@@ -111,3 +111,18 @@ namespace Generic_timer {
   };
 }
 
+// --------------------------------------------------------------------------
+INTERFACE [arm && arm_generic_timer && cpu_virt]:
+
+namespace Generic_timer { typedef Generic_timer::T<Generic_timer::Hyp> Gtimer; }
+
+// --------------------------------------------------------------------------
+INTERFACE [arm && arm_generic_timer && arm_em_tz]:
+
+namespace Generic_timer { typedef Generic_timer::T<Generic_timer::Physical> Gtimer; }
+
+// --------------------------------------------------------------------------
+INTERFACE [arm && arm_generic_timer && (!cpu_virt && (arm_em_ns || arm_em_std))]:
+
+namespace Generic_timer { typedef Generic_timer::T<Generic_timer::Virtual> Gtimer; }
+
