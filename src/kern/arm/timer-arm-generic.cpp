@@ -5,6 +5,9 @@ INTERFACE [arm && arm_generic_timer]:
 
 EXTENSION class Timer
 {
+public:
+  typedef Generic_timer::Gtimer Gtimer;
+
 private:
   enum
   {
@@ -19,21 +22,6 @@ private:
   static Mword _interval;
   static Mword _freq0;
 };
-
-// --------------------------------------------------------------------------
-INTERFACE [arm && arm_generic_timer && cpu_virt]:
-
-EXTENSION class Timer { public: typedef Generic_timer::T<Generic_timer::Hyp> Gtimer; };
-
-// --------------------------------------------------------------------------
-INTERFACE [arm && arm_generic_timer && arm_em_tz]:
-
-EXTENSION class Timer { public: typedef Generic_timer::T<Generic_timer::Physical> Gtimer; };
-
-// --------------------------------------------------------------------------
-INTERFACE [arm && arm_generic_timer && (!cpu_virt && (arm_em_ns || arm_em_std))]:
-
-EXTENSION class Timer { public: typedef Generic_timer::T<Generic_timer::Virtual> Gtimer; };
 
 // --------------------------------------------------------------
 IMPLEMENTATION [arm && arm_generic_timer]:
