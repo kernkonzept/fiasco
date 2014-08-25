@@ -173,19 +173,22 @@ Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order size,
                    && (i.level != level || Phys_addr(i.page_addr()) != phys)))
     return Insert_err_exists;
 
+  page_attribs.rights |= i.attribs().rights;
+  auto entry = i.make_page(phys, page_attribs);
+
   if (i.is_valid())
     {
-      if (EXPECT_FALSE(!i.add_attribs(page_attribs)))
+      if (EXPECT_FALSE(i.entry() == entry))
         return Insert_warn_exists;
 
+      i.set_page(entry);
       i.write_back_if(flush, c_asid());
       return Insert_warn_attrib_upgrade;
     }
   else
     {
-      i.create_page(phys, page_attribs);
+      i.set_page(entry);
       i.write_back_if(flush, Mem_unit::Asid_invalid);
-
       return Insert_ok;
     }
 }
@@ -232,7 +235,7 @@ Mem_space::v_lookup(Vaddr virt, Phys_addr *phys,
   if (!i.is_valid())
     return false;
 
-  if (phys) *phys = Virt_addr(i.page_addr());
+  if (phys) *phys = Phys_addr(i.page_addr());
   if (page_attribs) *page_attribs = i.attribs();
 
   return true;
@@ -405,8 +408,9 @@ Mem_space::sync_kernel()
 
   Phys_mem_addr pa((Address)kern_lib_start - Mem_layout::Map_base
                    + Mem_layout::Sdram_phys_base);
-  pte.create_page(pa, Page::Attr(Page::Rights::URX(), Page::Type::Normal(),
-                                 Page::Kern::Global()));
+  pte.set_page(pte.make_page(pa, Page::Attr(Page::Rights::URX(),
+                                            Page::Type::Normal(),
+                                            Page::Kern::Global())));
 
   pte.write_back_if(true, Mem_unit::Asid_kernel);
 
@@ -417,8 +421,9 @@ Mem_space::sync_kernel()
     return -1;
 
   pa = Phys_mem_addr(__mem_space_syscall_page);
-  pte.create_page(pa, Page::Attr(Page::Rights::URX(), Page::Type::Normal(),
-                                 Page::Kern::Global()));
+  pte.set_page(pte.make_page(pa, Page::Attr(Page::Rights::URX(),
+                                            Page::Type::Normal(),
+                                            Page::Kern::Global())));
 
   pte.write_back_if(true, Mem_unit::Asid_kernel);
 

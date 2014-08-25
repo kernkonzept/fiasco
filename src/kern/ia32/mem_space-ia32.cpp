@@ -198,11 +198,15 @@ Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order size,
                    && (i.level != level || Phys_addr(i.page_addr()) != phys)))
     return Insert_err_exists;
 
+  page_attribs.rights |= i.attribs().rights;
+  auto entry = i.make_page(phys, page_attribs);
+
   if (i.is_valid())
     {
-      if (EXPECT_FALSE(!i.add_attribs(page_attribs)))
+      if (EXPECT_FALSE(i.entry() == entry))
         return Insert_warn_exists;
 
+      i.set_page(entry);
       page_protect(Virt_addr::val(virt), Address(1) << Page_order::val(size),
                    *i.pte & Page_all_attribs);
 
@@ -210,7 +214,7 @@ Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order size,
     }
   else
     {
-      i.create_page(phys, page_attribs);
+      i.set_page(entry);
       page_map(Virt_addr::val(phys), Virt_addr::val(virt),
                Address(1) << Page_order::val(size), page_attribs);
 

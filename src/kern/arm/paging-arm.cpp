@@ -62,6 +62,8 @@ public:
   { return cxx::mask_lsb(*pte, page_order()); }
 
   Entry *pte;
+  Entry entry() const { return *pte; }
+
   unsigned char level;
 };
 
@@ -112,10 +114,11 @@ public:
     write_now(pte, phys | 3);
   }
 
-  Mword page_addr() const
+  Unsigned64 page_addr() const
   { return cxx::mask_lsb(*pte, page_order()); }
 
   Entry *pte;
+  Entry entry() const { return *pte; }
   unsigned char level;
 };
 
@@ -519,30 +522,17 @@ K_pte_ptr::set_attribs(Page::Attr attr)
 }
 
 PUBLIC inline NEEDS[K_pte_ptr::_attribs]
-void
-K_pte_ptr::create_page(Phys_mem_addr addr, Page::Attr attr)
+Mword
+K_pte_ptr::make_page(Phys_mem_addr addr, Page::Attr attr)
 {
-  Mword p = 2 | _attribs(attr) | cxx::int_value<Phys_mem_addr>(addr);
-  write_now(pte, p);
+  return 2 | _attribs(attr) | cxx::int_value<Phys_mem_addr>(addr);
 }
 
 PUBLIC inline
-bool
-K_pte_ptr::add_attribs(Page::Attr attr)
+void
+K_pte_ptr::set_page(Mword p)
 {
-  typedef L4_fpage::Rights R;
-
-  if (attr.rights & R::W())
-    {
-      auto p = access_once(pte);
-      if ((p & 0xc00) == 0x000)
-        {
-          p |= level == 0 ? 0xc00 : 0xff0;
-          write_now(pte, p);
-          return true;
-        }
-    }
-  return false;
+  write_now(pte, p);
 }
 
 PUBLIC inline
@@ -660,8 +650,8 @@ K_pte_ptr::attribs() const
 }
 
 PUBLIC inline NEEDS[K_pte_ptr::_attribs]
-void
-K_pte_ptr::create_page(Phys_mem_addr addr, Page::Attr attr)
+Mword
+K_pte_ptr::make_page(Phys_mem_addr addr, Page::Attr attr)
 {
   Mword p = 2 | _attribs(attr) | cxx::int_value<Phys_mem_addr>(addr);
   if (level == 0)
@@ -669,42 +659,14 @@ K_pte_ptr::create_page(Phys_mem_addr addr, Page::Attr attr)
   else
     p |= 0x10;   // AP[0]
 
-  write_now(pte, p);
+  return p;
 }
 
 PUBLIC inline
-bool
-K_pte_ptr::add_attribs(Page::Attr attr)
+void
+K_pte_ptr::set_page(Mword p)
 {
-  typedef L4_fpage::Rights R;
-  Mword n_attr = 0;
-
-  if (attr.rights & R::W())
-    {
-      if (level == 0)
-        n_attr = 0x200 << 6;
-      else
-        n_attr = 0x200;
-    }
-
-  if (attr.rights & R::X())
-    {
-      if (level == 0)
-        n_attr |= 0x10;
-      else
-        n_attr |= 0x01;
-    }
-
-
-  auto p = access_once(pte);
-  if (p & n_attr)
-    {
-      p &= ~n_attr;
-      write_now(pte, p);
-      return true;
-    }
-
-  return false;
+  write_now(pte, p);
 }
 
 PUBLIC inline
@@ -816,8 +778,8 @@ K_pte_ptr::attribs() const
 }
 
 PUBLIC inline NEEDS[K_pte_ptr::_attribs]
-void
-K_pte_ptr::create_page(Phys_mem_addr addr, Page::Attr attr)
+K_pte_ptr::Entry
+K_pte_ptr::make_page(Phys_mem_addr addr, Page::Attr attr)
 {
   Entry p = 0x400 | _attribs(attr) | cxx::int_value<Phys_mem_addr>(addr);
 
@@ -826,34 +788,14 @@ K_pte_ptr::create_page(Phys_mem_addr addr, Page::Attr attr)
   else
     p |= 1;
 
-  write_now(pte, p);
+  return p;
 }
 
 PUBLIC inline
-bool
-K_pte_ptr::add_attribs(Page::Attr attr)
+void
+K_pte_ptr::set_page(Entry p)
 {
-  typedef L4_fpage::Rights R;
-
-  Entry n_attr = 0;
-
-  if (attr.rights & R::W())
-    n_attr = 0x80;
-
-  if (attr.rights & R::X())
-    n_attr |= 0x0040000000000000;
-
-  if (!n_attr)
-    return false;
-
-  auto p = access_once(pte);
-  if (p & n_attr)
-    {
-      p &= ~n_attr;
-      write_now(pte, p);
-      return true;
-    }
-  return false;
+  write_now(pte, p);
 }
 
 PUBLIC inline
@@ -961,8 +903,8 @@ Pte_ptr::attribs() const
 }
 
 PUBLIC inline NEEDS[Pte_ptr::_attribs]
-void
-Pte_ptr::create_page(Phys_mem_addr addr, Page::Attr attr)
+Pte_ptr::Entry
+Pte_ptr::make_page(Phys_mem_addr addr, Page::Attr attr)
 {
   Entry p = 0x400 | _attribs(attr) | cxx::int_value<Phys_mem_addr>(addr);
   if (level == Pdir::Depth)
@@ -970,38 +912,7 @@ Pte_ptr::create_page(Phys_mem_addr addr, Page::Attr attr)
   else
     p |= 1;
 
-  write_now(pte, p);
-}
-
-PUBLIC inline
-bool
-Pte_ptr::add_attribs(Page::Attr attr)
-{
-  typedef L4_fpage::Rights R;
-
-  Entry n_attr = 0;
-  Mword a_attr = 0;
-
-  if (attr.rights & R::W())
-    a_attr = 0x2 << 6;
-
-  if (attr.rights & R::X())
-    n_attr |= 0x0040000000000000;
-
-  if (!n_attr && !a_attr)
-    return false;
-
-  auto p = access_once(pte);
-  auto old = p;
-  p &= ~n_attr;
-  p |= a_attr;
-
-  if (p != old)
-    {
-      write_now(pte, p);
-      return true;
-    }
-  return false;
+  return p;
 }
 
 PUBLIC inline

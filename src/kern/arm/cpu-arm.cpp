@@ -375,9 +375,9 @@ Cpu::init_mmu()
       Pdir::Depth, true,
       Kmem_alloc::q_allocator(Ram_quota::root));
 
-  pte.create_page(Phys_mem_addr((unsigned long)&ivt_start),
-                  Page::Attr(Page::Rights::RWX(),
-                  Page::Type::Normal(), Page::Kern::Global()));
+  pte.set_page(pte.make_page(Phys_mem_addr((unsigned long)&ivt_start),
+                             Page::Attr(Page::Rights::RWX(),
+                             Page::Type::Normal(), Page::Kern::Global())));
   pte.write_back_if(true, Mem_unit::Asid_kernel);
 }
 

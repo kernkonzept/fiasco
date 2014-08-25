@@ -21,8 +21,9 @@ Kernel_task::map_syscall_page(void *p)
     panic("FATAL: Error mapping syscall page to %p\n",
           (void *)Kmem_space::Syscalls);
 
-  pte.create_page(Phys_mem_addr(Kmem_space::kdir()->virt_to_phys((Address)p)),
-                  Page::Attr(Page::Rights::URX(), Page::Type::Normal(), Page::Kern::Global()));
+  pte.set_page(pte.make_page(Phys_mem_addr(Kmem_space::kdir()->virt_to_phys((Address)p)),
+                             Page::Attr(Page::Rights::URX(), Page::Type::Normal(),
+                                        Page::Kern::Global())));
   pte.write_back_if(true, Mem_unit::Asid_kernel);
 }
 
