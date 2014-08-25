@@ -57,30 +57,7 @@ private:
       return Attr(r, t);
     }
 
-    bool add_attribs(Page::Attr attr)
-    {
-      typedef L4_fpage::Rights R;
-
-      if (attr.rights & R::WX())
-        {
-          Unsigned64 a = 0;
-          if (attr.rights & R::W())
-            a = 2;
-
-          if (attr.rights & R::X())
-            a |= 4;
-
-          auto p = access_once(e);
-          auto o = p;
-          p |= a;
-          if (o != p)
-            {
-              write_now(e, p);
-              return true;
-            }
-        }
-      return false;
-    }
+    Unsigned64 entry() const { return *e; }
 
     void set_next_level(Unsigned64 phys)
     { set(phys | 7); }
@@ -106,7 +83,7 @@ private:
         *e &= ~dr;
     }
 
-    void create_page(Phys_mem_addr addr, Page::Attr attr)
+    Unsigned64 make_page(Phys_mem_addr addr, Page::Attr attr)
     {
       typedef L4_fpage::Rights R;
       typedef Page::Type T;
@@ -120,7 +97,12 @@ private:
       if (attr.type == T::Buffered()) r |= 1 << 3;
       if (attr.type == T::Uncached()) r |= 0;
 
-      set(cxx::int_value<Phys_mem_addr>(addr) | r);
+      return cxx::int_value<Phys_mem_addr>(addr) | r;
+    }
+
+    void set_page(Unsigned64 p)
+    {
+      set(p);
     }
 
   };
@@ -241,16 +223,19 @@ Vm_vmx_ept::v_insert(Mem_space::Phys_addr phys, Mem_space::Vaddr virt,
                    && (i.level != level || Mem_space::Phys_addr(i.page_addr()) != phys)))
     return Mem_space::Insert_err_exists;
 
+  auto entry = i.make_page(phys, page_attribs);
+
   if (i.is_valid())
     {
-      if (EXPECT_FALSE(!i.add_attribs(page_attribs)))
+      if (EXPECT_FALSE(i.entry() == entry))
         return Mem_space::Insert_warn_exists;
 
+      i.set_page(entry);
       return Mem_space::Insert_warn_attrib_upgrade;
     }
   else
     {
-      i.create_page(phys, page_attribs);
+      i.set_page(entry);
       return Mem_space::Insert_ok;
     }
 

@@ -264,8 +264,8 @@ Jdb::access_mem_task(Address virt, Space * task)
 
       if (!pte.is_valid() || pte.page_addr() != cxx::mask_lsb(phys, pte.page_order()))
         {
-          pte.create_page(Phys_mem_addr(cxx::mask_lsb(phys, pte.page_order())),
-                          Page::Attr(Page::Rights::RW()));
+          pte.set_page(pte.make_page(Phys_mem_addr(cxx::mask_lsb(phys, pte.page_order())),
+                                     Page::Attr(Page::Rights::RW())));
           pte.write_back_if(true, Mem_unit::Asid_kernel);
         }
 

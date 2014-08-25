@@ -38,6 +38,7 @@ public:
 
   typedef Mword Entry;
   Entry *pte;
+  Entry entry() const { return *pte; }
   unsigned char level;
 };
 
