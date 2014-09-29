@@ -35,6 +35,10 @@ IMPLEMENTATION [arm && arm_generic_timer]:
 Mword Timer::_interval;
 Mword Timer::_freq0;
 
+IMPLEMENT
+Irq_chip::Mode Timer::irq_mode()
+{ return Irq_chip::Mode::F_level_low; }
+
 IMPLEMENT_DEFAULT
 static inline
 Unsigned32 Timer::frequency()

@@ -7,8 +7,7 @@ EXTENSION class Timer
   friend class Kip_test;
 
 public:
-  static Irq_chip::Mode irq_mode()
-  { return Irq_chip::Mode::F_raising_edge; }
+  static Irq_chip::Mode irq_mode();
   static Unsigned32 get_scaler_ts_to_ns() { return _scaler_ts_to_ns; }
   static Unsigned32 get_shift_ts_to_ns() { return _shift_ts_to_ns; }
   static Unsigned32 get_scaler_ts_to_us() { return _scaler_ts_to_us; }
@@ -61,6 +60,10 @@ IMPLEMENT_DEFAULT
 Unsigned64
 Timer::time_stamp()
 { return 0; }
+
+IMPLEMENT_DEFAULT
+Irq_chip::Mode Timer::irq_mode()
+{ return Irq_chip::Mode::F_raising_edge; }
 
 IMPLEMENT inline NEEDS["kip.h", "warn.h"]
 void
