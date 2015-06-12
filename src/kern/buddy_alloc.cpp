@@ -160,9 +160,9 @@ Buddy_t_base<A,B>::free(void *block, unsigned long size)
 
   if (Debug_size_mismatch
       && size != static_cast<unsigned long>(Min_size) << size_index)
-    WARNX(Info, "Buddy::free: Size mismatch: %lx v %lx\n",
-          size, static_cast<unsigned long>(Min_size) << size_index);
-
+    WARNX(Info, "Buddy::free: Size mismatch: %lx v %lx [%p]\n",
+          size, static_cast<unsigned long>(Min_size) << size_index,
+          __builtin_return_address(0));
 
   // no need to look for a buddy if we already have the biggest block size
   while (size_index + 1 < Num_sizes)
@@ -250,8 +250,9 @@ Buddy_t_base<A,B>::alloc(unsigned long size)
 
   if (Debug_size_mismatch
       && size != static_cast<unsigned long>(Min_size) << size_index)
-    WARNX(Info, "Buddy::alloc: Size mismatch: %lx v %lx\n",
-          size, static_cast<unsigned long>(Min_size) << size_index);
+    WARNX(Info, "Buddy::alloc: Size mismatch: %lx v %lx [%p]\n",
+          size, static_cast<unsigned long>(Min_size) << size_index,
+          __builtin_return_address(0));
 
   //printf("[%u]: Buddy::alloc(%ld)[ret=%p]: size_index=%d\n", Proc::cpu_id(), size, __builtin_return_address(0), size_index);
 
