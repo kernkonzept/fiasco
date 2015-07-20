@@ -98,7 +98,7 @@ public:
     return r;
   }
 
-  void insert(T *e, Iterator const &pred)
+  Iterator insert(T *e, Iterator const &pred)
   {
     Item **x = &this->_f;
     if (pred != Base::end())
@@ -111,6 +111,20 @@ public:
 
     e->Item::_pn = x;
     *x = static_cast<Item*>(e);
+    return iter(e);
+  }
+
+  static Iterator insert_after(T *e, Iterator const &pred)
+  {
+    Item **x = &(*pred)->_n;
+    e->Item::_n = *x;
+
+    if (*x)
+      (*x)->_pn = &(e->Item::_n);
+
+    e->Item::_pn = x;
+    *x = static_cast<Item*>(e);
+    return iter(e);
   }
 
   static void insert_before(T *e, Iterator const &succ)
