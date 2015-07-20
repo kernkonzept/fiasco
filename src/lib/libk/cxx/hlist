@@ -13,15 +13,15 @@
 
 namespace cxx {
 
-class H_list_item
+template<typename ELEM_TYPE>
+class H_list_item_t
 {
 public:
-  H_list_item() : _n(nullptr), _pn(nullptr) {}
-  ~H_list_item() { l_remove(); }
+  H_list_item_t() : _n(nullptr), _pn(nullptr) {}
+  ~H_list_item_t() { l_remove(); }
 
 private:
-  H_list_item(H_list_item const &);
-  void operator = (H_list_item const &);
+  H_list_item_t(H_list_item_t const &) = delete;
 
   template<typename T, typename P> friend class H_list;
   template<typename T, typename X> friend struct Bits::Basic_list_policy;
@@ -38,11 +38,10 @@ private:
     _pn = nullptr;
   }
 
-  H_list_item *_n, **_pn;
+  H_list_item_t *_n, **_pn;
 };
 
-template< typename T >
-struct H_list_item_t : H_list_item {};
+typedef H_list_item_t<void> H_list_item;
 
 /**
  * General double-linked list of unspecified cxx::H_list_item elements.
@@ -53,9 +52,7 @@ template< typename T, typename POLICY = Bits::Basic_list_policy< T, H_list_item>
 class H_list : public Bits::Basic_list<POLICY>
 {
 private:
-  typedef cxx::conditional_t<
-    cxx::is_convertible_v<T, H_list_item_t<T> >,
-    H_list_item_t<T>, H_list_item> Item;
+  typedef typename POLICY::Item_type Item;
   typedef Bits::Basic_list<POLICY> Base;
   H_list(H_list const &);
   void operator = (H_list const &);
@@ -96,7 +93,7 @@ public:
 
   void insert(T *e, Iterator const &pred)
   {
-    H_list_item **x = &this->_f;
+    Item **x = &this->_f;
     if (pred != Base::end())
       x = &(*pred)->_n;
 
@@ -111,7 +108,7 @@ public:
 
   static void insert_before(T *e, Iterator const &succ)
   {
-    H_list_item **x = Base::__get_internal(succ);
+    Item **x = Base::__get_internal(succ);
 
     e->Item::_n = *x;
     e->Item::_pn = x;
@@ -170,10 +167,27 @@ public:
 };
 
 template< typename T >
+struct H_list_t : H_list<T, Bits::Basic_list_policy< T, H_list_item_t<T> > >
+{
+  H_list_t() = default;
+  H_list_t(bool b)
+  : H_list<T, Bits::Basic_list_policy< T, H_list_item_t<T> > >(b)
+  {};
+};
+
+template< typename T >
 class H_list_bss : public H_list<T>
 {
 public:
   H_list_bss() : H_list<T>(true) {}
 };
+
+template< typename T >
+class H_list_t_bss : public H_list_t<T>
+{
+public:
+  H_list_t_bss() : H_list_t<T>(true) {}
+};
+
 
 }

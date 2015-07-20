@@ -28,6 +28,7 @@ struct Basic_list_policy
   typedef TYPE **Type;
   typedef TYPE *Const_type;
   typedef TYPE *Head_type;
+  typedef TYPE Item_type;
 
   static Type next(Type c) { return &(*c)->_n; }
   static Const_type next(Const_type c) { return c->_n; }
