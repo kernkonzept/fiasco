@@ -91,6 +91,13 @@ public:
   /// Add element to the front of the list.
   void push_front(T *e) { add(e); }
 
+  T *pop_front()
+  {
+    T *r = this->front();
+    remove(r);
+    return r;
+  }
+
   void insert(T *e, Iterator const &pred)
   {
     Item **x = &this->_f;
