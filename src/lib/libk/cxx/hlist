@@ -18,7 +18,7 @@ class H_list_item_t
 {
 public:
   H_list_item_t() : _n(nullptr), _pn(nullptr) {}
-  ~H_list_item_t() { l_remove(); }
+  ~H_list_item_t() noexcept { l_remove(); }
 
 private:
   H_list_item_t(H_list_item_t const &) = delete;
@@ -26,7 +26,7 @@ private:
   template<typename T, typename P> friend class H_list;
   template<typename T, typename X> friend struct Bits::Basic_list_policy;
 
-  void l_remove()
+  void l_remove() noexcept
   {
     if (!_pn)
       return;
