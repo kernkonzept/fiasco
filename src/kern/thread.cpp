@@ -56,6 +56,7 @@ public:
     Op_gdt_x86 = 0x10,
     Op_set_tpidruro_arm = 0x10,
     Op_set_segment_base_amd64 = 0x12,
+    Op_segment_info_amd64 = 0x13,
   };
 
   enum Control_flags
