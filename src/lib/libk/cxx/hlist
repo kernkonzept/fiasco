@@ -13,11 +13,27 @@
 
 namespace cxx {
 
+/**
+ * Basic element type for a double-linked H_list.
+ *
+ * \tparam ELEM_TYPE  Base class of the list element.
+ */
 template<typename ELEM_TYPE>
 class H_list_item_t
 {
 public:
+  /**
+   * Constructor.
+   *
+   * Creates an element that is not in any list.
+   */
   H_list_item_t() : _n(nullptr), _pn(nullptr) {}
+  /**
+   * Destructor.
+   *
+   * Automatically removes the element from any list it still might be
+   * enchained in.
+   */
   ~H_list_item_t() noexcept { l_remove(); }
 
 private:
@@ -41,6 +57,7 @@ private:
   H_list_item_t *_n, **_pn;
 };
 
+/** Untyped list item. */
 typedef H_list_item_t<void> H_list_item;
 
 /**
@@ -91,6 +108,11 @@ public:
   /// Add element to the front of the list.
   void push_front(T *e) { add(e); }
 
+  /**
+   *  Remove and return the head element of the list.
+   *
+   *  \pre The list must not be empty or the behaviour will be undefined.
+   */
   T *pop_front()
   {
     T *r = this->front();
@@ -98,6 +120,16 @@ public:
     return r;
   }
 
+  /**
+   * Insert an element at the iterator position.
+   *
+   * \param e      New Element to be inserted
+   * \param pred   Iterator pointing to the element after which the
+   *               element will be inserted. If end() is given, the
+   *               element will be inserted at the beginning of the queue.
+   *
+   * \return Iterator pointing to the newly inserted element.
+   */
   Iterator insert(T *e, Iterator const &pred)
   {
     Item **x = &this->_f;
@@ -114,6 +146,17 @@ public:
     return iter(e);
   }
 
+  /**
+   * Insert an element after the iterator position.
+   *
+   * \param e      New element to be inserted.
+   * \param pred   Iterator pointing to the element after which the
+   *               element will be inserted. Must not be end().
+   *
+   * \return Iterator pointing to the newly inserted element.
+   *
+   * \pre The list must not be empty.
+   */
   static Iterator insert_after(T *e, Iterator const &pred)
   {
     Item **x = &(*pred)->_n;
@@ -127,6 +170,13 @@ public:
     return iter(e);
   }
 
+  /**
+   * Insert an element before the iterator position.
+   *
+   * \param e      New element to be inserted.
+   * \param succ   Iterator pointing to the element before which the
+   *               element will be inserted. Must not be end().
+   */
   static void insert_before(T *e, Iterator const &succ)
   {
     Item **x = Base::__get_internal(succ);
@@ -187,6 +237,13 @@ public:
   { e->Item::l_remove(); return e; }
 };
 
+/**
+ * Double-linked list of typed H_list_item_t elements.
+ *
+ * \note H_lists are not self-cleaning. Elements that are still chained
+ *       during destruction are not removed and will therefore be in an
+ *       undefined state after the destruction.
+ */
 template< typename T >
 struct H_list_t : H_list<T, Bits::Basic_list_policy< T, H_list_item_t<T> > >
 {
