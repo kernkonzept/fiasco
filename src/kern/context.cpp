@@ -1135,7 +1135,7 @@ Context::switch_exec_locked(Context *t, enum Helping_mode mode)
 
   t->set_helper(mode);
 
-  if (EXPECT_TRUE(current_cpu() == home_cpu()))
+  if (EXPECT_TRUE(get_current_cpu() == home_cpu()))
     update_ready_list();
 
   t->set_current_cpu(get_current_cpu());
