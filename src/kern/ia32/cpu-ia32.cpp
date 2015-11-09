@@ -115,9 +115,9 @@ private:
 
   Unsigned32 _thermal_and_pm_eax;
 
-  Unsigned32 scaler_tsc_to_ns;
-  Unsigned32 scaler_tsc_to_us;
-  Unsigned32 scaler_ns_to_tsc;
+  static Unsigned32 scaler_tsc_to_ns;
+  static Unsigned32 scaler_tsc_to_us;
+  static Unsigned32 scaler_ns_to_tsc;
 
 public:
 
@@ -527,6 +527,9 @@ struct Ia32_intel_microcode
 DEFINE_PER_CPU_P(0) Per_cpu<Cpu> Cpu::cpus(Per_cpu_data::Cpu_num);
 Cpu *Cpu::_boot_cpu;
 
+Unsigned32 Cpu::scaler_tsc_to_ns;
+Unsigned32 Cpu::scaler_tsc_to_us;
+Unsigned32 Cpu::scaler_ns_to_tsc;
 
 Cpu::Vendor_table const Cpu::intel_table[] FIASCO_INITDATA_CPU =
 {

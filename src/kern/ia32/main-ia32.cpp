@@ -151,10 +151,7 @@ int FIASCO_FASTCALL boot_ap_cpu()
   Timer::init(_cpu);
 
   if (cpu_is_new)
-    {
-      Apic::check_still_getting_interrupts();
-      Platform_control::init(_cpu);
-    }
+    Platform_control::init(_cpu);
 
   if (Koptions::o()->opt(Koptions::F_loadcnt))
     Perf_cnt::init_ap();
