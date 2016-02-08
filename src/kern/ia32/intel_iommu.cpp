@@ -7,12 +7,15 @@ INTERFACE:
 #include "cxx/protected_ptr"
 #include "cxx/static_vector"
 #include "pm.h"
+#include "tlbs.h"
 #include "mem_unit.h"
 #include "processor.h"
 
 namespace Intel {
 
-class Io_mmu : public Pm_object
+class Io_mmu :
+  public Tlb,
+  public Pm_object
 {
 public:
   /// Command and status register bits
@@ -356,6 +359,8 @@ public:
   void pm_on_resume(Cpu_number) override;
   void pm_on_suspend(Cpu_number) override {}
 
+  void tlb_flush() override;
+
   /**
    * \return true for success, false if the queue is full
    */
@@ -585,6 +590,7 @@ Intel::Io_mmu::setup(Cpu_number cpu, ACPI::Dmar_drhd const *drhd)
   modify_cmd(Cmd_qie);
 
   register_pm(cpu);
+  register_iommu_tlb();
 }
 
 IMPLEMENT FIASCO_INIT
@@ -686,6 +692,13 @@ Intel::Io_mmu::pm_on_resume(Cpu_number cpu)
       invalidate(Inv_desc::iotlb_glbl());
       modify_cmd(Cmd_te);
     }
+}
+
+IMPLEMENT
+void
+Intel::Io_mmu::tlb_flush()
+{
+  invalidate(Inv_desc::iotlb_glbl());
 }
 
 IMPLEMENT
