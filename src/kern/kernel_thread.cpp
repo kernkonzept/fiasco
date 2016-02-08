@@ -190,6 +190,7 @@ Kernel_thread::idle_op()
 IMPLEMENTATION [tickless_idle]:
 
 #include <rcupdate.h>
+#include <tlbs.h>
 
 EXTENSION class Kernel_thread
 {
@@ -223,7 +224,7 @@ Kernel_thread::idle_op()
       Rcu::enter_idle(cpu);
       Timer_tick::disable(cpu);
       Mem_space::disable_tlb(cpu);
-      Mem_unit::tlb_flush();
+      Tlb::flush_all_cpu(cpu);
 
       // do everything to do to a deep sleep state:
       //  - flush caches

@@ -5,6 +5,7 @@ INTERFACE:
 #include "space.h"
 #include <cxx/function>
 #include "cpu_call.h"
+#include "tlbs.h"
 
 class Mapdb;
 
@@ -67,42 +68,72 @@ private:
   };
 
   Flush_store<4> _cpu_tlb;
+  Flush_store<4> _iommu_tlb;
 
   /*
-   * This is called on the target/remote CPU.
+   * This is called on the target/remote CPU to flush CPU-local TLBs.
+   *
+   * \pre cpu == current_cpu()
    */
-  void do_flush()
+  void do_flush_cpu_op(Cpu_number cpu)
   {
     if (_cpu_tlb.all)
       {
-        // do a full flush locally
-        Mem_unit::tlb_flush();
+        // flush all CPU-local TLBs, e.g. MMU, ept, npt
+        Tlb::flush_all_cpu(cpu);
       }
     else
       _cpu_tlb.flush_stored();
   }
 
-  void global_flush()
+  /*
+   * This is called on the CPU that made the changes requiring a TLB Flush,
+   * to flush the affected CPU-local TLBs on all active CPUs.
+   */
+  void do_flush_cpu()
   {
     if (_cpu_tlb.empty)
       return;
 
-    Cpu_call::cpu_call_many(Mem_space::active_tlb(), [this](Cpu_number) {
-      this->do_flush();
+    Cpu_call::cpu_call_many(Mem_space::active_tlb(), [this](Cpu_number cpu) {
+      this->do_flush_cpu_op(cpu);
       return false;
     });
+  }
+
+  /*
+   * This is called on the CPU that made the changes requiring a TLB Flush,
+   * to flush the affected IOMMU TLBs.
+   */
+  void do_flush_iommu()
+  {
+    if (EXPECT_TRUE(_iommu_tlb.empty))
+      return;
+
+    if (EXPECT_FALSE(_iommu_tlb.all))
+      {
+        // flush all CPU-independent TLBs, e.g IOMMU
+        Tlb::flush_all_iommu();
+      }
+    else
+      _iommu_tlb.flush_stored();
   }
 
 public:
   void add_page(Mem_space *space, Mem_space::V_pfn, Mem_space::Page_order)
   {
     /* At a later stage, also use the addresses given here. */
-   _cpu_tlb.add_space(space);
+
+    if (EXPECT_FALSE(space->tlb_type() == Mem_space::Tlb_iommu))
+      _iommu_tlb.add_space(space);
+    else
+      _cpu_tlb.add_space(space);
   }
 
   ~Auto_tlb_flush()
   {
-    global_flush();
+    do_flush_cpu();
+    do_flush_iommu();
   }
 };
 
