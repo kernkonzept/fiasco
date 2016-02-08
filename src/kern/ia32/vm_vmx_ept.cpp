@@ -177,6 +177,18 @@ Vm_vmx_ept::add_page_size(Mem_space::Page_order o)
 }
 
 PUBLIC
+void
+Vm_vmx_ept::tlb_flush(bool) override
+{
+  auto const &vmx = Vmx::cpus.current();
+
+  if (vmx.info.has_invept_single())
+    Vm_vmx_ept_tlb::invept(Vm_vmx_ept_tlb::Single, _ept_phys);
+  else
+    Vm_vmx_ept_tlb::invept(Vm_vmx_ept_tlb::Global);
+}
+
+PUBLIC
 bool
 Vm_vmx_ept::v_lookup(Mem_space::Vaddr virt, Mem_space::Phys_addr *phys,
                      Mem_space::Page_order *order,

@@ -7,6 +7,25 @@ INTERFACE [vmx]:
 #include <cstdio>
 #include <cstring>
 
+class Vm_vmx_ept_tlb
+{
+public:
+  enum Context
+  {
+    Single = 0x1,
+    Global = 0x2,
+  };
+
+  static void invept(Context type, Mword eptp = 0)
+  {
+    struct Op
+    {
+      Unsigned64 eptp, resv;
+    } op = {eptp, 0};
+    asm volatile ("invept %0, %[type]" : : "m"(op), [type] "r"((Mword)type));
+  }
+};
+
 class Vmx_info
 {
 public:
@@ -169,6 +188,9 @@ public:
   Bit_defs_32<Exceptions> exception_bitmap;
 
   Unsigned64 ept_vpid_cap;
+  bool has_invept() const { return ept_vpid_cap & (1 << 20); }
+  bool has_invept_single() const { return ept_vpid_cap & (1 << 25); }
+  bool has_invept_global() const { return ept_vpid_cap & (1 << 26); }
   Unsigned64 max_index;
   Unsigned32 pinbased_ctls_default1;
   Unsigned32 procbased_ctls_default1;
@@ -639,6 +661,15 @@ Vmx_info::init()
       if (procbased_ctls2.allowed(Vmx_info::PRB2_enable_ept))
 	ept_vpid_cap = Cpu::rdmsr(0x48c);
 
+      if (has_invept() && !has_invept_global())
+      {
+        // Having the INVEPT instruction indicates that some kind of EPT TLB
+        // flushing is required. If the global INVEPT type is not supported, we
+        // cannot currently ensure proper EPT TLB flushing. Therefore, disable
+        // EPT in this presumably rare scenario.
+        procbased_ctls2.enforce(Vmx_info::PRB2_enable_ept, false);
+        procbased_ctls2.enforce(Vmx_info::PRB2_unrestricted, false);
+      }
 
       // we disable VPID so far, need to handle virtualize it in Fiasco,
       // as done for AMDs ASIDs
@@ -919,7 +950,9 @@ Vmx::Vmx(Cpu_number cpu)
 
   Pm_object::register_pm(cpu);
 
-
+  // Clean out residual ept tlb entries during boot.
+  if (info.procbased_ctls2.allowed(Vmx_info::PRB2_enable_ept))
+    Vm_vmx_ept_tlb::invept(Vm_vmx_ept_tlb::Global);
 }
 
 /// Some compile-time VMCS field calculations
