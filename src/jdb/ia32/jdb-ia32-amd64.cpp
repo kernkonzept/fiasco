@@ -191,8 +191,6 @@ void Jdb::init()
 
   Kconsole::console()->register_console(push_cons());
 
-  Thread::set_int3_handler(handle_int3_threadctx);
-
   _connected = true;
   Thread::may_enter_jdb = true;
 }

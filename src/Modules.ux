@@ -155,8 +155,7 @@ entry_frame_IMPL	:= entry_frame entry_frame-ia32-ux                   \
 fpu_IMPL		:= fpu fpu-ia32-ux fpu-ux
 irq_IMPL		:= irq irq-ux
 ipi_IMPL		:= ipi ipi-ux
-jdb_IMPL		:= jdb jdb-ux jdb-ansi jdb-ia32-ux jdb-thread        \
-			   jdb-int3 jdb-int3-ia32-ux
+jdb_IMPL		:= jdb jdb-ux jdb-ansi jdb-ia32-ux jdb-thread
 jdb_tbuf_IMPL		:= jdb_tbuf jdb_tbuf-ux
 jdb_tcb_IMPL		:= jdb_tcb jdb_tcb-ia32-ux
 jdb_bp_IMPL		:= jdb_bp-ia32-ux jdb_bp-ux

@@ -138,8 +138,6 @@ Jdb::init()
 
   register_libc_atexit(leave_getchar);
   atexit(leave_getchar);
-
-  Thread::set_int3_handler(handle_int3_threadctx);
 }
 
 PRIVATE
@@ -171,15 +169,7 @@ Jdb::int3_extension()
   Space *space = NULL; //get_task_id(0);
   error_buffer.cpu(Cpu_number::boot_cpu()).clear();
 
-  if (todo == 0x3c && peek ((Unsigned8 *) (addr+1), user) == 13)
-    {
-      enter_getchar();
-      entry_frame->_ax = Vkey::get();
-      Vkey::clear();
-      leave_getchar();
-      return 1;
-    }
-  else if (todo != 0xeb)
+  if (todo != 0xeb)
     {
       error_buffer.cpu(Cpu_number::boot_cpu()).printf("INT 3");
       return 0;

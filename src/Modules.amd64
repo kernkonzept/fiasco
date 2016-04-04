@@ -183,8 +183,7 @@ INTERFACES_JDB		+= jdb_dbinfo jdb_io_ports jdb_ptab jdb_trace_set \
 CXXSRC_JDB := tb_entry_output.cc
 
 apic_IMPL		+= apic-debug
-jdb_IMPL		+= jdb-ia32-amd64 jdb-ia32-ux \
-			   jdb-int3-ia32-amd64 jdb-int3-ia32-ux
+jdb_IMPL		+= jdb-ia32-amd64 jdb-ia32-ux
 jdb_bp_IMPL		:= jdb_bp-ia32-ux jdb_bp-ia32-amd64 jdb_bp-amd64
 jdb_bt_IMPL		:= jdb_bt-ia32-ux
 jdb_entry_frame_IMPL	:= jdb_entry_frame-ia32

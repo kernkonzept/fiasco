@@ -20,19 +20,6 @@ protected:
   static Trap_state::Handler nested_trap_handler FIASCO_FASTCALL;
 };
 
-
-//----------------------------------------------------------------------------
-INTERFACE [ia32,amd64]:
-
-class Trap_state;
-
-EXTENSION class Thread
-{
-private:
-  static int  (*int3_handler)(Trap_state*);
-};
-
-
 //----------------------------------------------------------------------------
 IMPLEMENTATION [ia32,amd64,ux]:
 
@@ -279,20 +266,14 @@ Thread::handle_slow_trap(Trap_state *ts)
   _recover_jmpbuf = 0;
 
 check_exception:
+  // backward compatibility cruft: check for those insane "int3" debug
+  // messaging command sequences
+  if (!from_user && (ts->_trapno == 3))
+    goto generic_debug;
 
   // send exception IPC if requested
   if (send_exception(ts))
     goto success;
-
-  // backward compatibility cruft: check for those insane "int3" debug
-  // messaging command sequences
-  if (ts->_trapno == 3)
-    {
-      if (int3_handler && int3_handler(ts))
-	goto success;
-
-      goto generic_debug;
-    }
 
   // privileged tasks also may invoke the kernel debugger with a debug
   // exception
@@ -456,21 +437,8 @@ Thread::send_exception_arch(Trap_state *ts)
   // Do not send exception IPC but return 'not for us' if thread is a normal
   // thread (not alien) and it's a debug trap,
   // debug traps for aliens are always reflected as exception IPCs
-  if (!(state() & Thread_alien)
-      && (ts->_trapno == 1 || ts->_trapno == 3))
+  if (!(state() & Thread_alien) && (ts->_trapno == 1))
     return 0; // we do not handle this
-
-  if (ts->_trapno == 3)
-    {
-      if (state() & Thread_dis_alien)
-	{
-	  state_del(Thread_dis_alien);
-	  return 0; // no exception
-	}
-
-      // set IP back on the int3 instruction
-      ts->ip(ts->ip() - 1);
-    }
 
   return 1; // make it an exception
 }
@@ -635,7 +603,6 @@ IMPLEMENTATION[ia32 || amd64]:
 #include "static_init.h"
 #include "terminate.h"
 
-int (*Thread::int3_handler)(Trap_state*);
 DEFINE_PER_CPU Per_cpu<Thread::Dbg_stack> Thread::dbg_stack;
 
 IMPLEMENT static inline NEEDS ["gdt.h"]
@@ -676,13 +643,6 @@ thread_handle_fputrap()
   LOG_TRAP_N(7);
 
   return current_thread()->switchin_fpu();
-}
-
-PUBLIC static inline
-void
-Thread::set_int3_handler(int (*handler)(Trap_state *ts))
-{
-  int3_handler = handler;
 }
 
 PRIVATE inline

@@ -1,15 +1,3 @@
-INTERFACE [ux]:
-
-#include <sys/types.h>
-
-class Trap_state;
-
-EXTENSION class Thread
-{
-private:
-  static int (*int3_handler)(Trap_state*);
-};
-
 IMPLEMENTATION [ux]:
 
 #include <cstdio>
@@ -22,7 +10,6 @@ IMPLEMENTATION [ux]:
 #include "per_cpu_data.h"
 #include "utcb_init.h"
 
-int (*Thread::int3_handler)(Trap_state*);
 DEFINE_PER_CPU Per_cpu<Thread::Dbg_stack> Thread::dbg_stack;
 
 
@@ -56,13 +43,6 @@ Thread::arch_init()
   r->cs(Emulation::kernel_cs() & ~1);			// force iret trap
   r->ss(Emulation::kernel_ss());
   r->flags(EFLAGS_IOPL_K | EFLAGS_IF | 2);
-}
-
-PUBLIC static inline
-void
-Thread::set_int3_handler(int (*handler)(Trap_state *ts))
-{
-  int3_handler = handler;
 }
 
 PRIVATE inline bool Thread::check_trap13_kernel(Trap_state *)
