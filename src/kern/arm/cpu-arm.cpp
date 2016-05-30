@@ -194,15 +194,21 @@ public:
 };
 
 // -------------------------------------------------------------------------------
-INTERFACE [arm && !bsp_cpu]:
+INTERFACE [arm]:
 
 EXTENSION class Cpu
 {
 private:
-  void bsp_init(bool) {}
+  static void bsp_init(bool);
 };
 
 //-------------------------------------------------------------------------
+IMPLEMENTATION [arm]:
+
+IMPLEMENT_DEFAULT static inline
+void
+Cpu::bsp_init(bool) {}
+
 IMPLEMENTATION [arm && armv6]: // -----------------------------------------
 
 PUBLIC static inline NEEDS[Cpu::set_actrl]

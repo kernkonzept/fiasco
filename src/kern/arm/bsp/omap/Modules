@@ -31,5 +31,4 @@ reset_IMPL            += reset-arm-omap
 clock_IMPL            += clock-generic
 platform_control_IMPL += platform_control-arm-omap4
 outer_cache_IMPL      += outer_cache-arm-omap
-cpu_IMPL              += cpu-arm-omap
 scu_IMPL              += scu-arm-omap
