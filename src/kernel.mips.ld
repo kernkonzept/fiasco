@@ -53,9 +53,7 @@ SECTIONS {
     PROVIDE (_initkip_end = .);
   } :kip :l4_kip
 
-  .koptions ALIGN(16K) : {
-    *(.koptions)
-  } :kip :l4_kopt
+  . = ALIGN(16K);
 
   .mp_tramp : {
     KEEP(*(.mp_tramp))
@@ -179,6 +177,11 @@ SECTIONS {
     PROVIDE (_per_cpu_data_end = .);
   }
 
+  . = ALIGN(8);
+  .koptions : {
+    *(.koptions)
+  } :rw :l4_kopt
+
   . = ALIGN(0x10);
   .bss : {
     PROVIDE (_bss_start = .);
@@ -192,7 +195,7 @@ SECTIONS {
 
     *(.bss .bss.* .gnu.linkonce.b.* COMMON)
     PROVIDE (_bss_end = .);
-  }
+  } :rw
 
   . = ALIGN(4K);
 
