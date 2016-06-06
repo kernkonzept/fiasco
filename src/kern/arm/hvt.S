@@ -97,7 +97,7 @@ hyp_vector_base:
 .macro HYP_FAULT err
 	switch_to_hyp_kernel
 	stmdb	sp!, {r0 - r12}		@ Stack rest of user state
-	sub	sp, #(4 * 3)
+	sub	sp, #(4 * 2)
 	mov	r0, #\err
 	b	hyp_fault_call
 .endm
@@ -125,10 +125,10 @@ hyp_trap_entry:
 
 	stmdb	sp!, {r0 - r12}   	@ Stack rest of user state
 	add	r0, sp, #13*4
-	sub	sp, sp, #16
+	sub	sp, sp, #8
 	mov	lr, pc
 	ldr	pc, 1f
-	add	sp, sp, #16
+	add	sp, sp, #8
 .global fast_ret_from_irq
 fast_ret_from_irq:
 	ldmia	sp, {r0 - r12}		@ Restore user state
@@ -140,7 +140,7 @@ GEN_IRET
 .global	vcpu_resume
 vcpu_resume:
 	add	sp, r1, #RF_SIZE
-	add	r0, r0, #12			@ pfa, err + tpidruro
+	add	r0, r0, #8			@ pfa, err
 	ldr	r1, [r0, #RF(PSR, 13*4)]	@ Unstack SPSR
 	msr	spsr_cfsx, r1
 	ldr	lr, [r0, #RF(USR_LR, 13*4)]	@ load LR_usr from vcpu state

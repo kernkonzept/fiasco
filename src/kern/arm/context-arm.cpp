@@ -237,7 +237,7 @@ IMPLEMENT_OVERRIDE inline
 void
 Context::arch_load_vcpu_user_state(Vcpu_state *vcpu, bool do_load)
 {
-  _tpidruro = vcpu->_regs.s.tpidruro;
+  _tpidruro = vcpu->_regs.tpidruro;
   if (do_load)
     load_tpidruro();
 }
