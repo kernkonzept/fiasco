@@ -138,7 +138,7 @@ void
 Context::copy_and_sanitize_trap_state(Trap_state *dst,
                                       Trap_state const *src) const
 {
-  Mem::memcpy_mwords(dst, src, 19);
+  Mem::memcpy_mwords(dst, src, 18);
   dst->pc = src->pc;
   dst->psr = access_once(&src->psr);
   sanitize_user_state(dst);
@@ -396,7 +396,7 @@ Context::arch_load_vcpu_kern_state(Vcpu_state *vcpu, bool do_load)
       if (do_load)
         {
           asm volatile ("mrc p15, 0, %0, c13, c0, 3"
-                        : "=r"(vcpu->_regs.s.tpidruro));
+                        : "=r"(vcpu->_regs.tpidruro));
           asm volatile ("mrc p15, 0, %0, c1,  c0, 0"
                         : "=r"(v->guest_regs.sctlr));
           asm volatile ("mrc p15, 0, %0, c13, c0, 0"
@@ -439,7 +439,7 @@ Context::arch_load_vcpu_kern_state(Vcpu_state *vcpu, bool do_load)
         }
       else
         {
-          vcpu->_regs.s.tpidruro = _tpidruro;
+          vcpu->_regs.tpidruro     = _tpidruro;
           v->guest_regs.sctlr      = v->sctlr;
           v->guest_regs.fcseidr    = v->fcseidr;
           v->guest_regs.contextidr = v->contextidr;
@@ -472,7 +472,7 @@ Context::arch_load_vcpu_user_state(Vcpu_state *vcpu, bool do_load)
 
   if (!(state() & Thread_ext_vcpu_enabled))
     {
-      _tpidruro = vcpu->_regs.s.tpidruro;
+      _tpidruro = vcpu->_regs.tpidruro;
       if (do_load)
         load_tpidruro();
       return;
@@ -533,13 +533,13 @@ Context::arch_load_vcpu_user_state(Vcpu_state *vcpu, bool do_load)
       if (hcr & Cpu::Hcr_tge)
         sctlr &= ~Cpu::Cp15_c1_mmu;
       asm volatile ("mcr p15, 0, %0, c1,  c0, 0" : : "r"(sctlr));
-      asm volatile ("mcr p15, 0, %0, c13, c0, 3" : : "r"(vcpu->_regs.s.tpidruro));
-      _tpidruro          = vcpu->_regs.s.tpidruro;
+      asm volatile ("mcr p15, 0, %0, c13, c0, 3" : : "r"(vcpu->_regs.tpidruro));
+      _tpidruro          = vcpu->_regs.tpidruro;
     }
   else
     {
       vcpu->host.tpidruro = _tpidruro;
-      _tpidruro           = vcpu->_regs.s.tpidruro;
+      _tpidruro           = vcpu->_regs.tpidruro;
       v->host_regs.sctlr  = v->sctlr;
       v->hcr              = hcr;
       v->sctlr            = v->guest_regs.sctlr;

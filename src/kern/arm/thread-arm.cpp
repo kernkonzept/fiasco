@@ -100,8 +100,6 @@ Thread::user_invoke()
   Trap_state *ts = nonull_static_cast<Trap_state*>
     (nonull_static_cast<Return_frame*>(current()->regs()));
 
-  assert (((Mword)ts & 7) == 4); // Return_frame has 5 words
-
   static_assert(sizeof(ts->r[0]) == sizeof(Mword), "Size mismatch");
   Mem::memset_mwords(&ts->r[0], 0, sizeof(ts->r) / sizeof(ts->r[0]));
 
@@ -442,7 +440,7 @@ Thread::do_trigger_exception(Entry_frame *r, void *ret_handler)
 }
 
 
-PRIVATE static inline NEEDS[Thread::get_ts_tpidruro]
+PRIVATE static inline NEEDS[Thread::set_tpidruro]
 bool FIASCO_WARN_RESULT
 Thread::copy_utcb_to_ts(L4_msg_tag tag, Thread *snd, Thread *rcv,
                         L4_fpage::Rights rights)
@@ -453,18 +451,18 @@ Thread::copy_utcb_to_ts(L4_msg_tag tag, Thread *snd, Thread *rcv,
 
   Trap_state *ts = (Trap_state*)rcv->_utcb_handler;
   Utcb *snd_utcb = snd->utcb().access();
+  Trex const *sregs = reinterpret_cast<Trex const *>(snd_utcb->values);
 
   if (EXPECT_FALSE(rcv->exception_triggered()))
     {
       // triggered exception pending
-      Mem::memcpy_mwords (ts, snd_utcb->values, 16);
-      Return_frame rf = *reinterpret_cast<Return_frame const *>((char const *)&snd_utcb->values[16]);
+      Mem::memcpy_mwords(ts, snd_utcb->values, 15);
+      Return_frame rf = access_once(static_cast<Return_frame const *>(&sregs->s));
       rcv->sanitize_user_state(&rf);
       rcv->_exc_cont.set(ts, &rf);
     }
   else
-    rcv->copy_and_sanitize_trap_state(
-       ts, reinterpret_cast<Trap_state const *>(snd_utcb->values));
+    rcv->copy_and_sanitize_trap_state(ts, &sregs->s);
 
   if (tag.transfer_fpu() && (rights & L4_fpage::Rights::W()))
     snd->transfer_fpu(rcv);
@@ -473,7 +471,7 @@ Thread::copy_utcb_to_ts(L4_msg_tag tag, Thread *snd, Thread *rcv,
   if ((tag.flags() & 0x8000) && (rights & L4_fpage::Rights::W()))
     rcv->utcb().access()->user[2] = snd_utcb->values[25];
 
-  rcv->get_ts_tpidruro(ts);
+  rcv->set_tpidruro(sregs);
 
   bool ret = transfer_msg_items(tag, snd, snd_utcb,
                                 rcv, rcv->utcb().access(), rights);
@@ -483,7 +481,7 @@ Thread::copy_utcb_to_ts(L4_msg_tag tag, Thread *snd, Thread *rcv,
 
 
 PRIVATE static inline NEEDS[Thread::save_fpu_state_to_utcb,
-                            Thread::set_ts_tpidruro]
+                            Thread::store_tpidruro]
 bool FIASCO_WARN_RESULT
 Thread::copy_ts_to_utcb(L4_msg_tag, Thread *snd, Thread *rcv,
                         L4_fpage::Rights rights)
@@ -493,20 +491,21 @@ Thread::copy_ts_to_utcb(L4_msg_tag, Thread *snd, Thread *rcv,
   {
     auto guard = lock_guard(cpu_lock);
     Utcb *rcv_utcb = rcv->utcb().access();
+    Trex *rregs = reinterpret_cast<Trex *>(rcv_utcb->values);
 
-    snd->set_ts_tpidruro(ts);
+    snd->store_tpidruro(rregs);
 
-    Mem::memcpy_mwords(rcv_utcb->values, ts, 16);
+    Mem::memcpy_mwords(rcv_utcb->values, ts, 15);
     Continuation::User_return_frame *d
-      = reinterpret_cast<Continuation::User_return_frame *>((char*)&rcv_utcb->values[16]);
+      = reinterpret_cast<Continuation::User_return_frame *>((char*)&rcv_utcb->values[15]);
 
     snd->_exc_cont.get(d, ts);
 
 
     if (EXPECT_TRUE(!snd->exception_triggered()))
       {
-        rcv_utcb->values[19] = ts->pc;
-        rcv_utcb->values[20] = ts->psr;
+        rcv_utcb->values[18] = ts->pc;
+        rcv_utcb->values[19] = ts->psr;
       }
 
     if (rcv_utcb->inherit_fpu() && (rights & L4_fpage::Rights::W()))
@@ -664,18 +663,18 @@ Thread::set_tpidruro(L4_msg_tag tag, Utcb *utcb)
 
 PRIVATE inline
 void
-Thread::get_ts_tpidruro(Trap_state *ts)
+Thread::set_tpidruro(Trex const *t)
 {
-  _tpidruro = ts->tpidruro;
+  _tpidruro = access_once(&t->tpidruro);
   if (this == current_thread())
     load_tpidruro();
 }
 
 PRIVATE inline
 void
-Thread::set_ts_tpidruro(Trap_state *ts)
+Thread::store_tpidruro(Trex *t)
 {
-  ts->tpidruro = _tpidruro;
+  t->tpidruro = _tpidruro;
 }
 
 // ------------------------------------------------------------------------
@@ -695,12 +694,12 @@ Thread::set_tpidruro(L4_msg_tag, Utcb *)
 
 PRIVATE inline
 void
-Thread::get_ts_tpidruro(Trap_state *)
+Thread::set_tpidruro(Trex const *)
 {}
 
 PRIVATE inline
 void
-Thread::set_ts_tpidruro(Trap_state *)
+Thread::store_tpidruro(Trex *)
 {}
 
 //-----------------------------------------------------------------------------

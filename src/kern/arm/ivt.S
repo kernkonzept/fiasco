@@ -95,10 +95,6 @@
 #endif
 .endm
 
-.macro make_tpidruro_space base
-	sub	\base, #4
-.endm
-
 /***********************************************************************
  * Enter the kernel slowtrap handler
  *
@@ -106,7 +102,6 @@
  */
 .macro 	enter_slowtrap errorcode
 	stmdb 	sp!, {r0 - r12}
-	make_tpidruro_space sp
 	enter_slowtrap_w_stack \errorcode
 .endm
 
@@ -495,7 +490,6 @@ slowtrap_from_pagefault:
 	disable_irqs
 	ldmia 	sp!, {r0 - r3}
 	stmdb 	sp!, {r0 - r11}
-	make_tpidruro_space sp
 	stmdb 	sp!, {r12, lr}
 	align_and_save_sp r0
 	adr   	lr, exception_return
@@ -636,7 +630,6 @@ alien_syscall: @ Do it for an alien ---------------------------------------
 	ldr	lr, [sp, #RF(SVC_LR, 13*4)] @ read orig exception PC
 	sub	lr, lr, #4                  @ adjust pc to be on insn
 	str	lr, [sp, #RF(PC,     13*4)] @ store to entry_stack_PC
-	make_tpidruro_space sp
 	enter_slowtrap_w_stack GET_HSR(0x3d)
 	@ Never reach this -- end up in user land after exception reply
 
@@ -653,7 +646,6 @@ alien_syscall: @ Do it for an alien ---------------------------------------
 	@ The trap occurs at the insn where the system call returns to.
 	@ Set the bit 0x00000040 to indicate a trap after the resumed 
 	@ system call.
-	make_tpidruro_space sp
 	enter_slowtrap_w_stack GET_HSR(0x3d), 0x40
 
 	
@@ -983,7 +975,7 @@ go_nonsecure:
 	.global	vcpu_resume
 vcpu_resume:
 	add	sp, r1, #RF_SIZE
-	add	lr, r0, #12			@ pfa, err + tpidruro
+	add	lr, r0, #8			@ pfa, err
 #if !defined(CONFIG_ARM_V6PLUS)
 	ldr	r1, [lr, #RF(PSR, 13*4)]	@ Unstack SPSR
 	msr	spsr_cfsx, r1			@ Load SPSR from kernel_lr

@@ -210,7 +210,7 @@ exception_return:
 	disable_irqs
 	ldr	sp, [sp]
 __return_from_user_invoke:
-	add	sp, sp, #12 // pfa, err & tpidruro
+	add	sp, sp, #8 // pfa, err
 	ldmia	sp!, {r0 - r12}
 	return_from_exception
 .endm

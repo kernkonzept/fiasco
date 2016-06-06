@@ -17,7 +17,6 @@ public:
     Arm_esr esr;
   };
 
-  Mword tpidruro;
   Mword r[13];
 };
 
@@ -31,6 +30,7 @@ public:
 struct Trex
 {
   Trap_state s;
+  Mword tpidruro;
   void set_ipc_upcall()
   { s.esr.ec() = 0x3f; }
 
