@@ -54,7 +54,7 @@ bool Per_cpu_data_alloc::alloc(Cpu_number cpu)
 
   _offsets[cpu] = per_cpu - _per_cpu_data_start;
   printf("Allocate %u bytes (%uKB) for CPU[%u] local storage (offset=%lx, %p-%p)\n",
-         size, (size + 513) / 1024, cxx::int_value<Cpu_number>(cpu),
+         size, (size + 1023) / 1024, cxx::int_value<Cpu_number>(cpu),
          (unsigned long)_offsets[cpu],
          _per_cpu_data_start + _offsets[cpu],
          _per_cpu_data_end + _offsets[cpu]);
