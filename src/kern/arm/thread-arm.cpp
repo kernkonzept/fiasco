@@ -97,16 +97,22 @@ Thread::user_invoke()
   user_invoke_generic();
   assert (current()->state() & Thread_ready);
 
+  auto *ct = current_thread();
+  auto *regs = ct->regs();
   Trap_state *ts = nonull_static_cast<Trap_state*>
-    (nonull_static_cast<Return_frame*>(current()->regs()));
+    (nonull_static_cast<Return_frame*>(regs));
 
   static_assert(sizeof(ts->r[0]) == sizeof(Mword), "Size mismatch");
   Mem::memset_mwords(&ts->r[0], 0, sizeof(ts->r) / sizeof(ts->r[0]));
 
-  if (current()->space()->is_sigma0())
+  if (ct->space()->is_sigma0())
     ts->r[0] = Kmem_space::kdir()->virt_to_phys((Address)Kip::k());
 
-  ts->psr |= Proc::Status_always_mask;
+  if (ct->exception_triggered())
+    ct->_exc_cont.flags(regs, ct->_exc_cont.flags(regs)
+                              | Proc::Status_always_mask);
+  else
+    regs->psr |= Proc::Status_always_mask;
 
   extern char __return_from_user_invoke;
 
@@ -122,8 +128,8 @@ Thread::user_invoke()
   panic("should never be reached");
   while (1)
     {
-      current()->state_del(Thread_ready);
-      current()->schedule();
+      ct->state_del(Thread_ready);
+      ct->schedule();
     };
 
   // never returns here
