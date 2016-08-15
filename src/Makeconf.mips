@@ -4,9 +4,7 @@ BITS-$(CONFIG_BIT32) = 32
 BITS-$(CONFIG_BIT64) = 64
 BITS = $(BITS-y)
 
-CROSS_COMPILE-32          ?= mips-linux-
-CROSS_COMPILE-64          ?= mips64el-linux-gnuabi64-
-CROSS_COMPILE             ?= $(CROSS_COMPILE-$(BITS))
+CROSS_COMPILE             ?= mips-linux-
 
 LD_EMULATION_CHOICE       := elf$(BITS)ltsmip
 SHARED_FLAGS              += -EL -msoft-float -mabi=$(BITS)
