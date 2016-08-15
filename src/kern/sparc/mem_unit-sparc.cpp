@@ -9,6 +9,10 @@ namespace Mmu
     {
       Cache_miss    = 0x01,
       Sys_control   = 0x02,
+      User_insn     = 0x08,
+      Sv_insn       = 0x09,
+      User_data     = 0x0a,
+      Sv_data       = 0x0b,
       Icache_tags   = 0x0C,
       Icache_data   = 0x0D,
       Dcache_tags   = 0x0E,
@@ -29,6 +33,8 @@ namespace Mmu
       Control       = 0x000,
       ContextTable  = 0x100,
       ContextNumber = 0x200,
+      Fault_status  = 0x300,
+      Fault_address = 0x400,
     };
 };
 
@@ -60,7 +66,7 @@ Mem_unit::tlb_flush()
 /** Flush page at virtual address
  */
 PUBLIC static inline
-void 
+void
 Mem_unit::tlb_flush(Address addr)
 {
   (void)addr;
@@ -89,7 +95,7 @@ PUBLIC static inline
 void
 Mem_unit::context_table(Address table)
 {
-  Proc::write_alternative<Mmu::Regs>(Mmu::ContextTable, (table >> 4) & ~0x3);
+  Proc::write_alternative<Mmu::Regs>(Mmu::ContextTable, (table >> 4) & ~0x3ul);
 }
 
 PUBLIC static inline

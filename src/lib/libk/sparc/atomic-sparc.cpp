@@ -4,38 +4,40 @@ IMPLEMENTATION [sparc]:
 
 inline
 bool
-cas_unsafe( Mword *ptr, Mword oldval, Mword newval )
+cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
 {
-  (void)ptr; (void)newval;
-  Mword ret = 0;
-
+  Mword ret;
+  // -mcpu=leon3 does not work for me although listed in docs :(
 #if 0
-  asm volatile ( "1:                            \n"
-		 "  lwarx  %%r6, 0, %[ptr]      \n"
-		 "  cmpw   %[oldval], %%r6      \n"
-		 "  bne-   2f                   \n"
-		 "  stwcx. %[newval], 0,%[ptr]  \n"
-		 "  bne-   1b                   \n"
-		 "2:                            \n"
-		 "  mr     %[ret], %%r6         \n"
-		 : [ret] "=r"(ret),
-		   [ptr] "=r"(ptr),
-		   [oldval] "=r"(oldval),
-		   [newval] "=r"(newval)
-		 : "0" (ret),
-		   "1" (ptr),
-		   "2" (oldval),
-		   "3" (newval)
-		 : "memory", "r6"
-		);
+  asm volatile("casa [%[ptr]]0xb, %[oldval], %[newval]"
+	       : [ptr] "=r" (ptr),
+	         [oldval] "=r" (oldval),
+	         [newval] "=r" (ret)
+               : "0" (ptr),
+	         "1" (oldval),
+		 "2" (newval));
+#else
+  register Mword _ptr        asm("l0") = (Mword)ptr;
+  register Mword _oldval     asm("l1") = oldval;
+  register Mword _newval_ret asm("l2") = newval;
+  asm volatile(".word 0xe5e40171\n" // "casa [%%l0]0xb, %%l1, %%l2\n"
+               : [ptr] "=r" (_ptr),
+                 [oldval] "=r" (_oldval),
+                 [newval_ret] "=r" (_newval_ret),
+	         [mem] "=m" (*ptr)
+               : "0" (_ptr),
+                 "1" (_oldval),
+                 "2" (_newval_ret));
 #endif
 
-  return ret == oldval;
+  return oldval == _newval_ret;
+  return oldval == ret;
+
+  //return __sync_bool_compare_and_swap(ptr, oldval, newval);
 }
 
-/* dummy implement */
 bool
-cas2_unsafe( Mword *, Mword *, Mword *)
+cas2_unsafe(Mword *, Mword *, Mword *)
 {
   panic("%s not implemented", __func__);
   return false;
@@ -43,18 +45,20 @@ cas2_unsafe( Mword *, Mword *, Mword *)
 
 inline
 void
-atomic_and (Mword *l, Mword mask)
+atomic_and(Mword *l, Mword mask)
 {
   Mword old;
-  do { old = *l; }
-  while ( !cas (l, old, old & mask));
+  do
+    old = *l;
+  while (!cas(l, old, old & mask));
 }
 
 inline
 void
-atomic_or (Mword *l, Mword bits)
+atomic_or(Mword *l, Mword bits)
 {
   Mword old;
-  do { old = *l; }
-  while ( !cas (l, old, old | bits));
+  do
+    old = *l;
+  while (!cas(l, old, old | bits));
 }

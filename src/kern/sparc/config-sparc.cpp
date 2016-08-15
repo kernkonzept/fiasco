@@ -23,7 +23,7 @@ public:
 
   enum
   {
-    Kmem_size     = 4*1024*1024, //4 MB
+    Kmem_size     = 16 << 20,
   };
 
   enum

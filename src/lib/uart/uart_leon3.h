@@ -13,6 +13,7 @@ namespace L4
     bool change_mode(Transfer_mode m, Baud_rate r);
     int get_char(bool blocking = true) const;
     int char_avail() const;
+    bool enable_rx_irq(bool = true);
     inline void out_char(char c) const;
     int write(char const *s, unsigned long count) const;
   };

@@ -170,11 +170,14 @@ Thread::Thread()
     _exc_handler(Thread_ptr::Invalid),
     _del_observer(0)
 {
-
   assert(state(false) == 0);
 
   inc_ref();
   _space.space(Kernel_task::kernel_task());
+
+  if (Config::Stack_depth)
+    std::memset((char *)this + sizeof(Thread), '5',
+                Thread::Size - sizeof(Thread)-64);
 
   // set a magic value -- we use it later to verify the stack hasn't
   // been overrun
@@ -182,7 +185,9 @@ Thread::Thread()
   _recover_jmpbuf = 0;
   _timeout = 0;
 
-  *reinterpret_cast<void(**)()> (--_kernel_sp) = user_invoke;
+  _kernel_sp -= 4;
+  printf("User-Invoke: this=%p *%p=%p\n", this, _kernel_sp, user_invoke); 
+  *reinterpret_cast<void(**)()>(_kernel_sp) = user_invoke;
 
   // clear out user regs that can be returned from the thread_ex_regs
   // system call to prevent covert channel
@@ -191,6 +196,7 @@ Thread::Thread()
   r->ip(0);
 
   state_add_dirty(Thread_dead, false);
+
   // ok, we're ready to go!
 }
 
