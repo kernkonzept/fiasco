@@ -5,7 +5,7 @@ IMPLEMENTATION[uart_leon3 && libuart]:
 
 IMPLEMENT Address Uart::base() const { return Mem_layout::Uart_base; }
 
-IMPLEMENT int Uart::irq() const { return 0; }
+IMPLEMENT int Uart::irq() const { return 3; }
 
 IMPLEMENT L4::Uart *Uart::uart()
 {

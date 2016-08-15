@@ -1,9 +1,31 @@
-/**
- * Sparc timer
- */
 INTERFACE [sparc]:
 
 #include "irq_chip.h"
+#include "mmio_register_block.h"
+
+EXTENSION class Timer : private Mmio_register_block
+{
+public:
+  static Irq_chip::Mode irq_mode()
+  { return Irq_chip::Mode::F_raising_edge; }
+
+private:
+  enum
+  {
+    Scaler        = 0,
+    Scaler_reload = 4,
+    Config        = 8,
+
+    Timer_nr = 0,
+
+    Timer_counter = 0x10 + Timer_nr * 0x10 + 0x0,
+    Timer_reload  = 0x10 + Timer_nr * 0x10 + 0x4,
+    Timer_control = 0x10 + Timer_nr * 0x10 + 0x8,
+    Timer_latch   = 0x10 + Timer_nr * 0x10 + 0xc,
+
+  };
+  static Static_object<Timer> _timer;
+};
 
 IMPLEMENTATION [sparc]:
 
@@ -11,32 +33,47 @@ IMPLEMENTATION [sparc]:
 #include "config.h"
 #include "globals.h"
 #include "kip.h"
-#include "decrementer.h"
+#include "kmem.h"
 #include "warn.h"
 
 #include <cstdio>
 
-IMPLEMENT inline NEEDS ["decrementer.h", "kip.h", "config.h", <cstdio>]
+Static_object<Timer> Timer::_timer;
+
+PUBLIC
+Timer::Timer() : Mmio_register_block(Kmem::mmio_remap(0x80000300))
+{
+  r<32>(Scaler) = 0;
+  r<32>(Scaler_reload) = 0;
+
+  Unsigned32 c = r<32>(Config);
+  assert(((c >> 8) & 1) == 1);
+
+  printf("Timers: num=%d irq=%d SI=%d [%08x]\n",
+         c & 7, irq_num(), (c >> 8) & 1, c);
+
+  r<32>(Config).clear(0x7f << 16);
+  r<32>(Timer_reload) = 100000;
+  r<32>(Timer_control) = (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3);
+
+  r<32>(Config).set(1 << (16 + Timer_nr));
+}
+
+PRIVATE
+unsigned
+Timer::irq_num()
+{ return (r<32>(Config) >> 3) & 0x1f; }
+
+PUBLIC static unsigned
+Timer::irq()
+{ return _timer->irq_num() + Timer_nr; }
+
+IMPLEMENT
 void
 Timer::init(Cpu_number)
 {
-  printf("Using PowerPC decrementer for scheduling\n");
-
-  //1000 Hz
-  Decrementer::d()->init(Kip::k()->frequency_bus /
-                         (4*Config::Scheduler_granularity));
-
+  _timer.construct();
 }
-
-PUBLIC static inline
-unsigned
-Timer::irq()
-{ return 0; }
-
-PUBLIC static inline NEEDS["irq_chip.h"]
-Irq_chip::Mode
-Timer::irq_mode()
-{ return Irq_chip::Mode::F_raising_edge; }
 
 PUBLIC static inline
 void
@@ -71,19 +108,19 @@ Timer::system_clock()
   return Kip::k()->clock;
 }
 
-IMPLEMENT inline NEEDS ["decrementer.h", "config.h", "kip.h"]
+IMPLEMENT inline NEEDS ["config.h", "kip.h"]
 void
 Timer::update_system_clock(Cpu_number cpu)
 {
   if (cpu == Cpu_number::boot_cpu())
-    {
-      Decrementer::d()->set();
-      Kip::k()->clock += Config::Scheduler_granularity;
-    }
+    Kip::k()->clock += Config::Scheduler_granularity;
 }
 
 IMPLEMENT inline
 void
-Timer::update_timer(Unsigned64)
+Timer::update_timer(Unsigned64 wakeup)
 {
+  (void)wakeup;
+  //if (Config::Scheduler_one_shot)
+  //  update_one_shot(wakeup);
 }

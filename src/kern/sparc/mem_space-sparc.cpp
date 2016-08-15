@@ -101,7 +101,10 @@ IMPLEMENT inline NEEDS[<cstdio>]
 void
 Mem_space::make_current()
 {
-  printf("%s FIXME\n", __func__);
+  printf("%s checkme\n", __func__);
+  _current.current() = this;
+
+  Paging::set_ptbr((Address)_dir);
 }
 
 
@@ -109,8 +112,12 @@ PROTECTED inline NEEDS[<cstdio>]
 int
 Mem_space::sync_kernel()
 {
-  printf("%s FIXME\n", __func__);
-  return 0;
+  printf("%s checkme\n", __func__);
+  return _dir->sync(Virt_addr(Mem_layout::User_max + 1), kernel_space()->_dir,
+                    Virt_addr(Mem_layout::User_max + 1),
+                    Virt_size(-(Mem_layout::User_max + 1)), Pdir::Super_level,
+                    Pte_ptr::need_cache_write_back(this == _current.current()),
+                    Kmem_alloc::q_allocator(_quota));
 }
 
 
@@ -118,7 +125,7 @@ IMPLEMENT inline NEEDS ["kmem.h", <cstdio>]
 void Mem_space::switchin_context(Mem_space *from)
 {
   (void)from;
-  printf("%s FIXME\n", __func__);
+  printf("Mem_space::switchin_context FIXME\n");
 }
 
 PUBLIC static inline
@@ -234,13 +241,40 @@ Mem_space::Status
 Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order size,
 		    Attr page_attribs)
 {
-  (void)phys; (void)virt; (void)page_attribs; (void)size;
+  bool const flush = _current.current() == this;
   assert (cxx::get_lsb(Phys_addr(phys), size) == 0);
   assert (cxx::get_lsb(Virt_addr(virt), size) == 0);
-/*
-  printf("v_insert: phys %08lx virt %08lx (%s) %p\n", phys, virt, 
-         page_attribs & Page_writable?"rw":"ro", this);*/
-  return Insert_err_nomem;
+
+  int level;
+  for (level = 0; level <= Pdir::Depth; ++level)
+    if (Page_order(Pdir::page_order_for_level(level)) <= size)
+      break;
+
+  auto i = _dir->walk(virt, level, Pte_ptr::need_cache_write_back(flush),
+                      Kmem_alloc::q_allocator(_quota));
+
+  if (EXPECT_FALSE(!i.is_valid() && i.level != level))
+    return Insert_err_nomem;
+
+  if (EXPECT_FALSE(i.is_valid()
+                   && (i.level != level || Phys_addr(i.page_addr()) != phys)))
+    return Insert_err_exists;
+
+  if (i.is_valid())
+    {
+      if (EXPECT_FALSE(!i.add_attribs(page_attribs)))
+        return Insert_warn_exists;
+
+      //i.write_back_if(flush, c_asid());
+      return Insert_warn_attrib_upgrade;
+    }
+  else
+    {
+      i.create_page(phys, page_attribs);
+      //i.write_back_if(flush, Mem_unit::Asid_invalid);
+
+      return Insert_ok;
+    }
 }
 
 
@@ -266,9 +300,9 @@ Mem_space::virt_to_phys_s0(void *a) const
 
 PUBLIC inline
 Address
-Mem_space::pmem_to_phys (Address virt) const
+Mem_space::pmem_to_phys(Address virt) const
 {
-  return virt;
+  return virt_to_phys(virt);
 }
 
 
@@ -294,6 +328,7 @@ Mem_space::v_lookup(Vaddr virt, Phys_addr *phys, Page_order *order,
 		    Attr *page_attribs)
 {
   (void)virt; (void)phys; (void)order; (void)page_attribs;
+  printf("Mem_space::v_lookup: ...\n");
   return false;
 }
 
@@ -312,6 +347,7 @@ Mem_space::v_delete(Vaddr virt, Page_order size,
 		    L4_fpage::Rights page_attribs)
 {
   (void)virt; (void)size; (void)page_attribs;
+  printf("Mem_space::v_delete: ...\n");
   return page_attribs;
 }
 

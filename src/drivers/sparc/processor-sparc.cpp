@@ -7,34 +7,30 @@ IMPLEMENTATION [sparc]:
 EXTENSION class Proc
 {
 public:
-  //disable power savings mode
- static Mword wake(Mword);
- static Cpu_phys_id cpu_id();
+  // disable power savings mode
+  static Mword wake(Mword);
+  static Cpu_phys_id cpu_id();
 };
 
 /// Unblock external interrupts
 IMPLEMENT static inline
 void Proc::sti()
 {
-  unsigned p = Psr::read();
-  p &= ~(0xF << Psr::Interrupt_lvl);
-  Psr::write(p);
+  Psr::modify(0xf << Psr::Interrupt_lvl, 0);
 }
 
 /// Block external interrupts
 IMPLEMENT static inline
 void Proc::cli()
 {
-  unsigned p = Psr::read();
-  p |= (0xF << Psr::Interrupt_lvl);
-  Psr::write(p);
+  Psr::modify(0, 0xf << Psr::Interrupt_lvl);
 }
 
 /// Are external interrupts enabled ?
 IMPLEMENT static inline
 Proc::Status Proc::interrupts()
 {
-  return Psr::read() & (0xF << Psr::Interrupt_lvl);
+  return (Psr::read() & (0xF << Psr::Interrupt_lvl)) == 0;
 }
 
 /// Block external interrupts and save the old state
@@ -63,8 +59,7 @@ void Proc::pause()
 IMPLEMENT static inline
 void Proc::halt()
 {
-  // XXX
-  asm volatile ("ta 0\n");
+  asm volatile ("");
 }
 
 IMPLEMENT static inline
@@ -77,7 +72,6 @@ Mword Proc::wake(Mword srr1)
 IMPLEMENT static inline
 void Proc::irq_chance()
 {
-  // XXX?
   asm volatile ("nop; nop;" : : :  "memory");
 }
 
@@ -111,12 +105,9 @@ PUBLIC static inline
 template <int ASI>
 Mword Proc::read_alternative(Mword reg)
 {
-	Mword ret;
-	asm volatile("lda [%1] %2, %0"
-				  : "=r" (ret)
-				  : "r" (reg),
-				    "i" (ASI));
-	return ret;
+  Mword ret;
+  asm volatile("lda [%1] %2, %0" : "=r" (ret) : "r" (reg), "i" (ASI));
+  return ret;
 
 }
 
@@ -124,11 +115,7 @@ PUBLIC static inline
 template <int ASI>
 void Proc::write_alternative(Mword reg, Mword value)
 {
-	asm volatile ("sta %0, [%1] %2\n\t"
-				  :
-				  : "r"(value),
-				    "r"(reg),
-				    "i"(ASI));
+  asm volatile ("sta %0, [%1] %2\n\t" : : "r"(value), "r"(reg), "i"(ASI));
 }
 
 

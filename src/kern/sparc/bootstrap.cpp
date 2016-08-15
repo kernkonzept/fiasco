@@ -10,18 +10,10 @@ IMPLEMENTATION [sparc]:
 #include <cstdlib>
 #include <cstdio>
 
-//XXX cbass: implement me
-extern "C" void __attribute__ ((noreturn))
-_exit(int)
-{
-  printf("Exiting\n");
-  while(1){};
-}
-
 extern "C" int main(void);
 
 extern "C" FIASCO_INIT
-int bootstrap_main(void * /* r3 */, Address prom_ptr /* r4 */)
+int bootstrap_main(void *, Address)
 {
   atexit(&static_destruction);
   static_construction();
@@ -29,4 +21,3 @@ int bootstrap_main(void * /* r3 */, Address prom_ptr /* r4 */)
   terminate(main());
   return 0;
 }
-

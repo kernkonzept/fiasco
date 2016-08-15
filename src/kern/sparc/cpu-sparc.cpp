@@ -6,7 +6,7 @@ INTERFACE [sparc]:
 EXTENSION class Cpu
 {
 public:
-  void init(bool is_boot_cpu = false);
+  void init(bool resume, bool is_boot_cpu = false);
   static void early_init();
 
   static Per_cpu<Cpu> cpus;
@@ -47,7 +47,7 @@ PUBLIC static inline unsigned Cpu::phys_bits() { return 32; }
 
 IMPLEMENT
 void
-Cpu::init(bool is_boot_cpu)
+Cpu::init(bool, bool is_boot_cpu)
 {
   if (is_boot_cpu)
     {
@@ -55,9 +55,13 @@ Cpu::init(bool is_boot_cpu)
       set_present(1);
       set_online(1);
     }
+
   _phys_id = Cpu_phys_id(0); //Proc::cpu_id();
+
   _ns_per_cycle = 0; //1000000000 / Boot_info::get_time_base();
   //printf("Timebase: %lu\n", Boot_info::get_time_base());
+
+  Psr::modify(0, 1ul << Psr::Enable_trap);
 }
 
 PUBLIC inline

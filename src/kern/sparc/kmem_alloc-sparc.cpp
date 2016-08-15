@@ -1,7 +1,9 @@
 //----------------------------------------------------------------------------
 IMPLEMENTATION [sparc]:
 
+#include "kmem.h"
 #include "mem_region.h"
+#include "psr.h"
 
 IMPLEMENT
 Kmem_alloc::Kmem_alloc()
@@ -22,21 +24,22 @@ Kmem_alloc::Kmem_alloc()
         f.start += (f.size() - alloc_size);
 
       printf("  [%08lx - %08lx %4ld kB]\n", f.start, f.end, f.size() >> 10);
-      Kip::k()->add_mem_region(Mem_desc(f.start, f.end,
-            Mem_desc::Reserved));
-      printf("    -> %08lx\n", Mem_layout::phys_to_pmem(f.start));
+      Kip::k()->add_mem_region(Mem_desc(f.start, f.end, Mem_desc::Reserved));
+      printf("    -> %08lx - %08lx\n",
+	     Mem_layout::phys_to_pmem(f.start),
+	     Mem_layout::phys_to_pmem(f.end));
       a->add_mem((void*)Mem_layout::phys_to_pmem(f.start), f.size());
       alloc_size -= f.size();
     }
 }
 
-PUBLIC inline
+PUBLIC inline NEEDS["kmem.h", "psr.h"]
 Address
 Kmem_alloc::to_phys(void *v) const
 {
-  // FIX
-  (void)v;
-  return ~0UL;
+  Address p = Kmem::kdir()->virt_to_phys((Address)v);
+  printf("Kmem_alloc::to_phys: v=%p p=%lx psr=%lx\n", v, p, Psr::read());
+  return p;
 }
 
 //----------------------------------------------------------------------------

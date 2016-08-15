@@ -5,6 +5,7 @@ INTERFACE[sparc]:
 EXTENSION class Syscall_frame
 {
   public:
+    Mword dummy;
     Mword r[30]; //{r0, r2, r3, ..., r10, r13 .., r31, ip
     void dump() const;
 };

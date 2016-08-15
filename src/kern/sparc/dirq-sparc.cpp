@@ -5,6 +5,7 @@ IMPLEMENTATION [sparc]:
 #include "processor.h"
 #include "pic.h"
 
+#error remove this file
 
 IMPLEMENTATION:
 

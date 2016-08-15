@@ -47,7 +47,7 @@ namespace L4
   bool Uart_leon3::startup(Io_register_block const *regs)
   {
     _regs = regs;
-    _regs->write<unsigned int>(CTRL_REG, CTRL_TE);
+    _regs->write<unsigned int>(CTRL_REG, CTRL_TE | CTRL_RE);
 
     return true;
   }
@@ -63,6 +63,19 @@ namespace L4
     return true;
   }
 
+  bool Uart_leon3::enable_rx_irq(bool enable)
+  {
+    unsigned r = _regs->read<unsigned int>(CTRL_REG);
+
+    if (enable)
+      r |= CTRL_RI;
+    else
+      r &= ~CTRL_RI;
+
+    _regs->write<unsigned int>(CTRL_REG, r);
+    return 0;
+  }
+
   int Uart_leon3::get_char(bool blocking) const
   {
     while (!char_avail())
@@ -74,7 +87,7 @@ namespace L4
 
   int Uart_leon3::char_avail() const
   {
-    return 0;
+    return _regs->read<unsigned int>(STATUS_REG) & STATUS_DR;
   }
 
   void Uart_leon3::out_char(char c) const
