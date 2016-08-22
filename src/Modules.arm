@@ -315,8 +315,10 @@ endif
 CONFIG_KERNEL_LOAD_ADDR := $(RAM_PHYS_BASE)
 
 ifneq ($(CONFIG_MP),)
+ifneq ($(CONFIG_ARM_MPCORE)$(CONFIG_ARM_CORTEX_A9)$(CONFIG_ARM_CORTEX_A5),)
 ifeq ($(MPCORE_PHYS_BASE),)
 $(error $(MODULES_FILE_BSP) needs to set MPCORE_PHYS_BASE variable)
+endif
 endif
 endif
 
