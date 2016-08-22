@@ -287,7 +287,7 @@ Vz::init()
   FORCE(3, msap, 0);
   // disable big page support (needs 64bit versions of some cp0 regs)
   FORCE(3, bpg, 0);
-  // disable DSP ASE as long as fiasco dones not support it
+  // disable DSP ASE as long as fiasco does not support it
   FORCE(3, dspp, 0);
   FORCE(3, dsp2p, 0);
   FORCE(3, ctxtc, 0);  // disable context config for now
@@ -409,7 +409,7 @@ Vz::State::save_full(int guest_id)
     {
       // need the timestamp when we save the cause register
       _saved_cause_timestamp = Timer::get_current_counter();
-      // alex: not sure if this is needed of if reads from cp0 are ordered
+      // alex: not sure if this is needed or if reads from cp0 are ordered
       ehb();
       mfgc0_32(&g_cause, Cp0_cause);
     }
@@ -469,7 +469,7 @@ Vz::State::save_full(int guest_id)
     mfgc0(&g_ulr, Cp0_user_local);
 
 
-  // 13, 5 NestedExc not supproted in guest
+  // 13, 5 NestedExc not supported in guest
   if (EXPECT_TRUE(!(c_map & M_epc)))
     {
       mfgc0(&g_epc, Cp0_epc);
@@ -658,7 +658,7 @@ Vz::State::load_full(int guest_id)
     mtgc0(g_ulr, Cp0_user_local);
 
   // 12, 2 .. 3 SRSxxx not implemented (disabled in guest_config)
-  // 13, 5 NestedExc not supproted in guest
+  // 13, 5 NestedExc not supported in guest
   mtgc0(g_epc, Cp0_epc);
   mtgc0(g_error_epc, Cp0_err_epc);
   mtgc0(g_ebase, Cp0_ebase);
@@ -818,7 +818,7 @@ Vz::State::load_selective(int guest_id)
     }
 
   // 12, 2 .. 3 SRSxxx not implemented (disabled in guest_config)
-  // 13, 5 NestedExc not supproted in guest
+  // 13, 5 NestedExc not supported in guest
   // FIXME: Think about Tag and Data registers
 
 
