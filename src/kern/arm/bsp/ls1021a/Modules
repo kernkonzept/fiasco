@@ -5,7 +5,6 @@ PREPROCESS_PARTS        += arm_generic_timer ls1021a 16550
 INTERFACES_KERNEL       += gic
 INTERFACES_KERNEL       += generic_timer
 RAM_PHYS_BASE           := 0x80000000
-MPCORE_PHYS_BASE        := 0x01c80000
 OBJECTS_LIBUART         += uart_16550.o
 SUBSYSTEMS              += LIBUART
 
