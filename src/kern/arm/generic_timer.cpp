@@ -32,6 +32,12 @@ namespace Generic_timer {
       // CNTKCTL: allow access to virtual counter from PL0
       asm volatile("mcr p15, 0, %0, c14, c1, 0" : : "r"(0x2));
     }
+
+    static Unsigned32 frequency()
+    { Unsigned32 v; asm volatile ("mrc p15, 0, %0, c14, c0, 0": "=r" (v)); return v; }
+
+    static void frequency(Unsigned32 v)
+    { asm volatile ("mcr p15, 0, %0, c14, c0, 0": :"r" (v)); }
   };
 
   template<> struct T<Physical>
@@ -60,6 +66,12 @@ namespace Generic_timer {
        // CNTKCTL: allow access to virtual and physical counter from PL0
       asm volatile("mcr p15, 0, %0, c14, c1, 0" : : "r"(0x3));
     }
+
+    static Unsigned32 frequency()
+    { Unsigned32 v; asm volatile ("mrc p15, 0, %0, c14, c0, 0": "=r" (v)); return v; }
+
+    static void frequency(Unsigned32 v)
+    { asm volatile ("mcr p15, 0, %0, c14, c0, 0": :"r" (v)); }
   };
 
   template<> struct T<Hyp>
@@ -90,6 +102,12 @@ namespace Generic_timer {
       // CNTHCTL: forbid access to physical timer from PL0 and PL1
       asm volatile("mcr p15, 4, %0, c14, c1, 0" : : "r"(0x0));
     }
+
+    static Unsigned32 frequency()
+    { Unsigned32 v; asm volatile ("mrc p15, 0, %0, c14, c0, 0": "=r" (v)); return v; }
+
+    static void frequency(Unsigned32 v)
+    { asm volatile ("mcr p15, 0, %0, c14, c0, 0": :"r" (v)); }
   };
 }
 
