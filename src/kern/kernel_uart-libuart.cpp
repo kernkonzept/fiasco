@@ -15,6 +15,7 @@ union Regs
 {
   Static_object<L4::Io_register_block_port> io;
   Static_object<L4::Io_register_block_mmio> mem;
+  Static_object<L4::Io_register_block_mmio_fixed_width<Unsigned64> > mem64;
   Static_object<L4::Io_register_block_mmio_fixed_width<Unsigned32> > mem32;
   Static_object<L4::Io_register_block_mmio_fixed_width<Unsigned16> > mem16;
 };
@@ -92,6 +93,10 @@ bool Kernel_uart::startup(unsigned, int irq)
                                            Koptions::o()->uart.reg_shift);
                   break;
                 case 2: // 2 bit shift, assume fixed 32bit access width
+                  r = regs.mem32.construct(Kmem::mmio_remap(base),
+                                           Koptions::o()->uart.reg_shift);
+                  break;
+                case 3: // 3 bit shift, assume fixed 64bit access width
                   r = regs.mem32.construct(Kmem::mmio_remap(base),
                                            Koptions::o()->uart.reg_shift);
                   break;
