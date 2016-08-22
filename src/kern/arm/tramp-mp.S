@@ -209,8 +209,10 @@ _tramp_mp_entry:
 1:
 	.long _tramp_mp_virt
 
+#if defined(CONFIG_ARM_MPCORE) || defined(CONFIG_ARM_CORTEX_A9) || defined(CONFIG_ARM_CORTEX_A5)
 .Lmpcore_phys_base:
 	.long MPCORE_PHYS_BASE
+#endif
 
 .Lactrl_cpuid:
 	.long 0xff0fff00
