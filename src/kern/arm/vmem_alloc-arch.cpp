@@ -43,7 +43,7 @@ void *Vmem_alloc::page_alloc(void *address, Zero_fill zf, unsigned mode)
   Mem_unit::dtlb_flush(address);
 
   if (zf == ZERO_FILL)
-    Mem::memset_mwords((unsigned long *)address, 0, Config::PAGE_SIZE >> 2);
+    Mem::memset_mwords((unsigned long *)address, 0, Config::PAGE_SIZE / sizeof(Mword));
 
   return address;
 }
