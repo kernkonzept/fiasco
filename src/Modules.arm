@@ -151,8 +151,9 @@ INTERFACES_KERNEL-$(CONFIG_CPU_VIRT) += vgic
 
 
 
-bootstrap_IMPL		:= bootstrap
+bootstrap_IMPL		:= bootstrap bootstrap-arm-$(BITS)
 CXXFLAGS_bootstrap      := -O3
+CXXFLAGS_bootstrap-arm-$(BITS) := $(CXXFLAGS_bootstrap)
 clock_IMPL              := clock
 config_IMPL	  	:= config config-arm
 context_IMPL	  	:= context context-arm context-vcpu context-arm-hyp
