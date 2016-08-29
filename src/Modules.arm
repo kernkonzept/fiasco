@@ -66,7 +66,7 @@ PRIVATE_INCDIR		+= drivers/$(CONFIG_XARCH)/$(BITS) drivers/$(CONFIG_XARCH) drive
 INTERFACES_DRIVERS 	:= sa1100 mux_console console uart filter_console \
 			   h3xxx io mem mmu reset processor delayloop
 io_IMPL			:= io io-arm
-mmu_IMPL		:= mmu mmu-arm
+mmu_IMPL		:= mmu mmu-arm mmu-arm-$(BITS)
 mem_IMPL		:= mem mem-arm
 uart_IMPL		:= uart uart-mmio
 reset_IMPL		:=
