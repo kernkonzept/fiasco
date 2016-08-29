@@ -599,7 +599,7 @@ Thread::handle_remote_kill(Drq *, Context *self, void *)
 
 PROTECTED
 bool
-Thread::kill()
+Thread::kill() override
 {
   auto guard = lock_guard(cpu_lock);
   inc_ref();
@@ -763,7 +763,7 @@ Thread::do_migration()
 }
 PUBLIC
 bool
-Thread::initiate_migration()
+Thread::initiate_migration() override
 {
   assert (current() != this);
   Migration *inf = start_migration();
@@ -781,7 +781,7 @@ Thread::initiate_migration()
 
 PUBLIC
 void
-Thread::finish_migration()
+Thread::finish_migration() override
 { enqueue_timeout_again(); }
 
 //---------------------------------------------------------------------------

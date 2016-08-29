@@ -130,8 +130,8 @@ IMPLEMENTATION:
 #include "warn.h"
 
 PUBLIC
-virtual void
-Thread::ipc_receiver_aborted()
+void
+Thread::ipc_receiver_aborted() override
 {
   assert (wait_queue());
   set_wait_queue(0);
@@ -141,7 +141,7 @@ Thread::ipc_receiver_aborted()
 
 PRIVATE
 void
-Thread::ipc_send_msg(Receiver *recv)
+Thread::ipc_send_msg(Receiver *recv) override
 {
   Syscall_frame *regs = _snd_regs;
   bool success = transfer_msg(regs->tag(), nonull_static_cast<Thread*>(recv), regs,
@@ -161,9 +161,9 @@ Thread::ipc_send_msg(Receiver *recv)
     recv->switch_to_locked(this);
 }
 
-PUBLIC virtual
+PUBLIC
 void
-Thread::modify_label(Mword const *todo, int cnt)
+Thread::modify_label(Mword const *todo, int cnt) override
 {
   assert (_snd_regs);
   Mword l = _snd_regs->from_spec();
