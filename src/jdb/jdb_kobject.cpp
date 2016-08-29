@@ -627,6 +627,9 @@ Jdb_kobject_extension::find_extension(Kobject_common const *o)
   for (Iterator ex = o->dbg_info()->_jdb_data.begin();
        ex != o->dbg_info()->_jdb_data.end(); ++ex)
     {
+      if (!*ex)
+        return 0;
+
       Jdb_kobject_extension *je = static_cast<Jdb_kobject_extension*>(*ex);
       if (je->type() == T::static_type)
 	return static_cast<T*>(je);
