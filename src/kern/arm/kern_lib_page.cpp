@@ -1,14 +1,4 @@
-INTERFACE [arm]:
-
-class Kern_lib_page
-{
-public:
-  static void init();
-};
-
-
-//---------------------------------------------------------------------------
-IMPLEMENTATION [arm]:
+IMPLEMENTATION [arm && !hyp]:
 
 #include <panic.h>
 
@@ -16,6 +6,13 @@ IMPLEMENTATION [arm]:
 #include "kmem_space.h"
 #include "ram_quota.h"
 #include "paging.h"
+#include "static_init.h"
+
+class Kern_lib_page
+{
+public:
+  static void init();
+};
 
 IMPLEMENT_DEFAULT
 void Kern_lib_page::init()
@@ -36,10 +33,7 @@ void Kern_lib_page::init()
   pte.write_back_if(true, Mem_unit::Asid_kernel);
 }
 
-//---------------------------------------------------------------------------
-IMPLEMENTATION [arm && hyp]:
-
-IMPLEMENT_OVERRIDE inline void Kern_lib_page::init() {}
+STATIC_INITIALIZE(Kern_lib_page);
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && !armv6plus]:
