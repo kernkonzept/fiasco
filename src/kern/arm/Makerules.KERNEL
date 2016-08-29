@@ -22,7 +22,7 @@ $(KERNEL).image: kernel.arm.lds $(CRT0) bootstrap.$(KERNEL).o $(OBJ_KERNEL_noboo
 	$(VERBOSE)$(LD) $(LDFLAGS) -m $(LD_EMULATION) $(KERNEL_LDFLAGS) -N -defsym kernel_load_addr=$(CONFIG_KERNEL_LOAD_ADDR) \
           -T $< -o $@ $(filter-out $<,$+)
 	$(call ADD_CONFIGFILE,$@)
-	$(VERBOSE)if [ -n "$$($(NM) -C bootstrap.o | grep "         U " | grep -vE 'Mem_layout::__ph_to_pm|_start_kernel|kernel_page_directory|kernel_lpae_dir|my_kernel_info_page')" ]; then \
+	$(VERBOSE)if [ -n "$$($(NM) -C bootstrap.$(KERNEL).o | grep "         U " | grep -vE 'Mem_layout::__ph_to_pm|_start_kernel|kernel_page_directory|kernel_l\w+_v?dir|my_kernel_info_page')" ]; then \
 	  echo "bootstrap.o contains unknown unresolved symbols."; exit 1; \
 	fi
 
