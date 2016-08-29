@@ -539,7 +539,7 @@ Vz::State::load_cause()
   using namespace Mips;
   enum { Cause_TI = 1UL << 30 };
 
-  mtgc0_32(g_cause, Cp0_compare);
+  mtgc0_32(g_cause, Cp0_cause);
   if (g_cause & Cause_TI)
     return;
 
