@@ -8,6 +8,7 @@ PREPROCESS_PARTS        += $(if $(CONFIG_PF_REALVIEW_PB11MP),realview_pb11mp)
 PREPROCESS_PARTS        += $(if $(CONFIG_PF_REALVIEW_PBX),realview_pbx)
 PREPROCESS_PARTS        += $(if $(CONFIG_PF_REALVIEW_VEXPRESS),realview_vexpress)
 PREPROCESS_PARTS        += $(if $(CONFIG_PF_REALVIEW_VEXPRESS_A9),realview_vexpress_a9)
+PREPROCESS_PARTS        += $(if $(CONFIG_PF_REALVIEW_VEXPRESS_A9),realview_vexpress_legacy)
 PREPROCESS_PARTS        += $(if $(CONFIG_PF_REALVIEW_VEXPRESS_A15),realview_vexpress_a15)
 PREPROCESS_PARTS        += generic_tickless_idle
 RAM_PHYS_BASE           := $(CONFIG_PF_REALVIEW_RAM_PHYS_BASE)
@@ -22,7 +23,7 @@ ifneq ($(CONFIG_ARM_MPCORE)$(CONFIG_ARM_CORTEX_A9),)
   timer_IMPL          += timer-arm-mptimer timer-arm-mptimer-realview
   INTERFACES_KERNEL   += timer_sp804
 else
-  ifneq ($(CONFIG_ARM_CORTEX_A15),)
+  ifneq ($(CONFIG_ARM_CORTEX_A53)$(CONFIG_ARM_CORTEX_A15),)
     PREPROCESS_PARTS  += arm_generic_timer
     INTERFACES_KERNEL += generic_timer
     timer_IMPL        += timer-arm-generic
