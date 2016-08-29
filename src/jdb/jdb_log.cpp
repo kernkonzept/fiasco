@@ -121,7 +121,9 @@ Jdb_log_list::show_item(String_buffer *buffer, void *item) const
   Tb_log_table_entry const *e = static_cast<Tb_log_table_entry const*>(item);
   char const *sc = e->name;
   sc += strlen(e->name) + 1;
-  buffer->printf("%s %s (%s)", *(e->patch) ? "[on ]" : "[off]",  e->name, sc);
+  buffer->printf("%s %s (%s)",
+                 Jdb_tbuf::get_entry_status(e) ? "[on ]" : "[off]",
+                 e->name, sc);
 }
 
 PRIVATE static inline
@@ -146,7 +148,7 @@ bool
 Jdb_log_list::enter_item(void *item) const
 {
   Tb_log_table_entry const *e = static_cast<Tb_log_table_entry const*>(item);
-  patch_item(e, *(e->patch) ? 0 : patch_val(e));
+  patch_item(e, Jdb_tbuf::get_entry_status(e) ? 0 : patch_val(e));
   return true;
 }
 
@@ -155,18 +157,12 @@ void
 Jdb_log_list::patch_item(Tb_log_table_entry const *e, unsigned char val)
 {
   if (e->patch)
-    {
-      *(e->patch) = val;
-      Mem_unit::make_coherent_to_pou(e->patch);
-    }
+    Jdb_tbuf::set_entry_status(e, val);
 
   for (Tb_log_table_entry *x = _end; x < &_jdb_log_table_end; ++x)
     {
       if (equal(x, e) && x->patch)
-        {
-          *(x->patch) = val;
-          Mem_unit::make_coherent_to_pou(x->patch);
-        }
+        Jdb_tbuf::set_entry_status(x, val);
     }
 }
 
