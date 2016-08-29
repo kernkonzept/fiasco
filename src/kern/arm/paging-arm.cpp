@@ -86,11 +86,6 @@ class K_pte_ptr
 public:
   typedef Unsigned64 Entry;
 
-  enum
-  {
-    Super_level    = 1,
-  };
-
   K_pte_ptr() = default;
   K_pte_ptr(void *p, unsigned char level) : pte((Unsigned64*)p), level(level) {}
 
@@ -98,7 +93,7 @@ public:
   void clear() { *pte = 0; }
   bool is_leaf() const
   {
-    if (level >= 2)
+    if (level >= Max_level)
       return true;
     return (*pte & 3) == 1;
   }
@@ -115,7 +110,7 @@ public:
   }
 
   Unsigned64 page_addr() const
-  { return cxx::mask_lsb(*pte, page_order()); }
+  { return cxx::get_lsb(cxx::mask_lsb(*pte, page_order()), 52); }
 
   Entry *pte;
   Entry entry() const { return *pte; }
@@ -228,7 +223,7 @@ EXTENSION class Page
 { public: enum { Ttbr_bits = 0x6a }; };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && armca9 && arm_lpae]:
+INTERFACE [arm && arm_lpae]:
 
 EXTENSION class Page
 { public: enum { Ttbr_bits = 0 }; };
@@ -347,16 +342,6 @@ public:
   };
 };
 
-
-//-----------------------------------------------------------------------------
-INTERFACE [arm && arm_lpae]:
-
-typedef Ptab::Tupel< Ptab::Traits< Unsigned64, 30, 2, true>,
-                     Ptab::Traits< Unsigned64, 21, 9, true>,
-                     Ptab::Traits< Unsigned64, 12, 9, true> >::List Ptab_traits;
-
-typedef Ptab::Shift<Ptab_traits, Virt_addr::Shift>::List Ptab_traits_vpn;
-typedef Ptab::Page_addr_wrap<Page_number, Virt_addr::Shift> Ptab_va_vpn;
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && armv5]:
