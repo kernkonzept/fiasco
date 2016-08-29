@@ -387,7 +387,7 @@ K_pte_ptr::write_back(void *start, void *end)
 { Mem_unit::clean_dcache(start, end); }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && (armca9 || armv7 || armv8)]:
+IMPLEMENTATION [arm && (armca9 || armv8)]:
 
 PUBLIC static inline
 bool
