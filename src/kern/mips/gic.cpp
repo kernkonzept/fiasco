@@ -84,6 +84,8 @@ private:
 // -----------------------------------------------------------------
 IMPLEMENTATION:
 
+#include <cassert>
+#include <cstdio>
 #include <string.h>
 
 PUBLIC

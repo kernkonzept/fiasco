@@ -19,6 +19,8 @@ Platform_control::boot_all_secondary_cpus()
 // ------------------------------------------------------------------------
 IMPLEMENTATION [mp]:
 
+#include <cstdio>
+
 #include "cm.h"
 #include "cpc.h"
 #include "kmem_alloc.h"
