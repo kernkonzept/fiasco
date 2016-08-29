@@ -4,6 +4,8 @@ INTERFACE [sparc]:
 
 IMPLEMENTATION[sparc]:
 
+#include <cstdio>
+
 #include "assert.h"
 #include "initcalls.h"
 #include "irq_chip_generic.h"
