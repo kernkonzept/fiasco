@@ -1,6 +1,8 @@
 INTERFACE [arm && exynos]:
 
-namespace Bootstrap {
-enum { Cache_flush_area = 0, };
-}
+EXTENSION class Bootstrap
+{
+public:
+  enum { Cache_flush_area = 0, };
+};
 
