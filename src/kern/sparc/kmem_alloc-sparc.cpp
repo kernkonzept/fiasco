@@ -5,6 +5,8 @@ IMPLEMENTATION [sparc]:
 #include "mem_region.h"
 #include "psr.h"
 
+#include <cstdio>
+
 IMPLEMENT
 Kmem_alloc::Kmem_alloc()
 {
@@ -33,7 +35,7 @@ Kmem_alloc::Kmem_alloc()
     }
 }
 
-PUBLIC inline NEEDS["kmem.h", "psr.h"]
+PUBLIC inline NEEDS["kmem.h", "psr.h", <cstdio>]
 Address
 Kmem_alloc::to_phys(void *v) const
 {
