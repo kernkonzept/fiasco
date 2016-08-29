@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm]:
+IMPLEMENTATION [arm && !armv6plus]:
 
 inline
 bool
