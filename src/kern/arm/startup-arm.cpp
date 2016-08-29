@@ -4,7 +4,6 @@ IMPLEMENTATION [arm]:
 #include "cpu.h"
 #include "fpu.h"
 #include "ipi.h"
-#include "kern_lib_page.h"
 #include "kernel_task.h"
 #include "kernel_uart.h"
 #include "kip_init.h"
@@ -62,6 +61,5 @@ Startup::stage2()
   Fpu::init(boot_cpu, false);
   Ipi::init(boot_cpu);
   Timer::init(boot_cpu);
-  Kern_lib_page::init();
   Utcb_init::init();
 }
