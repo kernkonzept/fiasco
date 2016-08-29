@@ -36,13 +36,6 @@ cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
   //return __sync_bool_compare_and_swap(ptr, oldval, newval);
 }
 
-bool
-cas2_unsafe(Mword *, Mword *, Mword *)
-{
-  panic("%s not implemented", __func__);
-  return false;
-}
-
 inline
 void
 atomic_and(Mword *l, Mword mask)

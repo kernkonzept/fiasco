@@ -1,8 +1,3 @@
-INTERFACE [mips]:
-
-// empty: should generate a linker error when used
-bool cas2_unsafe(Mword *, Mword *, Mword *);
-
 IMPLEMENTATION [mips]:
 
 #include "asm_mips.h"
@@ -96,14 +91,6 @@ atomic_add(Mword *l, Mword v)
 IMPLEMENTATION [mips && mp]:
 
 #include "mem.h"
-
-// empty: should generate a linker error when used
-template<typename W> inline
-bool mp_cas2_arch(void *, W, Mword, Mword, Mword)
-{
-  W::no_cas2 = 10; // trigger a compile error if cas2 is used
-  return false;
-}
 
 inline NEEDS["mem.h"]
 void

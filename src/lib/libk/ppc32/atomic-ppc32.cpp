@@ -30,14 +30,6 @@ cas_unsafe( Mword *ptr, Mword oldval, Mword newval )
   return ret == oldval;
 }
 
-/* dummy implement */
-bool
-cas2_unsafe( Mword *, Mword *, Mword *)
-{
-  panic("%s not implemented", __func__);
-  return false;
-}
-
 inline
 void
 atomic_and (Mword *l, Mword mask)
