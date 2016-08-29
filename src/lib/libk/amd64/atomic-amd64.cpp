@@ -77,35 +77,3 @@ mp_cas_arch (Mword *ptr, Mword oldval, Mword newval)
   return tmp == oldval;
 }
 
-inline
-bool
-cas2_unsafe (Mword *ptr, Mword *oldval, Mword *newval)
-{
-  char ret;
-  asm volatile
-    ("cmpxchg16b %3 ; sete %%cl"
-     : "=c" (ret), 
-       "=a" (* oldval), 
-       "=d" (*(oldval+1))
-     : "m" (*ptr) , 
-       "a" (* oldval), "d" (*(oldval+1)), 
-       "b" (* newval), "c" (*(newval+1))
-     : "memory");
-
-  return ret;
-}
-
-inline
-bool
-mp_cas2_arch (char *p, Mword o1, Mword o2, Mword n1, Mword n2)
-{
-  char ret;
-  asm volatile
-    ("lock; cmpxchg16b %3 ; sete %%cl"
-     : "=c" (ret), "=a" (o1), "=d" (o2)
-     : "m" (*p), "a" (o1), "d" (o2),
-       "b" (n1), "c" (n2)
-     : "memory");
-
-  return ret;
-}
