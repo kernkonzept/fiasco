@@ -5,7 +5,7 @@ EXTENSION class Tb_entry
 public:
   enum
   {
-    Tb_entry_size = 64,
+    Tb_entry_size = 16 * sizeof(Mword),
   };
   static Unsigned64 (*read_cycle_counter)();
 };
