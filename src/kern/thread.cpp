@@ -527,7 +527,6 @@ Thread::do_kill()
     while (Sender *s = Sender::cast(sender_list()->first()))
       {
         s->sender_dequeue(sender_list());
-        vcpu_update_state();
         s->ipc_receiver_aborted();
         Proc::preemption_point();
       }
