@@ -106,6 +106,7 @@ $(foreach m, $(GENERATED_MODULES), auto/stamp-$(m).ready): $(MODULES_FILES)
 	@($(foreach mod, $(GENERATED_MODULES),				\
 	    echo 'auto/stamp-$(mod).ready:				\
 		  $(addsuffix .cpp,$(call eval_impl,$(mod)))';		\
+	    $(foreach cpp, $(call eval_impl,$(mod)), echo '$(cpp).cpp:';) \
 	    echo '$(patsubst %,auto/%.cc,$(call eval_impl,$(mod)))'	\
 		 'auto/$(mod).h auto/$(mod)_i.h:			\
 		  auto/stamp-$(mod).ready ;				\
