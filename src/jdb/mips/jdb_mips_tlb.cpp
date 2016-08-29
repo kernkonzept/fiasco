@@ -3,6 +3,7 @@ IMPLEMENTATION:
 #include <cstdio>
 #include <cctype>
 
+#include "alternatives.h"
 #include "config.h"
 #include "jdb.h"
 #include "jdb_module.h"
