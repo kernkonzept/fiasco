@@ -160,7 +160,7 @@ IMPLEMENTATION [mips && !debug]:
 extern "C" void sys_kdb_ke()
 {}
 
-PRIVATE static inline
+PUBLIC static inline
 int
 Thread::call_nested_trap_handler(Trap_state *)
 { return -1; }
