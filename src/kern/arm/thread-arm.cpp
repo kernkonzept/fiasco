@@ -624,7 +624,7 @@ public:
 static Arm_ipis _arm_ipis;
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && !fpu]:
+IMPLEMENTATION [arm && (armv8 || !fpu)]:
 
 PUBLIC inline
 bool

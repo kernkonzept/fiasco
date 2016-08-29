@@ -7,15 +7,30 @@
    space */
 #ifdef CONFIG_CPU_VIRT
 virt_address       = kernel_load_addr;
-#else
+#elif defined CONFIG_BIT32
 virt_address       = 0xf0000000;
+#elif defined CONFIG_BIT64
+virt_address       = 0xffff000040000000;
 #endif
 phys_offset        = virt_address - kernel_load_addr;
 
-
+#if defined CONFIG_BIT32
 OUTPUT_FORMAT("elf32-littlearm", "elf32-bigarm",
               "elf32-littlearm")
+
 OUTPUT_ARCH(arm)
+#define WORD_SIZE 4
+#elif defined CONFIG_BIT64
+OUTPUT_FORMAT("elf64-littleaarch64", "elf64-bigaarch64",
+              "elf64-littleaarch64")
+
+OUTPUT_ARCH(aarch64)
+#define WORD_SIZE 8
+#else
+# error Either CONFIG_BIT32 or CONFIG_BIT64 must be set
+#endif
+
+
 ENTRY(_start)
 
 PHDRS {
@@ -101,9 +116,9 @@ SECTIONS {
 
     *(.rodata .rodata.* .gnu.linkonce.r.* .rodata1)
 
-    . = ALIGN(4);
+    . = ALIGN(WORD_SIZE);
     JDB_TABLE(log);
-    . = ALIGN(4);
+    . = ALIGN(WORD_SIZE);
     JDB_TABLE(typeinfo);
 
     . = ALIGN(0x40);

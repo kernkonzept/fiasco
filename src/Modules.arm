@@ -9,9 +9,15 @@ SUBSYSTEMS := 	ABI KERNEL LIBK DRIVERS MINILIBC \
 		CXXLIB VERSION JABI TCBOFFSET CRT0
 
 
-PREPROCESS_PARTS 	+= arch $(CONFIG_ABI) 32bit $(CONFIG_XARCH) \
-                           h3800 abs_syscalls
+PREPROCESS_PARTS 	+= arch $(CONFIG_ABI) $(CONFIG_XARCH) h3800
+
+ifeq ($(CONFIG_BIT64),y)
+PREPROCESS_PARTS += 64bit armv8 arm_esr_traps
+BITS := 64
+else
+PREPROCESS_PARTS += 32bit abs_syscalls
 BITS := 32
+endif
 
 PREPROCESS_PARTS-$(CONFIG_SERIAL)             += serial
 PREPROCESS_PARTS-$(CONFIG_MP)                 += mp
@@ -33,6 +39,9 @@ PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A7)            += armca9
 PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A8)            += armca8
 PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A9)            += armca9
 PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A15)           += armca9
+PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A53)           += armca9
+PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A57)           += armca9
+PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A72)           += armca9
 PREPROCESS_PARTS-$(CONFIG_ARM_EM_TZ)                += arm_em_tz
 PREPROCESS_PARTS-$(CONFIG_ARM_EM_STD)               += arm_em_std
 PREPROCESS_PARTS-$(CONFIG_ARM_EM_NS)                += arm_em_ns
@@ -45,7 +54,7 @@ PREPROCESS_PARTS-$(CONFIG_SCHED_WFQ)         += sched_wfq
 PREPROCESS_PARTS-$(CONFIG_SCHED_FP_WFQ)      += sched_fp_wfq
 PREPROCESS_PARTS-$(CONFIG_ARM_LPAE)          += arm_lpae
 PREPROCESS_PARTS-$(CONFIG_CPU_VIRT)                 += hyp vgic arm_esr_traps
-PREPROCESS_PARTS-y$(CONFIG_CPU_VIRT)                += noncont_mem
+PREPROCESS_PARTS-y$(CONFIG_CPU_VIRT)$(CONFIG_BIT64) += noncont_mem
 
 
 #
@@ -141,10 +150,11 @@ VPATH		+= jdb/arm/$(BITS) jdb/arm jdb
 PRIVATE_INCDIR 	+= kern/$(CONFIG_XARCH)/$(BITS) kern/$(CONFIG_XARCH) kern
 
 INTERFACES_KERNEL += 	__main mem_op kmem_space boot_uart_init     \
-			irq_chip_generic bootstrap kern_lib_page              \
+			irq_chip_generic bootstrap                  \
 			jdb_extensions outer_cache utcb_support cascade_irq   \
 			irq_mgr_multi_chip scu
 
+INTERFACES_KERNEL-$(CONFIG_BIT32) += kern_lib_page
 INTERFACES_KERNEL-$(CONFIG_SERIAL) += uart_console
 INTERFACES_KERNEL-$(CONFIG_ARM_EM_TZ) += vm
 INTERFACES_KERNEL-$(CONFIG_CPU_VIRT) += vgic
@@ -152,7 +162,7 @@ INTERFACES_KERNEL-$(CONFIG_CPU_VIRT) += vgic
 
 
 bootstrap_IMPL		:= bootstrap bootstrap-arm-$(BITS)
-CXXFLAGS_bootstrap      := -O3
+CXXFLAGS_bootstrap      := -O3 $(if $(CONFIG_BIT64),-mcmodel=large)
 CXXFLAGS_bootstrap-arm-$(BITS) := $(CXXFLAGS_bootstrap)
 clock_IMPL              := clock
 config_IMPL	  	:= config config-arm
@@ -161,8 +171,12 @@ context_IMPL	  	:= context context-arm context-arm-$(BITS) \
 continuation_IMPL	:= continuation-arm
 cpu_IMPL	  	:= cpu cpu-arm cpu-arm-hyp cpu-arm-$(BITS)
 cpu_lock_IMPL  	  	:= cpu_lock cpu_lock-generic
-entry_frame_IMPL  	:= entry_frame entry_frame-arm                       \
-			   entry_frame-abs-timeout-hack
+ifeq ($(CONFIG_BIT64),y)
+  entry_frame_IMPL	:= entry_frame-arm entry_frame-abs-timeout-hack
+else
+  entry_frame_IMPL	:= entry_frame entry_frame-arm                       \
+                  	   entry_frame-abs-timeout-hack
+endif
 fpu_IMPL		:= fpu fpu-arm
 ipi_IMPL		:= ipi ipi-arm
 kdb_ke_IMPL		:= kdb_ke-arm
@@ -190,7 +204,7 @@ sched_context_IMPL	:= sched_context-wfq sched_context-fixed_prio \
 scu_IMPL                := scu
 spin_lock_IMPL		:= spin_lock spin_lock-arm spin_lock-arm-$(BITS)
 startup_IMPL		:= startup startup-arm
-sys_call_page_IMPL	:= sys_call_page sys_call_page-arm
+sys_call_page_IMPL	:= sys_call_page $(if $(CONFIG_BIT32), sys_call_page-arm)
 task_IMPL		:= task task-arm
 thread_IMPL	  	:= thread thread-arm thread-arm-hyp \
 			   thread-jdb thread-jdb-$(BITS) thread-ipc \

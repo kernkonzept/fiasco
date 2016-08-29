@@ -47,7 +47,7 @@ PUBLIC static inline void Mem::dsb()
 { __asm__ __volatile__ ("mcr p15, 0, %0, c7, c10, 4" : : "r" (0) : "memory"); }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [armv7]:
+IMPLEMENTATION [armv7 || armv8]:
 
 PUBLIC static inline void Mem::dmb()
 { __asm__ __volatile__ ("dmb sy" : : : "memory"); }

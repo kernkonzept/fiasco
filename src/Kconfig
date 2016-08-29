@@ -663,7 +663,7 @@ config EXPERIMENTAL
 	  Use with caution!
 
 config PERF_CNT
-	def_bool y if JDB && (IA32 || AMD64 || ARM)
+	def_bool y if JDB && (IA32 || AMD64 || ARM || ARM64)
 
 config BIT32
 	bool
