@@ -32,16 +32,16 @@ do-all: $(ALL_STAMPS)
 #
 # Auto-created source files
 #
-
-.Clean-auto: $(MODULES_FILES) .Modules.deps globalconfig.out
-	rm -f							      	      \
-	$(filter-out 							      \
+auto_clean_files = $(strip $(filter-out 				      \
 	  $(addprefix auto/,				      		      \
 	    $(addsuffix .cc,						      \
 	      $(foreach mod, $(GENERATED_MODULES), $(call eval_impl,$(mod)))) \
 	    $(foreach mod, $(GENERATED_MODULES), 			      \
 			   $(mod).h $(mod)_i.h stamp-$(mod).ready)),	      \
-	  $(wildcard auto/*))
+	  $(wildcard auto/*)))
+
+.Clean-auto: $(MODULES_FILES) .Modules.deps globalconfig.out
+	$(if $(auto_clean_files),rm -f $(auto_clean_files))
 	touch $@
 
 define find_ld_emulation
