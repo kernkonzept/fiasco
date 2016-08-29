@@ -11,6 +11,7 @@ SUBSYSTEMS := 	ABI KERNEL LIBK DRIVERS MINILIBC \
 
 PREPROCESS_PARTS 	+= arch $(CONFIG_ABI) 32bit $(CONFIG_XARCH) \
                            h3800 abs_syscalls
+BITS := 32
 
 PREPROCESS_PARTS-$(CONFIG_SERIAL)             += serial
 PREPROCESS_PARTS-$(CONFIG_MP)                 += mp
@@ -51,7 +52,7 @@ PREPROCESS_PARTS-y$(CONFIG_CPU_VIRT)                += noncont_mem
 # TYPES subsystem
 #
 
-PRIVATE_INCDIR += types/$(CONFIG_XARCH) types
+PRIVATE_INCDIR += types/$(CONFIG_XARCH)/$(BITS) types/$(CONFIG_XARCH) types
 
 VPATH_LIBUART  := $(srcdir)/lib/uart
 PRIVATE_INCDIR += lib/uart
@@ -60,8 +61,8 @@ PRIVATE_INCDIR += lib/uart
 # DRIVERS Subsystem
 #
 DRIVERS 		:= libdrivers.a libgluedriverslibc.a
-VPATH			+= drivers/$(CONFIG_XARCH) drivers
-PRIVATE_INCDIR		+= drivers/$(CONFIG_XARCH) drivers
+VPATH			+= drivers/$(CONFIG_XARCH)/$(BITS) drivers/$(CONFIG_XARCH) drivers
+PRIVATE_INCDIR		+= drivers/$(CONFIG_XARCH)/$(BITS) drivers/$(CONFIG_XARCH) drivers
 INTERFACES_DRIVERS 	:= sa1100 mux_console console uart filter_console \
 			   h3xxx io mem mmu reset processor delayloop
 io_IMPL			:= io io-arm
@@ -69,7 +70,7 @@ mmu_IMPL		:= mmu mmu-arm
 mem_IMPL		:= mem mem-arm
 uart_IMPL		:= uart uart-mmio
 reset_IMPL		:=
-processor_IMPL		:= processor processor-arm
+processor_IMPL		:= processor processor-arm-$(BITS) processor-arm
 CXXSRC_DRIVERS		:= glue_libc.cc 
 NOOPT			+= $(patsubst %.o, %, $(OBJ_DRIVERS))
 ALWAYS_INLINE           += mem
@@ -78,8 +79,8 @@ ALWAYS_INLINE           += mem
 # MINILIBC Subsystem
 #
 MINILIBC	:= libc.a
-VPATH		+= lib/minilibc/$(CONFIG_XARCH) lib/minilibc
-PRIVATE_INCDIR	+= lib/minilibc/$(CONFIG_XARCH)/include lib/minilibc/include
+VPATH		+= lib/minilibc/$(CONFIG_XARCH)/$(BITS) lib/minilibc/$(CONFIG_XARCH) lib/minilibc
+PRIVATE_INCDIR	+= lib/minilibc/$(CONFIG_XARCH)/$(BITS)/include lib/minilibc/$(CONFIG_XARCH)/include lib/minilibc/include
 CSRC_MINILIBC	:= atexit.c memccpy.c memcmp.c memmove.c memset.c memcpy.c \
 		   memchr.c panic.c strchr.c strcmp.c strcpy.c strlen.c \
 		   strncmp.c strncpy.c strstr.c printf.c \
@@ -110,7 +111,7 @@ endif
 # JABI Subsystem
 #
 JABI			:= libjabi.a
-VPATH			+= jabi/$(CONFIG_XARCH) jabi
+VPATH			+= jabi/$(CONFIG_XARCH)/$(BITS) jabi/$(CONFIG_XARCH) jabi
 INTERFACES_JABI		:= jdb_ktrace
 
 #
@@ -118,7 +119,7 @@ INTERFACES_JABI		:= jdb_ktrace
 #
 
 ABI 		:= libabi.a
-VPATH 		+= abi/$(CONFIG_XARCH) abi 
+VPATH 		+= abi/$(CONFIG_XARCH)/$(BITS) abi/$(CONFIG_XARCH) abi 
 
 INTERFACES_ABI 	:= kip l4_types l4_fpage l4_msg_item \
                    l4_buf_desc l4_error
@@ -135,9 +136,9 @@ kip_IMPL	:= kip kip-debug kip-arm
 #
 KERNEL 		:= fiasco
 KERNEL_EXTRA 	:= Symbols kernel.arm.lds
-VPATH 		+= kern/$(CONFIG_XARCH) kern
+VPATH 		+= kern/$(CONFIG_XARCH)/$(BITS) kern/$(CONFIG_XARCH) kern
 VPATH		+= jdb/arm jdb
-PRIVATE_INCDIR 	+= kern/$(CONFIG_XARCH) kern
+PRIVATE_INCDIR 	+= kern/$(CONFIG_XARCH)/$(BITS) kern/$(CONFIG_XARCH) kern
 
 INTERFACES_KERNEL += 	__main mem_op kmem_space boot_uart_init     \
 			irq_chip_generic bootstrap kern_lib_page              \
@@ -255,8 +256,8 @@ INTERFACES_CXXLIB 	:= paranoia s_cruft
 # LIBK subsystem
 #
 LIBK 		:= libk.a
-VPATH          	+= lib/libk/$(CONFIG_XARCH) lib/libk
-PRIVATE_INCDIR 	+= lib/libk/$(CONFIG_XARCH) lib/libk
+VPATH          	+= lib/libk/$(CONFIG_XARCH)/$(BITS) lib/libk/$(CONFIG_XARCH) lib/libk
+PRIVATE_INCDIR 	+= lib/libk/$(CONFIG_XARCH)/$(BITS) lib/libk/$(CONFIG_XARCH) lib/libk
 
 #INTERFACES_LIBK:= atomic lock_guard profile uuencode gmon unistd panic auto_ptr
 INTERFACES_LIBK := std_macros atomic lock_guard auto_ptr
