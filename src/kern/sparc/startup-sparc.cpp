@@ -59,8 +59,10 @@ Startup::stage2()
   Utcb_init::init();
   puts("Startup::stage2 finished");
 
+  // CAS testing
   {
     Mword mem = 3;
+    (void)mem;
 
     assert(cas_unsafe(&mem, 3, 4));
     assert(mem == 4);
