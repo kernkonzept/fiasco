@@ -284,7 +284,7 @@ is_syscall_pc(Address pc)
 
 static inline
 Address
-get_fault_ipa(Ts_error_code hsr, bool insn_abt, bool ext_vcpu)
+get_fault_ipa(Arm_esr hsr, bool insn_abt, bool ext_vcpu)
 {
   Unsigned32 far;
   if (insn_abt)
@@ -327,7 +327,7 @@ extern "C" void arm_hyp_entry(Return_frame *rf)
   Trap_state *ts = static_cast<Trap_state*>(rf);
   Thread *ct = current_thread();
 
-  Ts_error_code hsr;
+  Arm_esr hsr;
   asm ("mrc p15, 4, %0, c5, c2, 0" : "=r" (hsr));
   ts->esr = hsr;
 

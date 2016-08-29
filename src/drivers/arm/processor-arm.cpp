@@ -1,5 +1,67 @@
 INTERFACE[arm]:
 
+#include <cxx/bitfield>
+
+class Arm_esr
+{
+public:
+  Arm_esr() = default;
+  explicit Arm_esr(Mword ec) : _raw(ec) {}
+  Mword _raw;
+
+  Mword raw() const { return _raw; }
+
+  CXX_BITFIELD_MEMBER(26, 31, ec, _raw);
+  CXX_BITFIELD_MEMBER(25, 25, il, _raw);
+  CXX_BITFIELD_MEMBER(24, 24, cv, _raw);
+  CXX_BITFIELD_MEMBER(20, 23, cond, _raw);
+
+  /** \pre ec == 0x01 */
+  CXX_BITFIELD_MEMBER( 0,  0, wfe_trapped, _raw);
+
+  CXX_BITFIELD_MEMBER(17, 19, mcr_opc2, _raw);
+  CXX_BITFIELD_MEMBER(16, 19, mcrr_opc1, _raw);
+  CXX_BITFIELD_MEMBER(14, 16, mcr_opc1, _raw);
+  CXX_BITFIELD_MEMBER(10, 13, mcr_crn, _raw);
+  CXX_BITFIELD_MEMBER(10, 13, mcrr_rt2, _raw);
+  CXX_BITFIELD_MEMBER( 5,  8, mcr_rt, _raw);
+  CXX_BITFIELD_MEMBER( 1,  4, mcr_crm, _raw);
+  CXX_BITFIELD_MEMBER( 0,  0, mcr_read, _raw);
+
+  Mword mcr_coproc_register() const { return _raw & 0xffc1f; }
+
+  static Mword mcr_coproc_register(unsigned opc1, unsigned crn, unsigned crm, unsigned opc2)
+  { return   mcr_opc1_bfm_t::val_dirty(opc1)
+           | mcr_crn_bfm_t::val_dirty(crn)
+           | mcr_crm_bfm_t::val_dirty(crm)
+           | mcr_opc2_bfm_t::val_dirty(opc2); }
+
+  static Mword mrc_coproc_register(unsigned opc1, unsigned crn, unsigned crm, unsigned opc2)
+  { return mcr_coproc_register(opc1, crn, crm, opc2) | 1; }
+
+  CXX_BITFIELD_MEMBER(12, 19, ldc_imm, _raw);
+  CXX_BITFIELD_MEMBER( 5,  8, ldc_rn, _raw);
+  CXX_BITFIELD_MEMBER( 4,  4, ldc_offset_form, _raw);
+  CXX_BITFIELD_MEMBER( 1,  3, ldc_addressing_mode, _raw);
+
+  CXX_BITFIELD_MEMBER( 5,  5, cpt_simd, _raw);
+  CXX_BITFIELD_MEMBER( 0,  3, cpt_cpnr, _raw);
+
+  CXX_BITFIELD_MEMBER( 0,  3, bxj_rm, _raw);
+
+  CXX_BITFIELD_MEMBER( 0, 15, svc_imm, _raw);
+
+  CXX_BITFIELD_MEMBER(24, 24, pf_isv, _raw);
+  CXX_BITFIELD_MEMBER(22, 23, pf_sas, _raw);
+  CXX_BITFIELD_MEMBER(21, 21, pf_sse, _raw);
+  CXX_BITFIELD_MEMBER(16, 19, pf_srt, _raw);
+  CXX_BITFIELD_MEMBER( 9,  9, pf_ea, _raw);
+  CXX_BITFIELD_MEMBER( 8,  8, pf_cache_maint, _raw);
+  CXX_BITFIELD_MEMBER( 7,  7, pf_s1ptw, _raw);
+  CXX_BITFIELD_MEMBER( 6,  6, pf_write, _raw);
+  CXX_BITFIELD_MEMBER( 0,  5, pf_fsc, _raw);
+};
+
 EXTENSION class Proc
 {
 private:
