@@ -6,6 +6,7 @@ IMPLEMENTATION [mips]:
 #include "cp0_status.h"
 #include "trap_state.h"
 #include "processor.h"
+#include "types.h"
 
 DEFINE_PER_CPU Per_cpu<Thread::Dbg_stack> Thread::dbg_stack;
 

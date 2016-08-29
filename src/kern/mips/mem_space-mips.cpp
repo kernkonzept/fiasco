@@ -92,6 +92,7 @@ private:
 IMPLEMENTATION [mips]:
 
 #include <cassert>
+#include <cstdio>
 #include <cstring>
 #include <new>
 
@@ -324,7 +325,7 @@ Mem_space::v_delete(Vaddr virt, Page_order size,
   return ret;
 }
 
-PUBLIC inline NEEDS[Mem_space::set_guest_ctl1_rid]
+PUBLIC inline NEEDS[Mem_space::set_guest_ctl1_rid, <cstdio>]
 bool
 Mem_space::add_tlb_entry(Vaddr virt, bool write_access, bool need_probe, bool guest)
 { (void) write_access;

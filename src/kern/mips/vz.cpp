@@ -359,7 +359,7 @@ Vz::State::init()
   modified_cp0_map = (Unsigned32)~0;
 }
 
-IMPLEMENT inline
+IMPLEMENT inline NEEDS[<cstdio>]
 void
 Vz::State::save_guest_tlb_entry(int guest_id, unsigned i)
 {
