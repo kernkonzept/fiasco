@@ -192,9 +192,9 @@ Jdb::handle_user_request(Cpu_number cpu)
   if (ef->error_code == ((0x33UL << 26) | 1))
     return execute_command_ni(task, str);
 
-  if (!peek(str, task, tmp) || tmp != '*')
+  if (!str || !peek(str, task, tmp) || tmp != '*')
     return false;
-  if (!peek(str+1, task, tmp) || tmp != '#')
+  if (!str || !peek(str+1, task, tmp) || tmp != '#')
     return false;
 
   return execute_command_ni(task, str+2);
@@ -231,33 +231,28 @@ void *
 Jdb::access_mem_task(Address virt, Space * task)
 {
   // align
-  virt &= ~0x03;
+  virt &= ~(sizeof(Mword) - 1);
 
   Address phys;
 
-  if (!task)
+  if (Mem_layout::in_kernel(virt))
     {
-      if (Mem_layout::in_kernel(virt))
-	{
-	  auto p = Kmem_space::kdir()->walk(Virt_addr(virt));
-	  if (!p.is_valid())
-	    return 0;
+      auto p = Kmem_space::kdir()->walk(Virt_addr(virt));
+      if (!p.is_valid())
+        return 0;
 
-	  phys = p.page_addr() | cxx::get_lsb(virt, p.page_order());
-	}
-      else
-	phys = virt;
+      phys = p.page_addr() | cxx::get_lsb(virt, p.page_order());
+    }
+  else if (task)
+    {
+      phys = Address(task->virt_to_phys_s0((void*)virt));
+
+      if (phys == (Address)-1)
+        return 0;
     }
   else
     {
-      phys = Address(task->virt_to_phys(virt));
-
-
-      if (phys == (Address)-1)
-	phys = task->virt_to_phys_s0((void *)virt);
-
-      if (phys == (Address)-1)
-	return 0;
+      phys = virt;
     }
 
   unsigned long addr = Mem_layout::phys_to_pmem(phys);
@@ -301,17 +296,18 @@ Jdb::peek_task(Address virt, Space * task, void *value, int width)
     {
     case 1:
         {
-          Mword dealign = (virt & 0x3) * 8;
+          Mword dealign = (virt & (sizeof(Mword) - 1)) * 8;
           *(Mword*)value = (*(Mword*)mem & (0xff << dealign)) >> dealign;
         }
 	break;
     case 2:
         {
-          Mword dealign = ((virt & 0x2) >> 1) * 16;
+          Mword dealign = ((virt & (sizeof(Mword) - 2)) >> 1) * 16;
           *(Mword*)value = (*(Mword*)mem & (0xffff << dealign)) >> dealign;
         }
 	break;
     case 4:
+    case 8:
       memcpy(value, mem, width);
     }
 
