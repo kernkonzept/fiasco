@@ -8,10 +8,6 @@ public:
   static Address phys_to_pmem(Address addr);
   static void add_pmem(Address phys, Address virt, unsigned long size);
 
-  static inline unsigned long round_superpage(unsigned long addr)
-  { return (addr + Config::SUPERPAGE_SIZE - 1) & ~(Config::SUPERPAGE_SIZE-1); }
-  static inline unsigned long trunc_superpage(unsigned long addr)
-  { return addr & ~(Config::SUPERPAGE_SIZE-1); }
 private:
   static unsigned short __ph_to_pm[1UL << (32 - Config::SUPERPAGE_SHIFT)];
 };
@@ -95,5 +91,5 @@ Mem_layout::pmem_to_phys(void const *addr)
 PUBLIC static inline
 Address
 Mem_layout::phys_to_pmem(Address phys)
-{ return phys; }
+{ return phys - Sdram_phys_base + Map_base; }
 
