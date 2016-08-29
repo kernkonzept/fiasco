@@ -41,7 +41,7 @@ IMPLEMENTATION:
 
 IMPLEMENT inline
 Mword
-Mem_layout::in_kernel (Address a)
+Mem_layout::in_kernel(Address a)
 {
   return a > User_max;
 }
