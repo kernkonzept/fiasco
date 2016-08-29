@@ -205,7 +205,7 @@ IMPLEMENT static inline
 void Proc::halt()
 {
   Status f = cli_save();
-  asm volatile("dsb \n\t"
+  asm volatile("dsb sy \n\t"
                "wfi \n\t");
   sti_restore(f);
 }
