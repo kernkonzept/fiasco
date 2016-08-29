@@ -511,7 +511,7 @@ Vz::State::save_full(int guest_id)
     }
 }
 
-IMPLEMENT inline
+IMPLEMENT inline NEEDS["timer.h"]
 void
 Vz::State::update_cause_ti()
 {
@@ -532,7 +532,7 @@ Vz::State::update_cause_ti()
     g_cause |= Cause_TI;
 }
 
-IMPLEMENT inline
+IMPLEMENT inline NEEDS["timer.h"]
 void
 Vz::State::load_cause()
 {
