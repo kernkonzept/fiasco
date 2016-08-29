@@ -89,12 +89,9 @@ kernel_main()
 
   Mem_unit::tlb_flush();
 
+  extern char call_bootstrap[];
   // switch to stack of kernel thread and bootstrap the kernel
-  asm volatile
-    ("	mov sp, %0            \n"   // switch stack
-     "	mov r0, %1            \n"   // push "this" pointer
-     "	bl call_bootstrap     \n"
-     : : "r" (kernel->init_stack()), "r" (kernel));
+  Thread::arm_fast_exit(kernel->init_stack(), call_bootstrap, kernel);
 }
 
 //------------------------------------------------------------------------
