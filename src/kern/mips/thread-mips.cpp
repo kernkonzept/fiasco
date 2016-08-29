@@ -2,6 +2,7 @@ IMPLEMENTATION [mips]:
 
 #include <cstdio>
 #include <cassert>
+#include "alternatives.h"
 #include "asm_mips.h"
 #include "cp0_status.h"
 #include "trap_state.h"
@@ -218,7 +219,7 @@ Thread::print_page_fault_error(Mword e)
          PF::is_read_error(e) ? 'r' : 'w', e);
 }
 
-PUBLIC static inline
+PUBLIC static inline NEEDS["alternatives.h"]
 void
 Thread::save_bad_instr(Trap_state *ts)
 {
