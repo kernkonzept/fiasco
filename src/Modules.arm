@@ -174,7 +174,8 @@ map_util_IMPL		:= map_util map_util-mem map_util-objs
 mapping_IMPL		:= mapping-arm mapping
 mem_layout_IMPL		:= mem_layout mem_layout-arm mem_layout-noncont
 mem_op_IMPL		:= mem_op mem_op-arm-$(BITS)
-mem_space_IMPL		:= mem_space mem_space-arm mem_space-user
+mem_space_IMPL		:= mem_space mem_space-arm mem_space-arm-$(BITS) \
+			   mem_space-user
 mem_unit_IMPL		:= mem_unit mem_unit-arm-$(BITS)
 kmem_IMPL		:= kmem kmem-arm-$(BITS)
 kmem_alloc_IMPL		:= kmem_alloc kmem_alloc-arm
