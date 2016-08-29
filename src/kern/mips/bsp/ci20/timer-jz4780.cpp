@@ -94,3 +94,12 @@ unsigned
 Timer::irq()
 { return 27; }
 
+PUBLIC static //inline
+Unsigned64
+Timer::get_current_counter()
+{
+  Unsigned32 lo = _tcu->r[Tcu_jz4780::OSTCNTL];
+  Unsigned32 hi = _tcu->r[Tcu_jz4780::OSTCNTH];
+
+  return (((Unsigned64)hi) << 32) | lo;
+}
