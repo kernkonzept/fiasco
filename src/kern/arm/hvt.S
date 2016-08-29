@@ -135,7 +135,7 @@ fast_ret_from_irq:
 	disable_irqs
 	add	sp, sp, #(13*4)
 GEN_IRET
-1:	.word arm_hyp_entry
+1:	.word arm_esr_entry
 
 .global	vcpu_resume
 vcpu_resume:

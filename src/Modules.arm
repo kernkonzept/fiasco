@@ -44,7 +44,7 @@ PREPROCESS_PARTS-$(CONFIG_SCHED_FIXED_PRIO)  += sched_fixed_prio
 PREPROCESS_PARTS-$(CONFIG_SCHED_WFQ)         += sched_wfq
 PREPROCESS_PARTS-$(CONFIG_SCHED_FP_WFQ)      += sched_fp_wfq
 PREPROCESS_PARTS-$(CONFIG_ARM_LPAE)          += arm_lpae
-PREPROCESS_PARTS-$(CONFIG_CPU_VIRT)                 += hyp vgic
+PREPROCESS_PARTS-$(CONFIG_CPU_VIRT)                 += hyp vgic arm_esr_traps
 PREPROCESS_PARTS-y$(CONFIG_CPU_VIRT)                += noncont_mem
 
 
@@ -156,7 +156,8 @@ CXXFLAGS_bootstrap      := -O3
 CXXFLAGS_bootstrap-arm-$(BITS) := $(CXXFLAGS_bootstrap)
 clock_IMPL              := clock
 config_IMPL	  	:= config config-arm
-context_IMPL	  	:= context context-arm context-vcpu context-arm-hyp
+context_IMPL	  	:= context context-arm context-arm-$(BITS) \
+                           context-vcpu context-arm-hyp
 continuation_IMPL	:= continuation-arm
 cpu_IMPL	  	:= cpu cpu-arm cpu-arm-hyp
 cpu_lock_IMPL  	  	:= cpu_lock cpu_lock-generic
@@ -187,9 +188,9 @@ startup_IMPL		:= startup startup-arm
 sys_call_page_IMPL	:= sys_call_page sys_call_page-arm
 task_IMPL		:= task task-arm
 thread_IMPL	  	:= thread thread-arm thread-arm-hyp \
-			   thread-jdb thread-ipc \
+			   thread-jdb thread-jdb-$(BITS) thread-ipc \
 			   thread-pagefault  thread-log \
-			   thread-vcpu
+			   thread-vcpu thread-arm-$(BITS)
 timer_IMPL		:= timer timer-arm
 timer_tick_IMPL		:= timer_tick timer_tick-arm
 utcb_init_IMPL		:= utcb_init utcb_init-arm

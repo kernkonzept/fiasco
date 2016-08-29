@@ -70,31 +70,31 @@ Thread::peek_user(T const *adr, Context *c)
   return T(~0);
 }
 
-namespace {
-    static Mword get_lr_for_mode(Return_frame const *rf)
+PRIVATE static inline
+Mword
+Thread::get_lr_for_mode(Return_frame const *rf)
+{
+  Mword ret;
+  switch (rf->psr & 0x1f)
     {
-      Mword ret;
-      switch (rf->psr & 0x1f)
-        {
-        case Proc::PSR_m_usr:
-        case Proc::PSR_m_sys:
-          return rf->ulr;
-        case Proc::PSR_m_irq:
-          asm ("mrs %0, lr_irq" : "=r" (ret)); return ret;
-        case Proc::PSR_m_fiq:
-          asm ("mrs %0, lr_fiq" : "=r" (ret)); return ret;
-        case Proc::PSR_m_abt:
-          asm ("mrs %0, lr_abt" : "=r" (ret)); return ret;
-        case Proc::PSR_m_svc:
-          asm ("mrs %0, lr_svc" : "=r" (ret)); return ret;
-        case Proc::PSR_m_und:
-          asm ("mrs %0, lr_und" : "=r" (ret)); return ret;
-        default:
-          assert(false); // wrong processor mode
-          return ~0UL;
-        }
+    case Proc::PSR_m_usr:
+    case Proc::PSR_m_sys:
+      return rf->ulr;
+    case Proc::PSR_m_irq:
+      asm ("mrs %0, lr_irq" : "=r" (ret)); return ret;
+    case Proc::PSR_m_fiq:
+      asm ("mrs %0, lr_fiq" : "=r" (ret)); return ret;
+    case Proc::PSR_m_abt:
+      asm ("mrs %0, lr_abt" : "=r" (ret)); return ret;
+    case Proc::PSR_m_svc:
+      asm ("mrs %0, lr_svc" : "=r" (ret)); return ret;
+    case Proc::PSR_m_und:
+      asm ("mrs %0, lr_und" : "=r" (ret)); return ret;
+    default:
+      assert(false); // wrong processor mode
+      return ~0UL;
     }
-};
+}
 
 extern "C" void hyp_mode_fault(Mword abort_type, Trap_state *ts)
 {
@@ -275,16 +275,16 @@ DEFINE_PER_CPU_LATE static Per_cpu<Local_irq_init> local_irqs;
 }
 
 
-static inline
+PRIVATE static inline
 bool
-is_syscall_pc(Address pc)
+Thread::is_syscall_pc(Address pc)
 {
-  return Unsigned32(-0x0c) <= pc && pc <= Unsigned32(-0x08);
+  return Address(-0x0c) <= pc && pc <= Address(-0x08);
 }
 
-static inline
+PRIVATE static inline
 Address
-get_fault_ipa(Arm_esr hsr, bool insn_abt, bool ext_vcpu)
+Thread::get_fault_pfa(Arm_esr hsr, bool insn_abt, bool ext_vcpu)
 {
   Unsigned32 far;
   if (insn_abt)
@@ -322,117 +322,12 @@ get_fault_ipa(Arm_esr hsr, bool insn_abt, bool ext_vcpu)
   return (par & 0xfffff000UL) | (far & 0xfff);
 }
 
-extern "C" void arm_hyp_entry(Return_frame *rf)
+PRIVATE static inline
+Arm_esr
+Thread::get_esr()
 {
-  Trap_state *ts = static_cast<Trap_state*>(rf);
-  Thread *ct = current_thread();
-
   Arm_esr hsr;
   asm ("mrc p15, 4, %0, c5, c2, 0" : "=r" (hsr));
-  ts->esr = hsr;
-
-  Unsigned32 tmp;
-  Mword state = ct->state();
-
-  switch (hsr.ec())
-    {
-    case 0x20:
-      tmp = get_fault_ipa(hsr, true, state & Thread_ext_vcpu_enabled);
-      if (!pagefault_entry(tmp, hsr.raw(), rf->pc, rf))
-        {
-          Proc::cli();
-          ts->pf_address = tmp;
-          slowtrap_entry(ts);
-        }
-      return;
-
-    case 0x24:
-      tmp = get_fault_ipa(hsr, false, state & Thread_ext_vcpu_enabled);
-      if (!pagefault_entry(tmp, hsr.raw(), rf->pc, rf))
-        {
-          Proc::cli();
-          ts->pf_address = tmp;
-          slowtrap_entry(ts);
-        }
-      return;
-
-    case 0x12: // HVC
-    case 0x11: // SVC
-        {
-          Unsigned32 pc = rf->pc;
-          if (!is_syscall_pc(pc))
-            {
-              slowtrap_entry(ts);
-              return;
-            }
-          rf->pc = get_lr_for_mode(rf);
-          ct->state_del(Thread_cancel);
-          if (state & (Thread_vcpu_user | Thread_alien))
-            {
-              if (state & Thread_dis_alien)
-                ct->state_del_dirty(Thread_dis_alien);
-              else
-                {
-                  slowtrap_entry(ts);
-                  return;
-                }
-            }
-
-          typedef void Syscall(void);
-          extern Syscall *sys_call_table[];
-          sys_call_table[(-pc) / 4]();
-          return;
-        }
-
-    case 0x00: // undef opcode with HCR.TGE=1
-        {
-          ct->state_del(Thread_cancel);
-          Mword state = ct->state();
-          Unsigned32 pc = rf->pc;
-
-          if (state & (Thread_vcpu_user | Thread_alien))
-            {
-              ts->pc += ts->psr & Proc::Status_thumb ? 2 : 4,
-              ct->send_exception(ts);
-              return;
-            }
-          else if (EXPECT_FALSE(!is_syscall_pc(pc + 4)))
-            {
-              ts->pc += ts->psr & Proc::Status_thumb ? 2 : 4,
-              slowtrap_entry(ts);
-              return;
-            }
-
-          rf->pc = get_lr_for_mode(rf);
-          ct->state_del(Thread_cancel);
-          typedef void Syscall(void);
-          extern Syscall *sys_call_table[];
-          sys_call_table[-(pc + 4) / 4]();
-          return;
-        }
-      break;
-
-    case 0x07:
-        {
-          if ((hsr.cpt_simd() || hsr.cpt_cpnr() == 10 || hsr.cpt_cpnr() == 11)
-              && Thread::handle_fpu_trap(ts))
-            return;
-
-          ct->send_exception(ts);
-        }
-      break;
-
-    case 0x03: // CP15 trapped
-        if (hsr.mcr_coproc_register() == hsr.mrc_coproc_register(0, 1, 0, 1))
-          {
-            ts->r[hsr.mcr_rt()] = 1 << 6;
-            ts->pc += 2 << hsr.il();
-            return;
-          }
-      // fall through
-
-    default:
-      ct->send_exception(ts);
-      break;
-    }
+  return hsr;
 }
+
