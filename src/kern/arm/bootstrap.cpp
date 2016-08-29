@@ -115,7 +115,7 @@ static inline void Bootstrap::set_asid() {}
 static inline void Bootstrap::set_ttbcr() {}
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && (armv6 || armv7)]:
+IMPLEMENTATION [arm && (armv6 || armv7)]:
 
 #include "kmem_space.h"
 
