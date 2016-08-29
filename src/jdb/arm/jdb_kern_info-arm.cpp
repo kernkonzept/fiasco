@@ -26,10 +26,10 @@ Jdb_kern_info_misc::show()
 {
   // FIXME: assume UP here (current_mem_space(0))
   printf("clck: %08x.%08x\n"
-	 "pdir: %08x\n",
+	 "pdir: %08lx\n",
 	 (unsigned) (Kip::k()->clock >> 32), 
 	 (unsigned) (Kip::k()->clock),
-         (unsigned) Mem_space::current_mem_space(Cpu_number::boot_cpu())->dir());
+         (unsigned long) Mem_space::current_mem_space(Cpu_number::boot_cpu())->dir());
 
 
 }
