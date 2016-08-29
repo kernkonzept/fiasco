@@ -169,10 +169,7 @@ extern "C" {
     // Pagefault in user mode
     if (PF::is_usermode_error(error_code))
       {
-        // PFs in the kern_lib_page are always write PFs due to rollbacks and
-        // insn decoding
-        if (EXPECT_FALSE((pc & Kmem::Kern_lib_base) == Kmem::Kern_lib_base))
-          error_code |= (1UL << 6);
+        error_code = Thread::mangle_kernel_lib_page_fault(pc, error_code);
 
         // TODO: Avoid calling Thread::map_fsr_user here everytime!
         if (t->vcpu_pagefault(pfa, Thread::map_fsr_user(error_code, true), pc))
