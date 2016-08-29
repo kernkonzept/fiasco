@@ -1014,6 +1014,8 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
 
 /**
  * \pre Runs on the sender CPU
+ * \retval true when the IPC was aborted
+ * \retval false iff the IPC was already finished
  */
 PRIVATE inline
 bool
@@ -1045,10 +1047,10 @@ Thread::abort_send(L4_error const &e, Thread *partner)
     {
     default:
     case Abt_ipc_done:
-      return true;
+      return false;
     case Abt_ipc_cancel:
       utcb().access()->error = e;
-      return false;
+      return true;
     case Abt_ipc_in_progress:
       state_add_dirty(Thread_ipc_transfer);
       while (state() & Thread_ipc_transfer)
@@ -1056,7 +1058,7 @@ Thread::abort_send(L4_error const &e, Thread *partner)
           state_del_dirty(Thread_ready);
           schedule();
         }
-      return true;
+      return false;
     }
 }
 
@@ -1076,7 +1078,7 @@ Thread::do_send_wait(Thread *partner, L4_timeout snd_t)
       Unsigned64 tval = snd_t.microsecs(Timer::system_clock(), utcb().access(true));
       // Zero timeout or timeout expired already -- give up
       if (tval == 0)
-        return abort_send(L4_error::Timeout, partner);
+        return !abort_send(L4_error::Timeout, partner);
 
       set_timeout(&timeout, tval);
     }
@@ -1090,10 +1092,10 @@ Thread::do_send_wait(Thread *partner, L4_timeout snd_t)
     }
 
   if (EXPECT_FALSE(ipc_state == (Thread_cancel | Thread_send_wait)))
-    return abort_send(L4_error::Canceled, partner);
+    return !abort_send(L4_error::Canceled, partner);
 
   if (EXPECT_FALSE(ipc_state == (Thread_timeout | Thread_send_wait)))
-    return abort_send(L4_error::Timeout, partner);
+    return !abort_send(L4_error::Timeout, partner);
 
   reset_timeout();
 
