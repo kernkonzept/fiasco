@@ -19,13 +19,15 @@ enum Thread_state
   // the ipc handshake bits needs to be in the first byte,
   // the shortcut depends on it
 
-  Thread_cancel               = 0x80,// state has been changed -- cancel activity
+  Thread_canceled             = 0x40, ///< The IPC operation is canceled by the receiver
+  Thread_cancel               = 0x80, // state has been changed -- cancel activity
   Thread_timeout              = 0x100,
 
-  Thread_full_ipc_mask        = Thread_ipc_mask | Thread_cancel
-                              | Thread_timeout | Thread_ipc_transfer,
+  Thread_full_ipc_mask        = Thread_ipc_mask | Thread_cancel | Thread_canceled
+                                | Thread_timeout | Thread_ipc_transfer,
 
-  Thread_ipc_abort_mask       = Thread_cancel | Thread_timeout | Thread_ipc_transfer,
+  Thread_ipc_abort_mask       = Thread_canceled | Thread_cancel | Thread_timeout
+                                | Thread_ipc_transfer,
 
   Thread_dead                 = 0x200,// tcb allocated, but inactive (not in any q)
   Thread_suspended            = 0x400,// thread must not execute user code

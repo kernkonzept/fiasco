@@ -133,10 +133,12 @@ PUBLIC
 void
 Thread::ipc_receiver_aborted() override
 {
+  assert (cpu_lock.test());
   assert (wait_queue());
   set_wait_queue(0);
 
-  activate();
+  if (xcpu_state_change(~0UL, Thread_canceled | Thread_ready, true))
+    current()->switch_to_locked(this);
 }
 
 PRIVATE
@@ -1022,11 +1024,6 @@ bool
 Thread::abort_send(L4_error const &e, Thread *partner)
 {
   state_del_dirty(Thread_full_ipc_mask);
-
-  if (_timeout && _timeout->is_set())
-    _timeout->reset();
-
-  set_timeout(0);
   Abort_state abt = Abt_ipc_done;
 
   if (partner->home_cpu() == current_cpu())
@@ -1066,6 +1063,8 @@ Thread::abort_send(L4_error const &e, Thread *partner)
 
 /**
  * \pre Runs on the sender CPU
+ * \retval true iff the IPC was finished during the wait
+ * \retval false iff the IPC was aborted with some error
  */
 PRIVATE inline
 bool
@@ -1091,13 +1090,20 @@ Thread::do_send_wait(Thread *partner, L4_timeout snd_t)
       schedule();
     }
 
+  reset_timeout();
+
+  if (EXPECT_FALSE(ipc_state == (Thread_canceled | Thread_send_wait)))
+    {
+      state_del_dirty(Thread_full_ipc_mask);
+      utcb().access()->error = L4_error::Canceled;
+      return false;
+    }
+
   if (EXPECT_FALSE(ipc_state == (Thread_cancel | Thread_send_wait)))
     return !abort_send(L4_error::Canceled, partner);
 
   if (EXPECT_FALSE(ipc_state == (Thread_timeout | Thread_send_wait)))
     return !abort_send(L4_error::Timeout, partner);
-
-  reset_timeout();
 
   return true;
 }
