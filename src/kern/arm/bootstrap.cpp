@@ -162,7 +162,7 @@ extern char bootstrap_bss_start[];
 extern char bootstrap_bss_end[];
 extern char __bss_start[];
 extern char __bss_end[];
-extern char kernel_page_directory[];
+extern char kernel_page_directory[] __attribute__((weak));
 
 extern "C" void _start_kernel(void);
 extern "C" void bootstrap_main()

@@ -347,7 +347,7 @@ Mem_space::init_page_sizes()
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [armv5 || armv6 || armv7]:
+IMPLEMENTATION [armv5 || armv6 || armv7 || armv8]:
 
 IMPLEMENT inline
 void
@@ -390,7 +390,7 @@ void Mem_space::make_current()
 }
 
 //----------------------------------------------------------------------------
-INTERFACE [armv6 || armca8]:
+INTERFACE [armv6 || armca8 || armv8]:
 
 EXTENSION class Mem_space
 {
@@ -414,7 +414,7 @@ EXTENSION class Mem_space
 };
 
 //----------------------------------------------------------------------------
-INTERFACE [armv6 || armv7]:
+INTERFACE [armv6 || armv7 || armv8]:
 
 #include "id_alloc.h"
 #include "types.h"
@@ -459,7 +459,7 @@ private:
 };
 
 //----------------------------------------------------------------------------
-INTERFACE [!(armv6 || armv7)]:
+INTERFACE [!(armv6 || armv7 || armv8)]:
 
 EXTENSION class Mem_space
 {
@@ -468,7 +468,7 @@ public:
 };
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [armv6 || armv7]:
+IMPLEMENTATION [armv6 || armv7 || armv8]:
 
 DEFINE_PER_CPU Per_cpu<Mem_space::Asid_alloc> Mem_space::_asid_alloc;
 

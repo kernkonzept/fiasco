@@ -1,10 +1,11 @@
 # ARCH:           ARM arm
 # ARCHDESCR:      ARM processor family
 #
-# ARCHSELECT:     BIT32
+# ARCHSELECT:     BIT32 if !ARM_V8
+# ARCHSELECT:     BIT64 if ARM_V8
 # ARCHSELECT:     HAS_FPU_OPTION
 # ARCHSELECT:     FPU if CPU_VIRT
-# ARCHSELECT:     ARM_LPAE if CPU_VIRT
+# ARCHSELECT:     ARM_LPAE if CPU_VIRT || BIT64
 # ARCHSELECT:     HAS_SERIAL_OPTION
 # ARCHSELECT:     HAS_VIRT_OBJ_SPACE_OPTION if ARM_V6PLUS && !CPU_VIRT && !ARM_1176_CACHE_ALIAS_FIX
 #
@@ -51,6 +52,15 @@ config CAN_ARM_CPU_CORTEX_A15
 config CAN_ARM_CACHE_L2CXX0
 	bool
 
+config CAN_ARM_CPU_CORTEX_A53
+	bool
+
+config CAN_ARM_CPU_CORTEX_A57
+	bool
+
+config CAN_ARM_CPU_CORTEX_A72
+	bool
+
 config DEFAULT_ARM_EM_TZ
         bool
 
@@ -65,7 +75,10 @@ config ARM_V7
 	              || ARM_CORTEX_A5 || ARM_CORTEX_A7 || ARM_CORTEX_A15
 
 config ARM_V6PLUS
-	def_bool y if ARM_V6 || ARM_V7
+	def_bool y if ARM_V6 || ARM_V7 || ARM_V8
+
+config ARM_V8
+	bool
 
 # SECTION: CPU
 
@@ -123,6 +136,27 @@ config ARM_CORTEX_A9
 config ARM_CORTEX_A15
 	bool "ARM Cortex-A15 CPU"
 	depends on CAN_ARM_CPU_CORTEX_A15
+	select HAS_MP_OPTION
+	select HAS_CPU_VIRT
+
+config ARM_CORTEX_A53
+	bool "ARM Cortex-A53 CPU"
+	depends on CAN_ARM_CPU_CORTEX_A53
+	select ARM_V8
+	select HAS_MP_OPTION
+	select HAS_CPU_VIRT
+
+config ARM_CORTEX_A57
+	bool "ARM Cortex-A57 CPU"
+	depends on CAN_ARM_CPU_CORTEX_A57
+	select ARM_V8
+	select HAS_MP_OPTION
+	select HAS_CPU_VIRT
+
+config ARM_CORTEX_A72
+	bool "ARM Cortex-A72 CPU"
+	depends on CAN_ARM_CPU_CORTEX_A72
+	select ARM_V8
 	select HAS_MP_OPTION
 	select HAS_CPU_VIRT
 

@@ -2,7 +2,9 @@
 # vi:se ft=make:
 
 #OPT_SHARED_FLAGS                  += $(call CHECKCC,-finline-limit=10000,)
-CROSS_COMPILE			  ?= arm-linux-
+CROSS_COMPILE_DFL-$(CONFIG_BIT32) := arm-linux-
+CROSS_COMPILE_DFL-$(CONFIG_BIT64) := aarch64-linux-
+CROSS_COMPILE                     ?= $(CROSS_COMPILE_DFL-y)
 SHARED_FLAGS-$(CONFIG_ARM_PXA)    += -mcpu=xscale
 SHARED_FLAGS-$(CONFIG_ARM_SA)     += -mcpu=strongarm1100
 SHARED_FLAGS-$(CONFIG_ARM_920T)   += -mcpu=arm920t
@@ -15,8 +17,14 @@ SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A7) += $(call CHECKCC,-mcpu=cortex-a7,-mcpu=cor
 SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A8) += $(call CHECKCC,-mcpu=cortex-a8)
 SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A9) += $(call CHECKCC,-mcpu=cortex-a9)
 SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A15) += $(call CHECKCC,-mcpu=cortex-a15,-mcpu=cortex-a9)
-SHARED_FLAGS			  += -msoft-float
-SHARED_FLAGS                      += $(call CHECKCC,-mno-thumb-interwork)
-SHARED_FLAGS                      += -marm -mabi=aapcs
-LDFLAGS                           += --no-warn-mismatch
-LD_EMULATION_CHOICE               := armelf armelf_linux_eabi armelf_fbsd
+SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A57) += $(call CHECKCC,-mcpu=cortex-a57)
+SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A72) += $(call CHECKCC,-mcpu=cortex-a72)
+SHARED_FLAGS-$(CONFIG_BIT32)      += -msoft-float
+SHARED_FLAGS-$(CONFIG_BIT32)      += $(call CHECKCC,-mno-thumb-interwork)
+SHARED_FLAGS-$(CONFIG_BIT32)      += -marm -mabi=aapcs
+SHARED_FLAGS-$(CONFIG_BIT64)      += -mgeneral-regs-only
+LDFLAGS-$(CONFIG_BIT32)           += --no-warn-mismatch
+LDFLAGS                           += $(LDFLAGS-y)
+LD_EMULATION_CHOICE-$(CONFIG_BIT32) := armelf armelf_linux_eabi armelf_fbsd
+LD_EMULATION_CHOICE-$(CONFIG_BIT64) := aarch64linux aarch64elf
+LD_EMULATION_CHOICE := $(LD_EMULATION_CHOICE-y)

@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm]:
+IMPLEMENTATION [arm && 32bit]:
 
 #include <cstdio>
 #include <cstring>

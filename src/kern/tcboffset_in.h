@@ -13,7 +13,7 @@
   DUMP_MEMBER1 (THREAD, Thread, _space,		SPACE)
   DUMP_MEMBER1 (THREAD, Thread, _pager,			PAGER)
   DUMP_MEMBER1 (THREAD, Thread, _recover_jmpbuf,	RECOVER_JMPBUF)
-#if defined(CONFIG_ARM)
+#if defined(CONFIG_ARM) && defined(CONFIG_BIT32)
   DUMP_MEMBER1 (THREAD, Thread, _exc_cont._ip,          EXCEPTION_IP)
   DUMP_MEMBER1 (THREAD, Thread, _exc_cont._psr,         EXCEPTION_PSR)
 #endif

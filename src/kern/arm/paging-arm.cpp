@@ -387,7 +387,7 @@ K_pte_ptr::write_back(void *start, void *end)
 { Mem_unit::clean_dcache(start, end); }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && armca9]:
+IMPLEMENTATION [arm && (armca9 || armv7 || armv8)]:
 
 PUBLIC static inline
 bool
@@ -692,7 +692,7 @@ K_pte_ptr::del_rights(L4_fpage::Rights r)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_lpae && armv7]:
+IMPLEMENTATION [arm && arm_lpae && (armv7 || armv8)]:
 
 PRIVATE inline
 K_pte_ptr::Entry
@@ -828,7 +828,7 @@ INTERFACE [arm && !hyp]:
 typedef K_pte_ptr Pte_ptr;
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_lpae && (armv6 || armv7) && hyp]:
+IMPLEMENTATION [arm && arm_lpae && (armv6 || armv7 || armv8) && hyp]:
 
 PRIVATE inline
 Pte_ptr::Entry
@@ -937,14 +937,14 @@ Mword PF::is_alignment_error(Mword error)
 { return ((error >> 26) == 0x24) && ((error & 0x40f) == 0x001); }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && (armv6 || armv7) && arm_lpae]:
+IMPLEMENTATION [arm && arm_lpae]:
 
 PUBLIC static inline
 Mword PF::is_alignment_error(Mword error)
 { return ((error >> 26) == 0x24) && ((error & 0x3f) == 0x21); }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && (armv6 || armv7)]:
+IMPLEMENTATION [arm && (armv6 || armv7 || armv8)]:
 
 PUBLIC inline NEEDS[K_pte_ptr::_attribs, K_pte_ptr::_attribs_mask]
 void

@@ -1,4 +1,4 @@
-INTERFACE [arm]:
+INTERFACE [arm && 32bit]:
 
 #include "jdb.h"
 #include "jdb_input.h"
@@ -9,7 +9,7 @@ class Jdb_bp : public Jdb_module, public Jdb_input_task_addr
 {
 };
 
-IMPLEMENTATION [arm]:
+IMPLEMENTATION [arm && 32bit]:
 
 #include <cstdio>
 #include "string_buffer.h"
