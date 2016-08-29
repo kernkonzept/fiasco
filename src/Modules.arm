@@ -159,7 +159,7 @@ config_IMPL	  	:= config config-arm
 context_IMPL	  	:= context context-arm context-arm-$(BITS) \
                            context-vcpu context-arm-hyp
 continuation_IMPL	:= continuation-arm
-cpu_IMPL	  	:= cpu cpu-arm cpu-arm-hyp
+cpu_IMPL	  	:= cpu cpu-arm cpu-arm-hyp cpu-arm-$(BITS)
 cpu_lock_IMPL  	  	:= cpu_lock cpu_lock-generic
 entry_frame_IMPL  	:= entry_frame entry_frame-arm                       \
 			   entry_frame-abs-timeout-hack
