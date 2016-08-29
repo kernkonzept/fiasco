@@ -137,7 +137,7 @@ kip_IMPL	:= kip kip-debug kip-arm
 KERNEL 		:= fiasco
 KERNEL_EXTRA 	:= Symbols kernel.arm.lds
 VPATH 		+= kern/$(CONFIG_XARCH)/$(BITS) kern/$(CONFIG_XARCH) kern
-VPATH		+= jdb/arm jdb
+VPATH		+= jdb/arm/$(BITS) jdb/arm jdb
 PRIVATE_INCDIR 	+= kern/$(CONFIG_XARCH)/$(BITS) kern/$(CONFIG_XARCH) kern
 
 INTERFACES_KERNEL += 	__main mem_op kmem_space boot_uart_init     \
@@ -216,7 +216,8 @@ jdb_dump_entry_frame_IMPL:= jdb_dump_entry_frame-arm
 jdb_tcb_IMPL		+= jdb_tcb-arm
 jdb_ptab_IMPL		:= jdb_ptab jdb_ptab-ia32-ux-arm jdb_ptab-arm
 jdb_entry_frame_IMPL	:= jdb_entry_frame-arm
-jdb_trace_set_IMPL	:= jdb_trace_set jdb_trace_set-arm
+jdb_trace_set_IMPL	:= jdb_trace_set jdb_trace_set-arm \
+			   jdb_trace_set-arm-$(BITS)
 jdb_bp_IMPL		:= jdb_bp-arm
 thread_IMPL		+= thread-debug 
 
