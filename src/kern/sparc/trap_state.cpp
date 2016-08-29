@@ -73,12 +73,11 @@ PUBLIC
 void
 Trap_state::dump()
 {
-  char const *excpts[] = 
-    {"reset","machine check"};
-  
+  //char const *excpts[] = { "reset", "machine check" };
+
   printf("EXCEPTION: pfa=%08lx, error=%08lx\n",
          //excpts[((error_code & ~0xff) >> 8) - 1]
-          pf_address, error_code);
+         pf_address, error_code);
 
   printf("SP: %08lx LR: %08lx SRR0: %08lx SRR1 %08lx\n\n"
          "R[0]  %08lx\n"
@@ -88,4 +87,3 @@ Trap_state::dump()
 	 r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7],
 	 r[8], r11, r12);
 }
-
