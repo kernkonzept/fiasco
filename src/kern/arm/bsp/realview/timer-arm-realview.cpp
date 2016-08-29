@@ -19,7 +19,7 @@ public:
 };
 
 // --------------------------------------------------------------------------
-INTERFACE [arm && realview_vexpress_a15 && arm_generic_timer]:
+INTERFACE [arm && arm_generic_timer]:
 
 EXTENSION class Timer
 {
@@ -89,7 +89,7 @@ Timer::system_clock()
 }
 
 // --------------------------------------------------------------------------
-IMPLEMENTATION [arm && realview_vexpress_a15 && arm_generic_timer]:
+IMPLEMENTATION [arm && arm_generic_timer]:
 
 IMPLEMENT
 void Timer::bsp_init(Cpu_number)

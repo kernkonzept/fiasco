@@ -109,7 +109,7 @@ public:
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && realview && realview_vexpress_a9]:
+INTERFACE [arm && realview_vexpress_legacy]:
 
 EXTENSION class Mem_layout
 {
@@ -124,7 +124,7 @@ public:
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && realview && realview_vexpress_a15]:
+INTERFACE [arm && realview_vexpress && !realview_vexpress_legacy]:
 
 EXTENSION class Mem_layout
 {
