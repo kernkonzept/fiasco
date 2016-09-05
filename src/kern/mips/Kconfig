@@ -57,7 +57,6 @@ config CPU_MIPS64_R6
 
 endchoice
 
-if MP
 config WEAK_ORDERING
 	bool
 	prompt "Weakly ordered memory access" \
@@ -76,8 +75,6 @@ config LIGHTWEIGHT_BARRIERS
 	  Choose this option if your CPU supports lightweight sync instructions.
 	  In particular sync 0x4, sync 0x10, sync 0x11, sync 0x12, sync 0x13 must
 	  be supported.
-
-endif
 
 # SECTION: GLOBAL
 
