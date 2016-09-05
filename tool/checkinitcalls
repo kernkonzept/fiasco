@@ -53,6 +53,7 @@ $sym_objdump = $target.$sym_objdump;
 $werror = 1 if have_warn_opt("error");
 if (!have_warn_opt("static-construction")) {
   push @ignore_funcs, ("(_Z41)?__static_initialization_and_destruction_0(ii\\.(clone|part)\\.\\d+)?");
+  push @ignore_funcs, ("__static_initialization_and_destruction_0\\(int, int\\) \\[clone \\.part\\.\\d+\\]");
   push @ignore_funcs, ("_GLOBAL__(sub_)?I\\.\\S*");
   push @ignore_funcs, ("_GLOBAL__sub_I__Z\\S*");
   push @ignore_funcs, ("global constructors keyed to \\S*");
