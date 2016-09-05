@@ -49,7 +49,7 @@ void
 Trap_state::copy_and_sanitize(Trap_state const *src)
 {
   // copy up to and including ulr
-  Mem::memcpy_mwords(this, src, 19);
+  Mem::memcpy_mwords(this, src, 17);
   // skip km_lr
   pc = src->pc;
   psr = access_once(&src->psr);

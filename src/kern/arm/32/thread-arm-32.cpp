@@ -73,7 +73,7 @@ Thread::copy_utcb_to_ts(L4_msg_tag tag, Thread *snd, Thread *rcv,
                         L4_fpage::Rights rights)
 {
   // if the message is too short just skip the whole copy in
-  if (EXPECT_FALSE(tag.words() < (sizeof(Trap_state) / sizeof(Mword))))
+  if (EXPECT_FALSE(tag.words() < (sizeof(Trex) / sizeof(Mword))))
     return true;
 
   Trap_state *ts = (Trap_state*)rcv->_utcb_handler;

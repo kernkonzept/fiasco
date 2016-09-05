@@ -229,15 +229,13 @@ leave_by_trigger_exception:
 	sub 	sp, sp, #RF_SIZE   @ restore old return frame
 	stmdb 	sp!, {r0 - r12}
 
-	sub sp, sp, #4
-
 	/* restore original IP */
 	CONTEXT_OF r1, sp
 	ldr 	r0, [r1, #(OFS__THREAD__EXCEPTION_IP)]
-	str	r0, [sp, #RF(PC, 14*4)]
+	str	r0, [sp, #RF(PC, 15*4)]
 
 	ldr	r0, [r1, #(OFS__THREAD__EXCEPTION_PSR)]
-	str	r0, [sp, #RF(PSR, 14*4)]
+	str	r0, [sp, #RF(PSR, 15*4)]
 
 	mov     r0, #~0
 	str	r0, [r1, #(OFS__THREAD__EXCEPTION_IP)]
