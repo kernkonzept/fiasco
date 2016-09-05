@@ -56,16 +56,12 @@ endif # ! maintainer mode
 
 
 Checkinitcalls: $(KERNEL) $(OBJ_KERNEL)
-ifneq ($(shell $(CXX) -dumpversion | cut -d . -f1-2),3.4)
 	@echo "Checking initcalls"
 	$(VERBOSE)$(srcdir)/../tool/checkinitcalls \
 	  -k fiasco.image \
 	  -Werror $(filter-out fiasco.image, $^) \
 	  $(if $(CROSS_COMPILE),-t $(CROSS_COMPILE)) && \
 	echo "Initcalls OK"
-else
-	@echo "Initcall check disabled due to gcc-3.4"
-endif
 
 TOOL_GDB_DIR=$(srcdir)/../tool/gdb
 GDB ?= gdb-multiarch
