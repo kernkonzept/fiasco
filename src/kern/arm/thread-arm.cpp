@@ -700,8 +700,6 @@ Thread::arm_esr_entry(Return_frame *rf)
     case 0x00: // undef opcode with HCR.TGE=1
         {
           ct->state_del(Thread_cancel);
-              ct->send_exception(ts);
-              return;
           Mword state = ct->state();
           Unsigned32 pc = rf->pc;
 
