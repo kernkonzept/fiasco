@@ -34,15 +34,15 @@
 	@ Adjust PC if it is in the special atomic insns area
         @ Zero-flag set after this fixup code
         cmp     \insn, #0xffffe000
-	bls	1f
+	bls	5477f
 	cmp	\insn, #0xfffff000
-	bhs     1f
+	bhs     5477f
 	tst	\insn, #0x10
 	biceq	\insn, \insn, #0x0ff
 .if \do_store_pc
-	str	\insn, [sp, #RF(PC,  RF_SIZE)]
+	str	\insn, [sp, #RF(PC,  \sp_offset)]
 .endif
-1:
+5477:
 	@ ---------------------------------------------------
 #endif
 .endm
