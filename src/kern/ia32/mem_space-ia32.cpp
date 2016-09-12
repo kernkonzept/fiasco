@@ -198,10 +198,13 @@ Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order size,
                    && (i.level != level || Phys_addr(i.page_addr()) != phys)))
     return Insert_err_exists;
 
-  page_attribs.rights |= i.attribs().rights;
+  bool const valid = i.is_valid();
+  if (valid)
+    page_attribs.rights |= i.attribs().rights;
+
   auto entry = i.make_page(phys, page_attribs);
 
-  if (i.is_valid())
+  if (valid)
     {
       if (EXPECT_FALSE(i.entry() == entry))
         return Insert_warn_exists;
