@@ -84,7 +84,8 @@
 #if defined(CONFIG_ARM_V6PLUS)
 	srsdb   #0x13!
 	disable_irqs
-	str	lr, [sp, #-4]!
+	sub	sp, sp, #(RF_SIZE - 8)
+	str	lr, [sp, #RF(SVC_LR, 0)]
 #else
 .if \not_svc
 	str	lr, s_lr
@@ -92,16 +93,17 @@
 	str	\reg, s_spsr
 	disable_irqs
 .endif  @ syscall (already in svc mode)
-	str	lr, [sp, #-12]!
+	sub	sp, sp, #RF_SIZE
+	str	lr, [sp, #RF(SVC_LR, 0)]
 .if \not_svc
 	ldr	lr, s_spsr
-	str	lr, [sp, #RF(PSR, -8)]
+	str	lr, [sp, #RF(PSR, 0)]
 	ldr	lr, s_lr
-	str	lr, [sp, #RF(PC,  -8)]
+	str	lr, [sp, #RF(PC, 0)]
 .else
-	str	lr, [sp, #RF(PC, -8)]
+	str	lr, [sp, #RF(PC, 0)]
 	mrs	lr, spsr
-	str	lr, [sp, #RF(PSR, -8)]
+	str	lr, [sp, #RF(PSR, 0)]
 .endif
 #endif
 .endm
@@ -167,14 +169,6 @@
  */
 
 
-/*************************************************************************
- * Generate stack for exception entries
- */
-.macro	exceptionframe
-	sub	sp, sp, #8
-.endm
-
-
 /***************************************************************************
  * Generate stack for system call entries
  *
@@ -222,16 +216,14 @@
 1:	ldr	pc, [r0]
 .global fast_ret_from_irq
 fast_ret_from_irq:
-2:      ldmia   sp, {r0 - r12}^
+2:      ldmia	sp, {r0 - r12}
 	disable_irqs
-        add     sp, sp, #13*4
+	add	sp, sp, #(13*4 + RF_SIZE)
 
         // XXX: use rfe here
 	/* Return */
-	ldr	lr, [sp, #RF(PSR,0)]
+	ldr	lr, [sp, #RF(PSR,-RF_SIZE)]
 	msr	spsr_cfsx, lr
-@	ldmia	sp, {sp,lr}^ @ done lazy
-	add	sp, sp, #RF_SIZE
 	ldr	lr, [sp, #RF(PC, -RF_SIZE)]
 	movs	pc, lr
 .endm
@@ -296,7 +288,6 @@ s_spsr:	.word	0
  */
 undef_entry:
 	switch_to_kernel 0 0 1
-	exceptionframe
 	enter_slowtrap GET_HSR(0x00)
 
 /**************************************************************************
@@ -308,7 +299,6 @@ undef_entry:
  */
 swi_entry:
 	switch_to_kernel 0 0 0
-	exceptionframe
 	enter_sys_call no_sys_call
 no_sys_call:
 	enter_slowtrap GET_HSR(0x11)
@@ -331,17 +321,14 @@ no_sys_call:
 inst_abort_entry:
 
 	switch_to_kernel 4 0 1
-
-	
 /**************************************************************************/
-prefetch_abort: @ A real prefetch abort occured --- handled as a page fault 
-	exceptionframe
-	stmdb   sp!, {r0 - r3, r12} 	@ Stack rest of user state
+/*prefetch_abort: @ A real prefetch abort occured --- handled as a page fault */
+	stmdb	sp!, {r0 - r3, r12} 	@ Stack rest of user state
 	ldr	lr, [sp, #RF(PSR, 5*4)]	@ get spsr from stack
 	ands	lr, lr, #0x0f		@ Mask all but relevant mode bits
 	bne	kernel_prefetch_abort	@ Kernel abort?
 	/* user prefetch abort */
-	mrc     p15, 0, r1, c5, c0, 1	@ Load IFSR into r1
+	mrc	p15, 0, r1, c5, c0, 1	@ Load IFSR into r1
 	bic	r1, r1, #GET_HSR(0x3f)
 	orr	r1, r1, #GET_HSR(0x20)  @ Set read bit and prefetch abort
 #if defined(CONFIG_ARM_V6PLUS) && !defined(CONFIG_ARM_1136) && !defined(CONFIG_ARM_MPCORE)
@@ -420,8 +407,6 @@ GEN_LEAVE_BY_TRIGGER_EXCEPTION
 .p2align 2
 data_abort_entry:
 	switch_to_kernel 8 0 1
-
-	exceptionframe
 	stmdb   sp!, {r0 - r3, r12}          @ Stack rest of user state
 
 	/* user data abort */
@@ -547,7 +532,6 @@ GEN_IRET
  */
 irq_entry:
 	switch_to_kernel 4 1 1
-	exceptionframe
 
 	stmdb   sp!, {r0 - r3, r12}   	@ Stack rest of user state
 	align_and_save_sp r12
@@ -632,9 +616,8 @@ fiq_entry:
 	sub	lr, lr, r0
 	srsdb	#0x13!
 	cps	#0x13
-	str	lr, [sp, #-4]!
-
-	exceptionframe
+	sub	sp, sp, #(RF_SIZE - 8)
+	str	lr, [sp, #RF(SVC_LR, 0)]
 
 	cps	#0x11
 	mov	r0, r10
@@ -643,7 +626,6 @@ fiq_entry:
 9:
 #endif // ARM_EM_TZ
 	switch_to_kernel 4 1 1
-	exceptionframe
 7:
 	stmdb	sp!, {r0 - r3, r12}   	@ Stack rest of user state
 	align_and_save_sp r12
