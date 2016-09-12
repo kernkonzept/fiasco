@@ -134,7 +134,6 @@ leave_by_vcpu_upcall:
 	str	lr, [sp, #RF(PSR, 0)]
 
 	stmdb	sp!, {r0 - r12}
-	sub sp, sp, #4
 	mov	r0, #-1			@ pfa
 	mov	r1, #GET_HSR(0x33)	@ err
 	orr	r1, #\type		@ + type
@@ -145,7 +144,7 @@ leave_by_vcpu_upcall:
 	ldr	pc, 3f
 
 1:
-	add	sp, sp, #12		@ pfa, err and tpidruro
+	add	sp, sp, #8		@ pfa, err
 	ldmia	sp!, {r0 - r12}
 	ldr	lr, [sp, #RF(PSR, 0)]
 	msr	cpsr, lr
