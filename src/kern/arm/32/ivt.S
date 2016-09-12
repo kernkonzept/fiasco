@@ -11,7 +11,25 @@
  * kernel mode and transfer the exception state).
  */
 
-.macro atomic_fixup insn do_store_pc
+/**
+ * Fix instruction pointer for entries from code on the kernel_lib page.
+ *
+ * \param insn         Register containing the instruction pointer for the
+ *                     entry.
+ * \param do_store_pc  Store the adjusted instruction pointer into the entry
+ *                     stack frame (sp must point to the return frame minus
+ *                     `sp_offset`.)
+ * \param sp_offset    Offset of `sp` below the start of the return frame
+ *                     (used with do_store_pc = true)
+ * \pre If do_store_pc is set then `sp` must point `sp_offset` bytes below the
+ *      start of the return frame (defined by `RF_SIZE`).
+ * \post The value in register `insn` is either untouched, or adjusted to the
+ *       start of an interrupted kernel_lib function.
+ * \post If do_store_pc is set the adjusted value of the program counter
+ *       is stored into the PC value within the return frame, referenced by
+ *       `sp`.
+ */
+.macro atomic_fixup insn do_store_pc sp_offset=20
 #ifndef CONFIG_ARM_V6PLUS
 	@ Adjust PC if it is in the special atomic insns area
         @ Zero-flag set after this fixup code
@@ -33,6 +51,22 @@
 	msr	cpsr_c, #0xd3
 .endm
 
+/**
+ * switch to kernel mode and
+ *
+ * \param reg           scratch register (used if not_svc on ARMv5)
+ * \param adjust        adjustment offset of the program counter
+ * \param atomic_fixup  fixup program counter for atomic instructions if set
+ * \param not_svc       set if code is running not in SVC mode (used
+ *                      for ARMv5).
+ * \pre `lr` of the current mode contains the exception program counter
+ * \post IRQs/FIQs are disabled.
+ * \post adjusted and fixed-up exception PC, SPSR, and SVC mode LR are
+ *       stored on the SVC mode stack.
+ * \post `sp` points to the SVC_LR field in the return frame (8 bytes into
+ *       the return frame).
+ *
+ */
 .macro  __switch_to_kernel reg adjust atomic_fixup not_svc
 .if \adjust != 0
 	sub	lr, lr, #\adjust
@@ -77,6 +111,9 @@
 
 /*************************************************************************
  * return from an exception
+ * \pre interrupts must be disabled
+ * \pre `sp` must point to the return frame
+ * \post `sp` points to the top of the stack (pops the return frame)
  */
 .macro 	return_from_exception
 	ldr	lr, [sp, #RF(PSR,0)]		@ Unstack SPSR
@@ -99,6 +136,9 @@
  * Enter the kernel slowtrap handler
  *
  * Stack the state and call 'slowtrap_entry' with sp and error code
+ * \pre 'sp' point to the start of the reurn frame
+ * \post R0-R12, errorcode, and pfa-dummy are stored below the return
+ *       frame and `sp` point to the pfa ...
  */
 .macro 	enter_slowtrap errorcode
 	stmdb 	sp!, {r0 - r12}
@@ -169,7 +209,8 @@
 	add	lr, sp, #RF(PC, 0)
 	stmia	lr, {lr}^
 
-	stmdb   sp!, {r0 - r12}
+	stmdb	sp!, {r0 - r12}
+	/* stack frame: RF + r12-r0, sp points to r0 */
 	CONTEXT_OF	r1, sp
 	RESET_THREAD_CANCEL_AT r1       @ sets r0 to state 
 	tst	r0, #VAL__Thread_alien_or_vcpu_user
@@ -619,6 +660,9 @@ fiq_entry:
 /**************************************************************************/
 /* The alien stuff is below                                               */
 /**************************************************************************/
+/**
+ * \pre sp  points to r0-r12 + RF
+ */
 alien_syscall: @ Do it for an alien ---------------------------------------
 	tst	r0, #VAL__Thread_dis_alien
 	bicne	r0, r0, #VAL__Thread_dis_alien
