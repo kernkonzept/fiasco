@@ -31,6 +31,10 @@ builddir:
 		exit 1;					\
 	fi
 	@$(call buildmakefile,$(BUILDDIR))
+	@if [ -f "$(TEMPLDIR)/globalconfig.out.$(T)" ]; then		\
+		echo "Copying template configuration $(T)";		\
+		cp $(TEMPLDIR)/globalconfig.out.$(T) $(BUILDDIR)/globalconfig.out;		\
+	fi
 	@echo "done."
 endif
 
