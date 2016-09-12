@@ -231,10 +231,10 @@ leave_by_trigger_exception:
 	/* restore original IP */
 	CONTEXT_OF r1, sp
 	ldr 	r0, [r1, #(OFS__THREAD__EXCEPTION_IP)]
-	str	r0, [sp, #RF(PC, 15*4)]
+	str	r0, [sp, #RF(PC, 13*4)]
 
 	ldr	r0, [r1, #(OFS__THREAD__EXCEPTION_PSR)]
-	str	r0, [sp, #RF(PSR, 15*4)]
+	str	r0, [sp, #RF(PSR, 13*4)]
 
 	mov     r0, #~0
 	str	r0, [r1, #(OFS__THREAD__EXCEPTION_IP)]
