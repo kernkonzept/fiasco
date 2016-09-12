@@ -73,7 +73,18 @@ public:
     Reap_list() : _h(0), _t(&_h) {}
     ~Reap_list() { del(); }
     Kobject ***list() { return &_t; }
-    void del();
+    bool empty() const { return _h == nullptr; }
+    void del_1();
+    void del_2();
+    void del()
+    {
+      if (EXPECT_TRUE(empty()))
+        return;
+
+      del_1();
+      current()->rcu_wait();
+      del_2();
+    }
   };
 
   using Kobject_dbg::dbg_id;
@@ -178,24 +189,24 @@ Kobject::kobject_invoke(L4_obj_ref, L4_fpage::Rights /*rights*/,
 }
 
 
-IMPLEMENT
+IMPLEMENT inline
 void
-Kobject::Reap_list::del()
+Kobject::Reap_list::del_1()
 {
-  if (EXPECT_TRUE(!_h))
-    return;
-
   for (Kobject *reap = _h; reap; reap = reap->_next_to_reap)
     reap->destroy(list());
+}
 
-  current()->rcu_wait();
-
+IMPLEMENT inline
+void
+Kobject::Reap_list::del_2()
+{
   for (Kobject *reap = _h; reap;)
     {
       Kobject *d = reap;
       reap = reap->_next_to_reap;
       if (d->put())
-	delete d;
+        delete d;
     }
 
   _h = 0;
