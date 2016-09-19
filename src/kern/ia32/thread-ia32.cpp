@@ -600,6 +600,7 @@ IMPLEMENTATION[ia32 || amd64]:
 #include "gdt.h"
 #include "globalconfig.h"
 #include "idt.h"
+#include "keycodes.h"
 #include "simpleio.h"
 #include "static_init.h"
 #include "terminate.h"
@@ -698,7 +699,7 @@ Thread::check_io_bitmap_delimiter_fault(Trap_state *ts)
   return 1;
 }
 
-PRIVATE inline
+PRIVATE inline NEEDS["keycodes.h"]
 int
 Thread::handle_not_nested_trap(Trap_state *ts)
 {
@@ -712,7 +713,7 @@ Thread::handle_not_nested_trap(Trap_state *ts)
   while ((r = Kconsole::console()->getchar(false)) == -1)
     Proc::pause();
 
-  if (r == '\033')
+  if (r == KEY_ESC)
     terminate (1);
 
   return 0;

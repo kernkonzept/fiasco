@@ -367,7 +367,7 @@ int Jdb_core::getchar()
     {
       c = Kconsole::console()->getchar(false);
       if (c != -1)
-        return c;
+        return c == KEY_SINGLE_ESC ? KEY_ESC : c;
 
       if (wait_for_input)
         wait_for_input();

@@ -28,7 +28,7 @@ PRIVATE static inline
 bool
 Vkey::is_debugger_entry_key(int key)
 {
-  return key == KEY_ESC;
+  return key == KEY_SINGLE_ESC;
 }
 
 // ------------------------------------------------------------------------
@@ -153,6 +153,7 @@ Vkey::check_()
 	case KEY_BACKSPACE:    hit |= add(127); break;
 	case KEY_TAB:          hit |= add(9); break;
 	case KEY_ESC:          hit |= add(27); break;
+	case KEY_SINGLE_ESC:   hit |= add(27); break;
 	case KEY_RETURN:       hit |= add(13); break;
 	case KEY_RETURN_2:     hit |= add(13); break;
 	default:               hit |= add(c); break;

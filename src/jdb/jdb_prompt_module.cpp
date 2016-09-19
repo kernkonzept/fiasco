@@ -242,7 +242,7 @@ Jdb_pcm::wait_for_escape(Console *cons)
   for (Mword cnt=100000; ; cnt--)
     {
       int c = cons->getchar(false);
-      if (c == '\033')
+      if (c == KEY_ESC || c == KEY_SINGLE_ESC)
 	return 1;
       if (!cnt)
 	return 0;
@@ -266,7 +266,7 @@ Jdb_pcm::wait_for_escape(Console *cons)
   for (;;)
     {
       int c = cons->getchar(false);
-      if (c == '\033')
+      if (c == KEY_ESC || c == KEY_SINGLE_ESC)
 	return 1;
       if (c != -1 || Cpu::rdtsc() > to)
 	return 0;

@@ -164,7 +164,7 @@ get_char:
           if (nc == -1)
             {
               pos = 0;
-              return 27;
+              return KEY_SINGLE_ESC;
             }
           else
             {
