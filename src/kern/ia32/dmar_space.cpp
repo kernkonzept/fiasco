@@ -155,6 +155,8 @@ IMPLEMENTATION [iommu]:
 #include "kmem_slab.h"
 #include "warn.h"
 
+JDB_DEFINE_TYPENAME(Dmar_space, "DMA");
+
 Dmar_space::Dmar_pt *Dmar_space::identity_map;
 bool Dmar_space::_initialized;
 Dmar_space::Did_map *Dmar_space::_free_dids;

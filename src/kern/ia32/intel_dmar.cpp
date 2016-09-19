@@ -8,6 +8,8 @@ IMPLEMENTATION [iommu]:
 
 #include <cstdio>
 
+JDB_DEFINE_TYPENAME(Dmar, "IOMMU");
+
 struct Dmar : Kobject_h<Dmar, Kobject>
 {
   L4_RPC(0, bind,   (Unsigned64 src_id, Ko::Cap<Dmar_space> dma_space));
