@@ -41,7 +41,7 @@ size_str (Mword size)
       size >>= 10;
       mult++;
     }
-  snprintf (scratchbuf, 6, "%u%c", unsigned(size), "BKMGTPX"[mult]);
+  snprintf(scratchbuf, 6, "%hu%c", (unsigned short)size, "BKMGTPX"[mult]);
   return scratchbuf;
 }
 
