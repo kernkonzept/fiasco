@@ -997,9 +997,11 @@ Cpu::identify()
         cpuid(10, &_arch_perfmon_info_eax,
                   &_arch_perfmon_info_ebx,
                   &_arch_perfmon_info_ecx, &i);
+        // FALLTHRU
       case 2:
         if (_vendor == Vendor_intel)
           cache_tlb_intel();
+        // FALLTHRU
       case 1:
         update_features_info();
       }
@@ -1055,17 +1057,20 @@ Cpu::identify()
 	switch (max)
 	  {
 	  default:
-	    // All cases fall through!
+	    // FALLTHRU
 	  case 0x80000008:
 	    if (_vendor == Vendor_amd || _vendor == Vendor_intel)
 	      addr_size_info();
+	    // FALLTHRU
 	  case 0x80000007:
 	  case 0x80000006:
 	    if (_vendor == Vendor_amd || _vendor == Vendor_via)
 	      cache_tlb_l2_l3();
+	    // FALLTHRU
 	  case 0x80000005:
 	    if (_vendor == Vendor_amd || _vendor == Vendor_via)
 	      cache_tlb_l1();
+	    // FALLTHRU
 	  case 0x80000004:
 	    {
 	      Unsigned32 *s = (Unsigned32 *)_model_str;
@@ -1074,6 +1079,7 @@ Cpu::identify()
                                       &s[2 + 4*i], &s[3 + 4*i]);
 	      _model_str[48] = 0;
 	    }
+	    // FALLTHRU
 	  case 0x80000003:
 	  case 0x80000002:
 	  case 0x80000001:

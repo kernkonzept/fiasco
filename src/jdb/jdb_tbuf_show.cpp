@@ -347,7 +347,7 @@ Jdb_tbuf_show::select_perf_event(Mword event)
 		  Perf_cnt::combine_event(evntsel, unit_mask, &event);
 		  return event;
 		}
-	      // else fall through
+	      // FALLTHRU
 	    case KEY_ESC:
 	      return Nil;
 	    default:
