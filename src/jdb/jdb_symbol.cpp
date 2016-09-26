@@ -100,6 +100,7 @@ Jdb_symbol_info::string_to_addr (const char *symstr)
 	case 'a': case 'b': case 'c':
 	case 'd': case 'e': case 'f':
 	  c -= 'a' - '9' - 1;
+	  // FALLTHRU
 	case '0': case '1': case '2':
 	case '3': case '4': case '5':
 	case '6': case '7': case '8':

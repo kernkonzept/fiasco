@@ -44,6 +44,7 @@ Jdb_input::get_mword(Mword *mword, int digits, int base, int first_char = 0)
 	    v -= 'a' - '9' - 1;
 	  else
 	    continue;
+	  // FALLTHRU
 	case '0': case '1': case '2':
 	case '3': case '4': case '5':
 	case '6': case '7': case '8':

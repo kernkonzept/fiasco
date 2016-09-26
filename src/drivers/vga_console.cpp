@@ -251,6 +251,7 @@ void Vga_console::ansi_attrib( int a )
     break;
   case 5:
     _attribute |= 0x8080;
+    // FALLTHRU
   default:
     if (30 <= a && a <= 37) 
       _attribute = (_attribute & 0x0f0) | colors[a-30] | ((_attribute >> 8) & 0x08);
