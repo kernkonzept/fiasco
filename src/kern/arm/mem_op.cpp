@@ -150,6 +150,13 @@ Mem_op::__arm_mem_l1_cache_maint(int op, void const *start, void const *end)
 
 }
 
+extern "C" void sys_arm_mem_op()
+{
+  Entry_frame *e = current()->regs();
+  Mem_op::arm_mem_cache_maint(e->r[0], (void *)e->r[1], (void *)e->r[2]);
+}
+
+
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
@@ -187,6 +194,9 @@ Mem_op::arm_mem_cache_maint(int op, void const *start, void const *end)
     };
 
 }
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && !hyp]:
 
 PUBLIC static void
 Mem_op::arm_mem_access(Mword *r)
