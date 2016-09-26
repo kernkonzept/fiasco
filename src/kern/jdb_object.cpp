@@ -70,6 +70,7 @@ Jdb_object::sys_kobject_debug(L4_msg_tag tag, unsigned op,
         return tag;
 
       sys_invoke_debug(i, f);
+      return f->tag();
     }
   return commit_result(0);
 }
