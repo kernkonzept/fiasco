@@ -52,6 +52,7 @@ public:
     enum { Bits = sizeof(VALUE) * 8 };
 
     using Reg_w<REG, VALUE>::operator =;
+    using Reg_r<REG, VALUE>::operator Type;
 
     Type set(Type bits)
     {
