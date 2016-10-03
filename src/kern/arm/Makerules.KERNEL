@@ -29,14 +29,15 @@ $(KERNEL).image: kernel.arm.lds $(CRT0) bootstrap.$(KERNEL).o $(OBJ_KERNEL_noboo
 $(KERNEL): $(KERNEL).image
 	$(LINK_MESSAGE)
 	$(VERBOSE)$(STRIP) $< -o $@
-	chmod 755 $@
+	$(VERBOSE)chmod 755 $@
 
-#	$(OBJCOPY) -O binary $@ fiasco	
+#	$(VERBOSE)$(OBJCOPY) -O binary $@ fiasco	
 
 Symbols: $(KERNEL).image
-	$(NM) $(KERNEL).image | c++filt | sort > $@.new
-	mv $@.new $@
-	chmod 755 $@
+	$(COMP_MESSAGE)
+	$(VERBOSE)$(NM) $(KERNEL).image | c++filt | sort > $@.new
+	$(VERBOSE)mv $@.new $@
+	$(VERBOSE)chmod 755 $@
 
 
 clean-KERNEL:
