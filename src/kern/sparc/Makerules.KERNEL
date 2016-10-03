@@ -20,8 +20,6 @@ $(KERNEL): $(KERNEL).image
 	$(VERBOSE)$(STRIP) $< -o $@
 	$(VERBOSE)chmod 755 $@
 
-#	$(VERBOSE)$(OBJCOPY) -O binary $@ fiasco	
-
 Symbols: $(KERNEL).image
 	$(COMP_MESSAGE)
 	$(VERBOSE)$(NM) $(KERNEL).image | c++filt | sort > $@.new
