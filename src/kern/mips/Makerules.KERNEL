@@ -18,6 +18,7 @@ $(KERNEL).image: kernel.mips.lds $(CRT0) $(OBJ_KERNEL) $(JDB) $(MINILIBC) $(LIBK
 $(KERNEL): $(KERNEL).image
 	$(LINK_MESSAGE)
 	$(VERBOSE)$(STRIP) $< -o $@
+	$(VERBOSE)$(OBJCOPY) --add-gnu-debuglink=$< $@
 	$(VERBOSE)chmod 755 $@
 
 Symbols: $(KERNEL).image
