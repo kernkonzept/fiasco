@@ -170,13 +170,6 @@ public:
   };
 };
 
-EXTENSION class K_pte_ptr
-{
-  // we have virtually tagged caches so need a cache flush before enabling
-  // a page table
-  enum { Need_cache_clean = false };
-};
-
 //---------------------------------------------------------------------------
 INTERFACE [arm && armv6plus && (mpcore || armca9)]:
 
