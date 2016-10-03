@@ -149,7 +149,8 @@ Perf_cnt::is_avail()
   switch (Cpu::boot_cpu()->copro_dbg_model())
     {
       case Cpu::Copro_dbg_model_v7:
-      case Cpu::Copro_dbg_model_v7_1: return true;
+      case Cpu::Copro_dbg_model_v7_1:
+      case Cpu::Copro_dbg_model_v8:   return true;
       default: return false;
     }
 }
