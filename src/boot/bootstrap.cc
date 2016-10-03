@@ -90,7 +90,7 @@ bootstrap()
   printf("Boot: kernel memory reserved\n");
 
   // make sure that we did not forgot to discard an unused header section
-  // (compare "objdump -p fiasco.image")
+  // (compare "objdump -p fiasco.debug")
   if ((Address)_start < Mem_layout::Kernel_image)
     panic("Fiasco kernel occupies memory below %014lx",
           (unsigned long)Mem_layout::Kernel_image);

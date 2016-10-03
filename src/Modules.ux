@@ -60,7 +60,7 @@ mem_IMPL		:= mem mem-ia32
 #
 # KERNEL subsystem
 #
-KERNEL			:= fiasco.image
+KERNEL			:= fiasco.debug
 KERNEL_EXTRA		:= irq0
 VPATH			+= kern/$(CONFIG_XARCH) kern/ia32/32 kern/ia32 kern
 VPATH			+= jdb/ia32 jdb/ia32/32 jdb/ux jdb

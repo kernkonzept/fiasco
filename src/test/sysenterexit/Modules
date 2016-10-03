@@ -9,7 +9,7 @@ endif
 #
 # KERNEL subsystem
 #
-KERNEL = fiasco.image
+KERNEL = fiasco.debug
 KERNEL_EXTRA = Symbols
 VPATH += kern
 PRIVATE_INCDIR += kern

@@ -59,22 +59,21 @@ endif # ! maintainer mode
 Checkinitcalls: $(KERNEL) $(OBJ_KERNEL)
 	@echo "Checking initcalls"
 	$(VERBOSE)$(srcdir)/../tool/checkinitcalls \
-	  -k fiasco.image \
-	  -Werror $(filter-out fiasco.image, $^) \
+	  -k fiasco.debug \
+	  -Werror $(filter-out fiasco.debug, $^) \
 	  $(if $(CROSS_COMPILE),-t $(CROSS_COMPILE)) && \
 	echo "Initcalls OK"
 
 TOOL_GDB_DIR=$(srcdir)/../tool/gdb
 GDB ?= gdb-multiarch
 
-gdb: fiasco.image
+gdb: fiasco
 	$(VERBOSE)FIASCO_TOOL_GDB_DIR=$(TOOL_GDB_DIR) \
-	 $(GDB) -x $(TOOL_GDB_DIR)/interactive.gdb fiasco.image
+	 $(GDB) -x $(TOOL_GDB_DIR)/interactive.gdb fiasco
 
-gen_ktrace_events.h: fiasco.image
+gen_ktrace_events.h: fiasco
 	$(VERBOSE)FIASCO_TOOL_GDB_DIR=$(TOOL_GDB_DIR) \
-	 $(GDB) --batch -x $(TOOL_GDB_DIR)/gen_ktrace_events.gdb \
-	               fiasco.image
+	 $(GDB) --batch -x $(TOOL_GDB_DIR)/gen_ktrace_events.gdb fiasco
 
 ToDoItems:
 	@files=$$(cd $(srcdir) &&                                            \
@@ -177,7 +176,7 @@ DEPS.dot: $(KERNEL_MODULES_CPP)
 # enforce that all $(DEPS) are made before this target, because the
 # Makefile contains "-include $(DEPS)" (which can result in Circular
 # being created/updated before all $(DEPS) are).  Therefore, depend on
-# the fiasco.image and on main (not with Fiasco-UX). Once this is made,
+# the fiasco.debug and on main (not with Fiasco-UX). Once this is made,
 # we know all $(DEPS) have been updated.
 Circular: $(KERNEL) $(BOOT) $(RUN_TESTS) $(CHECKSUM)
 	@echo "Creating $@"

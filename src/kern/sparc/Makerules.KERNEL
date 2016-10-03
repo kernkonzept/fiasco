@@ -9,21 +9,23 @@ phys_mem.o: $(TCBOFFSET)
 
 -include .kernel.sparc.lds.d
 
-$(KERNEL).image: kernel.sparc.lds $(CRT0) $(OBJ_KERNEL) $(JDB) $(LIBK) $(LIBDISASM) libdrivers.a $(ABI) $(LIBUART) $(CXXLIB) $(MINILIBC) libgluedriverslibc.a
+$(KERNEL).debug: kernel.sparc.lds $(CRT0) $(OBJ_KERNEL) $(JDB) $(LIBK) $(LIBDISASM) libdrivers.a $(ABI) $(LIBUART) $(CXXLIB) $(MINILIBC) libgluedriverslibc.a
 	$(LINK_MESSAGE)
 	$(VERBOSE)$(LD) $(LDFLAGS) -m $(LD_EMULATION) -N -defsym kernel_load_addr=$(CONFIG_KERNEL_LOAD_ADDR) \
 	  -T $< -o $@ $(filter-out $<,$+) $(LIBGCC)
 	$(call ADD_CONFIGFILE,$@)
 
-$(KERNEL): $(KERNEL).image
+# Remove '$(RM) fiasco.image' after a transition period
+$(KERNEL): $(KERNEL).debug
 	$(LINK_MESSAGE)
 	$(VERBOSE)$(STRIP) $< -o $@
 	$(VERBOSE)$(OBJCOPY) --add-gnu-debuglink=$< $@
 	$(VERBOSE)chmod 755 $@
+	$(VERBOSE)$(RM) fiasco.image
 
-Symbols: $(KERNEL).image
+Symbols: $(KERNEL).debug
 	$(COMP_MESSAGE)
-	$(VERBOSE)$(NM) $(KERNEL).image | $(CROSS_COMPILE)c++filt | sort > $@.new
+	$(VERBOSE)$(NM) $(KERNEL).debug | $(CROSS_COMPILE)c++filt | sort > $@.new
 	$(VERBOSE)mv $@.new $@
 	$(VERBOSE)chmod 644 $@
 

@@ -8,22 +8,24 @@ exception.o: $(TCBOFFSET)
 
 -include .kernel.mips.lds.d
 
-$(KERNEL).image: kernel.mips.lds $(CRT0) $(OBJ_KERNEL) $(JDB) $(MINILIBC) $(KERNEL_EXTRA_LIBS) $(LIBDISASM) $(ABI) $(LIBK) libdrivers.a $(LIBUART) $(CXXLIB) $(MINILIBC) libgluedriverslibc.a
+$(KERNEL).debug: kernel.mips.lds $(CRT0) $(OBJ_KERNEL) $(JDB) $(MINILIBC) $(KERNEL_EXTRA_LIBS) $(LIBDISASM) $(ABI) $(LIBK) libdrivers.a $(LIBUART) $(CXXLIB) $(MINILIBC) libgluedriverslibc.a
 	$(LINK_MESSAGE)
 	$(VERBOSE)$(LD) $(LDFLAGS) -m $(LD_EMULATION) -N -defsym kernel_load_addr=$(CONFIG_KERNEL_LOAD_ADDR) \
 	  $(KERNEL_LDFLAGS) \
           -T $< -o $@ $(filter-out $<,$+)
 	$(call ADD_CONFIGFILE,$@)
 
-$(KERNEL): $(KERNEL).image
+# Remove '$(RM) fiasco.image' after a transition period
+$(KERNEL): $(KERNEL).debug
 	$(LINK_MESSAGE)
 	$(VERBOSE)$(STRIP) $< -o $@
 	$(VERBOSE)$(OBJCOPY) --add-gnu-debuglink=$< $@
 	$(VERBOSE)chmod 755 $@
+	$(VERBOSE)$(RM) fiasco.image
 
-Symbols: $(KERNEL).image
+Symbols: $(KERNEL).debug
 	$(COMP_MESSAGE)
-	$(VERBOSE)$(NM) $(KERNEL).image | $(CROSS_COMPILE)c++filt | sort > $@.new
+	$(VERBOSE)$(NM) $(KERNEL).debug | $(CROSS_COMPILE)c++filt | sort > $@.new
 	$(VERBOSE)mv $@.new $@
 	$(VERBOSE)chmod 644 $@
 

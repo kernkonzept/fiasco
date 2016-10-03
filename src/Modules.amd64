@@ -82,7 +82,7 @@ processor_IMPL		:= processor processor-amd64
 #
 # KERNEL subsystem
 #
-KERNEL			:= fiasco.image
+KERNEL			:= fiasco.debug
 VPATH			+= kern/$(CONFIG_XARCH) kern/ia32/64 kern/ia32 kern
 PRIVATE_INCDIR		+= kern/$(CONFIG_XARCH) kern/ia32/64 kern/ia32 kern
 
