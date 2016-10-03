@@ -97,7 +97,7 @@ public:
    *
    * @post state() != 0.
    */
-  Thread();
+  explicit Thread(Ram_quota *);
 
   int handle_page_fault(Address pfa, Mword error, Mword pc,
                         Return_frame *regs);
@@ -140,7 +140,7 @@ public:
   bool arch_ext_vcpu_enabled();
 
 protected:
-  explicit Thread(Context_mode_kernel);
+  explicit Thread(Ram_quota *, Context_mode_kernel);
 
   // More ipc state
   Thread_ptr _pager;
@@ -199,10 +199,8 @@ Thread::operator new(size_t, Ram_quota *q) throw ()
 {
   void *t = Kmem_alloc::allocator()->q_unaligned_alloc(q, Thread::Size);
   if (t)
-    {
-      memset(t, 0, sizeof(Thread));
-      reinterpret_cast<Thread*>(t)->_quota = q;
-    }
+    memset(t, 0, sizeof(Thread));
+
   return t;
 }
 
@@ -273,8 +271,8 @@ Thread::unbind()
     @param id user-visible thread ID of the sender
  */
 IMPLEMENT inline
-Thread::Thread(Context_mode_kernel)
-  : Receiver(), Sender(), _del_observer(0), _magic(magic)
+Thread::Thread(Ram_quota *q, Context_mode_kernel)
+  : Receiver(), Sender(), _quota(q), _del_observer(0), _magic(magic)
 {
   inc_ref();
   _space.space(Kernel_task::kernel_task());

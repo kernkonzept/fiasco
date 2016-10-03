@@ -73,7 +73,7 @@ Kernel_thread::init_workload()
 	check(map(o, sigma0, sigma0, c, 0));
     }
 
-  Thread_object *sigma0_thread = new (Ram_quota::root) Thread_object();
+  Thread_object *sigma0_thread = new (Ram_quota::root) Thread_object(Ram_quota::root);
 
   assert(sigma0_thread);
 
@@ -99,7 +99,7 @@ Kernel_thread::init_workload()
   // prevent deletion of this thing
   boot_task->inc_ref();
 
-  Thread_object *boot_thread = new (Ram_quota::root) Thread_object();
+  Thread_object *boot_thread = new (Ram_quota::root) Thread_object(Ram_quota::root);
 
   assert (boot_thread);
 

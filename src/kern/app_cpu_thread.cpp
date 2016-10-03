@@ -28,6 +28,11 @@ IMPLEMENTATION [mp]:
 #include "timer_tick.h"
 #include "spin_lock.h"
 
+PUBLIC explicit inline
+App_cpu_thread::App_cpu_thread(Ram_quota *q)
+: Kernel_thread(q)
+{}
+
 PUBLIC static
 Kernel_thread *
 App_cpu_thread::may_be_create(Cpu_number cpu, bool cpu_never_seen_before)
@@ -38,7 +43,7 @@ App_cpu_thread::may_be_create(Cpu_number cpu, bool cpu_never_seen_before)
       return static_cast<Kernel_thread *>(kernel_context(cpu));
     }
 
-  Kernel_thread *t = new (Ram_quota::root) App_cpu_thread;
+  Kernel_thread *t = new (Ram_quota::root) App_cpu_thread(Ram_quota::root);
   assert (t);
 
   t->set_home_cpu(cpu);

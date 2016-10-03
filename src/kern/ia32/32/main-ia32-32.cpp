@@ -45,7 +45,7 @@ kernel_main(void)
   main_arch();
 
   // create kernel thread
-  static Kernel_thread *kernel = new (Ram_quota::root) Kernel_thread;
+  static Kernel_thread *kernel = new (Ram_quota::root) Kernel_thread(Ram_quota::root);
   assert_opt (kernel);
   Task *const ktask = Kernel_task::kernel_task();
   check(kernel->bind(ktask, User<Utcb>::Ptr(0)));
