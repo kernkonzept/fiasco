@@ -1,4 +1,5 @@
 # UX Kernel Makefile
+# vim:se ft=make:
 
 shortcut.o:          $(TCBOFFSET)
 sighandler.o:        $(TCBOFFSET)
