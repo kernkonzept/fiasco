@@ -30,9 +30,7 @@ $(KERNEL):	kernel.amd64.lds boot_img.o $(CRT0) $(OBJ_KERNEL) $(JDB) $(LIBK) $(KE
 		-o $@ $(filter-out $<,$+) $(LIBGCC) $(KERNEL_UNRES_SYMS)
 		$(call ADD_CONFIGFILE,$@)
 
-# '$(RM) main' should be removed later - Late 2012
 $(BOOT): $(KERNEL)
 		$(LINK_MESSAGE)
 		$(VERBOSE)$(STRIP) -o $@ $<
 		$(VERBOSE)chmod 755 $@
-		$(VERBOSE)$(RM) main
