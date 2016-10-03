@@ -45,8 +45,9 @@ IMPLEMENTATION:
 #include "watchdog.h"
 
 
-PUBLIC
-Kernel_thread::Kernel_thread() : Thread_object(Thread::Kernel)
+PUBLIC explicit
+Kernel_thread::Kernel_thread(Ram_quota *q)
+: Thread_object(q, Thread::Kernel)
 {}
 
 PUBLIC inline

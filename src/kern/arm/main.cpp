@@ -82,7 +82,7 @@ kernel_main()
   //  pic_disable_all();
 
   // create kernel thread
-  static Kernel_thread *kernel = new (Ram_quota::root) Kernel_thread;
+  static Kernel_thread *kernel = new (Ram_quota::root) Kernel_thread(Ram_quota::root);
   Task *const ktask = Kernel_task::kernel_task();
   check(kernel->bind(ktask, User<Utcb>::Ptr(0)));
   assert(((Mword)kernel->init_stack() & 7) == 0);

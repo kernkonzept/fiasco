@@ -101,10 +101,11 @@ IMPLEMENT inline void  Thread::user_ip(Mword ip)  { regs()->ip(ip); }
     @post state() != 0
  */
 IMPLEMENT
-Thread::Thread()
-: Sender            (0),	// select optimized version of constructor
+Thread::Thread(Ram_quota *q)
+: Sender(0),
   _pager(Thread_ptr::Invalid),
   _exc_handler(Thread_ptr::Invalid),
+  _quota(q),
   _del_observer(0)
 {
 
