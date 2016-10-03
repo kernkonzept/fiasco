@@ -1,4 +1,5 @@
 # -*- makefile -*-
+# vim:se ft=make:
 
 exception.o: $(TCBOFFSET)
 phys_mem.o: $(TCBOFFSET)
