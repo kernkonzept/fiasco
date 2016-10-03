@@ -39,4 +39,5 @@ $(KERNEL):	kernel.ia32.lds boot_img.o $(CRT0) $(OBJ_KERNEL) $(JDB) $(LIBK) $(KER
 $(BOOT): $(KERNEL)
 		$(LINK_MESSAGE)
 		$(VERBOSE)$(STRIP) -o $@ $<
+		$(VERBOSE)$(OBJCOPY) --add-gnu-debuglink=$< $@
 		$(VERBOSE)chmod 755 $@

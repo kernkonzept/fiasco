@@ -25,6 +25,7 @@ $(KERNEL).image: kernel.ppc32.lds $(CRT0) $(OBJ_KERNEL) $(LIBK) $(LIBDISASM) lib
 $(KERNEL): $(KERNEL).image
 	$(LINK_MESSAGE)
 	$(VERBOSE)$(STRIP) $< -o $@
+	$(VERBOSE)$(OBJCOPY) --add-gnu-debuglink=$< $@
 	$(VERBOSE)chmod 755 $@
 
 Symbols: $(KERNEL).image
