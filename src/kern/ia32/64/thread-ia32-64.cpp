@@ -241,6 +241,13 @@ int
 Thread::check_trap13_kernel (Trap_state * /*ts*/)
 { return 1; }
 
+PRIVATE static inline
+bool
+Thread::check_known_inkernel_fault(Trap_state *ts)
+{
+  extern char in_slowtrap_exit_label_iret[];
+  return ts->ip() == (Mword)in_slowtrap_exit_label_iret;
+}
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION [amd64 & (debug | kdb)]:

@@ -152,6 +152,22 @@ Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
   return true;
 }
 
+PRIVATE static inline
+bool
+Thread::check_known_inkernel_fault(Trap_state *ts)
+{
+  extern char in_slowtrap_exit_label_restore_gs[];
+  extern char in_slowtrap_exit_label_restore_fs[];
+  extern char in_slowtrap_exit_label_iret[];
+  extern char vcpu_resume_label_gs[];
+  extern char vcpu_resume_label_fs[];
+
+  return    ts->ip() == (Mword)in_slowtrap_exit_label_restore_gs
+         || ts->ip() == (Mword)in_slowtrap_exit_label_restore_fs
+         || ts->ip() == (Mword)in_slowtrap_exit_label_iret
+         || ts->ip() == (Mword)vcpu_resume_label_gs
+         || ts->ip() == (Mword)vcpu_resume_label_fs;
+}
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION [ia32 && !ux]:
