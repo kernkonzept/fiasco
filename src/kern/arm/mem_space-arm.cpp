@@ -138,8 +138,6 @@ void Mem_space::switchin_context(Mem_space *from)
 
   if (from != this)
     make_current();
-  else
-    tlb_flush(true);
 }
 
 
