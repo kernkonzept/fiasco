@@ -145,7 +145,7 @@ INTERFACE [ux]:
 EXTENSION class Config
 {
 public:
-  // 32MB RAM => 2.5MB kmem, 128MB RAM => 16MB kmem, >=512MB RAM => 64MB kmem
+  // 8 percent of total RAM, >=800MB RAM => 64MB kmem
   static const unsigned kernel_mem_per_cent = 8;
   enum
   {
@@ -159,7 +159,7 @@ INTERFACE [!ux && !64bit]:
 EXTENSION class Config
 {
 public:
-  // 32MB RAM => 2.5MB kmem, 128MB RAM => 16MB kmem, >=512MB RAM => 60MB kmem
+  // 8 percent of total RAM, >=750MB RAM => 60MB kmem
   static const unsigned kernel_mem_per_cent = 8;
   enum
   {
@@ -173,7 +173,7 @@ INTERFACE [!ux && 64bit]:
 EXTENSION class Config
 {
 public:
-  // 32MB RAM => 2.5MB kmem, 128MB RAM => 16MB kmem, >=512MB RAM => 60MB kmem
+  // 6 percent of total RAM, >=1706MB RAM => 1024MB kmem
   static const unsigned kernel_mem_per_cent = 6;
   enum
   {
