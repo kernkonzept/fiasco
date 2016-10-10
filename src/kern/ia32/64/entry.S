@@ -125,7 +125,7 @@ in_slowtrap:
 
 	restore_all_regs
 	add	$0x10,%rsp		/* pop trap number and error code */
-	iretq
+	MAY_FAULT(iretq, in_slowtrap_exit_label_iret)
 
 unexpected_trap_pop:
 #ifndef CONFIG_NO_FRAME_PTR

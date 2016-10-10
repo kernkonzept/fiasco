@@ -11,6 +11,10 @@
 	.ascii	msg		;\
 9:
 
+#define MAY_FAULT(insn, label) \
+	.global label;         \
+	label: insn
+
 //.macro REGS this_ptr, dst
 //	leal	(THREAD_BLOCK_SIZE - OFS__ENTRY_FRAME__MAX)(\this_ptr), \dst
 //.endm

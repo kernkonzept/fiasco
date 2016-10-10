@@ -183,11 +183,11 @@ in_slowtrap:
 	CHECK_SANITY 60(%esp)		/* scratches ecx */
 
 	addl	$4*2,%esp		/* Pop ds, es segment registers */
-	popl	REG_GS
-	popl	REG_FS			/* Restore segment registers */
+	MAY_FAULT(popl REG_GS, in_slowtrap_exit_label_restore_gs)
+	MAY_FAULT(popl REG_FS, in_slowtrap_exit_label_restore_fs) /* Restore segment registers */
 	popa
 	addl	$4*2,%esp		/* Pop trap number and error code */
-	iret
+	MAY_FAULT(iret, in_slowtrap_exit_label_iret)
 
 .Lunexpected_trap_pop:
 #ifndef CONFIG_NO_FRAME_PTR
@@ -655,8 +655,8 @@ vcpu_resume:
 	addl $(2*4), %esp // skip es and ds for now
 	//popl %es
 	//popl %ds
-	popl REG_GS
-	popl REG_FS
+	MAY_FAULT(popl REG_GS, vcpu_resume_label_gs)
+	MAY_FAULT(popl REG_FS, vcpu_resume_label_fs)
 	popa
 	addl $(2*4), %esp
 	iret

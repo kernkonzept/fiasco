@@ -224,6 +224,12 @@ Thread::handle_slow_trap(Trap_state *ts)
       if (ts->_trapno == 14)
 	goto check_exception;
 
+      if (check_known_inkernel_fault(ts))
+        {
+          ts->ip(regs()->ip());
+          goto check_exception;
+        }
+
       goto generic_debug;      // we were in kernel mode -- nothing to emulate
     }
 
