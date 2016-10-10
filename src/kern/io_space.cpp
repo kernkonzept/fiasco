@@ -312,12 +312,6 @@ Generic_io_space<SPACE>::tlb_flush_spaces(bool, Generic_io_space<SPACE> *,
                                           Generic_io_space<SPACE> *)
 {}
 
-PUBLIC template< typename SPACE >
-inline static
-bool
-Generic_io_space<SPACE>::need_tlb_flush()
-{ return false; }
-
 //
 // IO lookup / insert / delete / counting
 //
