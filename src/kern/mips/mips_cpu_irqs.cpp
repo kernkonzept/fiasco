@@ -88,7 +88,7 @@ public:
     Mips_cpu_irq_chip::mask(pin);
   }
 
-  int set_mode(Mword, Mode)
+  int set_mode(Mword, Mode) override
   {
     return Mode::Trigger_edge | Mode::Polarity_high;
   }
