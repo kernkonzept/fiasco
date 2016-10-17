@@ -43,12 +43,6 @@ VPATH_LIBUART  := $(srcdir)/lib/uart
 PRIVATE_INCDIR += lib/uart
 
 #
-# KARMA subsystem
-#
-VPATH_LIBKARMA := $(srcdir)/lib/karma
-PRIVATE_INCDIR += lib/karma
-
-#
 # DRIVERS Subsystem
 #
 DRIVERS			:= libdrivers.a libgluedriverslibc.a
@@ -269,10 +263,6 @@ VPATH += kern/mips/bsp/$(BSP_NAME) kern/mips/bsp
 
 ifeq ("$(filter LIBUART, $(SUBSYSTEMS))","LIBUART")
   LIBUART			:= uart/libuart.a
-endif
-
-ifeq ("$(filter LIBKARMA, $(SUBSYSTEMS))","LIBKARMA")
-  LIBKARMA			:= karma/libkarma.a
 endif
 
 CONFIG_KERNEL_LOAD_ADDR-32 := 0x80010000
