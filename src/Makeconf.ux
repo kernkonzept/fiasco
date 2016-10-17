@@ -14,16 +14,6 @@ L4STD_INCDIR		:= -include $(srcdir)/kern/ux/format.h
 L4STD_INCDIR_LAST	:=
 CPPFLAGS		+= -D_GNU_SOURCE
 
-SHARED_FLAGS-$(CONFIG_IA32_486) += -march=i486
-SHARED_FLAGS-$(CONFIG_IA32_586) += -march=i586
-SHARED_FLAGS-$(CONFIG_IA32_686) += -march=i686
-SHARED_FLAGS-$(CONFIG_IA32_P2)  += $(call CHECKCC,-march=pentium2,-march=i686)
-SHARED_FLAGS-$(CONFIG_IA32_P3)  += $(call CHECKCC,-march=pentium3,-march=i686)
-SHARED_FLAGS-$(CONFIG_IA32_P4)  += $(call CHECKCC,-march=pentium4,-march=i686)
-SHARED_FLAGS-$(CONFIG_IA32_K6)  += $(call CHECKCC,-march=k6,-march=i586)
-SHARED_FLAGS-$(CONFIG_IA32_K7)  += $(call CHECKCC,-march=athlon,-march=i686)
-SHARED_FLAGS-$(CONFIG_IA32_K8)  += $(call CHECKCC,-march=k8,-march=i686)
-
 SHARED_FLAGS                    += $(call CHECKCC,-mno-mmx,)
 SHARED_FLAGS                    += $(call CHECKCC,-mno-sse,)
 SHARED_FLAGS                    += $(call CHECKCC,-mno-sse2,)

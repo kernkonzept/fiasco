@@ -14,10 +14,6 @@ SHARED_FLAGS            += -m64 -mcmodel=kernel -mno-red-zone -funit-at-a-time
 OPT_CFLAGS		+= -mno-red-zone -funit-at-a-time
 OPT_CXXFLAGS		+= -mno-red-zone -funit-at-a-time
 
-SHARED_FLAGS-$(CONFIG_AMD64_CORE2) += $(call CHECKCC,-march=core2,)
-SHARED_FLAGS-$(CONFIG_AMD64_CORE_I)+= $(call CHECKCC,-march=corei7,)
-SHARED_FLAGS-$(CONFIG_AMD64_ATOM)  += $(call CHECKCC,-march=atom,)
-SHARED_FLAGS-$(CONFIG_AMD64_K8)    += $(call CHECKCC,-march=k8,)
 SHARED_FLAGS                       += $(call CHECKCC,-mno-mmx,)
 SHARED_FLAGS                       += $(call CHECKCC,-mno-sse,)
 SHARED_FLAGS                       += $(call CHECKCC,-mno-sse2,)
