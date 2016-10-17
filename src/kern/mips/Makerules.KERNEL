@@ -8,7 +8,7 @@ exception.o: $(TCBOFFSET)
 
 -include .kernel.mips.lds.d
 
-$(KERNEL).image: kernel.mips.lds $(CRT0) $(OBJ_KERNEL) $(JDB) $(MINILIBC) $(LIBK) $(KERNEL_EXTRA_LIBS) $(LIBDISASM) $(ABI) libdrivers.a $(LIBUART) $(LIBKARMA) $(CXXLIB) $(MINILIBC) libgluedriverslibc.a
+$(KERNEL).image: kernel.mips.lds $(CRT0) $(OBJ_KERNEL) $(JDB) $(MINILIBC) $(LIBK) $(KERNEL_EXTRA_LIBS) $(LIBDISASM) $(ABI) libdrivers.a $(LIBUART) $(CXXLIB) $(MINILIBC) libgluedriverslibc.a
 	$(LINK_MESSAGE)
 	$(VERBOSE)$(LD) $(LDFLAGS) -m $(LD_EMULATION) -N -defsym kernel_load_addr=$(CONFIG_KERNEL_LOAD_ADDR) \
 	  $(KERNEL_LDFLAGS) \
