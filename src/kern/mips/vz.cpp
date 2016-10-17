@@ -82,7 +82,7 @@ public:
     Mword g_bad_instr;   // $8, 1
     Mword g_bad_instr_p; // $8, 2
 
-    Mword g_kscr[8];     // $31, 0 .. 7; where 0 is actually desave
+    Mword g_kscr[8];     // $31, 0 .. 7
 
 
     struct Tlb_entry
@@ -110,7 +110,6 @@ public:
       M_intctl    = 1UL << 10, ///< IntCtl
       M_ebase     = 1UL << 11, ///< EBase
       M_ulr       = 1UL << 12, ///< ULR
-      M_desave    = 1UL << 13, ///< DESAVE
       M_ctl_0     = 1UL << 16, ///< GuestCtl0
       M_ctl_0_ext = 1UL << 17, ///< GuestCtl0Ext
       M_ctl_2     = 1UL << 18, ///< GuestCtl2
@@ -496,9 +495,6 @@ Vz::State::save_full(int guest_id)
 
   // FIXME: Think about Tag and Data registers
 
-  if (guest_cfg.r<1>().ep() & EXPECT_TRUE(!(c_map & M_desave)))
-    mfgc0(&g_kscr[0], Cp0_desave);
-
   auto kscr_n = guest_cfg.r<4>().k_scr_num();
   if (EXPECT_TRUE(!(c_map & M_kscr)))
     {
@@ -674,8 +670,6 @@ Vz::State::load_full(int guest_id)
 
 
   // FIXME: Think about Tag and Data registers
-  if (guest_cfg.r<1>().ep())
-    mtgc0(g_kscr[0], Cp0_desave);
 
   auto kscr_n = guest_cfg.r<4>().k_scr_num();
   mtg_kscr(kscr_n, 2);
@@ -820,10 +814,6 @@ Vz::State::load_selective(int guest_id)
   // 12, 2 .. 3 SRSxxx not implemented (disabled in guest_config)
   // 13, 5 NestedExc not supported in guest
   // FIXME: Think about Tag and Data registers
-
-
-  if (guest_cfg.r<1>().ep() & EXPECT_FALSE(mod_map & M_desave))
-    mtgc0(g_kscr[0], Cp0_desave);
 
   auto kscr_n = guest_cfg.r<4>().k_scr_num();
   if (EXPECT_FALSE(mod_map & M_kscr))
