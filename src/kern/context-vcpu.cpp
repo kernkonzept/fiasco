@@ -54,8 +54,8 @@ PUBLIC inline
 void
 Context::vcpu_save_state_and_upcall()
 {
-  extern char leave_by_vcpu_upcall[];
-  _exc_cont.activate(regs(), leave_by_vcpu_upcall);
+  extern char upcall[] asm ("leave_by_vcpu_upcall");
+  _exc_cont.activate(regs(), upcall);
 }
 
 PUBLIC inline NEEDS["fpu.h", "space.h", Context::arch_load_vcpu_kern_state,
