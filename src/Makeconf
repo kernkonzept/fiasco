@@ -252,10 +252,6 @@ CC_BLACKLIST-arm-gcc   := 4.8.0 4.8.1 4.8.2
 
 # CC_LAST_BROKEN-SEQ* specifies the last broken version
 # using the sequential version
-#
-# Memory write back issue I'm seeing with those versions, disappeared
-# with more recent builds.
-CC_LAST_BROKEN-SEQ-gcc-6 := 20160802
 
 CC_LAST_BROKEN-SEQ-gcc   := $(CC_LAST_BROKEN-SEQ-gcc-$(CCVER_MAJOR))
 
