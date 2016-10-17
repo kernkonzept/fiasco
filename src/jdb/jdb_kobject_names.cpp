@@ -189,7 +189,7 @@ Jdb_name_hdl::invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb)
           strncpy(dst, n->name(), l);
           dst[l - 1] = 0;
 
-          f->tag(Kobject_iface::commit_result(0));
+          f->tag(Kobject_iface::commit_result(0, (l + sizeof(Mword) - 1) / sizeof(Mword)));
           return true;
         }
     }
