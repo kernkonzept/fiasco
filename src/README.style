@@ -411,7 +411,7 @@ In particular, the conventions are as follows:
 
 * Preprocessor-symbol identifiers are all-uppercase and start with a
   letter.  As with all other identifiers, multiple words are separated
-  using underscores.  Examples: 'THREAD_BLOCK_SIZE', 'CONFIG_IA32_486'
+  using underscores.  Examples: 'THREAD_BLOCK_SIZE', 'CONFIG_PF_PC'
 
   Please note that preprocessor constants are deprecated and allowed
   only in assembly files and header files meant to be included in

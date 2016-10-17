@@ -12,25 +12,6 @@ SHARED_FLAGS-gcc        += -mpreferred-stack-boundary=2
 SHARED_FLAGS            += -m32
 
 SHARED_FLAGS-$(CONFIG_REGPARM3)   += -mregparm=3
-SHARED_FLAGS-$(CONFIG_IA32_486)	  += -march=i486
-SHARED_FLAGS-$(CONFIG_IA32_586)	  += -march=i586
-SHARED_FLAGS-$(CONFIG_IA32_686)	  += -march=i686
-SHARED_FLAGS-$(CONFIG_IA32_P2)	  += -march=i686 $(call CHECKCC,-mtune=pentium2,\
-                                                   $(call CHECKCC,-mcpu=pentium2))
-SHARED_FLAGS-$(CONFIG_IA32_P3)    += -march=i686 $(call CHECKCC,-mtune=pentium3,\
-                                                   $(call CHECKCC,-mcpu=pentium3))
-SHARED_FLAGS-$(CONFIG_IA32_P4)    += -march=i686 $(call CHECKCC,-mtune=pentium4,\
-                                                   $(call CHECKCC,-mcpu=pentium4))
-SHARED_FLAGS-$(CONFIG_IA32_PM)    += -march=i686 $(call CHECKCC,-mtune=pentium-m,\
-                                                   $(call CHECKCC,-mcpu=pentiumm))
-SHARED_FLAGS-$(CONFIG_IA32_CORE2) += $(call CHECKCC,-march=core2,-march=i686)
-SHARED_FLAGS-$(CONFIG_IA32_CORE_I)+= $(call CHECKCC,-march=corei7,-march=i686)
-SHARED_FLAGS-$(CONFIG_IA32_ATOM)  += $(call CHECKCC,-march=atom,-march=i686)
-SHARED_FLAGS-$(CONFIG_IA32_K6)    += $(call CHECKCC,-march=k6,-march=i586)
-SHARED_FLAGS-$(CONFIG_IA32_K7)    += $(call CHECKCC,-march=athlon,-march=i686)
-SHARED_FLAGS-$(CONFIG_IA32_K8)    += $(call CHECKCC,-march=k8,-march=i686)
-SHARED_FLAGS-$(CONFIG_IA32_K10)   += $(call CHECKCC,-march=barcelona,-march=i686)
-
 SHARED_FLAGS                      += $(call CHECKCC,-mno-mmx,)
 SHARED_FLAGS                      += $(call CHECKCC,-mno-sse,)
 SHARED_FLAGS                      += $(call CHECKCC,-mno-sse2,)
