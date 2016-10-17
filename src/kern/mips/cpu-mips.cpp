@@ -266,7 +266,7 @@ public:
   static Options options;
 
 private:
-  friend class Cpu_type;
+  friend struct Cpu_type;
 
   static Cpu_type _types[] __asm__("MIPS_cpu_types");
   static Cpu *_boot_cpu;
