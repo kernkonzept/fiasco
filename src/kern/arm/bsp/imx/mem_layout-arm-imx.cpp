@@ -95,7 +95,6 @@ EXTENSION class Mem_layout
 {
 public:
   enum Phys_layout_imx6 : Address {
-    Mp_scu_phys_base     = 0,
     Gic_dist_phys_base   = 0x00a01000,
     Gic_cpu_phys_base    = 0x00a02000,
     Gic_h_phys_base      = 0x00a04000,

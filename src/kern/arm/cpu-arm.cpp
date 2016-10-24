@@ -271,7 +271,7 @@ Cpu::disable_smp()
 }
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && (mpcore || armca9)]:
+INTERFACE [arm && arm_scu]:
 
 #include "scu.h"
 
@@ -282,15 +282,15 @@ public:
 };
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && (mpcore || armca9)]:
+IMPLEMENTATION [arm && arm_scu]:
 
 #include "kmem.h"
 
 Static_object<Scu> Cpu::scu;
 
-IMPLEMENT_OVERRIDE inline NEEDS["kmem.h"]
+PRIVATE static
 void
-Cpu::early_init_platform()
+Cpu::init_scu()
 {
   if (Scu::Available)
     {
@@ -299,6 +299,21 @@ Cpu::early_init_platform()
       scu->reset();
       scu->enable(Scu::Bsp_enable_bits);
     }
+}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && !arm_scu]:
+
+PRIVATE static inline void Cpu::init_scu() {}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && (mpcore || armca9)]:
+
+IMPLEMENT_OVERRIDE inline NEEDS[Cpu::init_scu]
+void
+Cpu::early_init_platform()
+{
+  init_scu();
 
   Mem_unit::clean_dcache();
 
