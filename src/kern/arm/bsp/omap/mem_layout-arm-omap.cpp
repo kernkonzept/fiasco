@@ -87,7 +87,5 @@ public:
     Gic_v_phys_base         = 0x48216000,
 
     Prm_phys_base           = 0x4ae06000,
-
-    Mp_scu_phys_base        = 0,
   };
 };

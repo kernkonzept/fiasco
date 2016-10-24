@@ -3,9 +3,7 @@ IMPLEMENTATION [arm && mp]:
 #include "io.h"
 #include "platform_control.h"
 #include "outer_cache.h"
-#include "scu.h"
 #include "paging.h"
-#include <cstdio>
 
 PUBLIC
 static void
@@ -21,12 +19,6 @@ Kernel_thread::boot_app_cpus()
   extern volatile Mword _tramp_mp_startup_ttbcr;
   extern volatile Mword _tramp_mp_startup_mair0;
   extern volatile Mword _tramp_mp_startup_mair1;
-
-  if (Scu::Available)
-    {
-      unsigned num_ap_cpus = Cpu::scu->config() & 3;
-      printf("Number of CPUs: %d\n", num_ap_cpus + 1);
-    }
 
   _tramp_mp_startup_cp15_c1 = Config::Cache_enabled
                               ? Cpu::Cp15_c1_cache_enabled : Cpu::Cp15_c1_cache_disabled;
