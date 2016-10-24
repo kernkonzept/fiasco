@@ -134,7 +134,10 @@ Platform_control::boot_all_secondary_cpus_cm()
       cm->set_access(1UL << i);
       (void) cm->get_co_coherence();
 
-      cpc->set_other_core(i);
+      // Starting with CM version 3, the CPC other field is set via
+      // the CM other field.
+      if (cm->revision() < Cm::Rev_cm3)
+        cpc->set_other_core(i);
       cpc->reset_other_core();
     }
 }

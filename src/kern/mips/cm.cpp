@@ -55,6 +55,13 @@ public:
     O_gcr_reset_ext_base    = 0x30,
     O_gcr_tcid_0_priority   = 0x40,
   };
+
+  enum Cm_revisions
+  {
+    Rev_cm2 = 6,
+    Rev_cm2_5 = 7,
+    Rev_cm3 = 8
+  };
   static Static_object<Cm> cm;
 
   Address mmio_base() const
@@ -69,9 +76,15 @@ public:
   unsigned num_cores() const
   { return (_gcr_base[R_gcr_config] & 0xff) + 1; }
 
+  unsigned revision() const
+  { return _rev; }
+
   void set_other_core(Mword core)
   {
-    _gcr_base[R_gcr_cl + O_gcr_other] = core << 16;
+    if (_rev < Rev_cm3)
+      _gcr_base[R_gcr_cl + O_gcr_other] = core << 16;
+    else
+      _gcr_base[R_gcr_cl + O_gcr_other] = core << 8;
   }
 
   void set_co_reset_base(Address base)
@@ -108,6 +121,7 @@ public:
 private:
   Phys_mem_addr _gcr_phys;
   Register_block<32> _gcr_base;
+  unsigned _rev;
   bool _cpc_enabled = false;
 };
 
@@ -189,6 +203,12 @@ Cm::Cm()
 
   printf("MIPS: Coherency Manager (CM) found: phys=%08lx(<<4) virt=%08lx\n",
          v, _gcr_base.get_mmio_base());
+
+  _rev = _gcr_base[R_gcr_rev] >> 8;
+  printf("MIPS: CM: revision %s (%08x)\n",
+         (_rev == Rev_cm2) ? "2.0" : (_rev == Rev_cm2_5) ? "2.5" :
+         (_rev == Rev_cm3) ? "3.0" : "<unknown>",
+         (unsigned) _gcr_base[R_gcr_rev]);
 
   unsigned config = _gcr_base[R_gcr_config];
   printf("MIPS: CM: cores=%u iocus=%u regions=%u\n",
