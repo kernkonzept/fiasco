@@ -6,6 +6,13 @@ INTERFACE:
 class Gic : public Irq_chip_gen
 {
 private:
+  typedef Mword Reg_type;
+  enum : unsigned long
+  {
+    Reg_bytes = sizeof(Reg_type),
+    Reg_width = Reg_bytes * 8
+  };
+
   enum : Address
   {
     Core_local = 0x8000,
@@ -60,25 +67,25 @@ private:
   static Address sh_map_core(Address irq, Cpu_phys_id core)
   {
     return Sh_map_vpe + irq * 0x20UL
-           + (cxx::int_value<Cpu_phys_id>(core) / 32UL) * 4UL;
+           + (cxx::int_value<Cpu_phys_id>(core) / Reg_width) * Reg_bytes;
   }
 
-  static Unsigned32 sh_map_core_bit(Cpu_phys_id core)
-  { return 1UL << (cxx::int_value<Cpu_phys_id>(core) % 32); }
+  static Reg_type sh_map_core_bit(Cpu_phys_id core)
+  { return 1UL << (cxx::int_value<Cpu_phys_id>(core) % Reg_width); }
 
   static Address sh_map_pin(Address irq)
   { return Sh_map_pin + irq * 0x4UL; }
 
   static Address sh_irq_reg(Address reg, Address irq)
-  { return reg + (irq / 32UL) * 4; }
+  { return reg + (irq / Reg_width) * Reg_bytes; }
 
-  static Unsigned32 sh_irq_bit(Address irq)
-  { return irq % 32UL; }
+  static Reg_type sh_irq_bit(Address irq)
+  { return 1UL << (irq % Reg_width); }
 
-  Register_block<32> _r;
+  Register_block<Reg_width> _r;
   Spin_lock<> _mode_lock;
 
-  Unsigned32 _enabled_map[256 / (sizeof(Unsigned32) * 8)];
+  Reg_type _enabled_map[256 / Reg_width];
 };
 
 // -----------------------------------------------------------------
@@ -91,14 +98,14 @@ IMPLEMENTATION:
 PUBLIC
 Gic::Gic(Address mmio, unsigned cpu_int) : _r(mmio), _mode_lock(Spin_lock<>::Unlocked)
 {
-  Mword cfg = _r[Sh_config];
+  Reg_type cfg = _r[Sh_config];
   unsigned vpes = (cfg & 0x3f) + 1;
   unsigned nrirqs = (((cfg >> 16) & 0xff) + 1) * 8;
-  Unsigned32 rev = _r[Sh_revision_id];
+  Reg_type rev = _r[Sh_revision_id];
 
   printf("MIPS GIC[%08lx]: %u IRQs %u VPEs%s, V%d.%d\n",
          mmio, nrirqs, vpes, (cfg & (1 << 31)) ? "VZP" : "",
-         rev >> 8, rev & 0xff);
+         (unsigned) rev >> 8, (unsigned) rev & 0xff);
 
   assert (vpes <= 32); // this limit is due to set_cpu limitations
   assert (nrirqs <= 256);
@@ -110,24 +117,19 @@ Gic::Gic(Address mmio, unsigned cpu_int) : _r(mmio), _mode_lock(Spin_lock<>::Unl
 
   memset(_enabled_map, 0, sizeof(_enabled_map));
 
-  for (unsigned i = 0; i < (nrirqs + 31) / 32; ++i)
+  for (unsigned i = 0; i < (nrirqs + Reg_width - 1) / Reg_width; ++i)
     {
-      _r[Sh_rmask   + i * 4] = 0xffffffff; // disabled
-      _r[Sh_pol     + i * 4] = 0xffffffff; // pol high
-      _r[Sh_trigger + i * 4] = 0; // level
+      _r[Sh_rmask   + i * Reg_bytes] = ~0UL; // disabled
+      _r[Sh_pol     + i * Reg_bytes] = ~0UL; // pol high
+      _r[Sh_trigger + i * Reg_bytes] = 0; // level
     }
 
   for (unsigned i = 0; i < nrirqs; ++i)
     {
       // default to core 0
-      _r[sh_map_core(i, Cpu_phys_id(0))]   = 1;
-      _r[sh_map_core(i, Cpu_phys_id(32))]  = 0;
-      _r[sh_map_core(i, Cpu_phys_id(64))]  = 0;
-      _r[sh_map_core(i, Cpu_phys_id(96))]  = 0;
-      _r[sh_map_core(i, Cpu_phys_id(128))] = 0;
-      _r[sh_map_core(i, Cpu_phys_id(160))] = 0;
-      _r[sh_map_core(i, Cpu_phys_id(192))] = 0;
-      _r[sh_map_core(i, Cpu_phys_id(224))] = 0;
+      _r[sh_map_core(i, Cpu_phys_id(0))] = 1;
+      for (unsigned id = Reg_width; id < 256; id += Reg_width)
+        _r[sh_map_core(i, Cpu_phys_id(id))]  = 0;
 
       _r[sh_map_pin(i)] = (1UL << 31) | cpu_int;
     }
@@ -139,13 +141,13 @@ PRIVATE inline
 void
 Gic::mod_mask(Mword pin, bool mask, unsigned hw_reg_base)
 {
-  unsigned b = 1 << sh_irq_bit(pin);
+  auto b = sh_irq_bit(pin);
 
   _r[sh_irq_reg(hw_reg_base, pin)] = b;
   if (mask)
-    _enabled_map[pin / 32] &= ~b;
+    _enabled_map[pin / Reg_width] &= ~b;
   else
-    _enabled_map[pin / 32] |= b;
+    _enabled_map[pin / Reg_width] |= b;
 }
 
 PUBLIC
@@ -186,14 +188,14 @@ Gic::set_mode(Mword pin, Mode mode) override
   auto pol = sh_irq_reg(Sh_pol, pin);
   auto trig = sh_irq_reg(Sh_trigger, pin);
   auto dual = sh_irq_reg(Sh_dual_edge, pin);
-  Unsigned32 bit = 1 << sh_irq_bit(pin);
+  auto bit = sh_irq_bit(pin);
 
   auto guard = lock_guard(_mode_lock);
 
   bool lvl = mode.level_triggered();
   bool pol_h = mode.polarity() == Mode::Polarity_high;
 
-  Unsigned32 mask = _r.read<Unsigned32>(sh_irq_reg(Sh_mask, pin)) & bit;
+  auto mask = _r.read<Reg_type>(sh_irq_reg(Sh_mask, pin)) & bit;
   if (mask)
     _r[rmask] = bit;
 
@@ -224,14 +226,14 @@ Gic::pending()
 {
   // We might also need to check that we're on the proper CPU but
   // lets postpone that until it is actually required
-  for (unsigned i = 0, o = 0; i < nr_irqs(); o += 4, i += 32)
+  for (unsigned i = 0, o = 0; i < nr_irqs(); o += Reg_bytes, i += Reg_width)
     {
-      Unsigned32 v = _r[Sh_pend + o] & _enabled_map[i / 32];
+      Reg_type v = _r[Sh_pend + o] & _enabled_map[i / Reg_width];
       if (v)
         return i + __builtin_ffs(v) - 1;
     }
 
-  return ~0;
+  return ~0U;
 }
 
 //---------------------------------------------------------------------------
@@ -291,7 +293,8 @@ Gic::init_ipis(Cpu_number cpu, Irq_base *irq) override
     Mips_cpu_irqs::chip->unmask(_cpu_int_ipi);
 
   unsigned i = _ipi_base + cxx::int_value<Cpu_number>(cpu);
-  _r[sh_map_core(i, Cpu_phys_id(0))] = 1UL << cxx::int_value<Cpu_phys_id>(Proc::cpu_id());
+  auto cpuid = Proc::cpu_id();
+  _r[sh_map_core(i, cpuid)] = sh_map_core_bit(cpuid);
 }
 
 PRIVATE inline NOEXPORT
@@ -308,15 +311,14 @@ Gic::setup_ipis()
   for (unsigned i = _ipi_base; i < nr_irqs(); ++i)
     {
       _r[sh_map_pin(i)] = (1UL << 31) | (_cpu_int_ipi - 2);
-      unsigned reg = (i / 32) * 4;
-      Unsigned32 mask = 1UL << (i % 32);
-      _r[Sh_pol       + reg].set(mask);   // pol high
-      _r[Sh_trigger   + reg].set(mask);   // edge
-      _r[Sh_dual_edge + reg].clear(mask); // single edge
+      auto mask = sh_irq_bit(i);
+      _r[sh_irq_reg(Sh_pol, i)].set(mask);   // pol high
+      _r[sh_irq_reg(Sh_trigger, i)].set(mask);   // edge
+      _r[sh_irq_reg(Sh_dual_edge, i)].clear(mask); // single edge
       asm volatile ("sync" : : : "memory");
       _r[Sh_wedge] = i;                   // clear IRQ
       asm volatile ("sync" : : : "memory");
-      _r[Sh_smask     + reg] = mask;      // enable
+      _r[sh_irq_reg(Sh_smask, i)] = mask;      // enable
     }
 
   Ipi::hw = this;
