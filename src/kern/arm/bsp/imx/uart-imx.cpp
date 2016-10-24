@@ -49,6 +49,16 @@ IMPLEMENT L4::Uart *Uart::uart()
   return &uart;
 }
 
+IMPLEMENTATION [imx7]:
+
+#include "uart_imx.h"
+
+IMPLEMENT L4::Uart *Uart::uart()
+{
+  static L4::Uart_imx7 uart;
+  return &uart;
+}
+
 IMPLEMENTATION:
 
 #include "koptions.h"

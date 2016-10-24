@@ -94,12 +94,29 @@ INTERFACE [arm && imx && imx6ul]: // ---------------------------------------
 EXTENSION class Mem_layout
 {
 public:
-  enum Phys_layout_imx6 : Address {
+  enum Phys_layout_imx6ul : Address {
     Gic_dist_phys_base   = 0x00a01000,
     Gic_cpu_phys_base    = 0x00a02000,
     Gic_h_phys_base      = 0x00a04000,
     Gic_v_phys_base      = 0x00a06000,
 
     Watchdog_phys_base   = 0x020bc000, // wdog1
+  };
+};
+
+INTERFACE [arm && imx && imx7]: // -----------------------------------------
+
+EXTENSION class Mem_layout
+{
+public:
+  enum Phys_layout_imx7 : Address {
+    Gic_dist_phys_base   = 0x31001000,
+    Gic_cpu_phys_base    = 0x31002000,
+    Gic_h_phys_base      = 0x31004000,
+    Gic_v_phys_base      = 0x31006000,
+
+    Watchdog_phys_base   = 0x30280000, // wdog2
+    Src_phys_base        = 0x30390000,
+    Gpc_phys_base        = 0x303a0000,
   };
 };

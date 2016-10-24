@@ -58,13 +58,21 @@ config PF_IMX_6UL
         help
           Choose for i.MX6UL platform.
 
+config PF_IMX_7
+        bool "i.MX7"
+        depends on PF_IMX
+        select CAN_ARM_CPU_CORTEX_A7
+        select HAS_CPU_VIRT
+        help
+          Choose for i.MX7 platform.
+
 endchoice
 
 config PF_IMX_RAM_PHYS_BASE
 	hex
 	default 0xc0000000 if PF_IMX_21
 	default 0x40000000 if PF_IMX_28
-	default 0x80000000 if PF_IMX_35 || PF_IMX_6UL
+	default 0x80000000 if PF_IMX_35 || PF_IMX_6UL || PF_IMX_7
 	default 0x90000000 if PF_IMX_51
         default 0x10000000 if PF_IMX_6
 
