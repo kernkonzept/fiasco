@@ -36,7 +36,7 @@ Symbols: $(KERNEL).image
 	$(COMP_MESSAGE)
 	$(VERBOSE)$(NM) $(KERNEL).image | c++filt | sort > $@.new
 	$(VERBOSE)mv $@.new $@
-	$(VERBOSE)chmod 755 $@
+	$(VERBOSE)chmod 644 $@
 
 
 clean-KERNEL:
