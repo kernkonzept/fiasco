@@ -57,7 +57,16 @@ void platform_imx_cpus_off()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && (imx35 || imx51 || imx53 || imx6 || imx6ul)]:
+IMPLEMENTATION [arm && imx7]:
+
+void platform_imx_cpus_off()
+{
+  // switch off core1
+  Io::clear<Mword>(1 << 1, Kmem::mmio_remap(Mem_layout::Src_phys_base) + 8);
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && (imx35 || imx51 || imx53 || imx6 || imx6ul || imx7)]:
 
 #include "io.h"
 #include "kmem.h"

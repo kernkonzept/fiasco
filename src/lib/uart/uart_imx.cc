@@ -98,6 +98,10 @@ namespace L4
         _regs->write<unsigned int>(UBIR, 0xf);
         _regs->write<unsigned int>(UBMR, 0x15b);
         break;
+      case Type_imx7:
+        _regs->write<unsigned int>(UBIR, 0xf);
+        _regs->write<unsigned int>(UBMR, 0x68);
+        break;
       }
 
     _regs->write<unsigned int>(UCR1, UCR1_EN);
