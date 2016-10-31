@@ -24,6 +24,7 @@ public:
     Cp15_c1_alignment_check = 1 << 1,
     Cp15_c1_cache           = 1 << 2,
     Cp15_c1_branch_predict  = 1 << 11,
+    Cp15_c1_v7_sw           = 1 << 10,
     Cp15_c1_insn_cache      = 1 << 12,
     Cp15_c1_high_vector     = 1 << 13,
   };
@@ -143,37 +144,12 @@ public:
 };
 
 
-INTERFACE [arm && armv7 && armca8]:
+INTERFACE [arm && (armv7 || armv8)]:
 
 EXTENSION class Cpu
 {
 public:
   enum {
-    Cp15_c1_ee              = 1 << 25,
-    Cp15_c1_nmfi            = 1 << 27,
-    Cp15_c1_tre             = 1 << 28,
-    Cp15_c1_te              = 1 << 30,
-    Cp15_c1_rao_sbop        = (0xf << 3) | (1 << 16) | (1 << 18) | (1 << 22) | (1 << 23),
-
-    Cp15_c1_cache_bits      = Cp15_c1_cache
-                              | Cp15_c1_insn_cache,
-
-    Cp15_c1_generic         = Cp15_c1_mmu
-                              | (Config::Cp15_c1_use_alignment_check ?  Cp15_c1_alignment_check : 0)
-			      | Cp15_c1_branch_predict
-                              | Cp15_c1_tre
-                              | Cp15_c1_rao_sbop
-			      | Cp15_c1_high_vector,
-  };
-};
-
-INTERFACE [arm && armv7 && armca9]:
-
-EXTENSION class Cpu
-{
-public:
-  enum {
-    Cp15_c1_sw              = 1 << 10,
     Cp15_c1_ha              = 1 << 17,
     Cp15_c1_ee              = 1 << 25,
     Cp15_c1_nmfi            = 1 << 27,
@@ -186,11 +162,10 @@ public:
 
     Cp15_c1_generic         = Cp15_c1_mmu
                               | (Config::Cp15_c1_use_alignment_check ?  Cp15_c1_alignment_check : 0)
-			      | Cp15_c1_branch_predict
-			      | Cp15_c1_high_vector
+                              | Cp15_c1_branch_predict
+                              | Cp15_c1_high_vector
                               | Cp15_c1_tre
-                              | Cp15_c1_rao_sbop
-			      | (Config::Cp15_c1_use_swp_enable ? Cp15_c1_sw : 0),
+                              | Cp15_c1_rao_sbop,
   };
 };
 
@@ -271,7 +246,7 @@ Cpu::disable_smp()
 }
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && arm_scu]:
+INTERFACE [arm && (mpcore || armca9)]:
 
 #include "scu.h"
 
@@ -282,7 +257,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_scu]:
+IMPLEMENTATION [arm && (mpcore || armca9)]:
 
 #include "kmem.h"
 
@@ -292,31 +267,31 @@ PRIVATE static
 void
 Cpu::init_scu()
 {
-  if (Scu::Available)
-    {
-      scu.construct(Kmem::mmio_remap(Mem_layout::Mp_scu_phys_base));
+  scu.construct(Kmem::mmio_remap(Mem_layout::Mp_scu_phys_base));
 
-      scu->reset();
-      scu->enable(Scu::Bsp_enable_bits);
-    }
+  scu->reset();
+  scu->enable(Scu::Bsp_enable_bits);
 }
-
-//---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !arm_scu]:
-
-PRIVATE static inline void Cpu::init_scu() {}
-
-//---------------------------------------------------------------------------
-IMPLEMENTATION [arm && (mpcore || armca9)]:
 
 IMPLEMENT_OVERRIDE inline NEEDS[Cpu::init_scu]
 void
 Cpu::early_init_platform()
 {
   init_scu();
-
   Mem_unit::clean_dcache();
+  enable_smp();
+}
 
+//---------------------------------------------------------------------------
+IMPLEMENTATION [(armv7 || armv8) && !armca9 && mp]:
+
+#include "kmem.h"
+
+IMPLEMENT_OVERRIDE inline NEEDS["kmem.h"]
+void
+Cpu::early_init_platform()
+{
+  Mem_unit::clean_dcache();
   enable_smp();
 }
 

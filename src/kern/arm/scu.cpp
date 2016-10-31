@@ -1,4 +1,4 @@
-INTERFACE [arm && arm_scu]:
+INTERFACE [arm]:
 
 #include <mmio_register_block.h>
 
@@ -40,7 +40,7 @@ public:
 };
 
 //-------------------------------------------------------------------------
-INTERFACE [arm && arm_scu && !bsp_cpu]:
+INTERFACE [arm && !bsp_cpu]:
 
 EXTENSION class Scu
 {
@@ -53,7 +53,7 @@ public:
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && arm_scu && arm_em_tz && mptimer]:
+INTERFACE [arm && arm_em_tz && mptimer]:
 
 EXTENSION class Scu
 {
@@ -61,7 +61,7 @@ EXTENSION class Scu
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && arm_scu && arm_em_tz && !mptimer]:
+INTERFACE [arm && arm_em_tz && !mptimer]:
 
 EXTENSION class Scu
 {
@@ -69,7 +69,7 @@ EXTENSION class Scu
 };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_scu && (mpcore || (armca9 && !arm_em_tz))]:
+IMPLEMENTATION [arm && (mpcore || (armca9 && !arm_em_tz))]:
 
 PUBLIC explicit
 Scu::Scu(Address base)
@@ -77,7 +77,7 @@ Scu::Scu(Address base)
 {}
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_scu && armca9 && arm_em_tz]:
+IMPLEMENTATION [arm && armca9 && arm_em_tz]:
 
 PUBLIC explicit
 Scu::Scu(Address base)

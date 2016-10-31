@@ -6,22 +6,14 @@ EXTENSION class Perf_cnt
 {
 public:
   static Perf_read_fn read_pmc[Max_slot];
-
+  static Mword get_max_perf_event();
   static const char *perf_type_str;
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && perf_cnt && !(mpcore || armca8 || armca9)]:
-
-EXTENSION class Perf_cnt
-{
-private:
-  enum
-  {
-    Nr_of_events = 0,
-  };
-
-};
+IMPLEMENTATION [arm && perf_cnt]:
+IMPLEMENT_DEFAULT inline
+Mword Perf_cnt::get_max_perf_event() { return 0; }
 
 // ------------------------------------------------------------------------
 INTERFACE [arm && perf_cnt && mpcore]:
@@ -69,8 +61,6 @@ private:
     EVENT_EXTMEM_TRANSFER_WRITE = 19,
 
     EVENT_CYCLE_COUNT = 31,
-
-    Nr_of_events = 32,
   };
 
   static Address mon_event_type_addr(int nr)
@@ -81,7 +71,12 @@ private:
 };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && perf_cnt && !(mpcore || armca8 || armca9)]:
+IMPLEMENTATION [arm && perf_cnt && mpcore]:
+IMPLEMENT_OVERRIDE inline
+Mword Perf_cnt::get_max_perf_event() { return 32; }
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && perf_cnt && !(mpcore || armv7 || armv8)]:
 
 char const *Perf_cnt::perf_type_str = "none";
 
@@ -111,31 +106,22 @@ Perf_cnt::set_event_type(int, int)
 {}
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && perf_cnt && armca8]:
-
-EXTENSION class Perf_cnt
-{
-private:
-  enum
-  {
-    Nr_of_events = 0x73,
-  };
-};
+IMPLEMENTATION [arm && perf_cnt && armca8]:
+IMPLEMENT_OVERRIDE inline
+Mword Perf_cnt::get_max_perf_event() { return 0x73; }
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && perf_cnt && armca9]:
-
-EXTENSION class Perf_cnt
-{
-private:
-  enum
-  {
-    Nr_of_events = 0x94,
-  };
-};
+IMPLEMENTATION [arm && perf_cnt && armca9]:
+IMPLEMENT_OVERRIDE inline
+Mword Perf_cnt::get_max_perf_event() { return 0x94; }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && perf_cnt && (armca8 || armca9)]:
+IMPLEMENTATION [arm && perf_cnt && armca15]:
+IMPLEMENT_OVERRIDE inline
+Mword Perf_cnt::get_max_perf_event() { return 0x7f; }
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && perf_cnt && (armv7 || armv8)]:
 
 #include "cpu.h"
 
@@ -273,12 +259,6 @@ Perf_cnt::get_perf_event(Mword nr, unsigned *evntsel,
   *name = (const char *)&_name;
   *desc = (const char *)&_desc;
   *evntsel = nr;
-}
-
-PUBLIC static Mword
-Perf_cnt::get_max_perf_event()
-{
-  return Nr_of_events;
 }
 
 PUBLIC static void

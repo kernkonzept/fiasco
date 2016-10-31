@@ -20,8 +20,7 @@ Kernel_thread::boot_app_cpus()
   extern volatile Mword _tramp_mp_startup_mair0;
   extern volatile Mword _tramp_mp_startup_mair1;
 
-  _tramp_mp_startup_cp15_c1 = Config::Cache_enabled
-                              ? Cpu::Cp15_c1_cache_enabled : Cpu::Cp15_c1_cache_disabled;
+  _tramp_mp_startup_cp15_c1 = Cpu::sctlr;
   _tramp_mp_startup_pdbr
     = Kmem_space::kdir()->virt_to_phys((Address)Kmem_space::kdir()) | Page::Ttbr_bits;
   _tramp_mp_startup_ttbcr   = Page::Ttbcr_bits;

@@ -193,7 +193,7 @@ void Proc::pause()
 {}
 
 //----------------------------------------------------------------
-IMPLEMENTATION[arm && (armca8 || armca9)]:
+IMPLEMENTATION[armv7 || armv8]:
 
 IMPLEMENT static inline
 void Proc::pause()

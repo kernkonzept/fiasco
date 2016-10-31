@@ -182,7 +182,7 @@ FIASCO_NOINLINE void Mmu<Flush_area, Ram>::inv_dcache(void const *start, void co
 }
 
 //-----------------------------------------------------------------------------
-INTERFACE [arm && (armca8 || armca9 || armv8)]:
+INTERFACE [armv7 || armv8]:
 
 EXTENSION class Mmu
 {
@@ -225,7 +225,7 @@ private:
 };
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && (armca8 || armca9 || armv7 || armv8)]:
+IMPLEMENTATION [armv7 || armv8]:
 
 IMPLEMENT
 template< unsigned long Flush_area, bool Ram >

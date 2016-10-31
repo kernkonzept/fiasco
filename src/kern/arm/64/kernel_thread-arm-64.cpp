@@ -3,9 +3,7 @@ IMPLEMENTATION [arm && mp]:
 #include "io.h"
 #include "platform_control.h"
 #include "outer_cache.h"
-#include "scu.h"
 #include "paging.h"
-#include <cstdio>
 
 EXTENSION class Kernel_thread
 {
@@ -27,12 +25,6 @@ Kernel_thread::boot_app_cpus()
   extern char _tramp_mp_entry[];
   extern char _tramp_mp_boot_info[];
   Mp_boot_info volatile *_tmp = reinterpret_cast<Mp_boot_info*>(_tramp_mp_boot_info);
-
-  if (Scu::Available)
-    {
-      unsigned num_ap_cpus = Cpu::scu->config() & 3;
-      printf("Number of CPUs: %d\n", num_ap_cpus + 1);
-    }
 
   _tmp->sctlr = Cpu::Sctlr_generic;
   _tmp->pdbr

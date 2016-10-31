@@ -1,8 +1,8 @@
-IMPLEMENTATION [realview && (!(mpcore || armca9) || realview_pbx)]:
+IMPLEMENTATION [realview && (!(mpcore || armv7 || armv8) || realview_pbx)]:
 
 IMPLEMENT int Uart::irq() const { return 44; }
 
-IMPLEMENTATION [realview && (mpcore || armca9) && !realview_pbx && !realview_vexpress]:
+IMPLEMENTATION [realview && (mpcore || armv7) && !realview_pbx && !realview_vexpress]:
 
 IMPLEMENT int Uart::irq() const { return 36; }
 
