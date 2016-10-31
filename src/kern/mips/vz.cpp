@@ -517,9 +517,9 @@ Vz::State::update_cause_ti()
     return;
 
   Unsigned64 ct = Timer::get_current_counter();
-  Unsigned64 gc = ct + ctl_gtoffset;
-  Unsigned64 last_gc = _saved_cause_timestamp + ctl_gtoffset;
-  Unsigned64 gcomp = g_compare | (last_gc & 0xffffffff00000000);
+  Unsigned64 gc = ct + (Signed32) ctl_gtoffset;
+  Unsigned64 last_gc = _saved_cause_timestamp + (Signed32) ctl_gtoffset;
+  Unsigned64 gcomp = ((Unsigned32) g_compare) | (last_gc & 0xffffffff00000000);
 
   if (gcomp < last_gc)
     gcomp += 0x100000000;
@@ -544,8 +544,8 @@ Vz::State::load_cause()
   // read it below.
   ehb();
   Unsigned64 ct = Timer::get_current_counter();
-  Unsigned64 gc = ct + ctl_gtoffset;
-  Unsigned64 last_gc = _saved_cause_timestamp + ctl_gtoffset;
+  Unsigned64 gc = ct + (Signed32) ctl_gtoffset;
+  Unsigned64 last_gc = _saved_cause_timestamp + (Signed32) ctl_gtoffset;
 
   Unsigned32 gcmp = mfgc0_32(Cp0_compare);
   Unsigned64 gcomp = gcmp | (last_gc & 0xffffffff00000000);
