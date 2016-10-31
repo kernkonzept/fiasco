@@ -14,6 +14,7 @@ CHECKCXX        = $(shell if $(CXX) $(1) -S -o /dev/null -xc++ /dev/null \
 eval_impl	= $(if $($(1)_IMPL),$($(1)_IMPL),$(1))
 
 include $(objbase)/globalconfig.out
+
 # use patsubst here to prevent confusion of syntax highlighting editors :-)
 CONFIG_XARCH	:= $(patsubst "%",%,$(CONFIG_XARCH))
 CONFIG_ABI	:= $(patsubst "%",%,$(CONFIG_ABI))
