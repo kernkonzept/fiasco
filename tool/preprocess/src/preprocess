@@ -629,7 +629,7 @@ sub match_e_opt
   my $t = '\(\)&|,\{\}!-';
   my $orig_tag = $tag;
 
-  while ($tag =~ /^\s*([$t]|(?:[^\s$t]+))\s*(.*?)$/)
+  while ($tag =~ /^$s ([$t]|(?:[^\s$t]+)) $s (.*?)$/sx)
     {
       my $r = $parts{$1};
       $cp .= defined $r ? $r : 0;
@@ -682,6 +682,11 @@ sub parse_file
 	      handle_source_code ();
 	      next NEXTLINE;	      
 	    }
+          if (/^$s (?:INTERFACE | IMPLEMENTATION) $s \[ (.*)/sx
+              && (! ($1 =~ /\]/)))
+            {
+              next MORE;
+            }
 
 	  if (s/^($s)
 	        (?:(INTERFACE
