@@ -9,7 +9,7 @@ SUBSYSTEMS := 	ABI KERNEL LIBK DRIVERS MINILIBC \
 		CXXLIB VERSION JABI TCBOFFSET CRT0
 
 
-PREPROCESS_PARTS 	+= arch $(CONFIG_ABI) $(CONFIG_XARCH) h3800
+PREPROCESS_PARTS 	+= $(CONFIG_ABI) $(CONFIG_XARCH)
 
 ifeq ($(CONFIG_BIT64),y)
 PREPROCESS_PARTS += 64bit armv8 arm_esr_traps
@@ -19,12 +19,8 @@ PREPROCESS_PARTS += 32bit abs_syscalls
 BITS := 32
 endif
 
-PREPROCESS_PARTS-$(CONFIG_SERIAL)             += serial
-PREPROCESS_PARTS-$(CONFIG_MP)                 += mp
-PREPROCESS_PARTS-$(CONFIG_FPU)                += fpu
 PREPROCESS_PARTS-$(CONFIG_LIST_ALLOC_SANITY)  += list_alloc_debug
-PREPROCESS_PARTS-$(CONFIG_JDB)                += debug jdb log
-PREPROCESS_PARTS-$(CONFIG_PERF_CNT)           += perf_cnt
+PREPROCESS_PARTS-$(CONFIG_JDB)                += debug log
 PREPROCESS_PARTS-$(CONFIG_ARM_CACHE_L2CXX0)   += outer_cache outer_cache_l2cxx0
 
 PREPROCESS_PARTS-$(CONFIG_ARM_920T)                 += armv5 arm920t vcache
@@ -42,17 +38,9 @@ PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A15)           += armca9
 PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A53)           += armca9
 PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A57)           += armca9
 PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A72)           += armca9
-PREPROCESS_PARTS-$(CONFIG_ARM_EM_TZ)                += arm_em_tz
-PREPROCESS_PARTS-$(CONFIG_ARM_EM_STD)               += arm_em_std
-PREPROCESS_PARTS-$(CONFIG_ARM_EM_NS)                += arm_em_ns
 PREPROCESS_PARTS-$(CONFIG_ARM_SECMONIF_NONE)        += arm_smif_none
 PREPROCESS_PARTS-$(CONFIG_ARM_SECMONIF_MC)          += arm_smif_mc
 PREPROCESS_PARTS-$(CONFIG_ARM_1176_CACHE_ALIAS_FIX) += arm1176_cache_alias_fix
-PREPROCESS_PARTS-$(CONFIG_ARM_CPU_ERRATA)           += arm_cpu_errata
-PREPROCESS_PARTS-$(CONFIG_SCHED_FIXED_PRIO)  += sched_fixed_prio
-PREPROCESS_PARTS-$(CONFIG_SCHED_WFQ)         += sched_wfq
-PREPROCESS_PARTS-$(CONFIG_SCHED_FP_WFQ)      += sched_fp_wfq
-PREPROCESS_PARTS-$(CONFIG_ARM_LPAE)          += arm_lpae
 PREPROCESS_PARTS-$(CONFIG_CPU_VIRT)                 += hyp vgic arm_esr_traps
 PREPROCESS_PARTS-y$(CONFIG_CPU_VIRT)$(CONFIG_BIT64) += noncont_mem
 PREPROCESS_PARTS-$(CONFIG_ARM_PSCI)                 += psci

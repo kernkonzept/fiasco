@@ -1,0 +1,21 @@
+#! /usr/bin/env perl
+
+# Take kconfig style options file and generate
+# preprocess tags named 'option' for each 'CONFIG_OPTION'.
+
+use strict;
+
+my $in = $ARGV[0];
+my @tags = ();
+
+open(my $cfg, "<$in") or die "cannot open $in for reading: $!";
+while (my $l = <$cfg>)
+{
+  chomp $l;
+  next unless $l =~ /^CONFIG_(\S+)\s*=\s*[ym]\s*$/;
+  my $tag = $1;
+  next if $tag =~ /^(HAS|CAN)_/;
+  push @tags, lc($tag);
+}
+
+print "PREPROCESS_PARTS += " . join(" ", @tags) . "\n";

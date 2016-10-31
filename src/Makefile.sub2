@@ -18,6 +18,7 @@ BUILD_OBJECTS=true
 
 include $(srcdir)/Makeconf	# also reads srcdir/Makeconf.local
                                 # and        objdir/Makeconf.local
+include globalconfig.tags
 include $(MODULES_FILE)
 include .Modules.deps
 
