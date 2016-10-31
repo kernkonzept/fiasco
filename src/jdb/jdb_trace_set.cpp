@@ -244,7 +244,7 @@ Jdb_set_trace::cmds() const
 	  &first_char },
 	{ 1, "P", "P", "%C",
 	  "P{+|-|*}\ton/off/buffer pagefault logging\n"
-	  "Pr{t|T|x|-}\trestrict pagefault log to (!)thread/!thread/addr/clr",
+	  "Pr{t|T|x|-}\trestrict pagefault log to (!)thread/addr/clr",
 	  &first_char },
     };
 
