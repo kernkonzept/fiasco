@@ -391,7 +391,7 @@ void Mem_space::make_current()
 }
 
 //----------------------------------------------------------------------------
-INTERFACE [armv6 || armca8 || armv8]:
+INTERFACE [armv6 || arm_lpae]:
 
 EXTENSION class Mem_space
 {
@@ -403,7 +403,7 @@ EXTENSION class Mem_space
 };
 
 //----------------------------------------------------------------------------
-INTERFACE [armv7 && armca9]:
+INTERFACE [(armv7 || armv8) && !arm_lpae]:
 
 EXTENSION class Mem_space
 {

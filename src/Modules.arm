@@ -30,14 +30,15 @@ PREPROCESS_PARTS-$(CONFIG_ARM_V6)                   += armv6
 PREPROCESS_PARTS-$(CONFIG_ARM_V7)                   += armv7
 PREPROCESS_PARTS-$(CONFIG_ARM_1136)                 += arm1136
 PREPROCESS_PARTS-$(CONFIG_ARM_1176)                 += arm1176
-PREPROCESS_PARTS-$(CONFIG_ARM_MPCORE)               += mpcore arm_scu
-PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A7)            += armca9
+PREPROCESS_PARTS-$(CONFIG_ARM_MPCORE)               += mpcore
+PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A5)            += armca5
+PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A7)            += armca7
 PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A8)            += armca8
-PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A9)            += armca9 arm_scu
-PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A15)           += armca9
-PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A53)           += armca9
-PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A57)           += armca9
-PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A72)           += armca9
+PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A9)            += armca9
+PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A15)           += armca15
+PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A53)           += armca53
+PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A57)           += armca57
+PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A72)           += armca72
 PREPROCESS_PARTS-$(CONFIG_ARM_SECMONIF_NONE)        += arm_smif_none
 PREPROCESS_PARTS-$(CONFIG_ARM_SECMONIF_MC)          += arm_smif_mc
 PREPROCESS_PARTS-$(CONFIG_ARM_1176_CACHE_ALIAS_FIX) += arm1176_cache_alias_fix
@@ -141,8 +142,10 @@ PRIVATE_INCDIR 	+= kern/$(CONFIG_XARCH)/$(BITS) kern/$(CONFIG_XARCH) kern
 INTERFACES_KERNEL += 	__main mem_op kmem_space boot_uart_init     \
 			irq_chip_generic bootstrap                  \
 			jdb_extensions outer_cache utcb_support cascade_irq   \
-			irq_mgr_multi_chip scu
+			irq_mgr_multi_chip
 
+INTERFACES_KERNEL-$(CONFIG_ARM_MPCORE) += scu
+INTERFACES_KERNEL-$(CONFIG_ARM_CORTEX_A9) += scu
 INTERFACES_KERNEL-$(CONFIG_BIT32) += kern_lib_page
 INTERFACES_KERNEL-$(CONFIG_SERIAL) += uart_console
 INTERFACES_KERNEL-$(CONFIG_ARM_EM_TZ) += vm

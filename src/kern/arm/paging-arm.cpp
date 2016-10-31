@@ -171,7 +171,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && armv6plus && (mpcore || armca9)]:
+INTERFACE [arm && ((armv6plus && mp) || armv8)]:
 
 EXTENSION class Page
 {
@@ -184,7 +184,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && armv6plus && !(mpcore || armca9)]:
+INTERFACE [arm && (armv6 || armv7) && !mp]:
 
 EXTENSION class Page
 {
@@ -209,7 +209,7 @@ EXTENSION class Page
 { public: enum { Ttbr_bits = 0xa }; };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && armca9 && !arm_lpae]:
+INTERFACE [arm && ((mp && armv7) || armv8) && !arm_lpae]:
 
 // S Sharable | RGN = Outer WB-WA | IRGN = Inner WB-WA | NOS
 EXTENSION class Page
@@ -222,10 +222,12 @@ EXTENSION class Page
 { public: enum { Ttbr_bits = 0 }; };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && armca8]: // armv7 w/o multiprocessing ext.
+INTERFACE [arm && !mp && armv7 && !arm_lpae]:
+// armv7 w/o multiprocessing ext.
 
+// RGN = Outer WB-WA | IRGN = Inner WB-WA
 EXTENSION class Page
-{ public: enum { Ttbr_bits = 0x2b }; };
+{ public: enum { Ttbr_bits = 0x09 }; };
 
 //----------------------------------------------------------------------------
 INTERFACE [arm && armv6 && !mpcore]:
@@ -247,7 +249,7 @@ public:
 };
 
 //----------------------------------------------------------------------------
-INTERFACE [arm && ((armv6 && mpcore) || (armv7 && !arm_lpae))]:
+INTERFACE [arm && ((armv6 && mpcore) || ((armv7 || armv8) && !arm_lpae))]:
 
 EXTENSION class Page
 {
@@ -266,7 +268,7 @@ public:
 };
 
 //----------------------------------------------------------------------------
-INTERFACE [arm && (armv6 || armv7) && !arm_lpae]:
+INTERFACE [arm && armv6plus && !arm_lpae]:
 
 #include "types.h"
 
@@ -358,7 +360,7 @@ K_pte_ptr::write_back(void *start, void *end)
 { Mem_unit::clean_dcache(start, end); }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && (armv6 || armca8)]:
+IMPLEMENTATION [arm && (armv6 || (armv7 && !mp))]:
 
 PUBLIC static inline
 bool
@@ -380,7 +382,7 @@ K_pte_ptr::write_back(void *start, void *end)
 { Mem_unit::clean_dcache(start, end); }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && (armca9 || armv8)]:
+IMPLEMENTATION [arm && ((armv7 && mp) || armv8)]:
 
 PUBLIC static inline
 bool
@@ -534,7 +536,7 @@ K_pte_ptr::del_rights(L4_fpage::Rights r)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !arm_lpae && (armv6 || armv7)]:
+IMPLEMENTATION [arm && !arm_lpae && (armv6 || armv7 || armv8)]:
 
 PRIVATE inline
 K_pte_ptr::Entry
@@ -804,7 +806,7 @@ K_pte_ptr::del_rights(L4_fpage::Rights r)
 }
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && arm_lpae && (armv6 || armv7) && hyp]:
+INTERFACE [arm && arm_lpae && armv7 && hyp]:
 
 class Pte_ptr : public K_pte_ptr
 {
@@ -923,7 +925,7 @@ Pte_ptr::del_rights(L4_fpage::Rights r)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && (armv6 || armv7) && !arm_lpae]:
+IMPLEMENTATION [arm && (armv6 || armv7 || armv8) && !arm_lpae]:
 
 PUBLIC static inline
 Mword PF::is_alignment_error(Mword error)

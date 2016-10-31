@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && (armca8 || armca9)]:
+IMPLEMENTATION [arm && (armv7 || armv8)]:
 
 PUBLIC static inline
 template< unsigned long Flush_area, bool Ram >
@@ -19,7 +19,7 @@ Mword Mmu<Flush_area, Ram>::icache_line_size()
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && (mpcore || arm1136 || arm1176 || armca8 || armca9)]:
+IMPLEMENTATION [arm && armv6plus]:
 
 IMPLEMENT inline
 template< unsigned long Flush_area, bool Ram >

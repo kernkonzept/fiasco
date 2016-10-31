@@ -7,11 +7,15 @@ public:
     Cp15_c1_cache_enabled  = Cp15_c1_generic | Cp15_c1_cache_bits,
     Cp15_c1_cache_disabled = Cp15_c1_generic,
   };
+
+  static Unsigned32 sctlr;
   bool has_generic_timer() const { return (_cpu_id._pfr[1] & 0xf0000) == 0x10000; }
 };
 
 //-------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
+
+Unsigned32 Cpu::sctlr;
 
 PRIVATE static inline
 Mword
@@ -22,9 +26,38 @@ Cpu::midr()
   return m;
 }
 
+PRIVATE static inline
+void
+Cpu::check_for_swp_enable()
+{
+  if (!Config::Cp15_c1_use_swp_enable)
+    return;
+
+  Mword midr;
+  asm volatile ("mrc p15, 0, %0, c0, c0, 0" : "=r"(midr));
+  if (((midr >> 16) & 0xf) != 0xf)
+    return; // pre ARMv7 has no swap enable / disable
+
+  Mword mpidr, id_isar0;
+  asm volatile ("mrc p15, 0, %0, c0, c2, 0" : "=r"(id_isar0));
+  asm volatile ("mrc p15, 0, %0, c0, c0, 5" : "=r"(mpidr));
+  if ((id_isar0 & 0xf) != 1)
+    return; // CPU has no swp / swpb
+
+  if (((mpidr >> 31) & 1) == 0)
+    return; // CPU has no MP extensions -> no swp enable
+
+  sctlr |= Cp15_c1_v7_sw;
+}
+
 IMPLEMENT
 void Cpu::early_init()
 {
+  sctlr = Config::Cache_enabled
+          ? Cp15_c1_cache_enabled : Cp15_c1_cache_disabled;
+
+  check_for_swp_enable();
+
   // switch to supervisor mode and intialize the memory system
   asm volatile ( " mov  r2, r13             \n"
                  " mov  r3, r14             \n"
@@ -34,8 +67,7 @@ void Cpu::early_init()
 
                  " mcr  p15, 0, %0, c1, c0  \n"
                  :
-                 : "r" (Config::Cache_enabled
-                        ? Cp15_c1_cache_enabled : Cp15_c1_cache_disabled),
+                 : "r" (sctlr),
                    "I" (Proc::Status_mode_supervisor
                         | Proc::Status_interrupts_disabled)
                  : "r2", "r3");

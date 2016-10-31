@@ -1,4 +1,4 @@
-INTERFACE [arm && perf_cnt && (armca8 || armca9)]:
+INTERFACE [arm && perf_cnt && (armv7 || armv8)]:
 
 EXTENSION class Perf_cnt
 {

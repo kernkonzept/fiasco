@@ -14,7 +14,7 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
   Vm_state *v = vm_state(vcpu_state);
   v->hcr = 0;
   v->csselr = 0;
-  v->sctlr = (Cpu::Cp15_c1_generic | Cpu::Cp15_c1_cache_bits) & ~(Cpu::Cp15_c1_mmu | (1 << 28));
+  v->sctlr = (Cpu::sctlr | Cpu::Cp15_c1_cache_bits) & ~(Cpu::Cp15_c1_mmu | (1 << 28));
   v->actlr = 0;
   v->cpacr = 0x5555555;
   v->fcseidr = 0;

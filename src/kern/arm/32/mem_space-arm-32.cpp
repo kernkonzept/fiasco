@@ -89,7 +89,7 @@ Mem_space::pmem_to_phys(Address virt) const
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [armv6 || armca8]:
+IMPLEMENTATION [armv6]:
 
 IMPLEMENT inline NEEDS[Mem_space::asid]
 void Mem_space::make_current()
@@ -112,7 +112,7 @@ void Mem_space::make_current()
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [armv7 && armca9 && !arm_lpae]:
+IMPLEMENTATION [(armv7 || armv8) && !arm_lpae]:
 
 IMPLEMENT inline NEEDS[Mem_space::asid]
 void
@@ -138,7 +138,7 @@ Mem_space::make_current()
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [armv7 && arm_lpae && !hyp]:
+IMPLEMENTATION [(armv7 || armv8) && arm_lpae && !hyp]:
 
 IMPLEMENT inline NEEDS[Mem_space::asid]
 void
@@ -160,7 +160,7 @@ Mem_space::make_current()
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [armv7 && arm_lpae && hyp]:
+IMPLEMENTATION [(armv7 || armv8) && arm_lpae && hyp]:
 
 IMPLEMENT inline NEEDS[Mem_space::asid]
 void
