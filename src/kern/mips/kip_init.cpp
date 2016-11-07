@@ -61,6 +61,9 @@ void Kip_init::init()
 {
   Kip *kinfo = reinterpret_cast<Kip*>(&KIP_namespace::my_kernel_info_page);
   Kip::init_global_kip(kinfo);
+
+  Kip::k()->sched_granularity = Config::Scheduler_granularity;
+
   kinfo->add_mem_region(Mem_desc(0, Mem_layout::User_max,
                         Mem_desc::Conventional, true));
 }
