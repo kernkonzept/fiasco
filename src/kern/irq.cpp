@@ -137,6 +137,18 @@ static Irq_base_cast register_irq_base_cast;
 }
 
 PROTECTED inline
+int
+Irq::get_irq_opcode(L4_msg_tag tag, Utcb const *utcb)
+{
+  if (tag.proto() == L4_msg_tag::Label_irq && tag.words() == 0)
+    return Op_trigger;
+  if (EXPECT_FALSE(tag.words() < 1))
+    return -1;
+
+  return access_once(utcb->values) & 0xffff;
+}
+
+PROTECTED inline
 L4_msg_tag
 Irq::dispatch_irq_proto(Unsigned16 op, bool may_unmask)
 {
@@ -307,11 +319,10 @@ Irq_muxer::kinvoke(L4_obj_ref, L4_fpage::Rights /*rights*/, Syscall_frame *f,
                    Utcb const *utcb, Utcb *)
 {
   L4_msg_tag tag = f->tag();
+  int op = get_irq_opcode(tag, utcb);
 
-  if (EXPECT_FALSE(tag.words() < 1))
+  if (EXPECT_FALSE(op < 0))
     return commit_result(-L4_err::EInval);
-
-  Unsigned16 op = access_once(utcb->values + 0) & 0xffff;
 
   switch (tag.proto())
     {
@@ -732,11 +743,10 @@ Irq_sender::kinvoke(L4_obj_ref, L4_fpage::Rights /*rights*/, Syscall_frame *f,
                     Utcb const *utcb, Utcb *)
 {
   L4_msg_tag tag = f->tag();
+  int op = get_irq_opcode(tag, utcb);
 
-  if (EXPECT_FALSE(tag.words() < 1))
+  if (EXPECT_FALSE(op < 0))
     return commit_result(-L4_err::EInval);
-
-  Unsigned16 op = access_once(utcb->values + 0);
 
   switch (tag.proto())
     {

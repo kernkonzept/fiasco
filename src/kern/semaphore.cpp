@@ -193,11 +193,10 @@ Semaphore::kinvoke(L4_obj_ref, L4_fpage::Rights /*rights*/, Syscall_frame *f,
                    Utcb const *utcb, Utcb *)
 {
   L4_msg_tag tag = f->tag();
+  int op = get_irq_opcode(tag, utcb);
 
-  if (EXPECT_FALSE(tag.words() < 1))
+  if (EXPECT_FALSE(op < 0))
     return commit_result(-L4_err::EInval);
-
-  Unsigned16 op = access_once(utcb->values) & 0xffff;
 
   switch (tag.proto())
     {
