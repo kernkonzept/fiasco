@@ -811,9 +811,9 @@ Irq::operator delete (void *_l)
 {
   Irq *l = reinterpret_cast<Irq*>(_l);
   if (l->_q)
-    l->_q->free(sizeof(Irq));
-
-  allocator()->free(l);
+    allocator()->q_free(l->_q, l);
+  else
+    allocator()->free(l);
 }
 
 PUBLIC template<typename T> inline NEEDS[Irq::allocator, Irq::operator new]
