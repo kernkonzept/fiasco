@@ -55,6 +55,7 @@ PREPROCESS_PARTS-$(CONFIG_SCHED_FP_WFQ)      += sched_fp_wfq
 PREPROCESS_PARTS-$(CONFIG_ARM_LPAE)          += arm_lpae
 PREPROCESS_PARTS-$(CONFIG_CPU_VIRT)                 += hyp vgic arm_esr_traps
 PREPROCESS_PARTS-y$(CONFIG_CPU_VIRT)$(CONFIG_BIT64) += noncont_mem
+PREPROCESS_PARTS-$(CONFIG_ARM_PSCI)                 += psci
 
 
 #
@@ -199,6 +200,7 @@ outer_cache_IMPL	:= outer_cache outer_cache-l2cxx0
 paging_IMPL	  	:= paging-arm paging-arm-$(BITS) paging
 perf_cnt_IMPL		:= perf_cnt perf_cnt-arm perf_cnt-arm-$(BITS)
 pic_IMPL		:= pic
+platform_control_IMPL	+= platform_control-arm-psci
 sched_context_IMPL	:= sched_context-wfq sched_context-fixed_prio \
 			   sched_context-fp_wfq sched_context
 scu_IMPL                := scu

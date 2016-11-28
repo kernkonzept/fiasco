@@ -243,6 +243,16 @@ config ARM_LPAE
         help
           Use the extended page table format (LPAE).
 
+config HAS_ARM_PSCI
+        bool
+
+config ARM_PSCI
+        bool "Use PSCI"
+        depends on HAS_ARM_PSCI
+        help
+          Use the "Power State Coordination Interface" (PSCI) for system
+          functions such as booting CPUs.
+
 config ARM_1176_CACHE_ALIAS_FIX
 	bool "Use cache restriction to supress aliasing issue on ARM1176"
 	depends on ARM_1176
