@@ -82,10 +82,11 @@ PRIVATE static inline
 void
 Fpu::copro_enable()
 {
+  Mword r;
   asm volatile("mrc  p15, 0, %0, c1, c0, 2\n"
                "orr  %0, %0, %1           \n"
                "mcr  p15, 0, %0, c1, c0, 2\n"
-               : : "r" (0), "I" (0x00f00000));
+               : "=r" (r) : "I" (0x00f00000));
   Mem::isb();
 }
 
@@ -96,10 +97,11 @@ PRIVATE static inline
 void
 Fpu::copro_enable()
 {
+  Mword r;
   asm volatile("mrc  p15, 0, %0, c1, c0, 2\n"
                "orr  %0, %0, %1           \n"
                "mcr  p15, 0, %0, c1, c0, 2\n"
-               : : "r" (0), "I" (0x00f00000));
+               : "=r" (r) : "I" (0x00f00000));
   Mem::isb();
   fpexc((fpexc() | FPEXC_EN)); // & ~FPEXC_EX);
 }
