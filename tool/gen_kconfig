@@ -141,11 +141,12 @@ while ($_=<IN>) {
   }
   if (/$tag PF_CHOICE\W/x) {
     foreach my $i (sort keys %pfs) {
-      if (defined $pfs{$i}{desc}) {
-	print OUT "config PF_$i\n	bool \"$pfs{$i}{desc}\"\n";
-      } else {
-	print OUT "config PF_$i\n	bool \"$i Platform\"\n";
-      }
+      $pfs{$i}{desc} = "$i Platform" unless defined $pfs{$i}{desc};
+    }
+
+    foreach my $i (sort { $pfs{$a}{desc} cmp $pfs{$b}{desc} } keys %pfs) {
+      print OUT "config PF_$i\n";
+      print OUT "	bool \"$pfs{$i}{desc}\"\n";
       print OUT "	depends on $_\n" foreach (@{$pfs{$i}{dep}});
       print OUT "	select $_\n" foreach (@{$pfs{$i}{select}});
       print OUT "\n";
