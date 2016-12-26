@@ -54,7 +54,11 @@ Bootstrap::leave_hyp_mode()
       break;
 
     case 2:
-      asm volatile ("   mov %[tmp], sp       \n"
+      asm volatile ("   mrs %[tmp], HCR_EL2  \n"
+                    "   bic %[tmp], %[tmp], #(1 << 27) \n" // HCR.TGE
+                    "   orr %[tmp], %[tmp], #(1 << 31) \n" // HCR.RW
+                    "   msr HCR_EL2, %[tmp]  \n"
+                    "   mov %[tmp], sp       \n"
                     "   msr spsr_el2, %[psr] \n"
                     "   adr x4, 1f           \n"
                     "   msr elr_el2, x4      \n"
