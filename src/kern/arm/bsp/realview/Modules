@@ -23,7 +23,7 @@ ifneq ($(CONFIG_ARM_MPCORE)$(CONFIG_ARM_CORTEX_A9),)
   timer_IMPL          += timer-arm-mptimer timer-arm-mptimer-realview
   INTERFACES_KERNEL   += timer_sp804
 else
-  ifneq ($(CONFIG_ARM_CORTEX_A53)$(CONFIG_ARM_CORTEX_A15),)
+  ifneq ($(CONFIG_ARM_CORTEX_A53)$(CONFIG_ARM_CORTEX_A57)$(CONFIG_ARM_CORTEX_A15),)
     PREPROCESS_PARTS  += arm_generic_timer
     INTERFACES_KERNEL += generic_timer
     timer_IMPL        += timer-arm-generic
