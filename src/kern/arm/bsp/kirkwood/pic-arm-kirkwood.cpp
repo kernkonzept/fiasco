@@ -1,9 +1,9 @@
-INTERFACE [arm && kirkwood]:
+INTERFACE [arm && pf_kirkwood]:
 
 #include "initcalls.h"
 
 //-------------------------------------------------------------------
-IMPLEMENTATION [arm && kirkwood]:
+IMPLEMENTATION [arm && pf_kirkwood]:
 
 #include "assert.h"
 #include "config.h"
@@ -115,7 +115,7 @@ void irq_handler()
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [debug && kirkwood]:
+IMPLEMENTATION [debug && pf_kirkwood]:
 
 PUBLIC
 char const *

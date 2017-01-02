@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && kirkwood]:
+IMPLEMENTATION [arm && pf_kirkwood]:
 
 #include "io.h"
 #include "kmem.h"

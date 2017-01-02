@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------
-INTERFACE [arm && kirkwood]:
+INTERFACE [arm && pf_kirkwood]:
 
 #include "kmem.h"
 #include "mmio_register_block.h"
@@ -33,7 +33,7 @@ private:
 };
 
 // ----------------------------------------------------------------------
-IMPLEMENTATION [arm && kirkwood]:
+IMPLEMENTATION [arm && pf_kirkwood]:
 
 #include "config.h"
 #include "kip.h"

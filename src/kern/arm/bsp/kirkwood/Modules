@@ -1,6 +1,6 @@
 # vim:set ft=make:
 
-PREPROCESS_PARTS        += kirkwood 16550 generic_tickless_idle libuart
+PREPROCESS_PARTS        += 16550 generic_tickless_idle libuart
 RAM_PHYS_BASE           := 0x0
 OBJECTS_LIBUART         += uart_16550.o
 SUBSYSTEMS              += LIBUART

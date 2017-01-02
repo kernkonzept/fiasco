@@ -1,4 +1,4 @@
-INTERFACE [arm && kirkwood]:
+INTERFACE [arm && pf_kirkwood]:
 
 EXTENSION class Mem_layout
 {
