@@ -854,7 +854,7 @@ Context::schedule()
       if (EXPECT_TRUE(current_cpu == ::current_cpu()))
         rq->schedule_in_progress = 0;
       else
-        return; // we got migrated and selected on our new CPU, so wen may run
+        return; // we got migrated and selected on our new CPU, so we may run
     }
 }
 
