@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && armada38x]:
+IMPLEMENTATION [arm && pf_armada38x]:
 
 #include "io.h"
 #include "kmem.h"

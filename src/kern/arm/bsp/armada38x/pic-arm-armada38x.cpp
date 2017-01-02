@@ -1,10 +1,10 @@
-INTERFACE [arm && pic_gic && armada38x]:
+INTERFACE [arm && pic_gic && pf_armada38x]:
 
 #include "gic.h"
 #include "initcalls.h"
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && armada38x]:
+IMPLEMENTATION [arm && pic_gic && pf_armada38x]:
 
 #include "irq_mgr_multi_chip.h"
 #include "kmem.h"
@@ -25,7 +25,7 @@ Pic::init()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && mp && armada38x]:
+IMPLEMENTATION [arm && pic_gic && mp && pf_armada38x]:
 
 PUBLIC static
 void Pic::init_ap(Cpu_number, bool resume)

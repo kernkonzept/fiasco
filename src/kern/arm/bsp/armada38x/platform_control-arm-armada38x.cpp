@@ -1,8 +1,8 @@
-INTERFACE [arm && armada38x]:
+INTERFACE [arm && pf_armada38x]:
 
 #include "types.h"
 
-IMPLEMENTATION [arm && armada38x]:
+IMPLEMENTATION [arm && pf_armada38x]:
 
 #include "kmem.h"
 #include "mmio_register_block.h"
@@ -50,7 +50,7 @@ Platform_control::init(Cpu_number cpu)
   cpu_subsys.r<32>(0x90) = 0x000f1d13;
 }
 
-IMPLEMENTATION [arm && mp && armada38x]: // -------------------------------
+IMPLEMENTATION [arm && mp && pf_armada38x]: // -------------------------------
 
 #include "ipi.h"
 #include "mem.h"

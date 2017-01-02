@@ -1,4 +1,4 @@
-IMPLEMENTATION [armada38x]:
+IMPLEMENTATION [pf_armada38x]:
 
 #include "koptions.h"
 #include "uart_16550_dw.h"

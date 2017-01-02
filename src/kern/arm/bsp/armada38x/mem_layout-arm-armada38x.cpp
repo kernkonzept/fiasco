@@ -1,4 +1,4 @@
-INTERFACE [arm && armada38x]: //-------------------------------------------
+INTERFACE [arm && pf_armada38x]: //-------------------------------------------
 
 EXTENSION class Mem_layout
 {
