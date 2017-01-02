@@ -59,7 +59,6 @@ public:
     Caps_end          = 0xfffffffffc400000UL,    ///< % 4MB
     Physmem           = 0xffffffff80000000UL,    ///< % 4MB   kernel memory
     Physmem_end       = 0xffffffffe0000000UL,    ///< % 4MB   kernel memory
-    Kernel_end	      = 0xffffffffffffffffUL+1,    ///< % end of address space
   };
 
   enum Offsets
