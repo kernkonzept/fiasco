@@ -1,4 +1,4 @@
-INTERFACE [arm && bcm2835]:
+INTERFACE [arm && pf_bcm2835]:
 
 EXTENSION class Bootstrap
 {
