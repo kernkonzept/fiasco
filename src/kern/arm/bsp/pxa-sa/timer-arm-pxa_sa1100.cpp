@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------
-INTERFACE [arm && (sa1100 || pxa)]:
+INTERFACE [arm && (pf_sa1100 || pf_xscale)]:
 
 #include "kmem.h"
 #include "mmio_register_block.h"
@@ -28,7 +28,7 @@ private:
 
 
 // -------------------------------------------------------------
-IMPLEMENTATION [arm && (sa1100 || pxa)]:
+IMPLEMENTATION [arm && (pf_sa1100 || pf_xscale)]:
 
 #include "config.h"
 #include "kip.h"

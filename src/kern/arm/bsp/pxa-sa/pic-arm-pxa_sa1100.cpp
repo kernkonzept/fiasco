@@ -1,4 +1,4 @@
-INTERFACE [arm && pxa]: // -------------------------------------
+INTERFACE [arm && pf_xscale]: // -------------------------------------
 
 #include "initcalls.h"
 #include "kmem.h"
@@ -17,7 +17,7 @@ public:
   };
 };
 
-INTERFACE [arm && sa1100]: // ----------------------------------
+INTERFACE [arm && pf_sa1100]: // ----------------------------------
 
 #include "initcalls.h"
 #include "kmem.h"
@@ -37,7 +37,7 @@ public:
 };
 
 // -------------------------------------------------------------
-IMPLEMENTATION [arm && (sa1100 || pxa)]:
+IMPLEMENTATION [arm && (pf_xscale || pf_sa1100)]:
 
 #include "assert.h"
 #include "config.h"
@@ -145,7 +145,7 @@ void irq_handler()
 }
 
 // -------------------------------------------------------------
-IMPLEMENTATION [arm && debug && (sa1100 || pxa)]:
+IMPLEMENTATION [arm && debug && (pf_sa1100 || pf_xscale)]:
 
 PUBLIC
 char const *
