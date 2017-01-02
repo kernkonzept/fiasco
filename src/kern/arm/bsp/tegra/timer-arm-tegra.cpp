@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------
-INTERFACE [arm && tegra2 && mptimer]:
+INTERFACE [arm && pf_tegra2 && mptimer]:
 
 EXTENSION class Timer
 {
@@ -8,7 +8,7 @@ private:
 };
 
 // --------------------------------------------------------------------------
-INTERFACE [arm && tegra3 && mptimer]:
+INTERFACE [arm && pf_tegra3 && mptimer]:
 
 EXTENSION class Timer
 {

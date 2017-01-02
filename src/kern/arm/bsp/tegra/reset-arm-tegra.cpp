@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && tegra]:
+IMPLEMENTATION [arm && pf_tegra]:
 
 #include "kmem.h"
 #include "mmio_register_block.h"

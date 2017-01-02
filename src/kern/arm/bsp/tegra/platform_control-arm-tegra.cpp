@@ -1,4 +1,4 @@
-INTERFACE [arm && mp && tegra]:
+INTERFACE [arm && mp && pf_tegra]:
 
 #include "mem_layout.h"
 
@@ -19,7 +19,7 @@ private:
   static Mword _orig_reset_vector;
 };
 
-INTERFACE [arm && mp && tegra3]:
+INTERFACE [arm && mp && pf_tegra3]:
 
 EXTENSION class Platform_control
 {
@@ -38,7 +38,7 @@ private:
 };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && mp && tegra2 && !arm_em_ns]:
+IMPLEMENTATION [arm && mp && pf_tegra2 && !arm_em_ns]:
 
 PRIVATE static
 void
@@ -55,7 +55,7 @@ Platform_control::init_cpus()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && mp && tegra3]:
+IMPLEMENTATION [arm && mp && pf_tegra3]:
 
 #include "io.h"
 #include "mem.h"
@@ -138,7 +138,7 @@ Platform_control::init_cpus()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && mp && tegra && !arm_em_ns]:
+IMPLEMENTATION [arm && mp && pf_tegra && !arm_em_ns]:
 
 #include "io.h"
 #include "kmem.h"
@@ -167,7 +167,7 @@ Platform_control::boot_ap_cpus(Address phys_reset_vector)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && mp && tegra && arm_em_ns]:
+IMPLEMENTATION [arm && mp && pf_tegra && arm_em_ns]:
 
 #include <cstdio>
 

@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && tegra && outer_cache_l2cxx0]:
+IMPLEMENTATION [arm && pf_tegra && arm_cache_l2cxx0]:
 
 IMPLEMENT
 Mword
