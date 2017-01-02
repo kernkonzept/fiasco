@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------
-IMPLEMENTATION[arm && armada38x && mptimer]:
+IMPLEMENTATION[arm && pf_armada38x && mptimer]:
 
 PRIVATE static Mword Timer::interval()
 {

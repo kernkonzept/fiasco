@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && armada38x && outer_cache_l2cxx0]:
+IMPLEMENTATION [arm && pf_armada38x && arm_cache_l2cxx0]:
 
 IMPLEMENT
 Mword

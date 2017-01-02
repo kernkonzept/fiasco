@@ -1,7 +1,7 @@
 # vim:set ft=make:
 
 PREPROCESS_PARTS      += generic_tickless_idle mptimer pic_gic
-PREPROCESS_PARTS      += armada38x libuart
+PREPROCESS_PARTS      += libuart
 INTERFACES_KERNEL     += gic
 SUBSYSTEMS            += LIBUART
 OBJECTS_LIBUART       += uart_16550.o uart_16550_dw.o
