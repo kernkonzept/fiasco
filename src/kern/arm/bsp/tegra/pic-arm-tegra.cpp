@@ -1,10 +1,10 @@
-INTERFACE [arm && pic_gic && tegra]:
+INTERFACE [arm && pic_gic && pf_tegra]:
 
 #include "gic.h"
 #include "initcalls.h"
 
 //-------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && tegra]:
+IMPLEMENTATION [arm && pic_gic && pf_tegra]:
 
 #include "irq_chip.h"
 #include "irq_mgr_multi_chip.h"
@@ -26,7 +26,7 @@ void Pic::init()
 }
 
 //-------------------------------------------------------------------
-IMPLEMENTATION [arm && mp && pic_gic && tegra]:
+IMPLEMENTATION [arm && mp && pic_gic && pf_tegra]:
 
 PUBLIC static
 void Pic::init_ap(Cpu_number, bool resume)

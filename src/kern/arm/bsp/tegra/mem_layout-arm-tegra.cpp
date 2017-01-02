@@ -1,4 +1,4 @@
-INTERFACE [arm && tegra]:
+INTERFACE [arm && pf_tegra]:
 
 EXTENSION class Mem_layout
 {
