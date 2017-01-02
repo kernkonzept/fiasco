@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && pxa]:
+IMPLEMENTATION [arm && pf_xscale]:
 
 #include "mem_layout.h"
 #include "mmio_register_block.h"

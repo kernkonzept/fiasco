@@ -1,6 +1,6 @@
 # vim:set ft=make:
 
-PREPROCESS_PARTS        += pxa 16550 vcache armv5 generic_tickless_idle libuart
+PREPROCESS_PARTS        += pxa 16550 vcache arm_v5 generic_tickless_idle libuart
 RAM_PHYS_BASE           := 0xa0000000
 VPATH                   += kern/arm/bsp/pxa-sa
 OBJECTS_LIBUART         += uart_16550.o
