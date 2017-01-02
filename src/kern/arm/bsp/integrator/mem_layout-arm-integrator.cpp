@@ -1,4 +1,4 @@
-INTERFACE [arm-integrator]: //----------------------------------------------
+INTERFACE [arm && pf_integrator]: //---------------------------------------
 
 EXTENSION class Mem_layout
 {

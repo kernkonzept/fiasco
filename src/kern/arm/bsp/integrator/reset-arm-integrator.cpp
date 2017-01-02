@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && integrator]:
+IMPLEMENTATION [arm && pf_integrator]:
 
 #include "io.h"
 #include "kmem.h"

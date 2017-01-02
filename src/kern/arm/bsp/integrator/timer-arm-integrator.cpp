@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------
-INTERFACE [arm && integrator]:
+INTERFACE [arm && pf_integrator]:
 
 #include "mmio_register_block.h"
 
@@ -28,7 +28,7 @@ private:
 };
 
 // ----------------------------------------------------------------------
-IMPLEMENTATION [arm && integrator]:
+IMPLEMENTATION [arm && pf_integrator]:
 
 #include "config.h"
 #include "kip.h"

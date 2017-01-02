@@ -1,4 +1,4 @@
-IMPLEMENTATION [integrator]:
+IMPLEMENTATION [pf_integrator]:
 
 #include "uart_pl011.h"
 #include "mem_layout.h"

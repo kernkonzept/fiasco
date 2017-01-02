@@ -1,9 +1,9 @@
-INTERFACE [arm && integrator]:
+INTERFACE [arm && pf_integrator]:
 
 #include "initcalls.h"
 
 // ---------------------------------------------------------------------
-IMPLEMENTATION [arm && integrator]:
+IMPLEMENTATION [arm && pf_integrator]:
 
 #include "assert.h"
 #include "initcalls.h"
@@ -87,7 +87,7 @@ void irq_handler()
 { mgr->c.handle_multi_pending<Irq_chip_arm_integr>(0); }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && integrator && arm_em_tz]:
+IMPLEMENTATION [arm && pf_integrator && arm_em_tz]:
 
 #include <cstdio>
 
@@ -99,7 +99,7 @@ Pic::set_pending_irq(unsigned group32num, Unsigned32 val)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [debug && integrator]:
+IMPLEMENTATION [debug && pf_integrator]:
 
 PUBLIC
 char const *
