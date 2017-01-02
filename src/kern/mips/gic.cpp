@@ -227,11 +227,12 @@ Gic::pending()
   // We might also need to check that we're on the proper CPU but
   // lets postpone that until it is actually required
   for (unsigned i = 0, o = 0; i < nr_irqs(); o += Reg_bytes, i += Reg_width)
-    {
-      Reg_type v = _r[Sh_pend + o] & _enabled_map[i / Reg_width];
-      if (v)
-        return i + __builtin_ffs(v) - 1;
-    }
+    if (_enabled_map[i / Reg_width])
+      {
+        Reg_type v = _r[Sh_pend + o] & _enabled_map[i / Reg_width];
+        if (v)
+          return i + __builtin_ffs(v) - 1;
+      }
 
   return ~0U;
 }
