@@ -1,8 +1,8 @@
-INTERFACE [arm && mp && sunxi]:
+INTERFACE [arm && mp && pf_sunxi]:
 
 #include "types.h"
 
-IMPLEMENTATION [arm && mp && sunxi]:
+IMPLEMENTATION [arm && mp && pf_sunxi]:
 
 #include "ipi.h"
 #include "mem.h"

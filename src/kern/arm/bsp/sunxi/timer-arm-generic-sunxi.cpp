@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm_generic_timer && sunxi]:
+IMPLEMENTATION [arm_generic_timer && pf_sunxi]:
 
 PUBLIC static
 unsigned Timer::irq()

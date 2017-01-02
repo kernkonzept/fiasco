@@ -1,4 +1,4 @@
-INTERFACE [arm && sunxi]:
+INTERFACE [arm && pf_sunxi]:
 
 #include "config.h"
 #include "kmem.h"
@@ -39,7 +39,7 @@ private:
 };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && sunxi]:
+IMPLEMENTATION [arm && pf_sunxi]:
 
 Static_object<Timer::Tmr> Timer::tmr;
 

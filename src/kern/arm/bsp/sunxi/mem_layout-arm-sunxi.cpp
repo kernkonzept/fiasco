@@ -1,4 +1,4 @@
-INTERFACE [arm && sunxi]: //-----------------------------------------------
+INTERFACE [arm && pf_sunxi]: //--------------------------------------------
 
 EXTENSION class Mem_layout
 {

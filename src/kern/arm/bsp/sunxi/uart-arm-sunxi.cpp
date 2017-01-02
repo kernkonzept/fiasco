@@ -1,4 +1,4 @@
-IMPLEMENTATION [sunxi]:
+IMPLEMENTATION [pf_sunxi]:
 
 #include "koptions.h"
 #include "uart_16550_dw.h"
