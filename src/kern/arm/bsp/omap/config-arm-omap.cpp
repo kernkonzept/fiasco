@@ -1,14 +1,14 @@
-INTERFACE[arm && omap3_35xevm]: //-----------------------------------------
+INTERFACE[arm && pf_omap3_omap35xevm]: //----------------------------------
 #define TARGET_NAME "OMAP35xEVM"
 
-INTERFACE[arm && omap3_beagleboard]: //------------------------------------
+INTERFACE[arm && pf_omap3_beagleboard]: //---------------------------------
 #define TARGET_NAME "Beagleboard"
 
-INTERFACE[arm && omap3_am33xx]: //-----------------------------------------
+INTERFACE[arm && pf_omap3_am33xx]: //--------------------------------------
 #define TARGET_NAME "AM33xx"
 
-INTERFACE[arm && omap4_pandaboard]: //-------------------------------------
+INTERFACE[arm && pf_omap4_pandaboard]: //----------------------------------
 #define TARGET_NAME "Pandaboard"
 
-INTERFACE[arm && omap5]: //------------------------------------------------
+INTERFACE[arm && pf_omap5]: //---------------------------------------------
 #define TARGET_NAME "OMAP5"

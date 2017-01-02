@@ -1,16 +1,16 @@
-IMPLEMENTATION [arm && (omap3_35xevm || omap3_am33xx)]: // ----------------
+IMPLEMENTATION [arm && (pf_omap3_omap35xevm || pf_omap3_am33xx)]: // ------
 
 IMPLEMENT int Uart::irq() const { return 72; }
 
-IMPLEMENTATION [arm && omap3_beagleboard]: // -----------------------------
+IMPLEMENTATION [arm && pf_omap3_beagleboard]: // --------------------------
 
 IMPLEMENT int Uart::irq() const { return 74; }
 
-IMPLEMENTATION [arm && omap4_pandaboard]: // ------------------------------
+IMPLEMENTATION [arm && pf_omap4_pandaboard]: // ---------------------------
 
 IMPLEMENT int Uart::irq() const { return 32 + 74; }
 
-IMPLEMENTATION [arm && omap5]: // -----------------------------------------
+IMPLEMENTATION [arm && pf_omap5]: // --------------------------------------
 
 IMPLEMENT int Uart::irq() const { return 32 + 74; }
 

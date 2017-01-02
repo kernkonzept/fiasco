@@ -1,4 +1,4 @@
-INTERFACE [omap3]: // ------------------------------------------------
+INTERFACE [pf_omap3]: // ------------------------------------------------
 
 #include "mmio_register_block.h"
 
@@ -26,7 +26,7 @@ private:
 };
 
 
-IMPLEMENTATION [omap3]: // ------------------------------------------------
+IMPLEMENTATION [pf_omap3]: // ------------------------------------------------
 
 #include <cassert>
 #include <cstdio>
@@ -82,7 +82,7 @@ Timer_omap_1mstimer::acknowledge()
 }
 
 
-IMPLEMENTATION [arm && omap3_am33xx]: // ----------------------------------
+IMPLEMENTATION [arm && pf_omap3_am33xx]: // ----------------------------------
 
 PRIVATE static
 void
@@ -99,7 +99,7 @@ Timer_omap_1mstimer::get_timer_values(unsigned &reload, int &tpir, int &tnir,
     }
 }
 
-IMPLEMENTATION [arm && omap3_35x]: // -------------------------------------
+IMPLEMENTATION [arm && pf_omap3_35x]: // -------------------------------------
 
 PRIVATE static
 void

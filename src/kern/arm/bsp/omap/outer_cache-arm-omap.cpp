@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && omap4 && outer_cache_l2cxx0]:
+IMPLEMENTATION [arm && pf_omap4 && arm_cache_l2cxx0]:
 
 EXTENSION class Outer_cache
 {
