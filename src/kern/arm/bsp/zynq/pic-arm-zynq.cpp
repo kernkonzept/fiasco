@@ -1,10 +1,10 @@
-INTERFACE [arm && pic_gic && zynq]:
+INTERFACE [arm && pic_gic && pf_zynq]:
 
 #include "gic.h"
 #include "initcalls.h"
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && zynq]:
+IMPLEMENTATION [arm && pic_gic && pf_zynq]:
 
 #include "irq_mgr_multi_chip.h"
 #include "kmem.h"
@@ -25,7 +25,7 @@ Pic::init()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && mp && zynq]:
+IMPLEMENTATION [arm && pic_gic && mp && pf_zynq]:
 
 PUBLIC static
 void Pic::init_ap(Cpu_number, bool resume)

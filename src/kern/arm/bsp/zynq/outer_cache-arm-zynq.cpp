@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && zynq && outer_cache_l2cxx0]:
+IMPLEMENTATION [arm && pf_zynq && arm_cache_l2cxx0]:
 
 IMPLEMENT
 Mword

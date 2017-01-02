@@ -1,4 +1,4 @@
-IMPLEMENTATION [zynq]:
+IMPLEMENTATION [pf_zynq]:
 
 #include "uart_cadence.h"
 #include "mem_layout.h"

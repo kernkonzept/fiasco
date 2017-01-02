@@ -1,4 +1,4 @@
-INTERFACE [arm && zynq]: //------------------------------------------------
+INTERFACE [arm && pf_zynq]: //------------------------------------------------
 
 EXTENSION class Mem_layout
 {
