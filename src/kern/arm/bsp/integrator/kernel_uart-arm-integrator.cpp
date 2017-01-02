@@ -3,7 +3,7 @@ INTERFACE:
 // On ARM the MMIO for the uart is accessible before the MMU is fully up
 EXTENSION class Kernel_uart { enum { Bsp_init_mode = Init_before_mmu }; };
 
-IMPLEMENTATION [arm && integrator && serial]:
+IMPLEMENTATION [arm && pf_integrator && serial]:
 
 IMPLEMENT
 bool Kernel_uart::startup(unsigned, int)
