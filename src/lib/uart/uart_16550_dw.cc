@@ -20,9 +20,9 @@ namespace L4
 
 void Uart_16550_dw::irq_ack()
 {
-  enum Registers_sunxi
+  enum Registers_dw
   {
-    USR = 0x1f,
+    DW_USR = 0x1f,
   };
   typedef unsigned char U8;
   U8 iir = _regs->read<U8>(IIR);
@@ -30,7 +30,7 @@ void Uart_16550_dw::irq_ack()
   if ((iir & IIR_BUSY) == IIR_BUSY)
     {
       U8 lcr = _regs->read<U8>(LCR);
-      U8 usr = _regs->read<U8>(USR);
+      U8 usr = _regs->read<U8>(DW_USR);
       asm volatile("" : : "r" (usr) : "memory");
       _regs->write<U8>(lcr, LCR);
     }
