@@ -1,7 +1,7 @@
-INTERFACE [arm && mp && realview]:
+INTERFACE [arm && mp && pf_realview]:
 #include "types.h"
 
-IMPLEMENTATION [arm && mp && realview]:
+IMPLEMENTATION [arm && mp && pf_realview]:
 
 #include "io.h"
 #include "ipi.h"

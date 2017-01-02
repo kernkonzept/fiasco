@@ -1,4 +1,4 @@
-INTERFACE [arm && realview]:
+INTERFACE [arm && pf_realview]:
 
 EXTENSION class Bootstrap
 {

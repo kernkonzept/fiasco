@@ -1,11 +1,11 @@
-IMPLEMENTATION [arm && realview]:
+IMPLEMENTATION [arm && pf_realview]:
 
 #include "io.h"
 #include "kmem.h"
 #include "platform.h"
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && realview && realview_eb]:
+IMPLEMENTATION [arm && pf_realview_eb]:
 
 static inline void do_reset()
 {
@@ -13,7 +13,7 @@ static inline void do_reset()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && realview && realview_pb11mp]:
+IMPLEMENTATION [arm && pf_realview_pb11mp]:
 
 static inline void do_reset()
 {
@@ -21,7 +21,7 @@ static inline void do_reset()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && realview && (realview_pbx || realview_vexpress)]:
+IMPLEMENTATION [arm && (pf_realview_pbx || pf_realview_vexpress)]:
 
 static inline void do_reset()
 {
@@ -29,7 +29,7 @@ static inline void do_reset()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && realview]:
+IMPLEMENTATION [arm && pf_realview]:
 
 void __attribute__ ((noreturn))
 platform_reset(void)

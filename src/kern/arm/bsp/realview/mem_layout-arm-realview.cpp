@@ -1,4 +1,4 @@
-INTERFACE [arm && realview]: // -------------------------------------------
+INTERFACE [arm && pf_realview]: // ----------------------------------------
 
 #include "globalconfig.h"
 
@@ -11,7 +11,7 @@ public:
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && realview && (realview_eb || realview_pb11mp || realview_pbx || realview_vexpress_a9)]:
+INTERFACE [arm && (pf_realview_eb || pf_realview_pb11mp || pf_realview_pbx || pf_realview_vexpress_a9)]:
 
 #include "globalconfig.h"
 
@@ -31,7 +31,8 @@ public:
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && realview && realview_eb && !(mpcore || armca9)]:
+INTERFACE [arm && pf_realview_eb
+           && !(arm_mpcore || arm_cortex_a9)]:
 
 EXTENSION class Mem_layout
 {
@@ -43,7 +44,8 @@ public:
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && realview && realview_eb && (mpcore || armca9)]:
+INTERFACE [arm && pf_realview_eb
+           && (arm_mpcore || arm_cortex_a9)]:
 
 EXTENSION class Mem_layout
 {
@@ -69,7 +71,7 @@ public:
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && realview && realview_pb11mp]:
+INTERFACE [arm && pf_realview_pb11mp]:
 
 EXTENSION class Mem_layout
 {
@@ -88,7 +90,7 @@ public:
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && realview && realview_pbx]:
+INTERFACE [arm && pf_realview_pbx]:
 
 EXTENSION class Mem_layout
 {
@@ -124,7 +126,7 @@ public:
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && realview_vexpress && !realview_vexpress_legacy]:
+INTERFACE [arm && pf_realview_vexpress && !realview_vexpress_legacy]:
 
 EXTENSION class Mem_layout
 {
