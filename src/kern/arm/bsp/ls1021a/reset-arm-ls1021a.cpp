@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && ls1021a]:
+IMPLEMENTATION [arm && pf_ls1021a]:
 
 #include "io.h"
 #include "kmem.h"

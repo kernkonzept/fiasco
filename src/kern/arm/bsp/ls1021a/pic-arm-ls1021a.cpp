@@ -1,10 +1,10 @@
-INTERFACE [arm && pic_gic && ls1021a]:
+INTERFACE [arm && pic_gic && pf_ls1021a]:
 
 #include "gic.h"
 #include "initcalls.h"
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && ls1021a]:
+IMPLEMENTATION [arm && pic_gic && pf_ls1021a]:
 
 #include "irq_mgr_multi_chip.h"
 #include "kmem.h"
@@ -25,7 +25,7 @@ Pic::init()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && mp && ls1021a]:
+IMPLEMENTATION [arm && pic_gic && mp && pf_ls1021a]:
 
 PUBLIC static
 void Pic::init_ap(Cpu_number, bool resume)

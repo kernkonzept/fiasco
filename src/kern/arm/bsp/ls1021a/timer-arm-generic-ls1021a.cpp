@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && ls1021a && arm_generic_timer]:
+IMPLEMENTATION [arm && pf_ls1021a && arm_generic_timer]:
 
 PUBLIC static
 unsigned Timer::irq()
