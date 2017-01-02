@@ -1,5 +1,4 @@
-// --------------------------------------------------------------------------
-IMPLEMENTATION[arm && zynq && mptimer]:
+IMPLEMENTATION[arm && pf_zynq && mptimer]:
 
 PRIVATE static Mword Timer::interval()
 {

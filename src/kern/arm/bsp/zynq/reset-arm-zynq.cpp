@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && zynq]:
+IMPLEMENTATION [arm && pf_zynq]:
 
 #include "io.h"
 #include "kmem.h"

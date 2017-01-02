@@ -1,8 +1,8 @@
-INTERFACE [arm && mp && zynq]:
+INTERFACE [arm && mp && pf_zynq]:
 
 #include "types.h"
 
-IMPLEMENTATION [arm && mp && zynq]:
+IMPLEMENTATION [arm && mp && pf_zynq]:
 
 #include "mem.h"
 #include "mmio_register_block.h"
