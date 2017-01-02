@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && bcm2835]:
+IMPLEMENTATION [arm && pf_bcm2835]:
 
 #include "io.h"
 #include "kmem.h"

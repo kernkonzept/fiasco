@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------
-INTERFACE [arm && bcm2835]:
+INTERFACE [arm && pf_bcm2835]:
 
 #include "mmio_register_block.h"
 
@@ -26,7 +26,7 @@ private:
 };
 
 // ----------------------------------------------------------------------
-IMPLEMENTATION [arm && bcm2835]:
+IMPLEMENTATION [arm && pf_bcm2835]:
 
 #include "config.h"
 #include "kip.h"

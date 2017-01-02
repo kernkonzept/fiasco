@@ -1,9 +1,9 @@
-INTERFACE [arm && bcm2835]:
+INTERFACE [arm && pf_bcm2835]:
 
 #include "initcalls.h"
 
 // ---------------------------------------------------------------------
-IMPLEMENTATION [arm && bcm2835]:
+IMPLEMENTATION [arm && pf_bcm2835]:
 
 #include "assert.h"
 #include "irq_chip_generic.h"
@@ -120,7 +120,7 @@ void irq_handler()
 { mgr->c.irq_handler(); }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && bcm2835 && arm_em_tz]:
+IMPLEMENTATION [arm && pf_bcm2835 && arm_em_tz]:
 
 #include <cstdio>
 
@@ -132,7 +132,7 @@ Pic::set_pending_irq(unsigned group32num, Unsigned32 val)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [debug && bcm2835]:
+IMPLEMENTATION [debug && pf_bcm2835]:
 
 PUBLIC
 char const *
