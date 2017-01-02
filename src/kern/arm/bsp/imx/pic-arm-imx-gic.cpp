@@ -1,16 +1,16 @@
-INTERFACE [arm && pic_gic && imx]:
+INTERFACE [arm && pic_gic && pf_imx]:
 
 #include "initcalls.h"
 #include "gic.h"
 
-INTERFACE [arm && pic_gic && (imx51 || imx53)]:
+INTERFACE [arm && pic_gic && (pf_imx_51 | pf_imx_53)]:
 
 EXTENSION class Pic
 {
   enum { Gic_sz = 7 };
 };
 
-INTERFACE [arm && pic_gic && (imx6 || imx6ul || imx7)]:
+INTERFACE [arm && pic_gic && (pf_imx_6 || pf_imx_6ul || pf_imx_7)]:
 
 EXTENSION class Pic
 {
@@ -18,7 +18,7 @@ EXTENSION class Pic
 };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && imx]:
+IMPLEMENTATION [arm && pic_gic && pf_imx]:
 
 #include "irq_mgr_multi_chip.h"
 #include "kmem.h"
@@ -39,7 +39,7 @@ Pic::init()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && mp && (imx6 || imx7)]:
+IMPLEMENTATION [arm && pic_gic && mp && (pf_imx_6 || pf_imx_7)]:
 
 PUBLIC static
 void Pic::init_ap(Cpu_number, bool resume)

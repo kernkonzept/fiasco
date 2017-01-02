@@ -1,4 +1,4 @@
-IMPLEMENTATION [imx21]:
+IMPLEMENTATION [pf_imx_21]:
 
 #include "uart_imx.h"
 
@@ -8,7 +8,7 @@ IMPLEMENT L4::Uart *Uart::uart()
   return &uart;
 }
 
-IMPLEMENTATION [imx28]:
+IMPLEMENTATION [pf_imx_28]:
 
 #include "koptions.h"
 #include "uart_pl011.h"
@@ -19,7 +19,7 @@ IMPLEMENT L4::Uart *Uart::uart()
   return &uart;
 }
 
-IMPLEMENTATION [imx35]:
+IMPLEMENTATION [pf_imx_35]:
 
 #include "uart_imx.h"
 
@@ -29,7 +29,7 @@ IMPLEMENT L4::Uart *Uart::uart()
   return &uart;
 }
 
-IMPLEMENTATION [imx51 || imx53]:
+IMPLEMENTATION [pf_imx_51 || pf_imx_53]:
 
 #include "uart_imx.h"
 
@@ -39,7 +39,7 @@ IMPLEMENT L4::Uart *Uart::uart()
   return &uart;
 }
 
-IMPLEMENTATION [imx6 || imx6ul]:
+IMPLEMENTATION [pf_imx_6 || pf_imx_6ul]:
 
 #include "uart_imx.h"
 
@@ -49,7 +49,7 @@ IMPLEMENT L4::Uart *Uart::uart()
   return &uart;
 }
 
-IMPLEMENTATION [imx7]:
+IMPLEMENTATION [pf_imx7]:
 
 #include "uart_imx.h"
 

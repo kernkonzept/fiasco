@@ -1,23 +1,23 @@
-INTERFACE [arm && imx21]:
+INTERFACE [arm && pf_imx_21]:
 
 #define TARGET_NAME "i.MX21"
 
-INTERFACE [arm && imx28]:
+INTERFACE [arm && pf_imx_28]:
 
 #define TARGET_NAME "i.MX28"
 
-INTERFACE [arm && imx35]:
+INTERFACE [arm && pf_imx_35]:
 
 #define TARGET_NAME "i.MX35"
 
-INTERFACE [arm && imx51]:
+INTERFACE [arm && pf_imx_51]:
 
 #define TARGET_NAME "i.MX51"
 
-INTERFACE [arm && imx53]:
+INTERFACE [arm && pf_imx_53]:
 
 #define TARGET_NAME "i.MX53"
 
-INTERFACE [arm && imx6]:
+INTERFACE [arm && pf_imx_6]:
 
 #define TARGET_NAME "i.MX6"

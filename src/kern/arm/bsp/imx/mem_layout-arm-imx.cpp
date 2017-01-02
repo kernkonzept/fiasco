@@ -1,4 +1,4 @@
-INTERFACE [arm && imx]: //----------------------------------------------
+INTERFACE [arm && pf_imx]: //----------------------------------------------
 
 EXTENSION class Mem_layout
 {
@@ -8,7 +8,7 @@ public:
   };
 };
 
-INTERFACE [arm && imx && imx21]: // ---------------------------------------
+INTERFACE [arm && pf_imx_21]: // ---------------------------------------
 
 EXTENSION class Mem_layout
 {
@@ -21,7 +21,7 @@ public:
   };
 };
 
-INTERFACE [arm && imx && imx28]: // ---------------------------------------
+INTERFACE [arm && pf_imx_28]: // ---------------------------------------
 
 EXTENSION class Mem_layout
 {
@@ -32,7 +32,7 @@ public:
   };
 };
 
-INTERFACE [arm && imx && imx35]: // ---------------------------------------
+INTERFACE [arm && pf_imx_35]: // ---------------------------------------
 
 EXTENSION class Mem_layout
 {
@@ -45,7 +45,7 @@ public:
 };
 
 
-INTERFACE [arm && imx && imx51]: // ---------------------------------------
+INTERFACE [arm && pf_imx_51]: // ---------------------------------------
 
 EXTENSION class Mem_layout
 {
@@ -58,7 +58,7 @@ public:
   };
 };
 
-INTERFACE [arm && imx && imx53]: // ---------------------------------------
+INTERFACE [arm && pf_imx_53]: // ---------------------------------------
 
 EXTENSION class Mem_layout
 {
@@ -71,7 +71,7 @@ public:
   };
 };
 
-INTERFACE [arm && imx && imx6]: // -----------------------------------------
+INTERFACE [arm && pf_imx_6]: // -----------------------------------------
 
 EXTENSION class Mem_layout
 {
@@ -89,7 +89,7 @@ public:
   };
 };
 
-INTERFACE [arm && imx && imx6ul]: // ---------------------------------------
+INTERFACE [arm && pf_imx_6ul]: // ---------------------------------------
 
 EXTENSION class Mem_layout
 {
@@ -104,7 +104,7 @@ public:
   };
 };
 
-INTERFACE [arm && imx && imx7]: // -----------------------------------------
+INTERFACE [arm && pf_imx7]: // -----------------------------------------
 
 EXTENSION class Mem_layout
 {

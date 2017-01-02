@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------
-IMPLEMENTATION[arm && imx6 && mptimer]:
+IMPLEMENTATION[arm && pf_imx_6 && mptimer]:
 
 #include "config.h"
 #include "kmem.h"
