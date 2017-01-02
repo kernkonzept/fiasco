@@ -1,11 +1,11 @@
 /* ARM specific */
-INTERFACE [arm && armv5]:
+INTERFACE [arm && arm_v5]:
 
 EXTENSION class Config
 { public: enum { Access_user_mem = Must_access_user_mem_direct }; };
 
 /* ARM specific */
-INTERFACE [arm && armv6plus]:
+INTERFACE [arm && arm_v6plus]:
 
 EXTENSION class Config
 { public: enum { Access_user_mem = No_access_user_mem }; };
@@ -115,7 +115,7 @@ Config::init_arch()
 {}
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [armv6plus]:
+IMPLEMENTATION [arm_v6plus]:
 
 #include "feature.h"
 

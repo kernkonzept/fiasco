@@ -98,7 +98,7 @@ Cpu::disable_dcache()
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && armv6plus]:
+IMPLEMENTATION [arm && arm_v6plus]:
 
 PRIVATE static inline
 void

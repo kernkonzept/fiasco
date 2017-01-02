@@ -39,7 +39,7 @@ struct Trex
 
 
 //-----------------------------------------------------------------
-IMPLEMENTATION [arm && !hyp]:
+IMPLEMENTATION [arm && !cpu_virt]:
 
 #include "processor.h"
 #include "mem.h"

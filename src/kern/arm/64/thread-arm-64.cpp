@@ -137,7 +137,7 @@ Thread::handle_svc(Trap_state *ts)
 }
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [arm && 64bit && !hyp]:
+IMPLEMENTATION [arm && 64bit && !cpu_virt]:
 
 PRIVATE static inline
 Arm_esr

@@ -130,13 +130,13 @@ public:
 };
 
 //--------------------------------------------------------------------
-INTERFACE[arm && !hyp]:
+INTERFACE[arm && !cpu_virt]:
 
 EXTENSION class Proc
 { public: enum : unsigned { Is_hyp = 0, Status_mode_supervisor = PSR_m_svc }; };
 
 //--------------------------------------------------------------------
-INTERFACE[arm && hyp]:
+INTERFACE[arm && cpu_virt]:
 
 EXTENSION class Proc
 { public: enum : unsigned { Is_hyp = 1, Status_mode_supervisor = PSR_m_hyp }; };
@@ -182,7 +182,7 @@ Cpu_phys_id Proc::cpu_id()
 { return Cpu_phys_id(0); }
 
 //----------------------------------------------------------------
-IMPLEMENTATION[arm && (pxa || sa1100 || s3c2410)]:
+IMPLEMENTATION[arm && (arm_pxa || arm_sa || arm_920t)]:
 
 IMPLEMENT static inline
 void Proc::halt()
@@ -193,7 +193,7 @@ void Proc::pause()
 {}
 
 //----------------------------------------------------------------
-IMPLEMENTATION[armv7 || armv8]:
+IMPLEMENTATION[arm_v7 || arm_v8]:
 
 IMPLEMENT static inline
 void Proc::pause()

@@ -385,7 +385,7 @@ Thread::invoke_arch(L4_msg_tag tag, Utcb *utcb)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && (arm_em_tz || hyp)]:
+IMPLEMENTATION [arm && (arm_em_tz || cpu_virt)]:
 
 IMPLEMENT_OVERRIDE inline
 bool
@@ -450,7 +450,7 @@ Thread::map_fsr_user(Mword fsr, bool)
 { return fsr; }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && armv6plus]:
+IMPLEMENTATION [arm && arm_v6plus]:
 
 PROTECTED inline
 void
@@ -496,7 +496,7 @@ Thread::store_tpidruro(Trex *t)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && !armv6plus]:
+IMPLEMENTATION [arm && !arm_v6plus]:
 
 PROTECTED inline
 void
@@ -625,7 +625,7 @@ public:
 static Arm_ipis _arm_ipis;
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && (armv8 || !fpu)]:
+IMPLEMENTATION [arm && (arm_v8 || !fpu)]:
 
 PUBLIC inline
 bool
@@ -635,7 +635,7 @@ Thread::check_and_handle_coproc_faults(Trap_state *)
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && !hyp]:
+IMPLEMENTATION [arm && !cpu_virt]:
 
 PUBLIC static inline template<typename T>
 T Thread::peek_user(T const *adr, Context *c)

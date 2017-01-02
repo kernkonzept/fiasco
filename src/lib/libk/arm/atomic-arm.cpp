@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && armv6plus]:
+IMPLEMENTATION [arm && arm_v6plus]:
 
 inline
 void

@@ -1,4 +1,4 @@
-IMPLEMENTATION[arm && !hyp]:
+IMPLEMENTATION[arm && !cpu_virt]:
 
 #include "config.h"
 #include "globals.h"
@@ -27,7 +27,7 @@ Kernel_task::map_syscall_page(void *p)
   pte.write_back_if(true, Mem_unit::Asid_kernel);
 }
 
-IMPLEMENTATION[arm && hyp]:
+IMPLEMENTATION[arm && cpu_virt]:
 
 #include "config.h"
 #include "globals.h"

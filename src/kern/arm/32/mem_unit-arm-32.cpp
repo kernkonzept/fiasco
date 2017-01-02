@@ -15,7 +15,7 @@ void Mem_unit::dtlb_flush(void *va)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && armv5]:
+IMPLEMENTATION [arm && arm_v5]:
 
 IMPLEMENT inline
 void Mem_unit::tlb_flush(void *va, unsigned long)
@@ -31,7 +31,7 @@ void Mem_unit::tlb_flush(unsigned long)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && (armv6 || armv7) && !hyp]:
+IMPLEMENTATION [arm && (arm_v6 || arm_v7) && !cpu_virt]:
 
 IMPLEMENT inline
 void Mem_unit::tlb_flush(void *va, unsigned long asid)
@@ -54,7 +54,7 @@ void Mem_unit::tlb_flush(unsigned long asid)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && (armv6 || armv7) && hyp]:
+IMPLEMENTATION [arm && (arm_v6 || arm_v7) && cpu_virt]:
 
 IMPLEMENT inline
 void Mem_unit::tlb_flush(void *va, unsigned long asid)
@@ -97,7 +97,7 @@ void Mem_unit::tlb_flush(unsigned long asid)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && hyp]:
+IMPLEMENTATION [arm && cpu_virt]:
 
 IMPLEMENT_OVERRIDE inline
 void Mem_unit::kernel_tlb_flush()

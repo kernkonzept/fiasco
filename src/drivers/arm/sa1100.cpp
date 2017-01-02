@@ -1,4 +1,4 @@
-INTERFACE [sa1100]:
+INTERFACE [pf_sa1100]:
 
 #include "types.h"
 #include "mmio_register_block.h"

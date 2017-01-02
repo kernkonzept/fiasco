@@ -59,7 +59,7 @@ private:
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && armv5]:
+INTERFACE [arm && arm_v5]:
 
 EXTENSION class Cpu
 {
@@ -92,7 +92,8 @@ public:
   };
 };
 
-INTERFACE [arm && armv6]:
+// ------------------------------------------------------------------------
+INTERFACE [arm && arm_v6]:
 
 EXTENSION class Cpu
 {
@@ -111,7 +112,8 @@ public:
   };
 };
 
-INTERFACE [arm && armv6 && !mpcore]:
+// ------------------------------------------------------------------------
+INTERFACE [arm && arm_v6 && !arm_mpcore]:
 
 EXTENSION class Cpu
 {
@@ -126,7 +128,8 @@ public:
   };
 };
 
-INTERFACE [arm && armv6 && mpcore]:
+// ------------------------------------------------------------------------
+INTERFACE [arm && arm_v6 && arm_mpcore]:
 
 EXTENSION class Cpu
 {
@@ -144,7 +147,8 @@ public:
 };
 
 
-INTERFACE [arm && (armv7 || armv8)]:
+// ------------------------------------------------------------------------
+INTERFACE [arm && (arm_v7 || arm_v8)]:
 
 EXTENSION class Cpu
 {
@@ -185,7 +189,7 @@ IMPLEMENT_DEFAULT static inline
 void
 Cpu::bsp_init(bool) {}
 
-IMPLEMENTATION [arm && armv6]: // -----------------------------------------
+IMPLEMENTATION [arm && arm_v6]: // -----------------------------------------
 
 PUBLIC static inline NEEDS[Cpu::set_actrl]
 void
@@ -201,7 +205,7 @@ Cpu::disable_smp()
   clear_actrl(0x20);
 }
 
-IMPLEMENTATION [arm && armv7]: //------------------------------------------
+IMPLEMENTATION [arm && arm_v7]: //------------------------------------------
 
 PUBLIC static inline NEEDS[Cpu::midr]
 bool
@@ -246,7 +250,7 @@ Cpu::disable_smp()
 }
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && (mpcore || armca9)]:
+INTERFACE [arm && (arm_mpcore || arm_cortex_a9)]:
 
 #include "scu.h"
 
@@ -257,7 +261,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && (mpcore || armca9)]:
+IMPLEMENTATION [arm && (arm_mpcore || arm_cortex_a9)]:
 
 #include "kmem.h"
 
@@ -283,7 +287,7 @@ Cpu::early_init_platform()
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [(armv7 || armv8) && !armca9 && mp]:
+IMPLEMENTATION [(arm_v7 || arm_v8) && !arm_cortex_a9 && mp]:
 
 #include "kmem.h"
 
@@ -419,7 +423,7 @@ IMPLEMENTATION [arm && arm_lpae]:
 PUBLIC static inline unsigned Cpu::phys_bits() { return 40; }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !armv6plus]:
+IMPLEMENTATION [arm && !arm_v6plus]:
 
 IMPLEMENT
 void
@@ -428,13 +432,13 @@ Cpu::id_init()
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [!arm_cpu_errata || !armv6plus]:
+IMPLEMENTATION [!arm_cpu_errata || !arm_v6plus]:
 
 PRIVATE static inline
 void Cpu::init_errata_workarounds() {}
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm_cpu_errata && armv6plus]:
+IMPLEMENTATION [arm_cpu_errata && arm_v6plus]:
 
 PRIVATE static inline
 void
@@ -629,7 +633,7 @@ Cpu::print_infos() const
 {}
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [debug && armv6plus]:
+IMPLEMENTATION [debug && arm_v6plus]:
 
 PRIVATE
 void
@@ -642,7 +646,7 @@ Cpu::id_print_infos() const
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [debug && !armv6plus]:
+IMPLEMENTATION [debug && !arm_v6plus]:
 
 PRIVATE
 void

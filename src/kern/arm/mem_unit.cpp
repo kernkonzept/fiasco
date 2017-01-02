@@ -33,7 +33,7 @@ Mem_unit::make_coherent_to_pou(void const *v)
 { clean_dcache(v); }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && armv8 && !hyp]:
+IMPLEMENTATION [arm && arm_v8 && !cpu_virt]:
 
 IMPLEMENT inline
 void Mem_unit::tlb_flush(void *va, unsigned long asid)

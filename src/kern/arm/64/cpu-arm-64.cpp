@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------
-INTERFACE [arm && armv8]:
+INTERFACE [arm && arm_v8]:
 
 EXTENSION class Cpu
 {
@@ -105,7 +105,7 @@ Cpu::disable_dcache()
 }
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [arm && armv8]:
+IMPLEMENTATION [arm && arm_v8]:
 
 PUBLIC static inline NEEDS[Cpu::midr]
 bool

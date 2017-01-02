@@ -1,4 +1,4 @@
-INTERFACE [arm && !kern_start_0xd && !hyp]:
+INTERFACE [arm && !kern_start_0xd && !cpu_virt]:
 
 EXTENSION class Mem_layout
 {
@@ -21,7 +21,7 @@ public:
 
 };
 //---------------------------------------------------------------------------
-INTERFACE [arm && hyp]:
+INTERFACE [arm && cpu_virt]:
 
 EXTENSION class Mem_layout
 {
@@ -48,7 +48,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && !hyp]:
+INTERFACE [arm && !cpu_virt]:
 
 #include "template_math.h"
 

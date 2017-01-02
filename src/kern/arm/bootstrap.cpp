@@ -109,13 +109,13 @@ Bootstrap::map_memory(void volatile *pd, Virt_addr va, Phys_addr pa,
 
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && armv5]:
+IMPLEMENTATION [arm && arm_v5]:
 
 static inline void Bootstrap::set_asid() {}
 static inline void Bootstrap::set_ttbcr() {}
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && (armv6 || armv7)]:
+IMPLEMENTATION [arm && (arm_v6 || arm_v7)]:
 
 #include "kmem_space.h"
 
@@ -135,14 +135,14 @@ Bootstrap::set_ttbcr()
 
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !arm1176_cache_alias_fix]:
+IMPLEMENTATION [arm && !arm_1176_cache_alias_fix]:
 
 PUBLIC static inline
 void
 Bootstrap::do_arm_1176_cache_alias_workaround() {}
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !arm_lpae && !(armv7 || mpcore)]:
+IMPLEMENTATION [arm && !arm_lpae && !(arm_v7 || arm_mpcore)]:
 
 PUBLIC static inline
 Bootstrap::Phys_addr

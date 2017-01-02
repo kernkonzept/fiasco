@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------
-INTERFACE [armv8 && fpu]:
+INTERFACE [arm_v8 && fpu]:
 
 EXTENSION class Fpu
 {
@@ -38,7 +38,7 @@ Fpu::save_user_exception_state(bool, Fpu_state *, Trap_state *,
 {}
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && fpu && armv6plus && !hyp]:
+IMPLEMENTATION [arm && fpu && arm_v6plus && !cpu_virt]:
 
 PRIVATE static inline
 void
@@ -47,7 +47,7 @@ Fpu::copro_enable()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && fpu && armv6plus && hyp]:
+IMPLEMENTATION [arm && fpu && arm_v6plus && cpu_virt]:
 
 PRIVATE static inline
 void
@@ -188,7 +188,7 @@ Fpu::show(Cpu_number)
 {}
 
 //-------------------------------------------------------------------------
-IMPLEMENTATION [arm && fpu && !hyp]:
+IMPLEMENTATION [arm && fpu && !cpu_virt]:
 
 IMPLEMENT inline NEEDS ["fpu_state.h", "mem.h", "static_assert.h", <cstring>]
 void
@@ -234,7 +234,7 @@ Fpu::disable()
 }
 
 //-------------------------------------------------------------------------
-IMPLEMENTATION [arm && fpu && hyp]:
+IMPLEMENTATION [arm && fpu && cpu_virt]:
 
 EXTENSION class Fpu
 {

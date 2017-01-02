@@ -1,4 +1,4 @@
-INTERFACE [sa1100]:
+INTERFACE [pf_sa1100]:
 
 #include "types.h"
 
@@ -69,7 +69,7 @@ private:
 };
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [sa1100]:
+IMPLEMENTATION [pf_sa1100]:
 
 #include <cassert>
 #include "processor.h"

@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && hyp]:
+IMPLEMENTATION [arm && cpu_virt]:
 
 EXTENSION class Cpu
 {

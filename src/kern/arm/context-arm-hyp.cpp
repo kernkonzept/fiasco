@@ -1,4 +1,4 @@
-INTERFACE [arm && hyp]:
+INTERFACE [arm && cpu_virt]:
 
 #include "vgic.h"
 
@@ -113,7 +113,7 @@ public:
 
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && hyp]:
+IMPLEMENTATION [arm && cpu_virt]:
 
 #include "mem.h"
 

@@ -1,4 +1,4 @@
-INTERFACE [arm && armv8]:
+INTERFACE [arm && arm_v8]:
 
 EXTENSION class Perf_cnt
 {

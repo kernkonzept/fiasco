@@ -92,7 +92,7 @@ public:
 class Entry_frame : public Return_frame {};
 
 //------------------------------------------------------------------
-IMPLEMENTATION [arm && 64bit && !hyp]:
+IMPLEMENTATION [arm && 64bit && !cpu_virt]:
 
 PUBLIC inline
 bool
@@ -100,7 +100,7 @@ Return_frame::check_valid_user_psr() const
 { return (pstate & Proc::Status_mode_mask) == 0x01; }
 
 //------------------------------------------------------------------
-IMPLEMENTATION [arm && 64bit && hyp]:
+IMPLEMENTATION [arm && 64bit && cpu_virt]:
 
 PUBLIC inline
 bool

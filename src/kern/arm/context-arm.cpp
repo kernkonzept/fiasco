@@ -21,7 +21,7 @@ private:
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [armv6plus]:
+INTERFACE [arm_v6plus]:
 
 EXTENSION class Context
 {
@@ -101,7 +101,7 @@ Context::is_kernel_mem_op_hit_and_clear()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [armv6plus]:
+IMPLEMENTATION [arm_v6plus]:
 
 PROTECTED inline void Context::arch_setup_utcb_ptr()
 {
@@ -130,7 +130,7 @@ Context::tpidruro() const
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [armv6plus && !hyp]:
+IMPLEMENTATION [arm_v6plus && !cpu_virt]:
 
 IMPLEMENT_OVERRIDE inline
 void
@@ -151,7 +151,7 @@ Context::arch_load_vcpu_user_state(Vcpu_state *vcpu, bool do_load)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [!armv6plus]:
+IMPLEMENTATION [!arm_v6plus]:
 
 PROTECTED inline void Context::arch_setup_utcb_ptr()
 {}

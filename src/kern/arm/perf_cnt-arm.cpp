@@ -16,7 +16,7 @@ IMPLEMENT_DEFAULT inline
 Mword Perf_cnt::get_max_perf_event() { return 0; }
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && perf_cnt && mpcore]:
+INTERFACE [arm && perf_cnt && arm_mpcore]:
 
 #include "mem_layout.h"
 
@@ -71,12 +71,12 @@ private:
 };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && perf_cnt && mpcore]:
+IMPLEMENTATION [arm && perf_cnt && arm_mpcore]:
 IMPLEMENT_OVERRIDE inline
 Mword Perf_cnt::get_max_perf_event() { return 32; }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && perf_cnt && !(mpcore || armv7 || armv8)]:
+IMPLEMENTATION [arm && perf_cnt && !(arm_mpcore || arm_v7 || arm_v8)]:
 
 char const *Perf_cnt::perf_type_str = "none";
 
@@ -106,22 +106,22 @@ Perf_cnt::set_event_type(int, int)
 {}
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && perf_cnt && armca8]:
+IMPLEMENTATION [arm && perf_cnt && arm_cortex_a8]:
 IMPLEMENT_OVERRIDE inline
 Mword Perf_cnt::get_max_perf_event() { return 0x73; }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && perf_cnt && armca9]:
+IMPLEMENTATION [arm && perf_cnt && arm_cortex_a9]:
 IMPLEMENT_OVERRIDE inline
 Mword Perf_cnt::get_max_perf_event() { return 0x94; }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && perf_cnt && armca15]:
+IMPLEMENTATION [arm && perf_cnt && arm_cortex_a15]:
 IMPLEMENT_OVERRIDE inline
 Mword Perf_cnt::get_max_perf_event() { return 0x7f; }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && perf_cnt && (armv7 || armv8)]:
+IMPLEMENTATION [arm && perf_cnt && (arm_v7 || arm_v8)]:
 
 #include "cpu.h"
 

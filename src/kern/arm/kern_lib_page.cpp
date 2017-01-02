@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && !hyp]:
+IMPLEMENTATION [arm && !cpu_virt]:
 
 #include <panic.h>
 
@@ -36,7 +36,7 @@ void Kern_lib_page::init()
 STATIC_INITIALIZE(Kern_lib_page);
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !armv6plus]:
+IMPLEMENTATION [arm && !arm_v6plus]:
 
 asm (
     ".p2align(12)                        \n"
@@ -87,7 +87,7 @@ asm (
     );
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && armv6plus]:
+IMPLEMENTATION [arm && arm_v6plus]:
 
 asm (
     ".p2align(12)                        \n"

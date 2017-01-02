@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && !armv6plus]:
+IMPLEMENTATION [arm && !arm_v6plus]:
 
 #include "mem_layout.h"
 #include "paging.h"
@@ -15,6 +15,6 @@ Utcb_init::init()
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && armv6plus]:
+IMPLEMENTATION [arm && arm_v6plus]:
 
 IMPLEMENT inline void Utcb_init::init() {}

@@ -16,7 +16,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && hyp]:
+INTERFACE [arm && cpu_virt]:
 
 EXTENSION class Mem_layout
 {
