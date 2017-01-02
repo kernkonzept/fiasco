@@ -12,7 +12,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && armv5]:
+IMPLEMENTATION [arm && arm_v5]:
 
 IMPLEMENT static inline
 template < unsigned long Flush_area, bool Ram >
@@ -25,7 +25,7 @@ void Mmu<Flush_area, Ram>::btc_inv()
 {}
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && (armv6 || armv7)]:
+IMPLEMENTATION [arm && (arm_v6 || arm_v7)]:
 
 IMPLEMENT static inline
 template < unsigned long Flush_area, bool Ram >
@@ -38,7 +38,8 @@ void Mmu<Flush_area, Ram>::btc_inv()
 { asm volatile ("mcr p15, 0, %0, c7, c5, 0" : : "r" (0) : "memory"); }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && (mpcore || arm1136 || arm1176 || pxa || sa1100 || 926 || arm920t)]:
+IMPLEMENTATION [arm && (arm_mpcore || arm_1136 || arm_1176 || arm_pxa
+                        || arm_sa || arm_926 || arm_920t)]:
 
 PUBLIC static inline
 template< unsigned long Flush_area, bool Ram >
@@ -56,7 +57,7 @@ Mmu<Flush_area, Ram>::icache_line_size()
 }
 
 // ---------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm920t]:
+IMPLEMENTATION [arm && arm_920t]:
 
 IMPLEMENT inline
 template< unsigned long Flush_area, bool Ram >
@@ -108,7 +109,7 @@ FIASCO_NOINLINE void Mmu<Flush_area, Ram>::inv_dcache(void const *start, void co
 }
 
 // ---------------------------------------------------------------------------
-IMPLEMENTATION [arm && (pxa || sa1100 || 926)]:
+IMPLEMENTATION [arm && (arm_pxa || arm_sa || arm_926)]:
 
 IMPLEMENT inline
 template< unsigned long Flush_area, bool Ram >
@@ -182,7 +183,7 @@ FIASCO_NOINLINE void Mmu<Flush_area, Ram>::inv_dcache(void const *start, void co
 }
 
 //-----------------------------------------------------------------------------
-INTERFACE [armv7 || armv8]:
+INTERFACE [arm_v7 || arm_v8]:
 
 EXTENSION class Mmu
 {
@@ -225,7 +226,7 @@ private:
 };
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [armv7 || armv8]:
+IMPLEMENTATION [arm_v7 || arm_v8]:
 
 IMPLEMENT
 template< unsigned long Flush_area, bool Ram >
@@ -254,7 +255,7 @@ void Mmu<Flush_area, Ram>::clean_dcache()
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && sa1100]:
+IMPLEMENTATION [arm && arm_sa]:
 
 IMPLEMENT
 template< unsigned long Flush_area, bool Ram >
@@ -312,7 +313,7 @@ FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_dcache()
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && pxa]:
+IMPLEMENTATION [arm && arm_pxa]:
 
 IMPLEMENT
 template< unsigned long Flush_area, bool Ram >
@@ -386,7 +387,7 @@ FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_dcache()
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm920t]:
+IMPLEMENTATION [arm && arm_920t]:
 
 IMPLEMENT
 template< unsigned long Flush_area, bool Ram >
@@ -418,7 +419,7 @@ FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_dcache()
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && 926]:
+IMPLEMENTATION [arm && arm_926]:
 
 IMPLEMENT
 template< unsigned long Flush_area, bool Ram >

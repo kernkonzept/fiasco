@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && arm_lpae && !hyp]:
+IMPLEMENTATION [arm && arm_lpae && !cpu_virt]:
 
 #include "cpu.h"
 
@@ -27,7 +27,7 @@ Bootstrap::enable_paging(Mword pdir)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_lpae && hyp]:
+IMPLEMENTATION [arm && arm_lpae && cpu_virt]:
 
 PUBLIC static inline void
 Bootstrap::enable_paging(Mword pdir)
@@ -101,7 +101,7 @@ Bootstrap::enable_paging(Mword pdir)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm1176_cache_alias_fix]:
+IMPLEMENTATION [arm && arm_1176_cache_alias_fix]:
 
 PUBLIC static inline void
 Bootstrap::do_arm_1176_cache_alias_workaround()
@@ -118,7 +118,7 @@ Bootstrap::do_arm_1176_cache_alias_workaround()
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !arm_lpae && (armv7 || mpcore)]:
+IMPLEMENTATION [arm && !arm_lpae && (arm_v7 || arm_mpcore)]:
 
 #include "paging.h"
 
@@ -132,7 +132,7 @@ Bootstrap::init_paging(void *const page_dir)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !hyp]:
+IMPLEMENTATION [arm && !cpu_virt]:
 
 #include "mem_layout.h"
 
@@ -191,7 +191,7 @@ Bootstrap::add_initial_pmem()
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && hyp]:
+IMPLEMENTATION [arm && cpu_virt]:
 
 #include "feature.h"
 #include "kip.h"

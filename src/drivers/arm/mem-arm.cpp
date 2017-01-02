@@ -25,7 +25,7 @@ Mem::memcpy_bytes(void *dst, void const *src, unsigned long nr_of_bytes)
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [armv5]:
+IMPLEMENTATION [arm_v5]:
 
 PUBLIC static inline void Mem::dmb() { barrier(); }
 
@@ -35,7 +35,7 @@ PUBLIC static inline void Mem::dsb()
 { __asm__ __volatile__ ("mcr p15, 0, %0, c7, c10, 4" : : "r" (0) : "memory"); }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [armv6]:
+IMPLEMENTATION [arm_v6]:
 
 PUBLIC static inline void Mem::dmb()
 { __asm__ __volatile__ ("mcr p15, 0, %0, c7, c10, 5" : : "r" (0) : "memory"); }
@@ -47,7 +47,7 @@ PUBLIC static inline void Mem::dsb()
 { __asm__ __volatile__ ("mcr p15, 0, %0, c7, c10, 4" : : "r" (0) : "memory"); }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [armv7 || armv8]:
+IMPLEMENTATION [arm_v7 || arm_v8]:
 
 PUBLIC static inline void Mem::dmb()
 { __asm__ __volatile__ ("dmb sy" : : : "memory"); }

@@ -1,11 +1,11 @@
-INTERFACE [arm && !hyp]:
+INTERFACE [arm && !cpu_virt]:
 
 #include "paging.h"
 
 typedef Pdir Kpdir;
 
 //---------------------------------------------------------------------
-INTERFACE [arm && hyp]:
+INTERFACE [arm && cpu_virt]:
 
 #include "paging.h"
 

@@ -348,7 +348,7 @@ Mem_space::init_page_sizes()
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [armv5 || armv6 || armv7 || armv8]:
+IMPLEMENTATION [arm_v5 || arm_v6 || arm_v7 || arm_v8]:
 
 IMPLEMENT inline
 void
@@ -356,7 +356,7 @@ Mem_space::v_set_access_flags(Vaddr, L4_fpage::Rights)
 {}
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [armv5]:
+IMPLEMENTATION [arm_v5]:
 
 PRIVATE inline
 void
@@ -391,7 +391,7 @@ void Mem_space::make_current()
 }
 
 //----------------------------------------------------------------------------
-INTERFACE [armv6 || arm_lpae]:
+INTERFACE [arm_v6 || arm_lpae]:
 
 EXTENSION class Mem_space
 {
@@ -403,7 +403,7 @@ EXTENSION class Mem_space
 };
 
 //----------------------------------------------------------------------------
-INTERFACE [(armv7 || armv8) && !arm_lpae]:
+INTERFACE [(arm_v7 || arm_v8) && !arm_lpae]:
 
 EXTENSION class Mem_space
 {
@@ -415,7 +415,7 @@ EXTENSION class Mem_space
 };
 
 //----------------------------------------------------------------------------
-INTERFACE [armv6 || armv7 || armv8]:
+INTERFACE [arm_v6 || arm_v7 || arm_v8]:
 
 #include "id_alloc.h"
 #include "types.h"
@@ -460,7 +460,7 @@ private:
 };
 
 //----------------------------------------------------------------------------
-INTERFACE [!(armv6 || armv7 || armv8)]:
+INTERFACE [!(arm_v6 || arm_v7 || arm_v8)]:
 
 EXTENSION class Mem_space
 {
@@ -469,7 +469,7 @@ public:
 };
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [armv6 || armv7 || armv8]:
+IMPLEMENTATION [arm_v6 || arm_v7 || arm_v8]:
 
 DEFINE_PER_CPU Per_cpu<Mem_space::Asid_alloc> Mem_space::_asid_alloc;
 

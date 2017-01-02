@@ -1,4 +1,4 @@
-INTERFACE [arm && outer_cache_l2cxx0]:
+INTERFACE [arm && arm_cache_l2cxx0]:
 
 #include "lock_guard.h"
 #include "mem_layout.h"
@@ -86,7 +86,7 @@ public:
 };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && outer_cache_l2cxx0]:
+IMPLEMENTATION [arm && arm_cache_l2cxx0]:
 
 #include "kmem.h"
 #include "processor.h"
@@ -216,7 +216,7 @@ Outer_cache::init()
 STATIC_INITIALIZE_P(Outer_cache, STARTUP_INIT_PRIO);
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && outer_cache_l2cxx0 && !debug]:
+IMPLEMENTATION [arm && arm_cache_l2cxx0 && !debug]:
 
 PRIVATE static
 void
@@ -224,7 +224,7 @@ Outer_cache::show_info(unsigned, Mword, Mword)
 {}
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && outer_cache_l2cxx0 && debug]:
+IMPLEMENTATION [arm && arm_cache_l2cxx0 && debug]:
 
 #include "io.h"
 #include <cstdio>

@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && arm_lpae && !hyp]:
+IMPLEMENTATION [arm && arm_lpae && !cpu_virt]:
 
 #include "cpu.h"
 
@@ -16,7 +16,7 @@ Bootstrap::enable_paging(Mword)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !hyp]:
+IMPLEMENTATION [arm && !cpu_virt]:
 
 extern char kernel_l0_dir[];
 extern char kernel_l1_dir[];

@@ -9,7 +9,7 @@ IMPLEMENTATION [arm]:
 #include "ram_quota.h"
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [arm && !hyp && noncont_mem]:
+IMPLEMENTATION [arm && !cpu_virt && noncont_mem]:
 
 #include "mem_layout.h"
 

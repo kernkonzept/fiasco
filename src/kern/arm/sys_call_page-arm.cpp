@@ -3,7 +3,7 @@ INTERFACE:
 #include "types.h"
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION[arm && !armv6plus]:
+IMPLEMENTATION[arm && !arm_v6plus]:
 
 PRIVATE static inline NOEXPORT NEEDS["types.h"]
 void
@@ -20,7 +20,7 @@ Sys_call_page::set_utcb_get_code(Unsigned32 *sys_calls)
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION[arm && armv6plus]:
+IMPLEMENTATION[arm && arm_v6plus]:
 
 PRIVATE static inline NOEXPORT NEEDS["types.h"]
 void

@@ -101,14 +101,14 @@ Mem_op::__arm_kmem_l1_cache_maint(int op, void const *kstart, void const *kend)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && !hyp]:
+IMPLEMENTATION [arm && !cpu_virt]:
 
 PRIVATE static inline void
 Mem_op::__arm_mem_l1_cache_maint(int op, void const *start, void const *end)
 { __arm_kmem_l1_cache_maint(op, start, end); }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && hyp]:
+IMPLEMENTATION [arm && cpu_virt]:
 
 PRIVATE static inline void
 Mem_op::__arm_mem_l1_cache_maint(int op, void const *start, void const *end)
@@ -196,7 +196,7 @@ Mem_op::arm_mem_cache_maint(int op, void const *start, void const *end)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && !hyp]:
+IMPLEMENTATION [arm && !cpu_virt]:
 
 PUBLIC static void
 Mem_op::arm_mem_access(Mword *r)

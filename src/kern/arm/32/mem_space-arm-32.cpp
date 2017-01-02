@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && !hyp]:
+IMPLEMENTATION [arm && !cpu_virt]:
 
 PROTECTED inline NEEDS["kmem_alloc.h"]
 int
@@ -19,7 +19,7 @@ Mem_space::pmem_to_phys(Address virt) const
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [arm && 32bit && hyp]:
+IMPLEMENTATION [arm && 32bit && cpu_virt]:
 
 static Address __mem_space_syscall_page;
 
@@ -89,7 +89,7 @@ Mem_space::pmem_to_phys(Address virt) const
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [armv6]:
+IMPLEMENTATION [arm_v6]:
 
 IMPLEMENT inline NEEDS[Mem_space::asid]
 void Mem_space::make_current()
@@ -112,7 +112,7 @@ void Mem_space::make_current()
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [(armv7 || armv8) && !arm_lpae]:
+IMPLEMENTATION [(arm_v7 || arm_v8) && !arm_lpae]:
 
 IMPLEMENT inline NEEDS[Mem_space::asid]
 void
@@ -138,7 +138,7 @@ Mem_space::make_current()
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [(armv7 || armv8) && arm_lpae && !hyp]:
+IMPLEMENTATION [(arm_v7 || arm_v8) && arm_lpae && !cpu_virt]:
 
 IMPLEMENT inline NEEDS[Mem_space::asid]
 void
@@ -160,7 +160,7 @@ Mem_space::make_current()
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [(armv7 || armv8) && arm_lpae && hyp]:
+IMPLEMENTATION [(arm_v7 || arm_v8) && arm_lpae && cpu_virt]:
 
 IMPLEMENT inline NEEDS[Mem_space::asid]
 void

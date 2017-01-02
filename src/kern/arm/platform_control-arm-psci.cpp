@@ -1,4 +1,4 @@
-INTERFACE [arm && psci]:
+INTERFACE [arm && arm_psci]:
 
 #include <types.h>
 
@@ -46,7 +46,7 @@ private:
   static bool psci_is_v1;
 };
 
-IMPLEMENTATION [arm && psci]:
+IMPLEMENTATION [arm && arm_psci]:
 
 #include "mem.h"
 #include "mmio_register_block.h"

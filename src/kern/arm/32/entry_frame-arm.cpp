@@ -112,7 +112,7 @@ void Syscall_frame::tag(L4_msg_tag const &tag)
 
 
 //------------------------------------------------------------------
-IMPLEMENTATION [arm && !hyp]:
+IMPLEMENTATION [arm && !cpu_virt]:
 
 PUBLIC inline
 bool
@@ -120,7 +120,7 @@ Return_frame::check_valid_user_psr() const
 { return (psr & Proc::Status_mode_mask) == Proc::PSR_m_usr; }
 
 //------------------------------------------------------------------
-IMPLEMENTATION [arm && hyp]:
+IMPLEMENTATION [arm && cpu_virt]:
 
 PUBLIC inline
 bool

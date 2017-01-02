@@ -12,7 +12,7 @@ public:
 };
 
 //--------------------------------------------------------------------
-IMPLEMENTATION [arm && armv6plus]:
+IMPLEMENTATION [arm && arm_v6plus]:
 
 IMPLEMENT static inline
 void Proc::cli()
@@ -69,7 +69,7 @@ Cpu_phys_id Proc::cpu_id()
 }
 
 //----------------------------------------------------------------
-IMPLEMENTATION [arm && !armv6plus]:
+IMPLEMENTATION [arm && !arm_v6plus]:
 
 IMPLEMENT static inline
 void Proc::cli()
@@ -110,7 +110,7 @@ Proc::Status Proc::cli_save()
 }
 
 //----------------------------------------------------------------
-IMPLEMENTATION[arm && 926]:
+IMPLEMENTATION[arm && arm_926]:
 
 IMPLEMENT static inline
 void Proc::pause()
@@ -137,7 +137,7 @@ void Proc::halt()
 }
 
 //----------------------------------------------------------------
-IMPLEMENTATION[arm && arm1136]:
+IMPLEMENTATION[arm && arm_1136]:
 
 IMPLEMENT static inline
 void Proc::pause()
@@ -153,7 +153,7 @@ void Proc::halt()
 }
 
 //----------------------------------------------------------------
-IMPLEMENTATION[arm && (arm1176 || mpcore)]:
+IMPLEMENTATION[arm && (arm_1176 || arm_mpcore)]:
 
 IMPLEMENT static inline
 void Proc::pause()

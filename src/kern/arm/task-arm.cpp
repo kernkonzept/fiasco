@@ -7,7 +7,7 @@ Task::invoke_arch(L4_msg_tag &, Utcb *)
   return false;
 }
 
-IMPLEMENTATION [arm && hyp]:
+IMPLEMENTATION [arm && cpu_virt]:
 
 namespace {
 

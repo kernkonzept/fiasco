@@ -141,7 +141,7 @@ K_pte_ptr::page_order() const
 
 
 //-----------------------------------------------------------------------------
-INTERFACE [arm && armv5]:
+INTERFACE [arm && arm_v5]:
 
 #include "types.h"
 
@@ -171,7 +171,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && ((armv6plus && mp) || armv8)]:
+INTERFACE [arm && ((arm_v6plus && mp) || arm_v8)]:
 
 EXTENSION class Page
 {
@@ -184,7 +184,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && (armv6 || armv7) && !mp]:
+INTERFACE [arm && (arm_v6 || arm_v7) && !mp]:
 
 EXTENSION class Page
 {
@@ -197,19 +197,19 @@ public:
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && (armv5 || (armv6 && !mpcore))]:
+INTERFACE [arm && (arm_v5 || (arm_v6 && !arm_mpcore))]:
 
 EXTENSION class Page
 { public: enum { Ttbr_bits = 0 }; };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && mpcore]:
+INTERFACE [arm && arm_mpcore]:
 
 EXTENSION class Page
 { public: enum { Ttbr_bits = 0xa }; };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && ((mp && armv7) || armv8) && !arm_lpae]:
+INTERFACE [arm && ((mp && arm_v7) || arm_v8) && !arm_lpae]:
 
 // S Sharable | RGN = Outer WB-WA | IRGN = Inner WB-WA | NOS
 EXTENSION class Page
@@ -222,7 +222,7 @@ EXTENSION class Page
 { public: enum { Ttbr_bits = 0 }; };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && !mp && armv7 && !arm_lpae]:
+INTERFACE [arm && !mp && arm_v7 && !arm_lpae]:
 // armv7 w/o multiprocessing ext.
 
 // RGN = Outer WB-WA | IRGN = Inner WB-WA
@@ -230,7 +230,7 @@ EXTENSION class Page
 { public: enum { Ttbr_bits = 0x09 }; };
 
 //----------------------------------------------------------------------------
-INTERFACE [arm && armv6 && !mpcore]:
+INTERFACE [arm && arm_v6 && !arm_mpcore]:
 
 EXTENSION class Page
 {
@@ -249,7 +249,7 @@ public:
 };
 
 //----------------------------------------------------------------------------
-INTERFACE [arm && ((armv6 && mpcore) || ((armv7 || armv8) && !arm_lpae))]:
+INTERFACE [arm && ((arm_v6 && arm_mpcore) || ((arm_v7 || arm_v8) && !arm_lpae))]:
 
 EXTENSION class Page
 {
@@ -268,7 +268,7 @@ public:
 };
 
 //----------------------------------------------------------------------------
-INTERFACE [arm && armv6plus && !arm_lpae]:
+INTERFACE [arm && arm_v6plus && !arm_lpae]:
 
 #include "types.h"
 
@@ -302,7 +302,7 @@ typedef Ptab::Shift<Ptab_traits, Virt_addr::Shift>::List Ptab_traits_vpn;
 typedef Ptab::Page_addr_wrap<Page_number, Virt_addr::Shift> Ptab_va_vpn;
 
 //-----------------------------------------------------------------------------
-INTERFACE [arm && arm_lpae && !hyp]:
+INTERFACE [arm && arm_lpae && !cpu_virt]:
 
 #include "ptab_base.h"
 #include "types.h"
@@ -320,7 +320,7 @@ public:
 };
 
 //-----------------------------------------------------------------------------
-INTERFACE [arm && arm_lpae && hyp]:
+INTERFACE [arm && arm_lpae && cpu_virt]:
 
 #include "ptab_base.h"
 #include "types.h"
@@ -339,7 +339,7 @@ public:
 
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && armv5]:
+IMPLEMENTATION [arm && arm_v5]:
 
 PUBLIC static inline
 bool
@@ -360,7 +360,7 @@ K_pte_ptr::write_back(void *start, void *end)
 { Mem_unit::clean_dcache(start, end); }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && (armv6 || (armv7 && !mp))]:
+IMPLEMENTATION [arm && (arm_v6 || (arm_v7 && !mp))]:
 
 PUBLIC static inline
 bool
@@ -382,7 +382,7 @@ K_pte_ptr::write_back(void *start, void *end)
 { Mem_unit::clean_dcache(start, end); }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && ((armv7 && mp) || armv8)]:
+IMPLEMENTATION [arm && ((arm_v7 && mp) || arm_v8)]:
 
 PUBLIC static inline
 bool
@@ -403,7 +403,7 @@ K_pte_ptr::write_back(void *, void *)
 {}
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && armv5]:
+IMPLEMENTATION [arm && arm_v5]:
 
 PUBLIC static inline
 Mword PF::is_alignment_error(Mword error)
@@ -536,7 +536,7 @@ K_pte_ptr::del_rights(L4_fpage::Rights r)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !arm_lpae && (armv6 || armv7 || armv8)]:
+IMPLEMENTATION [arm && !arm_lpae && arm_v6plus]:
 
 PRIVATE inline
 K_pte_ptr::Entry
@@ -687,7 +687,7 @@ K_pte_ptr::del_rights(L4_fpage::Rights r)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_lpae && (armv7 || armv8)]:
+IMPLEMENTATION [arm && arm_lpae && (arm_v7 || arm_v8)]:
 
 PRIVATE inline
 K_pte_ptr::Entry
@@ -806,7 +806,7 @@ K_pte_ptr::del_rights(L4_fpage::Rights r)
 }
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && arm_lpae && armv7 && hyp]:
+INTERFACE [arm && arm_lpae && arm_v7 && cpu_virt]:
 
 class Pte_ptr : public K_pte_ptr
 {
@@ -818,12 +818,12 @@ public:
 
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && !hyp]:
+INTERFACE [arm && !cpu_virt]:
 
 typedef K_pte_ptr Pte_ptr;
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_lpae && (armv6 || armv7 || armv8) && hyp]:
+IMPLEMENTATION [arm && arm_lpae && (arm_v6 || arm_v7 || arm_v8) && cpu_virt]:
 
 PRIVATE inline
 Pte_ptr::Entry
@@ -925,7 +925,7 @@ Pte_ptr::del_rights(L4_fpage::Rights r)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && (armv6 || armv7 || armv8) && !arm_lpae]:
+IMPLEMENTATION [arm && (arm_v6 || arm_v7 || arm_v8) && !arm_lpae]:
 
 PUBLIC static inline
 Mword PF::is_alignment_error(Mword error)
@@ -939,7 +939,7 @@ Mword PF::is_alignment_error(Mword error)
 { return ((error >> 26) == 0x24) && ((error & 0x3f) == 0x21); }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && (armv6 || armv7 || armv8)]:
+IMPLEMENTATION [arm && (arm_v6 || arm_v7 || arm_v8)]:
 
 PUBLIC inline NEEDS[K_pte_ptr::_attribs, K_pte_ptr::_attribs_mask]
 void

@@ -16,7 +16,7 @@ Mem_space::pmem_to_phys(Address virt) const
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [armv8 && arm_lpae && !hyp]:
+IMPLEMENTATION [arm_v8 && arm_lpae && !cpu_virt]:
 
 IMPLEMENT inline NEEDS[Mem_space::asid]
 void
@@ -31,7 +31,7 @@ Mem_space::make_current()
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [armv8 && arm_lpae && hyp]:
+IMPLEMENTATION [arm_v8 && arm_lpae && cpu_virt]:
 
 IMPLEMENT inline NEEDS[Mem_space::asid]
 void

@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && hyp]:
+IMPLEMENTATION [arm && cpu_virt]:
 
 IMPLEMENT_OVERRIDE
 void
@@ -136,7 +136,7 @@ extern "C" void hyp_mode_fault(Mword abort_type, Trap_state *ts)
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && hyp && fpu]:
+IMPLEMENTATION [arm && cpu_virt && fpu]:
 
 PUBLIC static
 bool
@@ -163,7 +163,7 @@ Thread::handle_fpu_trap(Trap_state *ts)
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && hyp]:
+IMPLEMENTATION [arm && cpu_virt]:
 
 #include "irq_mgr.h"
 

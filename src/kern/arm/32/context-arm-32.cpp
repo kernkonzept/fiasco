@@ -39,7 +39,7 @@ Context::arm_switch_gp_regs(Context *t)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !hyp]:
+IMPLEMENTATION [arm && !cpu_virt]:
 
 IMPLEMENT inline
 void
@@ -73,7 +73,7 @@ Context::spill_user_state()
 PUBLIC inline void Context::switch_vm_state(Context *) {}
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && armv6plus]:
+IMPLEMENTATION [arm && arm_v6plus]:
 
 PRIVATE inline
 void

@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && armv8]:
+IMPLEMENTATION [arm && arm_v8]:
 
 IMPLEMENT static inline
 template < unsigned long Flush_area, bool Ram >
@@ -29,7 +29,7 @@ Mword Mmu<Flush_area, Ram>::icache_line_size()
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && armv8]:
+IMPLEMENTATION [arm && arm_v8]:
 
 IMPLEMENT inline
 template< unsigned long Flush_area, bool Ram >
@@ -122,7 +122,7 @@ void Mmu<Flush_area, Ram>::inv_dcache(void const *start, void const *end)
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && armv8]:
+IMPLEMENTATION [arm && arm_v8]:
 
 EXTENSION class Mmu
 {

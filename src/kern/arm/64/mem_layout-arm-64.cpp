@@ -12,7 +12,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && !hyp]:
+INTERFACE [arm && !cpu_virt]:
 
 #include "template_math.h"
 

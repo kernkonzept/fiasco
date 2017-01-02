@@ -1,4 +1,4 @@
-INTERFACE [arm && hyp && vgic]:
+INTERFACE [arm && cpu_virt && vgic]:
 
 #include "kmem.h"
 #include "mmio_register_block.h"
@@ -110,7 +110,7 @@ public:
 };
 
 //------------------------------------------------------------------------
-IMPLEMENTATION [arm && hyp && vgic]:
+IMPLEMENTATION [arm && cpu_virt && vgic]:
 
 #include "per_cpu_data.h"
 

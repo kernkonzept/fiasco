@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && (armv7 || armv8)]:
+IMPLEMENTATION [arm && (arm_v7 || arm_v8)]:
 
 PUBLIC static inline
 template< unsigned long Flush_area, bool Ram >
@@ -19,7 +19,7 @@ Mword Mmu<Flush_area, Ram>::icache_line_size()
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && armv6plus]:
+IMPLEMENTATION [arm && arm_v6plus]:
 
 IMPLEMENT inline
 template< unsigned long Flush_area, bool Ram >
@@ -112,7 +112,7 @@ void Mmu<Flush_area, Ram>::inv_dcache(void const *start, void const *end)
   Mem::dsb();
 }
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && (mpcore || arm1136 || arm1176)]:
+IMPLEMENTATION [arm && (arm_mpcore || arm_1136 || arm_1176)]:
 
 IMPLEMENT
 template< unsigned long Flush_area, bool Ram >

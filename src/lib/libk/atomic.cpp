@@ -129,7 +129,7 @@ mp_cas_arch(Mword *m, Mword o, Mword n)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION[(ppc32 && !mp) || (sparc && !mp) || (arm && !armv6plus)]:
+IMPLEMENTATION[(ppc32 && !mp) || (sparc && !mp) || (arm && !arm_v6plus)]:
 
 #include "processor.h"
 

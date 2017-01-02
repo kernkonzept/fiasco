@@ -1,4 +1,4 @@
-INTERFACE [arm && perf_cnt && (armv7 || armv8)]:
+INTERFACE [arm && perf_cnt && (arm_v7 || arm_v8)]:
 
 EXTENSION class Perf_cnt
 {
@@ -89,7 +89,7 @@ private:
 };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && perf_cnt && mpcore]:
+IMPLEMENTATION [arm && perf_cnt && arm_mpcore]:
 
 #include "cpu.h"
 
