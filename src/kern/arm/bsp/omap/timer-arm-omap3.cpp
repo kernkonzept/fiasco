@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------
-INTERFACE [arm && omap3_35x]:
+INTERFACE [arm && pf_omap3_35x]:
 
 #include "timer_omap_1mstimer.h"
 #include "mem_layout.h"
@@ -17,7 +17,7 @@ private:
   static Static_object<Timer_omap_1mstimer> _timer;
 };
 
-INTERFACE [arm && omap3_am33xx]: //----------------------------------------
+INTERFACE [arm && pf_omap3_am33xx]: //----------------------------------------
 
 #include "timer_omap_1mstimer.h"
 #include "timer_omap_gentimer.h"
@@ -51,12 +51,12 @@ private:
   static Static_object<Timer_omap_gentimer> _gentimer;
 };
 
-IMPLEMENTATION [omap3]: // ------------------------------------------------
+IMPLEMENTATION [pf_omap3]: // ------------------------------------------------
 
 Static_object<Timer_omap_1mstimer> Timer::_timer;
 
 // -----------------------------------------------------------------------
-IMPLEMENTATION [arm && omap3_35x]:
+IMPLEMENTATION [arm && pf_omap3_35x]:
 
 #include "kmem.h"
 
@@ -77,7 +77,7 @@ Timer::acknowledge()
 }
 
 // -----------------------------------------------------------------------
-IMPLEMENTATION [arm && omap3_am33xx]:
+IMPLEMENTATION [arm && pf_omap3_am33xx]:
 
 #include "kmem.h"
 #include "mem_layout.h"
@@ -119,7 +119,7 @@ void Timer::acknowledge()
 }
 
 // -----------------------------------------------------------------------
-IMPLEMENTATION [arm && omap3]:
+IMPLEMENTATION [arm && pf_omap3]:
 
 #include "config.h"
 #include "kip.h"

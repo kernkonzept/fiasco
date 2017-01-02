@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && omap3_35x]: //--------------------------------------
+IMPLEMENTATION [arm && pf_omap3_35x]: //-----------------------------------
 
 #include "io.h"
 #include "kmem.h"
@@ -17,7 +17,7 @@ platform_reset(void)
     ;
 }
 
-IMPLEMENTATION [arm && omap3_am33xx]: //-----------------------------------
+IMPLEMENTATION [arm && pf_omap3_am33xx]: //--------------------------------
 
 #include "io.h"
 #include "kmem.h"
@@ -33,7 +33,7 @@ platform_reset(void)
     ;
 }
 
-IMPLEMENTATION [arm && omap4]: //------------------------------------------
+IMPLEMENTATION [arm && pf_omap4]: //---------------------------------------
 
 #include "io.h"
 #include "kmem.h"
@@ -55,7 +55,7 @@ platform_reset(void)
     ;
 }
 
-IMPLEMENTATION [arm && omap5]: //------------------------------------------
+IMPLEMENTATION [arm && pf_omap5]: //---------------------------------------
 
 #include "io.h"
 #include "kmem.h"

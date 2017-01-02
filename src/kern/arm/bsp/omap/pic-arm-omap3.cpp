@@ -1,4 +1,4 @@
-INTERFACE [arm && omap3]:
+INTERFACE [arm && pf_omap3]:
 
 #include "initcalls.h"
 #include "kmem.h"
@@ -10,7 +10,7 @@ EXTENSION class Pic
 public:
 };
 
-INTERFACE [arm && omap3_35x]: //-------------------------------------------
+INTERFACE [arm && pf_omap3_35x]: //-------------------------------------------
 
 EXTENSION class Pic
 {
@@ -18,7 +18,7 @@ public:
   enum { Num_irqs                 = 96, };
 };
 
-INTERFACE [arm && omap3_am33xx]: //----------------------------------------
+INTERFACE [arm && pf_omap3_am33xx]: //----------------------------------------
 
 EXTENSION class Pic
 {
@@ -27,7 +27,7 @@ public:
 };
 
 //-------------------------------------------------------------------------
-IMPLEMENTATION [arm && omap3]:
+IMPLEMENTATION [arm && pf_omap3]:
 
 #include "assert.h"
 #include "config.h"
@@ -151,7 +151,7 @@ void irq_handler()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && omap3 && arm_em_tz]:
+IMPLEMENTATION [arm && pf_omap3 && arm_em_tz]:
 
 #include <cstdio>
 
@@ -163,7 +163,7 @@ Pic::set_pending_irq(unsigned group32num, Unsigned32 val)
 }
 
 //-------------------------------------------------------------------------
-IMPLEMENTATION [debug && omap3]:
+IMPLEMENTATION [debug && pf_omap3]:
 
 PUBLIC
 char const *

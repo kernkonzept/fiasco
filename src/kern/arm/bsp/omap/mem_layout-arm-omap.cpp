@@ -1,4 +1,4 @@
-INTERFACE [arm && omap3_35x]: //-------------------------------------------
+INTERFACE [arm && pf_omap3_35x]: //----------------------------------------
 
 EXTENSION class Mem_layout
 {
@@ -18,7 +18,7 @@ public:
   };
 };
 
-INTERFACE [arm && omap3_35xevm]: //----------------------------------------
+INTERFACE [arm && pf_omap3_omap35xevm]: //----------------------------------
 
 EXTENSION class Mem_layout
 {
@@ -28,7 +28,7 @@ public:
   };
 };
 
-INTERFACE [arm && omap3_beagleboard]: //-----------------------------------
+INTERFACE [arm && pf_omap3_beagleboard]: //--------------------------------
 
 EXTENSION class Mem_layout
 {
@@ -38,7 +38,7 @@ public:
   };
 };
 
-INTERFACE [arm && omap3_am33xx]: //----------------------------------------
+INTERFACE [arm && pf_omap3_am33xx]: //-------------------------------------
 
 EXTENSION class Mem_layout
 {
@@ -56,7 +56,7 @@ public:
   };
 };
 
-INTERFACE [arm && omap4]: //-----------------------------------------------
+INTERFACE [arm && pf_omap4]: //--------------------------------------------
 
 EXTENSION class Mem_layout
 {
@@ -74,7 +74,7 @@ public:
   };
 };
 
-INTERFACE [arm && omap5]: //-----------------------------------------------
+INTERFACE [arm && pf_omap5]: //--------------------------------------------
 
 EXTENSION class Mem_layout
 {
