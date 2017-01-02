@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && sa1100]:
+IMPLEMENTATION [arm && pf_sa1100]:
 
 #include <sa1100.h>
 #include "kmem.h"
