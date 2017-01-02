@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm_generic_timer && exynos]:
+IMPLEMENTATION [arm_generic_timer && pf_exynos]:
 
 #include "timer_mct.h"
 #include "mem_layout.h"

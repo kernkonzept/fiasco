@@ -1,4 +1,4 @@
-INTERFACE[arm && exynos]:
+INTERFACE[arm && pf_exynos]:
 
 #include "globalconfig.h"
 

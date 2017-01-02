@@ -1,4 +1,4 @@
-INTERFACE [arm && exynos4]:
+INTERFACE [arm && pf_exynos4]:
 
 #include <config.h>
 
@@ -37,7 +37,7 @@ public:
   };
 };
 
-INTERFACE [arm && exynos4 && exynos_extgic]:
+INTERFACE [arm && pf_exynos4 && exynos_extgic]:
 
 EXTENSION class Mem_layout
 {
@@ -49,7 +49,7 @@ public:
   };
 };
 
-INTERFACE [arm && exynos4 && !exynos_extgic]:
+INTERFACE [arm && pf_exynos4 && !exynos_extgic]:
 
 EXTENSION class Mem_layout
 {
@@ -62,7 +62,7 @@ public:
   };
 };
 
-INTERFACE [arm && exynos5]:
+INTERFACE [arm && pf_exynos5]:
 
 EXTENSION class Mem_layout
 {

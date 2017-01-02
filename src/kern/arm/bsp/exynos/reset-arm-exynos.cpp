@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && exynos]:
+IMPLEMENTATION [arm && pf_exynos]:
 
 #include "io.h"
 #include "kmem.h"
