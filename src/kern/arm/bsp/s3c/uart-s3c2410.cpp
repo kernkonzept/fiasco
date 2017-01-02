@@ -1,4 +1,4 @@
-IMPLEMENTATION [s3c2410]:
+IMPLEMENTATION [pf_s3c2410]:
 
 #include "uart_s3c2410.h"
 #include "mem_layout.h"

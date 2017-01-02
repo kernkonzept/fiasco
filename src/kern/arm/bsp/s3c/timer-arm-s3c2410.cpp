@@ -1,4 +1,4 @@
-INTERFACE [arm && (s3c2410 || exynos)]:
+INTERFACE [arm && (pf_s3c2410 || pf_exynos)]:
 
 #include "kmem.h"
 #include "mmio_register_block.h"
@@ -34,7 +34,7 @@ private:
   static Static_object<Timer> _timer;
 };
 
-INTERFACE [arm && s3c2410]: // --------------------------------------------
+INTERFACE [arm && pf_s3c2410]: // --------------------------------------------
 
 EXTENSION class Timer
 {
@@ -43,7 +43,7 @@ public:
   enum { Reload_value = 33333, Tint_cstat_entable = 0 };
 };
 
-INTERFACE [arm && exynos]: // --------------------------------------------
+INTERFACE [arm && pf_exynos]: // --------------------------------------------
 
 EXTENSION class Timer
 {
@@ -53,7 +53,7 @@ public:
 };
 
 // -----------------------------------------------------------------------
-IMPLEMENTATION [arm && (s3c2410 || exynos)]:
+IMPLEMENTATION [arm && (pf_s3c2410 || pf_exynos)]:
 
 #include "config.h"
 #include "kip.h"

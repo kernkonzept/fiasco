@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && s3c2410]:
+IMPLEMENTATION [arm && pf_s3c2410]:
 
 #include "mmio_register_block.h"
 #include "kmem.h"
