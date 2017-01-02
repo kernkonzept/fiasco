@@ -70,7 +70,6 @@ Thread::handle_fpu_trap(Trap_state *ts)
     }
   else if (current_thread()->switchin_fpu())
     {
-      ts->pc -= (ts->psr & Proc::Status_thumb) ? 2 : 4;
       return true;
     }
   else
