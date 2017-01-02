@@ -10,7 +10,7 @@ private:
 };
 
 
-INTERFACE [arm && imx35]: // ----------------------------------------------
+INTERFACE [arm && pf_imx_35]: // ----------------------------------------------
 
 EXTENSION class Timer
 {
@@ -19,7 +19,7 @@ public:
 };
 
 
-INTERFACE [arm && (imx51 || imx53)]: // -----------------------------------
+INTERFACE [arm && (pf_imx_51 || pf_imx_53)]: // -----------------------------------
 
 EXTENSION class Timer
 {
@@ -27,7 +27,7 @@ public:
   static unsigned irq() { return 40; }
 };
 
-INTERFACE [arm && imx6]: // -----------------------------------------------
+INTERFACE [arm && pf_imx_6]: // -----------------------------------------------
 
 EXTENSION class Timer
 {

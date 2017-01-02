@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------
-INTERFACE [arm && (imx21 || imx35)]:
+INTERFACE [arm && (pf_imx_21 || pf_imx_35)]:
 
 #include "initcalls.h"
 #include "kmem.h"
@@ -12,7 +12,7 @@ public:
 };
 
 // ---------------------------------------------------------------------
-IMPLEMENTATION [arm && (imx21 || imx35)]:
+IMPLEMENTATION [arm && (pf_imx_21 || pf_imx_35)]:
 
 #include <cassert>
 #include "io.h"
@@ -129,7 +129,7 @@ void irq_handler()
 { mgr->c.irq_handler(); }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [debug && imx]:
+IMPLEMENTATION [debug && pf_imx]:
 
 PUBLIC
 char const *

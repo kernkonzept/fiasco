@@ -1,9 +1,9 @@
-INTERFACE [arm && mp && imx6]:
+INTERFACE [arm && mp && pf_imx_6]:
 
 #include "types.h"
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && mp && imx6]:
+IMPLEMENTATION [arm && mp && pf_imx_6]:
 
 #include "ipi.h"
 #include "mem_layout.h"
@@ -34,7 +34,7 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && mp && imx7]:
+IMPLEMENTATION [arm && mp && pf_imx_7]:
 
 #include "ipi.h"
 #include "mem_layout.h"

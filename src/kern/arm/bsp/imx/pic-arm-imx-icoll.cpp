@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------
-INTERFACE [arm && imx28]:
+INTERFACE [arm && pf_imx_28]:
 
 #include "initcalls.h"
 #include "kmem.h"
@@ -7,7 +7,7 @@ INTERFACE [arm && imx28]:
 class Irq_base;
 
 // ---------------------------------------------------------------------
-IMPLEMENTATION [arm && imx28]:
+IMPLEMENTATION [arm && pf_imx_28]:
 
 #include <cassert>
 #include "irq_chip_generic.h"
@@ -108,7 +108,7 @@ void irq_handler()
 { mgr->c.irq_handler(); }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [debug && imx]:
+IMPLEMENTATION [debug && pf_imx]:
 
 PUBLIC
 char const *

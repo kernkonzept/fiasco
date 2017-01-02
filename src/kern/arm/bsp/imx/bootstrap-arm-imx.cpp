@@ -1,4 +1,4 @@
-INTERFACE [arm && imx]:
+INTERFACE [arm && pf_imx]:
 
 EXTENSION class Bootstrap
 {

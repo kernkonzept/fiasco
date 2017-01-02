@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_generic_timer && (imx6ul || imx7)]:
+IMPLEMENTATION [arm && arm_generic_timer && (pf_imx_6ul || pf_imx_7)]:
 
 PUBLIC static
 unsigned Timer::irq()

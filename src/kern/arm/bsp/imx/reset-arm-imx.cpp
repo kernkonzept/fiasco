@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && imx21]:
+IMPLEMENTATION [arm && pf_imx_21]:
 
 #include "io.h"
 #include "kmem.h"
@@ -25,7 +25,7 @@ platform_reset(void)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && imx28]:
+IMPLEMENTATION [arm && pf_imx_28]:
 
 #include "kmem.h"
 #include "mmio_register_block.h"
@@ -42,13 +42,13 @@ platform_reset(void)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && (imx35 || imx51 || imx53 || imx6ul)]:
+IMPLEMENTATION [arm && (pf_imx_35 || pf_imx_51 || pf_imx_53 || pf_imx_6ul)]:
 
 void platform_imx_cpus_off()
 {}
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && imx6]:
+IMPLEMENTATION [arm && pf_imx_6]:
 
 void platform_imx_cpus_off()
 {
@@ -57,7 +57,7 @@ void platform_imx_cpus_off()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && imx7]:
+IMPLEMENTATION [arm && pf_imx_7]:
 
 void platform_imx_cpus_off()
 {
@@ -66,7 +66,8 @@ void platform_imx_cpus_off()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && (imx35 || imx51 || imx53 || imx6 || imx6ul || imx7)]:
+IMPLEMENTATION [arm && (pf_imx_35 || pf_imx_51 || pf_imx_53 || pf_imx_6
+                        || pf_imx_6ul || pf_imx_7)]:
 
 #include "io.h"
 #include "kmem.h"

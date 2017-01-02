@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------
-INTERFACE [arm && imx28]:
+INTERFACE [arm && pf_imx_28]:
 
 #include "kmem.h"
 #include "irq_chip.h"
@@ -42,7 +42,7 @@ private:
 };
 
 // ----------------------------------------------------------------------
-IMPLEMENTATION [arm && imx28]:
+IMPLEMENTATION [arm && pf_imx_28]:
 
 #include "config.h"
 #include "kip.h"
