@@ -6,7 +6,7 @@ EXTENSION class Mem_layout
 {
 public:
   enum Virt_layout : Address {
-    User_max             = 0x0000fffeffffffff,
+    User_max             = 0x0000ff7fffffffff,
     Utcb_addr            = User_max + 1 - 0x10000,
   };
 };
@@ -34,8 +34,8 @@ public:
     //Pmem_start           = 0xf0400000,
     //Pmem_end             = 0xf5000000,
 
-    Caps_start           = 0xfffff5000000,
-    Caps_end             = 0xfffffd000000,
+    Caps_start           = 0xff8005000000,
+    Caps_end             = 0xff800d000000,
     //Utcb_ptr_page        = 0xffffffffd000,
     // don't care about caches here, because arm uses a register on MP
     utcb_ptr_align       = Tl_math::Ld<sizeof(void*)>::Res,
