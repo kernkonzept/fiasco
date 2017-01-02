@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && sunxi]:
+IMPLEMENTATION [arm && pf_sunxi]:
 
 #include "io.h"
 #include "kmem.h"
