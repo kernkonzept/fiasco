@@ -1,6 +1,6 @@
 # vim:set ft=make:
 
-PREPROCESS_PARTS        += sa1100 vcache armv5 kern_start_0xd generic_tickless_idle
+PREPROCESS_PARTS        += vcache arm_v5 kern_start_0xd generic_tickless_idle
 RAM_PHYS_BASE           := 0xc0000000
 VPATH                   += kern/arm/bsp/pxa-sa
     

@@ -1,5 +1,4 @@
-//---------------------------------------------------------------------------
-INTERFACE [arm-sa1100]:
+INTERFACE [arm && pf_sa1100]:
 
 EXTENSION class Mem_layout
 {
