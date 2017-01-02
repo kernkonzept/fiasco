@@ -1,4 +1,4 @@
-INTERFACE[arm && realview]:
+INTERFACE[arm && pf_realview]:
 
 #include "mem_layout.h"
 #include "mmio_register_block.h"
@@ -48,7 +48,7 @@ class __Platform_init
 
 static __Platform_init __platform_init __attribute__((init_priority(101)));
 
-IMPLEMENTATION[arm && realview]:
+IMPLEMENTATION[arm && pf_realview]:
 
 #include "kmem.h"
 

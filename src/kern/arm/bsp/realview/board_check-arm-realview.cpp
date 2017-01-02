@@ -1,4 +1,4 @@
-INTERFACE [arm && realview]:
+INTERFACE [arm && pf_realview]:
 
 #include "types.h"
 
@@ -17,26 +17,26 @@ private:
 };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && realview]:
+IMPLEMENTATION [arm && pf_realview]:
 
 #include "initcalls.h"
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && realview && realview_eb]:
+IMPLEMENTATION [arm && pf_realview_eb]:
 
 Board_check::id_pair Board_check::ids[] FIASCO_INITDATA = {
   { 0x1ffffe00, 0x01400400 },
 };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && realview && realview_pb11mp]:
+IMPLEMENTATION [arm && pf_realview_pb11mp]:
 
 Board_check::id_pair Board_check::ids[] FIASCO_INITDATA = {
   { 0x0fffff00, 0x0159f500 },
 };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && realview && realview_pbx]:
+IMPLEMENTATION [arm && pf_realview_pbx]:
 
 Board_check::id_pair Board_check::ids[] FIASCO_INITDATA = {
   { 0xffffff00, 0x1182f500 }, // board
@@ -44,14 +44,14 @@ Board_check::id_pair Board_check::ids[] FIASCO_INITDATA = {
 };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && realview && realview_vexpress]:
+IMPLEMENTATION [arm && pf_realview_vexpress]:
 
 Board_check::id_pair Board_check::ids[] FIASCO_INITDATA = {
   { 0xcfffff00, 0x0190f500 },
 };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && realview]:
+IMPLEMENTATION [arm && pf_realview]:
 
 #include "kmem.h"
 #include "io.h"

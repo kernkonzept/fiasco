@@ -1,4 +1,4 @@
-INTERFACE [arm && realview]:
+INTERFACE [arm && pf_realview]:
 
 #include "kmem.h"
 #include "l4_types.h"
@@ -11,7 +11,7 @@ protected:
 };
 
 // --------------------------------------------------------------
-IMPLEMENTATION [arm && realview]:
+IMPLEMENTATION [arm && pf_realview]:
 
 #include "io.h"
 #include <cstdio>

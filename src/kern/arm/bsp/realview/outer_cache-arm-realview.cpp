@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && realview && outer_cache_l2cxx0 && armca9]:
+IMPLEMENTATION [arm && pf_realview && arm_cache_l2cxx0 && arm_cortex_a9]:
 
 IMPLEMENT
 Mword
@@ -17,7 +17,7 @@ Outer_cache::platform_init(Mword aux_control)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && realview && outer_cache_l2cxx0 && mpcore]:
+IMPLEMENTATION [arm && pf_realview && arm_cache_l2cxx0 && arm_mpcore]:
 
 IMPLEMENT
 Mword

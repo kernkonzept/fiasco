@@ -10,7 +10,7 @@ private:
 };
 
 // --------------------------------------------------------------------------
-INTERFACE [arm && sp804 && realview_vexpress_a15]:
+INTERFACE [arm && sp804 && pf_realview_vexpress_a15]:
 
 EXTENSION class Timer
 {
@@ -28,7 +28,7 @@ public:
 };
 
 // --------------------------------------------------------------------------
-INTERFACE [arm && sp804 && !realview_vexpress_a15]:
+INTERFACE [arm && sp804 && !pf_realview_vexpress_a15]:
 
 EXTENSION class Timer
 {

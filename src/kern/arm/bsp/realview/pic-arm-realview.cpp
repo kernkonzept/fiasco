@@ -1,4 +1,4 @@
-INTERFACE [arm && realview]:
+INTERFACE [arm && pf_realview]:
 
 #include "initcalls.h"
 #include "types.h"
@@ -7,7 +7,7 @@ INTERFACE [arm && realview]:
 class Irq_base;
 
 //-------------------------------------------------------------------
-INTERFACE [arm && realview && (mpcore || armca9)]:
+INTERFACE [arm && pf_realview && (arm_mpcore || arm_cortex_a9)]:
 
 EXTENSION class Pic
 {
@@ -19,14 +19,17 @@ private:
 };
 
 //-------------------------------------------------------------------
-IMPLEMENTATION [arm && !(mpcore || armca9)]:
+IMPLEMENTATION [arm && !(arm_mpcore || arm_cortex_a9)]:
 
 PRIVATE static inline
 void Pic::configure_core()
 {}
 
 //-------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && realview && (realview_pb11mp || (realview_eb && (mpcore || (armca9 && mp))))]:
+IMPLEMENTATION [arm && pic_gic
+                && (pf_realview_pb11mp
+                    || (pf_realview_eb
+                        && (arm_mpcore || (arm_cortex_a9 && mp))))]:
 
 #include "irq_mgr_multi_chip.h"
 #include "cascade_irq.h"
@@ -64,7 +67,10 @@ void Pic::init()
 }
 
 //-------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && !(realview && (realview_pb11mp || (realview_eb && (mpcore || (armca9 && mp)))))]:
+IMPLEMENTATION [arm && pic_gic
+                && !(pf_realview_pb11mp
+                     || (pf_realview_eb
+                         && (arm_mpcore || (arm_cortex_a9 && mp))))]:
 
 #include "irq_mgr_multi_chip.h"
 
@@ -90,7 +96,7 @@ void Pic::init_ap(Cpu_number, bool resume)
 }
 
 //-------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && (mpcore || armca9)]:
+IMPLEMENTATION [arm && pic_gic && (arm_mpcore || arm_cortex_a9)]:
 
 #include "cpu.h"
 #include "io.h"

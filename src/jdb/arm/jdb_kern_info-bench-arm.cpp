@@ -5,7 +5,7 @@ void
 Jdb_kern_info_bench::show_arch()
 {}
 
-IMPLEMENTATION[arm && realview]:
+IMPLEMENTATION[arm && pf_realview]:
 
 #include "platform.h"
 
@@ -14,7 +14,7 @@ Unsigned64
 Jdb_kern_info_bench::get_time_now()
 { return Platform::sys->read<Mword>(Platform::Sys::Cnt_24mhz); }
 
-IMPLEMENTATION[arm && !realview]:
+IMPLEMENTATION[arm && !pf_realview]:
 
 #include "kip.h"
 

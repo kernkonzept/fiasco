@@ -2,14 +2,8 @@
 
 SUBSYSTEMS              += LIBUART
 OBJECTS_LIBUART         += uart_pl011.o
-PREPROCESS_PARTS        += realview libuart pic_gic
-PREPROCESS_PARTS        += $(if $(CONFIG_PF_REALVIEW_EB),realview_eb)
-PREPROCESS_PARTS        += $(if $(CONFIG_PF_REALVIEW_PB11MP),realview_pb11mp)
-PREPROCESS_PARTS        += $(if $(CONFIG_PF_REALVIEW_PBX),realview_pbx)
-PREPROCESS_PARTS        += $(if $(CONFIG_PF_REALVIEW_VEXPRESS),realview_vexpress)
-PREPROCESS_PARTS        += $(if $(CONFIG_PF_REALVIEW_VEXPRESS_A9),realview_vexpress_a9)
+PREPROCESS_PARTS        += libuart pic_gic
 PREPROCESS_PARTS        += $(if $(CONFIG_PF_REALVIEW_VEXPRESS_A9),realview_vexpress_legacy)
-PREPROCESS_PARTS        += $(if $(CONFIG_PF_REALVIEW_VEXPRESS_A15),realview_vexpress_a15)
 PREPROCESS_PARTS        += generic_tickless_idle
 RAM_PHYS_BASE           := $(CONFIG_PF_REALVIEW_RAM_PHYS_BASE)
 
