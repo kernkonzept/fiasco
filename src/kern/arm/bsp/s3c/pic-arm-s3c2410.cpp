@@ -1,4 +1,4 @@
-INTERFACE [arm && s3c2410]:
+INTERFACE [arm && pf_s3c2410]:
 
 #include "initcalls.h"
 #include "kmem.h"
@@ -9,7 +9,7 @@ public:
 };
 
 // ---------------------------------------------------------------------
-IMPLEMENTATION [arm && s3c2410]:
+IMPLEMENTATION [arm && pf_s3c2410]:
 
 #include "assert.h"
 #include "config.h"
@@ -243,7 +243,7 @@ void irq_handler()
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [debug && s3c2410]:
+IMPLEMENTATION [debug && pf_s3c2410]:
 
 PUBLIC
 char const *

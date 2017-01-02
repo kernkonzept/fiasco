@@ -2,7 +2,7 @@
 
 SUBSYSTEMS              += LIBUART
 OBJECTS_LIBUART         += uart_s3c2410.o
-PREPROCESS_PARTS        += libuart s3c2410 generic_tickless_idle
+PREPROCESS_PARTS        += libuart generic_tickless_idle
 RAM_PHYS_BASE           := 0x30000000
 
 uart_IMPL             += uart-s3c2410
