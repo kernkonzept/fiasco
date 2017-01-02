@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && exynos && outer_cache_l2cxx0]:
+IMPLEMENTATION [arm && pf_exynos && arm_cache_l2cxx0]:
 
 #include "cpu.h"
 #include "platform.h"

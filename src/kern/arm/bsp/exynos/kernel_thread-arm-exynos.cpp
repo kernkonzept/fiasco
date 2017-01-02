@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------------
-IMPLEMENTATION [arm && tickless_idle && exynos && mp]:
+IMPLEMENTATION [arm && tickless_idle && pf_exynos && mp]:
 
 #include "cpu.h"
 #include "platform_control.h"
@@ -25,7 +25,7 @@ Kernel_thread::arch_tickless_idle(Cpu_number cpu)
 }
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [arm && tickless_idle && exynos && !mp]:
+IMPLEMENTATION [arm && tickless_idle && pf_exynos && !mp]:
 
 #include "cpu.h"
 #include "processor.h"
@@ -38,7 +38,7 @@ Kernel_thread::arch_tickless_idle(Cpu_number)
 }
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [arm && tickless_idle && exynos]:
+IMPLEMENTATION [arm && tickless_idle && pf_exynos]:
 
 PROTECTED inline NEEDS["processor.h"]
 void

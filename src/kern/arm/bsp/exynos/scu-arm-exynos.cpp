@@ -1,4 +1,4 @@
-INTERFACE [arm && bsp_cpu && (exynos4 || !arm_em_ns)]:
+INTERFACE [arm && bsp_cpu && (pf_exynos4 || !arm_em_ns)]:
 
 EXTENSION class Scu
 {
@@ -11,7 +11,7 @@ public:
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && bsp_cpu && (exynos5 && arm_em_ns)]:
+INTERFACE [arm && bsp_cpu && (pf_exynos5 && arm_em_ns)]:
 
 EXTENSION class Scu
 {

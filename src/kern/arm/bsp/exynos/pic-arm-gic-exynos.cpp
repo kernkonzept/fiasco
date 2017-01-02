@@ -4,7 +4,7 @@ INTERFACE:
 #include "initcalls.h"
 
 //-------------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && exynos]:
+IMPLEMENTATION [arm && pic_gic && pf_exynos]:
 
 class Mgr_exynos : public Irq_mgr
 {
@@ -34,7 +34,7 @@ protected:
 
 
 //-------------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && exynos]:
+IMPLEMENTATION [arm && pic_gic && pf_exynos]:
 
 #include <cstring>
 #include <cstdio>
@@ -425,7 +425,7 @@ Combiner_cascade_irq::handle(Upstream_irq const *u)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [exynos4 && !exynos_extgic]:
+IMPLEMENTATION [pf_exynos4 && !exynos_extgic]:
 
 class Mgr_int : public Mgr_exynos
 {
@@ -549,7 +549,7 @@ void Pic::init_ap(Cpu_number, bool resume)
 }
 
 // ------------------------------------------------------------------------
-INTERFACE [exynos4 && exynos_extgic]:
+INTERFACE [pf_exynos4 && exynos_extgic]:
 
 #include "gic.h"
 #include "per_cpu_data.h"
@@ -562,7 +562,7 @@ public:
 };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [exynos4 && exynos_extgic]:
+IMPLEMENTATION [pf_exynos4 && exynos_extgic]:
 
 #include "cpu.h"
 
@@ -801,7 +801,7 @@ Pic::set_pending_irq(unsigned group32num, Unsigned32 val)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [exynos5]:
+IMPLEMENTATION [pf_exynos5]:
 
 #include "platform.h"
 
@@ -941,7 +941,7 @@ void Pic::init_ap(Cpu_number, bool resume)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [debug && exynos]:
+IMPLEMENTATION [debug && pf_exynos]:
 
 PUBLIC
 char const *

@@ -1,4 +1,4 @@
-IMPLEMENTATION [mp && exynos && exynos_extgic]:
+IMPLEMENTATION [mp && pf_exynos && exynos_extgic]:
 
 #include "pic.h"
 #include "gic.h"

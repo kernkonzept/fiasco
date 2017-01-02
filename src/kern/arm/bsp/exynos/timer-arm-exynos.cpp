@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && mptimer && exynos]: // -----------------------------
+IMPLEMENTATION [arm && mptimer && pf_exynos]: // -----------------------------
 
 #include "config.h"
 #include "timer_mct.h"

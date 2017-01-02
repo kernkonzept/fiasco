@@ -1,4 +1,4 @@
-INTERFACE[arm && exynos]:
+INTERFACE[arm && pf_exynos]:
 
 #include "types.h"
 
@@ -37,7 +37,7 @@ private:
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && exynos && exynos_extgic]:
+INTERFACE [arm && pf_exynos && exynos_extgic]:
 
 EXTENSION class Platform
 {
@@ -46,7 +46,7 @@ public:
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && exynos && !exynos_extgic]:
+INTERFACE [arm && pf_exynos && !exynos_extgic]:
 
 EXTENSION class Platform
 {
@@ -55,19 +55,19 @@ public:
 };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && exynos]:
+IMPLEMENTATION [arm && pf_exynos]:
 
 #include "io.h"
 #include "mem_layout.h"
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && exynos && exynos_extgic]:
+IMPLEMENTATION [arm && pf_exynos && exynos_extgic]:
 
 #include <feature.h>
 KIP_KERNEL_FEATURE("exy:extgic");
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && exynos]:
+IMPLEMENTATION [arm && pf_exynos]:
 
 #include "kmem.h"
 
@@ -83,7 +83,7 @@ Platform::subrev()
 }
 
 //-------------------------------------------------------------------------------------------
-IMPLEMENTATION [arm && exynos && pkg_id_file]:
+IMPLEMENTATION [arm && pf_exynos && pkg_id_file]:
 
 #include "types.h"
 #include "globalconfig.h"
@@ -105,7 +105,7 @@ Platform::process_pkg_ids()
 }
 
 //-------------------------------------------------------------------------------------------
-IMPLEMENTATION [arm && exynos && !pkg_id_file]:
+IMPLEMENTATION [arm && pf_exynos && !pkg_id_file]:
 
 #include "types.h"
 #include "globalconfig.h"
@@ -116,7 +116,7 @@ Platform::process_pkg_ids()
 {}
 
 //-------------------------------------------------------------------------------------------
-IMPLEMENTATION [arm && exynos]:
+IMPLEMENTATION [arm && pf_exynos]:
 
 #include "config.h"
 

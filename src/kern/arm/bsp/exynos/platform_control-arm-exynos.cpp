@@ -1,4 +1,4 @@
-INTERFACE [arm && exynos]:
+INTERFACE [arm && pf_exynos]:
 
 #include "types.h"
 #include "io.h"
@@ -55,7 +55,7 @@ public:
 };
 
 //--------------------------------------------------------------------------
-INTERFACE [arm && exynos && (exynos_extgic || exynos5) && cpu_suspend]:
+INTERFACE [arm && pf_exynos && (exynos_extgic || pf_exynos5) && cpu_suspend]:
 
 #include "per_cpu_data.h"
 
@@ -66,7 +66,7 @@ public:
 };
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [arm && exynos && !mp]:
+IMPLEMENTATION [arm && pf_exynos && !mp]:
 
 PRIVATE static
 int
@@ -76,14 +76,14 @@ Platform_control::power_up_core(Cpu_phys_id)
 }
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [arm && exynos]:
+IMPLEMENTATION [arm && pf_exynos]:
 
 #include "per_cpu_data.h"
 
 Static_object<Platform_control::Pmu> Platform_control::pmu;
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [arm && exynos && mp && cpu_suspend]:
+IMPLEMENTATION [arm && pf_exynos && mp && cpu_suspend]:
 
 #include "poll_timeout_kclock.h"
 
@@ -109,7 +109,7 @@ Platform_control::power_up_core(Cpu_phys_id cpu)
 }
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [arm && exynos && mp && !cpu_suspend]:
+IMPLEMENTATION [arm && pf_exynos && mp && !cpu_suspend]:
 
 PRIVATE static
 int
@@ -120,7 +120,7 @@ Platform_control::power_up_core(Cpu_phys_id)
 
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [arm && exynos]:
+IMPLEMENTATION [arm && pf_exynos]:
 
 #include "kmem.h"
 #include "mem_unit.h"
@@ -137,7 +137,7 @@ Platform_control::write_phys_mem_coherent(Mword addr_p, Mword value)
 }
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [arm && exynos && mp && arm_em_ns && arm_smif_mc]:
+IMPLEMENTATION [arm && pf_exynos && mp && arm_em_ns && arm_secmonif_mc]:
 
 PRIVATE static
 void
@@ -157,7 +157,7 @@ Platform_control::cpuboot(Mword startup_vector, Cpu_phys_id cpu)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [exynos && mp && (!arm_em_ns || arm_smif_none)]:
+IMPLEMENTATION [pf_exynos && mp && (!arm_em_ns || arm_secmonif_none)]:
 
 #include "mem_layout.h"
 #include "platform.h"
@@ -180,7 +180,7 @@ Platform_control::cpuboot(Mword startup_vector, Cpu_phys_id cpu)
 }
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [arm && exynos && mp]:
+IMPLEMENTATION [arm && pf_exynos && mp]:
 
 #include "ipi.h"
 #include "kmem.h"
@@ -218,7 +218,9 @@ Platform_control::boot_ap_cpus(Address phys_reset_vector)
 
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [arm && ((exynos && !exynos_extgic && !exynos5 && cpu_suspend) || !cpu_suspend)]:
+IMPLEMENTATION [arm
+                && ((pf_exynos && !exynos_extgic && !pf_exynos5 && cpu_suspend)
+                    || !cpu_suspend)]:
 
 #include "l4_types.h"
 
@@ -235,7 +237,8 @@ Platform_control::do_core_n_off(Cpu_number)
 }
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [arm && exynos && mp && (exynos_extgic || exynos5) && cpu_suspend]:
+IMPLEMENTATION [arm && pf_exynos && mp && (exynos_extgic || pf_exynos5)
+                && cpu_suspend]:
 
 #include <cstdio>
 #include "cpu.h"
@@ -295,7 +298,7 @@ Platform_control::cpu_allow_shutdown(Cpu_number cpu, bool allow)
 
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [arm && exynos && cpu_suspend && arm_em_ns]:
+IMPLEMENTATION [arm && pf_exynos && cpu_suspend && arm_em_ns]:
 
 PRIVATE static inline
 void
@@ -306,7 +309,7 @@ Platform_control::do_sleep()
 }
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [arm && exynos && cpu_suspend && !arm_em_ns]:
+IMPLEMENTATION [arm && pf_exynos && cpu_suspend && !arm_em_ns]:
 
 PRIVATE static inline
 void
@@ -316,7 +319,7 @@ Platform_control::do_sleep()
 }
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [arm && exynos && (exynos_extgic || exynos5) && cpu_suspend]:
+IMPLEMENTATION [arm && pf_exynos && (exynos_extgic || pf_exynos5) && cpu_suspend]:
 
 #include <cassert>
 #include <cstdio>

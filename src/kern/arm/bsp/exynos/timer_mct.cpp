@@ -1,4 +1,4 @@
-INTERFACE [arm && exynos]: // ------------------
+INTERFACE [arm && pf_exynos]: // ------------------
 
 #include "mmio_register_block.h"
 #include "config.h"
@@ -50,7 +50,7 @@ public:
 };
 
 
-IMPLEMENTATION [arm && exynos]: // ------------------
+IMPLEMENTATION [arm && pf_exynos]: // ------------------
 
 PUBLIC
 void

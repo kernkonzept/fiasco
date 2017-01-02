@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && bsp_cpu && outer_cache_l2cxx0]:
+IMPLEMENTATION [arm && bsp_cpu && arm_cache_l2cxx0]:
 
 #include "platform.h"
 #include "smc.h"
@@ -24,7 +24,7 @@ Cpu::enable_cache_foz()
 { do_cache_foz(1); }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && bsp_cpu && !outer_cache_l2cxx0]:
+IMPLEMENTATION [arm && bsp_cpu && !arm_cache_l2cxx0]:
 
 PUBLIC static inline
 void

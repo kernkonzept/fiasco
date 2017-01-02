@@ -1,4 +1,4 @@
-INTERFACE [exynos]:
+INTERFACE [pf_exynos]:
 
 #include "l4_types.h"
 
@@ -11,7 +11,7 @@ public:
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [exynos && arm_em_ns && arm_smif_mc]:
+INTERFACE [pf_exynos && arm_em_ns && arm_secmonif_mc]:
 
 #include "types.h"
 
@@ -57,7 +57,7 @@ public:
 };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [exynos && arm_em_ns && arm_smif_mc]:
+IMPLEMENTATION [pf_exynos && arm_em_ns && arm_secmonif_mc]:
 
 #include "mem_space.h"
 #include "mem_unit.h"
@@ -86,7 +86,7 @@ Exynos_smc::write_cp15(unsigned opc1, unsigned crn,
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [exynos && (!arm_em_ns || arm_smif_none)]:
+IMPLEMENTATION [pf_exynos && (!arm_em_ns || arm_secmonif_none)]:
 
 IMPLEMENT inline
 void
