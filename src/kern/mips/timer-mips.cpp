@@ -91,7 +91,7 @@ Timer::acknowledge()
   // clear TI bit, and set new value if applicable
   _set_compare(t->_current_cmp);
   // we don't care about CP0 hazards here as a possible IRQ
-  // enbale afterwards will clear those anyways
+  // enable afterwards will clear those anyways
   // printf("TI: %u %u %u\n", cc, t->_current_cmp, t->_interval);
 }
 
