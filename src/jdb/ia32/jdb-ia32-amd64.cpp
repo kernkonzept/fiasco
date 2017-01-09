@@ -926,8 +926,8 @@ Jdb::handle_nested_trap(Jdb_entry_frame *e)
 	default:
 	  cursor(Jdb_screen::height(), 1);
 	  printf("\nGeneral Protection (eip=" L4_PTR_FMT ","
-	      " err=" L4_PTR_FMT ") -- jdb bug?\n",
-	      e->ip(), e->_err);
+	      " err=" L4_PTR_FMT ", pfa=" L4_PTR_FMT ") -- jdb bug?\n",
+	      e->ip(), e->_err, e->_cr2);
 	  break;
 	}
       break;
