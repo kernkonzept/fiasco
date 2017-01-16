@@ -96,12 +96,8 @@ Ipc_sender_base::handle_shortcut(Syscall_frame *dst_regs,
       //
 
       Mword *esp = reinterpret_cast<Mword*>(Entry_frame::to_entry_frame(dst_regs));
-
-      // set return address of irq_thread
-      *--esp = reinterpret_cast<Mword>(fast_ret_from_irq);
-
-      // XXX set stack pointer of irq_thread
       receiver->set_kernel_sp(esp);
+      receiver->prepare_switch_to(fast_ret_from_irq);
 
       // directly switch to the interrupt thread context and go out
       // fast using fast_ret_from_irq (implemented in assembler).

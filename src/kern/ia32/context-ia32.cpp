@@ -23,6 +23,13 @@ IMPLEMENTATION [ia32,amd64,ux]:
 #include "space.h"
 #include "thread_state.h"
 
+PUBLIC inline
+void
+Context::prepare_switch_to(void (*fptr)())
+{
+  *reinterpret_cast<void(**)()> (--_kernel_sp) = fptr;
+}
+
 /** Thread context switchin.  Called on every re-activation of a thread
     (switch_exec()).  This method is public only because it is called from
     from assembly code in switch_cpu().

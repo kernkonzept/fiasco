@@ -295,7 +295,7 @@ Thread::Thread(Ram_quota *q)
   _timeout = 0;
   _in_exception = false;
 
-  prepare_user_invoke();
+  prepare_switch_to(&user_invoke);
 
   // clear out user regs that can be returned from the thread_ex_regs
   // system call to prevent covert channel

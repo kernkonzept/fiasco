@@ -16,6 +16,13 @@ IMPLEMENTATION [ppc32]:
 #include "kmem.h"
 #include "utcb_support.h"
 
+PUBLIC inline
+void
+Context::prepare_switch_to(void (*fptr)())
+{
+  *reinterpret_cast<void(**)()> (--_kernel_sp) = fptr;
+}
+
 IMPLEMENT inline
 void
 Context::spill_user_state()
