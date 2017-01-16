@@ -13,6 +13,17 @@ protected:
   static Trap_state::Handler nested_trap_handler FIASCO_FASTCALL;
 };
 
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [arm && debug && (64bit || cpu_virt)]:
+
+PRIVATE static inline NOEXPORT bool
+Thread::debugger_needs_switch_to_kdir() { return false; }
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [arm && debug && !(64bit || cpu_virt)]:
+
+PRIVATE static inline NOEXPORT bool
+Thread::debugger_needs_switch_to_kdir() { return true; }
 
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && debug]:
@@ -92,7 +103,7 @@ Thread::call_nested_trap_handler(Trap_state *ts)
 
   Mem_space *m = Mem_space::current_mem_space(log_cpu);
 
-  if (Kernel_task::kernel_task() != m)
+  if (debugger_needs_switch_to_kdir() && (Kernel_task::kernel_task() != m))
     Kernel_task::kernel_task()->make_current();
 
   int ret = arm_enter_debugger(ts, log_cpu, &ntr, stack);
@@ -101,7 +112,7 @@ Thread::call_nested_trap_handler(Trap_state *ts)
   Mmu<Mem_layout::Cache_flush_area, true>::flush_cache();
   Mem::isb();
 
-  if (m != Kernel_task::kernel_task())
+  if (debugger_needs_switch_to_kdir() && (m != Kernel_task::kernel_task()))
     m->make_current();
 
   if (!ntr)
