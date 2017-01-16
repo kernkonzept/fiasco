@@ -49,7 +49,7 @@ IMPLEMENT L4::Uart *Uart::uart()
   return &uart;
 }
 
-IMPLEMENTATION [pf_imx7]:
+IMPLEMENTATION [pf_imx_7]:
 
 #include "uart_imx.h"
 
