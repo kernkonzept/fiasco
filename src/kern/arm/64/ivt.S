@@ -160,7 +160,7 @@ sys_call_table:
 
 
 .section	.text.ivt,"xa"
-.align 10
+.align 11
 .global exception_vector
 exception_vector:
 	# from el1 with sp_el0
@@ -169,12 +169,15 @@ exception_vector:
 	b .
 
 	.align 7
+	ENTRY call_nested_trap_handler
 	b .
 
 	.align 7
+	ENTRY call_nested_trap_handler
 	b .
 
 	.align 7
+	ENTRY call_nested_trap_handler
 	b .
 
 	# from el1 with sp_el1
@@ -186,10 +189,10 @@ exception_vector:
 	b	.Lirq_entry
 
 	.align 7
-	b .
+	b	.Lirq_entry
 
 	.align 7
-	b .
+	b	.Lirq_entry
 
 	# from el0 aarch64
 	.align 7
@@ -199,22 +202,26 @@ exception_vector:
 	b	.Lirq_entry
 
 	.align 7
-	b .
+	b	.Lirq_entry
 
 	.align 7
-	b .
+	b	.Lirq_entry
 
 	# from el0 aarch32
 	.align 7
+	ENTRY call_nested_trap_handler
 	b .
 
 	.align 7
+	ENTRY call_nested_trap_handler
 	b .
 
 	.align 7
+	ENTRY call_nested_trap_handler
 	b .
 
 	.align 7
+	ENTRY call_nested_trap_handler
 	b .
 
 	.align 7
