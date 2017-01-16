@@ -45,6 +45,7 @@ class Return_frame
 public:
   Mword eret_work;
   Mword r[31];
+  Mword _ksp;
   union
   {
     Arm_esr esr;

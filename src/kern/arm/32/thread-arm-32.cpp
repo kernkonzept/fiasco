@@ -1,5 +1,12 @@
 IMPLEMENTATION [arm && 32bit]:
 
+PRIVATE inline
+void
+Thread::prepare_user_invoke()
+{
+  *reinterpret_cast<void(**)()> (--_kernel_sp) = user_invoke;
+}
+
 /**
  * Mangle the error code in case of a kernel lib page fault.
  *

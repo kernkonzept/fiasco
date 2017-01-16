@@ -6,12 +6,13 @@
 #include "asm_entry.h"
 
 #define EF_ERETW  ( 0 * 8)
-#define EF_ESR    (32 * 8)
-#define EF_PFA    (33 * 8)
-#define EF_SP     (34 * 8)
-#define EF_PC     (35 * 8)
-#define EF_PSTATE (36 * 8)
-#define EF_SIZE   (37 * 8)
+#define EF_KSP    (32 * 8)
+#define EF_ESR    (33 * 8)
+#define EF_PFA    (34 * 8)
+#define EF_SP     (35 * 8)
+#define EF_PC     (36 * 8)
+#define EF_PSTATE (37 * 8)
+#define EF_SIZE   (38 * 8)
 
 .macro save_gprs no_78=0
 	stp	xzr, x0,   [sp]
@@ -80,7 +81,7 @@ leave_by_trigger_exception:
 .type	__iret, function
 .global	__iret
 __iret:
-	ldr	x0, [sp]
+	ldr	x0, [sp, #EF_KSP]
 	ldr	x1, [x0, #EF_ERETW]
 	cbnz	x1, 1f // handle continuations
 	mov	sp, x0
@@ -124,7 +125,7 @@ sys_call_table:
 	mrs	x4, SPSR_EL1
 	stp	x3, x4, [sp, #EF_PC]
 	mov	x0, sp
-	str	x0, [sp, #-8]!
+	str	x0, [sp, #EF_KSP]
 	adr	x30, __iret
 	br	x7
 
@@ -142,7 +143,7 @@ sys_call_table:
 	mrs	x4, SPSR_EL1
 	stp	x3, x4, [sp, #EF_PC]
 	mov	x0, sp
-	str	x0, [sp, #-8]!
+	str	x0, [sp, #EF_KSP]
 	adr	x30, __iret
 	b	irq_handler
 
@@ -153,7 +154,7 @@ sys_call_table:
 	mrs	x4, SPSR_EL1
 	stp	x3, x4, [sp, #EF_PC]
 	mov	x0, sp
-	str	x0, [sp, #-8]!
+	str	x0, [sp, #EF_KSP]
 	adr	x30, __iret
 	b	irq_handler
 
