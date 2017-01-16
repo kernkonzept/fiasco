@@ -190,7 +190,7 @@ EXTENSION class Mmu
 private:
   template< typename T >
   static void
-  __attribute__((optimize("no-unroll-loops")))
+  __attribute__((optimize("no-unroll-loops"), always_inline))
   set_way_full_loop(T const &f)
   {
     Mem::dmb();
