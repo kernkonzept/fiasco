@@ -119,7 +119,9 @@ PUBLIC inline NEEDS["processor.h", "mem.h"]
 void
 Entry_frame::copy_and_sanitize(Entry_frame const *src)
 {
-  Mem::memcpy_mwords(&esr, &src->esr, 34);
+  Mem::memcpy_mwords(&r[0], &src->r[0], 31);
+  usp = src->usp;
+  pc  = src->pc;
   pstate = access_once(&src->pstate);
   pstate &= ~(Proc::Status_mode_mask | Proc::Status_interrupts_mask);
   pstate |= Proc::Status_mode_user | Proc::Status_always_mask;

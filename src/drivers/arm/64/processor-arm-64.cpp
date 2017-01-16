@@ -7,12 +7,22 @@ public:
   {
     Status_mode_user      = 0x00,
     Status_mode_always_on = 0x100,
-    Status_mode_vmm       = 0x05, // EL1.h
+    Status_mode_vmm       = 0x00,
   };
 };
 
 //--------------------------------------------------------------------
 IMPLEMENTATION [arm && 64bit]:
+
+PUBLIC static inline
+Unsigned32
+Proc::sctlr()
+{
+  Unsigned32 v;
+  asm volatile ("mrs %0, SCTLR_EL1" : "=r"(v));
+  return v;
+}
+
 
 IMPLEMENT static inline
 Mword Proc::program_counter()
@@ -55,7 +65,7 @@ Proc::Status Proc::cli_save()
 }
 
 //----------------------------------------------------------------
-IMPLEMENTATION[arm && 64bit && mp && !cpu_virt]:
+IMPLEMENTATION[arm && 64bit && mp]:
 
 IMPLEMENT static inline
 Cpu_phys_id Proc::cpu_id()
@@ -64,18 +74,4 @@ Cpu_phys_id Proc::cpu_id()
   __asm__("mrs %0, MPIDR_EL1" : "=r" (mpidr));
   return Cpu_phys_id(mpidr & 0x7); // mind gic softirq
 }
-
-//----------------------------------------------------------------
-IMPLEMENTATION[arm && 64bit && mp && cpu_virt]:
-
-IMPLEMENT static inline
-Cpu_phys_id Proc::cpu_id()
-{
-  unsigned mpidr;
-  __asm__("mrs %0, MPIDR_EL2" : "=r" (mpidr));
-  return Cpu_phys_id(mpidr & 0x7); // mind gic softirq
-}
-
-
-
 

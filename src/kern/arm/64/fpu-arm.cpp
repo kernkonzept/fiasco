@@ -239,7 +239,7 @@ IMPLEMENTATION [arm && fpu && cpu_virt]:
 EXTENSION class Fpu
 {
 private:
-  Mword _fpexc;
+  //Mword _fpexc;
 };
 
 IMPLEMENT inline NEEDS ["fpu_state.h", "mem.h", "static_assert.h", <cstring>]
@@ -250,7 +250,7 @@ Fpu::init_state(Fpu_state *s)
   static_assert(!(sizeof (*fpu_regs) % sizeof(Mword)),
                 "Non-mword size of Fpu_regs");
   Mem::memset_mwords(fpu_regs, 0, sizeof (*fpu_regs) / sizeof(Mword));
-  fpu_regs->fpexc |= FPEXC_EN;
+  //fpu_regs->fpexc |= FPEXC_EN;
 }
 
 PUBLIC static
@@ -279,6 +279,7 @@ PUBLIC inline
 void
 Fpu::disable()
 {
+  Mword dummy;
   __asm__ __volatile__ (
       "mrs %0, CPTR_EL2        \n"
       "orr %0, %0, #(1 << 10)  \n"

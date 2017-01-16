@@ -1,25 +1,41 @@
-INTERFACE [arm]:
+INTERFACE [arm && cpu_virt]:
 
 #include "config.h"
-
-EXTENSION class Mem_layout
-{
-public:
-  enum Virt_layout : Address {
-    User_max             = 0x0000ff7fffffffff,
-    Utcb_addr            = User_max + 1 - 0x10000,
-  };
-};
-
-//---------------------------------------------------------------------------
-INTERFACE [arm && !cpu_virt]:
-
 #include "template_math.h"
 
 EXTENSION class Mem_layout
 {
 public:
   enum Virt_layout_kern : Address {
+    User_max             = 0x0000ffffffffffff,
+    Utcb_addr            = User_max + 1 - 0x10000,
+    Map_base             = RAM_PHYS_BASE,
+    Vmap_base            = (Map_base > 0x800000000000) ? 0x40000000 : 0x800000000000,
+    Tbuf_status_page     = Vmap_base,
+    //Tbuf_ustatus_page = Tbuf_status_page,
+    Tbuf_buffer_area     = Vmap_base + 0x200000,
+    //Tbuf_ubuffer_area    = Tbuf_buffer_area,
+    Jdb_tmp_map_area     = Vmap_base + 0x400000,
+
+    Registers_map_start  = Vmap_base + 0x40000000,
+    Registers_map_end    = Registers_map_start + 0x40000000,
+
+    Cache_flush_area     = 0x0, // dummy
+  };
+};
+
+//---------------------------------------------------------------------------
+INTERFACE [arm && !cpu_virt]:
+
+#include "config.h"
+#include "template_math.h"
+
+EXTENSION class Mem_layout
+{
+public:
+  enum Virt_layout_kern : Address {
+    User_max             = 0x0000ff7fffffffff,
+    Utcb_addr            = User_max + 1 - 0x10000,
     Service_page         = 0xffff1000eac00000,
     Tbuf_status_page     = Service_page + 0x5000,
     Tbuf_ustatus_page    = Tbuf_status_page,
@@ -28,8 +44,7 @@ public:
     Jdb_tmp_map_area     = Service_page + 0x400000,
     Registers_map_start  = 0xffff000000000000,
     Registers_map_end    = 0xffff000040000000,
-    Cache_flush_area     = 0xef000000,
-    Cache_flush_area_end = 0xef100000,
+    Cache_flush_area     = 0x0,
     Map_base             = 0xffff000040000000,
     //Pmem_start           = 0xf0400000,
     //Pmem_end             = 0xf5000000,

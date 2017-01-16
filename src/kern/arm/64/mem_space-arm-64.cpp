@@ -37,7 +37,6 @@ IMPLEMENT inline NEEDS[Mem_space::asid]
 void
 Mem_space::make_current()
 {
-// FIXME: flush bt only when reassigning ASIDs not on switch !!!!!!!
   asm volatile (
       "msr VTTBR_EL2, %0            \n" // set TTBR
       "isb                          \n"
