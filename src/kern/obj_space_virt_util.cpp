@@ -134,14 +134,11 @@ Obj_space_virt<SPACE>::caps_free()
     {
       Entry *c = get_cap(i);
       if (!c)
-	continue;
+        continue;
 
-      Address cp = Address(ms->virt_to_phys(Address(c)));
-      assert (cp != ~0UL);
-      void *cv = (void*)Mem_layout::phys_to_pmem(cp);
-      Obj::remove_cap_page_dbg_info(cv);
+      Obj::remove_cap_page_dbg_info(c);
 
-      a->q_unaligned_free(SPACE::ram_quota(this), Config::PAGE_SIZE, cv);
+      a->q_unaligned_free(SPACE::ram_quota(this), Config::PAGE_SIZE, c);
     }
   ms->dir()->destroy(Virt_addr(Mem_layout::Caps_start),
                      Virt_addr(Mem_layout::Caps_end-1),
