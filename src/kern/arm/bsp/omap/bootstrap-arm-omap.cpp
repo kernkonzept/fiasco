@@ -1,4 +1,4 @@
-INTERFACE [arm && omap]:
+INTERFACE [arm && pf_omap]:
 
 EXTENSION class Bootstrap
 {

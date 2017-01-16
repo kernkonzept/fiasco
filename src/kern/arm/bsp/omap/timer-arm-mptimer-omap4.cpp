@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------
-INTERFACE [arm && mptimer && omap4_pandaboard]:
+INTERFACE [arm && mptimer && pf_omap4_pandaboard]:
 
 EXTENSION class Timer
 {

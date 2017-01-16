@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm_generic_timer && omap5]:
+IMPLEMENTATION [arm_generic_timer && pf_omap5]:
 
 #include "mem_layout.h"
 
