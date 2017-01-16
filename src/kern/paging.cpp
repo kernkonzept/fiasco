@@ -3,7 +3,7 @@ INTERFACE:
 #include "types.h"
 #include "l4_msg_item.h"
 
-EXTENSION class Page
+class Page
 {
 public:
 
@@ -61,7 +61,7 @@ public:
   };
 };
 
-EXTENSION class PF
+class PF
 {
 public:
   static Mword is_translation_error( Mword error );
@@ -102,12 +102,11 @@ private:
   ALLOC *_a;
 };
 
-
-class Pdir
-: public Ptab::Base<Pte_ptr, Ptab_traits_vpn, Ptab_va_vpn >
+template<typename PTE_PTR, typename TRAITS, typename VA>
+class Pdir_t : public Ptab::Base<PTE_PTR, TRAITS, VA>
 {
 public:
-  enum { Super_level = Pte_ptr::Super_level };
+  enum { Super_level = PTE_PTR::Super_level };
 };
 
 IMPLEMENTATION:
@@ -126,12 +125,12 @@ Mword PF::pc_to_msgword1(Address pc, Mword error)
 //---------------------------------------------------------------------------
 IMPLEMENTATION[!ppc32]:
 
-PUBLIC
+PUBLIC template<typename PTE_PTR, typename TRAITS, typename VA>
 Address
-Pdir::virt_to_phys(Address virt) const
+Pdir_t<PTE_PTR, TRAITS, VA>::virt_to_phys(Address virt) const
 {
   Virt_addr va(virt);
-  auto i = walk(va);
+  auto i = this->walk(va);
   if (!i.is_valid())
     return ~0;
 
@@ -141,11 +140,11 @@ Pdir::virt_to_phys(Address virt) const
 //---------------------------------------------------------------------------
 IMPLEMENTATION[ppc32]:
 
-PUBLIC
+PUBLIC template<typename PTE_PTR, typename TRAITS, typename VA>
 Address
-Pdir::virt_to_phys(Address virt) const
+Pdir_t<PTE_PTR, TRAITS, VA>::virt_to_phys(Address virt) const
 {
-  auto i = walk(Virt_addr(virt));
+  auto i = this->walk(Virt_addr(virt));
 
   //if (!i.is_valid())
     return ~0UL;

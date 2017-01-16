@@ -7,9 +7,6 @@ INTERFACE[sparc]:
 #include "ptab_base.h"
 #include "mem_unit.h"
 
-class PF {};
-class Page {};
-
 typedef Ptab::Tupel< Ptab::Traits< Unsigned32, 24, 8, true>,
                      Ptab::Traits< Unsigned32, 18, 6, true>,
                      Ptab::Traits< Unsigned32, 12, 6, true> >::List Ptab_traits;
@@ -111,6 +108,9 @@ public:
     BUFFERED     = 0x00000000, // Hmm...
   };
 };
+
+typedef Pdir_t<Pte_ptr, Ptab_traits_vpn, Ptab_va_vpn> Pdir;
+class Kpdir : public Pdir {};
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION[sparc]:

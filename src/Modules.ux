@@ -181,7 +181,7 @@ mem_space_IMPL		:= mem_space mem_space-user mem_space-ia32 \
 			   mem_space-ux
 mem_unit_IMPL		:= mem_unit-ux
 obj_space_IMPL          := obj_space obj_space-phys
-paging_IMPL		:= paging-ia32-32 paging-ia32 paging
+paging_IMPL		:= paging paging-ia32-32 paging-ia32
 perf_cnt_IMPL		:= perf_cnt perf_cnt-ia32
 pmem_alloc_IMPL		:= pmem_alloc pmem_alloc-ia32-ux
 reset_IMPL		:= reset-ux

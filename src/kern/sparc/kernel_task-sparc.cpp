@@ -6,5 +6,5 @@ IMPLEMENTATION[sparc]:
 
 PRIVATE inline NEEDS["globals.h"]
 Kernel_task::Kernel_task()
-: Task(Ram_quota::root, Kmem::kdir(), Caps::none())
+: Task(Ram_quota::root, Kmem::kdir, Caps::none())
 {}

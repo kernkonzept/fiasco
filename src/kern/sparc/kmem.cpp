@@ -7,9 +7,6 @@ class Page_table;
 class Kmem : public Mem_layout
 {
 public:
-  static Pdir *kdir();
-  static Pdir *dir();
-
   static Mword *kernel_sp();
   static void kernel_sp(Mword *);
 
@@ -18,7 +15,6 @@ public:
 
   static Address virt_to_phys(const void *addr);
 private:
-  static Pdir *_kdir;
   static Mword *_sp;
 };
 
@@ -29,7 +25,7 @@ IMPLEMENTATION [sparc]:
 #include "panic.h"
 
 extern Mword kernel_srmmu_l1[256];
-Pdir *Kmem::_kdir = (Pdir *)kernel_srmmu_l1;
+Kpdir *Mem_layout::kdir = (Kpdir *)kernel_srmmu_l1;
 Mword *Kmem::_sp = 0;
 
 PUBLIC static
@@ -46,7 +42,7 @@ Kmem::mmio_remap(Address phys)
 
   ndev += Config::SUPERPAGE_SIZE;
 
-  auto m = kdir()->walk(Virt_addr(dm), Pte_ptr::Super_level);
+  auto m = kdir->walk(Virt_addr(dm), Pte_ptr::Super_level);
   assert (!m.is_valid());
   assert (m.page_order() == 24);
   Address phys_page = cxx::mask_lsb(phys, Config::SUPERPAGE_SHIFT);
@@ -60,14 +56,6 @@ Kmem::mmio_remap(Address phys)
 }
 
 IMPLEMENT inline
-Pdir *Kmem::kdir()
-{ return _kdir; }
-
-IMPLEMENT inline
-Pdir *Kmem::dir()
-{ return _kdir; }
-
-IMPLEMENT inline
 Mword *Kmem::kernel_sp()
 { return _sp;}
 
@@ -79,7 +67,7 @@ IMPLEMENT inline NEEDS["paging.h"]
 Address Kmem::virt_to_phys(const void *addr)
 {
   Address a = reinterpret_cast<Address>(addr);
-  return kdir()->virt_to_phys(a);
+  return kdir->virt_to_phys(a);
 }
 
 IMPLEMENT inline

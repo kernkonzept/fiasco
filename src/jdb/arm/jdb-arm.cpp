@@ -12,7 +12,7 @@ IMPLEMENTATION [arm]:
 #include "globals.h"
 #include "kernel_task.h"
 #include "kmem_alloc.h"
-#include "kmem_space.h"
+#include "kmem.h"
 #include "space.h"
 #include "mem_layout.h"
 #include "mem_unit.h"
@@ -237,7 +237,7 @@ Jdb::access_mem_task(Address virt, Space * task)
 
   if (Mem_layout::in_kernel(virt))
     {
-      auto p = Kmem_space::kdir()->walk(Virt_addr(virt));
+      auto p = Kmem::kdir->walk(Virt_addr(virt));
       if (!p.is_valid())
         return 0;
 
@@ -259,7 +259,7 @@ Jdb::access_mem_task(Address virt, Space * task)
   if (addr == (Address)-1)
     {
       Mem_unit::flush_vdcache();
-      auto pte = Kmem_space::kdir()
+      auto pte = Kmem::kdir
         ->walk(Virt_addr(Mem_layout::Jdb_tmp_map_area), Pdir::Super_level);
 
       if (!pte.is_valid() || pte.page_addr() != cxx::mask_lsb(phys, pte.page_order()))

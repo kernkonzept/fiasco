@@ -1,13 +1,5 @@
 INTERFACE[ppc32]:
 
-#include "types.h"
-
-class PF {};
-class Page {};
-
-//------------------------------------------------------------------------------
-INTERFACE[ppc32]:
-
 #include <cassert>
 #include "types.h"
 #include "ptab_base.h"
@@ -151,7 +143,8 @@ typedef Ptab::List< Ptab::Traits<Unsigned32, 22, 10, true>,
 
 typedef Ptab::Shift<Ptab_traits, Virt_addr::Shift>::List Ptab_traits_vpn;
 typedef Ptab::Page_addr_wrap<Page_number, Virt_addr::Shift> Ptab_va_vpn;
-
+typedef Pdir_t<Pte_ptr, Ptab_traits_vpn, Ptab_va_vpn> Pdir;
+class Kpdir : public Pdir {};
 
 IMPLEMENTATION[ppc32]:
 

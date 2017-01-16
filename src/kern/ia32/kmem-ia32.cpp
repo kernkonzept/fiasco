@@ -10,9 +10,9 @@ INTERFACE [ia32,amd64,ux]:
 #include "initcalls.h"
 #include "kip.h"
 #include "mem_layout.h"
+#include "paging.h"
 
 class Cpu;
-class Pdir;
 class Tss;
 
 class Device_map
@@ -81,7 +81,6 @@ public:
 private:
   static Unsigned8   *io_bitmap_delimiter;
   static Address kphys_start, kphys_end;
-  static Pdir *kdir; ///< Kernel page directory
 };
 
 
@@ -329,7 +328,7 @@ Kmem::init_mmu()
   dev_map.init();
   Kmem_alloc *const alloc = Kmem_alloc::allocator();
 
-  kdir = (Pdir*)alloc->alloc(Config::PAGE_SHIFT);
+  kdir = (Kpdir*)alloc->alloc(Config::PAGE_SHIFT);
   memset (kdir, 0, Config::PAGE_SIZE);
 
   unsigned long cpu_features = Cpu::get_features();
@@ -534,7 +533,7 @@ IMPLEMENTATION [ia32,ux,amd64]:
 
 // static class variables
 unsigned long Kmem::pmem_cpu_page, Kmem::cpu_page_vm;
-Pdir *Kmem::kdir;
+Kpdir *Mem_layout::kdir;
 
 
 static inline Address FIASCO_INIT_CPU
