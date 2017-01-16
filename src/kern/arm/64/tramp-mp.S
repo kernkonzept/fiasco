@@ -136,11 +136,6 @@ _tramp_mp_entry:
         tlbi	alle2
         tlbi	alle1
 
-        // init TTBCR
-        adr	x0, _tramp_mp_startup_ttbcr
-        ldr	x1, [x0]
-	msr	TTBCR_EL2, x1
-
         adr	x0, _tramp_mp_startup_pdbr
         ldr	x0, [x0]
 	msr	TTBR0_EL2, x0

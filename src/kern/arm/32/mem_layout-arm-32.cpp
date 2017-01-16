@@ -80,4 +80,22 @@ public:
 
 };
 
+//---------------------------------------------------------------------------
+INTERFACE [arm && cpu_virt]:
+
+EXTENSION class Mem_layout
+{
+public:
+  enum Virt_layout_kern : Address {
+    Cache_flush_area     = 0x00000000, // dummy
+    Service_page         = 0xeac00000,
+    Tbuf_status_page     = Service_page + 0x5000,
+    Tbuf_ustatus_page    = Tbuf_status_page,
+    Tbuf_buffer_area	 = Service_page + 0x200000,
+    Tbuf_ubuffer_area    = Tbuf_buffer_area,
+    Jdb_tmp_map_area     = Service_page + 0x400000,
+    Map_base             = RAM_PHYS_BASE,
+    Ivt_base             = 0xffff0000,
+  };
+};
 

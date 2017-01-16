@@ -38,7 +38,17 @@ public:
     Sctlr_e0e     = 1UL << 24,
     Sctlr_ee      = 1UL << 25,
     Sctlr_uci     = 1UL << 26,
+  };
+};
 
+//--------------------------------------------------------------------------
+IMPLEMENTATION [arm && !cpu_virt]:
+
+EXTENSION class Cpu
+{
+public:
+  enum
+  {
     Sctlr_res = (1UL << 11) | (1UL << 20) | (3UL << 22) | (3UL << 28),
 
     Sctlr_generic = Sctlr_m
@@ -54,9 +64,6 @@ public:
   };
 };
 
-//--------------------------------------------------------------------------
-IMPLEMENTATION [arm]:
-
 IMPLEMENT_OVERRIDE inline
 void
 Cpu::init_mmu()
@@ -64,6 +71,84 @@ Cpu::init_mmu()
   extern char exception_vector[];
   asm volatile ("msr VBAR_EL1, %0" : : "r"(&exception_vector));
 }
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION [arm && cpu_virt]:
+
+EXTENSION class Cpu
+{
+public:
+  enum : Unsigned64
+  {
+    Hcr_rw = 1UL << 31,
+    Hcr_must_set_bits = Hcr_vm | Hcr_swio | Hcr_ptw
+                      | Hcr_amo | Hcr_imo | Hcr_fmo
+                      | Hcr_tidcp | Hcr_tsc | Hcr_tactlr,
+
+    Hcr_host_bits = Hcr_must_set_bits | Hcr_rw | Hcr_dc | Hcr_tge
+  };
+
+  enum
+  {
+    Sctlr_res = (3UL << 4)  | (1UL << 11) | (1UL << 16)
+              | (1UL << 18) | (3UL << 22) | (3UL << 28),
+
+    Sctlr_generic = Sctlr_m
+                    | (Config::Cp15_c1_use_alignment_check ?  Sctlr_a : 0)
+                    | Sctlr_c
+                    | Sctlr_i
+                    | Sctlr_res,
+  };
+
+  enum {
+    Mdcr_hpmn_mask = 0xf,
+    Mdcr_tpmcr     = 1UL << 5,
+    Mdcr_tpm       = 1UL << 6,
+    Mdcr_hpme      = 1UL << 7,
+    Mdcr_tde       = 1UL << 8,
+    Mdcr_tda       = 1UL << 9,
+    Mdcr_tdosa     = 1UL << 10,
+    Mdcr_tdra      = 1UL << 11,
+
+    Mdcr_bits      = Mdcr_tpmcr | Mdcr_tpm,
+    Mdcr_vm_mask   = 0xf00,
+  };
+};
+
+IMPLEMENT_OVERRIDE inline void Cpu::init_mmu() {}
+
+IMPLEMENT_OVERRIDE
+void
+Cpu::init_hyp_mode()
+{
+  extern char exception_vector[];
+  asm volatile ("msr VBAR_EL2, %0" : : "r"(&exception_vector));
+  asm volatile ("msr VTCR_EL2, %0" : :
+  //                                    sl = 1       PS = 40bit   t0sz = 40bit
+                "r"(Page::Ttbcr_bits | (1UL << 6) | (2UL << 16) | 25));
+
+  asm volatile (
+        "msr MDCR_EL2, %0"
+        : : "r"(Mdcr_bits));
+
+  asm volatile (
+        "mrs x0, SCTLR_EL1\n"
+        "bic x0, x0, #1 \n"
+        "msr SCTLR_EL1, x0"
+        : : : "x0");
+
+  asm volatile ("msr HCR_EL2, %0" : : "r" (Hcr_host_bits));
+
+  Mem::dsb();
+  Mem::isb();
+
+  // HCPTR
+  asm volatile("msr CPTR_EL2, %0" : :
+               "r" (  0x33ff       // TCP: 0-9, 12-13
+                    | (1 << 20))); // TTA
+}
+//--------------------------------------------------------------------------
+IMPLEMENTATION [arm]:
 
 PUBLIC static inline
 bool

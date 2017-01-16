@@ -86,8 +86,11 @@ extern "C" void leave_by_vcpu_upcall(Trap_state *ts)
 {
   Thread *c = current_thread();
   Vcpu_state *vcpu = c->vcpu_state().access();
-  vcpu->_regs.s = *ts;
-  c->fast_return_to_user(vcpu->_entry_ip, vcpu->_entry_sp, c->vcpu_state().usr().get());
+  Mem::memcpy_mwords(vcpu->_regs.s.r, ts->r, 31);
+  vcpu->_regs.s.usp = ts->usp;
+  vcpu->_regs.s.pc = ts->pc;
+  vcpu->_regs.s.pstate = ts->pstate;
+  c->fast_return_to_user(vcpu->_entry_ip, vcpu->_sp, c->vcpu_state().usr().get());
 }
 
 IMPLEMENT
@@ -96,12 +99,19 @@ Thread::arm_kernel_sync_entry(Trap_state *ts)
 {
   auto esr = Thread::get_esr();
   ts->esr = esr;
+
+  // test for illegal execution state bit in PSR
+  if (ts->psr & (1UL << 20))
+    {
+      ts->psr &= ~(Proc::Status_mode_mask | Proc::Status_interrupts_mask);
+      ts->psr |= Proc::Status_mode_user | Proc::Status_always_mask;
+      ts->esr.ec() = 0xe;
+      current_thread()->send_exception(ts);
+      return;
+    }
+
   switch (esr.ec())
     {
-    case 0x25: // data abort -> handle cap space access from the kernel
-      call_nested_trap_handler(ts);
-      break;
-
     case 0x3c: // BRK
       call_nested_trap_handler(ts);
       ts->pc += 4;
@@ -136,32 +146,11 @@ Thread::handle_svc(Trap_state *ts)
   sys_call_table[0]();
 }
 
-//--------------------------------------------------------------------------
-IMPLEMENTATION [arm && 64bit && !cpu_virt]:
-
-PRIVATE static inline
-Arm_esr
-Thread::get_esr()
-{
-  Arm_esr esr;
-  asm volatile ("mrs %0, ESR_EL1" : "=r"(esr));
-  return esr;
-}
-
-PRIVATE static inline
-Address
-Thread::get_fault_pfa(Arm_esr /*hsr*/, bool /*insn_abt*/, bool /*ext_vcpu*/)
-{
-  Address a;
-  asm volatile ("mrs %0, FAR_EL1" : "=r"(a));
-  return a;
-}
-
 PRIVATE static inline
 bool
 Thread::is_syscall_pc(Address)
 {
-  return true; //Address(-0x0c) <= pc && pc <= Address(-0x08);
+  return false; //Address(-0x0c) <= pc && pc <= Address(-0x08);
 }
 
 PRIVATE static inline
@@ -219,5 +208,81 @@ Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
     __asm__ __volatile__ ("" : : "m"(*r));
   }
   return true;
+}
+
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION [arm && 64bit && !cpu_virt]:
+
+PRIVATE static inline
+Arm_esr
+Thread::get_esr()
+{
+  Arm_esr esr;
+  asm volatile ("mrs %0, ESR_EL1" : "=r"(esr));
+  return esr;
+}
+
+PRIVATE static inline
+Address
+Thread::get_fault_pfa(Arm_esr /*hsr*/, bool /*insn_abt*/, bool /*ext_vcpu*/)
+{
+  Address a;
+  asm volatile ("mrs %0, FAR_EL1" : "=r"(a));
+  return a;
+}
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION [arm && 64bit && cpu_virt]:
+
+PRIVATE static inline
+Arm_esr
+Thread::get_esr()
+{
+  Arm_esr esr;
+  asm volatile ("mrs %0, ESR_EL2" : "=r"(esr));
+  return esr;
+}
+
+PRIVATE static inline
+Address
+Thread::get_fault_pfa(Arm_esr hsr, bool /*insn_abt*/, bool ext_vcpu)
+{
+  Address a;
+  asm volatile ("mrs %0, FAR_EL2" : "=r"(a));
+  if (EXPECT_TRUE(!ext_vcpu) || !(Proc::sctlr() & Cpu::Sctlr_m))
+    return a;
+
+  if (hsr.pf_s1ptw() || (hsr.pf_fsc() < 0xc))
+    // stage 1 walk or access flag translation or size fault
+    {
+      Mword ipa;
+      asm ("mrs %0, HPFAR_EL2" : "=r" (ipa));
+      return (ipa << 8) | (a & 0xfff);
+    }
+
+  Mword par_tmp, res;
+  asm ("mrs %[tmp], PAR_EL1 \n"
+       "at  s1e1r, %[va]    \n"
+       "mrs %[res], PAR_EL1 \n"
+       "msr PAR_EL1, %[tmp] \n"
+       : [tmp] "=&r" (par_tmp),
+         [res] "=r" (res)
+       : [va]  "r" (a));
+
+  if (res & 1)
+    return ~0UL;
+
+  return (res & 0x00fffffffffff000) | (a & 0xfff);
+}
+
+PRIVATE inline
+void
+Arm_vtimer_ppi::mask()
+{
+  Mword v;
+  asm volatile("mrs %0, cntv_ctl_el0\n"
+               "orr %0, %0, #0x2              \n"
+               "msr cntv_ctl_el0, %0\n" : "=r" (v));
 }
 

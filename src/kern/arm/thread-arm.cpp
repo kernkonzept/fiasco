@@ -61,7 +61,9 @@ Thread::fast_return_to_user(Mword ip, Mword sp, Vcpu_state *arg)
   fill_user_state();
   //load_tpidruro();
 
-  r->psr &= ~Proc::Status_thumb;
+  // masking the illegal execution bit does not harm
+  // on 32bit it is res/sbz
+  r->psr &= ~(Proc::Status_thumb | (1UL << 20));
 
   // extended vCPU runs the host code in ARM system mode
   if (Proc::Is_hyp && (state() & Thread_ext_vcpu_enabled))

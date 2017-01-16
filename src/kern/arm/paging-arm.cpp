@@ -936,7 +936,7 @@ EXTENSION class K_pte_ptr :
 {};
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && arm_lpae && arm_v7 && cpu_virt]:
+INTERFACE [arm && arm_lpae && (arm_v7 || arm_v8) && cpu_virt]:
 
 template<typename CLASS>
 class Pte_ptr_t :

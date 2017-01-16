@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && cpu_virt]:
+IMPLEMENTATION [arm && 32bit && cpu_virt]:
 
 IMPLEMENT_OVERRIDE
 void
@@ -128,7 +128,7 @@ extern "C" void hyp_mode_fault(Mword abort_type, Trap_state *ts)
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && cpu_virt && fpu]:
+IMPLEMENTATION [arm && cpu_virt && fpu && 32bit]:
 
 PUBLIC static
 bool
@@ -239,14 +239,11 @@ private:
   unsigned _irq;
 };
 
-PUBLIC inline FIASCO_FLATTEN
+PUBLIC inline NEEDS[Arm_vtimer_ppi::mask] FIASCO_FLATTEN
 void
 Arm_vtimer_ppi::handle(Upstream_irq const *ui)
 {
-  Mword v;
-  asm volatile("mrc p15, 0, %0, c14, c3, 1\n"
-               "orr %0, #0x2              \n"
-               "mcr p15, 0, %0, c14, c3, 1\n" : "=r" (v));
+  mask();
   current_thread()->vcpu_vgic_upcall(1);
   chip()->ack(pin());
   ui->ack();
@@ -267,6 +264,18 @@ struct Local_irq_init
 DEFINE_PER_CPU_LATE static Per_cpu<Local_irq_init> local_irqs;
 }
 
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [arm && 32bit && cpu_virt]:
+
+PRIVATE inline
+void
+Arm_vtimer_ppi::mask()
+{
+  Mword v;
+  asm volatile("mrc p15, 0, %0, c14, c3, 1\n"
+               "orr %0, #0x2              \n"
+               "mcr p15, 0, %0, c14, c3, 1\n" : "=r" (v));
+}
 
 PRIVATE static inline
 bool
@@ -324,3 +333,45 @@ Thread::get_esr()
   return hsr;
 }
 
+// ---------------------------------------------------------------
+IMPLEMENTATION [arm && 64bit && cpu_virt]:
+
+IMPLEMENT_OVERRIDE
+void
+Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
+{
+  vcpu_state->version = Vcpu_arch_version;
+
+  if (!ext || (state() & Thread_ext_vcpu_enabled))
+    return;
+
+  assert (check_for_current_cpu());
+
+  Vm_state *v = vm_state(vcpu_state);
+  v->hcr = 0;
+  v->csselr = 0;
+  v->sctlr = (Cpu::Sctlr_generic | Cpu::Cp15_c1_cache_bits) & ~(Cpu::Cp15_c1_mmu);
+  v->actlr = 0;
+  v->cpacr = 0x5555555;
+  v->vbar = 0;
+  v->amair = 0;
+
+  v->guest_regs.hcr = Cpu::Hcr_tge;
+  v->guest_regs.sctlr = 0;
+  v->guest_regs.mdscr = 0;
+
+  v->host_regs.hcr = arm_get_hcr();
+  v->host_regs.mdscr = 0;
+  v->cntkctl = (1UL << 8) | (1UL << 1);
+
+  v->gic.hcr = Gic_h::Hcr(0);
+  v->gic.apr = 0;
+
+  if (current() == this)
+    {
+      asm volatile ("msr SCTLR_EL1, %0" : : "r"(v->sctlr));
+      asm volatile ("msr CNTKCTL_EL1, %0" : : "r"(v->cntkctl));
+    }
+
+  //regs()->pstate = (regs()->pstate & ~0x1fUL) | Proc::Status_mode_vmm;
+}

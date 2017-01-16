@@ -5,6 +5,12 @@
 #include "tcboffset.h"
 #include "asm_entry.h"
 
+#ifdef CONFIG_CPU_VIRT
+#define EL(x) x##_el2
+#else
+#define EL(x) x##_el1
+#endif
+
 #define EF_ERETW  ( 0 * 8)
 #define EF_KSP    (32 * 8)
 #define EF_ESR    (33 * 8)
@@ -57,11 +63,9 @@
 .endm
 
 .macro load_eret_state freg=sp
-	// ldr	x2, [\freg, #EF_SP]
-	// msr	SP_EL0, x2
 	ldp	x3, x4, [\freg, #EF_PC]
-	msr	ELR_EL1, x3
-	msr	SPSR_EL1, x4
+	msr	EL(ELR), x3
+	msr	EL(SPSR), x4
 .endm
 
 
@@ -81,6 +85,11 @@ leave_by_trigger_exception:
 .type	__iret, function
 .global	__iret
 __iret:
+	load_eret_state sp
+	add	sp, sp, #EF_SIZE
+	eret
+
+.Lret_from_exception:
 	ldr	x0, [sp, #EF_KSP]
 	ldr	x1, [x0, #EF_ERETW]
 	cbnz	x1, 1f // handle continuations
@@ -104,6 +113,8 @@ fast_ret_from_irq:
 .global	vcpu_resume
 vcpu_resume:
 	add	sp, x1, #EF_SIZE
+	ldr	x3, [x0, #EF_SP]
+	msr	SP_EL0, x3
 	load_eret_state x0
 	restore_gprs x0
 	ldr	x0, [x0, #8]
@@ -121,12 +132,12 @@ sys_call_table:
 
 .Lgeneric_entry:
 	save_gprs 1
-	mrs	x3, ELR_EL1
-	mrs	x4, SPSR_EL1
+	mrs	x3, EL(ELR)
+	mrs	x4, EL(SPSR)
 	stp	x3, x4, [sp, #EF_PC]
 	mov	x0, sp
 	str	x0, [sp, #EF_KSP]
-	adr	x30, __iret
+	adr	x30, .Lret_from_exception
 	br	x7
 
 .macro ENTRY func
@@ -136,26 +147,24 @@ sys_call_table:
 	b .Lgeneric_entry
 .endm
 
+.macro ENTRY_ESR func
+	sub	sp, sp, #EF_SIZE
+	stp	x7, x8,    [sp,  #64]
+	mrs	x8, EL(ESR)
+	str	x8, [sp, #EF_ESR]
+	adr	x7, \func
+	b .Lgeneric_entry
+.endm
+
 .Lirq_entry:
 	sub	sp, sp, #EF_SIZE
 	save_gprs
-	mrs	x3, ELR_EL1
-	mrs	x4, SPSR_EL1
+	mrs	x3, EL(ELR)
+	mrs	x4, EL(SPSR)
 	stp	x3, x4, [sp, #EF_PC]
 	mov	x0, sp
 	str	x0, [sp, #EF_KSP]
-	adr	x30, __iret
-	b	irq_handler
-
-.Ldbg:
-	sub	sp, sp, #EF_SIZE
-	save_gprs
-	mrs	x3, ELR_EL1
-	mrs	x4, SPSR_EL1
-	stp	x3, x4, [sp, #EF_PC]
-	mov	x0, sp
-	str	x0, [sp, #EF_KSP]
-	adr	x30, __iret
+	adr	x30, .Lret_from_exception
 	b	irq_handler
 
 
@@ -165,19 +174,19 @@ sys_call_table:
 exception_vector:
 	# from el1 with sp_el0
 	.align 7
-	ENTRY call_nested_trap_handler
+	ENTRY arm_kernel_sync_entry
 	b .
 
 	.align 7
-	ENTRY call_nested_trap_handler
+	ENTRY_ESR call_nested_trap_handler
 	b .
 
 	.align 7
-	ENTRY call_nested_trap_handler
+	ENTRY_ESR call_nested_trap_handler
 	b .
 
 	.align 7
-	ENTRY call_nested_trap_handler
+	ENTRY_ESR call_nested_trap_handler
 	b .
 
 	# from el1 with sp_el1
@@ -209,19 +218,19 @@ exception_vector:
 
 	# from el0 aarch32
 	.align 7
-	ENTRY call_nested_trap_handler
+	ENTRY arm_esr_entry
 	b .
 
 	.align 7
-	ENTRY call_nested_trap_handler
+	b	.Lirq_entry
 	b .
 
 	.align 7
-	ENTRY call_nested_trap_handler
+	b	.Lirq_entry
 	b .
 
 	.align 7
-	ENTRY call_nested_trap_handler
+	b	.Lirq_entry
 	b .
 
 	.align 7
