@@ -44,15 +44,6 @@ private:
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
-#include <cassert>
-#include <panic.h>
-
-#include "console.h"
-#include "kip_init.h"
-#include "mem_unit.h"
-
-#include <cstdio>
-
 IMPLEMENT inline
 Kpdir *Kmem_space::kdir()
 { return _kdir; }
