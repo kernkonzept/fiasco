@@ -1,5 +1,13 @@
 IMPLEMENTATION [arm]:
 
+PUBLIC inline
+void
+Context::prepare_switch_to(void (*fptr)())
+{
+  _kernel_sp -= 2;
+  *reinterpret_cast<void (**)()> (_kernel_sp) = fptr;
+}
+
 PRIVATE inline void
 Context::arm_switch_gp_regs(Context *t)
 {

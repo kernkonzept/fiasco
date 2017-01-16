@@ -76,7 +76,7 @@ Thread::Thread(Ram_quota *q)
   _recover_jmpbuf = 0;
   _timeout        = 0;
 
-  *reinterpret_cast<void(**)()> (--_kernel_sp) = user_invoke;
+  prepare_switch_to(&user_invoke);
 
   arch_init();
 

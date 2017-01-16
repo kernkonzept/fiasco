@@ -186,9 +186,8 @@ Thread::Thread(Ram_quota *q)
   _recover_jmpbuf = 0;
   _timeout = 0;
 
-  _kernel_sp -= 4;
+  prepare_switch_to(&user_invoke);
   printf("User-Invoke: this=%p *%p=%p\n", this, _kernel_sp, user_invoke); 
-  *reinterpret_cast<void(**)()>(_kernel_sp) = user_invoke;
 
   // clear out user regs that can be returned from the thread_ex_regs
   // system call to prevent covert channel

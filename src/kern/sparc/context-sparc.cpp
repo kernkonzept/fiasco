@@ -5,6 +5,14 @@ IMPLEMENTATION [sparc]:
 #include "kmem.h"
 #include "utcb_support.h"
 
+PUBLIC inline
+void
+Context::prepare_switch_to(void (*fptr)())
+{
+  _kernel_sp -= 4;
+  *reinterpret_cast<void (**)()> (_kernel_sp) = fptr;
+}
+
 IMPLEMENT inline
 void
 Context::spill_user_state()
