@@ -4,10 +4,6 @@ INTERFACE [arm-debug]:
 
 EXTENSION class Thread
 {
-public:
-  typedef void (*Dbg_extension_entry)(Thread *t, Entry_frame *r);
-  static Dbg_extension_entry dbg_extension[64];
-
 protected:
   static int call_nested_trap_handler(Trap_state *ts) asm ("call_nested_trap_handler");
   static Trap_state::Handler nested_trap_handler FIASCO_FASTCALL;
@@ -32,54 +28,7 @@ IMPLEMENTATION [arm && debug]:
 #include "mem_layout.h"
 #include "mmu.h"
 
-#include <cstring>
-
-Thread::Dbg_extension_entry Thread::dbg_extension[64];
-
 Trap_state::Handler Thread::nested_trap_handler FIASCO_FASTCALL;
-
-extern "C" void sys_kdb_ke()
-{
-  cpu_lock.lock();
-  Thread *t = current_thread();
-  Unsigned32 x = Thread::peek_user((Unsigned32 *)t->regs()->ip(), t);
-
-  if (EXPECT_FALSE(t->is_kernel_mem_op_hit_and_clear()))
-    x = 0;
-
-  if ((x & 0xffff0000) == 0xe35e0000)
-    {
-      unsigned func = x & 0x3f;
-      if (Thread::dbg_extension[func])
-	{
-	  Thread::dbg_extension[func](t, t->regs());
-	  t->regs()->ip(t->regs()->ip() + 4);
-	  return;
-	}
-    }
-
-  char str[32] = "USER ENTRY";
-  if ((x & 0xfffffff0) == 0xea000000)
-    // check for always branch, no return, maximum 32 bytes forward
-    {
-      char const *user_str = reinterpret_cast<char const *>(t->regs()->ip() + 4);
-      for (unsigned i = 0; i < sizeof(str); ++i)
-        {
-          str[i] = Thread::peek_user(user_str + i, t);
-          if (EXPECT_FALSE(t->is_kernel_mem_op_hit_and_clear()))
-            {
-              str[0] = 0;
-              break;
-            }
-          if (str[i] == 0)
-            break;
-        }
-
-      str[sizeof(str)-1] = 0;
-    }
-
-  kdb_ke(str);
-}
 
 IMPLEMENT
 int
@@ -123,9 +72,6 @@ Thread::call_nested_trap_handler(Trap_state *ts)
 
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm-!debug]:
-
-extern "C" void sys_kdb_ke()
-{}
 
 PRIVATE static inline
 int
