@@ -1,9 +1,9 @@
-INTERFACE [arm && mp && (omap4 || omap5)]:
+INTERFACE [arm && mp && (pf_omap4 || pf_omap5)]:
 
 #include "types.h"
 #include "mmio_register_block.h"
 
-IMPLEMENTATION [arm && mp && (omap4 || omap5)]: // ------------------------
+IMPLEMENTATION [arm && mp && (pf_omap4 || pf_omap5)]: // ------------------------
 
 #include "io.h"
 #include "kmem.h"
@@ -22,7 +22,7 @@ Platform_control::aux(unsigned cmd, Mword arg0, Mword arg1)
                  "r7", "r8", "r9", "r10", "r11", "lr", "memory");
 }
 
-IMPLEMENTATION [arm && mp && omap4]: // -----------------------------------
+IMPLEMENTATION [arm && mp && pf_omap4]: // -----------------------------------
 
 PRIVATE static
 void
@@ -31,7 +31,7 @@ Platform_control::setup_ap_boot(Mmio_register_block *aux, unsigned reg)
   aux->modify<Mword>(0x200, 0xfffffdff, reg);
 }
 
-IMPLEMENTATION [arm && mp && omap5]: // -----------------------------------
+IMPLEMENTATION [arm && mp && pf_omap5]: // -----------------------------------
 
 PRIVATE static
 void
@@ -40,7 +40,7 @@ Platform_control::setup_ap_boot(Mmio_register_block *aux, unsigned reg)
   aux->write<Mword>(0x20, reg);
 }
 
-IMPLEMENTATION [arm && mp && (omap4 || omap5)]: // ------------------------
+IMPLEMENTATION [arm && mp && (pf_omap4 || pf_omap5)]: // ------------------------
 
 #include "ipi.h"
 

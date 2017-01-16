@@ -1,10 +1,10 @@
-INTERFACE [arm && pic_gic && (omap4 || omap5)]:
+INTERFACE [arm && pic_gic && (pf_omap4 || pf_omap5)]:
 
 #include "initcalls.h"
 #include "gic.h"
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && (omap4 || omap5)]:
+IMPLEMENTATION [arm && pic_gic && (pf_omap4 || pf_omap5)]:
 
 #include "irq_mgr_multi_chip.h"
 #include "kmem.h"
@@ -25,7 +25,7 @@ Pic::init()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && mp && pic_gic && (omap4 || omap5)]:
+IMPLEMENTATION [arm && mp && pic_gic && (pf_omap4 || pf_omap5)]:
 
 PUBLIC static
 void Pic::init_ap(Cpu_number, bool resume)
