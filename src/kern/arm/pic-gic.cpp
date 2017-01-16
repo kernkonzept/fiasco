@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic]:
+INTERFACE [arm && pic_gic]:
 
 #include "gic.h"
 #include "initcalls.h"
@@ -9,6 +9,9 @@ EXTENSION class Pic
 public:
   static Static_object<Gic> gic;
 };
+
+//-------------------------------------------------------------------
+IMPLEMENTATION [arm && pic_gic]:
 
 Static_object<Gic> Pic::gic;
 
