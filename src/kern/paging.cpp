@@ -2,6 +2,7 @@ INTERFACE:
 
 #include "types.h"
 #include "l4_msg_item.h"
+#include "ptab_base.h"
 
 class Page
 {
