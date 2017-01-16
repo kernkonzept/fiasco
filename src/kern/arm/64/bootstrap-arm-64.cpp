@@ -13,6 +13,7 @@ Bootstrap::enable_paging(Mword)
   Mem::dsb();
   asm volatile("msr SCTLR_EL1, %[control]" : : [control] "r" (control));
   Mem::isb();
+  asm volatile ("ic iallu; dsb nsh; isb");
 }
 
 //---------------------------------------------------------------------------
@@ -23,6 +24,55 @@ extern char kernel_l1_dir[];
 extern char kernel_l0_vdir[];
 extern char kernel_l1_vdir[];
 extern char kernel_l2_mmio_dir[];
+
+static inline void
+switch_from_el3_to_el1()
+{
+  // drain the data and instruction caches as we might switch from
+  // secure to non-secure mode and only secure mode can clear
+  // caches for secure memory.
+  Mmu<Bootstrap::Cache_flush_area, true>::flush_cache();
+
+  Mword pfr0;
+  asm volatile ("mrs %0, id_aa64pfr0_el1" : "=r"(pfr0));
+  if (((pfr0 >> 8) & 0xf) != 0)
+    {
+      // EL2 supported, set HCR (RW and HCD)
+      asm volatile ("msr HCR_EL2, %0" : : "r"((1 << 29) | (1 << 31)));
+    }
+
+  // flush all E1 TLBs
+  asm volatile ("tlbi alle1");
+
+  // setup SCR (disable monitor completely)
+  asm volatile ("msr scr_el3, %0"
+                : :
+                "r"(Cpu::Scr_ns | Cpu::Scr_rw | Cpu::Scr_smd));
+
+  Mword sctlr_el3;
+  Mword sctlr_el1;
+  asm ("mrs %0, sctlr_el3" : "=r"(sctlr_el3));
+  asm ("mrs %0, sctlr_el1" : "=r"(sctlr_el1));
+  sctlr_el1 &= ~(Cpu::Sctlr_m | Cpu::Sctlr_a | Cpu::Sctlr_sa
+                 | Cpu::Sctlr_ee | Cpu::Sctlr_wxn
+                 | Cpu::Sctlr_uma);
+  sctlr_el1 |= Cpu::Sctlr_i | Cpu::Sctlr_c;
+  sctlr_el1 |= sctlr_el3 & Cpu::Sctlr_ee;
+  asm volatile ("msr sctlr_el1, %0" : : "r"(sctlr_el1));
+
+  Mword tmp;
+  // monitor mode .. switch to el1
+  asm volatile (
+      "   msr spsr_el3, %[psr] \n"
+      "   adr x4, 1f           \n"
+      "   msr elr_el3, x4      \n"
+      "   mov %[tmp], sp       \n"
+      "   eret                 \n"
+      "1: mov sp, %[tmp]       \n"
+      : [tmp]"=&r"(tmp)
+      : [psr]"r"((0xf << 6) | 5)
+      : "cc", "x4");
+}
 
 static void
 Bootstrap::leave_hyp_mode()
@@ -36,36 +86,23 @@ Bootstrap::leave_hyp_mode()
   switch (cel)
     {
     case 3:
-      // monitor mode .. switch to el1
-      asm volatile ("   mrs %[tmp], scr_el3  \n"
-                    "   and %[tmp], %[tmp], #1 \n"
-                    "   orr %[tmp], %[tmp], %[scr] \n"
-                    "   msr scr_el3, %[tmp]  \n"
-                    "   msr spsr_el3, %[psr] \n"
-                    "   adr x4, 1f           \n"
-                    "   msr elr_el3, x4      \n"
-                    "   mov %[tmp], sp       \n"
-                    "   eret                 \n"
-                    "1: mov sp, %[tmp]       \n"
-                    : [tmp]"=&r"(tmp)
-                    : [psr]"r"((0xf << 6) | 5),
-                      [scr]"r"((1 << 10))
-                    : "cc", "x4");
+      switch_from_el3_to_el1();
       break;
 
     case 2:
-      asm volatile ("   mrs %[tmp], HCR_EL2  \n"
-                    "   bic %[tmp], %[tmp], #(1 << 27) \n" // HCR.TGE
-                    "   orr %[tmp], %[tmp], #(1 << 31) \n" // HCR.RW
-                    "   msr HCR_EL2, %[tmp]  \n"
-                    "   mov %[tmp], sp       \n"
+      // flush all E1 TLBs
+      asm volatile ("tlbi alle1");
+      // set HCR (RW and HCD)
+      asm volatile ("msr HCR_EL2, %0" : : "r"((1 << 29) | (1 << 31)));
+      asm volatile ("   mov %[tmp], sp       \n"
                     "   msr spsr_el2, %[psr] \n"
                     "   adr x4, 1f           \n"
                     "   msr elr_el2, x4      \n"
                     "   eret                 \n"
                     "1: mov sp, %[tmp]       \n"
                     : [tmp]"=&r"(tmp)
-                    : [psr]"r"((0xf << 6) | 5) : "cc", "x4");
+                    : [psr]"r"((0xf << 6) | 5)
+                    : "cc", "x4");
       break;
     case 1:
     default:
@@ -119,7 +156,9 @@ Bootstrap::init_paging(void *)
       "msr tcr_el1, %2   \n"
       "dsb sy            \n"
       "msr ttbr0_el1, %0 \n"
-      "msr ttbr1_el1, %1 \n" : :
+      "msr ttbr1_el1, %1 \n"
+      "isb \n"
+      : :
       "r"(l0),
       "r"(vl0),
       "r"(  (5UL << 32) | (2UL << 30) | (attribs << 24) | (16UL << 16)
