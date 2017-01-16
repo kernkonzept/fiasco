@@ -5,13 +5,14 @@ Context::arm_switch_gp_regs(Context *t)
 {
   register Mword _old_this asm("x1") = (Mword)this;
   register Mword _new_this asm("x0") = (Mword)t;
-  unsigned long dummy1, dummy2;
+  register unsigned long dummy1 asm ("x9");
+  register unsigned long dummy2 asm ("x10");
 
   asm volatile
     (// save context of old thread
-     "   str   x29, [sp, #-8]!    \n" // FP
      "   adr   x30, 1f            \n"
-     "   str   x30, [sp, #-8]!    \n"
+     "   str   x30, [sp, #-16]!   \n"
+     "   str   x29, [sp, #8]      \n" // FP
      "   mov   x29, sp            \n"
      "   str   x29, [%[old_sp]]   \n"
 
@@ -22,9 +23,10 @@ Context::arm_switch_gp_regs(Context *t)
      "   bl switchin_context_label \n" // call Context::switchin_context(Context *)
 
      // return to new context
-     "   ldr   x30, [sp], #8      \n"
+     "   ldr   x29, [sp, #8]      \n"
+     "   ldr   x30, [sp], #16     \n"
      "   br    x30                \n"
-     "1: ldr   x29, [sp], #8      \n"
+     "1: \n"
 
      :
                   "=r" (_old_this),
@@ -36,8 +38,10 @@ Context::arm_switch_gp_regs(Context *t)
      "1" (_new_this),
      "2" (&_kernel_sp),
      "3" (t->_kernel_sp)
-     : "x19", "x20", "x21", "x22", "x23", "x24",
-       "x25", "x26", "x27", "x28", "x29", "x30", "memory");
+     :  "x2",  "x3",  "x4",  "x5",  "x6",  "x7",  "x8",
+       "x11", "x12", "x13", "x14", "x15", "x16", "x17",
+       "x18", "x19", "x20", "x21", "x22", "x23", "x24", "x25",
+       "x26", "x27", "x28", "x30", "memory");
 }
 
 IMPLEMENT inline
