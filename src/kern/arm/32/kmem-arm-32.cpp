@@ -4,7 +4,7 @@ PUBLIC static
 Address
 Kmem::mmio_remap(Address phys)
 {
-  auto m = Kmem_space::kdir()->walk(Virt_addr(phys), Pte_ptr::Super_level);
+  auto m = kdir->walk(Virt_addr(phys), Pte_ptr::Super_level);
   if (m.is_valid())
     {
       assert (m.page_order() >= Config::SUPERPAGE_SHIFT);

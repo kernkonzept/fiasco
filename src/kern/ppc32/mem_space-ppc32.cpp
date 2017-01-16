@@ -271,7 +271,7 @@ Mem_space::try_htab_fault(Address virt)
   Dir_type *dir = _dir;
 
   if(virt > Mem_layout::User_max)
-    dir = Kmem::kdir();
+    dir = Kmem::kdir;
 
 #ifdef FIX_THIS
   Pdir::Iter i = dir->walk(Addr(virt), Pdir::Super_level);

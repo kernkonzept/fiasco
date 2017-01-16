@@ -28,13 +28,13 @@ Jdb_util::is_mapped(void const *x)
 
 IMPLEMENTATION[arm]:
 
-#include "kmem_space.h"
+#include "kmem.h"
 
-IMPLEMENT_OVERRIDE inline NEEDS["kmem_space.h"]
+IMPLEMENT_OVERRIDE inline NEEDS["kmem.h"]
 bool
 Jdb_util::is_mapped(void const* addr)
 {
-  return Kmem_space::kdir()->virt_to_phys((Address)addr) != Address(~0UL);
+  return Kmem::kdir->virt_to_phys((Address)addr) != Address(~0UL);
 }
 
 IMPLEMENTATION[sparc]:

@@ -7,9 +7,6 @@ class Page_table;
 class Kmem : public Mem_layout
 {
 public:
-  static Pdir *kdir();
-  static Pdir *dir();
-
   static Mword *kernel_sp();
   static void kernel_sp(Mword *);
 
@@ -18,7 +15,6 @@ public:
 
   static Address virt_to_phys(const void *addr);
 private:
-  static Pdir *_kdir;
   static Mword *_sp;
 };
 
@@ -29,16 +25,8 @@ IMPLEMENTATION [ppc32]:
 #include "panic.h"
 
 char kernel_page_directory[sizeof(Pdir)];
-Pdir *Kmem::_kdir = (Pdir *)&kernel_page_directory;
+Kpdir *Mem_layout::kdir = (Kpdir *)&kernel_page_directory;
 Mword *Kmem::_sp = 0;
-
-IMPLEMENT inline
-Pdir *Kmem::kdir()
-{ return _kdir; }
-
-IMPLEMENT inline
-Pdir *Kmem::dir()
-{ return _kdir; }
 
 IMPLEMENT inline
 Mword *Kmem::kernel_sp()
@@ -52,7 +40,7 @@ IMPLEMENT inline NEEDS["paging.h"]
 Address Kmem::virt_to_phys(const void *addr)
 {
   Address a = reinterpret_cast<Address>(addr);
-  return kdir()->virt_to_phys(a);
+  return kdir->virt_to_phys(a);
 }
 
 IMPLEMENT inline

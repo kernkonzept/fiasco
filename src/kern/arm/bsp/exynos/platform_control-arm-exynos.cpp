@@ -245,7 +245,6 @@ IMPLEMENTATION [arm && pf_exynos && mp && (exynos_extgic || pf_exynos5)
 #include "io.h"
 #include "ipi.h"
 #include "kmem.h"
-#include "kmem_space.h"
 #include "pic.h"
 #include "processor.h"
 #include "smc.h"
@@ -266,7 +265,7 @@ Platform_control::resume_cpu(Cpu_number cpu)
 
   set_suspend_state(cpu, false);
   extern char _tramp_mp_entry[];
-  cpuboot(Kmem_space::kdir()->virt_to_phys((Address)_tramp_mp_entry), pcpu);
+  cpuboot(Kmem::kdir->virt_to_phys((Address)_tramp_mp_entry), pcpu);
   Ipi::send(Ipi::Global_request, current_cpu(), pcpu);
 
   return 0;

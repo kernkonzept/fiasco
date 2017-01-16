@@ -10,7 +10,7 @@ Kmem::mmio_remap(Address phys)
 
   ndev += Config::SUPERPAGE_SIZE;
 
-  auto m = Kmem_space::kdir()->walk(Virt_addr(dm), Pte_ptr::Super_level);
+  auto m = kdir->walk(Virt_addr(dm), Pte_ptr::Super_level);
   assert (!m.is_valid());
   assert (m.page_order() == Config::SUPERPAGE_SHIFT);
   Address phys_page = cxx::mask_lsb(phys, Config::SUPERPAGE_SHIFT);

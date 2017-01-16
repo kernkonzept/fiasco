@@ -17,7 +17,7 @@ IMPLEMENTATION [arm]:
 #include <cstdio>
 
 #include "globals.h"
-#include "kmem_space.h"
+#include "kmem.h"
 #include "mem_op.h"
 #include "static_assert.h"
 #include "thread_state.h"
@@ -97,7 +97,7 @@ Thread::user_invoke()
   Mem::memset_mwords(&ts->r[0], 0, sizeof(ts->r) / sizeof(ts->r[0]));
 
   if (ct->space()->is_sigma0())
-    ts->r[0] = Kmem_space::kdir()->virt_to_phys((Address)Kip::k());
+    ts->r[0] = Kmem::kdir->virt_to_phys((Address)Kip::k());
 
   if (ct->exception_triggered())
     ct->_exc_cont.flags(regs, ct->_exc_cont.flags(regs)

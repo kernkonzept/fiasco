@@ -81,11 +81,11 @@ Mem_space::sync_kernel()
   return 0;
 }
 
-PUBLIC inline NEEDS [Mem_space::virt_to_phys, "kmem_space.h"]
+PUBLIC inline NEEDS [Mem_space::virt_to_phys, "kmem.h"]
 Address
 Mem_space::pmem_to_phys(Address virt) const
 {
-  return Kmem_space::kdir()->virt_to_phys(virt);
+  return Kmem::kdir->virt_to_phys(virt);
 }
 
 //-----------------------------------------------------------------------------

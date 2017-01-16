@@ -19,10 +19,10 @@ void Kmem_space::init()
 IMPLEMENTATION[arm && arm_lpae]:
 
 Unsigned64 kernel_lpae_dir[4] __attribute__((aligned(4 * sizeof(Unsigned64))));
-Kpdir *Kmem_space::_kdir = (Kpdir *)&kernel_lpae_dir;
+Kpdir *Mem_layout::kdir = (Kpdir *)&kernel_lpae_dir;
 
 //----------------------------------------------------------------------------------
 IMPLEMENTATION[arm && !arm_lpae]:
 
-Kpdir *Kmem_space::_kdir = (Kpdir *)&kernel_page_directory;
+Kpdir *Mem_layout::kdir = (Kpdir *)&kernel_page_directory;
 

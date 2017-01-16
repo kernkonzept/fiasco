@@ -2,6 +2,8 @@ INTERFACE:
 
 #include "l4_types.h"
 
+class Kpdir;
+
 class Mem_layout
 {
 public:
@@ -19,6 +21,7 @@ public:
 
   static Mword in_tcbs (Address a); // FIXME
   static Mword in_kernel (Address a); // XXX: not right for UX
+  static Kpdir *kdir;
 };
 
 IMPLEMENTATION [obj_space_virt]:

@@ -2,12 +2,6 @@ INTERFACE [arm]:
 
 #include "mem_unit.h"
 
-class PF {};
-class Page
-{
-};
-
-
 //-------------------------------------------------------------------------------------
 INTERFACE [arm && !arm_lpae]:
 

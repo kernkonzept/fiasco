@@ -62,7 +62,6 @@ IMPLEMENTATION [arm]:
 #include "paging.h"
 #include "kmem.h"
 #include "kmem_alloc.h"
-#include "kmem_space.h"
 #include "mem_unit.h"
 
 Kmem_slab_t<Mem_space::Dir_type,
@@ -309,7 +308,7 @@ Mem_space::Mem_space(Ram_quota *q)
   asid(Mem_unit::Asid_invalid);
 }
 
-PROTECTED inline NEEDS[<new>, "kmem_slab.h", "kmem_space.h", Mem_space::asid]
+PROTECTED inline NEEDS[<new>, "kmem_slab.h", "kmem.h", Mem_space::asid]
 bool
 Mem_space::initialize()
 {
@@ -318,7 +317,7 @@ Mem_space::initialize()
     return false;
 
   _dir->clear(Pte_ptr::need_cache_write_back(false));
-  _dir_phys = Phys_mem_addr(Kmem_space::kdir()->virt_to_phys((Address)_dir));
+  _dir_phys = Phys_mem_addr(Kmem::kdir->virt_to_phys((Address)_dir));
 
   return true;
 }
@@ -329,7 +328,7 @@ Mem_space::Mem_space(Ram_quota *q, Dir_type* pdir)
 {
   asid(Mem_unit::Asid_invalid);
   _current.cpu(Cpu_number::boot_cpu()) = this;
-  _dir_phys = Phys_mem_addr(Kmem_space::kdir()->virt_to_phys((Address)_dir));
+  _dir_phys = Phys_mem_addr(Kmem::kdir->virt_to_phys((Address)_dir));
 }
 
 PUBLIC static inline

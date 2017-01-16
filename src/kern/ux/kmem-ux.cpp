@@ -5,8 +5,6 @@ class Kernel_task;
 EXTENSION class Kmem
 {
 protected:
-  static Pdir *kdir;	///< Kernel page directory
-
   friend class Kernel_task;
 };
 
@@ -68,7 +66,7 @@ Kmem::init_mmu(Cpu const &boot_cpu)
 {
   Kmem_alloc *const alloc = Kmem_alloc::allocator();
 
-  kdir = (Pdir*)alloc->alloc(Config::PAGE_SHIFT);
+  kdir = (Kpdir*)alloc->alloc(Config::PAGE_SHIFT);
   memset (kdir, 0, Config::PAGE_SIZE);
 
   Pt_entry::have_superpages(boot_cpu.superpages());
