@@ -654,7 +654,7 @@ Apic::test_present_but_disabled()
 }
 
 // activate APIC by writing to appropriate MSR
-static FIASCO_INIT_CPU_AND_PM
+PUBLIC static FIASCO_INIT_CPU_AND_PM
 void
 Apic::activate_by_msr()
 {
