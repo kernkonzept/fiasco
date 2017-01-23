@@ -65,7 +65,8 @@ define find_ld_emulation
 	  fi;                                                             \
 	done;                                                             \
 	if [ "$$found_it" != "1" ]; then                                  \
-	  echo "No known ld emulation found"; exit 1;                     \
+	  echo "No known ld emulation found (available: $$emulations)";   \
+	  exit 1;                                                         \
 	fi
 endef
 
