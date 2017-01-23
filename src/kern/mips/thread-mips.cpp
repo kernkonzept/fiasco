@@ -163,8 +163,8 @@ Thread::user_invoke()
   //Mem_op::cache()->icache_invalidate_all();
 
   __asm__ __volatile__ (
-      ASM_MTC0 "    %[epc], $14   \n"
       "mtc0         %[sta], $12   \n"
+      ASM_MTC0 "    %[epc], $14   \n"
       "move         $sp, %[usp]   \n"
       //"synci                    \n"
       "ehb                        \n"
