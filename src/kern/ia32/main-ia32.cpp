@@ -105,6 +105,8 @@ int FIASCO_FASTCALL boot_ap_cpu() __asm__("BOOT_AP_CPU");
 
 int FIASCO_FASTCALL boot_ap_cpu()
 {
+  Apic::activate_by_msr();
+
   Cpu_number _cpu = Apic::find_cpu(Apic::get_id());
   bool cpu_is_new = false;
   static Cpu_number last_cpu; // keep track of the last cpu ever appeared
