@@ -258,7 +258,7 @@ Thread::handle_slow_trap(Trap_state::Cause cause, Trap_state *ts,
   if (send_exception(ts))
     return 0;
 
-  // FIXME: should probably kill the thread and scheule here,
+  // FIXME: should probably kill the thread and schedule here,
   //        enter JDB for now
   return Thread::call_nested_trap_handler(ts);
 }
