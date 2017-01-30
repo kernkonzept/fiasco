@@ -34,10 +34,11 @@ namespace Ptab
   struct Tupel<T1, T2, T3, X...>
   { typedef Ptab::List<T1, typename Tupel<T2, T3, X...>::List > List; };
 
-  template< typename _T, unsigned _Level >
+  template< typename _T >
   struct Level
   {
     typedef _T Traits;
+    enum { Max_level = 0 };
 
     static unsigned shift(unsigned)
     { return Traits::Shift; }
@@ -53,14 +54,14 @@ namespace Ptab
 
     static unsigned entry_size(unsigned)
     { return sizeof(typename Traits::Entry); }
-
   };
 
-  template< typename _Head, typename _Tail, unsigned _Level >
-  struct Level< List<_Head, _Tail>, _Level >
+  template< typename _Head, typename _Tail >
+  struct Level< List<_Head, _Tail> >
   {
-    typedef Level<_Tail, _Level - 1> Next_level;
+    typedef Level<_Tail> Next_level;
     typedef _Head Traits;
+    enum { Max_level = Next_level::Max_level + 1 };
 
     static unsigned shift(unsigned level)
     {
@@ -102,11 +103,6 @@ namespace Ptab
         return Next_level::entry_size(level - 1);
     }
 
-  };
-
-  template< typename _Head, typename _Tail>
-  struct Level< List<_Head, _Tail>, 0> : Level<_Head, 0>
-  {
   };
 
   template< typename _Traits >
@@ -592,7 +588,7 @@ namespace Ptab
   public:
     enum { Depth = Walk::Max_depth };
 
-    typedef Level<Traits, Depth> Levels;
+    typedef Level<Traits> Levels;
 
     static unsigned lsb_for_level(unsigned level)
     { return Levels::shift(level); }
