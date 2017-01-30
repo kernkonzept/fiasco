@@ -131,6 +131,10 @@ namespace Mips
            || (r == Cp0_cmgcr_base)
            || (r == Cp0_load_linked_addr)
            || (r == Cp0_watch_lo)
+           || (r == Cp0_perf_counter_0)
+           || (r == Cp0_perf_counter_1)
+           || (r == Cp0_perf_counter_2)
+           || (r == Cp0_perf_counter_3)
            || (r == Cp0_xcontext)
            || (r == Cp0_tag_lo_0)
            || (r == Cp0_err_epc)
@@ -185,7 +189,15 @@ namespace Mips
            || (r == Cp0_config_5)
            || (r == Cp0_config_6)
            || (r == Cp0_config_7)
-           || (r == Cp0_watch_hi);
+           || (r == Cp0_watch_hi)
+           || (r == Cp0_perf_ctl_0)
+           || (r == Cp0_perf_counter_0)
+           || (r == Cp0_perf_ctl_1)
+           || (r == Cp0_perf_counter_1)
+           || (r == Cp0_perf_ctl_2)
+           || (r == Cp0_perf_counter_2)
+           || (r == Cp0_perf_ctl_3)
+           || (r == Cp0_perf_counter_3);
   }
 
   ALWAYS_INLINE constexpr bool is_32bit(unsigned reg, unsigned sel)
