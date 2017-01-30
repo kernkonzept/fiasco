@@ -28,11 +28,6 @@ extern char kernel_l2_mmio_dir[];
 static inline void
 switch_from_el3_to_el1()
 {
-  // drain the data and instruction caches as we might switch from
-  // secure to non-secure mode and only secure mode can clear
-  // caches for secure memory.
-  Mmu<Bootstrap::Cache_flush_area, true>::flush_cache();
-
   Mword pfr0;
   asm volatile ("mrs %0, id_aa64pfr0_el1" : "=r"(pfr0));
   if (((pfr0 >> 8) & 0xf) != 0)
@@ -43,6 +38,11 @@ switch_from_el3_to_el1()
 
   // flush all E1 TLBs
   asm volatile ("tlbi alle1");
+
+  // drain the data and instruction caches as we might switch from
+  // secure to non-secure mode and only secure mode can clear
+  // caches for secure memory.
+  Mmu<Bootstrap::Cache_flush_area, true>::flush_cache();
 
   // setup SCR (disable monitor completely)
   asm volatile ("msr scr_el3, %0"
