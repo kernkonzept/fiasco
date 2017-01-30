@@ -181,7 +181,10 @@ extern "C" void bootstrap_main()
 
   Bootstrap::add_initial_pmem();
 
-  _start_kernel();
+  // force to construct an absolute relocation because GCC may not do it.
+  void (*sk)(void) = _start_kernel;
+  asm volatile("" : "+r"(sk));
+  sk();
 
   while(1)
     ;
