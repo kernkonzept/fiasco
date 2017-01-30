@@ -76,7 +76,7 @@
 	mtc0	k0, CP0_GUESTCTL0
 #ifdef CONFIG_PF_SEAD3
 /* The CPU implementation on the FPGA SEAD3 board has a
-   buggy guest timer and does not singal timer interrupts
+   buggy guest timer and does not signal timer interrupts
    correctly to the guest. Work around this by manually
    injecting the timer interrupt via VIP instead.
    Note that this only works as long as Fiasco is uses a
