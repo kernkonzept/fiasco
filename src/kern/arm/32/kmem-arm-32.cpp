@@ -16,7 +16,7 @@ Kmem::mmio_remap(Address phys)
   assert (m.page_order() == Config::SUPERPAGE_SHIFT);
   Address phys_page = cxx::mask_lsb(phys, Config::SUPERPAGE_SHIFT);
   m.set_page(m.make_page(Phys_mem_addr(phys_page),
-                         Page::Attr(Page::Rights::RWX(),
+                         Page::Attr(Page::Rights::RW(),
                                     Page::Type::Uncached(),
                                     Page::Kern::Global())));
 
