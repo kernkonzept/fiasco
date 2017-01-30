@@ -596,6 +596,8 @@ Vmx_info::init()
   exception_bitmap = Bit_defs_32<Vmx_info::Exceptions>(0xffffffff00000000ULL);
 
   max_index = Cpu::rdmsr(0x48a);
+  if (procbased_ctls.allowed(Vmx_info::PRB1_enable_proc_based_ctls_2))
+    procbased_ctls2 = Cpu::rdmsr(0x48b);
 
   assert ((Vmx::F_sw_guest_cr2 & 0x3ff) > max_index);
   max_index = Vmx::F_sw_guest_cr2 & 0x3ff;
@@ -633,7 +635,6 @@ Vmx_info::init()
     {
       procbased_ctls.enforce(Vmx_info::PRB1_enable_proc_based_ctls_2, true);
 
-      procbased_ctls2 = Cpu::rdmsr(0x48b);
       if (procbased_ctls2.allowed(Vmx_info::PRB2_enable_ept))
 	ept_vpid_cap = Cpu::rdmsr(0x48c);
 
