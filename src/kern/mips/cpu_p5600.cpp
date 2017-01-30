@@ -7,13 +7,13 @@ struct P5600 : Cpu::Hooks
 {
   void init(Cpu_number, bool, Unsigned32) override
   {
-    // enable FTLB with prio 2
-    Mword v;
-    asm volatile ("mfc0 %0, $16, 6" : "=r" (v));
+    using namespace Mips;
+    // enable FTLB
+    Mword v = mfc0_32(Cp0_config_6);
     v &= ~(3 << 16);
     v |= (2 << 16) | (1 << 15);
-    asm volatile ("mtc0 %0, $16, 6" : : "r" (v));
-    asm volatile ("ehb");
+    mtc0_32(v, Cp0_config_6);
+    ehb();
   }
 };
 
