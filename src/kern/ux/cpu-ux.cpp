@@ -47,6 +47,10 @@ unsigned long Cpu::_fs; // for mp: percpu
 unsigned long Cpu::_kern_ds;
 unsigned long Cpu::_kern_es;
 
+PRIVATE inline ALWAYS_INLINE
+void
+Cpu::try_enable_hw_performance_states() {}
+
 IMPLEMENT FIASCO_INIT_CPU
 void
 Cpu::init()

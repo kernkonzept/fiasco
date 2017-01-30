@@ -150,6 +150,12 @@
 #define MSR_LASTINTFROMIP    0x1dd      // (P6)
 #define MSR_LASTINTTOIP      0x1de      // (P6)
 #define MSR_PAT              0x277      // PAT
+#define MSR_HWP_PM_ENABLE    0x770      // HWP enable/disable
+#define MSR_HWP_CAPABILITIES 0x771
+#define MSR_HWP_REQUEST_PKG  0x772
+#define MSR_HWP_INTERRUPT    0x773
+#define MSR_HWP_REQUEST      0x774
+#define MSR_HWP_STATUS       0x775
 
 // AMD64 Model Specific Registers
 #define MSR_EFER        0xc0000080      // Extended Feature Enable Register

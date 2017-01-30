@@ -1010,6 +1010,9 @@ Cpu::identify()
       cpuid(5, &_monitor_mwait_eax, &_monitor_mwait_ebx,
                &_monitor_mwait_ecx, &_monitor_mwait_edx);
 
+    if (max >= 6 && _vendor == Vendor_intel)
+      try_enable_hw_performance_states();
+
     if (max >= 7 && _vendor == Vendor_intel)
       {
         Unsigned32 dummy1, dummy2, dummy3;
@@ -1595,6 +1598,45 @@ Cpu::print_errata()
         printf("\033[31m#Errata known %d, affected by at least one\033[m\n",
                osvw_id_length);
     }
+}
+
+/**
+ * Enable hardware controlled performance states (HWP) if available.
+ *
+ * HWP enables the processor to autonomously select performance states. The OS
+ * can hint the CPU at the desired optimizations. For example, a system running
+ * on battery may hint the CPU to optimize for low power consumption. We just
+ * enable HWP and configure it to select the performance target autonomously.
+ *
+ * See Intel Manual Volume 3 Chapter 14.4 for details.
+ */
+PRIVATE FIASCO_INIT_CPU
+void
+Cpu::try_enable_hw_performance_states()
+{
+  enum
+  {
+    HWP_SUPPORT = 1 << 7,
+    HIGHEST_PERFORMANCE_MASK = 0xf,
+    LOWEST_PERFORMANCE_MASK = 0xf << 24,
+  };
+
+  Unsigned32 dummy, eax;
+  cpuid(0x6, &eax, &dummy, &dummy, &dummy);
+
+  if (!(eax & HWP_SUPPORT))
+    return;
+
+  // enable
+  wrmsr(0x1ULL, MSR_HWP_PM_ENABLE);
+
+  // let the hardware decide on everything (autonomous operation mode)
+  Unsigned64 hwp_caps = rdmsr(MSR_HWP_CAPABILITIES);
+  wrmsr((hwp_caps & HIGHEST_PERFORMANCE_MASK)
+        | (hwp_caps & LOWEST_PERFORMANCE_MASK), MSR_HWP_REQUEST);
+
+  if (id() == Cpu_number::boot_cpu())
+    printf("HWP: enabled\n");
 }
 
 IMPLEMENT FIASCO_INIT_CPU
