@@ -141,7 +141,7 @@ CXXFLAGS_bootstrap-arm-$(BITS) := $(CXXFLAGS_bootstrap)
 clock_IMPL              := clock
 config_IMPL	  	:= config config-arm
 context_IMPL	  	:= context context-arm context-arm-$(BITS) \
-                           context-vcpu context-arm-hyp
+                           context-vcpu context-arm-hyp context-arm-hyp-$(BITS)
 continuation_IMPL	:= continuation-arm
 cpu_IMPL	  	:= cpu cpu-arm cpu-arm-hyp cpu-arm-$(BITS)
 cpu_lock_IMPL  	  	:= cpu_lock cpu_lock-generic
@@ -229,7 +229,7 @@ endif
 
 CXXSRC_KERNEL		:= kernel_panic.cc libc_backend_lock.cc
 ASSRC_KERNEL	  	:= $(if $(CONFIG_MP),tramp-mp.S)
-ASSRC_KERNEL            += $(if $(CONFIG_CPU_VIRT),hvt.S,ivt.S)
+ASSRC_KERNEL            += $(if $(CONFIG_BIT32),$(if $(CONFIG_CPU_VIRT),hvt.S,ivt.S),ivt.S)
 CPPFLAGS                += $(if $(CONFIG_MP),-DMPCORE_PHYS_BASE=$(MPCORE_PHYS_BASE))
 CPPFLAGS                += -DRAM_PHYS_BASE=$(RAM_PHYS_BASE)
 
