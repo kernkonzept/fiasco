@@ -141,3 +141,11 @@ Platform_control::cpu_on(unsigned long target, Address phys_tramp_mp_addr)
   Psci_result r = psci_call(Psci_cpu_on, target, phys_tramp_mp_addr);
   return r.res[0];
 }
+
+PUBLIC static
+void
+Platform_control::system_reset()
+{
+  psci_call(Psci_system_reset);
+  printf("PSCI reset failed.\n");
+}
