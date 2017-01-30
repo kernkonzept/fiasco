@@ -265,7 +265,7 @@ namespace Mips
   { __asm__ __volatile__ ("ehb"); }
 
   inline void synci(void const *addr)
-  { __asm__ __volatile__ ("synci %0" : : "m"(addr)); }
+  { __asm__ __volatile__ ("synci 0(%0)" : : "r"(addr) : "memory"); }
 
   inline void tlbr()
   { __asm__ __volatile__ ("tlbr"); }
