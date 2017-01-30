@@ -665,7 +665,7 @@ Thread::arm_esr_entry(Return_frame *rf)
   Arm_esr esr = Thread::get_esr();
   ts->error_code = esr.raw();
 
-  Unsigned32 tmp;
+  Mword tmp;
   Mword state = ct->state();
 
   switch (esr.ec())
