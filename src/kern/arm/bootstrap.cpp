@@ -45,7 +45,7 @@ Bootstrap::pt_entry(Phys_addr pa, bool cache, bool local)
   if (cache)
     res |= Phys_addr(8);
   else
-    res |= Phys_addr(1UL << 54); // assume XN for non-cachable memory
+    res |= Phys_addr(1ULL << 54); // assume XN for non-cachable memory
 
   res |= Phys_addr(1 << 10); // AF
   res |= Phys_addr(3 << 8);  // Inner sharable
