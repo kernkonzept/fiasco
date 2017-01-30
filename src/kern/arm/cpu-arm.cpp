@@ -373,7 +373,7 @@ Cpu::init_mmu()
   extern char ivt_start;
   // map the interrupt vector table to 0xffff0000
   auto pte = Mem_layout::kdir->walk(Virt_addr(Kmem_space::Ivt_base),
-                                    Pdir::Depth, true,
+                                    Kpdir::Depth, true,
                                     Kmem_alloc::q_allocator(Ram_quota::root));
 
   pte.set_page(pte.make_page(Phys_mem_addr((unsigned long)&ivt_start),
