@@ -109,6 +109,20 @@ public:
   static Static_object<Gic_h> gic;
 };
 
+template< unsigned LREGS >
+struct Arm_vgic_t
+{
+   enum { N_lregs = LREGS };
+   Gic_h::Hcr hcr;
+   Gic_h::Vtr vtr;
+   Gic_h::Vmcr vmcr;
+   Gic_h::Misr misr;
+   Unsigned32 eisr[2];
+   Unsigned32 elsr[2];
+   Unsigned32 apr;
+   Gic_h::Lr lr[LREGS];
+};
+
 //------------------------------------------------------------------------
 IMPLEMENTATION [arm && cpu_virt && vgic]:
 
