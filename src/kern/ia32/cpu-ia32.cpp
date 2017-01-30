@@ -233,7 +233,7 @@ class Gdt;
 class Tss;
 
 
-EXTENSION class Cpu 
+EXTENSION class Cpu
 {
 public:
   enum Lbr
@@ -803,7 +803,7 @@ Cpu::cache_tlb_intel()
 		}
 	    }
 	}
-    } 
+    }
   while (++count < *desc);
 }
 
@@ -1767,4 +1767,3 @@ PUBLIC static inline
 void
 Cpu::set_gs(Unsigned16 val)
 { asm volatile ("mov %0, %%gs" : : "rm" (val)); }
-
