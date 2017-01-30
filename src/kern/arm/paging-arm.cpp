@@ -280,7 +280,7 @@ public:
     Section_local      = (1 << 17),
     Section_global     = 0,
     Section_cachable   = 0x0402 | Section_shared | Section_cachable_bits,
-    Section_no_cache   = 0x0402 | Section_shared,
+    Section_no_cache   = 0x0402 | Section_shared | 0x10 /*XN*/,
   };
 };
 
