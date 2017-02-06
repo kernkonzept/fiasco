@@ -17,9 +17,11 @@ public:
     Hcr_tactlr = 1 << 21,
     Hcr_tge  = 1 << 27,
 
-    Hcr_must_set_bits = Hcr_vm | Hcr_swio
+    Hcr_must_set_bits = Hcr_vm | Hcr_swio | Hcr_ptw
                       | Hcr_amo | Hcr_imo | Hcr_fmo
-                      | Hcr_tidcp | Hcr_tsc | Hcr_tactlr
+                      | Hcr_tidcp | Hcr_tsc | Hcr_tactlr,
+
+    Hcr_host_bits = Hcr_must_set_bits | Hcr_dc | Hcr_tge
   };
 };
 

@@ -684,7 +684,7 @@ alien_syscall: @ Do it for an alien ---------------------------------------
         mov  \reg, \kvcpu
 .endm
 
-GEN_VCPU_UPCALL OFS__THREAD__USER_VCPU, LOAD_USR_SP, LOAD_USR_VCPU, 1
+GEN_VCPU_UPCALL OFS__THREAD__USER_VCPU, LOAD_USR_SP, LOAD_USR_VCPU
 
 missed_excpt_ret_label:      .string "ERROR in exception return"
 fiq_label:	             .string "FIQ entry"

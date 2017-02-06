@@ -12,23 +12,22 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
   assert (check_for_current_cpu());
 
   Vm_state *v = vm_state(vcpu_state);
-  v->hcr = 0;
+  v->hcr = Cpu::Hcr_host_bits;
   v->csselr = 0;
   v->sctlr = (Cpu::sctlr | Cpu::Cp15_c1_cache_bits) & ~(Cpu::Cp15_c1_mmu | (1 << 28));
   v->actlr = 0;
   v->cpacr = 0x5555555;
   v->fcseidr = 0;
   v->contextidr = 0;
+  v->cntkctl = (1UL << 8) | (1UL << 1); // allow PL0 access to CNTV
   v->vbar = 0;
   v->amair0 = 0;
   v->amair1 = 0;
 
-  v->guest_regs.hcr = Cpu::Hcr_tge;
+  v->guest_regs.hcr = Cpu::Hcr_tge | Cpu::Hcr_must_set_bits;
   v->guest_regs.sctlr = 0;
 
-  v->host_regs.hcr = 0;
-  v->host_regs.svc.lr = regs()->ulr;
-  v->host_regs.svc.sp = regs()->sp();
+  v->host_regs.hcr = Cpu::Hcr_host_bits;
   v->svc.lr = regs()->ulr;
   v->svc.sp = regs()->sp();
 
@@ -37,17 +36,10 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
 
   if (current() == this)
     {
-      asm volatile ("mcr p15, 4, %0, c1, c1, 0"
-                    : : "r"((1 << 2) | Cpu::Hcr_dc | Cpu::Hcr_must_set_bits));
+      asm volatile ("mcr p15, 4, %0, c1, c1, 0" : : "r"(Cpu::Hcr_host_bits));
       asm volatile ("mcr p15, 0, %0, c1, c0, 0" : : "r"(v->sctlr));
-      asm volatile ("msr SP_svc, %0" : : "r"(v->host_regs.svc.sp));
-      asm volatile ("msr LR_svc, %0" : : "r"(v->host_regs.svc.lr));
+      asm volatile ("mcr p15, 0, %0, c14, c1, 0" : : "r"(v->cntkctl));
     }
-
-  if (exception_triggered())
-    _exc_cont.flags(regs(), _exc_cont.flags(regs()) | Proc::PSR_m_svc);
-  else
-    regs()->psr |=  Proc::PSR_m_svc;
 }
 
 extern "C" void slowtrap_entry(Trap_state *ts);
