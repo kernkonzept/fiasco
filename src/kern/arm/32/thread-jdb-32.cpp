@@ -9,7 +9,7 @@ Thread::arm_enter_debugger(Trap_state *ts, Cpu_number log_cpu,
   register Cpu_number _lcpu asm("r1") = log_cpu;
 
   asm volatile(
-      "mov    %[origstack], sp	 \n"
+      "mov    %[origstack], sp         \n"
       "ldr    %[tmp], [%[ntr]]         \n"
       "teq    %[tmp], #0               \n"
       "moveq  sp, %[stack]             \n"
@@ -21,16 +21,16 @@ Thread::arm_enter_debugger(Trap_state *ts, Cpu_number log_cpu,
       "mov    pc, %[handler]           \n"
       "1:                              \n"
       "ldr    %[ntr], [sp], #4         \n"
-      "ldr	sp, [sp]                 \n"
+      "ldr    sp, [sp]                 \n"
       "ldr    %[tmp], [%[ntr]]         \n"
       "sub    %[tmp], %[tmp], #1       \n"
       "str    %[tmp], [%[ntr]]         \n"
       : [origstack] "=&r" (dummy1), [tmp] "=&r" (tmp),
-      "=r" (_ts), "=r" (_lcpu)
+        "=r" (_ts), "=r" (_lcpu)
       : [ntr] "r" (ntr), [stack] "r" (stack),
-      [handler] "r" (*nested_trap_handler),
-      "2" (_ts), "3" (_lcpu)
-         : "memory", "r2", "r3", "r9", "r12", "r14");
+        [handler] "r" (*nested_trap_handler),
+        "2" (_ts), "3" (_lcpu)
+      : "memory", "r2", "r3", "r9", "r12", "r14");
 
   return _ts;
 }
