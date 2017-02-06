@@ -29,6 +29,11 @@ namespace L4
   {
     _regs = regs;
 
+    // Only do the detection on x86 where we want to avoid
+    // to write to I/O ports unnecessarily.
+    // On other platforms there are UARTs where this check
+    // fails.
+#if defined(__x86_64__) || defined(__i686__) || defined(__i386__)
     char scratch, scratch2, scratch3;
 
     scratch = _regs->read<unsigned char>(IER);
@@ -46,6 +51,7 @@ namespace L4
 
     if (!(scratch2 == 0x00 && scratch3 == 0x0f))
       return false;  // this is not the uart
+#endif
 
     if (!(_init_flags & F_skip_init))
       {
