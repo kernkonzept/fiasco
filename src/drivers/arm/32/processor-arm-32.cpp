@@ -7,7 +7,7 @@ public:
   {
     Status_mode_user      = 0x10,
     Status_mode_always_on = 0x110,
-    Status_mode_vmm       = 0x13, // SVC
+    Status_mode_vmm       = 0x10,
   };
 };
 

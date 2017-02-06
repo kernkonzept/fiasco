@@ -72,7 +72,7 @@ Context::arch_load_vcpu_kern_state(Vcpu_state *vcpu, bool do_load)
     arm_ext_vcpu_load_host_regs(vcpu, v);
   else
     {
-      v->hcr   = Cpu::Hcr_must_set_bits | Cpu::Hcr_dc;
+      v->hcr   = Cpu::Hcr_host_bits;
       v->sctlr = v->host_regs.sctlr;
     }
 }

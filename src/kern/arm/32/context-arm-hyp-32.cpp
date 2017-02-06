@@ -25,8 +25,7 @@ public:
       Unsigned32 dacr;
       Unsigned32 fcseidr;
       Unsigned32 contextidr;
-
-      Per_mode_regs svc;
+      Unsigned32 cntkctl;
     };
 
     typedef Arm_vgic_t<4> Gic;
@@ -318,19 +317,15 @@ Context::arm_ext_vcpu_switch_to_host(Vcpu_state *vcpu, Vm_state *v)
                 : "=r"(v->guest_regs.fcseidr));
   asm volatile ("mrc p15, 0, %0, c13, c0, 1"
                 : "=r"(v->guest_regs.contextidr));
-
-  asm volatile ("mrs %0, SP_svc"   : "=r"(v->guest_regs.svc.sp));
-  asm volatile ("mrs %0, LR_svc"   : "=r"(v->guest_regs.svc.lr));
-  asm volatile ("mrs %0, SPSR_svc" : "=r"(v->guest_regs.svc.spsr));
+  asm volatile ("mrc p15, 0, %0, c14, c1, 0"
+                : "=r" (v->guest_regs.cntkctl));
 
   // fcse not supported in vmm
   asm volatile ("mcr p15, 0, %0, c13, c0, 0" : : "r"(0));
   asm volatile ("mcr p15, 0, %0, c13, c0, 1"
                 : : "r"(v->host_regs.contextidr));
-
-  asm volatile ("msr SP_svc, %0"   : : "r"(v->host_regs.svc.sp));
-  asm volatile ("msr LR_svc, %0"   : : "r"(v->host_regs.svc.lr));
-  asm volatile ("msr SPSR_svc, %0" : : "r"(v->host_regs.svc.spsr));
+  asm volatile ("mcr p15, 0, %0, c14, c1, 0"
+                : : "r"((1UL << 8) | (1UL << 1))); // cntkctl
 
   asm volatile ("mrc p15, 0, %0, c14, c3, 1" : "=r" (v->cntv_ctl));
   // disable VTIMER
@@ -345,11 +340,10 @@ Context::arm_ext_vcpu_switch_to_host_no_load(Vcpu_state *vcpu, Vm_state *v)
   v->guest_regs.sctlr      = v->sctlr;
   v->guest_regs.fcseidr    = v->fcseidr;
   v->guest_regs.contextidr = v->contextidr;
-  v->guest_regs.svc        = v->svc;
+  v->guest_regs.cntkctl    = v->cntkctl;
 
   v->fcseidr    = 0;
   v->contextidr = v->host_regs.contextidr;
-  v->svc        = v->host_regs.svc;
 }
 
 PRIVATE inline
@@ -357,7 +351,7 @@ void
 Context::arm_ext_vcpu_load_host_regs(Vcpu_state *vcpu, Vm_state *v)
 {
   asm volatile ("mcr p15, 0, %0, c13, c0, 3" : : "r"(vcpu->host.tpidruro));
-  asm volatile ("mcr p15, 4, %0, c1,  c1, 0" : : "r"(Cpu::Hcr_must_set_bits | Cpu::Hcr_dc));
+  asm volatile ("mcr p15, 4, %0, c1,  c1, 0" : : "r"(Cpu::Hcr_host_bits));
   asm volatile ("mcr p15, 0, %0, c1,  c0, 0" : : "r"(v->host_regs.sctlr));
 }
 
@@ -368,19 +362,12 @@ Context::arm_ext_vcpu_switch_to_guest(Vcpu_state *, Vm_state *v)
   asm volatile ("mrc p15, 0, %0, c13, c0, 1"
                 : "=r"(v->host_regs.contextidr));
 
-  asm volatile ("mrs %0, SP_svc"   : "=r"(v->host_regs.svc.sp));
-  asm volatile ("mrs %0, LR_svc"   : "=r"(v->host_regs.svc.lr));
-  asm volatile ("mrs %0, SPSR_svc" : "=r"(v->host_regs.svc.spsr));
-
   asm volatile ("mcr p15, 0, %0, c13, c0, 0"
                 : : "r"(v->guest_regs.fcseidr));
   asm volatile ("mcr p15, 0, %0, c13, c0, 1"
                 : : "r"(v->guest_regs.contextidr));
 
-  asm volatile ("msr SP_svc, %0"   : : "r"(v->guest_regs.svc.sp));
-  asm volatile ("msr LR_svc, %0"   : : "r"(v->guest_regs.svc.lr));
-  asm volatile ("msr SPSR_svc, %0" : : "r"(v->guest_regs.svc.spsr));
-
+  asm volatile ("mcr p15, 0, %0, c14, c1, 0" : : "r" (v->guest_regs.cntkctl));
   asm volatile ("mcr p15, 0, %0, c14, c3, 1" : : "r" (v->cntv_ctl));
 }
 
@@ -388,11 +375,9 @@ PRIVATE inline
 void
 Context::arm_ext_vcpu_switch_to_guest_no_load(Vcpu_state *, Vm_state *v)
 {
-  v->host_regs.svc = v->svc;
-
   v->fcseidr    = v->guest_regs.fcseidr;
   v->contextidr = v->guest_regs.contextidr;
-  v->svc        = v->guest_regs.svc;
+  v->cntkctl = v->guest_regs.cntkctl;
 }
 
 PRIVATE inline
