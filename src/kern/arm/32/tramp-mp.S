@@ -75,7 +75,7 @@ _tramp_mp_entry:
 	// IRQs off, SVC
         mov   r0, #0xd3
         orr   r0, #0x100
-        msr   spsr, r0
+        msr   spsr_cxsf, r0
         adr   r1, 2f
         .inst 0xe12ef300 | 1   @ msr elr_hyp, r1
         .inst 0xe160006e       @ eret
