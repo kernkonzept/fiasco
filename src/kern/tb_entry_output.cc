@@ -183,8 +183,13 @@ formatter_ipc(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidlen)
       if (to.snd.is_absolute())
 	{
 	  // absolute send timeout
-	  Unsigned64 end = 0; // FIXME: to.snd.microsecs_abs (e->kclock());
-	  format_timeout(buf, (Mword)(end > e->kclock() ? end-e->kclock() : 0));
+          if (0)
+            {
+              Unsigned64 end = 0; // FIXME: to.snd.microsecs_abs (e->kclock());
+              format_timeout(buf, (Mword)(end > e->kclock() ? end-e->kclock() : 0));
+            }
+          else
+            buf->printf("abs-N/A");
 	}
       else
 	{
@@ -205,8 +210,13 @@ formatter_ipc(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidlen)
       if (to.rcv.is_absolute())
 	{
 	  // absolute receive timeout
-	  Unsigned64 end = 0; // FIXME: to.rcv.microsecs_abs (e->kclock());
-	  format_timeout(buf, (Mword)(end > e->kclock() ? end-e->kclock() : 0));
+          if (0)
+            {
+              Unsigned64 end = 0; // FIXME: to.rcv.microsecs_abs (e->kclock());
+              format_timeout(buf, (Mword)(end > e->kclock() ? end-e->kclock() : 0));
+            }
+          else
+            buf->printf("abs-N/A");
 	}
       else
 	{
