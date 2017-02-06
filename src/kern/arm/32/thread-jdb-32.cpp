@@ -30,7 +30,7 @@ Thread::arm_enter_debugger(Trap_state *ts, Cpu_number log_cpu,
       : [ntr] "r" (ntr), [stack] "r" (stack),
       [handler] "r" (*nested_trap_handler),
       "2" (_ts), "3" (_lcpu)
-         : "memory", "r2", "r3", "r4");
+         : "memory", "r2", "r3", "r9", "r12", "r14");
 
   return _ts;
 }
