@@ -1,11 +1,11 @@
-IMPLEMENTATION [mp]:
+IMPLEMENTATION [pic_gic && mp]:
 
 #include "cpu.h"
 #include "pic.h"
 #include "gic.h"
 #include "processor.h"
 
-IMPLEMENTATION [mp && arm_em_tz]: // --------------------------------------
+IMPLEMENTATION [pic_gic && mp && arm_em_tz]: // ---------------------------
 
 EXTENSION class Ipi
 {
@@ -13,7 +13,7 @@ public:
   enum { Ipi_start = 8 };
 };
 
-IMPLEMENTATION [mp && !arm_em_tz]: // -------------------------------------
+IMPLEMENTATION [pic_gic && mp && !arm_em_tz]: // --------------------------
 
 EXTENSION class Ipi
 {
@@ -21,7 +21,7 @@ public:
   enum { Ipi_start = 1 };
 };
 
-IMPLEMENTATION [mp]: // ---------------------------------------------------
+IMPLEMENTATION [pic_gic && mp]: // ----------------------------------------
 
 EXTENSION class Ipi
 {
@@ -59,7 +59,7 @@ void Ipi::eoi(Message, Cpu_number on_cpu)
 }
 
 // ---------------------------------------------------------------------------
-IMPLEMENTATION [mp && !irregular_gic]:
+IMPLEMENTATION [pic_gic && mp && !irregular_gic]:
 
 PUBLIC static inline NEEDS["pic.h"]
 void Ipi::send(Message m, Cpu_number from_cpu, Cpu_number to_cpu)
@@ -82,4 +82,3 @@ Ipi::bcast(Message m, Cpu_number from_cpu)
   (void)from_cpu;
   Pic::gic->softint_bcast(m);
 }
-
