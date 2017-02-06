@@ -175,6 +175,7 @@ Thread::vcpu_vgic_upcall(unsigned virq)
   // Before entering kernel mode to have original fpu state before
   // enabling FPU
   save_fpu_state_to_utcb(ts, utcb().access());
+  spill_user_state();
 
   check (vcpu_enter_kernel_mode(vcpu));
   vcpu = vcpu_state().access();
