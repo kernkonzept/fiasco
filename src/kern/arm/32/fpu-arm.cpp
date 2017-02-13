@@ -20,8 +20,9 @@ public:
 
   enum
   {
-    FPEXC_EN  = 1 << 30,
-    FPEXC_EX  = 1 << 31,
+    FPEXC_FP2V = 1 << 28,
+    FPEXC_EN   = 1 << 30,
+    FPEXC_EX   = 1 << 31,
   };
 
   struct Fpsid
@@ -175,12 +176,26 @@ Fpu::fpinst()
 }
 
 PUBLIC static inline
+void
+Fpu::fpinst(Mword v)
+{
+  asm volatile("mrc p10, 7, %0, cr9,  cr0" : : "r" (v));
+}
+
+PUBLIC static inline
 Mword
 Fpu::fpinst2()
 {
   Mword i;
   asm volatile("mcr p10, 7, %0, cr10,  cr0" : "=r" (i));
   return i;
+}
+
+PUBLIC static inline
+void
+Fpu::fpinst2(Mword v)
+{
+  asm volatile("mrc p10, 7, %0, cr10,  cr0" : : "r" (v));
 }
 
 PUBLIC static inline NEEDS[Fpu::fpexc]
@@ -290,16 +305,16 @@ Fpu::save_state(Fpu_state *s)
                 "orr %[tmp], %[fpexc], #0x40000000   \n"
                 "mcr p10, 7, %[tmp], cr8,  cr0, 0    \n" // enable FPU to store full state
                 "mrc p10, 7, %[fpscr], cr1,  cr0, 0   \n"
-                "tst %[fpexc], #0x80000000           \n"
-                "mrcne p10, 7, %[tmp], cr9, cr0, 0   \n"
-                "strne %[tmp], %[fpinst]               \n"
-                "mrcne p10, 7, %[tmp], cr10, cr0, 0  \n"
-                "strne %[tmp], %[fpinst2]              \n"
                 : [tmp] "=&r" (tmp),
                   [fpexc] "=&r" (fpu_regs->fpexc),
-                  [fpscr] "=&r" (fpu_regs->fpscr),
-                  [fpinst] "=m" (fpu_regs->fpinst),
-                  [fpinst2] "=m" (fpu_regs->fpinst2));
+                  [fpscr] "=&r" (fpu_regs->fpscr));
+
+  if (fpu_regs->fpexc & FPEXC_EX)
+    {
+      fpu_regs->fpinst = fpinst();
+      if (fpu_regs->fpexc & FPEXC_FP2V)
+        fpu_regs->fpinst2 = fpinst2();
+    }
 
   save_fpu_regs(fpu_regs);
 }
@@ -349,7 +364,8 @@ Fpu::save_user_exception_state(bool owner, Fpu_state *s, Trap_state *ts, Excepti
       if (exc & FPEXC_EX)
         {
           esu->fpinst  = Fpu::fpinst();
-          esu->fpinst2 = Fpu::fpinst2();
+          if (exc & FPEXC_FP2V)
+            esu->fpinst2 = Fpu::fpinst2();
 
           if (!Proc::Is_hyp)
             Fpu::fpexc(exc & ~FPEXC_EX);
@@ -370,7 +386,8 @@ Fpu::save_user_exception_state(bool owner, Fpu_state *s, Trap_state *ts, Excepti
   if (fpu_regs->fpexc & FPEXC_EX)
     {
       esu->fpinst  = fpu_regs->fpinst;
-      esu->fpinst2 = fpu_regs->fpinst2;
+      if (fpu_regs->fpexc & FPEXC_FP2V)
+        esu->fpinst2 = fpu_regs->fpinst2;
 
       if (!Proc::Is_hyp)
         fpu_regs->fpexc &= ~FPEXC_EX;
@@ -512,16 +529,16 @@ Fpu::restore_state(Fpu_state *s)
   Mword dummy;
   asm volatile ("mcr p10, 7, %[fpexc], cr8,  cr0, 0   \n"
                 "mcr p10, 7, %[fpscr], cr1,  cr0, 0   \n"
-                "tst %[fpexc], #0x80000000            \n"
-                "ldrne %[tmp], %[fpinst]              \n"
-                "mcrne p10, 7, %[tmp], cr9,  cr0, 0   \n"
-                "ldrne %[tmp], %[fpinst2]             \n"
-                "mcrne p10, 7, %[tmp], cr10,  cr0, 0  \n"
                 : [tmp] "=&r" (dummy)
                 : [fpexc] "r" (fpu_regs->fpexc | FPEXC_EN),
-                  [fpscr] "r" (fpu_regs->fpscr),
-                  [fpinst] "m" (fpu_regs->fpinst),
-                  [fpinst2] "m" (fpu_regs->fpinst2));
+                  [fpscr] "r" (fpu_regs->fpscr));
+
+  if (fpu_regs->fpexc & FPEXC_EX)
+    {
+      fpinst(fpu_regs->fpinst);
+      if (fpu_regs->fpexc & FPEXC_FP2V)
+        fpinst2(fpu_regs->fpinst2);
+    }
 
   restore_fpu_regs(fpu_regs);
 
