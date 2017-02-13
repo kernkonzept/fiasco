@@ -1,5 +1,7 @@
 // --------------------------------------------------------------------------
-INTERFACE [arm && pf_bcm2835]:
+INTERFACE [arm && pf_bcm283x && pf_bcm283x_rpi1]:
+
+// HINT: This is drivers/clocksource/bcm2835_timer.c
 
 #include "mmio_register_block.h"
 
@@ -9,24 +11,56 @@ public:
   static unsigned irq() { return 3; }
 
 private:
-  enum {
-      CS  = 0,
-      CLO = 4,
-      CHI = 8,
-      C0  = 0xc,
-      C1  = 0x10,
-      C2  = 0x14,
-      C3  = 0x18,
+  enum
+  {
+    CS  = 0,
+    CLO = 4,
+    CHI = 8,
+    C0  = 0xc,
+    C1  = 0x10,
+    C2  = 0x14,
+    C3  = 0x18,
 
-      Timer_nr = 3,
-      Interval = 1000,
+    Timer_nr = 3,
+    Interval = 1000,
   };
 
   static Static_object<Timer> _timer;
 };
 
+// --------------------------------------------------------------------------
+INTERFACE [arm && pf_bcm283x && arm_generic_timer]:
+
+#include "per_cpu_data.h"
+
+EXTENSION class Timer
+{
+private:
+  static Per_cpu<Unsigned64> _initial_hi_val;
+};
+
+// --------------------------------------------------------------------------
+IMPLEMENTATION [arm && pf_bcm283x && arm_generic_timer]:
+
+IMPLEMENT inline
+void Timer::bsp_init(Cpu_number)
+{
+  // should probably read the hi val here?
+}
+
+PUBLIC static inline
+unsigned Timer::irq()
+{
+  switch (Gtimer::Type)
+    {
+    case Generic_timer::Physical: return 1; // use the non-secure IRQ
+    case Generic_timer::Virtual:  return 3;
+    case Generic_timer::Hyp:      return 2;
+    };
+}
+
 // ----------------------------------------------------------------------
-IMPLEMENTATION [arm && pf_bcm2835]:
+IMPLEMENTATION [arm && pf_bcm283x && pf_bcm283x_rpi1]:
 
 #include "config.h"
 #include "kip.h"

@@ -536,6 +536,22 @@ public:
   static void kern_kdebug_ipi_entry() asm("kern_kdebug_ipi_entry");
 };
 
+PUBLIC static inline
+void
+Thread::handle_debug_remote_requests_irq()
+{
+  Ipi::eoi(Ipi::Debug, current_cpu());
+  Thread::kern_kdebug_ipi_entry();
+}
+
+PUBLIC static inline
+void
+Thread::handle_timer_remote_requests_irq(Upstream_irq const *ui)
+{
+  ui->ack();
+  current_thread()->handle_timer_interrupt();
+}
+
 class Thread_remote_rq_irq : public Irq_base
 {
 public:
@@ -573,10 +589,7 @@ class Thread_debug_ipi : public Irq_base
 public:
   // we assume IPIs to be top level, no upstream IRQ chips
   void handle(Upstream_irq const *)
-  {
-    Ipi::eoi(Ipi::Debug, current_cpu());
-    Thread::kern_kdebug_ipi_entry();
-  }
+  { Thread::handle_debug_remote_requests_irq(); }
 
   Thread_debug_ipi()
   {
@@ -591,13 +604,7 @@ class Thread_timer_tick_ipi : public Irq_base
 {
 public:
   void handle(Upstream_irq const *ui)
-  {
-    //Timer_tick *self = nonull_static_cast<Timer_tick *>(_s);
-    //self->ack();
-    ui->ack();
-    //self->log_timer();
-    current_thread()->handle_timer_interrupt();
-  }
+  { Thread::handle_timer_remote_requests_irq(ui); }
 
   Thread_timer_tick_ipi()
   { set_hit(&handler_wrapper<Thread_timer_tick_ipi>); }
@@ -607,7 +614,7 @@ public:
 
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [mp && !irregular_gic]:
+IMPLEMENTATION [mp && !arm_single_ipi_irq && !irregular_gic]:
 
 class Arm_ipis
 {
