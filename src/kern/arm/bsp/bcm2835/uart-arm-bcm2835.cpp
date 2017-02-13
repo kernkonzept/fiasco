@@ -1,4 +1,4 @@
-IMPLEMENTATION [pf_bcm2835]:
+IMPLEMENTATION [pf_bcm283x && !pf_bcm283x_rpi3]:
 
 #include "uart_pl011.h"
 #include "mem_layout.h"

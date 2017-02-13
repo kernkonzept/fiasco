@@ -1,12 +1,12 @@
-INTERFACE [arm && pf_bcm2835]:
+INTERFACE [arm && pf_bcm283x]:
 
 #include "initcalls.h"
+#include "irq_chip_generic.h"
 
 // ---------------------------------------------------------------------
-IMPLEMENTATION [arm && pf_bcm2835]:
+IMPLEMENTATION [arm && pf_bcm283x]:
 
 #include "assert.h"
-#include "irq_chip_generic.h"
 #include "irq_mgr.h"
 #include "mmio_register_block.h"
 #include "kmem.h"
@@ -39,9 +39,9 @@ Irq_chip_bcm::Irq_chip_bcm()
 : Irq_chip_gen(96),
   Mmio_register_block(Kmem::mmio_remap(Mem_layout::Pic_phys_base))
 {
-  write<Mword>(~0UL, Disable_Basic_IRQs);
-  write<Mword>(~0UL, Disable_IRQs_1);
-  write<Mword>(~0UL, Disable_IRQs_2);
+  write<Unsigned32>(~0UL, Disable_Basic_IRQs);
+  write<Unsigned32>(~0UL, Disable_IRQs_1);
+  write<Unsigned32>(~0UL, Disable_IRQs_2);
 }
 
 PUBLIC
@@ -49,7 +49,7 @@ void
 Irq_chip_bcm::mask(Mword irq)
 {
   assert(cpu_lock.test());
-  write<Mword>(1 << (irq & 0x1f), Disable_IRQs_1 + ((irq & 0x60) >> 3));
+  write<Unsigned32>(1 << (irq & 0x1f), Disable_IRQs_1 + ((irq & 0x60) >> 3));
 }
 
 PUBLIC
@@ -65,35 +65,30 @@ void
 Irq_chip_bcm::unmask(Mword irq)
 {
   assert(cpu_lock.test());
-  write<Mword>(1 << (irq & 0x1f), Enable_IRQs_1 + ((irq & 0x60) >> 3));
+  write<Unsigned32>(1 << (irq & 0x1f), Enable_IRQs_1 + ((irq & 0x60) >> 3));
 }
 
 static Static_object<Irq_mgr_single_chip<Irq_chip_bcm> > mgr;
 
-PUBLIC static FIASCO_INIT
-void Pic::init()
-{
-  Irq_mgr::mgr = mgr.construct();
-}
 
 PUBLIC
 void
 Irq_chip_bcm::irq_handler()
 {
-  while (1)
+  for (;;)
     {
       unsigned b = 64;
-      Mword p = read<Mword>(Irq_basic_pending);
+      Unsigned32 p = read<Unsigned32>(Irq_basic_pending);
 
       if (p & 0x100)
         {
           b = 0;
-          p = read<Mword>(Irq_pending_1);
+          p = read<Unsigned32>(Irq_pending_1);
         }
       else if (p & 0x200)
         {
           b = 32;
-          p = read<Mword>(Irq_pending_2);
+          p = read<Unsigned32>(Irq_pending_2);
         }
       else if (p)
         {
@@ -115,12 +110,44 @@ Irq_chip_bcm::irq_handler()
     }
 }
 
-extern "C"
-void irq_handler()
-{ mgr->c.irq_handler(); }
+PUBLIC static
+void
+Pic::handle_irq()
+{
+  mgr->c.irq_handler();
+}
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pf_bcm2835 && arm_em_tz]:
+IMPLEMENTATION [arm && pf_bcm283x && pf_bcm283x_rpi1]:
+
+PUBLIC static FIASCO_INIT
+void Pic::init()
+{
+  Irq_mgr::mgr = mgr.construct();
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && (pf_bcm283x_rpi2 || pf_bcm283x_rpi3)]:
+
+#include "arm_control.h"
+
+PUBLIC static FIASCO_INIT
+void Pic::init()
+{
+  Irq_mgr::mgr = mgr.construct();
+  Arm_control::init();
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && pf_bcm283x && mp]:
+
+PUBLIC static
+void
+Pic::init_ap(Cpu_number, bool)
+{}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && pf_bcm283x && arm_em_tz]:
 
 #include <cstdio>
 
@@ -132,7 +159,7 @@ Pic::set_pending_irq(unsigned group32num, Unsigned32 val)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [debug && pf_bcm2835]:
+IMPLEMENTATION [debug && pf_bcm283x]:
 
 PUBLIC
 char const *
