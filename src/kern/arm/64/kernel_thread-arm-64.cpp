@@ -2,7 +2,6 @@ IMPLEMENTATION [arm && mp]:
 
 #include "io.h"
 #include "platform_control.h"
-#include "outer_cache.h"
 #include "paging.h"
 
 EXTENSION class Kernel_thread
@@ -41,4 +40,3 @@ Kernel_thread::boot_app_cpus()
 
   Platform_control::boot_ap_cpus(Kmem::kdir->virt_to_phys((Address)_tramp_mp_entry));
 }
-
