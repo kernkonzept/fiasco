@@ -117,16 +117,12 @@ IMPLEMENT inline
 void
 Context::sanitize_user_state(Return_frame *dst) const
 {
-  if (state() & Thread_ext_vcpu_enabled)
-    {
-      if ((dst->psr & Proc::Status_mode_mask) == Proc::PSR_m_hyp)
-        dst->psr = (dst->psr & ~Proc::Status_mode_mask) | Proc::PSR_m_usr;
-    }
-  else
-    {
-      dst->psr &= ~(Proc::Status_mode_mask | Proc::Status_interrupts_mask);
-      dst->psr |= Proc::Status_mode_user | Proc::Status_always_mask;
-    }
+  Unsigned32 const forbidden = (state() & Thread_ext_vcpu_enabled)
+                               ? ~0x888f0000U  // allow all but hyp mode
+                               : ~0x00010000U; // only usermode allowed (0x10)
+
+  if ((1UL << (dst->psr & Proc::Status_mode_mask)) & forbidden)
+    dst->psr = (dst->psr & ~Proc::Status_mode_mask) | Proc::PSR_m_usr;
 }
 
 IMPLEMENT_OVERRIDE inline NEEDS["mem.h", Context::sanitize_user_state]
