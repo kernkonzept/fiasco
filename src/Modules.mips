@@ -140,6 +140,7 @@ mem_unit_IMPL		:= mem_unit-mips
 mem_space_IMPL		:= mem_space mem_space-user mem_space-mips
 obj_space_IMPL		:= obj_space obj_space-phys
 paging_IMPL		:= paging paging-mips
+perf_cnt_IMPL		:= perf_cnt perf_cnt-mips
 platform_control_IMPL	+= platform_control-mips
 cm_IMPL			:= cm
 cpc_IMPL		:= cpc

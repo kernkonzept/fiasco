@@ -23,6 +23,7 @@ IMPLEMENTATION [mips]:
 #include "mem_unit.h"
 #include "per_cpu_data.h"
 #include "per_cpu_data_alloc.h"
+#include "perf_cnt.h"
 #include "platform_control.h"
 #include "mips_cpu_irqs.h"
 #include "mips_bsp_irqs.h"
@@ -84,5 +85,6 @@ Startup::stage2()
   Ipi::init(boot_cpu);
   //Thread_ipi::init(boot_cpu);
   Timer::init(boot_cpu);
+  Perf_cnt::init_ap();
 }
 
