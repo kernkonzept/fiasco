@@ -259,7 +259,7 @@ Perf_cnt::write_ctl(Ctl_reg const &v, unsigned num)
 }
 
 PRIVATE static inline
-Ctl_reg
+Perf_cnt::Ctl_reg
 Perf_cnt::read_ctl(unsigned num)
 {
   switch (num)
@@ -282,7 +282,7 @@ Perf_cnt::setup_pmc(Mword slot, Mword event, Mword user, Mword kern, Mword)
   if (slot >= 2)
     return 0; // P5600 requirement for 2 perf pairs
 
-  Ctl_reg v;
+  Ctl_reg v(0);
   v.exl()   = kern;
   v.k()     = kern;
   v.s()     = kern;
