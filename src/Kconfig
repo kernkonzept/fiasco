@@ -540,7 +540,7 @@ config EXPERIMENTAL
 	  Use with caution!
 
 config PERF_CNT
-	def_bool y if JDB && (IA32 || AMD64 || ARM || ARM64)
+	def_bool y if JDB && (IA32 || AMD64 || ARM || ARM64 || MIPS)
 
 config BIT32
 	bool
