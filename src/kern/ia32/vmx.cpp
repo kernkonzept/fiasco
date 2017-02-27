@@ -1037,6 +1037,9 @@ Vmx::init_vmcs_infos(void *vcpu_state) const
   i->pinbased = info.pinbased_ctls;
   i->procbased = info.procbased_ctls;
   i->exit = info.exit_ctls;
+  // relax the IRQ on exit for the VMM. Nevertheless,
+  // our API hides this feature completely from the VMM
+  i->exit.relax(Vmx_info::Ex_ack_irq_on_exit);
   i->entry = info.entry_ctls;
   i->misc = info.misc;
   i->cr0_or = info.cr0_defs.must_be_one();
