@@ -59,7 +59,7 @@ Cpu::init_hyp_mode()
 
         "mcr p15, 4, %1, c1, c1, 0 \n"
         : :
-        "r" (Page::Ttbcr_bits | (1 << 6)),
+        "r" ((1UL << 31) | (Page::Tcr_attribs << 8) | (1 << 6)),
         "r" (Hcr_tge | Hcr_dc | Hcr_must_set_bits)
         : "r0" );
 

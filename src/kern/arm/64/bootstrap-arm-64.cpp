@@ -148,22 +148,14 @@ Bootstrap::init_paging(void *)
   vl1[l1_idx(Mem_layout::Map_base)]
     = pt_entry(Phys_addr(Mem_layout::Sdram_phys_base), true, false);
 
-
-  unsigned long attribs =   (3UL << 4)  /* SH == IS */
-                          | (1UL << 2)  /* ORGN = normal outer write-back write-allocate */
-                          | (1UL << 0); /* IRGN = normal inner write-back write-allocate */
-
   asm volatile (
       "msr tcr_el1, %2   \n"
       "dsb sy            \n"
       "msr ttbr0_el1, %0 \n"
       "msr ttbr1_el1, %1 \n"
-      "isb \n"
+      "isb               \n"
       : :
-      "r"(l0),
-      "r"(vl0),
-      "r"(  (5UL << 32) | (2UL << 30) | (attribs << 24) | (16UL << 16)
-          |               (0UL << 14) | (attribs <<  8) | (16UL << 0)));
+      "r"(l0), "r"(vl0), "r"(Page::Ttbcr_bits));
 
 
 
@@ -325,18 +317,13 @@ Bootstrap::init_paging(void *)
         = Phys_addr((Unsigned64)kernel_l2_mmio_dir + Virt_ofs) | Phys_addr(3);
     }
 
-  unsigned long attribs =   (3UL << 4)  /* SH == IS */
-                          | (1UL << 2)  /* ORGN = normal outer write-back write-allocate */
-                          | (1UL << 0); /* IRGN = normal inner write-back write-allocate */
-
   asm volatile (
       "msr tcr_el2, %1   \n"
       "dsb sy            \n"
       "msr ttbr0_el2, %0 \n"
-      "isb \n"
+      "isb               \n"
       : :
-      "r"(l0),
-      "r"((5UL << 16) | (0UL << 14) | (attribs <<  8) | (16UL << 0)));
+      "r"(l0), "r"(Page::Ttbcr_bits));
 
   return Phys_addr(0);
 }

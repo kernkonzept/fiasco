@@ -124,8 +124,10 @@ Cpu::init_hyp_mode()
   extern char exception_vector[];
   asm volatile ("msr VBAR_EL2, %0" : : "r"(&exception_vector));
   asm volatile ("msr VTCR_EL2, %0" : :
-  //                                    sl = 1       PS = 40bit   t0sz = 40bit
-                "r"(Page::Ttbcr_bits | (1UL << 6) | (2UL << 16) | 25));
+                "r"(  (1UL << 31) // RES1
+                    | (Page::Tcr_attribs << 8)
+                    // sl = 1       PS = 40bit   t0sz = 40bit
+                    | (1UL << 6) | (2UL << 16) | 25));
 
   asm volatile (
         "msr MDCR_EL2, %0"
