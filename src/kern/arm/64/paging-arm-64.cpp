@@ -46,9 +46,37 @@ public:
 
 typedef Pdir_t<Pte_ptr, Ptab_traits_vpn, Ptab_va_vpn> Pdir;
 
+EXTENSION class Page
+{
+public:
+  enum
+  {
+    Ttbcr_bits =   (1UL << 31) | (1UL << 23) // RES1
+                 | (Tcr_attribs <<  8)
+                 | (16UL <<  0) // (T0SZ) Address space size 48bits (64 - 16)
+                 | (0UL  << 14) // (TG0)  Page granularity 4kb
+                 | (5UL  << 16) // (PS)   Physical adress size 48bits
+  };
+};
+
 //---------------------------------------------------------------------------
 INTERFACE [arm && !cpu_virt]:
 
 typedef K_pte_ptr Pte_ptr;
 typedef Pdir_t<Pte_ptr, K_ptab_traits_vpn, Ptab_va_vpn> Pdir;
+
+EXTENSION class Page
+{
+public:
+  enum
+  {
+    Ttbcr_bits =   (Tcr_attribs <<  8)
+                 | (Tcr_attribs << 24)
+                 | (16UL <<  0) // (T0SZ) Address space size 48bits (64 - 16)
+                 | (16UL << 16) // (T1SZ) Address space size 48bits (64 - 16)
+                 | (0UL  << 14) // (TG0)  Page granularity 4kb
+                 | (2UL  << 30) // (TG1)  Page granularity 4kb
+                 | (5UL  << 32) // (IPS)  Physical adress size 48bits
+  };
+};
 

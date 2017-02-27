@@ -691,10 +691,11 @@ EXTENSION class Page
 public:
   enum
   {
-    Ttbcr_bits =   (1 << 31) // EAE
-                 | (3 << 12) // SH0
-                 | (1 << 10) // ORGN0
-                 | (1 << 8), // IRGN0
+    /// Attributes for page-table walks
+    Tcr_attribs =  (3UL << 4)  // SH0
+                 | (1UL << 2)  // ORGN0
+                 | (1UL << 0), // IRGN0
+
     Mair0_prrr_bits = 0x00ff4400,
     Mair1_nmrr_bits = 0,
   };
