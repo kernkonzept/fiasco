@@ -55,7 +55,7 @@ Startup::stage2()
   Pic::init();
   Thread::init_per_cpu(boot_cpu, false);
 
-  Cpu::init_mmu();
+  Cpu::init_mmu(true);
   Cpu::cpus.cpu(boot_cpu).init(false, true);
   Platform_control::init(boot_cpu);
   Fpu::init(boot_cpu, false);
