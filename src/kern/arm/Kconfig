@@ -1,8 +1,7 @@
 # ARCH:           ARM arm
 # ARCHDESCR:      ARM processor family
 #
-# ARCHSELECT:     BIT32 if !ARM_V8
-# ARCHSELECT:     BIT64 if ARM_V8
+# ARCHSELECT:     BIT32 if !BIT64
 # ARCHSELECT:     HAS_FPU_OPTION
 # ARCHSELECT:     FPU if CPU_VIRT
 # ARCHSELECT:     ARM_LPAE if CPU_VIRT || BIT64
@@ -13,6 +12,9 @@
 # ARCHDEFAULTPF: PF_INTEGRATOR
 
 # SECTION: GLOBAL
+
+config HAS_64BIT
+	bool
 
 config CAN_ARM_CPU_SA1100
 	bool
@@ -81,6 +83,9 @@ config ARM_V6PLUS
 config ARM_V8
 	bool
 
+config BIT64
+	def_bool y if HAS_64BIT
+
 # SECTION: CPU
 
 choice
@@ -146,6 +151,7 @@ config ARM_CORTEX_A53
 	select ARM_V8
 	select HAS_MP_OPTION
 	select HAS_CPU_VIRT
+	select HAS_64BIT
 
 config ARM_CORTEX_A57
 	bool "ARM Cortex-A57 CPU"
@@ -153,6 +159,7 @@ config ARM_CORTEX_A57
 	select ARM_V8
 	select HAS_MP_OPTION
 	select HAS_CPU_VIRT
+	select HAS_64BIT
 
 config ARM_CORTEX_A72
 	bool "ARM Cortex-A72 CPU"
@@ -160,6 +167,7 @@ config ARM_CORTEX_A72
 	select ARM_V8
 	select HAS_MP_OPTION
 	select HAS_CPU_VIRT
+	select HAS_64BIT
 
 endchoice
 
@@ -223,6 +231,10 @@ config ARM_SECMONIF_MC
 	depends on HAVE_ARM_SECMONIF_MC
 
 endchoice
+
+config BIT64
+	bool "Run Fiasco in 64bit processor mode"
+	depends on HAS_64BIT
 
 config ARM_CACHE_L2CXX0
 	bool "Enable L2 Cache"

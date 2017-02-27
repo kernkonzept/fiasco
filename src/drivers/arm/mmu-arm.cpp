@@ -37,6 +37,19 @@ template < unsigned long Flush_area, bool Ram >
 void Mmu<Flush_area, Ram>::btc_inv()
 { asm volatile ("mcr p15, 0, %0, c7, c5, 0" : : "r" (0) : "memory"); }
 
+// -----------------------------------------------------------------------
+IMPLEMENTATION [arm && arm_v8]:
+
+IMPLEMENT static inline
+template < unsigned long Flush_area, bool Ram >
+void Mmu<Flush_area, Ram>::btc_flush()
+{}
+
+IMPLEMENT static inline
+template < unsigned long Flush_area, bool Ram >
+void Mmu<Flush_area, Ram>::btc_inv()
+{}
+
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && (arm_mpcore || arm_1136 || arm_1176 || arm_pxa
                         || arm_sa || arm_926 || arm_920t)]:

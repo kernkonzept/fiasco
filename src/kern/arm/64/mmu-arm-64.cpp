@@ -1,15 +1,5 @@
 IMPLEMENTATION [arm && arm_v8]:
 
-IMPLEMENT static inline
-template < unsigned long Flush_area, bool Ram >
-void Mmu<Flush_area, Ram>::btc_flush()
-{}
-
-IMPLEMENT static inline
-template < unsigned long Flush_area, bool Ram >
-void Mmu<Flush_area, Ram>::btc_inv()
-{}
-
 PUBLIC static inline
 template< unsigned long Flush_area, bool Ram >
 Mword Mmu<Flush_area, Ram>::dcache_line_size()
