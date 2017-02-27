@@ -124,6 +124,7 @@ vcpu_resume:
 .global kern_kdebug_ipi_entry
 kern_kdebug_ipi_entry:
 	brk 10
+	ret
 
 .align 3
 .global	sys_call_table
