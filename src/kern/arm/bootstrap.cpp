@@ -2,6 +2,16 @@ INTERFACE [arm]:
 
 #include "mem_layout.h"
 #include "paging.h"
+#include "boot_infos.h"
+
+struct Bootstrap_info
+{
+  void (*entry)();
+  void *kip;
+  Boot_paging_info pi;
+};
+
+extern Bootstrap_info bs_info;
 
 class Bootstrap
 {
@@ -91,6 +101,8 @@ IMPLEMENTATION [arm]:
 #include "cpu.h"
 #include "paging.h"
 
+Bootstrap_info FIASCO_BOOT_PAGING_INFO bs_info;
+
 static inline NEEDS[Bootstrap::map_page_order]
 Bootstrap::Phys_addr
 Bootstrap::map_page_size_phys()
@@ -125,49 +137,31 @@ void
 Bootstrap::do_arm_1176_cache_alias_workaround() {}
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !arm_lpae && !(arm_v7 || arm_v8 || arm_mpcore)]:
-
-PUBLIC static inline
-Bootstrap::Phys_addr
-Bootstrap::init_paging(void *const page_dir)
-{
-  return Phys_addr((Mword)page_dir);
-}
-
-//---------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
 #include "kmem_space.h"
 #include "mmu.h"
 #include "globalconfig.h"
 
-extern char bootstrap_bss_start[];
-extern char bootstrap_bss_end[];
-extern char __bss_start[];
-extern char __bss_end[];
-extern char kernel_page_directory[] __attribute__((weak));
+PUBLIC static inline ALWAYS_INLINE
+void *
+Bootstrap::kern_to_boot(void *a)
+{
+  return (void *)((Mword)a + Bootstrap::Virt_ofs);
+}
 
-extern "C" void _start_kernel(void);
 extern "C" void bootstrap_main()
 {
-  void *const page_dir = kernel_page_directory + Bootstrap::Virt_ofs;
-
-  Unsigned32 tbbr = cxx::int_value<Bootstrap::Phys_addr>(Bootstrap::init_paging(page_dir))
+  Unsigned32 tbbr = cxx::int_value<Bootstrap::Phys_addr>(Bootstrap::init_paging())
                     | Page::Ttbr_bits;
-
-  Bootstrap::create_initial_mappings(page_dir);
 
   Mmu<Bootstrap::Cache_flush_area, true>::flush_cache();
 
   Bootstrap::do_arm_1176_cache_alias_workaround();
   Bootstrap::enable_paging(tbbr);
 
-  Bootstrap::add_initial_pmem();
-
   // force to construct an absolute relocation because GCC may not do it.
-  void (*sk)(void) = _start_kernel;
-  asm volatile("" : "+r"(sk));
-  sk();
+  bs_info.entry();
 
   while(1)
     ;

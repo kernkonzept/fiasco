@@ -13,18 +13,28 @@ OBJ_BOOTSTRAP = $(filter  bootstrap%,$(OBJ_KERNEL))
 
 -include .kernel.arm.lds.d
 
-bootstrap.$(KERNEL).o: $(OBJ_BOOTSTRAP) $(LIBGCC)
+bootstrap_lds      = $(srcdir)/kern/arm/bootstrap.arm.ld
+
+bootstrap_ldflags  = $(LDFLAGS) -m $(LD_EMULATION) --strip-debug
+bootstrap_ldflags += -defsym kernel_load_addr=$(CONFIG_KERNEL_LOAD_ADDR)
+bootstrap_ldflags += -T$(bootstrap_lds)
+
+bootstrap_export   = _start start_of_loader end_of_bootstrap_info
+bootstrap_strip    = --strip-all $(addprefix --keep-symbol=,$(bootstrap_export))
+
+bootstrap.$(KERNEL).pre.o: $(OBJ_BOOTSTRAP) $(LIBGCC) $(bootstrap_lds)
 	$(LINK_MESSAGE)
-	$(VERBOSE)$(LD) $(LDFLAGS) -m $(LD_EMULATION) -r $(OBJ_BOOTSTRAP) $(LIBGCC) -o $@
+	$(VERBOSE)$(LD) $(bootstrap_ldflags) $(OBJ_BOOTSTRAP) $(LIBGCC) -o $@
+
+bootstrap.$(KERNEL).o: bootstrap.$(KERNEL).pre.o
+	$(LINK_MESSAGE)
+	$(VERBOSE)$(OBJCOPY) $(bootstrap_strip) $< $@
 
 $(KERNEL).image: kernel.arm.lds $(CRT0) bootstrap.$(KERNEL).o $(OBJ_KERNEL_noboot) $(JDB) $(LIBK) $(KERNEL_EXTRA_LIBS) $(LIBDISASM) $(ABI) libdrivers.a $(LIBUART) $(CXXLIB) $(MINILIBC) $(LIBGCC) $(MINILIBC) libgluedriverslibc.a
 	$(LINK_MESSAGE)
 	$(VERBOSE)$(LD) $(LDFLAGS) -m $(LD_EMULATION) $(KERNEL_LDFLAGS) -N -defsym kernel_load_addr=$(CONFIG_KERNEL_LOAD_ADDR) \
           -T $< -o $@ $(filter-out $<,$+)
 	$(call ADD_CONFIGFILE,$@)
-	$(VERBOSE)if [ -n "$$($(NM) -C bootstrap.$(KERNEL).o | grep "         U " | grep -vE 'Mem_layout::__ph_to_pm|_start_kernel|kernel_page_directory|kernel_l\w+_v?dir|my_kernel_info_page')" ]; then \
-	  echo "bootstrap.o contains unknown unresolved symbols."; exit 1; \
-	fi
 
 $(KERNEL): $(KERNEL).image
 	$(LINK_MESSAGE)

@@ -42,23 +42,17 @@ public:
   static Static_object<System_control> system_control;
 };
 
-class __Platform_init
-{
-};
-
-static __Platform_init __platform_init __attribute__((init_priority(101)));
 
 IMPLEMENTATION[arm && pf_realview]:
 
 #include "kmem.h"
+#include "static_init.h"
 
 
 Static_object<Platform::Sys> Platform::sys;
 // hmmm
 Static_object<Platform::System_control> Platform::system_control;
-
-PUBLIC
-__Platform_init::__Platform_init()
+static void platform_init()
 {
   if (Platform::sys->get_mmio_base())
     return;
@@ -66,3 +60,5 @@ __Platform_init::__Platform_init()
   Platform::sys.construct(Kmem::mmio_remap(Mem_layout::System_regs_phys_base));
   Platform::system_control.construct(Kmem::mmio_remap(Mem_layout::System_ctrl_phys_base));
 }
+
+STATIC_INITIALIZER_P(platform_init, ROOT_FACTORY_INIT_PRIO);

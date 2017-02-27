@@ -20,16 +20,19 @@ OUTPUT_FORMAT("elf32-littlearm", "elf32-bigarm",
 
 OUTPUT_ARCH(arm)
 #define WORD_SIZE 4
+#define MWORD LONG
+
 #elif defined CONFIG_BIT64
+
 OUTPUT_FORMAT("elf64-littleaarch64", "elf64-bigaarch64",
               "elf64-littleaarch64")
 
 OUTPUT_ARCH(aarch64)
 #define WORD_SIZE 8
+#define MWORD QUAD
 #else
 # error Either CONFIG_BIT32 or CONFIG_BIT64 must be set
 #endif
-
 
 ENTRY(_start)
 
@@ -45,38 +48,28 @@ PHDRS {
   l4_koptions 0x11;
 }
 
+EXTERN (_start_kernel)
+ASSERT (_start_kernel > 0, "invalid _start_kernel address")
+
 SECTIONS {
 
 
   /DISCARD/ : {			/* Exit code and data		*/
 		*(.exitcall.exit)
+                *(.bootstrap.dropped*)
 	      }
 	      
   . = kernel_load_addr + 0x1000;
 	      
   .text : {
-    bootstrap*(.init)
-    bootstrap*(.text .text.* .gnu.linkonce.t.*)
-    bootstrap*(.glue_7t) *(.glue_7)
-    bootstrap*(.got .got.*)
-    bootstrap*(.fini)
-    
-    bootstrap*(.rodata .rodata.* .gnu.linkonce.r.* .rodata1)
+    MWORD(_start_kernel)
+    MWORD(my_kernel_info_page)
+    KEEP(*(.bootstrap.info))
+    ASSERT (ABSOLUTE(.) == end_of_bootstrap_info, "invalid size of bootstrap.info");
 
-    . = ALIGN(0x40);
-    
-    bootstrap*(.data .data.* .gnu.linkonce.d.*)
-    bootstrap*(.anno)
-
-    bootstrap*(.data) 
-    bootstrap*(.gnu.linkonce.d*)
+    . = ABSOLUTE(start_of_loader);
+    *(.bootstrap.text)
   } :bstrap
-
-  PROVIDE(bootstrap_bss_start = .);
-  .bss_bootstrap : {
-    bootstrap*(.bss .bss.* COMMON .gnu.linkonce.b.*)
-  } :bstrap
-  PROVIDE(bootstrap_bss_end = .);
 
   . = ALIGN(4K);
   end_of_loader = .;

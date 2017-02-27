@@ -20,12 +20,6 @@ static inline void
 Bootstrap::set_mair0(Mword v)
 { asm volatile ("msr MAIR_EL1, %0" : : "r"(v)); }
 
-extern char kernel_l0_dir[];
-extern char kernel_l1_dir[];
-extern char kernel_l0_vdir[];
-extern char kernel_l1_vdir[];
-extern char kernel_l2_mmio_dir[];
-
 static inline void
 switch_from_el3_to_el1()
 {
@@ -118,27 +112,27 @@ constexpr unsigned l1_idx(Unsigned64 va)
 { return (va >> 30) & 0x1ff; }
 
 PUBLIC static Bootstrap::Phys_addr
-Bootstrap::init_paging(void *)
+Bootstrap::init_paging()
 {
   leave_hyp_mode();
 
-  Phys_addr *const l0 = reinterpret_cast<Phys_addr*>(kernel_l0_dir + Virt_ofs);
-  Phys_addr *const l1 = reinterpret_cast<Phys_addr*>(kernel_l1_dir + Virt_ofs);
+  Phys_addr *const l0 = reinterpret_cast<Phys_addr*>(kern_to_boot(bs_info.pi.l0_dir));
+  Phys_addr *const l1 = reinterpret_cast<Phys_addr*>(kern_to_boot(bs_info.pi.l1_dir));
 
   l0[l0_idx(Mem_layout::Sdram_phys_base)]
-    = Phys_addr((Unsigned64)kernel_l1_dir + Virt_ofs) | Phys_addr(3);
+    = Phys_addr((Unsigned64)kern_to_boot(bs_info.pi.l1_dir)) | Phys_addr(3);
 
-  Phys_addr *const vl0 = reinterpret_cast<Phys_addr*>(kernel_l0_vdir + Virt_ofs);
-  Phys_addr *const vl1 = reinterpret_cast<Phys_addr*>(kernel_l1_vdir + Virt_ofs);
+  Phys_addr *const vl0 = reinterpret_cast<Phys_addr*>(kern_to_boot(bs_info.pi.l0_vdir));
+  Phys_addr *const vl1 = reinterpret_cast<Phys_addr*>(kern_to_boot(bs_info.pi.l1_vdir));
 
   static_assert(l0_idx(Mem_layout::Map_base) == l0_idx(Mem_layout::Registers_map_start),
                 "Mem_layout::Map_base and Mem_layout::Registers_map_start must share the 516GB index");
 
   vl0[l0_idx(Mem_layout::Map_base)]
-    = Phys_addr((Unsigned64)kernel_l1_vdir + Virt_ofs) | Phys_addr(3);
+    = Phys_addr((Unsigned64)kern_to_boot(bs_info.pi.l1_vdir)) | Phys_addr(3);
 
   vl1[l1_idx(Mem_layout::Registers_map_start)]
-    = Phys_addr((Unsigned64)kernel_l2_mmio_dir + Virt_ofs) | Phys_addr(3);
+    = Phys_addr((Unsigned64)kern_to_boot(bs_info.pi.l2_mmio_dir)) | Phys_addr(3);
 
   set_mair0(Page::Mair0_prrr_bits);
 
@@ -169,10 +163,6 @@ static inline
 Bootstrap::Order
 Bootstrap::map_page_order()
 { return Order(30); }
-
-PUBLIC static inline void
-Bootstrap::create_initial_mappings(void *)
-{}
 
 PUBLIC static inline void
 Bootstrap::add_initial_pmem()
@@ -213,11 +203,6 @@ Bootstrap::enable_paging(Mword)
   Mem::isb();
   asm volatile ("ic iallu; dsb nsh; isb");
 }
-
-extern char kernel_l0_dir[];
-extern char kernel_l1_dir[];
-extern char kernel_l1_vdir[];
-extern char kernel_l2_mmio_dir[];
 
 static inline void
 Bootstrap::set_mair0(Mword v)
@@ -287,12 +272,12 @@ constexpr unsigned l1_idx(Unsigned64 va)
 { return (va >> 30) & 0x1ff; }
 
 PUBLIC static Bootstrap::Phys_addr
-Bootstrap::init_paging(void *)
+Bootstrap::init_paging()
 {
   leave_el3();
 
-  Phys_addr *const l0 = reinterpret_cast<Phys_addr*>(kernel_l0_dir + Virt_ofs);
-  Phys_addr *const l1 = reinterpret_cast<Phys_addr*>(kernel_l1_dir + Virt_ofs);
+  Phys_addr *const l0 = reinterpret_cast<Phys_addr*>(kern_to_boot(bs_info.pi.l0_dir));
+  Phys_addr *const l1 = reinterpret_cast<Phys_addr*>(kern_to_boot(bs_info.pi.l1_dir));
 
   l0[l0_idx(Mem_layout::Sdram_phys_base)]
     = Phys_addr((Unsigned64)kernel_l1_dir + Virt_ofs) | Phys_addr(3);
@@ -305,16 +290,16 @@ Bootstrap::init_paging(void *)
   if (l0_idx(Mem_layout::Registers_map_start) != l0_idx(Mem_layout::Sdram_phys_base))
     {
       l0[l0_idx(Mem_layout::Registers_map_start)] =
-        Phys_addr((Unsigned64)kernel_l1_vdir + Virt_ofs) | Phys_addr(3);
+        Phys_addr((Unsigned64)kern_to_boot(bs_info.pi.l1_vdir)) | Phys_addr(3);
 
-      Phys_addr *const l1 = reinterpret_cast<Phys_addr*>(kernel_l1_vdir + Virt_ofs);
+      Phys_addr *const l1 = reinterpret_cast<Phys_addr*>(kern_to_boot(bs_info.pi.l1_vdir));
       l1[l1_idx(Mem_layout::Registers_map_start)]
-        = Phys_addr((Unsigned64)kernel_l2_mmio_dir + Virt_ofs) | Phys_addr(3);
+        = Phys_addr((Unsigned64)kern_to_boot(bs_info.pi.l2_mmio_dir)) | Phys_addr(3);
     }
   else
     {
       l1[l1_idx(Mem_layout::Registers_map_start)]
-        = Phys_addr((Unsigned64)kernel_l2_mmio_dir + Virt_ofs) | Phys_addr(3);
+        = Phys_addr((Unsigned64)kern_to_boot(bs_info.pi.l2_mmio_dir)) | Phys_addr(3);
     }
 
   asm volatile (
