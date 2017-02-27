@@ -10,8 +10,10 @@ EXTENSION class Kernel_thread
   struct Mp_boot_info
   {
     Mword sctlr;
-    Mword pdbr;
-    Mword ttbcr;
+    Mword tcr;
+    Mword mair;
+    Mword ttbr_kern;
+    Mword ttbr_usr;
   };
 };
 
@@ -24,19 +26,18 @@ Kernel_thread::boot_app_cpus()
 
   extern char _tramp_mp_entry[];
   extern char _tramp_mp_boot_info[];
-  Mp_boot_info volatile *_tmp = reinterpret_cast<Mp_boot_info*>(_tramp_mp_boot_info);
+  Mp_boot_info volatile *_tmp;
+  _tmp = reinterpret_cast<Mp_boot_info*>(_tramp_mp_boot_info);
 
-  _tmp->sctlr = Cpu::Sctlr_generic;
-  _tmp->pdbr
-    = Kmem::kdir->virt_to_phys((Address)Kmem::kdir) | Page::Ttbr_bits;
-  _tmp->ttbcr   = Page::Ttbcr_bits;
+  _tmp->sctlr = Proc::sctlr();
+  _tmp->mair  = Page::Mair0_prrr_bits;
+  _tmp->ttbr_kern = Kmem::kdir->virt_to_phys((Address)Kmem::kdir);
+  if (!Proc::Is_hyp)
+    _tmp->ttbr_usr = cxx::int_value<Phys_mem_addr>(Kernel_task::kernel_task()->dir_phys());
 
-  __asm__ __volatile__ ("" : : : "memory");
+  _tmp->tcr   = Page::Ttbcr_bits;
+  asm volatile ("dsb sy" : : : "memory");
   Mem_unit::clean_dcache();
-
-  Outer_cache::clean(Kmem::kdir->virt_to_phys((Address)&_tmp->sctlr));
-  Outer_cache::clean(Kmem::kdir->virt_to_phys((Address)&_tmp->pdbr));
-  Outer_cache::clean(Kmem::kdir->virt_to_phys((Address)&_tmp->ttbcr));
 
   Platform_control::boot_ap_cpus(Kmem::kdir->virt_to_phys((Address)_tramp_mp_entry));
 }

@@ -66,13 +66,54 @@ finished:
 
 	.global _tramp_mp_entry
 _tramp_mp_entry:
-        bsp_early_init x0, x1
-        mrs   x17, CurrentEL
-        cmp   x17, #0x8 // hyp mode
+	bsp_early_init x0, x1
+	mrs	x17, CurrentEL
+	lsr	x17, x17, #2
+	cmp	x17, #3 // running at EL3
+	b.ne	.Lnot_el3
+	// switch from EL3 to EL2...
+	tlbi	alle2is
+	dsb	sy
+	mov	x18, #((1 << 0) | (1 << 7) | (1 << 10))
+	msr	scr_el3, x18
+	mrs	x20, sctlr_el3
+	bl	cache_invalidate_v8
+	and	x18, x20, #(1 << 25)
+	.equ	sctlr_val, (  (3 << 4) | (1 << 11) | (1 << 16) \
+		            | (1 << 18)| (3 << 22) | (3 << 28) \
+		            | (1 << 2) | (1 << 1)  | (1 << 12))
+	movz	x17, #:abs_g0_nc:sctlr_val
+	movk	x17, #:abs_g1:sctlr_val
+	orr	x18, x18, x17
+#ifdef CONFIG_CPU_VIRT
+	mov	x6, #(1<< 31) // RW: EL1 = 64bit
+	msr	HCR_EL2, x6
+	msr	sctlr_el2, x18
+	mov	x18, #((0xf << 6) | 9) // => EL2
+#else
+	mrs	x6, id_aa64pfr0_el1
+	ubfx	x6, x6, #8, #4
+	cmp	x6, #0
+	b.eq	1f
+	mov	x6, #((1 << 29) | (1<< 31)) // RW + HCD
+	msr	HCR_EL2, x6
+1:	msr	sctlr_el1, x18
+	mov	x18, #((0xf << 6) | 5) // => EL1
+#endif
+	msr	spsr_el3, x18
+	adr	x4, 1f
+	msr	elr_el3, x4
+	mov	x18, sp
+	eret
+1:	mov	sp, x18
+	b	2f
+.Lnot_el3:
+	cmp	x17, #2
 #ifndef CONFIG_CPU_VIRT
-        b.ne  2f
-
-	movz	x17, #((0xf << 6) | 0x5) // DAIF + EL1 / SPSEL
+	b.ne  2f
+	mov	x6, #((1 << 29) | (1<< 31)) // RW + HCD
+	msr	HCR_EL2, x6
+	movz	x17, #((0xf << 6) | 5) // DAIF + EL1 / SPSEL
 	msr	SPSR_EL2, x17
 	adr	x18, 2f
 	msr	ELR_EL2, x18
@@ -85,89 +126,68 @@ _tramp_mp_entry:
 	msr	DAIFSet, #0xf
 
 	// enable SMP
-#ifndef CONFIG_ARM_EM_NS
-	adr   x0, .Lmpcore_phys_base
-	ldr   x0, [x0]
-	ldr   x1, [x0]
-	orr   x1, x1, #1
-	str   x1, [x0]
-
-	DC	cvac, x0
-	dsb	sy
-
-#endif
-
-#ifdef CONFIG_ARM_V8
-	bl    cache_invalidate_v8
-#endif
+	mrs	x0, S3_1_C15_C2_1 // CPUECTRL_EL1
+	tbnz	w0, #6, 5f
+	orr	x0, x0, #(1 << 6)
+	msr	S3_1_C15_C2_1, x0 // CPUECTRL_EL1
+5:
+	bl	cache_invalidate_v8
 
 	ic	iallu
 	isb	sy
 	dsb	sy
-#if 0
-#ifdef CONFIG_ARM_V7
-	// ACTRL is implementation defined
-	mrc   p15, 0, r0, c0, c0, 0  // read MIDR
-	adr   r3, .Lactrl_cpuid      // load addr
-	ldm   r3, {r1, r2}           // load mask + val
-	and   r3, r0, r1             // apply mask
-	teq   r3, r2                 // check value
-	bne   2f                     // only do mcr on this CPU
-#endif
 
-	mrc   p15, 0, r1, c1, c0, 1
-#ifdef CONFIG_ARM_V7
-	tst   r1, #0x40
-	bne   2f
-	lsr   r0, r0, #8
-	and   r0, r0, #7
-	cmp   r0, #7
-	orrne r1, r1, #0x41
-	orreq r1, r1, #0x40
-#else
-	orr   r1, r1, #0x20
-#endif
-	mcr   p15, 0, r1, c1, c0, 1
-
-2:
-#endif
 #ifdef CONFIG_CPU_VIRT
-        // TLB flush
-        tlbi	alle2
-        tlbi	alle1
-
-        adr	x0, _tramp_mp_startup_pdbr
-        ldr	x0, [x0]
-	msr	TTBR0_EL2, x0
-	movz	x0, #(1 | 2 | 4 | 16 | 32 | 0x1000)
-	msr	SCTLR_EL2, x0
-
-#else
+	// TLB flush
+	tlbi	alle2
 	tlbi	alle1
 
-	// reset ASID and PROCID
-	mov	x0, #0
-	msr	CONTEXTIDR_EL1, x0
+	adr	x0, _tramp_mp_startup_tcr
+	ldr	x0, [x0]
+	msr	TCR_EL2, x0
 
-	// init TTBCR
-	adr	x0, _tramp_mp_startup_ttbcr
+	adr	x0, _tramp_mp_startup_mair
+	ldr	x0, [x0]
+	msr	MAIR_EL2, x0
+
+	adr	x0, _tramp_mp_startup_ttbr_kern
+	ldr	x0, [x0]
+	msr	TTBR0_EL2, x0
+	dsb	sy
+
+	adr	x0, _tramp_mp_startup_sctlr
+	ldr	x0, [x0]
+	msr	SCTLR_EL2, x0
+#else
+	tlbi	vmalle1
+
+	msr	CONTEXTIDR_EL1, xzr
+
+	adr	x0, _tramp_mp_startup_tcr
 	ldr	x1, [x0]
 	msr	TCR_EL1, x1
 
-	mov x0, #0
-	tlbi	alle1
-
-	adr	x0, _tramp_mp_startup_pdbr
+	adr	x0, _tramp_mp_startup_ttbr_usr
 	ldr	x0, [x0]
 	msr	TTBR0_EL1, x0
-#endif
+
+	adr	x0, _tramp_mp_startup_ttbr_kern
+	ldr	x0, [x0]
+	msr	TTBR1_EL1, x0
+
+	adr	x0, _tramp_mp_startup_mair
+	ldr	x0, [x0]
+	msr	MAIR_EL1, x0
+	dsb	sy
 
 	adr x0, _tramp_mp_startup_sctlr
 	ldr x0, [x0]
 	msr SCTLR_EL1, x0
+#endif
+	dsb	sy
+	ic	iallu
+	isb	sy
 
-	// barrier
-	isb sy
 	ldr x0, 1f
 	br x0
 1:
@@ -183,8 +203,10 @@ _tramp_mp_entry:
 .global _tramp_mp_boot_info
 _tramp_mp_boot_info:
 defvar _tramp_mp_startup_sctlr
-defvar _tramp_mp_startup_pdbr
-defvar _tramp_mp_startup_ttbcr
+defvar _tramp_mp_startup_tcr
+defvar _tramp_mp_startup_mair
+defvar _tramp_mp_startup_ttbr_kern
+defvar _tramp_mp_startup_ttbr_usr
 
 	// we run paged now
 _tramp_mp_virt:
@@ -201,13 +223,12 @@ _tramp_mp_virt:
 	stxr	w2, x1, [x0]
 	cbnz	w2, 1b
 
-	// TLB flush
-	tlbi	alle1
-
 	adr	x8, _tramp_mp_init_stack_top
 	mov	sp, x8
 	ldr	x9, 3f
 	br	x9
+
+.align 4
 3:
 	.8byte BOOT_AP_CPU
 
