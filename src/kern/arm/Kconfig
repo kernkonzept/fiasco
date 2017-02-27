@@ -80,6 +80,9 @@ config ARM_V7
 config ARM_V6PLUS
 	def_bool y if ARM_V6 || ARM_V7 || ARM_V8
 
+config ARM_V7PLUS
+	def_bool y if ARM_V7 || ARM_V8
+
 config ARM_V8
 	bool
 
