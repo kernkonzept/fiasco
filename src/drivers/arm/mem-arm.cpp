@@ -50,13 +50,13 @@ PUBLIC static inline void Mem::dsb()
 IMPLEMENTATION [arm_v7 || arm_v8]:
 
 PUBLIC static inline void Mem::dmb()
-{ __asm__ __volatile__ ("dmb sy" : : : "memory"); }
+{ __asm__ __volatile__ ("dmb ish" : : : "memory"); }
 
 PUBLIC static inline void Mem::isb()
 { __asm__ __volatile__ ("isb sy" : : : "memory"); }
 
 PUBLIC static inline void Mem::dsb()
-{ __asm__ __volatile__ ("dsb sy" : : : "memory"); }
+{ __asm__ __volatile__ ("dsb ish" : : : "memory"); }
 
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && mp]:
