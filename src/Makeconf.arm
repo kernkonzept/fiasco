@@ -17,10 +17,10 @@ SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A7) += $(call CHECKCC,-mcpu=cortex-a7,-mcpu=cor
 SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A8) += $(call CHECKCC,-mcpu=cortex-a8)
 SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A9) += $(call CHECKCC,-mcpu=cortex-a9)
 SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A15) += $(call CHECKCC,-mcpu=cortex-a15,-mcpu=cortex-a9)
-SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A53) += $(call CHECKCC,-mcpu=cortex-a53)
-SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A57) += $(call CHECKCC,-mcpu=cortex-a57)
-SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A72) += $(call CHECKCC,-mcpu=cortex-a72)
-SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A73) += $(call CHECKCC,-mcpu=cortex-a73)
+SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A53) += $(call CHECKCC,-mcpu=cortex-a53,-march=armv8-a)
+SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A57) += $(call CHECKCC,-mcpu=cortex-a57,-march=armv8-a)
+SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A72) += $(call CHECKCC,-mcpu=cortex-a72,-march=armv8-a)
+SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A73) += $(call CHECKCC,-mcpu=cortex-a73,-march=armv8-a)
 SHARED_FLAGS-$(CONFIG_BIT32)      += -msoft-float
 SHARED_FLAGS-$(CONFIG_BIT32)      += $(call CHECKCC,-mno-thumb-interwork)
 SHARED_FLAGS-$(CONFIG_BIT32)      += -marm -mabi=aapcs
