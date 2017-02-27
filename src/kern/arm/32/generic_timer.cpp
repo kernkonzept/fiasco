@@ -8,7 +8,7 @@ namespace Generic_timer {
 
   template<> struct T<Virtual>
   {
-    enum { Type = Virtual };
+    enum { Type = Virtual, R1 = Physical, R2 = Hyp  };
     /* In non-HYP mode we use always the virtual counter and the
      * virtual timer
      */
@@ -42,7 +42,7 @@ namespace Generic_timer {
 
   template<> struct T<Physical>
   {
-    enum { Type = Physical };
+    enum { Type = Physical, R1 = Hyp, R2 = Virtual  };
     /* In non-HYP mode we use always the virtual counter and the
      * virtual timer
      */
@@ -76,7 +76,7 @@ namespace Generic_timer {
 
   template<> struct T<Hyp>
   {
-    enum { Type = Hyp };
+    enum { Type = Hyp, R1 = Physical, R2 = Virtual };
     /* In HYP mode we use the physical counter and the
      * HYP mode timer
      */
