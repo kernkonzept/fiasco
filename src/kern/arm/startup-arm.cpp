@@ -23,6 +23,23 @@ IMPLEMENTATION [arm]:
 #include <cstdlib>
 #include <cstdio>
 
+//------------------------------------------------------------------
+IMPLEMENTATION [arm && 32bit && !cpu_virt]:
+
+#include "static_init.h"
+
+static void add_initial_pmem()
+{
+    // The first 4MB of phys memory are always mapped to Map_base
+  Mem_layout::add_pmem(Mem_layout::Sdram_phys_base, Mem_layout::Map_base,
+                       4 << 20);
+}
+
+STATIC_INITIALIZER_P(add_initial_pmem, 101);
+
+//------------------------------------------------------------------
+IMPLEMENTATION [arm]:
+
 IMPLEMENT FIASCO_INIT FIASCO_NOINLINE
 void
 Startup::stage1()

@@ -76,17 +76,29 @@ Bootstrap::map_page_order() { return Order(21); }
 
 PUBLIC static inline NEEDS[Bootstrap::set_mair0]
 Bootstrap::Phys_addr
-Bootstrap::init_paging(void *const page_dir)
+Bootstrap::init_paging()
 {
-  extern char kernel_lpae_dir[];
-  Phys_addr *const lpae = reinterpret_cast<Phys_addr*>(kernel_lpae_dir + Virt_ofs);
+  void *page_dir = kern_to_boot(bs_info.pi.kernel_page_directory);
+  Phys_addr *const lpae = reinterpret_cast<Phys_addr*>(kern_to_boot(bs_info.pi.kernel_lpae_dir));
 
   for (unsigned i = 0; i < 4; ++i)
     lpae[i] = Phys_addr(((Address)page_dir + 0x1000 * i) | 3);;
 
   set_mair0(Page::Mair0_prrr_bits);
+  create_initial_mappings();
 
   return Phys_addr((Mword)lpae);
+}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && !arm_lpae && !(arm_v7 || arm_v8 || arm_mpcore)]:
+
+PUBLIC static inline
+Bootstrap::Phys_addr
+Bootstrap::init_paging()
+{
+  create_initial_mappings();
+  return Phys_addr((Mword)kern_to_boot(bs_info.pi.kernel_page_directory));
 }
 
 //---------------------------------------------------------------------------
@@ -143,11 +155,13 @@ IMPLEMENTATION [arm && !arm_lpae && (arm_v7 || arm_v8 || arm_mpcore)]:
 
 PUBLIC static inline NEEDS["paging.h"]
 Bootstrap::Phys_addr
-Bootstrap::init_paging(void *const page_dir)
+Bootstrap::init_paging()
 {
   asm volatile ("mcr p15, 0, %0, c10, c2, 0" : : "r"(Page::Mair0_prrr_bits));
   asm volatile ("mcr p15, 0, %0, c10, c2, 1" : : "r"(Page::Mair1_nmrr_bits));
-  return Phys_addr((Mword)page_dir);
+  create_initial_mappings();
+
+  return Phys_addr((Mword)kern_to_boot(bs_info.pi.kernel_page_directory));
 }
 
 //---------------------------------------------------------------------------
@@ -178,10 +192,12 @@ Bootstrap::leave_hyp_mode()
 
 PUBLIC static inline NEEDS["mem_layout.h"]
 void
-Bootstrap::create_initial_mappings(void *const page_dir)
+Bootstrap::create_initial_mappings()
 {
   typedef Bootstrap::Phys_addr Phys_addr;
   typedef Bootstrap::Virt_addr Virt_addr;
+
+  void *page_dir = kern_to_boot(bs_info.pi.kernel_page_directory);
 
   leave_hyp_mode();
 
@@ -201,29 +217,21 @@ Bootstrap::create_initial_mappings(void *const page_dir)
     Bootstrap::map_memory(page_dir, va, Phys_addr(cxx::int_value<Virt_addr>(va)), true, true);
 }
 
-PUBLIC static inline void
-Bootstrap::add_initial_pmem()
-{
-  // The first 4MB of phys memory are always mapped to Map_base
-  Mem_layout::add_pmem(Mem_layout::Sdram_phys_base, Mem_layout::Map_base,
-                       4 << 20);
-}
-
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && cpu_virt]:
 
-#include "feature.h"
 #include "kip.h"
 
 PUBLIC static inline NEEDS["kip.h"]
 void
-Bootstrap::create_initial_mappings(void *const page_dir)
+Bootstrap::create_initial_mappings()
 {
-  extern char my_kernel_info_page[];
   typedef Bootstrap::Phys_addr Phys_addr;
   typedef Bootstrap::Virt_addr Virt_addr;
 
-  Kip *kip = reinterpret_cast<Kip*>(my_kernel_info_page);
+  void *page_dir = kern_to_boot(bs_info.pi.kernel_page_directory);
+
+  Kip *kip = reinterpret_cast<Kip*>(kern_to_boot(bs_info.kip));
   for (auto const &md: kip->mem_descs_a())
     {
       if (!md.valid())
@@ -256,12 +264,6 @@ Bootstrap::create_initial_mappings(void *const page_dir)
 	}
     }
 }
-
-KIP_KERNEL_FEATURE("arm:hyp");
-
-PUBLIC static inline void
-Bootstrap::add_initial_pmem()
-{}
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm]:

@@ -132,7 +132,7 @@ INTERFACES_KERNEL-$(CONFIG_BIT32) += kern_lib_page
 INTERFACES_KERNEL-$(CONFIG_SERIAL) += uart_console
 INTERFACES_KERNEL-$(CONFIG_ARM_EM_TZ) += vm
 INTERFACES_KERNEL-$(CONFIG_CPU_VIRT) += vgic
-
+INTERFACES_KERNEL += boot_infos
 
 
 bootstrap_IMPL		:= bootstrap bootstrap-arm-$(BITS)

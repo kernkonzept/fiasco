@@ -1,5 +1,7 @@
 IMPLEMENTATION [arm && cpu_virt]:
 
+#include "feature.h"
+
 EXTENSION class Cpu
 {
 public:
@@ -18,6 +20,8 @@ public:
     Hcr_tge  = 1 << 27,
   };
 };
+
+KIP_KERNEL_FEATURE("arm:hyp");
 
 //--------------------------------------------------------------------
 IMPLEMENTATION [arm && cpu_virt && 32bit]:
