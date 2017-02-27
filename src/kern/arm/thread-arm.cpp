@@ -6,6 +6,8 @@ EXTENSION class Thread
 {
 public:
   static void init_per_cpu(Cpu_number cpu, bool resume);
+  bool check_and_handle_coproc_faults(Trap_state *);
+
 private:
   bool _in_exception;
 };
@@ -627,9 +629,9 @@ public:
 static Arm_ipis _arm_ipis;
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && (arm_v8 || !fpu)]:
+IMPLEMENTATION [arm]:
 
-PUBLIC inline
+IMPLEMENT_DEFAULT inline
 bool
 Thread::check_and_handle_coproc_faults(Trap_state *)
 {

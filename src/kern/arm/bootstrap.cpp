@@ -1,6 +1,7 @@
 INTERFACE [arm]:
 
 #include "mem_layout.h"
+#include "paging.h"
 
 class Bootstrap
 {
@@ -117,26 +118,6 @@ static inline void Bootstrap::set_asid() {}
 static inline void Bootstrap::set_ttbcr() {}
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && (arm_v6 || arm_v7)]:
-
-#include "kmem_space.h"
-
-static inline void
-Bootstrap::set_asid()
-{
-  asm volatile ("mcr p15, 0, %0, c13, c0, 1" : : "r" (0)); // ASID 0
-}
-
-static inline NEEDS["kmem_space.h"]
-void
-Bootstrap::set_ttbcr()
-{
-  asm volatile("mcr p15, 0, %[ttbcr], c2, c0, 2" // TTBCR
-               : : [ttbcr] "r" (Page::Ttbcr_bits));
-}
-
-
-//---------------------------------------------------------------------------
 IMPLEMENTATION [arm && !arm_1176_cache_alias_fix]:
 
 PUBLIC static inline
@@ -144,7 +125,7 @@ void
 Bootstrap::do_arm_1176_cache_alias_workaround() {}
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !arm_lpae && !(arm_v7 || arm_mpcore)]:
+IMPLEMENTATION [arm && !arm_lpae && !(arm_v7 || arm_v8 || arm_mpcore)]:
 
 PUBLIC static inline
 Bootstrap::Phys_addr

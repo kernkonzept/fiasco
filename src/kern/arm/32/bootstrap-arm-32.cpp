@@ -1,3 +1,22 @@
+IMPLEMENTATION [arm && arm_v6plus]:
+
+#include "kmem_space.h"
+
+static inline void
+Bootstrap::set_asid()
+{
+  asm volatile ("mcr p15, 0, %0, c13, c0, 1" : : "r" (0)); // ASID 0
+}
+
+static inline NEEDS["kmem_space.h"]
+void
+Bootstrap::set_ttbcr()
+{
+  asm volatile("mcr p15, 0, %[ttbcr], c2, c0, 2" // TTBCR
+               : : [ttbcr] "r" (Page::Ttbcr_bits));
+}
+
+//---------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_lpae && !cpu_virt]:
 
 #include "cpu.h"
@@ -118,7 +137,7 @@ Bootstrap::do_arm_1176_cache_alias_workaround()
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !arm_lpae && (arm_v7 || arm_mpcore)]:
+IMPLEMENTATION [arm && !arm_lpae && (arm_v7 || arm_v8 || arm_mpcore)]:
 
 #include "paging.h"
 

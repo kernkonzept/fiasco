@@ -174,7 +174,7 @@ Thread::condition_valid(unsigned char cond, Unsigned32 psr)
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && 32bit && fpu]:
+IMPLEMENTATION [arm && 32bit && fpu && !arm_v8]:
 
 PUBLIC static inline
 bool
@@ -197,7 +197,7 @@ Thread::check_for_kernel_mem_access_pf(Trap_state *ts, Thread *t)
   return false;
 }
 
-PUBLIC inline
+IMPLEMENT_OVERRIDE inline
 bool
 Thread::check_and_handle_coproc_faults(Trap_state *ts)
 {
