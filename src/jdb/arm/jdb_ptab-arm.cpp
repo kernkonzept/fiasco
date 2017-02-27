@@ -79,7 +79,7 @@ void
 Jdb_ptab::print_entry(Pte_ptr const &entry)
 {
   if (dump_raw)
-    printf("%08lx", *entry.pte);
+    printf("%08x", *entry.pte);
   else
     {
       if (!entry.is_valid())
