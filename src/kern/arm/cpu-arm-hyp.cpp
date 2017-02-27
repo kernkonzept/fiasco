@@ -35,7 +35,7 @@ public:
   };
 };
 
-IMPLEMENT_OVERRIDE inline void Cpu::init_mmu() {}
+IMPLEMENT_OVERRIDE inline void Cpu::init_mmu(bool) {}
 
 IMPLEMENT_OVERRIDE
 void

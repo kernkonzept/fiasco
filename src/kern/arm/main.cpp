@@ -143,6 +143,7 @@ int boot_ap_cpu()
     Per_cpu_data::run_ctors(_cpu);
 
   Cpu &cpu = Cpu::cpus.cpu(_cpu);
+  cpu.init_mmu(false);
   cpu.init(!cpu_is_new, false);
 
   Pic::init_ap(_cpu, !cpu_is_new);

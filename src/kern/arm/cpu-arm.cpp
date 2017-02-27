@@ -12,7 +12,7 @@ class Cpu
 {
 public:
   void init(bool resume, bool is_boot_cpu);
-  static void init_mmu();
+  static void init_mmu(bool is_boot_cpu);
 
   static void early_init();
 
@@ -368,8 +368,11 @@ Cpu::rdtsc (void)
 
 IMPLEMENT_DEFAULT
 void
-Cpu::init_mmu()
+Cpu::init_mmu(bool is_boot_cpu)
 {
+  if (!is_boot_cpu)
+    return;
+
   extern char ivt_start;
   // map the interrupt vector table to 0xffff0000
   auto pte = Mem_layout::kdir->walk(Virt_addr(Kmem_space::Ivt_base),
