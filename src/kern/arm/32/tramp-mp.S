@@ -1,5 +1,6 @@
 #include "globalconfig.h"
 #include "tcboffset.h"
+#include "asm_arm.h"
 
 #include TRAMP_MP_ASM_INCLUDE
 
@@ -99,8 +100,7 @@ _tramp_mp_entry:
 #endif
 
 	mcr	p15, 0, r0, c7, c11, 1 /* Clean the data cache by MVA*/
-        mcr     p15, 0, r0, c7, c10, 4 /* DSB */
-// ARMv7: dsb
+	dsb	sy
 
 #endif
 
@@ -110,9 +110,8 @@ _tramp_mp_entry:
 
 	mcr   p15, 0, r0, c7, c5, 0 // ICIALLU
 	mcr   p15, 0, r0, c7, c5, 6 // BPIALL
-        mcr   p15, 0, r0, c7, c5, 4 // ISB
-// ARMv7:        isb
-	mcr   p15, 0, r0, c7, c10, 4 // dsb
+	isb   sy
+	dsb   sy
 #ifdef CONFIG_ARM_V6
 	mcr   p15, 0, r0, c7, c7, 0  // inv both
 #endif

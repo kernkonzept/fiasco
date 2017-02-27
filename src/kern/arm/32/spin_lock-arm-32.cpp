@@ -46,9 +46,9 @@ Spin_lock<Lock_t>::unlock_arch()
       "ldr"#z " %[tmp], %[lock]             \n" \
       "bic %[tmp], %[tmp], #2          \n" /* Arch_lock == #2 */ \
       "str"#z " %[tmp], %[lock]             \n" \
-      "mcr p15, 0, %[tmp], c7, c10, 4  \n" /* drain write buffer */ \
-      "sev                             \n" \
-      : [lock] "=m" (_lock), [tmp] "=&r" (tmp))
+      : [lock] "=m" (_lock), [tmp] "=&r" (tmp)); \
+  Mem::dsb(); \
+  __asm__ __volatile__("sev")
   extern char __use_of_invalid_type_for_Spin_lock__sizeof_is_invalid;
   switch (sizeof(Lock_t))
     {
