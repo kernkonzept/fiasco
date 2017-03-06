@@ -45,6 +45,92 @@ EXTENSION class Bootstrap
   };
 };
 
+IMPLEMENTATION [arm]:
+
+PRIVATE static inline void
+Bootstrap::map_ram_range(Kpdir *kd, Bs_alloc &alloc,
+                         unsigned long pstart, unsigned long pend,
+                         long va_offset)
+{
+  typedef Ptab::Level<K_ptab_traits> L;
+  enum
+  {
+    Min_level = L::lower_bound_level(30), // 1GB largest page size
+    Max_level = L::Max_level - 1          // last level is second to last
+  };
+
+  static_assert(L::Max_level > 0, "one-level page tables are not supported");
+  static_assert(Min_level <= Max_level, "inconsistent page-table definition");
+
+  enum : unsigned long
+  {
+    Min_align = ~0UL << L::shift(Max_level)
+  };
+
+  unsigned long block_bits
+    = cxx::int_value<Phys_addr>(pt_entry(Phys_addr(0), true, false));
+
+  while (pstart <= pend)
+    {
+      unsigned long s = pstart & Min_align;
+      unsigned long e = (pend + ~Min_align + 1) & Min_align;
+      for (unsigned l = Min_level; l <= Max_level; ++l)
+        {
+          unsigned long const pg_mask = ~(~0UL << L::shift(l));
+          unsigned long const pg_sz   = 1UL << L::shift(l);
+          if (s & pg_mask)
+            continue;
+
+          if (s + pg_sz > e)
+            continue;
+
+          if (s == e)
+            return;
+
+          auto p = kd->walk(::Virt_addr(s - va_offset), l, false, alloc, Bs_mem_map());
+
+          if (L::shift(l) != p.page_order())
+            asm volatile ("brk #0xff");
+
+          p.set_page(block_bits | s);
+          pstart = s + pg_sz;
+          break;
+        }
+    }
+}
+
+PRIVATE static inline void
+Bootstrap::map_ram(Kpdir *kd, Bs_alloc &alloc)
+{
+  Kip *kip = reinterpret_cast<Kip*>(kern_to_boot(bs_info.kip));
+  for (auto const &md: kip->mem_descs_a())
+    {
+      if (!md.valid())
+        {
+          const_cast<Mem_desc&>(md).type(Mem_desc::Undefined);
+          continue;
+        }
+
+      if (md.is_virtual())
+        continue;
+
+      unsigned long s = md.start();
+      unsigned long e = md.end();
+
+      switch (md.type())
+        {
+        case Mem_desc::Conventional:
+          if (e <= s)
+            break;
+          map_ram_range(kd, alloc, s, e, Virt_ofs);
+          break;
+        default:
+          break;
+        }
+  }
+
+}
+
 
 IMPLEMENTATION [arm && pic_gic]:
 
@@ -191,11 +277,9 @@ Bootstrap::init_paging()
 
 
   Bs_alloc alloc(kern_to_boot(bs_info.pi.scratch), bs_info.pi.free_map);
-  // create mapping of RAM @ Mem_layout::Map_base in kdir
-  auto p = kd->walk(::Virt_addr(Mem_layout::Map_base), 1, false, alloc, Bs_mem_map());
-  p.set_page(cxx::int_value<Phys_addr>(pt_entry(Phys_addr(Mem_layout::Sdram_phys_base), true, false)));
   // force allocation of MMIO page directory
-  p = kd->walk(::Virt_addr(Mem_layout::Registers_map_start), 2, false, alloc, Bs_mem_map());
+  kd->walk(::Virt_addr(Mem_layout::Registers_map_start), 2, false, alloc, Bs_mem_map());
+  map_ram(kd, alloc);
 
   set_mair0(Page::Mair0_prrr_bits);
 
@@ -343,11 +427,8 @@ Bootstrap::init_paging()
   set_mair0(Page::Mair0_prrr_bits);
 
   Bs_alloc alloc(kern_to_boot(bs_info.pi.scratch), bs_info.pi.free_map);
-  auto p = d->walk(::Virt_addr(Mem_layout::Sdram_phys_base), 1, false, alloc, Bs_mem_map());
-  // assert (p.level() == 1)
-  p.set_page(cxx::int_value<Phys_addr>(pt_entry(Phys_addr(Mem_layout::Sdram_phys_base), true, false)));
-
-  p = d->walk(::Virt_addr(Mem_layout::Registers_map_start), 2, false, alloc, Bs_mem_map());
+  d->walk(::Virt_addr(Mem_layout::Registers_map_start), 2, false, alloc, Bs_mem_map());
+  map_ram(d, alloc);
 
   asm volatile (
       "msr tcr_el2, %1   \n"
