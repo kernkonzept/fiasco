@@ -61,11 +61,6 @@ Jdb_entry_frame::dump() const
 }
 #endif
 
-IMPLEMENT inline
-bool
-Jdb_entry_frame::debug_ipi() const
-{ return error_code == ((0x33UL << 26) | 2); }
-
 IMPLEMENT inline NEEDS["processor.h"]
 Address_type
 Jdb_entry_frame::from_user() const
@@ -119,3 +114,30 @@ PUBLIC inline
 void
 Jdb_status_page_frame::set(Address status_page)
 { r[0] = (Mword)status_page; }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && 32bit]:
+
+PUBLIC inline
+bool
+Jdb_entry_frame::debug_entry_kernel() const
+{ return error_code == (0x33UL << 26); }
+
+IMPLEMENT inline
+bool
+Jdb_entry_frame::debug_ipi() const
+{ return error_code == ((0x33UL << 26) | 2); }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && 64bit]:
+
+PUBLIC inline
+bool
+Jdb_entry_frame::debug_entry_kernel() const
+{ return error_code == 0xf2000000; }
+
+IMPLEMENT inline
+bool
+Jdb_entry_frame::debug_ipi() const
+{ return error_code == 0xf2000002; }
+

@@ -167,7 +167,7 @@ Jdb::handle_debug_traps(Cpu_number cpu)
       && bp_test_break)
     return bp_test_break(cpu, &error_buffer.cpu(cpu));
 
-  if (ef->error_code == (0x33UL << 26))
+  if (ef->debug_entry_kernel())
     error_buffer.cpu(cpu).printf("%s",(char const *)ef->r[0]);
   else if (ef->debug_ipi())
     error_buffer.cpu(cpu).printf("IPI ENTRY");
