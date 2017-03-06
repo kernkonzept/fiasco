@@ -1,46 +1,50 @@
-IMPLEMENTATION [arm]:
+INTERFACE [arm]:
 
 #include "mem_layout.h"
 #include "mmio_register_block.h"
 #include "paging.h"
 #include "config.h"
 
-struct Bs_mem_map
+EXTENSION class Bootstrap
 {
-  static Address phys_to_pmem(Address a)
-  { return a; }
-};
-
-struct Bs_alloc
-{
-  Bs_alloc(void *base, Mword &free_map)
-  : _p((Address)base), _free_map(free_map)
-  {}
-
-  static Address to_phys(void *v)
-  { return reinterpret_cast<Address>(v); }
-
-  static bool valid() { return true; }
-
-  void *alloc(unsigned size)
+  struct Bs_mem_map
   {
-    (void) size;
-    // assert (size == Config::PAGE_SIZE);
-    // test that size is a power of two
-    // assert (((size - 1) ^ size) == (size - 1));
+    static Address phys_to_pmem(Address a)
+    { return a; }
+  };
 
-    int x = __builtin_ffsl(_free_map);
-    if (x == 0)
-      return nullptr; // OOM
+  struct Bs_alloc
+  {
+    Bs_alloc(void *base, Mword &free_map)
+    : _p((Address)base), _free_map(free_map)
+    {}
 
-    _free_map &= ~(1UL << (x - 1));
+    static Address to_phys(void *v)
+    { return reinterpret_cast<Address>(v); }
 
-    return reinterpret_cast<void *>(_p + Config::PAGE_SIZE * (x - 1));
-  }
+    static bool valid() { return true; }
 
-  Address _p;
-  Mword &_free_map;
+    void *alloc(unsigned size)
+    {
+      (void) size;
+      // assert (size == Config::PAGE_SIZE);
+      // test that size is a power of two
+      // assert (((size - 1) ^ size) == (size - 1));
+
+      int x = __builtin_ffsl(_free_map);
+      if (x == 0)
+        return nullptr; // OOM
+
+      _free_map &= ~(1UL << (x - 1));
+
+      return reinterpret_cast<void *>(_p + Config::PAGE_SIZE * (x - 1));
+    }
+
+    Address _p;
+    Mword &_free_map;
+  };
 };
+
 
 IMPLEMENTATION [arm && pic_gic]:
 
