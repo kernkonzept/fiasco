@@ -125,7 +125,7 @@ private:
 
   typedef Ptab::Shift<Dmar_traits, 12>::List Dmar_traits_vpn;
   typedef Ptab::Page_addr_wrap<Page_number, 12> Dmar_va_vpn;
-  typedef Ptab::Base<Dmar_ptr, Dmar_traits_vpn, Dmar_va_vpn> Dmar_pt;
+  typedef Ptab::Base<Dmar_ptr, Dmar_traits_vpn, Dmar_va_vpn, Mem_layout> Dmar_pt;
 
 public:
   enum { Max_nr_did = 0x10000 };

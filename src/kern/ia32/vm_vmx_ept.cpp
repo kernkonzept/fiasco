@@ -114,7 +114,7 @@ private:
 
   typedef Ptab::Shift<Ept_traits, 12>::List Ept_traits_vpn;
   typedef Ptab::Page_addr_wrap<Page_number, 12> Ept_va_vpn;
-  typedef Ptab::Base<Epte_ptr, Ept_traits_vpn, Ept_va_vpn> Ept;
+  typedef Ptab::Base<Epte_ptr, Ept_traits_vpn, Ept_va_vpn, Mem_layout> Ept;
 
   Mword _ept_phys;
   Ept *_ept;

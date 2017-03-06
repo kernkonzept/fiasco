@@ -3,6 +3,7 @@ INTERFACE:
 #include "types.h"
 #include "l4_msg_item.h"
 #include "ptab_base.h"
+#include "mem_layout.h"
 
 class Page
 {
@@ -104,7 +105,7 @@ private:
 };
 
 template<typename PTE_PTR, typename TRAITS, typename VA>
-class Pdir_t : public Ptab::Base<PTE_PTR, TRAITS, VA>
+class Pdir_t : public Ptab::Base<PTE_PTR, TRAITS, VA, Mem_layout>
 {
 public:
   enum { Super_level = PTE_PTR::Super_level };
