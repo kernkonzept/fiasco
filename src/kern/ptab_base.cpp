@@ -40,20 +40,26 @@ namespace Ptab
     typedef _T Traits;
     enum { Max_level = 0 };
 
-    static unsigned shift(unsigned)
+    static constexpr unsigned shift(unsigned)
     { return Traits::Shift; }
 
-    static unsigned size(unsigned)
+    static constexpr unsigned size(unsigned)
     { return Traits::Size; }
 
-    static unsigned length(unsigned)
+    static constexpr unsigned long length(unsigned)
     { return 1UL << Traits::Size; }
 
-    static Address index(unsigned /*level*/, Address addr)
+    static constexpr Address index(unsigned /*level*/, Address addr)
     { return (addr >> Traits::Shift) & ((1UL << Traits::Size)-1); }
 
-    static unsigned entry_size(unsigned)
+    static constexpr unsigned entry_size(unsigned)
     { return sizeof(typename Traits::Entry); }
+
+    static constexpr unsigned may_be_leaf(unsigned)
+    { return Traits::May_be_leaf; }
+
+    static constexpr unsigned lower_bound_level(unsigned, unsigned level = 0)
+    { return level; }
   };
 
   template< typename _Head, typename _Tail >
@@ -63,46 +69,55 @@ namespace Ptab
     typedef _Head Traits;
     enum { Max_level = Next_level::Max_level + 1 };
 
-    static unsigned shift(unsigned level)
+    static constexpr unsigned shift(unsigned level)
     {
-      if (!level)
-        return Traits::Shift;
-      else
-        return Next_level::shift(level - 1);
+      return (!level)
+        ? (unsigned)Traits::Shift
+        : Next_level::shift(level - 1);
     }
 
-    static unsigned size(unsigned level)
+    static constexpr unsigned size(unsigned level)
     {
-      if (!level)
-        return Traits::Size;
-      else
-        return Next_level::size(level - 1);
+      return (!level)
+        ? (unsigned)Traits::Size
+        : Next_level::size(level - 1);
     }
 
-    static unsigned length(unsigned level)
+    static constexpr unsigned long length(unsigned level)
     {
-      if (!level)
-	return 1UL << Traits::Size;
-      else
-	return Next_level::length(level - 1);
+      return (!level)
+        ? (1UL << Traits::Size)
+        : Next_level::length(level - 1);
     }
 
-    static Address index(unsigned level, Address addr)
+    static constexpr Address index(unsigned level, Address addr)
     {
-      if (!level)
-	return (addr >> Traits::Shift) & ((1UL << Traits::Size)-1);
-      else
-	return Next_level::index(level - 1, addr);
+      return (!level)
+        ? (addr >> Traits::Shift) & ((1UL << Traits::Size)-1)
+        : Next_level::index(level - 1, addr);
     }
 
-    static unsigned entry_size(unsigned level)
+    static constexpr unsigned entry_size(unsigned level)
     {
-      if (!level)
-        return sizeof(typename Traits::Entry);
-      else
-        return Next_level::entry_size(level - 1);
+      return (!level)
+        ? sizeof(typename Traits::Entry)
+        : Next_level::entry_size(level - 1);
     }
 
+    static constexpr bool may_be_leaf(unsigned level)
+    {
+      return (!level)
+        ? (bool)Traits::May_be_leaf
+        : Next_level::may_be_leaf(level - 1);
+    }
+
+    static constexpr unsigned
+    lower_bound_level(unsigned max_shift, unsigned level = 0)
+    {
+      return (max_shift >= Traits::Shift)
+        ? level
+        : Next_level::lower_bound_level(max_shift, level + 1);
+    }
   };
 
   template< typename _Traits >
