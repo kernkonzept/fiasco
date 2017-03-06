@@ -217,7 +217,7 @@ Cpu::is_smp_capable()
     {
       switch ((id >> 4) & 0xf)
         {
-        case 7: case 9: case 15: return true;
+	  case 5: case 7: case 9: case 14: case 15: return true;
         }
     }
 
