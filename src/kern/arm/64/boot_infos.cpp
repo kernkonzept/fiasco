@@ -9,10 +9,9 @@ INTERFACE [arm && 64bit && !cpu_virt]:
 struct Boot_paging_info
 {
   void *l0_dir;
-  void *l1_dir;
   void *l0_vdir;
-  void *l1_vdir;
-  void *l2_mmio_dir;
+  void *scratch;
+  Mword free_map;
 };
 
 // ------------------------------------------------------------------------
@@ -21,7 +20,6 @@ INTERFACE [arm && 64bit && cpu_virt]:
 struct Boot_paging_info
 {
   void *l0_dir;
-  void *l1_dir;
-  void *l1_vdir;
-  void *l2_mmio_dir;
+  void *scratch;
+  Mword free_map;
 };
