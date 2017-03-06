@@ -164,4 +164,4 @@ IMPLEMENTATION [debug && pf_bcm283x]:
 PUBLIC
 char const *
 Irq_chip_bcm::chip_type() const
-{ return "BCM2835"; }
+{ return "BCM283X"; }

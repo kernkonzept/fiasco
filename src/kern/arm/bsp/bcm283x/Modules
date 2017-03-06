@@ -13,19 +13,19 @@ ifeq ($(CONFIG_PF_BCM283X_RPI3),y)
   uart_IMPL              = uart uart-16550
   kernel_uart_IMPL      += kernel_uart-libuart
 else
-  uart_IMPL             += uart-arm-bcm2835
-  kernel_uart_IMPL      += kernel_uart-arm-bcm2835
+  uart_IMPL             += uart-arm-bcm283x
+  kernel_uart_IMPL      += kernel_uart-arm-bcm283x
 endif
 arm_control_IMPL      += arm_control-arm-bcm283x
-config_IMPL           += config-arm-bcm2835
-mem_layout_IMPL       += mem_layout-arm-bcm2835
-pic_IMPL              += pic-arm-bcm2835
-bootstrap_IMPL        += bootstrap-arm-bcm2835
-timer_IMPL            += timer-arm-bcm2835
+config_IMPL           += config-arm-bcm283x
+mem_layout_IMPL       += mem_layout-arm-bcm283x
+pic_IMPL              += pic-arm-bcm283x
+bootstrap_IMPL        += bootstrap-arm-bcm283x
+timer_IMPL            += timer-arm-bcm283x
 timer_IMPL            += $(if $(CONFIG_ARM_V7PLUS),timer-arm-generic)
-timer_tick_IMPL       += $(if $(CONFIG_ARM_V7PLUS),timer_tick-arm-bcm2835, timer_tick-single-vector)
-reset_IMPL            += reset-arm-bcm2835
+timer_tick_IMPL       += $(if $(CONFIG_ARM_V7PLUS),timer_tick-arm-bcm283x,timer_tick-single-vector)
+reset_IMPL            += reset-arm-bcm283x
 clock_IMPL            += clock-generic
 ipi_IMPL              += ipi-arm-bcm283x
 platform_control_IMPL += platform_control-arm-bcm283x
-irq_handler_IMPL       = irq_handler-arm-bcm2835
+irq_handler_IMPL       = irq_handler-arm-bcm283x
