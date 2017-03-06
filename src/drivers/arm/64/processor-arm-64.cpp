@@ -14,16 +14,6 @@ public:
 //--------------------------------------------------------------------
 IMPLEMENTATION [arm && 64bit]:
 
-PUBLIC static inline
-Unsigned32
-Proc::sctlr()
-{
-  Unsigned32 v;
-  asm volatile ("mrs %0, SCTLR_EL1" : "=r"(v));
-  return v;
-}
-
-
 IMPLEMENT static inline
 Mword Proc::program_counter()
 {
@@ -73,5 +63,38 @@ Cpu_phys_id Proc::cpu_id()
   unsigned mpidr;
   __asm__("mrs %0, MPIDR_EL1" : "=r" (mpidr));
   return Cpu_phys_id(mpidr & 0x7); // mind gic softirq
+}
+
+//--------------------------------------------------------------------
+IMPLEMENTATION [arm && 64bit && cpu_virt]:
+
+PUBLIC static inline
+Unsigned32
+Proc::sctlr_el1()
+{
+  Unsigned32 v;
+  asm volatile ("mrs %0, SCTLR_EL1" : "=r"(v));
+  return v;
+}
+
+PUBLIC static inline
+Unsigned32
+Proc::sctlr()
+{
+  Unsigned32 v;
+  asm volatile ("mrs %0, SCTLR_EL2" : "=r"(v));
+  return v;
+}
+
+//--------------------------------------------------------------------
+IMPLEMENTATION [arm && 64bit && !cpu_virt]:
+
+PUBLIC static inline
+Unsigned32
+Proc::sctlr()
+{
+  Unsigned32 v;
+  asm volatile ("mrs %0, SCTLR_EL1" : "=r"(v));
+  return v;
 }
 
