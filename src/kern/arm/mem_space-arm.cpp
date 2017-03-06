@@ -36,6 +36,7 @@ public:
     Identity_map = 0,
   };
 
+  Phys_mem_addr dir_phys() const { return _dir_phys; }
 
   static void kernel_space(Mem_space *);
 
