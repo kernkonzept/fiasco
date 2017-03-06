@@ -7,7 +7,7 @@ EXTENSION class Context
 public:
   struct Vm_state
   {
-    struct Regs
+    struct Regs_g
     {
       Unsigned64 hcr;
 
@@ -15,13 +15,25 @@ public:
       Unsigned32 cntkctl;
       Unsigned32 mdcr;
       Unsigned32 mdscr;
+      Unsigned32 cpacr;
+      // dummy to keep 64bit alignment and total size
+      // of Regs_g + Regs_h pair
+      Unsigned32 _dummy_;
+    };
+
+    struct Regs_h
+    {
+      Unsigned64 hcr;
+
+      Unsigned32 sctlr;
+      Unsigned32 mdscr;
     };
 
     typedef Arm_vgic_t<4> Gic;
 
     /* The followin part is our user API */
-    Regs guest_regs;
-    Regs host_regs;
+    Regs_g guest_regs;
+    Regs_h host_regs;
     Gic  gic;
 
     Unsigned64 vmpidr;
@@ -113,7 +125,7 @@ Context::arm_hyp_load_non_vm_state(bool vgic)
   // load normal SCTLR ...
   asm volatile ("msr sctlr_el1, %0"
                 : : "r" (Cpu::Sctlr_generic & ~Cpu::Sctlr_m));
-  asm volatile ("msr cpacr_el1, %0" : : "r" (0xf00000));
+  asm volatile ("msr cpacr_el1, %0" : : "r" (0x300000));
   // disable all debug exceptions for non-vms, if we want debug
   // exceptions into JDB we need either per-thread or a global
   // setting for this value.
@@ -258,9 +270,11 @@ Context::arm_ext_vcpu_switch_to_host(Vcpu_state *vcpu, Vm_state *v)
 {
   asm volatile ("mrs %0, TPIDRRO_EL0" : "=r"(vcpu->_regs.tpidruro));
   asm volatile ("mrs %0, SCTLR_EL1"   : "=r"(v->guest_regs.sctlr));
-  asm volatile ("mrs %0, CNTKCTL_EL1"   : "=r" (v->guest_regs.cntkctl));
-  asm volatile ("mrs %0, MDCR_EL2"   : "=r"(v->guest_regs.mdcr));
+  asm volatile ("mrs %0, CNTKCTL_EL1" : "=r" (v->guest_regs.cntkctl));
+  asm volatile ("mrs %0, MDCR_EL2"    : "=r"(v->guest_regs.mdcr));
   asm volatile ("mrs %0, MDSCR_EL1"   : "=r"(v->guest_regs.mdscr));
+  asm volatile ("mrs %0, CPACR_EL1"   : "=r"(v->guest_regs.cpacr));
+  asm volatile ("msr CPACR_EL1, %0"   : : "r"(3UL << 20));
 
   asm volatile ("msr CNTKCTL_EL1, %0"   : : "r" ((1UL << 8) | (1UL << 1)));
   asm volatile ("mrs %0, CNTV_CTL_EL0" : "=r" (v->cntv_ctl));
@@ -271,6 +285,8 @@ Context::arm_ext_vcpu_switch_to_host(Vcpu_state *vcpu, Vm_state *v)
   // setting for this value. (probably including the contextidr)
   asm volatile ("msr MDCR_EL2, %0" : : "r"(Cpu::Mdcr_bits));
   asm volatile ("msr MDSCR_EL1, %0" : : "r"(0));
+  asm volatile ("msr SCTLR_EL1, %0"
+                : : "r"(Cpu::Sctlr_generic & ~Cpu::Sctlr_m));
 }
 
 PRIVATE inline
@@ -282,6 +298,7 @@ Context::arm_ext_vcpu_switch_to_host_no_load(Vcpu_state *vcpu, Vm_state *v)
   v->guest_regs.cntkctl    = v->cntkctl;
   v->guest_regs.mdcr       = v->mdcr;
   v->guest_regs.mdscr      = v->mdscr;
+  v->guest_regs.cpacr      = v->cpacr;
 }
 
 PRIVATE inline
@@ -290,8 +307,6 @@ Context::arm_ext_vcpu_load_host_regs(Vcpu_state *vcpu, Vm_state *)
 {
   asm volatile ("msr TPIDRRO_EL0, %0" : : "r"(vcpu->host.tpidruro));
   asm volatile ("msr HCR_EL2, %0"     : : "r"(Cpu::Hcr_host_bits));
-  asm volatile ("msr SCTLR_EL1, %0"
-                : : "r"(Cpu::Sctlr_generic & ~Cpu::Sctlr_m));
 }
 
 PRIVATE inline
@@ -303,8 +318,10 @@ Context::arm_ext_vcpu_switch_to_guest(Vcpu_state *, Vm_state *v)
   Unsigned32 mdcr = access_once(&v->guest_regs.mdcr);
   mdcr &= Cpu::Mdcr_vm_mask;
   mdcr |= Cpu::Mdcr_bits;
+  asm volatile ("msr SCTLR_EL1, %0"   : : "r"(v->guest_regs.sctlr));
   asm volatile ("msr MDCR_EL2, %0"    : : "r"(mdcr));
   asm volatile ("msr MDSCR_EL1, %0"   : : "r"(v->guest_regs.mdscr));
+  asm volatile ("msr CPACR_EL1, %0"   : : "r"(v->guest_regs.cpacr));
 }
 
 PRIVATE inline
@@ -314,18 +331,14 @@ Context::arm_ext_vcpu_switch_to_guest_no_load(Vcpu_state *, Vm_state *v)
   v->cntkctl = v->guest_regs.cntkctl;
   v->mdcr  = v->guest_regs.mdcr;
   v->mdscr = v->guest_regs.mdscr;
+  v->cpacr = v->guest_regs.cpacr;
 }
 
 PRIVATE inline
 void
-Context::arm_ext_vcpu_load_guest_regs(Vcpu_state *vcpu, Vm_state *v, Mword hcr)
+Context::arm_ext_vcpu_load_guest_regs(Vcpu_state *vcpu, Vm_state *, Mword hcr)
 {
   asm volatile ("mrs %0, TPIDRRO_EL0" : "=r"(vcpu->host.tpidruro));
-
   asm volatile ("msr HCR_EL2, %0" : : "r"(hcr));
-  Unsigned32 sctlr = access_once(&v->guest_regs.sctlr);
-  if (hcr & Cpu::Hcr_tge)
-    sctlr &= ~Cpu::Cp15_c1_mmu;
-  asm volatile ("msr SCTLR_EL1, %0"   : : "r"(sctlr));
   asm volatile ("msr TPIDRRO_EL0, %0" : : "r"(vcpu->_regs.tpidruro));
 }
