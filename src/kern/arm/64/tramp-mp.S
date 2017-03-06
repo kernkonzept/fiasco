@@ -190,16 +190,11 @@ _tramp_mp_entry:
 
 	ldr x0, 1f
 	br x0
+	.align 3
 1:
 	.8byte _tramp_mp_virt
 
-.Lmpcore_phys_base:
-	.8byte MPCORE_PHYS_BASE
-
-.Lactrl_cpuid:
-	.long 0xff0fff00
-	.long 0x410fc000
-
+	.align 3
 .global _tramp_mp_boot_info
 _tramp_mp_boot_info:
 defvar _tramp_mp_startup_sctlr
