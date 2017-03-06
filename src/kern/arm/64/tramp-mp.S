@@ -66,11 +66,23 @@ finished:
 
 	.global _tramp_mp_entry
 _tramp_mp_entry:
+	msr	DAIFSet, #0xf
 	bsp_early_init x0, x1
 	mrs	x17, CurrentEL
 	lsr	x17, x17, #2
 	cmp	x17, #3 // running at EL3
 	b.ne	.Lnot_el3
+
+	// try to setup GIC for non-secure ...
+	ldr	x16, _tramp_mp_gic_dist_base
+	cmp	x16, #0
+	b.eq	.Lno_gic
+	mov	w4, #0xffffffff
+	str	w4, [x16, 0x80]
+	ldr	x14, _tramp_mp_gic_cpu_base
+	mov	w4, #0xf0
+	str	w4, [x14, 4]
+.Lno_gic:
 	// switch from EL3 to EL2...
 	tlbi	alle2is
 	dsb	sy
@@ -202,6 +214,8 @@ defvar _tramp_mp_startup_tcr
 defvar _tramp_mp_startup_mair
 defvar _tramp_mp_startup_ttbr_kern
 defvar _tramp_mp_startup_ttbr_usr
+defvar _tramp_mp_gic_dist_base
+defvar _tramp_mp_gic_cpu_base
 
 	// we run paged now
 _tramp_mp_virt:
