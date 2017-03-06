@@ -123,7 +123,7 @@ vcpu_resume:
 
 .global kern_kdebug_ipi_entry
 kern_kdebug_ipi_entry:
-	brk 10
+	brk #2
 	ret
 
 .align 3
