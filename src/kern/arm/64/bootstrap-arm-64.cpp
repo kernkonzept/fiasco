@@ -280,7 +280,7 @@ Bootstrap::init_paging()
   Phys_addr *const l1 = reinterpret_cast<Phys_addr*>(kern_to_boot(bs_info.pi.l1_dir));
 
   l0[l0_idx(Mem_layout::Sdram_phys_base)]
-    = Phys_addr((Unsigned64)kernel_l1_dir + Virt_ofs) | Phys_addr(3);
+    = Phys_addr((Unsigned64)kern_to_boot(bs_info.pi.l1_dir)) | Phys_addr(3);
 
   set_mair0(Page::Mair0_prrr_bits);
 
