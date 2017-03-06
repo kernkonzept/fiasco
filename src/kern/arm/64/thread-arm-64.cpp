@@ -250,7 +250,7 @@ Thread::get_fault_pfa(Arm_esr hsr, bool /*insn_abt*/, bool ext_vcpu)
 {
   Address a;
   asm volatile ("mrs %0, FAR_EL2" : "=r"(a));
-  if (EXPECT_TRUE(!ext_vcpu) || !(Proc::sctlr() & Cpu::Sctlr_m))
+  if (EXPECT_TRUE(!ext_vcpu) || !(Proc::sctlr_el1() & Cpu::Sctlr_m))
     return a;
 
   if (hsr.pf_s1ptw() || (hsr.pf_fsc() < 0xc))
