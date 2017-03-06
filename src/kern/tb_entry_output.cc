@@ -61,6 +61,8 @@ static char const * const __tag_interpreter_strings_l4re[] = {
     "ma",
     "rm", // 5
     "ev",
+    "inh",
+    "dmaspc",
   };
 static char const * const __tag_interpreter_strings_fiasco[] = {
     "Kirq",      // -1
@@ -72,27 +74,29 @@ static char const * const __tag_interpreter_strings_fiasco[] = {
     0,
     "Kiopf",
     "Kcapfault",
-    0,           // -10
+    "Kobj",      // -10
     "Ktask",
     "Kthread",
     "Klog",
     "Ksched",
     "Kfactory",  // -15
     "Kvm",
-    0,
-    0,
-    0,
+    "Kdmaspc",
+    "Kirqsnd",
+    "Kirqmux",
     "Ksem",      // -20
     "Kmeta",
+    "Kiommu",
+    "Kdbg",
   };
 
 static
 char const *
 tag_to_string(L4_msg_tag const &tag)
 {
-  if (0x4000 <= tag.proto() && tag.proto() <= 0x4006)
+  if (0x4000 <= tag.proto() && tag.proto() <= 0x4008)
     return __tag_interpreter_strings_l4re[tag.proto() - 0x4000];
-  if (-21L <= tag.proto() && tag.proto() <= -1)
+  if (-23L <= tag.proto() && tag.proto() <= -1)
     return __tag_interpreter_strings_fiasco[-tag.proto() - 1];
   return 0;
 }
