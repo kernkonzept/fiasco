@@ -1,3 +1,23 @@
+IMPLEMENTATION [arm && mp && pic_gic]:
+
+PRIVATE static inline NOEXPORT
+void
+Kernel_thread::boot_app_cpu_gic(Mp_boot_info volatile *inf)
+{
+  inf->gic_dist_base = Mem_layout::Gic_dist_phys_base;
+  inf->gic_cpu_base = Mem_layout::Gic_cpu_phys_base;
+}
+
+IMPLEMENTATION [arm && mp && !pic_gic]:
+
+PRIVATE static inline NOEXPORT
+void
+Kernel_thread::boot_app_cpu_gic(Mp_boot_info volatile *inf)
+{
+  inf->gic_dist_base = 0;
+  inf->gic_cpu_base = 0;
+}
+
 IMPLEMENTATION [arm && mp]:
 
 #include "io.h"
@@ -13,6 +33,8 @@ EXTENSION class Kernel_thread
     Mword mair;
     Mword ttbr_kern;
     Mword ttbr_usr;
+    Mword gic_dist_base;
+    Mword gic_cpu_base;
   };
 };
 
@@ -35,6 +57,8 @@ Kernel_thread::boot_app_cpus()
     _tmp->ttbr_usr = cxx::int_value<Phys_mem_addr>(Kernel_task::kernel_task()->dir_phys());
 
   _tmp->tcr   = Page::Ttbcr_bits;
+  boot_app_cpu_gic(_tmp);
+
   asm volatile ("dsb sy" : : : "memory");
   Mem_unit::clean_dcache();
 

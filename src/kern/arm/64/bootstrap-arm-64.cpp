@@ -42,6 +42,28 @@ struct Bs_alloc
   Mword &_free_map;
 };
 
+IMPLEMENTATION [arm && pic_gic]:
+
+PUBLIC static void
+Bootstrap::config_gic_ns()
+{
+  Mmio_register_block dist(Mem_layout::Gic_dist_phys_base);
+  Mmio_register_block cpu(Mem_layout::Gic_cpu_phys_base);
+  unsigned n = ((dist.read<Unsigned32>(4 /*GICD_TYPER*/) & 0x1f) + 1) * 32;
+  dist.write<Unsigned32>(0, 0 /*Gic::GICD_CTRL*/);
+
+  for (unsigned i = 0; i < n / 32; ++i)
+    dist.write<Unsigned32>(~0U, 0x80 + i * 4);
+
+  cpu.write<Unsigned32>(0xf0, 4 /*PMR*/);
+  Mmu<Bootstrap::Cache_flush_area, true>::flush_cache();
+}
+
+IMPLEMENTATION [arm && !pic_gic]:
+
+PUBLIC static inline void
+Bootstrap::config_gic_ns() {}
+
 IMPLEMENTATION [arm && !cpu_virt]:
 
 #include "cpu.h"
@@ -67,6 +89,7 @@ Bootstrap::set_mair0(Mword v)
 static inline void
 switch_from_el3_to_el1()
 {
+  Bootstrap::config_gic_ns();
   Mword pfr0;
   asm volatile ("mrs %0, id_aa64pfr0_el1" : "=r"(pfr0));
   if (((pfr0 >> 8) & 0xf) != 0)
@@ -252,6 +275,8 @@ Bootstrap::leave_el3()
 
   if (cel != 3)
     return; // not on EL3 so do nothing
+
+  Bootstrap::config_gic_ns();
 
   Mword pfr0;
   asm volatile ("mrs %0, id_aa64pfr0_el1" : "=r"(pfr0));
