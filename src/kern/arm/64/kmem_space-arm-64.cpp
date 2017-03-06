@@ -12,9 +12,9 @@ IMPLEMENTATION [arm && !cpu_virt]:
 
 K_ptab_array kernel_l0_dir;
 static K_ptab_array kernel_l0_vdir;
-static K_ptab_array kernel_l1_vdir;
-static K_ptab_array kernel_l2_mmio_dir;
-static K_ptab_array kernel_l1_dir;
+
+enum { Num_scratch_pages = 3 };
+static K_ptab_array pdir_scartch[Num_scratch_pages];
 
 Kpdir *Mem_layout::kdir = (Kpdir *)&kernel_l0_vdir;
 
@@ -22,10 +22,9 @@ Kpdir *Mem_layout::kdir = (Kpdir *)&kernel_l0_vdir;
 static Boot_paging_info FIASCO_BOOT_PAGING_INFO _bs_pgin_dta =
 {
   kernel_l0_dir,
-  kernel_l1_dir,
   kernel_l0_vdir,
-  kernel_l1_vdir,
-  kernel_l2_mmio_dir
+  pdir_scartch,
+  (1 << Num_scratch_pages) - 1
 };
 
 // -----------------------------------------------------------------
@@ -34,9 +33,8 @@ IMPLEMENTATION [arm && cpu_virt]:
 #include "boot_infos.h"
 
 K_ptab_array kernel_l0_dir;
-static K_ptab_array kernel_l1_vdir;
-static K_ptab_array kernel_l2_mmio_dir;
-static K_ptab_array kernel_l1_dir;
+enum { Num_scratch_pages = 3 };
+static K_ptab_array pdir_scartch[Num_scratch_pages];
 
 Kpdir *Mem_layout::kdir = (Kpdir *)&kernel_l0_dir;
 
@@ -44,7 +42,6 @@ Kpdir *Mem_layout::kdir = (Kpdir *)&kernel_l0_dir;
 static Boot_paging_info FIASCO_BOOT_PAGING_INFO _bs_pgin_dta =
 {
   kernel_l0_dir,
-  kernel_l1_dir,
-  kernel_l1_vdir,
-  kernel_l2_mmio_dir
+  pdir_scartch,
+  (1 << Num_scratch_pages) - 1
 };

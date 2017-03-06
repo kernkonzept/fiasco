@@ -1,3 +1,47 @@
+IMPLEMENTATION [arm]:
+
+#include "mem_layout.h"
+#include "mmio_register_block.h"
+#include "paging.h"
+#include "config.h"
+
+struct Bs_mem_map
+{
+  static Address phys_to_pmem(Address a)
+  { return a; }
+};
+
+struct Bs_alloc
+{
+  Bs_alloc(void *base, Mword &free_map)
+  : _p((Address)base), _free_map(free_map)
+  {}
+
+  static Address to_phys(void *v)
+  { return reinterpret_cast<Address>(v); }
+
+  static bool valid() { return true; }
+
+  void *alloc(unsigned size)
+  {
+    (void) size;
+    // assert (size == Config::PAGE_SIZE);
+    // test that size is a power of two
+    // assert (((size - 1) ^ size) == (size - 1));
+
+    int x = __builtin_ffsl(_free_map);
+    if (x == 0)
+      return nullptr; // OOM
+
+    _free_map &= ~(1UL << (x - 1));
+
+    return reinterpret_cast<void *>(_p + Config::PAGE_SIZE * (x - 1));
+  }
+
+  Address _p;
+  Mword &_free_map;
+};
+
 IMPLEMENTATION [arm && !cpu_virt]:
 
 #include "cpu.h"
@@ -115,32 +159,22 @@ PUBLIC static Bootstrap::Phys_addr
 Bootstrap::init_paging()
 {
   leave_hyp_mode();
+  Pdir  *ud = reinterpret_cast<Pdir *>(kern_to_boot(bs_info.pi.l0_dir));
+  Kpdir *kd = reinterpret_cast<Kpdir *>(kern_to_boot(bs_info.pi.l0_vdir));
 
-  Phys_addr *const l0 = reinterpret_cast<Phys_addr*>(kern_to_boot(bs_info.pi.l0_dir));
-  Phys_addr *const l1 = reinterpret_cast<Phys_addr*>(kern_to_boot(bs_info.pi.l1_dir));
 
-  l0[l0_idx(Mem_layout::Sdram_phys_base)]
-    = Phys_addr((Unsigned64)kern_to_boot(bs_info.pi.l1_dir)) | Phys_addr(3);
-
-  Phys_addr *const vl0 = reinterpret_cast<Phys_addr*>(kern_to_boot(bs_info.pi.l0_vdir));
-  Phys_addr *const vl1 = reinterpret_cast<Phys_addr*>(kern_to_boot(bs_info.pi.l1_vdir));
-
-  static_assert(l0_idx(Mem_layout::Map_base) == l0_idx(Mem_layout::Registers_map_start),
-                "Mem_layout::Map_base and Mem_layout::Registers_map_start must share the 516GB index");
-
-  vl0[l0_idx(Mem_layout::Map_base)]
-    = Phys_addr((Unsigned64)kern_to_boot(bs_info.pi.l1_vdir)) | Phys_addr(3);
-
-  vl1[l1_idx(Mem_layout::Registers_map_start)]
-    = Phys_addr((Unsigned64)kern_to_boot(bs_info.pi.l2_mmio_dir)) | Phys_addr(3);
+  Bs_alloc alloc(kern_to_boot(bs_info.pi.scratch), bs_info.pi.free_map);
+  // create mapping of RAM @ Mem_layout::Map_base in kdir
+  auto p = kd->walk(::Virt_addr(Mem_layout::Map_base), 1, false, alloc, Bs_mem_map());
+  p.set_page(cxx::int_value<Phys_addr>(pt_entry(Phys_addr(Mem_layout::Sdram_phys_base), true, false)));
+  // force allocation of MMIO page directory
+  p = kd->walk(::Virt_addr(Mem_layout::Registers_map_start), 2, false, alloc, Bs_mem_map());
 
   set_mair0(Page::Mair0_prrr_bits);
 
-  l1[l1_idx(Mem_layout::Sdram_phys_base)]
-    = pt_entry(Phys_addr(Mem_layout::Sdram_phys_base), true, true);
-
-  vl1[l1_idx(Mem_layout::Map_base)]
-    = pt_entry(Phys_addr(Mem_layout::Sdram_phys_base), true, false);
+  // create 1:1 mapping of RAM in the idle (user) page table
+  auto up = ud->walk(::Virt_addr(Mem_layout::Sdram_phys_base), 1, false, alloc, Bs_mem_map());
+  up.set_page(cxx::int_value<Phys_addr>(pt_entry(Phys_addr(Mem_layout::Sdram_phys_base), true, true)));
 
   asm volatile (
       "msr tcr_el1, %2   \n"
@@ -149,7 +183,7 @@ Bootstrap::init_paging()
       "msr ttbr1_el1, %1 \n"
       "isb               \n"
       : :
-      "r"(l0), "r"(vl0), "r"(Page::Ttbcr_bits));
+      "r"(ud), "r"(kd), "r"(Page::Ttbcr_bits));
 
 
 
@@ -276,31 +310,15 @@ Bootstrap::init_paging()
 {
   leave_el3();
 
-  Phys_addr *const l0 = reinterpret_cast<Phys_addr*>(kern_to_boot(bs_info.pi.l0_dir));
-  Phys_addr *const l1 = reinterpret_cast<Phys_addr*>(kern_to_boot(bs_info.pi.l1_dir));
-
-  l0[l0_idx(Mem_layout::Sdram_phys_base)]
-    = Phys_addr((Unsigned64)kern_to_boot(bs_info.pi.l1_dir)) | Phys_addr(3);
-
+  Kpdir *d = reinterpret_cast<Kpdir *>(kern_to_boot(bs_info.pi.l0_dir));
   set_mair0(Page::Mair0_prrr_bits);
 
-  l1[l1_idx(Mem_layout::Sdram_phys_base)]
-    = pt_entry(Phys_addr(Mem_layout::Sdram_phys_base), true, false);
+  Bs_alloc alloc(kern_to_boot(bs_info.pi.scratch), bs_info.pi.free_map);
+  auto p = d->walk(::Virt_addr(Mem_layout::Sdram_phys_base), 1, false, alloc, Bs_mem_map());
+  // assert (p.level() == 1)
+  p.set_page(cxx::int_value<Phys_addr>(pt_entry(Phys_addr(Mem_layout::Sdram_phys_base), true, false)));
 
-  if (l0_idx(Mem_layout::Registers_map_start) != l0_idx(Mem_layout::Sdram_phys_base))
-    {
-      l0[l0_idx(Mem_layout::Registers_map_start)] =
-        Phys_addr((Unsigned64)kern_to_boot(bs_info.pi.l1_vdir)) | Phys_addr(3);
-
-      Phys_addr *const l1 = reinterpret_cast<Phys_addr*>(kern_to_boot(bs_info.pi.l1_vdir));
-      l1[l1_idx(Mem_layout::Registers_map_start)]
-        = Phys_addr((Unsigned64)kern_to_boot(bs_info.pi.l2_mmio_dir)) | Phys_addr(3);
-    }
-  else
-    {
-      l1[l1_idx(Mem_layout::Registers_map_start)]
-        = Phys_addr((Unsigned64)kern_to_boot(bs_info.pi.l2_mmio_dir)) | Phys_addr(3);
-    }
+  p = d->walk(::Virt_addr(Mem_layout::Registers_map_start), 2, false, alloc, Bs_mem_map());
 
   asm volatile (
       "msr tcr_el2, %1   \n"
@@ -308,7 +326,7 @@ Bootstrap::init_paging()
       "msr ttbr0_el2, %0 \n"
       "isb               \n"
       : :
-      "r"(l0), "r"(Page::Ttbcr_bits));
+      "r"(d), "r"(Page::Ttbcr_bits));
 
   return Phys_addr(0);
 }
