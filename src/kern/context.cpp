@@ -1454,7 +1454,7 @@ Context::handle_drq()
   resched |= _drq_q.handle_requests();
   state_del_dirty(Thread_drq_ready);
 
-  //LOG_MSG_3VAL(this, "xdrq", state(), ret, cpu_lock.test());
+  //LOG_MSG_3VAL(this, "xdrq", state(), 0, cpu_lock.test());
 
   /*
    * When the context is marked as dead (Thread_dead) then we must not execute
