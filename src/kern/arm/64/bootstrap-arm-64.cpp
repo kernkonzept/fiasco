@@ -383,7 +383,7 @@ Bootstrap::leave_el3()
   // setup SCR (disable monitor completely)
   asm volatile ("msr scr_el3, %0"
                 : :
-                "r"(Cpu::Scr_ns | Cpu::Scr_rw | Cpu::Scr_smd));
+                "r"(Cpu::Scr_ns | Cpu::Scr_rw | Cpu::Scr_smd | Cpu::Scr_hce));
 
   Mword sctlr_el3;
   Mword sctlr;
