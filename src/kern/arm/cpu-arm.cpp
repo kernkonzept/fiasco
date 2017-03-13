@@ -205,48 +205,70 @@ Cpu::disable_smp()
   clear_actrl(0x20);
 }
 
-IMPLEMENTATION [arm && arm_v7]: //------------------------------------------
+IMPLEMENTATION [arm && (arm_v7 || arm_v8) && 32bit]: //----------------------
 
-PUBLIC static inline NEEDS[Cpu::midr]
-bool
-Cpu::is_smp_capable()
+static void modify_actl(Unsigned64 mask, Unsigned64 value)
 {
-  // ACTRL is implementation defined
-  Mword id = midr();
-  if ((id & 0xff0fff00) == 0x410fc000)
-    {
-      switch ((id >> 4) & 0xf)
-        {
-	  case 5: case 7: case 9: case 14: case 15: return true;
-        }
-    }
-
-  return false;
+  Mword actrl;
+  asm volatile ("mrc p15, 0, %0, c1, c0, 1" : "=r" (actrl));
+  if ((actrl & mask) != value)
+    asm volatile ("mcr p15, 0, %0, c1, c0, 1" : : "r" ((actrl & mask) | value));
 }
 
-PUBLIC static inline
+static void modify_cpuectl(Unsigned64 mask, Unsigned64 value)
+{
+  Mword ectlh, ectll;
+  asm volatile ("mrrc p15, 1, %0, %1, c15" : "=r"(ectll), "=r"(ectlh));
+  Unsigned64 ectl = (((Unsigned64)ectlh) << 32) | ectll;
+  if ((ectl & mask) != value)
+    asm volatile ("mcrr p15, 1, %0, %1, c15" : :
+                  "r"((ectll & mask) | value),
+                  "r"((ectlh & (mask >> 32)) | (value >> 32)));
+}
+
+struct Midr_match
+{
+  Unsigned32 mask;
+  Unsigned32 value;
+  Unsigned64 f_mask;
+  Unsigned64 f_value;
+  void (*func)(Unsigned64 mask, Unsigned64 value);
+};
+
+static Midr_match _enable_smp[] =
+{
+  { 0xff0ffff0, 0x410fc050, 0x41, 0x41, &modify_actl },   // Cortex-A5
+  { 0xff0ffff0, 0x410fc070, 0x40, 0x40, &modify_actl },   // Cortex-A7
+  { 0xff0ffff0, 0x410fc090, 0x41, 0x41, &modify_actl },   // Cortex-A9
+  { 0xff0ffff0, 0x410fc0e0, 0x41, 0x41, &modify_actl },   // Cortex-A17
+  { 0xff0ffff0, 0x410fc0f0, 0x41, 0x41, &modify_actl },   // Cortex-A15
+  { 0xff0fff00, 0x410fd000, 0x40, 0x40, &modify_cpuectl } // Cortex-A3x/A5x/A7x
+};
+
+PUBLIC static
 void
 Cpu::enable_smp()
 {
-  if (!is_smp_capable())
-    return;
-
-  Mword v = ((midr() >> 4) & 7) == 7 ? 0x40 : 0x41;
-
-  Mword actrl;
-  asm volatile ("mrc p15, 0, %0, c1, c0, 1" : "=r" (actrl));
-  if (!(actrl & 0x40))
-    asm volatile ("mcr p15, 0, %0, c1, c0, 1" : : "r" (actrl | v));
+  Unsigned32 m = midr();
+  for (auto const &e : _enable_smp)
+    if ((e.mask & m) == e.value)
+      {
+        e.func(e.f_mask, e.f_value);
+        break;
+      }
 }
 
-PUBLIC static inline NEEDS[Cpu::clear_actrl]
+PUBLIC static
 void
 Cpu::disable_smp()
 {
-  if (!is_smp_capable())
-    return;
-
-  clear_actrl(0x41);
+  Unsigned32 m = midr();
+  for (auto const &e : _enable_smp)
+    if ((e.mask & m) == e.value)
+      {
+        e.func(e.f_mask, ~e.f_value & e.f_mask);
+        break;
+      }
 }
 
 //---------------------------------------------------------------------------
