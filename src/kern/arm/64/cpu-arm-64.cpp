@@ -38,6 +38,16 @@ public:
     Sctlr_e0e     = 1UL << 24,
     Sctlr_ee      = 1UL << 25,
     Sctlr_uci     = 1UL << 26,
+
+    Sctlr_el1_res = (1UL << 11) | (1UL << 20) | (3UL << 22) | (3UL << 28),
+
+    Sctlr_el1_generic = Sctlr_c
+                    | Sctlr_cp15ben
+                    | Sctlr_i
+                    | Sctlr_dze
+                    | Sctlr_uct
+                    | Sctlr_uci
+                    | Sctlr_el1_res,
   };
 };
 
@@ -49,18 +59,9 @@ EXTENSION class Cpu
 public:
   enum
   {
-    Sctlr_res = (1UL << 11) | (1UL << 20) | (3UL << 22) | (3UL << 28),
-
-    Sctlr_generic = Sctlr_m
+    Sctlr_generic = Sctlr_el1_generic
+                    | Sctlr_m
                     | (Config::Cp15_c1_use_alignment_check ?  Sctlr_a : 0)
-                    | Sctlr_c
-                    | Sctlr_cp15ben
-                    | Sctlr_sed
-                    | Sctlr_i
-                    | Sctlr_dze
-                    | Sctlr_uct
-                    | Sctlr_uci
-                    | Sctlr_res,
   };
 };
 
@@ -133,12 +134,7 @@ Cpu::init_hyp_mode()
         "msr MDCR_EL2, %0"
         : : "r"(Mdcr_bits));
 
-  asm volatile (
-        "mrs x0, SCTLR_EL1\n"
-        "bic x0, x0, #1 \n"
-        "msr SCTLR_EL1, x0"
-        : : : "x0");
-
+  asm volatile ("msr SCTLR_EL1, %0" : : "r"(Sctlr_el1_generic));
   asm volatile ("msr HCR_EL2, %0" : : "r" (Hcr_host_bits));
 
   Mem::dsb();

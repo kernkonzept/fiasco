@@ -123,8 +123,7 @@ Context::arm_hyp_load_non_vm_state(bool vgic)
 {
   asm volatile ("msr hcr_el2, %0"   : : "r"(Cpu::Hcr_host_bits));
   // load normal SCTLR ...
-  asm volatile ("msr sctlr_el1, %0"
-                : : "r" (Cpu::Sctlr_generic & ~Cpu::Sctlr_m));
+  asm volatile ("msr sctlr_el1, %0" : : "r" (Cpu::Sctlr_el1_generic));
   asm volatile ("msr cpacr_el1, %0" : : "r" (0x300000));
   // disable all debug exceptions for non-vms, if we want debug
   // exceptions into JDB we need either per-thread or a global
@@ -285,8 +284,7 @@ Context::arm_ext_vcpu_switch_to_host(Vcpu_state *vcpu, Vm_state *v)
   // setting for this value. (probably including the contextidr)
   asm volatile ("msr MDCR_EL2, %0" : : "r"(Cpu::Mdcr_bits));
   asm volatile ("msr MDSCR_EL1, %0" : : "r"(0));
-  asm volatile ("msr SCTLR_EL1, %0"
-                : : "r"(Cpu::Sctlr_generic & ~Cpu::Sctlr_m));
+  asm volatile ("msr SCTLR_EL1, %0" : : "r"(Cpu::Sctlr_el1_generic));
 }
 
 PRIVATE inline
