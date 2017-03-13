@@ -4,6 +4,7 @@ INTERFACE [arm]:
 #include "mmio_register_block.h"
 #include "paging.h"
 #include "config.h"
+#include "kip.h"
 
 EXTENSION class Bootstrap
 {
@@ -99,7 +100,7 @@ Bootstrap::map_ram_range(Kpdir *kd, Bs_alloc &alloc,
     }
 }
 
-PRIVATE static inline void
+PRIVATE static inline NEEDS["kip.h"] void
 Bootstrap::map_ram(Kpdir *kd, Bs_alloc &alloc)
 {
   Kip *kip = reinterpret_cast<Kip*>(kern_to_boot(bs_info.kip));
