@@ -127,7 +127,7 @@ private:
 /**
  * \brief encapsulation of RCU implementation.
  *
- * This calss aggregates per CPU data structures as well as the global
+ * This class aggregates per CPU data structures as well as the global
  * data structure for RCU and provides a common RCU interface.
  */
 class Rcu
