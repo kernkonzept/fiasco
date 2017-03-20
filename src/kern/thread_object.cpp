@@ -55,7 +55,7 @@ Obj_cap::deref(L4_fpage::Rights *rights = 0, bool dbg = false)
 	return 0;
 
       if (rights) *rights = L4_fpage::Rights::RWX();
-      return current_thread();
+      return current;
     }
 
   return current->space()->lookup_local(cap(), rights);
