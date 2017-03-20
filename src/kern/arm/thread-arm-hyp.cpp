@@ -366,6 +366,7 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
 
   v->gic.hcr = Gic_h::Hcr(0);
   v->gic.apr = 0;
+  v->vmpidr = 1UL << 31; // ARMv8: RES1
 
   if (current() == this)
     {
