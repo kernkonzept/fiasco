@@ -19,7 +19,7 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
   v->cpacr = 0x5555555;
   v->fcseidr = 0;
   v->contextidr = 0;
-  v->cntkctl = (1UL << 8) | (1UL << 1); // allow PL0 access to CNTV
+  v->cntkctl = Host_cntkctl; // allow PL0 access to CNTV
   v->vbar = 0;
   v->amair0 = 0;
   v->amair1 = 0;
@@ -362,7 +362,7 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
 
   v->host_regs.hcr = arm_get_hcr();
   v->host_regs.mdscr = 0;
-  v->cntkctl = (1UL << 8) | (1UL << 1);
+  v->cntkctl = Host_cntkctl;
 
   v->gic.hcr = Gic_h::Hcr(0);
   v->gic.apr = 0;

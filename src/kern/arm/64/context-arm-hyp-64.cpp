@@ -25,7 +25,7 @@ public:
     {
       Unsigned64 hcr;
 
-      Unsigned32 sctlr;
+      Unsigned32 dummy;
       Unsigned32 mdscr;
     };
 
@@ -132,6 +132,9 @@ Context::arm_hyp_load_non_vm_state(bool vgic)
   asm volatile ("msr mdcr_el2, %0" : : "r"(Cpu::Mdcr_bits));
   asm volatile ("msr mdscr_el1, %0" : : "r"(0));
   asm volatile ("msr cntv_ctl_el0, %0" : : "r"(0)); // disable VTIMER
+  // CNTKCTL: allow access to virtual and physical counter from PL0
+  // see: generic_timer.cpp: setup_timer_access (Hyp)
+  asm volatile("msr CNTKCTL_EL1, %0" : : "r"(0x3));
   if (vgic)
     Gic_h::gic->hcr(Gic_h::Hcr(0));
 }
@@ -278,7 +281,7 @@ Context::arm_ext_vcpu_switch_to_host(Vcpu_state *vcpu, Vm_state *v)
   asm volatile ("mrs %0, CPACR_EL1"   : "=r"(v->guest_regs.cpacr));
   asm volatile ("msr CPACR_EL1, %0"   : : "r"(3UL << 20));
 
-  asm volatile ("msr CNTKCTL_EL1, %0"   : : "r" ((1UL << 8) | (1UL << 1)));
+  asm volatile ("msr CNTKCTL_EL1, %0"   : : "r" (Host_cntkctl));
   asm volatile ("mrs %0, CNTV_CTL_EL0" : "=r" (v->cntv_ctl));
   // disable VTIMER
   asm volatile ("msr CNTV_CTL_EL0, %0" : : "r"(0));
@@ -300,6 +303,12 @@ Context::arm_ext_vcpu_switch_to_host_no_load(Vcpu_state *vcpu, Vm_state *v)
   v->guest_regs.mdcr       = v->mdcr;
   v->guest_regs.mdscr      = v->mdscr;
   v->guest_regs.cpacr      = v->cpacr;
+
+  v->cntkctl = Host_cntkctl;
+  v->sctlr   = Cpu::Sctlr_el1_generic;
+  v->cpacr   = 3UL << 20;
+  v->mdcr    = Cpu::Mdcr_bits;
+  v->mdscr   = 0;
 }
 
 PRIVATE inline
@@ -331,9 +340,10 @@ void
 Context::arm_ext_vcpu_switch_to_guest_no_load(Vcpu_state *, Vm_state *v)
 {
   v->cntkctl = v->guest_regs.cntkctl;
+  v->cpacr = v->guest_regs.cpacr;
+  v->sctlr = v->guest_regs.sctlr;
   v->mdcr  = v->guest_regs.mdcr;
   v->mdscr = v->guest_regs.mdscr;
-  v->cpacr = v->guest_regs.cpacr;
 }
 
 PRIVATE inline

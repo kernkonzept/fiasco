@@ -149,6 +149,10 @@ Context::arm_hyp_load_non_vm_state(bool vgic)
   asm volatile ("mcr p15, 0, %0, c13, c0, 0" : : "r" (0));
   asm volatile ("mcr p15, 0, %0, c13, c0, 1" : : "r" (0));
   asm volatile ("mcr p15, 0, %0, c14, c3, 1" : : "r" (0)); // disable VTIMER
+  // CNTKCTL: allow access to virtual and physical counter from PL0
+  // see: generic_timer.cpp: setup_timer_access (Hyp)
+  asm volatile("mcr p15, 0, %0, c14, c1, 0" : : "r"(0x3));
+
   if (vgic)
     Gic_h::gic->hcr(Gic_h::Hcr(0));
 }
@@ -301,7 +305,13 @@ Context::arm_get_hcr()
   return v;
 }
 
-PRIVATE inline
+PRIVATE static inline
+Unsigned32 Context::arm_host_sctlr()
+{
+  return (Cpu::sctlr | Cpu::Cp15_c1_cache_bits) & ~(Cpu::Cp15_c1_mmu | (1 << 28));
+}
+
+PRIVATE inline NEEDS[Context::arm_host_sctlr]
 void
 Context::arm_ext_vcpu_switch_to_host(Vcpu_state *vcpu, Vm_state *v)
 {
@@ -318,17 +328,17 @@ Context::arm_ext_vcpu_switch_to_host(Vcpu_state *vcpu, Vm_state *v)
 
   // fcse not supported in vmm
   asm volatile ("mcr p15, 0, %0, c13, c0, 0" : : "r"(0));
+  asm volatile ("mcr p15, 0, %0, c1,  c0, 0" : : "r"(arm_host_sctlr()));
   asm volatile ("mcr p15, 0, %0, c13, c0, 1"
                 : : "r"(v->host_regs.contextidr));
-  asm volatile ("mcr p15, 0, %0, c14, c1, 0"
-                : : "r"((1UL << 8) | (1UL << 1))); // cntkctl
+  asm volatile ("mcr p15, 0, %0, c14, c1, 0" : : "r"(Host_cntkctl));
 
   asm volatile ("mrc p15, 0, %0, c14, c3, 1" : "=r" (v->cntv_ctl));
   // disable VTIMER
   asm volatile ("mcr p15, 0, %0, c14, c3, 1" : : "r"(0));
 }
 
-PRIVATE inline
+PRIVATE inline NEEDS[Context::arm_host_sctlr]
 void
 Context::arm_ext_vcpu_switch_to_host_no_load(Vcpu_state *vcpu, Vm_state *v)
 {
@@ -338,17 +348,18 @@ Context::arm_ext_vcpu_switch_to_host_no_load(Vcpu_state *vcpu, Vm_state *v)
   v->guest_regs.contextidr = v->contextidr;
   v->guest_regs.cntkctl    = v->cntkctl;
 
+  v->sctlr      = arm_host_sctlr();
+  v->cntkctl    = Host_cntkctl;
   v->fcseidr    = 0;
   v->contextidr = v->host_regs.contextidr;
 }
 
 PRIVATE inline
 void
-Context::arm_ext_vcpu_load_host_regs(Vcpu_state *vcpu, Vm_state *v)
+Context::arm_ext_vcpu_load_host_regs(Vcpu_state *vcpu, Vm_state *)
 {
   asm volatile ("mcr p15, 0, %0, c13, c0, 3" : : "r"(vcpu->host.tpidruro));
   asm volatile ("mcr p15, 4, %0, c1,  c1, 0" : : "r"(Cpu::Hcr_host_bits));
-  asm volatile ("mcr p15, 0, %0, c1,  c0, 0" : : "r"(v->host_regs.sctlr));
 }
 
 PRIVATE inline
@@ -364,6 +375,7 @@ Context::arm_ext_vcpu_switch_to_guest(Vcpu_state *, Vm_state *v)
                 : : "r"(v->guest_regs.contextidr));
 
   asm volatile ("mcr p15, 0, %0, c14, c1, 0" : : "r" (v->guest_regs.cntkctl));
+  asm volatile ("mcr p15, 0, %0, c1,  c0, 0" : : "r"(v->guest_regs.sctlr));
   asm volatile ("mcr p15, 0, %0, c14, c3, 1" : : "r" (v->cntv_ctl));
 }
 
@@ -373,21 +385,16 @@ Context::arm_ext_vcpu_switch_to_guest_no_load(Vcpu_state *, Vm_state *v)
 {
   v->fcseidr    = v->guest_regs.fcseidr;
   v->contextidr = v->guest_regs.contextidr;
-  v->cntkctl = v->guest_regs.cntkctl;
+  v->cntkctl    = v->guest_regs.cntkctl;
+  v->sctlr      = v->guest_regs.sctlr;
 }
 
 PRIVATE inline
 void
-Context::arm_ext_vcpu_load_guest_regs(Vcpu_state *vcpu, Vm_state *v, Mword hcr)
+Context::arm_ext_vcpu_load_guest_regs(Vcpu_state *vcpu, Vm_state *, Mword hcr)
 {
   asm volatile ("mrc p15, 0, %0, c13, c0, 3" : "=r"(vcpu->host.tpidruro));
-  asm volatile ("mrc p15, 0, %0, c1,  c0, 0" : "=r"(v->host_regs.sctlr));
-
   asm volatile ("mcr p15, 4, %0, c1,  c1, 0" : : "r"(hcr));
-  Unsigned32 sctlr = access_once(&v->guest_regs.sctlr);
-  if (hcr & Cpu::Hcr_tge)
-    sctlr &= ~Cpu::Cp15_c1_mmu;
-  asm volatile ("mcr p15, 0, %0, c1,  c0, 0" : : "r"(sctlr));
   asm volatile ("mcr p15, 0, %0, c13, c0, 3" : : "r"(vcpu->_regs.tpidruro));
 }
 
