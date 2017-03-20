@@ -1,5 +1,14 @@
 IMPLEMENTATION [arm && cpu_virt]:
 
+EXTENSION class Context
+{
+protected:
+  enum
+  {
+    Host_cntkctl = (1U << 8) | (1U << 1),
+  };
+};
+
 PROTECTED static inline
 Context::Vm_state *
 Context::vm_state(Vcpu_state *vs)
@@ -71,10 +80,7 @@ Context::arch_load_vcpu_kern_state(Vcpu_state *vcpu, bool do_load)
   if (do_load)
     arm_ext_vcpu_load_host_regs(vcpu, v);
   else
-    {
-      v->hcr   = Cpu::Hcr_host_bits;
-      v->sctlr = v->host_regs.sctlr;
-    }
+    v->hcr   = Cpu::Hcr_host_bits;
 }
 
 IMPLEMENT_OVERRIDE inline NEEDS[Context::vm_state,
@@ -125,9 +131,7 @@ Context::arch_load_vcpu_user_state(Vcpu_state *vcpu, bool do_load)
     {
       vcpu->host.tpidruro = _tpidruro;
       _tpidruro           = vcpu->_regs.tpidruro;
-      v->host_regs.sctlr  = v->sctlr;
       v->hcr              = hcr;
-      v->sctlr            = v->guest_regs.sctlr;
     }
 }
 
