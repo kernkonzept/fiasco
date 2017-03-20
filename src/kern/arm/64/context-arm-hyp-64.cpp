@@ -244,6 +244,9 @@ Context::load_ext_vcpu_state(Mword _to_state, Vm_state const *v)
 //  asm volatile ("msr FPEXC32_EL2, %0" : : "r"(v->fpexc32));
   asm volatile ("msr IFSR32_EL2, %0"  : : "r"(v->ifsr32));
 
+
+  asm volatile ("msr VMPIDR_EL2, %0" : : "r" (v->vmpidr));
+
   asm volatile ("msr CNTV_CVAL_EL0, %0" : : "r" (v->cntv_cval));
   asm volatile ("msr CNTVOFF_EL2, %0"   : : "r" (v->cntvoff));
   asm volatile ("msr CNTKCTL_EL1, %0"   : : "r" (v->cntkctl));
@@ -311,6 +314,7 @@ PRIVATE inline
 void
 Context::arm_ext_vcpu_switch_to_guest(Vcpu_state *, Vm_state *v)
 {
+  asm volatile ("msr VMPIDR_EL2, %0" : : "r" (v->vmpidr));
   asm volatile ("msr CNTKCTL_EL1, %0"   : : "r" (v->guest_regs.cntkctl));
   asm volatile ("msr CNTV_CTL_EL0, %0" : : "r" (v->cntv_ctl));
   Unsigned32 mdcr = access_once(&v->guest_regs.mdcr);
