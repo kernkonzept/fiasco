@@ -14,7 +14,7 @@ it. User level applications are not included in this package.
 Licensing
 ---------
 
-Fiasco is freely redistributable under the GPL (see l4/kernel/fiasco/COPYING).
+Fiasco is freely redistributable under the GPL (see COPYING).
 For different licensing schemes please contact us at:
   info@l4re.org
 This is a closed list, proper mails will be let through by the moderator.
@@ -26,10 +26,10 @@ Supported architectures and ABIs
 
   * IA32  (32-bit Intel, AMD and compatible CPUs, i486 and above)
   * AMD64 (64-bit Intel, AMD and compatible CPUs)
-  * ARM   (various ARM CPUs and platforms)
+  * ARM   (various 32-bit ARM CPUs and platforms)
+  * ARM64 (various 64-bit ARM CPUs and platforms)
+  * MIPS  (32-bit and 64-bit MIPS version R2 and R6)
   * UX    (Linux usermode emulation of Fiasco/L4)
-
-A list of changes since the last release can be found in the CHANGES file.
 
 Building the Fiasco kernel
 --------------------------
@@ -37,13 +37,12 @@ Building the Fiasco kernel
 To compile Fiasco you need a recent version of gcc and a recent version of
 GNU binutils, GNU make and Perl version 5.6 or later.
 
-Change to the directory fiasco/l4/kernel/fiasco/ and
+Change to the directory where this README is located and
 create a build directory with "make BUILDDIR=build" and change to the
 'build' directory. Optionally modify the default configuration using
 "make menuconfig". Then compile the kernel by typing "make".
 
-The kernel image can then be found in fiasco/l4/kernel/fiasco/build/ as
-'fiasco'.
+The kernel binary can then be found as 'fiasco' in the build directory.
 
 For further information refer to: https://l4re.org/fiasco/build.html
 
@@ -58,7 +57,6 @@ Remote SVN
 ----------
 
 The latest development versions are available from our SVN server.
-The truly bleeding edge will want to check out daily snapshots from there.
 However, be aware that these may not always run correctly.
 You can also get user land programs for L4 from this SVN.
 
