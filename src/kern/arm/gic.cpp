@@ -351,7 +351,7 @@ Gic::is_edge_triggered(Mword pin) const
   if (pin < 16)
     return false;
 
-  Mword v = _dist.read<Unsigned32>(GICD_ICFGR + (pin >> 4) * 4);
+  Unsigned32 v = _dist.read<Unsigned32>(GICD_ICFGR + (pin >> 4) * 4);
   return (v >> ((pin & 15) * 2)) & 2;
 }
 
