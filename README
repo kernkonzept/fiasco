@@ -16,10 +16,10 @@ Licensing
 
 Fiasco is freely redistributable under the GPL (see l4/kernel/fiasco/COPYING).
 For different licensing schemes please contact us at:
-  fiasco-core@os.inf.tu-dresden.de
+  info@l4re.org
 This is a closed list, proper mails will be let through by the moderator.
 
-For more details, see our webpage at: http://os.inf.tu-dresden.de/fiasco/
+For more details, see our webpage at: https://l4re.org/fiasco/
 
 Supported architectures and ABIs
 --------------------------------
@@ -45,14 +45,14 @@ create a build directory with "make BUILDDIR=build" and change to the
 The kernel image can then be found in fiasco/l4/kernel/fiasco/build/ as
 'fiasco'.
 
-For further information refer to: http://os.inf.tu-dresden.de/fiasco/build.html
+For further information refer to: https://l4re.org/fiasco/build.html
 
 Mailing List
 ------------
 
 For problem reports and suggestions regarding the Fiasco microkernel,
 please subscribe and send mail to the l4-hackers mailing list:
-   http://os.inf.tu-dresden.de/mailman/listinfo/l4-hackers/
+   https://os.inf.tu-dresden.de/mailman/listinfo/l4-hackers/
 
 Remote SVN
 ----------
@@ -63,7 +63,7 @@ However, be aware that these may not always run correctly.
 You can also get user land programs for L4 from this SVN.
 
 For information how to use SVN see:
-http://os.inf.tu-dresden.de/L4Re/download.html
+https://l4re.org/download.html
 
 
 Enjoy!
