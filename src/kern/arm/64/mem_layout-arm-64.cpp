@@ -58,4 +58,18 @@ public:
 
 };
 
+//--------------------------------------------------------------------------
+IMPLEMENTATION [arm]:
 
+//---------------------------------
+// Workaround GCC BUG 33661
+// Do not use register asm ("r") in a template function, it will be ignored
+//---------------------------------
+PUBLIC static inline
+Mword
+Mem_layout::_read_special_safe(Mword const *a)
+{
+  Mword res;
+  __asm__ __volatile__ ("ldr %0, %1\n" : "=r" (res) : "m" (*a) : "cc" );
+  return res;
+}

@@ -31,19 +31,19 @@ IMPLEMENT inline
 bool
 Thread::pagein_tcb_request(Return_frame *regs)
 {
-  //if ((*(Mword*)regs->pc & 0xfff00fff ) == 0xe5900000)
-  if (*(Mword*)regs->pc == 0xe59ee000)
-    {
-      // printf("TCBR: %08lx\n", *(Mword*)regs->pc);
-      // skip faulting instruction
-      regs->pc += 4;
-      // tell program that a pagefault occurred we cannot handle
-      regs->psr |= 0x40000000;	// set zero flag in psr
-      regs->r[0] = 0;
+  assert (!regs->esr.pf_write()); // must be a read
+  assert (regs->esr.il());        // must be a 32bit wide insn
+  // we assume the instruction is a ldr with the target register
+  // in the lower 5 bits
+  unsigned rt = *(Mword*)regs->pc & 0x1f;
 
-      return true;
-    }
-  return false;
+  // skip faulting instruction
+  regs->pc += 4;
+  // tell program that a pagefault occurred we cannot handle
+  regs->psr |= 0x40000000;	// set zero flag in psr
+  regs->r[rt] = 0;
+
+  return true;
 }
 
 PUBLIC static inline void
@@ -112,6 +112,11 @@ Thread::arm_kernel_sync_entry(Trap_state *ts)
 
   switch (esr.ec())
     {
+    case 0x25: // adata bort from kenrel mode
+      if (EXPECT_FALSE(!handle_cap_area_fault(ts)))
+        call_nested_trap_handler(ts);
+      break;
+
     case 0x3c: // BRK
       call_nested_trap_handler(ts);
       ts->pc += 4;
@@ -232,8 +237,31 @@ Thread::get_fault_pfa(Arm_esr /*hsr*/, bool /*insn_abt*/, bool /*ext_vcpu*/)
   return a;
 }
 
+PRIVATE static inline
+bool
+Thread::handle_cap_area_fault(Trap_state *ts)
+{
+  Address pfa;
+  asm volatile ("mrs %0, FAR_EL1" : "=r"(pfa));
+
+  if (EXPECT_FALSE(!Mem_layout::is_caps_area(pfa)))
+    return false;
+
+  if (EXPECT_FALSE(!pagein_tcb_request(ts)))
+    return false;
+
+  return true;
+}
+
 //--------------------------------------------------------------------------
 IMPLEMENTATION [arm && 64bit && cpu_virt]:
+
+PRIVATE static inline
+bool
+Thread::handle_cap_area_fault(Trap_state *)
+{
+  return false; // cannot happen in HYP mode
+}
 
 PRIVATE static inline
 Arm_esr
