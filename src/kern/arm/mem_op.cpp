@@ -12,6 +12,10 @@ public:
     Op_cache_inv_data          = 0x02,
     Op_cache_coherent          = 0x03,
     Op_cache_dma_coherent      = 0x04,
+    Op_cache_dma_coherent_full = 0x05,
+    Op_cache_l2_clean          = 0x06,
+    Op_cache_l2_flush          = 0x07,
+    Op_cache_l2_inv            = 0x08,
   };
 
   enum Op_mem
@@ -85,6 +89,12 @@ Mem_op::__arm_kmem_l1_cache_maint(int op, void const *kstart, void const *kend)
       Mem_unit::flush_dcache(Virt_addr(Address(kstart)), Virt_addr(Address(kend)));
       break;
 
+    // We might not want to implement this one but single address outer
+    // cache flushing can be really slow
+    case Op_cache_dma_coherent_full:
+      Mem_unit::flush_dcache();
+      break;
+
     default:
       break;
     };
@@ -103,6 +113,12 @@ IMPLEMENTATION [arm && cpu_virt]:
 PRIVATE static inline void
 Mem_op::__arm_mem_l1_cache_maint(int op, void const *start, void const *end)
 {
+  if (op == Op_cache_dma_coherent_full)
+    {
+      __arm_kmem_l1_cache_maint(Op_cache_dma_coherent_full, 0, 0);
+      return;
+    }
+
   Virt_addr v = Virt_addr((Address)start);
   Virt_addr e = Virt_addr((Address)end);
 
@@ -155,9 +171,28 @@ Mem_op::arm_mem_cache_maint(int op, void const *start, void const *end)
   c->set_ignore_mem_op_in_progress(true);
   __arm_mem_l1_cache_maint(op, start, end);
   c->set_ignore_mem_op_in_progress(false);
+  switch (op)
+    {
+    case Op_cache_l2_clean:
+    case Op_cache_l2_flush:
+    case Op_cache_l2_inv:
+      outer_cache_op(op, Address(start), Address(end));
+      break;
 
-  if (op == Op_cache_dma_coherent)
-    outer_cache_op_flush(Address(start), Address(end));
+    case Op_cache_dma_coherent:
+      outer_cache_op(Op_cache_l2_flush, Address(start), Address(end));
+      break;
+
+    // We might not want to implement this one but single address outer
+    // cache flushing can be really slow
+    case Op_cache_dma_coherent_full:
+      Outer_cache::flush();
+      break;
+
+    default:
+      break;
+    };
+
 }
 
 // ------------------------------------------------------------------------
@@ -242,7 +277,7 @@ IMPLEMENTATION [arm && !outer_cache]:
 
 PRIVATE static inline
 void
-Mem_op::outer_cache_op_flush(Address, Address)
+Mem_op::outer_cache_op(int, Address, Address)
 {}
 
 // ------------------------------------------------------------------------
@@ -250,7 +285,7 @@ IMPLEMENTATION [arm && outer_cache]:
 
 PRIVATE static
 void
-Mem_op::outer_cache_op_flush(Address start, Address end)
+Mem_op::outer_cache_op(int op, Address start, Address end)
 {
 
   Virt_addr v = Virt_addr(start);
@@ -276,7 +311,18 @@ Mem_op::outer_cache_op_flush(Address start, Address end)
         {
           Virt_addr vstart = Virt_addr(phys_addr) | offs;
           Virt_addr vend = vstart + sz;
-          Outer_cache::flush(Virt_addr::val(vstart), Virt_addr::val(vend), false);
+          switch (op)
+            {
+            case Op_cache_l2_clean:
+              Outer_cache::clean(Virt_addr::val(vstart), Virt_addr::val(vend), false);
+              break;
+            case Op_cache_l2_flush:
+              Outer_cache::flush(Virt_addr::val(vstart), Virt_addr::val(vend), false);
+              break;
+            case Op_cache_l2_inv:
+              Outer_cache::invalidate(Virt_addr::val(vstart), Virt_addr::val(vend), false);
+              break;
+            }
         }
       v += sz;
     }
