@@ -529,7 +529,7 @@ thread_guest_tlb_probe(Mword *pfa)
   else
     mfgc0(&entry, Cp0_entry_lo1);
 
-  *pfa = (entry & 0x3fffffc0) << 6;
+  *pfa = ((entry & 0x3fffffc0) << 6) | (*pfa & 0xfff);
 
   mtgc0(gelo[0], Cp0_entry_lo1);
   mtgc0(gelo[1], Cp0_entry_lo2);
