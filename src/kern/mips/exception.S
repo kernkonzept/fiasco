@@ -521,7 +521,7 @@ END(kern_kdebug_ipi_entry)
 mips_tlb_refill_handler:
 	generic_exception_entry
 	ext	k1, k0, 3, 2
-	beqz	k1, 1f           # if comming from kernel mode skip loading k-sp
+	beqz	k1, 1f           # if coming from kernel mode skip loading k-sp
 	  move	k1, sp           # capture the current (kernel) sp
 	ASM_MFC0	k1, CP0_ERROREPC # load the kernel SP in ErrorEPC
 1:
@@ -548,7 +548,7 @@ mips_tlb_refill_handler:
 mips_xtlb_refill_handler:
 	generic_exception_entry
 	ext	k1, k0, 3, 2
-	beqz	k1, 1f           # if comming from kernel mode skip loading k-sp
+	beqz	k1, 1f           # if coming from kernel mode skip loading k-sp
 	  move	k1, sp           # capture the current (kernel) sp
 	ASM_MFC0	k1, CP0_ERROREPC # load the kernel SP in ErrorEPC
 1:

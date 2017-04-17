@@ -285,13 +285,13 @@ Mem_unit::tlb_read(Unsigned32 index)
  *                  flush shall be skipped.
  * \param guest_id  VZ guest ID (unused by this implementation).
  *
- * \pre Not reentrant. Must execute with disabled preemption.
+ * \pre Not re-entrant. Must execute with disabled preemption.
  *
  * This function uses unique entries with virtual addresses in `kseg1` and with
  * zero EntryLo0 and EntryLo1 values to overwrite matching TLB entries.
  *
  * \note If immediate visibility for TLB changes is needed an additional `ehb`
- *       is requred.
+ *       is required.
  *
  * \remark This implementation might overwrite wired entries.
  * \remark Assumes no global entries in the TLB.
@@ -362,10 +362,10 @@ Mem_unit::set_vz_guest_rid(Mword ctl1_orig, Mword guest_id)
  *                  the TLB. Values less than zero are unassigned ASIDs and the
  *                  flush shall be skipped.
  * \param guest_id  VZ guest ID to be flushed. Value `0` means no guest entries
- *                  shall mbe flushed (only root mappings with given ASID are
+ *                  shall be flushed (only root mappings with given ASID are
  *                  affected.
  *
- * \pre Not reentrant. Must execute with disabled preemption.
+ * \pre Not re-entrant. Must execute with disabled preemption.
  *
  * This function invalidates all TLB entries that either have guest ID `0` and
  * match the given `asid`, or if `guest_id` is not zero match the given guest
@@ -373,7 +373,7 @@ Mem_unit::set_vz_guest_rid(Mword ctl1_orig, Mword guest_id)
  * to explicitly invalidate entries.
  *
  * \note If immediate visibility for TLB changes is needed an additional `ehb`
- *       is requred.
+ *       is required.
  *
  * \remark This implementation might overwrite wired root entries.
  * \remark Assumes support for `EntryHi.EHINV`.
@@ -453,13 +453,13 @@ Mem_unit::_vz_guest_tlb_flush_impl(unsigned guest_id)
 /**
  * JTLB full flush for VZ CPUs without TLBINV instruction.
  *
- * \pre Not reentrant. Must execute with disabled preemption.
+ * \pre Not re-entrant. Must execute with disabled preemption.
  *
  * ID. The `EntryHi.EHINV` flag is used to detect invalid TLB entries and
- * to explicitely invalidate entries.
+ * to explicitly invalidate entries.
  *
  * \note If immediate visibility for TLB changes is needed an additional `ehb`
- *       is requred.
+ *       is required.
  *
  * \remark This implementation might overwrite wired root entries.
  * \remark Assumes support for `EntryHi.EHINV`.
@@ -478,7 +478,7 @@ Mem_unit::_vz_tlb_flush_full()
     {
       Mword e = tlb_read(idx);
 
-      // We assume thet c CPU with VZ and GuestID support has EHINV support
+      // We assume that a CPU with VZ and GuestID support has EHINV support
       if (e & Entry_hi_EHINV)
         continue;
 
@@ -499,14 +499,14 @@ Mem_unit::_vz_tlb_flush_full()
  *                  shall be flushed (only root mappings with given ASID are
  *                  affected).
  *
- * \pre Not reentrant. Must execute with disabled preemption.
+ * \pre Not re-entrant. Must execute with disabled preemption.
  *
  * This function invalidates all TLB entries that either have guest ID `0` and
  * match the given `asid`, or if `guest_id` is not zero match the given guest
  * ID.
  *
  * \note If immediate visibility for TLB changes is needed an additional `ehb`
- *       is requred.
+ *       is required.
  *
  * \remark This implementation might overwrite wired root entries.
  * \remark Assumes that TLBINV and TLBINVF do not affect guest TLB entries
@@ -574,14 +574,14 @@ Mem_unit::_vz_tlbinv_tlb_flush_full()
  *                  shall mbe flushed (only root mappings with given ASID are
  *                  affected.
  *
- * \pre Not reentrant. Must execute with disabled preemption.
+ * \pre Not re-entrant. Must execute with disabled preemption.
  *
  * This function invalidates all TLB entries that either have guest ID `0` and
  * match the given `asid`, or if `guest_id` is not zero match the given guest
  * ID.
  *
  * \note If immediate visibility for TLB changes is needed an additional `ehb`
- *       is requred.
+ *       is required.
  *
  * \remark This implementation might overwrite wired root entries.
  * \remark Assumes that TLBINV and TLBINVF do not affect guest TLB entries
@@ -653,12 +653,12 @@ Mem_unit::_vz_tlbinv_ftlb_flush_loop_full()
  *                  flush shall be skipped.
  * \param guest_id  VZ guest ID to be flushed (unused).
  *
- * \pre Not reentrant. Must execute with disabled preemption.
+ * \pre Not re-entrant. Must execute with disabled preemption.
  *
  * This function invalidates all TLB entries that match the given `asid`.
  *
  * \note If immediate visibility for TLB changes is needed an additional `ehb`
- *       is requred.
+ *       is required.
  *
  * \remark This implementation might overwrite wired root entries.
  */
@@ -712,12 +712,12 @@ Mem_unit::_tlbinv_ftlb_flush_loop_full()
  *                  flush shall be skipped.
  * \param guest_id  VZ guest ID to be flushed (unused).
  *
- * \pre Not reentrant. Must execute with disabled preemption.
+ * \pre Not re-entrant. Must execute with disabled preemption.
  *
  * This function invalidates all TLB entries that match the given `asid`.
  *
  * \note If immediate visibility for TLB changes is needed an additional `ehb`
- *       is requred.
+ *       is required.
  *
  * \remark This implementation might overwrite wired root entries.
  */
@@ -824,7 +824,7 @@ void Mem_unit::set_current_asid(unsigned long asid)
 /**
  * Create a unique VA for the given TLB index and asid.
  *
- * We use 0xa0000000 for that bacause 0x80000000 is used
+ * We use 0xa0000000 for that because 0x80000000 is used
  * in the TLB init and we want to be sure that we do never collide with
  * these entries.
  */
