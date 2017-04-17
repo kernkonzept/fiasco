@@ -1,11 +1,4 @@
-IMPLEMENTATION [arm]:
-
-IMPLEMENT inline
-void Mem_unit::tlb_flush()
-{
-  asm volatile("mcr p15, 0, %0, c8, c7, 0" // TLBIALL
-               : : "r" (0) : "memory");
-}
+IMPLEMENTATION [arm && !cpu_virt]:
 
 IMPLEMENT inline
 void Mem_unit::dtlb_flush(void *va)
@@ -16,6 +9,13 @@ void Mem_unit::dtlb_flush(void *va)
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_v5]:
+
+IMPLEMENT inline
+void Mem_unit::tlb_flush()
+{
+  asm volatile("mcr p15, 0, %0, c8, c7, 0" // TLBIALL
+               : : "r" (0) : "memory");
+}
 
 IMPLEMENT inline
 void Mem_unit::tlb_flush(void *va, unsigned long)
@@ -32,6 +32,15 @@ void Mem_unit::tlb_flush(unsigned long)
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_v6plus && !cpu_virt]:
+
+IMPLEMENT inline
+void Mem_unit::tlb_flush()
+{
+  btc_flush();
+  Mem::dsb();
+  asm volatile("mcr p15, 0, %0, c8, c7, 0" // TLBIALL
+               : : "r" (0) : "memory");
+}
 
 IMPLEMENT inline
 void Mem_unit::tlb_flush(void *va, unsigned long asid)
@@ -57,6 +66,21 @@ void Mem_unit::tlb_flush(unsigned long asid)
 IMPLEMENTATION [arm && arm_v6plus && cpu_virt]:
 
 IMPLEMENT inline
+void Mem_unit::tlb_flush()
+{
+  btc_flush();
+  Mem::dsb();
+  asm volatile("mcr p15, 4, r0, c8, c7, 4" : : : "memory"); // TLBIALLNSNH
+}
+
+IMPLEMENT inline
+void Mem_unit::dtlb_flush(void *va)
+{
+  asm volatile("mcr p15, 4, %0, c8, c7, 1" // TLBIMVAH
+               : : "r" ((unsigned long)va & 0xfffff000) : "memory");
+}
+
+IMPLEMENT inline
 void Mem_unit::tlb_flush(void *va, unsigned long asid)
 {
   if (asid == Asid_invalid)
@@ -64,7 +88,7 @@ void Mem_unit::tlb_flush(void *va, unsigned long asid)
   btc_flush();
   Mem::dsb();
   Mword t1, t2;
-  if (1) asm volatile(
+  asm volatile(
       "mrrc p15, 6, %[tmp1], %[tmp2], c2 \n"
       "mcrr p15, 6, %[tmp1], %[asid], c2 \n"
       "isb \n"
@@ -73,8 +97,6 @@ void Mem_unit::tlb_flush(void *va, unsigned long asid)
       : [tmp1] "=&r" (t1), [tmp2] "=&r" (t2)
       : [mva] "r" (((unsigned long)va & 0xfffff000)), [asid] "r" (asid << 16)
       : "memory");
-
-  if (0) asm volatile ( "mcr p15, 4, r0, c8, c7, 4" );
 }
 
 IMPLEMENT inline
@@ -83,7 +105,7 @@ void Mem_unit::tlb_flush(unsigned long asid)
   btc_flush();
   Mem::dsb();
   Mword t1, t2;
-  if (1) asm volatile(
+  asm volatile(
       "mrrc p15, 6, %[tmp1], %[tmp2], c2 \n"
       "mcrr p15, 6, %[tmp1], %[asid], c2 \n"
       "isb \n"
@@ -92,16 +114,10 @@ void Mem_unit::tlb_flush(unsigned long asid)
       : [tmp1] "=&r" (t1), [tmp2] "=&r" (t2)
       : [asid] "r" (asid << 16)
       : "memory");
-
-  if (0) asm volatile ( "mcr p15, 4, r0, c8, c7, 4" );
 }
-
-//---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !arm_v8 && cpu_virt]:
 
 IMPLEMENT_OVERRIDE inline
 void Mem_unit::kernel_tlb_flush()
 {
-  asm volatile("mcr p15, 4, r0, c8, c7, 0" : : "r" (0) : "memory");
+  asm volatile("mcr p15, 4, r0, c8, c7, 0" : : : "memory"); // TLBIALLH
 }
-
