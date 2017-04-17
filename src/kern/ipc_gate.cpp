@@ -414,7 +414,7 @@ ipc_gate_factory(Ram_quota *q, Space *space,
         }
 
       *err = L4_err::EPerm;
-      if (EXPECT_FALSE(!(thread_rights & L4_fpage::Rights::W())))
+      if (EXPECT_FALSE(!(thread_rights & L4_fpage::Rights::CS())))
         return 0;
     }
 
