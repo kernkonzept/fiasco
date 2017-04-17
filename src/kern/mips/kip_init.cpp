@@ -14,9 +14,9 @@ IMPLEMENTATION [mips]:
 #include "mem_layout.h"
 
 
-// Make the stuff below apearing only in this compilation unit.
+// Make the stuff below appearing only in this compilation unit.
 // Trick Preprocess to let the struct reside in the cc file rather
-// than putting it into the _i.h file which is perfectly wrong in 
+// than putting it into the _i.h file which is perfectly wrong in
 // this case.
 namespace KIP_namespace
 {

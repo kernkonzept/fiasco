@@ -8,7 +8,7 @@ INTERFACE:
  * Alternatives are patched at boot time to replace feature dependent
  * instructions.
  *
- * The curren timplementation is limited to patching a single ASM (32bit)
+ * The current implementation is limited to patching a single ASM (32bit)
  * instruction.
  *
  * An array of Alternative_insn structures is provided between

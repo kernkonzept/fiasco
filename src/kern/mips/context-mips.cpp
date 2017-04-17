@@ -35,7 +35,7 @@ PROTECTED inline void Context::arch_setup_utcb_ptr()
   // simulate the TLS model + TCB layout:
   // the thread pointer points + 0x7000 after the end of the TCB
   // (2x void*: dtv ptr and private ptr) before that we shall store
-  // the UTCB pointer in user-land TLS and we simlaute this...
+  // the UTCB pointer in user-land TLS and we simulate this...
   _ulr = (Address)&_utcb.usr()->utcb_addr + 0x7000 + (3 * sizeof(void*));
   _utcb.kern()->utcb_addr = (Mword)_utcb.usr().get();
 }
