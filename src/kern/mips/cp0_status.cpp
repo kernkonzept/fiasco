@@ -45,7 +45,11 @@ INTERFACE [mips32]:
 EXTENSION class Cp0_status
 {
 public:
-  enum { ST_USER_DEFAULT = ST_KSU_USER | ST_EXL | ST_IE };
+  enum
+  {
+    ST_USER_DEFAULT = ST_KSU_USER | ST_EXL | ST_IE,
+    ST_DEFAULT      = 0,
+  };
 };
 
 // -----------------------------------------------------------------------------
@@ -56,7 +60,8 @@ EXTENSION class Cp0_status
 public:
   enum
   {
-    ST_USER_DEFAULT = ST_FR | ST_UX | ST_SX | ST_KX | ST_KSU_USER | ST_EXL | ST_IE
+    ST_USER_DEFAULT = ST_FR | ST_UX | ST_SX | ST_KX | ST_KSU_USER | ST_EXL | ST_IE,
+    ST_DEFAULT      = ST_FR | ST_UX | ST_SX | ST_KX,
   };
 };
 

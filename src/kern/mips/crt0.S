@@ -52,7 +52,12 @@ _start:
  */
 MPSNIPPET _tramp_mp_e0
 	mtc0	$0, $13, 0 /* cause  <- 0 */
+#ifdef __mips64
+	li	t0, 0xe0 | (1 << 26)   /* status <- FR | KX | SX | UX */
+	mtc0	t0, $12, 0
+#else
 	mtc0	$0, $12, 0 /* status <- 0 */
+#endif
 	ehb
 MPEND _tramp_mp_e0
 
