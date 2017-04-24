@@ -509,7 +509,7 @@ Cpu::init(Cpu_number cpu, bool resume, bool is_boot_cpu)
       // now we should have a user address space up to 0xe0000000
     }
 
-  Cp0_status::write(0);
+  Cp0_status::write(Cp0_status::ST_DEFAULT);
   Mips::mtc0_32(0, Mips::Cp0_cause);
   Mips::ehb();
 
