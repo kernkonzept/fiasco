@@ -28,7 +28,7 @@ Delay::measure()
   unsigned count = 0;
 
   Kip *k = Kip::k();
-  Cpu_time t = Kip::k()->clock;
+  Cpu_time t = k->clock;
   Timer::update_timer(t + 1000); // 1ms
   while (t == (t1 = k->clock))
     Proc::pause();
