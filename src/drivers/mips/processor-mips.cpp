@@ -483,7 +483,7 @@ IMPLEMENTATION [mips]:
 #include "asm_mips.h"
 #include "alternatives.h"
 
-/// Unblock external inetrrupts
+/// Unblock external interrupts
 IMPLEMENT static inline ALWAYS_INLINE
 void Proc::sti()
 {
