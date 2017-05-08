@@ -7,7 +7,10 @@
 #include "globalconfig.h"
 
 #ifndef CONFIG_BIG_ENDIAN
-#define TARGET_BYTE_ORDER(a) a
+#define TARGET_BYTE_ORDER(a) \
+              len == 8 ? htole64(a) \
+                       : (len == 4 ? htole32(a) \
+                                   : (len == 2 ? htole16(a) : a))
 #else
 #define TARGET_BYTE_ORDER(a) \
               len == 8 ? htobe64(a) \
