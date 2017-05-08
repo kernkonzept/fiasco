@@ -58,7 +58,7 @@
 .macro restore_cp0_status ts_base, ts_offset
 	mfc0	k0, CP0_STATUS
 	ext	k1, k0, 6, 26
-	lw	k0, TS_STATUS(\ts_offset)(\ts_base)
+	ASM_L	k0, TS_STATUS(\ts_offset)(\ts_base)
 	ins	k0, k1, 6, 26
 #ifdef CONFIG_CPU_VIRT
 	ASM_ALTERNATIVE_ORIG_START
@@ -371,7 +371,7 @@ ENTRY reserved_insn
 	sll	k0, k0, 3      # 32 insn bundles (2 insns) one for each target
 	ASM_LA	k1, 2f         # register at 2f
 	ASM_ADDU	k0, k1, k0     # calculate the address of the target register load
-	lw	k1, TS_STATUS(CALL_FRAME_SIZE)(sp)
+	ASM_L	k1, TS_STATUS(CALL_FRAME_SIZE)(sp)
 	mtc0	k1, CP0_STATUS # restore CP0 Status as the entry code modified it
 	ASM_MFC0	k1, CP0_EPC    # skip the rdhwr insn
 	ASM_ADDIU	k1, k1, 4
