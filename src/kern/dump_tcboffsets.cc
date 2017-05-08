@@ -3,14 +3,17 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <arpa/inet.h>
+#include <endian.h>
 #include "globalconfig.h"
 
 #ifndef CONFIG_BIG_ENDIAN
 #define TARGET_BYTE_ORDER(a) a
 #else
-#define TARGET_BYTE_ORDER(a) len == 4 ? htonl(a) : a
-#endif 
+#define TARGET_BYTE_ORDER(a) \
+              len == 8 ? htobe64(a) \
+                       : (len == 4 ? htobe32(a) \
+                                   : (len == 2 ? htobe16(a) : a))
+#endif
 
 #define READ_VAL \
   ({read(fd, &val, len); TARGET_BYTE_ORDER(val);})
