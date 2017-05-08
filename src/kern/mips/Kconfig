@@ -57,6 +57,19 @@ config CPU_MIPS64_R6
 
 endchoice
 
+choice
+        prompt "Endianess"
+        default MIPS_LITTLE_ENDIAN
+
+config MIPS_LITTLE_ENDIAN
+        bool "Little Endian"
+
+config MIPS_BIG_ENDIAN
+        bool "Big Endian"
+        select BIG_ENDIAN
+
+endchoice
+
 config WEAK_ORDERING
 	bool
 	prompt "Weakly ordered memory access" \

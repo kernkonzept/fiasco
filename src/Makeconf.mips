@@ -6,10 +6,14 @@ BITS = $(BITS-y)
 
 CROSS_COMPILE             ?= mips-linux-
 
-LD_EMULATION_CHOICE       := elf$(BITS)ltsmip
+LD_EMULATION_CHOICE-$(CONFIG_MIPS_LITTLE_ENDIAN) := elf$(BITS)ltsmip
+LD_EMULATION_CHOICE-$(CONFIG_MIPS_BIG_ENDIAN)    := elf$(BITS)btsmip
+LD_EMULATION_CHOICE       := $(LD_EMULATION_CHOICE-y)
 SHARED_FLAGS-clang        += -fno-integrated-as
-SHARED_FLAGS              += -EL -msoft-float -mabi=$(BITS)
+SHARED_FLAGS              += -msoft-float -mabi=$(BITS)
 SHARED_FLAGS              += -mno-abicalls
+SHARED_FLAGS-$(CONFIG_MIPS_LITTLE_ENDIAN) += -EL
+SHARED_FLAGS-$(CONFIG_MIPS_BIG_ENDIAN)    += -EB
 SHARED_FLAGS-$(CONFIG_CPU_MIPS32_R2) += -march=mips32r2
 SHARED_FLAGS-$(CONFIG_CPU_MIPS32_R6) += -march=mips32r6
 SHARED_FLAGS-$(CONFIG_CPU_MIPS64_R2) += -march=mips64r2
