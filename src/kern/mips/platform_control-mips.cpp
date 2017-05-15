@@ -69,7 +69,7 @@ Platform_control::alloc_secondary_boot_code()
     case 5: // CWB coherent write back
       break;
     default:
-      printf("MIPS: error non-coherent CCA on boot cpu disbale MP\n");
+      printf("MIPS: Error, non-coherent CCA on boot CPU, disabling SMP.\n");
       return nullptr;
     }
 
