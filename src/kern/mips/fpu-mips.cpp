@@ -108,7 +108,7 @@ Fpu::mode_64bit()
 // ------------------------------------------------------------------------
 IMPLEMENTATION [mips32 && fpu && !mips_r6]:
 
-PRIVATE static inline
+PRIVATE static inline ALWAYS_INLINE
 void
 Fpu::set_mipsr2_fp64()
 {
@@ -121,7 +121,7 @@ Fpu::set_mipsr2_fp64()
 // ------------------------------------------------------------------------
 IMPLEMENTATION [mips64 && fpu && !mips_r6]:
 
-PRIVATE static inline
+PRIVATE static inline ALWAYS_INLINE
 void
 Fpu::set_mipsr2_fp64()
 {
@@ -141,7 +141,7 @@ Fpu::mode_64bit()
   return true;
 }
 
-PRIVATE static inline
+PRIVATE static inline ALWAYS_INLINE
 void
 Fpu::set_mipsr2_fp64()
 {
