@@ -64,16 +64,3 @@ Mem_layout::read_special_safe(T const *a)
   return T(res);
 #endif
 }
-
-PUBLIC static inline
-bool
-Mem_layout::is_special_mapped(void const *a)
-{
-  register Mword pagefault_if_0 asm("r14");
-  asm volatile ("msr cpsr_f, #0 \n" // clear flags
-                "ldr %0, [%0]   \n"
-		"movne %0, #1   \n"
-		"moveq %0, #0   \n"
-		: "=r" (pagefault_if_0) : "0" (a) : "cc");
-  return pagefault_if_0;
-}

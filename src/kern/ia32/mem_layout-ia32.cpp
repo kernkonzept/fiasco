@@ -54,21 +54,3 @@ Mem_layout::read_special_safe(T const *a)
   return T(res);
 
 }
-
-PUBLIC static inline
-bool
-Mem_layout::is_special_mapped(void const *a)
-{
-  // Touch the state to page in the TCB. If we get a pagefault here,
-  // the handler doesn't handle it but returns immediatly after
-  // setting eax to 0xffffffff
-  Mword pagefault_if_0;
-  asm volatile (
-      "clc; mov (%2), %0 \n\t"
-      "setnc %b0         \n\t"
-      : "=acd" (pagefault_if_0)
-      : "0"(0UL), "acdbSD"(a)
-      : "cc");
-  return pagefault_if_0;
-}
-
