@@ -240,6 +240,7 @@ static Midr_match _enable_smp[] =
   { 0xff0ffff0, 0x410fc050, 0x41, 0x41, &modify_actl },   // Cortex-A5
   { 0xff0ffff0, 0x410fc070, 0x40, 0x40, &modify_actl },   // Cortex-A7
   { 0xff0ffff0, 0x410fc090, 0x41, 0x41, &modify_actl },   // Cortex-A9
+  { 0xff0ffff0, 0x410fc0d0, 0x41, 0x41, &modify_actl },   // Cortex-A12
   { 0xff0ffff0, 0x410fc0e0, 0x41, 0x41, &modify_actl },   // Cortex-A17
   { 0xff0ffff0, 0x410fc0f0, 0x41, 0x41, &modify_actl },   // Cortex-A15
   { 0xff0fff00, 0x410fd000, 0x40, 0x40, &modify_cpuectl } // Cortex-A3x/A5x/A7x
