@@ -310,7 +310,7 @@ Cpu::early_init_platform()
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [(arm_v7 || arm_v8) && !arm_cortex_a9 && mp]:
+IMPLEMENTATION [(arm_v7 || arm_v8) && !arm_cortex_a9]:
 
 #include "kmem.h"
 
