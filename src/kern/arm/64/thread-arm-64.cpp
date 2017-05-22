@@ -61,28 +61,6 @@ Thread::arm_fast_exit(void *sp, void *pc, void *arg)
      "r" (r0));
 }
 
-PUBLIC static
-bool
-Thread::handle_fpu_trap(Trap_state *ts)
-{
-  if (Fpu::is_enabled())
-    {
-      assert(Fpu::fpu.current().owner() == current());
-      ts->esr.ec() = 0; // tag fpu undef insn
-    }
-  else if (current_thread()->switchin_fpu())
-    {
-      return true;
-    }
-  else
-    {
-      ts->esr.ec() = 0x07;
-      ts->esr.cv() = 1;
-      ts->esr.cpt_cpnr() = 10;
-    }
-
-  return false;
-}
 
 extern "C" void leave_by_vcpu_upcall(Trap_state *ts)
 {
@@ -217,6 +195,41 @@ Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
   return true;
 }
 
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && 64bit && fpu]:
+
+PUBLIC static
+bool
+Thread::handle_fpu_trap(Trap_state *ts)
+{
+  if (Fpu::is_enabled())
+    {
+      assert(Fpu::fpu.current().owner() == current());
+      ts->esr.ec() = 0; // tag fpu undef insn
+    }
+  else if (current_thread()->switchin_fpu())
+    {
+      return true;
+    }
+  else
+    {
+      ts->esr.ec() = 0x07;
+      ts->esr.cv() = 1;
+      ts->esr.cpt_cpnr() = 10;
+    }
+
+  return false;
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && 64bit && !fpu]:
+
+PUBLIC static
+bool
+Thread::handle_fpu_trap(Trap_state *)
+{
+  return false;
+}
 
 //--------------------------------------------------------------------------
 IMPLEMENTATION [arm && 64bit && !cpu_virt]:
