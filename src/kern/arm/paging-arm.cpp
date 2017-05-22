@@ -704,7 +704,7 @@ public:
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_lpae]:
 
-PUBLIC inline
+PUBLIC inline ALWAYS_INLINE
 unsigned char
 K_pte_ptr::page_order() const
 { return Kpdir::page_order_for_level(level); }
