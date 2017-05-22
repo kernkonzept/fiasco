@@ -14,8 +14,8 @@ TRAMP_MP_ASM_INCLUDE    := $(BSP_SRC_DIR)/tramp-mp-asm.h
 
 INTERFACES_KERNEL     += $(if $(CONFIG_PF_OMAP4_PANDABOARD)$(CONFIG_PF_OMAP5_5432EVM),gic)
 INTERFACES_KERNEL-pf_omap3 += timer_omap_1mstimer
-INTERFACES_KERNEL-pf_omap3_am33xx += timer_omap_gentimer
 INTERFACES_KERNEL     += $(foreach i,$(PREPROCESS_PARTS),$(INTERFACES_KERNEL-$(i)))
+INTERFACES_KERNEL-$(CONFIG_PF_OMAP3_AM33XX)  += timer_omap_gentimer
 INTERFACES_KERNEL-$(CONFIG_PF_OMAP5_5432EVM) += generic_timer
 
 uart_IMPL             += uart-arm-omap
