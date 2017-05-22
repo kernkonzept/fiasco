@@ -49,7 +49,7 @@ Mem_layout::in_kernel(Address a)
   return a > User_max;
 }
 
-PUBLIC static inline
+PUBLIC static inline ALWAYS_INLINE
 Mword
 Mem_layout::in_kernel_code (Address a)
 {
