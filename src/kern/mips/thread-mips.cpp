@@ -447,6 +447,8 @@ IMPLEMENT_OVERRIDE
 void
 Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
 {
+  vcpu_state->version = Vcpu_arch_version;
+
   if (!ext || (state() & Thread_ext_vcpu_enabled))
     return;
 
