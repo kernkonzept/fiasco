@@ -133,11 +133,3 @@ Mem_layout::read_special_safe(T const *a)
   Mword res;
   return T(res);
 }
-
-/* no page faults can occur, return true */
-PUBLIC static inline
-bool
-Mem_layout::is_special_mapped(void const * /*a*/)
-{
-  return true;
-}
