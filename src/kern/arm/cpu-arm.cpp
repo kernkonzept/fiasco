@@ -457,13 +457,13 @@ Cpu::id_init()
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [!arm_cpu_errata || !arm_v6plus]:
+IMPLEMENTATION [!arm_cpu_errata || !arm_v6plus || 64bit]:
 
 PRIVATE static inline
 void Cpu::init_errata_workarounds() {}
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm_cpu_errata && arm_v6plus]:
+IMPLEMENTATION [arm_cpu_errata && arm_v6plus && 32bit]:
 
 PRIVATE static inline
 void
