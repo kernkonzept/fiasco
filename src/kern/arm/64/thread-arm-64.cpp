@@ -1,5 +1,7 @@
 IMPLEMENTATION [arm && 64bit]:
 
+#include "fpu.h"
+
 /**
  * Mangle the error code in case of a kernel lib page fault.
  *
