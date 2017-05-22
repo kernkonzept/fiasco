@@ -454,7 +454,7 @@ Thread::map_fsr_user(Mword fsr, bool)
 { return fsr; }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_v6plus]:
+IMPLEMENTATION [arm && 32bit && arm_v6plus]:
 
 PROTECTED inline
 void
@@ -465,6 +465,17 @@ Thread::vcpu_resume_user_arch()
   asm volatile("mcr p15, 0, %0, c13, c0, 2"
                : : "r" (utcb().access(true)->values[25]) : "memory");
 }
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && (64bit || !arm_v6plus)]:
+
+PROTECTED inline
+void
+Thread::vcpu_resume_user_arch()
+{}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && arm_v6plus]:
 
 PRIVATE inline
 L4_msg_tag
@@ -501,11 +512,6 @@ Thread::store_tpidruro(Trex *t)
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && !arm_v6plus]:
-
-PROTECTED inline
-void
-Thread::vcpu_resume_user_arch()
-{}
 
 PRIVATE inline
 L4_msg_tag
