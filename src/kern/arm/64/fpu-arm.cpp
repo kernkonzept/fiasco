@@ -38,29 +38,6 @@ Fpu::save_user_exception_state(bool, Fpu_state *, Trap_state *,
 {}
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && fpu && arm_v6plus && !cpu_virt]:
-
-PRIVATE static inline
-void
-Fpu::copro_enable()
-{
-}
-
-// ------------------------------------------------------------------------
-IMPLEMENTATION [arm && fpu && arm_v6plus && cpu_virt]:
-
-PRIVATE static inline
-void
-Fpu::copro_enable()
-{
-  asm volatile("mrs  %0, CPACR_EL2  \n"
-               "orr  %0, %0, %1     \n"
-               "msr  CPACR_EL2, %0  \n"
-               : : "r" (0), "I" (3UL << 20));
-  Mem::isb();
-}
-
-// ------------------------------------------------------------------------
 IMPLEMENTATION [arm && fpu]:
 
 #include <cassert>
