@@ -679,6 +679,9 @@ void
 Jdb::remote_work(Cpu_number cpu, cxx::functor<void (Cpu_number)> &&func,
                  bool sync = true)
 {
+  if (!Cpu::online(cpu))
+    return;
+
   if (cpu == current_cpu)
     func(cpu);
   else
