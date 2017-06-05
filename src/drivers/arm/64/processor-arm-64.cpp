@@ -62,7 +62,7 @@ Cpu_phys_id Proc::cpu_id()
 {
   unsigned mpidr;
   __asm__("mrs %0, MPIDR_EL1" : "=r" (mpidr));
-  return Cpu_phys_id(mpidr & 0x7); // mind gic softirq
+  return Cpu_phys_id(mpidr & 0xffffff);
 }
 
 //--------------------------------------------------------------------
