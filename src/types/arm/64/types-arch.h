@@ -49,7 +49,7 @@ typedef Unsigned64             Cpu_time;
 
 #include <cxx/cxx_int>
 
-typedef cxx::int_type<unsigned char, struct Cpu_phys_id_t> Cpu_phys_id;
+typedef cxx::int_type<unsigned int, struct Cpu_phys_id_t> Cpu_phys_id;
 
 #endif
 
