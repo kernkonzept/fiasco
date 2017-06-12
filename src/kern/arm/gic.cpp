@@ -117,6 +117,38 @@ PUBLIC inline
 void Gic::pmr(unsigned prio)
 { _cpu.write<Unsigned32>(prio, GICC_PMR); }
 
+PRIVATE inline
+void Gic::gicc_enable()
+{
+  _cpu.write<Unsigned32>(GICC_CTRL_ENABLE | (Config_tz_sec ? GICC_CTRL_FIQEn : 0),
+                         GICC_CTRL);
+  pmr(Cpu_prio_val);
+}
+
+PRIVATE inline
+void Gic::gicd_enable()
+{
+  Unsigned32 dist_enable = GICD_CTRL_ENABLE;
+  if (Config_mxc_tzic && !Config_tz_sec)
+    dist_enable |= MXC_TZIC_CTRL_NSEN | MXC_TZIC_CTRL_NSENMASK;
+
+  _dist.write<Unsigned32>(dist_enable, GICD_CTRL);
+}
+
+PRIVATE inline
+void Gic::gicd_init_prio(unsigned from, unsigned to)
+{
+  for (unsigned i = from; i < to; i += 4)
+    _dist.write<Unsigned32>(0xa0a0a0a0, GICD_IPRIORITYR + i);
+}
+
+PRIVATE inline
+void Gic::gicd_init_regs(unsigned from, unsigned to)
+{
+  for (unsigned i = from; i < to; i += 32)
+    _dist.write<Unsigned32>(0xffffffff, GICD_ICENABLER + i * 4 / 32);
+}
+
 PRIVATE
 void
 Gic::cpu_init(bool resume)
@@ -171,9 +203,8 @@ Gic::cpu_init(bool resume)
         }
     }
 
-  _cpu.write<Unsigned32>(GICC_CTRL_ENABLE | (Config_tz_sec ? GICC_CTRL_FIQEn : 0),
-                         GICC_CTRL);
-  pmr(Cpu_prio_val);
+
+  gicc_enable();
 
   // Ensure BSPs have provided a mapping for the CPUTargetList
   assert(pcpu_to_sgi(Proc::cpu_id()) < 8);
@@ -214,11 +245,9 @@ Gic::init(bool primary_gic, int nr_irqs_override = -1)
         _dist.write<Unsigned32>(intmask, GICD_ITARGETSR + i);
     }
 
-  for (unsigned i = 32; i < num; i += 4)
-    _dist.write<Unsigned32>(0xa0a0a0a0, GICD_IPRIORITYR + i);
+  gicd_init_prio(32, num);
 
-  for (unsigned i = 32; i < num; i += 32)
-    _dist.write<Unsigned32>(0xffffffff, GICD_ICENABLER + i * 4 / 32);
+  gicd_init_regs(32, num);
 
   Mword v = 0;
   if (Config_tz_sec || Config_mxc_tzic)
@@ -227,14 +256,10 @@ Gic::init(bool primary_gic, int nr_irqs_override = -1)
   for (unsigned i = 32; i < num; i += 32)
     _dist.write<Unsigned32>(v, GICD_IGROUPR + i / 8);
 
-  Mword dist_enable = GICD_CTRL_ENABLE;
-  if (Config_mxc_tzic && !Config_tz_sec)
-    dist_enable |= MXC_TZIC_CTRL_NSEN | MXC_TZIC_CTRL_NSENMASK;
-
   for (unsigned i = 0; i < num; ++i)
     set_cpu(i, Cpu_number(0));
 
-  _dist.write<Unsigned32>(dist_enable, GICD_CTRL);
+  gicd_enable();
 
   if (Config_mxc_tzic)
     {
