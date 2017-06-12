@@ -10,7 +10,6 @@ uart_IMPL             += uart-arm-integrator
 config_IMPL           += config-arm-integrator
 mem_layout_IMPL       += mem_layout-arm-integrator
 pic_IMPL              += pic-arm-integrator
-bootstrap_IMPL        += bootstrap-arm-integrator
 timer_IMPL            += timer-arm-integrator
 timer_tick_IMPL       += timer_tick-single-vector
 kernel_uart_IMPL      += kernel_uart-arm-integrator

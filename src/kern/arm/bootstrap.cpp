@@ -30,6 +30,15 @@ public:
 };
 
 //---------------------------------------------------------------------------
+INTERFACE [arm && !(arm_sa || arm_pxa)]:
+
+EXTENSION class Bootstrap
+{
+public:
+  enum { Cache_flush_area = 0 };
+};
+
+//---------------------------------------------------------------------------
 INTERFACE [arm && arm_lpae]:
 
 #include <cxx/cxx_int>

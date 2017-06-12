@@ -40,7 +40,6 @@ pic_IMPL              += $(if $(CONFIG_PF_IMX_53),pic-gic pic-arm-imx-gic)
 pic_IMPL              += $(if $(CONFIG_PF_IMX_6),pic-gic pic-arm-imx-gic)
 pic_IMPL              += $(if $(CONFIG_PF_IMX_6UL),pic-gic pic-arm-imx-gic)
 pic_IMPL              += $(if $(CONFIG_PF_IMX_7),pic-gic pic-arm-imx-gic)
-bootstrap_IMPL        += bootstrap-arm-imx
 timer_IMPL            += $(if $(CONFIG_PF_IMX_21),timer-arm-imx21)
 timer_IMPL            += $(if $(CONFIG_PF_IMX_28),timer-arm-timrot)
 timer_IMPL            += $(if $(CONFIG_PF_IMX_35),timer-arm-imx_epit)

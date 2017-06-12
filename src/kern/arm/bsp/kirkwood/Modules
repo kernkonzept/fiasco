@@ -9,7 +9,6 @@ uart_IMPL              = uart uart-16550
 config_IMPL           += config-arm-kirkwood
 mem_layout_IMPL       += mem_layout-arm-kirkwood
 pic_IMPL              += pic-arm-kirkwood
-bootstrap_IMPL        += bootstrap-arm-kirkwood
 timer_IMPL            += timer-arm-kirkwood
 timer_tick_IMPL       += timer_tick-single-vector
 kernel_uart_IMPL      += kernel_uart-libuart
