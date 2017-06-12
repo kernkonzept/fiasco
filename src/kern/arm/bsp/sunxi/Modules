@@ -13,7 +13,6 @@ uart_IMPL             += uart-arm-sunxi
 config_IMPL           += config-arm-sunxi
 mem_layout_IMPL       += mem_layout-arm-sunxi
 pic_IMPL              += pic-gic pic-arm-sunxi
-bootstrap_IMPL        += bootstrap-arm-sunxi
 #timer_IMPL            += timer-arm-sunxi
 timer_IMPL            += timer-arm-generic timer-arm-generic-sunxi
 timer_tick_IMPL       += timer_tick-single-vector

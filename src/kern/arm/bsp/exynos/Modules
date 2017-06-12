@@ -27,7 +27,6 @@ pic_IMPL              += pic-arm-gic-exynos \
                          $(if $(CONFIG_PF_EXYNOS_EXTGIC),,pic-gic)
 ipi_IMPL              += $(if $(CONFIG_PF_EXYNOS_EXTGIC),ipi-arm-exynos)
 thread_IMPL           += thread-arm-exynos
-bootstrap_IMPL        += bootstrap-arm-exynos
 
 INTERFACES_KERNEL-$(CONFIG_PF_EXYNOS_TIMER_GEN) += generic_timer
 timer_IMPL            += $(if $(CONFIG_PF_EXYNOS_TIMER_GEN),timer-arm-generic timer-arm-generic-exynos)

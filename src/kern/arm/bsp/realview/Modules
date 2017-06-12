@@ -34,7 +34,6 @@ uart_IMPL             += uart-arm-realview
 config_IMPL           += config-arm-realview
 mem_layout_IMPL       += mem_layout-arm-realview
 pic_IMPL              += pic-gic pic-arm-realview
-bootstrap_IMPL        += bootstrap-arm-realview
 kernel_uart_IMPL      += kernel_uart-arm-realview
 reset_IMPL            += reset-arm-realview
 clock_IMPL            += clock-arm-realview

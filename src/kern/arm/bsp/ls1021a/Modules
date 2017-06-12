@@ -12,7 +12,6 @@ uart_IMPL              = uart uart-16550
 config_IMPL           += config-arm-ls1021a
 mem_layout_IMPL       += mem_layout-arm-ls1021a
 pic_IMPL              += pic-gic pic-arm-ls1021a
-bootstrap_IMPL        += bootstrap-arm-ls1021a
 timer_IMPL            += timer-arm-generic timer-arm-generic-ls1021a
 timer_tick_IMPL       += timer_tick-single-vector
 kernel_uart_IMPL      += kernel_uart-libuart

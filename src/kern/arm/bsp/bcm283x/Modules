@@ -20,7 +20,6 @@ arm_control_IMPL      += arm_control-arm-bcm283x
 config_IMPL           += config-arm-bcm283x
 mem_layout_IMPL       += mem_layout-arm-bcm283x
 pic_IMPL              += pic-arm-bcm283x
-bootstrap_IMPL        += bootstrap-arm-bcm283x
 timer_IMPL            += timer-arm-bcm283x
 timer_IMPL            += $(if $(CONFIG_ARM_V7PLUS),timer-arm-generic)
 timer_tick_IMPL       += $(if $(CONFIG_ARM_V7PLUS),timer_tick-arm-bcm283x,timer_tick-single-vector)

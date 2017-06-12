@@ -9,7 +9,6 @@ RAM_PHYS_BASE         := 0x0
 MPCORE_PHYS_BASE      := 0xf100c000
 TRAMP_MP_ASM_INCLUDE  := $(BSP_SRC_DIR)/tramp-mp-asm.h
 
-bootstrap_IMPL        += bootstrap-arm-armada38x
 clock_IMPL            += clock-generic
 config_IMPL           += config-arm-armada38x
 kernel_uart_IMPL      += kernel_uart-libuart

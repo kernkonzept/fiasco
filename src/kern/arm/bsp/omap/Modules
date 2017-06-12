@@ -22,7 +22,6 @@ uart_IMPL             += uart-arm-omap
 config_IMPL           += config-arm-omap
 mem_layout_IMPL       += mem_layout-arm-omap
 pic_IMPL              += $(if $(CONFIG_PF_OMAP4_PANDABOARD)$(CONFIG_PF_OMAP5_5432EVM),pic-gic pic-arm-gic-omap4,pic-arm-omap3)
-bootstrap_IMPL        += bootstrap-arm-omap
 timer_IMPL            += $(if $(CONFIG_PF_OMAP4_PANDABOARD),timer-arm-mptimer timer-arm-mptimer-omap4,timer-arm-omap3)
 timer_IMPL            += $(if $(CONFIG_PF_OMAP5_5432EVM),timer-arm-generic timer-arm-generic-omap5)
 timer_tick_IMPL       += timer_tick-single-vector
