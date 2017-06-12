@@ -83,9 +83,9 @@ man:
 	set -e; for i in $(MANSUBDIRS); do $(MAKE) -C $$i; done
 
 fiasco.builddir.create:
-	[ -e $(DFLBUILDDIR)/Makefile ] ||			 \
+	@[ -e $(DFLBUILDDIR)/Makefile ] ||			 \
 		($(call buildmakefile,$(DFLBUILDDIR)))
-	[ -f $(DFLBUILDDIR)/globalconfig.out ] || {		 \
+	@[ -f $(DFLBUILDDIR)/globalconfig.out ] || {		 \
 		cp  $(TEMPLDIR)/globalconfig.out.$(DFL_TEMPLATE) \
 			$(DFLBUILDDIR)/globalconfig.out;	 \
 		$(MAKE) -C $(DFLBUILDDIR) olddefconfig;	         \
