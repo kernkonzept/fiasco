@@ -52,6 +52,7 @@ public:
     Cpu_prio_val      = 0xf0,
   };
 
+  Unsigned32 pcpu_to_sgi(Cpu_phys_id);
 };
 
 // ------------------------------------------------------------------------
@@ -97,6 +98,10 @@ PUBLIC inline NEEDS["io.h"]
 bool
 Gic::has_sec_ext()
 { return _dist.read<Unsigned32>(GICD_TYPER) & (1 << 10); }
+
+IMPLEMENT_DEFAULT inline
+Unsigned32 Gic::pcpu_to_sgi(Cpu_phys_id cpu)
+{ return cxx::int_value<Cpu_phys_id>(cpu); }
 
 PUBLIC inline
 void Gic::softint_cpu(unsigned callmap, unsigned m)
@@ -169,6 +174,9 @@ Gic::cpu_init(bool resume)
   _cpu.write<Unsigned32>(GICC_CTRL_ENABLE | (Config_tz_sec ? GICC_CTRL_FIQEn : 0),
                          GICC_CTRL);
   pmr(Cpu_prio_val);
+
+  // Ensure BSPs have provided a mapping for the CPUTargetList
+  assert(pcpu_to_sgi(Proc::cpu_id()) < 8);
 }
 
 PUBLIC
@@ -196,7 +204,7 @@ Gic::init(bool primary_gic, int nr_irqs_override = -1)
 
   if (!Config_mxc_tzic)
     {
-      unsigned int intmask = 1U << cxx::int_value<Cpu_phys_id>(Proc::cpu_id());
+      unsigned int intmask = 1U << pcpu_to_sgi(Proc::cpu_id());
       intmask |= intmask << 8;
       intmask |= intmask << 16;
 
@@ -475,8 +483,8 @@ Gic::set_cpu(Mword pin, Cpu_number cpu)
   Unsigned32 val = _dist.read<Unsigned32>(reg);
 
   int shift = (pin % 4) * 8;
-  unsigned pcpu = cxx::int_value<Cpu_phys_id>(Cpu::cpus.cpu(cpu).phys_id());
-  val = (val & ~(0xf << shift)) | (1 << (pcpu + shift));
+  unsigned target = pcpu_to_sgi(Cpu::cpus.cpu(cpu).phys_id());
+  val = (val & ~(0xf << shift)) | (1 << (target + shift));
 
   _dist.write<Unsigned32>(val, reg);
 }
