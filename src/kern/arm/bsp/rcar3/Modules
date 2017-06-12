@@ -11,6 +11,7 @@ uart_IMPL             += uart-arm-rcar3
 config_IMPL           += config-arm-rcar3
 mem_layout_IMPL       += mem_layout-arm-rcar3
 pic_IMPL              += pic-gic pic-arm-rcar3
+gic_IMPL              += gic gic-arm-rcar3
 timer_IMPL            += timer-arm-generic timer-arm-generic-rcar3
 timer_tick_IMPL       += timer_tick-single-vector
 kernel_uart_IMPL      += kernel_uart-arm-rcar3
