@@ -1,7 +1,5 @@
 IMPLEMENTATION [arm_generic_timer && pf_rcar3]:
 
-#include "mem_layout.h"
-
 PUBLIC static
 unsigned Timer::irq()
 {
