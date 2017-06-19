@@ -244,14 +244,14 @@ LEAF(leave_by_trigger_exception)
 	.set push
 	.set at
 	lw	t0, TS_CAUSE(CALL_FRAME_SIZE)(sp)
-	and	t1, t0, ~0x303
-	or	t1, t1, 0x101  /* flag SW exception */
-	sw	t1, TS_CAUSE(CALL_FRAME_SIZE)(sp)
+	and	a0, t0, ~0x303
+	or	a0, a0, 0x101  /* flag SW exception */
+	sw	a0, TS_CAUSE(CALL_FRAME_SIZE)(sp)
 	/* clear continuation */
 	ASM_S	zero, TS_REG(0, CALL_FRAME_SIZE)(sp)
 	/* ra is ret_from_exception already, do a tail call */
 	j	thread_handle_trap
-	  nop
+	  ASM_ADDIU	a1, sp, CALL_FRAME_SIZE
 	.set pop
 END(leave_by_trigger_exception)
 
