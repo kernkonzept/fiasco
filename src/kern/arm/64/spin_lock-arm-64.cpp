@@ -48,6 +48,7 @@ Spin_lock<Lock_t>::unlock_arch()
       "ldr"#z " %" #u "[tmp], %[lock]  \n" \
       "bic %[tmp], %[tmp], #2          \n" /* Arch_lock == #2 */ \
       "stlr"#z " %" #u "[tmp], %[lock]             \n" \
+      "dsb ishst                       \n" \
       "sev                             \n" \
       : [lock] "=Q" (_lock), [tmp] "=&r" (tmp))
   extern char __use_of_invalid_type_for_Spin_lock__sizeof_is_invalid;
