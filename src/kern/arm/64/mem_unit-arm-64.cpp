@@ -67,7 +67,7 @@ void Mem_unit::tlb_flush(void *va, unsigned long asid)
 
   Mem::dsb();
   Mword tmp;
-  // FIXME: cloud do a compare for the current VMID before loading
+  // FIXME: could do a compare for the current VMID before loading
   // the vttbr and the isb
   asm volatile(
       "mrs %[tmp], vttbr_el2  \n"
@@ -94,7 +94,7 @@ void Mem_unit::tlb_flush(unsigned long asid)
   btc_flush();
   Mem::dsb();
   Mword tmp;
-  // FIXME: cloud do a compare for the current VMID before loading
+  // FIXME: could do a compare for the current VMID before loading
   // the vttbr and the isb
   asm volatile(
       "mrs %[tmp], vttbr_el2  \n"
