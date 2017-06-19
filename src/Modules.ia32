@@ -301,7 +301,7 @@ INTERFACES_CXXLIB	:= paranoia s_cruft
 LIBK		:= libk.a
 VPATH		+= lib/libk/$(CONFIG_XARCH) lib/libk
 PRIVATE_INCDIR  += lib/libk/$(CONFIG_XARCH) lib/libk
-INTERFACES_LIBK	:= atomic lock_guard auto_ptr std_macros
+INTERFACES_LIBK	:= atomic lock_guard std_macros
 CSRC_LIBK	+= gcc_lib.c
 CXXSRC_LIBK     += construction.cc
 

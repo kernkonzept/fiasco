@@ -188,7 +188,7 @@ LIBK 		:= libk.a
 VPATH          	+= lib/libk/$(CONFIG_XARCH) lib/libk
 PRIVATE_INCDIR 	+= lib/libk/$(CONFIG_XARCH) lib/libk
 
-INTERFACES_LIBK	:= auto_ptr atomic lock_guard std_macros
+INTERFACES_LIBK	:= atomic lock_guard std_macros
 CXXSRC_LIBK     += construction.cc
 atomic_IMPL     := atomic atomic-sparc
 
