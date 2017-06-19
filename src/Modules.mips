@@ -210,7 +210,7 @@ LIBK 		:= libk.a
 VPATH          	+= lib/libk/mips/$(BITS) lib/libk/mips lib/libk lib/libk/quad
 PRIVATE_INCDIR 	+= lib/libk/mips/$(BITS) lib/libk/mips lib/libk
 
-INTERFACES_LIBK	:= auto_ptr atomic lock_guard std_macros
+INTERFACES_LIBK	:= atomic lock_guard std_macros
 CSRC_LIBK	+= umoddi3.c ashldi3.c udivdi3.c qdivrem.c
 CXXSRC_LIBK     += construction.cc
 atomic_IMPL     := atomic atomic-mips

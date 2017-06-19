@@ -8,7 +8,7 @@ WRAPPERS		:= libwrappers.a
 # without modification
 
 INTERFACES_WRAPPERS	:= atomic lock_guard simple_lock slab_cache \
-			   auto_ptr l4_types l4_ipc
+			   l4_types l4_ipc
 
 l4_types_IMPL		:= l4_types-arch l4_types
 l4_ipc_IMPL		:= l4_ipc-arch l4_ipc
