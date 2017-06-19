@@ -24,7 +24,15 @@ INTERFACE [arm && arm_generic_timer]:
 EXTENSION class Timer
 {
 public:
-  static unsigned irq() { return 27; }
+  static unsigned irq()
+  {
+    switch (Gtimer::Type)
+      {
+      case Generic_timer::Physical: return 29;
+      case Generic_timer::Virtual:  return 27;
+      case Generic_timer::Hyp:      return 26;
+      };
+  }
 };
 
 // --------------------------------------------------------------------------
