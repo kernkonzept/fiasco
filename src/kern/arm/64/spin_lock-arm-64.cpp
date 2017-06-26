@@ -10,14 +10,12 @@ Spin_lock<Lock_t>::lock_arch()
 
 #define L(z,u) \
   __asm__ __volatile__ ( \
-      "1: ldr" #z "     %" #u "[d], [%[lock]]       \n" \
+      "   sevl                                      \n" \
+      "   prfm pstl1keep, [%[lock]]                 \n" \
+      "1: wfe                                       \n" \
+      "   ldaxr" #z "  %" #u "[d], [%[lock]]        \n" \
       "   tst     %[d], #2                          \n" /* Arch_lock == #2 */ \
-      "   beq 2f                                    \n" \
-      "   wfe                                       \n" \
-      "   b     1b                                  \n" \
-      "2: ldxr" #z "   %" #u "[d], [%[lock]]        \n" \
-      "   tst   %[d], #2                            \n" \
-      "   bne   1b                                  \n" \
+      "   bne 1b                                    \n" \
       "   orr   %[tmp], %[d], #2                    \n" \
       "   stxr" #z " %w[d], %" #u "[tmp], [%[lock]] \n" \
       "   cbnz  %w[d], 1b                           \n" \
@@ -48,8 +46,6 @@ Spin_lock<Lock_t>::unlock_arch()
       "ldr"#z " %" #u "[tmp], %[lock]  \n" \
       "bic %[tmp], %[tmp], #2          \n" /* Arch_lock == #2 */ \
       "stlr"#z " %" #u "[tmp], %[lock]             \n" \
-      "dsb ishst                       \n" \
-      "sev                             \n" \
       : [lock] "=Q" (_lock), [tmp] "=&r" (tmp))
   extern char __use_of_invalid_type_for_Spin_lock__sizeof_is_invalid;
   switch (sizeof(Lock_t))
