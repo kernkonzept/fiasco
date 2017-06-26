@@ -244,7 +244,7 @@ LEAF(leave_by_trigger_exception)
 	.set push
 	.set at
 	lw	t0, TS_CAUSE(CALL_FRAME_SIZE)(sp)
-	and	a0, t0, ~0x303
+	and	a0, t0, ~0x3ff
 	or	a0, a0, 0x101  /* flag SW exception */
 	sw	a0, TS_CAUSE(CALL_FRAME_SIZE)(sp)
 	/* clear continuation */
