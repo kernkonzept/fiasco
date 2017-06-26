@@ -660,12 +660,21 @@ public:
 };
 
 //----------------------------------------------------------------------------
-INTERFACE [arm]:
+INTERFACE [arm && 32bit]:
 
 EXTENSION class L4_exception_ipc
 {
 public:
   enum { Msg_size = 21 };
+};
+
+//----------------------------------------------------------------------------
+INTERFACE [arm && 64bit]:
+
+EXTENSION class L4_exception_ipc
+{
+public:
+  enum { Msg_size = 39 };
 };
 
 //----------------------------------------------------------------------------
