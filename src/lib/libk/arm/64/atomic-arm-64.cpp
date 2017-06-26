@@ -68,10 +68,11 @@ mp_cas_arch(Mword *m, Mword o, Mword n)
      "b.ne    2f                   \n"
      "stxr    %w[res], %[n], [%[m]]\n"
      "cbnz    %w[res], 1b          \n"
+     "dmb     ish                 \n"
      "2:                           \n"
      : [tmp] "=&r" (tmp), [res] "=&r" (res), "+m" (*m)
      : [n] "r" (n), [m] "r" (m), [o] "r" (o)
-     : "cc");
+     : "cc", "memory");
 
   // res == 0 is ok
   // res == 1 is failed
