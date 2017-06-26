@@ -1,5 +1,7 @@
 IMPLEMENTATION[arm && arm_v6plus]:
 
+#include "mem.h"
+
 inline
 void
 atomic_mp_add(Mword *l, Mword value)
@@ -54,7 +56,7 @@ atomic_mp_or(Mword *l, Mword value)
       : "cc");
 }
 
-inline
+inline NEEDS["mem.h"]
 bool
 mp_cas_arch(Mword *m, Mword o, Mword n)
 {
@@ -74,7 +76,8 @@ mp_cas_arch(Mword *m, Mword o, Mword n)
      "2:                           \n"
      : [tmp] "=&r" (tmp), [res] "=&r" (res), "+m" (*m)
      : [n] "r" (n), [m] "r" (m), [o] "r" (o)
-     : "cc");
+     : "cc", "memory");
+  Mem::dmb();
 
   // res == 0 is ok
   // res == 1 is failed
