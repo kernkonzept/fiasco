@@ -91,10 +91,10 @@ __iret:
 
 .Lret_from_exception:
 	ldr	x0, [sp, #EF_KSP]
+__return_from_user_invoke:
 	ldr	x1, [x0, #EF_ERETW]
 	cbnz	x1, 1f // handle continuations
 	mov	sp, x0
-__return_from_user_invoke:
 fast_ret_from_irq:
 	mrs x5, daif
 	cmp x5, #0x3c0

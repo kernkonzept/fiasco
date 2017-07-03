@@ -217,17 +217,9 @@
 .set noreorder
 .set noat
 
-LEAF(ret_from_exception)
-	ASM_L	k0, TS_REG(0, CALL_FRAME_SIZE)(sp)
-	bnez	k0, .Lexec_continuation
-	  nop
-	restore_all_and_eret	29, CALL_FRAME_SIZE
-
-.Lexec_continuation:
-	jr	k0
-	  ASM_S	zero, TS_REG(0, CALL_FRAME_SIZE)(sp) /* delay slot */
-
-END(ret_from_exception)
+LEAF(ret_from_user_invoke)
+	do_eret restore_all_and_eret
+END(ret_from_user_invoke)
 
 .section ".text.fast_ret_from_irq", "ax"
 LEAF(fast_ret_from_irq)
