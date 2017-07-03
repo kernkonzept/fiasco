@@ -110,7 +110,7 @@ Thread::user_invoke()
     regs->psr |= Proc::Status_always_mask;
   Proc::cli();
   extern char __return_from_user_invoke[];
-  arm_fast_exit(ts, __return_from_user_invoke, 0);
+  arm_fast_exit(ts, __return_from_user_invoke, ts);
   panic("should never be reached");
   while (1)
     {
@@ -304,8 +304,7 @@ Thread::Thread(Ram_quota *q)
   // clear out user regs that can be returned from the thread_ex_regs
   // system call to prevent covert channel
   Entry_frame *r = regs();
-  r->sp(0);
-  r->ip(0);
+  memset(r, 0, sizeof(*r));
   r->psr = Proc::Status_mode_user;
 
   state_add_dirty(Thread_dead, false);

@@ -129,8 +129,8 @@ Thread::Thread(Ram_quota *q)
   // clear out user regs that can be returned from the thread_ex_regs
   // system call to prevent covert channel
   Entry_frame *r = regs();
-  r->sp(0);
-  r->ip(0);
+  memset(r, 0, sizeof(*r));
+  r->status = Cp0_status::status_eret_to_user_ei(Cp0_status::read());
 
   state_add_dirty(Thread_dead, false);
   // ok, we're ready to go!
@@ -153,27 +153,29 @@ Thread::user_invoke()
   assert(current()->state() & Thread_ready);
   auto ts = current()->regs();
 
-  Mword register a0 __asm__("a0") = 0;
+  Proc::cli();
+
+  ts->r[4] = 0;
 
   if (EXPECT_FALSE(current_thread()->mem_space()->is_sigma0()))
-    a0 = Mem_layout::pmem_to_phys(Kip::k());
+    ts->r[4] = Mem_layout::pmem_to_phys(Kip::k());
 
   // FIXME: do we really need this or should the user be
   // responsible for that
   //Mem_op::cache()->icache_invalidate_all();
 
-  __asm__ __volatile__ (
-      "mtc0         %[sta], $12   \n"
-      ASM_MTC0 "    %[epc], $14   \n"
-      "move         $sp, %[usp]   \n"
-      //"synci                    \n"
-      "ehb                        \n"
-      "eret                       \n"
-     :
-     : [usp] "r" (ts->sp()), [epc] "r" (ts->ip()),
-       [sta] "r" (Cp0_status::status_eret_to_user_ei(Cp0_status::read())),
-       [a0]  "r" (a0)
-     );
+    {
+      extern char ret_from_user_invoke[];
+      Mword register a0 __asm__("a0") = (Mword)ts;
+      Mword register ra __asm__("ra") = (Mword)ret_from_user_invoke;
+      __asm__ __volatile__ (
+          ASM_ADDIU "  $sp, %[ts], -%[cfs]   \n"
+          "jr          %[ra]                 \n"
+          :
+          : [ra] "r" (ra),
+            [ts] "r" (a0),
+            [cfs] "i" (ASM_WORD_BYTES * ASM_NARGSAVE));
+    }
 
   __builtin_unreachable();
   panic("should never be reached");
