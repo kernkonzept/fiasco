@@ -129,7 +129,7 @@ Thread::call_nested_trap_handler(Trap_state *ts)
         " " ASM_S " %[tmp], 0(%[ntr])     \n"
         ".set pop                         \n"
         : [origstack] "=&r" (dummy1), [tmp] "=&r" (tmp),
-          "=r" (_ts), "=r" (_lcpu), "=r" (res)
+          "=r" (_ts), "=r" (_lcpu), "=&r" (res)
         : [ntr] "r" (&ntr), [stack] "r" (stack),
           [handler] "r" (nested_trap_handler),
           "2" (_ts), "3" (_lcpu),
