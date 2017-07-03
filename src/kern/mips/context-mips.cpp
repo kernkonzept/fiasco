@@ -161,7 +161,8 @@ Context::copy_and_sanitize_trap_state(Trap_state *dst,
                                       Trap_state const *src) const
 {
   *dst = access_once(src);
-  dst->status = 3 | (2 << 3);
+  dst->status &= Cp0_status::ST_USER_MASK;
+  dst->status |= Cp0_status::ST_USER_MUST_SET;
   if ((state() & Thread_ext_vcpu_enabled) && (src->status & (1 << 3)))
     dst->status |= 1 << 3;
 }
