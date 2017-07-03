@@ -2185,7 +2185,11 @@ bool
 Context::_execute_drq(Drq *rq, bool offline_cpu = false)
 {
   bool do_sched = _drq_q.execute_request(rq, Drq_q::No_drop, true);
-  assert (offline_cpu || home_cpu() == current_cpu());
+  // the DRQ function executed above might be preemptible in the case
+  // of local execution
+  if (EXPECT_FALSE(!offline_cpu && home_cpu() != current_cpu()))
+    return false;
+
   if (!in_ready_list() && (state(false) & Thread_ready_mask))
     {
       if (EXPECT_FALSE(offline_cpu))
