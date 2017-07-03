@@ -584,12 +584,12 @@ Irq_sender::modify_label(Mword const *todo, int cnt)
 
 PRIVATE static
 Context::Drq::Result
-Irq_sender::handle_remote_hit(Context::Drq *, Context *, void *arg)
+Irq_sender::handle_remote_hit(Context::Drq *, Context *target, void *arg)
 {
   Irq_sender *irq = (Irq_sender*)arg;
   irq->set_cpu(current_cpu());
   auto t = access_once(&irq->_irq_thread);
-  if (EXPECT_TRUE(t->home_cpu() == current_cpu()))
+  if (EXPECT_TRUE(t == target))
     {
       if (EXPECT_TRUE(irq->send_msg(t, false)))
         return Context::Drq::no_answer_resched();
