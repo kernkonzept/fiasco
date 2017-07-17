@@ -327,16 +327,6 @@ Irq_muxer::kinvoke(L4_obj_ref, L4_fpage::Rights /*rights*/, Syscall_frame *f,
   switch (tag.proto())
     {
     case L4_msg_tag::Label_irq:
-      // start BACKWARD COMPAT
-      switch (op)
-        {
-        case Op_compat_chain:
-          printf("KERNEL: backward compat IRQ-MUX chain, recompile your user code");
-          return sys_attach(tag, utcb, f);
-        default:
-          break;
-        }
-      // end BACKWARD COMPAT
       return dispatch_irq_proto(op, false);
 
     case L4_msg_tag::Label_irq_mux:
@@ -751,19 +741,6 @@ Irq_sender::kinvoke(L4_obj_ref, L4_fpage::Rights /*rights*/, Syscall_frame *f,
   switch (tag.proto())
     {
     case L4_msg_tag::Label_irq:
-      // start BACKWARD COMPAT
-      switch (op)
-        {
-        case Op_compat_attach:
-          printf("KERNEL: backward compat IRQ attach, recompile your user code\n");
-          return sys_attach(tag, utcb, f);
-        case Op_compat_detach:
-          printf("KERNEL: backward compat IRQ detach, recompile your user code\n");
-          return sys_detach();
-        default:
-          break;
-        }
-      // end BACKWARD COMPAT
       return dispatch_irq_proto(op, _queued < 1);
 
     case L4_msg_tag::Label_irq_sender:

@@ -179,28 +179,10 @@ factory_factory(Ram_quota *q, Space *,
   return static_cast<Factory*>(q)->create_factory(u->values[2]);
 }
 
-// start BACKWARD COMPAT
-static Kobject_iface * FIASCO_FLATTEN
-compat_irq_factory(Ram_quota *q, Space *,
-                   L4_msg_tag tag, Utcb const *u,
-                   int *err)
-{
-  *err = L4_err::ENomem;
-  printf("KERNEL: backward compat IRQ create, use new protocol IDs\n"
-         "        L4_PROTO_IRQ_SENDER, L4_PROTO_IRQ_MUX\n");
-  if (tag.words() >= 3 && u->values[2])
-    return Irq::allocate<Irq_muxer>(q);
-  else
-    return Irq::allocate<Irq_sender>(q);
-}
-// end BACKWARD COMPAT
-
 static inline void __attribute__((constructor)) FIASCO_INIT
 register_factory()
 {
   Kobject_iface::set_factory(L4_msg_tag::Label_factory, factory_factory);
-  // BACKWARD COMPAT
-  Kobject_iface::set_factory(L4_msg_tag::Label_irq, compat_irq_factory);
 }
 }
 
