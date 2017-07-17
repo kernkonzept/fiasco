@@ -91,7 +91,7 @@ Fpu::init_state(Fpu_state *s)
       if (_cpu.features() & FEAT_SSE)
 	sse->mxcsr = 0x1f80;
 
-      if (_cpu.ext_features() & FEATX_XSAVE)
+      if (_cpu.has_xsave())
         memset(reinterpret_cast<Xsave_buffer *>(s->state_buffer())->header, 0,
 	       sizeof (Xsave_buffer::header));
 
