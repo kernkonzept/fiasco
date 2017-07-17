@@ -1041,7 +1041,7 @@ Cpu_time
 Context::consumed_time()
 {
   if (Config::Fine_grained_cputime)
-    return _clock.current().us(_consumed_time);
+    return _clock.cpu(home_cpu()).us(_consumed_time);
 
   return _consumed_time;
 }
