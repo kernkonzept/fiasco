@@ -12,7 +12,7 @@ __setjmp:
 	stw	%r2, 4(%r3)
 	mflr	%r0 		/* link register */
 	stw	%r0, 8(%r3)
-	mfcr	%r0,		/* condition register */
+	mfcr	%r0		/* condition register */
 	stw	%r0, 12(%r3)
 	stmw	%r14,16(%r3)	/*XXX: r14 - r31 may be slow */
 	xor	%r3, %r3, %r3	/* return 0 */
