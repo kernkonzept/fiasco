@@ -50,11 +50,16 @@ public:
 class Idt_entry : public X86desc
 {
 private:
-  Unsigned16 _offset_low;
-  Unsigned16 _selector;
-  Unsigned8  _ist;
-  Unsigned8  _access;
-  Unsigned16 _offset_high;
+  union {
+    struct {
+      Unsigned16 _offset_low;
+      Unsigned16 _selector;
+      Unsigned8  _ist;
+      Unsigned8  _access;
+      Unsigned16 _offset_high;
+    };
+    Unsigned64 _raw;
+  };
 } __attribute__((packed));
 
 
@@ -272,8 +277,6 @@ X86desc::show() const
 
 IMPLEMENTATION:
 
-#include <cstring>
-
 PUBLIC inline
 X86desc::X86desc()
 {}
@@ -334,10 +337,10 @@ Unsigned16
 Pseudo_descriptor::limit() const
 { return _limit; }
 
-PUBLIC inline NEEDS [<cstring>]
+PUBLIC inline
 void
 Idt_entry::clear()
-{ memset(this, 0, sizeof(*this)); }
+{ _raw = 0; }
 
 PUBLIC inline
 Gdt_entry::Gdt_entry(Address base, Unsigned32 limit,
@@ -421,6 +424,5 @@ PUBLIC inline
 void
 Gdt_entry::clear()
 {
-  *(Unsigned64*)this = 0;
+  raw = 0;
 }
-
