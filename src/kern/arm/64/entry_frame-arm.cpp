@@ -98,7 +98,7 @@ IMPLEMENTATION [arm && 64bit && !cpu_virt]:
 PUBLIC inline
 bool
 Return_frame::check_valid_user_psr() const
-{ return (pstate & Proc::Status_mode_mask) == 0x01; }
+{ return (pstate & Proc::Status_mode_mask) == 0x00; }
 
 //------------------------------------------------------------------
 IMPLEMENTATION [arm && 64bit && cpu_virt]:
