@@ -401,7 +401,12 @@ Kmem::init_mmu()
 
   assert((Mem_layout::Io_bitmap & ~Config::SUPERPAGE_MASK) == 0);
 
-  long cpu_page_size = 0x10 + Config::Max_num_cpus * (sizeof(Tss) + 256);
+  enum { Cpu_page_size = 0x10 + Config::Max_num_cpus * (sizeof(Tss) + 256) };
+
+  /* Per-CPU TSS required to use IO-bitmap for more CPUs */
+  static_assert(Cpu_page_size < 0x10000, "Too many CPUs configured.");
+
+  long cpu_page_size = Cpu_page_size;
 
   if (cpu_page_size < Config::PAGE_SIZE)
     cpu_page_size = Config::PAGE_SIZE;

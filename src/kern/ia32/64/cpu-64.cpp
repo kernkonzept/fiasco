@@ -176,6 +176,8 @@ Cpu::init_tss(Address tss_mem, size_t tss_size)
 
   // XXX setup pointer for clean double fault stack
   tss->_ist1 = (Address)&dbf_stack_top;
+  assert(Mem_layout::Io_bitmap - tss_mem
+         < (1 << (sizeof(tss->_io_bit_map_offset) * 8)));
   tss->_io_bit_map_offset = Mem_layout::Io_bitmap - tss_mem;
   init_sysenter();
 }

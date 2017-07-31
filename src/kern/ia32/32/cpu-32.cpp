@@ -176,6 +176,8 @@ Cpu::init_tss(Address tss_mem, size_t tss_size)
 		      Gdt_entry::Access_kernel | Gdt_entry::Access_tss, 0);
 
   tss->set_ss0(Gdt::gdt_data_kernel);
+  assert(Mem_layout::Io_bitmap - tss_mem
+         < (1 << (sizeof(tss->_io_bit_map_offset) * 8)));
   tss->_io_bit_map_offset = Mem_layout::Io_bitmap - tss_mem;
 }
 
