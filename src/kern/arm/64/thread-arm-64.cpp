@@ -92,7 +92,7 @@ Thread::arm_kernel_sync_entry(Trap_state *ts)
 
   switch (esr.ec())
     {
-    case 0x25: // adata bort from kenrel mode
+    case 0x25: // data abort from kernel mode
       if (EXPECT_FALSE(!handle_cap_area_fault(ts)))
         call_nested_trap_handler(ts);
       break;
