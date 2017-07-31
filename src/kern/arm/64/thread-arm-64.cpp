@@ -110,6 +110,15 @@ Thread::arm_kernel_sync_entry(Trap_state *ts)
 
 PRIVATE inline
 void
+Thread::do_syscall()
+{
+  typedef void Syscall(void);
+  extern Syscall *sys_call_table[];
+  sys_call_table[0]();
+}
+
+PRIVATE inline
+void
 Thread::handle_svc(Trap_state *ts)
 {
   extern void slowtrap_entry(Trap_state *ts) asm ("slowtrap_entry");
@@ -118,17 +127,20 @@ Thread::handle_svc(Trap_state *ts)
   if (state & (Thread_vcpu_user | Thread_alien))
     {
       if (state & Thread_dis_alien)
-        state_del_dirty(Thread_dis_alien);
-      else
         {
-          slowtrap_entry(ts);
-          return;
+          state_del_dirty(Thread_dis_alien);
+          do_syscall();
+
+          ts->error_code |= 1 << 16; // ts->esr().alien_after_syscall() = 1;
         }
+      else
+        ts->pc -= 2 << ts->esr.il();
+
+      slowtrap_entry(ts);
+      return;
     }
 
-  typedef void Syscall(void);
-  extern Syscall *sys_call_table[];
-  sys_call_table[0]();
+  do_syscall();
 }
 
 PRIVATE static inline
