@@ -9,7 +9,7 @@ namespace cxx {
 /**
  * Simple encapsulation for a dynamically allocated array.
  *
- * The main purppose of this class is to support C++11 range for
+ * The main purpose of this class is to support C++11 range for
  * for simple dynamically allocated array with static size.
  */
 template<typename T, typename IDX = unsigned>
