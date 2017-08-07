@@ -131,7 +131,7 @@ Gic::Gic(Address mmio, unsigned cpu_int) : _r(mmio), _mode_lock(Spin_lock<>::Unl
       for (unsigned id = Reg_width; id < 256; id += Reg_width)
         _r[sh_map_core(i, Cpu_phys_id(id))]  = 0;
 
-      _r[sh_map_pin(i)] = (1UL << 31) | cpu_int;
+      _r.r<Unsigned32>(sh_map_pin(i)) = (1UL << 31) | cpu_int;
     }
 
   setup_ipis();
@@ -311,7 +311,7 @@ Gic::setup_ipis()
   //FIXME: limit the number of user visible IRQs by the IPIs allocated
   for (unsigned i = _ipi_base; i < nr_irqs(); ++i)
     {
-      _r[sh_map_pin(i)] = (1UL << 31) | (_cpu_int_ipi - 2);
+      _r.r<Unsigned32>(sh_map_pin(i)) = (1UL << 31) | (_cpu_int_ipi - 2);
       auto mask = sh_irq_bit(i);
       _r[sh_irq_reg(Sh_pol, i)].set(mask);   // pol high
       _r[sh_irq_reg(Sh_trigger, i)].set(mask);   // edge
