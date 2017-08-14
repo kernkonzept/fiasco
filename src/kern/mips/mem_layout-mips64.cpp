@@ -18,6 +18,8 @@ public:
     KSEG0e = 0xffffffff9fffffff,
     KSEG1  = 0xffffffffa0000000,
     KSEG1e = 0xffffffffbfffffff,
+
+    Exception_base = 0xffffffff80000000,
   };
 
   static inline unsigned long round_page(unsigned long addr)
