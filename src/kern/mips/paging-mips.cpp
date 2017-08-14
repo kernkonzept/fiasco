@@ -47,9 +47,48 @@ public:
 };
 
 // ------------------------------------------------------------
+INTERFACE [mips && 32bit]:
+
+class Pdir_defs
+{
+public:
+  enum : Mword
+  {
+    Used_levels = 2, // must be consistent with the used slots in PWSize
+    Depth = 4,       // for JDB, it skips zero bit levels itself
+    PT_level = 3,    // Level index for the final page table
+    PWField_ptei = 6,
+    PWField = (21 << 24) | (0 << 18) | (0 << 12) | (Config::PAGE_SHIFT        << 6) | PWField_ptei,
+    PWSize  = (11 << 24) | (0 << 18) | (0 << 12) | ((21 - Config::PAGE_SHIFT) << 6) | 0,
+
+    PWCtl_psn = 0
+  };
+};
+
+// ------------------------------------------------------------
+INTERFACE [mips && 64bit]:
+
+class Pdir_defs
+{
+public:
+  enum : Mword
+  {
+    Used_levels = 4, // must be consistent with the used slots in PWSize
+    Depth = 4,       // for JDB, it skips zero bit levels itself
+    PT_level = 3,    // Level index for the final page table
+    PWField_ptei = 6,
+    PWField = (39 << 24) | (30 << 18) | (21 << 12) | (Config::PAGE_SHIFT        << 6) | PWField_ptei,
+    PWSize  = ( 9 << 24) | ( 9 << 18) | ( 9 << 12) | ((21 - Config::PAGE_SHIFT) << 6) | 0,
+
+    PWCtl_psn = 0
+  };
+
+};
+
+// ------------------------------------------------------------
 INTERFACE [mips]:
 
-class Pdir
+class Pdir : public Pdir_defs
 {
 public:
   typedef Page_number Va;
@@ -155,15 +194,6 @@ public:
 
   enum : Mword
   {
-    Used_levels = 2, // must be consistent with the used slots in PWSize
-    Depth = 4,       // for JDB, it skips zero bit lavels itself
-    PT_level = 3,    // Level index for the final page table
-    PWField_ptei = 6,
-    PWField = (21 << 24) | (0 << 18) | (0 << 12) | (Config::PAGE_SHIFT        << 6) | PWField_ptei,
-    PWSize  = (11 << 24) | (0 << 18) | (0 << 12) | ((21 - Config::PAGE_SHIFT) << 6) | 0,
-
-    PWCtl_psn = 0,
-
     Valid = Tlb_entry::Valid << PWField_ptei,
     XI    = 1UL << (PWField_ptei - 2),
     RI    = 2UL << (PWField_ptei - 2),
