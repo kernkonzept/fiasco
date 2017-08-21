@@ -2,7 +2,7 @@
 Welcome to Fiasco.OC!
 ----------------------
 
-Fiasco is a microkernel and an be used to construct flexible systems. We at
+Fiasco is a microkernel and can be used to construct flexible systems. We at
 TU Dresden use it as a base for our TUD:OS system which supports running
 real-time and time-sharing applications as well as virtualization
 concurrently on one system. However, Fiasco is not only suitable for big and
