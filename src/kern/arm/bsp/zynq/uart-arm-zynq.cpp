@@ -11,6 +11,6 @@ IMPLEMENT int Uart::irq() const
 
 IMPLEMENT L4::Uart *Uart::uart()
 {
-  static L4::Uart_cadence uart;
+  static L4::Uart_cadence uart(Koptions::o()->uart.base_baud);
   return &uart;
 }

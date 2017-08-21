@@ -79,7 +79,7 @@ namespace L4
   {
     unsigned div = 4;
     _regs->write<unsigned>(Baud_rate_divider_reg0, div);
-    _regs->write<unsigned>(BAUDGEN, 50000000 / r / (div + 1));
+    _regs->write<unsigned>(BAUDGEN, _base_rate / r / (div + 1));
     _regs->write<unsigned>(MR, 0x20); // 8N1
     return true;
   }
