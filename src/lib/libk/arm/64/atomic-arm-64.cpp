@@ -78,3 +78,21 @@ mp_cas_arch(Mword *m, Mword o, Mword n)
   return !res;
 }
 
+template< typename T > inline
+T ALWAYS_INLINE
+atomic_load(T const *p)
+{
+  static_assert(sizeof(T) == 4 || sizeof(T) == 8,
+                "atomic_load supported for 4 and 8 byte types only");
+  return *const_cast<T const volatile *>(p);
+}
+
+template< typename T > inline
+void ALWAYS_INLINE
+atomic_store(T *p, T value)
+{
+  static_assert(sizeof(T) == 4 || sizeof(T) == 8,
+                "atomic_store supported for 4 and 8 byte types only");
+  *const_cast<T volatile *>(p) = value;
+}
+
