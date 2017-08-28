@@ -6,6 +6,11 @@
 
 IMPLEMENTATION [mips]:
 
+PUBLIC static inline
+void
+Mem::sync()
+{ asm volatile ("sync" : : : "memory"); }
+
 IMPLEMENT static inline
 void
 Mem::memset_mwords(void *dst, const unsigned long value, unsigned long nr_of_mwords)
