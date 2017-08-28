@@ -22,7 +22,6 @@ IMPLEMENTATION [mp]:
 #include <cstdio>
 
 #include "cm.h"
-#include "cpc.h"
 #include "kmem_alloc.h"
 
 static void *_bev;
@@ -81,15 +80,27 @@ Platform_control::alloc_secondary_boot_code()
   if (Cpu::options.segctl())
     p = COPY_MP_INIT(p, _tramp_mp_segctl);
 
+  if (Cm::present())
+    {
+      // this snippet enables coherency
+      // GCR base -> $v1
+      *(p++) = 0x3c030000 | ((Unsigned32) Cm::cm->mmio_base() >> 16);    // LUI $3, ...
+      *(p++) = 0x34630000 | (Cm::cm->mmio_base() & 0xffff); // ORI $3, $3, ...
+      *(p++) = 0x8c642008; // lw $a0, 0x2008($v1) -> read coh_en in CM to $a0,
+                           // used for chache init und cm init below
+    }
+  else
+    *(p++) = 0x24040000; // li $a0, 0
+
+  // needs $a0 == 0 if the cache needs initialization
   p = COPY_MP_INIT(p, _tramp_mp_cache);
 
   if (Cm::present())
     {
-      // this snippet enables coherency
-      // GCR base -> $v0
-      *(p++) = 0x3c020000 | ((Unsigned32) Cm::cm->mmio_base() >> 16);    // LUI $2, ...
-      *(p++) = 0x34420000 | (Cm::cm->mmio_base() & 0xffff); // ORI $2, $2, ...
-      p = COPY_MP_INIT(p, _tramp_mp_cm);
+      if (Cm::cm->revision() < Cm::Rev_cm3)
+        p = COPY_MP_INIT(p, _tramp_mp_cm);
+      else
+        p = COPY_MP_INIT(p, _tramp_mp_cm3);
     }
 
   p = COPY_MP_INIT(p, _tramp_mp_jmp_entry);
@@ -98,7 +109,7 @@ Platform_control::alloc_secondary_boot_code()
   for (Unsigned32 const *s = (Unsigned32 *)_bev; s <= p; s+= 32/4)
     {
       asm volatile ("cache 0x15, %0" : : "m"(*s));
-      asm volatile ("sync");
+      Mem::sync();
       asm volatile ("cache 0x17, %0" : : "m"(*s));
     }
 
@@ -122,23 +133,6 @@ Platform_control::boot_all_secondary_cpus_cm()
     return;
 
   Address e = Mem_layout::pmem_to_phys(bev) | Mem_layout::KSEG1;
-  unsigned num_cores = Cm::cm->num_cores();
-  Cm *cm = Cm::cm;
-  Mips_cpc *cpc = Mips_cpc::cpc;
-
-  for (unsigned i = 1; i < num_cores; ++i)
-    {
-      cm->set_other_core(i);
-      cm->set_co_reset_base(e);
-      cm->set_co_coherence(0);
-      cm->set_access(1UL << i);
-      (void) cm->get_co_coherence();
-
-      // Starting with CM version 3, the CPC other field is set via
-      // the CM other field.
-      if (cm->revision() < Cm::Rev_cm3)
-        cpc->set_other_core(i);
-      cpc->reset_other_core();
-    }
+  Cm::cm->start_all_vps(e);
 }
 

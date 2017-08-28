@@ -75,6 +75,9 @@ MPSNIPPET _tramp_mp_segctl
 MPEND _tramp_mp_segctl
 
 MPSNIPPET _tramp_mp_cache
+	bne	a0, $0, .Ldc_done /* skip cache init if we are already cohenrent */
+	  nop
+
 	mtc0	$0, $28, 0 /* TagLo */
 	mtc0	$0, $29, 0 /* TagHi */
 	mtc0	$0, $28, 2 /* TagLo */
@@ -149,13 +152,31 @@ MPEND _tramp_mp_cache
 
 /**
  * Enable coherency via CM2 API
- * \param v0  virtual, uncached CMGCR base address
+ * \param v1  virtual, uncached CMGCR base address
  */
 MPSNIPPET _tramp_mp_cm
-	li	t0, 0xff
-	sw	t0, 0x2008(v0)
-	ehb
+	bne	a0, $0, 1f
+	  li	t0, 0xff
+	sw	t0, 0x2008(v1)
+	sync
+1:	ehb
 MPEND _tramp_mp_cm
+
+MPSNIPPET _tramp_mp_cm3
+	bne	a0, $0, 1f
+	  li	t0, 0x1
+	sw	t0, 0x2008(v1)
+	sync
+	ehb
+	lw	t1, 0x2010(v1)
+	ext	t1, t1, 0, 10
+	li	t2, 2
+	sllv	t2, t2, t1
+	ASM_ADDIU	t2, t2, -1
+	sw	t2, 0xa028(v1)
+	sync
+1:
+MPEND _tramp_mp_cm3
 
 /**
  * Snippet to jump t_tramp_mp_entry in cached memory
