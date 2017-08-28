@@ -104,7 +104,7 @@ VPATH 		+= kern/mips/$(BITS) kern/mips kern
 VPATH		+= jdb/mips/$(BITS) jdb/mips jdb
 PRIVATE_INCDIR 	+= kern/mips/$(BITS) kern/mips kern
 
-INTERFACES_KERNEL +=	boot_uart_init cp0_status cm cpc \
+INTERFACES_KERNEL +=	boot_uart_init cp0_status cm \
 			mips_cpu_irqs irq_chip_generic \
 			alternatives \
 			cpu_p5600

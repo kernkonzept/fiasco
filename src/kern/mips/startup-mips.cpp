@@ -74,7 +74,7 @@ Startup::stage2()
 
   Mem_space::kernel_space(Kernel_task::kernel_task());
 
-  Cm::cm.construct();
+  Cm::init();
   Mips_cpu_irqs::init();
   Mips_bsp_irqs::init(boot_cpu);
 
