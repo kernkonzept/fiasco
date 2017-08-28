@@ -103,7 +103,8 @@ App_cpu_thread::bootstrap(Mword resume)
   if (!resume)
     {
       Cpu::cpus.current().print_infos();
-      printf("CPU[%u]: goes to idle loop\n", cxx::int_value<Cpu_number>(ccpu));
+      if (Config::Warn_level >= 2)
+        printf("CPU[%u]: goes to idle loop\n", cxx::int_value<Cpu_number>(ccpu));
     }
 
   for (;;)

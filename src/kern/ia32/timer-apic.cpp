@@ -36,9 +36,11 @@ Timer::init(Cpu_number)
     // from now we can save energy in getchar()
     Config::getchar_does_hlt_works_ok = false && Config::hlt_works_ok;
 
-  printf ("Using the Local APIC timer on vector %x (%s Mode) for scheduling\n",
-          (unsigned)Config::Apic_timer_vector,
-          Config::Scheduler_one_shot ? "One-Shot" : "Periodic");
+  if (Config::Warn_level >= 2)
+    printf ("Using the Local APIC timer on vector %x (%s Mode) for scheduling\n",
+            (unsigned)Config::Apic_timer_vector,
+            Config::Scheduler_one_shot ? "One-Shot" : "Periodic");
+
 }
 
 PUBLIC static inline

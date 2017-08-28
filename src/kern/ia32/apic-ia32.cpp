@@ -588,8 +588,9 @@ Apic::enable_errors()
       if (get_max_lvt() > 3)
 	clear_num_errors();
       after = get_num_errors();
-      printf("APIC ESR value before/after enabling: %08x/%08x\n",
-	    before, after);
+      if (Config::Warn_level >= 2)
+        printf("APIC ESR value before/after enabling: %08x/%08x\n",
+               before, after);
     }
 }
 
@@ -827,8 +828,9 @@ PUBLIC static
 void
 Apic::dump_info()
 {
-  printf("Local APIC[%02x]: version=%02x max_lvt=%d\n",
-         get_id() >> 24, get_version(), get_max_lvt());
+  if (Config::Warn_level >= 2)
+    printf("Local APIC[%02x]: version=%02x max_lvt=%d\n",
+           get_id() >> 24, get_version(), get_max_lvt());
 }
 
 IMPLEMENT

@@ -469,7 +469,8 @@ void
 Kmem::init_cpu(Cpu &cpu)
 {
   void *cpu_mem = Kmem_alloc::allocator()->unaligned_alloc(1024);
-  printf("Allocate cpu_mem @ %p\n", cpu_mem);
+  if (Config::Warn_level >= 2)
+    printf("Allocate cpu_mem @ %p\n", cpu_mem);
 
   // now initialize the global descriptor table
   cpu.init_gdt(__alloc(&cpu_mem, Gdt::gdt_max), user_max());
