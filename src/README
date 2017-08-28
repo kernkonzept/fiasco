@@ -14,44 +14,20 @@ directories.
 Configuration
 #############
 
-Fiasco's build system consists of a number of configuration files, and
-it also makes use of the L4 source tree's global Make configuration
-file, l4/Makeconf.  All configuration files are written in Makefile
-language.
+Fiasco's build system consists of a number of configuration files. All
+configuration files are written in Makefile language.
 
-:l4/Makeconf:
-  Global Make rules and search paths
-
-:l4/kernel/fiasco/src/Makefile:
+:src/Makefile:
   ``Fiasco's build system'' rules
 
-:l4/kernel/fiasco/src/Modules.in:
+:src/Modules.in:
   Standard configuration for Fiasco
 
-:<object directory>  /Modules:
-  Current configuration for Fiasco
-
-:l4/kernel/fiasco/src/Makerules.*:
+:src/Makerules.*:
   Make rules for each subsystem defined in Modules
 
-:l4/kernel/fiasco/src/Makerules.local':
+:src/Makerules.local':
   (Optional) User-specific configuration files
-
-:l4/Makeconf.local':
-  (Optional) User-specific configuration files
-
-(By default, the object directory is the main source directory,
-l4/kernel/fiasco/src/.  See the next section on how to use other
-object directories with custom configurations.)
-
-Users configure the build system by creating a Modules file.  If no
-Modules file exists, the standard configuration Modules.in is copied
-to Modules.  The build system warns the user if (after a "cvs update")
-Modules.in is newer than Modules.
-
-The Modules file defines a number of subsystems that should be built.
-For each subsystem, there must be a Makerules.<subsystem> file that
-defines rules for building the subsystem's targets.
 
 In the remainder of this section, I describe by example the language
 used in Modules file and the contents of the Makerules.* files.
@@ -142,27 +118,3 @@ It can access the following Make variables:
 
 :'BAR':
   targets of other subsystems
-
-
-Building in separate object directories
-#######################################
-
-It is possible to configure multiple directories, each with its own
-Modules file, as separate object directories.  (This usage is
-supported only if the main source directory [the one containing
-Modules.in] is not also used as an object directory.)
-
-To use a directory as an object directory, create in it a Makefile
-like this: 
-
-!srcdir = ..
-!
-!all:
-!
-!%:
-!          $(MAKE) -I $(srcdir) -f $(srcdir)/Makefile \
-!                  srcdir=$(srcdir) $@
-
-Change the "srcdir" definition to point to the main source directory.
-You can then create custom Modules files (and custom source files and
-Makerules.* files) in each object directory.
