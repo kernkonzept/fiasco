@@ -2,9 +2,6 @@
 
  Michael Hohmuth
 
-; To generate a printable version of this document, please type 
-; cd ../doc/style; make
-
 Introduction
 ############
 
@@ -66,12 +63,7 @@ These features are always disabled on the compiler command line.
 On the other hand, templates are allowed.  However, please keep in
 mind that Fiasco's source code needs to be interpreted not only by the
 latest version of GCC, but also by at least the two preceding stable
-versions of GCC, _and_ ---more significantly---by the VFiasco project's
-semantics compiler, which is a custom compiler _we_ (in a broader
-sense of we) have to maintain.  Therefore, using advanced tricks such
-as expression templates or partial specialization is strongly
-discouraged.
-
+versions of GCC.
 
 Source-code organization and directory structure
 ################################################
@@ -111,10 +103,7 @@ directory layout is as follows:
 :kern/: Source files shared for all Fiasco-supported
   architectures
 
-:kern/shared/: Source files shared by more than one, but not
-  all architectures.
-
-:kern/ia32, kern/ia64, kern/ux, and so on: Source files that are
+:kern/ia32, kern/ux, and so on: Source files that are
   specific for only one architecture.
 
 Currently, hardware architectures is the only configuration dimension
@@ -148,7 +137,6 @@ by dashes (-).  For example:
 
 * kern/thread.cpp
 * kern/shared/thread-ia32-ux.cpp
-* kern/ia64/thread-ia64.cpp
 
 Occasionally, it is useful to separate configuration-specific code
 into a source file of its own (see Section 
@@ -156,9 +144,9 @@ into a source file of its own (see Section
 contains the configuration string as a suffix, separated by dashes
 (-).  For example:
 
-* kern/thread-v4.cpp
-* kern/thread-v2x0.cpp
-* kern/ia32/thread-ia32-smas.cpp
+* kern/ia32/timer-pit.cpp
+* kern/ia32/32/tb_entry-ia32-32.cpp
+* kern/ia32/64/tb_entry-ia32-64.cpp
 
 
 Header files and the C++ preprocessor
@@ -199,27 +187,19 @@ makefiles:
 Adding new configuration options
 --------------------------------
 
-Help texts for configuration options in the rules file (rules.cml) are
-sorted by order in which the options appear in the menu defined at the
-bottom of the file. New configuration options must add such a help text
-describing what the config option does. After a new config option
-has been added, define under which conditions the config option should
-be suppressed, if any. It is generally a good idea to suppress config
-options for architectures and configurations where the option is
-meaningless. Options which can be suppressed for certain configurations
-usually require consistency rules to ensure they are not left in an
-undefined state from a previous selection.
+Fiasco uses Kconfig to configure and select features. Please refer to the
+[kconfig language][1] to learn how to add new configuration options.
 
-An example suppression rule is:         
-!  when UX suppress SERIAL
-The corresponding consistency rule is:
-!  require UX implies (SERIAL == n)
-
-This ensures that 'SERIAL' is set to "n" when someone had previously chosen
-'IA32' and 'SERIAL' set to "y" and then changes the architecture to 'UX'.
+After a new config option has been added, define under which conditions the
+config option should be suppressed, if any. It is generally a good idea to
+suppress config options for architectures and configurations where the option
+is meaningless. New configuration options must add a help text describing what
+the config option does.
 
 Do not forget to update the configuration templates in the directory
 src/templates after modifying configuration options.
+
+[1] https://www.kernel.org/doc/Documentation/kbuild/kconfig-language.txt
 
 Class Config
 ============
@@ -230,9 +210,6 @@ Fiasco.
 The constant variables can be derived from options the configuration
 tool has written to globalconfig.h.  As a special exception, '#ifdef'
 is allowed here.
-
-Boot-time configuration variables can be derived from the kernel's
-command line (class Cmdline).
 
 Configuration-specific source code
 ==================================
@@ -436,12 +413,11 @@ configuration-specific code.
 
 The interface documentation belongs to the function definition, except
 if configuration-specific functions (with the 'IMPLEMENT' directive)
-are declared in an 'INTERFACE' section.  In the that case, the
+are declared in an 'INTERFACE' section.  In that case, the
 documentation belongs to the declaration.
 
-Please use Doxygen's Javadoc-like style (the style using '@' instead
-of backslashes) to document your interfaces.  Fiasco's documentation
-is generated using Doxygen's auto-brief feature, so '@brief'
+Please use Doxygen's '\command' syntax to document your interfaces.  Fiasco's
+documentation is generated using Doxygen's auto-brief feature, so '\brief'
 directives are unnecessary [Heesch: Doxygen Manual].
 
 Comment style
@@ -642,144 +618,3 @@ Section 5.1).
 
 * Spacing inside expressions is not prescribed.  Please do something
   sensible to save us from adding more rules to this document.
-
-; Fiasco style rules
-; 
-; Y Directory organization
-; 
-; Y Naming: Classes, methods, constants
-; 
-; Y No exceptions, no RTTI
-; 
-; Y Singleton objects as static class interfaces, to save stack space
-; 
-; Y no preprocessor variables -- use enums
-; 
-; Y IMPLEMENT nur für definitionen in spezielleren Subsections
-; 
-; Y config class vs configuration management
-; 
-; Y header files: unusally not.  otherwise, multi-inc protection
-; 
-; Y assert, check
-; 
-; Y Max. 80 Zeichen pro Zeile
-; 
-; Y Doxygen-Style
-; 
-; Y Doxygen: Bei deklarierten Memberfunktionen (mit IMPLEMENT
-;   implementiert) kommt die Doku vor die Deklaration
-; 
-; Y Member-Vars: _member_name
-;   Klassen:     Class_name
-;   Konstanten:  Constant_name
-; 
-; Y XXX-Kommentare
-; 
-; Y wann eigenes Quellfile, wann mehrere IMPLEMENTATION-Sections in
-;   einem File?
-; 
-; Y Funktionname an Zeilenbeginn, Name/Parameter auf einer Zeile
-; 
-; Y Rückgabetyp auf Extra-Zeile
-; 
-; Y Einrücke-Standards
-;   . Enums
-; 
-; Y Endlosschleife: for (;;)
-; 
-; Y Makros: use do {} while (0);  (else-kompatibel)
-; 
-; Y Use inline NOEXPORT für lokale Inlines  (ohne NEEDS)
-; 
-; - kleine Interfaces erwünscht -- minimiere PUBLIC
-; 
-; Y Makros vermeiden
-; 
-; Y Konstanten als enums
-; 
-; Y cyclic dependencies, 
-;
-; - initcalls
-;
-; - boolean return values -- bool vs Mword, maybe a new type Bool?
-;
-; - "Thread*" t vs "Thread *t"
-;
-; - Style of CVS commit messages
-;
-; - Code duplication avoidance
-;
-; - C++ default parameters -- discouraged?
-;
-; - Passing structures as const structure&
-; 
-; - Makeconf.local: the place to set CC, CXX
-;
-; - Sort IMPLEMENTATION[xyz] sections alphabetically: ARM vor IA32 vor
-;   UX, V2 vor V4 vor X0 bzw. V2,X0 vor V4.
-;
-; - declaration/IMPLEMENT are not for documentation purposes, which
-;   would not work anyway; use the files in auto/ or Doxygen.
-; 
-; ----------------------------------------------------------------------
-; 
-; René:
-; 
-; Was mir am Anfang nicht klar war:
-; 
-; Y Namenskonvention, member mit _foo, Klassen mit Grossbuchstaben
-;   beginnen & co, Namen allg.
-; 
-; Y Comments englisch only
-; 
-; Y Klammersetzung!! Auch wo man Klammern weglassen soll!
-; 
-; - IMPLEMENT vs PUBLIC, PRIVATE, PROTECTED
-; 
-; Erwaehnenswert waere noch fuer Neuanfaenger
-; 
-; Y keine ifdefs
-; 
-; - vieleicht Waechter-Style:
-;   also nicht
-; 
-; 	if foo
-; 		if bar
-; 			if foobar
-; 
-;   sondern eher
-; 	if !foo
-; 		return
-; 	if !bar
-; 		return 
-;   usw.
-; 
-; Y Vieleicht sollten wir die maximale Einruecktiefe begrenzen. Ich bin fuer
-;   3-4. Ich weis das vieles im Code noch nicht so ist, aber man kann ja mal
-;   anfangen.
-; 
-; - Generic vs Arch.-spezifische Sachen, zB im generic kein regs()->ecx &
-;   co.
-; 
-; 
-; 
-;   Assemblermacros:
-;   Bis vor kurzen habe ich noch die #define Version genommen.
-;   Macht sich aber richtig ******* beim schreiben.
-;   Habe jetzt mein Zeug auf .macro umgestellt, sieht erheblich freundlicher
-;   aus.
-; 
-;   Ein paar hinweise allg zu Assembler, wann man lieber
-;   Funktionen/gemeinsamen Code sollte und wann Makros.
-
-;Local Variables:
-;mode:flyspell
-;ispell-local-dictionary: "american"
-;comment-start: ";"
-;comment-start-skip: "; *"
-;End:
-
-; LocalWords:  accessor Hohmuth tex pdflatex README Preprocess GCC polymorphism
-; LocalWords:  nonvirtual instantiable NDEBUG Doxygen's Doxygen XXX Javadoc cpp
-; LocalWords:  NOEXPORT Metarules ifdef
