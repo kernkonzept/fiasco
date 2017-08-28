@@ -48,6 +48,8 @@ Kmem_alloc::Kmem_alloc()
 
   // limit to KSEG0 size of 512MB
   unsigned long max = 0x20000000;
+  if (max > Config::kernel_mem_max)
+    max = Config::kernel_mem_max;
   a->init(Mem_layout::phys_to_pmem(0)); //Mem_layout::phys_to_pmem(f.start));
 
   _orig_free = alloc_size;
