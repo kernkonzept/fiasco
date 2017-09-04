@@ -85,6 +85,87 @@ mp_cas_arch(Mword *m, Mword o, Mword n)
   return !res;
 }
 
+template<typename T, typename V> inline
+T
+atomic_exchange(T *mem, V value)
+{
+  static_assert (sizeof(T) == 4 || sizeof(T) == 8,
+                 "invalid size of operand (must be 4 or 8 byte)");
+  T val = value;
+  T res;
+  Mword tmp;
+
+  switch (sizeof(T))
+    {
+    case 4:
+      asm (
+          "1:   ldrex %[res], [%[mem]] \n"
+          "     strex %[tmp], %[val], [%[mem]] \n"
+          "     cmp   %[tmp], #0 \n"
+          "     bne   1b "
+          : [res] "=&r" (res), [tmp] "=&r" (tmp), "+Qo" (*mem)
+          : [mem] "r" (mem), [val] "r" (val)
+          : "cc");
+      return res;
+
+    case 8:
+      asm (
+          "1:   ldrexd %[res], %H[res], [%[mem]] \n"
+          "     strexd %[tmp], %[val], %H[val], [%[mem]] \n"
+          "     cmp    %[tmp], #0 \n"
+          "     bne    1b "
+          : [res] "=&r" (res), [tmp] "=&r" (tmp), "+Qo" (*mem)
+          : [mem] "r" (mem), [val] "r" (val)
+          : "cc");
+      return res;
+
+    default:
+      return T();
+    }
+}
+
+template<typename T, typename V> inline
+T
+atomic_add_fetch(T *mem, V value)
+{
+  static_assert (sizeof(T) == 4 || sizeof(T) == 8,
+                 "invalid size of operand (must be 4 or 8 byte)");
+  T val = value;
+  T res;
+  Mword tmp;
+
+  switch (sizeof(T))
+    {
+    case 4:
+      asm (
+          "1:   ldrex %[res], [%[mem]] \n"
+          "     add   %[res], %[res], %[val] \n"
+          "     strex %[tmp], %[res], [%[mem]] \n"
+          "     cmp   %[tmp], #0 \n"
+          "     bne   1b "
+          : [res] "=&r" (res), [tmp] "=&r" (tmp), "+Qo" (*mem)
+          : [mem] "r" (mem), [val] "r" (val)
+          : "cc");
+      return res;
+
+    case 8:
+      asm (
+          "1:   ldrexd %[res], %H[res], [%[mem]] \n"
+          "     adds   %[res], %[res], %[val] \n"
+          "     adc    %H[res], %H[res], %H[val] \n"
+          "     strexd %[tmp], %[val], %H[val], [%[mem]] \n"
+          "     cmp    %[tmp], #0 \n"
+          "     bne    1b "
+          : [res] "=&r" (res), [tmp] "=&r" (tmp), "+Qo" (*mem)
+          : [mem] "r" (mem), [val] "r" (val)
+          : "cc");
+      return res;
+
+    default:
+      return T();
+    }
+}
+
 // --------------------------------------------------------------------
 IMPLEMENTATION[arm && arm_v6plus && arm_lpae]:
 

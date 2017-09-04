@@ -78,6 +78,90 @@ mp_cas_arch(Mword *m, Mword o, Mword n)
   return !res;
 }
 
+template<typename T, typename V> inline
+T
+atomic_exchange(T *mem, V value)
+{
+  static_assert (sizeof(T) == 4 || sizeof(T) == 8,
+                 "invalid size of operand (must be 4 or 8 byte)");
+  T val = value;
+  T res;
+  Mword tmp;
+
+  switch (sizeof(T))
+    {
+    case 4:
+      asm (
+          "     prfm  pstl1strm, [%[mem]] \n"
+          "1:   ldxr  %w[res], [%[mem]] \n"
+          "     stxr  %w[tmp], %w[val], [%[mem]] \n"
+          "     cmp   %w[tmp], #0 \n"
+          "     b.ne  1b "
+          : [res] "=&r" (res), [tmp] "=&r" (tmp), "+Qo" (*mem)
+          : [mem] "r" (mem), [val] "r" (val)
+          : "cc");
+      return res;
+
+    case 8:
+      asm (
+          "     prfm   pstl1strm, [%[mem]] \n"
+          "1:   ldxr   %[res], [%[mem]] \n"
+          "     stxr   %w[tmp], %[val], [%[mem]] \n"
+          "     cmp    %w[tmp], #0 \n"
+          "     b.ne   1b "
+          : [res] "=&r" (res), [tmp] "=&r" (tmp), "+Qo" (*mem)
+          : [mem] "r" (mem), [val] "r" (val)
+          : "cc");
+      return res;
+
+    default:
+      return T();
+    }
+}
+
+template<typename T, typename V> inline
+T
+atomic_add_fetch(T *mem, V value)
+{
+  static_assert (sizeof(T) == 4 || sizeof(T) == 8,
+                 "invalid size of operand (must be 4 or 8 byte)");
+  T val = value;
+  T res;
+  Mword tmp;
+
+  switch (sizeof(T))
+    {
+    case 4:
+      asm (
+          "     prfm   pstl1strm, [%[mem]] \n"
+          "1:   ldxr  %w[res], [%[mem]] \n"
+          "     add   %w[res], %w[res], %w[val] \n"
+          "     stxr  %w[tmp], %w[val], [%[mem]] \n"
+          "     cmp   %[tmp], #0 \n"
+          "     bne   1b "
+          : [res] "=&r" (res), [tmp] "=&r" (tmp), "+Qo" (*mem)
+          : [mem] "r" (mem), [val] "r" (val)
+          : "cc");
+      return res;
+
+    case 8:
+      asm (
+          "     prfm   pstl1strm, [%[mem]] \n"
+          "1:   ldxr   %[res], [%[mem]] \n"
+          "     add    %[res], %[res], %[val] \n"
+          "     stxr   %w[tmp], %[val], [%[mem]] \n"
+          "     cmp    %[tmp], #0 \n"
+          "     bne    1b "
+          : [res] "=&r" (res), [tmp] "=&r" (tmp), "+Qo" (*mem)
+          : [mem] "r" (mem), [val] "r" (val)
+          : "cc");
+      return res;
+
+    default:
+      return T();
+    }
+}
+
 template< typename T > inline
 T ALWAYS_INLINE
 atomic_load(T const *p)
