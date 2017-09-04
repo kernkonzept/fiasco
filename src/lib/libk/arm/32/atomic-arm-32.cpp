@@ -98,6 +98,7 @@ atomic_exchange(T *mem, V value)
   switch (sizeof(T))
     {
     case 4:
+      Mem::prefetch_w(mem);
       asm (
           "1:   ldrex %[res], [%[mem]] \n"
           "     strex %[tmp], %[val], [%[mem]] \n"
@@ -109,6 +110,7 @@ atomic_exchange(T *mem, V value)
       return res;
 
     case 8:
+      Mem::prefetch_w(mem);
       asm (
           "1:   ldrexd %[res], %H[res], [%[mem]] \n"
           "     strexd %[tmp], %[val], %H[val], [%[mem]] \n"
@@ -137,6 +139,7 @@ atomic_add_fetch(T *mem, V value)
   switch (sizeof(T))
     {
     case 4:
+      Mem::prefetch_w(mem);
       asm (
           "1:   ldrex %[res], [%[mem]] \n"
           "     add   %[res], %[res], %[val] \n"
@@ -149,6 +152,7 @@ atomic_add_fetch(T *mem, V value)
       return res;
 
     case 8:
+      Mem::prefetch_w(mem);
       asm (
           "1:   ldrexd %[res], %H[res], [%[mem]] \n"
           "     adds   %[res], %[res], %[val] \n"
@@ -224,6 +228,7 @@ atomic_store(T *p, T value)
     case 8:
         {
           long long tmp;
+          Mem::prefetch_w(p);
           asm volatile (
               "1: ldrexd %0, %H0, [%2] \n"
               "   strexd %0, %3, %H3, [%2] \n"
