@@ -1,3 +1,11 @@
+INTERFACE [arm]:
+
+EXTENSION class Mem
+{
+public:
+  static void prefetch_w(void *addr);
+};
+
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
@@ -24,6 +32,8 @@ Mem::memcpy_bytes(void *dst, void const *src, unsigned long nr_of_bytes)
   __builtin_memcpy(dst, src, nr_of_bytes);
 }
 
+IMPLEMENT_DEFAULT inline void Mem::prefetch_w(void *) {}
+
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm_v5]:
 
@@ -45,6 +55,13 @@ PUBLIC static inline void Mem::isb()
 
 PUBLIC static inline void Mem::dsb()
 { __asm__ __volatile__ ("mcr p15, 0, %0, c7, c10, 4" : : "r" (0) : "memory"); }
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [32bit && ((arm_v7 && mp) || arm_v8)]:
+
+IMPLEMENT_OVERRIDE inline void
+Mem::prefetch_w(void *addr)
+{ asm ("pldw %0" : : "m"(*reinterpret_cast<char *>(addr))); }
 
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm_v7 || arm_v8]:
