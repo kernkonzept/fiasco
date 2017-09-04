@@ -1,6 +1,7 @@
 IMPLEMENTATION[arm && arm_v6plus]:
 
 #include "mem.h"
+#include <cxx/type_traits>
 
 inline
 void
@@ -170,76 +171,70 @@ atomic_add_fetch(T *mem, V value)
     }
 }
 
+template< typename T > inline NEEDS [<cxx/type_traits>]
+typename cxx::enable_if<(sizeof(T) == 4), T>::type ALWAYS_INLINE
+atomic_load(T const *p)
+{
+  T res;
+  asm volatile ("ldr %0, %1" : "=r" (res) : "m"(*p));
+  return res;
+}
+
+template< typename T, typename V > inline NEEDS [<cxx/type_traits>]
+void ALWAYS_INLINE
+atomic_store(T *p, V value, typename cxx::enable_if<(sizeof(T) == 4), int>::type = 0)
+{
+  T val = value;
+  asm volatile ("str %1, %0" : "=m" (*p) : "r" (val));
+}
+
 // --------------------------------------------------------------------
 IMPLEMENTATION[arm && arm_v6plus && arm_lpae]:
 
-template< typename T > inline
-T ALWAYS_INLINE
+template< typename T > inline NEEDS [<cxx/type_traits>]
+typename cxx::enable_if<(sizeof(T) == 8), T>::type ALWAYS_INLINE
 atomic_load(T const *p)
 {
-  static_assert(sizeof(T) == 4 || sizeof(T) == 8,
-                "atomic_load supported for 4 and 8 byte types only");
-  return *const_cast<T const volatile *>(p);
+  T res;
+  asm volatile ("ldrd %0, %H0, %1" : "=r" (res) : "m"(*p));
+  return res;
 }
 
-template< typename T > inline
-void ALWAYS_INLINE
-atomic_store(T *p, T value)
+template< typename T, typename V > inline NEEDS [<cxx/type_traits>]
+inline void ALWAYS_INLINE
+atomic_store(T *p, V value, typename cxx::enable_if<(sizeof(T) == 8), int>::type = 0)
 {
-  static_assert(sizeof(T) == 4 || sizeof(T) == 8,
-                "atomic_store supported for 4 and 8 byte types only");
-  *const_cast<T volatile *>(p) = value;
+  T val = value;
+  asm volatile ("strd %1, %H1, %0" : "=m" (*p) : "r" (val));
 }
 
 // --------------------------------------------------------------------
 IMPLEMENTATION[arm && arm_v6plus && !arm_lpae]:
 
-template< typename T > inline
-T ALWAYS_INLINE
+template< typename T > inline NEEDS [<cxx/type_traits>]
+typename cxx::enable_if<(sizeof(T) == 8), T>::type ALWAYS_INLINE
 atomic_load(T const *p)
 {
-  static_assert(sizeof(T) == 4 || sizeof(T) == 8,
-                "atomic_load supported for 4 and 8 byte types only");
-  switch (sizeof(T))
-    {
-    case 4:
-      return *const_cast<T const volatile *>(p);
-    case 8:
-        {
-          T res;
-          asm volatile ("ldrexd %0, %H0, [%1]"
-                        : "=&r"(res) : "r"(p), "Qo"(*p));
-          return res;
-        }
-    }
+  T res;
+  asm volatile ("ldrexd %0, %H0, [%1]" : "=&r" (res) : "r" (p), "Qo" (*p));
+  return res;
 }
 
-template< typename T > inline
-void ALWAYS_INLINE
-atomic_store(T *p, T value)
+template< typename T, typename V > inline NEEDS [<cxx/type_traits>]
+inline void ALWAYS_INLINE
+atomic_store(T *p, V value, typename cxx::enable_if<(sizeof(T) == 8), int>::type = 0)
 {
-  static_assert(sizeof(T) == 4 || sizeof(T) == 8,
-                "atomic_store supported for 4 and 8 byte types only");
-  switch (sizeof(T))
-    {
-    case 4:
-      *const_cast<T volatile *>(p) = value;
-      break;
-    case 8:
-        {
-          long long tmp;
-          Mem::prefetch_w(p);
-          asm volatile (
-              "1: ldrexd %0, %H0, [%2] \n"
-              "   strexd %0, %3, %H3, [%2] \n"
-              "   teq    %0, #0 \n"
-              "   bne    1b"
-              : "=&r"(tmp), "=Qo"(*p)
-              : "r"(p), "r"(value)
-              : "cc");
-        }
-      break;
-    }
+  T val = value;
+  long long tmp;
+  Mem::prefetch_w(p);
+  asm volatile (
+      "1: ldrexd %0, %H0, [%2] \n"
+      "   strexd %0, %3, %H3, [%2] \n"
+      "   teq    %0, #0 \n"
+      "   bne    1b"
+      : "=&r"(tmp), "=Qo"(*p)
+      : "r"(p), "r"(val)
+      : "cc");
 }
 
 

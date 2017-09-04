@@ -168,15 +168,35 @@ atomic_load(T const *p)
 {
   static_assert(sizeof(T) == 4 || sizeof(T) == 8,
                 "atomic_load supported for 4 and 8 byte types only");
-  return *const_cast<T const volatile *>(p);
+  T res;
+  switch (sizeof(T))
+    {
+    case 4:
+      asm volatile ("ldr %w0, %1" : "=r" (res) : "m"(*p));
+      return res;
+
+    case 8:
+      asm volatile ("ldr %0, %1" : "=r" (res) : "m"(*p));
+      return res;
+    }
 }
 
-template< typename T > inline
+template< typename T, typename V > inline
 void ALWAYS_INLINE
-atomic_store(T *p, T value)
+atomic_store(T *p, V value)
 {
   static_assert(sizeof(T) == 4 || sizeof(T) == 8,
                 "atomic_store supported for 4 and 8 byte types only");
-  *const_cast<T volatile *>(p) = value;
+  T val = value;
+  switch (sizeof(T))
+    {
+    case 4:
+      asm volatile ("str %w1, %0" : "=m" (*p) : "r" (val));
+      break;
+
+    case 8:
+      asm volatile ("str %1, %0" : "=m" (*p) : "r" (val));
+      break;
+    }
 }
 
