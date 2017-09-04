@@ -86,89 +86,44 @@ mp_cas_arch(Mword *m, Mword o, Mword n)
   return !res;
 }
 
-template<typename T, typename V> inline
-T
+template<typename T, typename V> inline NEEDS [<cxx/type_traits>]
+typename cxx::enable_if<(sizeof(T) == 4), T>::type ALWAYS_INLINE
 atomic_exchange(T *mem, V value)
 {
-  static_assert (sizeof(T) == 4 || sizeof(T) == 8,
-                 "invalid size of operand (must be 4 or 8 byte)");
   T val = value;
   T res;
   Mword tmp;
 
-  switch (sizeof(T))
-    {
-    case 4:
-      Mem::prefetch_w(mem);
-      asm (
-          "1:   ldrex %[res], [%[mem]] \n"
-          "     strex %[tmp], %[val], [%[mem]] \n"
-          "     cmp   %[tmp], #0 \n"
-          "     bne   1b "
-          : [res] "=&r" (res), [tmp] "=&r" (tmp), "+Qo" (*mem)
-          : [mem] "r" (mem), [val] "r" (val)
-          : "cc");
-      return res;
-
-    case 8:
-      Mem::prefetch_w(mem);
-      asm (
-          "1:   ldrexd %[res], %H[res], [%[mem]] \n"
-          "     strexd %[tmp], %[val], %H[val], [%[mem]] \n"
-          "     cmp    %[tmp], #0 \n"
-          "     bne    1b "
-          : [res] "=&r" (res), [tmp] "=&r" (tmp), "+Qo" (*mem)
-          : [mem] "r" (mem), [val] "r" (val)
-          : "cc");
-      return res;
-
-    default:
-      return T();
-    }
+  Mem::prefetch_w(mem);
+  asm (
+      "1:   ldrex %[res], [%[mem]] \n"
+      "     strex %[tmp], %[val], [%[mem]] \n"
+      "     cmp   %[tmp], #0 \n"
+      "     bne   1b "
+      : [res] "=&r" (res), [tmp] "=&r" (tmp), "+Qo" (*mem)
+      : [mem] "r" (mem), [val] "r" (val)
+      : "cc");
+  return res;
 }
 
-template<typename T, typename V> inline
-T
+template<typename T, typename V> inline NEEDS [<cxx/type_traits>]
+typename cxx::enable_if<(sizeof(T) == 4), T>::type ALWAYS_INLINE
 atomic_add_fetch(T *mem, V value)
 {
-  static_assert (sizeof(T) == 4 || sizeof(T) == 8,
-                 "invalid size of operand (must be 4 or 8 byte)");
   T val = value;
   T res;
   Mword tmp;
-
-  switch (sizeof(T))
-    {
-    case 4:
-      Mem::prefetch_w(mem);
-      asm (
-          "1:   ldrex %[res], [%[mem]] \n"
-          "     add   %[res], %[res], %[val] \n"
-          "     strex %[tmp], %[res], [%[mem]] \n"
-          "     cmp   %[tmp], #0 \n"
-          "     bne   1b "
-          : [res] "=&r" (res), [tmp] "=&r" (tmp), "+Qo" (*mem)
-          : [mem] "r" (mem), [val] "r" (val)
-          : "cc");
-      return res;
-
-    case 8:
-      Mem::prefetch_w(mem);
-      asm (
-          "1:   ldrexd %[res], %H[res], [%[mem]] \n"
-          "     adds   %[res], %[res], %[val] \n"
-          "     adc    %H[res], %H[res], %H[val] \n"
-          "     strexd %[tmp], %[val], %H[val], [%[mem]] \n"
-          "     cmp    %[tmp], #0 \n"
-          "     bne    1b "
-          : [res] "=&r" (res), [tmp] "=&r" (tmp), "+Qo" (*mem)
-          : [mem] "r" (mem), [val] "r" (val)
-          : "cc");
-      return res;
-
-    default:
-      return T();
-    }
+  Mem::prefetch_w(mem);
+  asm (
+      "1:   ldrex %[res], [%[mem]] \n"
+      "     add   %[res], %[res], %[val] \n"
+      "     strex %[tmp], %[res], [%[mem]] \n"
+      "     cmp   %[tmp], #0 \n"
+      "     bne   1b "
+      : [res] "=&r" (res), [tmp] "=&r" (tmp), "+Qo" (*mem)
+      : [mem] "r" (mem), [val] "r" (val)
+      : "cc");
+  return res;
 }
 
 template< typename T > inline NEEDS [<cxx/type_traits>]
@@ -191,6 +146,8 @@ atomic_store(T *p, V value, typename cxx::enable_if<(sizeof(T) == 4), int>::type
 // --------------------------------------------------------------------
 IMPLEMENTATION[arm && arm_v6plus && arm_lpae]:
 
+#include <cxx/type_traits>
+
 template< typename T > inline NEEDS [<cxx/type_traits>]
 typename cxx::enable_if<(sizeof(T) == 8), T>::type ALWAYS_INLINE
 atomic_load(T const *p)
@@ -209,7 +166,54 @@ atomic_store(T *p, V value, typename cxx::enable_if<(sizeof(T) == 8), int>::type
 }
 
 // --------------------------------------------------------------------
-IMPLEMENTATION[arm && arm_v6plus && !arm_lpae]:
+IMPLEMENTATION[arm && (arm_v7plus || (arm_v6 && mp))]:
+
+#include <cxx/type_traits>
+
+template<typename T, typename V> inline NEEDS [<cxx/type_traits>]
+typename cxx::enable_if<(sizeof(T) == 8), T>::type ALWAYS_INLINE
+atomic_exchange(T *mem, V value)
+{
+  T val = value;
+  T res;
+  Mword tmp;
+  Mem::prefetch_w(mem);
+  asm (
+      "1:   ldrexd %[res], %H[res], [%[mem]] \n"
+      "     strexd %[tmp], %[val], %H[val], [%[mem]] \n"
+      "     cmp    %[tmp], #0 \n"
+      "     bne    1b "
+      : [res] "=&r" (res), [tmp] "=&r" (tmp), "+Qo" (*mem)
+      : [mem] "r" (mem), [val] "r" (val)
+      : "cc");
+  return res;
+}
+
+template<typename T, typename V> inline NEEDS [<cxx/type_traits>]
+typename cxx::enable_if<(sizeof(T) == 8), T>::type ALWAYS_INLINE
+atomic_add_fetch(T *mem, V value)
+{
+  T val = value;
+  T res;
+  Mword tmp;
+  Mem::prefetch_w(mem);
+  asm (
+      "1:   ldrexd %[res], %H[res], [%[mem]] \n"
+      "     adds   %[res], %[res], %[val] \n"
+      "     adc    %H[res], %H[res], %H[val] \n"
+      "     strexd %[tmp], %[val], %H[val], [%[mem]] \n"
+      "     cmp    %[tmp], #0 \n"
+      "     bne    1b "
+      : [res] "=&r" (res), [tmp] "=&r" (tmp), "+Qo" (*mem)
+      : [mem] "r" (mem), [val] "r" (val)
+      : "cc");
+  return res;
+}
+
+// --------------------------------------------------------------------
+IMPLEMENTATION[arm && arm_v6plus && mp && !arm_lpae]:
+
+#include <cxx/type_traits>
 
 template< typename T > inline NEEDS [<cxx/type_traits>]
 typename cxx::enable_if<(sizeof(T) == 8), T>::type ALWAYS_INLINE
@@ -237,4 +241,68 @@ atomic_store(T *p, V value, typename cxx::enable_if<(sizeof(T) == 8), int>::type
       : "cc");
 }
 
+// --------------------------------------------------------------------
+IMPLEMENTATION[arm && arm_v6 && !mp]:
+
+#include <cxx/type_traits>
+
+template<typename T, typename V> inline NEEDS [<cxx/type_traits>]
+typename cxx::enable_if<(sizeof(T) == 8), T>::type ALWAYS_INLINE
+atomic_exchange(T *mem, V value)
+{
+  // NOTE: this version assumes close IRQs during the operation
+  T val = value;
+  T res;
+  Mem::prefetch_w(mem);
+  asm (
+      "1:   ldrd %[res], %H[res], %[mem] \n"
+      "     strd %[val], %H[val], %[mem]   "
+      : [res] "=&r" (res), [mem] "+m" (*mem)
+      : [val] "r" (val));
+  return res;
+}
+
+template<typename T, typename V> inline NEEDS [<cxx/type_traits>]
+typename cxx::enable_if<(sizeof(T) == 8), T>::type ALWAYS_INLINE
+atomic_add_fetch(T *mem, V value)
+{
+  // NOTE: this version assumes close IRQs during the operation
+  T val = value;
+  T res;
+  Mem::prefetch_w(mem);
+  asm (
+      "1:   ldrd   %[res], %H[res], %[mem] \n"
+      "     adds   %[res], %[res], %[val] \n"
+      "     adc    %H[res], %H[res], %H[val] \n"
+      "     strd   %[val], %H[val], %[mem]"
+      : [res] "=&r" (res), [mem] "+m" (*mem)
+      : [val] "r" (val)
+      : "cc");
+  return res;
+}
+
+// --------------------------------------------------------------------
+IMPLEMENTATION[arm && arm_v6plus && !mp && !arm_lpae]:
+
+#include <cxx/type_traits>
+
+template< typename T > inline NEEDS [<cxx/type_traits>]
+typename cxx::enable_if<(sizeof(T) == 8), T>::type ALWAYS_INLINE
+atomic_load(T const *p)
+{
+  T res;
+  asm volatile ("ldrd %0, %H0, %1" : "=&r" (res) : "m" (*p));
+  return res;
+}
+
+template< typename T, typename V > inline NEEDS [<cxx/type_traits>]
+inline void ALWAYS_INLINE
+atomic_store(T *p, V value, typename cxx::enable_if<(sizeof(T) == 8), int>::type = 0)
+{
+  T val = value;
+  asm volatile (
+      "strd   %1, %H1, %0"
+      : "=m"(*p)
+      : "r"(val));
+}
 
