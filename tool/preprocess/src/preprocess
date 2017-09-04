@@ -1756,7 +1756,7 @@ sub print_funcdef($)
   # Remove default arguments from argument list
   my $args = $function->{args};
   $expr = qr{ [^(),]* (?:$paren_group)? [^(),]* }x;
-  $args =~ s/$s = $expr//gx;
+  $args =~ s/$s (?<![=!])=(?!=) $expr//gx;
   $args =~ s/($s(?:override|final))+($s)$/$2/g;
 
   print_expand "\n";
