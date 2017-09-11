@@ -55,7 +55,8 @@ Irq_chip_msi::msg(Mword pin, Unsigned64, Irq_mgr::Msi_info *inf)
     return -L4_err::ERange;
 
   inf->data = _entry[pin].vector() | (1 << 14);
-  inf->addr = 0xfee00000;
+  Unsigned32 apicid = Apic::apic.current()->cpu_id();
+  inf->addr = 0xfee00000 | (apicid << 12);
 
   return 0;
 }
