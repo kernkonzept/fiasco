@@ -1,5 +1,6 @@
 INTERFACE:
 
+#include <limits.h>
 #include "irq.h"
 #include "kobject_helper.h"
 #include "prio_list.h"
@@ -49,7 +50,9 @@ Semaphore::count_up(Thread **wakeup)
           *wakeup = t;
         }
       else
-        ++_queued;
+	// avoid wrapping the _queued counter around to 0
+	if (_queued < LONG_MAX)
+	  ++_queued;
     }
   return old;
 }
