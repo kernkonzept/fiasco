@@ -76,14 +76,14 @@ void __attribute__ ((noreturn))
 platform_reset(void)
 {
   enum {
-    WCR  = Mem_layout::Watchdog_phys_base + 0,
-    WCR_SRS = 1 << 4, // Software Reset Signal
+    WCR     = Mem_layout::Watchdog_phys_base + 0,
+    WCR_WDE = 1 << 2,
   };
 
   platform_imx_cpus_off();
 
-  // Assert Software reset signal by making the bit zero
-  Io::mask<Unsigned16>(~WCR_SRS, Kmem::mmio_remap(WCR));
+  // Enable watchdog with smallest timeout possible (0.5s)
+  Io::modify<Unsigned16>(WCR_WDE, 0xff00, Kmem::mmio_remap(WCR));
 
   for (;;)
     ;
