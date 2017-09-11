@@ -50,16 +50,16 @@ PUBLIC static inline void Mem::dsb()
 IMPLEMENTATION [arm_v6]:
 
 PUBLIC static inline void Mem::dmbst()
-{ __asm__ __volatile__ ("dmb" : : : "memory"); }
+{ __asm__ __volatile__ ("mcr p15, 0, r0, c7, c10, 5" : : : "memory"); }
 
 PUBLIC static inline void Mem::dmb()
-{ __asm__ __volatile__ ("dmb" : : : "memory"); }
+{ __asm__ __volatile__ ("mcr p15, 0, r0, c7, c10, 5" : : : "memory"); }
 
 PUBLIC static inline void Mem::isb()
-{ __asm__ __volatile__ ("isb" : : : "memory"); }
+{ __asm__ __volatile__ ("mcr p15, 0, r0, c7, c5, 4" : : : "memory"); }
 
 PUBLIC static inline void Mem::dsb()
-{ __asm__ __volatile__ ("dsb" : : : "memory"); }
+{ __asm__ __volatile__ ("mcr p15, 0, r0, c7, c10, 4" : : : "memory"); }
 
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [32bit && ((arm_v7 && mp) || arm_v8)]:
