@@ -1,69 +1,62 @@
+# The Fiasco.OC Microkernel Repository
 
-Welcome to Fiasco.OC!
-----------------------
+This repository contains the source code of the L4Re microkernel also known as
+the Fiasco.OC microkernel. User level applications are not included in this
+package.
 
-Fiasco is a microkernel and can be used to construct flexible systems. We at
-TU Dresden use it as a base for our TUD:OS system which supports running
-real-time and time-sharing applications as well as virtualization
-concurrently on one system. However, Fiasco is not only suitable for big and
-complex systems, but also for small, embedded applications.
+Fiasco is used to construct flexible systems that support running real-time,
+time-sharing and virtualization workloads concurrently on one system. The
+kernel scales from big and complex systems down to small and embedded
+applications. It supports the following architectures:
 
-This distribution contains the Fiasco.OC microkernel and tools to build
-it. User level applications are not included in this package.
+| Architecture | 32 bit | 64 bit |
+|:------------:|:------:|:------:|
+|      x86     |    x   |   x    |
+|      ARM     |    x   |   x    |
+|      MIPS    |    x   |   x    |
 
-Licensing
----------
+For a full list of the supported platforms and features see the [feature
+list](https://l4re.org/fiasco/features.html).
 
-Fiasco is freely redistributable under the GPL (see COPYING).
-For different licensing schemes please contact us at:
-  info@l4re.org
-This is a closed list, proper mails will be let through by the moderator.
+We welcome contributions to the microkernel. Please see our contributors guide on
+[how to contribute](CONTRIBUTING.md).
 
-For more details, see our webpage at: https://l4re.org/fiasco/
+## Reporting vulnerabilities
 
-Supported architectures and ABIs
---------------------------------
+We encourage responsible disclosure of vulnerabilities you may discover. Please
+disclose them privately via **security@kernkonzept.com** to us.
 
-  * IA32  (32-bit Intel, AMD and compatible CPUs, i486 and above)
-  * AMD64 (64-bit Intel, AMD and compatible CPUs)
-  * ARM   (various 32-bit ARM CPUs and platforms)
-  * ARM64 (various 64-bit ARM CPUs and platforms)
-  * MIPS  (32-bit and 64-bit MIPS version R2 and R6)
-  * UX    (Linux usermode emulation of Fiasco/L4)
+# Building
 
-Building the Fiasco kernel
---------------------------
+Fiasco.OC can be built using a recent version of gcc (>=4.7) or clang (>=3.7),
+GNU binutils, GNU make and Perl (>=5.6).
 
-To compile Fiasco you need a recent version of gcc and a recent version of
-GNU binutils, GNU make and Perl version 5.6 or later.
+Change to the top-level directory of this project and create a build directory
+by typing
+```
+$ make BUILDDIR=/path/to/build
+```
 
-Change to the directory where this README is located and
-create a build directory with "make BUILDDIR=build" and change to the
-'build' directory. Optionally modify the default configuration using
-"make menuconfig". Then compile the kernel by typing "make".
+Change to the newly created build directory. You can now modify the default
+configuration by typing
+```
+$ make menuconfig
+```
 
-The kernel binary can then be found as 'fiasco' in the build directory.
+Make the desired changes, save and exit the configuration. Now you can build
+the kernel by typing
+```
+$ make
+```
 
-For further information refer to: https://l4re.org/fiasco/build.html
+You can also build in parallel by providing a suitable ```-j``` option. If the
+build completed successfully you can find the kernel binary as *fiasco* in
+the build directory.
 
-Mailing List
-------------
+For further information please refer to our [detailed build
+instructions](https://l4re.org/fiasco/build.html).
 
-For problem reports and suggestions regarding the Fiasco microkernel,
-please subscribe and send mail to the l4-hackers mailing list:
-   https://os.inf.tu-dresden.de/mailman/listinfo/l4-hackers/
+# License
 
-Remote SVN
-----------
-
-The latest development versions are available from our SVN server.
-However, be aware that these may not always run correctly.
-You can also get user land programs for L4 from this SVN.
-
-For information how to use SVN see:
-https://l4re.org/download.html
-
-
-Enjoy!
-
-The Fiasco Team
+Fiasco is licensed under the GPLv2. If you require a different licensing scheme
+please contact us at **info@kernkonzept.com**.
