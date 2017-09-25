@@ -77,7 +77,7 @@ PUBLIC
 void
 Svm::pm_on_suspend(Cpu_number)
 {
-  // FIXME: Handle VMCB caching stuff iff enabled
+  // FIXME: Handle VMCB caching stuff if enabled
 }
 
 PUBLIC
@@ -228,7 +228,7 @@ Svm::msrpm_base_pa()
 { return _msrpm_base_pa; }
 
 /**
- * \pre user_vmcb must be a uniqe address across all address spaces
+ * \pre user_vmcb must be a unique address across all address spaces
  *      (e.g., a kernel KU-mem address)
  */
 PUBLIC inline
