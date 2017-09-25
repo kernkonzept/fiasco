@@ -1,6 +1,7 @@
 # PF: IMX
 # PFDESCR: NXP/Freescale i.MX
 # PFDEPENDS: ARM
+# PFSELECT: HAS_ARM_PSCI
 
 choice
 	prompt "NXP/Freescale i.MX"
