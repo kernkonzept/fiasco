@@ -315,7 +315,7 @@ Vm_svm::copy_control_area(Vmcb *dest, Vmcb *src)
     }
 
   // skip iopm_base_pa and msrpm_base_pa
-  // skip asid and TLB control, those are handle in fiasco
+  // skip asid and TLB control, those are handled in fiasco
 
   if (!clean.tpr())
     {
