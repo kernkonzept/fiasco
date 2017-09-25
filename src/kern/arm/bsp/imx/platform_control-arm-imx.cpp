@@ -34,7 +34,7 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && mp && pf_imx_7]:
+IMPLEMENTATION [arm && mp && pf_imx_7 && !arm_psci]:
 
 #include "ipi.h"
 #include "mem_layout.h"
@@ -71,4 +71,16 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
   gpc[GPC_PGC_A7CORE1_CTRL].clear(GPC_PGC_A7CORE1_CTRL_PCR); // enable again
 
   src[SRC_A7RCR1].set(SRC_A7RCR_A7_CORE1_ENABLE);
+}
+
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && mp && pf_imx_7 && arm_psci]:
+
+PUBLIC static
+void
+Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
+{
+  if (cpu_on(0x1, phys_tramp_mp_addr))
+    printf("KERNEL: PSCI CPU_ON failed\n");
 }
