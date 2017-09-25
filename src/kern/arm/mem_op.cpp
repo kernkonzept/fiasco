@@ -70,11 +70,8 @@ Mem_op::__arm_kmem_l1_cache_maint(int op, void const *kstart, void const *kend)
       break;
 
     case Op_cache_flush_data:
-      Mem_unit::flush_dcache(kstart, kend);
-      break;
-
     case Op_cache_inv_data:
-      l1_inv_dcache((Address)kstart, (Address)kend);
+      Mem_unit::flush_dcache(kstart, kend);
       break;
 
     case Op_cache_coherent:
