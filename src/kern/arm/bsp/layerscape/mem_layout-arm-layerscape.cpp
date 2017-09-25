@@ -1,9 +1,9 @@
-INTERFACE [arm && pf_ls1021a]: //------------------------------------------
+INTERFACE [arm && pf_layerscape]: //------------------------------------------
 
 EXTENSION class Mem_layout
 {
 public:
-  enum Phys_layout_ls1021a : Address
+  enum Phys_layout_layerscape : Address
   {
     Gic_dist_phys_base   = 0x01401000,
     Gic_cpu_phys_base    = 0x01402000,
