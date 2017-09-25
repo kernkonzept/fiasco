@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && pic_gic && pf_ls1021a]:
+IMPLEMENTATION [arm && pic_gic && pf_layerscape]:
 
 IMPLEMENT_OVERRIDE inline
 Unsigned32 Gic::pcpu_to_sgi(Cpu_phys_id cpu)

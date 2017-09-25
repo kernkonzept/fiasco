@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && mp && pf_ls1021a && !arm_psci]: // -----------------
+IMPLEMENTATION [arm && mp && pf_layerscape && !arm_psci]: // -------------
 
 #include "ipi.h"
 #include "mem.h"
@@ -16,7 +16,7 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
   Ipi::bcast(Ipi::Global_request, Cpu_number::boot_cpu());
 }
 
-IMPLEMENTATION [arm && mp && pf_ls1021a && arm_psci]: // -------------------
+IMPLEMENTATION [arm && mp && pf_layerscape && arm_psci]: // ---------------
 
 PUBLIC static
 void

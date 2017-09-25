@@ -1,0 +1,14 @@
+# PF: LAYERSCAPE
+# PFDESCR: NXP/Freescale Layerscape
+# PFSELECT: HAS_CPU_VIRT HAS_ARM_PSCI
+# PFDEPENDS: ARM
+
+choice
+	prompt "Layerscape variant"
+	default PF_LS1021A
+
+config PF_LS1021A
+	bool "LS1021A"
+	select CAN_ARM_CPU_CORTEX_A7
+
+endchoice
