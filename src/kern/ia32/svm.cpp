@@ -27,9 +27,6 @@ public:
 
 private:
   Vmcb const *_last_user_vmcb;
-  Unsigned32 _next_asid;
-  Unsigned32 _global_asid_generation;
-  bool _flush_all_asids;
 
   /* read mostly below */
   Unsigned32 _max_asid;
@@ -114,10 +111,7 @@ Svm::Svm(Cpu_number cpu)
   Cpu &c = Cpu::cpus.cpu(cpu);
   _last_user_vmcb = 0;
   _svm_enabled = false;
-  _next_asid = 1;
-  _global_asid_generation = 0;
   _max_asid = 0;
-  _flush_all_asids = true;
   _has_npt = false;
 
   if (!cpu_svm_available(cpu))
@@ -137,11 +131,11 @@ Svm::Svm(Cpu_number cpu)
       printf("SVM: nested paging supported\n");
       _has_npt = true;
     }
-  printf("SVM: NASID: %u\n", ebx);
+  printf("SVM: NASID: %u.\n", ebx);
   _max_asid = ebx - 1;
 
   // FIXME: MUST NOT PANIC ON CPU HOTPLUG
-  assert(_max_asid > 0);
+  //assert(_max_asid > 0);
 
   enum
   {
@@ -260,44 +254,3 @@ PUBLIC
 bool
 Svm::has_npt()
 { return _has_npt; }
-
-PUBLIC
-bool
-Svm::asid_valid(Unsigned32 asid, Unsigned32 generation)
-{
-  return ((asid > 0) &&
-          (asid <= _max_asid) &&
-          (generation <= _global_asid_generation));
-}
-
-PUBLIC inline
-void
-Svm::flush_asids_if_needed()
-{
-  if (EXPECT_TRUE(!_flush_all_asids))
-    return;
-
-  _flush_all_asids = false;
-  _kernel_vmcb->control_area.tlb_ctl |= 1;
-}
-
-PUBLIC inline
-Unsigned32
-Svm::global_asid_generation() const
-{ return _global_asid_generation; }
-
-PUBLIC
-Unsigned32
-Svm::next_asid()
-{
-  assert (cpu_lock.test());
-  if (_next_asid > _max_asid)
-    {
-      _global_asid_generation++;
-      _next_asid = 1;
-      // FIXME: must not crash on an overrun
-      assert (_global_asid_generation < ~0U);
-      _flush_all_asids = true;
-    }
-  return _next_asid++;
-}
