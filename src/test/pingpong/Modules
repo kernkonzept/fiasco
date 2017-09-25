@@ -1,0 +1,85 @@
+# -*- makefile -*-
+
+SUBSYSTEMS = BOOTTASK TESTTASK KERNEL CRT0 LIBK LIBAMM 
+
+ifneq ($(wildcard $(srcdir)/disasm),)
+SUBSYSTEMS += LIBDISASM
+endif
+
+#
+# KERNEL subsystem
+#
+KERNEL = fiasco.image
+KERNEL_EXTRA = Symbols
+VPATH += kern
+PRIVATE_INCDIR += kern
+
+INTERFACES_KERNEL = mapdb region \
+  space_context space space_index space_index_util \
+  stack irq_init kmem kmem_alloc slab_cache kmem_slab_simple kmem_slab \
+  switch_lock thread_lock helping_lock kernel_lock timer \
+  thread_state sched context threadid thread_regs sender receiver \
+  thread kernel_thread \
+  map_util irq startup console paranoia globals \
+  kdb kdb_ke jdb_symbol jdb_lines jdb_trace jdb_tbuf jdb_bp jdb main config 
+
+thread_IMPL = thread thread-syscall thread-list thread-ipc thread-msg \
+              thread-log
+
+kernel_thread_IMPL = kernel_thread-test
+
+OBJ_KERNEL = entry.o
+
+#
+# CRT0 subsystem
+#
+CRT0 = crt0.o
+
+OBJ_CRT0 = crt0.o
+
+#
+# LIBK subsystem
+#
+LIBK = libk.a
+VPATH += lib
+PRIVATE_INCDIR += . lib/oskit
+
+INTERFACES_LIBK = atomic lock_guard profile uuencode gmon unistd
+
+CSRC_LIBK = com_cons.c
+
+NOPROFILE += profile gmon
+
+#
+# LIBAMM subsystem
+#
+
+# This library is not relocatable; it is built in its source
+# directory.  Reference it with $(srcdir).
+LIBAMM = $(srcdir)/lib/oskit/amm/libamm.a
+
+#
+# LIBDISASM subsystem
+#
+LIBDISASM = $(srcdir)/disasm/libdisasm.a
+
+#
+# BOOTTASK subsystem
+#
+BOOTTASK = pingpong_test
+VPATH += boot test/boottask
+
+CSRC_BOOTTASK = oskit_support.c
+CXXSRC_BOOTTASK = bootstrap-boottask.cc
+OBJ_BOOTTASK = boot.o
+
+NOPROFILE += oskit_support bootstrap
+
+#
+# TESTTASK subsystem
+# 
+TESTTASK = pingpong
+VPATH += test/testtask
+
+CSRC_TESTTASK = pingpong.c
+OBJ_TESTTASK = crt0-user.o

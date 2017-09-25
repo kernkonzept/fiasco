@@ -1,0 +1,23 @@
+# vim:set ft=make:
+
+PREPROCESS_PARTS        += generic_tickless_idle sunxi pic_gic libuart
+PREPROCESS_PARTS        += arm_generic_timer
+INTERFACES_KERNEL       += gic
+INTERFACES_KERNEL       += generic_timer
+RAM_PHYS_BASE           := 0x40000000
+MPCORE_PHYS_BASE        := 0x01c80000
+OBJECTS_LIBUART         += uart_16550.o uart_16550_dw.o
+SUBSYSTEMS              += LIBUART
+
+uart_IMPL             += uart-arm-sunxi
+config_IMPL           += config-arm-sunxi
+mem_layout_IMPL       += mem_layout-arm-sunxi
+pic_IMPL              += pic-gic pic-arm-sunxi
+bootstrap_IMPL        += bootstrap-arm-sunxi
+#timer_IMPL            += timer-arm-sunxi
+timer_IMPL            += timer-arm-generic timer-arm-generic-sunxi
+timer_tick_IMPL       += timer_tick-single-vector
+kernel_uart_IMPL      += kernel_uart-libuart
+reset_IMPL            += reset-arm-sunxi
+clock_IMPL            += clock-generic
+platform_control_IMPL += platform_control-arm-sunxi

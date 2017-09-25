@@ -1,0 +1,10 @@
+/* -*- c++ -*- */
+
+#ifndef CLIMITS_INCLUDE
+#define CLIMITS_INCLUDE
+
+#include <limits.h>
+
+#endif //CLIMITS_INCLUDE
+
+

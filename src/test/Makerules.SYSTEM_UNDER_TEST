@@ -1,0 +1,26 @@
+# -*- makefile -*-
+
+CXXSRC_SYSTEM_UNDER_TEST += $(SYSTEM_UNDER_TEST).cc
+
+.PHONY: $(SYSTEM_UNDER_TEST)
+
+$(SYSTEM_UNDER_TEST): $(SYSTEM_UNDER_TEST).ok
+
+$(SYSTEM_UNDER_TEST).run: $(OBJ_SYSTEM_UNDER_TEST) $(LIBS)
+	$(CXX) -g -o $@ $(OBJ_SYSTEM_UNDER_TEST) $(LIBS)
+
+%.ok: %.run
+	@echo -n "Running test $* ... "
+	@./$< > $*.out
+ifeq ($(RECREATE_OUTPUT),1)
+	@cp $*.out $*.out.verify
+endif
+	@diff -u $(DIFF_FLAGS) $*.out.verify $*.out
+	@touch $@
+
+clean-SYSTEM_UNDER_TEST:
+	rm -f $(SYSTEM_UNDER_TEST).out $(SYSTEM_UNDER_TEST).run $(SYSTEM_UNDER_TEST).ok
+
+CXXFLAGS := $(filter-out -nostdinc, $(CXXFLAGS))
+CPPFLAGS := $(filter-out -I$(DROPS_STDINCDIR)/flux/c \
+                         -I$(OSKITDIR)/flux/c -nostdinc, $(CPPFLAGS))

@@ -1,0 +1,53 @@
+// vi:ft=cpp
+
+#pragma once
+
+#include <cxx/type_traits>
+
+namespace cxx {
+
+/**
+ * Simple encapsulation for a dynamically allocated array.
+ *
+ * The main purppose of this class is to support C++11 range for
+ * for simple dynamically allocated array with static size.
+ */
+template<typename T, typename IDX = unsigned>
+class static_vector
+{
+private:
+  template<typename X, typename IDX2> friend class static_vector;
+  T *_v;
+  IDX _l;
+
+public:
+  typedef T value_type;
+  typedef IDX index_type;
+
+  static_vector() = default;
+  static_vector(value_type *v, index_type length) : _v(v), _l(length) {}
+
+  /// Conversion from compatible arrays
+  template<typename X,
+           typename = typename enable_if<is_convertible<X, T>::value>::type>
+  static_vector(static_vector<X, IDX> const &o) : _v(o._v), _l(o._l) {}
+
+  index_type size() const { return _l; }
+  bool empty() const { return _l == 0; }
+
+  value_type &operator [] (index_type idx) { return _v[idx]; }
+  value_type const &operator [] (index_type idx) const { return _v[idx]; }
+
+  value_type *begin() { return _v; }
+  value_type *end() { return _v + _l; }
+  value_type const *begin() const { return _v; }
+  value_type const *end() const { return _v + _l; }
+  value_type const *cbegin() const { return _v; }
+  value_type const *cend() const { return _v + _l; }
+
+  /// Get the index of the given element of the array
+  index_type index(value_type const *o) const { return o - _v; }
+  index_type index(value_type const &o) const { return &o - _v; }
+};
+
+}

@@ -1,0 +1,243 @@
+# -*- makefile -*-
+
+# Targets in this Makefile:
+# - all: Run all subsystems' "all" targets
+# - doc: Create doxygen documentation in directory "docs"
+# - DEPS, DEPS.ps, DEPS.a4.ps, DEPS.tred.ps: 
+#	 Create dependency graphs
+# - TAGS, tags: 
+#	 Create editor tags
+# This Makefile is invoked in a sub-Make from the top-level Makefile
+# when globalconfig.out, Modules and .Modules.deps are up-to-date and
+# all `preprocess'd C++ source files have been created.
+
+all: do-all
+	$(VERBOSE)echo "  --> Build-Nr: $$(cat .build_nr)"
+
+BUILD_OBJECTS=true
+
+include $(srcdir)/Makeconf	# also reads srcdir/Makeconf.local
+                                # and        objdir/Makeconf.local
+include $(MODULES_FILE)
+include .Modules.deps
+
+# Compute sets of sources.  From these variables, Makeconf computes
+# $(DEPS) and $(SRC_ALL).  Set them before including Makerules.global.
+SRC_S = $(foreach subsys, $(SUBSYSTEMS), $(ASSRC_$(subsys)))
+SRC_C = $(foreach subsys, $(SUBSYSTEMS), $(CSRC_$(subsys)))
+SRC_CC = $(foreach subsys, $(SUBSYSTEMS), $(CXXSRC_$(subsys)))
+
+include $(srcdir)/Makerules.global # also reads objdir/Makerules.local
+
+include $(MAKERULES_SUBSYS)
+-include $(DEPS)
+
+# Recompile everything if the compiler configuration has changed.
+OBJS = $(foreach subsys, $(SUBSYSTEMS), $(OBJ_$(subsys)))
+$(OBJS): .Compiler-config
+
+#
+# Subsystem-specific rules and targets
+#
+
+ifeq ("$(CONFIG_MAINTAINER_MODE)","y")
+
+do-all: Checkinitcalls Circular-ok ToDoItems $(ALL)
+ifeq ($(CONFIG_XARCH),ux)
+# disabled until unittests fixed
+#do-all: unittest
+endif # UX
+
+else  # ! maintainer mode
+
+do-all: $(ALL)
+
+endif # ! maintainer mode
+
+
+Checkinitcalls: $(KERNEL) $(OBJ_KERNEL)
+ifneq ($(shell $(CXX) -dumpversion | cut -d . -f1-2),3.4)
+	@echo "Checking initcalls"
+	$(VERBOSE)$(srcdir)/../tool/checkinitcalls \
+	  -k fiasco.image \
+	  -Werror $(filter-out fiasco.image, $^) \
+	  $(if $(CROSS_COMPILE),-t $(CROSS_COMPILE)) && \
+	echo "Initcalls OK"
+else
+	@echo "Initcall check disabled due to gcc-3.4"
+endif
+
+TOOL_GDB_DIR=$(srcdir)/../tool/gdb
+GDB ?= gdb-multiarch
+
+gdb: fiasco.image
+	$(VERBOSE)FIASCO_TOOL_GDB_DIR=$(TOOL_GDB_DIR) \
+	 $(GDB) -x $(TOOL_GDB_DIR)/interactive.gdb fiasco.image
+
+gen_ktrace_events.h: fiasco.image
+	$(VERBOSE)FIASCO_TOOL_GDB_DIR=$(TOOL_GDB_DIR) \
+	 $(GDB) --batch -x $(TOOL_GDB_DIR)/gen_ktrace_events.gdb \
+	               fiasco.image
+
+ToDoItems:
+	@files=$$(cd $(srcdir) &&                                            \
+	          find . -type f -name '*.cpp' -o -name '*.cc' -o            \
+		                 -name '*.h' -o -name '*.S' -o -name '*.h'); \
+	fixme=$$(cd $(srcdir) && cat $$files | grep -wc FIXME);              \
+	XXX=$$(cd $(srcdir) && cat $$files | grep -wc XXX);                  \
+	if [ "$$fixme" -ne "0" -o "$$XXX" -ne "0" ]; then                    \
+	   echo "Found $$fixme times 'FIXME' and $$XXX times 'XXX'";         \
+	fi
+
+doc: docs/stamp-doc.ready
+
+docs/stamp-doc.ready: $(srcdir)/doxygen.conf $(foreach m, $(GENERATED_MODULES), auto/stamp-$(m).ready)
+	@mkdir -p docs
+	@touch $@
+	$(VERBOSE)doxygen $(srcdir)/doxygen.conf
+
+###
+
+# Make function "makedeps":  Creates (on stdout) a list of Make-like
+# dependencies in a format suitable for $(SHOWDEPS).  Expects a list
+# of source (BASE-suffix.{cpp,cc,c}, BASE[_i].h) files as input and extracts
+# include directives from them.  Dependecies contain only basenames of
+# files (up to the first "-").  Suffixes and extensions are stripped.
+makedeps= implname () { echo $$1 | sed 's|.*/||; s|_i\.h|.h|; s|[.-].*||;'; };\
+	  for i in $(1); \
+	  do \
+	    echo $$(implname $$i): $$(perl -n -e \
+              '/^\s*\#include\s+["<](.*).h[">]/ && print "$$1 "; next;' \
+              $$i); \
+	  done 
+
+DEPS:	$(SRC_ALL) $(foreach idir, $(PRIVATE_INCDIR), $(wildcard $(idir)/*.h))
+	$(call makedeps, $^) | $(SHOWDEPS) > $@.new
+	mv $@.new $@
+
+# Graphical version of DEPS dependency graph.
+
+# XXX DEPS.{dot,ps} only contain dependency graphs for the KERNEL and
+# LIBK subsystem.  Also, we remove a number of top-level and low-level
+# modules from the resulting graph to reduce the overwhelming number
+# of edges; however, `gendotdeps' ensures that modules participating
+# in circular dependencies are never removed.
+
+GENDOT_FLAGS ?= -t1u1
+
+KERNEL_MODULES_CPP = $(foreach mod, $(INTERFACES_KERNEL) $(INTERFACES_LIBK), \
+	$(addsuffix .cpp,$(call eval_impl,$(mod)))) \
+	$(foreach idir, $(srcdir)/kern $(srcdir)/kern/shared \
+	                $(srcdir)/kern/$(CONFIG_XARCH), \
+	  $(wildcard $(idir)/*.h))
+
+ifeq ($(CONFIG_XARCH),ux)
+EXTRA_INCLUDES = -I/usr/include/c++/$(shell $(CXX) -dumpversion) -I/usr/include
+endif
+
+DEPS.dot: $(KERNEL_MODULES_CPP)
+	@echo -n > source_files.mkdeps
+	@for f in $^ ; do \
+	   echo $$f >> source_files.mkdeps ; \
+	 done
+	$(srcdir)/../tool/gendotdeps \
+	  -E "$(PREPROCESS_PARTS)" $(addprefix -I,$(PRIVATE_INCDIR)) \
+	  $(EXTRA_INCLUDES) $(addprefix --vpath=,$(VPATH)) $(GENDOT_FLAGS) \
+	  -v -b $(srcdir)/DEPS.blacklist source_files.mkdeps -o $@ || $(RM) $@
+	@$(RM) source_files.mkdeps
+
+%.ps:	%.dot
+	dot -Tps -Gmclimit=200.0 -Gnslimit=500.0 \
+	  -Gsize=11,10 -Grotate=90 -o $@ $<
+
+%.a4.ps: %.dot
+	dot -Tps -Gmclimit=200.0 -Gnslimit=500.0 \
+	  -Gsize="11,8" -Granksep=0.7 -Grotate=90 -o $@ $<
+
+%.tred.ps: %.dot
+	tred $< | dot -Tps -Gmclimit=200.0 -Gnslimit=500.0 \
+	  -Gsize="11,8" -Granksep=0.7 -Grotate=90 -o $@ 
+
+%.svg:	%.dot
+	dot -Tsvg -Gmclimit=200.0 -Gnslimit=500.0 \
+	  -Gsize=11,10 -Grotate=90 -o $@ $<
+
+%.a4.svg: %.dot
+	dot -Tsvg -Gmclimit=200.0 -Gnslimit=500.0 \
+	  -Gsize="11,8" -Granksep=0.7 -Grotate=90 -o $@ $<
+
+%.tred.svg: %.dot
+	tred $< | dot -Tsvg -Gmclimit=200.0 -Gnslimit=500.0 \
+	  -Gsize="11,8" -Granksep=0.7 -Grotate=90 -o $@ 
+
+
+###
+
+# Circular should really be dependent on $(DEPS). However, we cannot
+# enforce that all $(DEPS) are made before this target, because the
+# Makefile contains "-include $(DEPS)" (which can result in Circular
+# being created/updated before all $(DEPS) are).  Therefore, depend on
+# the fiasco.image and on main (not with Fiasco-UX). Once this is made,
+# we know all $(DEPS) have been updated.
+Circular: $(KERNEL) $(BOOT) $(RUN_TESTS) $(CHECKSUM)
+	@echo "Creating $@"
+	@( \
+	  echo 'Do "make DEPS" for full fine-grained dependency information.';\
+	  for i in $(DEPS); \
+	  do \
+	    $(PREPROCESSDEPS) $$i; \
+	  done | $(SHOWDEPS) | $(CIRCULAR) \
+	) > $@.new
+	@mv $@.new $@
+
+# Create a Circular.max file for the first time.  Usually this target
+# is not needed -- there should be a Circular.max file in the CVS.
+$(srcdir)/Circular.max.$(CONFIG_XARCH): 
+# Circular is not in the dependencies because we do not want a new
+# copy of Circular.max every time Circular changes.  We nevertheless
+# need it to so the copy -- so create it explicitly
+	$(MAKE) -f $(srcdir)/Makefile.sub2 Circular
+	cp Circular $@
+
+# Check that the number of circular dependency has not increased in
+# this build.
+.PHONY: Circular-ok
+Circular-ok: $(srcdir)/Circular.max.$(CONFIG_XARCH) Circular
+# Circular.max.* must be the first dependency:  We are going to
+# reference it as $<.
+	@ max=$$(tail -1 $<); \
+	  current=$$(tail -1 Circular); \
+	  if [ $$current -gt $$max ]; \
+	  then \
+	    echo "Number of circular dependencies increased!"; \
+	    diff -up $< Circular; \
+	    exit 1; \
+	  fi; \
+	  echo "Circular-dependency check OK ($$current <= $$max)"
+
+###
+
+.PHONY: TAGS tags
+
+# Find directories for source and header files.  There may be
+# duplicates, so weed out the list using a tiny Perl script.
+define source-files
+	( find $(shell perl -e '				   \
+		%seen = ();					   \
+		foreach $$i (@ARGV) {				   \
+		    next if ! -e $$i || $$i eq ".";		   \
+		    next if defined $$seen{$$i};		   \
+		    $$seen{$$i} = 1;				   \
+		    print "$$i ";				   \
+		}' $(filter-out auto, $(VPATH) $(PRIVATE_INCDIR))) \
+	  -maxdepth 1 -type f -name '*.cpp' -o -name '*.h' 	   \
+	  -o -name '*.cc' -o -name '*.c' )
+endef
+
+TAGS:
+	$(source-files) | etags --members --language=c++ -
+
+tags:
+	$(source-files) | ctags --members --language=c++ -d -w -T -
+
+

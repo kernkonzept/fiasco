@@ -1,0 +1,39 @@
+# -*- makefile -*-
+# vim:set ft=make:
+
+# recent version.h required for any kip*.o files
+$(filter kip%.o,$(OBJ_ABI)): $(VERSION)
+
+$(VERSION): FORCE
+		$(GENVER_MESSAGE)
+		$(VERBOSE)v=`cd $(srcdir) && git rev-parse             \
+		                   --verify --short HEAD 2>/dev/null`; \
+		if [ -n "$$v" ]; then                                  \
+                  d=`cd $(srcdir) && git diff-index --name-only HEAD`; \
+                  [ -n "$$d" ] && v="$$v-dirty";                       \
+                else                                                   \
+		   v=`LC_ALL=C svnversion -nc $(srcdir) 2>/dev/null`;  \
+		   if [ -n "$$v"                                       \
+		        -a "$$v" != "Unversioned directory" ]; then    \
+		     v=$${v%[A-Z]}; v="r$${v#*:}";                     \
+		   else                                                \
+		     v=`cd $(srcdir) && hg id 2>/dev/null`;            \
+		     if [ -n "$$v" ]; then                             \
+		       v="$${v% *}";                                   \
+		     else                                              \
+		       v="unknown";                                    \
+		     fi                                                \
+		   fi                                                  \
+		fi;                                                    \
+		echo "#define CODE_VERSION \"$$v\"" > $@
+		$(VERBOSE)echo "#define BUILD_DATE \"$$(LC_ALL=C date)\"" >> $@
+		$(VERBOSE)if [ -e .build_nr ]; then                    \
+		  nr=$$(($$(cat .build_nr) + 1));                      \
+		else                                                   \
+		  nr=1;                                                \
+		fi;                                                    \
+		echo $$nr > .build_nr;                                 \
+		echo "#define BUILD_NR \"$$nr\"" >> $@
+
+clean-VERSION:
+		rm -f $(VERSION)

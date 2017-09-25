@@ -1,0 +1,18 @@
+# vim:set ft=make:
+
+SUBSYSTEMS              += LIBUART
+OBJECTS_LIBUART         += uart_pl011.o
+PREPROCESS_PARTS        += integrator libuart generic_tickless_idle
+RAM_PHYS_BASE           := 0x00000000
+
+
+uart_IMPL             += uart-arm-integrator
+config_IMPL           += config-arm-integrator
+mem_layout_IMPL       += mem_layout-arm-integrator
+pic_IMPL              += pic-arm-integrator
+bootstrap_IMPL        += bootstrap-arm-integrator
+timer_IMPL            += timer-arm-integrator
+timer_tick_IMPL       += timer_tick-single-vector
+kernel_uart_IMPL      += kernel_uart-arm-integrator
+reset_IMPL            += reset-arm-integrator
+clock_IMPL            += clock-generic

@@ -1,0 +1,20 @@
+/* -*- c++ -*- */
+
+#ifndef CSTDDEF_INCLUDE
+#define CSTDDEF_INCLUDE
+
+#include <stddef.h>
+
+namespace std {
+
+#if(__GNUC__>=3)
+
+  using ::ptrdiff_t;
+  using ::size_t;
+
+#endif
+
+};
+
+
+#endif // CSTDDEF_INCLUDE

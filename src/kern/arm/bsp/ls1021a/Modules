@@ -1,0 +1,22 @@
+# vim:set ft=make:
+
+PREPROCESS_PARTS        += generic_tickless_idle pic_gic libuart
+PREPROCESS_PARTS        += arm_generic_timer ls1021a 16550
+INTERFACES_KERNEL       += gic
+INTERFACES_KERNEL       += generic_timer
+RAM_PHYS_BASE           := 0x80000000
+MPCORE_PHYS_BASE        := 0x01c80000
+OBJECTS_LIBUART         += uart_16550.o
+SUBSYSTEMS              += LIBUART
+
+uart_IMPL              = uart uart-16550
+config_IMPL           += config-arm-ls1021a
+mem_layout_IMPL       += mem_layout-arm-ls1021a
+pic_IMPL              += pic-gic pic-arm-ls1021a
+bootstrap_IMPL        += bootstrap-arm-ls1021a
+timer_IMPL            += timer-arm-generic timer-arm-generic-ls1021a
+timer_tick_IMPL       += timer_tick-single-vector
+kernel_uart_IMPL      += kernel_uart-libuart
+reset_IMPL            += reset-arm-ls1021a
+clock_IMPL            += clock-generic
+platform_control_IMPL += platform_control-arm-ls1021a

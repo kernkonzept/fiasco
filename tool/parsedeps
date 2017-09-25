@@ -1,0 +1,45 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+$, = ' ';		# set output field separator
+$\ = "\n";		# set output record separator
+
+my $doit = 1;
+
+my @input = <>;
+$_ = join '', @input;
+
+s/\\\n//sg;			# delete continuations
+
+record:
+foreach my $record (split /\n/) {
+  next if $record =~ /^$/;
+
+  my @stuff = split /\s+/, $record;
+
+ line:
+  while ($_ = shift @stuff) {
+    chomp;	# strip record separator
+
+    if (/^else$/) {
+      $doit = 1;
+      next line;
+    }
+    
+    if (/^endif$/) {
+      print "";
+      $doit = 0;
+    }
+    
+    if ($doit) {
+      /:/ && ! m|^[^/]+\.o:$| && next record;
+
+      /Makefile/ && next line;
+      /auto\// || /:/ || next line;
+      print $_." \\";
+    }
+  }
+  print "";
+}
+

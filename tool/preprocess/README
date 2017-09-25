@@ -1,0 +1,38 @@
+`preprocess' -- A C++ preprocessor.
+-----------------------------------
+
+This program is a preprocessor for C++ modules.  With this tool, you
+write unit-style single-source-file modules in C++ (e.g., foo.cpp),
+from which the tool extracts three C++ source files that can then be
+processed using the standard C++ compiler toolchain:
+
+- A public header file (foo.h)
+
+- A private header file containing all non-public type definitions
+  (foo_i.h).  This facilitates debugging modules that need access to
+  implementation-specific data structures.
+
+- An implementation file (foo.cc)
+
+Features: 
+
+- Modules contain two sections.  The "INTERFACE:" section contains
+  the public interface to the module; the "IMPLEMENTATION:" section
+  contains everything else.  The preprocessor puts "INTERFACE:"
+  declarations into the public header file and tries to hide
+  everything else.
+
+- The preprocessor automatically expands class declarations using
+  member-function definitions found in the file.  Function labelled
+  PUBLIC, PROTECTED and PRIVATE are put into the corresponding section
+  of the class.  This feature saves typing effort and reduces
+  duplication.
+
+- Functions declared "inline" are exported automatically, along with
+  all the functions and types they need (these dependencies must be
+  declared in the module file).  This feature can be turned off so that
+  all functions labeled "inline" are hidded and generated out-of-line.
+
+For more documentation, please refer to the documentation (manpage,
+webpage) in directory "doc" (requires Doxygen), or go to the online
+documentation at <http://os.inf.tu-dresden.de/~hohmuth/prj/preprocess/>.

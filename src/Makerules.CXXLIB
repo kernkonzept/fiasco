@@ -1,0 +1,7 @@
+# -*- makefile -*-
+
+$(CXXLIB): $(OBJ_CXXLIB)
+	$(AR_MESSAGE)
+	$(VERBOSE)$(RM) $@
+	$(VERBOSE)$(AR) $(ARFLAGS) $@ $^
+

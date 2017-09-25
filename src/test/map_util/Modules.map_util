@@ -1,0 +1,24 @@
+# -*- makefile -*-
+
+ARCH				:= ia32
+SUBSYSTEMS			:= SYSTEM_UNDER_TEST ABI
+SYSTEM_UNDER_TEST		:= map_util.t
+
+INTERFACES_SYSTEM_UNDER_TEST	:= map_util mapdb space space_context \
+				   space_index config cpu boot_info
+
+INTERFACES_ABI			:= l4_types l4_ipc l4_syscalls kip
+
+boot_info_IMPL			:= boot_info boot_info-arch
+cpu_IMPL			:= cpu-x86 cpu-arch
+config_IMPL			:= config config-arch
+space_IMPL			:= space space-arch
+l4_syscalls_IMPL		:= l4_syscalls-arch l4_syscalls
+l4_types_IMPL			:= l4_types-arch l4_types
+l4_ipc_IMPL			:= l4_ipc-arch l4_ipc
+
+PRIVATE_INCDIR			+= lib/kern/include test/wrappers/auto \
+				   kern/$(ARCH) kern types/$(ARCH) types
+				   
+VPATH				+= kern kern/$(ARCH) kern/shared abi/$(ARCH) abi types/$(ARCH) types
+LIBS				:= ../wrappers/libwrappers.a

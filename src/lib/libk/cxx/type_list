@@ -1,0 +1,61 @@
+// vi:ft=cpp
+#pragma once
+
+/*
+ * (c) 2012 Alexander Warg <warg@os.inf.tu-dresden.de>,
+ *     economic rights: Technische Universität Dresden (Germany)
+ *
+ * This file is part of TUD:OS and distributed under the terms of the
+ * GNU General Public License 2.
+ * Please see the COPYING-GPL-2 file for details.
+ *
+ * As a special exception, you may use this file as part of a free software
+ * library without restriction.  Specifically, if other files instantiate
+ * templates or use macros or inline functions from this file, or you compile
+ * this file and link it with other files to produce an executable, this
+ * file does not by itself cause the resulting executable to be covered by
+ * the GNU General Public License.  This exception does not however
+ * invalidate any other reasons why the executable file might be covered by
+ * the GNU General Public License.
+ */
+
+
+#include "type_traits"
+
+namespace cxx {
+
+template< typename ...T >
+struct type_list;
+
+template<>
+struct type_list<>
+{
+  typedef false_type head;
+  typedef false_type tail;
+};
+
+template<typename HEAD, typename ...TAIL>
+struct type_list<HEAD, TAIL...>
+{
+  typedef HEAD head;
+  typedef type_list<TAIL...> tail;
+};
+
+template<typename TYPELIST, template <typename T> class PREDICATE>
+struct find_type;
+
+template<template <typename T> class PREDICATE>
+struct find_type<type_list<>, PREDICATE>
+{
+  typedef false_type type;
+};
+
+template<typename TYPELIST, template <typename T> class PREDICATE>
+struct find_type
+{
+  typedef typename conditional<PREDICATE<typename TYPELIST::head>::value,
+                               typename TYPELIST::head,
+                               typename find_type<typename TYPELIST::tail, PREDICATE>::type>::type type;
+};
+
+}

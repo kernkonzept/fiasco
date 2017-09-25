@@ -1,0 +1,18 @@
+# vim:set ft=make:
+
+SUBSYSTEMS              += LIBUART
+OBJECTS_LIBUART         += uart_pl011.o
+PREPROCESS_PARTS        += libuart generic_tickless_idle bcm2835
+RAM_PHYS_BASE           := 0
+
+
+uart_IMPL             += uart-arm-bcm2835
+config_IMPL           += config-arm-bcm2835
+mem_layout_IMPL       += mem_layout-arm-bcm2835
+pic_IMPL              += pic-arm-bcm2835
+bootstrap_IMPL        += bootstrap-arm-bcm2835
+timer_IMPL            += timer-arm-bcm2835
+timer_tick_IMPL       += timer_tick-single-vector
+kernel_uart_IMPL      += kernel_uart-arm-bcm2835
+reset_IMPL            += reset-arm-bcm2835
+clock_IMPL            += clock-generic

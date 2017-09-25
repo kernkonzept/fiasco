@@ -1,0 +1,38 @@
+# -*- makefile -*-
+# Boot Makefile
+
+# Add future prerequisites somewhere among the list of libraries.
+# You really should not have to add anything in the $(LD) line.
+
+boot_img.o:	boot_img.x2 boot_img.ren_syms
+	$(LINK_MESSAGE)
+	$(VERBOSE)$(OBJCOPY) --redefine-syms=boot_img.ren_syms $< $@
+
+boot_img.ren_syms: boot_img.x2
+	$(LINK_MESSAGE)
+	$(VERBOSE)$(NM) -u $^ | perl -n -e 'if (/^\s*U\s+bootstrap_(.*)$$/) { print "bootstrap_$$1 $$1\n"; }' > $@
+
+boot_img.x1:	$(OBJ_BOOT) $(DRIVERS) $(MINILIBC) 
+	$(LINK_MESSAGE)
+	$(VERBOSE)$(LD) -m $(LD_EMULATION) -r -s -o $@ \
+	-T $(srcdir)/boot/amd64/bootstrap.ld $^ $(LIBGCC)
+
+boot_img.x2:	boot_img.x1
+	$(LINK_MESSAGE)
+	$(VERBOSE)$(OBJCOPY) --prefix-alloc-sections=.bootstrap --prefix-symbols=bootstrap_ -G bootstrap__boot_start $^ $@
+
+
+-include .kernel.amd64.lds.d
+
+$(KERNEL):	kernel.amd64.lds boot_img.o $(CRT0) $(OBJ_KERNEL) $(JDB) $(LIBK) $(KERNEL_EXTRA_LIBS) $(ABI) $(JABI) libdrivers.a $(LIBUART) $(CXXLIB) $(MINILIBC) libgluedriverslibc.a
+		$(LINK_MESSAGE)
+		$(VERBOSE)$(LD) -m $(LD_EMULATION) -N -T $< -gc-sections \
+		-o $@ $(filter-out $<,$+) $(LIBGCC) $(KERNEL_UNRES_SYMS)
+		$(call ADD_CONFIGFILE,$@)
+
+# '$(RM) main' should be removed later - Late 2012
+$(BOOT): $(KERNEL)
+		$(LINK_MESSAGE)
+		$(VERBOSE)$(STRIP) -o $@ $<
+		$(VERBOSE)chmod 755 $@
+		$(VERBOSE)$(RM) main

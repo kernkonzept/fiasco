@@ -1,0 +1,48 @@
+# vim:set ft=make:
+
+SUBSYSTEMS              += LIBUART
+OBJECTS_LIBUART         += uart_pl011.o
+PREPROCESS_PARTS        += realview libuart pic_gic
+PREPROCESS_PARTS        += $(if $(CONFIG_PF_REALVIEW_EB),realview_eb)
+PREPROCESS_PARTS        += $(if $(CONFIG_PF_REALVIEW_PB11MP),realview_pb11mp)
+PREPROCESS_PARTS        += $(if $(CONFIG_PF_REALVIEW_PBX),realview_pbx)
+PREPROCESS_PARTS        += $(if $(CONFIG_PF_REALVIEW_VEXPRESS),realview_vexpress)
+PREPROCESS_PARTS        += $(if $(CONFIG_PF_REALVIEW_VEXPRESS_A9),realview_vexpress_a9)
+PREPROCESS_PARTS        += $(if $(CONFIG_PF_REALVIEW_VEXPRESS_A15),realview_vexpress_a15)
+PREPROCESS_PARTS        += generic_tickless_idle
+RAM_PHYS_BASE           := $(CONFIG_PF_REALVIEW_RAM_PHYS_BASE)
+
+MPCORE_PHYS_BASE-$(CONFIG_PF_REALVIEW_VEXPRESS_A9)  := 0x1e000000
+MPCORE_PHYS_BASE-$(CONFIG_PF_REALVIEW_VEXPRESS_A15) := 0x2c000000
+MPCORE_PHYS_BASE        := $(if $(MPCORE_PHYS_BASE-y),$(MPCORE_PHYS_BASE-y),0x1f000000)
+
+timer_IMPL            += timer-arm-realview
+ifneq ($(CONFIG_ARM_MPCORE)$(CONFIG_ARM_CORTEX_A9),)
+  PREPROCESS_PARTS    += mptimer
+  timer_IMPL          += timer-arm-mptimer timer-arm-mptimer-realview
+  INTERFACES_KERNEL   += timer_sp804
+else
+  ifneq ($(CONFIG_ARM_CORTEX_A15),)
+    PREPROCESS_PARTS  += arm_generic_timer
+    INTERFACES_KERNEL += generic_timer
+    timer_IMPL        += timer-arm-generic
+  else
+    PREPROCESS_PARTS  += sp804
+    INTERFACES_KERNEL += timer_sp804
+  endif
+endif
+
+INTERFACES_KERNEL     += gic platform board_check-arm-realview
+
+timer_tick_IMPL       += timer_tick-single-vector
+uart_IMPL             += uart-arm-realview
+config_IMPL           += config-arm-realview
+mem_layout_IMPL       += mem_layout-arm-realview
+pic_IMPL              += pic-gic pic-arm-realview
+bootstrap_IMPL        += bootstrap-arm-realview
+kernel_uart_IMPL      += kernel_uart-arm-realview
+reset_IMPL            += reset-arm-realview
+clock_IMPL            += clock-arm-realview
+outer_cache_IMPL      += outer_cache-arm-realview
+platform_IMPL         += platform-arm-realview
+platform_control_IMPL += platform_control-arm-realview

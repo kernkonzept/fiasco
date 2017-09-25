@@ -1,0 +1,8 @@
+/* -*- c++ -*- */
+
+#ifndef CASSERT_INCLUDE
+#define CASSERT_INCLUDE
+
+#include <assert.h>
+
+#endif // CASSERT_INCLUDE

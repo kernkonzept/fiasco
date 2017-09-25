@@ -1,0 +1,43 @@
+# -*- makefile -*-
+# vim:se ft=make:
+
+ivt.o: $(TCBOFFSET)
+hvt.o: $(TCBOFFSET)
+tramp-mp.o: $(TCBOFFSET)
+
+# Add future prerequisites somewhere among the list of libraries.
+# You really should not have to add anything in the $(LD) line.
+
+OBJ_KERNEL_noboot = $(filter-out bootstrap%,$(OBJ_KERNEL))
+OBJ_BOOTSTRAP = $(filter  bootstrap%,$(OBJ_KERNEL))
+
+-include .kernel.arm.lds.d
+
+bootstrap.$(KERNEL).o: $(OBJ_BOOTSTRAP) $(LIBGCC)
+	$(LINK_MESSAGE)
+	$(VERBOSE)$(LD) $(LDFLAGS) -m $(LD_EMULATION) -r $(OBJ_BOOTSTRAP) $(LIBGCC) -o $@
+
+$(KERNEL).image: kernel.arm.lds $(CRT0) bootstrap.$(KERNEL).o $(OBJ_KERNEL_noboot) $(JDB) $(LIBK) $(KERNEL_EXTRA_LIBS) $(LIBDISASM) $(ABI) libdrivers.a $(LIBUART) $(CXXLIB) $(MINILIBC) $(LIBGCC) $(MINILIBC) libgluedriverslibc.a
+	$(LINK_MESSAGE)
+	$(VERBOSE)$(LD) $(LDFLAGS) -m $(LD_EMULATION) $(KERNEL_LDFLAGS) -N -defsym kernel_load_addr=$(CONFIG_KERNEL_LOAD_ADDR) \
+          -T $< -o $@ $(filter-out $<,$+)
+	$(call ADD_CONFIGFILE,$@)
+	$(VERBOSE)if [ -n "$$($(NM) -C bootstrap.o | grep "         U " | grep -vE 'Mem_layout::__ph_to_pm|_start_kernel|kernel_page_directory|kernel_lpae_dir|my_kernel_info_page')" ]; then \
+	  echo "bootstrap.o contains unknown unresolved symbols."; exit 1; \
+	fi
+
+$(KERNEL): $(KERNEL).image
+	$(LINK_MESSAGE)
+	$(VERBOSE)$(STRIP) $< -o $@
+	chmod 755 $@
+
+#	$(OBJCOPY) -O binary $@ fiasco	
+
+Symbols: $(KERNEL).image
+	$(NM) $(KERNEL).image | c++filt | sort > $@.new
+	mv $@.new $@
+	chmod 755 $@
+
+
+clean-KERNEL:
+

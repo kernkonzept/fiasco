@@ -1,0 +1,3 @@
+implement_default.cpp:19: warning: Function Test::warn_func1 overrides an IMPLEMENT_DEFAULT function but does not use IMPLEMENT_OVERRIDE
+implement_default.cpp:20: warning: Function Test::warn_func2 overrides an IMPLEMENT_DEFAULT function but does not use IMPLEMENT_OVERRIDE
+warning: found 2 warning(s)

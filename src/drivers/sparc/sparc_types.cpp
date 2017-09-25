@@ -1,0 +1,2 @@
+INTERFACE [sparc]:
+

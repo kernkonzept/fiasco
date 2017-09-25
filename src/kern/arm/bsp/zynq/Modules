@@ -1,0 +1,21 @@
+# vim:set ft=make:
+
+SUBSYSTEMS              += LIBUART
+OBJECTS_LIBUART         += uart_cadence.o
+PREPROCESS_PARTS        += libuart generic_tickless_idle zynq mptimer pic_gic
+INTERFACES_KERNEL       += gic
+RAM_PHYS_BASE           := 0x0
+MPCORE_PHYS_BASE        := 0xf8f00000
+
+uart_IMPL             += uart-arm-zynq
+config_IMPL           += config-arm-zynq
+mem_layout_IMPL       += mem_layout-arm-zynq
+pic_IMPL              += pic-gic pic-arm-zynq
+bootstrap_IMPL        += bootstrap-arm-zynq
+timer_IMPL            += timer-arm-mptimer timer-arm-mptimer-zynq
+timer_tick_IMPL       += timer_tick-single-vector
+kernel_uart_IMPL      += kernel_uart-arm-zynq
+reset_IMPL            += reset-arm-zynq
+clock_IMPL            += clock-generic
+outer_cache_IMPL      += outer_cache-arm-zynq
+platform_control_IMPL += platform_control-arm-zynq

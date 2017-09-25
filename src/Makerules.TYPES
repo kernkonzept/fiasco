@@ -1,0 +1,8 @@
+# -*- makefile -*-
+
+$(TYPES): $(OBJ_TYPES)	
+	$(AR_MESSAGE)
+	$(VERBOSE)$(RM) $@
+	$(VERBOSE)$(AR) $(ARFLAGS) $@ $^
+
+

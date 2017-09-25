@@ -1,0 +1,96 @@
+# UX Kernel Makefile
+
+shortcut.o:          $(TCBOFFSET)
+sighandler.o:        $(TCBOFFSET)
+entry.o:             $(TCBOFFSET)
+entry-mp.o:          $(TCBOFFSET)
+sys_call_page-asm.o: $(TCBOFFSET)
+tramp-mp.o:          $(TCBOFFSET)
+
+
+# Add future prerequisites somewhere among the list of libraries. You really
+# should not have to add anything in the $(CXX) line.
+#
+# Please don't add -gc-sections as linker option here. The reason is that
+# properly working destructors of libc.a require __start_libc_atexit and
+# __stop_libc_atexit to be defined by the linker. The ld linker defines
+# these symbols by magic if it finds a 'libc section' -- the section name
+# starts with '_'. However, if the section is completely purged, these
+# symbols are not defined and therefore the libc destructors are not executed
+# (_IO_cleanup so far). We could manually create the correct section by adding
+#
+#   __libc_atexit : {
+#     PROVIDE(__start___libc_atexit = .);
+#     KEEP(*(__libc_atexit))
+#     PROVIDE(__stop___libc_atexit = .);
+#   }
+#
+# to the linker script. We don't do this because we don't know which symbols
+# are required by future versions of the libc.
+
+-include .kernel.ux.lds.d
+
+$(KERNEL):	kernel.ux.lds $(OBJ_KERNEL) $(MINILIBC) $(LIBK) $(KERNEL_EXTRA_LIBS) $(ABI) $(JABI) $(DRIVERS) $(CXXLIB)
+		$(LINK_MESSAGE)
+		$(VERBOSE)$(CXX) -m32 -Wl,-T$< -static -o $@ -Wl,--whole-archive $(MINILIBC) -Wl,--no-whole-archive $(KERNEL_UNRES_SYMS) $(filter-out $<,$+) -lutil $(WRAP_SYMBOLS)
+		$(VERBOSE)chmod 755 $@
+		@$(ECHO) "  ==> Generating fiasco"
+		$(VERBOSE)ln -sf $@ fiasco
+		$(VERBOSE)preinit_array_start=$$(nm $(KERNEL) | grep __preinit_array_start | cut -d' ' -f1); \
+		  preinit_array_end=$$(nm $(KERNEL) | grep __preinit_array_end   | cut -d' ' -f1); \
+		  if [ "$$preinit_array_start" != "$$preinit_array_end" ]; then \
+		    echo "preinit_array content appeared, check linker symbols"; \
+		  fi
+		$(call ADD_CONFIGFILE,$@)
+
+irq0.o:		irq0.c
+		$(COMP_MESSAGE)
+		$(VERBOSE)$(CC) -O2 -Wall -W -c -o $@ $<
+
+irq0:		irq0.o
+		$(LINK_MESSAGE)
+		$(VERBOSE)$(CC) -static -o $@ $<
+		$(STRIP_MESSAGE)
+		$(VERBOSE)$(STRIP) $@
+
+ifeq ($(CONFIG_UX_CON),y)
+
+define get_sdl_config
+  if sdl2-config --cflags > /dev/null 2>&1; then \
+    echo sdl2-config; \
+  else \
+    echo sdl-config; \
+  fi
+endef
+
+SDL_CONFIG := $(shell $(call get_sdl_config))
+
+SDL_CFLAGS  := $(shell $(CROSS_COMPILE)$(SDL_CONFIG) --cflags)
+SDL_LDFLAGS := $(shell $(CROSS_COMPILE)$(SDL_CONFIG) --libs)
+
+ifeq ($(SDL_CFLAGS),)
+  $(error $(SDL_CONFIG) not found. libsdl including header files installed?)
+endif
+
+ux_con.o:	ux_con.c
+		$(COMP_MESSAGE)
+		$(VERBOSE)$(CC) -O2 -Wall -W -g $(SDL_CFLAGS) -c $<
+
+ux_con:		ux_con.o
+		$(LINK_MESSAGE)
+		$(VERBOSE)$(CC) $(SDL_LDFLAGS) $< -o $@
+		$(STRIP_MESSAGE)
+		$(VERBOSE)$(STRIP) $@
+endif
+
+ifeq ($(CONFIG_UX_NET),y)
+ux_net.o:	ux_net.c
+		$(COMP_MESSAGE)
+		$(VERBOSE)$(CC) -O2 -Wall -W -g -c $<
+
+ux_net:		ux_net.o
+		$(LINK_MESSAGE)
+		$(VERBOSE)$(CC) $< -o $@
+		$(STRIP_MESSAGE)
+		$(VERBOSE)$(STRIP) $@
+endif

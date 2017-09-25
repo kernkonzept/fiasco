@@ -1,0 +1,153 @@
+#!/usr/bin/perl -w
+
+# we use BigInts for handling 64-bit values on IA32 systems
+
+use strict;
+use Getopt::Long;
+use Pod::Usage;
+use Math::BigInt;
+
+my $target       = '';
+my $sym_objdump  = 'nm -nC';
+my $dis_objdump  = 'objdump -drlC';
+my $hdr_objdump  = 'objdump -h';
+my $start_symbol = '_initcall_start';
+my $end_symbol   = '_initcall_end';
+my $kernel       = 'fiasco.image';
+my $error        = 0;
+my $werror       = 0;
+my @Wswitch      = ();
+my @ignore_funcs = ();
+
+my $opt = { "kernel"          => \$kernel,
+	    "start-symbol"    => \$start_symbol,
+	    "end-symbol"      => \$end_symbol,
+	    "W"               => \@Wswitch,
+	    "ignore-function" => \@ignore_funcs,
+	    "target"          => \$target };
+
+Getopt::Long::Configure ('bundling','no_ignore_case','auto_abbrev');
+
+GetOptions( $opt,
+	    "help|?|h",
+	    "man|m",
+	    "W=s@",
+	    "start-symbol=s",
+	    "end-symbol=s",
+	    "ignore-function=s@",
+	    "kernel|k=s",
+	    "target|t=s",
+	  );
+
+sub have_warn_opt {
+  my $opt = shift @_;
+  my @gr = grep /$opt/, @Wswitch;
+#  print "W: ".join(" ",@gr)."\n";
+  return scalar @gr;
+}
+
+$dis_objdump = $target.$dis_objdump;
+$hdr_objdump = $target.$hdr_objdump;
+$sym_objdump = $target.$sym_objdump;
+
+$werror = 1 if have_warn_opt("error");
+if (!have_warn_opt("static-construction")) {
+  push @ignore_funcs, ("(_Z41)?__static_initialization_and_destruction_0(ii\\.(clone|part)\\.\\d+)?");
+  push @ignore_funcs, ("_GLOBAL__(sub_)?I\\.\\S*");
+  push @ignore_funcs, ("_GLOBAL__sub_I__Z\\S*");
+  push @ignore_funcs, ("global constructors keyed to \\S*");
+  push @ignore_funcs, ("T\\.\\d+");
+}
+
+my $ignore_funcs = join("|",@ignore_funcs);
+
+#print "Ignore: $ignore_funcs\n";
+
+my @symbols = split($/,qx{$sym_objdump $kernel});
+
+my @start = grep /^[0-9a-fA-F]+\s+[A-Z]\s+$start_symbol\s*$/, @symbols;
+my @end   = grep /^[0-9a-fA-F]+\s+[A-Z]\s+$end_symbol\s*$/, @symbols;
+
+if(! defined $start[0] || ! defined $end[0]) {
+  die 'start ('.$start_symbol.') or end ('.$end_symbol.') symbol not found!';
+}
+
+my $start = $start[0];
+my $end   = $end[0];
+
+$start =~ s/^([0-9a-fA-F]+).*$/$1/;
+$end   =~ s/^([0-9a-fA-F]+).*$/$1/;
+
+#print "start of init area: $start\n";
+#print "end if init area  : $end\n";
+
+$start = Math::BigInt->new("0x".$start);
+$end   = Math::BigInt->new("0x".$end);
+
+my %init_syms;
+
+while($_ = shift @symbols) {
+  if(/^([0-9a-fA-F]+)\s+[A-Z]\s+(\S+)/) {
+    my $addr   = Math::BigInt->new("0x".$1);
+    my $symbol = $2;
+    if (   $symbol ne $start_symbol
+	&& $symbol ne $end_symbol
+	&& $addr->bcmp($start) >= 0
+	&& $addr->bcmp($end)   <  0) {
+      $init_syms{$symbol} = 1;
+#      print "$symbol\n";
+    }
+  }
+}
+
+while($_ = shift @ARGV) {
+  my $file = $_;
+
+  # search for sections .text.* in object file
+  my @sections = split $/, qx{$hdr_objdump $file};
+  my $text_sections = '';
+  foreach $_ (@sections) {
+    if (/^\s*[0-9]+\s(\.text[.0-9a-zA-Z_]*)/) {
+      $text_sections .= " -j ".$1;
+    }
+  }
+
+  # disassemble object file
+  my @dump = split $/, qx{$dis_objdump $text_sections $file};
+
+  my $source;
+  my $function;
+  my $warn;
+  if ($werror) {
+    $warn = "error";
+  } else {
+    $warn = "warning";
+  }
+
+  foreach $_ (@dump) {
+    if (/^(\S+:[0-9]+)\s*$/) {
+      $source = $1;
+      next;
+    }
+    if (/^([0-9a-fA-F]+)\s+<(.*)>:$/) {
+      $function = $2;
+      next;
+    }
+    if (/^\s*([0-9a-fA-F]+):\s+R_\S+\s+(\S+\(.*\))\S*\s*$/) {
+      my $sym = $2;
+      if (   defined $function
+	  && $function !~ /^($ignore_funcs)(\(.*\))?$/
+	  && defined $init_syms{$sym}) {
+	$source = $file unless defined $source;
+	(my $func_pretty = $function) =~ s/_GLOBAL__I\.\d+_//;
+	$func_pretty = `echo '$func_pretty' | ${target}c++filt`;
+	chomp $func_pretty;
+	print STDERR "$source: $warn: $func_pretty uses initcall ($sym) from normal text section\n";
+	$error++ if $werror;
+      }
+      next;
+    }
+  }
+}
+
+exit(1) if $error;

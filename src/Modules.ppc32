@@ -1,0 +1,244 @@
+# -*- makefile -*-
+# vi:se ft=make:
+
+###############################################################################
+
+include $(srcdir)/Modules.generic
+
+SUBSYSTEMS  :=	ABI KERNEL LIBUART LIBK DRIVERS MINILIBC CXXLIB CRT0 \
+		VERSION JABI TCBOFFSET
+
+
+PREPROCESS_PARTS 	+= $(CONFIG_XARCH) $(CONFIG_ABI) 32bit \
+			   abs_syscalls big_endian jdb_thread_names \
+			   obj_space_phys
+
+PREPROCESS_PARTS-$(CONFIG_SERIAL)             += serial
+PREPROCESS_PARTS-$(CONFIG_JDB) += debug jdb log
+PREPROCESS_PARTS-$(CONFIG_SCHED_FIXED_PRIO)  += sched_fixed_prio
+PREPROCESS_PARTS-$(CONFIG_SCHED_WFQ)         += sched_wfq
+PREPROCESS_PARTS-$(CONFIG_SCHED_FP_WFQ)      += sched_fp_wfq
+PREPROCESS_PARTS	+= $(PREPROCESS_PARTS-y)
+
+#
+# TYPES subsystem
+#
+PRIVATE_INCDIR += types/$(CONFIG_XARCH) types
+
+#
+# LIBUART subsystem
+#
+ifeq ("$(filter LIBUART, $(SUBSYSTEMS))","LIBUART")
+LIBUART			:= uart/libuart.a
+PREPROCESS_PARTS	+= libuart
+endif
+
+OBJECTS_LIBUART		+= uart_of.o uart_mpc52xx.o
+VPATH_LIBUART		:= $(srcdir)/lib/uart
+PRIVATE_INCDIR		+= lib/uart drivers/$(CONFIG_XARCH)/include
+
+#
+# DRIVERS Subsystem
+#
+DRIVERS			:= libdrivers.a libgluedriverslibc.a
+VPATH			+= drivers/$(CONFIG_XARCH) drivers
+PRIVATE_INCDIR		+= drivers/$(CONFIG_XARCH) drivers 
+INTERFACES_DRIVERS	:= mux_console console mem reset uart filter_console \
+			   processor delayloop io
+io_IMPL			:= io io-ppc32
+mem_IMPL		:= mem mem-ppc32
+uart_IMPL		:= uart uart-mmio
+reset_IMPL		:= reset-ppc32
+processor_IMPL		:= processor processor-ppc32
+CXXSRC_DRIVERS		:= glue_libc.cc
+NOOPT			+= $(patsubst %.o, %, $(OBJ_DRIVERS))
+
+#
+# MINILIBC Subsystem
+#
+MINILIBC	:= libc.a
+VPATH		+= lib/minilibc/$(CONFIG_XARCH) lib/minilibc
+PRIVATE_INCDIR	+= lib/minilibc/$(CONFIG_XARCH)/include lib/minilibc/include
+CSRC_MINILIBC	:= atexit.c memccpy.c memcmp.c memmove.c memset.c memcpy.c \
+		   memchr.c panic.c strchr.c strcmp.c strcpy.c strlen.c \
+		   strncmp.c strncpy.c strstr.c printf.c \
+		   __v_printf.c vprintf.c strtol.c strtoul.c __lltostr.c \
+		   __ltostr.c putchar.c puts.c getchar.c gets.c \
+		   sprintf.c snprintf.c vsnprintf.c vsprintf.c \
+		   longjmp.c isalnum.c isalpha.c isascii.c isblank.c \
+		   iscntrl.c isdigit.c isgraph.c islower.c isprint.c \
+		   ispunct.c isspace.c isupper.c isxdigit.c strspn.c \
+		   strcspn.c tolower.c
+ASSRC_MINILIBC	:= setjmp.S
+NOOPT		+= $(patsubst %.o, %, $(OBJ_MINILIBC))
+
+
+#
+# JABI Subsystem
+#
+JABI		:= libjabi.a
+VPATH		+= jabi/$(CONFIG_XARCH) jabi
+INTERFACES_JABI	:= jdb_ktrace
+
+
+#
+# ABI Subsystem
+#
+ABI 		:= libabi.a
+VPATH 		+= abi/$(CONFIG_XARCH) abi
+INTERFACES_ABI 	:= kip l4_types l4_fpage l4_msg_item l4_buf_desc l4_error
+
+kip_IMPL	:= kip kip-debug kip-ppc32
+l4_types_IMPL	:= l4_types l4_types-debug
+
+#
+# KERNEL subsystem
+#
+KERNEL 		:= fiasco
+KERNEL_EXTRA 	:= Symbols
+VPATH 		+= kern/$(CONFIG_XARCH) kern
+VPATH		+= jdb/$(CONFIG_XARCH) jdb
+PRIVATE_INCDIR 	+= kern/$(CONFIG_XARCH) kern
+
+INTERFACES_KERNEL +=	boot_uart_init bootstrap decrementer msr ppc_types     \
+			util utcb_support irq_chip_generic dirq boot_info
+
+INTERFACES_KERNEL-$(CONFIG_SERIAL) += uart_console
+
+INTERFACES_KERNEL += $(INTERFACES_KERNEL-y)
+
+
+boot_info_IMPL		:= boot_info boot_info-ppc32
+clock_IMPL		:= clock
+config_IMPL		:= config config-ppc32
+context_IMPL		:= context context-ppc32 context-vcpu
+continuation_IMPL	:= continuation-ppc32
+cpu_IMPL		:= cpu cpu-ppc32
+cpu_lock_IMPL		:= cpu_lock cpu_lock-generic
+dirq_IMPL		:= dirq-ppc32
+entry_frame_IMPL	:= entry_frame entry_frame-ppc32
+kdb_ke_IMPL		:= kdb_ke-ppc32
+kernel_task_IMPL	:= kernel_task kernel_task-ppc32
+kernel_thread_IMPL	:= kernel_thread kernel_thread-std kernel_thread-ppc32
+kernel_uart_IMPL	:= kernel_uart kernel_uart-ppc32
+kmem_alloc_IMPL		:= kmem_alloc kmem_alloc-ppc32
+map_util_IMPL		:= map_util map_util-mem map_util-objs
+mapping_IMPL		:= mapping-ppc32 mapping
+mem_layout_IMPL		:= mem_layout mem_layout-ppc32
+mem_unit_IMPL		:= mem_unit-ppc32
+mem_space_IMPL		:= mem_space mem_space-user mem_space-ppc32 \
+			   mem_space-htab mem_space-cache
+obj_space_IMPL		:= obj_space obj_space-phys
+paging_IMPL		:= paging-ppc32 paging
+pic_IMPL		:= pic
+sched_context_IMPL	:= sched_context-wfq sched_context-fixed_prio \
+			   sched_context-fp_wfq sched_context
+startup_IMPL		:= startup startup-ppc32
+sys_call_page_IMPL	:= sys_call_page sys_call_page-ppc32
+task_IMPL		:= task task-ppc32
+timer_IMPL		:= timer timer-decr-ppc32
+timer_tick_IMPL         := timer_tick timer_tick-ppc32
+thread_IMPL		:= thread thread-log thread-pagefault \
+			   thread-ppc32 thread-ipc thread-jdb \
+			   thread-vcpu
+utcb_init_IMPL		:= utcb_init utcb_init-ppc32
+utcb_support_IMPL	:= utcb_support utcb_support-ppc32
+vmem_alloc_IMPL		:= vmem_alloc vmem_alloc-ppc32
+tb_entry_IMPL		:= tb_entry tb_entry-ppc32
+warn_IMPL		:= warn warn-ppc32
+
+
+ifeq ("$(CONFIG_JDB)","y")
+JDB			:= jdb_compound.o
+SUBSYSTEMS		+= JDB
+
+CXXSRC_JDB := tb_entry_output.cc
+
+jdb_IMPL		+= jdb-ppc32
+jdb_tcb_IMPL		+= jdb_tcb-ppc32
+jdb_entry_frame_IMPL	:= jdb_entry_frame-ppc32
+thread_IMPL		+= thread-debug
+
+INTERFACES_JDB		+= $(INTERFACES_JDB-y)
+endif
+
+CXXSRC_KERNEL		:= kernel_panic.cc libc_backend_lock.cc
+ASSRC_KERNEL		:= exception.S phys_mem.S
+
+NOOPT			+= $(filter jdb%,\
+			     $(foreach in,$(INTERFACES_KERNEL), \
+			       $(if $($(in)_IMPL),$($(in)_IMPL),$(in))))
+NOOPT			+= tb_entry #tb_entry_output
+
+#
+# CRT0 subsystem
+#
+CRT0 		:= crt0.o
+ASSRC_CRT0	:= crt0.S
+
+
+#
+# CXXLIB Subsystem
+# 
+CXXLIB 			:= libcxx.a
+VPATH			+= lib/cxxlib
+INTERFACES_CXXLIB 	:= paranoia s_cruft
+
+#
+# LIBK subsystem
+#
+LIBK 		:= libk.a
+VPATH          	+= lib/libk/$(CONFIG_XARCH) lib/libk
+PRIVATE_INCDIR 	+= lib/libk/$(CONFIG_XARCH) lib/libk
+
+INTERFACES_LIBK	:= auto_ptr atomic lock_guard std_macros
+CXXSRC_LIBK     += construction.cc
+atomic_IMPL     := atomic atomic-ppc32
+
+#
+# LIBDISASM subsystem (only for Jdb)
+#
+ifeq ("$(CONFIG_JDB_DISASM)","y")
+  # $(srcdir)/lib/disasm may be removed
+  ifeq ($(wildcard $(srcdir)/lib/disasm),)
+    $(error $(srcdir)/lib/disasm is missing, disable CONFIG_JDB_DISASM)
+  endif
+  SUBSYSTEMS          += LIBDISASM
+  KERNEL_EXTRA_LIBS   += $(LIBDISASM)
+  PREPROCESS_PARTS    += jdb_disasm
+
+  LIBDISASM           := libdisasm.a
+  VPATH               += lib/disasm lib/disasm/elf lib/disasm/include \
+                         lib/disasm/include/opcode lib/disasm/opcodes \
+                         lib/disasm/libiberty lib/disasm/bfd
+  PRIVATE_INCDIR      += lib/disasm lib/disasm/elf lib/disasm/include \
+                         lib/disasm/include/opcode lib/disasm/opcodes \
+                         lib/disasm/libiberty lib/disasm/bfd
+  PRIVATE_INCDIR      += lib/disasm
+  CXXSRC_LIBDISASM    := disasm.cc
+  CSRC_LIBDISASM      := ppc-dis.c ppc-opc.c dis-init.c dis-buf.c \
+                         safe-ctype.c libbfd.c
+  NOOPT               += $(patsubst %.o, %, $(OBJ_LIBDISASM))
+endif
+
+#
+# VERSION subsystem
+#
+VERSION		:= version.h
+
+TCBOFFSET	:= tcboffset.h
+CXXSRC_TCBOFFSET	:= tcboffset.cc dump_tcboffsets.cc
+
+#
+# BSP subsystem
+#
+BSP_NAME         := $(patsubst "%",%,$(CONFIG_BSP_NAME))
+MODULES_FILE_BSP := $(srcdir)/kern/ppc32/bsp/$(BSP_NAME)/Modules
+ifeq ($(wildcard $(MODULES_FILE_BSP)),)
+  $(error No BSP name defined or no BSP Modules file available)
+endif
+
+include $(MODULES_FILE_BSP)
+VPATH += kern/ppc32/bsp/$(BSP_NAME) kern/ppc32/bsp
+
+MODULES_FILES = $(MODULES_FILE) $(MODULES_FILE_BSP)

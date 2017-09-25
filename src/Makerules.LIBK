@@ -1,0 +1,12 @@
+# -*- makefile -*-
+
+# Kernel library: stuff which is linked in optionally.  This includes
+# everything in the lib subdirectory, but may also include optional 
+# kernel subsystems which may be optimized away
+
+$(LIBK): $(OBJ_LIBK)
+	$(AR_MESSAGE)
+	$(VERBOSE)$(RM) $@
+	$(VERBOSE)$(AR) $(ARFLAGS) $@ $^
+
+clean-LIBK:

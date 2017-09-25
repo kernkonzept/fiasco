@@ -1,0 +1,27 @@
+# ARCH:        SPARC sparc
+# ARCHDESCR:   SPARC v8 processor family (Caution: EXPERIMENTAL)
+#
+# ARCHDEPENDS: EXPERIMENTAL && INCLUDE_SPARC
+# ARCHSELECT:  BIT32
+# ARCHSELECT:  CONTEXT_4K
+# ARCHSELECT:  HAS_SERIAL_OPTION
+#
+# ARCHHELP:    SPARC v8 is supposed to run on the LEON3 platform.
+# ARCHHELP:    It is unsupported at the moment.
+#
+# ARCHDEFAULTPF: PF_LEON3
+
+# SECTION: CPU
+
+choice
+	prompt "CPU"
+	default LEON3      if SPARC
+
+config LEON3
+	bool "Gaisler SPARC LEON3"
+	depends on SPARC
+	help
+	  Choose this if you have a LEON3 CPU.
+
+endchoice
+

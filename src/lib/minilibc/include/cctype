@@ -1,0 +1,27 @@
+/* -*- c++ -*- */
+
+#ifndef CCTYPES_INCLUDE
+#define CCTYPES_INCLUDE
+
+#include <ctype.h>
+namespace std {
+
+#if(__GNUC__>=3)
+  using ::isalnum;
+  using ::isalpha;
+  using ::isdigit;
+  using ::isgraph;
+  using ::islower;
+  using ::isprint;
+  using ::ispunct;
+  using ::isspace;
+  using ::isupper;
+  using ::isxdigit;
+  using ::tolower;
+  using ::toupper;
+#endif
+
+};
+
+#endif // CCTYPES_INCLUDE
+

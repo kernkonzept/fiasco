@@ -1,0 +1,8 @@
+# -*- makefile -*-
+
+$(ABI): $(OBJ_ABI)
+	$(AR_MESSAGE)
+	$(VERBOSE)$(RM) $@
+	$(VERBOSE)$(AR) $(ARFLAGS) $@ $^
+
+

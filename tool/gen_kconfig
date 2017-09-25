@@ -1,0 +1,156 @@
+#! /usr/bin/perl -W
+
+use strict;
+
+my $kconfig_src_file = shift;
+my $kconfig_obj_file = shift;
+
+my %pfs;
+my %archs;
+my %files;
+
+my $tag = qr {^\s*\#\s*};
+
+foreach my $f (@ARGV) {
+  my $bsp_name;
+  $bsp_name = $1 if $f =~ /\/bsp\/([^\/]+)\//;
+  open(X, $f) || die "Cannot open $f: $!";
+  my $pf;
+  my $arch;
+  my $arch_cpu;
+  my $current_snippet = [];
+  my $fi = { sections => { GLOBAL => $current_snippet } };
+  $files{$f} = $fi;
+
+  while ($_=<X>) {
+    if (/$tag PF:\s*(\S+)/x) {
+      $pf = { name => $bsp_name, file => $f };
+      push (@{$fi->{cond}}, "PF_$1");
+      $pfs{$1} = $pf;
+    }
+    if (/$tag SECTION:\s*(\S+)/x) {
+      $fi->{sections}{$1} = [] if not defined $fi->{sections}{$1};
+      $current_snippet = $fi->{sections}{$1};
+    }
+    if  (defined $pf) {
+      $pf->{desc}  = $1                        if /$tag PFDESCR:\s*(.+)/x;
+      push(@{$pf->{select}}, split(/\s+/, $1)) if /$tag PFSELECT:\s*(.+)/x;
+      push(@{$pf->{dep}}, $1)                  if /$tag PFDEPENDS:\s*(.+)/x;
+    }
+
+    if (/^$tag ARCH:\s*(\S+)\s+(\S+)/x) {
+      $arch_cpu = undef;
+      $arch = { name => $2, file => $f };
+      $archs{$1} = $arch;
+      $fi->{sections}{TARGET} = [] if not defined $fi->{sections}{TARGET};
+      $current_snippet = $fi->{sections}{TARGET};
+      push (@{$fi->{cond}}, $1);
+    }
+    if (defined $arch) {
+      $arch->{desc} = $1            if /$tag ARCHDESCR:\s*(.+)/x;
+      $arch->{default_cpu} = $1     if /$tag ARCHDEFAULTCPU:\s*(.+)/x;
+      $arch->{default_pf} = $1      if /$tag ARCHDEFAULTPF:\s*(.+)/x;
+      push (@{$arch->{select}}, $1) if /$tag ARCHSELECT:\s*(.+)/x;
+      push (@{$arch->{dep}}, $1)    if /$tag ARCHDEPENDS:\s*(.+)/x;
+      push (@{$arch->{help}}, $1)   if /$tag ARCHHELP:\s*(.+)/x;
+      if (/$tag ARCHCPU:\s*(\S+)\s+(.+)/x) {
+        $arch_cpu = { name => $1, desc => $2 };
+        push (@{$arch->{cpus}}, $arch_cpu);
+      }
+    }
+    if (defined $arch_cpu) {
+      push (@{$arch_cpu->{dep}}, $1)    if /$tag ARCHCPUDEPENDS:\s*(.+)/x;
+      push (@{$arch_cpu->{select}}, $1) if /$tag ARCHCPUSELECT:\s*(.+)/x;
+      push (@{$arch_cpu->{help}}, $1)   if /$tag ARCHCPUHELP:\s*(.+)/x;
+    }
+
+    push (@{$current_snippet}, $_);
+  }
+
+  close X;
+}
+open(IN, "$kconfig_src_file") || die "Cannot open $kconfig_src_file: $!";
+open(OUT, ">$kconfig_obj_file") || die "Cannot open $kconfig_obj_file: $!";
+while ($_=<IN>) {
+  print OUT;
+  if (/$tag ARCH_DEFAULT_CPU\W/x) {
+    foreach my $i (sort keys %archs) {
+      print OUT "\tdefault $archs{$i}{default_cpu}  if $i\n"
+        if defined $archs{$i}{default_cpu};
+    }
+  }
+  if (/$tag ARCH_DEFAULT_PF\W/x) {
+    foreach my $i (sort keys %archs) {
+      print OUT "\tdefault $archs{$i}{default_pf}  if $i\n"
+        if defined $archs{$i}{default_pf};
+    }
+  }
+  if (/$tag ARCH_NAME\W/x) {
+    foreach my $i (sort keys %archs) {
+      print OUT "\tdefault \"$archs{$i}{name}\"  if $i\n"
+        if defined $archs{$i}{name};
+    }
+  }
+  if (/$tag ARCH_CHOICE\W/x) {
+    foreach my $i (sort keys %archs) {
+      next unless defined $archs{$i}{desc};
+      print OUT "config $i\n";
+      print OUT "\tbool \"$archs{$i}{desc}\"\n";
+      print OUT "\tdepends on $_\n" foreach (@{$archs{$i}{dep}});
+      print OUT "\tselect $_\n" foreach (@{$archs{$i}{select}});
+      if (defined $archs{$i}{help}) {
+        print OUT "\thelp\n";
+        print OUT "\t\t$_\n" foreach (@{$archs{$i}{help}});
+      }
+      print OUT "\n";
+    }
+  }
+  if (/$tag ARCH_CPU\W/x) {
+    foreach my $i (sort keys %archs) {
+      foreach my $c (@{$archs{$i}{cpus}}) {
+        print OUT "config $c->{name}\n";
+        print OUT "\tbool \"$c->{desc}\"\n";
+        print OUT "\tdepends on $i\n";
+        print OUT "\tdepends on $_\n" foreach (@{$c->{dep}});
+        print OUT "\tselect $_\n" foreach (@{$c->{select}});
+        next unless $c->{help};
+        print OUT "\thelp\n";
+        print OUT "\t\t$_\n" foreach (@{$c->{help}});
+        print OUT "\n";
+      }
+    }
+  }
+
+  if (/$tag PF_SECTION:\s+(\S+)\W/x) {
+    my $sect = $1;
+    foreach my $i (sort keys %files) {
+      next unless defined $files{$i}{sections}{$sect};
+      print OUT "if " . join(" || ", @{$files{$i}{cond}})."\n";
+      print OUT "\t$_" foreach (@{$files{$i}{sections}{$sect}});
+      print OUT "endif\n";
+    }
+  }
+  if (/$tag PF_INCLUDE\W/x) {
+    print OUT "config BSP_NAME\n";
+    print OUT "\tstring\n";
+    foreach my $i (sort keys %pfs) {
+      if (defined $pfs{$i}{name}) {
+	print OUT "	default \"$pfs{$i}{name}\" if PF_$i\n";
+      }
+    }
+  }
+  if (/$tag PF_CHOICE\W/x) {
+    foreach my $i (sort keys %pfs) {
+      if (defined $pfs{$i}{desc}) {
+	print OUT "config PF_$i\n	bool \"$pfs{$i}{desc}\"\n";
+      } else {
+	print OUT "config PF_$i\n	bool \"$i Platform\"\n";
+      }
+      print OUT "	depends on $_\n" foreach (@{$pfs{$i}{dep}});
+      print OUT "	select $_\n" foreach (@{$pfs{$i}{select}});
+      print OUT "\n";
+    }
+  }
+}
+close IN;
+close OUT;

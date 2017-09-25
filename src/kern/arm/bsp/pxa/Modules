@@ -1,0 +1,20 @@
+# vim:set ft=make:
+
+PREPROCESS_PARTS        += pxa 16550 vcache armv5 generic_tickless_idle libuart
+RAM_PHYS_BASE           := 0xa0000000
+VPATH                   += kern/arm/bsp/pxa-sa
+OBJECTS_LIBUART         += uart_16550.o
+SUBSYSTEMS              += LIBUART
+
+# fully override uart_IMPL, all other ARM BSPs use uart-mmio
+uart_IMPL             := uart uart-16550
+config_IMPL           += config-arm-pxa_sa1100
+mem_layout_IMPL       += mem_layout-arm-pxa
+pic_IMPL              += pic-arm-pxa_sa1100
+bootstrap_IMPL        += bootstrap-arm-pxa
+timer_IMPL            += timer-arm-pxa_sa1100
+timer_tick_IMPL       += timer_tick-single-vector
+kernel_uart_IMPL      += kernel_uart-libuart
+reset_IMPL            += reset-arm-pxa
+timestamp_IMPL        += timestamp-generic
+clock_IMPL            += clock-generic

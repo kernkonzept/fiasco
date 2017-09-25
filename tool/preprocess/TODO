@@ -1,0 +1,44 @@
+BUGS:
+
+- Namespace declarations are unsupported.
+
+- Forward-declared, out-of-line defined nested classes are
+  unsupported.
+
+- Preprocess does not automatically export declarations of public
+  variables and static class data to the generated header file.
+
+- Conditional compilation (preprocessor) is unsupported on file
+  top-level (preprocessor expressions inside blocks are OK), with the
+  exception that code commented out using "#if 0" is detected
+  correctly and deleted.
+
+IDEAS:
+
+- Preprocess' source code should be modularized so that the parser can 
+  be used independently from the output generator.  This would enable
+  us writing other interesting applications based on the parsed source 
+  code:
+
+  . Enforce naming conventions
+  . Rewrite .cpp files according to user-specified rules; this could
+    eventually be extented so that Preprocess can support a
+    refactoring browser.
+  . Aspect weaving (aspect-oriented programming)
+  . Automatically generate insulation (wrappers, protocol classes,
+    procedural interface) for a specified class
+  . Support class invariants, and pre- and postconditions
+
+- When should we backdate newly-generated files?  Obviously, if the
+  newly generated file and its previous version are the same.  There
+  are circumstances, however, when clients using a generated header
+  file do not have to be recompiled: 
+
+  . Only line-number changes
+  . "friend" additions
+  . Relaxation of protection rules
+  . (and a number of other circumstances; see [Lakos])
+
+- Preprocess should be configurable not only via command-line
+  arguments, but also using a config file.
+

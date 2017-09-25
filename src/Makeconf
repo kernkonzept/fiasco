@@ -1,0 +1,282 @@
+# vi:set ft=make:
+# -*- Makefile -*-
+# Fiasco make configuration file
+#
+# created 1996/04/20 by hohmuth
+#
+
+CHECKCC         = $(shell if $(CC)  $(1) -S -o /dev/null -xc   /dev/null \
+		    > /dev/null 2>&1; then echo "$(1)"; else echo "$(2)"; fi ;)
+
+CHECKCXX        = $(shell if $(CXX) $(1) -S -o /dev/null -xc++ /dev/null \
+		    > /dev/null 2>&1; then echo "$(1)"; else echo "$(2)"; fi ;)
+
+eval_impl	= $(if $($(1)_IMPL),$($(1)_IMPL),$(1))
+
+include $(objbase)/globalconfig.out
+# use patsubst here to prevent confusion of syntax highlighting editors :-)
+CONFIG_XARCH	:= $(patsubst "%",%,$(CONFIG_XARCH))
+CONFIG_ABI	:= $(patsubst "%",%,$(CONFIG_ABI))
+
+SYSTEM		:= $(shell uname)
+CC		:= $(patsubst "%",%,$(CONFIG_CC))
+CXX		:= $(patsubst "%",%,$(CONFIG_CXX))
+HOST_CC		:= $(patsubst "%",%,$(CONFIG_HOST_CC))
+HOST_CXX	:= $(patsubst "%",%,$(CONFIG_HOST_CXX))
+RM		:= rm -f
+RM_R		:= rm -rf
+ECHO		:= echo
+ECHO_E		:= bash --norc -c 'echo -e "$$0" "$$@"'
+CP		:= cp
+GREP		:= GREP_OPTIONS= grep
+AWKP		?= gawk --posix
+CCACHE		?= ccache
+CFLAGS		:=
+CXXFLAGS	:= -std=c++0x
+OPT_CFLAGS	:= -O3
+OPT_CXXFLAGS	:= -O3
+NOOPT_CFLAGS	:= -Os
+NOOPT_CXXFLAGS	:= -Os
+ARFLAGS		:= crs
+srcdir		?= .
+L4DIR		?= $(srcdir)/../../../l4
+tooldir		:= $(srcdir)/../tool
+MOVE_IF_CHANGE	:= $(srcdir)/../tool/move-if-change
+SHOWDEPS	:= $(srcdir)/../tool/showdeps
+PREPROCESSDEPS	:= $(srcdir)/../tool/parsedeps
+CIRCULAR	:= $(srcdir)/../tool/circular
+
+ifeq ($(SYSTEM),FreeBSD)
+  MD5SUM	:= /sbin/md5
+else
+  MD5SUM	:= md5sum
+endif
+
+# The name of this file can be overridden from the command line or in
+# objdir/Makeconf.local.
+MODULES_FILE	= $(srcdir)/Modules.$(CONFIG_XARCH)
+
+PREPROCESS = $(srcdir)/../tool/preprocess/src/preprocess
+
+ifeq ($(CONFIG_INLINE),y)
+  PREPROCESS_FLAGS = -i -t
+else
+  PREPROCESS_FLAGS = -t
+endif
+
+ifneq ($(SYSTEM_TARGET),)
+  CROSS_COMPILE=$(SYSTEM_TARGET)
+  $(info The variable SYSTEM_TARGET has been deprecated in favor of CROSS_COMPILE.)
+endif
+
+AS			= $(CROSS_COMPILE)as
+LD			= $(CROSS_COMPILE)ld
+AR			= $(CROSS_COMPILE)ar
+NM			= $(CROSS_COMPILE)nm
+RANLIB			= $(CROSS_COMPILE)ranlib
+SIZE			= $(CROSS_COMPILE)size
+STRIP			= $(CROSS_COMPILE)strip
+OBJCOPY			= $(CROSS_COMPILE)objcopy
+OBJDUMP			= $(CROSS_COMPILE)objdump
+
+# Include architecture-specific rules. These may overwrite anything above
+include $(srcdir)/Makeconf.$(CONFIG_XARCH)
+
+# Include user-specific rules. These may overwrite anything above
+-include $(srcdir)/Makeconf.local
+-include $(objbase)/Makeconf.local
+
+get_cc_version_part      = $(shell echo $(1) | $(CC) -E -x c - | tail -1)
+
+ifneq ($(CCXX_VERSION),)
+  CCXX_SUFFIX		:= -$(CCXX_VERSION)
+endif
+
+# we would use "CPP ?= cpp" here but make has a default of "$(CC) -E" so we need to
+# overwrite the default with 'cpp' too, because 'gcc -E' does not always work correctly
+CPP			:= $(if $(filter undefined default,$(origin CPP)),cpp,$(CPP))
+CPP			:= $(CROSS_COMPILE)$(CPP)$(CCXX_SUFFIX)
+
+CC			:= $(CCXX_WRAP) $(if $(USE_CCACHE),$(CCACHE)) $(CROSS_COMPILE)$(CC)$(CCXX_SUFFIX)
+CXX			:= $(CCXX_WRAP) $(if $(USE_CCACHE),$(CCACHE)) $(CROSS_COMPILE)$(CXX)$(CCXX_SUFFIX)
+
+CCVER_ID_MAJOR-gcc        := __GNUC__
+CCVER_ID_MINOR-gcc        := __GNUC_MINOR__
+CCVER_ID_PATCHLEVEL-gcc   := __GNUC_PATCHLEVEL__
+CCVER_ID_MAJOR-clang      := __clang_major__
+CCVER_ID_MINOR-clang      := __clang_minor__
+CCVER_ID_PATCHLEVEL-clang := __clang_patchlevel__
+
+CC_TYPE                 := $(if $(findstring clang,$(shell $(CXX) --version)),clang,gcc)
+CCVER_MAJOR		:= $(call get_cc_version_part, $(CCVER_ID_MAJOR-$(CC_TYPE)))
+CCVER_MINOR		:= $(call get_cc_version_part, $(CCVER_ID_MINOR-$(CC_TYPE)))
+CCVER_PATCHLEVEL	:= $(call get_cc_version_part, $(CCVER_ID_PATCHLEVEL-$(CC_TYPE)))
+CCVER_VERSION-gcc       := $(CCVER_MAJOR)$(if $(filter $(CCVER_MAJOR),1 2 3 4),.$(CCVER_MINOR))
+CCVER_VERSION-clang     := $(CCVER_MAJOR).$(CCVER_MINOR)
+CCVER_VERSION           := $(CCVER_VERSION-$(CC_TYPE))
+CCVER_RELEASE-gcc       := $(CCVER_MAJOR).$(CCVER_MINOR)$(if $(filter $(CCVER_MAJOR),1 2 3 4),.$(CCVER_PATCHLEVEL))
+CCVER_RELEASE-clang     := $(CCVER_MAJOR).$(CCVER_MINOR).$(CCVER_PATCHLEVEL)
+CCVER_RELEASE           := $(CCVER_RELEASE-$(CC_TYPE))
+CCVER_FULL		:= $(CCVER_MAJOR).$(CCVER_MINOR).$(CCVER_PATCHLEVEL)
+CCVER_SEQ-gcc           := $(patsubst %$(word 1, " "),%,$(word 2,$(call get_cc_version_part, __VERSION__)))
+CCVER_SEQ-clang         := 0 # No (repo) version in release builds available
+CCVER_SEQ               := $(CCVER_SEQ-$(CC_TYPE))
+LIBGCC			:= $(shell $(CXX) $(SHARED_FLAGS) -print-libgcc-file-name)
+GCCINCDIR		:= $(shell $(CXX) $(SHARED_FLAGS) -print-file-name=include)
+
+
+L4ALL_INCDIR     	?= $(addprefix -I, $(PRIVATE_INCDIR))
+L4STD_INCDIR    	?= -nostdinc
+L4STD_INCDIR_LAST	?= -isystem $(GCCINCDIR)
+KERNEL_LDFLAGS		+= -gc-sections
+SHARED_FLAGS            += -fno-pic
+SHARED_FLAGS-gcc        += -fno-defer-pop
+# gcc #57845
+SHARED_FLAGS-gcc        += $(if $(filter sparc,$(CONFIG_XARCH)),,-freg-struct-return)
+SHARED_FLAGS-gcc	+= $(call CHECKCXX,-Wmisleading-indentation,)
+SHARED_FLAGS		+= -g -Wall -Wextra
+SHARED_FLAGS-clang	+= -Wno-unused-private-field
+SHARED_FLAGS-clang	+= -Wno-string-plus-int -Wno-overloaded-virtual
+SHARED_FLAGS-gcc	+= $(if $(call CHECKCC,-Wnonnull-compare),-Wno-nonnull-compare)
+SHARED_FLAGS		+= -Wundef
+
+SHARED_FLAGS		+= $(call CHECKCC,-Wformat=2,)
+SHARED_FLAGS		+= $(call CHECKCC,-fno-stack-protector,)
+SHARED_FLAGS		+= $(call CHECKCC,-fdiagnostics-show-option)
+
+OPT_CXXFLAGS-gcc	+= $(call CHECKCXX,-fweb,)
+OPT_CFLAGS-gcc		+= $(call CHECKCC,-fweb,)
+OPT_SHARED_FLAGS-gcc	+= $(call CHECKCC,-frename-registers,)
+OPT_SHARED_FLAGS-gcc	+= $(call CHECKCC,-fgcse-after-reload,)
+CXXFLAGS-gcc		+= -fno-implement-inlines
+
+-include $(objbase)/.Host-config
+
+# Configuration dependent compile flags
+SHARED_FLAGS-$(CONFIG_NDEBUG)           += -DNDEBUG
+SHARED_FLAGS-$(CONFIG_NO_FRAME_PTR)     += -fomit-frame-pointer
+SHARED_FLAGS-$(CONFIG_GSTABS)           += -gstabs+
+SHARED_FLAGS-$(CONFIG_UNREACHABLE_CODE) += $(call CHECKCC,-Wunreachable-code,)
+
+# Eagerly compute SHARED_FLAGS to avoid calling CHECKCC over and over again.
+SHARED_FLAGS       := $(SHARED_FLAGS) $(SHARED_FLAGS-y)
+SHARED_FLAGS       += $(SHARED_FLAGS-$(CC_TYPE))
+OPT_SHARED_FLAGS   += $(OPT_SHARED_FLAGS-$(CC_TYPE))
+NOOPT_SHARED_FLAGS += $(NOOPT_SHARED_FLAGS-$(CC_TYPE))
+
+# Standard compile flags
+ASFLAGS		+= $(SHARED_FLAGS) -DASSEMBLER
+ASFLAGS-clang	+= -no-integrated-as
+CFLAGS		+= $(SHARED_FLAGS)
+CXXFLAGS	+= $(SHARED_FLAGS) -fno-rtti -fno-exceptions
+OPT_CFLAGS	+= $(OPT_SHARED_FLAGS)
+OPT_CXXFLAGS	+= $(OPT_SHARED_FLAGS)
+NOOPT_CFLAGS	+= $(NOOPT_SHARED_FLAGS)
+NOOPT_CXXFLAGS	+= $(NOOPT_SHARED_FLAGS)
+CPPFLAGS	+= $(L4STD_INCDIR) $(L4ALL_INCDIR) $(L4STD_INCDIR_LAST)
+
+CPPFLAGS-clang  += -fno-builtin
+
+CXXFLAGS	+= $(call CHECKCXX,-fno-threadsafe-statics,)
+CXXFLAGS	+= $(call CHECKCXX,-Wno-non-virtual-dtor,)
+
+ASFLAGS         += $(ASFLAGS-$(CC_TYPE))
+CPPFLAGS        += $(CPPFLAGS-$(CC_TYPE))
+CXXFLAGS        += $(CXXFLAGS-$(CC_TYPE))
+OPT_CFLAGS      += $(OPT_CFLAGS-$(CC_TYPE))
+OPT_CXXFLAGS    += $(OPT_CXXFLAGS-$(CC_TYPE))
+NOOPT_CFLAGS    += $(NOOPT_CFLAGS-$(CC_TYPE))
+NOOPT_CXXFLAGS  += $(NOOPT_CXXFLAGS-$(CC_TYPE))
+
+
+# Output formatting, set V=1 to see command line, V=0 to prevent printing them
+VERBOSE		?= @
+ifeq ($(V),1)
+  VERBOSE :=
+  PREP_MESSAGE  ?= @$(ECHO) "  ... Preprocessing $(filter %.cpp,$^)"
+endif
+AR_MESSAGE	?= @$(ECHO) "  ==> Archiving into $@"
+COMP_MESSAGE	?= @$(ECHO) "  ... Making $@"
+LINK_MESSAGE	?= @$(ECHO) "  ==> Linking $@"
+DEP_MESSAGE	?= @$(ECHO) "  ... Building dependencies for $<"
+PREP_MESSAGE	?= @$(ECHO) "  ... Preprocessing $*"
+CHKSUM_MESSAGE  ?= @$(ECHO) "  ... Generating checksum for "
+PATCH_MESSAGE   ?= @$(ECHO) "  ... Writing checksum into "
+STRIP_MESSAGE	?= @$(ECHO) "  ... Stripping $@"
+GENVER_MESSAGE	?= @$(ECHO) "  ... Generating version information" 
+CLEAN_MESSAGE	?= @$(ECHO) "Removing created files"
+CLEANALL_MESSAGE?= @$(ECHO) "Removing all created files"
+INST_MESSAGE	?= @$(ECHO) "Installing $(^F)"
+OK_MESSAGE      ?= 
+
+COMP_MESSAGE_NOOPT ?= $(COMP_MESSAGE)
+
+ADD_CONFIGFILE   = $(VERBOSE)$(OBJCOPY) --add-section .debug.fiasco_config=globalconfig.out $(1)
+
+ifneq ($(VERBOSE),)
+MOVE_IF_CHANGE += -q
+endif
+
+SRC_ALL = $(SRC_S) $(SRC_CPP) $(SRC_C) $(SRC_CC)
+ifeq ($(filter clean cleanall mrproper,$(MAKECMDGOALS)),)
+DEPS	= $(foreach file,$(SRC_ALL), $(dir $(file)).$(notdir $(file)).d)
+
+# To enable all warning ...
+ENABLE_ALL_WARNINGS ?= n
+
+ifeq ($(CC_TYPE),gcc)
+  ifeq ($(ENABLE_ALL_WARNINGS),y)
+    tmp := $(call CHECKCC,-Wframe-larger-than=512)
+    CFLAGS   += $(tmp)
+    CXXFLAGS += $(tmp)
+    tmp :=
+  else
+    F_UNINITIALIZED := $(firstword $(call CHECKCC,-Wmaybe-uninitialized) \
+				   $(call CHECKCC,-Wuninitialized))
+    F_SET_NOT_USED  := $(call CHECKCC,-Wunused-but-set-variable)
+
+    F_UNINITIALIZED := $(patsubst -W%,-Wno-%,$(F_UNINITIALIZED))
+    F_SET_NOT_USED  := $(patsubst -W%,-Wno-%,$(F_SET_NOT_USED))
+
+    CFLAGS +=   $(F_UNINITIALIZED) $(F_SET_NOT_USED)
+    CXXFLAGS += $(F_UNINITIALIZED) $(F_SET_NOT_USED)
+  endif
+endif
+
+
+CC_WHITELIST-gcc     := 4.5 4.6 4.7 4.8 4.9 5 6
+CC_WHITELIST-clang   := 3.5 3.6 3.7 3.8
+CC_WHITELIST         := $(CC_WHITELIST-$(CC_TYPE))
+
+CC_BLACKLIST-arm-gcc   := 4.8.0 4.8.1 4.8.2
+
+# CC_LAST_BROKEN-SEQ* specifies the last broken version
+# using the sequential version
+#
+# Memory write back issue I'm seeing with those versions, disappeared
+# with more recent builds.
+CC_LAST_BROKEN-SEQ-gcc-6 := 20160802
+
+CC_LAST_BROKEN-SEQ-gcc   := $(CC_LAST_BROKEN-SEQ-gcc-$(CCVER_MAJOR))
+
+
+ifeq ($(filter $(CC_WHITELIST),$(CCVER_VERSION)),)
+  $(error $(CC_TYPE)-$(CCVER_VERSION) is not supported. \
+          Please use one of the following versions: $(CC_WHITELIST))
+endif
+
+# this is for GCC only
+ifneq ($(CC_LAST_BROKEN-SEQ-gcc),)
+  MIN_SEQ_VER := $(word 1,$(sort $(CC_LAST_BROKEN-SEQ-gcc) $(CCVER_SEQ)))
+  ifneq ($(CC_LAST_BROKEN-SEQ-gcc),$(MIN_SEQ_VER))
+    $(error $(CC_TYPE)-$(CCVER_FULL) $(CCVER_SEQ) is blacklisted, please update)
+  endif
+endif
+
+ifneq ($(filter $(CC_BLACKLIST-$(CONFIG_XARCH)-$(CC_TYPE)),$(CCVER_RELEASE))$(filter $(CC_BLACKLIST-$(CC_TYPE)),$(CCVER_RELEASE)),)
+  $(error $(CC_TYPE)-$(CCVER_FULL) is blacklisted, please update)
+endif
+
+else
+DEPS    = /dev/null
+endif

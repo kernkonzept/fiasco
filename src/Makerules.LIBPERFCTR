@@ -1,0 +1,7 @@
+# -*- makefile -*-
+
+$(LIBPERFCTR): $(OBJ_LIBPERFCTR)
+	$(AR_MESSAGE)
+	$(VERBOSE)$(RM) $@
+	$(VERBOSE)$(AR) $(ARFLAGS) $@ $^
+

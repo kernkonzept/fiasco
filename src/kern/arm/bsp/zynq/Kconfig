@@ -1,0 +1,21 @@
+# PF: ZYNQ
+# PFDESCR: Xilinx Zynq
+# PFSELECT: CAN_ARM_CPU_CORTEX_A9 CAN_ARM_CACHE_L2CXX0
+# PFDEPENDS: ARM
+
+choice
+        prompt "UART"
+        default PF_ZYNQ_UART_NR_0
+
+config PF_ZYNQ_UART_NR_0
+        bool "Use UART 0"
+
+config PF_ZYNQ_UART_NR_1
+        bool "Use UART 1"
+
+endchoice
+
+config PF_ZYNQ_UART_NR
+        int
+        default 0 if PF_ZYNQ_UART_NR_0
+        default 1 if PF_ZYNQ_UART_NR_1

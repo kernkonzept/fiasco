@@ -1,0 +1,35 @@
+# -*- makefile -*-
+# vi:se ft=make:
+
+OPT_SHARED_FLAGS	+= $(call CHECKCC,-finline-limit=10000,)
+OPT_CXXFLAGS		+= $(call CHECKCXX,--param large-function-insns=10000)
+OPT_CFLAGS		+= $(call CHECKCC,--param large-function-insns=10000)
+
+# The -Os option of gcc-4.0 sets max-inline-insns-single to 5 which prevents
+# inlining of almost every function
+NOOPT_SHARED_FLAGS	+= $(call CHECKCC,--param max-inline-insns-single=50)
+SHARED_FLAGS		+= -mpreferred-stack-boundary=2 -m32
+
+L4STD_INCDIR		:= -include $(srcdir)/kern/ux/format.h
+L4STD_INCDIR_LAST	:=
+CPPFLAGS		+= -D_GNU_SOURCE
+
+SHARED_FLAGS-$(CONFIG_IA32_486) += -march=i486
+SHARED_FLAGS-$(CONFIG_IA32_586) += -march=i586
+SHARED_FLAGS-$(CONFIG_IA32_686) += -march=i686
+SHARED_FLAGS-$(CONFIG_IA32_P2)  += $(call CHECKCC,-march=pentium2,-march=i686)
+SHARED_FLAGS-$(CONFIG_IA32_P3)  += $(call CHECKCC,-march=pentium3,-march=i686)
+SHARED_FLAGS-$(CONFIG_IA32_P4)  += $(call CHECKCC,-march=pentium4,-march=i686)
+SHARED_FLAGS-$(CONFIG_IA32_K6)  += $(call CHECKCC,-march=k6,-march=i586)
+SHARED_FLAGS-$(CONFIG_IA32_K7)  += $(call CHECKCC,-march=athlon,-march=i686)
+SHARED_FLAGS-$(CONFIG_IA32_K8)  += $(call CHECKCC,-march=k8,-march=i686)
+
+SHARED_FLAGS                    += $(call CHECKCC,-mno-mmx,)
+SHARED_FLAGS                    += $(call CHECKCC,-mno-sse,)
+SHARED_FLAGS                    += $(call CHECKCC,-mno-sse2,)
+SHARED_FLAGS                    += $(call CHECKCC,-mno-sse3,)
+SHARED_FLAGS                    += $(call CHECKCC,-mno-3dnow,)
+
+ASFLAGS				+= -m32
+OFORMAT				:= elf32-i386
+LD_EMULATION_CHOICE             := elf_i386 elf_i386_fbsd

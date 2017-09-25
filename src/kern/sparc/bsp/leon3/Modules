@@ -1,0 +1,10 @@
+# vim:set ft=make:
+
+CONFIG_KERNEL_LOAD_ADDR := 0x60000000
+
+PREPROCESS_PARTS	+= leon3 uart_leon3
+config_IMPL		+= config-sparc-leon3
+uart_IMPL		+= uart-leon3
+pic_IMPL		+= pic-sparc-leon3
+clock_IMPL		+= clock-generic
+timer_tick_IMPL		+= timer_tick-single-vector timer_tick-sparc

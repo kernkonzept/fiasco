@@ -1,0 +1,19 @@
+# vim:set ft=make:
+
+rel2abs	= $(foreach f, $(1),$(shell cd $(f); pwd))
+
+LIBUART_srcdir    := $(strip $(call rel2abs, $(srcdir)))
+LIBUART_VPATH_abs := $(call rel2abs, $(VPATH_LIBUART))
+
+$(LIBUART): FORCE
+	$(VERBOSE)if [ -e $(dir $@) ]; then true; else mkdir -p $(dir $@); fi
+	$(MAKE_MESSAGE)      
+	$(VERBOSE)$(MAKE) -C uart	 		\
+	  -f $(LIBUART_srcdir)/lib/uart/Makefile 	\
+	  srcdir=$(LIBUART_srcdir) 			\
+	  objbase=$(objbase) 				\
+	  VERBOSE="$(VERBOSE)" 				\
+	  OBJECTS="$(OBJECTS_LIBUART)" 			\
+	  TARGET="$(LIBUART)" 				\
+	  VPATH_LIBUART="$(LIBUART_VPATH_abs)" 		\
+	  PRIVATE_INCDIR="$(LIBUART_srcdir)/lib/uart $(PRIVATE_INCDIR)"

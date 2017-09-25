@@ -1,0 +1,48 @@
+#!/usr/bin/perl
+$, = ' ';		# set output field separator
+$\ = "\n";		# set output record separator
+
+$doit = 0;		# Is there a circular dep. with the current module?
+$modnameseen = 0;	# Have we seen the module name yet?
+$deps = 0;
+
+print "\n---\n";
+
+line: while (<>) {
+    chomp;	# strip record separator
+    if (/^[a-z]/) {
+	$modnameseen = 1;
+	$iam = $_;
+
+	maybeprintmodname() if $doit;
+
+	next;
+    }
+
+    if (/^---$/) {
+	print "\n---\n" if $doit;
+
+	$doit = 0;
+	$iamprinted = 0;
+	$modnameseen = 0;
+    }
+
+    s| \*$|| || next;
+
+    $doit = 1;
+    if ($modnameseen) {
+	maybeprintmodname();
+	$deps++;
+    }
+
+    print $_;
+}
+
+print "TOTAL CIRCULAR DEPS:\n$deps";
+
+######################################################################
+
+sub maybeprintmodname {
+    print "$iam" if ! $iamprinted;
+    $iamprinted = 1;
+}

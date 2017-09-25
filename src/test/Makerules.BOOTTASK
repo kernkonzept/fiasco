@@ -1,0 +1,23 @@
+# -*- makefile -*-
+
+$(BOOTTASK): $(OBJ_BOOTTASK) kernel.o test.o
+	$(LD) -Ttext 0x300000 -o $@ $^ $(STD_LIBS)
+	chmod 755 $@
+
+test.o: boottask-r.ld $(TESTTASK)
+	cp $(TESTTASK) $(TESTTASK).s
+	$(STRIP) $(TESTTASK).s
+	$(LD) -r -T $< -o $@ \
+	  -defsym boottask_entry=$(TESTTASK_ENTRY) \
+	  $(TESTTASK).s
+
+
+kernel.o: $(srcdir)/kernel-r.ld $(KERNEL) 
+	cp $(KERNEL) $(KERNEL).s
+	$(STRIP) $(KERNEL).s
+	$(LD) -r -T $< -o $@ \
+	  -defsym crt0_start=0x`$(NM) $(KERNEL) | grep crt0_start | cut -f1 -d' '` \
+	  $(KERNEL).s
+
+clean-BOOTTASK:
+	rm -f $(KERNEL).s kernel.o $(TESTTASK).s test.o 

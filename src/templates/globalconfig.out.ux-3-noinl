@@ -1,0 +1,5 @@
+CONFIG_PF_UX=y
+CONFIG_IA32_CORE_I=y
+# CONFIG_INLINE is not set
+# CONFIG_NO_FRAME_PTR is not set
+# CONFIG_JDB_GZIP is not set

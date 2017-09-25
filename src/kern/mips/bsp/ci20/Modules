@@ -1,0 +1,20 @@
+# vim:set ft=make:
+
+RAM_PHYS_BASE			:= 0x0
+PREPROCESS_PARTS		+= jz4780 ci20 16550 libuart
+PREPROCESS_PARTS-$(CONFIG_MP)	+= pic_gic cps
+PREPROCESS_PARTS		+= $(PREPROCESS_PARTS-y)
+SUBSYSTEMS			+= LIBUART
+OBJECTS_LIBUART			+= uart_16550.o
+
+INTERFACES_KERNEL		+= irq_mgr_flex irq_ingenic \
+				   mips_bsp_irqs cascade_irq \
+				   tcu_jz4780
+
+mips_bsp_irqs_IMPL	:= mips_bsp_irqs-ci20
+clock_IMPL		+= clock-generic
+uart_IMPL		+= uart-16550
+kernel_uart_IMPL	+= kernel_uart-libuart
+reset_IMPL              += reset-mips-ci20
+timer_tick_IMPL         += timer_tick-single-vector timer_tick-mips-intc
+timer_IMPL		:= timer timer-jz4780

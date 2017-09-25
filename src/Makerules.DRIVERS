@@ -1,0 +1,17 @@
+# -*- makefile -*-
+
+#$(DRIVERS): $(OBJ_DRIVERS)
+#	$(AR_MESSAGE)
+#	$(VERBOSE)$(RM) $@
+#	$(VERBOSE)$(AR) $(ARFLAGS) $@ $?
+
+libdrivers.a: $(filter-out glue%.o, $(OBJ_DRIVERS))
+	$(AR_MESSAGE)
+	$(VERBOSE)$(RM) $@
+	$(VERBOSE)$(AR) $(ARFLAGS) $@ $^
+
+libgluedriverslibc.a: $(filter glue%.o, $(OBJ_DRIVERS))
+	$(AR_MESSAGE)
+	$(VERBOSE)$(RM) $@
+	$(VERBOSE)$(AR) $(ARFLAGS) $@ $^
+

@@ -1,0 +1,340 @@
+# -*- makefile -*-
+# vi:se ft=make:
+
+###############################################################################
+
+include $(srcdir)/Modules.generic
+
+SUBSYSTEMS := 	ABI KERNEL LIBK DRIVERS MINILIBC \
+		CXXLIB VERSION JABI TCBOFFSET CRT0
+
+
+PREPROCESS_PARTS 	+= arch $(CONFIG_ABI) 32bit $(CONFIG_XARCH) \
+                           h3800 abs_syscalls
+
+PREPROCESS_PARTS-$(CONFIG_SERIAL)             += serial
+PREPROCESS_PARTS-$(CONFIG_MP)                 += mp
+PREPROCESS_PARTS-$(CONFIG_FPU)                += fpu
+PREPROCESS_PARTS-$(CONFIG_LIST_ALLOC_SANITY)  += list_alloc_debug
+PREPROCESS_PARTS-$(CONFIG_JDB)                += debug jdb log
+PREPROCESS_PARTS-$(CONFIG_PERF_CNT)           += perf_cnt
+PREPROCESS_PARTS-$(CONFIG_ARM_CACHE_L2CXX0)   += outer_cache outer_cache_l2cxx0
+
+PREPROCESS_PARTS-$(CONFIG_ARM_920T)                 += armv5 arm920t vcache
+PREPROCESS_PARTS-$(CONFIG_ARM_926)                  += armv5 926 vcache
+PREPROCESS_PARTS-$(CONFIG_ARM_V6PLUS)               += armv6plus
+PREPROCESS_PARTS-$(CONFIG_ARM_V6)                   += armv6
+PREPROCESS_PARTS-$(CONFIG_ARM_V7)                   += armv7
+PREPROCESS_PARTS-$(CONFIG_ARM_1136)                 += arm1136
+PREPROCESS_PARTS-$(CONFIG_ARM_1176)                 += arm1176
+PREPROCESS_PARTS-$(CONFIG_ARM_MPCORE)               += mpcore
+PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A7)            += armca9
+PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A8)            += armca8
+PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A9)            += armca9
+PREPROCESS_PARTS-$(CONFIG_ARM_CORTEX_A15)           += armca9
+PREPROCESS_PARTS-$(CONFIG_ARM_EM_TZ)                += arm_em_tz
+PREPROCESS_PARTS-$(CONFIG_ARM_EM_STD)               += arm_em_std
+PREPROCESS_PARTS-$(CONFIG_ARM_EM_NS)                += arm_em_ns
+PREPROCESS_PARTS-$(CONFIG_ARM_SECMONIF_NONE)        += arm_smif_none
+PREPROCESS_PARTS-$(CONFIG_ARM_SECMONIF_MC)          += arm_smif_mc
+PREPROCESS_PARTS-$(CONFIG_ARM_1176_CACHE_ALIAS_FIX) += arm1176_cache_alias_fix
+PREPROCESS_PARTS-$(CONFIG_ARM_CPU_ERRATA)           += arm_cpu_errata
+PREPROCESS_PARTS-$(CONFIG_SCHED_FIXED_PRIO)  += sched_fixed_prio
+PREPROCESS_PARTS-$(CONFIG_SCHED_WFQ)         += sched_wfq
+PREPROCESS_PARTS-$(CONFIG_SCHED_FP_WFQ)      += sched_fp_wfq
+PREPROCESS_PARTS-$(CONFIG_ARM_LPAE)          += arm_lpae
+PREPROCESS_PARTS-$(CONFIG_CPU_VIRT)                 += hyp vgic
+PREPROCESS_PARTS-y$(CONFIG_CPU_VIRT)                += noncont_mem
+
+
+#
+# TYPES subsystem
+#
+
+PRIVATE_INCDIR += types/$(CONFIG_XARCH) types
+
+VPATH_LIBUART  := $(srcdir)/lib/uart
+PRIVATE_INCDIR += lib/uart
+
+#
+# DRIVERS Subsystem
+#
+DRIVERS 		:= libdrivers.a libgluedriverslibc.a
+VPATH			+= drivers/$(CONFIG_XARCH) drivers
+PRIVATE_INCDIR		+= drivers/$(CONFIG_XARCH) drivers
+INTERFACES_DRIVERS 	:= sa1100 mux_console console uart filter_console \
+			   h3xxx io mem mmu reset processor delayloop
+io_IMPL			:= io io-arm
+mmu_IMPL		:= mmu mmu-arm
+mem_IMPL		:= mem mem-arm
+uart_IMPL		:= uart uart-mmio
+reset_IMPL		:=
+processor_IMPL		:= processor processor-arm
+CXXSRC_DRIVERS		:= glue_libc.cc 
+NOOPT			+= $(patsubst %.o, %, $(OBJ_DRIVERS))
+ALWAYS_INLINE           += mem
+
+#
+# MINILIBC Subsystem
+#
+MINILIBC	:= libc.a
+VPATH		+= lib/minilibc/$(CONFIG_XARCH) lib/minilibc
+PRIVATE_INCDIR	+= lib/minilibc/$(CONFIG_XARCH)/include lib/minilibc/include
+CSRC_MINILIBC	:= atexit.c memccpy.c memcmp.c memmove.c memset.c memcpy.c \
+		   memchr.c panic.c strchr.c strcmp.c strcpy.c strlen.c \
+		   strncmp.c strncpy.c strstr.c printf.c \
+		   __v_printf.c vprintf.c strtol.c strtoul.c __lltostr.c \
+		   __ltostr.c putchar.c puts.c getchar.c gets.c \
+		   sprintf.c snprintf.c vsnprintf.c vsprintf.c \
+		   longjmp.c isalnum.c isalpha.c isascii.c isblank.c \
+		   iscntrl.c isdigit.c isgraph.c islower.c isprint.c \
+		   ispunct.c isspace.c isupper.c isxdigit.c strspn.c \
+		   strcspn.c tolower.c raise.c aeabi.c
+ASSRC_MINILIBC	:= setjmp.S
+NOOPT		+= $(patsubst %.o, %, $(OBJ_MINILIBC))
+
+
+#
+# LIBGZIP subsystem (only for Jdb)
+#
+ifneq ($(CONFIG_JDB_GZIP),)
+  LIBGZIP		:= libgzip.a
+  VPATH		+= lib/gzip
+  PRIVATE_INCDIR	+= lib/gzip
+  CSRC_LIBGZIP	:= adler32.c crc32.c gzip.c trees.c deflate.c zutil.c
+  NOOPT		+= $(patsubst %.o, %, $(OBJ_LIBGZIP))
+endif
+
+
+#
+# JABI Subsystem
+#
+JABI			:= libjabi.a
+VPATH			+= jabi/$(CONFIG_XARCH) jabi
+INTERFACES_JABI		:= jdb_ktrace
+
+#
+# ABI Subsystem
+#
+
+ABI 		:= libabi.a
+VPATH 		+= abi/$(CONFIG_XARCH) abi 
+
+INTERFACES_ABI 	:= kip l4_types l4_fpage l4_msg_item \
+                   l4_buf_desc l4_error
+
+l4_types_IMPL 	:= l4_types l4_types-debug
+
+
+# x0!=32Bit UIDs
+kip_IMPL	:= kip kip-debug kip-arm
+
+
+#
+# KERNEL subsystem
+#
+KERNEL 		:= fiasco
+KERNEL_EXTRA 	:= Symbols kernel.arm.lds
+VPATH 		+= kern/$(CONFIG_XARCH) kern
+VPATH		+= jdb/arm jdb
+PRIVATE_INCDIR 	+= kern/$(CONFIG_XARCH) kern
+
+INTERFACES_KERNEL += 	__main mem_op kmem_space boot_uart_init     \
+			irq_chip_generic bootstrap kern_lib_page              \
+			jdb_extensions outer_cache utcb_support cascade_irq   \
+			irq_mgr_multi_chip scu
+
+INTERFACES_KERNEL-$(CONFIG_SERIAL) += uart_console
+INTERFACES_KERNEL-$(CONFIG_ARM_EM_TZ) += vm
+INTERFACES_KERNEL-$(CONFIG_CPU_VIRT) += vgic
+
+
+
+bootstrap_IMPL		:= bootstrap
+CXXFLAGS_bootstrap      := -O3
+clock_IMPL              := clock
+config_IMPL	  	:= config config-arm
+context_IMPL	  	:= context context-arm context-vcpu context-arm-hyp
+continuation_IMPL	:= continuation-arm
+cpu_IMPL	  	:= cpu cpu-arm cpu-arm-hyp
+cpu_lock_IMPL  	  	:= cpu_lock cpu_lock-generic
+entry_frame_IMPL  	:= entry_frame entry_frame-arm                       \
+			   entry_frame-abs-timeout-hack
+fpu_IMPL		:= fpu fpu-arm
+ipi_IMPL		:= ipi ipi-arm
+kdb_ke_IMPL		:= kdb_ke-arm
+kernel_task_IMPL	:= kernel_task kernel_task-arm
+kernel_thread_IMPL	:= kernel_thread kernel_thread-std kernel_thread-arm
+kernel_uart_IMPL  	:= kernel_uart
+map_util_IMPL		:= map_util map_util-mem map_util-objs
+mapping_IMPL		:= mapping-arm mapping
+mem_layout_IMPL		:= mem_layout mem_layout-arm mem_layout-noncont
+mem_space_IMPL		:= mem_space mem_space-arm mem_space-user
+kmem_alloc_IMPL		:= kmem_alloc kmem_alloc-arm
+outer_cache_IMPL	:= outer_cache outer_cache-l2cxx0
+paging_IMPL	  	:= paging-arm paging
+perf_cnt_IMPL		:= perf_cnt perf_cnt-arm
+pic_IMPL		:= pic
+sched_context_IMPL	:= sched_context-wfq sched_context-fixed_prio \
+			   sched_context-fp_wfq sched_context
+scu_IMPL                := scu
+spin_lock_IMPL		:= spin_lock spin_lock-arm
+startup_IMPL		:= startup startup-arm
+sys_call_page_IMPL	:= sys_call_page sys_call_page-arm
+task_IMPL		:= task task-arm
+thread_IMPL	  	:= thread thread-arm thread-arm-hyp \
+			   thread-jdb thread-ipc \
+			   thread-pagefault  thread-log \
+			   thread-vcpu
+timer_IMPL		:= timer timer-arm
+timer_tick_IMPL		:= timer_tick timer_tick-arm
+utcb_init_IMPL		:= utcb_init utcb_init-arm
+utcb_support_IMPL       := utcb_support utcb_support-arm
+vmem_alloc_IMPL	  	:= vmem_alloc vmem_alloc-arch
+tb_entry_IMPL		:= tb_entry tb_entry-arm
+
+
+ifeq ("$(CONFIG_JDB)","y")
+JDB			:= jdb_compound.o
+SUBSYSTEMS		+= JDB
+INTERFACES_JDB		+= jdb_ptab jdb_trace_set jdb_ipi jdb_log  \
+			   jdb_perf jdb_console_buffer jdb_idle_stats
+
+CXXSRC_JDB := tb_entry_output.cc
+
+
+jdb_IMPL		+= jdb-arm
+jdb_kern_info_IMPL	:= jdb_kern_info jdb_kern_info-arm \
+			   jdb_kern_info-bench jdb_kern_info-bench-arm \
+			   jdb_kern_info-cpu-arm
+jdb_dump_entry_frame_IMPL:= jdb_dump_entry_frame-arm
+jdb_tcb_IMPL		+= jdb_tcb-arm
+jdb_ptab_IMPL		:= jdb_ptab jdb_ptab-ia32-ux-arm jdb_ptab-arm
+jdb_entry_frame_IMPL	:= jdb_entry_frame-arm
+jdb_trace_set_IMPL	:= jdb_trace_set jdb_trace_set-arm
+jdb_bp_IMPL		:= jdb_bp-arm
+thread_IMPL		+= thread-debug 
+
+ifneq ($(CONFIG_JDB_GZIP),)
+ ifneq ($(wildcard $(srcdir)/lib/gzip),)
+  SUBSYSTEMS		+= LIBGZIP
+  KERNEL_EXTRA_LIBS	+= $(LIBGZIP)
+  INTERFACES_KERNEL	+= jdb_gzip
+ endif
+endif
+
+endif
+
+CXXSRC_KERNEL		:= kernel_panic.cc libc_backend_lock.cc
+ASSRC_KERNEL	  	:= $(if $(CONFIG_MP),tramp-mp.S)
+ASSRC_KERNEL            += $(if $(CONFIG_CPU_VIRT),hvt.S,ivt.S)
+CPPFLAGS                += $(if $(CONFIG_MP),-DMPCORE_PHYS_BASE=$(MPCORE_PHYS_BASE))
+CPPFLAGS                += -DRAM_PHYS_BASE=$(RAM_PHYS_BASE)
+
+NOOPT			+= $(filter jdb%,\
+			     $(foreach in,$(INTERFACES_KERNEL), \
+			       $(if $($(in)_IMPL),$($(in)_IMPL),$(in))))
+NOOPT			+= tb_entry tb_entry_output
+
+
+#
+# CRT0 subsystem
+#
+CRT0 		:= crt0.o
+ASSRC_CRT0	:= crt0.S
+
+
+#
+# CXXLIB Subsystem
+# 
+CXXLIB 			:= libcxx.a
+VPATH			+= lib/cxxlib
+INTERFACES_CXXLIB 	:= paranoia s_cruft
+
+#
+# LIBK subsystem
+#
+LIBK 		:= libk.a
+VPATH          	+= lib/libk/$(CONFIG_XARCH) lib/libk
+PRIVATE_INCDIR 	+= lib/libk/$(CONFIG_XARCH) lib/libk
+
+#INTERFACES_LIBK:= atomic lock_guard profile uuencode gmon unistd panic auto_ptr
+INTERFACES_LIBK := std_macros atomic lock_guard auto_ptr
+CXXSRC_LIBK     += construction.cc
+atomic_IMPL     := atomic atomic-arm-up
+
+ifeq ("$(CONFIG_JDB_DISASM)","y")
+  # $(srcdir)/lib/disasm may be removed
+  ifeq ($(wildcard $(srcdir)/lib/disasm),)
+    $(error $(srcdir)/lib/disasm is missing, disable CONFIG_JDB_DISASM)
+  endif
+  SUBSYSTEMS          += LIBDISASM
+  KERNEL_EXTRA_LIBS   += $(LIBDISASM)
+  PREPROCESS_PARTS    += jdb_disasm
+
+  LIBDISASM           := libdisasm.a
+  VPATH               += lib/disasm lib/disasm/elf lib/disasm/include \
+                         lib/disasm/include/opcode lib/disasm/opcodes \
+                         lib/disasm/libiberty lib/disasm/bfd
+  PRIVATE_INCDIR      += lib/disasm lib/disasm/elf lib/disasm/include \
+                         lib/disasm/include/opcode lib/disasm/opcodes \
+                         lib/disasm/libiberty lib/disasm/bfd
+  PRIVATE_INCDIR      += lib/disasm
+  CXXSRC_LIBDISASM    := disasm.cc
+  CSRC_LIBDISASM      := arm-dis.c dis-init.c dis-buf.c safe-ctype.c
+  NOOPT               += $(patsubst %.o, %, $(OBJ_LIBDISASM))
+endif
+
+#
+# VERSION subsystem
+#
+VERSION		:= version.h
+
+TCBOFFSET	:= tcboffset.h
+CXXSRC_TCBOFFSET	:= tcboffset.cc dump_tcboffsets.cc
+
+BSP_NAME         := $(patsubst "%",%,$(CONFIG_BSP_NAME))
+BSP_SRC_DIR      := kern/arm/bsp/$(BSP_NAME)
+MODULES_FILE_BSP := $(srcdir)/$(BSP_SRC_DIR)/Modules
+ifeq ($(wildcard $(MODULES_FILE_BSP)),)
+  $(error No BSP name defined or no BSP Modules file available)
+endif
+
+include $(MODULES_FILE_BSP)
+VPATH                   += $(BSP_SRC_DIR)
+PREPROCESS_PARTS	+= $(PREPROCESS_PARTS-y)
+INTERFACES_KERNEL       += $(INTERFACES_KERNEL-y)
+INTERFACES_JDB		+= $(INTERFACES_JDB-y)
+TRAMP_MP_ASM_INCLUDE    ?= kern/arm/tramp-mp-asm-default.h
+CPPFLAGS                += -DTRAMP_MP_ASM_INCLUDE=\"$(srcdir)/$(TRAMP_MP_ASM_INCLUDE)\"
+
+ifeq ("$(filter LIBUART, $(SUBSYSTEMS))","LIBUART")
+  LIBUART			:= uart/libuart.a
+endif
+
+CONFIG_KERNEL_LOAD_ADDR := $(RAM_PHYS_BASE)
+
+ifneq ($(CONFIG_MP),)
+ifeq ($(MPCORE_PHYS_BASE),)
+$(error $(MODULES_FILE_BSP) needs to set MPCORE_PHYS_BASE variable)
+endif
+endif
+
+ifneq ($(CONFIG_CPU_VIRT),)
+  ifeq ($(CC_TYPE),gcc)
+    ifneq ($(findstring $(CCVER_MAJOR),4 5 6 7),)
+      ifeq ($(CCVER_MAJOR),4)
+	ARM_CC_OK_FOR_VIRT := $(if $(findstring $(CCVER_MINOR),0 1 2 3 4 5 6),,y)
+      else
+        ARM_CC_OK_FOR_VIRT := y
+      endif
+    endif
+  endif
+
+  ifeq ($(ARM_CC_OK_FOR_VIRT),)
+    $(shell touch buildcheck.ignore)
+    $(error At least GCC 4.7 required for compiling Fiasco with virtualization enabled)
+  endif
+endif
+
+MODULES_FILES = $(MODULES_FILE) $(MODULES_FILE_BSP)

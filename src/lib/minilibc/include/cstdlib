@@ -1,0 +1,48 @@
+/* -*- c++ -*- */
+
+#ifndef CSTDLIB_INCLUDE
+#define CSTDLIB_INCLUDE
+
+#include <stdlib.h>
+
+
+namespace std {
+
+#if(__GNUC__>=3) 
+
+  using ::atexit;
+  using ::abs;
+  using ::labs;
+  using ::div_t;
+  using ::ldiv_t;
+  using ::lldiv_t;
+  using ::div;
+  using ::ldiv;
+  using ::lldiv;
+  using ::exit;
+  using ::abort;
+  using ::atoi;
+  using ::atol;
+  using ::atof;
+  using ::strtoul;
+  using ::strtol;
+
+#endif
+
+  inline long
+  abs(long i) { return labs(i); }
+
+  inline long long
+  abs(long long i) { return llabs(i); }
+
+  inline ldiv_t 
+  div( long i, long j ) { return ldiv(i,j); }
+
+  inline lldiv_t 
+  div( long long i, long long j ) { return lldiv(i,j); }
+  
+};
+
+
+
+#endif // CSTDLIB_INCLUDE

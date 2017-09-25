@@ -1,0 +1,34 @@
+# PF: TEGRA
+# PFDESCR: NVIDIA Tegra platform
+# PFSELECT: CAN_ARM_CPU_CORTEX_A9 CAN_ARM_CACHE_L2CXX0
+# PFDEPENDS: ARM
+
+choice
+	prompt "Tegra Platform"
+	default PF_TEGRA2
+
+config PF_TEGRA2
+	bool "Tegra2"
+	depends on PF_TEGRA
+
+config PF_TEGRA3
+	bool "Tegra3"
+	depends on PF_TEGRA
+
+endchoice
+
+choice
+	prompt "Platform Timer"
+	default PF_TEGRA_TIMER_MP
+
+config PF_TEGRA_TIMER_MP
+	bool "MP timer"
+	help
+	  ARM local-core multi-processor timer.
+
+config PF_TEGRA_TIMER_TMR
+	bool "TMR timer"
+	help
+	  Single broadcasting timer.
+
+endchoice

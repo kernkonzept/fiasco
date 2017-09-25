@@ -1,0 +1,192 @@
+#! /usr/bin/perl -W
+#
+# Adam Lackorzynski <adam@os.inf.tu-dresden.de>
+#
+# Input to this script is the output of dumpmapdbobjs from Fiasco-jdb
+# Output of this script is a dot graph
+#
+# Convert to SVG with e.g.:
+#  fdp -Gmclimit=200.0 -Gnslimit=500.0 -Gratio=0.7 \
+#    -Tsvg -o x.svg x.dot
+#
+# To be improved...
+
+use strict;
+
+my $ignore = 1;
+my $line = 0;
+#my %spaces;
+my %intasks;
+my %kobjstype;
+my %names;
+my %obj_to_connector;
+my %obj_to_root_space;
+
+my %obj_colors = (
+  'Task'   => 'red',
+  'Thread' => 'green',
+  'Sched'  => 'blue',
+  'Factory' => 'yellow',
+  'Gate'   => 'magenta',
+);
+
+while (<>)
+  {
+    chomp;
+    ++$line;
+    s/$//;
+    if (/^========= OBJECT DUMP BEGIN ===============/)
+      {
+	$ignore = 0;
+      }
+    elsif (/^========= OBJECT DUMP END ===============/)
+      {
+	last; # done, we only consider the first one
+      }
+    elsif (!$ignore)
+      {
+	my $dbgid;
+	my $obj_type;
+	my $intask;
+	my $name;
+	$dbgid = $1 if /^([\da-fA-F]+)\s+/;
+	$obj_type = $1 if /\s\[([^\s\]]+)/;
+	$intask   = $1 if /intask=(\S+)/;
+	$name     = $1 if /\s{([^\s}]+)/;
+
+        #print "$line: $_\n";
+        if (not defined $dbgid or not defined $obj_type)
+	  {
+	    print "ERROR: parse or content error in line $line: $_\n";
+	    last;
+	  }
+
+        $obj_type =~ s/\[.*?m//g;
+
+        $obj_to_connector{$dbgid} = $1
+          if $obj_type eq 'Gate' and (/ D=([\da-fA-Z]+)/);
+        $obj_to_connector{$dbgid} = $1
+          if $obj_type eq 'IRQ' and (/ T=([\da-fA-Z]+)/);
+	$obj_to_connector{$dbgid} = $1
+	  if $obj_type eq 'Thread' and (/ S=D:([\da-fA-Z]+)/);
+
+	$kobjstype{$dbgid} = $obj_type;
+	$names{$dbgid} = $name if defined $name;
+
+        if (defined $intask)
+          {
+	    $intasks{$dbgid} = [ map { /^\[(.+)\]$/ } split(/,/, $intask) ];
+
+            $intasks{$dbgid}[0] =~ /^([^:]+)/;
+            $obj_to_root_space{$dbgid} = $1;
+          }
+      }
+  }
+
+sub id_to_objtype($)
+{
+  my $a = shift;
+  return "$kobjstype{$a}" if defined $kobjstype{$a};
+  return $a;
+}
+
+sub id_to_name($)
+{
+  my $a = shift;
+  return "$a".":".id_to_objtype($a).":".$names{$a} if defined $names{$a};
+  return $a;
+}
+
+print "digraph A {\n";
+
+if (0)
+  {
+    foreach my $o (keys %kobjstype)
+      {
+	print "  o$o [label = \"", id_to_objtype($o), "\"];\n"; 
+      }
+  }
+
+foreach my $t (keys %kobjstype)
+  {
+    next unless
+      $kobjstype{$t} eq 'Task';
+
+    print "  subgraph cluster_$t { label = \"", id_to_name($t), "\";".
+          " style=filled; \n";
+
+    foreach my $o (keys %intasks)
+      {
+	foreach my $i (@{$intasks{$o}})
+	  {
+	    $i =~ /([\da-fA-F]+):(\d+)/;
+	    my $space = $1;
+	    my $lvl = $2;
+
+	    if ($t eq $space)
+	      {
+		print "    s$space"."o$o [label = \"".id_to_name($o)."\"";
+		#print "    s$space"."o$o [label = \"$o\"";
+                print ",color=$obj_colors{$kobjstype{$o}}"
+                  if defined $obj_colors{$kobjstype{$o}};
+                print "];\n";
+	      }
+
+	    #print "$o: $space - $lvl\n";
+	  }
+      }
+
+    print "  }\n";
+  }
+
+# mapping correlations
+foreach my $o (keys %intasks)
+  {
+    my $lvl = 0;
+    my @stack;
+
+    foreach my $i (@{$intasks{$o}})
+      {
+        $i =~ /([\da-fA-F]+):(\d+)/;
+        my $space = $1;
+        my $l = $2;
+
+        #print STDERR "$i -- l=$l\n";
+
+        $stack[$l] = $space;
+
+        if ($l > 0)
+          {
+            print "    s$stack[$l-1]o$o -> s$stack[$l]o$o";
+            print "[color=$obj_colors{$kobjstype{$o}}]"
+              if defined $obj_colors{$kobjstype{$o}};
+            print ";\n";
+          }
+        #print "$o: $space - $l\n";
+      }
+  }
+
+# connect tasks to cluster-boxes
+foreach my $t (keys %kobjstype)
+  {
+    next unless
+      $kobjstype{$t} eq 'Task';
+
+    if ($obj_to_root_space{$t} ne $t)
+      {
+        print " s$obj_to_root_space{$t}o$t -> cluster_$t [style=dashed];\n";
+      }
+  }
+
+
+# connect gates/irqs to their threads
+foreach my $g (keys %obj_to_connector)
+  {
+    my $s1 = $obj_to_root_space{$g};
+    my $s2 = $obj_to_root_space{$obj_to_connector{$g}};
+    my $o = $obj_to_connector{$g};
+    print "    s${s1}o$g -> s${s2}o$o [style=dotted];\n"
+      if defined $s1 and defined $s1;
+  }
+
+print "}\n";

@@ -1,0 +1,49 @@
+#! /usr/bin/perl -W
+
+use strict;
+
+my @filter_out = qw/
+  ABI
+  CC
+  CXX
+  HOST_CC
+  HOST_CXX
+  LABEL
+  MP_MAX_CPUS
+  XARCH
+/;
+
+my %filter_out_hash;
+
+$filter_out_hash{$_} = 1 foreach @filter_out;
+
+my $builds = 0;
+my %c_y;
+my %c;
+
+while (my $file = <>)
+  {
+    chomp $file;
+    open(A, $file) or die "Cannot open: $!";
+    $builds++;
+
+    while (<A>)
+      {
+	next unless /CONFIG_(\S+)[= ]/;
+
+	my $t = $1;
+
+	next if defined $filter_out_hash{$t};
+
+	$c{$t}++;
+	$c_y{$t}++ unless / is not set/;
+      }
+
+    close A;
+  }
+
+foreach my $x (sort keys %c)
+  {
+    my $v = defined $c_y{$x} ? $c_y{$x} : 0;
+    printf "%30s: %d/%d (%g%%)\n", $x, $v, $c{$x}, int($v * 1000 / $c{$x}) / 10;
+  }

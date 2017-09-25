@@ -1,0 +1,138 @@
+# -*- makefile -*-
+
+SUBSYSTEMS = BOOTTASK TESTTASK KERNEL CRT0 LIBK LIBAMM TCBOFFSET
+
+ifneq ($(wildcard $(srcdir)/disasm),)
+SUBSYSTEMS += LIBDISASM
+endif
+
+#
+# KERNEL subsystem
+#
+KERNEL = fiasco.image
+KERNEL_EXTRA = Symbols
+VPATH += kern
+PRIVATE_INCDIR += kern
+
+INTERFACES_KERNEL = mapdb region \
+  space_context space space_index space_index_util \
+  stack irq_init kmem kmem_alloc slab_cache kmem_slab_simple kmem_slab \
+  switch_lock thread_lock helping_lock kernel_lock timer \
+  thread_state sched context threadid thread_regs sender receiver \
+  thread kernel_thread thread_util \
+  map_util irq startup console paranoia globals \
+  kdb kdb_ke jdb_symbol jdb_lines jdb_trace jdb_tbuf jdb_bp jdb_thread_list \
+  jdb_tsc jdb apic watchdog rtc main config logger
+
+thread_IMPL = thread thread-syscall thread-list thread-ipc thread-msg \
+              thread-log
+
+kernel_thread_IMPL = kernel_thread kernel_thread-boottask
+
+#ASSRC_KERNEL = entry.S shortcut.S debug.S
+ASSRC_KERNEL = entry.S shortcut-classic.S shortcut2.S debug.S
+
+### When testing with test threads, uncomment the following:
+#
+VPATH += kern-test
+PRIVATE_INCDIR += kern-test
+#
+INTERFACES_KERNEL += generic_test_thread test_thread \
+  node cpu back_trace cpu_guard types
+#
+node_IMPL = node node-up
+cpu_IMPL = cpu cpu-perf cpu-perfp4
+config_IMPL = config config-test
+context_IMPL = context context-test
+#
+#kernel_thread_IMPL := $(filter-out kernel_thread-std,$(kernel_thread_IMPL)) \
+#  kernel_thread-test
+
+#
+## Replace this definition with your own test thread.
+#test_thread_IMPL = test_thread-test25       # switch to latency
+#test_thread_IMPL = test_thread-test26       # trace for thread switch
+#test_thread_IMPL = test_thread-test33	     # sysenter/exit shortcut ipc
+#test_thread_IMPL = test_thread-test37       # PEBS
+#test_thread_IMPL = test_thread-test39        # lock overheadd
+#test_thread_IMPL = test_thread-test40      # shortcut
+#test_thread_IMPL = test_thread-test42      # kernel entry latency
+#test_thread_IMPL = test_thread-test43      # scheduling latency
+#test_thread_IMPL = test_thread-test44      # semaphore bench helper
+test_thread_IMPL = test_thread-test45      # sysenter/exit
+#
+### End of test-thread section
+
+#
+# CRT0 subsystem
+#
+CRT0 = crt0.o
+
+ASSRC_CRT0 = crt0.S
+
+#
+# BOOT subsystem
+#
+BOOT = main
+VPATH += boot
+
+CSRC_BOOT = oskit_support.c
+CXXSRC_BOOT = bootstrap.cc
+ASSRC_BOOT = boot.S
+
+NOPROFILE += oskit_support bootstrap
+
+#
+# LIBK subsystem
+#
+LIBK = libk.a
+VPATH += lib
+PRIVATE_INCDIR += . lib/oskit
+
+INTERFACES_LIBK = atomic lock_guard profile uuencode gmon unistd
+
+CSRC_LIBK = com_cons.c
+
+NOPROFILE += profile gmon
+
+#
+# LIBAMM subsystem
+#
+
+# This library is not relocatable; it is built in its source
+# directory.  Reference it with $(srcdir).
+LIBAMM = $(srcdir)/lib/oskit/amm/libamm.a
+
+#
+# LIBDISASM subsystem
+#
+LIBDISASM = $(srcdir)/disasm/libdisasm.a
+
+#
+# TCBOFFSET subsystem
+#
+TCBOFFSET = tcboffset.h
+CXXSRC_TCBOFFSET = genoffset.cc
+#TCBOFFSET_EXTRA_FLAGS = -DFIASCO_SMP
+
+
+#
+# BOOTTASK subsystem
+#
+BOOTTASK = sysenterexit_test
+VPATH += boot test/boottask
+
+CSRC_BOOTTASK = oskit_support.c
+CXXSRC_BOOTTASK = bootstrap-boottask.cc
+OBJ_BOOTTASK = boot.o
+
+NOPROFILE += oskit_support bootstrap
+
+#
+# TESTTASK subsystem
+# 
+TESTTASK = sysenterexit
+VPATH += test/testtask
+
+CSRC_TESTTASK = sysenterexit.c
+OBJ_TESTTASK = crt0-user.o

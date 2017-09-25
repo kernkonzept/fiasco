@@ -1,0 +1,95 @@
+// vi:ft=cpp
+/*
+ * (c) 2015 Alexander Warg <alexander.warg@kernkonzept.com>,
+ *
+ * This file is part of TUD:OS and distributed under the terms of the
+ * GNU General Public License 2.
+ * Please see the COPYING-GPL-2 file for details.
+ *
+ * As a special exception, you may use this file as part of a free software
+ * library without restriction.  Specifically, if other files instantiate
+ * templates or use macros or inline functions from this file, or you compile
+ * this file and link it with other files to produce an executable, this
+ * file does not by itself cause the resulting executable to be covered by
+ * the GNU General Public License.  This exception does not however
+ * invalidate any other reasons why the executable file might be covered by
+ * the GNU General Public License.
+ */
+#pragma once
+
+#include <cxx/type_traits>
+
+namespace cxx {
+
+template<typename T>
+class Protected_base
+{
+private:
+  struct Null_ptr;
+  T *_p;
+
+protected:
+  Protected_base() = default;
+  explicit Protected_base(T *v) : _p(v) {}
+
+public:
+  typedef T Value_type;
+
+  bool valid() const { return _p != 0; }
+  operator Null_ptr const * () const
+  { return valid() ? (Null_ptr const *)1 : (Null_ptr const *)0; }
+
+  T *unsafe_ptr() const { return _p; }
+};
+
+/**
+ * A protected pointer is a pointer that cannot be dereferenced directly.
+ *
+ * Protected pointers can be used whenever it is not safe to directly
+ * dereference a pointer, but other type semantics of a pointer are
+ * desirable.  When READ_OK is true the pointer can be dereferenced to
+ * read-only versions of the object, allowing direct read access but
+ * restricting write access.
+ */
+template<typename T, bool READ_OK = false>
+struct Protected;
+
+template<typename T>
+struct Protected<T, false> : Protected_base<T>
+{
+  Protected() = default;
+  Protected(T *v) : Protected_base<T>(v) {}
+
+  template<typename X,
+           typename = typename enable_if<is_convertible<X, T>::value>::type>
+  Protected(X *v) : Protected_base<T>(v) {}
+
+  template<typename X,
+           typename = typename enable_if<is_convertible<X, T>::value>::type>
+  Protected(Protected<X, false> const &v)
+  : Protected_base<T>(v.unsafe_ptr())
+  {}
+};
+
+template<typename T>
+struct Protected<T, true> : Protected_base<T>
+{
+  Protected() = default;
+  Protected(T *v) : Protected_base<T>(v) {}
+
+  template<typename X,
+           typename = typename enable_if<is_convertible<X, T>::value>::type>
+  Protected(X *v) : Protected_base<T>(v) {}
+
+  template<typename X,
+           typename = typename enable_if<is_convertible<X, T>::value>::type>
+  Protected(Protected<X, true> const &v)
+  : Protected_base<T>(v.unsafe_ptr())
+  {}
+
+  T get() const { return *this->unsafe_ptr(); }
+  T const *operator -> () const { return this->unsafe_ptr(); }
+  T const &operator * () const { return *this->unsafe_ptr(); }
+};
+
+}

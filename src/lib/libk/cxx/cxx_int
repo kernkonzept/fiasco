@@ -1,0 +1,552 @@
+// vi:ft=cpp
+
+#pragma once
+#include "type_traits"
+
+/**
+ * \file
+ *
+ * This file provides helpers for defining type-safe integer types.
+ *
+ * Type-safe integers are internally represented as a normal built-in
+ * integer type but support only a limited number of operations
+ * according to the type they actually represent.
+ *
+ * How it works internally
+ * -----------------------
+ *
+ * The built-in integer types are wrapped in a class that implements only
+ * the operators that are needed for the type. In addition, these operators
+ * are only defined for the type itself, forbidding any implicit casts
+ * to and from the native types or any other type-safe integer. Thus, the
+ * compiler ensures that the meaning of the types is not accidentally
+ * changed or operations are used that are meaningless for a certain type.
+ * Because this is done through the type system, there is no overhead
+ * during runtime.
+ *
+ * How to use it
+ * -------------
+ *
+ * The file provides a base type for type-safe integers, \ref cxx::int_base, and
+ * a number of mixins that implement groups of operations. In order to
+ * define a new type, a class needs to be defined that inherits from the
+ * base type and from all mixins for which operations should be allowed.
+ * For example, to define a new type that wraps unsigned char and allows
+ * only bitwise operations, define:
+ *
+ *     class Bittype
+ *     : int_base<unsigned char, Bittype>,
+ *       int_bit_ops<Bittype>
+ *     {
+ *       Bittype() = default;
+ *       explicit Bittype(Value v) : cxx::int_base<unsigned char, Bittype>(v) {}
+ *     };
+ *
+ * Bittype provides the unique type here and ensures that the instantiated
+ * template is unique and assignment from other template instances will fail.
+ * It is essential to define the constructor as explicit to forbid implicit
+ * casting.
+ *
+ * There are a number of convenience classes defined for frequently used
+ * mixin uses.
+ */
+
+namespace cxx {
+
+/**
+ * Get native integer value of \a v.
+ *
+ * Get the native value of the embedded integer of TYPE.
+ * Provides an explicit cast of type-safe integers to their
+ * underlying builtin integer type.
+ */
+template< typename TYPE, typename = typename TYPE::Value > inline
+constexpr typename TYPE::Value
+int_value(typename cxx::identity<TYPE>::type const &v)
+{ return TYPE::val(v); }
+
+
+/**
+ * Get native integer value of \a v.
+ *
+ * Currently do this for native integers directly.
+ */
+template< typename TYPE > //, typename = typename cxx::enable_if<cxx::is_integral<TYPE>::value>::type > inline
+inline constexpr TYPE
+int_value(TYPE const &v)
+{ return v; }
+
+
+/** Base class for type-safe integers.
+ *
+ *  \tparam VALUE_T The integer type this class should wrap.
+ *  \tparam TYPE_T  Type of the implementing class, all operators
+ *                  are defined with respect to this class and can
+ *                  only operate with values of this type.
+ *
+ * A type-safe integer wraps an integer so that only specific operations are
+ * allowed. Most importantly, the class forbids implicit conversion to
+ * other integers, both type-safe and built-in.
+ *
+ * This base class only exports comparison and the storage for the integer
+ * value. Other operators can be added through mixins.
+ */
+template< typename VALUE_T, typename TYPE_T >
+class int_base
+{
+public:
+  typedef VALUE_T Value;
+  typedef TYPE_T  Target;
+  typedef int_base<VALUE_T, TYPE_T> Type;
+  enum class Value_enum : Value {};
+
+  int_base() = default;
+  constexpr explicit int_base(Value v) : _v(v) {}
+  constexpr int_base(Value_enum v) : _v(static_cast<Value>(v)) {}
+  constexpr operator Value_enum () const { return static_cast<Value_enum>(_v); }
+
+  TYPE_T operator = (TYPE_T const &o)
+  { _v = o._v; return *static_cast<TYPE_T*>(this); }
+
+  friend inline constexpr bool operator < (Type const &l, Type const &r) { return l._v < r._v; }
+  friend inline constexpr bool operator > (Type const &l, Type const &r) { return l._v > r._v; }
+  friend inline constexpr bool operator <= (Type const &l, Type const &r) { return l._v <= r._v; }
+  friend inline constexpr bool operator >= (Type const &l, Type const &r) { return l._v >= r._v; }
+  friend inline constexpr bool operator == (Type const &l, Type const &r) { return l._v == r._v; }
+  friend inline constexpr bool operator != (Type const &l, Type const &r) { return l._v != r._v; }
+
+  static constexpr Value val(Type const &t) { return t._v; }
+  static constexpr Value val(TYPE_T const &t) { return t._v; }
+  static constexpr Value &val(Type &t) { return t._v; }
+  static constexpr Value &val(TYPE_T &t) { return t._v; }
+
+protected:
+  Value _v;
+};
+
+
+/**
+ * Increment and decrement mixin for int_base.
+ *
+ * \tparam TYPE_T  Type of the implementing class.
+ */
+template< typename TYPE_T >
+struct int_inc_ops
+{
+  friend inline TYPE_T &operator ++ (TYPE_T &l)
+  { ++TYPE_T::val(l); return l; }
+
+  friend inline TYPE_T operator ++ (TYPE_T &l, int)
+  { TYPE_T old = l; TYPE_T::val(l)++; return old; }
+
+  friend inline TYPE_T &operator -- (TYPE_T &l)
+  { --TYPE_T::val(l); return l; }
+
+  friend inline TYPE_T operator -- (TYPE_T &l, int)
+  { TYPE_T old = l; TYPE_T::val(l)--; return old; }
+};
+
+
+/**
+ * Addition and subtraction mixin for int_base.
+ *
+ * \tparam TYPE_T Type of the implementing class.
+ * \tparam DIFF_T Type of the int_base base class that represents the
+ *                interval type.
+ *
+ * This mixin provides addition and subtraction for integer types where
+ * the difference between the absolute values should be represented by a
+ * different type. For example, the difference between two absolute memory
+ * addresses is an address offset, where address and offset are different
+ * types that cannot be used interchangeably.
+ *
+ * The mixin provides two versions of each operation: computation of a
+ * diff type using two operands of the base type and computation of a
+ * new absolute base type using a base type and a diff type operand.
+ */
+template< typename TYPE_T, typename DIFF_T = TYPE_T >
+struct int_diff_ops : int_inc_ops<TYPE_T>
+{
+  typedef DIFF_T Diff_type;
+
+  friend inline constexpr DIFF_T operator - (TYPE_T const &l, TYPE_T const &r)
+  { return DIFF_T(cxx::int_value<TYPE_T>(l) - cxx::int_value<TYPE_T>(r)); }
+
+  friend inline constexpr TYPE_T operator + (TYPE_T const &l, DIFF_T const &r)
+  { return TYPE_T(cxx::int_value<TYPE_T>(l) + cxx::int_value<DIFF_T>(r)); }
+
+  friend inline constexpr TYPE_T operator + (DIFF_T const &l, TYPE_T const &r)
+  { return TYPE_T(cxx::int_value<DIFF_T>(l) + cxx::int_value<TYPE_T>(r)); }
+
+  friend inline TYPE_T &operator += (TYPE_T &l, DIFF_T const &r)
+  { TYPE_T::val(l) += cxx::int_value<DIFF_T>(r); return l; }
+
+  friend inline constexpr TYPE_T operator - (TYPE_T const &l, DIFF_T const &r)
+  { return TYPE_T(cxx::int_value<TYPE_T>(l) - cxx::int_value<DIFF_T>(r)); }
+
+  friend inline TYPE_T &operator -= (TYPE_T &l, DIFF_T const &r)
+  { TYPE_T::val(l) -= cxx::int_value<DIFF_T>(r); return l; }
+};
+
+
+/**
+ * Addition and subtraction mixin for int_base.
+ *
+ * \tparam TYPE_T Type of the implementing class.
+ *
+ * Publishes addition and subtraction operators. When used in this form,
+ * the result of such an operation is expected to be of the same type.
+ * For example, given an integer type representing a size, the result of
+ * adding two sizes remains a size.
+ */
+template<typename TYPE_T>
+struct int_diff_ops<TYPE_T, TYPE_T> : int_inc_ops<TYPE_T>
+{
+  typedef TYPE_T Diff_type;
+
+  friend inline constexpr TYPE_T operator - (TYPE_T const &l, TYPE_T const &r)
+  { return TYPE_T(cxx::int_value<TYPE_T>(l) - cxx::int_value<TYPE_T>(r)); }
+
+  friend inline TYPE_T &operator -= (TYPE_T &l, TYPE_T const &r)
+  { TYPE_T::val(l) -= cxx::int_value<TYPE_T>(r); return l; }
+
+  friend inline constexpr TYPE_T operator + (TYPE_T const &l, TYPE_T const &r)
+  { return TYPE_T(cxx::int_value<TYPE_T>(l) + cxx::int_value<TYPE_T>(r)); }
+
+  friend inline TYPE_T &operator += (TYPE_T &l, TYPE_T const &r)
+  { TYPE_T::val(l) += cxx::int_value<TYPE_T>(r); return l; }
+};
+
+/**
+ * Basic bitwise operations for int_base types.
+ *
+ * \tparam TYPE_T Type of the implementing class.
+ *
+ * Internal class, for mixin see \ref cxx::int_bit_ops.
+ */
+template<typename TYPE_T>
+struct int_bit_ops_base
+{
+  friend inline constexpr TYPE_T operator | (TYPE_T const &l, TYPE_T const &r)
+  { return TYPE_T(cxx::int_value<TYPE_T>(l) | cxx::int_value<TYPE_T>(r)); }
+
+  friend inline TYPE_T &operator |= (TYPE_T &l, TYPE_T const &r)
+  { TYPE_T::val(l) |= cxx::int_value<TYPE_T>(r); return l; }
+
+  friend inline constexpr TYPE_T operator & (TYPE_T const &l, TYPE_T const &r)
+  { return TYPE_T(cxx::int_value<TYPE_T>(l) & cxx::int_value<TYPE_T>(r)); }
+
+  friend inline TYPE_T &operator &= (TYPE_T &l, TYPE_T const &r)
+  { TYPE_T::val(l) &= cxx::int_value<TYPE_T>(r); return l; }
+
+  friend inline constexpr TYPE_T operator ^ (TYPE_T const &l, TYPE_T const &r)
+  { return TYPE_T(cxx::int_value<TYPE_T>(l) ^ cxx::int_value<TYPE_T>(r)); }
+
+  friend inline TYPE_T &operator ^= (TYPE_T &l, TYPE_T const &r)
+  { TYPE_T::val(l) ^= cxx::int_value<TYPE_T>(r); return l; }
+
+  friend inline constexpr TYPE_T operator ~ (TYPE_T const &l)
+  { return TYPE_T(~cxx::int_value<TYPE_T>(l)); }
+};
+
+/**
+ * Bitwise mixin for int_base.
+ *
+ * \tparam TYPE_T Type of the implementing class.
+ * \tparam DIFF_T Type of the int_base base class that represents the
+ *                difference type.
+ *
+ * Provides bit-wise integer operations. This version should be used
+ * when the result of such an operation is of a different type than
+ * the original base type.
+ */
+template<typename TYPE_T, typename DIFF_T = TYPE_T>
+struct int_bit_ops : int_bit_ops_base<TYPE_T>
+{
+  friend inline constexpr TYPE_T operator | (TYPE_T const &l, DIFF_T const &r)
+  { return TYPE_T(cxx::int_value<TYPE_T>(l) | cxx::int_value<DIFF_T>(r)); }
+
+  friend inline constexpr TYPE_T operator | (DIFF_T const &l, TYPE_T const &r)
+  { return TYPE_T(cxx::int_value<DIFF_T>(l) | cxx::int_value<TYPE_T>(r)); }
+
+  friend inline TYPE_T &operator |= (TYPE_T &l, DIFF_T const &r)
+  { TYPE_T::val(l) |= cxx::int_value<DIFF_T>(r); return l; }
+
+  friend inline constexpr DIFF_T operator & (DIFF_T const &l, TYPE_T const &r)
+  { return DIFF_T(cxx::int_value<DIFF_T>(l) & cxx::int_value<TYPE_T>(r)); }
+
+  friend inline constexpr DIFF_T operator & (TYPE_T const &l, DIFF_T const &r)
+  { return DIFF_T(cxx::int_value<TYPE_T>(l) & cxx::int_value<DIFF_T>(r)); }
+
+  friend inline TYPE_T &operator &= (TYPE_T &l, DIFF_T const &r)
+  { TYPE_T::val(l) &= cxx::int_value<DIFF_T>(r); return l; }
+
+  friend inline constexpr TYPE_T operator ^ (DIFF_T const &l, TYPE_T const &r)
+  { return TYPE_T(cxx::int_value<DIFF_T>(l) ^ cxx::int_value<TYPE_T>(r)); }
+
+  friend inline constexpr TYPE_T operator ^ (TYPE_T const &l, DIFF_T const &r)
+  { return TYPE_T(cxx::int_value<TYPE_T>(l) ^ cxx::int_value<DIFF_T>(r)); }
+
+  friend inline TYPE_T &operator ^= (TYPE_T &l, DIFF_T const &r)
+  { TYPE_T::val(l) ^= cxx::int_value<DIFF_T>(r); return l; }
+};
+
+/**
+ * Bitwise mixin for int_base.
+ *
+ * \tparam TYPE_T Type of the implementing class.
+ *
+ * This version is actually used if there is no specific difference type
+ * for the integer type.
+ */
+template<typename TYPE_T>
+struct int_bit_ops<TYPE_T, TYPE_T> : int_bit_ops_base<TYPE_T> {};
+
+/**
+ * Shift mixin for int_base.
+ *
+ * \tparam TYPE_T  Type of the implementing class.
+ * \tparam ORDER_T Type of the int_base base class that represents the
+ *                 shift operand.
+ *
+ * Provides bit-wise shift operations. The shift operand must be represented by
+ * its own distinct type.
+ */
+template<typename TYPE_T, typename ORDER_T>
+struct int_shift_ops
+{
+  typedef ORDER_T Order_type;
+
+  friend inline constexpr TYPE_T operator << (TYPE_T const &l, ORDER_T const &r)
+  { return TYPE_T(cxx::int_value<TYPE_T>(l) << cxx::int_value<ORDER_T>(r)); }
+
+  friend inline TYPE_T &operator <<= (TYPE_T &l, ORDER_T const &r)
+  { TYPE_T::val(l) <<= cxx::int_value<ORDER_T>(r); return l; }
+
+  friend inline constexpr TYPE_T operator >> (TYPE_T const &l, ORDER_T const &r)
+  { return TYPE_T(cxx::int_value<TYPE_T>(l) >> cxx::int_value<ORDER_T>(r)); }
+
+  friend inline TYPE_T &operator >>= (TYPE_T &l, ORDER_T const &r)
+  { TYPE_T::val(l) >>= cxx::int_value<ORDER_T>(r); return l; }
+};
+
+/**
+ * Null checking mixin for int_base.
+ *
+ * \tparam TYPE_T Type of the implementing class.
+ *
+ * Provides the logical negator operator, which effectively tests the underlying
+ * integer for zero.
+ */
+template<typename TYPE_T>
+struct int_null_chk
+{
+  friend inline bool operator ! (TYPE_T const &v)
+  { return cxx::int_value<TYPE_T>(v) == 0; }
+
+private:
+  struct Type_conversion_error;
+
+public:
+  // prevents implicit casting to bool
+  constexpr operator Type_conversion_error const * () const
+  { return (Type_conversion_error const *)(cxx::int_value<TYPE_T>(*static_cast<TYPE_T const *>(this)) != 0 ? 1L : 0L); }
+};
+
+/**
+ *  Type-safe integer that only allows diff operations.
+ *
+ *  \tparam VALUE_T The integer type this class should wrap.
+ *  \tparam T       Signature type representing the data type.
+ *
+ *  Type-save integer that only allows assignment, comparison, addition and
+ *  subtraction with itself. Generally used for types representing
+ *  order (of magnitude).
+ */
+template<typename VALUE_T, typename T>
+struct int_type : int_base<VALUE_T, int_type<VALUE_T, T> >, int_diff_ops<int_type<VALUE_T, T> >
+{
+  typedef int_base<VALUE_T, int_type<VALUE_T, T> > Base;
+  typedef typename Base::Value Value;
+  typedef typename Base::Value_enum Value_enum;
+  int_type() = default;
+  explicit constexpr int_type(Value v) : Base(v) {}
+  constexpr int_type(Value_enum v) : Base(v) {}
+};
+
+/**
+ *  Final type-safe integer with full operation set and order type.
+ *
+ *  \tparam VALUE_T The integer type this class should wrap.
+ *  \tparam T       Signature type representing the data type.
+ *  \tparam ORDER_T Type of the shift operand.
+ *
+ *  Type-safe integer that supports addition, subtraction, shift and
+ *  bit-logic operations and defines a distinct type for the operand
+ *  used in shift operations. Generally used for types representing a
+ *  size, count or an offset.
+ *
+ *  This class should be considered final and only used to directly
+ *  typedef a new type, e.g.
+ *
+ *      typedef cxx::int_type<unsigned, struct Foo_t> Foo;
+ *
+ *  For defining a derived class, see \ref cxx::int_type_base.
+ */
+template<typename VALUE_T, typename T, typename ORDER_T>
+struct int_type_order
+: int_base<VALUE_T, int_type_order<VALUE_T, T, ORDER_T> >,
+  int_diff_ops<int_type_order<VALUE_T, T, ORDER_T> >,
+  int_shift_ops<int_type_order<VALUE_T, T, ORDER_T>, ORDER_T>,
+  int_bit_ops<int_type_order<VALUE_T, T, ORDER_T> >
+{
+  typedef int_base<VALUE_T, int_type_order<VALUE_T, T, ORDER_T> > Base;
+  typedef typename Base::Value Value;
+  typedef typename Base::Value_enum Value_enum;
+  int_type_order() = default;
+  explicit constexpr int_type_order(Value v) : Base(v) {}
+  constexpr int_type_order(Value_enum v) : Base(v) {}
+};
+
+/**
+ *  Final type-safe integer class with the full operation set.
+ *
+ *  \tparam VALUE_T The integer type this class should wrap.
+ *  \tparam T       Signature type representing the data type.
+ *  \tparam ORDER_T Type of the shift operand.
+ *  \tparam DIFF_T  Type representing the difference between absolute values.
+ *
+ *  Type-safe integer that supports addition, subtraction, shift and
+ *  bit-logic operations and defines a distinct type for the operator
+ *  used in shift operations and another for the difference.
+ *  Generally used for types representing an absolute value like addresses.
+ *
+ *  This class should be considered final and only used to directly
+ *  typedef a new type.
+ */
+template<typename VALUE_T, typename T, typename DIFF_T, typename ORDER_T>
+struct int_type_full
+: int_base<VALUE_T, int_type_full<VALUE_T, T, DIFF_T, ORDER_T> >,
+  int_diff_ops<int_type_full<VALUE_T, T, DIFF_T, ORDER_T>, DIFF_T>,
+  int_shift_ops<int_type_full<VALUE_T, T, DIFF_T, ORDER_T>, ORDER_T>,
+  int_bit_ops<int_type_full<VALUE_T, T, DIFF_T, ORDER_T>, DIFF_T>
+{
+  typedef int_base<VALUE_T, int_type_full<VALUE_T, T, DIFF_T, ORDER_T> > Base;
+  typedef typename Base::Value Value;
+  typedef typename Base::Value_enum Value_enum;
+  int_type_full() = default;
+  explicit constexpr int_type_full(Value v) : Base(v) {}
+  constexpr int_type_full(Value_enum v) : Base(v) {}
+};
+
+/**
+ *  Base class for simple type-safe integer with optional distinct diff type.
+ *
+ *  \tparam VALUE_T The integer type this class should wrap.
+ *  \tparam TYPE_T  Type of the implementing class.
+ *  \tparam DIFF_T  Type representing the difference between absolute values.
+ *
+ *  Type-save integer that only allows assignment, comparison, addition and
+ *  subtraction.
+ *
+ *  Use this class when deriving a type, for example, to mix in additional
+ *  operators:
+ *
+ *      class Foo : cxx::int_type_base<int, Foo>, cxx::int_null_chk<Foo> {}
+ *
+ *  For a final version to use directly in typedefs, see \ref cxx::int_type.
+ */
+template<typename VALUE_T, typename TYPE_T, typename DIFF_T = TYPE_T>
+struct int_type_base : int_base<VALUE_T, TYPE_T>, int_diff_ops<TYPE_T, DIFF_T>
+{
+  typedef int_base<VALUE_T, TYPE_T> Base;
+  typedef typename Base::Value Value;
+  typedef typename Base::Value_enum Value_enum;
+  int_type_base() = default;
+  explicit constexpr int_type_base(Value v) : Base(v) {}
+  constexpr int_type_base(Value_enum v) : Base(v) {}
+};
+
+/**
+ *  Base class for type-safe integer with distinct order type.
+ *
+ *  \tparam VALUE_T The integer type this class should wrap.
+ *  \tparam TYPE_T  Type of the implementing class.
+ *  \tparam ORDER_T Type of the shift operand.
+ *  \tparam DIFF_T  Type representing the difference between absolute values.
+ *
+ *  Full type-save integer implementing assignment, comparison,
+ *  addition/subtraction, shifting and bit operations. The shift operand is
+ *  expected to be of a distinct type.
+ *
+ *  Use this class when creating a new type by deriving a new class.
+ */
+template<typename VALUE_T, typename TYPE_T, typename ORDER_T, typename DIFF_T = TYPE_T>
+struct int_type_order_base : int_base<VALUE_T, TYPE_T>, int_diff_ops<TYPE_T, DIFF_T>,
+  int_shift_ops<TYPE_T, ORDER_T>, int_bit_ops<TYPE_T, DIFF_T>
+{
+  typedef int_base<VALUE_T, TYPE_T> Base;
+  typedef typename Base::Value Value;
+  typedef typename Base::Value_enum Value_enum;
+  int_type_order_base() = default;
+  explicit constexpr int_type_order_base(Value v) : Base(v) {}
+  constexpr int_type_order_base(Value_enum v) : Base(v) {}
+};
+
+template< typename TYPE, typename ORDER > inline
+constexpr TYPE
+mask_lsb(TYPE const &v, ORDER const &o)
+{ return v & (TYPE(~0) << o); }
+
+template< typename TYPE, typename ORDER > inline
+constexpr typename TYPE::Diff_type
+get_lsb(TYPE const &v, ORDER const &o)
+{ return v & ~(typename TYPE::Diff_type(~0) << o); }
+
+template< typename TYPE, typename ORDER,
+  typename = typename cxx::enable_if<cxx::is_integral<TYPE>::value>::type > inline
+constexpr TYPE
+get_lsb(TYPE const &v, ORDER const &o)
+{ return v & ~(TYPE(~0) << o); }
+
+/**
+ * Fixed-size array indexed by type-safe integers.
+ *
+ * \tparam VALUE  Type of array content.
+ * \tparam INDEX  Index type, must inherit from int_base and implement
+ *                int_bit_ops and int_shift_ops.
+ * \tparam SIZE   Size of array.
+ */
+template< typename VALUE, typename INDEX, unsigned long SIZE >
+class array
+{
+public:
+  typedef VALUE *iterator;
+  typedef VALUE const *const_iterator;
+
+  VALUE &operator [] (INDEX const &cpu)
+  { return _d[cxx::int_value<INDEX>(cpu)]; }
+
+  VALUE const &operator [] (INDEX const &cpu) const
+  { return _d[cxx::int_value<INDEX>(cpu)]; }
+
+  iterator begin() { return &_d[0]; }
+  iterator end() { return &_d[SIZE]; }
+
+  const_iterator begin() const { return &_d[0]; }
+  const_iterator end() const { return &_d[SIZE]; }
+
+  static INDEX size() { return INDEX(SIZE); }
+
+private:
+  VALUE _d[SIZE];
+};
+
+template< typename T >
+struct underlying_type<T, typename cxx::enable_if<!cxx::is_same<typename T::Value, void>::value>::type>
+{
+  typedef typename T::Value type;
+};
+
+} // namespace cxx
+

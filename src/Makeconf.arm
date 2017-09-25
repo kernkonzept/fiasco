@@ -1,0 +1,22 @@
+# -*- makefile -*-
+# vi:se ft=make:
+
+#OPT_SHARED_FLAGS                  += $(call CHECKCC,-finline-limit=10000,)
+CROSS_COMPILE			  ?= arm-linux-
+SHARED_FLAGS-$(CONFIG_ARM_PXA)    += -mcpu=xscale
+SHARED_FLAGS-$(CONFIG_ARM_SA)     += -mcpu=strongarm1100
+SHARED_FLAGS-$(CONFIG_ARM_920T)   += -mcpu=arm920t
+SHARED_FLAGS-$(CONFIG_ARM_926)    += -mcpu=arm926ej-s
+SHARED_FLAGS-$(CONFIG_ARM_1136)   += -mcpu=arm1136jf-s
+SHARED_FLAGS-$(CONFIG_ARM_1176)   += -mcpu=arm1176jzf-s
+SHARED_FLAGS-$(CONFIG_ARM_MPCORE) += -mcpu=mpcore
+SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A5) += $(call CHECKCC,-mcpu=cortex-a5)
+SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A7) += $(call CHECKCC,-mcpu=cortex-a7,-mcpu=cortex-a9)
+SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A8) += $(call CHECKCC,-mcpu=cortex-a8)
+SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A9) += $(call CHECKCC,-mcpu=cortex-a9)
+SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A15) += $(call CHECKCC,-mcpu=cortex-a15,-mcpu=cortex-a9)
+SHARED_FLAGS			  += -msoft-float
+SHARED_FLAGS                      += $(call CHECKCC,-mno-thumb-interwork)
+SHARED_FLAGS                      += -marm -mabi=aapcs
+LDFLAGS                           += --no-warn-mismatch
+LD_EMULATION_CHOICE               := armelf armelf_linux_eabi armelf_fbsd

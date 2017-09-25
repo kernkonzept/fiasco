@@ -1,0 +1,54 @@
+# vim:set ft=make:
+
+SUBSYSTEMS              += LIBUART
+OBJECTS_LIBUART         += uart_imx.o uart_pl011.o
+PREPROCESS_PARTS        += imx libuart generic_tickless_idle
+PREPROCESS_PARTS	+= $(if $(CONFIG_PF_IMX_21),imx21 kern_start_0xd)
+PREPROCESS_PARTS        += $(if $(CONFIG_PF_IMX_28),imx28)
+PREPROCESS_PARTS	+= $(if $(CONFIG_PF_IMX_35),imx35 imx_epit)
+PREPROCESS_PARTS	+= $(if $(CONFIG_PF_IMX_51),imx51 imx_epit \
+                                                    pic_gic pic_gic_mxc_tzic)
+PREPROCESS_PARTS	+= $(if $(CONFIG_PF_IMX_53),imx53 imx_epit \
+                                                    pic_gic pic_gic_mxc_tzic)
+PREPROCESS_PARTS        += $(if $(CONFIG_PF_IMX_6),imx6 pic_gic)
+PREPROCESS_PARTS        += $(if $(CONFIG_PF_IMX_6_TIMER_MPTIMER),mptimer)
+PREPROCESS_PARTS        += $(if $(CONFIG_PF_IMX_6_TIMER_EPIT),imx_epit)
+PREPROCESS_PARTS        += $(if $(CONFIG_PF_IMX_6UL),imx6ul pic_gic \
+                                                     arm_generic_timer)
+RAM_PHYS_BASE           := $(CONFIG_PF_IMX_RAM_PHYS_BASE)
+
+INTERFACES_KERNEL     += $(if $(CONFIG_PF_IMX_51),gic)
+INTERFACES_KERNEL     += $(if $(CONFIG_PF_IMX_6),gic)
+INTERFACES_KERNEL     += $(if $(CONFIG_PF_IMX_6UL),gic generic_timer)
+INTERFACES_KERNEL-$(CONFIG_PF_IMX_35) += timer_imx_epit
+INTERFACES_KERNEL-$(CONFIG_PF_IMX_51) += timer_imx_epit
+INTERFACES_KERNEL-$(CONFIG_PF_IMX_53) += timer_imx_epit
+INTERFACES_KERNEL-$(CONFIG_PF_IMX_6_TIMER_EPIT) += timer_imx_epit
+
+MPCORE_PHYS_BASE      := 0x00a00000
+
+uart_IMPL             += uart-imx
+config_IMPL           += config-arm-imx
+mem_layout_IMPL       += mem_layout-arm-imx
+pic_IMPL              += $(if $(CONFIG_PF_IMX_21),pic-arm-imx)
+pic_IMPL              += $(if $(CONFIG_PF_IMX_28),pic-arm-imx-icoll)
+pic_IMPL              += $(if $(CONFIG_PF_IMX_35),pic-arm-imx)
+pic_IMPL              += $(if $(CONFIG_PF_IMX_51),pic-gic pic-arm-imx51)
+pic_IMPL              += $(if $(CONFIG_PF_IMX_53),pic-gic pic-arm-imx51)
+pic_IMPL              += $(if $(CONFIG_PF_IMX_6),pic-gic pic-arm-imx51)
+pic_IMPL              += $(if $(CONFIG_PF_IMX_6UL),pic-gic pic-arm-imx6ul)
+bootstrap_IMPL        += bootstrap-arm-imx
+timer_IMPL            += $(if $(CONFIG_PF_IMX_21),timer-arm-imx21)
+timer_IMPL            += $(if $(CONFIG_PF_IMX_28),timer-arm-timrot)
+timer_IMPL            += $(if $(CONFIG_PF_IMX_35),timer-arm-imx_epit)
+timer_IMPL            += $(if $(CONFIG_PF_IMX_51),timer-arm-imx_epit)
+timer_IMPL            += $(if $(CONFIG_PF_IMX_53),timer-arm-imx_epit)
+timer_IMPL            += $(if $(CONFIG_PF_IMX_6_TIMER_MPTIMER),timer-arm-mptimer timer-arm-mptimer-imx6)
+timer_IMPL            += $(if $(CONFIG_PF_IMX_6_TIMER_EPIT),timer-arm-imx_epit)
+timer_IMPL            += $(if $(CONFIG_PF_IMX_6UL),timer-arm-generic timer-arm-generic-imx6ul)
+timer_tick_IMPL       += $(if $(CONFIG_PF_IMX_6_TIMER_EPIT),timer_tick-broadcast,timer_tick-single-vector)
+kernel_uart_IMPL      += kernel_uart-arm-imx
+reset_IMPL            += reset-arm-imx
+outer_cache_IMPL      += outer_cache-arm-imx6
+clock_IMPL            += clock-generic
+platform_control_IMPL += platform_control-arm-imx6

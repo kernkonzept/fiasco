@@ -1,0 +1,38 @@
+# -*- makefile -*-
+# vim:se ft=make:
+
+exception.o: $(TCBOFFSET)
+
+# Add future prerequisites somewhere among the list of libraries.
+# You really should not have to add anything in the $(LD) line.
+
+OBJ_KERNEL_noboot = $(filter-out bootstrap%,$(OBJ_KERNEL))
+OBJ_BOOTSTRAP = $(filter  bootstrap%,$(OBJ_KERNEL))
+
+bootstrap.$(KERNEL).o: $(OBJ_BOOTSTRAP) $(LIBGCC)
+	$(LINK_MESSAGE)
+	$(VERBOSE)$(LD) $(LDFLAGS) -m $(LD_EMULATION) -r $(OBJ_BOOTSTRAP) $(LIBGCC) -o $@
+
+-include .kernel.mips.lds.d
+
+$(KERNEL).image: kernel.mips.lds $(CRT0) bootstrap.$(KERNEL).o $(OBJ_KERNEL_noboot) $(JDB) $(MINILIBC) $(LIBK) $(KERNEL_EXTRA_LIBS) $(LIBDISASM) $(ABI) libdrivers.a $(LIBUART) $(LIBKARMA) $(CXXLIB) $(LIBGCC) $(MINILIBC) libgluedriverslibc.a
+	$(LINK_MESSAGE)
+	$(VERBOSE)$(LD) $(LDFLAGS) -m $(LD_EMULATION) -N -defsym kernel_load_addr=$(CONFIG_KERNEL_LOAD_ADDR) \
+	  $(KERNEL_LDFLAGS) \
+          -T $< -o $@ $(filter-out $<,$+)
+	$(call ADD_CONFIGFILE,$@)
+
+$(KERNEL): $(KERNEL).image
+	$(LINK_MESSAGE)
+	$(VERBOSE)$(STRIP) $< -o $@
+	chmod 755 $@
+
+#	$(OBJCOPY) -O binary $@ fiasco	
+
+Symbols: $(KERNEL).image
+	$(NM) $(KERNEL).image | c++filt | sort > $@.new
+	mv $@.new $@
+	chmod 755 $@
+
+clean-KERNEL:
+

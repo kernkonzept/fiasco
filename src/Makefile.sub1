@@ -1,0 +1,118 @@
+# -*- makefile -*-
+
+# Targets in this Makefile:
+# - all: Create C++ sources from Preprocess input
+#
+# This Makefile is invoked in a sub-Make from the top-level Makefile
+# (via Makerules.global) when globalconfig.out, Modules and
+# .Modules.deps are up-to-date.
+
+all: do-all
+
+BUILD_SOURCES=true
+
+include $(srcdir)/Makeconf	# also reads srcdir/Makeconf.local
+                                # and        objdir/Makeconf.local
+include $(MODULES_FILE)
+include .Modules.deps
+
+include $(srcdir)/Makerules.global # also reads objdir/Makerules.local
+
+# Read subsystem Makefile fragments.  We do not explicity use any
+# targets of these fragments in this Makefile, but this include allows
+# subsystem Makefile fragments to implicitly create more Makefile
+# fragments.
+include $(MAKERULES_SUBSYS)
+
+ALL_STAMPS = $(foreach m, $(GENERATED_MODULES), auto/stamp-$(m).ready)
+
+.PHONY: do-all
+do-all: $(ALL_STAMPS)
+
+#
+# Auto-created source files
+#
+
+.Clean-auto: $(MODULES_FILES) .Modules.deps globalconfig.out
+	rm -f							      	      \
+	$(filter-out 							      \
+	  $(addprefix auto/,				      		      \
+	    $(addsuffix .cc,						      \
+	      $(foreach mod, $(GENERATED_MODULES), $(call eval_impl,$(mod)))) \
+	    $(foreach mod, $(GENERATED_MODULES), 			      \
+			   $(mod).h $(mod)_i.h stamp-$(mod).ready)),	      \
+	  $(wildcard auto/*))
+	touch $@
+
+define find_ld_emulation
+	emulations=$$(LANG= $(LD) --help |                                \
+	              grep -i "supported emulations:" |                   \
+	              sed -e 's/.*supported emulations: //') ;            \
+	unset found_it;                                                   \
+	for e in $$emulations; do                                         \
+	  for c in $(2); do                                               \
+	    if [ "$$e" = "$$c" ]; then                                    \
+	      echo LD_EMULATION = $$e >> $(1);                            \
+	      found_it=1;                                                 \
+	      break;                                                      \
+	    fi;                                                           \
+	  done;                                                           \
+	done;                                                             \
+	if [ "$$found_it" != "1" ]; then                                  \
+	  echo "No known ld emulation found"; exit 1;                     \
+	fi
+endef
+
+# Force that rule to ensure that compiler changes caused by make command line
+# or system-wide compiler updates are noticed.  
+# Do not use .PHONY, because preprocess would then be triggered everytime.
+.Compiler-config: force-the-rule
+	@echo -n "Checking compiler config... "
+	@echo "CC = $(CC)" > $@.new
+	@echo "CXX = $(CXX)" >> $@.new
+	@echo "CPPFLAGS = $(CPPFLAGS)" >> $@.new
+	@echo "CFLAGS = $(CFLAGS)" >> $@.new
+	@echo "CXXFLAGS = $(CXXFLAGS)" >> $@.new
+	@echo "OPT_CFLAGS = $(OPT_CFLAGS)" >> $@.new
+	@echo "OPT_CXXFLAGS = $(OPT_CXXFLAGS)" >> $@.new
+	@echo "ASFLAGS = $(ASFLAGS)" >> $@.new
+	@echo "CONFIG_XARCH = $(CONFIG_XARCH)" >> $@.new
+# If the compiler configuration has changed, remove all dependency
+# files -- they have just become useless.
+	@$(MOVE_IF_CHANGE) $@.new $@				\
+	  && { $(RM) .*.d */.*.d; echo "CHANGED.  Recompiling."; }	\
+	  || echo "unchanged."
+
+.Host-config: force-the-rule
+	@$(call find_ld_emulation,$@.new,$(LD_EMULATION_CHOICE))
+	@$(MOVE_IF_CHANGE) $@.new $@ || true
+
+force-the-rule: ;
+
+$(ALL_STAMPS): $(MODULES_FILES) .Modules.deps globalconfig.out \
+	       .Clean-auto .Compiler-config .Host-config
+
+# Basename of implementation files = Basename of first .cpp file
+impl_name = $(basename $(firstword $(subst -, ,\
+              $(firstword $(filter %.cpp, $(notdir $(1)))))))
+
+$(ALL_STAMPS): auto/stamp-%.ready: $(PREPROCESS)
+	$(PREP_MESSAGE)
+	@mkdir -p auto
+	$(VERBOSE)$(PREPROCESS) \
+	   $(PREPROCESS_FLAGS) \
+	   $(if $(filter $(call impl_name,$^),$(ALWAYS_INLINE)),-i,) \
+	   -p auto/new_ \
+	  -e "$(PREPROCESS_PARTS)" -s \
+	  -h $* -c $(call impl_name,$^) $(filter %.cpp, $^)
+	@for i in $*.h $(call impl_name,$^)_i.h \
+	    $(patsubst %.cpp, %.cc, $(filter %.cpp, $(notdir $^))); \
+	  do \
+	    $(MOVE_IF_CHANGE) auto/new_$$i auto/$$i || true; \
+	  done
+	$(OK_MESSAGE)  
+	$(VERBOSE)touch $@
+
+.PRECIOUS: auto/stamp-%.ready
+.PRECIOUS: %.cc %.h %_i.h
+

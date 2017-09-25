@@ -1,0 +1,282 @@
+# -*- makefile -*-
+# vi:se ft=make:
+
+###############################################################################
+
+include $(srcdir)/Modules.generic
+
+SUBSYSTEMS  :=	ABI KERNEL LIBK DRIVERS MINILIBC CXXLIB CRT0 \
+		VERSION JABI TCBOFFSET
+
+
+PREPROCESS_PARTS 	+= $(CONFIG_XARCH) $(CONFIG_ABI)
+PREPROCESS_PARTS-$(CONFIG_BIT32) += 32bit mips32
+PREPROCESS_PARTS-$(CONFIG_BIT64) += 64bit mips64
+BITS-$(CONFIG_BIT32) = 32
+BITS-$(CONFIG_BIT64) = 64
+BITS = $(BITS-y)
+
+PREPROCESS_PARTS-$(CONFIG_CPU_VIRT)          += mips_vz
+PREPROCESS_PARTS-$(CONFIG_CPU_MIPSR6)        += mips_r6
+PREPROCESS_PARTS-$(CONFIG_PAGE_SIZE_16KB)    += pagesize_16k
+PREPROCESS_PARTS-$(CONFIG_PAGE_SIZE_4KB)     += pagesize_4k
+PREPROCESS_PARTS-$(CONFIG_SERIAL)            += serial force_vkey
+PREPROCESS_PARTS-$(CONFIG_MP)                += mp
+PREPROCESS_PARTS-$(CONFIG_FPU)               += fpu
+PREPROCESS_PARTS-$(CONFIG_JDB)               += debug jdb log
+PREPROCESS_PARTS-$(CONFIG_SCHED_FIXED_PRIO)  += sched_fixed_prio
+PREPROCESS_PARTS-$(CONFIG_SCHED_WFQ)         += sched_wfq
+PREPROCESS_PARTS-$(CONFIG_SCHED_FP_WFQ)      += sched_fp_wfq
+PREPROCESS_PARTS-$(CONFIG_WEAK_ORDERING)     += weak_ordering
+PREPROCESS_PARTS-$(CONFIG_LIGHTWEIGHT_BARRIERS) += mips_lw_barriers
+PREPROCESS_PARTS	+= $(PREPROCESS_PARTS-y)
+
+#
+# TYPES subsystem
+#
+PRIVATE_INCDIR += types/mips/$(BITS) types/mips types
+
+#
+# UART subsystem
+#
+VPATH_LIBUART  := $(srcdir)/lib/uart
+PRIVATE_INCDIR += lib/uart
+
+#
+# KARMA subsystem
+#
+VPATH_LIBKARMA := $(srcdir)/lib/karma
+PRIVATE_INCDIR += lib/karma
+
+#
+# DRIVERS Subsystem
+#
+DRIVERS			:= libdrivers.a libgluedriverslibc.a
+VPATH			+= drivers/mips/$(BITS) drivers/mips drivers
+PRIVATE_INCDIR		+= drivers/mips/$(BITS) drivers/mips drivers
+INTERFACES_DRIVERS	:= mux_console console mem reset uart filter_console \
+			   processor delayloop io mmu
+mem_IMPL		:= mem mem-mips
+uart_IMPL		:= uart
+processor_IMPL		:= processor processor-mips
+CXXSRC_DRIVERS		:= glue_libc.cc
+#NOOPT			+= $(patsubst %.o, %, $(OBJ_DRIVERS))
+
+#
+# MINILIBC Subsystem
+#
+MINILIBC	:= libc.a
+VPATH		+= lib/minilibc/mips/$(BITS) lib/minilibc/mips lib/minilibc
+PRIVATE_INCDIR	+= lib/minilibc/mips/$(BITS)/include  lib/minilibc/mips/include \
+		   lib/minilibc/include
+CSRC_MINILIBC	:= atexit.c memccpy.c memcmp.c memmove.c memset.c memcpy.c \
+		   memchr.c panic.c strchr.c strcmp.c strcpy.c strlen.c \
+		   strncmp.c strncpy.c strstr.c printf.c \
+		   __v_printf.c vprintf.c strtol.c strtoul.c __lltostr.c \
+		   __ltostr.c putchar.c puts.c getchar.c gets.c \
+		   sprintf.c snprintf.c vsnprintf.c vsprintf.c \
+		   longjmp.c isalnum.c isalpha.c isascii.c isblank.c \
+		   iscntrl.c isdigit.c isgraph.c islower.c isprint.c \
+		   ispunct.c isspace.c isupper.c isxdigit.c strspn.c \
+		   strcspn.c tolower.c
+ASSRC_MINILIBC	:= setjmp.S
+NOOPT		+= $(patsubst %.o, %, $(OBJ_MINILIBC))
+
+
+#
+# JABI Subsystem
+#
+JABI		:= libjabi.a
+VPATH		+= jabi/mips/$(BITS) jabi
+INTERFACES_JABI	:= jdb_ktrace
+
+
+#
+# ABI Subsystem
+#
+ABI 		:= libabi.a
+VPATH 		+= abi/mips/$(BITS) abi/mips abi
+INTERFACES_ABI 	:= kip l4_types l4_fpage l4_msg_item l4_buf_desc l4_error
+
+kip_IMPL	:= kip kip-debug kip-mips
+l4_types_IMPL	:= l4_types l4_types-mips l4_types-debug
+
+#
+# KERNEL subsystem
+#
+KERNEL 		:= fiasco
+KERNEL_EXTRA 	:= Symbols
+VPATH 		+= kern/mips/$(BITS) kern/mips kern
+VPATH		+= jdb/mips/$(BITS) jdb/mips jdb
+PRIVATE_INCDIR 	+= kern/mips/$(BITS) kern/mips kern
+
+INTERFACES_KERNEL +=	boot_uart_init cp0_status cm cpc \
+			mips_cpu_irqs irq_chip_generic \
+			alternatives \
+			cpu_p5600
+
+#missing: jdb_extensions
+
+INTERFACES_KERNEL-$(CONFIG_SERIAL) += uart_console
+INTERFACES_KERNEL-$(CONFIG_CPU_VIRT) += vz
+
+INTERFACES_KERNEL += $(INTERFACES_KERNEL-y)
+
+
+bitmap_linux_IMPL	:= bitmap_linux
+clock_IMPL		:= clock
+config_IMPL		:= config config-mips
+context_IMPL		:= context context-mips context-vcpu
+continuation_IMPL	:= continuation-mips
+cp0_status_IMPL         := cp0_status
+cpu_IMPL		:= cpu cpu-mips
+cpu_lock_IMPL		:= cpu_lock cpu_lock-generic
+entry_frame_IMPL	:= entry_frame-mips
+fpu_IMPL		:= fpu fpu-mips
+ipi_IMPL		:= ipi ipi-mips
+kdb_ke_IMPL		:= kdb_ke-mips
+kernel_task_IMPL	:= kernel_task
+kernel_thread_IMPL	:= kernel_thread kernel_thread-std kernel_thread-mips
+kernel_uart_IMPL  	:= kernel_uart
+kmem_alloc_IMPL		:= kmem_alloc kmem_alloc-mips
+map_util_IMPL		:= map_util map_util-mem map_util-objs
+mapping_IMPL		:= mapping-mips mapping
+mem_layout_IMPL		:= mem_layout mem_layout-mips$(BITS)
+mem_unit_IMPL		:= mem_unit-mips
+mem_space_IMPL		:= mem_space mem_space-user mem_space-mips
+obj_space_IMPL		:= obj_space obj_space-phys
+paging_IMPL		:= paging-mips
+platform_control_IMPL	+= platform_control-mips
+cm_IMPL			:= cm
+cpc_IMPL		:= cpc
+pic_IMPL		:= pic
+sched_context_IMPL	:= sched_context-wfq sched_context-fixed_prio \
+			   sched_context-fp_wfq sched_context
+space_IMPL		:= space
+spin_lock_IMPL		:= spin_lock spin_lock-mips
+startup_IMPL		:= startup startup-mips
+sys_call_page_IMPL	:= sys_call_page
+task_IMPL		:= task task-mips
+timer_IMPL		?= timer timer-mips
+timer_tick_IMPL         := timer_tick
+thread_IMPL		:= thread thread-log thread-pagefault \
+			   thread-mips thread-ipc thread-jdb \
+			   thread-vcpu
+vmem_alloc_IMPL		:= vmem_alloc
+tb_entry_IMPL		:= tb_entry tb_entry-mips
+
+
+ifeq ("$(CONFIG_JDB)","y")
+JDB			:= jdb_compound.o
+SUBSYSTEMS		+= JDB
+
+CXXSRC_JDB := tb_entry_output.cc
+
+jdb_IMPL		+= jdb-mips
+jdb_tcb_IMPL		+= jdb_tcb-mips
+jdb_entry_frame_IMPL	:= jdb_entry_frame-mips
+jdb_trace_set_IMPL	+= jdb_trace_set jdb_trace_set-mips
+jdb_kern_info_IMPL	:= jdb_kern_info
+jdb_tbuf_init_IMPL	:= jdb_tbuf_init jdb_tbuf_init-mips
+jdb_ptab_IMPL		:= jdb_ptab jdb_ptab-mips
+thread_IMPL		+= thread-debug
+INTERFACES_JDB		+= jdb_log jdb_trace_set jdb_ptab jdb_mips_tlb
+INTERFACES_JDB		+= $(INTERFACES_JDB-y)
+endif
+
+CXXSRC_KERNEL		:= kernel_panic.cc libc_backend_lock.cc
+ASSRC_KERNEL		:= exception.S
+#ASSRC_KERNEL-$(CONFIG_MP) += tramp-mp.S
+ASSRC_KERNEL              += $(ASSRC_KERNEL-y)
+
+NOOPT			+= $(filter jdb%,\
+			     $(foreach in,$(INTERFACES_KERNEL), \
+			       $(if $($(in)_IMPL),$($(in)_IMPL),$(in))))
+NOOPT			+= tb_entry #tb_entry_output
+
+#
+# CRT0 subsystem
+#
+CRT0 		:= crt0.o
+ASSRC_CRT0	:= crt0.S
+
+
+#
+# CXXLIB Subsystem
+# 
+CXXLIB 			:= libcxx.a
+VPATH			+= lib/cxxlib
+INTERFACES_CXXLIB 	:= paranoia s_cruft
+
+#
+# LIBK subsystem
+#
+LIBK 		:= libk.a
+VPATH          	+= lib/libk/mips/$(BITS) lib/libk/mips lib/libk lib/libk/quad
+PRIVATE_INCDIR 	+= lib/libk/mips/$(BITS) lib/libk/mips lib/libk
+
+INTERFACES_LIBK	:= auto_ptr atomic lock_guard std_macros
+CSRC_LIBK	+= umoddi3.c ashldi3.c udivdi3.c qdivrem.c
+CXXSRC_LIBK     += construction.cc
+atomic_IMPL     := atomic atomic-mips
+
+#
+# LIBDISASM subsystem (only for Jdb)
+#
+ifeq ("$(CONFIG_JDB_DISASM)","y")
+  # $(srcdir)/lib/disasm may be removed
+  ifeq ($(wildcard $(srcdir)/lib/disasm),)
+    $(error $(srcdir)/lib/disasm is missing, disable CONFIG_JDB_DISASM)
+  endif
+  SUBSYSTEMS          += LIBDISASM
+  KERNEL_EXTRA_LIBS   += $(LIBDISASM)
+  PREPROCESS_PARTS    += jdb_disasm
+
+  LIBDISASM           := libdisasm.a
+  VPATH               += lib/disasm lib/disasm/elf lib/disasm/include \
+                         lib/disasm/include/opcode lib/disasm/opcodes \
+                         lib/disasm/libiberty lib/disasm/bfd
+  PRIVATE_INCDIR      += lib/disasm lib/disasm/elf lib/disasm/include \
+                         lib/disasm/include/opcode lib/disasm/opcodes \
+                         lib/disasm/libiberty lib/disasm/bfd
+  PRIVATE_INCDIR      += lib/disasm
+  CXXSRC_LIBDISASM    := disasm.cc
+  CSRC_LIBDISASM      := mips-dis.c mips-opc.c mips16-opc.c dis-init.c dis-buf.c \
+                         safe-ctype.c libbfd.c
+  NOOPT               += $(patsubst %.o, %, $(OBJ_LIBDISASM))
+endif
+
+#
+# VERSION subsystem
+#
+VERSION		:= version.h
+
+TCBOFFSET	:= tcboffset.h
+CXXSRC_TCBOFFSET	:= tcboffset.cc dump_tcboffsets.cc
+
+#
+# BSP subsystem
+#
+BSP_NAME         := $(patsubst "%",%,$(CONFIG_BSP_NAME))
+MODULES_FILE_BSP := $(srcdir)/kern/mips/bsp/$(BSP_NAME)/Modules
+PRIVATE_INCDIR 	 += kern/mips/bsp/$(BSP_NAME)
+ifeq ($(wildcard $(MODULES_FILE_BSP)),)
+  $(error No BSP name defined or no BSP Modules file available)
+endif
+
+include $(MODULES_FILE_BSP)
+VPATH += kern/mips/bsp/$(BSP_NAME) kern/mips/bsp
+
+ifeq ("$(filter LIBUART, $(SUBSYSTEMS))","LIBUART")
+  LIBUART			:= uart/libuart.a
+endif
+
+ifeq ("$(filter LIBKARMA, $(SUBSYSTEMS))","LIBKARMA")
+  LIBKARMA			:= karma/libkarma.a
+endif
+
+CONFIG_KERNEL_LOAD_ADDR-32 := 0x80010000
+CONFIG_KERNEL_LOAD_ADDR-64 := 0xffffffff80010000
+CONFIG_KERNEL_LOAD_ADDR := $(CONFIG_KERNEL_LOAD_ADDR-$(BITS))
+
+MODULES_FILES = $(MODULES_FILE) $(MODULES_FILE_BSP)

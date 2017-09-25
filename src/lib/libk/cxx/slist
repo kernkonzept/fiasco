@@ -1,0 +1,181 @@
+// vi:ft=cpp
+/*
+ * (c) 2011 Alexander Warg <warg@os.inf.tu-dresden.de>
+ *     economic rights: Technische Universität Dresden (Germany)
+ *
+ * This file is part of TUD:OS and distributed under the terms of the
+ * GNU General Public License 2.
+ * Please see the COPYING-GPL-2 file for details.
+ *
+ * As a special exception, you may use this file as part of a free software
+ * library without restriction.  Specifically, if other files instantiate
+ * templates or use macros or inline functions from this file, or you compile
+ * this file and link it with other files to produce an executable, this
+ * file does not by itself cause the resulting executable to be covered by
+ * the GNU General Public License.  This exception does not however
+ * invalidate any other reasons why the executable file might be covered by
+ * the GNU General Public License.
+ */
+
+#pragma once
+
+#include "bits/list_basics.h"
+
+namespace cxx {
+
+class S_list_item
+{
+public:
+  S_list_item() : _n(0) {}
+  explicit S_list_item(bool) {}
+
+private:
+  template<typename T, typename P> friend class S_list;
+  template<typename T, typename P> friend class S_list_tail;
+  template<typename T, typename X> friend struct Bits::Basic_list_policy;
+
+  S_list_item(S_list_item const &);
+  void operator = (S_list_item const &);
+
+  S_list_item *_n;
+};
+
+template< typename T, typename POLICY = Bits::Basic_list_policy< T, S_list_item > >
+class S_list : public Bits::Basic_list<POLICY>
+{
+  S_list(S_list const &) = delete;
+  void operator = (S_list const &) = delete;
+
+private:
+  typedef typename Bits::Basic_list<POLICY> Base;
+
+public:
+  typedef typename Base::Iterator Iterator;
+
+  S_list(S_list &&o) : Base(static_cast<Base&&>(o)) {}
+
+  S_list &operator = (S_list &&o)
+  {
+    Base::operator = (static_cast<Base&&>(o));
+    return *this;
+  }
+
+  // BSS allocation
+  explicit S_list(bool x) : Base(x) {}
+
+  S_list() : Base() {}
+
+  void add(T *e)
+  {
+    e->_n = this->_f;
+    this->_f = e;
+  }
+
+  template< typename CAS >
+  void add(T *e, CAS const &c)
+  {
+    do
+      {
+        e->_n = this->_f;
+      }
+    while (!c(&this->_f, e->_n, e));
+  }
+
+  void push_front(T *e) { add(e); }
+  T *pop_front()
+  {
+    T *r = this->front();
+    if (this->_f)
+      this->_f = this->_f->_n;
+    return r;
+  }
+
+  void insert(T *e, Iterator const &pred)
+  {
+    S_list_item *p = *pred;
+    e->_n = p->_n;
+    p->_n = e;
+  }
+
+  static void insert_before(T *e, Iterator const &succ)
+  {
+    S_list_item **x = Base::__get_internal(succ);
+
+    e->_n = *x;
+    *x = e;
+  }
+
+  static void replace(Iterator const &p, T*e)
+  {
+    S_list_item **x = Base::__get_internal(p);
+    e->_n = (*x)->_n;
+    *x = e;
+  }
+
+  static Iterator erase(Iterator const &e)
+  {
+    S_list_item **x = Base::__get_internal(e);
+    *x = (*x)->_n;
+    return e;
+  }
+
+};
+
+
+template< typename T >
+class S_list_bss : public S_list<T>
+{
+public:
+  S_list_bss() : S_list<T>(true) {}
+};
+
+template< typename T, typename POLICY = Bits::Basic_list_policy< T, S_list_item >  >
+class S_list_tail : public S_list<T, POLICY>
+{
+private:
+  typedef S_list<T, POLICY> Base;
+
+public:
+  S_list_tail() : Base(), _tail(&this->_f) {}
+
+  S_list_tail(S_list_tail &&t) : Base(static_cast<Base&&>(t)), _tail(t._tail)
+  {
+    t._tail = &t._f;
+  }
+
+  S_list_tail &operator = (S_list_tail &&t)
+  {
+    Base::operator = (static_cast<Base &&>(t));
+    _tail = t._tail;
+    t._tail = &t._f;
+    return *this;
+  }
+
+  void push_back(T *e)
+  {
+    e->_n = 0;
+    *_tail = e;
+    _tail = &e->_n;
+  }
+
+  void clear()
+  {
+    Base::clear();
+    _tail = &this->_f;
+  }
+
+  void append(S_list_tail &o)
+  {
+    T *x = o.front();
+    *_tail = x;
+    if (x)
+      _tail = o._tail;
+    o.clear();
+  }
+
+
+private:
+  S_list_item **_tail;
+};
+
+}

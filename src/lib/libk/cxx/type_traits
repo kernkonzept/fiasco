@@ -1,0 +1,285 @@
+// vi:ft=cpp
+
+/*
+ * (c) 2008-2009 Alexander Warg <warg@os.inf.tu-dresden.de>,
+ *               Torsten Frenzel <frenzel@os.inf.tu-dresden.de>
+ *     economic rights: Technische Universität Dresden (Germany)
+ *
+ * This file is part of TUD:OS and distributed under the terms of the
+ * GNU General Public License 2.
+ * Please see the COPYING-GPL-2 file for details.
+ *
+ * As a special exception, you may use this file as part of a free software
+ * library without restriction.  Specifically, if other files instantiate
+ * templates or use macros or inline functions from this file, or you compile
+ * this file and link it with other files to produce an executable, this
+ * file does not by itself cause the resulting executable to be covered by
+ * the GNU General Public License.  This exception does not however
+ * invalidate any other reasons why the executable file might be covered by
+ * the GNU General Public License.
+ */
+
+
+#pragma once
+
+#pragma GCC system_header
+
+#include "fiasco_defs.h"
+
+namespace cxx {
+
+template< typename T, T V >
+struct integral_constant
+{
+  static T const value = V;
+  typedef T value_type;
+  typedef integral_constant<T, V> type;
+};
+
+typedef integral_constant<bool, true> true_type;
+typedef integral_constant<bool, false> false_type;
+
+template< typename T > struct remove_reference;
+
+template< typename T > struct identity { typedef T type; };
+
+template< typename T1, typename T2 > struct is_same;
+
+template< typename T > struct remove_const;
+
+template< typename T > struct remove_volatile;
+
+template< typename T > struct remove_cv;
+
+template< typename T > struct remove_pointer;
+
+template< typename T > struct remove_extent;
+
+template< typename T > struct remove_all_extents;
+
+
+
+template< typename, typename >
+struct is_same : false_type {};
+
+template< typename T >
+struct is_same<T, T> : true_type {};
+
+template< typename T >
+struct remove_reference { typedef T type; };
+
+template< typename T >
+struct remove_reference<T &> { typedef T type; };
+
+template< typename T >
+struct remove_reference<T &&> { typedef T type; };
+
+
+template< typename T > struct remove_const { typedef T type; };
+template< typename T > struct remove_const<T const> { typedef T type; };
+
+template< typename T > struct remove_volatile { typedef T type; };
+template< typename T > struct remove_volatile<T volatile> { typedef T type; };
+
+template< typename T >
+struct remove_cv { typedef typename remove_const<typename remove_volatile<T>::type>::type type; };
+
+template< typename T, typename >
+struct __remove_pointer_h { typedef T type; };
+
+template< typename T, typename I >
+struct __remove_pointer_h<T, I*> { typedef I type; };
+
+template< typename  T >
+struct remove_pointer : __remove_pointer_h<T, typename remove_cv<T>::type> {};
+
+
+template< typename T >
+struct remove_extent { typedef T type; };
+
+template< typename T >
+struct remove_extent<T[]> { typedef T type; };
+
+template< typename T, unsigned long N >
+struct remove_extent<T[N]> { typedef T type; };
+
+template< typename T >
+struct remove_all_extents { typedef T type; };
+
+template< typename T >
+struct remove_all_extents<T[]> { typedef typename remove_all_extents<T>::type type; };
+
+template< typename T, unsigned long N >
+struct remove_all_extents<T[N]> { typedef typename remove_all_extents<T>::type type; };
+
+template< typename T >
+inline T &&
+forward(typename cxx::remove_reference<T>::type &t)
+{ return static_cast<T &&>(t); }
+
+template< typename T >
+inline T &&
+forward(typename cxx::remove_reference<T>::type &&t)
+{ return static_cast<T &&>(t); }
+
+template< typename T >
+inline typename cxx::remove_reference<T>::type &&
+move(T &t) { return static_cast<typename cxx::remove_reference<T>::type &&>(t); }
+
+template< bool, typename T = void >
+struct enable_if {};
+
+template< typename T >
+struct enable_if<true, T> { typedef T type; };
+
+template< typename T >
+struct is_const : false_type {};
+
+template< typename T >
+struct is_const<T const> : true_type {};
+
+template< typename T >
+struct is_volatile : false_type {};
+
+template< typename T >
+struct is_volatile<T volatile> : true_type {};
+
+template< typename T >
+struct is_pointer : false_type {};
+
+template< typename T >
+struct is_pointer<T *> : true_type {};
+
+template< bool, typename, typename >
+struct conditional;
+
+template< bool C, typename T_TRUE, typename T_FALSE >
+struct conditional { typedef T_TRUE type; };
+
+template< typename T_TRUE, typename T_FALSE >
+struct conditional< false, T_TRUE, T_FALSE > { typedef T_FALSE type; };
+
+template<typename T>
+struct is_enum : integral_constant<bool, __is_enum(T)> {};
+
+
+template< typename T > struct is_integral : false_type {};
+
+template<> struct is_integral<bool> : true_type {};
+
+template<> struct is_integral<char> : true_type {};
+template<> struct is_integral<signed char> : true_type {};
+template<> struct is_integral<unsigned char> : true_type {};
+template<> struct is_integral<short> : true_type {};
+template<> struct is_integral<unsigned short> : true_type {};
+template<> struct is_integral<int> : true_type {};
+template<> struct is_integral<unsigned int> : true_type {};
+template<> struct is_integral<long> : true_type {};
+template<> struct is_integral<unsigned long> : true_type {};
+template<> struct is_integral<long long> : true_type {};
+template<> struct is_integral<unsigned long long> : true_type {};
+
+template< typename T, bool = is_integral<T>::value || is_enum<T>::value >
+struct __is_signed_helper : integral_constant<bool, static_cast<bool>(T(-1) < T(0))> {};
+
+template< typename T >
+struct __is_signed_helper<T, false> : integral_constant<bool, false> {};
+
+template< typename T >
+struct is_signed : __is_signed_helper<T> {};
+
+
+template< typename >
+struct is_array : false_type {};
+
+template< typename T >
+struct is_array<T[]> : true_type {};
+
+template< typename T, unsigned long N >
+struct is_array<T[N]> : true_type {};
+
+
+template< int SIZE, bool SIGN = false, bool = true > struct int_type_for_size;
+
+template<> struct int_type_for_size<sizeof(char), true, true>
+{ typedef signed char type; };
+
+template<> struct int_type_for_size<sizeof(char), false, true>
+{ typedef unsigned char type; };
+
+template<> struct int_type_for_size<sizeof(short), true, (sizeof(short) > sizeof(char))>
+{ typedef short type; };
+
+template<> struct int_type_for_size<sizeof(short), false, (sizeof(short) > sizeof(char))>
+{ typedef unsigned short type; };
+
+template<> struct int_type_for_size<sizeof(int), true, (sizeof(int) > sizeof(short))>
+{ typedef int type; };
+
+template<> struct int_type_for_size<sizeof(int), false, (sizeof(int) > sizeof(short))>
+{ typedef unsigned int type; };
+
+template<> struct int_type_for_size<sizeof(long), true, (sizeof(long) > sizeof(int))>
+{ typedef long type; };
+
+template<> struct int_type_for_size<sizeof(long), false, (sizeof(long) > sizeof(int))>
+{ typedef unsigned long type; };
+
+template<> struct int_type_for_size<sizeof(long long), true, (sizeof(long long) > sizeof(long))>
+{ typedef long long type; };
+
+template<> struct int_type_for_size<sizeof(long long), false, (sizeof(long long) > sizeof(long))>
+{ typedef unsigned long long type; };
+
+template< typename T, class Enable = void > struct underlying_type {};
+
+template< typename T >
+struct underlying_type<T, typename enable_if<is_enum<T>::value>::type >
+{
+  typedef typename int_type_for_size<sizeof(T), is_signed<T>::value>::type type;
+};
+
+template< typename T > struct make_signed;
+template<> struct make_signed<char>          { typedef signed char type; };
+template<> struct make_signed<unsigned char> { typedef signed char type; };
+template<> struct make_signed<signed char>   { typedef signed char type; };
+template<> struct make_signed<unsigned int>      { typedef signed int type; };
+template<> struct make_signed<signed int>        { typedef signed int type; };
+template<> struct make_signed<unsigned long int> { typedef signed long int type; };
+template<> struct make_signed<signed long int>   { typedef signed long int type; };
+template<> struct make_signed<unsigned long long int> { typedef signed long long int type; };
+template<> struct make_signed<signed long long int>   { typedef signed long long int type; };
+
+template< typename T > struct make_unsigned;
+template<> struct make_unsigned<char>          { typedef unsigned char type; };
+template<> struct make_unsigned<unsigned char> { typedef unsigned char type; };
+template<> struct make_unsigned<signed char>   { typedef unsigned char type; };
+template<> struct make_unsigned<unsigned int>      { typedef unsigned int type; };
+template<> struct make_unsigned<signed int>        { typedef unsigned int type; };
+template<> struct make_unsigned<unsigned long int> { typedef unsigned long int type; };
+template<> struct make_unsigned<signed long int>   { typedef unsigned long int type; };
+template<> struct make_unsigned<unsigned long long int> { typedef unsigned long long int type; };
+template<> struct make_unsigned<signed long long int>   { typedef unsigned long long int type; };
+
+
+template<typename From, typename To>
+struct is_convertible
+{
+private:
+  struct _true { char x[2]; };
+  struct _false {};
+
+  static _true _helper(To const *);
+  static _false _helper(...);
+public:
+  enum
+  {
+    value = sizeof(_true) == sizeof(_helper(static_cast<From*>(0)))
+            ? true : false
+  };
+
+  typedef bool value_type;
+};
+
+}
+

@@ -1,0 +1,11 @@
+# -*- makefile -*-
+
+$(SYMBOLS):	$(KERNEL)
+		$(COMP_MESSAGE)
+		$(VERBOSE)$(NM) -nC $(KERNEL)|grep "^00[0-9a-z]\{6,6\}">$@.new
+		$(VERBOSE)mv $@.new $@
+		$(VERBOSE)chmod 644 $@
+		$(call INSTALLFILE_RULE,$@,fiasco_symbols)
+
+clean-SYMBOLS:
+		rm -f $(SYMBOLS)

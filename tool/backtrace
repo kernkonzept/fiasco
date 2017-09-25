@@ -1,0 +1,134 @@
+#! /usr/bin/perl -W
+
+use Math::BigInt;
+use strict;
+
+my %sym_tab = (new Math::BigInt(0) => "ERRRRRRROR");
+my $sections = "BdDdTtVvWwuU";
+my %sec_tab;
+
+my %test;
+
+sub as_hex($)
+{
+  my $i = shift;
+  my $h = substr $i->as_hex(), 2;
+  $h = ('0' x (16-length($h))) . $h;
+  return $h;
+}
+
+if (!defined $ARGV[0])
+{
+  print "$0 image(s)\n";
+  print " input is read from stdin\n";
+  exit 1;
+}
+
+my $nm = 'nm';
+$nm = "$ENV{'CROSS_COMPILE'}$nm" if defined $ENV{"CROSS_COMPILE"};
+$nm = 'arm-linux-nm' if !(system("file -L $ARGV[0] | grep -qw ARM") >> 8);
+
+while (@ARGV)
+  {
+    my $img = shift;
+    foreach my $l (split('\n', qx{$nm $img | c++filt}))
+      {
+	if ($l =~ /^([0-9a-fA-F]*)\s+([$sections])\s+(.*)$/)
+	  {
+	    my ($addr, $sec, $sym) = (new Math::BigInt("0x$1"), $2, $3);
+	    if (defined $addr && ref $addr && !$addr->is_nan())
+	      {
+		$sym_tab{as_hex($addr)} = $sym;
+		$sec_tab{as_hex($addr)} = $sec;
+	      }
+	  }
+      }
+  }
+my @sorted_sym_tab_keys = sort keys %sym_tab;
+my $min_addr = $sorted_sym_tab_keys[0];
+my $max_addr = $sorted_sym_tab_keys[@sorted_sym_tab_keys - 1];
+
+print "Scanning image done, proceed.\n";
+
+sub find_sym($)
+{
+  my $addr = as_hex(shift);
+  my $hit = '0';
+
+  return new Math::BigInt(0)
+    if $addr lt $min_addr or $addr gt $max_addr;
+
+  foreach my $s (@sorted_sym_tab_keys)
+  {
+    if ($s gt $addr)
+    {
+      return new Math::BigInt("0x$hit");
+    }
+
+    $hit = $s;
+  }
+
+  return new Math::BigInt(0);
+}
+
+sub print_func($)
+{
+  my $addr = new Math::BigInt("0x".shift);
+  my $hit  = find_sym($addr);
+  my $offset = $addr-$hit;
+  my $o = $hit->as_hex();
+
+  return unless $hit;
+
+  printf " %s %30s(%s) + %6s = %s\n",
+	 $addr->as_hex(), $sym_tab{as_hex($hit)}, $sec_tab{as_hex($hit)},
+	 $offset->as_hex(), $hit->as_hex();
+}
+
+
+my $last_f = 0;
+while (<>)
+{
+  if (/^\s+#(\d+)\s+([0-9a-f]+)\s+([0-9a-f]+)/i) # fiasco bt without debuginfo
+  {
+    my $fn = $1;
+    my $stack = new Math::BigInt("0x$2");
+    my $addr = $3;
+    my $fsize = $stack - $last_f;
+
+    $last_f = $stack;
+    printf "%2d %s ", $fn, $stack->as_hex();
+    if ($fsize >= 0 && $fsize <= 2000)
+    {
+      printf "%4d", $fsize;
+    } else {
+      printf "....";
+    }
+    print_func($addr);
+  }
+  elsif (/^(?:.*?\|)?\s*(0x)?([0-9a-f]+)\s*$/i) # simple figure
+  {
+    print_func($2);
+  }
+  elsif (/^[\da-f]+:([\d\sa-f]+)$/i) # fiasco memory dump (mostly user stack)
+  {
+    my $l = $1;
+    for my $addr (split(/\s+/, $l))
+    {
+      print_func($addr);
+    }
+  }
+  elsif (/^\s*[\da-f]+\s+([\d\sa-f]+)\s*$/i) # fiasco tcb view stack
+  {
+    my $l = $1;
+    for my $val (split(/\s+/, $l))
+    {
+      next if $val eq '35353535'; # stack poison
+      if ($val =~ /^f.......(?:........)?$/i) {
+        print_func($val);
+      } else {
+	print " 0x$val  ... value ...\n";
+      }
+    }
+  }
+}

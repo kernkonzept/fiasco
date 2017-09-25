@@ -1,0 +1,88 @@
+# PF: REALVIEW
+# PFDESCR: ARM RealView Platform
+# PFDEPENDS: ARM
+
+choice
+	prompt "Realview Platform"
+	default PF_REALVIEW_EB
+
+config PF_REALVIEW_EB
+	bool "Emulation Baseboard (EB)"
+	depends on PF_REALVIEW
+	select CAN_ARM_CPU_926
+	select CAN_ARM_CPU_1176
+	select CAN_ARM_CPU_MPCORE
+	select CAN_ARM_CPU_CORTEX_A8
+	select CAN_ARM_CPU_CORTEX_A9
+	select CAN_ARM_CACHE_L2CXX0 if ARM_MPCORE
+	help
+	  Choose for Emulation Baseboard (EB)
+
+config PF_REALVIEW_PB11MP
+	bool "PB11MP"
+	depends on PF_REALVIEW
+	select CAN_ARM_CPU_MPCORE
+	select CAN_ARM_CACHE_L2CXX0
+	help
+	  Choose for PB11MP
+
+config PF_REALVIEW_PBX
+	bool "PBX"
+	depends on PF_REALVIEW
+	select CAN_ARM_CPU_CORTEX_A9
+	select CAN_ARM_CACHE_L2CXX0
+	help
+	  Choose for PBX-A9.
+
+config PF_REALVIEW_VEXPRESS
+	bool "Versatile Express"
+	depends on PF_REALVIEW
+	select CAN_ARM_CPU_CORTEX_A9
+	select CAN_ARM_CPU_CORTEX_A15
+	help
+	  Choose for Versatile Express.
+
+endchoice
+
+config PF_REALVIEW_VEXPRESS_A9
+	def_bool y
+	depends on PF_REALVIEW_VEXPRESS && ARM_CORTEX_A9
+
+config PF_REALVIEW_VEXPRESS_A15
+	def_bool y
+	depends on PF_REALVIEW_VEXPRESS && ARM_CORTEX_A15
+
+choice
+	prompt "Start of RAM (physical address)" if !PF_REALVIEW_EB
+	default PF_REALVIEW_RAM_PHYS_BASE_0x6 if PF_REALVIEW_VEXPRESS_A9
+	default PF_REALVIEW_RAM_PHYS_BASE_0x0
+
+config PF_REALVIEW_RAM_PHYS_BASE_0x0
+	bool "0x00000000"
+	depends on !ARM_CORTEX_A15
+
+config PF_REALVIEW_RAM_PHYS_BASE_0x2
+	bool "0x20000000"
+	depends on PF_REALVIEW_PBX
+
+config PF_REALVIEW_RAM_PHYS_BASE_0x6
+	bool "0x60000000"
+	depends on PF_REALVIEW_VEXPRESS_A9
+
+config PF_REALVIEW_RAM_PHYS_BASE_0x7
+	bool "0x70000000"
+	depends on PF_REALVIEW_PBX || PF_REALVIEW_PB11MP
+
+config PF_REALVIEW_RAM_PHYS_BASE_0x8
+	bool "0x80000000"
+	depends on PF_REALVIEW_VEXPRESS_A15
+
+endchoice
+
+config PF_REALVIEW_RAM_PHYS_BASE
+	hex
+	default 0x0        if !PF_REALVIEW_RAM_PHYS_BASE_0x2 && !PF_REALVIEW_RAM_PHYS_BASE_0x6 && !PF_REALVIEW_RAM_PHYS_BASE_0x7 && !PF_REALVIEW_RAM_PHYS_BASE_0x8
+	default 0x20000000 if PF_REALVIEW_RAM_PHYS_BASE_0x2
+	default 0x60000000 if PF_REALVIEW_RAM_PHYS_BASE_0x6
+	default 0x70000000 if PF_REALVIEW_RAM_PHYS_BASE_0x7
+	default 0x80000000 if PF_REALVIEW_RAM_PHYS_BASE_0x8

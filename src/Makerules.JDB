@@ -1,0 +1,10 @@
+
+
+$(JDB): $(OBJ_JDB) .$(JDB).deps
+	$(AR_MESSAGE)
+	$(VERBOSE)$(LD) -T/dev/null -m $(LD_EMULATION) --unique -Ur -r -o $@ $(OBJ_JDB)
+
+.$(JDB).deps: FORCE
+	$(VERBOSE)echo $(OBJ_JDB) > $@.new
+	$(VERBOSE)$(MOVE_IF_CHANGE) $@.new $@ || true
+

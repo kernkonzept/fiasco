@@ -1,0 +1,265 @@
+// vi:ft=cpp
+
+/*
+ * Copyright (C) 2015 Kernkonzept GmbH.
+ * Author: Alexander Warg <alexander.warg@kernkonzept.com>
+ *
+ * This file is distributed under the terms of the GNU General Public
+ * License, version 2.  Please see the COPYING-GPL-2 file for details.
+ *
+ * As a special exception, you may use this file as part of a free software
+ * library without restriction.  Specifically, if other files instantiate
+ * templates or use macros or inline functions from this file, or you compile
+ * this file and link it with other files to produce an executable, this
+ * file does not by itself cause the resulting executable to be covered by
+ * the GNU General Public License.  This exception does not however
+ * invalidate any other reasons why the executable file might be covered by
+ * the GNU General Public License.
+ */
+#pragma once
+
+#include <cxx/type_traits>
+
+namespace cxx {
+
+// FIXME: we should either use the compilers stdint.h somehow
+// or add our own global stdint.h file that defines this type.
+// For the time being use this definition in the cxx namespace.
+#ifdef __UINTPTR_TYPE__
+typedef __UINTPTR_TYPE__ uintptr_t;
+#else
+// fallback to unsigned long
+typedef unsigned long uintptr_t;
+#endif
+
+
+struct Type_info;
+
+namespace _dyn {
+
+  /// Information about a base class
+  struct Base_info
+  {
+    Type_info const *type; ///< Pointer to the type info for the base class
+    uintptr_t cast_diff;        ///< Offset of the base class in the derived class
+  };
+
+  /// Compound return type for _cxx_dyn_type()
+  struct Type
+  {
+    Type_info const *type; ///< Pointer to the type info
+    void const *base;      ///< Pointer to the start of the dynamic object
+
+    Type(Type_info const *type, void const *base) : type(type), base(base) {}
+  };
+
+  /**
+   * Helper to get a string that contains the type name for `T`
+   * \tparam T  Type to get a string containing its name.
+   */
+  template<typename T> inline
+  char const * __attribute__((always_inline))
+  name_of()
+  { return __PRETTY_FUNCTION__; }
+}
+
+/// Helper to get the type info for `T`
+template<typename T> struct Typeid
+{
+  static constexpr Type_info const *get() { return &T::_cxx_dyn_static_type; }
+};
+
+/// Helper for `T const` (same as `T`)
+template<typename T> struct Typeid<T const> : Typeid<T> {};
+/// Helper for `T *` (same as `T`)
+template<typename T> struct Typeid<T *> : Typeid<T> {};
+
+/// Type info structure
+struct Type_info
+{
+  _dyn::Base_info const *bases; ///< Pointer to base infos
+
+  char const *name;   ///< Some name for the type (debugging aid)
+  unsigned num_bases; ///< Number of base classes
+  unsigned size;      ///< Size of the type in bytes
+
+  /**
+   * Do the dynamic cast from `source` to `target`.
+   * \param target      Type info for the target type of the cast.
+   * \param source      Type info for the source type of the cast.
+   * \param ptr_offset  Offset from the start of this object to the
+   *                    source pointer in bytes.
+   * \param[out] delta  The delta in bytes than must be subtracted from
+   *                    the source pointer to get the target pointer.
+   * \retval true   Success (delta can be applied).
+   * \retval false  Failed dynamic cast.
+   */
+  bool do_cast(Type_info const *target, Type_info const *source,
+               uintptr_t ptr_offset, uintptr_t *delta) const
+  {
+    if (target == this)
+      {
+        *delta = ptr_offset;
+        return true;
+      }
+
+    for (auto const *b = bases; b < bases + num_bases; ++b)
+      {
+        if (b->cast_diff > ptr_offset)
+          continue;
+
+        uintptr_t new_offset = ptr_offset - b->cast_diff;
+        if (new_offset >= b->type->size)
+          continue;
+
+        if (b->type->do_cast(target, source, new_offset, delta))
+          return true;
+      }
+    return false;
+  }
+};
+
+/**
+ * Get the type info for object `o`.
+ */
+template<typename T>
+Type_info const *dyn_typeid(T *t)
+{ return t->_cxx_dyn_type().type; }
+
+/**
+ * Get the type info for object `o`.
+ */
+template<typename T>
+Type_info const *dyn_typeid(T const &t)
+{ return t._cxx_dyn_type().type; }
+
+/**
+ * Template for dynamic cast-able inheritance.
+ * \tparam SELF   The class that shall get dynamic type info injected.
+ * \tparam BASES  List of base classes to inherit from. All base classes
+ *                need to possess dynamic type info as well, for example,
+ *                by inheriting from cxx::Dyn_castable.
+ *
+ *     // define a base class with dynamic type info
+ *     class Object : public cxx::Dyn_castable<Object> { ... };
+ *
+ *     // define class Derived the is derived from `Object` and
+ *     // has dynamic type info too.
+ *     class Derived : public cxx::Dyn_castable<Derived, Object> { ... };
+ */
+template<typename SELF, typename ...BASES> class Dyn_castable;
+
+// Specialization for a root class with dynamic type info (without a base)
+template<typename SELF> class Dyn_castable<SELF>
+{
+  friend struct Typeid<SELF>;
+
+protected:
+  static Type_info const _cxx_dyn_static_type;
+
+public:
+  /// Get the runtime dynamic type of this object.
+  virtual _dyn::Type _cxx_dyn_type() const
+  { return _dyn::Type(&_cxx_dyn_static_type, static_cast<SELF const *>(this)); }
+};
+
+template<typename SELF>
+Type_info const Dyn_castable<SELF>::_cxx_dyn_static_type =
+{
+  0, // no base classes
+  _dyn::name_of<SELF>(),
+  0, // number of base classes = 0
+  sizeof(SELF)
+};
+
+
+template<typename SELF, typename BASE, typename ...BASES>
+class Dyn_castable<SELF, BASE, BASES...> : public BASE, public BASES...
+{
+  friend struct Typeid<SELF>;
+
+private:
+  enum { _cxx_dyn_num_bases = sizeof...(BASES) + 1 };
+  static _dyn::Base_info const _cxx_dyn_type_bases[_cxx_dyn_num_bases];
+
+protected:
+  static Type_info const _cxx_dyn_static_type;
+
+  /**
+   * Forwarding constructor.
+   * \tparam ARGS  Types of the arguments passed to the constructor of the
+   *               first base class (automatically determined).
+   * \param  args  The arguments pass to the constructor of the first base
+   *               class.
+   *
+   * NOTE: The limitation for constructor argument-forwarding is that
+   * it works for the first base class only. All further base classes are
+   * initialized by using their default constructor.
+   */
+  template<typename... ARGS>
+  explicit Dyn_castable(ARGS &&...args) : BASE(cxx::forward<ARGS>(args)...)
+  {}
+
+  /// The type of ourselves, useful for calling the constructor
+  typedef Dyn_castable<SELF, BASE, BASES...> Dyn_castable_class;
+
+public:
+  /// Return the runtime dynamic type of this object
+  _dyn::Type _cxx_dyn_type() const override
+  { return _dyn::Type(&_cxx_dyn_static_type, static_cast<SELF const *>(this)); }
+};
+
+template<typename SELF, typename BASE, typename ...BASES>
+_dyn::Base_info const Dyn_castable<SELF, BASE, BASES...>::_cxx_dyn_type_bases[] =
+{
+  { &BASE::_cxx_dyn_static_type,  reinterpret_cast<uintptr_t>(static_cast<BASE*>((SELF*)10)) - 10 },
+  { &BASES::_cxx_dyn_static_type, reinterpret_cast<uintptr_t>(static_cast<BASES*>((SELF*)10)) - 10 }...
+};
+
+template<typename SELF, typename BASE, typename ...BASES>
+Type_info const Dyn_castable<SELF, BASE, BASES...>::_cxx_dyn_static_type =
+{
+  _cxx_dyn_type_bases,
+  _dyn::name_of<SELF>(),
+  _cxx_dyn_num_bases,
+  sizeof(SELF)
+};
+
+/// Dynamic cast operator
+template<typename TO, typename FROM> inline
+TO dyn_cast(FROM *p)
+{
+  static_assert(is_pointer<TO>::value,
+                "cxx::dyn_cast<T>(): T is not a pointer");
+
+  typedef typename remove_pointer<TO>::type To_class;
+  static_assert(!is_volatile<FROM>::value && !is_volatile<To_class>::value,
+                "cxx::dyn_cast<T>(): volatile types not supported");
+  static_assert((!is_const<FROM>::value || is_const<To_class>::value),
+                "cxx::dyn_cast<T>(): casts away const qualifier");
+
+  if (!p)
+    return 0;
+
+  auto r = p->_cxx_dyn_type();
+
+  // fast path if T is the current type
+  if (Typeid<TO>::get() == r.type)
+    return reinterpret_cast<TO>(const_cast<void *>(r.base));
+
+  uintptr_t ptr_offset = (uintptr_t)p - (uintptr_t)r.base;
+  uintptr_t delta = 0;
+  if (r.type->do_cast(Typeid<TO>::get(), Typeid<FROM>::get(), ptr_offset,
+                      &delta))
+    {
+      TO res = reinterpret_cast<TO>((uintptr_t)p - delta);
+      if (res)
+        return res;
+      else
+        __builtin_unreachable();
+    }
+
+  return 0;
+}
+
+}

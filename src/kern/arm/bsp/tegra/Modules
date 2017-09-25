@@ -1,0 +1,29 @@
+# vim:set ft=make:
+
+PREPROCESS_PARTS        += tegra 16550 pic_gic generic_tickless_idle libuart
+PREPROCESS_PARTS-$(CONFIG_PF_TEGRA2) += tegra2
+PREPROCESS_PARTS-$(CONFIG_PF_TEGRA3) += tegra3
+PREPROCESS_PARTS-$(CONFIG_PF_TEGRA_TIMER_MP)  += mptimer
+PREPROCESS_PARTS-$(CONFIG_PF_TEGRA_TIMER_TMR) += tegra_timer_tmr
+RAM_PHYS_BASE-$(CONFIG_PF_TEGRA2) := $(if $(CONFIG_ARM_EM_TZ),0x30000000,0x0)
+RAM_PHYS_BASE-$(CONFIG_PF_TEGRA3) := $(if $(CONFIG_ARM_EM_TZ),0xa0000000,0x80000000)
+RAM_PHYS_BASE                     := $(RAM_PHYS_BASE-y)
+INTERFACES_KERNEL       += gic
+MPCORE_PHYS_BASE        := 0x50040000
+OBJECTS_LIBUART         += uart_16550.o
+SUBSYSTEMS              += LIBUART
+
+uart_IMPL              = uart uart-16550
+config_IMPL           += config-arm-tegra
+mem_layout_IMPL       += mem_layout-arm-tegra
+pic_IMPL              += pic-gic pic-arm-tegra
+bootstrap_IMPL        += bootstrap-arm-tegra
+timer_IMPL            += $(if $(CONFIG_PF_TEGRA_TIMER_MP),timer-arm-tegra timer-arm-mptimer)
+timer_IMPL            += $(if $(CONFIG_PF_TEGRA_TIMER_TMR),timer-arm-tegra)
+timer_tick_IMPL       += $(if $(CONFIG_PF_TEGRA_TIMER_MP),timer_tick-single-vector)
+timer_tick_IMPL       += $(if $(CONFIG_PF_TEGRA_TIMER_TMR),$(if $(CONFIG_MP),timer_tick-broadcast,timer_tick-single-vector))
+kernel_uart_IMPL      += kernel_uart-libuart
+reset_IMPL            += reset-arm-tegra
+clock_IMPL            += clock-generic
+platform_control_IMPL += platform_control-arm-tegra
+outer_cache_IMPL      += outer_cache-arm-tegra

@@ -1,0 +1,53 @@
+# vim:set ft=make:
+
+SUBSYSTEMS              += LIBUART
+OBJECTS_LIBUART-$(CONFIG_PF_EXYNOS_UART_NATIVE) += uart_s3c2410.o
+OBJECTS_LIBUART         += $(OBJECTS_LIBUART-y)
+PREPROCESS_PARTS        += exynos libuart pic_gic watchdog tickless_idle \
+                           bsp_cpu
+PREPROCESS_PARTS-$(CONFIG_PF_EXYNOS4)       += exynos4
+PREPROCESS_PARTS-$(CONFIG_PF_EXYNOS5)       += exynos5
+PREPROCESS_PARTS-$(CONFIG_PF_EXYNOS_TIMER_MCT) += exynos_mct
+PREPROCESS_PARTS-$(CONFIG_PF_EXYNOS_TIMER_MP)  += mptimer
+PREPROCESS_PARTS-$(CONFIG_PF_EXYNOS_TIMER_GEN) += arm_generic_timer
+PREPROCESS_PARTS-$(CONFIG_PF_EXYNOS_EXTGIC) += exynos_extgic irregular_gic
+PREPROCESS_PARTS-$(CONFIG_PF_EXYNOS_UART_NATIVE) += exynos_uart_native
+PREPROCESS_PARTS += $(if $(filter-out "",$(CONFIG_PF_EXYNOS_PKG_IDS)),pkg_id_file)
+
+INTERFACES_KERNEL       += gic platform smc timer_mct
+VPATH                   += kern/arm/bsp/s3c
+RAM_PHYS_BASE           := $(if $(CONFIG_ARM_EM_TZ),0xb0000000,0x40000000)
+MPCORE_PHYS_BASE        := 0x10500000
+
+
+uart_IMPL             += uart-arm-exynos
+config_IMPL           += config-arm-exynos
+cpu_IMPL              += cpu-arm-exynos
+scu_IMPL              += scu-arm-exynos
+mem_layout_IMPL       += mem_layout-arm-exynos
+pic_IMPL              += pic-arm-gic-exynos \
+                         $(if $(CONFIG_PF_EXYNOS_EXTGIC),,pic-gic)
+ipi_IMPL              += $(if $(CONFIG_PF_EXYNOS_EXTGIC),ipi-arm-exynos)
+thread_IMPL           += thread-arm-exynos
+bootstrap_IMPL        += bootstrap-arm-exynos
+
+INTERFACES_KERNEL-$(CONFIG_PF_EXYNOS_TIMER_GEN) += generic_timer
+timer_IMPL            += $(if $(CONFIG_PF_EXYNOS_TIMER_GEN),timer-arm-generic timer-arm-generic-exynos)
+timer_IMPL            += $(if $(CONFIG_PF_EXYNOS_TIMER_MP)$(CONFIG_PF_EXYNOS_TIMER_MCT),timer-arm-mptimer timer-arm-exynos)
+timer_IMPL            += $(if $(CONFIG_PF_EXYNOS_TIMER_PWM),timer-arm-s3c2410)
+
+timer_tick_IMPL       += $(if $(CONFIG_PF_EXYNOS_TIMER_GEN),timer_tick-single-vector)
+timer_tick_IMPL       += $(if $(CONFIG_PF_EXYNOS_TIMER_MCT),timer_tick-exynos-mct)
+timer_tick_IMPL       += $(if $(CONFIG_PF_EXYNOS_TIMER_MP),timer_tick-single-vector)
+timer_tick_IMPL       += $(if $(CONFIG_PF_EXYNOS_TIMER_PWM),$(if $(CONFIG_MP),timer_tick-broadcast,timer_tick-single-vector))
+
+kernel_uart_IMPL      += kernel_uart-arm-exynos
+kernel_thread_IMPL    += kernel_thread-arm-exynos
+reset_IMPL            += reset-arm-exynos
+clock_IMPL            += clock-generic
+outer_cache_IMPL      += outer_cache-arm-exynos
+platform_IMPL         += platform-arm-exynos
+watchdog_IMPL         += watchdog-arm-exynos
+
+platform_control_IMPL += platform_control-arm-exynos
+PREPROCESS_PARTS-$(CONFIG_CPU_SUSPEND)  += cpu_suspend

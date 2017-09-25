@@ -1,0 +1,12 @@
+# -*- makefile -*-
+
+$(SYMBOLS):	$(KERNEL)
+		$(COMP_MESSAGE)
+		$(VERBOSE)$(NM) -nC $(KERNEL) | \
+		   sed -e 's/^00000000//' | grep "^f[0-9a-z]\{7,7\}">$@.new
+		$(VERBOSE)mv $@.new $@
+		$(VERBOSE)chmod 644 $@
+		$(call INSTALLFILE_RULE,$@,fiasco_symbols)
+
+clean-SYMBOLS:
+		rm -f $(SYMBOLS)

@@ -1,0 +1,68 @@
+#! /usr/bin/perl
+
+use strict;
+
+my $cfg_prefix   = "CONFIG";
+my @arch_opts    = ("IA32", "ARM", "UX" ,"XARCH");
+my @abi_opts     = ("V2", "X0", "V4", "ABI");
+my @base_opts    = ("INLINE", "NDEBUG", "NO_FRAME_PTR", "FINE_GRAINED_CPUTIME",
+                    "FFUN");
+my @debug_opts   = ("KDB","JDB","VMEM_ALLOC_TEST","SERIAL", "PERF_CNT");
+my @compile_opts = ("VERBOSE", "MAINTAINER_MODE");
+
+my %cfg_files    = ("arch_config.cfg"    => \@arch_opts,
+                    "abi_config.cfg"     => \@abi_opts,
+		    "base_config.cfg"    => \@base_opts,
+		    "debug_config.cfg"   => \@debug_opts,
+		    "compile_config.cfg" => \@compile_opts);
+my $other_opts   = "other_config.cfg";
+
+my %cfg_files_2;
+
+my $outfile = shift;
+my $outhdl;
+my $other = 0;
+
+open($outhdl,">$outfile") || die "$outfile: $!";
+
+foreach my $cfg (keys %cfg_files)
+{
+  my $cfgs = $cfg_files{$cfg};
+  for (my $i = 0; $i <= $#$cfgs; $i++)
+    {
+      $cfgs->[$i] = $cfg_prefix."_".$cfgs->[$i];
+    }
+}
+
+my $expr;
+
+if ($outfile eq $other_opts)
+{
+  $other = 1;
+  foreach my $cfg (keys %cfg_files)
+  {
+    my $cfgs = $cfg_files{$cfg};
+    if ($expr ne "")
+    {
+      $expr = join("|", ($expr, @$cfgs));
+    } else {
+      $expr = join("|", @$cfgs);
+    }
+  }
+} else {
+  my $cfgs = $cfg_files{$outfile};
+  exit 0 if (!defined $cfgs) ;
+  $expr= join("|", @$cfgs);
+}
+
+while(<>)
+{
+  my $written = 0;
+  if (/^($expr)/ xor $other)
+  {
+    print $outhdl $_;
+  }
+}
+
+close $outhdl;
+

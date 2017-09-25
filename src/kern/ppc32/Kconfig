@@ -1,0 +1,27 @@
+# ARCH:         PPC32 ppc32
+# ARCHDESCR:    PowerPC 32 processor family (Caution: INCOMPLETE!)
+#
+# ARCHDEPENDS:  EXPERIMENTAL && INCLUDE_PPC32
+# ARCHSELECT:   CONTEXT_4K
+# ARCHSELECT:   BIG_ENDIAN
+# ARCHSELECT:   HAS_SERIAL_OPTION
+# ARCHSELECT:   BIT32
+#
+# ARCHHELP: PPC32 testing version, mainly for MPC5200 (603e). Currently,
+# ARCHHELP: there is no support whatsoever.
+#
+# ARCHDEFAULTPF: PF_MP52CXX
+
+# SECTION: CPU
+
+choice
+	prompt "CPU"
+	default PPC32_603e if PPC32
+
+config PPC32_603e
+	bool "PowerPC 603e"
+	depends on PPC32
+	help
+	  Choose this if you have an PowerPC 603e CPU.
+
+endchoice

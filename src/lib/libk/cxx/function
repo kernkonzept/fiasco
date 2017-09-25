@@ -1,0 +1,51 @@
+// vi: ft=cpp
+#pragma once
+
+#include "type_traits"
+
+namespace cxx {
+
+namespace Bits {
+  template< typename Res, typename ...Args >
+  struct _Callable
+  {
+    template< typename Functor >
+    static Res invoke(void *functor, Args && ...args)
+    { return (*reinterpret_cast<typename cxx::remove_reference<Functor>::type *>(functor))(cxx::forward<Args>(args)...); }
+  };
+}
+
+template< typename Signature > class functor;
+
+template< typename Res, typename ...Args >
+class functor<Res(Args...)>
+{
+protected:
+  typedef Res (*Func)(void *, Args && ...);
+  void *_d;
+  Func _f;
+
+public:
+  template< typename Functor >
+  functor(Functor &&f)
+  : _d(reinterpret_cast<void*>(&f)),
+    _f(Bits::_Callable<Res, Args...>::template invoke<Functor>) {}
+
+  functor() : _d(0), _f(0) {}
+
+  functor(functor &&) = default;
+  functor(functor const &) = default;
+  functor &operator = (functor const &) = default;
+
+
+  Res operator () (Args ...a) const
+  { return _f(_d, cxx::forward<Args>(a)...); }
+
+  Res operator () (Args ...a)
+  { return _f(_d, cxx::forward<Args>(a)...); }
+};
+
+
+}
+
+

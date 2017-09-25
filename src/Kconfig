@@ -1,0 +1,705 @@
+
+
+mainmenu "Fiasco configuration"
+
+config KERNELVERSION
+	string
+	option env="KERNELVERSION"
+
+config INCLUDE_PPC32
+	bool
+	option env="INCLUDE_PPC32"
+	help
+	  Use "INCLUDE_PPC32=y make config" to include ppc32 options.
+
+config INCLUDE_SPARC
+	bool
+	option env="INCLUDE_SPARC"
+	help
+	  Use "INCLUDE_SPARC=y make config" to include sparc options.
+
+# generic options that might be selected by platforms etc.
+config HAS_FPU_OPTION
+	bool
+
+config HAS_VIRT_OBJ_SPACE_OPTION
+	bool
+
+config HAS_SERIAL_OPTION
+	bool
+
+config HAS_WATCHDOG_OPTION
+	bool
+
+config HAS_JDB_DISASM_OPTION
+	bool
+
+config HAS_JDB_GZIP_OPTION
+	bool
+
+config HAS_IOMMU_OPTION
+	bool
+
+config HAS_MP_OPTION
+	bool
+
+config HAS_CPU_VIRT
+	bool
+
+menu "Target configuration"
+
+choice
+	prompt "Architecture"
+	default IA32
+
+config IA32
+	bool "Intel IA-32 processor family"
+	select BIT32
+	select HAS_VIRT_OBJ_SPACE_OPTION
+	select HAS_JDB_DISASM_OPTION
+	select HAS_JDB_GZIP_OPTION
+
+config AMD64
+	bool "AMD64 processor family"
+	select CONTEXT_8K
+	select HAS_VIRT_OBJ_SPACE_OPTION
+	select HAS_JDB_DISASM_OPTION
+	select HAS_JDB_GZIP_OPTION
+	select BIT64
+
+#  ARCH_CHOICE
+endchoice
+
+config BIG_ENDIAN
+	bool
+
+choice
+	prompt "Platform"
+	default PF_PC         if IA32
+	default PF_PC         if AMD64
+# ARCH_DEFAULT_PF
+
+config PF_PC
+	bool "PC platform"
+	depends on IA32 || AMD64
+	select HAS_SERIAL_OPTION
+	select HAS_WATCHDOG_OPTION
+	select HAS_IOMMU_OPTION
+	select HAS_MP_OPTION
+	select HAS_CPU_VIRT
+
+config PF_UX
+	bool "Linux Usermode Platform"
+	depends on IA32
+	select JDB
+
+# PF_CHOICE
+
+endchoice
+
+# PF_INCLUDE
+# PF_SECTION: GLOBAL
+
+config ABI_VF
+	def_bool y
+
+choice
+	prompt "CPU"
+	depends on IA32 || AMD64 || UX
+	default IA32_686   if IA32
+	default AMD64_K8   if AMD64
+
+config IA32_486
+	bool "Intel 80486"
+	depends on IA32
+	help
+	  Choose this if you have an Intel 80486 or equivalent CPU (i486).
+
+config IA32_586
+	bool "Intel Pentium / AMD K5"
+	depends on IA32
+	help
+	  Choose this if you have an Intel Pentium or compatible i586 CPU.
+
+config IA32_686
+	bool "Intel Pentium Pro"
+	depends on IA32
+	help
+	  Choose this if you have an Intel Pentium Pro or compatible i686 CPU.
+
+config IA32_P2
+	bool "Intel Pentium II / Celeron II"
+	depends on IA32
+	help
+	  Choose this if you have an Intel Pentium II or Pentium II based Celeron.
+
+config IA32_P3
+	bool "Intel Pentium III / Celeron III"
+	depends on IA32
+	help
+	  Choose this if you have an Intel Pentium III or Pentium III based Celeron.
+
+config IA32_P4
+	bool "Intel Pentium 4 / Celeron 4"
+	depends on IA32
+	help
+	  Choose this if you have an Intel Pentium 4 or Pentium 4 based Celeron.
+
+config IA32_PM
+	bool "Intel Pentium M"
+	depends on IA32
+	help
+	  Choose this if you have an Intel Pentium M.
+
+config IA32_CORE2
+	bool "Intel Core 2"
+	depends on IA32
+	help
+	  Choose this if you have an Intel Core 2.
+
+config IA32_CORE_I
+        bool "Intel Core-i"
+	depends on IA32
+	help
+	  Choose this if you want to optimize for Core-i class CPUs.
+
+config IA32_ATOM
+	bool "Intel Atom"
+	depends on IA32
+	help
+	  Choose this if you have an Intel Atom.
+
+config IA32_K6
+	bool "AMD K6 / K6-II / K6-III"
+	depends on IA32
+	help
+	  Choose this if you have an AMD K6 CPU.
+
+config IA32_K7
+	bool "AMD Athlon / Duron"
+	depends on IA32
+	help
+	  Choose this if you have an AMD Athlon or Duron CPU.
+
+config IA32_K8
+	bool "AMD Opteron / Athlon64"
+	depends on IA32
+	help
+	  Choose this if you have an AMD Opteron or Athlon64 CPU.
+
+config IA32_K10
+	bool "AMD Barcelona (K10)"
+	depends on IA32
+	help
+	  Choose this if you have an AMD Barcelona based CPU.
+
+
+config AMD64_K8
+	bool "AMD Opteron / Athlon64"
+	depends on AMD64
+	help
+	  Choose this if you have an AMD Opteron or Athlon64 CPU.
+
+config AMD64_CORE2
+	bool "Intel Core 2"
+	depends on AMD64
+	help
+	  Choose this if you have an Intel Core 2.
+
+config AMD64_CORE_I
+        bool "Intel Core-i"
+	depends on AMD64
+	help
+	  Choose this if you want to optimize for Core-i class CPUs.
+
+config AMD64_ATOM
+	bool "Intel Atom"
+	depends on AMD64
+	help
+	  Choose this if you have an Intel Atom.
+
+config AMD64_K10
+	bool "AMD Barcelona (K10)"
+	depends on AMD64
+	help
+	  Choose this if you have an AMD Barcelona based CPU.
+
+endchoice
+
+# PF_SECTION: CPU
+
+config CPU_VIRT
+	bool "Virtualization"
+	depends on HAS_CPU_VIRT
+	help
+	  Support virtualization extensions provided by CPUs, including
+	  nested paging. This feature allows you to run a virtual machine
+	  monitor (VMM) on top of Fiasco.
+
+choice
+	prompt "Timer tick source"
+	depends on PF_PC || PF_UX
+	default SCHED_APIC
+
+config SCHED_PIT
+	bool "Use PIT for scheduling"
+	depends on (PF_PC || PF_UX) && !MP
+	help
+	  Normally, Fiasco uses the RTC at IRQ8 for scheduling. This can be
+	  disadvantageous in certain circumstances, e.g. VMWare doesn't seem
+	  to emulate the RTC good enough so that not enough timer interrupts
+	  are produced. The PIT mode (using IRQ0) seems to work better in
+	  this case.  It is generally safe to use this option, so if you are
+	  unsure, say 'Y'.
+
+	  Consider that the interrupt priorities change: Using RTC, IRQ8 has
+	  the highest priority. Using PIT, IRQ0 has the highest priority.
+	  The only case where PIT scheduling does not work is with
+	  profiling. If profiling is enabled the PIT is used for generating
+	  the profiling interrupts.
+
+config SCHED_RTC
+	bool "Use RTC for scheduling"
+	depends on PF_PC && !MP
+	help
+	  'Yes' is the standard for this option. If this option is set
+	  Fiasco uses the RTC on IRQ 8 for scheduling.  This can be
+	  disadvantageous in certain circumstances, e.g. VMWare doesn't seem
+	  to emulate the RTC good enough so that not enough timer interrupts
+	  are produced.  The PIT (8254) mode (say 'no' here), seems to work
+	  better in this case. It is generally safe to use the PIT, so if
+	  you are unsure, say 'no'.
+	  Consider that the interrupt priorities change: Using RTC, IRQ8 has
+	  the highest priority. Using PIT, IRQ0 has the highest priority.
+	  The only case where PIT scheduling does not work is with
+	  profiling. If profiling is enabled the PIT is used for generating
+	  the profiling interrupts and the RTC must be used for scheduling.
+	  In the case where profiling shall be used within VMWare the
+	  SLOW_RTC option must be set, so that the timer resolution of
+	  Fiasco is reduced to 100Hz.
+
+config SCHED_APIC
+	bool "Use APIC timer for scheduling"
+	depends on PF_PC
+	help
+	  Use the Local APIC for scheduling.
+
+config SCHED_HPET
+	bool "Use HPET timer for scheduling (EXPERIMENTAL)"
+	depends on PF_PC && !MP && EXPERIMENTAL
+	help
+	  Use the HPET timer for scheduling.
+
+endchoice
+
+config WORKAROUND_AMD_FPU_LEAK
+	bool "Enables workaroud for AMD FPU security leak"
+	depends on PF_PC
+	help
+	  If you use Fiasco for high assurance, high security and use AMD
+	  CPUs you should enable this option. In any other case it is no
+	  harm to disable it.
+
+config REGPARM3
+	def_bool y
+	depends on IA32 && PF_PC
+
+config FPU
+	bool "Enable FPU co-processor" if HAS_FPU_OPTION
+	depends on HAS_FPU_OPTION
+	default y
+	help
+	  Enable this if your platform has hardware floating point support.
+
+# PF_SECTION: TARGET
+
+endmenu # target
+
+menu "Kernel options"
+
+config MP
+	bool "Enable multi processor support"
+	depends on HAS_MP_OPTION
+	help
+	  Enable support for machines with multiple processors.
+
+config MP_MAX_CPUS
+	int "Maximal supported number of CPUs"
+	depends on MP
+	range 1 128
+	default 4
+	help
+	  The maximum number of CPUs the kernel supports.
+
+#config ASSEMBLER_IPC_SHORTCUT
+#	bool "Assembler IPC shortcut"
+#	default y
+#	depends on (PF_PC || PF_UX) && !MP
+#	help
+#	  Use the assembler IPC shortcut to get even better short IPC
+#	  performance in the common case.
+
+config CONTEXT_8K
+	bool #"TCB size of 8k"
+	default n
+	help
+	  Use this option to use 8K kernel stacks. Only disable this option
+	  when you know what you're doing.
+
+config CONTEXT_4K
+	bool #"TCB size of 4k"
+	default y if !CONTEXT_8K
+	help
+	  Use this option to use 4K kernel stacks. Only disable this option
+	  when you know what you're doing.
+
+config SLOW_RTC
+	bool "Use RTC with 100 ticks per second"
+	depends on SCHED_RTC
+	help
+	  This option should be enabled if you use VMWare and no PIT
+	  scheduling. The timer resolution is lowered to 100 ticks per
+	  second.
+
+config ONE_SHOT
+	bool "Use scheduling timer in one-shot mode"
+	depends on SCHED_APIC && SYNC_TSC
+	help
+	  More costly than periodic but more fine-granular scheduling
+	  possible.  EXPERIMENTAL!
+
+config SYNC_TSC
+	bool "Use time-stamp counter for KIP and scheduling accounting"
+	depends on PF_PC && (IA32 || AMD64)
+	help
+	  Synchronize the internal kernel clock with the CPU time stamp
+	  counter.
+
+config FINE_GRAINED_CPUTIME
+	bool "Fine-grained CPU time"
+	help
+	  Measure CPU time consumed by a thread from switching to the thread
+	  until switching to another thread. Induces an overhead during each
+	  thread switch, so only activate it for debugging.
+
+config UX_CON
+	bool "Graphical console (requires SDL library!)"
+	depends on PF_UX
+	help
+	  Fiasco-UX can supply a graphical console for the L4 program it is
+	  running.  Enabling this option will build the additional program
+	  but needs the SDL library including development header files
+	  installed.
+
+config UX_NET
+	bool "Network support"
+	depends on PF_UX
+	help
+	  Enabling this option makes Fiasco-UX provide network support for
+	  L4 programs.
+
+choice 
+	prompt "Scheduler"
+	default FIXED_PRIO
+
+config SCHED_FIXED_PRIO
+	bool "Fixed priority scheduler"
+	help
+	  Choose this for the standard fixed priority scheduler with
+	  256 priority levels.
+
+config SCHED_WFQ
+	bool "Weighted fair queueing scheduler"
+	depends on EXPERIMENTAL
+	help
+	  Choose this scheduler for a weighted fair queueing scheduler
+	  running with dynamic priorities.
+
+config SCHED_FP_WFQ
+	bool "Combined fixed priority RT and WFQ scheduler"
+	depends on EXPERIMENTAL
+	help
+	  Combination of Fixed priority and weighted fair queueing
+	  scheduler.
+
+endchoice
+
+config IOMMU
+	bool "Enable support for DMA remapping" if HAS_IOMMU_OPTION
+	depends on HAS_IOMMU_OPTION
+	help
+	  This option enables support for DMA remapping (IO-MMUs).
+	  When this option is enabled and the platform has a supported IO-MMU
+	  the default is to block all DMA from remappable devices.
+	  The user-level must use kernel DMA spaces in combination with
+	  the IO-MMU kernel object to allow DMA.
+
+config DISABLE_VIRT_OBJ_SPACE
+	bool "No virtually mapped array for cap tables" if HAS_VIRT_OBJ_SPACE_OPTION
+	depends on HAS_VIRT_OBJ_SPACE_OPTION &&  EXPERIMENTAL
+
+config VIRT_OBJ_SPACE
+	def_bool y
+	depends on HAS_VIRT_OBJ_SPACE_OPTION
+	depends on !DISABLE_VIRT_OBJ_SPACE
+
+# PF_SECTION: KERNEL
+
+endmenu # kernel options
+
+menu "Debugging"
+
+config INLINE
+	bool "Generate inline code"
+	default y
+	help
+	  Inlining specifies that it is desirable for the compiler to
+	  integrate functions declared 'inline' into the calling routine.
+	  This usually leads to faster code, so unless you want to debug the
+	  kernel you should say 'Y' here.
+
+config NDEBUG
+	bool "Do not compile assertions"
+	help
+	  Don't insert assertions into the code. Should be enabled for
+	  kernels which are used for measurements.
+
+config NO_FRAME_PTR
+	bool "Compile without frame pointer"
+	default y
+	help
+	  Enabling this option optimizes for speed but makes debugging more
+	  difficult.
+
+config STACK_DEPTH
+	bool "Measure stack depth of threads"
+	help
+	  When this option is enabled, each thread control block is marked
+	  with magic numbers while creation. The function ``show thread
+	  lists'' scans the TCB for these magic numbers and shows the
+	  currently used depth of each thread.
+
+config LIST_ALLOC_SANITY
+	bool "Sanity checks in low level allocator"
+	help
+	  When this option is enabled the low level memory allocator does
+	  extra sanity checks on its data structures before and after every
+	  operation. This can help detect flaws like double frees or memory
+	  corruption by other means.
+
+	  These tests are very expensive so only enable them if a problem
+	  with memory allocation is expected.
+
+config BEFORE_IRET_SANITY
+	bool "Sanity checks at syscall entry/exit"
+	depends on PF_PC
+	help
+	  Perform the following additional sanity checks before returning to
+	  usermode:
+	    - Does the thread hold any locks?
+	    - Is the thread locked by any other thread?
+	    - Does the thread have the right state:
+	      * Thread_ready must be set.
+	      * Thread_cancel and Thread_fpu_owner might be set.
+	      * Any other state bit must not be set.
+	  Don't use Fiasco compiled with this option for performance analysis!
+
+config GSTABS
+	bool "Compile with gstabs+ debugging information"
+	depends on n
+	help
+	  Enabling this option includes the debugging information using the
+	  older gstabs+ format into the kernel image. This is necessary to
+	  access line number information of the kernel from JDB.
+
+config IRQ_SPINNER
+	bool "Display IRQ activity on VGA screen"
+	depends on PF_PC
+	help
+	  Display IRQ activity on VGA screen.
+
+config WATCHDOG
+	bool "Enable Watchdog support" if HAS_WATCHDOG_OPTION
+	default y if HAS_WATCHDOG_OPTION
+	depends on HAS_WATCHDOG_OPTION
+	help
+	  Enable support for watchdog using the builtin Local APIC and a
+	  performance counter. The watchdog can be enabled using the
+	  -watchdog command line option.
+
+config SERIAL
+	bool "Support for debugging over serial line" if HAS_SERIAL_OPTION
+	depends on HAS_SERIAL_OPTION
+	default y if HAS_SERIAL_OPTION
+	help
+	  This option enables support for input/output over serial interface.
+
+menuconfig JDB
+	bool "JDB kernel debugger"
+	default y
+	help
+	  The powerful Fiasco kernel debugger.
+
+if JDB
+
+config JDB_LOGGING
+	bool "JDB extended logging"
+	default y if !PF_UX
+	help
+	  There are two classes of logging events: Basic events don't
+	  consume any time if they are disabled (ipc, ipc result,
+	  pagefaults, unmap). Extended logging events add an additional
+	  overhead of most probably less than 10 cycles if they are
+	  disabled. These events can be activated/deactivated by the 'O'
+	  command in jdb.
+
+	  Should be disabled for kernels which are used for measurements.
+
+config JDB_DISASM
+	bool "JDB disassembler" if HAS_JDB_DISASM_OPTION
+	default y if HAS_JDB_DISASM_OPTION
+	help
+	  Add support for disassembly. Increases memory foot-print, only
+	  enable when needed.
+
+config JDB_GZIP
+	bool "GZIP compressed dumps" if HAS_JDB_GZIP_OPTION
+	default y if HAS_JDB_GZIP_OPTION
+	help
+	  Add supprt for gzip compressed dumps of the trace buffer.
+	  Increases memory foot-print, only enabled when needed.
+
+config JDB_ACCOUNTING
+	bool "JDB accounting"
+	help
+	  Enable accounting information about IPCs, context switches, page
+	  faults, and other events. The counters are accessible from
+	  userland through the tbuf status page.
+
+	  Should be disabled for kernels which are used for measurements.
+
+config JDB_MISC
+	bool "Miscellaneous JDB modules"
+	depends on PF_UX || PF_PC
+
+endif # JDB
+
+
+config POWERSAVE_GETCHAR
+	bool "Save power in getchar()"
+	default y
+	depends on PF_PC
+	help
+	  This option uses a processor HALT in getchar() to save power and
+	  prevent some P4 processors from being overheated. This option
+	  requires a working timer IRQ to wakeup getchar periodically.
+
+choice
+	prompt "Warn levels"
+	default WARN_WARNING
+
+config WARN_NONE
+	bool "Do not show show any kernel warning"
+
+config WARN_WARNING
+	bool "Show messages of warning level"
+
+config WARN_ANY
+	bool "Show all kernel warnings"
+
+endchoice # warn levels
+
+# PF_SECTION: DEBUG
+
+endmenu # debugging
+
+menu "Compiling"
+
+config CC
+	string "C compiler"
+	default "gcc"
+	help
+	  Use this option to override the default C compiler (gcc).
+
+config CXX
+	string "C++ compiler"
+	default "g++"
+	help
+	  Use this option to override the default C++ compiler (g++).
+
+config HOST_CC
+	string "C host compiler"
+	default "gcc"
+	help
+	  Use this option to override the default C host compiler (gcc).
+
+config HOST_CXX
+	string "C++ host compiler"
+	default "g++"
+	help
+	  Use this option to override the default C++ host compiler (g++).
+
+config MAINTAINER_MODE
+	bool "Do additional checks at build time"
+	help
+	  This enables the circular dependency and initcall checks.
+	  Say 'Yes' here if you do kernel hacking.
+
+config LABEL
+	string "Configuration label"
+	help
+	  Text string with a name for this configuration. To be displayed in
+	  the kernel boot-up.
+
+endmenu
+
+config EXPERIMENTAL
+	bool "Prompt for experimental features"
+	help
+	  Experimental features are available when enabling this option.
+	  Enabling these features might be less than fully secure and may
+	  disrupt the stability of your kernel.
+
+	  Use with caution!
+
+config PERF_CNT
+	def_bool y if JDB && (IA32 || AMD64 || ARM)
+
+config BIT32
+	bool
+
+config BIT64
+	bool
+
+config WARN_LEVEL
+	int
+	default 2 if WARN_ANY
+	default 1 if WARN_WARNING
+	default 0 if WARN_NONE
+
+config XARCH
+	string
+	default "ux" if PF_UX
+	default "amd64" if AMD64 && PF_PC
+	default "ia32" if IA32 && PF_PC
+# ARCH_NAME
+
+config IA32_TARGET
+	string
+	default "Intel 80486" if IA32_486
+	default "Intel Pentium" if IA32_586
+	default "Intel Pentium Pro" if IA32_686
+	default "Intel Pentium II" if IA32_P2
+	default "Intel Pentium III" if IA32_P3
+	default "Intel Pentium 4" if IA32_P4
+	default "Pentium M" if IA32_PM
+	default "AMD K6" if IA32_K6
+	default "AMD Athlon" if IA32_K7
+	default "Intel Core2" if IA32_CORE2 || AMD64_CORE2
+	default "Intel Core-i" if IA32_CORE_I || AMD64_CORE_I
+	default "Intel Atom" if IA32_ATOM || AMD64_ATOM
+	default "AMD Opteron" if IA32_K8 || AMD64_K8 || AMD64_K10 || IA32_K10
+
+config ABI
+	string
+	default "vf"

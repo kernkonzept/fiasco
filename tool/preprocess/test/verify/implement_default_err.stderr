@@ -1,0 +1,1 @@
+implement_default_err.cpp:10: error: No default implementation for Test::err_func1 found

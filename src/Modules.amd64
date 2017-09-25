@@ -1,0 +1,414 @@
+# -*- makefile -*-
+# vi:se ft=make:
+
+include $(srcdir)/Modules.generic
+
+SUBSYSTEMS = JABI ABI DRIVERS KERNEL CRT0 BOOT LIBK \
+	     CHECKSUM CXXLIB MINILIBC TCBOFFSET SYMBOLS VERSION GBLCFG
+
+PREPROCESS_PARTS 	+= arch $(CONFIG_ABI) 64bit iofp         \
+			   $(CONFIG_XARCH) apic abs-timeout-hack \
+			   i8259 pc i8254 fpu                    \
+			   auto_map_kip io realmode libuart
+
+PREPROCESS_PARTS-$(CONFIG_MP)                += mp
+PREPROCESS_PARTS-$(CONFIG_LIST_ALLOC_SANITY) += list_alloc_debug
+PREPROCESS_PARTS-$(CONFIG_JDB)               += debug log
+PREPROCESS_PARTS-$(CONFIG_SCHED_PIT)         += pit_timer
+PREPROCESS_PARTS-$(CONFIG_SCHED_RTC)         += rtc_timer
+PREPROCESS_PARTS-$(CONFIG_SCHED_APIC)        += apic_timer
+PREPROCESS_PARTS-$(CONFIG_SCHED_HPET)        += hpet_timer
+PREPROCESS_PARTS-$(CONFIG_SERIAL)            += serial 16550
+PREPROCESS_PARTS-$(CONFIG_WATCHDOG)          += watchdog
+PREPROCESS_PARTS-$(CONFIG_PERF_CNT)          += perf_cnt
+PREPROCESS_PARTS-$(CONFIG_CPU_VIRT)          += svm vmx virtual_space_iface
+PREPROCESS_PARTS-$(CONFIG_SCHED_FIXED_PRIO)  += sched_fixed_prio
+PREPROCESS_PARTS-$(CONFIG_SCHED_WFQ)         += sched_wfq
+PREPROCESS_PARTS-$(CONFIG_SCHED_FP_WFQ)      += sched_fp_wfq
+PREPROCESS_PARTS-$(CONFIG_IOMMU)             += iommu virtual_space_iface
+
+PREPROCESS_PARTS        += $(PREPROCESS_PARTS-y)
+
+#
+# TYPES subsystem
+#
+PRIVATE_INCDIR		+= types/$(CONFIG_XARCH) types
+
+#
+# ABI Subsystem
+#
+ABI			:= libabi.a
+VPATH			+= abi/$(CONFIG_XARCH) abi
+INTERFACES_ABI		:= l4_fpage l4_msg_item l4_buf_desc kip l4_types \
+			   l4_error virt
+
+kip_IMPL		:= kip kip-debug kip-amd64 kip-amd64-debug
+l4_types_IMPL		:= l4_types l4_types-debug
+virt_IMPL		:= virt-ia32-amd64
+
+#
+# JABI Subsystem
+#
+JABI			:= libjabi.a
+VPATH			+= jabi/$(CONFIG_XARCH) jabi
+INTERFACES_JABI		:= jdb_ktrace
+
+VPATH_LIBUART  := $(srcdir)/lib/uart
+PRIVATE_INCDIR += lib/uart
+SUBSYSTEMS += LIBUART
+LIBUART			:= uart/libuart.a
+OBJECTS_LIBUART = uart_16550.o
+
+#
+# DRIVERS subsystem
+#
+DRIVERS			:= libdrivers.a libgluedriverslibc.a
+VPATH			+= drivers/$(CONFIG_XARCH) drivers
+PRIVATE_INCDIR		+= drivers/$(CONFIG_XARCH) drivers
+INTERFACES_DRIVERS	:= mux_console console keyb io pci vga_console reset \
+			   processor delayloop mem
+ifeq ("$(CONFIG_SERIAL)","y")
+INTERFACES_DRIVERS	+= filter_console uart
+endif
+reset_IMPL		:= reset-amd64
+uart_IMPL		:= uart uart-16550
+CXXSRC_DRIVERS		:= glue_libc.cc
+NOOPT			+= $(patsubst %.o, %, $(OBJ_DRIVERS))
+
+keyb_IMPL		:= keyb keyb-pc 
+io_IMPL			:= io io-amd64
+mem_IMPL		:= mem mem-amd64
+processor_IMPL		:= processor processor-amd64
+
+#
+# KERNEL subsystem
+#
+KERNEL			:= fiasco.image
+VPATH			+= kern/$(CONFIG_XARCH) kern/ia32/64 kern/ia32 kern
+PRIVATE_INCDIR		+= kern/$(CONFIG_XARCH) kern/ia32/64 kern/ia32 kern
+
+INTERFACES_KERNEL	+= __main acpi acpi_fadt acpi_dmar \
+			   irq_chip_ia32 irq_chip_pic \
+			   io_apic intel_iommu io_apic_remapped \
+			   boot_console syscall_entry \
+			   irq_msi io_space apic pit boot_info checksum \
+			   x86desc gdt idt tss timer_irq dirq \
+			   i8259
+
+INTERFACES_KERNEL-$(CONFIG_IOMMU)    += intel_dmar dmar_space
+INTERFACES_KERNEL-$(CONFIG_CPU_VIRT) += svm vmx vm vm_svm vm_vmx vm_vmx_ept
+
+apic_IMPL		:= apic-ia32 apic-ia32-mp
+boot_console_IMPL	:= boot_console-ia32-amd64
+boot_info_IMPL		:= boot_info boot_info-ia32
+clock_IMPL              := clock clock-ia32
+config_IMPL		:= config config-ia32-64 config-ia32
+context_IMPL		:= context context-ia32 context-ia32-64 context-vcpu
+continuation_IMPL	:= continuation-ia32-64
+cpu_IMPL		:= cpu cpu-ia32 cpu-64
+dirq_IMPL		:= dirq-ia32-ux
+entry_frame_IMPL	:= entry_frame entry_frame-amd64 \
+			   entry_frame-abs-timeout-hack
+fpu_IMPL		:= fpu fpu-ia32-ux fpu-ia32
+ipi_IMPL		:= ipi ipi-ia32
+kdb_ke_IMPL		:= kdb_ke-ia32
+kernel_thread_IMPL	:= kernel_thread kernel_thread-std kernel_thread-ia32
+kernel_uart_IMPL	:= kernel_uart kernel_uart-libuart
+kip_init_IMPL		:= kip_init-ia32
+kmem_IMPL		:= kmem-ia32 kmem-ia32-64
+kmem_alloc_IMPL		:= kmem_alloc kmem_alloc-ia32
+main_IMPL		:= main-ia32-64 main-ia32
+mapping_IMPL		:= mapping-ia32-64 mapping
+map_util_IMPL		:= map_util map_util-mem map_util-io map_util-objs
+mem_layout_IMPL		:= mem_layout mem_layout-ia32 mem_layout-ia32-64
+mem_space_IMPL		:= mem_space mem_space-user mem_space-ia32
+mem_unit_IMPL		:= mem_unit-ia32
+paging_IMPL		:= paging-ia32-64 paging-ia32 paging
+perf_cnt_IMPL		:= perf_cnt perf_cnt-ia32
+pic_IMPL		:= pic pic-i8259
+pit_IMPL		:= pit-i8254
+platform_control_IMPL	+= platform_control-acpi_sleep platform_control-ia32
+pmem_alloc_IMPL		:= pmem_alloc pmem_alloc-ia32-ux
+rtc_IMPL		:= rtc-ia32
+sched_context_IMPL	:= sched_context-wfq sched_context-fixed_prio \
+			   sched_context-fp_wfq sched_context
+sigma0_task_IMPL	:= sigma0_task sigma0_task-io
+space_IMPL		:= space space-ia32 space-io
+spin_lock_IMPL		:= spin_lock spin_lock-ia32
+startup_IMPL		:= startup startup-ia32
+task_IMPL		:= task task-ia32-amd64
+tb_entry_IMPL		:= tb_entry tb_entry-ia32-64
+timer_IMPL		:= timer timer-ia32-amd64-ux
+thread_IMPL		:= thread thread-ia32 thread-ia32-64 \
+			   thread-ipc thread-pagefault thread-log \
+			   thread-debug thread-dbf thread-vcpu thread-io
+trap_state_IMPL		:= trap_state-amd64
+tss_IMPL		:= tss-amd64
+utcb_init_IMPL		:= utcb_init utcb_init-ia32
+vmem_alloc_IMPL		:= vmem_alloc vmem_alloc-ia32
+watchdog_IMPL		:= watchdog watchdog-ia32
+
+INTERFACES_KERNEL-$(CONFIG_SERIAL) += uart_console
+
+cpu_lock_IMPL		:= cpu_lock cpu_lock-generic
+
+ifeq ("$(CONFIG_SCHED_PIT)","y")
+  timer_IMPL		+= timer-pit
+  timer_tick_IMPL	+= timer_tick-single-vector timer_tick-ia32
+endif
+ifeq ("$(CONFIG_SCHED_RTC)","y")
+  timer_IMPL		+= timer-rtc
+  timer_tick_IMPL	+= timer_tick-single-vector timer_tick-ia32
+  INTERFACES_KERNEL	+= rtc
+endif
+ifeq ("$(CONFIG_SCHED_APIC)","y")
+  timer_IMPL		+= timer-apic
+  timer_tick_IMPL	+= timer_tick-apic
+endif
+ifeq ("$(CONFIG_SCHED_HPET)","y")
+  timer_IMPL		+= timer-hpet
+  timer_tick_IMPL       += timer_tick-single-vector timer_tick-ia32
+  INTERFACES_KERNEL     += hpet
+endif
+
+ifeq ("$(CONFIG_JDB)","y")
+JDB			:= jdb_compound.o
+SUBSYSTEMS		+= JDB
+VPATH			+= jdb/ia32/64 jdb/ia32 jdb
+INTERFACES_JDB		+= jdb_dbinfo jdb_io_ports jdb_ptab jdb_trace_set \
+			   jdb_console_buffer loadcnt jdb_io_apic jdb_ipi \
+			   jdb_bt jdb_log jdb_iomap jdb_misc              \
+			   jdb_halt_thread
+
+CXXSRC_JDB := tb_entry_output.cc
+
+apic_IMPL		+= apic-debug
+jdb_IMPL		+= jdb-ia32-amd64 jdb-ia32-ux \
+			   jdb-int3-ia32-amd64 jdb-int3-ia32-ux
+jdb_bp_IMPL		:= jdb_bp-ia32-ux jdb_bp-ia32-amd64 jdb_bp-amd64
+jdb_bt_IMPL		:= jdb_bt-ia32-ux
+jdb_entry_frame_IMPL	:= jdb_entry_frame-ia32
+jdb_kern_info_IMPL	:= jdb_kern_info jdb_kern_info-ia32-amd64 \
+			   jdb_kern_info-ia32-ux jdb_kern_info-apic \
+			   jdb_kern_info-pci jdb_kern_info-bench \
+			   jdb_kern_info-bench-ia32-64 \
+			   jdb_kern_info-dr jdb_kern_info-mtrr
+jdb_misc_IMPL		:= jdb_misc-ia32-amd64
+jdb_ptab_IMPL		:= jdb_ptab jdb_ptab-amd64
+jdb_screen_IMPL		:= jdb_screen jdb_screen-ia32
+jdb_tcb_IMPL		+= jdb_tcb-amd64
+jdb_trace_set_IMPL	:= jdb_trace_set jdb_trace_set-ia32-ux
+
+INTERFACES_JDB-$(CONFIG_JDB_MISC)	+= jdb_tetris
+
+INTERFACES_JDB		+= $(INTERFACES_JDB-y)
+endif
+
+
+CXXSRC_KERNEL		:= kernel_panic.cc libc_backend_lock.cc
+ASSRC_KERNEL		:= entry.S entry-native.S
+
+ASSRC_KERNEL-$(CONFIG_KIP_SYSCALLS_ABS) += sys_call_page-asm.S
+ASSRC_KERNEL-$(CONFIG_MP)               += tramp-mp.S entry-mp.S
+ASSRC_KERNEL-y                          += tramp-realmode.S tramp-acpi.S
+ASSRC_KERNEL-$(CONFIG_CPU_VIRT)         += vm_svm_asm.S vm_vmx_asm.S
+ASSRC_KERNEL                            += $(ASSRC_KERNEL-y)
+
+NOOPT			+= $(filter jdb%,\
+			     $(foreach in,$(INTERFACES_KERNEL), \
+			       $(if $($(in)_IMPL),$($(in)_IMPL),$(in))))
+NOOPT			+= tb_entry_output $(tb_entry_IMPL) $(perf_cnt_IMPL)  \
+			   kern_cnt loadcnt $(apic_IMPL) $(watchdog_IMPL) kdb \
+			   $(kernel_uart_IMPL) push_console thread-dbf   \
+			   trap_state
+NOOPT			+= $(foreach in,$(INTERFACES_JDB), \
+			       $(if $($(in)_IMPL),$($(in)_IMPL),$(in)))
+
+
+### When testing with test threads, uncomment the following:
+#
+# VPATH			+= kern-test
+# PRIVATE_INCDIR	+= kern-test
+#
+# INTERFACES_KERNEL	+= generic_test_thread test_thread node cpu \
+#			   back_trace cpu_guard types
+#
+# node_IMPL		:= node node-up
+# cpu_IMPL		:= cpu cpu-perf cpu-perfp4
+# config_IMPL		:= config config-test
+#
+# kernel_thread_IMPL	:= $(filter-out kernel_thread-std,$(kernel_thread_IMPL)) \
+#			   kernel_thread-test
+#
+# Replace this definition with your own test thread.
+# test_thread_IMPL	:= test_thread-test26
+#
+### End of test-thread section
+
+#
+# CRT0 subsystem
+#
+CRT0 			:= crt0.o
+ASSRC_CRT0		:= crt0.S
+
+#
+# BOOT subsystem
+#
+BOOT			:= fiasco
+VPATH			+= boot/$(CONFIG_XARCH) boot
+PRIVATE_INCDIR 		+= boot boot/amd64
+CXXSRC_BOOT		:= boot_libc_glue.cc bootstrap.cc boot_cpu.cc \
+			   direct_cons_putchar.cc
+ASSRC_BOOT		:= boot.S boot_idt.S
+NOOPT			+= $(patsubst %.o, %, $(OBJ_BOOT))
+
+#
+# TCBOFFSET subsystem
+#
+TCBOFFSET		:= tcboffset.h
+CXXSRC_TCBOFFSET	:= tcboffset.cc dump_tcboffsets.cc
+
+#
+# SYMBOLS subsystem
+#
+SYMBOLS			:= Symbols
+
+#
+# CHECKSUM subsystem
+#
+CHECKSUM		:= checksum
+CXXSRC_CHECKSUM		:= genchecksum.cc
+
+#
+# VERSION subsystem
+#
+VERSION			:= version.h
+
+#
+# GBLCFG subsystem
+#
+GBLCFG			:= gblcfg.o
+OBJ_KERNEL		+= gblcfg.o
+
+#
+# CXXLIB Subsystem
+#
+
+CXXLIB			:= libcxx.a
+VPATH			+= lib/cxxlib
+INTERFACES_CXXLIB	:= paranoia s_cruft
+
+#
+# LIBK subsystem
+#
+LIBK		:= libk.a
+VPATH		+= lib/libk/$(CONFIG_XARCH) lib/libk
+PRIVATE_INCDIR  += lib/libk/$(CONFIG_XARCH) lib/libk
+INTERFACES_LIBK	:= atomic lock_guard auto_ptr std_macros
+CXXSRC_LIBK     += construction.cc
+atomic_IMPL     := atomic atomic-amd64
+
+#
+# LIBGZIP subsystem (only for Jdb)
+#
+ifneq ($(CONFIG_JDB_GZIP),)
+  LIBGZIP		:= libgzip.a
+  VPATH			+= lib/gzip
+  PRIVATE_INCDIR	+= lib/gzip
+  CSRC_LIBGZIP		:= adler32.c crc32.c gzip.c trees.c deflate.c zutil.c
+  NOOPT			+= $(patsubst %.o, %, $(OBJ_LIBGZIP))
+endif
+
+#
+# LIBDISASM subsystem (only for Jdb)
+#
+ifeq ("$(CONFIG_JDB_DISASM)","y")
+  # $(srcdir)/lib/disasm may be removed
+  ifeq ($(wildcard $(srcdir)/lib/disasm),)
+    $(error $(srcdir)/lib/disasm is missing, disable CONFIG_JDB_DISASM)
+  endif
+
+  SUBSYSTEMS        += LIBDISASM
+  KERNEL_EXTRA_LIBS += $(LIBDISASM)
+  PREPROCESS_PARTS  += jdb_disasm
+
+  LIBDISASM         := libdisasm.a
+  VPATH	            += lib/disasm lib/disasm/elf lib/disasm/include \
+                       lib/disasm/include/opcode lib/disasm/opcodes \
+                       lib/disasm/libiberty lib/disasm/bfd
+  PRIVATE_INCDIR    += lib/disasm lib/disasm/elf lib/disasm/include \
+                       lib/disasm/include/opcode lib/disasm/opcodes \
+                       lib/disasm/libiberty lib/disasm/bfd
+  PRIVATE_INCDIR    += lib/disasm
+  CXXSRC_LIBDISASM  := disasm.cc
+  CSRC_LIBDISASM    := dis-init.c i386-dis.c dis-buf.c
+  NOOPT             += $(patsubst %.o, %, $(OBJ_LIBDISASM))
+endif
+
+#
+# LIBPERFCTR subsystem (only for Jdb)
+#
+LIBPERFCTR	:= libperfctr.a
+VPATH		+= lib/perfctr
+PRIVATE_INCDIR	+= lib/perfctr
+CSRC_LIBPERFCTR	:= event_set_p5.c event_set_p6.c event_set_amd.c \
+		   event_set_p4.c event_set_x86.c perfctr.c \
+		   event_set_centaur.c
+NOOPT		+= $(patsubst %.o, %, $(OBJ_LIBPERFCTR))
+
+#
+# LIBREGEX subsystem (only for Jdb)
+#
+LIBREGEX	:= libregex.a
+VPATH		+= lib/regex
+PRIVATE_INCDIR	+= lib/regex
+CSRC_LIBREGEX	:= alloc.c rx.c
+NOOPT		+= $(patsubst %.o, %, $(OBJ_LIBREGEX))
+
+#
+# MINILIBC Subsystem
+#
+MINILIBC	:= libc.a
+VPATH		+= lib/minilibc/$(CONFIG_XARCH) lib/minilibc
+PRIVATE_INCDIR	+= lib/minilibc/$(CONFIG_XARCH)/include lib/minilibc/include
+CSRC_MINILIBC	:= atexit.c memccpy.c memcmp.c memmove.c memset.c memcpy.c \
+		   memchr.c strchr.c strcmp.c strcpy.c strlen.c strncmp.c \
+		   strncpy.c strstr.c printf.c __v_printf.c \
+		   vprintf.c strtol.c strtoul.c lltostr.c __ltostr.c \
+		   putchar.c puts.c getchar.c gets.c sprintf.c \
+		   snprintf.c vsnprintf.c vsprintf.c longjmp.c isalnum.c \
+		   isalpha.c isascii.c isblank.c iscntrl.c isdigit.c \
+		   isgraph.c islower.c isprint.c ispunct.c isspace.c \
+		   isupper.c isxdigit.c tolower.c strcspn.c strspn.c panic.c
+ASSRC_MINILIBC	:= setjmp.S
+
+# do not profile all of MINILIBC, because it is used in the BOOT subsystem
+NOOPT		+= $(patsubst %.o, %, $(OBJ_MINILIBC))
+
+ifeq ("$(CONFIG_JDB)","y")
+
+ifneq ($(CONFIG_JDB_GZIP),)
+ ifneq ($(wildcard $(srcdir)/lib/gzip),)
+  SUBSYSTEMS		+= LIBGZIP
+  KERNEL_EXTRA_LIBS	+= $(LIBGZIP)
+  INTERFACES_KERNEL	+= jdb_gzip
+ endif
+endif
+
+ifneq ($(wildcard $(srcdir)/lib/perfctr),)
+  SUBSYSTEMS		+= LIBPERFCTR
+  KERNEL_EXTRA_LIBS	+= $(LIBPERFCTR)
+  KERNEL_UNRES_SYMS	+= -u perfctr_set_cputype
+endif
+
+ifneq ($(wildcard $(srcdir)/lib/regex),)
+  SUBSYSTEMS		+= LIBREGEX
+  KERNEL_EXTRA_LIBS	+= $(LIBREGEX)
+  PREPROCESS_PARTS	+= jdb_regex
+endif
+
+endif
+
+MODULES_FILES = $(MODULES_FILE) $(MODULES_FILE_BSP)
+
+INTERFACES_KERNEL       += $(INTERFACES_KERNEL-y)

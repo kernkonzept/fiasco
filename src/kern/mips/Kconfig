@@ -1,0 +1,137 @@
+# ARCH:           MIPS mips
+# ARCHDESCR:      MIPS processor family
+#
+# ARCHSELECT:     HAS_FPU_OPTION
+# ARCHSELECT:     HAS_SERIAL_OPTION
+# ARCHSELECT:     HAS_CPU_VIRT
+#
+# ARCHDEFAULTPF:  PF_MALTA
+
+# SECTION: CPU
+
+choice
+	prompt "CPU"
+	default CPU_MIPS32_R2
+
+config CPU_MIPS32_R2
+	bool "MIPS32 Release 2"
+	depends on SYS_HAS_CPU_MIPS32_R2 || SYS_HAS_CPU_MIPS64_R2
+	select BIT32
+	select CPU_MIPS32
+	select CPU_MIPSR2
+	help
+	  Choose this if you have a MIPS32 Release 2 CPU.
+
+config CPU_MIPS32_R6
+	bool "MIPS32 Release 6"
+	depends on SYS_HAS_CPU_MIPS32_R6 || SYS_HAS_CPU_MIPS64_R6
+	select BIT32
+	select CPU_MIPS32
+	select CPU_MIPSR6
+	select WEAK_ORDERING
+	select LIGHTWEIGHT_BARRIERS
+	help
+	  Choose this if you have a MIPS32 Release 6 CPU and toolchain.
+
+config CPU_MIPS64_R2
+	bool "MIPS64 Release 2"
+	depends on SYS_HAS_CPU_MIPS64_R2
+	select BIT64
+	select CPU_MIPS64
+	select CPU_MIPSR2
+	select CONTEXT_8K
+	help
+	  Choose this if you have a MIPS64 Release 2 CPU.
+
+config CPU_MIPS64_R6
+	bool "MIPS64 Release 6"
+	depends on SYS_HAS_CPU_MIPS64_R6
+	select BIT64
+	select CPU_MIPS64
+	select CPU_MIPSR6
+	select CONTEXT_8K
+	select WEAK_ORDERING
+	select LIGHTWEIGHT_BARRIERS
+	help
+	  Choose this if you have a MIPS64 Release 6 CPU and toolchain.
+
+endchoice
+
+if MP
+config WEAK_ORDERING
+	bool
+	prompt "Weakly ordered memory access" \
+	  if HAS_WEAK_ORDERING_OPTION && !CPU_MIPSR6
+	default y
+	help
+	  Choose this if you have a MIPS32 Release 2+ CPU with
+	  weak memory ordering.
+	  Say 'Y' if unsure.
+
+config LIGHTWEIGHT_BARRIERS
+	def_bool DEFAULT_LIGHTWEIGHT_BARRIERS
+	prompt "Use lightweight barriers" \
+	  if HAS_LIGHTWEIGHT_BARRIERS_OPTION && !CPU_MIPSR6 && WEAK_ORDERING
+	help
+	  Choose this option if your CPU supports lightweight sync instructions.
+	  In particular sync 0x4, sync 0x10, sync 0x11, sync 0x12, sync 0x13 must
+	  be supported.
+
+endif
+
+# SECTION: GLOBAL
+
+config SYS_HAS_CPU_MIPS32_R2
+	bool
+
+config SYS_HAS_CPU_MIPS32_R6
+	bool
+
+config SYS_HAS_CPU_MIPS64_R2
+	bool
+
+config SYS_HAS_CPU_MIPS64_R6
+	bool
+
+config HAS_WEAK_ORDERING_OPTION
+	bool
+
+config HAS_LIGHTWEIGHT_BARRIERS_OPTION
+	bool
+
+config CPU_MIPS32
+	bool
+
+config CPU_MIPS64
+	bool
+
+config CPU_MIPSR2
+	bool
+
+config CPU_MIPSR6
+	bool
+
+config CAN_MIPS_VZ_ASE
+	bool
+
+# SECTION: TARGET
+
+config MIPS_CPU_FREQUENCY
+	int "CPU frequency (MHz)"
+	depends on MIPS
+	default 200
+	help
+	  Set the CPU frequency to match the platform's cpu frequency
+	  for proper time keeping.
+
+choice
+        prompt "Minimum page size"
+        default MIPS_PAGE_SIZE_16K
+
+config MIPS_PAGE_SIZE_4K
+        bool "4KB minimum page size"
+
+config MIPS_PAGE_SIZE_16K
+        bool "16KB minimum page size"
+
+endchoice

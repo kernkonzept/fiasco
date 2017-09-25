@@ -1,0 +1,661 @@
+/*! <!-- -*- html-helper -*- -->
+
+\page preprocess Preprocess - A preprocessor for C and C++ modules
+
+\ifnot man
+
+Do you hate writing C or C++ header files?
+
+Do you always forget where to place those <code>inline</code>,
+<code>virtual</code>, <code>static</code>, and <code>explicit</code>
+modifiers -- to the member-function definition or declaration?
+
+Do you often find yourself avoiding to factor out a new method because
+you also need to add a method declaration to the class declaration in
+the header file?
+
+Do you hate putting inline function into header files, in a special
+order?
+
+If so, Preprocess may be your answer.  With this tool, you write
+<b>unit-style single-source-file modules</b> in C++, from which it
+automatically generates header and implementation files.
+
+<p>
+<hr>
+
+<h3>Table of contents:</h3>
+
+<ul>
+  <li>\ref SYNOPSIS
+  <li>\ref DESCRIPTION
+  <li>\ref OPTIONS
+  <li>\ref LANGUAGE
+  <li>\ref MISC
+  <li>\ref MAKEFILE
+  <li>\ref BUGS
+  <li>\ref DOWNLOAD
+  <li>\ref LIST
+  <li>\ref AUTHOR
+  <li>\ref SEE
+</ul>
+
+<p>
+
+\endif
+
+\section SYNOPSIS Synopsis
+
+<code>preprocess -c</code> <var>filename_base</var> 
+  [ <code>-o</code> <var>outfile_base</var> | <code>-s</code>] 
+<br><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[ <code>-p</code> <var>prepend</var> ]
+<br><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[ <code>-C</code> <var>source_ext</var> ] 
+  [ <code>-H</code> <var>header_ext</var> ]
+<br><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[ <code>-e</code> <var>tag_list</var> ]
+<br><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>[ <code>-i</code> ] [ <code>-t</code> ]
+  [ <code>-l</code> | <code>-L</code> ] [ <code>-v</code> ] [ <code>-d</code> ]
+<br><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><var>sources</var>...
+
+\section DESCRIPTION Description
+
+Preprocess is a preprocessor for C++ modules.  With this tool, you
+write <b>unit-style single-source-file modules</b> in C++.
+
+Preprocess essentially does these things (and frees the programmer
+from doing them):
+<UL>
+  <LI>Generate header files that contain declarations for public
+       classes and functions.</LI>
+  <LI>Fill in member-function declarations into class declarations.</LI>
+  <LI>Export public inline and template functions in correct order
+       (you need to declare dependencies for inline functions).</LI>
+  <LI>Optionally, function marked "<code>inline</code>" can be put
+       into the implementation file (out of line).  This can ease
+       development (as it temporarily decreases dependencies on header
+       files that change frequently) and debugging.</LI>
+</UL>
+
+These automatisms lead to source files that are more logically
+cohesive (no need to put inline and template functions into a separate
+file, in a special order) and saves typing effort.
+
+Preprocess works by transforming unit-style single-source-file C++
+modules into three output files: public header, private header, and
+implementation file.  C and C++ comments are preserved during the
+transformation, keeping the resulting files readable and making it
+possible to run another preprocessor on Preprocess' output.
+
+\section OPERATION Basic operation
+
+\htmlonly
+<table border=0>
+<tr><td width="70%" valign=top>
+\endhtmlonly
+
+Modules contain two sections.  The "<code>INTERFACE:</code>"
+section contains the public interface to the module; the
+"<code>IMPLEMENTATION:</code>" section contains everything else.  The
+preprocessor puts interface declarations into a public header file and
+tries to hide everything else.
+
+Class definitions deliberately lack declarations for member
+functions: Preprocess will add them automatically.  Member-function
+definitions (in the implementation section) labelled
+<code>PUBLIC</code>, <code>PROTECTED</code> and <code>PRIVATE</code>
+are put into the corresponding section of the class.  This feature
+saves typing effort and reduces duplication.
+
+From this input file (foo.cpp), Preprocess extracts three C++ source
+files that can then be processed using the standard C++ compiler
+toolchain:
+
+\htmlonly
+</td>
+<td bgcolor="#dedede">
+\endhtmlonly
+
+<code><pre>
+// C++ module -- Preprocess input file
+INTERFACE:
+
+\#include "bar.h"
+
+struct Baz;
+
+class Foo : public Bar
+{
+  Baz* d_baz;
+};
+
+IMPLEMENTATION:
+
+struct Baz
+{
+  int data;
+};
+
+PUBLIC
+int Foo::get_info() 
+{
+  return d_baz->data;
+}</pre></code>
+
+\htmlonly
+</td></tr>
+<tr valign=top><td>
+\endhtmlonly
+
+First, Preprocess generates a <b>public header file</b> (foo.h).  This
+header file contains all declarations from the interface section, with
+class definitions properly expanded to contain member-function
+declarations\htmlonly (shown <font color="#ff0000">red</font> in the
+example on the right side)\endhtmlonly.
+
+It also contains declarations of non-"<code>static</code>" free
+functions found in the implementation section, as well as definitions
+for functions declared "<code>inline</code>".  Additionally, it
+contains all "<code>\#include</code>" directives and function and class
+declarations and definitions the inline functions need; these
+dependencies need to be declared in the input file.  (These features
+are not shown in the example\htmlonly on the right side\endhtmlonly.)
+
+If desired, preprocess can also be instructed to hide all inline
+functions (and to generate them out-of-line instead), resulting in a
+public header file that better insulates clients from implementation
+details.
+
+\htmlonly
+</td><td bgcolor="#dedec0">
+\endhtmlonly
+
+<code><pre>
+// Preprocess-generated public header file
+\#ifndef foo_h
+\#define foo_h
+
+\#include "bar.h"
+
+struct Baz;
+
+class Foo : public Bar
+{
+private:
+  Baz* d_baz;
+\htmlonly <font color="#ff0000"> \endhtmlonly
+public:  
+  int get_info();\htmlonly </font> \endhtmlonly
+};
+
+\#endif // foo_h</pre></code>
+
+\htmlonly
+</td></tr>
+<tr valign=top><td>
+\endhtmlonly
+
+Second, a <b>private header file</b> containing all non-public type
+definitions (foo_i.h).  This file can be used by debugging modules
+that need access to implementation-specific data structures.
+
+ This file also contains all inline member functions belonging to
+classes declared here.  (This feature is not shown in the example.)
+
+
+\htmlonly
+</td><td bgcolor="#dedec0">
+\endhtmlonly
+
+<code><pre>
+// Preprocess-generated private header file
+\#ifndef foo_i_h
+\#define foo_i_h
+
+struct Baz
+{
+  int data;
+};
+
+\#endif // foo_i_h</pre></code>
+
+\htmlonly
+</td></tr>
+<tr valign=top><td>
+\endhtmlonly
+
+Third, an <b>implementation file</b> (foo.cc).  This file starts with
+declarations for all free "<code>static</code>" functions (not shown in
+the example).  Otherwise, it comprises all non-inline function
+definitions (and static inline functions).
+
+\htmlonly
+</td><td bgcolor="#dedec0">
+\endhtmlonly
+
+<code><pre>
+// Preprocess-generated implementation file
+\#include "foo.h"
+\#include "foo_i.h"
+
+void Foo::get_info() 
+{
+  return d_baz->info();
+}</pre></code>
+
+\htmlonly
+</td></tr>
+</table>
+\endhtmlonly
+
+\section OPTIONS Options reference
+
+Output files have names of the following form:
+<ul>
+  <li>Implementation file:
+       [<var>prepend</var>]<var>outfile_base</var>[<code>-</code><var>suffix</var>]<code>.</code><var>source_ext</var></li>
+  <li>Public header file:
+       [<var>prepend</var>]<var>outfile_base</var><code>.</code><var>header_ext</var></li>
+  <li>Private header file:
+       [<var>prepend</var>]<var>outfile_base</var><code>_i.</code><var>header_ext</var></li>
+</ul>
+
+where [<var>prepend</var>] is an optional filename part that can be
+specified using <code>-p</code>, <var>outfile_base</var> needs to be
+specified using <code>-c</code>, <var>suffix</var> is an optional
+suffix that can be specified using the <code>IMPLEMENTATION</code>
+directive, and <var>source_ext</var> and <var>header_ext</var> default
+to ".cc" and ".h" but can be overridden using <code>-C</code> and
+<code>-H</code>, respectively.
+<dl>
+  <dt><code>-c </code><var>filename_base</var> </dt>
+  <dd>Specifies the basename of generated file names that appear in
+      the output files.  This option is mandantory.</dd>
+  <dt><code>-o </code><var>outfile_base</var>  </dt>
+  <dd>Specifies the basename of output files.  It defaults to the
+      value of the  <code>-c</code> option.</dd>
+  <dt><code>-s</code></dt>
+  <dd>Generate one implementation file per source file, using the base
+       name of the implementation file as <var>outfile_base</var>, and not one
+       implementation file per <var>suffix</var> specified as
+       arguments to <code>IMPLEMENTATION</code> directives in the
+       source files.</dd>
+  <dt><code>-p </code><var>prepend</var>  </dt>
+  <dd>Specifies a prefix for all output file names.  This prefix is
+       prepended to <var>filename_base</var> and can contain directory
+       separators ("<code>/</code>").</dd>
+  <dt><code>-C </code><var>source_ext</var></dt>
+  <dd>Specify the extension of generated implementation files.
+       Defaults to ".cc".</dd>      
+  <dt><code>-H </code><var>header_ext</var></dt>
+  <dd>Specify the extension of generated header files.
+       Defaults to ".h".</dd>
+  <dt><code>-e</code> <var>tag_list</var></dt>
+  <dd>Enable conditional compilation using the selectors included in
+       the comma-separated <var>tag_list</var>.  This option is
+       intended to be used in conjunction with the <code>-s</code>
+       option.  See Section
+       \ref CONDITIONAL \if man CONDITIONAL COMPILATION \endif
+       for details on this option.</dd>
+  <dt><code>-t</code> </dt>
+  <dd>Truncate to size 0 output files for which Preprocess generates
+       no output.  This option supresses even <code>\#include</code>
+       directives in generated source files that are otherwise empty,
+       resulting in increased compilation speed for these files.</dd>
+  <dt><code>-i</code> </dt>
+  <dd>Generate <code>inline</code> code.  If this option is not
+       given, all code (including code marked "<code>inline</code>")
+       is generated out-of-line.</dd>
+  <dt><code>-l</code> </dt>
+  <dd>Avoid generating <code>\#line</code> directives in output
+       files.  If this option is not given, <code>\#line</code> will be
+       generated by default.</dd>
+  <dt><code>-L</code> </dt>
+  <dd>Avoid generating <code>\#line</code> directives in header files only.
+       Using this option can speed up builds because the contents of
+       header files change less frequently, as <code>\#line</code>
+       directives for (member) function declarations do not have to be
+       updated every time its definition in the source module changes
+       its absolute position.  (Of course, this assumes that the time
+       stamp of header files are updated only when the contents of the
+       files change.  See Section
+       \ref MAKEFILE \if man EXAMPLE MAKEFILE FRAGMENT \endif
+       for a possible way to
+       do this.) </dd>
+  <dt><code>-v</code> </dt>
+  <dd>Be verbose: Print results of <code>preprocess</code>' parser pass.</dd>
+  <dt><code>-d</code> </dt>
+  <dd>Be verbose: Print a diagnostic when dropping a section in
+       conditional-compilation mode (Option <code>-e</code>).</dd>
+</dl>
+
+
+\section LANGUAGE Language directives
+
+Preprocess understands a number of language directive that control its
+behavior.
+<dl>
+  <dt><code>INTERFACE:</code> 
+  <dd>Starts an interface section.  Every declaration from such a
+       section will be copied to the public header file.  Class
+       declarations found here (``public class'') will be completed
+       with member-function declarations for member functions found in
+       <code>IMPLEMENTATION</code> sections.
+       \htmlonly <p> \endhtmlonly
+       Function definitions are not allowed in this section.
+
+  <dt><code>IMPLEMENTATION:</code>
+  <dd>Starts an implementation section.  Preprocess tries to hide
+       declarations found in these sections in the internal header
+       file and in the implementation file, as follows:
+       <dl>
+	 <dt>Class declarations (``private classes'')
+	 <dd>(subject to member-function-declaration completion
+	      as with those in
+	      <code>INTERFACE:</code> sections) end up in the internal
+	      header file -- except if a public inline function of a
+	      public class depends on the private class, in which case
+	      the private class' declaration will be put into the
+	      public header file.
+	 <dt>Include directives
+	 <dd>underlie the same rules as class declarations.
+	 <dt>Function definitions 
+	 <dd>are usually held in the implementation file.  Public
+	      inline functions,  private inline 
+	      functions needed by a public inline function, and
+	      functions subject to template instatiation are exported
+	      to the public header file.  Other inline functions
+	      (except static non-member inline functions) are put into
+	      the private header file.
+	 <dt>Other code (e.g., variable definitions)
+	 <dd>is put into the implementation file.
+       </dl>
+
+  <dt><code>PUBLIC</code>, <code>PRIVATE</code>, and <code>PROTECTED</code>
+  <dd>specify member-function visibility.
+
+  <dt><code>explicit</code>, <code>static</code>, and <code>virtual</code>
+  <dd>specify member-function attributes.  The attributes will be
+       copied to the automatically-created member-function
+       declarations in class declarations (and removed for the actual
+       function definition, as C++ requires).
+
+  <dt><code>inline</code>
+  <dd>specifies inline functions.  This attribute will be retained
+       for function definitions (but deleted for
+       automatically-created member-function declarations, as C++
+       requires).  (Inline functions will be
+       exported subject to the rules defined above.)
+       
+  <dt><code>inline NEEDS [</code><i>dependencies</i><code>,</code>
+       <i>...</i> <code>]</code>
+  <dd>like <code>inline</code>, but additionally specifies types,
+       functions, and <code>\#include</code> statements that this
+       inline function depends on and that consequently need to be
+       exported as well, in front of this inline function.  Preprocess
+       reorders definitions such that all dependencies are defined
+       before the inline function.
+       \htmlonly <p> \endhtmlonly
+       Example:
+<blockquote><pre><code>inline NEEDS["foo.h", some_func, Some_class,
+             Some_other_class::member_func]
+int
+foo ()
+{ }
+</code></pre></blockquote>
+</dl>
+
+\subsection ADVANCED Language directives for advanced use
+
+<dl>       
+  <dt><code>IMPLEMENTATION [</code><i>suffix</i><code>]:</code> 
+  <dd>Starts an implementation section with code that will be put
+       into a nonstandard output file.  Instead of landing in
+       <i>outfile_base</i><code>.cc</code>, the code ends up in
+       <i>outfile_base</i><code>-</code><i>suffix</i><code>.cc</code>.
+       This directive is useful if there are several input files that
+       together make up one input module (which are fed to Preprocess
+       at the same time and which share one public and one private
+       header file).
+
+       (This form of the IMPLEMENTATION directive works only if
+       neither the <code>-s</code> (no-suffix) nor the <code>-e</code>
+       (conditional compilation) options are used.  See Section
+       \ref CONDITIONAL \if man CONDITIONAL COMPILATION \endif
+       for information on conditional compilation.)
+
+  <dt><code>EXTENSION class </code><var>classname</var><code> {</code>
+       ... <code>};</code>
+  <dd>Extends the definition of class <var>classname</var> (which
+       usually appears in another input file) with more members.  This
+       clause is usually used when a class can be configured with
+       several alternative extensions, for example to provide
+       portability across architectures.
+
+  <dt><code>IMPLEMENT</code>
+  <dd>is a member-function attribute that specifies that the member
+       function's declaration <em>should not</em> be copied to the
+       class declaration.  Use this attribute to implement an
+       interface that is already declared in the class declaration.
+
+  <dt><code>inline NOEXPORT</code>
+  <dd>specifies inline functions that will not be exported via the
+       public header file even if it is a publibly-visible function.
+       Instead, the function definition will end up in the
+       implementation file.
+
+  <dt><code>inline ALWAYS_INLINE</code>
+  <dd>specifies a functions that is generated as an inline function
+       even if the <code>-i</code> option is not used.  Use this
+       specifier for functions that absolutely must be inline even in
+       debugging builds.
+
+</dl>
+
+\subsection CONDITIONAL Conditional compilation
+
+Conditional compilation is a Preprocess mode that is enabled by using
+the "<code>-e</code> <var>tag_list</var>" option.
+
+<dl>       
+  <dt><code>INTERFACE [</code><i>tag_expression</i><code>]:</code> </dt>
+  <dt><code>IMPLEMENTATION [</code><i>tag_expression</i><code>]:</code></dt>
+  <dd>A <var>tag_expression</var> is a logical expression with negation (!),
+       conjunction (-), disjunction (,), and one level of parentheses
+       ({ and }), using selector tags as its atoms.  The
+       <code>INTERFACE</code> or <code>IMPLEMENTATION</code> section
+       is included in the output only if it is true using the
+       selectors specified in <var>tag_list</var>.
+       </dd>
+</dl>
+
+Examples:
+
+<pre><code>INTERFACE [a,b]:</code>
+// This section is used whenever a or b is contained in the <var>tag_list</var>
+
+<code>INTERFACE [a-b]: </code>
+// This section is used whenever a and b are contained in the <var>tag_list</var>
+
+<code>INTERFACE [a,b-c]:</code>
+// This section is used whenever a, or b and c are 
+// contained in the <var>tag_list</var>
+
+<code>INTERFACE [!a]:</code>
+// This section is used whenever a is not contained in the <var>tag_list</var>
+
+<code>INTERFACE [{a,b}-c]:</code>
+// This section is used whenever a and c, or b and c are 
+// contained in the <var>tag_list</var>
+
+<code>INTERFACE [!a,b-c]:</code>
+// This section is used whenever a is not contained in the <var>tag_list</var>,
+// or b and c are contained in the <var>tag_list</var></pre>
+
+\section MISC Usage hints
+
+When you use Preprocess, there are a few things you need to keep in
+mind.
+<ul>
+  <li>Preprocess currently does not support namespaces and nested
+       classes.  It is possible to use namespaces and nested classes
+       defined elsewhere (for example, in a library header file), but
+       you cannot define new namespaces and nested classes.
+       \htmlonly <p> \endhtmlonly
+  <li>Preprocess copies function declarations for publicly visible
+       functions to the public header file.  If you use user-defined
+       types in function signatures, you need to "<code>\#include</code>"
+       the corresponding header files (or add forward declarations) in
+       the "<code>INTERFACE:</code>" section of your module.  Private
+       inline functions (which might end up in the public header file)
+       need to specify their include dependencies in a "<code>NEEDS[]</code>"
+       clause.
+       \htmlonly <p> \endhtmlonly
+       Also, if you use names declared in an (externally-defined)
+       namespace (such as namespace "<code>std</code>"), you must
+       specify the fully-qualified name (including the namespace) in
+       the function signature (unless you use a "<code>using
+       namespace</code>" directive in the "<code>INTERFACE:</code>"
+       section, which is not recommended).
+       \htmlonly <p> \endhtmlonly
+  <li>Don't forget to specify inline functions required by other
+       inline functions in the latter's "<code>NEEDS</code>" clause.
+       Otherwise, Preprocess cannot guarantee the correct
+       inline-function order in the output, and you may get compiler
+       warnings like ``inline function is used but not defined.''  This
+       problem is reinforced when using private inline functions,
+       because Preprocess moves them out of the public header file
+       (into the private header file) unless a public function's
+       "<code>NEEDS</code>" clause requires them.
+</ul>
+
+\section MAKEFILE Example Makefile fragment
+
+\htmlonly
+<table border=0><tr valign=top>
+<td width="70%" valign=top>
+\endhtmlonly
+
+This is an example fragment from a Makefile (for GNU Make) that
+generates <code>*.cc</code>, <code>*.h</code>, and <code>*_i.h</code>
+files on the fly.  It only updates the generated files if they
+actually change; that is, if you change something in the
+implementation section that does not influence the header files, they
+will not be updated, avoiding recompilation of files that depend on
+them.
+
+This Makefile fragment needs GNU Make and the <a
+href="move-if-change">move-if-change</a> script that only updates a
+target if it is different from the source.
+
+This example assumes that you do not use the
+<code>IMPLEMENTATION[</code><var>suffix</var><code>]</code>
+directive.  If you do plan using this directive, a more elaborate
+mechanism is needed, such as the one used in the Makefiles for the
+<a href="http://os.inf.tu-dresden.de/fiasco/">Fiasco microkernel</a>.
+
+\htmlonly
+</td>
+<td bgcolor="#dedede">
+\endhtmlonly
+<pre><code>PREPROCESS = preprocess
+
+.PRECIOUS: stamp-%.ready
+stamp-%.ready: %.cpp
+	\$(PREPROCESS) -i -o new_\$* -c \$* \$<
+	./move-if-change new_\$*.h \$*.h 
+	./move-if-change new_\$*_i.h \$*_i.h 
+	./move-if-change new_\$*.cc \$*.cc 
+	touch \$@
+
+%.cc: stamp-%.ready
+        @[ -e \$@ ] || { rm -f \$<; \$(MAKE) \$<; }
+
+%.h: stamp-%.ready
+        @[ -e \$@ ] || { rm -f \$<; \$(MAKE) \$<; }
+
+\%_i.h: stamp-%.ready
+        @[ -e \$@ ] || { rm -f \$<; \$(MAKE) \$<; }</code></pre></td>
+
+\htmlonly
+</tr></table>
+\endhtmlonly
+
+<!-- ------------------------------------------------------------------- -->
+
+\section BUGS Limitations and ideas for future extensions
+
+<h3>Bugs</h3>
+
+<ul>
+  <li>Namespaces and nested classes currently are unsupported.
+  <li>The <code>\#line</code> directives Preprocess generates sometimes
+       are offset plus/minus one or two lines to the real code.
+  <li>Preprocess doesn't really understand preprocessor constructs
+       besides <code>\#include</code> and <code>\#if 0</code>; it just
+       copies all other direcitives into the output as it finds them.
+       That makes it easy for you to shoot yourself into the foot.
+</ul>
+
+<h3>Ideas for future extensions</h3>
+
+<ul>
+  <li>Generate HTML documentation for modules/classes.
+  <li>Auto-generated getters and setters for attributes
+  <li>Auto-generate insulation (wrappers, protocol classes,
+       procedural interface) for any given class.
+  <li>Transform input <code>.cpp</code> files into new
+       <code>.cpp</code> files, refactoring or renaming code on the
+       fly.
+  <li>Aspect-oriented programming: Weave in extensions (``aspects'')
+       to member functions.  Aspects can be
+       synchronization or debugging checks, for example.
+  <li>Support for class invariants (design by contract)
+  <li>Enforce a set of naming conventions.
+</ul>
+
+\section DOWNLOAD Download
+
+Preprocess is free software licensed under the GNU General Public
+License.  Its implementation language is Perl, so you need a Perl5
+interpreter to run it.
+
+You can download Preprocess as CVS module "<code>preprocess</code>"
+from the DROPS project's remote-CVS server.  Please refer to the <a
+href="http://os.inf.tu-dresden.de/drops/download.html">download
+instructions</a> on DROPS' website.
+
+\section LIST Mailing list
+
+There is a mailing list to which CVS-commit messages for changes made
+to preprocess are posted.  Please ask me if you would like to be put
+on this list (see Section \ref AUTHOR \if man AUTHOR \endif).
+
+New releases are periodically announced on <a
+href=http://freshmeat.net/projects/preprocess/"">the Freshmeat
+website</a>.  If you are a registered Freshmeat user, you can <a
+href="http://freshmeat.net/subscribe/36508/">subscribe to these
+release announcements</a>\if man at
+http://freshmeat.net/subscribe/36508/\endif.
+
+\section AUTHOR Author
+
+Michael Hohmuth <hohmuth@inf.tu-dresden.de>
+
+\section SEE See also
+
+<a href="http://os.inf.tu-dresden.de/~hohmuth/prj/preprocess/move-if-change"><code>move-if-change</code></a>(1) shell script\if man
+: http://os.inf.tu-dresden.de/~hohmuth/prj/preprocess/move-if-change
+\endif
+
+\if man
+<a
+href="http://os.inf.tu-dresden.de/~hohmuth/prj/preprocess/">Preprocess
+project web page</a>
+: http://os.inf.tu-dresden.de/~hohmuth/prj/preprocess/
+\endif
+
+Preprocess was originally written for the <a
+href="http://os.inf.tu-dresden.de/fiasco/">Fiasco microkernel</a>\if man
+: http://os.inf.tu-dresden.de/fiasco/
+\endif.
+
+*/

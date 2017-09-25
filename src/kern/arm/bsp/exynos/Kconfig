@@ -1,0 +1,115 @@
+# PF: EXYNOS
+# PFDESCR: Samsung Exynos
+# PFDEPENDS: ARM
+# PFSELECT: HAVE_ARM_SECMONIF_NONE HAVE_ARM_SECMONIF_MC
+
+config PF_EXYNOS4
+        bool
+        depends on PF_EXYNOS
+        select CAN_ARM_CPU_CORTEX_A9
+        select CAN_ARM_CACHE_L2CXX0
+
+config PF_EXYNOS5
+        bool
+        depends on PF_EXYNOS
+        select CAN_ARM_CPU_CORTEX_A15
+        select HAS_CPU_VIRT
+        select DEFAULT_ARM_EM_NS  if CPU_VIRT
+
+config CPU_SUSPEND
+        bool
+        default y if PF_EXYNOS && (PF_EXYNOS_EXTGIC || PF_EXYNOS5)
+        depends on PF_EXYNOS && (PF_EXYNOS_EXTGIC || PF_EXYNOS5)
+
+config PF_EXYNOS_PKG_IDS
+        string "Exynos package ID file"
+        default ""
+        help
+          Optional file for board IDs, to select proper UART at runtime.
+          It is safe to leave this empty and select the UART in this
+          configuration.
+
+choice
+        prompt "Exynos Platform"
+        default PF_EXYNOS_4210
+        help
+          Select the Exynos Soc type, if the optional package-ID
+          file is used (PF_EXYNOS_PKG_IDS) this file overrides the
+          Soc type for a matching platform.
+
+config PF_EXYNOS4_4210
+        bool "4210 - Exynos 4"
+        depends on PF_EXYNOS
+        select PF_EXYNOS4
+        help
+          Choose for Exynos4 based platforms.
+
+config PF_EXYNOS4_4412
+        bool "4412 - Exynos 4"
+        depends on PF_EXYNOS
+        select PF_EXYNOS4
+        help
+          Choose for Exynos4 based platforms.
+
+config PF_EXYNOS5_5250
+        bool "5250 - Exynos 5"
+        depends on PF_EXYNOS
+        select PF_EXYNOS5
+        help
+          Choose for Exynos5 based platforms.
+
+config PF_EXYNOS5_5410
+        bool "5410 - Exynos 5"
+        depends on PF_EXYNOS
+        select PF_EXYNOS5
+        help
+          Choose for Exynos5 based platforms.
+
+endchoice
+
+
+config PF_EXYNOS_UART_NATIVE
+	def_bool y
+
+config PF_EXYNOS_UART_NR
+        int "Which UART to use for kernel output"
+        range 0 3
+        default 2
+        depends on PF_EXYNOS_UART_NATIVE
+        help
+          Select which UART to use for kernel I/O. If the optional
+          package-ID file is used (PF_EXYNOS_PKG_IDS) this file
+          overrides the UART number for a matching platform.
+          Odroid-A and Odroid-X use UART 1, the Exynos Snow platform uses
+          UART 3, most others use UART 2.
+
+choice
+	prompt "Platform Timer"
+	default PF_EXYNOS_TIMER_MCT
+
+config PF_EXYNOS_TIMER_MCT
+	bool "Multi-core timer"
+	depends on !CPU_VIRT
+
+config PF_EXYNOS_TIMER_MP
+	bool "MP timer"
+	depends on ARM_CORTEX_A9
+
+config PF_EXYNOS_TIMER_PWM
+	bool "PWM timer"
+	depends on !CPU_VIRT
+
+config PF_EXYNOS_TIMER_GEN
+        bool "ARM Generic Timer"
+        depends on ARM_CORTEX_A15
+
+endchoice
+
+config PF_EXYNOS_EXTGIC
+        bool "Use ExtGic"
+	depends on PF_EXYNOS_TIMER_MCT
+        depends on PF_EXYNOS4
+        default y
+        help
+          Use internal or external GIC.
+

@@ -1,0 +1,17 @@
+# vim:set ft=make:
+
+SUBSYSTEMS              += LIBUART
+OBJECTS_LIBUART         += uart_s3c2410.o
+PREPROCESS_PARTS        += libuart s3c2410 generic_tickless_idle
+RAM_PHYS_BASE           := 0x30000000
+
+uart_IMPL             += uart-s3c2410
+config_IMPL           += config-arm-s3c2410
+mem_layout_IMPL       += mem_layout-arm-s3c2410
+pic_IMPL              += pic-arm-s3c2410
+bootstrap_IMPL        += bootstrap-arm-s3c2410
+timer_IMPL            += timer-arm-s3c2410
+timer_tick_IMPL       += timer_tick-single-vector
+kernel_uart_IMPL      += kernel_uart-arm-s3c2410
+reset_IMPL            += reset-arm-s3c2410
+clock_IMPL            += clock-generic

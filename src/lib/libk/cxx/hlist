@@ -1,0 +1,144 @@
+// vi:ft=cpp
+/*
+ * (c) 2011 Alexander Warg <warg@os.inf.tu-dresden.de>
+ *     economic rights: Technische Universität Dresden (Germany)
+ *
+ * This file is part of TUD:OS and distributed under the terms of the
+ * GNU General Public License 2.
+ * Please see the COPYING-GPL-2 file for details.
+ *
+ * As a special exception, you may use this file as part of a free software
+ * library without restriction.  Specifically, if other files instantiate
+ * templates or use macros or inline functions from this file, or you compile
+ * this file and link it with other files to produce an executable, this
+ * file does not by itself cause the resulting executable to be covered by
+ * the GNU General Public License.  This exception does not however
+ * invalidate any other reasons why the executable file might be covered by
+ * the GNU General Public License.
+ */
+
+#pragma once
+
+#include "bits/list_basics.h"
+#include "type_traits"
+
+namespace cxx {
+
+class H_list_item
+{
+public:
+  H_list_item() : _pn(0) {}
+  ~H_list_item() { l_remove(); }
+
+private:
+  H_list_item(H_list_item const &);
+  void operator = (H_list_item const &);
+
+  template<typename T, typename P> friend class H_list;
+  template<typename T, typename X> friend struct Bits::Basic_list_policy;
+
+  void l_remove()
+  {
+    if (!_pn)
+      return;
+
+    *_pn = _n;
+    if (_n) 
+      _n->_pn = _pn;
+
+    _pn = 0;
+  }
+
+  H_list_item *_n, **_pn;
+};
+
+template< typename T >
+struct H_list_item_t : H_list_item {};
+
+template< typename T, typename POLICY = Bits::Basic_list_policy< T, H_list_item> >
+class H_list : public Bits::Basic_list<POLICY>
+{
+private:
+  typedef typename cxx::conditional<
+    cxx::is_convertible<T, H_list_item_t<T> >::value,
+    H_list_item_t<T>, H_list_item>::type Item;
+  typedef Bits::Basic_list<POLICY> Base;
+  H_list(H_list const &);
+  void operator = (H_list const &);
+
+public:
+  typedef typename Base::Iterator Iterator;
+
+  // BSS allocation
+  explicit H_list(bool x) : Base(x) {}
+  H_list() : Base() {}
+
+  static Iterator iter(T *c) { return Base::__iter(c->Item::_pn); }
+
+  static bool in_list(T const *e) { return e->Item::_pn; }
+
+  void add(T *e)
+  {
+    if (this->_f)
+      this->_f->_pn = &e->Item::_n;
+    e->Item::_n = this->_f;
+    e->Item::_pn = &this->_f;
+    this->_f = static_cast<Item*>(e);
+  }
+
+  void push_front(T *e) { add(e); }
+
+  void insert(T *e, Iterator const &pred)
+  {
+    H_list_item **x = &this->_f;
+    if (pred != Base::end())
+      x = &(*pred)->_n;
+
+    e->Item::_n = *x;
+
+    if (*x)
+      (*x)->_pn = &(e->Item::_n);
+
+    e->Item::_pn = x;
+    *x = static_cast<Item*>(e);
+  }
+
+  static void insert_before(T *e, Iterator const &succ)
+  {
+    H_list_item **x = Base::__get_internal(succ);
+
+    e->Item::_n = *x;
+    e->Item::_pn = x;
+
+    if (*x)
+      (*x)->_pn = &e->Item::_n;
+
+    *x = static_cast<Item*>(e);
+  }
+
+  static void replace(T *p, T *e)
+  {
+    e->Item::_n = p->Item::_n;
+    e->Item::_pn = p->Item::_pn;
+    *(p->Item::_pn) = static_cast<Item*>(e);
+    if (e->Item::_n)
+      e->Item::_n->_pn = &(e->Item::_n);
+
+    p->Item::_pn = 0;
+  }
+
+  static void remove(T *e)
+  { e->Item::l_remove(); }
+
+  static Iterator erase(Iterator const &e)
+  { e->Item::l_remove(); return e; }
+};
+
+template< typename T >
+class H_list_bss : public H_list<T>
+{
+public:
+  H_list_bss() : H_list<T>(true) {}
+};
+
+}

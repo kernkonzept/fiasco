@@ -1,0 +1,69 @@
+# -*- makefile -*-
+# vi:se ft=make:
+PREPROCESS_PARTS-$(CONFIG_JDB_LOGGING)       += jdb_logging
+
+INTERFACES_KERNEL	:= cpu_mask rcupdate kobject_mapdb context_base pm \
+			   mem_region per_cpu_data startup                   \
+			   queue queue_item l4_buf_iter bitmap               \
+			   mapping spin_lock mapping_tree mappable           \
+			   dbg_page_info mapdb pic kobject_dbg koptions      \
+			   kobject_iface kobject ready_queue_wfq             \
+                           obj_space_types obj_space_phys_util \
+			   ready_queue_fp obj_space ptab_base ram_quota      \
+			   ref_obj mem_space space string_buffer \
+			   vlog kmem kmem_alloc slab_cache mem_layout        \
+			   kmem_slab switch_lock kip_init   \
+			   thread_lock helping_lock cpu_lock timer timeout   \
+			   ipc_timeout timeslice_timeout per_cpu_data_alloc  \
+			   vcpu_host_regs                                    \
+			   vcpu kobject_helper icu_helper thread_state       \
+			   context sender receiver mem_unit factory cpu_call \
+			   lock ipc_sender thread thread_object syscalls     \
+			   kernel_thread map_util irq banner warn            \
+			   app_cpu_thread globals watchdog kernel_uart       \
+			   main config vmem_alloc paging fpu                 \
+			   fpu_state fpu_alloc cpu entry_frame               \
+			   kernel_console ipc_gate task sigma0_task          \
+                           kernel_task platform_control_object          \
+			   irq_controller irq_chip irq_mgr terminate         \
+			   continuation timer_tick platform_control          \
+			   sched_context utcb_init perf_cnt trap_state       \
+			   buddy_alloc vkey kdb_ke prio_list ipi scheduler   \
+			   clock sys_call_page boot_alloc                    \
+			   assertion semaphore jdb_object
+
+OBJ_SPACE_TYPE = $(if $(CONFIG_VIRT_OBJ_SPACE),virt,phys)
+PREPROCESS_PARTS-y$(CONFIG_VIRT_OBJ_SPACE) += obj_space_phys
+PREPROCESS_PARTS += obj_space_$(OBJ_SPACE_TYPE)
+INTERFACES_KERNEL-$(CONFIG_VIRT_OBJ_SPACE) += obj_space_virt_util
+obj_space_IMPL = obj_space obj_space-$(OBJ_SPACE_TYPE)
+
+
+platform_control_IMPL   := platform_control
+
+syscalls_IMPL		:= syscalls syscalls-log
+
+timer_tick_IMPL         := timer_tick
+
+vcpu_host_regs_IMPL	:= vcpu_host_regs-$(CONFIG_XARCH)
+
+INTERFACES_JDB += \
+	jdb jdb_util jdb_core jdb_module jdb_prompt_ext jdb_list           \
+	jdb_handler_queue jdb_attach_irq jdb_entry_frame                   \
+	jdb_exit_module jdb_bp jdb_factory jdb_input jdb_ipc_gate          \
+	jdb_kobject jdb_kobject_names jdb_lines jdb_prompt_module          \
+	jdb_obj_space jdb_screen jdb_space jdb_symbol jdb_table jdb_tcb    \
+	jdb_thread jdb_thread_list kern_cnt jdb_counters push_console      \
+	jdb_regex jdb_disasm jdb_tbuf_output jdb_input_task jdb_tbuf_show  \
+	jdb_report jdb_dump jdb_mapdb jdb_timeout jdb_kern_info_kmem_alloc \
+	jdb_kern_info_kip jdb_kern_info jdb_kern_info_data jdb_utcb        \
+	jdb_trap_state jdb_rcupdate jdb_sender_list
+
+jdb_IMPL	+= jdb jdb-ansi jdb-thread
+jdb_tbuf_IMPL	+= jdb_tbuf jdb_tbuf-$(CONFIG_XARCH)
+jdb_tcb_IMPL	+= jdb_tcb
+
+ifeq ("$(CONFIG_JDB)","y")
+INTERFACES_KERNEL += \
+	jdb_tbuf jdb_tbuf_init tb_entry jdb_trace
+endif

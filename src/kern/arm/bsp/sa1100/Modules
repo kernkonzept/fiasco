@@ -1,0 +1,16 @@
+# vim:set ft=make:
+
+PREPROCESS_PARTS        += sa1100 vcache armv5 kern_start_0xd generic_tickless_idle
+RAM_PHYS_BASE           := 0xc0000000
+VPATH                   += kern/arm/bsp/pxa-sa
+    
+uart_IMPL             += uart-sa1100
+config_IMPL           += config-arm-pxa_sa1100
+mem_layout_IMPL       += mem_layout-arm-sa1100
+pic_IMPL              += pic-arm-pxa_sa1100
+bootstrap_IMPL        += bootstrap-arm-sa1100
+timer_IMPL            += timer-arm-pxa_sa1100
+timer_tick_IMPL       += timer_tick-single-vector
+kernel_uart_IMPL      += kernel_uart-arm-sa1100
+reset_IMPL            += reset-arm-sa1100
+clock_IMPL            += clock-generic

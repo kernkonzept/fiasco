@@ -1,0 +1,82 @@
+# PF: IMX
+# PFDESCR: NXP/Freescale i.MX
+# PFDEPENDS: ARM
+
+choice
+	prompt "NXP/Freescale i.MX"
+	default PF_IMX_51
+
+config PF_IMX_21
+	bool "i.MX21"
+	depends on PF_IMX
+	select CAN_ARM_CPU_926
+	help
+	  Choose for i.MX21.
+
+config PF_IMX_28
+	bool "i.MX28"
+	depends on PF_IMX
+	select CAN_ARM_CPU_926
+	help
+	  Choose for i.MX28.
+
+config PF_IMX_35
+	bool "i.MX35"
+	depends on PF_IMX
+	select CAN_ARM_CPU_1136
+        help
+          Choose for i.MX35 platform.
+
+config PF_IMX_51
+	bool "i.MX51"
+	depends on PF_IMX
+	select CAN_ARM_CPU_CORTEX_A8
+	help
+	  Choose for i.MX51.
+
+# remove comment when actually tested...
+#config PF_IMX_53
+#	bool "i.MX53"
+#	depends on PF_IMX
+#	select CAN_ARM_CPU_CORTEX_A8
+#	help
+#	  Choose for i.MX53.
+
+config PF_IMX_6
+        bool "i.MX6"
+        depends on PF_IMX
+        select CAN_ARM_CPU_CORTEX_A9
+	select CAN_ARM_CACHE_L2CXX0
+        help
+          Choose for i.MX6 platform.
+
+config PF_IMX_6UL
+        bool "i.MX6UL"
+        depends on PF_IMX
+        select CAN_ARM_CPU_CORTEX_A7
+        select HAS_CPU_VIRT
+        help
+          Choose for i.MX6UL platform.
+
+endchoice
+
+config PF_IMX_RAM_PHYS_BASE
+	hex
+	default 0xc0000000 if PF_IMX_21
+	default 0x40000000 if PF_IMX_28
+	default 0x80000000 if PF_IMX_35 || PF_IMX_6UL
+	default 0x90000000 if PF_IMX_51
+        default 0x10000000 if PF_IMX_6
+
+choice
+	prompt "Choose timer for i.MX6"
+	depends on ARM_CORTEX_A9
+	default PF_IMX_6_TIMER_MPTIMER
+
+config PF_IMX_6_TIMER_MPTIMER
+        bool "Use CPU-local MP-timer"
+
+config PF_IMX_6_TIMER_EPIT
+        bool "Use EPIT timer"
+
+endchoice

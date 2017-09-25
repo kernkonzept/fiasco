@@ -1,0 +1,148 @@
+#!/usr/bin/perl -w
+
+$mode = "ascii";
+$mode = shift @ARGV if ($#ARGV > -1);
+
+@input = <>;
+$_ = join '', @input;
+
+s/\\\n//sg;			# delete continuations
+s/^([^.-]+)[^.]*\..*:/${1}:/mg;	# keep only first word before ":", w/o "-"
+s/\s\.\.\/[^\s]+//sg;		# remove all dependencies not in our dir
+s|\s/[^\s]+||sg;		# remove all dependencies not in our dir
+s|\s+[A-Za-z0-9_/]+/([A-Za-z0-9_\.-]+)]*| $1|g; # keep basenames only
+s|\s+([A-Za-z0-9_-]+)\.[^\s]*| $1|g;  # keep basenames only
+s|\s+([A-Za-z0-9_]+)-[^\s]*| $1|g; # drop everything after "-"
+s/ +/ /sg;			# remove multiple spaces
+
+# 
+# Read single-module dependencies
+#
+
+foreach my $line (split /\n/)
+  {
+    my ($target, $deps) = split /:\s*/, $line;
+
+    @deps = sort grep {! /^${target}(?:_i)?$/ } split / /, $deps;
+
+    push @{$target_deps{$target}}, @deps;
+
+    foreach my $module (@deps)
+      {
+	push @{$depending_on{$module}}, $target;
+      }
+  }
+
+if ($mode eq "ascii")
+  {
+    show_deps();
+  }
+elsif ($mode eq "dot")
+  {
+    print_dot();
+  }
+# elsif ($mode eq "circular")
+#   {
+#     print_circular();
+#   }
+
+sub show_deps {
+  #
+  # Compute cycles
+  #
+
+  foreach my $module (keys %target_deps)
+    {
+      $all_deps{$module} = finddeps ($module, {});
+    }
+
+  #
+  # Print dependencies per module
+  #
+  
+  foreach my $module (sort keys %target_deps)
+    {
+      my %found;
+      
+      foreach my $called_by (@{$depending_on{$module}})
+	{
+	  next if defined $found{$called_by};
+	  $found{$called_by} = 1;
+	  
+	  print "    $called_by" . (defined $all_deps{$module}->{$called_by}
+				    ? " *" : "") . "\n";
+	}
+      
+      print "$module\n";
+      
+      %found = ();
+      
+      foreach my $calling (@{$target_deps{$module}})
+	{
+	  next if defined $found{$calling};
+	  $found{$calling} = 1;
+	  
+	  print "    $calling" . (defined $all_deps{$calling}->{$module}
+				  ? " *" : "") . "\n";
+	}
+      
+      print "\n---\n\n";
+    }
+}
+
+sub print_dot {
+  print "digraph G {\n";
+
+  foreach my $module (sort keys %target_deps)
+    {
+      next if scalar @{$target_deps{$module}} == 0;
+
+      my $modname = $module;
+      $modname =~ s,[/-],_,g;
+      
+      print "  $modname -> { ";
+      
+      my %found = ();
+      my $first = 1;
+      
+      foreach my $calling (@{$target_deps{$module}})
+	{
+	  next if defined $found{$calling};
+	  $found{$calling} = 1;
+
+	  print "; " if (! $first);
+	  $first = 0;
+
+	  $calling =~ s,[/-],_,g;
+      
+	  print "$calling"
+	}
+      print "};\n";
+    }      
+
+  print "};\n";
+}
+  
+sub finddeps {
+  my ($module, $traversed) = @_;
+  
+  return {} if ! defined $target_deps{$module};
+  return {} if defined $traversed->{$module};
+  $traversed->{$module} = 1;
+  
+  my @alldeps = @{$target_deps{$module}};
+  
+  foreach my $dep (@{$target_deps{$module}})
+    {
+      push @alldeps, keys %{finddeps ($dep, $traversed)};
+    }
+  
+  my %unique_names;
+  
+  foreach my $dep (@alldeps)
+    {
+      $unique_names{$dep} = 1;
+    }
+  
+  return \%unique_names;
+}

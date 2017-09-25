@@ -1,0 +1,117 @@
+# -*- makefile -*-
+
+# Unit tests for the KERN subsystem
+
+UNITTEST = unittest
+
+ALL_TESTS = $(INTERFACES_UNITTEST)
+RUN_TESTS = $(addsuffix .ok, $(ALL_TESTS))
+
+.PHONY: unittest
+unittest: $(RUN_TESTS)
+
+#
+# Dependency calculation.  WARNING: Black Art [tm].
+# Algorithm:  For each module M:
+# - Include everything mentioned in the INTERFACES_KERNEL before M
+# - Optimization: Sibling weed-out: Remove all modules mentioned
+#   directly before M that M does not #include
+# - Find object files comprising these modules
+# - Finally, add objects comprising module M_t, and all libraries
+#   subsystem KERNEL depends on
+#
+
+# Trim trailing "_t"
+module_of_test = $(patsubst %_t,%,$(1))
+
+# return sublist of $(2) which contains all elements before $(1)
+earlier_modules = $(shell echo $(2) | sed 's, $(strip $(1)) *.*$$,,')
+
+# return list of modules included by module $(1); candidates are in $(2)
+inc_sedstr = 's/^ *\# *include *"\(.*\)\.h"/\1/p'
+includes = $(filter $(2), \
+	     $(shell sed -n $(inc_sedstr) auto/$(strip $(1)).h auto/$(strip $(1))_i.h))
+
+# remove elements trailing list $(1) that do not appear in list $(2)
+comma = ,
+define trimlist 
+  $(shell perl -e '@l = split " ", "$(strip $(1))"; 
+		   %inc = ( $(addsuffix =>" "$(comma),$(2)) );
+		   sub trim { return () if ! scalar @_;
+			      my $$last = $$_[-1]; 
+			      return @_ if defined $$inc{$$last};
+			      pop @_;
+			      return trim(@_); }
+		   print join(" ", trim(@l));')
+endef
+
+# return list of objects belonging to a list of module
+objects = $(addsuffix .o, $(foreach mod, $(1), \
+				$(if $($(mod)_IMPL), $($(mod)_IMPL), $(mod))))
+
+ifdef BUILD_SOURCES
+
+do-all: .Unittest.deps
+
+.Unittest.deps: $(MODULES_FILE)
+	@echo "Generating $@"
+	$(VERBOSE)( $(foreach test, $(ALL_TESTS),			      \
+	    test_base=$(call module_of_test, $(test));			      \
+	    echo '$(test): $(call objects, $(test))			      \
+		           $$(call objects, '"$$test_base"' $$(call trimlist, \
+			           $(call earlier_modules,		      \
+					  $(call module_of_test, $(test)),    \
+                                          $(INTERFACES_KERNEL)),	      \
+				   $$(call includes, '"$$test_base"',	      \
+					   $$(INTERFACES_KERNEL))))';)        \
+	)  > $@.new
+	mv $@.new $@
+endif
+
+ifdef BUILD_OBJECTS
+include .Unittest.deps
+endif
+
+# List of subsystems on which KERNEL depends 
+$(ALL_TESTS): $(ABI) $(JABI) $(DRIVERS) $(LIBK) $(LIBAMM)
+$(ALL_TESTS): kernel.ux.lds
+
+# XXX Hacks
+$(ALL_TESTS): sighandler.o
+
+#
+# Compilation Rules
+#
+
+$(ALL_TESTS): %: %.o
+	@echo "Linking test $@"
+	$(VERBOSE)$(CXX) -m32 -Wl,-Tkernel.ux.lds,--gc-sections \
+	  -static $(CXXFLAGS) $(LDFLAGS) $(PROF_FLAGS) $(OPT_CXXFLAGS) \
+	  $(filter-out kernel.ux.lds,$^) -o $@ $(TEST_LIB) -lutil
+
+%.ok: %
+ifeq ($(CROSS_COMPILE)$(CONFIG_XARCH),ux)	# Test execution for non-cross UX builds
+	@echo -n "Running test $* ... "
+	@./$< --test --quiet > $*.out.full
+	@grep "^\[UTEST\]" $*.out.full > $*.out
+ifeq ($(RECREATE_OUTPUT),1)
+	@cp $*.out $(srcdir)/test/unit/$*.out.verify.$(CONFIG_ABI)
+endif # RECREATE_OUTPUT
+	@set -e;						   \
+	  testbase=$(srcdir)/test/unit/$*.out.verify; 		   \
+	  if [ -f $$testbase ]; then				   \
+	    if [ -f $$testbase.$(CONFIG_ABI) ]; then		   \
+	      echo "Error: $$testbase.$(CONFIG_ABI) and $$testbase both exist."; \
+	      exit 1;						   \
+	    fi;							   \
+	  else							   \
+	    testbase=$$testbase.$(CONFIG_ABI);			   \
+	  fi;							   \
+	  diff -u $(DIFF_FLAGS) $$testbase $*.out
+else  # ! ux
+# Add commands for executing tests built for other architectures.
+endif # ! ux
+	@touch $@
+
+clean-UNITTEST:
+	rm -f *_t *_t.ok *_t.out .Unittest.deps

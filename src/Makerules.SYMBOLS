@@ -1,0 +1,3 @@
+# -*- makefile -*-
+
+include $(srcdir)/kern/$(CONFIG_XARCH)/Makerules.SYMBOLS.$(CONFIG_XARCH)

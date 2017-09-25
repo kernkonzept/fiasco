@@ -1,0 +1,7 @@
+# -*- makefile -*-
+
+$(JABI): $(OBJ_JABI)
+	$(AR_MESSAGE)
+	$(VERBOSE)$(RM) $@
+	$(VERBOSE)$(AR) $(ARFLAGS) $@ $^
+

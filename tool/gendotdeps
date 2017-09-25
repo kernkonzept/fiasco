@@ -1,0 +1,630 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Getopt::Long;
+use Pod::Usage;
+
+my %styles = ( 
+  'node-normal'   => { style=>'solid', fillcolor=>'lightgrey' },
+  'node-included' => { style=>'filled', fillcolor=>'PaleGreen' },
+  'edge-normal'   => { color=>'black' },
+  'edge-circle'   => { color=>'red' },
+);
+
+
+my $finput      = *STDIN{IO};
+my $output      = *STDOUT{IO};
+my $trivial     = 0;
+my $unused      = 0;
+my $verbose     = 0;
+my $use_units   = 0;
+
+my $target_bl = "";
+my $source_bl = "";
+
+my $opt = { "verbose"   => \$verbose,
+            "trivial"   => \$trivial,
+            "unused"    => \$unused,
+	    "units"     => \$use_units,
+	  };
+
+Getopt::Long::Configure ('bundling','no_ignore_case','auto_abbrev');
+
+GetOptions( $opt,
+	    "help|?|h",
+	    "man|m",
+	    "verbose|v+",
+	    "trivial|t:i",
+	    "unused|u:i",
+	    "output|o=s",
+	    "blacklist|b=s",
+	    "sysincludes|s",
+	    "nosysincludes",
+	    "units|U",
+	    "includepath|I=s@",
+	    "vpath=s@",
+	    "descend|d",
+	    "fancy|f",
+	    "pre-parts|E=s",
+	    "verbose-drop|D"
+	  );
+	  
+my %parts = ( '{' => '(',
+              '}' => ')',
+	      ',' => '||',
+	      '-' => '&&',
+	      '|' => '|',
+	      '&' => '&',
+	      '(' => '(',
+	      ')' => ')',
+	      '!' => '!');
+
+if ($$opt{'pre-parts'} ne '') {
+ foreach my $p (split(' ',$$opt{'pre-parts'}))
+   {
+     $parts{$p} = '1';
+   }
+}
+
+# the next two lines may be omitted if the trivial|t:1 syntax works
+$trivial = 1 unless defined $trivial;
+$unused  = 1 unless defined $unused;
+$$opt{sysincludes} = 1 unless defined $$opt{sysincludes};
+$$opt{sysincludes} = 0 if $$opt{nosysincludes};
+
+pod2usage(1) if defined $$opt{help};
+pod2usage(-exitstatus => 0, -verbose => 2, -output=>\*STDOUT) if defined $$opt{man};
+
+if( defined $$opt{output} ) {
+  open( $output, ">$$opt{output}" ) || die "can't open output file: '$$opt{output}' - $!!";
+}
+
+if( defined $$opt{blacklist} ) {
+  open( I, "$$opt{blacklist}") || die "can't open black list file: '$$opt{blacklist}' - $!!";
+  while(<I>) {
+    chomp;
+    next if (/^\#/);
+    if (/^:(.*)$/) {
+      $target_bl .= $1." ";
+    }
+    if (/^->(.*)$/) {
+      $source_bl .= $1." ";
+    }
+    if (/^\*(.*)$/) {
+      $target_bl .= $1." ";
+      $source_bl .= $1." ";
+    }
+  }
+
+  $target_bl =~ s/\s+/|/g;
+  $source_bl =~ s/\s+/|/g;
+}
+
+my $args   = join(' ',@ARGV);
+
+if ( $args =~ s/\s*(\S+)// ) {
+  open( $finput, "$1" ) || die "can't open input file: '$1' - $!!";
+}
+
+my %all_deps;
+my %modules;
+my %units;
+my %module_struct;
+
+read_input();
+#print STDERR "READ:-----------------------------------------------\n";
+#list_modules();
+gen_all_deps();
+#print STDERR "GENALL:---------------------------------------------\n";
+#list_modules();
+remove_black_listed();
+#print STDERR "BL:-------------------------------------------------\n";
+#list_modules();
+
+while($unused-- && remove_unused()) {}
+while($trivial-- && remove_trivial()) {}
+
+#print STDERR "UT:-------------------------------------------------\n";
+#list_modules();
+
+remove_isolated();
+
+print_dot();
+close $output;
+
+
+#sub list_modules {
+#  print STDERR join('; ',sort keys %{$modules{"thread"}})."\n";
+#}
+
+
+sub module_name {
+  my ($filename) = @_;
+  $filename = unit_name($filename);
+  $filename =~ s|^([^-]*).*$|$1|;
+  return $filename;
+}
+
+sub unit_name {
+  my ($filename) = @_;
+  $filename =~ s|.*/(\S+)|$1|;  # remove path
+  $filename =~ s|(\S+)\..*|$1|; # remove extension
+  $filename =~ s|_i$||; # cpp remove private include ext
+  return $filename;
+}
+
+#--------------------------------------------------------------------
+sub find_file($) {
+  my $file = shift;
+  # absolute path
+  return $file if $file =~ /^\//;
+
+  # try to find the source cpp file in the vpath
+  if ($file =~ /^(.*)\.h$/) {
+    my $cpp = $1.'.cpp';
+    foreach my $dir (@{$$opt{"vpath"}}) {
+      foreach my $sdir (split (':', $dir)) {
+        return $sdir.'/'.$cpp if -f $sdir.'/'.$cpp;
+      }
+    }
+  }
+
+  # else try to find file in search path
+  foreach my $sdir (@{$$opt{"includepath"}},'.') {
+    return $sdir.'/'.$file if -f $sdir.'/'.$file;
+  }
+
+  print STDERR "file '$file' not found\n";
+  return undef;
+}
+
+sub match_e_opt($)
+{
+  my $tag = shift;
+  
+  return 1 if $$opt{'pre-parts'} eq '';	
+
+  my $cp = '';
+  my $t = '\(\)&|,\{\}!-';
+
+  while ($tag =~ /^\s*([$t]|(?:[^\s$t]+))\s*(.*?)$/)
+    {
+      my $r = $parts{$1};
+      $cp .= defined $r ? $r : 0;
+      $tag = $2;
+    }
+
+  my $match = eval $cp;
+  
+  if (!defined $match)
+    {
+      die "${ARGV}: error: syntax error in tag '$tag'\n";
+    }
+ 
+  if (($verbose>1 || $$opt{'verbose-drop'}) && !$match) 
+    {
+      print STDERR "Drop SECTION: [$tag]\n";
+    }
+
+  return $match;
+}
+
+sub add_unit($$) {
+  my ($module, $unit) = @_;
+  if (!defined $modules{$module}) {
+    $modules{$module} = {
+      name  => $module,
+      units => {},
+      deps  => {},
+    };
+  }
+  my $c_module = $modules{$module};
+
+  if (!defined $c_module->{units}->{$unit}) {
+    $c_module->{units}->{$unit} = { 
+      name   => $unit,
+      parent => $c_module,
+      deps => {} 
+    };
+    $units{$unit} = $c_module->{units}->{$unit};
+  }
+  
+  my $c_unit = $c_module->{units}->{$unit};
+  return ($c_module, $c_unit);
+}
+
+sub read_input {
+  my $incregexp = "[\\\"<](\\S+)[\\\">]";
+  $incregexp = "\\\"(\\S+)\\\"" if $$opt{sysincludes} == 0;
+  my @input = ();
+  while(<$finput>) {
+    push @input ,(split('\s',$_));
+  }
+
+  my %files = ();
+
+  foreach my $f (@input) {
+    $files{$f} = 1;
+  }
+
+  input_file: foreach my $inp (@input) {
+
+    my $cpp_module = 0;
+
+    open (C, $inp) || die "can't open input file: '$inp' - $!!";
+    
+    print STDERR "read: $inp" if $verbose>1;
+    my $module = module_name($inp);
+    my $unit   = unit_name($inp);
+
+    
+    $units{$unit} = {} if !defined $units{$unit};
+    my ($c_module, $c_unit) = add_unit($module, $unit);
+
+    my @includes;
+    my $implname;
+    my $skip_to_next_section = 0;
+    my $current_part = '';
+    LINE: while(<C>) {
+      chomp;
+      if (/^(?:INTERFACE|IMPLEMENTATION)\s*(?:\[\s*(.*)\s*\])?\s*:/)
+      {
+        $skip_to_next_section = 0;
+        $cpp_module = 1;
+	if (defined $1) {
+	  $current_part = $1;
+	  if (!match_e_opt($current_part)) {
+	    $skip_to_next_section = 1;
+	    next LINE;
+	  }
+	}
+      } elsif ($skip_to_next_section) {
+        next LINE;
+      }
+      if (/^\#include\s+$incregexp.*$/ && $1 !~ /_i$/ ) {
+	my $inc = $1;
+	my $incname = find_file($1);
+	next input_file if !defined $incname;
+	my $module_name = module_name($incname);
+	next LINE if $module_name eq $module;
+
+	$inc =~ s|.h$||;
+	$inc =~ s|[/.]|_|g;
+	my ($new_mod, $new_unit) = add_unit($module_name, unit_name($incname));
+	$c_unit->{deps}->{$module_name} = $new_mod;
+	$c_module->{deps}->{$module_name} = $new_mod;
+	if ($$opt{descend} && !defined $files{$incname}) {
+	  $files{$incname} = 2;
+	  $new_mod->{level} = 2;
+	  push @input, ($incname);
+	}
+      }
+      $cpp_module = 1 if /^(INTERFACE|IMPLEMENTATION).*:/;
+      if (/^IMPLEMENTATION\s*\[(\S+)\].*$/) {
+	$implname = $1;
+      }
+    }
+
+    $module =~ s|[/.]|_|g;
+
+    if (! defined $implname ) {
+      $implname = "**generic**";
+      push @{$module_struct{$module}{sub}}, ('"'.$module.'"');
+    } else {
+      $module =~ s/-($implname)$//;
+      push @{$module_struct{$module}{sub}}, ('"'.$module.'-'.$implname.'"');
+    }
+
+    print STDERR "[module=$module, implementation=$implname]\n" if $verbose>1;
+
+    @includes = grep {!/^$module$/} @includes; # remove self references
+    if (! defined $modules{$module}) {
+      $modules{$module} = {};
+    }
+    #$module_struct{$module}{descend} = $descend;
+    $module_struct{$module}{cpp} = $cpp_module;
+    foreach my $inc (@includes) {
+      ${${%{$modules{$module}}}{$inc}}{$implname} = 1;
+    }
+
+    close C;
+  }
+
+  close $finput;
+}
+
+#-----------------------------------------------------
+sub gen_all_deps {
+  %all_deps = ();
+  my $bunch = \%modules;
+  $bunch = \%units if $use_units;
+  foreach my $module (values %$bunch) {
+    $all_deps{$module->{name}} = finddeps ($module, {});
+  }
+}
+
+#-----------------------------------------------------
+sub remove_black_listed {
+  print STDERR "remove blacklisted: " if $verbose>0;
+  foreach my $mod (keys %modules) {
+    if( $mod =~ /^($target_bl)$/ && !defined $all_deps{$mod}->{$mod}) {
+      print STDERR "$mod " if $verbose>0;
+      delete $modules{$mod};
+      delete $all_deps{$mod};
+      next;
+    }
+    foreach my $calling (keys %{$modules{$mod}}) {
+      if( $calling =~ /^($source_bl)$/ && !defined $all_deps{$calling}->{$calling}) {
+	delete $modules{$mod}->{deps}->{$calling};
+        print STDERR "->$calling<- " if $verbose>2;
+      }
+    }
+  }
+
+  print STDERR "\n" if $verbose>0;
+
+}
+
+sub remove_isolated {
+  print STDERR "remove isolated: " if $verbose>0;
+  modu: foreach my $mod (keys %modules) {
+    next if (scalar (keys %{$modules{$mod}->{deps}})) > 0;
+    foreach my $calling (keys %modules) {
+      next modu if defined $modules{$calling}->{deps}->{$mod};
+    }
+    delete $modules{$mod};
+    delete $all_deps{$mod};
+    print STDERR "$mod " if $verbose >0;
+  }
+  print STDERR "\n" if $verbose>0;
+}
+
+#-----------------------------------------------------
+sub remove_trivial {
+  my $count = 0;
+  print STDERR "remove trivial: " if $verbose>0;
+  foreach my $mod (keys %modules) {
+    if (scalar keys %{$modules{$mod}->{deps}} == 0) {
+      $count++;
+      delete $modules{$mod};
+      delete $all_deps{$mod};
+      print STDERR "$mod " if $verbose>0;
+      foreach my $m (keys %modules) {
+	if (defined $%{$modules{$m}}{$mod}) {
+  	  delete $%{$modules{$m}}{$mod};
+        }
+      }
+    }
+  }
+  print STDERR "\n" if $verbose>0;
+  return $count;
+}
+
+#-------------------------------------------------------------
+sub remove_unused {
+  my $count = 0;
+  print STDERR "remove unused: " if $verbose>0;
+  foreach my $mod (keys %modules) {
+    foreach my $calling (keys %modules) {
+      goto used if defined $modules{$calling}->{deps}->{$mod};
+    }
+    print STDERR "$mod " if $verbose>0;
+    delete $modules{$mod};
+    delete $all_deps{$mod};
+    $count++;
+  used:
+  }
+  print STDERR "\n" if $verbose>0;
+  return $count;
+}
+
+
+
+sub specify_node($)
+{
+  my $n = shift;
+  if ($$opt{fancy}) {
+    my $style = $styles{'node-normal'};
+    $style = $styles{'node-included'} if $n->{level};
+    print "  node [style=$style->{style}, fillcolor=$style->{fillcolor}]; " .
+          "\"$n->{name}\";\n";
+  }
+      #elsif ( $$m{cpp} ) {
+#	print "  node [style=filled, fillcolor=LightSkyBlue]; \"$mod\";\n";
+#      }
+}
+
+sub edge($$)
+{
+  my ($f, $t) = @_;
+  my $t_n = $t->{name}; # the unit names
+  my $f_n = $f->{name};
+  my $f_mn = $f_n;
+  my $t_mn = $t_n;
+  $f_mn = $f->{parent}->{name} if defined $f->{parent};
+  $t_mn = $t->{parent}->{name} if defined $t->{parent};
+  
+  my $style = $styles{'edge-normal'};
+  my @label =();
+
+  if (defined $all_deps{$t_n}->{$f_mn}) {
+    $style = $styles{'edge-circle'};
+    if (!$use_units) {
+      foreach my $u (values %{$f->{units}}) {
+        if (defined $u->{deps}->{$t_n}) {
+	  push @label, ($u->{name});
+	}
+      }
+    }
+  }
+
+  my $label = join(", ", (@label));
+
+  print "  \"$f_n\" -> \"$t_n\" [color=$style->{color}, label=\"$label\"];\n";
+}
+
+#-------------------------------------------------------------
+sub print_dot {
+
+  #
+  # Print dependencies per module
+  #
+
+  print "digraph G {\n";
+  print "  compound=true;\n";
+
+  foreach my $val (values %modules) {
+    specify_node($val);
+  }
+
+  if ($use_units) {
+    foreach my $module (values %modules) {
+      foreach my $unit (values %{$module->{units}}) {
+        foreach my $calling (values %{$unit->{deps}}) {
+          # skip removed nodes
+          next if !defined $modules{$calling->{name}};
+	  foreach my $tunit (values %{$calling->{units}}) {
+            edge($unit, $tunit);
+	  }
+	}
+      }
+    }
+  } else {
+    foreach my $module (values %modules) {
+      foreach my $calling (values %{$module->{deps}}) {
+        # skip removed nodes
+        next if !defined $modules{$calling->{name}};
+        edge($module, $calling);
+      }
+    }
+  }
+
+  print "}\n";
+}
+
+#-------------------------------------------------------------
+sub finddeps {
+  my ($module, $traversed) = @_;
+  #print STDERR "finddeps $module\n";
+  return {} if defined $traversed->{$module->{name}};
+  $traversed->{$module->{name}} = 1;
+
+  my @deps = values %{$module->{deps}};
+
+  my $alldeps = {};
+
+  foreach my $dep (@deps) {
+    $alldeps->{$dep->{name}} = 1;
+    foreach my $u (keys %{finddeps ($dep, $traversed)}) {
+      $alldeps->{$u} = 1;
+    }
+  }
+
+  return $alldeps;
+}
+
+__END__
+
+=head1 NAME
+
+gendotdeps - generate module (.cpp) dependencies in dot format.
+
+=head1 SYNOPSIS
+
+gendotdeps [options] [input_file]
+
+ Options:
+   --blacklist=file, -b   use file as modules black list
+   --descend, -d          descend into included files
+   --fancy, -f            use fancy colors
+   --help, -h             show brief help message
+   --includepath, -I      specify an include path for '--descend'
+   --man, -m              show complete documentation
+   --nosysincludes        do not care about system includes (<gixgax.h>)
+   --output=file, -o      write output to file instead of standard out
+   --subgraphs            (BROKEN) show cpp modules with their submodules
+   --sysincludes, -s      consider even system includes (<gixgax.h>) as
+                          dependencies (default)
+   --trivial=n, -t        remove n levels of trivial modules
+   --unused=n, -u         remove n levels of unused modules
+   --verbose, -v          increase verbosity level
+
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<--blacklist>=file, B<-b>
+
+Use <file> as module black list. In the black-list file modules can be
+specified to be ignored as source of any dependency, as target of any
+dependency, or at all.
+
+=item B<--descend, -d>
+
+Descend into included files, if this option is enabled gendotdeps
+tries to open included files and track down also their
+dependecies. The files are looked up in the specified include
+directory (see B<--includepath, -I>).
+
+=item B<--fancy, -f>
+
+Use fancy colors for the different kinds of modules. If this option is
+enabled directly specified 'cpp' modules are filled sky-blue, directly
+specified non-'cpp' modules are filled white, not inspected includes
+are filled grey, and descended includes are filled beige.
+
+=item B<--help, -h, -?>
+
+Prints a brief help message and exits.
+
+=item B<--includepath> dir, B<-I>
+
+Adds dir to the search path for includes (see B<--descend>).
+
+=item B<--man, -m>
+
+Prints the manual page and exits.
+
+=item B<--nosysincludes>
+
+This option disables --sysincludes, this means that no system includes
+are taken into account for the dependency generation.
+
+=item B<--output>=file, B<-o>
+
+Write the generated dependency graph to <file> instead of standard
+output.
+
+=item B<--subgraphs>
+
+Generates a subgraph for every cpp module, which shows the submodules.
+
+=item B<--sysincludes, -s>
+
+This option is the default (see --nosysincludes). If this option is
+enabled also system includes are taken into account (<gixgax.h>) for
+the dependency calculations.
+
+=item B<--trivial>=n, B<-t>
+
+Remove <n> levels of trivial modules from the dependency
+graph. Trivial modules are modules that do not depend on any other
+modules.
+
+=item B<--unused>=n, B<-u>
+
+Remove <n> levels of unused modules from the dependency graph. Unused
+modules are modules that have no other modules depend on them.
+
+=item B<--verbose, -v>
+
+Each time this option occurs the verbosity level is increased.
+
+=back
+
+=head1 DESCRIPTION
+
+Should be done, sorry!
+
+=cut

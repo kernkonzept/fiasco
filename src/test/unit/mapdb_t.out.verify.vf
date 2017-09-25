@@ -1,0 +1,1190 @@
+[UTEST] PT INSERT: s0 pa=0:0 va=0:0 order=18
+[UTEST] PT INSERT: s0 pa=40000:40000 va=40000:40000 order=18
+[UTEST] PT INSERT: s0 pa=80000:80000 va=80000:80000 order=18
+[UTEST] PT INSERT: s0 pa=c0000:c0000 va=c0000:c0000 order=18
+[UTEST] ========== basic ======================================
+[UTEST] Initating test: basic
+[UTEST] ! m.lookup(other, to_pfn(Config::PAGE_SIZE), to_pfn(Config::PAGE_SIZE), &node, &frame): 	OK
+[UTEST] Looking up 4M node at physaddr=0K
+[UTEST] m.lookup(s0, to_pfn(0), to_pfn(0), &node, &frame): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x400
+[UTEST] 
+[UTEST] Inserting submapping
+[UTEST] sub: 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x400
+[UTEST] 1:  ==>  space=other vaddr=0x2 size=0x1 parent=s0 p.vaddr=0x1
+[UTEST] 
+[UTEST] Looking up 4M node at physaddr=8M
+[UTEST] m.lookup(s0, to_pfn(2 * Config::SUPERPAGE_SIZE), to_pfn(2 * Config::SUPERPAGE_SIZE), &node, &frame): 	OK
+[UTEST] 0:      space=s0 vaddr=0x800 size=0x400
+[UTEST] 
+[UTEST] Inserting submapping
+[UTEST] 0:      space=s0 vaddr=0x800 size=0x400
+[UTEST] 1:  ==>  space=other vaddr=0x1000 size=0x400 parent=s0 p.vaddr=0x800
+[UTEST] 
+[UTEST] Get that mapping again
+[UTEST] m.lookup(other, to_pfn(4 * Config::SUPERPAGE_SIZE), to_pfn(2 * Config::SUPERPAGE_SIZE), &sub, &frame): 	OK
+[UTEST] 1:       space=other vaddr=0x1000 size=0x400
+[UTEST] 
+[UTEST] m.shift(frame, sub) == Mapdb::Order(Config::SUPERPAGE_SHIFT - Config::PAGE_SHIFT): 	OK
+[UTEST] Inserting 4K submapping
+[UTEST] m.insert(frame, sub, client, to_pfn(15 * Config::PAGE_SIZE), to_pfn(2 * Config::SUPERPAGE_SIZE), to_pcnt(Config::PAGE_SHIFT)): 	OK
+[UTEST] 0:      space=s0 vaddr=0x800 size=0x400
+[UTEST] 1:       space=other vaddr=0x1000 size=0x400 parent=s0 p.vaddr=0x800
+[UTEST] 1:       space=client vaddr=0xf size=0x1 parent=other p.vaddr=0x1000
+[UTEST] 
+[UTEST] basic done: 7 tests passed, 0 failed
+[UTEST] basic OK
+[UTEST] ---------- basic --------------------------------------
+[UTEST] ========== maphole ======================================
+[UTEST] Initating test: maphole
+[UTEST] Looking up 4K node at physaddr=0
+[UTEST] m.lookup (grandfather, to_pfn(0), to_pfn(0), &gf_map, &frame): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x400
+[UTEST] 
+[UTEST] Inserting father mapping
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x400
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 
+[UTEST] Looking up father at physaddr=0
+[UTEST] m.lookup (father, to_pfn(0), to_pfn(0), &f_map, &frame): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x1
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 
+[UTEST] Inserting son mapping
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x1
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 
+[UTEST] Looking up father at physaddr=0
+[UTEST] m.lookup (father, to_pfn(0), to_pfn(0), &f_map, &frame): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x1
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 
+[UTEST] Inserting daughter mapping
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x1
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 2:        space=daughter vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 
+[UTEST] Looking up son at physaddr=0
+[UTEST] m.lookup(son, to_pfn(0), to_pfn(0), &son_map, &frame): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x1
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 2:        space=daughter vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 
+[UTEST] mapping tree: { s0 va=0 size=400
+[UTEST]   header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]   1: va=0 task=s0 depth=root
+[UTEST]   2: subtree...
+[UTEST]   mapping tree: { s0 va=0 size=1
+[UTEST]     header info: entries used: 4 free: 0 total: 8 lock: 0
+[UTEST]     1: va=0 task=s0 depth=root
+[UTEST]     2:   va=0 task=father depth=1
+[UTEST]     3:     va=0 task=son depth=2
+[UTEST]     4:     va=0 task=daughter depth=2
+[UTEST]     5: end
+[UTEST]   } // mapping tree: s0 va=0
+[UTEST]   3: end
+[UTEST] } // mapping tree: s0 va=0
+[UTEST] Son has accident on return from disco
+[UTEST] mapping tree: { s0 va=0 size=400
+[UTEST]   header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]   1: va=0 task=s0 depth=root
+[UTEST]   2: subtree...
+[UTEST]   mapping tree: { s0 va=0 size=1
+[UTEST]     header info: entries used: 3 free: 1 total: 8 lock: 0
+[UTEST]     1: va=0 task=s0 depth=root
+[UTEST]     2:   va=0 task=father depth=1
+[UTEST]     4:     va=0 task=daughter depth=2
+[UTEST]     5: end
+[UTEST]   } // mapping tree: s0 va=0
+[UTEST]   3: end
+[UTEST] } // mapping tree: s0 va=0
+[UTEST] Lost aunt returns from holidays
+[UTEST] m.lookup (grandfather, to_pfn(0), to_pfn(0), &gf_map, &frame): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x400
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 2:        space=daughter vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 
+[UTEST] Inserting aunt mapping
+[UTEST] m.insert (frame, gf_map, aunt, to_pfn(0), to_pfn(0), to_pcnt(Config::PAGE_SHIFT)): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x400
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 2:        space=daughter vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 1:       space=aunt vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 
+[UTEST] mapping tree: { s0 va=0 size=400
+[UTEST]   header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]   1: va=0 task=s0 depth=root
+[UTEST]   2: subtree...
+[UTEST]   mapping tree: { s0 va=0 size=1
+[UTEST]     header info: entries used: 4 free: 0 total: 8 lock: 0
+[UTEST]     1: va=0 task=s0 depth=root
+[UTEST]     2:   va=0 task=father depth=1
+[UTEST]     3:     va=0 task=daughter depth=2
+[UTEST]     4:   va=0 task=aunt depth=1
+[UTEST]     5: end
+[UTEST]   } // mapping tree: s0 va=0
+[UTEST]   3: end
+[UTEST] } // mapping tree: s0 va=0
+[UTEST] Looking up daughter at physaddr=0
+[UTEST] m.lookup(daughter, to_pfn(0), to_pfn(0), &daughter_map, &frame): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x1
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 2:        space=daughter vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 1:       space=aunt vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 
+[UTEST] Father of daugther is father
+[UTEST] f_map->space() == father: 	OK
+[UTEST] maphole done: 8 tests passed, 0 failed
+[UTEST] maphole OK
+[UTEST] ---------- maphole --------------------------------------
+[UTEST] ========== flushtest ======================================
+[UTEST] Initating test: flushtest
+[UTEST] Looking up 4K node at physaddr=0
+[UTEST] m.lookup (grandfather, to_pfn(0), to_pfn(0), &gf_map, &frame): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x400
+[UTEST] 
+[UTEST] Inserting father mapping
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x400
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 
+[UTEST] Looking up father at physaddr=0
+[UTEST] m.lookup (father, to_pfn(0), to_pfn(0), &f_map, &frame): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x1
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 
+[UTEST] Inserting son mapping
+[UTEST] m.insert (frame, f_map, son, to_pfn(0), to_pfn(0), to_pcnt(Config::PAGE_SHIFT)): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x1
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 
+[UTEST] Lost aunt returns from holidays
+[UTEST] m.lookup (grandfather, to_pfn(0), to_pfn(0), &gf_map, &frame): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x400
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 
+[UTEST] Inserting aunt mapping
+[UTEST] m.insert (frame, gf_map, aunt, to_pfn(0), to_pfn(0), to_pcnt(Config::PAGE_SHIFT)): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x400
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 1:       space=aunt vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 
+[UTEST] Looking up father at physaddr=0
+[UTEST] m.lookup(father, to_pfn(0), to_pfn(0), &f_map, &frame): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x1
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 1:       space=aunt vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 
+[UTEST] father is killed by his new love
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x1
+[UTEST] 1:       space=aunt vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 
+[UTEST] Try resurrecting the killed father again
+[UTEST] ! m.lookup(father, to_pfn(0), to_pfn(0), &f_map, &frame): 	OK
+[UTEST] Resurrection is impossible, as it ought to be.
+[UTEST] flushtest done: 7 tests passed, 0 failed
+[UTEST] flushtest OK
+[UTEST] ---------- flushtest --------------------------------------
+[UTEST] ========== basic ======================================
+[UTEST] Initating test: basic
+[UTEST] ! m.lookup(other, to_pfn(Config::PAGE_SIZE), to_pfn(Config::PAGE_SIZE), &node, &frame): 	OK
+[UTEST] Looking up 4M node at physaddr=0K
+[UTEST] m.lookup(s0, to_pfn(0), to_pfn(0), &node, &frame): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x40000
+[UTEST] 
+[UTEST] Inserting submapping
+[UTEST] sub: 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x40000
+[UTEST] 1:  ==>  space=other vaddr=0x2 size=0x1 parent=s0 p.vaddr=0x1
+[UTEST] 
+[UTEST] Looking up 4M node at physaddr=8M
+[UTEST] m.lookup(s0, to_pfn(2 * Config::SUPERPAGE_SIZE), to_pfn(2 * Config::SUPERPAGE_SIZE), &node, &frame): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x40000
+[UTEST] 1:       space=other vaddr=0x2 size=0x1 parent=s0 p.vaddr=0x1
+[UTEST] 
+[UTEST] Inserting submapping
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x40000
+[UTEST] 1:       space=other vaddr=0x2 size=0x1 parent=s0 p.vaddr=0x1
+[UTEST] 1:  ==>  space=other vaddr=0x1000 size=0x400 parent=s0 p.vaddr=0x800
+[UTEST] 
+[UTEST] Get that mapping again
+[UTEST] m.lookup(other, to_pfn(4 * Config::SUPERPAGE_SIZE), to_pfn(2 * Config::SUPERPAGE_SIZE), &sub, &frame): 	OK
+[UTEST] 1:       space=other vaddr=0x1000 size=0x400
+[UTEST] 
+[UTEST] m.shift(frame, sub) == Mapdb::Order(Config::SUPERPAGE_SHIFT - Config::PAGE_SHIFT): 	OK
+[UTEST] Inserting 4K submapping
+[UTEST] m.insert(frame, sub, client, to_pfn(15 * Config::PAGE_SIZE), to_pfn(2 * Config::SUPERPAGE_SIZE), to_pcnt(Config::PAGE_SHIFT)): 	OK
+[UTEST] 0:      space=s0 vaddr=0x800 size=0x400
+[UTEST] 1:       space=other vaddr=0x1000 size=0x400 parent=s0 p.vaddr=0x800
+[UTEST] 1:       space=client vaddr=0xf size=0x1 parent=other p.vaddr=0x1000
+[UTEST] 
+[UTEST] basic done: 7 tests passed, 0 failed
+[UTEST] basic OK
+[UTEST] ---------- basic --------------------------------------
+[UTEST] ========== maphole ======================================
+[UTEST] Initating test: maphole
+[UTEST] Looking up 4K node at physaddr=0
+[UTEST] m.lookup (grandfather, to_pfn(0), to_pfn(0), &gf_map, &frame): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x40000
+[UTEST] 
+[UTEST] Inserting father mapping
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x40000
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 
+[UTEST] Looking up father at physaddr=0
+[UTEST] m.lookup (father, to_pfn(0), to_pfn(0), &f_map, &frame): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x1
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 
+[UTEST] Inserting son mapping
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x1
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 
+[UTEST] Looking up father at physaddr=0
+[UTEST] m.lookup (father, to_pfn(0), to_pfn(0), &f_map, &frame): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x1
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 
+[UTEST] Inserting daughter mapping
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x1
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 2:        space=daughter vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 
+[UTEST] Looking up son at physaddr=0
+[UTEST] m.lookup(son, to_pfn(0), to_pfn(0), &son_map, &frame): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x1
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 2:        space=daughter vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 
+[UTEST] mapping tree: { s0 va=0 size=40000
+[UTEST]   header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]   1: va=0 task=s0 depth=root
+[UTEST]   2: subtree...
+[UTEST]   mapping tree: { s0 va=0 size=400
+[UTEST]     header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]     1: va=0 task=s0 depth=root
+[UTEST]     2: subtree...
+[UTEST]     mapping tree: { s0 va=0 size=200
+[UTEST]       header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]       1: va=0 task=s0 depth=root
+[UTEST]       2: subtree...
+[UTEST]       mapping tree: { s0 va=0 size=1
+[UTEST]         header info: entries used: 4 free: 0 total: 8 lock: 0
+[UTEST]         1: va=0 task=s0 depth=root
+[UTEST]         2:   va=0 task=father depth=1
+[UTEST]         3:     va=0 task=son depth=2
+[UTEST]         4:     va=0 task=daughter depth=2
+[UTEST]         5: end
+[UTEST]       } // mapping tree: s0 va=0
+[UTEST]       3: end
+[UTEST]     } // mapping tree: s0 va=0
+[UTEST]     3: end
+[UTEST]   } // mapping tree: s0 va=0
+[UTEST]   3: end
+[UTEST] } // mapping tree: s0 va=0
+[UTEST] Son has accident on return from disco
+[UTEST] mapping tree: { s0 va=0 size=40000
+[UTEST]   header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]   1: va=0 task=s0 depth=root
+[UTEST]   2: subtree...
+[UTEST]   mapping tree: { s0 va=0 size=400
+[UTEST]     header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]     1: va=0 task=s0 depth=root
+[UTEST]     2: subtree...
+[UTEST]     mapping tree: { s0 va=0 size=200
+[UTEST]       header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]       1: va=0 task=s0 depth=root
+[UTEST]       2: subtree...
+[UTEST]       mapping tree: { s0 va=0 size=1
+[UTEST]         header info: entries used: 3 free: 1 total: 8 lock: 0
+[UTEST]         1: va=0 task=s0 depth=root
+[UTEST]         2:   va=0 task=father depth=1
+[UTEST]         4:     va=0 task=daughter depth=2
+[UTEST]         5: end
+[UTEST]       } // mapping tree: s0 va=0
+[UTEST]       3: end
+[UTEST]     } // mapping tree: s0 va=0
+[UTEST]     3: end
+[UTEST]   } // mapping tree: s0 va=0
+[UTEST]   3: end
+[UTEST] } // mapping tree: s0 va=0
+[UTEST] Lost aunt returns from holidays
+[UTEST] m.lookup (grandfather, to_pfn(0), to_pfn(0), &gf_map, &frame): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x40000
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 2:        space=daughter vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 
+[UTEST] Inserting aunt mapping
+[UTEST] m.insert (frame, gf_map, aunt, to_pfn(0), to_pfn(0), to_pcnt(Config::PAGE_SHIFT)): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x40000
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 2:        space=daughter vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 1:       space=aunt vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 
+[UTEST] mapping tree: { s0 va=0 size=40000
+[UTEST]   header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]   1: va=0 task=s0 depth=root
+[UTEST]   2: subtree...
+[UTEST]   mapping tree: { s0 va=0 size=400
+[UTEST]     header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]     1: va=0 task=s0 depth=root
+[UTEST]     2: subtree...
+[UTEST]     mapping tree: { s0 va=0 size=200
+[UTEST]       header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]       1: va=0 task=s0 depth=root
+[UTEST]       2: subtree...
+[UTEST]       mapping tree: { s0 va=0 size=1
+[UTEST]         header info: entries used: 4 free: 0 total: 8 lock: 0
+[UTEST]         1: va=0 task=s0 depth=root
+[UTEST]         2:   va=0 task=father depth=1
+[UTEST]         3:     va=0 task=daughter depth=2
+[UTEST]         4:   va=0 task=aunt depth=1
+[UTEST]         5: end
+[UTEST]       } // mapping tree: s0 va=0
+[UTEST]       3: end
+[UTEST]     } // mapping tree: s0 va=0
+[UTEST]     3: end
+[UTEST]   } // mapping tree: s0 va=0
+[UTEST]   3: end
+[UTEST] } // mapping tree: s0 va=0
+[UTEST] Looking up daughter at physaddr=0
+[UTEST] m.lookup(daughter, to_pfn(0), to_pfn(0), &daughter_map, &frame): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x1
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 2:        space=daughter vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 1:       space=aunt vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 
+[UTEST] Father of daugther is father
+[UTEST] f_map->space() == father: 	OK
+[UTEST] maphole done: 8 tests passed, 0 failed
+[UTEST] maphole OK
+[UTEST] ---------- maphole --------------------------------------
+[UTEST] ========== flushtest ======================================
+[UTEST] Initating test: flushtest
+[UTEST] Looking up 4K node at physaddr=0
+[UTEST] m.lookup (grandfather, to_pfn(0), to_pfn(0), &gf_map, &frame): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x40000
+[UTEST] 
+[UTEST] Inserting father mapping
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x40000
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 
+[UTEST] Looking up father at physaddr=0
+[UTEST] m.lookup (father, to_pfn(0), to_pfn(0), &f_map, &frame): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x1
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 
+[UTEST] Inserting son mapping
+[UTEST] m.insert (frame, f_map, son, to_pfn(0), to_pfn(0), to_pcnt(Config::PAGE_SHIFT)): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x1
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 
+[UTEST] Lost aunt returns from holidays
+[UTEST] m.lookup (grandfather, to_pfn(0), to_pfn(0), &gf_map, &frame): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x40000
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 
+[UTEST] Inserting aunt mapping
+[UTEST] m.insert (frame, gf_map, aunt, to_pfn(0), to_pfn(0), to_pcnt(Config::PAGE_SHIFT)): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x40000
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 1:       space=aunt vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 
+[UTEST] Looking up father at physaddr=0
+[UTEST] m.lookup(father, to_pfn(0), to_pfn(0), &f_map, &frame): 	OK
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x1
+[UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 1:       space=aunt vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 
+[UTEST] father is killed by his new love
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x1
+[UTEST] 1:       space=aunt vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
+[UTEST] 
+[UTEST] Try resurrecting the killed father again
+[UTEST] ! m.lookup(father, to_pfn(0), to_pfn(0), &f_map, &frame): 	OK
+[UTEST] Resurrection is impossible, as it ought to be.
+[UTEST] flushtest done: 7 tests passed, 0 failed
+[UTEST] flushtest OK
+[UTEST] ---------- flushtest --------------------------------------
+[UTEST] ========== multilevel MDB ======================================
+[UTEST] Initating test: multilevel MDB
+[UTEST] Looking up 0xd2000000
+[UTEST] lookup (&m, s0, to_pfn(0xd2000000), &node, &frame): 	OK
+[UTEST] 0:      space=s0 vaddr=0xc0000 size=0x40000
+[UTEST] 
+[UTEST] Inserting submapping 4K
+[UTEST] Insert: other: va=2 pa=d2001 order=0
+[UTEST] PT INSERT: other pa=d2001:d2001 va=2:2 order=0
+[UTEST] sub: 	OK
+[UTEST] 0:      space=s0 vaddr=0xc0000 size=0x40000
+[UTEST] 1:  ==>  space=other vaddr=0x2 size=0x1 parent=s0 p.vaddr=0xd2001
+[UTEST] 
+[UTEST] Get that mapping again
+[UTEST] lookup(&m, other, to_pfn(2 * Config::PAGE_SIZE), &sub, &frame): 	OK
+[UTEST] 1:       space=other vaddr=0x2 size=0x1
+[UTEST] 
+[UTEST] m.shift(frame, sub) == Mapdb::Order(0): 	OK
+[UTEST] Inserting submapping 2M
+[UTEST] Insert: other: va=400 pa=d2200 order=9
+[UTEST] PT INSERT: other pa=d2200:d2200 va=400:400 order=9
+[UTEST] sub: 	OK
+[UTEST] 0:      space=s0 vaddr=0xc0000 size=0x40000
+[UTEST] 1:       space=other vaddr=0x2 size=0x1 parent=s0 p.vaddr=0xd2001
+[UTEST] 1:  ==>  space=other vaddr=0x400 size=0x200 parent=s0 p.vaddr=0xd2200
+[UTEST] 
+[UTEST] Get that mapping again
+[UTEST] lookup(&m, other, to_pfn(2 * (1<<21)), &sub, &frame): 	OK
+[UTEST] 1:       space=other vaddr=0x400 size=0x200
+[UTEST] 
+[UTEST] m.shift(frame, sub) == Mapdb::Order(21 - Config::PAGE_SHIFT): 	OK
+[UTEST] Inserting submapping 2M
+[UTEST] Insert: aunt: va=200 pa=d2000 order=9
+[UTEST] PT INSERT: aunt pa=d2000:d2000 va=200:200 order=9
+[UTEST] sub: 	OK
+[UTEST] 0:      space=s0 vaddr=0xc0000 size=0x40000
+[UTEST] 1:       space=other vaddr=0x2 size=0x1 parent=s0 p.vaddr=0xd2001
+[UTEST] 1:  ==>  space=aunt vaddr=0x200 size=0x200 parent=s0 p.vaddr=0xd2000
+[UTEST] 1:       space=other vaddr=0x400 size=0x200 parent=s0 p.vaddr=0xd2200
+[UTEST] 
+[UTEST] Insert: son: va=a0000 pa=d2200 order=0
+[UTEST] PT INSERT: son pa=d2200:d2200 va=a0000:a0000 order=0
+[UTEST] 1:       space=other vaddr=0x400 size=0x200
+[UTEST] 1:  ==>  space=son vaddr=0xa0000 size=0x1 parent=other p.vaddr=0x400
+[UTEST] 
+[UTEST] map(&m, other, to_pfn(2 * (1<<21)), son, to_pfn(0xa0000000), to_po(12)): 	OK
+[UTEST] unamp from other...
+[UTEST] unmap son va=a0000 for node:
+[UTEST] remove PTE: son va=a0000 pa=d2200 order=0
+[UTEST] state after flush:
+[UTEST] unmap(&m, other, to_pfn(2 * (1<<21)), to_pfn(3 * (1<<21)), false): 	OK
+[UTEST] unamp from s0...
+[UTEST] unmap other va=400 for node:
+[UTEST] remove PTE: other va=400 pa=d2200 order=9
+[UTEST] state after flush:
+[UTEST] unmap(&m, s0, poffs + to_pcnt(21), poffs + to_pcnt(21) + to_pcnt(21), false): 	OK
+[UTEST] Map 8MB from s0 to father
+[UTEST] Insert: father: va=3000 pa=51000 order=10
+[UTEST] PT INSERT: father pa=51000:51000 va=3000:3000 order=10
+[UTEST] 0:      space=s0 vaddr=0x40000 size=0x40000
+[UTEST] 1:  ==>  space=father vaddr=0x3000 size=0x400 parent=s0 p.vaddr=0x51000
+[UTEST] 
+[UTEST] map(&m, s0, to_pfn(0x51000000), father, to_pfn(0x3000000), to_po(22)): 	OK
+[UTEST] Insert: father: va=3400 pa=51400 order=10
+[UTEST] PT INSERT: father pa=51400:51400 va=3400:3400 order=10
+[UTEST] 0:      space=s0 vaddr=0x40000 size=0x40000
+[UTEST] 1:       space=father vaddr=0x3000 size=0x400 parent=s0 p.vaddr=0x51000
+[UTEST] 1:  ==>  space=father vaddr=0x3400 size=0x400 parent=s0 p.vaddr=0x51400
+[UTEST] 
+[UTEST] map(&m, s0, to_pfn(0x51400000), father, to_pfn(0x3400000), to_po(22)): 	OK
+[UTEST] Get first 8MB mapping
+[UTEST] lookup(&m, father, to_pfn(0x3000000), &node, &frame): 	OK
+[UTEST] 1:       space=father vaddr=0x3000 size=0x400
+[UTEST] 
+[UTEST] Map 6MB from father to aunt
+[UTEST] Insert: aunt: va=4000 pa=51200 order=9
+[UTEST] PT INSERT: aunt pa=51200:51200 va=4000:4000 order=9
+[UTEST] 1:       space=father vaddr=0x3000 size=0x400
+[UTEST] 1:  ==>  space=aunt vaddr=0x4000 size=0x200 parent=father p.vaddr=0x3200
+[UTEST] 
+[UTEST] map(&m, father, to_pfn(0x3200000 + (i << 21)), aunt, to_pfn(0x4000000 + (i<<21)), to_po(21)): 	OK
+[UTEST] Insert: aunt: va=4200 pa=51400 order=9
+[UTEST] PT INSERT: aunt pa=51400:51400 va=4200:4200 order=9
+[UTEST] 1:       space=father vaddr=0x3400 size=0x400
+[UTEST] 1:  ==>  space=aunt vaddr=0x4200 size=0x200 parent=father p.vaddr=0x3400
+[UTEST] 
+[UTEST] map(&m, father, to_pfn(0x3200000 + (i << 21)), aunt, to_pfn(0x4000000 + (i<<21)), to_po(21)): 	OK
+[UTEST] Insert: aunt: va=4400 pa=51600 order=9
+[UTEST] PT INSERT: aunt pa=51600:51600 va=4400:4400 order=9
+[UTEST] 1:       space=father vaddr=0x3400 size=0x400
+[UTEST] 1:       space=aunt vaddr=0x4200 size=0x200 parent=father p.vaddr=0x3400
+[UTEST] 1:  ==>  space=aunt vaddr=0x4400 size=0x200 parent=father p.vaddr=0x3600
+[UTEST] 
+[UTEST] map(&m, father, to_pfn(0x3200000 + (i << 21)), aunt, to_pfn(0x4000000 + (i<<21)), to_po(21)): 	OK
+[UTEST] Map 12K from aunt to client
+[UTEST] Insert: client: va=2 pa=51201 order=0
+[UTEST] PT INSERT: client pa=51201:51201 va=2:2 order=0
+[UTEST] 1:       space=aunt vaddr=0x4000 size=0x200
+[UTEST] 1:  ==>  space=client vaddr=0x2 size=0x1 parent=aunt p.vaddr=0x4001
+[UTEST] 
+[UTEST] map(&m, aunt, to_pfn(0x4001000 + (i<<12)), client, to_pfn(0x2000 + (i << 12)), to_po(12)): 	OK
+[UTEST] Insert: client: va=3 pa=51202 order=0
+[UTEST] PT INSERT: client pa=51202:51202 va=3:3 order=0
+[UTEST] 1:       space=aunt vaddr=0x4000 size=0x200
+[UTEST] 1:       space=client vaddr=0x2 size=0x1 parent=aunt p.vaddr=0x4001
+[UTEST] 1:  ==>  space=client vaddr=0x3 size=0x1 parent=aunt p.vaddr=0x4002
+[UTEST] 
+[UTEST] map(&m, aunt, to_pfn(0x4001000 + (i<<12)), client, to_pfn(0x2000 + (i << 12)), to_po(12)): 	OK
+[UTEST] Insert: client: va=4 pa=51203 order=0
+[UTEST] PT INSERT: client pa=51203:51203 va=4:4 order=0
+[UTEST] 1:       space=aunt vaddr=0x4000 size=0x200
+[UTEST] 1:       space=client vaddr=0x2 size=0x1 parent=aunt p.vaddr=0x4001
+[UTEST] 1:       space=client vaddr=0x3 size=0x1 parent=aunt p.vaddr=0x4002
+[UTEST] 1:  ==>  space=client vaddr=0x4 size=0x1 parent=aunt p.vaddr=0x4003
+[UTEST] 
+[UTEST] map(&m, aunt, to_pfn(0x4001000 + (i<<12)), client, to_pfn(0x2000 + (i << 12)), to_po(12)): 	OK
+[UTEST] page-table lookup: 1 in client failed
+[UTEST] !lookup(&m, client, to_pfn(0x1000), &node, &frame): 	OK
+[UTEST] lookup(&m, client, to_pfn(0x2000), &node, &frame): 	OK
+[UTEST] lookup(&m, client, to_pfn(0x3000), &node, &frame): 	OK
+[UTEST] lookup(&m, client, to_pfn(0x4000), &node, &frame): 	OK
+[UTEST] page-table lookup: 5 in client failed
+[UTEST] !lookup(&m, client, to_pfn(0x5000), &node, &frame): 	OK
+[UTEST] unmap aunt va=4000 for node:
+[UTEST] remove PTE: aunt va=4000 pa=51200 order=9
+[UTEST] unmap client va=2 for node:
+[UTEST] remove PTE: client va=2 pa=51201 order=0
+[UTEST] unmap client va=3 for node:
+[UTEST] remove PTE: client va=3 pa=51202 order=0
+[UTEST] unmap client va=4 for node:
+[UTEST] remove PTE: client va=4 pa=51203 order=0
+[UTEST] state after flush:
+[UTEST] unmap(&m, father, to_pfn(0x3202000), to_pfn(0x3203000), false): 	OK
+[UTEST] lookup(&m, father, to_pfn(0x3202000), &node, &frame): 	OK
+[UTEST] page-table lookup: 4000 in aunt failed
+[UTEST] !lookup(&m, aunt, to_pfn(0x4000000), &node, &frame): 	OK
+[UTEST] page-table lookup: 1 in client failed
+[UTEST] !lookup(&m, client, to_pfn(0x1000), &node, &frame): 	OK
+[UTEST] page-table lookup: 2 in client failed
+[UTEST] !lookup(&m, client, to_pfn(0x2000), &node, &frame): 	OK
+[UTEST] page-table lookup: 3 in client failed
+[UTEST] !lookup(&m, client, to_pfn(0x3000), &node, &frame): 	OK
+[UTEST] page-table lookup: 4 in client failed
+[UTEST] !lookup(&m, client, to_pfn(0x4000), &node, &frame): 	OK
+[UTEST] page-table lookup: 5 in client failed
+[UTEST] !lookup(&m, client, to_pfn(0x5000), &node, &frame): 	OK
+[UTEST] Map 4MB from father to aunt
+[UTEST] Insert: aunt: va=5000 pa=51000 order=10
+[UTEST] PT INSERT: aunt pa=51000:51000 va=5000:5000 order=10
+[UTEST] 1:       space=father vaddr=0x3000 size=0x400
+[UTEST] 2:  ==>   space=aunt vaddr=0x5000 size=0x400 parent=father p.vaddr=0x3000
+[UTEST] 
+[UTEST] map(&m, father, to_pfn(0x3000000), aunt, to_pfn(0x5000000), to_po(22)): 	OK
+[UTEST] Map 12K from aunt to client
+[UTEST] Insert: client: va=12 pa=51201 order=0
+[UTEST] PT INSERT: client pa=51201:51201 va=12:12 order=0
+[UTEST] 2:        space=aunt vaddr=0x5000 size=0x400
+[UTEST] 1:  ==>  space=client vaddr=0x12 size=0x1 parent=aunt p.vaddr=0x5201
+[UTEST] 
+[UTEST] map(&m, aunt, to_pfn(0x5201000 + (i<<12)), client, to_pfn(0x12000 + (i << 12)), to_po(12)): 	OK
+[UTEST] Insert: client: va=13 pa=51202 order=0
+[UTEST] PT INSERT: client pa=51202:51202 va=13:13 order=0
+[UTEST] 2:        space=aunt vaddr=0x5000 size=0x400
+[UTEST] 1:       space=client vaddr=0x12 size=0x1 parent=aunt p.vaddr=0x5201
+[UTEST] 1:  ==>  space=client vaddr=0x13 size=0x1 parent=aunt p.vaddr=0x5202
+[UTEST] 
+[UTEST] map(&m, aunt, to_pfn(0x5201000 + (i<<12)), client, to_pfn(0x12000 + (i << 12)), to_po(12)): 	OK
+[UTEST] Insert: client: va=14 pa=51203 order=0
+[UTEST] PT INSERT: client pa=51203:51203 va=14:14 order=0
+[UTEST] 2:        space=aunt vaddr=0x5000 size=0x400
+[UTEST] 1:       space=client vaddr=0x12 size=0x1 parent=aunt p.vaddr=0x5201
+[UTEST] 1:       space=client vaddr=0x13 size=0x1 parent=aunt p.vaddr=0x5202
+[UTEST] 1:  ==>  space=client vaddr=0x14 size=0x1 parent=aunt p.vaddr=0x5203
+[UTEST] 
+[UTEST] map(&m, aunt, to_pfn(0x5201000 + (i<<12)), client, to_pfn(0x12000 + (i << 12)), to_po(12)): 	OK
+[UTEST] unmap client va=13 for node:
+[UTEST] remove PTE: client va=13 pa=51202 order=0
+[UTEST] state after flush:
+[UTEST] unmap(&m, aunt, to_pfn(0x5202000), to_pfn(0x5203000), false): 	OK
+[UTEST] lookup(&m, father, to_pfn(0x3202000), &node, &frame): 	OK
+[UTEST] lookup(&m, aunt, to_pfn(0x5200000), &node, &frame): 	OK
+[UTEST] page-table lookup: 11 in client failed
+[UTEST] !lookup(&m, client, to_pfn(0x11000), &node, &frame): 	OK
+[UTEST] lookup(&m, client, to_pfn(0x12000), &node, &frame): 	OK
+[UTEST] page-table lookup: 13 in client failed
+[UTEST] !lookup(&m, client, to_pfn(0x13000), &node, &frame): 	OK
+[UTEST] lookup(&m, client, to_pfn(0x14000), &node, &frame): 	OK
+[UTEST] page-table lookup: 15 in client failed
+[UTEST] !lookup(&m, client, to_pfn(0x15000), &node, &frame): 	OK
+[UTEST] Map 12K from aunt to client
+[UTEST] Insert: client: va=22 pa=31ff order=0
+[UTEST] PT INSERT: client pa=31ff:31ff va=22:22 order=0
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x40000
+[UTEST] 1:  ==>  space=client vaddr=0x22 size=0x1 parent=s0 p.vaddr=0x31ff
+[UTEST] 
+[UTEST] map(&m, s0, to_pfn(0x31ff000 + (i<<12)), client, to_pfn(0x22000 + (i << 12)), to_po(12)): 	OK
+[UTEST] Insert: client: va=23 pa=3200 order=0
+[UTEST] PT INSERT: client pa=3200:3200 va=23:23 order=0
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x40000
+[UTEST] 1:       space=client vaddr=0x22 size=0x1 parent=s0 p.vaddr=0x31ff
+[UTEST] 1:  ==>  space=client vaddr=0x23 size=0x1 parent=s0 p.vaddr=0x3200
+[UTEST] 
+[UTEST] map(&m, s0, to_pfn(0x31ff000 + (i<<12)), client, to_pfn(0x22000 + (i << 12)), to_po(12)): 	OK
+[UTEST] Insert: client: va=24 pa=3201 order=0
+[UTEST] PT INSERT: client pa=3201:3201 va=24:24 order=0
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x40000
+[UTEST] 1:       space=client vaddr=0x22 size=0x1 parent=s0 p.vaddr=0x31ff
+[UTEST] 1:       space=client vaddr=0x23 size=0x1 parent=s0 p.vaddr=0x3200
+[UTEST] 1:  ==>  space=client vaddr=0x24 size=0x1 parent=s0 p.vaddr=0x3201
+[UTEST] 
+[UTEST] map(&m, s0, to_pfn(0x31ff000 + (i<<12)), client, to_pfn(0x22000 + (i << 12)), to_po(12)): 	OK
+[UTEST] lookup(&m, client, to_pfn(0x22000), &node, &frame): 	OK
+[UTEST] lookup(&m, client, to_pfn(0x23000), &node, &frame): 	OK
+[UTEST] lookup(&m, client, to_pfn(0x24000), &node, &frame): 	OK
+[UTEST] Insert: daughter: va=40000 pa=0 order=18
+[UTEST] PT INSERT: daughter pa=0:0 va=40000:40000 order=18
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x40000
+[UTEST] 1:       space=client vaddr=0x22 size=0x1 parent=s0 p.vaddr=0x31ff
+[UTEST] 1:       space=client vaddr=0x23 size=0x1 parent=s0 p.vaddr=0x3200
+[UTEST] 1:       space=client vaddr=0x24 size=0x1 parent=s0 p.vaddr=0x3201
+[UTEST] 1:  ==>  space=daughter vaddr=0x40000 size=0x40000 parent=s0 p.vaddr=0x0
+[UTEST] 
+[UTEST] map(&m, s0, to_pfn(0x0), daughter, to_pfn(0x40000000), to_po(30)): 	OK
+[UTEST] page-table lookup: 3ffff in daughter failed
+[UTEST] !lookup(&m, daughter, to_pfn(0x3fffffff), &node, &frame): 	OK
+[UTEST] lookup(&m, daughter, to_pfn(0x50000000), &node, &frame): 	OK
+[UTEST] page-table lookup: 80000 in daughter failed
+[UTEST] !lookup(&m, daughter, to_pfn(0x80000000), &node, &frame): 	OK
+[UTEST] Insert: client: va=32 pa=31ff order=0
+[UTEST] PT INSERT: client pa=31ff:31ff va=32:32 order=0
+[UTEST] 1:       space=daughter vaddr=0x40000 size=0x40000
+[UTEST] 1:  ==>  space=client vaddr=0x32 size=0x1 parent=daughter p.vaddr=0x431ff
+[UTEST] 
+[UTEST] map(&m, daughter, to_pfn(0x431ff000 + (i<<12)), client, to_pfn(0x32000 + (i<<12)), to_po(12)): 	OK
+[UTEST] Insert: client: va=33 pa=3200 order=0
+[UTEST] PT INSERT: client pa=3200:3200 va=33:33 order=0
+[UTEST] 1:       space=daughter vaddr=0x40000 size=0x40000
+[UTEST] 1:       space=client vaddr=0x32 size=0x1 parent=daughter p.vaddr=0x431ff
+[UTEST] 1:  ==>  space=client vaddr=0x33 size=0x1 parent=daughter p.vaddr=0x43200
+[UTEST] 
+[UTEST] map(&m, daughter, to_pfn(0x431ff000 + (i<<12)), client, to_pfn(0x32000 + (i<<12)), to_po(12)): 	OK
+[UTEST] Insert: client: va=34 pa=3201 order=0
+[UTEST] PT INSERT: client pa=3201:3201 va=34:34 order=0
+[UTEST] 1:       space=daughter vaddr=0x40000 size=0x40000
+[UTEST] 1:       space=client vaddr=0x32 size=0x1 parent=daughter p.vaddr=0x431ff
+[UTEST] 1:       space=client vaddr=0x33 size=0x1 parent=daughter p.vaddr=0x43200
+[UTEST] 1:  ==>  space=client vaddr=0x34 size=0x1 parent=daughter p.vaddr=0x43201
+[UTEST] 
+[UTEST] map(&m, daughter, to_pfn(0x431ff000 + (i<<12)), client, to_pfn(0x32000 + (i<<12)), to_po(12)): 	OK
+[UTEST] Insert: client: va=20000 pa=3000 order=9
+[UTEST] PT INSERT: client pa=3000:3000 va=20000:20000 order=9
+[UTEST] 1:       space=daughter vaddr=0x40000 size=0x40000
+[UTEST] 1:       space=client vaddr=0x32 size=0x1 parent=daughter p.vaddr=0x431ff
+[UTEST] 1:  ==>  space=client vaddr=0x20000 size=0x200 parent=daughter p.vaddr=0x43000
+[UTEST] 1:       space=client vaddr=0x33 size=0x1 parent=daughter p.vaddr=0x43200
+[UTEST] 1:       space=client vaddr=0x34 size=0x1 parent=daughter p.vaddr=0x43201
+[UTEST] 
+[UTEST] map(&m, daughter, to_pfn(0x43000000), client, to_pfn(0x20000000), to_po(21)): 	OK
+[UTEST] Insert: client: va=20200 pa=3200 order=9
+[UTEST] PT INSERT: client pa=3200:3200 va=20200:20200 order=9
+[UTEST] 1:       space=daughter vaddr=0x40000 size=0x40000
+[UTEST] 1:       space=client vaddr=0x32 size=0x1 parent=daughter p.vaddr=0x431ff
+[UTEST] 1:       space=client vaddr=0x20000 size=0x200 parent=daughter p.vaddr=0x43000
+[UTEST] 1:       space=client vaddr=0x33 size=0x1 parent=daughter p.vaddr=0x43200
+[UTEST] 1:       space=client vaddr=0x34 size=0x1 parent=daughter p.vaddr=0x43201
+[UTEST] 1:  ==>  space=client vaddr=0x20200 size=0x200 parent=daughter p.vaddr=0x43200
+[UTEST] 
+[UTEST] map(&m, daughter, to_pfn(0x43200000), client, to_pfn(0x20200000), to_po(21)): 	OK
+[UTEST] lookup(&m, client, to_pfn(0x32000), &node, &frame): 	OK
+[UTEST] lookup(&m, client, to_pfn(0x33000), &node, &frame): 	OK
+[UTEST] lookup(&m, client, to_pfn(0x34000), &node, &frame): 	OK
+[UTEST] lookup(&m, client, to_pfn(0x20000000), &node, &frame): 	OK
+[UTEST] lookup(&m, client, to_pfn(0x20200000), &node, &frame): 	OK
+[UTEST] Insert: son: va=20000 pa=3000 order=10
+[UTEST] PT INSERT: son pa=3000:3000 va=20000:20000 order=10
+[UTEST] 1:       space=daughter vaddr=0x40000 size=0x40000
+[UTEST] 1:       space=client vaddr=0x32 size=0x1 parent=daughter p.vaddr=0x431ff
+[UTEST] 1:       space=client vaddr=0x20000 size=0x200 parent=daughter p.vaddr=0x43000
+[UTEST] 1:       space=client vaddr=0x33 size=0x1 parent=daughter p.vaddr=0x43200
+[UTEST] 1:       space=client vaddr=0x34 size=0x1 parent=daughter p.vaddr=0x43201
+[UTEST] 1:       space=client vaddr=0x20200 size=0x200 parent=daughter p.vaddr=0x43200
+[UTEST] 1:  ==>  space=son vaddr=0x20000 size=0x400 parent=daughter p.vaddr=0x43000
+[UTEST] 
+[UTEST] map(&m, daughter, to_pfn(0x43000000), son, to_pfn(0x20000000), to_po(22)): 	OK
+[UTEST] Insert: client: va=40 pa=3200 order=0
+[UTEST] PT INSERT: client pa=3200:3200 va=40:40 order=0
+[UTEST] 1:       space=son vaddr=0x20000 size=0x400
+[UTEST] 1:  ==>  space=client vaddr=0x40 size=0x1 parent=son p.vaddr=0x20200
+[UTEST] 
+[UTEST] map(&m, son, to_pfn(0x20200000), client, to_pfn(0x40000), to_po(12)): 	OK
+[UTEST] Insert: client: va=41 pa=3201 order=0
+[UTEST] PT INSERT: client pa=3201:3201 va=41:41 order=0
+[UTEST] 1:       space=son vaddr=0x20000 size=0x400
+[UTEST] 1:       space=client vaddr=0x40 size=0x1 parent=son p.vaddr=0x20200
+[UTEST] 1:  ==>  space=client vaddr=0x41 size=0x1 parent=son p.vaddr=0x20201
+[UTEST] 
+[UTEST] map(&m, son, to_pfn(0x20201000), client, to_pfn(0x41000), to_po(12)): 	OK
+[UTEST] lookup(&m, client, to_pfn(0x40000), &node, &frame): 	OK
+[UTEST] lookup(&m, client, to_pfn(0x41000), &node, &frame): 	OK
+[UTEST] mapping tree: { s0 va=0 size=40000
+[UTEST]   header info: entries used: 4 free: 0 total: 8 lock: 0
+[UTEST]   1: va=0 task=s0 depth=root
+[UTEST]   2: subtree...
+[UTEST]   mapping tree: { s0 va=0 size=400
+[UTEST]     header info: entries used: 1 free: 0 total: 4 lock: 0
+[UTEST]     1: va=0 task=s0 depth=root
+[UTEST]     2: end
+[UTEST]   } // mapping tree: s0 va=0
+[UTEST]   mapping tree: { s0 va=3000 size=400
+[UTEST]     header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]     1: va=3000 task=s0 depth=root
+[UTEST]     2: subtree...
+[UTEST]     mapping tree: { s0 va=3000 size=200
+[UTEST]       header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]       1: va=3000 task=s0 depth=root
+[UTEST]       2: subtree...
+[UTEST]       mapping tree: { s0 va=3000 size=1
+[UTEST]         header info: entries used: 1 free: 0 total: 4 lock: 0
+[UTEST]         1: va=3000 task=s0 depth=root
+[UTEST]         2: end
+[UTEST]       } // mapping tree: s0 va=3000
+[UTEST]       mapping tree: { s0 va=31ff size=1
+[UTEST]         header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]         1: va=31ff task=s0 depth=root
+[UTEST]         2:   va=22 task=client depth=1
+[UTEST]         3: end
+[UTEST]       } // mapping tree: s0 va=31ff
+[UTEST]       3: end
+[UTEST]     } // mapping tree: s0 va=3000
+[UTEST]     mapping tree: { s0 va=3200 size=200
+[UTEST]       header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]       1: va=3200 task=s0 depth=root
+[UTEST]       2: subtree...
+[UTEST]       mapping tree: { s0 va=3200 size=1
+[UTEST]         header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]         1: va=3200 task=s0 depth=root
+[UTEST]         2:   va=23 task=client depth=1
+[UTEST]         3: end
+[UTEST]       } // mapping tree: s0 va=3200
+[UTEST]       mapping tree: { s0 va=3201 size=1
+[UTEST]         header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]         1: va=3201 task=s0 depth=root
+[UTEST]         2:   va=24 task=client depth=1
+[UTEST]         3: end
+[UTEST]       } // mapping tree: s0 va=3201
+[UTEST]       3: end
+[UTEST]     } // mapping tree: s0 va=3200
+[UTEST]     3: end
+[UTEST]   } // mapping tree: s0 va=3000
+[UTEST]   3:   va=40000 task=daughter depth=1
+[UTEST]   4: subtree...
+[UTEST]     mapping tree: { daughter va=43000 size=400
+[UTEST]       header info: entries used: 4 free: 0 total: 8 lock: 0
+[UTEST]       1: va=43000 task=daughter depth=root
+[UTEST]       2: subtree...
+[UTEST]       mapping tree: { daughter va=43000 size=200
+[UTEST]         header info: entries used: 3 free: 0 total: 4 lock: 0
+[UTEST]         1: va=43000 task=daughter depth=root
+[UTEST]         2: subtree...
+[UTEST]         mapping tree: { daughter va=43000 size=1
+[UTEST]           header info: entries used: 1 free: 0 total: 4 lock: 0
+[UTEST]           1: va=43000 task=daughter depth=root
+[UTEST]           2: end
+[UTEST]         } // mapping tree: daughter va=43000
+[UTEST]         mapping tree: { daughter va=431ff size=1
+[UTEST]           header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]           1: va=431ff task=daughter depth=root
+[UTEST]           2:   va=32 task=client depth=1
+[UTEST]           3: end
+[UTEST]         } // mapping tree: daughter va=431ff
+[UTEST]         3:   va=20000 task=client depth=1
+[UTEST]         4: end
+[UTEST]       } // mapping tree: daughter va=43000
+[UTEST]       mapping tree: { daughter va=43200 size=200
+[UTEST]         header info: entries used: 3 free: 0 total: 4 lock: 0
+[UTEST]         1: va=43200 task=daughter depth=root
+[UTEST]         2: subtree...
+[UTEST]         mapping tree: { daughter va=43200 size=1
+[UTEST]           header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]           1: va=43200 task=daughter depth=root
+[UTEST]           2:   va=33 task=client depth=1
+[UTEST]           3: end
+[UTEST]         } // mapping tree: daughter va=43200
+[UTEST]         mapping tree: { daughter va=43201 size=1
+[UTEST]           header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]           1: va=43201 task=daughter depth=root
+[UTEST]           2:   va=34 task=client depth=1
+[UTEST]           3: end
+[UTEST]         } // mapping tree: daughter va=43201
+[UTEST]         3:   va=20200 task=client depth=1
+[UTEST]         4: end
+[UTEST]       } // mapping tree: daughter va=43200
+[UTEST]       3:   va=20000 task=son depth=1
+[UTEST]       4: subtree...
+[UTEST]         mapping tree: { son va=20200 size=200
+[UTEST]           header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]           1: va=20200 task=son depth=root
+[UTEST]           2: subtree...
+[UTEST]           mapping tree: { son va=20200 size=1
+[UTEST]             header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]             1: va=20200 task=son depth=root
+[UTEST]             2:   va=40 task=client depth=1
+[UTEST]             3: end
+[UTEST]           } // mapping tree: son va=20200
+[UTEST]           mapping tree: { son va=20201 size=1
+[UTEST]             header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]             1: va=20201 task=son depth=root
+[UTEST]             2:   va=41 task=client depth=1
+[UTEST]             3: end
+[UTEST]           } // mapping tree: son va=20201
+[UTEST]           3: end
+[UTEST]         } // mapping tree: son va=20200
+[UTEST]       5: end
+[UTEST]     } // mapping tree: daughter va=43000
+[UTEST]   5: end
+[UTEST] } // mapping tree: s0 va=0
+[UTEST] unmap client va=33 for node:
+[UTEST] remove PTE: client va=33 pa=3200 order=0
+[UTEST] unmap client va=20200 for node:
+[UTEST] remove PTE: client va=20200 pa=3200 order=9
+[UTEST] unmap son va=20000 for node:
+[UTEST] remove PTE: son va=20000 pa=3000 order=10
+[UTEST] unmap client va=40 for node:
+[UTEST] remove PTE: client va=40 pa=3200 order=0
+[UTEST] unmap client va=41 for node:
+[UTEST] remove PTE: client va=41 pa=3201 order=0
+[UTEST] state after flush:
+[UTEST] unmap(&m, daughter, to_pfn(0x43200000), to_pfn(0x43201000), false): 	OK
+[UTEST] mapping tree: { s0 va=0 size=40000
+[UTEST]   header info: entries used: 4 free: 0 total: 8 lock: 0
+[UTEST]   1: va=0 task=s0 depth=root
+[UTEST]   2: subtree...
+[UTEST]   mapping tree: { s0 va=0 size=400
+[UTEST]     header info: entries used: 1 free: 0 total: 4 lock: 0
+[UTEST]     1: va=0 task=s0 depth=root
+[UTEST]     2: end
+[UTEST]   } // mapping tree: s0 va=0
+[UTEST]   mapping tree: { s0 va=3000 size=400
+[UTEST]     header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]     1: va=3000 task=s0 depth=root
+[UTEST]     2: subtree...
+[UTEST]     mapping tree: { s0 va=3000 size=200
+[UTEST]       header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]       1: va=3000 task=s0 depth=root
+[UTEST]       2: subtree...
+[UTEST]       mapping tree: { s0 va=3000 size=1
+[UTEST]         header info: entries used: 1 free: 0 total: 4 lock: 0
+[UTEST]         1: va=3000 task=s0 depth=root
+[UTEST]         2: end
+[UTEST]       } // mapping tree: s0 va=3000
+[UTEST]       mapping tree: { s0 va=31ff size=1
+[UTEST]         header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]         1: va=31ff task=s0 depth=root
+[UTEST]         2:   va=22 task=client depth=1
+[UTEST]         3: end
+[UTEST]       } // mapping tree: s0 va=31ff
+[UTEST]       3: end
+[UTEST]     } // mapping tree: s0 va=3000
+[UTEST]     mapping tree: { s0 va=3200 size=200
+[UTEST]       header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]       1: va=3200 task=s0 depth=root
+[UTEST]       2: subtree...
+[UTEST]       mapping tree: { s0 va=3200 size=1
+[UTEST]         header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]         1: va=3200 task=s0 depth=root
+[UTEST]         2:   va=23 task=client depth=1
+[UTEST]         3: end
+[UTEST]       } // mapping tree: s0 va=3200
+[UTEST]       mapping tree: { s0 va=3201 size=1
+[UTEST]         header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]         1: va=3201 task=s0 depth=root
+[UTEST]         2:   va=24 task=client depth=1
+[UTEST]         3: end
+[UTEST]       } // mapping tree: s0 va=3201
+[UTEST]       3: end
+[UTEST]     } // mapping tree: s0 va=3200
+[UTEST]     3: end
+[UTEST]   } // mapping tree: s0 va=3000
+[UTEST]   3:   va=40000 task=daughter depth=1
+[UTEST]   4: subtree...
+[UTEST]     mapping tree: { daughter va=43000 size=400
+[UTEST]       header info: entries used: 2 free: 0 total: 8 lock: 0
+[UTEST]       1: va=43000 task=daughter depth=root
+[UTEST]       2: subtree...
+[UTEST]       mapping tree: { daughter va=43000 size=200
+[UTEST]         header info: entries used: 3 free: 0 total: 4 lock: 0
+[UTEST]         1: va=43000 task=daughter depth=root
+[UTEST]         2: subtree...
+[UTEST]         mapping tree: { daughter va=43000 size=1
+[UTEST]           header info: entries used: 1 free: 0 total: 4 lock: 0
+[UTEST]           1: va=43000 task=daughter depth=root
+[UTEST]           2: end
+[UTEST]         } // mapping tree: daughter va=43000
+[UTEST]         mapping tree: { daughter va=431ff size=1
+[UTEST]           header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]           1: va=431ff task=daughter depth=root
+[UTEST]           2:   va=32 task=client depth=1
+[UTEST]           3: end
+[UTEST]         } // mapping tree: daughter va=431ff
+[UTEST]         3:   va=20000 task=client depth=1
+[UTEST]         4: end
+[UTEST]       } // mapping tree: daughter va=43000
+[UTEST]       mapping tree: { daughter va=43200 size=200
+[UTEST]         header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]         1: va=43200 task=daughter depth=root
+[UTEST]         2: subtree...
+[UTEST]         mapping tree: { daughter va=43201 size=1
+[UTEST]           header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]           1: va=43201 task=daughter depth=root
+[UTEST]           2:   va=34 task=client depth=1
+[UTEST]           3: end
+[UTEST]         } // mapping tree: daughter va=43201
+[UTEST]         3: end
+[UTEST]       } // mapping tree: daughter va=43200
+[UTEST]       3: end
+[UTEST]     } // mapping tree: daughter va=43000
+[UTEST]   5: end
+[UTEST] } // mapping tree: s0 va=0
+[UTEST] page-table lookup: 40 in client failed
+[UTEST] !lookup(&m, client, to_pfn(0x40000), &node, &frame): 	OK
+[UTEST] page-table lookup: 41 in client failed
+[UTEST] !lookup(&m, client, to_pfn(0x41000), &node, &frame): 	OK
+[UTEST] lookup(&m, client, to_pfn(0x32000), &node, &frame): 	OK
+[UTEST] page-table lookup: 33 in client failed
+[UTEST] !lookup(&m, client, to_pfn(0x33000), &node, &frame): 	OK
+[UTEST] lookup(&m, client, to_pfn(0x34000), &node, &frame): 	OK
+[UTEST] Insert: client: va=33 pa=3200 order=0
+[UTEST] PT INSERT: client pa=3200:3200 va=33:33 order=0
+[UTEST] 1:       space=daughter vaddr=0x40000 size=0x40000
+[UTEST] 1:       space=client vaddr=0x32 size=0x1 parent=daughter p.vaddr=0x431ff
+[UTEST] 1:       space=client vaddr=0x20000 size=0x200 parent=daughter p.vaddr=0x43000
+[UTEST] 1:  ==>  space=client vaddr=0x33 size=0x1 parent=daughter p.vaddr=0x43200
+[UTEST] 1:       space=client vaddr=0x34 size=0x1 parent=daughter p.vaddr=0x43201
+[UTEST] 
+[UTEST] map(&m, daughter, to_pfn(0x43200000), client, to_pfn(0x33000), to_po(12)): 	OK
+[UTEST] lookup(&m, client, to_pfn(0x33000), &node, &frame): 	OK
+[UTEST] mapping tree: { s0 va=0 size=40000
+[UTEST]   header info: entries used: 4 free: 0 total: 8 lock: 0
+[UTEST]   1: va=0 task=s0 depth=root
+[UTEST]   2: subtree...
+[UTEST]   mapping tree: { s0 va=0 size=400
+[UTEST]     header info: entries used: 1 free: 0 total: 4 lock: 0
+[UTEST]     1: va=0 task=s0 depth=root
+[UTEST]     2: end
+[UTEST]   } // mapping tree: s0 va=0
+[UTEST]   mapping tree: { s0 va=3000 size=400
+[UTEST]     header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]     1: va=3000 task=s0 depth=root
+[UTEST]     2: subtree...
+[UTEST]     mapping tree: { s0 va=3000 size=200
+[UTEST]       header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]       1: va=3000 task=s0 depth=root
+[UTEST]       2: subtree...
+[UTEST]       mapping tree: { s0 va=3000 size=1
+[UTEST]         header info: entries used: 1 free: 0 total: 4 lock: 0
+[UTEST]         1: va=3000 task=s0 depth=root
+[UTEST]         2: end
+[UTEST]       } // mapping tree: s0 va=3000
+[UTEST]       mapping tree: { s0 va=31ff size=1
+[UTEST]         header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]         1: va=31ff task=s0 depth=root
+[UTEST]         2:   va=22 task=client depth=1
+[UTEST]         3: end
+[UTEST]       } // mapping tree: s0 va=31ff
+[UTEST]       3: end
+[UTEST]     } // mapping tree: s0 va=3000
+[UTEST]     mapping tree: { s0 va=3200 size=200
+[UTEST]       header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]       1: va=3200 task=s0 depth=root
+[UTEST]       2: subtree...
+[UTEST]       mapping tree: { s0 va=3200 size=1
+[UTEST]         header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]         1: va=3200 task=s0 depth=root
+[UTEST]         2:   va=23 task=client depth=1
+[UTEST]         3: end
+[UTEST]       } // mapping tree: s0 va=3200
+[UTEST]       mapping tree: { s0 va=3201 size=1
+[UTEST]         header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]         1: va=3201 task=s0 depth=root
+[UTEST]         2:   va=24 task=client depth=1
+[UTEST]         3: end
+[UTEST]       } // mapping tree: s0 va=3201
+[UTEST]       3: end
+[UTEST]     } // mapping tree: s0 va=3200
+[UTEST]     3: end
+[UTEST]   } // mapping tree: s0 va=3000
+[UTEST]   3:   va=40000 task=daughter depth=1
+[UTEST]   4: subtree...
+[UTEST]     mapping tree: { daughter va=43000 size=400
+[UTEST]       header info: entries used: 2 free: 0 total: 8 lock: 0
+[UTEST]       1: va=43000 task=daughter depth=root
+[UTEST]       2: subtree...
+[UTEST]       mapping tree: { daughter va=43000 size=200
+[UTEST]         header info: entries used: 3 free: 0 total: 4 lock: 0
+[UTEST]         1: va=43000 task=daughter depth=root
+[UTEST]         2: subtree...
+[UTEST]         mapping tree: { daughter va=43000 size=1
+[UTEST]           header info: entries used: 1 free: 0 total: 4 lock: 0
+[UTEST]           1: va=43000 task=daughter depth=root
+[UTEST]           2: end
+[UTEST]         } // mapping tree: daughter va=43000
+[UTEST]         mapping tree: { daughter va=431ff size=1
+[UTEST]           header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]           1: va=431ff task=daughter depth=root
+[UTEST]           2:   va=32 task=client depth=1
+[UTEST]           3: end
+[UTEST]         } // mapping tree: daughter va=431ff
+[UTEST]         3:   va=20000 task=client depth=1
+[UTEST]         4: end
+[UTEST]       } // mapping tree: daughter va=43000
+[UTEST]       mapping tree: { daughter va=43200 size=200
+[UTEST]         header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]         1: va=43200 task=daughter depth=root
+[UTEST]         2: subtree...
+[UTEST]         mapping tree: { daughter va=43200 size=1
+[UTEST]           header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]           1: va=43200 task=daughter depth=root
+[UTEST]           2:   va=33 task=client depth=1
+[UTEST]           3: end
+[UTEST]         } // mapping tree: daughter va=43200
+[UTEST]         mapping tree: { daughter va=43201 size=1
+[UTEST]           header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]           1: va=43201 task=daughter depth=root
+[UTEST]           2:   va=34 task=client depth=1
+[UTEST]           3: end
+[UTEST]         } // mapping tree: daughter va=43201
+[UTEST]         3: end
+[UTEST]       } // mapping tree: daughter va=43200
+[UTEST]       3: end
+[UTEST]     } // mapping tree: daughter va=43000
+[UTEST]   5: end
+[UTEST] } // mapping tree: s0 va=0
+[UTEST] unmap client va=23 for node:
+[UTEST] remove PTE: client va=23 pa=3200 order=0
+[UTEST] unmap daughter va=40000 for node:
+[UTEST] remove PTE: daughter va=40000 pa=0 order=18
+[UTEST] unmap client va=32 for node:
+[UTEST] remove PTE: client va=32 pa=31ff order=0
+[UTEST] unmap client va=20000 for node:
+[UTEST] remove PTE: client va=20000 pa=3000 order=9
+[UTEST] unmap client va=33 for node:
+[UTEST] remove PTE: client va=33 pa=3200 order=0
+[UTEST] unmap client va=34 for node:
+[UTEST] remove PTE: client va=34 pa=3201 order=0
+[UTEST] state after flush:
+[UTEST] unmap(&m, s0, to_pfn(0x3200000), to_pfn(0x3201000), false): 	OK
+[UTEST] lookup(&m, s0, to_pfn(0x3200000), &node, &frame): 	OK
+[UTEST] lookup(&m, client, to_pfn(0x22000), &node, &frame): 	OK
+[UTEST] page-table lookup: 23 in client failed
+[UTEST] !lookup(&m, client, to_pfn(0x23000), &node, &frame): 	OK
+[UTEST] lookup(&m, client, to_pfn(0x24000), &node, &frame): 	OK
+[UTEST] page-table lookup: 32 in client failed
+[UTEST] !lookup(&m, client, to_pfn(0x32000), &node, &frame): 	OK
+[UTEST] page-table lookup: 33 in client failed
+[UTEST] !lookup(&m, client, to_pfn(0x33000), &node, &frame): 	OK
+[UTEST] page-table lookup: 34 in client failed
+[UTEST] !lookup(&m, client, to_pfn(0x34000), &node, &frame): 	OK
+[UTEST] page-table lookup: 20000 in client failed
+[UTEST] !lookup(&m, client, to_pfn(0x20000000), &node, &frame): 	OK
+[UTEST] page-table lookup: 20200 in client failed
+[UTEST] !lookup(&m, client, to_pfn(0x20200000), &node, &frame): 	OK
+[UTEST] page-table lookup: 40000 in daughter failed
+[UTEST] !lookup(&m, daughter, to_pfn(0x40000000), &node, &frame): 	OK
+[UTEST] mapping tree: { s0 va=0 size=40000
+[UTEST]   header info: entries used: 2 free: 0 total: 8 lock: 0
+[UTEST]   1: va=0 task=s0 depth=root
+[UTEST]   2: subtree...
+[UTEST]   mapping tree: { s0 va=0 size=400
+[UTEST]     header info: entries used: 1 free: 0 total: 4 lock: 0
+[UTEST]     1: va=0 task=s0 depth=root
+[UTEST]     2: end
+[UTEST]   } // mapping tree: s0 va=0
+[UTEST]   mapping tree: { s0 va=3000 size=400
+[UTEST]     header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]     1: va=3000 task=s0 depth=root
+[UTEST]     2: subtree...
+[UTEST]     mapping tree: { s0 va=3000 size=200
+[UTEST]       header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]       1: va=3000 task=s0 depth=root
+[UTEST]       2: subtree...
+[UTEST]       mapping tree: { s0 va=3000 size=1
+[UTEST]         header info: entries used: 1 free: 0 total: 4 lock: 0
+[UTEST]         1: va=3000 task=s0 depth=root
+[UTEST]         2: end
+[UTEST]       } // mapping tree: s0 va=3000
+[UTEST]       mapping tree: { s0 va=31ff size=1
+[UTEST]         header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]         1: va=31ff task=s0 depth=root
+[UTEST]         2:   va=22 task=client depth=1
+[UTEST]         3: end
+[UTEST]       } // mapping tree: s0 va=31ff
+[UTEST]       3: end
+[UTEST]     } // mapping tree: s0 va=3000
+[UTEST]     mapping tree: { s0 va=3200 size=200
+[UTEST]       header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]       1: va=3200 task=s0 depth=root
+[UTEST]       2: subtree...
+[UTEST]       mapping tree: { s0 va=3201 size=1
+[UTEST]         header info: entries used: 2 free: 0 total: 4 lock: 0
+[UTEST]         1: va=3201 task=s0 depth=root
+[UTEST]         2:   va=24 task=client depth=1
+[UTEST]         3: end
+[UTEST]       } // mapping tree: s0 va=3201
+[UTEST]       3: end
+[UTEST]     } // mapping tree: s0 va=3200
+[UTEST]     3: end
+[UTEST]   } // mapping tree: s0 va=3000
+[UTEST]   3: end
+[UTEST] } // mapping tree: s0 va=0
+[UTEST] multilevel MDB done: 89 tests passed, 0 failed
+[UTEST] multilevel MDB OK
+[UTEST] ---------- multilevel MDB --------------------------------------
+[UTEST] ========== multilevel 2 ======================================
+[UTEST] Initating test: multilevel 2
+[UTEST] Insert: father: va=80000 pa=40000 order=18
+[UTEST] PT INSERT: father pa=40000:40000 va=80000:80000 order=18
+[UTEST] 0:      space=s0 vaddr=0x40000 size=0x40000
+[UTEST] 1:  ==>  space=father vaddr=0x80000 size=0x40000 parent=s0 p.vaddr=0x40000
+[UTEST] 
+[UTEST] map(&m, s0, to_pfn(0x40000000), father, to_pfn(0x80000000), to_po(30)): 	OK
+[UTEST] Insert: son: va=0 pa=40000 order=9
+[UTEST] PT INSERT: son pa=40000:40000 va=0:0 order=9
+[UTEST] 1:       space=father vaddr=0x80000 size=0x40000
+[UTEST] 1:  ==>  space=son vaddr=0x0 size=0x200 parent=father p.vaddr=0x80000
+[UTEST] 
+[UTEST] map(&m, father, to_pfn(0x80000000), son, to_pfn(0x0), to_po(21)): 	OK
+[UTEST] lookup(&m, son, to_pfn(0x0)): 	OK
+[UTEST] unmap father va=80000 for node:
+[UTEST] remove PTE: father va=80000 pa=40000 order=18
+[UTEST] unmap son va=0 for node:
+[UTEST] remove PTE: son va=0 pa=40000 order=9
+[UTEST] state after flush:
+[UTEST] unmap(&m, s0, to_pfn(0x40400000), to_pfn(0x40401000), false): 	OK
+[UTEST] page-table lookup: 0 in son failed
+[UTEST] !lookup(&m, son, to_pfn(0x0)): 	OK
+[UTEST] multilevel 2 done: 5 tests passed, 0 failed
+[UTEST] multilevel 2 OK
+[UTEST] ---------- multilevel 2 --------------------------------------
+[UTEST] ========== multilevel 3 ======================================
+[UTEST] Initating test: multilevel 3
+[UTEST] Insert: father: va=0 pa=0 order=18
+[UTEST] PT INSERT: father pa=0:0 va=0:0 order=18
+[UTEST] 0:      space=s0 vaddr=0x0 size=0x40000
+[UTEST] 1:  ==>  space=father vaddr=0x0 size=0x40000 parent=s0 p.vaddr=0x0
+[UTEST] 
+[UTEST] map(&m, s0, to_pfn(0x00000000), father, to_pfn(0x00000000), to_po(30)): 	OK
+[UTEST] Insert: son: va=80200 pa=0 order=9
+[UTEST] PT INSERT: son pa=0:0 va=80200:80200 order=9
+[UTEST] 1:       space=father vaddr=0x0 size=0x40000
+[UTEST] 1:  ==>  space=son vaddr=0x80200 size=0x200 parent=father p.vaddr=0x0
+[UTEST] 
+[UTEST] map(&m, father, to_pfn(0x00000000), son, to_pfn(0x80200000), to_po(21)): 	OK
+[UTEST] lookup(&m, son, to_pfn(0x80200000)): 	OK
+[UTEST] unmap father va=0 for node:
+[UTEST] remove PTE: father va=0 pa=0 order=18
+[UTEST] unmap son va=80200 for node:
+[UTEST] remove PTE: son va=80200 pa=0 order=9
+[UTEST] state after flush:
+[UTEST] unmap(&m, s0, to_pfn(0x00000000), to_pfn(0x00001000), false): 	OK
+[UTEST] page-table lookup: 80200 in son failed
+[UTEST] !lookup(&m, son, to_pfn(0x80200000)): 	OK
+[UTEST] multilevel 3 done: 5 tests passed, 0 failed
+[UTEST] multilevel 3 OK
+[UTEST] ---------- multilevel 3 --------------------------------------
+[UTEST] #################################################################
+[UTEST] All tests finished: 143 tests passed, 0 failed

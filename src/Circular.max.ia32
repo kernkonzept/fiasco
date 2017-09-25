@@ -1,0 +1,18 @@
+Do "make DEPS" for full fine-grained dependency information.
+
+---
+
+    checksum
+boot_info
+    checksum
+
+---
+
+    boot_info
+checksum
+    boot_info
+
+---
+
+TOTAL CIRCULAR DEPS:
+2

@@ -1,0 +1,40 @@
+# -*- makefile -*-
+
+
+checksum.ro: genchecksum $(KERNEL) $(BOOT)
+	$(CHKSUM_MESSAGE)"$(BOOT) text section"
+	$(VERBOSE)$(OBJDUMP) \
+	  --start-address=0x`$(NM) $(KERNEL) | $(GREP) -w _start | cut -f1 -d' '` \
+	  --stop-address=0x`$(NM) $(KERNEL) | $(GREP) -w _etext | cut -f1 -d' '` \
+	  -s $(BOOT) | cut -f3,4,5,6 -d' ' | ./genchecksum > $@
+
+checksum.rw: genchecksum $(KERNEL) $(BOOT)
+	$(CHKSUM_MESSAGE)"$(BOOT) data section"
+	$(VERBOSE)$(OBJDUMP) \
+	  --start-address=0x`$(NM) $(KERNEL) | $(GREP) -w _kernel_data_start | cut -f1 -d' '` \
+	  --stop-address=0x`$(NM) $(KERNEL) | $(GREP) -w _edata | cut -f1 -d' '` \
+	  -s $(BOOT) | cut -f3,4,5,6 -d' ' | ./genchecksum > $@
+
+$(CHECKSUM): checksum.ro checksum.rw setchecksum $(BOOT)
+	$(PATCH_MESSAGE)"$(BOOT)"
+	$(VERBOSE)./setchecksum $(BOOT) \
+	  "0x$(shell cat checksum.ro)" \
+	  "0x$(shell cat checksum.rw)" && echo done >$@
+	$(call INSTALLFILE_RULE,fiasco,fiasco)
+
+setchecksum: setchecksum.c
+	$(COMP_MESSAGE)
+	$(VERBOSE)$(HOST_CC) -O2 -Wall $(HOST_CPPFLAGS) $(HOST_CFLAGS) -o $@ $^
+
+genchecksum: $(OBJ_CHECKSUM)
+	$(LINK_MESSAGE)
+	$(VERBOSE)$(HOST_CXX) -fno-rtti -fno-exceptions $(HOST_CPPFLAGS) $(HOST_CXXFLAGS) -o $@ $^ 
+
+$(OBJ_CHECKSUM): %.o: %.cc
+	$(COMP_MESSAGE)
+	$(VERBOSE)$(HOST_CXX) -fno-rtti -fno-exceptions -c -MD -MP -MF .$*.cc.d.new -O2 $(HOST_CPPFLAGS) $(HOST_CXXFLAGS) $< -o $@
+	@mv .$*.cc.d.new .$*.cc.d
+
+clean-CHECKSUM:
+	rm -f genchecksum setchecksum checksum.ro checksum.rw
+

@@ -1,0 +1,240 @@
+# ARCH:           ARM arm
+# ARCHDESCR:      ARM processor family
+#
+# ARCHSELECT:     BIT32
+# ARCHSELECT:     HAS_FPU_OPTION
+# ARCHSELECT:     FPU if CPU_VIRT
+# ARCHSELECT:     ARM_LPAE if CPU_VIRT
+# ARCHSELECT:     HAS_SERIAL_OPTION
+# ARCHSELECT:     HAS_VIRT_OBJ_SPACE_OPTION if ARM_V6PLUS && !CPU_VIRT && !ARM_1176_CACHE_ALIAS_FIX
+#
+# ARCHDEFAULTPF: PF_INTEGRATOR
+
+# SECTION: GLOBAL
+
+config CAN_ARM_CPU_SA1100
+	bool
+
+config CAN_ARM_CPU_XSCALE
+	bool
+
+config CAN_ARM_CPU_920T
+	bool
+
+config CAN_ARM_CPU_926
+	bool
+
+config CAN_ARM_CPU_1136
+	bool
+
+config CAN_ARM_CPU_1176
+	bool
+
+config CAN_ARM_CPU_MPCORE
+	bool
+
+config CAN_ARM_CPU_CORTEX_A5
+	bool
+
+config CAN_ARM_CPU_CORTEX_A7
+	bool
+
+config CAN_ARM_CPU_CORTEX_A8
+	bool
+
+config CAN_ARM_CPU_CORTEX_A9
+	bool
+
+config CAN_ARM_CPU_CORTEX_A15
+	bool
+
+config CAN_ARM_CACHE_L2CXX0
+	bool
+
+config DEFAULT_ARM_EM_TZ
+        bool
+
+config DEFAULT_ARM_EM_NS
+        bool
+
+config ARM_V6
+	def_bool y if ARM_1136 || ARM_1176 || ARM_MPCORE
+
+config ARM_V7
+	def_bool y if ARM_CORTEX_A8 || ARM_CORTEX_A9 \
+	              || ARM_CORTEX_A5 || ARM_CORTEX_A7 || ARM_CORTEX_A15
+
+config ARM_V6PLUS
+	def_bool y if ARM_V6 || ARM_V7
+
+# SECTION: CPU
+
+choice
+	prompt "CPU"
+	default ARM_926    if ARM
+
+config ARM_PXA
+	bool "Intel XScale"
+	depends on PF_XSCALE
+
+config ARM_SA
+	bool "Intel StrongARM"
+	depends on PF_SA1100
+
+config ARM_920T
+	bool "ARM 920T Processor"
+	depends on PF_S3C2410
+
+config ARM_926
+	bool "ARM 926 Processor"
+	depends on CAN_ARM_CPU_926
+
+config ARM_1136
+	bool "ARM 1136 CPU"
+	depends on CAN_ARM_CPU_1136
+
+config ARM_1176
+	bool "ARM 1176 CPU"
+	depends on CAN_ARM_CPU_1176
+
+config ARM_MPCORE
+	bool "ARM MPCore CPU"
+	depends on CAN_ARM_CPU_MPCORE
+	select HAS_MP_OPTION
+
+config ARM_CORTEX_A5
+	bool "ARM Cortex-A5 CPU"
+	depends on CAN_ARM_CPU_CORTEX_A5
+
+config ARM_CORTEX_A7
+	bool "ARM Cortex-A7 CPU"
+	depends on CAN_ARM_CPU_CORTEX_A7
+	select HAS_MP_OPTION
+
+config ARM_CORTEX_A8
+	bool "ARM Cortex-A8 CPU"
+	depends on CAN_ARM_CPU_CORTEX_A8
+
+config ARM_CORTEX_A9
+	bool "ARM Cortex-A9 CPU"
+	depends on CAN_ARM_CPU_CORTEX_A9
+	select HAS_MP_OPTION
+
+config ARM_CORTEX_A15
+	bool "ARM Cortex-A15 CPU"
+	depends on CAN_ARM_CPU_CORTEX_A15
+	select HAS_MP_OPTION
+	select HAS_CPU_VIRT
+
+endchoice
+
+# SECTION: TARGET
+
+config HAVE_ARM_SECMONIF_NONE
+	bool
+
+config HAVE_ARM_SECMONIF_MC
+	bool
+
+
+config ARM_ALIGNMENT_CHECK
+	bool "Enable alignment check"
+	depends on ARM
+	help
+	  Enable if you want to have alignment check enabled.
+
+choice
+	prompt "Execution Model"
+	depends on ARM
+        default ARM_EM_NS  if DEFAULT_ARM_EM_NS
+        default ARM_EM_TZ  if DEFAULT_ARM_EM_TZ
+        default ARM_EM_STD if !DEFAULT_ARM_EM_NS && !DEFAULT_ARM_EM_TZ
+
+config ARM_EM_STD
+	bool "Standard mode"
+	help
+	  Systems without ARM TrustZone support, or no specific TrustZone
+	  support.
+
+config ARM_EM_NS
+	bool "TrustZone normal side"
+	depends on ARM_1176 || ARM_CORTEX_A7 || ARM_CORTEX_A8 || ARM_CORTEX_A9 || ARM_CORTEX_A15
+	help
+	  In a system with ARM TrustZone extension, run on the normal side.
+
+config ARM_EM_TZ
+	bool "TrustZone secure side"
+	depends on !CPU_VIRT
+	depends on ARM_1176 || ARM_CORTEX_A7 || ARM_CORTEX_A8 || ARM_CORTEX_A9 || ARM_CORTEX_A15
+	help
+	  In a system with ARM TrustZone extension, run on the secure side,
+	  and allow monitor services.
+
+endchoice
+
+choice
+	prompt "Secure Monitor Interface"
+	depends on ARM_EM_NS
+
+config ARM_SECMONIF_NONE
+        bool "None"
+	depends on HAVE_ARM_SECMONIF_NONE
+        help
+          Running on a minimal secure monitor that does not require
+          any interaction (e.g., u-boot for KVM).
+
+config ARM_SECMONIF_MC
+	bool "Mobicore"
+	depends on HAVE_ARM_SECMONIF_MC
+
+endchoice
+
+config ARM_CACHE_L2CXX0
+	bool "Enable L2 Cache"
+	default y
+	depends on CAN_ARM_CACHE_L2CXX0
+	help 
+	  Enable L2 cache functionality.
+
+config ARM_ENABLE_SWP
+	bool "Enable the deprecated 'swp' instruction"
+	depends on ARM_CORTEX_A9 || ARM_CORTEX_A15 || ARM_CORTEX_A7 || ARM_CORTEX_A5
+	help
+	  Enabling this option enables the deprecated 'swp' instruction.
+	  Avoid to enable it.
+
+config ARM_LPAE
+        bool "Use LPAE page table format"
+        depends on ARM_CORTEX_A15 || ARM_CORTEX_A7
+        help
+          Use the extended page table format (LPAE).
+
+config ARM_1176_CACHE_ALIAS_FIX
+	bool "Use cache restriction to supress aliasing issue on ARM1176"
+	depends on ARM_1176
+	help
+	  The ARM1176 processor might have a memory aliasing problem when
+	  using cache sizes of more than 16kB cache. Enabling this option
+	  enables the workaround of reducing the cache size to 16kB.
+
+config ARM_CPU_ERRATA
+        bool "Enable CPU errata workarounds"
+        depends on ARM
+
+# SECTION: DEBUG
+
+menu "ARM debugging options"
+
+config VMEM_ALLOC_TEST
+	bool "Run test for Vmem_alloc allocator"
+	depends on ARM
+
+config DEBUG_KERNEL_PAGE_FAULTS
+	bool "Debugging of kernel page-faults"
+	depends on ARM
+	help
+	  This option enables logging of kernel page-faults (aka page faults
+	  from kernel mode). The page faults are logged to the normal
+	  console in the format *KP[pfa, error_code, ip].
+
+endmenu

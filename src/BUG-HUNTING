@@ -1,0 +1,31 @@
+This is a list of (funny) things, you have to check before you dig
+into deep debugging sessions.
+
+ * Check for assumptions about structure layout (and v-table 
+   pointers)
+
+ * Check for assumptions about bitfield layout (just the same 
+   as above, but as reminder)
+
+ * Is there code with side effects (i++=i++ or so)?
+
+ * Some unclobbered registers or memory in inline assembly?
+   - Keep in mind there was a problem on x86 with the clobber 
+     list, you have to mark clobbered registers as output to 
+     a dummy variable.
+
+   - Clobbering ebp has no effects. Really! We've tried it!
+     Also there is no output constraint, so if you use ebp,
+     you must explicitly save/restore it.
+
+ * Missing 'volatile' on shared and manipulated data?
+
+ * You made assumptions about the width of native data types?
+
+
+Put some printfs into the code, and hope they will not cover 
+the bug. Or just use JDB and find the bug.
+
+Remember: FIND THE BUG.
+
+

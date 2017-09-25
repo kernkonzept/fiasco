@@ -1,0 +1,27 @@
+# PF: MALTA
+# PFDESCR: MIPS Malta platform
+# PFDEPENDS: MIPS
+# PFSELECT: SYS_HAS_CPU_MIPS64_R2
+# PFSELECT: SYS_HAS_CPU_MIPS64_R6
+# PFSELECT: HAS_WEAK_ORDERING_OPTION
+# PFSELECT: HAS_LIGHTWEIGHT_BARRIERS_OPTION
+
+choice
+	prompt "Malta Platform"
+	default PF_MALTA_UP
+
+config PF_MALTA_UP
+	bool "Single CPU Platform"
+	depends on PF_MALTA
+	select CAN_MIPS_VZ_ASE
+
+config PF_MALTA_MP
+	bool "Multicore CPU Platform"
+	depends on PF_MALTA
+	select HAS_MP_OPTION
+	select CAN_MIPS_VZ_ASE
+        help
+          Use CONFIG_MP_MAX_CPUS to set the maximum supported number of CPUs
+
+endchoice
+

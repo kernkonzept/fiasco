@@ -1,0 +1,170 @@
+# -*- makefile  -*-
+# vi:set ft=make:
+
+#
+# Makerules for the sources of Fiasco
+#
+
+#
+# Source-code locations
+#
+
+
+# If building in a separate srcdir, prepend it to module-provided include paths
+ifneq ($(srcdir),.)
+VPATH 		:= $(addprefix $(srcdir)/, $(VPATH))
+PRIVATE_INCDIR	:= $(addprefix $(srcdir)/, $(PRIVATE_INCDIR))
+endif
+
+# Finally add the current directory and the preprocessor directory
+VPATH 		+= . auto
+PRIVATE_INCDIR	+= . auto
+
+#
+# Function for all Makreuls.<subsystem> files
+#
+
+MAKERULES_SUBSYS = $(foreach subsys, $(SUBSYSTEMS), $(firstword $(wildcard $(addsuffix /Makerules.$(subsys),$(VPATH) $(srcdir)))))
+
+#
+# special: build certain sources without profiling flags
+#
+NOPROFILE_C =  $(filter $(addsuffix .c,  $(NOPROFILE)), $(SRC_C))
+NOPROFILE_CC = $(filter $(addsuffix .cc, $(NOPROFILE)), $(SRC_CC))
+NOOPT_C =      $(filter $(addsuffix .c,  $(NOOPT)),     $(SRC_C))
+NOOPT_CC =     $(filter $(addsuffix .cc, $(NOOPT)),     $(SRC_CC))
+NONDEBUG_C =   $(filter $(addsuffix .c,  $(NONDEBUG)),  $(SRC_C))
+NONDEBUG_CC =  $(filter $(addsuffix .cc, $(NONDEBUG)),  $(SRC_CC))
+INSTRUMENT_C = $(filter $(addsuffix .c,  $(INSTRUMENT)),  $(SRC_C))
+INSTRUMENT_CC = $(filter $(addsuffix .cc, $(INSTRUMENT)),  $(SRC_CC))
+
+$(NOPROFILE_CC:.cc=.o) : %.o: %.cc
+	$(COMP_MESSAGE)
+	$(VERBOSE)$(CXX) -c -MD -MP -MF .$*.cc.d.new -o $@ \
+	  $(CPPFLAGS) $(CXXFLAGS) $(OPT_CXXFLAGS) $(CXXFLAGS_$(basename $(notdir $@))) $<
+	@mv .$*.cc.d.new .$*.cc.d
+
+$(NOPROFILE_C:.c=.o) : %.o: %.c
+	$(COMP_MESSAGE)
+	$(VERBOSE)$(CC) -c -MD -MP -MF .$*.c.d.new -o $@ \
+	  $(CPPFLAGS) $(CFLAGS) $(OPT_CFLAGS) $(CFLAGS_$(basename $(notdir $@))) $<
+	@mv .$*.c.d.new .$*.c.d
+
+$(NOOPT_CC:.cc=.o) : %.o: %.cc
+	$(COMP_MESSAGE_NOOPT)
+	$(VERBOSE)$(CXX) -c -MD -MP -MF .$*.cc.d.new -o $@ \
+	  $(CPPFLAGS) $(CXXFLAGS) $(NOOPT_CXXFLAGS) $(CXXFLAGS_$(basename $(notdir $@))) $<
+	@mv .$*.cc.d.new .$*.cc.d
+
+$(NOOPT_CC:.cc=.S) : %.S: %.cc
+	$(COMP_MESSAGE_NOOPT)
+	$(VERBOSE)$(CXX) -S -o $@ \
+	  $(CPPFLAGS) $(CXXFLAGS) $(NOOPT_CXXFLAGS) $(CXXFLAGS_$(basename $(notdir $@))) $<
+
+$(NOOPT_C:.c=.o) : %.o: %.c
+	$(COMP_MESSAGE_NOOPT)
+	$(VERBOSE)$(CC) -c -MD -MP -MF .$*.c.d.new -o $@ \
+	  $(CPPFLAGS) $(CFLAGS) $(NOOPT_CFLAGS) $(CFLAGS_$(basename $(notdir $@))) $<
+	@mv .$*.c.d.new .$*.c.d
+
+$(NOOPT_C:.c=.S) : %.S: %.c
+	$(COMP_MESSAGE_NOOPT)
+	$(VERBOSE)$(CC) -S -o $@ \
+	  $(CPPFLAGS) $(CFLAGS) $(NOOPT_CFLAGS) $(CFLAGS_$(basename $(notdir $@))) $<
+
+$(INSTRUMENT_CC:.cc=.o) : %.o: %.cc
+	$(COMP_MESSAGE)
+	$(VERBOSE)$(CXX) -c -MD -MP -MF .$*.cc.d.new -o $@ \
+	  $(CPPFLAGS) $(CXXFLAGS) $(PROF_FLAGS) $(OPT_CXXFLAGS) $(INST_FLAGS) $<
+	@mv .$*.cc.d.new .$*.cc.d
+
+$(INSTRUMENT_C:.c=.o) : %.o: %.c
+	$(COMP_MESSAGE)
+	$(VERBOSE)$(CC) -c -MD -MP -MF .$*.c.d.new -o $@ \
+	  $(CPPFLAGS) $(CFLAGS) $(PROF_FLAGS) $(OPT_CFLAGS) $(INST_FLAGS) $<
+	@mv .$*.c.d.new .$*.c.d
+
+$(NONDEBUG_CC:.cc=.o) : %.o: %.cc
+	$(COMP_MESSAGE)
+	$(VERBOSE)$(CXX) -c -MD -MP -MF .$*.cc.d.new -o $@ $(filter-out -DNDEBUG, \
+	  $(CPPFLAGS) $(CXXFLAGS) $(PROF_FLAGS) $(OPT_CXXFLAGS)) $<
+	@mv .$*.cc.d.new .$*.cc.d
+
+$(NONDEBUG_CC:.cc=.S) : %.S: %.cc
+	$(COMP_MESSAGE)
+	$(VERBOSE)$(CXX) -S -o $@ $(filter-out -DNDEBUG, \
+	  $(CPPFLAGS) $(CXXFLAGS) $(PROF_FLAGS) $(OPT_CXXFLAGS)) $<
+
+$(NONDEBUG_C:.c=.o) : %.o: %.c
+	$(COMP_MESSAGE)
+	$(VERBOSE)$(CC) -c -MD -MP -MF .$*.c.d.new -o $@ $(filter-out -DNDEBUG, \
+	  $(CPPFLAGS) $(CFLAGS) $(PROF_FLAGS) $(OPT_CFLAGS)) $<
+	@mv .$*.c.d.new .$*.c.d
+
+$(NONDEBUG_C:.c=.S) : %.S: %.c
+	$(COMP_MESSAGE)
+	$(VERBOSE)$(CC) -S -o $@ $(filter-out -DNDEBUG, \
+	  $(CPPFLAGS) $(CFLAGS) $(PROF_FLAGS) $(OPT_CFLAGS)) $<
+
+###
+
+#
+# Implicit rules
+#
+
+.PHONY: FORCE
+
+%.o:	%.cc
+	$(COMP_MESSAGE)
+	$(VERBOSE)$(CXX) -c -MD -MP -MF .$*.cc.d.new -o $@ \
+	  $(CPPFLAGS) $(CXXFLAGS) $(PROF_FLAGS) $(OPT_CXXFLAGS) $(CXXFLAGS_$(basename $(notdir $@))) $<
+	@mv .$*.cc.d.new .$*.cc.d
+
+%.S:	%.cc
+	$(COMP_MESSAGE)
+	$(VERBOSE)$(CC) -S -o $@ -fverbose-asm \
+	  $(CPPFLAGS) $(CXXFLAGS) $(PROF_FLAGS) $(OPT_CXXFLAGS) $(CXXFLAGS_$(basename $(notdir $@))) $<
+
+%.o:	%.c
+	$(COMP_MESSAGE)
+	$(VERBOSE)$(CC) -c -MD -MP -MF .$*.c.d.new -o $@ \
+	  $(CPPFLAGS) $(CFLAGS) $(PROF_FLAGS) $(OPT_CFLAGS) $(CFLAGS_$(basename $(notdir $@))) $<
+	@mv .$*.c.d.new .$*.c.d
+
+%.S:	%.c
+	$(COMP_MESSAGE)
+	$(VERBOSE)$(CC) -S -o $@ -fverbose-asm \
+	  $(CPPFLAGS) $(CFLAGS) $(PROF_FLAGS) $(OPT_CFLAGS) $(CFLAGS_$(basename $(notdir $@))) $<
+
+%.o:	%.S
+	$(COMP_MESSAGE)
+	$(VERBOSE)$(CC) -c -MD -MP -MF .$*.S.d.new -o $@ \
+	  $(CPPFLAGS) $(ASFLAGS) $<
+	@mv .$*.S.d.new .$*.S.d
+
+%.i:	%.c
+	$(COMP_MESSAGE)
+	$(VERBOSE)$(CC) -E -dD -o $@ \
+	  $(CPPFLAGS) $(CFLAGS) $(PROF_FLAGS) $(OPT_CFLAGS) $<
+
+%.i:	%.cc
+	$(COMP_MESSAGE)
+	$(VERBOSE)$(CXX) -E -dD -o $@ \
+	  $(CPPFLAGS) $(CXXFLAGS) $(PROF_FLAGS) $(OPT_CXXFLAGS) $<
+
+%.i:	%.S
+	$(COMP_MESSAGE)
+	$(VERBOSE)$(CC) -E -dD -o $@ $(CPPFLAGS) $(ASFLAGS) $<
+
+%.lds:	%.ld
+	$(COMP_MESSAGE)
+	$(VERBOSE)$(CPP) -MD -MP -MF .$@.d -MT $@ -undef -P -DASSEMBLER -o $@ $(CPPFLAGS) $<
+
+(%): %
+	$(AR_MESSAGE)
+	$(VERBOSE)$(AR) $(ARFLAGS) $@ $<
+
+vpath %.ld $(srcdir)
+
+# Suck in user-specific optional Makerules files
+-include Makerules.local

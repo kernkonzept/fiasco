@@ -1,0 +1,13 @@
+# lines starting with '*' are black lists for dependents and dependees
+# lines starting with '->' are black lists for dependees
+# lines starting with ':' are black lists for dependents
+
+# KERNEL
+*config.* l4_types types globalconfig
+
+# LIBC
+*.?stdlib .?assert .?stdio .?stdarg .?string __main _exit initfini
+*.?ctype .?setjmp .?alloca .?limits .?stddef .?cdefs .?signal
+*sys_wait sys_types sys_ptrace sys_user .?errno asm_unistd sys_stat
+*sys_mman fcntl sys_poll sys_ucontext simpleio keycodes
+

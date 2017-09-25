@@ -1,0 +1,74 @@
+
+ - make kobject_start_addr and co depend on debug feature
+ - remote TLB handling
+ - testing, testing, testing
+
+
+
+
+
+#########################################################################
+Older stuff, needs reviewing:
+
+
+Functionality
+#############
+
+- Kill (deadline) timeouts if a thread is terminated.
+- Fix Receiver::sender_enqueue (see ktest: "unfair scheduling").
+- Long IPC: Reserve first 4MB page after User_max as ``not available'' to
+  allow user to use the last 4MB page for long IPC (keyword IPC window)
+- Lazy IPC windowing for long IPC (similar to lazy FPU). The kernel should
+  store the IPC owner per address space (e.g. the last thread that called
+  setup_ipc_window()). When switching to a thread which performs long IPC
+  only flush the IPC window if it doesn't own the IPC window.
+  * Udo: It is also possible to setup the IPC window for the other thread
+         (saves pagefaults) but don't do this in switch_to()
+- Compare version numbers in IPC (and not only there).
+- Add receiver lists (similar to sender lists). A thread A stays in closed
+  wait to thread B. The IPC is not aborted if thread B is killed.
+  * Udo: Receiver lists are probably also needed for time donation.
+- Enhance the mapping database to support I/O flexpages for x86.
+- Enhance the mapping database to support Memory-Mapped flexpages.
+- Add scatter/gather as defined in the X.0 specification.
+- Replace fixed addresses of TCBs with e.g. a slab allocator and a hash table
+  for mapping Threadid->TCB (even for V2?)
+- IPC via chiefs. Does that still make sense?
+- The current profiling implementation produces the old BSD-GPROF4 format
+  which don't includes a magic number and the sample frequency. Either use
+  the 4.4BSD format (which isn't recognized by the binutils by default) or
+  use the GNU format (take the libc6 sources).
+- Vkey IRQ support for Fiasco-UX.
+- UTCBs for all architectures.
+
+
+Code cosmetics
+##############
+
+- Use the minilibc as GlibC replacement for Fiasco-UX. This would reduce the
+  stack footprint of printf() & colleagues and would allow to use these
+  functions from kernel thread contexts without switching the stack.
+- Remove all 32 bit values of -1 (0xffffffff). Replace them by a constant
+  defined as static_cast<Mword>(-1).
+- Remove multiple definitions of offsetof macro.
+- Unify long IPC pathes of all architectures.
+- More unification between the kernel debugger of IA32 and UX.
+- Fiasco-UX platform/subarchitecture separation.
+- Class Kmem should be related to Space. Kmem should be a ``real'' object.
+- ``Signal'' should be renamed to ``transactional message''.
+- Rename object variables ``my_foo'' to ``_foo''.
+- Simplify the IPC path by reducing the number of possible states.
+- Unify the Thread stuff in ARM and IA32 V4.
+
+
+Performance
+###########
+
+- The most important members of the TCB should have an offset less than 0x80
+  to achive smaller code (can save up to 3 bytes per instruction).
+- TCB cache line optimization.
+- Selective assertions, differ between ``normal'' assertions and ``expensive
+  assertions''.
+  * Frank: Assertions are quite cheap because they are marked as EXPECT_FALSE
+           (at least with gcc-3).
+

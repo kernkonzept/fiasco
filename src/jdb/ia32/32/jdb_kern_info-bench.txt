@@ -1,0 +1,111 @@
+Some results of 'kb' on different CPUs
+**************************************
+
+o 6:4:2:0 (Athlon [Thunderbird]), 807MHz, 256KB L2 cache:
+  1:dec ECX, jnz 1b             2.0 cycles
+  wbinvd                    46040.9 cycles
+  invlpg                       92.0 cycles
+  read CR3                      3.0 cycles
+  reload CR3                  102.0 cycles
+  clts                         12.0 cycles
+  cli + sti                     9.0 cycles
+  set CR0.ts                   62.0 cycles
+  in8(PIC)                   1085.4 cycles
+  in8(iodelay)               1085.4 cycles
+  out8(PIC)                  1127.0 cycles
+  get ES                        2.0 cycles
+  set ES + load ES:mem          9.0 cycles
+  modify ES + load ES:mem      18.0 cycles
+  int + iret                  202.0 cycles
+  sysenter + sysexit           67.0 cycles
+  sysenter + iret             107.0 cycles
+  syscall + sysret             64.0 cycles
+  push EAX + pop EAX            5.6 cycles
+  push flags + pop EAX          4.0 cycles
+  rdtsc                        11.0 cycles
+  rdpmc(0)                     11.0 cycles
+  APIC timer read              29.0 cycles
+  load data TLB (4k)           73.0 cycles
+  load code TLB (4k)           54.0 cycles
+
+o F:2:9:A (Celeron [Northwood]), 1995MHz, 128KB L2 cache
+  1:dec ECX, jnz 1b             1.5 cycles
+  wbinvd                   117953.0 cycles
+  invlpg                      520.0 cycles
+  read CR3                      8.0 cycles
+  reload CR3                  295.6 cycles
+  clts                        276.0 cycles
+  cli + sti                    88.0 cycles
+  set CR0.ts                  292.0 cycles
+  in8(PIC)                   1765.8 cycles
+  in8(iodelay)               1882.2 cycles
+  out8(PIC)                  1685.9 cycles
+  get ES                        8.0 cycles
+  set ES + load ES:mem         16.0 cycles
+  modify ES + load ES:mem      52.0 cycles
+  int + iret                  932.0 cycles
+  sysenter + sysexit          146.0 cycles
+  sysenter + iret             509.6 cycles
+  push EAX + pop EAX            8.2 cycles
+  push flags + pop EAX          8.0 cycles
+  rdtsc                        80.0 cycles
+  rdpmc(0)                    153.3 cycles
+  rdpmc32(0)                   63.2 cycles
+  APIC timer read             134.9 cycles
+  load data TLB (4k)           48.0 cycles
+  load code TLB (4k)           32.3 cycles
+
+o F:4:1:0 (Celeron 4E [Prescott/Nocona]), 2933MHz, 256KB L2 cache:
+  1:dec ECX, jnz 1b             1.5 cycles
+  wbinvd                   237504.0 cycles
+  invlpg                      512.0 cycles
+  read CR3                     23.4 cycles
+  reload CR3                  424.0 cycles
+  clts                        356.0 cycles
+  cli + sti                   122.1 cycles
+  set CR0.ts                  460.0 cycles
+  in8(PIC)                   3084.8 cycles
+  in8(iodelay)               1838.5 cycles
+  out8(PIC)                  3077.6 cycles
+  get ES                        9.0 cycles
+  set ES + load ES:mem         27.5 cycles
+  modify ES + load ES:mem      67.5 cycles
+  int + iret                  796.0 cycles
+  sysenter + sysexit          212.0 cycles
+  sysenter + iret             518.0 cycles
+  push EAX + pop EAX            7.0 cycles
+  push flags + pop EAX          9.0 cycles
+  rdtsc                       100.0 cycles
+  rdpmc(0)                    238.0 cycles
+  rdpmc32(0)                   91.0 cycles
+  APIC timer read             181.4 cycles
+  load data TLB (4k)           36.0 cycles
+  load code TLB (4k)           55.9 cycles
+
+o F:3:3:0 (Pentium 4E [Prescott/Nocona]), 2793.189 MHz (native), 1024 KB L2
+  1:dec ECX, jnz 1b             1.5 cycles
+  wbinvd                   466357.2 cycles
+  invlpg                      512.0 cycles
+  read CR3                     27.3 cycles
+  reload CR3                  368.0 cycles
+  clts                        344.0 cycles
+  cli + sti                   116.2 cycles
+  set CR0.ts                  432.0 cycles
+  in8(PIC)                   2128.0 cycles
+  in8(iodelay)               2271.0 cycles
+  out8(PIC)                  2016.0 cycles
+  get ES                       10.0 cycles
+  set ES + load ES:mem         22.5 cycles
+  modify ES + load ES:mem      67.5 cycles
+  int + iret                 1064.0 cycles
+  sysenter + sysexit          206.0 cycles
+  sysenter + iret             628.0 cycles
+  push EAX + pop EAX            5.0 cycles
+  push flags + pop EAX         10.0 cycles
+  rdtsc                       124.0 cycles
+  rdpmc(0)                    232.0 cycles
+  rdpmc32(0)                   92.0 cycles
+  APIC timer read             185.5 cycles
+  load data TLB (4k)           36.0 cycles
+  load code TLB (4k)           47.9 cycles
+

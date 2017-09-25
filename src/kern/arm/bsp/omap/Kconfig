@@ -1,0 +1,44 @@
+# PF: OMAP
+# PFDESCR: TI OMAP
+# PFDEPENDS: ARM
+
+choice
+	prompt "OMAP Platform"
+	depends on PF_OMAP
+	default PF_OMAP4_PANDABOARD
+
+config PF_OMAP3_OMAP35XEVM
+	bool "TI OMAP35xEVM"
+	select CAN_ARM_CPU_CORTEX_A8
+	help
+	  Choose for OMAP35xEVM platform.
+
+config PF_OMAP3_BEAGLEBOARD
+	bool "Beagle Board"
+	select CAN_ARM_CPU_CORTEX_A8
+	help
+	  Choose for Beagleboard.
+
+config PF_OMAP3_AM33XX
+	bool "TI AM33xx"
+	select CAN_ARM_CPU_CORTEX_A8
+	help
+	  Choose for AM33xx platforms (e.g. Beaglebone).
+
+config PF_OMAP4_PANDABOARD
+	bool "Pandaboard"
+	depends on PF_OMAP
+	select CAN_ARM_CPU_CORTEX_A9
+	select CAN_ARM_CACHE_L2CXX0
+	help
+	  Choose for Pandaboard.
+
+config PF_OMAP5_5432EVM
+        bool "OMAP5432EVM"
+	select CAN_ARM_CPU_CORTEX_A15
+	select HAS_CPU_VIRT
+	select DEFAULT_ARM_EM_NS if CPU_VIRT
+        help
+          Choose for OMAP5432EVM.
+
+endchoice

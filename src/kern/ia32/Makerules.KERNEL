@@ -1,0 +1,16 @@
+# -*- makefile -*- 
+# IA32 Kernel Makefile
+
+entry-native.o:		$(TCBOFFSET)
+entry.o:		$(TCBOFFSET)
+entry-mp.o:		$(TCBOFFSET)
+entry-ux.o:		$(TCBOFFSET)
+shortcut.o:		$(TCBOFFSET)
+tramp-mp.o:		$(TCBOFFSET)
+tramp-realmode.o:	$(TCBOFFSET)
+sys_call_page-asm.o:	$(TCBOFFSET)
+
+# Add future prerequisites somewhere among the list of libraries.
+# You really should not have to add anything in the $(LD) line.
+
+$(KERNEL):	

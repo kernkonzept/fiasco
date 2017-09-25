@@ -1,0 +1,4 @@
+# PF: KIRKWOOD
+# PFDESCR: Marvell Kirkwood platform
+# PFSELECT: CAN_ARM_CPU_926
+# PFDEPENDS: ARM

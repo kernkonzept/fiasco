@@ -1,0 +1,9 @@
+# vim:set ft=make:
+
+PREPROCESS_PARTS	+= qemu uart_of
+config_IMPL		+= config-ppc32-qemu
+uart_IMPL		+= uart-of
+pic_IMPL		+= pic-ppc32-qemu
+boot_info_IMPL		+= boot_info-ppc32-qemu
+clock_IMPL		+= clock-generic
+timer_tick_IMPL         += timer_tick-single-vector 
