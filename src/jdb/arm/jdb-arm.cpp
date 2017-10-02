@@ -260,7 +260,7 @@ Jdb::access_mem_task(Address virt, Space * task)
     {
       Mem_unit::flush_vdcache();
       auto pte = Kmem::kdir
-        ->walk(Virt_addr(Mem_layout::Jdb_tmp_map_area), Pdir::Super_level);
+        ->walk(Virt_addr(Mem_layout::Jdb_tmp_map_area), K_pte_ptr::Super_level);
 
       if (!pte.is_valid() || pte.page_addr() != cxx::mask_lsb(phys, pte.page_order()))
         {
