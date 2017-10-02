@@ -251,19 +251,23 @@ Jdb::access_mem_task(Address virt, Space * task)
         return 0;
     }
   else
-    {
-      phys = virt;
-    }
+    phys = virt;
 
   unsigned long addr = Mem_layout::phys_to_pmem(phys);
-  if (addr == (Address)-1)
+  if (addr != (Address)-1)
     {
-      Mem_unit::flush_vdcache();
-      auto pte = Kmem::kdir
-        ->walk(Virt_addr(Mem_layout::Jdb_tmp_map_area), K_pte_ptr::Super_level);
+      auto pte = Kmem::kdir->walk(Virt_addr(addr));
+      if (pte.is_valid())
+        return (void *)addr;
+    }
 
-      if (!pte.is_valid() || pte.page_addr() != cxx::mask_lsb(phys, pte.page_order()))
-        {
+  Mem_unit::flush_vdcache();
+  auto pte = Kmem::kdir
+    ->walk(Virt_addr(Mem_layout::Jdb_tmp_map_area), K_pte_ptr::Super_level);
+
+  if (!pte.is_valid()
+      || pte.page_addr() != cxx::mask_lsb(phys, pte.page_order()))
+    {
           Page::Type mem_type = Page::Type::Uncached();
           for (auto const &md: Kip::k()->mem_descs_a())
             if (!md.is_virtual() && md.contains(phys)
@@ -277,14 +281,12 @@ Jdb::access_mem_task(Address virt, Space * task)
             pte.make_page(Phys_mem_addr(cxx::mask_lsb(phys, pte.page_order())),
                           Page::Attr(Page::Rights::RW(), mem_type)));
           pte.write_back_if(true, Mem_unit::Asid_kernel);
-        }
-
-      Mem_unit::kernel_tlb_flush();
-
-      addr = Mem_layout::Jdb_tmp_map_area + (phys & (Config::SUPERPAGE_SIZE - 1));
     }
 
-  return (Mword*)addr;
+  Mem_unit::kernel_tlb_flush();
+
+  return (void *)(Mem_layout::Jdb_tmp_map_area
+                  + (phys & (Config::SUPERPAGE_SIZE - 1)));
 }
 
 PUBLIC static
