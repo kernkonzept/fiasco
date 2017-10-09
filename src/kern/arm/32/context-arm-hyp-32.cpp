@@ -41,6 +41,8 @@ public:
     Unsigned32 cntkctl;
     Unsigned32 cntv_ctl;
 
+    Unsigned32 vmpidr;
+
     /* The user API ends here */
 
     /* we should align this at a cache line ... */
@@ -294,6 +296,8 @@ Context::load_ext_vcpu_state(Mword _to_state, Vm_state const *v)
     asm volatile ("mcr p15, 0, %0, c14, c3, 1" : : "r" (v->cntv_ctl));
   else
     asm volatile ("mcr p15, 0, %0, c14, c3, 1" : : "r"(0));
+
+  asm volatile ("mcr  p15, 4, %0, c0, c0, 5" : : "r" (v->vmpidr));
 }
 
 PRIVATE static inline
@@ -377,6 +381,8 @@ Context::arm_ext_vcpu_switch_to_guest(Vcpu_state *, Vm_state *v)
   asm volatile ("mcr p15, 0, %0, c14, c1, 0" : : "r" (v->guest_regs.cntkctl));
   asm volatile ("mcr p15, 0, %0, c1,  c0, 0" : : "r"(v->guest_regs.sctlr));
   asm volatile ("mcr p15, 0, %0, c14, c3, 1" : : "r" (v->cntv_ctl));
+
+  asm volatile ("mcr  p15, 4, %0, c0, c0, 5" : : "r" (v->vmpidr));
 }
 
 PRIVATE inline
@@ -397,4 +403,3 @@ Context::arm_ext_vcpu_load_guest_regs(Vcpu_state *vcpu, Vm_state *, Mword hcr)
   asm volatile ("mcr p15, 4, %0, c1,  c1, 0" : : "r"(hcr));
   asm volatile ("mcr p15, 0, %0, c13, c0, 3" : : "r"(vcpu->_regs.tpidruro));
 }
-

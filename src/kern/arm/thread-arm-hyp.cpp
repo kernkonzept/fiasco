@@ -40,6 +40,11 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
       asm volatile ("mcr p15, 0, %0, c1, c0, 0" : : "r"(v->sctlr));
       asm volatile ("mcr p15, 0, %0, c14, c1, 0" : : "r"(v->cntkctl));
     }
+
+  // use the real MPIDR as initial value, we might change this later
+  // on and mask bits that should not be known to the user
+  asm ("mrc p15, 0, %0, c0, c0, 5" : "=r" (v->vmpidr));
+
 }
 
 extern "C" void slowtrap_entry(Trap_state *ts);
