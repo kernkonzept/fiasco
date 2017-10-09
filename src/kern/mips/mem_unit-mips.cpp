@@ -116,7 +116,7 @@ static unsigned _l3_line;
 
 PUBLIC static
 void
-Mem_unit::cache_detect()
+Mem_unit::cache_detect(unsigned cm_l2_cache_line)
 {
   auto c1 = Mips::Cfg<1>::read();
   if (c1.il())
@@ -129,8 +129,12 @@ Mem_unit::cache_detect()
     return;
 
   auto c2 = Mips::Cfg<2>::read();
-  if (c2.sl())
-    _l2_line = 2U << c2.sl();
+
+  if (cm_l2_cache_line)
+    _l2_line = 2U << cm_l2_cache_line;
+  else
+    if (c2.sl())
+      _l2_line = 2U << c2.sl();
 
   if (c2.tl())
     _l3_line = 2U << c2.tl();
