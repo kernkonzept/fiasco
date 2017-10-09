@@ -23,6 +23,7 @@ IMPLEMENTATION [mp]:
 
 #include "cm.h"
 #include "kmem_alloc.h"
+#include "mem_unit.h"
 
 static void *_bev;
 
@@ -105,15 +106,8 @@ Platform_control::alloc_secondary_boot_code()
 
   p = COPY_MP_INIT(p, _tramp_mp_jmp_entry);
 
-  // FIXME: use generic cache ops once implemented
-  for (Unsigned32 const *s = (Unsigned32 *)_bev; s <= p; s+= 32/4)
-    {
-      asm volatile ("cache 0x15, %0" : : "m"(*s));
-      Mem::sync();
-      asm volatile ("cache 0x17, %0" : : "m"(*s));
-    }
+  Mem_unit::dcache_flush((Address)_bev, (Address)p);
 
-  asm volatile ("sync" : : : "memory");
 #undef COPY_MP_INIT
   return _bev;
 }
