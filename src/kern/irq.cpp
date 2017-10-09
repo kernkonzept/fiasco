@@ -693,6 +693,9 @@ Irq_sender::sys_attach(L4_msg_tag tag, Utcb const *utcb,
       thread = Ko::deref<Thread>(&tag, utcb, &rights);
       if (!thread)
         return tag;
+
+      if (EXPECT_FALSE(!(rights & L4_fpage::Rights::CS())))
+        return commit_result(-L4_err::EPerm);
     }
   else
     thread = current_thread();
@@ -705,7 +708,7 @@ Irq_sender::sys_attach(L4_msg_tag tag, Utcb const *utcb,
   // thread. The user is responsible to synchronize Irq::attach calls to prevent
   // this.
   if (res == 0)
-    _irq_id = utcb->values[1];
+    _irq_id = access_once(&utcb->values[1]);
 
   cpu_lock.clear();
   rl.del();
