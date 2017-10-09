@@ -47,7 +47,8 @@ class Irq_sender
 public:
   enum Op {
     Op_attach = 0,
-    Op_detach = 1
+    Op_detach = 1,
+    Op_bind     = 0x10,
   };
 
 protected:
@@ -740,6 +741,15 @@ Irq_sender::kinvoke(L4_obj_ref, L4_fpage::Rights /*rights*/, Syscall_frame *f,
 
   switch (tag.proto())
     {
+    case L4_msg_tag::Label_kobject:
+      switch (op)
+        {
+        case Op_bind: // the Rcv_endpoint opcode (equal to Ipc_gate::bind_thread
+          return sys_attach(tag, utcb, f);
+        default:
+          return commit_result(-L4_err::ENosys);
+        }
+
     case L4_msg_tag::Label_irq:
       return dispatch_irq_proto(op, _queued < 1);
 
@@ -747,6 +757,7 @@ Irq_sender::kinvoke(L4_obj_ref, L4_fpage::Rights /*rights*/, Syscall_frame *f,
       switch (op)
         {
         case Op_attach:
+          WARN("Irq_sender::attach is deprecated, please use Rcv_endpoint::bind_thread.\n");
           return sys_attach(tag, utcb, f);
 
         case Op_detach:
