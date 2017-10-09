@@ -58,7 +58,6 @@ Startup::stage2()
 
   boot_cpu_o.init(Cpu_number::boot_cpu(), false, true);
   Mem_unit::init_tlb();
-  Mem_unit::cache_detect();
 
   //Mem_op::cache_init();
   Kip_init::init();
@@ -75,6 +74,7 @@ Startup::stage2()
   Mem_space::kernel_space(Kernel_task::kernel_task());
 
   Cm::init();
+  Mem_unit::cache_detect(Cm::cm ? Cm::cm->l2_cache_line() : 0);
   Mips_cpu_irqs::init();
   Mips_bsp_irqs::init(boot_cpu);
 

@@ -37,6 +37,7 @@ public:
     R_gcr_gic_status        = 0x00d0,
     R_gcr_cache_rev         = 0x00e0,
     R_gcr_cpc_status        = 0x00f0,
+    R_gcr_l2_config         = 0x0130,
     R_gcr_reg0_attr_base    = 0x0190,
     R_gcr_reg0_attr_mask    = 0x0198,
     R_gcr_reg1_attr_base    = 0x01a0,
@@ -88,6 +89,7 @@ public:
   virtual void start_all_vps(Address e) = 0;
   virtual void set_gic_base_and_enable(Address a) = 0;
   virtual Address mmio_base() const = 0;
+  virtual unsigned l2_cache_line() const = 0;
 
   unsigned revision() const
   { return _rev; }
@@ -217,6 +219,11 @@ public:
       }
   }
 
+  unsigned l2_cache_line() const override
+  {
+    return 0; // L2 cache not managed by CM2
+  }
+
 private:
   void set_other_core(Mword core)
   {
@@ -320,6 +327,11 @@ public:
         run_other_vp(1); 
         Mem::sync();
       }
+  }
+
+  unsigned l2_cache_line() const override
+  {
+    return (_gcr_base[R_gcr_l2_config] >> 8) & 0xf;
   }
 
 private:
