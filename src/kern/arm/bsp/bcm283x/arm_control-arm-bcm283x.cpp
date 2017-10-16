@@ -96,7 +96,10 @@ IMPLEMENTATION [pf_bcm283x_rpi2 || pf_bcm283x_rpi3]:
 
 Static_object<Arm_control> Arm_control::_arm_control;
 
-PRIVATE
+// ------------------------------------------------------------------------
+IMPLEMENTATION [mp && (pf_bcm283x_rpi2 || pf_bcm283x_rpi3) && !64bit]:
+
+PUBLIC
 void
 Arm_control::do_boot_cpu(Cpu_phys_id phys_cpu, Address paddr)
 {
@@ -105,8 +108,3 @@ Arm_control::do_boot_cpu(Cpu_phys_id phys_cpu, Address paddr)
   Mem::dsb();
   r.r<32>(Mailbox_set_base + mbox3_offset) = paddr;
 }
-
-PUBLIC static
-void
-Arm_control::boot_cpu(Cpu_phys_id phys_cpu, Address paddr)
-{ _arm_control->do_boot_cpu(phys_cpu, paddr); }
