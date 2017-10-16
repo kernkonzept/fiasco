@@ -1424,7 +1424,7 @@ Jdb::stop_all_cpus(Cpu_number current_cpu)
 	send_nmi(Cpu_number::boot_cpu());
 
       // Wait for messages from CPU 0
-      while ((volatile bool)jdb_active)
+      while (access_once(&jdb_active))
 	{
 	  Mem::mp_mb();
           remote_func.cpu(current_cpu).monitor_exec(current_cpu);
@@ -1439,7 +1439,7 @@ Jdb::stop_all_cpus(Cpu_number current_cpu)
       atomic_mp_add(&cpus_in_debugger, -1UL);
 
       // Wait for CPU 0 to leave us out
-      while ((volatile bool)leave_barrier)
+      while (access_once(&leave_barrier))
 	{
 	  Mem::barrier();
 	  Proc::pause();
@@ -1482,7 +1482,7 @@ Jdb::leave_wait_for_others()
       break;
     }
 
-  while ((volatile unsigned long)cpus_in_debugger)
+  while (access_once(&cpus_in_debugger))
     {
       Mem::mp_mb();
       Proc::pause();
