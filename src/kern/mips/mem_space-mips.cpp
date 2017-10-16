@@ -440,11 +440,8 @@ PUBLIC static
 void
 Mem_space::init()
 {
-  // read CCA from config 0.K0 and check against compiled in version
-  unsigned cca = Tlb_entry::Cached >> 3;
-  if (cca != 3 && Mips::Cfg<0>::read().k0() != cca)
-    panic("MIPS: compiled in CCA=%u conflicts with KSEG0 CCA=%u\n",
-          cca, (unsigned)Mips::Cfg<0>::read().k0());
+  Tlb_entry::cached = Mips::Cfg<0>::read().k0() << 3;
+  printf("TLB CCA: %ld\n", Tlb_entry::cached >> 3);
 
   init_page_sizes();
   //init_vzguestid();

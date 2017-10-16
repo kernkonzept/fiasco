@@ -20,30 +20,8 @@ public:
     // uf UCA supported: C_UCA      = 0x038,
     C_UCA      = 0x010, // fallback to uncached
   };
-};
 
-// ------------------------------------------------------------
-INTERFACE [mips && !mp]:
-
-EXTENSION class Tlb_entry
-{
-public:
-  enum : Mword
-  {
-    Cached     = 0x018, // use default CCA = 3 for UP systems
-  };
-};
-
-// ------------------------------------------------------------
-INTERFACE [mips && mp]:
-
-EXTENSION class Tlb_entry
-{
-public:
-  enum : Mword
-  {
-    Cached     = 0x028, // use CCA = 5 for MP systems (this might be wrong)
-  };
+  static Mword cached;
 };
 
 // ------------------------------------------------------------
@@ -115,7 +93,7 @@ public:
       typedef Page::Type T;
       typedef Page::Kern K;
       Mword v = 0;
-      if (attr.type == T::Normal())   v = Tlb_entry::Cached   << PWField_ptei;
+      if (attr.type == T::Normal())   v = Tlb_entry::cached   << PWField_ptei;
       if (attr.type == T::Buffered()) v = Tlb_entry::C_UCA    << PWField_ptei;
       if (attr.type == T::Uncached()) v = Tlb_entry::Uncached << PWField_ptei;
       if (attr.kern & K::Global())    v |= Tlb_entry::Global  << PWField_ptei;
@@ -151,7 +129,7 @@ public:
       a.kern = K();
       Mword v = *e;
       Mword ct = (v >> PWField_ptei) & Tlb_entry::Cache_mask;
-      if (ct == Tlb_entry::Cached)
+      if (ct == Tlb_entry::cached)
         a.type = T::Normal();
       else if (ct == Tlb_entry::Uncached)
         a.type = T::Uncached();
@@ -247,6 +225,8 @@ public:
 IMPLEMENTATION [mips]:
 
 #include "trap_state.h"
+
+Mword Tlb_entry::cached;
 
 IMPLEMENT inline NEEDS["trap_state.h"]
 Mword

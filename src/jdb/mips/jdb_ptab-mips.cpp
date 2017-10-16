@@ -33,7 +33,7 @@ Jdb_ptab::print_entry(Pdir::Pte_ptr const &entry)
       char ps = pss[entry.level];
 
       printf(" %05lx%s%c", phys >> Config::PAGE_SHIFT,
-                           ((*entry.e >> Pdir::PWField_ptei) & Tlb_entry::Cache_mask) == Tlb_entry::Cached
+                           ((*entry.e >> Pdir::PWField_ptei) & Tlb_entry::Cache_mask) == Tlb_entry::cached
                             ? "-" : JDB_ANSI_COLOR(lightblue) "n" JDB_ANSI_END,
                            ps);
       printf("%s%c" JDB_ANSI_END,
