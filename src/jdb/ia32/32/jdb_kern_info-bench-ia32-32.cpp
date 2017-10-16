@@ -63,7 +63,7 @@ Jdb_kern_info_bench::get_time_now()
   asm volatile ("outb %%al, $0x21" : : "a" (0xff))
 
 #define inst_apic_timer_read						\
-  (volatile Unsigned32)Apic::timer_reg_read()
+  asm volatile ("" : : "r"(Apic::timer_reg_read()))
 
 #define BENCH(name, instruction, rounds)				\
   do									\
@@ -452,7 +452,7 @@ Jdb_kern_info_bench::show_arch()
     }
   if (Config::apic)
     {
-      BENCH("APIC timer read", (void)inst_apic_timer_read, 200000);
+      BENCH("APIC timer read", inst_apic_timer_read, 200000);
     }
     {
       time = Cpu::rdtsc();
