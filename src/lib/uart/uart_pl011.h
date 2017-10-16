@@ -8,6 +8,7 @@ namespace L4
   class Uart_pl011 : public Uart
   {
   public:
+    /** freq == 0 means unknown and don't change baud rate */
     Uart_pl011(unsigned freq) : _freq(freq) {}
     bool startup(Io_register_block const *);
     void shutdown();
@@ -19,6 +20,7 @@ namespace L4
     int write(char const *s, unsigned long count) const;
 
   private:
+    void set_rate(Baud_rate r);
     unsigned _freq;
   };
 };
