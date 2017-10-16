@@ -1,14 +1,16 @@
 IMPLEMENTATION [pf_bcm283x && !pf_bcm283x_rpi3]:
 
+#include "koptions.h"
 #include "uart_pl011.h"
-#include "mem_layout.h"
 
-IMPLEMENT Address Uart::base() const { return Mem_layout::Uart_phys_base; }
+IMPLEMENT Address Uart::base() const
+{ return Koptions::o()->uart.base_address; }
 
-IMPLEMENT int Uart::irq() const { return 57; }
+IMPLEMENT int Uart::irq() const
+{ return Koptions::o()->uart.irqno; }
 
 IMPLEMENT L4::Uart *Uart::uart()
 {
-  static L4::Uart_pl011 uart(3000000);
+  static L4::Uart_pl011 uart(Koptions::o()->uart.base_baud);
   return &uart;
 }

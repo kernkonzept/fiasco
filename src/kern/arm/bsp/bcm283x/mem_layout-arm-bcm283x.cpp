@@ -27,7 +27,6 @@ public:
     Pic_phys_base        = Bcm283x_base + 0x0000b200,
     Timer_phys_base      = Bcm283x_base + 0x00003000,
     Watchdog_phys_base   = Bcm283x_base + 0x00100000,
-    Uart_phys_base       = Bcm283x_base + 0x00201000,
   };
 };
 
