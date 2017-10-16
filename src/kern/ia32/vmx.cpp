@@ -753,7 +753,9 @@ Vmx::vmwrite(Mword field, T value)
     WARNX(Info, "VMX: VMfailValid vmwrite(0x%04lx, %llx) => %lx, insn error: 0x%x\n",
           field, (Unsigned64)value, err, vmread<Unsigned32>(F_vm_instruction_error));
   if (sizeof(T) > sizeof(Mword))
-    asm volatile("vmwrite %0, %1" : : "r" ((Unsigned64)value >> 32), "r" (field + 1));
+    asm volatile("vmwrite %0, %1"
+                 : : "r" ((Mword)((Unsigned64)value >> 32)),
+                     "r" (field + 1));
 }
 
 PRIVATE
