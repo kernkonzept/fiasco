@@ -223,19 +223,20 @@ static inline
 Physframe *
 Physframe::alloc(size_t size)
 {
-  Physframe* block
-    = (Physframe*)Kmem_alloc::allocator()->unaligned_alloc(mem_size(size));
-
 #if 1				// Optimization: See constructor
-  if (block) 
-    memset(block, 0, size * sizeof(Physframe));
+  void *mem = Kmem_alloc::allocator()->unaligned_alloc(mem_size(size));
+  if (mem)
+    memset(mem, 0, size * sizeof(Physframe));
+  return (Physframe *)mem;
 #else
+  Physframe* block
+    = (Physframe *)Kmem_alloc::allocator()->unaligned_alloc(mem_size(size));
   assert (block);
   for (unsigned i = 0; i < size; ++i)
     new (block + i) Physframe();
-#endif
 
   return block;
+#endif
 }
 
 inline NOEXPORT
