@@ -373,7 +373,7 @@ ENTRY reserved_insn
 
 	# Load the target register with the ULR value
 	# we have 32 instruction bundles that load the
-	# target register and brnach to the exit code
+	# target register and branch to the exit code
 2:
 	b	3f
 	  nop
