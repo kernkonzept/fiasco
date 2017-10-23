@@ -30,6 +30,7 @@ public:
 IMPLEMENTATION:
 
 #include <cstdio>
+#include <cstring>
 
 #include "kmem_alloc.h"
 #include "warn.h"
@@ -90,6 +91,8 @@ Boot_alloced::alloc(size_t size)
     }
   else
     _free.erase(best);
+
+  memset(b, 0, size);
   return b;
 }
 
