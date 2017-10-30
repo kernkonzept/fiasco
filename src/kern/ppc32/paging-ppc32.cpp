@@ -191,11 +191,12 @@ Mword PF::is_read_error(Mword error)
 IMPLEMENT inline
 Mword PF::addr_to_msgword0(Address pfa, Mword error)
 {
-  Mword a = pfa & ~3;
+  Mword a = pfa & ~7ul;
   if(is_translation_error(error))
     a |= 1;
   if(!is_read_error(error))
     a |= 2;
+  // TODO: flag instruction fetch faults with a |= 4
   return a;
 }
 
