@@ -86,6 +86,7 @@ IMPLEMENTATION:
 #include "mem_region.h"
 #include "buddy_alloc.h"
 #include "panic.h"
+#include "warn.h"
 
 static Kmem_alloc::Alloc _a;
 Kmem_alloc::Alloc *Kmem_alloc::a = &_a;
@@ -181,6 +182,10 @@ Kmem_alloc::alloc(Bytes size)
       auto guard = lock_guard(lock);
       ret = a->alloc(sz);
     }
+
+  if (EXPECT_FALSE(!ret))
+    WARNX(Error, "Out of memory requesting 0x%lx bytes)\n",
+          cxx::int_value<Bytes>(size));
 
   return ret;
 }
