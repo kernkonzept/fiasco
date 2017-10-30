@@ -64,10 +64,7 @@ Jdb_entry_frame::dump() const
 IMPLEMENT inline NEEDS["processor.h"]
 Address_type
 Jdb_entry_frame::from_user() const
-{
-  return (psr & Proc::Status_mode_mask) != Proc::Status_mode_supervisor
-         ? ADDR_USER : ADDR_KERNEL;
-}
+{ return check_valid_user_psr() ? ADDR_USER : ADDR_KERNEL; }
 
 PUBLIC inline
 Address Jdb_entry_frame::ksp() const
