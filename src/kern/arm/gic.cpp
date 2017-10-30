@@ -351,8 +351,6 @@ PUBLIC
 int
 Gic::set_mode(Mword pin, Mode m) override
 {
-  return 0;
-
   if (!m.set_mode())
     return 0;
 
