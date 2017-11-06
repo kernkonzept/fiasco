@@ -58,7 +58,7 @@ Timer::init(Cpu_number ncpu)
   t->_last_counter = t->_current_cmp;
   t->_counter_high = 0;
   // Timer is clocked with half the CPU frequency
-  t->_interval = cpu.frequency() / Config::Scheduler_granularity / 2;
+  t->_interval = (cpu.frequency() / 1000000) * (Config::Scheduler_granularity / 2);
 
   if (true) // interval mode
     t->_current_cmp += t->_interval;
