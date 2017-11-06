@@ -49,7 +49,7 @@ unsigned long Cpu::_kern_es;
 
 PRIVATE inline ALWAYS_INLINE
 void
-Cpu::try_enable_hw_performance_states() {}
+Cpu::try_enable_hw_performance_states(bool) {}
 
 IMPLEMENT FIASCO_INIT_CPU
 void
