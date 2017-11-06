@@ -113,6 +113,8 @@ private:
   Unsigned32 _monitor_mwait_ecx;
   Unsigned32 _monitor_mwait_edx;
 
+  Unsigned32 _thermal_and_pm_eax;
+
   Unsigned32 scaler_tsc_to_ns;
   Unsigned32 scaler_tsc_to_us;
   Unsigned32 scaler_ns_to_tsc;
@@ -1010,8 +1012,14 @@ Cpu::identify()
       cpuid(5, &_monitor_mwait_eax, &_monitor_mwait_ebx,
                &_monitor_mwait_ecx, &_monitor_mwait_edx);
 
+    _thermal_and_pm_eax = 0;
     if (max >= 6 && _vendor == Vendor_intel)
-      try_enable_hw_performance_states();
+      {
+        Unsigned32 dummy;
+        cpuid(6, &_thermal_and_pm_eax, &dummy, &dummy, &dummy);
+      }
+
+    try_enable_hw_performance_states(false);
 
     if (max >= 7 && _vendor == Vendor_intel)
       {
@@ -1308,6 +1316,8 @@ Cpu::pm_resume()
     }
   init_sysenter();
   wrmsr(_suspend_tsc, MSR_TSC);
+
+  try_enable_hw_performance_states(true);
 }
 
 PUBLIC static inline
@@ -1612,19 +1622,16 @@ Cpu::print_errata()
  */
 PRIVATE FIASCO_INIT_CPU
 void
-Cpu::try_enable_hw_performance_states()
+Cpu::try_enable_hw_performance_states(bool resume)
 {
   enum
   {
     HWP_SUPPORT = 1 << 7,
-    HIGHEST_PERFORMANCE_MASK = 0xf,
-    LOWEST_PERFORMANCE_MASK = 0xf << 24,
+    HIGHEST_PERFORMANCE_SHIFT = 0,
+    LOWEST_PERFORMANCE_SHIFT = 24
   };
 
-  Unsigned32 dummy, eax;
-  cpuid(0x6, &eax, &dummy, &dummy, &dummy);
-
-  if (!(eax & HWP_SUPPORT))
+  if (!(_thermal_and_pm_eax & HWP_SUPPORT))
     return;
 
   // enable
@@ -1632,10 +1639,19 @@ Cpu::try_enable_hw_performance_states()
 
   // let the hardware decide on everything (autonomous operation mode)
   Unsigned64 hwp_caps = rdmsr(MSR_HWP_CAPABILITIES);
-  wrmsr((hwp_caps & HIGHEST_PERFORMANCE_MASK)
-        | (hwp_caps & LOWEST_PERFORMANCE_MASK), MSR_HWP_REQUEST);
+  // Package_Control (bit 42) = 0
+  // Activity_Window (bits 41:32) = 0 (auto)
+  // Energy_Performance_Preference (bits 31:24) = 0x80 (default)
+  // Desired_Performance (bits 23:16) = 0 (default)
+  // Maximum_Performance (bits 15:8) = HIGHEST_PERFORMANCE(hwp_cap)
+  // Minimum_Performance (bits 7:0) = LOWEST_PERFORMANCE(hwp_cap)
+  Unsigned64 request =
+    0x80ULL << 24 |
+    (((hwp_caps >> HIGHEST_PERFORMANCE_SHIFT) & 0xf) << 8) |
+    ((hwp_caps >> LOWEST_PERFORMANCE_SHIFT) & 0xf);
+  wrmsr(request, MSR_HWP_REQUEST);
 
-  if (id() == Cpu_number::boot_cpu())
+  if (!resume && id() == Cpu_number::boot_cpu())
     printf("HWP: enabled\n");
 }
 
