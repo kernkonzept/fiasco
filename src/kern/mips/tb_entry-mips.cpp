@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2014 Imagination Technologies Ltd.
  * Sanjay Lal <sanjayl@kymasys.com>
- * Alexander Warg <alexander.warg@kernekonzept.com>
+ * Alexander Warg <alexander.warg@kernkonzept.com>
  */
 
 INTERFACE [mips]:
