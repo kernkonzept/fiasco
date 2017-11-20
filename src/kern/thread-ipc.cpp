@@ -923,6 +923,8 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
         { // XXX: not sure if void fpages are needed
           // skip send item and current rcv_buffer
           --items;
+          *rcv_word = 0;
+          rcv_word += 2;
           continue;
         }
 
