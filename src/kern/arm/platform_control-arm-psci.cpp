@@ -14,8 +14,16 @@ public:
 private:
   enum Psci_error_codes
   {
-    Psci_success       =  0,
-    Psci_not_supported = -1,
+    Psci_success            =  0,
+    Psci_not_supported      = -1,
+    Psci_invalid_parameters = -2,
+    Psci_denied             = -3,
+    Psci_already_on         = -4,
+    Psci_on_pending         = -5,
+    Psci_internal_failure   = -6,
+    Psci_not_present        = -7,
+    Psci_disabled           = -8,
+    Psci_invalid_address    = -9,
   };
 
   enum Psci_functions
