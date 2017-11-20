@@ -60,6 +60,9 @@ public:
         n.type = o.type & ~Type::Set();
       return n;
     }
+
+    constexpr bool empty() const
+    { return (rights & Rights::RWX()).empty(); }
   };
 };
 

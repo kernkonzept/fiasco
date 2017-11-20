@@ -336,6 +336,37 @@ fpage_unmap(Space *space, L4_fpage fp, L4_map_mask mask, Kobject ***rl)
 //
 
 inline
+template <typename SPACE >
+bool
+map_lookup_src(SPACE* from,
+               typename SPACE::V_pfn const &snd_addr,
+               typename SPACE::Phys_addr *s_phys,
+               typename SPACE::Phys_addr *i_phys,
+               typename SPACE::Page_order *s_order,
+               typename SPACE::Attr *i_attribs,
+               typename SPACE::Attr attribs)
+{
+    typedef Map_traits<SPACE> Mt;
+    // Sigma0 special case: Sigma0 doesn't need to have a
+    // fully-constructed page table, and it can fabricate mappings
+    // for all physical addresses.
+    typename SPACE::Attr s_attribs;
+    if (EXPECT_FALSE(! from->v_fabricate(snd_addr, s_phys,
+                                         s_order, &s_attribs)))
+      return false;
+
+    // Compute attributes for to-be-inserted frame
+    typename SPACE::V_pfc page_offset = SPACE::subpage_offset(snd_addr, *s_order);
+    *i_phys = SPACE::subpage_address(*s_phys, page_offset);
+
+    *i_attribs = Mt::apply_attribs(s_attribs, *i_phys, attribs);
+    if (EXPECT_FALSE(i_attribs->empty()))
+      return false;
+
+    return true;
+}
+
+inline
 template <typename SPACE, typename MAPDB> inline
 L4_error
 map(MAPDB* mapdb,
@@ -358,8 +389,6 @@ map(MAPDB* mapdb,
 
   typedef typename MAPDB::Mapping Mapping;
   typedef typename MAPDB::Frame Frame;
-  typedef Map_traits<SPACE> Mt;
-
 
   L4_error condition = L4_error::None;
 
@@ -410,15 +439,15 @@ map(MAPDB* mapdb,
 
       // Sender lookup.
       // make gcc happy, initialized later anyway
-      typename SPACE::Phys_addr s_phys;
+      typename SPACE::Phys_addr s_phys, i_phys;
       Page_order s_order;
-      Attr s_attribs;
+      Attr i_attribs;
 
       // Sigma0 special case: Sigma0 doesn't need to have a
       // fully-constructed page table, and it can fabricate mappings
       // for all physical addresses.
-      if (EXPECT_FALSE(! from->v_fabricate(snd_addr, &s_phys,
-                                           &s_order, &s_attribs)))
+      if (EXPECT_FALSE(! map_lookup_src(from, snd_addr, &s_phys, &i_phys,
+                                        &s_order, &i_attribs, attribs)))
         {
           size = SPACE::to_size(s_order) - SPACE::subpage_offset(snd_addr, s_order);
           if (size >= snd_size)
@@ -438,11 +467,7 @@ map(MAPDB* mapdb,
       Page_order r_order;
       Attr r_attribs;
 
-      // Compute attributes for to-be-inserted frame
-      V_pfc page_offset = SPACE::subpage_offset(snd_addr, s_order);
-      typename SPACE::Phys_addr i_phys = SPACE::subpage_address(s_phys, page_offset);
       Page_order i_order = to_fit_size(s_order);
-
       V_pfc i_size = SPACE::to_size(i_order);
       bool const rcv_page_mapped = to->v_lookup(rcv_addr, &r_phys, &r_order, &r_attribs);
 
@@ -513,8 +538,6 @@ map(MAPDB* mapdb,
       // s_size, s_attribs), the max. size of the receiver frame
       // (r_phys), the sender_mapping, and whether a receiver mapping
       // already exists (doing_upgrade).
-
-      Attr i_attribs = Mt::apply_attribs(s_attribs, i_phys, attribs);
 
       // Do the actual insertion.
       typename SPACE::Status status
