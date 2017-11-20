@@ -32,6 +32,10 @@ namespace Obj {
     unsigned char extra() const { return _v & 0xf0; }
 
     static Attr Full() { return Attr(0xff); }
+
+    /// when cap R right is missing the cap cannot be mapped
+    constexpr bool empty() const
+    { return (_v & 0x4) == 0; }
   };
 
   class Capability
@@ -97,7 +101,7 @@ namespace Obj {
     explicit Entry(Mword v) : Capability(v) {}
 
     Attr rights() const
-    { return Attr(Capability::rights() | (_flags & ~3)); }
+    { return Attr(Capability::rights() | (_flags & ~3) | 0x4); }
 
     void set(Kobject_iface *obj, Attr rights)
     {

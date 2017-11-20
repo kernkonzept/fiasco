@@ -84,6 +84,8 @@ public:
     constexpr operator Value_enum () const
     { return static_cast<Value_enum>(_v); }
 
+    constexpr bool empty() const { return _v == 0; }
+
     constexpr Rights apply(Rights r) const { return *this & r; }
 
     /// Memory flex page is user accessible
