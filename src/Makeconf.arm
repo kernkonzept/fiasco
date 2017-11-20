@@ -2,7 +2,7 @@
 # vi:se ft=make:
 
 #OPT_SHARED_FLAGS                  += $(call CHECKCC,-finline-limit=10000,)
-CROSS_COMPILE_DFL-$(CONFIG_BIT32) := arm-linux-
+CROSS_COMPILE_DFL-$(CONFIG_BIT32) := arm-linux-gnueabihf-
 CROSS_COMPILE_DFL-$(CONFIG_BIT64) := aarch64-linux-gnu-
 CROSS_COMPILE                     ?= $(CROSS_COMPILE_DFL-y)
 SHARED_FLAGS-$(CONFIG_ARM_PXA)    += -mcpu=xscale
