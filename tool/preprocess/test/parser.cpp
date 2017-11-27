@@ -26,6 +26,12 @@ inline NEEDS["foo.h",
 int baz()
 {}
 
+// Try NEEDS with more whitespace
+inline NEEDS [ "foo.h", 
+	       bar ]
+int bak()
+{}
+
 // Try function arguments
 unsigned
 somefunc(unsigned (*func1)(), 
