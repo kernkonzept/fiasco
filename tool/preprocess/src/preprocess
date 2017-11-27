@@ -1311,7 +1311,9 @@ sub handle_function
 	    {
 	      if (s/^($s)NEEDS\s*\[([^\]]+)\]([\s\n])/$1$3/s)
 		{
-		  @{$func->{needs}} = split (/\s*,\s*/, $2);
+		  my $needs = $2;
+		  $needs =~ s/^\s+|\s+$//g;
+		  @{$func->{needs}} = split (/\s*,\s*/, $needs);
 		  # Delete NEEDS directive, but keep newlines
 		  while ($func->{pretext} =~ 
 			 s|NEEDS \s* \[ ( (?:[^\n\]]*\n)* )

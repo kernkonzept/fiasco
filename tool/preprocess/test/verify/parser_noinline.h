@@ -21,17 +21,17 @@ public:
   int alsoalreadythere();
 
 public:  
-#line 52 "parser.cpp"
+#line 58 "parser.cpp"
   // Try a constructor with weird syntax
   
   Foo ();
 
 private:  
-#line 44 "parser.cpp"
+#line 50 "parser.cpp"
   // And add a Foo function
   void func ();
   
-#line 48 "parser.cpp"
+#line 54 "parser.cpp"
   // Try default arguments
   void bar (int i = 15, int j = somefunc(0, somefunc(0, 0)));
 };
@@ -46,6 +46,12 @@ int bar();
 int baz();
 
 #line 29 "parser.cpp"
+// Try NEEDS with more whitespace
+
+
+int bak();
+
+#line 35 "parser.cpp"
 // Try function arguments
 unsigned
 somefunc(unsigned (*func1)(), 
