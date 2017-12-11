@@ -136,10 +136,10 @@ Pte_ptr::_attribs(Page::Attr attr) const
     v |= Page::NONCACHEABLE;
 
   Mword acc = 0;
-  bool u = attr.rights & L4_fpage::Rights::U();
-  bool r = attr.rights & L4_fpage::Rights::R();
-  bool w = attr.rights & L4_fpage::Rights::W();
-  bool x = attr.rights & L4_fpage::Rights::X();
+  bool u(attr.rights & L4_fpage::Rights::U());
+  bool r(attr.rights & L4_fpage::Rights::R());
+  bool w(attr.rights & L4_fpage::Rights::W());
+  bool x(attr.rights & L4_fpage::Rights::X());
 
   if (u)
     {
