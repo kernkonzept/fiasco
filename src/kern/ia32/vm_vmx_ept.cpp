@@ -205,8 +205,8 @@ Vm_vmx_ept::v_insert(Mem_space::Phys_addr phys, Mem_space::Vaddr virt,
 
   // XXX should modify page table using compare-and-swap
 
-  assert (cxx::get_lsb(Mem_space::Phys_addr(phys), size) == 0);
-  assert (cxx::get_lsb(Virt_addr(virt), size) == 0);
+  assert (cxx::is_zero(cxx::get_lsb(Mem_space::Phys_addr(phys), size)));
+  assert (cxx::is_zero(cxx::get_lsb(Virt_addr(virt), size)));
 
   int level;
   for (level = 0; level <= Ept::Depth; ++level)
@@ -247,7 +247,7 @@ Vm_vmx_ept::v_delete(Mem_space::Vaddr virt, Mem_space::Page_order size,
                      L4_fpage::Rights page_attribs) override
 {
   (void)size;
-  assert (cxx::get_lsb(Virt_addr(virt), size) == 0);
+  assert (cxx::is_zero(cxx::get_lsb(Virt_addr(virt), size)));
 
   auto i = _ept->walk(virt);
 

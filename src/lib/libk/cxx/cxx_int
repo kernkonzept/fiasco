@@ -344,13 +344,10 @@ struct int_null_chk
   friend inline bool operator ! (TYPE_T const &v)
   { return cxx::int_value<TYPE_T>(v) == 0; }
 
-private:
-  struct Type_conversion_error;
-
 public:
   // prevents implicit casting to bool
-  constexpr operator Type_conversion_error const * () const
-  { return (Type_conversion_error const *)(cxx::int_value<TYPE_T>(*static_cast<TYPE_T const *>(this)) != 0 ? 1L : 0L); }
+  explicit constexpr operator bool () const
+  { return cxx::int_value<TYPE_T>(*static_cast<TYPE_T const *>(this)) != 0; }
 };
 
 /**
@@ -508,6 +505,17 @@ template< typename TYPE, typename ORDER,
 constexpr TYPE
 get_lsb(TYPE const &v, ORDER const &o)
 { return v & ~(TYPE(~0) << o); }
+
+template< typename TYPE > inline
+constexpr bool
+is_zero(TYPE const &v)
+{ return cxx::int_value<TYPE>(v) == 0; }
+
+template< typename TYPE,
+  typename = typename cxx::enable_if<cxx::is_integral<TYPE>::value>::type > inline
+constexpr bool
+is_zero(TYPE const &v)
+{ return v == 0; }
 
 /**
  * Fixed-size array indexed by type-safe integers.
