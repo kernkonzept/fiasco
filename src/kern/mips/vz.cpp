@@ -115,6 +115,7 @@ public:
       M_ctl_2     = 1UL << 18, ///< GuestCtl2
       M_gtoffset  = 1UL << 24, ///< GTOffset
       M_compare   = 1UL << 25, ///< GuestCompare
+      M_llbit     = 1UL << 26, ///< when set, clear LLBit in LLAddr register
     };
 
     void init();
@@ -668,6 +669,8 @@ Vz::State::load_full(int guest_id)
   if (guest_cfg.r<3>().bp())
     mtgc0_32(g_bad_instr_p, Cp0_bad_instr_p); // BadInstrP
 
+  if (guest_cfg.r<5>().llb())
+    mtgc0(0, Cp0_load_linked_addr);
 
   // FIXME: Think about Tag and Data registers
 
@@ -810,6 +813,10 @@ Vz::State::load_selective(int guest_id)
       if (guest_cfg.r<3>().bp())
         mtgc0_32(g_bad_instr_p, Cp0_bad_instr_p);
     }
+
+  if (EXPECT_FALSE(mod_map & M_llbit))
+    if (guest_cfg.r<5>().llb())
+      mtgc0(0, Cp0_load_linked_addr);
 
   // 12, 2 .. 3 SRSxxx not implemented (disabled in guest_config)
   // 13, 5 NestedExc not supported in guest
