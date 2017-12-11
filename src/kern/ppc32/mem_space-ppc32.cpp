@@ -131,7 +131,7 @@ PUBLIC static inline
 L4_fpage::Rights
 Mem_space::is_full_flush(L4_fpage::Rights rights)
 {
-  return (bool)(rights & L4_fpage::Rights::R()); // CHECK!
+  return rights & L4_fpage::Rights::R(); // CHECK!
 }
 
 #if 0
