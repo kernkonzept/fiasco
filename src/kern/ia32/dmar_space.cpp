@@ -386,8 +386,8 @@ Dmar_space::v_insert(Mem_space::Phys_addr phys, Mem_space::Vaddr virt,
                      Mem_space::Page_order order,
                      Mem_space::Attr page_attribs) override
 {
-  assert (cxx::get_lsb(Mem_space::Phys_addr(phys), order) == 0);
-  assert (cxx::get_lsb(Virt_addr(virt), order) == 0);
+  assert (cxx::is_zero(cxx::get_lsb(Mem_space::Phys_addr(phys), order)));
+  assert (cxx::is_zero(cxx::get_lsb(Virt_addr(virt), order)));
 
   int level;
   for (level = 0; level < Dmar_pt::Depth; ++level)
@@ -423,7 +423,7 @@ L4_fpage::Rights
 Dmar_space::v_delete(Mem_space::Vaddr virt, Mem_space::Page_order order,
                      L4_fpage::Rights page_attribs) override
 {
-  assert(cxx::get_lsb(Virt_addr(virt), order) == 0);
+  assert(cxx::is_zero(cxx::get_lsb(Virt_addr(virt), order)));
 
   auto i = _dmarpt->walk(virt);
 

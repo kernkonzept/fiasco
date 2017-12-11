@@ -124,7 +124,7 @@ PUBLIC template< typename SPACE >
 static inline
 bool
 Generic_obj_space<SPACE>::is_full_flush(L4_fpage::Rights rights)
-{ return rights & L4_fpage::Rights::R(); }
+{ return (bool)(rights & L4_fpage::Rights::R()); }
 
 PUBLIC template< typename SPACE >
 static inline

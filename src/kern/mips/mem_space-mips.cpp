@@ -159,7 +159,7 @@ PUBLIC static inline
 bool
 Mem_space::is_full_flush(L4_fpage::Rights rights)
 {
-  return rights & L4_fpage::Rights::R();
+  return (bool)(rights & L4_fpage::Rights::R());
 }
 
 // Mapping utilities
@@ -183,8 +183,8 @@ Mem_space::Status
 Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order size,
                     Attr page_attribs)
 {
-  assert (cxx::get_lsb(phys, size) == 0);
-  assert (cxx::get_lsb(Virt_addr(virt), size) == 0);
+  assert (cxx::is_zero(cxx::get_lsb(phys, size)));
+  assert (cxx::is_zero(cxx::get_lsb(Virt_addr(virt), size)));
 
   unsigned po = cxx::int_value<Page_order>(size);
   auto i = _dir->walk(virt, po, Kmem_alloc::q_allocator(_quota));
@@ -301,7 +301,7 @@ Mem_space::v_delete(Vaddr virt, Page_order size,
                     L4_fpage::Rights page_attribs)
 {
   (void)size;
-  assert (cxx::get_lsb(Virt_addr(virt), size) == 0);
+  assert (cxx::is_zero(cxx::get_lsb(Virt_addr(virt), size)));
   auto i = _dir->walk(virt);
 
   if (EXPECT_FALSE (! i.is_pte()))
@@ -354,7 +354,7 @@ Mem_space::add_tlb_entry(Vaddr virt, bool write_access, bool need_probe, bool gu
   else
     {
       // dual page mode (at leaf level)
-      bool odd_page = virt & Vaddr(Virt_addr(1) << Page_order(Config::PAGE_SHIFT));
+      bool odd_page = !cxx::is_zero(virt & Vaddr(Virt_addr(1) << Page_order(Config::PAGE_SHIFT)));
       e.e -= odd_page;
       e0 = e.e[0];
       e0 >>= Pdir::PWField_ptei - 2;
