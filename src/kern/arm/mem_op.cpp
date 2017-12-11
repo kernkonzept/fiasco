@@ -83,7 +83,7 @@ Mem_op::__arm_kmem_l1_cache_maint(int op, void const *kstart, void const *kend)
       break;
 
     case Op_cache_dma_coherent:
-      Mem_unit::flush_dcache(Virt_addr(Address(kstart)), Virt_addr(Address(kend)));
+      Mem_unit::flush_dcache(kstart, kend);
       break;
 
     // We might not want to implement this one but single address outer
