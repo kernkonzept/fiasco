@@ -136,7 +136,7 @@ Kernel_thread::populate_cpu_num_to_apic()
 
   Cpu_number last_cpu = Cpu_number::first();
 
-  // Collect all *enabled* CPUs and assign them the leading CPU numbers.
+  // xAPIC: Collect all *enabled* CPUs and assign them the leading CPU numbers.
   for (unsigned entry = 0; last_cpu < Config::max_num_cpus(); ++entry)
     {
       auto const *lapic = madt->find<Acpi_madt::Lapic>(entry);
@@ -146,7 +146,31 @@ Kernel_thread::populate_cpu_num_to_apic()
       if (!(lapic->flags & 1))
         continue; // skip disabled entries
 
-      Apic_id aid{Unsigned32{lapic->apic_id} << 24};
+      Apic_id aid = Apic::acpi_lapic_to_apic_id(lapic->apic_id);
+
+      if (aid == boot_aid)
+        continue; // boot CPU already has a CPU number assigned
+
+      if (last_cpu == Cpu_number::boot_cpu())
+        ++last_cpu; // skip logical boot CPU number
+
+      _cpu_num_to_apic_id[last_cpu++] = aid;
+    }
+
+  // x2APIC: According to ACPI 5.2.12.12, logical processors with APIC ID values
+  // less than 255 must use the Processor Local APIC structure but there is
+  // hardware which has only MADT entry type LOCAL_X2AIC but no MADT entry type
+  // LAPIC!
+  for (unsigned entry = 0; last_cpu < Config::max_num_cpus(); ++entry)
+    {
+      auto const *lx2apic = madt->find<Acpi_madt::Local_x2apic>(entry++);
+      if (!lx2apic)
+        break;
+
+      if (!(lx2apic->flags & 1))
+        continue; // skip disabled entries
+
+      Apic_id aid{lx2apic->apic_id};
 
       if (aid == boot_aid)
         continue; // boot CPU already has a CPU number assigned
@@ -169,13 +193,28 @@ Kernel_thread::populate_cpu_num_to_apic()
       if (lapic->flags & 1)
         continue; // skip enabled entries
 
-      Apic_id aid{Unsigned32{lapic->apic_id} << 24};
+      Apic_id aid = Apic::acpi_lapic_to_apic_id(lapic->apic_id);
 
       if (last_cpu == Cpu_number::boot_cpu())
         ++last_cpu; // skip logical boot CPU number
 
       _cpu_num_to_apic_id[last_cpu++] = aid;
     }
+
+  for (unsigned entry = 0; last_cpu < Config::max_num_cpus(); ++entry)
+    {
+      auto const *lx2apic = madt->find<Acpi_madt::Local_x2apic>(entry);
+      if (!lx2apic)
+        break;
+
+      if (lx2apic->flags & 1)
+        continue; // skip enabled entries
+
+      Apic_id aid{lx2apic->apic_id};
+
+      if (aid != Apic_id{0xffffffff}) // ignore dummy entries
+        _cpu_num_to_apic_id[last_cpu++] = aid;
+   }
 
   return last_cpu > Cpu_number::first();
 }
@@ -216,6 +255,6 @@ Kernel_thread::boot_app_cpus()
   // broadcast an AP startup via the APIC (let run the self-registration code)
   tramp_page = reinterpret_cast<Address>(&_tramp_mp_entry[0]);
 
-  // Send IPI-Sequency to startup the APs
-  Apic::mp_startup(Cpu::boot_cpu(), Apic::APIC_IPI_OTHERS, tramp_page);
+  // Send IPI sequence to startup the APs
+  Apic::mp_startup(Apic_id{0} /*ignored*/, true, tramp_page);
 }

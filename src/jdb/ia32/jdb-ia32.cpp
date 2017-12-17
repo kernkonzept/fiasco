@@ -896,5 +896,6 @@ static
 void
 Jdb::send_nmi(Cpu_number cpu)
 {
-  Apic::mp_send_ipi(Apic::apic.cpu(cpu)->apic_id(), 0, Apic::APIC_IPI_NMI);
+  Apic::mp_send_ipi(Apic::Ipi_dest_shrt::Noshrt, Apic::apic.cpu(cpu)->apic_id(),
+                    Apic::Ipi_delivery_mode::Nmi, 0);
 }

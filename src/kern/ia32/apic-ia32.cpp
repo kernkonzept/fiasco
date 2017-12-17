@@ -21,7 +21,6 @@ public:
   static void map_registers() FIASCO_INIT;
   static void init(bool resume = false) FIASCO_INIT_AND_PM;
   Apic_id apic_id() const { return _id; }
-  Cpu_phys_id cpu_id() const { return Cpu_phys_id{cxx::int_value<Apic_id>(_id) >> 24}; }
 
   static Per_cpu<Static_object<Apic> > apic;
 
@@ -44,6 +43,7 @@ private:
   static unsigned timer_divisor;
   static unsigned frequency_khz;
   static Unsigned64 scaler_us_to_apic;
+  static bool use_x2;
 
   enum
   {
@@ -99,7 +99,8 @@ private:
 
   enum
   {
-    APIC_base_msr		= 0x1b,
+    APIC_msr_base               = 0x800,
+    APIC_base_msr               = 0x1b,
   };
 
   enum
@@ -234,8 +235,29 @@ Address Apic::phys_base;
 unsigned Apic::timer_divisor = 1;
 unsigned Apic::frequency_khz;
 Unsigned64 Apic::scaler_us_to_apic;
+bool       Apic::use_x2;
 
 int ignore_invalid_apic_reg_access;
+
+PUBLIC static inline
+bool
+Apic::use_x2apic()
+{
+  return use_x2;
+}
+
+/**
+ * CPU identifier of this CPU as provided by the APIC.
+ */
+PUBLIC inline
+Cpu_phys_id
+Apic::cpu_id() const
+{
+  if (use_x2)
+    return Cpu_phys_id{cxx::int_value<Apic_id>(_id)};
+  else
+    return Cpu_phys_id{cxx::int_value<Apic_id>(_id) >> 24};
+}
 
 /**
  * APIC identifier of the current CPU.
@@ -244,7 +266,23 @@ PUBLIC static inline
 Apic_id
 Apic::get_id()
 {
-  return Apic_id{reg_read(APIC_id) & 0xff000000};
+  if (use_x2)
+    return Apic_id{reg_read(APIC_id)};
+  else
+    return Apic_id{reg_read(APIC_id) & 0xff000000};
+}
+
+/**
+ * APIC identifier generated from 1-byte MADT Local APIC structure APIC ID.
+ */
+PUBLIC static inline
+Apic_id
+Apic::acpi_lapic_to_apic_id(Unsigned32 acpi_id)
+{
+  if (use_x2)
+    return Apic_id{acpi_id};
+  else
+    return Apic_id{Unsigned32{acpi_id} << 24};
 }
 
 PRIVATE static inline
@@ -295,14 +333,28 @@ PUBLIC static inline
 Unsigned32
 Apic::reg_read(unsigned reg)
 {
-  return *offset_cast<volatile Unsigned32 *>(io_base, reg);
+  if (use_x2)
+    return Cpu::rdmsr(APIC_msr_base + (reg >> 4));
+  else
+    return *offset_cast<volatile Unsigned32 *>(io_base, reg);
 }
 
 PUBLIC static inline
 void
 Apic::reg_write(unsigned reg, Unsigned32 val)
 {
-  *offset_cast<volatile Unsigned32 *>(io_base, reg) = val;
+  if (use_x2)
+    Cpu::wrmsr(val, 0, APIC_msr_base + (reg >> 4));
+  else
+    *offset_cast<volatile Unsigned32 *>(io_base, reg) = val;
+}
+
+PUBLIC static inline NEEDS[<cassert>]
+void
+Apic::reg_write64(unsigned reg, Unsigned64 val)
+{
+  assert(use_x2);
+  Cpu::wrmsr(val, APIC_msr_base + (reg >> 4));
 }
 
 PUBLIC static inline
@@ -662,7 +714,9 @@ Apic::activate_by_msr()
 
   msr = Cpu::rdmsr(APIC_base_msr);
   phys_base = msr & 0xfffff000;
-  msr |= 1 << 11;
+  msr |= 1 << 11; // enable local APIC
+  if (use_x2)
+    msr |= 1 << 10; // enable x2APIC mode
   Cpu::wrmsr(msr, APIC_base_msr);
 
   // later we have to call update_feature_info() as the flags may have changed
@@ -838,17 +892,29 @@ Apic::map_registers()
       present &= ~Present_before_msr;
     }
 
-  if (!(present & Present_before_msr))
+  if (cpu->ext_features() & FEATX_X2APIC)
     {
-      good_cpu = test_cpu(cpu);
-      if (good_cpu && Config::apic)
+      printf("Using x2APIC\n");
+      use_x2 = true;
+
+      present |= Present;
+      activate_by_msr();
+    }
+  else
+    {
+      printf("Using Legacy xAPIC\n");
+      if (!(present & Present_before_msr))
         {
-          // activate; this could lead an disabled APIC to appear
-          // set MMIO base address to be able to access the registers
-          activate_by_msr();
-          cpu->update_features_info();
-          if (cpu->features() & FEAT_APIC)
-            present |= Present;
+          good_cpu = test_cpu(cpu);
+          if (good_cpu && Config::apic)
+            {
+              // activate; this could lead an disabled APIC to appear
+              // set MMIO base address to be able to access the registers
+              activate_by_msr();
+              cpu->update_features_info();
+              if (cpu->features() & FEAT_APIC)
+                present |= Present;
+            }
         }
     }
 
@@ -856,8 +922,7 @@ Apic::map_registers()
     return;
 
   // initialize if available
-  if (is_present())
-    // map the Local APIC device registers
+  if (is_present() && !use_x2)
     map_apic_page();
 }
 

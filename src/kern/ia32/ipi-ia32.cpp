@@ -10,7 +10,7 @@ private:
   unsigned _count;
 
 public:
-  enum Message
+  enum Message : Unsigned8
   {
     Request        = APIC_IRQ_BASE - 1,
     Global_request = APIC_IRQ_BASE + 2,
@@ -61,7 +61,8 @@ PUBLIC static inline NEEDS["apic.h"]
 void
 Ipi::send(Message m, Cpu_number from_cpu, Cpu_number to_cpu)
 {
-  Apic::mp_send_ipi(_ipi.cpu(to_cpu)._apic_id, static_cast<Unsigned8>(m));
+  Apic::mp_send_ipi(Apic::Ipi_dest_shrt::Noshrt, _ipi.cpu(to_cpu)._apic_id,
+                    Apic::Ipi_delivery_mode::Fixed, Unsigned8{m});
   stat_sent(from_cpu);
 }
 
@@ -69,7 +70,8 @@ PUBLIC static inline NEEDS["apic.h"]
 void
 Ipi::bcast(Message m, Cpu_number /* from_cpu */)
 {
-  Apic::mp_send_ipi(Apic::APIC_IPI_OTHERS, static_cast<Unsigned8>(m));
+  Apic::mp_send_ipi(Apic::Ipi_dest_shrt::Others, Apic_id{0},
+                    Apic::Ipi_delivery_mode::Fixed, Unsigned8{m});
 }
 
 #if defined(CONFIG_IRQ_SPINNER)

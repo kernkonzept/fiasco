@@ -49,8 +49,7 @@ PUBLIC
 int
 Irq_chip_msi::msg(Mword pin, Unsigned64, Irq_mgr::Msi_info *inf)
 {
-  // the requester ID does not matter, we cannot verify
-  // without IRQ remapping
+  // the requester ID does not matter, we cannot verify without IRQ remapping
   if (pin >= _irqs)
     return -L4_err::ERange;
 
