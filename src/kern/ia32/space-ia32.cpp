@@ -1,4 +1,4 @@
-INTERFACE [ia32 || amd64]:
+INTERFACE [(ia32 || amd64) && !no_ldt]:
 
 #include "spin_lock.h"
 
@@ -28,7 +28,7 @@ protected:
 };
 
 // ---------------------------------------------------------------
-IMPLEMENTATION [ia32 || amd64]:
+IMPLEMENTATION [(ia32 || amd64) && !no_ldt]:
 
 #include "cpu.h"
 #include "globals.h"

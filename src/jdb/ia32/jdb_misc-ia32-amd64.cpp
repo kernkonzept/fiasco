@@ -234,6 +234,18 @@ Jdb_misc_debug::Jdb_misc_debug()
 static Jdb_misc_debug jdb_misc_debug INIT_PRIORITY(JDB_MODULE_INIT_PRIO);
 
 
+// --------------------------------------------------------
+IMPLEMENTATION[(ia32 || amd64) && no_ldt]:
+
+static inline void
+Jdb_misc_debug::show_ldt()
+{
+  printf(" -- no LDT support\n");
+}
+
+// --------------------------------------------------------
+IMPLEMENTATION[(ia32 || amd64) && !no_ldt]:
+
 static void
 Jdb_misc_debug::show_ldt()
 {
@@ -268,6 +280,9 @@ Jdb_misc_debug::show_ldt()
         }
     }
 }
+
+// --------------------------------------------------------
+IMPLEMENTATION[ia32 || amd64]:
 
 class Jdb_misc_info : public Jdb_module
 {

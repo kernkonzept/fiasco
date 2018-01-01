@@ -1,4 +1,12 @@
-IMPLEMENTATION [ia32 || amd64]:
+IMPLEMENTATION [(ia32 || amd64) && no_ldt]:
+
+PRIVATE inline
+bool
+Task::invoke_arch(L4_msg_tag, Utcb *)
+{ return false; }
+
+
+IMPLEMENTATION [(ia32 || amd64) && !no_ldt]:
 
 #include "gdt.h"
 #include "std_macros.h"

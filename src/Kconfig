@@ -328,6 +328,15 @@ config NO_IO_PAGEFAULT
 	  eanbled the kernel does not generate page-fault IPC for failed
 	  IO-Port accesses instead an excpetion IPC with a #GP is generated.
 
+config NO_LDT
+	bool "Disable support for the LDT" if IA32 || AMD64
+	depends on IA32 || AMD64
+	default y if IA32 || AMD64
+	help
+	  This option disables support for the X86 local descriptor
+	  table (LDT).  This reduces some overhead. However, this
+	  also makes the use of the LDT in L4Linux impossible.
+
 # PF_SECTION: KERNEL
 
 endmenu # kernel options
