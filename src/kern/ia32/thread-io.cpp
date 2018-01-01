@@ -1,4 +1,4 @@
-IMPLEMENTATION [io && (ia32 || amd64 || ux)]:
+IMPLEMENTATION [io && (ia32 || amd64 || ux) && !no_io_pagefault]:
 
 //
 // disassamble IO statements to compute the port address and
@@ -204,6 +204,39 @@ Thread::handle_io_page_fault(Trap_state *ts)
           ts->_trapno = 13;
           ts->_err = 0;
         }
+    }
+  return 0; // fail
+}
+
+// ----------------------------------------------------------
+IMPLEMENTATION [io && no_io_pagefault]:
+
+PRIVATE inline
+int
+Thread::handle_io_page_fault(Trap_state *ts)
+{
+  Address eip = ts->ip();
+  if (!check_io_bitmap_delimiter_fault(ts))
+    return 0;
+
+  // Check for IO page faults. If we got exception #14, the IO bitmap page is
+  // not available. If we got exception #13, the IO bitmap is available but
+  // the according bit is set. In both cases we have to dispatch the code at
+  // the faulting eip to determine the IO port and send an IO flexpage to our
+  // pager. If it was a page fault, check the faulting address to prevent
+  // touching userland.
+  if (eip <= Mem_layout::User_max &&
+      ((ts->_trapno == 13 && (ts->_err & 7) == 0) ||
+       (ts->_trapno == 14 && Kmem::is_io_bitmap_page_fault(ts->_cr2))))
+    {
+      ts->_cr2 = 0;
+      ts->_trapno = 13;
+      ts->_err = 0;
+      _recover_jmpbuf = 0;
+      if (send_exception(ts))
+        return 1;
+      else
+        return 2; // fail, don't send exception again
     }
   return 0; // fail
 }
