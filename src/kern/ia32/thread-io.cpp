@@ -85,6 +85,7 @@ Thread::get_ioport(Address eip, Trap_state *ts, unsigned *port, unsigned *size)
 	    return false;
 	}
 
+      /* FALLTHRU */
     case 0xf3:			// REP
       switch (mem_space()->peek((Unsigned8*)(eip + 1), from_user))
 	{
