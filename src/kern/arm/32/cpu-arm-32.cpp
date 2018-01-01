@@ -33,9 +33,7 @@ Cpu::check_for_swp_enable()
   if (!Config::Cp15_c1_use_swp_enable)
     return;
 
-  Mword midr;
-  asm volatile ("mrc p15, 0, %0, c0, c0, 0" : "=r"(midr));
-  if (((midr >> 16) & 0xf) != 0xf)
+  if (((midr() >> 16) & 0xf) != 0xf)
     return; // pre ARMv7 has no swap enable / disable
 
   Mword mpidr, id_isar0;
