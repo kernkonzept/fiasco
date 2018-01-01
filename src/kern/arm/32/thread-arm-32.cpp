@@ -174,7 +174,7 @@ Thread::condition_valid(unsigned char cond, Unsigned32 psr)
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && 32bit && fpu && !arm_v8]:
+IMPLEMENTATION [arm && 32bit && fpu]:
 
 PUBLIC static inline
 bool
