@@ -26,6 +26,15 @@ Cpu::midr()
   return m;
 }
 
+PUBLIC static inline
+Mword
+Cpu::mpidr()
+{
+  Mword mpid;
+  asm volatile ("mrc p15, 0, %0, c0, c0, 5" : "=r"(mpid));
+  return mpid;
+}
+
 PRIVATE static inline
 void
 Cpu::check_for_swp_enable()
@@ -36,13 +45,12 @@ Cpu::check_for_swp_enable()
   if (((midr() >> 16) & 0xf) != 0xf)
     return; // pre ARMv7 has no swap enable / disable
 
-  Mword mpidr, id_isar0;
+  Mword id_isar0;
   asm volatile ("mrc p15, 0, %0, c0, c2, 0" : "=r"(id_isar0));
-  asm volatile ("mrc p15, 0, %0, c0, c0, 5" : "=r"(mpidr));
   if ((id_isar0 & 0xf) != 1)
     return; // CPU has no swp / swpb
 
-  if (((mpidr >> 31) & 1) == 0)
+  if (((mpidr() >> 31) & 1) == 0)
     return; // CPU has no MP extensions -> no swp enable
 
   sctlr |= Cp15_c1_v7_sw;

@@ -160,6 +160,15 @@ Cpu::midr()
   return m;
 }
 
+PUBLIC static inline
+Mword
+Cpu::mpidr()
+{
+  Mword mpid;
+  asm volatile("mrs %0, mpidr_el1" : "=r"(mpid));
+  return mpid;
+}
+
 IMPLEMENT
 void
 Cpu::id_init()
