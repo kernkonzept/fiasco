@@ -47,7 +47,7 @@ class Kmem : public Mem_layout
 private:
   Kmem();			// default constructors are undefined
   Kmem (const Kmem&);
-  static unsigned long pmem_cpu_page, cpu_page_vm;
+  static unsigned long tss_mem_pm, tss_mem_vm;
 
 public:
   static Device_map dev_map;
@@ -401,49 +401,49 @@ Kmem::init_mmu()
 
   assert((Mem_layout::Io_bitmap & ~Config::SUPERPAGE_MASK) == 0);
 
-  enum { Cpu_page_size = 0x10 + Config::Max_num_cpus * (sizeof(Tss) + 256) };
+  enum { Tss_mem_size = 0x10 + Config::Max_num_cpus * (sizeof(Tss) + 256) };
 
   /* Per-CPU TSS required to use IO-bitmap for more CPUs */
-  static_assert(Cpu_page_size < 0x10000, "Too many CPUs configured.");
+  static_assert(Tss_mem_size < 0x10000, "Too many CPUs configured.");
 
-  long cpu_page_size = Cpu_page_size;
+  long tss_mem_size = Tss_mem_size;
 
-  if (cpu_page_size < Config::PAGE_SIZE)
-    cpu_page_size = Config::PAGE_SIZE;
+  if (tss_mem_size < Config::PAGE_SIZE)
+    tss_mem_size = Config::PAGE_SIZE;
 
-  pmem_cpu_page = Mem_layout::pmem_to_phys(alloc->unaligned_alloc(cpu_page_size));
+  tss_mem_pm = Mem_layout::pmem_to_phys(alloc->unaligned_alloc(tss_mem_size));
 
-  printf("Kmem:: cpu page at %lx (%ldBytes)\n", pmem_cpu_page, cpu_page_size);
+  printf("Kmem:: TSS mem at %lx (%ldBytes)\n", tss_mem_pm, tss_mem_size);
 
   if (superpages
-      && Config::SUPERPAGE_SIZE - (pmem_cpu_page & ~Config::SUPERPAGE_MASK) < 0x10000)
+      && Config::SUPERPAGE_SIZE - (tss_mem_pm & ~Config::SUPERPAGE_MASK) < 0x10000)
     {
       // can map as 4MB page because the cpu_page will land within a
       // 16-bit range from io_bitmap
       auto e = kdir->walk(Virt_addr(Mem_layout::Io_bitmap - Config::SUPERPAGE_SIZE),
                           Pdir::Super_level, false, pdir_alloc(alloc));
 
-      e.set_page(pmem_cpu_page & Config::SUPERPAGE_MASK,
+      e.set_page(tss_mem_pm & Config::SUPERPAGE_MASK,
                  Pt_entry::Writable | Pt_entry::Referenced
                  | Pt_entry::Dirty | Pt_entry::global());
 
-      cpu_page_vm = (pmem_cpu_page & ~Config::SUPERPAGE_MASK)
-                    + (Mem_layout::Io_bitmap - Config::SUPERPAGE_SIZE);
+      tss_mem_vm = (tss_mem_pm & ~Config::SUPERPAGE_MASK)
+                   + (Mem_layout::Io_bitmap - Config::SUPERPAGE_SIZE);
     }
   else
     {
       unsigned i;
-      for (i = 0; cpu_page_size > 0; ++i, cpu_page_size -= Config::PAGE_SIZE)
+      for (i = 0; tss_mem_size > 0; ++i, tss_mem_size -= Config::PAGE_SIZE)
         {
           pt = kdir->walk(Virt_addr(Mem_layout::Io_bitmap - Config::PAGE_SIZE * (i+1)),
                           Pdir::Depth, false, pdir_alloc(alloc));
 
-          pt.set_page(pmem_cpu_page + i*Config::PAGE_SIZE,
+          pt.set_page(tss_mem_pm + i * Config::PAGE_SIZE,
                       Pt_entry::Writable | Pt_entry::Referenced | Pt_entry::Dirty
                       | Pt_entry::global());
         }
 
-      cpu_page_vm = Mem_layout::Io_bitmap - Config::PAGE_SIZE * i;
+      tss_mem_vm = Mem_layout::Io_bitmap - Config::PAGE_SIZE * i;
     }
 
   // the IO bitmap must be followed by one byte containing 0xff
@@ -453,9 +453,8 @@ Kmem::init_mmu()
   //
   // Therefore we write 0xff in the first byte of the cpu_page
   // and map this page behind every IO bitmap
-  io_bitmap_delimiter = reinterpret_cast<Unsigned8 *>(cpu_page_vm);
-
-  cpu_page_vm += 0x10;
+  io_bitmap_delimiter = reinterpret_cast<Unsigned8 *>(tss_mem_vm);
+  tss_mem_vm += 0x10;
 
   // did we really get the first byte ??
   assert((reinterpret_cast<Address>(io_bitmap_delimiter)
@@ -538,7 +537,7 @@ IMPLEMENTATION [ia32,ux,amd64]:
 #include "tss.h"
 
 // static class variables
-unsigned long Kmem::pmem_cpu_page, Kmem::cpu_page_vm;
+unsigned long Kmem::tss_mem_pm, Kmem::tss_mem_vm;
 Kpdir *Mem_layout::kdir;
 
 
@@ -570,8 +569,8 @@ PUBLIC static inline
 Address
 Kmem::alloc_tss(Address size)
 {
-  Address ret = cpu_page_vm;
-  cpu_page_vm += (size + 0xf) & ~0xf;
+  Address ret = tss_mem_vm;
+  tss_mem_vm += (size + 0xf) & ~0xf;
 
   return ret;
 }

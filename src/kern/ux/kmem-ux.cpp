@@ -94,35 +94,35 @@ Kmem::init_mmu(Cpu const &boot_cpu)
   assert((Mem_layout::Io_bitmap & ~Config::SUPERPAGE_MASK) == 0);
 
   if (boot_cpu.superpages()
-      && Config::SUPERPAGE_SIZE - (pmem_cpu_page & ~Config::SUPERPAGE_MASK) < 0x10000)
+      && Config::SUPERPAGE_SIZE - (tss_mem_pm & ~Config::SUPERPAGE_MASK) < 0x10000)
     {
       // can map as 4MB page because the cpu_page will land within a
       // 16-bit range from io_bitmap
       kdir->walk(Virt_addr(Mem_layout::Io_bitmap - Config::SUPERPAGE_SIZE),
                  Pdir::Super_level, false, pdir_alloc(alloc)).
-        set_page(pmem_cpu_page & Config::SUPERPAGE_MASK,
+        set_page(tss_mem_pm & Config::SUPERPAGE_MASK,
                  Pt_entry::Pse_bit
                  | Pt_entry::Writable | Pt_entry::Referenced
                  | Pt_entry::Dirty | Pt_entry::global());
 
-      cpu_page_vm = (pmem_cpu_page & ~Config::SUPERPAGE_MASK)
-                    + (Mem_layout::Io_bitmap - Config::SUPERPAGE_SIZE);
+      tss_mem_vm = (tss_mem_pm & ~Config::SUPERPAGE_MASK)
+                   + (Mem_layout::Io_bitmap - Config::SUPERPAGE_SIZE);
     }
   else
     {
       auto pt = kdir->walk(Virt_addr(Mem_layout::Io_bitmap - Config::PAGE_SIZE),
                            Pdir::Depth, false, pdir_alloc(alloc));
 
-      pt.set_page(pmem_cpu_page,
+      pt.set_page(tss_mem_pm,
                   Pt_entry::Writable
                   | Pt_entry::Referenced | Pt_entry::Dirty
                   | Pt_entry::global());
 
-      cpu_page_vm = Mem_layout::Io_bitmap - Config::PAGE_SIZE;
+      tss_mem_vm = Mem_layout::Io_bitmap - Config::PAGE_SIZE;
     }
 
-  if (mmap ((void *) cpu_page_vm, Config::PAGE_SIZE, PROT_READ 
-            | PROT_WRITE, MAP_SHARED | MAP_FIXED, Boot_info::fd(), pmem_cpu_page)
+  if (mmap ((void *) tss_mem_vm, Config::PAGE_SIZE, PROT_READ
+            | PROT_WRITE, MAP_SHARED | MAP_FIXED, Boot_info::fd(), tss_mem_pm)
       == MAP_FAILED)
     printf ("CPU page mapping failed: %s\n", strerror (errno));
 
