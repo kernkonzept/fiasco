@@ -631,7 +631,7 @@ namespace Ptab
     PTE_PTR walk(Va virt, unsigned level = Depth, MEM &&mem = MEM()) const
     { return const_cast<Walk&>(_base).walk(_Addr::val(virt), level, false, Null_alloc(), cxx::forward<MEM>(mem)); }
 
-    template< typename OPTE_PTR, typename _Alloc, typename MEM = MEM_DFLT >
+    template< typename OPTE_PTR, typename _Alloc = Null_alloc, typename MEM = MEM_DFLT >
     int sync(Va l_addr, Base<OPTE_PTR, _Traits, _Addr, MEM_DFLT> const *_r,
              Va r_addr, Vs size, unsigned level = Depth,
              bool force_write_back = false,
