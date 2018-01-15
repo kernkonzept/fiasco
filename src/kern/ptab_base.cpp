@@ -602,6 +602,8 @@ namespace Ptab
     typedef typename _Addr::Value_type::Diff_type Vs;
     typedef _Traits Traits;
     typedef PTE_PTR Pte_ptr;
+    typedef _Addr Addr;
+    typedef MEM_DFLT Mem_default;
     typedef typename _Traits::Head L0;
 
     enum
