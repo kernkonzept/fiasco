@@ -11,6 +11,7 @@ INTERFACE [ia32,amd64,ux]:
 #include "kip.h"
 #include "mem_layout.h"
 #include "paging.h"
+#include "simple_alloc.h"
 
 class Cpu;
 class Tss;
@@ -47,7 +48,8 @@ class Kmem : public Mem_layout
 private:
   Kmem();			// default constructors are undefined
   Kmem (const Kmem&);
-  static unsigned long tss_mem_pm, tss_mem_vm;
+  static unsigned long tss_mem_pm;
+  static cxx::Simple_alloc tss_mem_vm;
 
 public:
   static Device_map dev_map;
@@ -406,14 +408,14 @@ Kmem::init_mmu()
   /* Per-CPU TSS required to use IO-bitmap for more CPUs */
   static_assert(Tss_mem_size < 0x10000, "Too many CPUs configured.");
 
-  long tss_mem_size = Tss_mem_size;
+  unsigned tss_mem_size = Tss_mem_size;
 
   if (tss_mem_size < Config::PAGE_SIZE)
     tss_mem_size = Config::PAGE_SIZE;
 
   tss_mem_pm = Mem_layout::pmem_to_phys(alloc->unaligned_alloc(tss_mem_size));
 
-  printf("Kmem:: TSS mem at %lx (%ldBytes)\n", tss_mem_pm, tss_mem_size);
+  printf("Kmem:: TSS mem at %lx (%uBytes)\n", tss_mem_pm, tss_mem_size);
 
   if (superpages
       && Config::SUPERPAGE_SIZE - (tss_mem_pm & ~Config::SUPERPAGE_MASK) < 0x10000)
@@ -427,13 +429,15 @@ Kmem::init_mmu()
                  Pt_entry::Writable | Pt_entry::Referenced
                  | Pt_entry::Dirty | Pt_entry::global());
 
-      tss_mem_vm = (tss_mem_pm & ~Config::SUPERPAGE_MASK)
-                   + (Mem_layout::Io_bitmap - Config::SUPERPAGE_SIZE);
+      tss_mem_vm = cxx::Simple_alloc(
+          (tss_mem_pm & ~Config::SUPERPAGE_MASK)
+          + (Mem_layout::Io_bitmap - Config::SUPERPAGE_SIZE),
+          tss_mem_size);
     }
   else
     {
       unsigned i;
-      for (i = 0; tss_mem_size > 0; ++i, tss_mem_size -= Config::PAGE_SIZE)
+      for (i = 0; (i << Config::PAGE_SHIFT) < tss_mem_size; ++i)
         {
           pt = kdir->walk(Virt_addr(Mem_layout::Io_bitmap - Config::PAGE_SIZE * (i+1)),
                           Pdir::Depth, false, pdir_alloc(alloc));
@@ -443,7 +447,9 @@ Kmem::init_mmu()
                       | Pt_entry::global());
         }
 
-      tss_mem_vm = Mem_layout::Io_bitmap - Config::PAGE_SIZE * i;
+      tss_mem_vm = cxx::Simple_alloc(
+          Mem_layout::Io_bitmap - Config::PAGE_SIZE * i,
+          tss_mem_size);
     }
 
   // the IO bitmap must be followed by one byte containing 0xff
@@ -453,8 +459,7 @@ Kmem::init_mmu()
   //
   // Therefore we write 0xff in the first byte of the cpu_page
   // and map this page behind every IO bitmap
-  io_bitmap_delimiter = reinterpret_cast<Unsigned8 *>(tss_mem_vm);
-  tss_mem_vm += 0x10;
+  io_bitmap_delimiter = tss_mem_vm.alloc<Unsigned8>();
 
   // did we really get the first byte ??
   assert((reinterpret_cast<Address>(io_bitmap_delimiter)
@@ -467,12 +472,15 @@ PUBLIC static FIASCO_INIT_CPU
 void
 Kmem::init_cpu(Cpu &cpu)
 {
-  void *cpu_mem = Kmem_alloc::allocator()->unaligned_alloc(1024);
+  cxx::Simple_alloc cpu_mem_vm(Kmem_alloc::allocator()->unaligned_alloc(1024), 1024);
   if (Config::Warn_level >= 2)
-    printf("Allocate cpu_mem @ %p\n", cpu_mem);
+    printf("Allocate cpu_mem @ %p\n", cpu_mem_vm.block());
+
+  cxx::Simple_alloc *cpu_mem_alloc = &cpu_mem_vm;
+  cxx::Simple_alloc *tss_alloc =  &tss_mem_vm;
 
   // now initialize the global descriptor table
-  cpu.init_gdt(__alloc(&cpu_mem, Gdt::gdt_max), user_max());
+  cpu.init_gdt((Address)cpu_mem_alloc->alloc_bytes(Gdt::gdt_max, 0x10), user_max());
 
   // Allocate the task segment as the last thing from cpu_page_vm
   // because with IO protection enabled the task segment includes the
@@ -481,9 +489,10 @@ Kmem::init_cpu(Cpu &cpu)
   // Allocate additional 256 bytes for emergency stack right beneath
   // the tss. It is needed if we get an NMI or debug exception at
   // entry_sys_fast_ipc/entry_sys_fast_ipc_c/entry_sys_fast_ipc_log.
-  Address tss_mem = alloc_tss(sizeof(Tss) + 256);
+  Address tss_mem = (Address)tss_alloc->alloc_bytes(sizeof(Tss) + 256, 0x10);
   assert(tss_mem + sizeof(Tss) + 256 < Mem_layout::Io_bitmap);
   tss_mem += 256;
+  assert(tss_mem >= Mem_layout::Io_bitmap - 0x100000);
 
   // this is actually tss_size + 1, including the io_bitmap_delimiter byte
   size_t tss_size;
@@ -510,7 +519,7 @@ Kmem::init_cpu(Cpu &cpu)
   // and finally initialize the TSS
   cpu.set_tss();
 
-  init_cpu_arch(cpu, &cpu_mem);
+  init_cpu_arch(cpu, cpu_mem_alloc);
 }
 
 
@@ -537,17 +546,9 @@ IMPLEMENTATION [ia32,ux,amd64]:
 #include "tss.h"
 
 // static class variables
-unsigned long Kmem::tss_mem_pm, Kmem::tss_mem_vm;
+unsigned long Kmem::tss_mem_pm;
+cxx::Simple_alloc Kmem::tss_mem_vm;
 Kpdir *Mem_layout::kdir;
-
-
-static inline Address FIASCO_INIT_CPU
-Kmem::__alloc(void **p, unsigned long size)
-{
-  Address r = ((unsigned long)*p + 0xf) & ~0xf;
-  *p = (void*)(r + size);
-  return r;
-}
 
 /**
  * Compute a kernel-virtual address for a physical address.
@@ -562,17 +563,6 @@ void *
 Kmem::phys_to_virt(Address addr)
 {
   return reinterpret_cast<void *>(Mem_layout::phys_to_pmem(addr));
-}
-
-/** Allocate some bytes from a memory page */
-PUBLIC static inline
-Address
-Kmem::alloc_tss(Address size)
-{
-  Address ret = tss_mem_vm;
-  tss_mem_vm += (size + 0xf) & ~0xf;
-
-  return ret;
 }
 
 /**
