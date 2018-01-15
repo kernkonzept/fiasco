@@ -9,8 +9,12 @@ public:
 
   enum
   {
+#ifdef CONFIG_KERNEL_ISOLATION
+    Access_user_mem = No_access_user_mem,
+#else
     // can access user memory directly
     Access_user_mem = Access_user_mem_direct,
+#endif
 
     /// Timer vector used with APIC timer or IOAPIC
     Apic_timer_vector = APIC_IRQ_BASE + 0,

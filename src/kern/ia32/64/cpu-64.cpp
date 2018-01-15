@@ -1,4 +1,4 @@
-INTERFACE [amd64]:
+INTERFACE [amd64 && !kernel_isolation]:
 
 #include "syscall_entry.h"
 
@@ -8,7 +8,7 @@ EXTENSION class Cpu
 };
 
 
-IMPLEMENTATION[amd64]:
+IMPLEMENTATION[amd64 && !kernel_isolation]:
 
 #include "mem_layout.h"
 #include "tss.h"
@@ -35,6 +35,35 @@ Cpu::setup_sysenter()
   wrmsr(~0ULL, MSR_SFMASK);
   _syscall_entry.set_rsp((Address)&kernel_sp());
 }
+
+IMPLEMENTATION[amd64 && kernel_isolation]:
+
+#include "mem_layout.h"
+#include "tss.h"
+
+PUBLIC
+void
+Cpu::set_fast_entry(void (*func)())
+{
+  *reinterpret_cast<Signed32 *>(Mem_layout::Mem_layout::Kentry_cpu_page + 0xc5) = (Signed32)(Signed64)func;
+}
+
+PUBLIC inline
+void
+Cpu::setup_sysenter() const
+{
+  wrmsr(0, GDT_CODE_KERNEL | ((GDT_CODE_USER32 | 3) << 16), MSR_STAR);
+  wrmsr((Unsigned64)Mem_layout::Kentry_cpu_page + 0xa0, MSR_LSTAR);
+  wrmsr((Unsigned64)Mem_layout::Kentry_cpu_page + 0xa0, MSR_CSTAR);
+  wrmsr(~0ULL, MSR_SFMASK);
+}
+
+IMPLEMENT inline NEEDS["mem_layout.h"]
+Address volatile &
+Cpu::kernel_sp() const
+{ return *reinterpret_cast<Address volatile *>(Mem_layout::Kentry_cpu_page + sizeof(Mword)); }
+
+IMPLEMENTATION[amd64]:
 
 extern "C" void entry_sys_fast_ipc_c();
 

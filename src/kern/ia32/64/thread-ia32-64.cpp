@@ -1,5 +1,7 @@
 //----------------------------------------------------------------------------
-IMPLEMENTATION [amd64]:
+IMPLEMENTATION [amd64 && !kernel_isolation]:
+
+#define FIASCO_ASM_IRET "iretq \n\t"
 
 PUBLIC template<typename T> inline
 void FIASCO_NORETURN
@@ -17,6 +19,32 @@ Thread::fast_return_to_user(Mword ip, Mword sp, T arg)
     );
   __builtin_trap();
 }
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [amd64 && kernel_isolation]:
+
+#define FIASCO_ASM_IRET "jmp safe_iret \n\t"
+
+PUBLIC template<typename T> inline
+void FIASCO_NORETURN
+Thread::fast_return_to_user(Mword ip, Mword sp, T arg)
+{
+  assert(cpu_lock.test());
+  assert(current() == this);
+
+  asm volatile
+    ("mov %[sp], %%rsp \t\n"
+     "mov %[flags], %%r11 \t\n"
+     "jmp safe_sysret \t\n"
+     :
+     : [cr3] "a" (*((Address *)Mem_layout::Kentry_cpu_page) | 0x1000),
+       [flags] "i" (EFLAGS_IF), "c" (ip), [sp] "r" (sp), "D"(arg)
+    );
+  __builtin_trap();
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [amd64]:
 
 PROTECTED inline NEEDS[Thread::sys_gdt_x86]
 L4_msg_tag
@@ -222,8 +250,7 @@ Thread::user_invoke()
      "  xor %%r13,%%r13 \n"
      "  xor %%r14,%%r14 \n"
      "  xor %%r15,%%r15 \n"
-
-     "  iretq           \n"
+     FIASCO_ASM_IRET
      :                          // no output
      : "a" (nonull_static_cast<Return_frame*>(current()->regs())),
        "c" (Gdt::gdt_data_user | Gdt::Selector_user),

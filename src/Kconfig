@@ -318,9 +318,24 @@ config VIRT_OBJ_SPACE
 	def_bool y
 	depends on HAS_VIRT_OBJ_SPACE_OPTION
 	depends on !DISABLE_VIRT_OBJ_SPACE
+	depends on !KERNEL_ISOLATION
+
+config KERNEL_ISOLATION
+	bool "Enable Kernel Address-Space Isolation" if AMD64
+	depends on AMD64
+	select NO_LDT
+	select NO_IO_PAGEFAULT
+	select CPU_LOCAL_MAP
+	help
+	  Use an extra address space (page table) for the microkernel.
+	  Only map a small trampoline and some static code and data into
+	  each user address space and keep the kernel in its own address
+	  space. This mitigates the deferred access rights check of some
+	  Intel CPUs during speculative execution. However, there is the
+	  extra TLB penalty for each system call.
 
 config CPU_LOCAL_MAP
-	bool "Enable CPU local page-tables for kernel mappings" if AMD64
+	bool "Enable CPU local page-tables for kernel mappings" if AMD64 && !KERNEL_ISOLATION
 	depends on AMD64
 	help
 	  Enable to use per CPU page directories to allow CPU-local
@@ -330,7 +345,7 @@ config CPU_LOCAL_MAP
 	  If unsure say N.
 
 config NO_IO_PAGEFAULT
-	bool "Disable IO-Port fault IPC" if IA32 || AMD64
+	bool "Disable IO-Port fault IPC" if (IA32 || AMD64) && !KERNEL_ISOLATION
 	depends on IA32 || AMD64
 	default y if  IA32 || AMD64
 	help
@@ -339,7 +354,7 @@ config NO_IO_PAGEFAULT
 	  IO-Port accesses instead an excpetion IPC with a #GP is generated.
 
 config NO_LDT
-	bool "Disable support for the LDT" if IA32 || AMD64
+	bool "Disable support for the LDT" if (IA32 || AMD64) && !KERNEL_ISOLATION
 	depends on IA32 || AMD64
 	default y if IA32 || AMD64
 	help

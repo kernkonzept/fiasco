@@ -652,6 +652,84 @@ Kmem::resume_cpu(Cpu_number)
 
 
 //--------------------------------------------------------------------------
+IMPLEMENTATION [(amd64 || ia32) && cpu_local_map && !kernel_isolation]:
+
+EXTENSION class Kmem
+{
+  enum { Num_cpu_dirs = 1 };
+};
+
+PUBLIC static inline
+Kpdir *
+Kmem::current_cpu_udir()
+{
+  return reinterpret_cast<Kpdir *>(Kentry_cpu_pdir);
+}
+
+PRIVATE static inline
+void
+Kmem::setup_cpu_structures_isolation(Cpu &cpu, Kpdir *, cxx::Simple_alloc *cpu_m)
+{
+  setup_cpu_structures(cpu, cpu_m, cpu_m);
+}
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION [(amd64 || ia32) && kernel_isolation]:
+
+EXTENSION class Kmem
+{
+  enum { Num_cpu_dirs = 2 };
+};
+
+PUBLIC static inline
+Kpdir *
+Kmem::current_cpu_udir()
+{
+  return reinterpret_cast<Kpdir *>(Kentry_cpu_pdir + 4096);
+}
+
+PRIVATE static
+void
+Kmem::setup_cpu_structures_isolation(Cpu &cpu, Kpdir *cpu_dir, cxx::Simple_alloc *cpu_m)
+{
+
+  auto src = cpu_dir->walk(Virt_addr(Kentry_cpu_page), 0);
+  auto dst = cpu_dir[1].walk(Virt_addr(Kentry_cpu_page), 0);
+  write_now(dst.pte, *src.pte);
+
+  // map kernel code to user space dir
+  extern char _kernel_text_start[];
+  extern char _kernel_text_entry_end[];
+  Address ki_page = ((Address)_kernel_text_start) & ~(Config::PAGE_SIZE - 1);
+  Address kie_page = (((Address)_kernel_text_entry_end) + (Config::PAGE_SIZE - 1)) & ~(Config::PAGE_SIZE - 1);
+
+  if (1)
+    printf("kernel code: %p(%lx)-%p(%lx)\n", _kernel_text_start,
+           ki_page, _kernel_text_entry_end, kie_page);
+
+  // FIXME: Move entry + exit code into dedicated sections and link
+  // into compact area to avoid mapping all kernel code to user land
+  // FIXME: Make sure we can and do share level 1 to 3 among all CPUs
+  cpu_dir[1].map(ki_page - Kernel_image_offset, Virt_addr(ki_page),
+                 Virt_size(kie_page - ki_page),
+                 Pt_entry::Referenced | Pt_entry::global(),
+                 Pdir::Depth,
+                 false, pdir_alloc(Kmem_alloc::allocator()));
+
+  unsigned const estack_sz = 128;
+  char *estack = (char *)cpu_m->alloc_bytes(estack_sz, 16);
+
+  extern char const syscall_entry_code[];
+  extern char const syscall_entry_code_end[];
+  char *sccode = (char *)cpu_m->alloc_bytes(syscall_entry_code_end - syscall_entry_code, 16);
+  assert ((Address)sccode == Kentry_cpu_page + 0xa0);
+  memcpy(sccode, syscall_entry_code, syscall_entry_code_end - syscall_entry_code);
+
+  setup_cpu_structures(cpu, cpu_m, cpu_m);
+  cpu.get_tss()->_rsp0 = (Address)(estack + estack_sz);
+}
+
+//--------------------------------------------------------------------------
 IMPLEMENTATION [(amd64 || ia32) && cpu_local_map]:
 
 DEFINE_PER_CPU static Per_cpu<Kpdir *> _per_cpu_dir;
@@ -659,13 +737,6 @@ DEFINE_PER_CPU static Per_cpu<Kpdir *> _per_cpu_dir;
 PUBLIC static inline
 Kpdir *
 Kmem::current_cpu_kdir()
-{
-  return reinterpret_cast<Kpdir *>(Kentry_cpu_pdir);
-}
-
-PUBLIC static inline
-Kpdir *
-Kmem::current_cpu_udir()
 {
   return reinterpret_cast<Kpdir *>(Kentry_cpu_pdir);
 }
@@ -684,7 +755,7 @@ Kmem::init_cpu(Cpu &cpu)
 {
   Kmem_alloc *const alloc = Kmem_alloc::allocator();
 
-  unsigned const cpu_dir_sz = sizeof(Kpdir);
+  unsigned const cpu_dir_sz = sizeof(Kpdir) * Num_cpu_dirs;
 
   Kpdir *cpu_dir = (Kpdir*)alloc->unaligned_alloc(cpu_dir_sz);
   memset (cpu_dir, 0, cpu_dir_sz);
@@ -804,10 +875,9 @@ Kmem::init_cpu(Cpu &cpu)
   Cpu::set_pdbr(cpu_dir_pa);
 
   cxx::Simple_alloc cpu_m(Kentry_cpu_page, Config::PAGE_SIZE);
-
   // CPU dir pa and 
   write_now(cpu_m.alloc<Mword>(4), cpu_dir_pa);
-  setup_cpu_structures(cpu, &cpu_m, &cpu_m);
+  setup_cpu_structures_isolation(cpu, cpu_dir, &cpu_m);
 }
 
 PUBLIC static

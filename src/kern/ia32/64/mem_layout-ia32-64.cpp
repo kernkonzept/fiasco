@@ -17,6 +17,7 @@ public:
   enum
   {
     Kentry_start      = 0xffff810000000000UL, ///< 512GB slot 258
+    Kentry_syscall    = FIASCO_KENTRY_SYSCALL_PAGE,
     Kentry_cpu_page   = 0xffff817fffffc000UL, ///< last 4KB in solt 258
     Io_bitmap         = 0xffff818000000000UL, ///< 512GB slot 259 first page
     Caps_start        = 0xffff818000800000UL,    ///< % 4MB
@@ -35,7 +36,6 @@ public:
     Tbuf_ustatus_page = Tbuf_status_page,
     Jdb_bench_page    = Service_page + 0x8000,   ///< % 4KB
     utcb_ptr_align    = Tl_math::Ld<64>::Res,    // 64byte cachelines
-    Idt               = Service_page + 0xfe000,  ///< % 4KB
     Syscalls          = Service_page + 0xff000,  ///< % 4KB syscall page
     Tbuf_buffer_area  = Service_page + 0x200000, ///< % 2MB
     Tbuf_ubuffer_area = Tbuf_buffer_area,
@@ -64,6 +64,7 @@ public:
 
     // used for CPU_LOCAL_MAP only
     Kentry_cpu_pdir   = 0xfffffffff0800000UL,
+    Cpu_local_start   = 0xfffffffff0012000UL,
 
     Physmem           = 0xffffffff80000000UL,    ///< % 4MB   kernel memory
     Physmem_end       = 0xffffffffe0000000UL,    ///< % 4MB   kernel memory
@@ -87,6 +88,26 @@ private:
   static Address physmem_offs asm ("PHYSMEM_OFFS");
 };
 
+//-----------------------------------------------------------
+INTERFACE [amd64 && !kernel_isolation]:
+
+EXTENSION class Mem_layout
+{
+public:
+  enum { Idt = Service_page + 0xfe000 };
+};
+
+//-----------------------------------------------------------
+INTERFACE [amd64 && kernel_isolation]:
+
+EXTENSION class Mem_layout
+{
+public:
+  // IDT in Kentry area
+  enum { Idt = 0xffff817fffffa000UL };
+};
+
+//-----------------------------------------------------------
 IMPLEMENTATION [amd64]:
 
 #include <cassert>

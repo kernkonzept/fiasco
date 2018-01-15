@@ -12,6 +12,9 @@
 	iret
 .endm
 
+.macro  SWITCH_TO_KERNEL_CR3 err
+.endm
+
 	.macro save_all_regs
 	pusha
 	.endm

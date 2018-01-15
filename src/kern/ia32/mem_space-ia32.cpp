@@ -458,8 +458,13 @@ Mem_space::make_current()
 
   pd[259] = d[259];
 
+  //pd->sync(Virt_addr(0), _dir, Virt_addr(0), Virt_size(1UL << 47), 0);
+  //pd->sync(Virt_addr(Mem_layout::Io_bitmap), _dir, Virt_addr(Mem_layout::Io_bitmap), Virt_size(512UL << 30), 0);
+#ifndef CONFIG_KERNEL_ISOLATION
+  asm volatile ("" : : : "memory");
   Address pd_pa = access_once(reinterpret_cast<Address *>(Mem_layout::Kentry_cpu_page));
   Cpu::set_pdbr(pd_pa);
+#endif
   _current.cpu(current_cpu()) = this;
 }
 

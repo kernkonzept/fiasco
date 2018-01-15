@@ -20,6 +20,7 @@ public:
   static const unsigned _idt_max = FIASCO_IDT_MAX;
 private:
   static const Address  _idt = Mem_layout::Idt;
+  static Address _idt_pa;
 };
 
 IMPLEMENTATION:
@@ -30,7 +31,10 @@ IMPLEMENTATION:
 #include "mem_unit.h"
 #include "paging.h"
 #include "panic.h"
-#include "vmem_alloc.h"
+#include "kmem_alloc.h"
+#include <cstring>
+
+Address Idt::_idt_pa;
 
 /**
  * IDT write-protect/write-unprotect function.
@@ -40,7 +44,7 @@ PRIVATE static
 void
 Idt::set_writable(bool writable)
 {
-  auto e = Kmem::dir()->walk(Virt_addr(_idt));
+  auto e = Kmem::current_cpu_kdir()->walk(Virt_addr(_idt));
 
   // Make sure page directory entry is valid and not a 4MB page
   assert (e.is_valid() && e.level == Pdir::Depth);
@@ -55,14 +59,12 @@ Idt::set_writable(bool writable)
 
 PUBLIC static FIASCO_INIT
 void
-Idt::init_table(Idt_init_entry *src)
+Idt::init_table(Idt_init_entry *src, Idt_entry *idt)
 {
-  Idt_entry *entries = (Idt_entry*)_idt;
-
   while (src->entry)
     {
       assert (src->vector < _idt_max);
-      entries[src->vector] =
+      idt[src->vector] =
         ((src->type & 0x1f) == 0x05) // task gate?
         ? Idt_entry(src->entry, src->type)
         : Idt_entry(src->entry, Gdt::gdt_code_kernel, src->type);
@@ -79,13 +81,35 @@ void
 Idt::init()
 {
   assert (_idt_max * sizeof(Idt_entry) <= Config::PAGE_SIZE && "IDT too large");
-  if (!Vmem_alloc::page_alloc((void *) _idt, Vmem_alloc::ZERO_FILL))
-    panic("IDT allocation failure");
+  auto alloc = Kmem_alloc::allocator();
+  Idt_entry *idt = (Idt_entry *)alloc->unaligned_alloc(Config::PAGE_SIZE);
+  if (!idt)
+    panic("IDT allocation failure: %d", __LINE__);
 
-  init_table((Idt_init_entry*)&idt_init_table);
+  _idt_pa = Mem_layout::pmem_to_phys(idt);
+  memset(idt, 0, Config::PAGE_SIZE);
+  init_table((Idt_init_entry*)&idt_init_table, idt);
+
+  init_current_cpu();
+}
+
+PUBLIC static
+void
+Idt::init_current_cpu()
+{
+  auto d = Kmem::current_cpu_kdir()->walk(Virt_addr(_idt), Pdir::Depth);
+  if (d.level != Pdir::Depth)
+    panic("IDT allocation failure: %d: level=%d %lx", __LINE__,
+          d.level, *d.pte);
+
+  if (!d.is_valid())
+    d.set_page(_idt_pa, Pt_entry::Referenced | Pt_entry::global());
+
+  if (d.page_addr() != _idt_pa)
+    panic("IDT allocation failure: %d: some other page mapped here %lx",
+          __LINE__, _idt);
+
   load();
-
-  set_writable(false);
 }
 
 
