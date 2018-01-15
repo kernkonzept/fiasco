@@ -16,10 +16,18 @@ public:
 
   enum
   {
-    Utcb_addr         = 0xffff800000000000UL,    ///< % 4kB UTCB map address
-    Kip_auto_map      = 0xffff800000002000UL,    ///< % 4kB
+    Kentry_start      = 0xffff810000000000UL, ///< 512GB slot 258
+    Kentry_cpu_page   = 0xffff817fffffc000UL, ///< last 4KB in solt 258
+    Io_bitmap         = 0xffff818000000000UL, ///< 512GB slot 259 first page
+    Caps_start        = 0xffff818000800000UL,    ///< % 4MB
+    Caps_end          = 0xffff81800c400000UL,    ///< % 4MB
+
+    Utcb_addr         = 0x0000007fff000000UL,    ///< % 4kB UTCB map address
     User_max          = 0x00007fffffffffffUL,
-    Service_page      = 0xffffffffeac00000UL,    ///< % 4MB global mappings
+
+    Kglobal_area      = 0xffffffff00000000UL,    ///< % 1GB to share 1GB tables (start)
+    Kglobal_area_end  = 0xffffffff80000000UL,    ///< % 1GB to share 1GB tables (end)
+    Service_page      = Kglobal_area,            ///< % 4MB global mappings
     Local_apic_page   = Service_page + 0x0000,   ///< % 4KB
     Kmem_tmp_page_1   = Service_page + 0x2000,   ///< % 4KB size 8KB
     Kmem_tmp_page_2   = Service_page + 0x4000,   ///< % 4KB size 8KB
@@ -32,15 +40,14 @@ public:
     Tbuf_buffer_area  = Service_page + 0x200000, ///< % 2MB
     Tbuf_ubuffer_area = Tbuf_buffer_area,
     // 0xffffffffeb800000-0xfffffffffec000000 (8MB) free
-    Io_map_area_start = 0xffffffffec000000UL,
-    Io_map_area_end   = 0xffffffffec800000UL,
-    ___free_3         = 0xffffffffec800000UL, ///< % 4MB
-    ___free_4         = 0xffffffffec880000UL, ///< % 4MB
-    Jdb_debug_start   = 0xffffffffecc00000UL,    ///< % 4MB   JDB symbols/lines
-    Jdb_debug_end     = 0xffffffffee000000UL,    ///< % 4MB
+    Io_map_area_start = Kglobal_area + 0xc000000UL,
+    Io_map_area_end   = Kglobal_area + 0xc800000UL,
+    ___free_3         = Kglobal_area + 0xc800000UL, ///< % 4MB
+    ___free_4         = Kglobal_area + 0xc880000UL, ///< % 4MB
+    Jdb_debug_start   = Kglobal_area + 0xcc00000UL,    ///< % 4MB   JDB symbols/lines
+    Jdb_debug_end     = Kglobal_area + 0xe000000UL,    ///< % 4MB
     // 0xffffffffee000000-0xffffffffef800000 (24MB) free
     Kstatic           = 0xffffffffef800000UL,    ///< % 4MB Io_bitmap
-    Io_bitmap         = 0xffffffffefc00000UL,    ///< % 4MB
     Vmem_end          = 0xfffffffff0000000UL,
 
     Kernel_image        = FIASCO_IMAGE_VIRT_START,
@@ -55,8 +62,9 @@ public:
     Adap_vram_cga_beg = Adap_image + 0xb8000, ///< % 8KB video RAM CGA memory
     Adap_vram_cga_end = Adap_image + 0xc0000,
 
-    Caps_start        = 0xfffffffff0800000UL,    ///< % 4MB
-    Caps_end          = 0xfffffffffc400000UL,    ///< % 4MB
+    // used for CPU_LOCAL_MAP only
+    Kentry_cpu_pdir   = 0xfffffffff0800000UL,
+
     Physmem           = 0xffffffff80000000UL,    ///< % 4MB   kernel memory
     Physmem_end       = 0xffffffffe0000000UL,    ///< % 4MB   kernel memory
   };
@@ -132,3 +140,4 @@ Mem_layout::in_pmem(Address addr)
 {
   return addr >= Physmem && addr < Physmem_end;
 }
+

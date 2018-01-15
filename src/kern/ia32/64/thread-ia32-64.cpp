@@ -284,13 +284,19 @@ Thread::call_nested_trap_handler(Trap_state *ts)
      "mov    %[stack],%%rsp	\n\t"	// setup clean stack pointer
      "1:			\n\t"
      "incq   %[recover]		\n\t"
+#ifndef CONFIG_CPU_LOCAL_MAP
      "mov    %%cr3, %[d1]	\n\t"
+#endif
      "push   %[d2]		\n\t"	// save old stack pointer on new stack
      "push   %[d1]		\n\t"	// save old pdbr
+#ifndef CONFIG_CPU_LOCAL_MAP
      "mov    %[pdbr], %%cr3	\n\t"
+#endif
      "callq  *%[handler]	\n\t"
      "pop    %[d1]		\n\t"
+#ifndef CONFIG_CPU_LOCAL_MAP
      "mov    %[d1], %%cr3	\n\t"
+#endif
      "pop    %%rsp		\n\t"	// restore old stack pointer
      "cmpq   $0,%[recover]	\n\t"	// check trap within trap handler
      "je     1f			\n\t"
@@ -300,7 +306,9 @@ Thread::call_nested_trap_handler(Trap_state *ts)
        "=S"(scratch2),
        [recover] "+m" (ntr)
      : [ts] "D" (ts),
+#ifndef CONFIG_CPU_LOCAL_MAP
        [pdbr] "r" (Kernel_task::kernel_task()->virt_to_phys((Address)Kmem::dir())),
+#endif
        [cpu] "S" (log_cpu),
        [stack] "r" (stack),
        [handler] "m" (nested_trap_handler)

@@ -324,6 +324,40 @@ generic_debug:
   return call_nested_trap_handler(ts);
 }
 
+//----------------------------------------------------------------------------
+IMPLEMENTATION [(ia32 || amd64 || ux) && cpu_local_map]:
+
+PUBLIC inline
+bool
+Thread::update_local_map(Address pfa, Mword /*error_code*/)
+{
+  unsigned idx = (pfa >> 39) & 0x1ff;
+  if (EXPECT_FALSE((idx > 255) && idx != 259))
+    return false;
+
+  auto s = Kmem::current_cpu_udir()->walk(Virt_addr(pfa), 0);
+  if (EXPECT_TRUE(s.is_valid()))
+    return false;
+
+  auto r = vcpu_aware_space()->dir()->walk(Virt_addr(pfa), 0);
+  if (EXPECT_FALSE(!r.is_valid()))
+    return false;
+
+   *s.pte = *r.pte;
+   return true;
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [(ia32 || amd64 || ux) && !cpu_local_map]:
+
+PUBLIC inline
+bool
+Thread::update_local_map(Address, Mword)
+{ return false; }
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [ia32 || amd64 || ux]:
+
 /**
  * The low-level page fault handler called from entry.S.  We're invoked with
  * interrupts turned off.  Apart from turning on interrupts in almost
@@ -347,6 +381,10 @@ thread_page_fault(Address pfa, Mword error_code, Address ip, Mword flags,
 #endif
 
   Thread *t = current_thread();
+
+  if (t->update_local_map(pfa, error_code))
+    return 1;
+
   // Pagefault in user mode or interrupts were enabled
   if (EXPECT_TRUE(PF::is_usermode_error(error_code))
       && t->vcpu_pagefault(pfa, error_code, ip))

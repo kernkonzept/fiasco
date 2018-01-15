@@ -150,27 +150,6 @@ void
 Mem_space::destroy()
 {}
 
-/**
- * Destructor.  Deletes the address space and unregisters it from
- * Space_index.
- */
-PRIVATE
-void
-Mem_space::dir_shutdown()
-{
-  // free all page tables we have allocated for this address space
-  // except the ones in kernel space which are always shared
-  _dir->destroy(Virt_addr(0UL),
-                Virt_addr(Mem_layout::User_max), 0, Pdir::Depth,
-                Kmem_alloc::q_allocator(_quota));
-
-  // free all unshared page table levels for the kernel space
-  _dir->destroy(Virt_addr(Mem_layout::User_max + 1),
-                Virt_addr(~0UL), 0, Pdir::Super_level,
-                Kmem_alloc::q_allocator(_quota));
-
-}
-
 IMPLEMENT
 Mem_space::Status
 Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order size,
@@ -341,6 +320,26 @@ Mem_space::v_delete(Vaddr virt, Page_order size, L4_fpage::Rights page_attribs)
 }
 
 /**
+ * Destructor.  Deletes the address space and unregisters it from
+ * Space_index.
+ */
+PRIVATE
+void
+Mem_space::dir_shutdown()
+{
+  // free all page tables we have allocated for this address space
+  // except the ones in kernel space which are always shared
+  _dir->destroy(Virt_addr(0UL),
+                Virt_addr(Mem_layout::User_max), 0, Pdir::Depth,
+                Kmem_alloc::q_allocator(_quota));
+
+  // free all unshared page table levels for the kernel space
+  _dir->destroy(Virt_addr(Mem_layout::User_max + 1),
+                Virt_addr(~0UL), 0, Pdir::Super_level,
+                Kmem_alloc::q_allocator(_quota));
+}
+
+/**
  * \brief Free all memory allocated for this Mem_space.
  * \pre Runs after the destructor!
  */
@@ -370,14 +369,6 @@ IMPLEMENTATION [ia32 || amd64]:
 #include <cstring>
 #include "config.h"
 #include "kmem.h"
-
-IMPLEMENT inline NEEDS ["cpu.h", "kmem.h"]
-void
-Mem_space::make_current()
-{
-  Cpu::set_pdbr((Mem_layout::pmem_to_phys(_dir)));
-  _current.cpu(current_cpu()) = this;
-}
 
 PUBLIC inline NEEDS ["kmem.h"]
 Address
@@ -426,6 +417,20 @@ Mem_space::switchin_context(Mem_space *from)
     }
 }
 
+// --------------------------------------------------------------------
+IMPLEMENTATION [(amd64 || ia32) && !cpu_local_map]:
+
+IMPLEMENT inline NEEDS ["cpu.h", "kmem.h"]
+void
+Mem_space::make_current()
+{
+  Cpu::set_pdbr((Mem_layout::pmem_to_phys(_dir)));
+  _current.cpu(current_cpu()) = this;
+}
+
+// --------------------------------------------------------------------
+IMPLEMENTATION [(amd64 || ia32 || ux) && !cpu_local_map]:
+
 PROTECTED inline
 int
 Mem_space::sync_kernel()
@@ -436,6 +441,36 @@ Mem_space::sync_kernel()
                     false,
                     Kmem_alloc::q_allocator(_quota));
 }
+
+
+// --------------------------------------------------------------------
+IMPLEMENTATION [(amd64 || ia32) && cpu_local_map]:
+
+IMPLEMENT inline NEEDS ["cpu.h", "kmem.h"]
+void
+Mem_space::make_current()
+{
+  Mword *pd = reinterpret_cast<Mword *>(Kmem::current_cpu_udir());
+  Mword *d = (Mword *)_dir;
+
+  for (unsigned i = 0; i < 256; ++i)
+    pd[i] = d[i];
+
+  pd[259] = d[259];
+
+  Address pd_pa = access_once(reinterpret_cast<Address *>(Mem_layout::Kentry_cpu_page));
+  Cpu::set_pdbr(pd_pa);
+  _current.cpu(current_cpu()) = this;
+}
+
+
+PROTECTED inline
+int
+Mem_space::sync_kernel()
+{
+  return 0;
+}
+
 
 // --------------------------------------------------------------------
 IMPLEMENTATION [amd64]:

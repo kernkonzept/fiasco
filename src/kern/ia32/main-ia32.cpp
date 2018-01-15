@@ -142,6 +142,7 @@ int FIASCO_FASTCALL boot_ap_cpu()
     }
   else
     {
+      Kmem::resume_cpu(_cpu);
       cpu.pm_resume();
       Pm_object::run_on_resume_hooks(_cpu);
     }

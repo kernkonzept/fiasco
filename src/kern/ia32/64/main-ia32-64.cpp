@@ -48,12 +48,10 @@ kernel_main(void)
 
   // switch to stack of kernel thread and bootstrap the kernel
   asm volatile
-    ("  movq %%rax, %%cr3       \n\t"   // restore proper cr3 after running on the mp boot dir
-     "	movq %3, %%rsp		\n\t"	// switch stack
+    ("	movq %3, %%rsp		\n\t"	// switch stack
      "	call call_bootstrap	\n\t"	// bootstrap kernel thread
      : "=a" (dummy), "=c" (dummy), "=d" (dummy)
-     : "S" (kernel->init_stack()), "D" (kernel),
-       "a" (Mem_layout::pmem_to_phys(Kmem::dir())));
+     : "S" (kernel->init_stack()), "D" (kernel));
 }
 
 

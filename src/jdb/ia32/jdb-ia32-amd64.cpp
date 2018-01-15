@@ -387,8 +387,10 @@ Jdb::peek_task(Address addr, Space *task, void *value, int width)
       // user address, use temporary mapping
       phys = Address(task->virt_to_phys (addr));
 
+#ifndef CONFIG_CPU_LOCAL_MAP
       if (phys == ~0UL)
-	phys = task->virt_to_phys_s0((void*)addr);
+        phys = task->virt_to_phys_s0((void*)addr);
+#endif
 
       if (phys == ~0UL)
 	return -1;
@@ -424,8 +426,10 @@ Jdb::poke_task(Address addr, Space *task, void const *value, int width)
       // user address, use temporary mapping
       phys = Address(task->virt_to_phys(addr));
 
+#ifndef CONFIG_CPU_LOCAL_MAP
       if (phys == ~0UL)
-	phys = task->virt_to_phys_s0((void*)addr);
+        phys = task->virt_to_phys_s0((void*)addr);
+#endif
 
       if (phys == ~0UL)
 	return -1;
