@@ -8,15 +8,12 @@ Thread::fast_return_to_user(Mword ip, Mword sp, T arg)
   assert(cpu_lock.test());
   assert(current() == this);
 
-  regs()->ip(ip);
-  regs()->sp(sp);
-  regs()->cs(Gdt::gdt_code_user | Gdt::Selector_user);
-  regs()->flags(EFLAGS_IF);
   asm volatile
-    ("mov %0, %%rsp \t\n"
-     "iretq         \t\n"
+    ("mov %[sp], %%rsp \t\n"
+     "mov %[flags], %%r11 \t\n"
+     "sysretq \t\n"
      :
-     : "r" (static_cast<Return_frame*>(regs())), "D"(arg)
+     : [flags] "i" (EFLAGS_IF), "c" (ip), [sp] "r" (sp), "D"(arg)
     );
   __builtin_trap();
 }
