@@ -405,6 +405,23 @@ GATE_ENTRY	0x2f, entry_int_pic_ignore, (ACC_PL_K | ACC_INTR_GATE)
 INTERRUPT	0x28, int8
 #endif
 
+/**
+ * Stub array for all IRQ vector entries in the IDT
+ *
+ * The immediate in the movabs shall be patched with the
+ * address of an Irq_base object that is later attached to
+ * the corresponding IDT vector.
+ */
+	.global idt_irq_vector_stubs
+	.align 64
+idt_irq_vector_stubs:
+.rept APIC_IRQ_BASE - 0x28
+	push	%eax
+	mov	$0, %eax
+	jmp	__generic_irq_entry
+.endr
+
+
 	.p2align 4
 	.type	.Lall_irqs,@function
 	.type	__generic_irq_entry,@function

@@ -286,6 +286,23 @@ entry_\name:
 	jmp	all_irqs
 .endm
 
+/**
+ * Stub array for all IRQ vector entries in the IDT
+ *
+ * The immediate in the movabs shall be patched with the
+ * address of an Irq_base object that is later attached to
+ * the corresponding IDT vector.
+ */
+	.global idt_irq_vector_stubs
+	.align 64
+idt_irq_vector_stubs:
+.rept APIC_IRQ_BASE - 0x28
+	push	%rdi
+	movabs	$0, %rdi
+	jmp	__generic_irq_entry
+.endr
+
+
 	.type __generic_irq_entry,@function
 	.global __generic_irq_entry
 

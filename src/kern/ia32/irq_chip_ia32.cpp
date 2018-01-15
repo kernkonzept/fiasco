@@ -1,3 +1,27 @@
+INTERFACE[amd64]:
+
+class Irq_base;
+
+/** this structure must exactly map to the code stubs from 64/entry.S */
+struct Irq_entry_stub
+{
+  char _res[3];
+  Irq_base *irq;
+  char _res2[5];
+} __attribute__((packed));
+
+INTERFACE[ia32 || ux]:
+
+class Irq_base;
+
+/** this structure must exactly map to the code stubs from 32/entry.S */
+struct Irq_entry_stub
+{
+  char _res[2];
+  Irq_base *irq;
+  char _res2[5];
+} __attribute__((packed));
+
 INTERFACE:
 
 #include "globals.h"
@@ -38,49 +62,6 @@ private:
 };
 
 /**
- * Entry point for a device IRQ IDT vector.
- *
- * IA32 IRQ Chips use arrays of this entry code pieces
- * and dynamically assign adresses of Irq_base objects to them
- * to directly pass device IRQs to an Irq_base object.
- *
- * The chips also use these objects to manage the assignment of Irq_base
- * objects to the pins of the IRQ controller.
- */
-class Irq_entry_code : public Boot_alloced
-{
-private:
-  struct
-  {
-    unsigned char push;
-    unsigned char mov;
-    Signed32 irq_adr;
-    unsigned char jmp;
-    Unsigned32 jmp_adr;
-    unsigned char vector;
-  } __attribute__((packed)) _d;
-
-public:
-  Irq_entry_code() { free(); _d.vector = 0; }
-
-  Irq_base *irq() const
-  { return (Irq_base*)((Smword)(_d.irq_adr)); }
-
-  bool is_free() const
-  { return !_d.push; }
-
-  void free()
-  {
-    _d.push = 0;
-    _d.irq_adr = 0;
-  }
-
-  unsigned char vector() const
-  { return _d.vector; }
-};
-
-
-/**
  * Generic IA32 IRQ chip class.
  *
  * Uses an array of Idt_entry_code objects to manage
@@ -95,18 +76,15 @@ public:
 
 protected:
   unsigned _irqs;
-  Irq_entry_code *_entry;
+  unsigned char *_vec;
   Spin_lock<> _entry_lock;
 
   static Int_vector_allocator _vectors;
+
+  unsigned char vector(Mword pin) const
+  { return _vec[pin]; }
 };
 
-
-IMPLEMENTATION [32bit]:
-enum { Register_arg0 = 0 }; // eax
-
-IMPLEMENTATION [64bit]:
-enum { Register_arg0 = 7 }; // rdi
 
 IMPLEMENTATION:
 
@@ -118,28 +96,6 @@ IMPLEMENTATION:
 
 // The global INT vector allocator for IRQs uses these data
 Int_vector_allocator Irq_chip_ia32::_vectors;
-
-PUBLIC
-void
-Irq_entry_code::setup(Irq_base *irq = 0, unsigned char vector = 0)
-{
-  extern char __generic_irq_entry[];
-  // push %eax/%rdi
-  _d.push = 0x50 + Register_arg0;
-
-  // mov imm32, %eax/%rdi
-  _d.mov = 0xb8 + Register_arg0;
-  _d.irq_adr = (Address)irq;
-
-  // jmp __generic_irq_entry
-  _d.jmp = 0xe9;
-  _d.jmp_adr = (Address)__generic_irq_entry - (Address)&_d - 11;
-
-
-  // no code, our currently assigned IRQ vector
-  // 0 means no vector allocated
-  _d.vector = vector;
-}
 
 
 /**
@@ -196,9 +152,12 @@ Int_vector_allocator::alloc()
 PUBLIC explicit inline
 Irq_chip_ia32::Irq_chip_ia32(unsigned irqs)
 : _irqs(irqs),
-  _entry(irqs ? new Irq_entry_code[irqs] : 0),
+  _vec(irqs ? (unsigned char *)Boot_alloced::alloc(irqs) : 0),
   _entry_lock(Spin_lock<>::Unlocked)
 {
+  for (unsigned i = 0; i < irqs; ++i)
+    _vec[i] = 0;
+
   // add vectors from 0x40 up to Int_vector_allocator::End
   // as free if we are the first IA32 chip ctor running
   if (_vectors.empty())
@@ -213,7 +172,11 @@ Irq_chip_ia32::irq(Mword irqn) const
   if (irqn >= _irqs)
     return 0;
 
-  return _entry[irqn].irq();
+  if (!_vec[irqn])
+    return 0;
+
+  extern Irq_entry_stub idt_irq_vector_stubs[];
+  return idt_irq_vector_stubs[_vec[irqn] - 0x20].irq;
 }
 
 /**
@@ -245,13 +208,8 @@ Irq_chip_ia32::_valloc(Mword pin, unsigned vector)
   if (vector >= Int_vector_allocator::End)
     return 0;
 
-  Irq_entry_code *const e = &_entry[pin];
-
-  if (!e->is_free())
+  if (_vec[pin])
     return 0;
-
-  if (!vector)
-    vector = e->vector();
 
   if (!vector)
     vector = _vectors.alloc();
@@ -263,13 +221,15 @@ PRIVATE
 unsigned
 Irq_chip_ia32::_vsetup(Irq_base *irq, Mword pin, unsigned vector)
 {
-  Irq_entry_code *const e = &_entry[pin];
-  e->setup(irq, vector);
+  _vec[pin] = vector;
+  extern Irq_entry_stub idt_irq_vector_stubs[];
+  auto p = idt_irq_vector_stubs + vector - 0x20;
+  p->irq = irq;
 
   // force code to memory before setting IDT entry
   Mem::barrier();
 
-  Idt::set_entry(vector, (Address)e, false);
+  Idt::set_entry(vector, (Address)p, false);
   return vector;
 }
 
@@ -297,15 +257,16 @@ PROTECTED
 bool
 Irq_chip_ia32::vfree(Irq_base *irq, void *handler)
 {
-  Irq_entry_code *e = &_entry[irq->pin()];
+  extern Irq_entry_stub idt_irq_vector_stubs[];
+  unsigned v = _vec[irq->pin()];
+  assert (v);
+  assert (idt_irq_vector_stubs[v - 0x20].irq == irq);
 
-  assert (!e->is_free());
-  assert (e->irq() == irq);
+  Idt::set_entry(v, (Address)handler, false);
+  idt_irq_vector_stubs[v - 0x20].irq = 0;
+  _vec[irq->pin()] = 0;
 
-  Idt::set_entry(e->vector(), (Address)handler, false);
-
-  e->free();
-
+  _vectors.free(v);
   return true;
 }
 
@@ -317,9 +278,9 @@ Irq_chip_ia32::reserve(Mword irqn)
   if (irqn >= _irqs)
     return false;
 
-  if (!_entry[irqn].is_free())
+  if (_vec[irqn])
     return false;
 
-  _entry[irqn].setup();
+  _vec[irqn] = 0xff;
   return true;
 }

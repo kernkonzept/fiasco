@@ -78,7 +78,7 @@ void
 Irq_chip_rmsi::unbind(Irq_base *irq) override
 {
   extern char entry_int_apic_ignore[];
-  unsigned vect = _entry[irq->pin()].vector();
+  unsigned vect = vector(irq->pin());
 
   _irt[vect].clear();
   asm volatile ("wbinvd");
@@ -95,7 +95,7 @@ Irq_chip_rmsi::msg(Mword pin, Unsigned64 src, Irq_mgr::Msi_info *inf)
   if (pin >= _irqs)
     return -L4_err::ERange;
 
-  unsigned vect = _entry[pin].vector();
+  unsigned vect = vector(pin);
   if (!vect)
     return 0;
 
@@ -129,7 +129,7 @@ Irq_chip_rmsi::is_edge_triggered(Mword) const override
 PUBLIC void
 Irq_chip_rmsi::set_cpu(Mword pin, Cpu_number cpu) override
 {
-  unsigned vect = _entry[pin].vector();
+  unsigned vect = vector(pin);
   if (!vect)
     return;
 
@@ -151,7 +151,7 @@ Irq_chip_rmsi::set_cpu(Mword pin, Cpu_number cpu) override
 PUBLIC void
 Irq_chip_rmsi::mask(Mword pin) override
 {
-  unsigned vect = _entry[pin].vector();
+  unsigned vect = vector(pin);
   if (!vect)
     return;
 
@@ -173,7 +173,7 @@ Irq_chip_rmsi::ack(Mword) override
 PUBLIC void
 Irq_chip_rmsi::mask_and_ack(Mword pin) override
 {
-  unsigned vect = _entry[pin].vector();
+  unsigned vect = vector(pin);
   if (!vect)
     return;
 
@@ -192,7 +192,7 @@ Irq_chip_rmsi::mask_and_ack(Mword pin) override
 PUBLIC void
 Irq_chip_rmsi::unmask(Mword pin) override
 {
-  unsigned vect = _entry[pin].vector();
+  unsigned vect = vector(pin);
   if (!vect)
     return;
 
@@ -286,7 +286,7 @@ PUBLIC
 void
 Io_apic_remapped::unbind(Irq_base *irq) override
 {
-  unsigned vect = _entry[irq->pin()].vector();
+  unsigned vect = vector(irq->pin());
   _iommu->set_irq_mapping(Intel::Io_mmu::Irte(), vect, true);
   Io_apic::unbind(irq);
 }
@@ -299,7 +299,7 @@ Io_apic_remapped::set_mode(Mword pin, Mode mode) override
 
   Io_apic::set_mode(pin, mode);
 
-  unsigned vect = _entry[pin].vector();
+  unsigned vect = vector(pin);
   if (EXPECT_FALSE(vect == 0))
     return 0;
 
@@ -318,7 +318,7 @@ Io_apic_remapped::set_mode(Mword pin, Mode mode) override
 PUBLIC void
 Io_apic_remapped::set_cpu(Mword pin, Cpu_number cpu) override
 {
-  unsigned vect = _entry[pin].vector();
+  unsigned vect = vector(pin);
   if (!vect)
     return;
 

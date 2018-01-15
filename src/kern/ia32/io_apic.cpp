@@ -206,7 +206,7 @@ Io_apic::Io_apic(Unsigned64 phys, unsigned gsi_base)
 
   _apic = a;
   _irqs = a->num_entries() + 1;
-  _entry = new Irq_entry_code[_irqs];
+  _vec = (unsigned char *)Boot_alloced::alloc(_irqs);
 
   if ((_offset + nr_irqs()) > _nr_irqs)
     _nr_irqs = _offset + nr_irqs();
