@@ -1055,7 +1055,7 @@ Thread::migrate(Migration *info)
 
   Cpu_number cpu = home_cpu();
 
-  if (current_cpu() == cpu || Config::Max_num_cpus == 1)
+  if (current_cpu() == cpu)
     current()->schedule_if(do_migration());
   else
     current()->schedule_if(migrate_xcpu(cpu));
