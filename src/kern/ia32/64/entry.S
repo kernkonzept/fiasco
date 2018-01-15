@@ -125,6 +125,7 @@ in_slowtrap:
 
 	restore_all_regs
 	add	$0x10,%rsp		/* pop trap number and error code */
+	SAFE_IRET
 	MAY_FAULT(iretq, in_slowtrap_exit_label_iret)
 
 unexpected_trap_pop:
@@ -179,7 +180,7 @@ in_page_fault:
 	add	$8, %rsp			/* drop pfa */
 	RESTORE_SCRATCH
 	add	$8,%rsp				/* remove error code */
-	iretq
+	SAFE_IRET
 
 /* If code or stack from a small address space are not yet mapped in the
    current page directory we might get a page fault on return from the
@@ -219,7 +220,7 @@ in_handle_fputrap:
 	test 	%eax,%eax
 	jz	real_fpu_exception
 	RESTORE_SCRATCH
-	iretq
+	SAFE_IRET
 real_fpu_exception:
 	RESTORE_SCRATCH
 	pushq	$(0)
@@ -252,7 +253,7 @@ do_timer_interrupt:
 	call	thread_timer_interrupt		/* enter with disabled irqs */
 in_timer_interrupt:
 	RESTORE_SCRATCH
-	iretq
+	SAFE_IRET
 
 	.p2align 4
 	.globl	entry_int_timer_slow
@@ -271,7 +272,7 @@ entry_int_timer_stop:
 	SAVE_SCRATCH
 	call	thread_timer_interrupt_stop
 	RESTORE_SCRATCH
-	iretq
+	SAFE_IRET
 
 /* other interrupts */
 
@@ -307,7 +308,7 @@ in_interrupt:
 	RESTORE_SCRATCH
 
 entry_int_pic_ignore:
-	iretq
+	SAFE_IRET
 
 	.global	entry_int_pic_ignore
 	.global	entry_int7
@@ -349,7 +350,7 @@ ret_from_syscall:
 	RESTORE_STATE
 	pop	%rax
 	add	$16, %rsp
-	iretq
+	SAFE_IRET
 
 /* TODO: remove old int 0x30 syscall entry as amd64 uses syscall */
 GATE_ENTRY	0x30, entry_sys_ipc_c, (ACC_PL_U | ACC_INTR_GATE)
@@ -372,7 +373,7 @@ in_sc_ipc1:
 	RESTORE_STATE
 	pop	%rax
 	add	$16, %rsp
-	iretq
+	SAFE_IRET
 
 	.globl	in_sc_ipc1
 
@@ -396,7 +397,7 @@ in_slow_ipc4:
 	RESTORE_STATE
 	pop	%rax
 	add	$16, %rsp
-	iretq
+	SAFE_IRET
 
 	.globl	in_slow_ipc4
 #endif // CONFIG_JDB
@@ -513,7 +514,7 @@ leave_by_vcpu_upcall:
 	mov %rax, 0(%rsp)
 	movq $EFLAGS_IF, 16(%rsp)
         movq $(GDT_CODE_USER | SEL_PL_U), 8(%rsp)
-	iretq
+	SAFE_IRET
 
 	.p2align
 	.globl	vcpu_resume
@@ -528,5 +529,5 @@ vcpu_resume:
 	restore_all_regs
 	add $(2*8), %rsp
 	andq	$0x7f, 8(%rsp)			// if entered using syscall
-	iretq
+	SAFE_IRET
 

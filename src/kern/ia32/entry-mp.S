@@ -8,7 +8,7 @@ entry_ipi_remote_request:
 	SAVE_SCRATCH
 	call	handle_remote_cpu_requests
 	RESTORE_SCRATCH
-	IRET_INSN
+	SAFE_IRET
 
 	.p2align 4
 	.globl entry_ipi
@@ -16,7 +16,7 @@ entry_ipi:
 	SAVE_SCRATCH
 	call	ipi_remote_call
 	RESTORE_SCRATCH
-	IRET_INSN
+	SAFE_IRET
 
 	.p2align 4
 	.globl entry_debug_ipi

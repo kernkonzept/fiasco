@@ -9,6 +9,19 @@
 
 #define REGISTER_SIZE 8
 
+.macro SAFE_SYSRET
+	/* make RIP canonical, workaround for intel IA32e flaw */
+	shl     $16, %rcx
+	sar     $16, %rcx
+	mov	32(%rsp), %r11				/* load user rflags */
+	mov	40(%rsp), %rsp				/* load user rsp */
+	sysretq
+.endm
+
+.macro SAFE_IRET
+	iretq
+.endm
+
 .macro  PRE_ALIEN_IPC target=slowtraps
 	btrl	$17, OFS__THREAD__STATE (%rbx)	/* Thread_dis_alien */
 	jc	1f

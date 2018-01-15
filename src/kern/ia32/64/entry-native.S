@@ -89,7 +89,7 @@ entry_apic_error_interrupt:
 	lea	SCRATCH_REGISTER_SIZE(%rsp), %rdi
 	call	apic_error_interrupt
 	RESTORE_SCRATCH
-	iretq
+	SAFE_IRET
 
 /* Intel Architecture Software Developer's Manual Volume 3,
  * Advanced Programmable Interrupt Controller (APIC):
@@ -112,7 +112,7 @@ entry_int_apic_ignore:
 	movl	$0, 0xb0(%rcx)
 	pop	%rdx
 	pop	%rcx
-	iretq
+	SAFE_IRET
 
 #if defined(CONFIG_JDB)
 
@@ -135,12 +135,7 @@ entry_sys_fast_ipc_log:
 in_slow_ipc5:
 	RESTORE_STATE_SYSEXIT
 	mov     16(%rsp), %rcx /* load user rip */
-        /* make RIP canonical, workaround for intel IA32e flaw */
-        shl     $16, %rcx
-        sar     $16, %rcx
-	mov	32(%rsp), %r11				/* load user rflags */
-	mov	40(%rsp), %rsp				/* load user rsp */
-	sysretq
+	SAFE_SYSRET
 
 alien_sys_fast_ipc_log:
 	ALIEN_SYSCALL syscall="call *syscall_table"
@@ -172,12 +167,7 @@ fast_ret_from_irq:
 	RESTORE_STATE_SYSEXIT
 	
 	mov     16(%rsp), %rcx /* load user rip */
-        /* make RIP canonical, workaround for intel IA32e flaw */
-        shl     $16, %rcx
-        sar     $16, %rcx
-	mov	32(%rsp), %r11				/* load user rflags */
-	mov	40(%rsp), %rsp				/* load user rsp */
-	sysretq
+	SAFE_SYSRET
 
 alien_sys_fast_ipc_c:
 	ALIEN_SYSCALL syscall="call sys_ipc_wrapper"
@@ -190,7 +180,7 @@ alien_sys_fast_ipc_c:
 leave_from_syscall_by_iret:
 	RESTORE_STATE_SYSEXIT
 	add $16, %rsp
-	iretq
+	SAFE_IRET
 
 	.bss
 	.space	4096
