@@ -136,7 +136,7 @@ atomic_add_fetch(T *mem, V value)
           "     prfm   pstl1strm, [%[mem]] \n"
           "1:   ldxr  %w[res], [%[mem]] \n"
           "     add   %w[res], %w[res], %w[val] \n"
-          "     stxr  %w[tmp], %w[val], [%[mem]] \n"
+          "     stxr  %w[tmp], %w[res], [%[mem]] \n"
           "     cmp   %[tmp], #0 \n"
           "     bne   1b "
           : [res] "=&r" (res), [tmp] "=&r" (tmp), "+Qo" (*mem)
@@ -149,7 +149,7 @@ atomic_add_fetch(T *mem, V value)
           "     prfm   pstl1strm, [%[mem]] \n"
           "1:   ldxr   %[res], [%[mem]] \n"
           "     add    %[res], %[res], %[val] \n"
-          "     stxr   %w[tmp], %[val], [%[mem]] \n"
+          "     stxr   %w[tmp], %[res], [%[mem]] \n"
           "     cmp    %[tmp], #0 \n"
           "     bne    1b "
           : [res] "=&r" (res), [tmp] "=&r" (tmp), "+Qo" (*mem)
