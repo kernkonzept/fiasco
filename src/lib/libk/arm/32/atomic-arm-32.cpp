@@ -201,7 +201,7 @@ atomic_add_fetch(T *mem, V value)
       "1:   ldrexd %[res], %H[res], [%[mem]] \n"
       "     adds   %[res], %[res], %[val] \n"
       "     adc    %H[res], %H[res], %H[val] \n"
-      "     strexd %[tmp], %[val], %H[val], [%[mem]] \n"
+      "     strexd %[tmp], %[res], %H[res], [%[mem]] \n"
       "     cmp    %[tmp], #0 \n"
       "     bne    1b "
       : [res] "=&r" (res), [tmp] "=&r" (tmp), "+Qo" (*mem)
@@ -274,7 +274,7 @@ atomic_add_fetch(T *mem, V value)
       "1:   ldrd   %[res], %H[res], %[mem] \n"
       "     adds   %[res], %[res], %[val] \n"
       "     adc    %H[res], %H[res], %H[val] \n"
-      "     strd   %[val], %H[val], %[mem]"
+      "     strd   %[res], %H[res], %[mem]"
       : [res] "=&r" (res), [mem] "+m" (*mem)
       : [val] "r" (val)
       : "cc");
