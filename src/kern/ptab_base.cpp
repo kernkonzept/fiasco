@@ -435,7 +435,7 @@ namespace Ptab
                        start_level, end_level, alloc, mem);
           if (Depth >= start_level)
             {
-              //printf("destroy: %*.sfree: %p: %p(%d)\n", Depth*2, "            ", this, n, sizeof(Next));
+              //printf("destroy: %*.sfree: %p: %p(%zd)\n", Depth*2, "            ", this, n, sizeof(Next));
               alloc.free(n, sizeof(Next));
             }
         }
