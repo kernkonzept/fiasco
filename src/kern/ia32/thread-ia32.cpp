@@ -335,14 +335,17 @@ Thread::update_local_map(Address pfa, Mword /*error_code*/)
   if (EXPECT_FALSE((idx > 255) && idx != 259))
     return false;
 
-  auto s = Kmem::current_cpu_udir()->walk(Virt_addr(pfa), 0);
-  if (EXPECT_TRUE(s.is_valid()))
+  auto *m = Kmem::pte_map();
+  if (EXPECT_FALSE(m->operator [](idx)))
     return false;
 
+  auto s = Kmem::current_cpu_udir()->walk(Virt_addr(pfa), 0);
+  assert (!s.is_valid());
   auto r = vcpu_aware_space()->dir()->walk(Virt_addr(pfa), 0);
   if (EXPECT_FALSE(!r.is_valid()))
     return false;
 
+  m->set_bit(idx);
    *s.pte = *r.pte;
    return true;
 }

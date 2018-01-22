@@ -732,6 +732,15 @@ Kmem::setup_cpu_structures_isolation(Cpu &cpu, Kpdir *cpu_dir, cxx::Simple_alloc
 //--------------------------------------------------------------------------
 IMPLEMENTATION [(amd64 || ia32) && cpu_local_map]:
 
+#include "bitmap.h"
+
+EXTENSION class Kmem
+{
+  static Bitmap<260> *_pte_map;
+};
+
+Bitmap<260> *Kmem::_pte_map;
+
 DEFINE_PER_CPU static Per_cpu<Kpdir *> _per_cpu_dir;
 
 PUBLIC static inline
@@ -878,7 +887,21 @@ Kmem::init_cpu(Cpu &cpu)
   // CPU dir pa and 
   write_now(cpu_m.alloc<Mword>(4), cpu_dir_pa);
   setup_cpu_structures_isolation(cpu, cpu_dir, &cpu_m);
+
+  auto *pte_map = cpu_m.alloc<Bitmap<260> >(1, 0x20);
+
+  pte_map->clear_all();
+  if (!_pte_map)
+    _pte_map = pte_map;
+  else if (_pte_map != pte_map)
+    panic("failed to allocate correct PTE map: %p expected %p\n",
+          pte_map, _pte_map);
 }
+
+PUBLIC static inline
+Bitmap<260> *
+Kmem::pte_map()
+{ return _pte_map; }
 
 PUBLIC static
 void

@@ -452,12 +452,21 @@ Mem_space::make_current()
 {
   Mword *pd = reinterpret_cast<Mword *>(Kmem::current_cpu_udir());
   Mword *d = (Mword *)_dir;
+  auto *m = Kmem::pte_map();
+  unsigned bit = 0;
+  for (;;)
+    {
+      bit = m->ffs(bit);
+      if (!bit)
+        break;
 
-  for (unsigned i = 0; i < 256; ++i)
-    pd[i] = d[i];
-
-  pd[259] = d[259];
-
+      Mword n = d[bit - 1];
+      pd[bit - 1] = n;
+      if (n == 0)
+        m->clear_bit(bit - 1);
+      //printf("u: %u %lx\n", bit - 1, n);
+      //LOG_MSG_3VAL(current(), "u", bit - 1, n, *reinterpret_cast<Mword *>(m));
+    }
   //pd->sync(Virt_addr(0), _dir, Virt_addr(0), Virt_size(1UL << 47), 0);
   //pd->sync(Virt_addr(Mem_layout::Io_bitmap), _dir, Virt_addr(Mem_layout::Io_bitmap), Virt_size(512UL << 30), 0);
 #ifndef CONFIG_KERNEL_ISOLATION
