@@ -92,6 +92,11 @@ SECTIONS {
 
     *(.rodata .rodata.* .gnu.linkonce.r.*)
 
+    . = ALIGN(16);
+    PROVIDE (ia32_intel_microcode_start = .);
+    KEEP(*(.intel_microcode))
+    PROVIDE (ia32_intel_microcode_end = .);
+
     . = ALIGN(8);
     JDB_TABLE(log);
     . = ALIGN(8);

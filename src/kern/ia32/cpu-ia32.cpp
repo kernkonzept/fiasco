@@ -319,6 +319,210 @@ IMPLEMENTATION[ia32,amd64,ux]:
 #include "config.h"
 #include "panic.h"
 #include "processor.h"
+#include "lock_guard.h"
+#include "spin_lock.h"
+
+struct Ia32_intel_microcode
+{
+  struct Ext_signature
+  {
+    Unsigned32 signature;
+    Unsigned32 processor_flags;
+    Unsigned32 checksum;
+  } __attribute__((packed));
+
+  struct Ext_signature_table
+  {
+    Unsigned32 count;
+    Unsigned32 checksum;
+    char _reserved[12];
+    Ext_signature sig[];
+
+    bool checksum_valid() const
+    {
+      Unsigned32 const *w = &count;
+      Unsigned32 const *e = w + (count * 3) + 5;
+      Unsigned32 cs = 0;
+      for (; w < e; ++w)
+        cs += w[0];
+
+      return cs == 0;
+    }
+
+  } __attribute__((packed));
+
+  struct Header
+  {
+    Unsigned32 hdr_version;
+    Signed32   update_rev;
+    Unsigned32 date;
+    Unsigned32 signature;
+    Unsigned32 checksum;
+    Unsigned32 loader_rev;
+    Unsigned32 processor_flags;
+    Unsigned32 _data_size;
+    Unsigned32 _total_size;
+    char _reserved[12];
+
+    Unsigned32 data_size() const
+    { return _data_size ? _data_size : 2000; }
+
+    void const *data() const { return this + 1; }
+
+    Unsigned32 total_size() const
+    {
+      static_assert (sizeof(Header) == 48,
+                     "invalid size for microcode header");
+      return _data_size ? _total_size : 2048;
+    }
+
+    bool checksum_valid() const
+    {
+      // must be a multiple of 1KiB
+      if (total_size() & 0x3ff)
+        return false;
+
+      Unsigned32 const *w = &hdr_version;
+      Unsigned32 const *e = w + (total_size() / 4);
+      Unsigned32 cs = 0;
+      for (; w < e; ++w)
+        cs += w[0];
+
+      return cs == 0;
+    }
+
+    bool match_proc(Unsigned32 sig, Unsigned32 proc_mask) const
+    {
+      if ((sig == signature)
+          && (processor_flags & proc_mask))
+        return true;
+
+      if (total_size() <= (data_size() + 48 + 20))
+        return false;
+
+      auto *et = reinterpret_cast<Ext_signature_table const *>(
+          (char const *)(this + 1) + data_size());
+
+      if (!et->checksum_valid())
+        return false;
+
+      for (auto const *e = et->sig; e != et->sig + et->count; ++e)
+        {
+          if ((e->signature == sig)
+              && (e->processor_flags & proc_mask))
+            return true;
+        }
+
+      return false;
+    }
+
+    bool match(Unsigned64 rev_sig, Unsigned32 proc_mask) const
+    {
+      if (!match_proc(rev_sig & 0xffffffffU, proc_mask))
+        return false;
+
+      return (Signed32)(rev_sig >> 32) < update_rev;
+    }
+
+  } __attribute__((packed));
+
+  static Unsigned64 get_sig()
+  {
+    Unsigned32 a, b, c, d;
+    Cpu::wrmsr(0, 0x8b); // IA32_BIOS_SIGN_ID
+    Cpu::cpuid(1, &a, &b, &c, &d);
+    return (Cpu::rdmsr(0x8b) & 0xffffffff00000000) | a;
+  }
+
+  static Header const *find(Unsigned64 rev_sig)
+  {
+    // get platform ID from IA32_PLATFORM_ID msr
+    Unsigned32 proc_mask = 1U << ((Cpu::rdmsr(0x17) >> 50) & 0x7);
+
+    extern char const __attribute__((weak))ia32_intel_microcode_start[];
+    extern char const __attribute__((weak))ia32_intel_microcode_end[];
+    char const *pos = ia32_intel_microcode_start;
+
+    if ((Address)pos & 0xf)
+      {
+        printf("warning: microcode updates misaligned, skipping\n");
+        return nullptr;
+      }
+
+    Header const *update = nullptr;
+
+    while (pos
+           && (pos < ia32_intel_microcode_end)
+           && (pos + 48 < ia32_intel_microcode_end))
+      {
+        auto const *u = reinterpret_cast<Header const *>(pos);
+        unsigned ts = u->total_size();
+        if (ts & 0x3ff)
+          {
+            printf("warning: microcode update size invalid: %x\n", ts);
+            return nullptr;
+          }
+
+        if (pos + ts > ia32_intel_microcode_end)
+          {
+            printf("warning: truncated microcode update, skip\n");
+            return nullptr;
+          }
+
+        if (u->loader_rev != 1)
+          {
+            printf("warning: microcode update, unknown loader revision: %x\n",
+                   u->loader_rev);
+
+            pos += ts;
+            continue;
+          }
+
+        if (u->match(rev_sig, proc_mask))
+          {
+            if (!u->checksum_valid())
+              printf("warning: microcode update checksum error, skipping\n");
+            else if (!update || update->update_rev < u->update_rev)
+              update = u;
+          }
+
+        pos += ts;
+      }
+
+    return update;
+  }
+
+  static bool load()
+  {
+    Unsigned64 rev_sig = get_sig();
+    auto const *update = find(rev_sig);
+    if (!update)
+      return false;
+
+    static Spin_lock<> load_lock(Spin_lock<>::Unlocked);
+
+      {
+        auto g = lock_guard(load_lock);
+        Cpu::wrmsr((Address)update->data(), 0x79); // IA32_BIOS_UPDT_TRIG
+      }
+
+    Unsigned64 n = get_sig();
+    if (rev_sig != n)
+      {
+        printf("microcode update: rev %x -> %x (%x)\n",
+               (unsigned)(rev_sig >> 32),
+               (unsigned)(n >> 32),
+               update->date);
+      }
+    else
+      {
+        printf("error: could not load microcode update: rev %llx != %llx (%x)\n",
+               rev_sig, n, update->date);
+        return false;
+      }
+    return true;
+  }
+};
 
 DEFINE_PER_CPU_P(0) Per_cpu<Cpu> Cpu::cpus(Per_cpu_data::Cpu_num);
 Cpu *Cpu::_boot_cpu;
@@ -991,6 +1195,9 @@ Cpu::identify()
 
     _vendor = (Cpu::Vendor)i;
 
+    if (_vendor == Vendor_intel)
+      Ia32_intel_microcode::load();
+
     init_indirect_branch_mitigation();
 
     switch (max)
@@ -1316,6 +1523,10 @@ Cpu::pm_resume()
 
       set_tss();
     }
+
+  if (_vendor == Vendor_intel)
+    Ia32_intel_microcode::load();
+
   init_indirect_branch_mitigation();
 
   init_sysenter();
