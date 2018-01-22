@@ -1647,8 +1647,8 @@ Cpu::try_enable_hw_performance_states(bool resume)
   // Minimum_Performance (bits 7:0) = LOWEST_PERFORMANCE(hwp_cap)
   Unsigned64 request =
     0x80ULL << 24 |
-    (((hwp_caps >> HIGHEST_PERFORMANCE_SHIFT) & 0xf) << 8) |
-    ((hwp_caps >> LOWEST_PERFORMANCE_SHIFT) & 0xf);
+    (((hwp_caps >> HIGHEST_PERFORMANCE_SHIFT) & 0xff) << 8) |
+    ((hwp_caps >> LOWEST_PERFORMANCE_SHIFT) & 0xff);
   wrmsr(request, MSR_HWP_REQUEST);
 
   if (!resume && id() == Cpu_number::boot_cpu())
