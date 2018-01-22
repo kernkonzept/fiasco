@@ -473,6 +473,12 @@ Mem_space::make_current()
   asm volatile ("" : : : "memory");
   Address pd_pa = access_once(reinterpret_cast<Address *>(Mem_layout::Kentry_cpu_page));
   Cpu::set_pdbr(pd_pa);
+#else
+#ifdef CONFIG_INTEL_IA32_BRANCH_BARRIERS
+  Address *ca = reinterpret_cast<Address *>(Mem_layout::Kentry_cpu_page);
+  // set EXIT flags NEEDS IBPB
+  ca[2] |= 1;
+#endif
 #endif
   _current.cpu(current_cpu()) = this;
 }

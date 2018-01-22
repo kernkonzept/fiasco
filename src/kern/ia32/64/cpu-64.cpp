@@ -45,7 +45,10 @@ PUBLIC
 void
 Cpu::set_fast_entry(void (*func)())
 {
-  *reinterpret_cast<Signed32 *>(Mem_layout::Mem_layout::Kentry_cpu_page + 0xc5) = (Signed32)(Signed64)func;
+  extern char const syscall_entry_code[];
+  extern char const syscall_entry_reloc[];
+  auto ofs = syscall_entry_reloc - syscall_entry_code + 3; // 3 byte movebas
+  *reinterpret_cast<Signed32 *>(Mem_layout::Mem_layout::Kentry_cpu_page + ofs + 0xa0) = (Signed32)(Signed64)func;
 }
 
 PUBLIC inline

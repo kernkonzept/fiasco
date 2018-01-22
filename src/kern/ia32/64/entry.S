@@ -101,6 +101,7 @@ EXCEPTION	0x13, vec13_simd_err
 	   from outside. */
 _slowtraps:
 slowtraps:
+	IA32_IBRS
 	mov	%rsp,%rdi		/* ARG1: address of trap_state */
 	mov	$0, %esi		/* ARG2: default CPU = 0 */
 	cld
@@ -160,6 +161,7 @@ entry_vec0e_page_fault:
 	cld
 	SWITCH_TO_KERNEL_CR3	1
 	SAVE_SCRATCH
+	IA32_IBRS
 
 /* We must reset the cancel flag here atomically
    if we are entering fresh from user mode and an IPC might occur.
@@ -256,6 +258,7 @@ GATE_ENTRY	APIC_IRQ_BASE, entry_int_timer, (ACC_PL_K | ACC_INTR_GATE)
 entry_int_timer:
 	SWITCH_TO_KERNEL_CR3	0
 	SAVE_SCRATCH
+	IA32_IBRS
 do_timer_interrupt:
 	cld
 	mov	SCRATCH_REGISTER_SIZE(%rsp),%rdi /* pass rip for logging */
@@ -270,6 +273,7 @@ entry_int_timer_slow:
 	cld
 	SWITCH_TO_KERNEL_CR3	0
 	SAVE_SCRATCH
+	IA32_IBRS
 	call	thread_timer_interrupt_slow	/* enter with disabled irqs */
 in_timer_interrupt_slow:
 	jmp	do_timer_interrupt
@@ -333,6 +337,7 @@ __generic_irq_entry:
 	.p2align 4
 	.type	all_irqs,@function
 all_irqs:
+	IA32_IBRS
 	cld
 	call	irq_interrupt			/* enter with disabled irqs */
 in_interrupt:
@@ -373,6 +378,7 @@ entry_\name:
 all_syscalls:
 	cld
 	SAVE_STATE
+	IA32_IBRS
 	ESP_TO_TCB_AT %rbx
 	testl	$VAL__Thread_alien_or_vcpu_user, OFS__THREAD__STATE (%rbx)
 	jnz	alien_sys_call
@@ -397,6 +403,7 @@ entry_sys_ipc_c:
 	sub	$16, %rsp
 	push	%rax
 	SAVE_STATE
+	IA32_IBRS_CLOBBER
 	ESP_TO_TCB_AT %rbx
 	testl	$VAL__Thread_alien_or_vcpu_user, OFS__THREAD__STATE (%rbx)
 	jnz	alien_sys_ipc_c

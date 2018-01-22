@@ -344,6 +344,20 @@ config CPU_LOCAL_MAP
 	  
 	  If unsure say N.
 
+config INTEL_IA32_BRANCH_BARRIERS
+	bool "Enable strict prediction berriers (IBRS,IBPB,STIBP)" if AMD64 && KERNEL_ISOLATION
+	depends on AMD64 && KERNEL_ISOLATION
+	help
+	  Use indirect branch prediction barriers to prevent
+	  speculation-based cache timing side-channels.
+	  This option enables Intel specific indirect branch control
+	  mitigation:
+	    (a) IBRS on all kernel entries to prevent in-kernel
+	        prediction attacks.
+	    (b) STIBP to prevent cross hyper-thred attacks.
+	    (c) IBPB after address space switches to prevent cross
+	        application attacks.
+
 config NO_IO_PAGEFAULT
 	bool "Disable IO-Port fault IPC" if (IA32 || AMD64) && !KERNEL_ISOLATION
 	depends on IA32 || AMD64

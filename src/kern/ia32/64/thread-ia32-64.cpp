@@ -32,12 +32,22 @@ Thread::fast_return_to_user(Mword ip, Mword sp, T arg)
   assert(cpu_lock.test());
   assert(current() == this);
 
+  Address *p = (Address *)Mem_layout::Kentry_cpu_page;
+
+#ifdef CONFIG_INTEL_IA32_BRANCH_BARRIERS
+  if (p[2] & 1)
+    {
+      p[2] &= ~1UL;
+      Cpu::wrmsr(0, 0, 0x49);
+    }
+#endif
+
   asm volatile
     ("mov %[sp], %%rsp \t\n"
      "mov %[flags], %%r11 \t\n"
      "jmp safe_sysret \t\n"
      :
-     : [cr3] "a" (*((Address *)Mem_layout::Kentry_cpu_page) | 0x1000),
+     : [cr3] "a" (p[0] | 0x1000),
        [flags] "i" (EFLAGS_IF), "c" (ip), [sp] "r" (sp), "D"(arg)
     );
   __builtin_trap();

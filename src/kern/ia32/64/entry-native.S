@@ -60,6 +60,7 @@ entry_vec08_dbf:
 	push	%r13
 	push	%r14
 	push	%r15
+	IA32_IBRS_CLOBBER
 	mov	%rsp,%rdi		// 1st arg: trap state
 	call	thread_handle_double_fault
 	jmp	entry_vec08_dbf
@@ -220,6 +221,9 @@ syscall_entry_code:
 	pushq	$(GDT_DATA_USER | 3)
 	pushq	CPUE_STACK(CPUE_OFFSET + 0, %rip)
 	push	%r11				/* save user rflags */
+	IA32_IBRS
+	.global syscall_entry_reloc
+syscall_entry_reloc:
 	mov	$entry_sys_fast_ipc_c, %r11
 	jmp	*%r11
 	.global syscall_entry_code_end
@@ -244,6 +248,16 @@ safe_iret:
 
 	mov	$0xffff817fffffc000, %r14
 	mov	%r13, CPUE_STACK( 0, %r14)
+#ifdef CONFIG_INTEL_IA32_BRANCH_BARRIERS
+	/* check for exit flags (need IBTPB?) */
+	mov	CPUE_EXIT(%r14), %r13
+	test	$(CPUE_EXIT_NEED_IBPB), %r13
+	jz	22f
+	and	$(~CPUE_EXIT_NEED_IBPB), %r13
+	mov	%r13, CPUE_EXIT(%r14)
+	IA32_IBPB
+22:
+#endif
 	mov	(%rsp), %r13
 	mov	%r13, CPUE_STACK( 8, %r14)
 	mov	32(%rsp), %r13

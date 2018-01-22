@@ -884,7 +884,10 @@ Kmem::init_cpu(Cpu &cpu)
   Cpu::set_pdbr(cpu_dir_pa);
 
   cxx::Simple_alloc cpu_m(Kentry_cpu_page, Config::PAGE_SIZE);
-  // CPU dir pa and 
+  // [0] = CPU dir pa
+  // [1] = KSP
+  // [2] = EXIT flags
+  // [3] = reserved
   write_now(cpu_m.alloc<Mword>(4), cpu_dir_pa);
   setup_cpu_structures_isolation(cpu, cpu_dir, &cpu_m);
 

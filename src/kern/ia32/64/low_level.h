@@ -14,6 +14,43 @@
 #define CPUE_KSP_OFS 8
 #define CPUE_KSP(reg) 8(reg)
 #define CPUE_CR3(reg) 0(reg)
+#define CPUE_EXIT(reg) 16(reg)
+#define CPUE_EXIT_NEED_IBPB 1
+
+#if defined(CONFIG_KERNEL_ISOLATION) && defined(CONFIG_INTEL_IA32_BRANCH_BARRIERS)
+.macro IA32_IBRS_CLOBBER
+	mov $0x48, %ecx
+	mov $0, %edx
+	mov $3, %eax
+	wrmsr
+.endm
+.macro IA32_IBRS
+	pushq %rax
+	pushq %rcx
+	pushq %rdx
+	IA32_IBRS_CLOBBER
+	popq %rdx
+	popq %rcx
+	popq %rax
+.endm
+.macro IA32_IBPB
+	pushq %rax
+	pushq %rcx
+	pushq %rdx
+	mov	$0x49, %ecx
+	xor	%edx, %edx
+	xor	%eax, %eax
+	wrmsr
+	popq %rdx
+	popq %rcx
+	popq %rax
+.endm
+#else
+.macro IA32_IBRS_CLOBBER
+.endm
+.macro IA32_IBRS
+.endm
+#endif
 
 .macro SAFE_SYSRET
 	/* make RIP canonical, workaround for intel IA32e flaw */
@@ -21,6 +58,15 @@
 	sar     $16, %rcx
 #ifdef CONFIG_KERNEL_ISOLATION
 	mov	$0xffff817fffffc000, %r15
+#ifdef CONFIG_INTEL_IA32_BRANCH_BARRIERS
+	mov	CPUE_EXIT(%r15), %r11
+	test	$(CPUE_EXIT_NEED_IBPB), %r11
+	jz	333f
+	and	$(~CPUE_EXIT_NEED_IBPB), %r11
+	mov	%r11, CPUE_EXIT(%r15)
+	IA32_IBPB
+333:
+#endif
 	mov	CPUE_CR3(%r15), %r15
 	or	$0x1000, %r15
 #endif

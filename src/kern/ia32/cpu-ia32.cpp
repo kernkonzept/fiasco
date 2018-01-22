@@ -991,6 +991,8 @@ Cpu::identify()
 
     _vendor = (Cpu::Vendor)i;
 
+    init_indirect_branch_mitigation();
+
     switch (max)
       {
       default:
@@ -1314,6 +1316,8 @@ Cpu::pm_resume()
 
       set_tss();
     }
+  init_indirect_branch_mitigation();
+
   init_sysenter();
   wrmsr(_suspend_tsc, MSR_TSC);
 
@@ -1825,3 +1829,38 @@ PUBLIC static inline
 void
 Cpu::set_gs(Unsigned16 val)
 { asm volatile ("mov %0, %%gs" : : "rm" (val)); }
+
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION[(ia32 || amd64 || ux) && !intel_ia32_branch_barriers]:
+
+PRIVATE inline FIASCO_INIT_CPU_AND_PM
+void
+Cpu::init_indirect_branch_mitigation()
+{}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION[(ia32 || amd64) && intel_ia32_branch_barriers]:
+
+PRIVATE FIASCO_INIT_CPU_AND_PM
+void
+Cpu::init_indirect_branch_mitigation()
+{
+  if (_vendor == Vendor_intel)
+    {
+      Unsigned32 a, b, c, d;
+      cpuid(0, &a, &b, &c, &d);
+      if (a < 7)
+        panic("intel CPU does not support IBRS, IBPB, STIBP (cpuid max < 7)\n");
+
+      cpuid(7, 0, &a, &b, &c, &d);
+      if (!(d & (1UL << 26)))
+        panic("IBRS / IBPB not supported by CPU: %x\n", d);
+
+      if (!(d & (1UL << 27)))
+        panic("STIBP not supported by CPU: %x\n", d);
+
+      // enable STIBP
+      wrmsr(2, 0x48);
+    }
+}
