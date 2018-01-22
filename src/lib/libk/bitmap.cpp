@@ -111,6 +111,24 @@ public:
       atomic_mp_or(&_bits[i], r._bits[i]);
   }
 
+  unsigned ffs(unsigned bit) const
+  {
+    unsigned long idx = bit / Bpl;
+    unsigned long b   = bit % Bpl;
+    for (unsigned i = idx; i < Nr_elems; ++i)
+      {
+        unsigned long v = _bits[i];
+        v >>= b;
+        unsigned r = __builtin_ffsl(v);
+        if (r > 0)
+          return r + (i * Bpl) + b;
+
+        b = 0;
+      }
+
+    return 0;
+  }
+
 protected:
   template< bool BIG, unsigned BTS > friend class Bitmap_base;
 
@@ -213,7 +231,16 @@ public:
     atomic_mp_or(&_bits, r._bits);
   }
 
+  unsigned ffs(unsigned bit) const
+  {
+    unsigned long v = _bits;
+    v >>= bit;
+    unsigned r = __builtin_ffsl(v);
+    if (r > 0)
+      return r + bit;
 
+    return 0;
+  }
 
 protected:
   template< bool BIG, unsigned BTS > friend class Bitmap_base;
