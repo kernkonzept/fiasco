@@ -276,7 +276,7 @@ Thread::call_nested_trap_handler(Trap_state *ts)
   if (!ntr)
     stack = dbg_stack.cpu(log_cpu).stack_top;
 
-  Unsigned64 dummy1, dummy2, dummy3;
+  Unsigned64 dummy1, dummy2, scratch1, scratch2;
 
   // don't set %esp if gdb fault recovery to ensure that exceptions inside
   // kdb/jdb don't overwrite the stack
@@ -299,14 +299,15 @@ Thread::call_nested_trap_handler(Trap_state *ts)
      "je     1f			\n\t"
      "decq   %[recover]		\n\t"
      "1:			\n\t"
-     : [ret] "=a"(ret), [d2] "=&r"(dummy2), [d1] "=&r"(dummy1), "=D"(dummy3),
+     : [ret] "=&a"(ret), [d2] "=&r"(dummy2), [d1] "=&r"(dummy1), "=D"(scratch1),
+       "=S"(scratch2),
        [recover] "+m" (ntr)
      : [ts] "D" (ts),
        [pdbr] "r" (Kernel_task::kernel_task()->virt_to_phys((Address)Kmem::dir())),
        [cpu] "S" (log_cpu),
        [stack] "r" (stack),
        [handler] "m" (nested_trap_handler)
-     : "rdx", "rcx", "r8", "r9", "memory");
+     : "rdx", "rcx", "r8", "r9", "r10", "r11", "memory");
 
   if (!ntr)
     Cpu_call::handle_global_requests();
