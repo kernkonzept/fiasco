@@ -224,7 +224,8 @@ Thread::handle_page_fault_pager(Thread_ptr const &_pager,
                 l->err     = error_code;
                 l->pfa     = pfa);
 
-      pager = this; // block on ourselves
+      halt();
+      return true;
     }
 
   // set up a register block used as an IPC parameter block for the
