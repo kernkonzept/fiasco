@@ -182,7 +182,7 @@ Usermode::write_debug_register (pid_t pid, Mword reg, Mword value)
 PRIVATE static
 void
 Usermode::kernel_entry(Cpu_number _cpu,
-                       struct ucontext *context,
+                       ucontext_t *context,
                        Mword trap,
                        Mword xss,
                        Mword esp,
@@ -281,7 +281,7 @@ Usermode::l4_syscall (Mword opcode)
 
 PRIVATE static inline NOEXPORT NEEDS["thread_state.h"]
 bool
-Usermode::user_exception(Cpu_number _cpu, pid_t pid, struct ucontext *context,
+Usermode::user_exception(Cpu_number _cpu, pid_t pid, ucontext_t *context,
                          struct user_regs_struct *regs)
 {
   Mword trap, error = 0, addr = 0;
@@ -317,7 +317,7 @@ Usermode::user_exception(Cpu_number _cpu, pid_t pid, struct ucontext *context,
 
   else
     {
-      struct ucontext *exception_context;
+      ucontext_t *exception_context;
 
       memcpy ((void *) Mem_layout::kernel_trampoline_page,
               (void *) &Mem_layout::task_sighandler_start,
@@ -329,7 +329,7 @@ Usermode::user_exception(Cpu_number _cpu, pid_t pid, struct ucontext *context,
       wait_for_stop (pid);
 
       // See corresponding code in sighandler.S
-      exception_context = reinterpret_cast<struct ucontext *>
+      exception_context = reinterpret_cast<ucontext_t *>
                           (Mem_layout::kernel_trampoline_page +
                          *reinterpret_cast<Address *>
                           (Mem_layout::kernel_trampoline_page + 0x100));
@@ -383,7 +383,7 @@ Usermode::user_exception(Cpu_number _cpu, pid_t pid, struct ucontext *context,
 PRIVATE static inline NOEXPORT
 bool
 Usermode::user_emulation(Cpu_number _cpu, int stop, pid_t pid,
-                         struct ucontext *context,
+                         ucontext_t *context,
                          struct user_regs_struct *regs)
 {
   Mword trap, error = 0;
@@ -450,7 +450,7 @@ Usermode::user_emulation(Cpu_number _cpu, int stop, pid_t pid,
 PRIVATE static inline NOEXPORT
 void
 Usermode::iret_to_user_mode(Cpu_number _cpu,
-                            struct ucontext *context, Mword *kesp)
+                            ucontext_t *context, Mword *kesp)
 {
   struct user_regs_struct regs;
   Context *t = context_of (kesp);
@@ -561,7 +561,7 @@ Usermode::iret_to_user_mode(Cpu_number _cpu,
  */
 PRIVATE static inline NOEXPORT
 void
-Usermode::iret_to_kern_mode (struct ucontext *context, Mword *kesp)
+Usermode::iret_to_kern_mode(ucontext_t *context, Mword *kesp)
 {
   context->uc_mcontext.gregs[REG_EIP]  = *(kesp + 0);
   context->uc_mcontext.gregs[REG_EFL]  = *(kesp + 2);
@@ -576,7 +576,7 @@ Usermode::iret_to_kern_mode (struct ucontext *context, Mword *kesp)
  */
 PRIVATE static inline NOEXPORT
 void
-Usermode::iret(Cpu_number _cpu, struct ucontext *context)
+Usermode::iret(Cpu_number _cpu, ucontext_t *context)
 {
   Mword *kesp = (Mword *) context->uc_mcontext.gregs[REG_ESP];
 
@@ -601,7 +601,7 @@ PRIVATE static
 void
 Usermode::emu_handler (int, siginfo_t *, void *ctx)
 {
-  struct ucontext *context = reinterpret_cast<struct ucontext *>(ctx);
+  ucontext_t *context = reinterpret_cast<ucontext_t *>(ctx);
   unsigned int trap = context->uc_mcontext.gregs[REG_TRAPNO];
 
   Cpu_number _cpu = Cpu::cpus.find_cpu(Cpu::By_phys_id(Cpu::phys_id_direct()));
@@ -647,7 +647,7 @@ PRIVATE static
 void
 Usermode::int_handler (int, siginfo_t *, void *ctx)
 {
-  struct ucontext *context = reinterpret_cast<struct ucontext *>(ctx);
+  ucontext_t *context = reinterpret_cast<ucontext_t *>(ctx);
 
   int gate = Irq_chip_ux::pending_vector();
   if (gate == -1)
@@ -669,7 +669,7 @@ PRIVATE static
 void
 Usermode::jdb_handler (int sig, siginfo_t *, void *ctx)
 {
-  struct ucontext *context = reinterpret_cast<struct ucontext *>(ctx);
+  ucontext_t *context = reinterpret_cast<ucontext_t *>(ctx);
 
   if (!Thread::is_tcb_address(context->uc_mcontext.gregs[REG_ESP]))
     return;
