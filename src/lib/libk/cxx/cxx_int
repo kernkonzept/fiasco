@@ -500,9 +500,8 @@ constexpr typename TYPE::Diff_type
 get_lsb(TYPE const &v, ORDER const &o)
 { return v & ~(typename TYPE::Diff_type(~0) << o); }
 
-template< typename TYPE, typename ORDER,
-  typename = typename cxx::enable_if<cxx::is_integral<TYPE>::value>::type > inline
-constexpr TYPE
+template< typename TYPE, typename ORDER > inline
+constexpr typename cxx::enable_if<cxx::is_integral<TYPE>::value, TYPE>::type
 get_lsb(TYPE const &v, ORDER const &o)
 { return v & ~(TYPE(~0) << o); }
 
