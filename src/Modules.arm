@@ -52,7 +52,7 @@ mem_IMPL		:= mem mem-arm
 uart_IMPL		:= uart uart-mmio
 reset_IMPL		:=
 processor_IMPL		:= processor processor-arm-$(BITS) processor-arm
-CXXSRC_DRIVERS		:= glue_libc.cc 
+CXXSRC_DRIVERS		:= glue_libc.cc
 NOOPT			+= $(patsubst %.o, %, $(OBJ_DRIVERS))
 ALWAYS_INLINE           += mem
 
@@ -100,7 +100,7 @@ INTERFACES_JABI		:= jdb_ktrace
 #
 
 ABI 		:= libabi.a
-VPATH 		+= abi/$(CONFIG_XARCH)/$(BITS) abi/$(CONFIG_XARCH) abi 
+VPATH 		+= abi/$(CONFIG_XARCH)/$(BITS) abi/$(CONFIG_XARCH) abi
 
 INTERFACES_ABI 	:= kip l4_types l4_fpage l4_msg_item \
                    l4_buf_desc l4_error
@@ -215,7 +215,7 @@ jdb_entry_frame_IMPL	:= jdb_entry_frame-arm
 jdb_trace_set_IMPL	:= jdb_trace_set jdb_trace_set-arm \
 			   jdb_trace_set-arm-$(BITS)
 jdb_bp_IMPL		:= jdb_bp-arm
-thread_IMPL		+= thread-debug 
+thread_IMPL		+= thread-debug
 
 ifneq ($(CONFIG_JDB_GZIP),)
  ifneq ($(wildcard $(srcdir)/lib/gzip),)
@@ -248,7 +248,7 @@ ASSRC_CRT0	:= crt0.S
 
 #
 # CXXLIB Subsystem
-# 
+#
 CXXLIB 			:= libcxx.a
 VPATH			+= lib/cxxlib
 INTERFACES_CXXLIB 	:= paranoia s_cruft

@@ -21,7 +21,7 @@ VPATH 		+= . auto
 PRIVATE_INCDIR	+= . auto
 
 #
-# Function for all Makreuls.<subsystem> files
+# Function for all Makerules.<subsystem> files
 #
 
 MAKERULES_SUBSYS = $(foreach subsys, $(SUBSYSTEMS), $(firstword $(wildcard $(addsuffix /Makerules.$(subsys),$(VPATH) $(srcdir)))))
