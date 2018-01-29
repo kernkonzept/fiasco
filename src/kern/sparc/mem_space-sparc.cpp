@@ -126,6 +126,7 @@ void Mem_space::switchin_context(Mem_space *from)
 {
   (void)from;
   printf("Mem_space::switchin_context FIXME\n");
+  CNT_ADDR_SPACE_SWITCH;
 }
 
 PUBLIC static inline

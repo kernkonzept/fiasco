@@ -354,7 +354,10 @@ Mem_space::switchin_context(Mem_space *from)
     return;
 
   if (this != from)
-    make_current();
+    {
+      CNT_ADDR_SPACE_SWITCH;
+      make_current();
+    }
 }
 
 //------------------------------------------------------------------------------

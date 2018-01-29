@@ -102,6 +102,7 @@ IMPLEMENTATION [mips]:
 #include "globals.h"
 #include "kdb_ke.h"
 #include "l4_types.h"
+#include "logdefs.h"
 #include "panic.h"
 #include "paging.h"
 #include "kmem.h"
@@ -489,7 +490,7 @@ Mem_space::make_current()
 //--------------------------------------------------------------
 IMPLEMENTATION [!mips_vz]:
 
-IMPLEMENT inline NEEDS ["kmem.h", Mem_space::c_asid]
+IMPLEMENT inline NEEDS ["kmem.h", "logdefs.h", Mem_space::c_asid]
 void Mem_space::switchin_context(Mem_space *)
 {
 #if 0
@@ -498,6 +499,7 @@ void Mem_space::switchin_context(Mem_space *)
     return;
 #endif
 
+  CNT_ADDR_SPACE_SWITCH;
   make_current();
 }
 
@@ -608,7 +610,6 @@ Mem_space::apply_extra_page_attribs(Attr *a)
     a->kern |= Page::Kern::Global();
 }
 
-#include "logdefs.h"
 PRIVATE inline
 void
 Mem_space::guest_id_init()
@@ -664,6 +665,8 @@ void Mem_space::switchin_context(Mem_space *)
         "mtc0 %0, $10, 4",  // Load GuestCtl1 with guest ID
         0x4 /* FEATURE_VZ */)
       : : "r"(0));
+
+  CNT_ADDR_SPACE_SWITCH;
 
   Mem_unit::set_current_asid(asid());
   _current.current() = this;

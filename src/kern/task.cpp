@@ -248,6 +248,8 @@ Task::initialize()
   // For UX, map the UTCB pointer page. For ia32, do nothing
   map_utcb_ptr_page();
 
+  CNT_TASK_CREATE;
+
   return true;
 }
 
