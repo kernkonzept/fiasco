@@ -96,6 +96,13 @@ Boot_alloced::alloc(size_t size)
   return b;
 }
 
+PUBLIC template<typename T> static
+T *
+Boot_alloced::allocate(size_t count = 1)
+{
+  return reinterpret_cast<T *>(alloc(count * sizeof(T)));
+}
+
 PUBLIC inline void *
 Boot_alloced::operator new (size_t size) throw()
 { return alloc(size); }
