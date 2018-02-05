@@ -14,9 +14,6 @@ public:
     Op_cache_coherent          = 0x03,
     Op_cache_dma_coherent      = 0x04,
     Op_cache_dma_coherent_full = 0x05,
-    Op_cache_l2_clean          = 0x06,
-    Op_cache_l2_flush          = 0x07,
-    Op_cache_l2_inv            = 0x08,
   };
 
   enum Op_mem
@@ -61,22 +58,6 @@ Mem_op::l1_inv_dcache(Address start, Address end)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && !outer_cache]:
-
-PRIVATE static inline void
-Mem_op::__arm_kmem_outer_cache_maint(int, Address, Address)
-{}
-
-// ------------------------------------------------------------------------
-IMPLEMENTATION [arm && outer_cache && !cpu_virt]:
-
-PRIVATE static inline void
-Mem_op::__arm_kmem_outer_cache_maint(int op, Address start, Address end)
-{
-  outer_cache_op(op, start, end);
-}
-
-// ------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
 PRIVATE static inline void
@@ -87,16 +68,18 @@ Mem_op::__arm_kmem_cache_maint(int op, void const *kstart, void const *kend)
     case Op_cache_clean_data:
       Mem_unit::clean_dcache(kstart, kend);
       Mem::barrier();
-      __arm_kmem_outer_cache_maint(Op_cache_l2_clean, Address(kstart),
-                                   Address(kend));
+      outer_cache_op(Address(kstart), Address(kend),
+                     [](Address s, Address e, bool sync)
+                     { Outer_cache::clean(s, e, sync); });
       break;
 
     case Op_cache_flush_data:
     case Op_cache_inv_data:
       Mem_unit::flush_dcache(kstart, kend);
       Mem::barrier();
-      __arm_kmem_outer_cache_maint(Op_cache_l2_flush, Address(kstart),
-                                   Address(kend));
+      outer_cache_op(Address(kstart), Address(kend),
+                     [](Address s, Address e, bool sync)
+                     { Outer_cache::flush(s, e, sync); });
       break;
 
     case Op_cache_coherent:
@@ -112,8 +95,9 @@ Mem_op::__arm_kmem_cache_maint(int op, void const *kstart, void const *kend)
     case Op_cache_dma_coherent:
       Mem_unit::flush_dcache(kstart, kend);
       Mem::barrier();
-      __arm_kmem_outer_cache_maint(Op_cache_l2_flush, Address(kstart),
-                                   Address(kend));
+      outer_cache_op(Address(kstart), Address(kend),
+                     [](Address s, Address e, bool sync)
+                     { Outer_cache::flush(s, e, sync); });
       break;
 
     // We might not want to implement this one but single address outer
@@ -200,18 +184,6 @@ Mem_op::arm_mem_cache_maint(int op, void const *start, void const *end)
   c->set_ignore_mem_op_in_progress(true);
   __arm_mem_cache_maint(op, start, end);
   c->set_ignore_mem_op_in_progress(false);
-  switch (op)
-    {
-    case Op_cache_l2_clean:
-    case Op_cache_l2_flush:
-    case Op_cache_l2_inv:
-      outer_cache_op(op, Address(start), Address(end));
-      break;
-
-    default:
-      break;
-    };
-
 }
 
 // ------------------------------------------------------------------------
@@ -294,17 +266,17 @@ extern "C" void sys_arm_mem_op()
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && !outer_cache]:
 
-PRIVATE static inline
+PRIVATE template<typename FUNC> static inline
 void
-Mem_op::outer_cache_op(int, Address, Address)
+Mem_op::outer_cache_op(Address, Address, FUNC &&)
 {}
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && outer_cache]:
 
-PRIVATE static
+PRIVATE template<typename FUNC> static
 void
-Mem_op::outer_cache_op(int op, Address start, Address end)
+Mem_op::outer_cache_op(Address start, Address end, FUNC &&f)
 {
 
   Virt_addr v = Virt_addr(start);
@@ -330,18 +302,7 @@ Mem_op::outer_cache_op(int op, Address start, Address end)
         {
           Virt_addr vstart = Virt_addr(phys_addr) | offs;
           Virt_addr vend = vstart + sz;
-          switch (op)
-            {
-            case Op_cache_l2_clean:
-              Outer_cache::clean(Virt_addr::val(vstart), Virt_addr::val(vend), false);
-              break;
-            case Op_cache_l2_flush:
-              Outer_cache::flush(Virt_addr::val(vstart), Virt_addr::val(vend), false);
-              break;
-            case Op_cache_l2_inv:
-              Outer_cache::invalidate(Virt_addr::val(vstart), Virt_addr::val(vend), false);
-              break;
-            }
+          f(Virt_addr::val(vstart), Virt_addr::val(vend), false);
         }
       v += sz;
     }
