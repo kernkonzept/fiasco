@@ -3,6 +3,7 @@ INTERFACE [arm && pic_gic]:
 #include "kmem.h"
 #include "irq_chip_generic.h"
 #include "mmio_register_block.h"
+#include "spin_lock.h"
 
 
 class Gic : public Irq_chip_gen
@@ -10,6 +11,8 @@ class Gic : public Irq_chip_gen
 private:
   Mmio_register_block _cpu;
   Mmio_register_block _dist;
+
+  Spin_lock<> _lock;
 
 public:
   enum
@@ -221,6 +224,8 @@ PUBLIC
 unsigned
 Gic::init(bool primary_gic, int nr_irqs_override = -1)
 {
+  _lock.init();
+
   if (!primary_gic)
     {
       cpu_init(false);
@@ -372,6 +377,8 @@ Gic::set_mode(Mword pin, Mode m)
     };
 
   unsigned shift = (pin & 15) * 2;
+
+  auto guard = lock_guard(_lock);
   _dist.modify<Unsigned32>(v << shift, 3 << shift, GICD_ICFGR + (pin >> 4) * 4);
 
   return 0;
@@ -504,6 +511,8 @@ PUBLIC inline NEEDS["cpu.h"]
 void
 Gic::set_cpu(Mword pin, Cpu_number cpu)
 {
+  auto guard = lock_guard(_lock);
+
   Mword reg = GICD_ITARGETSR + (pin & ~3);
   Unsigned32 val = _dist.read<Unsigned32>(reg);
 
@@ -521,6 +530,7 @@ PUBLIC
 void
 Gic::irq_prio(unsigned irq, unsigned prio)
 {
+  auto guard = lock_guard(_lock);
   _dist.modify<Unsigned32>(prio << ((irq & 3) * 8),
                            0xff << ((irq & 3) * 8),
                            GICD_IPRIORITYR + (irq >> 2) * 4);
