@@ -511,16 +511,8 @@ PUBLIC inline NEEDS["cpu.h"]
 void
 Gic::set_cpu(Mword pin, Cpu_number cpu)
 {
-  auto guard = lock_guard(_lock);
-
-  Mword reg = GICD_ITARGETSR + (pin & ~3);
-  Unsigned32 val = _dist.read<Unsigned32>(reg);
-
-  int shift = (pin % 4) * 8;
-  unsigned target = pcpu_to_sgi(Cpu::cpus.cpu(cpu).phys_id());
-  val = (val & ~(0xff << shift)) | (1 << (target + shift));
-
-  _dist.write<Unsigned32>(val, reg);
+  _dist.write<Unsigned8>(1 << pcpu_to_sgi(Cpu::cpus.cpu(cpu).phys_id()),
+                         GICD_ITARGETSR + pin);
 }
 
 //---------------------------------------------------------------------------
