@@ -522,18 +522,14 @@ PUBLIC
 void
 Gic::irq_prio(unsigned irq, unsigned prio)
 {
-  auto guard = lock_guard(_lock);
-  _dist.modify<Unsigned32>(prio << ((irq & 3) * 8),
-                           0xff << ((irq & 3) * 8),
-                           GICD_IPRIORITYR + (irq >> 2) * 4);
+  _dist.write<Unsigned8>(prio, GICD_IPRIORITYR + irq);
 }
 
 PUBLIC
 unsigned
 Gic::irq_prio(unsigned irq)
 {
-  return (_dist.read<Unsigned32>(GICD_IPRIORITYR + (irq >> 2) * 4)
-          >> ((irq & 3) * 8)) & 0xff;
+  return _dist.read<Unsigned8>(GICD_IPRIORITYR + irq);
 }
 
 PUBLIC
