@@ -16,10 +16,13 @@ applications. It supports the following architectures:
 |      MIPS    |    x   |   x    |
 
 For a full list of the supported platforms and features see the [feature
-list](https://l4re.org/fiasco/features.html).
+list][1].
 
-We welcome contributions to the microkernel. Please see our contributors guide on
-[how to contribute](CONTRIBUTING.md).
+We welcome contributions to the microkernel. Please see our contributors guide
+on [how to contribute][2].
+
+[1]: https://l4re.org/fiasco/features.html
+[2]: https://github.com/kernkonzept/fiasco/wiki/CONTRIBUTING
 
 ## Reporting vulnerabilities
 
