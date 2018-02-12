@@ -518,7 +518,7 @@ Gic::set_cpu(Mword pin, Cpu_number cpu)
 
   int shift = (pin % 4) * 8;
   unsigned target = pcpu_to_sgi(Cpu::cpus.cpu(cpu).phys_id());
-  val = (val & ~(0xf << shift)) | (1 << (target + shift));
+  val = (val & ~(0xff << shift)) | (1 << (target + shift));
 
   _dist.write<Unsigned32>(val, reg);
 }
