@@ -13,7 +13,6 @@ config PF_LS1021A
 
 config PF_LS1012A
 	bool "LS1012A"
-	select CAN_ARM_CPU_CORTEX_A7
 	select CAN_ARM_CPU_CORTEX_A53
 
 endchoice
