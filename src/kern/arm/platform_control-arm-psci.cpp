@@ -107,7 +107,8 @@ Platform_control::psci_call(Mword fn_id,
                 "r" (r4), "r" (r5), "r" (r6), "r" (r7)
               : "memory");
 
-  return { r0, r1, r2, r3 };
+  Psci_result res = { r0, r1, r2, r3 };
+  return res;
 }
 
 IMPLEMENT_OVERRIDE
