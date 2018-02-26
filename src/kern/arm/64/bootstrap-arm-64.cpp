@@ -316,7 +316,7 @@ Bootstrap::add_initial_pmem()
 
 asm
 (
-".section .text.init,#alloc,#execinstr \n"
+".section .text.init,\"ax\"            \n"
 ".type _start,#function                \n"
 ".global _start                        \n"
 "_start:                               \n"

@@ -1,7 +1,7 @@
 /* -*- c -*- */
 
 #include "asm.h"
-.section .text.init,#alloc,#execinstr
+.section .text.init,"ax"
 .type start,#function
 ENTRY(_start_kernel)
 ENTRY(start)
