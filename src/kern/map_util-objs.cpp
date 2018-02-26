@@ -112,18 +112,13 @@ map(Kobject_iface *o, Obj_space* to, Space *to_id, Cap_index rcv_addr,
 
   switch (status)
     {
-    case SPACE::Insert_warn_exists:
-    case SPACE::Insert_warn_attrib_upgrade:
     case SPACE::Insert_ok:
-
-      if (status == SPACE::Insert_ok)
-	{
-	  if (! o->map_root()->insert(0, to_id, ra))
-	    {
-	      to->v_delete(Obj_space::V_pfn(rcv_addr), Size(0), L4_fpage::Rights::FULL());
-	      return 0;
-	    }
-	}
+      if (!o->map_root()->insert(0, to_id, ra))
+        {
+          to->v_delete(Obj_space::V_pfn(rcv_addr), Size(0),
+                       L4_fpage::Rights::FULL());
+          return 0;
+        }
       break;
 
     case SPACE::Insert_err_nomem:
@@ -132,6 +127,8 @@ map(Kobject_iface *o, Obj_space* to, Space *to_id, Cap_index rcv_addr,
     case SPACE::Insert_err_exists:
       // Do not flag an error here -- because according to L4
       // semantics, it isn't.
+    case SPACE::Insert_warn_exists:
+    case SPACE::Insert_warn_attrib_upgrade:
       break;
     }
 
