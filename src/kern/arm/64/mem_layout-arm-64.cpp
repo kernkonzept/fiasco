@@ -84,11 +84,11 @@ Mem_layout::_read_special_safe(Mword const *address, Mword &v)
 {
   Mword ret;
   asm volatile ("msr  nzcv, xzr      \n" // clear flags
-		"mov  %[ret], #1     \n"
-		"ldr  %[val], %[adr] \n"
-		"b.e 1f              \n"
-		"mov  %[ret], xzr    \n"
-		"1:                  \n"
+                "mov  %[ret], #1     \n"
+                "ldr  %[val], %[adr] \n"
+                "b.ne 1f             \n"
+                "mov  %[ret], xzr    \n"
+                "1:                  \n"
 
                 : [val] "=r" (v), [ret] "=&r" (ret)
                 : [adr] "m" (*address)
