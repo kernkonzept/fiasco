@@ -124,10 +124,10 @@ Thread_object::invoke(L4_obj_ref /*self*/, L4_fpage::Rights rights, Syscall_fram
       bool have_rcv = false;
 
       if (EXPECT_FALSE(!check_sys_ipc(op, &partner, &sender, &have_rcv)))
-	{
-	  utcb->error = L4_error::Not_existent;
-	  return;
-	}
+        {
+          f->tag(commit_error(utcb, L4_error::Not_existent));
+          return;
+        }
 
       ct->do_ipc(f->tag(), partner, partner, have_rcv, sender,
                  f->timeout(), f, rights);
