@@ -70,7 +70,8 @@ Timer_tick::handle_timer(Irq_base *_s, Upstream_irq const *ui,
 {
   Timer_tick *self = nonull_static_cast<Timer_tick *>(_s);
   self->ack();
-  ui->ack();
+  if (ui)
+    ui->ack();
   Timer::update_system_clock(cpu);
   if (Config::esc_hack && cpu == Cpu_number::boot_cpu())
     {
