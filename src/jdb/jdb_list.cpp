@@ -88,14 +88,14 @@ Jdb_list::line_forw()
 PUBLIC
 bool
 Jdb_list::page_back()
-{ return filtered_seek(-Jdb_screen::height()+2, &_start); }
+{ return filtered_seek(-Jdb_screen::height()+3, &_start); }
 
 // _t_start += 24 if possible
 PUBLIC
 bool
 Jdb_list::page_forw()
 {
-  int fwd = filtered_seek(Jdb_screen::height()-2, &_last);
+  int fwd = filtered_seek(Jdb_screen::height()-3, &_last);
   if (fwd)
     return filtered_seek(fwd, &_start);
   return false;
