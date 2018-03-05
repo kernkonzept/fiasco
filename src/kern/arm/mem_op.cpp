@@ -64,7 +64,7 @@ Mem_op::l1_inv_dcache(Address start, Address end)
 IMPLEMENTATION [arm && !outer_cache]:
 
 PRIVATE static inline void
-Mem_op::__arm_kmem_outer_cache_maint(int op, Address start, Address end)
+Mem_op::__arm_kmem_outer_cache_maint(int, Address, Address)
 {}
 
 // ------------------------------------------------------------------------
