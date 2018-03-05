@@ -48,7 +48,7 @@
 .endm
 
 /**
- * Restore CP0 Status keeping IM0-IM7 + Impl bits (8-18)
+ * Restore CP0 Status keeping IM0-IM7 + Impl bits (6-31)
  * \param ts_base  Base pointer register to a trap-state (with offset
  *                 `ts_offset`)
  * \param ts_offset  Offset of the trap-state structure relative to
