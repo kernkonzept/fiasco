@@ -101,6 +101,8 @@ public:
 
   template<typename ...ARGS>
   Obj_space_phys_override(ARGS &&...args) : BASE(cxx::forward<ARGS>(args)...) {}
+
+  ~Obj_space_phys_override() { caps_free(); }
 };
 
 // ------------------------------------------------------------------------
