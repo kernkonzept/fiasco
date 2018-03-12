@@ -345,7 +345,7 @@ config CPU_LOCAL_MAP
 	  If unsure say N.
 
 config INTEL_IA32_BRANCH_BARRIERS
-	bool "Enable strict prediction berriers (IBRS,IBPB,STIBP)" if AMD64 && KERNEL_ISOLATION
+	bool "Enable strict prediction barriers (IBRS,IBPB,STIBP)" if AMD64 && KERNEL_ISOLATION
 	depends on AMD64 && KERNEL_ISOLATION
 	help
 	  Use indirect branch prediction barriers to prevent
