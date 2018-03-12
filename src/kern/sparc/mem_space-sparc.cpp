@@ -121,7 +121,7 @@ Mem_space::sync_kernel()
 }
 
 
-IMPLEMENT inline NEEDS ["kmem.h", <cstdio>]
+IMPLEMENT inline NEEDS ["kmem.h", "logdefs.h", <cstdio>]
 void Mem_space::switchin_context(Mem_space *from)
 {
   (void)from;
