@@ -264,8 +264,18 @@ Jdb::access_mem_task(Address virt, Space * task)
 
       if (!pte.is_valid() || pte.page_addr() != cxx::mask_lsb(phys, pte.page_order()))
         {
-          pte.set_page(pte.make_page(Phys_mem_addr(cxx::mask_lsb(phys, pte.page_order())),
-                                     Page::Attr(Page::Rights::RW())));
+          Page::Type mem_type = Page::Type::Uncached();
+          for (auto const &md: Kip::k()->mem_descs_a())
+            if (!md.is_virtual() && md.contains(phys)
+                && (md.type() == Mem_desc::Conventional))
+              {
+                mem_type = Page::Type::Normal();
+                break;
+              }
+
+          pte.set_page(
+            pte.make_page(Phys_mem_addr(cxx::mask_lsb(phys, pte.page_order())),
+                          Page::Attr(Page::Rights::RW(), mem_type)));
           pte.write_back_if(true, Mem_unit::Asid_kernel);
         }
 

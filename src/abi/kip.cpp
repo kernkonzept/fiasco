@@ -151,7 +151,7 @@ unsigned Mem_desc::is_virtual() const
 { return _l & 0x200; }
 
 PUBLIC inline
-bool Mem_desc::contains(unsigned long addr)
+bool Mem_desc::contains(Address addr) const
 {
   return start() <= addr && end() >= addr;
 }
