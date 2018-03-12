@@ -462,7 +462,7 @@ Jdb::is_adapter_memory(Address virt, Space *task)
 
   for (auto const &m: Kip::k()->mem_descs_a())
     if (m.type() == Mem_desc::Conventional && !m.is_virtual()
-        && m.start() <= phys && m.end() >= phys)
+        && m.contains(phys))
       return false;
 
   return true;
