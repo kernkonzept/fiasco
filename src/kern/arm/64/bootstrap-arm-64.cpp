@@ -115,19 +115,8 @@ Bootstrap::map_ram(Kpdir *kd, Bs_alloc &alloc)
       if (md.is_virtual())
         continue;
 
-      unsigned long s = md.start();
-      unsigned long e = md.end();
-
-      switch (md.type())
-        {
-        case Mem_desc::Conventional:
-          if (e <= s)
-            break;
-          map_ram_range(kd, alloc, s, e, Virt_ofs);
-          break;
-        default:
-          break;
-        }
+      if (md.type() == Mem_desc::Conventional)
+          map_ram_range(kd, alloc, md.start(), md.end(), Virt_ofs);
   }
 
 }

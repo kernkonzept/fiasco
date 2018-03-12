@@ -235,33 +235,22 @@ Bootstrap::create_initial_mappings()
   for (auto const &md: kip->mem_descs_a())
     {
       if (!md.valid())
-	{
-	  const_cast<Mem_desc&>(md).type(Mem_desc::Undefined);
-	  continue;
-	}
+        {
+          const_cast<Mem_desc&>(md).type(Mem_desc::Undefined);
+          continue;
+        }
 
       if (md.is_virtual())
-	continue;
+        continue;
 
-      unsigned long s = md.start();
-      unsigned long e = md.end();
-
-      // Sweep out stupid descriptors (that have the end before the start)
-      Virt_addr va;
-      Phys_addr pa;
-
-      switch (md.type())
-	{
-	case Mem_desc::Conventional:
-	  if (e <= s)
-	    break;
-          for (va = Virt_addr(s), pa = Phys_addr(s); va < Virt_addr(e);
+      if (md.type() == Mem_desc::Conventional)
+        {
+          auto va = Virt_addr(md.start());
+          auto pa = Phys_addr(md.start());
+          for (; va < Virt_addr(md.end());
                va += Bootstrap::map_page_size(), pa += Bootstrap::map_page_size_phys())
             Bootstrap::map_memory(page_dir, va, pa, true, false);
-	  break;
-	default:
-	  break;
-	}
+        }
     }
 }
 
