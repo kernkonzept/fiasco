@@ -73,16 +73,8 @@ Jdb_list::line_forw()
 {
   if (filtered_seek(1, &_last))
     return filtered_seek(1, &_start);
-  else
-    return false;
+  return false;
 }
-#if 0
-  Thread *t = _t_start;
-  iter(+Jdb_screen::height()-2, &_t_start);
-  iter(-Jdb_screen::height()+3, &_t_start);
-  return t != _t_start;
-}
-#endif
 
 // _t_start -= 24 if possible
 PUBLIC
@@ -101,14 +93,6 @@ Jdb_list::page_forw()
   return false;
 }
 
-#if 0
-  Thread *t = _t_start;
-  iter(+Jdb_screen::height()*2-5, &_t_start);
-  iter(-Jdb_screen::height()  +3, &_t_start);
-  return t != _t_start;
-}
-#endif
-
 // _t_start = first element of list
 PUBLIC
 bool
@@ -119,14 +103,12 @@ Jdb_list::goto_home()
 PUBLIC
 bool
 Jdb_list::goto_end()
-{ return filtered_seek(99999, &_start); }
-#if 0
-  Thread *t = _t_start;
-  iter(+9999, &_t_start);
-  iter(-Jdb_screen::height()+2, &_t_start);
-  return t != _t_start;
+{
+  int fwd = filtered_seek(99999, &_last);
+  if (fwd)
+    return filtered_seek(fwd, &_start);
+  return false;
 }
-#endif
 
 // search index of search starting from _start
 PRIVATE
