@@ -77,10 +77,12 @@ void Factory::operator delete (void *_f)
     return;
 
   Ram_quota *p = f->parent();
+  auto limit = f->limit();
+  asm ("" : "=m"(*f));
 
   allocator()->free(f);
   if (p)
-    p->free(sizeof(Factory) + f->limit());
+    p->free(sizeof(Factory) + limit);
 }
 
 PRIVATE

@@ -198,6 +198,7 @@ void Ipc_gate_obj::operator delete (void *_f)
 {
   Ipc_gate_obj *f = (Ipc_gate_obj*)_f;
   Ram_quota *p = f->_quota;
+  asm ("" : "=m"(*f));
 
   allocator()->free(f);
   if (p)
