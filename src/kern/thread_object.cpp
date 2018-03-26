@@ -134,6 +134,12 @@ Thread_object::invoke(L4_obj_ref /*self*/, L4_fpage::Rights rights, Syscall_fram
       return;
     }
 
+  if (EXPECT_FALSE(f->tag().words() < 1))
+    {
+      f->tag(commit_result(-L4_err::EMsgtooshort));
+      return;
+    }
+
   switch (utcb->values[0] & Opcode_mask)
     {
     case Op_control:
