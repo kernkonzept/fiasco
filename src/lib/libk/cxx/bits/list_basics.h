@@ -54,8 +54,6 @@ public:
   typedef typename POLICY::Value_type Value_type;
   typedef typename POLICY::Const_value_type Const_value_type;
 
-  class End_iterator {};
-
   class Iterator
   {
   private:
@@ -69,13 +67,10 @@ public:
     Value_type operator -> () const { return static_cast<Value_type>(*_c); }
     Iterator operator ++ () { _c = POLICY::next(_c); return *this; }
 
-    bool operator == (End_iterator const &) const { return *_c == 0; }
-    bool operator != (End_iterator const &) const { return *_c != 0; }
     bool operator == (Iterator const &o) const { return *_c == *o._c; }
     bool operator != (Iterator const &o) const { return !operator == (o); }
 
-    Iterator() {}
-    Iterator(End_iterator const &) : _c(__end()) {}
+    Iterator() : _c(__end()) {}
 
   private:
     friend class Basic_list;
@@ -104,13 +99,11 @@ public:
     Value_type operator -> () const { return static_cast<Value_type>(_c); }
     Const_iterator operator ++ () { _c = POLICY::next(_c); return *this; }
 
-    bool operator == (End_iterator const &) const { return _c == 0; }
-    bool operator != (End_iterator const &) const { return _c != 0; }
-    bool operator == (Const_iterator const &o) const { return _c == o._c; }
-    bool operator != (Const_iterator const &o) const { return !operator == (o); }
-
+    friend bool operator == (Const_iterator const &lhs, Const_iterator const &rhs)
+    { return lhs._c == rhs._c; }
+    friend bool operator != (Const_iterator const &lhs, Const_iterator const &rhs)
+    { return lhs._c != rhs._c; }
     Const_iterator() {}
-    Const_iterator(End_iterator const &) : _c(0) {}
     Const_iterator(Iterator const &o) : _c(*o) {}
 
   private:
@@ -145,7 +138,8 @@ public:
   Iterator begin() { return Iterator(&_f); }
   Const_iterator begin() const { return Const_iterator(_f); }
   static Const_iterator iter(Const_value_type c) { return Const_iterator(c); }
-  static End_iterator end() { return End_iterator(); }
+  Const_iterator end() const { return Const_iterator(); }
+  Iterator end() { return Iterator(); }
 
 protected:
   static typename POLICY::Type __get_internal(Iterator const &i) { return i._c; }
