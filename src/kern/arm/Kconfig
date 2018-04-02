@@ -268,6 +268,26 @@ config ARM_PSCI
           Use the "Power State Coordination Interface" (PSCI) for system
           functions such as booting CPUs.
 
+choice
+        prompt "PSCI call method"
+        depends on ARM_PSCI
+        default ARM_PSCI_SMC
+
+config ARM_PSCI_SMC
+        bool "SMC"
+        help
+          Choose this if the platform uses SMC as a conduit to
+          access PSCI functions.
+
+config ARM_PSCI_HVC
+        bool "HVC"
+        depends on HAS_CPU_VIRT
+        help
+          Choose this if the platform uses HVC as a conduit to
+          access PSCI functions.
+
+endchoice
+
 config ARM_1176_CACHE_ALIAS_FIX
 	bool "Use cache restriction to supress aliasing issue on ARM1176"
 	depends on ARM_1176
