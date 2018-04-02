@@ -11,7 +11,7 @@ class Ram_quota;
 class Thread;
 
 
-/** Hardware interrupts.  This class encapsulates handware IRQs.  Also,
+/** Hardware interrupts.  This class encapsulates hardware IRQs.  Also,
     it provides a registry that ensures that only one receiver can sign up
     to receive interrupt IPC messages.
  */
