@@ -103,28 +103,43 @@ IMPLEMENTATION[(ia32,amd64) && mp]:
 
 int FIASCO_FASTCALL boot_ap_cpu() __asm__("BOOT_AP_CPU");
 
+static void FIASCO_NORETURN
+stop_booting_ap_cpu(char const *msg, Unsigned32 apic_id)
+{
+  extern Spin_lock<Mword> _tramp_mp_spinlock;
+  printf("%s, disabling CPU: %x\n", msg, apic_id);
+  _tramp_mp_spinlock.clear();
+
+  while (1)
+    Proc::halt();
+}
+
 int FIASCO_FASTCALL boot_ap_cpu()
 {
   Apic::activate_by_msr();
 
-  Cpu_number _cpu = Apic::find_cpu(Apic::get_id());
+  Unsigned32 apic_id = Apic::get_id();
+  Cpu_number _cpu = Apic::find_cpu(apic_id);
   bool cpu_is_new = false;
-  static Cpu_number last_cpu; // keep track of the last cpu ever appeared
+
+  // keep track of the last cpu ever appeared
+  static Cpu_number last_cpu = Cpu_number::first();
   if (_cpu == Cpu_number::nil())
     {
-      _cpu = ++last_cpu; // 0 is the boot cpu, so pre increment
+      if (Kernel_thread::boot_deterministic)
+        {
+          _cpu = Kernel_thread::find_cpu_num_by_apic_id(apic_id);
+          if (Cpu_number::nil() == _cpu)
+            stop_booting_ap_cpu("Previously unknown CPU", apic_id);
+        }
+      else
+        _cpu = ++last_cpu;
+
       cpu_is_new = true;
     }
 
   if (cpu_is_new && !Per_cpu_data_alloc::alloc(_cpu))
-    {
-      extern Spin_lock<Mword> _tramp_mp_spinlock;
-      printf("CPU allocation failed for CPU%u, disabling CPU.\n",
-             cxx::int_value<Cpu_number>(_cpu));
-      _tramp_mp_spinlock.clear();
-      while (1)
-        Proc::halt();
-    }
+    stop_booting_ap_cpu("CPU allocation failed", apic_id);
 
   if (cpu_is_new)
     Per_cpu_data::run_ctors(_cpu);
