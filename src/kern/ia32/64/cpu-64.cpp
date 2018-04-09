@@ -4,7 +4,7 @@ INTERFACE [amd64 && !kernel_isolation]:
 
 EXTENSION class Cpu
 {
-  Syscall_entry _syscall_entry;
+  static Per_cpu_array<Syscall_entry> _syscall_entry;
 };
 
 
@@ -13,11 +13,13 @@ IMPLEMENTATION[amd64 && !kernel_isolation]:
 #include "mem_layout.h"
 #include "tss.h"
 
+Per_cpu_array<Syscall_entry> Cpu::_syscall_entry;
+
 PUBLIC
 void
 Cpu::set_fast_entry(void (*func)())
 {
-  _syscall_entry.set_entry(func);
+  _syscall_entry[id()].set_entry(func);
 }
 
 IMPLEMENT inline NEEDS["tss.h"]
@@ -30,10 +32,10 @@ void
 Cpu::setup_sysenter()
 {
   wrmsr(0, GDT_CODE_KERNEL | ((GDT_CODE_USER32 | 3) << 16), MSR_STAR);
-  wrmsr((Unsigned64)&_syscall_entry, MSR_LSTAR);
-  wrmsr((Unsigned64)&_syscall_entry, MSR_CSTAR);
+  wrmsr((Unsigned64)&_syscall_entry[id()], MSR_LSTAR);
+  wrmsr((Unsigned64)&_syscall_entry[id()], MSR_CSTAR);
   wrmsr(~0ULL, MSR_SFMASK);
-  _syscall_entry.set_rsp((Address)&kernel_sp());
+  _syscall_entry[id()].set_rsp((Address)&kernel_sp());
 }
 
 IMPLEMENTATION[amd64 && kernel_isolation]:

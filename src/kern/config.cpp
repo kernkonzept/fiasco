@@ -177,7 +177,7 @@ public:
   static const unsigned kernel_mem_per_cent = 6;
   enum
   {
-    kernel_mem_max      = 1024 << 20
+    kernel_mem_max      = 3328UL << 20
   };
 };
 

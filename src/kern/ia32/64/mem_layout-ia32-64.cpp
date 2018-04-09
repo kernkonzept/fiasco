@@ -66,7 +66,7 @@ public:
     Kentry_cpu_pdir   = 0xfffffffff0800000UL,
     Cpu_local_start   = 0xfffffffff0012000UL,
 
-    Physmem           = 0xffffffff80000000UL,    ///< % 4MB   kernel memory
+    Physmem           = 0xffffffff10000000UL,    ///< % 4MB   kernel memory
     Physmem_end       = 0xffffffffe0000000UL,    ///< % 4MB   kernel memory
     Physmem_max_size  = Physmem_end - Physmem,
   };
