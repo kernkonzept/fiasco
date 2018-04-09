@@ -31,7 +31,7 @@ config PF_EXYNOS_PKG_IDS
 
 choice
         prompt "Exynos Platform"
-        default PF_EXYNOS_4210
+        default PF_EXYNOS4_4210
         help
           Select the Exynos Soc type, if the optional package-ID
           file is used (PF_EXYNOS_PKG_IDS) this file overrides the
