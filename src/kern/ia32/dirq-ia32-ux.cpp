@@ -34,9 +34,8 @@ static inline void irq_spinners(int irqnum)
  */
 extern "C" FIASCO_FASTCALL
 void
-irq_interrupt(Mword _irqobj, Mword ip)
+irq_interrupt(Mword irqobj, Mword ip)
 {
-  Mword irqobj = (Smword)((Signed32)_irqobj);
   Thread::assert_irq_entry();
 
   CNT_IRQ;
