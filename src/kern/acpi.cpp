@@ -62,6 +62,14 @@ public:
     Unsigned8 len;
   } __attribute__((packed));
 
+  struct Lapic : public Apic_head
+  {
+    enum { ID = LAPIC };
+    Unsigned8 apic_processor_id;
+    Unsigned8 apic_id;
+    Unsigned32 flags;
+  } __attribute__((packed));
+
   struct Io_apic : public Apic_head
   {
     enum { ID = IOAPIC };
