@@ -276,7 +276,7 @@ config UX_NET
 
 choice 
 	prompt "Scheduler"
-	default FIXED_PRIO
+	default SCHED_FIXED_PRIO
 
 config SCHED_FIXED_PRIO
 	bool "Fixed priority scheduler"
