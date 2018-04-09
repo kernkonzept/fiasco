@@ -17,8 +17,7 @@ private:
 
 IMPLEMENTATION:
 
-#include "cpu_lock.h"
-#include "lock_guard.h"
+#include "atomic.h"
 
 Ram_quota *Ram_quota::root;
 
@@ -49,15 +48,23 @@ Ram_quota::current() const
 PUBLIC
 bool
 Ram_quota::alloc(signed long bytes)
-{ 
-  auto guard = lock_guard(cpu_lock);
-  if (unlimited() || _current + bytes <= _max)
+{
+  if (unlimited())
     {
-      _current += bytes;
+      atomic_mp_add(&_current, bytes);
       return true;
     }
 
-  return false;
+  for (;;)
+    {
+      unsigned long o = access_once(&_current);
+      unsigned long n = o + bytes;
+      if (n > _max)
+        return false;
+
+      if (mp_cas(&_current, o, n))
+        return true;
+    }
 }
 
 PUBLIC inline NEEDS[Ram_quota::alloc]

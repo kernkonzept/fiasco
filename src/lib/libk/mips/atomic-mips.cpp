@@ -143,6 +143,11 @@ atomic_mp_or(Mword *l, Mword value)
 { atomic_or(l, value); }
 
 inline
+void
+atomic_mp_add(Mword *l, Mword value)
+{ atomic_add(l, value); }
+
+inline
 bool
 mp_cas_arch(Mword *m, Mword o, Mword n)
 { return cas_unsafe(m, o, n); }
