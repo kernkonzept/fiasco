@@ -14,7 +14,7 @@ protected:
   {
     unsigned long index;
 
-    static void link(cxx::H_list<Head> &h, void *b, unsigned idx)
+    static void link(cxx::H_list<Head> &h, void *b, unsigned long idx)
     {
       Head *n = (Head*)b;
       n->index = idx;
@@ -25,11 +25,11 @@ protected:
   typedef cxx::H_list_bss<Head> B_list;
 };
 
-template< int MIN_LOG2_SIZE, int NUM_SIZES, int MAX_MEM >
+template< unsigned long MIN_LOG2_SIZE, int NUM_SIZES, unsigned long MAX_MEM >
 class Buddy_t_base : public Buddy_base
 {
 public:
-  enum
+enum : unsigned long
   {
     Min_log2_size = MIN_LOG2_SIZE,
     Min_size = 1UL << MIN_LOG2_SIZE,
@@ -39,7 +39,7 @@ public:
   };
 
 private:
-  enum
+  enum : unsigned long
   {
     // the number of bits in the bitmap is given by the amount of the smallest
     // supported blocks. We need an extra bit in the case that the Max_mem
@@ -66,7 +66,7 @@ IMPLEMENTATION:
 #include "warn.h"
 
 PRIVATE
-template<int A, int B, int M> 
+template<unsigned long A, int B, unsigned long M>
 inline
 Buddy_base::Head *
 Buddy_t_base<A,B,M>::buddy(void *block, unsigned long index, Head **new_block)
@@ -93,7 +93,7 @@ Buddy_t_base<A,B,M>::buddy(void *block, unsigned long index, Head **new_block)
 }
 
 PUBLIC
-template<int A, int B, int M>
+template<unsigned long A, int B, unsigned long M>
 inline
 void
 Buddy_t_base<A,B,M>::free(void *block, unsigned long size)
@@ -138,7 +138,7 @@ Buddy_t_base<A,B,M>::free(void *block, unsigned long size)
 
 
 PUBLIC
-template<int A, int B, int M>
+template<unsigned long A, int B, unsigned long M>
 void
 Buddy_t_base<A,B,M>::add_mem(void *b, unsigned long size)
 {
@@ -168,7 +168,7 @@ Buddy_t_base<A,B,M>::add_mem(void *b, unsigned long size)
 
 
 PRIVATE
-template<int A, int B, int M>
+template<unsigned long A, int B, unsigned long M>
 inline
 void
 Buddy_t_base<A,B,M>::split(Head *b, unsigned size_index, unsigned i)
@@ -186,7 +186,7 @@ Buddy_t_base<A,B,M>::split(Head *b, unsigned size_index, unsigned i)
 }
 
 PUBLIC
-template<int A, int B, int M>
+template<unsigned long A, int B, unsigned long M>
 inline
 void *
 Buddy_t_base<A,B,M>::alloc(unsigned long size)
@@ -217,18 +217,18 @@ Buddy_t_base<A,B,M>::alloc(unsigned long size)
 }
 
 PUBLIC
-template< int A, int B, int M >
+template< unsigned long A, int B, unsigned long M >
 void
 Buddy_t_base<A,B,M>::dump() const
 {
   unsigned long total = 0;
-  printf("Buddy_alloc [%d,%d]\n", Min_size, Num_sizes);
+  printf("Buddy_alloc [%ld,%ld]\n", Min_size, Num_sizes);
   for (unsigned i = 0; i < Num_sizes; ++i)
     {
-      unsigned c = 0;
+      unsigned long c = 0;
       unsigned long avail = 0;
       B_list::Const_iterator h = _free[i].begin();
-      printf("  [%d] %p(%lu)", Min_size << i, *h, h != _free[i].end() ? h->index : 0UL);
+      printf("  [%ld] %p(%lu)", Min_size << i, *h, h != _free[i].end() ? h->index : 0UL);
       while (h != _free[i].end())
 	{
 	  ++h;
@@ -255,7 +255,7 @@ Buddy_base::init(unsigned long base)
 { _base = base; }
 
 PUBLIC
-template< int A, int B, int M >
+template< unsigned long A, int B, unsigned long M >
 unsigned long
 Buddy_t_base<A,B,M>::avail() const
 {
