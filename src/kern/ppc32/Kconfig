@@ -10,7 +10,7 @@
 # ARCHHELP: PPC32 testing version, mainly for MPC5200 (603e). Currently,
 # ARCHHELP: there is no support whatsoever.
 #
-# ARCHDEFAULTPF: PF_MP52CXX
+# ARCHDEFAULTPF: PF_MPC52XX
 
 # SECTION: CPU
 
