@@ -222,13 +222,13 @@ void
 Buddy_t_base<A,B,M>::dump() const
 {
   unsigned long total = 0;
-  printf("Buddy_alloc [%ld,%ld]\n", Min_size, Num_sizes);
+  printf("Buddy_alloc [%ld,%ld]\n", (unsigned long)Min_size, (unsigned long)Num_sizes);
   for (unsigned i = 0; i < Num_sizes; ++i)
     {
       unsigned long c = 0;
       unsigned long avail = 0;
       B_list::Const_iterator h = _free[i].begin();
-      printf("  [%ld] %p(%lu)", Min_size << i, *h, h != _free[i].end() ? h->index : 0UL);
+      printf("  [%ld] %p(%lu)", (unsigned long)Min_size << i, *h, h != _free[i].end() ? h->index : 0UL);
       while (h != _free[i].end())
 	{
 	  ++h;
