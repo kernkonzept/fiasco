@@ -54,28 +54,6 @@ private:
   static bool psci_is_v1;
 };
 
-INTERFACE [arm && arm_psci && 32bit]:
-
-#define FIASCO_ARM_PSCI_CALL_ASM_OPERANDS \
-    : "=r" (r0), "=r" (r1), "=r" (r2), "=r" (r3) \
-    : "0" (r0), "1" (r1), "2" (r2), "3" (r3), \
-      "r" (r4), "r" (r5), "r" (r6), "r" (r7) \
-    : "memory"
-
-#define FIASCO_ARM_ASM_REG(n) asm("r" # n)
-
-INTERFACE [arm && arm_psci && 64bit]:
-
-#define FIASCO_ARM_PSCI_CALL_ASM_OPERANDS \
-    : "=r" (r0), "=r" (r1), "=r" (r2), "=r" (r3), \
-      "=r" (r4), "=r" (r5), "=r" (r6), "=r" (r7) \
-    : "0" (r0), "1" (r1), "2" (r2), "3" (r3), \
-      "4" (r4), "5" (r5), "6" (r6), "7" (r7) \
-    : "memory", "x8", "x9", "x10", "x11", "x12", "x13", \
-      "x14", "x15", "x16", "x17"
-
-#define FIASCO_ARM_ASM_REG(n) asm("x" # n)
-
 INTERFACE [arm && arm_psci && arm_psci_smc]:
 
 #define FIASCO_ARM_PSCI_CALL_ASM_FUNC "smc #0"
@@ -89,6 +67,7 @@ IMPLEMENTATION [arm && arm_psci]:
 #include "mem.h"
 #include "mmio_register_block.h"
 #include "kmem.h"
+#include "smc_call.h"
 
 #include <cstdio>
 
@@ -114,7 +93,7 @@ Platform_control::psci_fn(unsigned fn)
     };
 }
 
-PUBLIC static inline
+PUBLIC static inline NEEDS ["smc_call.h"]
 Platform_control::Psci_result
 Platform_control::psci_call(Mword fn_id,
                             Mword a0 = 0, Mword a1 = 0,
@@ -132,7 +111,7 @@ Platform_control::psci_call(Mword fn_id,
   register Mword r7 FIASCO_ARM_ASM_REG(7) = a6;
 
   asm volatile(FIASCO_ARM_PSCI_CALL_ASM_FUNC
-               FIASCO_ARM_PSCI_CALL_ASM_OPERANDS);
+               FIASCO_ARM_SMC_CALL_ASM_OPERANDS);
 
   Psci_result res = { r0, r1, r2, r3 };
   return res;

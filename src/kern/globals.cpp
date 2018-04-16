@@ -36,9 +36,10 @@ public:
     Scheduler =  7,
     Iommu     =  8,
     Jdb       = 10,
+    Smc       = 11,
 
     First_alloc_cap = Log,
-    Num_alloc       = 6,
+    Num_alloc       = 7,
     End_alloc_cap   = First_alloc_cap + Num_alloc,
   };
 

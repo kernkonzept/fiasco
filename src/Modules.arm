@@ -124,7 +124,7 @@ PRIVATE_INCDIR 	+= kern/$(CONFIG_XARCH)/$(BITS) kern/$(CONFIG_XARCH) kern
 INTERFACES_KERNEL += 	__main mem_op kmem_space boot_uart_init     \
 			irq_chip_generic bootstrap                  \
 			outer_cache utcb_support cascade_irq   \
-			irq_mgr_multi_chip
+			irq_mgr_multi_chip smc_call
 
 INTERFACES_KERNEL-$(CONFIG_ARM_MPCORE) += scu
 INTERFACES_KERNEL-$(CONFIG_ARM_CORTEX_A9) += scu
@@ -132,6 +132,7 @@ INTERFACES_KERNEL-$(CONFIG_BIT32) += kern_lib_page
 INTERFACES_KERNEL-$(CONFIG_SERIAL) += uart_console
 INTERFACES_KERNEL-$(CONFIG_ARM_EM_TZ) += vm
 INTERFACES_KERNEL-$(CONFIG_CPU_VIRT) += vgic
+INTERFACES_KERNEL-$(CONFIG_ARM_SMC_USER) += smc_user
 INTERFACES_KERNEL += boot_infos
 
 

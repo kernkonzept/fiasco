@@ -428,6 +428,7 @@ public:
     Label_semaphore = -20L,    ///< Protocol ID for semaphore objects.
     Label_iommu = -22L,        ///< Protocol ID for IOMMUs
     Label_debugger = -23L,     ///< Protocol ID for the debugger
+    Label_smc = -24L,          ///< Protocol ID for ARM SMC calls.
     Max_factory_label = Label_iommu,
   };
 private:

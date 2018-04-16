@@ -232,6 +232,14 @@ config ARM_SECMONIF_MC
 
 endchoice
 
+config ARM_SMC_USER
+	bool "Enable SMC user interface"
+	help
+	  When enabled then Fiasco offers an interface that allows user threads
+	  to talk to Trusted Applications and a Trusted OS on the secure-side.
+	  Fiasco only allows service calls in the range 0x30000000 to 0x3f000000.
+	  All other SMC calls will be blocked.
+
 config BIT64_CHOICE
 	bool "Run Fiasco in 64bit processor mode"
 	default y
