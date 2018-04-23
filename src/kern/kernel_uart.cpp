@@ -163,7 +163,8 @@ void
 Kernel_uart::enable_rcv_irq()
 {
   static Kuart_irq uart_irq;
-  if (Irq_mgr::mgr->alloc(&uart_irq, uart()->irq()))
+  auto mgr = Irq_mgr::mgr;
+  if (mgr->alloc(&uart_irq, mgr->legacy_override(uart()->irq())))
     {
       uart_irq.unmask();
       uart()->enable_rcv_irq();
