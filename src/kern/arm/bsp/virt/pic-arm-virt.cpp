@@ -6,7 +6,6 @@ INTERFACE [arm && pf_arm_virt]:
 
 class Irq_base;
 
-
 //-------------------------------------------------------------------
 IMPLEMENTATION [arm && pf_arm_virt]:
 
@@ -15,7 +14,6 @@ IMPLEMENTATION [arm && pf_arm_virt]:
 PUBLIC static FIASCO_INIT
 void Pic::init()
 {
-
   typedef Irq_mgr_multi_chip<9> Mgr;
 
   Gic *g = gic.construct(Kmem::mmio_remap(Mem_layout::Gic_cpu_phys_base),
