@@ -73,7 +73,7 @@ Semaphore::_hit_edge_irq(Upstream_irq const *ui)
   else
     mask_and_ack();
 
-  ui->ack();
+  Upstream_irq::ack(ui);
   if (t)
     t->activate();
 }
@@ -89,7 +89,7 @@ Semaphore::_hit_level_irq(Upstream_irq const *ui)
 {
   assert (cpu_lock.test());
   mask_and_ack();
-  ui->ack();
+  Upstream_irq::ack(ui);
   Thread *t = 0;
   count_up(&t);
 

@@ -226,11 +226,11 @@ Upstream_irq::Upstream_irq(Irq_base const *b, Upstream_irq const *prev)
 : _c(b->chip()), _p(b->pin()), _prev(prev)
 {}
 
-PUBLIC inline
+PUBLIC static inline
 void
-Upstream_irq::ack() const
+Upstream_irq::ack(Upstream_irq const *ui)
 {
-  for (Upstream_irq const *c = this; c; c = c->_prev)
+  for (Upstream_irq const *c = ui; c; c = c->_prev)
     c->_c->ack(c->_p);
 }
 

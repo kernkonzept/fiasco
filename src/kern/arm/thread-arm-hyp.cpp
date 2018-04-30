@@ -223,7 +223,7 @@ Arm_ppi_virt::handle(Upstream_irq const *ui)
 {
   current_thread()->vcpu_vgic_upcall(_virq);
   chip()->ack(pin());
-  ui->ack();
+  Upstream_irq::ack(ui);
 }
 
 class Arm_vtimer_ppi : public Irq_base
@@ -253,7 +253,7 @@ Arm_vtimer_ppi::handle(Upstream_irq const *ui)
   mask();
   current_thread()->vcpu_vgic_upcall(1);
   chip()->ack(pin());
-  ui->ack();
+  Upstream_irq::ack(ui);
 }
 
 static Arm_ppi_virt __vgic_irq(25, 0);  // virtual GIC

@@ -553,7 +553,7 @@ PUBLIC static inline
 void
 Thread::handle_timer_remote_requests_irq(Upstream_irq const *ui)
 {
-  ui->ack();
+  Upstream_irq::ack(ui);
   current_thread()->handle_timer_interrupt();
 }
 
