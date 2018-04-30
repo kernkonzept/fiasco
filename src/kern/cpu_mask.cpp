@@ -28,7 +28,7 @@ public:
   { return _b[cxx::int_value<Cpu_number>(cpu)]; }
 
   void clear(Cpu_number cpu)
-  { return _b.clear_bit(cxx::int_value<Cpu_number>(cpu)); }
+  { _b.clear_bit(cxx::int_value<Cpu_number>(cpu)); }
 
   void set(Cpu_number cpu)
   { _b.set_bit(cxx::int_value<Cpu_number>(cpu)); };
