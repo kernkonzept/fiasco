@@ -130,5 +130,8 @@ Kmem::init_mmu(Cpu const &boot_cpu)
       == MAP_FAILED)
     printf ("CPU page mapping failed: %s\n", strerror (errno));
 
+  kdir->walk(Virt_addr(Mem_layout::Service_page), Pdir::Depth,
+             false, pdir_alloc(alloc));
+
   Cpu::init_tss((Address)tss_mem_vm.alloc<Tss>(1, 0x10));
 }

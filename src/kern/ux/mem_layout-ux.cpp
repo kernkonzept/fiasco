@@ -35,6 +35,7 @@ public:
     Glibc_mmap_end     = 0x50000000,  ///<         hoping that is enough
     Caps_start         = 0x58000000,
     Caps_end           = 0x5f000000,
+    Service_page       = 0x5f000000,
     Idt                = 0x5f001000,
     Tbuf_status_page   = 0x5f002000,  ///< % 4KB   for jdb_tbuf
     Io_map_area_start  = 0x5f003000,
@@ -60,6 +61,7 @@ public:
     Vmem_start         = 0x20000000,
     Caps_start         = 0x28000000,
     Caps_end           = 0x2f000000,
+    Service_page       = 0x2f000000,
     Idt                = 0x2f001000,
     Tbuf_status_page   = 0x2f002000,  ///< % 4KB   for jdb_tbuf
     Io_map_area_start  = 0x2f003000,
