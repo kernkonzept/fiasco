@@ -34,9 +34,4 @@ public:
   static void *page_alloc(void *address,
 			  Zero_fill zf = NO_ZERO_FILL,
 			  unsigned mode = Kernel);
-
-private:
-  static void page_map(void *address, int order, Zero_fill zf,
-                       Address phys);
 };
-

@@ -58,9 +58,8 @@ error:
 //----------------------------------------------------------------------------
 IMPLEMENTATION[ia32,amd64]:
 
-IMPLEMENT inline
+PUBLIC static inline
 void
 Vmem_alloc::page_map(void * /*address*/, int /*order*/, Zero_fill /*zf*/,
 		     Address /*phys*/)
 {}
-

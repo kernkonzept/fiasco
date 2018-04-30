@@ -32,6 +32,7 @@ IMPLEMENTATION:
 #include "paging.h"
 #include "panic.h"
 #include "kmem_alloc.h"
+#include "vmem_alloc.h"
 #include <cstring>
 
 Address Idt::_idt_pa;
@@ -88,6 +89,9 @@ Idt::init()
 
   _idt_pa = Mem_layout::pmem_to_phys(idt);
   memset(idt, 0, Config::PAGE_SIZE);
+
+  Vmem_alloc::page_map((void *)_idt, 0, Vmem_alloc::NO_ZERO_FILL, _idt_pa);
+
   init_table((Idt_init_entry*)&idt_init_table, idt);
 
   init_current_cpu();

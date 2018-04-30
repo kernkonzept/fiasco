@@ -8,8 +8,8 @@ IMPLEMENTATION[ux]:
 #include "boot_info.h"
 #include "panic.h"
 
-IMPLEMENT inline NEEDS [<cerrno>, <cstring>, <unistd.h>, <sys/mman.h>,
-                        "boot_info.h", "config.h", "panic.h"]
+PUBLIC static inline NEEDS [<cerrno>, <cstring>, <unistd.h>, <sys/mman.h>,
+                            "boot_info.h", "config.h", "panic.h"]
 void
 Vmem_alloc::page_map(void *address, int order, Zero_fill zf, Address phys)
 {
@@ -21,4 +21,3 @@ Vmem_alloc::page_map(void *address, int order, Zero_fill zf, Address phys)
   if (zf == ZERO_FILL)
     memset(address, 0, (1 << order) * Config::PAGE_SIZE);
 }
-
