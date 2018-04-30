@@ -227,6 +227,8 @@ Usermode::kernel_entry(Cpu_number _cpu,
         *(kesp + 4) = xss;
         *(kesp + 3) = esp;
 
+      /* FALL-THRU */
+
       case 0:
         *(kesp + 2) = efl | (Proc::processor_state() & EFLAGS_IF);
         *(kesp + 1) = xcs & ~1; // trap on iret
@@ -237,6 +239,7 @@ Usermode::kernel_entry(Cpu_number _cpu,
     {
       case 0xe:					// Page Fault
         Emulation::set_page_fault_addr (cr2);
+      /* FALL-THRU */
       case 0x8:					// Double Fault
       case 0xa:					// Invalid TSS
       case 0xb:					// Segment Not Present

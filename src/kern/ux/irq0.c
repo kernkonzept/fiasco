@@ -28,6 +28,7 @@ int main (void) {
             if (write (0, "T", 1) != -1)
               continue;
 
+            /* FALL-THRU */
           case -1:
             if (errno != EINTR)
               return 1;
