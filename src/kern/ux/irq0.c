@@ -21,7 +21,7 @@ int main (void) {
   setitimer (ITIMER_REAL, &t, NULL);
 
   for (;;)
-    {  
+    {
       switch (sigwait (&blocked, &sig))
         {
           case 0:

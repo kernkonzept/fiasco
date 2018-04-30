@@ -131,6 +131,4 @@ Kmem::init_mmu(Cpu const &boot_cpu)
     printf ("CPU page mapping failed: %s\n", strerror (errno));
 
   Cpu::init_tss((Address)tss_mem_vm.alloc<Tss>(1, 0x10));
-
 }
-
