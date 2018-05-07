@@ -1,64 +1,95 @@
 INTERFACE:
 
 #include "atomic.h"
+#include <cxx/type_traits>
 
 template< bool LARGE, unsigned BITS >
 class Bitmap_base;
 
-// Implementation for bitmaps bigger than sizeof(unsigned long) * 8
-// Derived classes have to make sure to provide the storage space for
-// holding the bitmap.
-template<unsigned BITS>
-class Bitmap_base< true, BITS >
+template< typename STORAGE_TYPE >
+class Bitmap_base_base
 {
 public:
-  enum {
-    Bpl      = sizeof(unsigned long) * 8,
-    Nr_elems = (BITS + Bpl - 1) / Bpl,
-  };
+  typedef typename cxx::remove_pointer<typename cxx::remove_all_extents<STORAGE_TYPE>::type>::type
+    Bitmap_elem_type;
+
+  enum { Bpl = sizeof(Bitmap_elem_type) * 8 };
+
+  static constexpr unsigned long
+  nr_elems(unsigned long nr_bits)
+  { return (nr_bits + Bpl - 1) / Bpl; }
+
+  static constexpr unsigned long
+  size_in_bytes(unsigned long nr_bits)
+  { return nr_elems(nr_bits) * sizeof(Bitmap_elem_type); }
 
   void bit(unsigned long bit, bool on)
   {
     unsigned long idx = bit / Bpl;
     unsigned long b   = bit % Bpl;
-    _bits[idx] = (_bits[idx] & ~(1UL << b)) | ((unsigned long)on << b);
+    this->_bits[idx] = (this->_bits[idx] & ~(1UL << b)) | ((unsigned long)on << b);
   }
 
   void clear_bit(unsigned long bit)
   {
     unsigned long idx = bit / Bpl;
     unsigned long b   = bit % Bpl;
-    _bits[idx] &= ~(1UL << b);
+    this->_bits[idx] &= ~(1UL << b);
   }
 
   void set_bit(unsigned long bit)
   {
     unsigned long idx = bit / Bpl;
     unsigned long b   = bit % Bpl;
-    _bits[idx] |= (1UL << b);
+    this->_bits[idx] |= (1UL << b);
   }
 
   unsigned long operator [] (unsigned long bit) const
   {
     unsigned long idx = bit / Bpl;
     unsigned long b   = bit % Bpl;
-    return _bits[idx] & (1UL << b);
+    return this->_bits[idx] & (1UL << b);
   }
+
+protected:
+  STORAGE_TYPE _bits;
+};
+
+template<unsigned BITS>
+struct Bitmap_base_base_x :
+  Bitmap_base_base<unsigned long [(BITS + sizeof(unsigned long) * 8 - 1) / (sizeof(unsigned long) * 8)]>
+{};
+
+
+// Implementation for bitmaps bigger than sizeof(unsigned long) * 8
+// Derived classes have to make sure to provide the storage space for
+// holding the bitmap.
+template<unsigned BITS>
+class Bitmap_base< true, BITS > : public Bitmap_base_base_x<BITS>
+{
+public:
+  enum {
+    Bpl      = Bitmap_base_base_x<BITS>::Bpl,
+    Nr_elems = (BITS + Bpl - 1) / Bpl,
+  };
 
   bool atomic_get_and_clear(unsigned long bit)
   {
+    static_assert (Bitmap_base_base_x<BITS>::Bpl == sizeof(unsigned long) * 8,
+                   "invalid type of Bitmap_base_base");
+
     unsigned long idx = bit / Bpl;
     unsigned long b   = bit % Bpl;
     unsigned long v;
 
-    if (!(_bits[idx] & (1UL << b)))
+    if (!(this->_bits[idx] & (1UL << b)))
       return false;
 
     do
       {
-        v = _bits[idx];
+        v = this->_bits[idx];
       }
-    while (!mp_cas(&_bits[idx], v, v & ~(1UL << b)));
+    while (!mp_cas(&this->_bits[idx], v, v & ~(1UL << b)));
 
     return v & (1UL << b);
   }
@@ -70,9 +101,9 @@ public:
     unsigned long v;
     do
       {
-        v = _bits[idx];
+        v = this->_bits[idx];
       }
-    while (!mp_cas(&_bits[idx], v, v | (1UL << b)));
+    while (!mp_cas(&this->_bits[idx], v, v | (1UL << b)));
 
     return v & (1UL << b);
   }
@@ -81,26 +112,26 @@ public:
   {
     unsigned long idx = bit / Bpl;
     unsigned long b   = bit % Bpl;
-    atomic_mp_or(&_bits[idx], 1UL << b);
+    atomic_mp_or(&this->_bits[idx], 1UL << b);
   }
 
   void atomic_clear_bit(unsigned long bit)
   {
     unsigned long idx = bit / Bpl;
     unsigned long b   = bit % Bpl;
-    atomic_mp_and(&_bits[idx], ~(1UL << b));
+    atomic_mp_and(&this->_bits[idx], ~(1UL << b));
   }
 
   void clear_all()
   {
     for (unsigned i = 0; i < Nr_elems; ++i)
-      _bits[i] = 0;
+      this->_bits[i] = 0;
   }
 
   bool is_empty() const
   {
     for (unsigned i = 0; i < Nr_elems; ++i)
-      if (_bits[i])
+      if (this->_bits[i])
 	return false;
     return true;
   }
@@ -108,7 +139,7 @@ public:
   void atomic_or(Bitmap_base const &r)
   {
     for (unsigned i = 0; i < Nr_elems; ++i)
-      atomic_mp_or(&_bits[i], r._bits[i]);
+      atomic_mp_or(&this->_bits[i], r._bits[i]);
   }
 
   unsigned ffs(unsigned bit) const
@@ -117,7 +148,7 @@ public:
     unsigned long b   = bit % Bpl;
     for (unsigned i = idx; i < Nr_elems; ++i)
       {
-        unsigned long v = _bits[i];
+        unsigned long v = this->_bits[i];
         v >>= b;
         unsigned r = __builtin_ffsl(v);
         if (r > 0)
@@ -140,7 +171,7 @@ protected:
   void _or(Bitmap_base const &r)
   {
     for (unsigned i = 0; i < Nr_elems; ++i)
-      _bits[i] |= r._bits[i];
+      this->_bits[i] |= r._bits[i];
   }
 
   template<unsigned SOURCE_BITS>
@@ -148,10 +179,8 @@ protected:
   {
     static_assert(BITS <= SOURCE_BITS,
                   "cannot copy smaller bitmap into bigger one");
-    __builtin_memcpy(_bits, s._bits, Nr_elems * sizeof(_bits[0]));
+    __builtin_memcpy(this->_bits, s._bits, Nr_elems * sizeof(this->_bits[0]));
   }
-
-  unsigned long _bits[Nr_elems];
 };
 
 // Implementation for a bitmap up to sizeof(unsigned long) * 8 bits
