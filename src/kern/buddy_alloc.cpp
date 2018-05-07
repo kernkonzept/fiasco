@@ -237,8 +237,7 @@ Buddy_t_base<A,B,M>::dump() const
 	  else if (c == 5)
             printf(" ...");
 
-          if (*h)
-            avail += Min_size << i;
+          avail += Min_size << i;
 
 	  ++c;
 	}
