@@ -25,35 +25,80 @@ protected:
   typedef cxx::H_list_bss<Head> B_list;
 };
 
-template< unsigned long MIN_LOG2_SIZE, int NUM_SIZES, unsigned long MAX_MEM >
+template< unsigned long MIN_LOG2_SIZE, int NUM_SIZES>
 class Buddy_t_base : public Buddy_base
 {
+private:
+  struct Freemap : Bitmap_base_base<unsigned long *>
+  {
+    void setup(unsigned long *addr, unsigned long size_in_bytes)
+    {
+      _bits = addr;
+      for (unsigned i = 0; i < size_in_bytes / sizeof(Bitmap_elem_type); ++i)
+        _bits[i] = 0;
+    }
+  };
+
 public:
-enum : unsigned long
+  enum : unsigned long
   {
     Min_log2_size = MIN_LOG2_SIZE,
     Min_size = 1UL << MIN_LOG2_SIZE,
     Num_sizes = NUM_SIZES,
     Max_size = Min_size << (NUM_SIZES - 1),
-    Max_mem = MAX_MEM,
   };
 
+  static constexpr unsigned long
+  free_map_bytes(unsigned long min_addr, unsigned long max_addr)
+  { return Freemap::size_in_bytes(buddy_bits(min_addr, max_addr)); }
+
+  static constexpr unsigned long
+  free_map_align()
+  { return alignof (unsigned long); }
+
+  void setup_free_map(unsigned long *addr, unsigned long size_in_bytes)
+  { _free_map.setup(addr, size_in_bytes); }
+
+  static constexpr unsigned long
+  calc_base_addr(unsigned long min_addr)
+  { return min_addr & ~(Max_size - 1); }
+
 private:
-  enum : unsigned long
+
+  /**
+   * Calculate the size in bytes that needs to be handled by
+   * the free block bitmap.
+   * \param min_addr  The minimum address of any memory to be handled
+   *                  by the buddy allocator.
+   * \param max_addr  The maximum address (inclusive) of any memory
+   *                  block handled by the buddy allocator.
+   * \returns The size in bytes of memory that must be handled by the buddy's
+   *          free-blocks bitmap, taking any alignment constraints into
+   *          account.
+   */
+  static constexpr unsigned long
+  calc_max_mem_size(unsigned long min_addr, unsigned long max_addr)
+  {
+    return max_addr - calc_base_addr(min_addr) + 1;
+  }
+
+  static constexpr unsigned long
+  buddy_bits(unsigned long min_addr, unsigned long max_addr)
   {
     // the number of bits in the bitmap is given by the amount of the smallest
     // supported blocks. We need an extra bit in the case that the Max_mem
     // is no multiple of Max_size to ensure that buddy() does not access
     // beyond the bitmap.
-    Buddy_bits = (Max_mem + Min_size - 1)/Min_size
-                 + !!(Max_mem & (Max_size-1))
-  };
+    return (calc_max_mem_size(min_addr, max_addr) + Min_size - 1) / Min_size
+            + !!(calc_max_mem_size(min_addr, max_addr) & (Max_size - 1));
+  }
+
   B_list _free[Num_sizes];
-  Bitmap<Buddy_bits> _free_map;
+  Freemap _free_map;
 };
 
 
-class Buddy_alloc : public Buddy_t_base<10, 8, Config::kernel_mem_max>
+class Buddy_alloc : public Buddy_t_base<10, 8>
 {
 };
 
@@ -66,10 +111,10 @@ IMPLEMENTATION:
 #include "warn.h"
 
 PRIVATE
-template<unsigned long A, int B, unsigned long M>
+template<unsigned long A, int B>
 inline
 Buddy_base::Head *
-Buddy_t_base<A,B,M>::buddy(void *block, unsigned long index, Head **new_block)
+Buddy_t_base<A,B>::buddy(void *block, unsigned long index, Head **new_block)
 {
   //printf("buddy(%p, %ld)\n", block, index);
   unsigned long const size = Min_size << index;
@@ -93,13 +138,13 @@ Buddy_t_base<A,B,M>::buddy(void *block, unsigned long index, Head **new_block)
 }
 
 PUBLIC
-template<unsigned long A, int B, unsigned long M>
+template<unsigned long A, int B>
 inline
 void
-Buddy_t_base<A,B,M>::free(void *block, unsigned long size)
+Buddy_t_base<A,B>::free(void *block, unsigned long size)
 {
   assert ((unsigned long)block >= _base);
-  assert ((unsigned long)block - _base < Max_mem);
+  //assert ((unsigned long)block - _base < Max_mem);
   assert (!_free_map[((unsigned long)block - _base) / Min_size]);
   //bool _b = 0;
   //if (_debug) printf("Buddy::free(%p, %ld)\n", block, size);
@@ -138,9 +183,9 @@ Buddy_t_base<A,B,M>::free(void *block, unsigned long size)
 
 
 PUBLIC
-template<unsigned long A, int B, unsigned long M>
+template<unsigned long A, int B>
 void
-Buddy_t_base<A,B,M>::add_mem(void *b, unsigned long size)
+Buddy_t_base<A,B>::add_mem(void *b, unsigned long size)
 {
   unsigned long start = (unsigned long)b;
   unsigned long al_start;
@@ -168,10 +213,10 @@ Buddy_t_base<A,B,M>::add_mem(void *b, unsigned long size)
 
 
 PRIVATE
-template<unsigned long A, int B, unsigned long M>
+template<unsigned long A, int B>
 inline
 void
-Buddy_t_base<A,B,M>::split(Head *b, unsigned size_index, unsigned i)
+Buddy_t_base<A,B>::split(Head *b, unsigned size_index, unsigned i)
 {
   //unsigned si = size_index;
   //printf("Buddy::split(%p, %d, %d)\n", b, size_index, i);
@@ -186,10 +231,10 @@ Buddy_t_base<A,B,M>::split(Head *b, unsigned size_index, unsigned i)
 }
 
 PUBLIC
-template<unsigned long A, int B, unsigned long M>
+template<unsigned long A, int B>
 inline
 void *
-Buddy_t_base<A,B,M>::alloc(unsigned long size)
+Buddy_t_base<A,B>::alloc(unsigned long size)
 {
   unsigned size_index = 0;
   while (((unsigned long)Min_size << size_index) < size)
@@ -217,9 +262,9 @@ Buddy_t_base<A,B,M>::alloc(unsigned long size)
 }
 
 PUBLIC
-template< unsigned long A, int B, unsigned long M >
+template< unsigned long A, int B>
 void
-Buddy_t_base<A,B,M>::dump() const
+Buddy_t_base<A,B>::dump() const
 {
   unsigned long total = 0;
   printf("Buddy_alloc [%ld,%ld]\n", (unsigned long)Min_size, (unsigned long)Num_sizes);
@@ -249,14 +294,15 @@ Buddy_t_base<A,B,M>::dump() const
 }
 
 PUBLIC
+template< unsigned long A, int B>
 void
-Buddy_base::init(unsigned long base)
-{ _base = base; }
+Buddy_t_base<A,B>::init(unsigned long base)
+{ _base = calc_base_addr(base); }
 
 PUBLIC
-template< unsigned long A, int B, unsigned long M >
+template< unsigned long A, int B>
 unsigned long
-Buddy_t_base<A,B,M>::avail() const
+Buddy_t_base<A,B>::avail() const
 {
   unsigned long a = 0;
   for (unsigned i = 0; i < Num_sizes; ++i)

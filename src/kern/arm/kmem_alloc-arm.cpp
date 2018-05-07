@@ -43,6 +43,9 @@ Kmem_alloc::to_phys(void *v) const
   return Mem_layout::kdir->virt_to_phys((Address)v);
 }
 
+static unsigned long _freemap[
+  Kmem_alloc::Alloc::free_map_bytes(Mem_layout::Map_base, Mem_layout::Pmem_end - 1)
+  / sizeof(unsigned long)];
 
 IMPLEMENT
 Kmem_alloc::Kmem_alloc()
@@ -63,6 +66,9 @@ Kmem_alloc::Kmem_alloc()
     a->init(Mem_layout::Map_base);
   else
     a->init(Mem_layout::Pmem_start);
+
+  a->setup_free_map(_freemap, Kmem_alloc::Alloc::free_map_bytes(
+    Mem_layout::Map_base, Mem_layout::Pmem_end - 1));
 
   for (int i = map.length() - 1; i >= 0 && alloc_size > 0; --i)
     {
@@ -93,7 +99,6 @@ Address
 Kmem_alloc::to_phys(void *v) const
 { return (Address)v - Mem_layout::Map_base + Mem_layout::Sdram_phys_base; }
 
-
 IMPLEMENT
 Kmem_alloc::Kmem_alloc()
 {
@@ -109,39 +114,50 @@ Kmem_alloc::Kmem_alloc()
     panic("Kmem_alloc: No kernel memory available (%ld)\n",
           available_size);
 
-  Address base = ~0UL;
   for (int i = map.length() - 1; i >= 0 && alloc_size > 0; --i)
     {
-      Mem_region f = map[i];
+      Mem_region &f = map[i];
       if (f.size() > alloc_size)
-	f.start += (f.size() - alloc_size);
-
-      if (f.start < base)
-        base = f.start;
+        f.start += (f.size() - alloc_size);
 
       Kip::k()->add_mem_region(Mem_desc(f.start, f.end, Mem_desc::Reserved));
 
       alloc_size -= f.size();
+      if (!alloc_size)
+        {
+          // remove all the unsed regions
+          map.del(0, i);
+          break;
+        }
     }
 
-  base &= Config::SUPERPAGE_MASK;
-  base += offset;
+  unsigned long freemap_size
+    = Alloc::free_map_bytes(map[0].start, map[map.length()-1].end);
 
-  a->init(base);
-  alloc_size = Config::KMEM_SIZE;
+  unsigned long freemap_addr = ~0UL;
 
-  for (int i = map.length() - 1; i >= 0 && alloc_size > 0; --i)
+  for (int i = map.length() - 1; i >= 0; --i)
+    {
+      Mem_region &f = map[i];
+      if (f.size() >= freemap_size)
+        {
+          freemap_addr = f.end - freemap_size + 1 + offset;
+          f.end -= freemap_size;
+          break;
+        }
+    }
+
+  if (freemap_addr == ~0UL)
+    panic("could not allocate freemap for buddy allocator\n");
+
+  a->init(map[0].start + offset);
+  a->setup_free_map((unsigned long *)freemap_addr, freemap_size);
+
+  for (int i = map.length() - 1; i >= 0; --i)
     {
       Mem_region f = map[i];
-      if (f.size() > alloc_size)
-	f.start += (f.size() - alloc_size);
-
       a->add_mem((void *)(f.start + offset), f.size());
-      alloc_size -= f.size();
     }
-
-  if (alloc_size)
-    WARNX(Warning, "Kmem_alloc: cannot allocate sufficient kernel memory\n");
 }
 
 //----------------------------------------------------------------------------

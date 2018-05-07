@@ -127,40 +127,98 @@ Kmem_alloc::Kmem_alloc()
 {
   if (0)
     printf("Kmem_alloc::Kmem_alloc()\n");
-  bool initialized = false;
+
+  unsigned long min_addr = ~0UL;
+  unsigned long max_addr = 0;
 
   for (auto &md: Kip::k()->mem_descs_a())
     {
-      if (md.is_virtual())
-	continue;
+      if (!md.valid() || md.is_virtual())
+        continue;
+
+      if (md.type() != Mem_desc::Kernel_tmp)
+        continue;
+
+      if (min_addr > md.start())
+        min_addr = md.start();
+
+      if (max_addr < md.end())
+        max_addr = md.end();
+    }
+
+  if (min_addr >= max_addr)
+    panic("cannot allocate kernel memory, invalid reserved areas\n");
+
+  unsigned long freemap_size = Alloc::free_map_bytes(min_addr, max_addr);
+
+  if (0)
+    printf("Kmem_alloc: freemap needs %lu bytes\n", freemap_size);
+
+  // mem descriptor where we allocate the freemap
+  Mem_desc *bmmd = nullptr;
+
+  for (auto &md: Kip::k()->mem_descs_a())
+    {
+      if (!md.valid() || md.is_virtual())
+        continue;
+
+      if (md.type() != Mem_desc::Kernel_tmp)
+        continue;
+
+      unsigned long size = md.end() - md.start() + 1;
+      if (size < freemap_size)
+        continue;
+
+      bmmd = &md;
+      break;
+    }
+
+  if (!bmmd)
+    panic("Kmem_alloc: could not allocate buddy freemap\n");
+
+  unsigned long min_addr_kern = Mem_layout::phys_to_pmem(min_addr);
+  unsigned long bm_kern = Mem_layout::phys_to_pmem(bmmd->start());
+
+  if (bm_kern == min_addr_kern)
+    min_addr_kern += freemap_size;
+
+  if (0)
+    printf("Kmem_alloc: allocator base = %014lx\n",
+           Kmem_alloc::Alloc::calc_base_addr(min_addr_kern));
+
+  a->init(min_addr_kern);
+  a->setup_free_map(reinterpret_cast<unsigned long *>(bm_kern), freemap_size);
+
+  unsigned long size = bmmd->end() - bmmd->start() + 1;
+  if (size > freemap_size)
+    {
+      unsigned long sz = size - freemap_size;
+      if (0)
+        printf("  Kmem_alloc: block %014lx(%014lx) size=%lx\n",
+               bm_kern + freemap_size, min_addr_kern, sz);
+      a->add_mem((void*)(bm_kern + freemap_size), sz);
+      _orig_free += sz;
+    }
+
+  bmmd->type(Mem_desc::Reserved);
+
+  for (auto &md: Kip::k()->mem_descs_a())
+    {
+      if (!md.valid() || md.is_virtual())
+        continue;
+
+      if (md.type() != Mem_desc::Kernel_tmp)
+        continue;
 
       unsigned long s = md.start(), e = md.end();
+      unsigned long s_v = Mem_layout::phys_to_pmem(s);
 
-      // Sweep out stupid descriptors (that have the end before the start)
-      if (s >= e)
-	{
-	  md.type(Mem_desc::Undefined);
-	  continue;
-	}
-
-      if (md.type() == Mem_desc::Kernel_tmp)
-	{
-	  unsigned long s_v = Mem_layout::phys_to_pmem(s);
-	  if (!initialized)
-	    {
-	      initialized = true;
-	      a->init(s_v & ~(Kmem_alloc::Alloc::Max_size - 1));
-	      if (0)
-                printf("Kmem_alloc: allocator base = %014lx\n",
-                       s_v & ~(Kmem_alloc::Alloc::Max_size - 1));
-	    }
-	  if (0)
-            printf("  Kmem_alloc: block %014lx(%014lx) size=%lx\n",
-                   s_v, s, e - s + 1);
-	  a->add_mem((void *)s_v, e - s + 1);
-	  md.type(Mem_desc::Reserved);
-	  _orig_free += e - s + 1;
-	}
+      if (0)
+        printf("  Kmem_alloc: block %014lx(%014lx) size=%lx\n",
+               s_v, s, e - s + 1);
+      a->add_mem((void *)s_v, e - s + 1);
+      md.type(Mem_desc::Reserved);
+      _orig_free += e - s + 1;
     }
   if (0)
     printf("Kmem_alloc: construction done\n");

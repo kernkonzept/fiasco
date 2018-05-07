@@ -2,10 +2,15 @@
 IMPLEMENTATION [ppc32]:
 
 #include "mem_region.h"
+
+enum { Freemap_size = Kmem_alloc::Alloc::free_map_bytes(0, Config::Kmem_size) };
+static unsigned long _freemap[Freemap_size / sizeof (unsigned long)];
+
 IMPLEMENT
 Kmem_alloc::Kmem_alloc()
 {
   Mword alloc_size = Config::Kmem_size;
+  a->setup_free_map(_freemap, Freemap_size);
   unsigned long max = ~0UL;
 #warning This code needs adaption (see e.g. the arm version)
   for (;;)

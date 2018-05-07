@@ -22,6 +22,9 @@ Kmem_alloc::to_phys(void *v) const
   return Mem_layout::pmem_to_phys(v);
 }
 
+enum { Freemap_size = Kmem_alloc::Alloc::free_map_bytes(0, 0x20000000 - 1) };
+static unsigned long _freemap[Freemap_size / sizeof (unsigned long)];
+
 IMPLEMENT
 Kmem_alloc::Kmem_alloc()
 {
@@ -51,6 +54,7 @@ Kmem_alloc::Kmem_alloc()
   if (max > Config::kernel_mem_max)
     max = Config::kernel_mem_max;
   a->init(Mem_layout::phys_to_pmem(0)); //Mem_layout::phys_to_pmem(f.start));
+  a->setup_free_map(_freemap, Freemap_size);
 
   _orig_free = alloc_size;
   for (unsigned i = 0; alloc_size && (i < map.length()); ++i) {
