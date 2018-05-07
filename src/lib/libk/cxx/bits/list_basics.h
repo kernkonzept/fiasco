@@ -138,7 +138,7 @@ public:
   Iterator begin() { return Iterator(&_f); }
   Const_iterator begin() const { return Const_iterator(_f); }
   static Const_iterator iter(Const_value_type c) { return Const_iterator(c); }
-  Const_iterator end() const { return Const_iterator(); }
+  Const_iterator end() const { return Const_iterator(nullptr); }
   Iterator end() { return Iterator(); }
 
 protected:
