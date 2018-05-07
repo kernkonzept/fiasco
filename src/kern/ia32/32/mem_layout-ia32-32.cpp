@@ -14,7 +14,7 @@ public:
     Adap_in_kernel_image = FIASCO_IMAGE_PHYS_START < Config::SUPERPAGE_SIZE,
   };
 
-  enum
+  enum : Mword
   {
     Utcb_addr         = 0xbff00000,    ///< % 4KB   UTCB map address
     Kip_auto_map      = 0xbfff2000,    ///< % 4KB
@@ -58,6 +58,8 @@ public:
     Caps_start        = 0xf0800000,    ///< % 4MB
     Caps_end          = 0xf3000000,    ///< % 4MB == Caps_start + (1<<20) * 4
     Physmem           = 0xfc400000,    ///< % 4MB   kernel memory
+    Physmem_end       = 0x00000000,    ///< % 4MB   kernel memory
+    Physmem_max_size  = Physmem_end - Physmem,
   };
 
   enum Offsets

@@ -40,8 +40,8 @@ Kmem_alloc::base_init()
 	requested_size = Config::kernel_mem_max;
     }
 
-  if (requested_size > (0 - Mem_layout::Physmem))
-    requested_size = 0 - Mem_layout::Physmem; // maximum mappable memory
+  if (requested_size > Mem_layout::Physmem_max_size)
+    requested_size = Mem_layout::Physmem_max_size; // maximum mappable memory
 
   requested_size =    (requested_size + Config::PAGE_SIZE - 1)
                    & ~(Config::PAGE_SIZE - 1);
@@ -69,7 +69,7 @@ Kmem_alloc::base_init()
 	{ // next block is sufficient
 	  base = map[i - 1].end - size + 1;
 	  sp_base = base & ~(Config::SUPERPAGE_SIZE - 1);
-	  if ((end - sp_base + 1) > (0 - Mem_layout::Physmem))
+	  if ((end - sp_base + 1) > (Mem_layout::Physmem_max_size))
 	    {
 	      if (last == i)
 		{ // already a single block, try to align
