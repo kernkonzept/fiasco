@@ -40,8 +40,6 @@ struct Smc_user : Kobject_h<Smc_user, Kobject>
     out->values[3] = r3;
 
     return commit_result(0, 4);
-
-
   }
 };
 
