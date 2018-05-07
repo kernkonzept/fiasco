@@ -39,7 +39,7 @@
 	pushq %rdx
 	mov	$0x49, %ecx
 	xor	%edx, %edx
-	xor	%eax, %eax
+	mov	$1, %eax
 	wrmsr
 	popq %rdx
 	popq %rcx
