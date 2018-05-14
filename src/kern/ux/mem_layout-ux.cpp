@@ -28,7 +28,7 @@ EXTENSION class Mem_layout
 public:
 
   /** Virtual memory layout for 2KB kernel thread context. */
-  enum
+  enum : Mword
   {
     Vmem_start         = 0x20000000,
     Glibc_mmap_start   = 0x40000000,  ///<         fixed, Linux kernel spec.
@@ -46,6 +46,7 @@ public:
     Vmem_end           = 0x60000000,
     Physmem            = Vmem_end,    ///< % 4MB   physical memory
     Physmem_end        = 0xa0000000 - Host_as_offset,
+    Physmem_max_size  = Physmem_end - Physmem,
   };
 };
 
@@ -56,7 +57,7 @@ EXTENSION class Mem_layout
 public:
 
   /** Virtual memory layout for 4KB kernel thread context. */
-  enum
+  enum : Mword
   {
     Vmem_start         = 0x20000000,
     Caps_start         = 0x28000000,
@@ -73,6 +74,7 @@ public:
     Vmem_end           = 0x90000000,
     Physmem            = Vmem_end,    ///< % 4MB   physical memory
     Physmem_end        = 0xb0000000 - Host_as_offset,
+    Physmem_max_size  = Physmem_end - Physmem,
   };
 };
 
