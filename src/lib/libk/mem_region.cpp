@@ -56,16 +56,17 @@ private:
 //--------------------------------------------------------------------------
 IMPLEMENTATION:
 
-PRIVATE template< unsigned E >
+PUBLIC template< unsigned E >
 inline
 void
 Mem_region_map<E>::del(unsigned start, unsigned end)
 {
   unsigned delta = end - start;
-  for (unsigned p = start; p < end; ++p)
+  _l -= delta;
+
+  for (unsigned p = start; p < _l; ++p)
     _r[p] = _r[p + delta];
 
-  _l -= delta;
 }
 
 PUBLIC template< unsigned E >
