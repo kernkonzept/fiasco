@@ -815,6 +815,12 @@ Kmem::init_cpu(Cpu &cpu)
               if (dst.level != 2)
                 panic("could not setup per-cpu page table: %d\n", __LINE__);
 
+              if (dst.is_valid())
+                {
+                  assert (*dst.pte == *src.pte);
+                  ++i;
+                  continue;
+                }
 
               if (Print_info)
                 printf("physmem sync(2M): va:%16lx pte:%16lx\n", a, *src.pte);
@@ -838,6 +844,12 @@ Kmem::init_cpu(Cpu &cpu)
               if (dst.level != 1)
                 panic("could not setup per-cpu page table: %d\n", __LINE__);
 
+              if (dst.is_valid())
+                {
+                  assert (*dst.pte == *src.pte);
+                  i += 512; // skip 512 2MB entries == 1G
+                  continue;
+                }
 
               if (Print_info)
                 printf("physmem sync(1G): va:%16lx pte:%16lx\n", a, *src.pte);
