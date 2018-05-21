@@ -904,7 +904,7 @@ PUBLIC static
 char const *
 Cpu::exception_string(Mword trapno)
 {
-  if (trapno > 32)
+  if (trapno > 31)
     return "Maskable Interrupt";
   return exception_strings[trapno];
 }
