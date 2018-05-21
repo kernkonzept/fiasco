@@ -220,7 +220,7 @@ Factory::Log_entry::print(String_buffer *buf) const
   { /*   0 */ "gate", "irq", 0, 0, 0, 0, 0, 0,
     /*  -8 */ 0, 0, 0, "task", "thread", 0, 0, "factory",
     /* -16 */ "vm", 0, 0, 0, "sem" }; 
-  char const *_op = -op <= (int)(sizeof(ops)/sizeof(ops[0]))
+  char const *_op = -op < (int)(sizeof(ops)/sizeof(ops[0]))
     ? ops[-op] : "invalid op";
   if (!_op)
     _op = "(nan)";
