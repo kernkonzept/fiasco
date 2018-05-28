@@ -300,7 +300,7 @@ public:
   bool empty() const { return C::next(static_cast<T*>(&_h)) == &_h; }
 
   void remove(T *e) { Base::remove(e); }
-  void erase(Iterator const &e) { return Base::erase(e); }
+  Iterator erase(Iterator const &e) { return Base::erase(e); }
 
   void push(T *e, Pos pos)
   {
