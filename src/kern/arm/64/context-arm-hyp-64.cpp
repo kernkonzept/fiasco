@@ -121,17 +121,17 @@ PRIVATE inline
 void
 Context::arm_hyp_load_non_vm_state(bool vgic)
 {
-  asm volatile ("msr hcr_el2, %0"   : : "r"(Cpu::Hcr_host_bits));
+  asm volatile ("msr HCR_EL2, %0"   : : "r"(Cpu::Hcr_host_bits));
   // load normal SCTLR ...
-  asm volatile ("msr sctlr_el1, %0" : : "r" (Cpu::Sctlr_el1_generic));
-  asm volatile ("msr cpacr_el1, %0" : : "r" (0x300000));
+  asm volatile ("msr SCTLR_EL1, %0" : : "r" (Cpu::Sctlr_el1_generic));
+  asm volatile ("msr CPACR_EL1, %0" : : "r" (0x300000));
   // disable all debug exceptions for non-vms, if we want debug
   // exceptions into JDB we need either per-thread or a global
   // setting for this value.
-  asm volatile ("msr contextidr_el1, %0" : : "r"(0));
-  asm volatile ("msr mdcr_el2, %0" : : "r"(Cpu::Mdcr_bits));
-  asm volatile ("msr mdscr_el1, %0" : : "r"(0));
-  asm volatile ("msr cntv_ctl_el0, %0" : : "r"(0)); // disable VTIMER
+  asm volatile ("msr CONTEXTIDR_EL1, %0" : : "r"(0));
+  asm volatile ("msr MDCR_EL2, %0" : : "r"(Cpu::Mdcr_bits));
+  asm volatile ("msr MDSCR_EL1, %0" : : "r"(0));
+  asm volatile ("msr CNTV_CTL_EL0, %0" : : "r"(0)); // disable VTIMER
   // CNTKCTL: allow access to virtual and physical counter from PL0
   // see: generic_timer.cpp: setup_timer_access (Hyp)
   asm volatile("msr CNTKCTL_EL1, %0" : : "r"(0x3));
