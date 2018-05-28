@@ -382,6 +382,4 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
       asm volatile ("msr CNTKCTL_EL1, %0" : : "r"(v->cntkctl));
       asm volatile ("msr CNTVOFF_EL2, %0" : : "r"(v->cntvoff));
     }
-
-  //regs()->pstate = (regs()->pstate & ~0x1fUL) | Proc::Status_mode_vmm;
 }
