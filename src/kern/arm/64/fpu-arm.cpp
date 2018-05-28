@@ -61,7 +61,12 @@ Fpu::init(Cpu_number cpu, bool resume)
   if (!resume)
     show(cpu);
 
-  f.enable(); // make sure that in HYP case CPACR is loaded and enabled
+  // make sure that in HYP case CPACR is loaded and enabled.
+  // without HYP the disable below will disable it, so this does not hurt
+  __asm__ __volatile__ (
+      "msr  CPACR_EL1, %[cpacr_on]"
+      : : [cpacr_on]"r"(3UL << 20));
+
   f.disable();
   f.set_owner(0);
 }
@@ -214,13 +219,6 @@ Fpu::disable()
 //-------------------------------------------------------------------------
 IMPLEMENTATION [arm && fpu && cpu_virt]:
 
-EXTENSION class Fpu
-{
-private:
-  /// we have to ensure CPACR_EL1.FPEN = 3 and store the original here
-  Mword _capcr_el1 = (3UL << 20); // initially enable EL1 FPU
-};
-
 IMPLEMENT inline NEEDS ["fpu_state.h", "mem.h", "static_assert.h", <cstring>]
 void
 Fpu::init_state(Fpu_state *s)
@@ -251,25 +249,18 @@ Fpu::enable()
       "mrs %0, CPTR_EL2         \n"
       "bic %0, %0, #(1 << 10)   \n"
       "msr CPTR_EL2, %0         \n"
-      "msr CPACR_EL1, %1        \n"
-      : "=&r" (dummy) : "r" (_capcr_el1) );
+      : "=&r" (dummy) );
 }
 
 PUBLIC inline
 void
 Fpu::disable()
 {
-  Mword dummy, tmp;
+  Mword dummy;
   __asm__ __volatile__ (
       "mrs  %0, CPTR_EL2           \n"
-      "tbnz %0, #10, 1f            \n"
-      "mrs  %1, CPACR_EL1          \n"
-      "str  %1, %[cpacr]           \n"
-      "msr  CPACR_EL1, %[cpacr_on] \n"
       "orr  %0, %0, #(1 << 10)     \n"
       "msr  CPTR_EL2, %0           \n"
-      "1:                          \n"
-      : "=&r" (dummy), "=&r"(tmp), [cpacr]"+m"(_capcr_el1)
-      : [cpacr_on]"r"(3UL << 20));
+      : "=&r" (dummy));
 }
 
