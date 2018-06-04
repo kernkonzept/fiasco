@@ -173,10 +173,7 @@ Semaphore::sys_down(L4_timeout t, Utcb const *utcb)
   if (s & Thread_wait_mask)
     c_thread->state_del_dirty(Thread_wait_mask);
 
-  if (EXPECT_FALSE(s & Thread_cancel))
-    return commit_error(utcb, L4_error::R_canceled);
-
-  if (EXPECT_FALSE(s & Thread_timeout))
+  if (EXPECT_FALSE(s & (Thread_cancel | Thread_timeout)))
     {
       if (c_thread->in_sender_list())
         {
@@ -184,7 +181,8 @@ Semaphore::sys_down(L4_timeout t, Utcb const *utcb)
           c_thread->set_wait_queue(0);
           c_thread->sender_dequeue(&_waiting);
         }
-      return commit_error(utcb, L4_error::R_timeout);
+      return commit_error(utcb, (s & Thread_cancel) ? L4_error::R_canceled
+                                                    : L4_error::R_timeout);
     }
 
   return commit_result(0);
