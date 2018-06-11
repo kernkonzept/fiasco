@@ -42,7 +42,7 @@ __libc_backend_printf_lock_t __libc_backend_printf_lock(void);
 
 void __libc_backend_printf_unlock(__libc_backend_printf_lock_t);
 
-void __libc_backend_printf_local_force_unlock();
+void __libc_backend_printf_local_force_unlock(void);
 
 __END_DECLS
 
