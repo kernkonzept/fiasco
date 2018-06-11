@@ -48,8 +48,7 @@ Jdb_kern_info_pci::show()
               Unsigned16 vendor; Pci::read_cfg(_device + 0x00, &vendor);
               Unsigned16 device; Pci::read_cfg(_device + 0x02, &device);
 
-              if ((vendor == 0xffff && device == 0xffff) ||
-                  (device == 0x0000 && device == 0x0000))
+              if ((vendor == 0xffff && device == 0xffff))
                 break;
 
               Unsigned8 classcode; Pci::read_cfg(_device + 0x0b, &classcode);
