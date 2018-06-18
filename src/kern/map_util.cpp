@@ -346,24 +346,24 @@ map_lookup_src(SPACE* from,
                typename SPACE::Attr *i_attribs,
                typename SPACE::Attr attribs)
 {
-    typedef Map_traits<SPACE> Mt;
-    // Sigma0 special case: Sigma0 doesn't need to have a
-    // fully-constructed page table, and it can fabricate mappings
-    // for all physical addresses.
-    typename SPACE::Attr s_attribs;
-    if (EXPECT_FALSE(! from->v_fabricate(snd_addr, s_phys,
-                                         s_order, &s_attribs)))
-      return false;
+  typedef Map_traits<SPACE> Mt;
+  // Sigma0 special case: Sigma0 doesn't need to have a
+  // fully-constructed page table, and it can fabricate mappings
+  // for all physical addresses.
+  typename SPACE::Attr s_attribs;
+  if (EXPECT_FALSE(! from->v_fabricate(snd_addr, s_phys,
+                                       s_order, &s_attribs)))
+    return false;
 
-    // Compute attributes for to-be-inserted frame
-    typename SPACE::V_pfc page_offset = SPACE::subpage_offset(snd_addr, *s_order);
-    *i_phys = SPACE::subpage_address(*s_phys, page_offset);
+  // Compute attributes for to-be-inserted frame
+  typename SPACE::V_pfc page_offset = SPACE::subpage_offset(snd_addr, *s_order);
+  *i_phys = SPACE::subpage_address(*s_phys, page_offset);
 
-    *i_attribs = Mt::apply_attribs(s_attribs, *i_phys, attribs);
-    if (EXPECT_FALSE(i_attribs->empty()))
-      return false;
+  *i_attribs = Mt::apply_attribs(s_attribs, *i_phys, attribs);
+  if (EXPECT_FALSE(i_attribs->empty()))
+    return false;
 
-    return true;
+  return true;
 }
 
 inline
