@@ -225,7 +225,7 @@ extern "C" {
     if (t->send_exception(ts))
       return;
 
-    t->halt();
+    t->kill();
   }
 };
 

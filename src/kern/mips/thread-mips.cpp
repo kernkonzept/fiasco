@@ -273,7 +273,7 @@ thread_handle_trap(Mword cause, Trap_state *ts)
   Thread *ct = current_thread();
   LOG_TRAP_CN(ct, cause);
   if (ct->handle_slow_trap(cause, ts))
-    ct->halt();
+    ct->kill();
 }
 
 extern "C" void
@@ -282,7 +282,7 @@ handle_fpu_trap(Trap_state::Cause cause, Trap_state *ts)
   Thread *ct = current_thread();
   LOG_TRAP_CN(ct, cause.raw);
   if (!ct->switchin_fpu() && ct->handle_slow_trap(cause, ts))
-    ct->halt();
+    ct->kill();
 }
 
 extern "C" FIASCO_FASTCALL FIASCO_FLATTEN
@@ -308,10 +308,11 @@ thread_handle_tlb_fault(Mword cause, Trap_state *ts, Mword pfa)
       if (t->vcpu_pagefault(pfa, cause, ts->epc))
         return;
 
-      if (!t->handle_page_fault(pfa, cause, ts->epc, ts))
+      if (!t->handle_page_fault(pfa, cause, ts->epc, ts)
+          && t->handle_slow_trap(cause, ts, false))
         {
-          if (t->handle_slow_trap(cause, ts, false))
-            t->halt();
+          t->kill();
+          return;
         }
 
       s->add_tlb_entry(Virt_addr(pfa), !PF::is_read_error(cause), true, guest);
@@ -324,7 +325,7 @@ void
 thread_unhandled_trap(Mword, Trap_state *ts)
 {
   if (Thread::call_nested_trap_handler(ts))
-    current_thread()->halt();
+    current_thread()->kill();
 }
 
 
@@ -621,7 +622,7 @@ thread_handle_gva_tlb_fault(Mword cause, Trap_state *ts, Mword pfa)
   if (is_mapped && !thread_guest_tlb_probe(&pfa))
     {
       if (t->handle_slow_trap(cause, ts, true))
-        t->halt();
+        t->kill();
       return;
     }
 

@@ -290,7 +290,8 @@ fail_nomsg:
   if ((int)Config::Warn_level >= Warning)
     ts->dump();
 
-  halt();
+  kill();
+  return 0;
 
 success:
   _recover_jmpbuf = 0;

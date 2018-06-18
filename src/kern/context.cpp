@@ -1084,7 +1084,7 @@ Context::deblock_and_schedule(Context *to)
 {
   if (Sched_context::rq.current().deblock(to->sched(), sched(), true))
     {
-      switch_to_locked(to);
+     switch_to_locked(to);
       return true;
     }
 
