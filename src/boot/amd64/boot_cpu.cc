@@ -585,7 +585,9 @@ base_map_physical_memory_for_kernel()
 }
 
 
-extern "C" void
+extern "C" void trap_dump_panic(const struct trap_state *);
+
+void
 trap_dump_panic(const struct trap_state *st)
 {
   int from_user = (st->cs & 3);

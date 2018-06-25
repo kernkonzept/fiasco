@@ -60,7 +60,8 @@ check_overlap (const char *str,
 
 typedef void (*Start)(unsigned) FIASCO_FASTCALL;
 
-extern "C" FIASCO_FASTCALL
+extern "C" FIASCO_FASTCALL void bootstrap();
+
 void
 bootstrap()
 {
