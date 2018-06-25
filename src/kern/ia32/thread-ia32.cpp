@@ -392,7 +392,7 @@ thread_page_fault(Address pfa, Mword error_code, Address ip, Mword flags,
  */
 extern "C" FIASCO_FASTCALL
 int
-thread_handle_trap(Trap_state *ts, unsigned)
+thread_handle_trap(Trap_state *ts, Cpu_number)
 {
   return current_thread()->handle_slow_trap(ts);
 }

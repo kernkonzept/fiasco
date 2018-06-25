@@ -9,7 +9,7 @@ class Trap_state
   friend class Jdb_stack_view;
 
 public:
-  typedef FIASCO_FASTCALL int (*Handler)(Trap_state*, unsigned cpu);
+  typedef FIASCO_FASTCALL int (*Handler)(Trap_state*, Cpu_number cpu);
   static Handler base_handler asm ("BASE_TRAP_HANDLER");
 
   // Saved segment registers

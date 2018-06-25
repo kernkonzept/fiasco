@@ -63,7 +63,7 @@ Thread::handle_double_fault (Trap_state *ts)
 
       if (c == 'k' || c == 'K')
 	{
-	     nested_trap_handler(ts,0); // XXX: 0 is possibly the wrong CPU
+	     nested_trap_handler(ts,Cpu_number(0)); // XXX: 0 is possibly the wrong CPU
 	}
     }
   else
