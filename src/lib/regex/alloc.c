@@ -137,7 +137,7 @@ regex_init(void *ptr, unsigned size)
 }
 
 static inline int
-__ind_shift()
+__ind_shift(void)
 {
   return (MEM_BLOCK_SIZE==4096) ? 4 : 5;
 }
