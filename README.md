@@ -22,7 +22,7 @@ We welcome contributions to the microkernel. Please see our contributors guide
 on [how to contribute][2].
 
 [1]: https://l4re.org/fiasco/features.html
-[2]: https://github.com/kernkonzept/fiasco/wiki/CONTRIBUTING
+[2]: https://kernkonzept.com/L4Re/contributing/fiasco
 
 ## Reporting vulnerabilities
 
