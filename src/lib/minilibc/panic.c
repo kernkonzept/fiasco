@@ -12,7 +12,7 @@ __assert_fail(const char *__assertion, const char *__file,
   printf("\nAssertion failed: '%s' [ret=%p]\n"
          "  %s:%u at " L4_PTR_FMT "\n",
          __assertion, ret, __file, __line,
-          (Address)__builtin_return_address(0));
+          __builtin_return_address(0));
 
   exit(1);
 }
