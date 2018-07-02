@@ -10,7 +10,7 @@ __assert_fail(const char *__assertion, const char *__file,
               unsigned int __line, void *ret)
 {
   printf("\nAssertion failed: '%s' [ret=%p]\n"
-         "  %s:%u at " L4_PTR_FMT "\n",
+         "  %s:%u at %p\n",
          __assertion, ret, __file, __line,
           __builtin_return_address(0));
 
