@@ -36,6 +36,7 @@ bool dumpzero;
  * @param value the 2^n integer
  * @return the log base 2 of value, the exponent n
  */
+int log2(int value);
 int log2(int value)
 {
   unsigned c = 0; // c will be lg(v)
