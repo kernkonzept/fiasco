@@ -260,6 +260,9 @@ struct is_array<T[N]> : true_type {};
 template< typename T >
 inline constexpr bool is_array_v = is_array<T>::value;
 
+template< typename T, unsigned N >
+constexpr unsigned array_size(T const (&)[N]) { return N; }
+
 template< int SIZE, bool SIGN = false, bool = true > struct int_type_for_size;
 
 template<> struct int_type_for_size<sizeof(char), true, true>
