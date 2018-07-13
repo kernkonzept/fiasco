@@ -175,13 +175,6 @@ void Proc::irq_chance()
 }
 
 //----------------------------------------------------------------
-IMPLEMENTATION[arm && !mp]:
-
-IMPLEMENT static inline
-Cpu_phys_id Proc::cpu_id()
-{ return Cpu_phys_id(0); }
-
-//----------------------------------------------------------------
 IMPLEMENTATION[arm && (arm_pxa || arm_sa || arm_920t)]:
 
 IMPLEMENT static inline

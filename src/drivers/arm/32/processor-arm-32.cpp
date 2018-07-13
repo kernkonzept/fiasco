@@ -57,7 +57,14 @@ Proc::Status Proc::interrupts()
 }
 
 //----------------------------------------------------------------
-IMPLEMENTATION[arm && mp]:
+IMPLEMENTATION[arm && 32bit && !arm_v7 && !arm_v8]:
+
+IMPLEMENT static inline
+Cpu_phys_id Proc::cpu_id()
+{ return Cpu_phys_id(0); }
+
+//----------------------------------------------------------------
+IMPLEMENTATION[arm && 32bit && (arm_v7 || arm_v8)]:
 
 IMPLEMENT static inline
 Cpu_phys_id Proc::cpu_id()

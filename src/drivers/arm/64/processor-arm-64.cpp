@@ -54,7 +54,7 @@ Proc::Status Proc::cli_save()
 }
 
 //----------------------------------------------------------------
-IMPLEMENTATION[arm && 64bit && mp]:
+IMPLEMENTATION[arm && 64bit]:
 
 IMPLEMENT static inline
 Cpu_phys_id Proc::cpu_id()
