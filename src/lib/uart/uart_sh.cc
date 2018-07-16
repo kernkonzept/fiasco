@@ -30,8 +30,10 @@ namespace L4
   {
     SR_DR   = 1 << 0, // Data ready
     SR_RDF  = 1 << 1, // Receive FIFO full
+    SR_BRK  = 1 << 4, // Break Detect
     SR_TDFE = 1 << 5, // Transmit FIFO data empty
     SR_TEND = 1 << 6, // Transmission end
+    SR_ER   = 1 << 7, // Receive Error
 
     SCR_RE  = 1 << 4, // Receive enable
     SCR_TE  = 1 << 5, // Transmit enable
@@ -69,18 +71,23 @@ namespace L4
 
   int Uart_sh::get_char(bool blocking) const
   {
-    while (!char_avail())
+    int sr;
+    while (!(sr = char_avail()))
       if (!blocking)
         return -1;
 
-    int ch = _regs->read<unsigned char>(SCFRDR);
-    _regs->clear<unsigned short>(SCFSR, SR_DR | SR_RDF);
+    int ch;
+    if (sr & SR_BRK)
+      ch = -1;
+    else
+      ch = _regs->read<unsigned char>(SCFRDR);
+    _regs->clear<unsigned short>(SCFSR, SR_DR | SR_RDF | SR_ER | SR_BRK);
     return ch;
   }
 
   int Uart_sh::char_avail() const
   {
-    return _regs->read<unsigned short>(SCFSR) & (SR_DR | SR_RDF);
+    return _regs->read<unsigned short>(SCFSR) & (SR_DR | SR_RDF | SR_BRK);
   }
 
   void Uart_sh::out_char(char c) const
