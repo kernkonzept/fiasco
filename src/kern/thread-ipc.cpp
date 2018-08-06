@@ -1149,8 +1149,9 @@ Thread::remote_ipc_send(Ipc_remote_request *rq)
       break;
     }
 
-  if ((rq->tag.transfer_fpu() && rq->partner->_utcb_handler)
-      || rq->partner->utcb().access()->inherit_fpu())
+  if (rq->tag.transfer_fpu()
+      && (rq->partner->_utcb_handler
+          || rq->partner->utcb().access()->inherit_fpu()))
     rq->partner->spill_fpu_if_owner();
 
   // trigger remote_ipc_receiver_ready path, because we may need to grab locks
