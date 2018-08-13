@@ -2,22 +2,6 @@
 
 mainmenu "Fiasco configuration"
 
-config KERNELVERSION
-	string
-	option env="KERNELVERSION"
-
-config INCLUDE_PPC32
-	bool
-	option env="INCLUDE_PPC32"
-	help
-	  Use "INCLUDE_PPC32=y make config" to include ppc32 options.
-
-config INCLUDE_SPARC
-	bool
-	option env="INCLUDE_SPARC"
-	help
-	  Use "INCLUDE_SPARC=y make config" to include sparc options.
-
 # generic options that might be selected by platforms etc.
 config HAS_FPU_OPTION
 	bool
