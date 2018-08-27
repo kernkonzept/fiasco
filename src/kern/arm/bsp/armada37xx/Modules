@@ -1,0 +1,16 @@
+# vim:set ft=make:
+
+PREPROCESS_PARTS      += generic_tickless_idle arm_generic_timer pic_gic
+INTERFACES_KERNEL     += generic_timer
+OBJECTS_LIBUART       += uart_mvebu.o
+CXXFLAGS_uart-libuart += $(call LIBUART_UART, mvebu)
+RAM_PHYS_BASE         := 0x0
+
+clock_IMPL            += clock-generic
+config_IMPL           += config-arm-armada37xx
+mem_layout_IMPL       += mem_layout-arm-armada37xx
+pic_IMPL              += pic-gic pic-arm-armada37xx
+platform_control_IMPL += platform_control-arm-armada37xx
+reset_IMPL            += reset-arm-armada37xx
+timer_IMPL            += timer-arm-generic timer-arm-armada37xx
+timer_tick_IMPL       += timer_tick-single-vector
