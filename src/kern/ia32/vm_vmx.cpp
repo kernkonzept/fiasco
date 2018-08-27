@@ -252,7 +252,8 @@ Vm_vmx_t<X>::load_guest_state(Cpu_number cpu, void *src)
 #endif
 
   // write 32-bit fields
-  load(0x4800, 0x482a, src);
+  load(0x4800, 0x4826, src);
+  load(0x482a, src);
 
   if (pinbased_ctls.test(6)) // activate vmx-preemption timer
     load(Vmx::F_preempt_timer, src);
