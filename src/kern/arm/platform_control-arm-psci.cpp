@@ -165,3 +165,11 @@ Platform_control::system_reset()
   psci_call(Psci_system_reset);
   printf("PSCI reset failed.\n");
 }
+
+IMPLEMENT_OVERRIDE
+void
+Platform_control::system_off()
+{
+  psci_call(Psci_system_off);
+  printf("PSCI system-off failed.\n");
+}

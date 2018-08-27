@@ -9,6 +9,7 @@ public:
   static bool cpu_shutdown_available();
   static int cpu_allow_shutdown(Cpu_number cpu, bool allow);
   static int system_suspend(Mword extra);
+  static void system_off();
 };
 
 // ------------------------------------------------------------------------
@@ -36,3 +37,7 @@ int
 Platform_control::cpu_allow_shutdown(Cpu_number, bool)
 { return -L4_err::ENodev; }
 
+IMPLEMENT_DEFAULT inline
+void
+Platform_control::system_off()
+{}

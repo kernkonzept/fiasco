@@ -53,6 +53,9 @@ class Pfc : public Kobject_h<Pfc, Icu>
     if (msg->values[1] == 1) // reboot?
       platform_reset();
 
+    if (msg->values[1] == 0) // shutdown
+      Platform_control::system_off();
+
     // There's no generic in-kernel way for system power-off
     return commit_result(-L4_err::ENosys);
   }
