@@ -41,7 +41,7 @@ _tramp_acpi_wakeup:
 #if SET_VIDEO_MODE
   /*
    * Mask everything in the PIC for some reason the PIT timer is
-   * unmasked which causes spurious calls to IDT vecotor zero at least
+   * unmasked which causes spurious calls to IDT vector zero at least
    * during video mode reset.
    */
   mov $0xff, %al
@@ -105,7 +105,7 @@ _tramp_acpi_wakeup:
   popfl
 #endif
 
-  /* we cleared the busy flag in C++ code before suspend, so its save to load the TR here */
+  /* we cleared the busy flag in C++ code before suspend, so its safe to load the TR here */
   ltr _tr
   movl $0, %eax // return 0 (success)
   ret                   // return from function "acpi_save_cpu_and_suspend"
