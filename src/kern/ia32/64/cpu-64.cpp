@@ -34,7 +34,7 @@ Cpu::setup_sysenter()
   wrmsr(0, GDT_CODE_KERNEL | ((GDT_CODE_USER32 | 3) << 16), MSR_STAR);
   wrmsr((Unsigned64)&_syscall_entry[id()], MSR_LSTAR);
   wrmsr((Unsigned64)&_syscall_entry[id()], MSR_CSTAR);
-  wrmsr(~0ULL, MSR_SFMASK);
+  wrmsr(~0U, MSR_SFMASK);
   _syscall_entry[id()].set_rsp((Address)&kernel_sp());
 }
 
@@ -60,7 +60,7 @@ Cpu::setup_sysenter() const
   wrmsr(0, GDT_CODE_KERNEL | ((GDT_CODE_USER32 | 3) << 16), MSR_STAR);
   wrmsr((Unsigned64)Mem_layout::Kentry_cpu_page + 0xa0, MSR_LSTAR);
   wrmsr((Unsigned64)Mem_layout::Kentry_cpu_page + 0xa0, MSR_CSTAR);
-  wrmsr(~0ULL, MSR_SFMASK);
+  wrmsr(~0U, MSR_SFMASK);
 }
 
 IMPLEMENT inline NEEDS["mem_layout.h"]
