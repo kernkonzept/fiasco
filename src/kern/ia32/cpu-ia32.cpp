@@ -2077,4 +2077,6 @@ Cpu::init_indirect_branch_mitigation()
       // enable STIBP
       wrmsr(2, 0x48);
     }
+  else
+    panic("Kernel compiled with IBRS / IBPB, but not supported on non-Intel CPUs\n");
 }
