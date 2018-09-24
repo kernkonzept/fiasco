@@ -134,6 +134,7 @@
 #define MSR_TSC              0x010      // Time Stamp Counter
 #define MSR_IA32_FEATURE_CONTROL 0x03a  // Control Features in Intel 64 Processor
 #define MSR_IA32_TSC_ADJUST  0x03b      // TSC adjust value
+#define MSR_IA32_FLUSH_CMD   0x10b      // Flush L1D cache
 #define MSR_SYSENTER_CS      0x174      // Kernel Code Segment
 #define MSR_SYSENTER_ESP     0x175      // Kernel Syscall Entry
 #define MSR_SYSENTER_EIP     0x176      // Kernel Stack Pointer

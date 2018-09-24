@@ -46,7 +46,7 @@ IMPLEMENTATION [vmx]:
 #include "thread_state.h" // XXX: circular dep, move this out here!
 #include "virt.h"
 #include "idt.h"
-
+#include "cpu.h"
 
 PUBLIC inline
 Vm_vmx_b::Vm_vmx_b(Ram_quota *q) : Vm(q)
@@ -472,6 +472,9 @@ Vm_vmx_t<X>::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, void *vmcs_s)
   Unsigned64 host_xcr0 = Fpu::fpu.current().get_xcr0();
 
   load_guest_xcr0(host_xcr0, guest_xcr0);
+
+  if (Cpu::cpus.cpu(cpu).has_l1d_flush())
+    Cpu::wrmsr(1UL, MSR_IA32_FLUSH_CMD);
 
   unsigned long ret = resume_vm_vmx(&vcpu->_regs);
   // vmread error?

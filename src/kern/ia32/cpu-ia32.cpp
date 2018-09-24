@@ -64,6 +64,7 @@ private:
   Unsigned32 _features;
   Unsigned32 _ext_features;
   Unsigned32 _ext_07_ebx;
+  Unsigned32 _ext_07_edx;
   Unsigned32 _ext_8000_0001_ecx;
   Unsigned32 _ext_8000_0001_edx;
   Unsigned32 _local_features;
@@ -146,6 +147,9 @@ public:
 
   bool __attribute__((const)) has_smep() const
   { return _ext_07_ebx & FEATX_SMEP; }
+
+  bool __attribute__((const)) has_l1d_flush() const
+  { return (_ext_07_edx & (1UL << 28)); }
 
   unsigned ext_8000_0001_ecx() const { return _ext_8000_0001_ecx; }
   unsigned ext_8000_0001_edx() const { return _ext_8000_0001_edx; }
@@ -1235,8 +1239,8 @@ Cpu::identify()
 
     if (max >= 7 && _vendor == Vendor_intel)
       {
-        Unsigned32 dummy1, dummy2, dummy3;
-        cpuid(0x7, 0, &dummy1, &_ext_07_ebx, &dummy2, &dummy3);
+        Unsigned32 dummy1, dummy2;
+        cpuid(0x7, 0, &dummy1, &_ext_07_ebx, &dummy2, &_ext_07_edx);
       }
 
     if (_vendor == Vendor_intel)
