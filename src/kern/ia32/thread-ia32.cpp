@@ -261,8 +261,6 @@ Thread::handle_slow_trap(Trap_state *ts)
 
   ip = ts->ip();
 
-  // just print out some warning, we do the normal exception handling
-  handle_sysenter_trap(ts, ip, from_user);
   _recover_jmpbuf = 0;
 
 check_exception:
@@ -696,34 +694,6 @@ Thread::check_io_bitmap_delimiter_fault(Trap_state *ts)
     }
 
   return 1;
-}
-
-PRIVATE inline
-bool
-Thread::handle_sysenter_trap(Trap_state *ts, Address eip, bool from_user)
-{
-  if (EXPECT_FALSE
-      ((ts->_trapno == 6 || ts->_trapno == 13)
-       && (ts->_err & 0xffff) == 0
-       && (eip < Mem_layout::User_max - 1)
-       && (mem_space()->peek((Unsigned16*) eip, from_user)) == 0x340f))
-    {
-      // somebody tried to do sysenter on a machine without support for it
-      WARN("tcb=%p killed:\n"
-	   "\033[1;31mSYSENTER not supported on this machine\033[0m",
-	   this);
-
-      if (Cpu::have_sysenter())
-	// GP exception if sysenter is not correctly set up..
-        WARN("MSR_SYSENTER_CS: %llx", Cpu::rdmsr(MSR_SYSENTER_CS));
-      else
-	// We get UD exception on processors without SYSENTER/SYSEXIT.
-        WARN("SYSENTER/EXIT not available.");
-
-      return false;
-    }
-
-  return true;
 }
 
 PRIVATE inline
