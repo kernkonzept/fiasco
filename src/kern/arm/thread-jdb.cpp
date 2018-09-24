@@ -1,3 +1,11 @@
+INTERFACE [arm]:
+
+EXTENSION class Thread
+{
+protected:
+  static int call_nested_trap_handler(Trap_state *ts) asm ("call_nested_trap_handler");
+};
+
 INTERFACE [arm-debug]:
 
 #include "trap_state.h"
@@ -5,7 +13,6 @@ INTERFACE [arm-debug]:
 EXTENSION class Thread
 {
 protected:
-  static int call_nested_trap_handler(Trap_state *ts) asm ("call_nested_trap_handler");
   static Trap_state::Handler nested_trap_handler FIASCO_FASTCALL;
 };
 
@@ -73,7 +80,11 @@ Thread::call_nested_trap_handler(Trap_state *ts)
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm-!debug]:
 
-PRIVATE static inline
+IMPLEMENT
 int
-Thread::call_nested_trap_handler(Trap_state *)
-{ return -1; }
+Thread::call_nested_trap_handler(Trap_state *ts)
+{
+  ts->dump();
+  current_thread()->kill();
+  return -1;
+}
