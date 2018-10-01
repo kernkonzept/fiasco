@@ -473,7 +473,8 @@ Vm_vmx_t<X>::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, void *vmcs_s)
 
   load_guest_xcr0(host_xcr0, guest_xcr0);
 
-  if (Cpu::cpus.cpu(cpu).has_l1d_flush())
+  if (Cpu::cpus.cpu(cpu).has_l1d_flush()
+      && !Cpu::cpus.cpu(cpu).skip_l1dfl_vmentry())
     Cpu::wrmsr(1UL, MSR_IA32_FLUSH_CMD);
 
   unsigned long ret = resume_vm_vmx(&vcpu->_regs);

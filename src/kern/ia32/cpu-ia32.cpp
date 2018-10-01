@@ -68,6 +68,7 @@ private:
   Unsigned32 _ext_8000_0001_ecx;
   Unsigned32 _ext_8000_0001_edx;
   Unsigned32 _local_features;
+  Unsigned64 _arch_capabilities;
 
   Unsigned16 _inst_tlb_4k_entries;
   Unsigned16 _data_tlb_4k_entries;
@@ -150,6 +151,12 @@ public:
 
   bool __attribute__((const)) has_l1d_flush() const
   { return (_ext_07_edx & FEATX_L1D_FLUSH); }
+
+  bool __attribute__((const)) has_arch_capabilities() const
+  { return (_ext_07_edx & FEATX_IA32_ARCH_CAPABILITIES); }
+
+  bool __attribute ((const)) skip_l1dfl_vmentry() const
+  { return (_arch_capabilities & (1UL << 3)); }
 
   unsigned ext_8000_0001_ecx() const { return _ext_8000_0001_ecx; }
   unsigned ext_8000_0001_edx() const { return _ext_8000_0001_edx; }
@@ -1241,6 +1248,8 @@ Cpu::identify()
       {
         Unsigned32 dummy1, dummy2;
         cpuid(0x7, 0, &dummy1, &_ext_07_ebx, &dummy2, &_ext_07_edx);
+        if (has_arch_capabilities())
+          _arch_capabilities = rdmsr(MSR_IA32_ARCH_CAPABILITIES);
       }
 
     if (_vendor == Vendor_intel)

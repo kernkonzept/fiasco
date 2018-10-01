@@ -112,6 +112,7 @@
 #define FEATX_IBRS_IBPB 0x04000000      // IBRS and IBPB supported
 #define FEATX_STIBP     0x08000000      // STIBP supported
 #define FEATX_L1D_FLUSH 0x10000000      // L1D_FLUSH supported
+#define FEATX_IA32_ARCH_CAPABILITIES 0x20000000 // IA32_ARCH_CAPABILITIES supported
 
 // AMD: CPU Feature Flags, Fn80000001_ECX
 #define FEATA_SVM	0x00000004
@@ -138,6 +139,7 @@
 #define MSR_TSC              0x010      // Time Stamp Counter
 #define MSR_IA32_FEATURE_CONTROL 0x03a  // Control Features in Intel 64 Processor
 #define MSR_IA32_TSC_ADJUST  0x03b      // TSC adjust value
+#define MSR_IA32_ARCH_CAPABILITIES 0x10a // Enumeration of Architectural Features
 #define MSR_IA32_FLUSH_CMD   0x10b      // Flush L1D cache
 #define MSR_SYSENTER_CS      0x174      // Kernel Code Segment
 #define MSR_SYSENTER_ESP     0x175      // Kernel Syscall Entry
