@@ -280,6 +280,8 @@ Thread::Thread(Ram_quota *q, Context_mode_kernel)
   if (Config::Stack_depth)
     std::memset((char*)this + sizeof(Thread), '5',
                 Thread::Size-sizeof(Thread) - 64);
+
+  alloc_eager_fpu_state();
 }
 
 
@@ -784,7 +786,7 @@ Thread::finish_migration() override
 { enqueue_timeout_again(); }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [fpu && !ux]:
+IMPLEMENTATION [fpu && !ux && lazy_fpu]:
 
 #include "fpu.h"
 #include "fpu_alloc.h"
@@ -799,6 +801,8 @@ Thread::switchin_fpu(bool alloc_new_fpu = true)
 {
   if (state() & Thread_vcpu_fpu_disabled)
     return 0;
+
+  (void)alloc_new_fpu;
 
   Fpu &f = Fpu::fpu.current();
   // If we own the FPU, we should never be getting an "FPU unavailable" trap
@@ -825,6 +829,11 @@ Thread::switchin_fpu(bool alloc_new_fpu = true)
   f.set_owner(this);
   return 1;
 }
+
+PUBLIC inline
+bool
+Thread::alloc_eager_fpu_state()
+{ return true; }
 
 PUBLIC inline NEEDS["fpu.h", "fpu_alloc.h"]
 void
@@ -870,6 +879,47 @@ Thread::transfer_fpu(Thread *to) //, Trap_state *trap_state, Utcb *to_utcb)
 }
 
 //---------------------------------------------------------------------------
+IMPLEMENTATION [fpu && !ux && !lazy_fpu]:
+
+#include "fpu.h"
+#include "fpu_alloc.h"
+#include "fpu_state.h"
+
+/*
+ * Handle FPU trap for this context. Assumes disabled interrupts
+ */
+PUBLIC inline
+int
+Thread::switchin_fpu(bool alloc_new_fpu = true)
+{
+  if (state() & Thread_vcpu_fpu_disabled)
+    return 0;
+
+  (void)alloc_new_fpu;
+  panic("must not see any FPU trap with eager FPU\n");
+}
+
+PUBLIC inline NEEDS["fpu.h", "fpu_alloc.h"]
+bool
+Thread::alloc_eager_fpu_state()
+{
+  return Fpu_alloc::alloc_state(_quota, fpu_state());
+}
+
+PUBLIC inline NEEDS["fpu.h", "fpu_state.h"]
+void
+Thread::transfer_fpu(Thread *to) //, Trap_state *trap_state, Utcb *to_utcb)
+{
+  auto *curr = current();
+  if (this == curr)
+    Fpu::save_state(to->fpu_state());
+  else if (curr == to)
+    Fpu::fpu.current().restore_state(fpu_state());
+  else
+    memcpy(to->fpu_state()->state_buffer(), fpu_state()->state_buffer(), Fpu::state_size());
+}
+
+//---------------------------------------------------------------------------
 IMPLEMENTATION [!fpu]:
 
 PUBLIC inline
@@ -882,6 +932,13 @@ Thread::switchin_fpu(bool alloc_new_fpu = true)
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [!fpu || ux]:
+
+PUBLIC inline
+bool
+Thread::alloc_eager_fpu_state()
+{
+  return true;
+}
 
 PUBLIC inline
 void

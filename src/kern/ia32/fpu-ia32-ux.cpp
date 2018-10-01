@@ -57,6 +57,28 @@ private:
   static unsigned _state_align;
 };
 
+//----------------------------------------------------------------
+IMPLEMENTATION [fpu && lazy_fpu]:
+
+PRIVATE inline
+void
+Fpu::finish_init()
+{
+  set_owner(0);
+  disable();
+}
+
+//----------------------------------------------------------------
+IMPLEMENTATION [fpu && !lazy_fpu]:
+
+PRIVATE inline
+void
+Fpu::finish_init()
+{
+  enable();
+}
+
+
 IMPLEMENTATION[ia32,amd64,ux]:
 
 #include <cstring>
@@ -79,7 +101,7 @@ IMPLEMENT inline NEEDS ["cpu.h", "fpu_state.h", "globals.h", "regdefs.h",
 void
 Fpu::init_state(Fpu_state *s)
 {
-  Cpu const &_cpu = Cpu::cpus.cpu(current_cpu());
+  Cpu const &_cpu = *Cpu::boot_cpu();
   if (_cpu.features() & FEAT_FXSR)
     {
       assert (_state_size >= sizeof (sse_regs));
@@ -114,13 +136,8 @@ IMPLEMENT
 void
 Fpu::init(Cpu_number cpu, bool resume)
 {
-  // Mark FPU busy, so that first FPU operation will yield an exception
-  disable();
-
   // At first, noone owns the FPU
   Fpu &f = Fpu::fpu.cpu(cpu);
-
-  f.set_owner(0);
 
   init_disable();
 
@@ -159,6 +176,8 @@ Fpu::init(Cpu_number cpu, bool resume)
     _state_size = cpu_size;
   if (cpu_align > _state_align)
     _state_align = cpu_align;
+
+  f.finish_init();
 }
 
 

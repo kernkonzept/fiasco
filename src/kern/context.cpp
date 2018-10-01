@@ -497,52 +497,6 @@ Context::reset_kernel_sp()
   _kernel_sp = reinterpret_cast<Mword*>(regs());
 }
 
-PUBLIC inline
-void
-Context::spill_fpu_if_owner()
-{
-  // spill FPU state into memory before migration
-  if (state() & Thread_fpu_owner)
-    {
-      Fpu &f = Fpu::fpu.current();
-      if (current() != this)
-        f.enable();
-
-      spill_fpu();
-      f.set_owner(0);
-      f.disable();
-    }
-}
-
-PUBLIC static
-void
-Context::spill_current_fpu(Cpu_number cpu)
-{
-  (void)cpu;
-  assert (cpu == current_cpu());
-  Fpu &f = Fpu::fpu.current();
-  if (f.owner())
-    {
-      f.enable();
-      f.owner()->spill_fpu();
-      f.set_owner(0);
-      f.disable();
-    }
-}
-
-
-PUBLIC inline
-void
-Context::release_fpu_if_owner()
-{
-  // If this context owned the FPU, noone owns it now
-  Fpu &f = Fpu::fpu.current();
-  if (f.is_owner(this))
-    {
-      f.set_owner(0);
-      f.disable();
-    }
-}
 
 /** Destroy context.
  */
@@ -2311,10 +2265,8 @@ Context::rcu_wait()
     }
 }
 
-
-
 //----------------------------------------------------------------------------
-IMPLEMENTATION [fpu && !ux]:
+IMPLEMENTATION [fpu && !ux && lazy_fpu]:
 
 #include "fpu.h"
 
@@ -2331,7 +2283,6 @@ Context::spill_fpu()
   Fpu::save_state(fpu_state());
   state_del_dirty(Thread_fpu_owner);
 }
-
 
 /**
  * When switching away from the FPU owner, disable the FPU to cause
@@ -2351,11 +2302,137 @@ Context::switch_fpu(Context *t)
 }
 
 //----------------------------------------------------------------------------
+IMPLEMENTATION [fpu && lazy_fpu]:
+
+#include "fpu.h"
+
+PUBLIC inline
+void
+Context::spill_fpu_if_owner()
+{
+  // spill FPU state into memory before migration
+  if (!(state() & Thread_fpu_owner))
+    return;
+
+  Fpu &f = Fpu::fpu.current();
+
+  if (current() != this)
+    f.enable();
+
+  spill_fpu();
+  f.set_owner(0);
+  f.disable();
+}
+
+PUBLIC static
+void
+Context::spill_current_fpu(Cpu_number cpu)
+{
+  (void)cpu;
+  assert (cpu == current_cpu());
+
+  Fpu &f = Fpu::fpu.current();
+  if (f.owner())
+    {
+      f.enable();
+      f.owner()->spill_fpu();
+      f.set_owner(0);
+      f.disable();
+    }
+}
+
+
+PUBLIC inline
+void
+Context::release_fpu_if_owner()
+{
+  // If this context owns the FPU, no one owns it now
+  Fpu &f = Fpu::fpu.current();
+  if (f.is_owner(this))
+    {
+      f.set_owner(0);
+      f.disable();
+    }
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [fpu && !ux && !lazy_fpu]:
+
+#include "fpu.h"
+
+PUBLIC inline NEEDS ["fpu.h"]
+void
+Context::spill_fpu()
+{
+  assert (fpu_state());
+
+  // Save the FPU state of the previous FPU owner
+  Fpu::save_state(fpu_state());
+}
+
+IMPLEMENT inline NEEDS ["fpu.h"]
+void
+Context::switch_fpu(Context *t)
+{
+  Fpu &f = Fpu::fpu.current();
+
+  if (state() & Thread_vcpu_fpu_disabled)
+    f.enable();
+
+  spill_fpu();
+  f.restore_state(t->fpu_state());
+
+  if (t->state() & Thread_vcpu_fpu_disabled)
+    f.disable();
+}
+
+PUBLIC inline
+void
+Context::spill_fpu_if_owner()
+{
+  if (current() != this)
+    return;
+
+  spill_fpu();
+}
+
+PUBLIC static
+void
+Context::spill_current_fpu(Cpu_number cpu)
+{
+  (void)cpu;
+  assert (cpu == current_cpu());
+
+  current()->spill_fpu();
+}
+
+
+PUBLIC inline
+void
+Context::release_fpu_if_owner()
+{}
+
+//----------------------------------------------------------------------------
 IMPLEMENTATION [!fpu]:
 
 PUBLIC inline
 void
+Context::spill_fpu_if_owner()
+{}
+
+PUBLIC static
+void
+Context::spill_current_fpu(Cpu_number)
+{}
+
+PUBLIC inline
+void
 Context::spill_fpu()
+{}
+
+PUBLIC inline
+void
+Context::release_fpu_if_owner()
 {}
 
 IMPLEMENT inline

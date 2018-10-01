@@ -6,6 +6,9 @@ mainmenu "Fiasco configuration"
 config HAS_FPU_OPTION
 	bool
 
+config HAS_LAZY_FPU
+	bool
+
 config HAS_VIRT_OBJ_SPACE_OPTION
 	bool
 
@@ -42,6 +45,8 @@ config IA32
 	select HAS_VIRT_OBJ_SPACE_OPTION
 	select HAS_JDB_DISASM_OPTION
 	select HAS_JDB_GZIP_OPTION
+	select FPU
+	select HAS_LAZY_FPU
 
 config AMD64
 	bool "AMD64 processor family"
@@ -49,6 +54,8 @@ config AMD64
 	select HAS_JDB_DISASM_OPTION
 	select HAS_JDB_GZIP_OPTION
 	select BIT64
+	select FPU
+	select HAS_LAZY_FPU
 
 #  ARCH_CHOICE
 endchoice
@@ -166,10 +173,21 @@ config REGPARM3
 
 config FPU
 	bool "Enable FPU co-processor" if HAS_FPU_OPTION
-	depends on HAS_FPU_OPTION
-	default y
+	default y if HAS_FPU_OPTION
 	help
 	  Enable this if your platform has hardware floating point support.
+
+config LAZY_FPU
+	bool "Enable lazy FPU switching" if HAS_LAZY_FPU && FPU
+	depends on FPU && HAS_LAZY_FPU
+	default y if !AMD64
+	help
+	  Enable this option to allow lazy context switching of FPU / SIMD
+          processor state. This removes the overhead incurred by eagerly
+          switching the FPU / SIMD state which is needed to mitigate the lazy
+          FPU restore side-channel attack found on Intel processors.
+
+          It is save to enable this option on AMD CPUs.
 
 # PF_SECTION: TARGET
 

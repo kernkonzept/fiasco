@@ -27,7 +27,14 @@ public:
   static void save_state(Fpu_state *);
 
   static Per_cpu<Fpu> fpu;
+};
 
+// ----------------------------------------------------------------------
+INTERFACE [fpu && lazy_fpu]:
+
+EXTENSION class Fpu
+{
+public:
   Context *owner() const { return _owner; }
   void set_owner(Context *owner) { _owner = owner; }
   bool is_owner(Context *owner) const { return _owner == owner; }
@@ -36,6 +43,7 @@ private:
   Context *_owner;
 };
 
+//---------------------------------------------------------------------------
 IMPLEMENTATION:
 
 #include "fpu_state.h"

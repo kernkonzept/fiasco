@@ -12,7 +12,38 @@ protected:
   Ku_mem_ptr<Vcpu_state> _vcpu_state;
 };
 
+// ---------------------------------------------------------------------
+IMPLEMENTATION [!fpu]:
 
+PROTECTED inline
+void
+Context::vcpu_enable_fpu_if_disabled(Mword)
+{}
+
+// ---------------------------------------------------------------------
+IMPLEMENTATION [fpu && lazy_fpu]:
+
+PROTECTED inline
+void
+Context::vcpu_enable_fpu_if_disabled(Mword thread_state)
+{
+  if ((thread_state & (Thread_fpu_owner | Thread_vcpu_fpu_disabled))
+      == (Thread_fpu_owner | Thread_vcpu_fpu_disabled))
+    Fpu::fpu.current().enable();
+}
+
+// ---------------------------------------------------------------------
+IMPLEMENTATION [fpu && !lazy_fpu]:
+
+PROTECTED inline
+void
+Context::vcpu_enable_fpu_if_disabled(Mword thread_state)
+{
+  if (thread_state & Thread_vcpu_fpu_disabled)
+    Fpu::fpu.current().enable();
+}
+
+// ---------------------------------------------------------------------
 IMPLEMENTATION:
 
 IMPLEMENT_DEFAULT inline
@@ -58,7 +89,9 @@ Context::vcpu_save_state_and_upcall()
   _exc_cont.activate(regs(), upcall);
 }
 
-PUBLIC inline NEEDS["fpu.h", "space.h", Context::arch_load_vcpu_kern_state,
+PUBLIC inline NEEDS["fpu.h", "space.h",
+                    Context::vcpu_enable_fpu_if_disabled,
+                    Context::arch_load_vcpu_kern_state,
                     Context::vcpu_pv_switch_to_kernel]
 bool
 Context::vcpu_enter_kernel_mode(Vcpu_state *vcpu)
@@ -87,16 +120,14 @@ Context::vcpu_enter_kernel_mode(Vcpu_state *vcpu)
           arch_load_vcpu_kern_state(vcpu, load_cpu_state);
           vcpu_pv_switch_to_kernel(vcpu, load_cpu_state);
 
-	  if (load_cpu_state)
-	    {
-	      if ((s & (Thread_fpu_owner | Thread_vcpu_fpu_disabled))
-                  == (Thread_fpu_owner | Thread_vcpu_fpu_disabled))
-                Fpu::fpu.current().enable();
+          if (load_cpu_state)
+            {
+              vcpu_enable_fpu_if_disabled(s);
 
-	      space()->switchin_context(vcpu_user_space());
-	      return true;
-	    }
-	}
+              space()->switchin_context(vcpu_user_space());
+              return true;
+            }
+        }
     }
   return false;
 }

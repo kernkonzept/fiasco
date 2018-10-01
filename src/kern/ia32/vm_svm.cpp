@@ -382,7 +382,7 @@ Vm_svm::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, Vmcb *vmcb_s)
   if(vmcb_s->state_save_area.cr4 & 0x20)
     return -L4_err::EInval;
 #endif
-
+#ifdef CONFIG_LAZY_FPU
   // XXX:
   // This generates a circular dep between thread<->task, this cries for a
   // new abstraction...
@@ -394,6 +394,7 @@ Vm_svm::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, Vmcb *vmcb_s)
           return -L4_err::EInval;
         }
     }
+#endif
 
 #if 0  //should never happen
   host_cr0 = Cpu::get_cr0();

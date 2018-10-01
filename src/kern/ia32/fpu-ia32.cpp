@@ -120,6 +120,9 @@ Fpu::restore_state(Fpu_state *s)
         }
       break;
     case Variant_fpu:
+#ifdef CONFIG_LAZY_FPU
+      // this should be handled in the cases where we release the FPU and it has no owner anymore...
+
       // frstor is a waiting instruction and we must make sure no
       // FPU exceptions are pending here. We distinguish two cases:
       // 1) If we had a previous FPU owner, we called save_state before and
@@ -128,6 +131,7 @@ Fpu::restore_state(Fpu_state *s)
 
       if (!f.owner())
         asm volatile ("fnclex");
+#endif
 
       asm volatile ("frstor (%0)" : : "r" (s->state_buffer()));
       break;

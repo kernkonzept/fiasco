@@ -67,6 +67,8 @@ Thread::Thread(Ram_quota *q)
 
   arch_init();
 
+  alloc_eager_fpu_state();
+
   state_add_dirty(Thread_dead, false);
 
   // ok, we're ready to go!

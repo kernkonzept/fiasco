@@ -425,7 +425,7 @@ Vm_vmx_t<X>::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, void *vmcs_s)
       WARNX(Info, "VMX: not supported/enabled\n");
       return -L4_err::ENodev;
     }
-
+#ifdef CONFIG_LAZY_FPU
   // XXX:
   // This generates a circular dep between thread<->task, this cries for a
   // new abstraction...
@@ -437,7 +437,7 @@ Vm_vmx_t<X>::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, void *vmcs_s)
           return -L4_err::EInval;
         }
     }
-
+#endif
 #if 0
   if (EXPECT_FALSE(read<Unsigned32>(vmcs_s, 0x201a) != 0)) // EPT POINTER
     {
