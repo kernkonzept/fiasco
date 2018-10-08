@@ -109,6 +109,10 @@
 #define FEATX_IA32_TSC_ADJUST 0x00000002 // IA32 TSC Adjust available
 #define FEATX_SMEP      0x00000080      // Supervisor-Mode Execution Prevention
 
+#define FEATX_IBRS_IBPB 0x04000000      // IBRS and IBPB supported
+#define FEATX_STIBP     0x08000000      // STIBP supported
+#define FEATX_L1D_FLUSH 0x10000000      // L1D_FLUSH supported
+
 // AMD: CPU Feature Flags, Fn80000001_ECX
 #define FEATA_SVM	0x00000004
 

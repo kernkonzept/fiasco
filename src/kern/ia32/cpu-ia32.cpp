@@ -149,7 +149,7 @@ public:
   { return _ext_07_ebx & FEATX_SMEP; }
 
   bool __attribute__((const)) has_l1d_flush() const
-  { return (_ext_07_edx & (1UL << 28)); }
+  { return (_ext_07_edx & FEATX_L1D_FLUSH); }
 
   unsigned ext_8000_0001_ecx() const { return _ext_8000_0001_ecx; }
   unsigned ext_8000_0001_edx() const { return _ext_8000_0001_edx; }
@@ -2072,10 +2072,10 @@ Cpu::init_indirect_branch_mitigation()
         panic("intel CPU does not support IBRS, IBPB, STIBP (cpuid max < 7)\n");
 
       cpuid(7, 0, &a, &b, &c, &d);
-      if (!(d & (1UL << 26)))
+      if (!(d & FEATX_IBRS_IBPB))
         panic("IBRS / IBPB not supported by CPU: %x\n", d);
 
-      if (!(d & (1UL << 27)))
+      if (!(d & FEATX_STIBP))
         panic("STIBP not supported by CPU: %x\n", d);
 
       // enable STIBP
