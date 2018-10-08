@@ -134,8 +134,8 @@ SHARED_FLAGS            += -fno-pic
 SHARED_FLAGS-gcc        += -fno-defer-pop
 # gcc #57845
 SHARED_FLAGS-gcc        += $(if $(filter sparc,$(CONFIG_XARCH)),,-freg-struct-return)
-SHARED_FLAGS-gcc	+= $(call CHECKCXX,-Wmisleading-indentation,)
-SHARED_FLAGS		+= -g -Wall -Wextra
+SHARED_FLAGS-gcc	+= $(call CHECKCXX,-Wmisleading-indentation,) -Wlogical-op -Wfloat-equal
+SHARED_FLAGS  		+= -g -Wall -Wextra $(call CHECKCC,-Wdouble-promotion) $(call CHECKCC,-Wfloat-conversion)
 SHARED_FLAGS-clang	+= -Wno-unused-private-field
 SHARED_FLAGS-clang	+= -Wno-string-plus-int -Wno-overloaded-virtual
 SHARED_FLAGS-gcc	+= $(if $(call CHECKCC,-Wnonnull-compare),-Wno-nonnull-compare)
@@ -168,7 +168,7 @@ NOOPT_SHARED_FLAGS += $(NOOPT_SHARED_FLAGS-$(CC_TYPE))
 # Standard compile flags
 ASFLAGS		+= $(SHARED_FLAGS) -DASSEMBLER
 ASFLAGS-clang	+= -no-integrated-as
-CFLAGS		+= $(SHARED_FLAGS)
+CFLAGS		+= $(SHARED_FLAGS) -Wbad-function-cast -Wstrict-prototypes
 CXXFLAGS	+= $(SHARED_FLAGS) -fno-rtti -fno-exceptions
 OPT_CFLAGS	+= $(OPT_SHARED_FLAGS)
 OPT_CXXFLAGS	+= $(OPT_SHARED_FLAGS)
