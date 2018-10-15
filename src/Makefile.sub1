@@ -48,7 +48,7 @@ auto_clean_files = $(strip $(filter-out 				      \
 	touch $@
 
 define find_ld_emulation
-	emulations=$$(LANG= $(LD) --help |                                \
+	emulations=$$(LC_ALL=C $(LD) --help |                             \
 	              grep -i "supported emulations:" |                   \
 	              sed -e 's/.*supported emulations: //') ;            \
 	unset found_it;                                                   \
