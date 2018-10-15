@@ -57,6 +57,9 @@ config CAN_ARM_CPU_CORTEX_A15
 config CAN_ARM_CACHE_L2CXX0
 	bool
 
+config CAN_ARM_CPU_CORTEX_A35
+	bool
+
 config CAN_ARM_CPU_CORTEX_A53
 	bool
 
@@ -147,6 +150,14 @@ config ARM_CORTEX_A15
 	select HAS_MP_OPTION
 	select HAS_CPU_VIRT
 
+config ARM_CORTEX_A35
+	bool "ARM Cortex-A35 CPU"
+	depends on CAN_ARM_CPU_CORTEX_A35
+	select ARM_V8
+	select HAS_MP_OPTION
+	select HAS_CPU_VIRT
+	select HAS_64BIT
+
 config ARM_CORTEX_A53
 	bool "ARM Cortex-A53 CPU"
 	depends on CAN_ARM_CPU_CORTEX_A53
@@ -203,14 +214,14 @@ config ARM_EM_STD
 
 config ARM_EM_NS
 	bool "TrustZone normal side"
-	depends on ARM_1176 || ARM_CORTEX_A7 || ARM_CORTEX_A8 || ARM_CORTEX_A9 || ARM_CORTEX_A15
+	depends on ARM_1176 || ARM_CORTEX_A7 || ARM_CORTEX_A8 || ARM_CORTEX_A9 || ARM_CORTEX_A15 || ARM_CORTEX_A35 || ARM_CORTEX_A53 || ARM_CORTEX_A57 || ARM_CORTEX_A72
 	help
 	  In a system with ARM TrustZone extension, run on the normal side.
 
 config ARM_EM_TZ
 	bool "TrustZone secure side"
 	depends on !CPU_VIRT
-	depends on ARM_1176 || ARM_CORTEX_A7 || ARM_CORTEX_A8 || ARM_CORTEX_A9 || ARM_CORTEX_A15
+	depends on ARM_1176 || ARM_CORTEX_A7 || ARM_CORTEX_A8 || ARM_CORTEX_A9 || ARM_CORTEX_A15 || ARM_CORTEX_A35 || ARM_CORTEX_A53 || ARM_CORTEX_A57 || ARM_CORTEX_A72
 	help
 	  In a system with ARM TrustZone extension, run on the secure side,
 	  and allow monitor services.
