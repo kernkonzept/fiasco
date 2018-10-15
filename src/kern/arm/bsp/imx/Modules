@@ -1,6 +1,7 @@
 # vim:set ft=make:
 
 OBJECTS_LIBUART         += uart_imx.o uart_pl011.o
+OBJECTS_LIBUART         += $(if $(CONFIG_PF_IMX_8X),uart_lpuart.o)
 PREPROCESS_PARTS        += generic_tickless_idle
 PREPROCESS_PARTS	+= $(if $(CONFIG_PF_IMX_21),kern_start_0xd)
 PREPROCESS_PARTS        += $(if $(CONFIG_PF_IMX_35),imx_epit)
@@ -15,10 +16,13 @@ PREPROCESS_PARTS        += $(if $(CONFIG_PF_IMX_6UL),pic_gic \
                                                      arm_generic_timer)
 PREPROCESS_PARTS        += $(if $(CONFIG_PF_IMX_7),pic_gic \
                                                    arm_generic_timer)
+PREPROCESS_PARTS        += $(if $(CONFIG_ARM_V8),pic_gic \
+                                                 arm_generic_timer)
 RAM_PHYS_BASE           := $(CONFIG_PF_IMX_RAM_PHYS_BASE)
 
 INTERFACES_KERNEL     += $(if $(CONFIG_PF_IMX_6UL),generic_timer)
 INTERFACES_KERNEL     += $(if $(CONFIG_PF_IMX_7),generic_timer)
+INTERFACES_KERNEL     += $(if $(CONFIG_ARM_V8),generic_timer)
 INTERFACES_KERNEL-$(CONFIG_PF_IMX_35) += timer_imx_epit
 INTERFACES_KERNEL-$(CONFIG_PF_IMX_51) += timer_imx_epit
 INTERFACES_KERNEL-$(CONFIG_PF_IMX_53) += timer_imx_epit
@@ -42,6 +46,10 @@ LIBUART_HDR-$(CONFIG_PF_IMX_6UL)   += uart_imx.h
 LIBUART_TYP-$(CONFIG_PF_IMX_6UL)   += L4::Uart_imx6
 LIBUART_HDR-$(CONFIG_PF_IMX_7)     += uart_imx.h
 LIBUART_TYP-$(CONFIG_PF_IMX_7)     += L4::Uart_imx7
+LIBUART_HDR-$(CONFIG_PF_IMX_8X)    += uart_lpuart.h
+LIBUART_TYP-$(CONFIG_PF_IMX_8X)    += L4::Uart_lpuart
+LIBUART_HDR-$(CONFIG_PF_IMX_8M)    += uart_imx.h
+LIBUART_TYP-$(CONFIG_PF_IMX_8M)    += L4::Uart_imx8
 
 CXXFLAGS_uart-libuart += -include $(LIBUART_HDR-y) -DFIASCO_UART_TYPE=$(LIBUART_TYP-y)
 
@@ -56,6 +64,7 @@ pic_IMPL              += $(if $(CONFIG_PF_IMX_53),pic-gic pic-arm-imx-gic)
 pic_IMPL              += $(if $(CONFIG_PF_IMX_6),pic-gic pic-arm-imx-gic)
 pic_IMPL              += $(if $(CONFIG_PF_IMX_6UL),pic-gic pic-arm-imx-gic)
 pic_IMPL              += $(if $(CONFIG_PF_IMX_7),pic-gic pic-arm-imx-gic)
+pic_IMPL              += $(if $(CONFIG_ARM_V8),pic-gic pic-arm-imx-gic)
 timer_IMPL            += $(if $(CONFIG_PF_IMX_21),timer-arm-imx21)
 timer_IMPL            += $(if $(CONFIG_PF_IMX_28),timer-arm-timrot)
 timer_IMPL            += $(if $(CONFIG_PF_IMX_35),timer-arm-imx_epit)
@@ -65,6 +74,7 @@ timer_IMPL            += $(if $(CONFIG_PF_IMX_6_TIMER_MPTIMER),timer-arm-mptimer
 timer_IMPL            += $(if $(CONFIG_PF_IMX_6_TIMER_EPIT),timer-arm-imx_epit)
 timer_IMPL            += $(if $(CONFIG_PF_IMX_6UL),timer-arm-generic timer-arm-generic-imx)
 timer_IMPL            += $(if $(CONFIG_PF_IMX_7),timer-arm-generic timer-arm-generic-imx)
+timer_IMPL            += $(if $(CONFIG_ARM_V8),timer-arm-generic timer-arm-generic-imx)
 timer_tick_IMPL       += $(if $(CONFIG_PF_IMX_6_TIMER_EPIT),timer_tick-broadcast,timer_tick-single-vector)
 reset_IMPL            += reset-arm-imx
 outer_cache_IMPL      += outer_cache-arm-imx6

@@ -83,7 +83,21 @@ platform_reset(void)
   platform_imx_cpus_off();
 
   // Enable watchdog with smallest timeout possible (0.5s)
-  Io::modify<Unsigned16>(WCR_WDE, 0xff00, Kmem::mmio_remap(WCR));
+  Io::modify<Unsigned16>(WCR_WDE, 0xff10, Kmem::mmio_remap(WCR));
+
+  for (;;)
+    ;
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && arm_v8]:
+
+#include "platform_control.h"
+
+void __attribute__ ((noreturn))
+platform_reset(void)
+{
+  Platform_control::system_reset();
 
   for (;;)
     ;

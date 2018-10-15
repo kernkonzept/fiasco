@@ -75,12 +75,37 @@ config PF_IMX_7
         help
           Choose for i.MX7 platform.
 
+config PF_IMX_8M
+	bool "i.MX8M"
+	depends on PF_IMX
+	select CAN_ARM_CPU_CORTEX_A53
+	select HAS_CPU_VIRT
+        select HAS_ARM_PSCI
+        select ARM_PSCI
+        select ARM_GIC
+        select HAVE_ARM_GICV3
+	help
+	  Choose for i.MX8M platforms.
+
+config PF_IMX_8X
+	bool "i.MX8X"
+	depends on PF_IMX
+	select CAN_ARM_CPU_CORTEX_A35
+	select HAS_CPU_VIRT
+        select HAS_ARM_PSCI
+        select ARM_PSCI
+        select ARM_GIC
+        select HAVE_ARM_GICV3
+	help
+	  Choose for i.MX8X platforms.
+
 endchoice
 
 config PF_IMX_RAM_PHYS_BASE
 	hex
 	default 0xc0000000 if PF_IMX_21
-	default 0x40000000 if PF_IMX_28
+	default 0x40000000 if PF_IMX_28 || PF_IMX_8M
+	default 0x80200000 if PF_IMX_8X
 	default 0x80000000 if PF_IMX_35 || PF_IMX_6UL || PF_IMX_7
 	default 0x90000000 if PF_IMX_51
         default 0x10000000 if PF_IMX_6
