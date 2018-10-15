@@ -282,7 +282,7 @@ config ARM_PSCI
         depends on HAS_ARM_PSCI
         help
           Use the "Power State Coordination Interface" (PSCI) for system
-          functions such as booting CPUs.
+          functions such as booting CPUs and system reset.
 
 choice
         prompt "PSCI call method"
