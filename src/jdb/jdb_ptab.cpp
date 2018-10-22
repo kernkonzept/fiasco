@@ -100,7 +100,7 @@ Jdb_ptab::draw_entry(unsigned long row, unsigned long col)
   else if ((idx = index(row, col)) >= 0)
     print_entry(Pdir::Pte_ptr(pte(idx), cur_pt_level));
   else
-    putstr("   ###  ");
+    print_invalid();
 }
 
 IMPLEMENT
@@ -364,3 +364,21 @@ Jdb_ptab_m::Jdb_ptab_m()
 }
 
 static Jdb_ptab_m jdb_ptab_m INIT_PRIORITY(JDB_MODULE_INIT_PRIO);
+
+IMPLEMENTATION[32bit]:
+
+PRIVATE
+void
+Jdb_ptab::print_invalid()
+{
+    putstr("   ###  ");
+}
+
+IMPLEMENTATION[64bit]:
+
+PRIVATE
+void
+Jdb_ptab::print_invalid()
+{
+    putstr("       ###      ");
+}
