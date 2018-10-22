@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && pf_bcm283x && pf_bcm283x_rpi1]:
+IMPLEMENTATION [arm && pf_bcm283x && (pf_bcm283x_rpi1 || pf_bcm283x_rpizw)]:
 
 #include "pic.h"
 

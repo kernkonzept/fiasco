@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------
-INTERFACE [arm && pf_bcm283x && pf_bcm283x_rpi1]:
+INTERFACE [arm && pf_bcm283x && (pf_bcm283x_rpi1 || pf_bcm283x_rpizw)]:
 
 // HINT: This is drivers/clocksource/bcm2835_timer.c
 
@@ -60,7 +60,7 @@ unsigned Timer::irq()
 }
 
 // ----------------------------------------------------------------------
-IMPLEMENTATION [arm && pf_bcm283x && pf_bcm283x_rpi1]:
+IMPLEMENTATION [arm && pf_bcm283x && (pf_bcm283x_rpi1 || pf_bcm283x_rpizw)]:
 
 #include "config.h"
 #include "kip.h"

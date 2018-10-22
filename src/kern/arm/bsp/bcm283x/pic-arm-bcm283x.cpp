@@ -118,7 +118,7 @@ Pic::handle_irq()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pf_bcm283x && pf_bcm283x_rpi1]:
+IMPLEMENTATION [arm && pf_bcm283x && (pf_bcm283x_rpi1 || pf_bcm283x_rpizw)]:
 
 PUBLIC static FIASCO_INIT
 void Pic::init()

@@ -1,4 +1,4 @@
-INTERFACE [arm && pf_bcm283x_rpi1]: //-------------------------------------
+INTERFACE [arm && (pf_bcm283x_rpi1 || pf_bcm283x_rpizw)]: //-------------------------------------
 
 EXTENSION class Mem_layout
 {

@@ -1,4 +1,4 @@
-IMPLEMENTATION [pf_bcm283x && !pf_bcm283x_rpi3]:
+IMPLEMENTATION [pf_bcm283x && !(pf_bcm283x_rpi3 || pf_bcm283x_rpizw)]:
 
 #include "koptions.h"
 #include "uart_pl011.h"

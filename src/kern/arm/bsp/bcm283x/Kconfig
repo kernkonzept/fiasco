@@ -21,4 +21,9 @@ config PF_BCM283X_RPI3
         depends on PF_BCM283X
         select CAN_ARM_CPU_CORTEX_A53
 
+config PF_BCM283X_RPIZW
+        bool "rpizw"
+        depends on PF_BCM283X
+        select CAN_ARM_CPU_1176
+
 endchoice
