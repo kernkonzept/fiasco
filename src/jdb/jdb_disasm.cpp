@@ -108,45 +108,38 @@ static
 Address
 Jdb_disasm::disasm_offset(Address &start, int offset, Space *task)
 {
-  if (offset>0)
+  Address addr = start;
+  if (offset > 0)
     {
-      Address addr = start;
       while (offset--)
 	{
-	  if (!disasm_line(0, 0, addr, 0, task))
-	    {
-	      start = addr + offset;
-	      return false;
-	    }
+          if (!disasm_offset_incr(addr, task))
+            {
+              start = addr + offset;
+              return false;
+            }
 	  if (at_symbol(addr, task) && !offset--)
 	    break;
 	  if (at_line(addr, task) && !offset--)
 	    break;
 	}
-      start = addr;
-      return true;
     }
-
-  while (offset++)
+  else
     {
-      Address addr = start-64, va_start;
-      for (;;)
-	{
-	  va_start = addr;
-	  if (!disasm_line(0, 0, addr, 0, task))
-	    {
-	      start += offset-1;
-	      return false;
-	    }
-	  if (addr >= start)
-	    break;
-	}
-      start = va_start;
-      if (at_symbol(addr, task) && !offset++)
-	break;
-      if (at_line(addr, task) && !offset++)
-	break;
+      while (offset++)
+        {
+          if (!disasm_offset_decr(addr, task))
+            {
+              start = addr + offset - 1;
+              return false;
+            }
+          if (at_symbol(addr, task) && !offset++)
+            break;
+          if (at_line(addr, task) && !offset++)
+            break;
+        }
     }
+  start = addr;
   return true;
 }
 
@@ -231,13 +224,15 @@ Jdb_disasm::show(Address virt, Space *task, int level, bool do_clear_screen = fa
 	    }
 
 	  // show instruction breakpoint
+#if defined(CONFIG_IA32) || defined(CONFIG_AMD64)
           if (Mword i = Jdb_bp::instruction_bp_at_addr(addr))
             {
               stat_str[0] = '#';
               stat_str[1] = '0' + i - 1;
             }
+#endif
 
-	  printf("%s" L4_PTR_FMT "%s%s  ", 
+	  printf("%s" L4_PTR_FMT "%s%s  ",
 	         addr == enter_addr ? Jdb::esc_emph : "", addr, stat_str,
 		 addr == enter_addr ? "\033[m" : "");
 	  show_disasm_line(
@@ -357,3 +352,53 @@ Jdb_disasm::Jdb_disasm()
 {}
 
 static Jdb_disasm jdb_disasm INIT_PRIORITY(JDB_MODULE_INIT_PRIO);
+
+
+IMPLEMENTATION[jdb_disasm && !arm]:
+
+static
+bool
+Jdb_disasm::disasm_offset_decr(Address &addr, Space *task)
+{
+  Address test_addr = addr - 64;
+  Address work_addr;
+  for (;;)
+    {
+      work_addr = test_addr;
+      if (!disasm_line(0, 0, test_addr, 0, task))
+        return false;
+      if (test_addr >= addr)
+        break;
+    }
+  addr = work_addr;
+  return true;
+}
+
+static
+bool
+Jdb_disasm::disasm_offset_incr(Address &addr, Space *task)
+{
+  if (!disasm_line(0, 0, addr, 0, task))
+    return false;
+
+  return true;
+}
+
+
+IMPLEMENTATION[jdb_disasm && arm]:
+
+static
+bool
+Jdb_disasm::disasm_offset_decr(Address &addr, Space *)
+{
+  addr -= 4;
+  return true;
+}
+
+static
+bool
+Jdb_disasm::disasm_offset_incr(Address &addr, Space *)
+{
+  addr += 4;
+  return true;
+}

@@ -1,28 +1,26 @@
-#include "libbfd.h"
+#include <stdlib.h>
+#include "sysdep.h"
 #include "bfd.h"
 
-bfd_vma
-bfd_getb32 (const void *p)
+bfd_uint64_t
+bfd_get_bits (const void *p, int bits, bfd_boolean big_p)
 {
-  const bfd_byte *addr = p;
-  unsigned long v;
+  const bfd_byte *addr = (const bfd_byte *) p;
+  bfd_uint64_t data;
+  int i;
+  int bytes;
 
-  v = (unsigned long) addr[0] << 24;
-  v |= (unsigned long) addr[1] << 16;
-  v |= (unsigned long) addr[2] << 8;
-  v |= (unsigned long) addr[3];
-  return v;
-}
+  if (bits % 8 != 0)
+    abort ();
 
-bfd_vma
-bfd_getl32 (const void *p)
-{
-  const bfd_byte *addr = p;
-  unsigned long v;
+  data = 0;
+  bytes = bits / 8;
+  for (i = 0; i < bytes; i++)
+    {
+      int addr_index = big_p ? i : bytes - i - 1;
 
-  v = (unsigned long) addr[0];
-  v |= (unsigned long) addr[1] << 8;
-  v |= (unsigned long) addr[2] << 16;
-  v |= (unsigned long) addr[3] << 24;
-  return v;
+      data = (data << 8) | addr[addr_index];
+    }
+
+  return data;
 }

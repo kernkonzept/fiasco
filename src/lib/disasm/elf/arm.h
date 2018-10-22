@@ -1,12 +1,11 @@
 /* ARM ELF support for BFD.
-   Copyright 1998, 1999, 2000, 2001, 2002, 2003, 2004
-   Free Software Foundation, Inc.
+   Copyright (C) 1998-2018 Free Software Foundation, Inc.
 
    This file is part of BFD, the Binary File Descriptor library.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2 of the License, or
+   the Free Software Foundation; either version 3 of the License, or
    (at your option) any later version.
 
    This program is distributed in the hope that it will be useful,
@@ -25,7 +24,6 @@
 
 /* Processor specific flags for the ELF header e_flags field.  */
 #define EF_ARM_RELEXEC     0x01
-#define EF_ARM_HASENTRY    0x02
 #define EF_ARM_INTERWORK   0x04
 #define EF_ARM_APCS_26     0x08
 #define EF_ARM_APCS_FLOAT  0x10
@@ -41,10 +39,15 @@
 #define PT_ARM_EXIDX (PT_LOPROC + 1)
 
 /* Other constants defined in the ARM ELF spec. version B-01.  */
-#define EF_ARM_SYMSARESORTED 0x04	/* NB conflicts with EF_INTERWORK */
-#define EF_ARM_DYNSYMSUSESEGIDX 0x08	/* NB conflicts with EF_APCS26 */
-#define EF_ARM_MAPSYMSFIRST 0x10	/* NB conflicts with EF_APCS_FLOAT */
+#define EF_ARM_SYMSARESORTED 0x04	/* NB conflicts with EF_INTERWORK.  */
+#define EF_ARM_DYNSYMSUSESEGIDX 0x08	/* NB conflicts with EF_APCS26.  */
+#define EF_ARM_MAPSYMSFIRST 0x10	/* NB conflicts with EF_APCS_FLOAT.  */
 #define EF_ARM_EABIMASK      0xFF000000
+
+/* New constants defined in the ARM ELF spec. version XXX.
+   Only valid in conjunction with EF_ARM_EABI_VER5. */
+#define EF_ARM_ABI_FLOAT_SOFT 0x200	/* NB conflicts with EF_ARM_SOFT_FLOAT.  */
+#define EF_ARM_ABI_FLOAT_HARD 0x400	/* NB conflicts with EF_ARM_VFP_FLOAT.  */
 
 /* Constants defined in AAELF.  */
 #define EF_ARM_BE8	    0x00800000
@@ -71,12 +74,15 @@
 #define STT_ARM_16BIT      STT_HIPROC   /* A Thumb label.  */
 
 /* Additional section types.  */
-#define SHT_ARM_EXIDX	   0x70000001	/* Section holds ARM unwind info.  */
-#define SHT_ARM_PREEMPTMAP 0x70000002	/* Section pre-emption details.  */
-#define SHT_ARM_ATTRIBUTES 0x70000003	/* Section holds attributes.  */
+#define SHT_ARM_EXIDX	       0x70000001	/* Section holds ARM unwind info.  */
+#define SHT_ARM_PREEMPTMAP     0x70000002	/* Section pre-emption details.  */
+#define SHT_ARM_ATTRIBUTES     0x70000003	/* Section holds attributes.  */
+#define SHT_ARM_DEBUGOVERLAY   0x70000004	/* Section holds overlay debug info.  */
+#define SHT_ARM_OVERLAYSECTION 0x70000005	/* Section holds GDB and overlay integration info.  */
 
 /* ARM-specific values for sh_flags.  */
 #define SHF_ENTRYSECT      0x10000000   /* Section contains an entry point.  */
+#define SHF_ARM_PURECODE   0x20000000   /* Section contains only code and no data.  */
 #define SHF_COMDEF         0x80000000   /* Section may be multiply defined in the input to a link step.  */
 
 /* ARM-specific program header flags.  */
@@ -85,17 +91,28 @@
 #define PF_ARM_ABS         0x40000000   /* Segment must be loaded at its base address.  */
 
 /* Values for the Tag_CPU_arch EABI attribute.  */
-#define TAG_CPU_ARCH_PRE_V4    0
-#define TAG_CPU_ARCH_V4                1
-#define TAG_CPU_ARCH_V4T       2
-#define TAG_CPU_ARCH_V5T       3
-#define TAG_CPU_ARCH_V5TE      4
-#define TAG_CPU_ARCH_V5TEJ     5
-#define TAG_CPU_ARCH_V6                6
-#define TAG_CPU_ARCH_V6KZ      7
-#define TAG_CPU_ARCH_V6T2      8
-#define TAG_CPU_ARCH_V6K       9
-#define TAG_CPU_ARCH_V7                10
+#define TAG_CPU_ARCH_PRE_V4	0
+#define TAG_CPU_ARCH_V4		1
+#define TAG_CPU_ARCH_V4T	2
+#define TAG_CPU_ARCH_V5T	3
+#define TAG_CPU_ARCH_V5TE	4
+#define TAG_CPU_ARCH_V5TEJ	5
+#define TAG_CPU_ARCH_V6		6
+#define TAG_CPU_ARCH_V6KZ	7
+#define TAG_CPU_ARCH_V6T2	8
+#define TAG_CPU_ARCH_V6K	9
+#define TAG_CPU_ARCH_V7		10
+#define TAG_CPU_ARCH_V6_M	11
+#define TAG_CPU_ARCH_V6S_M	12
+#define TAG_CPU_ARCH_V7E_M	13
+#define TAG_CPU_ARCH_V8		14
+#define TAG_CPU_ARCH_V8R	15
+#define TAG_CPU_ARCH_V8M_BASE	16
+#define TAG_CPU_ARCH_V8M_MAIN	17
+#define MAX_TAG_CPU_ARCH	TAG_CPU_ARCH_V8M_MAIN
+/* Pseudo-architecture to allow objects to be compatible with the subset of
+   armv4t and armv6-m.  This value should never be stored in object files.  */
+#define TAG_CPU_ARCH_V4T_PLUS_V6_M (MAX_TAG_CPU_ARCH + 1)
 
 /* Relocation types.  */
 
@@ -114,7 +131,7 @@ START_RELOC_NUMBERS (elf_arm_reloc_type)
   RELOC_NUMBER (R_ARM_THM_CALL,        	 10)
   RELOC_NUMBER (R_ARM_THM_PC8,         	 11)
   RELOC_NUMBER (R_ARM_BREL_ADJ,	       	 12)
-  RELOC_NUMBER (R_ARM_SWI24,           	 13)   /* obsolete */
+  RELOC_NUMBER (R_ARM_TLS_DESC,          13)
   RELOC_NUMBER (R_ARM_THM_SWI8,        	 14)   /* obsolete */
   RELOC_NUMBER (R_ARM_XPC25,           	 15)   /* obsolete */
   RELOC_NUMBER (R_ARM_THM_XPC22,       	 16)   /* obsolete */
@@ -191,7 +208,10 @@ START_RELOC_NUMBERS (elf_arm_reloc_type)
   RELOC_NUMBER (R_ARM_THM_MOVW_BREL_NC,	 87)
   RELOC_NUMBER (R_ARM_THM_MOVT_BREL,   	 88)
   RELOC_NUMBER (R_ARM_THM_MOVW_BREL,   	 89)
-  /* 90-93 unallocated */
+  RELOC_NUMBER (R_ARM_TLS_GOTDESC,       90)
+  RELOC_NUMBER (R_ARM_TLS_CALL,          91)
+  RELOC_NUMBER (R_ARM_TLS_DESCSEQ,       92)
+  RELOC_NUMBER (R_ARM_THM_TLS_CALL,      93)
   RELOC_NUMBER (R_ARM_PLT32_ABS,       	 94)
   RELOC_NUMBER (R_ARM_GOT_ABS,	       	 95)
   RELOC_NUMBER (R_ARM_GOT_PREL,	       	 96)
@@ -212,6 +232,21 @@ START_RELOC_NUMBERS (elf_arm_reloc_type)
   RELOC_NUMBER (R_ARM_TLS_IE12GP,     	111)
   /* 112 - 127 private range */
   RELOC_NUMBER (R_ARM_ME_TOO,	        128)   /* obsolete */
+  RELOC_NUMBER (R_ARM_THM_TLS_DESCSEQ  ,129)
+
+  RELOC_NUMBER (R_ARM_THM_ALU_ABS_G0_NC,132)
+  RELOC_NUMBER (R_ARM_THM_ALU_ABS_G1_NC,133)
+  RELOC_NUMBER (R_ARM_THM_ALU_ABS_G2_NC,134)
+  RELOC_NUMBER (R_ARM_THM_ALU_ABS_G3_NC,135)
+
+  RELOC_NUMBER (R_ARM_IRELATIVE,      	160)
+  RELOC_NUMBER (R_ARM_GOTFUNCDESC,    	161)
+  RELOC_NUMBER (R_ARM_GOTOFFFUNCDESC, 	162)
+  RELOC_NUMBER (R_ARM_FUNCDESC,       	163)
+  RELOC_NUMBER (R_ARM_FUNCDESC_VALUE, 	164)
+  RELOC_NUMBER (R_ARM_TLS_GD32_FDPIC,   165)
+  RELOC_NUMBER (R_ARM_TLS_LDM32_FDPIC,  166)
+  RELOC_NUMBER (R_ARM_TLS_IE32_FDPIC,   167)
 
   /* Extensions?  R=read-only?  */
   RELOC_NUMBER (R_ARM_RXPC25,         	249)
@@ -234,7 +269,8 @@ START_RELOC_NUMBERS (elf_arm_reloc_type)
   FAKE_RELOC (R_ARM_GOT32,              R_ARM_GOT_BREL)   /* 32 bit GOT entry.  */
   FAKE_RELOC (R_ARM_ROSEGREL32,         R_ARM_SBREL31)    /* ??? */
   FAKE_RELOC (R_ARM_AMP_VCALL9,         R_ARM_BREL_ADJ)   /* Thumb-something.  Not used.  */
-END_RELOC_NUMBERS (R_ARM_max)
+
+END_RELOC_NUMBERS (R_ARM_max = 256)
 
 #ifdef BFD_ARCH_SIZE
 /* EABI object attributes.  */
@@ -248,9 +284,9 @@ enum
   Tag_CPU_arch_profile,
   Tag_ARM_ISA_use,
   Tag_THUMB_ISA_use,
-  Tag_VFP_arch,
+  Tag_FP_arch,
   Tag_WMMX_arch,
-  Tag_NEON_arch,
+  Tag_Advanced_SIMD_arch,
   Tag_PCS_config,
   Tag_ABI_PCS_R9_use,
   Tag_ABI_PCS_RW_data,
@@ -262,17 +298,60 @@ enum
   Tag_ABI_FP_exceptions,
   Tag_ABI_FP_user_exceptions,
   Tag_ABI_FP_number_model,
-  Tag_ABI_align8_needed,
-  Tag_ABI_align8_preserved,
+  Tag_ABI_align_needed,
+  Tag_ABI_align_preserved,
   Tag_ABI_enum_size,
   Tag_ABI_HardFP_use,
   Tag_ABI_VFP_args,
   Tag_ABI_WMMX_args,
   Tag_ABI_optimization_goals,
   Tag_ABI_FP_optimization_goals,
-  /* 32 is generic.  */
+  /* 32 is generic (Tag_compatibility).  */
+  Tag_undefined33 = 33,
+  Tag_CPU_unaligned_access,
+  Tag_undefined35,
+  Tag_FP_HP_extension,
+  Tag_undefined37,
+  Tag_ABI_FP_16bit_format,
+  Tag_undefined39,
+  Tag_undefined40,
+  Tag_undefined41,
+  Tag_MPextension_use,
+  Tag_undefined_43,
+  Tag_DIV_use,
+  Tag_DSP_extension = 46,
+  Tag_nodefaults = 64,
+  Tag_also_compatible_with,
+  Tag_T2EE_use,
+  Tag_conformance,
+  Tag_Virtualization_use,
+  Tag_undefined69,
+  Tag_MPextension_use_legacy,
+
+  /* The following tags are legacy names for other tags.  */
+  Tag_VFP_arch = Tag_FP_arch,
+  Tag_ABI_align8_needed = Tag_ABI_align_needed,
+  Tag_ABI_align8_preserved = Tag_ABI_align_preserved,
+  Tag_VFP_HP_extension = Tag_FP_HP_extension
 };
 
+/* Values for Tag_ABI_FP_number_model.  */
+enum
+{
+  AEABI_FP_number_model_none = 0,
+  AEABI_FP_number_model_ieee754_number = 1,
+  AEABI_FP_number_model_rtabi = 2,
+  AEABI_FP_number_model_ieee754_all = 3
+};
+
+/* Values for Tag_ABI_VFP_args.  */
+enum
+{
+  AEABI_VFP_args_base = 0,
+  AEABI_VFP_args_vfp = 1,
+  AEABI_VFP_args_toolchain = 2,
+  AEABI_VFP_args_compatible = 3
+};
 #endif
 
 /* The name of the note section used to identify arm variants.  */
@@ -283,5 +362,41 @@ enum
 #define ELF_STRING_ARM_unwind_info      ".ARM.extab"
 #define ELF_STRING_ARM_unwind_once      ".gnu.linkonce.armexidx."
 #define ELF_STRING_ARM_unwind_info_once ".gnu.linkonce.armextab."
+
+enum arm_st_branch_type {
+  ST_BRANCH_TO_ARM,
+  ST_BRANCH_TO_THUMB,
+  ST_BRANCH_LONG,
+  ST_BRANCH_UNKNOWN,
+  ST_BRANCH_ENUM_SIZE
+};
+
+#define NUM_ENUM_ARM_ST_BRANCH_TYPE_BITS 2
+#define ENUM_ARM_ST_BRANCH_TYPE_BITMASK	\
+  ((1 << NUM_ENUM_ARM_ST_BRANCH_TYPE_BITS) - 1)
+
+#define ARM_GET_SYM_BRANCH_TYPE(STI) \
+  ((enum arm_st_branch_type) ((STI) & ENUM_ARM_ST_BRANCH_TYPE_BITMASK))
+#ifdef BFD_ASSERT
+#define ARM_SET_SYM_BRANCH_TYPE(STI, TYPE)			\
+  do {								\
+    BFD_ASSERT (TYPE <= ST_BRANCH_ENUM_SIZE);			\
+    BFD_ASSERT ((1 << NUM_ENUM_ARM_ST_BRANCH_TYPE_BITS)		\
+		>= ST_BRANCH_ENUM_SIZE);			\
+    (STI) = (((STI) & ~ENUM_ARM_ST_BRANCH_TYPE_BITMASK)		\
+	     | ((TYPE) & ENUM_ARM_ST_BRANCH_TYPE_BITMASK));	\
+  } while (0)
+#else
+#define ARM_SET_SYM_BRANCH_TYPE(STI, TYPE)			\
+  (STI) = (((STI) & ~ENUM_ARM_ST_BRANCH_TYPE_BITMASK)		\
+	   | ((TYPE) & ENUM_ARM_ST_BRANCH_TYPE_BITMASK))
+#endif
+
+/* Get or set whether a symbol is a special symbol of an entry function of CMSE
+   secure code.  */
+#define ARM_GET_SYM_CMSE_SPCL(SYM_TARGET_INTERNAL) \
+  (((SYM_TARGET_INTERNAL) >> 2) & 1)
+#define ARM_SET_SYM_CMSE_SPCL(SYM_TARGET_INTERNAL) \
+  (SYM_TARGET_INTERNAL) |= 4
 
 #endif /* _ELF_ARM_H */

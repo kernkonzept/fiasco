@@ -1,39 +1,51 @@
 /* ELF support for BFD.
-   Copyright 1991, 1992, 1993, 1995, 1997, 1998, 1999, 2001, 2003, 2005
-   Free Software Foundation, Inc.
+   Copyright (C) 1991-2018 Free Software Foundation, Inc.
 
    Written by Fred Fish @ Cygnus Support, from information published
    in "UNIX System V Release 4, Programmers Guide: ANSI C and
    Programming Support Tools".
 
-This file is part of BFD, the Binary File Descriptor library.
+   This file is part of BFD, the Binary File Descriptor library.
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 3 of the License, or
+   (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA.  */
-
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
+   MA 02110-1301, USA.  */
 
 /* This file is part of ELF support for BFD, and contains the portions
    that describe how ELF is represented externally by the BFD library.
    I.E. it describes the in-file representation of ELF.  It requires
    the elf/common.h file which contains the portions that are common to
-   both the internal and external representations. */
+   both the internal and external representations.  */
 
 /* The 64-bit stuff is kind of random.  Perhaps someone will publish a
    spec someday.  */
 
 #ifndef _ELF_EXTERNAL_H
 #define _ELF_EXTERNAL_H
+
+/* Special section indices, which may show up in st_shndx fields, among
+   other places.  */
+
+#define SHN_LORESERVE	0xFF00		/* Begin range of reserved indices */
+#define SHN_LOPROC	0xFF00		/* Begin range of appl-specific */
+#define SHN_HIPROC	0xFF1F		/* End range of appl-specific */
+#define SHN_LOOS	0xFF20		/* OS specific semantics, lo */
+#define SHN_HIOS	0xFF3F		/* OS specific semantics, hi */
+#define SHN_ABS		0xFFF1		/* Associated symbol is absolute */
+#define SHN_COMMON	0xFFF2		/* Associated symbol is in common */
+#define SHN_XINDEX	0xFFFF		/* Section index is held elsewhere */
+#define SHN_HIRESERVE	0xFFFF		/* End range of reserved indices */
 
 /* ELF Header (32-bit implementations) */
 
@@ -123,6 +135,21 @@ typedef struct {
   unsigned char	sh_entsize[8];		/* Entry size if section holds table */
 } Elf64_External_Shdr;
 
+/* Compression header */
+
+typedef struct {
+  unsigned char	ch_type[4];		/* Type of compression */
+  unsigned char	ch_size[4];		/* Size of uncompressed data in bytes */
+  unsigned char	ch_addralign[4];	/* Alignment of uncompressed data  */
+} Elf32_External_Chdr;
+
+typedef struct {
+  unsigned char	ch_type[4];		/* Type of compression */
+  unsigned char	ch_reserved[4];		/* Padding */
+  unsigned char	ch_size[8];		/* Size of uncompressed data in bytes */
+  unsigned char	ch_addralign[8];	/* Alignment of uncompressed data  */
+} Elf64_External_Chdr;
+
 /* Symbol table entry */
 
 typedef struct {
@@ -155,6 +182,22 @@ typedef struct {
   unsigned char	type[4];		/* Interpretation of the descriptor */
   char		name[1];		/* Start of the name+desc data */
 } Elf_External_Note;
+
+/* Align an address upward to a boundary, expressed as a number of bytes.
+   E.g. align to an 8-byte boundary with argument of 8.  */
+#define ELF_ALIGN_UP(addr, boundary) \
+  (((bfd_vma) (addr) + ((boundary) - 1)) & ~ (bfd_vma) ((boundary) -1))
+
+/* Compute the offset of the note descriptor from size of note entry's
+   owner string and note alignment.  */
+#define ELF_NOTE_DESC_OFFSET(namesz, align) \
+  ELF_ALIGN_UP (offsetof (Elf_External_Note, name) + (namesz), (align))
+
+/* Compute the offset of the next note entry from size of note entry's
+   owner string, size of the note descriptor and note alignment.  */
+#define ELF_NOTE_NEXT_OFFSET(namesz, descsz, align) \
+  ELF_ALIGN_UP (ELF_NOTE_DESC_OFFSET ((namesz), (align)) + (descsz), \
+		(align))
 
 /* Relocation Entries */
 typedef struct {

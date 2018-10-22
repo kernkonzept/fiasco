@@ -273,6 +273,7 @@ ifeq ("$(CONFIG_JDB_DISASM)","y")
   endif
   SUBSYSTEMS          += LIBDISASM
   KERNEL_EXTRA_LIBS   += $(LIBDISASM)
+  PREPROCESS_PARTS    += jdb_disasm
 
   LIBDISASM           := libdisasm.a
   VPATH               += lib/disasm lib/disasm/elf lib/disasm/include \
@@ -283,8 +284,14 @@ ifeq ("$(CONFIG_JDB_DISASM)","y")
                          lib/disasm/libiberty lib/disasm/bfd
   PRIVATE_INCDIR      += lib/disasm
   CXXSRC_LIBDISASM    := disasm.cc
-  CSRC_LIBDISASM      := arm-dis.c dis-init.c dis-buf.c safe-ctype.c
-  NOOPT               += $(patsubst %.o, %, $(OBJ_LIBDISASM))
+ ifeq ($(CONFIG_BIT64),y)
+  CSRC_LIBDISASM      := aarch64-dis.c aarch64-dis-2.c \
+                         aarch64-opc.c aarch64-opc-2.c \
+                         dis-init.c dis-buf.c libbfd.c
+ else
+  CSRC_LIBDISASM      := arm-dis.c dis-init.c dis-buf.c
+ endif
+ NOOPT                += $(patsubst %.o, %, $(OBJ_LIBDISASM))
 endif
 
 #

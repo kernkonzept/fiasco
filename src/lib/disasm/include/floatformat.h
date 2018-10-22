@@ -1,6 +1,5 @@
 /* IEEE floating point support declarations, for GDB, the GNU Debugger.
-   Copyright 1991, 1994, 1995, 1997, 2000, 2003, 2005
-   Free Software Foundation, Inc.
+   Copyright (C) 1991-2018 Free Software Foundation, Inc.
 
 This file is part of GDB.
 
@@ -22,6 +21,10 @@ Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA. 
 #define FLOATFORMAT_H 1
 
 #include "ansidecl.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* A floatformat consists of a sign bit, an exponent and a mantissa.  Once the
    bytes are concatenated according to the byteorder flag, then each of those
@@ -85,10 +88,19 @@ struct floatformat
 
   /* Validator method.  */
   int (*is_valid) (const struct floatformat *fmt, const void *from);
+
+  /* Is the format actually the sum of two smaller floating point
+     formats (IBM long double, as described in
+     gcc/config/rs6000/darwin-ldouble-format)?  If so, this is the
+     smaller format in question, and the fields sign_start through
+     intbit describe the first half.  If not, this is NULL.  */
+  const struct floatformat *split_half;
 };
 
 /* floatformats for IEEE single and double, big and little endian.  */
 
+extern const struct floatformat floatformat_ieee_half_big;
+extern const struct floatformat floatformat_ieee_half_little;
 extern const struct floatformat floatformat_ieee_single_big;
 extern const struct floatformat floatformat_ieee_single_little;
 extern const struct floatformat floatformat_ieee_double_big;
@@ -118,6 +130,9 @@ extern const struct floatformat floatformat_ia64_spill_big;
 extern const struct floatformat floatformat_ia64_spill_little;
 extern const struct floatformat floatformat_ia64_quad_big;
 extern const struct floatformat floatformat_ia64_quad_little;
+/* IBM long double (double+double).  */
+extern const struct floatformat floatformat_ibm_long_double_big;
+extern const struct floatformat floatformat_ibm_long_double_little;
 
 /* Convert from FMT to a double.
    FROM is the address of the extended float.
@@ -136,5 +151,9 @@ floatformat_from_double (const struct floatformat *, const double *, void *);
 
 extern int
 floatformat_is_valid (const struct floatformat *fmt, const void *from);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif	/* defined (FLOATFORMAT_H) */

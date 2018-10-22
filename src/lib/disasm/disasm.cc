@@ -3,11 +3,13 @@
 #include <stdarg.h>
 #include <string.h>
 
+#include "kdb_ke.h"
 #include "include/dis-asm.h"
 #include "disasm.h"
 
 /* local variables */
 static char *out_buf;
+static char *out_buf_start;
 static int out_len;
 static int use_syms;
 static Space *dis_task;
@@ -15,7 +17,10 @@ static disassemble_info dis_info;
 static Peek_task dis_peek_task;
 static Get_symbol dis_get_symbol;
 
-extern int print_insn_i386 PARAMS ((bfd_vma, disassemble_info*));
+extern "C" int print_insn_i386(bfd_vma, disassemble_info*);
+extern "C" int print_insn_little_arm(bfd_vma, disassemble_info*);
+extern "C" int print_insn_aarch64(bfd_vma, disassemble_info*);
+
 
 /* read <length> bytes starting at memaddr */
 static int
@@ -75,6 +80,8 @@ my_print_address(bfd_vma memaddr, disassemble_info *info)
 
       (*info->fprintf_func)(info->stream, "%s", buf);
     }
+  else
+    (*info->fprintf_func)(info->stream, "%lx", memaddr);
 }
 
 static int
@@ -87,6 +94,21 @@ my_printf(void* stream __attribute__ ((unused)), const char *format, ...)
   
       va_start(list, format);
       len = vsnprintf(out_buf, out_len, format, list);
+      // replace TABs
+#if 1
+      char *o = out_buf, *t;
+      while ((t = strchr(o, '\t')))
+        {
+          int indent = 8-((t - out_buf_start) % 7);
+          char *cp;
+          for (cp = out_buf+out_len; cp > t+indent; --cp)
+            cp[0] = cp[-indent];
+          for (; cp >= t; --cp)
+            cp[0] = ' ';
+          len += indent;
+          o = t+indent;
+        }
+#endif
       if (len >= out_len)
 	len = out_len - 1;
       out_buf += len;
@@ -194,6 +216,7 @@ disasm_bytes(char *buffer, unsigned len, Address addr,
 {
   use_syms       = show_symbols;
   out_buf        = buffer;
+  out_buf_start  = buffer;
   out_len        = len;
   dis_task       = task;
   dis_peek_task  = peek_task;
@@ -219,8 +242,12 @@ disasm_bytes(char *buffer, unsigned len, Address addr,
   dis_info.buffer_length = 99; /* XXX */
   dis_info.buffer_vma = addr;
 #if defined CONFIG_ARM
+# if defined CONFIG_BIT32
   dis_info.mach = bfd_mach_arm_5;
-  return print_insn_little_arm (addr, &dis_info);
+  return print_insn_little_arm(addr, &dis_info);
+# else
+  return print_insn_aarch64(addr, &dis_info);
+# endif
 #elif defined CONFIG_PPC32
   dis_info.mach = bfd_mach_ppc_ec603e;
   return print_insn_big_powerpc(addr, &dis_info);
@@ -239,4 +266,11 @@ disasm_bytes(char *buffer, unsigned len, Address addr,
 #error Unknown architecture
 #endif
   (void)show_intel_syntax;
+}
+
+extern "C" void
+disasm_abort(void)
+{
+  for (;;)
+    kdb_ke("disasm: should never happen!");
 }
