@@ -108,7 +108,7 @@ Jdb::init()
 
 
 PRIVATE static
-void *
+unsigned char *
 Jdb::access_mem_task(Address virt, Space * task)
 {
   // align
@@ -140,7 +140,7 @@ Jdb::access_mem_task(Address virt, Space * task)
 	return 0;
     }
 
-   return (Mword*)phys;
+   return (unsigned char*)phys;
 }
 
 PUBLIC static
@@ -157,29 +157,11 @@ PUBLIC static
 int
 Jdb::peek_task(Address virt, Space * task, void *value, int width)
 {
-
-  void const *mem = access_mem_task(virt, task);
+  unsigned char const *mem = access_mem_task(virt, task);
   if (!mem)
     return -1;
 
-  switch (width)
-    {
-    case 1:
-        {
-          Mword dealign = (virt & 0x3) * 8;
-          *(Mword*)value = (*(Mword*)mem & (0xff << dealign)) >> dealign;
-          break;
-        }
-    case 2:
-        {
-          Mword dealign = ((virt & 0x2) >> 1) * 16;
-          *(Mword*)value = (*(Mword*)mem & (0xffff << dealign)) >> dealign;
-          break;
-        }
-    case 4:
-      memcpy(value, mem, width);
-    }
-
+  memcpy(value, mem + (virt & 0x3), width);
   return 0;
 }
 
@@ -196,7 +178,7 @@ Jdb::poke_task(Address virt, Space * task, void const *val, int width)
 {
   (void)virt; (void)task; (void)val; (void)width;
   /*
-  void *mem = access_mem_task(virt, task);
+  unsigned char *mem = access_mem_task(virt, task);
   if (!mem)
     return -1;
 

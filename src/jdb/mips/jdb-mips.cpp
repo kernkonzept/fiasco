@@ -113,7 +113,7 @@ Jdb::init()
 
 
 PRIVATE static
-void *
+unsigned char *
 Jdb::access_mem_task(Address virt, Space * task)
 {
   // align
@@ -130,14 +130,14 @@ Jdb::access_mem_task(Address virt, Space * task)
   else
     {
       if (virt >= Mem_layout::KSEG0 && virt <= Mem_layout::KSEG0e)
-        return (void*)virt;
+        return (unsigned char *)virt;
 
       phys = virt;
     }
 
   // physical memory accessible via unmapped KSEG0
   if (phys <= Mem_layout::KSEG0e - Mem_layout::KSEG0)
-    return (void *)(phys + Mem_layout::KSEG0);
+    return (unsigned char *)(phys + Mem_layout::KSEG0);
 
   // FIXME: temp mapping for the physical memory needed
   return 0;
@@ -154,31 +154,11 @@ PUBLIC static
 int
 Jdb::peek_task(Address virt, Space * task, void *value, int width)
 {
-
-  void const *mem = access_mem_task(virt, task);
+  unsigned char const *mem = access_mem_task(virt, task);
   if (!mem)
     return -1;
 
-  switch (width)
-    {
-    case 1:
-        {
-          Mword dealign = (virt & 0x3) * 8;
-          *(Mword*)value = (*(Mword*)mem & (0xff << dealign)) >> dealign;
-          break;
-        }
-    case 2:
-        {
-          Mword dealign = ((virt & 0x2) >> 1) * 16;
-          *(Mword*)value = (*(Mword*)mem & (0xffff << dealign)) >> dealign;
-          break;
-        }
-    case 4:
-    case 8:
-      memcpy(value, mem, width);
-      break;
-    }
-
+  memcpy(value, mem + (virt & 0x3), width);
   return 0;
 }
 
