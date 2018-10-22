@@ -3,7 +3,7 @@ INTERFACE [arm && pic_gic && pf_imx]:
 #include "initcalls.h"
 #include "gic.h"
 
-INTERFACE [arm && pic_gic && (pf_imx_51 | pf_imx_53)]:
+INTERFACE [arm && pic_gic && (pf_imx_51 || pf_imx_53)]:
 
 EXTENSION class Pic
 {
