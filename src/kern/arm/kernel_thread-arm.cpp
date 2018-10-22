@@ -37,7 +37,6 @@ PROTECTED inline NEEDS["processor.h", "mem_unit.h"]
 void
 Kernel_thread::arch_tickless_idle(unsigned)
 {
-  Mem_unit::tlb_flush();
   Proc::halt();
 }
 
