@@ -471,10 +471,8 @@ Jdb::is_adapter_memory(Address virt, Space *task)
 #define WEAK __attribute__((weak))
 extern "C" char in_slowtrap, in_page_fault, in_handle_fputrap;
 extern "C" char in_interrupt, in_timer_interrupt, in_timer_interrupt_slow;
-extern "C" char i30_ret_switch WEAK, se_ret_switch WEAK, in_slow_ipc1 WEAK;
-extern "C" char in_slow_ipc2 WEAK, in_slow_ipc4;
-extern "C" char in_slow_ipc5, in_sc_ipc1 WEAK;
-extern "C" char in_sc_ipc2 WEAK, in_syscall WEAK;
+extern "C" char in_slow_ipc4, in_slow_ipc5;
+extern "C" char in_sc_ipc1 WEAK, in_sc_ipc2 WEAK, in_syscall WEAK;
 #undef WEAK
 
 // Try to guess the thread state of t by walking down the kernel stack and
@@ -493,13 +491,9 @@ Jdb::guess_thread_state(Thread *t)
 	{
 	  if (ktop[i] == (Mword)&in_page_fault)
 	    state = s_pagefault;
-	  if ((ktop[i] == (Mword)&i30_ret_switch) ||// shortcut.S, int 0x30
-	      (ktop[i] == (Mword)&in_slow_ipc1) ||  // shortcut.S, int 0x30
-	      (ktop[i] == (Mword)&se_ret_switch) || // shortcut.S, sysenter
-	      (ktop[i] == (Mword)&in_slow_ipc2) ||  // shortcut.S, sysenter
-	      (ktop[i] == (Mword)&in_slow_ipc4) ||  // entry.S, int 0x30 log
+	  if ((ktop[i] == (Mword)&in_slow_ipc4) ||  // entry.S, int 0x30 log
 	      (ktop[i] == (Mword)&in_slow_ipc5) ||  // entry.S, sysenter log
-#if defined (CONFIG_JDB_LOGGING) || !defined(CONFIG_ASSEMBLER_IPC_SHORTCUT)
+#if defined (CONFIG_JDB_LOGGING)
 	      (ktop[i] == (Mword)&in_sc_ipc1)   ||  // entry.S, int 0x30
 	      (ktop[i] == (Mword)&in_sc_ipc2)   ||  // entry.S, sysenter
 #endif

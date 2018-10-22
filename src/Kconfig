@@ -191,14 +191,6 @@ config MP_MAX_CPUS
 	help
 	  The maximum number of CPUs the kernel supports.
 
-#config ASSEMBLER_IPC_SHORTCUT
-#	bool "Assembler IPC shortcut"
-#	default y
-#	depends on (PF_PC || PF_UX) && !MP
-#	help
-#	  Use the assembler IPC shortcut to get even better short IPC
-#	  performance in the common case.
-
 config CONTEXT_8K
 	bool #"TCB size of 8k"
 	default n

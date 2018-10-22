@@ -58,31 +58,24 @@ Jdb_set_trace::ipc_tracing(Mode mode)
     case Off:
       Jdb_ipc_trace::_trace = 0;
       Jdb_ipc_trace::_log = 0;
-      Jdb_ipc_trace::_cshortcut = 0;
       Jdb_ipc_trace::_slow_ipc = 0;
       break;
     case Log:
       Jdb_ipc_trace::_trace = 0;
       Jdb_ipc_trace::_log = 1;
       Jdb_ipc_trace::_log_to_buf = 0;
-      Jdb_ipc_trace::_cshortcut = 0;
       Jdb_ipc_trace::_slow_ipc = 0;
       break;
     case Log_to_buf:
       Jdb_ipc_trace::_trace = 0;
       Jdb_ipc_trace::_log = 1;
       Jdb_ipc_trace::_log_to_buf = 1;
-      Jdb_ipc_trace::_cshortcut = 0;
       Jdb_ipc_trace::_slow_ipc = 0;
       break;
     case Trace:
       Jdb_ipc_trace::_trace = 1;
-      Jdb_ipc_trace::_cshortcut = 0;
       Jdb_ipc_trace::_log = 0;
       Jdb_ipc_trace::_slow_ipc = 0;
-      break;
-    case Use_c_short_cut:
-      Jdb_ipc_trace::_cshortcut = 1;
       break;
     case Use_slow_path:
       Jdb_ipc_trace::_slow_ipc = 1;

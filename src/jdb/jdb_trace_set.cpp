@@ -14,7 +14,7 @@ IMPLEMENTATION:
 class Jdb_set_trace : public Jdb_module
 {
 public:
-  enum Mode { Off, Log, Log_to_buf, Trace, Use_c_short_cut, Use_slow_path };
+  enum Mode { Off, Log, Log_to_buf, Trace, Use_slow_path };
 
   Jdb_set_trace() FIASCO_INIT;
   void ipc_tracing(Mode mode);
@@ -116,15 +116,6 @@ Jdb_set_trace::action(int cmd, void *&args, char const *&fmt, int &)
 	    case 'S':
 	      if (second_char == '+')
 		ipc_tracing(Use_slow_path);
-	      else if (second_char == '-')
-		ipc_tracing(Off);
-	      else
-		return ERROR;
-	      putchar(second_char);
-	      break;
-	    case 'C':
-	      if (second_char == '+')
-		ipc_tracing(Use_c_short_cut);
 	      else if (second_char == '-')
 		ipc_tracing(Off);
 	      else
@@ -238,7 +229,6 @@ Jdb_set_trace::cmds() const
 	  "I{+|-|*|R{+|-}|T{+|-}}\ton/off/buffer ipc logging, on/off result, "
 	  "tracing\n"
 	  "IS{+|-}\tipc \033[1mwithout\033[m shortcut on/off\n"
-	  "IC{+|-}\tipc with C fast path / IPC with Assembler fast path\n"
 	  "Ir{t|T|a|A|s|-}\trestrict ipc log to (!)thread/(!)task/snd-only/"
 	  "clr",
 	  &first_char },

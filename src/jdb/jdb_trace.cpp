@@ -21,8 +21,6 @@ public:
   static int         _log_result;
   static int         _trace;
   static int         _slow_ipc;
-  static int         _cpath;
-  static int         _cshortcut;
   friend class Jdb_set_trace;
 };
 
@@ -58,8 +56,6 @@ int         Jdb_ipc_trace::_log_to_buf;
 int         Jdb_ipc_trace::_log_result;
 int         Jdb_ipc_trace::_trace;
 int         Jdb_ipc_trace::_slow_ipc;
-int         Jdb_ipc_trace::_cpath;
-int         Jdb_ipc_trace::_cshortcut;
 
 int         Jdb_pf_trace::_other_thread;
 Mword       Jdb_pf_trace::_gthread;
@@ -98,7 +94,7 @@ Jdb_ipc_trace::clear_restriction()
   _gthread      = 0;
   _other_task   = 0;
   _task         = 0;
-  _snd_only    = 0;
+  _snd_only     = 0;
 }
 
 PUBLIC static
