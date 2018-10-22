@@ -184,20 +184,21 @@ Jdb::handle_user_request(Cpu_number cpu)
   Jdb_entry_frame *ef = Jdb::entry_frame.cpu(cpu);
   const char *str = (char const *)ef->r[0];
   Space * task = get_task(cpu);
-  char tmp;
 
   if (ef->debug_ipi())
     return cpu != Cpu_number::boot_cpu();
 
+  // arm32
   if (ef->error_code == ((0x33UL << 26) | 1))
     return execute_command_ni(task, str);
 
-  if (!str || !peek(str, task, tmp) || tmp != '*')
-    return false;
-  if (!str || !peek(str+1, task, tmp) || tmp != '#')
+  // arm64
+  unsigned opcode;
+  if (!peek((unsigned*)ef->ip(), task, opcode) ||
+      opcode != 0xd4200020) // brk #1
     return false;
 
-  return execute_command_ni(task, str+2);
+  return execute_command_ni(task, str);
 }
 
 IMPLEMENT inline
