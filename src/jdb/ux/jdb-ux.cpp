@@ -299,8 +299,7 @@ PUBLIC static
 int
 Jdb::peek_task(Address virt, Space *space, void *value, int width)
 {
-  // make sure we don't cross a page boundary
-  if (virt & (width-1))
+  if (width > 0 && (virt & Config::PAGE_MASK) != ((virt + width - 1) & Config::PAGE_MASK))
     return -1;
 
   Address kvirt = virt_to_kvirt(virt, space);
@@ -315,12 +314,10 @@ PUBLIC static
 int
 Jdb::poke_task(Address virt, Space *space, void const *value, int width)
 {
-  // make sure we don't cross a page boundary
-  if (virt & (width-1))
+  if (width > 0 && (virt & Config::PAGE_MASK) != ((virt + width - 1) & Config::PAGE_MASK))
     return -1;
 
   Address kvirt = virt_to_kvirt(virt, space);
-
   if (kvirt == (Address)-1)
     return -1;
 
