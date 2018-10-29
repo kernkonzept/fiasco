@@ -339,7 +339,7 @@ PUBLIC static
 void
 Jdb::peek_phys(Address phys, void *value, int width)
 {
-  assert(!(phys & (width-1)));
+  assert(width > 0 && (phys & Config::PAGE_MASK) == ((phys + width - 1) & Config::PAGE_MASK));
 
   Address virt = Kmem::map_phys_page_tmp(phys, 0);
 
@@ -350,7 +350,7 @@ PUBLIC static
 void
 Jdb::poke_phys(Address phys, void const *value, int width)
 {
-  assert(!(phys & (width-1)));
+  assert(width > 0 && (phys & Config::PAGE_MASK) == ((phys + width - 1) & Config::PAGE_MASK));
 
   Address virt = Kmem::map_phys_page_tmp(phys, 0);
 
