@@ -23,7 +23,7 @@ public:
 class Trap_state : public Trap_state_regs, public Return_frame
 {
 public:
-  typedef int (*Handler)(Trap_state*, unsigned cpu);
+  typedef int (*Handler)(Trap_state*, Cpu_number cpu);
   bool exclude_logging() { return false; }
 };
 

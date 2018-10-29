@@ -5,7 +5,7 @@ INTERFACE:
 class Trap_state : public Entry_frame
 {
 public:
-  typedef int (*Handler)(Mword cause, Trap_state *);
+  typedef int (*Handler)(Trap_state*, Cpu_number cpu);
 
   // no exception traps to the kernel debugger on mips
   bool is_debug_exception() const { return false; }
