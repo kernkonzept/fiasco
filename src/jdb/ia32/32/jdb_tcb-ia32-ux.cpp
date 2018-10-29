@@ -18,40 +18,28 @@ EXTENSION class Jdb_tcb
 
 IMPLEMENT
 void
-Jdb_tcb::print_entry_frame_regs(Thread *t)
+Jdb_tcb::print_entry_frame_regs(Thread *)
 {
   Jdb_entry_frame *ef = Jdb::get_entry_frame(Jdb::current_cpu);
-  int from_user       = ef->from_user();
-  Address disass_addr = ef->ip();
+  char pfa[32] = "";
+
+  if (ef->_trapno == 14)
+    snprintf(pfa, sizeof(pfa), "(PFA " L4_PTR_FMT ")", ef->_cr2);
 
   // registers, disassemble
   printf("EAX=%08lx  ESI=%08lx  DS=%04lx\n"
-	 "EBX=%08lx  EDI=%08lx  ES=%04lx     ",
-	 ef->_ax, ef->_si, ef->_ds & 0xffff, ef->_bx, ef->_di, ef->_es & 0xffff);
-
-  if (Jdb_disasm::avail())
-    {
-      putstr(Jdb::esc_emph);
-      Jdb_disasm::show_disasm_line(-40, disass_addr, 0, from_user ? t->space() : 0);
-      putstr("\033[m");
-    }
-
-  printf("ECX=%08lx  EBP=%08lx  GS=%04lx     ",
-	 ef->_cx, ef->_bp, ef->_gs & 0xffff);
-
-  if (Jdb_disasm::avail())
-    Jdb_disasm::show_disasm_line(-40, disass_addr, 0, from_user ? t->space() : 0);
-
-  printf("EDX=%08lx  ESP=%08lx  SS=%04lx\n"
-	 "trap %lu (%s), error %08lx, from %s mode\n"
+	 "EBX=%08lx  EDI=%08lx  ES=%04lx\n"
+         "ECX=%08lx  EBP=%08lx  GS=%04lx\n"
+         "EDX=%08lx  ESP=%08lx  SS=%04lx\n"
+	 "trap %lu (%s), error %08lx, from %s mode%s\n"
 	 "CS=%04lx  EIP=%s%08lx\033[m  EFlags=%08lx\n",
+	 ef->_ax, ef->_si, ef->_ds & 0xffff, ef->_bx, ef->_di, ef->_es & 0xffff,
+	 ef->_cx, ef->_bp, ef->_gs & 0xffff,
 	 ef->_dx, ef->sp(), ef->ss() & 0xffff,
 	 ef->_trapno, Cpu::exception_string(ef->_trapno), ef->_err,
-	 from_user ? "user" : "kernel",
+	 ef->from_user() ? "user" : "kernel",
+         ef->_trapno == 14 ? pfa : "",
 	 ef->cs() & 0xffff, Jdb::esc_emph, ef->ip(), ef->flags());
-
-  if (ef->_trapno == 14)
-    printf("page fault linear address " L4_PTR_FMT "\n", ef->_cr2);
 }
 
 IMPLEMENT
@@ -214,4 +202,11 @@ Jdb_tcb_ptr::user_value_desc() const
 {
   const char *desc[] = { "SS", "SP", "EFL", "CS", "IP" };
   return desc[(Context::Size - _offs) / sizeof(Mword) - 1];
+}
+
+IMPLEMENT_OVERRIDE
+Address
+Jdb_tcb_ptr::user_ip() const
+{
+  return top_value(-5);
 }

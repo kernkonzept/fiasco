@@ -519,7 +519,8 @@ Jdb_tbuf_show::search(Mword start, Mword entries, const char *str,
   if (!entries)
     return found;
 
-  if (Jdb_regex::avail() && !Jdb_regex::start(str))
+  Jdb_regex regex;
+  if (!regex.start(str))
     {
       error("Error in regular expression");
       return found;
@@ -556,7 +557,7 @@ Jdb_tbuf_show::search(Mword start, Mword entries, const char *str,
           progress &= 3;
         }
 
-      if (Jdb_regex::avail() && Jdb_regex::find(buffer.begin(), 0, 0))
+      if (regex.find(buffer.begin(), 0, 0))
         {
           found = n;
           break;

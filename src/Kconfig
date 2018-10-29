@@ -484,7 +484,7 @@ config JDB_LOGGING
 
 config JDB_DISASM
 	bool "JDB disassembler" if HAS_JDB_DISASM_OPTION
-	default y if HAS_JDB_DISASM_OPTION && !ARM
+	default y if HAS_JDB_DISASM_OPTION && !ARM && !MIPS
 	help
 	  Add support for disassembly. Increases memory foot-print, only
 	  enable when needed.

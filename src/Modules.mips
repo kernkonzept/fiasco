@@ -211,9 +211,17 @@ VPATH          	+= lib/libk/mips/$(BITS) lib/libk/mips lib/libk lib/libk/quad
 PRIVATE_INCDIR 	+= lib/libk/mips/$(BITS) lib/libk/mips lib/libk
 
 INTERFACES_LIBK	:= atomic lock_guard std_macros
-CSRC_LIBK	+= umoddi3.c ashldi3.c udivdi3.c qdivrem.c
+CSRC_LIBK	+= umoddi3.c ashldi3.c udivdi3.c qdivrem.c ucmpdi2.c
 CXXSRC_LIBK     += construction.cc
 atomic_IMPL     := atomic atomic-mips
+
+#
+# SIMPLEMALLOC
+#
+SIMPLEMALLOC     := libsimple_malloc.a
+VPATH             += lib/simple_malloc
+PRIVATE_INCDIR    += lib/simple_malloc
+CXXSRC_SIMPLEMALLOC = simple_malloc.cc
 
 #
 # LIBDISASM subsystem (only for Jdb)
@@ -227,17 +235,22 @@ ifeq ("$(CONFIG_JDB_DISASM)","y")
   KERNEL_EXTRA_LIBS   += $(LIBDISASM)
   PREPROCESS_PARTS    += jdb_disasm
 
+  SUBSYSTEMS          += SIMPLEMALLOC
+  KERNEL_EXTRA_LIBS   += $(SIMPLEMALLOC)
+
   LIBDISASM           := libdisasm.a
-  VPATH               += lib/disasm lib/disasm/elf lib/disasm/include \
-                         lib/disasm/include/opcode lib/disasm/opcodes \
-                         lib/disasm/libiberty lib/disasm/bfd
-  PRIVATE_INCDIR      += lib/disasm lib/disasm/elf lib/disasm/include \
-                         lib/disasm/include/opcode lib/disasm/opcodes \
-                         lib/disasm/libiberty lib/disasm/bfd
-  PRIVATE_INCDIR      += lib/disasm
+  VPATH               += lib/disasm lib/disasm/capstone \
+			 lib/disasm/capstone/arch/Mips
+  PRIVATE_INCDIR      += lib/disasm lib/disasm/capstone/include
   CXXSRC_LIBDISASM    := disasm.cc
-  CSRC_LIBDISASM      := mips-dis.c mips-opc.c mips16-opc.c dis-init.c dis-buf.c \
-                         safe-ctype.c libbfd.c
+  CSRC_LIBDISASM      := cs.c utils.c \
+                         MCInst.c MCInstrDesc.c MCRegisterInfo.c SStream.c \
+                         MipsModule.c MipsInstPrinter.c \
+                         MipsDisassembler.c MipsMapping.c
+  CPPFLAGS            += -DCAPSTONE_HAS_MIPS
+  CFLAGS_MipsInstPrinter  = -Wno-unused-parameter
+  CFLAGS_MipsMapping      = -Wno-unused-parameter
+  CFLAGS_MipsDisassembler = -Wno-unused-parameter
   NOOPT               += $(patsubst %.o, %, $(OBJ_LIBDISASM))
 endif
 

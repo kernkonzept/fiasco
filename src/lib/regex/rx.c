@@ -10,12 +10,13 @@
 #include <string.h>
 #include <assert.h>
 #include <alloca.h>
+#include "simple_malloc.h"
 
 extern void* regex_realloc(void *ptr, size_t size);
 extern void  regex_free(void *ptr);
 
-#define realloc regex_realloc
-#define free    regex_free
+#define realloc simple_realloc
+#define free    simple_free
 
 
 /* this is ugly.
@@ -530,4 +531,3 @@ void regfree(regex_t* preg) {
   __regfree(&preg->r);
   memset(preg,0,sizeof(regex_t));
 }
-

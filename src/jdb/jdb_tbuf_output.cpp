@@ -205,7 +205,9 @@ PUBLIC static
 bool
 Jdb_tbuf_output::set_filter(const char *filter_str, Mword *entries)
 {
-  if (*filter_str && Jdb_regex::avail() && !Jdb_regex::start(filter_str))
+  Jdb_regex regex;
+
+  if (!regex.start(filter_str))
     return false;
 
   if (!*filter_str)
@@ -227,23 +229,17 @@ Jdb_tbuf_output::set_filter(const char *filter_str, Mword *entries)
       String_buf<200> s;
 
       print_entry(&s, e);
-      if (Jdb_regex::avail())
-	{
-	  if (Jdb_regex::find(s.begin(), 0, 0))
-	    {
-	      e->unhide();
-	      cnt++;
-	      continue;
-	    }
-	}
-      else
-	{
-	  if (strstr(s.begin(), filter_str))
-	    {
-	      e->unhide();
-	      cnt++;
-	      continue;
-	    }
+      if (regex.find(s.begin(), 0, 0))
+        {
+          e->unhide();
+          cnt++;
+          continue;
+        }
+      else if (strstr(s.begin(), filter_str))
+        {
+          e->unhide();
+          cnt++;
+          continue;
 	}
       e->hide();
     }

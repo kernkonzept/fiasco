@@ -17,29 +17,26 @@ INTERFACE [jdb_regex]:
 
 class Jdb_regex
 {
-private:
-  static const unsigned heap_size = 64 * 1024;
-  static char _init_done;
-
 public:
   static bool avail() { return true; }
 
-  static regex_t     _r;
-  static regmatch_t  _matches[1];
+  regex_t     _r;
+  regmatch_t  _matches[1];
+  bool        _active;
 };
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [!jdb_regex]:
 
-PUBLIC static
-int
+PUBLIC
+bool
 Jdb_regex::start(const char *)
-{ return 0; }
+{ return true; }
 
-PUBLIC static
-int
+PUBLIC
+bool
 Jdb_regex::find(const char *, const char **, const char **)
-{ return 0; }
+{ return false; }
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [jdb_regex]:
@@ -48,55 +45,50 @@ IMPLEMENTATION [jdb_regex]:
 #include "jdb_module.h"
 #include "kmem_alloc.h"
 #include "panic.h"
-#include "static_init.h"
+#include "simple_malloc.h"
 
-char       Jdb_regex::_init_done;
-regex_t    Jdb_regex::_r;
-regmatch_t Jdb_regex::_matches[1];
-
-
-STATIC_INITIALIZE_P(Jdb_regex, JDB_MODULE_INIT_PRIO);
-
-PUBLIC static
-void FIASCO_INIT
-Jdb_regex::init()
-{
-  if (!_init_done)
-    {
-      char *heap = (char*)Kmem_alloc::allocator()->unaligned_alloc(heap_size);
-      if (!heap)
-	panic("No memory for regex heap");
-      regex_init(heap, heap_size);
-      _init_done = 1;
-    }
-}
-
-PUBLIC static
-int
+PUBLIC
+bool
 Jdb_regex::start(const char *searchstr)
 {
-  // clear regex heap
-  regex_reset();
+  if (!searchstr || !*searchstr)
+    return true;
+
+  finish();
+
   // compile expression
-  return regcomp(&Jdb_regex::_r, searchstr, REG_EXTENDED) ? 0 : 1;
+  if (regcomp(&_r, searchstr, REG_EXTENDED) == 0)
+    return (_active = true);
+
+  return false;
 }
 
-PUBLIC static
-int
+PUBLIC
+void
+Jdb_regex::finish()
+{
+  regfree(&_r);
+  _active = false;
+}
+
+PUBLIC
+bool
 Jdb_regex::find(const char *buffer, const char **beg, const char **end)
 {
+  if (!_active)
+    return false;
+
   // execute expression
-  int ret = regexec(&Jdb_regex::_r, buffer, 
-		    sizeof(Jdb_regex::_matches)/sizeof(Jdb_regex::_matches[0]),
-		    Jdb_regex::_matches, 0);
+  int ret = regexec(&_r, buffer,
+		    sizeof(_matches)/sizeof(_matches[0]), _matches, 0);
 
   if (ret == REG_NOMATCH)
-    return 0;
+    return false;
 
   if (beg)
-    *beg = buffer + Jdb_regex::_matches[0].rm_so;
+    *beg = buffer + _matches[0].rm_so;
   if (end)
-    *end = buffer + Jdb_regex::_matches[0].rm_eo;
-  return 1;
+    *end = buffer + _matches[0].rm_eo;
+  return true;
 }
 

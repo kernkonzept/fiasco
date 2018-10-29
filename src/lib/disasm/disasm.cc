@@ -1,134 +1,14 @@
 
-#include <malloc.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <string.h>
 
-#include "kdb_ke.h"
-#include "include/dis-asm.h"
+#include "config.h"
+#include "simple_malloc.h"
+#include "capstone.h"
 #include "disasm.h"
 
-/* local variables */
-static char *out_buf;
-static char *out_buf_start;
-static int out_len;
-static int use_syms;
-static Space *dis_task;
-static disassemble_info dis_info;
-static Peek_task dis_peek_task;
-static Get_symbol dis_get_symbol;
-
-extern "C" int print_insn_i386(bfd_vma, disassemble_info*);
-extern "C" int print_insn_little_arm(bfd_vma, disassemble_info*);
-extern "C" int print_insn_aarch64(bfd_vma, disassemble_info*);
-
-
-/* read <length> bytes starting at memaddr */
-static int
-my_read_memory(bfd_vma memaddr, bfd_byte *myaddr, unsigned length,
-	       disassemble_info *info __attribute__ ((unused)))
-{
-  unsigned i;
-
-  for (i=0; i<length; i++)
-    {
-      Mword value;
-      if (dis_peek_task(memaddr+i, dis_task, &value, 1) == -1)
-	return -1;
-      *myaddr++ = (bfd_byte)value;
-    }
-
-  return 0;
-}
-
-/* XXX return byte without range check */
-static unsigned char
-my_get_data(bfd_vma memaddr)
-{
-  Mword value;
-  if (dis_peek_task(memaddr, dis_task, &value, 1) == -1)
-    return -1;
-
-  return value;
-}
-
-/* print address (using symbols if possible) */
-static void
-my_print_address(bfd_vma memaddr, disassemble_info *info)
-{
-  const char *symbol;
-
-  if (use_syms && dis_get_symbol
-      && (symbol = dis_get_symbol(memaddr, dis_task)))
-    {
-      unsigned i;
-      char buf[48];
-      const char *s;
-      
-      buf[0] = ' ';
-      buf[1] = '<';
-      for (i=2, s=symbol; i<(sizeof(buf)-3); )
-	{
-	  if (*s=='\0' || *s=='\n')
-	    break;
-	  buf[i++] = *s++;
-	  if (*(s-1)=='(')
-	    while ((*s != ')') && (*s != '\n') && (*s != '\0'))
-	      s++;
-	}
-      buf[i++] = '>';
-      buf[i++] = '\0';
-
-      (*info->fprintf_func)(info->stream, "%s", buf);
-    }
-  else
-    (*info->fprintf_func)(info->stream, "%lx", memaddr);
-}
-
-static int
-my_printf(void* stream __attribute__ ((unused)), const char *format, ...)
-{
-  if (out_len)
-    {
-      int len;
-      va_list list;
-  
-      va_start(list, format);
-      len = vsnprintf(out_buf, out_len, format, list);
-      // replace TABs
-#if 1
-      char *o = out_buf, *t;
-      while ((t = strchr(o, '\t')))
-        {
-          int indent = 8-((t - out_buf_start) % 7);
-          char *cp;
-          for (cp = out_buf+out_len; cp > t+indent; --cp)
-            cp[0] = cp[-indent];
-          for (; cp >= t; --cp)
-            cp[0] = ' ';
-          len += indent;
-          o = t+indent;
-        }
-#endif
-      if (len >= out_len)
-	len = out_len - 1;
-      out_buf += len;
-      out_len -= len;
-      va_end(list);
-    }
-  
-  return 0;
-}
-
-static void
-my_putchar(int c)
-{
-  if (out_len)
-    {
-      out_len--;
-      *out_buf++ = c;
-    }
-}
-
+#if 0
 /* check for special L4 int3-opcodes */
 static int
 special_l4_ops(bfd_vma memaddr)
@@ -136,7 +16,7 @@ special_l4_ops(bfd_vma memaddr)
   int len, bytes, i;
   const char *op;
   bfd_vma str, s;
-  
+
   switch (my_get_data(memaddr))
     {
     case 0xeb:
@@ -166,7 +46,7 @@ special_l4_ops(bfd_vma memaddr)
      	  if (out_len > len)
 	    out_len = len;
 	  /* do not use my_printf here because the string
-	   * can contain special characters (e.g. tabs) which 
+	   * can contain special characters (e.g. tabs) which
 	   * we do not want to display */
 	  while (out_len)
 	    {
@@ -206,26 +86,15 @@ special_l4_ops(bfd_vma memaddr)
 
   return 0;
 }
+#endif
 
-/* WARNING: This function is not reentrant because it accesses some
- * global static variables (out_buf, out_len, dis_task, ...) */
-unsigned int
+int
 disasm_bytes(char *buffer, unsigned len, Address addr,
-	     Space *task, int show_symbols, int show_intel_syntax,
-	     Peek_task peek_task, Get_symbol get_symbol)
+	     Space *task, int /*show_symbols*/, int show_intel_syntax,
+	     Peek_task peek_task, Get_symbol /*get_symbol*/)
 {
-  use_syms       = show_symbols;
-  out_buf        = buffer;
-  out_buf_start  = buffer;
-  out_len        = len;
-  dis_task       = task;
-  dis_peek_task  = peek_task;
-  dis_get_symbol = get_symbol;
-
-  /* terminate string */
-  if (out_len)
-    out_buf[--out_len] = '\0';
-
+  // symbols / lines not supported ATM anyway
+#if 0
   /* test for special L4 opcodes */
   if (my_get_data(addr) == 0xcc && (len = special_l4_ops(addr+1)))
     return len;
@@ -233,44 +102,92 @@ disasm_bytes(char *buffer, unsigned len, Address addr,
   /* one step back for special L4 opcodes */
   if (my_get_data(addr-1) == 0xcc && (len = special_l4_ops(addr)))
     return len-1;
-
-  INIT_DISASSEMBLE_INFO(dis_info, NULL, my_printf);
-  
-  dis_info.print_address_func = my_print_address;
-  dis_info.read_memory_func = my_read_memory;
-  dis_info.buffer = (bfd_byte*)addr;
-  dis_info.buffer_length = 99; /* XXX */
-  dis_info.buffer_vma = addr;
-#if defined CONFIG_ARM
-# if defined CONFIG_BIT32
-  dis_info.mach = bfd_mach_arm_5;
-  return print_insn_little_arm(addr, &dis_info);
-# else
-  return print_insn_aarch64(addr, &dis_info);
-# endif
-#elif defined CONFIG_PPC32
-  dis_info.mach = bfd_mach_ppc_ec603e;
-  return print_insn_big_powerpc(addr, &dis_info);
-#elif defined CONFIG_IA32
-  dis_info.mach = show_intel_syntax ? bfd_mach_i386_i386_intel_syntax
-				    : bfd_mach_i386_i386;
-  return print_insn_i386 (addr, &dis_info);
-#elif defined CONFIG_AMD64
-  dis_info.mach = show_intel_syntax ? bfd_mach_x86_64_intel_syntax
-				    : bfd_mach_x86_64;
-  return print_insn_i386 (addr, &dis_info);
-#elif defined CONFIG_SPARC
-  dis_info.mach = bfd_mach_sparc_v8plusa;
-  return print_insn_sparc(addr, &dis_info);
-#else
-#error Unknown architecture
 #endif
-  (void)show_intel_syntax;
-}
 
-extern "C" void
-disasm_abort(void)
-{
-  for (;;)
-    kdb_ke("disasm: should never happen!");
+  (void)show_intel_syntax;
+
+  int ret;
+  static csh handle;
+  if (handle == (csh)0)
+    {
+      static cs_opt_mem mem =
+        {
+          simple_malloc,
+          simple_calloc,
+          simple_realloc,
+          simple_free,
+          vsnprintf
+        };
+      ret = cs_option((csh)NULL, CS_OPT_MEM, (size_t)&mem);
+#if defined(CONFIG_IA32)
+      ret = cs_open(CS_ARCH_X86, (cs_mode)(CS_MODE_32), &handle);
+#elif defined(CONFIG_AMD64)
+      ret = cs_open(CS_ARCH_X86, (cs_mode)(CS_MODE_64), &handle);
+#elif defined(CONFIG_ARM) && defined(CONFIG_BIT32)
+      ret = cs_open(CS_ARCH_ARM, (cs_mode)(CS_MODE_ARM|CS_MODE_LITTLE_ENDIAN), &handle);
+#elif defined(CONFIG_ARM) && defined(CONFIG_BIT64)
+      ret = cs_open(CS_ARCH_ARM64, (cs_mode)(CS_MODE_ARM|CS_MODE_LITTLE_ENDIAN), &handle);
+#elif defined(CONFIG_MIPS)
+      ret = cs_open(CS_ARCH_MIPS,
+                    (cs_mode)(
+# if defined(CONFIG_BIT32)
+                              CS_MODE_MIPS32
+# else
+                              CS_MODE_MIPS64
+# endif
+                              |
+# if defined(CONFIG_MIPS_LITTLE_ENDIAN)
+                              CS_MODE_LITTLE_ENDIAN
+# else
+                              CS_MODE_BIT_ENDIAN
+# endif
+                             ), &handle);
+#endif
+    }
+  if (buffer)
+    *buffer = '\0';
+  int size = 0;
+  if (handle)
+    {
+#if defined(CONFIG_IA32) || defined(CONFIG_AMD64)
+      ret = cs_option(handle, CS_OPT_SYNTAX,
+                      show_intel_syntax ? CS_OPT_SYNTAX_INTEL : CS_OPT_SYNTAX_ATT);
+#endif
+      cs_insn *insn = NULL;
+
+      unsigned char code[16];
+      unsigned width1 = Config::PAGE_SIZE - (addr & ~Config::PAGE_MASK);
+      if (width1 > sizeof(code))
+        width1 = sizeof(code);
+      if (peek_task(addr, task, &code, width1) < 0)
+        size = -1;
+      else
+        {
+          unsigned width2 = sizeof(code) - width1;
+          // if fetching the 2nd part fails just hope that the first part is enough
+          if (width2 && peek_task(addr+width1, task, &code[width1], width2) < 0)
+            memset(&code[width1], 0, width2);
+          int cnt = cs_disasm(handle, code, sizeof(code), addr, 1, &insn);
+          if (cnt)
+            {
+              if (buffer)
+                snprintf(buffer, len, "%-7s %s", insn[0].mnemonic, insn[0].op_str);
+              size = insn->size;
+              cs_free(insn, cnt);
+            }
+          else if (buffer)
+            snprintf(buffer, len, "........ (%d)", cs_errno(handle));
+        }
+    }
+
+  if (!size)
+    {
+#if defined(CONFIG_ARM)
+      size = 4;
+#else
+      size = 1;
+#endif
+    }
+
+  return size;
 }

@@ -50,7 +50,6 @@ typedef struct __regex_t {
 
 int regcomp(regex_t* preg, const char* regex, int cflags) __THROW;
 int regexec(const regex_t* preg, const char* string, size_t nmatch, regmatch_t pmatch[], int eflags) __THROW;
-size_t regerror(int errcode, const regex_t* preg, char* errbuf, size_t errbuf_size) __THROW;
 void regfree(regex_t* preg) __THROW;
 
 enum __regex_errors {
@@ -73,11 +72,6 @@ enum __regex_errors {
   REG_ESPACE /* regcomp ran out of space */
 };
 
-char* re_comp(char* regex);
-int   re_exec(char* string);
-void  regex_init(void *ptr, unsigned size);
-void  regex_reset(void);
-  
 __END_DECLS
 
 #endif

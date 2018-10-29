@@ -23,6 +23,8 @@ typedef signed long long int   Signed64;
 /// machine word
 typedef signed   long          Smword;
 typedef unsigned long          Mword;
+typedef __INTPTR_TYPE__ intptr_t;
+typedef __UINTPTR_TYPE__ uintptr_t;
 
 enum {
   MWORD_BITS = 32,

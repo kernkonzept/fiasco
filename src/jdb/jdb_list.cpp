@@ -1,6 +1,7 @@
 INTERFACE:
 
 #include "string_buffer.h"
+#include "jdb_regex.h"
 
 class Jdb_list
 {
@@ -23,6 +24,7 @@ private:
   void *_start, *_last;
   void *_current;
   char _filter_str[20];
+  Jdb_regex _regex;
 };
 
 
@@ -153,8 +155,7 @@ Jdb_list::handle_string_filter_input()
       !_filter_str[0])
     return;
 
-
-  if (Jdb_regex::avail() && !Jdb_regex::start(_filter_str))
+  if (!_regex.start(_filter_str))
     {
       _filter_str[0] = 0;
       Jdb::printf_statline("search", 0, "Error in regexp");
@@ -178,11 +179,14 @@ Jdb_list::render_visible(void *i)
       buffer.terminate();
       if (Jdb_regex::avail())
         {
-          if (!Jdb_regex::find(buffer.begin(), 0, 0))
+          if (!_regex.find(buffer.begin(), 0, 0))
             i = 0;
         }
-      else if (!strstr(buffer.begin(), _filter_str))
-        i = 0;
+      else
+        {
+          if (!strstr(buffer.begin(), _filter_str))
+            i = 0;
+        }
     }
 
   if (i)
@@ -281,7 +285,7 @@ Jdb_list::page_show()
   unsigned i = 0;
 
   if (Jdb_regex::avail() && _filter_str[0])
-    assert(Jdb_regex::start(_filter_str));
+    assert(_regex.start(_filter_str));
 
   if (!t)
     return 0;

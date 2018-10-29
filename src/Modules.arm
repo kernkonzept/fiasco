@@ -63,7 +63,7 @@ MINILIBC	:= libc.a
 VPATH		+= lib/minilibc/$(CONFIG_XARCH)/$(BITS) lib/minilibc/$(CONFIG_XARCH) lib/minilibc
 PRIVATE_INCDIR	+= lib/minilibc/$(CONFIG_XARCH)/$(BITS)/include lib/minilibc/$(CONFIG_XARCH)/include lib/minilibc/include
 CSRC_MINILIBC	:= atexit.c memccpy.c memcmp.c memmove.c memset.c memcpy.c \
-		   memchr.c panic.c strchr.c strcmp.c strcpy.c strlen.c \
+		   memchr.c panic.c strchr.c strrchr.c strcmp.c strcpy.c strlen.c \
 		   strncmp.c strncpy.c strstr.c printf.c \
 		   __v_printf.c vprintf.c strtol.c strtoul.c __lltostr.c \
 		   __ltostr.c putchar.c puts.c getchar.c gets.c \
@@ -266,6 +266,14 @@ INTERFACES_LIBK := std_macros atomic lock_guard
 CXXSRC_LIBK     += construction.cc
 atomic_IMPL     := atomic atomic-arm-up atomic-arm-$(BITS) atomic-arm
 
+#
+# SIMPLEMALLOC
+#
+SIMPLEMALLOC     := libsimple_malloc.a
+VPATH             += lib/simple_malloc
+PRIVATE_INCDIR    += lib/simple_malloc
+CXXSRC_SIMPLEMALLOC = simple_malloc.cc
+
 ifeq ("$(CONFIG_JDB_DISASM)","y")
   # $(srcdir)/lib/disasm may be removed
   ifeq ($(wildcard $(srcdir)/lib/disasm),)
@@ -275,23 +283,32 @@ ifeq ("$(CONFIG_JDB_DISASM)","y")
   KERNEL_EXTRA_LIBS   += $(LIBDISASM)
   PREPROCESS_PARTS    += jdb_disasm
 
+  SUBSYSTEMS          += SIMPLEMALLOC
+  KERNEL_EXTRA_LIBS   += $(SIMPLEMALLOC)
+
   LIBDISASM           := libdisasm.a
-  VPATH               += lib/disasm lib/disasm/elf lib/disasm/include \
-                         lib/disasm/include/opcode lib/disasm/opcodes \
-                         lib/disasm/libiberty lib/disasm/bfd
-  PRIVATE_INCDIR      += lib/disasm lib/disasm/elf lib/disasm/include \
-                         lib/disasm/include/opcode lib/disasm/opcodes \
-                         lib/disasm/libiberty lib/disasm/bfd
-  PRIVATE_INCDIR      += lib/disasm
+  VPATH               += lib/disasm lib/disasm/capstone
+  PRIVATE_INCDIR      += lib/disasm lib/disasm/capstone/include
   CXXSRC_LIBDISASM    := disasm.cc
- ifeq ($(CONFIG_BIT64),y)
-  CSRC_LIBDISASM      := aarch64-dis.c aarch64-dis-2.c \
-                         aarch64-opc.c aarch64-opc-2.c \
-                         dis-init.c dis-buf.c libbfd.c
- else
-  CSRC_LIBDISASM      := arm-dis.c dis-init.c dis-buf.c
- endif
- NOOPT                += $(patsubst %.o, %, $(OBJ_LIBDISASM))
+  CSRC_LIBDISASM      := cs.c utils.c \
+                         MCInst.c MCInstrDesc.c MCRegisterInfo.c SStream.c
+  ifeq ("$(CONFIG_BIT32)","y")
+    VPATH             += lib/disasm/capstone/arch/ARM
+    CSRC_LIBDISASM    += ARMModule.c ARMInstPrinter.c \
+			 ARMDisassembler.c ARMMapping.c
+    CPPFLAGS          += -DCAPSTONE_HAS_ARM
+    CFLAGS_ARMDisassembler = -Wno-unused-parameter
+    CFLAGS_ARMMapping      = -Wno-unused-parameter
+  else
+    VPATH             += lib/disasm/capstone/arch/AArch64
+    CSRC_LIBDISASM    += AArch64Module.c AArch64InstPrinter.c \
+			 AArch64Disassembler.c AArch64Mapping.c \
+			 AArch64BaseInfo.c
+    CPPFLAGS          += -DCAPSTONE_HAS_ARM64
+    CFLAGS_AArch64Mapping      = -Wno-unused-parameter
+    CFLAGS_AArch64Disassembler = -Wno-unused-parameter
+  endif
+  NOOPT               += $(patsubst %.o, %, $(OBJ_LIBDISASM))
 endif
 
 #

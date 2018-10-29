@@ -318,6 +318,13 @@ ifneq ($(CONFIG_JDB_GZIP),)
   NOOPT			+= $(patsubst %.o, %, $(OBJ_LIBGZIP))
 endif
 
+# SIMPLEMALLOC
+#
+SIMPLEMALLOC       := libsimple_malloc.a
+VPATH              += lib/simple_malloc
+PRIVATE_INCDIR     += lib/simple_malloc
+CXXSRC_SIMPLEMALLOC = simple_malloc.cc
+
 #
 # LIBDISASM subsystem (only for Jdb)
 #
@@ -332,15 +339,19 @@ ifeq ("$(CONFIG_JDB_DISASM)","y")
   PREPROCESS_PARTS  += jdb_disasm
 
   LIBDISASM         := libdisasm.a
-  VPATH	            += lib/disasm lib/disasm/elf lib/disasm/include \
-                       lib/disasm/include/opcode lib/disasm/opcodes \
-                       lib/disasm/libiberty lib/disasm/bfd
-  PRIVATE_INCDIR    += lib/disasm lib/disasm/elf lib/disasm/include \
-                       lib/disasm/include/opcode lib/disasm/opcodes \
-                       lib/disasm/libiberty lib/disasm/bfd
-  PRIVATE_INCDIR    += lib/disasm
+  VPATH             += lib/disasm lib/disasm/capstone \
+                       lib/disasm/capstone/arch/X86
+  PRIVATE_INCDIR    += lib/disasm lib/disasm/capstone/include
   CXXSRC_LIBDISASM  := disasm.cc
-  CSRC_LIBDISASM    := dis-init.c i386-dis.c dis-buf.c
+  CSRC_LIBDISASM    := cs.c utils.c \
+                       MCInst.c MCInstrDesc.c MCRegisterInfo.c SStream.c
+  CSRC_LIBDISASM    += X86Module.c X86Disassembler.c X86DisassemblerDecoder.c \
+                       X86Mapping.c X86IntelInstPrinter.c X86ATTInstPrinter.c
+  CPPFLAGS          += -DCAPSTONE_HAS_X86
+  CFLAGS_X86Mapping      = -Wno-unused-parameter
+  CFLAGS_X86Disassembler = -Wno-unused-parameter
+  CFLAGS_X86IntelInstPrinter = -Wno-unused-parameter
+  CFLAGS_X86ATTInstPrinter   = -Wno-unused-parameter
   NOOPT             += $(patsubst %.o, %, $(OBJ_LIBDISASM))
 endif
 
@@ -361,7 +372,7 @@ NOOPT		+= $(patsubst %.o, %, $(OBJ_LIBPERFCTR))
 LIBREGEX	:= libregex.a
 VPATH		+= lib/regex
 PRIVATE_INCDIR	+= lib/regex
-CSRC_LIBREGEX	:= alloc.c rx.c
+CSRC_LIBREGEX	:= rx.c
 NOOPT		+= $(patsubst %.o, %, $(OBJ_LIBREGEX))
 
 #
@@ -404,6 +415,11 @@ ifneq ($(wildcard $(srcdir)/lib/regex),)
   SUBSYSTEMS		+= LIBREGEX
   KERNEL_EXTRA_LIBS	+= $(LIBREGEX)
   PREPROCESS_PARTS	+= jdb_regex
+endif
+
+ifneq ($(filter LIBREGEX LIBDISASM,$(SUBSYSTEMS)),)
+  SUBSYSTEMS          += SIMPLEMALLOC
+  KERNEL_EXTRA_LIBS   += $(SIMPLEMALLOC)
 endif
 
 endif

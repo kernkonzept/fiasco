@@ -80,6 +80,8 @@ public:
 
   inline const char *user_value_desc() const;
 
+  Address user_ip() const;
+
   inline Mword top_value(int offs) const
   { return *((Mword*)(Cpu::stack_align(_base + Context::Size)) + offs); }
 
@@ -103,6 +105,13 @@ private:
   Address  _base;
   Address  _offs;
 };
+
+IMPLEMENT_DEFAULT
+Address
+Jdb_tcb_ptr::user_ip() const
+{
+  return 0;
+}
 
 class Jdb_disasm_view
 {
@@ -172,7 +181,8 @@ PUBLIC static inline
 Mword
 Jdb_stack_view::cols()
 {
-  return Jdb_screen::cols() - 1;
+  // we show the low 8 bytes of the address
+  return Jdb_screen::cols(8, sizeof(Mword)*2+1) - 1;
 }
 
 PUBLIC static inline
@@ -400,12 +410,12 @@ Jdb_disasm_view::Jdb_disasm_view(unsigned x, unsigned y)
 
 PUBLIC
 void
-Jdb_disasm_view::show(Jdb_tcb_ptr const &p, Space *s, bool dump_only)
+Jdb_disasm_view::show(Address addr, Space *s, bool dump_only)
 {
   if (!Jdb_disasm::avail())
     return;
 
-  Address disass_addr = p.top_value(-5);
+  Address disass_addr = addr;
   if (dump_only)
     {
       for (unsigned i = 0; i < 20; ++i)
@@ -628,7 +638,13 @@ whole_screen:
     putstr("---\nvCPU    : ---\n");
 
   if (is_current_thread)
-    print_entry_frame_regs(t);
+    {
+      if (!dump_only)
+        Jdb::cursor(11, 1);
+      print_entry_frame_regs(t);
+      Jdb::cursor(Jdb_tcb::Disasm_x, Jdb_tcb::Disasm_y);
+      _disasm_view.show(ef->ip(), ef->from_user() ? t->space() : 0, dump_only);
+    }
 
   else if (t->space() != Kernel_task::kernel_task())
     {
@@ -638,7 +654,7 @@ whole_screen:
       putchar('\n');
       print_return_frame_regs(_stack_view.current, ksp);
 
-      _disasm_view.show(_stack_view.current, t->space(), dump_only);
+      _disasm_view.show(_stack_view.current.user_ip(), t->space(), dump_only);
     }
   else
     {

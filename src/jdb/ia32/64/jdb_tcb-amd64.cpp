@@ -30,45 +30,29 @@ void
 Jdb_tcb::print_entry_frame_regs(Thread *t)
 {
   Jdb_entry_frame *ef = Jdb::get_entry_frame(Jdb::current_cpu);
-  int from_user       = ef->from_user();
-  Address disass_addr = ef->ip();
+  char pfa[32] = "";
+
+  if (ef->_trapno == 14)
+    snprintf(pfa, sizeof(pfa), "(PFA " L4_PTR_FMT ")", ef->_cr2);
 
   // registers, disassemble
   printf("RAX=%016lx  RSI=%016lx\n"
-	 "RBX=%016lx  RDI=%016lx  ",
-	 ef->_ax, ef->_si, ef->_bx, ef->_di);
-  // XXX mix register status with disasemble code
-
-  if (Jdb_disasm::avail())
-    {
-      putstr(Jdb::esc_emph);
-      Jdb_disasm::show_disasm_line(-40, disass_addr, 0, from_user ? t->space() : 0);
-      putstr("\033[m");
-    }
-
-  printf("RCX=%016lx  RBP=%016lx  ",
-	 ef->_cx, ef->_bp);
-
-  if (Jdb_disasm::avail())
-    Jdb_disasm::show_disasm_line(-40, disass_addr, 0, from_user ? t->space() : 0);
-
-  printf("RDX=%016lx  RSP=%016lx\n"
+         "RBX=%016lx  RDI=%016lx\n"
+         "RCX=%016lx  RBP=%016lx\n"
+         "RDX=%016lx  RSP=%016lx\n"
          " R8=%016lx   R9=%016lx\n"
          "R10=%016lx  R11=%016lx\n"
          "R12=%016lx  R13=%016lx\n"
-         "R14=%016lx  R15=%016lx FS=%04lx\n"
-	 "trapno %lu, error %08lx, from %s mode\n"
+         "R14=%016lx  R15=%016lx  FS=%04lx\n"
+	 "trapno %lu, error %08lx, from %s mode%s\n"
 	 "RIP=%s%016lx\033[m  RFlags=%016lx\n",
-	 ef->_dx, ef->sp(),
-	 ef->_r8,  ef->_r9,
-	 ef->_r10, ef->_r11,
-	 ef->_r12, ef->_r13,
-	 ef->_r14, ef->_r15, t->_fs_base,
-	 ef->_trapno, ef->_err, from_user ? "user" : "kernel",
+	 ef->_ax, ef->_si, ef->_bx, ef->_di,
+	 ef->_cx, ef->_bp, ef->_dx, ef->sp(),
+	 ef->_r8,  ef->_r9, ef->_r10, ef->_r11,
+	 ef->_r12, ef->_r13, ef->_r14, ef->_r15, t->_fs_base,
+	 ef->_trapno, ef->_err, ef->from_user() ? "user" : "kernel",
+         ef->_trapno == 14 ? pfa : "",
 	 Jdb::esc_emph, ef->ip(), ef->flags());
-
-  if (ef->_trapno == 14)
-    printf("page fault linear address " L4_PTR_FMT "\n", ef->_cr2);
 }
 
 IMPLEMENT
@@ -326,4 +310,11 @@ Jdb_tcb_ptr::user_value_desc() const
 {
   const char *desc[] = { "SS", "SP", "RFL", "CS", "IP" };
   return desc[(Context::Size - _offs) / sizeof(Mword) - 1];
+}
+
+IMPLEMENT_OVERRIDE
+Address
+Jdb_tcb_ptr::user_ip() const
+{
+  return top_value(-5);
 }

@@ -6,7 +6,7 @@ EXTENSION class Jdb_tcb
 {
   enum
   {
-    Disasm_x = 41,
+    Disasm_x = 50,
     Disasm_y = 11,
     Stack_y  = 17,
   };
@@ -19,9 +19,9 @@ void Jdb_tcb::print_entry_frame_regs(Thread *t)
   Jdb_entry_frame *ef = Jdb::get_entry_frame(Jdb::current_cpu);
   int from_user       = ef->from_user();
 
-  printf("Registers (before debug entry from %s mode):\n"
-         "[0] %08lx %08lx %08lx %08lx  %08lx %08lx %08lx %08lx\n"
-         "[8] %08lx %08lx %08lx %08lx  %08lx %08lx %08lx %s%08lx\033[m\n"
+  printf("Regs (before debug entry from %s mode):\n"
+         "[0] %08lx %08lx %08lx %08lx\n[4] %08lx %08lx %08lx %08lx\n"
+         "[8] %08lx %08lx %08lx %08lx\n[c] %08lx %08lx %08lx %s%08lx\033[m\n"
          "upsr=%08lx tpidr: urw=%08lx uro=%08lx\n",
          from_user ? "user" : "kernel",
 	 ef->r[0], ef->r[1],ef->r[2], ef->r[3],
@@ -39,12 +39,12 @@ Jdb_tcb::info_thread_state(Thread *t)
 
   printf("PC=%s%08lx\033[m USP=%08lx\n",
          Jdb::esc_emph, current.top_value(-2), current.top_value(-5));
-  printf("[0] %08lx %08lx %08lx %08lx [4] %08lx %08lx %08lx %08lx\n",
+  printf("[0] %08lx %08lx %08lx %08lx\n[4] %08lx %08lx %08lx %08lx\n",
          current.top_value(-18), current.top_value(-17),
          current.top_value(-16), current.top_value(-15),
          current.top_value(-14), current.top_value(-13),
          current.top_value(-12), current.top_value(-11));
-  printf("[8] %08lx %08lx %08lx %08lx [c] %08lx %08lx %08lx %08lx\n",
+  printf("[8] %08lx %08lx %08lx %08lx\n[c] %08lx %08lx %08lx %08lx\n",
          current.top_value(-10), current.top_value(-9),
          current.top_value(-8),  current.top_value(-7),
          current.top_value(-6),  current.top_value(-4),
@@ -74,4 +74,11 @@ Jdb_tcb_ptr::user_value_desc() const
 {
   const char *desc[] = { "PSR", "PC", "KLR", "ULR", "SP" };
   return desc[(Context::Size - _offs) / sizeof(Mword) - 1];
+}
+
+IMPLEMENT_OVERRIDE
+Address
+Jdb_tcb_ptr::user_ip() const
+{
+  return top_value(-2);
 }

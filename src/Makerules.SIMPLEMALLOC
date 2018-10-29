@@ -1,0 +1,8 @@
+# -*- makefile -*-
+
+$(SIMPLEMALLOC): $(OBJ_SIMPLEMALLOC)
+	$(AR_MESSAGE)
+	$(VERBOSE)$(RM) $@
+	$(VERBOSE)$(AR) $(ARFLAGS) $@ $^
+
+clean-SIMPLEMALLOC:
