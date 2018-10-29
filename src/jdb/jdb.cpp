@@ -530,6 +530,7 @@ Jdb::input_long_mode(Jdb::Cmd *cmd, char const **args)
       switch (c)
 	{
 	case KEY_BACKSPACE:
+	case KEY_BACKSPACE_2:
 	  if (buf.len() > 0)
 	    {
 	      cursor(Cursor_left);

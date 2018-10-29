@@ -52,6 +52,7 @@ Jdb_input::get_mword(Mword *mword, int digits, int base, int first_char = 0)
           putchar(c);
           break;
         case KEY_BACKSPACE:
+        case KEY_BACKSPACE_2:
           if (digit)
             {
               putstr("\b \b");
@@ -95,6 +96,7 @@ Jdb_input::get_string(char *string, unsigned size)
     switch (int c = Jdb_core::getchar())
       {
       case KEY_BACKSPACE:
+      case KEY_BACKSPACE_2:
         if (pos)
           {
             putstr("\b \b");

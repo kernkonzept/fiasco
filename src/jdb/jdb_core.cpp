@@ -536,7 +536,7 @@ int Jdb_core::exec_cmd(Cmd const cmd, char const *str, int push_next_char = -1)
 		      if(c==KEY_ESC)
 			return 3;
 		      
-		      if(c==KEY_BACKSPACE && num_pos>0)
+		      if((c==KEY_BACKSPACE || c==KEY_BACKSPACE_2) && num_pos>0)
 			{
 			  putstr("\b \b");
 			  if(num_pos == 1 && negative)
@@ -639,7 +639,7 @@ int Jdb_core::exec_cmd(Cmd const cmd, char const *str, int push_next_char = -1)
 		      if(c==KEY_ESC)
 			return 3;
 
-		      if(c==KEY_BACKSPACE && num_pos)
+		      if((c==KEY_BACKSPACE || c==KEY_BACKSPACE_2) && num_pos)
 			{
 			  putstr("\b \b");
 			  num_pos--;

@@ -6,6 +6,7 @@
 enum
 {
   KEY_BACKSPACE		= 0x08,
+  KEY_BACKSPACE_2	= 0x7F,
   KEY_TAB		= 0x09,
   KEY_ESC		= 0x1b,
   KEY_RETURN		= 0x0d,
