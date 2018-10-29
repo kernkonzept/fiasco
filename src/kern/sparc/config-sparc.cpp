@@ -35,14 +35,12 @@ public:
 
   static unsigned const default_console_uart = 3;
   static unsigned const default_console_uart_baudrate = 115200;
-  static const char char_micro;
 };
 
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [sparc]:
 
-char const Config::char_micro = '\265';
 const char *const Config::kernel_warn_config_string = 0;
 
 IMPLEMENT FIASCO_INIT

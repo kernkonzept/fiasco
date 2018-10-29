@@ -791,13 +791,9 @@ Jdb::write_ll_ns(String_buffer *buf, Signed64 ns, bool sign)
       return;
     }
 
-  Console* gzip = Kconsole::console()->find_console(Console::GZIP);
   Mword _us = uns / 1000UL;
   Mword _ns = uns % 1000UL;
-  buf->printf("%3lu.%03lu %c ", _us, _ns,
-           gzip && gzip->state() & Console::OUTENABLED
-             ? '\265' 
-             : Config::char_micro);
+  buf->printf("%3lu.%03lu u ", _us, _ns);
 }
 
 PUBLIC static

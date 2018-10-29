@@ -94,8 +94,6 @@ public:
   static const unsigned default_console_uart = 1;
   static const unsigned default_console_uart_baudrate = 115200;
 
-  static char const char_micro;
-
   static bool found_vmware;
 
   enum {
@@ -110,7 +108,6 @@ IMPLEMENTATION[ia32,amd64]:
 bool Config::hlt_works_ok = true;
 
 bool Config::found_vmware = false;
-char const Config::char_micro = '\265';
 bool Config::apic = false;
 unsigned Config::scheduler_irq_vector;
 

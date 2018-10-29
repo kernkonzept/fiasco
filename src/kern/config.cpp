@@ -240,6 +240,8 @@ KIP_KERNEL_FEATURE("fi_gr_cputime");
 //-----------------------------------------------------------------------------
 IMPLEMENTATION:
 
+#include <stdio.h>
+
 IMPLEMENT FIASCO_INIT
 void Config::init()
 {
@@ -260,4 +262,3 @@ void Config::init()
     }
 #endif
 }
-

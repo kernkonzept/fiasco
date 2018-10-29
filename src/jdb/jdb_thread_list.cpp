@@ -685,7 +685,7 @@ Jdb_thread_list::list_threads_show_thread(Thread *t)
 	      else if (us >= 1000)
 		snprintf(to, sizeof(to), " %3dm", us / 1000);
 	      else
-		snprintf(to, sizeof(to), " %3d%c", us, Config::char_micro);
+		snprintf(to, sizeof(to), " %3du", us);
 	    }
 	}
     }

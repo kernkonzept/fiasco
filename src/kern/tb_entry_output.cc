@@ -30,7 +30,7 @@ format_timeout(String_buffer *buf, Mword us)
   else if (us >= 1000)		// 1ms
     buf->printf("%lu.%lum", us/1000, (us%1000)/100);
   else
-    buf->printf("%lu%c", us, Config::char_micro);
+    buf->printf("%luu", us);
 }
 
 template< typename T >

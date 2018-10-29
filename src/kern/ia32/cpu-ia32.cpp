@@ -1393,9 +1393,8 @@ Cpu::show_cache_tlb_info(const char *indent) const
     putchar('\n');
 
   if (_l1_trace_cache_size)
-    printf("%s%3dK %c-ops T Cache (%d-way associative)\n",
-           indent, _l1_trace_cache_size, Config::char_micro,
-           _l1_trace_cache_asso);
+    printf("%s%3dK u-ops T Cache (%d-way associative)\n",
+           indent, _l1_trace_cache_size, _l1_trace_cache_asso);
 
   else if (_l1_inst_cache_size)
     printf("%s%4d KB L1 I Cache (%d-way associative, %d bytes per line)\n",
