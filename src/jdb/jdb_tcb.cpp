@@ -497,6 +497,14 @@ Jdb_tcb::show(Thread *t, int level, bool dump_only)
       redraw_screen = false;
     }
 
+  Address ksp  = is_current_thread ? ef->ksp()
+                                   : (Address)t->get_kernel_sp();
+
+#if 0
+  Address tcb  = (Address)context_of((void*)ksp);
+#endif
+  _stack_view.init(ksp, ef, is_current_thread);
+
 whole_screen:
 
   if (redraw_screen)
@@ -618,14 +626,6 @@ whole_screen:
     }
   else
     putstr("---\nvCPU    : ---\n");
-
-  Address ksp  = is_current_thread ? ef->ksp()
-                                   : (Address)t->get_kernel_sp();
-
-#if 0
-  Address tcb  = (Address)context_of((void*)ksp);
-#endif
-  _stack_view.init(ksp, ef, is_current_thread);
 
   if (is_current_thread)
     print_entry_frame_regs(t);
