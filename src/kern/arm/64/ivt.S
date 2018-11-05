@@ -89,9 +89,17 @@ __iret:
 	add	sp, sp, #EF_SIZE
 	eret
 
+__return_from_user_invoke:
+// In case that a continuation is invoked before exit, make sure that
+// the handler returns to the normal exit ret_from_exception exit path and
+// finds the kernel stack address at the expected place.
+	add x30, x30, #(.Lret_from_exception - __return_from_user_invoke)
+	str x0, [sp, #EF_KSP]
+	b 6f
+
 .Lret_from_exception:
 	ldr	x0, [sp, #EF_KSP]
-__return_from_user_invoke:
+6:
 	ldr	x1, [x0, #EF_ERETW]
 	cbnz	x1, 1f // handle continuations
 	mov	sp, x0
