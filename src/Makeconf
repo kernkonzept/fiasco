@@ -11,6 +11,8 @@ CHECKCC         = $(shell if $(CC)  $(1) -S -o /dev/null -xc   /dev/null \
 CHECKCXX        = $(shell if $(CXX) $(1) -S -o /dev/null -xc++ /dev/null \
 		    > /dev/null 2>&1; then echo "$(1)"; else echo "$(2)"; fi ;)
 
+CHECKCC_NOWARN  = $(if $(shell $(CC) $(1) -S -o /dev/null -xc /dev/null 2>&1),$(2),$(1))
+
 eval_impl	= $(if $($(1)_IMPL),$($(1)_IMPL),$(1))
 
 include $(objbase)/globalconfig.out

@@ -19,6 +19,7 @@ SHARED_FLAGS                      += $(call CHECKCC,-mno-sse3,)
 SHARED_FLAGS                      += $(call CHECKCC,-mno-sse4,)
 SHARED_FLAGS                      += $(call CHECKCC,-mno-sse4a,)
 SHARED_FLAGS                      += $(call CHECKCC,-mno-3dnow,)
+SHARED_FLAGS-clang                += $(call CHECKCC_NOWARN,-Wno-address-of-packed-member)
 
 ASFLAGS				  += -m32
 OFORMAT				  := elf32-i386
