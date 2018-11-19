@@ -34,7 +34,7 @@ IMPLEMENTATION [!jdb_disasm]:
 
 PUBLIC static
 Jdb_module::Action_code
-Jdb_disasm::show(Address, Space *, int, bool = false)
+Jdb_disasm::show(Address, Space *, int)
 {
   return Jdb_module::NOTHING;
 }
@@ -174,16 +174,16 @@ Jdb_disasm::show_disasm_line(int len, Address &addr,
 
 PUBLIC static
 Jdb_module::Action_code
-Jdb_disasm::show(Address virt, Space *task, int level, bool do_clear_screen = false)
+Jdb_disasm::show(Address virt, Space *task, int level)
 {
   Address  enter_addr = virt;
   Space *trans_task = Jdb::translate_task(virt, task);
 
+  if (!level)
+    Jdb::clear_screen();
+
   for (;;)
     {
-      if (do_clear_screen)
-        Jdb::clear_screen();
-
       Jdb::cursor();
 
       Address addr;

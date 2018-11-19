@@ -86,15 +86,13 @@ PUBLIC
 void
 Jdb_dump::print_statline(unsigned long row, unsigned long col)
 {
-  char const *s = dump_type == D_MODE
+  char const *str = dump_type == D_MODE
                   ? "e=edit u=disasm D=dump <Space>=mode <CR>=goto addr"
                   : "<Space>=mode";
-  if (task)
-    Jdb::printf_statline("dump", s, "%c<" L4_PTR_FMT "> task %p",
-                         dump_type, virt(row, col), task);
-  else
-    Jdb::printf_statline("dump", s, "%c<" L4_PTR_FMT "> physical",
-	                 dump_type, virt(row, col));
+  char s[16];
+  Jdb::printf_statline("dump", str, "%c<" L4_PTR_FMT "> %s",
+                       dump_type, virt(row, col),
+                       Jdb::space_to_str(task, s, sizeof(s)));
 }
 
 IMPLEMENT
@@ -324,9 +322,10 @@ Jdb_dump::key_pressed(int c, unsigned long &row, unsigned long &col)
 	  Address virt1;
 	  if (Jdb::peek((Address*)virt(row,col), task, virt1))
 	    {
+	      char s[16];
 	      Jdb::printf_statline("dump", "<CR>=disassemble here",
-				   "u[address=" L4_PTR_FMT " task=%p] ",
-				   virt1, task);
+				   "u[address=" L4_PTR_FMT "%s] ", virt1,
+				   Jdb::space_to_str(task, s, sizeof(s)));
 	      int c1 = Jdb_core::getchar();
 	      if (c1 != KEY_RETURN && c1 != ' ' && c != KEY_RETURN_2)
 		{
@@ -335,7 +334,7 @@ Jdb_dump::key_pressed(int c, unsigned long &row, unsigned long &col)
 		  return Exit;
 		}
 
-              return Jdb_disasm::show(virt1, task, level+1, 1)
+              return Jdb_disasm::show(virt1, task, level+1)
                      ? Redraw
                      : Exit;
 	    }

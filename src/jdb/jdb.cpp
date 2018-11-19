@@ -1268,6 +1268,19 @@ Jdb::enter_jdb(Jdb_entry_frame *e, Cpu_number cpu)
   return 0;
 }
 
+PUBLIC static
+const char *
+Jdb::space_to_str(Space *s, char *str, size_t len)
+{
+  if (s)
+    {
+      snprintf(str, len, "task D:%lx",
+               static_cast<Task*>(s)->dbg_info()->dbg_id());
+      return str;
+    }
+  return "physical";
+}
+
 
 //--------------------------------------------------------------------------
 IMPLEMENTATION [!mp]:

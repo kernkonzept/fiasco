@@ -687,9 +687,9 @@ dump_stack:
             case ' ':
               if (Jdb_disasm::avail() && _stack_view.current.valid())
                 {
-                  printf("V %lx\n", _stack_view.current.value());
+                  printf("V %lx", _stack_view.current.value());
                   if (!Jdb_disasm::show(_stack_view.current.value(),
-                        _stack_view.current.is_user_value() ? t->space() : 0, level+1, true))
+                        _stack_view.current.is_user_value() ? t->space() : 0, level+1))
                     return NOTHING;
                   redraw_screen = true;
                 }
@@ -697,10 +697,11 @@ dump_stack:
             case 'u':
               if (Jdb_disasm::avail() && _stack_view.current.valid())
                 {
+                  char s[16];
                   Jdb::printf_statline("tcb", "<CR>=disassemble here",
-                                        "u[address=%08lx task=%lx] ",
+                                        "u[address=%08lx %s] ",
                                         _stack_view.current.value(),
-                                        Kobject_dbg::pointer_to_id(t->space()));
+                                        Jdb::space_to_str(t->space(), s, sizeof(s)));
                   int c1 = Jdb_core::getchar();
                   if ((c1 != KEY_RETURN) && c1 != KEY_RETURN_2 && (c1 != ' '))
                     {
@@ -710,7 +711,7 @@ dump_stack:
                     }
 
                   if (!Jdb_disasm::show(_stack_view.current.value(),
-                        _stack_view.current.is_user_value() ? t->space() : 0, level+1, true))
+                        _stack_view.current.is_user_value() ? t->space() : 0, level+1))
                     return NOTHING;
                   redraw_screen = true;
                 }
