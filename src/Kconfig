@@ -28,6 +28,9 @@ config HAS_IOMMU_OPTION
 config HAS_MP_OPTION
 	bool
 
+config HAS_GCOV_OPTION
+	bool
+
 config HAS_CPU_VIRT
 	bool
 
@@ -404,6 +407,13 @@ config NO_LDT
 endmenu # kernel options
 
 menu "Debugging"
+
+config GCOV
+	bool "GCOV support"
+	depends on HAS_GCOV_OPTION
+	help
+	  Adds coverage support using gcov. Only available when compiled with gcc.
+	  Do not enable this on production systems.
 
 config PERFORMANCE
 	bool "Performance configuration"

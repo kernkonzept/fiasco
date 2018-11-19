@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2016, 2020-2021 Kernkonzept GmbH.
+ * Copyright (C) 2016, 2020-2021, 2023 Kernkonzept GmbH.
  * Author: Steffen Liebergeld <steffen.liebergeld@kernkonzept.com>
  *
  * This file is distributed under the terms of the GNU General Public
@@ -12,15 +12,43 @@
  * for reference.
  */
 
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [debug || gcov]:
 
 #include "globals.h"
-#include "jdb.h"
 #include "kobject_helper.h"
+
+class Jdb_object : public Kobject_h<Jdb_object, Kobject>
+{
+private:
+  L4_msg_tag sys_print_gcov_data();
+public:
+  Jdb_object()
+  {
+    initial_kobjects.register_obj(this, Initial_kobjects::Jdb);
+  }
+
+  L4_msg_tag
+  kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
+          Utcb const *r_msg, Utcb *s_msg);
+};
+
+IMPLEMENT_DEFAULT
+L4_msg_tag
+Jdb_object::kinvoke(L4_obj_ref, L4_fpage::Rights, Syscall_frame *,
+                    Utcb const *, Utcb *)
+{
+  return commit_result(-L4_err::ENosys);
+}
+
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [debug]:
+
+#include "jdb.h"
 #include "kobject_rpc.h"
 #include "minmax.h"
 
-class Jdb_object : public Kobject_h<Jdb_object, Kobject>
+EXTENSION class Jdb_object
 {
 public:
   enum
@@ -42,11 +70,6 @@ public:
     Tbuf_log_3val  = 4,
     Tbuf_log_bin   = 5,
   };
-
-  Jdb_object()
-  {
-    initial_kobjects.register_obj(this, Initial_kobjects::Jdb);
-  }
 };
 
 JDB_DEFINE_TYPENAME(Jdb_object, "Jdb");
@@ -245,8 +268,7 @@ Jdb_object::sys_jdb(L4_msg_tag tag, unsigned op,
     }
 }
 
-
-PUBLIC
+IMPLEMENT_OVERRIDE
 L4_msg_tag
 Jdb_object::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
                     Utcb const *r_msg, Utcb *s_msg)
@@ -274,8 +296,63 @@ Jdb_object::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
     case 2:
       return sys_tbuf(tag, op & 0xff, rights, f, r_msg, s_msg);
 
+    case 4:
+      return sys_print_gcov_data();
+
     default:
       return sys_jdb(tag, op & 0xff, rights, f, r_msg, s_msg);
     }
 }
 
+//------------------------------------------------------------------
+IMPLEMENTATION [gcov]:
+
+extern "C" void gcov_print();
+
+IMPLEMENT
+L4_msg_tag
+Jdb_object::sys_print_gcov_data()
+{
+  gcov_print();
+  return commit_result(0);
+}
+
+//------------------------------------------------------------------
+IMPLEMENTATION [debug && !gcov]:
+
+IMPLEMENT
+L4_msg_tag
+Jdb_object::sys_print_gcov_data()
+{
+  return commit_result(-L4_err::ENosys);
+}
+
+
+//------------------------------------------------------------------
+IMPLEMENTATION [!debug && gcov]:
+
+JDB_DEFINE_TYPENAME(Jdb_object, "Jdb");
+
+static Jdb_object __jdb_kobject;
+
+IMPLEMENT_OVERRIDE
+L4_msg_tag
+Jdb_object::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
+                    Utcb const *r_msg, Utcb *)
+{
+  L4_msg_tag tag = f->tag();
+
+  if (!Ko::check_basics(&tag, rights, L4_msg_tag::Label_debugger))
+    return tag;
+
+  unsigned op =  access_once(&r_msg->values[0]);
+  auto group = op >> 8;
+  switch (group)
+    {
+    case 4:
+      return sys_print_gcov_data();
+
+    default:
+      return commit_result(-L4_err::ENosys);
+    }
+}

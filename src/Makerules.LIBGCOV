@@ -1,0 +1,9 @@
+# -*- makefile -*-
+
+$(LIBGCOV): $(OBJ_LIBGCOV)
+	$(AR_MESSAGE)
+	$(VERBOSE)$(RM) $@
+	$(VERBOSE)$(AR) $(ARFLAGS) $@ $^
+
+clean-LIBGCOV:
+	$(VERBOSE)$(RM) *.gcno

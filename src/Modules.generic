@@ -85,3 +85,12 @@ NOOPT			+= $(patsubst %.o, %,\
 LIBUART_UART = -include uart_$(strip $(1)).h \
 	       -DFIASCO_UART_TYPE=L4::Uart_$(strip $(if $(2),$(2),$(1)))
 
+#
+# GCOV Subsystem
+#
+LIBGCOV := libgcov.a
+VPATH += lib/gcov
+PRIVATE_INCDIR += lib/gcov/
+CSRC_LIBGCOV := libgcov.c gcov-plain.c
+
+NOOPT += $(patsubst %.o, %, $(OBJ_LIBGCOV))
