@@ -7,5 +7,6 @@ public:
     Gic_dist_phys_base   = 0x08000000,
     Gic_cpu_phys_base    = 0x08010000,
     Gic_h_phys_base      = 0x08030000,
+    Gic_v_phys_base      = 0x08040000,
   };
 };

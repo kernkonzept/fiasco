@@ -29,11 +29,12 @@ private:
 public:
   enum Operation
   {
-    Map         = 0,
-    Unmap       = 1,
-    Cap_info    = 2,
-    Add_ku_mem  = 3,
-    Ldt_set_x86 = 0x11,
+    Map           = 0,
+    Unmap         = 1,
+    Cap_info      = 2,
+    Add_ku_mem    = 3,
+    Ldt_set_x86   = 0x11,
+    Vgicc_map_arm = 0x12,
   };
 
   virtual int resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode);
