@@ -157,14 +157,14 @@ config ARM_CORTEX_A15
 	bool "ARM Cortex-A15 CPU"
 	depends on CAN_ARM_CPU_CORTEX_A15
 	select HAS_MP_OPTION
-	select HAS_CPU_VIRT
+	select HAS_CPU_VIRT if ARM_GIC
 
 config ARM_CORTEX_A35
 	bool "ARM Cortex-A35 CPU"
 	depends on CAN_ARM_CPU_CORTEX_A35
 	select ARM_V8
 	select HAS_MP_OPTION
-	select HAS_CPU_VIRT
+	select HAS_CPU_VIRT if ARM_GIC
 	select HAS_64BIT
 
 config ARM_CORTEX_A53
@@ -172,7 +172,7 @@ config ARM_CORTEX_A53
 	depends on CAN_ARM_CPU_CORTEX_A53
 	select ARM_V8
 	select HAS_MP_OPTION
-	select HAS_CPU_VIRT
+	select HAS_CPU_VIRT if ARM_GIC
 	select HAS_64BIT
 
 config ARM_CORTEX_A57
@@ -180,7 +180,7 @@ config ARM_CORTEX_A57
 	depends on CAN_ARM_CPU_CORTEX_A57
 	select ARM_V8
 	select HAS_MP_OPTION
-	select HAS_CPU_VIRT
+	select HAS_CPU_VIRT if ARM_GIC
 	select HAS_64BIT
 
 config ARM_CORTEX_A72
@@ -188,7 +188,7 @@ config ARM_CORTEX_A72
 	depends on CAN_ARM_CPU_CORTEX_A72
 	select ARM_V8
 	select HAS_MP_OPTION
-	select HAS_CPU_VIRT
+	select HAS_CPU_VIRT if ARM_GIC
 	select HAS_64BIT
 
 endchoice
