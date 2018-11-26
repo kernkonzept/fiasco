@@ -150,6 +150,25 @@ Fpu::set_mipsr2_fp64()
 }
 
 // ------------------------------------------------------------------------
+IMPLEMENTATION [mips && fpu && lazy_fpu]:
+
+PRIVATE inline
+void
+Fpu::finish_init()
+{
+  disable();
+  set_owner(0);
+}
+
+//-------------------------------------------------------------------------
+IMPLEMENTATION [mips && fpu && !lazy_fpu]:
+
+PRIVATE inline
+void
+Fpu::finish_init()
+{}
+
+// ------------------------------------------------------------------------
 IMPLEMENTATION [mips && fpu]:
 
 PRIVATE static
@@ -184,8 +203,7 @@ Fpu::init(Cpu_number cpu, bool resume)
   if (!resume)
     show(cpu);
 
-  f.disable();
-  f.set_owner(0);
+  f.finish_init();
 }
 
 PRIVATE static inline
