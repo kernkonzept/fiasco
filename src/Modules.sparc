@@ -179,7 +179,7 @@ ASSRC_CRT0	:= crt0.S
 # 
 CXXLIB 			:= libcxx.a
 VPATH			+= lib/cxxlib
-INTERFACES_CXXLIB 	:= paranoia s_cruft
+INTERFACES_CXXLIB 	:= paranoia
 
 #
 # LIBK subsystem

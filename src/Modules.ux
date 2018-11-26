@@ -242,7 +242,7 @@ OBJ_KERNEL		+= gblcfg.o
 #
 CXXLIB			:= libcxx.a
 VPATH			+= lib/cxxlib
-INTERFACES_CXXLIB	:= s_cruft paranoia
+INTERFACES_CXXLIB	:= paranoia
 
 #
 # LIBK subsystem
