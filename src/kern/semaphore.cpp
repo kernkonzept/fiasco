@@ -57,8 +57,8 @@ Semaphore::count_up(Thread **wakeup)
   return old;
 }
 
-PRIVATE inline NOEXPORT
-void ALWAYS_INLINE
+PRIVATE inline NOEXPORT ALWAYS_INLINE
+void
 Semaphore::_hit_edge_irq(Upstream_irq const *ui)
 {
   assert (cpu_lock.test());
@@ -83,8 +83,8 @@ void
 Semaphore::hit_edge_irq(Irq_base *i, Upstream_irq const *ui)
 { nonull_static_cast<Semaphore*>(i)->_hit_edge_irq(ui); }
 
-PRIVATE inline NOEXPORT
-void ALWAYS_INLINE
+PRIVATE inline NOEXPORT ALWAYS_INLINE
+void
 Semaphore::_hit_level_irq(Upstream_irq const *ui)
 {
   assert (cpu_lock.test());
@@ -115,8 +115,8 @@ Sender *
 Semaphore::sem_partner()
 { return reinterpret_cast<Sender *>(5); }
 
-PRIVATE inline NOEXPORT
-bool ALWAYS_INLINE
+PRIVATE inline NOEXPORT ALWAYS_INLINE
+bool
 Semaphore::down(Thread *ct)
 {
   bool run = true;
@@ -144,8 +144,8 @@ Semaphore::down(Thread *ct)
    return run;
 }
 
-PRIVATE inline NOEXPORT
-L4_msg_tag ALWAYS_INLINE
+PRIVATE inline NOEXPORT ALWAYS_INLINE
+L4_msg_tag
 Semaphore::sys_down(L4_timeout t, Utcb const *utcb)
 {
   Thread *const c_thread = ::current_thread();
