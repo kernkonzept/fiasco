@@ -257,7 +257,6 @@ Thread::handle_fpu_trap(Unsigned32 opcode, Trap_state *ts)
 
   if (Fpu::is_enabled())
     {
-      assert(Fpu::fpu.current().owner() == current());
       if (Fpu::is_emu_insn(opcode))
         return Fpu::emulate_insns(opcode, ts);
 

@@ -216,7 +216,6 @@ Thread::handle_fpu_trap(Trap_state *ts)
 {
   if (Fpu::is_enabled())
     {
-      assert(Fpu::fpu.current().owner() == current());
       ts->esr.ec() = 0; // tag fpu undef insn
     }
   else if (current_thread()->switchin_fpu())
