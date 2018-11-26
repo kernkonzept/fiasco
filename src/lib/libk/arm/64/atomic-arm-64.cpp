@@ -162,8 +162,8 @@ atomic_add_fetch(T *mem, V value)
     }
 }
 
-template< typename T > inline
-T ALWAYS_INLINE
+template< typename T > ALWAYS_INLINE inline
+T
 atomic_load(T const *p)
 {
   static_assert(sizeof(T) == 4 || sizeof(T) == 8,
@@ -181,8 +181,8 @@ atomic_load(T const *p)
     }
 }
 
-template< typename T, typename V > inline
-void ALWAYS_INLINE
+template< typename T, typename V > ALWAYS_INLINE inline
+void
 atomic_store(T *p, V value)
 {
   static_assert(sizeof(T) == 4 || sizeof(T) == 8,
