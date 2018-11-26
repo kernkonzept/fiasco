@@ -158,9 +158,6 @@ extern "C"
 IMPLEMENTATION [sparc]:
 
 /** Constructor.
-    @param id user-visible thread ID of the sender
-    @param init_prio initial priority
-    @param mcp thread's maximum controlled priority
     @post state() != 0
  */
 IMPLEMENT

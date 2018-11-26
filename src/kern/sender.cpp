@@ -43,7 +43,6 @@ IMPLEMENTATION:
 
 /** Optimized constructor.  This constructor assumes that the object storage
     is zero-initialized.
-    @param id user-visible thread ID of the sender
     @param ignored an integer argument.  The value doesn't matter and 
                    is used just to distinguish this constructor from the 
 		   default one.
@@ -158,7 +157,6 @@ void Sender::sender_update_prio(P_LIST list, unsigned short newprio)
 }
 
 /** Constructor.
-    @param id user-visible thread ID of the sender
  */
 PROTECTED inline
 Sender::Sender()

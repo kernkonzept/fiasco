@@ -267,8 +267,6 @@ Thread::unbind()
 /** Cut-down version of Thread constructor; only for kernel threads
     Do only what's necessary to get a kernel thread started --
     skip all fancy stuff, no locking is necessary.
-    @param task the address space
-    @param id user-visible thread ID of the sender
  */
 IMPLEMENT inline
 Thread::Thread(Ram_quota *q, Context_mode_kernel)

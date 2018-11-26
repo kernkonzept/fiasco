@@ -95,9 +95,6 @@ IMPLEMENT inline Mword Thread::user_ip() const    { return regs()->ip(); }
 IMPLEMENT inline void  Thread::user_ip(Mword ip)  { regs()->ip(ip); }
 
 /** Constructor.
-    @param id user-visible thread ID of the sender
-    @param init_prio initial priority
-    @param mcp thread's maximum controlled priority
     @post state() != 0
  */
 IMPLEMENT
