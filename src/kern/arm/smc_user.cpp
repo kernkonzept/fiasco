@@ -1,6 +1,7 @@
 IMPLEMENTATION[arm_smc_user]:
 
 #include "kobject_helper.h"
+#include "kobject_rpc.h"
 #include "smc_call.h"
 
 JDB_DEFINE_TYPENAME(Smc_user, "SMC");
