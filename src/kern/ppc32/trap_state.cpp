@@ -74,9 +74,9 @@ PUBLIC
 void
 Trap_state::dump()
 {
-  char const *excpts[] = 
-    {"reset","machine check"};
-  
+  //char const *excpts[] =
+  //  {"reset","machine check"};
+
   printf("EXCEPTION: pfa=%08lx, error=%08lx\n",
          //excpts[((error_code & ~0xff) >> 8) - 1]
           pf_address, error_code);

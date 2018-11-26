@@ -394,7 +394,7 @@ bool
 Pte_ptr::need_cache_write_back(bool current_pt)
 { return current_pt; }
 
-PUBLIC inline// NEEDS["mem_unit.h"]
+PUBLIC //inline NEEDS["mem_unit.h"]
 void
 Pte_ptr::write_back_if(bool current_pt, Mword /*asid*/ = 0)
 {
@@ -403,7 +403,7 @@ Pte_ptr::write_back_if(bool current_pt, Mword /*asid*/ = 0)
   //        Mem_unit::clean_dcache(pte);
 }
 
-PUBLIC static inline// NEEDS["mem_unit.h"]
+PUBLIC static //inline NEEDS["mem_unit.h"]
 void
 Pte_ptr::write_back(void *start, void *end)
 { (void)start; (void)end; }
