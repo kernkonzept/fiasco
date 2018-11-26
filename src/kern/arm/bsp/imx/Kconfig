@@ -1,7 +1,6 @@
 # PF: IMX
 # PFDESCR: NXP/Freescale i.MX
 # PFDEPENDS: ARM
-# PFSELECT: HAS_ARM_PSCI
 
 choice
 	prompt "NXP/Freescale i.MX"
@@ -64,6 +63,7 @@ config PF_IMX_7
         depends on PF_IMX
         select CAN_ARM_CPU_CORTEX_A7
         select HAS_CPU_VIRT
+        select HAS_ARM_PSCI
         help
           Choose for i.MX7 platform.
 
