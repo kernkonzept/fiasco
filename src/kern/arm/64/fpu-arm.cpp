@@ -67,8 +67,7 @@ Fpu::init(Cpu_number cpu, bool resume)
       "msr  CPACR_EL1, %[cpacr_on]"
       : : [cpacr_on]"r"(3UL << 20));
 
-  f.disable();
-  f.set_owner(0);
+  f.finish_init();
 }
 
 PRIVATE static inline
@@ -167,6 +166,26 @@ Fpu::save_user_exception_state(bool, Fpu_state *, Trap_state *, Exception_state_
 {
 }
 
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && fpu && lazy_fpu]:
+
+PRIVATE inline
+void
+Fpu::finish_init()
+{
+  disable();
+  set_owner(0);
+}
+
+//-------------------------------------------------------------------------
+IMPLEMENTATION [arm && fpu && !lazy_fpu]:
+
+PRIVATE inline
+void
+Fpu::finish_init()
+{}
+
+// ------------------------------------------------------------------------
 IMPLEMENTATION [arm && fpu]:
 
 PRIVATE static

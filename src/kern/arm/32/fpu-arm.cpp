@@ -266,8 +266,7 @@ Fpu::init(Cpu_number cpu, bool resume)
   if (!resume)
     show(cpu);
 
-  f.disable();
-  f.set_owner(0);
+  f.finish_init();
 }
 
 PRIVATE static inline
@@ -393,6 +392,25 @@ Fpu::save_user_exception_state(bool owner, Fpu_state *s, Trap_state *ts, Excepti
         fpu_regs->fpexc &= ~FPEXC_EX;
     }
 }
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && fpu && lazy_fpu]:
+
+PRIVATE inline
+void
+Fpu::finish_init()
+{
+  disable();
+  set_owner(0);
+}
+
+//-------------------------------------------------------------------------
+IMPLEMENTATION [arm && fpu && !lazy_fpu]:
+
+PRIVATE inline
+void
+Fpu::finish_init()
+{}
 
 //-------------------------------------------------------------------------
 IMPLEMENTATION [arm && fpu && debug]:
