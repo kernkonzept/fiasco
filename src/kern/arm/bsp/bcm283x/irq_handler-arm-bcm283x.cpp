@@ -34,6 +34,7 @@ inline void handle_ipis() {}
 IMPLEMENTATION [arm && (pf_bcm283x_rpi2 || pf_bcm283x_rpi3)]:
 
 #include "pic.h"
+#include "timer.h"
 #include "timer_tick.h"
 #include "arm_control.h"
 

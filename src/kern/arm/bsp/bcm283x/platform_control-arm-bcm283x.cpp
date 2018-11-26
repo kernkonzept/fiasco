@@ -17,6 +17,7 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
 IMPLEMENTATION [arm && mp && pf_bcm283x_rpi3 && 64bit]:
 
 #include "cpu.h"
+#include "kmem.h"
 #include "mmio_register_block.h"
 
 PUBLIC static
