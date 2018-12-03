@@ -16,7 +16,9 @@ Platform_control::aux(unsigned cmd, Mword arg0, Mword arg1)
   register unsigned long r1  asm("r1")  = arg1;
   register unsigned long r12 asm("r12") = cmd;
 
-  asm volatile("dsb; smc #0"
+  asm volatile(".arch_extension sec\n"
+               "dsb                \n"
+               "smc #0             \n"
                : : "r" (r0), "r" (r1), "r" (r12)
                : "r2", "r3", "r4", "r5", "r6",
                  "r7", "r8", "r9", "r10", "r11", "lr", "memory");

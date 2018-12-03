@@ -42,6 +42,8 @@
 	ERET
 .endm
 
+.arch_extension virt
+
 GEN_SYSCALL_TABLE
 
 .macro disable_irqs

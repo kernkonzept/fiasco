@@ -66,7 +66,10 @@ IMPLEMENTATION [32bit && ((arm_v7 && mp) || arm_v8)]:
 
 IMPLEMENT_OVERRIDE inline void
 Mem::prefetch_w(void *addr)
-{ asm ("pldw %0" : : "m"(*reinterpret_cast<char *>(addr))); }
+{
+  asm (".arch_extension mp\n"
+       "pldw %0" : : "m"(*reinterpret_cast<char *>(addr)));
+}
 
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm_v7 || arm_v8]:
