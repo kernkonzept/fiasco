@@ -237,9 +237,10 @@ randcheckagainstop:
 
 randcheckstat:
 	@find $(RANDBUILDDIR) -name 'ok-*' | tool/configstat
-	@echo "Building: $$(ls $(RANDBUILDDIR) | grep -c b-)    " \
-	      "Ok: $$(ls $(RANDBUILDDIR) | grep -c ok-)    "      \
-	      "Failed: $$(ls $(RANDBUILDDIR) | grep -c failed-)"
+	@echo "Building: $$(ls $(RANDBUILDDIR) | grep -c b-)    "    \
+	      "Ok: $$(ls $(RANDBUILDDIR) | grep -c ok-)    "         \
+	      "Failed: $$(ls $(RANDBUILDDIR) | grep -c failed-)    " \
+	      "Warnings: $$(ls $(RANDBUILDDIR) | grep -c warnings-)"
 
 randcheckstatloop:
 	@while true; do \
