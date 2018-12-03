@@ -29,7 +29,7 @@ __cxa_atexit(void (*func)(void*), void *arg, void *dso_handle)
   if (atexit_counter>=NUM_ATEXIT)
     return -1;
 
-  __atexitlist[atexit_counter].func = (void(*)(void*, int))func;
+  __atexitlist[atexit_counter].func = (void(*)(void*, int))(void *)func;
   __atexitlist[atexit_counter].arg  = arg;
   (void)dso_handle;
   atexit_counter++;
