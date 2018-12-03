@@ -1,8 +1,7 @@
 #include <string.h>
+#include <stdlib.h>
 
-int __lltostr(char *s, int size, unsigned long long i, int base, char UpCase);
-
-int __lltostr(char *s, int size, unsigned long long i, int base, char UpCase)
+int __lltostr(char *s, int size, unsigned long long i, int base, int UpCase)
 {
   char *tmp;
   unsigned int j=0;
@@ -23,7 +22,6 @@ int __lltostr(char *s, int size, unsigned long long i, int base, char UpCase)
   while((tmp>s)&&(i))
   {
     tmp--;
-    //    r = moddiv(i,base);
     if ((*tmp=i%base+'0')>'9') *tmp+=(UpCase?'A':'a')-'9'-1;
     i=i/base;
     j++;

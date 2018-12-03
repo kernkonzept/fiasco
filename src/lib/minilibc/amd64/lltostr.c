@@ -1,10 +1,9 @@
 #include <string.h>
+#include <stdlib.h>
 #include <div32.h>
 #include <mod32.h>
 
-int __lltostr(char *s, int size, unsigned long long i, int base, char UpCase);
-
-int __lltostr(char *s, int size, unsigned long long i, int base, char UpCase)
+int __lltostr(char *s, int size, unsigned long long i, int base, int UpCase)
 {
   char *tmp;
   unsigned int j=0;

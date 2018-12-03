@@ -1,13 +1,11 @@
 #include <string.h>
 #include <stdlib.h>
-//#include <moddiv.h>
 
-int __ltostr(char *s, unsigned int size, unsigned long i, unsigned int base, int UpCase)
+int __ltostr(char *s, int size, unsigned long i, int base, int UpCase)
 {
   char *tmp;
   unsigned int j=0;
-  //_moddiv_t r;
-  
+
   s[--size]=0;
 
   tmp=s+size;
@@ -24,7 +22,6 @@ int __ltostr(char *s, unsigned int size, unsigned long i, unsigned int base, int
   while((tmp>s)&&(i))
   {
     tmp--;
-    //r = moddiv(i,base);
     if ((*tmp=i%base+'0')>'9') *tmp+=(UpCase?'A':'a')-'9'-1;
     i=i/base;
     j++;

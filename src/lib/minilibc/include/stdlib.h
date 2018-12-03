@@ -11,13 +11,13 @@ int atexit(void (*function)(void));
 long int strtol(const char *nptr, char **endptr, int base);
 unsigned long int strtoul(const char *nptr, char **endptr, int base);
 
-extern int __ltostr(char *s, unsigned int size, unsigned long i, unsigned int base, int UpCase);
-extern int __dtostr(double d,char *buf,unsigned int maxlen,unsigned int prec);
+int __ltostr(char *s, int size, unsigned long i, int base, int UpCase);
+int __dtostr(double d,char *buf,unsigned int maxlen,unsigned int prec);
 
 #ifndef __STRICT_ANSI__
 __extension__ long long int strtoll(const char *nptr, char **endptr, int base);
 __extension__ unsigned long long int strtoull(const char *nptr, char **endptr, int base);
-__extension__ int __lltostr(char *s, unsigned int size, unsigned long long i, unsigned int base, int UpCase);
+__extension__ int __lltostr(char *s, int size, unsigned long long i, int base, int UpCase);
 #endif
 
 int atoi(const char *nptr);
