@@ -311,7 +311,7 @@ Perf_cnt::mode(Mword slot, const char **mode, const char **name,
 
   *event = mon_event_type(slot);
 
-    snprintf(_n[slot], sizeof(_n[slot]), "e%lx", *event);
+  snprintf(_n[slot], sizeof(_n[slot]), "e%lx", *event & 0xfff);
   _n[slot][sizeof(_n[slot]) - 1] = 0;
   *name = _n[slot];
 
