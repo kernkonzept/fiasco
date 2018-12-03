@@ -79,10 +79,10 @@ PUBLIC static inline
 Mword
 Cpu::read_vsid(unsigned sr = 0)
 {
-  Mword vsid;
+  Mword vsid = 0;
   (void)sr;
 
-  return (vsid & 0xffffff);
+  return vsid & 0xffffff;
 }
 
 /* set segment register 0-15 */
