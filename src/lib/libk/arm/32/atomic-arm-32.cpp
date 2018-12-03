@@ -86,8 +86,8 @@ mp_cas_arch(Mword *m, Mword o, Mword n)
   return !res;
 }
 
-template<typename T, typename V> inline NEEDS [<cxx/type_traits>]
-typename cxx::enable_if<(sizeof(T) == 4), T>::type ALWAYS_INLINE
+template<typename T, typename V> inline NEEDS[<cxx/type_traits>]
+ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 4), T>::type
 atomic_exchange(T *mem, V value)
 {
   T val = value;
@@ -107,7 +107,7 @@ atomic_exchange(T *mem, V value)
 }
 
 template<typename T, typename V> inline NEEDS [<cxx/type_traits>]
-typename cxx::enable_if<(sizeof(T) == 4), T>::type ALWAYS_INLINE
+ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 4), T>::type
 atomic_add_fetch(T *mem, V value)
 {
   T val = value;
@@ -127,7 +127,7 @@ atomic_add_fetch(T *mem, V value)
 }
 
 template< typename T > inline NEEDS [<cxx/type_traits>]
-typename cxx::enable_if<(sizeof(T) == 4), T>::type ALWAYS_INLINE
+ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 4), T>::type
 atomic_load(T const *p)
 {
   T res;
@@ -136,7 +136,7 @@ atomic_load(T const *p)
 }
 
 template< typename T, typename V > inline NEEDS [<cxx/type_traits>]
-void ALWAYS_INLINE
+ALWAYS_INLINE void
 atomic_store(T *p, V value, typename cxx::enable_if<(sizeof(T) == 4), int>::type = 0)
 {
   T val = value;
@@ -149,7 +149,7 @@ IMPLEMENTATION[arm && arm_v6plus && arm_lpae]:
 #include <cxx/type_traits>
 
 template< typename T > inline NEEDS [<cxx/type_traits>]
-typename cxx::enable_if<(sizeof(T) == 8), T>::type ALWAYS_INLINE
+ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 8), T>::type
 atomic_load(T const *p)
 {
   T res;
@@ -158,7 +158,7 @@ atomic_load(T const *p)
 }
 
 template< typename T, typename V > inline NEEDS [<cxx/type_traits>]
-inline void ALWAYS_INLINE
+ALWAYS_INLINE void
 atomic_store(T *p, V value, typename cxx::enable_if<(sizeof(T) == 8), int>::type = 0)
 {
   T val = value;
@@ -171,7 +171,7 @@ IMPLEMENTATION[arm && (arm_v7plus || (arm_v6 && mp))]:
 #include <cxx/type_traits>
 
 template<typename T, typename V> inline NEEDS [<cxx/type_traits>]
-typename cxx::enable_if<(sizeof(T) == 8), T>::type ALWAYS_INLINE
+ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 8), T>::type
 atomic_exchange(T *mem, V value)
 {
   T val = value;
@@ -190,7 +190,7 @@ atomic_exchange(T *mem, V value)
 }
 
 template<typename T, typename V> inline NEEDS [<cxx/type_traits>]
-typename cxx::enable_if<(sizeof(T) == 8), T>::type ALWAYS_INLINE
+ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 8), T>::type
 atomic_add_fetch(T *mem, V value)
 {
   T val = value;
@@ -216,7 +216,7 @@ IMPLEMENTATION[arm && arm_v6plus && mp && !arm_lpae]:
 #include <cxx/type_traits>
 
 template< typename T > inline NEEDS [<cxx/type_traits>]
-typename cxx::enable_if<(sizeof(T) == 8), T>::type ALWAYS_INLINE
+ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 8), T>::type
 atomic_load(T const *p)
 {
   T res;
@@ -225,7 +225,7 @@ atomic_load(T const *p)
 }
 
 template< typename T, typename V > inline NEEDS [<cxx/type_traits>]
-inline void ALWAYS_INLINE
+ALWAYS_INLINE void
 atomic_store(T *p, V value, typename cxx::enable_if<(sizeof(T) == 8), int>::type = 0)
 {
   T val = value;
@@ -247,7 +247,7 @@ IMPLEMENTATION[arm && arm_v6 && !mp]:
 #include <cxx/type_traits>
 
 template<typename T, typename V> inline NEEDS [<cxx/type_traits>]
-typename cxx::enable_if<(sizeof(T) == 8), T>::type ALWAYS_INLINE
+ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 8), T>::type
 atomic_exchange(T *mem, V value)
 {
   // NOTE: this version assumes close IRQs during the operation
@@ -263,7 +263,7 @@ atomic_exchange(T *mem, V value)
 }
 
 template<typename T, typename V> inline NEEDS [<cxx/type_traits>]
-typename cxx::enable_if<(sizeof(T) == 8), T>::type ALWAYS_INLINE
+ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 8), T>::type
 atomic_add_fetch(T *mem, V value)
 {
   // NOTE: this version assumes close IRQs during the operation
@@ -287,7 +287,7 @@ IMPLEMENTATION[arm && arm_v6plus && !mp && !arm_lpae]:
 #include <cxx/type_traits>
 
 template< typename T > inline NEEDS [<cxx/type_traits>]
-typename cxx::enable_if<(sizeof(T) == 8), T>::type ALWAYS_INLINE
+ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 8), T>::type
 atomic_load(T const *p)
 {
   T res;
@@ -296,7 +296,7 @@ atomic_load(T const *p)
 }
 
 template< typename T, typename V > inline NEEDS [<cxx/type_traits>]
-inline void ALWAYS_INLINE
+ALWAYS_INLINE void
 atomic_store(T *p, V value, typename cxx::enable_if<(sizeof(T) == 8), int>::type = 0)
 {
   T val = value;
@@ -305,4 +305,3 @@ atomic_store(T *p, V value, typename cxx::enable_if<(sizeof(T) == 8), int>::type
       : "=m"(*p)
       : "r"(val));
 }
-
