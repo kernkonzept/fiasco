@@ -14,7 +14,6 @@ config PF_EXYNOS5
         bool
         depends on PF_EXYNOS
         select CAN_ARM_CPU_CORTEX_A15
-        select HAS_CPU_VIRT
         select DEFAULT_ARM_EM_NS  if CPU_VIRT
 
 config CPU_SUSPEND

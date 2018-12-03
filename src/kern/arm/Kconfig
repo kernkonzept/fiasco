@@ -143,6 +143,7 @@ config ARM_CORTEX_A7
 	bool "ARM Cortex-A7 CPU"
 	depends on CAN_ARM_CPU_CORTEX_A7
 	select HAS_MP_OPTION
+	select HAS_CPU_VIRT if ARM_GIC
 
 config ARM_CORTEX_A8
 	bool "ARM Cortex-A8 CPU"
