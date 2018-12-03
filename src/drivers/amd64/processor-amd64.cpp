@@ -41,8 +41,8 @@ void Proc::stack_pointer(Mword sp)
   asm volatile ("mov %0, %%rsp" : : "r" (sp));
 }
 
-IMPLEMENT static inline
-Mword ALWAYS_INLINE Proc::program_counter()
+IMPLEMENT static inline ALWAYS_INLINE
+Mword Proc::program_counter()
 {
   Mword pc;
   asm volatile ("call 1f; 1: pop %0" : "=r" (pc));
