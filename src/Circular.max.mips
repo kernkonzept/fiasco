@@ -1,0 +1,18 @@
+Do "make DEPS" for full fine-grained dependency information.
+
+---
+
+    processor
+cp0_status
+    processor
+
+---
+
+    cp0_status
+processor
+    cp0_status
+
+---
+
+TOTAL CIRCULAR DEPS:
+2
