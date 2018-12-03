@@ -588,7 +588,7 @@ IMPLEMENT inline NEEDS ["mem_layout.h"]
 Multiboot_info *
 Boot_info::mbi_virt()
 {
-  return reinterpret_cast<Multiboot_info * const>
+  return reinterpret_cast<Multiboot_info *>
     (Mem_layout::Physmem + mbi_phys());
 }
 
@@ -743,7 +743,7 @@ PUBLIC static
 void
 Boot_info::set_jdb_cmd(const char *j)
 {
-  strncpy(Koptions::o()->jdb_cmd, j, sizeof(Koptions::o()->jdb_cmd));
+  strncpy(Koptions::o()->jdb_cmd, j, sizeof(Koptions::o()->jdb_cmd) - 1);
   Koptions::o()->jdb_cmd[sizeof(Koptions::o()->jdb_cmd) - 1] = 0;
 }
 
