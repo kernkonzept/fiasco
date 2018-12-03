@@ -268,10 +268,15 @@ textconfig: $(KCONFIG_FILE)
 	+$(VERBOSE)$(kconfig_call) config syncconfig
 	+$(VERBOSE)$(update_globalconfig_tags)
 
-menuconfig oldconfig xconfig gconfig nconfig randconfig allyesconfig allnoconfig: $(KCONFIG_FILE)
+menuconfig oldconfig xconfig gconfig nconfig allyesconfig allnoconfig: $(KCONFIG_FILE)
 	+$(VERBOSE)$(migrate_kconfig)
 	+$(VERBOSE)$(kconfig_call) $@
 	+$(VERBOSE)$(kconfig_call) syncconfig
+	+$(VERBOSE)$(update_globalconfig_tags)
+
+randconfig: $(KCONFIG_FILE)
+	+$(VERBOSE)$(kconfig_call) $@
+	+$(VERBOSE)$(kconfig_call) olddefconfig
 	+$(VERBOSE)$(update_globalconfig_tags)
 
 olddefconfig oldnoconfig: $(KCONFIG_FILE)
