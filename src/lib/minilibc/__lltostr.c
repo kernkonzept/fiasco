@@ -4,29 +4,30 @@
 int __lltostr(char *s, int size, unsigned long long i, int base, int UpCase)
 {
   char *tmp;
-  unsigned int j=0;
+  unsigned int j = 0;
 
-  s[--size]=0;
+  s[--size] = 0;
 
-  tmp=s+size;
+  tmp = s + size;
+  if (base == 0 || base > 36)
+    base = 10;
 
-  if ((base==0)||(base>36)) base=10;
-
-  j=0;
+  j = 0;
   if (!i)
-  {
-    *(--tmp)='0';
-    j=1;
-  }
+    {
+      *(--tmp) = '0';
+      j = 1;
+    }
 
-  while((tmp>s)&&(i))
-  {
-    tmp--;
-    if ((*tmp=i%base+'0')>'9') *tmp+=(UpCase?'A':'a')-'9'-1;
-    i=i/base;
-    j++;
-  }
-  memmove(s,tmp,j+1);
+  while (tmp > s && i)
+    {
+      tmp--;
+      if ((*tmp = i % base + '0') > '9')
+        *tmp += (UpCase ? 'A' : 'a') - '9' - 1;
+      i = i / base;
+      j++;
+    }
+  memmove(s, tmp, j + 1);
 
   return j;
 }
