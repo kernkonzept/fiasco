@@ -253,6 +253,7 @@ Jdb_disasm::show(Address virt, Space *task, int level)
 #if defined(CONFIG_IA32) || defined(CONFIG_AMD64)
       static char const * const syntax_mode[] = { "[AT&T]", "[Intel]" };
 #endif
+      char s[16];
       Jdb::printf_statline("dis",
 #if 0
                            "<Space>=lines mode",
@@ -260,7 +261,7 @@ Jdb_disasm::show(Address virt, Space *task, int level)
                            "",
 #endif
 			   "<" L4_PTR_FMT "> %s  %-9s  %-7s",
-			   virt, Jdb::space_to_str(task),
+			   virt, Jdb::space_to_str(task, s, sizeof(s)),
 #if 0
                            line_mode[(int)show_lines],
 #else
