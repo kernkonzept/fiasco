@@ -89,7 +89,7 @@ namespace L4
   bool Uart_16550::change_mode(Transfer_mode m, Baud_rate r)
   {
     unsigned long old_lcr = _regs->read<unsigned char>(LCR);
-    if(r != BAUD_NC) {
+    if(r != BAUD_NC && _base_rate) {
       unsigned short divisor = _base_rate / r;
       _regs->write<unsigned char>(LCR, old_lcr | 0x80/*DLAB*/);
       _regs->write<unsigned char>(TRB, divisor & 0x0ff);        /* BRD_LOW  */
