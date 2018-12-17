@@ -316,6 +316,15 @@ public:
 
   static void set_tss() { set_tr(Gdt::gdt_tss); }
 
+  /// Return the CPU's microcode revision
+  static Unsigned32 ucode_revision()
+  {
+    Unsigned32 a, b, c, d;
+    Cpu::wrmsr(0, 0x8b); // IA32_BIOS_SIGN_ID
+    Cpu::cpuid(1, &a, &b, &c, &d);
+    return Cpu::rdmsr(0x8b) >> 32;
+  }
+
 private:
   void init_lbr_type();
   void init_bts_type();
