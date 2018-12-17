@@ -4,6 +4,7 @@ IMPLEMENTATION:
 
 #include "config.h"
 #include "jdb.h"
+#include "jdb_disasm.h"
 #include "jdb_kobject.h"
 #include "jdb_module.h"
 #include "jdb_screen.h"
@@ -206,6 +207,42 @@ Jdb_ptab::key_pressed(int c, unsigned long &row, unsigned long &col)
     case ' ':
       dump_raw ^= 1;
       return Redraw;
+
+    case 'u': // disassemble using address the cursor points to
+      if (Jdb_disasm::avail() && _level<=7)
+        {
+          int idx = index(row, col);
+          if (idx < 0)
+            break;
+
+          Pdir::Pte_ptr pt_entry(pte(idx), cur_pt_level);
+          if (!pt_entry.is_valid())
+            break;
+
+          unsigned next_level, entries;
+
+          if (cur_pt_level >= Pdir::Depth ||
+              !entry_is_pt_ptr(pt_entry, &entries, &next_level))
+            {
+              Address virt = disp_virt(idx);
+              char s[16];
+              Jdb::printf_statline("p", "<CR>=disassemble here",
+                                   "u[address=" L4_PTR_FMT " %s] ", virt,
+                                   Jdb::space_to_str(_task, s, sizeof(s)));
+              int c1 = Jdb_core::getchar();
+              if (c1 != KEY_RETURN && c1 != ' ' && c != KEY_RETURN_2)
+                {
+                  Jdb::printf_statline("p", 0, "u");
+                  Jdb::execute_command("u", c1);
+                  return Exit;
+                }
+
+              return Jdb_disasm::show(virt, _task, _level+1)
+                ? Redraw
+                : Exit;
+            }
+        }
+      return Handled;
 
     case KEY_RETURN:	// goto ptab/address under cursor
     case KEY_RETURN_2:
