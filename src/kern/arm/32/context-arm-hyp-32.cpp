@@ -42,6 +42,7 @@ public:
     Unsigned32 cntv_ctl;
 
     Unsigned32 vmpidr;
+    Unsigned32 vpidr;
 
     /* The user API ends here */
 
@@ -298,6 +299,7 @@ Context::load_ext_vcpu_state(Mword _to_state, Vm_state const *v)
     asm volatile ("mcr p15, 0, %0, c14, c3, 1" : : "r"(0));
 
   asm volatile ("mcr  p15, 4, %0, c0, c0, 5" : : "r" (v->vmpidr));
+  asm volatile ("mcr  p15, 4, %0, c0, c0, 0" : : "r" (v->vpidr));
 }
 
 PRIVATE static inline
@@ -383,6 +385,7 @@ Context::arm_ext_vcpu_switch_to_guest(Vcpu_state *, Vm_state *v)
   asm volatile ("mcr p15, 0, %0, c14, c3, 1" : : "r" (v->cntv_ctl));
 
   asm volatile ("mcr  p15, 4, %0, c0, c0, 5" : : "r" (v->vmpidr));
+  asm volatile ("mcr  p15, 4, %0, c0, c0, 0" : : "r" (v->vpidr));
 }
 
 PRIVATE inline

@@ -47,6 +47,9 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
   // on and mask bits that should not be known to the user
   asm ("mrc p15, 0, %0, c0, c0, 5" : "=r" (v->vmpidr));
 
+  // use the real MIDR as initial value
+  asm ("mrc p15, 0, %0, c0, c0, 0" : "=r" (v->vpidr));
+
 }
 
 extern "C" void slowtrap_entry(Trap_state *ts);
@@ -375,6 +378,9 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
   v->gic.hcr = Gic_h::Hcr(0);
   v->gic.apr = 0;
   v->vmpidr = 1UL << 31; // ARMv8: RES1
+
+  // use the real MIDR as initial value
+  asm ("mrs %0, MIDR_EL1" : "=r" (v->vpidr));
 
   if (current() == this)
     {

@@ -36,6 +36,7 @@ public:
     Regs_h host_regs;
     Gic  gic;
 
+    Unsigned32 vpidr;
     Unsigned64 vmpidr;
 
     Unsigned64 cntvoff;
@@ -249,6 +250,7 @@ Context::load_ext_vcpu_state(Mword _to_state, Vm_state const *v)
 
 
   asm volatile ("msr VMPIDR_EL2, %0" : : "r" (v->vmpidr));
+  asm volatile ("msr VPIDR_EL2, %0"  : : "r" (v->vpidr));
 
   asm volatile ("msr CNTV_CVAL_EL0, %0" : : "r" (v->cntv_cval));
   asm volatile ("msr CNTVOFF_EL2, %0"   : : "r" (v->cntvoff));
@@ -323,6 +325,7 @@ PRIVATE inline
 void
 Context::arm_ext_vcpu_switch_to_guest(Vcpu_state *, Vm_state *v)
 {
+  asm volatile ("msr VPIDR_EL2, %0"  : : "r" (v->vpidr));
   asm volatile ("msr VMPIDR_EL2, %0" : : "r" (v->vmpidr));
   asm volatile ("msr CNTKCTL_EL1, %0"   : : "r" (v->guest_regs.cntkctl));
   asm volatile ("msr CNTV_CTL_EL0, %0" : : "r" (v->cntv_ctl));
