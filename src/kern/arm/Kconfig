@@ -291,7 +291,7 @@ config ARM_PSCI_SMC
 
 config ARM_PSCI_HVC
         bool "HVC"
-        depends on HAS_CPU_VIRT
+        depends on HAS_CPU_VIRT && !CPU_VIRT
         help
           Choose this if the platform uses HVC as a conduit to
           access PSCI functions.
