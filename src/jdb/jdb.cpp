@@ -1112,6 +1112,7 @@ IMPLEMENTATION:
 
 #include "ipi.h"
 #include "logdefs.h"
+#include "task.h"
 
 char Jdb::esc_iret[]     = "\033[36;1m";
 char Jdb::esc_bt[]       = "\033[31m";
