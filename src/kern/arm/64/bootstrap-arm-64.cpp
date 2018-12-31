@@ -286,8 +286,6 @@ Bootstrap::init_paging()
       : :
       "r"(ud), "r"(kd), "r"(Page::Ttbcr_bits));
 
-
-
   return Phys_addr(0);
 }
 
@@ -382,7 +380,7 @@ Bootstrap::leave_el3()
   sctlr = Cpu::Sctlr_generic & ~Cpu::Sctlr_m;
   sctlr |= sctlr_el3 & Cpu::Sctlr_ee;
   asm volatile ("dsb sy" : : : "memory");
-  // drain the data and instrcution caches as we might switch from
+  // drain the data and instruction caches as we might switch from
   // secure to non-secure mode and only secure mode can clear
   // caches for secure memory.
   Mmu<Bootstrap::Cache_flush_area, true>::flush_cache();
@@ -431,5 +429,3 @@ Bootstrap::init_paging()
 
   return Phys_addr(0);
 }
-
-
