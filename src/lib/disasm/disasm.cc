@@ -139,7 +139,7 @@ disasm_bytes(char *buffer, unsigned len, Address addr,
 # if defined(CONFIG_MIPS_LITTLE_ENDIAN)
                               CS_MODE_LITTLE_ENDIAN
 # else
-                              CS_MODE_BIT_ENDIAN
+                              CS_MODE_BIG_ENDIAN
 # endif
                              ), &handle);
 #endif
