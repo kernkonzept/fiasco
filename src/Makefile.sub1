@@ -103,9 +103,8 @@ $(ALL_STAMPS): $(MODULES_FILES) .Modules.deps globalconfig.out \
 impl_name = $(basename $(firstword $(subst -, ,\
               $(firstword $(filter %.cpp, $(notdir $(1)))))))
 
-$(ALL_STAMPS): auto/stamp-%.ready: $(PREPROCESS)
+$(ALL_STAMPS): auto/stamp-%.ready: $(PREPROCESS) | auto
 	$(PREP_MESSAGE)
-	@mkdir -p auto
 	$(VERBOSE)$(PREPROCESS) \
 	   $(PREPROCESS_FLAGS) \
 	   $(if $(filter $(call impl_name,$^),$(ALWAYS_INLINE)),-i,) \
@@ -119,6 +118,9 @@ $(ALL_STAMPS): auto/stamp-%.ready: $(PREPROCESS)
 	  done
 	$(OK_MESSAGE)  
 	$(VERBOSE)touch $@
+
+auto:
+	@mkdir -p auto
 
 .PRECIOUS: auto/stamp-%.ready
 .PRECIOUS: %.cc %.h %_i.h

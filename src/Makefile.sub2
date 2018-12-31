@@ -88,10 +88,13 @@ ToDoItems:
 
 doc: docs/stamp-doc.ready
 
-docs/stamp-doc.ready: $(srcdir)/doxygen.conf $(foreach m, $(GENERATED_MODULES), auto/stamp-$(m).ready)
-	@mkdir -p docs
+docs/stamp-doc.ready: $(srcdir)/doxygen.conf \
+		$(foreach m, $(GENERATED_MODULES), auto/stamp-$(m).ready) | docs
 	@touch $@
 	$(VERBOSE)doxygen $(srcdir)/doxygen.conf
+
+docs:
+	@mkdir -p docs
 
 ###
 
