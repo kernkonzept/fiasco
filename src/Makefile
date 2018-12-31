@@ -200,6 +200,9 @@ kconfig_call = $(MAKE) -C $(tooldir)/kconfig O=$(objbase) \
 	       INCLUDE_SPARC=$(INCLUDE_SPARC) \
 	       fiasco_srcdir=$(srcdir)/..
 
+update_globalconfig_tags = \
+	     $(tooldir)/config-tags globalconfig.out > globalconfig.tags
+
 # save config file dependencies to detect BSP removals
 .$(KCONFIG_FILE).parts: FORCE
 	@echo '$(KCONFIG_PART_FILES)' | cmp -s - $@ || echo '$(KCONFIG_PART_FILES)' > $@
@@ -212,28 +215,34 @@ $(KCONFIG_FILE): $(KCONFIG_SRC_FILE) $(KCONFIG_PART_FILES) .$(KCONFIG_FILE).part
 globalconfig.out: $(KCONFIG_FILE)
 	+$(kconfig_call) oldconfig
 
-globalconfig.tags: globalconfig.out
-	$(tooldir)/config-tags $< >$@
-
-globalconfig.h: globalconfig.out
+globalconfig.h globalconfig.tags: globalconfig.out
 	+$(kconfig_call) syncconfig
+	+$(update_globalconfig_tags)
 
 config: $(KCONFIG_FILE)
 	+$(kconfig_call) menuconfig
 	+$(kconfig_call) syncconfig
+	+$(update_globalconfig_tags)
 
 textconfig: $(KCONFIG_FILE)
 	+$(kconfig_call) config syncconfig
+	+$(update_globalconfig_tags)
 
 menuconfig oldconfig xconfig gconfig nconfig randconfig allyesconfig allnoconfig: $(KCONFIG_FILE)
 	+$(kconfig_call) $@
 	+$(kconfig_call) syncconfig
+	+$(update_globalconfig_tags)
 
-listnewconfig olddefconfig oldnoconfig savedefconfig: $(KCONFIG_FILE)
+olddefconfig oldnoconfig: $(KCONFIG_FILE)
 	+$(kconfig_call) $@
+	+$(update_globalconfig_tags)
 
 oldaskconfig: $(KCONFIG_FILE)
 	+$(kconfig_call) config
+	+$(update_globalconfig_tags)
+
+listnewconfig savedefconfig: $(KCONFIG_FILE)
+	+$(kconfig_call) $@
 
 ifneq ($(filter clean cleanall mrproper,$(MAKECMDGOALS)),)
 
