@@ -201,7 +201,7 @@ kconfig_call = $(MAKE) -C $(tooldir)/kconfig O=$(objbase) \
 	       fiasco_srcdir=$(srcdir)/..
 
 update_globalconfig_tags = \
-	     $(tooldir)/config-tags globalconfig.out > globalconfig.tags
+	     @$(tooldir)/config-tags globalconfig.out > globalconfig.tags
 
 # save config file dependencies to detect BSP removals
 .$(KCONFIG_FILE).parts: FORCE
