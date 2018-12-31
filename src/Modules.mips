@@ -248,7 +248,7 @@ ifeq ("$(CONFIG_JDB_DISASM)","y")
                          MipsModule.c MipsInstPrinter.c \
                          MipsDisassembler.c MipsMapping.c
   CPPFLAGS            += -DCAPSTONE_HAS_MIPS
-  CFLAGS_MipsInstPrinter  = -Wno-unused-parameter
+  CFLAGS_MipsInstPrinter  = -Wno-unused-parameter -Wno-bad-function-cast
   CFLAGS_MipsMapping      = -Wno-unused-parameter
   CFLAGS_MipsDisassembler = -Wno-unused-parameter
   NOOPT               += $(patsubst %.o, %, $(OBJ_LIBDISASM))

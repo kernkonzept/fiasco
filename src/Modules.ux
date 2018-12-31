@@ -301,7 +301,8 @@ ifeq ("$(CONFIG_JDB_DISASM)","y")
   CFLAGS_X86Mapping      = -Wno-unused-parameter
   CFLAGS_X86Disassembler = -Wno-unused-parameter
   CFLAGS_X86IntelInstPrinter = -Wno-unused-parameter
-  CFLAGS_X86ATTInstPrinter   = -Wno-unused-parameter
+  CFLAGS_X86ATTInstPrinter   = -Wno-unused-parameter -Wno-sign-compare
+  CFLAGS_X86DisassemblerDecoder = -Wno-bad-function-cast
   NOOPT             += $(patsubst %.o, %, $(OBJ_LIBDISASM))
 endif
 
