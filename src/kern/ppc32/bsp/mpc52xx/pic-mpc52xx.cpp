@@ -146,8 +146,8 @@ Pic::ack(Mword irq_num)
   unsigned line = pic_line(irq_num);
   unsigned num  = pic_num(irq_num);
 
-  if((line == IRQ_MAIN && (num >= 1 || num <= 3)) ||
-     (line == IRQ_CRIT && num == 0))
+  if ((line == IRQ_MAIN && (num >= 1 && num <= 3)) ||
+      (line == IRQ_CRIT && num == 0))
     Io::set<Unsigned32>(1U << (27 - num), ext());
 
   set_stat_msb(irq_num);
