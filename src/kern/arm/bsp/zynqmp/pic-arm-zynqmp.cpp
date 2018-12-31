@@ -28,7 +28,7 @@ Pic::init()
 IMPLEMENTATION [arm && pic_gic && mp && pf_zynqmp]:
 
 PUBLIC static
-void Pic::init_ap(Cpu_number, bool resume)
+void Pic::init_ap(Cpu_number cpu, bool resume)
 {
-  gic->init_ap(resume);
+  gic->init_ap(cpu, resume);
 }

@@ -215,7 +215,7 @@ Gic::cpu_init(bool resume)
 
 PUBLIC
 void
-Gic::init_ap(bool resume)
+Gic::init_ap(Cpu_number, bool resume)
 {
   cpu_init(resume);
 }

@@ -35,10 +35,10 @@ IMPLEMENTATION [arm && pic_gic
 #include "cascade_irq.h"
 
 PUBLIC static
-void Pic::init_ap(Cpu_number, bool resume)
+void Pic::init_ap(Cpu_number cpu, bool resume)
 {
-  gic->init_ap(resume);
-  static_cast<Gic*>(Irq_mgr::mgr->chip(256).chip)->init_ap(resume);
+  gic->init_ap(cpu, resume);
+  static_cast<Gic*>(Irq_mgr::mgr->chip(256).chip)->init_ap(cpu, resume);
 }
 
 
@@ -90,9 +90,9 @@ void Pic::init()
 }
 
 PUBLIC static
-void Pic::init_ap(Cpu_number, bool resume)
+void Pic::init_ap(Cpu_number cpu, bool resume)
 {
-  gic->init_ap(resume);
+  gic->init_ap(cpu, resume);
 }
 
 //-------------------------------------------------------------------

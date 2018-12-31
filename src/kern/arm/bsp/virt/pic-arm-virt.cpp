@@ -25,7 +25,7 @@ void Pic::init()
 }
 
 PUBLIC static
-void Pic::init_ap(Cpu_number, bool resume)
+void Pic::init_ap(Cpu_number cpu, bool resume)
 {
-  gic->init_ap(resume);
+  gic->init_ap(cpu, resume);
 }
