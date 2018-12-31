@@ -271,6 +271,12 @@ config ARM_LPAE
 config HAS_ARM_PSCI
         bool
 
+config FORCE_ARM_PSCI_SMC
+        bool
+
+config FORCE_ARM_PSCI_HVC
+        bool
+
 config ARM_PSCI
         bool "Use PSCI"
         depends on HAS_ARM_PSCI
@@ -281,17 +287,19 @@ config ARM_PSCI
 choice
         prompt "PSCI call method"
         depends on ARM_PSCI
-        default ARM_PSCI_SMC
+        default ARM_PSCI_SMC if !FORCE_ARM_PSCI_HVC || CPU_VIRT
+        default ARM_PSCI_HVC if FORCE_ARM_PSCI_HVC && !CPU_VIRT
 
 config ARM_PSCI_SMC
         bool "SMC"
+        depends on !FORCE_ARM_PSCI_HVC || CPU_VIRT
         help
           Choose this if the platform uses SMC as a conduit to
           access PSCI functions.
 
 config ARM_PSCI_HVC
         bool "HVC"
-        depends on HAS_CPU_VIRT && !CPU_VIRT
+        depends on HAS_CPU_VIRT && !CPU_VIRT && !FORCE_ARM_PSCI_SMC
         help
           Choose this if the platform uses HVC as a conduit to
           access PSCI functions.
