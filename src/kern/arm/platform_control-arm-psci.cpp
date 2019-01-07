@@ -136,9 +136,9 @@ Platform_control::init(Cpu_number cpu)
       if (r.res[0] & (1UL << 31))
         printf("PSCI: CPU_Suspend not supported (%d)\n", (int)r.res[0]);
       else
-        printf("PSCI: CPU_SUSPEND format %s, %ssupports OS initiated mode\n",
+        printf("PSCI: CPU_SUSPEND format %s, %s OS-initiated mode\n",
                r.res[0] & 2 ? "extended" : "original v0.2",
-               r.res[0] & 1 ? "" : "not ");
+               r.res[0] & 1 ? "supports" : "does not support");
     }
 
   r = psci_call(Psci_migrate_info_type);
