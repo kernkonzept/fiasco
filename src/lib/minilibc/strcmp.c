@@ -1,3 +1,4 @@
+#include <string.h>
 
 int strcmp(register const char *s,register const char *t) {
 

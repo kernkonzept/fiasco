@@ -11,6 +11,8 @@ static char          gz_out_buffer[45];
 static unsigned long gz_crc = 0;
 static int           gz_magic[2] = {0x1f, 0x8b};
 static void          (*raw_write)(const char *s, size_t len);
+void*                gzip_calloc(unsigned elem, unsigned size);
+void                 gzip_free(void *ptr);
 
 /* ENC is the basic 1 character encoding function to make a char printing */
 #define	ENC(c) ((c) ? ((c) & 077) + ' ': '`')

@@ -1,5 +1,7 @@
 #include <stddef.h>
 
+void* memcpy(void* dst, const void* src, size_t count);
+
 void* memcpy(void* dst, const void* src, size_t count) {
   register char *d=dst;
   register const char *s=src;

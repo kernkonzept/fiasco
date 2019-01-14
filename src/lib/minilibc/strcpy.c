@@ -1,3 +1,4 @@
+#include <string.h>
 
 char* strcpy(register char* s,register const char* t) {
 

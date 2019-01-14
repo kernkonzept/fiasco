@@ -6,18 +6,6 @@
 #include "types.h"
 
 void __attribute__((weak))
-__assert_fail(const char *__assertion, const char *__file,
-              unsigned int __line, void *ret)
-{
-  printf("\nAssertion failed: '%s' [ret=%p]\n"
-         "  %s:%u at %p\n",
-         __assertion, ret, __file, __line,
-          __builtin_return_address(0));
-
-  exit(1);
-}
-
-void __attribute__((weak))
 panic (const char *format, ...)
 {
   va_list args;

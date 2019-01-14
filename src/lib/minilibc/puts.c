@@ -1,3 +1,4 @@
+#include <simpleio.h>
 #include <stdio.h>
 #include <string.h>
 #include "libc_backend.h"

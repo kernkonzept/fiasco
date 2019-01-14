@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <string.h>
 
 void * memset(void * dst, int s, size_t count) {
     register char * a = dst;
