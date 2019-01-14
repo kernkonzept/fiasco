@@ -134,6 +134,9 @@ bool Thread::handle_sigma0_page_fault(Address pfa)
 
 
 extern "C" {
+  Mword pagefault_entry(const Mword pfa, Mword error_code,
+                        const Mword pc, Return_frame *ret_frame);
+  void slowtrap_entry(Trap_state *ts);
 
   /**
    * The low-level page fault handler called from entry.S.  We're invoked with
