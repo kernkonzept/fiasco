@@ -1,11 +1,4 @@
-IMPLEMENTATION [pic_gic && mp]:
-
-#include "cpu.h"
-#include "pic.h"
-#include "gic.h"
-#include "processor.h"
-
-IMPLEMENTATION [pic_gic && mp && arm_em_tz]: // ---------------------------
+INTERFACE [pic_gic && mp && arm_em_tz]: // --------------------------------
 
 EXTENSION class Ipi
 {
@@ -13,7 +6,8 @@ public:
   enum { Ipi_start = 8 };
 };
 
-IMPLEMENTATION [pic_gic && mp && !arm_em_tz]: // --------------------------
+// ---------------------------------------------------------------------------
+INTERFACE [pic_gic && mp && !arm_em_tz]:
 
 EXTENSION class Ipi
 {
@@ -21,7 +15,10 @@ public:
   enum { Ipi_start = 1 };
 };
 
-IMPLEMENTATION [pic_gic && mp]: // ----------------------------------------
+// ---------------------------------------------------------------------------
+INTERFACE [pic_gic && mp]:
+
+#include "gic.h"
 
 EXTENSION class Ipi
 {
@@ -31,10 +28,17 @@ public:
     Global_request = Ipi_start, Request, Debug, Timer,
     Ipi_end
   };
+
 private:
-  Unsigned32 _sgi_target;
+  Gic::Sgi_target _sgi_target;
 };
 
+// ---------------------------------------------------------------------------
+IMPLEMENTATION [pic_gic && mp]:
+
+#include "cpu.h"
+#include "pic.h"
+#include "processor.h"
 
 PUBLIC inline
 Ipi::Ipi() : _sgi_target(~0)

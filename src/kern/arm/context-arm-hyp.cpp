@@ -75,11 +75,8 @@ Context::arch_load_vcpu_kern_state(Vcpu_state *vcpu, bool do_load)
               v->gic.misr = Gic_h::gic->misr();
               v->gic.eisr = Gic_h::gic->eisr(0);
               v->gic.elsr = Gic_h::gic->elsr(0);
-
-              for (unsigned i = 0; i < Vm_state::Gic::N_lregs; ++i)
-                v->gic.lr[i] = Gic_h::gic->lr(i);
-
-              v->gic.apr = Gic_h::gic->apr();
+              Gic_h::gic->save_lrs(v->gic.lr, Vm_state::Gic::N_lregs);
+              Gic_h::gic->save_aprs(&v->gic.aprs);
               Gic_h::gic->hcr(Gic_h::Hcr(0));
             }
         }
@@ -123,9 +120,8 @@ Context::arch_load_vcpu_user_state(Vcpu_state *vcpu, bool do_load)
           if (v->gic.hcr.en())
             {
               Gic_h::gic->vmcr(v->gic.vmcr);
-              Gic_h::gic->apr(v->gic.apr);
-              for (unsigned i = 0; i < Vm_state::Gic::N_lregs; ++i)
-                Gic_h::gic->lr(i, v->gic.lr[i]);
+              Gic_h::gic->load_aprs(&v->gic.aprs);
+              Gic_h::gic->load_lrs(v->gic.lr, Vm_state::Gic::N_lregs);
             }
           Gic_h::gic->hcr(v->gic.hcr);
         }
@@ -172,11 +168,8 @@ Context::switch_vm_state(Context *t)
           v->gic.misr = Gic_h::gic->misr();
           v->gic.eisr = Gic_h::gic->eisr(0);
           v->gic.elsr = Gic_h::gic->elsr(0);
-
-          for (unsigned i = 0; i < Vm_state::Gic::N_lregs; ++i)
-            v->gic.lr[i] = Gic_h::gic->lr(i);
-
-          v->gic.apr = Gic_h::gic->apr();
+          Gic_h::gic->save_lrs(v->gic.lr, Vm_state::Gic::N_lregs);
+          Gic_h::gic->save_aprs(&v->gic.aprs);
         }
     }
 
@@ -188,9 +181,8 @@ Context::switch_vm_state(Context *t)
       if ((_to_state & Thread_vcpu_user) && v->gic.hcr.en())
         {
           Gic_h::gic->vmcr(v->gic.vmcr);
-          Gic_h::gic->apr(v->gic.apr);
-          for (unsigned i = 0; i < Vm_state::Gic::N_lregs; ++i)
-            Gic_h::gic->lr(i, v->gic.lr[i]);
+          Gic_h::gic->load_aprs(&v->gic.aprs);
+          Gic_h::gic->load_lrs(v->gic.lr, Vm_state::Gic::N_lregs);
           Gic_h::gic->hcr(v->gic.hcr);
         }
       else if (vgic)

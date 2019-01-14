@@ -1,7 +1,7 @@
 # PF: REALVIEW
 # PFDESCR: ARM RealView Platform
 # PFDEPENDS: ARM
-# PFSELECT: ARM_GIC
+# PFSELECT: ARM_GIC HAVE_ARM_GICV2
 
 choice
 	prompt "Realview Platform"

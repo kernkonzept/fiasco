@@ -617,10 +617,10 @@ class Arm_ipis
 public:
   Arm_ipis()
   {
-    check(Irq_mgr::mgr->alloc(&remote_rq_ipi, Ipi::Request));
-    check(Irq_mgr::mgr->alloc(&glbl_remote_rq_ipi, Ipi::Global_request));
-    check(Irq_mgr::mgr->alloc(&debug_ipi, Ipi::Debug));
-    check(Irq_mgr::mgr->alloc(&timer_ipi, Ipi::Timer));
+    check(Irq_mgr::mgr->alloc(&remote_rq_ipi, Ipi::Request, false));
+    check(Irq_mgr::mgr->alloc(&glbl_remote_rq_ipi, Ipi::Global_request, false));
+    check(Irq_mgr::mgr->alloc(&debug_ipi, Ipi::Debug, false));
+    check(Irq_mgr::mgr->alloc(&timer_ipi, Ipi::Timer, false));
   }
 
   Thread_remote_rq_irq remote_rq_ipi;

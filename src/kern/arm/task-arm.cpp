@@ -8,7 +8,7 @@ Task::invoke_arch(L4_msg_tag &, Utcb *)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && cpu_virt]:
+IMPLEMENTATION [arm && cpu_virt && !arm_gicv3]:
 
 #include "mem_layout.h"
 
@@ -48,6 +48,19 @@ Task::map_gicc_page(L4_msg_tag tag, Utcb *utcb)
 
   return commit_result(0);
 }
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && cpu_virt && arm_gicv3]:
+
+PRIVATE
+L4_msg_tag
+Task::map_gicc_page(L4_msg_tag, Utcb *)
+{
+  return commit_result(-L4_err::ENosys);
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && cpu_virt]:
 
 PRIVATE inline
 bool

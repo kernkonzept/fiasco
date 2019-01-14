@@ -1,8 +1,8 @@
 INTERFACE [arm && pic_gic]:
 
+#include "cpu.h"
 #include "kmem.h"
 #include "irq_chip_generic.h"
-#include "mmio_register_block.h"
 #include "gic_cpu.h"
 #include "gic_dist.h"
 
@@ -10,6 +10,7 @@ INTERFACE [arm && pic_gic]:
 class Gic : public Irq_chip_gen
 {
 private:
+  friend class Jdb;
   Gic_cpu _cpu;
   Gic_dist _dist;
 
@@ -20,7 +21,7 @@ public:
   };
 };
 
-//-------------------------------------------------------------------
+// ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pic_gic]:
 
 #include <cassert>
@@ -38,48 +39,37 @@ unsigned
 Gic::hw_nr_irqs()
 { return _dist.hw_nr_irqs(); }
 
-PUBLIC inline
-Unsigned32 Gic::pcpu_to_sgi(Cpu_phys_id cpu)
-{ return Gic_dist::pcpu_to_sgi(cpu); }
-
-PUBLIC inline
-void Gic::softint_cpu(unsigned callmap, unsigned m)
-{ _dist.softint_cpu(callmap, m); }
-
-PUBLIC inline
-void Gic::softint_bcast(unsigned m)
-{ _dist.softint_bcast(m); }
-
-PRIVATE
+PUBLIC
 void
-Gic::cpu_init(bool resume)
+Gic::init_ap(Cpu_number cpu, bool resume)
 {
   _cpu.disable();
 
   if (!resume)
-    _dist.cpu_init();
+    cpu_local_init(cpu);
 
   _cpu.enable();
-
-  // Ensure BSPs have provided a mapping for the CPUTargetList
-  assert(pcpu_to_sgi(Proc::cpu_id()) < (1u << 8));
-}
-
-PUBLIC
-void
-Gic::init_ap(Cpu_number, bool resume)
-{
-  cpu_init(resume);
 }
 
 PUBLIC
 unsigned
 Gic::init(bool primary_gic, int nr_irqs_override = -1)
 {
+  if (!primary_gic)
+    {
+      cpu_local_init(Cpu_number::boot_cpu());
+      return 0;
+    }
+
   _cpu.disable();
-  unsigned num = _dist.init(primary_gic, Cpu_prio_val,
+  unsigned num = _dist.init(Cpu_prio_val,
                             nr_irqs_override);
+
+  if (!Gic_dist::Config_mxc_tzic)
+    cpu_local_init(Cpu_number::boot_cpu());
+
   _cpu.enable();
+
   return num;
 }
 
@@ -143,7 +133,6 @@ Gic::ack(Mword pin) override
 {
   acknowledge_locked(pin);
 }
-
 
 PUBLIC
 void
@@ -248,7 +237,14 @@ IMPLEMENTATION [arm && mp && pic_gic]:
 
 #include "cpu.h"
 
-PUBLIC inline NEEDS["io.h"]
+PUBLIC inline NEEDS["cpu.h"]
+void
+Gic::set_cpu(Mword pin, Cpu_number cpu) override
+{
+  _dist.set_cpu(pin, Cpu::cpus.cpu(cpu).phys_id());
+}
+
+PUBLIC inline
 Unsigned32 Gic::pending()
 {
   Unsigned32 ack = _cpu.iar();
@@ -260,40 +256,8 @@ Unsigned32 Gic::pending()
   return ack & 0x3ff;
 }
 
-PUBLIC inline NEEDS["cpu.h"]
-void
-Gic::set_cpu(Mword pin, Cpu_number cpu) override
-{
-  _dist.set_cpu(pin, Cpu::cpus.cpu(cpu).phys_id());
-}
-
-//---------------------------------------------------------------------------
+// ------------------------------------------------------------------------
 IMPLEMENTATION [debug]:
-
-PUBLIC
-void
-Gic::irq_prio(unsigned irq, unsigned prio)
-{
-  _dist.irq_prio(irq, prio);
-}
-
-PUBLIC
-unsigned
-Gic::irq_prio(unsigned irq)
-{
-  return _dist.irq_prio(irq);
-}
-
-PUBLIC
-unsigned
-Gic::pmr()
-{ return _cpu.pmr(); }
-
-PUBLIC
-void
-Gic::pmr(unsigned prio)
-{ return _cpu.pmr(prio); }
-
 PUBLIC
 char const *
 Gic::chip_type() const override

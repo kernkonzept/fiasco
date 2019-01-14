@@ -21,22 +21,27 @@ public:
     GICD_ICENABLER    = 0x180,
     GICD_ISPENDR      = 0x200,
     GICD_ICPENDR      = 0x280,
+    GICD_ISACTIVER    = 0x300,
+    GICD_ICACTIVER    = 0x380,
     GICD_IPRIORITYR   = 0x400,
     GICD_ITARGETSR    = 0x800,
     GICD_ICFGR        = 0xc00,
     GICD_SGIR         = 0xf00,
 
+    GICD_IROUTER      = 0x6100,
+
     MXC_TZIC_PRIOMASK = 0x00c,
     MXC_TZIC_SYNCCTRL = 0x010,
     MXC_TZIC_PND      = 0xd00,
 
-    GICD_CTRL_ENABLE         = 1,
+    GICD_CTRL_ENABLE         = 0x01,
+    GICD_CTRL_ENGR1          = 0x01,
+    GICD_CTRL_ENGR1A         = 0x02,
+    GICD_CTRL_ARE_NS         = 0x10,
 
     MXC_TZIC_CTRL_NSEN       = 1 << 16,
     MXC_TZIC_CTRL_NSENMASK   = 1 << 31,
   };
-
-  static Unsigned32 pcpu_to_sgi(Cpu_phys_id);
 };
 
 // ------------------------------------------------------------------------
@@ -81,6 +86,77 @@ INTERFACE [arm && !arm_em_tz]:
 
 EXTENSION class Gic_dist { enum { Config_tz_sec = 0 }; };
 
+// ------------------------------------------------------------------------
+IMPLEMENTATION [!arm_gicv3]:
+
+EXTENSION class Gic_dist
+{
+public:
+  static Unsigned32 pcpu_to_sgi(Cpu_phys_id);
+};
+
+IMPLEMENT_DEFAULT inline
+Unsigned32
+Gic_dist::pcpu_to_sgi(Cpu_phys_id cpu)
+{ return 1U << cxx::int_value<Cpu_phys_id>(cpu); }
+
+PUBLIC inline NEEDS[Gic_dist::pcpu_to_sgi]
+void
+Gic_dist::set_cpu(Mword pin, Cpu_phys_id cpu)
+{
+  _dist.write<Unsigned8>(pcpu_to_sgi(cpu), GICD_ITARGETSR + pin);
+}
+
+PRIVATE inline
+void
+Gic_dist::igroup_init(unsigned num)
+{
+  Mword v = 0;
+  if (Config_tz_sec || Config_mxc_tzic)
+    v = 0xffffffff;
+
+  for (unsigned i = 32; i < num; i += 32)
+    _dist.write<Unsigned32>(v, GICD_IGROUPR + i / 8);
+}
+
+PUBLIC inline
+void
+Gic_dist::enable()
+{
+  Unsigned32 dist_enable = GICD_CTRL_ENABLE;
+  if (Config_mxc_tzic && !Config_tz_sec)
+    dist_enable |= MXC_TZIC_CTRL_NSEN | MXC_TZIC_CTRL_NSENMASK;
+
+  _dist.write<Unsigned32>(dist_enable, GICD_CTRL);
+}
+
+//-------------------------------------------------------------------
+IMPLEMENTATION [arm_gicv3]:
+
+PUBLIC inline
+void
+Gic_dist::set_cpu(Mword pin, Cpu_phys_id cpu)
+{
+  Unsigned64 v = Cpu_phys_id::val(cpu);
+  _dist.write<Unsigned64>(v & 0xff00ffffff, GICD_IROUTER + 8 * pin);
+}
+
+PRIVATE inline
+void
+Gic_dist::igroup_init(unsigned num)
+{
+  for (unsigned i = 32; i < num; i += 32)
+    _dist.write<Unsigned32>(~0u, GICD_IGROUPR + i / 8);
+}
+
+PUBLIC inline
+void
+Gic_dist::enable()
+{
+  Unsigned32 dist_enable = GICD_CTRL_ENGR1 | GICD_CTRL_ENGR1A | GICD_CTRL_ARE_NS;
+  _dist.write<Unsigned32>(dist_enable, GICD_CTRL);
+}
+
 //-------------------------------------------------------------------
 IMPLEMENTATION:
 
@@ -103,11 +179,6 @@ Gic_dist::has_sec_ext()
   return _dist.read<Unsigned32>(GICD_TYPER) & (1 << 10);
 }
 
-IMPLEMENT_DEFAULT inline
-Unsigned32
-Gic_dist::pcpu_to_sgi(Cpu_phys_id cpu)
-{ return 1U << cxx::int_value<Cpu_phys_id>(cpu); }
-
 PUBLIC inline
 void
 Gic_dist::softint_cpu(unsigned callmap, unsigned m)
@@ -125,17 +196,6 @@ void
 Gic_dist::disable()
 {
   _dist.write<Unsigned32>(0, GICD_CTRL);
-}
-
-PUBLIC inline
-void
-Gic_dist::enable()
-{
-  Unsigned32 dist_enable = GICD_CTRL_ENABLE;
-  if (Config_mxc_tzic && !Config_tz_sec)
-    dist_enable |= MXC_TZIC_CTRL_NSEN | MXC_TZIC_CTRL_NSENMASK;
-
-  _dist.write<Unsigned32>(dist_enable, GICD_CTRL);
 }
 
 PUBLIC inline
@@ -226,7 +286,6 @@ Gic_dist::set_pending_irq(unsigned idx, Unsigned32 val)
     }
 }
 
-
 PUBLIC inline
 void
 Gic_dist::cpu_init()
@@ -286,24 +345,11 @@ void
 Gic_dist::enable_irq(unsigned irq)
 { _dist.write<Unsigned32>(1 << (irq % 32), GICD_ISENABLER + (irq / 32) * 4); }
 
-PUBLIC inline NEEDS[Gic_dist::pcpu_to_sgi]
-void
-Gic_dist::set_cpu(Mword pin, Cpu_phys_id cpu)
-{
-  _dist.write<Unsigned8>(pcpu_to_sgi(cpu), GICD_ITARGETSR + pin);
-}
-
 PUBLIC
 unsigned
-Gic_dist::init(bool primary_gic, unsigned cpu_prio, int nr_irqs_override = -1)
+Gic_dist::init(unsigned cpu_prio, int nr_irqs_override = -1)
 {
   _lock.init();
-
-  if (!primary_gic)
-    {
-      cpu_init();
-      return 0;
-    }
 
   disable();
 
@@ -317,13 +363,7 @@ Gic_dist::init(bool primary_gic, unsigned cpu_prio, int nr_irqs_override = -1)
 
   init_prio(32, num);
   init_regs(32, num);
-
-  Mword v = 0;
-  if (Config_tz_sec || Config_mxc_tzic)
-    v = 0xffffffff;
-
-  for (unsigned i = 32; i < num; i += 32)
-    _dist.write<Unsigned32>(v, GICD_IGROUPR + i / 8);
+  igroup_init(num);
 
   for (unsigned i = 0; i < num; ++i)
     set_cpu(i, Proc::cpu_id());
@@ -335,8 +375,6 @@ Gic_dist::init(bool primary_gic, unsigned cpu_prio, int nr_irqs_override = -1)
       _dist.write<Unsigned32>(0x0, MXC_TZIC_SYNCCTRL);
       _dist.write<Unsigned32>(cpu_prio, MXC_TZIC_PRIOMASK);
     }
-  else
-    cpu_init();
 
   return num;
 }

@@ -122,7 +122,7 @@ Bootstrap::map_ram(Kpdir *kd, Bs_alloc &alloc)
 }
 
 
-IMPLEMENTATION [arm && pic_gic]:
+IMPLEMENTATION [arm && pic_gic && !arm_gicv3]:
 
 PUBLIC static void
 Bootstrap::config_gic_ns()
@@ -139,7 +139,7 @@ Bootstrap::config_gic_ns()
   Mmu<Bootstrap::Cache_flush_area, true>::flush_cache();
 }
 
-IMPLEMENTATION [arm && !pic_gic]:
+IMPLEMENTATION [arm && (!pic_gic || arm_gicv3)]:
 
 PUBLIC static inline void
 Bootstrap::config_gic_ns() {}

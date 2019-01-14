@@ -29,17 +29,17 @@ Timer_tick::setup(Cpu_number cpu)
 
 IMPLEMENT
 void
-Timer_tick::enable(Cpu_number)
+Timer_tick::enable(Cpu_number cpu)
 {
-  _glbl_timer->chip()->unmask(_glbl_timer->pin());
+  _glbl_timer->chip()->unmask_percpu(cpu, _glbl_timer->pin());
   Timer::enable();
 }
 
 IMPLEMENT
 void
-Timer_tick::disable(Cpu_number)
+Timer_tick::disable(Cpu_number cpu)
 {
-  _glbl_timer->chip()->mask(_glbl_timer->pin());
+  _glbl_timer->chip()->mask_percpu(cpu, _glbl_timer->pin());
 }
 
 PUBLIC inline NEEDS["timer.h"]

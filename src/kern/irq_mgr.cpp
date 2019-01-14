@@ -97,15 +97,16 @@ IMPLEMENT inline Irq_mgr::~Irq_mgr() {}
 
 PUBLIC inline
 bool
-Irq_mgr::alloc(Irq_base *irq, Mword global_irq)
+Irq_mgr::alloc(Irq_base *irq, Mword global_irq, bool init = true)
 {
   Irq i = chip(global_irq);
   if (!i.chip)
     return false;
 
-  if (i.chip->alloc(irq, i.pin))
+  if (i.chip->alloc(irq, i.pin, init))
     {
-      i.chip->set_cpu(i.pin, Cpu_number::boot_cpu());
+      if (init)
+        i.chip->set_cpu(i.pin, Cpu_number::boot_cpu());
       return true;
     }
   return false;

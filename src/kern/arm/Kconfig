@@ -94,6 +94,12 @@ config ARM_V8
 config ARM_GIC
 	bool
 
+config HAVE_ARM_GICV2
+        bool
+
+config HAVE_ARM_GICV3
+        bool
+
 # SECTION: CPU
 
 choice
@@ -318,6 +324,24 @@ config ARM_PSCI_HVC
         help
           Choose this if the platform uses HVC as a conduit to
           access PSCI functions.
+
+endchoice
+
+choice
+        prompt "ARM GIC version"
+        depends on ARM_GIC
+
+config ARM_GICV2
+        bool "Use ARM GICv2 interface"
+        depends on HAVE_ARM_GICV2
+        help
+          Use GIC version 2 as interrupt controller.
+
+config ARM_GICV3
+        bool "Use ARM GICv3 interface"
+        depends on HAVE_ARM_GICV3
+        help
+          Use GIC version 3 interface.
 
 endchoice
 

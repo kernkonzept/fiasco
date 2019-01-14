@@ -80,6 +80,11 @@ public:
     // and enabling IRQs must use 'ehb'
   }
 
+  void mask_percpu(Cpu_number, Mword pin) override
+  {
+    mask(pin);
+  }
+
   void ack(Mword) override
   {}
 
@@ -108,6 +113,11 @@ public:
     Cp0_status::write(s);
     // NOTE: we do not use 'ehb' here as this is done with IRQs disabled
     // and enabling IRQs must use 'ehb'
+  }
+
+  void unmask_percpu(Cpu_number, Mword pin) override
+  {
+    unmask(pin);
   }
 
 private:

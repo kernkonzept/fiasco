@@ -60,7 +60,11 @@ public:
   };
 
   virtual void mask(Mword pin) = 0;
+  virtual void mask_percpu(Cpu_number, Mword pin)
+  { mask(pin); }
   virtual void unmask(Mword pin) = 0;
+  virtual void unmask_percpu(Cpu_number, Mword pin)
+  { unmask(pin); }
   virtual void ack(Mword pin) = 0;
   virtual void mask_and_ack(Mword pin) = 0;
 

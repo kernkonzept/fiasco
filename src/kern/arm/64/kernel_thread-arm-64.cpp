@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && mp && pic_gic]:
+IMPLEMENTATION [arm && mp && pic_gic && !arm_gicv3]:
 
 PRIVATE static inline NOEXPORT
 void
@@ -6,6 +6,16 @@ Kernel_thread::boot_app_cpu_gic(Mp_boot_info volatile *inf)
 {
   inf->gic_dist_base = Mem_layout::Gic_dist_phys_base;
   inf->gic_cpu_base = Mem_layout::Gic_cpu_phys_base;
+}
+
+IMPLEMENTATION [arm && mp && pic_gic && arm_gicv3]:
+
+PRIVATE static inline NOEXPORT
+void
+Kernel_thread::boot_app_cpu_gic(Mp_boot_info volatile *inf)
+{
+  inf->gic_dist_base = Mem_layout::Gic_redist_phys_base;
+  inf->gic_cpu_base = 0;
 }
 
 IMPLEMENTATION [arm && mp && !pic_gic]:
@@ -33,7 +43,7 @@ EXTENSION class Kernel_thread
     Mword mair;
     Mword ttbr_kern;
     Mword ttbr_usr;
-    Mword gic_dist_base;
+    Mword gic_dist_base; // only needed for IGROUPR0
     Mword gic_cpu_base;
   };
 };

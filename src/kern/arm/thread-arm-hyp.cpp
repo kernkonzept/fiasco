@@ -42,7 +42,7 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
 
   v->gic.hcr = Gic_h::Hcr(0);
   v->gic.vtr = Gic_h::gic->vtr();
-  v->gic.apr = 0;
+  v->gic.aprs.clear();
 
   if (current() == this)
     {
@@ -218,11 +218,11 @@ public:
     set_hit(handler_wrapper<Arm_ppi_virt>);
   }
 
-  void alloc()
+  void alloc(Cpu_number cpu)
   {
     printf("Allocate ARM PPI %d to virtual %d\n", _irq, _virq);
-    check (Irq_mgr::mgr->alloc(this, _irq));
-    chip()->unmask(pin());
+    check (Irq_mgr::mgr->alloc(this, _irq, false));
+    chip()->unmask_percpu(cpu, pin());
   }
 
 private:
@@ -249,11 +249,11 @@ public:
     set_hit(handler_wrapper<Arm_vtimer_ppi>);
   }
 
-  void alloc()
+  void alloc(Cpu_number cpu)
   {
     printf("Allocate ARM PPI %d to virtual %d\n", _irq, 1);
-    check (Irq_mgr::mgr->alloc(this, _irq));
-    chip()->unmask(pin());
+    check (Irq_mgr::mgr->alloc(this, _irq, false));
+    chip()->unmask_percpu(cpu, pin());
   }
 
 private:
@@ -277,13 +277,18 @@ static Arm_vtimer_ppi __vtimer_irq(27); // virtual timer
 namespace {
 struct Local_irq_init
 {
-  Local_irq_init()
+  explicit Local_irq_init(Cpu_number cpu)
   {
-    __vgic_irq.alloc();
-    __vtimer_irq.alloc();
+    if (cpu >= Cpu::invalid())
+      return;
+
+    __vgic_irq.alloc(cpu);
+    __vtimer_irq.alloc(cpu);
   }
 };
-DEFINE_PER_CPU_LATE static Per_cpu<Local_irq_init> local_irqs;
+
+DEFINE_PER_CPU_LATE static Per_cpu<Local_irq_init>
+  local_irqs(Per_cpu_data::Cpu_num);
 }
 
 //-----------------------------------------------------------------------------
@@ -395,7 +400,7 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
 
   v->gic.hcr = Gic_h::Hcr(0);
   v->gic.vtr = Gic_h::gic->vtr();
-  v->gic.apr = 0;
+  v->gic.aprs.clear();
   v->vmpidr = 1UL << 31; // ARMv8: RES1
 
   // use the real MIDR as initial value

@@ -31,6 +31,7 @@ config PF_OMAP4_PANDABOARD
 	select CAN_ARM_CPU_CORTEX_A9
 	select CAN_ARM_CACHE_L2CXX0
 	select ARM_GIC
+	select HAVE_ARM_GICV2
 	help
 	  Choose for Pandaboard.
 
@@ -40,6 +41,7 @@ config PF_OMAP5_5432EVM
 	select HAS_CPU_VIRT
 	select DEFAULT_ARM_EM_NS if CPU_VIRT
 	select ARM_GIC
+	select HAVE_ARM_GICV2
         help
           Choose for OMAP5432EVM.
 
