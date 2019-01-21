@@ -299,7 +299,7 @@ ifeq ("$(CONFIG_JDB_DISASM)","y")
     CPPFLAGS          += -DCAPSTONE_HAS_ARM
     CFLAGS_ARMDisassembler = -Wno-unused-parameter
     CFLAGS_ARMMapping      = -Wno-unused-parameter
-    CFLAGS_ARMInstPrinter  = -Wno-bad-function-cast
+    CFLAGS_ARMInstPrinter  = -Wno-bad-function-cast -Wno-unused-parameter
   else
     VPATH             += lib/disasm/capstone/arch/AArch64
     CSRC_LIBDISASM    += AArch64Module.c AArch64InstPrinter.c \
@@ -308,7 +308,7 @@ ifeq ("$(CONFIG_JDB_DISASM)","y")
     CPPFLAGS          += -DCAPSTONE_HAS_ARM64
     CFLAGS_AArch64Mapping      = -Wno-unused-parameter
     CFLAGS_AArch64Disassembler = -Wno-unused-parameter
-    CFLAGS_AArch64InstPrinter  = -Wno-bad-function-cast
+    CFLAGS_AArch64InstPrinter  = -Wno-bad-function-cast -Wno-unused-parameter
   endif
   NOOPT               += $(patsubst %.o, %, $(OBJ_LIBDISASM))
 endif

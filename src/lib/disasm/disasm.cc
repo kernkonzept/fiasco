@@ -5,7 +5,7 @@
 
 #include "config.h"
 #include "simple_malloc.h"
-#include "capstone.h"
+#include <capstone/capstone.h>
 #include "disasm.h"
 
 #if 0

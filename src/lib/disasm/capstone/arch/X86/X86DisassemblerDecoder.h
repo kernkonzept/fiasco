@@ -14,7 +14,7 @@
  *===----------------------------------------------------------------------===*/
 
 /* Capstone Disassembly Engine */
-/* By Nguyen Anh Quynh <aquynh@gmail.com>, 2013-2014 */
+/* By Nguyen Anh Quynh <aquynh@gmail.com>, 2013-2015 */
 
 #ifndef CS_X86_DISASSEMBLERDECODER_H
 #define CS_X86_DISASSEMBLERDECODER_H
@@ -23,11 +23,6 @@
 #include <libkern/libkern.h>
 #else
 #include <stdio.h>
-#endif
-#if 0
-#if !defined(_MSC_VER) || !defined(_KERNEL_MODE)
-#include <stdint.h>
-#endif
 #endif
 
 #include "X86DisassemblerDecoderCommon.h"
@@ -357,7 +352,15 @@
   ENTRY(DR4)        \
   ENTRY(DR5)        \
   ENTRY(DR6)        \
-  ENTRY(DR7)
+  ENTRY(DR7)        \
+  ENTRY(DR8)        \
+  ENTRY(DR9)        \
+  ENTRY(DR10)        \
+  ENTRY(DR11)        \
+  ENTRY(DR12)        \
+  ENTRY(DR13)        \
+  ENTRY(DR14)        \
+  ENTRY(DR15)
 
 #define REGS_CONTROL  \
   ENTRY(CR0)          \
@@ -546,7 +549,11 @@ typedef void (*dlog_t)(void* arg, const char *log);
 /// The specification for how to extract and interpret a full instruction and
 /// its operands.
 struct InstructionSpecifier {
+#ifdef CAPSTONE_X86_REDUCE
+	uint8_t operands;
+#else
 	uint16_t operands;
+#endif
 };
 
 /*
@@ -591,7 +598,7 @@ typedef struct InternalInstruction {
   uint8_t                       sib;
   /* The displacement, used for memory operands */
   bool                          consumedDisplacement;
-  int32_t                       displacement;
+  int64_t                       displacement;
   /* The value of the two-byte escape prefix (usually 0x0f) */
   uint8_t twoByteEscape;
   /* The value of the three-byte escape prefix (usually 0x38 or 0x3a) */
@@ -601,8 +608,8 @@ typedef struct InternalInstruction {
   uint8_t                       sibScale;
   SIBBase                       sibBase;
   uint8_t                       numImmediatesConsumed;
-  /* true if the prefix byte, 0xf2 or 0xf3 is xacquire or xrelease */
-  bool xAcquireRelease;
+  /* 0xf2 or 0xf3 is xacquire or xrelease */
+  uint8_t xAcquireRelease;
 
   /* The value of the vector extension prefix(EVEX/VEX/XOP), if present */
   uint8_t vectorExtensionPrefix[4];
@@ -611,6 +618,7 @@ typedef struct InternalInstruction {
      needed to find relocation entries for adding symbolic operands */
   uint8_t displacementOffset;
   uint8_t immediateOffset;
+  uint8_t modRMOffset;
 
   // end-of-zero-members
 

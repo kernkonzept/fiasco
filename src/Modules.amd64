@@ -348,9 +348,9 @@ ifeq ("$(CONFIG_JDB_DISASM)","y")
   CSRC_LIBDISASM    += X86Module.c X86Disassembler.c X86DisassemblerDecoder.c \
                        X86Mapping.c X86IntelInstPrinter.c X86ATTInstPrinter.c
   CPPFLAGS          += -DCAPSTONE_HAS_X86
-  CFLAGS_X86Mapping      = -Wno-unused-parameter
+  CFLAGS_X86Mapping      = -Wno-unused-parameter -Wno-missing-field-initializers
   CFLAGS_X86Disassembler = -Wno-unused-parameter
-  CFLAGS_X86IntelInstPrinter = -Wno-unused-parameter
+  CFLAGS_X86IntelInstPrinter = -Wno-unused-parameter -Wno-sign-compare
   CFLAGS_X86ATTInstPrinter   = -Wno-unused-parameter -Wno-sign-compare
   CFLAGS_X86DisassemblerDecoder = -Wno-bad-function-cast
   NOOPT             += $(patsubst %.o, %, $(OBJ_LIBDISASM))
