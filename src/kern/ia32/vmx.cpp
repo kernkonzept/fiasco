@@ -120,6 +120,7 @@ public:
     PRB2_enable_ept      = 1,
     PRB2_enable_vpid     = 5,
     PRB2_unrestricted    = 7,
+    PRB2_enable_pml      = 17,
     PRB2_enable_xsaves   = 20,
   };
 
@@ -642,6 +643,9 @@ Vmx_info::init()
       // we disable VPID so far, need to handle virtualize it in Fiasco,
       // as done for AMDs ASIDs
       procbased_ctls2.enforce(Vmx_info::PRB2_enable_vpid, false);
+
+      // we do not (yet) support Page Modification Logging (PML)
+      procbased_ctls2.enforce(Vmx_info::PRB2_enable_pml, false);
 
       // EPT only in conjunction with unrestricted guest !!!
       if (procbased_ctls2.allowed(Vmx_info::PRB2_enable_ept))
