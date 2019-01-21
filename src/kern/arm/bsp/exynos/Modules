@@ -12,7 +12,7 @@ PREPROCESS_PARTS-$(CONFIG_PF_EXYNOS_EXTGIC) += exynos_extgic irregular_gic
 PREPROCESS_PARTS-$(CONFIG_PF_EXYNOS_UART_NATIVE) += exynos_uart_native
 PREPROCESS_PARTS += $(if $(filter-out "",$(CONFIG_PF_EXYNOS_PKG_IDS)),pkg_id_file)
 
-INTERFACES_KERNEL       += gic platform smc timer_mct
+INTERFACES_KERNEL       += platform smc timer_mct
 VPATH                   += kern/arm/bsp/s3c
 RAM_PHYS_BASE           := $(if $(CONFIG_ARM_EM_TZ),0xb0000000,0x40000000)
 MPCORE_PHYS_BASE        := 0x10500000

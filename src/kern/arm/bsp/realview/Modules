@@ -27,7 +27,7 @@ else
   endif
 endif
 
-INTERFACES_KERNEL     += gic platform board_check-arm-realview
+INTERFACES_KERNEL     += platform board_check-arm-realview
 
 timer_tick_IMPL       += timer_tick-single-vector
 uart_IMPL             += uart-arm-realview

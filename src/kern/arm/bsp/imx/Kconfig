@@ -31,6 +31,7 @@ config PF_IMX_51
 	bool "i.MX51"
 	depends on PF_IMX
 	select CAN_ARM_CPU_CORTEX_A8
+	select ARM_GIC
 	help
 	  Choose for i.MX51.
 
@@ -47,6 +48,7 @@ config PF_IMX_6
         depends on PF_IMX
         select CAN_ARM_CPU_CORTEX_A9
 	select CAN_ARM_CACHE_L2CXX0
+	select ARM_GIC
         help
           Choose for i.MX6 platform.
 
@@ -55,6 +57,7 @@ config PF_IMX_6UL
         depends on PF_IMX
         select CAN_ARM_CPU_CORTEX_A7
         select HAS_CPU_VIRT
+	select ARM_GIC
         help
           Choose for i.MX6UL platform.
 
@@ -64,6 +67,7 @@ config PF_IMX_7
         select CAN_ARM_CPU_CORTEX_A7
         select HAS_CPU_VIRT
         select HAS_ARM_PSCI
+	select ARM_GIC
         help
           Choose for i.MX7 platform.
 

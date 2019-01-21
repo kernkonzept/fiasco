@@ -2,7 +2,6 @@
 
 PREPROCESS_PARTS        += generic_tickless_idle pic_gic libuart
 PREPROCESS_PARTS        += arm_generic_timer 16550
-INTERFACES_KERNEL       += gic
 INTERFACES_KERNEL       += generic_timer
 RAM_PHYS_BASE           := 0x80000000
 OBJECTS_LIBUART         += uart_16550.o

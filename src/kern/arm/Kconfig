@@ -91,6 +91,9 @@ config ARM_V7PLUS
 config ARM_V8
 	bool
 
+config ARM_GIC
+	bool
+
 # SECTION: CPU
 
 choice

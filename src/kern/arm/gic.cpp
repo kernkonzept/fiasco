@@ -4,12 +4,13 @@ INTERFACE [arm && pic_gic]:
 #include "irq_chip_generic.h"
 #include "mmio_register_block.h"
 #include "spin_lock.h"
+#include "gic_cpu.h"
 
 
 class Gic : public Irq_chip_gen
 {
 private:
-  Mmio_register_block _cpu;
+  Gic_cpu _cpu;
   Mmio_register_block _dist;
 
   Spin_lock<> _lock;
@@ -34,25 +35,12 @@ public:
     MXC_TZIC_SYNCCTRL = 0x010,
     MXC_TZIC_PND      = 0xd00,
 
-    GICC_CTRL         = 0x00,
-    GICC_PMR          = 0x04,
-    GICC_BPR          = 0x08,
-    GICC_IAR          = 0x0c,
-    GICC_EOIR         = 0x10,
-    GICC_RPR          = 0x14,
-    GICC_HPPIR        = 0x18,
-
     GICD_CTRL_ENABLE         = 1,
 
     MXC_TZIC_CTRL_NSEN       = 1 << 16,
     MXC_TZIC_CTRL_NSENMASK   = 1 << 31,
 
-    GICC_CTRL_ENABLE_GRP0    = 1 << 0,
-    GICC_CTRL_ENABLE_GRP1    = 1 << 1,
-    GICC_CTRL_ENABLE         = GICC_CTRL_ENABLE_GRP0,
-    GICC_CTRL_FIQEn          = 1 << 3,
-
-    Cpu_prio_val      = 0xf0,
+    Cpu_prio_val      = Gic_cpu::Cpu_prio_val,
   };
 
   Unsigned32 pcpu_to_sgi(Cpu_phys_id);
@@ -116,18 +104,6 @@ PUBLIC inline
 void Gic::softint_bcast(unsigned m)
 { _dist.write<Unsigned32>((1 << 24) | m, GICD_SGIR); }
 
-PUBLIC inline
-void Gic::pmr(unsigned prio)
-{ _cpu.write<Unsigned32>(prio, GICC_PMR); }
-
-PRIVATE inline
-void Gic::gicc_enable()
-{
-  _cpu.write<Unsigned32>(GICC_CTRL_ENABLE | (Config_tz_sec ? GICC_CTRL_FIQEn : 0),
-                         GICC_CTRL);
-  pmr(Cpu_prio_val);
-}
-
 PRIVATE inline
 void Gic::gicd_enable()
 {
@@ -161,7 +137,7 @@ Gic::cpu_init(bool resume)
   if (Config_tz_sec)
     sec_irqs = 0x00000f00;
 
-  _cpu.write<Unsigned32>(0, GICC_CTRL);
+  _cpu.disable();
 
   if (!resume)
     {
@@ -207,7 +183,7 @@ Gic::cpu_init(bool resume)
     }
 
 
-  gicc_enable();
+  _cpu.enable();
 
   // Ensure BSPs have provided a mapping for the CPUTargetList
   assert(pcpu_to_sgi(Proc::cpu_id()) < 8);
@@ -311,7 +287,7 @@ PUBLIC inline
 void Gic::acknowledge_locked(unsigned irq)
 {
   if (!Config_mxc_tzic)
-    _cpu.write<Unsigned32>(irq, GICC_EOIR);
+    _cpu.ack(irq);
 }
 
 PUBLIC
@@ -485,7 +461,7 @@ Unsigned32 Gic::pending()
       return 0;
     }
 
-  return _cpu.read<Unsigned32>(GICC_IAR) & 0x3ff;
+  return _cpu.iar() & 0x3ff;
 }
 
 //-------------------------------------------------------------------
@@ -496,11 +472,11 @@ IMPLEMENTATION [arm && mp && pic_gic]:
 PUBLIC inline NEEDS["io.h"]
 Unsigned32 Gic::pending()
 {
-  Unsigned32 ack = _cpu.read<Unsigned32>(GICC_IAR);
+  Unsigned32 ack = _cpu.iar();
 
   // IPIs/SGIs need to take the whole ack value
   if ((ack & 0x3ff) < 16)
-    _cpu.write<Unsigned32>(ack, GICC_EOIR);
+    _cpu.ack(ack);
 
   return ack & 0x3ff;
 }
@@ -533,7 +509,12 @@ Gic::irq_prio(unsigned irq)
 PUBLIC
 unsigned
 Gic::pmr()
-{ return _cpu.read<Unsigned32>(GICC_PMR); }
+{ return _cpu.pmr(); }
+
+PUBLIC
+void
+Gic::pmr(unsigned prio)
+{ return _cpu.pmr(prio); }
 
 PUBLIC
 char const *

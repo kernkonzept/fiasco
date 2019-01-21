@@ -18,10 +18,8 @@ PREPROCESS_PARTS        += $(if $(CONFIG_PF_IMX_7),pic_gic \
                                                    arm_generic_timer)
 RAM_PHYS_BASE           := $(CONFIG_PF_IMX_RAM_PHYS_BASE)
 
-INTERFACES_KERNEL     += $(if $(CONFIG_PF_IMX_51),gic)
-INTERFACES_KERNEL     += $(if $(CONFIG_PF_IMX_6),gic)
-INTERFACES_KERNEL     += $(if $(CONFIG_PF_IMX_6UL),gic generic_timer)
-INTERFACES_KERNEL     += $(if $(CONFIG_PF_IMX_7),gic generic_timer)
+INTERFACES_KERNEL     += $(if $(CONFIG_PF_IMX_6UL),generic_timer)
+INTERFACES_KERNEL     += $(if $(CONFIG_PF_IMX_7),generic_timer)
 INTERFACES_KERNEL-$(CONFIG_PF_IMX_35) += timer_imx_epit
 INTERFACES_KERNEL-$(CONFIG_PF_IMX_51) += timer_imx_epit
 INTERFACES_KERNEL-$(CONFIG_PF_IMX_53) += timer_imx_epit

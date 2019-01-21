@@ -4,7 +4,7 @@ SUBSYSTEMS              += LIBUART
 OBJECTS_LIBUART         += uart_pl011.o
 PREPROCESS_PARTS        += generic_tickless_idle libuart pic_gic \
                            arm_generic_timer psci
-INTERFACES_KERNEL       += generic_timer gic
+INTERFACES_KERNEL       += generic_timer
 RAM_PHYS_BASE           := 0x40000000
 
 
