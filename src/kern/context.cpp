@@ -2085,8 +2085,16 @@ Context::take_cpu_offline(Cpu_number cpu, bool drain_rqq = false)
     }
   Mem::mp_mb();
 
-  Rcu::do_pending_work(cpu);
+  do
+    {
+      Rcu::do_pending_work(cpu);
+      Proc::pause();
+    }
+  while (!Rcu::idle(cpu));
+  Rcu::enter_idle(cpu);
+
   Cpu_call::handle_global_requests();
+
   return true;
 }
 
@@ -2095,6 +2103,7 @@ void
 Context::take_cpu_online(Cpu_number cpu)
 {
   Cpu::cpus.cpu(cpu).set_online(true);
+  Rcu::leave_idle(cpu);
 }
 
 PRIVATE
