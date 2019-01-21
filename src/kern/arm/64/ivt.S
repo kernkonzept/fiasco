@@ -93,7 +93,7 @@ __return_from_user_invoke:
 // In case that a continuation is invoked before exit, make sure that
 // the handler returns to the normal exit ret_from_exception exit path and
 // finds the kernel stack address at the expected place.
-	add x30, x30, #(.Lret_from_exception - __return_from_user_invoke)
+	adr x30, .Lret_from_exception
 	str x0, [sp, #EF_KSP]
 	b 6f
 
