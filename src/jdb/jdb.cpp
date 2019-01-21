@@ -871,139 +871,99 @@ Jdb::get_entry_frame(Cpu_number cpu)
 /// handling of standard cursor keys (Up/Down/PgUp/PgDn)
 PUBLIC static
 int
-Jdb::std_cursor_key(int c, Mword cols, Mword lines, Mword max_absy, Mword *absy,
-                    Mword *addy, Mword *addx, bool *redraw)
+Jdb::std_cursor_key(int c, Mword cols, Mword lines,
+                    Mword max_absy, Mword max_pos,
+                    Mword *absy, Mword *addy, Mword *addx, bool *redraw)
 {
+  Mword old_absy = *absy;
+  Mword old_pos  = (*absy + *addy) * cols + (addx ? *addx : 0);
+  if (!max_pos)
+    max_pos = (max_absy + lines-1) * cols-1;
   switch (c)
     {
     case KEY_CURSOR_LEFT:
     case 'h':
-      if (addx)
-	{
-	  if (*addx > 0)
-	    (*addx)--;
-	  else if (*addy > 0)
-	    {
-	      (*addy)--;
-	      *addx = cols - 1;
-	    }
-	  else if (*absy > 0)
-	    {
-	      (*absy)--;
-	      *addx = cols - 1;
-	      *redraw = true;
-	    }
-	}
-      else
-	return 0;
+      if (!addx)
+        return 0;
+      if (*addx > 0)
+        (*addx)--;
+      else if (*addy > 0)
+        (*addy)--, *addx = cols-1;
+      else if (*absy > 0)
+        (*absy)--, *addx = cols-1;
       break;
     case KEY_CURSOR_RIGHT:
     case 'l':
-      if (addx)
-	{   
-	  if (*addx < cols - 1)
-	    (*addx)++;
-	  else if (*addy < lines - 1)
-	    {
-	      (*addy)++; 
-	      *addx = 0;
-	    }
-	  else if (*absy < max_absy)
-	    {
-	      (*absy)++;
-	      *addx = 0;
-	      *redraw = true;
-	    }
-	}
-      else
-	return 0;
+      if (!addx)
+        return 0;
+      if (*addx < cols-1 && old_pos+1 <= max_pos)
+        (*addx)++;
+      else if (*addy < lines-1)
+        (*addy)++, *addx = 0;
+      else if (*absy < max_absy)
+        (*absy)++, *addx = 0;
       break;
     case KEY_CURSOR_UP:
     case 'k':
       if (*addy > 0)
-	(*addy)--;
+        (*addy)--;
       else if (*absy > 0)
-	{
-	  (*absy)--;
-	  *redraw = true;
-	}
+        (*absy)--;
       break;
     case KEY_CURSOR_DOWN:
     case 'j':
-      if (*addy < lines-1)
-	(*addy)++;
+      if (*addy < lines-1 && old_pos + cols <= max_pos)
+        (*addy)++;
+      else if (*absy < max_absy && old_pos + cols <= max_pos)
+        (*absy)++;
       else if (*absy < max_absy)
-	{
-	  (*absy)++;
-	  *redraw = true;
-	}
+        (*absy)++, (*addy)--;
       break;
     case KEY_CURSOR_HOME:
     case 'H':
-      *addy = 0;
       if (addx)
-	*addx = 0;
-      if (*absy > 0)
-	{
-	  *absy = 0;
-	  *redraw = true;
-	}
+        *addx = 0;
+      *absy = 0;
+      *addy = 0;
       break;
     case KEY_CURSOR_END:
     case 'L':
-      *addy = lines-1;
       if (addx)
-	*addx = cols - 1;
-      if (*absy < max_absy)
-	{
-	  *absy = max_absy;
-	  *redraw = true;
-	}
+        *addx = max_pos % cols;
+      *absy = max_absy;
+      *addy = lines-1;
       break;
     case KEY_PAGE_UP:
     case 'K':
       if (*absy >= lines)
-	{
-	  *absy -= lines;
-	  *redraw = true;
-	}
-      else
-	{
-	  if (*absy > 0)
-	    {
-	      *absy = 0;
-	      *redraw = true;
-	    }
-	  else if (*addy > 0)
-	    *addy = 0;
-	  else if (addx)
-	    *addx = 0;
-	}
+        *absy -= lines;
+      else if (*absy > 0)
+        *absy = 0;
+      else if (*addy > 0)
+        *addy = 0;
+      else if (addx)
+        *addx = 0;
       break;
     case KEY_PAGE_DOWN:
     case 'J':
-      if (*absy+lines-1 < max_absy)
-	{
-	  *absy += lines;
-	  *redraw = true;
-	}
-      else
-	{
-	  if (*absy < max_absy)
-	    {
-	      *absy = max_absy;
-	      *redraw = true;
-	    }
-	  else if (*addy < lines-1)
-      	    *addy = lines-1;
-	  else if (addx)
-	    *addx = cols - 1;
-	}
+      if (*absy+lines-1 < max_absy && old_pos + lines * cols <= max_pos)
+        *absy += lines;
+      else if (*absy < max_absy)
+        *absy = max_absy;
+      else if (*addy < lines-1 && old_pos + (lines-1 - *addy) * cols <= max_pos)
+        *addy = lines-1;
+      else if (*addy < lines - 2)
+        *addy = lines-2;
+      else if (addx && old_pos + cols - 1 <= max_pos)
+        *addx = cols - 1;
+      else if (addx && *addy == lines - 1)
+        *addx = max_pos % cols;
       break;
     default:
       return 0;
     }
 
+  *redraw = *absy != old_absy;
   return 1;
 }
 

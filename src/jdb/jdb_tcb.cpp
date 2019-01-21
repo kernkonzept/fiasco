@@ -342,12 +342,14 @@ Jdb_stack_view::handle_key(int key, bool *redraw)
     lines = max_lines - absy;
 
   if (key == 'e')
-    edit_stack(redraw);
-  else
-    return Jdb::std_cursor_key(key, this->cols(), lines, max_absy,
-      &absy, &addy, &addx, redraw);
+    {
+      edit_stack(redraw);
+      return true;
+    }
 
-  return true;
+  return Jdb::std_cursor_key(key, this->cols(), lines, max_absy,
+                             Context::Size / sizeof(Mword) - 1,
+                             &absy, &addy, &addx, redraw);
 }
 
 PUBLIC

@@ -170,7 +170,6 @@ Jdb_tbuf_show::select_perf_event_unit_mask(Mword nr, Mword unit_mask)
   Mword addy     = 0;
   Mword max_absy = 0;
   Mword lines    = 10;
-  Mword cols	 = Jdb_screen::cols() - 1;
 
   Mword default_value, nvalues, value;
   Perf_cnt::Unit_mask_type type;
@@ -232,7 +231,7 @@ Jdb_tbuf_show::select_perf_event_unit_mask(Mword nr, Mword unit_mask)
           show_perf_event_unit_mask_entry(nr, absy + addy, unit_mask, exclusive);
           Perf_cnt::get_unit_mask_entry(nr, absy + addy, &value, &dummy);
 
-          if (Jdb::std_cursor_key(c, cols, lines, max_absy,
+          if (Jdb::std_cursor_key(c, 0, lines, max_absy, 0,
                                   &absy, &addy, 0, &redraw))
             continue;
 
@@ -270,7 +269,6 @@ Jdb_tbuf_show::select_perf_event(Mword event)
   Mword lines    = (nevents < Jdb_screen::height() - 6)
                    ? nevents
                    : Jdb_screen::height() - 6;
-  Mword cols     = Jdb_screen::cols() - 1;
   Mword max_absy = nevents-lines;
 
   if (nevents == 0)
@@ -327,7 +325,7 @@ Jdb_tbuf_show::select_perf_event(Mword event)
           Jdb::cursor(addy + Tbuf_start_line + 2, 1);
           int c = Jdb_core::getchar();
           show_perf_event(absy + addy);
-          if (Jdb::std_cursor_key(c, cols, lines, max_absy,
+          if (Jdb::std_cursor_key(c, 0, lines, max_absy, 0,
                                   &absy, &addy, 0, &redraw))
             continue;
 
@@ -648,7 +646,6 @@ restart:
   Mword posy[10];                // idx of mark{0..9}
   Mword addy;			 // cursor position starting from top of screen
   Mword lines = Jdb_screen::height()-4;
-  Mword cols  = Jdb_screen::cols() - 1;
   Mword n;
   Tb_entry *e;
 
@@ -810,7 +807,7 @@ restart:
               show_events(item.y, refy, 1, mode, time_mode, 0);
             }
 
-          if (Jdb::std_cursor_key(c, cols, lines, max_absy,
+          if (Jdb::std_cursor_key(c, 0, lines, max_absy, 0,
                                   &_absy, &addy, 0, &redraw))
             continue;
 
