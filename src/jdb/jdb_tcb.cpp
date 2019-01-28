@@ -382,7 +382,7 @@ Jdb_stack_view::edit_stack(bool *redraw)
           Jdb::printf_statline("tcb", 0, "edit <" ADDR_FMT "> = " ADDR_FMT,
               current.addr(), current.value());
           Jdb::cursor(posy(), posx() + 1);
-          if (!Jdb_input::get_mword(&value, c, 16))
+          if (!Jdb_input::get_mword(&value, sizeof(Mword)*2, 16, c))
             {
               Jdb::cursor(posy(), posx());
               print_value(current);
