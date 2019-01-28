@@ -335,11 +335,34 @@ Jdb::translate_task(Address addr, Space *task)
   return (Kmem::is_kmem_page_fault(addr, 0)) ? 0 : task;
 }
 
+PUBLIC static inline
+bool
+Jdb::same_page(Address a1, Address a2)
+{
+  return (a1 & Config::PAGE_MASK) == (a2 & Config::PAGE_MASK);
+}
+
+PUBLIC static inline
+bool
+Jdb::consecutive_pages(Address a1, Address a2)
+{
+  return (a1 & Config::PAGE_MASK) + Config::PAGE_SIZE
+      == (a2 & Config::PAGE_MASK);
+}
+
+PUBLIC static inline NEEDS[Jdb::same_page, Jdb::consecutive_pages]
+bool
+Jdb::same_or_consecutive_pages(Address a1, Address a2)
+{
+  return same_page(a1, a2) || consecutive_pages(a1, a2);
+}
+
 PUBLIC static
 void
 Jdb::peek_phys(Address phys, void *value, int width)
 {
-  assert(width > 0 && (phys & Config::PAGE_MASK) == ((phys + width - 1) & Config::PAGE_MASK));
+  assert(width > 0);
+  assert(same_or_consecutive_pages(phys, phys + width - 1));
 
   Address virt = Kmem::map_phys_page_tmp(phys, 0);
 
@@ -350,7 +373,8 @@ PUBLIC static
 void
 Jdb::poke_phys(Address phys, void const *value, int width)
 {
-  assert(width > 0 && (phys & Config::PAGE_MASK) == ((phys + width - 1) & Config::PAGE_MASK));
+  assert(width > 0);
+  assert(same_or_consecutive_pages(phys, phys + width - 1));
 
   Address virt = Kmem::map_phys_page_tmp(phys, 0);
 
@@ -379,20 +403,20 @@ Jdb::peek_task(Address addr, Space *task, void *value, int width)
     }
   // specific address space, use temporary mapping
   if (!task)
-    phys = addr;
+    phys = Kmem::virt_to_phys((void*)addr);
   else
     {
       // user address, use temporary mapping
-      phys = Address(task->virt_to_phys (addr));
+      phys = Address(task->virt_to_phys(addr));
 
 #ifndef CONFIG_CPU_LOCAL_MAP
       if (phys == ~0UL)
         phys = task->virt_to_phys_s0((void*)addr);
 #endif
-
-      if (phys == ~0UL)
-	return -1;
     }
+
+  if (phys == ~0UL)
+    return -1;
 
   peek_phys(phys, value, width);
   return 0;
