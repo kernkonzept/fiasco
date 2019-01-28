@@ -78,6 +78,11 @@ public:
 
   inline bool is_user_value() const;
 
+  Space *space(Thread *user_thread) const
+  {
+    return is_user_value() ? user_thread->space() : 0;
+  }
+
   inline const char *user_value_desc() const;
 
   Address user_ip() const;
@@ -684,9 +689,10 @@ whole_screen:
         Jdb::cursor(11, 1);
       print_entry_frame_regs(t);
       Jdb::cursor(Jdb_tcb::Disasm_x, Jdb_tcb::Disasm_y);
-      _disasm_view.show(ef->ip(), ef->from_user() ? t->space() : 0, dump_only);
+      _disasm_view.show(ef->ip(), ef->from_user() ? t->space()
+                                                  : Kernel_task::kernel_task(),
+                        dump_only);
     }
-
   else if (t->space() != Kernel_task::kernel_task())
     {
       if (!dump_only)
@@ -738,7 +744,7 @@ dump_stack:
               if (jdb_dump_addr_task && _stack_view.current.valid())
                 {
                   if (!jdb_dump_addr_task(_stack_view.current.value(),
-                        _stack_view.current.is_user_value() ? t->space() : 0, level+1))
+                                          _stack_view.current.space(t), level+1))
                     return NOTHING;
                   redraw_screen = true;
                 }
@@ -752,7 +758,7 @@ dump_stack:
                 {
                   printf("V %lx", _stack_view.current.value());
                   if (!Jdb_disasm::show(_stack_view.current.value(),
-                        _stack_view.current.is_user_value() ? t->space() : 0, level+1))
+                                        _stack_view.current.space(t), level+1))
                     return NOTHING;
                   redraw_screen = true;
                 }
@@ -774,7 +780,7 @@ dump_stack:
                     }
 
                   if (!Jdb_disasm::show(_stack_view.current.value(),
-                        _stack_view.current.is_user_value() ? t->space() : 0, level+1))
+                                        _stack_view.current.space(t), level+1))
                     return NOTHING;
                   redraw_screen = true;
                 }

@@ -111,17 +111,11 @@ Jdb_dump::draw_entry(unsigned long row, unsigned long col)
   if (&ignore_invalid_apic_reg_access)
     ignore_invalid_apic_reg_access = 1;
 
-  Mword dummy;
-  bool mapped  = Jdb::peek((Mword*)entry, task, dummy);
-  bool ram     = !Jdb::is_adapter_memory(entry, task);
-
-  if (mapped)
+  if (!Jdb::is_adapter_memory(entry, task) || show_adapter_memory)
     {
-      if (ram || show_adapter_memory)
-	{
-	  Mword mword;
-	  Jdb::peek((Mword*)entry, task, mword);
-
+      Mword mword;
+      if (Jdb::peek((Mword*)entry, task, mword))
+        {
 	  if (dump_type==D_MODE)
 	    {
 	      if (mword == 0)
@@ -149,23 +143,19 @@ Jdb_dump::draw_entry(unsigned long row, unsigned long col)
 		  putchar(b>=32 && b<=126 ? b : '.');
 		}
 	    }
-	}
-      else // is_adapter_memory
-	{
-	  if (dump_type == C_MODE)
-	    printf("%.*s", (int)Jdb_screen::Mword_size_cmode, Jdb_screen::Mword_adapter);
-	  else
-	    printf("%.*s", (int)Jdb_screen::Mword_size_bmode, Jdb_screen::Mword_adapter);
-	}
+        }
+      else // !mapped
+        printf("%.*s",
+               dump_type == C_MODE ? (int)Jdb_screen::Mword_size_cmode
+                                   : (int)Jdb_screen::Mword_size_bmode,
+               Jdb_screen::Mword_not_mapped);
     }
-  else // !mapped
-    {
-      if (dump_type == C_MODE)
-	printf("%.*s", (int)Jdb_screen::Mword_size_cmode, Jdb_screen::Mword_not_mapped);
-      else
-        printf("%.*s", (int)Jdb_screen::Mword_size_bmode, Jdb_screen::Mword_not_mapped);
-    }
-  
+  else // is_adapter_memory
+    printf("%.*s",
+           dump_type == C_MODE ? (int)Jdb_screen::Mword_size_cmode
+                               : (int)Jdb_screen::Mword_size_bmode,
+           Jdb_screen::Mword_adapter);
+
   if (&ignore_invalid_apic_reg_access)
     ignore_invalid_apic_reg_access = 0;
 }

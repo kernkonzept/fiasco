@@ -80,6 +80,8 @@ public:
   static void save_disable_irqs(Cpu_number cpu);
   static void restore_irqs(Cpu_number cpu);
 
+  static bool is_canonical_address(Address);
+
 protected:
   template< typename T >
   static void set_monitored_address(T *dest, T val);
@@ -1240,6 +1242,13 @@ Jdb::space_to_str(Space *s, char *str, size_t len)
       return str;
     }
   return "physical";
+}
+
+IMPLEMENT_DEFAULT inline
+bool
+Jdb::is_canonical_address(Address)
+{
+  return true;
 }
 
 

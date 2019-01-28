@@ -82,6 +82,7 @@ Jdb_disasm::disasm_line(char *buffer, int buflen, Address &addr,
 
   if ((len = disasm_bytes(buffer, buflen, addr, task, show_symbols,
 			  show_intel_syntax, &Jdb::peek_task,
+			  &Jdb::is_adapter_memory,
 			  &Jdb_symbol::match_addr_to_symbol)) < 0)
     {
       addr += 1;
