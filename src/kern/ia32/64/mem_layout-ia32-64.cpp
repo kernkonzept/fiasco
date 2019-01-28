@@ -18,7 +18,7 @@ public:
   {
     Kentry_start      = 0xffff810000000000UL, ///< 512GB slot 258
     Kentry_syscall    = FIASCO_KENTRY_SYSCALL_PAGE,
-    Kentry_cpu_page   = 0xffff817fffffc000UL, ///< last 4KB in solt 258
+    Kentry_cpu_page   = 0xffff817fffffc000UL, ///< last 4KB in slot 258
     Io_bitmap         = 0xffff818000000000UL, ///< 512GB slot 259 first page
     Caps_start        = 0xffff818000800000UL,    ///< % 4MB
     Caps_end          = 0xffff81800c400000UL,    ///< % 4MB
