@@ -391,4 +391,6 @@ Jdb_table::draw_table(unsigned long row, unsigned long col,
         }
       putchar('\n');
     }
+  for (unsigned long y = lines; y < Jdb_screen::height()-1; ++y)
+    putstr("\033[K\n");
 }
