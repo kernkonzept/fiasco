@@ -38,25 +38,35 @@ Jdb_utcb::Jdb_utcb()
 
 PUBLIC static
 void
-Jdb_utcb::print(Thread *t)
+Jdb_utcb::print(Thread *t, bool overlayprint)
 {
+  char const *clreol_lf = "\n";
+  if (overlayprint)
+    {
+      clreol_lf = Jdb::clear_to_eol_lf_str();
+      Jdb::line();
+    }
+
   if (t->utcb().kern())
     {
-      printf("\nUtcb-addr: %p\n", t->utcb().kern());
-      t->utcb().kern()->print();
+      printf("\nUtcb-addr: %p%s", t->utcb().kern(), clreol_lf);
+      t->utcb().kern()->print(clreol_lf);
     }
 
   if (t->state(false) & Thread_vcpu_enabled)
     {
       Vcpu_state *v = t->vcpu_state().kern();
-      printf("\nVcpu-state-addr: %p\n", v);
-      printf("state: %x    saved-state:  %x  sticky: %x\n",
+      printf("%sVcpu-state-addr: %p%s", clreol_lf, v, clreol_lf);
+      printf("state: %x    saved-state:  %x  sticky: %x%s",
              (unsigned)v->state, (unsigned)v->_saved_state,
-             (unsigned)v->sticky_flags);
-      printf("entry_sp = %lx    entry_ip = %lx  sp = %lx\n",
-             v->_entry_sp, v->_entry_ip, v->_sp);
+             (unsigned)v->sticky_flags, clreol_lf);
+      printf("entry_sp = %lx    entry_ip = %lx  sp = %lx%s",
+             v->_entry_sp, v->_entry_ip, v->_sp, clreol_lf);
       v->_regs.dump();
     }
+
+  if (overlayprint)
+    Jdb::line();
 }
 
 PUBLIC virtual
@@ -73,7 +83,7 @@ Jdb_utcb::action( int cmd, void *&, char const *&, int &)
       return NOTHING;
     }
 
-  print(t);
+  print(t, false);
 
   return NOTHING;
 }
@@ -122,12 +132,22 @@ Jdb_kobject_utcb_hdl::handle_key(Kobject_common *o, int keycode)
       if (!t)
         return false;
 
-      Jdb_utcb::print(t);
+      Jdb_utcb::print(t, true);
       Jdb::getchar();
       return true;
     }
 
   return false;
+}
+
+PUBLIC
+char const *
+Jdb_kobject_utcb_hdl::help_text(Kobject_common *o) const override
+{
+  if (cxx::dyn_cast<Thread *>(o))
+    return "z=UTCB/vCPU";
+
+  return 0;
 }
 
 STATIC_INITIALIZE(Jdb_kobject_utcb_hdl);

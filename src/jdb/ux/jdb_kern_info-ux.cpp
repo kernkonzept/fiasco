@@ -115,7 +115,7 @@ Jdb_kern_info_host::show()
 
       String_buf<64> buf;
 
-      Jdb_kobject::obj_description(&buf, true, *i);
+      Jdb_kobject::obj_description(&buf, nullptr, true, *i);
       printf("%s, host-pid=%d\n", buf.c_str(), task->pid());
 
       buf.reset();

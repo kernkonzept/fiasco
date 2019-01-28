@@ -27,33 +27,34 @@ Kobject *Jdb_sender_list::object;
 
 PRIVATE
 void
-Jdb_sender_list::show_sender_list(Prio_list *t, int overlayprint,
-                                  int printnone,
+Jdb_sender_list::show_sender_list(Prio_list *t,
+                                  int overlayprint, int printnone,
                                   const char *tag = 0, unsigned long dbgid = 0)
 {
   if (overlayprint)
     {
-      puts(Jdb_screen::Line);
-      Jdb::clear_to_eol();
+      Jdb::line();
+      putchar('\n');
     }
 
   Prio_list::P_list::Iterator p = t->begin();
   if (p == t->end())
     {
-      if (overlayprint)
-        Jdb::clear_to_eol();
       if (printnone)
-        printf("%s (%lx): Nothing in sender list\n", tag, dbgid);
+        {
+          printf("%s (%lx): Nothing in sender list", tag, dbgid);
+          if (overlayprint)
+            Jdb::clear_to_eol();
+          putchar('\n');
+        }
       if (overlayprint)
-        puts(Jdb_screen::Line);
+        Jdb::line();
       return;
     }
 
   bool first = true;
   for (; p != t->end(); ++p)
     {
-      if (overlayprint)
-        Jdb::clear_to_eol();
       if (first)
         {
           printf("%s (%lx): ", tag, dbgid);
@@ -69,11 +70,13 @@ Jdb_sender_list::show_sender_list(Prio_list *t, int overlayprint,
           ++s;
         }
       while (*s != *p);
-      puts("");
+      if (overlayprint)
+        Jdb::clear_to_eol();
+      putchar('\n');
     }
 
   if (overlayprint)
-    puts(Jdb_screen::Line);
+    Jdb::line();
 }
 
 PRIVATE
@@ -127,6 +130,16 @@ Jdb_sender_list::handle_key(Kobject_common *o, int keycode)
 
   Jdb::getchar();
   return true;
+}
+
+PUBLIC
+char const *
+Jdb_sender_list::help_text(Kobject_common *o) const override
+{
+  if (cxx::dyn_cast<Thread *>(o) || cxx::dyn_cast<Ipc_gate_obj *>(o))
+    return "S=sndlist";
+
+  return 0;
 }
 
 PUBLIC

@@ -132,6 +132,9 @@ public:
   bool memdump_is_colored;
 
   bool edit_registers();
+
+private:
+  int _show_obj_help;
 };
 
 
@@ -173,8 +176,8 @@ IMPLEMENT_DEFAULT bool Jdb_stack_view::edit_registers() { return true; }
 
 
 PUBLIC
-Jdb_stack_view::Jdb_stack_view(unsigned y)
-: start_y(y), absy(0), memdump_is_colored(true)
+Jdb_stack_view::Jdb_stack_view(unsigned y, int show_obj_help = 1)
+: start_y(y), absy(0), memdump_is_colored(true), _show_obj_help(show_obj_help)
 {}
 
 PUBLIC static inline
@@ -265,7 +268,7 @@ Jdb_stack_view::dump(bool dump_only)
       p = current;
       p.offs(absy * bytes_per_line());
       Jdb::cursor(start_y, 1);
-      ylen = Jdb_screen::height() - start_y;
+      ylen = Jdb_screen::height() - _show_obj_help - start_y;
     }
 
   for (unsigned y = 0; y < ylen; ++y)
@@ -314,26 +317,33 @@ Jdb_stack_view::highlight(bool highl)
   print_value(current, highl);
 
   String_buf<120> kobj_desc;
+  String_buf<80> kobj_help;
   Kobject_dbg::Iterator o;
 
   if (current.is_kern_code())
     kobj_desc.printf("Kernel code"); // todo: print kernel function name
   else if (current.is_user_value())
     kobj_desc.printf("Return frame: %s", current.user_value_desc());
-  else if ((o = Kobject_dbg::pointer_to_obj(reinterpret_cast<void *>(current.value()))) != Kobject_dbg::end())
-    Jdb_kobject::obj_description(&kobj_desc, true, *o);
+  else if ((o = Kobject_dbg::pointer_to_obj(reinterpret_cast<void *>(current.value())))
+           != Kobject_dbg::end())
+    Jdb_kobject::obj_description(&kobj_desc, &kobj_help, true, *o);
 
+  if (_show_obj_help)
+    {
+      Jdb::cursor(Jdb_screen::height() - 1, 1);
+      printf("%*s", Jdb_screen::width(), kobj_help.c_str());
+    }
   Jdb::printf_statline("tcb", "<CR>=dump <Space>=Disas",
                        "%s", kobj_desc.c_str());
 }
 
 PUBLIC
 bool
-Jdb_stack_view::handle_key(int key, bool *redraw)
+Jdb_stack_view::handle_key(int keycode, bool *redraw)
 {
-  Mword   lines    = Jdb_screen::height() - start_y;
+  Mword   lines     = Jdb_screen::height() - _show_obj_help - start_y;
   Mword   max_lines = (Context::Size + bytes_per_line() - 1)/bytes_per_line();
-  Address max_absy = max_lines - lines;
+  Address max_absy  = max_lines - lines;
 
   if (lines > max_lines)
     max_absy = 0;
@@ -341,13 +351,13 @@ Jdb_stack_view::handle_key(int key, bool *redraw)
   if (lines > max_lines - absy)
     lines = max_lines - absy;
 
-  if (key == 'e')
+  if (keycode == 'e')
     {
       edit_stack(redraw);
       return true;
     }
 
-  return Jdb::std_cursor_key(key, this->cols(), lines, max_absy,
+  return Jdb::std_cursor_key(keycode, this->cols(), lines, max_absy,
                              Context::Size / sizeof(Mword) - 1,
                              &absy, &addy, &addx, redraw);
 }
@@ -466,6 +476,35 @@ Jdb_tcb::parent(Kobject_common *o)
     return 0;
 
   return static_cast<Task*>(t->space());
+}
+
+PRIVATE static
+bool
+Jdb_tcb::handle_obj_key(int keycode, Mword addr)
+{
+  Kobject_dbg::Iterator o =
+    Kobject_dbg::pointer_to_obj(reinterpret_cast<void *>(addr));
+
+  if (o != Kobject_dbg::end())
+    {
+      Kobject *k = Kobject::from_dbg(o);
+      bool handled = false;
+
+      // in case of overlayprint
+      Jdb::cursor(3, 1);
+
+      for (Jdb_kobject::Handler_iter h = Jdb_kobject::module()->global_handlers.begin();
+           h != Jdb_kobject::module()->global_handlers.end(); ++h)
+        handled |= h->handle_key(k, keycode);
+
+      if (Jdb_kobject_handler *h = Jdb_kobject::module()->find_handler(k))
+        handled |= h->handle_key(k, keycode);
+
+      if (handled)
+        return true;
+    }
+
+  return false;
 }
 
 PRIVATE static inline
@@ -683,6 +722,12 @@ dump_stack:
 
       if (c == KEY_CURSOR_HOME && level > 0)
         return GO_BACK;
+
+      if (handle_obj_key(c, _stack_view.current.value()))
+        {
+          redraw_screen = true;
+          goto whole_screen;
+        }
 
       if (!_stack_view.handle_key(c, &redraw))
         {
@@ -914,7 +959,7 @@ Jdb_tcb::print_cpu(String_buffer *buf, Thread *t)
 
 PUBLIC
 void
-Jdb_tcb::show_kobject_short(String_buffer *buf, Kobject_common *o)
+Jdb_tcb::show_kobject_short(String_buffer *buf, Kobject_common *o, bool) override
 {
   Thread *t = cxx::dyn_cast<Thread *>(Kobject::from_dbg(o->dbg_info()));
   bool is_current = Jdb_tcb::is_current(t);

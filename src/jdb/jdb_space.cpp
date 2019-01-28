@@ -52,7 +52,7 @@ Jdb_space::show_kobject(Kobject_common *o, int lvl)
 
 PUBLIC
 void
-Jdb_space::show_kobject_short(String_buffer *buf, Kobject_common *o)
+Jdb_space::show_kobject_short(String_buffer *buf, Kobject_common *o, bool) override
 {
   Task *t = cxx::dyn_cast<Task*>(o);
   if (t == Kernel_task::kernel_task())

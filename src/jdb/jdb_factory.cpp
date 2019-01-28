@@ -37,7 +37,7 @@ Jdb_factory::show_kobject(Kobject_common *, int )
 
 PUBLIC
 void
-Jdb_factory::show_kobject_short(String_buffer *buf, Kobject_common *o)
+Jdb_factory::show_kobject_short(String_buffer *buf, Kobject_common *o, bool) override
 {
   Factory *t = cxx::dyn_cast<Factory*>(o);
   buf->printf(" c=%lu l=%lu", t->current(), t->limit());

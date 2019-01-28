@@ -36,11 +36,12 @@ public:
   Jdb_kobject_handler() : kobj_type(0) {}
   cxx::Type_info const *kobj_type;
   virtual bool show_kobject(Kobject_common *o, int level) = 0;
-  virtual void show_kobject_short(String_buffer *, Kobject_common *) {}
+  virtual void show_kobject_short(String_buffer *, Kobject_common *, bool) {}
   virtual Kobject_common *follow_link(Kobject_common *o) { return o; }
   virtual ~Jdb_kobject_handler() {}
   virtual bool invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb);
   virtual bool handle_key(Kobject_common *, int /*keycode*/) { return false; }
+  virtual char const *help_text(Kobject_common *) const { return 0; };
   virtual Kobject *parent(Kobject_common *) { return 0; }
   char const *kobject_type(Kobject_common *o) const
   { return _kobject_type(o); }
@@ -190,11 +191,13 @@ Jdb_kobject_list::Jdb_kobject_list()
 
 PUBLIC
 void
-Jdb_kobject_list::show_item(String_buffer *buffer, void *item) const
+Jdb_kobject_list::show_item(String_buffer *buffer, String_buffer *help_text,
+                            void *item) const override
 {
   if (!item)
     return;
-  Jdb_kobject::obj_description(buffer, false, static_cast<Kobject*>(item)->dbg_info());
+  Jdb_kobject::obj_description(buffer, help_text, false,
+                               static_cast<Kobject*>(item)->dbg_info());
 }
 
 PUBLIC
@@ -221,6 +224,10 @@ bool
 Jdb_kobject_list::handle_key(void *item, int keycode)
 {
   Kobject *o = static_cast<Kobject*>(item);
+
+  // in case of overlayprint
+  Jdb::cursor(3, 1);
+
   bool handled = false;
   for (Jdb_kobject::Handler_iter h = Jdb_kobject::module()->global_handlers.begin();
        h != Jdb_kobject::module()->global_handlers.end(); ++h)
@@ -421,17 +428,35 @@ Jdb_kobject::kobject_type(Kobject_common *o)
 
 PUBLIC static
 void
-Jdb_kobject::obj_description(String_buffer *buffer, bool dense, Kobject_dbg *o)
+Jdb_kobject::obj_description(String_buffer *buffer, String_buffer *help_text,
+                             bool dense, Kobject_dbg *o)
 {
-  buffer->printf(dense ? "%lx %lx [%-*s]" : "%8lx %08lx [%-*s]",
-                 o->dbg_id(), (Mword)Kobject::from_dbg(o), 7, kobject_type(Kobject::from_dbg(o)));
+  Kobject *k = Kobject::from_dbg(o);
+
+  if (buffer)
+    buffer->printf(dense ? "%lx %lx [%-*s]" : "%8lx %08lx [%-*s]",
+                   o->dbg_id(), (Mword)k, dense ? 0 : 7, kobject_type(k));
+
+  char const *ht;
 
   for (Handler_iter h = module()->global_handlers.begin();
        h != module()->global_handlers.end(); ++h)
-    h->show_kobject_short(buffer, Kobject::from_dbg(o));
+    {
+      if (buffer)
+        h->show_kobject_short(buffer, k, dense);
 
-  if (Jdb_kobject_handler *oh = Jdb_kobject::module()->find_handler(Kobject::from_dbg(o)))
-    oh->show_kobject_short(buffer, Kobject::from_dbg(o));
+      if (help_text && (ht = h->help_text(k)))
+        help_text->printf(" %s", ht);
+    }
+
+  if (Jdb_kobject_handler *oh = Jdb_kobject::module()->find_handler(k))
+    {
+      if (buffer)
+        oh->show_kobject_short(buffer, k, dense);
+
+      if (help_text && (ht = oh->help_text(k)))
+        help_text->printf(" %s", ht);
+    }
 }
 
 PRIVATE static

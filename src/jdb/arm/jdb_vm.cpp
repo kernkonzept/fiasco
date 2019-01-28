@@ -44,7 +44,7 @@ Jdb_vm::kobject_type(Kobject_common *) const
 
 PUBLIC
 void
-Jdb_vm::show_kobject_short(String_buffer *buf, Kobject_common *o)
+Jdb_vm::show_kobject_short(String_buffer *buf, Kobject_common *o, bool) override
 {
   return cxx::dyn_cast<Vm *>(o)->show_short(buf);
 }

@@ -41,7 +41,7 @@ Jdb_ipc_gate::show_kobject(Kobject_common *, int)
 
 PUBLIC
 void
-Jdb_ipc_gate::show_kobject_short(String_buffer *buf, Kobject_common *o)
+Jdb_ipc_gate::show_kobject_short(String_buffer *buf, Kobject_common *o, bool) override
 {
   Ipc_gate_obj *g = cxx::dyn_cast<Ipc_gate_obj*>(Kobject::from_dbg(o->dbg_info()));
   if (!g)

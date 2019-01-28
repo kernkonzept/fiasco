@@ -116,14 +116,16 @@ Jdb_log_list_hdl::invoke(Kobject_common *, Syscall_frame *f, Utcb *utcb)
 
 PUBLIC
 void
-Jdb_log_list::show_item(String_buffer *buffer, void *item) const
+Jdb_log_list::show_item(String_buffer *buffer, String_buffer *,
+                        void *item) const override
 {
   Tb_log_table_entry const *e = static_cast<Tb_log_table_entry const*>(item);
   char const *sc = e->name;
   sc += strlen(e->name) + 1;
-  buffer->printf("%s %s (%s)",
-                 Jdb_tbuf::get_entry_status(e) ? "[on ]" : "[off]",
-                 e->name, sc);
+  if (buffer)
+    buffer->printf("%s %s (%s)",
+                   Jdb_tbuf::get_entry_status(e) ? "[on ]" : "[off]",
+                   e->name, sc);
 }
 
 PRIVATE static inline

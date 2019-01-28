@@ -418,6 +418,12 @@ Jdb_kobject_mapdb_hdl::handle_key(Kobject_common *o, int keycode)
     return false;
 }
 
+PUBLIC
+char const *
+Jdb_kobject_mapdb_hdl::help_text(Kobject_common *) const override
+{
+  return "m=mappings";
+}
 
 
 STATIC_INITIALIZE(Jdb_kobject_mapdb_hdl);
@@ -483,13 +489,14 @@ Jdb_mapdb::show_simple_tree(Kobject_common *f, unsigned indent = 1)
   unsigned      screenline = 0;
   int           c;
 
-  puts(Jdb_screen::Line);
+  putchar('\r');
+  Jdb::line();
   if (!f || f->map_root()->_root.empty())
     {
       printf(" no mapping tree registered for frame number 0x%lx\033[K\n",
              (unsigned long) f);
       screenline++;
-      puts(Jdb_screen::Line);
+      Jdb::line();
       return true;
     }
 
@@ -541,7 +548,7 @@ Jdb_mapdb::show_simple_tree(Kobject_common *f, unsigned indent = 1)
         }
     }
 
-  puts(Jdb_screen::Line);
+  Jdb::line();
   return true;
 }
 

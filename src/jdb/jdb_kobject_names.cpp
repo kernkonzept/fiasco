@@ -130,13 +130,15 @@ public:
 
 PUBLIC
 void
-Jdb_name_hdl::show_kobject_short(String_buffer *buf, Kobject_common *o)
+Jdb_name_hdl::show_kobject_short(String_buffer *buf, Kobject_common *o,
+                                 bool dense) override
 {
   Jdb_kobject_name *ex
     = Jdb_kobject_extension::find_extension<Jdb_kobject_name>(o);
 
   if (ex)
-    buf->printf(" {%-*.*s}", ex->max_len(), ex->max_len(), ex->name());
+    buf->printf(" {%-*.*s}",
+                dense ? 0 : ex->max_len(), ex->max_len(), ex->name());
 }
 
 PUBLIC

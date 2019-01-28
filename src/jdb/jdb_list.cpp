@@ -10,7 +10,8 @@ public:
   virtual void next_mode() {}
   virtual void next_sort() {}
   virtual void *get_head() const = 0;
-  virtual void show_item(String_buffer *buffer, void *item) const = 0;
+  virtual void show_item(String_buffer *buffer, String_buffer *help_text,
+                         void *item) const = 0;
   virtual char const *show_head() const = 0;
   virtual int seek(int cnt, void **item) = 0;
   virtual bool enter_item(void * /*item*/) const { return true; }
@@ -24,6 +25,7 @@ private:
   void *_start, *_last;
   void *_current;
   char _filter_str[20];
+  unsigned _screen_height;
   Jdb_regex _regex;
 };
 
@@ -49,7 +51,7 @@ IMPLEMENTATION:
 
 PUBLIC
 Jdb_list::Jdb_list()
-  : _start(0), _current(0)
+  : _start(0), _current(0), _screen_height(Jdb_screen::height() - 4)
 {
   _filter_str[0] = 0;
 }
@@ -82,14 +84,14 @@ Jdb_list::line_forw()
 PUBLIC
 bool
 Jdb_list::page_back()
-{ return filtered_seek(-Jdb_screen::height()+3, &_start); }
+{ return filtered_seek(-_screen_height, &_start); }
 
 // _t_start += 24 if possible
 PUBLIC
 bool
 Jdb_list::page_forw()
 {
-  int fwd = filtered_seek(Jdb_screen::height()-3, &_last);
+  int fwd = filtered_seek(_screen_height, &_last);
   if (fwd)
     return filtered_seek(fwd, &_start);
   return false;
@@ -120,7 +122,7 @@ Jdb_list::lookup_in_visible_area(void *search)
   unsigned i;
   void *t;
 
-  for (i = 0, t = _start; i < Jdb_screen::height() - 3; ++i)
+  for (i = 0, t = _start; i < _screen_height; ++i)
     {
       if (t == search)
         return i;
@@ -165,7 +167,7 @@ Jdb_list::handle_string_filter_input()
 
 PRIVATE
 Jdb_list::Line_buf *
-Jdb_list::render_visible(void *i)
+Jdb_list::render_visible(void *i, String_buffer *help_text)
 {
   static Line_buf buffer;
   buffer.clear();
@@ -173,7 +175,7 @@ Jdb_list::render_visible(void *i)
   while ((p = parent(p)))
     buffer.append(' ');
 
-  show_item(&buffer, i);
+  show_item(&buffer, help_text, i);
   if (_filter_str[0])
     {
       buffer.terminate();
@@ -241,7 +243,7 @@ PRIVATE
 void *
 Jdb_list::get_visible(void *i)
 {
-  if (render_visible(i))
+  if (render_visible(i, nullptr))
     return i;
 
   filtered_seek(1, &i);
@@ -265,7 +267,7 @@ Jdb_list::filtered_seek(int cnt, void **item, Jdb_list::Line_buf **buf = 0)
       if ((i = seek(d, item)) == 0)
         return c;
 
-      if (Line_buf *b = render_visible(*item))
+      if (Line_buf *b = render_visible(*item, nullptr))
         {
           if (buf)
             *buf = b;
@@ -290,9 +292,9 @@ Jdb_list::page_show()
   if (!t)
     return 0;
 
-  Line_buf *b = render_visible(t);
+  Line_buf *b = render_visible(t, nullptr);
 
-  for (i = 0; i < Jdb_screen::height()-3; ++i)
+  for (i = 0; i < _screen_height; ++i)
     {
       if (!t)
         break;
@@ -417,7 +419,7 @@ Jdb_list::do_list()
     }
 
 
-  for (;;)
+  for (bool terminate = false; !terminate;)
     {
       _start = get_visible(_start);
       // set y to position of t_current in current displayed list
@@ -428,13 +430,13 @@ Jdb_list::do_list()
 	  y = 0;
 	}
 
-      for (bool resync=false; !resync;)
+      for (bool resync = false; !resync && !terminate;)
 	{
 	  Jdb::cursor(2, 1);
 	  y_max = page_show();
 
 	  // clear rest of screen (if where less than 24 lines)
-	  for (unsigned i = y_max; i < Jdb_screen::height()-3; ++i)
+	  for (unsigned i = y_max; i < _screen_height; ++i)
             putstr("\033[K\n");
 
           char const *d = "<Space>=mode <Tab>=link <CR>=select /=filter";
@@ -445,8 +447,13 @@ Jdb_list::do_list()
             Jdb::printf_statline("Objs", d, "%s", get_mode_str());
 
 	  // key event loop
-	  for (bool redraw=false; !redraw; )
+	  for (bool redraw = false; !redraw && !resync && !terminate; )
 	    {
+              String_buf<80> help_text;
+              show_item(nullptr, &help_text, index(y));
+              Jdb::cursor(Jdb_screen::height() - 1, 1);
+              printf("%*s", Jdb_screen::width(), help_text.c_str());
+
 	      Jdb::cursor(y+2, 1);
 	      switch (int c=Jdb_core::getchar())
 		{
@@ -487,7 +494,6 @@ Jdb_list::do_list()
 		case 's': // switch sort
 		  _current = index(y);
 		  next_sort();
-		  redraw = true;
 		  resync = true;
 		  break;
 		case ' ': // switch mode
@@ -495,13 +501,11 @@ Jdb_list::do_list()
 		  next_mode();
 		  _current = get_valid(_current);
                   _start   = get_valid(_start);
-		  redraw = true;
 		  resync = true;
 		  break;
                 case '/':
                   handle_string_filter_input();
                   _current = get_visible(_current);
-                  redraw = true;
                   resync = true;
                   break;
 		case KEY_TAB: // go to associated object
@@ -510,7 +514,6 @@ Jdb_list::do_list()
 		  if (t != _current)
 		    {
 		      _current = t;
-		      redraw = true;
 		      resync = true;
 		    }
 		  break;
@@ -518,18 +521,24 @@ Jdb_list::do_list()
 		case KEY_RETURN_2:
 		  _current = index(y);
 		  if (!enter_item(_current))
-		    return;
+                    {
+                      terminate = true;
+                      break;
+                    }
 		  show_header();
 		  redraw = 1;
 		  break;
 		case KEY_ESC:
 		  Jdb::abort_command();
-		  return;
+                  terminate = true;
+		  break;
 		default:
 		  _current = index(y);
 		  if (!handle_key(_current, c) && Jdb::is_toplevel_cmd(c))
-		    return;
-
+                    {
+                      terminate = true;
+                      break;
+                    }
 		  show_header();
 		  redraw = 1;
 		  break;
@@ -537,5 +546,7 @@ Jdb_list::do_list()
 	    }
 	}
     }
+  Jdb::cursor(Jdb_screen::height() - 1, 1);
+  Jdb::clear_to_eol();
 }
 

@@ -34,7 +34,7 @@ Jdb_report::show_objects()
       l != Kobject_dbg::end(); ++l)
     {
       buf.reset();
-      Jdb_kobject::obj_description(&buf, false, *l);
+      Jdb_kobject::obj_description(&buf, nullptr, false, *l);
       printf("%.*s\n", buf.length(), buf.c_str());
     }
 }

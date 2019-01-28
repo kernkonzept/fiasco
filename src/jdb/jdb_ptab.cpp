@@ -191,6 +191,17 @@ Jdb_ptab_m::handle_key(Kobject_common *o, int code)
 }
 
 PUBLIC
+char const *
+Jdb_ptab_m::help_text(Kobject_common *o) const override
+{
+  Thread *t;
+  if (cxx::dyn_cast<Task*>(o) || ((t = cxx::dyn_cast<Thread*>(o)) && t->space()))
+    return "p=ptab";
+
+  return 0;
+}
+
+PUBLIC
 unsigned 
 Jdb_ptab::key_pressed(int c, unsigned long &row, unsigned long &col)
 {

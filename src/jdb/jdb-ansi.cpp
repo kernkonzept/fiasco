@@ -85,11 +85,25 @@ Jdb::screen_scroll (unsigned int start, unsigned int end)
     printf ("\033[r");
 }
 
-PUBLIC static inline NEEDS[<simpleio.h>]
+PUBLIC static inline NEEDS[<simpleio.h>, Jdb::clear_to_eol_str]
 void
 Jdb::clear_to_eol()
 {
-  putstr("\033[K");
+  putstr(clear_to_eol_str());
+}
+
+PUBLIC static inline
+char const *
+Jdb::clear_to_eol_str()
+{
+  return "\033[K";
+}
+
+PUBLIC static inline
+char const *
+Jdb::clear_to_eol_lf_str()
+{
+  return "\033[K\n";
 }
 
 // preserve the history of the serial console if fancy != 0
@@ -118,3 +132,10 @@ Jdb::clear_screen(int fancy=FANCY)
   cursor();
 }
 
+PUBLIC static
+void
+Jdb::line()
+{
+  for (unsigned i = 0; i < Jdb_screen::width(); ++i)
+    putchar('-');
+}

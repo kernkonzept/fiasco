@@ -50,7 +50,8 @@ operator ++ (Jdb_obj_space::Mode &m)
 
 PUBLIC
 Jdb_obj_space::Jdb_obj_space(Address base = 0, int level = 0)
-: _base(base),
+: Jdb_table(1),
+  _base(base),
   _task(0),
   _mode(Name)
 {
@@ -78,18 +79,24 @@ void
 Jdb_obj_space::print_statline(unsigned long row, unsigned long col)
 {
   static String_buf<128> buf;
+  static String_buf<80> help;
   buf.clear();
+  help.clear();
   unsigned rights;
 
   Kobject_iface *o = item(index(row,col), &rights);
   if (!o)
     {
+      Jdb::cursor(Jdb_screen::height() - 1, 1);
+      Jdb::clear_to_eol();
       Jdb::printf_statline("objs", "<Space>=mode", "%lx: -- INVALID --",
                            cxx::int_value<Cap_index>(index(row,col)));
       return;
     }
 
-  Jdb_kobject::obj_description(&buf, true, o->dbg_info());
+  Jdb_kobject::obj_description(&buf, &help, true, o->dbg_info());
+  Jdb::cursor(Jdb_screen::height() - 1, 1);
+  printf("%*s", Jdb_screen::width(), help.c_str());
   Jdb::printf_statline("objs", "<Space>=mode",
                        "%lxr%x: %-*s",
                        cxx::int_value<Cap_index>(index(row,col)),
@@ -150,6 +157,9 @@ Jdb_obj_space::handle_user_keys(int c, Kobject_iface *o)
   if (!o)
     return false;
 
+  // in case of overlayprint
+  Jdb::cursor(3, 1);
+
   bool handled = false;
   for (Jdb_kobject::Handler_iter h = Jdb_kobject::module()->global_handlers.begin();
        h != Jdb_kobject::module()->global_handlers.end(); ++h)
@@ -205,6 +215,17 @@ Jdb_obj_space::handle_key(Kobject_common *o, int code)
   show(0, 0);
 
   return true;
+}
+
+PUBLIC
+char const *
+Jdb_obj_space::help_text(Kobject_common *o) const override
+{
+  Thread *t;
+  if (cxx::dyn_cast<Task*>(o) || ((t = cxx::dyn_cast<Thread *>(o)) && t->space()))
+    return "o=objspace";
+
+  return 0;
 }
 
 static Jdb_obj_space jdb_obj_space INIT_PRIORITY(JDB_MODULE_INIT_PRIO);

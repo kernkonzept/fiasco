@@ -133,7 +133,8 @@ Jdb_kobject_irq::show_kobject(Kobject_common *, int)
 
 PUBLIC
 void
-Jdb_kobject_irq::show_kobject_short(String_buffer *buf, Kobject_common *o)
+Jdb_kobject_irq::show_kobject_short(String_buffer *buf,
+                                    Kobject_common *o, bool) override
 {
   Irq *i = cxx::dyn_cast<Irq*>(o);
   Kobject_common *w = follow_link(o);

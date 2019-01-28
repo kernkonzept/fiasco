@@ -13,6 +13,10 @@ public:
     Exit,
   };
 
+  explicit Jdb_table(int show_obj_help = 0)
+   : _show_obj_help(show_obj_help)
+  {}
+
   virtual unsigned col_width(unsigned col) const = 0;
   virtual unsigned long cols() const = 0;
   virtual unsigned long rows() const = 0;
@@ -26,6 +30,9 @@ public:
   virtual unsigned height() const;
 
   virtual bool edit_entry(unsigned long row, unsigned long col, unsigned cx, unsigned cy);
+
+private:
+  int _show_obj_help;
 };
 
 
@@ -72,7 +79,7 @@ Jdb_table::width() const
 IMPLEMENT
 unsigned
 Jdb_table::height() const
-{ return Jdb_screen::height() - 1; }
+{ return Jdb_screen::height() - 1 - _show_obj_help; }
 
 PRIVATE
 unsigned long
@@ -391,6 +398,6 @@ Jdb_table::draw_table(unsigned long row, unsigned long col,
         }
       putchar('\n');
     }
-  for (unsigned long y = lines; y < Jdb_screen::height()-1; ++y)
+  for (unsigned long y = lines; y < height(); ++y)
     putstr("\033[K\n");
 }
