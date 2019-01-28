@@ -552,7 +552,7 @@ base_paging_init(void)
   // map in the first 4MB of physical memory to 0xfffffffff0000000
   pdir_map_range(base_pml4_pa, Mem_layout::Kernel_image,
                  Mem_layout::Kernel_image_phys,
-                 Mem_layout::Kernel_image_end - Mem_layout::Kernel_image,
+                 Mem_layout::Kernel_image_size,
                  INTEL_PDE_VALID | INTEL_PDE_WRITE | INTEL_PDE_USER);
 
   // Adapter memory needs a seperate mapping

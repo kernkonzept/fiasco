@@ -44,11 +44,12 @@ public:
     Vmem_end          = 0xf0000000,
 
     Kernel_image        = FIASCO_IMAGE_VIRT_START, // usually 0xf0000000
-    Kernel_image_end    = Kernel_image + Config::SUPERPAGE_SIZE,
+    Kernel_image_size   = FIASCO_IMAGE_VIRT_SIZE,
+    Kernel_image_end    = Kernel_image + Kernel_image_size,
 
     Adap_image           = Adap_in_kernel_image
                            ? Kernel_image
-                           : Kernel_image + Config::SUPERPAGE_SIZE,
+                           : Kernel_image + Kernel_image_size,
 
     Adap_vram_mda_beg = Adap_image + 0xb0000, ///< % 8KB video RAM MDA memory
     Adap_vram_mda_end = Adap_image + 0xb8000,

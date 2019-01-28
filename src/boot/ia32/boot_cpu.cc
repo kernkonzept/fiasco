@@ -475,8 +475,7 @@ base_paging_init(void)
   // map in the Kernel image (superpage) of physical memory to 0xf0000000
   pdir_map_range(base_pdir_pa, /*virt*/Mem_layout::Kernel_image,
                  Mem_layout::Kernel_image_phys,
-		 /*size*/Mem_layout::Kernel_image_end -
-			 Mem_layout::Kernel_image,
+		 Mem_layout::Kernel_image_size,
 		 INTEL_PDE_VALID | INTEL_PDE_WRITE | INTEL_PDE_USER);
 
   // Adapter memory is already contrained in the kernel-image mapping

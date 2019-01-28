@@ -233,6 +233,9 @@ SECTIONS {
     PROVIDE (_initcall_end = .);
   } : kidata
 
+  ASSERT(_initcall_end - _kernel_image < FIASCO_IMAGE_VIRT_SIZE,
+         "Increase FIASCO_IMAGE_VIRT_SIZE!")
+
   /DISCARD/ : {
     *(.note)
     *(.note.ABI-tag)

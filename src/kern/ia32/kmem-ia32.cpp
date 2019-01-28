@@ -365,21 +365,20 @@ Kmem::init_mmu()
       Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced,
       Pt_entry::super_level(), false, pdir_alloc(alloc));
 
-
   kdir->map(Mem_layout::Kernel_image_phys,
             Virt_addr(Mem_layout::Kernel_image),
-            Virt_size(Config::SUPERPAGE_SIZE),
+            Virt_size(Mem_layout::Kernel_image_size),
             Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced
             | Pt_entry::global(), Pt_entry::super_level(), false,
             pdir_alloc(alloc));
 
-   if (!Mem_layout::Adap_in_kernel_image)
-     kdir->map(Mem_layout::Adap_image_phys,
-               Virt_addr(Mem_layout::Adap_image),
-               Virt_size(Config::SUPERPAGE_SIZE),
-               Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced
-               | Pt_entry::global(), Pt_entry::super_level(),
-               false, pdir_alloc(alloc));
+  if (!Mem_layout::Adap_in_kernel_image)
+    kdir->map(Mem_layout::Adap_image_phys,
+              Virt_addr(Mem_layout::Adap_image),
+              Virt_size(Config::SUPERPAGE_SIZE),
+              Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced
+              | Pt_entry::global(), Pt_entry::super_level(),
+              false, pdir_alloc(alloc));
 
   // map the last 64MB of physical memory as kernel memory
   kdir->map(Mem_layout::pmem_to_phys(Mem_layout::Physmem),
@@ -861,9 +860,9 @@ Kmem::init_cpu(Cpu &cpu)
         }
     }
 
-  cpu_dir->map(Kernel_image_phys,
+  cpu_dir->map(Mem_layout::Kernel_image_phys,
                Virt_addr(Kernel_image),
-               Virt_size(Config::SUPERPAGE_SIZE),
+               Virt_size(Mem_layout::Kernel_image_size),
                Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced
                | Pt_entry::global(), Pt_entry::super_level(), false,
                pdir_alloc(alloc));
