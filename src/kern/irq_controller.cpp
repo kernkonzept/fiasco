@@ -48,7 +48,7 @@ Icu::op_icu_bind(unsigned irqnum, Ko::Cap<Irq> const &irq)
   irq.obj->unbind();
 
   if (!Irq_mgr::mgr->alloc(irq.obj, irqnum))
-    return commit_result(-L4_err::EPerm);
+    return commit_result(-L4_err::EInval);
 
   return commit_result(0);
 }
