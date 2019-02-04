@@ -41,3 +41,5 @@ $(BOOT): $(KERNEL)
 		$(VERBOSE)$(STRIP) -o $@ $<
 		$(VERBOSE)$(OBJCOPY) --add-gnu-debuglink=$< $@
 		$(VERBOSE)chmod 755 $@
+
+BOOT_CLEAN := boot_img.x1 boot_img.x2 boot_img.ren_syms boot_img.ren_syms kernel.ia32.lds
