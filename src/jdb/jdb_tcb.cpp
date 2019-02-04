@@ -55,8 +55,6 @@ public:
     : _base(p.base()), _offs(p.offs())
   {}
 
-  Jdb_tcb_ptr &operator = (Jdb_tcb_ptr const &) = default;
-
   inline bool valid() const
   { return _offs <= Context::Size-sizeof(Mword); }
 

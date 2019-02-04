@@ -30,8 +30,6 @@ public:
   L4_error(Error_code ec = None, Phase p = Snd) : _raw(ec | p) {}
   L4_error(L4_error const &e, Phase p = Snd) : _raw(e._raw | p) {}
 
-  L4_error &operator = (L4_error const &) = default;
-
   bool ok() const { return _raw == 0; }
 
   Error_code error() const { return Error_code(_raw & 0x1e); }

@@ -35,8 +35,7 @@ public:
   enum { Alignment = Mapping_entry::Alignment };
 
   // CREATORS
-  Mapping(const Mapping&) = default;
-  Mapping &operator = (Mapping const &) = default;
+  Mapping(const Mapping&);	// this constructor is undefined.
 
   // DATA
   Mapping_entry _data;
