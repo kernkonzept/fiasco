@@ -1,5 +1,4 @@
-#ifndef REGDEFS_H
-#define REGDEFS_H
+#pragma once
 
 //
 // Register and register bit definitions for ia32 and amd64 architectures.
@@ -134,46 +133,3 @@
 #define PF_ERR_USERMODE 0x00000004      // PF: Caused By User Mode Code
 #define PF_ERR_RESERVED 0x00000008      // PF: Reserved Bit Set in PDIR
 #define PF_ERR_INSTFETCH 0x00000010     // PF: Instruction fetch
-
-// Model Specific Registers
-#define MSR_TSC              0x010      // Time Stamp Counter
-#define MSR_IA32_FEATURE_CONTROL 0x03a  // Control Features in Intel 64 Processor
-#define MSR_IA32_TSC_ADJUST  0x03b      // TSC adjust value
-#define MSR_IA32_ARCH_CAPABILITIES 0x10a // Enumeration of Architectural Features
-#define MSR_IA32_FLUSH_CMD   0x10b      // Flush L1D cache
-#define MSR_SYSENTER_CS      0x174      // Kernel Code Segment
-#define MSR_SYSENTER_ESP     0x175      // Kernel Syscall Entry
-#define MSR_SYSENTER_EIP     0x176      // Kernel Stack Pointer
-#define MSR_LER_FROM_LIP     0x1d7      // Last Exception Record From Linear
-#define MSR_LER_TO_LIP       0x1d8      // Last Exception Record To Linear
-#define MSR_DEBUGCTLA        0x1d9      // Debug Control
-#define MSR_LASTBRANCH_TOS   0x1da      // (P4) Last Branch Record Stack TOS
-#define MSR_LASTBRANCH_0     0x1db      // (P4) Last Branch Record 0
-#define MSR_LASTBRANCH_1     0x1dc      // (P4) Last Branch Record 1
-#define MSR_LASTBRANCH_2     0x1dd      // (P4) Last Branch Record 2
-#define MSR_LASTBRANCH_3     0x1de      // (P4) Last Branch Record 3
-#define MSR_LASTBRANCHFROMIP 0x1db      // (P6)
-#define MSR_LASTBRANCHTOIP   0x1dc      // (P6)
-#define MSR_LASTINTFROMIP    0x1dd      // (P6)
-#define MSR_LASTINTTOIP      0x1de      // (P6)
-#define MSR_PAT              0x277      // PAT
-#define MSR_HWP_PM_ENABLE    0x770      // HWP enable/disable
-#define MSR_HWP_CAPABILITIES 0x771
-#define MSR_HWP_REQUEST_PKG  0x772
-#define MSR_HWP_INTERRUPT    0x773
-#define MSR_HWP_REQUEST      0x774
-#define MSR_HWP_STATUS       0x775
-
-// AMD64 Model Specific Registers
-#define MSR_EFER        0xc0000080      // Extended Feature Enable Register
-#define MSR_STAR        0xc0000081      // CS and SS for Syscall/Sysret
-#define MSR_LSTAR       0xc0000082      // EIP for Syscall (64Bit-Mode)
-#define MSR_CSTAR       0xc0000083      // EIP for Syscall (Comp-Mode)
-#define MSR_SFMASK      0xc0000084      // RFLAGS for Syscall
-#define MSR_FS_BASE     0xc0000100      // FS-Base
-#define MSR_GS_BASE     0xc0000101      // GS-Base
-#define MSR_KERNEL_GS_BASE 0xc0000102   // Kernel-GS-Base
-#define MSR_VM_CR       0xc0010114      // SVM
-#define MSR_VM_HSAVE_PA 0xc0010117      // SVM host state-save area
-
-#endif

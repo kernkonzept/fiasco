@@ -232,7 +232,7 @@ void
 Cpu::set_sysenter(void (*func)(void))
 {
   _sysenter_eip = reinterpret_cast<Mword>(func);
-  wrmsr(reinterpret_cast<Mword>(func), 0, MSR_SYSENTER_EIP);
+  wrmsr(reinterpret_cast<Mword>(func), 0, Msr_ia32_sysenter_eip);
 }
 
 
@@ -248,9 +248,9 @@ PUBLIC inline
 void
 Cpu::setup_sysenter() const
 {
-  wrmsr(Gdt::gdt_code_kernel, 0, MSR_SYSENTER_CS);
-  wrmsr(reinterpret_cast<unsigned long>(&kernel_sp()), 0, MSR_SYSENTER_ESP);
-  wrmsr(_sysenter_eip, 0, MSR_SYSENTER_EIP);
+  wrmsr(Gdt::gdt_code_kernel, 0, Msr_ia32_sysenter_cs);
+  wrmsr(reinterpret_cast<unsigned long>(&kernel_sp()), 0, Msr_ia32_sysenter_esp);
+  wrmsr(_sysenter_eip, 0, Msr_ia32_sysenter_eip);
 }
 
 PUBLIC FIASCO_INIT_AND_PM

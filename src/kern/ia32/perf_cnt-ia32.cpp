@@ -107,16 +107,11 @@ enum
 enum
 {
   // Intel P5
-  Msr_p5_cesr		= 0x11,
-  Msr_p5_ctr0		= 0x12,
-  Msr_p5_ctr1		= 0x13,
   P5_evntsel_user	= 0x00000080,
   P5_evntsel_kern	= 0x00000040,
   P5_evntsel_duration	= 0x00000100,
 
   // Intel P6/PII/PIII
-  Msr_p6_perfctr0	= 0xC1,
-  Msr_p6_evntsel0	= 0x186,
   P6_evntsel_enable	= 0x00400000,
   P6_evntsel_int	= 0x00100000,
   P6_evntsel_user	= 0x00010000,
@@ -124,8 +119,6 @@ enum
   P6_evntsel_edge	= 0x00040000,
 
   // AMD K7/K8
-  Msr_k7_evntsel0	= 0xC0010000,
-  Msr_k7_perfctr0	= 0xC0010004,
   K7_evntsel_enable	= P6_evntsel_enable,
   K7_evntsel_int	= P6_evntsel_int,
   K7_evntsel_user	= P6_evntsel_user,
@@ -133,11 +126,6 @@ enum
   K7_evntsel_edge	= P6_evntsel_edge,
 
   // Intel P4
-  Msr_p4_misc_enable	= 0x1A0,
-  Msr_p4_perfctr0	= 0x300,
-  Msr_p4_bpu_counter0	= 0x300,
-  Msr_p4_cccr0		= 0x360,
-  Msr_p4_fsb_escr0	= 0x3A2,
   P4_escr_user		= (1<<2),
   P4_escr_kern		= (1<<3),
   Msr_p4_bpu_cccr0	= 0x360,
@@ -148,8 +136,6 @@ enum
   P4_cccr_required	= (3<<16),
   P4_cccr_enable	= (1<<12),
 
-  Msr_ap_perfctr0       = 0xC1,
-  Msr_ap_evntsel0       = 0x186,
   AP_evntsel_enable     = P6_evntsel_enable,
   AP_evntsel_int        = P6_evntsel_int,
   AP_evntsel_user       = P6_evntsel_user,
@@ -472,8 +458,8 @@ Perf_cnt_ap::Perf_cnt_ap()
     {
       // fixed-function performance counters supported in principle
       unsigned nr_fixed_function_perctr = edx & 0x1f;
-      Unsigned64 msr_fixed_ctr_ctrl = Cpu::rdmsr(0x38d); // IA32_FIXED_CTR_CTRL
-      Unsigned64 msr_perf_global_ctrl = Cpu::rdmsr(0x38f); // IA32_PERF_GLOBAL_CTRL
+      Unsigned64 msr_fixed_ctr_ctrl = Cpu::rdmsr(Msr_ia32_fixed_ctr_ctrl);
+      Unsigned64 msr_perf_global_ctrl = Cpu::rdmsr(Msr_ia32_perf_global_ctrl);
       for (unsigned i = 0; i < nr_fixed_function_perctr; ++i)
         if ((ecx & (1 << i)) || ((edx & 0x1f) > i))
           {
@@ -565,16 +551,23 @@ Perf_cnt_p4::init() override
 
   // disable precise event based sampling
   if (!(misc_enable & (1<<12)))
-    clear_msr_range(0x3F1, 2);
+    {
+      clear_msr_range(Msr_ia32_pebs_enable, 1);
+      clear_msr_range(Msr_pebs_matrix_vert, 1);
+    }
 
   // ensure sane state of performance counter registers
-  clear_msr_range(0x3A0, 26);
+  clear_msr_range(Msr_bsu_escr0, 26);
   if (Cpu::boot_cpu()->model() <= 2)
-    clear_msr_range(0x3BA, 2);
-  clear_msr_range(0x3BC, 3);
-  clear_msr_range(0x3C0, 6);
-  clear_msr_range(0x3C8, 6);
-  clear_msr_range(0x3E0, 2);
+    clear_msr_range(Msr_iq_escr0, 2);
+  clear_msr_range(Msr_rat_escr0, 2);
+  clear_msr_range(Msr_ssu_escr0, 1);
+  clear_msr_range(Msr_ms_escr0, 2);
+  clear_msr_range(Msr_tbpu_escr0, 2);
+  clear_msr_range(Msr_tc_escr0, 2);
+  clear_msr_range(Msr_ix_escr0, 2);
+  clear_msr_range(Msr_cru_escr0, 4);
+  clear_msr_range(Msr_cru_escr4, 2);
   clear_msr_range(Msr_p4_cccr0, 18);
   clear_msr_range(Msr_p4_perfctr0, 18);
 

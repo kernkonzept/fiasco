@@ -11,6 +11,7 @@ IMPLEMENTATION[ia32 || amd64]:
 #include "idt.h"
 #include "io.h"
 #include "i8259.h"
+#include "msrdefs.h"
 #include "jdb_screen.h"
 #include "perf_cnt.h"
 #include "pic.h"
@@ -300,7 +301,7 @@ Jdb_kern_info_cpu::show_feature_ia32_tsc_adjust()
             auto get_tsc_adj = [](Cpu_number)
               {
                 Unsigned64 v = ~0ULL;
-                Jdb::rdmsr(MSR_IA32_TSC_ADJUST, &v);
+                Jdb::rdmsr(Msr_ia32_tsc_adjust, &v);
                 printf("%lld\n", v);
               };
 

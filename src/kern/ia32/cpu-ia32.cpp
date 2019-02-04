@@ -5,6 +5,7 @@ INTERFACE[ia32 || amd64]:
 #include "l4_types.h"
 #include "types.h"
 #include "initcalls.h"
+#include "msrdefs.h"
 #include "regdefs.h"
 #include "per_cpu_data.h"
 
@@ -91,7 +92,7 @@ private:
   Unsigned32 _ext_8000_0001_ecx;        // CPUID(8000_0001).ECX
   Unsigned32 _ext_8000_0001_edx;        // CPUID(8000_0001).EDX
   Unsigned32 _local_features;           // See Local_features
-  Unsigned64 _arch_capabilities;        // MSR_IA32_ARCH_CAPABILITIES
+  Unsigned64 _arch_capabilities;        // Msr_ia32_arch_capabilities
 
   Unsigned16 _inst_tlb_4k_entries;
   Unsigned16 _data_tlb_4k_entries;
@@ -343,9 +344,9 @@ public:
   static Unsigned32 ucode_revision()
   {
     Unsigned32 a, b, c, d;
-    Cpu::wrmsr(0, 0x8b); // IA32_BIOS_SIGN_ID
+    Cpu::wrmsr(0, Msr_ia32_bios_sign_id);
     Cpu::cpuid(1, &a, &b, &c, &d);
-    return Cpu::rdmsr(0x8b) >> 32;
+    return Cpu::rdmsr(Msr_ia32_bios_sign_id) >> 32;
   }
 
 private:
@@ -481,15 +482,15 @@ struct Ia32_intel_microcode
 
   static Unsigned64 get_sig()
   {
-    Cpu::wrmsr(0, 0x8b); // IA32_BIOS_SIGN_ID
+    Cpu::wrmsr(0, Msr_ia32_bios_sign_id);
     Unsigned32 a = Cpu::cpuid_eax(1);
-    return (Cpu::rdmsr(0x8b) & 0xffffffff00000000) | a;
+    return (Cpu::rdmsr(Msr_ia32_bios_sign_id) & 0xffffffff00000000) | a;
   }
 
   static Header const *find(Unsigned64 rev_sig)
   {
     // get platform ID from IA32_PLATFORM_ID msr
-    Unsigned32 proc_mask = 1U << ((Cpu::rdmsr(0x17) >> 50) & 0x7);
+    Unsigned32 proc_mask = 1U << ((Cpu::rdmsr(Msr_ia32_platform_id) >> 50) & 0x7);
 
     extern char const __attribute__((weak))ia32_intel_microcode_start[];
     extern char const __attribute__((weak))ia32_intel_microcode_end[];
@@ -556,7 +557,7 @@ struct Ia32_intel_microcode
       {
         auto g = lock_guard(load_lock);
         Cpu::wrmsr(reinterpret_cast<Address>(update->data()),
-                   0x79); // IA32_BIOS_UPDT_TRIG
+                   Msr_ia32_bios_updt_trig);
       }
 
     Unsigned64 n = get_sig();
@@ -1315,7 +1316,7 @@ Cpu::identify()
         Unsigned32 dummy1, dummy2;
         cpuid(0x7, 0, &dummy1, &_ext_07_ebx, &dummy2, &_ext_07_edx);
         if (has_arch_capabilities())
-          _arch_capabilities = rdmsr(MSR_IA32_ARCH_CAPABILITIES);
+          _arch_capabilities = rdmsr(Msr_ia32_arch_capabilities);
       }
 
     if (_vendor == Vendor_intel)
@@ -1607,7 +1608,7 @@ Cpu::pm_resume()
 
   if ((features() & FEAT_TSC) && can_wrmsr())
     if (_ext_07_ebx & FEATX_IA32_TSC_ADJUST)
-      wrmsr(0, 0, MSR_IA32_TSC_ADJUST);
+      wrmsr(0, 0, Msr_ia32_tsc_adjust);
 
   try_enable_hw_performance_states(true);
 }
@@ -1762,7 +1763,7 @@ Cpu::init_bts_type()
 
   if (can_wrmsr() && vendor() == Vendor_intel)
     {
-      if (family() == 15 && (rdmsr(0x1A0) & (1<<11)) == 0)
+      if (family() == 15 && (rdmsr(Msr_ia32_misc_enable) & (1<<11)) == 0)
 	_bts = Bts_pentium_4;
       if (family() == 6  && (model() == 9 || (model() >= 13 &&
 	      model() <= 15)))
@@ -1790,7 +1791,7 @@ Cpu::lbr_enable(bool on)
 	  lbr_active    = false;
 	  debugctl_set &= ~1;
 	  debugctl_busy = lbr_active || bts_active;
-	  wrmsr(debugctl_reset, MSR_DEBUGCTLA);
+	  wrmsr(debugctl_reset, Msr_debugctla);
 	}
     }
 }
@@ -1807,14 +1808,14 @@ Cpu::btf_enable(bool on)
 	  btf_active      = true;
 	  debugctl_set   |= 2;
 	  debugctl_reset |= 2; /* don't disable bit in kernel */
-	  wrmsr(2, MSR_DEBUGCTLA);     /* activate _now_ */
+	  wrmsr(2, Msr_debugctla);     /* activate _now_ */
 	}
       else
 	{
 	  btf_active    = false;
 	  debugctl_set &= ~2;
 	  debugctl_busy = lbr_active || bts_active;
-	  wrmsr(debugctl_reset, MSR_DEBUGCTLA);
+	  wrmsr(debugctl_reset, Msr_debugctla);
 	}
     }
 }
@@ -1846,7 +1847,7 @@ Cpu::bts_enable(bool on)
 	    default:;
 	    }
 	  debugctl_busy = lbr_active || bts_active;
-	  wrmsr(debugctl_reset, MSR_DEBUGCTLA);
+	  wrmsr(debugctl_reset, Msr_debugctla);
 	}
     }
 }
@@ -1856,7 +1857,7 @@ void
 Cpu::debugctl_enable()
 {
   if (debugctl_busy)
-    wrmsr(debugctl_set, MSR_DEBUGCTLA);
+    wrmsr(debugctl_set, Msr_debugctla);
 }
 
 PUBLIC inline
@@ -1864,7 +1865,7 @@ void
 Cpu::debugctl_disable()
 {
   if (debugctl_busy)
-    wrmsr(debugctl_reset, MSR_DEBUGCTLA);
+    wrmsr(debugctl_reset, Msr_debugctla);
 }
 
 /*
@@ -1879,15 +1880,15 @@ Cpu::print_errata()
     {
       Unsigned16 osvw_id_length, i;
       bool affected = false;
-      osvw_id_length = rdmsr(0xc0010140) & 0xff;
+      osvw_id_length = rdmsr(Msr_osvw_id_length) & 0xff;
 
       for (i = 1; ((i - 1) * 64) < osvw_id_length; i++)
         {
-          Unsigned64 osvw_msr = rdmsr(0xc0010140 + i);
+          Unsigned64 osvw_msr = rdmsr(Msr_osvw_id_length + i);
           if (osvw_msr != 0)
             {
               printf("\033[31mOSVW_MSR%d = 0x%016llx\033[m\n",
-                     i, rdmsr(0xc0010140 + i));
+                     i, rdmsr(Msr_osvw_id_length + i));
               affected = true;
             }
         }
@@ -1922,10 +1923,10 @@ Cpu::try_enable_hw_performance_states(bool resume)
     return;
 
   // enable
-  wrmsr(0x1ULL, MSR_HWP_PM_ENABLE);
+  wrmsr(0x1ULL, Msr_hwp_pm_enable);
 
   // let the hardware decide on everything (autonomous operation mode)
-  Unsigned64 hwp_caps = rdmsr(MSR_HWP_CAPABILITIES);
+  Unsigned64 hwp_caps = rdmsr(Msr_hwp_capabilities);
   // Package_Control (bit 42) = 0
   // Activity_Window (bits 41:32) = 0 (auto)
   // Energy_Performance_Preference (bits 31:24) = 0x80 (default)
@@ -1936,7 +1937,7 @@ Cpu::try_enable_hw_performance_states(bool resume)
     0x80ULL << 24 |
     (((hwp_caps >> HIGHEST_PERFORMANCE_SHIFT) & 0xff) << 8) |
     ((hwp_caps >> LOWEST_PERFORMANCE_SHIFT) & 0xff);
-  wrmsr(request, MSR_HWP_REQUEST);
+  wrmsr(request, Msr_hwp_request);
 
   if (!resume && id() == Cpu_number::boot_cpu())
     printf("HWP: enabled\n");
@@ -1985,7 +1986,7 @@ Cpu::init(Cpu_number cpu)
 
   if ((features() & FEAT_TSC) && can_wrmsr())
     if (_ext_07_ebx & FEATX_IA32_TSC_ADJUST)
-      wrmsr(0, 0, MSR_IA32_TSC_ADJUST);
+      wrmsr(0, 0, Msr_ia32_tsc_adjust);
 
   // See Attribs_enum on how PA0, PA2 and PA3 are used.
   // PA0 (used):   Write back (WB).
@@ -1997,7 +1998,7 @@ Cpu::init(Cpu_number cpu)
   // PA6 (unused): Uncached, can be overridden by WC in MTRRs (UC-).
   // PA7 (unused): Uncacheable (UC).
   if ((features() & FEAT_PAT) && can_wrmsr())
-    wrmsr(0x00010406, 0x00070406, MSR_PAT);
+    wrmsr(0x00010406, 0x00070406, Msr_ia32_pat);
 
   print_errata();
 }
@@ -2136,11 +2137,11 @@ Cpu::set_frequency_and_scalers(Unsigned64 freq)
  * purposes. For instance, for a Kaby Lake processor, CPUID_16 returned a value
  * of 2800MHz while the actual CPU frequency is 2808MHz.
  *
- * MSR_PLATFORM_INFO is less accurate as well. On the mentioned Kaby Lake CPU,
+ * Msr_platform_info is less accurate as well. On the mentioned Kaby Lake CPU,
  * bits 15:8 report 28 defining a frequency of 28*100=2800MHz.
  *
  * Calibrating the TSC delivers results which are still more accurate than the
- * rounded information from CPUID_16 and MSR_PLATFORM_INFO, even on QEMU.
+ * rounded information from CPUID_16 and Msr_platform_info, even on QEMU.
  */
 PRIVATE
 bool
@@ -2270,7 +2271,7 @@ Cpu::init_indirect_branch_mitigation()
         panic("STIBP not supported by CPU: %x", d);
 
       // enable STIBP
-      wrmsr(2, 0x48);
+      wrmsr(2, Msr_ia32_spec_ctrl);
     }
   else
     panic("Kernel compiled with IBRS / IBPB, but not supported on non-Intel CPUs");

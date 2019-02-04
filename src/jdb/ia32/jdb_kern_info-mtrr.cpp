@@ -1,7 +1,8 @@
 IMPLEMENTATION:
 
-#include "static_init.h"
+#include "msrdefs.h"
 #include "paging_bits.h"
+#include "static_init.h"
 
 class Jdb_kern_info_mtrr : public Jdb_kern_info_module
 {
@@ -27,8 +28,8 @@ Jdb_kern_info_mtrr::get_var_mtrr(int reg, Address *ret_base,
                                  Address *ret_size, int *ret_type)
 {
   Unsigned64 mask, base;
-  if (   Jdb::rdmsr(0x201 + 2*reg, &mask) && (mask & 0x800)
-      && Jdb::rdmsr(0x200 + 2*reg, &base))
+  if (   Jdb::rdmsr(Msr_ia32_mtrr_phybase1 + 2*reg, &mask) && (mask & 0x800)
+      && Jdb::rdmsr(Msr_ia32_mtrr_phybase0 + 2*reg, &base))
     {
       *ret_size = (-(size_or_mask | mask >> Config::PAGE_SHIFT))
         << Config::PAGE_SHIFT;
@@ -49,7 +50,7 @@ Jdb_kern_info_mtrr::show() override
     "write-through (WT)", "write-protected (WP)", "write back (WB)", "??"
   };
   Unsigned64 num_mtrr;
-  if (Jdb::rdmsr(0xfe, &num_mtrr))
+  if (Jdb::rdmsr(Msr_ia32_mtrrcap, &num_mtrr))
     num_mtrr &= 0xff;
   else
     num_mtrr = 8;

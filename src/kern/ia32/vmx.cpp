@@ -1340,19 +1340,21 @@ private:
 // -----------------------------------------------------------------------
 IMPLEMENTATION[vmx]:
 
+#include <cstring>
+
+#include "atomic.h"
 #include "cpu.h"
+#include "cpu_call.h"
+#include "cpu_mask.h"
+#include "entry-ia32.h"
+#include "idt.h"
 #include "kmem.h"
 #include "kmem_alloc.h"
 #include "kmem_slab.h"
 #include "kobject_dbg.h"
 #include "l4_types.h"
-#include <cstring>
-#include "idt.h"
+#include "msrdefs.h"
 #include "vm_vmx_asm.h"
-#include "entry-ia32.h"
-#include "cpu_mask.h"
-#include "cpu_call.h"
-#include "atomic.h"
 
 JDB_DEFINE_TYPENAME(Vmx_vmcs, "VMX VMCS");
 
@@ -1404,24 +1406,26 @@ Vmx_info::init()
 {
   enum { ShowDebugDumps = 0 };
   bool ept = false;
-  basic = Cpu::rdmsr(0x480);
-  pinbased_ctls = Cpu::rdmsr(0x481);
+  basic = Cpu::rdmsr(Msr_ia32_vmx_basic);
+  pinbased_ctls = Cpu::rdmsr(Msr_ia32_vmx_pinbased_ctls);
   pinbased_ctls_default1 = pinbased_ctls.must_be_one();
-  procbased_ctls = Cpu::rdmsr(0x482);
+  procbased_ctls = Cpu::rdmsr(Msr_ia32_vmx_procbased_ctls);
   procbased_ctls_default1 = procbased_ctls.must_be_one();
-  exit_ctls = Cpu::rdmsr(0x483);
+  exit_ctls = Cpu::rdmsr(Msr_ia32_vmx_exit_ctls);
   exit_ctls_default1 = exit_ctls.must_be_one();
-  entry_ctls = Cpu::rdmsr(0x484);
+  entry_ctls = Cpu::rdmsr(Msr_ia32_vmx_entry_ctls);
   entry_ctls_default1 = entry_ctls.must_be_one();
-  misc = Cpu::rdmsr(0x485);
+  misc = Cpu::rdmsr(Msr_ia32_vmx_misc);
 
-  cr0_defs = Bit_defs<Mword>(Cpu::rdmsr(0x486), Cpu::rdmsr(0x487));
-  cr4_defs = Bit_defs<Mword>(Cpu::rdmsr(0x488), Cpu::rdmsr(0x489));
+  cr0_defs = Bit_defs<Mword>(Cpu::rdmsr(Msr_ia32_vmx_cr0_fixed0),
+                             Cpu::rdmsr(Msr_ia32_vmx_cr0_fixed1));
+  cr4_defs = Bit_defs<Mword>(Cpu::rdmsr(Msr_ia32_vmx_cr4_fixed0),
+                             Cpu::rdmsr(Msr_ia32_vmx_cr4_fixed1));
   exception_bitmap = Bit_defs_32<Vmx_info::Exceptions>(0xffffffff00000000ULL);
 
-  max_index = Cpu::rdmsr(0x48a);
+  max_index = Cpu::rdmsr(Msr_ia32_vmx_vmcs_enum);
   if (procbased_ctls.allowed(Vmx_info::PRB1_enable_proc_based_ctls_2))
-    procbased_ctls2 = Cpu::rdmsr(0x48b);
+    procbased_ctls2 = Cpu::rdmsr(Msr_ia32_vmx_procbased_ctls2);
 
   assert((Vmx::Sw_guest_xcr0 & 0x3ff) > max_index);
   assert((Vmx::Sw_guest_cr2 & 0x3ff) > max_index);
@@ -1430,11 +1434,11 @@ Vmx_info::init()
     {
       // do not use the true pin-based ctls because user-level then needs to
       // be aware of the fact that it has to set bits 1, 2, and 4 to default 1
-      if constexpr (0) pinbased_ctls = Cpu::rdmsr(0x48d);
+      if constexpr (0) pinbased_ctls = Cpu::rdmsr(Msr_ia32_vmx_true_pinbased_ctls);
 
-      procbased_ctls = Cpu::rdmsr(0x48e);
-      exit_ctls = Cpu::rdmsr(0x48f);
-      entry_ctls = Cpu::rdmsr(0x490);
+      procbased_ctls = Cpu::rdmsr(Msr_ia32_vmx_true_procbased_ctls);
+      exit_ctls = Cpu::rdmsr(Msr_ia32_vmx_true_exit_ctls);
+      entry_ctls = Cpu::rdmsr(Msr_ia32_vmx_true_entry_ctls);
     }
 
   if constexpr (ShowDebugDumps)
@@ -1464,7 +1468,7 @@ Vmx_info::init()
       procbased_ctls.enforce(Vmx_info::PRB1_enable_proc_based_ctls_2, true);
 
       if (procbased_ctls2.allowed(Vmx_info::PRB2_enable_ept))
-        ept_vpid_cap = Cpu::rdmsr(0x48c);
+        ept_vpid_cap = Cpu::rdmsr(Msr_ia32_vmx_ept_vpid_cap);
 
       if (has_invept() && !has_invept_global())
       {
@@ -1503,7 +1507,7 @@ Vmx_info::init()
             }
 
           // We currently do not implement the xss bitmap, and do not support
-          // the MSR_IA32_XSS which is shared between guest and host. Therefore
+          // the Msr_ia32_xss which is shared between guest and host. Therefore
           // we disable xsaves/xrstores for the guest.
           procbased_ctls2.enforce(Vmx_info::PRB2_enable_xsaves, false);
         }
@@ -2580,7 +2584,7 @@ Vmx::handle_bios_lock()
     Feature_control_vmx_outside_SMX = 1 << 2,
   };
 
-  Unsigned64 feature = Cpu::rdmsr(MSR_IA32_FEATURE_CONTROL);
+  Unsigned64 feature = Cpu::rdmsr(Msr_ia32_feature_control);
 
   if (feature & Feature_control_lock)
     {
@@ -2589,7 +2593,7 @@ Vmx::handle_bios_lock()
     }
   else
     Cpu::wrmsr(feature | Feature_control_vmx_outside_SMX | Feature_control_lock,
-               MSR_IA32_FEATURE_CONTROL);
+               Msr_ia32_feature_control);
   return true;
 }
 

@@ -43,13 +43,14 @@ class Vm_vmx : public Vm_vmx_t<Vm_vmx>
 IMPLEMENTATION [vmx]:
 
 #include "context.h"
-#include "mem_space.h"
+#include "cpu.h"
 #include "fpu.h"
+#include "mem_space.h"
+#include "msrdefs.h"
+#include "idt.h"
 #include "thread.h" // XXX: circular dep, move this out here!
 #include "thread_state.h" // XXX: circular dep, move this out here!
 #include "virt.h"
-#include "idt.h"
-#include "cpu.h"
 
 static Kmem_slab_t<Vm_vmx> _vmx_allocator("Vm_vmx");
 
@@ -160,13 +161,13 @@ Vm_vmx_t<VARIANT>::vm_entry(Trex *regs,
 
   if (cpu.features() & FEAT_PAT
       && vmx.info.exit_ctls.allowed(Vmx_info::Ex_load_ia32_pat))
-    Vmx::vmcs_write<Vmx::Vmcs_host_ia32_pat>(Cpu::rdmsr(MSR_PAT));
+    Vmx::vmcs_write<Vmx::Vmcs_host_ia32_pat>(Cpu::rdmsr(Msr_ia32_pat));
 
   if (vmx.info.exit_ctls.allowed(Vmx_info::Ex_load_ia32_efer))
-    Vmx::vmcs_write<Vmx::Vmcs_host_ia32_efer>(Cpu::rdmsr(MSR_EFER));
+    Vmx::vmcs_write<Vmx::Vmcs_host_ia32_efer>(Cpu::rdmsr(Msr_ia32_efer));
 
   if (vmx.info.exit_ctls.allowed(Vmx_info::Ex_load_perf_global_ctl))
-    Vmx::vmcs_write<Vmx::Vmcs_host_ia32_perf_global_ctrl>(Cpu::rdmsr(0x199));
+    Vmx::vmcs_write<Vmx::Vmcs_host_ia32_perf_global_ctrl>(Cpu::rdmsr(Msr_ia32_perf_ctl));
 
   safe_host_segments();
 
@@ -194,7 +195,7 @@ Vm_vmx_t<VARIANT>::vm_entry(Trex *regs,
   load_guest_xcr0(host_xcr0, guest_xcr0);
 
   if (cpu.has_l1d_flush() && !cpu.skip_l1dfl_vmentry())
-    Cpu::wrmsr(1UL, MSR_IA32_FLUSH_CMD);
+    Cpu::wrmsr(1UL, Msr_ia32_flush_cmd);
 
   unsigned long ret = resume_vm_vmx(regs);
 
@@ -439,8 +440,8 @@ Vm_vmx_t<VARIANT>::safe_host_segments()
 {
   /* we can optimize GS and FS handling based on the assuption that
    * FS and GS do not change often for the host / VMM */
-  Vmx::vmcs_write<Vmx::Vmcs_host_fs_base>(Cpu::rdmsr(MSR_FS_BASE));
-  Vmx::vmcs_write<Vmx::Vmcs_host_gs_base>(Cpu::rdmsr(MSR_GS_BASE));
+  Vmx::vmcs_write<Vmx::Vmcs_host_fs_base>(Cpu::rdmsr(Msr_ia32_fs_base));
+  Vmx::vmcs_write<Vmx::Vmcs_host_gs_base>(Cpu::rdmsr(Msr_ia32_gs_base));
   Vmx::vmcs_write<Vmx::Vmcs_host_fs_selector>(Cpu::get_fs());
   Vmx::vmcs_write<Vmx::Vmcs_host_gs_selector>(Cpu::get_gs());
 }
@@ -464,18 +465,18 @@ Vm_vmx_t<VARIANT>::store_guest_restore_host_msrs(Vmx_vm_state *vm_state,
   if (!guest_long_mode)
     return;
 
-  vm_state->write<Vmx::Sw_msr_syscall_mask>(Cpu::rdmsr(MSR_SFMASK));
-  vm_state->write<Vmx::Sw_msr_cstar>(Cpu::rdmsr(MSR_CSTAR));
-  vm_state->write<Vmx::Sw_msr_lstar>(Cpu::rdmsr(MSR_LSTAR));
-  vm_state->write<Vmx::Sw_msr_star>(Cpu::rdmsr(MSR_STAR));
-  // MSR_TSC_AUX
-  vm_state->write<Vmx::Sw_msr_kernel_gs_base>(Cpu::rdmsr(MSR_KERNEL_GS_BASE));
+  vm_state->write<Vmx::Sw_msr_syscall_mask>(Cpu::rdmsr(Msr_ia32_fmask));
+  vm_state->write<Vmx::Sw_msr_cstar>(Cpu::rdmsr(Msr_ia32_cstar));
+  vm_state->write<Vmx::Sw_msr_lstar>(Cpu::rdmsr(Msr_ia32_lstar));
+  vm_state->write<Vmx::Sw_msr_star>(Cpu::rdmsr(Msr_ia32_star));
+  // Msr_tsc_aux
+  vm_state->write<Vmx::Sw_msr_kernel_gs_base>(Cpu::rdmsr(Msr_ia32_kernel_gs_base));
 
   // setup_sysenter sets SFMASK, CSTAR, LSTAR and STAR MSR
   Cpu::cpus.current().setup_sysenter();
-  // MSR_TSC_AUX
+  // Msr_tsc_aux
   // Reset msr_kernel_gs_base to avoid possible inter-vm channel
-  Cpu::wrmsr(0UL, MSR_KERNEL_GS_BASE);
+  Cpu::wrmsr(0UL, Msr_ia32_kernel_gs_base);
 }
 
 /**
@@ -498,13 +499,13 @@ Vm_vmx_t<VARIANT>::load_guest_msrs(Vmx_vm_state const *vm_state,
 
   // Writing to CSTAR, LSTAR or KERNEL_GS_BASE triggers a #GP fault if the
   // provided address is not canonical.
-  Cpu::wrmsr(vm_state->read<Vmx::Sw_msr_syscall_mask>(), MSR_SFMASK);
-  Cpu::set_canonical_msr(vm_state->read<Vmx::Sw_msr_cstar>(), MSR_CSTAR);
-  Cpu::set_canonical_msr(vm_state->read<Vmx::Sw_msr_lstar>(), MSR_LSTAR);
-  Cpu::wrmsr(vm_state->read<Vmx::Sw_msr_star>(), MSR_STAR);
-  // MSR_TSC_AUX
+  Cpu::wrmsr(vm_state->read<Vmx::Sw_msr_syscall_mask>(), Msr_ia32_fmask);
+  Cpu::set_canonical_msr(vm_state->read<Vmx::Sw_msr_cstar>(), Msr_ia32_cstar);
+  Cpu::set_canonical_msr(vm_state->read<Vmx::Sw_msr_lstar>(), Msr_ia32_lstar);
+  Cpu::wrmsr(vm_state->read<Vmx::Sw_msr_star>(), Msr_ia32_star);
+  // Msr_tsc_aux
   Cpu::set_canonical_msr(vm_state->read<Vmx::Sw_msr_kernel_gs_base>(),
-                         MSR_KERNEL_GS_BASE);
+                         Msr_ia32_kernel_gs_base);
 }
 
 //------------------------------------------------------------------

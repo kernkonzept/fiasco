@@ -107,7 +107,6 @@ private:
   enum
   {
     APIC_msr_base               = 0x800,
-    APIC_base_msr               = 0x1b,
   };
 
   enum
@@ -396,7 +395,7 @@ Apic::timer_reg_write(Unsigned32 val)
 PUBLIC static inline NEEDS["cpu.h"]
 Address
 Apic::apic_page_phys()
-{ return Cpu::rdmsr(APIC_base_msr) & 0xfffff000; }
+{ return Cpu::rdmsr(Msr_ia32_apic_base) & 0xfffff000; }
 
 // set the global pagetable entry for the Local APIC device registers
 PUBLIC
@@ -710,7 +709,7 @@ Apic::test_present_but_disabled()
   if (!good_cpu)
     return 0;
 
-  Unsigned64 msr = Cpu::rdmsr(APIC_base_msr);
+  Unsigned64 msr = Cpu::rdmsr(Msr_ia32_apic_base);
   return ((msr & 0xffffff000ULL) == 0xfee00000ULL);
 }
 
@@ -721,12 +720,12 @@ Apic::activate_by_msr()
 {
   Unsigned64 msr;
 
-  msr = Cpu::rdmsr(APIC_base_msr);
+  msr = Cpu::rdmsr(Msr_ia32_apic_base);
   phys_base = msr & 0xfffff000;
   msr |= 1 << 11; // enable local APIC
   if (use_x2)
     msr |= 1 << 10; // enable x2APIC mode
-  Cpu::wrmsr(msr, APIC_base_msr);
+  Cpu::wrmsr(msr, Msr_ia32_apic_base);
 
   // later we have to call update_feature_info() as the flags may have changed
 }

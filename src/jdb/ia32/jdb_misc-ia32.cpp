@@ -7,6 +7,7 @@ IMPLEMENTATION[ia32 || amd64]:
 #include "jdb_ktrace.h"
 #include "jdb_module.h"
 #include "jdb_screen.h"
+#include "msrdefs.h"
 #include "static_init.h"
 #include "task.h"
 #include "x86desc.h"
@@ -136,15 +137,15 @@ Jdb_misc_debug::action(int cmd, void *&args, char const *&fmt, int &) override
 	      Cpu::boot_cpu()->lbr_type() == Cpu::Lbr_pentium_4_ext)
 	    {
               Unsigned64 msr_from, msr_to;
-              if (   Jdb::rdmsr(MSR_LER_FROM_LIP, &msr_from)
-                  && Jdb::rdmsr(MSR_LER_TO_LIP, &msr_to))
+              if (   Jdb::rdmsr(Msr_ler_from_lip, &msr_from)
+                  && Jdb::rdmsr(Msr_ler_to_lip, &msr_to))
                 {
                   show_lbr_entry("\nbefore exc:", msr_from);
                   show_lbr_entry(" =>", msr_to);
                 }
 
               Unsigned64 branch_tos;
-              if (Jdb::rdmsr(MSR_LASTBRANCH_TOS, &branch_tos))
+              if (Jdb::rdmsr(Msr_lastbranch_tos, &branch_tos))
                 {
                   branch_tos &= 0xffffffffU;
                   if (Cpu::boot_cpu()->lbr_type() == Cpu::Lbr_pentium_4)
@@ -154,7 +155,7 @@ Jdb_misc_debug::action(int cmd, void *&args, char const *&fmt, int &) override
                         {
                           j = (j+1) & 3;
                           Unsigned64 msr;
-                          if (Jdb::rdmsr(MSR_LASTBRANCH_0+j, &msr))
+                          if (Jdb::rdmsr(Msr_lastbranch_0+j, &msr))
                             {
                               show_lbr_entry("\nbranch/exc:", msr >> 32);
                               show_lbr_entry(" =>", msr);
@@ -168,8 +169,8 @@ Jdb_misc_debug::action(int cmd, void *&args, char const *&fmt, int &) override
                         {
                           j = (j+1) & 15;
                           Unsigned64 msr_from, msr_to;
-                          if (Jdb::rdmsr(0x680+j, &msr_from)
-                              && Jdb::rdmsr(0x6c0+j, &msr_to))
+                          if (Jdb::rdmsr(Msr_lastbranch_0_from_ip+j, &msr_from)
+                              && Jdb::rdmsr(Msr_lastbranch_0_to_ip+j, &msr_to))
                             {
                               show_lbr_entry("\nbranch/exc:", msr_from);
                               show_lbr_entry(" =>", msr_to);
@@ -183,10 +184,10 @@ Jdb_misc_debug::action(int cmd, void *&args, char const *&fmt, int &) override
 	      Unsigned64 msr_from_ip, msr_to_ip;
               Unsigned64 msr_from_int, msr_to_int;
 
-              if (   Jdb::rdmsr(MSR_LASTBRANCHFROMIP, &msr_from_ip)
-                  && Jdb::rdmsr(MSR_LASTBRANCHTOIP, &msr_to_ip)
-                  && Jdb::rdmsr(MSR_LASTINTFROMIP, &msr_from_int)
-                  && Jdb::rdmsr(MSR_LASTINTTOIP, &msr_to_int))
+              if (   Jdb::rdmsr(Msr_lastbranchfromip, &msr_from_ip)
+                  && Jdb::rdmsr(Msr_lastbranchtoip, &msr_to_ip)
+                  && Jdb::rdmsr(Msr_lastintfromip, &msr_from_int)
+                  && Jdb::rdmsr(Msr_lastinttoip, &msr_to_int))
                 {
                   show_lbr_entry("\nbranch:", msr_from_ip);
                   show_lbr_entry(" =>", msr_to_ip);
