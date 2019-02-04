@@ -821,6 +821,7 @@ Go_m::Go_m()
 PUBLIC
 Jdb_module::Action_code Go_m::action( int, void *&, char const *&, int & )
 {
+  putchar('\n');
   return LEAVE;
 }
 
