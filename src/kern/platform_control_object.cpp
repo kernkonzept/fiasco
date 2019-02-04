@@ -51,7 +51,7 @@ class Pfc : public Kobject_h<Pfc, Icu>
       return commit_result(-L4_err::EInval);
 
     if (msg->values[1] == 1) // reboot?
-      platform_reset();
+      Platform_control::system_reboot();
 
     if (msg->values[1] == 0) // shutdown
       Platform_control::system_off();

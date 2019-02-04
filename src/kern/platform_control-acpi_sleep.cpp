@@ -10,9 +10,12 @@ IMPLEMENTATION:
 #include "pm.h"
 #include "timer.h"
 #include "timer_tick.h"
+#include "reset.h"
 
 static bool _system_suspend_enabled;
+// Values cached from ACPI FADT, initialized in Platform_control::init
 static Unsigned32 _pm1a, _pm1b, _pm1a_sts, _pm1b_sts;
+static Unsigned32 _fadt_reset_value, _fadt_reset_regs_addr;
 static Address phys_wake_vector;
 static Acpi_facs *facs;
 
@@ -59,10 +62,15 @@ Platform_control::init(Cpu_number cpu)
   _realmode_startup_pdbr = Kmem::get_realmode_startup_pdbr();
   facs->fw_wake_vector = phys_wake_vector;
 
+  // The fadt pointer is only valid in the kernel address space of idle. To
+  // avoid dereferencing it in a different context, we cache the values we
+  // need.
   _pm1a = fadt->pm1a_cntl_blk;
   _pm1b = fadt->pm1b_cntl_blk;
   _pm1a_sts = fadt->pm1a_evt_blk;
   _pm1b_sts = fadt->pm1b_evt_blk;
+  _fadt_reset_value = fadt->reset_value;
+  _fadt_reset_regs_addr = fadt->reset_regs.addr;
 
   _system_suspend_enabled = true;
 }
@@ -122,6 +130,7 @@ static void suspend_ap_cpus() {}
 IMPLEMENTATION:
 
 #include "cpu_call.h"
+#include "io.h"
 
 /**
  * \brief Initiate a full system suspend to RAM.
@@ -182,4 +191,19 @@ Platform_control::system_suspend(Mword extra)
     }, true);
 
   return extra;
+}
+
+IMPLEMENT_OVERRIDE
+static void
+Platform_control::system_reboot()
+{
+  auto guard = lock_guard(cpu_lock);
+
+  if (!_system_suspend_enabled)
+    return;
+
+  Io::out8(_fadt_reset_value, _fadt_reset_regs_addr);
+
+  // if ACPI reset failed, try other methods
+  platform_reset();
 }

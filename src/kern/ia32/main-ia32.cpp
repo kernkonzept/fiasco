@@ -15,6 +15,7 @@ IMPLEMENTATION[ia32,amd64]:
 #include "kernel_console.h"
 #include "koptions.h"
 #include "pic.h"
+#include "platform_control.h"
 #include "processor.h"
 #include "reset.h"
 #include "timer.h"
@@ -28,7 +29,7 @@ extern "C" void __attribute__ ((noreturn))
 _exit(int)
 {
   if (exit_question_active)
-    platform_reset();
+    Platform_control::system_reboot();
 
   while (1)
     {
