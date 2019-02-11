@@ -1,0 +1,108 @@
+/*
+ * (c) 2019 Adam Lackorzynski <adam@l4re.org>
+ *
+ * This file is part of L4Re and distributed under the terms of the
+ * GNU General Public License 2.
+ * Please see the COPYING-GPL-2 file for details.
+ */
+#include "uart_lpuart.h"
+#include "poll_timeout_counter.h"
+
+namespace L4
+{
+  enum
+  {
+    VERID  = 0x00,
+    PARAM  = 0x04,
+    GLOBAL = 0x08,
+    PINCFG = 0x0c,
+    BAUD   = 0x10,
+    STAT   = 0x14,
+    CTRL   = 0x18,
+    DATA   = 0x1c,
+    MATCH  = 0x20,
+    MODIR  = 0x24,
+    FIFO   = 0x28,
+    WATER  = 0x2c,
+
+    CTRL_RE       = 1 << 18,
+    CTRL_TE       = 1 << 19,
+    CTRL_RIE      = 1 << 21,
+
+    FIFO_RXEMPT   = 1 << 22, // Receive buffer is empty?
+    FIFO_TXEMPT   = 1 << 23, // Transmit FIFO empty?
+
+    BAUD_CLOCK    = 80064000,
+    BAUD_OSR_VAL  = 4,
+    BAUD_OSR      = BAUD_OSR_VAL << 24,
+    BAUD_BOTHEDGE = 1 << 17,
+  };
+
+  bool Uart_lpuart::startup(Io_register_block const *regs)
+  {
+    _regs = regs;
+    _regs->write<unsigned>(CTRL, CTRL_RE | CTRL_TE);
+    return true;
+  }
+
+  bool Uart_lpuart::enable_rx_irq(bool enable)
+  {
+    if (enable)
+      _regs->set<unsigned>(CTRL, CTRL_RIE);
+    else
+      _regs->clear<unsigned>(CTRL, CTRL_RIE);
+
+    return true;
+  }
+
+  void Uart_lpuart::shutdown()
+  {
+    _regs->write<unsigned>(CTRL, 0);
+  }
+
+  bool Uart_lpuart::change_mode(Transfer_mode, Baud_rate r)
+  {
+    _regs->clear<unsigned>(CTRL, CTRL_RE | CTRL_TE);
+
+    _regs->write<unsigned>(BAUD,
+                             ((BAUD_CLOCK / r / (BAUD_OSR_VAL + 1)) & 0x1fff)
+                           | BAUD_OSR);
+
+    _regs->set<unsigned>(CTRL, CTRL_RE | CTRL_TE);
+    return true;
+  }
+
+  int Uart_lpuart::get_char(bool blocking) const
+  {
+    int sr;
+    while (!(sr = char_avail()))
+      if (!blocking)
+        return -1;
+
+    return _regs->read<unsigned char>(DATA);
+  }
+
+  int Uart_lpuart::char_avail() const
+  {
+    return !(_regs->read<unsigned>(FIFO) & FIFO_RXEMPT);
+  }
+
+  void Uart_lpuart::out_char(char c) const
+  {
+    Poll_timeout_counter i(3000000);
+
+    while (i.test(!(_regs->read<unsigned>(FIFO) & FIFO_TXEMPT)))
+      ;
+
+    _regs->write<unsigned char>(DATA, c);
+  }
+
+  int Uart_lpuart::write(char const *s, unsigned long count) const
+  {
+    unsigned long c = count;
+    while (c--)
+      out_char(*s++);
+
+    return count;
+  }
+}
