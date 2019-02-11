@@ -94,7 +94,7 @@ public:
 
   void ack(Mword) override {}
 
-  char const *chip_type() const override { return "Bcast"; }
+  char const *chip_type() const { return "Bcast"; }
 
 private:
   Smword _mask_cnt;
