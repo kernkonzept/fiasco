@@ -28,7 +28,7 @@ public:
   };
 
   L4_error(Error_code ec = None, Phase p = Snd) : _raw(ec | p) {}
-  L4_error(L4_error const &e, Phase p = Snd) : _raw(e._raw | p) {}
+  L4_error(L4_error const &e, Phase p) : _raw(e._raw | p) {}
 
   bool ok() const { return _raw == 0; }
 
