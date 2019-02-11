@@ -171,7 +171,7 @@ Mword
 Fpu::fpinst()
 {
   Mword i;
-  asm volatile("mcr p10, 7, %0, cr9,  cr0" : "=r" (i));
+  asm volatile("mrc p10, 7, %0, cr9,  cr0" : "=r" (i));
   return i;
 }
 
@@ -179,7 +179,7 @@ PUBLIC static inline
 void
 Fpu::fpinst(Mword v)
 {
-  asm volatile("mrc p10, 7, %0, cr9,  cr0" : : "r" (v));
+  asm volatile("mcr p10, 7, %0, cr9,  cr0" : : "r" (v));
 }
 
 PUBLIC static inline
@@ -187,7 +187,7 @@ Mword
 Fpu::fpinst2()
 {
   Mword i;
-  asm volatile("mcr p10, 7, %0, cr10,  cr0" : "=r" (i));
+  asm volatile("mrc p10, 7, %0, cr10,  cr0" : "=r" (i));
   return i;
 }
 
@@ -195,7 +195,7 @@ PUBLIC static inline
 void
 Fpu::fpinst2(Mword v)
 {
-  asm volatile("mrc p10, 7, %0, cr10,  cr0" : : "r" (v));
+  asm volatile("mcr p10, 7, %0, cr10,  cr0" : : "r" (v));
 }
 
 PUBLIC static inline NEEDS[Fpu::fpexc]
