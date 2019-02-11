@@ -11,7 +11,7 @@ INTERFACE [mips]:
 #define FIASCO_CP0_SIZE_ERROR(size, reg, sel)              \
   asm (".error \"" __FILE__ ":" FIASCO_STRINGIFY(__LINE__) \
        ": CP0 register %0, %1 is not " size " sized\""     \
-       : : "n"(reg), "n"(sel))
+       : : "i"(reg), "i"(sel))
 
 namespace Mips
 {
@@ -215,7 +215,7 @@ namespace Mips
         ".set push\n\t.set virt\n\t"
         "mfgc0\t%0, $%1, %2\n\t"
         ".set pop"
-        : "=r"(v) : "n"(reg), "n"(sel));
+        : "=r"(v) : "i"(reg), "i"(sel));
     return v;
   }
 
@@ -229,7 +229,7 @@ namespace Mips
     Smword v;
     asm volatile (
         "mfc0\t%0, $%1, %2\n\t"
-        : "=r"(v) : "n"(reg), "n"(sel));
+        : "=r"(v) : "i"(reg), "i"(sel));
     return v;
   }
 
@@ -247,7 +247,7 @@ namespace Mips
 
     asm (".set push\n\t.set virt\n\t"
          "mtgc0\t%z0, $%1, %2\n\t"
-         ".set pop" : : "Jr"(v), "n"(reg), "n"(sel));
+         ".set pop" : : "Jr"(v), "i"(reg), "i"(sel));
   }
 
   inline ALWAYS_INLINE
@@ -258,7 +258,7 @@ namespace Mips
       FIASCO_CP0_SIZE_ERROR("32bit", reg, sel);
 
     asm ("mtc0\t%z0, $%1, %2\n\t"
-         : : "Jr"(v), "n"(reg), "n"(sel));
+         : : "Jr"(v), "i"(reg), "i"(sel));
   }
 
   inline void ehb()
@@ -302,7 +302,7 @@ mfgc0(Mword *v, unsigned reg, unsigned sel)
   asm (".set push\n\t.set virt\n\t"
        "mfgc0\t%0, $%1, %2\n\t"
        ".set pop"
-       : "=r"(*v) : "n"(reg), "n"(sel), "m"(*v));
+       : "=r"(*v) : "i"(reg), "i"(sel), "m"(*v));
 }
 
 inline ALWAYS_INLINE
@@ -317,7 +317,7 @@ mfgc0(unsigned reg, unsigned sel)
       ".set push\n\t.set virt\n\t"
       "mfgc0\t%0, $%1, %2\n\t"
       ".set pop"
-      : "=r"(v) : "n"(reg), "n"(sel));
+      : "=r"(v) : "i"(reg), "i"(sel));
   return v;
 }
 
@@ -331,7 +331,7 @@ mfc0(unsigned reg, unsigned sel)
   Mword v;
   asm volatile (
       "mfc0\t%0, $%1, %2\n\t"
-      : "=r"(v) : "n"(reg), "n"(sel));
+      : "=r"(v) : "i"(reg), "i"(sel));
   return v;
 }
 
@@ -344,7 +344,7 @@ mtgc0(Mword v, unsigned reg, unsigned sel)
 
   asm (".set push\n\t.set virt\n\t"
        "mtgc0\t%z0, $%1, %2\n\t"
-       ".set pop" : : "Jr"(v), "n"(reg), "n"(sel));
+       ".set pop" : : "Jr"(v), "i"(reg), "i"(sel));
 }
 
 inline ALWAYS_INLINE
@@ -355,7 +355,7 @@ mtc0(Mword v, unsigned reg, unsigned sel)
     FIASCO_CP0_SIZE_ERROR("mword", reg, sel);
 
   asm ("mtc0\t%z0, $%1, %2\n\t"
-       : : "Jr"(v), "n"(reg), "n"(sel));
+       : : "Jr"(v), "i"(reg), "i"(sel));
 }
 
 } // namespace Mips
@@ -378,7 +378,7 @@ mfgc0(Mword *v, unsigned reg, unsigned sel)
   asm (".set push\n\t.set virt\n\t"
        "dmfgc0\t%0, $%1, %2\n\t"
        ".set pop"
-       : "=r"(*v) : "n"(reg), "n"(sel), "m"(*v));
+       : "=r"(*v) : "i"(reg), "i"(sel), "m"(*v));
 }
 
 inline ALWAYS_INLINE
@@ -393,7 +393,7 @@ mfgc0(unsigned reg, unsigned sel)
       ".set push\n\t.set virt\n\t"
       "dmfgc0\t%0, $%1, %2\n\t"
       ".set pop"
-      : "=r"(v) : "n"(reg), "n"(sel));
+      : "=r"(v) : "i"(reg), "i"(sel));
   return v;
 }
 
@@ -407,7 +407,7 @@ mfc0(unsigned reg, unsigned sel)
   Mword v;
   asm volatile (
       "dmfc0\t%0, $%1, %2\n\t"
-      : "=r"(v) : "n"(reg), "n"(sel));
+      : "=r"(v) : "i"(reg), "i"(sel));
   return v;
 }
 
@@ -420,7 +420,7 @@ mtgc0(Mword v, unsigned reg, unsigned sel)
 
   asm (".set push\n\t.set virt\n\t"
        "dmtgc0\t%z0, $%1, %2\n\t"
-       ".set pop" : : "Jr"(v), "n"(reg), "n"(sel));
+       ".set pop" : : "Jr"(v), "i"(reg), "i"(sel));
 }
 
 inline ALWAYS_INLINE
@@ -431,7 +431,7 @@ mtc0(Mword v, unsigned reg, unsigned sel)
     FIASCO_CP0_SIZE_ERROR("mword", reg, sel);
 
   asm ("dmtc0\t%z0, $%1, %2\n\t"
-       : : "Jr"(v), "n"(reg), "n"(sel));
+       : : "Jr"(v), "i"(reg), "i"(sel));
 }
 
 } // namespace Mips

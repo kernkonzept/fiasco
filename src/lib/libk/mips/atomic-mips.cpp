@@ -82,7 +82,7 @@ atomic_add(Mword *l, Mword v)
           ASM_ADDU " %[tmp], %[v]    \n"
           ASM_SC   " %[tmp], %[ptr]  \n"
           : [tmp] "=&r" (tmp), [ptr] "+ZC" (*l)
-          : [v] "Jg" (v));
+          : [v] "Ir" (v));
     }
   while (!tmp);
 }
