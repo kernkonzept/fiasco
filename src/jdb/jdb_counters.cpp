@@ -39,7 +39,7 @@ Jdb_counters::reset()
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_counters::action(int cmd, void *&, char const *&, int &)
+Jdb_counters::action(int cmd, void *&, char const *&, int &) override
 {
   if (!Config::Jdb_accounting)
     {
@@ -65,7 +65,7 @@ Jdb_counters::action(int cmd, void *&, char const *&, int &)
 
 PUBLIC
 Jdb_counters::Cmd const *
-Jdb_counters::cmds() const
+Jdb_counters::cmds() const override
 {
   static Cmd cs[] =
     {
@@ -77,7 +77,7 @@ Jdb_counters::cmds() const
 
 PUBLIC
 int
-Jdb_counters::num_cmds() const
+Jdb_counters::num_cmds() const override
 {
   return 1;
 }

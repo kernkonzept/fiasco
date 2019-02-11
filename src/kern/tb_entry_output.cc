@@ -115,34 +115,35 @@ class Tb_entry_ipc_fmt : public Tb_entry_formatter
 {
 public:
   Tb_entry_ipc_fmt() {}
-  void print(String_buffer *, Tb_entry const *) const {}
-  Group_order has_partner(Tb_entry const *) const
+  void print(String_buffer *, Tb_entry const *) const override {}
+  Group_order has_partner(Tb_entry const *) const override
   { return Tb_entry::Group_order::first(); }
-  Group_order is_pair(Tb_entry const *e, Tb_entry const *n) const
+  Group_order is_pair(Tb_entry const *e, Tb_entry const *n) const override
   {
     if (static_cast<Tb_entry_ipc_res const *>(n)->pair_event() == e->number())
       return Group_order::last();
     else
       return Group_order::none();
   }
-  Mword partner(Tb_entry const *) const { return 0; }
+  Mword partner(Tb_entry const *) const override { return 0; }
 };
 
 class Tb_entry_ipc_res_fmt : public Tb_entry_formatter
 {
 public:
   Tb_entry_ipc_res_fmt() {}
-  void print(String_buffer *, Tb_entry const *) const {}
-  Group_order has_partner(Tb_entry const *) const
+  void print(String_buffer *, Tb_entry const *) const override {}
+  Group_order has_partner(Tb_entry const *) const override
   { return Tb_entry::Group_order::last(); }
-  Group_order is_pair(Tb_entry const *e, Tb_entry const *n) const
+  Group_order is_pair(Tb_entry const *e, Tb_entry const *n) const override
   {
     if (static_cast<Tb_entry_ipc_res const *>(e)->pair_event() == n->number())
       return Group_order::first();
     else
       return Group_order::none();
   }
-  Mword partner(Tb_entry const *e) const { return static_cast<Tb_entry_ipc_res const *>(e)->pair_event(); }
+  Mword partner(Tb_entry const *e) const override
+  { return static_cast<Tb_entry_ipc_res const *>(e)->pair_event(); }
 };
 
 

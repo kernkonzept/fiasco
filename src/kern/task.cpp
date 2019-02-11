@@ -96,7 +96,7 @@ Task::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode)
 
 PUBLIC virtual
 bool
-Task::put()
+Task::put() override
 { return dec_ref() == 0; }
 
 PRIVATE
@@ -372,7 +372,7 @@ Task::generic_factory(Ram_quota *q, Space *,
  */
 PUBLIC
 void
-Task::destroy(Kobject ***reap_list)
+Task::destroy(Kobject ***reap_list) override
 {
   Kobject::destroy(reap_list);
 
@@ -561,7 +561,7 @@ Task::sys_cap_info(Syscall_frame *f, Utcb *utcb)
 
 PUBLIC
 void
-Task::invoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f, Utcb *utcb)
+Task::invoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f, Utcb *utcb) override
 {
   if (EXPECT_FALSE(f->tag().proto() != L4_msg_tag::Label_task))
     {

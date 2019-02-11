@@ -1015,7 +1015,7 @@ static Jdb_base_cmds jdb_base_cmds INIT_PRIORITY(JDB_MODULE_INIT_PRIO);
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_base_cmds::action (int cmd, void *&, char const *&, int &)
+Jdb_base_cmds::action (int cmd, void *&, char const *&, int &) override
 {
   if (cmd!=0)
     return NOTHING;
@@ -1029,14 +1029,14 @@ Jdb_base_cmds::action (int cmd, void *&, char const *&, int &)
 
 PUBLIC
 int
-Jdb_base_cmds::num_cmds() const
+Jdb_base_cmds::num_cmds() const override
 { 
   return 1;
 }
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_base_cmds::cmds() const
+Jdb_base_cmds::cmds() const override
 {
   static Cmd cs[] =
     { { 0, "*", "mode", "", "*|mode\tswitch long and short command mode",

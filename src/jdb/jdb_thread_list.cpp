@@ -557,7 +557,7 @@ Jdb_thread_list::Jdb_thread_list()
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_thread_list::action(int cmd, void *&argbuf, char const *&fmt, int &)
+Jdb_thread_list::action(int cmd, void *&argbuf, char const *&fmt, int &) override
 {
   static char const *const cpu_fmt = " cpu=%i\n";
   static char const *const nfmt = "";
@@ -853,7 +853,7 @@ Jdb_thread_list::list_threads(Thread *t_start, char pr)
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_thread_list::cmds() const
+Jdb_thread_list::cmds() const override
 {
   static Cmd cs[] =
     {
@@ -866,7 +866,7 @@ Jdb_thread_list::cmds() const
 
 PUBLIC
 int
-Jdb_thread_list::num_cmds() const
+Jdb_thread_list::num_cmds() const override
 {
   return 2;
 }

@@ -71,7 +71,7 @@ Jdb_utcb::print(Thread *t, bool overlayprint)
 
 PUBLIC virtual
 Jdb_module::Action_code
-Jdb_utcb::action( int cmd, void *&, char const *&, int &)
+Jdb_utcb::action( int cmd, void *&, char const *&, int &) override
 {
   if (cmd)
     return NOTHING;
@@ -90,12 +90,12 @@ Jdb_utcb::action( int cmd, void *&, char const *&, int &)
 
 PUBLIC
 int
-Jdb_utcb::num_cmds() const
+Jdb_utcb::num_cmds() const override
 { return 1; }
 
 PUBLIC
 Jdb_module::Cmd
-const * Jdb_utcb::cmds() const
+const * Jdb_utcb::cmds() const override
 {
   static Cmd cs[] =
     {

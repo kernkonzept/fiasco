@@ -41,7 +41,7 @@ Jdb_attach_irq::Jdb_attach_irq()
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_attach_irq::action( int cmd, void *&args, char const *&, int & )
+Jdb_attach_irq::action( int cmd, void *&args, char const *&, int & ) override
 {
   if (cmd)
     return NOTHING;
@@ -71,14 +71,14 @@ Jdb_attach_irq::action( int cmd, void *&args, char const *&, int & )
 
 PUBLIC
 int
-Jdb_attach_irq::num_cmds() const
+Jdb_attach_irq::num_cmds() const override
 {
   return 1;
 }
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_attach_irq::cmds() const
+Jdb_attach_irq::cmds() const override
 {
   static Cmd cs[] =
     {   { 0, "R", "irq", " [l]ist/[a]ttach: %c",

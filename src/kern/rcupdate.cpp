@@ -211,7 +211,7 @@ class Rcu_timeout : public Timeout
  */
 PRIVATE
 bool
-Rcu_timeout::expired()
+Rcu_timeout::expired() override
 { return Rcu::process_callbacks(); }
 
 

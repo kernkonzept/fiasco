@@ -80,9 +80,9 @@ public:
   template< typename... A >
   explicit Irq_mgr_single_chip(A&&... args) : c(cxx::forward<A>(args)...) {}
 
-  Irq chip(Mword irqnum) const { return Irq(&c, irqnum); }
-  unsigned nr_irqs() const { return c.nr_irqs(); }
-  unsigned nr_msis() const { return 0; }
+  Irq chip(Mword irqnum) const override { return Irq(&c, irqnum); }
+  unsigned nr_irqs() const override { return c.nr_irqs(); }
+  unsigned nr_msis() const override { return 0; }
   mutable CHIP c;
 };
 

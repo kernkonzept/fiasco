@@ -50,7 +50,7 @@ Jdb_pic::Jdb_pic()
 
 
 PUBLIC Jdb_module::Action_code
-Jdb_pic::action( int cmd, void *&/*args*/, char const *&/*fmt*/, int & )
+Jdb_pic::action(int cmd, void *&/*args*/, char const *&/*fmt*/, int & ) override
 {
   if (cmd!=0)
     return NOTHING;
@@ -61,13 +61,13 @@ Jdb_pic::action( int cmd, void *&/*args*/, char const *&/*fmt*/, int & )
 }
 
 PUBLIC
-int Jdb_pic::num_cmds() const
+int Jdb_pic::num_cmds() const override
 {
   return 1;
 }
 
 PUBLIC
-Jdb_module::Cmd const *Jdb_pic::cmds() const
+Jdb_module::Cmd const *Jdb_pic::cmds() const override
 {
   static Cmd cs[] =
     {{ 0, "i", "pic", "", "i\tshow pic state", 0 }};

@@ -38,7 +38,7 @@ public:
   : cxx::Dyn_castable<T, Base>(cxx::forward<A>(args)...)
   {}
 
-  void invoke(L4_obj_ref self, L4_fpage::Rights rights, Syscall_frame *f, Utcb *u)
+  void invoke(L4_obj_ref self, L4_fpage::Rights rights, Syscall_frame *f, Utcb *u) override
   {
     L4_msg_tag res(no_reply());
     if (EXPECT_TRUE(self.op() & L4_obj_ref::Ipc_send))

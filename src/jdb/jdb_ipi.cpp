@@ -27,7 +27,7 @@ Jdb_ipi_module::print_info(Cpu_number cpu)
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_ipi_module::action(int cmd, void *&, char const *&, int &)
+Jdb_ipi_module::action(int cmd, void *&, char const *&, int &) override
 {
   if (cmd)
     return NOTHING;
@@ -39,12 +39,12 @@ Jdb_ipi_module::action(int cmd, void *&, char const *&, int &)
 
 PUBLIC
 int
-Jdb_ipi_module::num_cmds() const
+Jdb_ipi_module::num_cmds() const override
 { return 1; }
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_ipi_module::cmds() const
+Jdb_ipi_module::cmds() const override
 {
   static Cmd cs[] =
     { { 0, "", "ipi", "", "ipi\tIPI information", 0 } };

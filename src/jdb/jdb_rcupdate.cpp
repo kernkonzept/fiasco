@@ -35,7 +35,7 @@ Jdb_rcupdate::print_batch(Rcu_batch const &b)
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_rcupdate::action(int cmd, void *&, char const *&, int &)
+Jdb_rcupdate::action(int cmd, void *&, char const *&, int &) override
 {
   printf("\nRCU--------------------------\n");
 
@@ -76,7 +76,7 @@ Jdb_rcupdate::action(int cmd, void *&, char const *&, int &)
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_rcupdate::cmds() const
+Jdb_rcupdate::cmds() const override
 {
   static Cmd cs[] =
     {
@@ -87,7 +87,7 @@ Jdb_rcupdate::cmds() const
   
 PUBLIC
 int
-Jdb_rcupdate::num_cmds() const
+Jdb_rcupdate::num_cmds() const override
 { return 1; }
 
 static Jdb_rcupdate jdb_rcupdate INIT_PRIORITY(JDB_MODULE_INIT_PRIO);

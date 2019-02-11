@@ -20,7 +20,7 @@ Kobject *Jdb_halt_thread::threadid;
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_halt_thread::action(int cmd, void *&, char const *&, int &)
+Jdb_halt_thread::action(int cmd, void *&, char const *&, int &) override
 {
   if (cmd != 0)
     return NOTHING;
@@ -40,7 +40,7 @@ Jdb_halt_thread::action(int cmd, void *&, char const *&, int &)
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_halt_thread::cmds() const
+Jdb_halt_thread::cmds() const override
 {
   static Cmd cs[] =
     {
@@ -53,7 +53,7 @@ Jdb_halt_thread::cmds() const
 
 PUBLIC
 int
-Jdb_halt_thread::num_cmds() const
+Jdb_halt_thread::num_cmds() const override
 {
   return 1;
 }

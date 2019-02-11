@@ -88,7 +88,7 @@ namespace {
 struct Jdb_ipc_log_pm : Pm_object
 {
   Jdb_ipc_log_pm(Cpu_number cpu) { register_pm(cpu); }
-  void pm_on_resume(Cpu_number cpu)
+  void pm_on_resume(Cpu_number cpu) override
   {
     void (*fast_entry)(void);
 
@@ -101,7 +101,7 @@ struct Jdb_ipc_log_pm : Pm_object
     Cpu::cpus.cpu(cpu).set_fast_entry(fast_entry);
   }
 
-  void pm_on_suspend(Cpu_number) {}
+  void pm_on_suspend(Cpu_number) override {}
 };
 
 DEFINE_PER_CPU static Per_cpu<Jdb_ipc_log_pm> _pm(Per_cpu_data::Cpu_num);

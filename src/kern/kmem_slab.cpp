@@ -208,7 +208,7 @@ Kmem_slab::~Kmem_slab()
 // allocate or free blocks
 
 virtual void *
-Kmem_slab::block_alloc(unsigned long size, unsigned long)
+Kmem_slab::block_alloc(unsigned long size, unsigned long) override
 {
   assert (size >= Buddy_alloc::Min_size);
   assert (size <= Buddy_alloc::Max_size);
@@ -218,7 +218,7 @@ Kmem_slab::block_alloc(unsigned long size, unsigned long)
 }
 
 virtual void
-Kmem_slab::block_free(void *block, unsigned long size)
+Kmem_slab::block_free(void *block, unsigned long size) override
 {
   Kmem_alloc::allocator()->unaligned_free(size, block);
 }

@@ -34,7 +34,7 @@ protected:
 
 private:
   // we do not support triggering modes
-  void switch_mode(bool) {}
+  void switch_mode(bool) override {}
 };
 
 // ------------------------------------------------------------------------

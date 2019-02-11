@@ -616,7 +616,7 @@ Jdb_bp::get_free_bp()
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_bp::action(int cmd, void *&args, char const *&fmt, int &next_char)
+Jdb_bp::action(int cmd, void *&args, char const *&fmt, int &next_char) override
 {
   enum State
   {
@@ -799,7 +799,7 @@ Jdb_bp::action(int cmd, void *&args, char const *&fmt, int &next_char)
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_bp::cmds() const
+Jdb_bp::cmds() const override
 {
   static Cmd cs[] =
     {
@@ -819,7 +819,7 @@ Jdb_bp::cmds() const
 
 PUBLIC
 int
-Jdb_bp::num_cmds() const
+Jdb_bp::num_cmds() const override
 {
   return 1;
 }

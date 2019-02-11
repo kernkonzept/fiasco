@@ -19,7 +19,7 @@ Jdb_kern_info_kip::Jdb_kern_info_kip()
 
 PUBLIC
 void
-Jdb_kern_info_kip::show()
+Jdb_kern_info_kip::show() override
 {
   Kip::k()->print();
 }

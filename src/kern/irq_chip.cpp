@@ -86,16 +86,16 @@ public:
 class Irq_chip_soft : public Irq_chip
 {
 public:
-  void mask(Mword) {}
-  void unmask(Mword) {}
-  void mask_and_ack(Mword) {}
-  void ack(Mword) {}
+  void mask(Mword) override {}
+  void unmask(Mword) override {}
+  void mask_and_ack(Mword) override {}
+  void ack(Mword) override {}
 
-  void set_cpu(Mword, Cpu_number) {}
-  int set_mode(Mword, Mode) { return 0; }
-  bool is_edge_triggered(Mword) const { return true; }
+  void set_cpu(Mword, Cpu_number) override {}
+  int set_mode(Mword, Mode) override { return 0; }
+  bool is_edge_triggered(Mword) const override { return true; }
 
-  char const *chip_type() const { return "Soft"; }
+  char const *chip_type() const override { return "Soft"; }
 
   static Irq_chip_soft sw_chip;
 };

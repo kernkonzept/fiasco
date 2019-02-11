@@ -105,7 +105,7 @@ Jdb_pcm::detect_screensize()
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_pcm::action(int cmd, void *&args, char const *&fmt, int &)
+Jdb_pcm::action(int cmd, void *&args, char const *&fmt, int &) override
 {
   if (cmd)
     return NOTHING;
@@ -198,13 +198,13 @@ Jdb_pcm::action(int cmd, void *&args, char const *&fmt, int &)
 }
 
 PUBLIC
-int Jdb_pcm::num_cmds() const
+int Jdb_pcm::num_cmds() const override
 {
   return 1;
 }
 
 PUBLIC
-Jdb_module::Cmd const * Jdb_pcm::cmds() const
+Jdb_module::Cmd const * Jdb_pcm::cmds() const override
 {
   static Cmd cs[] =
     {

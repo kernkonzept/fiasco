@@ -819,20 +819,20 @@ Go_m::Go_m()
 {}
 
 PUBLIC
-Jdb_module::Action_code Go_m::action( int, void *&, char const *&, int & )
+Jdb_module::Action_code Go_m::action( int, void *&, char const *&, int & ) override
 {
   putchar('\n');
   return LEAVE;
 }
 
 PUBLIC
-int Go_m::num_cmds() const
+int Go_m::num_cmds() const override
 { 
   return 1;
 }
 
 PUBLIC
-Jdb_module::Cmd const * Go_m::cmds() const
+Jdb_module::Cmd const * Go_m::cmds() const override
 {
   static Cmd cs[] =
     { 
@@ -862,7 +862,7 @@ static Help_m help_m INIT_PRIORITY(JDB_MODULE_INIT_PRIO);
 
 
 PUBLIC
-Jdb_module::Action_code Help_m::action( int, void *&, char const *&, int & )
+Jdb_module::Action_code Help_m::action(int, void *&, char const *&, int &) override
 {
   size_t const tab_width = 27;
 
@@ -952,13 +952,13 @@ Jdb_module::Action_code Help_m::action( int, void *&, char const *&, int & )
 }
 
 PUBLIC
-int Help_m::num_cmds() const
+int Help_m::num_cmds() const override
 { 
   return 2;
 }
 
 PUBLIC
-Jdb_module::Cmd const * Help_m::cmds() const
+Jdb_module::Cmd const * Help_m::cmds() const override
 {
   static Cmd cs[] =
     {

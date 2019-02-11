@@ -1080,7 +1080,7 @@ restart:
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_tbuf_show::action(int cmd, void *&, char const *&, int &)
+Jdb_tbuf_show::action(int cmd, void *&, char const *&, int &) override
 {
   switch (cmd)
     {
@@ -1109,7 +1109,7 @@ Jdb_tbuf_show::action(int cmd, void *&, char const *&, int &)
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_tbuf_show::cmds() const
+Jdb_tbuf_show::cmds() const override
 {
   static Cmd cs[] =
     {
@@ -1125,7 +1125,7 @@ Jdb_tbuf_show::cmds() const
 
 PUBLIC
 int
-Jdb_tbuf_show::num_cmds() const
+Jdb_tbuf_show::num_cmds() const override
 {
   return 3;
 }

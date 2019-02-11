@@ -34,7 +34,7 @@ IMPLEMENTATION:
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_set_trace::action(int cmd, void *&args, char const *&fmt, int &)
+Jdb_set_trace::action(int cmd, void *&args, char const *&fmt, int &) override
 {
   switch (cmd)
     {
@@ -221,7 +221,7 @@ Jdb_set_trace::action(int cmd, void *&args, char const *&fmt, int &)
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_set_trace::cmds() const
+Jdb_set_trace::cmds() const override
 {
   static Cmd cs[] =
     {
@@ -243,7 +243,7 @@ Jdb_set_trace::cmds() const
 
 PUBLIC
 int
-Jdb_set_trace::num_cmds() const
+Jdb_set_trace::num_cmds() const override
 {
   return 2;
 }

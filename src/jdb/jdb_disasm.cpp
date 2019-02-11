@@ -332,7 +332,7 @@ Jdb_disasm::show(Address virt, Space *task, int level)
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_disasm::action(int cmd, void *&args, char const *&fmt, int &next_char)
+Jdb_disasm::action(int cmd, void *&args, char const *&fmt, int &next_char) override
 {
   if (cmd == 0)
     {
@@ -357,7 +357,7 @@ Jdb_disasm::action(int cmd, void *&args, char const *&fmt, int &next_char)
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_disasm::cmds() const
+Jdb_disasm::cmds() const override
 {
   static Cmd cs[] =
     {
@@ -371,7 +371,7 @@ Jdb_disasm::cmds() const
 
 PUBLIC
 int
-Jdb_disasm::num_cmds() const
+Jdb_disasm::num_cmds() const override
 { return 1; }
 
 IMPLEMENT

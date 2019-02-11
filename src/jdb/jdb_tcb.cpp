@@ -1071,8 +1071,8 @@ Jdb_tcb::print_kobject(Thread *t, Cap_index capidx)
 class Jdb_thread_name_ext : public Jdb_prompt_ext
 {
 public:
-  void ext();
-  void update();
+  void ext() override;
+  void update() override;
 };
 
 IMPLEMENT

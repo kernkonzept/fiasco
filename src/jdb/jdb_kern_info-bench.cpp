@@ -23,7 +23,7 @@ Jdb_kern_info_bench::Jdb_kern_info_bench()
 
 PUBLIC
 void
-Jdb_kern_info_bench::show()
+Jdb_kern_info_bench::show() override
 {
   do_mp_benchmark();
   show_arch();

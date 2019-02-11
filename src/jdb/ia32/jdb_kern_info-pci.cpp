@@ -20,7 +20,7 @@ Jdb_kern_info_pci::Jdb_kern_info_pci()
 
 PUBLIC
 void
-Jdb_kern_info_pci::show()
+Jdb_kern_info_pci::show() override
 {
   static const char * const classes[] =
     { "unknown", "mass storage contoller", "network controller", 

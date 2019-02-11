@@ -12,37 +12,37 @@ namespace L4
     : _base(base)
     {}
 
-    unsigned char  read8(unsigned long reg) const
+    unsigned char  read8(unsigned long reg) const override
     {
       return Proc::read_alternative<0x1C>(_base + reg) & 0xFF;
     }
 
-    unsigned short read16(unsigned long reg) const
+    unsigned short read16(unsigned long reg) const override
     {
       return Proc::read_alternative<0x1C>(_base + reg) & 0xFFFF;
     }
 
-    unsigned int   read32(unsigned long reg) const
+    unsigned int   read32(unsigned long reg) const override
     {
       return Proc::read_alternative<0x1C>(_base + reg);
     }
 
-    void write8(unsigned long reg, unsigned char val) const
+    void write8(unsigned long reg, unsigned char val) const override
     {
       Proc::write_alternative<0x1C>(_base + reg, val);
     }
 
-    void write16(unsigned long reg, unsigned short val) const
+    void write16(unsigned long reg, unsigned short val) const override
     {
       Proc::write_alternative<0x1C>(_base + reg, val);
     }
 
-    void write32(unsigned long reg, unsigned int val) const
+    void write32(unsigned long reg, unsigned int val) const override
     {
       Proc::write_alternative<0x1C>(_base + reg, val);
     }
 
-    void delay() const
+    void delay() const override
     {
     }
 

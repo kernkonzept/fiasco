@@ -418,7 +418,7 @@ Jdb_list_timeouts::list()
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_list_timeouts::action(int cmd, void *&, char const *&, int &)
+Jdb_list_timeouts::action(int cmd, void *&, char const *&, int &) override
 {
   if (cmd == 0)
     list();
@@ -430,7 +430,7 @@ Jdb_list_timeouts::action(int cmd, void *&, char const *&, int &)
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_list_timeouts::cmds() const
+Jdb_list_timeouts::cmds() const override
 {
   static Cmd cs[] =
     {
@@ -443,7 +443,7 @@ Jdb_list_timeouts::cmds() const
 
 PUBLIC
 int
-Jdb_list_timeouts::num_cmds() const
+Jdb_list_timeouts::num_cmds() const override
 {
   return 2;
 }

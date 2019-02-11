@@ -50,7 +50,7 @@ class Sigma0_space : public Test_space
 {
 public:
   explicit Sigma0_space(Ram_quota *q) : Test_space(q, "s0") {}
-  bool is_sigma0() const { return true; }
+  bool is_sigma0() const override { return true; }
 };
 
 
@@ -58,7 +58,7 @@ PUBLIC
 bool
 Sigma0_space::v_fabricate(Mem_space::Vaddr address,
                           Mem_space::Phys_addr *phys, Mem_space::Page_order *size,
-                          Mem_space::Attr *attribs = 0)
+                          Mem_space::Attr *attribs = 0) override
 {
   // special-cased because we don't do ptab lookup for sigma0
   *size = static_cast<Mem_space const &>(*this).largest_page_size();
@@ -72,7 +72,7 @@ Sigma0_space::v_fabricate(Mem_space::Vaddr address,
 
 PUBLIC inline
 Page_number
-Sigma0_space::mem_space_map_max_address() const
+Sigma0_space::mem_space_map_max_address() const override
 { return Page_number(1UL << (MWORD_BITS - Mem_space::Page_shift)); }
 
 class Timeout;

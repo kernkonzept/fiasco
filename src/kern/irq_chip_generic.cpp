@@ -34,12 +34,12 @@ Irq_chip_gen::init(unsigned nirqs)
 
 PUBLIC inline
 unsigned
-Irq_chip_gen::nr_irqs() const
+Irq_chip_gen::nr_irqs() const override
 { return _nirqs; }
 
 PUBLIC
 Irq_base *
-Irq_chip_gen::irq(Mword pin) const
+Irq_chip_gen::irq(Mword pin) const override
 {
   if (pin >= _nirqs)
     return 0;
@@ -49,7 +49,7 @@ Irq_chip_gen::irq(Mword pin) const
 
 PUBLIC
 bool
-Irq_chip_gen::alloc(Irq_base *irq, Mword pin)
+Irq_chip_gen::alloc(Irq_base *irq, Mword pin) override
 {
   if (pin >= _nirqs)
     return false;
@@ -64,7 +64,7 @@ Irq_chip_gen::alloc(Irq_base *irq, Mword pin)
 
 PUBLIC
 void
-Irq_chip_gen::unbind(Irq_base *irq)
+Irq_chip_gen::unbind(Irq_base *irq) override
 {
   mask(irq->pin());
   Mem::barrier();
@@ -74,7 +74,7 @@ Irq_chip_gen::unbind(Irq_base *irq)
 
 PUBLIC
 bool
-Irq_chip_gen::reserve(Mword pin)
+Irq_chip_gen::reserve(Mword pin) override
 {
   if (pin >= _nirqs)
     return false;

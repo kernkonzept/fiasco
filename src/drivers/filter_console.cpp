@@ -35,7 +35,7 @@ IMPLEMENTATION:
 #include "delayloop.h"
 
 PUBLIC
-int Filter_console::char_avail() const
+int Filter_console::char_avail() const override
 {
   if (!(_o->state() & INENABLED))
     return -1;
@@ -57,7 +57,7 @@ Filter_console::Filter_console(Console *o, int to = 10)
 
 PUBLIC
 int
-Filter_console::write(char const *str, size_t len)
+Filter_console::write(char const *str, size_t len) override
 {
   if (!(_o->state() & OUTENABLED))
     return len;
@@ -121,7 +121,7 @@ Filter_console::getchar_timeout(unsigned timeout)
 
 PUBLIC
 int
-Filter_console::getchar(bool b = true)
+Filter_console::getchar(bool b = true) override
 {
   if (!(_o->state() & INENABLED))
     return -1;
@@ -265,7 +265,7 @@ get_char:
 
 PUBLIC
 Mword
-Filter_console::get_attributes() const
+Filter_console::get_attributes() const override
 {
   return _o->get_attributes();
 }

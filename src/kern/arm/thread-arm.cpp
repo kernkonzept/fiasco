@@ -569,7 +569,7 @@ public:
     unmask();
   }
 
-  void switch_mode(bool) {}
+  void switch_mode(bool) override {}
 };
 
 class Thread_glbl_remote_rq_irq : public Irq_base
@@ -585,7 +585,7 @@ public:
     unmask();
   }
 
-  void switch_mode(bool) {}
+  void switch_mode(bool) override {}
 };
 
 class Thread_debug_ipi : public Irq_base
@@ -601,7 +601,7 @@ public:
     unmask();
   }
 
-  void switch_mode(bool) {}
+  void switch_mode(bool) override {}
 };
 
 class Thread_timer_tick_ipi : public Irq_base
@@ -613,7 +613,7 @@ public:
   Thread_timer_tick_ipi()
   { set_hit(&handler_wrapper<Thread_timer_tick_ipi>); }
 
-  void switch_mode(bool) {}
+  void switch_mode(bool) override {}
 };
 
 

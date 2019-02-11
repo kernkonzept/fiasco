@@ -21,7 +21,7 @@ Jdb_kern_info_dr::Jdb_kern_info_dr()
 
 PUBLIC
 void
-Jdb_kern_info_dr::show()
+Jdb_kern_info_dr::show() override
 {
   printf("dr0: " L4_PTR_FMT "\n"
          "dr1: " L4_PTR_FMT "\n"

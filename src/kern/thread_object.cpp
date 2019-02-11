@@ -77,7 +77,7 @@ Thread_object::Thread_object(Ram_quota *q, Context_mode_kernel k)
 
 PUBLIC virtual
 bool
-Thread_object::put()
+Thread_object::put() override
 { return dec_ref() == 0; }
 
 
@@ -100,7 +100,7 @@ Thread_object::operator delete(void *_t)
 
 PUBLIC
 void
-Thread_object::destroy(Kobject ***rl)
+Thread_object::destroy(Kobject ***rl) override
 {
   Kobject::destroy(rl);
   if (!is_invalid(false))
@@ -110,7 +110,8 @@ Thread_object::destroy(Kobject ***rl)
 
 PUBLIC
 void
-Thread_object::invoke(L4_obj_ref /*self*/, L4_fpage::Rights rights, Syscall_frame *f, Utcb *utcb)
+Thread_object::invoke(L4_obj_ref /*self*/, L4_fpage::Rights rights,
+                      Syscall_frame *f, Utcb *utcb) override
 {
   L4_obj_ref::Operation op = f->ref().op();
   if (((op != 0) && !(op & L4_obj_ref::Ipc_send))

@@ -143,13 +143,13 @@ Jdb_kobject_list::Mode::Mode_list Jdb_kobject_list::Mode::modes;
 class Jdb_kobject_id_hdl : public Jdb_kobject_handler
 {
 public:
-  virtual bool show_kobject(Kobject_common *, int) { return false; }
+  virtual bool show_kobject(Kobject_common *, int) override { return false; }
   virtual ~Jdb_kobject_id_hdl() {}
 };
 
 PUBLIC
 bool
-Jdb_kobject_id_hdl::invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb)
+Jdb_kobject_id_hdl::invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb) override
 {
   if (   utcb->values[0] != Op_global_id
       && utcb->values[0] != Op_kobj_to_id)
@@ -468,7 +468,7 @@ Jdb_kobject::print_kobj(Kobject *o)
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_kobject::action(int cmd, void *&, char const *&, int &)
+Jdb_kobject::action(int cmd, void *&, char const *&, int &) override
 {
   if (cmd == 0)
     {
@@ -496,7 +496,7 @@ Jdb_kobject::action(int cmd, void *&, char const *&, int &)
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_kobject::cmds() const
+Jdb_kobject::cmds() const override
 {
   static Cmd cs[] =
     {
@@ -509,7 +509,7 @@ Jdb_kobject::cmds() const
 
 PUBLIC
 int
-Jdb_kobject::num_cmds() const
+Jdb_kobject::num_cmds() const override
 { return 2; }
 
 STATIC_INITIALIZE_P(Jdb_kobject, JDB_MODULE_INIT_PRIO);

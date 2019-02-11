@@ -11,10 +11,10 @@ class Keyb : public Console
 {
 public:
   // must be implemented in platform part.
-  int getchar(bool blocking = true);
+  int getchar(bool blocking = true) override;
 
   // implemented empty
-  int write(char const *str, size_t len);
+  int write(char const *str, size_t len) override;
 
   enum Keymap { Keymap_en, Keymap_de };
   void set_keymap(Keymap);
@@ -34,7 +34,7 @@ Keyb::write(char const *, size_t len)
 
 PUBLIC
 Mword
-Keyb::get_attributes() const
+Keyb::get_attributes() const override
 {
   return DIRECT | IN;
 }

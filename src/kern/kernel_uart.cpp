@@ -117,7 +117,7 @@ Kernel_uart::Kernel_uart()
 }
 
 PUBLIC void
-Kernel_uart::pm_on_suspend(Cpu_number cpu)
+Kernel_uart::pm_on_suspend(Cpu_number cpu) override
 {
   (void)cpu;
   assert (cpu == Cpu_number::boot_cpu());
@@ -129,7 +129,7 @@ Kernel_uart::pm_on_suspend(Cpu_number cpu)
 }
 
 PUBLIC void
-Kernel_uart::pm_on_resume(Cpu_number cpu)
+Kernel_uart::pm_on_resume(Cpu_number cpu) override
 {
   (void)cpu;
   assert (cpu == Cpu_number::boot_cpu());
@@ -145,7 +145,7 @@ class Kuart_irq : public Irq_base
 {
 public:
   Kuart_irq() { hit_func = &handler_wrapper<Kuart_irq>; }
-  void switch_mode(bool) {}
+  void switch_mode(bool) override {}
   void handle(Upstream_irq const *ui)
   {
     Kernel_uart::uart()->irq_ack();

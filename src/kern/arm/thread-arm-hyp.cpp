@@ -214,7 +214,7 @@ public:
   }
 
 private:
-  void switch_mode(bool) {}
+  void switch_mode(bool) override {}
 
   unsigned _virq;
   unsigned _irq;
@@ -245,7 +245,7 @@ public:
   }
 
 private:
-  void switch_mode(bool) {}
+  void switch_mode(bool) override {}
   unsigned _irq;
 };
 

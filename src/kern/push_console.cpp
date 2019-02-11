@@ -18,7 +18,7 @@ IMPLEMENTATION:
 
 PUBLIC
 int
-Push_console::getchar(bool /*blocking*/)
+Push_console::getchar(bool /*blocking*/) override
 {
   if (_out != _in)
     {
@@ -34,14 +34,14 @@ Push_console::getchar(bool /*blocking*/)
 
 PUBLIC
 int
-Push_console::char_avail() const
+Push_console::char_avail() const override
 {
   return _in != _out; // unknown
 }
 
 PUBLIC
 int
-Push_console::write(char const * /*str*/, size_t len)
+Push_console::write(char const * /*str*/, size_t len) override
 {
   return len;
 }
@@ -70,7 +70,7 @@ Push_console::flush()
 
 PUBLIC inline
 Mword
-Push_console::get_attributes() const
+Push_console::get_attributes() const override
 {
   return PUSH | IN;
 }

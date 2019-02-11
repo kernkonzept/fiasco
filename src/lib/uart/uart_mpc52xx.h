@@ -54,14 +54,14 @@ namespace L4
     inline void mpc52xx_out_char(char c) const;
 
   public:
-    bool startup(const L4::Io_register_block *);
-    void shutdown();
-    bool enable_rx_irq(bool enable = true);
-    bool change_mode(Transfer_mode m, Baud_rate r);
-    int get_char(bool blocking = true) const;
-    int char_avail() const;
+    bool startup(const L4::Io_register_block *) override;
+    void shutdown() override;
+    bool enable_rx_irq(bool enable = true) override;
+    bool change_mode(Transfer_mode m, Baud_rate r) override;
+    int get_char(bool blocking = true) const override;
+    int char_avail() const override;
     inline void out_char(char c) const;
-    int write(char const *s, unsigned long count) const;
+    int write(char const *s, unsigned long count) const override;
   };
 };
 

@@ -73,14 +73,14 @@ namespace L4
       _ier_bits(ier_bits), _fcr_bits(fcr_bits)
     {}
 
-    bool startup(Io_register_block const *regs);
-    void shutdown();
-    bool change_mode(Transfer_mode m, Baud_rate r);
-    int get_char(bool blocking = true) const;
-    int char_avail() const;
+    bool startup(Io_register_block const *regs) override;
+    void shutdown() override;
+    bool change_mode(Transfer_mode m, Baud_rate r) override;
+    int get_char(bool blocking = true) const override;
+    int char_avail() const override;
     inline void out_char(char c) const;
-    int write(char const *s, unsigned long count) const;
-    bool enable_rx_irq(bool enable = true);
+    int write(char const *s, unsigned long count) const override;
+    bool enable_rx_irq(bool enable = true) override;
 
   private:
     unsigned long _base_rate;

@@ -95,7 +95,7 @@ Jdb_iomap::show()
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_iomap::action(int cmd, void *&args, char const *&fmt, int &next_char)
+Jdb_iomap::action(int cmd, void *&args, char const *&fmt, int &next_char) override
 {
   if (cmd == 0)
     {
@@ -129,7 +129,7 @@ Jdb_iomap::action(int cmd, void *&args, char const *&fmt, int &next_char)
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_iomap::cmds() const
+Jdb_iomap::cmds() const override
 {
   static Cmd cs[] =
     {
@@ -142,7 +142,7 @@ Jdb_iomap::cmds() const
 
 PUBLIC
 int
-Jdb_iomap::num_cmds() const
+Jdb_iomap::num_cmds() const override
 {
   return 1;
 }

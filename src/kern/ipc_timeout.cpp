@@ -51,7 +51,7 @@ IPC_timeout::owner()
  */
 PRIVATE
 bool
-IPC_timeout::expired()
+IPC_timeout::expired() override
 {
   Receiver * const _owner = owner();
 

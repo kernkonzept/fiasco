@@ -30,7 +30,7 @@ Bsod_m::Bsod_m()
 {}
 
 PUBLIC
-Jdb_module::Action_code Bsod_m::action( int, void *&, char const *& )
+Jdb_module::Action_code Bsod_m::action( int, void *&, char const *&) override
 {
   const char *bsod_unstable =
     "\033[H\033[44;37;1m\033[2J\n\n\n\n\n\n"
@@ -69,13 +69,13 @@ Jdb_module::Action_code Bsod_m::action( int, void *&, char const *& )
 }
 
 PUBLIC
-int const Bsod_m::num_cmds() const
+int const Bsod_m::num_cmds() const override
 { 
   return 1;
 }
 
 PUBLIC
-Jdb_module::Cmd const *const Bsod_m::cmds() const
+Jdb_module::Cmd const *const Bsod_m::cmds() const override
 {
   static Cmd cs[] =
     { { 0, "t", "t", "\n", NULL, 0 }, };

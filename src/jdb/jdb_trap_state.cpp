@@ -41,7 +41,7 @@ Jdb_trap_state_module::print_trap_state(Cpu_number cpu)
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_trap_state_module::action (int cmd, void *&argbuf, char const *&fmt, int &next)
+Jdb_trap_state_module::action (int cmd, void *&argbuf, char const *&fmt, int &next) override
 {
   char const *c = (char const *)argbuf;
   static Cpu_number cpu;
@@ -67,14 +67,14 @@ Jdb_trap_state_module::action (int cmd, void *&argbuf, char const *&fmt, int &ne
 
 PUBLIC
 int
-Jdb_trap_state_module::num_cmds() const
+Jdb_trap_state_module::num_cmds() const override
 {
   return 1;
 }
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_trap_state_module::cmds() const
+Jdb_trap_state_module::cmds() const override
 {
   static char c;
   static Cmd cs[] =

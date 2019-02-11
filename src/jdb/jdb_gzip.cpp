@@ -63,7 +63,7 @@ Jdb_gzip::disable()
 }
 
 PUBLIC void
-Jdb_gzip::state(Mword new_state)
+Jdb_gzip::state(Mword new_state) override
 {
   if ((_state ^ new_state) & OUTENABLED)
     {
@@ -78,7 +78,7 @@ Jdb_gzip::state(Mword new_state)
 
 PUBLIC
 int
-Jdb_gzip::write(char const *str, size_t len)
+Jdb_gzip::write(char const *str, size_t len) override
 {
   gz_write(str, len);
   return len;
@@ -94,7 +94,7 @@ Jdb_gzip::console()
 
 PUBLIC
 Mword
-Jdb_gzip::get_attributes() const
+Jdb_gzip::get_attributes() const override
 {
   return GZIP | OUT;
 }

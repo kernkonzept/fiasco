@@ -18,7 +18,7 @@ Jdb_kern_info_data::Jdb_kern_info_data()
 
 PUBLIC
 void
-Jdb_kern_info_data::show()
+Jdb_kern_info_data::show() override
 {
   show_percpu_offsets();
 }

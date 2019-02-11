@@ -23,8 +23,8 @@ IMPLEMENTATION:
 class Jdb_tid_ext : public Jdb_prompt_ext
 {
 public:
-  void ext();
-  void update();
+  void ext() override;
+  void update() override;
 };
 
 IMPLEMENT

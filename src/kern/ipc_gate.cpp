@@ -38,12 +38,12 @@ class Ipc_gate_obj :
   typedef Slab_cache Self_alloc;
 
 public:
-  bool put() { return Ipc_gate::put(); }
+  bool put() override { return Ipc_gate::put(); }
 
   Thread *thread() const { return _thread; }
   Mword id() const { return _id; }
-  Mword obj_id() const { return _id; }
-  bool is_local(Space *s) const { return _thread && _thread->space() == s; }
+  Mword obj_id() const override { return _id; }
+  bool is_local(Space *s) const override { return _thread && _thread->space() == s; }
 };
 
 //---------------------------------------------------------------------------
@@ -85,12 +85,12 @@ JDB_DEFINE_TYPENAME(Ipc_gate_obj, "\033[35mGate\033[m");
 
 PUBLIC
 ::Kobject_mappable *
-Ipc_gate_obj::map_root()
+Ipc_gate_obj::map_root() override
 { return Ipc_gate::map_root(); }
 
 PUBLIC
 Kobject_iface *
-Ipc_gate_obj::downgrade(unsigned long attr)
+Ipc_gate_obj::downgrade(unsigned long attr) override
 {
   if (attr & L4_msg_item::C_obj_right_1)
     return static_cast<Ipc_gate*>(this);
@@ -136,7 +136,7 @@ Ipc_gate_obj::unblock_all()
 
 PUBLIC virtual
 void
-Ipc_gate_obj::initiate_deletion(Kobject ***r)
+Ipc_gate_obj::initiate_deletion(Kobject ***r) override
 {
   if (_thread)
     _thread->ipc_gate_deleted(_id);
@@ -146,7 +146,7 @@ Ipc_gate_obj::initiate_deletion(Kobject ***r)
 
 PUBLIC virtual
 void
-Ipc_gate_obj::destroy(Kobject ***r)
+Ipc_gate_obj::destroy(Kobject ***r) override
 {
   Kobject::destroy(r);
   Thread *tmp = access_once(&_thread);
@@ -266,7 +266,8 @@ Ipc_gate_ctl::get_infos(L4_obj_ref, L4_fpage::Rights,
 
 PUBLIC
 void
-Ipc_gate_ctl::invoke(L4_obj_ref self, L4_fpage::Rights rights, Syscall_frame *f, Utcb *utcb)
+Ipc_gate_ctl::invoke(L4_obj_ref self, L4_fpage::Rights rights,
+                     Syscall_frame *f, Utcb *utcb) override
 {
   if (f->tag().proto() == L4_msg_tag::Label_kobject)
     Kobject_h<Ipc_gate_ctl, Kobject_iface>::invoke(self, rights, f, utcb);
@@ -345,7 +346,8 @@ Ipc_gate::block(Thread *ct, L4_timeout const &to, Utcb *u)
 
 PUBLIC
 void
-Ipc_gate::invoke(L4_obj_ref /*self*/, L4_fpage::Rights rights, Syscall_frame *f, Utcb *utcb)
+Ipc_gate::invoke(L4_obj_ref /*self*/, L4_fpage::Rights rights,
+                 Syscall_frame *f, Utcb *utcb) override
 {
   Syscall_frame *ipc_f = f;
   //LOG_MSG_3VAL(current(), "gIPC", Mword(_thread), _id, f->obj_2_flags());
@@ -437,7 +439,7 @@ IMPLEMENTATION [debug]:
 
 PUBLIC
 ::Kobject_dbg *
-Ipc_gate_obj::dbg_info() const
+Ipc_gate_obj::dbg_info() const override
 { return Ipc_gate::dbg_info(); }
 
 IMPLEMENT

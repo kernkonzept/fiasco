@@ -87,7 +87,7 @@ public:
   Capability lookup(Cap_index virt);
 
   FIASCO_SPACE_VIRTUAL
-  V_pfn obj_map_max_address() const;
+  V_pfn obj_map_max_address() const FIASCO_VIRT_OBJ_SPACE_OVERRIDE;
 
   FIASCO_SPACE_VIRTUAL
   void caps_free();

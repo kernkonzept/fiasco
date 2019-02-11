@@ -38,12 +38,12 @@ Tb_log_table_entry *Jdb_log_list::_end;
 class Jdb_log_list_hdl : public Jdb_kobject_handler
 {
 public:
-  virtual bool show_kobject(Kobject_common *, int) { return true; }
+  bool show_kobject(Kobject_common *, int) override { return true; }
 };
 
 PUBLIC
 bool
-Jdb_log_list_hdl::invoke(Kobject_common *, Syscall_frame *f, Utcb *utcb)
+Jdb_log_list_hdl::invoke(Kobject_common *, Syscall_frame *f, Utcb *utcb) override
 {
   switch (utcb->values[0])
     {
@@ -340,7 +340,7 @@ Jdb_log::Jdb_log()
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_log::action(int, void *&, char const *&, int &)
+Jdb_log::action(int, void *&, char const *&, int &) override
 {
   if (_jdb_log_table >= &_jdb_log_table_end)
     return NOTHING;
@@ -354,7 +354,7 @@ Jdb_log::action(int, void *&, char const *&, int &)
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_log::cmds() const
+Jdb_log::cmds() const override
 {
   static Cmd cs[] =
     {
@@ -365,7 +365,7 @@ Jdb_log::cmds() const
 
 PUBLIC
 int
-Jdb_log::num_cmds() const
+Jdb_log::num_cmds() const override
 { return 1; }
 
 static Jdb_log jdb_log INIT_PRIORITY(JDB_MODULE_INIT_PRIO);

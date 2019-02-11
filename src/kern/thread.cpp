@@ -327,7 +327,7 @@ Mword Del_irq_chip::pin(Thread *t)
 
 PUBLIC inline
 void
-Del_irq_chip::unbind(Irq_base *irq)
+Del_irq_chip::unbind(Irq_base *irq) override
 { thread(irq->pin())->remove_delete_irq(); }
 
 

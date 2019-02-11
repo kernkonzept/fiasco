@@ -31,7 +31,7 @@ Timeslice_timeout::Timeslice_timeout(Cpu_number cpu)
  */
 PRIVATE
 bool
-Timeslice_timeout::expired()
+Timeslice_timeout::expired() override
 {
   Sched_context::Ready_queue &rq = Sched_context::rq.current();
   Sched_context *sched = rq.current_sched();

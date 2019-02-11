@@ -166,7 +166,7 @@ struct Jdb_mips_tlb : Jdb_module
   }
 
   Jdb_module::Action_code
-  action(int cmd, void *&argbuf, char const *&fmt, int &next)
+  action(int cmd, void *&argbuf, char const *&fmt, int &next) override
   {
     if (cmd != 0)
       return NOTHING;
@@ -193,7 +193,7 @@ struct Jdb_mips_tlb : Jdb_module
     return NOTHING;
   }
 
-  Jdb_module::Cmd const *cmds() const
+  Jdb_module::Cmd const *cmds() const override
   {
     static char c;
     static Cmd cs[] =
@@ -204,7 +204,7 @@ struct Jdb_mips_tlb : Jdb_module
     return cs;
   }
 
-  int num_cmds() const
+  int num_cmds() const override
   { return 1; }
 };
 

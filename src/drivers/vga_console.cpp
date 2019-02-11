@@ -57,12 +57,12 @@ public:
   /**
    * Output method.
    */
-  int write(char const *str, size_t len);
+  int write(char const *str, size_t len) override;
 
   /**
    * Empty implementation.
    */
-  int getchar(bool blocking = true);
+  int getchar(bool blocking = true) override;
 
   inline bool is_working();
 
@@ -511,7 +511,7 @@ bool Vga_console::is_working()
 }
 
 PUBLIC
-Mword Vga_console::get_attributes() const
+Mword Vga_console::get_attributes() const override
 {
   return DIRECT | OUT;
 }

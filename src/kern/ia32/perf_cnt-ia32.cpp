@@ -252,14 +252,14 @@ Perf_cnt_p5::Perf_cnt_p5()
 
 FIASCO_INIT_CPU
 int
-Perf_cnt_p5::init()
+Perf_cnt_p5::init() override
 {
   Cpu::wrmsr(0, Msr_p5_cesr); // disable both counters
   return 1;
 }
 
 void
-Perf_cnt_p5::set_pmc_event(Mword slot)
+Perf_cnt_p5::set_pmc_event(Mword slot) override
 {
   Unsigned64 msr;
   Mword event;
@@ -313,7 +313,7 @@ Perf_cnt_p6::Perf_cnt_p6(Mword sel_reg0, Mword ctr_reg0,
 
 FIASCO_INIT_CPU
 int
-Perf_cnt_p6::init()
+Perf_cnt_p6::init() override
 {
   for (Mword i=0; i<_nr_regs; i++)
     {
@@ -324,7 +324,7 @@ Perf_cnt_p6::init()
 }
 
 void
-Perf_cnt_p6::set_pmc_event(Mword slot)
+Perf_cnt_p6::set_pmc_event(Mword slot) override
 {
   Mword event;
 
@@ -341,7 +341,7 @@ Perf_cnt_p6::set_pmc_event(Mword slot)
 }
 
 void
-Perf_cnt_p6::start_pmc(Mword /*reg_nr*/)
+Perf_cnt_p6::start_pmc(Mword /*reg_nr*/) override
 {
   Unsigned64 msr;
 
@@ -351,7 +351,7 @@ Perf_cnt_p6::start_pmc(Mword /*reg_nr*/)
 }
 
 void
-Perf_cnt_p6::init_watchdog()
+Perf_cnt_p6::init_watchdog() override
 {
   Unsigned64 msr;
 
@@ -363,7 +363,7 @@ Perf_cnt_p6::init_watchdog()
 }
 
 void
-Perf_cnt_p6::init_loadcnt()
+Perf_cnt_p6::init_loadcnt() override
 {
   Unsigned64 msr;
 
@@ -376,7 +376,7 @@ Perf_cnt_p6::init_loadcnt()
 }
 
 void
-Perf_cnt_p6::start_watchdog()
+Perf_cnt_p6::start_watchdog() override
 {
   Unsigned64 msr;
 
@@ -386,7 +386,7 @@ Perf_cnt_p6::start_watchdog()
 }
 
 void
-Perf_cnt_p6::stop_watchdog()
+Perf_cnt_p6::stop_watchdog() override
 {
   Unsigned64 msr;
 
@@ -411,7 +411,7 @@ Perf_cnt_k7::Perf_cnt_k7()
 {}
 
 void
-Perf_cnt_k7::start_pmc(Mword reg_nr)
+Perf_cnt_k7::start_pmc(Mword reg_nr) override
 {
   Unsigned64 msr;
 
@@ -421,7 +421,7 @@ Perf_cnt_k7::start_pmc(Mword reg_nr)
 }
 
 void
-Perf_cnt_k7::init_watchdog()
+Perf_cnt_k7::init_watchdog() override
 {
   Unsigned64 msr;
 
@@ -433,7 +433,7 @@ Perf_cnt_k7::init_watchdog()
 }
 
 void
-Perf_cnt_k7::init_loadcnt()
+Perf_cnt_k7::init_loadcnt() override
 {
   Unsigned64 msr;
 
@@ -466,7 +466,7 @@ Perf_cnt_ap::Perf_cnt_ap()
 }
 
 void
-Perf_cnt_ap::start_pmc(Mword reg_nr)
+Perf_cnt_ap::start_pmc(Mword reg_nr) override
 {
   Unsigned64 msr;
 
@@ -476,7 +476,7 @@ Perf_cnt_ap::start_pmc(Mword reg_nr)
 }
 
 void
-Perf_cnt_ap::init_watchdog()
+Perf_cnt_ap::init_watchdog() override
 {
   Unsigned64 msr;
 
@@ -488,7 +488,7 @@ Perf_cnt_ap::init_watchdog()
 }
 
 void
-Perf_cnt_ap::init_loadcnt()
+Perf_cnt_ap::init_loadcnt() override
 {
   Unsigned64 msr;
 
@@ -530,7 +530,7 @@ Perf_cnt_p4::cccr_escr_select(Mword n)
 
 FIASCO_INIT_CPU
 int
-Perf_cnt_p4::init()
+Perf_cnt_p4::init() override
 {
   Unsigned32 misc_enable = Cpu::rdmsr(Msr_p4_misc_enable);
 
@@ -557,11 +557,11 @@ Perf_cnt_p4::init()
 }
 
 void
-Perf_cnt_p4::set_pmc_event(Mword /*slot*/)
+Perf_cnt_p4::set_pmc_event(Mword /*slot*/) override
 {}
 
 void
-Perf_cnt_p4::start_pmc(Mword reg_nr)
+Perf_cnt_p4::start_pmc(Mword reg_nr) override
 {
   Unsigned64 msr;
 
@@ -571,7 +571,7 @@ Perf_cnt_p4::start_pmc(Mword reg_nr)
 }
 
 void
-Perf_cnt_p4::init_watchdog()
+Perf_cnt_p4::init_watchdog() override
 {
   Unsigned64 msr;
   
@@ -588,7 +588,7 @@ Perf_cnt_p4::init_watchdog()
 }
 
 void
-Perf_cnt_p4::init_loadcnt()
+Perf_cnt_p4::init_loadcnt() override
 {
   Unsigned64 msr;
   
@@ -608,7 +608,7 @@ Perf_cnt_p4::init_loadcnt()
 }
 
 void
-Perf_cnt_p4::start_watchdog()
+Perf_cnt_p4::start_watchdog() override
 {
   Unsigned64 msr;
 
@@ -619,7 +619,7 @@ Perf_cnt_p4::start_watchdog()
 }
 
 void
-Perf_cnt_p4::stop_watchdog()
+Perf_cnt_p4::stop_watchdog() override
 {
   Unsigned64 msr;
 

@@ -18,9 +18,9 @@ public:
     SIZE = 8  ///< The maximum number of consoles to be multiplexed.
   };
 
-  int  write(char const *str, size_t len);
-  int  getchar(bool blocking = true);
-  int  char_avail() const;
+  int  write(char const *str, size_t len) override;
+  int  getchar(bool blocking = true) override;
+  int  char_avail() const override;
 
 private:
   int     _next_getchar;
@@ -153,7 +153,7 @@ Mux_console::getchar(bool blocking)
  */
 PUBLIC
 Mword
-Mux_console::get_attributes() const
+Mux_console::get_attributes() const override
 {
   Mword attr = 0;
 

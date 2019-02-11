@@ -49,7 +49,7 @@ Jdb_report::delim(const char *text = 0)
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_report::action(int cmd, void *&, char const *&, int &)
+Jdb_report::action(int cmd, void *&, char const *&, int &) override
 {
   if (cmd != 0)
     return NOTHING;
@@ -116,12 +116,12 @@ Jdb_report::action(int cmd, void *&, char const *&, int &)
 
 PUBLIC
 int
-Jdb_report::num_cmds() const
+Jdb_report::num_cmds() const override
 { return 1; }
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_report::cmds() const
+Jdb_report::cmds() const override
 {
   static Cmd cs[] =
     {

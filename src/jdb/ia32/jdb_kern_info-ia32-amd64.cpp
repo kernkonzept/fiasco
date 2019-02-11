@@ -30,7 +30,7 @@ Jdb_kern_info_idt::Jdb_kern_info_idt()
 
 PUBLIC
 void
-Jdb_kern_info_idt::show()
+Jdb_kern_info_idt::show() override
 {
   Pseudo_descriptor idt_pseudo;
   unsigned line = 0;
@@ -69,7 +69,7 @@ Jdb_kern_info_test_tsc_scaler::Jdb_kern_info_test_tsc_scaler()
 
 PUBLIC
 void
-Jdb_kern_info_test_tsc_scaler::show()
+Jdb_kern_info_test_tsc_scaler::show() override
 {
   while (Kconsole::console()->getchar(false) == -1)
     {
@@ -99,7 +99,7 @@ Jdb_kern_info_pic_state::Jdb_kern_info_pic_state()
 }
 
 void
-Jdb_kern_info_pic_state::show()
+Jdb_kern_info_pic_state::show() override
 {
   typedef Irq_chip_i8259<Io> I8259;
   int i;
@@ -159,7 +159,7 @@ Jdb_kern_info_misc::Jdb_kern_info_misc()
 
 PUBLIC
 void
-Jdb_kern_info_misc::show()
+Jdb_kern_info_misc::show() override
 {
   printf ("clck: %08x.%08x\n",
 	  (unsigned) (Kip::k()->clock >> 32),
@@ -215,7 +215,7 @@ Jdb_kern_info_cpu::Jdb_kern_info_cpu()
 
 PUBLIC
 void
-Jdb_kern_info_cpu::show()
+Jdb_kern_info_cpu::show() override
 {
   const char *perf_type = Perf_cnt::perf_type();
   char cpu_mhz[32];
@@ -318,7 +318,7 @@ Jdb_kern_info_gdt::show_gdt(Cpu_number cpu)
 
 PUBLIC
 void
-Jdb_kern_info_gdt::show()
+Jdb_kern_info_gdt::show() override
 {
   line = 0;
   Jdb::foreach_cpu(&show_gdt);
@@ -343,7 +343,7 @@ Jdb_kern_info_hpet_smm::Jdb_kern_info_hpet_smm()
 
 PUBLIC
 void
-Jdb_kern_info_hpet_smm::show()
+Jdb_kern_info_hpet_smm::show() override
 {
   const unsigned config_spin_loops = 10000;
   const unsigned config_hist_loops = 60;

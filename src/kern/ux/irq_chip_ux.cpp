@@ -49,7 +49,7 @@ IMPLEMENTATION:
 
 PUBLIC
 bool
-Irq_chip_ux::alloc(Irq_base *irq, Mword irqn)
+Irq_chip_ux::alloc(Irq_base *irq, Mword irqn) override
 {
   if (irqn >= Num_irqs)
     return false;
@@ -62,7 +62,7 @@ Irq_chip_ux::alloc(Irq_base *irq, Mword irqn)
 
 PUBLIC
 void
-Irq_chip_ux::unmask(Mword pin)
+Irq_chip_ux::unmask(Mword pin) override
 {
   assert (pin < Num_irqs);
   auto &p = pfd[pin];
@@ -102,6 +102,6 @@ IMPLEMENTATION [ux && debug]:
 
 PUBLIC
 char const *
-Irq_chip_ux::chip_type() const
+Irq_chip_ux::chip_type() const override
 { return "UX"; }
 

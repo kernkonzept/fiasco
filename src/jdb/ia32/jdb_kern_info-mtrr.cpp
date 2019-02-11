@@ -54,7 +54,7 @@ Jdb_kern_info_mtrr::get_var_mtrr(int reg, Address *ret_base,
 
 PUBLIC
 void
-Jdb_kern_info_mtrr::show()
+Jdb_kern_info_mtrr::show() override
 {
   int num_mtrr;
   static const char * const typestr[] = 

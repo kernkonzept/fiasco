@@ -109,10 +109,10 @@ IMPLEMENTATION:
 #include "lock_guard.h"
 
 
-PUBLIC bool  Kobject::is_local(Space *) const { return false; }
-PUBLIC Mword Kobject::obj_id() const { return ~0UL; }
+PUBLIC bool  Kobject::is_local(Space *) const override { return false; }
+PUBLIC Mword Kobject::obj_id() const override { return ~0UL; }
 PUBLIC virtual bool  Kobject::put() { return true; }
-PUBLIC inline Kobject_mappable *Kobject::map_root() { return this; }
+PUBLIC inline Kobject_mappable *Kobject::map_root() override { return this; }
 
 PUBLIC inline NEEDS["lock_guard.h"]
 Smword
@@ -125,7 +125,7 @@ Kobject_mappable::dec_cap_refcnt(Smword diff)
 
 PUBLIC
 void
-Kobject::initiate_deletion(Kobject ***reap_list)
+Kobject::initiate_deletion(Kobject ***reap_list) override
 {
   existence_lock.invalidate();
 
@@ -253,7 +253,7 @@ Kobject::from_dbg(Kobject_dbg::Iterator const &d)
 
 PUBLIC
 Kobject_dbg *
-Kobject::dbg_info() const
+Kobject::dbg_info() const override
 { return const_cast<Kobject*>(this); }
 
 IMPLEMENT

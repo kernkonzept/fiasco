@@ -104,7 +104,7 @@ Io_apic_entry *Io_apic::_state_save_area;
 
 
 PUBLIC Irq_mgr::Irq
-Io_apic_mgr::chip(Mword irq) const
+Io_apic_mgr::chip(Mword irq) const override
 {
   Io_apic *a = Io_apic::find_apic(irq);
   if (a)
@@ -115,22 +115,22 @@ Io_apic_mgr::chip(Mword irq) const
 
 PUBLIC
 unsigned
-Io_apic_mgr::nr_irqs() const
+Io_apic_mgr::nr_irqs() const override
 {
   return Io_apic::total_irqs();
 }
 
 PUBLIC
 unsigned
-Io_apic_mgr::nr_msis() const
+Io_apic_mgr::nr_msis() const override
 { return 0; }
 
 PUBLIC unsigned
-Io_apic_mgr::legacy_override(Mword i)
+Io_apic_mgr::legacy_override(Mword i) override
 { return Io_apic::legacy_override(i); }
 
 PUBLIC void
-Io_apic_mgr::pm_on_suspend(Cpu_number cpu)
+Io_apic_mgr::pm_on_suspend(Cpu_number cpu) override
 {
   (void)cpu;
   assert (cpu == Cpu_number::boot_cpu());
@@ -138,7 +138,7 @@ Io_apic_mgr::pm_on_suspend(Cpu_number cpu)
 }
 
 PUBLIC void
-Io_apic_mgr::pm_on_resume(Cpu_number cpu)
+Io_apic_mgr::pm_on_resume(Cpu_number cpu) override
 {
   (void)cpu;
   assert (cpu == Cpu_number::boot_cpu());

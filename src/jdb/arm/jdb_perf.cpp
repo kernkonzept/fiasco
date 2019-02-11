@@ -18,7 +18,7 @@ IMPLEMENTATION [arm]:
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_perf::action(int cmd, void *&, char const *&, int &)
+Jdb_perf::action(int cmd, void *&, char const *&, int &) override
 {
   if (cmd)
     return NOTHING;
@@ -38,13 +38,13 @@ Jdb_perf::action(int cmd, void *&, char const *&, int &)
 
 PUBLIC
 int
-Jdb_perf::num_cmds() const
+Jdb_perf::num_cmds() const override
 { return 1; }
 
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_perf::cmds() const
+Jdb_perf::cmds() const override
 {
   static Cmd cs[] =
     {

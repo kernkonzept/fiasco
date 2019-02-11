@@ -78,23 +78,23 @@ public:
     Op_chain = 0
   };
 
-  int set_mode(Mword, Irq_chip::Mode) { return 0; }
-  bool is_edge_triggered(Mword) const { return false; }
-  void switch_mode(bool)
+  int set_mode(Mword, Irq_chip::Mode) override { return 0; }
+  bool is_edge_triggered(Mword) const override { return false; }
+  void switch_mode(bool) override
   {
     // the irq object is assumed to be always handled as
     // level triggered
   }
 
-  void set_cpu(Mword, Cpu_number)
+  void set_cpu(Mword, Cpu_number) override
   {
     // don't know what to do here, may be multiple targets on different
     // CPUs!
   }
 
-  void ack(Mword) {}
+  void ack(Mword) override {}
 
-  char const *chip_type() const { return "Bcast"; }
+  char const *chip_type() const override { return "Bcast"; }
 
 private:
   Smword _mask_cnt;
@@ -173,7 +173,7 @@ Irq::dispatch_irq_proto(Unsigned16 op, bool may_unmask)
 
 PUBLIC
 void
-Irq_muxer::unmask(Mword)
+Irq_muxer::unmask(Mword) override
 {
   Smword old;
   do
@@ -187,7 +187,7 @@ Irq_muxer::unmask(Mword)
 
 PUBLIC
 void
-Irq_muxer::mask(Mword)
+Irq_muxer::mask(Mword) override
 {
   Smword old;
   do
@@ -201,7 +201,7 @@ Irq_muxer::mask(Mword)
 
 PUBLIC
 void
-Irq_muxer::unbind(Irq_base *irq)
+Irq_muxer::unbind(Irq_base *irq) override
 {
   Irq_base *n;
     {
@@ -225,7 +225,7 @@ Irq_muxer::unbind(Irq_base *irq)
 
 PUBLIC
 void
-Irq_muxer::mask_and_ack(Mword)
+Irq_muxer::mask_and_ack(Mword) override
 {}
 
 PUBLIC inline
@@ -272,7 +272,7 @@ Irq_muxer::Irq_muxer(Ram_quota *q = 0)
 
 PUBLIC
 void
-Irq_muxer::destroy(Kobject ***rl)
+Irq_muxer::destroy(Kobject ***rl) override
 {
   while (Irq_base *n = Irq_base::_next)
     {
@@ -476,14 +476,14 @@ Irq_sender::Irq_sender(Ram_quota *q = 0)
 
 PUBLIC
 void
-Irq_sender::switch_mode(bool is_edge_triggered)
+Irq_sender::switch_mode(bool is_edge_triggered) override
 {
   hit_func = is_edge_triggered ? &hit_edge_irq : &hit_level_irq;
 }
 
 PUBLIC
 void
-Irq_sender::destroy(Kobject ***rl)
+Irq_sender::destroy(Kobject ***rl) override
 {
   auto g = lock_guard(cpu_lock);
   (void)free(rl);
@@ -555,7 +555,7 @@ Irq_sender::transfer_msg(Receiver *recv)
 }
 
 PUBLIC void
-Irq_sender::modify_label(Mword const *todo, int cnt)
+Irq_sender::modify_label(Mword const *todo, int cnt) override
 {
   for (int i = 0; i < cnt*4; i += 4)
     {
@@ -776,7 +776,7 @@ Irq_sender::kinvoke(L4_obj_ref, L4_fpage::Rights /*rights*/, Syscall_frame *f,
 
 PUBLIC
 Mword
-Irq_sender::obj_id() const
+Irq_sender::obj_id() const override
 { return _irq_id; }
 
 
@@ -825,7 +825,7 @@ Irq::Irq(Ram_quota *q = 0) : _q(q) {}
 
 PUBLIC
 void
-Irq::destroy(Kobject ***rl)
+Irq::destroy(Kobject ***rl) override
 {
   Irq_base::destroy();
   Kobject::destroy(rl);

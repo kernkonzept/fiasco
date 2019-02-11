@@ -22,7 +22,7 @@ Jdb_kern_info_misc::Jdb_kern_info_misc()
 
 PUBLIC
 void
-Jdb_kern_info_misc::show()
+Jdb_kern_info_misc::show() override
 {
   // FIXME: assume UP here (current_mem_space(0))
   printf("clck: %08x.%08x\n"

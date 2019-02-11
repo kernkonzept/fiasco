@@ -130,7 +130,7 @@ Apic::find_cpu(Unsigned32 phys_id)
 }
 
 PUBLIC void
-Apic::pm_on_suspend(Cpu_number)
+Apic::pm_on_suspend(Cpu_number) override
 {
   _saved_apic_timer = timer_reg_read();
 }
@@ -139,7 +139,7 @@ Apic::pm_on_suspend(Cpu_number)
 IMPLEMENTATION [!mp]:
 
 PUBLIC void
-Apic::pm_on_resume(Cpu_number)
+Apic::pm_on_resume(Cpu_number) override
 {
   Apic::init(true);
   timer_reg_write(_saved_apic_timer);
@@ -149,7 +149,7 @@ Apic::pm_on_resume(Cpu_number)
 IMPLEMENTATION [mp]:
 
 PUBLIC void
-Apic::pm_on_resume(Cpu_number cpu)
+Apic::pm_on_resume(Cpu_number cpu) override
 {
   if (cpu == Cpu_number::boot_cpu())
     Apic::init(true);

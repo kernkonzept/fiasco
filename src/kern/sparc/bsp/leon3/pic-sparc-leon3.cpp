@@ -31,9 +31,9 @@ private:
   };
 
 public:
-  int set_mode(Mword, Mode) { return 0; }
-  bool is_edge_triggered(Mword) const { return false; }
-  void set_cpu(Mword, Cpu_number) {}
+  int set_mode(Mword, Mode) override { return 0; }
+  bool is_edge_triggered(Mword) const override { return false; }
+  void set_cpu(Mword, Cpu_number) override {}
 };
 
 PUBLIC
@@ -55,7 +55,7 @@ Irq_chip_sparc::cpu()
 
 PUBLIC
 void
-Irq_chip_sparc::mask(Mword irq)
+Irq_chip_sparc::mask(Mword irq) override
 {
   assert(cpu_lock.test());
   printf("IRQ-mask: irq=%ld\n", irq);
@@ -65,14 +65,14 @@ Irq_chip_sparc::mask(Mword irq)
 
 PUBLIC
 void
-Irq_chip_sparc::ack(Mword irq)
+Irq_chip_sparc::ack(Mword irq) override
 {
   r<32>(ICLEAR) = 1 << irq;
 }
 
 PUBLIC
 void
-Irq_chip_sparc::mask_and_ack(Mword irq)
+Irq_chip_sparc::mask_and_ack(Mword irq) override
 {
   assert(cpu_lock.test());
   printf("IRQ-mask+ack: irq=%ld\n", irq);
@@ -82,7 +82,7 @@ Irq_chip_sparc::mask_and_ack(Mword irq)
 
 PUBLIC
 void
-Irq_chip_sparc::unmask(Mword irq)
+Irq_chip_sparc::unmask(Mword irq) override
 {
   assert(cpu_lock.test());
   printf("IRQ-unmask: irq=%ld\n", irq);
@@ -118,5 +118,5 @@ IMPLEMENTATION [sparc && debug]:
 
 PUBLIC
 char const *
-Irq_chip_sparc::chip_type() const
+Irq_chip_sparc::chip_type() const override
 { return "Sparc something fixme"; }

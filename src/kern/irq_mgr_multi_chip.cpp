@@ -6,8 +6,8 @@ template< unsigned Bits_per_entry >
 class Irq_mgr_multi_chip : public Irq_mgr
 {
 public:
-  unsigned nr_irqs() const { return _nchips << Bits_per_entry; }
-  unsigned nr_msis() const { return 0; }
+  unsigned nr_irqs() const override { return _nchips << Bits_per_entry; }
+  unsigned nr_msis() const override { return 0; }
 
 private:
   struct Chip
@@ -36,7 +36,7 @@ Irq_mgr_multi_chip<Bits_per_chip>::Irq_mgr_multi_chip(unsigned chips)
 
 PUBLIC template< unsigned Bits_per_entry >
 Irq_mgr::Irq
-Irq_mgr_multi_chip<Bits_per_entry>::chip(Mword irqnum) const
+Irq_mgr_multi_chip<Bits_per_entry>::chip(Mword irqnum) const override
 {
   unsigned c = irqnum >> Bits_per_entry;
   if (c >= _nchips)

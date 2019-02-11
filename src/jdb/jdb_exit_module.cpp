@@ -27,7 +27,7 @@ static Jdb_exit_module jdb_exit_module INIT_PRIORITY(JDB_MODULE_INIT_PRIO);
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_exit_module::action (int cmd, void *&, char const *&, int &)
+Jdb_exit_module::action (int cmd, void *&, char const *&, int &) override
 {
   if (cmd != 0)
     return NOTHING;
@@ -49,14 +49,14 @@ Jdb_exit_module::action (int cmd, void *&, char const *&, int &)
 
 PUBLIC
 int
-Jdb_exit_module::num_cmds() const
+Jdb_exit_module::num_cmds() const override
 {
   return 1;
 }
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_exit_module::cmds() const
+Jdb_exit_module::cmds() const override
 {
   static Cmd cs[] =
     { { 0, "^", "exit", "", "^\treboot the system", 0 } };

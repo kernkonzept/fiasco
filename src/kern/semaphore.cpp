@@ -105,7 +105,7 @@ Semaphore::hit_level_irq(Irq_base *i, Upstream_irq const *ui)
 
 PUBLIC
 void
-Semaphore::switch_mode(bool is_edge_triggered)
+Semaphore::switch_mode(bool is_edge_triggered) override
 {
   hit_func = is_edge_triggered ? &hit_edge_irq : &hit_level_irq;
 }

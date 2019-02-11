@@ -300,7 +300,7 @@ Jdb_mapdb::show(Mapping::Pfn page, char which_mapdb)
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_mapdb::action(int cmd, void *&args, char const *&fmt, int &next_char)
+Jdb_mapdb::action(int cmd, void *&args, char const *&fmt, int &next_char) override
 {
   static char which_mapdb = 'm';
 
@@ -359,7 +359,7 @@ Jdb_mapdb::action(int cmd, void *&args, char const *&fmt, int &next_char)
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_mapdb::cmds() const
+Jdb_mapdb::cmds() const override
 {
   static Cmd cs[] =
     {
@@ -374,7 +374,7 @@ Jdb_mapdb::cmds() const
 
 PUBLIC
 int
-Jdb_mapdb::num_cmds() const
+Jdb_mapdb::num_cmds() const override
 {
   return 2;
 }

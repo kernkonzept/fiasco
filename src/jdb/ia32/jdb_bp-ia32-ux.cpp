@@ -606,7 +606,7 @@ Jdb_set_bp::Jdb_set_bp()
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_set_bp::action(int cmd, void *&args, char const *&fmt, int &next_char)
+Jdb_set_bp::action(int cmd, void *&args, char const *&fmt, int &next_char) override
 {
   Jdb_module::Action_code code;
   Breakpoint::Mode mode;
@@ -807,7 +807,7 @@ got_address:
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_set_bp::cmds() const
+Jdb_set_bp::cmds() const override
 {
   static Cmd cs[] =
     {
@@ -826,7 +826,7 @@ Jdb_set_bp::cmds() const
 
 PUBLIC
 int
-Jdb_set_bp::num_cmds() const
+Jdb_set_bp::num_cmds() const override
 {
   return 1;
 }

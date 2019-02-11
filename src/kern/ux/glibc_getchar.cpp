@@ -15,7 +15,7 @@ public:
 
 PUBLIC
 int
-Glibc_getchar::getchar(bool blocking)
+Glibc_getchar::getchar(bool blocking) override
 {
   (void)blocking;
   return ::getchar();
@@ -23,7 +23,7 @@ Glibc_getchar::getchar(bool blocking)
 
 PUBLIC
 int
-Glibc_getchar::write(char const *str, size_t len)
+Glibc_getchar::write(char const *str, size_t len) override
 {
   (void)str; (void)len;
   return 1;
@@ -31,7 +31,7 @@ Glibc_getchar::write(char const *str, size_t len)
 
 PUBLIC
 Mword
-Glibc_getchar::get_attributes() const
+Glibc_getchar::get_attributes() const override
 {
   return UX | IN;
 }

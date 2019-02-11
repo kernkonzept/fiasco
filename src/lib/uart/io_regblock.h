@@ -172,21 +172,21 @@ namespace L4
     unsigned long addr(unsigned long reg) const
     { return _base + (reg << _shift); }
 
-    unsigned char  read8(unsigned long reg) const
+    unsigned char  read8(unsigned long reg) const override
     { return _read<unsigned char>(reg); }
-    unsigned short read16(unsigned long reg) const
+    unsigned short read16(unsigned long reg) const override
     { return _read<unsigned short>(reg); }
-    unsigned int   read32(unsigned long reg) const
+    unsigned int   read32(unsigned long reg) const override
     { return _read<unsigned int>(reg); }
 
-    void write8(unsigned long reg, unsigned char val) const
+    void write8(unsigned long reg, unsigned char val) const override
     { _write(reg, val); }
-    void write16(unsigned long reg, unsigned short val) const
+    void write16(unsigned long reg, unsigned short val) const override
     { _write(reg, val); }
-    void write32(unsigned long reg, unsigned int val) const
+    void write32(unsigned long reg, unsigned int val) const override
     { _write(reg, val); }
 
-    void delay() const
+    void delay() const override
     {}
 
   private:
@@ -214,21 +214,21 @@ namespace L4
     unsigned long addr(unsigned long reg) const
     { return _base + (reg << _shift); }
 
-    unsigned char  read8(unsigned long reg) const
+    unsigned char  read8(unsigned long reg) const override
     { return _read<unsigned char>(reg); }
-    unsigned short read16(unsigned long reg) const
+    unsigned short read16(unsigned long reg) const override
     { return _read<unsigned short>(reg); }
-    unsigned int   read32(unsigned long reg) const
+    unsigned int   read32(unsigned long reg) const override
     { return _read<unsigned int>(reg); }
 
-    void write8(unsigned long reg, unsigned char val) const
+    void write8(unsigned long reg, unsigned char val) const override
     { _write(reg, val); }
-    void write16(unsigned long reg, unsigned short val) const
+    void write16(unsigned long reg, unsigned short val) const override
     { _write(reg, val); }
-    void write32(unsigned long reg, unsigned int val) const
+    void write32(unsigned long reg, unsigned int val) const override
     { _write(reg, val); }
 
-    void delay() const
+    void delay() const override
     {}
 
   private:

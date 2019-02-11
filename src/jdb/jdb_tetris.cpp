@@ -220,7 +220,7 @@ Jdb_tetris_m::Jdb_tetris_m()
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_tetris_m::action(int, void *&, char const *&, int &)
+Jdb_tetris_m::action(int, void *&, char const *&, int &) override
 {
   int i, j, k, c;
 
@@ -316,14 +316,14 @@ Jdb_tetris_m::action(int, void *&, char const *&, int &)
 
 PUBLIC
 int
-Jdb_tetris_m::num_cmds() const
+Jdb_tetris_m::num_cmds() const override
 {
   return 1;
 }
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_tetris_m::cmds() const
+Jdb_tetris_m::cmds() const override
 {
   static Cmd cs[] =
     {

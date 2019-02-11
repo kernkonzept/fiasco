@@ -18,6 +18,6 @@ namespace L4
     : Uart_16550(base_rate)
     {}
 
-    void irq_ack();
+    void irq_ack() override;
   };
 }

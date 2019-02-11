@@ -25,7 +25,7 @@ Jdb_kern_info_misc::Jdb_kern_info_misc()
 
 PUBLIC
 void
-Jdb_kern_info_misc::show()
+Jdb_kern_info_misc::show() override
 {
   printf ("clck: %08x.%08x\n",
 	  (unsigned) (Kip::k()->clock >> 32), 
@@ -49,7 +49,7 @@ Jdb_kern_info_cpu::Jdb_kern_info_cpu()
 
 PUBLIC
 void
-Jdb_kern_info_cpu::show()
+Jdb_kern_info_cpu::show() override
 {
   const char *perf_type = Perf_cnt::perf_type();
   char cpu_mhz[32];
@@ -105,7 +105,7 @@ Jdb_kern_info_host::Jdb_kern_info_host()
 
 PUBLIC
 void
-Jdb_kern_info_host::show()
+Jdb_kern_info_host::show() override
 {
   for (Kobject_dbg::Iterator i = Kobject_dbg::begin(); i != Kobject_dbg::end(); ++i)
     {

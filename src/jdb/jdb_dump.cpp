@@ -31,9 +31,9 @@ class Jdb_dump : public Jdb_module, public Jdb_table
 {
 public:
   Jdb_dump() FIASCO_INIT;
-  unsigned long cols() const { return Jdb_screen::cols(); }
-  unsigned long rows() const { return Jdb_screen::rows(); }
-  void draw_entry(unsigned long row, unsigned long col);
+  unsigned long cols() const override { return Jdb_screen::cols(); }
+  unsigned long rows() const override { return Jdb_screen::rows(); }
+  void draw_entry(unsigned long row, unsigned long col) override;
   void print_statline();
 
 private:
@@ -72,7 +72,7 @@ Jdb_dump::virt(unsigned long row, unsigned long col)
 
 PUBLIC
 unsigned
-Jdb_dump::col_width(unsigned col) const
+Jdb_dump::col_width(unsigned col) const override
 {
   if (col == 0)
     return Jdb_screen::Col_head_size;
@@ -84,7 +84,7 @@ Jdb_dump::col_width(unsigned col) const
 
 PUBLIC
 void
-Jdb_dump::print_statline(unsigned long row, unsigned long col)
+Jdb_dump::print_statline(unsigned long row, unsigned long col) override
 {
   char const *str = dump_type == D_MODE
                   ? "e=edit u=disasm D=dump <Space>=mode <CR>=goto addr"
@@ -180,7 +180,7 @@ Jdb_dump::dump(Address virt, Space *task, int level)
 
 PUBLIC
 bool
-Jdb_dump::edit_entry(unsigned long row, unsigned long col, unsigned cx, unsigned cy)
+Jdb_dump::edit_entry(unsigned long row, unsigned long col, unsigned cx, unsigned cy) override
 {
   Address entry = virt(row,col);
 
@@ -202,7 +202,7 @@ Jdb_dump::edit_entry(unsigned long row, unsigned long col, unsigned cx, unsigned
 
 PUBLIC
 unsigned
-Jdb_dump::key_pressed(int c, unsigned long &row, unsigned long &col)
+Jdb_dump::key_pressed(int c, unsigned long &row, unsigned long &col) override
 {
   switch (c)
     {
@@ -360,7 +360,7 @@ Jdb_dump::key_pressed(int c, unsigned long &row, unsigned long &col)
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_dump::action(int cmd, void *&args, char const *&fmt, int &next_char)
+Jdb_dump::action(int cmd, void *&args, char const *&fmt, int &next_char) override
 {
   if (cmd == 0)
     {
@@ -386,7 +386,7 @@ Jdb_dump::action(int cmd, void *&args, char const *&fmt, int &next_char)
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_dump::cmds() const
+Jdb_dump::cmds() const override
 {
   static Cmd cs[] =
     {
@@ -399,7 +399,7 @@ Jdb_dump::cmds() const
 
 PUBLIC
 int
-Jdb_dump::num_cmds() const
+Jdb_dump::num_cmds() const override
 {
   return 1;
 }

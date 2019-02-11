@@ -22,7 +22,7 @@ extern "C" const char _binary_gblcfg_o_txt_end;
 
 PUBLIC
 void
-Jdb_kern_info_config::show()
+Jdb_kern_info_config::show() override
 {
   printf("%*.*s",
       (int)(&_binary_gblcfg_o_txt_end - &_binary_gblcfg_o_txt_start),

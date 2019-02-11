@@ -6,7 +6,7 @@ INTERFACE:
 class Kconsole : public Mux_console
 {
 public:
-  int  getchar(bool blocking = true);
+  int  getchar(bool blocking = true) override;
   void getchar_chance();
 
   static Mux_console *console() FIASCO_CONST

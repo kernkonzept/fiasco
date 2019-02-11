@@ -98,7 +98,7 @@ Console_buffer::~Console_buffer()
 
 PUBLIC
 int
-Console_buffer::write( char const *str, size_t len )
+Console_buffer::write( char const *str, size_t len) override
 {
   if (_enabled && out_buf)
     {
@@ -140,7 +140,7 @@ Console_buffer::dec_out_ptr(char **c)
 
 PUBLIC
 int
-Console_buffer::getchar(bool)
+Console_buffer::getchar(bool) override
 {
   return -1;
 }
@@ -330,7 +330,7 @@ next_line:
 }
 
 PUBLIC
-Mword Console_buffer::get_attributes() const
+Mword Console_buffer::get_attributes() const override
 {
   return BUFFER | OUT;
 }
@@ -366,7 +366,7 @@ Mword Jdb_cb::output_lines;
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_cb::action(int cmd, void *&args, char const *&fmt, int &next_char)
+Jdb_cb::action(int cmd, void *&args, char const *&fmt, int &next_char) override
 {
   if (cmd != 0)
     return NOTHING;
@@ -405,7 +405,7 @@ Jdb_cb::action(int cmd, void *&args, char const *&fmt, int &next_char)
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_cb::cmds() const
+Jdb_cb::cmds() const override
 {
   static const Cmd cs[] =
     {
@@ -418,7 +418,7 @@ Jdb_cb::cmds() const
 
 PUBLIC
 int
-Jdb_cb::num_cmds() const
+Jdb_cb::num_cmds() const override
 {
   return 1;
 }

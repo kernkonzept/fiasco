@@ -21,7 +21,7 @@ Jdb_kern_info_apic::Jdb_kern_info_apic()
 
 PUBLIC
 void
-Jdb_kern_info_apic::show()
+Jdb_kern_info_apic::show() override
 {
   if (!Config::apic)
     {

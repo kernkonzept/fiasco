@@ -316,7 +316,7 @@ void Gic::acknowledge_locked(unsigned irq)
 
 PUBLIC
 void
-Gic::mask(Mword pin)
+Gic::mask(Mword pin) override
 {
   assert (cpu_lock.test());
   disable_locked(pin);
@@ -324,7 +324,7 @@ Gic::mask(Mword pin)
 
 PUBLIC
 void
-Gic::mask_and_ack(Mword pin)
+Gic::mask_and_ack(Mword pin) override
 {
   assert (cpu_lock.test());
   disable_locked(pin);
@@ -333,7 +333,7 @@ Gic::mask_and_ack(Mword pin)
 
 PUBLIC
 void
-Gic::ack(Mword pin)
+Gic::ack(Mword pin) override
 {
   acknowledge_locked(pin);
 }
@@ -341,7 +341,7 @@ Gic::ack(Mword pin)
 
 PUBLIC
 void
-Gic::unmask(Mword pin)
+Gic::unmask(Mword pin) override
 {
   assert (cpu_lock.test());
   enable_locked(pin, 0xa);
@@ -349,7 +349,7 @@ Gic::unmask(Mword pin)
 
 PUBLIC
 int
-Gic::set_mode(Mword pin, Mode m)
+Gic::set_mode(Mword pin, Mode m) override
 {
   return 0;
 
@@ -386,7 +386,7 @@ Gic::set_mode(Mword pin, Mode m)
 
 PUBLIC
 bool
-Gic::is_edge_triggered(Mword pin) const
+Gic::is_edge_triggered(Mword pin) const override
 {
   if (pin < 16)
     return false;
@@ -423,7 +423,7 @@ IMPLEMENTATION [arm && !arm_em_tz]:
 
 PUBLIC
 bool
-Gic::alloc(Irq_base *irq, Mword pin)
+Gic::alloc(Irq_base *irq, Mword pin) override
 {
   // allow local irqs to be allocated on each CPU
   return (pin < 32 && irq->chip() == this && irq->pin() == pin) || Irq_chip_gen::alloc(irq, pin);
@@ -469,7 +469,7 @@ IMPLEMENTATION [arm && !mp && pic_gic]:
 
 PUBLIC
 void
-Gic::set_cpu(Mword, Cpu_number)
+Gic::set_cpu(Mword, Cpu_number) override
 {}
 
 PUBLIC inline NEEDS["io.h"]
@@ -509,7 +509,7 @@ Unsigned32 Gic::pending()
 
 PUBLIC inline NEEDS["cpu.h"]
 void
-Gic::set_cpu(Mword pin, Cpu_number cpu)
+Gic::set_cpu(Mword pin, Cpu_number cpu) override
 {
   _dist.write<Unsigned8>(1 << pcpu_to_sgi(Cpu::cpus.cpu(cpu).phys_id()),
                          GICD_ITARGETSR + pin);
@@ -539,5 +539,5 @@ Gic::pmr()
 
 PUBLIC
 char const *
-Gic::chip_type() const
+Gic::chip_type() const override
 { return "GIC"; }

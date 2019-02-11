@@ -305,7 +305,7 @@ Jdb_bt::show(Mword ebp, Mword eip1, Mword eip2, Address_type user)
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_bt::action(int cmd, void *&args, char const *&fmt, int &next_char)
+Jdb_bt::action(int cmd, void *&args, char const *&fmt, int &next_char) override
 {
   if (cmd == 0)
     {
@@ -412,7 +412,7 @@ start_backtrace_known_ebp:
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_bt::cmds() const
+Jdb_bt::cmds() const override
 {
   static Cmd cs[] =
     {
@@ -426,7 +426,7 @@ Jdb_bt::cmds() const
 
 PUBLIC
 int
-Jdb_bt::num_cmds() const
+Jdb_bt::num_cmds() const override
 {
   return 1;
 }

@@ -51,7 +51,7 @@ Jdb_io_apic_module::print_lapic(Cpu_number cpu)
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_io_apic_module::action (int cmd, void *&, char const *&, int &)
+Jdb_io_apic_module::action(int cmd, void *&, char const *&, int &) override
 {
   if (cmd!=0)
     return NOTHING;
@@ -102,14 +102,14 @@ Jdb_io_apic_module::action (int cmd, void *&, char const *&, int &)
 
 PUBLIC
 int
-Jdb_io_apic_module::num_cmds() const
+Jdb_io_apic_module::num_cmds() const override
 { 
   return 1;
 }
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_io_apic_module::cmds() const
+Jdb_io_apic_module::cmds() const override
 {
   static Cmd cs[] =
     { { 0, "A", "apic", "", "apic\tdump state of IOAPIC", (void*)0 } };

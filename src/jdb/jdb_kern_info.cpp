@@ -81,7 +81,7 @@ Jdb_kern_info::register_subcmd(Jdb_kern_info_module *m)
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_kern_info::action(int cmd, void *&args, char const *&, int &)
+Jdb_kern_info::action(int cmd, void *&args, char const *&, int &) override
 {
   if (cmd != 0)
     return NOTHING;
@@ -110,14 +110,14 @@ Jdb_kern_info::action(int cmd, void *&args, char const *&, int &)
 
 PUBLIC
 int
-Jdb_kern_info::num_cmds() const
+Jdb_kern_info::num_cmds() const override
 {
   return 1;
 }
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_kern_info::cmds() const
+Jdb_kern_info::cmds() const override
 {
   static Cmd cs[] =
     {

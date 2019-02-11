@@ -72,7 +72,7 @@ Mem_region_map<E>::del(unsigned start, unsigned end)
 PUBLIC template< unsigned E >
 inline NEEDS[Mem_region_map::del]
 bool
-Mem_region_map<E>::add(Mem_region const &r)
+Mem_region_map<E>::add(Mem_region const &r) override
 {
   if (!r.valid())
     return true;
@@ -109,7 +109,7 @@ Mem_region_map<E>::add(Mem_region const &r)
 PUBLIC template< unsigned E >
 inline NEEDS[Mem_region_map::del]
 bool
-Mem_region_map<E>::sub(Mem_region const &r)
+Mem_region_map<E>::sub(Mem_region const &r) override
 {
   if (!r.valid())
     return true;

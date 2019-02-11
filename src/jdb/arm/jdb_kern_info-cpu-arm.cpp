@@ -102,7 +102,7 @@ static Cp_struct cp_vals[] = {
 
 PUBLIC
 void
-Jdb_kern_info_cpu::show()
+Jdb_kern_info_cpu::show() override
 {
 
   for (unsigned i = 0; i < sizeof(cp_vals) / sizeof(cp_vals[0]); ++i)

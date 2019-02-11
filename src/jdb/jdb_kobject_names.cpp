@@ -11,7 +11,7 @@ class Jdb_kobject_name : public Jdb_kobject_extension
 {
 public:
   static char const *const static_type;
-  virtual char const *type() const { return static_type; }
+  virtual char const *type() const override { return static_type; }
 
   ~Jdb_kobject_name() {}
 
