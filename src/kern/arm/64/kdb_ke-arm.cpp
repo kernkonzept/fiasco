@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm]:
+IMPLEMENTATION [arm && debug]:
 
 inline void kdb_ke(const char *msg)
 {

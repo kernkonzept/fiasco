@@ -1,4 +1,4 @@
-INTERFACE [ia32,ux,amd64]:
+INTERFACE [(ia32,ux,amd64) && debug]:
 
 #define kdb_ke(msg)			\
   asm ("int3           		\n\t"	\
@@ -12,4 +12,3 @@ INTERFACE [ia32,ux,amd64]:
        ".ascii \"*##\"		\n\t"	\
        "1:			\n\t"	\
        : : "a"(msg))
-

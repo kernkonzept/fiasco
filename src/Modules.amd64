@@ -111,7 +111,7 @@ entry_frame_IMPL	:= entry_frame entry_frame-amd64 \
 			   entry_frame-abs-timeout-hack
 fpu_IMPL		:= fpu fpu-ia32-ux fpu-ia32
 ipi_IMPL		:= ipi ipi-ia32
-kdb_ke_IMPL		:= kdb_ke-ia32
+kdb_ke_IMPL		+= kdb_ke-ia32
 kernel_thread_IMPL	:= kernel_thread kernel_thread-std kernel_thread-ia32
 kernel_uart_IMPL	:= kernel_uart kernel_uart-libuart
 kip_init_IMPL		:= kip_init-ia32

@@ -4,7 +4,7 @@
  * Author: Yann Le Du <ledu@kymasys.com>
  */
 
-INTERFACE [mips]:
+INTERFACE [mips && debug]:
 
 void kdb_ke(const char *msg) asm ("kern_kdebug_entry");
 void kdb_ke_sequence(const char *msg) asm ("kern_kdebug_sequence_entry");

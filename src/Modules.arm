@@ -154,7 +154,7 @@ else
 endif
 fpu_IMPL		:= fpu fpu-arm
 ipi_IMPL		:= ipi ipi-arm
-kdb_ke_IMPL		:= kdb_ke-arm
+kdb_ke_IMPL		+= kdb_ke-arm
 kernel_task_IMPL	:= kernel_task kernel_task-arm
 kernel_thread_IMPL	:= kernel_thread kernel_thread-std kernel_thread-arm \
 			   kernel_thread-arm-$(BITS)
