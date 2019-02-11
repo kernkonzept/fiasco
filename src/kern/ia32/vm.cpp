@@ -10,7 +10,7 @@ public:
   : Obj_space_phys_override<Task>(q, Caps::mem() | Caps::obj())
   {}
 
-  int resume_vcpu(Context *, Vcpu_state *, bool) = 0;
+  int resume_vcpu(Context *, Vcpu_state *, bool) override = 0;
 };
 
 // ------------------------------------------------------------------------
@@ -20,7 +20,7 @@ IMPLEMENTATION:
 
 PUBLIC inline
 Page_number
-Vm::mem_space_map_max_address() const
+Vm::mem_space_map_max_address() const override
 { return Page_number(1UL << (MWORD_BITS - Mem_space::Page_shift)); }
 
 PROTECTED static inline

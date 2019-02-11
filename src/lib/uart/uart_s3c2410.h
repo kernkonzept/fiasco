@@ -42,10 +42,10 @@ namespace L4
     Uart_s3c2410() : Uart_s3c(Type_24xx) {}
 
   protected:
-    void ack_rx_irq() const {}
-    void wait_for_empty_tx_fifo() const;
-    void wait_for_non_full_tx_fifo() const;
-    unsigned is_rx_fifo_non_empty() const;
+    void ack_rx_irq() const override {}
+    void wait_for_empty_tx_fifo() const override;
+    void wait_for_non_full_tx_fifo() const override;
+    unsigned is_rx_fifo_non_empty() const override;
 
     void auto_flow_control(bool on);
   };
@@ -56,10 +56,10 @@ namespace L4
     Uart_s3c64xx() : Uart_s3c(Type_64xx) {}
 
   protected:
-    void ack_rx_irq() const;
-    void wait_for_empty_tx_fifo() const;
-    void wait_for_non_full_tx_fifo() const;
-    unsigned is_rx_fifo_non_empty() const;
+    void ack_rx_irq() const override;
+    void wait_for_empty_tx_fifo() const override;
+    void wait_for_non_full_tx_fifo() const override;
+    unsigned is_rx_fifo_non_empty() const override;
   };
 
   class Uart_s5pv210 : public Uart_s3c
@@ -84,10 +84,10 @@ namespace L4
     void restore(Save_block const *) const;
 
   protected:
-    void ack_rx_irq() const;
-    void wait_for_empty_tx_fifo() const;
-    void wait_for_non_full_tx_fifo() const;
-    unsigned is_rx_fifo_non_empty() const;
+    void ack_rx_irq() const override;
+    void wait_for_empty_tx_fifo() const override;
+    void wait_for_non_full_tx_fifo() const override;
+    unsigned is_rx_fifo_non_empty() const override;
   };
 };
 

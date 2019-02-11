@@ -72,14 +72,14 @@ DEFINE_PER_CPU_LATE Per_cpu<Svm> Svm::cpus(Per_cpu_data::Cpu_num);
 
 PUBLIC
 void
-Svm::pm_on_suspend(Cpu_number)
+Svm::pm_on_suspend(Cpu_number) override
 {
   // FIXME: Handle VMCB caching stuff if enabled
 }
 
 PUBLIC
 void
-Svm::pm_on_resume(Cpu_number)
+Svm::pm_on_resume(Cpu_number) override
 {
   Unsigned64 efer = Cpu::rdmsr(MSR_EFER);
   efer |= 1 << 12;

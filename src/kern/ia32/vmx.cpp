@@ -787,7 +787,7 @@ Vmx::handle_bios_lock()
 
 PUBLIC
 void
-Vmx::pm_on_resume(Cpu_number)
+Vmx::pm_on_resume(Cpu_number) override
 {
   check (handle_bios_lock());
 
@@ -808,7 +808,7 @@ Vmx::pm_on_resume(Cpu_number)
 
 PUBLIC
 void
-Vmx::pm_on_suspend(Cpu_number)
+Vmx::pm_on_suspend(Cpu_number) override
 {
   Mword eflags;
   asm volatile("vmclear %1 \n\t"

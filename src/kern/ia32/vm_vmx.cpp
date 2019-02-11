@@ -529,7 +529,7 @@ Vm_vmx_t<X>::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, void *vmcs_s)
 
 PUBLIC template<typename X> inline
 int
-Vm_vmx_t<X>::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode)
+Vm_vmx_t<X>::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode) override
 {
   (void)user_mode;
   assert (user_mode);

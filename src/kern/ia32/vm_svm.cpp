@@ -644,7 +644,7 @@ Vm_svm::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, Vmcb *vmcb_s)
 
 PUBLIC
 int
-Vm_svm::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode)
+Vm_svm::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode) override
 {
   (void)user_mode;
   assert (user_mode);
