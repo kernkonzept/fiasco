@@ -34,9 +34,6 @@ public:
 
   enum { Alignment = Mapping_entry::Alignment };
 
-  // CREATORS
-  Mapping(const Mapping&);	// this constructor is undefined.
-
   // DATA
   Mapping_entry _data;
   static_assert (__alignof__(Mapping_entry) == Alignment, "WRONG ALIGNMENT");
