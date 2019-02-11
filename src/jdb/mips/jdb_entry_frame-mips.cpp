@@ -43,7 +43,7 @@ bool
 Jdb_entry_frame::debug_sequence() const
 {
   Cause c(cause);
-  return c.exc_code() == 9 && c.bp_spec() == 1;
+  return c.exc_code() == 9 && r[Entry_frame::R_t0] == 1;
 }
 
 IMPLEMENT inline
