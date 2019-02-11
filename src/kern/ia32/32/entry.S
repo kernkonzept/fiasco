@@ -412,6 +412,7 @@ INTERRUPT	0x28, int8
  * address of an Irq_base object that is later attached to
  * the corresponding IDT vector.
  */
+	.section ".entry.text.irqs", "ax", @progbits
 	.global idt_irq_vector_stubs
 	.align 64
 idt_irq_vector_stubs:
@@ -420,6 +421,7 @@ idt_irq_vector_stubs:
 	mov	$0, %eax
 	jmp	__generic_irq_entry
 .endr
+        .previous
 
 
 	.p2align 4
