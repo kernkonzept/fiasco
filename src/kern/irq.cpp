@@ -556,7 +556,7 @@ Irq_sender::transfer_msg(Receiver *recv)
   // set ipc return value: OK
   dst_regs->tag(L4_msg_tag(0));
 
-  // set ipc source thread id
+  // set the IRQ label
   dst_regs->from(_irq_id);
 
   return dst_regs;
