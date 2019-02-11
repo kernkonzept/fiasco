@@ -531,7 +531,7 @@ Jdb_mapdb::show_simple_tree(Kobject_common *f, unsigned indent = 1)
 
       printf("  " L4_PTR_FMT "[C:%lx]: space=D:%lx%.*s rights=%x flags=%lx obj=%p",
              (Address)*m, cap_idx, space_id, task_descr.length(), task_descr.begin(),
-             (unsigned)cxx::int_value<Obj::Attr>(e->rights()), e->_flags,
+             (unsigned)cxx::int_value<Obj::Attr>(e->rights()), (unsigned long)e->_flags,
              e->obj());
 
       puts("\033[K");

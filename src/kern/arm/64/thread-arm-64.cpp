@@ -1,6 +1,7 @@
 IMPLEMENTATION [arm && 64bit]:
 
 #include "fpu.h"
+#include "slowtrap_entry.h"
 
 /**
  * Mangle the error code in case of a kernel lib page fault.
@@ -117,11 +118,11 @@ Thread::do_syscall()
   sys_call_table[0]();
 }
 
-PRIVATE inline
+
+PRIVATE inline NEEDS["slowtrap_entry.h"]
 void
 Thread::handle_svc(Trap_state *ts)
 {
-  extern void slowtrap_entry(Trap_state *ts) asm ("slowtrap_entry");
   Mword state = this->state();
   state_del(Thread_cancel);
   if (state & (Thread_vcpu_user | Thread_alien))

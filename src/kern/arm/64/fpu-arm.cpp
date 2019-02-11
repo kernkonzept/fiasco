@@ -75,6 +75,8 @@ PRIVATE static inline
 void
 Fpu::save_fpu_regs(Fpu_regs *r)
 {
+  Mword fpcr;
+  Mword fpsr;
   asm volatile("stp     q0, q1,   [%[s], #16 *  0]        \n"
                "stp     q2, q3,   [%[s], #16 *  2]        \n"
                "stp     q4, q5,   [%[s], #16 *  4]        \n"
@@ -93,10 +95,12 @@ Fpu::save_fpu_regs(Fpu_regs *r)
                "stp     q30, q31, [%[s], #16 * 30]        \n"
                "mrs     %[fpcr], fpcr                     \n"
                "mrs     %[fpsr], fpsr                     \n"
-               : [fpcr] "=r" (r->fpcr),
-                 [fpsr] "=r" (r->fpsr),
+               : [fpcr] "=r" (fpcr),
+                 [fpsr] "=r" (fpsr),
                  "=m" (r->state)
                : [s] "r" (r->state));
+  r->fpcr = fpcr;
+  r->fpsr = fpsr;
 }
 
 PRIVATE static inline
@@ -121,8 +125,8 @@ Fpu::restore_fpu_regs(Fpu_regs *r)
                "ldp     q30, q31, [%[s], #16 * 30]        \n"
                "msr     fpcr, %[fpcr]                     \n"
                "msr     fpsr, %[fpsr]                     \n"
-               : : [fpcr] "r" (r->fpcr),
-                   [fpsr] "r" (r->fpsr),
+               : : [fpcr] "r" ((Mword)r->fpcr),
+                   [fpsr] "r" ((Mword)r->fpsr),
                    [s] "r" (r->state),
                    "m" (r->state));
 }

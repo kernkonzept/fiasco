@@ -175,7 +175,7 @@ switch_from_el3_to_el1()
   if (((pfr0 >> 8) & 0xf) != 0)
     {
       // EL2 supported, set HCR (RW and HCD)
-      asm volatile ("msr HCR_EL2, %0" : : "r"((1 << 29) | (1 << 31)));
+      asm volatile ("msr HCR_EL2, %0" : : "r"((1UL << 29) | (1UL << 31)));
     }
 
   // flush all E1 TLBs
@@ -189,7 +189,7 @@ switch_from_el3_to_el1()
   // setup SCR (disable monitor completely)
   asm volatile ("msr scr_el3, %0"
                 : :
-                "r"(Cpu::Scr_ns | Cpu::Scr_rw | Cpu::Scr_smd));
+                "r"((Mword)(Cpu::Scr_ns | Cpu::Scr_rw | Cpu::Scr_smd)));
 
   Mword sctlr_el3;
   Mword sctlr_el1;
@@ -212,7 +212,7 @@ switch_from_el3_to_el1()
       "   eret                 \n"
       "1: mov sp, %[tmp]       \n"
       : [tmp]"=&r"(tmp)
-      : [psr]"r"((0xf << 6) | 5)
+      : [psr]"r"((0xfUL << 6) | 5UL)
       : "cc", "x4");
 }
 
@@ -235,7 +235,7 @@ Bootstrap::leave_hyp_mode()
       // flush all E1 TLBs
       asm volatile ("tlbi alle1");
       // set HCR (RW and HCD)
-      asm volatile ("msr HCR_EL2, %0" : : "r"((1 << 29) | (1 << 31)));
+      asm volatile ("msr HCR_EL2, %0" : : "r"((1UL << 29) | (1UL << 31)));
       asm volatile ("   mov %[tmp], sp       \n"
                     "   msr spsr_el2, %[psr] \n"
                     "   adr x4, 1f           \n"
@@ -243,7 +243,7 @@ Bootstrap::leave_hyp_mode()
                     "   eret                 \n"
                     "1: mov sp, %[tmp]       \n"
                     : [tmp]"=&r"(tmp)
-                    : [psr]"r"((0xf << 6) | 5)
+                    : [psr]"r"((0xfUL << 6) | 5UL)
                     : "cc", "x4");
       break;
     case 1:

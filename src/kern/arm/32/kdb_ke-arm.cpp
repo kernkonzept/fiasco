@@ -1,8 +1,8 @@
 INTERFACE [arm && debug]:
 
 void kdb_ke(const char *msg) asm ("kern_kdebug_entry")
-__attribute__((long_call));
+FIASCO_LONGCALL;
 
 void kdb_ke_sequence(const char *msg) asm ("kern_kdebug_sequence_entry")
-__attribute__((long_call));
+FIASCO_LONGCALL;
 

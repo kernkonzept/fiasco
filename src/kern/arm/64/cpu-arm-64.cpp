@@ -190,7 +190,7 @@ Cpu::enable_dcache()
   asm volatile("mrs     %0, SCTLR_EL1 \n"
                "orr     %0, %0, %1    \n"
                "msr     SCTLR_EL1, %0 \n"
-               : "=&r" (r) : "r" (Sctlr_c | Sctlr_i));
+               : "=&r" (r) : "r" ((Mword)(Sctlr_c | Sctlr_i)));
 }
 
 PUBLIC static inline
@@ -201,7 +201,7 @@ Cpu::disable_dcache()
   asm volatile("mrs     %0, SCTLR_EL1 \n"
                "bic     %0, %0, %1    \n"
                "msr     SCTLR_EL1, %0 \n"
-               : "=&r" (r) : "r" (Sctlr_c | Sctlr_i));
+               : "=&r" (r) : "r" ((Mword)(Sctlr_c | Sctlr_i)));
 }
 
 //--------------------------------------------------------------------------

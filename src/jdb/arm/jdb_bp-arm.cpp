@@ -721,7 +721,7 @@ Jdb_bp::action(int cmd, void *&args, char const *&fmt, int &next_char) override
   if (state == Do_mod)
     {
       if (breakpoint_cmd == '-')
-        Jdb::on_each_cpu_pl([this](Cpu_number)
+        Jdb::on_each_cpu_pl([](Cpu_number)
           {
             set_bw(breakpoint_number, breakpoint_type,
                    Jdb_input_task_addr::addr(), ~1UL, 0);
@@ -754,7 +754,7 @@ Jdb_bp::action(int cmd, void *&args, char const *&fmt, int &next_char) override
           };
 
 
-          Jdb::on_each_cpu_pl([this](Cpu_number)
+          Jdb::on_each_cpu_pl([](Cpu_number)
             {
               set_bw(breakpoint_number, 'b',
                      Jdb_input_task_addr::addr(), 0, Val);
@@ -784,7 +784,7 @@ Jdb_bp::action(int cmd, void *&args, char const *&fmt, int &next_char) override
                       | (3 <<  1)  // PAC all
                       | (1 <<  0); // enable
 
-          Jdb::on_each_cpu_pl([val, this](Cpu_number)
+          Jdb::on_each_cpu_pl([val](Cpu_number)
             {
               set_bw(breakpoint_number, 'w', Jdb_input_task_addr::addr(),
                      0, val);

@@ -61,22 +61,22 @@ public:
 // ------------------------------------------------------------------------
 INTERFACE [arm && pic_gic && pic_gic_mxc_tzic]:
 
-EXTENSION class Gic { enum { Config_mxc_tzic = 1 }; };
+EXTENSION class Gic { static constexpr bool Config_mxc_tzic = true; };
 
 // ------------------------------------------------------------------------
 INTERFACE [arm && pic_gic && !pic_gic_mxc_tzic]:
 
-EXTENSION class Gic { enum { Config_mxc_tzic = 0 }; };
+EXTENSION class Gic { static constexpr bool Config_mxc_tzic = false; };
 
 // ------------------------------------------------------------------------
 INTERFACE [arm && arm_em_tz]:
 
-EXTENSION class Gic { enum { Config_tz_sec = 1 }; };
+EXTENSION class Gic { static constexpr bool Config_tz_sec = true; };
 
 // ------------------------------------------------------------------------
 INTERFACE [arm && !arm_em_tz]:
 
-EXTENSION class Gic { enum { Config_tz_sec = 0 }; };
+EXTENSION class Gic { static constexpr bool Config_tz_sec = false; };
 
 
 //-------------------------------------------------------------------

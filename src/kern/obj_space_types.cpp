@@ -209,6 +209,6 @@ namespace Obj
 INTERFACE [!debug]:
 
 namespace Obj {
-  static void add_cap_page_dbg_info(void *, void *, Address) {}
-  static void remove_cap_page_dbg_info(void *) {}
+  static inline void add_cap_page_dbg_info(void *, void *, Address) {}
+  static inline void remove_cap_page_dbg_info(void *) {}
 }

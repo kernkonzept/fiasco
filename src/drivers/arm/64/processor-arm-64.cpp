@@ -59,7 +59,7 @@ IMPLEMENTATION[arm && 64bit]:
 IMPLEMENT static inline
 Cpu_phys_id Proc::cpu_id()
 {
-  unsigned mpidr;
+  Mword mpidr;
   __asm__("mrs %0, MPIDR_EL1" : "=r" (mpidr));
   return Cpu_phys_id(mpidr & 0xffffff);
 }
@@ -71,7 +71,7 @@ PUBLIC static inline
 Unsigned32
 Proc::sctlr_el1()
 {
-  Unsigned32 v;
+  Mword v;
   asm volatile ("mrs %0, SCTLR_EL1" : "=r"(v));
   return v;
 }
@@ -80,7 +80,7 @@ PUBLIC static inline
 Unsigned32
 Proc::sctlr()
 {
-  Unsigned32 v;
+  Mword v;
   asm volatile ("mrs %0, SCTLR_EL2" : "=r"(v));
   return v;
 }
@@ -92,7 +92,7 @@ PUBLIC static inline
 Unsigned32
 Proc::sctlr()
 {
-  Unsigned32 v;
+  Mword v;
   asm volatile ("mrs %0, SCTLR_EL1" : "=r"(v));
   return v;
 }

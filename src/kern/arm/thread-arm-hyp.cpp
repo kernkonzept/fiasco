@@ -1,5 +1,7 @@
 IMPLEMENTATION [arm && 32bit && cpu_virt]:
 
+#include "slowtrap_entry.h"
+
 IMPLEMENT_OVERRIDE
 void
 Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
@@ -52,7 +54,6 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
 
 }
 
-extern "C" void slowtrap_entry(Trap_state *ts);
 extern "C" Mword pagefault_entry(const Mword pfa, Mword error_code,
                                  const Mword pc, Return_frame *ret_frame);
 

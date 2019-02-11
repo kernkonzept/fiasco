@@ -20,11 +20,19 @@ INTERFACE:
 
 #define MARK_AS_DEPRECATED	__attribute__ ((__deprecated__))
 #define ALWAYS_INLINE		__attribute__ ((__always_inline__))
-#define FIASCO_NOINLINE        __attribute__ ((__noinline__))
-#define FIASCO_WARN_RESULT     __attribute__ ((warn_unused_result))
+#define FIASCO_NOINLINE         __attribute__ ((__noinline__))
+#define FIASCO_WARN_RESULT      __attribute__ ((warn_unused_result))
 
 #define FIASCO_NORETURN         __attribute__ ((__noreturn__))
 #define FIASCO_FLATTEN          __attribute__((__flatten__))
+
+#ifdef __clang__
+# define FIASCO_NO_UNROLL_LOOPS
+# define FIASCO_LONGCALL
+#else
+# define FIASCO_NO_UNROLL_LOOPS __attribute__((optimize("no-unroll-loops")))
+# define FIASCO_LONGCALL        __attribute__((long_call))
+#endif
 
 #define FIASCO_STRINGIFY_(x) #x
 #define FIASCO_STRINGIFY(x) FIASCO_STRINGIFY_(x)
