@@ -15,6 +15,7 @@ namespace L4
       Type_imx51,
       Type_imx6,
       Type_imx7,
+      Type_imx8,
     };
     explicit Uart_imx(enum platform_type type)
        : _type(type) {}
@@ -53,12 +54,20 @@ namespace L4
   {
   public:
     Uart_imx6() : Uart_imx(Type_imx6) {}
+
+    void irq_ack() override;
   };
 
   class Uart_imx7 : public Uart_imx
   {
   public:
     Uart_imx7() : Uart_imx(Type_imx7) {}
+  };
+
+  class Uart_imx8 : public Uart_imx
+  {
+  public:
+    Uart_imx8() : Uart_imx(Type_imx8) {}
   };
 };
 

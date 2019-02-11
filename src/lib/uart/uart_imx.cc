@@ -23,6 +23,8 @@ namespace L4
 
 
     UCR1_EN        = 1  <<  0, // Enable UART
+    UCR1_RTSDEN    = 1  <<  5, // RTS Delta Interrupt Enable
+    UCR1_RRDYEN    = 1  <<  9, // Receiver Ready Interrupt Enable
 
     UCR2_SRST      = 1  <<  0, // Software Reset
     UCR2_RXEN      = 1  <<  1, // Receiver Enable
@@ -44,6 +46,7 @@ namespace L4
     UCR3_ACIEN     = 1  <<  0, // Autobaud Counter Interrupt enable
     UCR3_INVT      = 1  <<  1, // Inverted Infrared Transmission
     UCR3_RXDMUXSEL = 1  <<  2, // RXD Muxed Input Selected: 0 = serial ist IPP_UART_RXD, IR is IPP_UART_RXD_IR, 1 = IPP_UART_RXD_MUX for both
+    UCR3_AWAKEN    = 1  <<  3, // Asynchronous WAKE Interrupt Enable
 
 
     UCR4_DREN      = 1  <<  0, // Receive Data Ready Interrupt Enable
@@ -65,6 +68,7 @@ namespace L4
     UFCR_TXTL_8    = 8  << 10, // Trasmitter Trigger Level: 8 chars
     UFCR_TXTL_32   = 32 << 10, // Trasmitter Trigger Level: 32 chars
 
+    USR1_AWAKE     = 1  <<  4, // Asynchronous WAKE Interrupt Flag
     USR1_TRDY      = 1  << 13, // Transmitter Ready
 
     USR2_RDR       = 1  <<  0, // Receive Data Ready
@@ -102,6 +106,10 @@ namespace L4
         _regs->write<unsigned int>(UBIR, 0xf);
         _regs->write<unsigned int>(UBMR, 0x68);
         break;
+      case Type_imx8:
+        _regs->write<unsigned int>(UBIR, 0xf);
+        _regs->write<unsigned int>(UBMR, 0x6c);
+        break;
       }
 
     _regs->write<unsigned int>(UCR1, UCR1_EN);
@@ -129,6 +137,14 @@ namespace L4
       _regs->write<unsigned int>(UCR4, _regs->read<unsigned int>(UCR4) & ~UCR4_DREN);
 
     return true;
+  }
+
+  void Uart_imx6::irq_ack()
+  {
+    unsigned int usr1 = _regs->read<unsigned int>(USR1);
+
+    if (usr1 & USR1_AWAKE)
+      _regs->write<unsigned int>(USR1, USR1_AWAKE);
   }
 
   bool Uart_imx::change_mode(Transfer_mode, Baud_rate)
