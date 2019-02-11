@@ -18,9 +18,9 @@ class Utcb;
  * as passed from user level.
  *
  * A capability selector contains an index into the capability table/object
- * space of a task.  The index is usually stored in the most significant bits
+ * space of a task. The index is usually stored in the most significant bits
  * of the binary representation. The twelve least significant bits are used to
- * to denote the type of operation that shall be invoked and also so flags for
+ * denote the type of operation that shall be invoked and also flags for
  * special capabilities, such as the invalid cap, the reply capability, or the
  * self capability.
  *
@@ -28,8 +28,8 @@ class Utcb;
  * primitives that consist of two phases, the send phase and the receive phase.
  * However, both phases are optional and come in slightly different flavors.
  * \see L4_obj_ref::Operation.
- * The terms send and receive are from the invokers point of view.  This means,
- * a client doing RPC needs a send for sending the requested operation an
+ * The terms send and receive are from the invokers point of view. This means,
+ * a client doing RPC needs a send for sending the requested operation and
  * parameters and a receive to receive the return code of the RPC.
  */
 class L4_obj_ref
@@ -53,7 +53,7 @@ public:
     /**
      * Set this bit to include a send phase.
      *
-     * In the case of a send phase, the message is send to the object
+     * In the case of a send phase, the message is sent to the object
      * denoted by either the capability selector (cap()), the reply capability
      * (if #Ipc_reply is also set), or to the thread itself (if the cap is the
      * special self capability).
@@ -73,8 +73,8 @@ public:
      * Set this bit to denote an open-wait receive phase.
      *
      * An open wait means that the invoker shall wait for a message from any
-     * sender that has a capability to send messages to the invoker.  In this
-     * case the index (cap()) in the capability selector are ignored for the
+     * sender that has a capability to send messages to the invoker. In this
+     * case the index (cap()) in the capability selector is ignored for the
      * receive phase.
      */
     Ipc_open_wait = 4,
@@ -159,12 +159,12 @@ public:
   };
 
   /**
-   * Create a special capability selector from \a s.
+   * Create a special capability selector from `s`.
    * \param s which special cap selector shall be created
    *          (see L4_obj_ref::Special).
    *
    * Special capability selectors are the invalid capability and the self
-   * Capability.  All special capability selectors must have the #Special_bit
+   * Capability. All special capability selectors must have the #Special_bit
    * set.
    */
   L4_obj_ref(Special s = Invalid) : _raw(s) {}
@@ -195,7 +195,7 @@ public:
   bool special() const { return _raw & Special_bit; }
 
   /**
-   * Is this capability selector the special \a self capability.
+   * Is this capability selector the special `self` capability.
    * \return true if this capability is the special self capability for the
    *         invoking thread.
    */
@@ -257,7 +257,7 @@ public:
 
   /**
    * Compare two capability selectors for equality.
-   * \param o the right hand side for te comparison.
+   * \param o the right hand side for the comparison.
    * \note Capability selectors are compared by their binary representation.
    */
   bool operator == (L4_obj_ref const &o) const { return _raw == o._raw; }
@@ -276,7 +276,7 @@ class L4_map_mask
 public:
 
   /**
-   * Create a from binary representation.
+   * Create a map mask from binary representation.
    * \param raw the binary representation, as passed from user level.
    */
   explicit L4_map_mask(Mword raw = 0) : _raw(raw) {}
@@ -294,7 +294,7 @@ public:
   Mword raw() const { return _raw; }
 
   /**
-   * Unmap from the calling Task too.
+   * Unmap from the calling task too.
    * \return true if the caller wishes to unmap from its own address space too.
    */
   Mword self_unmap() const { return _raw & 0x80000000; }
@@ -316,13 +316,13 @@ private:
  *
  * A message tag determines the number of untyped message words (words()), the
  * number of typed message items (items(), L4_msg_item), some flags, and a
- * protocol ID.  The number of typed and untyped items in the UTCB's message
- * registers, as well as the flags, control the kernels message passing
- * mechanism.  The protocol ID is not interpreted by the message passing
- * itself, however is interpreted by the receiving object itself.  In thread to
- * thread IPC the all contents besides the flags are copied from the sender to
- * the receiver. The flags on the receiver side contain some information about
- * the operation itself.
+ * protocol ID. The number of typed and untyped items in the UTCB's message
+ * registers, as well as the flags, control the kernel's message passing
+ * mechanism. The protocol ID is not interpreted by the message passing
+ * itself, however it is interpreted by the receiving object. In thread to
+ * thread IPC all contents besides the flags are copied from the sender to the
+ * receiver. The flags on the receiver side contain some information about the
+ * operation itself.
  *
  * The untyped message words are copied to the receiving object/thread
  * uninterpreted. The typed items directly following the untyped words in
@@ -459,7 +459,7 @@ public:
   L4_timeout(Mword man, Mword exp, bool clock);
 
   /**
-   * Create a timeout from it's binary representation.
+   * Create a timeout from its binary representation.
    * @param t the binary timeout value.
    */
   L4_timeout(unsigned short t = 0);
@@ -493,7 +493,7 @@ public:
 
   /**
    * Set the mantissa of the receive timeout.
-   * @param mr the mantissa of the recieve timeout (see L4_timeout()).
+   * @param mr the mantissa of the receive timeout (see L4_timeout()).
    * @see rcv_exp()
    */
   void man(Mword mr);
@@ -501,14 +501,14 @@ public:
   /**
    * Get the relative receive timeout in microseconds.
    * @param clock Current value of kernel clock
-   * @return The receive timeout in micro seconds.
+   * @return The receive timeout in microseconds.
    */
   Unsigned64 microsecs_rel(Unsigned64 clock) const;
 
   /**
    * Get the absolute receive timeout in microseconds.
    * @param clock Current value of kernel clock
-   * @return The receive timeout in micro seconds.
+   * @return The receive timeout in microseconds.
    */
   Unsigned64 microsecs_abs(Utcb const *u) const;
 
@@ -713,23 +713,23 @@ INTERFACE:
  * comprises three sets of registers: the message registers (MRs), the buffer
  * registers (BRs and BDR), and the control registers (TCRs).
  *
- * The message registers (MRs) contain the contents of the messages that are
- * sent to objects or received from objects.  The message contents consist of
- * untyped data and typed message items (see L4_msg_tag).  The untyped must be
- * stored in the first \a n message registers (\a n = L4_msg_tag::words()) and
- * are transferred / copied uninterpreted to the receiving object (MRs of
- * receiver thread or kernel object).  The typed items follow starting at MR[\a
- * n+1].  Each typed item is stored in two MRs and is interpreted by the kernel
+ * The message registers (MRs) contain the content of the messages that are
+ * sent to objects or received from objects. The message contents consist of
+ * untyped data and typed message items (see L4_msg_tag). The untyped data must
+ * be stored in the first `n` message registers (`n` = L4_msg_tag::words()) and
+ * are transferred / copied uninterpreted to the receiving object (MRs of the
+ * receiver thread or kernel object). The typed items follow starting at MR[`
+ * n+1`]. Each typed item is stored in two MRs and is interpreted by the kernel
  * (see L4_msg_item, L4_fpage). The number of items is denoted by
- * L4_msg_tag::items().  On the receiver side the typed items are translated
- * into a format that is useful for the receiver and stored at into the same
- * MRs in the receivers UTCB.
+ * L4_msg_tag::items(). On the receiver side the typed items are translated
+ * into a format that is useful for the receiver and stored into the same MRs
+ * in the receiver's UTCB.
  *
  * The buffer registers (BRs and BDR) contain information that describe receive
- * buffers for incoming typed items.  The contents of these registers are not
+ * buffers for incoming typed items. The contents of these registers are not
  * altered by the kernel. The buffer descriptor register (BDR, Utcb::buf_desc)
  * contains information about the items in the buffer registers (BRs) and
- * flags to enable FPU state transfer.  The BRs contain a set of receive
+ * flags to enable FPU state transfer. The BRs contain a set of receive
  * message items (L4_msg_item) that describe receive buffers, such as, virtual
  * memory regions for incoming memory mappings or buffers for capabilities.
  * The BRs are also used to store absolute 64bit timeout values for operations,
@@ -738,7 +738,7 @@ INTERFACE:
  *
  * The thread control registers (TCRs) comprise an error code for errors during
  * message passing and a set of user-level registers. The user-level registers
- * are not used by the kernel and provide and anchor for thread-local storage.
+ * are not used by the kernel and provide an anchor for thread-local storage.
  */
 class Utcb
 {
