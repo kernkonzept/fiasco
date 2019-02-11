@@ -102,34 +102,38 @@ Thread::get_lr_for_mode(Return_frame const *rf)
 extern "C" void hyp_mode_fault(Mword abort_type, Trap_state *ts)
 {
   Mword v;
+
+  Mword hsr;
+  asm volatile("mrc p15, 4, %0, c5, c2, 0" : "=r" (hsr));
+
   switch (abort_type)
     {
     case 0:
     case 1:
       ts->esr.ec() = abort_type ? 0x11 : 0;
-      printf("KERNEL%d: %s fault at %lx\n",
+      printf("KERNEL%d: %s fault at %lx hsr=%lx\n",
              cxx::int_value<Cpu_number>(current_cpu()),
              abort_type ? "SWI" : "Undefined instruction",
-             ts->km_lr);
+             ts->km_lr, hsr);
       break;
     case 2:
       ts->esr.ec() = 0x21;
       asm volatile("mrc p15, 4, %0, c6, c0, 2" : "=r"(v));
-      printf("KERNEL%d: Instruction abort at %lx\n",
+      printf("KERNEL%d: Instruction abort at %lx hsr=%lx\n",
              cxx::int_value<Cpu_number>(current_cpu()),
-             v);
+             v, hsr);
       break;
     case 3:
       ts->esr.ec() = 0x25;
       asm volatile("mrc p15, 4, %0, c6, c0, 0" : "=r"(v));
-      printf("KERNEL%d: Data abort: pc=%lx pfa=%lx\n",
+      printf("KERNEL%d: Data abort: pc=%lx pfa=%lx hsr=%lx\n",
              cxx::int_value<Cpu_number>(current_cpu()),
-             ts->ip(), v);
+             ts->ip(), v, hsr);
       break;
     default:
-      printf("KERNEL%d: Unknown hyp fault at %lx\n",
+      printf("KERNEL%d: Unknown hyp fault at %lx hsr=%lx\n",
              cxx::int_value<Cpu_number>(current_cpu()),
-             ts->ip());
+             ts->ip(), hsr);
       break;
     };
 
