@@ -95,8 +95,6 @@ public:
   int set_mode(Mword, Mode) override { return 0; }
   bool is_edge_triggered(Mword) const override { return true; }
 
-  char const *chip_type() const { return "Soft"; }
-
   static Irq_chip_soft sw_chip;
 };
 
@@ -204,6 +202,15 @@ EXTENSION class Irq_chip
 public:
   virtual char const *chip_type() const = 0;
 };
+
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION[debug]:
+
+PUBLIC
+char const *
+Irq_chip_soft::chip_type() const override
+{ return "Soft"; }
 
 
 //--------------------------------------------------------------------------

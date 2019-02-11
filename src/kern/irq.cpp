@@ -94,12 +94,20 @@ public:
 
   void ack(Mword) override {}
 
-  char const *chip_type() const { return "Bcast"; }
-
 private:
   Smword _mask_cnt;
   Spin_lock<> _mux_lock;
 };
+
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION[debug]:
+
+PUBLIC
+char const *
+Irq_muxer::chip_type() const override
+{ return "Bcast"; }
+
 
 //-----------------------------------------------------------------------------
 IMPLEMENTATION:
