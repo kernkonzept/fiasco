@@ -148,10 +148,10 @@ __ind_shift(void)
 static size_t
 get_index(size_t _size)
 {
-  register size_t idx=0;
+  size_t idx=0;
   if (_size)
     {
-      register size_t size=((_size-1)&(MEM_BLOCK_SIZE-1))>>__ind_shift();
+      size_t size=((_size-1)&(MEM_BLOCK_SIZE-1))>>__ind_shift();
       while(size)
 	{
 	  size>>=1;
@@ -186,7 +186,7 @@ __small_malloc(size_t _size)
 
   if (ptr==0)
     {
-      register int i,nr;
+      int i,nr;
       ptr=(__alloc_t*)simple_mmap(MEM_BLOCK_SIZE);
       if (ptr==MAP_FAILED)
 	return MAP_FAILED;
@@ -214,7 +214,7 @@ __small_malloc(size_t _size)
 void
 simple_free(void *ptr)
 {
-  register size_t size;
+  size_t size;
   if (ptr)
     {
       size=(BLOCK_START(ptr))->size;
@@ -269,7 +269,7 @@ simple_calloc(size_t nmemb, size_t size)
 void*
 simple_realloc(void* ptr, size_t _size)
 {
-  register size_t size=_size;
+  size_t size=_size;
   if (ptr)
     {
       if (size)
@@ -286,7 +286,7 @@ simple_realloc(void* ptr, size_t _size)
 		  void *new_ptr=simple_malloc(_size);
 		  if (new_ptr)
 		    {
-		      register __alloc_t* foo=BLOCK_START(new_ptr);
+		      __alloc_t* foo=BLOCK_START(new_ptr);
 		      size=foo->size;
 		      if (size>tmp->size)
 			size=tmp->size;
@@ -298,7 +298,7 @@ simple_realloc(void* ptr, size_t _size)
 		}
 	      else
 		{
-		  register void* foo;
+		  void* foo;
 		  size=PAGE_ALIGN(size);
 		  foo=simple_mremap(tmp,tmp->size,size);
 		  if (foo==MAP_FAILED)
