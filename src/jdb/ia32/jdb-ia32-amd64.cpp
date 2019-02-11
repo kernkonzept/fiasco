@@ -381,6 +381,18 @@ Jdb::poke_phys(Address phys, void const *value, int width)
   memcpy((void*)virt, value, width);
 }
 
+PRIVATE static
+bool
+Jdb::check_is_kmem_valid_addr(Address virtaddr)
+{
+  if (!Kmem::is_kmem_page_fault(virtaddr, 0))
+    return false;
+
+  Address pdbr = Cpu::get_pdbr();
+  Pdir *kdir = (Pdir *)Mem_layout::phys_to_pmem(pdbr);
+  return kdir->walk(Virt_addr(virtaddr)).is_valid();
+}
+
 PUBLIC static
 int
 Jdb::peek_task(Address addr, Space *task, void *value, int width)
@@ -388,18 +400,10 @@ Jdb::peek_task(Address addr, Space *task, void *value, int width)
   if (!Cpu::is_canonical_address(addr))
     return -1;
 
-  if (!task && Kmem::is_kmem_page_fault(addr, 0))
+  if (!task && check_is_kmem_valid_addr(addr))
     {
-      // address of kernel directory
-      Address pdbr;
-      asm volatile ("mov %%cr3, %0" : "=r" (pdbr));
-      Pdir *kdir = (Pdir*)Mem_layout::phys_to_pmem(pdbr);
-      auto i = kdir->walk(Virt_addr(addr));
-      if (i.is_valid())
-	{
-          memcpy(value, (void*)addr, width);
-          return 0;
-	}
+      memcpy(value, (void *)addr, width);
+      return 0;
     }
 
   Address phys;
@@ -430,17 +434,10 @@ Jdb::poke_task(Address addr, Space *task, void const *value, int width)
   if (!Cpu::is_canonical_address(addr))
     return -1;
 
-  if (!task && Kmem::is_kmem_page_fault(addr, 0))
+  if (!task && check_is_kmem_valid_addr(addr))
     {
-      Address pdbr;
-      asm volatile ("mov %%cr3, %0" : "=r" (pdbr));
-      Pdir *kdir = (Pdir*)Mem_layout::phys_to_pmem(pdbr);
-      auto i = kdir->walk(Virt_addr(addr));
-      if (i.is_valid())
-	{
-          memcpy((void*)addr, value, width);
-          return 0;
-	}
+      memcpy((void *)addr, value, width);
+      return 0;
     }
 
   Address phys;
