@@ -21,9 +21,12 @@
 
 #include <platform.h>
 
+#include "MipsDisassembler.h"
+
 #include "../../utils.h"
 
 #include "../../MCInst.h"
+
 #include "../../MCRegisterInfo.h"
 #include "../../SStream.h"
 

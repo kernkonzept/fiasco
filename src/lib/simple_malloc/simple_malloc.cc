@@ -127,7 +127,7 @@ simple_malloc_reset(void)
   memset(__small_mem, 0, sizeof(__small_mem));
 }
 
-void
+static void
 simple_malloc_init(void)
 {
   const size_t size = 16*4*1024; // must be less than 32 pages!
