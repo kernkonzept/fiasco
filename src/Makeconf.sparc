@@ -4,4 +4,4 @@
 CROSS_COMPILE			?= sparc-linux-
 LD_EMULATION_CHOICE             := elf32_sparc
 # why does leon3 not work?
-SHARED_FLAGS                    += -mcpu=leon
+SHARED_FLAGS                    += -mcpu=leon -m32
