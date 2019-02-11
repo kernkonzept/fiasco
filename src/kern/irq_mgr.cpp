@@ -60,7 +60,7 @@ public:
    * \pre The IRQ pin needs to be already allocated before using this function.
    */
   virtual int msg(Mword irqnum, Unsigned64, Msi_info *) const
-  { (void)irqnum; return -L4_err::EPerm; }
+  { (void)irqnum; return -L4_err::ENosys; }
 
   virtual void set_cpu(Mword irqnum, Cpu_number cpu) const;
 

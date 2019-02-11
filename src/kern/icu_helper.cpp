@@ -83,7 +83,7 @@ template<typename REAL_ICU>
 L4_msg_tag
 Icu_h<REAL_ICU>::op_icu_msi_info(Mword, Unsigned64, Msi_info *)
 {
-  return Kobject_iface::commit_result(-L4_err::EInval);
+  return Kobject_iface::commit_result(-L4_err::ENosys);
 }
 
 PUBLIC template< typename REAL_ICU >
