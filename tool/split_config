@@ -7,7 +7,7 @@ my @arch_opts    = ("IA32", "ARM", "UX" ,"XARCH");
 my @abi_opts     = ("V2", "X0", "V4", "ABI");
 my @base_opts    = ("INLINE", "NDEBUG", "NO_FRAME_PTR", "FINE_GRAINED_CPUTIME",
                     "FFUN");
-my @debug_opts   = ("KDB","JDB","VMEM_ALLOC_TEST","SERIAL", "PERF_CNT");
+my @debug_opts   = ("JDB","VMEM_ALLOC_TEST","SERIAL", "PERF_CNT");
 my @compile_opts = ("VERBOSE", "MAINTAINER_MODE");
 
 my %cfg_files    = ("arch_config.cfg"    => \@arch_opts,

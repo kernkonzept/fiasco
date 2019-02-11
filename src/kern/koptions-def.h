@@ -15,7 +15,6 @@ namespace L4_kernel_options
     F_noscreen          = 1 << 3,
     F_esc               = 1 << 4,
     F_nojdb             = 1 << 5,
-    F_nokdb             = 1 << 6,
     F_nohlt             = 1 << 7,
     F_apic              = 1 << 8,
     F_loadcnt           = 1 << 9,

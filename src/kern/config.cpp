@@ -264,9 +264,6 @@ void Config::init()
 #ifdef CONFIG_SERIAL
   if (    Koptions::o()->opt(Koptions::F_serial_esc)
       && !Koptions::o()->opt(Koptions::F_noserial)
-# ifdef CONFIG_KDB
-      &&  Koptions::o()->opt(Koptions::F_nokdb)
-# endif
       && !Koptions::o()->opt(Koptions::F_nojdb))
     {
       serial_esc = SERIAL_ESC_IRQ;
