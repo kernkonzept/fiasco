@@ -37,7 +37,7 @@ Jdb_space::Jdb_space()
 
 PUBLIC
 bool
-Jdb_space::show_kobject(Kobject_common *o, int lvl)
+Jdb_space::show_kobject(Kobject_common *o, int lvl) override
 {
   Task *t = cxx::dyn_cast<Task*>(o);
   show(t);
@@ -90,7 +90,7 @@ static bool space_filter(Kobject_common const *o)
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_space::action(int cmd, void *&, char const *&, int &)
+Jdb_space::action(int cmd, void *&, char const *&, int &) override
 {
   if (cmd == 0)
     {
@@ -102,7 +102,7 @@ Jdb_space::action(int cmd, void *&, char const *&, int &)
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_space::cmds() const
+Jdb_space::cmds() const override
 {
   static Cmd cs[] =
     {
@@ -113,7 +113,7 @@ Jdb_space::cmds() const
   
 PUBLIC
 int
-Jdb_space::num_cmds() const
+Jdb_space::num_cmds() const override
 { return 1; }
 
 static

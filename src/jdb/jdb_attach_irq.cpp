@@ -109,7 +109,7 @@ Jdb_kobject_irq::Jdb_kobject_irq()
 
 PUBLIC
 bool
-Jdb_kobject_irq::handle_key(Kobject_common *o, int key)
+Jdb_kobject_irq::handle_key(Kobject_common *o, int key) override
 {
   (void)o; (void)key;
   return false;
@@ -119,7 +119,7 @@ Jdb_kobject_irq::handle_key(Kobject_common *o, int key)
 
 PUBLIC
 Kobject_common *
-Jdb_kobject_irq::follow_link(Kobject_common *o)
+Jdb_kobject_irq::follow_link(Kobject_common *o) override
 {
   Irq_sender *t = cxx::dyn_cast<Irq_sender*>(o);
   Kobject_common *k = t ? Kobject::from_dbg(Kobject_dbg::pointer_to_obj(t->owner())) : 0;
@@ -128,7 +128,7 @@ Jdb_kobject_irq::follow_link(Kobject_common *o)
 
 PUBLIC
 bool
-Jdb_kobject_irq::show_kobject(Kobject_common *, int)
+Jdb_kobject_irq::show_kobject(Kobject_common *, int) override
 { return true; }
 
 PUBLIC

@@ -30,7 +30,7 @@ Jdb_factory::Jdb_factory()
 
 PUBLIC
 bool
-Jdb_factory::show_kobject(Kobject_common *, int )
+Jdb_factory::show_kobject(Kobject_common *, int ) override
 {
   return true;
 }

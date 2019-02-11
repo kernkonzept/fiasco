@@ -28,7 +28,7 @@ Jdb_ipc_gate::Jdb_ipc_gate()
 
 PUBLIC
 Kobject_common *
-Jdb_ipc_gate::follow_link(Kobject_common *o)
+Jdb_ipc_gate::follow_link(Kobject_common *o) override
 {
   Ipc_gate_obj *g = cxx::dyn_cast<Ipc_gate_obj *>(Kobject::from_dbg(o->dbg_info()));
   return g->thread() ? Kobject::from_dbg(g->thread()->dbg_info()) : o;
@@ -36,7 +36,7 @@ Jdb_ipc_gate::follow_link(Kobject_common *o)
 
 PUBLIC
 bool
-Jdb_ipc_gate::show_kobject(Kobject_common *, int)
+Jdb_ipc_gate::show_kobject(Kobject_common *, int) override
 { return true; }
 
 PUBLIC

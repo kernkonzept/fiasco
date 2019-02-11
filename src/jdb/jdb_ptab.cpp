@@ -26,7 +26,8 @@ public:
 private:
   Address task;
   static char first_char;
-  bool show_kobject(Kobject_common *, int) { return false; }
+  bool show_kobject(Kobject_common *, int) override
+  { return false; }
 };
 
 class Jdb_ptab : public Jdb_table
@@ -64,7 +65,7 @@ Jdb_ptab::Jdb_ptab(void *pt_base = 0, Space *task = 0,
 
 PUBLIC
 unsigned
-Jdb_ptab::col_width(unsigned column) const
+Jdb_ptab::col_width(unsigned column) const override
 {
   if (column == 0)
     return Jdb_screen::Col_head_size;
@@ -74,7 +75,7 @@ Jdb_ptab::col_width(unsigned column) const
 
 PUBLIC
 unsigned long
-Jdb_ptab::cols() const
+Jdb_ptab::cols() const override
 {
   return Jdb_screen::cols(sizeof(Mword) * 2, sizeof(Pdir::Pte_ptr::Entry) * 2);
 }
@@ -87,7 +88,7 @@ int jdb_dump_addr_task(Address addr, Space *task, int level)
 
 PUBLIC
 void
-Jdb_ptab::draw_entry(unsigned long row, unsigned long col)
+Jdb_ptab::draw_entry(unsigned long row, unsigned long col) override
 {
   int idx;
   if (col == 0)
@@ -169,7 +170,7 @@ Jdb_ptab::print_head(void *entry)
 
 PUBLIC
 bool
-Jdb_ptab_m::handle_key(Kobject_common *o, int code)
+Jdb_ptab_m::handle_key(Kobject_common *o, int code) override
 {
   if (code != 'p')
     return false;
@@ -203,7 +204,7 @@ Jdb_ptab_m::help_text(Kobject_common *o) const override
 
 PUBLIC
 unsigned 
-Jdb_ptab::key_pressed(int c, unsigned long &row, unsigned long &col)
+Jdb_ptab::key_pressed(int c, unsigned long &row, unsigned long &col) override
 {
   switch (c)
     {
@@ -303,7 +304,7 @@ Jdb_ptab::disp_virt(int idx)
 
 PUBLIC
 unsigned long
-Jdb_ptab::rows() const
+Jdb_ptab::rows() const override
 {
   if (cols() > 1)
     return (entries + cols() - 2) / (cols()-1);
@@ -312,7 +313,7 @@ Jdb_ptab::rows() const
 
 PUBLIC
 void
-Jdb_ptab::print_statline(unsigned long row, unsigned long col)
+Jdb_ptab::print_statline(unsigned long row, unsigned long col) override
 {
   unsigned long sid = Kobject_dbg::pointer_to_id(_task);
 
@@ -329,7 +330,8 @@ Jdb_ptab::print_statline(unsigned long row, unsigned long col)
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_ptab_m::action(int cmd, void *&args, char const *&fmt, int &next_char)
+Jdb_ptab_m::action(int cmd, void *&args, char const *&fmt,
+                   int &next_char) override
 {
   if (cmd == 0)
     {
@@ -386,7 +388,7 @@ Jdb_ptab_m::action(int cmd, void *&args, char const *&fmt, int &next_char)
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_ptab_m::cmds() const
+Jdb_ptab_m::cmds() const override
 {
   static Cmd cs[] =
     {
@@ -399,7 +401,7 @@ Jdb_ptab_m::cmds() const
 
 PUBLIC
 int
-Jdb_ptab_m::num_cmds() const
+Jdb_ptab_m::num_cmds() const override
 {
   return 1;
 }

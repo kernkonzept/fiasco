@@ -23,8 +23,11 @@ class Jdb_log_list : public Jdb_list
 {
   friend class Jdb_log_list_hdl;
 public:
-  void *get_head() const { return _jdb_log_table; }
-  char const *show_head() const { return "[Log]"; }
+  void *get_head() const override
+  { return _jdb_log_table; }
+
+  char const *show_head() const override
+  { return "[Log]"; }
 
 private:
   static Tb_log_table_entry *_end;
@@ -147,7 +150,7 @@ Jdb_log_list::find_next_log(const char *name, const char *sc,
 
 PUBLIC
 bool
-Jdb_log_list::enter_item(void *item) const
+Jdb_log_list::enter_item(void *item) const override
 {
   Tb_log_table_entry const *e = static_cast<Tb_log_table_entry const*>(item);
   patch_item(e, Jdb_tbuf::get_entry_status(e) ? 0 : patch_val(e));
@@ -232,7 +235,7 @@ Jdb_log_list::pref(void **item)
 
 PUBLIC
 int
-Jdb_log_list::seek(int cnt, void **item)
+Jdb_log_list::seek(int cnt, void **item) override
 {
   Tb_log_table_entry *e = static_cast<Tb_log_table_entry*>(*item);
   if (cnt > 0)

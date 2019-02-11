@@ -31,7 +31,10 @@ private:
   Space  *_task;
   Mode    _mode;
 
-  bool show_kobject(Kobject_common *, int) { return false; }
+  bool show_kobject(Kobject_common *, int) override
+  {
+    return false;
+  }
 };
 
 static inline
@@ -61,22 +64,22 @@ Jdb_obj_space::Jdb_obj_space(Address base = 0, int level = 0)
 
 PUBLIC
 unsigned
-Jdb_obj_space::col_width(unsigned column) const
+Jdb_obj_space::col_width(unsigned column) const override
 { return (column == 0) ? 6 : 16; }
 
 PUBLIC
 unsigned long
-Jdb_obj_space::cols() const
+Jdb_obj_space::cols() const override
 { return Jdb_screen::cols(col_width(0), col_width(1)); }
 
 PUBLIC
 unsigned long
-Jdb_obj_space::rows() const
+Jdb_obj_space::rows() const override
 { return Obj_space::Map_max_address / (cols() - 1); }
 
 PUBLIC
 void
-Jdb_obj_space::print_statline(unsigned long row, unsigned long col)
+Jdb_obj_space::print_statline(unsigned long row, unsigned long col) override
 {
   static String_buf<128> buf;
   static String_buf<80> help;
@@ -134,7 +137,7 @@ Jdb_obj_space::print_entry(Cap_index entry)
 
 PUBLIC
 void
-Jdb_obj_space::draw_entry(unsigned long row, unsigned long col)
+Jdb_obj_space::draw_entry(unsigned long row, unsigned long col) override
 {
   if (col == 0)
     printf("%06lx", cxx::int_value<Cap_index>(index(row, 1)));
@@ -173,7 +176,8 @@ Jdb_obj_space::handle_user_keys(int c, Kobject_iface *o)
 
 PUBLIC
 unsigned
-Jdb_obj_space::key_pressed(int c, unsigned long &row, unsigned long &col)
+Jdb_obj_space::key_pressed(int c, unsigned long &row,
+                           unsigned long &col) override
 {
   switch (c)
     {
@@ -196,7 +200,7 @@ Jdb_obj_space::key_pressed(int c, unsigned long &row, unsigned long &col)
 
 PUBLIC
 bool
-Jdb_obj_space::handle_key(Kobject_common *o, int code)
+Jdb_obj_space::handle_key(Kobject_common *o, int code) override
 {
   if (code != 'o')
     return false;

@@ -392,7 +392,9 @@ static Jdb_mapdb jdb_mapdb INIT_PRIORITY(JDB_MODULE_INIT_PRIO);
 class Jdb_kobject_mapdb_hdl : public Jdb_kobject_handler
 {
 public:
-  virtual bool show_kobject(Kobject_common *, int) { return true; }
+  bool show_kobject(Kobject_common *, int) override
+  { return true; }
+
   virtual ~Jdb_kobject_mapdb_hdl() {}
 };
 
@@ -406,7 +408,7 @@ Jdb_kobject_mapdb_hdl::init()
 
 PUBLIC
 bool
-Jdb_kobject_mapdb_hdl::handle_key(Kobject_common *o, int keycode)
+Jdb_kobject_mapdb_hdl::handle_key(Kobject_common *o, int keycode) override
 {
   if (keycode == 'm')
     {

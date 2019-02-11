@@ -109,7 +109,7 @@ public:
     }
   };
 
-  void *get_head() const
+  void *get_head() const override
   { return Kobject::from_dbg(Kobject_dbg::begin()); }
 
 private:
@@ -202,7 +202,7 @@ Jdb_kobject_list::show_item(String_buffer *buffer, String_buffer *help_text,
 
 PUBLIC
 bool
-Jdb_kobject_list::enter_item(void *item) const
+Jdb_kobject_list::enter_item(void *item) const override
 {
   Kobject *o = static_cast<Kobject*>(item);
   return Jdb_kobject::module()->handle_obj(o, 1);
@@ -210,7 +210,7 @@ Jdb_kobject_list::enter_item(void *item) const
 
 PUBLIC
 void *
-Jdb_kobject_list::follow_link(void *item)
+Jdb_kobject_list::follow_link(void *item) override
 {
   Kobject *o = static_cast<Kobject*>(item);
   if (Jdb_kobject_handler *h = Jdb_kobject::module()->find_handler(o))
@@ -221,7 +221,7 @@ Jdb_kobject_list::follow_link(void *item)
 
 PUBLIC
 bool
-Jdb_kobject_list::handle_key(void *item, int keycode)
+Jdb_kobject_list::handle_key(void *item, int keycode) override
 {
   Kobject *o = static_cast<Kobject*>(item);
 
@@ -279,7 +279,7 @@ Jdb_kobject_list::prev(Kobject *obj)
 
 PUBLIC
 int
-Jdb_kobject_list::seek(int cnt, void **item)
+Jdb_kobject_list::seek(int cnt, void **item) override
 {
   Kobject *c = static_cast<Kobject*>(*item);
   int i;
@@ -317,7 +317,7 @@ Jdb_kobject_list::seek(int cnt, void **item)
 
 PUBLIC
 char const *
-Jdb_kobject_list::show_head() const
+Jdb_kobject_list::show_head() const override
 {
   return "[Objects]";
 }
@@ -325,7 +325,7 @@ Jdb_kobject_list::show_head() const
 
 PUBLIC
 char const *
-Jdb_kobject_list::get_mode_str() const
+Jdb_kobject_list::get_mode_str() const override
 {
   if (_current_mode == Mode::modes.end())
     return "[Objects]";
@@ -336,7 +336,7 @@ Jdb_kobject_list::get_mode_str() const
 
 PUBLIC
 void
-Jdb_kobject_list::next_mode()
+Jdb_kobject_list::next_mode() override
 {
   if (_current_mode == Mode::modes.end())
     return;
@@ -352,7 +352,7 @@ Jdb_kobject_list::next_mode()
  * get a new visible one */
 PUBLIC
 void *
-Jdb_kobject_list::get_valid(void *o)
+Jdb_kobject_list::get_valid(void *o) override
 {
   if (!_filter)
     return o;

@@ -15,7 +15,9 @@ class Jdb_sender_list : public Jdb_module, public Jdb_kobject_handler
 public:
   Jdb_sender_list() FIASCO_INIT;
 
-  virtual bool show_kobject(Kobject_common *, int) { return true; }
+  bool show_kobject(Kobject_common *, int) override
+  { return true; }
+
 private:
   static Kobject *object;
 };
@@ -99,7 +101,7 @@ Jdb_sender_list::show_obj(Kobject *o, int printnone)
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_sender_list::action(int cmd, void *&, char const *&, int &)
+Jdb_sender_list::action(int cmd, void *&, char const *&, int &) override
 {
   if (cmd)
     return NOTHING;
@@ -116,7 +118,7 @@ Jdb_sender_list::action(int cmd, void *&, char const *&, int &)
 
 PUBLIC
 bool
-Jdb_sender_list::handle_key(Kobject_common *o, int keycode)
+Jdb_sender_list::handle_key(Kobject_common *o, int keycode) override
 {
   if (keycode != 'S')
     return false;
@@ -143,11 +145,11 @@ Jdb_sender_list::help_text(Kobject_common *o) const override
 }
 
 PUBLIC
-int Jdb_sender_list::num_cmds() const
+int Jdb_sender_list::num_cmds() const override
 { return 1; }
 
 PUBLIC
-Jdb_module::Cmd const * Jdb_sender_list::cmds() const
+Jdb_module::Cmd const * Jdb_sender_list::cmds() const override
 {
   static Cmd cs[] =
     {

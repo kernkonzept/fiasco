@@ -474,7 +474,7 @@ Jdb_tcb::at_jdb_enter()
 
 PUBLIC virtual
 Kobject *
-Jdb_tcb::parent(Kobject_common *o)
+Jdb_tcb::parent(Kobject_common *o) override
 {
   Thread *t = cxx::dyn_cast<Thread*>(o);
   if (!t)
@@ -857,7 +857,7 @@ L4KD:
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_tcb::action(int cmd, void *&args, char const *&fmt, int &next_char)
+Jdb_tcb::action(int cmd, void *&args, char const *&fmt, int &next_char) override
 {
   static Address tcb_addr = 0;
   if (cmd == 0)
@@ -931,7 +931,7 @@ Jdb_tcb::action(int cmd, void *&args, char const *&fmt, int &next_char)
 
 PUBLIC
 Kobject_common *
-Jdb_tcb::follow_link(Kobject_common *o)
+Jdb_tcb::follow_link(Kobject_common *o) override
 {
   Thread *t = cxx::dyn_cast<Thread *>(Kobject::from_dbg(o->dbg_info()));
   if (t->space() == Kernel_task::kernel_task())
@@ -941,7 +941,7 @@ Jdb_tcb::follow_link(Kobject_common *o)
 
 PUBLIC
 bool
-Jdb_tcb::show_kobject(Kobject_common *o, int level)
+Jdb_tcb::show_kobject(Kobject_common *o, int level) override
 {
   Thread *t = cxx::dyn_cast<Thread *>(Kobject::from_dbg(o->dbg_info()));
   return show(t, level, false);
@@ -992,7 +992,7 @@ Jdb_tcb::show_kobject_short(String_buffer *buf, Kobject_common *o, bool) overrid
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_tcb::cmds() const
+Jdb_tcb::cmds() const override
 {
   static Cmd cs[] =
     {
@@ -1007,7 +1007,7 @@ Jdb_tcb::cmds() const
 
 PUBLIC
 int
-Jdb_tcb::num_cmds() const
+Jdb_tcb::num_cmds() const override
 { return 2; }
 
 static Jdb_tcb jdb_tcb INIT_PRIORITY(JDB_MODULE_INIT_PRIO);

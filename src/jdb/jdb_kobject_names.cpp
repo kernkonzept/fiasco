@@ -124,7 +124,7 @@ Jdb_kobject_name::name()
 class Jdb_name_hdl : public Jdb_kobject_handler
 {
 public:
-  virtual bool show_kobject(Kobject_common *, int) { return true; }
+  bool show_kobject(Kobject_common *, int) override { return true; }
   virtual ~Jdb_name_hdl() {}
 };
 
@@ -143,7 +143,7 @@ Jdb_name_hdl::show_kobject_short(String_buffer *buf, Kobject_common *o,
 
 PUBLIC
 bool
-Jdb_name_hdl::invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb)
+Jdb_name_hdl::invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb) override
 {
   switch (utcb->values[0])
     {
