@@ -51,10 +51,6 @@ public:
       _offs(addr &  (Context::Size-1))
   {}
 
-  Jdb_tcb_ptr(Jdb_tcb_ptr const &p)
-    : _base(p.base()), _offs(p.offs())
-  {}
-
   inline bool valid() const
   { return _offs <= Context::Size-sizeof(Mword); }
 
