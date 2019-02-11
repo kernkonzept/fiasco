@@ -223,7 +223,7 @@ public:
    * \return The index into the capability table stored in the capability
    *         selector (i.e., the most significant bits of the selector).
    */
-  Cap_index cap() const { return Cap_index(_raw >> 12); }
+  Cap_index cap() const { return Cap_index(_raw >> Cap_shift); }
 
   /**
    * Get the operation stored in this selector (see L4_obj_ref::Operation).
