@@ -38,7 +38,7 @@ Thread::arm_enter_debugger(Trap_state *ts, Cpu_number log_cpu,
       [handler] "+r" (handler)
       :
       :
-      "memory", "x5", "x6", "x7", "x8", "x9", "x10", "x11",
+      "memory", "x2", "x5", "x6", "x7", "x8", "x9", "x10", "x11",
       "x12", "x13", "x14", "x15", "x16", "x17", "x18", "x30");
 
   return _ts;
