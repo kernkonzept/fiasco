@@ -9,7 +9,7 @@ CROSS_COMPILE             ?= mips-linux-
 LD_EMULATION_CHOICE-$(CONFIG_MIPS_LITTLE_ENDIAN) := elf$(BITS)ltsmip
 LD_EMULATION_CHOICE-$(CONFIG_MIPS_BIG_ENDIAN)    := elf$(BITS)btsmip
 LD_EMULATION_CHOICE       := $(LD_EMULATION_CHOICE-y)
-SHARED_FLAGS-clang        += -fno-integrated-as
+SHARED_FLAGS-clang        += -fno-integrated-as -G0
 SHARED_FLAGS              += -msoft-float -mabi=$(BITS)
 SHARED_FLAGS              += -mno-abicalls
 SHARED_FLAGS-$(CONFIG_MIPS_LITTLE_ENDIAN) += -EL
