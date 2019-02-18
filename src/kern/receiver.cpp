@@ -54,6 +54,7 @@ typedef Context_ptr_base<Receiver> Receiver_ptr;
 
 IMPLEMENTATION:
 
+#include "atomic.h"
 #include "l4_types.h"
 #include <cassert>
 
@@ -97,6 +98,30 @@ Receiver::set_caller(Receiver *caller, L4_fpage::Rights rights)
   Mword nv = Mword(caller) | (cxx::int_value<L4_fpage::Rights>(rights) & 0x3);
   reinterpret_cast<Mword volatile &>(_caller) = nv;
 }
+
+/**
+ * Reset the caller field to 0 iff the current value is `old_caller`.
+ */
+PUBLIC inline NEEDS["atomic.h"]
+void
+Receiver::reset_caller(Receiver const *old_caller)
+{
+  Mword ov = Mword(old_caller) | (_caller & 0x3);
+  // avoid exclusive access (do test, test-and-set)
+  if (_caller != ov)
+    return;
+
+  mp_cas(&_caller, ov, 0UL);
+}
+
+PUBLIC inline
+void
+Receiver::reset_caller()
+{
+  if (_caller)
+    _caller = 0;
+}
+
 /** IPC partner (sender).
     @return sender of ongoing or previous IPC operation
  */
@@ -281,14 +306,6 @@ Receiver::vcpu_async_ipc(Sender const *sender) const
   self->state_add_dirty(Thread_receive_wait);
   self->vcpu_save_state_and_upcall();
   return Rs_irq_receive;
-}
-
-PUBLIC inline
-void
-Receiver::reset_caller()
-{
-  if (_caller)
-    _caller = 0;
 }
 
 PUBLIC inline

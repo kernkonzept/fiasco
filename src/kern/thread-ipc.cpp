@@ -588,8 +588,8 @@ Thread::do_ipc(L4_msg_tag const &tag, bool have_send, Thread *partner,
       if ((state() & Thread_full_ipc_mask) == Thread_receive_wait)
         goto_sleep(t.rcv, sender, utcb().access(true));
 
-      if (sender && sender == partner && partner->caller() == this)
-        partner->reset_caller();
+      if (sender && sender == partner)
+        partner->reset_caller(this);
     }
 
   Mword state = this->state();
