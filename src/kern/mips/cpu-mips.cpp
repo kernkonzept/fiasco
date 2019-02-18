@@ -278,9 +278,12 @@ private:
 
   Cpu_phys_id _phys_id;
 
-  void panic(char const *fmt, ...) const __attribute__((noreturn));
-  void require(bool cond, char const *fmt, ...) const;
-  void pr(char const *fmt, ...) const;
+  void panic(char const *fmt, ...) const
+    __attribute__((noreturn, format(printf,2,3)));
+  void require(bool cond, char const *fmt, ...) const
+    __attribute__((format(printf,3,4)));
+  void pr(char const *fmt, ...) const
+    __attribute__((format(printf,2,3)));
 };
 
 IMPLEMENTATION:
@@ -310,7 +313,7 @@ Cpu::panic(char const *fmt, ...) const
   printf("CPU[%d]: panic: ", cxx::int_value<Cpu_number>(id()));
   vprintf(fmt, list);
   va_end(list);
-  panic("end");
+  ::panic("panic");
 }
 
 IMPLEMENT
@@ -325,7 +328,7 @@ Cpu::require(bool cond, char const *fmt, ...) const
   printf("CPU[%d]: panic: ", cxx::int_value<Cpu_number>(id()));
   vprintf(fmt, list);
   va_end(list);
-  panic("end");
+  ::panic("panic");
 }
 
 IMPLEMENT
@@ -368,7 +371,8 @@ Cpu::first_boot(bool is_boot_cpu)
           "None", "Standard TLB", "BAT", "Fixed Map",
           "Dual VTLB / FTLB", "<unk>", "<unk>", "<unk>"
         };
-      panic("unsupported TLB type: %s (%d)\n", tlb_type[c.r<0>().mt()], c.r<0>().mt());
+      panic("unsupported TLB type: %s (%u)\n",
+            tlb_type[c.r<0>().mt()], (unsigned int)c.r<0>().mt());
     }
 
   require(c.r<0>().vi() == 0, "virtual instruction caches not supported\n");
