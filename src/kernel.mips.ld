@@ -72,6 +72,7 @@ SECTIONS {
 
     *(.rodata .rodata.* .gnu.linkonce.r.*)
 
+    . = ALIGN(WORD_ALIGN);
     PROVIDE(MIPS_cpu_types = .);
     KEEP(*(.mips.cpu_type))
     LONG(0); LONG(0); LONG(0); LONG(0);
