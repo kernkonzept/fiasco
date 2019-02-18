@@ -102,9 +102,9 @@ Thread::call_nested_trap_handler(Trap_state *ts)
 
   Mword dummy1, tmp, ret;
   {
-    register Mword _ts asm("a0") = (Mword)ts;
-    register Mword res asm("v0");
-    register Cpu_number _lcpu asm("a1") = log_cpu;
+    register Mword _ts asm("$4") = (Mword)ts;      // $4 == a0
+    register Mword res asm("$2");                  // $2 == v0
+    register Cpu_number _lcpu asm("$5") = log_cpu; // $5 == a1
 
     asm volatile(
         ".set push                        \n"
@@ -134,8 +134,8 @@ Thread::call_nested_trap_handler(Trap_state *ts)
           [handler] "r" (nested_trap_handler),
           [rsz] "n" (sizeof(Mword)),
           [frsz] "n" (ASM_NARGSAVE * sizeof(Mword))
-        : "memory", "ra", "a2", "a3", "v1", "t0", "t1", "t2",
-          "t3", "t4", "t5", "t6", "t7", "t8", "t9");
+        : "memory", "$3", "$6", "$7", "$8", "$9", "$10", "$11",
+           "$12", "$13", "$14", "$15", "$24", "$25", "$31");
 
     ret = res;
     ts->epc +=4;
