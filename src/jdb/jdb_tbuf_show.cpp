@@ -550,7 +550,7 @@ Jdb_tbuf_show::search(Mword start, Mword entries, const char *str,
       if ((n & 0x7f) == 0)
         {
           static int progress;
-          Jdb::cursor(Jdb_screen::height(), 79);
+          Jdb::cursor(Jdb_screen::height(), Jdb_screen::width());
           putchar("|/-\\"[progress++]);
           progress &= 3;
         }
@@ -568,7 +568,7 @@ Jdb_tbuf_show::search(Mword start, Mword entries, const char *str,
     }
 
   // restore screen
-  Jdb::cursor(Jdb_screen::height(), 79);
+  Jdb::cursor(Jdb_screen::height(), Jdb_screen::width());
   putchar('t');
 
   return found;
