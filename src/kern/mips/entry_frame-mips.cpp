@@ -172,12 +172,14 @@ Return_frame::dump() const
     "gp", "sp", "fp", "ra"
   };
 
-  printf("00[ 0]: 00000000 ");
-  for (unsigned i = 1; i < 32; ++i)
-    printf("%s[%2d]: %08lx%s", regs[i], i, r[i], (i & 3) == 3 ? "\n" : " ");
+  int sz = 2 * sizeof(Mword);
+  printf("00[ 0]: %0*x ", sz, 0);
 
-  printf("HI: %08lx LO: %08lx\n", hi, lo);
-  printf("Status %08lx Cause %08lx EPC %08lx\n", status, cause, epc);
-  //printf("Cause  %08lx BadVaddr %08lx\n", cause, badvaddr);
+  for (unsigned i = 1; i < 32; ++i)
+    printf("%s[%2d]: %0*lx%s", regs[i], i, sz, r[i], (i & 3) == 3 ? "\n" : " ");
+
+  printf("HI: %*lx LO: %*lx\n", sz, hi, sz, lo);
+  printf("Status %0*lx Cause %0*lx EPC %0*lx\n", sz, status, sz, cause, sz, epc);
+  //printf("Cause  %0*lx BadVaddr %0*lx\n", sz, cause, sz, badvaddr);
 }
 
