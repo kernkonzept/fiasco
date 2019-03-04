@@ -496,12 +496,7 @@ Task::sys_cap_valid(Syscall_frame *, Utcb *utcb)
 
   Obj_space::Capability cap = lookup(obj.cap());
   if (EXPECT_TRUE(cap.valid()))
-    {
-      if (!(utcb->values[1] & 1))
-        return commit_result(1);
-      else
-        return commit_result(cap.obj()->map_root()->cap_ref_cnt());
-    }
+    return commit_result(1);
   else
     return commit_result(0);
 }

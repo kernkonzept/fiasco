@@ -30,8 +30,6 @@ public:
     _cnt = 1;
     return true;
   }
-
-  Smword cap_ref_cnt() const { return _cnt; }
 };
 
 
