@@ -28,6 +28,14 @@ public:
     F_ECHO = 000010,
   };
 
+  enum Operation
+  {
+    Op_write    = 0,
+    Op_read     = 1,
+    Op_set_attr = 2,
+    Op_get_attr = 3,
+  };
+
 private:
   Irq_base *_irq;
   Mword _i_flags;
@@ -66,10 +74,8 @@ Vlog::operator delete (void *)
 
 PRIVATE inline NOEXPORT
 void
-Vlog::log_string(Syscall_frame *f, Utcb const *u)
+Vlog::log_string(Utcb const *u)
 {
-  L4_snd_item_iter snd_items(u, f->tag().words());
-
   unsigned len = u->values[1];
   char const *str = (char const *)&u->values[2];
 
@@ -239,17 +245,14 @@ Vlog::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,
 
   switch (r_msg->values[0])
     {
-    case 0:
-      log_string(f, r_msg);
+    case Op_write:
+      log_string(r_msg);
       return no_reply();
-
-    case 2: // set attr
+    case Op_set_attr:
       return set_attr(rights, f, r_msg);
-
-    case 3: // get attr
+    case Op_get_attr:
       return get_attr(rights, f, s_msg);
-
-    default:
+    default: // Op_read
       return get_input(rights, f, s_msg);
     }
 }
