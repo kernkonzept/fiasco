@@ -63,13 +63,6 @@ Obj_cap::deref(L4_fpage::Rights *rights = 0, bool dbg = false)
   return current->space()->lookup_local(cap(), rights);
 }
 
-PUBLIC inline NEEDS["kobject.h"]
-bool
-Obj_cap::revalidate(Kobject_iface *o)
-{
-  return deref() == o;
-}
-
 PUBLIC explicit
 Thread_object::Thread_object(Ram_quota *q) : Thread(q) {}
 
