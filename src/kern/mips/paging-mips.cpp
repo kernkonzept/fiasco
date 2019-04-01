@@ -270,7 +270,12 @@ Mword PF::addr_to_msgword0(Address pfa, Mword cause)
   if(!is_read_error(cause))
     a |= 2;
 
-  // FIXME: flag instruction fetch faults with a |= 4
+  if (static_cast<Trap_state::Cause const>(cause).exc_code() == 0x14) // TLBXI
+    {
+      // Executing non-executable page.
+      a |= 4;
+    }
+
   return a;
 }
 
