@@ -494,9 +494,6 @@ PRIVATE
 bool
 Thread::do_kill()
 {
-  if (is_invalid())
-    return false;
-
   //
   // Kill this thread
   //
