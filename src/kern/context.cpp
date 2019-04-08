@@ -36,7 +36,6 @@ public:
 
   Kobject_iface *ptr(Space *, L4_fpage::Rights *) const;
 
-  bool is_kernel() const { return false; }
   bool is_valid() const { return _t != Cap_index(~0UL); }
 
   // only for debugging use

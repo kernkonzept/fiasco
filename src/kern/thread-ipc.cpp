@@ -786,10 +786,6 @@ Thread::send_exception(Trap_state *ts)
       fast_return_to_user(vcpu->_entry_ip, vcpu->_sp, vcpu_state().usr().get());
     }
 
-  // local IRQs must be disabled because we dereference a Thread_ptr
-  if (EXPECT_FALSE(_exc_handler.is_kernel()))
-    return 0;
-
   if (!send_exception_arch(ts))
     return 0; // do not send exception
 
