@@ -20,6 +20,7 @@ namespace L4
     void shutdown() override;
     bool enable_rx_irq(bool enable = true) override;
     bool change_mode(Transfer_mode m, Baud_rate r) override;
+    void irq_ack() override;
     int get_char(bool blocking = true) const override;
     int char_avail() const override;
     inline void out_char(char c) const;
