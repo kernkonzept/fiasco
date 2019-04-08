@@ -1091,17 +1091,20 @@ Thread::do_send_wait(Thread *partner, L4_timeout snd_t)
 
   reset_timeout();
 
-  if (EXPECT_FALSE(ipc_state == (Thread_canceled | Thread_send_wait)))
+  if (EXPECT_TRUE(!(ipc_state & Thread_send_wait)))
+    return true;
+
+  if (EXPECT_FALSE(ipc_state & Thread_canceled))
     {
       state_del_dirty(Thread_full_ipc_mask);
       utcb().access()->error = L4_error::Canceled;
       return false;
     }
 
-  if (EXPECT_FALSE(ipc_state == (Thread_cancel | Thread_send_wait)))
+  if (EXPECT_FALSE(ipc_state & Thread_cancel))
     return !abort_send(L4_error::Canceled, partner);
 
-  if (EXPECT_FALSE(ipc_state == (Thread_timeout | Thread_send_wait)))
+  if (EXPECT_FALSE(ipc_state & Thread_timeout))
     return !abort_send(L4_error::Timeout, partner);
 
   return true;
