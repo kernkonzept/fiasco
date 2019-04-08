@@ -63,13 +63,6 @@ public:
   explicit Space(Ram_quota *q, Caps c) : Mem_space(q), _caps(c) {}
   virtual ~Space() = 0;
 
-  enum State
-  { // we must use values with the two lest significant bits == 0
-    Starting    = 0x00,
-    Ready       = 0x08,
-    In_deletion = 0x10
-  };
-
   struct Ku_mem : public cxx::S_list_item
   {
     User<void>::Ptr u_addr;
