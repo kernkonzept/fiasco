@@ -31,8 +31,7 @@ Task::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode)
   if (user_mode)
     {
       ctxt->state_add_dirty(Thread_vcpu_user);
-      vcpu->state |= Vcpu_state::F_traps | Vcpu_state::F_exceptions
-                     | Vcpu_state::F_debug_exc;
+      vcpu->state |= Vcpu_state::F_traps | Vcpu_state::F_exceptions;
 
       ctxt->space_ref()->user_mode(user_mode);
 
@@ -70,8 +69,7 @@ Vz_vm::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode) override
     return -L4_err::EInval;
 
   ctxt->state_add_dirty(Thread_vcpu_user);
-  vcpu->state |= Vcpu_state::F_traps | Vcpu_state::F_exceptions
-                 | Vcpu_state::F_debug_exc;
+  vcpu->state |= Vcpu_state::F_traps | Vcpu_state::F_exceptions;
 
   ctxt->space_ref()->user_mode(user_mode);
   auto &owner = Vz::owner.cpu(ctxt->get_current_cpu());

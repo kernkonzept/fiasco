@@ -7,9 +7,6 @@ class Trap_state : public Entry_frame
 public:
   typedef int (*Handler)(Trap_state*, Cpu_number cpu);
 
-  // no exception traps to the kernel debugger on mips
-  bool is_debug_exception() const { return false; }
-
   // generally MIPS encodes the error code and trapno into the cause
   // register, so we return status ess error code however
   Mword trapno() const { return esr.ec(); }

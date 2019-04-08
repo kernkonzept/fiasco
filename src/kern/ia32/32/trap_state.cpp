@@ -230,11 +230,6 @@ void
 Trap_state::consume_instruction(unsigned count)
 { cas ((Address*)(&_ip), _ip, _ip + count); }
 
-PUBLIC inline
-bool
-Trap_state::is_debug_exception() const
-{ return _trapno == 1 || _trapno == 3; }
-
 PUBLIC
 void
 Trap_state::dump()

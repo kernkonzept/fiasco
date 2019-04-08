@@ -11,11 +11,6 @@ IMPLEMENTATION [mips]:
 
 DEFINE_PER_CPU Per_cpu<Thread::Dbg_stack> Thread::dbg_stack;
 
-PUBLIC inline NEEDS ["trap_state.h"]
-bool
-Thread::send_exception_arch(Trap_state *)
-{ return true; }
-
 PROTECTED inline
 int
 Thread::sys_control_arch(Utcb *)

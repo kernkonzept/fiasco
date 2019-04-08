@@ -304,14 +304,6 @@ Thread::user_ip(Mword ip)
     }
 }
 
-PUBLIC inline NEEDS ["trap_state.h"]
-int
-Thread::send_exception_arch(Trap_state * /*ts*/)
-{
-  NOT_IMPL_PANIC;
-  return 1;      // We did it
-}
-
 PROTECTED inline
 void
 Thread::vcpu_resume_user_arch()

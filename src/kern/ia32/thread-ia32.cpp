@@ -429,21 +429,6 @@ void
 Thread::save_fpu_state_to_utcb(Trap_state *, Utcb *)
 {}
 
-/* return 1 if this exception should be sent, return 0 if not
- */
-PUBLIC inline NEEDS["trap_state.h"]
-int
-Thread::send_exception_arch(Trap_state *ts)
-{
-  // Do not send exception IPC but return 'not for us' if thread is a normal
-  // thread (not alien) and it's a debug trap,
-  // debug traps for aliens are always reflected as exception IPCs
-  if (!(state() & Thread_alien) && (ts->_trapno == 1))
-    return 0; // we do not handle this
-
-  return 1; // make it an exception
-}
-
 //----------------------------------------------------------------------------
 IMPLEMENTATION [!(vmx || svm) && (ia32 || amd64)]:
 

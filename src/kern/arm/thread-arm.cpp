@@ -326,14 +326,6 @@ Mword
 Thread::user_flags() const
 { return 0; }
 
-PUBLIC inline NEEDS ["trap_state.h"]
-int
-Thread::send_exception_arch(Trap_state *)
-{
-  // nothing to tweak on ARM
-  return 1;
-}
-
 PRIVATE inline
 void
 Thread::save_fpu_state_to_utcb(Trap_state *ts, Utcb *u)

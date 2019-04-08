@@ -64,11 +64,6 @@ Trap_state::set_pagefault(Mword pfa, Mword error)
   error_code = error;
 }
 
-PUBLIC inline
-bool
-Trap_state::is_debug_exception() const
-{ return false; }
-
 PUBLIC
 void
 Trap_state::dump()

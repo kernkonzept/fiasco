@@ -90,11 +90,6 @@ bool
 Trap_state::exception_is_undef_insn() const
 { return esr.ec() == 0; }
 
-PUBLIC inline
-bool
-Trap_state::is_debug_exception() const
-{ return esr.ec() == 0x24 && esr.pf_fsc() == 0x22; }
-
 PUBLIC
 void
 Trap_state::dump()

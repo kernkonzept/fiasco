@@ -751,12 +751,6 @@ Thread::send_exception(Trap_state *ts)
 
   if (vcpu_exceptions_enabled(vcpu))
     {
-      // do not reflect debug exceptions to the VCPU but handle them in
-      // Fiasco
-      if (EXPECT_FALSE(ts->is_debug_exception()
-                       && !(vcpu->state & Vcpu_state::F_debug_exc)))
-        return 0;
-
       if (_exc_cont.valid(ts))
         return 1;
 
@@ -785,9 +779,6 @@ Thread::send_exception(Trap_state *ts)
       vcpu->_regs.s = *ts;
       fast_return_to_user(vcpu->_entry_ip, vcpu->_sp, vcpu_state().usr().get());
     }
-
-  if (!send_exception_arch(ts))
-    return 0; // do not send exception
 
   L4_fpage::Rights rights = L4_fpage::Rights(0);
   Kobject_iface *pager = _exc_handler.ptr(space(), &rights);
