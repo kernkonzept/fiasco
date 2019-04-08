@@ -64,8 +64,8 @@ Jdb::wfi_enter()
 
   wfi_gic.orig_tt_prio = g->irq_prio(tt->pin());
   wfi_gic.orig_pmr     = g->pmr();
-  g->pmr(0x20);
-  g->irq_prio(tt->pin(), 0x10);
+  g->pmr(0x90);
+  g->irq_prio(tt->pin(), 0x00);
 
   Timer_tick::enable(Cpu_number::boot_cpu());
 }
