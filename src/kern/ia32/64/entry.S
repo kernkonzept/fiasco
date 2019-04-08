@@ -71,10 +71,10 @@ EXCEPTION	0x00, vec00_zero_div
    entry_sys_fast_ipc -- see ia32/entry-ia32.S */
 GATE_ENTRY	0x01, entry_vec01_debug, (ACC_PL_K | ACC_INTR_GATE)
 /* XXX IA32 has to handle NMI occured exactly at entry_sys_fast_ipc */
-EXCEP_USR	0x02, vec02_nmi
+EXCEPTION	0x02, vec02_nmi
 EXCEP_USR	0x03, vec03_breakpoint
-EXCEP_USR	0x04, vec04_into
-EXCEP_USR	0x05, vec05_bounds
+EXCEPTION	0x04, vec04_into
+EXCEPTION	0x05, vec05_bounds
 EXCEPTION	0x06, vec06_invop
 # EXCEPTION	0x07, nofpu
 // XXX we can't use a task gate, instead we must use IST
