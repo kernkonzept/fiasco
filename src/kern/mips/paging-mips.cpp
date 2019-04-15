@@ -247,6 +247,14 @@ Mword
 PF::is_read_error(Trap_state::Cause const cause)
 { return is_read_error(cause.raw); }
 
+PUBLIC static inline
+Mword
+PF::is_xi_error(Mword cause)
+{
+  // TLBXI
+  return (cause & 0x7c) == 0x50;
+}
+
 PUBLIC static inline NEEDS["trap_state.h"]
 Mword
 PF::is_translation_error(Trap_state::Cause const cause)
@@ -260,7 +268,7 @@ Mword
 PF::is_translation_error(Mword cause)
 { return is_translation_error(Trap_state::Cause(cause)); }
 
-IMPLEMENT inline NEEDS[PF::is_read_error]
+IMPLEMENT inline NEEDS[PF::is_read_error, PF::is_xi_error]
 Mword PF::addr_to_msgword0(Address pfa, Mword cause)
 {
   Mword a = pfa & ~7;
@@ -270,7 +278,7 @@ Mword PF::addr_to_msgword0(Address pfa, Mword cause)
   if(!is_read_error(cause))
     a |= 2;
 
-  if (static_cast<Trap_state::Cause const>(cause).exc_code() == 0x14) // TLBXI
+  if (is_xi_error(cause))
     {
       // Executing non-executable page.
       a |= 4;
