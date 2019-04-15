@@ -90,6 +90,7 @@ Jdb::_wait_for_input()
   unsigned i = static_cast<Gic*>(tt->chip())->pending();
   if (i == tt->pin())
     {
+      Kernel_uart::uart()->irq_ack();
       tt->chip()->ack(i);
       tt->ack();
     }
