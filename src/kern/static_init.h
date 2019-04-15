@@ -80,7 +80,7 @@ static static_init_##va __static_construction_of_##va##__ \
 #define STATIC_INITIALIZER_P(f, p) \
   __STATIC_INITIALIZER_P(f,func_##f,p)
 
-/// mark f as static initailizer
+/// mark f as static initializer
 #define STATIC_INITIALIZER(f) \
   __STATIC_INITIALIZER(f,func_##f)
 //@}
