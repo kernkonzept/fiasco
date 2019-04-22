@@ -43,9 +43,9 @@ public:
   virtual void state(Mword new_state);
 
   /**
-   * Write a string of len chacters to the output.
+   * Write a string of len characters to the output.
    * @param str the string to write (no zero termination is needed)
-   * @param len the number of chacters to write.
+   * @param len the number of characters to write.
    *
    * This method must be implemented in every implementation, but
    * can simply do nothing for input only consoles.
@@ -53,8 +53,8 @@ public:
   virtual int write(char const *str, size_t len);
 
   /**
-   * read a charcater from the input.
-   * @param blocking if true getchar blocks til a charcater is available.
+   * read a character from the input.
+   * @param blocking if true getchar blocks til a character is available.
    *
    * This method must be implemented in every implementation, but
    * can simply return -1 for output only consoles.
@@ -66,8 +66,8 @@ public:
    *
    * This method can be implemented.
    * It must return -1 if no information is available, 
-   * 1 if at least one character is avialable, and 0 if
-   * no charachter is available.
+   * 1 if at least one character is available, and 0 if
+   * no character is available.
    */
   virtual int char_avail() const;
 
