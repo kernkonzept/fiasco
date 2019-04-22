@@ -39,7 +39,7 @@ IMPLEMENTATION:
 
 PUBLIC
 Mux_console::Mux_console()
-: Console(ENABLED), _next_getchar(-1), _items(0)
+: Console(ENABLED), _next_getchar(-1), _items(0), _ignore_input_until(0)
 {}
 
 IMPLEMENT
