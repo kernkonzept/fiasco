@@ -201,13 +201,13 @@ Kmem_alloc::create_free_map(Kip const *kip, Mem_region_map_base *map)
   for (auto const &md: kip->mem_descs_a())
     {
       if (!md.valid())
-	{
-	  const_cast<Mem_desc &>(md).type(Mem_desc::Undefined);
-	  continue;
-	}
+        {
+          const_cast<Mem_desc &>(md).type(Mem_desc::Undefined);
+          continue;
+        }
 
       if (md.is_virtual())
-	continue;
+        continue;
 
       unsigned long s = md.start();
       unsigned long e = md.end();
@@ -215,29 +215,29 @@ Kmem_alloc::create_free_map(Kip const *kip, Mem_region_map_base *map)
       // Sweep out stupid descriptors (that have the end before the start)
 
       switch (md.type())
-	{
-	case Mem_desc::Conventional:
-	  s = (s + Config::PAGE_SIZE - 1) & ~(Config::PAGE_SIZE - 1);
-	  e = ((e + 1) & ~(Config::PAGE_SIZE - 1)) - 1;
-	  if (e <= s)
-	    break;
-	  available_size += e - s + 1;
-	  if (!map->add(Mem_region(s, e)))
-	    panic("Kmem_alloc::create_free_map(): memory map too small");
-	  break;
-	case Mem_desc::Reserved:
-	case Mem_desc::Dedicated:
-	case Mem_desc::Shared:
-	case Mem_desc::Arch:
-	case Mem_desc::Bootloader:
-	  s = s & ~(Config::PAGE_SIZE - 1);
-	  e = ((e + Config::PAGE_SIZE) & ~(Config::PAGE_SIZE - 1)) - 1;
-	  if (!map->sub(Mem_region(s, e)))
-	    panic("Kmem_alloc::create_free_map(): memory map too small");
-	  break;
-	default:
-	  break;
-	}
+        {
+        case Mem_desc::Conventional:
+          s = (s + Config::PAGE_SIZE - 1) & ~(Config::PAGE_SIZE - 1);
+          e = ((e + 1) & ~(Config::PAGE_SIZE - 1)) - 1;
+          if (e <= s)
+            break;
+          available_size += e - s + 1;
+          if (!map->add(Mem_region(s, e)))
+            panic("Kmem_alloc::create_free_map(): memory map too small");
+          break;
+        case Mem_desc::Reserved:
+        case Mem_desc::Dedicated:
+        case Mem_desc::Shared:
+        case Mem_desc::Arch:
+        case Mem_desc::Bootloader:
+          s = s & ~(Config::PAGE_SIZE - 1);
+          e = ((e + Config::PAGE_SIZE) & ~(Config::PAGE_SIZE - 1)) - 1;
+          if (!map->sub(Mem_region(s, e)))
+            panic("Kmem_alloc::create_free_map(): memory map too small");
+          break;
+        default:
+          break;
+        }
     }
 
   return available_size;
