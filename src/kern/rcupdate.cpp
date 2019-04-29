@@ -16,7 +16,7 @@ class Rcu_batch
   friend class Jdb_rcupdate;
 public:
   /// create uninitialized batch.
-  Rcu_batch() {}
+  Rcu_batch() = default;
   /// create a btach initialized with \a b.
   Rcu_batch(long b) : _b(b) {}
 

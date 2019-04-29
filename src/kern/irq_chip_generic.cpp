@@ -6,7 +6,7 @@ INTERFACE:
 class Irq_chip_gen : public Irq_chip_icu
 {
 public:
-  Irq_chip_gen() {}
+  Irq_chip_gen() = default;
   explicit Irq_chip_gen(unsigned nirqs) { init(nirqs); }
 
 private:

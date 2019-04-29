@@ -20,6 +20,7 @@ class Mapping
 {
   friend class Jdb_mapdb;
 public:
+  Mapping() = default;
   typedef Mdb_types::Order Order;
   typedef Mdb_types::Pcnt Pcnt;
   typedef Mdb_types::Pfn Pfn;
@@ -43,10 +44,6 @@ public:
 IMPLEMENTATION:
 
 #include "config.h"
-
-PUBLIC inline 
-Mapping::Mapping()
-{}
 
 inline 
 Mapping_entry *

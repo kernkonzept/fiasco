@@ -280,7 +280,7 @@ protected:
   };
   unsigned long _bits;
 
-  Bitmap_base() {}
+  Bitmap_base() = default;
   Bitmap_base(Bitmap_base const &) = delete;
   Bitmap_base &operator = (Bitmap_base const &) = delete;
 

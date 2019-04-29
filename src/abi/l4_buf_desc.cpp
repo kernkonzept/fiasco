@@ -37,7 +37,7 @@ public:
    * Create an uninitialized buffer descriptor.
    * \note The value of the buffer descriptor is unpredictable.
    */
-  L4_buf_desc() {}
+  L4_buf_desc() = default;
 
   /**
    * Create a buffer descriptor with given values.

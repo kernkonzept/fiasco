@@ -44,7 +44,7 @@ namespace Obj {
     Mword _obj;
 
   public:
-    Capability() {}
+    Capability() = default;
     explicit Capability(Mword v) : _obj(v) {}
     Kobject_iface *obj() const { return (Kobject_iface *)(_obj & ~3UL); }
     void set(Kobject_iface *obj, unsigned char rights)

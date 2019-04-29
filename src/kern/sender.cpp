@@ -19,6 +19,7 @@ public:
   virtual void modify_label(Mword const *todo, int cnt) = 0;
 
 protected:
+  Sender() = default;
   Iteratable_prio_list *_wq;
 
 private:
@@ -155,10 +156,3 @@ void Sender::sender_update_prio(P_LIST list, unsigned short newprio)
   sender_dequeue(list);
   sender_enqueue(list, newprio);
 }
-
-/** Constructor.
- */
-PROTECTED inline
-Sender::Sender()
-{}
-
