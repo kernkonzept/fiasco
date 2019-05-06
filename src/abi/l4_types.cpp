@@ -507,7 +507,7 @@ public:
 
   /**
    * Get the absolute receive timeout in microseconds.
-   * @param clock Current value of kernel clock
+   * @param u  UTCB pointer.
    * @return The receive timeout in microseconds.
    */
   Unsigned64 microsecs_abs(Utcb const *u) const;
@@ -515,7 +515,6 @@ public:
 private:
   enum
     {
-      Clock_mask   = 0x0400,
       Abs_mask     = 0x8000,
 
       Exp_mask     = 0x7c00,
@@ -942,14 +941,6 @@ IMPLEMENT inline L4_timeout::L4_timeout(unsigned short t)
 IMPLEMENT inline unsigned short L4_timeout::raw() const
 { return _t; }
 
-PUBLIC inline
-Mword L4_timeout::abs_exp() const
-{ return (_t >> 11) & 0xf; }
-
-PUBLIC inline
-bool L4_timeout::abs_clock() const
-{ return _t & Clock_mask; }
-
 IMPLEMENT inline
 Unsigned64
 L4_timeout::microsecs_rel(Unsigned64 clock) const
@@ -1005,12 +996,6 @@ unsigned short L4_timeout::is_finite() const
 IMPLEMENT inline
 L4_timeout::L4_timeout(Mword man, Mword exp)
 : _t (((man & Man_mask) | ((exp << Exp_shift) & Exp_mask)))
-{}
-
-IMPLEMENT inline
-L4_timeout::L4_timeout(Mword man, Mword exp, bool clock)
-: _t (((man & Man_mask) | ((exp << (Exp_shift+1)) & Exp_mask)
-      | (clock ? Clock_mask : 0) | Abs_mask))
 {}
 
 IMPLEMENT inline Mword L4_timeout::exp() const
