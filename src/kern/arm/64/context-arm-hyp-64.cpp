@@ -31,7 +31,7 @@ public:
 
     typedef Arm_vgic_t<4> Gic;
 
-    /* The followin part is our user API */
+    /* The following part is our user API */
     Regs_g guest_regs;
     Regs_h host_regs;
     Gic  gic;

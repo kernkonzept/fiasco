@@ -105,7 +105,8 @@ _tramp_acpi_wakeup:
   popfl
 #endif
 
-  /* we cleared the busy flag in C++ code before suspend, so its safe to load the TR here */
+  /* We cleared the busy flag in the C++ code before suspend, so it is safe to
+     load the TR here. */
   ltr _tr
   movl $0, %eax // return 0 (success)
   ret                   // return from function "acpi_save_cpu_and_suspend"

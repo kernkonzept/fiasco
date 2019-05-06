@@ -187,7 +187,7 @@ config LAZY_FPU
           switching the FPU / SIMD state which is needed to mitigate the lazy
           FPU restore side-channel attack found on Intel processors.
 
-          It is save to enable this option on AMD CPUs.
+          It is safe to enable this option on AMD CPUs.
 
 # PF_SECTION: TARGET
 
