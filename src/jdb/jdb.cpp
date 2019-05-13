@@ -806,11 +806,11 @@ Jdb::write_ll_hex(String_buffer *buf, Signed64 x, bool sign)
   Unsigned64 xu = (x < 0) ? -x : x;
 
   if (sign)
-    buf->printf("%s%03lx" L4_PTR_FMT,
+    buf->printf("%s%03lx%08x",
                 (x < 0) ? "-" : (x == 0) ? " " : "+",
-                (Mword)((xu >> 32) & 0xfff), (Mword)xu);
+                (Mword)((xu >> 32) & 0xfff), (unsigned)xu);
   else
-    buf->printf("%04lx" L4_PTR_FMT, (Mword)((xu >> 32) & 0xffff), (Mword)xu);
+    buf->printf("%04lx%08x", (Mword)((xu >> 32) & 0xffff), (unsigned)xu);
 }
 
 PUBLIC static
