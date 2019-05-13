@@ -126,8 +126,10 @@ Jdb_log_list::show_item(String_buffer *buffer, String_buffer *,
   char const *sc = e->name;
   sc += strlen(e->name) + 1;
   if (buffer)
-    buffer->printf("%s %s (%s)",
-                   Jdb_tbuf::get_entry_status(e) ? "[on ]" : "[off]",
+    buffer->printf("[%s] %s (%s)",
+                   Jdb_tbuf::get_entry_status(e)
+                   ? JDB_ANSI_COLOR(green) "ON " JDB_ANSI_END
+                   : JDB_ANSI_COLOR(red) "off" JDB_ANSI_END,
                    e->name, sc);
 }
 
