@@ -72,17 +72,27 @@ PRIVATE
 void
 Jdb_space::show(Task *t)
 {
-  printf("Space %p (Kobject*)%p\n", t, static_cast<Kobject*>(t));
+  Jdb::cursor(3, 1);
+  Jdb::line();
+  printf("\nSpace %p (Kobject*)%p%s\n",
+         t, static_cast<Kobject*>(t), Jdb::clear_to_eol_str());
 
   for (Space::Ku_mem_list::Const_iterator m = t->_ku_mem.begin(); m != t->_ku_mem.end();
        ++m)
-    printf("  utcb area: user_va=%p kernel_va=%p size=%x\n",
-           m->u_addr.get(), m->k_addr, m->size);
+    printf("  utcb area: user_va=%p kernel_va=%p size=%x%s\n",
+           m->u_addr.get(), m->k_addr, m->size, Jdb::clear_to_eol_str());
 
   unsigned long m = t->ram_quota()->current();
-  unsigned long l = t->ram_quota()->limit();
-  printf("  mem usage:  %lu (%luKB) of %lu (%luKB) @%p\n", 
-         m, m/1024, l, l/1024, t->ram_quota());
+  printf("  mem usage: %lu (%luKB) ", m, m/1024);
+  if (t->ram_quota()->unlimited())
+    printf("-- unlimited%s\n", Jdb::clear_to_eol_str());
+  else
+    {
+      unsigned long l = t->ram_quota()->limit();
+      printf("of %lu (%luKB) @%p%s\n",
+             l, l/1024, t->ram_quota(), Jdb::clear_to_eol_str());
+    }
+  Jdb::line();
 }
 
 static bool space_filter(Kobject_common const *o)
