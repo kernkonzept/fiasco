@@ -119,6 +119,11 @@ Jdb_pcm::action(int cmd, void *&args, char const *&fmt, int &) override
           args = &prompt_color;
           return EXTRA_INPUT;
 	case 'd':
+          if (!Kconsole::console()->find_console(Console::DIRECT))
+            {
+              printf("\nDirect console not available\n");
+              return ERROR;
+            }
 	  fmt = "%c";
 	  args = &direct_enable;
 	  return EXTRA_INPUT;
@@ -213,7 +218,7 @@ Jdb_module::Cmd const * Jdb_pcm::cmds() const override
 	   "\tnN: noir(black), rR: red, gG: green, bB: blue,\n"
 	   "\tyY: yellow, mM: magenta, cC: cyan, wW: white;\n"
 	   "\tthe capital letters are for bold text.\n"
-	   "Jd{+|-}\ton/off Jdb output to VGA/Hercules console\n"
+	   "Jd{+|-}\ton/off Jdb output to direct console\n"
 	   "Jh\tset Jdb screen height\n"
 	   "Jw\tset Jdb screen width\n"
 	   "JS\tdetect screen size using ESCape sequence ESC [ 6 n\n"
