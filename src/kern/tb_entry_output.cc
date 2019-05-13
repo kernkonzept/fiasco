@@ -54,15 +54,16 @@ get_ipc_type(T e)
 }
 
 static char const * const __tag_interpreter_strings_l4re[] = {
-    "ds", // 0
+    "ds", // 0x4000
     "name",
     "parent",
     "goos",
     "ma",
-    "rm", // 5
+    "rm", // 0x4005
     "ev",
     "inh",
     "dmaspc",
+    "mmiospc",
   };
 static char const * const __tag_interpreter_strings_fiasco[] = {
     "Kirq",      // -1
@@ -88,15 +89,16 @@ static char const * const __tag_interpreter_strings_fiasco[] = {
     "Kmeta",
     "Kiommu",
     "Kdbg",
+    "Ksmc",
   };
 
 static
 char const *
 tag_to_string(L4_msg_tag const &tag)
 {
-  if (0x4000 <= tag.proto() && tag.proto() <= 0x4008)
+  if (0x4000 <= tag.proto() && tag.proto() <= 0x4009)
     return __tag_interpreter_strings_l4re[tag.proto() - 0x4000];
-  if (-23L <= tag.proto() && tag.proto() <= -1)
+  if (-24L <= tag.proto() && tag.proto() <= -1)
     return __tag_interpreter_strings_fiasco[-tag.proto() - 1];
   return 0;
 }
