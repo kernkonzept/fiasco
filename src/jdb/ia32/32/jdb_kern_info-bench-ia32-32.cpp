@@ -457,9 +457,9 @@ Jdb_kern_info_bench::show_arch()
     {
       time = Cpu::rdtsc();
       for (i=200000; i; i--)
-	asm volatile ("invlpg %c2	\n\t"
-		      "mov %c2, %1	\n\t"
-		      : "=r" (dummy), "=r" (dummy)
+	asm volatile ("invlpg %c1	\n\t"
+		      "mov %c1, %0	\n\t"
+		      : "=r" (dummy)
 		      : "i"(Mem_layout::Jdb_bench_page));
       time = Cpu::rdtsc() - time - time_invlpg;
       show_time (time, 200000, "load data TLB (4k)");

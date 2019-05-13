@@ -202,21 +202,16 @@ Jdb_kern_info_bench::show_arch()
       BENCH("APIC timer read", inst_apic_timer_read, 200000);
     }
 
-#ifndef CONFIG_AMD64
-    // disable this benchmark as it does not compile
-    // (probably because Mem_layout::Jdb_bench_page
-    // cannot be represented as 32bit signed immediate on AMD64)
     {
       time = Cpu::rdtsc();
       for (i=200000; i; i--)
-	asm volatile ("invlpg %c2	\n\t"
-		      "mov %c2, %1	\n\t"
-		      : "=r" (dummy), "=r" (dummy)
-		      : "i"(Mem_layout::Jdb_bench_page));
+	asm volatile ("invlpg %1	\n\t"
+		      "mov %1, %0	\n\t"
+		      : "=r" (dummy)
+		      : "m" (*(char*)Mem_layout::Jdb_bench_page));
       time = Cpu::rdtsc() - time - time_invlpg;
       show_time (time, 200000, "load data TLB (4k)");
     }
-#endif
 
     {
       // asm ("1: mov %%cr3,%%rdx; mov %%rdx, %%cr3; dec %%rax; jnz 1b; ret")
