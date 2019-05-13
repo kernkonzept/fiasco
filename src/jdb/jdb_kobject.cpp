@@ -536,9 +536,14 @@ Jdb_kobject::fmt_handler(char /*fmt*/, int *size, char const *cmd_str, void *arg
 	{
 	  putstr("\b \b");
 	  --pos;
+          continue;
 	}
 
-      if (pos < (int)sizeof(buffer) - 1)
+      if (pos < (int)sizeof(buffer) - 1
+          && (   (c >= '0' && c <= '9')
+              || (c >= 'a' && c <= 'f')
+              || (c >= 'A' && c <= 'F')
+              || (c == 'P' && pos == 0)))
 	{
           Jdb_core::cmd_putchar(c);
 	  buffer[pos++] = c;
