@@ -24,8 +24,9 @@ void
 Jdb_counters::show()
 {
   putchar('\n');
-  for (unsigned i=0; i<Kern_cnt_max; i++)
-    printf("  %-25s%10lu\n", Kern_cnt::get_str(i), *Kern_cnt::get_ctr(i));
+
+  for (unsigned i = 0; i < Kern_cnt::Valid_ctrs; ++i)
+    printf("  %-25s%10u\n", Kern_cnt::get_vld_str(i), *Kern_cnt::get_vld_ctr(i));
   putchar('\n');
 }
 

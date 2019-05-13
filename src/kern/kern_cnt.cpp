@@ -4,13 +4,19 @@ INTERFACE:
 
 class Kern_cnt
 {
+public:
+  enum {
+    Valid_ctrs = 7,
+  };
+
 private:
   enum {
     Max_slot = 2,
   };
 
-  static Mword *kcnt[Max_slot];
+  static Unsigned32 *kcnt[Max_slot];
   static Mword (*read_kcnt_fn[Max_slot])();
+  static Unsigned8 valid_ctrs[Valid_ctrs];
 };
 
 
@@ -21,24 +27,67 @@ IMPLEMENTATION:
 #include "tb_entry.h"
 #include "jdb_tbuf.h"
 
-Mword *Kern_cnt::kcnt[Max_slot];
+Unsigned32 *Kern_cnt::kcnt[Max_slot];
 Mword (*Kern_cnt::read_kcnt_fn[Max_slot])() = { read_kcnt1, read_kcnt2 };
 
-static Mword Kern_cnt::read_kcnt1() { return *kcnt[0]; }
-static Mword Kern_cnt::read_kcnt2() { return *kcnt[1]; }
+// Only the following counters have to be used. The remaining Kern_cnt_XXX
+// enums are deprecated but we don't want to change the trace buffer status
+// page.
+Unsigned8 Kern_cnt::valid_ctrs[Kern_cnt::Valid_ctrs] =
+{
+  Kern_cnt_context_switch,
+  Kern_cnt_addr_space_switch,
+  Kern_cnt_irq,
+  Kern_cnt_page_fault,
+  Kern_cnt_io_fault,
+  Kern_cnt_schedule,
+  Kern_cnt_exc_ipc,
+};
+
+static Mword Kern_cnt::read_kcnt1() { return (Mword)*kcnt[0]; }
+static Mword Kern_cnt::read_kcnt2() { return (Mword)*kcnt[1]; }
 
 PUBLIC static
-Mword*
+int
+Kern_cnt::valid_2_ctr(unsigned num)
+{
+  return num >= Valid_ctrs ? -1 : valid_ctrs[num];
+}
+
+PUBLIC static
+int
+Kern_cnt::ctr_2_valid(unsigned num)
+{
+  for (unsigned i = 0; i < Valid_ctrs; ++i)
+    if (valid_ctrs[i] == num)
+      return i;
+
+  return -1;
+}
+
+PUBLIC static
+Unsigned32*
 Kern_cnt::get_ctr(int num)
 {
-  Tracebuffer_status *status = Jdb_tbuf::status();
+  if (num >= Kern_cnt_max)
+    return nullptr;
 
-  return (Mword*)(num < Kern_cnt_max ? status->kerncnts + num : 0);
+  return Jdb_tbuf::status()->kerncnts + num;
+}
+
+PUBLIC static
+Unsigned32*
+Kern_cnt::get_vld_ctr(int num)
+{
+  if (num >= Valid_ctrs)
+    return nullptr;
+
+  return get_ctr(valid_2_ctr(num));
 }
 
 PUBLIC static
 const char *
-Kern_cnt::get_str(Mword num)
+Kern_cnt::get_str(unsigned num)
 {
   switch (num)
     {
@@ -54,15 +103,25 @@ Kern_cnt::get_str(Mword num)
     case Kern_cnt_schedule:          return "Scheduler calls";
     case Kern_cnt_iobmap_tlb_flush:  return "IO bitmap TLB flushs";
     case Kern_cnt_exc_ipc:           return "Exception IPCs";
-    default:                         return 0;
+    default:                         return nullptr;
     }
+}
+
+PUBLIC static
+const char *
+Kern_cnt::get_vld_str(unsigned num)
+{
+  if (num >= Valid_ctrs)
+    return nullptr;
+
+  return get_str(valid_2_ctr(num));
 }
 
 PUBLIC static
 int
 Kern_cnt::mode(Mword slot, const char **mode, const char **name, Mword *event)
 {
-  Mword *c = 0;
+  Unsigned32 *c = 0;
 
   switch (slot)
     {
@@ -94,7 +153,7 @@ Kern_cnt::setup_pmc(Mword slot, Mword event)
 
   if (!(event & 0x80000000))
     {
-      kcnt[slot] = 0;
+      kcnt[slot] = nullptr;
       Tb_entry::set_rdcnt(slot, 0);
       return 0;
     }

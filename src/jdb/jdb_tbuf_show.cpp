@@ -145,11 +145,11 @@ Jdb_tbuf_show::show_perf_event(Mword nr)
 {
   const char *name, *desc;
   unsigned evntsel;
-  Mword add_kcnt = Config::Jdb_accounting ? Kern_cnt_max : 0;
+  Mword add_kcnt = Config::Jdb_accounting ? Kern_cnt::Valid_ctrs : 0;
 
   if (nr < add_kcnt)
     {
-      const char * const s = Kern_cnt::get_str(nr);
+      const char * const s = Kern_cnt::get_vld_str(nr);
       printf("   %-26.26s %.49s\033[K", s, "(kernel event counter)");
       return;
     }
@@ -197,7 +197,7 @@ Jdb_tbuf_show::select_perf_event_unit_mask(Mword nr, Mword unit_mask)
 
   Jdb::cursor(Tbuf_start_line, 1);
   putstr("\033[32m");
-  show_perf_event(nr + (Config::Jdb_accounting ? Kern_cnt_max : 0));
+  show_perf_event(nr + (Config::Jdb_accounting ? Kern_cnt::Valid_ctrs : 0));
   printf("\033[m\033[K\n"
          "\033[K\n"
          "  \033[1;32mSelect Event Mask (%s):\033[m\033[K\n"
@@ -264,7 +264,7 @@ Jdb_tbuf_show::select_perf_event(Mword event)
 {
   Mword absy     = 0;
   Mword addy     = 0;
-  Mword add_kcnt = Config::Jdb_accounting ? Kern_cnt_max : 0;
+  Mword add_kcnt = Config::Jdb_accounting ? Kern_cnt::Valid_ctrs : 0;
   Mword nevents  = Perf_cnt::get_max_perf_event() + add_kcnt;
   Mword lines    = (nevents < Jdb_screen::height() - 6)
                    ? nevents
@@ -284,7 +284,7 @@ Jdb_tbuf_show::select_perf_event(Mword event)
   printf("%sSelect Performance Counter\033[m\033[K\n\033[K", Jdb::esc_emph2);
 
   if (event & 0x80000000)
-    addy = event & 0xff;
+    addy = Kern_cnt::ctr_2_valid(event & 0xff);
   else
     {
       Perf_cnt::split_event(event, &evntsel, &unit_mask);
@@ -335,7 +335,7 @@ Jdb_tbuf_show::select_perf_event(Mword event)
             case KEY_RETURN_2:
               absy += addy;
               if (absy < add_kcnt)
-                return absy | 0x80000000;
+                return Kern_cnt::valid_2_ctr(absy) | 0x80000000;
 
               absy -= add_kcnt;
               Perf_cnt::get_perf_event(absy, &evntsel, &dummy, &dummy);
@@ -462,9 +462,9 @@ Jdb_tbuf_show::show_events(Mword n, Mword ref, Mword count, Unsigned8 mode,
               else
                 {
                   if (time_mode != 1)
-                    Jdb::write_ll_hex(&s, (Unsigned64)kclock - ref_kclock, true);
+                    Jdb::write_ll_hex(&s, (Signed64)kclock - ref_kclock, true);
                   else
-                    s.printf("%+12d", (int)kclock - (int)ref_kclock);
+                    s.printf("%+12lld", (Signed64)kclock - ref_kclock);
                 }
               break;
             case Kclock_start_mode:
@@ -681,7 +681,7 @@ restart:
 
   for (;;)
     {
-      Mword count, perf_event[2];
+      Mword count, perf_event[2] = { 0, 0};
       Mword perf_user[2] = { 0, 0 };
       Mword perf_kern[2] = { 0, 0 };
       Mword perf_edge[2] = { 0, 0 };
@@ -709,7 +709,7 @@ restart:
              mode==Pmc1_delta_mode || mode==Pmc1_ref_mode ? Jdb::esc_emph : "",
              perf_name[0]);
 
-      Jdb::cursor(1, 71);
+      Jdb::cursor(1, Jdb_screen::width()-9);
       printf("%10s\n"
              "%24s 2=" L4_PTR_FMT "(%s%s\033[m%s%s%s\033[m)\033[K\n",
               mode_str[(int)mode], "",

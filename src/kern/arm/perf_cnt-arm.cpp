@@ -73,7 +73,7 @@ private:
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && perf_cnt && arm_mpcore]:
 IMPLEMENT_OVERRIDE inline
-Mword Perf_cnt::get_max_perf_event() { return 32; }
+Mword Perf_cnt::get_max_perf_event() { return is_avail() ? 32 : 0; }
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && perf_cnt && !(arm_mpcore || arm_v7 || arm_v8)]:
@@ -108,17 +108,27 @@ Perf_cnt::set_event_type(int, int)
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && perf_cnt && arm_cortex_a8]:
 IMPLEMENT_OVERRIDE inline
-Mword Perf_cnt::get_max_perf_event() { return 0x73; }
+Mword Perf_cnt::get_max_perf_event() { return is_avail() ? 0x73 : 0; }
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && perf_cnt && arm_cortex_a9]:
 IMPLEMENT_OVERRIDE inline
-Mword Perf_cnt::get_max_perf_event() { return 0x94; }
+Mword Perf_cnt::get_max_perf_event() { return is_avail() ? 0x94 : 0; }
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && perf_cnt && arm_cortex_a15]:
 IMPLEMENT_OVERRIDE inline
-Mword Perf_cnt::get_max_perf_event() { return 0x7f; }
+Mword Perf_cnt::get_max_perf_event() { return is_avail() ? 0x7f : 0; }
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && perf_cnt && !(arm_v7 || arm_v8)]:
+
+PRIVATE static
+bool
+Perf_cnt::is_avail()
+{
+  return true;
+}
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && perf_cnt && (arm_v7 || arm_v8)]:
@@ -126,12 +136,15 @@ IMPLEMENTATION [arm && perf_cnt && (arm_v7 || arm_v8)]:
 #include "cpu.h"
 
 char const *Perf_cnt::perf_type_str = "ACor";
-int Perf_cnt::_nr_counters;
+int Perf_cnt::_nr_counters = 1;
 
 PRIVATE static
 bool
 Perf_cnt::is_avail()
 {
+  if (!_nr_counters)
+    return false;
+
   switch (Cpu::boot_cpu()->copro_dbg_model())
     {
       case Cpu::Copro_dbg_model_v7:
@@ -179,9 +192,8 @@ Perf_cnt::mon_event_type(int nr)
 {
   if (!is_avail())
     return 0;
-
   if (nr >= _nr_counters)
-    return 0xff;
+    return 0;
   pmnxsel(nr);
   return evtsel();
 }
@@ -268,7 +280,7 @@ Perf_cnt::split_event(Mword event, unsigned *evntsel, Mword *)
 }
 
 PUBLIC static Mword
-Perf_cnt::lookup_event(Mword) { return 0; }
+Perf_cnt::lookup_event(Mword) { return is_avail() ? 0 : (Mword)-1; }
 
 PUBLIC static void
 Perf_cnt::combine_event(Mword evntsel, Mword, Mword *event)
@@ -309,13 +321,16 @@ Perf_cnt::mode(Mword slot, const char **mode, const char **name,
   if (slot >= Max_slot)
     return 0;
 
+  if (!is_avail())
+    return 0;
+
   *event = mon_event_type(slot);
 
   snprintf(_n[slot], sizeof(_n[slot]), "e%lx", *event & 0xfff);
   _n[slot][sizeof(_n[slot]) - 1] = 0;
   *name = _n[slot];
 
-  *mode = "";
+  *mode = "on";
   *user = *kern = *edge = 0;
 
   return 1;
