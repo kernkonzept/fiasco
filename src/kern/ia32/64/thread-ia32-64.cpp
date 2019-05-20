@@ -65,7 +65,7 @@ Thread::invoke_arch(L4_msg_tag tag, Utcb *utcb)
     case Op_gdt_x86: return sys_gdt_x86(tag, utcb);
     case Op_set_segment_base_amd64:
       if (tag.words() < 2)
-        return commit_result(-L4_err::EInval);
+        return commit_result(-L4_err::EMsgtooshort);
       switch (utcb->values[0] >> 16)
         {
         case 0:
