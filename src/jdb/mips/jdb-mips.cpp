@@ -195,9 +195,10 @@ PUBLIC static
 void
 Jdb::write_tsc_s(String_buffer *buf, Signed64 tsc, bool sign)
 {
-  if (sign)
-    buf->printf("%c", (tsc < 0) ? '-' : (tsc == 0) ? ' ' : '+');
-  buf->printf("%lld c", tsc);
+  if (sign && tsc != 0)
+    buf->printf("%+lld c", tsc);
+  else
+    buf->printf("%lld c", tsc);
 }
 
 PUBLIC static
