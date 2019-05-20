@@ -163,7 +163,7 @@ template<typename T> struct Msg_item
   enum
   {
     in_size   = sizeof(T),
-    in_align  = alignof(T),
+    in_align  = __alignof__(T),
     out_size  = 0,
     out_align = 1,
     in_items  = 0,
@@ -213,7 +213,7 @@ template<typename T> struct Msg_item<T*>
     in_size   = 0,
     in_align  = 1,
     out_size  = sizeof(T),
-    out_align = alignof(T),
+    out_align = __alignof__(T),
     in_items  = 0,
     out_items = 0,
   };
