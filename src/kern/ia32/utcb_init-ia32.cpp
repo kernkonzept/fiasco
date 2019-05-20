@@ -29,7 +29,7 @@ Utcb_init::utcb_segment()
 { return Gdt::gdt_utcb | Gdt::Selector_user; }
 
 
-IMPLEMENT inline
+IMPLEMENT inline ALWAYS_INLINE
 void
 Utcb_init::init()
 {}

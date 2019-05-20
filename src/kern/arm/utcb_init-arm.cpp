@@ -17,4 +17,4 @@ Utcb_init::init()
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_v6plus]:
 
-IMPLEMENT inline void Utcb_init::init() {}
+IMPLEMENT inline ALWAYS_INLINE void Utcb_init::init() {}
