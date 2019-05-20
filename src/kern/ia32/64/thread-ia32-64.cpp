@@ -64,27 +64,34 @@ Thread::invoke_arch(L4_msg_tag tag, Utcb *utcb)
     {
     case Op_gdt_x86: return sys_gdt_x86(tag, utcb);
     case Op_set_segment_base_amd64:
-      if (tag.words() < 2)
-        return commit_result(-L4_err::EMsgtooshort);
-      switch (utcb->values[0] >> 16)
-        {
-        case 0:
-          _fs = 0;
-          _fs_base = utcb->values[1];
-          if (current() == this)
-            Cpu::wrmsr(_fs_base, MSR_FS_BASE);
-          break;
+      {
+        if (tag.words() < 2)
+          return commit_result(-L4_err::EMsgtooshort);
 
-        case 1:
-          _gs = 0;
-          _gs_base = utcb->values[1];
-          if (current() == this)
-            Cpu::wrmsr(_gs_base, MSR_GS_BASE);
-          break;
+        Mword base = access_once(utcb->values + 1);
+        if (!Cpu::is_canonical_address(base))
+          return commit_result(-L4_err::EInval);
 
-        default: return commit_result(-L4_err::EInval);
-        }
-      return Kobject_iface::commit_result(0);
+        switch (utcb->values[0] >> 16)
+          {
+          case 0:
+            _fs = 0;
+            _fs_base = base;
+            if (current() == this)
+              Cpu::wrmsr(_fs_base, MSR_FS_BASE);
+            break;
+
+          case 1:
+            _gs = 0;
+            _gs_base = base;
+            if (current() == this)
+              Cpu::wrmsr(_gs_base, MSR_GS_BASE);
+            break;
+
+          default: return commit_result(-L4_err::EInval);
+          }
+        return Kobject_iface::commit_result(0);
+      }
     case Op_segment_info_amd64:
       utcb->values[0] = Gdt::gdt_data_user   | Gdt::Selector_user; // user_ds32
       utcb->values[1] = Gdt::gdt_code_user   | Gdt::Selector_user; // user_cs64
