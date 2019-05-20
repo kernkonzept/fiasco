@@ -339,7 +339,7 @@ Thread::call_nested_trap_handler(Trap_state *ts)
      "je     1f			\n\t"
      "decq   %[recover]		\n\t"
      "1:			\n\t"
-     : [ret] "=&a"(ret), [d2] "=&r"(dummy2), [d1] "=&r"(dummy1), "=D"(scratch1),
+     : [ret] "=&a"(ret), [d2] "=&d"(dummy2), [d1] "=&c"(dummy1), "=D"(scratch1),
        "=S"(scratch2),
        [recover] "+m" (ntr)
      : [ts] "D" (ts),
@@ -349,7 +349,7 @@ Thread::call_nested_trap_handler(Trap_state *ts)
        [cpu] "S" (log_cpu),
        [stack] "r" (stack),
        [handler] "m" (nested_trap_handler)
-     : "rdx", "rcx", "r8", "r9", "r10", "r11", "memory");
+     : "r8", "r9", "r10", "r11", "memory");
 
   if (!ntr)
     Cpu_call::handle_global_requests();
