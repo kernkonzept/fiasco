@@ -385,7 +385,7 @@ PUBLIC static
 int
 Jdb::peek_task(Address addr, Space *task, void *value, int width)
 {
-  if (!is_canonical_address(addr))
+  if (!Cpu::is_canonical_address(addr))
     return -1;
 
   if (!task && Kmem::is_kmem_page_fault(addr, 0))
@@ -427,7 +427,7 @@ PUBLIC static
 int
 Jdb::poke_task(Address addr, Space *task, void const *value, int width)
 {
-  if (!is_canonical_address(addr))
+  if (!Cpu::is_canonical_address(addr))
     return -1;
 
   if (!task && Kmem::is_kmem_page_fault(addr, 0))
@@ -662,15 +662,6 @@ IMPLEMENTATION[amd64]:
 static void
 Jdb::analyze_code(Cpu_number)
 {}
-
-IMPLEMENT_OVERRIDE inline
-bool
-Jdb::is_canonical_address(Address virt)
-{
-  // A canonical virtual address for AMD64 defines that bits 48..63 need
-  // to have the same value as bit 47 (48-bit VA implementation).
-  return virt >= 0xffff800000000000UL || virt <= 0x00007fffffffffffUL;
-}
 
 IMPLEMENTATION[ia32,amd64]:
 

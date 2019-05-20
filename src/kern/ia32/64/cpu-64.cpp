@@ -255,3 +255,7 @@ Mword
 Cpu::stack_align(Mword stack)
 { return stack & ~0xf; }
 
+IMPLEMENT_OVERRIDE inline
+bool
+Cpu::is_canonical_address(Address addr)
+{ return (addr >= (~0UL << 47)) || (addr <= (~0UL >> 17)); }

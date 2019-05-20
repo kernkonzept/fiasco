@@ -235,7 +235,7 @@ Jdb::access_mem_task(Address virt, Space * task)
   // align
   virt &= ~(sizeof(Mword) - 1);
 
-  if (!is_canonical_address(virt))
+  if (!Cpu::is_canonical_address(virt))
     return 0;
 
   Address phys;
@@ -403,16 +403,4 @@ Jdb::monitor_address(Cpu_number, T volatile const *addr)
 {
   asm volatile("wfe");
   return *addr;
-}
-
-
-//----------------------------------------------------------------------------
-IMPLEMENTATION [bit64]:
-
-IMPLEMENT_OVERRIDE inline
-bool
-Jdb::is_canonical_address(Address virt)
-{
-  // cf. ARMv8-A Address Translation
-  return virt >= 0xffff000000000000UL || virt <= 0x0000ffffffffffffUL;
 }

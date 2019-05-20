@@ -41,6 +41,8 @@ public:
   static Online_cpu_mask const &online_mask();
   static Online_cpu_mask const &present_mask();
 
+  static bool is_canonical_address(Address addr);
+
 private:
 
   static Online_cpu_mask _online_mask;
@@ -104,6 +106,11 @@ Cpu::set_present(bool o)
   else
     _present_mask.atomic_clear(id());
 }
+
+IMPLEMENT_DEFAULT inline
+bool
+Cpu::is_canonical_address(Address)
+{ return true; }
 
 // --------------------------------------------------------------------------
 IMPLEMENTATION [mp]:

@@ -690,3 +690,14 @@ Cpu::print_infos() const
   printf("Cache config: %s\n", Config::Cache_enabled ? "ON" : "OFF");
   id_print_infos();
 }
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [bit64]:
+
+IMPLEMENT_OVERRIDE inline
+bool
+Cpu::is_canonical_address(Address addr)
+{
+  // cf. ARMv8-A Address Translation
+  return addr >= 0xffff000000000000UL || addr <= 0x0000ffffffffffffUL;
+}
