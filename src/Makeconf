@@ -120,8 +120,6 @@ CCVER_FULL		:= $(CCVER_MAJOR).$(CCVER_MINOR).$(CCVER_PATCHLEVEL)
 CCVER_SEQ-gcc           := $(patsubst %$(word 1, " "),%,$(word 2,$(call get_cc_version_part, __VERSION__)))
 CCVER_SEQ-clang         := 0 # No (repo) version in release builds available
 CCVER_SEQ               := $(CCVER_SEQ-$(CC_TYPE))
-LIBGCC			:= $(shell $(CXX) $(SHARED_FLAGS) -print-libgcc-file-name)
-GCCINCDIR		:= $(shell $(CXX) $(SHARED_FLAGS) -print-file-name=include)
 
 
 L4ALL_INCDIR     	?= $(addprefix -I, $(PRIVATE_INCDIR))
@@ -187,6 +185,10 @@ OPT_CFLAGS      += $(OPT_CFLAGS-$(CC_TYPE))
 OPT_CXXFLAGS    += $(OPT_CXXFLAGS-$(CC_TYPE))
 NOOPT_CFLAGS    += $(NOOPT_CFLAGS-$(CC_TYPE))
 NOOPT_CXXFLAGS  += $(NOOPT_CXXFLAGS-$(CC_TYPE))
+
+
+LIBGCC      := $(shell $(CXX) $(SHARED_FLAGS) -print-libgcc-file-name)
+GCCINCDIR   := $(shell $(CXX) $(SHARED_FLAGS) -print-file-name=include)
 
 
 # Output formatting, set V=1 to see command line, V=0 to prevent printing them
