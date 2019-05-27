@@ -22,7 +22,7 @@ class Kpdir : public Pdir_t<K_pte_ptr, K_ptab_traits_vpn, Ptab_va_vpn> {};
 //---------------------------------------------------------------------------
 INTERFACE [arm && cpu_virt]:
 
-/* we currently use only 3-levels for stage 2 paging with a fixed IPA siaze of 40bits */
+/* we currently use only 3-levels for stage 2 paging with a fixed IPA size of 40bits */
 typedef Ptab::Tupel< Ptab::Traits< Unsigned64, 30, 10, true>,
                      Ptab::Traits< Unsigned64, 21, 9, true>,
                      Ptab::Traits< Unsigned64, 12, 9, true> >::List Ptab_traits;
@@ -52,10 +52,10 @@ public:
   enum
   {
     Ttbcr_bits =   (1UL << 31) | (1UL << 23) // RES1
-                 | (Tcr_attribs <<  8)
+                 | (Tcr_attribs <<  8) // (IRGN0)
                  | (16UL <<  0) // (T0SZ) Address space size 48bits (64 - 16)
                  | (0UL  << 14) // (TG0)  Page granularity 4kb
-                 | (5UL  << 16) // (PS)   Physical adress size 48bits
+                 | (5UL  << 16) // (PS)   Physical address size 48bits
   };
 };
 
@@ -70,13 +70,13 @@ EXTENSION class Page
 public:
   enum
   {
-    Ttbcr_bits =   (Tcr_attribs <<  8)
-                 | (Tcr_attribs << 24)
+    Ttbcr_bits =   (Tcr_attribs <<  8) // (IRGN0)
+                 | (Tcr_attribs << 24) // (IRGN1)
                  | (16UL <<  0) // (T0SZ) Address space size 48bits (64 - 16)
                  | (16UL << 16) // (T1SZ) Address space size 48bits (64 - 16)
                  | (0UL  << 14) // (TG0)  Page granularity 4kb
                  | (2UL  << 30) // (TG1)  Page granularity 4kb
-                 | (5UL  << 32) // (IPS)  Physical adress size 48bits
+                 | (5UL  << 32) // (IPS)  Physical address size 48bits
   };
 };
 
