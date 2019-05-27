@@ -360,14 +360,14 @@ Thread::do_trigger_exception(Entry_frame *r, void *ret_handler)
 
 PROTECTED inline
 int
-Thread::sys_control_arch(Utcb *)
+Thread::sys_control_arch(Utcb const *, Utcb *)
 {
   return 0;
 }
 
 PROTECTED inline NEEDS[Thread::set_tpidruro]
 L4_msg_tag
-Thread::invoke_arch(L4_msg_tag tag, Utcb *utcb)
+Thread::invoke_arch(L4_msg_tag tag, Utcb const *utcb, Utcb *)
 {
   switch (utcb->values[0] & Opcode_mask)
     {
@@ -469,7 +469,7 @@ IMPLEMENTATION [arm && arm_v6plus]:
 
 PRIVATE inline
 L4_msg_tag
-Thread::set_tpidruro(L4_msg_tag tag, Utcb *utcb)
+Thread::set_tpidruro(L4_msg_tag tag, Utcb const *utcb)
 {
   if (EXPECT_FALSE(tag.words() < 2))
     return commit_result(-L4_err::EInval);
@@ -505,7 +505,7 @@ IMPLEMENTATION [arm && !arm_v6plus]:
 
 PRIVATE inline
 L4_msg_tag
-Thread::set_tpidruro(L4_msg_tag, Utcb *)
+Thread::set_tpidruro(L4_msg_tag, Utcb const *)
 {
   return commit_result(-L4_err::EInval);
 }

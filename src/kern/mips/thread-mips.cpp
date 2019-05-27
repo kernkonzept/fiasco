@@ -13,7 +13,7 @@ DEFINE_PER_CPU Per_cpu<Thread::Dbg_stack> Thread::dbg_stack;
 
 PROTECTED inline
 int
-Thread::sys_control_arch(Utcb *)
+Thread::sys_control_arch(Utcb const *, Utcb *)
 {
   return 0;
 }
@@ -53,7 +53,7 @@ Thread::cache_op(unsigned op, Address start, Address end)
 PROTECTED inline NEEDS["processor.h", Thread::sys_vz_save_state,
                        Thread::cache_op]
 L4_msg_tag
-Thread::invoke_arch(L4_msg_tag tag, Utcb *utcb)
+Thread::invoke_arch(L4_msg_tag tag, Utcb const *utcb, Utcb *)
 {
   switch (unsigned op = access_once(&utcb->values[0]) & Opcode_mask)
     {
@@ -427,7 +427,7 @@ IMPLEMENTATION [mips && !mips_vz]:
 
 PRIVATE inline
 int
-Thread::sys_vz_save_state(L4_msg_tag, Utcb *)
+Thread::sys_vz_save_state(L4_msg_tag, Utcb const *)
 { return -L4_err::ENosys; }
 
 //----------------------------------------------------------
@@ -456,7 +456,7 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
 
 PRIVATE inline
 int
-Thread::sys_vz_save_state(L4_msg_tag tag, Utcb *utcb)
+Thread::sys_vz_save_state(L4_msg_tag tag, Utcb const *utcb)
 {
   if (tag.words() < 2)
     return -L4_err::EMsgtooshort;

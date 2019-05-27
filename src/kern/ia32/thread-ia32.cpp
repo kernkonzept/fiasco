@@ -508,12 +508,12 @@ Thread::vcpu_resume_user_arch()
 
 PRIVATE inline
 L4_msg_tag
-Thread::sys_gdt_x86(L4_msg_tag tag, Utcb *utcb)
+Thread::sys_gdt_x86(L4_msg_tag tag, Utcb const *utcb, Utcb *out)
 {
   // if no words given then return the first gdt entry
   if (EXPECT_FALSE(tag.words() == 1))
     {
-      utcb->values[0] = Gdt::gdt_user_entry1 >> 3;
+      out->values[0] = Gdt::gdt_user_entry1 >> 3;
       return Kobject_iface::commit_result(0, 1);
     }
 
@@ -709,7 +709,7 @@ Thread::handle_not_nested_trap(Trap_state *ts)
 
 PROTECTED inline
 int
-Thread::sys_control_arch(Utcb *)
+Thread::sys_control_arch(Utcb const *, Utcb *)
 {
   return 0;
 }

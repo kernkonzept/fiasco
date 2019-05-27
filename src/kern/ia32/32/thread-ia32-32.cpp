@@ -273,11 +273,11 @@ IMPLEMENTATION [ia32]:
 
 PROTECTED inline NEEDS[Thread::sys_gdt_x86]
 L4_msg_tag
-Thread::invoke_arch(L4_msg_tag tag, Utcb *utcb)
+Thread::invoke_arch(L4_msg_tag tag, Utcb const *utcb, Utcb *out)
 {
   switch (utcb->values[0] & Opcode_mask)
     {
-    case Op_gdt_x86: return sys_gdt_x86(tag, utcb);
+    case Op_gdt_x86: return sys_gdt_x86(tag, utcb, out);
     default:
       return commit_result(-L4_err::ENosys);
     };

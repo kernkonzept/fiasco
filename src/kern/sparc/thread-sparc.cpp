@@ -270,14 +270,14 @@ Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread * /*snd*/, Thread * /*rcv*/,
 
 PROTECTED inline
 L4_msg_tag
-Thread::invoke_arch(L4_msg_tag /*tag*/, Utcb * /*utcb*/)
+Thread::invoke_arch(L4_msg_tag /*tag*/, Utcb const * /*utcb*/, Utcb * /*out*/)
 {
   return commit_result(-L4_err::ENosys);
 }
 
 PROTECTED inline
 int
-Thread::sys_control_arch(Utcb *)
+Thread::sys_control_arch(Utcb const *, Utcb *)
 {
   return 0;
 }

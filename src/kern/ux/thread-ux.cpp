@@ -167,7 +167,7 @@ Thread::user_invoke()
 
 PROTECTED inline
 int
-Thread::sys_control_arch(Utcb *utcb)
+Thread::sys_control_arch(Utcb const *utcb, Utcb *)
 {
   if (utcb->values[0] & Ctl_ux_native)
     _is_native = utcb->values[4] & Ctl_ux_native;
@@ -184,7 +184,7 @@ KIP_KERNEL_FEATURE("segments");
 
 PROTECTED inline
 L4_msg_tag
-Thread::invoke_arch(L4_msg_tag tag, Utcb *utcb)
+Thread::invoke_arch(L4_msg_tag tag, Utcb const *utcb, Utcb *out)
 {
   switch (utcb->values[0] & Opcode_mask)
     {
@@ -193,7 +193,7 @@ Thread::invoke_arch(L4_msg_tag tag, Utcb *utcb)
       // if no words given then return the first gdt entry
       if (tag.words() == 1)
         {
-          utcb->values[0] = Emulation::host_tls_base();
+          out->values[0] = Emulation::host_tls_base();
           return commit_result(0, 1);
         }
 
