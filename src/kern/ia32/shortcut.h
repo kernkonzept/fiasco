@@ -1,6 +1,8 @@
 #ifndef SHORTCUT_H
 #define SHORTCUT_H
 
+#ifdef __ASSEMBLER__
+
 #include "globalconfig.h"
 
 // stackframe structure
@@ -63,6 +65,8 @@
 #define CNT_SHORTCUT_FAILED
 #define CNT_SHORTCUT_SUCCESS
 #define CNT_IOBMAP_TLB_FLUSH
+
+#endif
 
 #endif
 

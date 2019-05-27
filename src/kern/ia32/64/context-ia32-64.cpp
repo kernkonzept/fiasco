@@ -7,8 +7,8 @@ protected:
   Unsigned16 _ds;
 
 public:
-  Mword fs_base() const { return _fs_base; }
-  Mword gs_base() const { return _gs_base; }
+  Mword *fs_base() { return &_fs_base; }
+  Mword *gs_base() { return &_gs_base; }
 };
 
 // ------------------------------------------------------------------------
@@ -38,14 +38,14 @@ Context::switch_cpu(Context *t)
     Cpu::set_fs(t->_fs);
 
   if (!t->_fs)
-    Cpu::wrmsr(t->_fs_base, MSR_FS_BASE);
+    Cpu::set_fs_base(&t->_fs_base);
 
   _gs = Cpu::get_gs();
   if (EXPECT_FALSE(_gs | _gs_base | t->_gs))
     Cpu::set_gs(t->_gs);
 
   if (!t->_gs)
-    Cpu::wrmsr(t->_gs_base, MSR_GS_BASE);
+    Cpu::set_gs_base(&t->_gs_base);
 
   store_segments();
   asm volatile
@@ -109,10 +109,10 @@ Context::fill_user_state()
   Cpu::set_gs(_gs);
 
   if (EXPECT_TRUE(!_fs))
-    Cpu::wrmsr(_fs_base, MSR_FS_BASE);
+    Cpu::set_fs_base(&_fs_base);
 
   if (EXPECT_TRUE(!_gs))
-    Cpu::wrmsr(_gs_base, MSR_GS_BASE);
+    Cpu::set_gs_base(&_gs_base);
 }
 
 IMPLEMENT_OVERRIDE inline
@@ -143,7 +143,7 @@ Context::vcpu_pv_switch_to_kernel(Vcpu_state *vcpu, bool current)
   _fs = tmp;
 
   if (EXPECT_TRUE(current && !tmp))
-    Cpu::wrmsr(_fs_base, MSR_FS_BASE);
+    Cpu::set_fs_base(&_fs_base);
 
   tmp = access_once(&vcpu->host.gs);
   if (EXPECT_FALSE(current && (_gs | tmp)))
@@ -151,7 +151,7 @@ Context::vcpu_pv_switch_to_kernel(Vcpu_state *vcpu, bool current)
   _gs = tmp;
 
   if (EXPECT_TRUE(current && !tmp))
-    Cpu::wrmsr(_gs_base, MSR_GS_BASE);
+    Cpu::set_gs_base(&_gs_base);
 }
 
 IMPLEMENT_OVERRIDE inline
@@ -177,7 +177,7 @@ Context::vcpu_pv_switch_to_user(Vcpu_state *vcpu, bool current)
   _fs = tmp;
 
   if (EXPECT_TRUE(current && !tmp))
-    Cpu::wrmsr(_fs_base, MSR_FS_BASE);
+    Cpu::set_fs_base(&_fs_base);
 
   tmp = access_once(&vcpu->_regs.gs);
   if (EXPECT_FALSE(current && (_gs | tmp)))
@@ -185,5 +185,5 @@ Context::vcpu_pv_switch_to_user(Vcpu_state *vcpu, bool current)
   _gs = tmp;
 
   if (EXPECT_TRUE(current && !tmp))
-    Cpu::wrmsr(_gs_base, MSR_GS_BASE);
+    Cpu::set_gs_base(&_gs_base);
 }

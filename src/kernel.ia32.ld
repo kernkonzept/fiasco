@@ -84,11 +84,17 @@ SECTIONS {
     crt0.o(.text)
     *(.init)
     *(.text SORT(.text.*) .gnu.linkonce.t.*)
+    *(.fixup .fixup.*)
     *(.fini)
 
     PROVIDE (_ecode = .);
 
     *(.rodata .rodata.* .gnu.linkonce.r.*)
+
+    . = ALIGN(4);
+    PROVIDE(__exc_table_start = .);
+    KEEP(*(__exc_table __exc_table.*))
+    PROVIDE(__exc_table_end = .);
 
     . = ALIGN(4);
     JDB_TABLE(log);

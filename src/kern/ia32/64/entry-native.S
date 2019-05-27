@@ -210,16 +210,16 @@ leave_from_syscall_by_iret:
 dbf_stack_top:
 
 	.section ".text.syscall_entry"
-/* This code shall be copied to Kentry_cpu_page + 0xa0 */
-#define CPUE_OFFSET syscall_entry_code - 0xa0
+/* This code shall be copied to Kentry_cpu_page + 0x30 */
+#define CPUE_OFFSET syscall_entry_code - 0x30
 	.global syscall_entry_code
 syscall_entry_code:
-	mov	%rsp, CPUE_STACK(CPUE_OFFSET + 0, %rip)
+	mov	%rsp, (CPUE_OFFSET + CPUE_SCRATCH_OFS)(%rip)
 	mov	(CPUE_OFFSET + CPUE_CR3_OFS)(%rip), %rsp
 	mov	%rsp, %cr3
 	mov	(CPUE_OFFSET + CPUE_KSP_OFS)(%rip), %rsp
 	pushq	$(GDT_DATA_USER | 3)
-	pushq	CPUE_STACK(CPUE_OFFSET + 0, %rip)
+	pushq	(CPUE_OFFSET + CPUE_SCRATCH_OFS)(%rip)
 	push	%r11				/* save user rflags */
 	IA32_IBRS
 	.global syscall_entry_reloc
@@ -247,7 +247,7 @@ safe_iret:
 	jz	1f
 
 	mov	$0xffff817fffffc000, %r14
-	mov	%r13, CPUE_STACK( 0, %r14)
+	mov	%r13, CPUE_STACK(-56, %r14)
 #ifdef CONFIG_INTEL_IA32_BRANCH_BARRIERS
 	/* check for exit flags (need IBTPB?) */
 	mov	CPUE_EXIT(%r14), %r13
@@ -259,26 +259,31 @@ safe_iret:
 22:
 #endif
 	mov	(%rsp), %r13
-	mov	%r13, CPUE_STACK( 8, %r14)
+	mov	%r13, CPUE_STACK(-48, %r14)
 	mov	32(%rsp), %r13
-	mov	%r13, CPUE_STACK(16, %r14)
+	mov	%r13, CPUE_STACK(-40, %r14)
 	mov	40(%rsp), %r13
-	mov	%r13, CPUE_STACK(24, %r14)
+	mov	%r13, CPUE_STACK(-32, %r14)
 	mov	48(%rsp), %r13
-	mov	%r13, CPUE_STACK(32, %r14)
+	mov	%r13, CPUE_STACK(-24, %r14)
 	mov	56(%rsp), %r13
-	mov	%r13, CPUE_STACK(40, %r14)
+	mov	%r13, CPUE_STACK(-16, %r14)
 	mov	64(%rsp), %r13
-	mov	%r13, CPUE_STACK(48, %r14)
-	lea	CPUE_STACK(0, %r14), %rsp
+	mov	%r13, CPUE_STACK( -8, %r14)
+	lea	CPUE_STACK(-56, %r14), %rsp
 	mov	CPUE_CR3U(%r14), %r13
 	mov	%r13, %cr3
 	pop	%r13
 	pop	%r14
-	iretq
-1:
-	pop	%r14
+6:	iretq
+
+1:	pop	%r14
 	add	$24, %rsp
-	iretq	/* direct iret to kernel mode */
+5:	iretq	/* direct iret to kernel mode */
+
+.global safe_iret_insn
+	ASM_KEX 6b, 0, iretq_exception_handler
+	/* the in kernel iret should actually never trigger this */
+	ASM_KEX 5b, 0, iretq_exception_handler
 #endif
 

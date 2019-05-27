@@ -1,9 +1,23 @@
 INTERFACE[ia32,amd64,ux]:
 
+#include "asm.h"
 #include "types.h"
 #include "initcalls.h"
 #include "regdefs.h"
 #include "per_cpu_data.h"
+
+#define FIASCO_IA32_LOAD_SEG_SAFE(seg, val) \
+  asm volatile ("mov %0, %%" #seg : : "rm"(val))
+
+#define FIASCO_IA32_LOAD_SEG(seg, val) \
+  asm volatile (                              \
+    "1: mov %0, %%" #seg "\n\t"               \
+    ".pushsection \".fixup.%=\", \"ax?\"\n\t" \
+    "2: movw  $0, %0                    \n\t" \
+    "   jmp 1b                          \n\t" \
+    ".popsection                        \n\t" \
+    ASM_KEX(1b, 2b)                           \
+    : : "rm" (val))
 
 EXTENSION
 class Cpu
@@ -1492,19 +1506,31 @@ Cpu::get_ss()
   return val;
 }
 
-PUBLIC static inline
+PUBLIC static inline NEEDS["asm.h"]
 void
 Cpu::set_ds(Unsigned16 val)
-{ asm volatile ("mov %0, %%ds" : : "rm" (val)); }
+{
+  if (__builtin_constant_p(val))
+    FIASCO_IA32_LOAD_SEG_SAFE(ds, val);
+  else
+    FIASCO_IA32_LOAD_SEG(ds, val);
+}
 
-PUBLIC static inline
+PUBLIC static inline NEEDS["asm.h"]
 void
 Cpu::set_es(Unsigned16 val)
-{ asm volatile ("mov %0, %%es" : : "rm" (val)); }
+{
+  if (__builtin_constant_p(val))
+    FIASCO_IA32_LOAD_SEG_SAFE(es, val);
+  else
+    FIASCO_IA32_LOAD_SEG(es, val);
+}
+
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION[ia32, amd64]:
 
+#include "asm.h"
 #include "config.h"
 #include "div32.h"
 #include "gdt.h"
@@ -2066,16 +2092,25 @@ Unsigned16
 Cpu::get_gs()
 { Unsigned16 val; asm volatile ("mov %%gs, %0" : "=rm" (val)); return val; }
 
-PUBLIC static inline
+PUBLIC static inline NEEDS["asm.h"]
 void
 Cpu::set_fs(Unsigned16 val)
-{ asm volatile ("mov %0, %%fs" : : "rm" (val)); }
+{
+  if (__builtin_constant_p(val))
+    FIASCO_IA32_LOAD_SEG_SAFE(fs, val);
+  else
+    FIASCO_IA32_LOAD_SEG(fs, val);
+}
 
-PUBLIC static inline
+PUBLIC static inline NEEDS["asm.h"]
 void
 Cpu::set_gs(Unsigned16 val)
-{ asm volatile ("mov %0, %%gs" : : "rm" (val)); }
-
+{
+  if (__builtin_constant_p(val))
+    FIASCO_IA32_LOAD_SEG_SAFE(gs, val);
+  else
+    FIASCO_IA32_LOAD_SEG(gs, val);
+}
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION[(ia32 || amd64 || ux) && !intel_ia32_branch_barriers]:

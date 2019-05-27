@@ -75,8 +75,11 @@ IMPLEMENT_DEFAULT
 int
 Task::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode)
 {
-  Trap_state ts;
-  ctxt->copy_and_sanitize_trap_state(&ts, &vcpu->_regs.s);
+  // BAD: use the top-of the context stack area for the vcpu_resume
+  // return, otherwise exceptions during return to user are very
+  // ugly to handle.
+  Trap_state *ts = reinterpret_cast<Trap_state *>(ctxt->regs() + 1) - 1;
+  ctxt->copy_and_sanitize_trap_state(ts, &vcpu->_regs.s);
 
   // FIXME: UX is currently broken
   /* UX:ctxt->vcpu_resume_user_arch(); */
@@ -90,7 +93,7 @@ Task::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode)
 
   ctxt->space_ref()->user_mode(user_mode);
   switchin_context(ctxt->space());
-  vcpu_resume(&ts, ctxt->regs());
+  vcpu_resume(ts, ctxt->regs());
 }
 
 PUBLIC virtual

@@ -80,11 +80,11 @@ Vm_svm::restore_segments(Context *ctxt, Unsigned16 fs, Unsigned16 gs)
 {
   Cpu::set_fs(fs);
   if (!fs)
-    Cpu::wrmsr(ctxt->fs_base(), MSR_FS_BASE);
+    Cpu::set_fs_base(ctxt->fs_base());
 
   Cpu::set_gs(gs);
   if (!gs)
-    Cpu::wrmsr(ctxt->gs_base(), MSR_GS_BASE);
+    Cpu::set_gs_base(ctxt->gs_base());
 }
 
 PRIVATE inline NEEDS["assert_opt.h", "virt.h"]

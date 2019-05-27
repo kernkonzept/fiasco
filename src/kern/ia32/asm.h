@@ -3,7 +3,8 @@
 
 #include "globalconfig.h"
 #include "shortcut.h"
-#include "tcboffset.h"
+
+#ifdef __ASSEMBLER__
 
 #define kdb_ke_asm(msg)		\
 	int3			;\
@@ -11,13 +12,22 @@
 	.ascii	msg		;\
 9:
 
-#define MAY_FAULT(insn, label) \
-	.global label;         \
-	label: insn
+#ifdef CONFIG_BIT64
+# define PTR_VAL(x) .quad x
+# define PTR_ALIGN 8
+#else
+# define PTR_VAL(x) .long x
+# define PTR_ALIGN 4
+#endif
 
-//.macro REGS this_ptr, dst
-//	leal	(THREAD_BLOCK_SIZE - OFS__ENTRY_FRAME__MAX)(\this_ptr), \dst
-//.endm
+.macro ASM_KEX ip:req, fixup:req, handler = 0
+	.pushsection "__exc_table", "a?"
+	.align PTR_ALIGN
+	PTR_VAL(\ip)
+	PTR_VAL(\fixup)
+	PTR_VAL(\handler)
+	.popsection
+.endm
 
 #ifdef CONFIG_BEFORE_IRET_SANITY
 
@@ -69,5 +79,25 @@
 	.endm
 
 #endif // DO_SANITY_CHECKS_BEFORE_IRET
+
+#else // __ASSEMBLY__
+
+#ifdef CONFIG_BIT64
+# define ASM_PTR_VAL(x) ".quad " #x
+# define ASM_PTR_ALIGN "8"
+#else
+# define ASM_PTR_VAL(x) ".long " #x
+# define ASM_PTR_ALIGN "4"
+#endif
+
+#define ASM_KEX(ip, fixup) \
+	"\t.section __exc_table.%=, \"a?\"     \n" \
+	"\t.align " ASM_PTR_ALIGN             "\n" \
+	"\t" ASM_PTR_VAL(ip)                  "\n" \
+	"\t" ASM_PTR_VAL(fixup)               "\n" \
+	"\t" ASM_PTR_VAL(0)                   "\n" \
+	"\t.previous                           \n"
+
+#endif
 
 #endif // ASM_SANITY_CHECK_H

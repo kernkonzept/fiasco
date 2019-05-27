@@ -83,14 +83,21 @@ SECTIONS {
     PROVIDE ( _kernel_text_start = . );
     *(SORT(.entry.text.*))
     PROVIDE ( _kernel_text_entry_end = . );
+    . = ALIGN(8);
     crt0.o(.text)
     *(.init)
     *(.text SORT(.text.*) .gnu.linkonce.t.*)
-    *(.fini)
+    *(.fixup .fixup.*)
+/*    *(.fini) */
 
     PROVIDE (_ecode = .);
 
     *(.rodata .rodata.* .gnu.linkonce.r.*)
+
+    . = ALIGN(8);
+    PROVIDE(__exc_table_start = .);
+    KEEP(*(__exc_table __exc_table.*))
+    PROVIDE(__exc_table_end = .);
 
     . = ALIGN(16);
     PROVIDE (ia32_intel_microcode_start = .);

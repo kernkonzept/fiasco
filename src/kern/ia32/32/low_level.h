@@ -12,7 +12,7 @@
 	iret
 .endm
 
-.macro  SWITCH_TO_KERNEL_CR3 err
+.macro  SWITCH_TO_KERNEL_CR3 err, from_iret_fault = 0
 .endm
 
 	.macro save_all_regs

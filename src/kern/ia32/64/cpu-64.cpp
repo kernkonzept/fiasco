@@ -50,7 +50,7 @@ Cpu::set_fast_entry(void (*func)())
   extern char const syscall_entry_code[];
   extern char const syscall_entry_reloc[];
   auto ofs = syscall_entry_reloc - syscall_entry_code + 3; // 3 byte movebas
-  *reinterpret_cast<Signed32 *>(Mem_layout::Mem_layout::Kentry_cpu_page + ofs + 0xa0) = (Signed32)(Signed64)func;
+  *reinterpret_cast<Signed32 *>(Mem_layout::Mem_layout::Kentry_cpu_page + ofs + 0x30) = (Signed32)(Signed64)func;
 }
 
 PUBLIC inline
@@ -58,8 +58,8 @@ void
 Cpu::setup_sysenter() const
 {
   wrmsr(0, GDT_CODE_KERNEL | ((GDT_CODE_USER32 | 3) << 16), MSR_STAR);
-  wrmsr((Unsigned64)Mem_layout::Kentry_cpu_page + 0xa0, MSR_LSTAR);
-  wrmsr((Unsigned64)Mem_layout::Kentry_cpu_page + 0xa0, MSR_CSTAR);
+  wrmsr((Unsigned64)Mem_layout::Kentry_cpu_page + 0x30, MSR_LSTAR);
+  wrmsr((Unsigned64)Mem_layout::Kentry_cpu_page + 0x30, MSR_CSTAR);
   wrmsr(~0U, MSR_SFMASK);
 }
 
@@ -196,6 +196,41 @@ Cpu::set_cs()
     : "rax", "memory");
 }
 
+PUBLIC static inline NEEDS["asm.h"]
+void
+Cpu::set_fs_base(Mword *base)
+{
+  asm volatile (
+    "2: movq\t%0, %%rax\n\t"
+    "   movq\t%%rax, %%rdx\n\t"
+    "   shrq\t$32, %%rdx\n\t"
+    "1: wrmsr\n\t"
+    ".pushsection\t\".fixup.%=\", \"ax?\"\n\t"
+    "3: movq\t$0, %0\n\t"
+    "   jmp\t2b\n\t"
+    ".popsection\n\t"
+    ASM_KEX(1b, 3b)
+     : : "m" (*base),
+         "c" (MSR_FS_BASE) : "eax", "edx");
+}
+
+PUBLIC static inline NEEDS["asm.h"]
+void
+Cpu::set_gs_base(Mword *base)
+{
+  asm volatile (
+    "2: movq\t%0, %%rax\n\t"
+    "   movq\t%%rax, %%rdx\n\t"
+    "   shrq\t$32, %%rdx\n\t"
+    "1: wrmsr\n\t"
+    ".pushsection\t\".fixup.%=\", \"ax?\"\n\t"
+    "3: movq\t$0, %0\n\t"
+    "   jmp\t2b\n\t"
+    ".popsection\n\t"
+    ASM_KEX(1b, 3b)
+     : : "m" (*base),
+         "c" (MSR_GS_BASE) : "eax", "edx");
+}
 
 extern "C" Address dbf_stack_top;
 

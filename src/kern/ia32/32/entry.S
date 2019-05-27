@@ -137,7 +137,9 @@ slowtraps:
 #endif
 
 	pushl	REG_FS		/* we save the segment regs in the trap   */
+.Lslowtrap_push_gs:
 	pushl	REG_GS		/* state, but we do not restore them.  We */
+.Lslowtrap_push_ds:
 	pushl	%ds		/* rather reload them using               */
 	pushl	%es		/* RESET_{KERNEL,USER}_SEGMENTS           */
 
@@ -155,24 +157,16 @@ slowtraps:
 	   thread.  That's OK, because it is still atomic -- we never
 	   enable IRQs (sti) before that point. */
 
+.Lenter_slowtrap_after_fixup:
 	movl	%esp,%eax		/* ARG1: address of trap_state */
 	xorl	%edx,%edx		/* ARG2: default CPU = 0 */
-#ifndef CONFIG_NO_FRAME_PTR
-	pushl	OFS__TRAP_STATE__IP(%esp)       /* create artificial stack frame */
-	pushl	%ebp
-	leal	(%esp),%ebp
-#endif
 
         /* Call the C handler function if one has been installed.  */
 	movl	BASE_TRAP_HANDLER, %ecx
 	orl	%ecx,%ecx
-	jz	.Lunexpected_trap_pop
+	jz	.Lunexpected_trap
 	call	*%ecx
 in_slowtrap:
-
-#ifndef CONFIG_NO_FRAME_PTR
-	leal	8(%esp),%esp
-#endif
 
 	/* If the handler function returned zero (success),
 	   then resume execution as if the trap never happened.
@@ -183,17 +177,51 @@ in_slowtrap:
 	CHECK_SANITY 60(%esp)		/* scratches ecx */
 
 	addl	$4*2,%esp		/* Pop ds, es segment registers */
-	MAY_FAULT(popl REG_GS, in_slowtrap_exit_label_restore_gs)
-	MAY_FAULT(popl REG_FS, in_slowtrap_exit_label_restore_fs) /* Restore segment registers */
+1:	popl REG_GS
+2:	popl REG_FS
 	popa
 	addl	$4*2,%esp		/* Pop trap number and error code */
-	MAY_FAULT(iret, in_slowtrap_exit_label_iret)
+3:	iret
 
-.Lunexpected_trap_pop:
-#ifndef CONFIG_NO_FRAME_PTR
-	leal	8(%esp), %esp
-#endif
+	/* set fixups for segemnt pops */
+	ASM_KEX 1b, 11f
+	ASM_KEX 2b, 22f
+	ASM_KEX 3b, 0, .Liret_exception_handler
 
+	.section .fixup, "ax?", @progbits
+	.align 4
+11:	movl	$13, (10 * 4)(%esp) /* GP as trap number */
+	mov	%gs, (11 * 4)(%esp) /* segment selector as error code */
+	jmp .Lslowtrap_push_ds
+
+	.align 4
+22:	movl	$13, ( 9 * 4)(%esp) /* GP as trap number */
+	mov	%fs, (10 * 4)(%esp) /* segment selector as error code */
+	jmp .Lslowtrap_push_gs
+
+	/* write new return address below trap state.
+	 * So when we return from the slowtrap handlers
+	 * we can fix the extra stack offset from the
+	 * original stack frame */
+	.align 4
+.Liret_exception_handler:
+	movl	$.Liret_exception_stack_fix, -4(%edx)
+	mov	$1, %eax
+	ret
+
+	.align 4
+.Liret_exception_stack_fix:
+	mov	$14, %ecx
+	lea	(13 * 4)(%esp), %esi
+	lea	(16 * 4)(%esp), %edi
+	std
+	rep movsl	%ds:(%esi), %es:(%edi)
+	cld
+	add	$(3 * 4), %esp
+	jmp	.Lenter_slowtrap_after_fixup
+	.previous
+
+	.align 4
 .Lunexpected_trap:
 	movw	%ss,%ax
 	movw	%ax,%ds
@@ -674,11 +702,11 @@ vcpu_resume:
 	addl $(2*4), %esp // skip es and ds for now
 	//popl %es
 	//popl %ds
-	MAY_FAULT(popl REG_GS, vcpu_resume_label_gs)
-	MAY_FAULT(popl REG_FS, vcpu_resume_label_fs)
+1:	popl REG_GS
+2:	popl REG_FS
 	popa
 	addl $(2*4), %esp
-	iret
+3:	iret
 
 	// fast return from Dirq::hit
 	.align	16

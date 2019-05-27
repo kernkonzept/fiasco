@@ -52,11 +52,11 @@ entry_\name:
 /*
  * Error code has been pushed.  Just push trap number.
  */
-.macro	EXCEP_ERR n, name
+.macro	EXCEP_ERR n, name, from_iret_fault = 0
 	GATE_ENTRY	\n, entry_\name, (ACC_PL_K | ACC_INTR_GATE)
 	.p2align 3
 entry_\name:
-	SWITCH_TO_KERNEL_CR3 1
+	SWITCH_TO_KERNEL_CR3 1, \from_iret_fault
 	push	$(\n)
 	save_all_regs
 	jmp	_slowtraps
@@ -81,9 +81,9 @@ EXCEPTION	0x06, vec06_invop
 GATE_ENTRY	0x08, entry_vec08_dbf, (ACC_PL_K | ACC_INTR_GATE)
 EXCEPTION	0x09, vec09_fpu_ovfl
 # EXCEP_ERR	0x0a, vec0a_inv_tss
-EXCEP_ERR	0x0b, vec0b_segnp
-EXCEP_ERR	0x0c, vec0c_stack_fault
-EXCEP_ERR	0x0d, vec0d_gen_prot
+EXCEP_ERR	0x0b, vec0b_segnp, 1
+EXCEP_ERR	0x0c, vec0c_stack_fault, 1
+EXCEP_ERR	0x0d, vec0d_gen_prot, 1
 # EXCEP_ERR	0x0e, vec0e_page_fault
 # EXCEPTION	0x0f, vec0f_trap_0f
 EXCEPTION	0x10, vec10_fpu_err
@@ -102,44 +102,53 @@ EXCEPTION	0x13, vec13_simd_err
 _slowtraps:
 slowtraps:
 	IA32_IBRS
+.Lenter_slowtrap_after_fixup:
 	mov	%rsp,%rdi		/* ARG1: address of trap_state */
 	mov	$0, %esi		/* ARG2: default CPU = 0 */
 	cld
-#ifndef CONFIG_NO_FRAME_PTR
-	mov     OFS__TRAP_STATE__IP(%rsp),%rax	/* create artificial stack frame */
-	push    %rax			/* push rip */
-	push	%rbp
-	lea	(%rsp),%rbp
-#endif
 
         /* Call the C handler function if one has been installed.  */
 	mov	BASE_TRAP_HANDLER, %rax
 	or	%rax,%rax
-	jz	unexpected_trap_pop
+	jz	.Lunexpected_trap
 	call	*%rax
 in_slowtrap:
-
-#ifndef CONFIG_NO_FRAME_PTR
-	lea	0x10(%rsp),%rsp		/* remove frame pointer	*/
-#endif
 
 	/* If the handler function returned zero (success),
 	   then resume execution as if the trap never happened.
 	   Otherwise, just panic.  */
 	or	%rax,%rax
-	jnz	unexpected_trap
+	jnz	.Lunexpected_trap
 
 	restore_all_regs
 	add	$0x10,%rsp		/* pop trap number and error code */
 	SAFE_IRET
-	MAY_FAULT(iretq, in_slowtrap_exit_label_iret)
 
-unexpected_trap_pop:
-#ifndef CONFIG_NO_FRAME_PTR
-	lea	0x10(%rsp), %rsp	/* remove stack frame */
-#endif
+.align 8
+.global iretq_exception_handler
+iretq_exception_handler:
+	/* patch return address from base-trap handler to the iret fixup */
+	movq	$.Liretq_exception_stack_fix, -8(%rsi)
+	mov	$1, %eax
+	retq
 
-unexpected_trap:
+.align 8
+.Liretq_exception_stack_fix:
+        /* The actual stack frame is 6 words below the original
+           stack frame, because of 16byte alignment of AMD64 SP
+           on kernel entry, and an odd length of the Trap_state
+           structure */
+	mov	$18, %ecx
+	lea	(17 * 8)(%rsp), %rsi
+	lea	(23 * 8)(%rsp), %rdi
+	std
+	rep movsq	%ds:(%rsi), %es:(%rdi)
+	cld
+	add	$(6 * 8), %rsp
+	jmp	.Lenter_slowtrap_after_fixup
+
+.align 8
+.Lunexpected_trap:
 	mov	%rsp,%rdi		/* 1st arg: trap state */
 	call	trap_dump_panic
 

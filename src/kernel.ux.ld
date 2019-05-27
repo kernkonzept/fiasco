@@ -27,6 +27,7 @@ SECTIONS {
   
   .text : {
     *(.text .stub .text.* .gnu.linkonce.t.*)
+    *(.fixup .fixup.*)
   } = 0x90
 
   PROVIDE (_ecode = .);
@@ -40,6 +41,9 @@ SECTIONS {
     /* Discarding the build-id section will yield to an error from the
      * linker so just put it here */
     *(.note.gnu.build-id)
+    PROVIDE(__exc_table_start = .);
+    KEEP(*(__exc_table __exc_table.*))
+    PROVIDE(__exc_table_end = .);
   }
 
   .preinit_array : {

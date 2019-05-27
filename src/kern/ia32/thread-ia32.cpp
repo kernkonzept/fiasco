@@ -38,6 +38,7 @@ IMPLEMENTATION [ia32,amd64,ux]:
 #include "thread.h"
 #include "timer.h"
 #include "trap_state.h"
+#include "exc_table.h"
 
 Trap_state::Handler Thread::nested_trap_handler FIASCO_FASTCALL;
 
@@ -160,6 +161,39 @@ Thread::print_page_fault_error(Mword e)
   printf("%lx", e);
 }
 
+PRIVATE static
+bool
+Thread::handle_kernel_exc(Trap_state *ts)
+{
+  for (auto const &e: Exc_entry::table())
+    {
+      if (e.ip == ts->ip())
+        {
+          if (e.handler)
+            {
+              if (0)
+                printf("fixup exception(h): %ld: ip=%lx -> handler %p fixup %lx ts @ %p -> %lx\n",
+                       ts->trapno(), ts->ip(), e.handler, e.fixup, ts, reinterpret_cast<Mword const *>(ts)[-1]);
+              if (0)
+                ts->dump();
+
+              return e.handler(&e, ts);
+            }
+          else if (e.fixup)
+            {
+              if (0)
+                printf("fixup exception: %ld: ip=%lx -> fixup %lx\n",
+                       ts->trapno(), ts->ip(), e.fixup);
+              ts->ip(e.fixup);
+              return true;
+            }
+          else
+            return false;
+        }
+    }
+  return false;
+}
+
 /**
  * The global trap handler switch.
  * This function handles CPU-exception reflection, int3 debug messages,
@@ -208,15 +242,12 @@ Thread::handle_slow_trap(Trap_state *ts)
 
   if (EXPECT_FALSE(!from_user))
     {
+      if (handle_kernel_exc(ts))
+        goto success;
+
       // get also here if a pagefault was not handled by the user level pager
       if (ts->_trapno == 14)
-	goto check_exception;
-
-      if (check_known_inkernel_fault(ts))
-        {
-          ts->ip(regs()->ip());
-          goto check_exception;
-        }
+        goto check_exception;
 
       goto generic_debug;      // we were in kernel mode -- nothing to emulate
     }
@@ -325,8 +356,8 @@ Thread::update_local_map(Address pfa, Mword /*error_code*/)
     return false;
 
   m->set_bit(idx);
-   *s.pte = *r.pte;
-   return true;
+  *s.pte = *r.pte;
+  return true;
 }
 
 //----------------------------------------------------------------------------

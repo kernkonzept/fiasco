@@ -717,14 +717,14 @@ Kmem::setup_cpu_structures_isolation(Cpu &cpu, Kpdir *cpu_dir, cxx::Simple_alloc
                  Pdir::Depth,
                  false, pdir_alloc(Kmem_alloc::allocator()));
 
-  unsigned const estack_sz = 128;
-  char *estack = (char *)cpu_m->alloc_bytes(estack_sz, 16);
-
   extern char const syscall_entry_code[];
   extern char const syscall_entry_code_end[];
   char *sccode = (char *)cpu_m->alloc_bytes(syscall_entry_code_end - syscall_entry_code, 16);
-  assert ((Address)sccode == Kentry_cpu_page + 0xa0);
+  assert ((Address)sccode == Kentry_cpu_page + 0x30);
   memcpy(sccode, syscall_entry_code, syscall_entry_code_end - syscall_entry_code);
+
+  unsigned const estack_sz = 512;
+  char *estack = (char *)cpu_m->alloc_bytes(estack_sz, 16);
 
   setup_cpu_structures(cpu, cpu_m, cpu_m);
   cpu.get_tss()->_rsp0 = (Address)(estack + estack_sz);
@@ -901,7 +901,8 @@ Kmem::init_cpu(Cpu &cpu)
   // [1] = KSP
   // [2] = EXIT flags
   // [3] = CPU dir pa + 0x1000 (PCID: + bit63 + ASID)
-  Mword *p = cpu_m.alloc<Mword>(4);
+  // [4] = entry scratch register
+  Mword *p = cpu_m.alloc<Mword>(6);
   // With PCID enabled set bit 63 to prevent flushing of any TLB entries or
   // paging-structure caches during the page table switch. In that case TLB
   // flushes are exclusively done by Mem_unit::tlb_flush() calls.
