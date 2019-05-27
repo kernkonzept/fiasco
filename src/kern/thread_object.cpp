@@ -52,7 +52,7 @@ Obj_cap::deref(L4_fpage::Rights *rights = 0, bool dbg = false)
   if (EXPECT_FALSE(special()))
     {
       if (!self())
-	return 0;
+        return 0;
 
       if (rights) *rights = L4_fpage::Rights::RWX();
       return current;
@@ -237,34 +237,34 @@ Thread_object::sys_vcpu_resume(L4_msg_tag const &tag, Utcb *utcb)
     {
       assert(cpu_lock.test());
       do_ipc(L4_msg_tag(), 0, 0, true, 0,
-	     L4_timeout_pair(L4_timeout::Zero, L4_timeout::Zero),
-	     &vcpu->_ipc_regs, L4_fpage::Rights::FULL());
+             L4_timeout_pair(L4_timeout::Zero, L4_timeout::Zero),
+             &vcpu->_ipc_regs, L4_fpage::Rights::FULL());
 
       vcpu = vcpu_state().access(true);
 
       if (EXPECT_TRUE(!vcpu->_ipc_regs.tag().has_error()
-	              || this->utcb().access(true)->error.error() == L4_error::R_timeout))
-	{
-	  vcpu->_regs.set_ipc_upcall();
+                      || this->utcb().access(true)->error.error() == L4_error::R_timeout))
+        {
+          vcpu->_regs.set_ipc_upcall();
 
-	  Address sp;
+          Address sp;
 
-	  // tried to resume to user mode, so an IRQ enters from user mode
-	  if (vcpu->_saved_state & Vcpu_state::F_user_mode)
+          // tried to resume to user mode, so an IRQ enters from user mode
+          if (vcpu->_saved_state & Vcpu_state::F_user_mode)
             sp = vcpu->_entry_sp;
-	  else
+          else
             sp = vcpu->_regs.s.sp();
 
-	  LOG_TRACE("VCPU events", "vcpu", this, Vcpu_log,
-	      l->type = 4;
-	      l->state = vcpu->state;
-	      l->ip = vcpu->_entry_ip;
-	      l->sp = sp;
-	      l->space = static_cast<Task*>(_space.vcpu_aware())->dbg_id();
-	      );
+          LOG_TRACE("VCPU events", "vcpu", this, Vcpu_log,
+              l->type = 4;
+              l->state = vcpu->state;
+              l->ip = vcpu->_entry_ip;
+              l->sp = sp;
+              l->space = static_cast<Task*>(_space.vcpu_aware())->dbg_id();
+              );
 
-	  fast_return_to_user(vcpu->_entry_ip, sp, vcpu_state().usr().get());
-	}
+          fast_return_to_user(vcpu->_entry_ip, sp, vcpu_state().usr().get());
+        }
     }
 
   vcpu->state = vcpu->_saved_state;
@@ -279,10 +279,10 @@ Thread_object::sys_vcpu_resume(L4_msg_tag const &tag, Utcb *utcb)
       user_mode = true;
 
       if (!(vcpu->state & Vcpu_state::F_fpu_enabled))
-	{
-	  state_add_dirty(Thread_vcpu_fpu_disabled);
-	  Fpu::fpu.current().disable();
-	}
+        {
+          state_add_dirty(Thread_vcpu_fpu_disabled);
+          Fpu::fpu.current().disable();
+        }
       else
         state_del_dirty(Thread_vcpu_fpu_disabled);
 
@@ -329,14 +329,14 @@ Thread_object::sys_modify_senders(L4_msg_tag tag, Utcb const *in, Utcb * /*out*/
     {
       // this is kind of arbitrary
       for (int cnt = 50; c && cnt > 0; --cnt)
-	{
-	  Sender *s = Sender::cast(c);
-	  s->modify_label(&in->values[1], elems);
-	  c = sender_list()->next(c);
-	}
+        {
+          Sender *s = Sender::cast(c);
+          s->modify_label(&in->values[1], elems);
+          c = sender_list()->next(c);
+        }
 
       if (!c)
-	return Kobject_iface::commit_result(0);
+        return Kobject_iface::commit_result(0);
 
       sender_list()->cursor(c);
       Proc::preemption_point();
@@ -435,12 +435,12 @@ Thread_object::sys_control(L4_fpage::Rights rights, L4_msg_tag tag, Utcb *utcb)
   if (flags & Ctl_alien_thread)
     {
       if (utcb->values[4] & Ctl_alien_thread)
-	{
-	  add_state |= Thread_alien;
-	  del_state |= Thread_dis_alien;
-	}
+        {
+          add_state |= Thread_alien;
+          del_state |= Thread_dis_alien;
+        }
       else
-	del_state |= Thread_alien;
+        del_state |= Thread_alien;
     }
 
   utcb->values[1] = _old_pager;
