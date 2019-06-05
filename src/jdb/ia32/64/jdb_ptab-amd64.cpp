@@ -2,11 +2,11 @@ IMPLEMENTATION [amd64]:
 
 #include "paging.h"
 
-IMPLEMENT
+PRIVATE template< typename T >
 void
-Jdb_ptab::print_entry(Pdir::Pte_ptr const &entry)
+Jdb_ptab_pdir<T>::print_entry(T_pte_ptr const &entry) const
 {
-  if (dump_raw)
+  if (_dump_raw)
     {
       printf(L4_PTR_FMT, *entry.pte);
       return;
@@ -20,7 +20,7 @@ Jdb_ptab::print_entry(Pdir::Pte_ptr const &entry)
 
   Address phys = entry_phys(entry);
 
-  if (entry.level != Pdir::Depth && entry.is_leaf())
+  if (entry.level != T::Depth && entry.is_leaf())
     printf((phys >> 20) > 0xFF
 	   ? "       %03lx/2" : "        %02lx/2", phys >> 20);
   else
@@ -29,7 +29,7 @@ Jdb_ptab::print_entry(Pdir::Pte_ptr const &entry)
     printf((phys >> Config::PAGE_SHIFT) > 0xFFFF
            ? "%12lx" : "        %04lx", phys >> Config::PAGE_SHIFT);
 
-  putchar(((cur_pt_level >= Pdir::Depth || entry.is_leaf()) &&
+  putchar(((_pt_level >= T::Depth || entry.is_leaf()) &&
 	 (*entry.pte & Pt_entry::Cpu_global)) ? '+' : '-');
   printf("%s%c%s", *entry.pte & Pt_entry::Noncacheable ? JDB_ANSI_COLOR(lightblue) : "",
                    *entry.pte & Pt_entry::Noncacheable

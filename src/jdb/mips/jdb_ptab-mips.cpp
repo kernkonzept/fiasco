@@ -1,19 +1,19 @@
 IMPLEMENTATION [mips]:
 
-IMPLEMENT_OVERRIDE
+IMPLEMENT_OVERRIDE template< typename T >
 void *
-Jdb_ptab::entry_virt(Pdir::Pte_ptr const &entry)
+Jdb_ptab_pdir<T>::entry_virt(T_pte_ptr const &entry) const
 {
   return (void *)entry.next_level();
 }
 
 IMPLEMENTATION [cpu_mips32]:
 
-IMPLEMENT
+PRIVATE template< typename T >
 void
-Jdb_ptab::print_entry(Pdir::Pte_ptr const &entry)
+Jdb_ptab_pdir<T>::print_entry(T_pte_ptr const &entry) const
 {
-  if (dump_raw)
+  if (_dump_raw)
     printf("%08lx", *entry.e);
   else
     {
@@ -31,25 +31,25 @@ Jdb_ptab::print_entry(Pdir::Pte_ptr const &entry)
 
       Address phys = entry.page_addr();
 
-      bool cached = ((*entry.e >> Pdir::PWField_ptei) & Tlb_entry::Cache_mask)
+      bool cached = ((*entry.e >> T::PWField_ptei) & Tlb_entry::Cache_mask)
                     == Tlb_entry::cached;
 
       printf(" %05lx%s%s%c" JDB_ANSI_END,
              phys >> Config::PAGE_SHIFT,
              cached ? "-" : JDB_ANSI_COLOR(lightblue) "n" JDB_ANSI_END,
-             !(*entry.e & Pdir::XI) ? "" : JDB_ANSI_COLOR(red),
-             (*entry.e & Pdir::Write) ? 'w' : 'r');
+             !(*entry.e & T::XI) ? "" : JDB_ANSI_COLOR(red),
+             (*entry.e & T::Write) ? 'w' : 'r');
     }
 }
 
 
 IMPLEMENTATION [cpu_mips64]:
 
-IMPLEMENT
+PRIVATE template< typename T >
 void
-Jdb_ptab::print_entry(Pdir::Pte_ptr const &entry)
+Jdb_ptab_pdir<T>::print_entry(T_pte_ptr const &entry) const
 {
-  if (dump_raw)
+  if (_dump_raw)
     printf("%016lx", *entry.e);
   else
     {
@@ -67,13 +67,13 @@ Jdb_ptab::print_entry(Pdir::Pte_ptr const &entry)
 
       Address phys = entry.page_addr();
 
-      bool cached = ((*entry.e >> Pdir::PWField_ptei) & Tlb_entry::Cache_mask)
+      bool cached = ((*entry.e >> T::PWField_ptei) & Tlb_entry::Cache_mask)
                     == Tlb_entry::cached;
 
       printf("%14lx%s%s%c" JDB_ANSI_END,
              phys >> Config::PAGE_SHIFT,
              cached ? "-" : JDB_ANSI_COLOR(lightblue) "n" JDB_ANSI_END,
-             !(*entry.e & Pdir::XI) ? "" : JDB_ANSI_COLOR(red),
-             (*entry.e & Pdir::Write) ? 'w' : 'r');
+             !(*entry.e & T::XI) ? "" : JDB_ANSI_COLOR(red),
+             (*entry.e & T::Write) ? 'w' : 'r');
     }
 }
