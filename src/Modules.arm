@@ -73,7 +73,6 @@ CSRC_MINILIBC	:= atexit.c memccpy.c memcmp.c memmove.c memset.c memcpy.c \
 		   ispunct.c isspace.c isupper.c isxdigit.c strspn.c \
 		   strcspn.c tolower.c raise.c aeabi.c
 ASSRC_MINILIBC	:= setjmp.S
-NOOPT		+= $(patsubst %.o, %, $(OBJ_MINILIBC))
 
 
 #
@@ -310,7 +309,6 @@ ifeq ("$(CONFIG_JDB_DISASM)","y")
     CFLAGS_AArch64Disassembler = -Wno-unused-parameter
     CFLAGS_AArch64InstPrinter  = -Wno-bad-function-cast -Wno-unused-parameter
   endif
-  NOOPT               += $(patsubst %.o, %, $(OBJ_LIBDISASM))
 endif
 
 #

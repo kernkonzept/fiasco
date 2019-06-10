@@ -74,7 +74,6 @@ CSRC_MINILIBC	:= atexit.c memccpy.c memcmp.c memmove.c memset.c memcpy.c \
 		   ispunct.c isspace.c isupper.c isxdigit.c strspn.c \
 		   strcspn.c tolower.c
 ASSRC_MINILIBC	:= setjmp.S
-NOOPT		+= $(patsubst %.o, %, $(OBJ_MINILIBC))
 
 
 #
@@ -252,7 +251,6 @@ ifeq ("$(CONFIG_JDB_DISASM)","y")
   CFLAGS_MipsInstPrinter  = -Wno-unused-parameter -Wno-bad-function-cast
   CFLAGS_MipsMapping      = -Wno-unused-parameter
   CFLAGS_MipsDisassembler = -Wno-unused-parameter
-  NOOPT               += $(patsubst %.o, %, $(OBJ_LIBDISASM))
 endif
 
 #

@@ -352,7 +352,6 @@ ifeq ("$(CONFIG_JDB_DISASM)","y")
   CFLAGS_X86IntelInstPrinter = -Wno-unused-parameter -Wno-sign-compare
   CFLAGS_X86ATTInstPrinter   = -Wno-unused-parameter -Wno-sign-compare
   CFLAGS_X86DisassemblerDecoder = -Wno-bad-function-cast
-  NOOPT             += $(patsubst %.o, %, $(OBJ_LIBDISASM))
 endif
 
 #
@@ -392,8 +391,6 @@ CSRC_MINILIBC	:= atexit.c memccpy.c memcmp.c memmove.c memset.c memcpy.c \
 		   isupper.c isxdigit.c tolower.c strcspn.c strspn.c panic.c
 ASSRC_MINILIBC	:= setjmp.S
 
-# do not profile all of MINILIBC, because it is used in the BOOT subsystem
-NOOPT		+= $(patsubst %.o, %, $(OBJ_MINILIBC))
 
 ifeq ("$(CONFIG_JDB)","y")
 

@@ -69,3 +69,8 @@ ifeq ("$(CONFIG_JDB)","y")
 INTERFACES_KERNEL += \
 	jdb_tbuf jdb_tbuf_init tb_entry jdb_trace
 endif
+
+# - do not profile all of MINILIBC, because it is used in the BOOT subsystem
+# - save some space for debugger, disassembler, ...
+NOOPT			+= $(patsubst %.o, %,\
+			   $(OBJ_MINILIBC) $(OBJ_JDB) $(OBJ_LIBDISASM))

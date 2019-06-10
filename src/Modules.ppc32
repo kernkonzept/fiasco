@@ -70,7 +70,6 @@ CSRC_MINILIBC	:= atexit.c memccpy.c memcmp.c memmove.c memset.c memcpy.c \
 		   ispunct.c isspace.c isupper.c isxdigit.c strspn.c \
 		   strcspn.c tolower.c
 ASSRC_MINILIBC	:= setjmp.S
-NOOPT		+= $(patsubst %.o, %, $(OBJ_MINILIBC))
 
 
 #
@@ -218,7 +217,6 @@ ifeq ("$(CONFIG_JDB_DISASM)","y")
   CXXSRC_LIBDISASM    := disasm.cc
   CSRC_LIBDISASM      := ppc-dis.c ppc-opc.c dis-init.c dis-buf.c \
                          safe-ctype.c libbfd.c
-  NOOPT               += $(patsubst %.o, %, $(OBJ_LIBDISASM))
 endif
 
 #

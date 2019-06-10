@@ -214,6 +214,7 @@ NOOPT			+= $(filter jdb%,\
 			     $(foreach in,$(INTERFACES_KERNEL), \
 			       $(if $($(in)_IMPL),$($(in)_IMPL),$(in))))
 NOOPT			+= tb_entry tb_entry_output
+NOOPT			+= $(patsubst %.o, %, $(OBJ_JDB))
 
 #
 # TCBOFFSET subsystem
