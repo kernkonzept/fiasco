@@ -110,27 +110,27 @@ long as no debugger is installed at user level.
 Some key bindings correspond to different actions based on context and based on
 object type. Below are some common bindings.
 
-```
-Esc (Escape)              = enter JDB (from running program)
-Esc (Escape)              = return to top level context (from within JDB)
-Home                      = go up/back one level (in many contexts)
-Enter                     = select (depends on context)
-CR (Carriage Return)      = select (depends on context)
-PgUp, PgDn, Home, End     = navigate page left, down, up, right
-H, J, K, L                = navigate page left, down, up, right
-←, ↑, ↑, →  (cursor keys) = navigate left, down, up, right
-h, j, k, l  (cursor keys) = navigate left, down, up, right
-```
+Key                       | Description
+--------------------------|----------------------------------------------
+Esc (Escape)              | enter JDB (from running program)
+Esc (Escape)              | return to top level context (from within JDB)
+Home                      | go up/back one level (in many contexts)
+Enter                     | select (depends on context)
+CR (Carriage Return)      | select (depends on context)
+PgUp, PgDn, Home, End     | navigate page left, down, up, right
+H, J, K, L                | navigate page left, down, up, right
+←, ↑, ↑, →  (cursor keys) | navigate left, down, up, right
+h, j, k, l  (cursor keys) | navigate left, down, up, right
 
 Some common abbreviations for object listing are shown here.
 
-```
-R = Reference count
-C = Capability
-C = CPU
-D = Debug IDentifier
-DID = Debug IDentifier
-```
+Key  | Description
+-----|-----------------
+R    | Reference count
+C    | Capability
+C    | CPU
+D    | Debug IDentifier
+DID  | Debug IDentifier
 
 ### Status line
 
@@ -168,36 +168,23 @@ Shows the CPU, instruction pointer and trap type for the entry into JDB.
 
 ### JDB options: J
 
-```
-JS Use full screen for JDB. Adapts the height of the screen to the height of
-the terminal window by detecting its current size using escape sequences. Some
-terminals may not support the necessary escape sequence and can be set using
-'Jh' and 'Jw'.
-```
-```
-Jh Set the JDB screen height. Also used to revert from full screen.
-```
-```
-Jw Set the JDB screen width.
-```
-```
-Jc Set the color of the debug prompt.
-```
-```
-Jd-/Jd+ Disable/enable direct console.
-```
+Cmd     | Abbreviation
+--------|-----------------------------------------------------------------
+JS      | Use full screen for JDB. Adapts the height of the screen to the height of the terminal window by detecting its current size using escape sequences. Some terminals may not support the necessary escape sequence and can be set using 'Jh' and 'Jw'.
+Jh      | Set the JDB screen height. Also used to revert from full screen.
+Jw      | Set the JDB screen width.
+Jc      | Set the color of the debug prompt.
+Jd-/Jd+ | Disable/enable direct console.
 
 ### Screen Output Buffer: B
 
 The output buffer stores all output written to the Fiasco kernel debugger
 console.
 
-```
-B Show complete output buffer.
-```
-```
-Bn Show last n lines of output buffer.
-```
+Cmd | Abbreviation
+----|-------------
+B   | Show complete output buffer.
+Bn  | Show last n lines of output buffer.
 
 ## Information about Kernel State
 
@@ -225,18 +212,12 @@ included here.
 
 ARCH: The list of avaliable subcommands is architecture-specific.
 
-```
-kh Short help about available subcommands.
-```
-```
-kf Interprets the content of the kernel info page.
-```
-```
-ki Miscellaneous kernel info.
-```
-```
-km Kernel memory footprint.
-```
+Cmd | Abbreviation
+----|-------------
+kh  | Short help about available subcommands.
+kf  | Interprets the content of the kernel info page.
+ki  | Miscellaneous kernel info.
+km  | Kernel memory footprint.
 
 ### List Kernel Objects: Q
 
@@ -263,29 +244,31 @@ Tab Link to related or parent objects.
 
 The following shows some examples of object-specific information:
 
-```
-... object-specific information
-D= Debug identifier (DID)
-C= CPU thread is running on
-R= Object Reference count
-S=D:xx DID of task providing dataspace
-L= Gate or IRQ internal object ID
-I= IRQ pin (0 if not applicable)
-Soft|Hard = IRQ chip type
-F= IRQ flags
-T= DID of thread triggered by IRQ
-Q= 0|1 is queued or not
+Key        | Description
+-----------|--------------------------------
+.. .       | object-specific information
+D=         | Debug identifier (DID)
+C=         | CPU thread is running on
+R=         | Object Reference count
+S=D:xx     | DID of task providing dataspace
+L=         | Gate or IRQ internal object ID
+I=         | IRQ pin (0 if not applicable)
+Soft\|Hard | IRQ chip type
+F=         | IRQ flags
+T=         | DID of thread triggered by IRQ
+Q=         | 0\|1 is queued or not
 
 TODO what does 'Q' show for factory; what are <current> and <limit>?
 
-[Factory] c=<current> l=<limit>
-[Task   ] R=n
-[Thread ] C=n R=n <thread state> <cur:current thread>
-[Thread ] C=n S=D:<dataspace DID> R=n
-[Gate   ] L=<object ID> D=<bound thread DID>
-[IRQ ipc] I=<pin> Soft|Hard F=<flags> L=<object ID> T=<DID> Q=<queued?>
-[IRQ sem] I=0 Soft F=<flags> Q=<queued?>
-```
+Object    | object-specific information
+----------|------------------------------
+[Factory] | c=<current> l=<limit>
+[Task   ] | R=n
+[Thread ] | C=n R=n <thread state> <cur:current thread>
+[Thread ] | C=n S=D:<dataspace DID> R=n
+[Gate   ] | L=<object ID> D=<bound thread DID>
+[IRQ ipc] | I=<pin> Soft|Hard F=<flags> L=<object ID> T=<DID> Q=<queued?>
+[IRQ sem] | I=0 Soft F=<flags> Q=<queued?>
 
 ### Task list: s
 
@@ -308,18 +291,20 @@ For each thread the following information is displayed: debug ID, current CPU,
 debug name (if available), priority, debug ID of the dataspace provider, debug
 ID of thread being waited on (if any), timeout, thread state.
 
-```
-lp Display list of thread present.
-lr Display list of threads with state set to ready to run.
-```
-```
-Cursor keys Scroll in the list.
-Enter Show the TCB of the selected thread.
-Home Navigate back to the list.
-Space Cycle through the sort mode: Unsorted, sorted by thread priority, sorted
-by thread identifier, and sorted by dataspace.
-Tab Switches to the thread in the list that the current thread is waiting for.
-```
+Cmd | Abbreviation
+----|-------------------------------------------------------
+lp  | Display list of thread present.
+lr  | Display list of threads with state set to ready to run.
+
+Keys:
+
+Key         | Description
+------------|---------------------------------------------------------------
+Cursor keys | Scroll in the list.
+Enter       | Show the TCB of the selected thread.
+Home        | Navigate back to the list.
+Space       | Cycle through the sort mode: Unsorted, sorted by thread priority, sorted by thread identifier, and sorted by dataspace.
+Tab         | Switches to the thread in the list that the current thread is waiting for.
 
 Note that the thread name prefixed with '#' refers to the L4Re thread typically
 serving as default page fault handler, exception handler, and region manager
@@ -335,10 +320,12 @@ for other threads in the system. For example:
 
 Display all current active timeouts.
 
-```
-Cursor keys Scroll in the list.
-Enter Show the TCB of the owner of the selected timeout.
-```
+Keys:
+
+Key         | Description
+------------|--------------------------------------------------
+Cursor keys | Scroll in the list.
+Enter       | Show the TCB of the owner of the selected timeout.
 
 ### Thread Control Block: t
 
@@ -1052,22 +1039,12 @@ ARCH: Not all architectures.
 
 TODO which architectures actually support it?
 
-```
-bt Display the user-backtrace of the last thread running (currently active
-thread) before entering JDB. Instruction pointers are shown from newest
-at the top down to oldest.
-```
-```
-bttxxx Display the user-backtrace of thread xxx. Also shows the kernel
-backtrace of the selected thread.
-```
-```
-bttxxxxxxxx Display the user-backtrace specifying the low dword of thread id
-```
-```
-btxxxxxxxx Display the backtrace of the current thread interpreting address
-xxxxxxxx as framepointer.
-```
+Cmd | Description
+----|-----------------------------------------------------------------------
+bt  | Display the user-backtrace of the last thread running (currently active thread) before entering JDB. Instruction pointers are shown from newest at the top down to oldest.
+bttxxx | Display the user-backtrace of thread xxx. Also shows the kernel backtrace of the selected thread.
+bttxxxxxxxx | Display the user-backtrace specifying the low dword of thread id
+btxxxxxxxx | Display the backtrace of the current thread interpreting address xxxxxxxx as framepointer.
 
 ### Breakpoint: b.
 
@@ -1175,7 +1152,7 @@ As a convenience when debugging some capabilities are by default created with a
 name string which is displayed in JDB. Names can also be assigned to other
 capabilities in the system as an aid to debugging.
 
-- #include <l4/sys/debugger.h>
+- `#include <l4/sys/debugger.h>`
 ```
     l4_debugger_set_object_name()
 ```
@@ -1190,20 +1167,20 @@ TODO What registers does enter_kdebug("*+text") save on other ARCH?
 
 User level trace events:
 
-- #include <l4/sys/kdebug.h>
+- `#include <l4/sys/kdebug.h>`
 ```
     enter_kdebug("*text");
     Creates a trace buffer entry containing the string 'text'.
 ```
 
-- #include <l4/sys/kdebug.h>
+- `#include <l4/sys/kdebug.h>`
 ```
     enter_kdebug("*+text");
     Creates a trace buffer entry containing the string 'text'. The values of the
     registers EAX, ECX, and EDX are stored together with the message.
 ```
 
-- #include <l4/sys/ktrace.h>
+- `#include <l4/sys/ktrace.h>`
 ```
     fiasco_tbuf_log("text");
     Creates a trace buffer entry containing the string 'text'. In contrast to
@@ -1224,7 +1201,7 @@ Some trace buffer control commands are callable from a user level program.
 These can be used to clear and dump the trace buffer and obtain counts of
 system events (e.g. context switches, page faults, irqs, etc).
 
-- #include <l4/sys/ktrace.h>
+- `#include <l4/sys/ktrace.h>`
 ```
     fiasco_tbuf_clear();
     fiasco_tbuf_dump();
@@ -1242,7 +1219,7 @@ A user program can add calls to the enter_kdebug() function to go into the
 kernel debugger at that point in the execution of the program. This can be
 useful for examining system state at certain points.
 
-- #include <l4/sys/kdebug.h>
+- `#include <l4/sys/kdebug.h>`
 ```
     enter_kdebug("text");
     Enters the kernel debugger with entry reason string 'text'.
@@ -1254,7 +1231,7 @@ useful for examining system state at certain points.
 Some non-interactive JDB commands may be executed from a user level program by
 using enter_kdebug() and providing a control sequence starting with "*#".
 
-- #include <l4/sys/kdebug.h>
+- `#include <l4/sys/kdebug.h>`
 ```
     enter_kdebug("*#");
 ```
@@ -1274,82 +1251,26 @@ For example, to log the IPC traffic for a specific code sequence use:
 ## JDB-related Command Line Switches
 
 TODO review these ==> Frank is looking into it
-```
--wait Emit a debug trap after the kernel has been initialised and before user
-programs are started. This will usually enter the kernel debugger and show the
-debugger prompt.
-```
-```
--nojdb Disables the builtin kernel debugger JDB.
-```
-```
--nokdb Disables the GDB stub. Should Fiasco raise an exception, it will just
-call the builtin jdb.
-```
-```
--noscreen Disables output to VGA/Hercules console.
-```
-```
--noserial Disables output to serial console. If this switch is not given,
-kernel messages will output additionally to the serial interface. If '-nokdb'
-is enabled, you can use a terminal program on the host to control Fiasco. If
-you are connected to a remote GDB, messages are copied to GDB's console.
-```
-```
--comspeed=n Will set the rate of the serial interface to n bytes/second. 115200
-baud is the default.
-```
-```
--comport=n Will use COMn for serial communication. COM1 is the default.
-Possible values for n are 1, 2, 3, and 4. n is interpreted as an I/O port if n
-> 4.
-```
-```
--hercules Redirect kernel messages to the Hercules (or other MGA-compatible)
-console.
-```
-```
--esc Enable esc hack. On every timer interrupt, ask the keyboard if the Escape
-key was pressed. If so, do enter into kernel debugger. Applications (e.g.
-L4Linux) may be confused by dropped key events so better use -serial_esc.
-```
-```
--kmemsize=n Overwrite Fiasco's heuristic for required kernel memory. Set the
-memory reserved for mapping trees, TCBs, and other to 'n' MB.
-```
-```
--watchdog Enable watchdog. On every timer interrupt, tell the watchdog that we
-are sill alive. If a task disables the interrupts and loops, the timer
-interrupt isn't called anymore and after 2 seconds the watchdog releases an non
-maskable interrupt (NMI) which forces Fiasco to step into the kernel debugger.
-Requires at least an Intel PPro or AMD K7 Model 2.
-TODO rewrite OBSOLETE
-```
-```
--loadcnt Initialize a performance counter for counting all cycles the CPU is
-not halted. The counter is accessible from userland via rdpmc(x) where x is 0
-on P6/K7, and P4.
-TODO rewrite OBSOLETE
-```
-```
--apic Initialize the builtin Local APIC. If the Local APIC is disabled by the
-BIOS but available it is re-enabled.
-```
-```
--serial_esc Enter jdb on serial receive interrupts. This is only necessary if
-kdb was disabled by '-nokdb'.
-```
-```
--tbuf_entries=n Set number of lines to store in the debugging trace buffer.
-Default is 16384.
-```
-```
--outbuf=n Set output buffer for kddisplay functions to n bytes. Default is 8192.
-```
-```
--jdbcmd=cmds Execute Jdb commands non-interactive at startup. Example: use
--jdbcmd=I*IR+P*PR+to log all IPCs and page faults from startup.
-```
+
+Parameter     | Description
+--------------|----------------------------------------------------------------------
+`-wait`       | Emit a debug trap after the kernel has been initialised and before user programs are started. This will usually enter the kernel debugger and show the debugger prompt.
+`-nojdb`      | Disables the builtin kernel debugger JDB.
+`-nokdb`      | Disables the GDB stub. Should Fiasco raise an exception, it will just call the builtin jdb.
+`-noscreen`   | Disables output to VGA/Hercules console.
+`-noserial`   | Disables output to serial console. If this switch is not given, kernel messages will output additionally to the serial interface. If '-nokdb' is enabled, you can use a terminal program on the host to control Fiasco. If you are connected to a remote GDB, messages are copied to GDB's console.
+`-comspeed=n` | Will set the rate of the serial interface to n bytes/second. 115200 baud is the default.
+`-comport=n`  | Will use COMn for serial communication. COM1 is the default. Possible values for n are 1, 2, 3, and 4. n is interpreted as an I/O port if n>4.
+`-hercules`   | Redirect kernel messages to the Hercules (or other MGA-compatible) console.
+`-esc`        | Enable esc hack. On every timer interrupt, ask the keyboard if the Escape key was pressed. If so, do enter into kernel debugger. Applications (e.g. L4Linux) may be confused by dropped key events so better use -serial_esc.
+`-kmemsize=n` | Overwrite Fiasco's heuristic for required kernel memory. Set the memory reserved for mapping trees, TCBs, and other to 'n' MB.
+`-watchdog`   | Enable watchdog. On every timer interrupt, tell the watchdog that we are sill alive. If a task disables the interrupts and loops, the timer interrupt isn't called anymore and after 2 seconds the watchdog releases an non maskable interrupt (NMI) which forces Fiasco to step into the kernel debugger. Requires at least an Intel PPro or AMD K7 Model 2. TODO rewrite OBSOLETE
+`-loadcnt`    | Initialize a performance counter for counting all cycles the CPU is not halted. The counter is accessible from userland via rdpmc(x) where x is 0 on P6/K7, and P4. TODO rewrite OBSOLETE
+`-apic`       | Initialize the builtin Local APIC. If the Local APIC is disabled by the BIOS but available it is re-enabled.
+`-serial_esc` | Enter jdb on serial receive interrupts. This is only necessary if kdb was disabled by '-nokdb'.
+`-tbuf_entries=n` | Set number of lines to store in the debugging trace buffer. Default is 16384.
+`-outbuf=n`     | Set output buffer for kddisplay functions to n bytes. Default is 8192.
+`-jdb_cmd=cmds` | Execute Jdb commands non-interactive at startup. Example: use -jdb_cmd=I*IR+P*PR+ to log all IPCs and page faults from startup.
 
 ## Credits
 
