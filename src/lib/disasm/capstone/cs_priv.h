@@ -34,7 +34,7 @@ typedef void (*GetRegisterAccess_t)(const cs_insn *insn,
 
 // Fiasco: Save some space by packing all structs / data.
 //         All the structs are not space-optimized...
-#ifndef CAPSTONE_HAS_MIPS
+#if !defined(CAPSTONE_HAS_MIPS) && !defined(CAPSTONE_HAS_ARM)
 # pragma pack(1)
 #endif
 
@@ -84,7 +84,7 @@ struct cs_struct {
 	struct insn_mnem *mnem_list;	// linked list of customized instruction mnemonic
 };
 
-#ifndef CAPSTONE_HAS_MIPS
+#if !defined(CAPSTONE_HAS_MIPS) && !defined(CAPSTONE_HAS_ARM)
 # pragma pack()
 #endif
 

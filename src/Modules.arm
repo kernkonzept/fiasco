@@ -312,6 +312,8 @@ ifeq ("$(CONFIG_JDB_DISASM)","y")
     CFLAGS_ARMDisassembler = -Wno-unused-parameter
     CFLAGS_ARMMapping      = -Wno-unused-parameter
     CFLAGS_ARMInstPrinter  = -Wno-bad-function-cast -Wno-unused-parameter
+    $(foreach f, $(patsubst %.c, %, $(CSRC_LIBDISASM)), \
+      $(eval CFLAGS_$(f) += -mno-unaligned-access))
   else
     VPATH             += lib/disasm/capstone/arch/AArch64
     CSRC_LIBDISASM    += AArch64Module.c AArch64InstPrinter.c \
