@@ -75,8 +75,10 @@ GATE_INITTAB_END
 	push	%rdx
 	push	%rcx
 	push	%rbx
-	push	%rax	
-	
+	push	%rax
 
+        /* invoke trap_dump_panic(const struct trap_state *st)
+         * %rdi contains first argument
+         */
+	mov	%rsp,%rdi
 	call	trap_dump_panic
-
