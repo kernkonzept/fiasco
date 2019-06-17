@@ -132,6 +132,7 @@
 #define PF_ERR_WRITE    0x00000002      // PF: Page Is Write Protected
 #define PF_ERR_USERMODE 0x00000004      // PF: Caused By User Mode Code
 #define PF_ERR_RESERVED 0x00000008      // PF: Reserved Bit Set in PDIR
+#define PF_ERR_INSTFETCH 0x00000010     // PF: Instruction fetch
 #define PF_ERR_REMTADDR 0x40000000      // PF: In Remote Address Space
 #define PF_ERR_USERADDR 0x80000000      // PF: In User Address Space
 
