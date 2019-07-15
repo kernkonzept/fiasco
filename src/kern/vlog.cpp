@@ -111,7 +111,7 @@ Vlog::get_input(L4_fpage::Rights rights, Syscall_frame *f, Utcb *u)
   if (!have_receive(u))
     return commit_result(0);
 
-  if (!(rights & L4_fpage::Rights::X()))
+  if (!(rights & L4_fpage::Rights::CW()))
     return commit_result(-L4_err::EPerm);
 
   char *buffer = reinterpret_cast<char *>(&u->values[1]);

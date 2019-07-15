@@ -374,7 +374,7 @@ Thread_object::sys_register_delete_irq(L4_msg_tag tag, Utcb const *in, Utcb * /*
   if (!irq)
     return Kobject_iface::commit_result(-L4_err::EInval);
 
-  if (EXPECT_FALSE(!(irq_rights & L4_fpage::Rights::X())))
+  if (EXPECT_FALSE(!(irq_rights & L4_fpage::Rights::CW())))
     return Kobject_iface::commit_result(-L4_err::EPerm);
 
   register_delete_irq(irq);
