@@ -134,8 +134,6 @@ Thread::handle_svc(Trap_state *ts)
 
           ts->error_code |= 1 << 16; // ts->esr().alien_after_syscall() = 1;
         }
-      else
-        ts->pc -= 2 << ts->esr.il();
 
       slowtrap_entry(ts);
       return;
