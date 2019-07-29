@@ -2,6 +2,12 @@
 #include "libperfctr.h"
 #include "event_set.h"
 
+/* Interface -- see perf_cnt-ia32.cpp */
+void perfctr_set_cputype(unsigned);
+const struct perfctr_event* perfctr_lookup_event(unsigned, unsigned*);
+const struct perfctr_event* perfctr_index_event(unsigned);
+unsigned perfctr_get_max_event(void);
+
 /* current event set depending on CPU type */
 static const struct perfctr_event_set *event_set;
 
@@ -85,4 +91,3 @@ perfctr_get_max_event(void)
 {
   return perfctr_get_max_event_set(event_set);
 }
-
