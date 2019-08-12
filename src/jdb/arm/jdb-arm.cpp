@@ -328,7 +328,7 @@ Jdb::poke_task(Address virt, Space * task, void const *val, int width)
   if (!mem)
     return -1;
 
-  memcpy(mem, val, width);
+  memcpy(mem + (virt & (sizeof(Mword) - 1)), val, width);
   return 0;
 }
 
