@@ -330,6 +330,7 @@ Jdb::poke_task(Address virt, Space * task, void const *val, int width)
     return -1;
 
   memcpy(mem + (virt & (sizeof(Mword) - 1)), val, width);
+  Mem_unit::make_coherent_to_pou(mem + (virt & (sizeof(Mword) - 1)));
   return 0;
 }
 
