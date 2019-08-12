@@ -230,7 +230,7 @@ Jdb::init()
 
 PRIVATE static
 unsigned char *
-Jdb::access_mem_task(Address virt, Space * task)
+Jdb::access_mem_task(Address virt, Space * task, bool readonly)
 {
   // align
   virt &= ~(sizeof(Mword) - 1);
@@ -262,7 +262,8 @@ Jdb::access_mem_task(Address virt, Space * task)
   if (addr != (Address)-1)
     {
       auto pte = Kmem::kdir->walk(Virt_addr(addr));
-      if (pte.is_valid())
+      if (pte.is_valid()
+          && (readonly || (pte.attribs().rights & Page::Rights::W())))
         return (unsigned char *)addr;
     }
 
@@ -305,7 +306,7 @@ PUBLIC static
 int
 Jdb::peek_task(Address virt, Space * task, void *value, int width)
 {
-  unsigned char const *mem = access_mem_task(virt, task);
+  unsigned char const *mem = access_mem_task(virt, task, true);
   if (!mem)
     return -1;
 
@@ -324,7 +325,7 @@ PUBLIC static
 int
 Jdb::poke_task(Address virt, Space * task, void const *val, int width)
 {
-  unsigned char *mem = access_mem_task(virt, task);
+  unsigned char *mem = access_mem_task(virt, task, false);
   if (!mem)
     return -1;
 
