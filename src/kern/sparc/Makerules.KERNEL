@@ -23,7 +23,7 @@ $(KERNEL): $(KERNEL).image
 
 Symbols: $(KERNEL).image
 	$(COMP_MESSAGE)
-	$(VERBOSE)$(NM) $(KERNEL).image | c++filt | sort > $@.new
+	$(VERBOSE)$(NM) $(KERNEL).image | $(CROSS_COMPILE)c++filt | sort > $@.new
 	$(VERBOSE)mv $@.new $@
 	$(VERBOSE)chmod 644 $@
 
