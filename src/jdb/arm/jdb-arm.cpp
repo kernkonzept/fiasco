@@ -230,7 +230,7 @@ Jdb::init()
 
 PRIVATE static
 unsigned char *
-Jdb::access_mem_task(Jdb_address addr)
+Jdb::access_mem_task(Jdb_address addr, bool write)
 {
   if (!Cpu::is_canonical_address(addr.addr()))
     return 0;
@@ -259,7 +259,8 @@ Jdb::access_mem_task(Jdb_address addr)
   if (kaddr != (Address)-1)
     {
       auto pte = Kmem::kdir->walk(Virt_addr(kaddr));
-      if (pte.is_valid())
+      if (pte.is_valid()
+          && (!write || pte.attribs().rights & Page::Rights::W()))
         return (unsigned char *)kaddr;
     }
 
@@ -295,7 +296,7 @@ PUBLIC static
 int
 Jdb::peek_task(Jdb_address addr, void *value, int width)
 {
-  unsigned char const *mem = access_mem_task(addr);
+  unsigned char const *mem = access_mem_task(addr, false);
   if (!mem)
     return -1;
 
@@ -314,7 +315,7 @@ PUBLIC static
 int
 Jdb::poke_task(Jdb_address addr, void const *val, int width)
 {
-  unsigned char *mem = access_mem_task(addr);
+  unsigned char *mem = access_mem_task(addr, true);
   if (!mem)
     return -1;
 

@@ -376,14 +376,15 @@ Jdb::poke_phys(Address phys, void const *value, int width)
 
 PRIVATE static
 bool
-Jdb::check_is_kmem_valid_addr(Address virtaddr)
+Jdb::check_is_kmem_valid_addr(Address virtaddr, bool write)
 {
   if (!Kmem::is_kmem_page_fault(virtaddr, 0))
     return false;
 
   Address pdbr = Cpu::get_pdbr();
   Pdir *kdir = (Pdir *)Mem_layout::phys_to_pmem(pdbr);
-  return kdir->walk(Virt_addr(virtaddr)).is_valid();
+  auto i = kdir->walk(Virt_addr(virtaddr));
+  return i.is_valid() && (!write || (i.attribs().rights & Page::Rights::W()));
 }
 
 PUBLIC static
@@ -395,7 +396,7 @@ Jdb::peek_task(Jdb_address addr, void *value, int width)
 
   if (addr.is_kmem())
     {
-      if (!check_is_kmem_valid_addr(addr.addr()))
+      if (!check_is_kmem_valid_addr(addr.addr(), false))
         return -1;
 
       memcpy(value, addr.virt(), width);
@@ -432,7 +433,7 @@ Jdb::poke_task(Jdb_address addr, void const *value, int width)
 
   if (addr.is_kmem())
     {
-      if (!check_is_kmem_valid_addr(addr.addr()))
+      if (!check_is_kmem_valid_addr(addr.addr(), true))
         return -1;
 
       memcpy(addr.virt(), value, width);
@@ -440,6 +441,7 @@ Jdb::poke_task(Jdb_address addr, void const *value, int width)
     }
 
   Address phys;
+
   if (addr.is_phys())
     phys = addr.phys();
   else

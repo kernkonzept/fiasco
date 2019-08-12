@@ -248,7 +248,7 @@ Jdb::handle_conditional_breakpoint(Cpu_number, Jdb_entry_frame *)
 
 PUBLIC
 static Address
-Jdb::virt_to_kvirt(Jdb_address addr)
+Jdb::virt_to_kvirt(Jdb_address addr, bool)
 {
   Mem_space::Phys_addr phys;
   Mem_space::Page_order size;
@@ -305,7 +305,7 @@ Jdb::peek_task(Jdb_address addr, void *value, int width)
            != ((addr.addr() + width - 1) & Config::PAGE_MASK))
     return -1;
 
-  Address kvirt = virt_to_kvirt(addr);
+  Address kvirt = virt_to_kvirt(addr, false);
   if (kvirt == (Address)-1)
     return -1;
 
@@ -322,7 +322,7 @@ Jdb::poke_task(Jdb_address addr, void const *value, int width)
            != ((addr.addr() + width - 1) & Config::PAGE_MASK))
     return -1;
 
-  Address kvirt = virt_to_kvirt(addr);
+  Address kvirt = virt_to_kvirt(addr, true);
   if (kvirt == (Address)-1)
     return -1;
 

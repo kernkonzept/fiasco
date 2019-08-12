@@ -111,8 +111,12 @@ Jdb::init()
 
 PRIVATE static
 unsigned char *
-Jdb::access_mem_task(Jdb_address addr)
+Jdb::access_mem_task(Jdb_address addr, bool write)
 {
+  // no need to special case write here, the kernel runs on
+  // writable physical memory
+  (void) write;
+
   Address phys;
 
   if (addr.is_phys())
@@ -141,7 +145,7 @@ PUBLIC static
 int
 Jdb::peek_task(Jdb_address addr, void *value, int width)
 {
-  unsigned char const *mem = access_mem_task(addr);
+  unsigned char const *mem = access_mem_task(addr, false);
   if (!mem)
     return -1;
 
@@ -162,7 +166,7 @@ Jdb::poke_task(Jdb_address addr, void const *val, int width)
 {
   (void)addr; (void)val; (void)width;
   /*
-  unsigned char *mem = access_mem_task(virt, task);
+  unsigned char *mem = access_mem_task(addr, true);
   if (!mem)
     return -1;
 

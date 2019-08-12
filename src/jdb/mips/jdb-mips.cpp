@@ -114,8 +114,11 @@ Jdb::init()
 
 PRIVATE static
 unsigned char *
-Jdb::access_mem_task(Jdb_address addr)
+Jdb::access_mem_task(Jdb_address addr, bool write)
 {
+  // no special need for MIPS here all returned mappings are writable
+  (void) write;
+
   Address phys;
   if (addr.is_phys())
     phys = addr.phys();
@@ -146,7 +149,7 @@ PUBLIC static
 int
 Jdb::peek_task(Jdb_address addr, void *value, int width)
 {
-  unsigned char const *mem = access_mem_task(addr);
+  unsigned char const *mem = access_mem_task(addr, false);
   if (!mem)
     return -1;
 
@@ -165,7 +168,7 @@ PUBLIC static
 int
 Jdb::poke_task(Jdb_address addr, void const *val, int width)
 {
-  void *mem = access_mem_task(addr);
+  void *mem = access_mem_task(addr, true);
   if (!mem)
     return -1;
 
