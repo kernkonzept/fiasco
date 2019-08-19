@@ -279,7 +279,7 @@ Obj_space_phys<SPACE>::v_delete(V_pfn virt, Page_order size,
 {
   (void)size;
   assert (size == Page_order(0));
-  Capability *c = get_cap(virt);
+  Entry *c = get_cap(virt);
 
   if (c && c->valid())
     {
