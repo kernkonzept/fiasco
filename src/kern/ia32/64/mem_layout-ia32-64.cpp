@@ -89,6 +89,31 @@ private:
 };
 
 //-----------------------------------------------------------
+INTERFACE [amd64 && kernel_isolation && !kernel_nx]:
+
+EXTENSION class Mem_layout
+{
+public:
+  enum : Mword
+  {
+    Kentry_cpu_syscall_entry = Kentry_cpu_page + 0x30
+  };
+};
+
+//-----------------------------------------------------------
+INTERFACE [amd64 && kernel_isolation && kernel_nx]:
+
+EXTENSION class Mem_layout
+{
+public:
+  enum : Mword
+  {
+    Kentry_cpu_page_text     = Kentry_cpu_page + Config::PAGE_SIZE,
+    Kentry_cpu_syscall_entry = Kentry_cpu_page_text
+  };
+};
+
+//-----------------------------------------------------------
 INTERFACE [amd64 && !kernel_isolation]:
 
 EXTENSION class Mem_layout
@@ -109,7 +134,6 @@ public:
   enum : Mword
   {
     Idt = 0xffff817fffffa000UL,                  ///< IDT in Kentry area
-    Kentry_cpu_syscall_entry = Kentry_cpu_page + 0x30
   };
 };
 

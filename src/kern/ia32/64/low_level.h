@@ -5,12 +5,17 @@
 #include "regdefs.h"
 #include "shortcut.h"
 #include "tcboffset.h"
+#include "globalconfig.h"
 
 
 #define REGISTER_SIZE 8
 
 /* Layout of Kentry_cpu_page */
+#ifndef CONFIG_KERNEL_NX
 #define CPUE_STACK_OFS (0x30 + (((syscall_entry_code_end - syscall_entry_code) + 0xf) & ~0xf))
+#else
+#define CPUE_STACK_OFS 0x30
+#endif
 #define CPUE_STACK_TOP_OFS (CPUE_STACK_OFS + 512)
 #define CPUE_STACK(x, reg) (CPUE_STACK_TOP_OFS + x)(reg)
 #define CPUE_CR3_OFS 0

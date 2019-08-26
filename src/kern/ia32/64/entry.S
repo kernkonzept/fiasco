@@ -313,7 +313,44 @@ entry_\name:
 
 /**
  * Stub array for all IRQ vector entries in the IDT
- *
+ */
+
+#ifdef CONFIG_KERNEL_NX
+
+/*
+ * Note that the array is split into the data part and the code part because
+ * the kernel write-protects its code and prevents execution of its data.
+ */
+
+STUB_DATA_SIZE = 8
+STUB_TEXT_SIZE = 16
+
+	.section ".entry.data.irqs", "aw", @progbits
+	.global idt_irq_vector_stubs
+	.global idt_irq_vector_stubs_data
+	.align 8
+idt_irq_vector_stubs:
+idt_irq_vector_stubs_data:
+.rept APIC_IRQ_BASE - 0x28
+	.quad 0
+.endr
+
+	.section ".entry.text.irqs", "ax", @progbits
+	.global idt_irq_vector_stubs_text
+	.align 64
+idt_irq_vector_stubs_text:
+.rept APIC_IRQ_BASE - 0x28
+0:
+	push	%rdi
+	movq	(idt_irq_vector_stubs_data + STUB_DATA_SIZE * (0b - idt_irq_vector_stubs_text) / STUB_TEXT_SIZE), %rdi
+	jmp	__generic_irq_entry
+	/* the entries are not constant length, align to compensate */
+	.align 16
+.endr
+
+#else /* CONFIG_KERNEL_NX */
+
+/*
  * The immediate in the movabs shall be patched with the
  * address of an Irq_base object that is later attached to
  * the corresponding IDT vector.
@@ -327,6 +364,8 @@ idt_irq_vector_stubs:
 	movabs	$0, %rdi
 	jmp	__generic_irq_entry
 .endr
+
+#endif /* CONFIG_KERNEL_NX */
 
 
 	.type __generic_irq_entry,@function

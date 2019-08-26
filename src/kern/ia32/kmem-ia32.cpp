@@ -323,6 +323,9 @@ Kmem::mmio_remap(Address phys)
   return va + offs;
 }
 
+//--------------------------------------------------------------------------
+IMPLEMENTATION [ia32 || (amd64 && !kernel_nx)]:
+
 PRIVATE static FIASCO_INIT
 void
 Kmem::map_initial_ram()
@@ -358,6 +361,90 @@ Kmem::map_kernel_virt(Kpdir *dir)
            Pt_entry::super_level(), false, pdir_alloc(Kmem_alloc::allocator()));
 }
 
+//--------------------------------------------------------------------------
+IMPLEMENTATION [amd64 && kernel_nx]:
+
+PRIVATE static FIASCO_INIT
+void
+Kmem::map_initial_ram()
+{
+  Kmem_alloc *const alloc = Kmem_alloc::allocator();
+
+  // set up the kernel mapping for physical memory.  mark all pages as
+  // referenced and modified (so when touching the respective pages
+  // later, we save the CPU overhead of marking the pd/pt entries like
+  // this)
+
+  // we also set up a one-to-one virt-to-phys mapping for two reasons:
+  // (1) so that we switch to the new page table early and re-use the
+  //     segment descriptors set up by boot_cpu.cc.  (we'll set up our
+  //     own descriptors later.) we only need the first 6MB for that.
+  // (2) a one-to-one phys-to-virt mapping in the kernel's page directory
+  //     sometimes comes in handy (mostly useful for debugging)
+
+
+  // first 2M
+
+  // Beginning of physical memory up to the realmode trampoline code is RW
+  kdir->map(0, Virt_addr(0), Virt_size(FIASCO_MP_TRAMP_PAGE),
+            Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
+            | Pt_entry::Referenced,
+            Pdir::Depth, false, pdir_alloc(alloc));
+
+  // Realmode trampoline code is RWX
+  kdir->map(FIASCO_MP_TRAMP_PAGE, Virt_addr(FIASCO_MP_TRAMP_PAGE),
+            Virt_size(Config::PAGE_SIZE),
+            Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced,
+            Pdir::Depth, false, pdir_alloc(alloc));
+
+  // The rest of the first 2M is RW
+  kdir->map(FIASCO_MP_TRAMP_PAGE + Config::PAGE_SIZE,
+            Virt_addr(FIASCO_MP_TRAMP_PAGE + Config::PAGE_SIZE),
+            Virt_size(Config::SUPERPAGE_SIZE - FIASCO_MP_TRAMP_PAGE
+                      - Config::PAGE_SIZE),
+            Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
+            | Pt_entry::Referenced,
+            Pdir::Depth, false, pdir_alloc(alloc));
+
+  // Second 2M is RW
+  kdir->map(Config::SUPERPAGE_SIZE, Virt_addr(Config::SUPERPAGE_SIZE),
+            Virt_size(Config::SUPERPAGE_SIZE),
+            Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
+            | Pt_entry::Referenced,
+            Pt_entry::super_level(), false, pdir_alloc(alloc));
+}
+
+PRIVATE static FIASCO_INIT_CPU
+void
+Kmem::map_kernel_virt(Kpdir *dir)
+{
+  Kmem_alloc *const alloc = Kmem_alloc::allocator();
+  // The first 2M of kernel are RW
+  dir->map(Mem_layout::Kernel_image_phys, Virt_addr(Mem_layout::Kernel_image),
+           Virt_size(Config::SUPERPAGE_SIZE),
+           Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
+           | Pt_entry::Referenced | Pt_entry::global(),
+           Pt_entry::super_level(), false, pdir_alloc(alloc));
+
+  // Kernel text is RX
+  dir->map(Mem_layout::Kernel_image_phys + Config::SUPERPAGE_SIZE,
+           Virt_addr(Mem_layout::Kernel_image + Config::SUPERPAGE_SIZE),
+           Virt_size(Config::SUPERPAGE_SIZE),
+           Pt_entry::Referenced | Pt_entry::global(), Pt_entry::super_level(),
+           false, pdir_alloc(alloc));
+
+  // Kernel data is RW
+  dir->map(Mem_layout::Kernel_image_phys + 2 * Config::SUPERPAGE_SIZE,
+           Virt_addr(Mem_layout::Kernel_image + 2 * Config::SUPERPAGE_SIZE),
+           Virt_size(Config::SUPERPAGE_SIZE),
+           Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
+           | Pt_entry::Referenced | Pt_entry::global(),
+           Pt_entry::super_level(), false, pdir_alloc(alloc));
+}
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION [ia32, amd64]:
+
 PUBLIC static FIASCO_INIT
 void
 Kmem::init_mmu()
@@ -387,17 +474,17 @@ Kmem::init_mmu()
   map_kernel_virt(kdir);
 
   if (!Mem_layout::Adap_in_kernel_image)
-    kdir->map(Mem_layout::Adap_image_phys,
-              Virt_addr(Mem_layout::Adap_image),
+    kdir->map(Mem_layout::Adap_image_phys, Virt_addr(Mem_layout::Adap_image),
               Virt_size(Config::SUPERPAGE_SIZE),
-              Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced
-              | Pt_entry::global(), Pt_entry::super_level(),
-              false, pdir_alloc(alloc));
+              Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
+              | Pt_entry::Referenced | Pt_entry::global(),
+              Pt_entry::super_level(), false, pdir_alloc(alloc));
 
   // map the last 64MB of physical memory as kernel memory
   kdir->map(Mem_layout::pmem_to_phys(Mem_layout::Physmem),
             Virt_addr(Mem_layout::Physmem), Virt_size(Mem_layout::pmem_size),
-            Pt_entry::Writable | Pt_entry::Referenced | Pt_entry::global(),
+            Pt_entry::XD | Pt_entry::Writable | Pt_entry::Referenced
+            | Pt_entry::global(),
             Pt_entry::super_level(), false, pdir_alloc(alloc));
 
   // The service page directory entry points to an universal usable
@@ -608,7 +695,7 @@ Kmem::setup_global_cpu_structures(bool superpages)
                           Pdir::Super_level, false, pdir_alloc(alloc));
 
       e.set_page(tss_mem_pm & Config::SUPERPAGE_MASK,
-                 Pt_entry::Writable | Pt_entry::Referenced
+                 Pt_entry::XD | Pt_entry::Writable | Pt_entry::Referenced
                  | Pt_entry::Dirty | Pt_entry::global());
 
       tss_mem_vm = cxx::Simple_alloc(
@@ -625,8 +712,8 @@ Kmem::setup_global_cpu_structures(bool superpages)
                               Pdir::Depth, false, pdir_alloc(alloc));
 
           e.set_page(tss_mem_pm + i * Config::PAGE_SIZE,
-                     Pt_entry::Writable | Pt_entry::Referenced | Pt_entry::Dirty
-                     | Pt_entry::global());
+                     Pt_entry::XD | Pt_entry::Writable | Pt_entry::Referenced
+                     | Pt_entry::Dirty | Pt_entry::global());
         }
 
       tss_mem_vm = cxx::Simple_alloc(
@@ -740,6 +827,38 @@ Kmem::setup_cpu_structures_isolation(Cpu &cpu, Kpdir *cpu_dir, cxx::Simple_alloc
   cpu.get_tss()->_rsp0 = (Address)(estack + estack_sz);
 }
 
+//--------------------------------------------------------------------------
+IMPLEMENTATION [(amd64 || ia32) && kernel_isolation && kernel_nx]:
+
+PRIVATE static
+void
+Kmem::prepare_kernel_entry_points(cxx::Simple_alloc *, Kpdir *cpu_dir)
+{
+  extern char _kernel_data_entry_start[];
+  extern char _kernel_data_entry_end[];
+  Address kd_page = ((Address)_kernel_data_entry_start) & ~(Config::PAGE_SIZE - 1);
+  Address kde_page = (((Address)_kernel_data_entry_end) + (Config::PAGE_SIZE - 1)) & ~(Config::PAGE_SIZE - 1);
+
+  if (Print_info)
+    printf("kernel entry data: %p(%lx)-%p(%lx)\n", _kernel_data_entry_start,
+           kd_page, _kernel_data_entry_end, kde_page);
+
+  cpu_dir[1].map(kd_page - Kernel_image_offset, Virt_addr(kd_page),
+                 Virt_size(kde_page - kd_page),
+                 Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Referenced
+                 | Pt_entry::global(),
+                 Pdir::Depth, false, pdir_alloc(Kmem_alloc::allocator()));
+
+  extern char const syscall_entry_code[];
+  cpu_dir[1].map(virt_to_phys(syscall_entry_code),
+                 Virt_addr(Kentry_cpu_page_text), Virt_size(Config::PAGE_SIZE),
+                 Pt_entry::Referenced | Pt_entry::global(), Pdir::Depth, false,
+                 pdir_alloc(Kmem_alloc::allocator()));
+}
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION [(amd64 || ia32) && kernel_isolation && !kernel_nx]:
+
 PRIVATE static
 void
 Kmem::prepare_kernel_entry_points(cxx::Simple_alloc *cpu_m, Kpdir *)
@@ -750,6 +869,22 @@ Kmem::prepare_kernel_entry_points(cxx::Simple_alloc *cpu_m, Kpdir *)
   assert ((Address)sccode == Kentry_cpu_syscall_entry);
   memcpy(sccode, syscall_entry_code, syscall_entry_code_end - syscall_entry_code);
 }
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION [(amd64 || ia32) && kernel_nx]:
+
+PRIVATE static inline NEEDS["paging.h"]
+Pte_ptr::Entry
+Kmem::conf_xd()
+{ return Pt_entry::XD; }
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION [(amd64 || ia32) && !kernel_nx]:
+
+PRIVATE static inline NEEDS["paging.h"]
+Pte_ptr::Entry
+Kmem::conf_xd()
+{ return 0; }
 
 //--------------------------------------------------------------------------
 IMPLEMENTATION [(amd64 || ia32) && cpu_local_map]:
@@ -883,31 +1018,27 @@ Kmem::init_cpu(Cpu &cpu)
 
   map_kernel_virt(cpu_dir);
 
-   if (!Adap_in_kernel_image)
-     cpu_dir->map(Adap_image_phys,
-                  Virt_addr(Adap_image),
-                  Virt_size(Config::SUPERPAGE_SIZE),
-                  Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced
-                  | Pt_entry::global(), Pt_entry::super_level(),
-                  false, pdir_alloc(alloc));
+  if (!Adap_in_kernel_image)
+    cpu_dir->map(Adap_image_phys, Virt_addr(Adap_image),
+                 Virt_size(Config::SUPERPAGE_SIZE),
+                 Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
+                 | Pt_entry::Referenced | Pt_entry::global(),
+                 Pt_entry::super_level(), false, pdir_alloc(alloc));
 
   Address cpu_dir_pa = Mem_layout::pmem_to_phys(cpu_dir);
-  cpu_dir->map(cpu_dir_pa, Virt_addr(Kentry_cpu_pdir),
-               Virt_size(cpu_dir_sz),
-               Pt_entry::Writable | Pt_entry::Referenced
-               | Pt_entry::Dirty  | Pt_entry::global(),
-               Pdir::Depth,
-               false, pdir_alloc(alloc));
+  cpu_dir->map(cpu_dir_pa, Virt_addr(Kentry_cpu_pdir), Virt_size(cpu_dir_sz),
+               Pt_entry::XD | Pt_entry::Writable | Pt_entry::Referenced
+               | Pt_entry::Dirty | Pt_entry::global(),
+               Pdir::Depth, false, pdir_alloc(alloc));
 
   unsigned const cpu_mx_sz = Config::PAGE_SIZE;
   void *cpu_mx = alloc->unaligned_alloc(cpu_mx_sz);
   auto cpu_mx_pa = Mem_layout::pmem_to_phys(cpu_mx);
 
   cpu_dir->map(cpu_mx_pa, Virt_addr(Kentry_cpu_page), Virt_size(cpu_mx_sz),
-               Pt_entry::Writable | Pt_entry::Referenced
-               | Pt_entry::Dirty  | Pt_entry::global(),
-               Pdir::Depth,
-               false, pdir_alloc(alloc));
+               conf_xd() | Pt_entry::Writable
+               | Pt_entry::Referenced | Pt_entry::Dirty | Pt_entry::global(),
+               Pdir::Depth, false, pdir_alloc(alloc));
 
   _per_cpu_dir.cpu(cpu.id()) = cpu_dir;
   Cpu::set_pdbr(cpu_dir_pa);
@@ -919,7 +1050,7 @@ Kmem::init_cpu(Cpu &cpu)
   // [3] = CPU dir pa + 0x1000 (PCID: + bit63 + ASID)
   // [4] = entry scratch register
   // [5] = unused
-  // [6] = here starts the syscall entry code
+  // [6] = here starts the syscall entry code (NX: unused)
   Mword *p = cpu_m.alloc<Mword>(6);
   // With PCID enabled set bit 63 to prevent flushing of any TLB entries or
   // paging-structure caches during the page table switch. In that case TLB

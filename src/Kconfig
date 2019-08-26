@@ -328,6 +328,15 @@ config KERNEL_ISOLATION
 	  Intel CPUs during speculative execution. However, there is the
 	  extra TLB penalty for each system call.
 
+config KERNEL_NX
+	bool "Enable support for kernel RO and non-executable mappings" if AMD64
+	depends on AMD64
+	help
+	  Make kernel mappings either writable or executable, but not
+	  writable and executable at the same time. This makes certain
+	  classes of programming errors more difficult to exploit by a potential
+	  attacker.
+
 config IA32_PCID
 	bool "Enable usage of Intel PCID feature"
 	depends on AMD64

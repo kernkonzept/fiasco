@@ -76,9 +76,10 @@ SECTIONS {
     *(.koptions)
   } :koptions :l4_koptions = 0
 
-#ifdef CONFIG_ALLOW_RO_TEXT
-  . = ALIGN(4K);
+#ifdef CONFIG_KERNEL_NX
+  . = ALIGN(2M);
 #endif
+
   .text : AT (ADDR(.text) - _fiasco_image_offset) {
     PROVIDE ( _kernel_text_start = . );
     *(SORT(.entry.text.*))
@@ -89,6 +90,14 @@ SECTIONS {
     *(.text SORT(.text.*) .gnu.linkonce.t.*)
     *(.fixup .fixup.*)
 /*    *(.fini) */
+
+#ifdef CONFIG_KERNEL_NX
+    /*
+     * We don't want to have another executable superpage in the kernel, so we
+     * keep the initcall text here.
+     */
+    *(.initcall.text*)
+#endif
 
     PROVIDE (_ecode = .);
 
@@ -105,8 +114,6 @@ SECTIONS {
     PROVIDE (ia32_intel_microcode_end = .);
 
     . = ALIGN(8);
-    JDB_TABLE(log);
-    . = ALIGN(8);
     JDB_TABLE(typeinfo);
 
     . = ALIGN(0x40);
@@ -114,15 +121,29 @@ SECTIONS {
     PROVIDE (_etext = .);
   } : ktext = 0x90909090
 
-#ifdef CONFIG_ALLOW_RO_TEXT
-  . = ALIGN(4K);
-#else
-  . = ALIGN(0x10);
+#ifdef CONFIG_KERNEL_NX
+  /*
+   * This section serves the purpose of taking up the remainder of the last 2M
+   * up to a new 2M boundary without taking up any space in the file (the linker
+   * script can apparently do this only for writable sections). This way we tell
+   * the kernel this memory (i.e. the executable part of the kernel address
+   * space) is reserved and should not be used for anything.
+   */
+  .fill_kernel : AT (ADDR(.fill_kernel) - _fiasco_image_offset) {
+    . = ALIGN(2M);
+  }
 #endif
+
   .data : AT (ADDR(.data) - _fiasco_image_offset) {
     PROVIDE (_kernel_data_start = .);
     *(.data .data.* .gnu.linkonce.d.*)
     *(.anno)
+
+#ifdef CONFIG_KERNEL_NX
+    PROVIDE (_kernel_data_entry_start = .);
+    *(SORT(.entry.data.*));
+    PROVIDE (_kernel_data_entry_end = .);
+#endif
 
     /* Constructor and destructor lists, ordered by priority.  The lists
        are traversed from end to start, therefore the *_END__ symbols
@@ -203,6 +224,9 @@ SECTIONS {
     KEEP (*(.dtors))
     __DTOR_LIST__ = .;
 
+    . = ALIGN(8);
+    JDB_TABLE(log);
+
     PROVIDE (_edata = .);
   } : kdata
 
@@ -231,7 +255,9 @@ SECTIONS {
   . = ALIGN(4096);
   PROVIDE (_initcall_start = .);
   .initcall.text : AT (ADDR(.initcall.text) - _fiasco_image_offset) {
+#ifndef CONFIG_KERNEL_NX
     *(.initcall.text*)
+#endif
   } : kitext = 0x90909090
 
   .initcall.data : AT (ADDR(.initcall.data) - _fiasco_image_offset) {

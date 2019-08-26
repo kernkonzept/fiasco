@@ -210,8 +210,24 @@ leave_from_syscall_by_iret:
 dbf_stack_top:
 
 	.section ".text.syscall_entry"
+
+#ifdef CONFIG_KERNEL_NX
+
+/*
+ * This code shall be mapped to Kentry_cpu_page_text, exactly one page above
+ * Kentry_cpu_page, which makes it possible to refer to the data without
+ * cloberring a register.
+ */
+#define CPUE_OFFSET syscall_entry_code - 0x1000
+
+	.align 0x1000
+
+#else
+
 /* This code shall be copied to Kentry_cpu_syscall_entry */
 #define CPUE_OFFSET syscall_entry_code - 0x30
+
+#endif
 	.global syscall_entry_code
 syscall_entry_code:
 	mov	%rsp, (CPUE_OFFSET + CPUE_SCRATCH_OFS)(%rip)

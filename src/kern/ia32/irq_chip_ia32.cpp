@@ -1,4 +1,23 @@
-INTERFACE[amd64]:
+INTERFACE[amd64 && kernel_nx]:
+
+class Irq_base;
+
+/** this structure must exactly map to the entry stubs from 64/entry.S */
+struct Irq_entry_stub_text
+{
+  char _res[16];
+} __attribute__((packed));
+
+struct Irq_entry_stub_data
+{
+  Irq_base *irq;
+} __attribute__((packed));
+
+using Irq_entry_stub = Irq_entry_stub_data;
+
+
+//--------------------------------------------------------------------------
+INTERFACE[amd64 && !kernel_nx]:
 
 class Irq_base;
 
@@ -217,22 +236,6 @@ Irq_chip_ia32::_valloc(Mword pin, unsigned vector)
   return vector;
 }
 
-PRIVATE
-unsigned
-Irq_chip_ia32::_vsetup(Irq_base *irq, Mword pin, unsigned vector)
-{
-  _vec[pin] = vector;
-  extern Irq_entry_stub idt_irq_vector_stubs[];
-  auto p = idt_irq_vector_stubs + vector - 0x20;
-  p->irq = irq;
-
-  // force code to memory before setting IDT entry
-  Mem::barrier();
-
-  Idt::set_entry(vector, (Address)p, false);
-  return vector;
-}
-
 /**
  * \pre `irq->irqLock()` must be held
  */
@@ -283,4 +286,43 @@ Irq_chip_ia32::reserve(Mword irqn)
 
   _vec[irqn] = 0xff;
   return true;
+}
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION[kernel_nx]:
+
+PRIVATE
+unsigned
+Irq_chip_ia32::_vsetup(Irq_base *irq, Mword pin, unsigned vector)
+{
+  _vec[pin] = vector;
+  extern Irq_entry_stub_data idt_irq_vector_stubs_data[];
+  extern Irq_entry_stub_text idt_irq_vector_stubs_text[];
+  idt_irq_vector_stubs_data[vector - 0x20].irq = irq;
+
+  // force code to memory before setting IDT entry
+  Mem::barrier();
+
+  Idt::set_entry(vector, (Address)&idt_irq_vector_stubs_text[vector - 0x20],
+                 false);
+  return vector;
+}
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION[!kernel_nx]:
+
+PRIVATE
+unsigned
+Irq_chip_ia32::_vsetup(Irq_base *irq, Mword pin, unsigned vector)
+{
+  _vec[pin] = vector;
+  extern Irq_entry_stub idt_irq_vector_stubs[];
+  auto p = idt_irq_vector_stubs + vector - 0x20;
+  p->irq = irq;
+
+  // force code to memory before setting IDT entry
+  Mem::barrier();
+
+  Idt::set_entry(vector, (Address)p, false);
+  return vector;
 }
