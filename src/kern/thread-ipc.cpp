@@ -302,8 +302,8 @@ Thread::handle_page_fault_pager(Thread_ptr const &_pager,
     }
   else // no error
     {
-      // If the pager rejects the mapping, it replies -1 in msg.w0
-      if (EXPECT_FALSE (r.tag().proto() < 0 || utcb->values[0] == Mword(-1)))
+      // If the pager rejects the mapping, it replies with a negative label
+      if (EXPECT_FALSE (r.tag().proto() < 0))
         success = false;
     }
 
