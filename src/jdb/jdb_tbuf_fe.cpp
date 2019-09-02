@@ -12,20 +12,22 @@ public:
 
 IMPLEMENTATION:
 
+#include "globals.h"
 #include "jdb.h"
-#include "mem_unit.h"
+#include "jdb_types.h"
 
 IMPLEMENT_DEFAULT
 unsigned char
 Jdb_tbuf_fe::get_entry_status(Tb_log_table_entry const *e)
 {
-  return *(e->patch);
+  unsigned char value;
+  check(Jdb::peek(Jdb_addr<unsigned char>::kmem_addr(e->patch), value));
+  return value;
 }
 
 IMPLEMENT_DEFAULT
 void
 Jdb_tbuf_fe::set_entry_status(Tb_log_table_entry const *e, unsigned char value)
 {
-  *(e->patch) = value;
-  Mem_unit::make_coherent_to_pou(e->patch);
+  check(Jdb::poke(Jdb_addr<unsigned char>::kmem_addr(e->patch), value));
 }
