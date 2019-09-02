@@ -67,8 +67,10 @@ const char *id2name(const name_map* map, int max, const unsigned int id);
 
 // count number of positive members in a list.
 // NOTE: list must be guaranteed to end in 0
-unsigned int count_positive(const uint16_t *list, unsigned int max);
-unsigned int count_positive8(const unsigned char *list, unsigned int max);
+#define count_positive(list) count_positive_max(list, ARR_SIZE(list))
+#define count_positive8(list) count_positive8_max(list, ARR_SIZE(list))
+unsigned int count_positive_max(const uint16_t *list, unsigned int max);
+unsigned int count_positive8_max(const unsigned char *list, unsigned int max);
 
 #define ARR_SIZE(a) (sizeof(a)/sizeof(a[0]))
 #define MATRIX_SIZE(a) (sizeof(a[0])/sizeof(a[0][0]))

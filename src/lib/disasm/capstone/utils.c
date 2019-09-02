@@ -69,10 +69,11 @@ const char *id2name(const name_map* map, int max, const unsigned int id)
 
 // count number of positive members in a list.
 // NOTE: list must be guaranteed to end in 0
-unsigned int count_positive(const uint16_t *list, unsigned int max)
+unsigned int count_positive_max(const uint16_t *list, unsigned int max)
 {
 	unsigned int c;
 
+        // Fiasco: limit loop to max (save space)
 	for (c = 0; c < max && list[c] > 0; c++);
 
 	return c;
@@ -80,10 +81,11 @@ unsigned int count_positive(const uint16_t *list, unsigned int max)
 
 // count number of positive members in a list.
 // NOTE: list must be guaranteed to end in 0
-unsigned int count_positive8(const unsigned char *list, unsigned int max)
+unsigned int count_positive8_max(const unsigned char *list, unsigned int max)
 {
 	unsigned int c;
 
+        // Fiasco: limit loop to max (save space)
 	for (c = 0; c < max && list[c] > 0; c++);
 
 	return c;

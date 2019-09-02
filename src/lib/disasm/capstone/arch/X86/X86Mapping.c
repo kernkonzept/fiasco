@@ -50,7 +50,7 @@ enum {
 
 static const x86_reg sib_index_map[] = {
 	X86_REG_INVALID,
-#define ENTRY(x) (const x86_reg)X86_REG_##x,
+#define ENTRY(x) (const x86_reg)X86_REG_##x, // Fiasco: cast prevents warning
 	ALL_EA_BASES
 	REGS_XMM
 	REGS_YMM
@@ -2498,21 +2498,18 @@ void X86_get_insn_id(cs_struct *h, cs_insn *insn, unsigned int id)
 		if (h->detail) {
 #ifndef CAPSTONE_DIET
 			memcpy(insn->detail->regs_read, insns[i].regs_use, sizeof(insns[i].regs_use));
-			insn->detail->regs_read_count = (uint8_t)count_positive(insns[i].regs_use,
-                                                                                ARR_SIZE(insns[i].regs_use));
+			insn->detail->regs_read_count = (uint8_t)count_positive(insns[i].regs_use);
 
 			// special cases when regs_write[] depends on arch
 			switch(id) {
 				default:
 					memcpy(insn->detail->regs_write, insns[i].regs_mod, sizeof(insns[i].regs_mod));
-					insn->detail->regs_write_count = (uint8_t)count_positive(insns[i].regs_mod,
-                                                                                                 ARR_SIZE(insns[i].regs_mod));
+					insn->detail->regs_write_count = (uint8_t)count_positive(insns[i].regs_mod);
 					break;
 				case X86_RDTSC:
 					if (h->mode == CS_MODE_64) {
 						memcpy(insn->detail->regs_write, insns[i].regs_mod, sizeof(insns[i].regs_mod));
-						insn->detail->regs_write_count = (uint8_t)count_positive(insns[i].regs_mod,
-                                                                                                         ARR_SIZE(insns[i].regs_mod));
+						insn->detail->regs_write_count = (uint8_t)count_positive(insns[i].regs_mod);
 					} else {
 						insn->detail->regs_write[0] = X86_REG_EAX;
 						insn->detail->regs_write[1] = X86_REG_EDX;
@@ -2522,8 +2519,7 @@ void X86_get_insn_id(cs_struct *h, cs_insn *insn, unsigned int id)
 				case X86_RDTSCP:
 					if (h->mode == CS_MODE_64) {
 						memcpy(insn->detail->regs_write, insns[i].regs_mod, sizeof(insns[i].regs_mod));
-						insn->detail->regs_write_count = (uint8_t)count_positive(insns[i].regs_mod,
-                                                                                                         ARR_SIZE(insns[i].regs_mod));
+						insn->detail->regs_write_count = (uint8_t)count_positive(insns[i].regs_mod);
 					} else {
 						insn->detail->regs_write[0] = X86_REG_EAX;
 						insn->detail->regs_write[1] = X86_REG_ECX;
@@ -2656,8 +2652,7 @@ void X86_get_insn_id(cs_struct *h, cs_insn *insn, unsigned int id)
 			}
 
 			memcpy(insn->detail->groups, insns[i].groups, sizeof(insns[i].groups));
-			insn->detail->groups_count = (uint8_t)count_positive8(insns[i].groups,
-                                                                              ARR_SIZE(insns[i].groups));
+			insn->detail->groups_count = (uint8_t)count_positive8(insns[i].groups);
 
 			if (insns[i].branch || insns[i].indirect_branch) {
 				// this insn also belongs to JUMP group. add JUMP group
@@ -3117,7 +3112,6 @@ static bool valid_repne(cs_struct *h, unsigned int opcode)
 
 			case X86_INS_MOVSB:
 			case X86_INS_MOVSW:
-			case X86_INS_MOVSD:
 			case X86_INS_MOVSQ:
 
 			case X86_INS_LODSB:
@@ -3139,6 +3133,11 @@ static bool valid_repne(cs_struct *h, unsigned int opcode)
 			case X86_INS_OUTSD:
 
 				return true;
+
+			case X86_INS_MOVSD:
+				if (opcode == X86_MOVSW) // REP MOVSB
+					return true;
+				return false;
 
 			case X86_INS_CMPSD:
 				if (opcode == X86_CMPSL) // REP CMPSD
