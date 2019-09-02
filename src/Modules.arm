@@ -358,6 +358,11 @@ ifneq ($(CONFIG_CPU_VIRT),)
       endif
     endif
   endif
+  ifeq ($(CC_TYPE),clang)
+    ifneq ($(findstring $(CCVER_MAJOR),7 8 9),)
+      ARM_CC_OK_FOR_VIRT := y
+    endif
+  endif
 
   ifeq ($(ARM_CC_OK_FOR_VIRT),)
     $(shell touch buildcheck.ignore)
