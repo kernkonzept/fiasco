@@ -6,6 +6,7 @@ IMPLEMENTATION:
 #include "initcalls.h"
 #include "ipc_gate.h"
 #include "irq.h"
+#include "kip.h"
 #include "koptions.h"
 #include "map_util.h"
 #include "mem_layout.h"

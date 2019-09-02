@@ -5,6 +5,7 @@ IMPLEMENTATION [mips]:
 #include "alternatives.h"
 #include "asm_mips.h"
 #include "cp0_status.h"
+#include "kip.h"
 #include "trap_state.h"
 #include "processor.h"
 #include "types.h"

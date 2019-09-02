@@ -13,6 +13,7 @@ IMPLEMENTATION:
 #include "jdb_screen.h"
 #include "kernel_console.h"
 #include "keycodes.h"
+#include "kip.h"
 #include "kmem.h"
 #include "simpleio.h"
 #include "static_init.h"

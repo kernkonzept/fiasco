@@ -12,6 +12,7 @@ IMPLEMENTATION:
 #include "jdb_kobject_names.h"
 #include "kernel_console.h"
 #include "keycodes.h"
+#include "kip.h"
 #include "minmax.h"
 #include "simpleio.h"
 #include "task.h"
