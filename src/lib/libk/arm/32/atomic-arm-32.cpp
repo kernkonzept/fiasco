@@ -86,7 +86,7 @@ mp_cas_arch(Mword *m, Mword o, Mword n)
   return !res;
 }
 
-template<typename T, typename V> inline NEEDS[<cxx/type_traits>]
+template<typename T, typename V> inline NEEDS["mem.h", <cxx/type_traits>]
 ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 4), T>::type
 atomic_exchange(T *mem, V value)
 {
@@ -106,7 +106,7 @@ atomic_exchange(T *mem, V value)
   return res;
 }
 
-template<typename T, typename V> inline NEEDS [<cxx/type_traits>]
+template<typename T, typename V> inline NEEDS ["mem.h", <cxx/type_traits>]
 ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 4), T>::type
 atomic_add_fetch(T *mem, V value)
 {
@@ -170,7 +170,7 @@ IMPLEMENTATION[arm && (arm_v7plus || (arm_v6 && mp))]:
 
 #include <cxx/type_traits>
 
-template<typename T, typename V> inline NEEDS [<cxx/type_traits>]
+template<typename T, typename V> inline NEEDS ["mem.h", <cxx/type_traits>]
 ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 8), T>::type
 atomic_exchange(T *mem, V value)
 {
@@ -189,7 +189,7 @@ atomic_exchange(T *mem, V value)
   return res;
 }
 
-template<typename T, typename V> inline NEEDS [<cxx/type_traits>]
+template<typename T, typename V> inline NEEDS ["mem.h", <cxx/type_traits>]
 ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 8), T>::type
 atomic_add_fetch(T *mem, V value)
 {
@@ -224,7 +224,7 @@ atomic_load(T const *p)
   return res;
 }
 
-template< typename T, typename V > inline NEEDS [<cxx/type_traits>]
+template< typename T, typename V > inline NEEDS ["mem.h", <cxx/type_traits>]
 ALWAYS_INLINE void
 atomic_store(T *p, V value, typename cxx::enable_if<(sizeof(T) == 8), int>::type = 0)
 {
@@ -246,7 +246,7 @@ IMPLEMENTATION[arm && arm_v6 && !mp]:
 
 #include <cxx/type_traits>
 
-template<typename T, typename V> inline NEEDS [<cxx/type_traits>]
+template<typename T, typename V> inline NEEDS ["mem.h", <cxx/type_traits>]
 ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 8), T>::type
 atomic_exchange(T *mem, V value)
 {
@@ -262,7 +262,7 @@ atomic_exchange(T *mem, V value)
   return res;
 }
 
-template<typename T, typename V> inline NEEDS [<cxx/type_traits>]
+template<typename T, typename V> inline NEEDS ["mem.h", <cxx/type_traits>]
 ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 8), T>::type
 atomic_add_fetch(T *mem, V value)
 {
