@@ -9,12 +9,14 @@
 
 #define REGISTER_SIZE 8
 
+/* Layout of Kentry_cpu_page */
 #define CPUE_STACK(x, reg) (x + 0x20)(reg)
 #define CPUE_CR3_OFS 0
 #define CPUE_KSP_OFS 8
 #define CPUE_KSP(reg) 8(reg)
 #define CPUE_CR3(reg) 0(reg)
 #define CPUE_EXIT(reg) 16(reg)
+#define CPUE_CR3U(reg) 24(reg)
 #define CPUE_EXIT_NEED_IBPB 1
 
 #if defined(CONFIG_KERNEL_ISOLATION) && defined(CONFIG_INTEL_IA32_BRANCH_BARRIERS)
@@ -58,7 +60,7 @@
 	sar     $16, %rcx
 #ifdef CONFIG_KERNEL_ISOLATION
 	mov	$0xffff817fffffc000, %r15
-#ifdef CONFIG_INTEL_IA32_BRANCH_BARRIERS
+# ifdef CONFIG_INTEL_IA32_BRANCH_BARRIERS
 	mov	CPUE_EXIT(%r15), %r11
 	test	$(CPUE_EXIT_NEED_IBPB), %r11
 	jz	333f
@@ -66,9 +68,8 @@
 	mov	%r11, CPUE_EXIT(%r15)
 	IA32_IBPB
 333:
-#endif
-	mov	CPUE_CR3(%r15), %r15
-	or	$0x1000, %r15
+# endif
+	mov	CPUE_CR3U(%r15), %r15
 #endif
 	mov	32(%rsp), %r11				/* load user rflags */
 	mov	40(%rsp), %rsp				/* load user rsp */

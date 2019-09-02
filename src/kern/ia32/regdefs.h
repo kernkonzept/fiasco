@@ -32,6 +32,7 @@
 #define CR4_OSFXSR      0x00000200      // OS Supports FXSAVE/FXRSTOR
 #define CR4_OSXMMEXCPT  0x00000400      // OS Supports SIMD Exceptions
 #define CR4_VMXE        0x00002000      // VMX enable
+#define CR4_PCID        0x00020000      // Enable PCID
 #define CR4_OSXSAVE     0x00040000      // OS Support XSAVE
 #define CR4_SMEP        0x00100000      // Supervisor-Mode Execution Prevention
 
@@ -108,6 +109,7 @@
 
 #define FEATX_IA32_TSC_ADJUST 0x00000002 // IA32 TSC Adjust available
 #define FEATX_SMEP      0x00000080      // Supervisor-Mode Execution Prevention
+#define FEATX_INVPCID   0x00000400      // INVPCID
 
 #define FEATX_IBRS_IBPB 0x04000000      // IBRS and IBPB supported
 #define FEATX_STIBP     0x08000000      // STIBP supported

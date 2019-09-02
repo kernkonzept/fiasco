@@ -302,7 +302,7 @@ Kmem::map_phys_page(Address phys, Address virt,
   i.set_page(pte, Pt_entry::Writable | Pt_entry::Referenced | Pt_entry::Dirty
                   | (cached ? 0 : (Pt_entry::Write_through | Pt_entry::Noncacheable))
                   | (global ? Pt_entry::global() : 0));
-  Mem_unit::tlb_flush(virt);
+  Mem_unit::tlb_flush_kernel(virt);
 
   if (offs)
     *offs = phys - pte;
@@ -897,11 +897,17 @@ Kmem::init_cpu(Cpu &cpu)
   Cpu::set_pdbr(cpu_dir_pa);
 
   cxx::Simple_alloc cpu_m(Kentry_cpu_page, Config::PAGE_SIZE);
-  // [0] = CPU dir pa
+  // [0] = CPU dir pa (PCID: + bit63 + ASID 0)
   // [1] = KSP
   // [2] = EXIT flags
-  // [3] = reserved
-  write_now(cpu_m.alloc<Mword>(4), cpu_dir_pa);
+  // [3] = CPU dir pa + 0x1000 (PCID: + bit63 + ASID)
+  Mword *p = cpu_m.alloc<Mword>(4);
+  // With PCID enabled set bit 63 to prevent flushing of any TLB entries or
+  // paging-structure caches during the page table switch. In that case TLB
+  // flushes are exclusively done by Mem_unit::tlb_flush() calls.
+  Mword const flush_tlb_bit = Config::Pcid_enabled ? 1UL << 63 : 0;
+  write_now(&p[0], cpu_dir_pa | flush_tlb_bit);
+  write_now(&p[3], cpu_dir_pa | flush_tlb_bit |  0x1000);
   setup_cpu_structures_isolation(cpu, cpu_dir, &cpu_m);
 
   auto *pte_map = cpu_m.alloc<Bitmap<260> >(1, 0x20);

@@ -119,6 +119,9 @@ int FIASCO_FASTCALL boot_ap_cpu()
 {
   Apic::activate_by_msr();
 
+  if (Config::Pcid_enabled)
+    Cpu::set_cr4(Cpu::get_cr4() | CR4_PCID);
+
   Unsigned32 apic_id = Apic::get_id();
   Cpu_number _cpu = Apic::find_cpu(apic_id);
   bool cpu_is_new = false;

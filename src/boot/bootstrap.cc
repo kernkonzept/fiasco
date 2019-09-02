@@ -100,7 +100,7 @@ bootstrap()
 
   base_map_physical_memory_for_kernel();
 
-  Mem_unit::tlb_flush();
+  Mem_unit::tlb_flush_early();
 
   start = (Start)_start;
 

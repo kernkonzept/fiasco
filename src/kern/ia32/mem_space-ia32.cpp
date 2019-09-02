@@ -62,6 +62,57 @@ protected:
 };
 
 //----------------------------------------------------------------------------
+INTERFACE[amd64 && ia32_pcid]:
+
+#include "id_alloc.h"
+#include "types.h"
+#include "mem_unit.h"
+
+EXTENSION class Mem_space
+{
+public:
+  enum
+  {
+    Asid_num = (1 << 12) - 1,
+    Asid_base = 1
+  };
+
+private:
+  typedef Per_cpu_array<unsigned long> Asid_array;
+  Asid_array _asid;
+
+  struct Asid_ops
+  {
+    enum { Id_offset = Asid_base };
+
+    static bool valid(Mem_space *o, Cpu_number cpu)
+    { return o->_asid[cpu] != Mem_unit::Asid_invalid; }
+
+    static unsigned long get_id(Mem_space *o, Cpu_number cpu)
+    { return o->_asid[cpu]; }
+
+    static bool can_replace(Mem_space *v, Cpu_number cpu)
+    { return v != current_mem_space(cpu); }
+
+    static void set_id(Mem_space *o, Cpu_number cpu, unsigned long id)
+    {
+      write_now(&o->_asid[cpu], id);
+      Mem_unit::tlb_flush(id);
+    }
+
+    static void reset_id(Mem_space *o, Cpu_number cpu)
+    { write_now(&o->_asid[cpu], (unsigned long)Mem_unit::Asid_invalid); }
+  };
+
+  struct Asid_alloc : Id_alloc<unsigned char, Mem_space, Asid_ops>
+  {
+    Asid_alloc() : Id_alloc<unsigned char, Mem_space, Asid_ops>(Asid_num) {}
+  };
+
+  static Per_cpu<Asid_alloc> _asid_alloc;
+};
+
+//----------------------------------------------------------------------------
 IMPLEMENTATION [ia32 || ux || amd64]:
 
 #include <cstring>
@@ -71,12 +122,6 @@ IMPLEMENTATION [ia32 || ux || amd64]:
 #include "mem_layout.h"
 #include "paging.h"
 #include "std_macros.h"
-
-
-
-
-PUBLIC explicit inline
-Mem_space::Mem_space(Ram_quota *q) : _quota(q), _dir(0) {}
 
 PROTECTED inline
 bool
@@ -114,16 +159,6 @@ Mem_space::has_superpages()
   return Cpu::have_superpages();
 }
 
-
-IMPLEMENT inline NEEDS["mem_unit.h"]
-void
-Mem_space::tlb_flush(bool = false)
-{
-  if (_current.current() == this)
-    Mem_unit::tlb_flush();
-}
-
-
 IMPLEMENT inline
 Mem_space *
 Mem_space::current_mem_space(Cpu_number cpu) /// XXX: do not fix, deprecated, remove!
@@ -143,7 +178,6 @@ Mem_space::set_attributes(Virt_addr virt, Attr page_attribs)
   i.set_attribs(page_attribs);
   return true;
 }
-
 
 PROTECTED inline
 void
@@ -346,6 +380,7 @@ Mem_space::dir_shutdown()
 PUBLIC
 Mem_space::~Mem_space()
 {
+  reset_asid();
   if (_dir)
     {
       dir_shutdown();
@@ -442,7 +477,6 @@ Mem_space::sync_kernel()
                     Kmem_alloc::q_allocator(_quota));
 }
 
-
 // --------------------------------------------------------------------
 IMPLEMENTATION [(amd64 || ia32) && cpu_local_map]:
 
@@ -474,11 +508,20 @@ Mem_space::make_current()
   Address pd_pa = access_once(reinterpret_cast<Address *>(Mem_layout::Kentry_cpu_page));
   Cpu::set_pdbr(pd_pa);
 #else
-#ifdef CONFIG_INTEL_IA32_BRANCH_BARRIERS
+# ifdef CONFIG_INTEL_IA32_BRANCH_BARRIERS
   Address *ca = reinterpret_cast<Address *>(Mem_layout::Kentry_cpu_page);
   // set EXIT flags NEEDS IBPB
   ca[2] |= 1;
-#endif
+# endif
+# ifdef CONFIG_IA32_PCID
+  // [0]: CPU pdir pa + (if PCID: + bit 63 + ASID 0) -- not relevant here
+  // [3]: CPU pdir pa + (if PCID: + bit 63 + ASID)
+  Mword *p = reinterpret_cast<Mword *>(Mem_layout::Kentry_cpu_page);
+  Mword pd_pa = p[3];
+  pd_pa &= ~0xfffUL;
+  pd_pa |= asid();
+  p[3] = pd_pa;
+# endif
 #endif
   _current.cpu(current_cpu()) = this;
 }
@@ -535,4 +578,75 @@ Mem_space::init_page_sizes()
   add_page_size(Page_order(Config::PAGE_SHIFT));
   if (Cpu::cpus.cpu(Cpu_number::boot_cpu()).superpages())
     add_page_size(Page_order(22)); // 4MB
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [!ia32_pcid]:
+
+PUBLIC explicit inline
+Mem_space::Mem_space(Ram_quota *q) : _quota(q), _dir(0) {}
+
+IMPLEMENT inline NEEDS["mem_unit.h"]
+void
+Mem_space::tlb_flush(bool = false)
+{
+  if (_current.current() == this)
+    Mem_unit::tlb_flush();
+}
+
+PRIVATE inline
+void
+Mem_space::init_asid() {}
+
+PRIVATE inline
+void
+Mem_space::reset_asid() {}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [amd64 && ia32_pcid]:
+
+DEFINE_PER_CPU Per_cpu<Mem_space::Asid_alloc> Mem_space::_asid_alloc;
+
+PUBLIC explicit inline NEEDS[Mem_space::asid]
+Mem_space::Mem_space(Ram_quota *q) : _quota(q), _dir(0)
+{
+  asid(Mem_unit::Asid_invalid);
+}
+
+PRIVATE inline
+void
+Mem_space::asid(unsigned long a)
+{
+  for (Asid_array::iterator i = _asid.begin(); i != _asid.end(); ++i)
+    *i = a;
+}
+
+PUBLIC inline
+unsigned long
+Mem_space::c_asid() const
+{ return _asid[current_cpu()]; }
+
+PRIVATE inline
+unsigned long
+Mem_space::asid()
+{
+  Cpu_number cpu = current_cpu();
+  return _asid_alloc.cpu(cpu).alloc(this, cpu);
+};
+
+PRIVATE inline
+void
+Mem_space::reset_asid()
+{
+  for (Cpu_number i = Cpu_number::first(); i < Config::max_num_cpus(); ++i)
+    _asid_alloc.cpu(i).free(this, i);
+}
+
+IMPLEMENT inline NEEDS["mem_unit.h"]
+void
+Mem_space::tlb_flush(bool = false)
+{
+  auto asid = c_asid();
+  if (asid != Mem_unit::Asid_invalid)
+    Mem_unit::tlb_flush(asid);
 }

@@ -53,7 +53,9 @@ enum
   INTEL_PML4E_WRITE	= 0x0000000000000002LL,
   INTEL_PML4E_USER	= 0x0000000000000004LL,
   INTEL_PML4E_PFN	= 0x000ffffffffff000LL,
- 
+
+  CPUF_EXT_PCID         = 1 << 17,
+
   BASE_TSS		= 0x08,
   KERNEL_DS		= 0x18,
   KERNEL_CS_64		= 0x20, // XXX
@@ -143,7 +145,8 @@ struct trap_state
   Unsigned64 rip, cs, rflags, rsp, ss;
 };
 
-static Unsigned64       cpu_feature_flags;
+static Unsigned32       cpu_feature_flags;
+static Unsigned32       cpu_ext_feature_flags;
 static Address          base_pml4_pa;
 static struct x86_tss   base_tss;
 static struct x86_desc  base_gdt[GDTSZ];
@@ -257,6 +260,11 @@ paging_enable(Address pml4)
   /* Enable Physical Address Extension (PAE). */
   set_cr4(get_cr4() | CR4_PAE);
 
+  /* We need to check for the CPU feature otherwise setting the PCID bit may
+   * trigger a #GP, see Intel manual. If needed we will complain later. */
+  if (Config::Pcid_enabled && (cpu_ext_feature_flags & CPUF_EXT_PCID))
+    set_cr4(get_cr4() | CR4_PCID);
+
   /* Load the page map level 4.  */
   set_cr3(pml4);
 
@@ -287,11 +295,12 @@ cpuid()
 
 	  if (highest_val >= 1)
 	    {
-	      asm volatile("cpuid"
-		           : "=a" (dummy),
-      			     "=d" (cpu_feature_flags)
-			     : "a" (1)
-			     : "ebx", "ecx");
+              asm volatile("cpuid"
+                           : "=a" (dummy),
+                             "=c" (cpu_ext_feature_flags),
+                             "=d" (cpu_feature_flags)
+                           : "a" (1)
+                           : "ebx");
 	    }
 	}
     }

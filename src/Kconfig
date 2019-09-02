@@ -328,6 +328,15 @@ config KERNEL_ISOLATION
 	  Intel CPUs during speculative execution. However, there is the
 	  extra TLB penalty for each system call.
 
+config IA32_PCID
+	bool "Enable usage of Intel PCID feature"
+	depends on AMD64
+	depends on KERNEL_ISOLATION
+	help
+	  Use Intel PCID to implement address space IDs on x86. This should
+	  reduce the amount of TLB flushes needed during address space switches
+	  or user/kernel switches with kernel page table isolation.
+
 config CPU_LOCAL_MAP
 	bool "Enable CPU local page-tables for kernel mappings" if AMD64 && !KERNEL_ISOLATION
 	depends on AMD64

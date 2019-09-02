@@ -271,8 +271,7 @@ safe_iret:
 	mov	64(%rsp), %r13
 	mov	%r13, CPUE_STACK(48, %r14)
 	lea	CPUE_STACK(0, %r14), %rsp
-	mov	CPUE_CR3(%r14), %r13
-	or	$0x1000, %r13
+	mov	CPUE_CR3U(%r14), %r13
 	mov	%r13, %cr3
 	pop	%r13
 	pop	%r14

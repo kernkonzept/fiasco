@@ -55,7 +55,7 @@ Idt::set_writable(bool writable)
   else
     e.del_attribs(Pt_entry::Writable); // Make read-only
 
-  Mem_unit::tlb_flush (_idt);
+  Mem_unit::tlb_flush_kernel(_idt);
 }
 
 PUBLIC static FIASCO_INIT

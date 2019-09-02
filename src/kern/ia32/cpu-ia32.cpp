@@ -145,9 +145,13 @@ public:
   unsigned ext_features() const { return _ext_features; }
   bool has_monitor_mwait() const { return _ext_features & FEATX_MONITOR; }
   bool has_monitor_mwait_irq() const { return _monitor_mwait_ecx & 3; }
+  bool has_pcid() const { return _ext_features & FEATX_PCID; }
 
   bool __attribute__((const)) has_smep() const
   { return _ext_07_ebx & FEATX_SMEP; }
+
+  bool __attribute__((const)) has_invpcid() const
+  { return _ext_07_ebx & FEATX_INVPCID; }
 
   bool __attribute__((const)) has_l1d_flush() const
   { return (_ext_07_edx & FEATX_L1D_FLUSH); }
@@ -1913,11 +1917,18 @@ Cpu::init()
   if (features() & FEAT_SSE)
     cr4 |= CR4_OSXMMEXCPT;
 
-  // enable SMEP if available
   if (has_smep())
     cr4 |= CR4_SMEP;
 
   set_cr4 (cr4);
+
+  if (Config::Pcid_enabled)
+    {
+     if (!has_pcid())
+       panic("CONFIG_IA32_PCID enabled but CPU lacks this feature");
+     if (!has_invpcid())
+       panic("CONFIG_IA32_PCID enabled but CPU lacks 'invpcid' instruction");
+    }
 
   if ((features() & FEAT_TSC) && can_wrmsr())
     {

@@ -123,7 +123,14 @@ Kernel_thread::boot_app_cpus()
   Address tramp_page;
 
   _realmode_startup_pdbr = Kmem::get_realmode_startup_pdbr();
-  _tramp_mp_startup_cr4 = Cpu::get_cr4();
+
+  Unsigned32 cr4 = Cpu::get_cr4();
+  // Do not enable PCID as it raises a page fault while booting up.
+  // PCID is enabled later in boot_ap_cpu().
+  if (Config::Pcid_enabled)
+    cr4 &= ~CR4_PCID;
+
+  _tramp_mp_startup_cr4 = cr4;
   _tramp_mp_startup_cr0 = Cpu::get_cr0();
   _tramp_mp_startup_gdt_pdesc
     = Pseudo_descriptor((Address)Cpu::boot_cpu()->get_gdt(), Gdt::gdt_max -1);

@@ -15,6 +15,11 @@ public:
     // can access user memory directly
     Access_user_mem = Access_user_mem_direct,
 #endif
+#ifdef CONFIG_IA32_PCID
+    Pcid_enabled = true,
+#else
+    Pcid_enabled = false,
+#endif
 
     /// Timer vector used with APIC timer or IOAPIC
     Apic_timer_vector = APIC_IRQ_BASE + 0,

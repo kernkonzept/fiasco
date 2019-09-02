@@ -47,7 +47,11 @@ Thread::fast_return_to_user(Mword ip, Mword sp, T arg)
      "mov %[flags], %%r11 \t\n"
      "jmp safe_sysret \t\n"
      :
-     : [cr3] "a" (p[0] | 0x1000),
+     // p[0] = CPU dir pa (if PCID: + bit63 + ASID 0)
+     // p[1] = KSP
+     // p[2] = EXIT flags
+     // p[3] = CPU dir pa + 0x1000 (if PCID: + bit63 + ASID)
+     : [cr3] "a" (p[3]),
        [flags] "i" (EFLAGS_IF), "c" (ip), [sp] "r" (sp), "D"(arg)
     );
   __builtin_trap();
