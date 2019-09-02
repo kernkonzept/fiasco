@@ -124,18 +124,18 @@ Context::arm_hyp_load_non_vm_state(bool vgic)
 {
   asm volatile ("msr HCR_EL2, %0"   : : "r"(Cpu::Hcr_host_bits));
   // load normal SCTLR ...
-  asm volatile ("msr SCTLR_EL1, %0" : : "r" (Cpu::Sctlr_el1_generic));
-  asm volatile ("msr CPACR_EL1, %0" : : "r" (0x300000));
+  asm volatile ("msr SCTLR_EL1, %0" : : "r" ((Mword)Cpu::Sctlr_el1_generic));
+  asm volatile ("msr CPACR_EL1, %0" : : "r" (0x300000UL));
   // disable all debug exceptions for non-vms, if we want debug
   // exceptions into JDB we need either per-thread or a global
   // setting for this value.
-  asm volatile ("msr CONTEXTIDR_EL1, %0" : : "r"(0));
-  asm volatile ("msr MDCR_EL2, %0" : : "r"(Cpu::Mdcr_bits));
-  asm volatile ("msr MDSCR_EL1, %0" : : "r"(0));
-  asm volatile ("msr CNTV_CTL_EL0, %0" : : "r"(0)); // disable VTIMER
+  asm volatile ("msr CONTEXTIDR_EL1, %0" : : "r"(0UL));
+  asm volatile ("msr MDCR_EL2, %0" : : "r"((Mword)Cpu::Mdcr_bits));
+  asm volatile ("msr MDSCR_EL1, %0" : : "r"(0UL));
+  asm volatile ("msr CNTV_CTL_EL0, %0" : : "r"(0UL)); // disable VTIMER
   // CNTKCTL: allow access to virtual and physical counter from PL0
   // see: generic_timer.cpp: setup_timer_access (Hyp)
-  asm volatile("msr CNTKCTL_EL1, %0" : : "r"(0x3));
+  asm volatile("msr CNTKCTL_EL1, %0" : : "r"(0x3UL));
   if (vgic)
     Gic_h::gic->hcr(Gic_h::Hcr(0));
 }
@@ -144,6 +144,8 @@ PRIVATE inline
 void
 Context::save_ext_vcpu_state(Mword _state, Vm_state *v)
 {
+  Mword m;
+
   // save vm state
   asm volatile ("mrs %0, TPIDRRO_EL0" : "=r"(_tpidruro));
 
@@ -153,10 +155,14 @@ Context::save_ext_vcpu_state(Mword _state, Vm_state *v)
   asm volatile ("mrs %0, TTBR0_EL1" : "=r"(v->ttbr0));
   asm volatile ("mrs %0, TTBR1_EL1" : "=r"(v->ttbr1));
 
-  asm volatile ("mrs %0, CSSELR_EL1" : "=r"(v->csselr));
-  asm volatile ("mrs %0, SCTLR_EL1"  : "=r"(v->sctlr));
-  asm volatile ("mrs %0, CPACR_EL1"  : "=r"(v->cpacr));
-  asm volatile ("mrs %0, ESR_EL1"    : "=r"(v->esr));
+  asm volatile ("mrs %0, CSSELR_EL1" : "=r"(m));
+  v->csselr = m;
+  asm volatile ("mrs %0, SCTLR_EL1"  : "=r"(m));
+  v->sctlr = m;
+  asm volatile ("mrs %0, CPACR_EL1"  : "=r"(m));
+  v->cpacr = m;
+  asm volatile ("mrs %0, ESR_EL1"    : "=r"(m));
+  v->esr = m;
 
   asm volatile ("mrs %0, MAIR_EL1"  : "=r"(v->mair));
   asm volatile ("mrs %0, AMAIR_EL1" : "=r"(v->amair));
@@ -169,28 +175,45 @@ Context::save_ext_vcpu_state(Mword _state, Vm_state *v)
   asm volatile ("mrs %0, FAR_EL1"   : "=r"(v->far));
   asm volatile ("mrs %0, PAR_EL1"   : "=r"(v->par));
 
-  asm volatile ("mrs %0, SPSR_EL1"  : "=r"(v->spsr_el1));
-  asm volatile ("mrs %0, SPSR_abt"  : "=r"(v->spsr_abt));
-  asm volatile ("mrs %0, SPSR_fiq"  : "=r"(v->spsr_fiq));
-  asm volatile ("mrs %0, SPSR_irq"  : "=r"(v->spsr_irq));
-  asm volatile ("mrs %0, SPSR_und"  : "=r"(v->spsr_und));
+  asm volatile ("mrs %0, SPSR_EL1"  : "=r"(m));
+  v->spsr_el1 = m;
+  asm volatile ("mrs %0, SPSR_abt"  : "=r"(m));
+  v->spsr_abt = m;
+  asm volatile ("mrs %0, SPSR_fiq"  : "=r"(m));
+  v->spsr_fiq = m;
+  asm volatile ("mrs %0, SPSR_irq"  : "=r"(m));
+  v->spsr_irq = m;
+  asm volatile ("mrs %0, SPSR_und"  : "=r"(m));
+  v->spsr_und = m;
 
-  asm volatile ("mrs %0, AFSR0_EL1" : "=r"(v->afsr[0]));
-  asm volatile ("mrs %0, AFSR1_EL1" : "=r"(v->afsr[1]));
+  asm volatile ("mrs %0, AFSR0_EL1" : "=r"(m));
+  v->afsr[0] = m;
+  asm volatile ("mrs %0, AFSR1_EL1" : "=r"(m));
+  v->afsr[1] = m;
 
-  asm volatile ("mrs %0, MDCR_EL2" : "=r"(v->mdcr));
-  asm volatile ("mrs %0, MDSCR_EL1" : "=r"(v->mdscr));
-  asm volatile ("mrs %0, CONTEXTIDR_EL1" : "=r"(v->contextidr));
+  asm volatile ("mrs %0, MDCR_EL2" : "=r"(m));
+  v->mdcr = m;
+  asm volatile ("mrs %0, MDSCR_EL1" : "=r"(m));
+  v->mdscr = m;
+  asm volatile ("mrs %0, CONTEXTIDR_EL1" : "=r"(m));
+  v->contextidr = m;
 
-  asm volatile ("mrs %0, DACR32_EL2"  : "=r"(v->dacr32));
-//  asm volatile ("mrs %0, FPEXC32_EL2" : "=r"(v->fpexc32));
-  asm volatile ("mrs %0, IFSR32_EL2"  : "=r"(v->ifsr32));
+  asm volatile ("mrs %0, DACR32_EL2"  : "=r"(m));
+  v->dacr32 = m;
+//  asm volatile ("mrs %0, FPEXC32_EL2" : "=r"(m));
+//  v->fpexc32 = m;
+  asm volatile ("mrs %0, IFSR32_EL2"  : "=r"(m));
+  v->ifsr32 = m;
 
   asm volatile ("mrs %0, CNTV_CVAL_EL0" : "=r" (v->cntv_cval));
   asm volatile ("mrs %0, CNTVOFF_EL2"   : "=r" (v->cntvoff));
-  asm volatile ("mrs %0, CNTKCTL_EL1"   : "=r" (v->cntkctl));
+  asm volatile ("mrs %0, CNTKCTL_EL1"   : "=r" (m));
+  v->cntkctl = m;
   if ((_state & Thread_vcpu_user))
-    asm volatile ("mrs %0, CNTV_CTL_EL0" : "=r" (v->cntv_ctl));
+    {
+      asm volatile ("mrs %0, CNTV_CTL_EL0" : "=r" (m));
+      v->cntv_ctl = m;
+    }
 }
 
 PRIVATE inline
@@ -207,15 +230,15 @@ Context::load_ext_vcpu_state(Mword _to_state, Vm_state const *v)
   asm volatile ("msr TTBR0_EL1, %0" : : "r"(v->ttbr0));
   asm volatile ("msr TTBR1_EL1, %0" : : "r"(v->ttbr1));
 
-  asm volatile ("msr CSSELR_EL1, %0" : : "r"(v->csselr));
+  asm volatile ("msr CSSELR_EL1, %0" : : "r"((Mword)v->csselr));
 
   Unsigned32 sctlr = access_once(&v->sctlr);
   if (hcr & Cpu::Hcr_tge)
     sctlr &= ~Cpu::Cp15_c1_mmu;
 
-  asm volatile ("msr SCTLR_EL1, %0"  : : "r"(sctlr));
-  asm volatile ("msr CPACR_EL1, %0"  : : "r"(v->cpacr));
-  asm volatile ("msr ESR_EL1, %0"    : : "r"(v->esr));
+  asm volatile ("msr SCTLR_EL1, %0"  : : "r"((Mword)sctlr));
+  asm volatile ("msr CPACR_EL1, %0"  : : "r"((Mword)v->cpacr));
+  asm volatile ("msr ESR_EL1, %0"    : : "r"((Mword)v->esr));
 
   asm volatile ("msr MAIR_EL1, %0"  : : "r"(v->mair));
   asm volatile ("msr AMAIR_EL1, %0" : : "r"(v->amair));
@@ -228,38 +251,38 @@ Context::load_ext_vcpu_state(Mword _to_state, Vm_state const *v)
   asm volatile ("msr FAR_EL1, %0"   : : "r"(v->far));
   asm volatile ("msr PAR_EL1, %0"   : : "r"(v->par));
 
-  asm volatile ("msr SPSR_EL1, %0"  : : "r"(v->spsr_el1));
-  asm volatile ("msr SPSR_abt, %0"  : : "r"(v->spsr_abt));
-  asm volatile ("msr SPSR_fiq, %0"  : : "r"(v->spsr_fiq));
-  asm volatile ("msr SPSR_irq, %0"  : : "r"(v->spsr_irq));
-  asm volatile ("msr SPSR_und, %0"  : : "r"(v->spsr_und));
+  asm volatile ("msr SPSR_EL1, %0"  : : "r"((Mword)v->spsr_el1));
+  asm volatile ("msr SPSR_abt, %0"  : : "r"((Mword)v->spsr_abt));
+  asm volatile ("msr SPSR_fiq, %0"  : : "r"((Mword)v->spsr_fiq));
+  asm volatile ("msr SPSR_irq, %0"  : : "r"((Mword)v->spsr_irq));
+  asm volatile ("msr SPSR_und, %0"  : : "r"((Mword)v->spsr_und));
 
-  asm volatile ("msr AFSR0_EL1, %0" : : "r"(v->afsr[0]));
-  asm volatile ("msr AFSR1_EL1, %0" : : "r"(v->afsr[1]));
+  asm volatile ("msr AFSR0_EL1, %0" : : "r"((Mword)v->afsr[0]));
+  asm volatile ("msr AFSR1_EL1, %0" : : "r"((Mword)v->afsr[1]));
 
   Unsigned32 mdcr = access_once(&v->mdcr);
   mdcr &= Cpu::Mdcr_vm_mask;
   mdcr |= Cpu::Mdcr_bits;
-  asm volatile ("msr MDCR_EL2, %0" : : "r"(mdcr));
-  asm volatile ("msr MDSCR_EL1, %0" : : "r"(v->mdscr));
-  asm volatile ("msr CONTEXTIDR_EL1, %0" : : "r"(v->contextidr));
+  asm volatile ("msr MDCR_EL2, %0" : : "r"((Mword)mdcr));
+  asm volatile ("msr MDSCR_EL1, %0" : : "r"((Mword)v->mdscr));
+  asm volatile ("msr CONTEXTIDR_EL1, %0" : : "r"((Mword)v->contextidr));
 
-  asm volatile ("msr DACR32_EL2, %0"  : : "r"(v->dacr32));
-//  asm volatile ("msr FPEXC32_EL2, %0" : : "r"(v->fpexc32));
-  asm volatile ("msr IFSR32_EL2, %0"  : : "r"(v->ifsr32));
+  asm volatile ("msr DACR32_EL2, %0"  : : "r"((Mword)v->dacr32));
+//  asm volatile ("msr FPEXC32_EL2, %0" : : "r"((Mword)v->fpexc32));
+  asm volatile ("msr IFSR32_EL2, %0"  : : "r"((Mword)v->ifsr32));
 
 
   asm volatile ("msr VMPIDR_EL2, %0" : : "r" (v->vmpidr));
-  asm volatile ("msr VPIDR_EL2, %0"  : : "r" (v->vpidr));
+  asm volatile ("msr VPIDR_EL2, %0"  : : "r" ((Mword)v->vpidr));
 
   asm volatile ("msr CNTV_CVAL_EL0, %0" : : "r" (v->cntv_cval));
   asm volatile ("msr CNTVOFF_EL2, %0"   : : "r" (v->cntvoff));
-  asm volatile ("msr CNTKCTL_EL1, %0"   : : "r" (v->cntkctl));
+  asm volatile ("msr CNTKCTL_EL1, %0"   : : "r" ((Mword)(v->cntkctl)));
 
   if ((_to_state & Thread_vcpu_user))
-    asm volatile ("msr CNTV_CTL_EL0, %0" : : "r" (v->cntv_ctl));
+    asm volatile ("msr CNTV_CTL_EL0, %0" : : "r" ((Mword)v->cntv_ctl));
   else
-    asm volatile ("msr CNTV_CTL_EL0, %0" : : "r" (0));
+    asm volatile ("msr CNTV_CTL_EL0, %0" : : "r" (0UL));
 }
 
 PROTECTED static inline
@@ -275,24 +298,32 @@ PRIVATE inline
 void
 Context::arm_ext_vcpu_switch_to_host(Vcpu_state *vcpu, Vm_state *v)
 {
+  Mword m;
+
   asm volatile ("mrs %0, TPIDRRO_EL0" : "=r"(vcpu->_regs.tpidruro));
-  asm volatile ("mrs %0, SCTLR_EL1"   : "=r"(v->guest_regs.sctlr));
-  asm volatile ("mrs %0, CNTKCTL_EL1" : "=r" (v->guest_regs.cntkctl));
-  asm volatile ("mrs %0, MDCR_EL2"    : "=r"(v->guest_regs.mdcr));
-  asm volatile ("mrs %0, MDSCR_EL1"   : "=r"(v->guest_regs.mdscr));
-  asm volatile ("mrs %0, CPACR_EL1"   : "=r"(v->guest_regs.cpacr));
+  asm volatile ("mrs %0, SCTLR_EL1"   : "=r"(m));
+  v->guest_regs.sctlr = m;
+  asm volatile ("mrs %0, CNTKCTL_EL1" : "=r"(m));
+  v->guest_regs.cntkctl = m;
+  asm volatile ("mrs %0, MDCR_EL2"    : "=r"(m));
+  v->guest_regs.mdcr = m;
+  asm volatile ("mrs %0, MDSCR_EL1"   : "=r"(m));
+  v->guest_regs.mdscr = m;
+  asm volatile ("mrs %0, CPACR_EL1"   : "=r"(m));
+  v->guest_regs.cpacr = m;
   asm volatile ("msr CPACR_EL1, %0"   : : "r"(3UL << 20));
 
-  asm volatile ("msr CNTKCTL_EL1, %0"   : : "r" (Host_cntkctl));
-  asm volatile ("mrs %0, CNTV_CTL_EL0" : "=r" (v->cntv_ctl));
+  asm volatile ("msr CNTKCTL_EL1, %0"  : : "r" ((Mword)Host_cntkctl));
+  asm volatile ("mrs %0, CNTV_CTL_EL0" : "=r" (m));
+  v->cntv_ctl = m;
   // disable VTIMER
-  asm volatile ("msr CNTV_CTL_EL0, %0" : : "r"(0));
+  asm volatile ("msr CNTV_CTL_EL0, %0" : : "r"(0UL));
   // disable all debug exceptions for non-vms, if we want debug
   // exceptions into JDB we need either per-thread or a global
   // setting for this value. (probably including the contextidr)
-  asm volatile ("msr MDCR_EL2, %0" : : "r"(Cpu::Mdcr_bits));
-  asm volatile ("msr MDSCR_EL1, %0" : : "r"(0));
-  asm volatile ("msr SCTLR_EL1, %0" : : "r"(Cpu::Sctlr_el1_generic));
+  asm volatile ("msr MDCR_EL2, %0" : : "r"((Mword)Cpu::Mdcr_bits));
+  asm volatile ("msr MDSCR_EL1, %0" : : "r"(0UL));
+  asm volatile ("msr SCTLR_EL1, %0" : : "r"((Mword)Cpu::Sctlr_el1_generic));
 }
 
 PRIVATE inline
@@ -325,17 +356,17 @@ PRIVATE inline
 void
 Context::arm_ext_vcpu_switch_to_guest(Vcpu_state *, Vm_state *v)
 {
-  asm volatile ("msr VPIDR_EL2, %0"  : : "r" (v->vpidr));
-  asm volatile ("msr VMPIDR_EL2, %0" : : "r" (v->vmpidr));
-  asm volatile ("msr CNTKCTL_EL1, %0"   : : "r" (v->guest_regs.cntkctl));
-  asm volatile ("msr CNTV_CTL_EL0, %0" : : "r" (v->cntv_ctl));
+  asm volatile ("msr VPIDR_EL2, %0"  : : "r"((Mword)v->vpidr));
+  asm volatile ("msr VMPIDR_EL2, %0" : : "r"(v->vmpidr));
+  asm volatile ("msr CNTKCTL_EL1, %0" : : "r"((Mword)v->guest_regs.cntkctl));
+  asm volatile ("msr CNTV_CTL_EL0, %0" : : "r"((Mword)v->cntv_ctl));
   Unsigned32 mdcr = access_once(&v->guest_regs.mdcr);
   mdcr &= Cpu::Mdcr_vm_mask;
   mdcr |= Cpu::Mdcr_bits;
-  asm volatile ("msr SCTLR_EL1, %0"   : : "r"(v->guest_regs.sctlr));
-  asm volatile ("msr MDCR_EL2, %0"    : : "r"(mdcr));
-  asm volatile ("msr MDSCR_EL1, %0"   : : "r"(v->guest_regs.mdscr));
-  asm volatile ("msr CPACR_EL1, %0"   : : "r"(v->guest_regs.cpacr));
+  asm volatile ("msr SCTLR_EL1, %0"   : : "r"((Mword)v->guest_regs.sctlr));
+  asm volatile ("msr MDCR_EL2, %0"    : : "r"((Mword)mdcr));
+  asm volatile ("msr MDSCR_EL1, %0"   : : "r"((Mword)v->guest_regs.mdscr));
+  asm volatile ("msr CPACR_EL1, %0"   : : "r"((Mword)v->guest_regs.cpacr));
 }
 
 PRIVATE inline

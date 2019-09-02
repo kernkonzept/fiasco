@@ -130,11 +130,9 @@ Cpu::init_hyp_mode()
                     // sl = 1       PS = 40bit   t0sz = 40bit
                     | (1UL << 6) | (2UL << 16) | 25));
 
-  asm volatile (
-        "msr MDCR_EL2, %0"
-        : : "r"(Mdcr_bits));
+  asm volatile ("msr MDCR_EL2, %0" : : "r"((Mword)Mdcr_bits));
 
-  asm volatile ("msr SCTLR_EL1, %0" : : "r"(Sctlr_el1_generic));
+  asm volatile ("msr SCTLR_EL1, %0" : : "r"((Mword)Sctlr_el1_generic));
   asm volatile ("msr HCR_EL2, %0" : : "r" (Hcr_host_bits));
 
   Mem::dsb();
@@ -142,7 +140,7 @@ Cpu::init_hyp_mode()
 
   // HCPTR
   asm volatile("msr CPTR_EL2, %0" : :
-               "r" (  0x33ff       // TCP: 0-9, 12-13
+               "r" (  0x33ffUL     // TCP: 0-9, 12-13
                     | (1 << 20))); // TTA
 }
 //--------------------------------------------------------------------------

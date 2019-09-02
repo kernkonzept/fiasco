@@ -385,12 +385,14 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
   v->vmpidr = 1UL << 31; // ARMv8: RES1
 
   // use the real MIDR as initial value
-  asm ("mrs %0, MIDR_EL1" : "=r" (v->vpidr));
+  Mword m;
+  asm ("mrs %0, MIDR_EL1" : "=r"(m));
+  v->vpidr = m;
 
   if (current() == this)
     {
-      asm volatile ("msr SCTLR_EL1, %0" : : "r"(v->sctlr));
-      asm volatile ("msr CNTKCTL_EL1, %0" : : "r"(v->cntkctl));
+      asm volatile ("msr SCTLR_EL1, %0" : : "r"((Mword)v->sctlr));
+      asm volatile ("msr CNTKCTL_EL1, %0" : : "r"((Mword)v->cntkctl));
       asm volatile ("msr CNTVOFF_EL2, %0" : : "r"(v->cntvoff));
     }
 }

@@ -364,7 +364,7 @@ Bootstrap::leave_el3()
         ;
     }
 
-  asm volatile ("msr HCR_EL2, %0" : : "r"(1 << 31));
+  asm volatile ("msr HCR_EL2, %0" : : "r"(1UL << 31));
 
   // flush all E2 TLBs
   asm volatile ("tlbi alle2is");
@@ -372,7 +372,7 @@ Bootstrap::leave_el3()
   // setup SCR (disable monitor completely)
   asm volatile ("msr scr_el3, %0"
                 : :
-                "r"(Cpu::Scr_ns | Cpu::Scr_rw | Cpu::Scr_smd | Cpu::Scr_hce));
+                "r"((Mword)(Cpu::Scr_ns | Cpu::Scr_rw | Cpu::Scr_smd | Cpu::Scr_hce)));
 
   Mword sctlr_el3;
   Mword sctlr;
@@ -397,7 +397,7 @@ Bootstrap::leave_el3()
       "   eret                 \n"
       "1: mov sp, %[tmp]       \n"
       : [tmp]"=&r"(tmp)
-      : [psr]"r"((0xf << 6) | 9)
+      : [psr]"r"((0xfUL << 6) | 9)
       : "cc", "x4");
 }
 
@@ -425,7 +425,7 @@ Bootstrap::init_paging()
       "msr ttbr0_el2, %0 \n"
       "isb               \n"
       : :
-      "r"(d), "r"(Page::Ttbcr_bits));
+      "r"(d), "r"((Mword)Page::Ttbcr_bits));
 
   return Phys_addr(0);
 }
