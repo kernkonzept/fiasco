@@ -22,6 +22,7 @@ protected:
 IMPLEMENTATION:
 
 #include "ipc_timeout.h"
+#include "assert_opt.h"
 
 JDB_DEFINE_TYPENAME(Semaphore,  "\033[37mIRQ sem\033[m");
 
@@ -144,7 +145,7 @@ Semaphore::down(Thread *ct)
    return run;
 }
 
-PRIVATE inline NOEXPORT ALWAYS_INLINE
+PRIVATE inline NEEDS["assert_opt.h"] NOEXPORT ALWAYS_INLINE
 L4_msg_tag
 Semaphore::sys_down(L4_timeout t, Utcb const *utcb)
 {
