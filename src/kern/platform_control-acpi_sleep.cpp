@@ -131,6 +131,7 @@ IMPLEMENTATION:
 
 #include "cpu_call.h"
 #include "io.h"
+#include "fpu.h"
 
 /**
  * \brief Initiate a full system suspend to RAM.
