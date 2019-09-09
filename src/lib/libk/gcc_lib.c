@@ -8,7 +8,7 @@ struct llmoddiv_t
   unsigned long long mod;
 };
 
-struct llmoddiv_t llmoddiv(unsigned long long div, unsigned long long s)
+static struct llmoddiv_t llmoddiv(unsigned long long div, unsigned long long s)
 {
   unsigned long long i;
   unsigned long long tmp;
