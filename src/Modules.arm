@@ -216,6 +216,7 @@ jdb_trace_set_IMPL	:= jdb_trace_set jdb_trace_set-arm \
 			   jdb_trace_set-arm-$(BITS)
 jdb_bp_IMPL		:= jdb_bp-arm
 thread_IMPL		+= thread-debug
+jdb_tbuf_fe_IMPL        := jdb_tbuf_fe jdb_tbuf_fe-arm
 
 ifneq ($(CONFIG_JDB_GZIP),)
  ifneq ($(wildcard $(srcdir)/lib/gzip),)

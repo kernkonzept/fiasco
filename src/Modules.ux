@@ -118,7 +118,7 @@ INTERFACES_KERNEL	:= string_buffer mem_region simpleio kernel_console panic warn
 			   jdb_tcb jdb_prompt_module jdb_bt	  \
 			   jdb_mapdb jdb_ptab jdb_kern_info jdb_counters  \
 			   glibc_getchar jdb_trace jdb_trace_set	  \
-			   jdb_tbuf_init kern_cnt  	  \
+			   jdb_tbuf_init kern_cnt jdb_tbuf_fe             \
 			   jdb_tbuf_output jdb_tbuf_show                  \
 			   jdb_misc checksum watchdog terminate		  \
 			   jdb_screen push_console jdb_bp		  \

@@ -22,10 +22,6 @@ public:
     Result = 2
   };
 
-  static unsigned char get_entry_status(Tb_log_table_entry const *e);
-  static void set_entry_status(Tb_log_table_entry const *e,
-                               unsigned char value);
-
 protected:
   static Tb_entry_union *_tbuf_act;	// current entry
   static Tb_entry_union *_tbuf_max;
@@ -66,7 +62,6 @@ IMPLEMENTATION:
 #include "cpu_lock.h"
 #include "initcalls.h"
 #include "lock_guard.h"
-#include "mem_unit.h"
 #include "std_macros.h"
 
 // read only: initialized at boot
@@ -449,20 +444,4 @@ void
 Jdb_tbuf::disable_filter()
 {
   _filter_enabled = 0;
-}
-
-IMPLEMENT_DEFAULT
-unsigned char
-Jdb_tbuf::get_entry_status(Tb_log_table_entry const *e)
-{
-  return *(e->patch);
-}
-
-IMPLEMENT_DEFAULT
-void
-Jdb_tbuf::set_entry_status(Tb_log_table_entry const *e,
-                           unsigned char value)
-{
-  *(e->patch) = value;
-  Mem_unit::make_coherent_to_pou(e->patch);
 }

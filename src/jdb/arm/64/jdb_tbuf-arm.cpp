@@ -19,28 +19,3 @@ INTERFACE [arm && jdb_logging]:
                     : [xfmt] "i" (&Tb_entry_formatter_t<fmt>::singleton)); \
       if (EXPECT_FALSE( __do_log__ ))				\
 	{
-
-IMPLEMENTATION [arm && 64bit && jdb_logging]:
-
-#include "jdb.h"
-#include "jdb_types.h"
-
-IMPLEMENT_OVERRIDE
-unsigned char
-Jdb_tbuf::get_entry_status(Tb_log_table_entry const *e)
-{
-  return (*reinterpret_cast<Unsigned32 const *>(e->patch) >> 5) & 0xffff;
-}
-
-IMPLEMENT_OVERRIDE
-void
-Jdb_tbuf::set_entry_status(Tb_log_table_entry const *e,
-                           unsigned char value)
-{
-  Unsigned32 insn;
-  if (Jdb::peek_task(Jdb_address::kmem_addr(e->patch), &insn, sizeof(insn)))
-    return;
-  insn = (insn & ~(0xffffU << 5)) | (((Unsigned32)value) << 5);
-  Jdb::poke_task(Jdb_address::kmem_addr(e->patch), &insn, sizeof(insn));
-}
-
