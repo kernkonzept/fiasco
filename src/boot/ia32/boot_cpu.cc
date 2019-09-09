@@ -511,7 +511,8 @@ static char const * const base_regs =
   "EIP %08x EFLAGS %08x\n"
   "CS %04x SS %04x DS %04x ES %04x FS %04x GS %04x\n";
 
-extern "C" FIASCO_FASTCALL
+extern "C" FIASCO_FASTCALL void trap_dump_panic(const struct trap_state *);
+
 void
 trap_dump_panic(const struct trap_state *st)
 {
