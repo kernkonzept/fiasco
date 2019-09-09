@@ -433,16 +433,16 @@ Jdb_disasm_view::show(Address addr, Space *s, bool dump_only)
   if (dump_only)
     {
       for (unsigned i = 0; i < 20; ++i)
-        Jdb_disasm::show_disasm_line(Jdb_screen::width(), disass_addr, 0, s);
+        Jdb_disasm::show_disasm_line(Jdb_screen::width(), disass_addr, s);
       return;
     }
 
   Jdb::cursor(_y, _x);
   putstr(Jdb::esc_emph);
-  Jdb_disasm::show_disasm_line(-40, disass_addr, 0, s);
+  Jdb_disasm::show_disasm_line(-40, disass_addr, s);
   putstr("\033[m");
   Jdb::cursor(_y + 1, _x);
-  Jdb_disasm::show_disasm_line(-40, disass_addr, 0, s);
+  Jdb_disasm::show_disasm_line(-40, disass_addr, s);
 }
 
 

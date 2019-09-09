@@ -19,7 +19,6 @@ IMPLEMENTATION:
 #include "jdb_input_task.h"
 #include "jdb_module.h"
 #include "jdb_screen.h"
-#include "jdb_symbol.h"
 #include "kernel_console.h"
 #include "keycodes.h"
 #include "simpleio.h"

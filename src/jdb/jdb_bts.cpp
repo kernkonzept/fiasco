@@ -8,7 +8,6 @@ IMPLEMENTATION:
 #include "jdb_input.h"
 #include "jdb_module.h"
 #include "jdb_screen.h"
-#include "jdb_symbol.h"
 #include "keycodes.h"
 #include "kernel_console.h"
 #include "mem_layout.h"
@@ -177,26 +176,8 @@ Jdb_bts::show_entry(Mword idx)
   printf(" %5ld: %08x => %08x %c", 
          idx, e->from, e->to, e->pred() ? 'p' : ' ');
 
-  Space *task = e->task();
-
-  if (Mem_layout::in_kernel(e->from) || task != 0)
-    {
-      Address sym_addr = e->from;
-      char buffer[64];
-
-      if (Jdb_symbol::match_addr_to_symbol_fuzzy(&sym_addr, task,
-						 buffer,
-						 46 < sizeof(buffer)
-						   ? 46 : sizeof(buffer))
-	  && e->from-sym_addr < 1024)
-	{
-	  printf("   %s", buffer);
-	  if (e->from-sym_addr)
-	    printf(" %s+ 0x%lx\033[m", Jdb::esc_line, e->from-sym_addr);
-	}
-    }
   puts("\033[K");
-  
+
   return true;
 }
 

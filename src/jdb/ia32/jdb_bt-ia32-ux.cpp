@@ -8,9 +8,7 @@ IMPLEMENTATION[ia32,amd64,ux]:
 #include "jdb_input.h"
 #include "jdb_input_task.h"
 #include "jdb_kobject.h"
-#include "jdb_lines.h"
 #include "jdb_module.h"
-#include "jdb_symbol.h"
 #include "mem_layout.h"
 #include "keycodes.h"
 #include "thread_object.h"
@@ -214,40 +212,9 @@ Jdb_bt::get_kernel_eip_ebp(Mword &eip1, Mword &eip2, Mword &ebp)
 
 /** Show one backtrace item we found. Add symbol name and line info */
 static void
-Jdb_bt::show_item(int nr, Address ksp, Address addr, Address_type user)
+Jdb_bt::show_item(int nr, Address ksp, Address addr, Address_type)
 {
-  char buffer[74];
-
-  printf(" %s#%d " L4_PTR_FMT " " L4_PTR_FMT "", nr<10 ? " ": "", nr, ksp, addr);
-
-  Address sym_addr = addr;
-  if (Jdb_symbol::match_addr_to_symbol_fuzzy(&sym_addr, 
-					     user == ADDR_KERNEL ? 0 : task, 
-				     	     buffer,
-					     56 < sizeof(buffer) 
-					            ? 56 : sizeof(buffer))
-      // if the previous symbol is to far away assume that there is no
-      // symbol for that entry
-      && (addr-sym_addr < 1024))
-    {
-      printf(" : %s", buffer);
-      if (addr-sym_addr)
-	printf(" %s+ 0x%lx\033[m", Jdb::esc_line, addr-sym_addr);
-    }
-
-  // search appropriate line backwards starting from addr-1 because we
-  // don't want to see the line info for the next statement after the
-  // call but the line info for the call itself
-  Address line_addr = addr-1;
-  if (Jdb_lines::match_addr_to_line_fuzzy(&line_addr, 
-					  user == ADDR_KERNEL ? 0 : task,
-				     	  buffer, sizeof(buffer)-1, 0)
-      // if the previous line is to far away assume that there is no
-      // line for that entry
-      && (addr-line_addr < 128))
-    printf("\n%6s%s%s\033[m", "", Jdb::esc_line, buffer);
-
-  putchar('\n');
+  printf(" %s#%d " L4_PTR_FMT " " L4_PTR_FMT "\n", nr<10 ? " ": "", nr, ksp, addr);
 }
 
 static void

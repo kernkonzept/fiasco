@@ -10,7 +10,6 @@ IMPLEMENTATION:
 #include "jdb_input.h"
 #include "jdb_module.h"
 #include "jdb_screen.h"
-#include "jdb_symbol.h"
 #include "jdb_regex.h"
 #include "jdb_tbuf.h"
 #include "jdb_tbuf_output.h"

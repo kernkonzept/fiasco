@@ -328,13 +328,6 @@ Jdb::get_thread(Cpu_number cpu)
   return static_cast<Thread*>(context_of((const void*)sp));
 }
 
-PUBLIC static
-Space *
-Jdb::translate_task(Address addr, Space *task)
-{
-  return (Kmem::is_kmem_page_fault(addr, 0)) ? 0 : task;
-}
-
 PUBLIC static inline
 bool
 Jdb::same_page(Address a1, Address a2)

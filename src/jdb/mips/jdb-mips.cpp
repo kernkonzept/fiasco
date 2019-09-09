@@ -144,13 +144,6 @@ Jdb::access_mem_task(Address virt, Space * task)
 }
 
 PUBLIC static
-Space *
-Jdb::translate_task(Address addr, Space * task)
-{
-  return (Kmem::is_kmem_page_fault(addr, 0)) ? 0 : task;
-}
-
-PUBLIC static
 int
 Jdb::peek_task(Address virt, Space * task, void *value, int width)
 {

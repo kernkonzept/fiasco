@@ -81,7 +81,7 @@ INTERFACES_KERNEL	:= string_buffer mem_region simpleio kernel_console panic warn
 			   bitmap buddy_alloc koptions context_base \
 			   mem_layout per_cpu_data pm globals loader vhw   \
 			   kip_init ipi queue_item queue cpu_mask rcupdate \
-			   boot_info config jdb_symbol jdb_util	          \
+			   boot_info config jdb_util	          \
 			   tb_entry perf_cnt jdb_tbuf x86desc		  \
 			   emulation irq_chip_ux_base pic cpu trampoline cpu_lock \
 			   spin_lock boot_alloc			  \
@@ -112,10 +112,10 @@ INTERFACES_KERNEL	:= string_buffer mem_region simpleio kernel_console panic warn
 			   irq_chip_ia32 irq_chip_ux \
 			   banner fpu_alloc irq icu_helper main 	  \
 			   startup libc_support reset semaphore          \
-			   jdb_dbinfo jdb fb net \
+			   jdb fb net \
 			   jdb_core jdb_module jdb_table         	  \
 			   jdb_thread_list jdb_input jdb_input_task jdb_dump jdb_thread  \
-			   jdb_lines jdb_tcb jdb_prompt_module jdb_bt	  \
+			   jdb_tcb jdb_prompt_module jdb_bt	  \
 			   jdb_mapdb jdb_ptab jdb_kern_info jdb_counters  \
 			   glibc_getchar jdb_trace jdb_trace_set	  \
 			   jdb_tbuf_init kern_cnt  	  \

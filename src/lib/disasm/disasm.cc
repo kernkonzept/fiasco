@@ -90,9 +90,8 @@ special_l4_ops(bfd_vma memaddr)
 
 int
 disasm_bytes(char *buffer, unsigned len, Address addr, Space *task,
-             int /*show_symbols*/, int show_intel_syntax,
-             Peek_task peek_task, Is_adp_mem is_adp_mem,
-             Get_symbol /*get_symbol*/)
+             int show_intel_syntax,
+             Peek_task peek_task, Is_adp_mem is_adp_mem)
 {
   // symbols / lines not supported ATM anyway
 #if 0

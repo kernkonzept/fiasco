@@ -36,8 +36,6 @@ public:
     Io_map_area_start = 0xec000000,
     Io_map_area_end   = 0xec800000,
     __free_4          = 0xec880000,    ///< % 4MB
-    Jdb_debug_start   = 0xecc00000,    ///< % 4MB   JDB symbols/lines
-    Jdb_debug_end     = 0xee000000,    ///< % 4MB
     // 0xee000000-0xef800000 (24MB) free
     Kstatic           = 0xef800000,    ///< Io_bitmap - 4MB
     Io_bitmap         = 0xefc00000,    ///< % 4MB

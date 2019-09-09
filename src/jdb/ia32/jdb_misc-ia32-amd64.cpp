@@ -6,7 +6,6 @@ IMPLEMENTATION[ia32 || amd64]:
 #include "jdb.h"
 #include "jdb_ktrace.h"
 #include "jdb_module.h"
-#include "jdb_symbol.h"
 #include "jdb_screen.h"
 #include "static_init.h"
 #include "task.h"
@@ -90,11 +89,7 @@ Mword    Jdb_misc_debug::task;
 static void
 Jdb_misc_debug::show_lbr_entry(const char *str, Address addr)
 {
-  char symbol[60];
-
   printf("%s " L4_PTR_FMT " ", str, addr);
-  if (Jdb_symbol::match_addr_to_symbol_fuzzy(&addr, 0, symbol, sizeof(symbol)))
-    printf("(%s)", symbol);
 }
 
 PUBLIC

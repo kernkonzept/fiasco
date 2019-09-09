@@ -44,8 +44,6 @@ public:
     Io_map_area_end   = Kglobal_area + 0xc800000UL,
     ___free_3         = Kglobal_area + 0xc800000UL, ///< % 4MB
     ___free_4         = Kglobal_area + 0xc880000UL, ///< % 4MB
-    Jdb_debug_start   = Kglobal_area + 0xcc00000UL,    ///< % 4MB   JDB symbols/lines
-    Jdb_debug_end     = Kglobal_area + 0xe000000UL,    ///< % 4MB
     // 0xffffffffee000000-0xffffffffef800000 (24MB) free
     Kstatic           = 0xffffffffef800000UL,    ///< % 4MB Io_bitmap
     Vmem_end          = 0xfffffffff0000000UL,

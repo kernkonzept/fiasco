@@ -4,7 +4,6 @@
 #include <cstring>
 
 #include "config.h"
-#include "jdb_symbol.h"
 #include "jdb_tbuf_output.h"
 #include "jdb_util.h"
 #include "kobject_dbg.h"

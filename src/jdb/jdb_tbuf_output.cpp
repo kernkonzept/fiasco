@@ -28,7 +28,6 @@ IMPLEMENTATION:
 #include "jdb.h"
 #include "jdb_kobject_names.h"
 #include "jdb_regex.h"
-#include "jdb_symbol.h"
 #include "jdb_tbuf.h"
 #include "kdb_ke.h"
 #include "kernel_console.h"

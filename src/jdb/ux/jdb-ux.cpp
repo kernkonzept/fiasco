@@ -41,7 +41,6 @@ IMPLEMENTATION [ux]:
 #include "globals.h"
 #include "initcalls.h"
 #include "jdb_core.h"
-#include "jdb_dbinfo.h"
 #include "jdb_screen.h"
 #include "kernel_console.h"
 #include "kernel_task.h"
@@ -242,15 +241,6 @@ bool
 Jdb::handle_conditional_breakpoint(Cpu_number, Jdb_entry_frame *)
 { return false; }
 
-
-PUBLIC
-static Space *
-Jdb::translate_task(Address /*addr*/, Space *task)
-{
-  // we have no idea if addr belongs to kernel or user space
-  // since kernel and user occupy different address spaces
-  return task;
-}
 
 PUBLIC
 static Address

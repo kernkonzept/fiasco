@@ -18,13 +18,6 @@ private:
   static Kobject *_task;
   static Space   *_space;
   static Address  _addr;
-public:
-  typedef struct
-    {
-      char str[32];
-      Jdb_module::Gotkey *gotkey;
-    } Symbol;
-  static Symbol   symbol;
 };
 
 
@@ -44,16 +37,7 @@ char     Jdb_input_task_addr::first_char_have_task;
 Kobject *Jdb_input_task_addr::_task;
 Space   *Jdb_input_task_addr::_space;
 Address  Jdb_input_task_addr::_addr;
-Jdb_input_task_addr::Symbol Jdb_input_task_addr::symbol;
 
-
-static
-void
-Jdb_input_task_addr::gotkey_complete_symbol(char *&str, int maxlen, int c)
-{ (void)str; (void)maxlen;
-  if (c == KEY_TAB)
-    printf("XXX\n"); //Jdb_symbol::complete_symbol(str, maxlen, task);
-}
 
 PUBLIC static
 Task *
@@ -81,8 +65,6 @@ Jdb_input_task_addr::action(void *&args, char const *&fmt, int &next_char)
       _task         = 0;
       _space        = Jdb::get_current_space();
       _addr         = (Address)-1;
-      symbol.str[0] = '\0';
-      symbol.gotkey = gotkey_complete_symbol;
     }
 
   if (args == &first_char_have_task)
@@ -121,14 +103,7 @@ Jdb_input_task_addr::action(void *&args, char const *&fmt, int &next_char)
     }
   else if (args == &first_char || args == &first_char_have_task)
     {
-      if (first_char == 's')
-	{
-	  args = &symbol;
-	  fmt  = strcmp(fmt, " addr=%C") ? " symbol=%32S"
-					 : " \b\b\b\b\b\bsymbol=%32S";
-	  return Jdb_module::EXTRA_INPUT;
-	}
-      else if (isxdigit(first_char))
+      if (isxdigit(first_char))
 	{
 	  next_char = first_char;
 	  args = &_addr;
@@ -141,23 +116,6 @@ Jdb_input_task_addr::action(void *&args, char const *&fmt, int &next_char)
 	  fmt = "%C";
 	  return Jdb_module::EXTRA_INPUT;
 	}
-    }
-  else if (args == &symbol)
-    {
-#if 0
-      // XXX: Fix symbols
-      Address sym_addr;
-      bool instr = strlen(symbol.str)>=sizeof(symbol.str)-1;
-      if ((sym_addr = Jdb_symbol::match_symbol_to_addr(symbol.str,
-						       instr, task)))
-	_addr = sym_addr;
-      else
-	{
-	  _addr = (Address)-1;
-	  puts(" not found");
-	  return Jdb_module::ERROR;
-	}
-#endif
     }
 
   return Jdb_module::NOTHING;

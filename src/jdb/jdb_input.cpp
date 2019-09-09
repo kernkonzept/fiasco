@@ -14,7 +14,6 @@ IMPLEMENTATION:
 #include <cstdio>
 #include "keycodes.h"
 #include "jdb.h"
-#include "jdb_symbol.h"
 #include "simpleio.h"
 
 PUBLIC static
