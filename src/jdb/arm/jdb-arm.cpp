@@ -294,36 +294,10 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
 
 PUBLIC static
 int
-Jdb::peek_task(Jdb_address addr, void *value, int width)
-{
-  unsigned char const *mem = access_mem_task(addr, false);
-  if (!mem)
-    return -1;
-
-  memcpy(value, mem, width);
-  return 0;
-}
-
-PUBLIC static
-int
 Jdb::is_adapter_memory(Jdb_address)
 {
   return 0;
 }
-
-PUBLIC static
-int
-Jdb::poke_task(Jdb_address addr, void const *val, int width)
-{
-  unsigned char *mem = access_mem_task(addr, true);
-  if (!mem)
-    return -1;
-
-  memcpy(mem, val, width);
-  Mem_unit::make_coherent_to_pou(mem);
-  return 0;
-}
-
 
 PRIVATE static
 void

@@ -296,40 +296,6 @@ Jdb::peek (T const *addr, Address_type user)
   return Mem_space::current_mem_space(Cpu_number::boot_cpu())->peek(addr, user);
 }
 
-PUBLIC static
-int
-Jdb::peek_task(Jdb_address addr, void *value, int width)
-{
-  if (width > 0
-      && (addr.addr() & Config::PAGE_MASK)
-           != ((addr.addr() + width - 1) & Config::PAGE_MASK))
-    return -1;
-
-  unsigned char const *mem = access_mem_task(addr, false);
-  if (!mem)
-    return -1;
-
-  memcpy(value, mem, width);
-  return 0;
-}
-
-PUBLIC static
-int
-Jdb::poke_task(Jdb_address addr, void const *value, int width)
-{
-  if (width > 0
-      && (addr.addr() & Config::PAGE_MASK)
-           != ((addr.addr() + width - 1) & Config::PAGE_MASK))
-    return -1;
-
-  unsigned char *mem = access_mem_task(addr, true);
-  if (!mem)
-    return -1;
-
-  memcpy(mem, value, width);
-  return 0;
-}
-
 PUBLIC
 static int
 Jdb::is_adapter_memory(Jdb_address)

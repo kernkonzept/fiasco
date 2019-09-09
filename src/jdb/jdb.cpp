@@ -985,6 +985,31 @@ Jdb::get_task(Cpu_number cpu)
 //
 
 PUBLIC static
+int
+Jdb::peek_task(Jdb_address addr, void *value, int width)
+{
+  unsigned char const *mem = access_mem_task(addr, false);
+  if (!mem)
+    return -1;
+
+  memcpy(value, mem, width);
+  return 0;
+}
+
+PUBLIC static
+int
+Jdb::poke_task(Jdb_address addr, void const *value, int width)
+{
+  unsigned char *mem = access_mem_task(addr, true);
+  if (!mem)
+    return -1;
+
+  memcpy(mem, value, width);
+  Mem_unit::make_coherent_to_pou(mem);
+  return 0;
+}
+
+PUBLIC static
 template< typename T >
 bool
 Jdb::peek(Jdb_addr<T> addr, typename cxx::remove_const<T>::type &value)
