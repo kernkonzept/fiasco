@@ -375,36 +375,28 @@ Jdb::poke_phys(Address phys, void const *value, int width)
 }
 
 PRIVATE static
-bool
-Jdb::check_is_kmem_valid_addr(Address virtaddr, bool write)
-{
-  if (!Kmem::is_kmem_page_fault(virtaddr, 0))
-    return false;
-
-  Address pdbr = Cpu::get_pdbr();
-  Pdir *kdir = (Pdir *)Mem_layout::phys_to_pmem(pdbr);
-  auto i = kdir->walk(Virt_addr(virtaddr));
-  return i.is_valid() && (!write || (i.attribs().rights & Page::Rights::W()));
-}
-
-PUBLIC static
-int
-Jdb::peek_task(Jdb_address addr, void *value, int width)
+unsigned char *
+Jdb::access_mem_task(Jdb_address addr, bool write)
 {
   if (!Cpu::is_canonical_address(addr.addr()))
-    return -1;
+    return nullptr;
+
+  Address phys;
 
   if (addr.is_kmem())
     {
-      if (!check_is_kmem_valid_addr(addr.addr(), false))
-        return -1;
+      Address pdbr = Cpu::get_pdbr();
+      Pdir *kdir = (Pdir *)Mem_layout::phys_to_pmem(pdbr);
+      auto i = kdir->walk(Virt_addr(addr.addr()));
+      if (!i.is_valid())
+        return nullptr;
 
-      memcpy(value, addr.virt(), width);
-      return 0;
+      if (!write || (i.attribs().rights & Page::Rights::W()))
+        return (unsigned char *)addr.virt();
+
+      phys = i.page_addr() | cxx::get_lsb(addr.addr(), i.page_order());
     }
-
-  Address phys;
-  if (addr.is_phys())
+  else if (addr.is_phys())
     phys = addr.phys();
   else
     {
@@ -418,9 +410,21 @@ Jdb::peek_task(Jdb_address addr, void *value, int width)
     }
 
   if (phys == ~0UL)
+    return nullptr;
+
+  Address virt = Kmem::map_phys_page_tmp(phys, 0);
+  return reinterpret_cast<unsigned char *>(virt);
+}
+
+PUBLIC static
+int
+Jdb::peek_task(Jdb_address addr, void *value, int width)
+{
+  unsigned char const *mem = access_mem_task(addr, false);
+  if (!mem)
     return -1;
 
-  peek_phys(phys, value, width);
+  memcpy(value, mem, width);
   return 0;
 }
 
@@ -428,37 +432,11 @@ PUBLIC static
 int
 Jdb::poke_task(Jdb_address addr, void const *value, int width)
 {
-  if (!Cpu::is_canonical_address(addr.addr()))
+  unsigned char *mem = access_mem_task(addr, true);
+  if (!mem)
     return -1;
 
-  if (addr.is_kmem())
-    {
-      if (!check_is_kmem_valid_addr(addr.addr(), true))
-        return -1;
-
-      memcpy(addr.virt(), value, width);
-      return 0;
-    }
-
-  Address phys;
-
-  if (addr.is_phys())
-    phys = addr.phys();
-  else
-    {
-      // user address, use temporary mapping
-      phys = Address(addr.space()->virt_to_phys(addr.addr()));
-
-#ifndef CONFIG_CPU_LOCAL_MAP
-      if (phys == ~0UL)
-        phys = addr.space()->virt_to_phys_s0(addr.virt());
-#endif
-
-      if (phys == ~0UL)
-	return -1;
-    }
-
-  poke_phys(phys, value, width);
+  memcpy(mem, value, width);
   return 0;
 }
 
