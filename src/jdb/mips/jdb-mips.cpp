@@ -88,7 +88,7 @@ Jdb::handle_user_request(Cpu_number cpu)
     return cpu != Cpu_number::boot_cpu();
 
   if (ef->debug_sequence())
-    return execute_command_ni(task, str);
+    return execute_command_ni(Jdb_addr<char const>(str, task));
 
   return false;
 }
@@ -114,25 +114,24 @@ Jdb::init()
 
 PRIVATE static
 unsigned char *
-Jdb::access_mem_task(Address virt, Space * task)
+Jdb::access_mem_task(Jdb_address addr)
 {
-  // align
-  virt &= ~0x03;
-
   Address phys;
-  if (task)
+  if (addr.is_phys())
+    phys = addr.phys();
+  else if (addr.is_kmem())
     {
-      phys = task->virt_to_phys_s0((void *)virt);
+      if (addr.addr() >= Mem_layout::KSEG0 && addr.addr() <= Mem_layout::KSEG0e)
+        return (unsigned char *)addr.virt();
 
-      if (phys == (Address)-1)
-        return 0;
+      phys = addr.addr();
     }
   else
     {
-      if (virt >= Mem_layout::KSEG0 && virt <= Mem_layout::KSEG0e)
-        return (unsigned char *)virt;
+      phys = addr.space()->virt_to_phys_s0(addr.virt());
 
-      phys = virt;
+      if (phys == (Address)-1)
+        return 0;
     }
 
   // physical memory accessible via unmapped KSEG0
@@ -145,28 +144,28 @@ Jdb::access_mem_task(Address virt, Space * task)
 
 PUBLIC static
 int
-Jdb::peek_task(Address virt, Space * task, void *value, int width)
+Jdb::peek_task(Jdb_address addr, void *value, int width)
 {
-  unsigned char const *mem = access_mem_task(virt, task);
+  unsigned char const *mem = access_mem_task(addr);
   if (!mem)
     return -1;
 
-  memcpy(value, mem + (virt & 0x3), width);
+  memcpy(value, mem, width);
   return 0;
 }
 
 PUBLIC static
 int
-Jdb::is_adapter_memory(Address, Space *)
+Jdb::is_adapter_memory(Jdb_address)
 {
   return 0;
 }
 
 PUBLIC static
 int
-Jdb::poke_task(Address virt, Space * task, void const *val, int width)
+Jdb::poke_task(Jdb_address addr, void const *val, int width)
 {
-  void *mem = access_mem_task(virt, task);
+  void *mem = access_mem_task(addr);
   if (!mem)
     return -1;
 

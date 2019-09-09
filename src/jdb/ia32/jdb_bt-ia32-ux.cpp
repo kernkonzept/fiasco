@@ -68,7 +68,7 @@ Jdb_bt::get_user_eip_ebp(Address &eip, Address &ebp)
 	  if (eip >= Mem_layout::Syscalls)
 	    {
 	      if ((entry_esp & (sizeof(Mword)-1))
-		  || !Jdb::peek((Address*)entry_esp, task, eip))
+		  || !Jdb::peek(Jdb_addr<Address>((Address *)entry_esp, task), eip))
 		{
 		  printf("\n esp page invalid");
 		  ebp = eip = 0;
@@ -78,7 +78,7 @@ Jdb_bt::get_user_eip_ebp(Address &eip, Address &ebp)
 	    }
 
 	  if ((entry_esp & (sizeof(Mword)-1))
-	      ||!Jdb::peek((Mword*)entry_esp, task, ebp))
+	      ||!Jdb::peek(Jdb_addr<Mword>((Mword *)entry_esp, task), ebp))
 	    {
 	      printf("\n esp page invalid");
 	      ebp = eip = 0;
@@ -122,8 +122,8 @@ Jdb_bt::get_user_ebp_following_kernel_stack()
       Mword m1, m2;
 
       if (  (ebp == 0) || (ebp & (sizeof(Mword)-1))
-	  || !Jdb::peek((Address*)ebp, 0 /*kernel*/, m1)
-	  || !Jdb::peek((Address*)ebp+1, 0 /*kernel*/, m2))
+	  || !Jdb::peek(Jdb_addr<Address>::kmem_addr((Address *)ebp), m1)
+	  || !Jdb::peek(Jdb_addr<Address>::kmem_addr((Address *)ebp + 1), m2))
 	// invalid ebp -- leaving
 	return 0;
 
@@ -241,8 +241,8 @@ Jdb_bt::show(Mword ebp, Mword eip1, Mword eip2, Address_type user)
       if (i > 1)
 	{
 	  if (  (ebp == 0) || (ebp & (sizeof(Mword)-1))
-	      || !Jdb::peek((Address*)ebp, task, m1)
-	      || !Jdb::peek((Address*)ebp+1, task, m2))
+	      || !Jdb::peek(Jdb_addr<Address>((Address*)ebp, task), m1)
+	      || !Jdb::peek(Jdb_addr<Address>((Address*)ebp + 1, task), m2))
 	    // invalid ebp -- leaving
 	    return;
 

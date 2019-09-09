@@ -37,10 +37,10 @@ public:
     } Guessed_thread_state;
 
 
-  static int (*bp_test_log_only)();
-  static int (*bp_test_sstep)();
-  static int (*bp_test_break)(String_buffer *buf);
-  static int (*bp_test_other)(String_buffer *buf);
+  static int (*bp_test_log_only)(Cpu_number cpu, Jdb_entry_frame *ef);
+  static int (*bp_test_sstep)(Cpu_number cpu, Jdb_entry_frame *ef);
+  static int (*bp_test_break)(Cpu_number cpu, Jdb_entry_frame *ef, String_buffer *buf);
+  static int (*bp_test_other)(Cpu_number cpu, Jdb_entry_frame *ef, String_buffer *buf);
 
 private:
 
@@ -157,13 +157,13 @@ Unsigned16 Jdb::pic_status;
 DEFINE_PER_CPU Per_cpu<unsigned> Jdb::apic_tpr;
 DEFINE_PER_CPU Per_cpu<int> Jdb::jdb_irqs_disabled;
 
-int  (*Jdb::bp_test_log_only)();
-int  (*Jdb::bp_test_sstep)();
-int  (*Jdb::bp_test_break)(String_buffer *buf);
-int  (*Jdb::bp_test_other)(String_buffer *buf);
+int  (*Jdb::bp_test_log_only)(Cpu_number cpu, Jdb_entry_frame *ef);
+int  (*Jdb::bp_test_sstep)(Cpu_number cpu, Jdb_entry_frame *ef);
+int  (*Jdb::bp_test_break)(Cpu_number cpu, Jdb_entry_frame *ef, String_buffer *buf);
+int  (*Jdb::bp_test_other)(Cpu_number cpu, Jdb_entry_frame *ef, String_buffer *buf);
 
 // available from the jdb_dump module
-int jdb_dump_addr_task (Address addr, Space *task, int level)
+int jdb_dump_addr_task (Jdb_address addr, int level)
   __attribute__((weak));
 
 
@@ -388,28 +388,31 @@ Jdb::check_is_kmem_valid_addr(Address virtaddr)
 
 PUBLIC static
 int
-Jdb::peek_task(Address addr, Space *task, void *value, int width)
+Jdb::peek_task(Jdb_address addr, void *value, int width)
 {
-  if (!Cpu::is_canonical_address(addr))
+  if (!Cpu::is_canonical_address(addr.addr()))
     return -1;
 
-  if (!task && check_is_kmem_valid_addr(addr))
+  if (addr.is_kmem())
     {
-      memcpy(value, (void *)addr, width);
+      if (!check_is_kmem_valid_addr(addr.addr()))
+        return -1;
+
+      memcpy(value, addr.virt(), width);
       return 0;
     }
 
   Address phys;
-  if (!task)
-    phys = Kmem::virt_to_phys((void*)addr);
+  if (addr.is_phys())
+    phys = addr.phys();
   else
     {
       // user address, use temporary mapping
-      phys = Address(task->virt_to_phys(addr));
+      phys = Address(addr.space()->virt_to_phys(addr.addr()));
 
 #ifndef CONFIG_CPU_LOCAL_MAP
       if (phys == ~0UL)
-        phys = task->virt_to_phys_s0((void*)addr);
+        phys = addr.space()->virt_to_phys_s0(addr.virt());
 #endif
     }
 
@@ -422,28 +425,31 @@ Jdb::peek_task(Address addr, Space *task, void *value, int width)
 
 PUBLIC static
 int
-Jdb::poke_task(Address addr, Space *task, void const *value, int width)
+Jdb::poke_task(Jdb_address addr, void const *value, int width)
 {
-  if (!Cpu::is_canonical_address(addr))
+  if (!Cpu::is_canonical_address(addr.addr()))
     return -1;
 
-  if (!task && check_is_kmem_valid_addr(addr))
+  if (addr.is_kmem())
     {
-      memcpy((void *)addr, value, width);
+      if (!check_is_kmem_valid_addr(addr.addr()))
+        return -1;
+
+      memcpy(addr.virt(), value, width);
       return 0;
     }
 
   Address phys;
-  if (!task)
-    phys = addr;
+  if (addr.is_phys())
+    phys = addr.phys();
   else
     {
       // user address, use temporary mapping
-      phys = Address(task->virt_to_phys(addr));
+      phys = Address(addr.space()->virt_to_phys(addr.addr()));
 
 #ifndef CONFIG_CPU_LOCAL_MAP
       if (phys == ~0UL)
-        phys = task->virt_to_phys_s0((void*)addr);
+        phys = addr.space()->virt_to_phys_s0(addr.virt());
 #endif
 
       if (phys == ~0UL)
@@ -454,25 +460,33 @@ Jdb::poke_task(Address addr, Space *task, void const *value, int width)
   return 0;
 }
 
+PUBLIC static
+Address
+Jdb::get_phys_address(Jdb_address addr)
+{
+  if (addr.is_null())
+    return (Address)~0UL;
+
+  if (addr.is_phys())
+    return addr.phys();
+
+  if (addr.is_kmem())
+    return Kmem::virt_to_phys(addr.virt());
+
+  return addr.space()->virt_to_phys_s0(addr.virt());
+}
+
 // The content of apdapter memory is not shown by default because reading
 // memory-mapped I/O registers may confuse the hardware. We assume that all
 // memory above the end of the RAM is adapter memory.
 PUBLIC static
 int
-Jdb::is_adapter_memory(Address virt, Space *task)
+Jdb::is_adapter_memory(Jdb_address addr)
 {
-  Address phys;
+  if (addr.is_null())
+    return false;
 
-  if (!task)
-    // phys requested
-    phys = virt;
-  else if (   !Kmem::is_io_bitmap_page_fault(virt)
-           &&  Kmem::is_kmem_page_fault(virt, 0))
-    // kernel address
-    phys = Kmem::virt_to_phys((const void*)virt);
-  else
-    // user address
-    phys = task->virt_to_phys_s0((void*)virt);
+  Address phys = get_phys_address(addr);
 
   if (phys == ~0UL)
     return false;
@@ -613,8 +627,10 @@ Jdb::analyze_code(Cpu_number cpu)
 
   Unsigned8 op1, op2;
 
-  if (   !peek((Unsigned8*)entry_frame->ip(), task, op1)
-      || !peek((Unsigned8*)(entry_frame->ip()+1), task, op2))
+  Jdb_addr<Unsigned8> insn_ptr((Unsigned8*)entry_frame->ip(), task);
+
+  if (   !peek(insn_ptr, op1)
+      || !peek(insn_ptr + 1, op2))
     return;
 
   if (op1 != 0x0f && op1 != 0xff)
@@ -716,22 +732,22 @@ Jdb::handle_single_step(Cpu_number cpu)
 
 // entered debugger due to debug exception
 static inline NOEXPORT int
-Jdb::handle_trap1(Cpu_number cpu)
+Jdb::handle_trap1(Cpu_number cpu, Jdb_entry_frame *ef)
 {
   // FIXME: currently only on boot cpu
   if (cpu != Cpu_number::boot_cpu())
     return 0;
 
-  if (bp_test_sstep && bp_test_sstep())
+  if (bp_test_sstep && bp_test_sstep(cpu, ef))
     return handle_single_step(cpu);
 
   error_buffer.cpu(cpu).clear();
   if (bp_test_break
-      && bp_test_break(&error_buffer.cpu(cpu)))
+      && bp_test_break(cpu, ef, &error_buffer.cpu(cpu)))
     return 1;
 
   if (bp_test_other
-      && bp_test_other(&error_buffer.cpu(cpu)))
+      && bp_test_other(cpu, ef, &error_buffer.cpu(cpu)))
     return 1;
 
   return 0;
@@ -739,26 +755,26 @@ Jdb::handle_trap1(Cpu_number cpu)
 
 // entered debugger due to software breakpoint
 static inline NOEXPORT int
-Jdb::handle_trap3(Cpu_number cpu)
+Jdb::handle_trap3(Cpu_number cpu, Jdb_entry_frame *entry_frame)
 {
-  Jdb_entry_frame *entry_frame = Jdb::entry_frame.cpu(cpu);
   Space *task = get_task(cpu);
   Unsigned8 op;
   Unsigned8 len;
 
   error_buffer.cpu(cpu).clear();
   error_buffer.cpu(cpu).printf("%s", "INT 3");
-  if (   !peek((Unsigned8*)entry_frame->ip(), task, op)
-      || !peek((Unsigned8*)(entry_frame->ip()+1), task, len)
+  Jdb_addr<Unsigned8 const> insn_ptr((Unsigned8*)entry_frame->ip(), task);
+  if (   !peek(insn_ptr, op)
+      || !peek(insn_ptr + 1, len)
       || op != 0xeb)
     return 1;
 
-  char const *msg = (char const*)(entry_frame->ip()+2);
-  char buffer[3];
-  if (!peek(msg, task, buffer[0]))
+  Jdb_addr<Unsigned8 const> msg = insn_ptr + 2;
+  Unsigned8 buffer[3];
+  if (!peek(msg, buffer[0]))
     return 1;
 
-  if (len > 1 && !peek(msg+1, task, buffer[1]))
+  if (len > 1 && !peek(msg + 1, buffer[1]))
     return 1;
 
   // we are entering here because enter_kdebugger("*#..."); failed
@@ -767,22 +783,22 @@ Jdb::handle_trap3(Cpu_number cpu)
       unsigned i;
       char ctrl[29];
 
-      len-=2;
-      msg+=2;
-      if (len && peek(msg, task, buffer[2]))
+      len -= 2;
+      msg += 2;
+      if (len && peek(msg, buffer[2]))
 	{
-	  char tmp;
+	  Unsigned8 tmp;
 	  if (buffer[2] == '#')
 	    {
 	      // the ``-jdb_cmd='' sequence
-	      msg = (char const*)entry_frame->value();
-	      for (i=0; i<sizeof(ctrl)-1 && peek(msg, task, tmp) && tmp; i++, msg++)
+	      msg = Jdb_addr<Unsigned8 const>((Unsigned8 const*)entry_frame->value(), task);
+	      for (i=0; i<sizeof(ctrl)-1 && peek(msg, tmp) && tmp; i++, msg++)
 		ctrl[i] = tmp;
 	    }
 	  else
 	    {
 	      // a ``enter_kdebug("*#")'' sequence
-	      for (i=0; i<sizeof(ctrl)-1 && i<len && peek(msg, task, tmp); i++, msg++)
+	      for (i=0; i<sizeof(ctrl)-1 && i<len && peek(msg, tmp); i++, msg++)
 		ctrl[i] = tmp;
 	    }
 	  ctrl[i] = '\0';
@@ -797,7 +813,7 @@ Jdb::handle_trap3(Cpu_number cpu)
       len = len < 47 ? len : 47;
 
       error_buffer.cpu(cpu).clear();
-      for(i=0; i<len && peek(msg+i, task, buffer[0]); i++)
+      for(i=0; i<len && peek(msg + i, buffer[0]); i++)
         error_buffer.cpu(cpu).append(buffer[0]);
       error_buffer.cpu(cpu).terminate();
     }
@@ -807,13 +823,13 @@ Jdb::handle_trap3(Cpu_number cpu)
 
 // entered debugger due to other exception
 static inline NOEXPORT int
-Jdb::handle_trapX(Cpu_number cpu)
+Jdb::handle_trapX(Cpu_number cpu, Jdb_entry_frame *ef)
 {
   error_buffer.cpu(cpu).clear();
-  error_buffer.cpu(cpu).printf("%s", Cpu::exception_string(entry_frame.cpu(cpu)->_trapno));
-  if (   entry_frame.cpu(cpu)->_trapno >= 10
-      && entry_frame.cpu(cpu)->_trapno <= 14)
-    error_buffer.cpu(cpu).printf("(ERR=" L4_PTR_FMT ")", entry_frame.cpu(cpu)->_err);
+  error_buffer.cpu(cpu).printf("%s", Cpu::exception_string(ef->_trapno));
+  if (   ef->_trapno >= 10
+      && ef->_trapno <= 14)
+    error_buffer.cpu(cpu).printf("(ERR=" L4_PTR_FMT ")", ef->_err);
 
   return 1;
 }
@@ -835,34 +851,35 @@ Jdb::handle_user_request(Cpu_number cpu)
     {
       Space *task = get_task(cpu);
       Unsigned8 todo;
-      if (!peek((Unsigned8*)entry_frame->ip(), task, todo))
+      Jdb_addr<Unsigned8 const> insn_ptr((Unsigned8 *)entry_frame->ip(), task);
+      if (!peek(insn_ptr, todo))
 	return false;
 
       // jmp == enter_kdebug()
       if (todo == 0xeb)
 	{
 	  Unsigned8 len;
-	  if (!peek((Unsigned8*)(entry_frame->ip()+1), task, len))
+	  if (!peek(insn_ptr + 1, len))
 	    return false;
 
-	  char const *str = (char const *)(entry_frame->ip()+2);
+	  Jdb_addr<char const> str((char const *)(entry_frame->ip() + 2), task);
 	  char tmp;
 
 	  if (len <= 2)
 	    return false;
 
-	  if (!peek(str, task, tmp) || tmp !='*')
+	  if (!peek(str, tmp) || tmp !='*')
 	    return false;
 
-	  if (!peek(str+1, task, tmp) || tmp != '#')
+	  if (!peek(str + 1, tmp) || tmp != '#')
 	    return false;
 
 	  int ret;
 
-	  if (peek(str+2, task, tmp) && tmp == '#')
-	    ret = execute_command_ni(task, (char const *)entry_frame->value());
+	  if (peek(str + 2, tmp) && tmp == '#')
+	    ret = execute_command_ni(Jdb_addr<char const>((char const *)entry_frame->value(), task));
 	  else
-	    ret = execute_command_ni(task, str+2, len-2);
+	    ret = execute_command_ni(str + 2, len - 2);
 
 	  if (ret)
 	    return 1;
@@ -870,7 +887,7 @@ Jdb::handle_user_request(Cpu_number cpu)
       // cmpb
       else if (todo == 0x3c)
 	{
-	  if (!peek((Unsigned8*)(entry_frame->ip()+1), task, todo))
+	  if (!peek(insn_ptr + 1, todo))
 	    return false;
 
 	  switch (todo)
@@ -902,8 +919,8 @@ Jdb::leave_trap_handler(Cpu_number cpu)
 
 IMPLEMENT
 bool
-Jdb::handle_conditional_breakpoint(Cpu_number, Jdb_entry_frame *e)
-{ return e->_trapno == 1 && bp_test_log_only && bp_test_log_only(); }
+Jdb::handle_conditional_breakpoint(Cpu_number cpu, Jdb_entry_frame *e)
+{ return e->_trapno == 1 && bp_test_log_only && bp_test_log_only(cpu, e); }
 
 IMPLEMENT
 void
@@ -959,13 +976,14 @@ bool
 Jdb::handle_debug_traps(Cpu_number cpu)
 {
   bool really_break = true;
+  auto *ef = entry_frame.cpu(cpu);
 
-  if (entry_frame.cpu(cpu)->_trapno == 1)
-    really_break = handle_trap1(cpu);
-  else if (entry_frame.cpu(cpu)->_trapno == 3)
-    really_break = handle_trap3(cpu);
+  if (ef->_trapno == 1)
+    really_break = handle_trap1(cpu, ef);
+  else if (ef->_trapno == 3)
+    really_break = handle_trap3(cpu, ef);
   else
-    really_break = handle_trapX(cpu);
+    really_break = handle_trapX(cpu, ef);
 
   if (really_break)
     {

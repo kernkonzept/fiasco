@@ -373,7 +373,7 @@ Jdb_bp::test_debug(Cpu_number cpu, String_buffer *buf, char *type,
           String_buf<12> datacontent;
           Mword val = 0;
 
-          if (Jdb::peek_task(ef->pf_address, Jdb::get_thread(cpu)->space(),
+          if (Jdb::peek_task(Jdb_address(ef->pf_address, Jdb::get_thread(cpu)->space()),
                              &val, 4) == 0)
             datacontent.printf(" [%lx]", val);
 

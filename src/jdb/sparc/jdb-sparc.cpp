@@ -74,12 +74,14 @@ Jdb::handle_user_request(Cpu_number cpu)
   if (ef->debug_ipi())
     return cpu != Cpu_number::boot_cpu();
 
-  if (!peek(str, task, tmp) || tmp != '*')
+  Jdb_addr<char const> s(str, task);
+
+  if (!peek(s, tmp) || tmp != '*')
     return false;
-  if (!peek(str+1, task, tmp) || tmp != '#')
+  if (!peek(s + 1, tmp) || tmp != '#')
     return false;
 
-  return execute_command_ni(task, str+2);
+  return execute_command_ni(s + 2);
 }
 
 IMPLEMENT inline
@@ -109,35 +111,28 @@ Jdb::init()
 
 PRIVATE static
 unsigned char *
-Jdb::access_mem_task(Address virt, Space * task)
+Jdb::access_mem_task(Jdb_address addr)
 {
-  // align
-
-  virt &= ~0x03;
-
   Address phys;
 
-  if (!task)
+  if (addr.is_phys())
+    phys = addr.phys();
+  else if (addr.is_kmem())
     {
-      if (Mem_layout::in_kernel(virt))
-	{
-	  phys = Kmem::virt_to_phys((void *)virt);
-	  if (phys == (Address)-1)
-	    return 0;
+      phys = Kmem::virt_to_phys(addr.virt());
+      if (phys == (Address)-1)
+        return 0;
 
-	}
-      else
-	phys = virt;
     }
   else
     {
-      phys = Address(task->virt_to_phys(virt));
+      phys = Address(addr.space()->virt_to_phys(addr.addr()));
 
       if (phys == (Address)-1)
-	phys = task->virt_to_phys_s0((void *)virt);
+        phys = addr.space()->virt_to_phys_s0(addr.virt());
 
       if (phys == (Address)-1)
-	return 0;
+        return 0;
     }
 
    return (unsigned char*)phys;
@@ -145,28 +140,28 @@ Jdb::access_mem_task(Address virt, Space * task)
 
 PUBLIC static
 int
-Jdb::peek_task(Address virt, Space * task, void *value, int width)
+Jdb::peek_task(Jdb_address addr, void *value, int width)
 {
-  unsigned char const *mem = access_mem_task(virt, task);
+  unsigned char const *mem = access_mem_task(addr);
   if (!mem)
     return -1;
 
-  memcpy(value, mem + (virt & 0x3), width);
+  memcpy(value, mem, width);
   return 0;
 }
 
 PUBLIC static
 int
-Jdb::is_adapter_memory(Address, Space *)
+Jdb::is_adapter_memory(Jdb_address)
 {
   return 0;
 }
 
 PUBLIC static
 int
-Jdb::poke_task(Address virt, Space * task, void const *val, int width)
+Jdb::poke_task(Jdb_address addr, void const *val, int width)
 {
-  (void)virt; (void)task; (void)val; (void)width;
+  (void)addr; (void)val; (void)width;
   /*
   unsigned char *mem = access_mem_task(virt, task);
   if (!mem)

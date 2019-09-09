@@ -191,15 +191,15 @@ Jdb::handle_user_request(Cpu_number cpu)
 
   // arm32
   if (ef->error_code == ((0x33UL << 26) | 1))
-    return execute_command_ni(task, str);
+    return execute_command_ni(Jdb_addr<char const>(str, task));
 
   // arm64
   unsigned opcode;
-  if (!peek((unsigned*)ef->ip(), task, opcode) ||
+  if (!peek(Jdb_addr<unsigned>((unsigned*)ef->ip(), task), opcode) ||
       opcode != 0xd4200020) // brk #1
     return false;
 
-  return execute_command_ni(task, str);
+  return execute_command_ni(Jdb_addr<char const>(str, task));
 }
 
 IMPLEMENT inline
@@ -230,41 +230,37 @@ Jdb::init()
 
 PRIVATE static
 unsigned char *
-Jdb::access_mem_task(Address virt, Space * task, bool readonly)
+Jdb::access_mem_task(Jdb_address addr)
 {
-  // align
-  virt &= ~(sizeof(Mword) - 1);
-
-  if (!Cpu::is_canonical_address(virt))
+  if (!Cpu::is_canonical_address(addr.addr()))
     return 0;
 
   Address phys;
 
-  if (Mem_layout::in_kernel(virt))
+  if (addr.is_kmem())
     {
-      auto p = Kmem::kdir->walk(Virt_addr(virt));
+      auto p = Kmem::kdir->walk(Virt_addr(addr.addr()));
       if (!p.is_valid())
         return 0;
 
-      phys = p.page_addr() | cxx::get_lsb(virt, p.page_order());
+      phys = p.page_addr() | cxx::get_lsb(addr.addr(), p.page_order());
     }
-  else if (task)
+  else if (!addr.is_phys())
     {
-      phys = Address(task->virt_to_phys_s0((void*)virt));
+      phys = Address(addr.space()->virt_to_phys_s0(addr.virt()));
 
       if (phys == (Address)-1)
         return 0;
     }
   else
-    phys = virt;
+    phys = addr.phys();
 
-  unsigned long addr = Mem_layout::phys_to_pmem(phys);
-  if (addr != (Address)-1)
+  unsigned long kaddr = Mem_layout::phys_to_pmem(phys);
+  if (kaddr != (Address)-1)
     {
-      auto pte = Kmem::kdir->walk(Virt_addr(addr));
-      if (pte.is_valid()
-          && (readonly || (pte.attribs().rights & Page::Rights::W())))
-        return (unsigned char *)addr;
+      auto pte = Kmem::kdir->walk(Virt_addr(kaddr));
+      if (pte.is_valid())
+        return (unsigned char *)kaddr;
     }
 
   Mem_unit::flush_vdcache();
@@ -297,33 +293,33 @@ Jdb::access_mem_task(Address virt, Space * task, bool readonly)
 
 PUBLIC static
 int
-Jdb::peek_task(Address virt, Space * task, void *value, int width)
+Jdb::peek_task(Jdb_address addr, void *value, int width)
 {
-  unsigned char const *mem = access_mem_task(virt, task, true);
+  unsigned char const *mem = access_mem_task(addr);
   if (!mem)
     return -1;
 
-  memcpy(value, mem + (virt & (sizeof(Mword) - 1)), width);
+  memcpy(value, mem, width);
   return 0;
 }
 
 PUBLIC static
 int
-Jdb::is_adapter_memory(Address, Space *)
+Jdb::is_adapter_memory(Jdb_address)
 {
   return 0;
 }
 
 PUBLIC static
 int
-Jdb::poke_task(Address virt, Space * task, void const *val, int width)
+Jdb::poke_task(Jdb_address addr, void const *val, int width)
 {
-  unsigned char *mem = access_mem_task(virt, task, false);
+  unsigned char *mem = access_mem_task(addr);
   if (!mem)
     return -1;
 
-  memcpy(mem + (virt & (sizeof(Mword) - 1)), val, width);
-  Mem_unit::make_coherent_to_pou(mem + (virt & (sizeof(Mword) - 1)));
+  memcpy(mem, val, width);
+  Mem_unit::make_coherent_to_pou(mem);
   return 0;
 }
 

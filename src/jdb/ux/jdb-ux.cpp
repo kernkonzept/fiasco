@@ -23,7 +23,8 @@ public:
   template < typename T > static T peek(T const *addr, Address_type user);
 
   static int (*bp_test_log_only)();
-  static int (*bp_test_break)(String_buffer *buf);
+  static int (*bp_test_break)(Cpu_number cpu, Jdb_entry_frame *ef,
+                              String_buffer *buf);
 
 private:
   static unsigned short rows, cols;
@@ -61,7 +62,8 @@ IMPLEMENTATION [ux]:
 #include "vkey.h"
 
 int (*Jdb::bp_test_log_only)();
-int (*Jdb::bp_test_break)(String_buffer *buf);
+int (*Jdb::bp_test_break)(Cpu_number cpu, Jdb_entry_frame *ef,
+                          String_buffer *buf);
 
 unsigned short Jdb::rows, Jdb::cols;
 
@@ -185,9 +187,11 @@ Jdb::int3_extension()
       char c = peek (((Unsigned8 *) addr + 3), user);
 
       if ((c == '#')
-	  ? execute_command_ni(space, (char const *) entry_frame->_ax)
-	  : execute_command_ni(space, (char const *)(addr + 3), len-2))
-	return 1; // => leave Jdb
+            ? execute_command_ni(
+              Jdb_addr<char const>((char const *)entry_frame->_ax, space))
+            : execute_command_ni(
+              Jdb_addr<char const>((char const *)(addr + 3), space), len - 2))
+        return 1; // => leave Jdb
     }
 
   for (i = 0; i < len; i++)
@@ -220,7 +224,7 @@ Jdb::handle_debug_traps(Cpu_number cpu)
 	    if (bp_test_log_only && bp_test_log_only())
 	      return false;
 	    if (bp_test_break
-		&& bp_test_break(&error_buffer.cpu(cpu)))
+		&& bp_test_break(cp, &entry_frame, &error_buffer.cpu(cpu)))
 	      break;
 	  }
 #endif
@@ -244,24 +248,28 @@ Jdb::handle_conditional_breakpoint(Cpu_number, Jdb_entry_frame *)
 
 PUBLIC
 static Address
-Jdb::virt_to_kvirt(Address virt, Mem_space* space)
+Jdb::virt_to_kvirt(Jdb_address addr)
 {
   Mem_space::Phys_addr phys;
   Mem_space::Page_order size;
 
-  if (!space)
+  if (addr.is_kmem())
     {
       // Kernel address.
       // We can directly access it via virtual addresses if it's kernel code
       // (which is always mapped, but doesn't appear in the kernel pagetable)
       //  or if we find a mapping for it in the kernel's master pagetable.
-      return ((virt >= (Address)&Mem_layout::load &&
-               virt <  (Kernel_thread::init_done()
+      return ((addr.addr() >= (Address)&Mem_layout::load &&
+               addr.addr() <  (Kernel_thread::init_done()
                         ? (Address)&Mem_layout::end
                         : (Address)&Mem_layout::initcall_end))
-              || Kernel_task::kernel_task()->virt_to_phys(virt) != ~0UL)
-             ? virt
+              || Kernel_task::kernel_task()->virt_to_phys(addr.addr()) != ~0UL)
+             ? addr.addr()
              : (Address) -1;
+    }
+  else if (addr.is_phys())
+    {
+      return (Address) -1;
     }
   else
     {
@@ -269,10 +277,13 @@ Jdb::virt_to_kvirt(Address virt, Mem_space* space)
       // We can't directly access it because it's in a different host process
       // but if the task's pagetable has a mapping for it, we can translate
       // task-virtual -> physical -> kernel-virtual address and then access.
-      Virt_addr va(virt);
-      return (space->v_lookup(va, &phys, &size, 0))
-	? (Address) Kmem::phys_to_virt(Mem_space::Phys_addr::val(phys) + Virt_size::val(cxx::get_lsb(va, size)))
-	: (Address) -1;
+      Virt_addr va(addr.addr());
+      return (static_cast<Mem_space *>(addr.space())
+                ->v_lookup(va, &phys, &size, 0))
+               ? (Address)Kmem::phys_to_virt(
+                 Mem_space::Phys_addr::val(phys)
+                 + Virt_size::val(cxx::get_lsb(va, size)))
+               : (Address)-1;
     }
 }
 
@@ -287,12 +298,14 @@ Jdb::peek (T const *addr, Address_type user)
 
 PUBLIC static
 int
-Jdb::peek_task(Address virt, Space *space, void *value, int width)
+Jdb::peek_task(Jdb_address addr, void *value, int width)
 {
-  if (width > 0 && (virt & Config::PAGE_MASK) != ((virt + width - 1) & Config::PAGE_MASK))
+  if (width > 0
+      && (addr.addr() & Config::PAGE_MASK)
+           != ((addr.addr() + width - 1) & Config::PAGE_MASK))
     return -1;
 
-  Address kvirt = virt_to_kvirt(virt, space);
+  Address kvirt = virt_to_kvirt(addr);
   if (kvirt == (Address)-1)
     return -1;
 
@@ -302,12 +315,14 @@ Jdb::peek_task(Address virt, Space *space, void *value, int width)
 
 PUBLIC static
 int
-Jdb::poke_task(Address virt, Space *space, void const *value, int width)
+Jdb::poke_task(Jdb_address addr, void const *value, int width)
 {
-  if (width > 0 && (virt & Config::PAGE_MASK) != ((virt + width - 1) & Config::PAGE_MASK))
+  if (width > 0
+      && (addr.addr() & Config::PAGE_MASK)
+           != ((addr.addr() + width - 1) & Config::PAGE_MASK))
     return -1;
 
-  Address kvirt = virt_to_kvirt(virt, space);
+  Address kvirt = virt_to_kvirt(addr);
   if (kvirt == (Address)-1)
     return -1;
 
@@ -317,7 +332,7 @@ Jdb::poke_task(Address virt, Space *space, void const *value, int width)
 
 PUBLIC
 static int
-Jdb::is_adapter_memory(Address /*addr*/, Space * /*task*/)
+Jdb::is_adapter_memory(Jdb_address)
 {
   return 0;
 }

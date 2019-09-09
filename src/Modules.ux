@@ -112,7 +112,7 @@ INTERFACES_KERNEL	:= string_buffer mem_region simpleio kernel_console panic warn
 			   irq_chip_ia32 irq_chip_ux \
 			   banner fpu_alloc irq icu_helper main 	  \
 			   startup libc_support reset semaphore          \
-			   jdb fb net \
+			   jdb_types jdb fb net \
 			   jdb_core jdb_module jdb_table         	  \
 			   jdb_thread_list jdb_input jdb_input_task jdb_dump jdb_thread  \
 			   jdb_tcb jdb_prompt_module jdb_bt	  \

@@ -167,7 +167,7 @@ Jdb_stack_view  Jdb_tcb::_stack_view (Jdb_tcb::Stack_y);
 
 
 // available from jdb_dump module
-extern int jdb_dump_addr_task (Address addr, Space *task, int level)
+extern int jdb_dump_addr_task(Jdb_address addr, int level)
   __attribute__((weak));
 
 
@@ -424,25 +424,25 @@ Jdb_disasm_view::Jdb_disasm_view(unsigned x, unsigned y)
 
 PUBLIC
 void
-Jdb_disasm_view::show(Address addr, Space *s, bool dump_only)
+Jdb_disasm_view::show(Jdb_address addr, bool dump_only)
 {
   if (!Jdb_disasm::avail())
     return;
 
-  Address disass_addr = addr;
+  Jdb_address disass_addr = addr;
   if (dump_only)
     {
       for (unsigned i = 0; i < 20; ++i)
-        Jdb_disasm::show_disasm_line(Jdb_screen::width(), disass_addr, s);
+        Jdb_disasm::show_disasm_line(Jdb_screen::width(), disass_addr);
       return;
     }
 
   Jdb::cursor(_y, _x);
   putstr(Jdb::esc_emph);
-  Jdb_disasm::show_disasm_line(-40, disass_addr, s);
+  Jdb_disasm::show_disasm_line(-40, disass_addr);
   putstr("\033[m");
   Jdb::cursor(_y + 1, _x);
-  Jdb_disasm::show_disasm_line(-40, disass_addr, s);
+  Jdb_disasm::show_disasm_line(-40, disass_addr);
 }
 
 
@@ -685,9 +685,12 @@ whole_screen:
         Jdb::cursor(11, 1);
       print_entry_frame_regs(t);
       Jdb::cursor(Jdb_tcb::Disasm_x, Jdb_tcb::Disasm_y);
-      _disasm_view.show(ef->ip(), ef->from_user() ? t->space()
-                                                  : Kernel_task::kernel_task(),
-                        dump_only);
+      Jdb_address insn_ptr;
+      if (ef->from_user())
+        insn_ptr = Jdb_address(ef->ip(), t->space());
+      else
+        insn_ptr = Jdb_address::kmem_addr(ef->ip());
+      _disasm_view.show(insn_ptr, dump_only);
     }
   else if (t->space() != Kernel_task::kernel_task())
     {
@@ -697,7 +700,7 @@ whole_screen:
       putchar('\n');
       print_return_frame_regs(_stack_view.current, ksp);
 
-      _disasm_view.show(_stack_view.current.user_ip(), t->space(), dump_only);
+      _disasm_view.show(Jdb_address(_stack_view.current.user_ip(), t->space()), dump_only);
     }
   else
     {
@@ -739,8 +742,9 @@ dump_stack:
             case KEY_RETURN_2:
               if (jdb_dump_addr_task && _stack_view.current.valid())
                 {
-                  if (!jdb_dump_addr_task(_stack_view.current.value(),
-                                          _stack_view.current.space(t), level+1))
+                  if (!jdb_dump_addr_task(Jdb_address(_stack_view.current.value(),
+                                                      _stack_view.current.space(t)),
+                                          level + 1))
                     return NOTHING;
                   redraw_screen = true;
                 }
@@ -753,8 +757,8 @@ dump_stack:
               if (Jdb_disasm::avail() && _stack_view.current.valid())
                 {
                   printf("V %lx", _stack_view.current.value());
-                  if (!Jdb_disasm::show(_stack_view.current.value(),
-                                        _stack_view.current.space(t), level+1))
+                  Jdb_address insn_ptr(_stack_view.current.value(), _stack_view.current.space(t));
+                  if (!Jdb_disasm::show(insn_ptr, level + 1))
                     return NOTHING;
                   redraw_screen = true;
                 }
@@ -775,8 +779,8 @@ dump_stack:
                       return NOTHING;
                     }
 
-                  if (!Jdb_disasm::show(_stack_view.current.value(),
-                                        _stack_view.current.space(t), level+1))
+                  Jdb_address insn_ptr(_stack_view.current.value(), _stack_view.current.space(t));
+                  if (!Jdb_disasm::show(insn_ptr, level + 1))
                     return NOTHING;
                   redraw_screen = true;
                 }

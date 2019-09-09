@@ -23,6 +23,7 @@ INTERFACE [arm && jdb_logging]:
 IMPLEMENTATION [arm && 64bit && jdb_logging]:
 
 #include "jdb.h"
+#include "jdb_types.h"
 
 IMPLEMENT_OVERRIDE
 unsigned char
@@ -37,9 +38,9 @@ Jdb_tbuf::set_entry_status(Tb_log_table_entry const *e,
                            unsigned char value)
 {
   Unsigned32 insn;
-  if (Jdb::peek_task(Address(e->patch), 0, &insn, sizeof(insn)))
+  if (Jdb::peek_task(Jdb_address::kmem_addr(e->patch), &insn, sizeof(insn)))
     return;
   insn = (insn & ~(0xffffU << 5)) | (((Unsigned32)value) << 5);
-  Jdb::poke_task(Address(e->patch), 0, &insn, sizeof(insn));
+  Jdb::poke_task(Jdb_address::kmem_addr(e->patch), &insn, sizeof(insn));
 }
 

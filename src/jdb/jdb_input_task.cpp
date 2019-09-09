@@ -1,6 +1,7 @@
 INTERFACE:
 
 #include "jdb_module.h"
+#include "jdb_types.h"
 #include "types.h"
 #include "l4_types.h"
 
@@ -53,6 +54,23 @@ PUBLIC static
 Address
 Jdb_input_task_addr::addr()
 { return _addr; }
+
+PUBLIC static
+Jdb_address
+Jdb_input_task_addr::address()
+{
+  if (_task == 0 && _addr == (Address)-1)
+    return Jdb_address::null();
+
+  if (_task == 0 && _space == 0)
+    return Jdb_address(_addr); // phys
+
+  if (_space)
+    return Jdb_address(_addr, _space); // virt
+
+  // use kmem as last resort
+  return Jdb_address::kmem_addr(_addr);
+}
 
 PUBLIC static
 Jdb_module::Action_code

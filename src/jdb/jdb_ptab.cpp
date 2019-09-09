@@ -82,7 +82,7 @@ Jdb_ptab::cols() const override
 
 
 // available from the jdb_dump module
-int jdb_dump_addr_task(Address addr, Space *task, int level)
+int jdb_dump_addr_task(Jdb_address addr, int level)
   __attribute__((weak));
 
 
@@ -236,11 +236,11 @@ Jdb_ptab::key_pressed(int c, unsigned long &row, unsigned long &col) override
           if (cur_pt_level >= Pdir::Depth ||
               !entry_is_pt_ptr(pt_entry, &entries, &next_level))
             {
-              Address virt = disp_virt(idx);
+              Jdb_address virt(disp_virt(idx), _task);
               char s[16];
               Jdb::printf_statline("p", "<CR>=disassemble here",
-                                   "u[address=" L4_PTR_FMT " %s] ", virt,
-                                   Jdb::space_to_str(_task, s, sizeof(s)));
+                                   "u[address=" L4_PTR_FMT " %s] ", virt.addr(),
+                                   Jdb::space_to_str(virt.space(), s, sizeof(s)));
               int c1 = Jdb_core::getchar();
               if (c1 != KEY_RETURN && c1 != ' ' && c != KEY_RETURN_2)
                 {
@@ -249,7 +249,7 @@ Jdb_ptab::key_pressed(int c, unsigned long &row, unsigned long &col) override
                   return Exit;
                 }
 
-              return Jdb_disasm::show(virt, _task, _level+1)
+              return Jdb_disasm::show(virt, _level + 1)
                 ? Redraw
                 : Exit;
             }
@@ -283,7 +283,7 @@ Jdb_ptab::key_pressed(int c, unsigned long &row, unsigned long &col) override
 	    }
 	  else if (jdb_dump_addr_task != 0)
 	    {
-	      if (!jdb_dump_addr_task(disp_virt(idx), _task, _level+1))
+	      if (!jdb_dump_addr_task(Jdb_address(disp_virt(idx), _task), _level + 1))
 		return Exit;
 	      return Redraw;
 	    }

@@ -50,6 +50,7 @@ vcpu_host_regs_IMPL	:= vcpu_host_regs-$(CONFIG_XARCH)
 kdb_ke_IMPL             := kdb_ke
 
 INTERFACES_JDB += \
+	jdb_types                                                          \
 	jdb jdb_util jdb_core jdb_module jdb_prompt_ext jdb_list           \
 	jdb_handler_queue jdb_attach_irq jdb_entry_frame                   \
 	jdb_exit_module jdb_bp jdb_factory jdb_input jdb_ipc_gate          \

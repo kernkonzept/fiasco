@@ -3,6 +3,9 @@ INTERFACE[ia32,amd64,ux]:
 #include "initcalls.h"
 #include "l4_types.h"
 #include "string_buffer.h"
+#include "jdb_types.h"
+
+class Jdb_entry_frame;
 
 class Thread;
 class Task;
@@ -48,9 +51,8 @@ private:
       Bp_mem_res    mem;
     } Restriction;
 
-  Address      addr;
+  Jdb_address  addr;
   Unsigned8    len;
-  Address_type user;
   Mode         mode;
   Log          log;
   Restriction  restrict;
@@ -141,14 +143,14 @@ PUBLIC inline NOEXPORT
 void
 Breakpoint::kill()
 {
-  addr = 0;
+  addr = Jdb_address::null();
 }
 
 PUBLIC inline NOEXPORT
 int
 Breakpoint::unused()
 {
-  return addr == 0;
+  return addr == Jdb_address::null();
 }
 
 PUBLIC inline NOEXPORT
@@ -160,7 +162,7 @@ Breakpoint::break_at_instruction()
 
 PUBLIC inline NOEXPORT
 int
-Breakpoint::match_addr(Address virt, Mode m)
+Breakpoint::match_addr(Jdb_address virt, Mode m)
 {
   return !unused() && addr == virt && mode == m;
 }
@@ -228,10 +230,10 @@ PUBLIC
 void
 Breakpoint::show()
 {
-  if (addr)
+  if (!addr.is_null())
     {
       printf("%5s on %12s at " L4_PTR_FMT,
-	     log ? "LOG" : "BREAK", mode_names[mode & 3], addr);
+	     log ? "LOG" : "BREAK", mode_names[mode & 3], addr.addr());
       if (mode != INSTRUCTION)
 	printf(" len %d", len);
       else
@@ -332,7 +334,7 @@ Breakpoint::restricted(Thread *t)
       Mword y   = restrict.mem.y;
       Mword z   = restrict.mem.z;
 
-      if (Jdb::peek_task(restrict.mem.addr, task, &val, restrict.mem.len) != 0)
+      if (Jdb::peek_task(Jdb_address(restrict.mem.addr, task), &val, restrict.mem.len) != 0)
 	return 0;
 
       // return true if rules do NOT match
@@ -351,9 +353,7 @@ Breakpoint::test_break(String_buffer *buf, Thread *t)
   if (restricted(t))
     return 0;
 
-  Space *task = t->space();
-
-  buf->printf("break on %s at " L4_PTR_FMT, mode_names[mode], addr);
+  buf->printf("break on %s at " L4_PTR_FMT, mode_names[mode], addr.addr());
   if (mode == WRITE || mode == ACCESS)
     {
       // If it's a write or access (read) breakpoint, we look at the
@@ -365,7 +365,7 @@ Breakpoint::test_break(String_buffer *buf, Thread *t)
       if (len > sizeof(Mword))
 	return 0;
 
-      if (Jdb::peek_task(addr, task, &val, len) != 0)
+      if (Jdb::peek_task(addr, &val, len) != 0)
 	return 0;
 
       buf->printf(" [%08lx]", val);
@@ -382,7 +382,6 @@ Breakpoint::test_log(Thread *t)
 
   if (log && !restricted(t))
     {
-      Space *task = t->space();
       // log breakpoint
       Mword value = 0;
 
@@ -396,13 +395,13 @@ Breakpoint::test_log(Thread *t)
 	  if (len > sizeof(Mword))
 	    return;
 
-	  if (Jdb::peek_task(addr, task, &value, len) != 0)
+	  if (Jdb::peek_task(addr, &value, len) != 0)
 	    return;
 	}
 
       // is called with disabled interrupts
       Tb_entry_bp *tb = static_cast<Tb_entry_bp*>(Jdb_tbuf::new_entry());
-      tb->set(t, e->ip(), mode, len, value, addr);
+      tb->set(t, e->ip(), mode, len, value, addr.addr());
       Jdb_tbuf::commit_entry();
     }
 }
@@ -444,11 +443,10 @@ Jdb_bp::set_dr7(int num, Mword len, Breakpoint::Mode mode, Mword &dr7)
 
 PUBLIC static
 int
-Jdb_bp::set_breakpoint(int num, Address addr, Mword len,
-		       Breakpoint::Mode mode, Breakpoint::Log log,
-		       Task *task)
+Jdb_bp::set_breakpoint(int num, Jdb_address addr, Mword len,
+		       Breakpoint::Mode mode, Breakpoint::Log log)
 {
-  if (set_debug_address_register(num, addr, len, mode, task))
+  if (set_debug_address_register(num, addr, len, mode))
     {
       bps[num].set(addr, len, mode, log);
       return 1;
@@ -487,10 +485,9 @@ Jdb_bp::first_unused()
 // Return 1 if a breakpoint hits
 PUBLIC static
 int
-Jdb_bp::test_break(String_buffer *buf, Mword dr6)
+Jdb_bp::test_break(Cpu_number cpu, Jdb_entry_frame *e, String_buffer *buf, Mword dr6)
 {
-  Thread *t = Jdb::get_thread(Cpu_number::boot_cpu());
-  Jdb_entry_frame *e = Jdb::get_entry_frame(Cpu_number::boot_cpu());
+  Thread *t = Jdb::get_thread(cpu);
 
   for (int i = 0; i < 4; i++)
     if (dr6 & (1 << i))
@@ -531,7 +528,7 @@ Jdb_bp::test_log(Mword &dr6)
 
 PUBLIC static
 Mword
-Jdb_bp::test_match(Address addr, Breakpoint::Mode mode)
+Jdb_bp::test_match(Jdb_address addr, Breakpoint::Mode mode)
 {
   for (int i = 0; i < 4; i++)
     if (bps[i].match_addr(addr, mode))
@@ -542,7 +539,7 @@ Jdb_bp::test_match(Address addr, Breakpoint::Mode mode)
 
 PUBLIC static
 int
-Jdb_bp::instruction_bp_at_addr(Address addr)
+Jdb_bp::instruction_bp_at_addr(Jdb_address addr)
 { return test_match(addr, Breakpoint::INSTRUCTION); }
 
 
@@ -725,9 +722,9 @@ got_address:
 	  // abort if no address was given
 	  if (Jdb_input_task_addr::addr() == (Address)-1)
 	    return ERROR;
-	  Jdb_bp::set_breakpoint(breakpoint_number, Jdb_input_task_addr::addr(),
-				 breakpoint_length, mode, Breakpoint::BREAK,
-				 Jdb_input_task_addr::task());
+
+	  Jdb_bp::set_breakpoint(breakpoint_number, Jdb_input_task_addr::address(),
+				 breakpoint_length, mode, Breakpoint::BREAK);
 	  putchar('\n');
 	  break;
 	case 5:

@@ -1,9 +1,11 @@
 INTERFACE:
 
 #include <cxx/function>
+#include <cxx/type_traits>
 
 #include "l4_types.h"
 #include "cpu_mask.h"
+#include "jdb_types.h"
 #include "jdb_core.h"
 #include "jdb_handler_queue.h"
 #include "mem.h"
@@ -381,10 +383,10 @@ Jdb::push_cons()
 // non-interactive commands here (e.g. we don't allow d, t, l, u commands)
 PRIVATE static
 int
-Jdb::execute_command_ni(Space *task, char const *str, int len = 1000)
+Jdb::execute_command_ni(Jdb_addr<char const> str, int len = 1000)
 {
   char tmp = 0;
-  for (; len && peek(str, task, tmp) && tmp; ++str, --len)
+  for (; len && peek(str, tmp) && tmp; ++str, --len)
     if ((unsigned char)tmp != 0xff)
       push_cons()->push(tmp);
 
@@ -985,13 +987,13 @@ Jdb::get_task(Cpu_number cpu)
 PUBLIC static
 template< typename T >
 bool
-Jdb::peek(T const *addr, Space *task, T &value)
+Jdb::peek(Jdb_addr<T> addr, typename cxx::remove_const<T>::type &value)
 {
   // use an Mword here instead of T as some implementations of peek_task use
   // an Mword in their operation which is potentially bigger than T
   // XXX: should be fixed
   Mword tmp;
-  bool ret = peek_task((Address)addr, task, &tmp, sizeof(T)) == 0;
+  bool ret = peek_task(addr, &tmp, sizeof(T)) == 0;
   value = tmp;
   return ret;
 }
@@ -999,8 +1001,8 @@ Jdb::peek(T const *addr, Space *task, T &value)
 PUBLIC static
 template< typename T >
 bool
-Jdb::poke(T *addr, Space *task, T const &value)
-{ return poke_task((Address)addr, task, &value, sizeof(T)) == 0; }
+Jdb::poke(Jdb_addr<T> addr, T const &value)
+{ return poke_task(addr, &value, sizeof(T)) == 0; }
 
 
 class Jdb_base_cmds : public Jdb_module

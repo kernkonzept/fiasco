@@ -89,7 +89,7 @@ special_l4_ops(bfd_vma memaddr)
 #endif
 
 int
-disasm_bytes(char *buffer, unsigned len, Address addr, Space *task,
+disasm_bytes(char *buffer, unsigned len, Jdb_address addr,
              int show_intel_syntax,
              Peek_task peek_task, Is_adp_mem is_adp_mem)
 {
@@ -156,20 +156,20 @@ disasm_bytes(char *buffer, unsigned len, Address addr, Space *task,
       cs_insn *insn = NULL;
 
       unsigned char code[16];
-      unsigned width1 = Config::PAGE_SIZE - (addr & ~Config::PAGE_MASK);
+      unsigned width1 = Config::PAGE_SIZE - (addr.addr() & ~Config::PAGE_MASK);
       if (width1 > sizeof(code))
         width1 = sizeof(code);
-      if (is_adp_mem(addr, task) || peek_task(addr, task, &code, width1) < 0)
+      if (is_adp_mem(addr) || peek_task(addr, &code, width1) < 0)
         size = -1;
       else
         {
           unsigned width2 = sizeof(code) - width1;
           // if fetching the 2nd part fails just hope that the first part is enough
           if (width2
-              && (is_adp_mem(addr+width1, task)
-                  || peek_task(addr+width1, task, &code[width1], width2) < 0))
+              && (is_adp_mem(addr + width1)
+                  || peek_task(addr + width1, &code[width1], width2) < 0))
             memset(&code[width1], 0, width2);
-          int cnt = cs_disasm(handle, code, sizeof(code), addr, 1, &insn);
+          int cnt = cs_disasm(handle, code, sizeof(code), addr.addr(), 1, &insn);
           if (cnt)
             {
               if (buffer)

@@ -5,8 +5,9 @@ INTERFACE:
 EXTENSION class Jdb_bp
 {
 private:
-  static int		test_log_only();
-  static int		test_break(String_buffer *buf);
+  static int test_log_only();
+  static int test_break(Cpu_number cpu, Jdb_entry_frame *ef,
+                        String_buffer *buf);
 };
 
 
@@ -27,11 +28,10 @@ Breakpoint::restricted_task()
 
 PUBLIC inline
 void
-Breakpoint::set(Address _addr, Mword _len, Mode _mode, Log _log)
+Breakpoint::set(Jdb_address _addr, Mword _len, Mode _mode, Log _log)
 {
   addr = _addr;
   mode = _mode;
-  user = ADDR_USER;   // we don't allow breakpoints in kernel space
   log  = _log;
   len  = _len;
 }
@@ -86,10 +86,10 @@ Jdb_bp::set_debug_control_register(Mword val, Space *task)
 
 static
 int
-Jdb_bp::set_debug_address_register(int num, Mword addr, Mword len,
-				   Breakpoint::Mode mode, Task *task)
+Jdb_bp::set_debug_address_register(int num, Jdb_address addr, Mword len,
+				   Breakpoint::Mode mode)
 {
-  if (!task)
+  if (addr.is_kmem())
     {
       putstr(" => kernel task not allowed for breakpoints");
       return 0;
@@ -97,6 +97,7 @@ Jdb_bp::set_debug_address_register(int num, Mword addr, Mword len,
   if (num >= 0 && num <= 3)
     {
       Mword local_dr7;
+      Task *task = static_cast<Task *>(addr.space());
       Task *old_task = cxx::dyn_cast<Task*>(Kobject::from_dbg(Kobject_dbg::id_to_obj(bps[num].restricted_task())));
 
       if (old_task)
@@ -107,7 +108,7 @@ Jdb_bp::set_debug_address_register(int num, Mword addr, Mword len,
 	  set_debug_control_register(local_dr7, old_task);
 	}
       bps[num].restrict_task(0, task->dbg_info()->dbg_id());
-      write_debug_register(num, addr, task);
+      write_debug_register(num, addr.addr(), task);
       local_dr7 = get_debug_control_register(task);
       clr_dr7(num, local_dr7);
       set_dr7(num, len, mode, local_dr7);
@@ -164,7 +165,7 @@ Jdb_bp::test_log_only()
 /** @return 1 if breakpoint occured */
 IMPLEMENT
 int
-Jdb_bp::test_break(String_buffer *buf)
+Jdb_bp::test_break(Cpu_number cpu, Jdb_entry_frame *ef, String_buffer *buf)
 {
   Space *t = Jdb::get_thread(Cpu_number::boot_cpu())->space();
   Mword dr6  = read_debug_register(6, t);
@@ -172,7 +173,7 @@ Jdb_bp::test_break(String_buffer *buf)
   if (!(dr6 & 0x000000f))
     return 0;
 
-  test_break(buf, dr6);
+  test_break(cpu, ef, buf, dr6);
   write_debug_register(6, dr6 & ~0x0000000f, t);
   return 1;
 }

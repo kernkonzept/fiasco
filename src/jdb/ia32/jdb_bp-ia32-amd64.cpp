@@ -1,14 +1,17 @@
 INTERFACE[ia32,amd64]:
 
 #include "string_buffer.h"
+#include "jdb_types.h"
+
+class Jdb_entry_frame;
 
 EXTENSION class Jdb_bp
 {
 private:
-  static int		test_sstep();
-  static int		test_break(String_buffer *buf);
-  static int		test_other(String_buffer *buf);
-  static int		test_log_only();
+  static int		test_sstep(Cpu_number cpu, Jdb_entry_frame *ef);
+  static int		test_break(Cpu_number cpu, Jdb_entry_frame *ef, String_buffer *buf);
+  static int		test_other(Cpu_number cpu, Jdb_entry_frame *ef, String_buffer *buf);
+  static int		test_log_only(Cpu_number cpu, Jdb_entry_frame *ef);
   static Mword		dr7;
 };
 
@@ -26,11 +29,10 @@ Mword Jdb_bp::dr7;
 
 PUBLIC inline NEEDS["kmem.h"]
 void
-Breakpoint::set(Address _addr, Mword _len, Mode _mode, Log _log)
+Breakpoint::set(Jdb_address _addr, Mword _len, Mode _mode, Log _log)
 {
   addr = _addr;
   mode = _mode;
-  user = Kmem::is_kmem_page_fault(_addr, 0) ? ADDR_KERNEL : ADDR_USER;
   log  = _log;
   len  = _len;
 }
@@ -60,17 +62,17 @@ Jdb_bp::global_breakpoints()
 
 static
 int
-Jdb_bp::set_debug_address_register(int num, Mword addr, Mword len,
-				   Breakpoint::Mode mode, Space *)
+Jdb_bp::set_debug_address_register(int num, Jdb_address addr, Mword len,
+				   Breakpoint::Mode mode)
 {
   clr_dr7(num, dr7);
   set_dr7(num, len, mode, dr7);
   switch (num)
     {
-    case 0: write_debug_register(0, addr); break;
-    case 1: write_debug_register(1, addr); break;
-    case 2: write_debug_register(2, addr); break;
-    case 3: write_debug_register(3, addr); break;
+    case 0: write_debug_register(0, addr.addr()); break;
+    case 1: write_debug_register(1, addr.addr()); break;
+    case 2: write_debug_register(2, addr.addr()); break;
+    case 3: write_debug_register(3, addr.addr()); break;
     default:;
     }
   return 1;
@@ -103,7 +105,7 @@ Jdb_bp::at_jdb_leave()
 /** @return 1 if single step occured */
 IMPLEMENT
 int
-Jdb_bp::test_sstep()
+Jdb_bp::test_sstep(Cpu_number, Jdb_entry_frame *)
 {
   Mword dr6 = read_debug_register(6);
   if (!(dr6 & Val_test_sstep))
@@ -117,13 +119,13 @@ Jdb_bp::test_sstep()
 /** @return 1 if breakpoint occured */
 IMPLEMENT
 int
-Jdb_bp::test_break(String_buffer *buf)
+Jdb_bp::test_break(Cpu_number cpu, Jdb_entry_frame *ef, String_buffer *buf)
 {
   Mword dr6 = read_debug_register(6);
   if (!(dr6 & Val_test))
     return 0;
 
-  int ret = test_break(buf, dr6);
+  int ret = test_break(cpu, ef, buf, dr6);
   write_debug_register(6, dr6 & ~Val_test);
   return ret;
 }
@@ -131,7 +133,7 @@ Jdb_bp::test_break(String_buffer *buf)
 /** @return 1 if other debug exception occured */
 IMPLEMENT
 int
-Jdb_bp::test_other(String_buffer *buf)
+Jdb_bp::test_other(Cpu_number, Jdb_entry_frame *, String_buffer *buf)
 {
   Mword dr6 = read_debug_register(6);
   if (!(dr6 & Val_test_other))
@@ -145,7 +147,7 @@ Jdb_bp::test_other(String_buffer *buf)
 /** @return 1 if only breakpoints were logged and jdb should not be entered */
 IMPLEMENT
 int
-Jdb_bp::test_log_only()
+Jdb_bp::test_log_only(Cpu_number, Jdb_entry_frame *)
 {
   Mword dr6 = read_debug_register(6);
 

@@ -928,7 +928,7 @@ restart:
                     {
                       if (Jdb_disasm::avail())
                         {
-                          if (!Jdb_disasm::show(eip, t->space(), 1))
+                          if (!Jdb_disasm::show(Jdb_address(eip, t->space()), 1))
                             goto exit;
                         }
                       else
