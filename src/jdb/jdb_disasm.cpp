@@ -25,7 +25,6 @@ public:
   static bool avail() { return true; }
 private:
   static char show_intel_syntax;
-  static char show_lines;
 };
 
 
@@ -65,11 +64,6 @@ IMPLEMENTATION [jdb_disasm]:
 #include "task.h"
 
 char Jdb_disasm::show_intel_syntax;
-#if 0
-char Jdb_disasm::show_lines = 2;
-#else
-char Jdb_disasm::show_lines = 0;
-#endif
 
 static
 bool
@@ -191,26 +185,14 @@ Jdb_disasm::show(Address virt, Space *task, int level)
 			   addr, task);
 	}
 
-#if 0
-      static char const * const line_mode[] = { "", "[Source]", "[Headers]" };
-#endif
 #if defined(CONFIG_IA32) || defined(CONFIG_AMD64)
       static char const * const syntax_mode[] = { "[AT&T]", "[Intel]" };
 #endif
       char s[16];
       Jdb::printf_statline("dis",
-#if 0
-                           "<Space>=lines mode",
-#else
                            "",
-#endif
-			   "<" L4_PTR_FMT "> %s  %-9s  %-7s",
+			   "<" L4_PTR_FMT "> %s  %-7s",
 			   virt, Jdb::space_to_str(task, s, sizeof(s)),
-#if 0
-                           line_mode[(int)show_lines],
-#else
-                           "",
-#endif
 #if defined(CONFIG_IA32) || defined(CONFIG_AMD64)
 			   syntax_mode[(int)show_intel_syntax]
 #else
@@ -245,11 +227,6 @@ Jdb_disasm::show(Address virt, Space *task, int level)
 	case 'J':
 	  disasm_offset(virt, +Jdb_screen::height()-2, task);
 	  break;
-#if 0
-	case ' ':
-	  show_lines = (show_lines+1) % 3;
-	  break;
-#endif
 #if defined(CONFIG_IA32) || defined(CONFIG_AMD64)
 	case KEY_TAB:
 	  show_intel_syntax ^= 1;
@@ -285,7 +262,7 @@ Jdb_disasm::action(int cmd, void *&args, char const *&fmt, int &next_char) overr
       if (code == Jdb_module::NOTHING
 	  && Jdb_input_task_addr::space() != 0)
 	{
-	  Address addr  = Jdb_input_task_addr::addr();
+	  Address addr = Jdb_input_task_addr::addr();
 	  Space *space = Jdb_input_task_addr::space();
 	  if (addr == (Address)-1)
 	    addr = Jdb::get_entry_frame(Jdb::current_cpu)->ip();
