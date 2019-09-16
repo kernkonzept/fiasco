@@ -159,7 +159,7 @@ PRIVATE inline
 bool
 Jdb_ptab::is_executable(Pte_ptr const &entry)
 {
-  return *entry.pte & 0x0040000000000000;
+  return !(*entry.pte & 0x0040000000000000);
 }
 
 IMPLEMENT
