@@ -43,6 +43,9 @@ Kip_init::setup_ux(Kip *k)
                        & Config::PAGE_MASK) - 1,
                       Mem_desc::Reserved);
 
+  constexpr unsigned rwx =
+    cxx::int_value<L4_fpage::Rights>(L4_fpage::Rights::RWX());
+
   mbm++;
   k->root_ip		= mbm->reserved;
   if ((Boot_info::root_start() & Config::PAGE_MASK)
@@ -50,7 +53,7 @@ Kip_init::setup_ux(Kip *k)
     *(m++) = Mem_desc(Boot_info::root_start() & Config::PAGE_MASK,
                       ((Boot_info::root_end() + (Config::PAGE_SIZE - 1))
                        & Config::PAGE_MASK) - 1,
-                      Mem_desc::Bootloader);
+                      Mem_desc::Bootloader, false, rwx);
 
   unsigned long version_size = 0;
   for (char const *v = k->version_string(); *v; )
@@ -87,10 +90,10 @@ Kip_init::setup_ux(Kip *k)
   mod_end = (mod_end + Config::PAGE_SIZE -1) & ~(Config::PAGE_SIZE - 1);
 
   if (mod_end > mod_start)
-    *(m++) = Mem_desc(mod_start, mod_end - 1, Mem_desc::Bootloader);
+    *(m++) = Mem_desc(mod_start, mod_end - 1, Mem_desc::Bootloader, false, rwx);
 
   *(m++) = Mem_desc(Boot_info::mbi_phys(),
                     ((Boot_info::mbi_phys() + Boot_info::mbi_size()
                      + Config::PAGE_SIZE-1) & Config::PAGE_MASK) - 1,
-                    Mem_desc::Bootloader);
+                    Mem_desc::Bootloader, false, rwx);
 }
