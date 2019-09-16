@@ -429,6 +429,7 @@ static inline void __attribute__((constructor)) FIASCO_INIT
 register_factory()
 {
   Kobject_iface::set_factory(0, ipc_gate_factory);
+  Kobject_iface::set_factory(L4_msg_tag::Label_kobject, ipc_gate_factory);
 }
 }
 
