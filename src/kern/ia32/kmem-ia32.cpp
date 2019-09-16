@@ -907,13 +907,11 @@ Kmem::init_cpu(Cpu &cpu)
   auto *pte_map = cpu_m.alloc<Bitmap<260> >(1, 0x20);
 
   pte_map->clear_all();
-  // sync pte_map bits for context switch optimization.
-  // slots > 255 are CPU local / kernel stuff
+  // Sync pte_map bits for context switch optimization.
+  // Slots > 255 are CPU local / kernel area.
   for (unsigned long i = 0; i < 256; ++i)
-    {
-      if (cpu_dir->walk(Virt_addr(i << 39), 0).is_valid())
-        pte_map->set_bit(i);
-    }
+    if (cpu_dir->walk(Virt_addr(i << 39), 0).is_valid())
+      pte_map->set_bit(i);
 
   if (!_pte_map)
     _pte_map = pte_map;
