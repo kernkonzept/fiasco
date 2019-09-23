@@ -254,7 +254,16 @@ Mword
 PF::is_xi_error(Mword cause)
 {
   // TLBXI
-  return (cause & 0x7c) == 0x50;
+  auto code = cause & 0x7c;
+  return code == (0x14 << 2);
+}
+
+PUBLIC static inline
+Mword
+PF::is_tlb_rights_error(Mword cause)
+{
+  auto code = cause & 0x7c;
+  return code == (0x14 << 2) || code == (0x13 << 2);
 }
 
 PUBLIC static inline NEEDS["trap_state.h"]

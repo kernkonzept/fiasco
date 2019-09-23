@@ -293,7 +293,7 @@ thread_handle_tlb_fault(Mword cause, Trap_state *ts, Mword pfa)
   bool need_probe = !(cause & 1);
   bool guest = ts->status & (1 << 3);
 
-  if (EXPECT_FALSE(PF::is_xi_error(cause)
+  if (EXPECT_FALSE(PF::is_tlb_rights_error(cause)
                    || !s->add_tlb_entry(Virt_addr(pfa),
                                         !PF::is_read_error(cause), need_probe,
                                         guest)))
