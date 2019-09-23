@@ -85,6 +85,7 @@ public:
       Mword v = 0;
       if (r & R::W())    v |= Write;
       if (!(r & R::X())) v |= XI;
+      if (!(r & R::R())) v |= RI;
       return v;
     }
 
