@@ -358,7 +358,7 @@ ifneq ($(CONFIG_CPU_VIRT),)
     endif
   endif
   ifeq ($(CC_TYPE),clang)
-    ifneq ($(findstring $(CCVER_MAJOR),7 8 9),)
+    ifneq ($(findstring $(CCVER_MAJOR),7 8 9 10),)
       ARM_CC_OK_FOR_VIRT := y
     endif
   endif
