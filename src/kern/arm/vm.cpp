@@ -224,22 +224,10 @@ Vm::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode)
 namespace {
 static Kobject_iface * FIASCO_FLATTEN
 vm_factory(Ram_quota *q, Space *,
-           L4_msg_tag, Utcb const *,
+           L4_msg_tag t, Utcb const *u,
            int *err)
 {
-  typedef Kmem_slab_t<Vm> Alloc;
-
-  *err = L4_err::ENomem;
-  Vm *v = Alloc::q_new(q, q);
-
-  if (EXPECT_FALSE(!v))
-    return 0;
-
-  if (EXPECT_TRUE(v->initialize()))
-    return v;
-
-  Alloc::q_del(q, v);
-  return 0;
+  return Task::create<Vm>(q, t, u, err);
 }
 
 static inline void __attribute__((constructor)) FIASCO_INIT
