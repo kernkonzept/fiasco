@@ -329,7 +329,7 @@ Mem_space::v_delete(Vaddr virt, Page_order size,
 PUBLIC inline NEEDS[Mem_space::set_guest_ctl1_rid, <cstdio>]
 bool
 Mem_space::add_tlb_entry(Vaddr virt, bool write_access, bool need_probe, bool guest)
-{ (void) write_access;
+{
   // align virt to double pages at least, as we need to add
   // two phys pages in the tlb
   Vaddr a = cxx::mask_lsb(virt, Page_order(Config::PAGE_SHIFT + 1));
