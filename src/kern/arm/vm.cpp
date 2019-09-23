@@ -286,7 +286,7 @@ Mword
 Vm::jdb_get(Mword *state_ptr)
 {
   Mword v = ~0UL;
-  Jdb::peek(state_ptr, this, v);
+  Jdb::peek(Jdb_addr<Mword>(state_ptr, this), v);
   return v;
 }
 
