@@ -113,7 +113,8 @@ public:
     L4_fpage::Rights rights() const
     {
       typedef L4_fpage::Rights R;
-      R r = R::U() | R::R();
+      R r = R::U();
+      if (!(*e & RI)) r |= R::R();
       if (*e & Write) r |= R::W();
       if (!(*e & XI)) r |= R::X();
       return r;
