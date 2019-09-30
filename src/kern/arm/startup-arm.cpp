@@ -14,6 +14,7 @@ IMPLEMENTATION [arm]:
 #include "perf_cnt.h"
 #include "pic.h"
 #include "platform_control.h"
+#include "psci.h"
 #include "processor.h"
 #include "static_init.h"
 #include "thread.h"
@@ -75,6 +76,7 @@ Startup::stage2()
   Cpu::init_mmu(true);
   Cpu::cpus.cpu(boot_cpu).init(false, true);
   Platform_control::init(boot_cpu);
+  Psci::init(boot_cpu);
   Fpu::init(boot_cpu, false);
   Ipi::init(boot_cpu);
   Timer::init(boot_cpu);

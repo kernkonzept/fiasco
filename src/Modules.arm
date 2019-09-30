@@ -123,7 +123,7 @@ PRIVATE_INCDIR 	+= kern/$(CONFIG_XARCH)/$(BITS) kern/$(CONFIG_XARCH) kern
 INTERFACES_KERNEL += 	__main mem_op kmem_space boot_uart_init     \
 			irq_chip_generic bootstrap                  \
 			outer_cache utcb_support cascade_irq   \
-			irq_mgr_multi_chip smc_call
+			irq_mgr_multi_chip smc_call psci
 
 INTERFACES_KERNEL-$(CONFIG_ARM_MPCORE) += scu
 INTERFACES_KERNEL-$(CONFIG_ARM_CORTEX_A9) += scu
@@ -173,9 +173,8 @@ outer_cache_IMPL	:= outer_cache outer_cache-l2cxx0
 paging_IMPL	  	:= paging paging-arm paging-arm-$(BITS)
 perf_cnt_IMPL		:= perf_cnt perf_cnt-arm perf_cnt-arm-$(BITS)
 pic_IMPL		:= pic
-ifeq ($(CONFIG_ARM_PSCI),y)
-platform_control_IMPL	+= platform_control-arm-psci
-endif
+platform_control_IMPL   += platform_control-arm-psci
+psci_IMPL		:= psci-arm
 sched_context_IMPL	:= sched_context-wfq sched_context-fixed_prio \
 			   sched_context-fp_wfq sched_context
 scu_IMPL                := scu

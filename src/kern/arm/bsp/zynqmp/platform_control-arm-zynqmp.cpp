@@ -4,6 +4,7 @@ IMPLEMENTATION [arm && mp && pf_zynqmp]:
 #include "mem.h"
 #include "mmio_register_block.h"
 #include "kmem.h"
+#include "psci.h"
 
 #include <cstdio>
 
@@ -17,7 +18,7 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
       int r = cpu_on(coreid[i], phys_tramp_mp_addr);
       if (r)
         {
-          if (r != Psci_already_on)
+          if (r != Psci::Psci_already_on)
             printf("CPU%d boot-up error: %d\n", i, r);
           continue;
         }
