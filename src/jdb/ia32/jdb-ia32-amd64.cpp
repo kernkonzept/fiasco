@@ -458,7 +458,7 @@ Jdb::is_adapter_memory(Jdb_address addr)
 #define WEAK __attribute__((weak))
 extern "C" char in_slowtrap, in_page_fault, in_handle_fputrap;
 extern "C" char in_interrupt, in_timer_interrupt, in_timer_interrupt_slow;
-extern "C" char in_slow_ipc4, in_slow_ipc5;
+extern "C" char in_slow_ipc4 WEAK, in_slow_ipc5;
 extern "C" char in_sc_ipc1 WEAK, in_sc_ipc2 WEAK, in_syscall WEAK;
 #undef WEAK
 

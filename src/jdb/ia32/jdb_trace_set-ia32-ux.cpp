@@ -1,46 +1,32 @@
 IMPLEMENTATION:
+
 #include "syscalls.h"
-#include "idt.h"
 #include "jdb.h"
 #include "pm.h"
 
-extern "C" void entry_sys_ipc_log (void);
-extern "C" void entry_sys_ipc_c (void);
-extern "C" void entry_sys_ipc (void);
-extern "C" void entry_sys_fast_ipc_log (void);
-extern "C" void entry_sys_fast_ipc_c (void);
-extern "C" void entry_sys_fast_ipc (void);
-
 extern "C" void sys_ipc_wrapper (void);
-extern "C" void ipc_short_cut_wrapper (void);
 extern "C" void sys_ipc_log_wrapper (void);
 extern "C" void sys_ipc_trace_wrapper (void);
 
-typedef void (Fast_entry_func)(void);
+extern "C" void entry_sys_fast_ipc_log (void);
+extern "C" void entry_sys_fast_ipc_c (void);
 
 static
 void
 Jdb_set_trace::set_ipc_vector()
 {
-  void (*int30_entry)(void);
   void (*fast_entry)(void);
 
-  if (Jdb_ipc_trace::_trace || Jdb_ipc_trace::_slow_ipc ||
-      Jdb_ipc_trace::_log)
-    {
-      int30_entry = entry_sys_ipc_log;
-      fast_entry  = entry_sys_fast_ipc_log;
-    }
+  if (Jdb_ipc_trace::_trace || Jdb_ipc_trace::_slow_ipc || Jdb_ipc_trace::_log)
+    fast_entry  = entry_sys_fast_ipc_log;
   else
-    {
-      int30_entry = entry_sys_ipc_c;
-      fast_entry  = entry_sys_fast_ipc_c;
-    }
+    fast_entry  = entry_sys_fast_ipc_c;
 
-  Idt::set_entry(0x30, (Address) int30_entry, true);
   Jdb::on_each_cpu([fast_entry](Cpu_number cpu){
     Cpu::cpus.cpu(cpu).set_fast_entry(fast_entry);
   });
+
+  set_ipc_vector_int();
 
   if (Jdb_ipc_trace::_trace)
     syscall_table[0] = sys_ipc_trace_wrapper;
@@ -106,4 +92,33 @@ struct Jdb_ipc_log_pm : Pm_object
 
 DEFINE_PER_CPU static Per_cpu<Jdb_ipc_log_pm> _pm(Per_cpu_data::Cpu_num);
 
+}
+
+IMPLEMENTATION [ia32,ux]:
+
+#include "idt.h"
+
+extern "C" void entry_sys_ipc_log (void);
+extern "C" void entry_sys_ipc_c (void);
+
+static
+void
+Jdb_set_trace::set_ipc_vector_int()
+{
+  void (*int30_entry)(void);
+
+  if (Jdb_ipc_trace::_trace || Jdb_ipc_trace::_slow_ipc || Jdb_ipc_trace::_log)
+    int30_entry = entry_sys_ipc_log;
+  else
+    int30_entry = entry_sys_ipc_c;
+
+  Idt::set_entry(0x30, (Address) int30_entry, true);
+}
+
+IMPLEMENTATION [amd64]:
+
+static
+void
+Jdb_set_trace::set_ipc_vector_int()
+{
 }

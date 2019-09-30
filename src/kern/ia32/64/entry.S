@@ -392,59 +392,6 @@ ret_from_syscall:
 	add	$16, %rsp
 	SAFE_IRET
 
-/* TODO: remove old int 0x30 syscall entry as amd64 uses syscall */
-GATE_ENTRY	0x30, entry_sys_ipc_c, (ACC_PL_U | ACC_INTR_GATE)
-
-        .p2align 4
-	.globl	entry_sys_ipc_c
-entry_sys_ipc_c:
-	cld
-	SWITCH_TO_KERNEL_CR3 0
-	sub	$16, %rsp
-	push	%rax
-	SAVE_STATE
-	IA32_IBRS_CLOBBER
-	ESP_TO_TCB_AT %rbx
-	testl	$VAL__Thread_alien_or_vcpu_user, OFS__THREAD__STATE (%rbx)
-	jnz	alien_sys_ipc_c
-	RESET_THREAD_CANCEL_AT %rbx
-
-
-	call	sys_ipc_wrapper
-in_sc_ipc1:
-	RESTORE_STATE
-	pop	%rax
-	add	$16, %rsp
-	SAFE_IRET
-
-	.globl	in_sc_ipc1
-
-#ifdef CONFIG_JDB
-	/* The slow variant of sys_ipc_entry is used when logging IPC */
-        .p2align 4
-	.globl	entry_sys_ipc_log
-
-entry_sys_ipc_log:
-	cld
-	SWITCH_TO_KERNEL_CR3 0
-	sub	$16, %rsp
-	push	%rax
-	SAVE_STATE
-	ESP_TO_TCB_AT %rbx
-	testl	$VAL__Thread_alien_or_vcpu_user, OFS__THREAD__STATE (%rbx)
-	jnz	alien_sys_ipc_log
-	RESET_THREAD_CANCEL_AT %rbx
-	call	*syscall_table
-
-in_slow_ipc4:
-	RESTORE_STATE
-	pop	%rax
-	add	$16, %rsp
-	SAFE_IRET
-
-	.globl	in_slow_ipc4
-#endif // CONFIG_JDB
-
         // these labels help show_tcb to guess the thread state
 	.globl	in_syscall
 	.globl	in_slowtrap
