@@ -178,7 +178,7 @@ config FPU
 	  Enable this if your platform has hardware floating point support.
 
 config LAZY_FPU
-	bool "Enable lazy FPU switching" if HAS_LAZY_FPU && FPU
+	bool "Enable lazy FPU switching" if HAS_LAZY_FPU && FPU && !PF_UX
 	depends on FPU && HAS_LAZY_FPU
 	default y if !AMD64
 	help
