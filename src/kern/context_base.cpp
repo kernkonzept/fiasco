@@ -44,7 +44,7 @@ inline NEEDS ["config.h"]
 Context *context_of(const void *ptr)
 {
   return reinterpret_cast<Context *>
-    (reinterpret_cast<unsigned long>(ptr) & ~(Context_base::Size - 1));
+    ((reinterpret_cast<unsigned long>(ptr) - 4) & ~(Context_base::Size - 1));
 }
 
 inline NEEDS [context_of, "processor.h"]
@@ -87,5 +87,7 @@ Context_base::get_current_cpu() const
 
 inline NEEDS ["processor.h"]
 Cpu_number FIASCO_PURE current_cpu()
-{ return reinterpret_cast<Context_base *>(Proc::stack_pointer() & ~(Context_base::Size - 1))->_cpu; }
-
+{
+  return reinterpret_cast<Context_base *>((Proc::stack_pointer() - 4)
+                                          & ~(Context_base::Size - 1))->_cpu;
+}
