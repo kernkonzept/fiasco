@@ -146,6 +146,7 @@ bool Thread::handle_sigma0_page_fault(Address pfa)
 }
 
 extern "C" {
+  void except_notimpl(void);
   void except_notimpl(void)
   {
     Mword etype,  dar, dsisr, vsid, msr, ksp;
@@ -201,6 +202,8 @@ extern "C" {
     return ret;
   }
 
+  void slowtrap_entry(Trap_state * /*ts*/);
+
   void slowtrap_entry(Trap_state * /*ts*/)
   {
     NOT_IMPL_PANIC;
@@ -218,6 +221,8 @@ Thread::pagein_tcb_request(Return_frame * /*regs*/)
 
 extern "C"
 {
+  void timer_handler();
+
   void timer_handler()
   {
     Return_frame *rf = nonull_static_cast<Return_frame*>(current()->regs());
