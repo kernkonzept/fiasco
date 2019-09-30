@@ -42,6 +42,22 @@ Jdb::wfi_leave()
 {}
 
 // ------------------------------------------------------------------------
+IMPLEMENTATION [arm && pic_gic && serial]:
+
+PRIVATE static inline
+void
+Jdb::kernel_uart_irq_ack()
+{ Kernel_uart::uart()->irq_ack(); }
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && pic_gic && !serial]:
+
+PRIVATE static inline
+void
+Jdb::kernel_uart_irq_ack()
+{}
+
+// ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pic_gic]:
 
 #include "gic.h"
@@ -90,7 +106,7 @@ Jdb::_wait_for_input()
   unsigned i = static_cast<Gic*>(tt->chip())->pending();
   if (i == tt->pin())
     {
-      Kernel_uart::uart()->irq_ack();
+      kernel_uart_irq_ack();
       tt->chip()->ack(i);
       tt->ack();
     }
