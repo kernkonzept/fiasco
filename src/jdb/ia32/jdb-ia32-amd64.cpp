@@ -792,7 +792,7 @@ Jdb::handle_trapX(Cpu_number cpu, Jdb_entry_frame *ef)
 
 /** Int3 debugger interface. This function is called immediately
  * after entering the kernel debugger.
- * @return 1 if command was successfully interpreted
+ * @return true if command was successfully interpreted
  */
 IMPLEMENT
 bool
@@ -803,64 +803,35 @@ Jdb::handle_user_request(Cpu_number cpu)
   if (entry_frame->debug_ipi())
     return cpu != Cpu_number::boot_cpu();
 
-  if (entry_frame->_trapno == 3)
-    {
-      Space *task = get_task(cpu);
-      Unsigned8 todo;
-      Jdb_addr<Unsigned8 const> insn_ptr((Unsigned8 *)entry_frame->ip(), task);
-      if (!peek(insn_ptr, todo))
-	return false;
+  if (entry_frame->_trapno != 3)
+    return false;
 
-      // jmp == enter_kdebug()
-      if (todo == 0xeb)
-	{
-	  Unsigned8 len;
-	  if (!peek(insn_ptr + 1, len))
-	    return false;
+  char todo;
+  auto insn_ptr = Jdb_addr<char const>::kmem_addr((char const *)entry_frame->ip());
 
-	  Jdb_addr<char const> str((char const *)(entry_frame->ip() + 2), task);
-	  char tmp;
+  if (!peek(insn_ptr, todo) || todo != (char)0xeb)
+    return false;
 
-	  if (len <= 2)
-	    return false;
+  char len;
+  if (!peek(insn_ptr + 1, len))
+    return false;
 
-	  if (!peek(str, tmp) || tmp !='*')
-	    return false;
+  if (len <= 2)
+    return false;
 
-	  if (!peek(str + 1, tmp) || tmp != '#')
-	    return false;
+  auto str_ptr = Jdb_addr<char const>::kmem_addr((char const *)(entry_frame->value()));
+  char tmp;
 
-	  int ret;
+  if (!peek(insn_ptr + 2, tmp) || tmp !='*')
+    return false;
 
-	  if (peek(str + 2, tmp) && tmp == '#')
-	    ret = execute_command_ni(Jdb_addr<char const>((char const *)entry_frame->value(), task));
-	  else
-	    ret = execute_command_ni(str + 2, len - 2);
+  if (!peek(insn_ptr + 3, tmp) || tmp != '#')
+    return false;
 
-	  if (ret)
-	    return 1;
-	}
-      // cmpb
-      else if (todo == 0x3c)
-	{
-	  if (!peek(insn_ptr + 1, todo))
-	    return false;
+  if (peek(insn_ptr + 4, tmp) && tmp == '#')
+    return execute_command_ni(str_ptr);
 
-	  switch (todo)
-	    {
-	    case 29:
-	      if (entry_frame->value() == 3)
-		{
-		  Watchdog::disable();
-		  execute_command("Tgzip");
-		  Watchdog::enable();
-		  return 1;
-		}
-	      break;
-	    }
-	}
-    }
-  return 0;
+  return execute_command_ni(insn_ptr + 2, len - 2);
 }
 
 IMPLEMENT

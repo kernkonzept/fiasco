@@ -1165,7 +1165,7 @@ Jdb::enter_jdb(Jdb_entry_frame *e, Cpu_number cpu)
     }
 
   Jdb::current_cpu = cpu;
-  // check for int $3 user debugging interface
+  // check for kdb_ke debugging interface; only used from kernel context
   if (foreach_cpu(&handle_user_request, true))
     {
       close_debug_console(cpu);

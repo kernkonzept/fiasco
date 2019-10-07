@@ -199,23 +199,22 @@ bool
 Jdb::handle_user_request(Cpu_number cpu)
 {
   Jdb_entry_frame *ef = Jdb::entry_frame.cpu(cpu);
-  const char *str = (char const *)ef->r[0];
-  Space * task = get_task(cpu);
+  auto str = Jdb_addr<char const>::kmem_addr((char const *)ef->r[0]);
 
   if (ef->debug_ipi())
     return cpu != Cpu_number::boot_cpu();
 
-  // arm32
+  // arm32, see kdb_ke_sequence()
   if (ef->error_code == ((0x33UL << 26) | 1))
-    return execute_command_ni(Jdb_addr<char const>(str, task));
+    return execute_command_ni(str);
 
-  // arm64
+  // arm64, see kdb_ke_sequence()
   unsigned opcode;
-  if (!peek(Jdb_addr<unsigned>((unsigned*)ef->ip(), task), opcode) ||
-      opcode != 0xd4200020) // brk #1
-    return false;
+  if (peek(Jdb_addr<unsigned>::kmem_addr((unsigned*)ef->ip()), opcode)
+      && opcode == 0xd4200020) // brk #1
+    return execute_command_ni(str);
 
-  return execute_command_ni(Jdb_addr<char const>(str, task));
+  return false;
 }
 
 IMPLEMENT inline

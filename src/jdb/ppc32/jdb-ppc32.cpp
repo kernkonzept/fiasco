@@ -67,21 +67,19 @@ bool
 Jdb::handle_user_request(Cpu_number cpu)
 {
   Jdb_entry_frame *ef = Jdb::entry_frame.cpu(cpu);
-  const char *str = (char const *)ef->r[2];
-  Space * task = get_task(cpu);
-  char tmp;
 
   if (ef->debug_ipi())
     return cpu != Cpu_number::boot_cpu();
 
-  Jdb_addr<char const> s(str, task);
+  auto str = Jdb_addr<char const>::kmem_addr((char const *)ef->r[2]);
 
-  if (!peek(s, tmp) || tmp != '*')
+  char tmp;
+  if (!peek(str, tmp) || tmp != '*')
     return false;
-  if (!peek(s + 1, tmp) || tmp != '#')
+  if (!peek(str + 1, tmp) || tmp != '#')
     return false;
 
-  return execute_command_ni(s + 2);
+  return execute_command_ni(str + 2);
 }
 
 IMPLEMENT inline

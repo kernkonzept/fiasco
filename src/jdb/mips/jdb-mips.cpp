@@ -81,14 +81,13 @@ bool
 Jdb::handle_user_request(Cpu_number cpu)
 {
   Jdb_entry_frame *ef = Jdb::entry_frame.cpu(cpu);
-  const char *str = (char const *)ef->r[Entry_frame::R_a0];
-  Space * task = get_task(cpu);
+  auto str = Jdb_addr<char const>::kmem_addr((char const *)ef->r[Entry_frame::R_a0]);
 
   if (ef->debug_ipi())
     return cpu != Cpu_number::boot_cpu();
 
   if (ef->debug_sequence())
-    return execute_command_ni(Jdb_addr<char const>(str, task));
+    return execute_command_ni(str);
 
   return false;
 }
