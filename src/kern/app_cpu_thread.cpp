@@ -48,7 +48,7 @@ App_cpu_thread::may_be_create(Cpu_number cpu, bool cpu_never_seen_before)
 
   t->set_home_cpu(cpu);
   t->set_current_cpu(cpu);
-  check(t->bind(Kernel_task::kernel_task(), User<Utcb>::Ptr(0)));
+  t->kbind(Kernel_task::kernel_task());
   return t;
 }
 

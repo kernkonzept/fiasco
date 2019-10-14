@@ -80,7 +80,7 @@ extern "C" void kernel_main()
   // create kernel thread
   static Kernel_thread *kernel = new (Ram_quota::root) Kernel_thread(Ram_quota::root);
   Task *const ktask = Kernel_task::kernel_task();
-  check(kernel->bind(ktask, User<Utcb>::Ptr(0)));
+  kernel->kbind(ktask);
   assert(((Mword)kernel->init_stack() & 7) == 0);
 
   register Mword a0 __asm__("a0") = reinterpret_cast<Mword>(kernel);

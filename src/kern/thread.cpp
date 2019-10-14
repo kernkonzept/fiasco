@@ -205,14 +205,22 @@ Thread::operator new(size_t, Ram_quota *q) throw ()
 }
 
 PUBLIC
+void
+Thread::kbind(Task *t)
+{
+  auto guard = lock_guard(_space.lock());
+  _space.space(t);
+  t->inc_ref();
+}
+
+PUBLIC
 bool
 Thread::bind(Task *t, User<Utcb>::Ptr utcb)
 {
   // _utcb == 0 for all kernel threads
   Space::Ku_mem const *u = t->find_ku_mem(utcb, sizeof(Utcb));
 
-  // kernel thread?
-  if (EXPECT_FALSE(utcb && !u))
+  if (EXPECT_FALSE(!u))
     return false;
 
   auto guard = lock_guard(_space.lock());
@@ -222,12 +230,8 @@ Thread::bind(Task *t, User<Utcb>::Ptr utcb)
   _space.space(t);
   t->inc_ref();
 
-  if (u)
-    {
-      _utcb.set(utcb, u->kern_addr(utcb));
-      arch_setup_utcb_ptr();
-    }
-
+  _utcb.set(utcb, u->kern_addr(utcb));
+  arch_setup_utcb_ptr();
   return true;
 }
 
