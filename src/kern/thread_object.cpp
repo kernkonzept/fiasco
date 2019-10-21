@@ -107,6 +107,9 @@ Thread_object::destroy(Kobject ***rl) override
   Kobject::destroy(rl);
   if (!is_invalid(false))
     check(kill());
+  else
+    unbind();
+
   assert(_magic == magic);
 }
 
