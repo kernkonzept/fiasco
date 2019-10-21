@@ -63,6 +63,12 @@ public:
 
     constexpr bool empty() const
     { return (rights & Rights::RWX()).empty(); }
+
+    Attr operator |= (Attr r)
+    {
+      rights |= r.rights;
+      return *this;
+    }
   };
 };
 

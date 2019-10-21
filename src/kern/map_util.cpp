@@ -519,6 +519,8 @@ map(MAPDB* mapdb,
           if (! sender_mapping)	// Need flush
             unmap(mapdb, to, to_id, SPACE::page_address(rcv_addr, r_order), SPACE::to_size(r_order),
                   L4_fpage::Rights::FULL(), L4_map_mask::full(), tlb, reap_list);
+          else
+            i_attribs |= r_attribs;
         }
 
       // Loop increment is size of insertion
