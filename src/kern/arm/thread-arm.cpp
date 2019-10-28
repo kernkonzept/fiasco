@@ -55,7 +55,6 @@ Thread::fast_return_to_user(Mword ip, Mword sp, Vcpu_state *arg)
 {
   extern char __iret[];
   Entry_frame *r = regs();
-  assert(r->check_valid_user_psr());
 
   r->ip(ip);
   r->sp(sp); // user-sp is in lazy user state and thus handled by
@@ -71,6 +70,7 @@ Thread::fast_return_to_user(Mword ip, Mword sp, Vcpu_state *arg)
   if (Proc::Is_hyp && (state() & Thread_ext_vcpu_enabled))
     r->psr_set_mode(Proc::Status_mode_user);
 
+  assert(r->check_valid_user_psr());
   arm_fast_exit(nonull_static_cast<Return_frame*>(r), __iret, arg);
   panic("__builtin_trap()");
 }
