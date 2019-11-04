@@ -7,6 +7,7 @@
 #include "boot_paging.h"
 #include "mem_layout.h"
 #include "processor.h"
+#include "panic.h"
 #include "regdefs.h"
 
 enum
@@ -150,8 +151,6 @@ static struct idt_desc  base_idt[IDTSZ];
 
 static char dbf_stack[2048];
 
-extern "C" void _exit(int code) __attribute__((noreturn));
-
 static inline Unsigned64* find_pml4e(Address pml4_pa, Address la)
 { return (&((Unsigned64*)pml4_pa)[(la >> PML4ESHIFT) & PML4EMASK]); }
 
@@ -266,13 +265,6 @@ paging_enable(Address pml4)
 
   /* Turn on paging and switch to long mode. */
   asm volatile("mov  %0,%%cr0 ; jmp  1f ; 1:" : : "r" (get_cr0() | CR0_PG));
-}
-
-static void
-panic(const char *str)
-{
-  printf("\n%s\n", str);
-  _exit(-1);
 }
 
 static void
@@ -590,17 +582,18 @@ trap_dump_panic(const struct trap_state *st)
   int from_user = (st->cs & 3);
   int i;
 
-  printf("RAX %016llx RBX %016llx\n", st->rax, st->rbx);
-  printf("RCX %016llx RDX %016llx\n", st->rcx, st->rdx);
-  printf("RSI %016llx RDI %016llx\n", st->rsi, st->rdi);
-  printf("RBP %016llx RSP %016llx\n",
+  putchar('\n');
+  printf("RAX %016llx  RBX %016llx\n", st->rax, st->rbx);
+  printf("RCX %016llx  RDX %016llx\n", st->rcx, st->rdx);
+  printf("RSI %016llx  RDI %016llx\n", st->rsi, st->rdi);
+  printf("RBP %016llx  RSP %016llx\n",
       st->rbp, from_user ? st->rsp : (Address)&st->rsp);
-  printf("R8  %016llx R9  %016llx\n", st->r8, st->r9);
-  printf("R10 %016llx R11 %016llx\n", st->r10, st->r11);
-  printf("R12 %016llx R13 %016llx\n", st->r12, st->r13);
-  printf("R14 %016llx R15 %016llx\n", st->r14, st->r15);
-  printf("RIP %016llx RFLAGS %016llx\n", st->rip, st->rflags);
-  printf("CS %04llx SS %04llx\n",
+  printf("R8  %016llx  R9  %016llx\n", st->r8, st->r9);
+  printf("R10 %016llx  R11 %016llx\n", st->r10, st->r11);
+  printf("R12 %016llx  R13 %016llx\n", st->r12, st->r13);
+  printf("R14 %016llx  R15 %016llx\n", st->r14, st->r15);
+  printf("RIP %016llx  RFL %016llx\n", st->rip, st->rflags);
+  printf("CS %04llx  SS %04llx\n",
       st->cs & 0xffff, from_user ? st->ss & 0xffff : get_ss());
   printf("trapno %llu, error %08llx, from %s mode\n",
       st->trapno, st->err, from_user ? "user" : "kernel");
@@ -627,7 +620,7 @@ trap_dump_panic(const struct trap_state *st)
   if (!from_user)
     {
       for (i = 0; i < 32; i++)
-	printf("%016llx%c", (&st->rsp)[i], ((i & 7) == 7) ? '\n' : ' ');
+	printf("%016llx%c", (&st->rsp)[i], ((i & 3) == 3) ? '\n' : ' ');
     }
   panic("Unexpected trap while booting Fiasco!");
 }
