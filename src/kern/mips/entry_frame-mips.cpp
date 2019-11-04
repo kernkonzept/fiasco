@@ -121,6 +121,7 @@ public:
   void copy_and_sanitize(Return_frame const *f)
   {
     Mem::memcpy_mwords(&r[1], &f->r[1], 31u + 2u);
+    status = access_once(&f->status);
     status &= Cp0_status::ST_USER_MASK;
     status |= Cp0_status::ST_USER_MUST_SET;
 
