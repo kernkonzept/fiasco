@@ -53,8 +53,6 @@ enum
   INTEL_PML4E_USER	= 0x0000000000000004LL,
   INTEL_PML4E_PFN	= 0x000ffffffffff000LL,
  
-  CPUF_4MB_PAGES	= 0x00000008,
-
   BASE_TSS		= 0x08,
   KERNEL_DS		= 0x18,
   KERNEL_CS_64		= 0x20, // XXX
@@ -487,7 +485,6 @@ pdir_map_range(Address pml4_pa, Address la, Address pa,
 	      /* Use a 2MB page if we can.  */
 	      if (superpage_aligned(la) && superpage_aligned(pa)
 		  && (size >= SUPERPAGE_SIZE))
-		  //&& (cpu_feature_flags & CPUF_4MB_PAGES)) XXX
 		{
 		  /* a failed assertion here may indicate a memory wrap
 		     around problem */
