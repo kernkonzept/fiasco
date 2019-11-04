@@ -31,14 +31,12 @@ Jdb_ptab::print_entry(Pdir::Pte_ptr const &entry)
 
       Address phys = entry.page_addr();
 
-      char const pss[] = "CS";
-      char ps = pss[entry.level];
+      bool cached = ((*entry.e >> Pdir::PWField_ptei) & Tlb_entry::Cache_mask)
+                    == Tlb_entry::cached;
 
-      printf(" %05lx%s%c", phys >> Config::PAGE_SHIFT,
-                           ((*entry.e >> Pdir::PWField_ptei) & Tlb_entry::Cache_mask) == Tlb_entry::cached
-                            ? "-" : JDB_ANSI_COLOR(lightblue) "n" JDB_ANSI_END,
-                           ps);
-      printf("%s%c" JDB_ANSI_END,
+      printf(" %05lx%s%s%c" JDB_ANSI_END,
+             phys >> Config::PAGE_SHIFT,
+             cached ? "-" : JDB_ANSI_COLOR(lightblue) "n" JDB_ANSI_END,
              !(*entry.e & Pdir::XI) ? "" : JDB_ANSI_COLOR(red),
              (*entry.e & Pdir::Write) ? 'w' : 'r');
     }
@@ -69,14 +67,12 @@ Jdb_ptab::print_entry(Pdir::Pte_ptr const &entry)
 
       Address phys = entry.page_addr();
 
-      char const pss[] = "CS";
-      char ps = pss[entry.level];
+      bool cached = ((*entry.e >> Pdir::PWField_ptei) & Tlb_entry::Cache_mask)
+                    == Tlb_entry::cached;
 
-      printf(" %13lx%s%c", phys >> Config::PAGE_SHIFT,
-                           ((*entry.e >> Pdir::PWField_ptei) & Tlb_entry::Cache_mask) == Tlb_entry::cached
-                            ? "-" : JDB_ANSI_COLOR(lightblue) "n" JDB_ANSI_END,
-                           ps);
-      printf("%s%c" JDB_ANSI_END,
+      printf("%14lx%s%s%c" JDB_ANSI_END,
+             phys >> Config::PAGE_SHIFT,
+             cached ? "-" : JDB_ANSI_COLOR(lightblue) "n" JDB_ANSI_END,
              !(*entry.e & Pdir::XI) ? "" : JDB_ANSI_COLOR(red),
              (*entry.e & Pdir::Write) ? 'w' : 'r');
     }
