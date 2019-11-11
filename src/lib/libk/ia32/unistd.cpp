@@ -25,16 +25,6 @@ IMPLEMENTATION:
 #include "config.h"
 #include "kernel_console.h"
 
-int 
-creat(const char* fname, int)
-{
-  printf("starting to output: %s.uu -- hit Return\n", fname);
-//  Kconsole::console()->getchar();
-  Kconsole::console()->start_exclusive(Console::GZIP);
-
-  return 6; 
-}
-
 void 
 perror(const char *s)
 {
