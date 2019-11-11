@@ -374,10 +374,10 @@ Slab_cache::reap()		// request that cache returns memory to system
   return sz;
 }
 
-// ------------------------------------------------------------------------
-IMPLEMENTATION[debug]:
+// Debugging output
 
 #include <cstdio>
+
 
 PUBLIC
 void
