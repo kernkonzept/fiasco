@@ -41,11 +41,26 @@ Jdb_regex::find(const char *, const char **, const char **)
 // ------------------------------------------------------------------------
 IMPLEMENTATION [jdb_regex]:
 
+#include <cstring>
+
 #include "config.h"
 #include "jdb_module.h"
 #include "kmem_alloc.h"
 #include "panic.h"
 #include "simple_malloc.h"
+
+PUBLIC
+Jdb_regex::Jdb_regex()
+  : _active(false)
+{
+}
+
+PUBLIC
+Jdb_regex::~Jdb_regex()
+{
+  if (_active)
+    regfree(&_r);
+}
 
 PUBLIC
 bool
@@ -68,6 +83,7 @@ void
 Jdb_regex::finish()
 {
   regfree(&_r);
+  memset(_matches, 0, sizeof(_matches));
   _active = false;
 }
 
@@ -91,4 +107,3 @@ Jdb_regex::find(const char *buffer, const char **beg, const char **end)
     *end = buffer + _matches[0].rm_eo;
   return true;
 }
-
