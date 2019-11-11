@@ -298,12 +298,6 @@ Mem_space::ram_quota() const
 { return _quota; }
 
 
-/// Avoid deallocation of page table upon Mem_space destruction.
-PUBLIC
-void
-Mem_space::reset_dirty ()
-{ _dir = 0; }
-
 PUBLIC inline
 Mem_space::Dir_type*
 Mem_space::dir ()

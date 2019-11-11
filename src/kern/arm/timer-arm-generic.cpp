@@ -40,9 +40,6 @@ static inline
 Unsigned32 Timer::frequency()
 { return Gtimer::frequency(); }
 
-PUBLIC static void Timer::configure(const Cpu_number &)
-{ /* Remove me -- need reinit function */ }
-
 IMPLEMENT
 void Timer::init(Cpu_number cpu)
 {

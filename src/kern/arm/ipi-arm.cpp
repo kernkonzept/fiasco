@@ -40,10 +40,6 @@ PUBLIC inline
 Ipi::Ipi()
 {}
 
-PUBLIC static
-void Ipi::ipi_call_debug_arch()
-{}
-
 PUBLIC static inline
 void Ipi::eoi(Message, Cpu_number on_cpu)
 {
