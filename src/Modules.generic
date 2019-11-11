@@ -34,12 +34,13 @@ INTERFACES_KERNEL	:= cpu_mask rcupdate kobject_mapdb context_base pm \
 			   sched_context utcb_init perf_cnt trap_state       \
 			   buddy_alloc vkey kdb_ke prio_list ipi scheduler   \
 			   clock sys_call_page boot_alloc                    \
-			   assertion semaphore jdb_object tlbs
+			   semaphore jdb_object tlbs
 
 OBJ_SPACE_TYPE = $(if $(CONFIG_VIRT_OBJ_SPACE),virt,phys)
 PREPROCESS_PARTS-y$(CONFIG_VIRT_OBJ_SPACE) += obj_space_phys
 PREPROCESS_PARTS += obj_space_$(OBJ_SPACE_TYPE)
 INTERFACES_KERNEL-$(CONFIG_VIRT_OBJ_SPACE) += obj_space_virt_util
+INTERFACES_KERNEL-y$(CONFIG_NDEBUG) += assertion
 obj_space_IMPL = obj_space obj_space-$(OBJ_SPACE_TYPE)
 
 
