@@ -87,11 +87,6 @@ public:
   { _state &= ~state; }
 
 public:
-  /**
-   * Disables the stdout, stdin, and stderr console.
-   */
-  static void disable_all();
-
   /// stdout for libc glue.
   static Console *stdout;
   /// stderr for libc glue.
@@ -145,14 +140,6 @@ void
 Console::fail()
 {
   _state |= FAILED;
-}
-
-IMPLEMENT
-void Console::disable_all()
-{
-  stdout = 0;
-  stderr = 0;
-  stdin  = 0;
 }
 
 IMPLEMENT
