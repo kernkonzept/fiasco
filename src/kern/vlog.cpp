@@ -152,6 +152,18 @@ Vlog::bind(Irq_base *irq, Mword irqnum)
 }
 
 PUBLIC
+void
+Vlog::unbind(Irq_base *irq) override
+{
+  if (!_irq || _irq != irq)
+    return;
+
+  Vkey::irq(nullptr);
+  _irq = nullptr;
+  Irq_chip_soft::unbind(irq);
+}
+
+PUBLIC
 L4_msg_tag
 Vlog::op_icu_bind(unsigned irqnum, Ko::Cap<Irq> const &irq)
 {
