@@ -416,31 +416,6 @@ Thread::handle_timer_interrupt()
 }
 
 
-PUBLIC
-void
-Thread::halt()
-{
-  // Cancel must be cleared on all kernel entry paths. See slowtraps for
-  // why we delay doing it until here.
-  state_del(Thread_cancel);
-
-  // we haven't been re-initialized (cancel was not set) -- so sleep
-  if (state_change_safely(~Thread_ready, Thread_cancel | Thread_dead))
-    while (! (state() & Thread_ready))
-      schedule();
-}
-
-PUBLIC static
-void
-Thread::halt_current()
-{
-  for (;;)
-    {
-      current_thread()->halt();
-      kdb_ke("Thread not halted");
-    }
-}
-
 PRIVATE static inline
 void
 Thread::user_invoke_generic()
@@ -1368,6 +1343,31 @@ Thread::Migration_log::print(String_buffer *buf) const
   buf->printf("migrate from %u to %u (state=%lx user ip=%lx)",
               cxx::int_value<Cpu_number>(src_cpu),
               cxx::int_value<Cpu_number>(target_cpu), state, user_ip);
+}
+
+PUBLIC
+void
+Thread::halt()
+{
+  // Cancel must be cleared on all kernel entry paths. See slowtraps for
+  // why we delay doing it until here.
+  state_del(Thread_cancel);
+
+  // we haven't been re-initialized (cancel was not set) -- so sleep
+  if (state_change_safely(~Thread_ready, Thread_cancel | Thread_dead))
+    while (! (state() & Thread_ready))
+      schedule();
+}
+
+PUBLIC static
+void
+Thread::halt_current()
+{
+  for (;;)
+    {
+      current_thread()->halt();
+      kdb_ke("Thread not halted");
+    }
 }
 
 //----------------------------------------------------------------------------
