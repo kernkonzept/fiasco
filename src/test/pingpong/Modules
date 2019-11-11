@@ -17,7 +17,7 @@ PRIVATE_INCDIR += kern
 INTERFACES_KERNEL = mapdb region \
   space_context space space_index space_index_util \
   stack irq_init kmem kmem_alloc slab_cache kmem_slab_simple kmem_slab \
-  switch_lock thread_lock helping_lock kernel_lock timer \
+  switch_lock helping_lock kernel_lock timer \
   thread_state sched context threadid thread_regs sender receiver \
   thread kernel_thread \
   map_util irq startup console paranoia globals \

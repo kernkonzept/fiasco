@@ -596,11 +596,6 @@ whole_screen:
   else
     putstr("        ");
 
-  putstr("\n"
-         "lcked by: ");
-  //if (t->thread_lock()->lock_owner())
-  //  Jdb_kobject::print_uid(static_cast<Thread*>(t->thread_lock()->lock_owner()), 3);
-
   putstr("\t\t\ttimeout  : ");
   if (t->_timeout && t->_timeout->is_set())
     {

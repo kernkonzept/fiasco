@@ -103,7 +103,7 @@ INTERFACES_KERNEL	:= string_buffer mem_region simpleio kernel_console panic warn
 			   mapping mapping_tree mappable                  \
 			   mapdb kobject_mapdb map_util \
 			   hostproc task sigma0_task kernel_task prio_list \
-			   thread_lock timeslice_timeout	  \
+			   timeslice_timeout	  \
 			   ipc_timeout thread_state	  \
 			   sender receiver ipc_sender thread thread_object \
 			   kobject_helper timer_tick platform_control     \

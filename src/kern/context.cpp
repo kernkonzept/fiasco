@@ -1104,8 +1104,6 @@ Context::switch_exec_locked(Context *t, enum Helping_mode mode)
   // Time-slice lending: if t is locked, switch to its locker
   // instead, this is transitive
   //
-  // For the Thread_lock case only, so skip this
-  // t = handle_helping(t);
   Context *ret = handle_helping(t);
   assert(ret == t);
   (void)ret;
@@ -1162,8 +1160,6 @@ Context::switch_exec_helping(Context *t, Mword const *lock, Mword val)
   // Time-slice lending: if t is locked, switch to its locker
   // instead, this is transitive
   //
-  // For the Thread_lock case only, so skip this
-  // t = handle_helping(t);
 
   // we actually hold locks
   if (!t->need_help(lock, val))

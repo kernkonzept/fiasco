@@ -13,7 +13,7 @@ INTERFACES_KERNEL	:= cpu_mask rcupdate kobject_mapdb context_base pm \
 			   ref_obj mem_space space string_buffer \
 			   vlog kmem kmem_alloc slab_cache mem_layout        \
 			   kmem_slab switch_lock kip_init   \
-			   thread_lock helping_lock cpu_lock timer timeout   \
+			   helping_lock cpu_lock timer timeout   \
 			   ipc_timeout timeslice_timeout per_cpu_data_alloc  \
 			   vcpu_host_regs                                    \
 			   vcpu kobject_helper icu_helper thread_state       \

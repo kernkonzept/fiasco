@@ -63,7 +63,6 @@ IMPLEMENTATION:
 #include "lock_guard.h"
 #include "logdefs.h"
 #include "sender.h"
-#include "thread_lock.h"
 #include "entry_frame.h"
 #include "std_macros.h"
 #include "thread_state.h"
@@ -72,7 +71,6 @@ IMPLEMENTATION:
 
 IMPLEMENT inline Receiver::~Receiver() {}
 /** Constructor.
-    @param thread_lock the lock used for synchronizing access to this receiver
     @param space_context the space context 
  */
 PROTECTED inline
