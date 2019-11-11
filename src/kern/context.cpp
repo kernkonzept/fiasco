@@ -1311,47 +1311,6 @@ Context::Drq_q::handle_requests(Drop_mode drop)
 }
 
 /**
- * \brief Forced dequeue from lock wait queue, or DRQ queue.
- */
-PRIVATE
-void
-Context::force_dequeue()
-{
-  Queue_item *const qi = queue_item();
-
-  if (qi->queued())
-    {
-      // we're waiting for a lock or have a DRQ pending
-      Queue *const q = qi->queue();
-        {
-          auto guard = lock_guard(q->q_lock());
-          // check again, with the queue lock held.
-          // NOTE: we may be already removed from the queue on another CPU
-          if (qi->queued() && qi->queue())
-            {
-              // we must never be taken from one queue to another on a
-              // different CPU
-              assert(q == qi->queue());
-              // pull myself out of the queue, mark reason as invalidation
-              q->dequeue(qi, Queue_item::Invalid);
-            }
-        }
-    }
-}
-
-/**
- * \brief Dequeue from lock and DRQ queues, abort pending DRQs
- */
-PROTECTED
-void
-Context::shutdown_queues()
-{
-  force_dequeue();
-  shutdown_drqs();
-}
-
-
-/**
  * \brief Check for pending DRQs.
  * \return true if there are DRQs pending, false if not.
  */
