@@ -176,17 +176,17 @@ unsigned long
 Kobject_dbg::pointer_to_id(void const *)
 { return ~0UL; }
 
-PUBLIC static
+PUBLIC static inline
 bool
 Kobject_dbg::is_kobj(void const *)
 { return false; }
 
-PUBLIC static
+PUBLIC static inline
 Kobject_dbg::Iterator
 Kobject_dbg::id_to_obj(unsigned long)
 { return 0; }
 
-PUBLIC static
+PUBLIC static inline
 unsigned long
 Kobject_dbg::obj_to_id(void const *)
 { return ~0UL; }
