@@ -731,8 +731,6 @@ protected:
 //----------------------------------------------------------------------------
 IMPLEMENTATION [riscv && debug]:
 
-#include "vkey.h"
-
 extern "C" void sys_ipc_wrapper();
 Thread::Sys_call Thread::sys_call_entry = sys_ipc_wrapper;
 

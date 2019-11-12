@@ -301,7 +301,6 @@ IMPLEMENTATION:
 #include "thread.h"
 #include "thread_state.h"
 #include "l4_buf_iter.h"
-#include "vkey.h"
 #include "global_data.h"
 
 JDB_DEFINE_TYPENAME(Irq_sender, "\033[37mIRQ ipc\033[m");

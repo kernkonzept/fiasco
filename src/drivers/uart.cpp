@@ -95,6 +95,15 @@ public:
    */
   int write(char const *str, size_t len) override;
 
+  Mword get_attributes() const override;
+};
+
+//---------------------------------------------------------------------------
+INTERFACE [input]:
+
+EXTENSION class Uart
+{
+public:
   /**
    * (abstract) Read a character.
    */
@@ -104,11 +113,10 @@ public:
    * (abstract) Is there anything to read?
    */
   int char_avail() const override;
-
-  Mword get_attributes() const override;
 };
 
-INTERFACE[uart_checksum]:
+//---------------------------------------------------------------------------
+INTERFACE [uart_checksum]:
 
 #include "stream_crc32.h"
 
@@ -129,7 +137,7 @@ IMPLEMENT
 Mword
 Uart::get_attributes() const
 {
-  return UART | IN | OUT;
+  return UART | OUT | ((TAG_ENABLED(input)) ? IN : 0);
 }
 
 //---------------------------------------------------------------------------
@@ -188,12 +196,18 @@ int Uart::write(const char *s, __SIZE_TYPE__ count)
   return uart()->write(s, count);
 }
 
+IMPLEMENT_DEFAULT inline void Uart::enable_rcv_irq() {}
+IMPLEMENT_DEFAULT inline void Uart::disable_rcv_irq() {}
+IMPLEMENT_DEFAULT inline void Uart::irq_ack() {}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [libuart && input]:
+
 IMPLEMENT inline
 int Uart::getchar(bool blocking)
 {
   return uart()->get_char(blocking);
 }
-
 
 IMPLEMENT inline
 int Uart::char_avail() const
@@ -201,26 +215,26 @@ int Uart::char_avail() const
   return uart()->char_avail();
 }
 
-IMPLEMENT
+IMPLEMENT_OVERRIDE
 void Uart::enable_rcv_irq()
 {
   uart()->enable_rx_irq(true);
 }
 
-IMPLEMENT
+IMPLEMENT_OVERRIDE
 void Uart::disable_rcv_irq()
 {
   uart()->enable_rx_irq(false);
 }
 
-IMPLEMENT
+IMPLEMENT_OVERRIDE
 void Uart::irq_ack()
 {
   uart()->irq_ack();
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [!libuart]:
+IMPLEMENTATION [!libuart && input]:
 
 IMPLEMENT_DEFAULT
 void Uart::irq_ack()

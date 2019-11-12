@@ -56,7 +56,7 @@ Vkey::is_debugger_entry_key(int)
 }
 
 // ---------------------------------------------------------------------------
-IMPLEMENTATION [serial]:
+IMPLEMENTATION [serial && input]:
 
 #include <cstdio>
 
@@ -229,7 +229,7 @@ Vkey::clear()
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [!serial]:
+IMPLEMENTATION [!serial || !input]:
 
 #include "kernel_console.h"
 

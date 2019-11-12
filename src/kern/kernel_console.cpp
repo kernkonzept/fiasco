@@ -7,9 +7,6 @@ INTERFACE:
 class Kconsole : public Mux_console
 {
 public:
-  int  getchar(bool blocking = true) override;
-  void getchar_chance();
-
   /**
    * Get the pointer to \ref _c.
    *
@@ -48,9 +45,26 @@ IMPLEMENTATION:
 
 DEFINE_GLOBAL Global_data<Static_object<Kconsole>> Kconsole::_c;
 
+PUBLIC inline
+Kconsole::Kconsole()
+{
+  Console::stdout = this;
+  Console::stderr = this;
+  if constexpr (TAG_ENABLED(input))
+    Console::stdin  = this;
+}
 
-IMPLEMENT
-int Kconsole::getchar(bool blocking)
+
+PUBLIC static FIASCO_NOINLINE
+void
+Kconsole::init()
+{ _c.construct(); }
+
+// -------------------------------------------------------------------------
+IMPLEMENTATION [input]:
+
+PUBLIC
+int Kconsole::getchar(bool blocking) override
 {
   if (!blocking)
     return Mux_console::getchar(false);
@@ -64,20 +78,3 @@ int Kconsole::getchar(bool blocking)
       Proc::pause();
     }
 }
-
-
-PUBLIC inline
-Kconsole::Kconsole()
-{
-  Console::stdout = this;
-  Console::stderr = this;
-  Console::stdin  = this;
-}
-
-
-PUBLIC static FIASCO_NOINLINE
-void
-Kconsole::init()
-{ _c.construct(); }
-
-

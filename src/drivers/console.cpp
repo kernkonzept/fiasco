@@ -62,15 +62,6 @@ public:
   virtual int getchar(bool blocking = true);
 
   /**
-   * Is input available?
-   *
-   * This method can be implemented. It must return -1 if no information is
-   * available, >= 1 if at least one character is available, and 0 if no
-   * character is available.
-   */
-  virtual int char_avail() const;
-
-  /**
    * Console attributes.
    */
   virtual Mword get_attributes() const;
@@ -97,8 +88,23 @@ protected:
   Mword  _state;
 };
 
+//---------------------------------------------------------------------------
+INTERFACE [input]:
 
+EXTENSION class Console
+{
+public:
+  /**
+   * Is input available?
+   *
+   * This method can be implemented. It must return -1 if no information is
+   * available, 0 if no character is available and >= 1 if at least one
+   * character is available.
+   */
+  virtual int char_avail() const;
+};
 
+//---------------------------------------------------------------------------
 IMPLEMENTATION:
 
 #include <cstring>
@@ -154,18 +160,22 @@ int Console::getchar(bool /* blocking */)
 }
 
 IMPLEMENT
-int Console::char_avail() const
-{
-  return -1; /* unknown */
-}
-
-IMPLEMENT
 Mword Console::get_attributes() const
 {
   return 0;
 }
 
-IMPLEMENTATION[debug]:
+//---------------------------------------------------------------------------
+IMPLEMENTATION [input]:
+
+IMPLEMENT
+int Console::char_avail() const
+{
+  return -1; /* unknown */
+}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [debug]:
 
 PUBLIC
 const char*

@@ -56,7 +56,6 @@ IMPLEMENTATION [serial]:
 #include "kip.h"
 #include "koptions.h"
 #include "panic.h"
-#include "vkey.h"
 
 static DEFINE_GLOBAL Global_data<Static_object<Filter_console>> _fcon;
 static DEFINE_GLOBAL Global_data<Static_object<Kernel_uart>> _kernel_uart;
@@ -141,6 +140,25 @@ Kernel_uart::pm_on_resume([[maybe_unused]] Cpu_number cpu) override
     uart()->enable_rcv_irq();
 }
 
+// ------------------------------------------------------------------------
+IMPLEMENTATION [serial && input]:
+
+#include "vkey.h"
+
+IMPLEMENT
+void
+Kernel_uart::enable_rcv_irq()
+{
+  Irq_mgr *mgr = Irq_mgr::mgr;
+  Mword gsi = mgr->legacy_override(uart()->irq());
+
+  if (!mgr->gsi_attach(&uart_irq, gsi))
+    return;
+
+  uart_irq->unmask();
+  uart()->enable_rcv_irq();
+  Vkey::enable_receive();
+}
 
 class Kuart_irq : public Irq_base
 {
@@ -160,21 +178,6 @@ public:
 
 static DEFINE_GLOBAL_PRIO(BOOTSTRAP_INIT_PRIO) Global_data<Kuart_irq> uart_irq;
 
-IMPLEMENT
-void
-Kernel_uart::enable_rcv_irq()
-{
-  Irq_mgr *mgr = Irq_mgr::mgr;
-  Mword gsi = mgr->legacy_override(uart()->irq());
-
-  if (!mgr->gsi_attach(&uart_irq, gsi))
-    return;
-
-  uart_irq->unmask();
-  uart()->enable_rcv_irq();
-  Vkey::enable_receive();
-}
-
 //---------------------------------------------------------------------------
 IMPLEMENTATION [!serial]:
 
@@ -186,6 +189,9 @@ Kernel_uart::init(Init_mode = Init_before_mmu)
 IMPLEMENT inline
 Kernel_uart::Kernel_uart()
 {}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [!serial && input]:
 
 IMPLEMENT inline
 void

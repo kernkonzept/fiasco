@@ -40,7 +40,7 @@ public:
 };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION[!sync_clock]:
+IMPLEMENTATION [!sync_clock]:
 
 #include "kip.h"
 #include "mem.h"
@@ -101,6 +101,9 @@ bool
 Delay::initializing()
 { return access_once(&count) == 0; }
 
+// ------------------------------------------------------------------------
+IMPLEMENTATION [!sync_clock && (debug || input)]:
+
 IMPLEMENT
 void
 Delay::delay(unsigned ms)
@@ -116,9 +119,9 @@ Delay::delay(unsigned ms)
       Mem::barrier();
       while (c--)
         {
-	  static_cast<void>(k->clock());
-	  Proc::pause();
-	}
+          static_cast<void>(k->clock());
+          Proc::pause();
+        }
       Mem::barrier();
     }
 }
@@ -142,10 +145,7 @@ Delay::udelay(unsigned us)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION[sync_clock]:
-
-#include "processor.h"
-#include "timer.h"
+IMPLEMENTATION [sync_clock]:
 
 IMPLEMENT
 void
@@ -154,6 +154,12 @@ Delay::init()
   // In this configuration we use Timer::aux_clock_unstopped(), which, unlike
   // the KIP clock, updates independent of any timer tick interrupt.
 }
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [sync_clock && (debug || input)]:
+
+#include "processor.h"
+#include "timer.h"
 
 IMPLEMENT inline
 bool

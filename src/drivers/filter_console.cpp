@@ -44,19 +44,6 @@ IMPLEMENTATION:
 #include <cstring>
 #include <cctype>
 #include "keycodes.h"
-#include "delayloop.h"
-
-PUBLIC
-int Filter_console::char_avail() const override
-{
-  if (!(_o->state() & INENABLED))
-    return -1;
-
-  if (pos)
-    return 1;
-
-  return _o->char_avail();
-}
 
 PUBLIC inline explicit
 Filter_console::Filter_console(Console *o, unsigned loops = 400)
@@ -76,6 +63,31 @@ Filter_console::write(char const *str, size_t len) override
 
   return _o->write(str, len);
 }
+
+PUBLIC
+Mword
+Filter_console::get_attributes() const override
+{
+  return _o->get_attributes();
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [input]:
+
+#include "delayloop.h"
+
+PUBLIC
+int Filter_console::char_avail() const override
+{
+  if (!(_o->state() & INENABLED))
+    return -1;
+
+  if (pos)
+    return 1;
+
+  return _o->char_avail();
+}
+
 
 PRIVATE inline
 int
@@ -237,10 +249,3 @@ Filter_console::getchar(bool blocking = true) override
   return -1;
 }
 
-
-PUBLIC
-Mword
-Filter_console::get_attributes() const override
-{
-  return _o->get_attributes();
-}

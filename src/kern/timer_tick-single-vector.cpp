@@ -12,7 +12,6 @@ public:
 IMPLEMENTATION:
 
 #include "timer.h"
-#include "vkey.h"
 
 DEFINE_GLOBAL Global_data<Static_object<Timer_tick>> Timer_tick::_glbl_timer;
 

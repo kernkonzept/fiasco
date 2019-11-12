@@ -663,10 +663,18 @@ config JDB_KMEM_STATS
 	  Support dumping kernel memory statistics to the console. This must be
 	  triggered from user space and requires the JDB capability.
 
+config INPUT
+	bool "Console input support"
+	default y if HAS_SERIAL_OPTION
+	help
+	  Enable input specific code in the kernel. Disable this option if you
+	  do not require input support.
+
 menuconfig JDB
 	bool "JDB kernel debugger"
 	default y
 	select RT_DBG
+	select INPUT
 	depends on !AMP
 	help
 	  The powerful Fiasco kernel debugger.
