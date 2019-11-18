@@ -3,7 +3,6 @@
 #include "globalconfig.h"
 #include "config_tcbsize.h"
 #include "tcboffset.h"
-#include "asm_entry.h"
 
 #ifdef CONFIG_CPU_VIRT
 #define EL(x) x##_el2
