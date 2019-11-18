@@ -323,6 +323,12 @@ leave_by_trigger_exception:
 vcpu_resume:
 // XXX: end of just a build fix...
 
+
+        .global leave_and_kill_myself
+leave_and_kill_myself:
+        bl      thread_do_leave_and_kill_myself
+// XXX: end of just a another build fix...
+
 /*******************************************************************************
  * kdebug entry
  */

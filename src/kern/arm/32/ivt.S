@@ -357,6 +357,7 @@ kernel_prefetch_abort_label: .string "Kernel prefetch abort"
 /*****************************************************************************/
 GEN_SYSCALL_TABLE
 GEN_LEAVE_BY_TRIGGER_EXCEPTION
+GEN_LEAVE_AND_KILL_MYSELF
 
 
 /****************************************************************************

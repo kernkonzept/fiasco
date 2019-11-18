@@ -121,6 +121,8 @@ private:
    */
   static void user_invoke();
 
+  static void do_leave_and_kill_myself() asm("thread_do_leave_and_kill_myself");
+
 public:
   static bool pagein_tcb_request(Return_frame *regs);
 
@@ -182,6 +184,8 @@ IMPLEMENTATION:
 
 JDB_DEFINE_TYPENAME(Thread,  "\033[32mThread\033[m");
 DEFINE_PER_CPU Per_cpu<unsigned long> Thread::nested_trap_recover;
+
+extern "C" void leave_and_kill_myself(void) FIASCO_NORETURN;
 
 IMPLEMENT
 Thread::Dbg_stack::Dbg_stack()
@@ -433,8 +437,9 @@ Thread::user_invoke_generic()
 }
 
 
-PRIVATE static void
-Thread::leave_and_kill_myself()
+IMPLEMENT /* static */
+void
+Thread::do_leave_and_kill_myself()
 {
   current_thread()->do_kill();
 #ifdef CONFIG_JDB
@@ -567,7 +572,7 @@ Thread::handle_remote_kill(Drq *, Context *self, void *)
   Thread *c = nonull_static_cast<Thread*>(self);
   c->state_add_dirty(Thread_cancel | Thread_ready);
   c->_exc_cont.restore(c->regs());
-  c->do_trigger_exception(c->regs(), (void*)&Thread::leave_and_kill_myself);
+  c->do_trigger_exception(c->regs(), (void*)&leave_and_kill_myself);
   return Drq::done();
 }
 
@@ -585,7 +590,7 @@ Thread::kill() override
       state_add_dirty(Thread_cancel | Thread_ready);
       Sched_context::rq.current().deblock(sched(), current()->sched());
       _exc_cont.restore(regs()); // overwrite an already triggered exception
-      do_trigger_exception(regs(), (void*)&Thread::leave_and_kill_myself);
+      do_trigger_exception(regs(), (void*)&leave_and_kill_myself);
       return true;
     }
 

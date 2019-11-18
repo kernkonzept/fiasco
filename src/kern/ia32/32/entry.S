@@ -690,7 +690,11 @@ fast_ret_from_irq:
 	andl	$0x7f, 4(%esp)			// if entered using sysenter
 	iret
 
-
-
-
+        .p2align
+        .globl  leave_and_kill_myself
+leave_and_kill_myself:
+        // make space for a dummy Return_frame accessible by the callee
+        subl    $(5*4),%esp                     // sizeof(Return_frame)
+        call    thread_do_leave_and_kill_myself
+        // does never return
 

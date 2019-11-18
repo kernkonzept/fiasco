@@ -247,6 +247,14 @@ LEAF(leave_by_trigger_exception)
 	.set pop
 END(leave_by_trigger_exception)
 
+.section ".text.leave_and_kill_myself", "ax"
+LEAF(leave_and_kill_myself)
+        // make space for a dummy Return_frame accessible by the callee
+	j	thread_do_leave_and_kill_myself
+	ASM_ADDIU	sp, sp, -TS_FRAME
+        // does never return
+END(leave_and_kill_myself)
+
 .macro ENTRY name
 	.section .text.exc. ## name ## _entry, "ax"
 	.set noreorder

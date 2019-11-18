@@ -234,3 +234,14 @@ leave_by_trigger_exception:
 
 	enter_slowtrap_w_stack GET_HSR(0x3e)
 .endm
+
+.macro GEN_LEAVE_AND_KILL_MYSELF
+.align 4
+.global leave_and_kill_myself
+
+leave_and_kill_myself:
+        // make space for a dummy Return_frame accessible by the callee
+        sub     sp, sp, #RF_SIZE
+        bl      thread_do_leave_and_kill_myself
+        // does never return
+.endm

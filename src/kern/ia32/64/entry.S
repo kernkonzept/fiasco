@@ -522,3 +522,11 @@ vcpu_resume:
 	andq	$0x7f, 8(%rsp)			// if entered using syscall
 	SAFE_IRET
 
+        .p2align
+        .globl  leave_and_kill_myself
+leave_and_kill_myself:
+        // make space for a dummy Return_frame accessible by the callee
+        subq    $(5*8),%rsp                     // sizeof(Return_frame)
+        call    thread_do_leave_and_kill_myself
+        // does never return
+

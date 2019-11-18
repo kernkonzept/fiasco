@@ -71,6 +71,13 @@
 
 .section	.text.excp, "xa"
 
+.type   leave_and_kill_myself, function
+.global leave_and_kill_myself
+leave_and_kill_myself:
+        // make space for a dummy Return_frame accessible by the callee
+        sub     sp, sp, #EF_SIZE
+        bl      thread_do_leave_and_kill_myself
+
 .type	leave_by_trigger_exception, function
 .global	leave_by_trigger_exception
 leave_by_trigger_exception:
