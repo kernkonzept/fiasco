@@ -200,7 +200,21 @@ Thread::handle_slow_trap(Trap_state *ts)
 
       // get also here if a pagefault was not handled by the user level pager
       if (ts->_trapno == 14)
-        goto check_exception;
+        {
+          if ((ts->_err & (PF_ERR_INSTFETCH | PF_ERR_PRESENT))
+              == (PF_ERR_INSTFETCH | PF_ERR_PRESENT))
+            {
+              ts->dump();
+              panic("kernel data execution\n");
+            }
+          if ((ts->_err & (PF_ERR_WRITE | PF_ERR_PRESENT))
+              == (PF_ERR_WRITE | PF_ERR_PRESENT))
+            {
+              ts->dump();
+              panic("kernel code modification\n");
+            }
+          goto check_exception;
+        }
 
       goto generic_debug;      // we were in kernel mode -- nothing to emulate
     }

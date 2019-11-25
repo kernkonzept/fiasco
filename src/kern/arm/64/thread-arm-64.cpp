@@ -56,6 +56,11 @@ extern "C" void leave_by_vcpu_upcall(Trap_state *ts)
   c->vcpu_return_to_kernel(vcpu->_entry_ip, vcpu->_sp, c->vcpu_state().usr().get());
 }
 
+bool is_permission_fault(Mword error)
+{
+  return (error & 0x3c) == 0xc;
+}
+
 IMPLEMENT
 void
 Thread::arm_kernel_sync_entry(Trap_state *ts)
@@ -78,10 +83,24 @@ Thread::arm_kernel_sync_entry(Trap_state *ts)
 
   switch (esr.ec())
     {
+    case 0x21: // instruction abort from kernel mode
+      if (is_permission_fault(esr.raw()))
+        {
+          ts->dump();
+          panic("kernel data execution\n");
+        }
+      ts->pf_address = get_fault_pfa(esr, true, false);
+      call_nested_trap_handler(ts);
+      break;
     case 0x25: // data abort from kernel mode
       if (EXPECT_FALSE(!handle_cap_area_fault(ts)))
         {
           ts->pf_address = get_fault_pfa(esr, false, false);
+          if (!PF::is_read_error(esr.raw()) && is_permission_fault(esr.raw()))
+            {
+              ts->dump();
+              panic("kernel code modification\n");
+            }
           call_nested_trap_handler(ts);
         }
       break;
