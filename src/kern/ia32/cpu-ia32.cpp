@@ -143,7 +143,7 @@ public:
   unsigned brand() const { return _brand & 0xFF; }
   unsigned features() const { return _features; }
   unsigned ext_features() const { return _ext_features; }
-  bool has_monitor_mwait() const { return _ext_features & (1 << 3); }
+  bool has_monitor_mwait() const { return _ext_features & FEATX_MONITOR; }
   bool has_monitor_mwait_irq() const { return _monitor_mwait_ecx & 3; }
 
   bool __attribute__((const)) has_smep() const
