@@ -93,6 +93,7 @@ Context::load_tpidruro() const
   asm volatile ("msr TPIDRRO_EL0, %0" : : "r" (_tpidruro));
 }
 
+// ---------------------------------------------------------------
 IMPLEMENTATION [arm && !cpu_virt]:
 
 IMPLEMENT inline
@@ -103,8 +104,4 @@ Context::sanitize_user_state(Return_frame *dst) const
   dst->psr |= Proc::Status_mode_user | Proc::Status_always_mask;
 }
 
-// -----------------------------------------------------------------
-IMPLEMENTATION [arm && !cpu_virt]:
-
 PUBLIC inline void Context::switch_vm_state(Context *) {}
-
