@@ -6,7 +6,7 @@ public:
   enum : unsigned
   {
     Status_mode_user      = 0x00,
-    Status_mode_always_on = 0x100,
+    Status_mode_always_on = 0x00,
   };
 };
 
