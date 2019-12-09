@@ -6,9 +6,8 @@ include $(srcdir)/Modules.generic
 SUBSYSTEMS = JABI ABI DRIVERS KERNEL CRT0 BOOT LIBK \
 	     CHECKSUM CXXLIB MINILIBC TCBOFFSET VERSION GBLCFG
 
-PREPROCESS_PARTS 	+= arch $(CONFIG_ABI) 32bit iofp         \
-			   $(CONFIG_XARCH) apic abs-timeout-hack \
-			   i8259 pc i8254 fpu                    \
+PREPROCESS_PARTS 	+= arch $(CONFIG_ABI) 32bit iofp \
+			   $(CONFIG_XARCH) apic i8259 pc i8254 fpu \
 			   abs_syscalls auto_map_kip io realmode libuart
 
 PREPROCESS_PARTS-$(CONFIG_MP)                += mp
@@ -106,8 +105,7 @@ context_IMPL		:= context context-ia32 context-ia32-32 context-vcpu
 continuation_IMPL	:= continuation-ia32-32
 cpu_IMPL		:= cpu cpu-ia32 cpu-32
 dirq_IMPL		:= dirq-ia32-ux
-entry_frame_IMPL	:= entry_frame entry_frame-ia32-ux \
-			   entry_frame-abs-timeout-hack
+entry_frame_IMPL	:= entry_frame entry_frame-ia32-ux
 fpu_IMPL		:= fpu fpu-ia32-ux fpu-ia32
 ipi_IMPL		:= ipi ipi-ia32
 kdb_ke_IMPL		+= kdb_ke-ia32

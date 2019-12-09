@@ -150,8 +150,7 @@ cpu_IMPL		:= cpu cpu-ia32 cpu-ux cpu-32
 cpu_lock_IMPL		:= cpu_lock cpu_lock-generic
 dirq_IMPL		:= dirq-ia32-ux
 dirq_pic_pin_IMPL	:= dirq_pic_pin dirq_pic_pin-ia32-ux
-entry_frame_IMPL	:= entry_frame entry_frame-ia32-ux                   \
-			   entry_frame-abs-timeout-hack
+entry_frame_IMPL	:= entry_frame entry_frame-ia32-ux
 fpu_IMPL		:= fpu fpu-ia32-ux fpu-ux
 irq_IMPL		:= irq irq-ux
 ipi_IMPL		:= ipi ipi-ux

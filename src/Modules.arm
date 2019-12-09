@@ -146,10 +146,9 @@ continuation_IMPL	:= continuation-arm
 cpu_IMPL	  	:= cpu cpu-arm cpu-arm-hyp cpu-arm-$(BITS)
 cpu_lock_IMPL  	  	:= cpu_lock cpu_lock-generic
 ifeq ($(CONFIG_BIT64),y)
-  entry_frame_IMPL	:= entry_frame-arm entry_frame-abs-timeout-hack
+  entry_frame_IMPL	:= entry_frame-arm
 else
-  entry_frame_IMPL	:= entry_frame entry_frame-arm                       \
-                  	   entry_frame-abs-timeout-hack
+  entry_frame_IMPL	:= entry_frame entry_frame-arm
 endif
 fpu_IMPL		:= fpu fpu-arm
 ipi_IMPL		:= ipi ipi-arm
