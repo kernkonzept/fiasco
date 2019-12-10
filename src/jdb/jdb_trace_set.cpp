@@ -14,7 +14,7 @@ IMPLEMENTATION:
 class Jdb_set_trace : public Jdb_module
 {
 public:
-  enum Mode { Off, Log, Log_to_buf, Use_slow_path };
+  enum Mode { Off, Log, Log_to_buf };
 
   Jdb_set_trace() FIASCO_INIT;
   void ipc_tracing(Mode mode);
@@ -26,9 +26,6 @@ private:
 
 char Jdb_set_trace::first_char;
 char Jdb_set_trace::second_char;
-
-IMPLEMENTATION[!{ia32,amd64}]:
-
 
 IMPLEMENTATION:
 
@@ -108,15 +105,6 @@ Jdb_set_trace::action(int cmd, void *&args, char const *&fmt, int &) override
 		Jdb_ipc_trace::_log_result = 1;
 	      else if (second_char == '-')
 		Jdb_ipc_trace::_log_result = 0;
-	      else
-		return ERROR;
-	      putchar(second_char);
-	      break;
-	    case 'S':
-	      if (second_char == '+')
-		ipc_tracing(Use_slow_path);
-	      else if (second_char == '-')
-		ipc_tracing(Off);
 	      else
 		return ERROR;
 	      putchar(second_char);
@@ -210,7 +198,6 @@ Jdb_set_trace::cmds() const override
 	{ 0, "I", "I", "%C",
 	  "I{+|-|*|R{+|-}|T{+|-}}\ton/off/buffer ipc logging, on/off result, "
 	  "tracing\n"
-	  "IS{+|-}\tipc \033[1mwithout\033[m shortcut on/off\n"
 	  "Ir{t|T|a|A|s|-}\trestrict ipc log to (!)thread/(!)task/snd-only/"
 	  "clr",
 	  &first_char },

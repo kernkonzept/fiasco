@@ -19,7 +19,6 @@ public:
   static int         _log;
   static int         _log_to_buf;
   static int         _log_result;
-  static int         _slow_ipc;
   friend class Jdb_set_trace;
 };
 
@@ -53,7 +52,6 @@ int         Jdb_ipc_trace::_snd_only;
 int         Jdb_ipc_trace::_log;
 int         Jdb_ipc_trace::_log_to_buf;
 int         Jdb_ipc_trace::_log_result;
-int         Jdb_ipc_trace::_slow_ipc;
 
 int         Jdb_pf_trace::_other_thread;
 Mword       Jdb_pf_trace::_gthread;
@@ -119,12 +117,7 @@ Jdb_ipc_trace::show()
 	}
     }
   else
-    {
-      printf("IPC logging disabled -- using the IPC %s path",
-	  _slow_ipc
-	    ? "slow" 
-	    : "C fast");
-    }
+    putstr("IPC logging disabled");
 
   putchar('\n');
 }

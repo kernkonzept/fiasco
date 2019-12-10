@@ -69,7 +69,7 @@ Jdb_set_trace::set_ipc_vector()
 {
   void (*fast_entry)(void);
 
-  if (Jdb_ipc_trace::_slow_ipc || Jdb_ipc_trace::_log)
+  if (Jdb_ipc_trace::_log)
     fast_entry  = entry_sys_fast_ipc_log;
   else
     fast_entry  = entry_sys_fast_ipc_c;
@@ -80,7 +80,7 @@ Jdb_set_trace::set_ipc_vector()
 
   set_ipc_vector_int();
 
-  if ((Jdb_ipc_trace::_log && !Jdb_ipc_trace::_slow_ipc))
+  if (Jdb_ipc_trace::_log)
     syscall_table[0] = sys_ipc_log_wrapper;
   else
     syscall_table[0] = sys_ipc_wrapper;
@@ -93,20 +93,14 @@ Jdb_set_trace::ipc_tracing(Mode mode)
     {
     case Off:
       Jdb_ipc_trace::_log = 0;
-      Jdb_ipc_trace::_slow_ipc = 0;
       break;
     case Log:
       Jdb_ipc_trace::_log = 1;
       Jdb_ipc_trace::_log_to_buf = 0;
-      Jdb_ipc_trace::_slow_ipc = 0;
       break;
     case Log_to_buf:
       Jdb_ipc_trace::_log = 1;
       Jdb_ipc_trace::_log_to_buf = 1;
-      Jdb_ipc_trace::_slow_ipc = 0;
-      break;
-    case Use_slow_path:
-      Jdb_ipc_trace::_slow_ipc = 1;
       break;
     }
   set_ipc_vector();
@@ -120,7 +114,7 @@ struct Jdb_ipc_log_pm : Cpu_pm_callbacks
   {
     void (*fast_entry)(void);
 
-    if (Jdb_ipc_trace::_slow_ipc || Jdb_ipc_trace::_log)
+    if (Jdb_ipc_trace::_log)
       fast_entry  = entry_sys_fast_ipc_log;
     else
       fast_entry  = entry_sys_fast_ipc_c;
@@ -150,7 +144,7 @@ Jdb_set_trace::set_ipc_vector_int()
 {
   void (*int30_entry)(void);
 
-  if (Jdb_ipc_trace::_slow_ipc || Jdb_ipc_trace::_log)
+  if (Jdb_ipc_trace::_log)
     int30_entry = entry_sys_ipc_log;
   else
     int30_entry = entry_sys_ipc_c;
