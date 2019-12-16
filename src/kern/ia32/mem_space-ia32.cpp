@@ -104,9 +104,9 @@ private:
     { write_now(&o->_asid[cpu], (unsigned long)Mem_unit::Asid_invalid); }
   };
 
-  struct Asid_alloc : Id_alloc<unsigned char, Mem_space, Asid_ops>
+  struct Asid_alloc : Id_alloc<Unsigned16, Mem_space, Asid_ops>
   {
-    Asid_alloc() : Id_alloc<unsigned char, Mem_space, Asid_ops>(Asid_num) {}
+    Asid_alloc() : Id_alloc<Unsigned16, Mem_space, Asid_ops>(Asid_num) {}
   };
 
   static Per_cpu<Asid_alloc> _asid_alloc;
