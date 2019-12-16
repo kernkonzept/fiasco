@@ -960,7 +960,7 @@ Base_mappable::pack()
 
           if (new_t)
             {
-              // ivalidate node 0 because we must not free the quota for it
+              // invalidate node 0 because we must not free the quota for it
               t->reset();
               t = new_t.get();
 
@@ -1001,7 +1001,7 @@ Base_mappable::pack()
 
       if (new_t)
         {
-          // ivalidate node 0 because we must not free the quota for it
+          // invalidate node 0 because we must not free the quota for it
           t->reset();
           t = new_t.get();
 
