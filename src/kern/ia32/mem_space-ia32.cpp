@@ -596,10 +596,6 @@ Mem_space::tlb_flush(bool = false)
 
 PRIVATE inline
 void
-Mem_space::init_asid() {}
-
-PRIVATE inline
-void
 Mem_space::reset_asid() {}
 
 //----------------------------------------------------------------------------
