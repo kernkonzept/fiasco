@@ -49,6 +49,9 @@
 /* clobbers: EAX, EDX, ECX */
 .macro ENABLE_PAGING cr0, cr3, cr4, gdt
 	movl	\cr4, %eax
+	/* mask PCID, to set it later in IA32e mode
+	 * if it is set in 'cr4' */
+	andl	$~CR4_PCID, %eax
 	movl	%eax, %cr4
 #ifdef CONFIG_AMD64
 	movl	_realmode_startup_pdbr,	%eax
@@ -87,6 +90,12 @@
 	movw	$0, %ax
 	movw	%ax, %fs
 	movw	%ax, %gs
+#ifdef CONFIG_AMD64
+	/* load CR4 again, now with PCID bit
+	 * (only IA32e supports PCID) */
+	movq	\cr4, %rax
+	movq	%rax, %cr4
+#endif
 .endm
 
 
