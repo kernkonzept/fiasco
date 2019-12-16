@@ -2020,24 +2020,32 @@ Context::take_cpu_offline(Cpu_number cpu, bool drain_rqq = false)
 {
   assert (cpu == current_cpu());
 
+  for (;;)
     {
       auto &q = _pending_rqq.current();
-      auto guard = lock_guard(q.q_lock());
 
-      if (q.first())
         {
+          auto guard = lock_guard(q.q_lock());
+
+          if (!q.first())
+            {
+              Cpu::cpus.current().set_online(false);
+              break;
+            }
+
           if (!drain_rqq)
             return false;
-
-          Context *migration_q = 0;
-          q.handle_requests(&migration_q);
-          // assume we run from the idle thread, and the idle thread does
-          // never migrate so `migration_q` must be 0
-          assert (!migration_q);
         }
 
-      Cpu::cpus.current().set_online(false);
+      // Pending_rqq::handle_requests must be called without the
+      // queue lock held.
+      Context *migration_q = 0;
+      q.handle_requests(&migration_q);
+      // assume we run from the idle thread, and the idle thread does
+      // never migrate so `migration_q` must be 0
+      assert (!migration_q);
     }
+
   Mem::mp_mb();
 
   do
