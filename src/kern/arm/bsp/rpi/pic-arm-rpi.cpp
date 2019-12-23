@@ -1,10 +1,10 @@
-INTERFACE [arm && pf_bcm283x]:
+INTERFACE [arm && pf_rpi]:
 
 #include "initcalls.h"
 #include "irq_chip_generic.h"
 
-// ---------------------------------------------------------------------
-IMPLEMENTATION [arm && pf_bcm283x]:
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && pf_rpi && !pic_gic]:
 
 #include "assert.h"
 #include "irq_mgr.h"
@@ -118,7 +118,7 @@ Pic::handle_irq()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pf_bcm283x && (pf_bcm283x_rpi1 || pf_bcm283x_rpizw)]:
+IMPLEMENTATION [arm && pf_rpi && (pf_rpi_rpi1 || pf_rpi_rpizw)]:
 
 PUBLIC static FIASCO_INIT
 void Pic::init()
@@ -127,7 +127,7 @@ void Pic::init()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && (pf_bcm283x_rpi2 || pf_bcm283x_rpi3)]:
+IMPLEMENTATION [arm && pf_rpi && (pf_rpi_rpi2 || pf_rpi_rpi3)]:
 
 #include "arm_control.h"
 
@@ -139,7 +139,7 @@ void Pic::init()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pf_bcm283x && mp]:
+IMPLEMENTATION [arm && pf_rpi && !pic_gic && mp]:
 
 PUBLIC static
 void
@@ -147,7 +147,7 @@ Pic::init_ap(Cpu_number, bool)
 {}
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pf_bcm283x && arm_em_tz]:
+IMPLEMENTATION [arm && pf_rpi && !pic_gic && arm_em_tz]:
 
 #include <cstdio>
 
@@ -158,10 +158,43 @@ Pic::set_pending_irq(unsigned group32num, Unsigned32 val)
   printf("%s(%d, %x): Not implemented\n", __func__, group32num, val);
 }
 
-//---------------------------------------------------------------------------
-IMPLEMENTATION [debug && pf_bcm283x]:
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && pic_gic]:
+
+#include "gic_v2.h"
+#include "irq_mgr_multi_chip.h"
+#include "kmem.h"
+
+PUBLIC static FIASCO_INIT
+void
+Pic::init()
+{
+  typedef Irq_mgr_multi_chip<8> M;
+
+  M *m = new Boot_object<M>(1);
+
+  gic = new Boot_object<Gic_v2>(Kmem::mmio_remap(Mem_layout::Gic_cpu_phys_base,
+	                                         Gic_cpu_v2::Size),
+                                Kmem::mmio_remap(Mem_layout::Gic_dist_phys_base,
+				                 Gic_dist::Size));
+  m->add_chip(0, gic, gic->nr_irqs());
+
+  Irq_mgr::mgr = m;
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && mp && pic_gic]:
+
+PUBLIC static
+void Pic::init_ap(Cpu_number cpu, bool resume)
+{
+  gic->init_ap(cpu, resume);
+}
+
+//-------------------------------------------------------------------------
+IMPLEMENTATION [debug && pf_rpi && !pic_gic]:
 
 PUBLIC
 char const *
 Irq_chip_bcm::chip_type() const
-{ return "BCM283X"; }
+{ return "Raspberry Pi"; }

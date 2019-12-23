@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && pf_bcm283x && (pf_bcm283x_rpi1 || pf_bcm283x_rpizw)]:
+IMPLEMENTATION [arm && pf_rpi && (pf_rpi_rpi1 || pf_rpi_rpizw)]:
 
 #include "pic.h"
 
@@ -7,7 +7,7 @@ void irq_handler()
 { Pic::handle_irq(); }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && mp && (pf_bcm283x_rpi2 || pf_bcm283x_rpi3)]:
+IMPLEMENTATION [arm && mp && (pf_rpi_rpi2 || pf_rpi_rpi3)]:
 
 #include "ipi.h"
 #include "thread.h"
@@ -26,12 +26,12 @@ void handle_ipis()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && !mp && (pf_bcm283x_rpi2 || pf_bcm283x_rpi3)]:
+IMPLEMENTATION [arm && !mp && (pf_rpi_rpi2 || pf_rpi_rpi3)]:
 
 inline void handle_ipis() {}
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && (pf_bcm283x_rpi2 || pf_bcm283x_rpi3)]:
+IMPLEMENTATION [arm && (pf_rpi_rpi2 || pf_rpi_rpi3)]:
 
 #include "pic.h"
 #include "timer.h"

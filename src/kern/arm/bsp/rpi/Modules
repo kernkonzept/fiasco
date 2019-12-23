@@ -1,0 +1,43 @@
+# vim:set ft=make:
+
+PREPROCESS_PARTS        += generic_tickless_idle
+RAM_PHYS_BASE           := 0
+
+PREPROCESS_PARTS        += generic_tickless_idle
+
+PREPROCESS_PARTS-$(CONFIG_ARM_V7PLUS)       += arm_generic_timer
+OBJECTS_LIBUART-$(CONFIG_PF_RPI_UART_16550)  = uart_16550.o
+OBJECTS_LIBUART-$(CONFIG_PF_RPI_UART_PL011)  = uart_pl011.o
+OBJECTS_LIBUART         += $(OBJECTS_LIBUART-y)
+CXXFLAGS-$(CONFIG_PF_RPI_UART_16550)_uart-libuart += $(call LIBUART_UART, 16550)
+CXXFLAGS-$(CONFIG_PF_RPI_UART_PL011)_uart-libuart += $(call LIBUART_UART, pl011)
+CXXFLAGS_uart-libuart   += $(CXXFLAGS-y_uart-libuart)
+
+PREPROCESS_PARTS-$(CONFIG_PF_RPI_RPI1)  += arm_single_ipi_irq
+PREPROCESS_PARTS-$(CONFIG_PF_RPI_RPI2)  += arm_single_ipi_irq
+PREPROCESS_PARTS-$(CONFIG_PF_RPI_RPI3)  += arm_single_ipi_irq
+PREPROCESS_PARTS-$(CONFIG_PF_RPI_RPIZW) += arm_single_ipi_irq
+PREPROCESS_PARTS-$(CONFIG_ARM_GIC)          += pic_gic
+
+INTERFACES_KERNEL-$(CONFIG_ARM_V7PLUS)   += generic_timer
+INTERFACES_KERNEL-$(CONFIG_PF_RPI_RPI1)  += arm_control irq_handler
+INTERFACES_KERNEL-$(CONFIG_PF_RPI_RPI2)  += arm_control irq_handler
+INTERFACES_KERNEL-$(CONFIG_PF_RPI_RPI3)  += arm_control irq_handler
+INTERFACES_KERNEL-$(CONFIG_PF_RPI_RPIZW) += arm_control irq_handler
+
+arm_control_IMPL      += arm_control-arm-rpi
+config_IMPL           += config-arm-rpi
+mem_layout_IMPL       += mem_layout-arm-rpi
+pic_IMPL              += pic-arm-rpi
+pic_IMPL              += $(if $(CONFIG_ARM_GIC),pic-gic)
+timer_IMPL            += timer-arm-rpi
+timer_IMPL            += $(if $(CONFIG_ARM_V7PLUS),timer-arm-generic)
+timer_IMPL            += $(if $(CONFIG_PF_RPI_RPI4),timer-arm-generic-rpi)
+timer_tick_IMPL       += $(if $(CONFIG_ARM_V7PLUS),timer_tick-arm-rpi,\
+			                           timer_tick-single-vector)
+timer_tick_IMPL       += $(if $(CONFIG_PF_RPI_RPI4),timer_tick-single-vector)
+reset_IMPL            += reset-arm-rpi
+clock_IMPL            += clock-generic
+ipi_IMPL              += ipi-arm-rpi
+platform_control_IMPL += platform_control-arm-rpi
+irq_handler_IMPL       = irq_handler-arm-rpi

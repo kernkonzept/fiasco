@@ -1,4 +1,4 @@
-INTERFACE [arm && pf_bcm283x && mp]: // -----------------------------------
+INTERFACE [arm && pf_rpi && mp && !pic_gic]: // -----------------------
 
 EXTENSION class Ipi
 {
@@ -11,7 +11,7 @@ private:
   Cpu_phys_id _phys_id;
 };
 
-IMPLEMENTATION [arm && pf_bcm283x && mp]: // ------------------------------
+IMPLEMENTATION [arm && pf_rpi && mp && !pic_gic]: // ------------------
 
 #include "arm_control.h"
 #include "cpu.h"

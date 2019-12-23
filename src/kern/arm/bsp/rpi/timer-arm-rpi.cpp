@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------
-INTERFACE [arm && pf_bcm283x && (pf_bcm283x_rpi1 || pf_bcm283x_rpizw)]:
+INTERFACE [arm && pf_rpi && (pf_rpi_rpi1 || pf_rpi_rpizw)]:
 
 // HINT: This is drivers/clocksource/bcm2835_timer.c
 
@@ -29,7 +29,7 @@ private:
 };
 
 // --------------------------------------------------------------------------
-INTERFACE [arm && pf_bcm283x && arm_generic_timer]:
+INTERFACE [arm && pf_rpi && arm_generic_timer]:
 
 #include "per_cpu_data.h"
 
@@ -40,7 +40,7 @@ private:
 };
 
 // --------------------------------------------------------------------------
-IMPLEMENTATION [arm && pf_bcm283x && arm_generic_timer]:
+IMPLEMENTATION [arm && pf_rpi && arm_generic_timer && (pf_rpi_rpi3 || pf_rpi_rpi2)]:
 
 IMPLEMENT inline
 void Timer::bsp_init(Cpu_number)
@@ -60,7 +60,7 @@ unsigned Timer::irq()
 }
 
 // ----------------------------------------------------------------------
-IMPLEMENTATION [arm && pf_bcm283x && (pf_bcm283x_rpi1 || pf_bcm283x_rpizw)]:
+IMPLEMENTATION [arm && pf_rpi && (pf_rpi_rpi1 || pf_rpi_rpizw)]:
 
 #include "config.h"
 #include "kip.h"

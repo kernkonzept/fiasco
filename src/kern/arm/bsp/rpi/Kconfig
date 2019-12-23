@@ -1,0 +1,51 @@
+# PF: RPI
+# PFDESCR: Raspberry Pi (Broadcom 283X & 2711)
+# PFDEPENDS: ARM
+
+config PF_RPI_UART_16550
+        bool
+
+config PF_RPI_UART_PL011
+        bool
+
+choice
+        prompt "Raspberry Pi variant"
+        default PF_RPI_RPI3
+
+config PF_RPI_RPI1
+        bool "rpi1"
+        depends on PF_RPI
+        select RPI
+        select PF_RPI_UART_PL011
+        select CAN_ARM_CPU_1176
+
+config PF_RPI_RPI2
+        bool "rpi2"
+        depends on PF_RPI
+        select RPI
+        select PF_RPI_UART_PL011
+        select CAN_ARM_CPU_CORTEX_A7
+
+config PF_RPI_RPI3
+        bool "rpi3"
+        depends on PF_RPI
+        select RPI
+        select PF_RPI_UART_16550
+        select CAN_ARM_CPU_CORTEX_A53
+
+config PF_RPI_RPIZW
+        bool "rpizw"
+        depends on PF_RPI
+        select RPI
+        select PF_RPI_UART_16550
+        select CAN_ARM_CPU_1176
+
+config PF_RPI_RPI4
+        bool "rpi4"
+        depends on PF_RPI
+        select PF_RPI_UART_16550
+        select CAN_ARM_CPU_CORTEX_A72
+        select ARM_GIC
+        select HAVE_ARM_GICV2
+
+endchoice

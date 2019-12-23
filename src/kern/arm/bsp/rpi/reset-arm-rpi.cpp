@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && pf_bcm283x]:
+IMPLEMENTATION [arm && pf_rpi]:
 
 #include "io.h"
 #include "kmem.h"

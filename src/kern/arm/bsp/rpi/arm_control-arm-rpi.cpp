@@ -1,4 +1,4 @@
-INTERFACE [pf_bcm283x_rpi2 || pf_bcm283x_rpi3]: // ------------------------
+INTERFACE [pf_rpi_rpi2 || pf_rpi_rpi3]: // --------------------------------
 
 #include "assert.h"
 #include "kmem.h"
@@ -92,12 +92,12 @@ private:
 };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [pf_bcm283x_rpi2 || pf_bcm283x_rpi3]:
+IMPLEMENTATION [pf_rpi_rpi2 || pf_rpi_rpi3]:
 
 Static_object<Arm_control> Arm_control::_arm_control;
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [mp && (pf_bcm283x_rpi2 || pf_bcm283x_rpi3) && !64bit]:
+IMPLEMENTATION [mp && (pf_rpi_rpi2 || pf_rpi_rpi3) && !64bit]:
 
 PUBLIC
 void
