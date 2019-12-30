@@ -206,6 +206,7 @@ public:
     Value &operator = (Bits_type val) { this->set(val); return *this; }
     Value &operator = (Value const &val)
     { this->set(val.get()); return *this; }
+    Value(Value const &) = default;
   };
 
   /** Internal helper type */
@@ -218,6 +219,7 @@ public:
     Value_unshifted &operator = (Shift_type val) { this->set_unshifted(val); return *this; }
     Value_unshifted &operator = (Value_unshifted const &val)
     { this->set_unshifted(val.get_unshifted()); return *this; }
+    Value_unshifted(Value_unshifted const &) = default;
   };
 
   /** Reference type to access the bits inside a raw bit field. */

@@ -116,6 +116,7 @@ public:
   Addr_val(Addr_val const volatile &o) : B(o._v) {}
   Addr_val(Addr_val const &)  = default;
   Addr_val() = default;
+  Addr_val &operator = (Addr_val const &o) = default;
 
   template< int OSHIFT >
   T operator << (Order<OSHIFT> const &o) const
