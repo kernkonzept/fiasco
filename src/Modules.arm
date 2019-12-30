@@ -349,7 +349,7 @@ endif
 
 ifneq ($(CONFIG_CPU_VIRT),)
   ifeq ($(CC_TYPE),gcc)
-    ifneq ($(findstring $(CCVER_MAJOR),4 5 6 7 8 9),)
+    ifneq ($(findstring $(CCVER_MAJOR),4 5 6 7 8 9 10),)
       ifeq ($(CCVER_MAJOR),4)
 	ARM_CC_OK_FOR_VIRT := $(if $(findstring $(CCVER_MINOR),0 1 2 3 4 5 6),,y)
       else
