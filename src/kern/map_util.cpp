@@ -550,58 +550,57 @@ map(MAPDB* mapdb,
         case SPACE::Insert_warn_exists:
         case SPACE::Insert_warn_attrib_upgrade:
         case SPACE::Insert_ok:
+          {
+            assert (s_valid || status == SPACE::Insert_ok);
+            // Never doing upgrades for mapdb-unmanaged memory
 
-          assert (s_valid || status == SPACE::Insert_ok);
-          // Never doing upgrades for mapdb-unmanaged memory
+            if (grant)
+              {
+                if (s_valid
+                    && EXPECT_FALSE(!mapdb->grant(mapdb_frame, sender_mapping,
+                                                  to_id, SPACE::to_pfn(rcv_addr))))
+                  {
+                    // Error -- remove mapping again.
+                    to->v_delete(rcv_addr, i_order, L4_fpage::Rights::FULL());
+                    tlb.add_page(to, rcv_addr, i_order);
 
-          if (grant)
-            {
-              if (s_valid
-                  && EXPECT_FALSE(!mapdb->grant(mapdb_frame, sender_mapping,
-                                                to_id, SPACE::to_pfn(rcv_addr))))
-                {
-                  // Error -- remove mapping again.
-                  to->v_delete(rcv_addr, i_order, L4_fpage::Rights::FULL());
-                  tlb.add_page(to, rcv_addr, i_order);
+                    // may fail due to quota limits
+                    condition = L4_error::Map_failed;
+                    break;
+                  }
 
-                  // may fail due to quota limits
-                  condition = L4_error::Map_failed;
-                  break;
-                }
+                from->v_delete(SPACE::page_address(snd_addr, s_order), s_order,
+                               L4_fpage::Rights::FULL());
+                tlb.add_page(from, SPACE::page_address(snd_addr, s_order), s_order);
+              }
+            else if (status == SPACE::Insert_ok)
+              {
+                if (s_valid
+                    && !mapdb->insert(mapdb_frame, sender_mapping,
+                                      to_id, SPACE::to_pfn(rcv_addr),
+                                      SPACE::to_pfn(i_phys), SPACE::to_pcnt(i_order)))
+                  {
+                    // Error -- remove mapping again.
+                    to->v_delete(rcv_addr, i_order, L4_fpage::Rights::FULL());
+                    tlb.add_page(to, rcv_addr, i_order);
 
-              from->v_delete(SPACE::page_address(snd_addr, s_order), s_order, L4_fpage::Rights::FULL());
-              tlb.add_page(from, SPACE::page_address(snd_addr, s_order), s_order);
-            }
-          else if (status == SPACE::Insert_ok)
-            {
-              if (s_valid
-                  && !mapdb->insert(mapdb_frame, sender_mapping,
-                                    to_id, SPACE::to_pfn(rcv_addr),
-                                    SPACE::to_pfn(i_phys), SPACE::to_pcnt(i_order)))
-                {
-                  // Error -- remove mapping again.
-                  to->v_delete(rcv_addr, i_order, L4_fpage::Rights::FULL());
-                  tlb.add_page(to, rcv_addr, i_order);
+                    // XXX This is not race-free as the mapping could have
+                    // been used in the mean-time, but we do not care.
+                    condition = L4_error::Map_failed;
+                    break;
+                  }
+              }
 
-                  // XXX This is not race-free as the mapping could have
-                  // been used in the mean-time, but we do not care.
-                  condition = L4_error::Map_failed;
-                  break;
-                }
-            }
+            if (SPACE::Need_insert_tlb_flush)
+              tlb.add_page(to, rcv_addr, i_order);
 
-          if (SPACE::Need_insert_tlb_flush)
-            tlb.add_page(to, rcv_addr, i_order);
-
-            {
-              V_pfc super_offset = SPACE::subpage_offset(snd_addr, i_order);
-              if (super_offset != V_pfc(0))
-                // Just use OR here because i_phys may already contain
-                // the offset. (As is on ARM)
-                i_phys = SPACE::subpage_address(i_phys, super_offset);
-            }
-
-          break;
+            V_pfc super_offset = SPACE::subpage_offset(snd_addr, i_order);
+            if (super_offset != V_pfc(0))
+              // Just use OR here because i_phys may already contain
+              // the offset. (As is on ARM)
+              i_phys = SPACE::subpage_address(i_phys, super_offset);
+            break;
+          }
 
         case SPACE::Insert_err_nomem:
           condition = L4_error::Map_failed;

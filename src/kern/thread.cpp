@@ -1174,7 +1174,9 @@ Thread::migrate_away(Migration *inf, bool remote)
   bool resched = false;
 
   if (_timeout)
-    _timeout->reset();
+    {
+      _timeout->reset();
+    }
 
   //printf("[%u] %lx: m %lx %u -> %u\n", current_cpu(), current_thread()->dbg_id(), this->dbg_id(), cpu(), inf->cpu);
     {
