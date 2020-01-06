@@ -1182,7 +1182,7 @@ Thread::migrate_away(Migration *inf, bool remote)
     {
       Sched_context::Ready_queue &rq = EXPECT_TRUE(!remote)
                                      ? Sched_context::rq.current()
-                                     :  Sched_context::rq.cpu(home_cpu());
+                                     : Sched_context::rq.cpu(home_cpu());
 
       // if we are in the middle of the scheduler, leave it now
       if (rq.schedule_in_progress == this)
