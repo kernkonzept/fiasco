@@ -153,7 +153,7 @@
 	  sub	$56, %r14
 #if 1
 	  /* NOTE: the new trap stack is aligned to 16byte before the
-	   * new iretr frame is pushed by the CPU, this means we have
+	   * new iret frame is pushed by the CPU, this means we have
 	   * an 8byte gap to the original 5 * 8 bytes iret frame,
 	   * hence the offset is 48 (6 * 8).
 	   */
@@ -171,7 +171,7 @@
 	  mov	(24 + 48)(%rsp), %r13
 	  mov	%r13, 16(%r14)
 #endif
-	  /* copy error code and r13m r14 from the fault stack frame */
+	  /* copy error code and r13 + r14 from the fault stack frame */
 	  mov	16(%rsp), %r13
 	  mov	%r13, 8(%r14)
 	  mov	8(%rsp), %r13
