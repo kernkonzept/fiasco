@@ -80,14 +80,20 @@ IMPLEMENT inline
 bool
 Jdb_tcb_ptr::is_user_value() const
 {
-  return _offs >= Context::Size - 7 * sizeof(Mword);
+  return _offs >= Context::Size - 37 * sizeof(Mword);
 }
 
 IMPLEMENT inline
 const char *
 Jdb_tcb_ptr::user_value_desc() const
 {
-  const char *desc[] = { "PSR", "PC", "USP", "PFA", "ESR", "KSP", "ULR" };
+  const char *desc[] =
+  {
+    "PSR", "PC", "USP", "PFA", "ESR", "KSP", "ULR", "X29", "X28", "X27",
+    "X26", "X25", "X24", "X23", "X22", "X21", "X20", "X19", "X18", "X17",
+    "X16", "X15", "X14", "X13", "X12", "X11", "X10", "X9", "X8", "X7","X6",
+    "X5", "X4", "X3", "X2", "X1", "X0"
+  };
   return desc[(Context::Size - _offs) / sizeof(Mword) - 1];
 }
 
