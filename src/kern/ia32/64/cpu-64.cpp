@@ -211,7 +211,7 @@ Cpu::set_fs_base(Mword *base)
     ".popsection\n\t"
     ASM_KEX(1b, 3b)
      : : "m" (*base),
-         "c" (MSR_FS_BASE) : "eax", "edx");
+         "c" (MSR_FS_BASE) : "rax", "rdx");
 }
 
 PUBLIC static inline NEEDS["asm.h"]
@@ -229,7 +229,7 @@ Cpu::set_gs_base(Mword *base)
     ".popsection\n\t"
     ASM_KEX(1b, 3b)
      : : "m" (*base),
-         "c" (MSR_GS_BASE) : "eax", "edx");
+         "c" (MSR_GS_BASE) : "rax", "rdx");
 }
 
 extern "C" Address dbf_stack_top;
