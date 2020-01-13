@@ -246,7 +246,7 @@ safe_iret:
 	test	$3, %r14
 	jz	1f
 
-	mov	$0xffff817fffffc000, %r14
+	mov	$VAL__MEM_LAYOUT__KENTRY_CPU_PAGE, %r14
 	mov	%r13, CPUE_STACK(-56, %r14)
 #ifdef CONFIG_INTEL_IA32_BRANCH_BARRIERS
 	/* check for exit flags (need IBTPB?) */

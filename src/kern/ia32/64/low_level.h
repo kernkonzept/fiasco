@@ -63,7 +63,7 @@
 	shl     $16, %rcx
 	sar     $16, %rcx
 #ifdef CONFIG_KERNEL_ISOLATION
-	mov	$0xffff817fffffc000, %r15
+	mov	$VAL__MEM_LAYOUT__KENTRY_CPU_PAGE, %r15
 # ifdef CONFIG_INTEL_IA32_BRANCH_BARRIERS
 	mov	CPUE_EXIT(%r15), %r11
 	test	$(CPUE_EXIT_NEED_IBPB), %r11
@@ -100,11 +100,11 @@
 	.else
 	  mov	16(%rsp), %r14
 	.endif
-	test	$3, %r14
+	test	$3, %r14                                /* RPL of cs */
 	jz	5551f
 
 	push	%r13
-	mov	$0xffff817fffffc000, %r13
+	mov	$VAL__MEM_LAYOUT__KENTRY_CPU_PAGE, %r13
 	mov	CPUE_CR3(%r13), %r14
 	mov	%r14, %cr3
 	mov	CPUE_KSP(%r13), %r14
@@ -145,7 +145,7 @@
 	  .align 8
 5553:
 	  push	%r13
-	  mov	$0xffff817fffffc000, %r13
+	  mov	$VAL__MEM_LAYOUT__KENTRY_CPU_PAGE, %r13
 	  mov	CPUE_CR3(%r13), %r14
 	  mov	%r14, %cr3
 	  /* now running in the kernel */

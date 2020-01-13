@@ -72,6 +72,9 @@
   DUMP_CONSTANT (MEM_LAYOUT__LAPIC,            Mem_layout::Local_apic_page)
   DUMP_CONSTANT (MEM_LAYOUT__IO_BITMAP,        Mem_layout::Io_bitmap)
   DUMP_CONSTANT (MEM_LAYOUT__SYSCALLS,         Mem_layout::Syscalls)
+# ifdef CONFIG_AMD64
+  DUMP_CONSTANT (MEM_LAYOUT__KENTRY_CPU_PAGE,  Mem_layout::Kentry_cpu_page)
+# endif
 #endif
 #ifdef CONFIG_PF_UX
   DUMP_CONSTANT (MEM_LAYOUT__TRAMPOLINE_PAGE,  Mem_layout::Trampoline_page)
