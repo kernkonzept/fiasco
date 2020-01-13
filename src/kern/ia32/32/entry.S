@@ -702,11 +702,11 @@ vcpu_resume:
 	addl $(2*4), %esp // skip es and ds for now
 	//popl %es
 	//popl %ds
-1:	popl REG_GS
-2:	popl REG_FS
+	popl REG_GS
+	popl REG_FS
 	popa
 	addl $(2*4), %esp
-3:	iret
+	iret
 
 	// fast return from Dirq::hit
 	.align	16
