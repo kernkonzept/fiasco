@@ -183,7 +183,7 @@ in_slowtrap:
 	addl	$4*2,%esp		/* Pop trap number and error code */
 3:	iret
 
-	/* set fixups for segemnt pops */
+	/* set fixups for segment pops */
 	ASM_KEX 1b, 11f
 	ASM_KEX 2b, 22f
 	ASM_KEX 3b, 0, .Liret_exception_handler
