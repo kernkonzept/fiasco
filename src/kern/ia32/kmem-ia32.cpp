@@ -902,6 +902,8 @@ Kmem::init_cpu(Cpu &cpu)
   // [2] = EXIT flags
   // [3] = CPU dir pa + 0x1000 (PCID: + bit63 + ASID)
   // [4] = entry scratch register
+  // [5] = unused
+  // [6] = here starts the syscall entry code
   Mword *p = cpu_m.alloc<Mword>(6);
   // With PCID enabled set bit 63 to prevent flushing of any TLB entries or
   // paging-structure caches during the page table switch. In that case TLB
