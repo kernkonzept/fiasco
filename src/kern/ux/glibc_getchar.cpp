@@ -1,6 +1,7 @@
 IMPLEMENTATION:
 
 #include <cstdio>
+#include <unistd.h>
 #include "console.h"
 #include "filter_console.h"
 #include "glibc_getchar.h"
@@ -18,7 +19,10 @@ int
 Glibc_getchar::getchar(bool blocking) override
 {
   (void)blocking;
-  return ::getchar();
+  int c = 0;
+  if (::read(STDIN_FILENO, &c, 1) <= 0)
+    c = -1;
+  return c;
 }
 
 PUBLIC
