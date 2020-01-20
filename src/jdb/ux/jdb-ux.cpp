@@ -241,7 +241,7 @@ Jdb::access_mem_task(Jdb_address addr, bool)
       return ((addr.addr() >= (Address)&Mem_layout::load
                && addr.addr() < (Kernel_thread::init_done()
                                    ? (Address)&Mem_layout::end
-                                   : (Address)&Mem_layout::initcall_end))
+                                   : (Address)Mem_layout::initcall_end))
               || Kernel_task::kernel_task()->virt_to_phys(addr.addr()) != ~0UL)
                ? (unsigned char *)addr.virt()
                : nullptr;

@@ -8,16 +8,16 @@ class Mem_layout
 {
 public:
   /// reflect symbols in linker script
-  static const char load            asm ("_load");
-  static const char image_start     asm ("_kernel_image_start");
-  static const char start           asm ("_start");
-  static const char end             asm ("_end");
-  static const char ecode           asm ("_ecode");
-  static const char etext           asm ("_etext");
-  static const char data_start      asm ("_kernel_data_start");
-  static const char edata           asm ("_edata");
-  static const char initcall_start  asm ("_initcall_start");
-  static const char initcall_end    asm ("_initcall_end");
+  static const char load             asm ("_load");
+  static const char image_start      asm ("_kernel_image_start");
+  static const char start            asm ("_start");
+  static const char end              asm ("_end");
+  static const char ecode            asm ("_ecode");
+  static const char etext            asm ("_etext");
+  static const char data_start       asm ("_kernel_data_start");
+  static const char edata            asm ("_edata");
+  static const char initcall_start[] asm ("_initcall_start");
+  static const char initcall_end[]   asm ("_initcall_end");
 
   static Mword in_tcbs (Address a); // FIXME
   static Mword in_kernel (Address a); // XXX: not right for UX

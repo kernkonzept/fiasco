@@ -12,10 +12,11 @@ IMPLEMENT inline
 void
 Kernel_thread::free_initcall_section()
 {
-  memset( (void*)&Mem_layout::initcall_start, 0, &Mem_layout::initcall_end
-          - &Mem_layout::initcall_start );
-  printf("%d KB kernel memory freed @ %p\n", (int)(&Mem_layout::initcall_end -
-         &Mem_layout::initcall_start)/1024, &Mem_layout::initcall_start);
+  memset(const_cast<char *>(Mem_layout::initcall_start), 0,
+         Mem_layout::initcall_end - Mem_layout::initcall_start);
+  printf("%d KB kernel memory freed @ %p\n",
+         (int)(Mem_layout::initcall_end - Mem_layout::initcall_start)/1024,
+         Mem_layout::initcall_start);
 }
 
 IMPLEMENT FIASCO_INIT

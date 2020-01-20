@@ -17,9 +17,13 @@ void
 Kernel_thread::free_initcall_section()
 {
   // just fill up with invalid opcodes
-  for (unsigned short *i = (unsigned short *) &Mem_layout::initcall_start;   
-                       i < (unsigned short *) &Mem_layout::initcall_end; i++)
-    *i = 0x0b0f;	// UD2 opcode
+  for (char *i = const_cast<char *>(Mem_layout::initcall_start);
+       i + 1 < const_cast<char *>(Mem_layout::initcall_end); i += 2)
+    {
+      // UD2
+      i[0] = 0x0f;
+      i[1] = 0x0b;
+    }
 }
 
 

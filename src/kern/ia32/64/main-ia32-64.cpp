@@ -34,8 +34,8 @@ kernel_main(void)
   cpu.print_infos();
 
   printf ("\nFreeing init code/data: %lu bytes (%lu pages)\n\n",
-          (Address)(&Mem_layout::initcall_end - &Mem_layout::initcall_start),
-          ((Address)(&Mem_layout::initcall_end - &Mem_layout::initcall_start)
+          (Address)(Mem_layout::initcall_end - Mem_layout::initcall_start),
+          ((Address)(Mem_layout::initcall_end - Mem_layout::initcall_start)
           >> Config::PAGE_SHIFT));
 
   // Perform architecture specific initialization
