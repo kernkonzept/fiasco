@@ -40,7 +40,7 @@ Kernel_thread::init_workload()
 	;
       *d = '\0';
 
-      kdb_ke_sequence(ctrl);
+      kdb_ke_sequence(ctrl, d - ctrl);
     }
 
   // kernel debugger rendezvous

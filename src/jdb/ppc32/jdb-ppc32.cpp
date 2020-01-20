@@ -57,7 +57,8 @@ Jdb::handle_debug_traps(Cpu_number cpu)
 {
   Jdb_entry_frame *ef = entry_frame.cpu(cpu);
   error_buffer.cpu(cpu).clear();
-  error_buffer.cpu(cpu).printf("%s", (char const *)ef->r[2]);
+  // XXX kdb_ke() / kdb_ke_nstr()
+  error_buffer.cpu(cpu).printf("%s", ef->text());
 
   return true;
 }
@@ -71,15 +72,8 @@ Jdb::handle_user_request(Cpu_number cpu)
   if (ef->debug_ipi())
     return cpu != Cpu_number::boot_cpu();
 
-  auto str = Jdb_addr<char const>::kmem_addr((char const *)ef->r[2]);
-
-  char tmp;
-  if (!peek(str, tmp) || tmp != '*')
-    return false;
-  if (!peek(str + 1, tmp) || tmp != '#')
-    return false;
-
-  return execute_command_ni(str + 2);
+  // XXX kdb_ke_sequence()
+  return false;
 }
 
 IMPLEMENT inline

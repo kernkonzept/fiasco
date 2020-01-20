@@ -13,6 +13,21 @@ IMPLEMENTATION[ia32,ux,amd64]:
 
 PUBLIC inline
 bool
+Jdb_entry_frame::debug_entry_kernel_str() const
+{ return _trapno == 3 && _ax == 0; }
+
+PUBLIC inline
+bool
+Jdb_entry_frame::debug_entry_user_str() const
+{ return _trapno == 3 && _ax == 1; }
+
+PUBLIC inline
+bool
+Jdb_entry_frame::debug_entry_kernel_sequence() const
+{ return _trapno == 3 && _ax == 2; }
+
+PUBLIC inline
+bool
 Jdb_entry_frame::debug_ipi() const
 { return _trapno == 0xee; }
 
@@ -35,6 +50,16 @@ PUBLIC inline
 Mword
 Jdb_entry_frame::param() const
 { return _ax; }
+
+PUBLIC inline
+char const *
+Jdb_entry_frame::text() const
+{ return reinterpret_cast<char const *>(_cx); }
+
+PUBLIC inline
+unsigned
+Jdb_entry_frame::textlen() const
+{ return _dx; }
 
 
 //---------------------------------------------------------------------------

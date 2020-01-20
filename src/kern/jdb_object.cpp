@@ -189,22 +189,20 @@ Jdb_object::sys_jdb(L4_msg_tag tag, unsigned op,
     {
     case Jdb_enter:
       {
-        unsigned size = min<unsigned>(access_once(&r_msg->values[1]),
-                                      (tag.words() - 2) * sizeof(Mword));
+        // On some architectures, 'r_msg' is not accessible from JDB context.
+        // Thus pass the pointer of the kernel context to kdb_ke_*().
+        Utcb const *u_kern = current()->utcb().kern();
 
-        if (size > 0)
-          {
-            auto txt = reinterpret_cast<char const *>(&r_msg->values[2]);
-            if ((size > 2) && (txt[0] == '*') && (txt[1] == '#'))
-              {
-                kdb_ke_sequence(txt + 2);
-                return commit_result(0);
-              }
+        auto length = min<unsigned>(access_once(&r_msg->values[1]),
+                                    (tag.words() - 2) * sizeof(Mword));
+        auto txt_user = reinterpret_cast<char const *>(&r_msg->values[2]);
+        auto txt_kern = reinterpret_cast<char const *>(&u_kern->values[2]);
 
-            printf("JDB-enter: '%.*s'", size, txt);
-          }
+        if (length > 2 && txt_user[0] == '*' && txt_user[1] == '#')
+          kdb_ke_sequence(txt_kern + 2, length);
+        else
+          kdb_ke_nstr(txt_kern, length);
 
-        kdb_ke("user");
         return commit_result(0);
       }
     case Jdb_outchar:

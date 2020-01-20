@@ -383,15 +383,12 @@ Jdb::push_cons()
 // non-interactive commands here (e.g. we don't allow d, t, l, u commands)
 PRIVATE static
 int
-Jdb::execute_command_ni(Jdb_addr<char const> str, int len = 1000)
+Jdb::execute_command_ni(char const *str, int len)
 {
-  char tmp = 0;
-  for (; len && peek(str, tmp) && tmp; ++str, --len)
-    if ((unsigned char)tmp != 0xff)
-      push_cons()->push(tmp);
+  for (; len && *str; ++str, --len)
+    push_cons()->push(*str);
 
-  if ((unsigned char)tmp != 0xff)
-    push_cons()->push('_'); // terminating return
+  push_cons()->push('_'); // terminating return
 
 
   // prevent output of sequences

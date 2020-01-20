@@ -59,3 +59,12 @@ Mword
 Jdb_entry_frame::param() const
 { return r[2]; /*r3*/ }
 
+PUBLIC inline
+char const *
+Jdb_entry_frame::text() const
+{ return reinterpret_cast<char const *>(r[2]); }
+
+PUBLIC inline
+unsigned
+Jdb_entry_frame::textlen() const
+{ return r[3]; }

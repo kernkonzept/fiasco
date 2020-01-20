@@ -347,7 +347,7 @@ kernel_prefetch_abort:			@ Kernel generated IAbort
 					@ Should not get IAborts in kernel
 					@ Kernel Panic
 	adr	r0, kernel_prefetch_abort_label
-	b	kern_kdebug_entry
+	b	kern_kdebug_cstr_entry
 
 
 kernel_prefetch_abort_label: .string "Kernel prefetch abort"

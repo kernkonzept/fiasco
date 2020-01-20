@@ -184,8 +184,10 @@ Jdb::handle_debug_traps(Cpu_number cpu)
       && bp_test_break)
     return bp_test_break(cpu, &error_buffer.cpu(cpu));
 
-  if (ef->debug_entry_kernel())
-    error_buffer.cpu(cpu).printf("%s",(char const *)ef->r[0]);
+  if (ef->debug_entry_kernel_str())
+    error_buffer.cpu(cpu).printf("%s", ef->text());
+  else if (ef->debug_entry_user_str())
+    error_buffer.cpu(cpu).printf("user \"%.*s\"", ef->textlen(), ef->text());
   else if (ef->debug_ipi())
     error_buffer.cpu(cpu).printf("IPI ENTRY");
   else
@@ -199,20 +201,12 @@ bool
 Jdb::handle_user_request(Cpu_number cpu)
 {
   Jdb_entry_frame *ef = Jdb::entry_frame.cpu(cpu);
-  auto str = Jdb_addr<char const>::kmem_addr((char const *)ef->r[0]);
 
   if (ef->debug_ipi())
     return cpu != Cpu_number::boot_cpu();
 
-  // arm32, see kdb_ke_sequence()
-  if (ef->error_code == ((0x33UL << 26) | 1))
-    return execute_command_ni(str);
-
-  // arm64, see kdb_ke_sequence()
-  unsigned opcode;
-  if (peek(Jdb_addr<unsigned>::kmem_addr((unsigned*)ef->ip()), opcode)
-      && opcode == 0xd4200020) // brk #1
-    return execute_command_ni(str);
+  if (ef->debug_entry_kernel_sequence())
+    return execute_command_ni(ef->text(), ef->textlen());
 
   return false;
 }

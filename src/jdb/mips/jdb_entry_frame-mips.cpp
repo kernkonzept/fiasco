@@ -9,9 +9,6 @@ class Jdb_entry_frame : public Trap_state
 public:
   Address_type from_user() const;
   Address ip() const;
-  bool debug_trap() const;
-  bool debug_sequence() const;
-  bool debug_ipi() const;
 };
 
 //---------------------------------------------------------------------------
@@ -20,28 +17,36 @@ IMPLEMENTATION[mips]:
 #include <cstdio>
 #include "processor.h"
 
-IMPLEMENT inline
+PUBLIC inline
 bool
-Jdb_entry_frame::debug_trap() const
+Jdb_entry_frame::debug_entry_kernel_str() const
 {
   Cause c(cause);
-  return c.exc_code() == 9;
+  return c.exc_code() == 9 && r[Entry_frame::R_t0] == 0;
 }
 
-IMPLEMENT inline
+PUBLIC inline
 bool
-Jdb_entry_frame::debug_sequence() const
+Jdb_entry_frame::debug_entry_user_str() const
 {
   Cause c(cause);
   return c.exc_code() == 9 && r[Entry_frame::R_t0] == 1;
 }
 
-IMPLEMENT inline
+PUBLIC inline
+bool
+Jdb_entry_frame::debug_entry_kernel_sequence() const
+{
+  Cause c(cause);
+  return c.exc_code() == 9 && r[Entry_frame::R_t0] == 2;
+}
+
+PUBLIC inline
 bool
 Jdb_entry_frame::debug_ipi() const
 {
   Cause c(cause);
-  return c.exc_code() == 9 && c.bp_spec() == 2;
+  return c.exc_code() == 9 && c.bp_spec() == 3;
 }
 
 IMPLEMENT inline NEEDS["cp0_status.h"]
@@ -58,6 +63,16 @@ Address Jdb_entry_frame::ksp() const
 IMPLEMENT inline
 Address Jdb_entry_frame::ip() const
 { return epc; }
+
+PUBLIC inline
+char const *
+Jdb_entry_frame::text() const
+{ return reinterpret_cast<char const *>(r[Entry_frame::R_a0]); }
+
+PUBLIC inline
+unsigned
+Jdb_entry_frame::textlen() const
+{ return r[Entry_frame::R_a1]; }
 
 //---------------------------------------------------------------------------
 // the following register usage matches ABI in l4sys/include/ARCH-mips/kdebug.h

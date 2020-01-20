@@ -1,14 +1,16 @@
-INTERFACE [(ia32,ux,amd64) && debug]:
+IMPLEMENTATION [(ia32,ux,amd64) && debug]:
 
-#define kdb_ke(msg)			\
-  asm ("int3           		\n\t"	\
-       "jmp 1f			\n\t"	\
-       ".ascii " #msg  "	\n\t"	\
-       "1:			\n\t")
+inline void kdb_ke(char const *msg)
+{
+  asm volatile ("int3" : : "a"(0), "c"(msg));
+}
 
-#define kdb_ke_sequence(msg)		\
-  asm ("int3			\n\t"	\
-       "jmp 1f			\n\t"	\
-       ".ascii \"*##\"		\n\t"	\
-       "1:			\n\t"	\
-       : : "a"(msg))
+inline void kdb_ke_nstr(char const *msg, unsigned len)
+{
+  asm volatile ("int3" : : "a"(1), "c"(msg), "d"(len));
+}
+
+inline void kdb_ke_sequence(char const *msg, unsigned len)
+{
+  asm volatile ("int3" : : "a"(2), "c"(msg), "d"(len));
+}

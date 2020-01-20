@@ -93,7 +93,8 @@ public:
     CXX_BITFIELD_MEMBER( 0,  1, src_context, raw);
     /// Exception code
     CXX_BITFIELD_MEMBER( 2,  6, exc_code, raw);
-    /// L4-extension: break point spec: 0 normal, 1 JSB sequence, 2 JDB IPI
+    /// L4-extension: break point spec:
+    /// 0 normal/cstr, 1 normal/nstr, 2 JDB sequence, 3 JDB IPI (fake)
     CXX_BITFIELD_MEMBER(16, 17, bp_spec, raw);
   };
 

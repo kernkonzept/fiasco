@@ -160,44 +160,23 @@ Jdb::conf_screen()
 
 /** handle int3 debug extension */
 PUBLIC static inline NOEXPORT
-int
+bool
 Jdb::int3_extension()
 {
-  Jdb_entry_frame *entry_frame = Jdb::entry_frame.cpu(Cpu_number::boot_cpu());
-  Address      addr = entry_frame->ip();
-  Address_type user = (entry_frame->cs() & 3) ? ADDR_USER : ADDR_KERNEL;
-  Unsigned8    todo = peek ((Unsigned8 *) addr, user);
-  Space *space = NULL; //get_task_id(0);
-  error_buffer.cpu(Cpu_number::boot_cpu()).clear();
+  auto cpu = Cpu_number::boot_cpu();
+  Jdb_entry_frame *ef = Jdb::entry_frame.cpu(cpu);
+  error_buffer.cpu(cpu).clear();
 
-  if (todo != 0xeb)
-    {
-      error_buffer.cpu(Cpu_number::boot_cpu()).printf("INT 3");
-      return 0;
-    }
+  if (ef->debug_entry_kernel_str())
+    error_buffer.cpu(cpu).printf("%s", ef->text());
+  else if (ef->debug_entry_user_str())
+    error_buffer.cpu(cpu).printf("user \"%.*s\"", ef->textlen(), ef->text());
+  else if (ef->debug_entry_kernel_sequence())
+    return execute_command_ni(ef->text(), ef->textlen());
+  else
+    return false;
 
-  // todo == 0xeb => enter_kdebug()
-  Mword i;
-  Mword len = peek ((Unsigned8 *) ++addr, user);
-
-  if (len > 2 &&
-      peek (((Unsigned8 *) addr + 1), user) == '*' &&
-      peek (((Unsigned8 *) addr + 2), user) == '#')
-    {
-      char c = peek (((Unsigned8 *) addr + 3), user);
-
-      if ((c == '#')
-            ? execute_command_ni(
-              Jdb_addr<char const>((char const *)entry_frame->_ax, space))
-            : execute_command_ni(
-              Jdb_addr<char const>((char const *)(addr + 3), space), len - 2))
-        return 1; // => leave Jdb
-    }
-
-  for (i = 0; i < len; i++)
-    error_buffer.cpu(Cpu_number::boot_cpu()).append(peek ((Unsigned8 *) ++addr, user));
-  error_buffer.cpu(Cpu_number::boot_cpu()).terminate();
-  return 0;
+  return true;
 }
 
 static
@@ -216,7 +195,7 @@ Jdb::handle_debug_traps(Cpu_number cpu)
         error_buffer.cpu(cpu).printf("Interception");
         break;
       case 3:
-	if (int3_extension())
+	if (!int3_extension())
           return false;
 #ifdef FIXME
         if (get_thread(cpu)->d_taskno())

@@ -53,23 +53,13 @@ Jdb::handle_debug_traps(Cpu_number cpu)
 {
   Jdb_entry_frame *ef = Jdb::entry_frame.cpu(cpu);
   error_buffer.cpu(cpu).clear();
-  const char *str = "<break>";
-  bool from_user = ef->status & Trap_state::S_ksu;
-
-  if (!from_user)
-    {
-      // kernel kdb_ke provides a string pointer in a0
-      auto x = (char const *)ef->r[Entry_frame::R_a0];
-      if ((uintptr_t)x >= Mem_layout::KSEG0
-          && (uintptr_t)x <= Mem_layout::KSEG0e
-          && memchr(x, 0, 100))
-        str = x;
-    }
 
   if (ef->debug_ipi())
     error_buffer.cpu(cpu).printf("IPI ENTRY");
-  else if (ef->debug_trap())
-    error_buffer.cpu(cpu).printf("%s", str);
+  else if (ef->debug_entry_kernel_str())
+    error_buffer.cpu(cpu).printf("%s", ef->text());
+  else if (ef->debug_entry_user_str())
+    error_buffer.cpu(cpu).printf("user: \"%.*s\"", ef->textlen(), ef->text());
   else
     error_buffer.cpu(cpu).printf("ENTRY");
 
@@ -81,13 +71,12 @@ bool
 Jdb::handle_user_request(Cpu_number cpu)
 {
   Jdb_entry_frame *ef = Jdb::entry_frame.cpu(cpu);
-  auto str = Jdb_addr<char const>::kmem_addr((char const *)ef->r[Entry_frame::R_a0]);
 
   if (ef->debug_ipi())
     return cpu != Cpu_number::boot_cpu();
 
-  if (ef->debug_sequence())
-    return execute_command_ni(str);
+  if (ef->debug_entry_kernel_sequence())
+    return execute_command_ni(ef->text(), ef->textlen());
 
   return false;
 }

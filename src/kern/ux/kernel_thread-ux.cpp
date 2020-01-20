@@ -75,7 +75,7 @@ Kernel_thread::bootstrap_arch()
   Trap_state::base_handler = thread_handle_trap;
 
   if (Koptions::o()->opt(Koptions::F_jdb_cmd))
-    kdb_ke_sequence(Koptions::o()->jdb_cmd);
+    kdb_ke_sequence(Koptions::o()->jdb_cmd, strlen(Koptions::o()->jdb_cmd));
 
   atexit(ux_termination_handler);
   boot_app_cpus();

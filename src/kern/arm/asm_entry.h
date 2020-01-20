@@ -146,7 +146,6 @@ leave_by_vcpu_upcall:
 	ldr	sp, [sp, #(RF(USR_SP, 0))]
 	mov	pc, lr
 
-
 3:	.word call_nested_trap_handler
 #else
 	mov	pc, lr
@@ -155,23 +154,27 @@ leave_by_vcpu_upcall:
 
 
 .macro GEN_DEBUGGER_ENTRIES
-	.global	kern_kdebug_entry
+	.global	kern_kdebug_cstr_entry
 	.align 4
-kern_kdebug_entry:
+kern_kdebug_cstr_entry:
 	DEBUGGER_ENTRY 0
+
+	.global	kern_kdebug_nstr_entry
+	.align 4
+kern_kdebug_nstr_entry:
+	DEBUGGER_ENTRY 1
 
 	.global	kern_kdebug_sequence_entry
 	.align 4
 kern_kdebug_sequence_entry:
-	DEBUGGER_ENTRY 1
-
+	DEBUGGER_ENTRY 2
 
 #ifdef CONFIG_MP
 	.section ".text"
 	.global	kern_kdebug_ipi_entry
 	.align 4
 kern_kdebug_ipi_entry:
-	DEBUGGER_ENTRY 2
+	DEBUGGER_ENTRY 3
 	.previous
 #endif
 

@@ -432,17 +432,21 @@ END_ENTRY reserved_insn
 
 .section ".text.kdebug_entry", "ax"
 .set noreorder
-LEAF(kern_kdebug_entry)
+LEAF(kern_kdebug_cstr_entry)
 	DEBUGGER_ENTRY	0x00000000
-END(kern_kdebug_entry)
+END(kern_kdebug_cstr_entry)
+
+LEAF(kern_kdebug_nstr_entry)
+	DEBUGGER_ENTRY	0x00000001
+END(kern_kdebug_nstr_entry)
 
 LEAF(kern_kdebug_sequence_entry)
-	DEBUGGER_ENTRY	0x00000001
+	DEBUGGER_ENTRY	0x00000002
 END(kern_kdebug_sequence_entry)
 
 #ifdef CONFIG_MP
 LEAF(kern_kdebug_ipi_entry)
-	DEBUGGER_ENTRY	0x00000002
+	DEBUGGER_ENTRY	0x00000003
 END(kern_kdebug_ipi_entry)
 #endif
 

@@ -707,7 +707,7 @@ public:
         // fake a trap-state for the nested_trap handler and set the cause to debug ipi
         Trap_state ts;
         Trap_state::Cause *cause = &reinterpret_cast<Trap_state::Cause &>(ts.cause);
-        cause->bp_spec() = 2;
+        cause->bp_spec() = 3;
         cause->exc_code() = 9;
         Thread::call_nested_trap_handler(&ts);
       }

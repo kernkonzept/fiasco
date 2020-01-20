@@ -52,29 +52,63 @@ Mword
 Jdb_entry_frame::param() const
 { return r[0]; }
 
+PUBLIC inline
+char const *
+Jdb_entry_frame::text() const
+{ return reinterpret_cast<char const *>(r[0]); }
+
+PUBLIC inline
+unsigned
+Jdb_entry_frame::textlen() const
+{ return r[1]; }
+
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && 32bit]:
 
+// Error = 0x33UL: see DEBUGGER_ENTRY
+
 PUBLIC inline
 bool
-Jdb_entry_frame::debug_entry_kernel() const
+Jdb_entry_frame::debug_entry_kernel_str() const
 { return error_code == (0x33UL << 26); }
+
+PUBLIC inline
+bool
+Jdb_entry_frame::debug_entry_user_str() const
+{ return error_code == ((0x33UL << 26) | 1); }
+
+PUBLIC inline
+bool
+Jdb_entry_frame::debug_entry_kernel_sequence() const
+{ return error_code == ((0x33UL << 26) | 2); }
 
 IMPLEMENT inline
 bool
 Jdb_entry_frame::debug_ipi() const
-{ return error_code == ((0x33UL << 26) | 2); }
+{ return error_code == ((0x33UL << 26) | 3); }
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && 64bit]:
 
+// Error 0x3cUL: 'brk'
+
 PUBLIC inline
 bool
-Jdb_entry_frame::debug_entry_kernel() const
-{ return error_code == 0xf2000000; }
+Jdb_entry_frame::debug_entry_kernel_str() const
+{ return error_code == ((0x3cUL << 26) | (1 << 25)); }
+
+PUBLIC inline
+bool
+Jdb_entry_frame::debug_entry_user_str() const
+{ return error_code == ((0x3cUL << 26) | (1 << 25) | 1); }
+
+PUBLIC inline
+bool
+Jdb_entry_frame::debug_entry_kernel_sequence() const
+{ return error_code == ((0x3cUL << 26) | (1 << 25) | 2); }
 
 IMPLEMENT inline
 bool
 Jdb_entry_frame::debug_ipi() const
-{ return error_code == 0xf2000002; }
+{ return error_code == ((0x3cUL << 26) | (1 << 25) | 3); }
 

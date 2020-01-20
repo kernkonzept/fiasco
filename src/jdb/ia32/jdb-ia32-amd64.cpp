@@ -710,71 +710,17 @@ Jdb::handle_trap1(Cpu_number cpu, Jdb_entry_frame *ef)
 }
 
 // entered debugger due to software breakpoint
-static inline NOEXPORT int
-Jdb::handle_trap3(Cpu_number cpu, Jdb_entry_frame *entry_frame)
+static inline NOEXPORT bool
+Jdb::handle_trap3(Cpu_number cpu, Jdb_entry_frame *ef)
 {
-  Space *task = get_task(cpu);
-  Unsigned8 op;
-  Unsigned8 len;
-
   error_buffer.cpu(cpu).clear();
-  error_buffer.cpu(cpu).printf("%s", "INT 3");
-  Jdb_addr<Unsigned8 const> insn_ptr((Unsigned8*)entry_frame->ip(), task);
-  if (   !peek(insn_ptr, op)
-      || !peek(insn_ptr + 1, len)
-      || op != 0xeb)
-    return 1;
 
-  Jdb_addr<Unsigned8 const> msg = insn_ptr + 2;
-  Unsigned8 buffer[3];
-  if (!peek(msg, buffer[0]))
-    return 1;
+  if (ef->debug_entry_kernel_str())
+    error_buffer.cpu(cpu).printf("%s", ef->text());
+  else if (ef->debug_entry_user_str())
+    error_buffer.cpu(cpu).printf("user \"%.*s\"", ef->textlen(), ef->text());
 
-  if (len > 1 && !peek(msg + 1, buffer[1]))
-    return 1;
-
-  // we are entering here because enter_kdebugger("*#..."); failed
-  if (len > 1 && buffer[0] == '*' && buffer[1] == '#')
-    {
-      unsigned i;
-      char ctrl[29];
-
-      len -= 2;
-      msg += 2;
-      if (len && peek(msg, buffer[2]))
-	{
-	  Unsigned8 tmp;
-	  if (buffer[2] == '#')
-	    {
-	      // the ``-jdb_cmd='' sequence
-	      msg = Jdb_addr<Unsigned8 const>((Unsigned8 const*)entry_frame->value(), task);
-	      for (i=0; i<sizeof(ctrl)-1 && peek(msg, tmp) && tmp; i++, msg++)
-		ctrl[i] = tmp;
-	    }
-	  else
-	    {
-	      // a ``enter_kdebug("*#")'' sequence
-	      for (i=0; i<sizeof(ctrl)-1 && i<len && peek(msg, tmp); i++, msg++)
-		ctrl[i] = tmp;
-	    }
-	  ctrl[i] = '\0';
-          error_buffer.cpu(cpu).clear();
-	  error_buffer.cpu(cpu).printf("invalid ctrl sequence \"%s\"", ctrl);
-	}
-    }
-  // enter_kdebugger("...");
-  else if (len > 0)
-    {
-      unsigned i;
-      len = len < 47 ? len : 47;
-
-      error_buffer.cpu(cpu).clear();
-      for(i=0; i<len && peek(msg + i, buffer[0]); i++)
-        error_buffer.cpu(cpu).append(buffer[0]);
-      error_buffer.cpu(cpu).terminate();
-    }
-
-  return 1;
+  return true;
 }
 
 // entered debugger due to other exception
@@ -798,40 +744,15 @@ IMPLEMENT
 bool
 Jdb::handle_user_request(Cpu_number cpu)
 {
-  Jdb_entry_frame *entry_frame = Jdb::entry_frame.cpu(cpu);
+  Jdb_entry_frame *ef = Jdb::entry_frame.cpu(cpu);
 
-  if (entry_frame->debug_ipi())
+  if (ef->debug_ipi())
     return cpu != Cpu_number::boot_cpu();
 
-  if (entry_frame->_trapno != 3)
-    return false;
+  if (ef->debug_entry_kernel_sequence())
+    return execute_command_ni(ef->text(), ef->textlen());
 
-  char todo;
-  auto insn_ptr = Jdb_addr<char const>::kmem_addr((char const *)entry_frame->ip());
-
-  if (!peek(insn_ptr, todo) || todo != (char)0xeb)
-    return false;
-
-  char len;
-  if (!peek(insn_ptr + 1, len))
-    return false;
-
-  if (len <= 2)
-    return false;
-
-  auto str_ptr = Jdb_addr<char const>::kmem_addr((char const *)(entry_frame->value()));
-  char tmp;
-
-  if (!peek(insn_ptr + 2, tmp) || tmp !='*')
-    return false;
-
-  if (!peek(insn_ptr + 3, tmp) || tmp != '#')
-    return false;
-
-  if (peek(insn_ptr + 4, tmp) && tmp == '#')
-    return execute_command_ni(str_ptr);
-
-  return execute_command_ni(insn_ptr + 2, len - 2);
+  return false;
 }
 
 IMPLEMENT
