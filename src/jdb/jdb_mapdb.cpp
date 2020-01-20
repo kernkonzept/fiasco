@@ -363,8 +363,8 @@ Jdb_mapdb::cmds() const override
 {
   static Cmd cs[] =
     {
-        { 0, "m", "mapdb", "%c",
-          "m[i]<addr>\tshow [I/O] mapping database starting at address",
+        { 0, "m", "mapdb", "%C",
+          "m[i]<pfn>\tshow [I/O] mapping database for PFN [port]",
           &subcmd },
         { 1, "", "dumpmapdbobjs", "",
           "dumpmapdbobjs\tDump complete object mapping database", 0 },
