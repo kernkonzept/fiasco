@@ -381,7 +381,36 @@ entry_\name:
 	jmp	all_syscalls
 .endm
 
+#ifndef CONFIG_KERNEL_ISOLATION
+#ifdef CONFIG_MP
+MAX_NUM_CPUS = CONFIG_MP_MAX_CPUS
+#else
+MAX_NUM_CPUS = 1
+#endif
+
+#define SYSCALL_ENTRY_DATA_SIZE 64
+#define SYSCALL_ENTRY_TEXT_SIZE (0f - 0b)
+#define SYSCALL_ENTRY_OFFSET ((0b - syscall_entry_text) / SYSCALL_ENTRY_TEXT_SIZE)
+#define SYSCALL_ENTRY_DATA (syscall_entry_data + SYSCALL_ENTRY_OFFSET * SYSCALL_ENTRY_DATA_SIZE)
+#define KERN_SP (SYSCALL_ENTRY_DATA + 0)
+#define USER_SP (SYSCALL_ENTRY_DATA + 8)
 	.section ".entry.text.syscalls", "ax", @progbits
+	.global syscall_entry_text
+	.align 64
+syscall_entry_text:
+.rept MAX_NUM_CPUS
+0:
+	mov %rsp, USER_SP(%rip)
+	mov KERN_SP(%rip), %rsp
+	mov (%rsp), %rsp
+	pushq $GDT_DATA_USER | 3
+	pushq USER_SP(%rip)
+	jmp entry_sys_fast_ipc_c
+	.align 32
+0:
+.endr
+#endif /* !CONFIG_KERNEL_ISOLATION */
+
 	.p2align 4
 	.type	all_syscalls,@function
 all_syscalls:

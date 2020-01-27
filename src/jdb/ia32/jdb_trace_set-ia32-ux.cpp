@@ -1,3 +1,47 @@
+IMPLEMENTATION[ia32,ux]:
+
+static
+void
+set_fast_entry(Cpu_number cpu, void (*fast_entry)(void))
+{
+  Cpu::cpus.cpu(cpu).set_fast_entry(fast_entry);
+}
+
+IMPLEMENTATION[amd64 && kernel_isolation]:
+
+#include "jdb.h"
+#include "jdb_types.h"
+
+static
+void
+set_fast_entry(Cpu_number, void (*func)())
+{
+  extern char const syscall_entry_code[];
+  extern char const syscall_entry_reloc[];
+  // 3 byte offset into "mov fn,%r11" instruction
+  auto ofs = syscall_entry_reloc - syscall_entry_code + 3;
+  auto reloc = reinterpret_cast<Signed32 *>(
+    Mem_layout::Mem_layout::Kentry_cpu_page + ofs + 0x30);
+  check(Jdb::poke(Jdb_addr<Signed32>::kmem_addr(reloc), (Signed32)(Signed64)func));
+}
+
+IMPLEMENTATION[amd64 && !kernel_isolation]:
+
+#include "jdb.h"
+#include "jdb_types.h"
+
+static
+void
+set_fast_entry(Cpu_number cpu, void (*func)())
+{
+  extern Per_cpu_array<Syscall_entry_text> syscall_entry_text;
+
+  Address entry = (Address)&syscall_entry_text[cpu];
+  Address reloc = entry + 0x1b;
+  Signed32 ofs = (Address)func - (reloc + sizeof(Signed32));
+  check(Jdb::poke(Jdb_addr<Signed32>::kmem_addr((Signed32 *) reloc), ofs));
+}
+
 IMPLEMENTATION:
 
 #include "syscalls.h"
@@ -23,7 +67,7 @@ Jdb_set_trace::set_ipc_vector()
     fast_entry  = entry_sys_fast_ipc_c;
 
   Jdb::on_each_cpu([fast_entry](Cpu_number cpu){
-    Cpu::cpus.cpu(cpu).set_fast_entry(fast_entry);
+    set_fast_entry(cpu, fast_entry);
   });
 
   set_ipc_vector_int();
@@ -84,7 +128,7 @@ struct Jdb_ipc_log_pm : Pm_object
     else
       fast_entry  = entry_sys_fast_ipc_c;
 
-    Cpu::cpus.cpu(cpu).set_fast_entry(fast_entry);
+    set_fast_entry(cpu, fast_entry);
   }
 
   void pm_on_suspend(Cpu_number) override {}

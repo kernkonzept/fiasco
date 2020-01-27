@@ -4,7 +4,8 @@ INTERFACE [amd64 && !kernel_isolation]:
 
 EXTENSION class Cpu
 {
-  static Per_cpu_array<Syscall_entry> _syscall_entry;
+  static Per_cpu_array<Syscall_entry_data>
+    _syscall_entry_data asm("syscall_entry_data");
 };
 
 
@@ -13,14 +14,7 @@ IMPLEMENTATION[amd64 && !kernel_isolation]:
 #include "mem_layout.h"
 #include "tss.h"
 
-Per_cpu_array<Syscall_entry> Cpu::_syscall_entry;
-
-PUBLIC
-void
-Cpu::set_fast_entry(void (*func)())
-{
-  _syscall_entry[id()].set_entry(func);
-}
+Per_cpu_array<Syscall_entry_data> Cpu::_syscall_entry_data;
 
 IMPLEMENT inline NEEDS["tss.h"]
 Address volatile &
@@ -31,27 +25,19 @@ PUBLIC inline
 void
 Cpu::setup_sysenter()
 {
+  extern Per_cpu_array<Syscall_entry_text> syscall_entry_text;
+
   wrmsr(0, GDT_CODE_KERNEL | ((GDT_CODE_USER32 | 3) << 16), MSR_STAR);
-  wrmsr((Unsigned64)&_syscall_entry[id()], MSR_LSTAR);
-  wrmsr((Unsigned64)&_syscall_entry[id()], MSR_CSTAR);
+  wrmsr((Unsigned64)&syscall_entry_text[id()], MSR_LSTAR);
+  wrmsr((Unsigned64)&syscall_entry_text[id()], MSR_CSTAR);
   wrmsr(~0U, MSR_SFMASK);
-  _syscall_entry[id()].set_rsp((Address)&kernel_sp());
+  _syscall_entry_data[id()].set_rsp((Address)&kernel_sp());
 }
 
 IMPLEMENTATION[amd64 && kernel_isolation]:
 
 #include "mem_layout.h"
 #include "tss.h"
-
-PUBLIC
-void
-Cpu::set_fast_entry(void (*func)())
-{
-  extern char const syscall_entry_code[];
-  extern char const syscall_entry_reloc[];
-  auto ofs = syscall_entry_reloc - syscall_entry_code + 3; // 3 byte movebas
-  *reinterpret_cast<Signed32 *>(Mem_layout::Mem_layout::Kentry_cpu_page + ofs + 0x30) = (Signed32)(Signed64)func;
-}
 
 PUBLIC inline
 void
@@ -78,7 +64,6 @@ Cpu::init_sysenter()
 {
   setup_sysenter();
   wrmsr(rdmsr(MSR_EFER) | 1, MSR_EFER);
-  set_fast_entry(entry_sys_fast_ipc_c);
 }
 
 
