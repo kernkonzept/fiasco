@@ -114,6 +114,7 @@ suspend_ap_cpus()
           Platform_control::prepare_cpu_suspend(cpun);
           _cpus_to_suspend.atomic_clear(current_cpu());
           Platform_control::cpu_suspend(cpun);
+          Mem_unit::tlb_flush();
           return Context::Drq::no_answer_resched();
         }, 0);
       return false;
@@ -173,6 +174,8 @@ do_system_suspend(Context::Drq *, Context *, void *data)
                                 (_pm1b << 16) | _pm1a,
                                 (_pm1b_sts << 16) | _pm1a_sts))
     *reinterpret_cast<Mword *>(data) = -L4_err::EInval;
+
+  Mem_unit::tlb_flush();
 
   Cpu::cpus.current().pm_resume();
 
