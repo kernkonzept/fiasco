@@ -46,6 +46,24 @@ private:
 };
 
 
+//----------------------------------------------------------------------------
+INTERFACE[jdb]:
+
+EXTENSION class Timer
+{
+public:
+  /**
+   * Reduce the timer frequency (when entering JDB).
+   */
+  static void switch_freq_jdb();
+
+  /**
+   * Return the timer frequency to normal (when leaving JDB).
+   */
+  static void switch_freq_system();
+};
+
+
 IMPLEMENTATION:
 
 Cpu_number Timer::_cpu;
@@ -53,4 +71,18 @@ Cpu_number Timer::_cpu;
 IMPLEMENT_DEFAULT
 void
 Timer::enable()
+{}
+
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION[jdb]:
+
+IMPLEMENT_DEFAULT
+void
+Timer::switch_freq_jdb()
+{}
+
+IMPLEMENT_DEFAULT
+void
+Timer::switch_freq_system()
 {}
