@@ -117,6 +117,8 @@ Jdb::_wait_for_input()
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
+#include "timer.h"
+
 // disable interrupts before entering the kernel debugger
 IMPLEMENT
 void
@@ -147,15 +149,15 @@ Jdb::restore_irqs(Cpu_number cpu)
   Proc::sti_restore(jdb_irq_state.cpu(cpu));
 }
 
-IMPLEMENT inline
+IMPLEMENT inline NEEDS["timer.h"]
 void
 Jdb::enter_trap_handler(Cpu_number)
-{}
+{ Timer::switch_freq_jdb(); }
 
-IMPLEMENT inline
+IMPLEMENT inline NEEDS["timer.h"]
 void
 Jdb::leave_trap_handler(Cpu_number)
-{}
+{ Timer::switch_freq_system(); }
 
 IMPLEMENT inline
 bool
@@ -378,4 +380,18 @@ Jdb::monitor_address(Cpu_number, T volatile const *addr)
 {
   asm volatile("wfe");
   return *addr;
+}
+
+IMPLEMENT_OVERRIDE
+void
+Jdb::other_cpu_halt_in_jdb()
+{
+  Proc::halt();
+}
+
+IMPLEMENT_OVERRIDE
+void
+Jdb::wakeup_other_cpus_from_jdb(Cpu_number c)
+{
+  Ipi::send(Ipi::Debug, Cpu_number::first(), c);
 }

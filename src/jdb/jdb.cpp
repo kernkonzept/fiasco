@@ -1352,6 +1352,10 @@ EXTENSION class Jdb
   static void (*_remote_work_ipi_func)(Cpu_number, void *);
   static void *_remote_work_ipi_func_data;
   static unsigned long _remote_work_ipi_done;
+  // non-boot CPUs halting in JDB
+  static void other_cpu_halt_in_jdb();
+  // wakeup non-boot CPUs from halting
+  static void wakeup_other_cpus_from_jdb(Cpu_number);
 };
 
 //--------------------------------------------------------------------------
@@ -1471,7 +1475,7 @@ Jdb::stop_all_cpus(Cpu_number current_cpu)
 	{
 	  Mem::mp_mb();
           remote_func.cpu(current_cpu).monitor_exec(current_cpu);
-	  Proc::pause();
+	  other_cpu_halt_in_jdb();
 	}
 
       // This CPU defacto left JDB
@@ -1509,6 +1513,7 @@ Jdb::leave_wait_for_others()
 	  if (cpu_in_jdb(c))
 	    {
 	      // notify other CPU
+              wakeup_other_cpus_from_jdb(c);
               Jdb::remote_func.cpu(c).reset_mp_safe();
 //	      printf("JDB: wait for CPU[%2u] to leave\n", cxx::int_value<Cpu_number>(c));
 	      all_there = false;
@@ -1580,3 +1585,15 @@ Jdb::remote_work_ipi(Cpu_number this_cpu, Cpu_number to_cpu,
 
   return true;
 }
+
+IMPLEMENT_DEFAULT
+void
+Jdb::other_cpu_halt_in_jdb()
+{
+  Proc::pause();
+}
+
+IMPLEMENT_DEFAULT
+void
+Jdb::wakeup_other_cpus_from_jdb(Cpu_number)
+{}
