@@ -328,19 +328,6 @@ bool
 Mem_space::is_sigma0() const
 { return false; }
 
-//---------------------------------------------------------------------------
-IMPLEMENTATION [!io]:
-
-PUBLIC inline
-Mword
-Mem_space::get_io_counter (void)
-{ return 0; }
-
-PUBLIC inline
-bool
-Mem_space::io_lookup (Address)
-{ return false; }
-
 //----------------------------------------------------------------------------
 IMPLEMENTATION [!mp]:
 
