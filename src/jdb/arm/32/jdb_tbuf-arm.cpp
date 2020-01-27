@@ -1,9 +1,10 @@
 INTERFACE [arm && jdb_logging]:
 
-// Clang does not accept the "c" (constant) modifier.
+// Clang < 9 does not accept the "c" (constant) modifier.
+// https://bugs.llvm.org/show_bug.cgi?id=40959
 // gcc requires the "c" modifier.
 
-#ifdef __clang__
+#if defined(__clang__) && (__clang_major__ < 9)
 # define BEGIN_LOG_EVENT(name, sc, fmt)				\
   do								\
     {								\
