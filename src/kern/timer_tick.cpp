@@ -72,7 +72,8 @@ Timer_tick::handle_timer(Irq_base *_s, Upstream_irq const *ui,
   self->ack();
   Upstream_irq::ack(ui);
   Timer::update_system_clock(cpu);
-  if (Config::esc_hack && cpu == Cpu_number::boot_cpu())
+  if (   (cpu == Cpu_number::boot_cpu())
+      && (Config::esc_hack || (Config::serial_esc == Config::SERIAL_ESC_NOIRQ)))
     {
       if (Kconsole::console()->char_avail() && !Vkey::check_())
         kdb_ke("SERIAL_ESC");
