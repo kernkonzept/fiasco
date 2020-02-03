@@ -162,7 +162,7 @@ Irq_chip_rmsi::mask(Mword pin) override
 
   e.present() = 0;
   irte = e;
-  asm volatile ("wbinvd");
+  asm volatile ("wbinvd"); // FIXME: use a single chanline writeback here
   inv_iec(vect);
 }
 
@@ -184,7 +184,7 @@ Irq_chip_rmsi::mask_and_ack(Mword pin) override
 
   e.present() = 0;
   irte = e;
-  asm volatile ("wbinvd");
+  asm volatile ("wbinvd"); // FIXME: use a single chanline writeback here
   inv_iec(vect);
   ::Apic::irq_ack();
 }
@@ -207,7 +207,7 @@ Irq_chip_rmsi::unmask(Mword pin) override
 
   e.present() = 1;
   irte = e;
-  asm volatile ("wbinvd");
+  asm volatile ("wbinvd"); // FIXME: use a single chanline writeback here
 }
 
 
