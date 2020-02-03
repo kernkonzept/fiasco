@@ -30,11 +30,10 @@ Jdb_report::show_objects()
   String_buf<256> buf;
 
   printf("System objects:\n");
-  for (Kobject_dbg::Iterator l = Kobject_dbg::begin();
-      l != Kobject_dbg::end(); ++l)
+  for (auto const &l: Kobject_dbg::_kobjects)
     {
       buf.reset();
-      Jdb_kobject::obj_description(&buf, nullptr, false, *l);
+      Jdb_kobject::obj_description(&buf, nullptr, false, l);
       printf("%.*s\n", buf.length(), buf.c_str());
     }
 }
@@ -88,10 +87,9 @@ Jdb_report::action(int cmd, void *&, char const *&, int &) override
 
   delim("TCBs:");
   Jdb_screen::set_width(80);
-  for (Kobject_dbg::Iterator l = Kobject_dbg::begin();
-       l != Kobject_dbg::end(); ++l)
+  for (auto const &l: Kobject_dbg::_kobjects)
     {
-      Thread *t = cxx::dyn_cast<Thread *>(Kobject::from_dbg(*l));
+      Thread *t = cxx::dyn_cast<Thread *>(Kobject::from_dbg(l));
       if (t)
         {
           String_buf<22> b;

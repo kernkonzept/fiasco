@@ -284,14 +284,13 @@ void
 Jdb_list_timeouts::complete_show()
 {
   typedef Rnd_container<Timeout_iter> Cont;
-  typedef Cont::Iterator Iter;
 
   Cont to_cont(Timeout_iter(&Timeout_q::timeout_queue.cpu(Cpu_number::first())),
                Timeout_iter(&Timeout_q::timeout_queue.cpu(Cpu_number::first()), true));
 
   show_header();
-  for (Iter i = to_cont.begin(); i != to_cont.end(); ++i)
-    list_timeouts_show_timeout(*i);
+  for (auto const &i: to_cont)
+    list_timeouts_show_timeout(i);
 }
 
 static

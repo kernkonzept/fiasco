@@ -653,14 +653,12 @@ static
 T *
 Jdb_kobject_extension::find_extension(Kobject_common const *o)
 {
-  typedef Kobject_dbg::Dbg_ext_list::Iterator Iterator;
-  for (Iterator ex = o->dbg_info()->_jdb_data.begin();
-       ex != o->dbg_info()->_jdb_data.end(); ++ex)
+  for (auto const &ex: o->dbg_info()->_jdb_data)
     {
-      if (!*ex)
+      if (!ex)
         return 0;
 
-      Jdb_kobject_extension *je = static_cast<Jdb_kobject_extension*>(*ex);
+      Jdb_kobject_extension *je = static_cast<Jdb_kobject_extension*>(ex);
       if (je->type() == T::static_type)
 	return static_cast<T*>(je);
     }

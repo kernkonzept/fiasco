@@ -507,12 +507,11 @@ Jdb_mapdb::show_simple_tree(Kobject_common *f, unsigned indent = 1)
 
   screenline += 2;
 
-  for (Obj::Mapping::List::Iterator m = f->map_root()->_root.begin();
-       m != f->map_root()->_root.end(); ++m)
+  for (auto const &m: f->map_root()->_root)
     {
       Kconsole::console()->getchar_chance();
 
-      Obj::Entry *e = static_cast<Obj::Entry*>(*m);
+      Obj::Entry *e = static_cast<Obj::Entry*>(m);
       Dbg_page_info *pi = Dbg_page_info::table()[Virt_addr(e)];
 
       Mword space_id = ~0UL;
@@ -530,7 +529,7 @@ Jdb_mapdb::show_simple_tree(Kobject_common *f, unsigned indent = 1)
         }
 
       printf("  " L4_PTR_FMT "[C:%lx]: space=D:%lx%.*s rights=%x flags=%lx obj=%p",
-             (Address)*m, cap_idx, space_id, task_descr.length(), task_descr.begin(),
+             (Address)m, cap_idx, space_id, task_descr.length(), task_descr.begin(),
              (unsigned)cxx::int_value<Obj::Attr>(e->rights()), (unsigned long)e->_flags,
              e->obj());
 
