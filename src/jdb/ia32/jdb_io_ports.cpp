@@ -57,8 +57,8 @@ PUBLIC
 Jdb_module::Action_code
 Io_m::action( int cmd, void *&args, char const *&fmt, int &) override
 {
-  static char const *const port_in_fmt    = " addr=%8p";
-  static char const *const port_out_fmt   = " addr=%8p, val=%8x";
+  static char const *const port_in_fmt    = " addr=%8x";
+  static char const *const port_out_fmt   = " addr=%8x, val=%8x";
   static char const *const pci_in_fmt     = 
     "\b\b\b\b\b\bPCI conf: bus=%2x, dev=%2x, subdev=%2x, reg=%2x";
   static char const *const pci_out_fmt    = 
