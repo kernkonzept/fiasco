@@ -34,6 +34,10 @@ Jdb_io_apic_module::print_lapic(Cpu_number cpu)
          cxx::int_value<Cpu_number>(cpu),
          Apic::get_id(), Apic::tpr(), Apic::reg_read(0xa0));
   printf("  Running: tpr=%02x\n", Jdb::apic_tpr.cpu(cpu));
+  printf("  Timer: icr=%08x ccr=%08x LVT=%08x\n",
+         Apic::reg_read(0x380),
+         Apic::reg_read(0x390),
+         Apic::reg_read(0x320));
 
   unsigned const regs[] = { 0x200, 0x100, 0x180 };
   char const *const regn[] = { "IRR", "ISR", "TMR" };
