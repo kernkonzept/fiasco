@@ -443,7 +443,7 @@ int Jdb_core::exec_cmd(Cmd const cmd, char const *str, int push_next_char = -1)
 
 	if(*(f++))
 	  {
-	    int long_fmt = sizeof(long long int) == sizeof(void*);
+	    int long_fmt = 0; // default to 'int'
 	    bool negative = false;
 	    long long int val = 0;
 	    max_len = 0;
@@ -490,7 +490,7 @@ int Jdb_core::exec_cmd(Cmd const cmd, char const *str, int push_next_char = -1)
 		    long_fmt = 0;
 		  else if(sizeof(long int)==sizeof(void*))
 		    long_fmt = 1;
-		  else //if(sizeof(long long int)==sizeof(void*))
+		  else if(sizeof(long long int)==sizeof(void*))
 		    long_fmt = 2;
 		  goto input_num;
 
