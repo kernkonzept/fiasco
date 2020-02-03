@@ -20,15 +20,17 @@ union Regs
   Static_object<L4::Io_register_block_mmio_fixed_width<Unsigned16> > mem16;
 };
 
-static bool
-setup_uart_io_port(Regs *regs, Address base, int irq)
-{
-  regs->io.construct(base);
-  return Kernel_uart::uart()->startup(regs->io.get(), irq,
-                                      Koptions::o()->uart.base_baud);
 }
 
+PRIVATE bool
+Kernel_uart::setup_uart_io_port(void *r, Address base, int irq)
+{
+  Regs *regs = static_cast<Regs *>(r);
+  regs->io.construct(base);
+  return this->Uart::startup(regs->io.get(), irq,
+                             Koptions::o()->uart.base_baud);
 }
+
 
 //------------------------------------------------------------------------
 IMPLEMENTATION [libuart && serial && !io]:
@@ -44,12 +46,12 @@ union Regs
   Static_object<L4::Io_register_block_mmio_fixed_width<Unsigned16> > mem16;
 };
 
-static bool
-setup_uart_io_port(Regs *, Address, int)
-{
-  panic ("cannot use IO-Port based uart\n");
 }
 
+PRIVATE bool
+Kernel_uart::setup_uart_io_port(void *, Address, int)
+{
+  panic ("cannot use IO-Port based uart\n");
 }
 
 //------------------------------------------------------------------------
@@ -105,7 +107,7 @@ bool Kernel_uart::startup(unsigned, int irq)
                         Koptions::o()->uart.reg_shift);
                   break;
                 }
-              return uart()->startup(r, irq, Koptions::o()->uart.base_baud);
+              return this->Uart::startup(r, irq, Koptions::o()->uart.base_baud);
             }
         default:
           return false;

@@ -22,7 +22,6 @@ public:
     Devices0_phys_base    = 0x10000000,
     System_regs_phys_base = Devices0_phys_base,
     System_ctrl_phys_base = Devices0_phys_base + 0x00001000,
-    Uart_phys_base        = Devices0_phys_base + 0x00009000,
     Timer0_phys_base      = Devices0_phys_base + 0x00011000,
     //Timer1_phys_base      = Devices0_phys_base + 0x00011020,
     //Timer2_phys_base      = Devices0_phys_base + 0x00012000,
@@ -135,7 +134,6 @@ public:
     Devices0_phys_base   = 0x1c000000,
     System_regs_phys_base = 0x1c010000,
     System_ctrl_phys_base = 0x1c020000,
-    Uart_phys_base        = 0x1c090000,
 
     Devices1_phys_base   = 0x1c100000,
     Timer0_phys_base      = Devices1_phys_base + 0x00010000,

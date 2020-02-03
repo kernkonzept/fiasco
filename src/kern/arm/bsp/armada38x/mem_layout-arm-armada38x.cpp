@@ -9,6 +9,5 @@ public:
     Gic_cpu_phys_base    = 0xf100c100,
     Gic_dist_phys_base   = 0xf100d000,
     Mp_scu_phys_base     = 0xf100c000,
-    Uart_phys_base       = 0xf1012000,
   };
 };

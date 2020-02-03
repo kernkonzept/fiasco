@@ -1,16 +1,14 @@
 # vim:set ft=make:
 
 PREPROCESS_PARTS      += generic_tickless_idle mptimer pic_gic
-PREPROCESS_PARTS      += libuart
-SUBSYSTEMS            += LIBUART
 OBJECTS_LIBUART       += uart_16550.o uart_16550_dw.o
+CXXFLAGS_uart-libuart += $(call LIBUART_UART, 16550_dw)
 RAM_PHYS_BASE         := 0x0
 MPCORE_PHYS_BASE      := 0xf100c000
 TRAMP_MP_ASM_INCLUDE  := $(BSP_SRC_DIR)/tramp-mp-asm.h
 
 clock_IMPL            += clock-generic
 config_IMPL           += config-arm-armada38x
-kernel_uart_IMPL      += kernel_uart-libuart
 mem_layout_IMPL       += mem_layout-arm-armada38x
 outer_cache_IMPL      += outer_cache-arm-armada38x
 pic_IMPL              += pic-gic pic-arm-armada38x
@@ -18,4 +16,3 @@ platform_control_IMPL += platform_control-arm-armada38x
 reset_IMPL            += reset-arm-armada38x
 timer_IMPL            += timer-arm-mptimer timer-arm-mptimer-armada38x
 timer_tick_IMPL       += timer_tick-single-vector
-uart_IMPL             += uart-arm-armada38x

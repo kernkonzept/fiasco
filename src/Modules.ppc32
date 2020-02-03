@@ -33,7 +33,6 @@ LIBUART			:= uart/libuart.a
 PREPROCESS_PARTS	+= libuart
 endif
 
-OBJECTS_LIBUART		+= uart_of.o uart_mpc52xx.o
 VPATH_LIBUART		:= $(srcdir)/lib/uart
 PRIVATE_INCDIR		+= lib/uart drivers/$(CONFIG_XARCH)/include
 
@@ -47,7 +46,7 @@ INTERFACES_DRIVERS	:= mux_console console mem reset uart filter_console \
 			   processor delayloop io
 io_IMPL			:= io io-ppc32
 mem_IMPL		:= mem mem-ppc32
-uart_IMPL		:= uart uart-mmio
+uart_IMPL		:= uart uart-libuart
 reset_IMPL		:= reset-ppc32
 processor_IMPL		:= processor processor-ppc32
 CXXSRC_DRIVERS		:= glue_libc.cc
@@ -119,7 +118,7 @@ entry_frame_IMPL	:= entry_frame entry_frame-ppc32
 kdb_ke_IMPL		+= kdb_ke-ppc32
 kernel_task_IMPL	:= kernel_task kernel_task-ppc32
 kernel_thread_IMPL	:= kernel_thread kernel_thread-std kernel_thread-ppc32
-kernel_uart_IMPL	:= kernel_uart kernel_uart-ppc32
+kernel_uart_IMPL	:= kernel_uart kernel_uart-libuart
 kmem_alloc_IMPL		:= kmem_alloc kmem_alloc-ppc32
 map_util_IMPL		:= map_util map_util-mem map_util-objs
 mapping_IMPL		:= mapping-ppc32 mapping

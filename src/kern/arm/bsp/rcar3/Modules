@@ -1,19 +1,17 @@
 # vim:set ft=make:
 
-SUBSYSTEMS            += LIBUART
 OBJECTS_LIBUART       += uart_sh.o
-PREPROCESS_PARTS      += libuart generic_tickless_idle \
+CXXFLAGS_uart-libuart += $(call LIBUART_UART, sh)
+PREPROCESS_PARTS      += generic_tickless_idle \
                          arm_generic_timer pic_gic psci
 INTERFACES_KERNEL     += generic_timer
 RAM_PHYS_BASE         := 0x48000000
 
-uart_IMPL             += uart-arm-rcar3
 config_IMPL           += config-arm-rcar3
 mem_layout_IMPL       += mem_layout-arm-rcar3
 pic_IMPL              += pic-gic pic-arm-rcar3
 timer_IMPL            += timer-arm-generic timer-arm-generic-rcar3
 timer_tick_IMPL       += timer_tick-single-vector
-kernel_uart_IMPL      += kernel_uart-arm-rcar3
 reset_IMPL            += reset-arm-rcar3
 clock_IMPL            += clock-generic
 platform_control_IMPL += platform_control-arm-rcar3

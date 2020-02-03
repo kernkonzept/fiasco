@@ -1,9 +1,11 @@
 # vim:set ft=make:
 
-SUBSYSTEMS              += LIBUART
 OBJECTS_LIBUART-$(CONFIG_PF_EXYNOS_UART_NATIVE) += uart_s3c2410.o
 OBJECTS_LIBUART         += $(OBJECTS_LIBUART-y)
-PREPROCESS_PARTS        += libuart pic_gic watchdog tickless_idle \
+CXXFLAGS-$(CONFIG_PF_EXYNOS_UART_NATIVE)_uart-libuart += $(call LIBUART_UART, s3c2410)
+CXXFLAGS_uart-libuart   += $(CXXFLAGS-y_uart-libuart)
+
+PREPROCESS_PARTS        += pic_gic watchdog tickless_idle \
                            bsp_cpu
 PREPROCESS_PARTS-$(CONFIG_PF_EXYNOS_TIMER_MCT) += exynos_mct
 PREPROCESS_PARTS-$(CONFIG_PF_EXYNOS_TIMER_MP)  += mptimer
@@ -18,7 +20,6 @@ RAM_PHYS_BASE           := $(if $(CONFIG_ARM_EM_TZ),0xb0000000,0x40000000)
 MPCORE_PHYS_BASE        := 0x10500000
 
 
-uart_IMPL             += uart-arm-exynos
 config_IMPL           += config-arm-exynos
 cpu_IMPL              += cpu-arm-exynos
 scu_IMPL              += scu-arm-exynos
@@ -38,7 +39,6 @@ timer_tick_IMPL       += $(if $(CONFIG_PF_EXYNOS_TIMER_MCT),timer_tick-exynos-mc
 timer_tick_IMPL       += $(if $(CONFIG_PF_EXYNOS_TIMER_MP),timer_tick-single-vector)
 timer_tick_IMPL       += $(if $(CONFIG_PF_EXYNOS_TIMER_PWM),$(if $(CONFIG_MP),timer_tick-broadcast,timer_tick-single-vector))
 
-kernel_uart_IMPL      += kernel_uart-arm-exynos
 kernel_thread_IMPL    += kernel_thread-arm-exynos
 reset_IMPL            += reset-arm-exynos
 clock_IMPL            += clock-generic

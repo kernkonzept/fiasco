@@ -1,8 +1,8 @@
 # vim:set ft=make:
 
-SUBSYSTEMS              += LIBUART
 OBJECTS_LIBUART         += uart_omap35x.o
-PREPROCESS_PARTS        += libuart generic_tickless_idle
+CXXFLAGS_uart-libuart   += $(call LIBUART_UART, omap35x)
+PREPROCESS_PARTS        += generic_tickless_idle
 PREPROCESS_PARTS	+= $(if $(CONFIG_PF_OMAP3_OMAP35XEVM),pf_omap3 pf_omap3_35x)
 PREPROCESS_PARTS	+= $(if $(CONFIG_PF_OMAP3_BEAGLEBOARD),pf_omap3 pf_omap3_35x)
 PREPROCESS_PARTS	+= $(if $(CONFIG_PF_OMAP3_AM33XX),pf_omap3)
@@ -17,14 +17,12 @@ INTERFACES_KERNEL     += $(foreach i,$(PREPROCESS_PARTS),$(INTERFACES_KERNEL-$(i
 INTERFACES_KERNEL-$(CONFIG_PF_OMAP3_AM33XX)  += timer_omap_gentimer
 INTERFACES_KERNEL-$(CONFIG_PF_OMAP5_5432EVM) += generic_timer
 
-uart_IMPL             += uart-arm-omap
 config_IMPL           += config-arm-omap
 mem_layout_IMPL       += mem_layout-arm-omap
 pic_IMPL              += $(if $(CONFIG_PF_OMAP4_PANDABOARD)$(CONFIG_PF_OMAP5_5432EVM),pic-gic pic-arm-gic-omap4,pic-arm-omap3)
 timer_IMPL            += $(if $(CONFIG_PF_OMAP4_PANDABOARD),timer-arm-mptimer timer-arm-mptimer-omap4,timer-arm-omap3)
 timer_IMPL            += $(if $(CONFIG_PF_OMAP5_5432EVM),timer-arm-generic timer-arm-generic-omap5)
 timer_tick_IMPL       += timer_tick-single-vector
-kernel_uart_IMPL      += kernel_uart-arm-omap
 reset_IMPL            += reset-arm-omap
 clock_IMPL            += clock-generic
 platform_control_IMPL += platform_control-arm-omap4

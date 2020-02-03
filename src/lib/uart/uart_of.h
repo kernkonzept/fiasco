@@ -14,7 +14,7 @@ namespace L4
     ihandle_t  _serial;
 
   public:
-    Uart_of()
+    explicit Uart_of(unsigned /*base_rate*/)
       : Of(), _serial(0) {}
     bool startup(Io_register_block const *) override;
     void shutdown() override;

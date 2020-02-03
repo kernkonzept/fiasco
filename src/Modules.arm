@@ -5,11 +5,11 @@
 
 include $(srcdir)/Modules.generic
 
-SUBSYSTEMS := 	ABI KERNEL LIBK DRIVERS MINILIBC \
+SUBSYSTEMS := 	ABI KERNEL LIBK DRIVERS MINILIBC LIBUART \
 		CXXLIB VERSION JABI TCBOFFSET CRT0
 
 
-PREPROCESS_PARTS 	+= $(CONFIG_ABI) $(CONFIG_XARCH)
+PREPROCESS_PARTS 	+= $(CONFIG_ABI) $(CONFIG_XARCH) libuart
 
 ifeq ($(CONFIG_BIT64),y)
 PREPROCESS_PARTS += 64bit arm_esr_traps
@@ -49,7 +49,7 @@ INTERFACES_DRIVERS 	:= sa1100 mux_console console uart filter_console \
 io_IMPL			:= io io-arm
 mmu_IMPL		:= mmu mmu-arm mmu-arm-$(BITS)
 mem_IMPL		:= mem mem-arm
-uart_IMPL		:= uart uart-mmio
+uart_IMPL		:= uart uart-libuart
 reset_IMPL		:=
 processor_IMPL		:= processor processor-arm-$(BITS) processor-arm
 CXXSRC_DRIVERS		:= glue_libc.cc
@@ -167,7 +167,7 @@ kdb_ke_IMPL		+= kdb_ke-arm
 kernel_task_IMPL	:= kernel_task kernel_task-arm
 kernel_thread_IMPL	:= kernel_thread kernel_thread-std kernel_thread-arm \
 			   kernel_thread-arm-$(BITS)
-kernel_uart_IMPL  	:= kernel_uart
+kernel_uart_IMPL  	:= kernel_uart kernel_uart-libuart
 map_util_IMPL		:= map_util map_util-mem map_util-objs
 mapping_IMPL		:= mapping-arm mapping
 mem_layout_IMPL		:= mem_layout mem_layout-arm-$(BITS) \

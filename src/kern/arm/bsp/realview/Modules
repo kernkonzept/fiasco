@@ -1,8 +1,9 @@
 # vim:set ft=make:
 
-SUBSYSTEMS              += LIBUART
 OBJECTS_LIBUART         += uart_pl011.o
-PREPROCESS_PARTS        += libuart pic_gic
+CXXFLAGS_uart-libuart   += $(call LIBUART_UART, pl011)
+
+PREPROCESS_PARTS        += pic_gic
 PREPROCESS_PARTS        += $(if $(CONFIG_PF_REALVIEW_VEXPRESS_A9),realview_vexpress_legacy)
 PREPROCESS_PARTS        += generic_tickless_idle
 RAM_PHYS_BASE           := $(CONFIG_PF_REALVIEW_RAM_PHYS_BASE)
@@ -30,11 +31,9 @@ endif
 INTERFACES_KERNEL     += platform board_check-arm-realview
 
 timer_tick_IMPL       += timer_tick-single-vector
-uart_IMPL             += uart-arm-realview
 config_IMPL           += config-arm-realview
 mem_layout_IMPL       += mem_layout-arm-realview
 pic_IMPL              += pic-gic pic-arm-realview
-kernel_uart_IMPL      += kernel_uart-arm-realview
 reset_IMPL            += reset-arm-realview
 clock_IMPL            += clock-arm-realview
 outer_cache_IMPL      += outer_cache-arm-realview

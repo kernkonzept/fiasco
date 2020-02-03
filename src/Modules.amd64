@@ -17,7 +17,7 @@ PREPROCESS_PARTS-$(CONFIG_SCHED_PIT)         += pit_timer
 PREPROCESS_PARTS-$(CONFIG_SCHED_RTC)         += rtc_timer
 PREPROCESS_PARTS-$(CONFIG_SCHED_APIC)        += apic_timer
 PREPROCESS_PARTS-$(CONFIG_SCHED_HPET)        += hpet_timer
-PREPROCESS_PARTS-$(CONFIG_SERIAL)            += serial 16550
+PREPROCESS_PARTS-$(CONFIG_SERIAL)            += serial
 PREPROCESS_PARTS-$(CONFIG_WATCHDOG)          += watchdog
 PREPROCESS_PARTS-$(CONFIG_PERF_CNT)          += perf_cnt
 PREPROCESS_PARTS-$(CONFIG_CPU_VIRT)          += svm vmx virtual_space_iface
@@ -70,7 +70,8 @@ ifeq ("$(CONFIG_SERIAL)","y")
 INTERFACES_DRIVERS	+= filter_console uart
 endif
 reset_IMPL		:= reset-amd64
-uart_IMPL		:= uart uart-16550
+uart_IMPL		:= uart uart-libuart
+CXXFLAGS_uart-libuart   := $(call LIBUART_UART, 16550)
 CXXSRC_DRIVERS		:= glue_libc.cc
 NOOPT			+= $(patsubst %.o, %, $(OBJ_DRIVERS))
 

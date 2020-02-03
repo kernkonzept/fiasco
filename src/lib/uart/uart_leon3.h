@@ -8,6 +8,7 @@ namespace L4
   class Uart_leon3 : public Uart
   {
   public:
+    explicit Uart_leon3(unsigned /*base_rate*/) {}
     bool startup(Io_register_block const *) override;
     void shutdown() override;
     bool change_mode(Transfer_mode m, Baud_rate r) override;

@@ -1,8 +1,10 @@
 # vim:set ft=make:
 
-PREPROCESS_PARTS	+= qemu uart_of
+OBJECTS_LIBUART		+= uart_of.o
+CXXFLAGS_uart-libuart   += $(call LIBUART_UART, of)
+
+PREPROCESS_PARTS	+= qemu
 config_IMPL		+= config-ppc32-qemu
-uart_IMPL		+= uart-of
 pic_IMPL		+= pic-ppc32-qemu
 boot_info_IMPL		+= boot_info-ppc32-qemu
 clock_IMPL		+= clock-generic

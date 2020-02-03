@@ -76,3 +76,7 @@ endif
 # - save some space for debugger, disassembler, ...
 NOOPT			+= $(patsubst %.o, %,\
 			   $(OBJ_MINILIBC) $(OBJ_JDB) $(OBJ_LIBDISASM))
+
+# Helper function to generate CXXFLAGS_uart-libuart
+LIBUART_UART = -include uart_$(strip $(1)).h -DFIASCO_UART_TYPE=L4::Uart_$(strip $(1))
+

@@ -1,9 +1,11 @@
 # vim:set ft=make:
 
-PREPROCESS_PARTS	+= mpc52xx uart_mpc52xx
+OBJECTS_LIBUART		+= uart_mpc52xx.o
+CXXFLAGS_uart-libuart   += $(call LIBUART_UART, mpc52xx)
+
+PREPROCESS_PARTS	+= mpc52xx
 clock_IMPL		+= clock-generic
 config_IMPL		+= config-ppc32-mpc52xx
-uart_IMPL		+= uart-mpc52xx
 boot_info_IMPL		+= boot_info-mpc52xx
 pic_IMPL		+= pic-mpc52xx
 timer_tick_IMPL         += timer_tick-single-vector 

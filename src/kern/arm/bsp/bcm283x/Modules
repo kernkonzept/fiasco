@@ -1,26 +1,20 @@
 # vim:set ft=make:
 
-SUBSYSTEMS              += LIBUART
-PREPROCESS_PARTS        += libuart generic_tickless_idle arm_single_ipi_irq
+PREPROCESS_PARTS        += generic_tickless_idle arm_single_ipi_irq
 PREPROCESS_PARTS        += $(if $(CONFIG_ARM_V7PLUS),arm_generic_timer)
-PREPROCESS_PARTS        += $(if $(CONFIG_PF_BCM283X_RPI3),16550)
-PREPROCESS_PARTS        += $(if $(CONFIG_PF_BCM283X_RPIZW),16550)
 INTERFACES_KERNEL       += $(if $(CONFIG_ARM_V7PLUS),generic_timer)
 INTERFACES_KERNEL       += arm_control irq_handler
 RAM_PHYS_BASE           := 0
 
 ifeq ($(CONFIG_PF_BCM283X_RPI3),y)
-  uart_IMPL              = uart uart-16550
-  kernel_uart_IMPL      += kernel_uart-libuart
   OBJECTS_LIBUART       += uart_16550.o
+  CXXFLAGS_uart-libuart += $(call LIBUART_UART, 16550)
 else ifeq ($(CONFIG_PF_BCM283X_RPIZW),y)
-  uart_IMPL              = uart uart-16550
-  kernel_uart_IMPL      += kernel_uart-libuart
   OBJECTS_LIBUART       += uart_16550.o
+  CXXFLAGS_uart-libuart += $(call LIBUART_UART, 16550)
 else
-  uart_IMPL             += uart-arm-bcm283x
-  kernel_uart_IMPL      += kernel_uart-arm-bcm283x
   OBJECTS_LIBUART       += uart_pl011.o
+  CXXFLAGS_uart-libuart += $(call LIBUART_UART, pl011)
 endif
 arm_control_IMPL      += arm_control-arm-bcm283x
 config_IMPL           += config-arm-bcm283x

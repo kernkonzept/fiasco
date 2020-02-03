@@ -32,7 +32,6 @@ public:
     Gpio2_phys_base      = 0x11000000,
     Gpio1_phys_base      = 0x11400000,
     Sromc_phys_base      = 0x12570000,
-    Uart_phys_base       = 0x13800000,
     Pwm_phys_base        = 0x139d0000,
   };
 };
@@ -85,7 +84,6 @@ public:
     Mp_scu_phys_base       = 0x10500000,
     Gpio1_phys_base        = 0x11400000,
     Sromc_phys_base        = 0x12250000,
-    Uart_phys_base         = 0x12c00000,
     Pwm_phys_base          = 0x12dd0000,
     Gpio2_phys_base        = 0x13400000,
   };
