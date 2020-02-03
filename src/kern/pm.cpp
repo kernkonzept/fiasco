@@ -32,8 +32,8 @@ public:
   static void run_on_resume_hooks(Cpu_number cpu)
   {
     List &l = _list.cpu(cpu);
-    for (List::Iterator c = l.begin(); c != l.end(); ++c)
-      (*c)->pm_on_resume(cpu);
+    for (auto const &c: l)
+      c->pm_on_resume(cpu);
   }
 
 private:
