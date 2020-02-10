@@ -115,6 +115,9 @@ suspend_ap_cpus()
       return false;
     }, true);
 
+  // Wind up pending Rcu and Drq changes together with all _cpus_to_suspend
+  check (Context::take_cpu_offline(current_cpu(), true));
+
   while (!_cpus_to_suspend.empty())
     {
       Proc::pause();
@@ -122,9 +125,16 @@ suspend_ap_cpus()
     }
 }
 
+static void
+take_boot_cpu_online()
+{
+  Context::take_cpu_online(current_cpu());
+}
+
 IMPLEMENTATION [!mp]:
 
 static void suspend_ap_cpus() {}
+static void take_boot_cpu_online() {}
 
 
 IMPLEMENTATION:
@@ -161,6 +171,8 @@ do_system_suspend(Context::Drq *, Context *, void *data)
     *reinterpret_cast<Mword *>(data) = -L4_err::EInval;
 
   Cpu::cpus.current().pm_resume();
+
+  take_boot_cpu_online();
 
   Pm_object::run_on_resume_hooks(current_cpu());
 
