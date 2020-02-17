@@ -121,19 +121,19 @@ public:
 
   static Iterator insert_after(T *e, Iterator const &pos)
   {
-    C::prev(e) = *pos;
-    C::next(e) = C::next(*pos);
-    C::prev(C::next(*pos)) = e;
-    C::next(*pos) = e;
+    C::prev(e) = pos._c;
+    C::next(e) = C::next(pos._c);
+    C::prev(C::next(pos._c)) = e;
+    C::next(pos._c) = e;
     return pos;
   }
 
   static Iterator insert_before(T *e, Iterator const &pos)
   {
-    C::next(e) = *pos;
-    C::prev(e) = C::prev(*pos);
-    C::next(C::prev(*pos)) = e;
-    C::prev(*pos) = e;
+    C::next(e) = pos._c;
+    C::prev(e) = C::prev(pos._c);
+    C::next(C::prev(pos._c)) = e;
+    C::prev(pos._c) = e;
     return pos;
   }
 
@@ -295,9 +295,9 @@ public:
   typedef T* value_type;
   typedef T* Value_type;
 
-  D_list() { this->self_insert(static_cast<T*>(&_h)); }
+  D_list() { C::next(&_h) = C::prev(&_h) = &_h; }
 
-  bool empty() const { return C::next(static_cast<T*>(&_h)) == &_h; }
+  bool empty() const { return C::next(&_h) == &_h; }
 
   void remove(T *e) { Base::remove(e); }
   Iterator erase(Iterator const &e) { return Base::erase(e); }
