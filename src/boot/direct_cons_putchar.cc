@@ -30,15 +30,15 @@ direct_cons_putchar(unsigned char c)
       break;
 
     default:
-      if (ofs >= 80)
-	direct_cons_putchar('\n');
+      {
+        if (ofs >= 80)
+          direct_cons_putchar('\n');
 
-	{
-	  volatile unsigned char *p = vidbase + 80*2*24 + ofs*2;
-	  p[0] = c;
-	  p[1] = 0x0f;
-	  ofs++;
-	}
-      break;
+        volatile unsigned char *p = vidbase + 80*2*24 + ofs*2;
+        p[0] = c;
+        p[1] = 0x0f;
+        ofs++;
+        break;
+      }
     }
 }
