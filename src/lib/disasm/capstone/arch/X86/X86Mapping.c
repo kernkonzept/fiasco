@@ -50,7 +50,7 @@ enum {
 
 static const x86_reg sib_index_map[] = {
 	X86_REG_INVALID,
-#define ENTRY(x) X86_REG_##x,
+#define ENTRY(x) (const x86_reg)X86_REG_##x,
 	ALL_EA_BASES
 	REGS_XMM
 	REGS_YMM
