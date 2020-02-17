@@ -301,6 +301,7 @@ Jdb_log_list::move_dups()
 {
   _end = &_jdb_log_table_end;
   Tb_log_table_entry *const tab_end = &_jdb_log_table_end;
+  unsigned entries = &_jdb_log_table_end - _jdb_log_table;
   for (Tb_log_table_entry *p = _jdb_log_table + 1; p < _end;)
     {
       if (equal(p-1, p))
@@ -310,7 +311,7 @@ Jdb_log_list::move_dups()
 	    {
 	      Tb_log_table_entry tmp = *p;
 	      memmove(p, p + 1, sizeof(Tb_log_table_entry) * (tab_end - p - 1));
-	      *(tab_end - 1) = tmp;
+              _jdb_log_table[entries - 1] = tmp;
 	    }
 	  else
 	    break;
