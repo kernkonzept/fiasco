@@ -10,6 +10,15 @@ public:
   static void init() FIASCO_INIT;
 
   /**
+   * Determine if the delay loop is currently initializing. Better don't disturb
+   * the boot CPU during that time.
+   *
+   * \retval true   if the calibration loop is being initialized.
+   * \retval false  otherwise.
+   */
+  static bool initializing();
+
+  /**
    * Wait for a certain amount of time.
    *
    * \param ms  The number of milliseconds to wait for.
@@ -35,8 +44,11 @@ IMPLEMENTATION[!sync_clock]:
 
 #include "kip.h"
 #include "mem.h"
+#include "minmax.h"
+#include "panic.h"
 #include "processor.h"
 #include "timer.h"
+#include "types.h"
 
 EXTENSION class Delay
 {
@@ -76,11 +88,18 @@ IMPLEMENT
 void
 Delay::init()
 {
-  count = measure();
+  unsigned c1 = measure();
   unsigned c2 = measure();
-  if (c2 > count)
-    count = c2;
+  count = max(c1, c2);
+  Mem::mp_wmb();
+  if (!count)
+    panic("Delay calibration failed");
 }
+
+IMPLEMENT inline NEEDS["types.h"]
+bool
+Delay::initializing()
+{ return access_once(&count) == 0; }
 
 IMPLEMENT
 void
@@ -135,6 +154,11 @@ Delay::init()
   // In this configuration we use Timer::aux_clock_unstopped(), which, unlike
   // the KIP clock, updates independent of any timer tick interrupt.
 }
+
+IMPLEMENT inline
+bool
+Delay::initializing()
+{ return false; }
 
 IMPLEMENT
 void
