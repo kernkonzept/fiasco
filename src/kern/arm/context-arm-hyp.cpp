@@ -192,3 +192,7 @@ Context::switch_vm_state(Context *t)
   else
     arm_hyp_load_non_vm_state(vgic);
 }
+
+IMPLEMENTATION [arm && !cpu_virt]:
+
+PUBLIC inline void Context::switch_vm_state(Context *) {}

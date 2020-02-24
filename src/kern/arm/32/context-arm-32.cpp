@@ -77,8 +77,6 @@ Context::spill_user_state()
       : "=m"(ef->usp), "=m"(ef->ulr) : [rf] "r" (&ef->usp));
 }
 
-PUBLIC inline void Context::switch_vm_state(Context *) {}
-
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_v6plus]:
 
