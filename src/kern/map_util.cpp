@@ -261,20 +261,22 @@ Map_traits<Obj_space>::apply_attribs(Obj_space::Attr attribs,
 }
 
 
-/** Flexpage mapping.
-    divert to mem_map (for memory fpages) or io_map (for IO fpages)
-    @param from source address space
-    @param fp_from flexpage descriptor for virtual-address space range
-	in source address space
-    @param to destination address space
-    @param fp_to flexpage descriptor for virtual-address space range
-	in destination address space
-    @param offs sender-specified offset into destination flexpage
-    @param grant if set, grant the fpage, otherwise map
-    @pre page_aligned(offs)
-    @return IPC error
-    L4_fpage from_fp, to_fp;
-    Mword control;code that describes the status of the operation
+/**
+ * Flexpage mapping.
+ *
+ * \param from     Source address space
+ * \param fp_from  Flexpage descriptor for virtual-address space range in source
+ *                 address space
+ * \param to       Destination address space
+ * \param fp_to    Flexpage descriptor for virtual-address space range in
+ *                 destination address space
+ * \param control  Message item describing the mapping operation.
+ * \param r        List of Kobjects that may be deleted during that operation.
+
+ * \return IPC error
+ *
+ * This function diverts to mem_map (for memory fpages), io_map (for IO fpages)
+ * or obj_map (for capability fpages).
 */
 // Don't inline -- it eats too much stack.
 // inline NEEDS ["config.h", io_map]
