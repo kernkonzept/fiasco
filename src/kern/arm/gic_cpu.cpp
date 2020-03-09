@@ -38,10 +38,8 @@ INTERFACE [!arm_em_tz]:
 
 EXTENSION class Gic_cpu { enum { Config_tz_sec = 0 }; };
 
-
 //-------------------------------------------------------------------
 IMPLEMENTATION:
-
 
 PUBLIC inline
 void
