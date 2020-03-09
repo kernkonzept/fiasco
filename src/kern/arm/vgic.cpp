@@ -9,6 +9,7 @@ INTERFACE [arm && cpu_virt && vgic]:
 class Gic_h : private Mmio_register_block
 {
 public:
+  enum { Version = 2 };
   enum Register
   {
     HCR   = 0x000,
@@ -117,10 +118,10 @@ struct Arm_vgic_t
    Gic_h::Vtr vtr;
    Gic_h::Vmcr vmcr;
    Gic_h::Misr misr;
-   Unsigned32 eisr[2];
-   Unsigned32 elsr[2];
-   Unsigned32 apr;
+   Unsigned32 eisr;
+   Unsigned32 elsr;
    Gic_h::Lr lr[LREGS];
+   Unsigned32 apr;
 };
 
 //------------------------------------------------------------------------

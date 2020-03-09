@@ -130,7 +130,7 @@ INTERFACES_KERNEL-$(CONFIG_ARM_CORTEX_A9) += scu
 INTERFACES_KERNEL-$(CONFIG_BIT32) += kern_lib_page
 INTERFACES_KERNEL-$(CONFIG_SERIAL) += uart_console
 INTERFACES_KERNEL-$(CONFIG_ARM_EM_TZ) += vm
-INTERFACES_KERNEL-$(CONFIG_CPU_VIRT) += vgic
+INTERFACES_KERNEL-$(CONFIG_CPU_VIRT) += hyp_vm_state vgic
 INTERFACES_KERNEL-$(CONFIG_ARM_SMC_USER) += smc_user
 INTERFACES_KERNEL-$(CONFIG_ARM_GIC) += gic_cpu gic
 INTERFACES_KERNEL += boot_infos
@@ -152,6 +152,7 @@ else
   entry_frame_IMPL	:= entry_frame entry_frame-arm
 endif
 fpu_IMPL		:= fpu fpu-arm
+hyp_vm_state_IMPL	:= hyp_vm_state hyp_vm_state-$(BITS)
 ipi_IMPL		:= ipi ipi-arm
 kdb_ke_IMPL		+= kdb_ke-arm
 kernel_task_IMPL	:= kernel_task kernel_task-arm

@@ -13,7 +13,13 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
 
   assert (check_for_current_cpu());
 
+  Vm_state::Vm_info *info
+    = reinterpret_cast<Vm_state::Vm_info *>((char *)vcpu_state + 0x200);
+
+  info->setup();
+
   Vm_state *v = vm_state(vcpu_state);
+
   v->hcr = Cpu::Hcr_host_bits;
   v->csselr = 0;
   v->sctlr = (Cpu::sctlr | Cpu::Cp15_c1_cache_bits) & ~(Cpu::Cp15_c1_mmu | (1 << 28));
@@ -35,6 +41,7 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
   v->svc.sp = regs()->sp();
 
   v->gic.hcr = Gic_h::Hcr(0);
+  v->gic.vtr = Gic_h::gic->vtr();
   v->gic.apr = 0;
 
   if (current() == this)
@@ -362,7 +369,13 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
 
   assert (check_for_current_cpu());
 
+  Vm_state::Vm_info *info
+    = reinterpret_cast<Vm_state::Vm_info *>((char *)vcpu_state + 0x200);
+
+  info->setup();
+
   Vm_state *v = vm_state(vcpu_state);
+
   v->hcr = 0;
   v->csselr = 0;
   v->sctlr = Cpu::Sctlr_el1_generic;
@@ -381,6 +394,7 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
   v->cntvoff = 0;
 
   v->gic.hcr = Gic_h::Hcr(0);
+  v->gic.vtr = Gic_h::gic->vtr();
   v->gic.apr = 0;
   v->vmpidr = 1UL << 31; // ARMv8: RES1
 

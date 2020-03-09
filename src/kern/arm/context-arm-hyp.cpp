@@ -1,3 +1,14 @@
+INTERFACE [arm && cpu_virt]:
+
+#include "hyp_vm_state.h"
+
+EXTENSION class Context
+{
+public:
+  typedef Hyp_vm_state Vm_state;
+};
+
+//---------------------------------------------------------------------------
 IMPLEMENTATION [arm && cpu_virt]:
 
 EXTENSION class Context
@@ -62,13 +73,13 @@ Context::arch_load_vcpu_kern_state(Vcpu_state *vcpu, bool do_load)
               v->gic.hcr = ghcr;
               v->gic.vmcr = Gic_h::gic->vmcr();
               v->gic.misr = Gic_h::gic->misr();
-              for (unsigned i = 0; i < ((Vm_state::Gic::N_lregs + 31) / 32); ++i)
-                v->gic.eisr[i] = Gic_h::gic->eisr(i);
-              for (unsigned i = 0; i < ((Vm_state::Gic::N_lregs + 31) / 32); ++i)
-                v->gic.elsr[i] = Gic_h::gic->elsr(i);
-              v->gic.apr = Gic_h::gic->apr();
+              v->gic.eisr = Gic_h::gic->eisr(0);
+              v->gic.elsr = Gic_h::gic->elsr(0);
+
               for (unsigned i = 0; i < Vm_state::Gic::N_lregs; ++i)
                 v->gic.lr[i] = Gic_h::gic->lr(i);
+
+              v->gic.apr = Gic_h::gic->apr();
               Gic_h::gic->hcr(Gic_h::Hcr(0));
             }
         }
@@ -159,17 +170,13 @@ Context::switch_vm_state(Context *t)
           vgic = true;
           v->gic.vmcr = Gic_h::gic->vmcr();
           v->gic.misr = Gic_h::gic->misr();
-
-          for (unsigned i = 0; i < ((Vm_state::Gic::N_lregs + 31) / 32); ++i)
-            v->gic.eisr[i] = Gic_h::gic->eisr(i);
-
-          for (unsigned i = 0; i < ((Vm_state::Gic::N_lregs + 31) / 32); ++i)
-            v->gic.elsr[i] = Gic_h::gic->elsr(i);
-
-          v->gic.apr = Gic_h::gic->apr();
+          v->gic.eisr = Gic_h::gic->eisr(0);
+          v->gic.elsr = Gic_h::gic->elsr(0);
 
           for (unsigned i = 0; i < Vm_state::Gic::N_lregs; ++i)
             v->gic.lr[i] = Gic_h::gic->lr(i);
+
+          v->gic.apr = Gic_h::gic->apr();
         }
     }
 
