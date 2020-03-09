@@ -36,7 +36,7 @@ private:
   Mmio_register_block r;
 
   static unsigned cpu_off(Cpu_phys_id cpu)
-  { return cxx::int_value<Cpu_phys_id>(cpu) * 4; }
+  { return (cxx::int_value<Cpu_phys_id>(cpu) & 0xffu) * 4u; }
 
 public:
   void timer_mask(unsigned timer, Cpu_phys_id cpu = Proc::cpu_id())
@@ -67,13 +67,13 @@ public:
   void send_ipi(unsigned ipi_msg, Cpu_phys_id to_cpu)
   {
     Mem::dsb();
-    unsigned cpu_num = cxx::int_value<Cpu_phys_id>(to_cpu);
+    unsigned cpu_num = cxx::int_value<Cpu_phys_id>(to_cpu) & 0xffu;
     r.r<32>(Mailbox_set_base + 16 * cpu_num) = 1 << ipi_msg;
   }
 
   unsigned ipi_pending()
   {
-    unsigned cpu_num = cxx::int_value<Cpu_phys_id>(Proc::cpu_id());
+    unsigned cpu_num = cxx::int_value<Cpu_phys_id>(Proc::cpu_id()) & 0xffu;
     unsigned mbox0_rdclk = Mailbox_rd_clr_base + 16 * cpu_num;
 
     Unsigned32 v = r.r<32>(mbox0_rdclk);
