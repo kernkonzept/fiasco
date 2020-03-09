@@ -38,7 +38,7 @@ IMPLEMENTATION:
 
 PUBLIC
 bool
-Irq_chip_ia32_pic::alloc(Irq_base *irq, Mword irqn) override
+Irq_chip_ia32_pic::alloc(Irq_base *irq, Mword irqn, bool init = true) override
 {
   // no mor than 16 IRQs
   if (irqn > 0xf)
@@ -46,7 +46,7 @@ Irq_chip_ia32_pic::alloc(Irq_base *irq, Mword irqn) override
 
   // PIC uses 16 vectors from Base_vector statically
   unsigned vector = Base_vector + irqn;
-  return valloc<Irq_chip_ia32_pic>(irq, irqn, vector);
+  return valloc<Irq_chip_ia32_pic>(irq, irqn, vector, init);
 }
 
 PUBLIC

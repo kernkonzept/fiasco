@@ -241,14 +241,14 @@ Irq_chip_ia32::_valloc(Mword pin, unsigned vector)
  */
 PROTECTED template<typename CHIP> inline
 unsigned
-Irq_chip_ia32::valloc(Irq_base *irq, Mword pin, unsigned vector)
+Irq_chip_ia32::valloc(Irq_base *irq, Mword pin, unsigned vector, bool init)
 {
   auto g = lock_guard(_entry_lock);
   unsigned v = _valloc(pin, vector);
   if (!v)
     return 0;
 
-  static_cast<CHIP*>(this)->bind(irq, pin);
+  static_cast<CHIP*>(this)->bind(irq, pin, !init);
   _vsetup(irq, pin, v);
   return v;
 }

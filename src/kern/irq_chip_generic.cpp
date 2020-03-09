@@ -49,7 +49,7 @@ Irq_chip_gen::irq(Mword pin) const override
 
 PUBLIC
 bool
-Irq_chip_gen::alloc(Irq_base *irq, Mword pin) override
+Irq_chip_gen::alloc(Irq_base *irq, Mword pin, bool init = true) override
 {
   if (pin >= _nirqs)
     return false;
@@ -58,7 +58,7 @@ Irq_chip_gen::alloc(Irq_base *irq, Mword pin) override
     return false;
 
   _irqs[pin] = irq;
-  bind(irq, pin);
+  bind(irq, pin, !init);
   return true;
 }
 

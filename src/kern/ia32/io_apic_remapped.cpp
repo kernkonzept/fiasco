@@ -70,8 +70,8 @@ Irq_chip_rmsi::inv_iec(unsigned vect)
 
 PUBLIC
 bool
-Irq_chip_rmsi::alloc(Irq_base *irq, Mword pin) override
-{ return valloc<Irq_chip_rmsi>(irq, pin, 0); }
+Irq_chip_rmsi::alloc(Irq_base *irq, Mword pin, bool init = true) override
+{ return valloc<Irq_chip_rmsi>(irq, pin, 0, init); }
 
 PUBLIC
 void
@@ -257,9 +257,9 @@ Irq_mgr_rmsi::legacy_override(Mword irq) override
 
 PUBLIC
 bool
-Io_apic_remapped::alloc(Irq_base *irq, Mword pin) override
+Io_apic_remapped::alloc(Irq_base *irq, Mword pin, bool init = true) override
 {
-  unsigned v = valloc<Io_apic_remapped>(irq, pin, 0);
+  unsigned v = valloc<Io_apic_remapped>(irq, pin, 0, init);
 
   if (!v)
     return false;

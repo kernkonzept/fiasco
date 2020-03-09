@@ -31,8 +31,8 @@ private:
 
 PUBLIC
 bool
-Irq_chip_msi::alloc(Irq_base *irq, Mword pin) override
-{ return valloc<Irq_chip_msi>(irq, pin, 0); }
+Irq_chip_msi::alloc(Irq_base *irq, Mword pin, bool init = true) override
+{ return valloc<Irq_chip_msi>(irq, pin, 0, init); }
 
 PUBLIC
 void

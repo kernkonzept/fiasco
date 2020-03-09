@@ -49,14 +49,14 @@ IMPLEMENTATION:
 
 PUBLIC
 bool
-Irq_chip_ux::alloc(Irq_base *irq, Mword irqn) override
+Irq_chip_ux::alloc(Irq_base *irq, Mword irqn, bool init = true) override
 {
   if (irqn >= Num_irqs)
     return false;
 
   // PIC uses 16 vectors from Base_vector statically
   unsigned vector = _base_vect + irqn;
-  return valloc<Irq_chip_ux>(irq, irqn, vector);
+  return valloc<Irq_chip_ux>(irq, irqn, vector, init);
 }
 
 

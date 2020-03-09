@@ -167,7 +167,7 @@ public:
     return _irqs[pin];
   }
 
-  bool alloc(Irq_base *irq, Mword pin) override
+  bool alloc(Irq_base *irq, Mword pin, bool init = true) override
   {
     if (pin >= 16)
       return false;
@@ -178,7 +178,7 @@ public:
     if (!mp_cas(&_irqs[pin], (Irq_base *)0, irq))
       return false;
 
-    this->bind(irq, pin);
+    this->bind(irq, pin, !init);
     return true;
   }
 

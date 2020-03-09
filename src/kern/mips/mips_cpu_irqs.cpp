@@ -35,7 +35,7 @@ public:
   Irq_base *irq(Mword pin) const override
   { return _irqs[pin]; }
 
-  bool alloc(Irq_base *irq, Mword pin) override
+  bool alloc(Irq_base *irq, Mword pin, bool init = true) override
   {
     if (pin >= Mips_cpu_irq_chip::nr_irqs())
       return false;
@@ -46,7 +46,7 @@ public:
     if (!mp_cas(&_irqs[pin], (Irq_base *)0, irq))
       return false;
 
-    bind(irq, pin);
+    bind(irq, pin, !init);
     return true;
   }
 

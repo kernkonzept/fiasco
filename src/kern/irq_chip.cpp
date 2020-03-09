@@ -106,7 +106,7 @@ class Irq_chip_icu : public Irq_chip
 {
 public:
   virtual bool reserve(Mword pin) = 0;
-  virtual bool alloc(Irq_base *irq, Mword pin) = 0;
+  virtual bool alloc(Irq_base *irq, Mword pin, bool init = true) = 0;
   virtual Irq_base *irq(Mword pin) const = 0;
   virtual unsigned nr_irqs() const = 0;
   virtual ~Irq_chip_icu() = 0;

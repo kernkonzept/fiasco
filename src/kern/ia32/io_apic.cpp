@@ -597,9 +597,9 @@ Io_apic::is_edge_triggered(Mword pin) const override
 
 PUBLIC
 bool
-Io_apic::alloc(Irq_base *irq, Mword pin) override
+Io_apic::alloc(Irq_base *irq, Mword pin, bool init = true) override
 {
-  unsigned v = valloc<Io_apic>(irq, pin, 0);
+  unsigned v = valloc<Io_apic>(irq, pin, 0, init);
 
   if (!v)
     return false;
