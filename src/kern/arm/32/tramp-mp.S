@@ -247,7 +247,8 @@ _tramp_mp_virt:
 	mcr p15, 0, r0, c8, c7, 0
 
 	adr	sp, _tramp_mp_init_stack_top
-	nop
+	// 8-byte stack alignment for passing 'long long' values on the stack
+	bic	sp, sp, #7
 	ldr	pc, [pc, #-4]
 
 	.long BOOT_AP_CPU
