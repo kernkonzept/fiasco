@@ -104,6 +104,7 @@ class Context :
   protected Rcu_item
 {
   MEMBER_OFFSET();
+  friend class Jdb_thread;
   friend class Jdb_thread_list;
   friend class Context_ptr;
   friend class Jdb_utcb;

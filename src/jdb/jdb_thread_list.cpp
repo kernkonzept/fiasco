@@ -705,7 +705,7 @@ Jdb_thread_list::list_threads_show_thread(Thread *t)
 
   if (long_output)
     {
-      Jdb_thread::print_state_long(t, 47);
+      Jdb_thread::print_state_long(t, 72);
       putchar('\n');
     }
   else

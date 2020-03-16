@@ -17,9 +17,9 @@ IMPLEMENTATION:
 
 #include <cstdio>
 
-PUBLIC static
-void
-Jdb_thread::print_state_long(Thread *t, unsigned cut_on_len = 0)
+PRIVATE static
+unsigned
+Jdb_thread::print_state_bits(Mword bits, unsigned max_size)
 {
   static char const * const state_names[] =
     {
@@ -35,22 +35,20 @@ Jdb_thread::print_state_long(Thread *t, unsigned cut_on_len = 0)
   unsigned chars = 0;
   bool comma = false;
 
-  Mword bits = t->state(false);
-
   for (unsigned i = 0; i < sizeof (state_names) / sizeof (char *);
        i++, bits >>= 1)
     {
       if (!(bits & 1))
         continue;
 
-      if (cut_on_len)
+      if (max_size)
         {
           unsigned add = strlen(state_names[i]) + comma;
-          if (chars + add > cut_on_len)
+          if (chars + add > max_size)
             {
-              if (chars < cut_on_len - 4)
+              if (chars + 4 <= max_size)
                 putstr(",...");
-              break;
+              return 0;
             }
           chars += add;
         }
@@ -59,6 +57,30 @@ Jdb_thread::print_state_long(Thread *t, unsigned cut_on_len = 0)
 
       comma = 1;
     }
+
+  return chars < max_size ? max_size - chars : 0;
+}
+
+PUBLIC static
+void
+Jdb_thread::print_state_long(Thread *t, unsigned max_size = 119)
+{
+  max_size = print_state_bits(t->state(false), max_size);
+  if (!t->_remote_state_change.pending())
+    return;
+
+  if (max_size > 7)
+    {
+      putstr(" [add: ");
+      max_size = print_state_bits(t->_remote_state_change.add, max_size - 7);
+    }
+  if (max_size > 7)
+    {
+      putstr("; del: ");
+      max_size = print_state_bits(t->_remote_state_change.del, max_size - 7);
+    }
+  if (max_size > 0)
+    putchar(']');
 }
 
 PUBLIC static
