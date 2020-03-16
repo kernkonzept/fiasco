@@ -55,7 +55,7 @@ Jdb_rcupdate::action(int cmd, void *&, char const *&, int &) override
 
       for (Cpu_number i = Cpu_number::first(); i < Config::max_num_cpus(); ++i)
 	{
-	  if (!Cpu::online(i))
+          if (!Per_cpu_data::valid(i))
 	    continue;
 
 	  printf("  CPU[%2u]:", cxx::int_value<Cpu_number>(i));
