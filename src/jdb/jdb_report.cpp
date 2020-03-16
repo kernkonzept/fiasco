@@ -82,6 +82,9 @@ Jdb_report::action(int cmd, void *&, char const *&, int &) override
   Jdb::execute_command_long("k c");
   Jdb::execute_command_long("k f");
 
+  delim("IPI");
+  Jdb::execute_command_long("ipi");
+
   delim("RCU");
   Jdb::execute_command_long("rcupdate");
 
