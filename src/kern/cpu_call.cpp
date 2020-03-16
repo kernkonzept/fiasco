@@ -13,6 +13,7 @@ class Cpu_call_queue;
 class Cpu_call : private Queue_item
 {
   friend class Cpu_call_queue;
+  friend class Jdb_cpu_call_module;
 
 private:
   cxx::functor<bool (Cpu_number cpu)> _func;

@@ -85,6 +85,9 @@ Jdb_report::action(int cmd, void *&, char const *&, int &) override
   delim("IPI");
   Jdb::execute_command_long("ipi");
 
+  delim("CPU calls");
+  Jdb::execute_command_long("cpucalls");
+
   delim("RCU");
   Jdb::execute_command_long("rcupdate");
 
