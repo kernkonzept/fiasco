@@ -73,11 +73,15 @@ Jdb_report::action(int cmd, void *&, char const *&, int &) override
   Jdb::execute_command_long("threadlist r");
   Jdb::execute_command_long("timeoutsdump");
 
+
   delim("Kmem:");
   Jdb::execute_command_long("k m");
   delim("Kernel info:");
   Jdb::execute_command_long("k c");
   Jdb::execute_command_long("k f");
+
+  delim("RCU");
+  Jdb::execute_command_long("rcupdate");
 
   delim("Trace buffer:");
   Jdb::execute_command_long("tbufdumptext");
