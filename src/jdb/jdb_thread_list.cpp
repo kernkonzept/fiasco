@@ -595,6 +595,16 @@ Jdb_thread_list::action(int cmd, void *&argbuf, char const *&fmt, int &) overrid
   else if (cmd == 1)
     {
       Thread *t = Jdb::get_current_active();
+
+      {
+        // Hm, we are in JDB, however we have to make the assertion in
+        // ready_enqueue happy.
+        auto g = lock_guard(cpu_lock);
+        // enqueue current, which may not be in the ready list due to lazy queueing
+        if (!t->in_ready_list())
+          Sched_context::rq.cpu(t->home_cpu()).ready_enqueue(t->sched());
+      }
+
       long_output = 1;
       Jdb_thread_list::init(subcmd == 'r' ? 'r' : 'p', t);
       Jdb_thread_list::set_start(t);
