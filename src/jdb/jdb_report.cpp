@@ -68,9 +68,11 @@ Jdb_report::action(int cmd, void *&, char const *&, int &) override
   delim("Objects:");
   show_objects();
 
-  delim("Threads:");
+  delim("Threads [present]:");
   Jdb::execute_command_long("threadlist p");
+  delim("Threads [ready]:");
   Jdb::execute_command_long("threadlist r");
+  delim("Timeouts:");
   Jdb::execute_command_long("timeoutsdump");
 
 
