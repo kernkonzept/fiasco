@@ -17,11 +17,41 @@ public:
     Hcr_tsc = 1 << 19,
     Hcr_tidcp = 1 << 20,
     Hcr_tactlr = 1 << 21,
+    Hcr_tsw  = 1 << 22,
+    Hcr_ttlb = 1 << 25,
+    Hcr_tvm  = 1 << 26,
     Hcr_tge  = 1 << 27,
   };
 };
 
 KIP_KERNEL_FEATURE("arm:hyp");
+
+//--------------------------------------------------------
+INTERFACE [arm && cpu_virt && arm_v7]:
+
+EXTENSION class Cpu
+{
+public:
+  enum Hstr_values
+  {
+    Hstr_non_vm = 0x39f6f, // ALL but crn=13,7 (TPIDxxR, DSB) CP15 traped
+    Hstr_vm = 0x0, // none
+  };
+
+};
+
+//--------------------------------------------------------
+INTERFACE [arm && cpu_virt && arm_v8]:
+
+EXTENSION class Cpu
+{
+public:
+  enum Hstr_values
+  {
+    Hstr_non_vm = 0x9f6f, // ALL but crn=13,7 (TPIDxxR, DSB) CP15 traped
+    Hstr_vm = 0x0, // none
+  };
+};
 
 //--------------------------------------------------------------------
 IMPLEMENTATION [arm && cpu_virt && 32bit]:
@@ -35,7 +65,22 @@ public:
                       | Hcr_amo | Hcr_imo | Hcr_fmo
                       | Hcr_tidcp | Hcr_tsc | Hcr_tactlr,
 
-    Hcr_host_bits = Hcr_must_set_bits | Hcr_dc | Hcr_tge
+    /**
+     * HCR value to be used for the VMM.
+     *
+     * The VMM runs in system mode (PL1), but has extended
+     * CP15 access allowed.
+     */
+    Hcr_host_bits = Hcr_must_set_bits | Hcr_dc,
+
+    /**
+     * HCR value to be used for normal threads.
+     *
+     * On a hyp kernel all threads run per default in system mode (PL1).
+     * However, all but the TPIDxyz CP15 accesses are disabled.
+     */
+    Hcr_non_vm_bits = Hcr_must_set_bits | Hcr_dc | Hcr_tsw
+                      | Hcr_ttlb | Hcr_tvm
   };
 };
 
@@ -64,8 +109,10 @@ Cpu::init_hyp_mode()
         "mcr p15, 4, %1, c1, c1, 0 \n"
         : :
         "r" ((1UL << 31) | (Page::Tcr_attribs << 8) | (1 << 6)),
-        "r" (Hcr_tge | Hcr_dc | Hcr_must_set_bits)
+        "r" (Hcr_non_vm_bits)
         : "r0" );
+
+  asm ("mcr p15, 4, %0, c1, c1, 3" : : "r"(Hstr_non_vm)); // HSTR
 
   Mem::dsb();
   Mem::isb();

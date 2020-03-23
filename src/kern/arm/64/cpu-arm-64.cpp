@@ -81,12 +81,27 @@ EXTENSION class Cpu
 public:
   enum : Unsigned64
   {
+    Hcr_tid2 = 1ul << 17, // protects CTR CESSLR etc.
     Hcr_rw = 1UL << 31,
+    Hcr_trvm = 1ul << 30,
     Hcr_must_set_bits = Hcr_vm | Hcr_swio | Hcr_ptw
                       | Hcr_amo | Hcr_imo | Hcr_fmo
                       | Hcr_tidcp | Hcr_tsc | Hcr_tactlr,
 
-    Hcr_host_bits = Hcr_must_set_bits | Hcr_rw | Hcr_dc | Hcr_tge
+    /**
+     * HCR value to be used for the VMM.
+     *
+     * The AArch64 VMM is currently running in EL0 (hence TGE)
+     */
+    Hcr_host_bits = Hcr_must_set_bits | Hcr_rw | Hcr_dc,
+
+    /**
+     * HCR value to bue used for normal threads.
+     *
+     * On AArch64 (with virtualization support) running in EL0
+     */
+    Hcr_non_vm_bits = Hcr_must_set_bits | Hcr_rw | Hcr_dc | Hcr_tsw
+                      | Hcr_ttlb | Hcr_tvm | Hcr_trvm
   };
 
   enum
@@ -124,23 +139,24 @@ void
 Cpu::init_hyp_mode()
 {
   extern char exception_vector[];
-  asm volatile ("msr VBAR_EL2, %0" : : "r"(&exception_vector));
-  asm volatile ("msr VTCR_EL2, %0" : :
+  asm volatile ("msr VBAR_EL2, %x0" : : "r"(&exception_vector));
+  asm volatile ("msr VTCR_EL2, %x0" : :
                 "r"(  (1UL << 31) // RES1
                     | (Page::Tcr_attribs << 8)
                     // sl = 1       PS = 40bit   t0sz = 40bit
                     | (1UL << 6) | (2UL << 16) | 25));
 
-  asm volatile ("msr MDCR_EL2, %0" : : "r"((Mword)Mdcr_bits));
+  asm volatile ("msr MDCR_EL2, %x0" : : "r"((Mword)Mdcr_bits));
 
-  asm volatile ("msr SCTLR_EL1, %0" : : "r"((Mword)Sctlr_el1_generic));
-  asm volatile ("msr HCR_EL2, %0" : : "r" (Hcr_host_bits));
+  asm volatile ("msr SCTLR_EL1, %x0" : : "r"((Mword)Sctlr_el1_generic));
+  asm volatile ("msr HCR_EL2, %x0" : : "r" (Hcr_non_vm_bits));
+  asm volatile ("msr HSTR_EL2, %x0" : : "r" (Hstr_non_vm));
 
   Mem::dsb();
   Mem::isb();
 
   // HCPTR
-  asm volatile("msr CPTR_EL2, %0" : :
+  asm volatile("msr CPTR_EL2, %x0" : :
                "r" (  0x33ffUL     // TCP: 0-9, 12-13
                     | (1 << 20))); // TTA
 }
@@ -152,7 +168,7 @@ bool
 Cpu::has_generic_timer()
 { return true; }
 
-PRIVATE static inline
+PUBLIC static inline
 Mword
 Cpu::midr()
 {
@@ -251,3 +267,18 @@ Cpu::disable_smp()
     asm volatile ("msr S3_1_C15_C2_1, %0" : : "r" (cpuectl & ~(1UL << 6)));
 }
 
+PUBLIC static inline
+Unsigned64
+Cpu::hcr()
+{
+  Unsigned64 r;
+  asm volatile ("mrs %0, HCR_EL2" : "=r"(r));
+  return r;
+}
+
+PUBLIC static inline
+void
+Cpu::hcr(Unsigned64 hcr)
+{
+  asm volatile ("msr HCR_EL2, %0" : : "r"(hcr));
+}

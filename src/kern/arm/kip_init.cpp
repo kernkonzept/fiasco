@@ -71,7 +71,7 @@ void Kip_init::init()
 }
 
 //--------------------------------------------------------------
-IMPLEMENTATION[64bit]:
+IMPLEMENTATION[64bit && !cpu_virt]:
 
 PRIVATE static inline
 void
@@ -85,6 +85,23 @@ Kip_init::init_syscalls(Kip *kinfo)
 
   K *k = reinterpret_cast<K *>(kinfo);
   k->w[0x100] = 0xd65f03c0d4000001; // svc #0; ret
+}
+
+//--------------------------------------------------------------
+IMPLEMENTATION[64bit && cpu_virt]:
+
+PRIVATE static inline
+void
+Kip_init::init_syscalls(Kip *kinfo)
+{
+  union K
+  {
+    Kip k;
+    Mword w[512];
+  };
+
+  K *k = reinterpret_cast<K *>(kinfo);
+  k->w[0x100] = 0xd65f03c0d4000002; // hvc #0; ret
 }
 
 //--------------------------------------------------------------

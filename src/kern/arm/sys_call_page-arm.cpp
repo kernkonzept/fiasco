@@ -89,7 +89,9 @@ Sys_call_page::init()
     panic("FIASCO: can't allocate system-call page.\n");
 
   for (unsigned i = 0; i < Config::PAGE_SIZE / sizeof(Unsigned32); ++i)
-    sys_calls[i] = 0xef000000; // svc
+    sys_calls[i] = Proc::Is_hyp
+                   ? 0xe1400070  // hvc
+                   : 0xef000000; // svc
 
   set_utcb_get_code(sys_calls + (0xf00 / sizeof(Unsigned32)));
 

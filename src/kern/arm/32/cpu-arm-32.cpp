@@ -17,7 +17,7 @@ IMPLEMENTATION [arm]:
 
 Unsigned32 Cpu::sctlr;
 
-PRIVATE static inline
+PUBLIC static inline
 Mword
 Cpu::midr()
 {
@@ -143,3 +143,42 @@ Cpu::id_init()
   __asm__("mrc p15, 0, %0, c0, c1, 7": "=r" (_cpu_id._mmfr[3]));
 }
 
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && arm_v7]:
+
+PUBLIC static inline
+Unsigned32
+Cpu::hcr()
+{
+  Unsigned32 r;
+  asm volatile ("mrc p15, 4, %0, c1, c1, 0" : "=r"(r));
+  return r;
+}
+
+PUBLIC static inline
+void
+Cpu::hcr(Unsigned32 hcr)
+{
+  asm volatile ("mcr p15, 4, %0, c1, c1, 0" : : "r"(hcr));
+}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && arm_v8]:
+
+PUBLIC static inline
+Unsigned64
+Cpu::hcr()
+{
+  Unsigned32 l, h;
+  asm volatile ("mrc p15, 4, %0, c1, c1, 0" : "=r"(l));
+  asm volatile ("mrc p15, 4, %0, c1, c1, 4" : "=r"(h));
+  return ((Unsigned64)h << 32) | l;
+}
+
+PUBLIC static inline
+void
+Cpu::hcr(Unsigned64 hcr)
+{
+  asm volatile ("mcr p15, 4, %0, c1, c1, 0" : : "r"(hcr & 0xffffffff));
+  asm volatile ("mcr p15, 4, %0, c1, c1, 4" : : "r"(hcr >> 32));
+}

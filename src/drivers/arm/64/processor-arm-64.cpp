@@ -1,4 +1,4 @@
-INTERFACE[arm && 64bit]:
+INTERFACE[arm && 64bit && !cpu_virt]:
 
 EXTENSION class Proc
 {
@@ -6,6 +6,20 @@ public:
   enum : unsigned
   {
     Status_mode_user      = 0x00,
+    Status_mode_always_on = 0x100,
+  };
+};
+
+//--------------------------------------------------------------------
+INTERFACE[arm && 64bit && cpu_virt]:
+
+EXTENSION class Proc
+{
+public:
+  enum : unsigned
+  {
+    // user threads on a hyp kernel run in system mode
+    Status_mode_user      = 0x04, // EL1t
     Status_mode_always_on = 0x100,
   };
 };

@@ -63,7 +63,7 @@ Thread::fast_return_to_user(Mword ip, Mword sp, Vcpu_state *arg)
   r->psr &= ~(Proc::Status_thumb | (1UL << 20));
 
   // make sure the VMM executes in the correct mode
-  if (Proc::Is_hyp && (state() & Thread_ext_vcpu_enabled))
+  if (Proc::Is_hyp)
     r->psr_set_mode(Proc::Status_mode_user);
 
   assert(r->check_valid_user_psr());
@@ -701,6 +701,7 @@ Thread::arm_esr_entry(Return_frame *rf)
     case 0x12: // HVC
     case 0x11: // SVC
     case 0x15: // SVC from aarch64
+    case 0x16: // HVC from aarch64
       current_thread()->handle_svc(ts);
       return;
 

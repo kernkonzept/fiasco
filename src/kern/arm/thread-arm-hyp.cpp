@@ -20,25 +20,20 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
 
   Vm_state *v = vm_state(vcpu_state);
 
-  v->hcr = Cpu::Hcr_host_bits;
   v->csselr = 0;
   v->sctlr = (Cpu::sctlr | Cpu::Cp15_c1_cache_bits) & ~(Cpu::Cp15_c1_mmu | (1 << 28));
   v->actlr = 0;
   v->cpacr = 0x5555555;
   v->fcseidr = 0;
-  v->contextidr = 0;
-  v->cntkctl = Host_cntkctl; // allow PL0 access to CNTV
-  v->cntvoff = 0;
   v->vbar = 0;
   v->amair0 = 0;
   v->amair1 = 0;
+  v->cntvoff = 0;
 
   v->guest_regs.hcr = Cpu::Hcr_tge | Cpu::Hcr_must_set_bits;
   v->guest_regs.sctlr = 0;
 
   v->host_regs.hcr = Cpu::Hcr_host_bits;
-  v->svc.lr = regs()->ulr;
-  v->svc.sp = regs()->sp();
 
   Gic_h_global::gic->setup_state(&v->gic);
 
@@ -46,8 +41,6 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
     {
       asm volatile ("mcr p15, 4, %0, c1, c1, 0" : : "r"(Cpu::Hcr_host_bits));
       asm volatile ("mcr p15, 0, %0, c1, c0, 0" : : "r"(v->sctlr));
-      asm volatile ("mcr p15, 0, %0, c14, c1, 0" : : "r"(v->cntkctl));
-      asm volatile ("mcrr p15, 4, %Q0, %R0, c14" : : "r"(v->cntvoff));
     }
 
   // use the real MPIDR as initial value, we might change this later
@@ -376,35 +369,24 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
 
   Vm_state *v = vm_state(vcpu_state);
 
-  v->hcr = 0;
-  v->csselr = 0;
   v->sctlr = Cpu::Sctlr_el1_generic;
   v->actlr = 0;
-  v->cpacr = 0x5555555;
-  v->vbar = 0;
   v->amair = 0;
 
+  v->cntvoff = 0;
   v->guest_regs.hcr = Cpu::Hcr_tge;
   v->guest_regs.sctlr = 0;
-  v->guest_regs.mdscr = 0;
 
-  v->host_regs.hcr = arm_get_hcr();
-  v->host_regs.mdscr = 0;
-  v->cntkctl = Host_cntkctl;
-  v->cntvoff = 0;
+  v->host_regs.hcr = Cpu::Hcr_host_bits;
 
   Gic_h_global::gic->setup_state(&v->gic);
-  v->vmpidr = 1UL << 31; // ARMv8: RES1
 
-  // use the real MIDR as initial value
-  Mword m;
-  asm ("mrs %0, MIDR_EL1" : "=r"(m));
-  v->vpidr = m;
+  v->vmpidr = _hyp.vmpidr;
+  v->vpidr = _hyp.vpidr;
 
   if (current() == this)
     {
-      asm volatile ("msr SCTLR_EL1, %0" : : "r"((Mword)v->sctlr));
-      asm volatile ("msr CNTKCTL_EL1, %0" : : "r"((Mword)v->cntkctl));
-      asm volatile ("msr CNTVOFF_EL2, %0" : : "r"(v->cntvoff));
+      asm volatile ("msr SCTLR_EL1, %x0"   : : "r"(v->sctlr));
+      asm volatile ("msr CNTVOFF_EL2, %x0" : : "r"(v->cntvoff));
     }
 }

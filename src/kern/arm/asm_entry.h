@@ -50,7 +50,7 @@ sys_call_table:
 	.word sys_arm_mem_op
 .endm
 
-.macro GEN_VCPU_UPCALL THREAD_VCPU, LOAD_USR_SP, LOAD_USR_VCPU
+.macro GEN_VCPU_UPCALL THREAD_VCPU, LOAD_USR_SP, LOAD_USR_VCPU, USER_MODE=0x10
 .align 4
 .global leave_by_vcpu_upcall;
 
@@ -74,7 +74,7 @@ leave_by_vcpu_upcall:
 	ldr	r0, [r1, #(OFS__THREAD__EXCEPTION_PSR)]
 	str	r0, [r2, #RF(PSR, 0)]
 	bic	r0, #0x2f // force ARM mode
-	orr   r0, #0x10
+	orr	r0, #(\USER_MODE)
 	str	r0, [sp, #RF(PSR, 3*4)]
 
         ldr	r0, [sp, #RF(USR_LR, 3*4)]

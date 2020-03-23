@@ -1,5 +1,6 @@
 INTERFACE:
 
+#include "cpu.h"
 #include "types.h"
 #include "vgic_global.h"
 
@@ -26,4 +27,18 @@ public:
   };
 
   static_assert(sizeof(Vm_info) <= 0x200, "Vm_info must less than 0x200 bytes");
+};
+
+struct Context_hyp
+{
+  Unsigned64 par;
+  Unsigned64 hcr = Cpu::Hcr_non_vm_bits;
+
+  Unsigned64 cntvoff;
+  Unsigned64 cntv_cval;
+  Unsigned32 cntkctl = 0x3; // allow usr access per default
+  Unsigned32 cntv_ctl;
+
+  Mword tpidrprw;
+  Unsigned32 contextidr;
 };
