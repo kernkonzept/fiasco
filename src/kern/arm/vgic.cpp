@@ -65,19 +65,97 @@ public:
     CXX_BITFIELD_MEMBER(  6,  6, grp1_e, raw);
     CXX_BITFIELD_MEMBER(  7,  7, grp1_d, raw);
   };
+
+  template< unsigned LREGS >
+  struct Arm_vgic_t
+  {
+    enum { N_lregs = LREGS };
+    union Lrs
+    {
+      Unsigned64 lr64[LREGS];
+      Unsigned32 lr32[LREGS];
+    };
+
+    Gic_h::Hcr hcr;
+    Gic_h::Vtr vtr;
+    Gic_h::Vmcr vmcr;
+    Gic_h::Misr misr;
+    Unsigned32 eisr;
+    Unsigned32 elsr;
+    Lrs lr;
+    Unsigned32 aprs[8];
+  };
+
+  using Arm_vgic = Arm_vgic_t<4>;
+
+  virtual bool save_full(Arm_vgic *g) = 0;
+  virtual void save_and_disable(Arm_vgic *g) = 0;
+  virtual void load_full(Arm_vgic const *g, bool enabled) = 0;
+
+  virtual void disable() = 0;
+  virtual unsigned version() const = 0;
+  virtual Address gic_v_address() const = 0;
+  virtual void setup_state(Arm_vgic *s) const = 0;
 };
 
-template< unsigned LREGS >
-struct Arm_vgic_t
+template<typename IMPL>
+class Gic_h_mixin : public Gic_h
 {
-   enum { N_lregs = LREGS };
-   Gic_h::Hcr hcr;
-   Gic_h::Vtr vtr;
-   Gic_h::Vmcr vmcr;
-   Gic_h::Misr misr;
-   Unsigned32 eisr;
-   Unsigned32 elsr;
-   Gic_h::Lr lr[LREGS];
-   Gic_h::Aprs aprs;
-};
+private:
+  IMPL const *self() const { return static_cast<IMPL const *>(this); }
+  IMPL *self() { return static_cast<IMPL *>(this); }
 
+public:
+  bool save_full(Arm_vgic *g) override
+  {
+    auto hcr = self()->hcr();
+    if (!hcr.en())
+      return false;
+
+    // the EIOcount might have changed
+    g->hcr  = hcr;
+    g->vmcr = self()->vmcr();
+    g->misr = self()->misr();
+    g->eisr = self()->eisr();
+    g->elsr = self()->elsr();
+    self()->save_lrs(&g->lr, Arm_vgic::N_lregs);
+    self()->save_aprs(g->aprs);
+    return true;
+  }
+
+  void save_and_disable(Arm_vgic *g) override
+  {
+    if (Gic_h_mixin::save_full(g))
+      self()->hcr(Hcr(0));
+  }
+
+  void load_full(Arm_vgic const *to, bool enabled) override
+  {
+    auto hcr = access_once(&to->hcr);
+    if (hcr.en())
+      {
+        self()->vmcr(to->vmcr);
+        self()->load_aprs(to->aprs);
+        self()->load_lrs(&to->lr, Arm_vgic::N_lregs);
+        self()->hcr(hcr);
+      }
+    else if (enabled)
+      self()->hcr(hcr);
+  }
+
+  void setup_state(Arm_vgic *s) const override
+  {
+    s->hcr = Hcr(0);
+    s->vtr = self()->vtr();
+    for (auto &a: s->aprs)
+      a = 0;
+    for (auto &l: s->lr.lr64)
+      l = 0;
+  }
+
+  void disable() override
+  { self()->hcr(Hcr(0)); }
+
+  unsigned version() const override
+  { return IMPL::Version; }
+};

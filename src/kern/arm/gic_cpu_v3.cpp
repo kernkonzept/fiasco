@@ -2,7 +2,7 @@ INTERFACE:
 
 #include "types.h"
 
-class Gic_cpu
+class Gic_cpu_v3
 {
 public:
   enum
@@ -17,14 +17,7 @@ public:
     ICC_SRE_DIB          = 1 << 2,
     ICC_SRE_Enable_lower = 1 << 3,
   };
+
+  void disable() {}
 };
-
-//-------------------------------------------------------------------
-IMPLEMENTATION:
-
-PUBLIC explicit inline
-Gic_cpu::Gic_cpu(Address /*cpu_base*/)
-{}
-
-PUBLIC inline void Gic_cpu::disable() {}
 

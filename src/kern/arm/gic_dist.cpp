@@ -87,29 +87,44 @@ INTERFACE [arm && !arm_em_tz]:
 EXTENSION class Gic_dist { enum { Config_tz_sec = 0 }; };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [!arm_gicv3]:
+IMPLEMENTATION:
 
 EXTENSION class Gic_dist
 {
 public:
-  static Unsigned32 pcpu_to_sgi(Cpu_phys_id);
+  using V2 = cxx::integral_constant<int, 2>;
+  using V3 = cxx::integral_constant<int, 3>;
 };
 
-IMPLEMENT_DEFAULT inline
-Unsigned32
-Gic_dist::pcpu_to_sgi(Cpu_phys_id cpu)
-{ return 1U << cxx::int_value<Cpu_phys_id>(cpu); }
-
-PUBLIC inline NEEDS[Gic_dist::pcpu_to_sgi]
+PUBLIC inline
 void
-Gic_dist::set_cpu(Mword pin, Cpu_phys_id cpu)
+Gic_dist::set_cpu(Mword pin, Unsigned8 target, V2)
 {
-  _dist.write<Unsigned8>(pcpu_to_sgi(cpu), GICD_ITARGETSR + pin);
+  _dist.write<Unsigned8>(target, GICD_ITARGETSR + pin);
 }
 
-PRIVATE inline
+PUBLIC inline
+Unsigned32
+Gic_dist::itarget(unsigned offset)
+{
+  return _dist.read<Unsigned32>(GICD_ITARGETSR + offset);
+}
+
+PUBLIC inline
 void
-Gic_dist::igroup_init(unsigned num)
+Gic_dist::init_targets(unsigned max, V2)
+{
+  // use target from local IRQ 0-3
+  Unsigned32 t = itarget(0);
+
+  for (unsigned i = 32; i < max; i += 4)
+    _dist.write<Unsigned32>(t, GICD_ITARGETSR + i);
+}
+
+
+PUBLIC inline
+void
+Gic_dist::igroup_init(V2, unsigned num)
 {
   Mword v = 0;
   if (Config_tz_sec || Config_mxc_tzic)
@@ -121,7 +136,7 @@ Gic_dist::igroup_init(unsigned num)
 
 PUBLIC inline
 void
-Gic_dist::enable()
+Gic_dist::enable(V2)
 {
   Unsigned32 dist_enable = GICD_CTRL_ENABLE;
   if (Config_mxc_tzic && !Config_tz_sec)
@@ -133,17 +148,29 @@ Gic_dist::enable()
 //-------------------------------------------------------------------
 IMPLEMENTATION [arm_gicv3]:
 
+#include "cpu.h"
+
 PUBLIC inline
 void
-Gic_dist::set_cpu(Mword pin, Cpu_phys_id cpu)
+Gic_dist::set_cpu(Mword pin, Cpu_phys_id cpu, V3)
 {
   Unsigned64 v = Cpu_phys_id::val(cpu);
   _dist.write<Unsigned64>(v & 0xff00ffffff, GICD_IROUTER + 8 * pin);
 }
 
-PRIVATE inline
+PUBLIC inline NEEDS["cpu.h"]
 void
-Gic_dist::igroup_init(unsigned num)
+Gic_dist::init_targets(unsigned max, V3)
+{
+  Unsigned64 t = Cpu::mpidr();
+
+  for (unsigned i = 32; i < max; ++i)
+    _dist.write<Unsigned64>(t & 0xff00ffffff, GICD_IROUTER + i * 8);
+}
+
+PRIVATE
+void
+Gic_dist::igroup_init(V3, unsigned num)
 {
   for (unsigned i = 32; i < num; i += 32)
     _dist.write<Unsigned32>(~0u, GICD_IGROUPR + i / 8);
@@ -151,7 +178,7 @@ Gic_dist::igroup_init(unsigned num)
 
 PUBLIC inline
 void
-Gic_dist::enable()
+Gic_dist::enable(V3)
 {
   Unsigned32 dist_enable = GICD_CTRL_ENGR1 | GICD_CTRL_ENGR1A | GICD_CTRL_ARE_NS;
   _dist.write<Unsigned32>(dist_enable, GICD_CTRL);
@@ -181,15 +208,10 @@ Gic_dist::has_sec_ext()
 
 PUBLIC inline
 void
-Gic_dist::softint_cpu(unsigned callmap, unsigned m)
+Gic_dist::softint(Unsigned32 sgi)
 {
-  _dist.write<Unsigned32>(((callmap & 0xff) << 16) | m, GICD_SGIR);
+  _dist.write<Unsigned32>(sgi, GICD_SGIR);
 }
-
-PUBLIC inline
-void
-Gic_dist::softint_bcast(unsigned m)
-{ _dist.write<Unsigned32>((1 << 24) | m, GICD_SGIR); }
 
 PUBLIC inline
 void
@@ -288,7 +310,12 @@ Gic_dist::set_pending_irq(unsigned idx, Unsigned32 val)
 
 PUBLIC inline
 void
-Gic_dist::cpu_init()
+Gic_dist::cpu_init(V3)
+{}
+
+PUBLIC inline
+void
+Gic_dist::cpu_init_v2()
 {
   Mword sec_irqs;
 
@@ -346,8 +373,9 @@ Gic_dist::enable_irq(unsigned irq)
 { _dist.write<Unsigned32>(1 << (irq % 32), GICD_ISENABLER + (irq / 32) * 4); }
 
 PUBLIC
+template<typename VERSION>
 unsigned
-Gic_dist::init(unsigned cpu_prio, int nr_irqs_override = -1)
+Gic_dist::init(VERSION, unsigned cpu_prio, int nr_irqs_override = -1)
 {
   _lock.init();
 
@@ -363,12 +391,11 @@ Gic_dist::init(unsigned cpu_prio, int nr_irqs_override = -1)
 
   init_prio(32, num);
   init_regs(32, num);
-  igroup_init(num);
+  igroup_init(VERSION(), num);
 
-  for (unsigned i = 0; i < num; ++i)
-    set_cpu(i, Proc::cpu_id());
+  init_targets(num, VERSION());
 
-  enable();
+  enable(VERSION());
 
   if (Config_mxc_tzic)
     {

@@ -7,17 +7,13 @@ INTERFACE [arm && pic_gic]:
 EXTENSION class Pic
 {
 public:
-  static Static_object<Gic> gic;
+  static Gic *gic;
 };
 
 //-------------------------------------------------------------------
 IMPLEMENTATION [arm && pic_gic]:
 
-Static_object<Gic> Pic::gic;
-
-extern "C"
-void irq_handler()
-{ Pic::gic->hit(0); }
+Gic *Pic::gic;
 
 //-------------------------------------------------------------------
 IMPLEMENTATION [arm && pic_gic && arm_em_tz]:

@@ -69,6 +69,9 @@ hyp_irq_entry:
 	disable_irqs
 	add	sp, sp, #20
 	return_from_exception
+
+	.global __irq_handler_irq
+__irq_handler_irq:
 1:	.word	irq_handler
 
 

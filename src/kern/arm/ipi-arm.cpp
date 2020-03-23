@@ -28,9 +28,6 @@ public:
     Global_request = Ipi_start, Request, Debug, Timer,
     Ipi_end
   };
-
-private:
-  Gic::Sgi_target _sgi_target;
 };
 
 // ---------------------------------------------------------------------------
@@ -41,7 +38,7 @@ IMPLEMENTATION [pic_gic && mp]:
 #include "processor.h"
 
 PUBLIC inline
-Ipi::Ipi() : _sgi_target(~0)
+Ipi::Ipi()
 {}
 
 PUBLIC static
@@ -60,25 +57,16 @@ IMPLEMENTATION [pic_gic && mp && !irregular_gic]:
 
 IMPLEMENT inline NEEDS["processor.h"]
 void
-Ipi::init(Cpu_number cpu)
+Ipi::init(Cpu_number)
 {
-  _ipi.cpu(cpu)._sgi_target = Pic::gic->pcpu_to_sgi(Cpu::cpus.cpu(cpu).phys_id());
 }
 
 PUBLIC static inline NEEDS["pic.h"]
 void Ipi::send(Message m, Cpu_number from_cpu, Cpu_number to_cpu)
 {
-  Pic::gic->softint_cpu(_ipi.cpu(to_cpu)._sgi_target, m);
+  Pic::gic->softint_cpu(to_cpu, m);
   stat_sent(from_cpu);
 }
-
-PUBLIC static inline NEEDS["pic.h"]
-void Ipi::send(Message m, Cpu_number from_cpu, Cpu_phys_id to_cpu)
-{
-  Pic::gic->softint_cpu(Pic::gic->pcpu_to_sgi(to_cpu), m);
-  stat_sent(from_cpu);
-}
-
 PUBLIC static inline
 void
 Ipi::bcast(Message m, Cpu_number from_cpu)

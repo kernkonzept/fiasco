@@ -8,9 +8,9 @@ Task::invoke_arch(L4_msg_tag &, Utcb *)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && cpu_virt && !arm_gicv3]:
+IMPLEMENTATION [arm && cpu_virt && vgic]:
 
-#include "mem_layout.h"
+#include "vgic_global.h"
 
 PRIVATE
 L4_msg_tag
@@ -18,6 +18,10 @@ Task::map_gicc_page(L4_msg_tag tag, Utcb *utcb)
 {
   if (tag.words() < 2)
     return commit_result(-L4_err::EInval);
+
+  auto addr = Gic_h_global::gic->gic_v_address();
+  if (!addr)
+    return commit_result(-L4_err::ENosys);
 
   L4_fpage gicc_page(utcb->values[1]);
   if (   !gicc_page.is_valid()
@@ -29,7 +33,7 @@ Task::map_gicc_page(L4_msg_tag tag, Utcb *utcb)
 
   Mem_space *ms = static_cast<Mem_space *>(this);
   Mem_space::Status res =
-    ms->v_insert(Mem_space::Phys_addr(Mem_layout::Gic_v_phys_base),
+    ms->v_insert(Mem_space::Phys_addr(addr),
                  Virt_addr((Address)u_addr.get()),
                  Mem_space::Page_order(Config::PAGE_SHIFT),
                  Mem_space::Attr(L4_fpage::Rights::URW()));
@@ -50,7 +54,7 @@ Task::map_gicc_page(L4_msg_tag tag, Utcb *utcb)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && cpu_virt && arm_gicv3]:
+IMPLEMENTATION [arm && cpu_virt && !vgic]:
 
 PRIVATE
 L4_msg_tag

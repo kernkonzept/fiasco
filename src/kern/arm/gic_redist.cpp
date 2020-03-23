@@ -37,22 +37,19 @@ public:
 IMPLEMENTATION:
 
 #include "cpu.h"
-#include "kmem.h"
-
 #include <cstdio>
 
 PUBLIC
 void
-Gic_redist::find(Cpu_number cpu)
+Gic_redist::find(Address base, Unsigned64 mpidr, Cpu_number cpu)
 {
   unsigned o = 0;
   Unsigned64 gicr_typer;
-  Unsigned64 mpidr = Cpu::mpidr();
   Unsigned64 typer_aff =   ((mpidr & 0x0000ffffff) << (32 - 0))
                          | ((mpidr & 0xff00000000) << (56 - 32));
   do
     {
-      Mmio_register_block r(Kmem::mmio_remap(Mem_layout::Gic_redist_phys_base + o));
+      Mmio_register_block r(base + o);
 
       unsigned id = r.read<Unsigned32>(0xffe0);
       if (   id != 0x92

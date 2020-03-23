@@ -6,6 +6,7 @@ INTERFACE [arm && pic_gic && pf_tegra]:
 //-------------------------------------------------------------------
 IMPLEMENTATION [arm && pic_gic && pf_tegra]:
 
+#include "gic_v2.h"
 #include "irq_chip.h"
 #include "irq_mgr_multi_chip.h"
 #include "gic.h"
@@ -18,8 +19,8 @@ void Pic::init()
 
   M *m = new Boot_object<M>(1);
 
-  gic.construct(Kmem::mmio_remap(Mem_layout::Gic_cpu_phys_base),
-                Kmem::mmio_remap(Mem_layout::Gic_dist_phys_base));
+  gic = new Boot_object<Gic_v2>(Kmem::mmio_remap(Mem_layout::Gic_cpu_phys_base),
+                                Kmem::mmio_remap(Mem_layout::Gic_dist_phys_base));
   m->add_chip(0, gic, gic->nr_irqs());
 
   Irq_mgr::mgr = m;

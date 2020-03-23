@@ -45,7 +45,7 @@ Context::arm_hyp_load_non_vm_state(bool vgic)
   // see: generic_timer.cpp: setup_timer_access (Hyp)
   asm volatile("msr CNTKCTL_EL1, %0" : : "r"(0x3UL));
   if (vgic)
-    Gic_h::gic->hcr(Gic_h::Hcr(0));
+    Gic_h_global::gic->disable();
 }
 
 PRIVATE inline

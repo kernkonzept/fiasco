@@ -24,7 +24,7 @@ public:
     Unsigned32 cntkctl;
   };
 
-  typedef Arm_vgic_t<4> Gic;
+  typedef Gic_h::Arm_vgic Gic;
 
   /* The following part is our user API */
   Regs guest_regs;

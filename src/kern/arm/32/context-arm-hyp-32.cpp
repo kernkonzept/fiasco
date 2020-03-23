@@ -54,7 +54,7 @@ Context::arm_hyp_load_non_vm_state(bool vgic)
   asm volatile("mcr p15, 0, %0, c14, c1, 0" : : "r"(0x3));
 
   if (vgic)
-    Gic_h::gic->hcr(Gic_h::Hcr(0));
+    Gic_h_global::gic->disable();
 }
 
 PRIVATE inline

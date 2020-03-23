@@ -79,8 +79,8 @@ Jdb::wfi_enter()
   Gic *g = static_cast<Gic*>(tt->chip());
 
   wfi_gic.orig_tt_prio = g->irq_prio_bootcpu(tt->pin());
-  wfi_gic.orig_pmr     = g->_cpu.pmr();
-  g->_cpu.pmr(0x90);
+  wfi_gic.orig_pmr     = g->get_pmr();
+  g->set_pmr(0x90);
   g->irq_prio_bootcpu(tt->pin(), 0x00);
 
   Timer_tick::enable(Cpu_number::boot_cpu());
@@ -93,7 +93,7 @@ Jdb::wfi_leave()
   Timer_tick *tt = Timer_tick::boot_cpu_timer_tick();
   Gic *g = static_cast<Gic*>(tt->chip());
   g->irq_prio_bootcpu(tt->pin(), wfi_gic.orig_tt_prio);
-  g->_cpu.pmr(wfi_gic.orig_pmr);
+  g->set_pmr(wfi_gic.orig_pmr);
 }
 
 PRIVATE static
@@ -103,7 +103,7 @@ Jdb::_wait_for_input()
   Proc::halt();
 
   Timer_tick *tt = Timer_tick::boot_cpu_timer_tick();
-  unsigned i = static_cast<Gic*>(tt->chip())->pending();
+  unsigned i = static_cast<Gic*>(tt->chip())->get_pending();
   if (i == tt->pin())
     {
       kernel_uart_irq_ack();

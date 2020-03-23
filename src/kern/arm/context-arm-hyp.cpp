@@ -33,7 +33,7 @@ Context::arch_vcpu_ext_shutdown()
     return;
 
   state_del_dirty(Thread_ext_vcpu_enabled);
-  arm_hyp_load_non_vm_state(Gic_h::gic->hcr().en());
+  arm_hyp_load_non_vm_state(true);
 }
 
 IMPLEMENT_OVERRIDE inline NEEDS[Context::vm_state, Context::arm_get_hcr,
@@ -66,19 +66,7 @@ Context::arch_load_vcpu_kern_state(Vcpu_state *vcpu, bool do_load)
       if (do_load)
         {
           arm_ext_vcpu_switch_to_host(vcpu, v);
-
-          Gic_h::Hcr ghcr = Gic_h::gic->hcr();
-          if (ghcr.en())
-            {
-              v->gic.hcr = ghcr;
-              v->gic.vmcr = Gic_h::gic->vmcr();
-              v->gic.misr = Gic_h::gic->misr();
-              v->gic.eisr = Gic_h::gic->eisr(0);
-              v->gic.elsr = Gic_h::gic->elsr(0);
-              Gic_h::gic->save_lrs(v->gic.lr, Vm_state::Gic::N_lregs);
-              Gic_h::gic->save_aprs(&v->gic.aprs);
-              Gic_h::gic->hcr(Gic_h::Hcr(0));
-            }
+          Gic_h_global::gic->save_and_disable(&v->gic);
         }
       else
         arm_ext_vcpu_switch_to_host_no_load(vcpu, v);
@@ -116,14 +104,7 @@ Context::arch_load_vcpu_user_state(Vcpu_state *vcpu, bool do_load)
       if (do_load)
         {
           arm_ext_vcpu_switch_to_guest(vcpu, v);
-
-          if (v->gic.hcr.en())
-            {
-              Gic_h::gic->vmcr(v->gic.vmcr);
-              Gic_h::gic->load_aprs(&v->gic.aprs);
-              Gic_h::gic->load_lrs(v->gic.lr, Vm_state::Gic::N_lregs);
-            }
-          Gic_h::gic->hcr(v->gic.hcr);
+          Gic_h_global::gic->load_full(&v->gic, true);
         }
       else
         arm_ext_vcpu_switch_to_guest_no_load(vcpu, v);
@@ -161,16 +142,8 @@ Context::switch_vm_state(Context *t)
       Vm_state *v = vm_state(vcpu_state().access());
       save_ext_vcpu_state(_state, v);
 
-      if ((_state & Thread_vcpu_user) && Gic_h::gic->hcr().en())
-        {
-          vgic = true;
-          v->gic.vmcr = Gic_h::gic->vmcr();
-          v->gic.misr = Gic_h::gic->misr();
-          v->gic.eisr = Gic_h::gic->eisr(0);
-          v->gic.elsr = Gic_h::gic->elsr(0);
-          Gic_h::gic->save_lrs(v->gic.lr, Vm_state::Gic::N_lregs);
-          Gic_h::gic->save_aprs(&v->gic.aprs);
-        }
+      if ((_state & Thread_vcpu_user))
+        vgic = Gic_h_global::gic->save_full(&v->gic);
     }
 
   if (_to_state & Thread_ext_vcpu_enabled)
@@ -178,15 +151,10 @@ Context::switch_vm_state(Context *t)
       Vm_state const *v = vm_state(t->vcpu_state().access());
       t->load_ext_vcpu_state(_to_state, v);
 
-      if ((_to_state & Thread_vcpu_user) && v->gic.hcr.en())
-        {
-          Gic_h::gic->vmcr(v->gic.vmcr);
-          Gic_h::gic->load_aprs(&v->gic.aprs);
-          Gic_h::gic->load_lrs(v->gic.lr, Vm_state::Gic::N_lregs);
-          Gic_h::gic->hcr(v->gic.hcr);
-        }
+      if (_to_state & Thread_vcpu_user)
+        Gic_h_global::gic->load_full(&v->gic, vgic);
       else if (vgic)
-        Gic_h::gic->hcr(Gic_h::Hcr(0));
+        Gic_h_global::gic->disable();
     }
   else
     arm_hyp_load_non_vm_state(vgic);

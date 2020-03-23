@@ -3,7 +3,7 @@ INTERFACE:
 #include "mmio_register_block.h"
 
 
-class Gic_cpu
+class Gic_cpu_v2
 {
 private:
   Mmio_register_block _cpu;
@@ -31,26 +31,26 @@ public:
 // ------------------------------------------------------------------------
 INTERFACE [arm_em_tz]:
 
-EXTENSION class Gic_cpu { enum { Config_tz_sec = 1 }; };
+EXTENSION class Gic_cpu_v2 { enum { Config_tz_sec = 1 }; };
 
 // ------------------------------------------------------------------------
 INTERFACE [!arm_em_tz]:
 
-EXTENSION class Gic_cpu { enum { Config_tz_sec = 0 }; };
+EXTENSION class Gic_cpu_v2 { enum { Config_tz_sec = 0 }; };
 
 //-------------------------------------------------------------------
 IMPLEMENTATION:
 
 PUBLIC inline
 void
-Gic_cpu::pmr(unsigned prio)
+Gic_cpu_v2::pmr(unsigned prio)
 {
   _cpu.write<Unsigned32>(prio, GICC_PMR);
 }
 
 PUBLIC inline
 void
-Gic_cpu::enable()
+Gic_cpu_v2::enable()
 {
   _cpu.write<Unsigned32>(GICC_CTRL_ENABLE | (Config_tz_sec ? GICC_CTRL_FIQEn : 0),
                          GICC_CTRL);
@@ -59,32 +59,32 @@ Gic_cpu::enable()
 
 PUBLIC inline
 void
-Gic_cpu::disable()
+Gic_cpu_v2::disable()
 {
   _cpu.write<Unsigned32>(0, GICC_CTRL);
 }
 
 PUBLIC explicit inline
-Gic_cpu::Gic_cpu(Address cpu_base)
+Gic_cpu_v2::Gic_cpu_v2(Address cpu_base)
   : _cpu(cpu_base)
 {}
 
 PUBLIC inline
 void
-Gic_cpu::ack(Unsigned32 irq)
+Gic_cpu_v2::ack(Unsigned32 irq)
 {
   _cpu.write<Unsigned32>(irq, GICC_EOIR);
 }
 
 PUBLIC inline
 Unsigned32
-Gic_cpu::iar()
+Gic_cpu_v2::iar()
 {
   return _cpu.read<Unsigned32>(GICC_IAR);
 }
 
 PUBLIC inline
 unsigned
-Gic_cpu::pmr()
+Gic_cpu_v2::pmr()
 { return _cpu.read<Unsigned32>(GICC_PMR); }
 

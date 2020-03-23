@@ -427,6 +427,8 @@ Combiner_cascade_irq::handle(Upstream_irq const *u)
 // ------------------------------------------------------------------------
 IMPLEMENTATION [pf_exynos4 && !exynos_extgic]:
 
+#include "gic_v2.h"
+
 class Mgr_int : public Mgr_exynos
 {
 public:
@@ -457,8 +459,11 @@ private:
 PUBLIC
 Mgr_int::Mgr_int()
 {
-  _gic = Pic::gic.construct(Kmem::mmio_remap(Mem_layout::Gic_cpu_int_phys_base),
-                            Kmem::mmio_remap(Mem_layout::Gic_dist_int_phys_base));
+  auto g = new Boot_object<Gic_v2>(Kmem::mmio_remap(Mem_layout::Gic_cpu_int_phys_base),
+                                   Kmem::mmio_remap(Mem_layout::Gic_dist_int_phys_base));
+
+  _gic = g;
+  Pic::gic = g;
 
   _cc     = new Boot_object<Combiner_chip>();
   _wu_gc  = new Boot_object<Gpio_wakeup_chip>(Kmem::Gpio2_phys_base);
@@ -551,14 +556,14 @@ void Pic::init_ap(Cpu_number cpu, bool resume)
 // ------------------------------------------------------------------------
 INTERFACE [pf_exynos4 && exynos_extgic]:
 
-#include "gic.h"
+#include "gic_v2.h"
 #include "per_cpu_data.h"
 #include "platform.h"
 
 EXTENSION class Pic
 {
 public:
-  static Per_cpu_ptr<Static_object<Gic> > gic;
+  static Per_cpu_ptr<Static_object<Gic_v2> > gic;
 };
 
 // ------------------------------------------------------------------------
@@ -566,7 +571,7 @@ IMPLEMENTATION [pf_exynos4 && exynos_extgic]:
 
 #include "cpu.h"
 
-Per_cpu_ptr<Static_object<Gic> > Pic::gic;
+Per_cpu_ptr<Static_object<Gic_v2> > Pic::gic;
 
 class Mgr_ext : public Mgr_exynos
 {
@@ -599,14 +604,14 @@ public:
 private:
   friend void irq_handler();
   friend class Pic;
-  static Per_cpu<Static_object<Gic> > _gic;
+  static Per_cpu<Static_object<Gic_v2> > _gic;
   Combiner_chip *_cc;
   Gpio_wakeup_chip *_wu_gc;
   Gpio_eint_chip *_ei_gc1, *_ei_gc2;
   //Gpio_eint_chip *_ei_gc3, *_ei_gc4;
 };
 
-DEFINE_PER_CPU Per_cpu<Static_object<Gic> > Mgr_ext::_gic;
+DEFINE_PER_CPU Per_cpu<Static_object<Gic_v2> > Mgr_ext::_gic;
 
 PUBLIC
 Mgr_ext::Mgr_ext()
@@ -803,11 +808,8 @@ Pic::set_pending_irq(unsigned group32num, Unsigned32 val)
 // ------------------------------------------------------------------------
 IMPLEMENTATION [pf_exynos5]:
 
+#include "gic_v2.h"
 #include "platform.h"
-
-EXTENSION class Pic
-{
-};
 
 class Mgr : public Mgr_exynos
 {
@@ -838,8 +840,9 @@ private:
 PUBLIC
 Mgr::Mgr()
 {
-  Gic *g = Pic::gic.construct(Kmem::mmio_remap(Mem_layout::Gic_cpu_phys_base),
-                              Kmem::mmio_remap(Mem_layout::Gic_dist_phys_base));
+  Gic *g = new Boot_object<Gic_v2>(Kmem::mmio_remap(Mem_layout::Gic_cpu_phys_base),
+                                   Kmem::mmio_remap(Mem_layout::Gic_dist_phys_base));
+  Pic::gic = g;
 
   _cc = new Boot_object<Combiner_chip>();
 

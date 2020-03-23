@@ -130,10 +130,11 @@ INTERFACES_KERNEL-$(CONFIG_ARM_CORTEX_A9) += scu
 INTERFACES_KERNEL-$(CONFIG_BIT32) += kern_lib_page
 INTERFACES_KERNEL-$(CONFIG_SERIAL) += uart_console
 INTERFACES_KERNEL-$(CONFIG_ARM_EM_TZ) += vm
-INTERFACES_KERNEL-$(CONFIG_CPU_VIRT) += hyp_vm_state vgic
+INTERFACES_KERNEL-$(CONFIG_CPU_VIRT) += hyp_vm_state vgic vgic_v2 vgic_v3 vgic_global
 INTERFACES_KERNEL-$(CONFIG_ARM_SMC_USER) += smc_user
 INTERFACES_KERNEL-$(CONFIG_ARM_GICV3) += gic_redist
-INTERFACES_KERNEL-$(CONFIG_ARM_GIC) += gic_cpu gic_dist gic
+INTERFACES_KERNEL-$(CONFIG_ARM_GIC) += gic_cpu_v2 gic_dist gic gic_v2
+INTERFACES_KERNEL-$(CONFIG_ARM_GICV3) += gic_v3 gic_cpu_v3
 INTERFACES_KERNEL += boot_infos
 
 
@@ -154,12 +155,8 @@ else
 endif
 fpu_IMPL		:= fpu fpu-arm
 gic_IMPL			:= gic
-gic_IMPL-y			:= gic-v2
-gic_IMPL-$(CONFIG_ARM_GICV3)	:= gic-v3
 gic_IMPL			+= $(gic_IMPL-y)
-gic_cpu_IMPL-y		:= gic_cpu-v2
-gic_cpu_IMPL-$(CONFIG_ARM_GICV3) := gic_cpu-v3 gic_cpu-v3-$(BITS)
-gic_cpu_IMPL		+= $(gic_cpu_IMPL-y)
+gic_cpu_v3_IMPL		:= gic_cpu_v3 gic_cpu_v3-$(BITS)
 gic_dist_IMPL		:= gic_dist
 hyp_vm_state_IMPL	:= hyp_vm_state hyp_vm_state-$(BITS)
 ipi_IMPL		:= ipi ipi-arm
@@ -200,7 +197,8 @@ timer_IMPL		:= timer timer-arm
 timer_tick_IMPL		:= timer_tick timer_tick-arm
 utcb_init_IMPL		:= utcb_init utcb_init-arm
 utcb_support_IMPL       := utcb_support utcb_support-arm
-vgic_IMPL		:= vgic $(if $(CONFIG_ARM_GICV3),vgic-v3 vgic-v3-$(BITS),vgic-v2)
+vgic_IMPL		:= vgic
+vgic_v3_IMPL		:= vgic_v3 vgic_v3-$(BITS)
 vmem_alloc_IMPL	  	:= vmem_alloc vmem_alloc-arch
 tb_entry_IMPL		:= tb_entry tb_entry-arm
 

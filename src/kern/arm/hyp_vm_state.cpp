@@ -1,7 +1,7 @@
 INTERFACE:
 
 #include "types.h"
-#include "vgic.h"
+#include "vgic_global.h"
 
 class Hyp_vm_state
 {
@@ -20,10 +20,10 @@ public:
     void setup()
     {
       version = Version;
-      gic_version = Gic_h::Version;
+      gic_version = Gic_h_global::gic->version();
       features = 0;
     }
   };
 
-  static_assert(sizeof(Vm_info) <= 0x2004, "Vm_info must less than 0x200 bytes");
+  static_assert(sizeof(Vm_info) <= 0x200, "Vm_info must less than 0x200 bytes");
 };

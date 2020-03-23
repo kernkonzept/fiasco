@@ -40,9 +40,7 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
   v->svc.lr = regs()->ulr;
   v->svc.sp = regs()->sp();
 
-  v->gic.hcr = Gic_h::Hcr(0);
-  v->gic.vtr = Gic_h::gic->vtr();
-  v->gic.aprs.clear();
+  Gic_h_global::gic->setup_state(&v->gic);
 
   if (current() == this)
     {
@@ -398,9 +396,7 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
   v->cntkctl = Host_cntkctl;
   v->cntvoff = 0;
 
-  v->gic.hcr = Gic_h::Hcr(0);
-  v->gic.vtr = Gic_h::gic->vtr();
-  v->gic.aprs.clear();
+  Gic_h_global::gic->setup_state(&v->gic);
   v->vmpidr = 1UL << 31; // ARMv8: RES1
 
   // use the real MIDR as initial value

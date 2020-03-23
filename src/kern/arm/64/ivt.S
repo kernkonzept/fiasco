@@ -180,6 +180,9 @@ sys_call_table:
 	mov	x0, sp
 	str	x0, [sp, #EF_KSP]
 	adr	x30, .Lret_from_exception
+
+	.global __irq_handler_b_irq
+__irq_handler_b_irq:
 	b	irq_handler
 
 

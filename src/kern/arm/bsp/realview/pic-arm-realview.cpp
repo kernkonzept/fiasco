@@ -31,6 +31,7 @@ IMPLEMENTATION [arm && pic_gic
                     || (pf_realview_eb
                         && (arm_mpcore || (arm_cortex_a9 && mp))))]:
 
+#include "gic_v2.h"
 #include "irq_mgr_multi_chip.h"
 #include "cascade_irq.h"
 
@@ -48,15 +49,17 @@ void Pic::init()
   configure_core();
   typedef Irq_mgr_multi_chip<8> Mgr;
 
-  Gic *g = gic.construct(Kmem::mmio_remap(Mem_layout::Gic_cpu_phys_base),
-                         Kmem::mmio_remap(Mem_layout::Gic_dist_phys_base));
+  Gic *g = new Boot_object<Gic_v2>(Kmem::mmio_remap(Mem_layout::Gic_cpu_phys_base),
+                                   Kmem::mmio_remap(Mem_layout::Gic_dist_phys_base));
+  gic = g;
+
   Mgr *m = new Boot_object<Mgr>(2);
   Irq_mgr::mgr = m;
 
   m->add_chip(0, g, g->nr_irqs());
 
-  g = new Boot_object<Gic>(Kmem::mmio_remap(Mem_layout::Gic1_cpu_phys_base),
-                           Kmem::mmio_remap(Mem_layout::Gic1_dist_phys_base));
+  g = new Boot_object<Gic_v2>(Kmem::mmio_remap(Mem_layout::Gic1_cpu_phys_base),
+                              Kmem::mmio_remap(Mem_layout::Gic1_dist_phys_base));
   m->add_chip(256, g, g->nr_irqs());
 
   // FIXME: Replace static local variable, use placement new
@@ -72,6 +75,7 @@ IMPLEMENTATION [arm && pic_gic
                      || (pf_realview_eb
                          && (arm_mpcore || (arm_cortex_a9 && mp))))]:
 
+#include "gic_v2.h"
 #include "irq_mgr_multi_chip.h"
 
 PUBLIC static FIASCO_INIT
@@ -81,8 +85,9 @@ void Pic::init()
 
   typedef Irq_mgr_multi_chip<8> Mgr;
 
-  Gic *g = gic.construct(Kmem::mmio_remap(Mem_layout::Gic_cpu_phys_base),
-                         Kmem::mmio_remap(Mem_layout::Gic_dist_phys_base));
+  Gic *g = new Boot_object<Gic_v2>(Kmem::mmio_remap(Mem_layout::Gic_cpu_phys_base),
+                                   Kmem::mmio_remap(Mem_layout::Gic_dist_phys_base));
+  gic = g;
 
   Mgr *m = new Boot_object<Mgr>(1);
   m->add_chip(0, g, g->nr_irqs());

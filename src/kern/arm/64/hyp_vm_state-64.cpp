@@ -25,7 +25,7 @@ public:
     Unsigned32 mdscr;
   };
 
-  typedef Arm_vgic_t<4> Gic;
+  typedef Gic_h_global::Arm_vgic Gic;
 
   /* The following part is our user API */
   Regs_g guest_regs;
