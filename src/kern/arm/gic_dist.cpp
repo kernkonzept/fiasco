@@ -11,6 +11,8 @@ private:
   Spin_lock<> _lock;
 
 public:
+  using V2 = cxx::integral_constant<int, 2>;
+  using V3 = cxx::integral_constant<int, 3>;
   enum
   {
     GICD_CTRL         = 0x000,
@@ -86,29 +88,8 @@ INTERFACE [arm && !arm_em_tz]:
 
 EXTENSION class Gic_dist { enum { Config_tz_sec = 0 }; };
 
-// ------------------------------------------------------------------------
-IMPLEMENTATION:
-
-EXTENSION class Gic_dist
-{
-public:
-  using V2 = cxx::integral_constant<int, 2>;
-  using V3 = cxx::integral_constant<int, 3>;
-};
-
-PUBLIC inline
-void
-Gic_dist::set_cpu(Mword pin, Unsigned8 target, V2)
-{
-  _dist.write<Unsigned8>(target, GICD_ITARGETSR + pin);
-}
-
-PUBLIC inline
-Unsigned32
-Gic_dist::itarget(unsigned offset)
-{
-  return _dist.read<Unsigned32>(GICD_ITARGETSR + offset);
-}
+//-------------------------------------------------------------------
+IMPLEMENTATION [have_arm_gicv2]:
 
 PUBLIC inline
 void
@@ -121,6 +102,12 @@ Gic_dist::init_targets(unsigned max, V2)
     _dist.write<Unsigned32>(t, GICD_ITARGETSR + i);
 }
 
+PUBLIC inline
+void
+Gic_dist::set_cpu(Mword pin, Unsigned8 target, V2)
+{
+  _dist.write<Unsigned8>(target, GICD_ITARGETSR + pin);
+}
 
 PUBLIC inline
 void
@@ -145,8 +132,57 @@ Gic_dist::enable(V2)
   _dist.write<Unsigned32>(dist_enable, GICD_CTRL);
 }
 
+PUBLIC inline
+void
+Gic_dist::cpu_init_v2()
+{
+  Mword sec_irqs;
+
+  if (Config_tz_sec)
+    sec_irqs = 0x00000f00;
+
+  _dist.write<Unsigned32>(0xffffffff, GICD_ICENABLER);
+  if (Config_tz_sec)
+    {
+      _dist.write<Unsigned32>(0x00000f00, GICD_ISENABLER);
+      _dist.write<Unsigned32>(~sec_irqs, GICD_IGROUPR);
+    }
+  else
+    {
+      _dist.write<Unsigned32>(0x0000001e, GICD_ISENABLER);
+      _dist.write<Unsigned32>(0, GICD_IGROUPR);
+    }
+
+  _dist.write<Unsigned32>(0xffffffff, GICD_ICPENDR);
+
+  _dist.write<Unsigned32>(0xffffffff, 0x380); // clear active
+  _dist.write<Unsigned32>(0xffffffff, 0xf10); // sgi pending clear
+  _dist.write<Unsigned32>(0xffffffff, 0xf14); // sgi pending clear
+  _dist.write<Unsigned32>(0xffffffff, 0xf18); // sgi pending clear
+  _dist.write<Unsigned32>(0xffffffff, 0xf1c); // sgi pending clear
+
+  for (unsigned g = 0; g < 32; g += 4)
+    {
+      Mword v = 0;
+      if (Config_tz_sec)
+        {
+          unsigned b = (sec_irqs >> g) & 0xf;
+
+          for (int i = 0; i < 4; ++i)
+            if (b & (1 << i))
+              v |= 0x40 << (i * 8);
+            else
+              v |= 0xa0 << (i * 8);
+        }
+      else
+        v = 0xa0a0a0a0;
+
+      _dist.write<Unsigned32>(v, GICD_IPRIORITYR + g);
+    }
+}
+
 //-------------------------------------------------------------------
-IMPLEMENTATION [arm_gicv3]:
+IMPLEMENTATION [have_arm_gicv3]:
 
 #include "cpu.h"
 
@@ -184,8 +220,20 @@ Gic_dist::enable(V3)
   _dist.write<Unsigned32>(dist_enable, GICD_CTRL);
 }
 
+PUBLIC inline
+void
+Gic_dist::cpu_init(V3)
+{}
+
 //-------------------------------------------------------------------
 IMPLEMENTATION:
+
+PUBLIC inline
+Unsigned32
+Gic_dist::itarget(unsigned offset)
+{
+  return _dist.read<Unsigned32>(GICD_ITARGETSR + offset);
+}
 
 PUBLIC explicit inline
 Gic_dist::Gic_dist(Address dist_base)
@@ -310,60 +358,6 @@ Gic_dist::set_pending_irq(unsigned idx, Unsigned32 val)
 
 PUBLIC inline
 void
-Gic_dist::cpu_init(V3)
-{}
-
-PUBLIC inline
-void
-Gic_dist::cpu_init_v2()
-{
-  Mword sec_irqs;
-
-  if (Config_tz_sec)
-    sec_irqs = 0x00000f00;
-
-  _dist.write<Unsigned32>(0xffffffff, GICD_ICENABLER);
-  if (Config_tz_sec)
-    {
-      _dist.write<Unsigned32>(0x00000f00, GICD_ISENABLER);
-      _dist.write<Unsigned32>(~sec_irqs, GICD_IGROUPR);
-    }
-  else
-    {
-      _dist.write<Unsigned32>(0x0000001e, GICD_ISENABLER);
-      _dist.write<Unsigned32>(0, GICD_IGROUPR);
-    }
-
-  _dist.write<Unsigned32>(0xffffffff, GICD_ICPENDR);
-
-  _dist.write<Unsigned32>(0xffffffff, 0x380); // clear active
-  _dist.write<Unsigned32>(0xffffffff, 0xf10); // sgi pending clear
-  _dist.write<Unsigned32>(0xffffffff, 0xf14); // sgi pending clear
-  _dist.write<Unsigned32>(0xffffffff, 0xf18); // sgi pending clear
-  _dist.write<Unsigned32>(0xffffffff, 0xf1c); // sgi pending clear
-
-  for (unsigned g = 0; g < 32; g += 4)
-    {
-      Mword v = 0;
-      if (Config_tz_sec)
-        {
-          unsigned b = (sec_irqs >> g) & 0xf;
-
-          for (int i = 0; i < 4; ++i)
-            if (b & (1 << i))
-              v |= 0x40 << (i * 8);
-            else
-              v |= 0xa0 << (i * 8);
-        }
-      else
-        v = 0xa0a0a0a0;
-
-      _dist.write<Unsigned32>(v, GICD_IPRIORITYR + g);
-    }
-}
-
-PUBLIC inline
-void
 Gic_dist::disable_irq(unsigned irq)
 { _dist.write<Unsigned32>(1 << (irq % 32), GICD_ICENABLER + (irq / 32) * 4); }
 
@@ -419,5 +413,4 @@ Gic_dist::irq_prio(unsigned irq)
 {
   return _dist.read<Unsigned8>(GICD_IPRIORITYR + irq);
 }
-
 

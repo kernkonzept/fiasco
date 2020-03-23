@@ -1,28 +1,16 @@
-INTERFACE [arm && pf_arm_virt]:
-
-#include "initcalls.h"
-#include "types.h"
-#include "gic.h"
-
-class Irq_base;
-
 //-------------------------------------------------------------------
 IMPLEMENTATION [arm && pf_arm_virt]:
 
 #include "irq_mgr_multi_chip.h"
+#include "gic_v2.h"
+#include "gic_v3.h"
+
 
 PUBLIC static
 void Pic::init_ap(Cpu_number cpu, bool resume)
 {
   gic->init_ap(cpu, resume);
 }
-
-//-------------------------------------------------------------------
-IMPLEMENTATION [arm && pf_arm_virt && arm_gicv3]:
-
-#include "irq_mgr_multi_chip.h"
-#include "gic_v2.h"
-#include "gic_v3.h"
 
 PUBLIC static FIASCO_INIT
 void Pic::init()
@@ -54,21 +42,3 @@ void Pic::init()
   Irq_mgr::mgr = m;
 }
 
-//-------------------------------------------------------------------
-IMPLEMENTATION [arm && pf_arm_virt && !arm_gicv3]:
-
-#include "irq_mgr_multi_chip.h"
-#include "gic_v2.h"
-
-PUBLIC static FIASCO_INIT
-void Pic::init()
-{
-  typedef Irq_mgr_multi_chip<9> Mgr;
-
-  gic = new Boot_object<Gic_v2>(Kmem::mmio_remap(Mem_layout::Gic_cpu_phys_base),
-                                Kmem::mmio_remap(Mem_layout::Gic_dist_phys_base));
-
-  Mgr *m = new Boot_object<Mgr>(1);
-  m->add_chip(0, gic, gic->nr_irqs());
-  Irq_mgr::mgr = m;
-}

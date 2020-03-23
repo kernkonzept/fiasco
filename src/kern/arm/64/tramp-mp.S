@@ -79,9 +79,14 @@ _tramp_mp_entry:
 	b.eq	.Lno_gic
 	mov	w4, #0xffffffff
 	str	w4, [x16, 0x80]
+	mov	x4, #0xff
 	ldr	x14, _tramp_mp_gic_cpu_base
-	mov	w4, #0xf0
+	cmp	x14, #0
+	b.eq	.Lgic_v3_cpu
 	str	w4, [x14, 4]
+	b	.Lno_gic
+.Lgic_v3_cpu:
+	msr	S3_0_C4_C6_0, x4
 .Lno_gic:
 	// switch from EL3 to EL2...
 	tlbi	alle2is

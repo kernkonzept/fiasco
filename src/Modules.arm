@@ -130,11 +130,15 @@ INTERFACES_KERNEL-$(CONFIG_ARM_CORTEX_A9) += scu
 INTERFACES_KERNEL-$(CONFIG_BIT32) += kern_lib_page
 INTERFACES_KERNEL-$(CONFIG_SERIAL) += uart_console
 INTERFACES_KERNEL-$(CONFIG_ARM_EM_TZ) += vm
-INTERFACES_KERNEL-$(CONFIG_CPU_VIRT) += hyp_vm_state vgic vgic_v2 vgic_v3 vgic_global
+INTERFACES_KERNEL-$(CONFIG_CPU_VIRT) += hyp_vm_state vgic vgic_global
+INTERFACES_KERNEL-$(CONFIG_CPU_VIRT)$(CONFIG_HAVE_ARM_GICV2) += vgic_v2
+INTERFACES_KERNEL-$(CONFIG_CPU_VIRT)$(CONFIG_HAVE_ARM_GICV3) += vgic_v3
 INTERFACES_KERNEL-$(CONFIG_ARM_SMC_USER) += smc_user
-INTERFACES_KERNEL-$(CONFIG_ARM_GICV3) += gic_redist
-INTERFACES_KERNEL-$(CONFIG_ARM_GIC) += gic_cpu_v2 gic_dist gic gic_v2
-INTERFACES_KERNEL-$(CONFIG_ARM_GICV3) += gic_v3 gic_cpu_v3
+INTERFACES_KERNEL-$(CONFIG_ARM_GIC) += gic_dist gic
+INTERFACES_KERNEL-$(CONFIG_HAVE_ARM_GICV3) += gic_redist
+INTERFACES_KERNEL-$(CONFIG_HAVE_ARM_GICV2) += gic_v2 gic_cpu_v2
+INTERFACES_KERNEL-$(CONFIG_HAVE_ARM_GICV3) += gic_v3 gic_cpu_v3
+
 INTERFACES_KERNEL += boot_infos
 
 
@@ -154,8 +158,7 @@ else
   entry_frame_IMPL	:= entry_frame entry_frame-arm
 endif
 fpu_IMPL		:= fpu fpu-arm
-gic_IMPL			:= gic
-gic_IMPL			+= $(gic_IMPL-y)
+gic_IMPL		:= gic
 gic_cpu_v3_IMPL		:= gic_cpu_v3 gic_cpu_v3-$(BITS)
 gic_dist_IMPL		:= gic_dist
 hyp_vm_state_IMPL	:= hyp_vm_state hyp_vm_state-$(BITS)
@@ -338,7 +341,7 @@ endif
 include $(MODULES_FILE_BSP)
 VPATH                   += $(BSP_SRC_DIR)
 PREPROCESS_PARTS	+= $(PREPROCESS_PARTS-y)
-INTERFACES_KERNEL       += $(INTERFACES_KERNEL-y)
+INTERFACES_KERNEL       += $(INTERFACES_KERNEL-y) $(INTERFACES_KERNEL-yy)
 INTERFACES_JDB		+= $(INTERFACES_JDB-y)
 TRAMP_MP_ASM_INCLUDE    ?= kern/arm/tramp-mp-asm-default.h
 CPPFLAGS                += -DTRAMP_MP_ASM_INCLUDE=\"$(srcdir)/$(TRAMP_MP_ASM_INCLUDE)\"

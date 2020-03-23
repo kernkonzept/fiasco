@@ -122,7 +122,7 @@ Bootstrap::map_ram(Kpdir *kd, Bs_alloc &alloc)
 }
 
 
-IMPLEMENTATION [arm && pic_gic && !arm_gicv3]:
+IMPLEMENTATION [arm && pic_gic && !have_arm_gicv3]:
 
 PUBLIC static void
 Bootstrap::config_gic_ns()
@@ -135,11 +135,11 @@ Bootstrap::config_gic_ns()
   for (unsigned i = 0; i < n / 32; ++i)
     dist.write<Unsigned32>(~0U, 0x80 + i * 4);
 
-  cpu.write<Unsigned32>(0xf0, 4 /*PMR*/);
+  cpu.write<Unsigned32>(0xff, 4 /*PMR*/);
   Mmu<Bootstrap::Cache_flush_area, true>::flush_cache();
 }
 
-IMPLEMENTATION [arm && (!pic_gic || arm_gicv3)]:
+IMPLEMENTATION [arm && (!pic_gic || have_arm_gicv3)]:
 
 PUBLIC static inline void
 Bootstrap::config_gic_ns() {}
