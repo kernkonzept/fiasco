@@ -39,7 +39,6 @@ Context::arm_hyp_load_non_vm_state(bool vgic)
   // exceptions into JDB we need either per-thread or a global
   // setting for this value.
   asm volatile ("msr CONTEXTIDR_EL1, %0" : : "r"(0UL));
-  asm volatile ("msr MDCR_EL2, %0" : : "r"((Mword)Cpu::Mdcr_bits));
   asm volatile ("msr MDSCR_EL1, %0" : : "r"(0UL));
   asm volatile ("msr CNTV_CTL_EL0, %0" : : "r"(0UL)); // disable VTIMER
   // CNTKCTL: allow access to virtual and physical counter from PL0
@@ -100,8 +99,6 @@ Context::save_ext_vcpu_state(Mword _state, Vm_state *v)
   asm volatile ("mrs %0, AFSR1_EL1" : "=r"(m));
   v->afsr[1] = m;
 
-  asm volatile ("mrs %0, MDCR_EL2" : "=r"(m));
-  v->mdcr = m;
   asm volatile ("mrs %0, MDSCR_EL1" : "=r"(m));
   v->mdscr = m;
   asm volatile ("mrs %0, CONTEXTIDR_EL1" : "=r"(m));
@@ -172,7 +169,6 @@ Context::load_ext_vcpu_state(Mword _to_state, Vm_state const *v)
   Unsigned32 mdcr = access_once(&v->mdcr);
   mdcr &= Cpu::Mdcr_vm_mask;
   mdcr |= Cpu::Mdcr_bits;
-  asm volatile ("msr MDCR_EL2, %0" : : "r"((Mword)mdcr));
   asm volatile ("msr MDSCR_EL1, %0" : : "r"((Mword)v->mdscr));
   asm volatile ("msr CONTEXTIDR_EL1, %0" : : "r"((Mword)v->contextidr));
 
@@ -214,8 +210,6 @@ Context::arm_ext_vcpu_switch_to_host(Vcpu_state *vcpu, Vm_state *v)
   v->guest_regs.sctlr = m;
   asm volatile ("mrs %0, CNTKCTL_EL1" : "=r"(m));
   v->guest_regs.cntkctl = m;
-  asm volatile ("mrs %0, MDCR_EL2"    : "=r"(m));
-  v->guest_regs.mdcr = m;
   asm volatile ("mrs %0, MDSCR_EL1"   : "=r"(m));
   v->guest_regs.mdscr = m;
   asm volatile ("mrs %0, CPACR_EL1"   : "=r"(m));
@@ -230,7 +224,6 @@ Context::arm_ext_vcpu_switch_to_host(Vcpu_state *vcpu, Vm_state *v)
   // disable all debug exceptions for non-vms, if we want debug
   // exceptions into JDB we need either per-thread or a global
   // setting for this value. (probably including the contextidr)
-  asm volatile ("msr MDCR_EL2, %0" : : "r"((Mword)Cpu::Mdcr_bits));
   asm volatile ("msr MDSCR_EL1, %0" : : "r"(0UL));
   asm volatile ("msr SCTLR_EL1, %0" : : "r"((Mword)Cpu::Sctlr_el1_generic));
 }
@@ -273,7 +266,6 @@ Context::arm_ext_vcpu_switch_to_guest(Vcpu_state *, Vm_state *v)
   mdcr &= Cpu::Mdcr_vm_mask;
   mdcr |= Cpu::Mdcr_bits;
   asm volatile ("msr SCTLR_EL1, %0"   : : "r"((Mword)v->guest_regs.sctlr));
-  asm volatile ("msr MDCR_EL2, %0"    : : "r"((Mword)mdcr));
   asm volatile ("msr MDSCR_EL1, %0"   : : "r"((Mword)v->guest_regs.mdscr));
   asm volatile ("msr CPACR_EL1, %0"   : : "r"((Mword)v->guest_regs.cpacr));
 }

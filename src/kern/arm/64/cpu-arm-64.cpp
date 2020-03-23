@@ -111,7 +111,9 @@ public:
     Mdcr_tdosa     = 1UL << 10,
     Mdcr_tdra      = 1UL << 11,
 
-    Mdcr_bits      = Mdcr_tpmcr | Mdcr_tpm,
+    Mdcr_bits      = Mdcr_tpmcr | Mdcr_tpm
+                     | Mdcr_tda | Mdcr_tdosa | Mdcr_tdra
+                     | Mdcr_tde,
     Mdcr_vm_mask   = 0xf00,
   };
 };
