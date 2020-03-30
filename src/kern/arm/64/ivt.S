@@ -41,7 +41,7 @@
 .endm
 
 .macro restore_gprs freg=sp
-	.if \freg != x0
+	.ifnes "\freg", "x0"
 		ldr	x0,        [\freg,   #8]
 	.endif
 	ldp	x1, x2,    [\freg,  #16]
