@@ -507,7 +507,7 @@ Jdb_mapdb::show_simple_tree(Kobject_common *f, unsigned indent = 1)
 
   screenline += 2;
 
-  for (auto const &m: f->map_root()->_root)
+  for (auto const &&m: f->map_root()->_root)
     {
       Kconsole::console()->getchar_chance();
 

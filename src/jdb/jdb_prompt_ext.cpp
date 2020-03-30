@@ -37,14 +37,14 @@ void Jdb_prompt_ext::update()
 IMPLEMENT
 void Jdb_prompt_ext::do_all()
 {
-  for (auto const &e: exts)
+  for (auto const &&e: exts)
     e->ext();
 }
 
 IMPLEMENT
 void Jdb_prompt_ext::update_all()
 {
-  for (auto const &e: exts)
+  for (auto const &&e: exts)
     e->update();
 }
 

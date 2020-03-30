@@ -164,7 +164,7 @@ Kobject_mapdb::flush(const Frame& f, Mapping *m, L4_map_mask mask,
 
   if (flush)
     {
-      for (auto const &i: f.frame->_root)
+      for (auto const &&i: f.frame->_root)
         {
           Obj::Entry *e = static_cast<Obj::Entry*>(i);
           if (e->ref_cnt()) // counted

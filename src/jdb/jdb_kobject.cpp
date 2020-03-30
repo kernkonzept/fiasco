@@ -653,7 +653,7 @@ static
 T *
 Jdb_kobject_extension::find_extension(Kobject_common const *o)
 {
-  for (auto const &ex: o->dbg_info()->_jdb_data)
+  for (auto const &&ex: o->dbg_info()->_jdb_data)
     {
       if (!ex)
         return 0;

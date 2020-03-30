@@ -289,7 +289,7 @@ Jdb_list_timeouts::complete_show()
                Timeout_iter(&Timeout_q::timeout_queue.cpu(Cpu_number::first()), true));
 
   show_header();
-  for (auto const &i: to_cont)
+  for (auto const &&i: to_cont)
     list_timeouts_show_timeout(i);
 }
 

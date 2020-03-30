@@ -88,7 +88,7 @@ Jdb_kern_info::action(int cmd, void *&args, char const *&, int &) override
 
   char c = *(char*)(args);
 
-  for (auto const &kim: modules)
+  for (auto const &&kim: modules)
     {
       if (kim->_subcmd == c)
 	{
@@ -100,7 +100,7 @@ Jdb_kern_info::action(int cmd, void *&args, char const *&, int &) override
     }
 
   putchar('\n');
-  for (auto const &kim: modules)
+  for (auto const &&kim: modules)
     printf("  k%c   %s\n", kim->_subcmd, kim->_descr);
 
   putchar('\n');

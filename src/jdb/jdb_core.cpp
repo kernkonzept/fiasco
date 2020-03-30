@@ -272,7 +272,7 @@ int Jdb_core::set_prompt_color(char x)
 IMPLEMENT
 Jdb_core::Cmd Jdb_core::has_cmd(char const *cmd)
 {
-  for (auto const &m: Jdb_module::modules)
+  for (auto const &&m: Jdb_module::modules)
     {
       Cmd c(m);
       c.cmd = m->has_cmd(cmd, short_mode);
@@ -302,7 +302,7 @@ Jdb_core::print_alternatives(char const *prefix)
   unsigned prefix_len = 0;
   char const *match = 0;
 
-  for (auto const &m: Jdb_module::modules)
+  for (auto const &&m: Jdb_module::modules)
     {
       unsigned sc_max = m->num_cmds();
       Jdb_module::Cmd const *cmds = m->cmds();
@@ -331,7 +331,7 @@ Jdb_core::complete_cmd(char const *prefix, bool &multi_match)
   Cmd match(0, 0);
   multi_match = false;
 
-  for (auto const &m: Jdb_module::modules)
+  for (auto const &&m: Jdb_module::modules)
     {
       unsigned sc_max = m->num_cmds();
       Jdb_module::Cmd const *cmds = m->cmds();
@@ -874,10 +874,10 @@ Jdb_module::Action_code Help_m::action(int, void *&, char const *&, int &) overr
   unsigned line = 0;
 
   puts("");
-  for (auto const &c: Jdb_category::categories)
+  for (auto const &&c: Jdb_category::categories)
     {
       bool first = true;
-      for (auto const &m: Jdb_module::modules)
+      for (auto const &&m: Jdb_module::modules)
 	{
           if (m->category() != c)
             continue;
