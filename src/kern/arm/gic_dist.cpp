@@ -52,7 +52,7 @@ INTERFACE [arm && pic_gic_mxc_tzic]:
 EXTENSION class Gic_dist
 {
 public:
-  enum { Config_mxc_tzic = 1 };
+  static constexpr bool Config_mxc_tzic = true;
 
   Unsigned32 mxc_pending()
   {
@@ -73,7 +73,7 @@ INTERFACE [arm && !pic_gic_mxc_tzic]:
 EXTENSION class Gic_dist
 {
 public:
-  enum { Config_mxc_tzic = 0 };
+  static constexpr bool Config_mxc_tzic = false;
 
   Unsigned32 mxc_pending() const { return 0; }
 };
@@ -81,12 +81,12 @@ public:
 // ------------------------------------------------------------------------
 INTERFACE [arm && arm_em_tz]:
 
-EXTENSION class Gic_dist { enum { Config_tz_sec = 1 }; };
+EXTENSION class Gic_dist { static constexpr bool Config_tz_sec = true; };
 
 // ------------------------------------------------------------------------
 INTERFACE [arm && !arm_em_tz]:
 
-EXTENSION class Gic_dist { enum { Config_tz_sec = 0 }; };
+EXTENSION class Gic_dist { static constexpr bool Config_tz_sec = false; };
 
 //-------------------------------------------------------------------
 IMPLEMENTATION [have_arm_gicv2]:

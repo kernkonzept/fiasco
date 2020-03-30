@@ -31,12 +31,12 @@ public:
 // ------------------------------------------------------------------------
 INTERFACE [arm_em_tz]:
 
-EXTENSION class Gic_cpu_v2 { enum { Config_tz_sec = 1 }; };
+EXTENSION class Gic_cpu_v2 { static constexpr bool Config_tz_sec = true; };
 
 // ------------------------------------------------------------------------
 INTERFACE [!arm_em_tz]:
 
-EXTENSION class Gic_cpu_v2 { enum { Config_tz_sec = 0 }; };
+EXTENSION class Gic_cpu_v2 { static constexpr bool Config_tz_sec = false; };
 
 //-------------------------------------------------------------------
 IMPLEMENTATION:
