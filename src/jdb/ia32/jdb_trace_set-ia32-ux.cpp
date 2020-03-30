@@ -7,6 +7,7 @@ set_fast_entry(Cpu_number cpu, void (*fast_entry)(void))
   Cpu::cpus.cpu(cpu).set_fast_entry(fast_entry);
 }
 
+//--------------------------------------------------------------------------
 IMPLEMENTATION[amd64 && kernel_isolation]:
 
 #include "jdb.h"
@@ -21,10 +22,11 @@ set_fast_entry(Cpu_number, void (*func)())
   // 3 byte offset into "mov fn,%r11" instruction
   auto ofs = syscall_entry_reloc - syscall_entry_code + 3;
   auto reloc = reinterpret_cast<Signed32 *>(
-    Mem_layout::Mem_layout::Kentry_cpu_page + ofs + 0x30);
+    Mem_layout::Mem_layout::Kentry_cpu_syscall_entry + ofs);
   check(Jdb::poke(Jdb_addr<Signed32>::kmem_addr(reloc), (Signed32)(Signed64)func));
 }
 
+//--------------------------------------------------------------------------
 IMPLEMENTATION[amd64 && !kernel_isolation]:
 
 #include "jdb.h"
@@ -42,6 +44,7 @@ set_fast_entry(Cpu_number cpu, void (*func)())
   check(Jdb::poke(Jdb_addr<Signed32>::kmem_addr((Signed32 *) reloc), ofs));
 }
 
+//--------------------------------------------------------------------------
 IMPLEMENTATION:
 
 #include "syscalls.h"
@@ -138,6 +141,7 @@ DEFINE_PER_CPU static Per_cpu<Jdb_ipc_log_pm> _pm(Per_cpu_data::Cpu_num);
 
 }
 
+//--------------------------------------------------------------------------
 IMPLEMENTATION [ia32,ux]:
 
 #include "idt.h"

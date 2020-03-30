@@ -44,8 +44,8 @@ void
 Cpu::setup_sysenter() const
 {
   wrmsr(0, GDT_CODE_KERNEL | ((GDT_CODE_USER32 | 3) << 16), MSR_STAR);
-  wrmsr((Unsigned64)Mem_layout::Kentry_cpu_page + 0x30, MSR_LSTAR);
-  wrmsr((Unsigned64)Mem_layout::Kentry_cpu_page + 0x30, MSR_CSTAR);
+  wrmsr((Unsigned64)Mem_layout::Kentry_cpu_syscall_entry, MSR_LSTAR);
+  wrmsr((Unsigned64)Mem_layout::Kentry_cpu_syscall_entry, MSR_CSTAR);
   wrmsr(~0U, MSR_SFMASK);
 }
 

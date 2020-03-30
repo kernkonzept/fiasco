@@ -210,7 +210,7 @@ leave_from_syscall_by_iret:
 dbf_stack_top:
 
 	.section ".text.syscall_entry"
-/* This code shall be copied to Kentry_cpu_page + 0x30 */
+/* This code shall be copied to Kentry_cpu_syscall_entry */
 #define CPUE_OFFSET syscall_entry_code - 0x30
 	.global syscall_entry_code
 syscall_entry_code:

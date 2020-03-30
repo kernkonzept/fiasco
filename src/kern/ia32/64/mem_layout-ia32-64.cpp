@@ -94,7 +94,10 @@ INTERFACE [amd64 && !kernel_isolation]:
 EXTENSION class Mem_layout
 {
 public:
-  enum { Idt = Service_page + 0xfe000 };
+  enum : Mword
+  {
+    Idt = Service_page + 0xfe000
+  };
 };
 
 //-----------------------------------------------------------
@@ -103,8 +106,11 @@ INTERFACE [amd64 && kernel_isolation]:
 EXTENSION class Mem_layout
 {
 public:
-  // IDT in Kentry area
-  enum { Idt = 0xffff817fffffa000UL };
+  enum : Mword
+  {
+    Idt = 0xffff817fffffa000UL,                  ///< IDT in Kentry area
+    Kentry_cpu_syscall_entry = Kentry_cpu_page + 0x30
+  };
 };
 
 //-----------------------------------------------------------

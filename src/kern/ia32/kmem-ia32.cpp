@@ -720,7 +720,7 @@ Kmem::setup_cpu_structures_isolation(Cpu &cpu, Kpdir *cpu_dir, cxx::Simple_alloc
   extern char const syscall_entry_code[];
   extern char const syscall_entry_code_end[];
   char *sccode = (char *)cpu_m->alloc_bytes(syscall_entry_code_end - syscall_entry_code, 16);
-  assert ((Address)sccode == Kentry_cpu_page + 0x30);
+  assert ((Address)sccode == Kentry_cpu_syscall_entry);
   memcpy(sccode, syscall_entry_code, syscall_entry_code_end - syscall_entry_code);
 
   unsigned const estack_sz = 512;
