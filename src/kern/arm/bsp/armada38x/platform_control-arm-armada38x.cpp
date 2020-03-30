@@ -67,7 +67,7 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
 
   pmu_c1.r<32>(0x24) = phys_tramp_mp_addr;
   Mem::mp_wmb();
-  Ipi::send(Ipi::Global_request, Cpu_number::boot_cpu(), Cpu_phys_id(hwcpu));
+  Pic::gic->softint_phys(Ipi::Global_request, 1ul << (16 + hwcpu));
 
   Mmio_register_block cpu_reset(Kmem::mmio_remap(0xf1020800));
   cpu_reset.r<32>(hwcpu * 0x8).clear(1);

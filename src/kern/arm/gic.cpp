@@ -24,6 +24,7 @@ public:
 
   // init / pm only functions (rarely used)
   virtual void softint_bcast(unsigned m) = 0;
+  virtual void softint_phys(unsigned m, Unsigned64 target) = 0;
   virtual void init_ap(Cpu_number cpu, bool resume) = 0;
   virtual unsigned gic_version() const = 0;
 

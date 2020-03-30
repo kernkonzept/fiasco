@@ -182,7 +182,7 @@ Platform_control::cpuboot(Mword startup_vector, Cpu_phys_id cpu)
 //--------------------------------------------------------------------------
 IMPLEMENTATION [arm && pf_exynos && mp]:
 
-#include "ipi.h"
+#include "pic.h"
 #include "kmem.h"
 #include "mem_unit.h"
 #include "outer_cache.h"
@@ -197,23 +197,23 @@ Platform_control::boot_ap_cpus(Address phys_reset_vector)
 
   if (Platform::is_4412() || Platform::is_5410())
     {
-      for (Cpu_phys_id i = Cpu_phys_id(1);
-           i < Cpu_phys_id(4) && i < Cpu_phys_id(Config::Max_num_cpus);
+      for (unsigned i = 1;
+           i < 4 && i < Config::Max_num_cpus;
            ++i)
         {
-          power_up_core(i);
+          power_up_core(Cpu_phys_id(i));
           if (Platform::is_4412())
-            cpuboot(phys_reset_vector, i);
-          Ipi::send(Ipi::Global_request, Cpu_number::boot_cpu(), i);
+            cpuboot(phys_reset_vector, Cpu_phys_id(i));
+          Pic::gic->softint_phys(Ipi::Global_request, 1u << (16 + i));
         }
 
       return;
     }
 
-  Cpu_phys_id const second = Cpu_phys_id(1);
-  power_up_core(second);
-  cpuboot(phys_reset_vector, second);
-  Ipi::send(Ipi::Global_request, Cpu_number::boot_cpu(), second);
+  unsigned const second = 1;
+  power_up_core(Cpu_phys_id(second));
+  cpuboot(phys_reset_vector, Cpu_phys_id(second));
+  Pic::gic->softint_phys(Ipi::Global_request, 1u << (16 + second));
 }
 
 
@@ -266,7 +266,7 @@ Platform_control::resume_cpu(Cpu_number cpu)
   set_suspend_state(cpu, false);
   extern char _tramp_mp_entry[];
   cpuboot(Kmem::kdir->virt_to_phys((Address)_tramp_mp_entry), pcpu);
-  Ipi::send(Ipi::Global_request, current_cpu(), pcpu);
+  Ipi::send(Ipi::Global_request, current_cpu(), cpu);
 
   return 0;
 }

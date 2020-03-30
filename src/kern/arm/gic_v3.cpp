@@ -44,6 +44,11 @@ Gic_v3::softint_bcast(unsigned m) override
 
 PUBLIC inline
 void
+Gic_v3::softint_phys(unsigned m, Unsigned64 target) override
+{ _cpu.softint(target | (m << 24)); }
+
+PUBLIC inline
+void
 Gic_v3::cpu_local_init(Cpu_number cpu)
 {
   auto &rd = _redist.cpu(cpu);

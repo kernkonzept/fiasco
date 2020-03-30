@@ -40,6 +40,11 @@ Gic_v2::softint_bcast(unsigned m) override
 
 PUBLIC inline
 void
+Gic_v2::softint_phys(unsigned m, Unsigned64 target) override
+{ _dist.softint(target | m); }
+
+PUBLIC inline
+void
 Gic_v2::cpu_local_init(Cpu_number cpu)
 {
   _dist.cpu_init_v2();
