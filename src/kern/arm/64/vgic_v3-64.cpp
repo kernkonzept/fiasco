@@ -101,7 +101,7 @@ Gic_h_v3::load_aprs(Unsigned32 const *a)
 #undef READ_APR
 }
 
-PUBLIC static inline void ALWAYS_INLINE
+PUBLIC static inline ALWAYS_INLINE void
 Gic_h_v3::save_lrs(Gic_h::Arm_vgic::Lrs *lr, unsigned n)
 {
 #define READ_LR(ul,v,x) \
@@ -127,7 +127,7 @@ Gic_h_v3::save_lrs(Gic_h::Arm_vgic::Lrs *lr, unsigned n)
 #undef READ_LR
 }
 
-PUBLIC static inline void ALWAYS_INLINE
+PUBLIC static inline ALWAYS_INLINE void
 Gic_h_v3::load_lrs(Gic_h::Arm_vgic::Lrs const *lr, unsigned n)
 {
 #define READ_LR(ul,v,x) \
