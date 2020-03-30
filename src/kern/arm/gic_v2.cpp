@@ -26,12 +26,12 @@ IMPLEMENTATION:
 
 PUBLIC inline
 void
-Gic_v2::softint_cpu(Cpu_number target, unsigned m)
+Gic_v2::softint_cpu(Cpu_number target, unsigned m) override
 { _dist.softint(_sgi_template[target] | m); }
 
 PUBLIC inline
 void
-Gic_v2::softint_bcast(unsigned m)
+Gic_v2::softint_bcast(unsigned m) override
 { _dist.softint((1u << 24) | m); }
 
 PUBLIC inline
@@ -56,14 +56,14 @@ IMPLEMENTATION [debug]:
 
 PUBLIC
 void
-Gic_v2::irq_prio_bootcpu(unsigned irq, unsigned prio)
+Gic_v2::irq_prio_bootcpu(unsigned irq, unsigned prio) override
 {
   _dist.irq_prio(irq, prio);
 }
 
 PUBLIC
 unsigned
-Gic_v2::irq_prio_bootcpu(unsigned irq)
+Gic_v2::irq_prio_bootcpu(unsigned irq) override
 {
   return _dist.irq_prio(irq);
 }

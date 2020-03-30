@@ -31,7 +31,7 @@ DEFINE_PER_CPU Per_cpu<Gic_redist> Gic_v3::_redist;
 
 PUBLIC inline
 void
-Gic_v3::softint_cpu(Cpu_number target, unsigned m)
+Gic_v3::softint_cpu(Cpu_number target, unsigned m) override
 {
   Unsigned64 sgi = _sgi_template[target] | (m << 24);
   _cpu.softint(sgi);
@@ -39,7 +39,7 @@ Gic_v3::softint_cpu(Cpu_number target, unsigned m)
 
 PUBLIC inline
 void
-Gic_v3::softint_bcast(unsigned m)
+Gic_v3::softint_bcast(unsigned m) override
 { _cpu.softint((1ull << 40) | (m << 24)); }
 
 PUBLIC inline
@@ -74,7 +74,7 @@ Gic_v3::set_cpu(Mword pin, Cpu_number cpu) override
 
 PUBLIC
 void
-Gic_v3::mask_percpu(Cpu_number cpu, Mword pin)
+Gic_v3::mask_percpu(Cpu_number cpu, Mword pin) override
 {
   assert(pin < 32);
   assert (cpu_lock.test());
@@ -83,7 +83,7 @@ Gic_v3::mask_percpu(Cpu_number cpu, Mword pin)
 
 PUBLIC
 void
-Gic_v3::unmask_percpu(Cpu_number cpu, Mword pin)
+Gic_v3::unmask_percpu(Cpu_number cpu, Mword pin) override
 {
   assert(pin < 32);
   assert (cpu_lock.test());
