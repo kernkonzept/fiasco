@@ -10,8 +10,12 @@
 #endif
 
 .macro defvar name
-.global \name
-\name: .long 0
+	.global \name
+	.type   \name,%object
+	.p2align 2
+.LC\name:
+\name:	.long 0
+	.size \name, . - \name
 .endm
 
 	.section .mp_tramp, "awx"
@@ -148,15 +152,15 @@ _tramp_mp_entry:
         mcr p15, 4, r0, c8, c7, 4 /* TLBIALLNSNH */
 
         // init TTBCR
-        adr r0, _tramp_mp_startup_ttbcr
+        adr r0, .LC_tramp_mp_startup_ttbcr
         ldr r1, [r0]
         mcr p15, 4, r1, c2, c0, 2
 
-        adr r0, _tramp_mp_startup_mair0
+        adr r0, .LC_tramp_mp_startup_mair0
         ldr r0, [r0]
         mcr p15, 4, r0, c10, c2, 0  // MAIR0
 
-        adr r0, _tramp_mp_startup_pdbr
+        adr r0, .LC_tramp_mp_startup_pdbr
         ldr r0, [r0]
         mov r1, #0
         mcrr p15, 4, r0, r1, c2     // HTBR
@@ -167,7 +171,7 @@ _tramp_mp_entry:
 	// TLB flush
 	mcr p15, 0, r0, c8, c7, 0
 
-	adr r0, _tramp_mp_startup_dcr
+	adr r0, .LC_tramp_mp_startup_dcr
 	ldr r0, [r0]
 	mcr p15, 0, r0, c3, c0
 
@@ -176,21 +180,21 @@ _tramp_mp_entry:
 	mcr p15, 0, r0, c13, c0, 1
 
 	// init TTBCR
-	adr r0, _tramp_mp_startup_ttbcr
+	adr r0, .LC_tramp_mp_startup_ttbcr
 	ldr r1, [r0]
 	mcr p15, 0, r1, c2, c0, 2
 
-	adr r0, _tramp_mp_startup_mair0
+	adr r0, .LC_tramp_mp_startup_mair0
 	ldr r0, [r0]
 	mcr p15, 0, r0, c10, c2, 0  // MAIR0 / PRRR
-	adr r0, _tramp_mp_startup_mair1
+	adr r0, .Lc_tramp_mp_startup_mair1
 	ldr r0, [r0]
 	mcr p15, 0, r0, c10, c2, 1  // MAIR1 / NMRR
 
 	mov r0, #0
 	mcr p15, 0, r0, c8, c7, 0
 
-	adr r0, _tramp_mp_startup_pdbr
+	adr r0, .LC_tramp_mp_startup_pdbr
 	ldr r0, [r0]
 	tst r1, #(1 << 31)
 	movne  r1, #0
@@ -198,7 +202,7 @@ _tramp_mp_entry:
 	mcreq  p15, 0, r0, c2, c0
 #endif
 
-	adr r0, _tramp_mp_startup_cp15_c1
+	adr r0, .LC_tramp_mp_startup_cp15_c1
 	ldr r0, [r0]
 	mcr p15, 0, r0, c1, c0
 
@@ -208,7 +212,7 @@ _tramp_mp_entry:
 	ldr r0, 1f
 	mov pc, r0
 1:
-	.long _tramp_mp_virt
+	.long .LC_tramp_mp_virt
 
 #if defined(CONFIG_ARM_MPCORE) || defined(CONFIG_ARM_CORTEX_A9) || defined(CONFIG_ARM_CORTEX_A5)
 .Lmpcore_phys_base:
@@ -227,9 +231,9 @@ defvar _tramp_mp_startup_mair0
 defvar _tramp_mp_startup_mair1
 
 	// we run paged now
-_tramp_mp_virt:
+.LC_tramp_mp_virt:
 	// spinlock on cpu-init
-	adr	r0, _tramp_mp_spinlock
+	adr	r0, .LC_tramp_mp_spinlock
 1:	ldr	r1, [r0]
 	teq	r1, #0
 	wfene
@@ -246,8 +250,8 @@ _tramp_mp_virt:
 	// TLB flush
 	mcr p15, 0, r0, c8, c7, 0
 
-	adr	sp, _tramp_mp_init_stack
-	add	sp, #(_tramp_mp_init_stack_top-_tramp_mp_init_stack)
+	adr	sp, .LC_tramp_mp_init_stack
+	add	sp, #(.LC_tramp_mp_init_stack_top-.LC_tramp_mp_init_stack)
 	nop
 	ldr	pc, [pc, #-4]
 
@@ -257,7 +261,7 @@ _tramp_mp_virt:
 defvar _tramp_mp_spinlock
 
 	.p2align 3
-_tramp_mp_init_stack:
+.LC_tramp_mp_init_stack:
 	.space 1024
-_tramp_mp_init_stack_top:
+.LC_tramp_mp_init_stack_top:
 
