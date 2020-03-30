@@ -53,6 +53,7 @@ Platform_control::init(Cpu_number cpu)
 IMPLEMENTATION [arm && mp && pf_armada38x]: // -------------------------------
 
 #include "ipi.h"
+#include "pic.h"
 #include "mem.h"
 #include "mmio_register_block.h"
 #include "kmem.h"

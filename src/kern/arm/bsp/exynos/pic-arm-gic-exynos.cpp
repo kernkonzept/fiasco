@@ -602,7 +602,6 @@ public:
   Unsigned32 wakeup_irq_eint_mask() { return _wu_gc->_wakeup; }
 
 private:
-  friend void irq_handler();
   friend class Pic;
   static Per_cpu<Static_object<Gic_v2> > _gic;
   Combiner_chip *_cc;
@@ -720,12 +719,18 @@ Mgr_ext::set_cpu(Mword irqnum, Cpu_number cpu) const
           cxx::int_value<Cpu_number>(cpu));
 }
 
+PUBLIC static
+void
+Mgr_ext::exynos_irq_handler()
+{ nonull_static_cast<Mgr_ext *>(Irq_mgr::mgr)->_gic.current()->hit(0); }
+
 PUBLIC static FIASCO_INIT
 void Pic::init()
 {
   Mgr_ext *m = new Boot_object<Mgr_ext>();
   Irq_mgr::mgr = m;
   gic = &m->_gic;
+  Gic::set_irq_handler(&Mgr_ext::exynos_irq_handler);
 }
 
 PUBLIC static
@@ -789,11 +794,6 @@ void Pic::init_ap(Cpu_number cpu, bool resume)
       gic.cpu(cpu)->alloc(_check_irq0.cpu(cpu), 0);
     }
 }
-
-
-extern "C"
-void irq_handler()
-{ nonull_static_cast<Mgr_ext *>(Irq_mgr::mgr)->_gic.current()->hit(0); }
 
 //-------------------------------------------------------------------
 IMPLEMENTATION [arm && exynos_extgic && arm_em_tz]:

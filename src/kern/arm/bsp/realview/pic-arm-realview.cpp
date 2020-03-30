@@ -63,7 +63,7 @@ void Pic::init()
   m->add_chip(256, g, g->nr_irqs());
 
   // FIXME: Replace static local variable, use placement new
-  Cascade_irq *casc_irq = new Boot_object<Cascade_irq>(g, &Gic::cascade_hit);
+  Cascade_irq *casc_irq = new Boot_object<Cascade_irq>(g, &Gic_v2::cascade_hit);
 
   gic->alloc(casc_irq, 42);
   casc_irq->unmask();
