@@ -127,7 +127,7 @@ Mword
 Fpu::fpsid_read()
 {
   Mword v;
-  asm volatile("mrc p10, 7, %0, cr0, cr0" : "=r" (v));
+  asm volatile(".fpu vfp\n vmrs %0, fpsid" : "=r" (v));
   return v;
 }
 
@@ -136,7 +136,7 @@ Mword
 Fpu::mvfr0()
 {
   Mword v;
-  asm volatile("mrc p10, 7, %0, cr7, cr0" : "=r" (v));
+  asm volatile(".fpu vfp\n vmrs %0, mvfr0" : "=r" (v));
   return v;
 }
 
@@ -145,7 +145,7 @@ Mword
 Fpu::mvfr1()
 {
   Mword v;
-  asm volatile("mrc p10, 7, %0, cr6, cr0" : "=r" (v));
+  asm volatile(".fpu vfp\n vmrs %0, mvfr1" : "=r" (v));
   return v;
 }
 
@@ -154,7 +154,7 @@ PRIVATE static inline
 void
 Fpu::fpexc(Mword v)
 {
-  asm volatile("mcr p10, 7, %0, cr8, cr0" : : "r" (v));
+  asm volatile(".fpu vfp\n vmsr fpexc, %0" : : "r" (v));
 }
 
 PUBLIC static inline
@@ -162,7 +162,7 @@ Mword
 Fpu::fpexc()
 {
   Mword v;
-  asm volatile("mrc p10, 7, %0, cr8, cr0" : "=r" (v));
+  asm volatile(".fpu vfp\n vmrs %0, fpexc" : "=r" (v));
   return v;
 }
 
@@ -171,7 +171,7 @@ Mword
 Fpu::fpinst()
 {
   Mword i;
-  asm volatile("mrc p10, 7, %0, cr9,  cr0" : "=r" (i));
+  asm volatile(".fpu vfp\n vmrs %0, fpinst" : "=r" (i));
   return i;
 }
 
@@ -179,7 +179,7 @@ PUBLIC static inline
 void
 Fpu::fpinst(Mword v)
 {
-  asm volatile("mcr p10, 7, %0, cr9,  cr0" : : "r" (v));
+  asm volatile(".fpu vfp\n vmsr fpinst, %0" : : "r" (v));
 }
 
 PUBLIC static inline
@@ -187,7 +187,7 @@ Mword
 Fpu::fpinst2()
 {
   Mword i;
-  asm volatile("mrc p10, 7, %0, cr10,  cr0" : "=r" (i));
+  asm volatile(".fpu vfp\n vmrs %0, fpinst2" : "=r" (i));
   return i;
 }
 
@@ -195,7 +195,7 @@ PUBLIC static inline
 void
 Fpu::fpinst2(Mword v)
 {
-  asm volatile("mcr p10, 7, %0, cr10,  cr0" : : "r" (v));
+  asm volatile(".fpu vfp\n vmsr fpinst2, %0" : : "r" (v));
 }
 
 PUBLIC static inline NEEDS[Fpu::fpexc]
@@ -274,9 +274,10 @@ void
 Fpu::save_fpu_regs(Fpu_regs *r)
 {
   Mword tmp;
-  asm volatile("stc p11, cr0, [%0], #128     \n"
-               "cmp    %2, #0                \n"
-               "stcnel p11, cr0, [%0], #128  \n"
+  asm volatile(".fpu neon\n"
+               "vstm   %0!, {d0-d15}   \n"
+               "cmp    %2, #0          \n"
+               "vstmne %0!, {d16-d31}  \n"
                : "=r" (tmp) : "0" (r->state), "r" (save_32r));
 }
 
@@ -285,9 +286,10 @@ void
 Fpu::restore_fpu_regs(Fpu_regs *r)
 {
   Mword tmp;
-  asm volatile("ldc    p11, cr0, [%0], #128 \n"
-               "cmp    %2, #0               \n"
-               "ldcnel p11, cr0, [%0], #128 \n"
+  asm volatile(".fpu neon\n "
+               "vldm   %0!, {d0-d15}  \n"
+               "cmp    %2, #0        \n"
+               "vldmne %0!, {d16-d31} \n"
                : "=r" (tmp) : "0" (r->state), "r" (save_32r));
 }
 
@@ -300,10 +302,11 @@ Fpu::save_state(Fpu_state *s)
 
   assert(fpu_regs);
 
-  asm volatile ("mrc p10, 7, %[fpexc], cr8,  cr0, 0  \n"
+  asm volatile (".fpu vfp \n"
+                "vmrs %[fpexc], fpexc  \n"
                 "orr %[tmp], %[fpexc], #0x40000000   \n"
-                "mcr p10, 7, %[tmp], cr8,  cr0, 0    \n" // enable FPU to store full state
-                "mrc p10, 7, %[fpscr], cr1,  cr0, 0   \n"
+                "vmsr fpexc, %[tmp]    \n" // enable FPU to store full state
+                "vmrs %[fpscr], fpscr  \n"
                 : [tmp] "=&r" (tmp),
                   [fpexc] "=&r" (fpu_regs->fpexc),
                   [fpscr] "=&r" (fpu_regs->fpscr));
@@ -328,8 +331,8 @@ Fpu::restore_state(Fpu_state *s)
 
   restore_fpu_regs(fpu_regs);
 
-  asm volatile ("mcr p10, 7, %0, cr8,  cr0, 0  \n"
-                "mcr p10, 7, %1, cr1,  cr0, 0  \n"
+  asm volatile ("vmsr fpexc, %0  \n"
+                "vmsr fpscr, %1  \n"
                 :
                 : "r" ((fpu_regs->fpexc | FPEXC_EN) & ~FPEXC_EX),
                   "r" (fpu_regs->fpscr));
@@ -544,10 +547,10 @@ Fpu::restore_state(Fpu_state *s)
 
   assert(fpu_regs);
 
-  Mword dummy;
-  asm volatile ("mcr p10, 7, %[fpexc], cr8,  cr0, 0   \n"
-                "mcr p10, 7, %[fpscr], cr1,  cr0, 0   \n"
-                : [tmp] "=&r" (dummy)
+  asm volatile (".fpu vfp\n"
+                "vmsr fpexc, %[fpexc]  \n"
+                "vmsr fpscr, %[fpscr]  \n"
+                :
                 : [fpexc] "r" (fpu_regs->fpexc | FPEXC_EN),
                   [fpscr] "r" (fpu_regs->fpscr));
 
@@ -560,7 +563,7 @@ Fpu::restore_state(Fpu_state *s)
 
   restore_fpu_regs(fpu_regs);
 
-  asm volatile ("mcr p10, 7, %0, cr8,  cr0, 0  \n"
+  asm volatile (".fpu vfp\n  vmsr fpexc, %0  \n"
                 :
                 : "r" (fpu_regs->fpexc));
 }
