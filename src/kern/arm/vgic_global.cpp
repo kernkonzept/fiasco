@@ -1,4 +1,4 @@
-INTERFACE: 
+INTERFACE:
 
 #include "vgic.h"
 
