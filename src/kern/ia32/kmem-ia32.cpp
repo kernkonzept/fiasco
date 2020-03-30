@@ -323,6 +323,41 @@ Kmem::mmio_remap(Address phys)
   return va + offs;
 }
 
+PRIVATE static FIASCO_INIT
+void
+Kmem::map_initial_ram()
+{
+  Kmem_alloc *const alloc = Kmem_alloc::allocator();
+
+  // set up the kernel mapping for physical memory.  mark all pages as
+  // referenced and modified (so when touching the respective pages
+  // later, we save the CPU overhead of marking the pd/pt entries like
+  // this)
+
+  // we also set up a one-to-one virt-to-phys mapping for two reasons:
+  // (1) so that we switch to the new page table early and re-use the
+  //     segment descriptors set up by boot_cpu.cc.  (we'll set up our
+  //     own descriptors later.) we only need the first 4MB for that.
+  // (2) a one-to-one phys-to-virt mapping in the kernel's page directory
+  //     sometimes comes in handy (mostly useful for debugging)
+
+  // first 4MB page
+  kdir->map(0, Virt_addr(0UL), Virt_size(4 << 20),
+            Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced,
+            Pt_entry::super_level(), false, pdir_alloc(alloc));
+}
+
+PRIVATE static FIASCO_INIT_CPU
+void
+Kmem::map_kernel_virt(Kpdir *dir)
+{
+  dir->map(Mem_layout::Kernel_image_phys, Virt_addr(Kernel_image),
+           Virt_size(Mem_layout::Kernel_image_size),
+           Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced
+           | Pt_entry::global(),
+           Pt_entry::super_level(), false, pdir_alloc(Kmem_alloc::allocator()));
+}
+
 PUBLIC static FIASCO_INIT
 void
 Kmem::init_mmu()
@@ -348,29 +383,8 @@ Kmem::init_mmu()
       Cpu::set_cr4 (Cpu::get_cr4() | CR4_PGE);
     }
 
-  // set up the kernel mapping for physical memory.  mark all pages as
-  // referenced and modified (so when touching the respective pages
-  // later, we save the CPU overhead of marking the pd/pt entries like
-  // this)
-
-  // we also set up a one-to-one virt-to-phys mapping for two reasons:
-  // (1) so that we switch to the new page table early and re-use the
-  //     segment descriptors set up by boot_cpu.cc.  (we'll set up our
-  //     own descriptors later.) we only need the first 4MB for that.
-  // (2) a one-to-one phys-to-virt mapping in the kernel's page directory
-  //     sometimes comes in handy (mostly useful for debugging)
-
-  // first 4MB page
-  kdir->map(0, Virt_addr(0UL), Virt_size(4 << 20),
-      Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced,
-      Pt_entry::super_level(), false, pdir_alloc(alloc));
-
-  kdir->map(Mem_layout::Kernel_image_phys,
-            Virt_addr(Mem_layout::Kernel_image),
-            Virt_size(Mem_layout::Kernel_image_size),
-            Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced
-            | Pt_entry::global(), Pt_entry::super_level(), false,
-            pdir_alloc(alloc));
+  map_initial_ram();
+  map_kernel_virt(kdir);
 
   if (!Mem_layout::Adap_in_kernel_image)
     kdir->map(Mem_layout::Adap_image_phys,
@@ -717,17 +731,24 @@ Kmem::setup_cpu_structures_isolation(Cpu &cpu, Kpdir *cpu_dir, cxx::Simple_alloc
                  Pdir::Depth,
                  false, pdir_alloc(Kmem_alloc::allocator()));
 
-  extern char const syscall_entry_code[];
-  extern char const syscall_entry_code_end[];
-  char *sccode = (char *)cpu_m->alloc_bytes(syscall_entry_code_end - syscall_entry_code, 16);
-  assert ((Address)sccode == Kentry_cpu_syscall_entry);
-  memcpy(sccode, syscall_entry_code, syscall_entry_code_end - syscall_entry_code);
+  prepare_kernel_entry_points(cpu_m, cpu_dir);
 
   unsigned const estack_sz = 512;
   char *estack = (char *)cpu_m->alloc_bytes(estack_sz, 16);
 
   setup_cpu_structures(cpu, cpu_m, cpu_m);
   cpu.get_tss()->_rsp0 = (Address)(estack + estack_sz);
+}
+
+PRIVATE static
+void
+Kmem::prepare_kernel_entry_points(cxx::Simple_alloc *cpu_m, Kpdir *)
+{
+  extern char const syscall_entry_code[];
+  extern char const syscall_entry_code_end[];
+  char *sccode = (char *)cpu_m->alloc_bytes(syscall_entry_code_end - syscall_entry_code, 16);
+  assert ((Address)sccode == Kentry_cpu_syscall_entry);
+  memcpy(sccode, syscall_entry_code, syscall_entry_code_end - syscall_entry_code);
 }
 
 //--------------------------------------------------------------------------
@@ -860,12 +881,7 @@ Kmem::init_cpu(Cpu &cpu)
         }
     }
 
-  cpu_dir->map(Mem_layout::Kernel_image_phys,
-               Virt_addr(Kernel_image),
-               Virt_size(Mem_layout::Kernel_image_size),
-               Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced
-               | Pt_entry::global(), Pt_entry::super_level(), false,
-               pdir_alloc(alloc));
+  map_kernel_virt(cpu_dir);
 
    if (!Adap_in_kernel_image)
      cpu_dir->map(Adap_image_phys,
