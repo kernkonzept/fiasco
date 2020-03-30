@@ -67,4 +67,30 @@ void Kip_init::init()
   Kip::init_global_kip(kinfo);
   kinfo->add_mem_region(Mem_desc(0, Mem_layout::User_max,
                         Mem_desc::Conventional, true));
+  init_syscalls(kinfo);
 }
+
+//--------------------------------------------------------------
+IMPLEMENTATION[64bit]:
+
+PRIVATE static inline
+void
+Kip_init::init_syscalls(Kip *kinfo)
+{
+  union K
+  {
+    Kip k;
+    Mword w[512];
+  };
+
+  K *k = reinterpret_cast<K *>(kinfo);
+  k->w[0x100] = 0xd65f03c0d4000001; // svc #0; ret
+}
+
+//--------------------------------------------------------------
+IMPLEMENTATION[32bit]:
+
+PRIVATE static inline
+void
+Kip_init::init_syscalls(Kip *)
+{}
