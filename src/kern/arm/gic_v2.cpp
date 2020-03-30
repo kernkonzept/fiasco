@@ -19,6 +19,10 @@ public:
 
     _cpu.enable();
   }
+
+  Gic_v2(Address cpu_base, Address dist_base, Gic *master_mapping)
+  : Gic(dist_base, master_mapping, cpu_base)
+  {}
 };
 
 //-------------------------------------------------------------------
