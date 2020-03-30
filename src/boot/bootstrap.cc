@@ -95,8 +95,9 @@ bootstrap()
     panic("Fiasco kernel occupies memory below %014lx",
           (unsigned long)Mem_layout::Kernel_image);
 
-  if ((Address)&_end - Mem_layout::Kernel_image > 4<<20)
-    panic("Fiasco boot system occupies more than 4MB");
+  if ((Address)&_end - Mem_layout::Kernel_image > Mem_layout::Kernel_image_size)
+    panic("Fiasco boot system occupies more than %luMB",
+          Mem_layout::Kernel_image_size / (1024 * 1024));
 
   base_map_physical_memory_for_kernel();
 

@@ -547,7 +547,7 @@ base_paging_init(void)
   pdir_map_range(base_pml4_pa, /*virt*/0, /*phys*/0, /*size*/4 << 20,
 		 INTEL_PDE_VALID | INTEL_PDE_WRITE | INTEL_PDE_USER);
 
-  // map in the first 4MB of physical memory to 0xfffffffff0000000
+  // map in the physical start of the kernel to 0xfffffffff0000000
   pdir_map_range(base_pml4_pa, Mem_layout::Kernel_image,
                  Mem_layout::Kernel_image_phys,
                  Mem_layout::Kernel_image_size,
