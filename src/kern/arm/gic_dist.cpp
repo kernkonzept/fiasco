@@ -137,6 +137,13 @@ Gic_dist::set_cpu(Mword pin, Unsigned8 target, V2)
 }
 
 PUBLIC inline
+Unsigned32
+Gic_dist::itarget(unsigned offset)
+{
+  return _dist.read<Unsigned32>(GICD_ITARGETSR + offset);
+}
+
+PUBLIC inline
 void
 Gic_dist::igroup_init(V2, unsigned num)
 {
@@ -242,24 +249,38 @@ Gic_dist::hw_nr_lpis()
   return 1U << (num_lpis + 1);
 }
 
+PUBLIC static inline
+Unsigned64
+Gic_dist::cpu_to_irouter_entry(Cpu_number cpu)
+{
+  auto phys_id = cxx::int_value<Cpu_phys_id>(Cpu::cpus.cpu(cpu).phys_id());
+  return Unsigned64{phys_id & 0xff000000} << 8 | (phys_id & 0xffffff);
+}
+
 PUBLIC inline
 void
-Gic_dist::set_cpu(Mword pin, Cpu_phys_id cpu, V3)
+Gic_dist::set_cpu(Mword pin, Unsigned64 irouter_entry, V3)
 {
   if (pin < 32) // GICD_IROUTER<0..31> are reserved
     return;
-  Unsigned64 v = cxx::int_value<Cpu_phys_id>(cpu);
-  _dist.write_non_atomic<Unsigned64>(v & 0xff00ffffff, GICD_IROUTER + 8 * pin);
+  _dist.write_non_atomic<Unsigned64>(irouter_entry, GICD_IROUTER + 8 * pin);
 }
 
 PUBLIC inline NEEDS["cpu.h"]
 void
 Gic_dist::init_targets(unsigned max, V3)
 {
-  Unsigned64 t = Cpu::mpidr() & 0xff00ffffff;
+  Unsigned64 t = Cpu::mpidr() & 0xff00ffffffULL;
 
   for (unsigned i = 32; i < max; ++i)
     _dist.write_non_atomic<Unsigned64>(t, GICD_IROUTER + 8 * i);
+}
+
+PUBLIC inline
+Unsigned32
+Gic_dist::irouter(unsigned num)
+{
+  return _dist.read_non_atomic<Unsigned64>(GICD_IROUTER + num * 8);
 }
 
 PRIVATE
@@ -301,13 +322,6 @@ IMPLEMENTATION:
 
 #include "l4_types.h"
 #include "lock_guard.h"
-
-PUBLIC inline
-Unsigned32
-Gic_dist::itarget(unsigned offset)
-{
-  return _dist.read<Unsigned32>(GICD_ITARGETSR + offset);
-}
 
 PUBLIC explicit inline
 Gic_dist::Gic_dist(Address dist_base)

@@ -45,6 +45,14 @@ Gic_cpu_v3::enable()
 
 PUBLIC inline NEEDS["mem.h"]
 void
+Gic_cpu_v3::disable()
+{
+  asm volatile("msr S3_0_C12_C12_7, %x0" : : "r" (0ul)); // ICC_IGRPEN1_EL1
+  Mem::isb();
+}
+
+PUBLIC inline NEEDS["mem.h"]
+void
 Gic_cpu_v3::ack(Unsigned32 irq)
 {
   asm volatile("msr S3_0_C12_C12_1, %x0" : : "r"(irq)); // ICC_EOIR1_EL1

@@ -25,6 +25,7 @@ public:
   virtual void softint_bcast(unsigned m) = 0;
   virtual void softint_phys(unsigned m, Unsigned64 target) = 0;
   virtual void init_ap(Cpu_number cpu, bool resume) = 0;
+  virtual void cpu_deinit(Cpu_number cpu) = 0;
   virtual unsigned gic_version() const = 0;
 
   // empty default for JDB
@@ -90,6 +91,13 @@ public:
       self()->cpu_local_init(cpu);
 
     _cpu.enable();
+  }
+
+  void cpu_deinit(Cpu_number cpu) override
+  {
+    self()->migrate_irqs(cpu, Cpu_number::boot_cpu());
+    self()->redist_disable(cpu);
+    _cpu.disable();
   }
 
   unsigned init(bool primary_gic, int nr_irqs_override = -1)

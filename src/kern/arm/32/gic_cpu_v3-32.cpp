@@ -21,6 +21,8 @@ void Gic_cpu_v3::_enable_sre_set()
 //-------------------------------------------------------------------
 IMPLEMENTATION:
 
+#include "mem.h"
+
 PUBLIC inline
 void
 Gic_cpu_v3::pmr(unsigned prio)
@@ -37,6 +39,14 @@ Gic_cpu_v3::enable()
   asm volatile("mcr p15, 0, %0, c12, c12, 7" : : "r" (1)); // ICC_IGRPEN1
 
   pmr(Cpu_prio_val);
+}
+
+PUBLIC inline NEEDS["mem.h"]
+void
+Gic_cpu_v3::disable()
+{
+  asm volatile("mcr p15, 0, %0, c12, c12, 7" : : "r" (0)); // ICC_IGRPEN1
+  Mem::isb();
 }
 
 PUBLIC inline

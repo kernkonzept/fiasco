@@ -68,6 +68,7 @@ public:
 private:
   void init_lpi() {}
   void cpu_local_init_lpi(Cpu_number) {}
+  void migrate_lpis(Cpu_number, Cpu_number) {}
 };
 
 //-------------------------------------------------------------------
@@ -120,6 +121,11 @@ Gic_v3::softint_phys(unsigned m, Unsigned64 target) override
 
 PUBLIC inline
 void
+Gic_v3::redist_disable(Cpu_number cpu)
+{ _redist.cpu(cpu).disable(); }
+
+PUBLIC inline
+void
 Gic_v3::cpu_local_init(Cpu_number cpu)
 {
   auto &rd = _redist.cpu(cpu);
@@ -147,7 +153,21 @@ PUBLIC
 void
 Gic_v3::set_cpu(Mword pin, Cpu_number cpu) override
 {
-  _dist.set_cpu(pin, ::Cpu::cpus.cpu(cpu).phys_id(), Version());
+  _dist.set_cpu(pin, _dist.cpu_to_irouter_entry(cpu), Version());
+}
+
+PUBLIC
+void
+Gic_v3::migrate_irqs(Cpu_number from, Cpu_number to)
+{
+  unsigned num = hw_nr_irqs();
+  Unsigned64 val_from = _dist.cpu_to_irouter_entry(from);
+
+  for (unsigned i = 0; i < num; ++i)
+    if (_dist.irouter(i) == val_from)
+      set_cpu(i, to);
+
+  migrate_lpis(from, to);
 }
 
 PUBLIC
@@ -233,6 +253,14 @@ Gic_v3::cpu_local_init_lpi(Cpu_number cpu)
       for (unsigned i = 0; i < _num_its; i++)
         _its_vec[i]->cpu_init(cpu, _redist.cpu(cpu));
     }
+}
+
+PUBLIC
+void
+Gic_v3::migrate_lpis(Cpu_number from, Cpu_number to)
+{
+  if (_has_lpis)
+    _msi->Gic_msi::migrate_lpis(from, to);
 }
 
 PUBLIC

@@ -19,7 +19,4 @@ public:
     ICC_SRE_DIB          = 1 << 2,
     ICC_SRE_Enable_lower = 1 << 3,
   };
-
-  void disable() {}
 };
-
