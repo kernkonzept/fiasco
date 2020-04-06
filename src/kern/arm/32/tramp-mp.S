@@ -187,7 +187,7 @@ _tramp_mp_entry:
 	adr r0, .LC_tramp_mp_startup_mair0
 	ldr r0, [r0]
 	mcr p15, 0, r0, c10, c2, 0  // MAIR0 / PRRR
-	adr r0, .Lc_tramp_mp_startup_mair1
+	adr r0, .LC_tramp_mp_startup_mair1
 	ldr r0, [r0]
 	mcr p15, 0, r0, c10, c2, 1  // MAIR1 / NMRR
 
