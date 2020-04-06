@@ -194,7 +194,7 @@
 	jc	1f
 	movq	$253, (16*8)(%rsp)
 	movq	$0,   (17*8)(%rsp)
-	sub	$2, (16*8 + 2*8)(%rsp) /* reset RIP to syscall */
+	subq	$2, (16*8 + 2*8)(%rsp) /* reset RIP to syscall */
 	jmp	\target
 1:	/* do alien IPC and raise a trap afterwards */
 	RESET_THREAD_CANCEL_AT %rbx
