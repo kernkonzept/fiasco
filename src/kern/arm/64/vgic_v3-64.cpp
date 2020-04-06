@@ -104,51 +104,51 @@ Gic_h_v3::load_aprs(Unsigned32 const *a)
 PUBLIC static inline ALWAYS_INLINE void
 Gic_h_v3::save_lrs(Gic_h::Arm_vgic::Lrs *lr, unsigned n)
 {
-#define READ_LR(ul,v,x) \
+#define TRANSFER_LR(ul,v,x) \
   asm ("mrs %x0, S3_4_C12_" #ul "_" #v : "=r"(lr->lr64[x])); \
   if (n <= x + 1) return
 
-  READ_LR(c12, 0, 0);
-  READ_LR(c12, 1, 1);
-  READ_LR(c12, 2, 2);
-  READ_LR(c12, 3, 3);
-  READ_LR(c12, 4, 4);
-  READ_LR(c12, 5, 5);
-  READ_LR(c12, 6, 6);
-  READ_LR(c12, 7, 7);
-  READ_LR(c13, 0, 8);
-  READ_LR(c13, 1, 9);
-  READ_LR(c13, 2, 10);
-  READ_LR(c13, 3, 11);
-  READ_LR(c13, 4, 12);
-  READ_LR(c13, 5, 13);
-  READ_LR(c13, 6, 14);
-  READ_LR(c13, 7, 15);
-#undef READ_LR
+  TRANSFER_LR(c12, 0, 0);
+  TRANSFER_LR(c12, 1, 1);
+  TRANSFER_LR(c12, 2, 2);
+  TRANSFER_LR(c12, 3, 3);
+  TRANSFER_LR(c12, 4, 4);
+  TRANSFER_LR(c12, 5, 5);
+  TRANSFER_LR(c12, 6, 6);
+  TRANSFER_LR(c12, 7, 7);
+  TRANSFER_LR(c13, 0, 8);
+  TRANSFER_LR(c13, 1, 9);
+  TRANSFER_LR(c13, 2, 10);
+  TRANSFER_LR(c13, 3, 11);
+  TRANSFER_LR(c13, 4, 12);
+  TRANSFER_LR(c13, 5, 13);
+  TRANSFER_LR(c13, 6, 14);
+  TRANSFER_LR(c13, 7, 15);
+#undef TRANSFER_LR
 }
 
 PUBLIC static inline ALWAYS_INLINE void
 Gic_h_v3::load_lrs(Gic_h::Arm_vgic::Lrs const *lr, unsigned n)
 {
-#define READ_LR(ul,v,x) \
+#define TRANSFER_LR(ul,v,x) \
   asm ("msr S3_4_C12_" #ul "_" #v ", %x0" : : "r"(lr->lr64[x])); \
   if (n <= x + 1) return
 
-  READ_LR(c12, 0, 0);
-  READ_LR(c12, 1, 1);
-  READ_LR(c12, 2, 2);
-  READ_LR(c12, 3, 3);
-  READ_LR(c12, 4, 4);
-  READ_LR(c12, 5, 5);
-  READ_LR(c12, 6, 6);
-  READ_LR(c12, 7, 7);
-  READ_LR(c13, 0, 8);
-  READ_LR(c13, 1, 9);
-  READ_LR(c13, 2, 10);
-  READ_LR(c13, 3, 11);
-  READ_LR(c13, 4, 12);
-  READ_LR(c13, 5, 13);
-  READ_LR(c13, 6, 14);
-  READ_LR(c13, 7, 15);
-#undef READ_LR
+  TRANSFER_LR(c12, 0, 0);
+  TRANSFER_LR(c12, 1, 1);
+  TRANSFER_LR(c12, 2, 2);
+  TRANSFER_LR(c12, 3, 3);
+  TRANSFER_LR(c12, 4, 4);
+  TRANSFER_LR(c12, 5, 5);
+  TRANSFER_LR(c12, 6, 6);
+  TRANSFER_LR(c12, 7, 7);
+  TRANSFER_LR(c13, 0, 8);
+  TRANSFER_LR(c13, 1, 9);
+  TRANSFER_LR(c13, 2, 10);
+  TRANSFER_LR(c13, 3, 11);
+  TRANSFER_LR(c13, 4, 12);
+  TRANSFER_LR(c13, 5, 13);
+  TRANSFER_LR(c13, 6, 14);
+  TRANSFER_LR(c13, 7, 15);
+#undef TRANSFER_LR
 }
