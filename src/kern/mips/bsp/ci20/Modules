@@ -4,7 +4,7 @@ RAM_PHYS_BASE			:= 0x0
 PREPROCESS_PARTS		+= jz4780 ci20
 PREPROCESS_PARTS-$(CONFIG_MP)	+= pic_gic cps
 PREPROCESS_PARTS		+= $(PREPROCESS_PARTS-y)
-OBJECTS_LIBUART			+= uart_16550.o
+OBJECTS_LIBUART			+= uart_16550.o uart_16550_dw.o
 CXXFLAGS_uart-libuart		+= $(call LIBUART_UART, 16550_dw)
 
 INTERFACES_KERNEL		+= irq_mgr_flex irq_ingenic \

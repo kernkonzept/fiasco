@@ -38,8 +38,8 @@ LIBUART_HDR-$(CONFIG_PF_IMX_53)    += uart_imx.h
 LIBUART_TYP-$(CONFIG_PF_IMX_53)    += L4::Uart_imx51
 LIBUART_HDR-$(CONFIG_PF_IMX_6)     += uart_imx.h
 LIBUART_TYP-$(CONFIG_PF_IMX_6)     += L4::Uart_imx6
-LIBUART_HDR-$(CONFIG_PF_IMX_6_UL)  += uart_imx.h
-LIBUART_TYP-$(CONFIG_PF_IMX_6_UL)  += L4::Uart_imx6
+LIBUART_HDR-$(CONFIG_PF_IMX_6UL)   += uart_imx.h
+LIBUART_TYP-$(CONFIG_PF_IMX_6UL)   += L4::Uart_imx6
 LIBUART_HDR-$(CONFIG_PF_IMX_7)     += uart_imx.h
 LIBUART_TYP-$(CONFIG_PF_IMX_7)     += L4::Uart_imx7
 
