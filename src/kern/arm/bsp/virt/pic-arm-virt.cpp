@@ -4,6 +4,7 @@ IMPLEMENTATION [arm && pf_arm_virt]:
 #include "irq_mgr_multi_chip.h"
 #include "gic_v2.h"
 #include "gic_v3.h"
+#include "panic.h"
 
 
 PUBLIC static

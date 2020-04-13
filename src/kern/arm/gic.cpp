@@ -1,5 +1,6 @@
 INTERFACE [arm && pic_gic]:
 
+#include "assert.h"
 #include "cascade_irq.h"
 #include "cpu.h"
 #include "kmem.h"
