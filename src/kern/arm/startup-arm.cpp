@@ -70,10 +70,10 @@ Startup::stage2()
   Kmem_space::init();
   Kernel_task::init();
   Mem_space::kernel_space(Kernel_task::kernel_task());
+  Cpu::init_mmu(true);
   Pic::init();
   Thread::init_per_cpu(boot_cpu, false);
 
-  Cpu::init_mmu(true);
   Cpu::cpus.cpu(boot_cpu).init(false, true);
   Platform_control::init(boot_cpu);
   Psci::init(boot_cpu);
