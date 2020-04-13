@@ -228,6 +228,8 @@ Gic_dist::cpu_init(V3)
 //-------------------------------------------------------------------
 IMPLEMENTATION:
 
+#include "l4_types.h"
+
 PUBLIC inline
 Unsigned32
 Gic_dist::itarget(unsigned offset)
@@ -284,7 +286,7 @@ Gic_dist::init_regs(unsigned from, unsigned to)
     _dist.write<Unsigned32>(0xffffffff, GICD_ICENABLER + i * 4 / 32);
 }
 
-PUBLIC inline
+PUBLIC inline NEEDS["l4_types.h"]
 int
 Gic_dist::set_mode(Mword pin, Irq_chip::Mode m)
 {
