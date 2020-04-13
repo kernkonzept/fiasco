@@ -155,7 +155,7 @@ Gic_dist::cpu_init_v2()
 
   _dist.write<Unsigned32>(0xffffffff, GICD_ICPENDR);
 
-  _dist.write<Unsigned32>(0xffffffff, 0x380); // clear active
+  _dist.write<Unsigned32>(0xffffffff, GICD_ICACTIVER); // clear active
   _dist.write<Unsigned32>(0xffffffff, 0xf10); // sgi pending clear
   _dist.write<Unsigned32>(0xffffffff, 0xf14); // sgi pending clear
   _dist.write<Unsigned32>(0xffffffff, 0xf18); // sgi pending clear
