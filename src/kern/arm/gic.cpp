@@ -194,11 +194,11 @@ Gic::hw_nr_irqs()
 { return _dist.hw_nr_irqs(); }
 
 PUBLIC inline
-void Gic::disable_locked( unsigned irq )
+void Gic::disable_locked(unsigned irq)
 { _dist.disable_irq(irq); }
 
 PUBLIC inline
-void Gic::enable_locked(unsigned irq, unsigned /*prio*/)
+void Gic::enable_locked(unsigned irq)
 { _dist.enable_irq(irq); }
 
 
@@ -215,7 +215,7 @@ void
 Gic::unmask(Mword pin) override
 {
   assert (cpu_lock.test());
-  enable_locked(pin, 0xa);
+  enable_locked(pin);
 }
 
 PUBLIC
