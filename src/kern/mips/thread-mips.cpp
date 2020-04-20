@@ -125,6 +125,8 @@ Thread::Thread(Ram_quota *q)
   memset(r, 0, sizeof(*r));
   r->status = Cp0_status::status_eret_to_user_ei(Cp0_status::read());
 
+  alloc_eager_fpu_state();
+
   state_add_dirty(Thread_dead, false);
   // ok, we're ready to go!
 }
