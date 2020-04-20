@@ -39,7 +39,7 @@ STATIC_INITIALIZE(Kern_lib_page);
 IMPLEMENTATION [arm && !arm_v6plus]:
 
 asm (
-    ".p2align(12)                        \n"
+    ".p2align 12                         \n"
     "kern_lib_start:                     \n"
 
     // atomic add
@@ -59,7 +59,7 @@ asm (
     // r1: cmp value
     // r2: new value
     // r3: tmp
-    ".p2align(8)                         \n"
+    ".p2align 8                          \n"
     "  ldr r3, [r0]			 \n"
     "  cmp r3, r1                        \n"
     "  nop                               \n"
@@ -75,7 +75,7 @@ asm (
     //  in-r1: new value
     // out-r0: old value
     // tmp-r2
-    ".p2align(8)                         \n"
+    ".p2align 8                          \n"
     "  ldr r2, [r0]			 \n"
     "  nop                               \n"
     "  nop                               \n"
@@ -90,7 +90,7 @@ asm (
 IMPLEMENTATION [arm && arm_v6plus]:
 
 asm (
-    ".p2align(12)                        \n"
+    ".p2align 12                         \n"
     ".global kern_lib_start              \n" // need this for mem_space.cpp
     "kern_lib_start:                     \n"
 
@@ -117,7 +117,7 @@ asm (
     // r1: cmp value
     // r2: new value
     // r3: tmp reg
-    ".p2align(8)                         \n"
+    ".p2align 8                          \n"
     "  1: ldrex r3, [r0]		 \n"
     "  cmp r3, r1                        \n"
     "  movne r0, #0                      \n"
@@ -134,7 +134,7 @@ asm (
     //  in-r0: memory reference
     //  in-r1: new value
     // out-r0: old value
-    ".p2align(8)                         \n"
+    ".p2align 8                          \n"
     "  1:                                \n"
     "  ldrex r2, [r0]			 \n"
     "  strex r3, r1, [r0]                \n"
