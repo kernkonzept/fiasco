@@ -125,7 +125,7 @@ entry_vec08_dbf:
  * See "Pentium Pro Processor Specification Update / January 1999"
  * Erratum "Virtual Wire mode through local APIC may cause int 15"
  * This exception can be silently ignored */
-	.p2align(4)
+	.p2align 4
 	.globl	entry_vec0f_apic_spurious_interrupt_bug
 entry_vec0f_apic_spurious_interrupt_bug:
 	pushl	%ecx
@@ -135,7 +135,7 @@ entry_vec0f_apic_spurious_interrupt_bug:
 	iret
 
 /* APIC error interrupt */
-	.p2align(4)
+	.p2align 4
 	.globl	entry_apic_error_interrupt
 entry_apic_error_interrupt:
 	cld
@@ -151,7 +151,7 @@ entry_apic_error_interrupt:
  * Spurious Interrupt: "If at the time the INTA cycle is issued, the
  * interupt that was to be dispensed has become masked (programmed by
  * software), the local APIC will deliver a spurious-interrupt vector." */
-	.p2align(4)
+	.p2align 4
 	.globl	entry_apic_spurious_interrupt
 entry_apic_spurious_interrupt:
 	pushl	%ecx
@@ -160,7 +160,7 @@ entry_apic_spurious_interrupt:
 	popl	%ecx
 	iret
 
-	.p2align(4)
+	.p2align 4
 	.global	entry_int_apic_ignore
 entry_int_apic_ignore:
 	pushl	%ecx
@@ -175,7 +175,7 @@ entry_int_apic_ignore:
 
 #if defined(CONFIG_JDB)
 
-	.p2align(4)
+	.p2align 4
 	.global entry_sys_fast_ipc_log
 entry_sys_fast_ipc_log:
 	pop	%esp
@@ -223,7 +223,7 @@ in_slow_ipc5:
 #endif // CONFIG_JDB
 
 
-	.p2align(4)
+	.p2align 4
 	.global entry_sys_fast_ipc_c
 entry_sys_fast_ipc_c:
 	pop	%esp
@@ -288,7 +288,7 @@ ret_from_fast_alien_ipc:
 	popl    %eax
 .endm
 
-	.p2align(4)
+	.p2align 4
 	.globl	leave_from_sysenter_by_iret
 leave_from_sysenter_by_iret:
 	LEAVE_SE_BY_IRET

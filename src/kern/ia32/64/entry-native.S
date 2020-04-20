@@ -37,7 +37,7 @@ entry_vec01_debug:
 
 
 	.section ".entry.text.dbf", "ax", @progbits
-	.p2align(4)
+	.p2align 4
 	.globl	entry_vec08_dbf
 entry_vec08_dbf:
 	SWITCH_TO_KERNEL_CR3 0
@@ -67,7 +67,7 @@ entry_vec08_dbf:
 
 
 	.section ".entry.text.tss", "ax", @progbits
-	.p2align(4)
+	.p2align 4
 	.globl	entry_vec0a_invalid_tss
 entry_vec0a_invalid_tss:
 	andq	$0xffffffffffffbfff, 24(%rsp)
@@ -79,7 +79,7 @@ entry_vec0a_invalid_tss:
  * See "Pentium Pro Processor Specification Update / January 1999"
  * Erratum "Virtual Wire mode through local APIC may cause int 15"
  * This exception can be silently ignored */
-	.p2align(4)
+	.p2align 4
 	.globl	entry_vec0f_apic_spurious_interrupt_bug
 entry_vec0f_apic_spurious_interrupt_bug:
 #ifndef CONFIG_KERNEL_ISOLATION
@@ -90,7 +90,7 @@ entry_vec0f_apic_spurious_interrupt_bug:
 
 /* XXX has to be fixed */
 /* APIC error interrupt */
-	.p2align(4)
+	.p2align 4
 	.globl	entry_apic_error_interrupt
 entry_apic_error_interrupt:
 	cld
@@ -106,7 +106,7 @@ entry_apic_error_interrupt:
  * Spurious Interrupt: "If at the time the INTA cycle is issued, the
  * interupt that was to be dispensed has become masked (programmed by
  * software), the local APIC will deliver a spurious-interrupt vector." */
-	.p2align(4)
+	.p2align 4
 	.globl	entry_apic_spurious_interrupt
 entry_apic_spurious_interrupt:
 #ifndef CONFIG_KERNEL_ISOLATION
@@ -114,7 +114,7 @@ entry_apic_spurious_interrupt:
 #endif
 	iretq
 
-	.p2align(4)
+	.p2align 4
 	.global	entry_int_apic_ignore
 entry_int_apic_ignore:
 	SWITCH_TO_KERNEL_CR3 0
@@ -129,7 +129,7 @@ entry_int_apic_ignore:
 
 #if defined(CONFIG_JDB)
 	.section ".entry.text.syscalls_log", "ax", @progbits
-	.p2align(4)
+	.p2align 4
 	.global entry_syscall_log
 	.global entry_sys_fast_ipc_log
 entry_syscall_log:
@@ -163,7 +163,7 @@ alien_sys_fast_ipc_log:
 #endif // CONFIG_JDB
 
 	.section ".entry.text.syscalls", "ax", @progbits
-	.p2align(4)
+	.p2align 4
 	.global entry_syscall_c
 	.global entry_sys_fast_ipc_c
 entry_syscall_c:
@@ -197,7 +197,7 @@ alien_sys_fast_ipc_c:
 
 	.globl	in_sc_ipc2
 
-	.p2align(4)
+	.p2align 4
 	.globl	leave_from_syscall_by_iret
 leave_from_syscall_by_iret:
 	RESTORE_STATE_SYSEXIT

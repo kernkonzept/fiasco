@@ -1,4 +1,4 @@
-	.p2align(4)
+	.p2align 4
 	.globl	resume_vm_svm
 resume_vm_svm:
 	

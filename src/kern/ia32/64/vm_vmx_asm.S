@@ -2,7 +2,7 @@
  * Function resume_vm_vmx, arguments:
  *  - rdi: Pointer to registers (layout specific...)
  */
-	.p2align(4)
+	.p2align 4
 	.globl resume_vm_vmx
 	.globl vm_vmx_exit_vec
 resume_vm_vmx:

@@ -7,9 +7,7 @@ _boot_start:
 	push	$0			/* no return address */
 	jmp	bootstrap
 
-        .align  4
-
-	.p2align(2), 0x90
+	.p2align 2, 0x90
 	.long   0x1BADB002              /* magic */
 	.long   0x00000000              /* feature flags */
 	.long   0 - 0x1BADB002
