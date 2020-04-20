@@ -264,7 +264,10 @@ Thread::unbind()
     }
 
   if (old)
-    delete old;
+    {
+      current()->rcu_wait();
+      delete old;
+    }
 
   return true;
 }
