@@ -381,9 +381,7 @@ Jdb_ptab_m::action(int cmd, void *&args, char const *&fmt,
 	      return EXTRA_INPUT_WITH_NEXTCHAR;
 	    }
 	  else
-	    {
-	      task = 0; //Jdb::get_current_task();
-	    }
+            task = 0; // use current task -- see below
 	}
       else if (args == &task)
 	{
@@ -399,7 +397,7 @@ Jdb_ptab_m::action(int cmd, void *&args, char const *&fmt,
 	    return Jdb_module::NOTHING;
         }
       else
-        s = Kernel_task::kernel_task();
+        s = Jdb::get_space(Jdb::current_cpu);
 
       void *ptab_base;
       if (!(ptab_base = static_cast<Mem_space*>(s)->dir()))
