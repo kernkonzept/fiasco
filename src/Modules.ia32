@@ -172,8 +172,8 @@ JDB			:= jdb_compound.o
 SUBSYSTEMS		+= JDB
 VPATH			+= jdb/ia32/32 jdb/ia32 jdb
 INTERFACES_JDB		+= jdb_io_ports jdb_ptab jdb_trace_set \
-			   jdb_console_buffer loadcnt jdb_io_apic jdb_ipi \
-			   jdb_bt jdb_log jdb_iomap jdb_misc              \
+			   jdb_console_buffer loadcnt jdb_io_apic \
+			   jdb_bt jdb_log jdb_iomap jdb_misc \
 			   jdb_halt_thread
 
 CXXSRC_JDB := tb_entry_output.cc

@@ -209,8 +209,8 @@ tb_entry_IMPL		:= tb_entry tb_entry-arm
 ifeq ("$(CONFIG_JDB)","y")
 JDB			:= jdb_compound.o
 SUBSYSTEMS		+= JDB
-INTERFACES_JDB		+= jdb_ptab jdb_trace_set jdb_ipi jdb_log  \
-			   jdb_perf jdb_console_buffer jdb_idle_stats
+INTERFACES_JDB		+= jdb_ptab jdb_trace_set jdb_log jdb_perf \
+			   jdb_console_buffer jdb_idle_stats
 
 CXXSRC_JDB := tb_entry_output.cc
 

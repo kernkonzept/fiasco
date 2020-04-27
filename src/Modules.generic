@@ -61,7 +61,7 @@ INTERFACES_JDB += \
 	jdb_report jdb_dump jdb_mapdb jdb_timeout jdb_kern_info_kmem_alloc \
 	jdb_kern_info_kip jdb_kern_info jdb_kern_info_data jdb_utcb        \
 	jdb_trap_state jdb_rcupdate jdb_sender_list jdb_tbuf_fe            \
-	jdb_cpu_call
+	jdb_cpu_call jdb_ipi
 
 jdb_IMPL	+= jdb jdb-ansi jdb-thread
 jdb_tbuf_IMPL	+= jdb_tbuf jdb_tbuf-$(CONFIG_XARCH)
