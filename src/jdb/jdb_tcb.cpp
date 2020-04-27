@@ -879,6 +879,7 @@ Jdb_tcb::action(int cmd, void *&args, char const *&fmt, int &next_char) override
                 fmt       = " tcb=%x => ";
                 putchar(first_char);
                 return Jdb_module::EXTRA_INPUT;
+              case ' ':
               case KEY_RETURN:
               case KEY_RETURN_2:
                 show(0, 0, false);
