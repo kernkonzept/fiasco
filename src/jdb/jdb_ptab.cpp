@@ -240,7 +240,7 @@ Jdb_ptab::key_pressed(int c, unsigned long &row, unsigned long &col) override
               char s[16];
               Jdb::printf_statline("p", "<CR>=disassemble here",
                                    "u[address=" L4_PTR_FMT " %s] ", virt.addr(),
-                                   Jdb::space_to_str(virt.space(), s, sizeof(s)));
+                                   Jdb::addr_space_to_str(virt, s, sizeof(s)));
               int c1 = Jdb_core::getchar();
               if (c1 != KEY_RETURN && c1 != ' ' && c != KEY_RETURN_2)
                 {

@@ -93,7 +93,7 @@ Jdb_dump::print_statline(unsigned long row, unsigned long col) override
   Jdb_address a = virt(row, col);
   Jdb::printf_statline("dump", str, "%c<" L4_PTR_FMT "> %s",
                        dump_type, a.addr(),
-                       Jdb::space_to_str(a.space(), s, sizeof(s)));
+                       Jdb::addr_space_to_str(a, s, sizeof(s)));
 }
 
 IMPLEMENT
@@ -318,7 +318,7 @@ Jdb_dump::key_pressed(int c, unsigned long &row, unsigned long &col) override
 	      char s[16];
 	      Jdb::printf_statline("dump", "<CR>=disassemble here",
 				   "u[address=" L4_PTR_FMT "%s] ", virt1,
-				   Jdb::space_to_str(a.space(), s, sizeof(s)));
+				   Jdb::addr_space_to_str(a, s, sizeof(s)));
 	      int c1 = Jdb_core::getchar();
 	      if (c1 != KEY_RETURN && c1 != ' ' && c != KEY_RETURN_2)
 		{

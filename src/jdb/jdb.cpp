@@ -1255,15 +1255,15 @@ Jdb::enter_jdb(Jdb_entry_frame *e, Cpu_number cpu)
 
 PUBLIC static
 const char *
-Jdb::space_to_str(Space *s, char *str, size_t len)
+Jdb::addr_space_to_str(Jdb_address addr, char *str, size_t len)
 {
-  if (s)
-    {
-      snprintf(str, len, "task D:%lx",
-               static_cast<Task*>(s)->dbg_info()->dbg_id());
-      return str;
-    }
-  return "physical";
+  if (addr.is_kmem())
+    return "kernel";
+  if (addr.is_phys())
+    return "physical";
+  snprintf(str, len, "task D:%lx",
+           static_cast<Task*>(addr.space())->dbg_info()->dbg_id());
+  return str;
 }
 
 

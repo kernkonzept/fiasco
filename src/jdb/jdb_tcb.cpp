@@ -765,7 +765,10 @@ dump_stack:
                   Jdb::printf_statline("tcb", "<CR>=disassemble here",
                                         "u[address=%08lx %s] ",
                                         _stack_view.current.value(),
-                                        Jdb::space_to_str(t->space(), s, sizeof(s)));
+                                        Jdb::addr_space_to_str(
+                                                         Jdb_address(nullptr,
+                                                                     t->space()),
+                                                         s, sizeof(s)));
                   int c1 = Jdb_core::getchar();
                   if ((c1 != KEY_RETURN) && c1 != KEY_RETURN_2 && (c1 != ' '))
                     {

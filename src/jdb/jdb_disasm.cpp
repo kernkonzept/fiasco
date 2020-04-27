@@ -193,7 +193,7 @@ Jdb_disasm::show(Jdb_address virt, int level)
       Jdb::printf_statline("dis",
                            "",
 			   "<" L4_PTR_FMT "> %s  %-7s",
-			   virt.addr(), Jdb::space_to_str(virt.space(), s, sizeof(s)),
+			   virt.addr(), Jdb::addr_space_to_str(virt, s, sizeof(s)),
 #if defined(CONFIG_IA32) || defined(CONFIG_AMD64)
 			   syntax_mode[(int)show_intel_syntax]
 #else
