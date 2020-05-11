@@ -159,6 +159,7 @@ Thread::user_invoke()
   // responsible for that
   //Mem_op::cache()->icache_invalidate_all();
 
+  do
     {
       extern char ret_from_user_invoke[];
       Mword register a0 __asm__("a0") = (Mword)ts;
@@ -171,6 +172,7 @@ Thread::user_invoke()
             [ts] "r" (a0),
             [cfs] "i" (ASM_WORD_BYTES * ASM_NARGSAVE));
     }
+  while (0);
 
   __builtin_unreachable();
   panic("should never be reached");
