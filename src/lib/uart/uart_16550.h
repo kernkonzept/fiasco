@@ -36,6 +36,25 @@ namespace L4
       IIR_BUSY = 7,
     };
 
+    enum Register_init
+    {
+#ifdef UART_16550_INIT_MCR
+      Init_mcr = UART_16550_INIT_MCR,
+#else
+      Init_mcr = 0,
+#endif
+#ifdef UART_16550_INIT_IER
+      Init_ier = UART_16550_INIT_IER,
+#else
+      Init_ier = 0,
+#endif
+#ifdef UART_16550_INIT_FCR
+      Init_fcr = UART_16550_INIT_FCR,
+#else
+      Init_fcr = 0,
+#endif
+    };
+
   public:
     enum
       {
@@ -61,16 +80,9 @@ namespace L4
         Base_rate_pxa = 921600,
       };
 
-    enum Init_flags
-    {
-      F_skip_init = 1,
-    };
-
-    explicit Uart_16550(unsigned long base_rate, unsigned char init_flags = 0,
-                        unsigned char ier_bits = 0,
-                        unsigned char mcr_bits = 0, unsigned char fcr_bits = 0)
-    : _base_rate(base_rate), _init_flags(init_flags), _mcr_bits(mcr_bits),
-      _ier_bits(ier_bits), _fcr_bits(fcr_bits)
+    explicit Uart_16550(unsigned long base_rate)
+    : _base_rate(base_rate), _mcr_bits(Init_mcr),
+      _ier_bits(Init_ier), _fcr_bits(Init_fcr)
     {}
 
     bool startup(Io_register_block const *regs) override;
@@ -84,7 +96,6 @@ namespace L4
 
   private:
     unsigned long _base_rate;
-    unsigned char _init_flags;
     unsigned char _mcr_bits;
     unsigned char _ier_bits;
     unsigned char _fcr_bits;
