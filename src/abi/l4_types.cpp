@@ -535,7 +535,7 @@ struct L4_timeout_pair
   L4_timeout_pair(L4_timeout const &rcv, L4_timeout const &snd)
     : rcv(rcv), snd(snd) {}
 
-  L4_timeout_pair(unsigned long v) : rcv(v), snd(v >> 16) {}
+  explicit L4_timeout_pair(unsigned long v) : rcv(v), snd(v >> 16) {}
 
   Mword raw() const { return (Mword)rcv.raw() | (Mword)snd.raw() << 16; }
 };
