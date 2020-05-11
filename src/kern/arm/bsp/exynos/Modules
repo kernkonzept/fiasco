@@ -2,7 +2,7 @@
 
 OBJECTS_LIBUART-$(CONFIG_PF_EXYNOS_UART_NATIVE) += uart_s3c2410.o
 OBJECTS_LIBUART         += $(OBJECTS_LIBUART-y)
-CXXFLAGS-$(CONFIG_PF_EXYNOS_UART_NATIVE)_uart-libuart += $(call LIBUART_UART, s3c2410)
+CXXFLAGS-$(CONFIG_PF_EXYNOS_UART_NATIVE)_uart-libuart += $(call LIBUART_UART, s3c2410, s5pv210)
 CXXFLAGS_uart-libuart   += $(CXXFLAGS-y_uart-libuart)
 
 PREPROCESS_PARTS        += pic_gic watchdog tickless_idle \
