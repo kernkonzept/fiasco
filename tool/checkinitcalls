@@ -58,6 +58,8 @@ if (!have_warn_opt("static-construction")) {
   push @ignore_funcs, ("_GLOBAL__sub_I__Z\\S*");
   push @ignore_funcs, ("global constructors keyed to \\S*");
   push @ignore_funcs, ("T\\.\\d+");
+  push @ignore_funcs, ("__cxx_global_var_init");
+  push @ignore_funcs, ("__cxx_global_var_init\\..*");
 }
 
 my $ignore_funcs = join("|",@ignore_funcs);
