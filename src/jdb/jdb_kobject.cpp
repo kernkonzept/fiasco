@@ -55,7 +55,7 @@ public:
       if (t->type == cxx::dyn_typeid(o))
         return t->name;
 
-    return cxx::dyn_typeid(o)->name;
+    return "no type name";
   }
 
   bool is_global() const { return !kobj_type; }
@@ -456,13 +456,6 @@ Jdb_kobject::obj_description(String_buffer *buffer, String_buffer *help_text,
     }
 }
 
-PRIVATE static
-void
-Jdb_kobject::print_kobj(Kobject *o)
-{
-  printf("%p [type=%s]", o, cxx::dyn_typeid(o)->name);
-}
-
 PUBLIC
 Jdb_module::Action_code
 Jdb_kobject::action(int cmd, void *&, char const *&, int &) override
@@ -478,7 +471,6 @@ Jdb_kobject::action(int cmd, void *&, char const *&, int &) override
           Kobject *k = Kobject::from_dbg(i);
           if (!handle_obj(k, 0))
             printf("Kobj w/o handler: ");
-          print_kobj(k);
           puts("");
         }
       return NOTHING;

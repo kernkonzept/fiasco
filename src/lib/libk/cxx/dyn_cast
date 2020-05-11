@@ -52,15 +52,6 @@ namespace _dyn {
 
     Type(Type_info const *type, void const *base) : type(type), base(base) {}
   };
-
-  /**
-   * Helper to get a string that contains the type name for `T`
-   * \tparam T  Type to get a string containing its name.
-   */
-  template<typename T> inline
-  char const * __attribute__((always_inline))
-  name_of()
-  { return __PRETTY_FUNCTION__; }
 }
 
 /// Helper to get the type info for `T`
@@ -79,7 +70,6 @@ struct Type_info
 {
   _dyn::Base_info const *bases; ///< Pointer to base infos
 
-  char const *name;   ///< Some name for the type (debugging aid)
   unsigned num_bases; ///< Number of base classes
   unsigned size;      ///< Size of the type in bytes
 
@@ -167,7 +157,6 @@ template<typename SELF>
 Type_info const Dyn_castable<SELF>::_cxx_dyn_static_type =
 {
   0, // no base classes
-  _dyn::name_of<SELF>(),
   0, // number of base classes = 0
   sizeof(SELF)
 };
@@ -220,7 +209,6 @@ template<typename SELF, typename BASE, typename ...BASES>
 Type_info const Dyn_castable<SELF, BASE, BASES...>::_cxx_dyn_static_type =
 {
   _cxx_dyn_type_bases,
-  _dyn::name_of<SELF>(),
   _cxx_dyn_num_bases,
   sizeof(SELF)
 };
