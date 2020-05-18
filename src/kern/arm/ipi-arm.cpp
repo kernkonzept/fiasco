@@ -35,7 +35,6 @@ IMPLEMENTATION [pic_gic && mp]:
 
 #include "cpu.h"
 #include "pic.h"
-#include "processor.h"
 
 PUBLIC inline
 Ipi::Ipi()
@@ -55,7 +54,7 @@ void Ipi::eoi(Message, Cpu_number on_cpu)
 // ---------------------------------------------------------------------------
 IMPLEMENTATION [pic_gic && mp && !irregular_gic]:
 
-IMPLEMENT inline NEEDS["processor.h"]
+IMPLEMENT inline
 void
 Ipi::init(Cpu_number)
 {
