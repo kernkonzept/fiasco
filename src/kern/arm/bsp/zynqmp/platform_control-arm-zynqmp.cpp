@@ -5,6 +5,7 @@ IMPLEMENTATION [arm && mp && pf_zynqmp]:
 #include "mmio_register_block.h"
 #include "kmem.h"
 #include "psci.h"
+#include "minmax.h"
 
 #include <cstdio>
 
@@ -12,7 +13,7 @@ PUBLIC static
 void
 Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
 {
-  for (int i = 0; i < 4; ++i)
+  for (int i = 0; i < min<unsigned>(4, Config::Max_num_cpus); ++i)
     {
       unsigned coreid[4] = { 0x0, 0x1, 0x2, 0x3 };
       int r = cpu_on(coreid[i], phys_tramp_mp_addr);
