@@ -11,14 +11,14 @@ public:
 
 private:
   enum {
-    Control_Reg  = 0x20300,
-    Reload0_Reg  = 0x20310,
-    Timer0_Reg   = 0x20314,
-    Reload1_Reg  = 0x20318,
-    Timer1_Reg   = 0x2031c,
+    Control_Reg  = 0x300,
+    Reload0_Reg  = 0x310,
+    Timer0_Reg   = 0x314,
+    Reload1_Reg  = 0x318,
+    Timer1_Reg   = 0x31c,
 
-    Bridge_cause = 0x20110,
-    Bridge_mask  = 0x20114,
+    Bridge_cause = 0x110,
+    Bridge_mask  = 0x114,
 
     Timer0_enable = 1 << 0,
     Timer0_auto   = 1 << 1,
@@ -43,7 +43,7 @@ Static_object<Timer> Timer::_timer;
 
 PUBLIC
 Timer::Timer()
-: Mmio_register_block(Kmem::mmio_remap(Mem_layout::Timer_phys_base))
+: Mmio_register_block(Kmem::mmio_remap(Mem_layout::Timer_phys_base, 0x400))
 {
   // Disable timer
   write(0, Control_Reg);

@@ -65,7 +65,7 @@ public:
 PUBLIC inline
 Irq_chip_arm_omap3::Irq_chip_arm_omap3()
 : Irq_chip_gen(Pic::Num_irqs),
-  Mmio_register_block(Kmem::mmio_remap(Mem_layout::Intc_phys_base))
+  Mmio_register_block(Kmem::mmio_remap(Mem_layout::Intc_phys_base, 0x1000))
 {
   // Reset
   write<Mword>(2, INTCPS_SYSCONFIG);

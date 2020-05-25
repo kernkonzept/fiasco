@@ -49,8 +49,10 @@ void Pic::init()
   configure_core();
   typedef Irq_mgr_multi_chip<8> Mgr;
 
-  Gic *g = new Boot_object<Gic_v2>(Kmem::mmio_remap(Mem_layout::Gic_cpu_phys_base),
-                                   Kmem::mmio_remap(Mem_layout::Gic_dist_phys_base));
+  Gic *g = new Boot_object<Gic_v2>(Kmem::mmio_remap(Mem_layout::Gic_cpu_phys_base,
+                                                    Gic_cpu_v2::Size),
+                                   Kmem::mmio_remap(Mem_layout::Gic_dist_phys_base,
+                                                    Gic_dist::Size));
   gic = g;
 
   Mgr *m = new Boot_object<Mgr>(2);
@@ -58,8 +60,10 @@ void Pic::init()
 
   m->add_chip(0, g, g->nr_irqs());
 
-  g = new Boot_object<Gic_v2>(Kmem::mmio_remap(Mem_layout::Gic1_cpu_phys_base),
-                              Kmem::mmio_remap(Mem_layout::Gic1_dist_phys_base));
+  g = new Boot_object<Gic_v2>(Kmem::mmio_remap(Mem_layout::Gic1_cpu_phys_base,
+                                               Gic_cpu_v2::Size),
+                              Kmem::mmio_remap(Mem_layout::Gic1_dist_phys_base,
+                                               Gic_dist::Size));
   m->add_chip(256, g, g->nr_irqs());
 
   // FIXME: Replace static local variable, use placement new
@@ -85,8 +89,10 @@ void Pic::init()
 
   typedef Irq_mgr_multi_chip<8> Mgr;
 
-  Gic *g = new Boot_object<Gic_v2>(Kmem::mmio_remap(Mem_layout::Gic_cpu_phys_base),
-                                   Kmem::mmio_remap(Mem_layout::Gic_dist_phys_base));
+  Gic *g = new Boot_object<Gic_v2>(Kmem::mmio_remap(Mem_layout::Gic_cpu_phys_base,
+                                                    Gic_cpu_v2::Size),
+                                   Kmem::mmio_remap(Mem_layout::Gic_dist_phys_base,
+                                                    Gic_dist::Size));
   gic = g;
 
   Mgr *m = new Boot_object<Mgr>(1);

@@ -16,8 +16,10 @@ Pic::init()
 {
   typedef Irq_mgr_multi_chip<9> M;
 
-  gic = new Boot_object<Gic_v3>(Kmem::mmio_remap(Mem_layout::Gic_dist_phys_base),
-                                Kmem::mmio_remap(Mem_layout::Gic_redist_phys_base));
+  gic = new Boot_object<Gic_v3>(Kmem::mmio_remap(Mem_layout::Gic_dist_phys_base,
+                                                 Gic_dist::Size),
+                                Kmem::mmio_remap(Mem_layout::Gic_redist_phys_base,
+                                                 Mem_layout::Gic_redist_phys_size));
 
   M *m = new Boot_object<M>(1);
   m->add_chip(0, gic, gic->nr_irqs());

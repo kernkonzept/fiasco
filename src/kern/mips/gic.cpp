@@ -5,6 +5,12 @@ INTERFACE:
 
 class Gic : public Irq_chip_gen
 {
+public:
+  enum
+  {
+    Size = 0x20000,
+  };
+
 private:
   typedef Mword Reg_type;
   enum : unsigned long

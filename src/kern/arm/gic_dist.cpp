@@ -32,6 +32,9 @@ public:
 
     GICD_IROUTER      = 0x6100,
 
+    // covers GICv2 and GICv3
+    Size              = 0x10000,
+
     MXC_TZIC_PRIOMASK = 0x00c,
     MXC_TZIC_SYNCCTRL = 0x010,
     MXC_TZIC_PND      = 0xd00,

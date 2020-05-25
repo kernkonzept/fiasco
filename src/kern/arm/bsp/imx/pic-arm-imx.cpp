@@ -87,7 +87,7 @@ Irq_chip_arm_imx::unmask(Mword irq)
 PUBLIC inline
 Irq_chip_arm_imx::Irq_chip_arm_imx()
 : Irq_chip_gen(64),
-  Mmio_register_block(Kmem::mmio_remap(Mem_layout::Pic_phys_base))
+  Mmio_register_block(Kmem::mmio_remap(Mem_layout::Pic_phys_base, 0x100))
 {
   write<Mword>(0,    INTCTL);
   write<Mword>(0x10, NIMASK); // Do not disable any normal interrupts

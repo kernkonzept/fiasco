@@ -26,7 +26,7 @@ public:
   };
 
   Arm_control()
-  : r(Kmem::mmio_remap(0x40000000))
+  : r(Kmem::mmio_remap(0x40000000, 0x100))
   {
     r.r<32>(Control) = 0;
     r.r<32>(Prescaler) =  1 << 31;

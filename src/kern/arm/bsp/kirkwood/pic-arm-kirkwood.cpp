@@ -18,14 +18,14 @@ class Irq_chip_kirkwood : public Irq_chip_gen, private Mmio_register_block
 private:
   enum
   {
-    Main_Irq_cause_low_reg     = 0x20200,
-    Main_Irq_mask_low_reg      = 0x20204,
-    Main_Fiq_mask_low_reg      = 0x20208,
-    Endpoint_irq_mask_low_reg  = 0x2020c,
-    Main_Irq_cause_high_reg    = 0x20210,
-    Main_Irq_mask_high_reg     = 0x20214,
-    Main_Fiq_mask_high_reg     = 0x20218,
-    Endpoint_irq_mask_high_reg = 0x2021c,
+    Main_Irq_cause_low_reg     = 0x200,
+    Main_Irq_mask_low_reg      = 0x204,
+    Main_Fiq_mask_low_reg      = 0x208,
+    Endpoint_irq_mask_low_reg  = 0x20c,
+    Main_Irq_cause_high_reg    = 0x210,
+    Main_Irq_mask_high_reg     = 0x214,
+    Main_Fiq_mask_high_reg     = 0x218,
+    Endpoint_irq_mask_high_reg = 0x21c,
 
     Bridge_int_num = 1,
   };
@@ -33,7 +33,7 @@ private:
 public:
   Irq_chip_kirkwood()
   : Irq_chip_gen(64),
-    Mmio_register_block(Kmem::mmio_remap(Mem_layout::Pic_phys_base))
+    Mmio_register_block(Kmem::mmio_remap(Mem_layout::Pic_phys_base, 0x400))
   {
     // Disable all interrupts
     write<Unsigned32>(0U, Main_Irq_mask_low_reg);

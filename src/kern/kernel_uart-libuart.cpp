@@ -84,22 +84,24 @@ bool Kernel_uart::startup(unsigned, int irq)
             {
               L4::Io_register_block *r = 0;
 
+              // Koptions doesn't pass the UART size so take a sound guess.
+              Address const size = 0x1000 - (base & 0xfff);
               switch (Koptions::o()->uart.reg_shift)
                 {
                 case 0: // no shift use natural access width
-                  r = regs.mem.construct(Kmem::mmio_remap(base),
+                  r = regs.mem.construct(Kmem::mmio_remap(base, size),
                                          Koptions::o()->uart.reg_shift);
                   break;
                 case 1: // 1 bit shift, assume fixed 16bit access width
-                  r = regs.mem16.construct(Kmem::mmio_remap(base),
+                  r = regs.mem16.construct(Kmem::mmio_remap(base, size),
                                            Koptions::o()->uart.reg_shift);
                   break;
                 case 2: // 2 bit shift, assume fixed 32bit access width
-                  r = regs.mem32.construct(Kmem::mmio_remap(base),
+                  r = regs.mem32.construct(Kmem::mmio_remap(base, size),
                                            Koptions::o()->uart.reg_shift);
                   break;
                 case 3: // 3 bit shift, assume fixed 64bit access width
-                  r = regs.mem32.construct(Kmem::mmio_remap(base),
+                  r = regs.mem32.construct(Kmem::mmio_remap(base, size),
                                            Koptions::o()->uart.reg_shift);
                   break;
                 default:

@@ -17,6 +17,6 @@ unsigned Timer::irq()
 IMPLEMENT
 void Timer::bsp_init(Cpu_number)
 {
-  Mct_timer mct(Kmem::mmio_remap(Mem_layout::Mct_phys_base));
+  Mct_timer mct(Kmem::mmio_remap(Mem_layout::Mct_phys_base, 0x100));
   mct.start_free_running();
 }

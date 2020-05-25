@@ -166,7 +166,8 @@ PUBLIC static
 void
 Outer_cache::initialize(bool v)
 {
-  l2cxx0.construct(Kmem::mmio_remap(Mem_layout::L2cxx0_phys_base));
+  l2cxx0.construct(Kmem::mmio_remap(Mem_layout::L2cxx0_phys_base,
+                                    Config::PAGE_SIZE));
   Mword cache_id   = l2cxx0->read<Mword>(L2cxx0::CACHE_ID);
   Mword aux        = l2cxx0->read<Mword>(L2cxx0::AUX_CONTROL);
   unsigned ways    = 8;

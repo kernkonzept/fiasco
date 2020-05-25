@@ -6,7 +6,7 @@ IMPLEMENTATION [mips && sead3]:
 void __attribute__ ((noreturn))
 platform_reset(void)
 {
-  Register_block<32> r(Kmem::mmio_remap(0x1f000050));
+  Register_block<32> r(Kmem::mmio_remap(0x1f000050, sizeof(Unsigned32)));
   r[0] = 0x4d;
 
   for (;;)

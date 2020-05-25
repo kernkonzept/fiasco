@@ -95,7 +95,7 @@ public:
 PUBLIC
 S3c_chip::S3c_chip()
 : Irq_chip_gen(32),
-  Mmio_register_block(Kmem::mmio_remap(Mem_layout::Pic_phys_base))
+  Mmio_register_block(Kmem::mmio_remap(Mem_layout::Pic_phys_base, 0x100))
 {
 
   write<Mword>(0xffffffff, INTMSK); // all masked

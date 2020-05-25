@@ -9,8 +9,8 @@ class Kirkwood_reset
 public:
   enum
   {
-    Mask_reg       = 0x20108,
-    Soft_reset_reg = 0x2010c,
+    Mask_reg       = 0x108,
+    Soft_reset_reg = 0x10c,
   };
 };
 
@@ -18,7 +18,7 @@ public:
 void __attribute__ ((noreturn))
 platform_reset(void)
 {
-  Mmio_register_block r(Kmem::mmio_remap(Mem_layout::Reset_phys_base));
+  Mmio_register_block r(Kmem::mmio_remap(Mem_layout::Reset_phys_base, 0x200));
   // enable software reset
   r.write(1 << 2, Kirkwood_reset::Mask_reg);
 

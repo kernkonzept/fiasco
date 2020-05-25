@@ -7,7 +7,7 @@ IMPLEMENTATION [arm && pf_layerscape]:
 void __attribute__ ((noreturn))
 platform_reset(void)
 {
-  Mmio_register_block r(Kmem::mmio_remap(0x02ad0000));
+  Mmio_register_block r(Kmem::mmio_remap(0x02ad0000, sizeof(Unsigned16)));
   r.r<16>(0x0) = 1 << 2;
 
   for (;;)

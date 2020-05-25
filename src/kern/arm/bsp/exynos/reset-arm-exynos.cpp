@@ -6,7 +6,8 @@ IMPLEMENTATION [arm && pf_exynos]:
 void __attribute__ ((noreturn))
 platform_reset(void)
 {
-  Io::write<Mword>(1, Kmem::mmio_remap(Mem_layout::Pmu_phys_base + 0x400));
+  Io::write<Mword>(1, Kmem::mmio_remap(Mem_layout::Pmu_phys_base + 0x400,
+                                       sizeof(Mword)));
 
   // we should reboot now
   while (1)

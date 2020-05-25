@@ -130,7 +130,7 @@ PRIVATE static
 void
 Platform_control::write_phys_mem_coherent(Mword addr_p, Mword value)
 {
-  Mword addr_v = Kmem::mmio_remap(addr_p);
+  Mword addr_v = Kmem::mmio_remap(addr_p, sizeof(Mword));
   Io::write<Mword>(value, addr_v);
   Mem_unit::flush_dcache((void *)addr_v, (void *)(addr_v + sizeof(value)));
   Outer_cache::flush(addr_p);
@@ -337,7 +337,7 @@ Platform_control::init(Cpu_number cpu)
   if (cpu == Cpu_number::boot_cpu())
     {
       assert (!pmu->get_mmio_base());
-      pmu.construct(Kmem::mmio_remap(Mem_layout::Pmu_phys_base));
+      pmu.construct(Kmem::mmio_remap(Mem_layout::Pmu_phys_base, 0x100));
 
       for (Cpu_phys_id i = Cpu_phys_id(0);
            i < Cpu_phys_id(2);

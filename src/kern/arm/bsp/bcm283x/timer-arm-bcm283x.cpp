@@ -84,7 +84,7 @@ Timer::Timer(Address base) : Mmio_register_block(base)
 
 IMPLEMENT
 void Timer::init(Cpu_number)
-{ _timer.construct(Kmem::mmio_remap(Mem_layout::Timer_phys_base)); }
+{ _timer.construct(Kmem::mmio_remap(Mem_layout::Timer_phys_base, 0x100)); }
 
 PUBLIC static inline NEEDS[Timer::set_next]
 void

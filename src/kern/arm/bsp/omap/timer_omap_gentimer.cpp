@@ -26,7 +26,7 @@ IMPLEMENTATION [arm]: // ----------------------------------
 
 PUBLIC
 Timer_omap_gentimer::Timer_omap_gentimer()
-: Mmio_register_block(Kmem::mmio_remap(Mem_layout::Timergen_phys_base))
+: Mmio_register_block(Kmem::mmio_remap(Mem_layout::Timergen_phys_base, 0x100))
 {
   // Mword idr = Io::read<Mword>(TIDR);
   // older timer: idr >> 16 == 0

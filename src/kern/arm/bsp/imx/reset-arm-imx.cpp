@@ -15,10 +15,11 @@ platform_reset(void)
   };
 
   // WDT CLock Enable
-  Io::set<Unsigned32>(PLL_PCCR1_WDT_EN, Kmem::mmio_remap(PLL_PCCR1));
+  Io::set<Unsigned32>(PLL_PCCR1_WDT_EN, Kmem::mmio_remap(PLL_PCCR1,
+                                                         sizeof(Unsigned32));
 
   // Assert Software reset signal by making the bit zero
-  Io::mask<Unsigned16>(~WCR_SRS, Kmem::mmio_remap(WCR));
+  Io::mask<Unsigned16>(~WCR_SRS, Kmem::mmio_remap(WCR, sizeof(Unsigned16));
 
   for (;;)
     ;
@@ -33,7 +34,7 @@ IMPLEMENTATION [arm && pf_imx_28]:
 void __attribute__ ((noreturn))
 platform_reset(void)
 {
-  Register_block<32> r(Kmem::mmio_remap(0x80056000));
+  Register_block<32> r(Kmem::mmio_remap(0x80056000, 0x100));
   r[0x50] = 1; // Watchdog counter
   r[0x04] = 1 << 4; // Watchdog enable
 
@@ -53,7 +54,8 @@ IMPLEMENTATION [arm && pf_imx_6]:
 void platform_imx_cpus_off()
 {
   // switch off core1-3
-  Io::clear<Mword>(7 << 22, Kmem::mmio_remap(Mem_layout::Src_phys_base) + 0);
+  Io::clear<Mword>(7 << 22, Kmem::mmio_remap(Mem_layout::Src_phys_base,
+                                             sizeof(Mword)) + 0);
 }
 
 // ------------------------------------------------------------------------
@@ -62,7 +64,8 @@ IMPLEMENTATION [arm && pf_imx_7]:
 void platform_imx_cpus_off()
 {
   // switch off core1
-  Io::clear<Mword>(1 << 1, Kmem::mmio_remap(Mem_layout::Src_phys_base) + 8);
+  Io::clear<Mword>(1 << 1, Kmem::mmio_remap(Mem_layout::Src_phys_base,
+                                            sizeof(Mword)) + 8);
 }
 
 // ------------------------------------------------------------------------
@@ -83,7 +86,8 @@ platform_reset(void)
   platform_imx_cpus_off();
 
   // Enable watchdog with smallest timeout possible (0.5s)
-  Io::modify<Unsigned16>(WCR_WDE, 0xff10, Kmem::mmio_remap(WCR));
+  Io::modify<Unsigned16>(WCR_WDE, 0xff10, Kmem::mmio_remap(WCR,
+                                                           sizeof(Unsigned16)));
 
   for (;;)
     ;

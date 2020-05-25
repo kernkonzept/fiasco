@@ -7,12 +7,13 @@ IMPLEMENTATION [arm && pf_xscale]:
 void __attribute__ ((noreturn))
 platform_reset(void)
 {
-  enum {
+  enum
+  {
     OSCR  = 0x10,
     OWER  = 0x18,
   };
 
-  Mmio_register_block timer(Kmem::mmio_remap(Mem_layout::Timer_phys_base));
+  Mmio_register_block timer(Kmem::mmio_remap(Mem_layout::Timer_phys_base, 0x20));
 
   timer.write<Mword>(1, OWER);
   timer.write<Mword>(0xffffff00, OSCR);

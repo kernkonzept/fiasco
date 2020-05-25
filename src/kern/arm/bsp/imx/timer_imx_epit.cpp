@@ -40,7 +40,7 @@ IMPLEMENTATION [arm && imx_epit]:
 
 PUBLIC
 Timer_imx_epit::Timer_imx_epit(Address phys_base)
-: Mmio_register_block(Kmem::mmio_remap(phys_base))
+: Mmio_register_block(Kmem::mmio_remap(phys_base, 0x100))
 {
   write<Mword>(0, EPITCR); // Disable
   write<Mword>(EPITCR_SWR, EPITCR);

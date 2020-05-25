@@ -57,8 +57,10 @@ static void platform_init()
   if (Platform::sys->get_mmio_base())
     return;
 
-  Platform::sys.construct(Kmem::mmio_remap(Mem_layout::System_regs_phys_base));
-  Platform::system_control.construct(Kmem::mmio_remap(Mem_layout::System_ctrl_phys_base));
+  Platform::sys.construct(Kmem::mmio_remap(Mem_layout::System_regs_phys_base,
+                                           0x1000));
+  Platform::system_control.construct(Kmem::mmio_remap(Mem_layout::System_ctrl_phys_base,
+                                                      0x1000));
 }
 
 STATIC_INITIALIZER_P(platform_init, ROOT_FACTORY_INIT_PRIO);

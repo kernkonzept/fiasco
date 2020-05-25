@@ -110,7 +110,8 @@ struct Gic_h_v2_init
       return;
 
     Gic_h_global::gic
-      = new Boot_object<Gic_h_v2>(Kmem::mmio_remap(Mem_layout::Gic_h_phys_base));
+      = new Boot_object<Gic_h_v2>(Kmem::mmio_remap(Mem_layout::Gic_h_phys_base,
+                                                   Config::PAGE_SIZE));
   }
 };
 

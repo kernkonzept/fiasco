@@ -57,9 +57,10 @@ Mword Kmem::is_io_bitmap_page_fault( Mword /*pfa*/ )
 
 PUBLIC static
 Address
-Kmem::mmio_remap(Address phys)
+Kmem::mmio_remap(Address phys, Address size)
 {
   (void)phys;
+  (void)size;
   // implement me
   return ~0UL;
 }

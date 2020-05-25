@@ -45,13 +45,16 @@ void
 Platform_control::init_cpus()
 {
   // clocks on other cpu
-  Mword r = Io::read<Mword>(Kmem::mmio_remap(Clk_rst_ctrl_clk_cpu_cmplx));
-  Io::write<Mword>(r & ~(1 << 9), Kmem::mmio_remap(Clk_rst_ctrl_clk_cpu_cmplx));
+  Mword r = Io::read<Mword>(Kmem::mmio_remap(Clk_rst_ctrl_clk_cpu_cmplx,
+                                             sizeof(Mword)));
+  Io::write<Mword>(r & ~(1 << 9), Kmem::mmio_remap(Clk_rst_ctrl_clk_cpu_cmplx,
+                                                   sizeof(Mword)));
   Io::write<Mword>((1 << 13) | (1 << 9) | (1 << 5) | (1 << 1),
-		   Kmem::mmio_remap(Clk_rst_ctrl_rst_cpu_cmplx_clr));
+		   Kmem::mmio_remap(Clk_rst_ctrl_rst_cpu_cmplx_clr,
+                                    sizeof(Mword)));
 
   // kick cpu1
-  Io::write<Mword>(0, Kmem::mmio_remap(Unhalt_addr));
+  Io::write<Mword>(0, Kmem::mmio_remap(Unhalt_addr, sizeof(Mword)));
 }
 
 // ------------------------------------------------------------------------
@@ -67,7 +70,9 @@ PRIVATE static
 Mword
 Platform_control::pwr_status(int gate)
 {
-  Mword r = Io::read<Mword>(Kmem::mmio_remap(Kmem::Pmc_phys_base + PMC_PWRGATE_STATUS_0));
+  Mword r = Io::read<Mword>(Kmem::mmio_remap(Kmem::Pmc_phys_base
+                                             + PMC_PWRGATE_STATUS_0,
+                                             sizeof(Mword)));
   return r & (1 << gate);
 }
 
@@ -86,9 +91,10 @@ Platform_control::init_cpus()
   int cpu_powergates[4]        = { 0, 9, 10, 11 };
   int flowctrl_cpu_halt_ofs[4] = { 0, 0x14, 0x1c, 0x24 };
   int flowctrl_cpu_csr_ofs[4]  = { 8, 0x18, 0x20, 0x28 };
-  Mmio_register_block clk_rst(Kmem::mmio_remap(Mem_layout::Clock_reset_phys_base));
-  Mmio_register_block pmc(Kmem::mmio_remap(Mem_layout::Pmc_phys_base));
-  Mmio_register_block flow_ctrl(Kmem::mmio_remap(0x60007000));
+  Mmio_register_block clk_rst(Kmem::mmio_remap(Mem_layout::Clock_reset_phys_base,
+                                               0x1000));
+  Mmio_register_block pmc(Kmem::mmio_remap(Mem_layout::Pmc_phys_base, 0x100));
+  Mmio_register_block flow_ctrl(Kmem::mmio_remap(0x60007000, 0x100));
 
   for (unsigned i = 1; i < 4; ++i)
     {
@@ -148,7 +154,8 @@ Mword Platform_control::_orig_reset_vector;
 PRIVATE static
 void Platform_control::reset_orig_reset_vector()
 {
-  Io::write<Mword>(_orig_reset_vector, Kmem::mmio_remap(Reset_vector_addr));
+  Io::write<Mword>(_orig_reset_vector, Kmem::mmio_remap(Reset_vector_addr,
+                                                        sizeof(Mword)));
 }
 
 PUBLIC static
@@ -156,10 +163,12 @@ void
 Platform_control::boot_ap_cpus(Address phys_reset_vector)
 {
   // remember original reset vector
-  _orig_reset_vector = Io::read<Mword>(Kmem::mmio_remap(Reset_vector_addr));
+  _orig_reset_vector = Io::read<Mword>(Kmem::mmio_remap(Reset_vector_addr,
+                                                        sizeof(Mword)));
 
   // set (temporary) new reset vector
-  Io::write<Mword>(phys_reset_vector, Kmem::mmio_remap(Reset_vector_addr));
+  Io::write<Mword>(phys_reset_vector, Kmem::mmio_remap(Reset_vector_addr,
+                                                       sizeof(Mword)));
 
   //atexit(reset_orig_reset_vector);
 

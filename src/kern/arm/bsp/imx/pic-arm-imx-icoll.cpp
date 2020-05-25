@@ -69,7 +69,7 @@ Irq_chip_imx_icoll::unmask(Mword irq)
 
 PUBLIC inline
 Irq_chip_imx_icoll::Irq_chip_imx_icoll()
-: Irq_chip_gen(128), _reg(Kmem::mmio_remap(Mem_layout::Pic_phys_base))
+: Irq_chip_gen(128), _reg(Kmem::mmio_remap(Mem_layout::Pic_phys_base, 0x1000))
 {
   _reg[HW_ICOLL_CTRL] = 0;
 

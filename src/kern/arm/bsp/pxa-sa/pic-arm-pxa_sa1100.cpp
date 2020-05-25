@@ -57,7 +57,7 @@ public:
 PUBLIC inline
 Chip::Chip()
 : Irq_chip_gen(32),
-  Mmio_register_block(Kmem::mmio_remap(Mem_layout::Pic_phys_base))
+  Mmio_register_block(Kmem::mmio_remap(Mem_layout::Pic_phys_base, 0x100))
 {
   // only unmasked interrupts wakeup from idle
   write<Mword>(0x01, Pic::ICCR);

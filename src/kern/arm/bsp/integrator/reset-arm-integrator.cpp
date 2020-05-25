@@ -10,7 +10,7 @@ platform_reset(void)
     HDR_CTRL_OFFSET = Mem_layout::Integrator_phys_base + 0xc,
   };
 
-  Io::write(1 << 3, Kmem::mmio_remap(HDR_CTRL_OFFSET));
+  Io::write(1 << 3, Kmem::mmio_remap(HDR_CTRL_OFFSET, sizeof(Mword)));
 
   for (;;)
     ;

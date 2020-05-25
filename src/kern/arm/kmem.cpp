@@ -37,28 +37,44 @@ IMPLEMENTATION [noncont_mem]:
 
 PUBLIC static
 Address
-Kmem::mmio_remap(Address phys)
+Kmem::mmio_remap(Address phys, Address size)
 {
   static Address ndev = 0;
-  Address v = phys_to_pmem(phys);
-  if (v != ~0UL)
-    return v;
 
-  Address dm = Mem_layout::Registers_map_start + ndev;
-  assert(dm < Mem_layout::Registers_map_end);
-
-  ndev += Config::SUPERPAGE_SIZE;
-
-  auto m = kdir->walk(Virt_addr(dm), K_pte_ptr::Super_level);
-  assert (!m.is_valid());
-  assert (m.page_order() == Config::SUPERPAGE_SHIFT);
   Address phys_page = cxx::mask_lsb(phys, Config::SUPERPAGE_SHIFT);
-  m.set_page(m.make_page(Phys_mem_addr(phys_page),
-                         Page::Attr(Page::Rights::RWX(), Page::Type::Uncached(),
-                                    Page::Kern::Global())));
+  Address phys_end = Mem_layout::round_superpage(phys + size);
+  bool needs_remap = false;
 
-  m.write_back_if(true, Mem_unit::Asid_kernel);
-  add_pmem(phys_page, dm, Config::SUPERPAGE_SIZE);
+  for (Address p = phys_page; p < phys_end; p += Config::SUPERPAGE_SIZE)
+    {
+      if (phys_to_pmem(p) == ~0UL)
+        {
+          needs_remap = true;
+          break;
+        }
+    }
+
+  if (needs_remap)
+    {
+      for (Address p = phys_page; p < phys_end; p += Config::SUPERPAGE_SIZE)
+        {
+          Address dm = Mem_layout::Registers_map_start + ndev;
+          assert(dm < Mem_layout::Registers_map_end);
+
+          ndev += Config::SUPERPAGE_SIZE;
+
+          auto m = kdir->walk(Virt_addr(dm), K_pte_ptr::Super_level);
+          assert (!m.is_valid());
+          assert (m.page_order() == Config::SUPERPAGE_SHIFT);
+          m.set_page(m.make_page(Phys_mem_addr(p),
+                                 Page::Attr(Page::Rights::RWX(),
+                                            Page::Type::Uncached(),
+                                            Page::Kern::Global())));
+
+          m.write_back_if(true, Mem_unit::Asid_kernel);
+          add_pmem(p, dm, Config::SUPERPAGE_SIZE);
+        }
+    }
 
   return phys_to_pmem(phys);
 }

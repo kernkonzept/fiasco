@@ -311,8 +311,10 @@ Kmem::map_phys_page(Address phys, Address virt,
 
 PUBLIC static
 Address
-Kmem::mmio_remap(Address phys)
+Kmem::mmio_remap(Address phys, Address size)
 {
+  assert(size == Config::PAGE_SIZE);
+
   Address offs;
   Address va = alloc_io_vmem(Config::PAGE_SIZE);
 

@@ -37,7 +37,7 @@ public:
 PUBLIC
 Irq_chip_bcm::Irq_chip_bcm()
 : Irq_chip_gen(96),
-  Mmio_register_block(Kmem::mmio_remap(Mem_layout::Pic_phys_base))
+  Mmio_register_block(Kmem::mmio_remap(Mem_layout::Pic_phys_base, 0x100))
 {
   write<Unsigned32>(~0U, Disable_Basic_IRQs);
   write<Unsigned32>(~0U, Disable_IRQs_1);

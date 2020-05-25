@@ -7,7 +7,8 @@ IMPLEMENTATION [arm && pf_armada38x]:
 void __attribute__ ((noreturn))
 platform_reset(void)
 {
-  Mmio_register_block r(Kmem::mmio_remap(0xf1018200));
+  // Configuration and Control
+  Mmio_register_block r(Kmem::mmio_remap(0xf1018200, 0x100));
   r.r<32>(0x60) = 1;
   r.r<32>(0x64) = 1;
 

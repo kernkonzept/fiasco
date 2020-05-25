@@ -41,7 +41,7 @@ IMPLEMENTATION [sparc]:
 Static_object<Timer> Timer::_timer;
 
 PUBLIC
-Timer::Timer() : Mmio_register_block(Kmem::mmio_remap(0x80000300))
+Timer::Timer() : Mmio_register_block(Kmem::mmio_remap(0x80000300, 0x10))
 {
   r<32>(Scaler) = 0;
   r<32>(Scaler_reload) = 0;

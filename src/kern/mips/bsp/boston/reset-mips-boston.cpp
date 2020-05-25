@@ -6,7 +6,7 @@ IMPLEMENTATION [mips && boston]:
 void __attribute__ ((noreturn))
 platform_reset(void)
 {
-  Register_block<32> syscon(Kmem::mmio_remap(0x17ffd010));
+  Register_block<32> syscon(Kmem::mmio_remap(0x17ffd010, 0x20));
   syscon[0x10] = 0x10;
 
   for (;;)

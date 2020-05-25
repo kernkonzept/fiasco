@@ -47,7 +47,7 @@ Timer_omap_1mstimer::get_timer_values_32khz(unsigned &reload, int &tpir, int &tn
 
 PUBLIC explicit
 Timer_omap_1mstimer::Timer_omap_1mstimer(bool f_32khz)
-: Mmio_register_block(Kmem::mmio_remap(Mem_layout::Timer1ms_phys_base))
+: Mmio_register_block(Kmem::mmio_remap(Mem_layout::Timer1ms_phys_base, 0x100))
 {
   // reset
   write<Mword>(1, TIOCP_CFG);

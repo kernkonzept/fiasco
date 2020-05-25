@@ -71,7 +71,7 @@ PUBLIC static FIASCO_INIT
 void
 Watchdog::init()
 {
-  wdog.construct(Kmem::mmio_remap(Mem_layout::Watchdog_phys_base));
+  wdog.construct(Kmem::mmio_remap(Mem_layout::Watchdog_phys_base, 0x10));
   if (1)
     {
       wdog->setup(Reset_timeout_val);

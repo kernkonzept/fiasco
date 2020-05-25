@@ -23,7 +23,7 @@ Platform_control::init(Cpu_number cpu)
     Remap_low_off = 8,
     Remap_hi_off  = 12,
   };
-  Mmio_register_block cpu_subsys(Kmem::mmio_remap(0xf1020000));
+  Mmio_register_block cpu_subsys(Kmem::mmio_remap(0xf1020000, 0x100));
 
   // Disable Window 0-7
   for (unsigned i = 0; i < 8; ++i)
@@ -63,12 +63,15 @@ void
 Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
 {
   unsigned hwcpu = 1;
-  Mmio_register_block pmu_c1(Kmem::mmio_remap(0xf1022100 + hwcpu * 0x100));
+  // CPU1 Power Management
+  Mmio_register_block pmu_c1(Kmem::mmio_remap(0xf1022100 + hwcpu * 0x100,
+                                              0x100));
 
   pmu_c1.r<32>(0x24) = phys_tramp_mp_addr;
   Mem::mp_wmb();
   Pic::gic->softint_phys(Ipi::Global_request, 1ul << (16 + hwcpu));
 
-  Mmio_register_block cpu_reset(Kmem::mmio_remap(0xf1020800));
+  // CPU0..n Software Reset Control Register
+  Mmio_register_block cpu_reset(Kmem::mmio_remap(0xf1020800, 8));
   cpu_reset.r<32>(hwcpu * 0x8).clear(1);
 }

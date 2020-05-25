@@ -6,7 +6,7 @@ IMPLEMENTATION[arm && mptimer]:
 
 PRIVATE static Mword Timer::interval()
 {
-  Timer_sp804 timer(Kmem::mmio_remap(Mem_layout::Timer0_phys_base));
+  Timer_sp804 timer(Kmem::mmio_remap(Mem_layout::Timer0_phys_base, 0x10));
   Platform::system_control->modify<Mword>(Platform::System_control::Timer0_enable, 0, 0);
 
   Mword frequency = 1000000;

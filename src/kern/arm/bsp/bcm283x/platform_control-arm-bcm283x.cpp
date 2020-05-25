@@ -24,7 +24,7 @@ PUBLIC static
 void
 Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
 {
-  static Mmio_register_block a(Kmem::mmio_remap(0xd8));
+  static Mmio_register_block a(Kmem::mmio_remap(0xd8, 0x28));
   Cpu_phys_id myid = Proc::cpu_id();
   for (unsigned i = 0; i < 4; ++i)
     if (myid != Cpu_phys_id(i))

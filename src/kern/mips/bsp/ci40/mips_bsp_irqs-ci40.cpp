@@ -39,7 +39,7 @@ Mips_bsp_irqs::init(Cpu_number cpu)
   Address my_gic_base = 0x1bdc0000;
   Cm::cm->set_gic_base_and_enable(my_gic_base);
 
-  auto *gic = new Boot_object<Gic>(Kmem::mmio_remap(my_gic_base), 2);
+  auto *gic = new Boot_object<Gic>(Kmem::mmio_remap(my_gic_base, Gic::Size), 2);
   auto *c = new Boot_object<Cascade_irq>(gic, gic_hit);
   Mips_cpu_irqs::chip->alloc(c, 2);
   c->unmask();
