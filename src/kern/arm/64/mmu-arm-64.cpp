@@ -26,7 +26,7 @@ template< unsigned long Flush_area, bool Ram >
 void Mmu<Flush_area, Ram>::flush_cache(void const *start,
 				       void const *end)
 {
-  unsigned i = icache_line_size(), d = dcache_line_size();
+  unsigned long i = icache_line_size(), d = dcache_line_size();
   __asm__ __volatile__ (
       "1:  dc civac, %[i]  \n"
       "    ic ivau,  %[i]  \n"
