@@ -229,10 +229,11 @@ Bootstrap::config_feature_traps(Mword pfr0, bool leave_el3, bool leave_el2)
     }
 }
 
-IMPLEMENTATION [arm && mmu && pic_gic && !have_arm_gicv3]:
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && mmu && pic_gic && have_arm_gicv2]:
 
 PUBLIC static void
-Bootstrap::config_gic_ns()
+Bootstrap::config_gicv2_ns()
 {
   auto dist_mmio = reinterpret_cast<void *>(Mem_layout::Gic_dist_phys_base);
   auto cpu_mmio = reinterpret_cast<void *>(Mem_layout::Gic_cpu_phys_base);
@@ -243,17 +244,67 @@ Bootstrap::config_gic_ns()
   dist.write<Unsigned32>(0, 0 /*Gic::GICD_CTRL*/);
 
   for (unsigned i = 0; i < n / 32; ++i)
-    dist.write<Unsigned32>(~0U, 0x80 + i * 4);
+    dist.write<Unsigned32>(~0U, 0x80 + i * 4); // GICD_IGROUPR
 
   cpu.write<Unsigned32>(0xff, 4 /*PMR*/);
   Mmu::flush_cache();
 }
 
-IMPLEMENTATION [arm && mmu && (!pic_gic || have_arm_gicv3)]:
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && mmu && pic_gic && have_arm_gicv3]:
 
-PUBLIC static inline void
+PUBLIC static void
+Bootstrap::config_gicv3_ns()
+{
+  auto dist_mmio = reinterpret_cast<void *>(Mem_layout::Gic_dist_phys_base);
+  auto redist_mmio = reinterpret_cast<void *>(Mem_layout::Gic_redist_phys_base);
+
+  Mmio_register_block dist(dist_mmio);
+  Mmio_register_block redist(redist_mmio);
+  unsigned n = ((dist.read<Unsigned32>(4 /*GICD_TYPER*/) & 0x1f) + 1) * 32;
+  dist.write<Unsigned32>(0, 0 /*Gic::GICD_CTRL*/);
+
+  for (unsigned i = 0; i < n / 32; ++i)
+    redist.write<Unsigned32>(~0U, 0x10080 + i * 4); // GICR_IGROUPR0
+
+  asm volatile("msr S3_0_C4_C6_0, %x0": : "r" (0xff)); // ICC_PMR_EL1
+  Mmu::flush_cache();
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && (!pic_gic || !mmu)]:
+
+PUBLIC static void
 Bootstrap::config_gic_ns() {}
 
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && mmu && pic_gic && have_arm_gicv2 && !have_arm_gicv3]:
+
+PUBLIC static void
+Bootstrap::config_gic_ns()
+{ config_gicv2_ns(); }
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && mmu && pic_gic && !have_arm_gicv2 && have_arm_gicv3]:
+
+PUBLIC static void
+Bootstrap::config_gic_ns()
+{ config_gicv3_ns(); }
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && mmu && pic_gic && have_arm_gicv2 && have_arm_gicv3]:
+
+PUBLIC static inline void
+Bootstrap::config_gic_ns()
+{
+  Mmio_register_block dist(reinterpret_cast<void *>(Mem_layout::Gic_dist_phys_base));
+  if ((dist.read<Unsigned32>(0xfe8) & 0x0f0) == 0x20)
+    config_gicv2_ns();
+  else
+    config_gicv3_ns();
+}
+
+// ------------------------------------------------------------------------
 IMPLEMENTATION [arm && !cpu_virt]:
 
 #include "cpu.h"
