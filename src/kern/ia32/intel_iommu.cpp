@@ -350,7 +350,7 @@ public:
     regs[Reg_64::Irt_addr] = irt_pa | (order - 1);
     modify_cmd(Cmd_sirtp);
     invalidate(Inv_desc::global_iec());
-    modify_cmd(Cmd_ire);
+    modify_cmd(Cmd_ire, Cmd_cfi);
   }
 
   void pm_on_resume(Cpu_number) override;
@@ -671,7 +671,7 @@ Intel::Io_mmu::pm_on_resume(Cpu_number cpu)
       regs[Reg_64::Irt_addr] = irt_pa | (_irq_remap_table_size - 1);
       modify_cmd(Cmd_sirtp);
       invalidate(Inv_desc::global_iec());
-      modify_cmd(Cmd_ire);
+      modify_cmd(Cmd_ire, Cmd_cfi);
     }
 
   if (_root_table)
