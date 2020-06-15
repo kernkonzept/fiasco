@@ -19,7 +19,7 @@ platform_reset(void)
                                                          sizeof(Unsigned32));
 
   // Assert Software reset signal by making the bit zero
-  Io::mask<Unsigned16>(~WCR_SRS, Kmem::mmio_remap(WCR, sizeof(Unsigned16));
+  Io::mask<Unsigned16>(~WCR_SRS, Kmem::mmio_remap(WCR, sizeof(Unsigned16)));
 
   for (;;)
     ;
