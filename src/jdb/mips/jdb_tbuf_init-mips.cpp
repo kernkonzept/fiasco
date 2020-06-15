@@ -12,6 +12,11 @@ IMPLEMENTATION [mips]:
 
 IMPLEMENT_OVERRIDE FIASCO_INIT
 unsigned
+Jdb_tbuf_init::max_size()
+{ return 2 << 20; }
+
+IMPLEMENT_OVERRIDE FIASCO_INIT
+unsigned
 Jdb_tbuf_init::allocate(unsigned size)
 {
   _status = (Tracebuffer_status *)Kmem_alloc::allocator()

@@ -38,6 +38,7 @@ public:
     utcb_ptr_align    = Tl_math::Ld<64>::Res,    // 64byte cachelines
     Syscalls          = Service_page + 0xff000,  ///< % 4KB syscall page
     Tbuf_buffer_area  = Service_page + 0x200000, ///< % 2MB
+    Tbuf_buffer_size  = 0x200000,
     Tbuf_ubuffer_area = Tbuf_buffer_area,
     // 0xffffffffeb800000-0xfffffffffec000000 (8MB) free
     Io_map_area_start = Kglobal_area + 0xc000000UL,

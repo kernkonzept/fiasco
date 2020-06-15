@@ -5,6 +5,7 @@ INTERFACE:
 class Jdb_tbuf_init : public Jdb_tbuf
 {
 private:
+  static unsigned max_size();
   static unsigned allocate(unsigned size);
 
 public:
@@ -31,8 +32,16 @@ STATIC_INITIALIZE_P(Jdb_tbuf_init, JDB_MODULE_INIT_PRIO);
 
 IMPLEMENT_DEFAULT FIASCO_INIT
 unsigned
+Jdb_tbuf_init::max_size()
+{ return Mem_layout::Tbuf_buffer_size; }
+
+IMPLEMENT_DEFAULT FIASCO_INIT
+unsigned
 Jdb_tbuf_init::allocate(unsigned size)
 {
+  if (size > max_size())
+    return max_size();
+
   _status = (Tracebuffer_status *)Mem_layout::Tbuf_status_page;
   if (!Vmem_alloc::page_alloc((void*) status(), Vmem_alloc::ZERO_FILL))
     panic("jdb_tbuf: alloc status page at %p failed", _status);
@@ -65,10 +74,11 @@ void Jdb_tbuf_init::init()
       if (Koptions::o()->opt(Koptions::F_tbuf_entries))
         want_entries = Koptions::o()->tbuf_entries;
 
-      // minimum: 8KB (  2 pages), maximum: 2MB (512 pages)
-      // must be a power of 2 (for performance reasons)
+      // Must be a power of 2 (for performance reasons). Also use a sane upper
+      // limit which fits into 4GB. The allocate function limits the buffer to
+      // the available window in the virtual memory layout.
       for (n = Config::PAGE_SIZE / sizeof(Tb_entry_union);
-           n < want_entries && n * sizeof(Tb_entry_union) < 0x200000;
+           n < want_entries && n < max_size();
            n <<= 1)
         ;
 
@@ -78,20 +88,9 @@ void Jdb_tbuf_init::init()
       max_entries(n);
       unsigned size = n * sizeof(Tb_entry_union);
       unsigned got = allocate(size);
-      if (got == 0)
-        panic("could not allocate trace buffer memory entries=%u %u KiB.\n",
-              n, size >> 10);
-
-      if (got & (got - 1))
-        panic("Trace buffer size unaligned\n");
-
       if (got < size)
-        {
-          n = got / sizeof(Tb_entry_union);
-          size = n * sizeof(Tb_entry_union);
-          max_entries(n);
-          printf("Shrinking trace buffer to %u entries.\n", n);
-        }
+        panic("Could not allocate trace buffer memory entries=%u: got %u/%u KiB.\n",
+              n, got >> 10, size >> 10);
 
       status()->scaler_tsc_to_ns = Cpu::boot_cpu()->get_scaler_tsc_to_ns();
       status()->scaler_tsc_to_us = Cpu::boot_cpu()->get_scaler_tsc_to_us();

@@ -41,6 +41,7 @@ public:
     Io_map_area_start  = 0x5f003000,
     Io_map_area_end    = 0x5f006000,
     Tbuf_buffer_area   = 0x5f200000,  ///< % 2MB   tracebuffer
+    Tbuf_buffer_size   = 0x00200000,
     Io_bitmap          = 0x5f800000,  ///< % 4MB   dummy
     _Free_1            = 0x5fc00000,  ///< % 4MB   dummy
     Vmem_end           = 0x60000000,
@@ -68,6 +69,7 @@ public:
     Io_map_area_start  = 0x2f003000,
     Io_map_area_end    = 0x2f006000,
     Tbuf_buffer_area   = 0x2f200000,  ///< % 2MB   tracebuffer
+    Tbuf_buffer_size   = 0x00200000,
     Io_bitmap          = 0x2f800000,  ///< % 4MB   dummy
     Glibc_mmap_start   = 0x40000000,  ///<         fixed, Linux kernel spec.
     Glibc_mmap_end     = 0x50000000,  ///<         hoping that is enough
