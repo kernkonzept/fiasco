@@ -35,7 +35,7 @@ Kmem::mmio_remap(Address phys, Address size)
   static Address ndev = 0;
 
   Address phys_page = cxx::mask_lsb(phys, Config::SUPERPAGE_SHIFT);
-  Address phys_end = Mem_layout::round_superpage(phys + size);
+  Address phys_end = (phys + size + Config::SUPERPAGE_SIZE - 1) & ~(Config::SUPERPAGE_SIZE-1);
   bool needs_remap = false;
 
   for (Address p = phys_page; p < phys_end; p += Config::SUPERPAGE_SIZE)
@@ -46,7 +46,7 @@ Kmem::mmio_remap(Address phys, Address size)
 
   if (needs_remap)
     {
-      for (Address p = Mem_layout::trunc_superpage(phys);
+      for (Address p = (phys & ~(Config::SUPERPAGE_SIZE-1));
            p < phys_end; p += Config::SUPERPAGE_SIZE)
         {
           Address dm = Mem_layout::Registers_map_start + ndev;

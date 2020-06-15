@@ -16,7 +16,7 @@ platform_reset(void)
 
   // WDT CLock Enable
   Io::set<Unsigned32>(PLL_PCCR1_WDT_EN, Kmem::mmio_remap(PLL_PCCR1,
-                                                         sizeof(Unsigned32));
+                                                         sizeof(Unsigned32)));
 
   // Assert Software reset signal by making the bit zero
   Io::mask<Unsigned16>(~WCR_SRS, Kmem::mmio_remap(WCR, sizeof(Unsigned16)));
