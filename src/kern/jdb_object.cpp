@@ -90,7 +90,7 @@ Jdb_object::sys_tbuf(L4_msg_tag tag, unsigned op,
       return commit_result(0);
 
     case Tbuf_dump:
-      kdb_ke("tbuf_dump");
+      kdb_ke_sequence("*tbufdumpgzip_mode_", 19);
       return commit_result(0);
 
     case Tbuf_log:
