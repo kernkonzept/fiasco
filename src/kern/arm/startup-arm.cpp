@@ -11,7 +11,6 @@ IMPLEMENTATION [arm]:
 #include "kmem_space.h"
 #include "per_cpu_data.h"
 #include "per_cpu_data_alloc.h"
-#include "perf_cnt.h"
 #include "pic.h"
 #include "platform_control.h"
 #include "psci.h"
