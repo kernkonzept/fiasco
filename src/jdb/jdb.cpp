@@ -176,7 +176,7 @@ const char *Jdb::toplevel_cmds = "j_";
 
 // a short command must be included in this list to be enabled for non-
 // interactive execution
-const char *Jdb::non_interactive_cmds = "bEIJLMNOPSU^Z";
+const char *Jdb::non_interactive_cmds = "bEIJLMNOPSU^Z*";
 
 DEFINE_PER_CPU Per_cpu<bool> Jdb::running;	// JDB is already running
 bool Jdb::never_break;		// never enter JDB
@@ -383,36 +383,58 @@ Jdb::execute_command_ni(char const *str, int len)
 
   push_cons()->push('_'); // terminating return
 
-
-  // prevent output of sequences
-  Kconsole::console()->change_state(0, 0, ~Console::OUTENABLED, 0);
-
+  bool leave = true;
   for (;;)
     {
-      int c = getchar();
+      // Prevent output of sequences. Do this inside the loop because some
+      // commands do Console::start_exclusive() + Console::end_exclusive().
+      Kconsole::console()->change_state(0, 0, ~Console::OUTENABLED, 0);
 
-      was_input_error = true;
-      if (0 != strchr(non_interactive_cmds, c))
-	{
-	  char _cmd[] = {(char)c, 0};
-	  Jdb_core::Cmd cmd = Jdb_core::has_cmd(_cmd);
+      if (short_mode)
+        {
+          int c = getchar();
+          if (c == KEY_RETURN || c == KEY_RETURN_2 || c == ' ')
+            break;
 
-	  if (cmd.cmd)
-	    {
-	      if (Jdb_core::exec_cmd (cmd, 0) != 3)
-                was_input_error = false;
-	    }
-	}
+          was_input_error = true;
+          if (0 != strchr(non_interactive_cmds, c))
+            {
+              char _cmd[] = {(char)c, 0};
+              Jdb_core::Cmd cmd = Jdb_core::has_cmd(_cmd);
 
-      if (c == KEY_RETURN || c == KEY_RETURN_2 || c == ' ' || was_input_error)
-	{
-	  push_cons()->flush();
-	  // re-enable all consoles but GZIP
-	  Kconsole::console()->change_state(0, Console::GZIP,
-					    ~0U, Console::OUTENABLED);
-	  return c == KEY_RETURN || c == KEY_RETURN_2 || c == ' ';
-	}
+              if (cmd.cmd)
+                {
+                  if (Jdb_core::exec_cmd (cmd, 0) != 3)
+                    was_input_error = false;
+                }
+            }
+
+          if (was_input_error)
+            {
+              leave = false;
+              break;
+            }
+        }
+      else
+        {
+          Jdb_core::Cmd cmd(0, 0);
+          char const *args;
+          input_long_mode(&cmd, &args);
+          if (!cmd.cmd)
+            break;
+
+          if (Jdb_core::exec_cmd(cmd, args) == 3)
+            {
+              leave = false;
+              break;
+            }
+        }
     }
+
+  push_cons()->flush();
+  // re-enable all consoles but GZIP
+  Kconsole::console()->change_state(0, Console::GZIP, ~0UL, Console::OUTENABLED);
+  return leave;
 }
 
 PRIVATE static
