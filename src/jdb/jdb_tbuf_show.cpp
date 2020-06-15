@@ -382,28 +382,19 @@ Jdb_tbuf_show::show_events(Mword n, Mword ref, Mword count, Unsigned8 mode,
 
       if (long_output)
         {
-          char s[3];
+          char s[3] = "  ";
           Jdb_tbuf_output::print_entry(&_buffer_str, n);
 
           if (!Jdb_tbuf::diff_tsc(n, &dtsc))
             dtsc = 0;
 
-          strcpy(s, "  ");
-          if (n == ref)
-            {
-              s[0] = 'R';
-              s[1] = ' ';
-            }
-          else
-            {
-              for (int i = 0; i < 10; i++)
-                if (number == _nr_pos[i])
-                  {
-                    s[0] = 'M';
-                    s[1] = i + '0';
-                    break;
-                  }
-            }
+          for (int i = 0; i < 10; i++)
+            if (number == _nr_pos[i])
+              {
+                s[0] = 'M';
+                s[1] = i + '0';
+                break;
+              }
 
           String_buf<13> s_tsc_dc;
           String_buf<15> s_tsc_ds;
