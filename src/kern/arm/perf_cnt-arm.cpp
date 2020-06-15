@@ -83,7 +83,7 @@ char const *Perf_cnt::perf_type_str = "none";
 
 PUBLIC static inline FIASCO_INIT_CPU_SFX(init_cpu)
 void
-Perf_cnt::init_cpu()
+Perf_cnt::init_cpu(Cpu const &)
 {}
 
 PUBLIC static inline
@@ -204,10 +204,12 @@ Perf_cnt::mon_event_type(int nr)
 
 PUBLIC static FIASCO_INIT_CPU
 void
-Perf_cnt::init_cpu()
+Perf_cnt::init_cpu(Cpu const &cpu)
 {
   if (!is_avail())
     return;
+
+  ccnt_init(cpu);
 
   _nr_counters = (pmcr() >> 11) & 0x1f;
 
@@ -300,7 +302,7 @@ PUBLIC static FIASCO_INIT_CPU
 void
 Perf_cnt::init()
 {
-  init_cpu();
+  init_cpu(*Cpu::boot_cpu());
 
   read_pmc[0] = read_counter_0;
   read_pmc[1] = read_counter_1;
@@ -312,9 +314,9 @@ Perf_cnt::init()
 
 PUBLIC static inline NEEDS[Perf_cnt::init_cpu] FIASCO_INIT_CPU_SFX(init_ap)
 void
-Perf_cnt::init_ap(Cpu const &)
+Perf_cnt::init_ap(Cpu const &cpu)
 {
-  init_cpu();
+  init_cpu(cpu);
 }
 
 PUBLIC static int

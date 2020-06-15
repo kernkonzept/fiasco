@@ -79,6 +79,9 @@ public:
 
   unsigned copro_dbg_model() const { return _cpu_id._dfr0 & 0xf; }
 
+  bool has_pmuv2() const;
+  bool has_pmuv3() const;
+
 private:
   void init_supervisor_mode(bool is_boot_cpu);
   void init_hyp_mode();
@@ -91,7 +94,6 @@ private:
   Ids _cpu_id;
 
   bool has_hpmn0() const;
-  bool has_pmuv3() const;
 };
 
 // ------------------------------------------------------------------------
@@ -330,7 +332,14 @@ Cpu::has_hpmn0() const
   return false;
 }
 
-IMPLEMENT_DEFAULT static inline
+IMPLEMENT_DEFAULT inline
+bool
+Cpu::has_pmuv2() const
+{
+  return false;
+}
+
+IMPLEMENT_DEFAULT inline
 bool
 Cpu::has_pmuv3() const
 {

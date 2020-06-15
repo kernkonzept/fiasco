@@ -383,6 +383,14 @@ Cpu::has_hpmn0() const
 
 IMPLEMENT_OVERRIDE inline
 bool
+Cpu::has_pmuv2() const
+{
+  unsigned pmuv = (_cpu_id._dfr0 >> 8) & 0xf;
+  return pmuv >= 1 && pmuv != 0xf;
+}
+
+IMPLEMENT_OVERRIDE inline
+bool
 Cpu::has_pmuv3() const
 {
   unsigned pmuv = (_cpu_id._dfr0 >> 8) & 0xf;

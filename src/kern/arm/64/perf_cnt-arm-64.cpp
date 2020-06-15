@@ -40,6 +40,8 @@ private:
   static Mword ccnt()
   { Mword val; asm volatile ("mrs %0, PMCCNTR_EL0" : "=r" (val)); return val;}
 
+  static void ccnt_init(Cpu const &cpu);
+
 
   static void evtsel(Mword val)
   { asm volatile ("msr PMXEVTYPER_EL0, %0" : : "r" (val)); }
@@ -80,4 +82,27 @@ private:
 
 
   static int _nr_counters;
+};
+
+// --------------------------------------------------------------------------
+IMPLEMENTATION [arm && arm_v8]:
+
+IMPLEMENT
+void
+Perf_cnt::ccnt_init(Cpu const &cpu)
+{
+  if (cpu.has_pmuv3())
+    {
+      Mword val;
+      asm volatile ("mrs %0, PMCCFILTR_EL0" : "=r" (val));
+      val &= ~(1UL << 31); //   P=0: don't disable counting of cycles in EL1
+      val &= ~(1UL << 30); //   U=0: don't disable counting of cycles in EL0
+      val &= ~(1UL << 29); // NSK=0: don't disable counting of cycles in
+                           // non-secure EL1
+      val &= ~(1UL << 28); // NSU=0: don't disable counting of cycles in
+                           // non-secure EL0
+      if (TAG_ENABLED(cpu_virt))
+        val |= (1UL << 27); // NSH=1: don't disable counting of cycles in EL2
+      asm volatile ("msr PMCCFILTR_EL0, %0" : : "r" (val));
+    }
 };
