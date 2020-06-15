@@ -94,7 +94,6 @@ private:
   Jdb(const Jdb&);
 
   static char hide_statline;
-  static char last_cmd;
   static char next_cmd;
   static Per_cpu<String_buf<81> > error_buffer;
   static bool was_input_error;
@@ -163,7 +162,6 @@ Jdb_handler_queue Jdb::jdb_leave;
 
 DEFINE_PER_CPU Per_cpu<String_buf<81> > Jdb::error_buffer;
 char Jdb::next_cmd;			// next global command to execute
-char Jdb::last_cmd;
 
 char Jdb::hide_statline;		// show status line on enter_kdebugger
 DEFINE_PER_CPU Per_cpu<Jdb_entry_frame*> Jdb::entry_frame;
@@ -239,11 +237,6 @@ PUBLIC static inline
 void
 Jdb::set_next_cmd(char cmd)
 { next_cmd = cmd; }
-
-PUBLIC static inline
-int
-Jdb::was_last_cmd()
-{ return last_cmd; }
 
 PUBLIC static inline
 int
@@ -615,16 +608,14 @@ Jdb::execute_command()
 
   if (cmd.cmd)
     {
-      int ret = Jdb_core::exec_cmd( cmd, args );
+      int ret = Jdb_core::exec_cmd(cmd, args);
 
       if (!ret)
 	hide_statline = false;
 
-      last_cmd = cmd_key;
       return ret;
     }
 
-  last_cmd = 0;
   return 1;
 }
 
