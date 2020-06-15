@@ -27,9 +27,9 @@ raw_putchar(int c)
 static void
 uu_open(const char *name)
 {
-  raw_write("\nbegin 644 ", 11);
+  raw_write("\r\nbegin 644 ", 12);
   raw_write(name, strlen(name));
-  raw_write("\n", 1);
+  raw_write("\r\n", 2);
 }
 
 static void
@@ -38,7 +38,7 @@ uu_close(void)
   char ch = ENC('\0');
 
   raw_putchar(ch);
-  raw_write("\nend\n", 5);
+  raw_write("\r\nend\r\n", 7);
 }
 
 static void
@@ -80,7 +80,7 @@ uu_write(const char *in, int len)
 	  ch = ENC(ch);
 	  raw_putchar(ch);
 	}
-      raw_putchar('\n');
+      raw_write("\r\n", 2);
     }
 }
 
