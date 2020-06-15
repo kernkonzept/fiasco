@@ -302,7 +302,9 @@ Perf_cnt::init()
   read_pmc[0] = read_counter_0;
   read_pmc[1] = read_counter_1;
 
-  Tb_entry::set_cycle_read_func(read_cycle_cnt);
+  // Don't use PMCCNT_EL0 as time stamp counter.
+  // Use the default generic ARM timer instead.
+  // Tb_entry::set_cycle_read_func(read_cycle_cnt);
 }
 
 PUBLIC static inline NEEDS[Perf_cnt::init_cpu] FIASCO_INIT_CPU

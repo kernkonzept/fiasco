@@ -344,17 +344,27 @@ IMPLEMENT_OVERRIDE
 void
 Jdb::write_tsc_s(String_buffer *buf, Signed64 tsc, bool sign)
 {
-  if (sign && tsc != 0)
-    buf->printf("%+lld c", tsc);
-  else
-    buf->printf("%lld c", tsc);
+  Unsigned64 uns = Timer::ts_to_ns(tsc < 0 ? -tsc : tsc);
+
+  if (tsc < 0)
+    uns = -uns;
+
+  if (sign)
+    buf->printf("%c", (tsc < 0) ? '-' : (tsc == 0) ? ' ' : '+');
+
+  Mword _s  = uns / 1000000000;
+  Mword _us = (uns / 1000) - 1000000 * _s;
+  buf->printf("%3lu.%06lu s ", _s, _us);
 }
 
 IMPLEMENT_OVERRIDE
 void
 Jdb::write_tsc(String_buffer *buf, Signed64 tsc, bool sign)
 {
-  write_tsc_s(buf, tsc, sign);
+  Unsigned64 ns = Timer::ts_to_ns(tsc < 0 ? -tsc : tsc);
+  if (tsc < 0)
+    ns = -ns;
+  write_ll_ns(buf, ns, sign);
 }
 
 
