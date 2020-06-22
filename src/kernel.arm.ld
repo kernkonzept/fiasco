@@ -35,6 +35,10 @@ OUTPUT_ARCH(aarch64)
 # error Either CONFIG_BIT32 or CONFIG_BIT64 must be set
 #endif
 
+#if defined CONFIG_BIT32 && !defined CONFIG_CPU_VIRT
+# define NEED_EXCPT
+#endif
+
 ENTRY(_start)
 
 PHDRS {
@@ -43,7 +47,9 @@ PHDRS {
   koptions PT_LOAD;
   tramp PT_LOAD;
   kernel PT_LOAD;
+#if defined NEED_EXCPT
   excpt PT_LOAD;
+#endif
   initcall PT_LOAD;
   dyn PT_DYNAMIC;
   l4_kip 0x10;
@@ -178,6 +184,7 @@ SECTIONS {
   }
   __end_of_the_kernel = .;
 
+#if defined NEED_EXCPT
   ivt_start = ADDR(.bss) + SIZEOF(.bss) - phys_offset;
   .excp 0xffff0000 : AT (ivt_start) {
     KEEP (*(.vect)) *(.excp.text)
@@ -185,6 +192,7 @@ SECTIONS {
   } :excpt
 
   . = __end_of_the_kernel + SIZEOF(.excp);
+#endif
 
   PROVIDE( _end = . );
 
