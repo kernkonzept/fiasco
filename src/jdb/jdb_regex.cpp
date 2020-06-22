@@ -82,7 +82,8 @@ PUBLIC
 void
 Jdb_regex::finish()
 {
-  regfree(&_r);
+  if (_active)
+    regfree(&_r);
   memset(_matches, 0, sizeof(_matches));
   _active = false;
 }
