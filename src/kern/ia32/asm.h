@@ -6,6 +6,8 @@
 
 #ifdef __ASSEMBLER__
 
+#include "tcboffset.h"
+
 #define kdb_ke_asm(msg)		\
 	int3			;\
 	jmp	9f		;\
