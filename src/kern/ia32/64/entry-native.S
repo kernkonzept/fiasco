@@ -272,6 +272,8 @@ safe_iret:
 	and	$(~CPUE_EXIT_NEED_IBPB), %r13
 	mov	%r13, CPUE_EXIT(%r14)
 	IA32_IBPB
+	mov	GDT_DATA_KERNEL, %r13
+	verw	%r13w
 22:
 #endif
 	mov	(%rsp), %r13

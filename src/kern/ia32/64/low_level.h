@@ -76,6 +76,8 @@
 	and	$(~CPUE_EXIT_NEED_IBPB), %r11
 	mov	%r11, CPUE_EXIT(%r15)
 	IA32_IBPB
+	mov	GDT_DATA_KERNEL, %r11
+	verw	%r11w
 333:
 # endif
 	mov	CPUE_CR3U(%r15), %r15
