@@ -452,37 +452,93 @@ Mem_space::switchin_context(Mem_space *from)
     }
 }
 
-// --------------------------------------------------------------------
-IMPLEMENTATION [(amd64 || ia32) && !cpu_local_map]:
-
-IMPLEMENT inline NEEDS ["cpu.h", "kmem.h"]
+IMPLEMENT inline NEEDS ["cpu.h", Mem_space::prepare_pt_switch,
+                        Mem_space::switch_page_table]
 void
 Mem_space::make_current()
 {
-  Cpu::set_pdbr((Mem_layout::pmem_to_phys(_dir)));
+  prepare_pt_switch();
+  switch_page_table();
   _current.cpu(current_cpu()) = this;
 }
 
 // --------------------------------------------------------------------
-IMPLEMENTATION [(amd64 || ia32 || ux) && !cpu_local_map]:
+IMPLEMENTATION [(amd64 || ia32) && cpu_local_map && ia32_pcid]:
 
-PROTECTED inline
-int
-Mem_space::sync_kernel()
+PRIVATE inline NEEDS[Mem_space::cpu_val]
+void
+Mem_space::set_current_pcid()
 {
-  return _dir->sync(Virt_addr(Mem_layout::User_max + 1), Kmem::dir(),
-                    Virt_addr(Mem_layout::User_max + 1),
-                    Virt_size(-(Mem_layout::User_max + 1)), Pdir::Super_level,
-                    false,
-                    Kmem_alloc::q_allocator(_quota));
+  // [0]: CPU pdir pa + (if PCID: + bit 63 + ASID 0) -- not relevant here
+  // [3]: CPU pdir pa + (if PCID: + bit 63 + ASID)
+  Address pd_pa = cpu_val()[3];
+  pd_pa &= ~0xfffUL;
+  pd_pa |= asid();
+  cpu_val()[3] = pd_pa;
+}
+
+// --------------------------------------------------------------------
+IMPLEMENTATION [(amd64 || ia32) && !ia32_pcid]:
+
+PRIVATE inline
+void
+Mem_space::set_current_pcid()
+{}
+
+// --------------------------------------------------------------------
+IMPLEMENTATION [(amd64 || ia32) && cpu_local_map && intel_ia32_branch_barriers]:
+
+PRIVATE inline NEEDS[Mem_space::cpu_val]
+void
+Mem_space::set_needs_ibpb()
+{
+  // set EXIT flags CPUE_EXIT_NEED_IBPB
+  cpu_val()[2] |= 1;
+}
+
+// --------------------------------------------------------------------
+IMPLEMENTATION [(amd64 || ia32) && !intel_ia32_branch_barriers]:
+
+PRIVATE inline
+void
+Mem_space::set_needs_ibpb()
+{}
+
+// --------------------------------------------------------------------
+IMPLEMENTATION [(amd64 || ia32) && cpu_local_map && kernel_isolation]:
+
+PRIVATE inline NEEDS [Mem_space::set_current_pcid,
+                      Mem_space::set_needs_ibpb]
+void
+Mem_space::switch_page_table()
+{
+  // prepare for switching the page table on kernel exit...
+  set_needs_ibpb();
+  set_current_pcid();
+}
+
+// --------------------------------------------------------------------
+IMPLEMENTATION [(amd64 || ia32) && cpu_local_map && !kernel_isolation]:
+
+PRIVATE inline NEEDS[Mem_space::cpu_val]
+void
+Mem_space::switch_page_table()
+{
+  // switch page table directly
+  Cpu::set_pdbr(access_once(&cpu_val()[0]));
 }
 
 // --------------------------------------------------------------------
 IMPLEMENTATION [(amd64 || ia32) && cpu_local_map]:
 
-IMPLEMENT inline NEEDS ["cpu.h", "kmem.h"]
+PRIVATE static inline
+Address *
+Mem_space::cpu_val()
+{ return reinterpret_cast<Address *>(Mem_layout::Kentry_cpu_page); }
+
+PRIVATE inline NEEDS ["cpu.h", "kmem.h"]
 void
-Mem_space::make_current()
+Mem_space::prepare_pt_switch()
 {
   Mword *pd = reinterpret_cast<Mword *>(Kmem::current_cpu_udir());
   Mword *d = (Mword *)_dir;
@@ -501,29 +557,7 @@ Mem_space::make_current()
       //printf("u: %u %lx\n", bit - 1, n);
       //LOG_MSG_3VAL(current(), "u", bit - 1, n, *reinterpret_cast<Mword *>(m));
     }
-  //pd->sync(Virt_addr(0), _dir, Virt_addr(0), Virt_size(1UL << 47), 0);
-  //pd->sync(Virt_addr(Mem_layout::Io_bitmap), _dir, Virt_addr(Mem_layout::Io_bitmap), Virt_size(512UL << 30), 0);
-#ifndef CONFIG_KERNEL_ISOLATION
   asm volatile ("" : : : "memory");
-  Address pd_pa = access_once(reinterpret_cast<Address *>(Mem_layout::Kentry_cpu_page));
-  Cpu::set_pdbr(pd_pa);
-#else
-# ifdef CONFIG_INTEL_IA32_BRANCH_BARRIERS
-  Address *ca = reinterpret_cast<Address *>(Mem_layout::Kentry_cpu_page);
-  // set EXIT flags NEEDS IBPB
-  ca[2] |= 1;
-# endif
-# ifdef CONFIG_IA32_PCID
-  // [0]: CPU pdir pa + (if PCID: + bit 63 + ASID 0) -- not relevant here
-  // [3]: CPU pdir pa + (if PCID: + bit 63 + ASID)
-  Mword *p = reinterpret_cast<Mword *>(Mem_layout::Kentry_cpu_page);
-  Mword pd_pa = p[3];
-  pd_pa &= ~0xfffUL;
-  pd_pa |= asid();
-  p[3] = pd_pa;
-# endif
-#endif
-  _current.cpu(current_cpu()) = this;
 }
 
 
@@ -534,6 +568,32 @@ Mem_space::sync_kernel()
   return 0;
 }
 
+// --------------------------------------------------------------------
+IMPLEMENTATION [(amd64 || ia32) && !cpu_local_map]:
+
+PRIVATE inline
+void
+Mem_space::prepare_pt_switch()
+{}
+
+PRIVATE inline NEEDS["kmem.h"]
+void
+Mem_space::switch_page_table()
+{
+  // switch page table directly
+  Cpu::set_pdbr(Mem_layout::pmem_to_phys(_dir));
+}
+
+PROTECTED inline
+int
+Mem_space::sync_kernel()
+{
+  return _dir->sync(Virt_addr(Mem_layout::User_max + 1), Kmem::dir(),
+                    Virt_addr(Mem_layout::User_max + 1),
+                    Virt_size(-(Mem_layout::User_max + 1)), Pdir::Super_level,
+                    false,
+                    Kmem_alloc::q_allocator(_quota));
+}
 
 // --------------------------------------------------------------------
 IMPLEMENTATION [amd64]:
