@@ -313,7 +313,8 @@ PUBLIC static
 Address
 Kmem::mmio_remap(Address phys, Address size)
 {
-  assert(size == Config::PAGE_SIZE);
+  assert(size <= Config::PAGE_SIZE);
+  (void)size;
 
   Address offs;
   Address va = alloc_io_vmem(Config::PAGE_SIZE);
