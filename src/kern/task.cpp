@@ -383,8 +383,9 @@ PRIVATE inline NOEXPORT
 L4_msg_tag
 Task::sys_map(L4_fpage::Rights rights, Syscall_frame *f, Utcb *utcb)
 {
-  LOG_TRACE("Task map", "map", ::current(), Log_unmap,
+  LOG_TRACE("Task map", "map", ::current(), Log_map_unmap,
       l->id = dbg_id();
+      l->map   = true;
       l->mask  = utcb->values[1];
       l->fpage = utcb->values[2]);
 
@@ -450,8 +451,9 @@ Task::sys_unmap(Syscall_frame *f, Utcb *utcb)
   Kobject::Reap_list rl;
   unsigned words = f->tag().words();
 
-  LOG_TRACE("Task unmap", "unm", ::current(), Log_unmap,
+  LOG_TRACE("Task unmap", "unm", ::current(), Log_map_unmap,
             l->id = dbg_id();
+            l->map   = false;
             l->mask  = utcb->values[1];
             l->fpage = utcb->values[2]);
 
@@ -616,11 +618,12 @@ INTERFACE [debug]:
 EXTENSION class Task
 {
 private:
-  struct Log_unmap : public Tb_entry
+  struct Log_map_unmap : public Tb_entry
   {
     Mword id;
     Mword mask;
     Mword fpage;
+    bool  map;
     void print(String_buffer *buf) const;
   };
 
@@ -633,9 +636,28 @@ IMPLEMENTATION [debug]:
 
 IMPLEMENT
 void
-Task::Log_unmap::print(String_buffer *buf) const
+Task::Log_map_unmap::print(String_buffer *buf) const
 {
   L4_fpage fp(fpage);
-  buf->printf("task=[U:%lx] mask=%lx fpage=[%u/%u]%lx",
-              id, mask, (unsigned)fp.order(), (unsigned)fp.type(), fpage);
+  buf->printf("task=[%c:%lx] %s=%lx fpage=[%u/",
+              map ? 'M' : 'U', id,
+              map ? "snd_base" : "mask", mask, (unsigned)fp.order());
+  switch (fp.type())
+    {
+    case L4_fpage::Special:
+      buf->printf("spc] fpage=%lx", fpage);
+      break;
+    case L4_fpage::Memory:
+      buf->printf("mem] addr=%lx", Virt_addr::val(fp.mem_address()));
+      break;
+    case L4_fpage::Io:
+      buf->printf("io] port=%lx", cxx::int_value<Port_number>(fp.io_address()));
+      break;
+    case L4_fpage::Obj:
+      buf->printf("obj] cap=C:%lx", cxx::int_value<Cap_index>(fp.obj_index()));
+      break;
+    default:
+      buf->printf("???] fpage=%lx", fpage);
+      break;
+    }
 }
