@@ -363,9 +363,6 @@ void
 Treemap_ops::flush(Treemap *submap,
                    Treemap::Pcnt offs_begin, Treemap::Pcnt offs_end) const
 {
-  typedef Treemap::Pcnt Pcnt;
-  typedef Treemap::Pfn Pfn;
-
   for (Treemap::Page i = submap->trunc_to_page(offs_begin);
       i < submap->round_to_page(offs_end);
       ++i)
