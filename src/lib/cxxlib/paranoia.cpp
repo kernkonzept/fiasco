@@ -13,12 +13,14 @@ char __dso_handle __attribute__((weak));
 
 extern "C" void __cxa_pure_virtual() 
 {
-  panic("cxa pure virtual function called");
+  panic("cxa pure virtual function called from " L4_PTR_FMT,
+        L4_PTR_ARG(__builtin_return_address(0)));
 }
 
 extern "C" void __pure_virtual()
 {
-  panic("pure virtual function called");
+  panic("pure virtual function called from " L4_PTR_FMT,
+        L4_PTR_ARG(__builtin_return_address(0)));
 }
 
 void operator delete(void *) throw()
