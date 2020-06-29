@@ -159,14 +159,14 @@ PUBLIC
 void
 Kernel_thread::idle_op()
 {
-  // this version must run with disabled IRQs and a wakup must continue directly
-  // after the wait for event.
+  // this version must run with disabled IRQs and a wakeup must continue
+  // directly after the wait for event.
   auto guard = lock_guard(cpu_lock);
   Cpu_number cpu = home_cpu();
   ++_idle_counter.cpu(cpu);
   // 1. check for latency requirements that prevent low power modes
-  // 2. check for timouts on this CPU ignore the idle thread's timeslice
-  // 3. check for RCU work on this cpu
+  // 2. check for timeouts on this CPU ignore the idle thread's timeslice
+  // 3. check for RCU work on this CPU
   if (Rcu::idle(cpu)
       && !Timeout_q::timeout_queue.cpu(cpu).have_timeouts(timeslice_timeout.cpu(cpu)))
     {
