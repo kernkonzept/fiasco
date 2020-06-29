@@ -20,6 +20,7 @@ IMPLEMENTATION [mp]:
 #include "helping_lock.h"
 #include "kernel_task.h"
 #include "processor.h"
+#include "rcupdate.h"
 #include "scheduler.h"
 #include "task.h"
 #include "thread.h"
