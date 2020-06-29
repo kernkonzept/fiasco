@@ -17,16 +17,16 @@ class Rcu_batch
 public:
   /// create uninitialized batch.
   Rcu_batch() = default;
-  /// create a btach initialized with \a b.
+  /// create a batch initialized with \a b.
   Rcu_batch(long b) : _b(b) {}
 
   /// less than comparison.
   bool operator < (Rcu_batch const &o) const { return (_b - o._b) < 0; }
   /// greater than comparison.
   bool operator > (Rcu_batch const &o) const { return (_b - o._b) > 0; }
-  /// greater than comparison.
+  /// greater than / equal to comparison.
   bool operator >= (Rcu_batch const &o) const { return (_b - o._b) >= 0; }
-  /// equelity check.
+  /// equality check.
   bool operator == (Rcu_batch const &o) const { return _b == o._b; }
   /// inequality test.
   bool operator != (Rcu_batch const &o) const { return _b != o._b; }
@@ -90,7 +90,7 @@ class Rcu_data
   friend class Jdb_rcupdate;
 public:
 
-  Rcu_batch _q_batch;   ///< batch nr. for grace period
+  Rcu_batch _q_batch;   ///< batch no. for grace period
   bool _q_passed;       ///< quiescent state passed?
   bool _pending;        ///< wait for quiescent state
   bool _idle;
@@ -125,7 +125,7 @@ private:
 };
 
 /**
- * \brief encapsulation of RCU implementation.
+ * \brief Encapsulation of RCU implementation.
  *
  * This class aggregates per CPU data structures as well as the global
  * data structure for RCU and provides a common RCU interface.
@@ -196,9 +196,6 @@ IMPLEMENTATION:
 #include "static_init.h"
 #include "timeout.h"
 #include "logdefs.h"
-
-// XXX: includes for debugging
-// #include "logdefs.h"
 
 
 class Rcu_timeout : public Timeout
