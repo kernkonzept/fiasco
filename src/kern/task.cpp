@@ -3,7 +3,6 @@ INTERFACE:
 #include "context.h"
 #include "kobject.h"
 #include "l4_types.h"
-#include "rcupdate.h"
 #include "space.h"
 #include "spin_lock.h"
 #include "unique_ptr.h"
@@ -11,10 +10,9 @@ INTERFACE:
 /**
  * \brief A task is a protection domain.
  *
- * A is derived from Space, which aggregates a set of address spaces.
- * Additionally to a space, a task provides initialization and
- * destruction functionality for a protection domain.
- * Task is also derived from Rcu_item to provide RCU shutdown of tasks.
+ * A task is derived from Space, which aggregates a set of address spaces.
+ * Additionally to a space, a task provides initialization and destruction
+ * functionality for a protection domain.
  */
 class Task :
   public cxx::Dyn_castable<Task, Kobject>,
