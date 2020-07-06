@@ -260,20 +260,28 @@ Jdb_list::filtered_seek(int cnt, void **item, Jdb_list::Line_buf **buf = 0)
 
   int c = 0;
   int d = cnt < 0 ? -1 : 1;
+
+  void *valid_item = *item;
+  void *new_item = *item;
   for (;;)
     {
-      int i;
+      if ((seek(d, &new_item)) == 0)
+        {
+          *item = valid_item;
+          return c;
+        }
 
-      if ((i = seek(d, item)) == 0)
-        return c;
-
-      if (Line_buf *b = render_visible(*item, nullptr))
+      if (Line_buf *b = render_visible(new_item, nullptr))
         {
           if (buf)
             *buf = b;
           c += d;
           if (cnt == c)
-            return c;
+            {
+              *item = new_item;
+              return c;
+            }
+          valid_item = new_item;
         }
     }
 }
