@@ -2020,6 +2020,7 @@ bool
 Context::take_cpu_offline(Cpu_number cpu, bool drain_rqq = false)
 {
   assert (cpu == current_cpu());
+  assert (!Proc::interrupts());
 
   for (;;)
     {
@@ -2049,6 +2050,10 @@ Context::take_cpu_offline(Cpu_number cpu, bool drain_rqq = false)
 
   Mem::mp_mb();
 
+  // As the interrupts are disabled (this is acceptable as this function is
+  // called during system suspend only), the loop safely drains all the RCU
+  // queues of the current CPU without race conditions. And the enter_idle()
+  // does safely remove the CPU from the list of active CPUs.
   do
     {
       Rcu::do_pending_work(cpu);
