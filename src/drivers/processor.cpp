@@ -12,17 +12,17 @@ public:
   /// Block external interrupts
   static void cli();
 
-  /// Unblock external inetrrupts
+  /// Unblock external interrupts
   static void sti();
 
-  /// Are external interrupts enabled ?
+  /// Are external interrupts enabled?
   static Status interrupts();
 
   /// Block external interrupts and save the old state
   static Status cli_save();
 
   /// Conditionally unblock external interrupts
-  static void sti_restore( Status );
+  static void sti_restore(Status);
 
   static void pause();
 
