@@ -332,7 +332,7 @@ void
 Jdb::leave_getchar()
 {}
 
-PUBLIC static
+IMPLEMENT_OVERRIDE
 void
 Jdb::write_tsc_s(String_buffer *buf, Signed64 tsc, bool sign)
 {
@@ -342,7 +342,7 @@ Jdb::write_tsc_s(String_buffer *buf, Signed64 tsc, bool sign)
     buf->printf("%lld c", tsc);
 }
 
-PUBLIC static
+IMPLEMENT_OVERRIDE
 void
 Jdb::write_tsc(String_buffer *buf, Signed64 tsc, bool sign)
 {

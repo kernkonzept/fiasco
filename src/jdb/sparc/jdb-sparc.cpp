@@ -165,12 +165,12 @@ void
 Jdb::leave_getchar()
 {}
 
-PUBLIC static
+IMPLEMENT_OVERRIDE
 void
 Jdb::write_tsc_s(String_buffer *, Signed64 /*tsc*/, bool /*sign*/)
 {}
 
-PUBLIC static
+IMPLEMENT_OVERRIDE
 void
 Jdb::write_tsc(String_buffer *, Signed64 /*tsc*/, bool /*sign*/)
 {}
