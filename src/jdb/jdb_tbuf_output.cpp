@@ -180,12 +180,14 @@ Jdb_tbuf_output::print_entry(String_buffer *buf, Tb_entry *tb)
     snprintf(tidstr, sizeof(tidstr), "p:%p", t);
   else
     {
+      int len = snprintf(tidstr, sizeof(tidstr), "%04lx", t->dbg_info()->dbg_id());
       Jdb_kobject_name *ex
         = Jdb_kobject_extension::find_extension<Jdb_kobject_name>(t);
       if (show_names && ex)
-        snprintf(tidstr, sizeof(tidstr), "%04lx %-*.*s", t->dbg_info()->dbg_id(), (int)ex->max_len(), (int)ex->max_len(), ex->name());
-      else
-        snprintf(tidstr, sizeof(tidstr), "%04lx", t->dbg_info()->dbg_id());
+        snprintf(tidstr + len, sizeof(tidstr) - len, " %-*.*s",
+                 (int)ex->max_len(), (int)ex->max_len(), ex->name());
+      else if (show_names && t == Context::kernel_context(t->home_cpu()))
+        snprintf(tidstr + len, sizeof(tidstr) - len, " {KERNEL}");
     }
 
   if (Config::Max_num_cpus > 1)
