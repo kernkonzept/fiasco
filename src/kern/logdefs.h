@@ -36,8 +36,6 @@
 
 #include "globals.h"
 #include "jdb_tbuf.h"
-#include "cpu_lock.h"
-#include "lock_guard.h"
 #include "processor.h"
 
 #define LOG_TRACE_COND(name, sc, ctx, fmt, cond, code...)               \
@@ -103,8 +101,6 @@
  */
 #define LOG_MSG(context, text)                                          \
   do {                                                                  \
-    /* The cpu_lock is needed since virq::hit() depends on it */        \
-    auto guard = lock_guard(cpu_lock);                                  \
     Tb_entry_ke *tb = static_cast<Tb_entry_ke*>(Jdb_tbuf::new_entry()); \
     tb->set(context, Proc::program_counter());                          \
     tb->msg.set_const(text);                                            \
@@ -116,8 +112,6 @@
  */
 #define LOG_MSG_3VAL(context, text, v1, v2, v3)                         \
   do {                                                                  \
-    /* The cpu_lock is needed since virq::hit() depends on it */        \
-    auto guard = lock_guard(cpu_lock);                                  \
     Tb_entry_ke_reg *tb = Jdb_tbuf::new_entry<Tb_entry_ke_reg>();       \
     tb->set(context, Proc::program_counter());                          \
     tb->v[0] = v1; tb->v[1] = v2; tb->v[2] = v3;                        \

@@ -93,20 +93,11 @@ void Jdb_tbuf_init::init()
           printf("Shrinking trace buffer to %u entries.\n", n);
         }
 
-      status()->window[0].tracebuffer = (Address)_buffer;
-      status()->window[1].tracebuffer = (Address)_buffer + size / 2;
-      status()->window[0].size        = size / 2;
-      status()->window[1].size        = size / 2;
-      status()->window[0].version     = 0;
-      status()->window[1].version     = 0;
-
       status()->scaler_tsc_to_ns = Cpu::boot_cpu()->get_scaler_tsc_to_ns();
       status()->scaler_tsc_to_us = Cpu::boot_cpu()->get_scaler_tsc_to_us();
       status()->scaler_ns_to_tsc = Cpu::boot_cpu()->get_scaler_ns_to_tsc();
 
       _tbuf_max    = buffer() + max_entries();
-      _count_mask1 =  max_entries()    - 1;
-      _count_mask2 = (max_entries())/2 - 1;
       _size        = size;
 
       clear_tbuf();
