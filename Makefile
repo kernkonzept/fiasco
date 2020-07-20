@@ -34,6 +34,7 @@ builddir:
 	@if [ -f "$(TEMPLDIR)/globalconfig.out.$(T)" ]; then		\
 		echo "Copying template configuration $(T)";		\
 		cp $(TEMPLDIR)/globalconfig.out.$(T) $(BUILDDIR)/globalconfig.out;		\
+		$(MAKE) -C $(BUILDDIR) olddefconfig;			\
 	fi
 	@echo "done."
 endif
