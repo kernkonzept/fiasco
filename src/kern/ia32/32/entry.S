@@ -63,7 +63,7 @@ entry_\name:
 	btrl	$17, OFS__THREAD__STATE (%ebx) /* Thread_dis_alien */
 	jc	1f
 	RESTORE_STATE
-	sub	$2, 4(%esp)                /* Correct EIP to point to insn */
+	subl	$2, 4(%esp)                /* Correct EIP to point to insn */
 	popl 	%eax
 	pushl	$(0x30 << 3 | 2)
 	pushl	$(0xd)
@@ -610,7 +610,7 @@ GATE_INITTAB_END
 	btrl	$17, OFS__THREAD__STATE (%ebx) /* Thread_dis_alien */
 	jc	1f
 	RESTORE_STATE
-	sub	$2, 4(%esp)		/* Correct EIP to point to insn */
+	subl	$2, 4(%esp)		/* Correct EIP to point to insn */
 	SC_ADDR_TO_ERR 2
 2:	pushl	$0xd
 	xchgl	4(%esp), %eax
