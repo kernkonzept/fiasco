@@ -52,7 +52,7 @@ void Proc::ux_set_virtual_processor_state(Status s)
 IMPLEMENT static inline
 void Proc::pause()
 {
-  asm volatile (" .byte 0xf3, 0x90 #pause \n" );
+  asm volatile ("pause");
 }
 
 IMPLEMENT static inline

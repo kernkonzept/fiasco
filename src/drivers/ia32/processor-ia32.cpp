@@ -38,7 +38,7 @@ Mword Proc::program_counter()
 IMPLEMENT static inline
 void Proc::pause()
 {
-  asm volatile (".byte 0xf3, 0x90 #pause" );
+  asm volatile ("pause");
 }
 
 IMPLEMENT static inline
