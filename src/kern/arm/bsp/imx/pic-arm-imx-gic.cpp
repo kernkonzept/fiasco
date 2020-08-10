@@ -66,9 +66,11 @@ Pic::init()
 
   M *m = new Boot_object<M>(1);
 
-  Mmio_register_block dist(Kmem::mmio_remap(Mem_layout::Gic_dist_phys_base));
+  Mmio_register_block dist(Kmem::mmio_remap(Mem_layout::Gic_dist_phys_base,
+                                            Gic_dist::Size));
   gic = new Boot_object<Gic_v3>(dist.get_mmio_base(),
-                                Kmem::mmio_remap(Mem_layout::Gic_redist_phys_base));
+                                Kmem::mmio_remap(Mem_layout::Gic_redist_phys_base,
+                                                 Mem_layout::Gic_redist_phys_size));
   m->add_chip(0, gic, gic->nr_irqs());
 
   Irq_mgr::mgr = m;
