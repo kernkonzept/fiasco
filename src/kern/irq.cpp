@@ -472,8 +472,8 @@ Irq_sender::hit_edge_irq(Irq_base *i, Upstream_irq const *ui)
 
 PRIVATE
 L4_msg_tag
-Irq_sender::sys_attach(L4_msg_tag tag, Utcb const *utcb,
-                       Syscall_frame *)
+Irq_sender::sys_bind(L4_msg_tag tag, Utcb const *utcb,
+                     Syscall_frame *)
 {
   Thread *thread;
 
@@ -537,8 +537,8 @@ Irq_sender::kinvoke(L4_obj_ref, L4_fpage::Rights /*rights*/, Syscall_frame *f,
     case L4_msg_tag::Label_kobject:
       switch (op)
         {
-        case Op_bind: // the Rcv_endpoint opcode (equal to Ipc_gate::bind_thread
-          return sys_attach(tag, utcb, f);
+        case Op_bind: // the Rcv_endpoint opcode (equal to Ipc_gate::bind_thread)
+          return sys_bind(tag, utcb, f);
         default:
           return commit_result(-L4_err::ENosys);
         }
@@ -549,10 +549,6 @@ Irq_sender::kinvoke(L4_obj_ref, L4_fpage::Rights /*rights*/, Syscall_frame *f,
     case L4_msg_tag::Label_irq_sender:
       switch (op)
         {
-        case Op_attach:
-          WARN("Irq_sender::attach is deprecated, please use Rcv_endpoint::bind_thread.\n");
-          return sys_attach(tag, utcb, f);
-
         case Op_detach:
           return sys_detach();
 
