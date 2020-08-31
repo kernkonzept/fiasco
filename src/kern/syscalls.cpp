@@ -24,7 +24,6 @@ IMPLEMENT void FIASCO_FLATTEN sys_ipc_wrapper()
   Utcb *utcb = curr->utcb().access(true);
   L4_fpage::Rights rights;
   Kobject_iface *o = obj.deref(&rights);
-  L4_msg_tag e;
   if (EXPECT_TRUE(o!=0))
     o->invoke(obj, rights, f, utcb);
   else
