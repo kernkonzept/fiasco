@@ -49,5 +49,5 @@ $(OBJ_CHECKSUM): %.o: %.cc
 	@mv .$*.cc.d.new .$*.cc.d
 
 clean-CHECKSUM:
-	rm -f genchecksum setchecksum checksum.ro checksum.rw
+	$(RM) genchecksum setchecksum checksum.ro checksum.rw
 

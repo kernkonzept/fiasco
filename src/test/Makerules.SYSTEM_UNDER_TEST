@@ -19,7 +19,7 @@ endif
 	@touch $@
 
 clean-SYSTEM_UNDER_TEST:
-	rm -f $(SYSTEM_UNDER_TEST).out $(SYSTEM_UNDER_TEST).run $(SYSTEM_UNDER_TEST).ok
+	$(RM) $(SYSTEM_UNDER_TEST).out $(SYSTEM_UNDER_TEST).run $(SYSTEM_UNDER_TEST).ok
 
 CXXFLAGS := $(filter-out -nostdinc, $(CXXFLAGS))
 CPPFLAGS := $(filter-out -I$(DROPS_STDINCDIR)/flux/c \

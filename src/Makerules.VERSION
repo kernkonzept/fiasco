@@ -36,4 +36,4 @@ $(VERSION): FORCE
 		echo "#define BUILD_NR \"$$nr\"" >> $@
 
 clean-VERSION:
-		rm -f $(VERSION)
+		$(RM) $(VERSION)

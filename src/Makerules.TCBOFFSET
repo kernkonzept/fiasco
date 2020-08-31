@@ -18,4 +18,4 @@ tcboffset.bin: tcboffset.o
 
 
 clean-TCBOFFSET:
-	rm -f tcboffset.o tcboffset.bin $(TCBOFFSET) dump_tcboffsets
+	$(RM) tcboffset.o tcboffset.bin $(TCBOFFSET) dump_tcboffsets

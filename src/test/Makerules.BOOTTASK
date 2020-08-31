@@ -20,4 +20,4 @@ kernel.o: $(srcdir)/kernel-r.ld $(KERNEL)
 	  $(KERNEL).s
 
 clean-BOOTTASK:
-	rm -f $(KERNEL).s kernel.o $(TESTTASK).s test.o 
+	$(RM) $(KERNEL).s kernel.o $(TESTTASK).s test.o

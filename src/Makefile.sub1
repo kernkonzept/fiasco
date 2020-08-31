@@ -44,7 +44,7 @@ auto_clean_files = $(strip $(filter-out 				      \
 	  $(wildcard auto/*)))
 
 .Clean-auto: $(MODULES_FILES) .Modules.deps globalconfig.out
-	$(if $(auto_clean_files),rm -f $(auto_clean_files))
+	$(if $(auto_clean_files),$(RM) $(auto_clean_files))
 	touch $@
 
 define find_ld_emulation

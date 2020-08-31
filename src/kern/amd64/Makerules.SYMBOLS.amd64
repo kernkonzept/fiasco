@@ -8,4 +8,4 @@ $(SYMBOLS):	$(KERNEL)
 		$(call INSTALLFILE_RULE,$@,fiasco_symbols)
 
 clean-SYMBOLS:
-		rm -f $(SYMBOLS)
+		$(RM) $(SYMBOLS)

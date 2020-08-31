@@ -15,5 +15,5 @@ $(GBLCFG): globalconfig.out
 	$(VERBOSE)$(RM) $@.txt
 
 clean-GBLCFG:
-	rm -f $(GBLCFG)
+	$(RM) $(GBLCFG)
 

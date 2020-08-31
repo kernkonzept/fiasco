@@ -114,4 +114,4 @@ endif # ! ux
 	@touch $@
 
 clean-UNITTEST:
-	rm -f *_t *_t.ok *_t.out .Unittest.deps
+	$(RM) *_t *_t.ok *_t.out .Unittest.deps

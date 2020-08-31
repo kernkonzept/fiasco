@@ -7,7 +7,7 @@
 include $(srcdir)/boot/$(CONFIG_XARCH)/Makerules.BOOT.$(CONFIG_XARCH)
 
 clean-BOOT:
-		rm -f kernel kernel.o $(BOOT_CLEAN)
+		$(RM) kernel kernel.o $(BOOT_CLEAN)
 
 cleanall-BOOT:
-		rm -f fiasco
+		$(RM) fiasco
