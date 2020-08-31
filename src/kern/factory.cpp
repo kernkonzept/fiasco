@@ -33,7 +33,7 @@ Factory::Factory()
 {}
 
 PRIVATE inline
-Factory::Factory(Ram_quota *q, unsigned long max)
+Factory::Factory(Ram_quota *q, Mword max)
   : Ram_quota(q, max)
 {}
 
@@ -50,11 +50,28 @@ Factory * FIASCO_PURE
 Factory::root()
 { return nonull_static_cast<Factory*>(Ram_quota::root); }
 
+PUBLIC
+void
+Factory::destroy(Kobject ***rl) override
+{
+  Kobject::destroy(rl);
+  take_and_invalidate();
+}
+
+PUBLIC inline
+bool
+Factory::put() override
+{
+  return Ram_quota::put();
+}
 
 PUBLIC inline NEEDS[Factory::Factory]
 Factory *
-Factory::create_factory(unsigned long max)
+Factory::create_factory(Mword max)
 {
+  if (!check_max(max))
+    return 0;
+
   Auto_quota<Ram_quota> q(this, sizeof(Factory) + max);
   if (EXPECT_FALSE(!q))
     return 0;

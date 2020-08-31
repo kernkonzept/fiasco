@@ -1,6 +1,7 @@
 INTERFACE:
 
 #include <cstddef>
+#include <types.h>
 
 class Ram_quota
 {
@@ -10,8 +11,12 @@ public:
 
 private:
   Ram_quota *_parent;
-  unsigned long _current;
-  unsigned long _max;
+  Mword _current;
+
+  enum : Mword
+  { Invalid = 1UL << ((sizeof(Mword) * 8) - 1) };
+
+  Mword _max;
 };
 
 
@@ -23,6 +28,15 @@ Ram_quota *Ram_quota::root;
 
 IMPLEMENT inline Ram_quota::~Ram_quota() {}
 
+PUBLIC static inline
+bool
+Ram_quota::check_max(Mword max)
+{
+  // we actually allow one byte less to always allow
+  // 1 byte spare for take_and_invalidate() / put() handling
+  return (max != 0) && (max < (Invalid - 1));
+}
+
 PUBLIC inline NEEDS[<cstddef>]
 void *
 Ram_quota::operator new (size_t, void *b) throw()
@@ -30,35 +44,40 @@ Ram_quota::operator new (size_t, void *b) throw()
 
 PUBLIC
 Ram_quota::Ram_quota()
-  : _parent(0), _current(0), _max (~0UL)
+  : _parent(0), _current(0), _max(0)
 {
   root = this;
 }
 
 PUBLIC
-Ram_quota::Ram_quota(Ram_quota *p, unsigned long max)
-  : _parent(p), _current(0), _max (max)
+Ram_quota::Ram_quota(Ram_quota *p, Mword max)
+  : _parent(p), _current(0), _max(max)
 {}
 
-PUBLIC
-unsigned long
+
+PUBLIC inline
+Mword
 Ram_quota::current() const
-{ return _current; }
+{ return _current & ~Invalid; }
 
 PUBLIC
 bool
-Ram_quota::alloc(signed long bytes)
+Ram_quota::alloc(Mword bytes)
 {
+  // prevent overflow
+  if (bytes >= Invalid)
+    return false;
+
   if (unlimited())
-    {
-      atomic_mp_add(&_current, bytes);
-      return true;
-    }
+    return true;
 
   for (;;)
     {
-      unsigned long o = access_once(&_current);
-      unsigned long n = o + bytes;
+      Mword o = access_once(&_current);
+      if (o & Invalid)
+        return false;
+
+      Mword n = o + bytes;
       if (n > _max)
         return false;
 
@@ -67,11 +86,67 @@ Ram_quota::alloc(signed long bytes)
     }
 }
 
-PUBLIC inline NEEDS[Ram_quota::alloc]
+PUBLIC inline NEEDS["atomic.h"]
 void
-Ram_quota::free(signed long bytes)
-{ alloc(-bytes); }
+Ram_quota::free(Mword bytes)
+{
+  if (unlimited())
+    return;
 
+  //Mword r = atomic_add_fetch(&_current, -bytes);
+  Mword o,r;
+  do
+    {
+      o = access_once(&_current);
+      r = o - bytes;
+    }
+  while (!mp_cas(&_current, o, r));
+
+  if (r == Invalid)
+    delete this;
+}
+
+/**
+ * Allocate one byte to prevent immediate deletion, and
+ * mark the object as invalid.
+ */
+PROTECTED inline NEEDS["atomic.h"]
+void
+Ram_quota::take_and_invalidate()
+{
+  if (unlimited())
+    return;
+
+  for (;;)
+    {
+      Mword o = access_once(&_current);
+      Mword n = (o + 1) | Invalid;
+
+      if (mp_cas(&_current, o, n))
+        return;
+    }
+}
+
+PUBLIC inline NEEDS["atomic.h"]
+bool
+Ram_quota::put()
+{
+  // the ulimited factory is special and there is
+  // always a reference remaining
+  if (unlimited())
+    return false;
+
+  //Mword r = atomic_add_fetch(&_current, -bytes);
+  Mword o, r;
+  do
+    {
+      o = access_once(&_current);
+      r = o - 1;
+    }
+  while (!mp_cas(&_current, o, r));
+
+  return r == Invalid;
+}
 
 PUBLIC inline
 Ram_quota*
@@ -79,12 +154,12 @@ Ram_quota::parent() const
 { return _parent; }
 
 PUBLIC inline
-unsigned long
+Mword
 Ram_quota::limit() const
 { return _max; }
 
 PUBLIC inline
 bool
 Ram_quota::unlimited() const
-{ return _max == ~0UL; }
+{ return _max == 0; }
 

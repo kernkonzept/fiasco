@@ -52,10 +52,5 @@ Fpu_alloc::free_state(Fpu_state *s)
       Ram_quota *q = *((Ram_quota **)((char*)(s->_state_buffer) + sz));
       slab_alloc()->q_free(q, s->_state_buffer);
       s->_state_buffer = 0;
-
-      // transferred FPU state may leed to quotas w/o a task but only FPU
-      // contexts allocated
-      if (q->current() == 0)
-	delete q;
     }
 }
