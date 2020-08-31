@@ -9,7 +9,6 @@
 #include <ctype.h>
 #include <string.h>
 #include <assert.h>
-#include <alloca.h>
 #include "simple_malloc.h"
 
 extern void* regex_realloc(void *ptr, size_t size);
@@ -17,6 +16,7 @@ extern void  regex_free(void *ptr);
 
 #define realloc simple_realloc
 #define free    simple_free
+#define alloca  __builtin_alloca
 
 
 /* this is ugly.
