@@ -87,6 +87,26 @@ local_atomic_add(Mword *l, Mword v)
   while (!tmp);
 }
 
+inline NEEDS["asm_mips.h"]
+Mword
+__f_atomic_add_fetch(Mword *l, Mword v)
+{
+  Mword tmp, res;
+
+  do
+    {
+      __asm__ __volatile__(
+          ASM_LL   " %[tmp], %[ptr]  \n"
+          ASM_ADDU " %[tmp], %[v]    \n"
+          "move      %[res], %[tmp]  \n"
+          ASM_SC   " %[tmp], %[ptr]  \n"
+          : [tmp] "=&r" (tmp), [ptr] "+ZC" (*l), [res] "=r"(res)
+          : [v] "Ir" (v));
+    }
+  while (!tmp);
+  return res;
+}
+
 //---------------------------------------------------------------------------
 IMPLEMENTATION [mips && mp]:
 
@@ -119,6 +139,16 @@ atomic_add(Mword *l, Mword value)
   Mem::mp_mb();
 }
 
+inline NEEDS["mem.h", __f_atomic_add_fetch]
+Mword
+atomic_add_fetch(Mword *l, Mword v)
+{
+  Mem::mp_mb();
+  Mword res = __f_atomic_add_fetch(l, v);
+  Mem::mp_mb();
+  return res;
+}
+
 inline NEEDS["mem.h"]
 bool
 cas_arch(Mword *m, Mword o, Mword n)
@@ -146,6 +176,13 @@ inline
 void
 atomic_add(Mword *l, Mword value)
 { local_atomic_add(l, value); }
+
+inline NEEDS[__f_atomic_add_fetch]
+Mword
+atomic_add_fetch(Mword *l, Mword v)
+{
+  return __f_atomic_add_fetch(l, v);
+}
 
 inline
 bool

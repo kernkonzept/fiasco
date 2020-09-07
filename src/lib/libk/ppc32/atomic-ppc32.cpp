@@ -47,3 +47,13 @@ local_atomic_or(Mword *l, Mword bits)
   do { old = *l; }
   while (!local_cas(l, old, old | bits));
 }
+
+inline
+Mword
+atomic_add_fetch(Mword *l, Mword a)
+{
+  Mword old;
+  do { old = *l; }
+  while (!cas(l, old, old + a));
+  return old + a;
+}

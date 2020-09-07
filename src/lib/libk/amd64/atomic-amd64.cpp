@@ -21,6 +21,15 @@ atomic_add(Mword *l, Mword value)
   asm volatile ("lock; addq %1, %2" : "=m"(*l) : "er"(value), "m"(*l));
 }
 
+template<typename T> inline
+T
+atomic_add_fetch(T *mem, T addend)
+{
+  T res;
+  asm volatile ("lock; xadd %1, %0" : "+m"(*mem), "=r"(res) : "1"(addend));
+  return res + addend;
+}
+
 inline
 void
 local_atomic_add(Mword *l, Mword value)

@@ -50,6 +50,7 @@ local_atomic_change(T *ptr, T mask, T bits)
 //---------------------------------------------------------------------------
 IMPLEMENTATION[(ppc32 && !mp) || (sparc && !mp) || (arm && !arm_v6plus)]:
 
+#include <cxx/type_traits>
 #include "processor.h"
 
 // Fall-back UP implementations for ppc32, sparc and armv5
@@ -79,6 +80,17 @@ atomic_add(Mword *l, Mword value)
   Proc::Status s = Proc::cli_save();
   *l += value;
   Proc::sti_restore(s);
+}
+
+template<typename T, typename V> inline NEEDS [<cxx/type_traits>, "processor.h"]
+ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 4), T>::type
+atomic_add_fetch(T *mem, V value)
+{
+  Proc::Status s = Proc::cli_save();
+  *mem += value;
+  T res = *mem;
+  Proc::sti_restore(s);
+  return res;
 }
 
 //---------------------------------------------------------------------------
