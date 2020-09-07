@@ -279,7 +279,7 @@ PRIVATE_INCDIR 	+= lib/libk/$(CONFIG_XARCH)/$(BITS) lib/libk/$(CONFIG_XARCH) lib
 #INTERFACES_LIBK:= atomic lock_guard profile uuencode gmon unistd panic
 INTERFACES_LIBK := std_macros atomic lock_guard
 CXXSRC_LIBK     += construction.cc
-atomic_IMPL     := atomic atomic-arm-up atomic-arm-$(BITS) atomic-arm
+atomic_IMPL     := atomic atomic-arm-$(BITS) atomic-arm
 
 #
 # SIMPLEMALLOC
