@@ -171,7 +171,7 @@ Irq_sender::alloc(Thread *t, Kobject ***rl)
       if (EXPECT_FALSE(old == detach_in_progress()))
         return -L4_err::EBusy;
 
-      if (mp_cas(&_irq_thread, old, t))
+      if (cas(&_irq_thread, old, t))
         break;
     }
 
@@ -247,7 +247,7 @@ Irq_sender::free(Kobject ***rl)
       if (t == nullptr)
         return -L4_err::ENoent;
 
-      if (EXPECT_TRUE(mp_cas(&_irq_thread, t, detach_in_progress())))
+      if (EXPECT_TRUE(cas(&_irq_thread, t, detach_in_progress())))
         break;
     }
 
@@ -305,7 +305,7 @@ Irq_sender::consume()
     {
       old = _queued;
     }
-  while (!mp_cas (&_queued, old, 0L));
+  while (!cas(&_queued, old, 0L));
   Mem::mp_acquire();
 
   if (old >= 2 && hit_func == &hit_edge_irq)
@@ -400,7 +400,7 @@ Irq_sender::queue()
   Smword old;
   do
     old = _queued;
-  while (!mp_cas(&_queued, old, old + 1));
+  while (!cas(&_queued, old, old + 1));
   return old;
 }
 

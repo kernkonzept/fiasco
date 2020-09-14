@@ -871,7 +871,7 @@ private:
       if (EXPECT_FALSE(new_asid == Invalid_asid))
         return Invalid_asid;
 
-      if (!mp_cas<Asid>(asid_storage, Invalid_asid, new_asid))
+      if (!cas<Asid>(asid_storage, Invalid_asid, new_asid))
         {
           // Already allocated by someone else.
           free_asid(new_asid);
@@ -887,7 +887,7 @@ private:
       if (asid == Invalid_asid)
         return;
 
-      if (!mp_cas<Asid>(asid_storage, asid, Invalid_asid))
+      if (!cas<Asid>(asid_storage, asid, Invalid_asid))
         // Someone else changed the ASID.
         return;
 
@@ -1509,7 +1509,7 @@ Iommu::Domain::get_cd(unsigned ias)
   // Ensure context descriptor is visible to other CPUs before setting _cd.
   Mem::mp_wmb();
 
-  if (!mp_cas<Cd *>(&_cd, nullptr, new_cd))
+  if (!cas<Cd *>(&_cd, nullptr, new_cd))
     {
       // Already allocated by someone else.
       Kmem_slab_cd::q_del(_space->ram_quota(), new_cd);

@@ -192,7 +192,7 @@ Task::alloc_ku_mem(L4_fpage ku_area)
   m->k_addr = p;
   m->size = sz;
 
-  _ku_mem.add(m, mp_cas<cxx::S_list_item*>);
+  _ku_mem.add(m, cas<cxx::S_list_item*>);
 
   return 0;
 }

@@ -1673,7 +1673,7 @@ private:
       if (_s)
         return false; // either running or already trying
 
-      bool ret = mp_cas(&_s, Not_running, Trying);
+      bool ret = cas(&_s, Not_running, Trying);
       if (ret)
         Mem::mp_acquire();
       return ret;
@@ -1696,7 +1696,7 @@ private:
       if (access_once(&_s))
         return false;
 
-      bool ret = mp_cas(&_s, Not_running, Running);
+      bool ret = cas(&_s, Not_running, Running);
       if (ret)
         Mem::mp_acquire();
       return ret;

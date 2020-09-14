@@ -325,7 +325,7 @@ PUBLIC inline NEEDS["atomic.h"]
 Kmem_alloc_reaper::Kmem_alloc_reaper(size_t (*reap)(bool desperate))
 : _reap(reap)
 {
-  mem_reapers.add(this, mp_cas<cxx::S_list_item *>);
+  mem_reapers.add(this, cas<cxx::S_list_item *>);
 }
 
 PUBLIC static

@@ -204,7 +204,7 @@ Kmem_slab::Kmem_slab(unsigned long slab_size,
 				   char const *name)
   : Slab_cache(slab_size, elem_size, alignment, name)
 {
-  reap_list.add(this, mp_cas<cxx::S_list_item*>);
+  reap_list.add(this, cas<cxx::S_list_item*>);
 }
 
 // Specializations providing their own block_alloc()/block_free() can
@@ -217,7 +217,7 @@ Kmem_slab::Kmem_slab(unsigned elem_size,
                      unsigned long max_size = Buddy_alloc::Max_size)
   : Slab_cache(elem_size, alignment, name, min_size, max_size)
 {
-  reap_list.add(this, mp_cas<cxx::S_list_item*>);
+  reap_list.add(this, cas<cxx::S_list_item*>);
 }
 
 PUBLIC

@@ -202,7 +202,7 @@ Pte_ptr::access_flags() const
       else
         return L4_fpage::Rights(0);
 
-      if (mp_cas(pte, raw, raw & ~(Dirty | Referenced)))
+      if (cas(pte, raw, raw & ~(Dirty | Referenced)))
         return r;
     }
 }

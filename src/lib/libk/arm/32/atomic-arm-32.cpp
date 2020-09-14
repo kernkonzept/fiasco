@@ -81,7 +81,7 @@ atomic_or(Mword *l, Mword value)
 
 inline NEEDS["mem.h"]
 bool
-mp_cas_arch(Mword *m, Mword o, Mword n)
+cas_arch(Mword *m, Mword o, Mword n)
 {
   Mword tmp, res;
 

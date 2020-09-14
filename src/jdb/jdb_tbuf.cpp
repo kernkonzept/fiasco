@@ -104,7 +104,7 @@ Jdb_tbuf::new_entry()
   // use atomic_add() when available!
   do
     n = access_once(&_number);
-  while (!mp_cas(&_number, n, n + 1));
+  while (!cas(&_number, n, n + 1));
 
   Tb_entry_union *tb = buffer() + (n & (_max_entries - 1));
   // As long as not all information is written, write an invalid number which

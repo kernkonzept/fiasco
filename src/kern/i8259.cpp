@@ -175,7 +175,7 @@ public:
     if (_irqs[pin])
       return false;
 
-    if (!mp_cas(&_irqs[pin], (Irq_base *)0, irq))
+    if (!cas(&_irqs[pin], (Irq_base *)0, irq))
       return false;
 
     this->bind(irq, pin, !init);

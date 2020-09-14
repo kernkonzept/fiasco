@@ -66,7 +66,7 @@ local_cas_unsafe(Mword *ptr, Mword cmpval, Mword newval)
 
 inline
 bool
-mp_cas_arch(Mword *ptr, Mword cmpval, Mword newval)
+cas_arch(Mword *ptr, Mword cmpval, Mword newval)
 {
   Mword oldval;
 
@@ -101,7 +101,7 @@ local_cas_unsafe(Mword *ptr, Mword cmpval, Mword newval)
 
 inline
 bool
-mp_cas_arch(Mword *ptr, Mword cmpval, Mword newval)
+cas_arch(Mword *ptr, Mword cmpval, Mword newval)
 {
   Mword oldval_ignore, zflag;
 

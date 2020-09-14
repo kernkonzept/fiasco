@@ -89,7 +89,7 @@ public:
       {
         v = this->_bits[idx];
       }
-    while (!mp_cas(&this->_bits[idx], v, v & ~(1UL << b)));
+    while (!cas(&this->_bits[idx], v, v & ~(1UL << b)));
 
     return v & (1UL << b);
   }
@@ -108,7 +108,7 @@ public:
         if (!(v & (1UL << b)))
           return false;
       }
-    while (!mp_cas(&this->_bits[idx], v, v & ~(1UL << b)));
+    while (!cas(&this->_bits[idx], v, v & ~(1UL << b)));
 
     return true;
   }
@@ -122,7 +122,7 @@ public:
       {
         v = this->_bits[idx];
       }
-    while (!mp_cas(&this->_bits[idx], v, v | (1UL << b)));
+    while (!cas(&this->_bits[idx], v, v | (1UL << b)));
 
     return v & (1UL << b);
   }
@@ -141,7 +141,7 @@ public:
         if (v & (1UL << b))
           return true;
       }
-    while (!mp_cas(&this->_bits[idx], v, v | (1UL << b)));
+    while (!cas(&this->_bits[idx], v, v | (1UL << b)));
 
     return false;
   }
@@ -263,7 +263,7 @@ public:
       {
         v = _bits;
       }
-    while (!mp_cas(&_bits, v, v & ~(1UL << bit)));
+    while (!cas(&_bits, v, v & ~(1UL << bit)));
 
     return v & (1UL << bit);
   }
@@ -279,7 +279,7 @@ public:
         if (!(v & (1UL << bit)))
           return false;
       }
-    while (!mp_cas(&_bits, v, v & ~(1UL << bit)));
+    while (!cas(&_bits, v, v & ~(1UL << bit)));
 
     return true;
   }
@@ -291,7 +291,7 @@ public:
       {
         v = _bits;
       }
-    while (!mp_cas(&_bits, v, v | (1UL << bit)));
+    while (!cas(&_bits, v, v | (1UL << bit)));
 
     return v & (1UL << bit);
   }
@@ -307,7 +307,7 @@ public:
         if (v & (1UL << bit))
           return true;
       }
-    while (!mp_cas(&_bits, v, v | (1UL << bit)));
+    while (!cas(&_bits, v, v | (1UL << bit)));
 
     return false;
   }

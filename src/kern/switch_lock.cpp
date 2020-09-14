@@ -286,7 +286,7 @@ Switch_lock::set_lock_owner(Context *o)
 
   Mem::mp_wmb();
 
-  if (EXPECT_FALSE(!mp_cas(&_lock_owner, Mword(0), Address(o))))
+  if (EXPECT_FALSE(!cas(&_lock_owner, Mword(0), Address(o))))
     {
       if (have_no_locks)
         {

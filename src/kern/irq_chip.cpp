@@ -184,7 +184,7 @@ public:
         if (!(old & F_enabled))
           return true;
       }
-    while (!mp_cas(&_flags, old, old & ~F_enabled));
+    while (!cas(&_flags, old, old & ~F_enabled));
     return false;
   }
 
@@ -203,7 +203,7 @@ public:
         if (old & F_enabled)
           return false;
       }
-    while (!mp_cas(&_flags, old, old | F_enabled));
+    while (!cas(&_flags, old, old | F_enabled));
     return true;
   }
 

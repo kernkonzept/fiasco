@@ -9,7 +9,7 @@ IMPLEMENTATION:
  * Atomically test and modify memory \c without protection against concurrent
  * writes from other CPUs (\c not SMP-safe). The memory is only written if it
  * contains a dedicated value. For the variant with protection against
- * concurrent writes from other CPUs, \see mp_cas().
+ * concurrent writes from other CPUs, \see cas().
  *
  * \param ptr     Pointer to the memory to change.
  * \param oldval  Only write 'newval' if the memory contains this value.
@@ -96,7 +96,7 @@ IMPLEMENTATION [!mp]:
  */
 template< typename T > inline
 bool
-mp_cas(T *ptr, T oldval, T newval)
+cas(T *ptr, T oldval, T newval)
 { return local_cas(ptr, oldval, newval); }
 
 //---------------------------------------------------------------------------
@@ -117,11 +117,9 @@ IMPLEMENTATION [mp]:
  */
 template< typename T > inline
 bool
-mp_cas(T *ptr, T oldval, T newval)
+cas(T *ptr, T oldval, T newval)
 {
   static_assert(sizeof(T) == sizeof(Mword), "CAS requires Mword-sized type.");
 
-  return mp_cas_arch(reinterpret_cast<Mword*>(ptr),
-                     Mword(oldval),
-                     Mword(newval));
+  return cas_arch(reinterpret_cast<Mword*>(ptr), Mword(oldval), Mword(newval));
 }

@@ -105,7 +105,7 @@ Ref_cnt_obj::inc_ref(bool from_zero = true)
       if (!from_zero && !old)
         return false;
     }
-  while (!mp_cas(&_ref_cnt, old, old + 1));
+  while (!cas(&_ref_cnt, old, old + 1));
   return true;
 }
 
@@ -116,7 +116,7 @@ Ref_cnt_obj::dec_ref()
   Smword old;
   do
     old = _ref_cnt;
-  while (!mp_cas(&_ref_cnt, old, old - 1));
+  while (!cas(&_ref_cnt, old, old - 1));
 
   return old - 1;
 }

@@ -125,7 +125,7 @@ IMPLEMENT_OVERRIDE
 void
 Timer::switch_freq_jdb()
 {
-  if (mp_cas(&_using_interval_jdb, (Mword)false, (Mword)true))
+  if (cas(&_using_interval_jdb, (Mword)false, (Mword)true))
     _interval *= 10;
 }
 
@@ -133,6 +133,6 @@ IMPLEMENT_OVERRIDE
 void
 Timer::switch_freq_system()
 {
-  if (mp_cas(&_using_interval_jdb, (Mword)true, (Mword)false))
+  if (cas(&_using_interval_jdb, (Mword)true, (Mword)false))
     _interval /= 10;
 }

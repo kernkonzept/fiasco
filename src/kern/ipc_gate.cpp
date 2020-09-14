@@ -242,7 +242,7 @@ Ipc_gate_ctl::bind_thread(L4_obj_ref, L4_fpage::Rights rights,
     {
       old = access_once(&g->_thread);
     }
-  while (!mp_cas(&g->_thread, old, t));
+  while (!cas(&g->_thread, old, t));
 
   Kobject::Reap_list r;
   if (old)

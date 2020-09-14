@@ -51,7 +51,7 @@ IMPLEMENTATION [arm && arm_v6plus]:
 inline
 bool
 local_cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
-{ return mp_cas_arch(ptr, oldval, newval); }
+{ return cas_arch(ptr, oldval, newval); }
 
 inline
 void

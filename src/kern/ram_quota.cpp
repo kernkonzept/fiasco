@@ -81,7 +81,7 @@ Ram_quota::alloc(Mword bytes)
       if (n > _max)
         return false;
 
-      if (mp_cas(&_current, o, n))
+      if (cas(&_current, o, n))
         return true;
     }
 }
@@ -107,7 +107,7 @@ Ram_quota::_free_bytes(Mword bytes)
       o = access_once(&_current);
       r = o - bytes;
     }
-  while (!mp_cas(&_current, o, r));
+  while (!cas(&_current, o, r));
 
   return r == Invalid;
 }
@@ -143,7 +143,7 @@ Ram_quota::take_and_invalidate()
       Mword o = access_once(&_current);
       Mword n = (o + 1) | Invalid;
 
-      if (mp_cas(&_current, o, n))
+      if (cas(&_current, o, n))
         return;
     }
 }

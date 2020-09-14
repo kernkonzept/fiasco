@@ -355,7 +355,7 @@ Thread::register_delete_irq(Irq_base *irq)
   auto g = lock_guard(irq->irq_lock());
   irq->unbind();
   Del_irq_chip::chip.bind(irq, (Mword)this);
-  if (mp_cas(&_del_observer, (Irq_base *)nullptr, irq))
+  if (cas(&_del_observer, (Irq_base *)nullptr, irq))
     return true;
 
   irq->unbind();
@@ -366,7 +366,7 @@ PUBLIC
 void
 Thread::remove_delete_irq(Irq_base *irq)
 {
-  mp_cas(&_del_observer, irq, (Irq_base *)nullptr);
+  cas(&_del_observer, irq, (Irq_base *)nullptr);
 }
 
 // end of: IPC-gate deletion stuff -------------------------------
@@ -715,7 +715,7 @@ Thread::start_migration()
 
   assert (!((Mword)m & 0x3)); // ensure alignment
 
-  if (!m || !mp_cas(&_migration, m, (Migration*)0))
+  if (!m || !cas(&_migration, m, (Migration*)0))
     return reinterpret_cast<Migration*>(0x2); // bit one == 0 --> no need to reschedule
 
   if (m->cpu == home_cpu())
@@ -1096,7 +1096,7 @@ Thread::migrate(Migration *info)
       Migration *old;
       do
         old = _migration;
-      while (!mp_cas(&_migration, old, info));
+      while (!cas(&_migration, old, info));
       // flag old migration to be done / stale
       if (old)
         write_now(&old->in_progress, true);

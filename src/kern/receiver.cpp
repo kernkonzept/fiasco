@@ -130,7 +130,7 @@ Receiver::reset_caller(Receiver const *old_caller)
   if (_caller != ov)
     return;
 
-  mp_cas(&_caller, ov, 0UL);
+  cas(&_caller, ov, 0UL);
 }
 
 PUBLIC inline

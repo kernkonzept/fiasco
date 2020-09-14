@@ -44,7 +44,7 @@ public:
         // then we have to reset the ID of our victim, else the
         // reset function is currently resetting the IDs of the
         // victim from a different CPU.
-        if (mp_cas(bad_guy, victim, reinterpret_cast<Owner_type *>(1)))
+        if (cas(bad_guy, victim, reinterpret_cast<Owner_type *>(1)))
           Id_ops::reset_id(victim, arg);
         break;
       }
@@ -62,7 +62,7 @@ public:
 
     Id_type id = Id_ops::get_id(owner, arg) - Id_ops::Id_offset;
     Owner_type **o = &_active[id];
-    if (!mp_cas(o, owner, reinterpret_cast<Owner_type *>(~0UL)))
+    if (!cas(o, owner, reinterpret_cast<Owner_type *>(~0UL)))
       while (access_once(o) == reinterpret_cast<Owner_type *>(1))
         Proc::pause();
   }

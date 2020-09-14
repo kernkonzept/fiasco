@@ -121,7 +121,7 @@ atomic_add(Mword *l, Mword value)
 
 inline NEEDS["mem.h"]
 bool
-mp_cas_arch(Mword *m, Mword o, Mword n)
+cas_arch(Mword *m, Mword o, Mword n)
 {
   Mem::mp_mb();
   Mword ret = local_cas_unsafe(m, o, n);
@@ -149,6 +149,6 @@ atomic_add(Mword *l, Mword value)
 
 inline
 bool
-mp_cas_arch(Mword *m, Mword o, Mword n)
+cas_arch(Mword *m, Mword o, Mword n)
 { return local_cas_unsafe(m, o, n); }
 
