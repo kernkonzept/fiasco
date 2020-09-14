@@ -1485,7 +1485,7 @@ Jdb::stop_all_cpus(Cpu_number current_cpu)
 
       // Signal CPU 0, that we are ready to leve the debugger
       // This is the second door of the airlock
-      atomic_mp_add(&cpus_in_debugger, -1UL);
+      atomic_add(&cpus_in_debugger, -1UL);
 
       // Wait for CPU 0 to leave us out
       while (access_once(&leave_barrier))

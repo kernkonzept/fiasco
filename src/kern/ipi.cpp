@@ -86,7 +86,7 @@ private:
 PUBLIC static inline NEEDS["atomic.h"]
 void
 Ipi::stat_sent(Cpu_number from_cpu)
-{ atomic_mp_add(&_ipi.cpu(from_cpu)._stat_sent, 1); }
+{ atomic_add(&_ipi.cpu(from_cpu)._stat_sent, 1); }
 
 PUBLIC static inline
 void

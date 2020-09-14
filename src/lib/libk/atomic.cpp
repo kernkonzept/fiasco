@@ -56,7 +56,7 @@ IMPLEMENTATION[(ppc32 && !mp) || (sparc && !mp) || (arm && !arm_v6plus)]:
 
 inline NEEDS["processor.h"]
 void
-atomic_mp_and(Mword *l, Mword value)
+atomic_and(Mword *l, Mword value)
 {
   Proc::Status s = Proc::cli_save();
   *l &= value;
@@ -65,7 +65,7 @@ atomic_mp_and(Mword *l, Mword value)
 
 inline NEEDS["processor.h"]
 void
-atomic_mp_or(Mword *l, Mword value)
+atomic_or(Mword *l, Mword value)
 {
   Proc::Status s = Proc::cli_save();
   *l |= value;
@@ -74,7 +74,7 @@ atomic_mp_or(Mword *l, Mword value)
 
 inline NEEDS["processor.h"]
 void
-atomic_mp_add(Mword *l, Mword value)
+atomic_add(Mword *l, Mword value)
 {
   Proc::Status s = Proc::cli_save();
   *l += value;

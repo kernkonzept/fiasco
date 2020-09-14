@@ -56,9 +56,9 @@ local_cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
 inline
 void
 local_atomic_or(Mword *l, Mword value)
-{ atomic_mp_or(l, value); }
+{ atomic_or(l, value); }
 
 inline
 void
 local_atomic_and(Mword *l, Mword mask)
-{ atomic_mp_and(l, mask); }
+{ atomic_and(l, mask); }

@@ -94,7 +94,7 @@ IMPLEMENTATION [mips && mp]:
 
 inline NEEDS["mem.h"]
 void
-atomic_mp_and(Mword *l, Mword value)
+atomic_and(Mword *l, Mword value)
 {
   Mem::mp_mb();
   local_atomic_and(l, value);
@@ -103,7 +103,7 @@ atomic_mp_and(Mword *l, Mword value)
 
 inline NEEDS["mem.h"]
 void
-atomic_mp_or(Mword *l, Mword value)
+atomic_or(Mword *l, Mword value)
 {
   Mem::mp_mb();
   local_atomic_or(l, value);
@@ -112,7 +112,7 @@ atomic_mp_or(Mword *l, Mword value)
 
 inline NEEDS["mem.h"]
 void
-atomic_mp_add(Mword *l, Mword value)
+atomic_add(Mword *l, Mword value)
 {
   Mem::mp_mb();
   local_atomic_add(l, value);
@@ -134,17 +134,17 @@ IMPLEMENTATION [mips && !mp]:
 
 inline
 void
-atomic_mp_and(Mword *l, Mword value)
+atomic_and(Mword *l, Mword value)
 { local_atomic_and(l, value); }
 
 inline
 void
-atomic_mp_or(Mword *l, Mword value)
+atomic_or(Mword *l, Mword value)
 { local_atomic_or(l, value); }
 
 inline
 void
-atomic_mp_add(Mword *l, Mword value)
+atomic_add(Mword *l, Mword value)
 { local_atomic_add(l, value); }
 
 inline

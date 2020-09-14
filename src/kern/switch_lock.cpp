@@ -266,7 +266,7 @@ PRIVATE inline
 void NO_INSTRUMENT
 Switch_lock::clear_lock_owner()
 {
-  atomic_mp_and(&_lock_owner, 1);
+  atomic_and(&_lock_owner, 1);
 }
 
 PRIVATE inline
@@ -437,7 +437,7 @@ void NO_INSTRUMENT
 Switch_lock::invalidate()
 {
   auto guard = lock_guard(cpu_lock);
-  atomic_mp_or(&_lock_owner, 1);
+  atomic_or(&_lock_owner, 1);
 }
 
 PUBLIC

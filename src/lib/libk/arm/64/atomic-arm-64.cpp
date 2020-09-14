@@ -2,7 +2,7 @@ IMPLEMENTATION[arm]:
 
 inline
 void
-atomic_mp_add(Mword *l, Mword value)
+atomic_add(Mword *l, Mword value)
 {
   Mword tmp, ret;
 
@@ -19,7 +19,7 @@ atomic_mp_add(Mword *l, Mword value)
 
 inline
 void
-atomic_mp_and(Mword *l, Mword value)
+atomic_and(Mword *l, Mword value)
 {
   Mword tmp, ret;
 
@@ -36,7 +36,7 @@ atomic_mp_and(Mword *l, Mword value)
 
 inline
 void
-atomic_mp_or(Mword *l, Mword value)
+atomic_or(Mword *l, Mword value)
 {
   Mword tmp, ret;
 

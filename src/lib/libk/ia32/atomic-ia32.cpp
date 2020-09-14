@@ -2,14 +2,14 @@ IMPLEMENTATION [ia32,ux]:
 
 inline
 void
-atomic_mp_and(Mword *l, Mword value)
+atomic_and(Mword *l, Mword value)
 {
   asm volatile ("lock; andl %1, %2" : "=m"(*l) : "ir"(value), "m"(*l));
 }
 
 inline
 void
-atomic_mp_or(Mword *l, Mword value)
+atomic_or(Mword *l, Mword value)
 {
   asm volatile ("lock; orl %1, %2" : "=m"(*l) : "ir"(value), "m"(*l));
 }
@@ -17,7 +17,7 @@ atomic_mp_or(Mword *l, Mword value)
 
 inline
 void
-atomic_mp_add(Mword *l, Mword value)
+atomic_add(Mword *l, Mword value)
 {
   asm volatile ("lock; addl %1, %2" : "=m"(*l) : "ir"(value), "m"(*l));
 }

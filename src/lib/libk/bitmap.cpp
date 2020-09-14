@@ -150,14 +150,14 @@ public:
   {
     unsigned long idx = bit / Bpl;
     unsigned long b   = bit % Bpl;
-    atomic_mp_or(&this->_bits[idx], 1UL << b);
+    ::atomic_or(&this->_bits[idx], 1UL << b);
   }
 
   void atomic_clear_bit(unsigned long bit)
   {
     unsigned long idx = bit / Bpl;
     unsigned long b   = bit % Bpl;
-    atomic_mp_and(&this->_bits[idx], ~(1UL << b));
+    ::atomic_and(&this->_bits[idx], ~(1UL << b));
   }
 
   void clear_all()
@@ -178,7 +178,7 @@ public:
   {
     for (unsigned i = 0; i < Nr_elems; ++i)
       if (r._bits[i])
-        atomic_mp_or(&this->_bits[i], r._bits[i]);
+        ::atomic_or(&this->_bits[i], r._bits[i]);
   }
 
   unsigned ffs(unsigned bit) const
@@ -314,12 +314,12 @@ public:
 
   void atomic_set_bit(unsigned long bit)
   {
-    atomic_mp_or(&_bits, 1UL << bit);
+    ::atomic_or(&_bits, 1UL << bit);
   }
 
   void atomic_clear_bit(unsigned long bit)
   {
-    atomic_mp_and(&_bits, ~(1UL << bit));
+    ::atomic_and(&_bits, ~(1UL << bit));
   }
 
   void clear_all()
@@ -335,7 +335,7 @@ public:
   void atomic_or(Bitmap_base const &r)
   {
     if (r._bits)
-      atomic_mp_or(&_bits, r._bits);
+      ::atomic_or(&_bits, r._bits);
   }
 
   unsigned ffs(unsigned bit) const
