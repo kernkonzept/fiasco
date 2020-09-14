@@ -43,6 +43,37 @@ INTERFACE:
 #include "rcupdate.h"
 #include "space.h"
 
+/**
+ * Basic kernel object.
+ *
+ * This is the base class for all kernel objects that are exposed through
+ * capabilities.
+ *
+ * Kernel objects have a specific life-cycle management that is based
+ * on (a) kernel external visibility through capabilities and (b) kernel
+ * internal references among kernel objects.
+ *
+ * If there are no more capabilities to a kernel object, due to an unmap
+ * (either of the last capability, or with delete flag and delete rights),
+ * the kernel runs the 2-phase destruction protocol for kernel objects
+ * (implemented in Kobject::Reap_list::del()):
+ * - Call Kobject::destroy(). Mark this object as invalid. When this function
+ *   returns, the object cannot be longer referenced. One object reference is
+ *   still maintained to prevent the final removal before all other objects
+ *   realized that the object vanished.
+ * - Block for an RCU grace period.
+ * - Call Kobject::put(). Release the final reference to the object preparing
+ *   the object deletion.
+ *
+ * If Kobject::put() returns true, the kernel object is to be deleted.
+ * If there are any other non-capability references to a kernel object,
+ * Kobject::put() *must* return `false` and an object-specific MP-safe
+ * mechanism for object deletions has to take over.
+ *
+ * Kobject::destroy() and Kobject::put() are called exactly once for a single
+ * object during Kobject::Reap_list::del(). These functions must not be called
+ * anywhere else.
+ */
 class Kobject :
   public cxx::Dyn_castable<Kobject, Kobject_iface>,
   private Kobject_mappable,
@@ -74,6 +105,10 @@ public:
     bool empty() const { return _h == nullptr; }
     void del_1();
     void del_2();
+
+    /**
+     * Delete kernel objects without capability references.
+     */
     void del()
     {
       if (EXPECT_TRUE(empty()))
