@@ -86,12 +86,12 @@ Ram_quota::alloc(Mword bytes)
     }
 }
 
-PUBLIC inline NEEDS["atomic.h"]
-void
-Ram_quota::free(Mword bytes)
+PRIVATE inline NEEDS["atomic.h"]
+bool
+Ram_quota::_free_bytes(Mword bytes)
 {
   if (unlimited())
-    return;
+    return false;
 
   //Mword r = atomic_add_fetch(&_current, -bytes);
   Mword o,r;
@@ -102,7 +102,14 @@ Ram_quota::free(Mword bytes)
     }
   while (!mp_cas(&_current, o, r));
 
-  if (r == Invalid)
+  return r == Invalid;
+}
+
+PUBLIC inline NEEDS[Ram_quota::_free_bytes]
+void
+Ram_quota::free(Mword bytes)
+{
+  if (_free_bytes(bytes))
     delete this;
 }
 
@@ -127,25 +134,11 @@ Ram_quota::take_and_invalidate()
     }
 }
 
-PUBLIC inline NEEDS["atomic.h"]
+PUBLIC inline NEEDS[Ram_quota::_free_bytes]
 bool
 Ram_quota::put()
 {
-  // the ulimited factory is special and there is
-  // always a reference remaining
-  if (unlimited())
-    return false;
-
-  //Mword r = atomic_add_fetch(&_current, -bytes);
-  Mword o, r;
-  do
-    {
-      o = access_once(&_current);
-      r = o - 1;
-    }
-  while (!mp_cas(&_current, o, r));
-
-  return r == Invalid;
+  return _free_bytes(1);
 }
 
 PUBLIC inline
