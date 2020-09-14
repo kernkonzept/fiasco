@@ -215,7 +215,7 @@ Trap_state::value3(Mword value)
 PUBLIC inline NEEDS["atomic.h"] 
 void
 Trap_state::consume_instruction(unsigned count)
-{ cas ((Address*)(&_ip), _ip, _ip + count); }
+{ local_cas((Address*)(&_ip), _ip, _ip + count); }
 
 PUBLIC
 void

@@ -9,7 +9,7 @@ IMPLEMENTATION [mips]:
 
 inline NEEDS["asm_mips.h"]
 bool
-cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
+local_cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
 {
   Mword ret;
 
@@ -35,7 +35,7 @@ cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
 
 inline NEEDS["asm_mips.h"]
 void
-atomic_and(Mword *l, Mword mask)
+local_atomic_and(Mword *l, Mword mask)
 {
   Mword tmp;
 
@@ -53,7 +53,7 @@ atomic_and(Mword *l, Mword mask)
 
 inline NEEDS["asm_mips.h"]
 void
-atomic_or(Mword *l, Mword bits)
+local_atomic_or(Mword *l, Mword bits)
 {
   Mword tmp;
 
@@ -71,7 +71,7 @@ atomic_or(Mword *l, Mword bits)
 
 inline NEEDS["asm_mips.h"]
 void
-atomic_add(Mword *l, Mword v)
+local_atomic_add(Mword *l, Mword v)
 {
   Mword tmp;
 
@@ -97,7 +97,7 @@ void
 atomic_mp_and(Mword *l, Mword value)
 {
   Mem::mp_mb();
-  atomic_and(l, value);
+  local_atomic_and(l, value);
   Mem::mp_mb();
 }
 
@@ -106,7 +106,7 @@ void
 atomic_mp_or(Mword *l, Mword value)
 {
   Mem::mp_mb();
-  atomic_or(l, value);
+  local_atomic_or(l, value);
   Mem::mp_mb();
 }
 
@@ -115,7 +115,7 @@ void
 atomic_mp_add(Mword *l, Mword value)
 {
   Mem::mp_mb();
-  atomic_add(l, value);
+  local_atomic_add(l, value);
   Mem::mp_mb();
 }
 
@@ -124,7 +124,7 @@ bool
 mp_cas_arch(Mword *m, Mword o, Mword n)
 {
   Mem::mp_mb();
-  Mword ret = cas_unsafe(m, o, n);
+  Mword ret = local_cas_unsafe(m, o, n);
   Mem::mp_mb();
   return ret;
 }
@@ -135,20 +135,20 @@ IMPLEMENTATION [mips && !mp]:
 inline
 void
 atomic_mp_and(Mword *l, Mword value)
-{ atomic_and(l, value); }
+{ local_atomic_and(l, value); }
 
 inline
 void
 atomic_mp_or(Mword *l, Mword value)
-{ atomic_or(l, value); }
+{ local_atomic_or(l, value); }
 
 inline
 void
 atomic_mp_add(Mword *l, Mword value)
-{ atomic_add(l, value); }
+{ local_atomic_add(l, value); }
 
 inline
 bool
 mp_cas_arch(Mword *m, Mword o, Mword n)
-{ return cas_unsafe(m, o, n); }
+{ return local_cas_unsafe(m, o, n); }
 

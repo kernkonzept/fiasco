@@ -25,11 +25,11 @@ IMPLEMENTATION:
  */
 template< typename Type > inline
 bool
-cas(Type *ptr, Type oldval, Type newval)
+local_cas(Type *ptr, Type oldval, Type newval)
 {
   MACRO_CAS_ASSERT(sizeof(Type), sizeof(Mword));
-  return cas_unsafe(reinterpret_cast<Mword *>(ptr),
-                    (Mword)oldval, (Mword)newval);
+  return local_cas_unsafe(reinterpret_cast<Mword *>(ptr),
+                         (Mword)oldval, (Mword)newval);
 }
 
 /**
@@ -42,14 +42,14 @@ cas(Type *ptr, Type oldval, Type newval)
  */
 template <typename T> inline
 T
-atomic_change(T *ptr, T mask, T bits)
+local_atomic_change(T *ptr, T mask, T bits)
 {
   T old;
   do
     {
       old = *ptr;
     }
-  while (!cas(ptr, old, (old & mask) | bits));
+  while (!local_cas(ptr, old, (old & mask) | bits));
   return old;
 }
 
@@ -93,7 +93,7 @@ IMPLEMENTATION [!mp]:
 /**
  * Atomically test and modify memory with protection against concurrent writes
  * from other CPUs (SMP-safe). On UP systems, this function is equivalent to
- * \see 'cas'.
+ * \see 'local_cas'.
  *
  * \param ptr     Pointer to the memory to change.
  * \param oldval  Only write 'newval' if the memory contains this value.
@@ -103,7 +103,7 @@ IMPLEMENTATION [!mp]:
 template< typename T > inline
 bool
 mp_cas(T *ptr, T oldval, T newval)
-{ return cas(ptr, oldval, newval); }
+{ return local_cas(ptr, oldval, newval); }
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [mp]:

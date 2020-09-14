@@ -4,7 +4,7 @@ IMPLEMENTATION [sparc]:
 
 inline
 bool
-cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
+local_cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
 {
   Mword ret;
   // -mcpu=leon3 does not work for me although listed in docs :(
@@ -38,20 +38,20 @@ cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
 
 inline
 void
-atomic_and(Mword *l, Mword mask)
+local_atomic_and(Mword *l, Mword mask)
 {
   Mword old;
   do
     old = *l;
-  while (!cas(l, old, old & mask));
+  while (!local_cas(l, old, old & mask));
 }
 
 inline
 void
-atomic_or(Mword *l, Mword bits)
+local_atomic_or(Mword *l, Mword bits)
 {
   Mword old;
   do
     old = *l;
-  while (!cas(l, old, old | bits));
+  while (!local_cas(l, old, old | bits));
 }

@@ -331,7 +331,7 @@ inline NEEDS["paging.h"]
 void
 Generic_io_space<SPACE>::addto_io_counter(int incr)
 {
-  atomic_add (&_io_counter, incr);
+  local_atomic_add(&_io_counter, incr);
 }
 
 

@@ -24,21 +24,21 @@ atomic_mp_add(Mword *l, Mword value)
 
 inline
 void
-atomic_add(Mword *l, Mword value)
+local_atomic_add(Mword *l, Mword value)
 {
   asm volatile ("addl %1, %2" : "=m"(*l) : "ir"(value), "m"(*l));
 }
 
 inline
 void
-atomic_and(Mword *l, Mword mask)
+local_atomic_and(Mword *l, Mword mask)
 {
   asm volatile ("andl %1, %2" : "=m"(*l) : "ir"(mask), "m"(*l));
 }
 
 inline
 void
-atomic_or(Mword *l, Mword bits)
+local_atomic_or(Mword *l, Mword bits)
 {
   asm volatile ("orl %1, %2" : "=m"(*l) : "ir"(bits), "m"(*l));
 }
@@ -52,7 +52,7 @@ IMPLEMENTATION [(ia32,ux)&& !cc_has_asm_flag_outputs]:
 
 inline
 bool
-cas_unsafe(Mword *ptr, Mword cmpval, Mword newval)
+local_cas_unsafe(Mword *ptr, Mword cmpval, Mword newval)
 {
   Mword oldval;
 
@@ -87,7 +87,7 @@ IMPLEMENTATION [(ia32,ux) && cc_has_asm_flag_outputs]:
 
 inline
 bool
-cas_unsafe(Mword *ptr, Mword cmpval, Mword newval)
+local_cas_unsafe(Mword *ptr, Mword cmpval, Mword newval)
 {
   Mword oldval_ignore, zflag;
 

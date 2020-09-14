@@ -64,11 +64,11 @@ Startup::stage2()
     Mword mem = 3;
     (void)mem;
 
-    assert(cas_unsafe(&mem, 3, 4));
+    assert(local_cas_unsafe(&mem, 3, 4));
     assert(mem == 4);
-    assert(!cas_unsafe(&mem, 3, 5));
+    assert(!local_cas_unsafe(&mem, 3, 5));
     assert(mem == 4);
-    assert(cas_unsafe(&mem, 4, 5));
+    assert(local_cas_unsafe(&mem, 4, 5));
     assert(mem == 5);
   }
 

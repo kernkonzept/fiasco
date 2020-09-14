@@ -566,7 +566,7 @@ void
 Context::state_add(Mword bits)
 {
   assert(check_for_current_cpu());
-  atomic_or(&_state, bits);
+  local_atomic_or(&_state, bits);
 }
 
 /**
@@ -594,7 +594,7 @@ void
 Context::state_del(Mword bits)
 {
   assert (check_for_current_cpu());
-  atomic_and(&_state, ~bits);
+  local_atomic_and(&_state, ~bits);
 }
 
 /**
@@ -634,7 +634,7 @@ Context::state_change_safely(Mword mask, Mword bits)
       if ((old & bits & mask) | (~old & ~mask))
         return 0;
     }
-  while (!cas(&_state, old, (old & mask) | bits));
+  while (!local_cas(&_state, old, (old & mask) | bits));
 
   return 1;
 }
@@ -649,7 +649,7 @@ Mword
 Context::state_change(Mword mask, Mword bits)
 {
   assert (check_for_current_cpu());
-  return atomic_change(&_state, mask, bits);
+  return local_atomic_change(&_state, mask, bits);
 }
 
 /**

@@ -7,7 +7,7 @@ IMPLEMENTATION [arm && !arm_v6plus]:
 
 inline
 bool
-cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
+local_cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
 {
   Mword ret;
   asm volatile("    mrs    r5, cpsr    \n"
@@ -29,20 +29,20 @@ cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
 
 inline
 void
-atomic_and(Mword *l, Mword mask)
+local_atomic_and(Mword *l, Mword mask)
 {
   Mword old;
   do { old = *l; }
-  while (!cas(l, old, old & mask));
+  while (!local_cas(l, old, old & mask));
 }
 
 inline
 void
-atomic_or(Mword *l, Mword bits)
+local_atomic_or(Mword *l, Mword bits)
 {
   Mword old;
   do { old = *l; }
-  while (!cas(l, old, old | bits));
+  while (!local_cas(l, old, old | bits));
 }
 
 //---------------------------------------------------------------------------
@@ -50,15 +50,15 @@ IMPLEMENTATION [arm && arm_v6plus]:
 
 inline
 bool
-cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
+local_cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
 { return mp_cas_arch(ptr, oldval, newval); }
 
 inline
 void
-atomic_or(Mword *l, Mword value)
+local_atomic_or(Mword *l, Mword value)
 { atomic_mp_or(l, value); }
 
 inline
 void
-atomic_and(Mword *l, Mword mask)
+local_atomic_and(Mword *l, Mword mask)
 { atomic_mp_and(l, mask); }
