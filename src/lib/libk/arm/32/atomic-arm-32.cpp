@@ -250,12 +250,14 @@ atomic_store(T *p, V value, typename cxx::enable_if<(sizeof(T) == 8), int>::type
 IMPLEMENTATION[arm && arm_v6 && !mp]:
 
 #include <cxx/type_traits>
+#include "processor.h"
 
-template<typename T, typename V> inline NEEDS ["mem.h", <cxx/type_traits>]
+template<typename T, typename V> inline NEEDS ["mem.h", "processor.h",
+                                               <cxx/type_traits>]
 ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 8), T>::type
 atomic_exchange(T *mem, V value)
 {
-  // NOTE: this version assumes close IRQs during the operation
+  Mword s = Proc::cli_save();
   T val = value;
   T res;
   Mem::prefetch_w(mem);
@@ -264,14 +266,16 @@ atomic_exchange(T *mem, V value)
       "     strd %[val], %H[val], %[mem]   "
       : [res] "=&r" (res), [mem] "+m" (*mem)
       : [val] "r" (val));
+  Proc::sti_restore(s);
   return res;
 }
 
-template<typename T, typename V> inline NEEDS ["mem.h", <cxx/type_traits>]
+template<typename T, typename V> inline NEEDS ["mem.h", "processor.h",
+                                               <cxx/type_traits>]
 ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 8), T>::type
 atomic_add_fetch(T *mem, V value)
 {
-  // NOTE: this version assumes close IRQs during the operation
+  Mword s = Proc::cli_save();
   T val = value;
   T res;
   Mem::prefetch_w(mem);
@@ -283,6 +287,7 @@ atomic_add_fetch(T *mem, V value)
       : [res] "=&r" (res), [mem] "+m" (*mem)
       : [val] "r" (val)
       : "cc");
+  Proc::sti_restore(s);
   return res;
 }
 
