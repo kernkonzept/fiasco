@@ -85,7 +85,7 @@ Cpu_number
 Context_base::get_current_cpu() const
 { return _cpu; }
 
-inline NEEDS ["processor.h"]
+inline NEEDS [current, "processor.h"]
 Cpu_number FIASCO_PURE current_cpu()
-{ return reinterpret_cast<Context_base *>(Proc::stack_pointer() & ~(Context_base::Size - 1))->_cpu; }
+{ return reinterpret_cast<Context_base *>(current())->_cpu; }
 
