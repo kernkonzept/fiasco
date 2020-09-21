@@ -101,16 +101,7 @@ Ram_quota::_free_bytes(Mword bytes)
   if (unlimited())
     return false;
 
-  //Mword r = atomic_add_fetch(&_current, -bytes);
-  Mword o,r;
-  do
-    {
-      o = access_once(&_current);
-      r = o - bytes;
-    }
-  while (!cas(&_current, o, r));
-
-  return r == Invalid;
+  return atomic_add_fetch(&_current, -bytes) == Invalid;
 }
 
 PUBLIC inline NEEDS[Ram_quota::_free_bytes]
