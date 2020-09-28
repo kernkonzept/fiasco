@@ -32,7 +32,7 @@ public:
 
   bool ok() const { return _raw == 0; }
 
-  Error_code error() const { return Error_code(_raw & 0x1e); }
+  Error_code error() const { return Error_code(_raw & 0x1f); }
   Mword raw() const { return _raw; }
   bool snd_phase() const { return !(_raw & Rcv); }
 
