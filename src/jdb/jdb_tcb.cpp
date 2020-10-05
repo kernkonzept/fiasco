@@ -84,8 +84,11 @@ public:
 
   Address user_ip() const;
 
+  inline Mword const *top_value_ptr(int offs) const
+  { return (Mword*)(Cpu::stack_align(_base + Context::Size)) + offs; }
+
   inline Mword top_value(int offs) const
-  { return *((Mword*)(Cpu::stack_align(_base + Context::Size)) + offs); }
+  { return *top_value_ptr(offs); }
 
   inline Address base() const
   { return _base; }
