@@ -512,7 +512,8 @@ PRIVATE inline NEEDS [Mem_space::set_current_pcid,
 void
 Mem_space::switch_page_table()
 {
-  // prepare for switching the page table on kernel exit...
+  // We are currently running on the kernel page table. Prepare for switching
+  // to the user page table on kernel exit.
   set_needs_ibpb();
   set_current_pcid();
 }
