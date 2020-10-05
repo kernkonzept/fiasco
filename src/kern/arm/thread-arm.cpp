@@ -99,7 +99,7 @@ Thread::user_invoke()
   if (ct->space()->is_sigma0())
     ts->r[0] = Kmem::kdir->virt_to_phys((Address)Kip::k());
 
-  // load KIP syscall ode into r1/x1 to allow user processes to
+  // load KIP syscall code into r1/x1 to allow user processes to
   // do syscalls even without access to the KIP.
   ts->r[1] = reinterpret_cast<Mword *>(Kip::k())[0x100];
 
