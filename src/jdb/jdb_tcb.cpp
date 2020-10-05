@@ -618,9 +618,9 @@ whole_screen:
   time_str.terminate();
   printf("%-13s", time_str.begin());
 
-  printf("\t\ttimeslice: %llu/%llu us\n"
+  printf("\t\ttimeslice: %llu us\n"
          "pager\t: ",
-         t->sched()->left(), ~0ULL/*t->sched()->quantum()*/);
+         t->sched()->left());
   print_kobject(t, t->_pager.raw());
 
   putstr("\ttask     : ");
