@@ -24,6 +24,7 @@ IMPLEMENTATION [arm]:
 #include "static_assert.h"
 #include "thread_state.h"
 #include "types.h"
+#include "warn.h"
 
 enum {
   FSR_STATUS_MASK = 0x0d,
@@ -152,9 +153,10 @@ extern "C" {
   {
     if (EXPECT_FALSE(PF::is_alignment_error(error_code)))
       {
-	printf("KERNEL%d: alignment error at %08lx (PC: %08lx, SP: %08lx, FSR: %lx, PSR: %lx)\n",
-               cxx::int_value<Cpu_number>(current_cpu()), pfa, pc,
-               ret_frame->usp, error_code, ret_frame->psr);
+	WARNX(Warning,
+              "KERNEL%d: alignment error at %08lx (PC: %08lx, SP: %08lx, FSR: %lx, PSR: %lx)\n",
+              cxx::int_value<Cpu_number>(current_cpu()), pfa, pc,
+              ret_frame->usp, error_code, ret_frame->psr);
         return false;
       }
 
