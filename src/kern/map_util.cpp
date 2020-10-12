@@ -724,7 +724,7 @@ unmap(MAPDB* mapdb, SPACE* space, Space *space_id,
 
       // phys_size and page_address have now been set up, allowing the
       // use of continue (which evaluates the for-loop's iteration
-      // expression involving these to variables).
+      // expression involving these two variables).
 
       if (! have_page)
         continue;
