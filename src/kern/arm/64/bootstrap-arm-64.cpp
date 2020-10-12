@@ -252,12 +252,6 @@ Bootstrap::leave_hyp_mode()
     }
 }
 
-constexpr unsigned l0_idx(Unsigned64 va)
-{ return (va >> 39) & 0x1ff; }
-
-constexpr unsigned l1_idx(Unsigned64 va)
-{ return (va >> 30) & 0x1ff; }
-
 PUBLIC static Bootstrap::Phys_addr
 Bootstrap::init_paging()
 {
@@ -400,12 +394,6 @@ Bootstrap::leave_el3()
       : [psr]"r"((0xfUL << 6) | 9)
       : "cc", "x4");
 }
-
-constexpr unsigned l0_idx(Unsigned64 va)
-{ return (va >> 39) & 0x1ff; }
-
-constexpr unsigned l1_idx(Unsigned64 va)
-{ return (va >> 30) & 0x1ff; }
 
 PUBLIC static Bootstrap::Phys_addr
 Bootstrap::init_paging()
