@@ -43,6 +43,8 @@ atomic_or(Mword *l, Mword bits)
   asm volatile ("orl %1, %2" : "=m"(*l) : "ir"(bits), "m"(*l));
 }
 
+//---------------------------------------------------------------------------
+IMPLEMENTATION [(ia32,ux)&& !cc_has_asm_flag_outputs]:
 // ``unsafe'' stands for no safety according to the size of the given type.
 // There are type safe versions of the cas operations in the architecture
 // independent part of atomic that use the unsafe versions and make a type
@@ -50,30 +52,63 @@ atomic_or(Mword *l, Mword bits)
 
 inline
 bool
-cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
+cas_unsafe(Mword *ptr, Mword cmpval, Mword newval)
 {
-  Mword tmp;
+  Mword oldval;
 
-  asm volatile
-    ("cmpxchgl %1, %2"
-     : "=a" (tmp)
-     : "r" (newval), "m" (*ptr), "a" (oldval)
-     : "memory");
+  asm volatile ("cmpxchgl %[newval], %[ptr]"
+                : "=a"(oldval)
+                : [newval]"r"(newval), [ptr]"m"(*ptr), "a"(cmpval)
+                : "memory");
 
-  return tmp == oldval;
+  return oldval == cmpval;
 }
 
 inline
 bool
-mp_cas_arch(Mword *ptr, Mword oldval, Mword newval)
+mp_cas_arch(Mword *ptr, Mword cmpval, Mword newval)
 {
-  Mword tmp;
+  Mword oldval;
 
-  asm volatile
-    ("lock; cmpxchgl %1, %2"
-     : "=a" (tmp)
-     : "r" (newval), "m" (*ptr), "a" (oldval)
-     : "memory");
+  asm volatile ("lock; cmpxchgl %[newval], %[ptr]"
+                : "=a"(oldval)
+                : [newval]"r"(newval), [ptr]"m"(*ptr), "a"(cmpval)
+                : "memory");
 
-  return tmp == oldval;
+  return oldval == cmpval;
+}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [(ia32,ux) && cc_has_asm_flag_outputs]:
+// ``unsafe'' stands for no safety according to the size of the given type.
+// There are type safe versions of the cas operations in the architecture
+// independent part of atomic that use the unsafe versions and make a type
+// check.
+
+inline
+bool
+cas_unsafe(Mword *ptr, Mword cmpval, Mword newval)
+{
+  Mword oldval_ignore, zflag;
+
+  asm volatile ("cmpxchgl %[newval], %[ptr]"
+                : "=a"(oldval_ignore), "=@ccz"(zflag)
+                : [newval]"r"(newval), [ptr]"m"(*ptr), "a"(cmpval)
+                : "memory");
+
+  return zflag;
+}
+
+inline
+bool
+mp_cas_arch(Mword *ptr, Mword cmpval, Mword newval)
+{
+  Mword oldval_ignore, zflag;
+
+  asm volatile ("lock; cmpxchgl %[newval], %[ptr]"
+                : "=a"(oldval_ignore), "=@ccz"(zflag)
+                : [newval]"r"(newval), [ptr]"m"(*ptr), "a"(cmpval)
+                : "memory");
+
+  return zflag;
 }
