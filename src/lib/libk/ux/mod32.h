@@ -9,12 +9,9 @@ unsigned long
 mod32(unsigned long long dividend, unsigned long divisor)
 {
   unsigned long ret, dummy;
-  asm ("divl	%5		\n\t"
-       "movl	%4, %%eax	\n\t"
-       "divl	%5		\n\t"
+  asm ("divl    %[divisor]      \n\t"
      : "=d"(ret), "=a"(dummy)
-     : "a"((unsigned long)(dividend >> 32)), "d"(0),
-       "irm"((unsigned long)(dividend & 0xffffffff)), "rm"(divisor));
+     : "A"(dividend), [divisor]"rm"(divisor));
   return ret;
 }
 

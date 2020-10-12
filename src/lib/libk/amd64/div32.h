@@ -9,9 +9,10 @@ unsigned long long
 div32(unsigned long long dividend, unsigned long divisor)
 {
   unsigned long long ret;
-  asm ("divq	%3		\n\t"
-     : "=a"(ret)
-     : "a"((unsigned long)(dividend)), "d"(0), "rm"(divisor));
+  unsigned long dummy;
+  asm ("divq    %[divisor]      \n\t"
+     : "=a"(ret), "=d"(dummy)
+     : "a"(dividend), "d"(0), [divisor]"rm"(divisor));
   return ret;
 }
 

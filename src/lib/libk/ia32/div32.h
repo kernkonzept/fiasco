@@ -10,13 +10,14 @@ div32(unsigned long long dividend, unsigned long divisor)
 {
   unsigned long long ret;
   unsigned long dummy;
-  asm ("divl	%5		\n\t"
-       "xchg	%%eax, %4	\n\t"
-       "divl	%5		\n\t"
-       "movl	%4, %%edx	\n\t"
+  asm ("divl    %[divisor]              \n\t"
+       "xchg    %%eax, %[dividend_lo32] \n\t"
+       "divl    %[divisor]              \n\t"
+       "movl    %[dividend_lo32], %%edx \n\t"
      : "=A"(ret), "=r"(dummy)
      : "a"((unsigned long)(dividend >> 32)), "d"(0),
-       "1"((unsigned long)(dividend & 0xffffffff)), "rm"(divisor));
+       [dividend_lo32]"1"((unsigned long)(dividend & 0xffffffff)),
+       [divisor]"rm"(divisor));
   return ret;
 }
 
