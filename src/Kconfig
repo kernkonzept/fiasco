@@ -424,17 +424,6 @@ config STACK_DEPTH
 	  lists'' scans the TCB for these magic numbers and shows the
 	  currently used depth of each thread.
 
-config LIST_ALLOC_SANITY
-	bool "Sanity checks in low level allocator"
-	help
-	  When this option is enabled the low level memory allocator does
-	  extra sanity checks on its data structures before and after every
-	  operation. This can help detect flaws like double frees or memory
-	  corruption by other means.
-
-	  These tests are very expensive so only enable them if a problem
-	  with memory allocation is expected.
-
 config BEFORE_IRET_SANITY
 	bool "Sanity checks at syscall entry/exit"
 	depends on PF_PC

@@ -11,7 +11,6 @@ PREPROCESS_PARTS 	+= arch $(CONFIG_ABI) 32bit iofp \
 			   abs_syscalls auto_map_kip io realmode libuart
 
 PREPROCESS_PARTS-$(CONFIG_MP)                += mp
-PREPROCESS_PARTS-$(CONFIG_LIST_ALLOC_SANITY) += list_alloc_debug
 PREPROCESS_PARTS-$(CONFIG_JDB)               += debug log
 PREPROCESS_PARTS-$(CONFIG_SCHED_PIT)         += pit_timer
 PREPROCESS_PARTS-$(CONFIG_SCHED_RTC)         += rtc_timer

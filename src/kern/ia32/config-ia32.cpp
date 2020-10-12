@@ -133,9 +133,6 @@ const char *const Config::kernel_warn_config_string =
 #ifndef CONFIG_NO_FRAME_PTR
   "  CONFIG_NO_FRAME_PTR is off\n"
 #endif
-#ifdef CONFIG_LIST_ALLOC_SANITY
-  "  CONFIG_LIST_ALLOC_SANITY is on\n"
-#endif
 #ifdef CONFIG_BEFORE_IRET_SANITY
   "  CONFIG_BEFORE_IRET_SANITY is on\n"
 #endif
