@@ -365,6 +365,8 @@ Bootstrap::leave_el3()
         ;
     }
 
+  // TODO: ACTRL_EL3.CPUECTRL = 1 if A53 and friends
+
   asm volatile ("msr HCR_EL2, %0" : : "r"(Cpu::Hcr_rw));
 
   // setup SCR (disable monitor completely)
