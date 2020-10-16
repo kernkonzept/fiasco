@@ -104,12 +104,13 @@ _tramp_mp_entry:
 	msr	S3_0_C4_C6_0, x4
 .Lno_gic:
 	// switch from EL3 to EL2...
-	tlbi	alle2is
-	dsb	sy
 	movz	x18, #:abs_g0_nc:SCR_EL3_DEFAULT_BITS
 	movk	x18, #:abs_g1:SCR_EL3_DEFAULT_BITS
 	msr	scr_el3, x18
 	mrs	x20, sctlr_el3
+	dsb	sy
+	tlbi	alle2is
+	dsb	sy
 	bl	cache_invalidate_v8
 	and	x18, x20, #(1 << 25)
 	.equ	sctlr_val, (  (3 << 4) | (1 << 11) | (1 << 16) \

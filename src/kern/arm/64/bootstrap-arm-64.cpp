@@ -367,13 +367,13 @@ Bootstrap::leave_el3()
 
   asm volatile ("msr HCR_EL2, %0" : : "r"(Cpu::Hcr_rw));
 
-  // flush all E2 TLBs
-  asm volatile ("tlbi alle2is");
-
   // setup SCR (disable monitor completely)
   asm volatile ("msr scr_el3, %0"
                 : :
                 "r"(Cpu::Scr_default_bits));
+
+  // flush all EL2 TLBs
+  asm volatile ("tlbi alle2is");
 
   Mword sctlr_el3;
   Mword sctlr;
