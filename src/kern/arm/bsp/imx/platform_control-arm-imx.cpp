@@ -92,15 +92,20 @@ IMPLEMENTATION [arm && mp && arm_v8 && arm_psci]:
 
 #include "cpu.h"
 #include "psci.h"
+#include "minmax.h"
 
 PUBLIC static
 void
 Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
 {
   int seq = 1;
-  for (unsigned i = 0; i < 4; ++i)
+  enum { Num_cores = 6 };
+  unsigned coreid[Num_cores] = { 0x000, 0x001, 0x002, 0x003,
+                                 0x100, 0x101 };
+
+  for (int i = 0; i < min<int>(Num_cores, Config::Max_num_cpus); ++i)
     {
-      int r = cpu_on(i, phys_tramp_mp_addr);
+      int r = Psci::cpu_on(coreid[i], phys_tramp_mp_addr);
       if (r)
         {
           if (r != Psci::Psci_already_on)

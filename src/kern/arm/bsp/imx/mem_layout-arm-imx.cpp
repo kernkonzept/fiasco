@@ -133,14 +133,14 @@ public:
   };
 };
 
-INTERFACE [arm && pf_imx_8x]: // ----------------------------------------
+INTERFACE [arm && pf_imx_8xq]: // ---------------------------------------
 
 EXTENSION class Mem_layout
 {
 public:
-  enum Phys_layout_imx8x : Address {
+  enum Phys_layout_imx8xq : Address {
     Gic_dist_phys_base = 0x51a00000,
     Gic_redist_phys_base = 0x51b00000,
-    Gic_redist_phys_size = 0xc0000,
+    Gic_redist_phys_size = 0x100000,
   };
 };

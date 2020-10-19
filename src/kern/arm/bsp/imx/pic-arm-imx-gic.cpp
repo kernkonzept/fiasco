@@ -20,7 +20,7 @@ EXTENSION class Pic
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && pic_gic && pf_imx_8x]:
+INTERFACE [arm && pic_gic && pf_imx_8xq]:
 
 EXTENSION class Pic
 {
