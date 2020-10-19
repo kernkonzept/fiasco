@@ -37,7 +37,7 @@ namespace L4_kernel_options
   enum
   {
     Magic = 0x4C344B43,
-    Version_current = 1,
+    Version_current = 2,
   };
 
   enum Uart_type
@@ -72,6 +72,8 @@ namespace L4_kernel_options
     Unsigned32  kmemsize;         ///< Wanted kernel memory size in KiB
 
     Uart uart;                     ///< Kernel UART
+
+    Unsigned64  core_spin_addr;   ///< Boot address for secondary cores
 
     char         jdb_cmd[128];
     Unsigned32  tbuf_entries;
