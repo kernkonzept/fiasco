@@ -143,11 +143,11 @@ Thread::ipc_receiver_aborted() override
 
 PRIVATE
 void
-Thread::ipc_send_msg(Receiver *recv) override
+Thread::ipc_send_msg(Receiver *recv, bool open_wait) override
 {
   Syscall_frame *regs = _snd_regs;
   bool success = transfer_msg(regs->tag(), nonull_static_cast<Thread*>(recv), regs,
-                              _ipc_send_rights);
+                              _ipc_send_rights, open_wait);
   sender_dequeue(recv->sender_list());
   recv->vcpu_update_state();
   //printf("  done\n");
@@ -528,7 +528,8 @@ Thread::do_ipc(L4_msg_tag const &tag, bool have_send, Thread *partner,
           if (EXPECT_TRUE(current_cpu == partner->home_cpu()))
             partner->reset_timeout();
 
-          ok = transfer_msg(tag, partner, regs, rights);
+          ok = transfer_msg(tag, partner, regs, rights,
+                            !partner->partner());
 
           // transfer is also a possible migration point
           current_cpu = ::current_cpu();
@@ -580,7 +581,7 @@ Thread::do_ipc(L4_msg_tag const &tag, bool have_send, Thread *partner,
   if (next)
     {
       state_change_dirty(~Thread_ipc_mask, Thread_receive_in_progress);
-      next->ipc_send_msg(this);
+      next->ipc_send_msg(this, !sender);
       state_del_dirty(Thread_ipc_mask);
     }
   else if (have_receive)
@@ -628,7 +629,8 @@ Thread::do_ipc(L4_msg_tag const &tag, bool have_send, Thread *partner,
 PRIVATE inline NEEDS [Thread::copy_utcb_to]
 bool
 Thread::transfer_msg(L4_msg_tag tag, Thread *receiver,
-                     Syscall_frame *sender_regs, L4_fpage::Rights rights)
+                     Syscall_frame *sender_regs,
+                     L4_fpage::Rights rights, bool open_wait)
 {
   Syscall_frame* dst_regs = receiver->rcv_regs();
 
@@ -638,7 +640,7 @@ Thread::transfer_msg(L4_msg_tag tag, Thread *receiver,
   dst_regs->from(sender_regs->from_spec());
 
   // setup the reply capability in case of a call
-  if (success && partner() == receiver)
+  if (success && open_wait && partner() == receiver)
     receiver->set_caller(this, rights);
 
   return success;
@@ -1155,7 +1157,8 @@ Thread::remote_ipc_send(Ipc_remote_request *rq)
       rq->result = Check_sender::Ok;
       return true;
     }
-  bool success = transfer_msg(rq->tag, rq->partner, rq->regs, _ipc_send_rights);
+  bool success = transfer_msg(rq->tag, rq->partner, rq->regs, _ipc_send_rights,
+                              !rq->partner->partner());
   if (success && rq->have_rcv)
     xcpu_state_change(~Thread_send_wait, Thread_receive_wait);
   else

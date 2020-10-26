@@ -14,7 +14,7 @@ public:
   /** Receiver-ready callback.  Receivers make sure to call this
       function on waiting senders when they get ready to receive a
       message from that sender.  Senders need to overwrite this interface. */
-  virtual void ipc_send_msg(Receiver *) = 0;
+  virtual void ipc_send_msg(Receiver *, bool open_wait) = 0;
   virtual void ipc_receiver_aborted() = 0;
   virtual void modify_label(Mword const *todo, int cnt) = 0;
 

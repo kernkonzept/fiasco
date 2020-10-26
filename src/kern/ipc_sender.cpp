@@ -45,7 +45,7 @@ Ipc_sender_base::ipc_receiver_aborted() override
  */
 PUBLIC template< typename Derived >
 virtual void
-Ipc_sender<Derived>::ipc_send_msg(Receiver *recv) override
+Ipc_sender<Derived>::ipc_send_msg(Receiver *recv, bool) override
 {
   derived()->transfer_msg(recv);
   if (derived()->dequeue_sender())
