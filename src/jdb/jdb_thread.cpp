@@ -112,7 +112,7 @@ PUBLIC static
 void
 Jdb_thread::print_partner(Thread *t, int task_format = 0)
 {
-  Sender const *p = t->partner();
+  void const *p = t->_partner;
 
   if (!has_partner(t))
     {
@@ -126,7 +126,7 @@ Jdb_thread::print_partner(Thread *t, int task_format = 0)
       return;
     }
 
-  if (p == Semaphore::sem_partner())
+  if (t->is_partner(Semaphore::sem_partner()))
     {
       printf("%*s ", task_format, "Sem");
       // Actually getting the semaphore would require to scan all

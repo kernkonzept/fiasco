@@ -21,6 +21,9 @@ class Sender;
  */
 class Receiver : public Context,  public Ref_cnt_obj
 {
+  friend class Jdb_tcb;
+  friend class Jdb_thread;
+
   MEMBER_OFFSET();
 
 public:
@@ -44,7 +47,7 @@ public:
 
 private:
   // DATA
-  Sender const *_partner;         // IPC partner I'm waiting for/involved with
+  void const *_partner;     // IPC partner I'm waiting for/involved with
   Syscall_frame *_rcv_regs; // registers used for receive
   Mword _caller;
   Iteratable_prio_list _sender_list;
@@ -120,16 +123,17 @@ Receiver::reset_caller()
     _caller = 0;
 }
 
-/** IPC partner (sender).
-    @return sender of ongoing or previous IPC operation
- */
 PROTECTED inline
-Sender const *
-Receiver::partner() const
+bool Receiver::is_partner(Sender *s) const
 {
-  return _partner;
+  return _partner == s;
 }
 
+PROTECTED inline
+bool Receiver::has_partner() const
+{
+  return _partner != nullptr;
+}
 
 // Interface for senders
 
@@ -233,7 +237,7 @@ PUBLIC inline
 bool
 Receiver::in_ipc(Sender *sender)
 {
-  return (state() & Thread_receive_in_progress) && (partner() == sender);
+  return (state() & Thread_receive_in_progress) && (_partner == sender);
 }
 
 
@@ -244,7 +248,7 @@ Receiver::in_ipc(Sender *sender)
                  right now (open wait, or closed wait and waiting for sender).
  */
 IMPLEMENT inline NEEDS["std_macros.h", "thread_state.h", "sender.h",
-                       Receiver::partner, Receiver::vcpu_async_ipc]
+                       Receiver::vcpu_async_ipc]
 Receiver::Rcv_state
 Receiver::sender_ok(const Sender *sender) const
 {
@@ -255,13 +259,13 @@ Receiver::sender_ok(const Sender *sender) const
     return vcpu_async_ipc(sender);
 
   // Check open wait; test if this sender is really the first in queue
-  if (EXPECT_TRUE(!partner()
+  if (EXPECT_TRUE(!_partner
                   && (_sender_list.empty()
 		    || sender->is_head_of(&_sender_list))))
     return Rs_ipc_receive;
 
   // Check closed wait; test if this sender is really who we specified
-  if (EXPECT_TRUE(sender == partner()))
+  if (EXPECT_TRUE(sender == _partner))
     return Rs_ipc_receive;
 
   return Rs_not_receiving;

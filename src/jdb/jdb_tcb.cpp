@@ -583,7 +583,7 @@ whole_screen:
   Jdb_thread::print_state_long(t);
 
   putstr("\nwait for: ");
-  if (!t->partner())
+  if (!t->has_partner())
     putstr("---  ");
   else
     Jdb_thread::print_partner(t, 4);

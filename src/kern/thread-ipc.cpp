@@ -529,7 +529,7 @@ Thread::do_ipc(L4_msg_tag const &tag, bool have_send, Thread *partner,
             partner->reset_timeout();
 
           ok = transfer_msg(tag, partner, regs, rights,
-                            !partner->partner());
+                            !partner->has_partner());
 
           // transfer is also a possible migration point
           current_cpu = ::current_cpu();
@@ -640,7 +640,7 @@ Thread::transfer_msg(L4_msg_tag tag, Thread *receiver,
   dst_regs->from(sender_regs->from_spec());
 
   // setup the reply capability in case of a call
-  if (success && open_wait && partner() == receiver)
+  if (success && open_wait && is_partner(receiver))
     receiver->set_caller(this, rights);
 
   return success;
@@ -1158,7 +1158,7 @@ Thread::remote_ipc_send(Ipc_remote_request *rq)
       return true;
     }
   bool success = transfer_msg(rq->tag, rq->partner, rq->regs, _ipc_send_rights,
-                              !rq->partner->partner());
+                              !rq->partner->has_partner());
   if (success && rq->have_rcv)
     xcpu_state_change(~Thread_send_wait, Thread_receive_wait);
   else
