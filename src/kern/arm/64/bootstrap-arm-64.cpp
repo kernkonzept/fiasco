@@ -82,6 +82,9 @@ Bootstrap::map_ram_range(Kpdir *kd, Bs_alloc &alloc,
           if (s & pg_mask)
             continue;
 
+          if ((s - va_offset) & pg_mask)
+            continue;
+
           if (s + pg_sz > e)
             continue;
 
