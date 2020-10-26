@@ -45,7 +45,8 @@ public:
     Registers_map_start  = 0xffff000000000000,
     Registers_map_end    = 0xffff000040000000,
     Cache_flush_area     = 0x0,
-    Map_base             = 0xffff000040000000,
+    Map_base             = 0xffff000040000000
+                              + (RAM_PHYS_BASE & ((1 << 30) - 1)),
     //Pmem_start           = 0xf0400000,
     //Pmem_end             = 0xf5000000,
 
