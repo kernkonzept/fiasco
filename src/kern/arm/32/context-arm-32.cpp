@@ -12,7 +12,8 @@ Context::arm_switch_gp_regs(Context *t)
 {
   register Mword _old_this asm("r1") = (Mword)this;
   register Mword _new_this asm("r0") = (Mword)t;
-  unsigned long dummy1, dummy2;
+  register Mword _old_sp asm("r2") = (Mword)&_kernel_sp;
+  register Mword _new_sp asm("r3") = (Mword)t->_kernel_sp;
 
   asm volatile
     (// save context of old thread
@@ -32,16 +33,13 @@ Context::arm_switch_gp_regs(Context *t)
      "1: ldmia sp!, {fp}          \n"
 
      :
-                  "=r" (_old_this),
-                  "=r" (_new_this),
-     [old_sp]     "=r" (dummy1),
-     [new_sp]     "=r" (dummy2)
+              "+r" (_old_this),
+              "+r" (_new_this),
+     [old_sp] "+r" (_old_sp),
+     [new_sp] "+r" (_new_sp)
      :
-     "0" (_old_this),
-     "1" (_new_this),
-     "2" (&_kernel_sp),
-     "3" (t->_kernel_sp)
-     : "r4", "r5", "r6", "r7", "r8", "r9",
+     : // r11/fp is saved / restored using stmdb/ldmia
+       "r4", "r5", "r6", "r7", "r8", "r9",
        "r10", "r12", "r14", "memory");
 }
 
