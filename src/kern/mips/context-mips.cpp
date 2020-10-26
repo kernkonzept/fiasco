@@ -48,15 +48,17 @@ Context::switch_cpu(Context *t)
   Proc::set_ulr(t->_ulr);
 
     {
-      Mword register _current asm("$5") = (Mword)this; // a1 = this
-      Mword register _to asm("$4") = (Mword)t;         // a0 = t
+      Mword register _old_this asm("$5") = (Mword)this;        // a1
+      Mword register _new_this asm("$4") = (Mword)t;           // a0
+      Mword register _old_sp asm("$6") = (Mword)&_kernel_sp;   // a2
+      Mword register _new_sp asm("$7") = (Mword)t->_kernel_sp; // a3
 
       __asm__ __volatile__ (
           ".set push                                  \n"
           ".set noreorder                             \n"
           ".set noat                                  \n"
           "  " ASM_ADDIU " $29, $29, -(%[rsz] * 6)    \n"
-          "  " ASM_S     " $29, %[old_sp]             \n" // save old sp
+          "  " ASM_S     " $29, (%[old_sp])           \n" // save old sp
           "  " ASM_S     " $28, (%[rsz] * 4)($29)     \n"
           "  " ASM_S     " $30, (%[rsz] * 5)($29)     \n"
           "  " ASM_LA    " $31, 1f                    \n"
@@ -70,10 +72,11 @@ Context::switch_cpu(Context *t)
           "  " ASM_L " $30, (%[rsz] * 5)($29)         \n"
           "  " ASM_ADDIU " $29, $29, (%[rsz] * 6)     \n"
           ".set pop                                   \n"
-          : [old_sp] "=m" (_kernel_sp)
-          : [current] "r" (_current), [to] "r" (_to),
-            [new_sp] "r" (t->_kernel_sp),
-            [rsz]"i"(ASM_WORD_BYTES)
+          : [old_sp]   "+r" (_old_sp),
+            [new_sp]   "+r" (_new_sp),
+            [old_this] "+r" (_old_this),
+            [new_this] "+r" (_new_this)
+          : [rsz]"i"(ASM_WORD_BYTES)
           : "$2",  "$3",  "$8",  "$9",  "$10", "$11", "$12",
             "$13", "$14", "$15", "$16", "$17", "$18", "$19", "$20", "$21",
             "$22", "$23", "$24", "$25", "$31", "memory"
