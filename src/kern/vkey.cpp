@@ -69,6 +69,17 @@ IMPLEMENTATION [serial && !ux]:
 static Vkey::Echo_type vkey_echo;
 static char     vkey_buffer[256];
 static unsigned vkey_tail, vkey_head;
+static bool     enable_rcv = false;
+
+PUBLIC static
+void
+Vkey::enable_receive()
+{ enable_rcv = true; }
+
+PUBLIC static
+bool
+Vkey::receive_enabled()
+{ return enable_rcv; }
 
 PUBLIC static
 void
@@ -220,6 +231,16 @@ Vkey::clear()
 IMPLEMENTATION [!serial || ux]:
 
 #include "kernel_console.h"
+
+PUBLIC static inline
+void
+Vkey::enable_receive()
+{}
+
+PUBLIC static inline
+bool
+Vkey::receive_enabled()
+{ return false; }
 
 PUBLIC static inline
 void

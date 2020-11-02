@@ -174,6 +174,7 @@ Kernel_uart::enable_rcv_irq()
     {
       uart_irq.unmask();
       uart()->enable_rcv_irq();
+      Vkey::enable_receive();
     }
 }
 

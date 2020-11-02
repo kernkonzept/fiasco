@@ -12,16 +12,9 @@ public:
     Sys_cpu, ///< Hit only on the CPU that manages the system time
     App_cpu, ///< Hit only on application CPUs
   };
+
   /// Create a timer IRQ object
-  explicit Timer_tick(Mode mode)
-  {
-    switch (mode)
-      {
-      case Any_cpu: set_hit(&handler_all); break;
-      case Sys_cpu: set_hit(&handler_sys_time); break;
-      case App_cpu: set_hit(&handler_app); break;
-      }
-  }
+  explicit Timer_tick(Mode mode);
 
   static void setup(Cpu_number cpu);
   static void enable(Cpu_number cpu);
@@ -60,6 +53,20 @@ IMPLEMENTATION:
 #include "kdb_ke.h"
 #include "kernel_console.h"
 #include "vkey.h"
+
+IMPLEMENT
+Timer_tick::Timer_tick(Mode mode)
+{
+  switch (mode)
+    {
+    case Any_cpu: set_hit(&handler_all); break;
+    case Sys_cpu: set_hit(&handler_sys_time); break;
+    case App_cpu: set_hit(&handler_app); break;
+    }
+
+  if (Config::esc_hack || (Config::serial_esc == Config::SERIAL_ESC_NOIRQ))
+    Vkey::enable_receive();
+}
 
 PRIVATE static inline NEEDS["thread.h", "timer.h", "kdb_ke.h",
                             "kernel_console.h", "vkey.h"]

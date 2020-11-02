@@ -178,7 +178,12 @@ Vlog::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,
   L4_msg_tag const t = f->tag();
 
   if (t.proto() == L4_msg_tag::Label_irq)
-    return Icu_h<Vlog>::icu_invoke(ref, rights, f, r_msg, s_msg);
+    {
+      if (r_msg->values[0] == Op_bind && !Vkey::receive_enabled())
+        WARN("Without -esc / -serial_esc, Vlog will not generate input events!\n");
+
+      return Icu_h<Vlog>::icu_invoke(ref, rights, f, r_msg, s_msg);
+    }
   else if (t.proto() != L4_msg_tag::Label_log)
     return commit_result(-L4_err::EBadproto);
 
