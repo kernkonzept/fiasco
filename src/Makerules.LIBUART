@@ -19,3 +19,9 @@ $(LIBUART): FORCE | $(dir $(LIBUART))
 
 $(dir $(LIBUART)):
 	@mkdir -p $@
+
+clean-LIBUART:
+	$(RM) uart/*.o
+
+cleanall-LIBUART:
+	$(RM) uart/.*.d

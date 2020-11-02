@@ -8,3 +8,5 @@ $(JDB): $(OBJ_JDB) .$(JDB).deps
 	$(VERBOSE)echo $(OBJ_JDB) > $@.new
 	$(VERBOSE)$(MOVE_IF_CHANGE) $@.new $@ || true
 
+cleanall-JDB:
+	$(RM) .$(JDB).deps
