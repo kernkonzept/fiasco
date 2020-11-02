@@ -89,10 +89,13 @@ Kernel_thread::bootstrap()
   Per_cpu_data::run_late_ctors(Cpu::invalid());
   bootstrap_arch();
 
+  // Needs to be done before the timer is enabled. Otherwise after returning
+  // from printf() there could be a burst of timer interrupts distorting the
+  // timer loop calibration. The measurement intervals would be far too short.
+  printf("Calibrating timer loop... ");
   Timer_tick::enable(current_cpu());
   Proc::sti();
   Watchdog::enable();
-  printf("Calibrating timer loop... ");
   // Init delay loop, needs working timer interrupt
   Delay::init();
   printf("done.\n");
