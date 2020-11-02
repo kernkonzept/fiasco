@@ -138,6 +138,7 @@ while ($_=<IN>) {
 	print OUT "	default \"$pfs{$i}{name}\" if PF_$i\n";
       }
     }
+    print OUT "\n";
   }
   if (/$tag PF_CHOICE\W/x) {
     foreach my $i (sort keys %pfs) {
