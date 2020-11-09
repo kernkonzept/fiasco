@@ -129,8 +129,6 @@ Mem_space::make_current()
       "isb                          \n"
       "mcr p15, 0, %2, c7, c5, 6    \n" // bt flush
       "isb                          \n"
-      "mov r1, r1                   \n"
-      "sub pc, pc, #4               \n"
       :
       : "r" (Phys_mem_addr::val(_dir_phys) | Page::Ttbr_bits), "r"(asid()), "r" (0)
       : "r1");
@@ -151,8 +149,6 @@ Mem_space::make_current()
       "isb                          \n"
       "mcr p15, 0, %2, c7, c5, 6    \n" // bt flush
       "isb                          \n"
-      "mov r1, r1                   \n"
-      "sub pc, pc, #4               \n"
       :
       : "r" (Phys_mem_addr::val(_dir_phys)), "r"(asid() << 16), "r" (0)
       : "r1");
@@ -174,8 +170,6 @@ Mem_space::make_current()
       "isb                          \n"
       "mcr p15, 0, %2, c7, c5, 6    \n" // bt flush
       "isb                          \n"
-      "mov r1, r1                   \n"
-      "sub pc, pc, #4               \n"
       :
       : "r" (Phys_mem_addr::val(_dir_phys)), "r"(asid() << 16), "r" (0)
       : "r1");
