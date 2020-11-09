@@ -30,6 +30,9 @@ public:
 
     GICR_TYPER_VLPIS  = 1 << 1,
     GICR_TYPER_Last   = 1 << 4,
+
+    GICR_WAKER_Processor_sleep = 1 << 1,
+    GICR_WAKER_Children_asleep = 1 << 2,
   };
 
 };
@@ -39,6 +42,7 @@ IMPLEMENTATION:
 
 #include "cpu.h"
 #include "panic.h"
+#include "poll_timeout_counter.h"
 #include <cstdio>
 
 PUBLIC
@@ -83,6 +87,20 @@ PUBLIC
 void
 Gic_redist::cpu_init()
 {
+  unsigned val = _redist.read<Unsigned32>(GICR_WAKER);
+  if (val & GICR_WAKER_Children_asleep)
+    {
+      val &= ~GICR_WAKER_Processor_sleep;
+      _redist.write<Unsigned32>(val, GICR_WAKER);
+
+      L4::Poll_timeout_counter i(5000000);
+      while (i.test(_redist.read<Unsigned32>(GICR_WAKER) & GICR_WAKER_Children_asleep))
+        Proc::pause();
+
+      if (i.timed_out())
+        panic("GIC: redistributor did not awake\n");
+    }
+
   _redist.write<Unsigned32>(0xffffffff, GICR_ICENABLER0);
 
   _redist.write<Unsigned32>(0x0000001e, GICR_ISENABLER0);
