@@ -598,7 +598,9 @@ Intel::Io_mmu::init(Cpu_number cpu)
     return false;
 
   dmar_flags = d->flags;
-  hw_addr_width = d->haw;
+  // the value reported in the DMA remapping reporting structure is N but the
+  // host address width has to be computed as (N + 1)
+  hw_addr_width = d->haw + 1;
 
   // first count the units
   unsigned units = 0;
