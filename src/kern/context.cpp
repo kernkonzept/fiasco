@@ -313,7 +313,6 @@ protected:
   Context_space_ref _space;
 
 private:
-  Context *_donatee;
   Context *_helper;
 
   // Lock state
@@ -934,25 +933,6 @@ Context::set_helper(Helping_mode const mode)
     }
 }
 
-/** Donatee.  Context that receives our time slices, for example
-    because it has locked us.
-    @return context that should be activated instead of us when we're
-            switch_exec()'ed.
-*/
-PUBLIC inline
-Context *
-Context::donatee() const
-{
-  return _donatee;
-}
-
-PUBLIC inline
-void
-Context::set_donatee(Context * const donatee)
-{
-  _donatee = donatee;
-}
-
 PUBLIC inline
 void
 Context::set_kernel_sp(Mword * const esp)
@@ -1047,39 +1027,6 @@ Context::deblock_and_schedule(Context *to)
 
 
 /**
- * Switch execution context while not running under CPU lock.
- */
-
-PRIVATE inline
-Context *
-Context::handle_helping(Context *t)
-{
-  // XXX: maybe we do not need this on MP, because we have no helping there
-  assert (current() == this);
-  // Time-slice lending: if t is locked, switch to its locker
-  // instead, this is transitive
-  while (t->donatee() &&		// target thread locked
-         t->donatee() != t)		// not by itself
-    {
-      // Special case for Thread::kill(): If the locker is
-      // current(), switch to the locked thread to allow it to
-      // release other locks.  Do this only when the target thread
-      // actually owns locks.
-      if (t->donatee() == this)
-        {
-          if (t->lock_cnt() > 0)
-            break;
-
-          return this;
-        }
-
-      t = t->donatee();
-    }
-  return t;
-}
-
-
-/**
  * Switch to a specific different execution context.
  *        If that context is currently locked, switch to its locker instead
  *        (except if current() is the locker)
@@ -1105,9 +1052,6 @@ Context::switch_exec_locked(Context *t, enum Helping_mode mode)
   // Time-slice lending: if t is locked, switch to its locker
   // instead, this is transitive
   //
-  Context *ret = handle_helping(t);
-  assert(ret == t);
-  (void)ret;
 
   if (EXPECT_FALSE(t->running_on_different_cpu()))
     {

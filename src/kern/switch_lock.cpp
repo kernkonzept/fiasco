@@ -405,8 +405,7 @@ Switch_lock::switch_dirty(Lock_context const &c)
 
   if (!need_sched)
     need_sched = (   curr->lock_cnt() == 0
-                  && (   curr->home_cpu() != current_cpu()
-                      || curr->donatee()));
+                  && curr->home_cpu() != current_cpu());
 
   if (EXPECT_FALSE(need_sched))
     schedule(curr);

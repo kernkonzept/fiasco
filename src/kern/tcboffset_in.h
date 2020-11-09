@@ -1,6 +1,5 @@
   DUMP_MEMBER1 (THREAD, Context, _state,		STATE)
   DUMP_MEMBER1 (THREAD, Context, _kernel_sp,		KERNEL_SP)
-  DUMP_MEMBER1 (THREAD, Context, _donatee,		DONATEE)
   DUMP_MEMBER1 (THREAD, Context, _lock_cnt,		LOCK_CNT)
   DUMP_MEMBER1 (THREAD, Context, _sched_context,	SCHED_CONTEXT)
   DUMP_MEMBER1 (THREAD, Context, _sched,		SCHED)
