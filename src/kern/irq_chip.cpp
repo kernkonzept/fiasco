@@ -161,9 +161,6 @@ public:
 
   void set_cpu(Cpu_number cpu) { _chip->set_cpu(_pin, cpu); }
 
-  unsigned get_mode() const
-  { return _flags & 0xe; }
-
   bool masked() const { return !(_flags & F_enabled); }
   Mword flags() const { return _flags; }
 
