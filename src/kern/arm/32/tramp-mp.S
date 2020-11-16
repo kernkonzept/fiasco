@@ -21,48 +21,50 @@
 	.section .mp_tramp, "awx"
 	.p2align 12
 
-#ifdef CONFIG_ARM_V7
-cache_invalidate_v7:
-	// B2.2.7
-	mrc     p15, 1, r0, c0, c0, 1
-	ands    r3, r0, #0x07000000
-	mov     r3, r3, lsr #23
+#if defined(CONFIG_ARM_V7) && !defined(CONFIG_ARM_PSCI)
+/* Similar to B2.2.7 but only consider L1 and use DCISW instead of DCCSW.
+ * Must be executed _before_ the cache is enabled!
+ *
+ * We would like to be able to invalidate all levels of non-shared caches.
+ * Unfortunately there is no information available regarding the layout of
+ * shared / non-shared caches in the system. As only non-PSCI platforms need to
+ * be considered (PSCI CPU_ON performs invalidation of caches on boot), assume
+ * that these only have L1 cache or they use bsp_early_init to perform further
+ * initialization.
+ */
+cache_invalidate_l1_v7:
+	mrc     p15, 1, r0, c0, c0, 1   @ read CLIDR
+	tst     r0, #0x07000000         @ CLIDR.LoC == 0?
 	beq     finished
-	mov     r10, #0
-loop1:
-	add     r2, r10, r10, lsr #1
-	mov     r1, r0, lsr r2
-	and     r1, r1, #7
+	and     r1, r0, #7              @ CLIDR.ctype0
 	cmp     r1, #2
-	blt     skip
-	mcr     p15, 2, r10, c0, c0, 0
+	blt     skip                    @ skip on no cache or I cache only
+	mov     r0, #0
+	mcr     p15, 2, r0, c0, c0, 0   @ CSSELR = 0 (L1)
 	isb
-	mrc     p15, 1, r1, c0, c0, 0
-	and     r2, r1, #7
+	mrc     p15, 1, r1, c0, c0, 0   @ read CCSIDR
+	and     r2, r1, #7              @ CCSIDR.LineSize
 	add     r2, r2, #4
 	movw    r4, #0x3ff
-	ands    r4, r4, r1, lsr #3
+	ands    r4, r4, r1, lsr #3      @ CCSIDR.Associativity
 	clz     r5, r4
 	mov     r9, r4
-loop2:
+loop1:
 	movw    r7, #0x7fff
-	ands    r7, r7, r1, lsr #13
-loop3:
-	orr     r11, r10, r9, lsl r5
+	ands    r7, r7, r1, lsr #13     @ CCSIDR.NumSets
+loop2:
+	orr     r11, r0, r9, lsl r5
 	orr     r11, r11, r7, lsl r2
-	mcr     p15, 0, r11, c7, c6, 2
+	mcr     p15, 0, r11, c7, c6, 2  @ DCISW
 	subs    r7, r7, #1
-	bge     loop3
-	subs    r9, r9, #1
 	bge     loop2
+	subs    r9, r9, #1
+	bge     loop1
 skip:
-	add     r10, r10, #2
-	cmp     r3, r10
-	bgt     loop1
 	dsb
 finished:
 	mov     r0, #0
-	mcr     p15, 2, r0, c0, c0, 0
+	mcr     p15, 2, r0, c0, c0, 0   @ reset CSSELR
 	dsb
 	isb
 	mov     pc, lr
@@ -108,8 +110,8 @@ _tramp_mp_entry:
 
 #endif
 
-#ifdef CONFIG_ARM_V7
-	bl    cache_invalidate_v7
+#if defined(CONFIG_ARM_V7) && !defined(CONFIG_ARM_PSCI)
+	bl    cache_invalidate_l1_v7
 #endif
 
 	mcr   p15, 0, r0, c7, c5, 0 // ICIALLU
