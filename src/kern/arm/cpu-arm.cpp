@@ -672,16 +672,23 @@ void
 Cpu::print_infos() const
 {}
 
+PUBLIC static inline
+void
+Cpu::print_boot_infos()
+{}
+
 // ------------------------------------------------------------------------
 IMPLEMENTATION [debug && arm_v6plus]:
 
-PRIVATE
+PUBLIC
 void
-Cpu::id_print_infos() const
+Cpu::print_infos() const
 {
-  printf("ID_PFR[01]:  %08lx %08lx", _cpu_id._pfr[0], _cpu_id._pfr[1]);
-  printf(" ID_[DA]FR0: %08lx %08lx\n", _cpu_id._dfr0, _cpu_id._afr0);
-  printf("ID_MMFR[04]: %08lx %08lx %08lx %08lx\n",
+  int n = cxx::int_value<Cpu_number>(current_cpu());
+  printf("CPU%u: ID_PFR[01]:  %08lx %08lx ID_[DA]FR0: %08lx %08lx\n"
+         "%*s ID_MMFR[04]: %08lx %08lx %08lx %08lx\n",
+         n, _cpu_id._pfr[0], _cpu_id._pfr[1], _cpu_id._dfr0, _cpu_id._afr0,
+         n > 9 ? 6 : 5, "",
          _cpu_id._mmfr[0], _cpu_id._mmfr[1], _cpu_id._mmfr[2], _cpu_id._mmfr[3]);
 }
 
@@ -690,19 +697,17 @@ IMPLEMENTATION [debug && !arm_v6plus]:
 
 PRIVATE
 void
-Cpu::id_print_infos() const
-{
-}
+Cpu::print_infos() const
+{}
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [debug]:
 
-PUBLIC
+PUBLIC static
 void
-Cpu::print_infos() const
+Cpu::print_boot_infos()
 {
   printf("Cache config: %s\n", Config::Cache_enabled ? "ON" : "OFF");
-  id_print_infos();
 }
 
 // ------------------------------------------------------------------------

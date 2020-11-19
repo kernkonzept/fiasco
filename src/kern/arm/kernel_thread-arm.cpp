@@ -1,6 +1,7 @@
 IMPLEMENTATION [arm]:
 
 #include "config.h"
+#include "cpu.h"
 #include "mem_space.h"
 
 IMPLEMENT_OVERRIDE inline NEEDS["mem_space.h"]
@@ -20,6 +21,7 @@ void
 Kernel_thread::bootstrap_arch()
 {
   Proc::sti();
+  Cpu::print_boot_infos();
   boot_app_cpus();
   Proc::cli();
 }
