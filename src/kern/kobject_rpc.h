@@ -84,7 +84,7 @@ OBJ *deref_next(L4_msg_tag *tag, Utcb const *utcb,
                 L4_snd_item_iter &snd_items, Space *space,
                 Rights *rights)
 {
-  if (!snd_items.next() || snd_items.get()->b.is_void())
+  if (!snd_items.more() || !snd_items.next() || snd_items.get()->b.is_void())
     {
       *tag = commit_result(-L4_err::EInval);
       return 0;
