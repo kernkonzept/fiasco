@@ -347,7 +347,8 @@ config IA32_PCID
 	  or user/kernel switches with kernel page table isolation.
 
 config CPU_LOCAL_MAP
-	bool "Enable CPU local page-tables for kernel mappings" if AMD64 && !KERNEL_ISOLATION
+	bool "Enable CPU local page-tables for kernel mappings" if AMD64 \
+		&& !KERNEL_ISOLATION && EXPERIMENTAL
 	depends on AMD64
 	help
 	  Enable to use per CPU page directories to allow CPU-local
