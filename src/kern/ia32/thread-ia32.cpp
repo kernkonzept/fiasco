@@ -215,6 +215,9 @@ Thread::handle_slow_trap(Trap_state *ts)
       goto generic_debug;
     }
 
+  if (EXPECT_FALSE(ts->_trapno == 2))
+    goto generic_debug;        // NMI always enters kernel debugger
+
   if (from_user && _space.user_mode())
     {
       if (ts->_trapno == 14 && Kmem::is_io_bitmap_page_fault(ts->_cr2))
@@ -251,9 +254,6 @@ Thread::handle_slow_trap(Trap_state *ts)
 
       goto generic_debug;      // we were in kernel mode -- nothing to emulate
     }
-
-  if (EXPECT_FALSE(ts->_trapno == 2))
-    goto generic_debug;        // NMI always enters kernel debugger
 
   if (EXPECT_FALSE(ts->_trapno == 0xffffffff))
     goto generic_debug;        // debugger interrupt
