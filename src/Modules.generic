@@ -1,5 +1,9 @@
 # -*- makefile -*-
 # vi:se ft=make:
+
+# Include for unit tests, enable by including UTEST in SUBSYSTEMS.
+include $(srcdir)/test/utest/Modules.utest
+
 PREPROCESS_PARTS-$(CONFIG_JDB_LOGGING)       += jdb_logging
 
 INTERFACES_KERNEL	:= cpu_mask rcupdate kobject_mapdb context_base pm \

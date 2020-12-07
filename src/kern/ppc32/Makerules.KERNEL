@@ -17,16 +17,24 @@ phys_mem.o: $(TCBOFFSET)
 
 -include .kernel.ppc32.lds.d
 
-$(KERNEL).debug: kernel.ppc32.lds $(CRT0) $(OBJ_KERNEL) $(LIBK) $(LIBDISASM) libdrivers.a $(ABI) $(LIBUART) $(CXXLIB) $(MINILIBC) libgluedriverslibc.a 
-	$(LINK_MESSAGE)
-	$(VERBOSE)$(LD) $(LDFLAGS) -m $(LD_EMULATION) -N -T $< -o $@ $(filter-out $<,$+) $(LIBGCC)
-	$(call ADD_CONFIGFILE,$@)
+# $(1) = fiasco - variable
+# $(2) = fiasco.debug - variable
+# $(3) = Additional $(OBJ_X), e.g. OBJ_<unittest>
+define gen_kernel_rules =
+$(2): kernel.ppc32.lds $$(CRT0) $$(OBJ_KERNEL) $(3) $$(LIBK) $$(LIBDISASM) libdrivers.a $$(ABI) $$(LIBUART) $$(CXXLIB) $$(MINILIBC) libgluedriverslibc.a
+	$$(LINK_MESSAGE)
+	$$(VERBOSE)$$(LD) $$(LDFLAGS) -m $$(LD_EMULATION) -N -T $$< -o $$@ $$(filter-out $$<,$$+) $$(LIBGCC)
+	$$(call ADD_CONFIGFILE,$$@)
 
-$(KERNEL): $(KERNEL).debug
-	$(LINK_MESSAGE)
-	$(VERBOSE)$(STRIP) $< -o $@
-	$(VERBOSE)$(OBJCOPY) --add-gnu-debuglink=$< $@
-	$(VERBOSE)chmod 755 $@
+$(1): $(2)
+	$$(LINK_MESSAGE)
+	$$(VERBOSE)$$(STRIP) $$< -o $$@
+	$$(VERBOSE)$$(OBJCOPY) --add-gnu-debuglink=$$< $$@
+	$$(VERBOSE)chmod 755 $$@
+endef
+
+# generate $(KERNEL) rule
+$(eval $(call gen_kernel_rules,$(KERNEL),$(KERNEL).debug,))
 
 Symbols: $(KERNEL).debug
 	$(COMP_MESSAGE)

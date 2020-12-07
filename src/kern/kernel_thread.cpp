@@ -45,6 +45,12 @@ IMPLEMENTATION:
 #include "watchdog.h"
 
 
+/**
+ * unit test interface
+ */
+void
+init_unittest() __attribute__((weak));
+
 PUBLIC explicit
 Kernel_thread::Kernel_thread(Ram_quota *q)
 : Thread_object(q, Thread::Kernel)
@@ -120,7 +126,10 @@ Kernel_thread::run()
   Rcu::leave_idle(home_cpu());
   // init_workload cannot be an initcall, because it fires up the userland
   // applications which then have access to initcall frames as per kinfo page.
-  init_workload();
+  if (init_unittest)
+    init_unittest();
+  else
+    init_workload();
 
   for (;;)
     idle_op();

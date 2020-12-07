@@ -469,6 +469,11 @@ config SERIAL
 	help
 	  This option enables support for input/output over serial interface.
 
+config UNIT_TEST
+	bool "Compile unit tests"
+	help
+	  Compile fiasco unit tests.
+
 menuconfig JDB
 	bool "JDB kernel debugger"
 	default y

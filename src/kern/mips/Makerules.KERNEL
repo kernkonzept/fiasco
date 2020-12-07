@@ -8,18 +8,26 @@ exception.o: $(TCBOFFSET)
 
 -include .kernel.mips.lds.d
 
-$(KERNEL).debug: kernel.mips.lds $(CRT0) $(OBJ_KERNEL) $(JDB) $(MINILIBC) $(KERNEL_EXTRA_LIBS) $(LIBDISASM) $(ABI) $(LIBK) libdrivers.a $(LIBUART) $(CXXLIB) $(MINILIBC) libgluedriverslibc.a
-	$(LINK_MESSAGE)
-	$(VERBOSE)$(LD) $(LDFLAGS) -m $(LD_EMULATION) -N -defsym kernel_load_addr=$(CONFIG_KERNEL_LOAD_ADDR) \
-	  $(KERNEL_LDFLAGS) \
-          -T $< -o $@ $(filter-out $<,$+)
-	$(call ADD_CONFIGFILE,$@)
+# $(1) = fiasco - variable
+# $(2) = fiasco.debug - variable
+# $(3) = Additional $(OBJ_X), e.g. OBJ_<unittest>
+define gen_kernel_rules =
+$(2): kernel.mips.lds $$(CRT0) $$(OBJ_KERNEL) $(3) $$(JDB) $$(MINILIBC) $$(KERNEL_EXTRA_LIBS) $$(LIBDISASM) $$(ABI) $$(LIBK) libdrivers.a $$(LIBUART) $$(CXXLIB) $$(MINILIBC) libgluedriverslibc.a
+	$$(LINK_MESSAGE)
+	$$(VERBOSE)$$(LD) $$(LDFLAGS) -m $$(LD_EMULATION) -N -defsym kernel_load_addr=$$(CONFIG_KERNEL_LOAD_ADDR) \
+	  $$(KERNEL_LDFLAGS) \
+          -T $$< -o $$@ $$(filter-out $$<,$$+)
+	$$(call ADD_CONFIGFILE,$$@)
 
-$(KERNEL): $(KERNEL).debug
-	$(LINK_MESSAGE)
-	$(VERBOSE)$(STRIP) $< -o $@
-	$(VERBOSE)$(OBJCOPY) --add-gnu-debuglink=$< $@
-	$(VERBOSE)chmod 755 $@
+$(1): $(2)
+	$$(LINK_MESSAGE)
+	$$(VERBOSE)$$(STRIP) $$< -o $$@
+	$$(VERBOSE)$$(OBJCOPY) --add-gnu-debuglink=$$< $$@
+	$$(VERBOSE)chmod 755 $$@
+endef
+
+# generate $(KERNEL) rule
+$(eval $(call gen_kernel_rules,$(KERNEL),$(KERNEL).debug,))
 
 Symbols: $(KERNEL).debug
 	$(COMP_MESSAGE)

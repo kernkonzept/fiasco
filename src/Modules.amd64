@@ -6,6 +6,11 @@ include $(srcdir)/Modules.generic
 SUBSYSTEMS = JABI ABI DRIVERS KERNEL CRT0 BOOT LIBK \
 	     CHECKSUM CXXLIB MINILIBC TCBOFFSET SYMBOLS VERSION GBLCFG
 
+ifeq ($(CONFIG_UNIT_TEST),y)
+	# UTEST depends on KERNEL and CHECKSUM, must be listed after them
+	SUBSYSTEMS += UTEST
+endif
+
 PREPROCESS_PARTS 	+= arch $(CONFIG_ABI) 64bit iofp \
 			   $(CONFIG_XARCH) i8259 pc i8254 fpu \
 			   auto_map_kip io realmode libuart
@@ -273,7 +278,7 @@ SYMBOLS			:= Symbols
 #
 # CHECKSUM subsystem
 #
-CHECKSUM		:= checksum
+CHECKSUM		:= checksum_subsys
 CXXSRC_CHECKSUM		:= genchecksum.cc
 
 #
@@ -420,6 +425,6 @@ endif
 
 endif
 
-MODULES_FILES = $(MODULES_FILE) $(MODULES_FILE_BSP)
+MODULES_FILES += $(MODULES_FILE) $(MODULES_FILE_BSP)
 
 INTERFACES_KERNEL       += $(INTERFACES_KERNEL-y)

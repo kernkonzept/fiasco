@@ -1,0 +1,34 @@
+# -*- makefile -*-
+# vi:se ft=make:
+
+# Makerules for all unit test targets.
+#
+# Each unit test comes in its own kernel binary. Everything is preprocessed and
+# compiled together. The linker stage adds the object file of the unit test to
+# the link rule.
+
+# select all test_* files to genererate a build target for each.
+UTEST_TESTS = $(filter test_%,$(INTERFACES_UTEST))
+
+# select the utest framework files to add to each test build target.
+UTEST_FRAMEWORK = $(filter utest_fw%,$(OBJ_UTEST))
+
+# default target for the UTEST subsystem, add all test binaries as prerequisites.
+utest: $(UTEST_TESTS)
+
+# generate link rules for each unit test binary.
+$(foreach tname,$(UTEST_TESTS),\
+	$(eval $(call gen_kernel_rules,\
+		$(tname),\
+		$(tname).debug,\
+		$$(UTEST_FRAMEWORK) $$(filter $(tname)%,$$(OBJ_UTEST)))))
+
+# generate checksum rules for each unit test binary.
+ifneq ($(filter CHECKSUM,$(SUBSYSTEMS)),)
+$(foreach tname,$(UTEST_TESTS),\
+	$(eval $(call all_checksum_rules,\
+		$(tname),$(tname).debug,-$(tname))))
+endif
+
+clean-UTEST:
+	rm -rf $(OBJ_UTEST)
