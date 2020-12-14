@@ -174,6 +174,12 @@ protected:
       this->_bits[i] |= r._bits[i];
   }
 
+  void _and(Bitmap_base const &r)
+  {
+    for (unsigned i = 0; i < Nr_elems; ++i)
+      this->_bits[i] &= r._bits[i];
+  }
+
   template<unsigned SOURCE_BITS>
   void _copy(Bitmap_base<true, SOURCE_BITS> const &s)
   {
@@ -289,6 +295,11 @@ protected:
     _bits |= r._bits;
   }
 
+  void _and(Bitmap_base const &r)
+  {
+    _bits &= r._bits;
+  }
+
   void _copy(Bitmap_base const &s)
   { _bits = s._bits; }
 
@@ -334,6 +345,12 @@ public:
   Bitmap &operator |= (Bitmap const &o)
   {
     this->_or(o);
+    return *this;
+  }
+
+  Bitmap &operator &= (Bitmap const &o)
+  {
+    this->_and(o);
     return *this;
   }
 };
