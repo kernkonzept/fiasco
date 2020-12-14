@@ -139,7 +139,8 @@ public:
   void atomic_or(Bitmap_base const &r)
   {
     for (unsigned i = 0; i < Nr_elems; ++i)
-      atomic_mp_or(&this->_bits[i], r._bits[i]);
+      if (r._bits[i])
+        atomic_mp_or(&this->_bits[i], r._bits[i]);
   }
 
   unsigned ffs(unsigned bit) const
@@ -263,7 +264,8 @@ public:
 
   void atomic_or(Bitmap_base const &r)
   {
-    atomic_mp_or(&_bits, r._bits);
+    if (r._bits)
+      atomic_mp_or(&_bits, r._bits);
   }
 
   unsigned ffs(unsigned bit) const
