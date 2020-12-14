@@ -42,6 +42,9 @@ public:
   bool atomic_get_and_clear(Cpu_number cpu)
   { return _b.atomic_get_and_clear(cxx::int_value<Cpu_number>(cpu)); }
 
+  void atomic_or(Cpu_mask_t const &v)
+  { _b.atomic_or(v._b); }
+
 private:
   template<unsigned B> friend class Cpu_mask_t;
   Bitmap<Max_num_cpus> _b;
