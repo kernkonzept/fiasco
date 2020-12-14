@@ -10,6 +10,7 @@ class Cpu_mask_t
 public:
   enum { Max_num_cpus = MAX_NUM_CPUS };
   enum class Init { Bss };
+
   Cpu_mask_t(Init) {}
   Cpu_mask_t() { _b.clear_all(); }
 
@@ -24,6 +25,7 @@ public:
   }
 
   bool empty() const { return _b.is_empty(); }
+
   bool get(Cpu_number cpu) const
   { return _b[cxx::int_value<Cpu_number>(cpu)]; }
 
@@ -32,6 +34,18 @@ public:
 
   void set(Cpu_number cpu)
   { _b.set_bit(cxx::int_value<Cpu_number>(cpu)); };
+
+  Cpu_mask_t &operator |= (Cpu_mask_t const &o)
+  {
+    _b |= o._b;
+    return *this;
+  }
+
+  Cpu_mask_t &operator &= (Cpu_mask_t const &o)
+  {
+    _b &= o._b;
+    return *this;
+  }
 
   void atomic_set(Cpu_number cpu)
   { _b.atomic_set_bit(cxx::int_value<Cpu_number>(cpu)); }
