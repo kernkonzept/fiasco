@@ -290,9 +290,8 @@ static void show_tree(Treemap *pages, Mapping::Pcnt offset = Mapping::Pcnt(0),
 
   Page       page = pages->trunc_to_page(offset);
   Physframe*    f = pages->frame(page);
-  Mapping_tree* t = f->tree.get();
 
-  if (! t)
+  if (!f->has_mappings())
     {
 #if 0
       cout << setbase(10)
@@ -307,9 +306,10 @@ static void show_tree(Treemap *pages, Mapping::Pcnt offset = Mapping::Pcnt(0),
   std::string ind = "";
   std::string tree_ind(indent, ' ');
 
+  Mapping_tree* t = f->tree();
   cout << setbase(10)
-       << "[UTEST] " << tree_ind << "mapping tree: { " << *t->mappings()[0].space()
-       << " va=" << pages->vaddr(t->mappings())
+       << "[UTEST] " << tree_ind << "mapping tree: { " << *f->first_mapping()->space()
+       << " va=" << pages->vaddr(f->first_mapping())
        << " size=" << (Mapdb::Pfn(1) << pages->page_shift()) << endl;
 
   tree_ind = std::string(indent + 2, ' ');
@@ -327,16 +327,16 @@ static void show_tree(Treemap *pages, Mapping::Pcnt offset = Mapping::Pcnt(0),
 
   for (Mapping* m = t->mappings(); m != t->end(); m++)
     {
-      if (m->depth() == Mapping::Depth_empty)
+      if (!m->is_end_tag() && m->unused())
         continue;
 
       cout << "[UTEST] " << tree_ind << (m - t->mappings() +1) << ": ";
 
-      if (m->depth() == Mapping::Depth_submap)
+      if (m->submap())
         cout << "subtree..." << endl;
       else
         {
-          if (m->depth() == Mapping::Depth_end)
+          if (m->is_end_tag())
             {
               cout << "end" << endl;
               break;
@@ -347,14 +347,14 @@ static void show_tree(Treemap *pages, Mapping::Pcnt offset = Mapping::Pcnt(0),
               cout << ind << "va=" << pages->vaddr(m) << " task=" << *m->space()
                    << " depth=";
 
-              if (m->depth() == Mapping::Depth_root)
+              if (m->is_root())
                 cout << "root" << endl;
               else
                 cout << m->depth() << endl;
             }
         }
 
-      if (m->depth() == Mapping::Depth_submap)
+      if (m->submap())
         for (Mapping::Pcnt subo = Mapping::Pcnt(0);
              cxx::mask_lsb(subo,  pages->page_shift()) == Mapping::Pcnt(0);
              subo += (Mapping::Pcnt(1) << m->submap()->page_shift()))
@@ -363,8 +363,8 @@ static void show_tree(Treemap *pages, Mapping::Pcnt offset = Mapping::Pcnt(0),
 
   tree_ind = std::string(indent, ' ');
 
-  cout << "[UTEST] " << tree_ind << "} // mapping tree: " << *t->mappings()[0].space()
-       << " va=" << pages->vaddr(t->mappings()) << endl;
+  cout << "[UTEST] " << tree_ind << "} // mapping tree: " << *f->first_mapping()->space()
+       << " va=" << pages->vaddr(f->first_mapping()) << endl;
 
 }
 

@@ -139,6 +139,13 @@ Mapping::is_end_tag() const
   return depth() == Depth_end;
 }
 
+PUBLIC inline 
+bool
+Mapping::is_root() const
+{
+  return depth() == Depth_root;
+}
+
 PUBLIC inline
 Treemap *
 Mapping::submap() const

@@ -176,12 +176,19 @@ INTERFACE:
 /** Array elements for holding frame-specific data. */
 class Base_mappable
 {
+private:
+  cxx::unique_ptr<Mapping_tree> _tree;
+
 public:
   typedef Mapping_tree::Page Page;
+  typedef Mapping::Pfn Pfn;
+  typedef Mapping::Pcnt Pcnt;
   // DATA
-  cxx::unique_ptr<Mapping_tree> tree;
   typedef ::Lock Lock;
   Lock lock;
+
+  Mapping_tree *tree() const { return _tree.get(); }
+  void erase_tree() { _tree.reset(); }
 }; // struct Physframe
 
 
@@ -414,35 +421,6 @@ Mapping_tree::last()
 }
 
 // A utility function to find the tree header belonging to a mapping. 
-
-/** Our Mapping_tree.
-    @return the Mapping_tree we are in.
- */
-PUBLIC static
-Mapping_tree *
-Mapping_tree::head_of(Mapping *m)
-{
-  while (m->depth() > Mapping::Depth_root)
-    {
-      // jump in bigger steps if this is not a free mapping
-      if (m->depth() <= Mapping::Depth_max)
-        {
-          m -= m->depth();
-          continue;
-        }
-
-      m--;
-    }
-
-  return reinterpret_cast<Mapping_tree *>
-    (reinterpret_cast<char *>(m) - sizeof(Mapping_tree));
-  // We'd rather like to use offsetof as follows, but it's unsupported
-  // for non-POD classes.  So we instead rely on GCC's zero-length
-  // array magic (sizeof(Mapping_tree) is the size of the header
-  // without the array).
-  // return reinterpret_cast<Mapping_tree *>
-  //   (reinterpret_cast<char *>(m) - offsetof(Mapping_tree, _mappings));
-}
 
 /** Next mapping in the mapping tree.
     @param t head of mapping tree, if available
@@ -879,6 +857,10 @@ Mapping_tree::lookup(Space *space, Page page)
   return 0;
 }
 
+PUBLIC inline
+bool
+Base_mappable::has_mappings() const
+{ return _tree != nullptr; }
 
 PUBLIC
 Mapping *
@@ -887,7 +869,7 @@ Base_mappable::lookup(Space *space, Page page)
   // get and lock the tree.
   if (EXPECT_FALSE(lock.lock() == Lock::Invalid))
     return 0;
-  Mapping_tree *t = tree.get();
+  Mapping_tree *t = _tree.get();
   assert (t);
   if (Mapping *m = t->lookup(space, page))
     return m;
@@ -900,7 +882,7 @@ PUBLIC inline
 Mapping *
 Base_mappable::insert(Mapping* parent, Space *space, Page page)
 {
-  Mapping_tree* t = tree.get();
+  Mapping_tree* t = _tree.get();
   if (!t)
     {
       assert (parent == 0);
@@ -914,9 +896,9 @@ Base_mappable::insert(Mapping* parent, Space *space, Page page)
       if (EXPECT_FALSE(!new_tree))
         return 0;
 
-      tree = cxx::move(new_tree);
+      _tree = cxx::move(new_tree);
       q.release();
-      return tree->mappings();
+      return _tree->mappings();
     }
 
   Mapping *free = t->allocate(Mapping_tree::quota(space), parent, false);
@@ -946,7 +928,7 @@ Base_mappable::pack()
   // than 3/4 of the entries are used, compress the tree.  Otherwise,
   // (4) copy to a larger tree.
 
-  Mapping_tree *t = tree.get();
+  Mapping_tree *t = _tree.get();
   bool maybe_out_of_memory = false;
 
   do // (this is not actually a loop, just a block we can "break" out of)
@@ -965,7 +947,7 @@ Base_mappable::pack()
               t = new_t.get();
 
               // Register new tree.
-              tree = cxx::move(new_t);
+              _tree = cxx::move(new_t);
 
               break;
             }
@@ -1006,7 +988,7 @@ Base_mappable::pack()
           t = new_t.get();
 
           // Register new tree. 
-          tree = cxx::move(new_t);
+          _tree = cxx::move(new_t);
         }
       else
         {
@@ -1024,5 +1006,123 @@ Base_mappable::pack()
   (void) maybe_out_of_memory;
 }
 
+PUBLIC inline
+bool
+Base_mappable::init_tree(Page page, Space *owner)
+{
+  if (_tree)
+    return true;
 
+  Auto_quota<Ram_quota> q(Mapping_tree::quota(owner), sizeof(Mapping));
+  if (EXPECT_FALSE(!q))
+    return false;
 
+  cxx::unique_ptr<Mapping_tree> new_tree
+    (new (Mapping_tree::Size_id_min)
+       Mapping_tree(Mapping_tree::Size_id_min, page, owner));
+
+  if (EXPECT_FALSE(!new_tree))
+    return false;
+
+  q.release();
+  _tree = cxx::move(new_tree);
+
+  return true;
+}
+
+PUBLIC inline
+void
+Base_mappable::check_integrity(Space *owner)
+{ _tree->check_integrity(owner); }
+
+/**
+ * Grant the mapping `m` of this mappable to a new destination.
+ */
+PUBLIC template< typename SUBMAP_OPS >
+bool
+Base_mappable::grant(Mapping* m, Space *new_space, Page page,
+                     SUBMAP_OPS &&submap_ops)
+{
+  return _tree->grant(m, new_space, page, cxx::forward<SUBMAP_OPS>(submap_ops));
+}
+
+PUBLIC template< typename SUBMAP_OPS >
+void
+Base_mappable::flush(Pcnt offs_begin, Pcnt offs_end,
+                     SUBMAP_OPS &&submap_ops)
+{
+  _tree->flush(_tree->mappings(), false, offs_begin, offs_end,
+               cxx::forward<SUBMAP_OPS>(submap_ops));
+}
+
+PUBLIC template< typename SUBMAP_OPS >
+void
+Base_mappable::flush(Mapping *parent, bool me_too,
+                     Pcnt offs_begin, Pcnt offs_end,
+                     SUBMAP_OPS &&submap_ops)
+{
+  _tree->flush(parent, me_too, offs_begin, offs_end,
+               cxx::forward<SUBMAP_OPS>(submap_ops));
+}
+
+PUBLIC inline
+unsigned long
+Base_mappable::base_quota_size() const
+{
+  // if we have a tree we have one initial mapping object
+  return !_tree ? 0 : sizeof(Mapping);
+}
+
+PUBLIC inline
+void
+Base_mappable::grant_tree(Space *new_space, Page page)
+{
+  if (!_tree)
+    return;
+
+  auto guard = lock_guard(lock);
+  _tree->mappings()->set_space(new_space);
+  _tree->mappings()->set_page(page);
+}
+
+PUBLIC inline
+Treemap *
+Base_mappable::find_submap(Mapping *parent) const
+{
+  return _tree->find_submap(parent);
+}
+
+PUBLIC inline
+Mapping *
+Base_mappable::alloc_mapping(Ram_quota *q, Mapping *parent,
+                             bool submap)
+{
+  return _tree->allocate(q, parent, submap);
+}
+
+PUBLIC inline
+void
+Base_mappable::free_mapping(Ram_quota *q, Mapping *parent)
+{
+#ifndef NDEBUG
+  ++(_tree->_empty_count);
+#endif
+  return _tree->free_mapping(q, parent);
+}
+
+PUBLIC inline
+Mapping *
+Base_mappable::first_mapping() const
+{
+  return _tree->mappings();
+}
+
+PUBLIC inline
+void
+Base_mappable::release()
+{
+  pack();
+
+  // Unlock tree.
+  lock.clear();
+}

@@ -62,7 +62,7 @@ Jdb_mapdb::show_tree(Treemap* pages, Mapping::Pcnt offset, Mdb_types::Order base
 
   Page       page = pages->trunc_to_page(offset);
   Physframe*    f = pages->frame(page);
-  Mapping_tree* t = f->tree.get();
+  Mapping_tree* t = f->tree();
   unsigned      i;
   int           c;
 
@@ -115,7 +115,7 @@ Jdb_mapdb::show_tree(Treemap* pages, Mapping::Pcnt offset, Mdb_types::Order base
     }
 #endif
 
-  Mapping* m = t->mappings();
+  auto m = t->mappings();
 
   screenline += 2;
 
@@ -125,7 +125,7 @@ Jdb_mapdb::show_tree(Treemap* pages, Mapping::Pcnt offset, Mdb_types::Order base
     {
       Kconsole::console()->getchar_chance();
 
-      if (m->depth() == Mapping::Depth_submap)
+      if (m->submap())
         printf("%*u: %lx  subtree@" L4_PTR_FMT,
                indent + c_depth > 10
                  ? 0 : (int)(indent + c_depth),
@@ -139,14 +139,14 @@ Jdb_mapdb::show_tree(Treemap* pages, Mapping::Pcnt offset, Mdb_types::Order base
                  val(pages->vaddr(m), base_size),
                  Kobject_dbg::pointer_to_id(m->space()));
 
-          if (m->depth() == Mapping::Depth_root)
+          if (m->is_root())
             printf("root");
-          else if (m->depth() == Mapping::Depth_empty)
+          else if (m->unused())
             {
               printf("empty");
               ++empty;
             }
-          else if (m->depth() == Mapping::Depth_end)
+          else if (m->is_end_tag())
             printf("end");
           else
             printf("%u", c_depth);
@@ -155,7 +155,7 @@ Jdb_mapdb::show_tree(Treemap* pages, Mapping::Pcnt offset, Mdb_types::Order base
       puts("\033[K");
       screenline++;
 
-      if (screenline >= (m->depth() == Mapping::Depth_submap
+      if (screenline >= (m->submap()
                          ? Jdb_screen::height() - 3
                          : Jdb_screen::height()))
         {
@@ -169,7 +169,7 @@ Jdb_mapdb::show_tree(Treemap* pages, Mapping::Pcnt offset, Mdb_types::Order base
           Jdb::cursor(3, 1);
         }
 
-      if (m->depth() == Mapping::Depth_submap)
+      if (m->submap())
         {
           if (! Jdb_mapdb::show_tree(m->submap(),
                                      cxx::get_lsb(offset, pages->_page_shift),
@@ -447,7 +447,7 @@ Jdb_mapdb::dump_all_cap_trees()
       s[sizeof(s) - 1] = 0;
       printf("%s", s);
 
-      Mapping_tree *t = f->tree.get();
+      Mapping_tree *t = f->tree();
 
       if (!t)
         {
@@ -455,12 +455,12 @@ Jdb_mapdb::dump_all_cap_trees()
           continue;
         }
 
-      Mapping *m = t->mappings();
+      auto m = t->mappings();
 
       printf(" intask=");
       for (int i = 0; i < t->_count; i++, m++)
         {
-          if (m->depth() == Mapping::Depth_submap)
+          if (m->submap())
             printf("%s[subtree]", i ? "," : "");
           else
             printf("%s[%lx:%d]",
@@ -469,7 +469,7 @@ Jdb_mapdb::dump_all_cap_trees()
         }
       printf("\n");
 
-      if (m->depth() == Mapping::Depth_submap)
+      if (m->submap())
         {
           printf("not good, submap in simple mapping tree\n");
         }
