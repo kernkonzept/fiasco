@@ -182,7 +182,6 @@ kernel_thread_IMPL	:= kernel_thread kernel_thread-std kernel_thread-arm \
 			   kernel_thread-arm-$(BITS)
 kernel_uart_IMPL  	:= kernel_uart kernel_uart-libuart
 map_util_IMPL		:= map_util map_util-mem map_util-objs
-mapping_IMPL		:= mapping-arm mapping
 mem_layout_IMPL		:= mem_layout mem_layout-arm-$(BITS) \
 			   mem_layout-arm mem_layout-noncont
 mem_op_IMPL		:= mem_op mem_op-arm-$(BITS)

@@ -5,14 +5,9 @@ INTERFACE:
 #include "lock.h"
 #include "mapping.h"
 #include "types.h"
-
-#include <unique_ptr.h>
+#include <cxx/hlist>
 
 class Ram_quota;
-
-class Simple_tree_submap_ops
-{
-};
 
 /* The mapping database.
 
@@ -113,117 +108,18 @@ class Simple_tree_submap_ops
  */
 
 
-INTERFACE [!big_endian]:
-//
-// Mapping_tree
-// FIXME: do we need this depending on endianess ?
-class Mapping_tree
+class Mapping_tree : public cxx::H_list<Mapping>
 {
 public:
   typedef Mapping::Page Page;
   typedef Mapping::Pfn Pfn;
   typedef Mapping::Pcnt Pcnt;
 
-  enum Size_id
-  {
-    Size_id_min = 0,
-    Size_id_max = 9		// can be up to 15 (4 bits)
-  };
-  // DATA
-  unsigned _count: 16;		///< Number of live entries in this tree.
-  unsigned _size_id: 4;		///< Tree size -- see number_of_entries().
-  unsigned _empty_count: 11;	///< Number of dead entries in this tree.
-                                //   XXX currently never read, except in
-                                //   sanity checks
-
-  unsigned _unused: 1;		// (make this 32 bits to avoid a compiler bug)
-
-  Mapping _mappings[0];
-
-};
-
-
-INTERFACE [big_endian]:
-//
-// Mapping_tree
-// FIXME: do we need this depending on endianess ?
-class Mapping_tree
-{
-public:
-  typedef Mapping::Page Page;
-  typedef Mapping::Pfn Pfn;
-  typedef Mapping::Pcnt Pcnt;
-
-  enum Size_id
-  {
-    Size_id_min = 0,
-    Size_id_max = 9		// can be up to 15 (4 bits)
-  };
-  // DATA
-  unsigned _unused: 1;		// (make this 32 bits to avoid a compiler bug)
-  unsigned _size_id: 4;		///< Tree size -- see number_of_entries().
-  unsigned _empty_count: 11;	///< Number of dead entries in this tree.
-                                //   XXX currently never read, except in
-                                //   sanity checks
-
-  unsigned _count: 16;		///< Number of live entries in this tree.
-  Mapping _mappings[0];
+private:
+  typedef cxx::H_list<Mapping> Mappings;
 };
 
 INTERFACE:
-
-EXTENSION class Mapping_tree
-{
-public:
-  class Iterator
-  {
-  private:
-    friend class Mapping_tree;
-    Mapping *_m = nullptr;
-    Mapping_tree *_t = nullptr;
-
-    bool _is_valid() const { return (_m != nullptr) && !_m->is_end_tag(); }
-
-  public:
-    Iterator() = default;
-    Iterator(Mapping_tree *t, Mapping *m) : _m(m), _t(t) {}
-
-    bool operator == (Iterator const &o) const
-    {
-      if (_is_valid() && o._is_valid())
-        // we assume the same tree here, per precondition
-        return _m == o._m;
-
-      return _is_valid() == o._is_valid();
-    }
-
-    bool operator != (Iterator const &o) const
-    { return !operator == (o); }
-
-    Iterator &operator ++ ()
-    {
-      for (;;)
-        {
-          ++_m;
-          if (_m == _t->end_ptr() || _m->is_end_tag())
-            {
-              _m = nullptr;
-              return *this;
-            }
-
-          if (!_m->unused())
-            return *this;
-        }
-    }
-
-    Mapping *operator * () const { return _m; }
-    Mapping *operator -> () const { return _m; }
-  };
-
-
-  Iterator begin() { return Iterator(this, _mappings); }
-  Iterator end() { return Iterator(); }
-};
 
 //
 // class Physframe
@@ -233,18 +129,20 @@ public:
 class Base_mappable
 {
 private:
-  cxx::unique_ptr<Mapping_tree> _tree;
+  Mapping_tree _tree;
 
 public:
   typedef Mapping_tree::Page Page;
   typedef Mapping::Pfn Pfn;
   typedef Mapping::Pcnt Pcnt;
   // DATA
+  Mapping_tree *tree() { return &_tree; }
+  Mapping_tree const *tree() const { return &_tree; }
+
   typedef ::Lock Lock;
   Lock lock;
 
-  Mapping_tree *tree() const { return _tree.get(); }
-  void erase_tree() { _tree.reset(); }
+  void erase_tree() { _tree.erase(); }
 }; // struct Physframe
 
 
@@ -266,107 +164,7 @@ IMPLEMENTATION:
 
 // Helpers
 
-PUBLIC inline
-unsigned long
-Simple_tree_submap_ops::mem_size(Treemap const *) const
-{ return 0; }
-
-PUBLIC inline
-void
-Simple_tree_submap_ops::grant(Treemap *, Space *, Page_number) const
-{}
-
-PUBLIC inline
-Space *
-Simple_tree_submap_ops::owner(Treemap const *) const
-{ return 0; }
-
-PUBLIC inline
-bool
-Simple_tree_submap_ops::is_partial(Treemap const *, Page_number, Page_number) const
-{ return false; }
-
-PUBLIC inline
-void
-Simple_tree_submap_ops::del(Treemap *) const
-{}
-
-PUBLIC inline
-void
-Simple_tree_submap_ops::flush(Treemap *, Page_number, Page_number) const
-{}
-
-//
-// Mapping-tree allocators
-//
-
-enum Mapping_tree_size
-{
-  Size_factor = 4,
-  Size_id_max = 9		// can be up to 15 (4 bits)
-};
-
-PUBLIC inline
-Mapping_tree::Size_id
-Mapping_tree::shrink()
-{
-  unsigned sid = _size_id - 1;
-  while (sid > 0 && ((static_cast<unsigned>(_count) << 2) < ((unsigned)Size_factor << sid)))
-    --sid;
-
-  return Size_id(sid);
-}
-
-PUBLIC inline
-Mapping_tree::Size_id
-Mapping_tree::bigger()
-{ return Mapping_tree::Size_id(_size_id + 1); }
-
-template<int SIZE_ID>
-struct Mapping_tree_allocator
-{
-  Kmem_slab a;
-  enum
-  {
-    Elem_size = (Size_factor << SIZE_ID) * sizeof (Mapping)
-                + ((sizeof(Mapping_tree) + Mapping::Alignment - 1)
-                   & ~((unsigned long)Mapping::Alignment - 1))
-  };
-
-  Mapping_tree_allocator(Kmem_slab **array)
-  : a(Elem_size, Mapping::Alignment, "Mapping_tree")
-  { array[SIZE_ID] = &a; }
-};
-
-template<int SIZE_ID_MAX>
-struct Mapping_tree_allocators;
-
-template<>
-struct Mapping_tree_allocators<0>
-{
-  Mapping_tree_allocator<0> a;
-  Mapping_tree_allocators(Kmem_slab **array) : a(array) {}
-};
-
-template<int SIZE_ID_MAX>
-struct Mapping_tree_allocators
-{
-
-  Mapping_tree_allocator<SIZE_ID_MAX> a;
-  Mapping_tree_allocators<SIZE_ID_MAX - 1> n;
-
-  Mapping_tree_allocators(Kmem_slab **array) : a(array), n(array) {}
-};
-
-static Kmem_slab *_allocators[Size_id_max + 1];
-static Mapping_tree_allocators<Size_id_max> _mapping_tree_allocators(_allocators);
-
-static
-Kmem_slab *
-allocator_for_treesize(int size)
-{
-  return _allocators[size];
-}
+static Kmem_slab_t<Mapping> _mapping_allocator("Mapping");
 
 //
 // class Mapping_tree
@@ -381,265 +179,34 @@ Mapping_tree::quota(Space *space)
 }
 
 PUBLIC
-void*
-Mapping_tree::operator new (size_t, Mapping_tree::Size_id size_id) throw()
-{ return allocator_for_treesize(size_id)->alloc(); }
-
-PUBLIC
 void
-Mapping_tree::operator delete (void* block)
+Mapping_tree::erase()
 {
-  if (!block)
-    return;
+  Ram_quota *q = nullptr;
+  for (Iterator d = begin(); *d;)
+    {
+      // space is nullptr if the Mapping references a submap and
+      // in this case trhe predecessor is the parent mapping that
+      // contains the space pointer for this submap, so just use
+      // the quota from the previous iteration.
+      if (d->space())
+        q = quota(d->space());
 
-  // Try to guess right allocator object -- XXX unportable!
-  Mapping_tree* t = static_cast<Mapping_tree*>(block);
+      assert(q);
 
-  t->check_integrity();
-
-  allocator_for_treesize(t->_size_id)->free(block);
+      Mapping *m = *d;
+      d = Mappings::erase(d);
+      _mapping_allocator.q_del(q, m);
+    }
 }
 
-PUBLIC //inline NEEDS[Mapping_depth, Mapping_tree::last]
-Mapping_tree::Mapping_tree(Size_id size_id, Page page,
-                           Space *owner)
-{
-  _count = 1;			// 1 valid mapping
-  _size_id = size_id;   	// size is equal to Size_factor << 0
-#ifndef NDEBUG
-  _empty_count = 0;		// no gaps in tree representation
-#endif
-
-  _mappings[0].set_depth(Mapping::Depth_root);
-  _mappings[0].set_page(page);
-  _mappings[0].set_space(owner);
-
-  _mappings[1].set_depth(Mapping::Depth_end);
-
-  // We also always set the end tag on last entry so that we can
-  // check whether it has been overwritten.
-  last()->set_depth(Mapping::Depth_end);
-}
-
-PUBLIC
+PUBLIC inline
 Mapping_tree::~Mapping_tree()
-{
-  // special case for copied mapping trees
-  for (auto const &m: *this)
-    {
-      if (!m->submap())
-        quota(m->space())->free(sizeof(Mapping));
-    }
-}
+{ erase(); }
 
-PUBLIC //inline NEEDS[Mapping_depth, Mapping_tree::last]
-Mapping_tree::Mapping_tree(Size_id size_id, Mapping_tree* from_tree)
-{
-  _size_id = size_id;
-  last()->set_depth(Mapping::Depth_end);
-
-  copy_compact_tree(this, from_tree);
-}
-
-// public routines with inline implementations
-PUBLIC inline NEEDS[Mapping_tree_size]
-unsigned
-Mapping_tree::number_of_entries() const
-{
-  return Size_factor << (unsigned long)_size_id;
-}
-
-PUBLIC inline
-Mapping *
-Mapping_tree::mappings()
-{
-  return & _mappings[0];
-}
-
-PUBLIC inline
-bool
-Mapping_tree::is_empty() const
-{
-  return _count == 0;
-}
-
-PUBLIC inline NEEDS[Mapping_tree::mappings, Mapping_tree::number_of_entries]
-Mapping *
-Mapping_tree::end_ptr()
-{
-  return mappings() + number_of_entries();
-}
-
-PUBLIC inline NEEDS[Mapping_tree::end_ptr]
-Mapping *
-Mapping_tree::last()
-{
-  return end_ptr() - 1;
-}
-
-// A utility function to find the tree header belonging to a mapping. 
-
-/** Next mapping in the mapping tree.
-    @param t head of mapping tree, if available
-    @return the next mapping in the mapping tree.  If the mapping has
-    children, it is the first child.  Otherwise, if the mapping has a
-    sibling, it's the next sibling.  Otherwise, if the mapping is the
-    last sibling or only child, it's the mapping's parent.
- */
-PUBLIC inline
-Mapping *
-Mapping_tree::next(Mapping *m)
-{
-  for (m++; m < end_ptr() && ! m->is_end_tag(); m++)
-    if (! m->unused())
-      return m;
-
-  return 0;
-}
-
-/** Next child mapping of a given parent mapping.  This
-    function traverses the mapping tree like next(); however, it
-    stops (and returns 0) if the next mapping is outside the subtree
-    starting with parent.
-    @param parent Parent mapping
-    @return the next child mapping of a given parent mapping
- */
-PUBLIC inline NEEDS[Mapping_tree::next]
-Mapping *
-Mapping_tree::next_child(Mapping *parent, Mapping *current_child)
-{
-  // Find the next valid entry in the tree structure.
-  Mapping *m = next(current_child);
-
-  // If we didn't find an entry, or if the entry cannot be a child of
-  // "parent", return 0
-  if (m == 0 || m->depth() <= parent->depth())
-    return 0;
-
-  return m;			// Found!
-}
-
-// This function copies the elements of mapping tree src to mapping
-// tree dst, ignoring empty elements (that is, compressing the
-// source tree.  In-place compression is supported.
-PUBLIC static
-void
-Mapping_tree::copy_compact_tree(Mapping_tree *dst, Mapping_tree *src)
-{
-  unsigned src_count = src->_count; // Store in local variable before
-                                    // it can get overwritten
-
-  // Special case: cannot in-place compact a full tree
-  if (src == dst && src->number_of_entries() == src_count)
-    return;
-
-  // Now we can assume the resulting tree will not be full.
-  assert (src_count < dst->number_of_entries());
-
-  dst->_count = 0;
-#ifndef NDEBUG
-  dst->_empty_count = 0;
-#endif
-
-  Mapping *d = dst->mappings();
-
-  for (auto const &s: *src)
-    {
-      *d++ = *s;
-      dst->_count += 1;
-    }
-
-  assert (dst->_count == src_count); // Same number of entries
-  assert (d < dst->end_ptr());
-  // Room for one more entry (the Mapping::Depth_end entry)
-
-  d->set_depth(Mapping::Depth_end);
-  dst->last()->set_depth(Mapping::Depth_end);
-} // copy_compact_tree()
-
-// Don't inline this function -- it eats a lot of stack space!
-PUBLIC // inline NEEDS[Mapping::data, Mapping::unused, Mapping::is_end_tag,
-       //              Mapping_tree::end, Mapping_tree::number_of_entries]
-void
-Mapping_tree::check_integrity(Space *owner = (Space*)-1)
-{
-  (void)owner;
-#ifndef NDEBUG
-  bool enter_ke = false;
-  // Sanity checking
-  if (// Either each entry is used
-      !(number_of_entries() == static_cast<unsigned>(_count) + _empty_count
-      // Or the last used entry is end tag
-        || mappings()[_count + _empty_count].is_end_tag()))
-    {
-      printf("mapdb consistency error: "
-             "%u == %u + %u || mappings()[%u + %u].is_end_tag()=%d\n",
-             number_of_entries(), static_cast<unsigned>(_count), _empty_count,
-             _count, _empty_count, mappings()[_count + _empty_count].is_end_tag());
-      enter_ke = true;
-    }
-
-  Mapping *m = mappings();
-
-  if (!(m->is_end_tag()   // When the tree was copied to a new one
-        || (!m->unused()  // The first entry is never unused.
-            && m->depth() == 0
-            && (owner == (Space *)-1 || m->space() == owner))))
-    {
-      printf("mapdb corrupted: owner=%p\n"
-             "  m=%p (end: %s depth: %u space: %p page: %lx)\n",
-             owner, m, m->is_end_tag() ? "yes" : "no", m->depth(), m->space(),
-             cxx::int_value<Page>(m->page()));
-      enter_ke = true;
-    }
-
-  unsigned used = 0, dead = 0;
-
-  while (m < end_ptr() && !m->is_end_tag())
-    {
-      if (m->unused())
-        dead++;
-      else
-        used++;
-
-      m++;
-    }
-
-  if ((enter_ke |= _count != used))
-    printf("mapdb: _count=%u != used=%u\n", _count, used);
-  if ((enter_ke |= _empty_count != dead))
-    printf("mapdb: _empty_count=%u != dead=%u\n", _empty_count, dead);
-
-  if (enter_ke)
-    {
-      printf("mapdb:    from %p on CPU%u\n",
-             __builtin_return_address(0),
-             cxx::int_value<Cpu_number>(current_cpu()));
-      kdb_ke("mapdb");
-    }
-
-#endif // ! NDEBUG
-}
-
-
-/**
- * Use this function to reset a the tree to empty.
- *
- * In the case where a tree was copied to a new one you have to use 
- * this function to prevent the node iteration in the destructor.
- */
-PUBLIC inline
-void
-Mapping_tree::reset()
-{
-  _count = 0;
-  _empty_count = 0;
-  _mappings[0].set_depth(Mapping::Depth_end);
-}
-
-PUBLIC inline NEEDS[Mapping_tree::next, <cassert>]
+PUBLIC inline NEEDS[<cassert>]
 Treemap *
-Mapping_tree::find_submap(Iterator parent)
+Mapping_tree::find_submap(Iterator parent) const
 {
   assert (! parent->submap());
 
@@ -653,133 +220,45 @@ Mapping_tree::find_submap(Iterator parent)
   return nullptr;
 }
 
-PUBLIC inline NEEDS["ram_quota.h"]
+PUBLIC
 Mapping_tree::Iterator
 Mapping_tree::allocate(Ram_quota *payer, Iterator parent,
                        bool insert_submap = false)
 {
-  // If the parent mapping already has the maximum depth, we cannot
-  // insert a child.
-  if (EXPECT_FALSE (parent->depth() == Mapping::Depth_max))
-    return Iterator();
+  Mapping *m = _mapping_allocator.q_new(payer, *parent);
+  if (!m)
+    return end();
 
-  // After locating the right place for the new entry, it will be
-  // stored there (if this place is empty) or the following entries
-  // moved by one entry.
-
-  // We cannot continue if the last array entry is not free.  This
-  // only happens if an earlier call to free() with this mapping tree
-  // couldn't allocate a bigger array.  In this case, signal an
-  // out-of-memory condition.
-  if (EXPECT_FALSE (! last()->unused()))
-    return Iterator();
-
-  Auto_quota<Ram_quota> q(payer, sizeof(Mapping));
-  if (EXPECT_FALSE(!q))
-    return Iterator();
-
-  //allocation is done, so...
-  q.release();
-
-  Mapping *insert = (*parent) + 1, *free = 0;
-  // - Find an insertion point for the new entry. Acceptable insertion
-  //   points are either before a sibling (same depth) or at the end
-  //   of the subtree; for submap insertions, it's always before
-  //   the first sibling.  "insert" keeps track of the last
-  //   acceptable insertion point.
-  // - Find a free entry in the array encoding the subtree ("free").
-  //   There might be none; in this case, we stop at the end of the
-  //   subtree.
-
-  if (!insert_submap)
-    for (; insert < end_ptr(); ++insert)
-      {
-        // End of subtree?  If we reach this point, this is our insert spot.
-        if (insert->is_end_tag() || insert->depth() <= parent->depth())
-          break;
-
-        if (insert->unused())
-          free = insert;
-        else if (free		// Only look for insert spots after free
-                 && insert->depth() <= parent->depth() + 1)
-          break;
-      }
-
-  assert (insert);
-  assert (free == 0 || (free->unused() && free < insert));
-
-  // We now update "free" to point to a free spot that is acceptable
-  // as well.
-
-  if (free)
+  Iterator pivot = parent;
+  if (!insert_submap && *parent)
     {
-      // "free" will be the latest free spot before the "insert" spot.
-      // If there is anything between "free" and "insert", move it
-      // upward to make space just before insert.
-      while (free + 1 != insert)
-        {
-          *free = *(free + 1);
-          free++;
-        }
+      auto n = pivot;
+      ++n;
+      if (*n && n->submap())
+        pivot = n;
 
-#ifndef NDEBUG
-      // Tree-header maintenance
-      _empty_count -= 1;	// Allocated dead entry
-#endif
-    }
-  else				// free == 0
-    {
-      // There was no free spot in the subtree.  Move everything
-      // downward until we have free space.  This is guaranteed to
-      // succeed, because we ensured earlier that the last entry of
-      // the array is free.
-
-      free = insert;		// This will be the free spot
-
-      // Find empty spot
-      while (! insert->unused())
-        insert++;
-
-      // Tree maintenance: handle end tag, empty count
-      if (insert->is_end_tag())
-        {
-          // Need to move end tag.
-          if (insert + 1 < end_ptr())
-            insert++;           // Arrange for copying end tag as well
-        }
-#ifndef NDEBUG
-      else
-        _empty_count -= 1;      // Allocated dead entry
-#endif
-
-      // Move mappings
-      while (insert > free)
-        {
-          *insert = *(insert - 1);
-          --insert;
-        }
+      m->set_depth(parent->depth() + 1);
     }
 
-  _count += 1;		// Adding an alive entry
-
-  // found a place to insert new child (free).
-  free->set_depth(insert_submap ? (unsigned)Mapping::Depth_submap
-                                : parent->depth() + 1);
-
-  return Iterator(this, free);
+  if (*pivot)
+    {
+      insert(m, pivot);
+      return ++pivot;
+    }
+  else
+    {
+      push_front(m);
+      return begin();
+    }
 }
 
-PUBLIC inline NEEDS["ram_quota.h", "assert_opt.h"]
+PUBLIC
 Mapping_tree::Iterator
-Mapping_tree::free_mapping(Ram_quota *q, Mapping_tree::Iterator m)
+Mapping_tree::free_mapping(Ram_quota *q, Iterator m)
 {
-  assert_opt(m._t == this);
-  assert_opt(m._m);
-  assert (!m->unused() && !m->is_end_tag());
-  q->free(sizeof(Mapping));
-  m->set_unused();
-  ++m;
-  --_count;
+  auto d = *m;
+  m = Mappings::erase(m);
+  _mapping_allocator.q_del(q, d);
   return m;
 }
 
@@ -789,48 +268,20 @@ Mapping_tree::flush(Iterator parent, bool me_too,
                     Pcnt offs_begin, Pcnt offs_end,
                     SUBMAP_OPS const &submap_ops = SUBMAP_OPS())
 {
-  assert (! parent->unused());
+  unsigned long p_depth = parent->depth();
 
-  // This is easy to do: We just have to iterate over the array
-  // encoding the tree.
-  Mapping *start_of_deletions = *parent;
-  unsigned p_depth = parent->depth();
-  unsigned deleted = 0;
-#ifndef NDEBUG
-  unsigned empty_elems_passed = 0;
-#endif
-
+  Iterator m = parent;
   if (me_too)
-    {
-      free_mapping(quota(parent->space()), parent);
-      deleted++;
-    }
+    m = free_mapping(quota(parent->space()), m);
   else
-    start_of_deletions++;
+    ++m;
 
-  unsigned m_depth = p_depth;
+  unsigned long m_depth = p_depth;
 
-  for (Mapping* m = (*parent) + 1;
-       m < end_ptr() && ! m->is_end_tag();
-       m++)
+  while (*m)
     {
-      if (unsigned (m->depth()) <= p_depth)
-        {
-          // Found another data element -- stop deleting.  Since we
-          // created holes in the tree representation, account for it.
-#ifndef NDEBUG
-          _empty_count += deleted;
-#endif
-          return;
-        }
-
-      if (m->unused())
-        {
-#ifndef NDEBUG
-          empty_elems_passed++;
-#endif
-          continue;
-        }
+      if (!m->submap() && (m->depth() <= p_depth))
+        return;
 
       Space *space;
       if (Treemap* submap = m->submap())
@@ -844,8 +295,7 @@ Mapping_tree::flush(Iterator parent, bool me_too,
               && submap_ops.is_partial(submap, offs_begin, offs_end))
             {
               submap_ops.flush(submap, offs_begin, offs_end);
-
-              start_of_deletions++;
+              ++m;
               continue;
             }
           else
@@ -858,19 +308,7 @@ Mapping_tree::flush(Iterator parent, bool me_too,
         }
 
       // Delete the element.
-      free_mapping(quota(space), Iterator(this, m));
-      deleted++;
-    }
-
-  // We deleted stuff at the end of the array -- move end tag
-  if (start_of_deletions < end_ptr())
-    {
-      start_of_deletions->set_depth(Mapping::Depth_end);
-
-#ifndef NDEBUG
-      // also, reduce number of free entries
-      _empty_count -= empty_elems_passed;
-#endif
+      m = free_mapping(quota(space), m);
     }
 }
 
@@ -906,199 +344,44 @@ Mapping_tree::grant(Iterator const &m, Space *new_space, Page page,
 }
 
 PUBLIC inline
-Mapping *
-Mapping_tree::lookup(Space *space, Page page)
-{
-
-  Mapping *m;
-
-  for (m = mappings(); m; m = next(m))
-    {
-      assert (!m->submap());
-      if (m->space() == space && m->page() == page)
-        return m;
-    }
-
-  return 0;
-}
-
-PUBLIC inline
 bool
 Base_mappable::has_mappings() const
-{ return _tree != nullptr; }
-
-PUBLIC
-Mapping *
-Base_mappable::lookup(Space *space, Page page)
-{
-  // get and lock the tree.
-  if (EXPECT_FALSE(lock.lock() == Lock::Invalid))
-    return 0;
-  Mapping_tree *t = _tree.get();
-  assert (t);
-  if (Mapping *m = t->lookup(space, page))
-    return m;
-
-  lock.clear();
-  return 0;
-}
+{ return _tree.front(); }
 
 PUBLIC inline
 Mapping_tree::Iterator
 Base_mappable::insert(Mapping_tree::Iterator parent, Space *space, Page page)
 {
-  Mapping_tree* t = _tree.get();
-  if (!t)
-    {
-      assert (*parent == 0);
-      Auto_quota<Ram_quota> q(Mapping_tree::quota(space), sizeof(Mapping));
-      if (EXPECT_FALSE(!q))
-        return Mapping_tree::Iterator();
-
-      Mapping_tree::Size_id min_size = Mapping_tree::Size_id_min;
-      cxx::unique_ptr<Mapping_tree> new_tree(new (min_size) Mapping_tree (min_size, page, space));
-
-      if (EXPECT_FALSE(!new_tree))
-        return Mapping_tree::Iterator();
-
-      _tree = cxx::move(new_tree);
-      q.release();
-      return _tree->begin();
-    }
-
-  auto free = t->allocate(Mapping_tree::quota(space), parent, false);
+  auto free = tree()->allocate(Mapping_tree::quota(space), parent, false);
 
   if (EXPECT_FALSE(!*free))
     return Mapping_tree::Iterator();
 
   free->set_space(space);
   free->set_page(page);
-
-  t->check_integrity();
   return free;
-}
-
-
-PUBLIC
-void 
-Base_mappable::pack()
-{
-  // Before we unlock the tree, we need to make sure that there is
-  // room for at least one new mapping.  In particular, this means
-  // that the last entry of the array encoding the tree must be free.
-
-  // (1) When we use up less than a quarter of all entries of the
-  // array encoding the tree, copy to a smaller tree.  Otherwise, (2)
-  // if the last entry is free, do nothing.  Otherwise, (3) if less
-  // than 3/4 of the entries are used, compress the tree.  Otherwise,
-  // (4) copy to a larger tree.
-
-  Mapping_tree *t = _tree.get();
-  bool maybe_out_of_memory = false;
-
-  do // (this is not actually a loop, just a block we can "break" out of)
-    {
-      // (1) Do we need to allocate a smaller tree?
-      if (t->_size_id > Mapping_tree::Size_id_min // must not be smallest size
-          && (static_cast<unsigned>(t->_count) << 2) < t->number_of_entries())
-        {
-          Mapping_tree::Size_id sid = t->Mapping_tree::shrink();
-          cxx::unique_ptr<Mapping_tree> new_t(new (sid) Mapping_tree(sid, t));
-
-          if (new_t)
-            {
-              // invalidate node 0 because we must not free the quota for it
-              t->reset();
-              t = new_t.get();
-
-              // Register new tree.
-              _tree = cxx::move(new_t);
-
-              break;
-            }
-        }
-
-      // (2) Is last entry is free?
-      if (t->last()->unused())
-        break;			// OK, last entry is free.
-
-      // Last entry is not free -- either compress current array
-      // (i.e., move free entries to end of array), or allocate bigger
-      // array.
-
-      // (3) Should we compress the tree?
-      // We also try to compress if we cannot allocate a bigger
-      // tree because there is no bigger tree size.
-      if (t->_count < (t->number_of_entries() >> 2)
-                      + (t->number_of_entries() >> 1)
-          || t->_size_id == Size_id_max) // cannot enlarge?
-        {
-          if (t->_size_id == Size_id_max)
-            maybe_out_of_memory = true;
-
-          Mapping_tree::copy_compact_tree(t, t); // in-place compression
-
-          break;
-        }
-
-      // (4) OK, allocate a bigger array.
-
-      Mapping_tree::Size_id sid = t->bigger();
-      cxx::unique_ptr<Mapping_tree> new_t(new (sid) Mapping_tree(sid, t));
-
-      if (new_t)
-        {
-          // invalidate node 0 because we must not free the quota for it
-          t->reset();
-          t = new_t.get();
-
-          // Register new tree. 
-          _tree = cxx::move(new_t);
-        }
-      else
-        {
-          // out of memory -- just do tree compression and hope that helps.
-          maybe_out_of_memory = true;
-
-          Mapping_tree::copy_compact_tree(t, t); // in-place compression
-        }
-    }
-  while (false);
-
-  // The last entry of the tree should now be free -- exept if we're
-  // out of memory.
-  assert (t->last()->unused() || maybe_out_of_memory);
-  (void) maybe_out_of_memory;
 }
 
 PUBLIC inline
 bool
 Base_mappable::init_tree(Page page, Space *owner)
 {
-  if (_tree)
+  if (_tree.front())
     return true;
 
-  Auto_quota<Ram_quota> q(Mapping_tree::quota(owner), sizeof(Mapping));
-  if (EXPECT_FALSE(!q))
+  Mapping *m = *_tree.allocate(Mapping_tree::quota(owner), _tree.end(), false);
+  if (EXPECT_FALSE(!m))
     return false;
 
-  cxx::unique_ptr<Mapping_tree> new_tree
-    (new (Mapping_tree::Size_id_min)
-       Mapping_tree(Mapping_tree::Size_id_min, page, owner));
-
-  if (EXPECT_FALSE(!new_tree))
-    return false;
-
-  q.release();
-  _tree = cxx::move(new_tree);
-
+  m->set_page(page);
+  m->set_space(owner);
   return true;
 }
 
 PUBLIC inline
 void
-Base_mappable::check_integrity(Space *owner)
-{ _tree->check_integrity(owner); }
+Base_mappable::check_integrity(Space *)
+{}
 
 /**
  * Grant the mapping `m` of this mappable to a new destination.
@@ -1108,7 +391,7 @@ bool
 Base_mappable::grant(Mapping_tree::Iterator m, Space *new_space, Page page,
                      SUBMAP_OPS &&submap_ops)
 {
-  return _tree->grant(m, new_space, page, cxx::forward<SUBMAP_OPS>(submap_ops));
+  return _tree.grant(m, new_space, page, cxx::forward<SUBMAP_OPS>(submap_ops));
 }
 
 PUBLIC template< typename SUBMAP_OPS >
@@ -1116,8 +399,8 @@ void
 Base_mappable::flush(Pcnt offs_begin, Pcnt offs_end,
                      SUBMAP_OPS &&submap_ops)
 {
-  _tree->flush(_tree->begin(), false, offs_begin, offs_end,
-               cxx::forward<SUBMAP_OPS>(submap_ops));
+  _tree.flush(_tree.begin(), false, offs_begin, offs_end,
+              cxx::forward<SUBMAP_OPS>(submap_ops));
 }
 
 PUBLIC template< typename SUBMAP_OPS > inline
@@ -1126,8 +409,8 @@ Base_mappable::flush(Mapping_tree::Iterator parent, bool me_too,
                      Pcnt offs_begin, Pcnt offs_end,
                      SUBMAP_OPS &&submap_ops)
 {
-  _tree->flush(parent, me_too, offs_begin, offs_end,
-               cxx::forward<SUBMAP_OPS>(submap_ops));
+  _tree.flush(parent, me_too, offs_begin, offs_end,
+              cxx::forward<SUBMAP_OPS>(submap_ops));
 }
 
 PUBLIC inline
@@ -1135,26 +418,26 @@ unsigned long
 Base_mappable::base_quota_size() const
 {
   // if we have a tree we have one initial mapping object
-  return !_tree ? 0 : sizeof(Mapping);
+  return !_tree.front() ? 0 : sizeof(Mapping);
 }
 
 PUBLIC inline
 void
 Base_mappable::grant_tree(Space *new_space, Page page)
 {
-  if (!_tree)
+  if (!_tree.front())
     return;
 
   auto guard = lock_guard(lock);
-  _tree->mappings()->set_space(new_space);
-  _tree->mappings()->set_page(page);
+  _tree.front()->set_space(new_space);
+  _tree.front()->set_page(page);
 }
 
 PUBLIC inline
 Treemap *
 Base_mappable::find_submap(Mapping_tree::Iterator parent) const
 {
-  return _tree->find_submap(parent);
+  return _tree.find_submap(parent);
 }
 
 PUBLIC inline
@@ -1163,32 +446,27 @@ Base_mappable::alloc_mapping(Ram_quota *q,
                              Mapping_tree::Iterator parent,
                              bool submap)
 {
-  return _tree->allocate(q, parent, submap);
+  return _tree.allocate(q, parent, submap);
 }
 
 PUBLIC inline
 Mapping_tree::Iterator
 Base_mappable::free_mapping(Ram_quota *q, Mapping_tree::Iterator parent)
 {
-#ifndef NDEBUG
-  ++(_tree->_empty_count);
-#endif
-  return _tree->free_mapping(q, parent);
+  return _tree.free_mapping(q, parent);
 }
 
 PUBLIC inline
 Mapping_tree::Iterator
 Base_mappable::insertion_head() const
 {
-  return _tree->begin();
+  return const_cast<Mapping_tree &>(_tree).begin();
 }
 
 PUBLIC inline
 void
 Base_mappable::release()
 {
-  pack();
-
   // Unlock tree.
   lock.clear();
 }
@@ -1204,5 +482,5 @@ PUBLIC inline
 Mapping_tree::Iterator
 Base_mappable::first() const
 {
-  return ++_tree->begin();
+  return ++const_cast<Mapping_tree &>(_tree).begin();
 }

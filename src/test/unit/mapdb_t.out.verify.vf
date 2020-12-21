@@ -65,43 +65,39 @@
 [UTEST] Inserting daughter mapping
 [UTEST] 0:      space=s0 vaddr=0x0 size=0x1
 [UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
-[UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
 [UTEST] 2:        space=daughter vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
 [UTEST] 
 [UTEST] Looking up son at physaddr=0
 [UTEST] m.lookup(son, to_pfn(0), to_pfn(0), &frame): 	OK
 [UTEST] 0:      space=s0 vaddr=0x0 size=0x1
 [UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
-[UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
 [UTEST] 2:        space=daughter vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
 [UTEST] 
 [UTEST] mapping tree: { s0 va=0 size=400
-[UTEST]   header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]   1: va=0 task=s0 depth=root
-[UTEST]   2: subtree...
+[UTEST]   header info: lock: 0
+[UTEST]   : va=0 task=s0 depth=root
+[UTEST]   : subtree...
 [UTEST]   mapping tree: { s0 va=0 size=1
-[UTEST]     header info: entries used: 4 free: 0 total: 8 lock: 0
-[UTEST]     1: va=0 task=s0 depth=root
-[UTEST]     2:   va=0 task=father depth=1
-[UTEST]     3:     va=0 task=son depth=2
-[UTEST]     4:     va=0 task=daughter depth=2
-[UTEST]     5: end
+[UTEST]     header info: lock: 0
+[UTEST]     : va=0 task=s0 depth=root
+[UTEST]     :   va=0 task=father depth=1
+[UTEST]     :     va=0 task=daughter depth=2
+[UTEST]     :     va=0 task=son depth=2
 [UTEST]   } // mapping tree: s0 va=0
-[UTEST]   3: end
 [UTEST] } // mapping tree: s0 va=0
 [UTEST] Son has accident on return from disco
 [UTEST] mapping tree: { s0 va=0 size=400
-[UTEST]   header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]   1: va=0 task=s0 depth=root
-[UTEST]   2: subtree...
+[UTEST]   header info: lock: 0
+[UTEST]   : va=0 task=s0 depth=root
+[UTEST]   : subtree...
 [UTEST]   mapping tree: { s0 va=0 size=1
-[UTEST]     header info: entries used: 3 free: 1 total: 8 lock: 0
-[UTEST]     1: va=0 task=s0 depth=root
-[UTEST]     2:   va=0 task=father depth=1
-[UTEST]     4:     va=0 task=daughter depth=2
-[UTEST]     5: end
+[UTEST]     header info: lock: 0
+[UTEST]     : va=0 task=s0 depth=root
+[UTEST]     :   va=0 task=father depth=1
+[UTEST]     :     va=0 task=daughter depth=2
 [UTEST]   } // mapping tree: s0 va=0
-[UTEST]   3: end
 [UTEST] } // mapping tree: s0 va=0
 [UTEST] Lost aunt returns from holidays
 [UTEST] m.lookup (grandfather, to_pfn(0), to_pfn(0), &frame): 	OK
@@ -112,30 +108,28 @@
 [UTEST] Inserting aunt mapping
 [UTEST] m.insert (frame, aunt, to_pfn(0), to_pfn(0), to_pcnt(Config::PAGE_SHIFT)): 	OK
 [UTEST] 0:      space=s0 vaddr=0x0 size=0x400
+[UTEST] 1:       space=aunt vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
 [UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
 [UTEST] 2:        space=daughter vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
-[UTEST] 1:       space=aunt vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
 [UTEST] 
 [UTEST] mapping tree: { s0 va=0 size=400
-[UTEST]   header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]   1: va=0 task=s0 depth=root
-[UTEST]   2: subtree...
+[UTEST]   header info: lock: 0
+[UTEST]   : va=0 task=s0 depth=root
+[UTEST]   : subtree...
 [UTEST]   mapping tree: { s0 va=0 size=1
-[UTEST]     header info: entries used: 4 free: 0 total: 8 lock: 0
-[UTEST]     1: va=0 task=s0 depth=root
-[UTEST]     2:   va=0 task=father depth=1
-[UTEST]     3:     va=0 task=daughter depth=2
-[UTEST]     4:   va=0 task=aunt depth=1
-[UTEST]     5: end
+[UTEST]     header info: lock: 0
+[UTEST]     : va=0 task=s0 depth=root
+[UTEST]     :   va=0 task=aunt depth=1
+[UTEST]     :   va=0 task=father depth=1
+[UTEST]     :     va=0 task=daughter depth=2
 [UTEST]   } // mapping tree: s0 va=0
-[UTEST]   3: end
 [UTEST] } // mapping tree: s0 va=0
 [UTEST] Looking up daughter at physaddr=0
 [UTEST] m.lookup(daughter, to_pfn(0), to_pfn(0), &frame): 	OK
 [UTEST] 0:      space=s0 vaddr=0x0 size=0x1
+[UTEST] 1:       space=aunt vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
 [UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
 [UTEST] 2:        space=daughter vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
-[UTEST] 1:       space=aunt vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
 [UTEST] 
 [UTEST] Father of daugther is father
 [UTEST] frame.m->parent()->space() == father: 	OK
@@ -172,16 +166,16 @@
 [UTEST] Inserting aunt mapping
 [UTEST] m.insert (frame, aunt, to_pfn(0), to_pfn(0), to_pcnt(Config::PAGE_SHIFT)): 	OK
 [UTEST] 0:      space=s0 vaddr=0x0 size=0x400
+[UTEST] 1:       space=aunt vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
 [UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
 [UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
-[UTEST] 1:       space=aunt vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
 [UTEST] 
 [UTEST] Looking up father at physaddr=0
 [UTEST] m.lookup(father, to_pfn(0), to_pfn(0), &frame): 	OK
 [UTEST] 0:      space=s0 vaddr=0x0 size=0x1
+[UTEST] 1:       space=aunt vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
 [UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
 [UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
-[UTEST] 1:       space=aunt vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
 [UTEST] 
 [UTEST] father is killed by his new love
 [UTEST] 0:      space=s0 vaddr=0x0 size=0x1
@@ -258,67 +252,59 @@
 [UTEST] Inserting daughter mapping
 [UTEST] 0:      space=s0 vaddr=0x0 size=0x1
 [UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
-[UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
 [UTEST] 2:        space=daughter vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
 [UTEST] 
 [UTEST] Looking up son at physaddr=0
 [UTEST] m.lookup(son, to_pfn(0), to_pfn(0), &frame): 	OK
 [UTEST] 0:      space=s0 vaddr=0x0 size=0x1
 [UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
-[UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
 [UTEST] 2:        space=daughter vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
+[UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
 [UTEST] 
 [UTEST] mapping tree: { s0 va=0 size=40000
-[UTEST]   header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]   1: va=0 task=s0 depth=root
-[UTEST]   2: subtree...
+[UTEST]   header info: lock: 0
+[UTEST]   : va=0 task=s0 depth=root
+[UTEST]   : subtree...
 [UTEST]   mapping tree: { s0 va=0 size=400
-[UTEST]     header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]     1: va=0 task=s0 depth=root
-[UTEST]     2: subtree...
+[UTEST]     header info: lock: 0
+[UTEST]     : va=0 task=s0 depth=root
+[UTEST]     : subtree...
 [UTEST]     mapping tree: { s0 va=0 size=200
-[UTEST]       header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]       1: va=0 task=s0 depth=root
-[UTEST]       2: subtree...
+[UTEST]       header info: lock: 0
+[UTEST]       : va=0 task=s0 depth=root
+[UTEST]       : subtree...
 [UTEST]       mapping tree: { s0 va=0 size=1
-[UTEST]         header info: entries used: 4 free: 0 total: 8 lock: 0
-[UTEST]         1: va=0 task=s0 depth=root
-[UTEST]         2:   va=0 task=father depth=1
-[UTEST]         3:     va=0 task=son depth=2
-[UTEST]         4:     va=0 task=daughter depth=2
-[UTEST]         5: end
+[UTEST]         header info: lock: 0
+[UTEST]         : va=0 task=s0 depth=root
+[UTEST]         :   va=0 task=father depth=1
+[UTEST]         :     va=0 task=daughter depth=2
+[UTEST]         :     va=0 task=son depth=2
 [UTEST]       } // mapping tree: s0 va=0
-[UTEST]       3: end
 [UTEST]     } // mapping tree: s0 va=0
-[UTEST]     3: end
 [UTEST]   } // mapping tree: s0 va=0
-[UTEST]   3: end
 [UTEST] } // mapping tree: s0 va=0
 [UTEST] Son has accident on return from disco
 [UTEST] mapping tree: { s0 va=0 size=40000
-[UTEST]   header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]   1: va=0 task=s0 depth=root
-[UTEST]   2: subtree...
+[UTEST]   header info: lock: 0
+[UTEST]   : va=0 task=s0 depth=root
+[UTEST]   : subtree...
 [UTEST]   mapping tree: { s0 va=0 size=400
-[UTEST]     header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]     1: va=0 task=s0 depth=root
-[UTEST]     2: subtree...
+[UTEST]     header info: lock: 0
+[UTEST]     : va=0 task=s0 depth=root
+[UTEST]     : subtree...
 [UTEST]     mapping tree: { s0 va=0 size=200
-[UTEST]       header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]       1: va=0 task=s0 depth=root
-[UTEST]       2: subtree...
+[UTEST]       header info: lock: 0
+[UTEST]       : va=0 task=s0 depth=root
+[UTEST]       : subtree...
 [UTEST]       mapping tree: { s0 va=0 size=1
-[UTEST]         header info: entries used: 3 free: 1 total: 8 lock: 0
-[UTEST]         1: va=0 task=s0 depth=root
-[UTEST]         2:   va=0 task=father depth=1
-[UTEST]         4:     va=0 task=daughter depth=2
-[UTEST]         5: end
+[UTEST]         header info: lock: 0
+[UTEST]         : va=0 task=s0 depth=root
+[UTEST]         :   va=0 task=father depth=1
+[UTEST]         :     va=0 task=daughter depth=2
 [UTEST]       } // mapping tree: s0 va=0
-[UTEST]       3: end
 [UTEST]     } // mapping tree: s0 va=0
-[UTEST]     3: end
 [UTEST]   } // mapping tree: s0 va=0
-[UTEST]   3: end
 [UTEST] } // mapping tree: s0 va=0
 [UTEST] Lost aunt returns from holidays
 [UTEST] m.lookup (grandfather, to_pfn(0), to_pfn(0), &frame): 	OK
@@ -329,42 +315,38 @@
 [UTEST] Inserting aunt mapping
 [UTEST] m.insert (frame, aunt, to_pfn(0), to_pfn(0), to_pcnt(Config::PAGE_SHIFT)): 	OK
 [UTEST] 0:      space=s0 vaddr=0x0 size=0x40000
+[UTEST] 1:       space=aunt vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
 [UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
 [UTEST] 2:        space=daughter vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
-[UTEST] 1:       space=aunt vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
 [UTEST] 
 [UTEST] mapping tree: { s0 va=0 size=40000
-[UTEST]   header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]   1: va=0 task=s0 depth=root
-[UTEST]   2: subtree...
+[UTEST]   header info: lock: 0
+[UTEST]   : va=0 task=s0 depth=root
+[UTEST]   : subtree...
 [UTEST]   mapping tree: { s0 va=0 size=400
-[UTEST]     header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]     1: va=0 task=s0 depth=root
-[UTEST]     2: subtree...
+[UTEST]     header info: lock: 0
+[UTEST]     : va=0 task=s0 depth=root
+[UTEST]     : subtree...
 [UTEST]     mapping tree: { s0 va=0 size=200
-[UTEST]       header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]       1: va=0 task=s0 depth=root
-[UTEST]       2: subtree...
+[UTEST]       header info: lock: 0
+[UTEST]       : va=0 task=s0 depth=root
+[UTEST]       : subtree...
 [UTEST]       mapping tree: { s0 va=0 size=1
-[UTEST]         header info: entries used: 4 free: 0 total: 8 lock: 0
-[UTEST]         1: va=0 task=s0 depth=root
-[UTEST]         2:   va=0 task=father depth=1
-[UTEST]         3:     va=0 task=daughter depth=2
-[UTEST]         4:   va=0 task=aunt depth=1
-[UTEST]         5: end
+[UTEST]         header info: lock: 0
+[UTEST]         : va=0 task=s0 depth=root
+[UTEST]         :   va=0 task=aunt depth=1
+[UTEST]         :   va=0 task=father depth=1
+[UTEST]         :     va=0 task=daughter depth=2
 [UTEST]       } // mapping tree: s0 va=0
-[UTEST]       3: end
 [UTEST]     } // mapping tree: s0 va=0
-[UTEST]     3: end
 [UTEST]   } // mapping tree: s0 va=0
-[UTEST]   3: end
 [UTEST] } // mapping tree: s0 va=0
 [UTEST] Looking up daughter at physaddr=0
 [UTEST] m.lookup(daughter, to_pfn(0), to_pfn(0), &frame): 	OK
 [UTEST] 0:      space=s0 vaddr=0x0 size=0x1
+[UTEST] 1:       space=aunt vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
 [UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
 [UTEST] 2:        space=daughter vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
-[UTEST] 1:       space=aunt vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
 [UTEST] 
 [UTEST] Father of daugther is father
 [UTEST] frame.m->parent()->space() == father: 	OK
@@ -401,16 +383,16 @@
 [UTEST] Inserting aunt mapping
 [UTEST] m.insert (frame, aunt, to_pfn(0), to_pfn(0), to_pcnt(Config::PAGE_SHIFT)): 	OK
 [UTEST] 0:      space=s0 vaddr=0x0 size=0x40000
+[UTEST] 1:       space=aunt vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
 [UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
 [UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
-[UTEST] 1:       space=aunt vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
 [UTEST] 
 [UTEST] Looking up father at physaddr=0
 [UTEST] m.lookup(father, to_pfn(0), to_pfn(0), &frame): 	OK
 [UTEST] 0:      space=s0 vaddr=0x0 size=0x1
+[UTEST] 1:       space=aunt vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
 [UTEST] 1:       space=father vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
 [UTEST] 2:        space=son vaddr=0x0 size=0x1 parent=father p.vaddr=0x0
-[UTEST] 1:       space=aunt vaddr=0x0 size=0x1 parent=s0 p.vaddr=0x0
 [UTEST] 
 [UTEST] father is killed by his new love
 [UTEST] 0:      space=s0 vaddr=0x0 size=0x1
@@ -722,121 +704,102 @@
 [UTEST] lookup(&m, client, to_pfn(0x40000), &frame): 	OK
 [UTEST] lookup(&m, client, to_pfn(0x41000), &frame): 	OK
 [UTEST] mapping tree: { s0 va=0 size=40000
-[UTEST]   header info: entries used: 4 free: 0 total: 8 lock: 0
-[UTEST]   1: va=0 task=s0 depth=root
-[UTEST]   2: subtree...
+[UTEST]   header info: lock: 0
+[UTEST]   : va=0 task=s0 depth=root
+[UTEST]   : subtree...
 [UTEST]   mapping tree: { s0 va=0 size=400
-[UTEST]     header info: entries used: 1 free: 0 total: 4 lock: 0
-[UTEST]     1: va=0 task=s0 depth=root
-[UTEST]     2: end
+[UTEST]     header info: lock: 0
+[UTEST]     : va=0 task=s0 depth=root
 [UTEST]   } // mapping tree: s0 va=0
 [UTEST]   mapping tree: { s0 va=3000 size=400
-[UTEST]     header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]     1: va=3000 task=s0 depth=root
-[UTEST]     2: subtree...
+[UTEST]     header info: lock: 0
+[UTEST]     : va=3000 task=s0 depth=root
+[UTEST]     : subtree...
 [UTEST]     mapping tree: { s0 va=3000 size=200
-[UTEST]       header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]       1: va=3000 task=s0 depth=root
-[UTEST]       2: subtree...
+[UTEST]       header info: lock: 0
+[UTEST]       : va=3000 task=s0 depth=root
+[UTEST]       : subtree...
 [UTEST]       mapping tree: { s0 va=3000 size=1
-[UTEST]         header info: entries used: 1 free: 0 total: 4 lock: 0
-[UTEST]         1: va=3000 task=s0 depth=root
-[UTEST]         2: end
+[UTEST]         header info: lock: 0
+[UTEST]         : va=3000 task=s0 depth=root
 [UTEST]       } // mapping tree: s0 va=3000
 [UTEST]       mapping tree: { s0 va=31ff size=1
-[UTEST]         header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]         1: va=31ff task=s0 depth=root
-[UTEST]         2:   va=22 task=client depth=1
-[UTEST]         3: end
+[UTEST]         header info: lock: 0
+[UTEST]         : va=31ff task=s0 depth=root
+[UTEST]         :   va=22 task=client depth=1
 [UTEST]       } // mapping tree: s0 va=31ff
-[UTEST]       3: end
 [UTEST]     } // mapping tree: s0 va=3000
 [UTEST]     mapping tree: { s0 va=3200 size=200
-[UTEST]       header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]       1: va=3200 task=s0 depth=root
-[UTEST]       2: subtree...
+[UTEST]       header info: lock: 0
+[UTEST]       : va=3200 task=s0 depth=root
+[UTEST]       : subtree...
 [UTEST]       mapping tree: { s0 va=3200 size=1
-[UTEST]         header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]         1: va=3200 task=s0 depth=root
-[UTEST]         2:   va=23 task=client depth=1
-[UTEST]         3: end
+[UTEST]         header info: lock: 0
+[UTEST]         : va=3200 task=s0 depth=root
+[UTEST]         :   va=23 task=client depth=1
 [UTEST]       } // mapping tree: s0 va=3200
 [UTEST]       mapping tree: { s0 va=3201 size=1
-[UTEST]         header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]         1: va=3201 task=s0 depth=root
-[UTEST]         2:   va=24 task=client depth=1
-[UTEST]         3: end
+[UTEST]         header info: lock: 0
+[UTEST]         : va=3201 task=s0 depth=root
+[UTEST]         :   va=24 task=client depth=1
 [UTEST]       } // mapping tree: s0 va=3201
-[UTEST]       3: end
 [UTEST]     } // mapping tree: s0 va=3200
-[UTEST]     3: end
 [UTEST]   } // mapping tree: s0 va=3000
-[UTEST]   3:   va=40000 task=daughter depth=1
-[UTEST]   4: subtree...
+[UTEST]   :   va=40000 task=daughter depth=1
+[UTEST]   : subtree...
 [UTEST]     mapping tree: { daughter va=43000 size=400
-[UTEST]       header info: entries used: 4 free: 0 total: 8 lock: 0
-[UTEST]       1: va=43000 task=daughter depth=root
-[UTEST]       2: subtree...
+[UTEST]       header info: lock: 0
+[UTEST]       : va=43000 task=daughter depth=root
+[UTEST]       : subtree...
 [UTEST]       mapping tree: { daughter va=43000 size=200
-[UTEST]         header info: entries used: 3 free: 0 total: 4 lock: 0
-[UTEST]         1: va=43000 task=daughter depth=root
-[UTEST]         2: subtree...
+[UTEST]         header info: lock: 0
+[UTEST]         : va=43000 task=daughter depth=root
+[UTEST]         : subtree...
 [UTEST]         mapping tree: { daughter va=43000 size=1
-[UTEST]           header info: entries used: 1 free: 0 total: 4 lock: 0
-[UTEST]           1: va=43000 task=daughter depth=root
-[UTEST]           2: end
+[UTEST]           header info: lock: 0
+[UTEST]           : va=43000 task=daughter depth=root
 [UTEST]         } // mapping tree: daughter va=43000
 [UTEST]         mapping tree: { daughter va=431ff size=1
-[UTEST]           header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]           1: va=431ff task=daughter depth=root
-[UTEST]           2:   va=32 task=client depth=1
-[UTEST]           3: end
+[UTEST]           header info: lock: 0
+[UTEST]           : va=431ff task=daughter depth=root
+[UTEST]           :   va=32 task=client depth=1
 [UTEST]         } // mapping tree: daughter va=431ff
-[UTEST]         3:   va=20000 task=client depth=1
-[UTEST]         4: end
+[UTEST]         :   va=20000 task=client depth=1
 [UTEST]       } // mapping tree: daughter va=43000
 [UTEST]       mapping tree: { daughter va=43200 size=200
-[UTEST]         header info: entries used: 3 free: 0 total: 4 lock: 0
-[UTEST]         1: va=43200 task=daughter depth=root
-[UTEST]         2: subtree...
+[UTEST]         header info: lock: 0
+[UTEST]         : va=43200 task=daughter depth=root
+[UTEST]         : subtree...
 [UTEST]         mapping tree: { daughter va=43200 size=1
-[UTEST]           header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]           1: va=43200 task=daughter depth=root
-[UTEST]           2:   va=33 task=client depth=1
-[UTEST]           3: end
+[UTEST]           header info: lock: 0
+[UTEST]           : va=43200 task=daughter depth=root
+[UTEST]           :   va=33 task=client depth=1
 [UTEST]         } // mapping tree: daughter va=43200
 [UTEST]         mapping tree: { daughter va=43201 size=1
-[UTEST]           header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]           1: va=43201 task=daughter depth=root
-[UTEST]           2:   va=34 task=client depth=1
-[UTEST]           3: end
+[UTEST]           header info: lock: 0
+[UTEST]           : va=43201 task=daughter depth=root
+[UTEST]           :   va=34 task=client depth=1
 [UTEST]         } // mapping tree: daughter va=43201
-[UTEST]         3:   va=20200 task=client depth=1
-[UTEST]         4: end
+[UTEST]         :   va=20200 task=client depth=1
 [UTEST]       } // mapping tree: daughter va=43200
-[UTEST]       3:   va=20000 task=son depth=1
-[UTEST]       4: subtree...
+[UTEST]       :   va=20000 task=son depth=1
+[UTEST]       : subtree...
 [UTEST]         mapping tree: { son va=20200 size=200
-[UTEST]           header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]           1: va=20200 task=son depth=root
-[UTEST]           2: subtree...
+[UTEST]           header info: lock: 0
+[UTEST]           : va=20200 task=son depth=root
+[UTEST]           : subtree...
 [UTEST]           mapping tree: { son va=20200 size=1
-[UTEST]             header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]             1: va=20200 task=son depth=root
-[UTEST]             2:   va=40 task=client depth=1
-[UTEST]             3: end
+[UTEST]             header info: lock: 0
+[UTEST]             : va=20200 task=son depth=root
+[UTEST]             :   va=40 task=client depth=1
 [UTEST]           } // mapping tree: son va=20200
 [UTEST]           mapping tree: { son va=20201 size=1
-[UTEST]             header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]             1: va=20201 task=son depth=root
-[UTEST]             2:   va=41 task=client depth=1
-[UTEST]             3: end
+[UTEST]             header info: lock: 0
+[UTEST]             : va=20201 task=son depth=root
+[UTEST]             :   va=41 task=client depth=1
 [UTEST]           } // mapping tree: son va=20201
-[UTEST]           3: end
 [UTEST]         } // mapping tree: son va=20200
-[UTEST]       5: end
 [UTEST]     } // mapping tree: daughter va=43000
-[UTEST]   5: end
 [UTEST] } // mapping tree: s0 va=0
 [UTEST] unmap client va=33 for node:
 [UTEST] remove PTE: client va=33 pa=3200 order=0
@@ -851,94 +814,79 @@
 [UTEST] state after flush:
 [UTEST] unmap(&m, daughter, to_pfn(0x43200000), to_pfn(0x43201000), false): 	OK
 [UTEST] mapping tree: { s0 va=0 size=40000
-[UTEST]   header info: entries used: 4 free: 0 total: 8 lock: 0
-[UTEST]   1: va=0 task=s0 depth=root
-[UTEST]   2: subtree...
+[UTEST]   header info: lock: 0
+[UTEST]   : va=0 task=s0 depth=root
+[UTEST]   : subtree...
 [UTEST]   mapping tree: { s0 va=0 size=400
-[UTEST]     header info: entries used: 1 free: 0 total: 4 lock: 0
-[UTEST]     1: va=0 task=s0 depth=root
-[UTEST]     2: end
+[UTEST]     header info: lock: 0
+[UTEST]     : va=0 task=s0 depth=root
 [UTEST]   } // mapping tree: s0 va=0
 [UTEST]   mapping tree: { s0 va=3000 size=400
-[UTEST]     header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]     1: va=3000 task=s0 depth=root
-[UTEST]     2: subtree...
+[UTEST]     header info: lock: 0
+[UTEST]     : va=3000 task=s0 depth=root
+[UTEST]     : subtree...
 [UTEST]     mapping tree: { s0 va=3000 size=200
-[UTEST]       header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]       1: va=3000 task=s0 depth=root
-[UTEST]       2: subtree...
+[UTEST]       header info: lock: 0
+[UTEST]       : va=3000 task=s0 depth=root
+[UTEST]       : subtree...
 [UTEST]       mapping tree: { s0 va=3000 size=1
-[UTEST]         header info: entries used: 1 free: 0 total: 4 lock: 0
-[UTEST]         1: va=3000 task=s0 depth=root
-[UTEST]         2: end
+[UTEST]         header info: lock: 0
+[UTEST]         : va=3000 task=s0 depth=root
 [UTEST]       } // mapping tree: s0 va=3000
 [UTEST]       mapping tree: { s0 va=31ff size=1
-[UTEST]         header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]         1: va=31ff task=s0 depth=root
-[UTEST]         2:   va=22 task=client depth=1
-[UTEST]         3: end
+[UTEST]         header info: lock: 0
+[UTEST]         : va=31ff task=s0 depth=root
+[UTEST]         :   va=22 task=client depth=1
 [UTEST]       } // mapping tree: s0 va=31ff
-[UTEST]       3: end
 [UTEST]     } // mapping tree: s0 va=3000
 [UTEST]     mapping tree: { s0 va=3200 size=200
-[UTEST]       header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]       1: va=3200 task=s0 depth=root
-[UTEST]       2: subtree...
+[UTEST]       header info: lock: 0
+[UTEST]       : va=3200 task=s0 depth=root
+[UTEST]       : subtree...
 [UTEST]       mapping tree: { s0 va=3200 size=1
-[UTEST]         header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]         1: va=3200 task=s0 depth=root
-[UTEST]         2:   va=23 task=client depth=1
-[UTEST]         3: end
+[UTEST]         header info: lock: 0
+[UTEST]         : va=3200 task=s0 depth=root
+[UTEST]         :   va=23 task=client depth=1
 [UTEST]       } // mapping tree: s0 va=3200
 [UTEST]       mapping tree: { s0 va=3201 size=1
-[UTEST]         header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]         1: va=3201 task=s0 depth=root
-[UTEST]         2:   va=24 task=client depth=1
-[UTEST]         3: end
+[UTEST]         header info: lock: 0
+[UTEST]         : va=3201 task=s0 depth=root
+[UTEST]         :   va=24 task=client depth=1
 [UTEST]       } // mapping tree: s0 va=3201
-[UTEST]       3: end
 [UTEST]     } // mapping tree: s0 va=3200
-[UTEST]     3: end
 [UTEST]   } // mapping tree: s0 va=3000
-[UTEST]   3:   va=40000 task=daughter depth=1
-[UTEST]   4: subtree...
+[UTEST]   :   va=40000 task=daughter depth=1
+[UTEST]   : subtree...
 [UTEST]     mapping tree: { daughter va=43000 size=400
-[UTEST]       header info: entries used: 2 free: 0 total: 8 lock: 0
-[UTEST]       1: va=43000 task=daughter depth=root
-[UTEST]       2: subtree...
+[UTEST]       header info: lock: 0
+[UTEST]       : va=43000 task=daughter depth=root
+[UTEST]       : subtree...
 [UTEST]       mapping tree: { daughter va=43000 size=200
-[UTEST]         header info: entries used: 3 free: 0 total: 4 lock: 0
-[UTEST]         1: va=43000 task=daughter depth=root
-[UTEST]         2: subtree...
+[UTEST]         header info: lock: 0
+[UTEST]         : va=43000 task=daughter depth=root
+[UTEST]         : subtree...
 [UTEST]         mapping tree: { daughter va=43000 size=1
-[UTEST]           header info: entries used: 1 free: 0 total: 4 lock: 0
-[UTEST]           1: va=43000 task=daughter depth=root
-[UTEST]           2: end
+[UTEST]           header info: lock: 0
+[UTEST]           : va=43000 task=daughter depth=root
 [UTEST]         } // mapping tree: daughter va=43000
 [UTEST]         mapping tree: { daughter va=431ff size=1
-[UTEST]           header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]           1: va=431ff task=daughter depth=root
-[UTEST]           2:   va=32 task=client depth=1
-[UTEST]           3: end
+[UTEST]           header info: lock: 0
+[UTEST]           : va=431ff task=daughter depth=root
+[UTEST]           :   va=32 task=client depth=1
 [UTEST]         } // mapping tree: daughter va=431ff
-[UTEST]         3:   va=20000 task=client depth=1
-[UTEST]         4: end
+[UTEST]         :   va=20000 task=client depth=1
 [UTEST]       } // mapping tree: daughter va=43000
 [UTEST]       mapping tree: { daughter va=43200 size=200
-[UTEST]         header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]         1: va=43200 task=daughter depth=root
-[UTEST]         2: subtree...
+[UTEST]         header info: lock: 0
+[UTEST]         : va=43200 task=daughter depth=root
+[UTEST]         : subtree...
 [UTEST]         mapping tree: { daughter va=43201 size=1
-[UTEST]           header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]           1: va=43201 task=daughter depth=root
-[UTEST]           2:   va=34 task=client depth=1
-[UTEST]           3: end
+[UTEST]           header info: lock: 0
+[UTEST]           : va=43201 task=daughter depth=root
+[UTEST]           :   va=34 task=client depth=1
 [UTEST]         } // mapping tree: daughter va=43201
-[UTEST]         3: end
 [UTEST]       } // mapping tree: daughter va=43200
-[UTEST]       3: end
 [UTEST]     } // mapping tree: daughter va=43000
-[UTEST]   5: end
 [UTEST] } // mapping tree: s0 va=0
 [UTEST] page-table lookup: 40 in client failed
 [UTEST] !lookup(&m, client, to_pfn(0x40000), &frame): 	OK
@@ -959,100 +907,84 @@
 [UTEST] map(&m, daughter, to_pfn(0x43200000), client, to_pfn(0x33000), to_po(12)): 	OK
 [UTEST] lookup(&m, client, to_pfn(0x33000), &frame): 	OK
 [UTEST] mapping tree: { s0 va=0 size=40000
-[UTEST]   header info: entries used: 4 free: 0 total: 8 lock: 0
-[UTEST]   1: va=0 task=s0 depth=root
-[UTEST]   2: subtree...
+[UTEST]   header info: lock: 0
+[UTEST]   : va=0 task=s0 depth=root
+[UTEST]   : subtree...
 [UTEST]   mapping tree: { s0 va=0 size=400
-[UTEST]     header info: entries used: 1 free: 0 total: 4 lock: 0
-[UTEST]     1: va=0 task=s0 depth=root
-[UTEST]     2: end
+[UTEST]     header info: lock: 0
+[UTEST]     : va=0 task=s0 depth=root
 [UTEST]   } // mapping tree: s0 va=0
 [UTEST]   mapping tree: { s0 va=3000 size=400
-[UTEST]     header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]     1: va=3000 task=s0 depth=root
-[UTEST]     2: subtree...
+[UTEST]     header info: lock: 0
+[UTEST]     : va=3000 task=s0 depth=root
+[UTEST]     : subtree...
 [UTEST]     mapping tree: { s0 va=3000 size=200
-[UTEST]       header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]       1: va=3000 task=s0 depth=root
-[UTEST]       2: subtree...
+[UTEST]       header info: lock: 0
+[UTEST]       : va=3000 task=s0 depth=root
+[UTEST]       : subtree...
 [UTEST]       mapping tree: { s0 va=3000 size=1
-[UTEST]         header info: entries used: 1 free: 0 total: 4 lock: 0
-[UTEST]         1: va=3000 task=s0 depth=root
-[UTEST]         2: end
+[UTEST]         header info: lock: 0
+[UTEST]         : va=3000 task=s0 depth=root
 [UTEST]       } // mapping tree: s0 va=3000
 [UTEST]       mapping tree: { s0 va=31ff size=1
-[UTEST]         header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]         1: va=31ff task=s0 depth=root
-[UTEST]         2:   va=22 task=client depth=1
-[UTEST]         3: end
+[UTEST]         header info: lock: 0
+[UTEST]         : va=31ff task=s0 depth=root
+[UTEST]         :   va=22 task=client depth=1
 [UTEST]       } // mapping tree: s0 va=31ff
-[UTEST]       3: end
 [UTEST]     } // mapping tree: s0 va=3000
 [UTEST]     mapping tree: { s0 va=3200 size=200
-[UTEST]       header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]       1: va=3200 task=s0 depth=root
-[UTEST]       2: subtree...
+[UTEST]       header info: lock: 0
+[UTEST]       : va=3200 task=s0 depth=root
+[UTEST]       : subtree...
 [UTEST]       mapping tree: { s0 va=3200 size=1
-[UTEST]         header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]         1: va=3200 task=s0 depth=root
-[UTEST]         2:   va=23 task=client depth=1
-[UTEST]         3: end
+[UTEST]         header info: lock: 0
+[UTEST]         : va=3200 task=s0 depth=root
+[UTEST]         :   va=23 task=client depth=1
 [UTEST]       } // mapping tree: s0 va=3200
 [UTEST]       mapping tree: { s0 va=3201 size=1
-[UTEST]         header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]         1: va=3201 task=s0 depth=root
-[UTEST]         2:   va=24 task=client depth=1
-[UTEST]         3: end
+[UTEST]         header info: lock: 0
+[UTEST]         : va=3201 task=s0 depth=root
+[UTEST]         :   va=24 task=client depth=1
 [UTEST]       } // mapping tree: s0 va=3201
-[UTEST]       3: end
 [UTEST]     } // mapping tree: s0 va=3200
-[UTEST]     3: end
 [UTEST]   } // mapping tree: s0 va=3000
-[UTEST]   3:   va=40000 task=daughter depth=1
-[UTEST]   4: subtree...
+[UTEST]   :   va=40000 task=daughter depth=1
+[UTEST]   : subtree...
 [UTEST]     mapping tree: { daughter va=43000 size=400
-[UTEST]       header info: entries used: 2 free: 0 total: 8 lock: 0
-[UTEST]       1: va=43000 task=daughter depth=root
-[UTEST]       2: subtree...
+[UTEST]       header info: lock: 0
+[UTEST]       : va=43000 task=daughter depth=root
+[UTEST]       : subtree...
 [UTEST]       mapping tree: { daughter va=43000 size=200
-[UTEST]         header info: entries used: 3 free: 0 total: 4 lock: 0
-[UTEST]         1: va=43000 task=daughter depth=root
-[UTEST]         2: subtree...
+[UTEST]         header info: lock: 0
+[UTEST]         : va=43000 task=daughter depth=root
+[UTEST]         : subtree...
 [UTEST]         mapping tree: { daughter va=43000 size=1
-[UTEST]           header info: entries used: 1 free: 0 total: 4 lock: 0
-[UTEST]           1: va=43000 task=daughter depth=root
-[UTEST]           2: end
+[UTEST]           header info: lock: 0
+[UTEST]           : va=43000 task=daughter depth=root
 [UTEST]         } // mapping tree: daughter va=43000
 [UTEST]         mapping tree: { daughter va=431ff size=1
-[UTEST]           header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]           1: va=431ff task=daughter depth=root
-[UTEST]           2:   va=32 task=client depth=1
-[UTEST]           3: end
+[UTEST]           header info: lock: 0
+[UTEST]           : va=431ff task=daughter depth=root
+[UTEST]           :   va=32 task=client depth=1
 [UTEST]         } // mapping tree: daughter va=431ff
-[UTEST]         3:   va=20000 task=client depth=1
-[UTEST]         4: end
+[UTEST]         :   va=20000 task=client depth=1
 [UTEST]       } // mapping tree: daughter va=43000
 [UTEST]       mapping tree: { daughter va=43200 size=200
-[UTEST]         header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]         1: va=43200 task=daughter depth=root
-[UTEST]         2: subtree...
+[UTEST]         header info: lock: 0
+[UTEST]         : va=43200 task=daughter depth=root
+[UTEST]         : subtree...
 [UTEST]         mapping tree: { daughter va=43200 size=1
-[UTEST]           header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]           1: va=43200 task=daughter depth=root
-[UTEST]           2:   va=33 task=client depth=1
-[UTEST]           3: end
+[UTEST]           header info: lock: 0
+[UTEST]           : va=43200 task=daughter depth=root
+[UTEST]           :   va=33 task=client depth=1
 [UTEST]         } // mapping tree: daughter va=43200
 [UTEST]         mapping tree: { daughter va=43201 size=1
-[UTEST]           header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]           1: va=43201 task=daughter depth=root
-[UTEST]           2:   va=34 task=client depth=1
-[UTEST]           3: end
+[UTEST]           header info: lock: 0
+[UTEST]           : va=43201 task=daughter depth=root
+[UTEST]           :   va=34 task=client depth=1
 [UTEST]         } // mapping tree: daughter va=43201
-[UTEST]         3: end
 [UTEST]       } // mapping tree: daughter va=43200
-[UTEST]       3: end
 [UTEST]     } // mapping tree: daughter va=43000
-[UTEST]   5: end
 [UTEST] } // mapping tree: s0 va=0
 [UTEST] unmap client va=23 for node:
 [UTEST] remove PTE: client va=23 pa=3200 order=0
@@ -1086,50 +1018,42 @@
 [UTEST] page-table lookup: 40000 in daughter failed
 [UTEST] !lookup(&m, daughter, to_pfn(0x40000000), &frame): 	OK
 [UTEST] mapping tree: { s0 va=0 size=40000
-[UTEST]   header info: entries used: 2 free: 0 total: 8 lock: 0
-[UTEST]   1: va=0 task=s0 depth=root
-[UTEST]   2: subtree...
+[UTEST]   header info: lock: 0
+[UTEST]   : va=0 task=s0 depth=root
+[UTEST]   : subtree...
 [UTEST]   mapping tree: { s0 va=0 size=400
-[UTEST]     header info: entries used: 1 free: 0 total: 4 lock: 0
-[UTEST]     1: va=0 task=s0 depth=root
-[UTEST]     2: end
+[UTEST]     header info: lock: 0
+[UTEST]     : va=0 task=s0 depth=root
 [UTEST]   } // mapping tree: s0 va=0
 [UTEST]   mapping tree: { s0 va=3000 size=400
-[UTEST]     header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]     1: va=3000 task=s0 depth=root
-[UTEST]     2: subtree...
+[UTEST]     header info: lock: 0
+[UTEST]     : va=3000 task=s0 depth=root
+[UTEST]     : subtree...
 [UTEST]     mapping tree: { s0 va=3000 size=200
-[UTEST]       header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]       1: va=3000 task=s0 depth=root
-[UTEST]       2: subtree...
+[UTEST]       header info: lock: 0
+[UTEST]       : va=3000 task=s0 depth=root
+[UTEST]       : subtree...
 [UTEST]       mapping tree: { s0 va=3000 size=1
-[UTEST]         header info: entries used: 1 free: 0 total: 4 lock: 0
-[UTEST]         1: va=3000 task=s0 depth=root
-[UTEST]         2: end
+[UTEST]         header info: lock: 0
+[UTEST]         : va=3000 task=s0 depth=root
 [UTEST]       } // mapping tree: s0 va=3000
 [UTEST]       mapping tree: { s0 va=31ff size=1
-[UTEST]         header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]         1: va=31ff task=s0 depth=root
-[UTEST]         2:   va=22 task=client depth=1
-[UTEST]         3: end
+[UTEST]         header info: lock: 0
+[UTEST]         : va=31ff task=s0 depth=root
+[UTEST]         :   va=22 task=client depth=1
 [UTEST]       } // mapping tree: s0 va=31ff
-[UTEST]       3: end
 [UTEST]     } // mapping tree: s0 va=3000
 [UTEST]     mapping tree: { s0 va=3200 size=200
-[UTEST]       header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]       1: va=3200 task=s0 depth=root
-[UTEST]       2: subtree...
+[UTEST]       header info: lock: 0
+[UTEST]       : va=3200 task=s0 depth=root
+[UTEST]       : subtree...
 [UTEST]       mapping tree: { s0 va=3201 size=1
-[UTEST]         header info: entries used: 2 free: 0 total: 4 lock: 0
-[UTEST]         1: va=3201 task=s0 depth=root
-[UTEST]         2:   va=24 task=client depth=1
-[UTEST]         3: end
+[UTEST]         header info: lock: 0
+[UTEST]         : va=3201 task=s0 depth=root
+[UTEST]         :   va=24 task=client depth=1
 [UTEST]       } // mapping tree: s0 va=3201
-[UTEST]       3: end
 [UTEST]     } // mapping tree: s0 va=3200
-[UTEST]     3: end
 [UTEST]   } // mapping tree: s0 va=3000
-[UTEST]   3: end
 [UTEST] } // mapping tree: s0 va=0
 [UTEST] multilevel MDB done: 89 tests passed, 0 failed
 [UTEST] multilevel MDB OK

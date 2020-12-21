@@ -77,51 +77,19 @@ Jdb_mapdb::show_tree(Treemap* pages, Mapping::Pcnt offset, Mdb_types::Order base
   printf(" mapping tree for %s-page %012llx of task %lx - header at "
          L4_PTR_FMT "\033[K\n",
          size_str(1ULL << cxx::int_value<Mdb_types::Order>(pages->_page_shift + base_size)),
-         val(pages->vaddr(t->mappings()), base_size),
-         Kobject_dbg::pointer_to_id(t->mappings()[0].space()),
+         val(pages->vaddr(*t->begin()), base_size),
+         Kobject_dbg::pointer_to_id(t->begin()->space()),
          (Address)t);
-#ifdef NDEBUG
-  // If NDEBUG is active, t->_empty_count is undefined
-  printf(" header info: "
-         "entries used: %u  free: --  total: %u  lock=%u\033[K\n",
-         t->_count, t->number_of_entries(),
-         f->lock.test());
 
-  if (t->_count > t->number_of_entries())
-    {
-      printf("\033[K\n"
-             "\033[K\n"
-             "  seems to be a wrong tree ! ...exiting");
-      // clear rest of page
-      for (i=6; i<Jdb_screen::height(); i++)
-        printf("\033[K\n");
-      return false;
-    }
-#else
-  printf(" header info: "
-         "entries used: %u  free: %u  total: %u  lock=%d\033[K\n",
-         t->_count, t->_empty_count, t->number_of_entries(),
-         f->lock.test());
+  printf(" header info: lock=%u\033[K\n", f->lock.test());
 
-  if (unsigned (t->_count) + t->_empty_count > t->number_of_entries())
-    {
-      printf("\033[K\n"
-             "\033[K\n"
-             "  seems to be a wrong tree ! ...exiting");
-      // clear rest of page
-      for (i=6; i<Jdb_screen::height(); i++)
-        printf("\033[K\n");
-      return false;
-    }
-#endif
-
-  auto m = t->mappings();
+  auto m = t->begin();
 
   screenline += 2;
 
   unsigned empty = 0;
   unsigned c_depth = 0;
-  for(i=0; i < t->_count + empty; i++, m++)
+  for(i=0; *m; i++, ++m)
     {
       Kconsole::console()->getchar_chance();
 
@@ -129,14 +97,14 @@ Jdb_mapdb::show_tree(Treemap* pages, Mapping::Pcnt offset, Mdb_types::Order base
         printf("%*u: %lx  subtree@" L4_PTR_FMT,
                indent + c_depth > 10
                  ? 0 : (int)(indent + c_depth),
-               i+1, (Address) m->data(), (Mword) m->submap());
+               i+1, (Address) *m, (Mword) m->submap());
       else
         {
           c_depth = m->depth();
           printf("%*u: %lx  va=%012llx  task=%lx  depth=",
                  indent + c_depth > 10 ? 0 : (int)(indent + c_depth),
-                 i+1, (Address) m->data(),
-                 val(pages->vaddr(m), base_size),
+                 i+1, (Address) *m,
+                 val(pages->vaddr(*m), base_size),
                  Kobject_dbg::pointer_to_id(m->space()));
 
           if (m->is_root())

@@ -288,7 +288,6 @@ static void show_tree(Treemap *pages, Mapping::Pcnt offset = Mapping::Pcnt(0),
                       int indent = 0)
 {
   typedef Treemap::Page Page;
-
   Page       page = pages->trunc_to_page(offset);
   Physframe*    f = pages->frame(page);
 
@@ -319,44 +318,24 @@ static void show_tree(Treemap *pages, Mapping::Pcnt offset = Mapping::Pcnt(0),
 
   tree_ind = std::string(indent + 2, ' ');
 
-  cout << "[UTEST] " << tree_ind << "header info: entries used: " << t->_count
-       << " free: " << t->_empty_count
-       << " total: " << t->number_of_entries()
-       << " lock: " << f->lock.test() << endl;
+  cout << "[UTEST] " << tree_ind << "header info: lock: " << f->lock.test() << endl;
 
-  if (unsigned (t->_count) + t->_empty_count > t->number_of_entries())
+  for (Mapping* m = t->mappings(); m; m = t->next(m))
     {
-      cout << "[UTEST] " << tree_ind << "seems to be corrupt tree..." << endl;
-      return;
-    }
-
-  for (Mapping* m = t->mappings(); m != t->end_ptr(); m++)
-    {
-      if (!m->is_end_tag() && m->unused())
-        continue;
-
-      cout << "[UTEST] " << tree_ind << (m - t->mappings() +1) << ": ";
+      cout << "[UTEST] " << tree_ind << ": ";
 
       if (m->submap())
         cout << "subtree..." << endl;
       else
         {
-          if (m->is_end_tag())
-            {
-              cout << "end" << endl;
-              break;
-            }
-          else
-            {
-              ind = std::string(m->depth() * 2, ' ');
-              cout << ind << "va=" << pages->vaddr(m) << " task=" << *m->space()
-                   << " depth=";
+          ind = std::string(m->depth() * 2, ' ');
+          cout << ind << "va=" << pages->vaddr(m) << " task=" << *m->space()
+               << " depth=";
 
-              if (m->is_root())
-                cout << "root" << endl;
-              else
-                cout << m->depth() << endl;
-            }
+          if (m->depth() == 0)
+            cout << "root" << endl;
+          else
+            cout << m->depth() << endl;
         }
 
       if (m->submap())

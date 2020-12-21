@@ -59,10 +59,8 @@ public:
       return frame == o.frame;
     }
 
-    void clear(bool pack = false)
+    void clear(bool = false)
     {
-      if (pack)
-        frame->pack();
       frame->lock.clear();
       frame = nullptr;
     }
@@ -714,7 +712,7 @@ Treemap::insert(Physframe* frame, Mapping_tree::Iterator const &parent,
   if (! submap) // Need allocation of new entry -- for submap or
 		// normal mapping
     {
-      // first check quota! In case of a new submap the parent pays for 
+      // first check quota! In case of a new submap the parent pays for
       // the node...
       payer = Mapping_tree::quota(insert_submap ? parent_space : space);
 
@@ -778,8 +776,6 @@ Treemap::flush(Physframe* f, Mapping_tree::Iterator parent,
                bool me_too,
                Pcnt offs_begin, Pcnt offs_end)
 {
-  assert (! parent->unused());
-
   // This is easy to do: We just have to iterate over the array
   // encoding the tree.
   f->flush(parent, me_too, offs_begin, offs_end, Treemap_ops(_page_shift));

@@ -126,7 +126,6 @@ kernel_thread_IMPL	:= kernel_thread kernel_thread-std kernel_thread-ppc32
 kernel_uart_IMPL	:= kernel_uart kernel_uart-libuart
 kmem_alloc_IMPL		:= kmem_alloc kmem_alloc-ppc32
 map_util_IMPL		:= map_util map_util-mem map_util-objs
-mapping_IMPL		:= mapping-ppc32 mapping
 mem_layout_IMPL		:= mem_layout mem_layout-ppc32
 mem_unit_IMPL		:= mem_unit-ppc32
 mem_space_IMPL		:= mem_space mem_space-user mem_space-ppc32 \
