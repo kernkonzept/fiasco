@@ -257,13 +257,11 @@ Physframe::~Physframe()
       auto guard = lock_guard(lock);
 
       // Find next-level trees.
-      for (Mapping* m = tree()->mappings();
-	   m && !m->is_end_tag();
-	   m = tree()->next(m))
-	{
-	  if (m->submap())
-	    delete m->submap();
-	}
+      for (auto m = tree()->begin(); *m; ++m)
+        {
+          if (m->submap())
+            delete m->submap();
+        }
 
       erase_tree();
     }

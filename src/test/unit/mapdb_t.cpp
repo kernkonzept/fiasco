@@ -326,7 +326,7 @@ static void show_tree(Treemap *pages, Mapping::Pcnt offset = Mapping::Pcnt(0),
       return;
     }
 
-  for (Mapping* m = t->mappings(); m != t->end(); m++)
+  for (Mapping* m = t->mappings(); m != t->end_ptr(); m++)
     {
       if (!m->is_end_tag() && m->unused())
         continue;

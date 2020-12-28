@@ -169,6 +169,59 @@ struct Mapping_tree
 };
 
 INTERFACE:
+
+EXTENSION class Mapping_tree
+{
+public:
+  class Iterator
+  {
+  private:
+    Mapping *_m = nullptr;
+    Mapping_tree *_t = nullptr;
+
+    bool _is_valid() const { return (_m != nullptr) && !_m->is_end_tag(); }
+
+  public:
+    Iterator() = default;
+    Iterator(Mapping_tree *t, Mapping *m) : _m(m), _t(t) {}
+
+    bool operator == (Iterator const &o) const
+    {
+      if (_is_valid() && o._is_valid())
+        // we assume the same tree here, per precondition
+        return _m == o._m;
+
+      return _is_valid() == o._is_valid();
+    }
+
+    bool operator != (Iterator const &o) const
+    { return !operator == (o); }
+
+    Iterator &operator ++ ()
+    {
+      for (;;)
+        {
+          ++_m;
+          if (_m == _t->end_ptr() || _m->is_end_tag())
+            {
+              _m = nullptr;
+              return *this;
+            }
+
+          if (!_m->unused())
+            return *this;
+        }
+    }
+
+    Mapping *operator * () const { return _m; }
+    Mapping *operator -> () const { return _m; }
+  };
+
+
+  Iterator begin() { return Iterator(this, _mappings); }
+  Iterator end() { return Iterator(); }
+};
+
 //
 // class Physframe
 //
@@ -368,9 +421,9 @@ PUBLIC
 Mapping_tree::~Mapping_tree()
 {
   // special case for copied mapping trees
-  for (Mapping *m = _mappings; m < end() && !m->is_end_tag(); ++m)
+  for (auto const &m: *this)
     {
-      if (!m->submap() && !m->unused())
+      if (!m->submap())
         quota(m->space())->free(sizeof(Mapping));
     }
 }
@@ -408,16 +461,16 @@ Mapping_tree::is_empty() const
 
 PUBLIC inline NEEDS[Mapping_tree::mappings, Mapping_tree::number_of_entries]
 Mapping *
-Mapping_tree::end()
+Mapping_tree::end_ptr()
 {
   return mappings() + number_of_entries();
 }
 
-PUBLIC inline NEEDS[Mapping_tree::end]
+PUBLIC inline NEEDS[Mapping_tree::end_ptr]
 Mapping *
 Mapping_tree::last()
 {
-  return end() - 1;
+  return end_ptr() - 1;
 }
 
 // A utility function to find the tree header belonging to a mapping. 
@@ -433,7 +486,7 @@ PUBLIC inline
 Mapping *
 Mapping_tree::next(Mapping *m)
 {
-  for (m++; m < end() && ! m->is_end_tag(); m++)
+  for (m++; m < end_ptr() && ! m->is_end_tag(); m++)
     if (! m->unused())
       return m;
 
@@ -486,16 +539,14 @@ Mapping_tree::copy_compact_tree(Mapping_tree *dst, Mapping_tree *src)
 
   Mapping *d = dst->mappings();
 
-  for (Mapping *s = src->mappings();
-       s && !s->is_end_tag();
-       s = src->next(s))
+  for (auto const &s: *src)
     {
       *d++ = *s;
       dst->_count += 1;
     }
 
   assert (dst->_count == src_count); // Same number of entries
-  assert (d < dst->end());
+  assert (d < dst->end_ptr());
   // Room for one more entry (the Mapping::Depth_end entry)
 
   d->set_depth(Mapping::Depth_end);
@@ -540,7 +591,7 @@ Mapping_tree::check_integrity(Space *owner = (Space*)-1)
 
   unsigned used = 0, dead = 0;
 
-  while (m < end() && !m->is_end_tag())
+  while (m < end_ptr() && !m->is_end_tag())
     {
       if (m->unused())
         dead++;
@@ -603,8 +654,9 @@ Mapping *
 Mapping_tree::allocate(Ram_quota *payer, Mapping *parent,
                        bool insert_submap = false)
 {
-  Auto_quota<Ram_quota> q(payer, sizeof(Mapping));
-  if (EXPECT_FALSE(!q))
+  // If the parent mapping already has the maximum depth, we cannot
+  // insert a child.
+  if (EXPECT_FALSE (parent->depth() == Mapping::Depth_max))
     return 0;
 
   // After locating the right place for the new entry, it will be
@@ -618,9 +670,8 @@ Mapping_tree::allocate(Ram_quota *payer, Mapping *parent,
   if (EXPECT_FALSE (! last()->unused()))
     return 0;
 
-  // If the parent mapping already has the maximum depth, we cannot
-  // insert a child.
-  if (EXPECT_FALSE (parent->depth() == Mapping::Depth_max))
+  Auto_quota<Ram_quota> q(payer, sizeof(Mapping));
+  if (EXPECT_FALSE(!q))
     return 0;
 
   //allocation is done, so...
@@ -637,7 +688,7 @@ Mapping_tree::allocate(Ram_quota *payer, Mapping *parent,
   //   subtree.
 
   if (!insert_submap)
-    for (; insert < end(); ++insert)
+    for (; insert < end_ptr(); ++insert)
       {
         // End of subtree?  If we reach this point, this is our insert spot.
         if (insert->is_end_tag() || insert->depth() <= parent->depth())
@@ -689,7 +740,7 @@ Mapping_tree::allocate(Ram_quota *payer, Mapping *parent,
       if (insert->is_end_tag())
         {
           // Need to move end tag.
-          if (insert + 1 < end())
+          if (insert + 1 < end_ptr())
             insert++;           // Arrange for copying end tag as well
         }
 #ifndef NDEBUG
@@ -752,7 +803,7 @@ Mapping_tree::flush(Mapping *parent, bool me_too,
   unsigned m_depth = p_depth;
 
   for (Mapping* m = parent + 1;
-       m < end() && ! m->is_end_tag();
+       m < end_ptr() && ! m->is_end_tag();
        m++)
     {
       if (unsigned (m->depth()) <= p_depth)
@@ -804,7 +855,7 @@ Mapping_tree::flush(Mapping *parent, bool me_too,
     }
 
   // We deleted stuff at the end of the array -- move end tag
-  if (start_of_deletions < end())
+  if (start_of_deletions < end_ptr())
     {
       start_of_deletions->set_depth(Mapping::Depth_end);
 
