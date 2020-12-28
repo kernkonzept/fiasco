@@ -94,6 +94,25 @@ public:
     return v & (1UL << b);
   }
 
+  // Same functionality as atomic_get_and_clear() except that _bits is not
+  // written if the bit was already clear (and the function returns false).
+  bool atomic_get_and_clear_if_set(unsigned long bit)
+  {
+    unsigned long idx = bit / Bpl;
+    unsigned long b   = bit % Bpl;
+    unsigned long v;
+
+    do
+      {
+        v = this->_bits[idx];
+        if (!(v & (1UL << b)))
+          return false;
+      }
+    while (!mp_cas(&this->_bits[idx], v, v & ~(1UL << b)));
+
+    return true;
+  }
+
   bool atomic_get_and_set(unsigned long bit)
   {
     unsigned long idx = bit / Bpl;
@@ -228,6 +247,22 @@ public:
     while (!mp_cas(&_bits, v, v & ~(1UL << bit)));
 
     return v & (1UL << bit);
+  }
+
+  // Same functionality as atomic_get_and_clear() except that _bits is not
+  // written if the bit was already clear (and the function returns false).
+  bool atomic_get_and_clear_if_set(unsigned long bit)
+  {
+    unsigned long v;
+    do
+      {
+        v = _bits;
+        if (!(v & (1UL << bit)))
+          return false;
+      }
+    while (!mp_cas(&_bits, v, v & ~(1UL << bit)));
+
+    return true;
   }
 
   bool atomic_get_and_set(unsigned long bit)
