@@ -308,9 +308,13 @@ static void show_tree(Treemap *pages, Mapping::Pcnt offset = Mapping::Pcnt(0),
   std::string tree_ind(indent, ' ');
 
   Mapping_tree* t = f->tree();
+  auto frame_va = offset + pages->page_offset();
+
+
+
   cout << setbase(10)
-       << "[UTEST] " << tree_ind << "mapping tree: { " << *f->first_mapping()->space()
-       << " va=" << pages->vaddr(f->first_mapping())
+       << "[UTEST] " << tree_ind << "mapping tree: { " << *pages->owner()
+       << " va=" << frame_va
        << " size=" << (Mapdb::Pfn(1) << pages->page_shift()) << endl;
 
   tree_ind = std::string(indent + 2, ' ');
@@ -364,8 +368,8 @@ static void show_tree(Treemap *pages, Mapping::Pcnt offset = Mapping::Pcnt(0),
 
   tree_ind = std::string(indent, ' ');
 
-  cout << "[UTEST] " << tree_ind << "} // mapping tree: " << *f->first_mapping()->space()
-       << " va=" << pages->vaddr(f->first_mapping()) << endl;
+  cout << "[UTEST] " << tree_ind << "} // mapping tree: " << *pages->owner()
+       << " va=" << frame_va << endl;
 
 }
 
