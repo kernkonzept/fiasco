@@ -133,8 +133,8 @@ init_mapdb_mem(Space *sigma0)
     printf("MDB: phys_bits=%u levels = %u\n", Cpu::boot_cpu()->phys_bits(), idx);
 
   mapdb_mem.construct(sigma0,
-      Mapping::Page(1U << (phys_bits - Config::PAGE_SHIFT - page_sizes[0])),
-      page_sizes, idx);
+                      Mapping::Order(phys_bits - Config::PAGE_SHIFT),
+                      page_sizes, idx);
 }
 
 

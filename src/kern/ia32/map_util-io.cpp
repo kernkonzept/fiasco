@@ -23,7 +23,7 @@ void init_mapdb_io(Space *sigma0)
   static size_t const io_page_sizes[] =
     {Io_space::Map_superpage_shift, 9, Io_space::Page_shift};
 
-  mapdb_io.construct(sigma0, Mapping::Page(0x10000 >> io_page_sizes[0]), io_page_sizes, 3);
+  mapdb_io.construct(sigma0, Mapping::Order(16), io_page_sizes, 3);
 }
 
 /** Map the IO port region described by "fp_from" of address space "from"

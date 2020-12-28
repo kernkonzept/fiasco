@@ -457,10 +457,12 @@ Treemap::quota_size(Page key_end)
 
 PUBLIC static
 Treemap *
-Treemap::create(Page key_end, Space *owner_id,
-                Pfn page_offset, Order page_shift,
-                const size_t* sub_shifts, unsigned sub_shifts_max)
+Treemap::create(Order parent_page_shift, Space *owner_id,
+                Pfn page_offset,
+                const size_t* shifts, unsigned shifts_max)
 {
+  Order page_shift(shifts[0]);
+  Page key_end = Page(1) << (parent_page_shift - page_shift);
   Auto_quota<Ram_quota> quota(Mapping_tree::quota(owner_id), quota_size(key_end));
 
   if (EXPECT_FALSE(!quota))
@@ -479,8 +481,8 @@ Treemap::create(Page key_end, Space *owner_id,
     }
 
   quota.release();
-  return new (m) Treemap(key_end, owner_id, page_offset, page_shift, sub_shifts,
-                         sub_shifts_max, pf);
+  return new (m) Treemap(key_end, owner_id, page_offset, page_shift, shifts + 1,
+                         shifts_max - 1, pf);
 }
 
 
@@ -670,10 +672,8 @@ Treemap::insert(Physframe* frame, Mapping* parent, Space *space,
 
       assert (_sub_shifts_max > 0);
 
-      submap
-        = Treemap::create(Page(1) << (_page_shift - Order(_sub_shifts[0])),
-            parent->space(), vaddr(parent), Order(_sub_shifts[0]),
-            _sub_shifts + 1, _sub_shifts_max - 1);
+      submap = Treemap::create(_page_shift, parent->space(), vaddr(parent),
+                               _sub_shifts, _sub_shifts_max);
       if (! submap)
         {
           // free the mapping got with allocate
@@ -833,12 +833,10 @@ Mapdb::foreach_mapping(Mapdb::Frame const &f, Mapping* parent,
            Config::Mapdb_ram_only is true.) 
  */
 PUBLIC
-Mapdb::Mapdb(Space *owner, Mapping::Page end_frame, size_t const *page_shifts,
+Mapdb::Mapdb(Space *owner, Order parent_page_shift, size_t const *page_shifts,
              unsigned page_shifts_max)
-: _treemap(Treemap::create(end_frame, owner,
-                           Pfn(0),
-                           Order(page_shifts[0]), page_shifts + 1,
-                           page_shifts_max - 1))
+: _treemap(Treemap::create(parent_page_shift, owner,
+                           Pfn(0), page_shifts, page_shifts_max))
 {
   // assert (boot_time);
   assert (_treemap);

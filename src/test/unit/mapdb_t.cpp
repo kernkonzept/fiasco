@@ -608,7 +608,7 @@ static Mapdb *new_multilevel_mapdb()
       21 - Config::PAGE_SHIFT,
       0};
 
-  return new Mapdb(s0, Mapping::Page(1U << (42 - Config::PAGE_SHIFT - page_sizes[0])),
+  return new Mapdb(s0, Mapping::Order(42 - Config::PAGE_SHIFT),
       page_sizes, sizeof(page_sizes) / sizeof(page_sizes[0]));
 }
 
@@ -1006,15 +1006,15 @@ int main()
   unsigned phys_bits = 32;
   Mapdb *m;
 
-  m = new Mapdb(s0, Mapping::Page(1U << (phys_bits - Config::PAGE_SHIFT - page_sizes[0])),
+  m = new Mapdb(s0, Mapping::Order(phys_bits - Config::PAGE_SHIFT),
                 page_sizes, page_sizes_max);
   basic(*m);
 
-  m = new Mapdb(s0, Mapping::Page(1U << (phys_bits - Config::PAGE_SHIFT - page_sizes[0])),
+  m = new Mapdb(s0, Mapping::Order(phys_bits - Config::PAGE_SHIFT),
                 page_sizes, page_sizes_max);
   maphole(*m);
 
-  m = new Mapdb(s0, Mapping::Page(1U << (phys_bits - Config::PAGE_SHIFT - page_sizes[0])),
+  m = new Mapdb(s0, Mapping::Order(phys_bits - Config::PAGE_SHIFT),
                 page_sizes, page_sizes_max);
   flushtest(*m);
 
