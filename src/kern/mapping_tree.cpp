@@ -1118,7 +1118,7 @@ Base_mappable::free_mapping(Ram_quota *q, Mapping *parent)
 
 PUBLIC inline
 Mapping *
-Base_mappable::first_mapping() const
+Base_mappable::insertion_head() const
 {
   return _tree->mappings();
 }

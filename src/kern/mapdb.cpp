@@ -636,8 +636,8 @@ Treemap::lookup(Pcnt key, Space *search_space, Pfn search_va,
 
 PUBLIC
 Mapping *
-Treemap::insert(Physframe* frame, Mapping* parent, Space *space,
-                Pfn va, Pcnt phys, Pcnt size)
+Treemap::insert(Physframe* frame, Mapping* parent, Space *parent_space, Pfn parent_va,
+                Space *space, Pfn va, Pcnt phys, Pcnt size)
 {
   Treemap* submap = 0;
   Ram_quota *payer;
@@ -654,7 +654,7 @@ Treemap::insert(Physframe* frame, Mapping* parent, Space *space,
     {
       // first check quota! In case of a new submap the parent pays for 
       // the node...
-      payer = Mapping_tree::quota(insert_submap ? parent->space() : space);
+      payer = Mapping_tree::quota(insert_submap ? parent_space : space);
 
       Mapping *free = frame->alloc_mapping(payer, parent, insert_submap);
       if (EXPECT_FALSE(!free))
@@ -672,7 +672,7 @@ Treemap::insert(Physframe* frame, Mapping* parent, Space *space,
 
       assert (_sub_shifts_max > 0);
 
-      submap = Treemap::create(_page_shift, parent->space(), vaddr(parent),
+      submap = Treemap::create(_page_shift, parent_space, parent_va,
                                _sub_shifts, _sub_shifts_max);
       if (! submap)
         {
@@ -684,12 +684,14 @@ Treemap::insert(Physframe* frame, Mapping* parent, Space *space,
       free->set_submap(submap);
     }
 
-  Physframe* subframe = submap->tree(submap->trunc_to_page(cxx::get_lsb(phys, psz)));
+  Pcnt subframe_offset = cxx::mask_lsb(cxx::get_lsb(phys, psz), submap->page_shift());
+  Physframe* subframe = submap->tree(submap->trunc_to_page(subframe_offset));
   if (! subframe)
     return 0;
 
-  // XXX recurse.
-  Mapping* ret = submap->insert(subframe, subframe->first_mapping(), space, va,
+  Mapping* ret = submap->insert(subframe, subframe->insertion_head(),
+                                parent_space, parent_va + subframe_offset,
+                                space, va,
                                 cxx::get_lsb(phys, psz), size);
 
   subframe->release();
@@ -870,8 +872,9 @@ Mapping *
 Mapdb::insert(const Mapdb::Frame& frame, Mapping* parent, Space *space,
               Pfn va, Pfn phys, Pcnt size)
 {
-  return frame.treemap->insert(frame.frame, parent, space, va, phys - Pfn(0),
-                               size);
+  return frame.treemap->insert(frame.frame, parent, parent->space(),
+                               frame.treemap->vaddr(parent),
+                               space, va, phys - Pfn(0), size);
 } // insert()
 
 
