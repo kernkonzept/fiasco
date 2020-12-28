@@ -1132,3 +1132,17 @@ Base_mappable::release()
   // Unlock tree.
   lock.clear();
 }
+
+PUBLIC inline
+unsigned
+Base_mappable::min_depth() const
+{
+  return 1;
+}
+
+PUBLIC inline
+Mapping *
+Base_mappable::first() const
+{
+  return _tree->next(_tree->mappings());
+}

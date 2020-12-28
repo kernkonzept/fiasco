@@ -734,56 +734,83 @@ Treemap::grant(Physframe* f, Mapping* m, Space *new_space, Pfn va)
 //
 // class Mapdb_iterator
 //
+
+PUBLIC template<typename F> inline
+void
+Treemap::for_range(Page start, Page end, F &&func)
+{
+  Order ps = page_shift();
+
+  for (Page sub_page = start; sub_page < end; ++sub_page)
+    {
+      Physframe *f = frame(sub_page);
+      if (!f->has_mappings())
+        continue;
+
+      auto guard = lock_guard(f->lock);
+      func(f, ps);
+    }
+}
+
+PRIVATE template<typename F> static inline NEEDS[Physframe]
+void
+Mapdb::_for_full_subtree(Base_mappable *m, unsigned min_depth,
+                         Mapping *first, Mapdb::Order size, F &&func)
+{
+  typedef Mapping::Page Page;
+  auto *tree = m->tree();
+  for (Mapping *cursor = first; cursor; cursor = tree->next(cursor))
+    {
+      if (Treemap *map = cursor->submap())
+        map->for_range(Page(0), map->end(), [func](Physframe *f, Mapdb::Order size)
+            {
+              _for_full_subtree(f, f->min_depth(), f->first(), size,
+                                func);
+
+            });
+      else if (cursor->depth() >= min_depth)
+        func(cursor, size);
+      else
+        break;
+    }
+}
+
 PRIVATE template<typename F> static inline NEEDS[Treemap::round_to_page, Physframe]
 void
-Mapdb::_foreach_mapping(Base_mappable *mappable, Mapping *parent,
-                        bool me_too, Mapdb::Order size,
-                        Mapdb::Pfn va_begin, Mapdb::Pfn va_end, F func)
+Mapdb::_foreach_mapping(Base_mappable *mappable, unsigned min_depth,
+                        Mapping *cursor,
+                        Mapdb::Order size,
+                        Mapdb::Pfn va_begin, Mapdb::Pfn va_end, F &&func)
 {
   typedef Mapping::Page Page;
   auto tree = mappable->tree();
 
-  for (Mapping *cursor = tree->next_child(parent, parent); cursor;
-       cursor = tree->next_child(parent,cursor))
+  if (!cursor)
+    return;
+
+  if (Treemap *submap = cursor->submap())
     {
-      if (cursor && !cursor->submap())
-        {
-          func(cursor, size);
-          me_too = true;
-        }
-      else
-        {
-          Treemap *submap = cursor->submap();
-          Order ps = submap->page_shift();
-          Pfn po = submap->page_offset();
-          Page start(0);
-          Page end(submap->end());
+      Order ps = submap->page_shift();
+      Pfn po = submap->page_offset();
+      Page start(0);
+      Page end(submap->end());
 
-          if (!me_too)
-            {
-              if (va_begin > po)
-                start = Page(cxx::int_value<Pcnt>((va_begin - po) >> ps));
+      if (va_begin > po)
+        start = Page(cxx::int_value<Pcnt>((va_begin - po) >> ps));
 
-              if (va_end < po + submap->size())
-                end = submap->round_to_page(va_end - po);
-            }
+      if (va_end < po + submap->size())
+        end = submap->round_to_page(va_end - po);
 
-          for (Page sub_page = start; sub_page < end; ++sub_page)
-            {
-              Physframe *f = submap->frame(sub_page);
-              if (!f->has_mappings())
-                continue;
+      submap->for_range(start, end, [&func, va_begin, va_end](Physframe *f, Mapdb::Order size)
+          {
+            _foreach_mapping(f, f->min_depth(), f->first(),
+                             size, va_begin, va_end, func);
+          });
 
-              auto guard = lock_guard(f->lock);
-
-              _foreach_mapping(f, f->first_mapping(), me_too, submap->page_shift(),
-                               va_begin, va_end, func);
-            }
-
-        }
-
-
+      cursor = tree->next(cursor);
     }
+
+  _for_full_subtree(mappable, min_depth, cursor, size, cxx::forward<F>(func));
 }
 
 PUBLIC template<typename F> static inline NEEDS[Treemap::round_to_page, Physframe]
@@ -791,7 +818,8 @@ void
 Mapdb::foreach_mapping(Mapdb::Frame const &f, Mapping* parent,
                        Mapdb::Pfn va_begin, Mapdb::Pfn va_end, F &&func)
 {
-  _foreach_mapping(f.frame, parent, false, f.treemap->page_shift(),
+  _foreach_mapping(f.frame, parent->depth() + 1, f.frame->tree()->next(parent),
+                   f.treemap->page_shift(),
                    va_begin, va_end, cxx::forward<F>(func));
 }
 
