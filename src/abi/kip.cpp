@@ -215,6 +215,7 @@ Kip::init_global_kip(Kip *kip)
   global_kip = kip;
 
   kip->platform_info.is_mp = Config::Max_num_cpus > 1;
+  kip->sched_granularity = Config::Scheduler_granularity;
 
   // check that the KIP has actually been set up
   //assert(kip->sigma0_ip && kip->root_ip && kip->user_ptr);

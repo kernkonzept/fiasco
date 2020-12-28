@@ -92,7 +92,6 @@ void Kip_init::init()
   Kip::init_global_kip(kinfo);
 
   Kip::k()->clock = 0;
-  Kip::k()->sched_granularity = Config::Scheduler_granularity;
 
   setup_user_virtual(kinfo);
 
