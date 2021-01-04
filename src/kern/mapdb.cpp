@@ -38,10 +38,21 @@ public:
   typedef Mapping::Pcnt Pcnt;
   typedef Mdb_types::Order Order;
 
+private:
+  // get the virtual address coresponding to the given physframe
+  // inside this map
+  Pfn frame_vaddr(Physframe const *f) const
+  {
+    return  _page_offset + (Pcnt(f - _physframe) << _page_shift);
+  }
+
+public:
   class Frame
   {
   public:
-    Mapping_tree::Iterator m;
+    using Iterator = Mapping_tree::Iterator;
+
+    Iterator m;
     Treemap *treemap;
     Physframe *frame = nullptr;
 
@@ -85,6 +96,18 @@ public:
       treemap = tm;
       frame = pf;
     }
+
+    Space *pspace() const
+    { return *m ? m->space() : treemap->owner(); }
+
+    Pfn pvaddr() const
+    { return *m ? vaddr() : treemap->frame_vaddr(frame); }
+
+    int next_depth() const
+    { return *m ? m->depth() + 1 : 0; }
+
+    Iterator next_mapping() const
+    { return *m ? ++Iterator(m) : frame->first(); }
   };
 
 private:
@@ -126,7 +149,7 @@ public:
 
 private:
   // DATA
-  Treemap* const _treemap;
+  Treemap *const _treemap;
 };
 
 IMPLEMENTATION:
@@ -282,7 +305,8 @@ Physframe::alloc(size_t size)
 
 inline NOEXPORT
        NEEDS["mapping_tree.h", Treemap::~Treemap, Treemap::operator delete]
-Physframe::~Physframe()
+void
+Physframe::del(Space *owner)
 {
   if (has_mappings())
     {
@@ -295,16 +319,26 @@ Physframe::~Physframe()
             delete m->submap();
         }
 
-      erase_tree();
+      erase_tree(owner);
     }
+}
+
+inline NOEXPORT
+       NEEDS["mapping_tree.h", Treemap::~Treemap, Treemap::operator delete]
+Physframe::~Physframe()
+{
+  assert (!has_mappings());
 }
 
 static // inline NEEDS[Physframe::~Physframe]
 void 
-Physframe::free(Physframe *block, size_t size)
+Physframe::free(Physframe *block, size_t size, Space *owner)
 {
   for (unsigned i = 0; i < size; ++i)
-    block[i].~Physframe();
+    {
+      block[i].del(owner);
+      block[i].~Physframe();
+    }
 
   Kmem_alloc::allocator()->unaligned_free(Physframe::mem_size(size), block);
 }
@@ -425,7 +459,7 @@ Treemap_ops::flush(Treemap *submap,
       auto guard = lock_guard(subframe->lock);
 
       if (offs_begin <= page_offs_begin && offs_end >= page_offs_end)
-        subframe->erase_tree();
+        subframe->erase_tree(submap->owner());
       else
         {
           // FIXME: do we have to check for subframe->tree != 0 here ?
@@ -515,7 +549,7 @@ Treemap::create(Order parent_page_shift, Space *owner_id,
   void *m = allocator()->alloc();
   if (EXPECT_FALSE(!m))
     {
-      Physframe::free(pf, cxx::int_value<Page>(key_end));
+      Physframe::free(pf, cxx::int_value<Page>(key_end), owner_id);
       return 0;
     }
 
@@ -529,7 +563,7 @@ Treemap::create(Order parent_page_shift, Space *owner_id,
 PUBLIC inline NEEDS[Physframe::free, Mapdb]
 Treemap::~Treemap()
 {
-  Physframe::free(_physframe, cxx::int_value<Page>(_key_end));
+  Physframe::free(_physframe, cxx::int_value<Page>(_key_end), owner());
 }
 
 static Kmem_slab_t<Treemap> _treemap_allocator("Treemap");
@@ -676,6 +710,14 @@ Treemap::lookup(Pcnt key, Space *search_space, Pfn search_va,
   // FIXME: should we return an OOM here ?
   if (!f)
     return false;
+
+  // special sigma0 case for synthetic 1. level mapping nodes
+  if (search_space->is_sigma0())
+    {
+      assert (_owner_id == search_space);
+      res->set(f->insertion_head(), this, f);
+      return true;
+    }
 
   auto m = _lookup(f, f->tree()->begin(), search_space, key, search_va, res);
   if (*m)
@@ -881,8 +923,7 @@ Mapdb::foreach_mapping(Frame const &f,
                        Mapdb::Pfn va_begin, Mapdb::Pfn va_end,
                        F &&func)
 {
-  auto p = f.m;
-  _foreach_mapping(f.m->depth() + 1, ++p,
+  _foreach_mapping(f.next_depth(), f.next_mapping(),
                    f.treemap->page_shift(),
                    va_begin, va_end, cxx::forward<F>(func));
 }
@@ -929,13 +970,13 @@ Mapdb::~Mapdb()
     @post  All Mapping* pointers pointing into this mapping tree,
            except "parent" and its parents, will be invalidated.
  */
-PUBLIC
+PUBLIC inline
 Mapping *
 Mapdb::insert(Frame const &frame, Space *space,
               Pfn va, Pfn phys, Pcnt size)
 {
-  return frame.treemap->insert(frame.frame, frame.m, frame.m->space(),
-                               frame.vaddr(),
+  return frame.treemap->insert(frame.frame, frame.m,
+                               frame.pspace(), frame.pvaddr(),
                                space, va, phys - Pfn(0), size);
 } // insert()
 
@@ -972,12 +1013,12 @@ Mapdb::flush(Frame const &f, L4_map_mask mask,
              Pfn va_start, Pfn va_end)
 {
   Pcnt size = f.treemap->page_size();
-  Pcnt offs_begin = va_start > f.vaddr()
-                  ? va_start - f.vaddr()
+  Pcnt offs_begin = va_start > f.pvaddr()
+                  ? va_start - f.pvaddr()
                   : Pcnt(0);
-  Pcnt offs_end = va_end > f.vaddr() + size
+  Pcnt offs_end = va_end > f.pvaddr() + size
                 ? size
-                : va_end - f.vaddr();
+                : va_end - f.pvaddr();
 
   f.treemap->flush(f.frame, f.m, mask.self_unmap(), offs_begin, offs_end);
 } // flush()
@@ -1045,6 +1086,13 @@ Treemap::lookup_src_dst(Space *src, Pcnt src_key, Pfn src_va, Pcnt src_size,
 
   int c_depth = f->min_depth() - 1; // depth of current node
   Mapping_tree::Iterator m = t->begin();
+
+  // special sigma0 case for synthetic 1. level mapping nodes
+  if (*m && src->is_sigma0())
+    {
+      assert (src == _owner_id);
+      src_frame->set(f->insertion_head(), this, f);
+    }
 
   for (; *m && !src_frame->frame && !dst_frame->frame; ++m)
     {

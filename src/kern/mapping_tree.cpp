@@ -142,7 +142,7 @@ public:
   typedef ::Lock Lock;
   Lock lock;
 
-  void erase_tree() { _tree.erase(); }
+  void erase_tree(Space *owner) { _tree.erase(owner); }
 }; // struct Physframe
 
 
@@ -178,11 +178,21 @@ Mapping_tree::quota(Space *space)
   return space->ram_quota();
 }
 
+PUBLIC static inline
+Mapping_tree::Iterator
+Mapping_tree::insertion_head()
+{
+  return Mapping_tree::Iterator();
+}
+
 PUBLIC
 void
-Mapping_tree::erase()
+Mapping_tree::erase(Space *owner)
 {
-  Ram_quota *q = nullptr;
+  if (!front())
+    return;
+
+  Ram_quota *q = quota(owner);
   for (Iterator d = begin(); *d;)
     {
       // space is nullptr if the Mapping references a submap and
@@ -202,17 +212,19 @@ Mapping_tree::erase()
 
 PUBLIC inline
 Mapping_tree::~Mapping_tree()
-{ erase(); }
+{ erase(nullptr); }
 
 PUBLIC inline NEEDS[<cassert>]
 Treemap *
-Mapping_tree::find_submap(Iterator parent) const
+Mapping_tree::find_submap(Const_iterator parent) const
 {
-  assert (! parent->submap());
-
   // We need just one step to find a possible submap, because they are
   // always a parent's first child.
-  ++parent;
+
+  if (!*parent) // == insertion_head())
+    parent = begin();
+  else
+    ++parent;
 
   if (*parent)
     return parent->submap();
@@ -222,28 +234,52 @@ Mapping_tree::find_submap(Iterator parent) const
 
 PUBLIC
 Mapping_tree::Iterator
-Mapping_tree::allocate(Ram_quota *payer, Iterator parent,
-                       bool insert_submap = false)
+Mapping_tree::allocate_submap(Ram_quota *payer, Iterator parent)
 {
   Mapping *m = _mapping_allocator.q_new(payer);
   if (!m)
     return end();
 
-  Iterator pivot = parent;
-  if (!insert_submap && *parent)
+  if (*parent)
     {
-      auto n = pivot;
-      ++n;
-      if (*n && n->submap())
-        pivot = n;
+      insert(m, parent);
+      return ++parent;
+    }
+  else
+    {
+      push_front(m);
+      return begin();
+    }
+}
 
+PUBLIC
+Mapping_tree::Iterator
+Mapping_tree::allocate(Ram_quota *payer, Iterator parent)
+{
+  Mapping *m = _mapping_allocator.q_new(payer);
+  if (!m)
+    return end();
+
+  Iterator test = parent;
+  if (*test)
+    {
       m->set_depth(parent->depth() + 1);
+      ++test;
+    }
+  else
+    {
+      m->set_depth(0);
+      test = begin();
     }
 
-  if (*pivot)
+
+  if (*test && test->submap())
+    parent = test;
+
+  if (*parent)
     {
-      insert(m, pivot);
-      return ++pivot;
+      insert(m, parent);
+      return ++parent;
     }
   else
     {
@@ -307,13 +343,22 @@ Mapping_tree::flush(Iterator parent, bool me_too,
                     Pcnt offs_begin, Pcnt offs_end,
                     SUBMAP_OPS &&submap_ops = SUBMAP_OPS())
 {
-  unsigned long p_depth = parent->depth();
-
+  int p_depth;
   Iterator m = parent;
-  if (me_too)
-    m = free_mapping(quota(parent->space()), m);
+  if (*m)
+    {
+      p_depth = m->depth();
+      if (me_too)
+        m = free_mapping(quota(parent->space()), m);
+      else
+        ++m;
+    }
   else
-    ++m;
+    {
+      m = begin();
+      p_depth = -1;
+      me_too = false; // we do not support unmapping from sigma0, so downgrade...
+    }
 
   flush(m, p_depth, me_too, offs_begin, offs_end,
         cxx::forward<SUBMAP_OPS>(submap_ops));
@@ -357,32 +402,10 @@ Base_mappable::has_mappings() const
 { return _tree.front(); }
 
 PUBLIC inline
-Mapping_tree::Iterator
-Base_mappable::insert(Mapping_tree::Iterator parent, Space *space, Page page)
-{
-  auto free = tree()->allocate(Mapping_tree::quota(space), parent, false);
-
-  if (EXPECT_FALSE(!*free))
-    return Mapping_tree::Iterator();
-
-  free->set_space(space);
-  free->set_page(page);
-  return free;
-}
-
-PUBLIC inline
 bool
 Base_mappable::init_tree(Page page, Space *owner)
 {
-  if (_tree.front())
-    return true;
-
-  Mapping *m = *_tree.allocate(Mapping_tree::quota(owner), _tree.end(), false);
-  if (EXPECT_FALSE(!m))
-    return false;
-
-  m->set_page(page);
-  m->set_space(owner);
+  (void) page; (void) owner;
   return true;
 }
 
@@ -425,20 +448,14 @@ PUBLIC inline
 unsigned long
 Base_mappable::base_quota_size() const
 {
-  // if we have a tree we have one initial mapping object
-  return !_tree.front() ? 0 : sizeof(Mapping);
+  return 0;
 }
 
 PUBLIC inline
 void
 Base_mappable::grant_tree(Space *new_space, Page page)
 {
-  if (!_tree.front())
-    return;
-
-  auto guard = lock_guard(lock);
-  _tree.front()->set_space(new_space);
-  _tree.front()->set_page(page);
+  (void) new_space; (void) page;
 }
 
 PUBLIC inline
@@ -454,7 +471,10 @@ Base_mappable::alloc_mapping(Ram_quota *q,
                              Mapping_tree::Iterator parent,
                              bool submap)
 {
-  return _tree.allocate(q, parent, submap);
+  if (submap)
+    return _tree.allocate_submap(q, parent);
+  else
+    return _tree.allocate(q, parent);
 }
 
 PUBLIC inline
@@ -468,7 +488,7 @@ PUBLIC inline
 Mapping_tree::Iterator
 Base_mappable::insertion_head() const
 {
-  return const_cast<Mapping_tree &>(_tree).begin();
+  return _tree.insertion_head();
 }
 
 PUBLIC inline
@@ -483,12 +503,12 @@ PUBLIC inline
 unsigned
 Base_mappable::min_depth() const
 {
-  return 1;
+  return 0;
 }
 
 PUBLIC inline
 Mapping_tree::Iterator
 Base_mappable::first() const
 {
-  return ++const_cast<Mapping_tree &>(_tree).begin();
+  return const_cast<Mapping_tree &>(_tree).begin();
 }
