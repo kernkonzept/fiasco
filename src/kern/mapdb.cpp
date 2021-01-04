@@ -599,6 +599,42 @@ Treemap::frame(Page key) const
   return &_physframe[cxx::int_value<Page>(key)];
 }
 
+
+PRIVATE inline NEEDS[Treemap::match]
+Mapping *
+Treemap::_lookup(Physframe *f, Mapping *m, Space *spc, Pcnt key, Pfn va,
+                 Frame *res, int *root_depth = 0, int *current_depth = 0)
+{
+  auto t = f->tree();
+  auto subkey = cxx::get_lsb(key, _page_shift);
+  for (; m; m = t->next(m))
+    {
+      if (Treemap *sub = m->submap())
+        {
+          // XXX Recursion.  The max. recursion depth should better be
+          // limited!
+          if (sub->lookup(subkey, spc, va, res))
+            return m;
+
+          continue;
+        }
+
+      if (current_depth)
+        {
+          *current_depth = m->depth();
+          if (*root_depth >= *current_depth)
+            *root_depth = -2;
+        }
+
+      if (match(m, spc, va))
+        {
+          res->set(m, this, f);
+          return m;
+        }
+    }
+  return m;
+}
+
 PUBLIC
 bool
 Treemap::lookup(Pcnt key, Space *search_space, Pfn search_va,
@@ -612,40 +648,18 @@ Treemap::lookup(Pcnt key, Space *search_space, Pfn search_va,
   if (!f)
     return false;
 
-  Mapping_tree *t = f->tree();
-  Order const psz = _page_shift;
-
-  assert (t);
-  assert (t->mappings()[0].space() == _owner_id);
-  assert (vaddr(t->mappings()) == cxx::mask_lsb(key, psz) + _page_offset);
-
-  Mapping *m;
-  bool ret = false;
-
-  for (m = t->mappings(); m; m = t->next (m))
+  if (auto m = _lookup(f, f->tree()->mappings(), search_space, key, search_va, res))
     {
-      if (Treemap *sub = m->submap())
-	{
-	  // XXX Recursion.  The max. recursion depth should better be
-	  // limited!
-	  if ((ret = sub->lookup(cxx::get_lsb(key, psz),
-	                         search_space, search_va, res)))
-	    break;
-	}
-      else if (m->space() == search_space
-	       && vaddr(m) == cxx::mask_lsb(search_va, psz))
-	{
-	  res->m = m;
-	  res->treemap = this;
-	  res->frame = f;
-	  return true;		// found! -- return locked
-	}
+      if (m->submap())
+        f->lock.clear();
+
+      return true;
     }
 
   // not found, or found in submap -- unlock tree
   f->lock.clear();
 
-  return ret;
+  return false;
 }
 
 PUBLIC
