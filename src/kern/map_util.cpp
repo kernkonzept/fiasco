@@ -389,7 +389,6 @@ map(MAPDB* mapdb,
   typedef typename SPACE::V_pfn V_pfn;
   typedef typename SPACE::V_pfc V_pfc;
 
-  typedef typename MAPDB::Mapping Mapping;
   typedef typename MAPDB::Frame Frame;
 
   L4_error condition = L4_error::None;
@@ -499,10 +498,11 @@ map(MAPDB* mapdb,
       // we can overmap, either look up the destination mapping first
       // (and compute the sender mapping from it) or look up the
       // sender mapping directly.
-      Mapping* sender_mapping = 0;
+
       // mapdb_frame will be initialized by the mapdb lookup function when
       // it returns true, so don't care about "may be use uninitialized..."
-      Frame mapdb_frame;
+      Frame sender_frame;
+      sender_frame.m = 0;
 
       if (rcv_page_mapped)
         {
@@ -514,11 +514,11 @@ map(MAPDB* mapdb,
               && r_order <= i_order             // Rcv frame in snd frame
               && SPACE::page_address(r_phys, i_order) == i_phys
               && s_valid)
-            sender_mapping = mapdb->check_for_upgrade(SPACE::to_pfn(r_phys), from_id,
+            sender_frame.m = mapdb->check_for_upgrade(SPACE::to_pfn(r_phys), from_id,
                                                       SPACE::to_pfn(snd_addr), to_id,
-                                                      SPACE::to_pfn(rcv_addr), &mapdb_frame);
+                                                      SPACE::to_pfn(rcv_addr), &sender_frame);
 
-          if (! sender_mapping)	// Need flush
+          if (! sender_frame.m)	// Need flush
             unmap(mapdb, to, to_id, SPACE::page_address(rcv_addr, r_order), SPACE::to_size(r_order),
                   L4_fpage::Rights::FULL(), L4_map_mask::full(), tlb, reap_list);
           else
@@ -528,11 +528,11 @@ map(MAPDB* mapdb,
       // Loop increment is size of insertion
       size = i_size;
 
-      if (s_valid && ! sender_mapping
+      if (s_valid && ! sender_frame.m
           && EXPECT_FALSE(! mapdb->lookup(from_id,
                                           SPACE::to_pfn(SPACE::page_address(snd_addr, s_order)),
                                           SPACE::to_pfn(s_phys),
-                                          &sender_mapping, &mapdb_frame)))
+                                          &sender_frame)))
         continue;		// someone deleted this mapping in the meantime
 
       // from here mapdb_frame is always initialized, so ignore the warning
@@ -559,8 +559,8 @@ map(MAPDB* mapdb,
             if (grant)
               {
                 if (s_valid
-                    && EXPECT_FALSE(!mapdb->grant(mapdb_frame, sender_mapping,
-                                                  to_id, SPACE::to_pfn(rcv_addr))))
+                    && EXPECT_FALSE(!mapdb->grant(sender_frame, to_id,
+                                                  SPACE::to_pfn(rcv_addr))))
                   {
                     // Error -- remove mapping again.
                     to->v_delete(rcv_addr, i_order, L4_fpage::Rights::FULL());
@@ -578,7 +578,7 @@ map(MAPDB* mapdb,
             else if (status == SPACE::Insert_ok)
               {
                 if (s_valid
-                    && !mapdb->insert(mapdb_frame, sender_mapping,
+                    && !mapdb->insert(sender_frame,
                                       to_id, SPACE::to_pfn(rcv_addr),
                                       SPACE::to_pfn(i_phys), SPACE::to_pcnt(i_order)))
                   {
@@ -621,8 +621,8 @@ map(MAPDB* mapdb,
           break;
         }
 
-      if (sender_mapping)
-        mapdb->free(mapdb_frame);
+      if (sender_frame.m)
+        mapdb->free(sender_frame);
 
       if (!condition.ok())
         break;
@@ -644,7 +644,6 @@ map(MAPDB* mapdb,
 template<typename MAPDB>
 void
 save_access_flags(Mem_space *space, typename Mem_space::V_pfn page_address, bool me_too,
-                  typename MAPDB::Mapping *mapping,
                   typename MAPDB::Frame const &mapdb_frame,
                   L4_fpage::Rights page_rights)
 {
@@ -652,11 +651,11 @@ save_access_flags(Mem_space *space, typename Mem_space::V_pfn page_address, bool
     {
       // When flushing access attributes from our space as well,
       // cache them in parent space, otherwise in our space.
-      if (! me_too || !mapping->parent())
+      if (! me_too || !mapdb_frame.m->parent())
         space->v_set_access_flags(page_address, accessed);
       else
         {
-          typename MAPDB::Mapping *parent = mapping->parent();
+          typename MAPDB::Mapping *parent = mapdb_frame.m->parent();
           typename Mem_space::V_pfn parent_address = Mem_space::to_virt(mapdb_frame.vaddr(parent));
           parent->space()->v_set_access_flags(parent_address, accessed);
         }
@@ -668,7 +667,6 @@ template<typename MAPDB, typename SPACE,
          typename = typename cxx::enable_if<!cxx::is_same<SPACE, Mem_space>::value>::type>
 void
 save_access_flags(SPACE *, typename SPACE::V_pfn, bool,
-                  typename MAPDB::Mapping *,
                   typename MAPDB::Frame const &,
                   L4_fpage::Rights)
 {}
@@ -686,7 +684,6 @@ unmap(MAPDB* mapdb, SPACE* space, Space *space_id,
 {
   using namespace Mu;
 
-  typedef typename MAPDB::Mapping Mapping;
   typedef typename MAPDB::Frame Frame;
 
   typedef typename SPACE::V_pfn V_pfn;
@@ -742,11 +739,10 @@ unmap(MAPDB* mapdb, SPACE* space, Space *space_id,
       // all pages shall be handled by our mapping data base
       assert (mapdb->valid_address(SPACE::to_pfn(phys)));
 
-      Mapping *mapping;
       Frame mapdb_frame;
 
       if (! mapdb->lookup(space_id, SPACE::to_pfn(page_address), SPACE::to_pfn(phys),
-                          &mapping, &mapdb_frame))
+                          &mapdb_frame))
         // someone else unmapped faster
         continue;		// skip
 
@@ -761,7 +757,7 @@ unmap(MAPDB* mapdb, SPACE* space, Space *space_id,
           tlb.add_page(space, address, phys_order);
         }
 
-      MAPDB::foreach_mapping(mapdb_frame, mapping, SPACE::to_pfn(address), SPACE::to_pfn(end),
+      MAPDB::foreach_mapping(mapdb_frame, SPACE::to_pfn(address), SPACE::to_pfn(end),
           [&page_rights, rights, full_flush, &tlb](typename MAPDB::Mapping *m, typename MAPDB::Order size)
           {
             page_rights |= v_delete<SPACE>(m, size, rights, full_flush, tlb);
@@ -770,11 +766,11 @@ unmap(MAPDB* mapdb, SPACE* space, Space *space_id,
       flushed_rights |= page_rights;
 
       // Store access attributes for later retrieval
-      save_access_flags<MAPDB>(space, page_address, me_too, mapping, mapdb_frame, page_rights);
+      save_access_flags<MAPDB>(space, page_address, me_too, mapdb_frame, page_rights);
 
       if (full_flush)
         {
-          mapdb->flush(mapdb_frame, mapping, mask, SPACE::to_pfn(address),
+          mapdb->flush(mapdb_frame, mask, SPACE::to_pfn(address),
                        SPACE::to_pfn(end));
           Map_traits<SPACE>::free_object(phys, reap_list);
         }

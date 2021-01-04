@@ -149,7 +149,6 @@ int main()
   Phys_addr phys;
   Page_order order;
   Attr page_attribs;
-  Mapping *m;
   Mapdb::Frame frame;
 
   cout << "[UTEST] s0 [0x10000] -> server [0x1000]" << endl;
@@ -169,8 +168,8 @@ int main()
   assert (phys == Phys_addr(0x10000));
   assert (page_attribs.rights == L4_fpage::Rights::URWX());
 
-  assert (mapdb->lookup(sigma0, to_pfn(0x10000), to_pfn(0x10000), &m, &frame));
-  print_node (m, frame);
+  assert (mapdb->lookup(sigma0, to_pfn(0x10000), to_pfn(0x10000), &frame));
+  print_node (frame);
   mapdb->free (frame);
 
   cout << "[UTEST] s0 [0/superpage] -> server [0] -> should map many 4K pages and "
@@ -191,8 +190,8 @@ int main()
   assert (phys == Phys_addr(0));
   assert (page_attribs.rights == L4_fpage::Rights::URX());
 
-  assert (mapdb->lookup(sigma0, to_pfn(0), to_pfn(0), &m, &frame));
-  print_node (m, frame);
+  assert (mapdb->lookup(sigma0, to_pfn(0), to_pfn(0), &frame));
+  print_node (frame);
   mapdb->free (frame);
 
   // previous mapping still there?
@@ -209,8 +208,8 @@ int main()
 
   // mapdb entry -- tree should now contain another mapping 
   // s0 [0x10000] -> server [0x10000]
-  assert (mapdb->lookup(sigma0, to_pfn(0x10000), to_pfn(0x10000), &m, &frame));
-  print_node (m, frame, 0x10000, 0x11000);
+  assert (mapdb->lookup(sigma0, to_pfn(0x10000), to_pfn(0x10000), &frame));
+  print_node (frame, 0x10000, 0x11000);
   mapdb->free (frame);
 
   cout << "[UTEST] Partially unmap superpage s0 [0/superpage]" << endl;
@@ -225,8 +224,8 @@ int main()
 	      Test_fpage::mem(0x100000, Config::SUPERPAGE_SHIFT - 2, L4_fpage::Rights::URWX()),
 	      L4_map_mask(0) /*full unmap, not me too)*/, reap.list());
   
-  assert (mapdb->lookup(sigma0, to_pfn(0x0), to_pfn(0x0), &m, &frame));
-  print_node (m, frame);
+  assert (mapdb->lookup(sigma0, to_pfn(0x0), to_pfn(0x0), &frame));
+  print_node (frame);
   mapdb->free (frame);
 
   assert (! ms(server)->v_lookup(to_vaddr(0x101000), &phys, &order, &page_attribs));
@@ -249,8 +248,8 @@ int main()
   assert (phys == Virt_addr(0x400000));
   assert (page_attribs.rights == L4_fpage::Rights::URWX());
 
-  assert (mapdb->lookup(sigma0, to_pfn(0x400000), to_pfn(0x400000), &m, &frame));
-  print_node (m, frame);
+  assert (mapdb->lookup(sigma0, to_pfn(0x400000), to_pfn(0x400000), &frame));
+  print_node (frame);
   mapdb->free (frame);
 
   // 
@@ -274,8 +273,8 @@ int main()
   // Previously, the 4K submapping is attached to the Sigma0 parent.
   // Not any more.
 
-  assert (mapdb->lookup(sigma0, to_pfn(0x400000), to_pfn(0x400000), &m, &frame));
-  print_node (m, frame);
+  assert (mapdb->lookup(sigma0, to_pfn(0x400000), to_pfn(0x400000), &frame));
+  print_node (frame);
   mapdb->free (frame);
 
   //
@@ -311,8 +310,8 @@ int main()
   assert (page_attribs == (Mem_space::Page_writable 
 			   | Mem_space::Page_user_accessible));  
 
-  assert (mapdb->lookup (sigma0, 0x400000, 0x400000, &m, &frame));
-  print_node (m, frame);
+  assert (mapdb->lookup (sigma0, 0x400000, 0x400000, &frame));
+  print_node (frame);
   mapdb->free (frame);
 
   fpage_unmap (server,
@@ -330,8 +329,8 @@ int main()
   assert (page_attribs == (Mem_space::Page_writable 
 			   | Mem_space::Page_user_accessible));  
 
-  assert (mapdb->lookup (sigma0->id(), 0x400000, 0x400000, &m, &frame));
-  print_node (m, frame);
+  assert (mapdb->lookup (sigma0->id(), 0x400000, 0x400000, &frame));
+  print_node (frame);
   mapdb->free (frame);
 #endif
 
@@ -424,19 +423,20 @@ std::ostream &operator << (std::ostream &s, Space const &sp)
 }
 
 
-static void print_node(Mapping* node, const Mapdb::Frame& frame,
+static void print_node(const Mapdb::Frame& frame,
 		       Address va_begin = 0, Address va_end = ~0UL)
 {
+  auto node = frame.m;
   assert (node);
 
-  Mapdb::Order size = Mapdb::shift(frame, node);
+  Mapdb::Order size = Mapdb::shift(frame);
 
   cout << "space="  << *node->space()
        << " vaddr=0x" << node->pfn(size)
        << " size=0x" << (Mapdb::Pfn(1) << size)
        << endl;
 
-  Mapdb::foreach_mapping(frame, node, to_pfn(va_begin), to_pfn(va_end),
+  Mapdb::foreach_mapping(frame, to_pfn(va_begin), to_pfn(va_end),
     [](Mapping *node, Mapdb::Order order)
     {
       cout << "[UTEST] ";

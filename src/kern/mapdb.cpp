@@ -27,12 +27,13 @@ public:
   // TYPES
   class Frame
   {
-    friend class Mapdb;
-    Treemap* treemap;
-    Physframe* frame;
-
   public:
+    Mapping *m;
+    Treemap *treemap;
+    Physframe *frame;
+
     inline Pfn vaddr(Mapping* m) const;
+    inline Pfn vaddr() const;
     inline Order page_shift() const;
   };
 
@@ -69,6 +70,7 @@ public:
   typedef Mapdb::Pfn Pfn;
   typedef Mapdb::Pcnt Pcnt;
   typedef Mapdb::Order Order;
+  typedef Mapdb::Frame Frame;
 
 private:
   friend class Jdb_mapdb;
@@ -586,8 +588,7 @@ Treemap::frame(Page key) const
 PUBLIC
 bool
 Treemap::lookup(Pcnt key, Space *search_space, Pfn search_va,
-                Mapping** out_mapping, Treemap** out_treemap,
-                Physframe** out_frame)
+                Frame *res)
 {
   // get and lock the tree.
   assert (trunc_to_page(key) < _key_end);
@@ -614,16 +615,15 @@ Treemap::lookup(Pcnt key, Space *search_space, Pfn search_va,
 	  // XXX Recursion.  The max. recursion depth should better be
 	  // limited!
 	  if ((ret = sub->lookup(cxx::get_lsb(key, psz),
-	                         search_space, search_va,
-	                         out_mapping, out_treemap, out_frame)))
+	                         search_space, search_va, res)))
 	    break;
 	}
       else if (m->space() == search_space
 	       && vaddr(m) == cxx::mask_lsb(search_va, psz))
 	{
-	  *out_mapping = m;
-	  *out_treemap = this;
-	  *out_frame = f;
+	  res->m = m;
+	  res->treemap = this;
+	  res->frame = f;
 	  return true;		// found! -- return locked
 	}
     }
@@ -817,10 +817,10 @@ Mapdb::_foreach_mapping(Base_mappable *mappable, unsigned min_depth,
 
 PUBLIC template<typename F> static inline NEEDS[Treemap::round_to_page, Physframe]
 void
-Mapdb::foreach_mapping(Mapdb::Frame const &f, Mapping* parent,
+Mapdb::foreach_mapping(Frame const &f,
                        Mapdb::Pfn va_begin, Mapdb::Pfn va_end, F &&func)
 {
-  _foreach_mapping(f.frame, parent->depth() + 1, f.frame->tree()->next(parent),
+  _foreach_mapping(f.frame, f.m->depth() + 1, f.frame->tree()->next(f.m),
                    f.treemap->page_shift(),
                    va_begin, va_end, cxx::forward<F>(func));
 }
@@ -869,11 +869,11 @@ Mapdb::~Mapdb()
  */
 PUBLIC
 Mapping *
-Mapdb::insert(const Mapdb::Frame& frame, Mapping* parent, Space *space,
+Mapdb::insert(Frame const &frame, Space *space,
               Pfn va, Pfn phys, Pcnt size)
 {
-  return frame.treemap->insert(frame.frame, parent, parent->space(),
-                               frame.treemap->vaddr(parent),
+  return frame.treemap->insert(frame.frame, frame.m, frame.m->space(),
+                               frame.vaddr(),
                                space, va, phys - Pfn(0), size);
 } // insert()
 
@@ -893,10 +893,9 @@ Mapdb::insert(const Mapdb::Frame& frame, Mapping* parent, Space *space,
 PUBLIC
 bool
 Mapdb::lookup(Space *space, Pfn va, Pfn phys,
-             Mapping** out_mapping, Mapdb::Frame* out_lock)
+              Frame *res)
 {
-  return _treemap->lookup(phys - Pfn(0), space, va, out_mapping,
-                          & out_lock->treemap, & out_lock->frame);
+  return _treemap->lookup(phys - Pfn(0), space, va, res);
 }
 
 /** Unlock the mapping tree to which the mapping belongs.  Once a tree
@@ -913,7 +912,7 @@ Mapdb::lookup(Space *space, Pfn va, Pfn phys,
  */
 PUBLIC
 static void
-Mapdb::free(const Mapdb::Frame& f)
+Mapdb::free(Frame const &f)
 {
   f.frame->release();
 } // free()
@@ -926,18 +925,18 @@ Mapdb::free(const Mapdb::Frame& f)
  */
 PUBLIC static
 void
-Mapdb::flush(const Mapdb::Frame& f, Mapping *m, L4_map_mask mask,
+Mapdb::flush(Frame const &f, L4_map_mask mask,
              Pfn va_start, Pfn va_end)
 {
   Pcnt size = f.treemap->page_size();
-  Pcnt offs_begin = va_start > f.treemap->vaddr(m)
-                  ? va_start - f.treemap->vaddr(m)
+  Pcnt offs_begin = va_start > f.vaddr()
+                  ? va_start - f.vaddr()
                   : Pcnt(0);
-  Pcnt offs_end = va_end > f.treemap->vaddr(m) + size
+  Pcnt offs_end = va_end > f.vaddr() + size
                 ? size
-                : va_end - f.treemap->vaddr(m);
+                : va_end - f.vaddr();
 
-  f.treemap->flush(f.frame, m, mask.self_unmap(), offs_begin, offs_end);
+  f.treemap->flush(f.frame, f.m, mask.self_unmap(), offs_begin, offs_end);
 } // flush()
 
 /** Change ownership of a mapping.
@@ -948,16 +947,16 @@ Mapdb::flush(const Mapdb::Frame& f, Mapping *m, L4_map_mask mask,
  */
 PUBLIC
 bool
-Mapdb::grant(const Mapdb::Frame& f, Mapping *m, Space *new_space,
+Mapdb::grant(Frame const &f, Space *new_space,
              Pfn va)
 {
-  return f.treemap->grant(f.frame, m, new_space, va);
+  return f.treemap->grant(f.frame, f.m, new_space, va);
 }
 
 /** Return page size of given mapping and frame. */
 PUBLIC static inline NEEDS[Treemap::page_shift, "mapping_tree.h"]
 Mapdb::Order
-Mapdb::shift(const Mapdb::Frame& f, Mapping * /*m*/)
+Mapdb::shift(Frame const &f)
 {
   // XXX add special case for _mappings[0]: Return superpage size.
   return f.treemap->page_shift();
@@ -965,9 +964,9 @@ Mapdb::shift(const Mapdb::Frame& f, Mapping * /*m*/)
 
 PUBLIC static inline NEEDS[Treemap::vaddr, "mapping_tree.h"]
 Mapdb::Pfn
-Mapdb::vaddr(const Mapdb::Frame& f, Mapping* m)
+Mapdb::vaddr(Frame const &f)
 {
-  return f.treemap->vaddr(m);
+  return f.treemap->vaddr(f.m);
 }
 
 // 
@@ -977,6 +976,11 @@ Mapdb::vaddr(const Mapdb::Frame& f, Mapping* m)
 IMPLEMENT inline NEEDS[Treemap::vaddr, "mapping_tree.h"]
 Mapdb::Pfn
 Mapdb::Frame::vaddr(Mapping* m) const
+{ return treemap->vaddr(m); }
+
+IMPLEMENT inline NEEDS[Treemap::vaddr, "mapping_tree.h"]
+Mapdb::Pfn
+Mapdb::Frame::vaddr() const
 { return treemap->vaddr(m); }
 
 IMPLEMENT inline NEEDS[Treemap::page_shift, "mapping_tree.h"]
@@ -1003,13 +1007,12 @@ Mapdb::check_for_upgrade(Pfn phys,
 {
   // Check if we can upgrade mapping.  Otherwise, flush target
   // mapping.
-  Mapping* receiver_mapping;
   if (valid_address(phys) // Can lookup in mapdb
-      && lookup(to_id, rcv_addr, phys, &receiver_mapping, mapdb_frame))
+      && lookup(to_id, rcv_addr, phys, mapdb_frame))
     {
-      Mapping* receiver_parent = receiver_mapping->parent();
+      Mapping* receiver_parent = mapdb_frame->m->parent();
       if (receiver_parent->space() == from_id
-	  && vaddr(*mapdb_frame, receiver_parent) == snd_addr)
+	  && mapdb_frame->vaddr(receiver_parent) == snd_addr)
 	return receiver_parent;
       else		// Not my child -- cannot upgrade
 	free(*mapdb_frame);

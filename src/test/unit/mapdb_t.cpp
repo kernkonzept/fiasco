@@ -234,8 +234,9 @@ static std::ostream &operator << (std::ostream &s, Fake_task::Entry const &e)
 }
 
 
-static void print_node(Mapping* node, const Mapdb::Frame& frame, Mapping *sub = 0)
+static void print_node(const Mapdb::Frame& frame, Mapping *sub = 0)
 {
+  auto node = frame.m;
   assert (node);
 
   cout << "[UTEST] " << node->depth() << ": ";
@@ -255,7 +256,7 @@ static void print_node(Mapping* node, const Mapdb::Frame& frame, Mapping *sub = 
        << " size=0x" << (Mapdb::Pfn(1) << shift)
        << endl;
 
-  Mapdb::foreach_mapping(frame, node, Mapdb::Pfn(0), Mapdb::Pfn(~0),
+  Mapdb::foreach_mapping(frame, Mapdb::Pfn(0), Mapdb::Pfn(~0),
       [sub](Mapping *node, Mapdb::Order shift)
       {
         cout << "[UTEST] " << node->depth() << ": ";
@@ -384,29 +385,29 @@ Mapdb::Order to_po(unsigned order)
 
 static void basic(Mapdb &m)
 {
-  Mapping *node, *sub;
+  Mapping *sub;
   Mapdb::Frame frame;
 
   init_test("basic");
 
   TEST (! m.lookup(other, to_pfn(Config::PAGE_SIZE),
                      to_pfn(Config::PAGE_SIZE),
-                     &node, &frame));
+                     &frame));
 
   cout << "[UTEST] Looking up 4M node at physaddr=0K" << endl;
   TEST (m.lookup(s0,
                    to_pfn(0),
                    to_pfn(0),
-                   &node, &frame));
-  print_node(node, frame);
+                   &frame));
+  print_node(frame);
 
   cout << "[UTEST] Inserting submapping" << endl;
-  sub = m.insert(frame, node, other,
+  sub = m.insert(frame, other,
                  to_pfn(2 * Config::PAGE_SIZE),
                  to_pfn(Config::PAGE_SIZE),
                  to_pcnt(Config::PAGE_SHIFT));
   TEST (sub);
-  print_node(node, frame, sub);
+  print_node(frame, sub);
   m.free(frame);
 
   //////////////////////////////////////////////////////////////////////
@@ -415,17 +416,17 @@ static void basic(Mapdb &m)
   TEST (m.lookup(s0,
                    to_pfn(2 * Config::SUPERPAGE_SIZE),
                    to_pfn(2 * Config::SUPERPAGE_SIZE),
-                   &node, &frame));
-  print_node(node, frame);
+                   &frame));
+  print_node(frame);
 
   // XXX broken mapdb: assert (node->size() == Config::SUPERPAGE_SIZE);
 
   cout << "[UTEST] Inserting submapping" << endl;
-  sub = m.insert(frame, node, other,
+  sub = m.insert(frame, other,
                  to_pfn(4 * Config::SUPERPAGE_SIZE),
                  to_pfn(2 * Config::SUPERPAGE_SIZE),
                  to_pcnt(Config::SUPERPAGE_SHIFT));
-  print_node(node, frame, sub);
+  print_node(frame, sub);
 
   // Before we can insert new mappings, we must free the tree.
   m.free(frame);
@@ -434,87 +435,89 @@ static void basic(Mapdb &m)
   TEST (m.lookup(other,
                    to_pfn(4 * Config::SUPERPAGE_SIZE),
                    to_pfn(2 * Config::SUPERPAGE_SIZE),
-                   &sub, &frame));
-  print_node(sub, frame);
-  TEST (m.shift(frame, sub) == Mapdb::Order(Config::SUPERPAGE_SHIFT - Config::PAGE_SHIFT));
+                   &frame));
+  print_node(frame);
+  TEST (m.shift(frame) == Mapdb::Order(Config::SUPERPAGE_SHIFT - Config::PAGE_SHIFT));
 
-  node = sub->parent();
+  Mapping *ma = sub->parent();
 
   cout << "[UTEST] Inserting 4K submapping" << endl;
-  TEST ( m.insert(frame, sub, client,
+  TEST ( m.insert(frame, client,
                     to_pfn(15 * Config::PAGE_SIZE),
                     to_pfn(2 * Config::SUPERPAGE_SIZE),
                     to_pcnt(Config::PAGE_SHIFT)));
-  print_node(node, frame);
+  frame.m = ma;
+  print_node(frame);
 
   m.free(frame);
 
   test_done();
 }
 
-static void print_whole_tree(Mapping *node, const Mapdb::Frame& frame)
+static void print_whole_tree(const Mapdb::Frame& frame)
 {
-  while(node->parent())
-    node = node->parent();
-  print_node (node, frame);
+  auto f = frame;
+  while(f.m->parent())
+    f.m = f.m->parent();
+  print_node(f);
 }
 
 
 static void maphole(Mapdb &m)
 {
-  Mapping *gf_map, *f_map, *son_map, *daughter_map;
   Mapdb::Frame frame;
 
   init_test("maphole");
 
   cout << "[UTEST] Looking up 4K node at physaddr=0" << endl;
   TEST (m.lookup (grandfather, to_pfn(0),
-		    to_pfn(0), &gf_map, &frame));
-  print_whole_tree (gf_map, frame);
+		    to_pfn(0), &frame));
+  print_whole_tree (frame);
 
   cout << "[UTEST] Inserting father mapping" << endl;
-  f_map = m.insert (frame, gf_map, father, to_pfn(0),
+  m.insert (frame, father, to_pfn(0),
 		    to_pfn(0),
 		    to_pcnt(Config::PAGE_SHIFT));
-  print_whole_tree (gf_map, frame);
+  print_whole_tree (frame);
   m.free(frame);
 
 
   cout << "[UTEST] Looking up father at physaddr=0" << endl;
   TEST (m.lookup (father, to_pfn(0),
-		    to_pfn(0), &f_map, &frame));
-  print_whole_tree (f_map, frame);
+		    to_pfn(0), &frame));
+  print_whole_tree (frame);
 
   cout << "[UTEST] Inserting son mapping" << endl;
-  son_map = m.insert (frame, f_map, son, to_pfn(0),
+  m.insert (frame, son, to_pfn(0),
 		      to_pfn(0),
 		      to_pcnt(Config::PAGE_SHIFT));
-  print_whole_tree (f_map, frame);
+  print_whole_tree (frame);
   m.free(frame);
 
 
   cout << "[UTEST] Looking up father at physaddr=0" << endl;
   TEST (m.lookup (father, to_pfn(0),
-		    to_pfn(0), &f_map, &frame));
-  print_whole_tree (f_map, frame);
+		    to_pfn(0), &frame));
+  print_whole_tree (frame);
 
   cout << "[UTEST] Inserting daughter mapping" << endl;
-  daughter_map = m.insert (frame, f_map, daughter, to_pfn(0),
+  m.insert (frame, daughter, to_pfn(0),
 			   to_pfn(0),
 			   to_pcnt(Config::PAGE_SHIFT));
-  print_whole_tree (f_map, frame);
+  print_whole_tree (frame);
   m.free(frame);
 
 
   cout << "[UTEST] Looking up son at physaddr=0" << endl;
   TEST (m.lookup(son, to_pfn(0),
-		   to_pfn(0), &son_map, &frame));
-  f_map = son_map->parent();
-  print_whole_tree (son_map, frame);
+		   to_pfn(0), &frame));
+  Mapdb::Frame f_frame = frame;
+  f_frame.m = frame.m->parent();
+  print_whole_tree (f_frame);
   show_tree(m.dbg_treemap());
 
   cout << "[UTEST] Son has accident on return from disco" << endl;
-  m.flush(frame, son_map, L4_map_mask::full(),
+  m.flush(frame, L4_map_mask::full(),
 	  to_pfn(0),
 	  to_pfn(Config::PAGE_SIZE));
   m.free(frame);
@@ -522,25 +525,24 @@ static void maphole(Mapdb &m)
 
   cout << "[UTEST] Lost aunt returns from holidays" << endl;
   TEST (m.lookup (grandfather, to_pfn(0),
-		    to_pfn(0), &gf_map, &frame));
-  print_whole_tree (gf_map, frame);
+		    to_pfn(0), &frame));
+  print_whole_tree (frame);
 
   cout << "[UTEST] Inserting aunt mapping" << endl;
-  TEST (m.insert (frame, gf_map, aunt, to_pfn(0),
+  TEST (m.insert (frame, aunt, to_pfn(0),
 		    to_pfn(0),
 		    to_pcnt(Config::PAGE_SHIFT)));
-  print_whole_tree (gf_map, frame);
+  print_whole_tree (frame);
   m.free(frame);
   show_tree(m.dbg_treemap());
 
   cout << "[UTEST] Looking up daughter at physaddr=0" << endl;
   TEST (m.lookup(daughter, to_pfn(0),
-		   to_pfn(0), &daughter_map, &frame));
-  print_whole_tree (daughter_map, frame);
-  f_map = daughter_map->parent();
-  cout << "[UTEST] Father of daugther is " << *f_map->space() << endl;
+		   to_pfn(0), &frame));
+  print_whole_tree (frame);
+  cout << "[UTEST] Father of daugther is " << *frame.m->parent()->space() << endl;
 
-  TEST(f_map->space() == father);
+  TEST(frame.m->parent()->space() == father);
 
   m.free(frame);
   test_done();
@@ -549,51 +551,53 @@ static void maphole(Mapdb &m)
 
 static void flushtest(Mapdb &m)
 {
-  Mapping *gf_map, *f_map;
   Mapdb::Frame frame;
 
   init_test("flushtest");
 
   cout << "[UTEST] Looking up 4K node at physaddr=0" << endl;
-  TEST (m.lookup (grandfather, to_pfn(0), to_pfn(0), &gf_map, &frame));
-  print_whole_tree (gf_map, frame);
+  TEST (m.lookup (grandfather, to_pfn(0), to_pfn(0), &frame));
+  print_whole_tree (frame);
 
   cout << "[UTEST] Inserting father mapping" << endl;
-  f_map = m.insert (frame, gf_map, father, to_pfn(0), to_pfn(0), to_pcnt(Config::PAGE_SHIFT));
-  print_whole_tree (gf_map, frame);
+  m.insert (frame, father, to_pfn(0), to_pfn(0), to_pcnt(Config::PAGE_SHIFT));
+  print_whole_tree (frame);
   m.free(frame);
 
 
   cout << "[UTEST] Looking up father at physaddr=0" << endl;
-  TEST (m.lookup (father, to_pfn(0), to_pfn(0), &f_map, &frame));
-  print_whole_tree (f_map, frame);
+  TEST (m.lookup (father, to_pfn(0), to_pfn(0), &frame));
+  print_whole_tree (frame);
 
   cout << "[UTEST] Inserting son mapping" << endl;
-  TEST (m.insert (frame, f_map, son, to_pfn(0), to_pfn(0), to_pcnt(Config::PAGE_SHIFT)));
-  print_whole_tree (f_map, frame);
+  TEST (m.insert (frame, son, to_pfn(0), to_pfn(0), to_pcnt(Config::PAGE_SHIFT)));
+  print_whole_tree (frame);
   m.free(frame);
 
   cout << "[UTEST] Lost aunt returns from holidays" << endl;
-  TEST (m.lookup (grandfather, to_pfn(0), to_pfn(0), &gf_map, &frame));
-  print_whole_tree (gf_map, frame);
+  TEST (m.lookup (grandfather, to_pfn(0), to_pfn(0), &frame));
+  print_whole_tree (frame);
 
   cout << "[UTEST] Inserting aunt mapping" << endl;
-  TEST (m.insert (frame, gf_map, aunt, to_pfn(0), to_pfn(0), to_pcnt(Config::PAGE_SHIFT)));
-  print_whole_tree (gf_map, frame);
+  TEST (m.insert (frame, aunt, to_pfn(0), to_pfn(0), to_pcnt(Config::PAGE_SHIFT)));
+  print_whole_tree (frame);
   m.free(frame);
 
   cout << "[UTEST] Looking up father at physaddr=0" << endl;
-  TEST (m.lookup(father, to_pfn(0), to_pfn(0), &f_map, &frame));
-  gf_map = f_map->parent();
-  print_whole_tree (gf_map, frame);
+  TEST (m.lookup(father, to_pfn(0), to_pfn(0), &frame));
+
+  Mapdb::Frame gf_frame = frame;
+  gf_frame.m = frame.m->parent();
+
+  print_whole_tree (gf_frame);
 
   cout << "[UTEST] father is killed by his new love" << endl;
-  m.flush(frame, f_map, L4_map_mask::full(), to_pfn(0), to_pfn(Config::PAGE_SIZE));
-  print_whole_tree (gf_map, frame);
+  m.flush(frame, L4_map_mask::full(), to_pfn(0), to_pfn(Config::PAGE_SIZE));
+  print_whole_tree (gf_frame);
   m.free(frame);
 
   cout << "[UTEST] Try resurrecting the killed father again" << endl;
-  TEST (! m.lookup(father, to_pfn(0), to_pfn(0), &f_map, &frame));
+  TEST (! m.lookup(father, to_pfn(0), to_pfn(0), &frame));
 
   cout << "[UTEST] Resurrection is impossible, as it ought to be." << endl;
 
@@ -613,7 +617,7 @@ static Mapdb *new_multilevel_mapdb()
 }
 
 
-static Mapping *insert(Mapdb *m, Mapdb::Frame const &frame, Mapping *node, Fake_task *task,
+static Mapping *insert(Mapdb *m, Mapdb::Frame const &frame, Fake_task *task,
                        Mapdb::Pfn virt, Mapdb::Pfn phys, Mapdb::Order order)
 {
   Mapping *sub;
@@ -621,7 +625,7 @@ static Mapping *insert(Mapdb *m, Mapdb::Frame const &frame, Mapping *node, Fake_
             << " pa=" << phys
             << " order=" << order << std::endl;
 
-  sub = m->insert(frame, node, task, virt, phys, Mapdb::Pcnt(1) << order);
+  sub = m->insert(frame, task, virt, phys, Mapdb::Pcnt(1) << order);
   if (!sub)
     return 0;
 
@@ -630,7 +634,7 @@ static Mapping *insert(Mapdb *m, Mapdb::Frame const &frame, Mapping *node, Fake_
 }
 
 static Fake_task::Entry const *
-lookup(Mapdb *m, Fake_task *task, Mapdb::Pfn virt, Mapping **node,
+lookup(Mapdb *m, Fake_task *task, Mapdb::Pfn virt,
        Mapdb::Frame *frame, bool verb = true)
 {
   auto e = task->match(virt);
@@ -641,7 +645,7 @@ lookup(Mapdb *m, Fake_task *task, Mapdb::Pfn virt, Mapping **node,
       return 0;
     }
 
-  if (!m->lookup(task, virt, e->phys, node, frame))
+  if (!m->lookup(task, virt, e->phys, frame))
     {
       if (verb)
         std::cout << "[UTEST] MDB lookup: " << virt << " in " << *task << ": " << *e << ": failed" << std::endl;
@@ -654,16 +658,15 @@ lookup(Mapdb *m, Fake_task *task, Mapdb::Pfn virt, Mapping **node,
 static Fake_task::Entry const *
 lookup(Mapdb *m, Fake_task *task, Mapdb::Pfn virt, bool verb = true)
 {
-  Mapping *node;
   Mapdb::Frame f;
-  return lookup(m, task, virt, &node, &f, verb);
+  return lookup(m, task, virt, &f, verb);
 }
 
 static bool map(Mapdb *m, Fake_task *from, Mapdb::Pfn fa, Fake_task *to, Mapdb::Pfn ta, Mapdb::Order order)
 {
-  Mapping *node, *sub;
+  Mapping *sub;
   Mapdb::Frame f;
-  auto e = lookup(m, from, fa, &node, &f);
+  auto e = lookup(m, from, fa, &f);
   if (!e)
     {
       std::cout << "[UTEST] could not lookup source mapping: " << *from << " @ " << fa << std::endl;
@@ -690,7 +693,7 @@ static bool map(Mapdb *m, Fake_task *from, Mapdb::Pfn fa, Fake_task *to, Mapdb::
       return false;
     }
 
-  if (!(sub = insert(m, f, node, to, ta, e->phys | cxx::get_lsb(fa, e->order), order)))
+  if (!(sub = insert(m, f, to, ta, e->phys | cxx::get_lsb(fa, e->order), order)))
     {
       m->free(f);
       std::cout << "[UTEST] could not create mapping (MDB insert failed):"
@@ -699,16 +702,15 @@ static bool map(Mapdb *m, Fake_task *from, Mapdb::Pfn fa, Fake_task *to, Mapdb::
       return false;
     }
 
-  print_node(node, f, sub);
+  print_node(f, sub);
   m->free(f);
   return true;
 }
 
 static bool unmap(Mapdb *m, Fake_task *task, Mapdb::Pfn va_start, Mapdb::Pfn va_end, bool me_too)
 {
-  Mapping *node;
   Mapdb::Frame f;
-  auto e = lookup(m, task, va_start, &node, &f);
+  auto e = lookup(m, task, va_start, &f);
   if (!e)
     {
       std::cout << "[UTEST] could not lookup mapping: " << *task << " @ " << va_start << std::endl;
@@ -726,7 +728,7 @@ static bool unmap(Mapdb *m, Fake_task *task, Mapdb::Pfn va_start, Mapdb::Pfn va_
     task->remove(va_start);
 
   // now delete from the other address spaces
-  Mapdb::foreach_mapping(f, node, va_start, va_end, [](Mapping *m, Mapdb::Order size)
+  Mapdb::foreach_mapping(f, va_start, va_end, [](Mapping *m, Mapdb::Order size)
     {
       Fake_task *s = static_cast<Fake_task *>(m->space());
       Mapdb::Pfn page = m->pfn(size);
@@ -734,7 +736,7 @@ static bool unmap(Mapdb *m, Fake_task *task, Mapdb::Pfn va_start, Mapdb::Pfn va_
       s->remove(page);
     });
 
-  m->flush(f, node, me_too ? L4_map_mask::full() : L4_map_mask(0), va_start, va_end);
+  m->flush(f, me_too ? L4_map_mask::full() : L4_map_mask(0), va_start, va_end);
   m->free(f);
   std::cout << "[UTEST] state after flush:" << std::endl;
   //print_node(node, f);
@@ -744,57 +746,56 @@ static bool unmap(Mapdb *m, Fake_task *task, Mapdb::Pfn va_start, Mapdb::Pfn va_
 
 void multilevel(Mapdb &m)
 {
-  Mapping *node, *sub;
   Mapdb::Frame frame, s0_frame;
   Mapdb::Pfn poffs = to_pfn(0xd2000000);
 
   init_test("multilevel MDB");
 
   cout << "[UTEST] Looking up 0xd2000000" << endl;
-  TEST (lookup (&m, s0, to_pfn(0xd2000000), &node, &frame));
+  TEST (lookup (&m, s0, to_pfn(0xd2000000), &frame));
 
   s0_frame = frame;
 
-  print_node (node, frame);
+  print_node (frame);
 
   cout << "[UTEST] Inserting submapping 4K" << endl;
-  sub = insert(&m, s0_frame, node, other,
-               to_pfn(2 * Config::PAGE_SIZE),
-               poffs + to_pcnt(Config::PAGE_SHIFT),
-               to_po(Config::PAGE_SHIFT));
+  Mapping *sub = insert(&m, s0_frame, other,
+                        to_pfn(2 * Config::PAGE_SIZE),
+                        poffs + to_pcnt(Config::PAGE_SHIFT),
+                        to_po(Config::PAGE_SHIFT));
   TEST (sub);
-  print_node(node, s0_frame, sub);
+  print_node(s0_frame, sub);
   m.free(s0_frame);
 
   cout << "[UTEST] Get that mapping again" << endl;
-  TEST (lookup(&m, other, to_pfn(2 * Config::PAGE_SIZE), &sub, &frame));
+  TEST (lookup(&m, other, to_pfn(2 * Config::PAGE_SIZE), &frame));
 
-  print_node(sub, frame);
-  TEST (m.shift(frame, sub) == Mapdb::Order(0));
+  print_node(frame);
+  TEST (m.shift(frame) == Mapdb::Order(0));
 
   cout << "[UTEST] Inserting submapping 2M" << endl;
-  sub = insert(&m, s0_frame, node, other,
+  sub = insert(&m, s0_frame, other,
                to_pfn(2 * (1 << 21)),
                poffs + to_pcnt(21),
                to_po(21));
   TEST (sub);
-  print_node(node, s0_frame, sub);
+  print_node(s0_frame, sub);
   m.free(s0_frame);
 
   cout << "[UTEST] Get that mapping again" << endl;
-  TEST (lookup(&m, other, to_pfn(2 * (1<<21)), &sub, &frame));
+  TEST (lookup(&m, other, to_pfn(2 * (1<<21)), &frame));
 
-  print_node(sub, frame);
-  TEST (m.shift(frame, sub) == Mapdb::Order(21 - Config::PAGE_SHIFT));
+  print_node(frame);
+  TEST (m.shift(frame) == Mapdb::Order(21 - Config::PAGE_SHIFT));
 
 
   cout << "[UTEST] Inserting submapping 2M" << endl;
-  sub = insert(&m, s0_frame, node, aunt,
+  sub = insert(&m, s0_frame, aunt,
                to_pfn(1 << 21),
                poffs,
                to_po(21));
   TEST (sub);
-  print_node(node, s0_frame, sub);
+  print_node(s0_frame, sub);
   m.free(s0_frame);
 
   TEST (map(&m, other, to_pfn(2 * (1<<21)), son, to_pfn(0xa0000000), to_po(12)));
@@ -807,9 +808,10 @@ void multilevel(Mapdb &m)
   TEST (map(&m, s0, to_pfn(0x51000000), father, to_pfn(0x3000000), to_po(22)));
   TEST (map(&m, s0, to_pfn(0x51400000), father, to_pfn(0x3400000), to_po(22)));
 
+  sub = frame.m;
   cout << "[UTEST] Get first 8MB mapping" << endl;
-  TEST (lookup(&m, father, to_pfn(0x3000000), &node, &frame));
-  print_node(node, frame, sub);
+  TEST (lookup(&m, father, to_pfn(0x3000000), &frame));
+  print_node(frame, sub);
   m.free(frame);
 
   cout << "[UTEST] Map 6MB from father to aunt" << endl;
@@ -820,20 +822,20 @@ void multilevel(Mapdb &m)
   for (unsigned i = 0; i < 3; ++i)
     TEST (map(&m, aunt, to_pfn(0x4001000 + (i<<12)), client, to_pfn(0x2000 + (i << 12)), to_po(12)));
 
-  TEST (!lookup(&m, client, to_pfn(0x1000), &node, &frame));
-  TEST (lookup(&m, client, to_pfn(0x2000), &node, &frame));
-  TEST (lookup(&m, client, to_pfn(0x3000), &node, &frame));
-  TEST (lookup(&m, client, to_pfn(0x4000), &node, &frame));
-  TEST (!lookup(&m, client, to_pfn(0x5000), &node, &frame));
+  TEST (!lookup(&m, client, to_pfn(0x1000), &frame));
+  TEST (lookup(&m, client, to_pfn(0x2000), &frame));
+  TEST (lookup(&m, client, to_pfn(0x3000), &frame));
+  TEST (lookup(&m, client, to_pfn(0x4000), &frame));
+  TEST (!lookup(&m, client, to_pfn(0x5000), &frame));
 
   TEST (unmap(&m, father, to_pfn(0x3202000), to_pfn(0x3203000), false));
-  TEST (lookup(&m, father, to_pfn(0x3202000), &node, &frame));
-  TEST (!lookup(&m, aunt, to_pfn(0x4000000), &node, &frame));
-  TEST (!lookup(&m, client, to_pfn(0x1000), &node, &frame));
-  TEST (!lookup(&m, client, to_pfn(0x2000), &node, &frame));
-  TEST (!lookup(&m, client, to_pfn(0x3000), &node, &frame));
-  TEST (!lookup(&m, client, to_pfn(0x4000), &node, &frame));
-  TEST (!lookup(&m, client, to_pfn(0x5000), &node, &frame));
+  TEST (lookup(&m, father, to_pfn(0x3202000), &frame));
+  TEST (!lookup(&m, aunt, to_pfn(0x4000000), &frame));
+  TEST (!lookup(&m, client, to_pfn(0x1000), &frame));
+  TEST (!lookup(&m, client, to_pfn(0x2000), &frame));
+  TEST (!lookup(&m, client, to_pfn(0x3000), &frame));
+  TEST (!lookup(&m, client, to_pfn(0x4000), &frame));
+  TEST (!lookup(&m, client, to_pfn(0x5000), &frame));
 
   cout << "[UTEST] Map 4MB from father to aunt" << endl;
   TEST (map(&m, father, to_pfn(0x3000000), aunt, to_pfn(0x5000000), to_po(22)));
@@ -843,26 +845,26 @@ void multilevel(Mapdb &m)
     TEST (map(&m, aunt, to_pfn(0x5201000 + (i<<12)), client, to_pfn(0x12000 + (i << 12)), to_po(12)));
 
   TEST (unmap(&m, aunt, to_pfn(0x5202000), to_pfn(0x5203000), false));
-  TEST (lookup(&m, father, to_pfn(0x3202000), &node, &frame));
-  TEST (lookup(&m, aunt, to_pfn(0x5200000), &node, &frame));
-  TEST (!lookup(&m, client, to_pfn(0x11000), &node, &frame));
-  TEST (lookup(&m, client, to_pfn(0x12000), &node, &frame));
-  TEST (!lookup(&m, client, to_pfn(0x13000), &node, &frame));
-  TEST (lookup(&m, client, to_pfn(0x14000), &node, &frame));
-  TEST (!lookup(&m, client, to_pfn(0x15000), &node, &frame));
+  TEST (lookup(&m, father, to_pfn(0x3202000), &frame));
+  TEST (lookup(&m, aunt, to_pfn(0x5200000), &frame));
+  TEST (!lookup(&m, client, to_pfn(0x11000), &frame));
+  TEST (lookup(&m, client, to_pfn(0x12000), &frame));
+  TEST (!lookup(&m, client, to_pfn(0x13000), &frame));
+  TEST (lookup(&m, client, to_pfn(0x14000), &frame));
+  TEST (!lookup(&m, client, to_pfn(0x15000), &frame));
 
   cout << "[UTEST] Map 12K from aunt to client" << endl;
   for (unsigned i = 0; i < 3; ++i)
     TEST (map(&m, s0, to_pfn(0x31ff000 + (i<<12)), client, to_pfn(0x22000 + (i << 12)), to_po(12)));
 
-  TEST (lookup(&m, client, to_pfn(0x22000), &node, &frame));
-  TEST (lookup(&m, client, to_pfn(0x23000), &node, &frame));
-  TEST (lookup(&m, client, to_pfn(0x24000), &node, &frame));
+  TEST (lookup(&m, client, to_pfn(0x22000), &frame));
+  TEST (lookup(&m, client, to_pfn(0x23000), &frame));
+  TEST (lookup(&m, client, to_pfn(0x24000), &frame));
 
   TEST (map(&m, s0, to_pfn(0x0), daughter, to_pfn(0x40000000), to_po(30)));
-  TEST (!lookup(&m, daughter, to_pfn(0x3fffffff), &node, &frame));
-  TEST (lookup(&m, daughter, to_pfn(0x50000000), &node, &frame));
-  TEST (!lookup(&m, daughter, to_pfn(0x80000000), &node, &frame));
+  TEST (!lookup(&m, daughter, to_pfn(0x3fffffff), &frame));
+  TEST (lookup(&m, daughter, to_pfn(0x50000000), &frame));
+  TEST (!lookup(&m, daughter, to_pfn(0x80000000), &frame));
 
   for (unsigned i = 0; i < 3; ++i)
     TEST (map(&m, daughter, to_pfn(0x431ff000 + (i<<12)), client, to_pfn(0x32000 + (i<<12)), to_po(12)));
@@ -870,50 +872,50 @@ void multilevel(Mapdb &m)
   TEST (map(&m, daughter, to_pfn(0x43000000), client, to_pfn(0x20000000), to_po(21)));
   TEST (map(&m, daughter, to_pfn(0x43200000), client, to_pfn(0x20200000), to_po(21)));
 
-  TEST (lookup(&m, client, to_pfn(0x32000), &node, &frame));
-  TEST (lookup(&m, client, to_pfn(0x33000), &node, &frame));
-  TEST (lookup(&m, client, to_pfn(0x34000), &node, &frame));
+  TEST (lookup(&m, client, to_pfn(0x32000), &frame));
+  TEST (lookup(&m, client, to_pfn(0x33000), &frame));
+  TEST (lookup(&m, client, to_pfn(0x34000), &frame));
 
-  TEST (lookup(&m, client, to_pfn(0x20000000), &node, &frame));
-  TEST (lookup(&m, client, to_pfn(0x20200000), &node, &frame));
+  TEST (lookup(&m, client, to_pfn(0x20000000), &frame));
+  TEST (lookup(&m, client, to_pfn(0x20200000), &frame));
 
   TEST (map(&m, daughter, to_pfn(0x43000000), son, to_pfn(0x20000000), to_po(22)));
   TEST (map(&m, son, to_pfn(0x20200000), client, to_pfn(0x40000), to_po(12)));
   TEST (map(&m, son, to_pfn(0x20201000), client, to_pfn(0x41000), to_po(12)));
 
-  TEST (lookup(&m, client, to_pfn(0x40000), &node, &frame));
-  TEST (lookup(&m, client, to_pfn(0x41000), &node, &frame));
+  TEST (lookup(&m, client, to_pfn(0x40000), &frame));
+  TEST (lookup(&m, client, to_pfn(0x41000), &frame));
 
   show_tree(m.dbg_treemap());
   TEST (unmap(&m, daughter, to_pfn(0x43200000), to_pfn(0x43201000), false));
   show_tree(m.dbg_treemap());
 
-  TEST (!lookup(&m, client, to_pfn(0x40000), &node, &frame));
-  TEST (!lookup(&m, client, to_pfn(0x41000), &node, &frame));
+  TEST (!lookup(&m, client, to_pfn(0x40000), &frame));
+  TEST (!lookup(&m, client, to_pfn(0x41000), &frame));
 
-  TEST (lookup(&m, client, to_pfn(0x32000), &node, &frame));
-  TEST (!lookup(&m, client, to_pfn(0x33000), &node, &frame));
-  TEST (lookup(&m, client, to_pfn(0x34000), &node, &frame));
+  TEST (lookup(&m, client, to_pfn(0x32000), &frame));
+  TEST (!lookup(&m, client, to_pfn(0x33000), &frame));
+  TEST (lookup(&m, client, to_pfn(0x34000), &frame));
 
   TEST (map(&m, daughter, to_pfn(0x43200000), client, to_pfn(0x33000), to_po(12)));
-  TEST (lookup(&m, client, to_pfn(0x33000), &node, &frame));
+  TEST (lookup(&m, client, to_pfn(0x33000), &frame));
 
   show_tree(m.dbg_treemap());
   TEST (unmap(&m, s0, to_pfn(0x3200000), to_pfn(0x3201000), false));
 
-  TEST (lookup(&m, s0, to_pfn(0x3200000), &node, &frame));
-  TEST (lookup(&m, client, to_pfn(0x22000), &node, &frame));
-  TEST (!lookup(&m, client, to_pfn(0x23000), &node, &frame));
-  TEST (lookup(&m, client, to_pfn(0x24000), &node, &frame));
+  TEST (lookup(&m, s0, to_pfn(0x3200000), &frame));
+  TEST (lookup(&m, client, to_pfn(0x22000), &frame));
+  TEST (!lookup(&m, client, to_pfn(0x23000), &frame));
+  TEST (lookup(&m, client, to_pfn(0x24000), &frame));
 
-  TEST (!lookup(&m, client, to_pfn(0x32000), &node, &frame));
-  TEST (!lookup(&m, client, to_pfn(0x33000), &node, &frame));
-  TEST (!lookup(&m, client, to_pfn(0x34000), &node, &frame));
+  TEST (!lookup(&m, client, to_pfn(0x32000), &frame));
+  TEST (!lookup(&m, client, to_pfn(0x33000), &frame));
+  TEST (!lookup(&m, client, to_pfn(0x34000), &frame));
 
-  TEST (!lookup(&m, client, to_pfn(0x20000000), &node, &frame));
-  TEST (!lookup(&m, client, to_pfn(0x20200000), &node, &frame));
+  TEST (!lookup(&m, client, to_pfn(0x20000000), &frame));
+  TEST (!lookup(&m, client, to_pfn(0x20200000), &frame));
 
-  TEST (!lookup(&m, daughter, to_pfn(0x40000000), &node, &frame));
+  TEST (!lookup(&m, daughter, to_pfn(0x40000000), &frame));
   show_tree(m.dbg_treemap());
 
   test_done();
