@@ -35,6 +35,13 @@ public:
     inline Pfn vaddr(Mapping* m) const;
     inline Pfn vaddr() const;
     inline Order page_shift() const;
+
+    void set(Mapping *ma, Treemap *tm, Physframe *pf)
+    {
+      m = ma;
+      treemap = tm;
+      frame = pf;
+    }
   };
 
   // for mapdb_t
@@ -546,7 +553,7 @@ Treemap::end_addr() const
 
 PUBLIC inline NEEDS[Treemap::to_vaddr, "mapping_tree.h"]
 Treemap::Pfn
-Treemap::vaddr(Mapping* m) const
+Treemap::vaddr(Mapping const *m) const
 {
   return to_vaddr(m->page());
 }
@@ -556,6 +563,13 @@ void
 Treemap::set_vaddr(Mapping* m, Pfn address) const
 {
   m->set_page(trunc_to_page(address));
+}
+
+PRIVATE inline NEEDS[Treemap::vaddr]
+bool
+Treemap::match(Mapping const *m, Space *spc, Pfn va) const
+{
+  return  (m->space() == spc) && (vaddr(m) == cxx::mask_lsb(va, _page_shift));
 }
 
 PUBLIC
