@@ -120,19 +120,21 @@ Jdb_mapdb::show_tree(Treemap* pages, Mapping::Pcnt offset, Mdb_types::Order base
   screenline += 2;
 
   unsigned empty = 0;
+  unsigned c_depth = 0;
   for(i=0; i < t->_count + empty; i++, m++)
     {
       Kconsole::console()->getchar_chance();
 
       if (m->depth() == Mapping::Depth_submap)
         printf("%*u: %lx  subtree@" L4_PTR_FMT,
-               indent + m->parent()->depth() > 10
-                 ? 0 : (int)(indent + m->parent()->depth()),
+               indent + c_depth > 10
+                 ? 0 : (int)(indent + c_depth),
                i+1, (Address) m->data(), (Mword) m->submap());
       else
         {
+          c_depth = m->depth();
           printf("%*u: %lx  va=%012llx  task=%lx  depth=",
-                 indent + m->depth() > 10 ? 0 : (int)(indent + m->depth()),
+                 indent + c_depth > 10 ? 0 : (int)(indent + c_depth),
                  i+1, (Address) m->data(),
                  val(pages->vaddr(m), base_size),
                  Kobject_dbg::pointer_to_id(m->space()));
@@ -147,7 +149,7 @@ Jdb_mapdb::show_tree(Treemap* pages, Mapping::Pcnt offset, Mdb_types::Order base
           else if (m->depth() == Mapping::Depth_end)
             printf("end");
           else
-            printf("%lu", static_cast<unsigned long>(m->depth()));
+            printf("%u", c_depth);
         }
 
       puts("\033[K");
@@ -172,7 +174,7 @@ Jdb_mapdb::show_tree(Treemap* pages, Mapping::Pcnt offset, Mdb_types::Order base
           if (! Jdb_mapdb::show_tree(m->submap(),
                                      cxx::get_lsb(offset, pages->_page_shift),
                                      base_size,
-                                     screenline, indent + m->parent()->depth()))
+                                     screenline, indent + c_depth))
             return false;
         }
     }
