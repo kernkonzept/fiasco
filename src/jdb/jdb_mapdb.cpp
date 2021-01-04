@@ -154,7 +154,7 @@ static
 Address
 Jdb_mapdb::end_address (Mapdb* mapdb)
 {
-  return cxx::int_value<Mdb_types::Pfn>(mapdb->_treemap->end_addr());
+  return cxx::int_value<Mdb_types::Pfn>(mapdb->dbg_treemap()->end_addr());
 }
 
 static
@@ -205,7 +205,7 @@ Jdb_mapdb::show(Mapping::Pfn page, char which_mapdb)
 
       j = 3;
 
-      if (! Jdb_mapdb::show_tree(mapdb->_treemap, page - Mapping::Pfn(0), base_size, j))
+      if (! Jdb_mapdb::show_tree(mapdb->dbg_treemap(), page - Mapping::Pfn(0), base_size, j))
         return;
 
       for (; j<Jdb_screen::height(); j++)
