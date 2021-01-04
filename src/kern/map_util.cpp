@@ -536,16 +536,16 @@ map(MAPDB* mapdb,
               Map_traits<SPACE>::free_object(r_phys, reap_list);
 
               // unlock destination if it is not a grant is the same tree
-              if (rcv_frame.frame != sender_frame.frame)
-                mapdb->free(rcv_frame);
+              if (!rcv_frame.same_lock(sender_frame))
+                rcv_frame.clear(true);
             }
           else if (r == 0)
             {
               i_attribs |= r_attribs;
               // we might unlock the sender mapping as we are going to manipulate
               // the existing receiver mapping without doing a mapdb->insert later.
-              if (rcv_frame.frame != sender_frame.frame)
-                mapdb->free(sender_frame);
+              if (!rcv_frame.same_lock(sender_frame))
+                sender_frame.clear();
 
               // store the still locked rcv mapping for later unlock
               sender_frame = rcv_frame;
@@ -649,8 +649,7 @@ map(MAPDB* mapdb,
           break;
         }
 
-      if (sender_frame.frame)
-        mapdb->free(sender_frame);
+      sender_frame.might_clear(true);
 
       if (!condition.ok())
         break;
@@ -803,7 +802,7 @@ unmap(MAPDB* mapdb, SPACE* space, Space *space_id,
           Map_traits<SPACE>::free_object(phys, reap_list);
         }
 
-      mapdb->free(mapdb_frame);
+      mapdb_frame.clear(true);
     }
 
   return flushed_rights;

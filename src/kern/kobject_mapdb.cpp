@@ -34,6 +34,23 @@ public:
     Mapping *m = 0;
 
     inline size_t size() const;
+
+    void clear(bool = false)
+    {
+      frame->_lock.clear();
+      frame = nullptr;
+    }
+
+    void might_clear(bool = false)
+    {
+      if (frame)
+        clear();
+    }
+
+    bool same_lock(Frame const &o) const
+    {
+      return frame == o.frame;
+    }
   };
 
   template< typename F >
@@ -156,13 +173,6 @@ Kobject_mapdb::grant(Frame &f, Space *, Vaddr va)
 
   return true;
 }
-
-PUBLIC inline
-static void 
-Kobject_mapdb::free(Frame const &f)
-{
-  f.frame->_lock.clear();
-} // free()
 
 PUBLIC static inline
 void

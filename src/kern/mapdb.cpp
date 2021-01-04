@@ -54,18 +54,31 @@ public:
     Order page_shift() const
     { return treemap->page_shift(); }
 
-    void reset()
+    bool same_lock(Frame const &o) const
     {
+      return frame == o.frame;
+    }
+
+    void clear(bool pack = false)
+    {
+      if (pack)
+        frame->pack();
       frame->lock.clear();
       frame = nullptr;
     }
 
-    void reset_both(Physframe *f)
+    void clear_both(Physframe *f)
     {
       if (f != frame)
         f->lock.clear();
 
-      reset();
+      clear();
+    }
+
+    void might_clear(bool pack = false)
+    {
+      if (frame)
+        clear(pack);
     }
 
     void set(Mapping_tree::Iterator ma, Treemap *tm, Physframe *pf)
@@ -951,25 +964,6 @@ Mapdb::lookup(Space *space, Pfn va, Pfn phys,
   return _treemap->lookup(phys - Pfn(0), space, va, res);
 }
 
-/** Unlock the mapping tree to which the mapping belongs.  Once a tree
-    has been unlocked, all Mapping instances pointing into it become
-    invalid.
-
-    A mapping tree is locked during lookup().  When the tree is
-    locked, the tree may be traversed (using member functions of
-    Mapping, which serves as an iterator over the tree) or
-    manipulated (using insert(), free(), flush(), grant()).  Note that
-    only one insert() is allowed during each locking cycle.
-
-    @param mapping_of_tree Any mapping belonging to a mapping tree.
- */
-PUBLIC
-static void
-Mapdb::free(Frame const &f)
-{
-  f.frame->release();
-} // free()
-
 /** Delete mappings from a tree.  This function deletes mappings
     recusively.
     @param m Mapping that denotes the subtree that should be deleted.
@@ -1041,7 +1035,7 @@ Treemap::lookup_src_dst(Space *src, Pcnt src_key, Pfn src_va, Pcnt src_size,
         {
           // src mapping not found -> we cannot map
           // free the dst frame and abort
-          dst_frame->reset();
+          dst_frame->clear();
           return -1;
         }
 
@@ -1099,7 +1093,7 @@ Treemap::lookup_src_dst(Space *src, Pcnt src_key, Pfn src_va, Pcnt src_size,
                   &r_depth, &c_depth);
       if (!*m)
         {
-          src_frame->reset_both(f);
+          src_frame->clear_both(f);
           return -1; // nothing found
         }
 
@@ -1129,7 +1123,7 @@ Treemap::lookup_src_dst(Space *src, Pcnt src_key, Pfn src_va, Pcnt src_size,
       if (!*m)
         {
           // nothing found
-          dst_frame->reset_both(f);
+          dst_frame->clear_both(f);
           return -1;
         }
 
@@ -1146,7 +1140,7 @@ Treemap::lookup_src_dst(Space *src, Pcnt src_key, Pfn src_va, Pcnt src_size,
       if (r_depth == c_depth)
         {
           // src is in subtree of dst -> unmap dst and noting to map then
-          src_frame->reset();
+          src_frame->clear();
           return 2; // unmap + no map
         }
       // src is in a sibling subtree -> unmap + map
