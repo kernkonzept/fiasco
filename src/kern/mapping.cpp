@@ -2,7 +2,7 @@ INTERFACE:
 
 #include "types.h"
 #include "mapdb_types.h"
-#include "cxx/hlist"
+#include "cxx/slist"
 
 class Space;
 class Treemap;
@@ -19,7 +19,7 @@ class Treemap;
     become invalid) when Mapdb::free is called with any one of its
     mappings.
  */
-class Mapping : public cxx::H_list_item
+class Mapping : public cxx::S_list_item
 {
   template<typename T,
            typename INTERNAL = Mword,

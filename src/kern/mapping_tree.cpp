@@ -5,7 +5,7 @@ INTERFACE:
 #include "lock.h"
 #include "mapping.h"
 #include "types.h"
-#include <cxx/hlist>
+#include <cxx/slist>
 
 class Ram_quota;
 
@@ -108,7 +108,7 @@ class Ram_quota;
  */
 
 
-class Mapping_tree : public cxx::H_list<Mapping>
+class Mapping_tree : public cxx::S_list<Mapping>
 {
 public:
   typedef Mapping::Page Page;
@@ -116,7 +116,7 @@ public:
   typedef Mapping::Pcnt Pcnt;
 
 private:
-  typedef cxx::H_list<Mapping> Mappings;
+  typedef cxx::S_list<Mapping> Mappings;
 };
 
 INTERFACE:
