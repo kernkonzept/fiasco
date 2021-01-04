@@ -502,8 +502,6 @@ map(MAPDB* mapdb,
       // mapdb_frame will be initialized by the mapdb lookup function when
       // it returns true, so don't care about "may be use uninitialized..."
       Frame sender_frame;
-      sender_frame.m = 0;
-
       if (rcv_page_mapped)
         {
           // We have something mapped.
@@ -514,11 +512,11 @@ map(MAPDB* mapdb,
               && r_order <= i_order             // Rcv frame in snd frame
               && SPACE::page_address(r_phys, i_order) == i_phys
               && s_valid)
-            sender_frame.m = mapdb->check_for_upgrade(SPACE::to_pfn(r_phys), from_id,
-                                                      SPACE::to_pfn(snd_addr), to_id,
-                                                      SPACE::to_pfn(rcv_addr), &sender_frame);
+            mapdb->check_for_upgrade(SPACE::to_pfn(r_phys), from_id,
+                                     SPACE::to_pfn(snd_addr), to_id,
+                                     SPACE::to_pfn(rcv_addr), &sender_frame);
 
-          if (! sender_frame.m)	// Need flush
+          if (! sender_frame.frame)	// Need flush
             unmap(mapdb, to, to_id, SPACE::page_address(rcv_addr, r_order), SPACE::to_size(r_order),
                   L4_fpage::Rights::FULL(), L4_map_mask::full(), tlb, reap_list);
           else
@@ -528,7 +526,7 @@ map(MAPDB* mapdb,
       // Loop increment is size of insertion
       size = i_size;
 
-      if (s_valid && ! sender_frame.m
+      if (s_valid && ! sender_frame.frame
           && EXPECT_FALSE(! mapdb->lookup(from_id,
                                           SPACE::to_pfn(SPACE::page_address(snd_addr, s_order)),
                                           SPACE::to_pfn(s_phys),
@@ -621,7 +619,7 @@ map(MAPDB* mapdb,
           break;
         }
 
-      if (sender_frame.m)
+      if (sender_frame.frame)
         mapdb->free(sender_frame);
 
       if (!condition.ok())
@@ -656,7 +654,7 @@ save_access_flags(Mem_space *space, typename Mem_space::V_pfn page_address, bool
       else
         {
           typename MAPDB::Mapping *parent = mapdb_frame.m->parent();
-          typename Mem_space::V_pfn parent_address = Mem_space::to_virt(mapdb_frame.vaddr(parent));
+          typename Mem_space::V_pfn parent_address = Mem_space::to_virt(mapdb_frame.treemap->vaddr(parent));
           parent->space()->v_set_access_flags(parent_address, accessed);
         }
     }

@@ -117,8 +117,9 @@ INTERFACE [!big_endian]:
 //
 // Mapping_tree
 // FIXME: do we need this depending on endianess ?
-struct Mapping_tree
+class Mapping_tree
 {
+public:
   typedef Mapping::Page Page;
   typedef Mapping::Pfn Pfn;
   typedef Mapping::Pcnt Pcnt;
@@ -146,8 +147,9 @@ INTERFACE [big_endian]:
 //
 // Mapping_tree
 // FIXME: do we need this depending on endianess ?
-struct Mapping_tree
+class Mapping_tree
 {
+public:
   typedef Mapping::Page Page;
   typedef Mapping::Pfn Pfn;
   typedef Mapping::Pcnt Pcnt;
@@ -176,6 +178,7 @@ public:
   class Iterator
   {
   private:
+    friend class Mapping_tree;
     Mapping *_m = nullptr;
     Mapping_tree *_t = nullptr;
 
@@ -251,6 +254,7 @@ IMPLEMENTATION:
 #include <cassert>
 #include <cstring>
 
+#include "assert_opt.h"
 #include "config.h"
 #include "globals.h"
 #include "kdb_ke.h"
@@ -635,29 +639,29 @@ Mapping_tree::reset()
 
 PUBLIC inline NEEDS[Mapping_tree::next, <cassert>]
 Treemap *
-Mapping_tree::find_submap(Mapping *parent)
+Mapping_tree::find_submap(Iterator parent)
 {
   assert (! parent->submap());
 
   // We need just one step to find a possible submap, because they are
   // always a parent's first child.
-  Mapping* m = next(parent);
+  ++parent;
 
-  if (m && m->submap())
-    return m->submap();
+  if (*parent)
+    return parent->submap();
 
-  return 0;
+  return nullptr;
 }
 
 PUBLIC inline NEEDS["ram_quota.h"]
-Mapping *
-Mapping_tree::allocate(Ram_quota *payer, Mapping *parent,
+Mapping_tree::Iterator
+Mapping_tree::allocate(Ram_quota *payer, Iterator parent,
                        bool insert_submap = false)
 {
   // If the parent mapping already has the maximum depth, we cannot
   // insert a child.
   if (EXPECT_FALSE (parent->depth() == Mapping::Depth_max))
-    return 0;
+    return Iterator();
 
   // After locating the right place for the new entry, it will be
   // stored there (if this place is empty) or the following entries
@@ -668,16 +672,16 @@ Mapping_tree::allocate(Ram_quota *payer, Mapping *parent,
   // couldn't allocate a bigger array.  In this case, signal an
   // out-of-memory condition.
   if (EXPECT_FALSE (! last()->unused()))
-    return 0;
+    return Iterator();
 
   Auto_quota<Ram_quota> q(payer, sizeof(Mapping));
   if (EXPECT_FALSE(!q))
-    return 0;
+    return Iterator();
 
   //allocation is done, so...
   q.release();
 
-  Mapping *insert = parent + 1, *free = 0;
+  Mapping *insert = (*parent) + 1, *free = 0;
   // - Find an insertion point for the new entry. Acceptable insertion
   //   points are either before a sibling (same depth) or at the end
   //   of the subtree; for submap insertions, it's always before
@@ -762,22 +766,26 @@ Mapping_tree::allocate(Ram_quota *payer, Mapping *parent,
   free->set_depth(insert_submap ? (unsigned)Mapping::Depth_submap
                                 : parent->depth() + 1);
 
-  return free;
+  return Iterator(this, free);
 }
 
-PUBLIC inline NEEDS["ram_quota.h"]
-void
-Mapping_tree::free_mapping(Ram_quota *q, Mapping *m)
+PUBLIC inline NEEDS["ram_quota.h", "assert_opt.h"]
+Mapping_tree::Iterator
+Mapping_tree::free_mapping(Ram_quota *q, Mapping_tree::Iterator m)
 {
+  assert_opt(m._t == this);
+  assert_opt(m._m);
   assert (!m->unused() && !m->is_end_tag());
   q->free(sizeof(Mapping));
   m->set_unused();
+  ++m;
   --_count;
+  return m;
 }
 
 PUBLIC template< typename SUBMAP_OPS >
 void
-Mapping_tree::flush(Mapping *parent, bool me_too,
+Mapping_tree::flush(Iterator parent, bool me_too,
                     Pcnt offs_begin, Pcnt offs_end,
                     SUBMAP_OPS const &submap_ops = SUBMAP_OPS())
 {
@@ -785,7 +793,7 @@ Mapping_tree::flush(Mapping *parent, bool me_too,
 
   // This is easy to do: We just have to iterate over the array
   // encoding the tree.
-  Mapping *start_of_deletions = parent;
+  Mapping *start_of_deletions = *parent;
   unsigned p_depth = parent->depth();
   unsigned deleted = 0;
 #ifndef NDEBUG
@@ -802,7 +810,7 @@ Mapping_tree::flush(Mapping *parent, bool me_too,
 
   unsigned m_depth = p_depth;
 
-  for (Mapping* m = parent + 1;
+  for (Mapping* m = (*parent) + 1;
        m < end_ptr() && ! m->is_end_tag();
        m++)
     {
@@ -850,7 +858,7 @@ Mapping_tree::flush(Mapping *parent, bool me_too,
         }
 
       // Delete the element.
-      free_mapping(quota(space), m);
+      free_mapping(quota(space), Iterator(this, m));
       deleted++;
     }
 
@@ -868,7 +876,7 @@ Mapping_tree::flush(Mapping *parent, bool me_too,
 
 PUBLIC template< typename SUBMAP_OPS >
 bool
-Mapping_tree::grant(Mapping* m, Space *new_space, Page page,
+Mapping_tree::grant(Iterator const &m, Space *new_space, Page page,
                     SUBMAP_OPS const &submap_ops = SUBMAP_OPS())
 {
   unsigned long _quota = sizeof(Mapping);
@@ -936,32 +944,32 @@ Base_mappable::lookup(Space *space, Page page)
 }
 
 PUBLIC inline
-Mapping *
-Base_mappable::insert(Mapping* parent, Space *space, Page page)
+Mapping_tree::Iterator
+Base_mappable::insert(Mapping_tree::Iterator parent, Space *space, Page page)
 {
   Mapping_tree* t = _tree.get();
   if (!t)
     {
-      assert (parent == 0);
+      assert (*parent == 0);
       Auto_quota<Ram_quota> q(Mapping_tree::quota(space), sizeof(Mapping));
       if (EXPECT_FALSE(!q))
-        return 0;
+        return Mapping_tree::Iterator();
 
       Mapping_tree::Size_id min_size = Mapping_tree::Size_id_min;
       cxx::unique_ptr<Mapping_tree> new_tree(new (min_size) Mapping_tree (min_size, page, space));
 
       if (EXPECT_FALSE(!new_tree))
-        return 0;
+        return Mapping_tree::Iterator();
 
       _tree = cxx::move(new_tree);
       q.release();
-      return _tree->mappings();
+      return _tree->begin();
     }
 
-  Mapping *free = t->allocate(Mapping_tree::quota(space), parent, false);
+  auto free = t->allocate(Mapping_tree::quota(space), parent, false);
 
-  if (EXPECT_FALSE(!free))
-        return 0;
+  if (EXPECT_FALSE(!*free))
+    return Mapping_tree::Iterator();
 
   free->set_space(space);
   free->set_page(page);
@@ -1095,9 +1103,9 @@ Base_mappable::check_integrity(Space *owner)
 /**
  * Grant the mapping `m` of this mappable to a new destination.
  */
-PUBLIC template< typename SUBMAP_OPS >
+PUBLIC template< typename SUBMAP_OPS > inline
 bool
-Base_mappable::grant(Mapping* m, Space *new_space, Page page,
+Base_mappable::grant(Mapping_tree::Iterator m, Space *new_space, Page page,
                      SUBMAP_OPS &&submap_ops)
 {
   return _tree->grant(m, new_space, page, cxx::forward<SUBMAP_OPS>(submap_ops));
@@ -1108,13 +1116,13 @@ void
 Base_mappable::flush(Pcnt offs_begin, Pcnt offs_end,
                      SUBMAP_OPS &&submap_ops)
 {
-  _tree->flush(_tree->mappings(), false, offs_begin, offs_end,
+  _tree->flush(_tree->begin(), false, offs_begin, offs_end,
                cxx::forward<SUBMAP_OPS>(submap_ops));
 }
 
-PUBLIC template< typename SUBMAP_OPS >
+PUBLIC template< typename SUBMAP_OPS > inline
 void
-Base_mappable::flush(Mapping *parent, bool me_too,
+Base_mappable::flush(Mapping_tree::Iterator parent, bool me_too,
                      Pcnt offs_begin, Pcnt offs_end,
                      SUBMAP_OPS &&submap_ops)
 {
@@ -1144,22 +1152,23 @@ Base_mappable::grant_tree(Space *new_space, Page page)
 
 PUBLIC inline
 Treemap *
-Base_mappable::find_submap(Mapping *parent) const
+Base_mappable::find_submap(Mapping_tree::Iterator parent) const
 {
   return _tree->find_submap(parent);
 }
 
 PUBLIC inline
-Mapping *
-Base_mappable::alloc_mapping(Ram_quota *q, Mapping *parent,
+Mapping_tree::Iterator
+Base_mappable::alloc_mapping(Ram_quota *q,
+                             Mapping_tree::Iterator parent,
                              bool submap)
 {
   return _tree->allocate(q, parent, submap);
 }
 
 PUBLIC inline
-void
-Base_mappable::free_mapping(Ram_quota *q, Mapping *parent)
+Mapping_tree::Iterator
+Base_mappable::free_mapping(Ram_quota *q, Mapping_tree::Iterator parent)
 {
 #ifndef NDEBUG
   ++(_tree->_empty_count);
@@ -1168,10 +1177,10 @@ Base_mappable::free_mapping(Ram_quota *q, Mapping *parent)
 }
 
 PUBLIC inline
-Mapping *
+Mapping_tree::Iterator
 Base_mappable::insertion_head() const
 {
-  return _tree->mappings();
+  return _tree->begin();
 }
 
 PUBLIC inline
@@ -1192,8 +1201,8 @@ Base_mappable::min_depth() const
 }
 
 PUBLIC inline
-Mapping *
+Mapping_tree::Iterator
 Base_mappable::first() const
 {
-  return _tree->next(_tree->mappings());
+  return ++_tree->begin();
 }

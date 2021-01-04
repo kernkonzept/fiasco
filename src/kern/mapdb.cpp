@@ -7,7 +7,7 @@ INTERFACE:
 #include "mapping_tree.h"
 #include "auto_quota.h"
 
-struct Mapping_tree;		// forward decls
+class Mapping_tree;		// forward decls
 class Physframe;
 class Treemap;
 class Space;
@@ -28,15 +28,15 @@ public:
   class Frame
   {
   public:
-    Mapping *m;
+    Mapping_tree::Iterator m;
     Treemap *treemap;
     Physframe *frame;
 
-    inline Pfn vaddr(Mapping* m) const;
+    inline Pfn vaddr(Mapping_tree::Iterator m) const;
     inline Pfn vaddr() const;
     inline Order page_shift() const;
 
-    void set(Mapping *ma, Treemap *tm, Physframe *pf)
+    void set(Mapping_tree::Iterator ma, Treemap *tm, Physframe *pf)
     {
       m = ma;
       treemap = tm;
@@ -599,13 +599,12 @@ Treemap::frame(Page key) const
 
 
 PRIVATE inline NEEDS[Treemap::match]
-Mapping *
-Treemap::_lookup(Physframe *f, Mapping *m, Space *spc, Pcnt key, Pfn va,
+Mapping_tree::Iterator
+Treemap::_lookup(Physframe *f, Mapping_tree::Iterator m, Space *spc, Pcnt key, Pfn va,
                  Frame *res, int *root_depth = 0, int *current_depth = 0)
 {
-  auto t = f->tree();
   auto subkey = cxx::get_lsb(key, _page_shift);
-  for (; m; m = t->next(m))
+  for (; *m; ++m)
     {
       if (Treemap *sub = m->submap())
         {
@@ -624,7 +623,7 @@ Treemap::_lookup(Physframe *f, Mapping *m, Space *spc, Pcnt key, Pfn va,
             *root_depth = -2;
         }
 
-      if (match(m, spc, va))
+      if (match(*m, spc, va))
         {
           res->set(m, this, f);
           return m;
@@ -646,7 +645,8 @@ Treemap::lookup(Pcnt key, Space *search_space, Pfn search_va,
   if (!f)
     return false;
 
-  if (auto m = _lookup(f, f->tree()->mappings(), search_space, key, search_va, res))
+  auto m = _lookup(f, f->tree()->begin(), search_space, key, search_va, res);
+  if (*m)
     {
       if (m->submap())
         f->lock.clear();
@@ -662,9 +662,11 @@ Treemap::lookup(Pcnt key, Space *search_space, Pfn search_va,
 
 PUBLIC
 Mapping *
-Treemap::insert(Physframe* frame, Mapping* parent, Space *parent_space, Pfn parent_va,
+Treemap::insert(Physframe* frame, Mapping_tree::Iterator const &parent,
+                Space *parent_space, Pfn parent_va,
                 Space *space, Pfn va, Pcnt phys, Pcnt size)
 {
+  using Iterator = Mapping_tree::Iterator;
   Treemap* submap = 0;
   Ram_quota *payer;
   Order const psz = _page_shift;
@@ -682,18 +684,18 @@ Treemap::insert(Physframe* frame, Mapping* parent, Space *parent_space, Pfn pare
       // the node...
       payer = Mapping_tree::quota(insert_submap ? parent_space : space);
 
-      Mapping *free = frame->alloc_mapping(payer, parent, insert_submap);
-      if (EXPECT_FALSE(!free))
+      Iterator free = frame->alloc_mapping(payer, parent, insert_submap);
+      if (EXPECT_FALSE(!*free))
         return 0; 
 
       // Check for submap entry.
       if (! insert_submap)	// Not a submap entry
         {
           free->set_space(space);
-          set_vaddr(free, va);
+          set_vaddr(*free, va);
 
           frame->check_integrity(_owner_id);
-          return free;
+          return *free;
         }
 
       assert (_sub_shifts_max > 0);
@@ -738,7 +740,8 @@ Treemap::flush(Physframe* f, Pcnt offs_begin, Pcnt offs_end)
 
 PUBLIC
 void
-Treemap::flush(Physframe* f, Mapping* parent, bool me_too,
+Treemap::flush(Physframe* f, Mapping_tree::Iterator parent,
+               bool me_too,
                Pcnt offs_begin, Pcnt offs_end)
 {
   assert (! parent->unused());
@@ -752,7 +755,7 @@ Treemap::flush(Physframe* f, Mapping* parent, bool me_too,
 
 PUBLIC
 bool
-Treemap::grant(Physframe* f, Mapping* m, Space *new_space, Pfn va)
+Treemap::grant(Physframe* f, Mapping_tree::Iterator m, Space *new_space, Pfn va)
 {
   return f->grant(m, new_space, trunc_to_page(va), Treemap_ops(_page_shift));
 }
@@ -782,22 +785,23 @@ Treemap::for_range(Page start, Page end, F &&func)
 
 PRIVATE template<typename F> static inline NEEDS[Physframe]
 void
-Mapdb::_for_full_subtree(Base_mappable *m, unsigned min_depth,
-                         Mapping *first, Mapdb::Order size, F &&func)
+Mapdb::_for_full_subtree(unsigned min_depth,
+                         Mapping_tree::Iterator first,
+                         Mapdb::Order size,
+                         F &&func)
 {
   typedef Mapping::Page Page;
-  auto *tree = m->tree();
-  for (Mapping *cursor = first; cursor; cursor = tree->next(cursor))
+  for (auto cursor = first; *cursor; ++cursor)
     {
       if (Treemap *map = cursor->submap())
         map->for_range(Page(0), map->end(), [func](Physframe *f, Mapdb::Order size)
             {
-              _for_full_subtree(f, f->min_depth(), f->first(), size,
+              _for_full_subtree(f->min_depth(), f->first(), size,
                                 func);
 
             });
       else if (cursor->depth() >= min_depth)
-        func(cursor, size);
+        func(*cursor, size);
       else
         break;
     }
@@ -805,15 +809,15 @@ Mapdb::_for_full_subtree(Base_mappable *m, unsigned min_depth,
 
 PRIVATE template<typename F> static inline NEEDS[Treemap::round_to_page, Physframe]
 void
-Mapdb::_foreach_mapping(Base_mappable *mappable, unsigned min_depth,
-                        Mapping *cursor,
+Mapdb::_foreach_mapping(unsigned min_depth,
+                        Mapping_tree::Iterator cursor,
                         Mapdb::Order size,
-                        Mapdb::Pfn va_begin, Mapdb::Pfn va_end, F &&func)
+                        Mapdb::Pfn va_begin, Mapdb::Pfn va_end,
+                        F &&func)
 {
   typedef Mapping::Page Page;
-  auto tree = mappable->tree();
 
-  if (!cursor)
+  if (!*cursor)
     return;
 
   if (Treemap *submap = cursor->submap())
@@ -831,22 +835,24 @@ Mapdb::_foreach_mapping(Base_mappable *mappable, unsigned min_depth,
 
       submap->for_range(start, end, [&func, va_begin, va_end](Physframe *f, Mapdb::Order size)
           {
-            _foreach_mapping(f, f->min_depth(), f->first(),
+            _foreach_mapping(f->min_depth(), f->first(),
                              size, va_begin, va_end, func);
           });
 
-      cursor = tree->next(cursor);
+      ++cursor;
     }
 
-  _for_full_subtree(mappable, min_depth, cursor, size, cxx::forward<F>(func));
+  _for_full_subtree(min_depth, cursor, size, cxx::forward<F>(func));
 }
 
 PUBLIC template<typename F> static inline NEEDS[Treemap::round_to_page, Physframe]
 void
 Mapdb::foreach_mapping(Frame const &f,
-                       Mapdb::Pfn va_begin, Mapdb::Pfn va_end, F &&func)
+                       Mapdb::Pfn va_begin, Mapdb::Pfn va_end,
+                       F &&func)
 {
-  _foreach_mapping(f.frame, f.m->depth() + 1, f.frame->tree()->next(f.m),
+  auto p = f.m;
+  _foreach_mapping(f.m->depth() + 1, ++p,
                    f.treemap->page_shift(),
                    va_begin, va_end, cxx::forward<F>(func));
 }
@@ -992,7 +998,7 @@ PUBLIC static inline NEEDS[Treemap::vaddr, "mapping_tree.h"]
 Mapdb::Pfn
 Mapdb::vaddr(Frame const &f)
 {
-  return f.treemap->vaddr(f.m);
+  return f.treemap->vaddr(*f.m);
 }
 
 // 
@@ -1001,13 +1007,13 @@ Mapdb::vaddr(Frame const &f)
 
 IMPLEMENT inline NEEDS[Treemap::vaddr, "mapping_tree.h"]
 Mapdb::Pfn
-Mapdb::Frame::vaddr(Mapping* m) const
-{ return treemap->vaddr(m); }
+Mapdb::Frame::vaddr(Mapping_tree::Iterator m) const
+{ return treemap->vaddr(*m); }
 
 IMPLEMENT inline NEEDS[Treemap::vaddr, "mapping_tree.h"]
 Mapdb::Pfn
 Mapdb::Frame::vaddr() const
-{ return treemap->vaddr(m); }
+{ return treemap->vaddr(*m); }
 
 IMPLEMENT inline NEEDS[Treemap::page_shift, "mapping_tree.h"]
 Mapdb::Order
@@ -1038,10 +1044,16 @@ Mapdb::check_for_upgrade(Pfn phys,
     {
       Mapping* receiver_parent = mapdb_frame->m->parent();
       if (receiver_parent->space() == from_id
-	  && mapdb_frame->vaddr(receiver_parent) == snd_addr)
-	return receiver_parent;
+	  && mapdb_frame->treemap->vaddr(receiver_parent) == snd_addr)
+        {
+          mapdb_frame->m = Mapping_tree::Iterator(mapdb_frame->frame->tree(), receiver_parent);
+          return receiver_parent;
+        }
       else		// Not my child -- cannot upgrade
-	free(*mapdb_frame);
+        {
+          free(*mapdb_frame);
+          mapdb_frame->frame = nullptr;
+        }
     }
   return 0;
 }
