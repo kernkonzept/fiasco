@@ -12,49 +12,6 @@ class Physframe;
 class Treemap;
 class Space;
 
-/** A mapping database.
- */
-class Mapdb
-{
-  friend class Jdb_mapdb;
-
-public:
-  typedef ::Mapping Mapping;
-  typedef Mapping::Pfn Pfn;
-  typedef Mapping::Pcnt Pcnt;
-  typedef Mdb_types::Order Order;
-
-  // TYPES
-  class Frame
-  {
-  public:
-    Mapping_tree::Iterator m;
-    Treemap *treemap;
-    Physframe *frame = nullptr;
-
-    inline Pfn vaddr(Mapping_tree::Iterator m) const;
-    inline Pfn vaddr() const;
-    inline Order page_shift() const;
-    inline void reset();
-    inline void reset_both(Physframe *f);
-
-    void set(Mapping_tree::Iterator ma, Treemap *tm, Physframe *pf)
-    {
-      m = ma;
-      treemap = tm;
-      frame = pf;
-    }
-  };
-
-  // for mapdb_t
-  Treemap *dbg_treemap() const
-  { return _treemap; }
-
-private:
-  // DATA
-  Treemap* const _treemap;
-};
-
 // 
 // class Physframe
 // 
@@ -76,10 +33,48 @@ class Treemap
 {
 public:
   typedef Mapping_tree::Page Page;
-  typedef Mapdb::Pfn Pfn;
-  typedef Mapdb::Pcnt Pcnt;
-  typedef Mapdb::Order Order;
-  typedef Mapdb::Frame Frame;
+  typedef ::Mapping Mapping;
+  typedef Mapping::Pfn Pfn;
+  typedef Mapping::Pcnt Pcnt;
+  typedef Mdb_types::Order Order;
+
+  class Frame
+  {
+  public:
+    Mapping_tree::Iterator m;
+    Treemap *treemap;
+    Physframe *frame = nullptr;
+
+    Pfn vaddr(Mapping_tree::Iterator m) const
+    { return treemap->vaddr(*m); }
+
+    Pfn vaddr() const
+    { return treemap->vaddr(*m); }
+
+    Order page_shift() const
+    { return treemap->page_shift(); }
+
+    void reset()
+    {
+      frame->lock.clear();
+      frame = nullptr;
+    }
+
+    void reset_both(Physframe *f)
+    {
+      if (f != frame)
+        f->lock.clear();
+
+      reset();
+    }
+
+    void set(Mapping_tree::Iterator ma, Treemap *tm, Physframe *pf)
+    {
+      m = ma;
+      treemap = tm;
+      frame = pf;
+    }
+  };
 
 private:
   friend class Jdb_mapdb;
@@ -99,6 +94,29 @@ public:
   Pfn page_offset() const { return _page_offset; }
 };
 
+/** A mapping database.
+ */
+class Mapdb
+{
+  friend class Jdb_mapdb;
+
+public:
+  typedef ::Mapping Mapping;
+  typedef Treemap::Pfn Pfn;
+  typedef Treemap::Pcnt Pcnt;
+  typedef Treemap::Order Order;
+  typedef Treemap::Frame Frame;
+
+  // TYPES
+
+  // for mapdb_t
+  Treemap *dbg_treemap() const
+  { return _treemap; }
+
+private:
+  // DATA
+  Treemap* const _treemap;
+};
 
 IMPLEMENTATION:
 
@@ -372,7 +390,7 @@ Treemap_ops::is_partial(Treemap const *submap, Treemap::Pcnt offs_begin,
 }
 
 PUBLIC inline
-void 
+void
 Treemap_ops::del(Treemap *submap) const
 { delete submap; }
 
@@ -987,58 +1005,6 @@ Mapdb::grant(Frame const &f, Space *new_space,
 {
   return f.treemap->grant(f.frame, f.m, new_space, va);
 }
-
-/** Return page size of given mapping and frame. */
-PUBLIC static inline NEEDS[Treemap::page_shift, "mapping_tree.h"]
-Mapdb::Order
-Mapdb::shift(Frame const &f)
-{
-  // XXX add special case for _mappings[0]: Return superpage size.
-  return f.treemap->page_shift();
-}
-
-PUBLIC static inline NEEDS[Treemap::vaddr, "mapping_tree.h"]
-Mapdb::Pfn
-Mapdb::vaddr(Frame const &f)
-{
-  return f.treemap->vaddr(*f.m);
-}
-
-// 
-// class Mapdb::Frame
-// 
-IMPLEMENT inline
-void
-Mapdb::Frame::reset()
-{
-  frame->lock.clear();
-  frame = nullptr;
-}
-
-IMPLEMENT inline
-void
-Mapdb::Frame::reset_both(Physframe *f)
-{
-  if (f != frame)
-    f->lock.clear();
-
-  reset();
-}
-
-IMPLEMENT inline NEEDS[Treemap::vaddr, "mapping_tree.h"]
-Mapdb::Pfn
-Mapdb::Frame::vaddr(Mapping_tree::Iterator m) const
-{ return treemap->vaddr(*m); }
-
-IMPLEMENT inline NEEDS[Treemap::vaddr, "mapping_tree.h"]
-Mapdb::Pfn
-Mapdb::Frame::vaddr() const
-{ return treemap->vaddr(*m); }
-
-IMPLEMENT inline NEEDS[Treemap::page_shift, "mapping_tree.h"]
-Mapdb::Order
-Mapdb::Frame::page_shift() const
-{ return treemap->page_shift(); }
 
 PUBLIC inline NEEDS [Treemap::end_addr, "mapping_tree.h"]
 bool
