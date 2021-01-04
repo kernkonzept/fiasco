@@ -668,7 +668,7 @@ map(MAPDB* mapdb,
 }
 
 // save access rights for Mem_space
-template<typename MAPDB>
+inline template<typename MAPDB>
 void
 save_access_flags(Mem_space *space, typename Mem_space::V_pfn page_address, bool me_too,
                   typename MAPDB::Frame const &mapdb_frame,
@@ -678,14 +678,13 @@ save_access_flags(Mem_space *space, typename Mem_space::V_pfn page_address, bool
     {
       // When flushing access attributes from our space as well,
       // cache them in parent space, otherwise in our space.
-      if (! me_too || !mapdb_frame.m->parent())
-        space->v_set_access_flags(page_address, accessed);
-      else
-        {
-          typename MAPDB::Mapping *parent = mapdb_frame.m->parent();
-          typename Mem_space::V_pfn parent_address = Mem_space::to_virt(mapdb_frame.treemap->vaddr(parent));
-          parent->space()->v_set_access_flags(parent_address, accessed);
-        }
+      space->v_set_access_flags(page_address, accessed);
+
+      (void) me_too;
+      (void) mapdb_frame;
+      // we have no backreference to out parent, so
+      // we cannot store the access rights there in
+      // the me_too case...
     }
 }
 
