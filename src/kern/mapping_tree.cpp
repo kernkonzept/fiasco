@@ -225,7 +225,7 @@ Mapping_tree::Iterator
 Mapping_tree::allocate(Ram_quota *payer, Iterator parent,
                        bool insert_submap = false)
 {
-  Mapping *m = _mapping_allocator.q_new(payer, *parent);
+  Mapping *m = _mapping_allocator.q_new(payer);
   if (!m)
     return end();
 

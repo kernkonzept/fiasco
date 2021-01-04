@@ -41,11 +41,10 @@ class Mapping : public cxx::S_list_item
   friend class Jdb_mapdb;
   friend class Mapping_tree;
 
-  Kptr<Space> _space;
-  Kptr<Mapping> _parent;
+  Kptr<Space> _space = nullptr;
 
   union {
-    unsigned long _virt;
+    unsigned long _virt = 0;
     Treemap *_submap;
   };
 
@@ -60,11 +59,6 @@ public:
   struct Page_t;
   typedef cxx::int_type_order<Address, Page_t, Order> Page;
 
-  explicit Mapping(Mapping *parent)
-  : _space(0), _parent(parent), _virt(0)
-  {}
-
-  Mapping *parent() const { return _parent; }
   Space *space() const { return _space; }
   unsigned long depth() const { return _virt & 0xff; }
   bool has_max_depth() const { return depth() == 0xff; }
