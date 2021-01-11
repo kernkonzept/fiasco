@@ -7,14 +7,11 @@ INTERFACE:
 #include "mapping_tree.h"
 #include "auto_quota.h"
 
-class Mapping_tree;		// forward decls
-class Physframe;
-class Treemap;
 class Space;
 
-// 
+//
 // class Physframe
-// 
+//
 
 /** Array elements for holding frame-specific data. */
 class Physframe : public Base_mappable
@@ -22,23 +19,39 @@ class Physframe : public Base_mappable
   friend class Mapdb;
   friend class Treemap;
   friend class Jdb_mapdb;
+
+public:
+  static unsigned long mem_size(size_t size)
+  { return (size * sizeof(Physframe) + 1023) & ~1023; }
 }; // struct Physframe
 
 
-// 
+//
 // class Treemap
-// 
+//
 
 class Treemap
 {
 public:
-  typedef Mapping_tree::Page Page;
-  typedef ::Mapping Mapping;
-  typedef Mapping::Pfn Pfn;
-  typedef Mapping::Pcnt Pcnt;
-  typedef Mdb_types::Order Order;
+  using Mapping = ::Mapping;
+  using Page    = Mapping_tree::Page;
+  using Pfn     = Mapping::Pfn;
+  using Pcnt    = Mapping::Pcnt;
+  using Order   = Mdb_types::Order;
 
 private:
+  bool match(Mapping const *m, Space *spc, Pfn va) const
+  {
+    return (m->space() == spc)
+           && (vaddr(m) == cxx::mask_lsb(va, _page_shift));
+  }
+
+  static unsigned long quota_size(Page key_end)
+  {
+    return Physframe::mem_size(cxx::int_value<Page>(key_end))
+           + sizeof(Treemap);
+  }
+
   // get the virtual address coresponding to the given physframe
   // inside this map
   Pfn frame_vaddr(Physframe const *f) const
@@ -124,8 +137,58 @@ private:
   const unsigned _sub_shifts_max;  ///< Number of valid _page_sizes entries
 
 public:
-  Page end() const { return _key_end; }
-  Pfn page_offset() const { return _page_offset; }
+  Treemap(Page key_end, Space *owner_id,
+          Pfn page_offset, Order page_shift,
+          const size_t* sub_shifts, unsigned sub_shifts_max,
+          Physframe *physframe)
+  : _key_end(key_end),
+    _owner_id(owner_id),
+    _page_offset(page_offset),
+    _page_shift(page_shift),
+    _physframe(physframe),
+    _sub_shifts(sub_shifts),
+    _sub_shifts_max(sub_shifts_max)
+  {}
+
+  ~Treemap()
+  { Physframe::free(_physframe, cxx::int_value<Page>(_key_end), owner()); }
+
+  Page  end() const         { return _key_end; }
+  Pfn   page_offset() const { return _page_offset; }
+  Pcnt  page_size() const   { return Pcnt(1) << _page_shift; }
+  Order page_shift() const  { return _page_shift; }
+  Space *owner() const      { return _owner_id; }
+
+  Page round_to_page(Pcnt v) const
+  {
+    return Page(cxx::int_value<Pcnt>(
+          (v + ((Pcnt(1) << _page_shift) - Pcnt(1)))
+          >> _page_shift));
+  }
+
+  Page trunc_to_page(Pcnt v) const
+  { return Page(cxx::int_value<Pcnt>(v >> _page_shift)); }
+
+  Page trunc_to_page(Pfn v) const
+  { return Page(cxx::int_value<Pfn>(v >> _page_shift)); }
+
+  Pfn to_vaddr(Page v) const
+  { return Pfn(cxx::int_value<Page>(v << _page_shift)); }
+
+  Pcnt size() const
+  { return to_vaddr(_key_end) - Pfn(0); }
+
+  Pfn end_addr() const
+  { return _page_offset + size(); }
+
+  Pfn vaddr(Mapping const *m) const
+  { return to_vaddr(m->page()); }
+
+  void set_vaddr(Mapping* m, Pfn address) const
+  { m->set_page(trunc_to_page(address)); }
+
+  Physframe *frame(Page key) const
+  { return &_physframe[cxx::int_value<Page>(key)]; }
 };
 
 /** A mapping database.
@@ -135,17 +198,24 @@ class Mapdb
   friend class Jdb_mapdb;
 
 public:
-  typedef ::Mapping Mapping;
-  typedef Treemap::Pfn Pfn;
-  typedef Treemap::Pcnt Pcnt;
-  typedef Treemap::Order Order;
-  typedef Treemap::Frame Frame;
+  using Mapping = ::Mapping;
+  using Pfn =     Treemap::Pfn;
+  using Pcnt =    Treemap::Pcnt;
+  using Order =   Treemap::Order;
+  using Frame =   Treemap::Frame;
 
-  // TYPES
+  ~Mapdb()
+  { delete _treemap; }
 
-  // for mapdb_t
   Treemap *dbg_treemap() const
   { return _treemap; }
+
+  bool valid_address(Pfn phys) const
+  {
+    // on the root level physical and virtual frame numbers
+    // are the same
+    return phys < _treemap->end_addr();
+  }
 
 private:
   // DATA
@@ -276,13 +346,6 @@ Physframe::operator new (size_t, void *p)
 { return p; }
 #endif
 
-PUBLIC static inline
-unsigned long
-Physframe::mem_size(size_t size)
-{
-  return (size*sizeof(Physframe) + 1023) & ~1023;
-}
-
 static inline
 Physframe *
 Physframe::alloc(size_t size)
@@ -304,7 +367,7 @@ Physframe::alloc(size_t size)
 }
 
 inline NOEXPORT
-       NEEDS["mapping_tree.h", Treemap::~Treemap, Treemap::operator delete]
+       NEEDS["mapping_tree.h", Treemap::operator delete]
 void
 Physframe::del(Space *owner)
 {
@@ -324,7 +387,7 @@ Physframe::del(Space *owner)
 }
 
 inline NOEXPORT
-       NEEDS["mapping_tree.h", Treemap::~Treemap, Treemap::operator delete]
+       NEEDS["mapping_tree.h", Treemap::operator delete]
 Physframe::~Physframe()
 {
   assert (!has_mappings());
@@ -350,27 +413,37 @@ Physframe::free(Physframe *block, size_t size, Space *owner)
 
 class Treemap_ops
 {
-  typedef Treemap::Order Order;
-  typedef Treemap::Page Page;
-  typedef Treemap::Pfn Pfn;
-  typedef Treemap::Pcnt Pcnt;
+private:
+  using Order = Treemap::Order;
+  using Page  = Treemap::Page;
+  using Pfn   = Treemap::Pfn;
+  using Pcnt  = Treemap::Pcnt;
   Order _page_shift;
+
+public:
+  explicit Treemap_ops(Order page_shift)
+  : _page_shift(page_shift)
+  {}
+
+  Pfn to_vaddr(Page v) const
+  { return Pfn(cxx::int_value<Page>(v << _page_shift)); }
+
+  Pcnt page_size() const
+  { return Pcnt(1) << _page_shift; }
+
+  Space *owner(Treemap const *submap) const
+  { return submap->owner(); }
+
+  bool is_partial(Treemap const *submap, Pcnt offs_begin,
+                  Pcnt offs_end) const
+  {
+    return offs_begin > Pcnt(0)
+           || offs_end < submap->size();
+  }
+
+  void del(Treemap *submap) const
+  { delete submap; }
 };
-
-PUBLIC inline
-Treemap_ops::Treemap_ops(Order page_shift)
-: _page_shift(page_shift)
-{}
-
-PUBLIC inline
-Treemap::Pfn
-Treemap_ops::to_vaddr(Page v) const
-{ return Pfn(cxx::int_value<Page>(v << _page_shift)); }
-
-PUBLIC inline
-Treemap::Pcnt
-Treemap_ops::page_size() const
-{ return Pcnt(1) << _page_shift; }
 
 PUBLIC
 unsigned long
@@ -420,26 +493,8 @@ Treemap_ops::grant(Treemap *submap, Space *old_space,
     }
 }
 
-PUBLIC inline
-Space *
-Treemap_ops::owner(Treemap const *submap) const
-{ return submap->owner(); }
 
-PUBLIC inline
-bool
-Treemap_ops::is_partial(Treemap const *submap, Treemap::Pcnt offs_begin,
-                        Treemap::Pcnt offs_end) const
-{
-  return offs_begin > Treemap::Pcnt(0)
-         || offs_end < submap->size();
-}
-
-PUBLIC inline
-void
-Treemap_ops::del(Treemap *submap) const
-{ delete submap; }
-
-PUBLIC inline NEEDS[Treemap::round_to_page, Treemap::trunc_to_page, "mapping_tree.h"]
+PUBLIC inline NEEDS["mapping_tree.h"]
 void
 Treemap_ops::flush(Treemap *submap,
                    Treemap::Pcnt offs_begin, Treemap::Pcnt offs_end) const
@@ -479,55 +534,6 @@ Treemap_ops::flush(Treemap *submap,
 // Treemap members
 //
 
-PRIVATE inline
-Treemap::Treemap(Page key_end, Space *owner_id,
-                 Pfn page_offset, Order page_shift,
-                 const size_t* sub_shifts, unsigned sub_shifts_max,
-                 Physframe *physframe)
-  : _key_end(key_end),
-    _owner_id(owner_id),
-    _page_offset(page_offset),
-    _page_shift(page_shift),
-    _physframe(physframe),
-    _sub_shifts(sub_shifts),
-    _sub_shifts_max(sub_shifts_max)
-{
-  assert (_physframe);
-}
-
-PUBLIC inline
-Treemap::Page
-Treemap::round_to_page(Pcnt v) const
-{
-  return Page(cxx::int_value<Pcnt>((v + ((Pcnt(1) << _page_shift) - Pcnt(1)))
-                                   >> _page_shift));
-}
-
-PUBLIC inline
-Treemap::Page
-Treemap::trunc_to_page(Pcnt v) const
-{ return Page(cxx::int_value<Pcnt>(v >> _page_shift)); }
-
-PUBLIC inline
-Treemap::Page
-Treemap::trunc_to_page(Pfn v) const
-{ return Page(cxx::int_value<Pfn>(v >> _page_shift)); }
-
-PUBLIC inline
-Treemap::Pfn
-Treemap::to_vaddr(Page v) const
-{ return Pfn(cxx::int_value<Page>(v << _page_shift)); }
-
-PUBLIC inline
-Treemap::Pcnt
-Treemap::page_size() const
-{ return Pcnt(1) << _page_shift; }
-
-PRIVATE static inline
-unsigned long
-Treemap::quota_size(Page key_end)
-{ return Physframe::mem_size(cxx::int_value<Page>(key_end)) + sizeof(Treemap); }
-
 PUBLIC static
 Treemap *
 Treemap::create(Order parent_page_shift, Space *owner_id,
@@ -558,14 +564,6 @@ Treemap::create(Order parent_page_shift, Space *owner_id,
                          shifts_max - 1, pf);
 }
 
-
-
-PUBLIC inline NEEDS[Physframe::free, Mapdb]
-Treemap::~Treemap()
-{
-  Physframe::free(_physframe, cxx::int_value<Page>(_key_end), owner());
-}
-
 static Kmem_slab_t<Treemap> _treemap_allocator("Treemap");
 
 static
@@ -574,7 +572,7 @@ Treemap::allocator()
 { return _treemap_allocator.slab(); }
 
 
-PUBLIC inline NEEDS[Treemap::quota_size]
+PUBLIC inline
 void
 Treemap::operator delete (void *block)
 {
@@ -584,56 +582,6 @@ Treemap::operator delete (void *block)
   asm ("" : "=m"(t->_owner_id), "=m"(t->_key_end));
   allocator()->free(block);
   Mapping_tree::quota(id)->free(Treemap::quota_size(end));
-}
-
-PUBLIC inline
-Treemap::Order
-Treemap::page_shift() const
-{
-  return _page_shift;
-}
-
-PUBLIC inline
-Space *
-Treemap::owner() const
-{
-  return _owner_id;
-}
-
-
-PUBLIC inline NEEDS[Treemap::to_vaddr, "mapping_tree.h"]
-Treemap::Pcnt
-Treemap::size() const
-{
-  return to_vaddr(_key_end) - Pfn(0);
-}
-
-PUBLIC inline NEEDS[Treemap::size, "mapping_tree.h"]
-Treemap::Pfn
-Treemap::end_addr() const
-{
-  return _page_offset + size();
-}
-
-PUBLIC inline NEEDS[Treemap::to_vaddr, "mapping_tree.h"]
-Treemap::Pfn
-Treemap::vaddr(Mapping const *m) const
-{
-  return to_vaddr(m->page());
-}
-
-PUBLIC inline NEEDS[Treemap::trunc_to_page, "mapping_tree.h"]
-void
-Treemap::set_vaddr(Mapping* m, Pfn address) const
-{
-  m->set_page(trunc_to_page(address));
-}
-
-PRIVATE inline NEEDS[Treemap::vaddr]
-bool
-Treemap::match(Mapping const *m, Space *spc, Pfn va) const
-{
-  return  (m->space() == spc) && (vaddr(m) == cxx::mask_lsb(va, _page_shift));
 }
 
 PUBLIC
@@ -654,17 +602,7 @@ Treemap::tree(Page key)
   return f;
 }
 
-PUBLIC
-Physframe*
-Treemap::frame(Page key) const
-{
-  assert (key < _key_end);
-
-  return &_physframe[cxx::int_value<Page>(key)];
-}
-
-
-PRIVATE inline NEEDS[Treemap::match]
+PRIVATE inline
 Mapping_tree::Iterator
 Treemap::_lookup(Physframe *f, Mapping_tree::Iterator m, Space *spc, Pcnt key, Pfn va,
                  Frame *res, int *root_depth = 0, int *current_depth = 0)
@@ -734,319 +672,7 @@ Treemap::lookup(Pcnt key, Space *search_space, Pfn search_va,
   return false;
 }
 
-PUBLIC
-Mapping *
-Treemap::insert(Physframe* frame, Mapping_tree::Iterator const &parent,
-                Space *parent_space, Pfn parent_va,
-                Space *space, Pfn va, Pcnt phys, Pcnt size)
-{
-  using Iterator = Mapping_tree::Iterator;
-  Treemap* submap = 0;
-  Ram_quota *payer;
-  Order const psz = _page_shift;
-  bool insert_submap = page_size() != size;
-
-  // Inserting subpage mapping?  See if we can find a submap.  If so,
-  // we don't have to allocate a new Mapping entry.
-  if (insert_submap)
-    submap = frame->find_submap(parent);
-
-  if (! submap) // Need allocation of new entry -- for submap or
-		// normal mapping
-    {
-      // first check quota! In case of a new submap the parent pays for
-      // the node...
-      payer = Mapping_tree::quota(insert_submap ? parent_space : space);
-
-      Iterator free = frame->alloc_mapping(payer, parent, insert_submap);
-      if (EXPECT_FALSE(!*free))
-        return 0; 
-
-      // Check for submap entry.
-      if (! insert_submap)	// Not a submap entry
-        {
-          free->set_space(space);
-          set_vaddr(*free, va);
-
-          frame->check_integrity(_owner_id);
-          return *free;
-        }
-
-      assert (_sub_shifts_max > 0);
-
-      submap = Treemap::create(_page_shift, parent_space, parent_va,
-                               _sub_shifts, _sub_shifts_max);
-      if (! submap)
-        {
-          // free the mapping got with allocate
-          frame->free_mapping(payer, free);
-          return 0;
-        }
-
-      free->set_submap(submap);
-    }
-
-  Pcnt subframe_offset = cxx::mask_lsb(cxx::get_lsb(phys, psz), submap->page_shift());
-  Physframe* subframe = submap->tree(submap->trunc_to_page(subframe_offset));
-  if (! subframe)
-    return 0;
-
-  Mapping* ret = submap->insert(subframe, subframe->insertion_head(),
-                                parent_space, parent_va + subframe_offset,
-                                space, va,
-                                cxx::get_lsb(phys, psz), size);
-
-  subframe->release();
-
-  return ret;
-} // Treemap::insert()
-
-PUBLIC
-void
-Treemap::flush(Physframe* f, Pcnt offs_begin, Pcnt offs_end)
-{
-  // This is easy to do: We just have to iterate over the array
-  // encoding the tree.
-  f->flush(offs_begin, offs_end, Treemap_ops(_page_shift));
-  f->check_integrity(_owner_id);
-  return;
-} // Treemap::flush()
-
-PUBLIC
-void
-Treemap::flush(Physframe* f, Mapping_tree::Iterator parent,
-               bool me_too,
-               Pcnt offs_begin, Pcnt offs_end)
-{
-  // This is easy to do: We just have to iterate over the array
-  // encoding the tree.
-  f->flush(parent, me_too, offs_begin, offs_end, Treemap_ops(_page_shift));
-  f->check_integrity(_owner_id);
-  return;
-} // Treemap::flush()
-
-PUBLIC
-bool
-Treemap::grant(Physframe* f, Mapping_tree::Iterator m, Space *new_space, Pfn va)
-{
-  return f->grant(m, new_space, trunc_to_page(va), Treemap_ops(_page_shift));
-}
-
-
-
-//
-// class Mapdb_iterator
-//
-
-PUBLIC template<typename F> inline
-void
-Treemap::for_range(Page start, Page end, F &&func)
-{
-  Order ps = page_shift();
-
-  for (Page sub_page = start; sub_page < end; ++sub_page)
-    {
-      Physframe *f = frame(sub_page);
-      if (!f->has_mappings())
-        continue;
-
-      auto guard = lock_guard(f->lock);
-      func(f, ps);
-    }
-}
-
-PRIVATE template<typename F> static inline NEEDS[Physframe]
-void
-Mapdb::_for_full_subtree(unsigned min_depth,
-                         Mapping_tree::Iterator first,
-                         Mapdb::Order size,
-                         F &&func)
-{
-  typedef Mapping::Page Page;
-  for (auto cursor = first; *cursor; ++cursor)
-    {
-      if (Treemap *map = cursor->submap())
-        map->for_range(Page(0), map->end(), [func](Physframe *f, Mapdb::Order size)
-            {
-              _for_full_subtree(f->min_depth(), f->first(), size,
-                                func);
-
-            });
-      else if (cursor->depth() >= min_depth)
-        func(*cursor, size);
-      else
-        break;
-    }
-}
-
-PRIVATE template<typename F> static inline NEEDS[Treemap::round_to_page, Physframe]
-void
-Mapdb::_foreach_mapping(unsigned min_depth,
-                        Mapping_tree::Iterator cursor,
-                        Mapdb::Order size,
-                        Mapdb::Pfn va_begin, Mapdb::Pfn va_end,
-                        F &&func)
-{
-  typedef Mapping::Page Page;
-
-  if (!*cursor)
-    return;
-
-  if (Treemap *submap = cursor->submap())
-    {
-      Order ps = submap->page_shift();
-      Pfn po = submap->page_offset();
-      Page start(0);
-      Page end(submap->end());
-
-      if (va_begin > po)
-        start = Page(cxx::int_value<Pcnt>((va_begin - po) >> ps));
-
-      if (va_end < po + submap->size())
-        end = submap->round_to_page(va_end - po);
-
-      submap->for_range(start, end, [&func, va_begin, va_end](Physframe *f, Mapdb::Order size)
-          {
-            _foreach_mapping(f->min_depth(), f->first(),
-                             size, va_begin, va_end, func);
-          });
-
-      ++cursor;
-    }
-
-  _for_full_subtree(min_depth, cursor, size, cxx::forward<F>(func));
-}
-
-PUBLIC template<typename F> static inline NEEDS[Treemap::round_to_page, Physframe]
-void
-Mapdb::foreach_mapping(Frame const &f,
-                       Mapdb::Pfn va_begin, Mapdb::Pfn va_end,
-                       F &&func)
-{
-  _foreach_mapping(f.next_depth(), f.next_mapping(),
-                   f.treemap->page_shift(),
-                   va_begin, va_end, cxx::forward<F>(func));
-}
-
-
-// 
-// class Mapdb
-// 
-
-/** Constructor.
-    @param End physical end address of RAM.  (Used only if 
-           Config::Mapdb_ram_only is true.) 
- */
-PUBLIC
-Mapdb::Mapdb(Space *owner, Order parent_page_shift, size_t const *page_shifts,
-             unsigned page_shifts_max)
-: _treemap(Treemap::create(parent_page_shift, owner,
-                           Pfn(0), page_shifts, page_shifts_max))
-{
-  // assert (boot_time);
-  assert (_treemap);
-} // Mapdb()
-
-/** Destructor. */
-PUBLIC
-Mapdb::~Mapdb()
-{
-  delete _treemap;
-}
-
-/** Insert a new mapping entry with the given values as child of
-    "parent".
-    We assume that there is at least one free entry at the end of the
-    array so that at least one insert() operation can succeed between a
-    lookup()/free() pair of calls.  This is guaranteed by the free()
-    operation which allocates a larger tree if the current one becomes
-    to small.
-    @param parent Parent mapping of the new mapping.
-    @param space  Number of the address space into which the mapping is entered
-    @param va     Virtual address of the mapped page.
-    @param size   Size of the mapping.  For memory mappings, 4K or 4M.
-    @return If successful, new mapping.  If out of memory or mapping 
-           tree full, 0.
-    @post  All Mapping* pointers pointing into this mapping tree,
-           except "parent" and its parents, will be invalidated.
- */
-PUBLIC inline
-Mapping *
-Mapdb::insert(Frame const &frame, Space *space,
-              Pfn va, Pfn phys, Pcnt size)
-{
-  return frame.treemap->insert(frame.frame, frame.m,
-                               frame.pspace(), frame.pvaddr(),
-                               space, va, phys - Pfn(0), size);
-} // insert()
-
-
-/** 
- * Lookup a mapping and lock the corresponding mapping tree.  The returned
- * mapping pointer, and all other mapping pointers derived from it, remain
- * valid until free() is called on one of them.  We guarantee that at most 
- * one insert() operation succeeds between one lookup()/free() pair of calls 
- * (it succeeds unless the mapping tree is fu68,ll).
- * @param space Number of virtual address space in which the mapping 
- *              was entered
- * @param va    Virtual address of the mapping
- * @param phys  Physical address of the mapped pag frame
- * @return mapping, if found; otherwise, 0
- */
-PUBLIC
-bool
-Mapdb::lookup(Space *space, Pfn va, Pfn phys,
-              Frame *res)
-{
-  return _treemap->lookup(phys - Pfn(0), space, va, res);
-}
-
-/** Delete mappings from a tree.  This function deletes mappings
-    recusively.
-    @param m Mapping that denotes the subtree that should be deleted.
-    @param me_too If true, delete m as well; otherwise, delete only 
-           submappings.
- */
-PUBLIC static
-void
-Mapdb::flush(Frame const &f, L4_map_mask mask,
-             Pfn va_start, Pfn va_end)
-{
-  Pcnt size = f.treemap->page_size();
-  Pcnt offs_begin = va_start > f.pvaddr()
-                  ? va_start - f.pvaddr()
-                  : Pcnt(0);
-  Pcnt offs_end = va_end > f.pvaddr() + size
-                ? size
-                : va_end - f.pvaddr();
-
-  f.treemap->flush(f.frame, f.m, mask.self_unmap(), offs_begin, offs_end);
-} // flush()
-
-/** Change ownership of a mapping.
-    @param m Mapping to be modified.
-    @param new_space Number of address space the mapping should be 
-                     transferred to
-    @param va Virtual address of the mapping in the new address space
- */
-PUBLIC
-bool
-Mapdb::grant(Frame const &f, Space *new_space,
-             Pfn va)
-{
-  return f.treemap->grant(f.frame, f.m, new_space, va);
-}
-
-PUBLIC inline NEEDS [Treemap::end_addr, "mapping_tree.h"]
-bool
-Mapdb::valid_address(Pfn phys)
-{
-  // on the root level physical and virtual frame numbers
-  // are the same
-  return phys < _treemap->end_addr();
-}
-
-PUBLIC inline NEEDS[Treemap::match, Treemap::_lookup, "assert_opt.h"]
+PUBLIC inline NEEDS[Treemap::_lookup, "assert_opt.h"]
 int
 Treemap::lookup_src_dst(Space *src, Pcnt src_key, Pfn src_va, Pcnt src_size,
                         Space *dst, Pcnt dst_key, Pfn dst_va, Pcnt dst_size,
@@ -1193,6 +819,295 @@ Treemap::lookup_src_dst(Space *src, Pcnt src_key, Pfn src_va, Pcnt src_size,
     }
 }
 
+PUBLIC
+Mapping *
+Treemap::insert(Physframe* frame, Mapping_tree::Iterator const &parent,
+                Space *parent_space, Pfn parent_va,
+                Space *space, Pfn va, Pcnt phys, Pcnt size)
+{
+  using Iterator = Mapping_tree::Iterator;
+  Treemap* submap = 0;
+  Ram_quota *payer;
+  Order const psz = _page_shift;
+  bool insert_submap = page_size() != size;
+
+  // Inserting subpage mapping?  See if we can find a submap.  If so,
+  // we don't have to allocate a new Mapping entry.
+  if (insert_submap)
+    submap = frame->find_submap(parent);
+
+  if (! submap) // Need allocation of new entry -- for submap or
+		// normal mapping
+    {
+      // first check quota! In case of a new submap the parent pays for
+      // the node...
+      payer = Mapping_tree::quota(insert_submap ? parent_space : space);
+
+      Iterator free = frame->alloc_mapping(payer, parent, insert_submap);
+      if (EXPECT_FALSE(!*free))
+        return 0; 
+
+      // Check for submap entry.
+      if (! insert_submap)	// Not a submap entry
+        {
+          free->set_space(space);
+          set_vaddr(*free, va);
+
+          frame->check_integrity(_owner_id);
+          return *free;
+        }
+
+      assert (_sub_shifts_max > 0);
+
+      submap = Treemap::create(_page_shift, parent_space, parent_va,
+                               _sub_shifts, _sub_shifts_max);
+      if (! submap)
+        {
+          // free the mapping got with allocate
+          frame->free_mapping(payer, free);
+          return 0;
+        }
+
+      free->set_submap(submap);
+    }
+
+  Pcnt subframe_offset = cxx::mask_lsb(cxx::get_lsb(phys, psz), submap->page_shift());
+  Physframe* subframe = submap->tree(submap->trunc_to_page(subframe_offset));
+  if (! subframe)
+    return 0;
+
+  Mapping* ret = submap->insert(subframe, subframe->insertion_head(),
+                                parent_space, parent_va + subframe_offset,
+                                space, va,
+                                cxx::get_lsb(phys, psz), size);
+
+  subframe->release();
+
+  return ret;
+} // Treemap::insert()
+
+PUBLIC
+void
+Treemap::flush(Physframe* f, Pcnt offs_begin, Pcnt offs_end)
+{
+  // This is easy to do: We just have to iterate over the array
+  // encoding the tree.
+  f->flush(offs_begin, offs_end, Treemap_ops(_page_shift));
+  f->check_integrity(_owner_id);
+  return;
+} // Treemap::flush()
+
+PUBLIC
+void
+Treemap::flush(Physframe* f, Mapping_tree::Iterator parent,
+               bool me_too,
+               Pcnt offs_begin, Pcnt offs_end)
+{
+  // This is easy to do: We just have to iterate over the array
+  // encoding the tree.
+  f->flush(parent, me_too, offs_begin, offs_end, Treemap_ops(_page_shift));
+  f->check_integrity(_owner_id);
+  return;
+} // Treemap::flush()
+
+PUBLIC
+bool
+Treemap::grant(Physframe* f, Mapping_tree::Iterator m, Space *new_space, Pfn va)
+{
+  return f->grant(m, new_space, trunc_to_page(va), Treemap_ops(_page_shift));
+}
+
+PUBLIC template<typename F> inline
+void
+Treemap::for_range(Page start, Page end, F &&func)
+{
+  Order ps = page_shift();
+
+  for (Page sub_page = start; sub_page < end; ++sub_page)
+    {
+      Physframe *f = frame(sub_page);
+      if (!f->has_mappings())
+        continue;
+
+      auto guard = lock_guard(f->lock);
+      func(f, ps);
+    }
+}
+
+PRIVATE template<typename F> static inline
+void
+Mapdb::_for_full_subtree(unsigned min_depth,
+                         Mapping_tree::Iterator first,
+                         Mapdb::Order size,
+                         F &&func)
+{
+  typedef Mapping::Page Page;
+  for (auto cursor = first; *cursor; ++cursor)
+    {
+      if (Treemap *map = cursor->submap())
+        map->for_range(Page(0), map->end(), [func](Physframe *f, Mapdb::Order size)
+            {
+              _for_full_subtree(f->min_depth(), f->first(), size,
+                                func);
+
+            });
+      else if (cursor->depth() >= min_depth)
+        func(*cursor, size);
+      else
+        break;
+    }
+}
+
+PRIVATE template<typename F> static inline
+void
+Mapdb::_foreach_mapping(unsigned min_depth,
+                        Mapping_tree::Iterator cursor,
+                        Mapdb::Order size,
+                        Mapdb::Pfn va_begin, Mapdb::Pfn va_end,
+                        F &&func)
+{
+  typedef Mapping::Page Page;
+
+  if (!*cursor)
+    return;
+
+  if (Treemap *submap = cursor->submap())
+    {
+      Order ps = submap->page_shift();
+      Pfn po = submap->page_offset();
+      Page start(0);
+      Page end(submap->end());
+
+      if (va_begin > po)
+        start = Page(cxx::int_value<Pcnt>((va_begin - po) >> ps));
+
+      if (va_end < po + submap->size())
+        end = submap->round_to_page(va_end - po);
+
+      submap->for_range(start, end, [&func, va_begin, va_end](Physframe *f, Mapdb::Order size)
+          {
+            _foreach_mapping(f->min_depth(), f->first(),
+                             size, va_begin, va_end, func);
+          });
+
+      ++cursor;
+    }
+
+  _for_full_subtree(min_depth, cursor, size, cxx::forward<F>(func));
+}
+
+PUBLIC template<typename F> static inline
+void
+Mapdb::foreach_mapping(Frame const &f,
+                       Mapdb::Pfn va_begin, Mapdb::Pfn va_end,
+                       F &&func)
+{
+  _foreach_mapping(f.next_depth(), f.next_mapping(),
+                   f.treemap->page_shift(),
+                   va_begin, va_end, cxx::forward<F>(func));
+}
+
+
+// 
+// class Mapdb
+// 
+
+/** Constructor.
+    @param End physical end address of RAM.  (Used only if 
+           Config::Mapdb_ram_only is true.) 
+ */
+PUBLIC inline NEEDS[<cassert>]
+Mapdb::Mapdb(Space *owner, Order parent_page_shift, size_t const *page_shifts,
+             unsigned page_shifts_max)
+: _treemap(Treemap::create(parent_page_shift, owner,
+                           Pfn(0), page_shifts, page_shifts_max))
+{
+  // assert (boot_time);
+  assert (_treemap);
+} // Mapdb()
+
+/** Insert a new mapping entry with the given values as child of
+    "parent".
+    We assume that there is at least one free entry at the end of the
+    array so that at least one insert() operation can succeed between a
+    lookup()/free() pair of calls.  This is guaranteed by the free()
+    operation which allocates a larger tree if the current one becomes
+    to small.
+    @param parent Parent mapping of the new mapping.
+    @param space  Number of the address space into which the mapping is entered
+    @param va     Virtual address of the mapped page.
+    @param size   Size of the mapping.  For memory mappings, 4K or 4M.
+    @return If successful, new mapping.  If out of memory or mapping 
+           tree full, 0.
+    @post  All Mapping* pointers pointing into this mapping tree,
+           except "parent" and its parents, will be invalidated.
+ */
+PUBLIC inline
+Mapping *
+Mapdb::insert(Frame const &frame, Space *space,
+              Pfn va, Pfn phys, Pcnt size)
+{
+  return frame.treemap->insert(frame.frame, frame.m,
+                               frame.pspace(), frame.pvaddr(),
+                               space, va, phys - Pfn(0), size);
+} // insert()
+
+
+/** 
+ * Lookup a mapping and lock the corresponding mapping tree.  The returned
+ * mapping pointer, and all other mapping pointers derived from it, remain
+ * valid until free() is called on one of them.  We guarantee that at most 
+ * one insert() operation succeeds between one lookup()/free() pair of calls 
+ * (it succeeds unless the mapping tree is fu68,ll).
+ * @param space Number of virtual address space in which the mapping 
+ *              was entered
+ * @param va    Virtual address of the mapping
+ * @param phys  Physical address of the mapped pag frame
+ * @return mapping, if found; otherwise, 0
+ */
+PUBLIC inline
+bool
+Mapdb::lookup(Space *space, Pfn va, Pfn phys,
+              Frame *res)
+{
+  return _treemap->lookup(phys - Pfn(0), space, va, res);
+}
+
+/** Delete mappings from a tree.  This function deletes mappings
+    recusively.
+    @param m Mapping that denotes the subtree that should be deleted.
+    @param me_too If true, delete m as well; otherwise, delete only 
+           submappings.
+ */
+PUBLIC static inline
+void
+Mapdb::flush(Frame const &f, L4_map_mask mask,
+             Pfn va_start, Pfn va_end)
+{
+  Pcnt size = f.treemap->page_size();
+  Pcnt offs_begin = va_start > f.pvaddr()
+                  ? va_start - f.pvaddr()
+                  : Pcnt(0);
+  Pcnt offs_end = va_end > f.pvaddr() + size
+                ? size
+                : va_end - f.pvaddr();
+
+  f.treemap->flush(f.frame, f.m, mask.self_unmap(), offs_begin, offs_end);
+} // flush()
+
+/** Change ownership of a mapping.
+    @param m Mapping to be modified.
+    @param new_space Number of address space the mapping should be 
+                     transferred to
+    @param va Virtual address of the mapping in the new address space
+ */
+PUBLIC inline
+bool
+Mapdb::grant(Frame const &f, Space *new_space,
+             Pfn va)
+{
+  return f.treemap->grant(f.frame, f.m, new_space, va);
+}
 
 PUBLIC inline
 int
