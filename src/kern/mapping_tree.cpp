@@ -822,21 +822,26 @@ Mapping_tree::grant(Mapping* m, Space *new_space, Page page,
 {
   unsigned long _quota = sizeof(Mapping);
   Treemap* submap = find_submap(m);
-  if (submap)
-    _quota += submap_ops.mem_size(submap);
-
-  if (!quota(new_space)->alloc(_quota))
-    return false;
 
   Space *old_space = m->space();
 
-  m->set_space(new_space);
+  if (old_space != new_space)
+    {
+      if (submap)
+        _quota += submap_ops.mem_size(submap);
+
+      if (!quota(new_space)->alloc(_quota))
+        return false;
+
+      quota(old_space)->free(_quota);
+
+      m->set_space(new_space);
+    }
+
   m->set_page(page);
 
   if (submap)
     submap_ops.grant(submap, old_space, new_space, page);
-
-  quota(old_space)->free(_quota);
 
   return true;
 }
