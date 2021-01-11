@@ -834,9 +834,10 @@ Mapping_tree::grant(Mapping* m, Space *new_space, Page page,
   m->set_page(page);
 
   if (submap)
-    submap_ops.grant(submap, new_space, page);
+    submap_ops.grant(submap, old_space, new_space, page);
 
   quota(old_space)->free(_quota);
+
   return true;
 }
 

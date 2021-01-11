@@ -299,7 +299,7 @@ Treemap::Pcnt
 Treemap_ops::page_size() const
 { return Pcnt(1) << _page_shift; }
 
-PUBLIC 
+PUBLIC
 unsigned long
 Treemap_ops::mem_size(Treemap const *submap) const
 {
@@ -309,22 +309,42 @@ Treemap_ops::mem_size(Treemap const *submap) const
   for (Page key = Page(0);
       key < submap->_key_end;
       ++key)
-    quota += submap->frame(key)->base_quota_size();
+    {
+      Physframe *f = submap->frame(key);
+      quota += f->base_quota_size();
+      if (!f->has_mappings())
+        continue;
+
+      // recurse dow through all page sizes
+      if (Treemap *s = f->find_submap(f->insertion_head()))
+        quota += mem_size(s);
+    }
 
   return quota;
 }
 
 PUBLIC
 void
-Treemap_ops::grant(Treemap *submap, Space *new_space, Page page) const
+Treemap_ops::grant(Treemap *submap, Space *old_space,
+                   Space *new_space, Page virt_page) const
 {
   submap->_owner_id = new_space;
-  submap->_page_offset = to_vaddr(page);
-  auto const shift = _page_shift - submap->_page_shift;
+  submap->_page_offset = to_vaddr(virt_page);
   auto const end = submap->_key_end;
+  auto const subva = virt_page << (_page_shift - submap->_page_shift);
 
   for (Page key = Page(0); key < end; ++key)
-    submap->frame(key)->grant_tree(new_space, page + (key >> shift));
+    {
+      auto f = submap->frame(key);
+      f->grant_tree(new_space, subva + key);
+      if (!f->has_mappings())
+        continue;
+
+      // recurse dow through all page sizes
+      if (Treemap *s = f->find_submap(f->insertion_head()))
+        Treemap_ops(submap->_page_shift).grant(s, old_space, new_space,
+                    subva + key);
+    }
 }
 
 PUBLIC inline
