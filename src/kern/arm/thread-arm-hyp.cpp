@@ -59,9 +59,6 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
 
 }
 
-extern "C" Mword pagefault_entry(const Mword pfa, Mword error_code,
-                                 const Mword pc, Return_frame *ret_frame);
-
 PUBLIC static inline template<typename T>
 T
 Thread::peek_user(T const *adr, Context *c)
