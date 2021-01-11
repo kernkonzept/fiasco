@@ -4,6 +4,7 @@ INTERFACE:
 #include "l4_types.h"
 #include "lock.h"
 #include "mapping.h"
+#include "space.h"
 #include "types.h"
 #include <cxx/slist>
 
@@ -111,15 +112,19 @@ class Ram_quota;
 class Mapping_tree : public cxx::S_list<Mapping>
 {
 public:
-  typedef Mapping::Page Page;
-  typedef Mapping::Pfn Pfn;
-  typedef Mapping::Pcnt Pcnt;
+  using Page = Mapping::Page;
+  using Pfn  = Mapping::Pfn;
+  using Pcnt = Mapping::Pcnt;
 
 private:
-  typedef cxx::S_list<Mapping> Mappings;
-};
+  using Mappings = cxx::S_list<Mapping>;
 
-INTERFACE:
+public:
+  ~Mapping_tree() { erase(nullptr); }
+
+  static Iterator insertion_head() { return Iterator(); }
+  static Ram_quota *quota(Space *space) { return space->ram_quota(); }
+};
 
 //
 // class Physframe
@@ -132,19 +137,36 @@ private:
   Mapping_tree _tree;
 
 public:
-  typedef Mapping_tree::Page Page;
-  typedef Mapping::Pfn Pfn;
-  typedef Mapping::Pcnt Pcnt;
-  // DATA
-  Mapping_tree *tree() { return &_tree; }
-  Mapping_tree const *tree() const { return &_tree; }
+  using Page = Mapping_tree::Page;
+  using Pfn  = Mapping::Pfn;
+  using Pcnt = Mapping::Pcnt;
+  using Lock = ::Lock;
+  using Iterator = Mapping_tree::Iterator;
 
-  typedef ::Lock Lock;
   Lock lock;
 
+  Mapping_tree *tree() { return &_tree; }
+  Mapping_tree const *tree() const { return &_tree; }
   void erase_tree(Space *owner) { _tree.erase(owner); }
-}; // struct Physframe
+  bool has_mappings() const { return _tree.front(); }
+  bool init_tree(Page, Space *) { return true; }
+  void check_integrity(Space *) {}
+  unsigned long base_quota_size() const { return 0; }
+  void grant_tree(Space *, Page) {}
+  Treemap *find_submap(Iterator parent) const
+  { return _tree.find_submap(parent); }
 
+  Iterator free_mapping(Ram_quota *q, Iterator m)
+  { return _tree.free_mapping(q, m); }
+
+  Iterator insertion_head() const
+  { return _tree.insertion_head(); }
+
+  void release() { lock.clear(); }
+  unsigned min_depth() const { return 0; }
+  Iterator first() const
+  { return const_cast<Mapping_tree &>(_tree).begin(); }
+};
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION:
@@ -152,7 +174,6 @@ IMPLEMENTATION:
 #include <cassert>
 #include <cstring>
 
-#include "assert_opt.h"
 #include "config.h"
 #include "globals.h"
 #include "kdb_ke.h"
@@ -169,21 +190,6 @@ static Kmem_slab_t<Mapping> _mapping_allocator("Mapping");
 //
 // class Mapping_tree
 //
-
-PUBLIC static
-inline NEEDS["space.h"]
-Ram_quota *
-Mapping_tree::quota(Space *space)
-{
-  return space->ram_quota();
-}
-
-PUBLIC static inline
-Mapping_tree::Iterator
-Mapping_tree::insertion_head()
-{
-  return Mapping_tree::Iterator();
-}
 
 PUBLIC
 void
@@ -209,10 +215,6 @@ Mapping_tree::erase(Space *owner)
       _mapping_allocator.q_del(q, m);
     }
 }
-
-PUBLIC inline
-Mapping_tree::~Mapping_tree()
-{ erase(nullptr); }
 
 PUBLIC inline NEEDS[<cassert>]
 Treemap *
@@ -364,7 +366,6 @@ Mapping_tree::flush(Iterator parent, bool me_too,
         cxx::forward<SUBMAP_OPS>(submap_ops));
 }
 
-
 PUBLIC template< typename SUBMAP_OPS > inline
 bool
 Mapping_tree::grant(Iterator const &m, Space *new_space, Page page,
@@ -396,24 +397,6 @@ Mapping_tree::grant(Iterator const &m, Space *new_space, Page page,
   return true;
 }
 
-PUBLIC inline
-bool
-Base_mappable::has_mappings() const
-{ return _tree.front(); }
-
-PUBLIC inline
-bool
-Base_mappable::init_tree(Page page, Space *owner)
-{
-  (void) page; (void) owner;
-  return true;
-}
-
-PUBLIC inline
-void
-Base_mappable::check_integrity(Space *)
-{}
-
 /**
  * Grant the mapping `m` of this mappable to a new destination.
  */
@@ -425,7 +408,7 @@ Base_mappable::grant(Mapping_tree::Iterator m, Space *new_space, Page page,
   return _tree.grant(m, new_space, page, cxx::forward<SUBMAP_OPS>(submap_ops));
 }
 
-PUBLIC template< typename SUBMAP_OPS >
+PUBLIC template< typename SUBMAP_OPS > inline
 void
 Base_mappable::flush(Pcnt offs_begin, Pcnt offs_end,
                      SUBMAP_OPS &&submap_ops)
@@ -445,27 +428,6 @@ Base_mappable::flush(Mapping_tree::Iterator parent, bool me_too,
 }
 
 PUBLIC inline
-unsigned long
-Base_mappable::base_quota_size() const
-{
-  return 0;
-}
-
-PUBLIC inline
-void
-Base_mappable::grant_tree(Space *new_space, Page page)
-{
-  (void) new_space; (void) page;
-}
-
-PUBLIC inline
-Treemap *
-Base_mappable::find_submap(Mapping_tree::Iterator parent) const
-{
-  return _tree.find_submap(parent);
-}
-
-PUBLIC inline
 Mapping_tree::Iterator
 Base_mappable::alloc_mapping(Ram_quota *q,
                              Mapping_tree::Iterator parent,
@@ -477,38 +439,3 @@ Base_mappable::alloc_mapping(Ram_quota *q,
     return _tree.allocate(q, parent);
 }
 
-PUBLIC inline
-Mapping_tree::Iterator
-Base_mappable::free_mapping(Ram_quota *q, Mapping_tree::Iterator parent)
-{
-  return _tree.free_mapping(q, parent);
-}
-
-PUBLIC inline
-Mapping_tree::Iterator
-Base_mappable::insertion_head() const
-{
-  return _tree.insertion_head();
-}
-
-PUBLIC inline
-void
-Base_mappable::release()
-{
-  // Unlock tree.
-  lock.clear();
-}
-
-PUBLIC inline
-unsigned
-Base_mappable::min_depth() const
-{
-  return 0;
-}
-
-PUBLIC inline
-Mapping_tree::Iterator
-Base_mappable::first() const
-{
-  return const_cast<Mapping_tree &>(_tree).begin();
-}
