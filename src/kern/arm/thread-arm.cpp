@@ -7,9 +7,6 @@ EXTENSION class Thread
 public:
   static void init_per_cpu(Cpu_number cpu, bool resume);
   bool check_and_handle_coproc_faults(Trap_state *);
-
-private:
-  bool _in_exception;
 };
 
 // ------------------------------------------------------------------------
@@ -298,7 +295,6 @@ Thread::Thread(Ram_quota *q)
   _magic = magic;
   _recover_jmpbuf = 0;
   _timeout = 0;
-  _in_exception = false;
 
   prepare_switch_to(&user_invoke);
 
@@ -343,11 +339,8 @@ PRIVATE inline
 bool
 Thread::invalid_ipc_buffer(void const *a)
 {
-  if (!_in_exception)
-    return Mem_layout::in_kernel(((Address)a & Config::SUPERPAGE_MASK)
-                                 + Config::SUPERPAGE_SIZE - 1);
-
-  return false;
+  return Mem_layout::in_kernel(((Address)a & Config::SUPERPAGE_MASK)
+                               + Config::SUPERPAGE_SIZE - 1);
 }
 
 PROTECTED inline
