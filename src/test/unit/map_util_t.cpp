@@ -170,7 +170,7 @@ int main()
 
   assert (mapdb->lookup(sigma0, to_pfn(0x10000), to_pfn(0x10000), &frame));
   print_node (frame);
-  mapdb->free (frame);
+  frame.clear(true);
 
   cout << "[UTEST] s0 [0/superpage] -> server [0] -> should map many 4K pages and "
           "overmap previous mapping" << endl;
@@ -192,7 +192,7 @@ int main()
 
   assert (mapdb->lookup(sigma0, to_pfn(0), to_pfn(0), &frame));
   print_node (frame);
-  mapdb->free (frame);
+  frame.clear(true);
 
   // previous mapping still there?
 
@@ -210,7 +210,7 @@ int main()
   // s0 [0x10000] -> server [0x10000]
   assert (mapdb->lookup(sigma0, to_pfn(0x10000), to_pfn(0x10000), &frame));
   print_node (frame, 0x10000, 0x11000);
-  mapdb->free (frame);
+  frame.clear(true);
 
   cout << "[UTEST] Partially unmap superpage s0 [0/superpage]" << endl;
 
@@ -226,7 +226,7 @@ int main()
   
   assert (mapdb->lookup(sigma0, to_pfn(0x0), to_pfn(0x0), &frame));
   print_node (frame);
-  mapdb->free (frame);
+  frame.clear(true);
 
   assert (! ms(server)->v_lookup(to_vaddr(0x101000), &phys, &order, &page_attribs));
 
@@ -250,7 +250,7 @@ int main()
 
   assert (mapdb->lookup(sigma0, to_pfn(0x400000), to_pfn(0x400000), &frame));
   print_node (frame);
-  mapdb->free (frame);
+  frame.clear(true);
 
   // 
   // server [8M+4K] -> client [8K]
@@ -275,7 +275,7 @@ int main()
 
   assert (mapdb->lookup(sigma0, to_pfn(0x400000), to_pfn(0x400000), &frame));
   print_node (frame);
-  mapdb->free (frame);
+  frame.clear(true);
 
   //
   // Overmap a read-only page.  The writable attribute should not be
@@ -312,7 +312,7 @@ int main()
 
   assert (mapdb->lookup (sigma0, 0x400000, 0x400000, &frame));
   print_node (frame);
-  mapdb->free (frame);
+  frame.clear(true);
 
   fpage_unmap (server,
 	       Test_fpage (false, true, Config::PAGE_SHIFT, 0x801000),
@@ -331,7 +331,7 @@ int main()
 
   assert (mapdb->lookup (sigma0->id(), 0x400000, 0x400000, &frame));
   print_node (frame);
-  mapdb->free (frame);
+  frame.clear(true);
 #endif
 
 
@@ -427,12 +427,17 @@ static void print_node(const Mapdb::Frame& frame,
 		       Address va_begin = 0, Address va_end = ~0UL)
 {
   auto node = frame.m;
-  assert (node);
+  Space *n_space = frame.pspace();
 
-  Mapdb::Order size = Mapdb::shift(frame);
+  if (!*node)
+    node = frame.frame->first();
 
-  cout << "space="  << *node->space()
-       << " vaddr=0x" << node->pfn(size)
+  assert (*node);
+
+  Mapdb::Order size = frame.treemap->page_shift();
+
+  cout << "space="  << *n_space
+       << " vaddr=0x" << frame.pvaddr()
        << " size=0x" << (Mapdb::Pfn(1) << size)
        << endl;
 
@@ -440,19 +445,13 @@ static void print_node(const Mapdb::Frame& frame,
     [](Mapping *node, Mapdb::Order order)
     {
       cout << "[UTEST] ";
-      for (int d = node->depth(); d != 0; d--)
+      for (int d = node->depth() + 1; d != 0; d--)
         cout << ' ';
 
       cout << setbase(16)
 	   << "space="  << *node->space()
 	   << " vaddr=0x" << node->pfn(order)
 	   << " size=0x" << (Mapdb::Pfn(1) << order);
-
-      if (Mapping* p = node->parent())
-	{
-	  cout << " parent=" << *p->space()
-	       << " p.vaddr=0x" << p->pfn(order);
-	}
 
       cout << endl;
     });
