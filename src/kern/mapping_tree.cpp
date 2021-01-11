@@ -149,10 +149,7 @@ public:
   Mapping_tree const *tree() const { return &_tree; }
   void erase_tree(Space *owner) { _tree.erase(owner); }
   bool has_mappings() const { return _tree.front(); }
-  bool init_tree(Page, Space *) { return true; }
-  void check_integrity(Space *) {}
   unsigned long base_quota_size() const { return 0; }
-  void grant_tree(Space *, Page) {}
   Treemap *find_submap(Iterator parent) const
   { return _tree.find_submap(parent); }
 

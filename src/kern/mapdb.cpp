@@ -482,7 +482,6 @@ Treemap_ops::grant(Treemap *submap, Space *old_space,
   for (Page key = Page(0); key < end; ++key)
     {
       auto f = submap->frame(key);
-      f->grant_tree(new_space, subva + key);
       if (!f->has_mappings())
         continue;
 
@@ -584,21 +583,14 @@ Treemap::operator delete (void *block)
   Mapping_tree::quota(id)->free(Treemap::quota_size(end));
 }
 
-PUBLIC
+PUBLIC inline NEEDS[<cassert>]
 Physframe*
 Treemap::tree(Page key)
 {
   assert (key < _key_end);
 
-  Physframe *f = &_physframe[cxx::int_value<Page>(key)];
-
+  Physframe *f = frame(key);
   f->lock.lock();
-  if (!f->init_tree(key + trunc_to_page(_page_offset), _owner_id))
-    {
-      f->lock.clear();
-      return 0;
-    }
-
   return f;
 }
 
@@ -852,8 +844,6 @@ Treemap::insert(Physframe* frame, Mapping_tree::Iterator const &parent,
         {
           free->set_space(space);
           set_vaddr(*free, va);
-
-          frame->check_integrity(_owner_id);
           return *free;
         }
 
@@ -893,7 +883,6 @@ Treemap::flush(Physframe* f, Pcnt offs_begin, Pcnt offs_end)
   // This is easy to do: We just have to iterate over the array
   // encoding the tree.
   f->flush(offs_begin, offs_end, Treemap_ops(_page_shift));
-  f->check_integrity(_owner_id);
   return;
 } // Treemap::flush()
 
@@ -906,7 +895,6 @@ Treemap::flush(Physframe* f, Mapping_tree::Iterator parent,
   // This is easy to do: We just have to iterate over the array
   // encoding the tree.
   f->flush(parent, me_too, offs_begin, offs_end, Treemap_ops(_page_shift));
-  f->check_integrity(_owner_id);
   return;
 } // Treemap::flush()
 
