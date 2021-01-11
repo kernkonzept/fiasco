@@ -264,23 +264,15 @@ Mapping_tree::free_mapping(Ram_quota *q, Iterator m)
 
 PUBLIC template< typename SUBMAP_OPS >
 void
-Mapping_tree::flush(Iterator parent, bool me_too,
+Mapping_tree::flush(Iterator m, int p_depth, bool me_too,
                     Pcnt offs_begin, Pcnt offs_end,
                     SUBMAP_OPS const &submap_ops = SUBMAP_OPS())
 {
-  unsigned long p_depth = parent->depth();
-
-  Iterator m = parent;
-  if (me_too)
-    m = free_mapping(quota(parent->space()), m);
-  else
-    ++m;
-
-  unsigned long m_depth = p_depth;
+  int m_depth = p_depth;
 
   while (*m)
     {
-      if (!m->submap() && (m->depth() <= p_depth))
+      if (!m->submap() && ((int)m->depth() <= p_depth))
         return;
 
       Space *space;
@@ -288,9 +280,6 @@ Mapping_tree::flush(Iterator parent, bool me_too,
         {
           space = submap_ops.owner(submap);
           if (! me_too
-              // Check for immediate child.  Note: It's a bad idea to
-              // call m->parent() because that would iterate backwards
-              // over already-deleted entries.
               && m_depth == p_depth
               && submap_ops.is_partial(submap, offs_begin, offs_end))
             {
@@ -313,6 +302,25 @@ Mapping_tree::flush(Iterator parent, bool me_too,
 }
 
 PUBLIC template< typename SUBMAP_OPS >
+void
+Mapping_tree::flush(Iterator parent, bool me_too,
+                    Pcnt offs_begin, Pcnt offs_end,
+                    SUBMAP_OPS &&submap_ops = SUBMAP_OPS())
+{
+  unsigned long p_depth = parent->depth();
+
+  Iterator m = parent;
+  if (me_too)
+    m = free_mapping(quota(parent->space()), m);
+  else
+    ++m;
+
+  flush(m, p_depth, me_too, offs_begin, offs_end,
+        cxx::forward<SUBMAP_OPS>(submap_ops));
+}
+
+
+PUBLIC template< typename SUBMAP_OPS > inline
 bool
 Mapping_tree::grant(Iterator const &m, Space *new_space, Page page,
                     SUBMAP_OPS const &submap_ops = SUBMAP_OPS())
@@ -399,7 +407,7 @@ void
 Base_mappable::flush(Pcnt offs_begin, Pcnt offs_end,
                      SUBMAP_OPS &&submap_ops)
 {
-  _tree.flush(_tree.begin(), false, offs_begin, offs_end,
+  _tree.flush(first(), min_depth() - 1, false, offs_begin, offs_end,
               cxx::forward<SUBMAP_OPS>(submap_ops));
 }
 
