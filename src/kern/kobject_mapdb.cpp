@@ -69,6 +69,44 @@ Kobject_mapdb::lookup(Space *, Vaddr va, Phys_addr obj,
   return false;
 }
 
+PUBLIC inline static
+int
+Kobject_mapdb::lookup_src_dst(Space *sspc, Phys_addr sobj, Vaddr sva, Obj_space::V_pfc,
+                              Space *dspc, Phys_addr dobj, Vaddr dva, Obj_space::V_pfc,
+                              Frame *sframe, Frame *dframe)
+{
+  Kobject_mappable *srn = sobj->map_root();
+  srn->_lock.lock();
+
+  if (sva._c->obj() != sobj)
+    {
+      srn->_lock.clear();
+      return -1;
+    }
+
+  Kobject_mappable *drn = dobj->map_root();
+  bool same_obj = drn == srn;
+
+  if (!same_obj)
+    drn->_lock.lock();
+
+  if (dva._c->obj() != dobj)
+    {
+      if (!same_obj)
+        drn->_lock.clear();
+      srn->_lock.clear();
+      return -1;
+    }
+
+  sframe->m = sva._c;
+  sframe->frame = srn;
+
+  dframe->m = dva._c;
+  dframe->frame = drn;
+
+  return (sspc == dspc && sva == dva) ? 2 : 1;
+}
+
 PUBLIC static inline
 bool
 Kobject_mapdb::valid_address(Phys_addr obj)
@@ -80,17 +118,6 @@ PUBLIC static inline
 Page_number
 Kobject_mapdb::vaddr(Frame const &)
 { return Page_number(0); }
-
-PUBLIC inline
-Kobject_mapdb::Mapping *
-Kobject_mapdb::check_for_upgrade(Obj_space::Phys_addr,
-                                 Space *, Obj_space::V_pfn,
-                                 Space *, Obj_space::V_pfn,
-                                 Frame *)
-{
-  // Hm we never or seldomly do upgrades on cap anyway
-  return 0;
-}
 
 PUBLIC inline static
 Kobject_mapdb::Mapping *

@@ -30,11 +30,13 @@ public:
   public:
     Mapping_tree::Iterator m;
     Treemap *treemap;
-    Physframe *frame;
+    Physframe *frame = nullptr;
 
     inline Pfn vaddr(Mapping_tree::Iterator m) const;
     inline Pfn vaddr() const;
     inline Order page_shift() const;
+    inline void reset();
+    inline void reset_both(Physframe *f);
 
     void set(Mapping_tree::Iterator ma, Treemap *tm, Physframe *pf)
     {
@@ -201,6 +203,7 @@ IMPLEMENTATION:
 #include <cassert>
 #include <cstring>
 
+#include "assert_opt.h"
 #include "config.h"
 #include "globals.h"
 #include "helping_lock.h"
@@ -620,7 +623,7 @@ Treemap::_lookup(Physframe *f, Mapping_tree::Iterator m, Space *spc, Pcnt key, P
         {
           *current_depth = m->depth();
           if (*root_depth >= *current_depth)
-            *root_depth = -2;
+            *root_depth = -3;
         }
 
       if (match(*m, spc, va))
@@ -1004,6 +1007,23 @@ Mapdb::vaddr(Frame const &f)
 // 
 // class Mapdb::Frame
 // 
+IMPLEMENT inline
+void
+Mapdb::Frame::reset()
+{
+  frame->lock.clear();
+  frame = nullptr;
+}
+
+IMPLEMENT inline
+void
+Mapdb::Frame::reset_both(Physframe *f)
+{
+  if (f != frame)
+    f->lock.clear();
+
+  reset();
+}
 
 IMPLEMENT inline NEEDS[Treemap::vaddr, "mapping_tree.h"]
 Mapdb::Pfn
@@ -1029,33 +1049,156 @@ Mapdb::valid_address(Pfn phys)
   return phys < _treemap->end_addr();
 }
 
+PUBLIC inline NEEDS[Treemap::match, Treemap::_lookup, "assert_opt.h"]
+int
+Treemap::lookup_src_dst(Space *src, Pcnt src_key, Pfn src_va, Pcnt src_size,
+                        Space *dst, Pcnt dst_key, Pfn dst_va, Pcnt dst_size,
+                        Frame *src_frame, Frame *dst_frame)
+{
+  assert_opt (!src_frame->frame);
+  assert_opt (!dst_frame->frame);
+
+  Order const ps = _page_shift;
+  auto const src_k = trunc_to_page(src_key);
+  auto const dst_k = trunc_to_page(dst_key);
+
+  assert (src_k < _key_end);
+  assert (dst_k < _key_end);
+
+  if (src_k != dst_k)
+    {
+      // different phys frames, do separate lookups
+      if (!lookup(dst_key, dst, dst_va, dst_frame))
+        return -1;
+
+      if (!lookup(src_key, src, src_va, src_frame))
+        {
+          // src mapping not found -> we cannot map
+          // free the dst frame and abort
+          dst_frame->reset();
+          return -1;
+        }
+
+      // src and dst found but no upgrade possible
+      return 1; // --> unmap dst then map
+    }
+
+  // we give prio to the dst mapping
+  Physframe *f = tree(dst_k);
+  auto t = f->tree();
+
+  int c_depth = f->min_depth() - 1; // depth of current node
+  Mapping_tree::Iterator m = t->begin();
+
+  for (; *m && !src_frame->frame && !dst_frame->frame; ++m)
+    {
+      if (Treemap *sub = m->submap())
+        {
+          auto const dst_subkey = cxx::get_lsb(dst_key, ps);
+          auto const src_subkey = cxx::get_lsb(src_key, ps);
+          int r = sub->lookup_src_dst(src, src_subkey, src_va, src_size,
+                                      dst, dst_subkey, dst_va, dst_size,
+                                      src_frame, dst_frame);
+          if (r >= 0)
+            {
+              f->lock.clear();
+              return r;
+            }
+
+          continue;
+        }
+
+      c_depth = m->depth();
+
+      if (match(*m, src, src_va))
+        src_frame->set(m, this, f);
+
+      if (match(*m, dst, dst_va))
+        dst_frame->set(m, this, f);
+    }
+
+  if (!src_frame->frame && !dst_frame->frame)
+    {
+      f->lock.clear();
+      return -1; // nothing found
+    }
+  else if (src_frame->frame && dst_frame->frame)
+    // src == dst
+    return 2; // unmap, but no map
+  else if (src_frame->frame)
+    {
+      // look for dst only
+      int r_depth = c_depth;
+      m = _lookup(f, m, dst, dst_key, dst_va, dst_frame,
+                  &r_depth, &c_depth);
+      if (!*m)
+        {
+          src_frame->reset_both(f);
+          return -1; // nothing found
+        }
+
+      if (!m->submap())
+        {
+          if (r_depth + 1 == c_depth)
+            return 0; // upgrade
+
+          return 1;
+        }
+
+        if (r_depth == c_depth
+            && dst_frame->m->depth() == f->min_depth())
+          return 0;
+
+        // found dst and src, do not unlock because src_frame
+        // needs to be kept locked
+        return 1;
+    }
+  else
+    {
+      // src not yet found, look for src only
+      int r_depth = c_depth;
+      m = _lookup(f, m, src, src_key, src_va, src_frame,
+                  &r_depth, &c_depth);
+
+      if (!*m)
+        {
+          // nothing found
+          dst_frame->reset_both(f);
+          return -1;
+        }
+
+      if (!m->submap())
+        {
+          // same mapping size
+          if (r_depth < (int)f->min_depth() - 1)
+            return 1; // in another subtree -> unmap + map
+
+          return 2; // in the same subtree -> unmap + no map
+        }
+
+      // smaller mapping in submap found...
+      if (r_depth == c_depth)
+        {
+          // src is in subtree of dst -> unmap dst and noting to map then
+          src_frame->reset();
+          return 2; // unmap + no map
+        }
+      // src is in a sibling subtree -> unmap + map
+      // needs to be kept locked
+      return 1;
+    }
+}
+
 
 PUBLIC inline
-Mapdb::Mapping *
-Mapdb::check_for_upgrade(Pfn phys,
-                         Space *from_id, Pfn snd_addr,
-                         Space *to_id, Pfn rcv_addr,
-                         Frame *mapdb_frame)
+int
+Mapdb::lookup_src_dst(Space *src, Pfn src_phys, Pfn src_va, Pcnt src_size,
+                      Space *dst, Pfn dst_phys, Pfn dst_va, Pcnt dst_size,
+                      Frame *src_frame, Frame *dst_frame)
 {
-  // Check if we can upgrade mapping.  Otherwise, flush target
-  // mapping.
-  if (valid_address(phys) // Can lookup in mapdb
-      && lookup(to_id, rcv_addr, phys, mapdb_frame))
-    {
-      Mapping* receiver_parent = mapdb_frame->m->parent();
-      if (receiver_parent->space() == from_id
-	  && mapdb_frame->treemap->vaddr(receiver_parent) == snd_addr)
-        {
-          mapdb_frame->m = Mapping_tree::Iterator(mapdb_frame->frame->tree(), receiver_parent);
-          return receiver_parent;
-        }
-      else		// Not my child -- cannot upgrade
-        {
-          free(*mapdb_frame);
-          mapdb_frame->frame = nullptr;
-        }
-    }
-  return 0;
+  return _treemap->lookup_src_dst(src, src_phys - Pfn(0), src_va, src_size,
+                                  dst, dst_phys - Pfn(0), dst_va, dst_size,
+                                  src_frame, dst_frame);
 }
 
 

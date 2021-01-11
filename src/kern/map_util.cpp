@@ -493,45 +493,76 @@ map(MAPDB* mapdb,
             }
         }
 
-      bool const s_valid = mapdb->valid_address(SPACE::to_pfn(s_phys));
-      // Also, look up mapping database entry.  Depending on whether
-      // we can overmap, either look up the destination mapping first
-      // (and compute the sender mapping from it) or look up the
-      // sender mapping directly.
-
-      // mapdb_frame will be initialized by the mapdb lookup function when
-      // it returns true, so don't care about "may be use uninitialized..."
-      Frame sender_frame;
-      if (rcv_page_mapped)
-        {
-          // We have something mapped.
-
-          // Check if we can upgrade mapping.  Otherwise, flush target
-          // mapping.
-          if (! grant                         // Grant currently always flushes
-              && r_order <= i_order             // Rcv frame in snd frame
-              && SPACE::page_address(r_phys, i_order) == i_phys
-              && s_valid)
-            mapdb->check_for_upgrade(SPACE::to_pfn(r_phys), from_id,
-                                     SPACE::to_pfn(snd_addr), to_id,
-                                     SPACE::to_pfn(rcv_addr), &sender_frame);
-
-          if (! sender_frame.frame)	// Need flush
-            unmap(mapdb, to, to_id, SPACE::page_address(rcv_addr, r_order), SPACE::to_size(r_order),
-                  L4_fpage::Rights::FULL(), L4_map_mask::full(), tlb, reap_list);
-          else
-            i_attribs |= r_attribs;
-        }
-
       // Loop increment is size of insertion
       size = i_size;
+      bool const s_valid = mapdb->valid_address(SPACE::to_pfn(s_phys));
+      Frame sender_frame;
+      if (!s_valid)
+        continue; // no valid sender mapping, skip
 
-      if (s_valid && ! sender_frame.frame
-          && EXPECT_FALSE(! mapdb->lookup(from_id,
-                                          SPACE::to_pfn(SPACE::page_address(snd_addr, s_order)),
-                                          SPACE::to_pfn(s_phys),
-                                          &sender_frame)))
+      if (rcv_page_mapped)
+        {
+          Frame rcv_frame;
+          int r = mapdb->lookup_src_dst(from_id, SPACE::to_pfn(s_phys),
+                                        SPACE::to_pfn(SPACE::page_address(snd_addr, s_order)),
+                                        SPACE::to_pcnt(s_order),
+                                        to_id, SPACE::to_pfn(r_phys), SPACE::to_pfn(rcv_addr),
+                                        SPACE::to_pcnt(r_order), &sender_frame, &rcv_frame);
+
+          if (r < 0)
+            // nothing found
+            continue;
+
+          if (r > 0
+              || grant
+              || SPACE::page_address(r_phys, i_order) != i_phys
+              || r_order > i_order)
+            {
+              // unmap dst
+              auto addr = SPACE::page_address(rcv_addr, r_order);
+              auto size = SPACE::to_size(r_order);
+              to_id->SPACE::v_delete(addr, r_order, L4_fpage::Rights::FULL());
+
+              tlb.add_page(to_id, addr, r_order);
+
+              MAPDB::foreach_mapping(rcv_frame, SPACE::to_pfn(addr), SPACE::to_pfn(addr + size),
+                  [&tlb](typename MAPDB::Mapping *m, typename MAPDB::Order size)
+                  {
+                    v_delete<SPACE>(m, size, L4_fpage::Rights::FULL(), true, tlb);
+                  });
+
+              mapdb->flush(rcv_frame, L4_map_mask::full(), SPACE::to_pfn(addr),
+                           SPACE::to_pfn(addr + size));
+              Map_traits<SPACE>::free_object(r_phys, reap_list);
+
+              // unlock destination if it is not a grant is the same tree
+              if (rcv_frame.frame != sender_frame.frame)
+                mapdb->free(rcv_frame);
+            }
+          else if (r == 0)
+            {
+              i_attribs |= r_attribs;
+              // we might unlock the sender mapping as we are going to manipulate
+              // the existing receiver mapping without doing a mapdb->insert later.
+              if (rcv_frame.frame != sender_frame.frame)
+                mapdb->free(sender_frame);
+
+              // store the still locked rcv mapping for later unlock
+              sender_frame = rcv_frame;
+            }
+
+          if (r == 2)
+            // src is gone too
+            continue;
+
+        }
+      else if (! mapdb->lookup(from_id,
+                               SPACE::to_pfn(SPACE::page_address(snd_addr, s_order)),
+                               SPACE::to_pfn(s_phys),
+                               &sender_frame))
         continue;		// someone deleted this mapping in the meantime
+
+
 
       // from here mapdb_frame is always initialized, so ignore the warning
       // in grant / insert
@@ -575,10 +606,9 @@ map(MAPDB* mapdb,
               }
             else if (status == SPACE::Insert_ok)
               {
-                if (s_valid
-                    && !mapdb->insert(sender_frame,
-                                      to_id, SPACE::to_pfn(rcv_addr),
-                                      SPACE::to_pfn(i_phys), SPACE::to_pcnt(i_order)))
+                if (!mapdb->insert(sender_frame,
+                                   to_id, SPACE::to_pfn(rcv_addr),
+                                   SPACE::to_pfn(i_phys), SPACE::to_pcnt(i_order)))
                   {
                     // Error -- remove mapping again.
                     to->v_delete(rcv_addr, i_order, L4_fpage::Rights::FULL());
