@@ -232,8 +232,7 @@ Kmem_slab::reap_all (bool desperate)
 {
   size_t freed = 0;
 
-  for (Reap_list::Const_iterator alloc = reap_list.begin();
-       alloc != reap_list.end(); ++alloc)
+  for (auto *alloc: reap_list)
     {
       size_t got;
       do
