@@ -268,7 +268,7 @@ config UX_NET
 	  Enabling this option makes Fiasco-UX provide network support for
 	  L4 programs.
 
-choice 
+choice
 	prompt "Scheduler"
 	default SCHED_FIXED_PRIO
 
@@ -354,7 +354,7 @@ config CPU_LOCAL_MAP
 	  Enable to use per CPU page directories to allow CPU-local
 	  mapping of kernel memory. This is used for kernel isolation
 	  etc.
-	  
+
 	  If unsure say N.
 
 config INTEL_IA32_BRANCH_BARRIERS

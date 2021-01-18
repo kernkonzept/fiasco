@@ -274,7 +274,7 @@ config ARM_CACHE_L2CXX0
 	bool "Enable L2 Cache"
 	default y
 	depends on CAN_ARM_CACHE_L2CXX0
-	help 
+	help
 	  Enable L2 cache functionality.
 
 config ARM_ENABLE_SWP
