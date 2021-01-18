@@ -684,7 +684,7 @@ Pf_msg_utcb_saver::restore(Utcb *u)
 
 /**
  * \pre must run with local IRQs disabled (CPU lock held)
- * to ensure that handler does not dissapear meanwhile.
+ * to ensure that handler does not disappear meanwhile.
  */
 PRIVATE
 bool
@@ -968,7 +968,7 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
               L4_error err;
 
                 {
-                  // We take the existence_lock for syncronizing maps...
+                  // We take the existence_lock for synchronizing maps...
                   // This is kind of coarse grained
                   auto sp_lock = lock_guard_dont_lock(rcv_t->existence_lock);
                   if (!sp_lock.check_and_lock(&rcv_t->existence_lock))
