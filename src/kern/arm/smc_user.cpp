@@ -19,11 +19,12 @@ struct Smc_user : Kobject_h<Smc_user, Kobject>
     if (f->tag().words() != 8)
       return commit_result(-L4_err::EInval);
 
+    register Mword r0 FIASCO_ARM_ASM_REG(0) = access_once(&in->values[0]);
+
     // only allow calls to trusted applications or a trusted OS
-    if ((in->values[0] & 0x3F000000) < 0x30000000)
+    if ((r0 & 0x3F000000) < 0x30000000)
       return commit_result(-L4_err::ENosys);
 
-    register Mword r0 FIASCO_ARM_ASM_REG(0) = in->values[0];
     register Mword r1 FIASCO_ARM_ASM_REG(1) = in->values[1];
     register Mword r2 FIASCO_ARM_ASM_REG(2) = in->values[2];
     register Mword r3 FIASCO_ARM_ASM_REG(3) = in->values[3];
