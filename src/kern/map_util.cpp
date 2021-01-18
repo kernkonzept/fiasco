@@ -676,13 +676,11 @@ save_access_flags(Mem_space *space, typename Mem_space::V_pfn page_address, bool
 {
   if (L4_fpage::Rights accessed = page_rights & (L4_fpage::Rights::RW()))
     {
-      // When flushing access attributes from our space as well,
-      // cache them in parent space, otherwise in our space.
       space->v_set_access_flags(page_address, accessed);
 
       (void) me_too;
       (void) mapdb_frame;
-      // we have no backreference to out parent, so
+      // we have no back reference to our parent, so
       // we cannot store the access rights there in
       // the me_too case...
     }
