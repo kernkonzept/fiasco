@@ -124,7 +124,7 @@ public:
 
   Lock existence_lock;
 
-public:
+private:
   Kobject *_next_to_reap;
 
 public:
