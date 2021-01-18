@@ -36,12 +36,10 @@ $(KERNEL):	kernel.ia32.lds boot_img.o $(CRT0) $(OBJ_KERNEL) $(JDB) $(LIBK) $(KER
 		   $(KERNEL_UNRES_SYMS)
 		$(call ADD_CONFIGFILE,$@)
 
-# Remove '$(RM) fiasco.image' after a transition period
 $(BOOT): $(KERNEL)
 		$(LINK_MESSAGE)
 		$(VERBOSE)$(STRIP) -o $@ $<
 		$(VERBOSE)$(OBJCOPY) --add-gnu-debuglink=$< $@
 		$(VERBOSE)chmod 755 $@
-		$(VERBOSE)$(RM) fiasco.image
 
 BOOT_CLEAN := boot_img.x1 boot_img.x2 boot_img.ren_syms boot_img.ren_syms kernel.ia32.lds

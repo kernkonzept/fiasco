@@ -15,13 +15,11 @@ $(KERNEL).debug: kernel.sparc.lds $(CRT0) $(OBJ_KERNEL) $(JDB) $(LIBK) $(LIBDISA
 	  -T $< -o $@ $(filter-out $<,$+) $(LIBGCC)
 	$(call ADD_CONFIGFILE,$@)
 
-# Remove '$(RM) fiasco.image' after a transition period
 $(KERNEL): $(KERNEL).debug
 	$(LINK_MESSAGE)
 	$(VERBOSE)$(STRIP) $< -o $@
 	$(VERBOSE)$(OBJCOPY) --add-gnu-debuglink=$< $@
 	$(VERBOSE)chmod 755 $@
-	$(VERBOSE)$(RM) fiasco.image
 
 Symbols: $(KERNEL).debug
 	$(COMP_MESSAGE)

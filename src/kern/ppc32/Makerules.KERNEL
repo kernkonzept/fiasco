@@ -22,13 +22,11 @@ $(KERNEL).debug: kernel.ppc32.lds $(CRT0) $(OBJ_KERNEL) $(LIBK) $(LIBDISASM) lib
 	$(VERBOSE)$(LD) $(LDFLAGS) -m $(LD_EMULATION) -N -T $< -o $@ $(filter-out $<,$+) $(LIBGCC)
 	$(call ADD_CONFIGFILE,$@)
 
-# Remove '$(RM) fiasco.image' after a transition period
 $(KERNEL): $(KERNEL).debug
 	$(LINK_MESSAGE)
 	$(VERBOSE)$(STRIP) $< -o $@
 	$(VERBOSE)$(OBJCOPY) --add-gnu-debuglink=$< $@
 	$(VERBOSE)chmod 755 $@
-	$(VERBOSE)$(RM) fiasco.image
 
 Symbols: $(KERNEL).debug
 	$(COMP_MESSAGE)
