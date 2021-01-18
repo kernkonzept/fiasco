@@ -537,7 +537,7 @@ map(MAPDB* mapdb,
 
               // unlock destination if it is not a grant is the same tree
               if (!rcv_frame.same_lock(sender_frame))
-                rcv_frame.clear(true);
+                rcv_frame.clear();
             }
           else if (r == 0)
             {
@@ -649,7 +649,7 @@ map(MAPDB* mapdb,
           break;
         }
 
-      sender_frame.might_clear(true);
+      sender_frame.might_clear();
 
       if (!condition.ok())
         break;
@@ -799,7 +799,7 @@ unmap(MAPDB* mapdb, SPACE* space, Space *space_id,
           Map_traits<SPACE>::free_object(phys, reap_list);
         }
 
-      mapdb_frame.clear(true);
+      mapdb_frame.clear();
     }
 
   return flushed_rights;

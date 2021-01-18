@@ -400,7 +400,7 @@ static void basic(Mapdb &m)
                  to_pcnt(Config::PAGE_SHIFT));
   TEST (sub);
   print_node(frame, sub);
-  frame.clear(true);
+  frame.clear();
 
   //////////////////////////////////////////////////////////////////////
 
@@ -422,7 +422,7 @@ static void basic(Mapdb &m)
   auto parent_ma = frame.m;
 
   // Before we can insert new mappings, we must free the tree.
-  frame.clear(true);
+  frame.clear();
 
   cout << "[UTEST] Get that mapping again" << endl;
   TEST (m.lookup(other,
@@ -440,7 +440,7 @@ static void basic(Mapdb &m)
   frame.m = parent_ma;
   print_node(frame);
 
-  frame.clear(true);
+  frame.clear();
 
   test_done();
 }
@@ -469,7 +469,7 @@ static void maphole(Mapdb &m)
 		    to_pfn(0),
 		    to_pcnt(Config::PAGE_SHIFT));
   print_whole_tree (frame);
-  frame.clear(true);
+  frame.clear();
 
 
   cout << "[UTEST] Looking up father at physaddr=0" << endl;
@@ -482,7 +482,7 @@ static void maphole(Mapdb &m)
 		      to_pfn(0),
 		      to_pcnt(Config::PAGE_SHIFT));
   print_whole_tree (frame);
- frame.clear(true);
+ frame.clear();
 
 
   cout << "[UTEST] Looking up father at physaddr=0" << endl;
@@ -495,7 +495,7 @@ static void maphole(Mapdb &m)
 			   to_pfn(0),
 			   to_pcnt(Config::PAGE_SHIFT));
   print_whole_tree (frame);
-  frame.clear(true);
+  frame.clear();
 
 
   cout << "[UTEST] Looking up son at physaddr=0" << endl;
@@ -508,7 +508,7 @@ static void maphole(Mapdb &m)
   m.flush(frame, L4_map_mask::full(),
 	  to_pfn(0),
 	  to_pfn(Config::PAGE_SIZE));
-  frame.clear(true);
+  frame.clear();
   show_tree(m.dbg_treemap());
 
   cout << "[UTEST] Lost aunt returns from holidays" << endl;
@@ -521,7 +521,7 @@ static void maphole(Mapdb &m)
 		    to_pfn(0),
 		    to_pcnt(Config::PAGE_SHIFT)));
   print_whole_tree (frame);
-  frame.clear(true);
+  frame.clear();
   show_tree(m.dbg_treemap());
 
   cout << "[UTEST] Looking up daughter at physaddr=0" << endl;
@@ -532,7 +532,7 @@ static void maphole(Mapdb &m)
 
   //TEST(frame.m->parent()->space() == father);
 
-  frame.clear(true);
+  frame.clear();
   test_done();
 }
 
@@ -550,7 +550,7 @@ static void flushtest(Mapdb &m)
   cout << "[UTEST] Inserting father mapping" << endl;
   m.insert (frame, father, to_pfn(0), to_pfn(0), to_pcnt(Config::PAGE_SHIFT));
   print_whole_tree (frame);
-  frame.clear(true);
+  frame.clear();
 
 
   cout << "[UTEST] Looking up father at physaddr=0" << endl;
@@ -560,7 +560,7 @@ static void flushtest(Mapdb &m)
   cout << "[UTEST] Inserting son mapping" << endl;
   TEST (m.insert (frame, son, to_pfn(0), to_pfn(0), to_pcnt(Config::PAGE_SHIFT)));
   print_whole_tree (frame);
-  frame.clear(true);
+  frame.clear();
 
   cout << "[UTEST] Lost aunt returns from holidays" << endl;
   TEST (m.lookup (grandfather, to_pfn(0), to_pfn(0), &frame));
@@ -569,7 +569,7 @@ static void flushtest(Mapdb &m)
   cout << "[UTEST] Inserting aunt mapping" << endl;
   TEST (m.insert (frame, aunt, to_pfn(0), to_pfn(0), to_pcnt(Config::PAGE_SHIFT)));
   print_whole_tree (frame);
-  frame.clear(true);
+  frame.clear();
 
   cout << "[UTEST] Looking up father at physaddr=0" << endl;
   TEST (m.lookup(father, to_pfn(0), to_pfn(0), &frame));
@@ -579,7 +579,7 @@ static void flushtest(Mapdb &m)
   cout << "[UTEST] father is killed by his new love" << endl;
   m.flush(frame, L4_map_mask::full(), to_pfn(0), to_pfn(Config::PAGE_SIZE));
   print_whole_tree (frame);
-  frame.clear(true);
+  frame.clear();
 
   cout << "[UTEST] Try resurrecting the killed father again" << endl;
   TEST (! m.lookup(father, to_pfn(0), to_pfn(0), &frame));
@@ -660,7 +660,7 @@ static bool map(Mapdb *m, Fake_task *from, Mapdb::Pfn fa, Fake_task *to, Mapdb::
 
   if (e->order < order)
     {
-      f.clear(true);
+      f.clear();
       std::cout << "[UTEST] could not create mapping (target size too large):"
                 << " from " << *from << " @ " << fa << " order " << e->order
                 << " -> to " << *to << " @ " << ta << " order " << order << std::endl;
@@ -671,7 +671,7 @@ static bool map(Mapdb *m, Fake_task *from, Mapdb::Pfn fa, Fake_task *to, Mapdb::
 
   if (cxx::get_lsb(ta, order) != Mapdb::Pcnt(0))
     {
-      f.clear(true);
+      f.clear();
       std::cout << "[UTEST] could not create mapping (misaligned):"
                 << " from " << *from << " @ " << fa << " order " << e->order
                 << " -> to " << *to << " @ " << ta << " order " << order << std::endl;
@@ -680,7 +680,7 @@ static bool map(Mapdb *m, Fake_task *from, Mapdb::Pfn fa, Fake_task *to, Mapdb::
 
   if (!(sub = insert(m, f, to, ta, e->phys | cxx::get_lsb(fa, e->order), order)))
     {
-      f.clear(true);
+      f.clear();
       std::cout << "[UTEST] could not create mapping (MDB insert failed):"
                 << " from " << *from << " @ " << fa << " order " << e->order
                 << " -> to " << *to << " @ " << ta << " order " << order << std::endl;
@@ -688,7 +688,7 @@ static bool map(Mapdb *m, Fake_task *from, Mapdb::Pfn fa, Fake_task *to, Mapdb::
     }
 
   print_node(f, sub);
-  f.clear(true);
+  f.clear();
   return true;
 }
 
@@ -723,7 +723,7 @@ static bool unmap(Mapdb *m, Fake_task *task, Mapdb::Pfn va_start, Mapdb::Pfn va_
 
   m->flush(f, me_too ? L4_map_mask::full() : L4_map_mask(0), va_start, va_end);
   //print_node(f);
-  f.clear(true);
+  f.clear();
   std::cout << "[UTEST] state after flush:" << std::endl;
 
   return true;
@@ -781,7 +781,7 @@ void multilevel(Mapdb &m)
                to_po(21));
   TEST (sub);
   print_node(s0_frame, sub);
-  s0_frame.clear(true);
+  s0_frame.clear();
 
   TEST (map(&m, other, to_pfn(2 * (1<<21)), son, to_pfn(0xa0000000), to_po(12)));
   cout << "[UTEST] unamp from other..." << endl;
@@ -797,7 +797,7 @@ void multilevel(Mapdb &m)
   cout << "[UTEST] Get first 8MB mapping" << endl;
   TEST (lookup(&m, father, to_pfn(0x3000000), &frame));
   print_node(frame, sub);
-  frame.clear(true);
+  frame.clear();
 
   cout << "[UTEST] Map 6MB from father to aunt" << endl;
   for (unsigned i = 0; i < 3; ++i)

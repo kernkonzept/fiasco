@@ -87,7 +87,7 @@ public:
       return frame == o.frame;
     }
 
-    void clear(bool = false)
+    void clear()
     {
       frame->lock.clear();
       frame = nullptr;
@@ -101,10 +101,10 @@ public:
       clear();
     }
 
-    void might_clear(bool pack = false)
+    void might_clear()
     {
       if (frame)
-        clear(pack);
+        clear();
     }
 
     void set(Mapping_tree::Iterator ma, Treemap *tm, Physframe *pf)

@@ -170,7 +170,7 @@ int main()
 
   assert (mapdb->lookup(sigma0, to_pfn(0x10000), to_pfn(0x10000), &frame));
   print_node (frame);
-  frame.clear(true);
+  frame.clear();
 
   cout << "[UTEST] s0 [0/superpage] -> server [0] -> should map many 4K pages and "
           "overmap previous mapping" << endl;
@@ -192,7 +192,7 @@ int main()
 
   assert (mapdb->lookup(sigma0, to_pfn(0), to_pfn(0), &frame));
   print_node (frame);
-  frame.clear(true);
+  frame.clear();
 
   // previous mapping still there?
 
@@ -210,7 +210,7 @@ int main()
   // s0 [0x10000] -> server [0x10000]
   assert (mapdb->lookup(sigma0, to_pfn(0x10000), to_pfn(0x10000), &frame));
   print_node (frame, 0x10000, 0x11000);
-  frame.clear(true);
+  frame.clear();
 
   cout << "[UTEST] Partially unmap superpage s0 [0/superpage]" << endl;
 
@@ -226,7 +226,7 @@ int main()
   
   assert (mapdb->lookup(sigma0, to_pfn(0x0), to_pfn(0x0), &frame));
   print_node (frame);
-  frame.clear(true);
+  frame.clear();
 
   assert (! ms(server)->v_lookup(to_vaddr(0x101000), &phys, &order, &page_attribs));
 
@@ -250,7 +250,7 @@ int main()
 
   assert (mapdb->lookup(sigma0, to_pfn(0x400000), to_pfn(0x400000), &frame));
   print_node (frame);
-  frame.clear(true);
+  frame.clear();
 
   // 
   // server [8M+4K] -> client [8K]
@@ -275,7 +275,7 @@ int main()
 
   assert (mapdb->lookup(sigma0, to_pfn(0x400000), to_pfn(0x400000), &frame));
   print_node (frame);
-  frame.clear(true);
+  frame.clear();
 
   //
   // Overmap a read-only page.  The writable attribute should not be
