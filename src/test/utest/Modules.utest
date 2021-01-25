@@ -2,8 +2,9 @@
 # vi:se ft=make:
 
 # There can be several subdirectories containing a Modules.utest file.
-# Every Modules.utest file in a subdirectory is included and evaluated. These
-# Modules.utest files are expected to ONLY extend the INTERFACES_UTEST variable.
+# Every Modules.utest file in a direct subdirectory is included and evaluated.
+# These Modules.utest files are expected to ONLY extend the INTERFACES_UTEST
+# variable.
 
 
 UTEST = utest_subsys
@@ -26,7 +27,7 @@ PRIVATE_INCDIR += $(ALL_UTEST_DIRS)
 # Add all test_ files to INTERFACES_UTEST.
 
 # framework
-INTERFACES_UTEST :=
+INTERFACES_UTEST := utest_fw
 
 # include all existing Modules in subdirectories. They modify INTERFACES_UTEST.
 include $(UTEST_SUBDIR_MODULES)
