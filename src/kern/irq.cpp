@@ -321,7 +321,7 @@ Irq_sender::requeue_sender()
 { return consume() > 0; }
 
 /**
- * Predicate used to figure out if the sender shall be deqeued after
+ * Predicate used to figure out if the sender shall be dequeued after
  * sending the request.
  */
 PUBLIC inline NEEDS[Irq_sender::consume]
