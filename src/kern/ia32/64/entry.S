@@ -462,14 +462,6 @@ GATE_ENTRY	(APIC_IRQ_BASE - 1), entry_ipi_remote_request, (ACC_PL_K | ACC_INTR_G
 
 GATE_INITTAB_END
 
-alien_sys_ipc_c:
-	ALIEN_SYSCALL syscall="call sys_ipc_wrapper" trap_target=_slowtraps
-
-#if defined (CONFIG_JDB)
-alien_sys_ipc_log:
-	ALIEN_SYSCALL syscall="call *syscall_table" trap_target=_slowtraps
-#endif
-
 	.section ".entry.text.upcalls", "ax", @progbits
 	.p2align 3
 	.globl	leave_by_trigger_exception
