@@ -408,17 +408,6 @@ INTERRUPT	0x28, int8
 #endif
 
 /* system calls */
-.macro	SYSTEM_CALL int, name
-	GATE_ENTRY	\int, entry_\name, (ACC_PL_U | ACC_INTR_GATE)
-	.p2align 4
-entry_\name:
-	cld
-	SWITCH_TO_KERNEL_CR3 0
-	sub	$16, %rsp
-	push	%rax
-	mov	$(syscall_table+8*(\int-0x30)), %rax
-	jmp	all_syscalls
-.endm
 
 #ifndef CONFIG_KERNEL_ISOLATION
 #ifdef CONFIG_MP
@@ -450,27 +439,7 @@ syscall_entry_text:
 .endr
 #endif /* !CONFIG_KERNEL_ISOLATION */
 
-	.p2align 4
-	.type	all_syscalls,@function
-all_syscalls:
-	cld
-	SAVE_STATE
-	IA32_IBRS
-	ESP_TO_TCB_AT %rbx
-	testl	$VAL__Thread_alien_or_vcpu_user, OFS__THREAD__STATE (%rbx)
-	jnz	alien_sys_call
-	RESET_THREAD_CANCEL_AT %rbx
-
-	call	*(%rax)
-in_syscall:
-ret_from_syscall:
-	RESTORE_STATE
-	pop	%rax
-	add	$16, %rsp
-	SAFE_IRET
-
         // these labels help show_tcb to guess the thread state
-	.globl	in_syscall
 	.globl	in_slowtrap
 	.globl	in_page_fault
 	.globl	in_handle_fputrap
@@ -478,8 +447,6 @@ ret_from_syscall:
 	.globl	in_timer_interrupt
 	.globl	in_timer_interrupt_slow
 
-
-SYSTEM_CALL	0x32, sys_invoke_debug
 
 /* these functions are implemented in entry-native.S */
 GATE_ENTRY	0x0a, entry_vec0a_invalid_tss, (ACC_PL_K | ACC_INTR_GATE)
@@ -502,9 +469,6 @@ alien_sys_ipc_c:
 alien_sys_ipc_log:
 	ALIEN_SYSCALL syscall="call *syscall_table" trap_target=_slowtraps
 #endif
-
-alien_sys_call:
-	ALIEN_SYSCALL syscall="call *(%rax)" trap_target=_slowtraps
 
 	.section ".entry.text.upcalls", "ax", @progbits
 	.p2align 3
