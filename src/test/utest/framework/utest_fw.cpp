@@ -15,6 +15,8 @@ INTERFACE:
 #include "l4_error.h"
 #include "processor.h"
 #include "kip.h"
+#include "reset.h"
+#include "kdb_ke.h"
 
 
 extern "C" void gcov_print() __attribute__((weak));
@@ -266,8 +268,16 @@ Utest_fw::finish()
   if (gcov_print)
     gcov_print();
 
+  if (_sum_failed && ext_info.debug)
+    kdb_ke("Test finish with failure & Debug flag set.");
+
   printf("\nKUT 1..%i\n", _num_tests);
   printf("\nKUT TAP TEST FINISHED\n");
+
+  // QEMU platforms terminate after the FINISH line. Only hardware tests
+  // progress to this point and might want to restart the HW platform.
+  if (ext_info.restart)
+    platform_reset();
 
   exit(_sum_failed);
 }
