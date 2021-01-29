@@ -21,11 +21,28 @@ public:
   bool valid(void const *) const
   { return _ip != ~0UL; }
 
-  Address ip() const { return _ip; }
-  void ip(Address ip) { _ip = ip; }
+  Address ip() const
+  {
+    Mword ret = _ip;
+    if (_psr & Proc::Status_thumb)
+      ret |= 1U;
+    return ret;
+  }
+
+  void ip(Address ip)
+  {
+    _ip = ip & ~1UL;
+    if (ip & 1U)
+      _psr |= Proc::Status_thumb;
+    else
+      _psr &= ~(Mword)Proc::Status_thumb;
+  }
 
   Mword flags(Return_frame const *) const { return _psr; }
-  void flags(Return_frame *, Mword psr) { _psr = psr; }
+  void flags(Return_frame *, Mword psr)
+  {
+    _psr = (psr & ~(Mword)Proc::Status_thumb) | (_psr & Proc::Status_thumb);
+  }
 
   Mword sp(Return_frame const *o) const { return o->usp; }
   void sp(Return_frame *o, Mword sp) { o->usp = sp; }
@@ -42,6 +59,13 @@ public:
     regs->pc = Mword(cont_func);
     regs->psr &= ~(Proc::Status_mode_mask | Proc::Status_thumb); // clear mode
     regs->psr |= Proc::Status_mode_supervisor | Proc::Status_interrupts_disabled;
+    if (regs->pc & 1U)
+      {
+        regs->pc &= 1UL;
+        regs->psr |= Proc::Status_thumb;
+      }
+    else
+      regs->psr &= ~(Mword)Proc::Status_thumb;
   }
 
   void set(Return_frame *dst, User_return_frame const *src)

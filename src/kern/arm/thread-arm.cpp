@@ -60,7 +60,14 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, Vcpu_state *arg)
 
   // masking the illegal execution bit does not harm
   // on 32bit it is res/sbz
-  r->psr &= ~(Proc::Status_thumb | (1UL << 20));
+  r->psr &= ~(1UL << 20);
+  if (r->ip() & 1U)
+    {
+      r->psr |= Proc::Status_thumb;
+      r->ip(r->ip() & ~1U);
+    }
+  else
+    r->psr &= ~(Mword)Proc::Status_thumb;
 
   // make sure the VMM executes in the correct mode
   if (Proc::Is_hyp)
@@ -111,6 +118,7 @@ Thread::user_invoke()
                               | Proc::Status_always_mask);
   else
     regs->psr |= Proc::Status_always_mask;
+
   Proc::cli();
   extern char __return_from_user_invoke[];
   arm_fast_exit(ts, __return_from_user_invoke, ts);
