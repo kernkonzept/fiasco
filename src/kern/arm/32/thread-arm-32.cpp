@@ -22,7 +22,20 @@ Thread::mangle_kernel_lib_page_fault(Mword pc, Mword error_code)
 IMPLEMENT inline NEEDS[Thread::exception_triggered]
 Mword
 Thread::user_ip() const
-{ return exception_triggered() ? _exc_cont.ip() : regs()->ip(); }
+{
+  Mword ret;
+
+  if (exception_triggered())
+    ret = _exc_cont.ip();
+  else
+    {
+      ret = regs()->ip();
+      if (regs()->psr & Proc::Status_thumb)
+        ret |= 1U;
+    }
+
+  return ret;
+}
 
 IMPLEMENT inline NEEDS[Thread::exception_triggered]
 void
@@ -33,7 +46,11 @@ Thread::user_ip(Mword ip)
   else
     {
       Entry_frame *r = regs();
-      r->ip(ip);
+      r->ip(ip & ~1UL);
+      if (ip & 1U)
+        r->psr |= Proc::Status_thumb;
+      else
+        r->psr &= ~static_cast<Mword>(Proc::Status_thumb);
     }
 }
 
