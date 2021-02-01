@@ -29,14 +29,8 @@ Thread::vcpu_set_user_space(Task *t)
   Task *old = static_cast<Task*>(_space.vcpu_user());
   _space.vcpu_user(t);
 
-  if (old)
-    {
-      if (!old->dec_ref())
-	{
-	  rcu_wait();
-	  delete old;
-	}
-    }
+  if (old && !old->dec_ref())
+    delete old;
 }
 
 PUBLIC inline NEEDS["logdefs.h", "vcpu.h"]
