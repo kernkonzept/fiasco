@@ -76,7 +76,7 @@ void Context::switchin_context(Context *from)
   assert (state() & Thread_ready_mask);
   from->handle_lock_holder_preemption();
 
-  // switch to our page directory if nessecary
+  // switch to our page directory if necessary
   vcpu_aware_space()->switchin_context(from->vcpu_aware_space());
 
   Utcb_support::current(this->utcb().usr());

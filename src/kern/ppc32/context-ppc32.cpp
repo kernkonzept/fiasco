@@ -94,7 +94,7 @@ void Context::switchin_context(Context *from)
   printf("switch in address space: %p\n",_space);
 #endif
 
-  // switch to our page directory if nessecary
+  // switch to our page directory if necessary
   vcpu_aware_space()->switchin_context(from->vcpu_aware_space());
 
   Utcb_support::current(utcb().usr());

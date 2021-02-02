@@ -101,7 +101,7 @@ void Context::switchin_context(Context *from)
 
   Space *spc = vcpu_aware_space();
   if (!switchin_guest_context(spc))
-    // switch to our page directory if nessecary
+    // switch to our page directory if necessary
     spc->switchin_context(0);
 
   // load new kernel-entry SP into ErrorEPC as we use this
