@@ -90,12 +90,12 @@ Ipc_gate_obj::map_root() override
 
 PUBLIC
 Kobject_iface *
-Ipc_gate_obj::downgrade(unsigned long attr) override
+Ipc_gate_ctl::downgrade(unsigned long attr) override
 {
   if (attr & L4_msg_item::C_obj_right_1)
-    return static_cast<Ipc_gate*>(this);
+    return static_cast<Ipc_gate*>(static_cast<Ipc_gate_obj*>(this));
   else
-    return static_cast<Ipc_gate_ctl*>(this);
+    return this;
 }
 
 PUBLIC inline
