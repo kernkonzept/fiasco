@@ -15,6 +15,7 @@ public:
     GICR_TYPER        = 0x0008,
     GICR_STATUSR      = 0x0010,
     GICR_WAKER        = 0x0014,
+    GICR_PIDR2        = 0xffe8,
     GICR_SGI_BASE     = 0x10000,
     GICR_IGROUPR0     = GICR_SGI_BASE + 0x0080,
     GICR_ISENABLER0   = GICR_SGI_BASE + 0x0100,
@@ -51,11 +52,7 @@ Gic_redist::find(Address base, Unsigned64 mpidr, Cpu_number cpu)
     {
       Mmio_register_block r(base + o);
 
-      unsigned id = r.read<Unsigned32>(0xffe0);
-      if (   id != 0x92
-          && id != 0x93) // No GICR
-        break;
-      id = r.read<Unsigned32>(0xffe8);
+      unsigned id = r.read<Unsigned32>(GICR_PIDR2);
       if (   id != 0x3b    // No GICv3
           && id != 0x4b)   // and no GICv4
         break;
