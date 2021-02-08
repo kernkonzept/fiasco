@@ -77,8 +77,8 @@ Gic_redist::find(Address base, Unsigned64 mpidr, Cpu_number cpu)
     }
   while (!(gicr_typer & GICR_TYPER_Last));
 
-  printf("GIC: Did not find a redistributor for CPU%d\n",
-         cxx::int_value<Cpu_number>(cpu));
+  panic("GIC: Did not find a redistributor for CPU%d\n",
+        cxx::int_value<Cpu_number>(cpu));
 }
 
 PUBLIC
