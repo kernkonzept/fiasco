@@ -6,20 +6,32 @@
 # Each unit test comes in its own kernel binary. Everything is preprocessed and
 # compiled together. The linker stage adds the object file of the unit test to
 # the link rule.
+# All binaries are created in the utest/ directory.
 
-# select all test_* files to genererate a build target for each.
+# select all test_* files to generate a build target for each.
 UTEST_TESTS = $(filter test_%,$(INTERFACES_UTEST))
+
+# the final binaries go into the utest/ folder.
+UTEST_BINARIES = $(addprefix utest/,$(UTEST_TESTS))
 
 # select the utest framework files to add to each test build target.
 UTEST_FRAMEWORK = $(filter utest_fw%,$(OBJ_UTEST))
 
+
 # default target for the UTEST subsystem, add all test binaries as prerequisites.
-utest: $(UTEST_TESTS)
+utest_subsys: $(UTEST_BINARIES)
+
+# Ensure the utest folder exists before the target is build
+$(UTEST_BINARIES): | utest
+
+# create utest folder
+utest:
+	@mkdir -p utest
 
 # generate link rules for each unit test binary.
 $(foreach tname,$(UTEST_TESTS),\
 	$(eval $(call gen_kernel_rules,\
-		$(tname),\
+		utest/$(tname),\
 		$(tname).debug,\
 		$$(UTEST_FRAMEWORK) $$(filter $(tname)%,$$(OBJ_UTEST)))))
 
@@ -27,7 +39,7 @@ $(foreach tname,$(UTEST_TESTS),\
 ifneq ($(filter CHECKSUM,$(SUBSYSTEMS)),)
 $(foreach tname,$(UTEST_TESTS),\
 	$(eval $(call all_checksum_rules,\
-		$(tname),$(tname).debug,-$(tname))))
+		utest/$(tname),$(tname).debug,-$(tname))))
 endif
 
 clean-UTEST:

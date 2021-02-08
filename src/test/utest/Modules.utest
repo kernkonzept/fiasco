@@ -6,7 +6,7 @@
 # Modules.utest files are expected to ONLY extend the INTERFACES_UTEST variable.
 
 
-UTEST = utest
+UTEST = utest_subsys
 
 # Collect all Modules.utest files in subdirectories to test/utest.
 UTEST_SUBDIR_MODULES = $(wildcard $(srcdir)/test/utest/*/Modules.utest)
