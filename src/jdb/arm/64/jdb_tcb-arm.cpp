@@ -8,7 +8,7 @@ EXTENSION class Jdb_tcb
   {
     Disasm_x = 48,
     Disasm_y = 11,
-    Stack_y  = 19,
+    Stack_y  = 20,
   };
 
 };
@@ -40,14 +40,18 @@ void
 Jdb_tcb::print_entry_frame_regs(Thread *t)
 {
   Jdb_entry_frame *ef = Jdb::get_entry_frame(Jdb::current_cpu);
+  bool user = ef->from_user();
 
   printf("Regs (before debug entry from %s mode):\n",
-         ef->from_user() ? "user" : "kernel");
+         user ? "user" : "kernel");
 
   print_gp_regs(&ef->r[0]);
 
-  printf("upsr=%016lx tpidr: urw=%016lx uro=%016lx\n",
-         ef->psr, t->tpidrurw(), t->tpidruro());
+  printf("psr=%016lx tpidr: urw=%016lx uro=%016lx\n"
+         " pc=%s%016lx\033[m %csp=%016lx x30=%016lx\n",
+         ef->psr, t->tpidrurw(), t->tpidruro(), Jdb::esc_iret,
+         ef->ip(), user ? 'u' : 'k', user ? ef->sp() : (Mword)(ef + 1),
+         ef->r[30]);
 }
 
 IMPLEMENT
