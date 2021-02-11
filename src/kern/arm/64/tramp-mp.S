@@ -142,7 +142,13 @@ _tramp_mp_entry:
 2:
 	msr	DAIFSet, #0xf
 
-	// enable SMP
+	// Enable SMP via implementation defined CPUECTRL_EL1 which
+	// is available on Arm implementations
+	mrs	x0, midr_el1
+	lsr	w0, w0, #24
+	cmp	x0, #0x41
+	b.ne	5f
+
 	mrs	x0, S3_1_C15_C2_1 // CPUECTRL_EL1
 	tbnz	w0, #6, 5f
 	orr	x0, x0, #(1 << 6)
