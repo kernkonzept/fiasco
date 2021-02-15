@@ -38,6 +38,7 @@ public:
 IMPLEMENTATION:
 
 #include "cpu.h"
+#include "panic.h"
 #include <cstdio>
 
 PUBLIC
