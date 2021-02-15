@@ -166,8 +166,8 @@ Switch_lock::try_lock()
 }
 
 /** Acquire the lock with priority inheritance.
- *  If the lock is occupied, enqueue in list of helpers and lend CPU 
- *  to current lock owner until we are the lock owner.
+ *  If the lock is occupied, lend the CPU to current lock owner until we are the
+ *  lock owner.
  *  @return #Locked if the lock was already locked by the current context.
  *          #Not_locked if the current context got the lock (the usual case).
  *          #Invalid if the lock does not exist (see valid()).
@@ -194,8 +194,8 @@ Switch_lock::help(Context *curr, Context *owner, Address owner_id)
 }
 
 /** Acquire the lock with priority inheritance.
- *  If the lock is occupied, enqueue in list of helpers and lend CPU 
- *  to current lock owner until we are the lock owner (see lock()).
+ *  If the lock is occupied, lend the CPU to current lock owner until we are the
+ *  lock owner.
  *  @pre caller holds cpu lock
  *  @return #Locked if the lock was already locked by the current context.
  *          #Not_locked if the current context got the lock (the usual case).
@@ -252,7 +252,7 @@ Switch_lock::test_and_set()
 /** Acquire the lock with priority inheritance (see test_and_set()).
  *  @return #Locked if we owned the lock already.  #Not_locked otherwise.
  *          #Invalid is returned if the lock does not exist (see valid()).
- *          @pre caller holds cpu lock
+ *  @pre caller holds cpu lock
  */
 PUBLIC
 inline NEEDS["globals.h"]

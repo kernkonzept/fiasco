@@ -460,31 +460,25 @@ Context_ptr::ptr(Space *s, L4_fpage::Rights *rights) const
 
 #include <cstdio>
 
-/** Initialize a context.  After setup, a switch_exec to this context results
-    in a return to user code using the return registers at regs().  The
-    return registers are not initialized however; neither is the space_context
-    to be used in thread switching (use set_space_context() for that).
-    @pre (_kernel_sp == 0)  &&  (* (stack end) == 0)
+/**
+ * Initialize a context.
+ * 
+ * After setup, a switch_exec_locked to this context results in a return to user
+ * code using the return registers at regs(). The return registers are not
+ * initialized however; neither is the Space to be used in thread switching.
+ * 
+ * \pre (_kernel_sp == 0)  &&  (* (stack end) == 0)
  */
 PUBLIC inline NEEDS ["atomic.h", "entry_frame.h", <cstdio>]
 Context::Context()
 : _kernel_sp(reinterpret_cast<Mword*>(regs())),
-  /* TCBs are zero initialized _utcb_handler(0), */
+  // TCBs are zero initialized. Thus, members not explictly initialized can be
+  // assumed to be zero-initialized, unless their default constructor does
+  // something different.
   _helper(this),
   _sched_context(),
   _sched(&_sched_context)
-  /* TCBs should be initialized to zero!
-  _migration(0),
-  _need_to_finish_migration(false)
-  */
 {
-  // NOTE: We do not have to synchronize the initialization of
-  // _space_context because it is constant for all concurrent
-  // invocations of this constructor.  When two threads concurrently
-  // try to create a new task, they already synchronize in
-  // sys_task_new() and avoid calling us twice with different
-  // space_context arguments.
-
   _home_cpu = Cpu::invalid();
 }
 
@@ -1101,10 +1095,6 @@ Context::switch_exec_helping(Context *t, Mword const *lock, Mword val)
   Context *t_orig = t;
   (void)t_orig;
 
-  // Time-slice lending: if t is locked, switch to its locker
-  // instead, this is transitive
-  //
-
   // we actually hold locks
   if (!t->need_help(lock, val))
     return Switch::Failed;
@@ -1328,8 +1318,8 @@ Context::switch_handle_drq()
 }
 
 /**
- * \brief Get the queue item of the context.
- * \pre The context must currently not be in any queue.
+ * Get the queue item of the context.
+ *
  * \return The queue item of the context.
  *
  * The queue item can be used to enqueue the context to a Queue.

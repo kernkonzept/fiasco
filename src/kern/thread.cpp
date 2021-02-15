@@ -291,8 +291,7 @@ Thread::Thread(Ram_quota *q, Context_mode_kernel)
 
 
 /** Destructor.  Reestablish the Context constructor's precondition.
-    @pre current() == thread_lock()->lock_owner()
-         && state() == Thread_dead
+    @pre state() == Thread_dead
     @pre lock_cnt() == 0
     @post (_kernel_sp == 0)  &&  (* (stack end) == 0)  &&  !exists()
  */
