@@ -25,7 +25,7 @@ EXTENSION class Bootstrap
 
     static bool valid() { return true; }
 
-    void *alloc(unsigned size)
+    void *alloc(Bytes size)
     {
       (void) size;
       // assert (size == Config::PAGE_SIZE);

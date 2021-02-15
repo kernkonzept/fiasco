@@ -234,7 +234,7 @@ Dmar_space::initialize()
   if (!_initialized)
     return false;
 
-  b = Kmem_alloc::allocator()->q_alloc(ram_quota(), Config::PAGE_SHIFT);
+  b = Kmem_alloc::allocator()->q_alloc(ram_quota(), Config::page_order());
   if (EXPECT_FALSE(!b))
     return false;
 
@@ -257,7 +257,7 @@ Dmar_space::initialize()
       // allocated and fail.
       _dmarpt->destroy(Virt_addr(0UL), Virt_addr(~0UL), 0, Dmar_pt::Depth,
                        Kmem_alloc::q_allocator(ram_quota()));
-      Kmem_alloc::allocator()->q_free(ram_quota(), Config::PAGE_SHIFT, _dmarpt);
+      Kmem_alloc::allocator()->q_free(ram_quota(), Config::page_order(), _dmarpt);
       _dmarpt = 0;
       return false;
     }
@@ -541,7 +541,7 @@ Dmar_space::~Dmar_space()
     {
       _dmarpt->destroy(Virt_addr(0UL), Virt_addr(~0UL), 0, Dmar_pt::Depth,
                        Kmem_alloc::q_allocator(ram_quota()));
-      Kmem_alloc::allocator()->q_free(ram_quota(), Config::PAGE_SHIFT, _dmarpt);
+      Kmem_alloc::allocator()->q_free(ram_quota(), Config::page_order(), _dmarpt);
       _dmarpt = 0;
     }
 }

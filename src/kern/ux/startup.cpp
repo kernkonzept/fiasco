@@ -57,7 +57,7 @@ startup_system2()
 
   // must copy the KIP to allocated phys memory, because user apps cannot
   // access the kernel image memory
-  Kip *kip = (Kip*)Kmem_alloc::allocator()->alloc(Config::PAGE_SHIFT);
+  Kip *kip = (Kip*)Kmem_alloc::allocator()->alloc(Config::page_order());
   memcpy(kip, Kip::k(), Config::PAGE_SIZE);
   Kip::init_global_kip(kip);
 

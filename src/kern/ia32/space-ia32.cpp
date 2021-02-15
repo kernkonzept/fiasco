@@ -44,7 +44,7 @@ void
 Space::Ldt::alloc()
 {
   // LDT maximum size is one page
-  _addr = Kmem_alloc::allocator()->alloc(Config::PAGE_SHIFT);
+  _addr = Kmem_alloc::allocator()->alloc(Config::page_order());
   Mem::memset_mwords(reinterpret_cast<void *>(addr()), 0,
                      Config::PAGE_SIZE / sizeof(Mword));
 }
@@ -53,7 +53,7 @@ IMPLEMENT inline
 Space::Ldt::~Ldt()
 {
   if (addr())
-    Kmem_alloc::allocator()->free(Config::PAGE_SHIFT,
+    Kmem_alloc::allocator()->free(Config::page_order(),
                                   reinterpret_cast<void*>(addr()));
 }
 

@@ -142,7 +142,7 @@ inline NEEDS["static_assert.h"]
 Obj_space_phys<SPACE>::Obj_space_phys()
 {
   static_assert(sizeof(Cap_dir) == Config::PAGE_SIZE, "cap_dir size mismatch");
-  _dir = (Cap_dir*)Kmem_alloc::allocator()->q_unaligned_alloc(ram_quota(), Config::PAGE_SIZE);
+  _dir = (Cap_dir*)Kmem_alloc::allocator()->q_alloc(ram_quota(), Config::page_size());
   if (_dir)
     Mem::memset_mwords(_dir, 0, Config::PAGE_SIZE / sizeof(Mword));
 }
@@ -176,7 +176,7 @@ Obj_space_phys<SPACE>::caps_alloc(Cap_index virt)
   if (EXPECT_FALSE(d_idx >= Slots_per_dir))
     return 0;
 
-  void *mem = Kmem_alloc::allocator()->q_unaligned_alloc(ram_quota(), Config::PAGE_SIZE);
+  void *mem = Kmem_alloc::allocator()->q_alloc(ram_quota(), Config::page_size());
 
   if (!mem)
     return 0;
@@ -206,10 +206,10 @@ Obj_space_phys<SPACE>::caps_free()
         continue;
 
       Obj::remove_cap_page_dbg_info(d->d[i]);
-      a->q_unaligned_free(ram_quota(), Config::PAGE_SIZE, d->d[i]);
+      a->q_free(ram_quota(), Config::page_size(), d->d[i]);
     }
 
-  a->q_unaligned_free(ram_quota(), Config::PAGE_SIZE, d);
+  a->q_free(ram_quota(), Config::page_size(), d);
 }
 
 //

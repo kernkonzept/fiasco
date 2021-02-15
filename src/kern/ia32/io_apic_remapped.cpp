@@ -355,7 +355,7 @@ Io_apic_remapped::init_apics()
   };
 
   typedef Intel::Io_mmu::Irte Irte;
-  Irte *irt = new (Kmem_alloc::allocator()->unaligned_alloc(Num_irtes * sizeof(Irte)))
+  Irte *irt = new (Kmem_alloc::allocator()->alloc(Bytes(Num_irtes * sizeof(Irte))))
                   Irte[Num_irtes];
   if (!irt)
     panic("IOMMU: could not allocate interrupt remapping table\n");

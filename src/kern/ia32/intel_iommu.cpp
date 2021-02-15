@@ -701,7 +701,8 @@ Intel::Io_mmu::get_context_entry(Unsigned8 bus, Unsigned8 df, bool may_alloc)
     return 0;
 
   enum { Ct_size = 4096 };
-  void *ctx = Kmem_alloc::allocator()->unaligned_alloc(Ct_size);
+  const Bytes Ct_bytes = Bytes(Ct_size);
+  void *ctx = Kmem_alloc::allocator()->alloc(Ct_bytes);
   if (EXPECT_FALSE(!ctx))
     return 0; // out of memory
 
@@ -719,7 +720,7 @@ Intel::Io_mmu::get_context_entry(Unsigned8 bus, Unsigned8 df, bool may_alloc)
           // someone else allocated the context table meanwhile
           g.reset();
           // we assume context tables are never freed
-          Kmem_alloc::allocator()->unaligned_free(Ct_size, ctx);
+          Kmem_alloc::allocator()->free(Ct_bytes, ctx);
           return ((Cte *)Mem_layout::phys_to_pmem(rte->ctp())) + df;
         }
 

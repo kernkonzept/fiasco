@@ -83,7 +83,8 @@ typename Obj_space_virt<SPACE>::Entry *
 Obj_space_virt<SPACE>::caps_alloc(Cap_index virt)
 {
   Address cv = (Address)cap_virt(virt);
-  void *mem = Kmem_alloc::allocator()->q_unaligned_alloc(SPACE::ram_quota(this), Config::PAGE_SIZE);
+  void *mem = Kmem_alloc::allocator()->q_alloc(SPACE::ram_quota(this),
+                                               Config::page_size());
 
   if (!mem)
     return 0;
@@ -110,8 +111,8 @@ Obj_space_virt<SPACE>::caps_alloc(Cap_index virt)
       break;
     case Mem_space::Insert_err_exists:
     case Mem_space::Insert_err_nomem:
-      Kmem_alloc::allocator()->q_unaligned_free(SPACE::ram_quota(this),
-          Config::PAGE_SIZE, mem);
+      Kmem_alloc::allocator()->q_free(SPACE::ram_quota(this),
+                                      Config::page_size(), mem);
       return 0;
     };
 
@@ -138,7 +139,7 @@ Obj_space_virt<SPACE>::caps_free()
 
       Obj::remove_cap_page_dbg_info(c);
 
-      a->q_unaligned_free(SPACE::ram_quota(this), Config::PAGE_SIZE, c);
+      a->q_free(SPACE::ram_quota(this), Config::page_size(), c);
     }
   ms->dir()->destroy(Virt_addr(Mem_layout::Caps_start),
                      Virt_addr(Mem_layout::Caps_end-1),

@@ -202,7 +202,7 @@ PUBLIC static FIASCO_INIT
 void
 Jdb_kobject_name::init()
 {
-  _names = (Jdb_kobject_name*)Kmem_alloc::allocator()->unaligned_alloc(Name_buffer_size);
+  _names = (Jdb_kobject_name*)Kmem_alloc::allocator()->alloc(Bytes(Name_buffer_size));
   if (!_names)
     panic("No memory for thread names");
 

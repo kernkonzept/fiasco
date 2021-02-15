@@ -115,6 +115,12 @@ public:
   static bool esc_hack;
   static unsigned tbuf_entries;
   static unsigned num_ap_cpus asm("config_num_ap_cpus");
+
+  static constexpr Order page_order()
+  { return Order(PAGE_SHIFT); }
+
+  static constexpr Bytes page_size()
+  { return Bytes(PAGE_SIZE); }
 };
 
 #define GREETING_COLOR_ANSI_TITLE  "\033[1;32m"

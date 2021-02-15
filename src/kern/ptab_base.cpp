@@ -8,7 +8,7 @@ namespace Ptab
 
   struct Null_alloc
   {
-    static void *alloc(unsigned long) { return 0; }
+    static void *alloc(Bytes) { return 0; }
     static void free(void *) {}
     static bool valid() { return false; }
     static unsigned to_phys(void *) { return 0; }
@@ -306,7 +306,7 @@ namespace Ptab
     template< typename _Alloc >
     Next *alloc_next(PTE_PTR e, _Alloc &&a, bool force_write_back)
     {
-      Next *n = (Next*)a.alloc(sizeof(Next));
+      Next *n = (Next*)a.alloc(Bytes(sizeof(Next)));
       if (EXPECT_FALSE(!n))
         return 0;
 
@@ -436,7 +436,7 @@ namespace Ptab
           if (Depth >= start_level)
             {
               //printf("destroy: %*.sfree: %p: %p(%zd)\n", Depth*2, "            ", this, n, sizeof(Next));
-              alloc.free(n, sizeof(Next));
+              alloc.free(n, Bytes(sizeof(Next)));
             }
         }
     }

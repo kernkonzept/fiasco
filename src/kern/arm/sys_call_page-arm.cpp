@@ -84,7 +84,7 @@ IMPLEMENT static
 void
 Sys_call_page::init()
 {
-  Unsigned32 *sys_calls = (Unsigned32*)Kmem_alloc::allocator()->unaligned_alloc(Config::PAGE_SIZE);
+  Unsigned32 *sys_calls = (Unsigned32*)Kmem_alloc::allocator()->alloc(Config::page_size());
   if (!sys_calls)
     panic("FIASCO: can't allocate system-call page.\n");
 

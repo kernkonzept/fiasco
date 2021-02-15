@@ -106,7 +106,7 @@ Task::alloc_ku_mem_chunk(User<void>::Ptr u_addr, unsigned size, void **k_addr)
   assert ((size & (size - 1)) == 0);
 
   Kmem_alloc *const alloc = Kmem_alloc::allocator();
-  void *p = alloc->q_unaligned_alloc(ram_quota(), size);
+  void *p = alloc->q_alloc(ram_quota(), Bytes(size));
 
   if (EXPECT_FALSE(!p))
     return -L4_err::ENomem;
@@ -224,7 +224,7 @@ Task::free_ku_mem_chunk(void *k_addr, User<void>::Ptr u_addr, unsigned size,
       static_cast<Mem_space*>(this)->v_delete(user_va, page_size, L4_fpage::Rights::FULL());
     }
 
-  alloc->q_unaligned_free(ram_quota(), size, k_addr);
+  alloc->q_free(ram_quota(), Bytes(size), k_addr);
 }
 
 PRIVATE

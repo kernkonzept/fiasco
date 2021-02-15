@@ -77,6 +77,7 @@ private:
 };
 
 typedef cxx::int_type<unsigned, struct Order_t> Order;
+typedef cxx::int_type_order<unsigned long, struct Bytes_t, Order> Bytes;
 
 namespace Addr {
 

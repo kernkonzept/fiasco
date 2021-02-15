@@ -43,23 +43,23 @@ class Kmem_q_alloc
 public:
   Kmem_q_alloc(Q *q, Kmem_alloc *a) : _a(a), _q(q) {}
   bool valid() const { return _a && _q; }
-  void *alloc(unsigned long size) const
+  void *alloc(Bytes size) const
   {
     Auto_quota<Q> q(_q, size);
     if (EXPECT_FALSE(!q))
       return 0;
 
     void *b;
-    if (EXPECT_FALSE(!(b=_a->unaligned_alloc(size))))
+    if (EXPECT_FALSE(!(b = _a->alloc(size))))
       return 0;
 
     q.release();
     return b;
   }
 
-  void free(void *block, unsigned long size) const
+  void free(void *block, Bytes size) const
   {
-    _a->unaligned_free(size, block);
+    _a->free(size, block);
     _q->free(size);
   }
 
@@ -128,26 +128,26 @@ void
 Kmem_alloc::dump() const
 { a->dump(); }
 
-PUBLIC inline NEEDS [Kmem_alloc::unaligned_alloc]
+PUBLIC inline //NEEDS [Kmem_alloc::alloc]
 void *
-Kmem_alloc::alloc(size_t o)
+Kmem_alloc::alloc(Order o)
 {
-  return unaligned_alloc(1UL << o);
+  return alloc(Bytes(1) << o);
 }
 
 
-PUBLIC inline NEEDS [Kmem_alloc::unaligned_free]
+PUBLIC inline //NEEDS [Kmem_alloc::free]
 void
-Kmem_alloc::free(size_t o, void *p)
+Kmem_alloc::free(Order o, void *p)
 {
-  unaligned_free(1UL << o, p);
+  free(Bytes(1) << o, p);
 }
 
 PUBLIC template<typename T> inline
 T *
 Kmem_alloc::alloc_array(unsigned elems)
 {
-  return new (this->unaligned_alloc(sizeof(T) * elems)) T[elems];
+  return new (this->alloc(Bytes(sizeof(T) * elems))) T[elems];
 }
 
 PUBLIC template<typename T> inline
@@ -156,19 +156,20 @@ Kmem_alloc::free_array(T *b, unsigned elems)
 {
   for (unsigned i = 0; i < elems; ++i)
     b[i].~T();
-  this->unaligned_free(b, sizeof(T) * elems);
+  this->free(b, Bytes(sizeof(T) * elems));
 }
 
 PUBLIC
 void *
-Kmem_alloc::unaligned_alloc(unsigned long size)
+Kmem_alloc::alloc(Bytes size)
 {
-  assert(size >= 8 /* NEW INTERFACE PARANIOIA */);
+  const size_t sz = cxx::int_value<Bytes>(size);
+  assert(sz >= 8 /* NEW INTERFACE PARANIOIA */);
   void* ret;
 
   {
     auto guard = lock_guard(lock);
-    ret = a->alloc(size);
+    ret = a->alloc(sz);
   }
 
   if (!ret)
@@ -176,7 +177,7 @@ Kmem_alloc::unaligned_alloc(unsigned long size)
       Kmem_alloc_reaper::morecore (/* desperate= */ true);
 
       auto guard = lock_guard(lock);
-      ret = a->alloc(size);
+      ret = a->alloc(sz);
     }
 
   return ret;
@@ -184,11 +185,12 @@ Kmem_alloc::unaligned_alloc(unsigned long size)
 
 PUBLIC
 void
-Kmem_alloc::unaligned_free(unsigned long size, void *page)
+Kmem_alloc::free(Bytes size, void *page)
 {
-  assert(size >= 8 /* NEW INTERFACE PARANIOIA */);
+  const size_t sz = cxx::int_value<Bytes>(size);
+  assert(sz >= 8 /* NEW INTERFACE PARANIOIA */);
   auto guard = lock_guard(lock);
-  a->free(page, size);
+  a->free(page, sz);
 }
 
 
@@ -246,9 +248,9 @@ Kmem_alloc::create_free_map(Kip const *kip, Mem_region_map_base *map)
 PUBLIC template< typename Q >
 inline
 void *
-Kmem_alloc::q_alloc(Q *quota, size_t order)
+Kmem_alloc::q_alloc(Q *quota, Order order)
 {
-  Auto_quota<Q> q(quota, 1UL<<order);
+  Auto_quota<Q> q(quota, order);
   if (EXPECT_FALSE(!q))
     return 0;
 
@@ -263,14 +265,14 @@ Kmem_alloc::q_alloc(Q *quota, size_t order)
 PUBLIC template< typename Q >
 inline
 void *
-Kmem_alloc::q_unaligned_alloc(Q *quota, size_t size)
+Kmem_alloc::q_alloc(Q *quota, Bytes size)
 {
   Auto_quota<Q> q(quota, size);
   if (EXPECT_FALSE(!q))
     return 0;
 
   void *b;
-  if (EXPECT_FALSE(!(b=unaligned_alloc(size))))
+  if (EXPECT_FALSE(!(b = alloc(size))))
     return 0;
 
   q.release();
@@ -279,37 +281,37 @@ Kmem_alloc::q_unaligned_alloc(Q *quota, size_t size)
 
 
 PUBLIC inline NEEDS["mem_layout.h"]
-void Kmem_alloc::free_phys(size_t s, Address p)
+void Kmem_alloc::free_phys(Order o, Address p)
 {
   void *va = (void*)Mem_layout::phys_to_pmem(p);
   if ((unsigned long)va != ~0UL)
-    free(s, va);
+    free(o, va);
 }
 
 PUBLIC template< typename Q >
 inline
 void
-Kmem_alloc::q_free_phys(Q *quota, size_t order, Address obj)
+Kmem_alloc::q_free_phys(Q *quota, Order order, Address obj)
 {
   free_phys(order, obj);
-  quota->free(1UL << order);
+  quota->free(Bytes(1) << order);
 }
 
 PUBLIC template< typename Q >
 inline
 void
-Kmem_alloc::q_free(Q *quota, size_t order, void *obj)
+Kmem_alloc::q_free(Q *quota, Order order, void *obj)
 {
   free(order, obj);
-  quota->free(1UL << order);
+  quota->free(Bytes(1) << order);
 }
 
 PUBLIC template< typename Q >
 inline
 void
-Kmem_alloc::q_unaligned_free(Q *quota, size_t size, void *obj)
+Kmem_alloc::q_free(Q *quota, Bytes size, void *obj)
 {
-  unaligned_free(size, obj);
+  free(size, obj);
   quota->free(size);
 }
 

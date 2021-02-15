@@ -137,7 +137,7 @@ Mem_space::initialize()
   if (EXPECT_FALSE(!q))
     return false;
 
-  _dir = (Dir_type*)Kmem_alloc::allocator()->unaligned_alloc(sizeof(Dir_type));
+  _dir = (Dir_type*)Kmem_alloc::allocator()->alloc(Bytes(sizeof(Dir_type)));
   if (!_dir)
     return false;
 
@@ -415,7 +415,7 @@ Mem_space::~Mem_space()
       _dir->destroy(Virt_addr(0UL),
                     Virt_addr(Mem_layout::User_max),
                     Kmem_alloc::q_allocator(_quota));
-      Kmem_alloc::allocator()->q_unaligned_free(ram_quota(), sizeof(Dir_type), _dir);
+      Kmem_alloc::allocator()->q_free(ram_quota(), Bytes(sizeof(Dir_type)), _dir);
     }
 }
 

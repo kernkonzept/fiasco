@@ -63,7 +63,7 @@ Boot_alloced::alloc(size_t size)
       while (alloc_size < size)
 	alloc_size <<= 1;
 
-      Block *b = (Block*)Kmem_alloc::allocator()->unaligned_alloc(alloc_size);
+      Block *b = (Block*)Kmem_alloc::allocator()->alloc(Bytes(alloc_size));
       if (Debug_boot_alloc)
         printf("Boot_alloc: allocated extra memory block @%p (size=%lx)\n",
                b, alloc_size);

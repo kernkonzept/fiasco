@@ -1,5 +1,7 @@
 #pragma once
 
+#include "types.h"
+
 class Ram_quota;
 
 template<typename T = Ram_quota>
@@ -14,6 +16,20 @@ public:
   Auto_quota operator = (Auto_quota const &) = delete;
 
   Auto_quota(T *quota, unsigned long size)
+  : _quota(0), _bytes(size)
+  {
+    if (quota->alloc(size))
+      _quota = quota;
+  }
+
+  Auto_quota(T *quota, Order order)
+  : _quota(0), _bytes(Bytes(1) << order)
+  {
+    if (quota->alloc(Bytes(1) << order))
+      _quota = quota;
+  }
+
+  Auto_quota(T *quota, Bytes size)
   : _quota(0), _bytes(size)
   {
     if (quota->alloc(size))
@@ -51,7 +67,7 @@ public:
   { return reinterpret_cast<_unspec_bool_type>(_quota); }
 
 private:
-  void reset(T *quota, unsigned long size)
+  void reset(T *quota, Bytes size)
   {
     if (_quota)
       _quota->free(_bytes);
@@ -61,5 +77,5 @@ private:
   }
 
   T *_quota;
-  unsigned long _bytes;
+  Bytes _bytes;
 };

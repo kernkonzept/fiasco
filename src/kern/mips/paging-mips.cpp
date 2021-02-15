@@ -166,7 +166,7 @@ public:
 
   struct Null_alloc
   {
-    static void *alloc(unsigned long) { return 0; }
+    static void *alloc(Bytes) { return 0; }
     static void free(void *) {}
     static bool valid() { return false; }
     static unsigned to_phys(void *) { return 0; }
@@ -358,7 +358,7 @@ Pdir::walk(Va _virt, unsigned isize = 0,
 
       if (do_alloc)
         {
-          p = (Mword*)alloc.alloc(sizeof(Mword) << size);
+          p = (Mword*)alloc.alloc(Bytes(sizeof(Mword) << size));
           if (!p)
             return r; // OOM
 
@@ -436,7 +436,7 @@ Pdir::destroy(Va _start, Va _end, ALLOC const &alloc)
               continue;
             }
 
-          alloc.free((void *)v, sizeof(Mword) << l_bits[n + 1]);
+          alloc.free((void *)v, Bytes(sizeof(Mword) << l_bits[n + 1]));
         }
 
       if (start >= end)

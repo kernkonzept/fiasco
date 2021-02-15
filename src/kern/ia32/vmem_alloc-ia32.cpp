@@ -21,7 +21,7 @@ Vmem_alloc::page_alloc(void *address, Zero_fill zf, unsigned mode)
   void *vpage = 0;
   Address page;
 
-  vpage = Kmem_alloc::allocator()->alloc(Config::PAGE_SHIFT);
+  vpage = Kmem_alloc::allocator()->alloc(Config::page_order());
 
   if (EXPECT_FALSE(!vpage))
     return 0;
@@ -50,7 +50,7 @@ Vmem_alloc::page_alloc(void *address, Zero_fill zf, unsigned mode)
   return address;
 
 error:
-  Kmem_alloc::allocator()->free(Config::PAGE_SHIFT, vpage); // 2^0 = 1 page
+  Kmem_alloc::allocator()->free(Config::page_order(), vpage); // 2^0 = 1 page
   return 0;
 }
 

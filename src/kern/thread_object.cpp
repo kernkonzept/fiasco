@@ -83,7 +83,7 @@ Thread_object::operator delete(void *_t)
 {
   Thread_object * const t = nonull_static_cast<Thread_object*>(_t);
   Ram_quota * const q = t->_quota;
-  Kmem_alloc::allocator()->q_unaligned_free(q, Thread::Size, t);
+  Kmem_alloc::allocator()->q_free(q, Bytes(Thread::Size), t);
 
   LOG_TRACE("Kobject delete", "del", current(), Log_destroy,
       l->id = t->dbg_id();

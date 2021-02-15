@@ -46,7 +46,7 @@ bool Per_cpu_data_alloc::alloc(Cpu_number cpu)
 
   unsigned size = _per_cpu_data_end - _per_cpu_data_start;
 
-  char *per_cpu = (char*)Kmem_alloc::allocator()->unaligned_alloc(size);
+  char *per_cpu = (char*)Kmem_alloc::allocator()->alloc(Bytes(size));
 
   if (!per_cpu)
     return false;

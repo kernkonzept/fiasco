@@ -131,7 +131,7 @@ static void
 simple_malloc_init(void)
 {
   const size_t size = 16*4*1024; // must be less than 32 pages!
-  char *heap = (char*)Kmem_alloc::allocator()->unaligned_alloc(size);
+  char *heap = (char*)Kmem_alloc::allocator()->alloc(Bytes(size));
   if (!heap)
     panic("No memory for simple_malloc heap");
   linear_mem_pages = size / PAGE_SIZE;

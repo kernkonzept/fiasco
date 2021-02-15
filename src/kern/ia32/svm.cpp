@@ -147,7 +147,7 @@ Svm::Svm(Cpu_number cpu)
 
   /* 16kB IO permission map and Vmcb (16kB are good for the buddy allocator)*/
   // FIXME: MUST NOT PANIC ON CPU HOTPLUG
-  check(_iopm = Kmem_alloc::allocator()->unaligned_alloc(Io_pm_size + Vmcb_size));
+  check(_iopm = Kmem_alloc::allocator()->alloc(Bytes(Io_pm_size + Vmcb_size)));
   _iopm_base_pa = Kmem::virt_to_phys(_iopm);
   _kernel_vmcb = (Vmcb*)((char*)_iopm + Io_pm_size);
   _kernel_vmcb_pa = Kmem::virt_to_phys(_kernel_vmcb);
@@ -161,7 +161,7 @@ Svm::Svm(Cpu_number cpu)
 
   /* 8kB MSR permission map */
   // FIXME: MUST NOT PANIC ON CPU HOTPLUG
-  check(_msrpm = Kmem_alloc::allocator()->unaligned_alloc(Msr_pm_size));
+  check(_msrpm = Kmem_alloc::allocator()->alloc(Bytes(Msr_pm_size)));
   _msrpm_base_pa = Kmem::virt_to_phys(_msrpm);
   memset(_msrpm, ~0, Msr_pm_size);
 
@@ -178,7 +178,7 @@ Svm::Svm(Cpu_number cpu)
 
   /* 4kB Host state-safe area */
   // FIXME: MUST NOT PANIC ON CPU HOTPLUG
-  check(_vm_hsave_area = Kmem_alloc::allocator()->unaligned_alloc(State_save_area_size));
+  check(_vm_hsave_area = Kmem_alloc::allocator()->alloc(Bytes(State_save_area_size)));
   Unsigned64 vm_hsave_pa = Kmem::virt_to_phys(_vm_hsave_area);
 
   c.wrmsr(vm_hsave_pa, MSR_VM_HSAVE_PA);

@@ -79,7 +79,7 @@ Console_buffer::alloc(size_t size)
       out_buf_size = (size + Config::PAGE_SIZE - 1) & Config::PAGE_MASK;
       if (out_buf_size)
 	out_buf = (char *)Kmem_alloc::allocator()->
-                            unaligned_alloc(out_buf_size);
+                            alloc(Bytes(out_buf_size));
 
       out_buf_w = out_buf;
 
@@ -91,8 +91,7 @@ PUBLIC
 Console_buffer::~Console_buffer()
 {
   if(out_buf)
-    Kmem_alloc::allocator()->
-      unaligned_free(out_buf_size, out_buf);
+    Kmem_alloc::allocator()->free(Bytes(out_buf_size), out_buf);
   out_buf = 0;
 }
 

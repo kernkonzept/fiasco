@@ -24,7 +24,7 @@ Console *Jdb_gzip::uart;
 Jdb_gzip::Jdb_gzip() : Console(DISABLED)
 {
   char *heap = (char*)Kmem_alloc::allocator()->
-    unaligned_alloc(heap_pages*Config::PAGE_SIZE);
+    alloc(Bytes(heap_pages * Config::PAGE_SIZE));
   if (!heap)
     panic("No memory for gzip heap");
   gz_init(heap, heap_pages * Config::PAGE_SIZE, raw_write);

@@ -302,7 +302,7 @@ Vm_vmx_ept::~Vm_vmx_ept()
     {
       _ept->destroy(Virt_addr(0UL), Virt_addr(~0UL), 0, Ept::Depth,
                     Kmem_alloc::q_allocator(ram_quota()));
-      Kmem_alloc::allocator()->q_free(ram_quota(), Config::PAGE_SHIFT, _ept);
+      Kmem_alloc::allocator()->q_free(ram_quota(), Config::page_order(), _ept);
       _ept = 0;
       _ept_phys = 0;
     }
@@ -314,7 +314,7 @@ Vm_vmx_ept::initialize()
 {
   void *b;
   if (EXPECT_FALSE(!(b = Kmem_alloc::allocator()
-	  ->q_alloc(ram_quota(), Config::PAGE_SHIFT))))
+	  ->q_alloc(ram_quota(), Config::page_order()))))
     return false;
 
   _ept = static_cast<Ept*>(b);

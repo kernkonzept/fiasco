@@ -83,7 +83,7 @@ Idt::init()
 {
   assert (_idt_max * sizeof(Idt_entry) <= Config::PAGE_SIZE && "IDT too large");
   auto alloc = Kmem_alloc::allocator();
-  Idt_entry *idt = (Idt_entry *)alloc->unaligned_alloc(Config::PAGE_SIZE);
+  Idt_entry *idt = (Idt_entry *)alloc->alloc(Config::page_size());
   if (!idt)
     panic("IDT allocation failure: %d", __LINE__);
 

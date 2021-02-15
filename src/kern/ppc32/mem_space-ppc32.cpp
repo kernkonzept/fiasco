@@ -89,7 +89,7 @@ Mem_space::initialize()
 {
   void *b;
   if (EXPECT_FALSE(!(b = Kmem_alloc::allocator()
-	  ->q_alloc(_quota, Config::PAGE_SHIFT))))
+	  ->q_alloc(_quota, Config::page_order()))))
     return false;
 
   _dir = static_cast<Dir_type*>(b);

@@ -731,7 +731,7 @@ Usermode::init(Cpu_number cpu)
     stack.ss_sp  = (void *) Mem_layout::phys_to_pmem
                                 (Mem_layout::Sigstack_cpu0_start_frame);
   else
-    stack.ss_sp = Kmem_alloc::allocator()->alloc(Mem_layout::Sigstack_log2_size);
+    stack.ss_sp = Kmem_alloc::allocator()->alloc(Order(Mem_layout::Sigstack_log2_size));
   stack.ss_size  =  Mem_layout::Sigstack_size;
   stack.ss_flags = 0;
 

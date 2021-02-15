@@ -86,6 +86,13 @@ Ram_quota::alloc(Mword bytes)
     }
 }
 
+PUBLIC
+bool
+Ram_quota::alloc(Bytes size)
+{
+  return alloc(cxx::int_value<Bytes>(size));
+}
+
 PRIVATE inline NEEDS["atomic.h"]
 bool
 Ram_quota::_free_bytes(Mword bytes)
@@ -111,6 +118,13 @@ Ram_quota::free(Mword bytes)
 {
   if (_free_bytes(bytes))
     delete this;
+}
+
+PUBLIC inline NEEDS[Ram_quota::_free_bytes]
+void
+Ram_quota::free(Bytes size)
+{
+  free(cxx::int_value<Bytes>(size));
 }
 
 /**

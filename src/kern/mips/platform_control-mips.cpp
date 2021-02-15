@@ -58,7 +58,7 @@ Platform_control::alloc_secondary_boot_code()
    })
 
   // allocate 4KB as we need a 4KB alignemnt for the boot vector
-  _bev = Kmem_alloc::allocator()->unaligned_alloc(4096);
+  _bev = Kmem_alloc::allocator()->alloc(Bytes(4096));
   Unsigned32 *p = (Unsigned32 *)_bev;
 
   unsigned cca = Mips::Cfg<0>::read().k0();

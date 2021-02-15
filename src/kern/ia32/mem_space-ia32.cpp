@@ -129,7 +129,7 @@ Mem_space::initialize()
 {
   void *b;
   if (EXPECT_FALSE(!(b = Kmem_alloc::allocator()
-	  ->q_alloc(_quota, Config::PAGE_SHIFT))))
+	  ->q_alloc(_quota, Config::page_order()))))
     return false;
 
   _dir = static_cast<Dir_type*>(b);
@@ -384,7 +384,7 @@ Mem_space::~Mem_space()
   if (_dir)
     {
       dir_shutdown();
-      Kmem_alloc::allocator()->q_free(_quota, Config::PAGE_SHIFT, _dir);
+      Kmem_alloc::allocator()->q_free(_quota, Config::page_order(), _dir);
     }
 }
 

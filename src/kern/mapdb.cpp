@@ -21,8 +21,12 @@ class Physframe : public Base_mappable
   friend class Jdb_mapdb;
 
 public:
-  static unsigned long mem_size(size_t size)
+  static constexpr unsigned long mem_size(size_t size)
   { return (size * sizeof(Physframe) + 1023) & ~1023; }
+
+  static constexpr Bytes mem_bytes(size_t size)
+  { return Bytes(mem_size(size)); }
+
 }; // struct Physframe
 
 
@@ -46,10 +50,10 @@ private:
            && (vaddr(m) == cxx::mask_lsb(va, _page_shift));
   }
 
-  static unsigned long quota_size(Page key_end)
+  static Bytes quota_size(Page key_end)
   {
-    return Physframe::mem_size(cxx::int_value<Page>(key_end))
-           + sizeof(Treemap);
+    return Bytes(Physframe::mem_size(cxx::int_value<Page>(key_end))
+                     + sizeof(Treemap));
   }
 
   // get the virtual address coresponding to the given physframe
@@ -351,13 +355,13 @@ Physframe *
 Physframe::alloc(size_t size)
 {
 #if 1				// Optimization: See constructor
-  void *mem = Kmem_alloc::allocator()->unaligned_alloc(mem_size(size));
+  void *mem = Kmem_alloc::allocator()->alloc(mem_bytes(size));
   if (mem)
     memset(mem, 0, size * sizeof(Physframe));
   return (Physframe *)mem;
 #else
   Physframe* block
-    = (Physframe *)Kmem_alloc::allocator()->unaligned_alloc(mem_size(size));
+    = (Physframe *)Kmem_alloc::allocator()->alloc(mem_bytes(size));
   assert (block);
   for (unsigned i = 0; i < size; ++i)
     new (block + i) Physframe();
@@ -403,7 +407,7 @@ Physframe::free(Physframe *block, size_t size, Space *owner)
       block[i].~Physframe();
     }
 
-  Kmem_alloc::allocator()->unaligned_free(Physframe::mem_size(size), block);
+  Kmem_alloc::allocator()->free(Physframe::mem_bytes(size), block);
 }
 
 //

@@ -166,21 +166,21 @@ Generic_io_space<SPACE>::~Generic_io_space()
       // sanity check
       assert (iopte.level != Pdir::Super_level);
 
-      Kmem_alloc::allocator()->q_free_phys(ram_quota(), Config::PAGE_SHIFT,
+      Kmem_alloc::allocator()->q_free_phys(ram_quota(), Config::page_order(),
                                            iopte.page_addr());
 
       // switch to next page-table entry
       ++iopte;
 
       if (iopte.is_valid())
-        Kmem_alloc::allocator()->q_free_phys(ram_quota(), Config::PAGE_SHIFT,
+        Kmem_alloc::allocator()->q_free_phys(ram_quota(), Config::page_order(),
                                              iopte.page_addr());
 
       auto iopde = mem_space()->dir()->walk(Virt_addr(Mem_layout::Io_bitmap),
                                             Pdir::Super_level);
 
       // free the page table
-      Kmem_alloc::allocator()->q_free_phys(ram_quota(), Config::PAGE_SHIFT,
+      Kmem_alloc::allocator()->q_free_phys(ram_quota(), Config::page_order(),
                                            iopde.next_level());
 
       // free reference
@@ -390,7 +390,7 @@ Generic_io_space<SPACE>::io_insert(Address port_number)
       // nothing mapped! Get a page and map it in the IO bitmap
       void *page;
       if (!(page = Kmem_alloc::allocator()->q_alloc(ram_quota(),
-                                                    Config::PAGE_SHIFT)))
+                                                    Config::page_order())))
 	return Insert_err_nomem;
 
       // clear all IO ports
@@ -407,7 +407,7 @@ Generic_io_space<SPACE>::io_insert(Address port_number)
 
       if (status == Mem_space::Insert_err_nomem)
 	{
-	  Kmem_alloc::allocator()->free(Config::PAGE_SHIFT, page);
+	  Kmem_alloc::allocator()->free(Config::page_order(), page);
 	  ram_quota()->free(Config::PAGE_SIZE);
 	  return Insert_err_nomem;
 	}

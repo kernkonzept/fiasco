@@ -19,7 +19,7 @@ IMPLEMENTATION [arm]:
 IMPLEMENT
 void *Vmem_alloc::page_alloc(void *address, Zero_fill zf, unsigned mode)
 {
-  void *vpage = Kmem_alloc::allocator()->alloc(Config::PAGE_SHIFT);
+  void *vpage = Kmem_alloc::allocator()->alloc(Config::page_order());
 
   if (EXPECT_FALSE(!vpage))
     return 0;

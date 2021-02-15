@@ -190,7 +190,7 @@ extern "C" void leave_and_kill_myself(void) FIASCO_NORETURN;
 IMPLEMENT
 Thread::Dbg_stack::Dbg_stack()
 {
-  stack_top = Kmem_alloc::allocator()->unaligned_alloc(Stack_size); 
+  stack_top = Kmem_alloc::allocator()->alloc(Bytes(Stack_size));
   if (stack_top)
     stack_top = (char *)stack_top + Stack_size;
   //printf("JDB STACK start= %p - %p\n", (char *)stack_top - Stack_size, (char *)stack_top);
@@ -201,7 +201,7 @@ PUBLIC inline
 void *
 Thread::operator new(size_t, Ram_quota *q) throw ()
 {
-  void *t = Kmem_alloc::allocator()->q_unaligned_alloc(q, Thread::Size);
+  void *t = Kmem_alloc::allocator()->q_alloc(q, Bytes(Thread::Size));
   if (t)
     memset(t, 0, sizeof(Thread));
 
