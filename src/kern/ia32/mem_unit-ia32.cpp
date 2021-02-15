@@ -8,15 +8,20 @@ public:
   enum { Asid_invalid = 1 << 12 };
 };
 
-/** INVPCID types */
-enum
-{
-  Invpcid_single_address = 0,           /**< Individual address */
-  Invpcid_single_context = 1,           /**< Single-context */
-  Invpcid_all_context_global = 2,       /**< All-context, including globals */
-  Invpcid_all_context = 3,              /**< All-context */
-};
+INTERFACE[amd64 && ia32_pcid]:
 
+EXTENSION class Mem_unit
+{
+private:
+  /** INVPCID types */
+  enum
+  {
+    Invpcid_single_address = 0,           /**< Individual address, except global translations */
+    Invpcid_single_context = 1,           /**< Single-context, except global translations */
+    Invpcid_all_context_global = 2,       /**< All-context, including globals */
+    Invpcid_all_context_non_global = 3,   /**< All-context except global translations */
+  };
+};
 
 IMPLEMENTATION[ia32 || amd64]:
 
