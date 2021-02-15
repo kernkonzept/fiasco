@@ -729,7 +729,7 @@ Context::schedule()
   assert (!Sched_context::rq.current().schedule_in_progress);
 
   // we give up the CPU as a helpee, so we have no helper anymore
-  if (EXPECT_FALSE(helper() != 0))
+  if (EXPECT_FALSE(helper() != this))
     set_helper(Not_Helping);
 
   // if we are a thread on a foreign CPU we must ask the kernel context to
