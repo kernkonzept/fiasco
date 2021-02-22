@@ -354,7 +354,7 @@ Slab_cache::reap()		// request that cache returns memory to system
 	  s = _empty.front();
 	  // nothing to free
 	  if (!s)
-	    return 0;
+	    break;
 
 	  cxx::H_list<Slab>::remove(s);
 	}
