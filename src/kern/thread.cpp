@@ -240,10 +240,13 @@ Thread::bind(Task *t, User<Utcb>::Ptr utcb)
 }
 
 
-PUBLIC inline NEEDS["kdb_ke.h", "kernel_task.h", "cpu_lock.h", "space.h"]
+PUBLIC
 bool
 Thread::unbind()
 {
+  assert(   (!(state() & Thread_dead) && current() == this)
+         || ( (state() & Thread_dead) && current() != this));
+
   Task *old;
 
     {
@@ -255,8 +258,9 @@ Thread::unbind()
       old = static_cast<Task*>(_space.space());
       _space.space(Kernel_task::kernel_task());
 
-      // switch to a safe page table
-      if (Mem_space::current_mem_space(current_cpu()) == old)
+      // switch to a safe page table if the thread is to be going itself
+      if (   current() == this
+          && Mem_space::current_mem_space(current_cpu()) == old)
         Kernel_task::kernel_task()->switchin_context(old);
 
       if (old->dec_ref())
