@@ -66,7 +66,7 @@ Jdb_mapdb::show_tree(Treemap* pages, Mapping::Pcnt offset, Mdb_types::Order base
   unsigned      i;
   int           c;
 
-  if (! t)
+  if (!t || !*t->begin())
     {
       printf(" no mapping tree registered for frame number 0x%lx\033[K\n",
              cxx::int_value<Mapping::Page>(page));
