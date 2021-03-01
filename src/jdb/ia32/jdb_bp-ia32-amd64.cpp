@@ -102,7 +102,7 @@ Jdb_bp::at_jdb_leave()
   write_debug_register(7, dr7);
 }
 
-/** @return 1 if single step occured */
+/** @return 1 if single step occurred */
 IMPLEMENT
 int
 Jdb_bp::test_sstep(Cpu_number, Jdb_entry_frame *)
@@ -116,7 +116,7 @@ Jdb_bp::test_sstep(Cpu_number, Jdb_entry_frame *)
   return 1;
 }
 
-/** @return 1 if breakpoint occured */
+/** @return 1 if breakpoint occurred */
 IMPLEMENT
 int
 Jdb_bp::test_break(Cpu_number cpu, Jdb_entry_frame *ef, String_buffer *buf)
@@ -130,7 +130,7 @@ Jdb_bp::test_break(Cpu_number cpu, Jdb_entry_frame *ef, String_buffer *buf)
   return ret;
 }
 
-/** @return 1 if other debug exception occured */
+/** @return 1 if other debug exception occurred */
 IMPLEMENT
 int
 Jdb_bp::test_other(Cpu_number, Jdb_entry_frame *, String_buffer *buf)

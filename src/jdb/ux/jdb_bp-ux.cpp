@@ -162,7 +162,7 @@ Jdb_bp::test_log_only()
   return 0;
 }
 
-/** @return 1 if breakpoint occured */
+/** @return 1 if breakpoint occurred */
 IMPLEMENT
 int
 Jdb_bp::test_break(Cpu_number cpu, Jdb_entry_frame *ef, String_buffer *buf)

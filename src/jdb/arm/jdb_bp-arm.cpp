@@ -449,7 +449,7 @@ Jdb_bp::set_bw(int idx, char type, Address addr,
     }
 }
 
-/** @return 1 if breakpoint occured */
+/** @return 1 if breakpoint occurred */
 IMPLEMENT
 int
 Jdb_bp::test_break(Cpu_number cpu, String_buffer *buf)

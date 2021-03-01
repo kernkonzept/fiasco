@@ -782,7 +782,7 @@ Jdb::handle_nested_trap(Jdb_entry_frame *e)
     {
     case 2:
       cursor(Jdb_screen::height(), 1);
-      printf("\nNMI occured\n");
+      printf("\nNMI occurred\n");
       break;
     case 3:
       cursor(Jdb_screen::height(), 1);
