@@ -17,7 +17,7 @@ IMPLEMENTATION:
 /** 
  * The global page fault handler switch.
  * Handles page-fault monitoring, classification of page faults based on
- * virtual-memory area they occured in, page-directory updates for kernel
+ * virtual-memory area they occurred in, page-directory updates for kernel
  * faults, IPC-window updates, and invocation of paging function for
  * user-space page faults (handle_page_fault_pager).
  * @param pfa page-fault virtual address

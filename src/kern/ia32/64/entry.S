@@ -67,10 +67,10 @@ GATE_INITTAB_BEGIN idt_init_table
 	.section ".entry.text.vec", "ax", @progbits
 
 EXCEPTION	0x00, vec00_zero_div
-/* IA32 has to handle breakpoint exceptions if occured exactly at 
+/* IA32 has to handle breakpoint exceptions if occurred exactly at
    entry_sys_fast_ipc -- see ia32/entry-ia32.S */
 GATE_ENTRY	0x01, entry_vec01_debug, (ACC_PL_K | ACC_INTR_GATE)
-/* XXX IA32 has to handle NMI occured exactly at entry_sys_fast_ipc */
+/* XXX IA32 has to handle NMI occurred exactly at entry_sys_fast_ipc */
 EXCEPTION	0x02, vec02_nmi
 EXCEP_USR	0x03, vec03_breakpoint
 EXCEPTION	0x04, vec04_into

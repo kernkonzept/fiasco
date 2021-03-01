@@ -322,7 +322,7 @@ inst_abort_entry:
 
 	switch_to_kernel 4 0 1
 /**************************************************************************/
-/*prefetch_abort: @ A real prefetch abort occured --- handled as a page fault */
+/*prefetch_abort: @ A real prefetch abort occurred --- handled as a page fault */
 	stmdb	sp!, {r0 - r3, r12} 	@ Stack rest of user state
 	ldr	lr, [sp, #RF(PSR, 5*4)]	@ get spsr from stack
 	ands	lr, lr, #0x0f		@ Mask all but relevant mode bits
