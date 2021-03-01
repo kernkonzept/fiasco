@@ -276,7 +276,7 @@ Thread::unbind()
     Do only what's necessary to get a kernel thread started --
     skip all fancy stuff, no locking is necessary.
  */
-IMPLEMENT inline
+IMPLEMENT inline NEEDS["kernel_task.h"]
 Thread::Thread(Ram_quota *q, Context_mode_kernel)
   : Receiver(), Sender(), _quota(q), _del_observer(0), _magic(magic)
 {
