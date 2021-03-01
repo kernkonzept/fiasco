@@ -241,7 +241,7 @@ Thread::bind(Task *t, User<Utcb>::Ptr utcb)
 
 
 PUBLIC
-bool
+void
 Thread::unbind()
 {
   assert(   (!(state() & Thread_dead) && current() == this)
@@ -253,7 +253,7 @@ Thread::unbind()
       auto guard = lock_guard(_space.lock());
 
       if (_space.space() == Kernel_task::kernel_task())
-        return true;
+        return;
 
       old = static_cast<Task*>(_space.space());
       _space.space(Kernel_task::kernel_task());
@@ -269,8 +269,6 @@ Thread::unbind()
 
   if (old)
     delete old;
-
-  return true;
 }
 
 /** Cut-down version of Thread constructor; only for kernel threads
