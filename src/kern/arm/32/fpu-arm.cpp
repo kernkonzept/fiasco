@@ -275,9 +275,11 @@ Fpu::save_fpu_regs(Fpu_regs *r)
 {
   Mword tmp;
   asm volatile(".fpu neon\n"
-               "vstm   %0!, {d0-d15}   \n"
                "cmp    %2, #0          \n"
-               "vstmne %0!, {d16-d31}  \n"
+               "vstm   %0!, {d0-d15}   \n"
+               "beq 1f                 \n"
+               "vstm   %0!, {d16-d31}  \n"
+               "1:                     \n"
                : "=r" (tmp) : "0" (r->state), "r" (save_32r));
 }
 
@@ -287,9 +289,11 @@ Fpu::restore_fpu_regs(Fpu_regs *r)
 {
   Mword tmp;
   asm volatile(".fpu neon\n "
-               "vldm   %0!, {d0-d15}  \n"
                "cmp    %2, #0        \n"
-               "vldmne %0!, {d16-d31} \n"
+               "vldm   %0!, {d0-d15}  \n"
+               "beq 1f                 \n"
+               "vldm   %0!, {d16-d31} \n"
+               "1:                     \n"
                : "=r" (tmp) : "0" (r->state), "r" (save_32r));
 }
 
