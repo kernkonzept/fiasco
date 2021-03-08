@@ -27,11 +27,31 @@ class Receiver : public Context,  public Ref_cnt_obj
   MEMBER_OFFSET();
 
 public:
-  enum Rcv_state
+  struct Rcv_state
   {
-    Rs_not_receiving = false,
-    Rs_ipc_receive   = true,
-    Rs_irq_receive   = true + 1
+    enum S
+    {
+      Not_receiving = 0x00,
+      Open_wait_flag = 0x01,
+      Ipc_receive   = 0x02, // with closed wait
+      Ipc_open_wait = 0x03, // IPC with open wait
+      Irq_receive   = 0x05, // IRQ (alawys open wait)
+    };
+
+    S s;
+
+    constexpr Rcv_state(S s) noexcept : s(s) {}
+    Rcv_state() = default;
+    Rcv_state(Rcv_state const &) = default;
+    Rcv_state(Rcv_state &&) = default;
+    Rcv_state &operator = (Rcv_state const &) = default;
+    Rcv_state &operator = (Rcv_state &&) = default;
+    ~Rcv_state() = default;
+
+    constexpr explicit operator bool () const { return s; }
+    constexpr bool is_open_wait() const { return s & Open_wait_flag; }
+    constexpr bool is_irq() const { return s & 0x4; }
+    constexpr bool is_ipc() const { return s & 0x2; }
   };
 
   enum Abort_state
@@ -254,13 +274,13 @@ Receiver::sender_ok(const Sender *sender) const
   if (EXPECT_TRUE(!_partner
                   && (_sender_list.empty()
 		    || sender->is_head_of(&_sender_list))))
-    return Rs_ipc_receive;
+    return Rcv_state::Ipc_open_wait;
 
   // Check closed wait; test if this sender is really who we specified
   if (EXPECT_TRUE(sender == _partner))
-    return Rs_ipc_receive;
+    return Rcv_state::Ipc_receive;
 
-  return Rs_not_receiving;
+  return Rcv_state::Not_receiving;
 }
 
 //-----------------------------------------------------------------------------
@@ -271,12 +291,12 @@ Receiver::Rcv_state
 Receiver::vcpu_async_ipc(Sender const *sender) const
 {
   if (EXPECT_FALSE(state() & Thread_ipc_mask))
-    return Rs_not_receiving;
+    return Rcv_state::Not_receiving;
 
   Vcpu_state *vcpu = vcpu_state().access();
 
   if (EXPECT_FALSE(!vcpu_irqs_enabled(vcpu)))
-    return Rs_not_receiving;
+    return Rcv_state::Not_receiving;
 
   Receiver *self = const_cast<Receiver*>(this);
 
@@ -299,7 +319,7 @@ Receiver::vcpu_async_ipc(Sender const *sender) const
   self->set_partner(const_cast<Sender*>(sender));
   self->state_add_dirty(Thread_receive_wait);
   self->vcpu_save_state_and_upcall();
-  return Rs_irq_receive;
+  return Rcv_state::Irq_receive;
 }
 
 PUBLIC inline
