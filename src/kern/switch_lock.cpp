@@ -11,31 +11,20 @@ INTERFACE:
 class Context;
 
 
-/** A lock that implements priority inheritance.
+/**
+ * A lock that implements priority inheritance.
  *
- * The lock uses a validity checker (VALID) for doing an existence check
- * before the lock is actually acquired. With this mechanism the lock itself
- * may disappear while it is locked (see clear_no_switch_dirty() and 
- * switch_dirty()), even if it is under contention. When the lock no longer
- * exists VALID::valid(void const *lock) must return false, true if it
- * exists (see Switch_lock_valid). This mechanism is used in Thread_lock
- * when thread control blocks are deallocated.
+ * The lock uses a validity checker for doing an existence check before the lock
+ * is actually acquired. With this mechanism the lock itself may disappear while
+ * it is locked (see clear_no_switch_dirty() and switch_dirty()), even if it is
+ * under contention. When the lock no longer exists, valid() returns false.
  *
- * The operations lock(), lock_dirty(), try_lock(), test(), test_and_set(),
- * and test_and_set_dirty() may return #Invalid if the lock does 
- * no longer exist.
+ * The operations lock(), lock_dirty(), try_lock(), test(), test_and_set(), and
+ * test_and_set_dirty() may return #Invalid if the lock does no longer exist.
  *
- * The operations initialize(), lock_owner(), clear(), clear_dirty(), and
- * clear_no_switch_dirty() must not be called on any invalid lock,
- * thus the lock itself must be held for using these operations. 
- * (Except initialize(), which is only useful for locks that are always 
- * valid.)
- * 
- * @param VALID must be set to a validity checker for the lock.
- * 
- * The validity checker is used while acquiring the lock to test
- * if the lock itself exists. We assume that a lock may disappear
- * while we are blocked on it.
+ * The validity checker is used while acquiring the lock to test if the lock
+ * itself exists. We assume that a lock may disappear while we are blocked on
+ * it.
  */
 class Switch_lock
 {
@@ -51,7 +40,7 @@ private:
 
 public:
   /**
-   * @brief The result type of lock operations.
+   * The result type of lock operations.
    */
   enum Status 
   {
@@ -86,13 +75,14 @@ IMPLEMENTATION:
 #include "processor.h"
 
 
-// 
-// Switch_lock inlines 
+//
+// Switch_lock inlines
 //
 
 /**
- * Test if the lock is valid (uses the validity checker).
- * @return true if the lock really exists, false if not.
+ * Test if the lock is valid.
+ *
+ * \return true if the lock really exists, false if not.
  */
 PUBLIC
 inline
@@ -100,9 +90,12 @@ bool NO_INSTRUMENT
 Switch_lock::valid() const
 { return (_lock_owner & 1) == 0; }
 
-/** Initialize Switch_lock.  Call this function if you cannot
-    guarantee that your Switch_lock instance is allocated from
-    zero-initialized memory. */
+/**
+ * Initialize Switch_lock.
+ *
+ * Call this function if you cannot guarantee that your Switch_lock instance is
+ * allocated from zero-initialized memory.
+ */
 PUBLIC
 inline
 void NO_INSTRUMENT
@@ -111,9 +104,10 @@ Switch_lock::initialize()
   _lock_owner = 0;
 }
 
-/** Lock owner. 
- *  @pre The lock must be valid (see valid()).
- *  @return current owner of the lock.  0 if there is no owner.
+/**
+ * Lock owner.
+ *
+ * \return current owner of the lock. 0 if there is no owner.
  */
 PUBLIC
 inline NEEDS["lock_guard.h", "cpu_lock.h"]
@@ -124,9 +118,12 @@ Switch_lock::lock_owner() const
   return (Context*)(_lock_owner & ~1UL);
 }
 
-/** Is lock set?.
-    @return #Locked if lock is set, #Not_locked if not locked, and #Invalid if 
-            the lock does not exist (see valid()).
+/**
+ * Is lock set?
+ *
+ * \retval #Locked      The lock is set.
+ * \retval #Not_locked  The lock is not set.
+ * \retval #Invalid     The lock does not exist (see valid()).
  */
 PUBLIC
 inline NEEDS["lock_guard.h", "cpu_lock.h"]
@@ -140,11 +137,13 @@ Switch_lock::test() const
   return o ? Locked : Not_locked;
 }
 
-/** Try to acquire the lock.
-    @return #Locked if successful: current context is now the owner of the lock.
-            #Not_locked if lock has previously been set.  Returns Not_locked
-	    even if the current context is already the lock owner.
-	    The result is #Invalid if the lock does not exist (see valid()).
+/**
+ * Try to acquire the lock.
+ *
+ * \retval #Locked      Success: current context is now the lock owner.
+ * \retval #Not_locked  Lock already has an onwer. Returns #Not_locked even if
+ *                      the current context is already the lock owner.
+ * \retval #Invalid     The lock does not exist (see valid()).
  */
 
 inline NEEDS["atomic.h"]
@@ -165,12 +164,15 @@ Switch_lock::try_lock()
   return ret ? Locked : Not_locked;
 }
 
-/** Acquire the lock with priority inheritance.
- *  If the lock is occupied, lend the CPU to current lock owner until we are the
- *  lock owner.
- *  @return #Locked if the lock was already locked by the current context.
- *          #Not_locked if the current context got the lock (the usual case).
- *          #Invalid if the lock does not exist (see valid()).
+/**
+ * Acquire the lock with priority inheritance.
+ *
+ * If the lock is occupied, lend the CPU to current lock owner until we are the
+ * lock owner.
+ *
+ * \retval #Locked      The lock was already locked by the current context.
+ * \retval #Not_locked  The current context got the lock (the usual case).
+ * \retval #Invalid     The lock does not exist (see valid()).
  */
 PUBLIC
 Switch_lock::Status NO_INSTRUMENT
@@ -193,13 +195,10 @@ Switch_lock::help(Context *curr, Context *owner, Address owner_id)
     }
 }
 
-/** Acquire the lock with priority inheritance.
- *  If the lock is occupied, lend the CPU to current lock owner until we are the
- *  lock owner.
- *  @pre caller holds cpu lock
- *  @return #Locked if the lock was already locked by the current context.
- *          #Not_locked if the current context got the lock (the usual case).
- *          #Invalid if the lock does not exist (see valid()).
+/**
+ * \copydoc Switch_lock::lock()
+ *
+ * \pre caller holds cpu lock
  */
 PUBLIC
 inline NEEDS["context.h", "processor.h", Switch_lock::set_lock_owner]
@@ -237,9 +236,8 @@ Switch_lock::lock_dirty()
 }
 
 
-/** Acquire the lock with priority inheritance.
- *  @return #Locked if we owned the lock already.  #Not_locked otherwise.
- *          #Invalid is returned if the lock does not exist (see valid()).
+/**
+ * \copydoc Switch_lock::lock()
  */
 PUBLIC
 inline NEEDS["globals.h"]
@@ -249,10 +247,8 @@ Switch_lock::test_and_set()
   return lock();
 }
 
-/** Acquire the lock with priority inheritance (see test_and_set()).
- *  @return #Locked if we owned the lock already.  #Not_locked otherwise.
- *          #Invalid is returned if the lock does not exist (see valid()).
- *  @pre caller holds cpu lock
+/**
+ * \copydoc Switch_lock::lock_dirty()
  */
 PUBLIC
 inline NEEDS["globals.h"]
@@ -348,13 +344,16 @@ IMPLEMENTATION:
 
 /**
  * Clear the lock, however do not switch to a potential helper yet.
+ *
  * This function is used when the lock must be cleared and the object
  * containing the lock will be deallocated atomically. We have to do the
  * switch later using switch_dirty(Lock_context).
- * @return the context for a later switch_dirty()
- * @pre The lock must be valid (see valid()).
- * @pre caller hold cpu lock
- * @post switch_dirty() must be called in the same atomical section
+ *
+ * \return the context for a later switch_dirty()
+ *
+ * \pre caller holds cpu lock
+ *
+ * \post switch_dirty() must be called in the same atomical section
  */
 PROTECTED
 inline NEEDS[Switch_lock::clear_lock_owner, "context.h"]
@@ -371,10 +370,12 @@ Switch_lock::clear_no_switch_dirty()
 
 /**
  * Do the switch part of clear() after a clear_no_switch_dirty().
- * This function does not touch the lock itself (may be called on 
+ * This function does not touch the lock itself (may be called on
  * an invalid lock).
- * @param c the context returned by a former clear_no_switch_dirty().
- * @pre must be called atomically with clear_no_switch_dirty(),
+ *
+ * \param c  the context returned by a former clear_no_switch_dirty().
+ *
+ * \pre must be called atomically with clear_no_switch_dirty(),
  *      under the same cpu lock
  */
 PROTECTED
@@ -406,13 +407,13 @@ Switch_lock::switch_dirty(Lock_context const &c)
     schedule(curr);
 }
 
-/** Free the lock.  
-    Return the CPU to helper if there is one, since it had to have a
-    higher priority to be able to help (priority may be its own, it
-    may run on a donated timeslice or round robin scheduling may have
-    selected a thread on the same priority level as me)
-
-    @pre The lock must be valid (see valid()).
+/**
+ * Free the lock.
+ *
+ * Return the CPU to helper if there is one, since it had to have a
+ * higher priority to be able to help (priority may be its own, it
+ * may run on a donated timeslice or round robin scheduling may have
+ * selected a thread on the same priority level as me)
  */
 PUBLIC
 void NO_INSTRUMENT
@@ -431,15 +432,16 @@ Switch_lock::set(Status s)
     clear();
 }
 
-/** Free the lock.
-    Return the CPU to helper if there is one, since it had to have a
-    higher priority to be able to help (priority may be its own, it
-    may run on a donated timeslice or round robin scheduling may have
-    selected a thread on the same priority level as me).
-    If _lock_owner is 0, then this is a no op
-
-    @pre The lock must be valid (see valid())
-    @pre caller holds cpu lock
+/**
+ * Free the lock.
+ *
+ * Return the CPU to helper if there is one, since it had to have a
+ * higher priority to be able to help (priority may be its own, it
+ * may run on a donated timeslice or round robin scheduling may have
+ * selected a thread on the same priority level as me).
+ * If _lock_owner is 0, then this is a no op
+ *
+ * \pre caller holds cpu lock
  */
 PUBLIC
 inline
