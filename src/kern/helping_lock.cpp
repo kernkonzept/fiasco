@@ -8,10 +8,12 @@ INTERFACE:
 #endif
 #define NO_INSTRUMENT __attribute__((no_instrument_function))
 
-/** A wrapper for Switch_lock that works even when the threading system
-    has not been intialized yet.
-    This wrapper is necessary because most lock-protected objects are 
-    initialized before the threading system has been fired up.
+/**
+ * A wrapper for Switch_lock that works even when the threading system
+ * has not been intialized yet.
+ *
+ * This wrapper is necessary because most lock-protected objects are
+ * initialized before the threading system has been fired up.
  */
 class Helping_lock : private Switch_lock
 {
@@ -49,8 +51,11 @@ Helping_lock::Helping_lock ()
   Switch_lock::initialize();
 }
 
-/** Acquire the lock with priority inheritance.
-    @return true if we owned the lock already.  false otherwise.
+/**
+ * \copydoc Switch_lock::test_and_set()
+ *
+ * A return value of #Not_Locked may also indicate that the threading system is
+ * not yet activated.
  */
 PUBLIC inline
 Helping_lock::Status NO_INSTRUMENT
@@ -62,10 +67,7 @@ Helping_lock::test_and_set ()
   return Switch_lock::test_and_set();
 }
 
-/** Acquire the lock with priority inheritance.
-    If the lock is occupied, enqueue in list of helpers and lend CPU 
-    to current lock owner until we are the lock owner.
- */
+/// \copydoc test_and_set()
 PUBLIC inline NEEDS ["panic.h"]
 Helping_lock::Status NO_INSTRUMENT
 Helping_lock::lock ()
@@ -73,8 +75,11 @@ Helping_lock::lock ()
   return test_and_set();
 }
 
-/** Is lock set?.
-    @return true if lock is set.
+/**
+ * \copydoc Switch_lock::test()
+ *
+ * A return value of #Not_Locked may also indicate that the threading system is
+ * not activated yet.
  */
 PUBLIC inline NEEDS["std_macros.h"]
 Helping_lock::Status NO_INSTRUMENT
@@ -86,10 +91,7 @@ Helping_lock::test ()
   return Switch_lock::test();
 }
 
-/** Free the lock.
-    Return the CPU to helper or next lock owner, whoever has the higher 
-    priority, given that thread's priority is higher that our's.
- */
+/// \copydoc Switch_lock::clear()
 PUBLIC inline NEEDS["std_macros.h"]
 void NO_INSTRUMENT
 Helping_lock::clear()
@@ -108,8 +110,11 @@ Helping_lock::set(Status s)
     clear();
 }
 
-/** Lock owner. 
-    @return current owner of the lock.  0 if there is no owner.
+/**
+ * \copydoc Switch_lock::lock_owner()
+ *
+ * A return value of `current()` may also indicate that the threading system is
+ * not activated yet.
  */
 PUBLIC inline NEEDS["std_macros.h", "globals.h"]
 Context* NO_INSTRUMENT
