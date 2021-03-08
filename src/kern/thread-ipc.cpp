@@ -30,12 +30,31 @@ class Syscall_frame;
 EXTENSION class Thread
 {
 protected:
-  enum class Check_sender
+  struct Check_sender
   {
-    Ok = 0,
-    Queued = 2,
-    Done = 4,
-    Failed = 1,
+    enum R
+    {
+      Ok = 0,
+      Open_wait_flag = 0x1,
+      Queued = 2,
+      Done   = 4,
+      Failed = 5,
+    };
+
+    static_assert((unsigned)Rcv_state::Open_wait_flag == (unsigned)Open_wait_flag,
+                  "Rcv_state and Check_sender flags must be compatible");
+
+    R s;
+
+    constexpr Check_sender(Receiver::Rcv_state s)
+    : s((R)(s.s & Open_wait_flag))
+    {}
+
+    constexpr Check_sender(R s) noexcept : s(s) {}
+    Check_sender() = default;
+
+    constexpr bool is_ok() const { return !(s & ~1u); }
+    constexpr bool is_open_wait() const { return s & Open_wait_flag; }
   };
 
   struct Ipc_remote_request
@@ -294,21 +313,19 @@ Thread::check_sender(Thread *sender, bool timeout)
       return Check_sender::Failed;
     }
 
-  if (EXPECT_FALSE(!sender_ok(sender)))
-    {
-      if (!timeout)
-        {
-          sender->utcb().access()->error = L4_error::Timeout;
-          return Check_sender::Failed;
-        }
+  if (auto ok = sender_ok(sender))
+    return ok;
 
-      sender->set_wait_queue(sender_list());
-      sender->sender_enqueue(sender_list(), sender->sched_context()->prio());
-      vcpu_set_irq_pending();
-      return Check_sender::Queued;
+  if (!timeout)
+    {
+      sender->utcb().access()->error = L4_error::Timeout;
+      return Check_sender::Failed;
     }
 
-  return Check_sender::Ok;
+  sender->set_wait_queue(sender_list());
+  sender->sender_enqueue(sender_list(), sender->sched_context()->prio());
+  vcpu_set_irq_pending();
+  return Check_sender::Queued;
 }
 
 /**
@@ -377,17 +394,19 @@ Thread::handshake_receiver(Thread *partner, L4_timeout snd_t)
 {
   assert(cpu_lock.test());
 
-  switch (expect(partner->check_sender(this, !snd_t.is_zero()), Check_sender::Ok))
+  Check_sender r = partner->check_sender(this, !snd_t.is_zero());
+  switch (r.s)
     {
     case Check_sender::Failed:
-      return Check_sender::Failed;
+      break;
     case Check_sender::Queued:
       state_add_dirty(Thread_send_wait);
-      return Check_sender::Queued;
-    default:
+      break;
+    default: // Ok
       partner->state_change_dirty(~(Thread_ipc_mask | Thread_ready), Thread_ipc_transfer);
-      return Check_sender::Ok;
+      break;
     }
+  return r;
 }
 
 PRIVATE inline
@@ -501,7 +520,7 @@ Thread::do_ipc(L4_msg_tag const &tag, bool have_send, Thread *partner,
           current_cpu = ::current_cpu();
         }
 
-      switch (expect(result, Check_sender::Ok))
+      switch (result.s)
         {
         case Check_sender::Done:
           ok = true;
@@ -529,7 +548,7 @@ Thread::do_ipc(L4_msg_tag const &tag, bool have_send, Thread *partner,
             partner->reset_timeout();
 
           ok = transfer_msg(tag, partner, regs, rights,
-                            !partner->has_partner());
+                            result.is_open_wait());
 
           // transfer is also a possible migration point
           current_cpu = ::current_cpu();
@@ -1128,7 +1147,8 @@ Thread::remote_ipc_send(Ipc_remote_request *rq)
          rq->timeout);
 #endif
 
-  switch (expect(rq->partner->check_sender(this, rq->timeout), Check_sender::Ok))
+  Check_sender r = rq->partner->check_sender(this, rq->timeout);
+  switch (r.s)
     {
     case Check_sender::Failed:
       xcpu_state_change(~Thread_ipc_mask, 0);
@@ -1154,11 +1174,11 @@ Thread::remote_ipc_send(Ipc_remote_request *rq)
       //LOG_MSG_3VAL(rq->partner, "pull", dbg_id(), 0, 0);
       xcpu_state_change(~Thread_send_wait, Thread_ready);
       rq->partner->state_change_dirty(~(Thread_ipc_mask | Thread_ready), Thread_ipc_transfer);
-      rq->result = Check_sender::Ok;
+      rq->result = r;
       return true;
     }
   bool success = transfer_msg(rq->tag, rq->partner, rq->regs, _ipc_send_rights,
-                              !rq->partner->has_partner());
+                              r.is_open_wait());
   if (success && rq->have_rcv)
     xcpu_state_change(~Thread_send_wait, Thread_receive_wait);
   else
