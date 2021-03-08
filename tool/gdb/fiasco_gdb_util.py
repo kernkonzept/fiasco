@@ -181,7 +181,7 @@ class Fiasco_tbuf(gdb.Command):
        "Mu_log::Map_log": "map",
        "Mu_log::Unmap_log": "unmap",
        "Rcu::Log_rcu": "rcu",
-       "Task::Log_unmap": "tunmap",
+       "Task::Log_map_unmap": "tmap",
        "Tb_entry_bp" : "bp",
        "Tb_entry_ctx_sw": "context_switch",
        "Tb_entry_ipc": "ipc",
@@ -395,15 +395,17 @@ class Fiasco_tbuf(gdb.Command):
     print("Querying Tb_entry types. This might take a while.")
     # Is there any faster way of doing this?
     output = gdb.execute("info types", False, True)
-    regexp = re.compile('^(\S+);$') # should fetch all we need
+    regexp = re.compile('^(?:\d+:\s+)?(\S+);$') # should fetch all we need
     types = []
     for line in output.split('\n'):
       m = regexp.match(line)
       if m:
-        t = gdb.lookup_type(m.group(1))
-        if "Tb_entry" in t and t["Tb_entry"].is_base_class:
-          types.append(t)
-
+        try:
+          t = gdb.lookup_type(m.group(1))
+          if "Tb_entry" in t and t["Tb_entry"].is_base_class:
+            types.append(t)
+        except gdb.error:
+          pass
     return types
 
   def invoke(self, arg, from_tty):
