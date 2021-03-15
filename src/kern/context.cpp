@@ -179,7 +179,6 @@ public:
 
     typedef Result (Request_func)(Drq *, Context *target, void *);
     enum Wait_mode { No_wait = 0, Wait = 1 };
-    enum Exec_mode { Target_ctxt = 0, Any_ctxt = 1 };
     // enum State { Idle = 0, Handled = 1, Reply_handled = 2 };
 
     Request_func *func;
@@ -1209,7 +1208,7 @@ Context::Drq_q::execute_request(Drq *r, Drop_mode drop, bool local)
               return need_resched || !(c->state() & Thread_ready_mask);
             }
           else
-            need_resched |= c->enqueue_drq(r, Drq::Target_ctxt);
+            need_resched |= c->enqueue_drq(r);
         }
     }
   return need_resched;
@@ -1436,7 +1435,6 @@ Context::xcpu_state_change(Mword mask, Mword add, bool lazy_q = false)
 PUBLIC inline NEEDS[Context::enqueue_drq, "logdefs.h"]
 void
 Context::drq(Drq *drq, Drq::Request_func *func, void *arg,
-             Drq::Exec_mode exec = Drq::Target_ctxt,
              Drq::Wait_mode wait = Drq::Wait)
 {
   if (0)
@@ -1461,7 +1459,7 @@ Context::drq(Drq *drq, Drq::Request_func *func, void *arg,
     cur->state_add(Thread_drq_wait);
 
 
-  enqueue_drq(drq, exec);
+  enqueue_drq(drq);
 
   //LOG_MSG_3VAL(src, "<drq", src->state(), Mword(this), 0);
   while (wait == Drq::Wait && cur->state() & Thread_drq_wait)
@@ -1504,9 +1502,8 @@ Context::kernel_context_drq(Drq::Request_func *func, void *arg)
 PUBLIC inline NEEDS[Context::drq]
 void
 Context::drq(Drq::Request_func *func, void *arg,
-             Drq::Exec_mode exec = Drq::Target_ctxt,
              Drq::Wait_mode wait = Drq::Wait)
-{ return drq(&current()->_drq, func, arg, exec, wait); }
+{ return drq(&current()->_drq, func, arg, wait); }
 
 PRIVATE static
 bool
@@ -1609,7 +1606,7 @@ Context::pending_rqq_enqueue()
 
 PUBLIC
 bool
-Context::enqueue_drq(Drq *rq, Drq::Exec_mode /*exec*/)
+Context::enqueue_drq(Drq *rq)
 {
   assert (cpu_lock.test());
 
@@ -2092,7 +2089,7 @@ Context::_deq_exec_drq(Drq *rq, bool offline_cpu = false)
 
 PUBLIC
 bool
-Context::enqueue_drq(Drq *rq, Drq::Exec_mode /*exec*/)
+Context::enqueue_drq(Drq *rq)
 {
   assert (cpu_lock.test());
 

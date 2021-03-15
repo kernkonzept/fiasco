@@ -617,7 +617,7 @@ Thread_object::sys_ex_regs(L4_msg_tag const &tag, Utcb *utcb, Utcb *out)
   params.thread = current_thread();
   params.have_recv = (utcb == out);
 
-  drq(handle_remote_ex_regs, &params, Drq::Any_ctxt);
+  drq(handle_remote_ex_regs, &params);
   return params.result;
 }
 
@@ -687,7 +687,7 @@ Thread_object::sys_thread_stats(L4_msg_tag const &/*tag*/, Utcb const * /*utcb*/
   Clock::Time value;
 
   if (home_cpu() != current_cpu())
-    drq(handle_sys_thread_stats_remote, &value, Drq::Any_ctxt);
+    drq(handle_sys_thread_stats_remote, &value);
   else
     {
       // Respect the fact that the consumed time is only updated on context switch

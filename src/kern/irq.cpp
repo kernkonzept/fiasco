@@ -377,7 +377,7 @@ Irq_sender::handle_remote_hit(Context::Drq *, Context *target, void *arg)
     }
   else
     t->drq(&irq->_drq, handle_remote_hit, irq,
-           Context::Drq::Target_ctxt, Context::Drq::No_wait);
+           Context::Drq::No_wait);
 
   return Context::Drq::no_answer();
 }
@@ -404,7 +404,7 @@ Irq_sender::send()
 
   if (EXPECT_FALSE(t->home_cpu() != current_cpu()))
     t->drq(&_drq, handle_remote_hit, this,
-           Context::Drq::Target_ctxt, Context::Drq::No_wait);
+           Context::Drq::No_wait);
   else
     send_msg(t, true);
 }
