@@ -80,7 +80,7 @@ Queue::enqueue(Queue_item *i)
 
 PUBLIC inline NEEDS["assert.h", "std_macros.h"]
 bool
-Queue::dequeue(Queue_item *i, Queue_item::Status reason)
+Queue::dequeue(Queue_item *i)
 {
   assert (_m.head().test());
   assert (i->queued());
@@ -89,7 +89,6 @@ Queue::dequeue(Queue_item *i, Queue_item::Status reason)
     return false;
 
   _m.remove(i);
-  i->_q = (Queue*)reason;
   return true;
 }
 

@@ -7,8 +7,6 @@ class Queue;
 class Queue_item : public cxx::D_list_item
 {
   friend class Queue;
-public:
-  enum Status { Ok, Retry, Invalid };
 
 private:
   Queue *_q;
@@ -31,13 +29,5 @@ Queue_item::queue() const
 {
   assert (queued());
   return _q;
-}
-
-PUBLIC inline NEEDS["assert.h"]
-Queue_item::Status
-Queue_item::status() const
-{
-  assert (!queued());
-  return Status((unsigned long)_q);
 }
 

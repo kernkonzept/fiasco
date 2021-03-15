@@ -1211,7 +1211,7 @@ Thread::migrate_away(Migration *inf, bool remote)
       assert (q.q_lock()->test());
       // potentially dequeue from our local queue
       if (_pending_rq.queued())
-        check (q.dequeue(&_pending_rq, Queue_item::Ok));
+        check (q.dequeue(&_pending_rq));
 
       Sched_context *sc = sched_context();
       sc->set(inf->sp);

@@ -105,7 +105,7 @@ class Cpu_call_queue : public Queue
 {
 public:
   void enq(Cpu_call *rq);
-  bool dequeue(Cpu_call *drq, Queue_item::Status reason);
+  bool dequeue(Cpu_call *drq);
   bool handle_requests();
   bool execute_request(Cpu_call *r);
 };
@@ -136,12 +136,12 @@ Cpu_call_queue::execute_request(Cpu_call *r)
 
 IMPLEMENT inline NEEDS["lock_guard.h"]
 bool
-Cpu_call_queue::dequeue(Cpu_call *r, Queue_item::Status reason)
+Cpu_call_queue::dequeue(Cpu_call *r)
 {
   auto guard = lock_guard(q_lock());
   if (!r->queued())
     return false;
-  return Queue::dequeue(r, reason);
+  return Queue::dequeue(r);
 }
 
 IMPLEMENT inline NEEDS["mem.h", "lock_guard.h", "globals.h"]
@@ -158,7 +158,7 @@ Cpu_call_queue::handle_requests()
           if (!qi)
             return need_resched;
 
-          check (Queue::dequeue(qi, Queue_item::Ok));
+          check (Queue::dequeue(qi));
         }
 
       Cpu_call *r = static_cast<Cpu_call*>(qi);
@@ -220,7 +220,7 @@ Cpu_call::remote_call(Cpu_number cpu, bool async)
   if (EXPECT_FALSE(!Cpu::online(cpu)))
     {
       Mem::mp_mb();
-      if (q.dequeue(this, Queue_item::Ok) && !async)
+      if (q.dequeue(this) && !async)
         done();
       assert (is_done(async));
       return false;

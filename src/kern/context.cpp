@@ -198,7 +198,7 @@ public:
   public:
     enum Drop_mode { Drop = true, No_drop = false };
     void enq(Drq *rq);
-    bool dequeue(Drq *drq, Queue_item::Status reason);
+    bool dequeue(Drq *drq);
     bool handle_requests(Drop_mode drop = No_drop);
     bool execute_request(Drq *r, Drop_mode drop, bool local);
   };
@@ -1217,12 +1217,12 @@ Context::Drq_q::execute_request(Drq *r, Drop_mode drop, bool local)
 
 IMPLEMENT inline NEEDS["lock_guard.h"]
 bool
-Context::Drq_q::dequeue(Drq *drq, Queue_item::Status reason)
+Context::Drq_q::dequeue(Drq *drq)
 {
   auto guard = lock_guard(q_lock());
   if (!drq->queued())
     return false;
-  return Queue::dequeue(drq, reason);
+  return Queue::dequeue(drq);
 }
 
 IMPLEMENT inline NEEDS["mem.h", "lock_guard.h"]
@@ -1241,7 +1241,7 @@ Context::Drq_q::handle_requests(Drop_mode drop)
           if (!qi)
             return need_resched;
 
-          check (Queue::dequeue(qi, Queue_item::Ok));
+          check (Queue::dequeue(qi));
         }
 
       Drq *r = static_cast<Drq*>(qi);
@@ -1913,7 +1913,7 @@ Context::Pending_rqq::handle_requests(Context **mq)
           if (!qi)
             return resched;
 
-          check (dequeue(qi, Queue_item::Ok));
+          check (dequeue(qi));
           c = static_cast<Context::Pending_rq *>(qi)->context();
         }
 
@@ -2081,7 +2081,7 @@ PRIVATE inline
 bool
 Context::_deq_exec_drq(Drq *rq, bool offline_cpu = false)
 {
-  if (!_drq_q.dequeue(rq, Queue_item::Ok))
+  if (!_drq_q.dequeue(rq))
     return false; // already handled
 
   if (!drq_pending() && EXPECT_FALSE(state(false) & Thread_drq_ready))
@@ -2162,7 +2162,7 @@ Context::shutdown_drqs()
     {
       auto guard = lock_guard(_pending_rq.queue()->q_lock());
       if (_pending_rq.queued())
-        _pending_rq.queue()->dequeue(&_pending_rq, Queue_item::Ok);
+        _pending_rq.queue()->dequeue(&_pending_rq);
     }
 
   _drq_q.handle_requests(Drq_q::Drop);
