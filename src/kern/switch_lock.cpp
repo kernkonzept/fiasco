@@ -19,7 +19,7 @@ class Context;
  * it is locked (see clear_no_switch_dirty() and switch_dirty()), even if it is
  * under contention. When the lock no longer exists, valid() returns false.
  *
- * The operations lock(), lock_dirty(), try_lock(), test(), test_and_set(), and
+ * The operations lock(), lock_dirty(), test(), test_and_set(), and
  * test_and_set_dirty() may return #Invalid if the lock does no longer exist.
  *
  * The validity checker is used while acquiring the lock to test if the lock
@@ -138,33 +138,6 @@ Switch_lock::test() const
 }
 
 /**
- * Try to acquire the lock.
- *
- * \retval #Locked      Success: current context is now the lock owner.
- * \retval #Not_locked  Lock already has an onwer. Returns #Not_locked even if
- *                      the current context is already the lock owner.
- * \retval #Invalid     The lock does not exist (see valid()).
- */
-
-inline NEEDS["atomic.h"]
-Switch_lock::Status NO_INSTRUMENT
-Switch_lock::try_lock()
-{
-  auto guard = lock_guard(cpu_lock);
-
-  if (EXPECT_FALSE(!valid()))
-    return Invalid;
-
-  Context *c = current();
-  bool ret = set_lock_owner(c);
-
-  if (ret)
-    c->inc_lock_cnt();	// Do not lose this lock if current is deleted
-
-  return ret ? Locked : Not_locked;
-}
-
-/**
  * Acquire the lock with priority inheritance.
  *
  * If the lock is occupied, lend the CPU to current lock owner until we are the
@@ -267,6 +240,11 @@ Switch_lock::clear_lock_owner()
   _lock_owner &= 1;
 }
 
+/**
+ * Set the lock owner.
+ *
+ * \pre must only be called on a free lock
+ */
 PRIVATE inline
 bool NO_INSTRUMENT
 Switch_lock::set_lock_owner(Context *o)
