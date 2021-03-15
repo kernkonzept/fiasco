@@ -43,4 +43,5 @@ $(foreach tname,$(UTEST_TESTS),\
 endif
 
 clean-UTEST:
-	rm -rf $(OBJ_UTEST)
+	$(RM) $(OBJ_UTEST) $(addprefix utest/,$(UTEST_TESTS)) \
+		$(patsubst %,%.debug,$(UTEST_TESTS))
