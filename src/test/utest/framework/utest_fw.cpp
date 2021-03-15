@@ -9,6 +9,7 @@ INTERFACE:
 #include <cxx/type_traits>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 
 #include "l4_error.h"
 
@@ -59,8 +60,11 @@ public:
   { return _group_name ? _group_name : "No_group"; }
 
 private:
-  int _done = 0;
-  int _failed = 0;
+  int _num_tests = 0;
+  int _sum_failed = 0;
+  unsigned _instance_counter = 0;
+  // prevent printing of multiple TAP lines per test
+  bool _tap_line_printed = false;
   char const *_group_name = nullptr;
   char const *_test_name = nullptr;
 };
@@ -179,13 +183,17 @@ PUBLIC inline
 void
 Utest_fw::finish()
 {
-  printf("\nKUT 1..%i\n", _done);
+  // finish previous test if there is one.
+  if (_num_tests > 0)
+    test_done();
+
+  printf("\nKUT 1..%i\n", _num_tests);
   printf("\nKUT TAP TEST FINISHED\n");
 
   if (gcov_print)
     gcov_print();
 
-  exit(_failed);
+  exit(_sum_failed);
 }
 
 /// Use a new `group` and `test` name for subsequent TAP output.
@@ -198,17 +206,83 @@ Utest_fw::name_group_test(char const *group, char const *test)
 }
 
 /**
- * Print a TAP result line.
+ * Start a new test with new `group` and `test` name.
  *
- * \param success  Print an ok or not ok prefix.
- * \param msg      Test message to include in the output.
+ * When the same group and test name are used as the previous test, an instance
+ * counter is incremented.
+ *
+ * \note It is forbidden to use the same group and test name for
+ *       non-consecutive tests. This also contradicts a shuffle feature.
  */
 PUBLIC inline
 void
-Utest_fw::tap_msg(bool success, char const *msg) const
+Utest_fw::new_test(char const *group, char const *test)
 {
-  printf("\nKUT %s %i %s::%s - %s\n", success ? "ok" : "not ok", _done,
-         group_name(), test_name(), msg);
+  // finish previous test if this isn't the first.
+  if (_num_tests > 0)
+    test_done();
+
+  ++_num_tests;
+  // initialize for new test.
+  _tap_line_printed = false;
+
+  // same group and test name as before.
+  if (   group && test && _group_name && _test_name
+      && !strcmp(group, _group_name) && !strcmp(test, _test_name))
+    ++_instance_counter;
+  else
+    {
+      _instance_counter = 0;
+      name_group_test(group, test);
+    }
+
+  Utest_debug().printf("New test %s::%s/%u\n", group, test, _instance_counter);
+}
+
+/// Emit a TAP line for the current test, if the TAP Line wasn't printed before.
+PUBLIC inline
+void
+Utest_fw::test_done()
+{
+  // tap_msg() checks if a TAP line was already printed, if it wasn't the test
+  // was successful.
+  tap_msg(true);
+}
+
+/**
+ * Print a TAP result line.
+ *
+ * \param success    Print an ok or not ok prefix.
+ * \param msg        (Optional) A message to print with the `todo_skip` marker.
+ * \param todo_skip  (Optional) A TAP TODO or SKIP marker.
+ *
+ * \note This is printed once for each test. The first failing statement prints
+ *       this line.
+ */
+PUBLIC inline
+void
+Utest_fw::tap_msg(bool success,
+                  char const *msg = nullptr,
+                  char const *todo_skip = nullptr)
+{
+  // Print a TAP line only once per test.
+  if (_tap_line_printed)
+    return;
+
+  _tap_line_printed = true;
+
+  // Print in a single printf statement to avoid line splitting in SMP setups.
+  if (_instance_counter == 0)
+    printf("\nKUT %s %i %s::%s %s%s\n", success ? "ok" : "not ok", _num_tests,
+           group_name(), test_name(),
+           todo_skip ? todo_skip : "",
+           msg ? msg : "");
+  else
+    printf("\nKUT %s %i %s::%s/%u %s%s\n", success ? "ok" : "not ok", _num_tests,
+           group_name(), test_name(),
+           _instance_counter,
+           todo_skip ? todo_skip : "",
+           msg ? msg : "");
 }
 
 /**
@@ -218,16 +292,18 @@ Utest_fw::tap_msg(bool success, char const *msg) const
  *
  * A TODO test is always considered a failure. The test count and failure
  * count are increased accordingly.
+ *
+ * \note tap_todo() must be called after new_test() and before the first
+ *       UTEST_ macro.
  */
 PUBLIC inline
 void
 Utest_fw::tap_todo(char const *msg)
 {
-  ++_done;
-  ++_failed;
+  // If tap_msg() was called before for this test, this call has no effect.
+  tap_msg(false, msg, "# TODO ");
 
-  printf("\nKUT not ok %s::%s %i # TODO %s\n", group_name(), test_name(), _done,
-         msg);
+  ++_sum_failed;
 }
 
 /**
@@ -246,15 +322,16 @@ void
 Utest_fw::tap_msg_bad(A &&lhs, B &&rhs,
                       char const *lhs_str, char const *op,
                       char const *rhs_str, char const *msg,
-                      char const *file, int line) const
+                      char const *file, int line)
 {
-  tap_msg(false, msg);
+  tap_msg(false);
 
   printf("\nKUT # Assertion failure: %s:%i\n", file, line);
   print_eval("LHS", cxx::forward<A>(lhs), lhs_str);
   print_eval("RHS", cxx::forward<B>(rhs), rhs_str);
 
-  printf("\nKUT #\t%s %s %s\n",lhs_str, op, rhs_str);
+  printf("\nKUT #\t%s %s %s\n", lhs_str, op, rhs_str);
+  printf("\nKUT # %s\n", msg);
 }
 
 /**
@@ -281,15 +358,17 @@ Utest_fw::binary_cmp(bool finish_on_failure, bool result,
                      char const *op, char const *msg,
                      char const *file, int line)
 {
-  ++_done;
-
   if (result)
-    tap_msg(true, msg);
+    {
+      // Print debug output, not a TAP line.
+      Utest_debug().printf("%s::%s/%u - %s (line %i)\n", group_name(),
+                           test_name(), _instance_counter, msg, line);
+    }
   else
     {
       tap_msg_bad(cxx::forward<A>(lhs), cxx::forward<B>(rhs), lhs_str, op,
                   rhs_str, msg, file, line);
-      ++_failed;
+      ++_sum_failed;
       if (finish_on_failure)
         finish();
     }
