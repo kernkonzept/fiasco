@@ -240,7 +240,7 @@ Fpu::emulate_insns(Mword opcode, Trap_state *ts)
       ts->r[rt] = Fpu::mvfr0();
       break;
     default:
-      assert(0);
+      return false;
     }
 
   if (ts->psr & Proc::Status_thumb)
