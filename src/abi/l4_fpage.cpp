@@ -335,9 +335,10 @@ public:
 
 
   /**
-   * Remove the given rights from this flex page.
-   * \param r the rights to remove. The semantics depend on the
-   *          type (type()) of the flex page.
+   * Mask the flex page with the given rights.
+   *
+   * \param r Rights mask. All rights missing in the mask are removed.
+   *          The semantics depend on the type (type()) of the flex page.
    */
   void mask_rights(Rights r) { _raw &= (Mword(cxx::int_value<Rights>(r)) | ~_rights_bfm_t::Mask); }
 };
