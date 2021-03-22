@@ -178,9 +178,14 @@ Define the symbol `void init_workload()` and place your code in this function.
 void
 init_workload()
 {
-  Utest_fw::tap_log.start("group_name", "test_name");
+  Utest_fw::tap_log.start();
+  Utest_fw::new_test("group_name", "test_name");
 
   UTEST_EQ(Utest::Assert, A, B, <MSG>);
+
+  Utest_fw::new_test("group_nameX", "test_nameX");
+
+  UTEST_EQ(Utest::Assert, C, D, <MSG>);
 
   Utest_fw::tap_log.finish();
 }
@@ -190,8 +195,10 @@ Instead of `Assert` you can use `Expect` as first macro parameter. Then the
 test will not terminate, if the comparison returns false.
 
 To allow for post-processing please provide a group and a test name to the
-framework with `Utest_fw::tap_log.start()`.
-You need to call `Utest_fw::tap_log.finish()` at the end of the test.
+framework with `Utest_fw::tap_log.new_test()`.
+This allows to create a TAP line for each finished test.
+
+You need to call `Utest_fw::tap_log.finish()` at the end of the test suite.
 
 All supported `UTEST_` macros are listed in `utest_fw.cpp`.
 
