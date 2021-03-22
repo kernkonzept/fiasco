@@ -156,7 +156,7 @@ Kmem_alloc::free_array(T *b, unsigned elems)
 {
   for (unsigned i = 0; i < elems; ++i)
     b[i].~T();
-  this->free(b, Bytes(sizeof(T) * elems));
+  this->free(Bytes(sizeof(T) * elems), b);
 }
 
 PUBLIC
