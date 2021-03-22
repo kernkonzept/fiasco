@@ -513,7 +513,6 @@ Thread::do_ipc(L4_msg_tag const &tag, Thread *partner,
   assert (this == current());
 
   bool do_switch = false;
-  bool have_receive_part = have_receive;
 
   assert (!(state() & Thread_ipc_mask));
 
@@ -632,15 +631,10 @@ Thread::do_ipc(L4_msg_tag const &tag, Thread *partner,
     {
       if ((state() & Thread_full_ipc_mask) == Thread_receive_wait)
         goto_sleep(t.rcv, sender, utcb().access(true));
+    }
 
-      if (sender && sender == partner)
-        partner->reset_caller(this);
-    }
-  else if (have_receive_part)
-    {
-      if (sender && sender == partner)
-        partner->reset_caller(this);
-    }
+  if (sender && sender == partner)
+    partner->reset_caller(this);
 
   Mword state = this->state();
 
