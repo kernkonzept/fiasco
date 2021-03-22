@@ -164,7 +164,7 @@ void *
 Kmem_alloc::alloc(Bytes size)
 {
   const size_t sz = cxx::int_value<Bytes>(size);
-  assert(sz >= 8 /* NEW INTERFACE PARANIOIA */);
+  assert(sz >= 8 /* NEW INTERFACE PARANOIA */);
   void* ret;
 
   {
@@ -188,7 +188,7 @@ void
 Kmem_alloc::free(Bytes size, void *page)
 {
   const size_t sz = cxx::int_value<Bytes>(size);
-  assert(sz >= 8 /* NEW INTERFACE PARANIOIA */);
+  assert(sz >= 8 /* NEW INTERFACE PARANOIA */);
   auto guard = lock_guard(lock);
   a->free(page, sz);
 }
