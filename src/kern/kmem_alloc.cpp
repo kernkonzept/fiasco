@@ -15,6 +15,8 @@ template<typename Q> class Kmem_q_alloc;
 
 class Kmem_alloc
 {
+  friend class Kmem_alloc_tester;
+
   Kmem_alloc();
 
 public:
