@@ -89,11 +89,11 @@ Signed64 Perf_cnt_arch::hold_watchdog;
 Perf_cnt_arch::Event Perf_cnt_arch::pmc_event[Perf_cnt::Max_slot];
 char  Perf_cnt_arch::pmc_alloc[Perf_cnt::Max_pmc];
 
-static Perf_cnt_p5 perf_cnt_p5 __attribute__ ((init_priority(PERF_CNT_INIT_PRIO)));
-static Perf_cnt_p6 perf_cnt_p6 __attribute__ ((init_priority(PERF_CNT_INIT_PRIO)));
-static Perf_cnt_k7 perf_cnt_k7 __attribute__ ((init_priority(PERF_CNT_INIT_PRIO)));
-static Perf_cnt_p4 perf_cnt_p4 __attribute__ ((init_priority(PERF_CNT_INIT_PRIO)));
-static Perf_cnt_ap perf_cnt_ap __attribute__ ((init_priority(PERF_CNT_INIT_PRIO)));
+static Perf_cnt_p5 perf_cnt_p5 INIT_PRIORITY(PERF_CNT_INIT_PRIO);
+static Perf_cnt_p6 perf_cnt_p6 INIT_PRIORITY(PERF_CNT_INIT_PRIO);
+static Perf_cnt_k7 perf_cnt_k7 INIT_PRIORITY(PERF_CNT_INIT_PRIO);
+static Perf_cnt_p4 perf_cnt_p4 INIT_PRIORITY(PERF_CNT_INIT_PRIO);
+static Perf_cnt_ap perf_cnt_ap INIT_PRIORITY(PERF_CNT_INIT_PRIO);
 
 enum
 {
