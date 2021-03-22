@@ -14,7 +14,7 @@ INTERFACE:
 #include "l4_error.h"
 
 
-extern void gcov_print() __attribute__((weak));
+extern "C" void gcov_print() __attribute__((weak));
 
 
 /// Utest namespace for constants
@@ -187,11 +187,11 @@ Utest_fw::finish()
   if (_num_tests > 0)
     test_done();
 
-  printf("\nKUT 1..%i\n", _num_tests);
-  printf("\nKUT TAP TEST FINISHED\n");
-
   if (gcov_print)
     gcov_print();
+
+  printf("\nKUT 1..%i\n", _num_tests);
+  printf("\nKUT TAP TEST FINISHED\n");
 
   exit(_sum_failed);
 }
