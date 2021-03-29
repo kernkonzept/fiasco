@@ -857,7 +857,7 @@ Thread::copy_utcb_to_utcb(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
   if (success
       && tag.transfer_fpu()
       && rcv_utcb->inherit_fpu()
-      && (rights & L4_fpage::Rights::W()))
+      && (rights & L4_fpage::Rights::CS()))
     snd->transfer_fpu(rcv);
 
   return success;

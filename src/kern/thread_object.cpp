@@ -56,7 +56,7 @@ Obj_cap::deref(L4_fpage::Rights *rights = 0, bool dbg = false)
       if (!self())
         return 0;
 
-      if (rights) *rights = L4_fpage::Rights::RWX();
+      if (rights) *rights = L4_fpage::Rights::CRWS();
       return current;
     }
 
@@ -193,7 +193,7 @@ Thread_object::sys_vcpu_resume(L4_msg_tag const &tag, Utcb const *utcb, Utcb *)
       Task *task = cxx::dyn_cast<Task*>(s->lookup_local(user_task.cap(),
                                                          &task_rights));
 
-      if (EXPECT_FALSE(task && !(task_rights & L4_fpage::Rights::W())))
+      if (EXPECT_FALSE(task && !(task_rights & L4_fpage::Rights::CS())))
         return commit_result(-L4_err::EPerm);
 
       if (task != vcpu_user_space())

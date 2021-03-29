@@ -91,11 +91,11 @@ Thread::copy_utcb_to_ts(L4_msg_tag tag, Thread *snd, Thread *rcv,
   else
     rcv->copy_and_sanitize_trap_state(ts, &sregs->s);
 
-  if (tag.transfer_fpu() && (rights & L4_fpage::Rights::W()))
+  if (tag.transfer_fpu() && (rights & L4_fpage::Rights::CS()))
     snd->transfer_fpu(rcv);
 
   // FIXME: this is an old l4linux specific hack, will be replaced/remved
-  if ((tag.flags() & 0x8000) && (rights & L4_fpage::Rights::W()))
+  if ((tag.flags() & 0x8000) && (rights & L4_fpage::Rights::CS()))
     rcv->utcb().access()->user[2] = snd_utcb->values[25];
 
   rcv->set_tpidruro(sregs);
@@ -135,7 +135,7 @@ Thread::copy_ts_to_utcb(L4_msg_tag, Thread *snd, Thread *rcv,
         rcv_utcb->values[19] = ts->psr;
       }
 
-    if (rcv_utcb->inherit_fpu() && (rights & L4_fpage::Rights::W()))
+    if (rcv_utcb->inherit_fpu() && (rights & L4_fpage::Rights::CS()))
       {
         snd->save_fpu_state_to_utcb(ts, rcv_utcb);
         snd->transfer_fpu(rcv);

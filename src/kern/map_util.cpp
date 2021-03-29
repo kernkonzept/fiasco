@@ -111,10 +111,10 @@ v_delete<Obj_space>(Kobject_mapdb::Mapping *m, int, L4_fpage::Rights flush_right
 
   if (c->valid())
     {
-      if (flush_rights & L4_fpage::Rights::R())
+      if (flush_rights & L4_fpage::Rights::CR())
         c->invalidate();
       else
-        c->del_rights(flush_rights & L4_fpage::Rights::WX());
+        c->del_rights(flush_rights & L4_fpage::Rights::CWS());
     }
   return L4_fpage::Rights(0);
 }

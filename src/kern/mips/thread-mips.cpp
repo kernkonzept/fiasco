@@ -394,7 +394,7 @@ Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
   if (rcv == current())
     Proc::set_ulr(rcv->_ulr);
 
-  if (tag.transfer_fpu() && (rights & L4_fpage::Rights::W()))
+  if (tag.transfer_fpu() && (rights & L4_fpage::Rights::CS()))
     snd->transfer_fpu(rcv);
 
   bool ret = transfer_msg_items(tag, snd, snd_utcb,
@@ -417,7 +417,7 @@ Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
     r->s = *ts;
     r->ulr = snd->_ulr;
 
-    if (rcv_utcb->inherit_fpu() && (rights & L4_fpage::Rights::W()))
+    if (rcv_utcb->inherit_fpu() && (rights & L4_fpage::Rights::CS()))
       {
         snd->save_fpu_state_to_utcb(ts, rcv_utcb);
         snd->transfer_fpu(rcv);

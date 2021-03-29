@@ -283,7 +283,7 @@ Obj_space_phys<SPACE>::v_delete(V_pfn virt, Page_order size,
 
   if (c && c->valid())
     {
-      if (page_attribs & L4_fpage::Rights::R())
+      if (page_attribs & L4_fpage::Rights::CR())
         c->invalidate();
       else
 	c->del_rights(page_attribs);

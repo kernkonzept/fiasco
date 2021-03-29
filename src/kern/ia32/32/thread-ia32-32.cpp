@@ -115,7 +115,7 @@ Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
   if (rcv == current())
     rcv->load_gdt_user_entries(rcv);
 
-  if (tag.transfer_fpu() && (rights & L4_fpage::Rights::W()))
+  if (tag.transfer_fpu() && (rights & L4_fpage::Rights::CS()))
     snd->transfer_fpu(rcv);
 
   bool ret = transfer_msg_items(tag, snd, snd_utcb,
@@ -146,7 +146,7 @@ Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
       else
         Mem::memcpy_mwords(&dst->s, ts, Ts::Words);
 
-      if (rcv_utcb->inherit_fpu() && (rights & L4_fpage::Rights::W()))
+      if (rcv_utcb->inherit_fpu() && (rights & L4_fpage::Rights::CS()))
         snd->transfer_fpu(rcv);
     }
   return true;
