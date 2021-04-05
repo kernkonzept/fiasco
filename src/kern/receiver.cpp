@@ -274,7 +274,7 @@ Receiver::sender_ok(const Sender *sender) const
 //-----------------------------------------------------------------------------
 // VCPU code:
 
-PRIVATE inline
+PRIVATE inline NEEDS["logdefs.h"]
 Receiver::Rcv_state
 Receiver::vcpu_async_ipc(Sender const *sender) const
 {
