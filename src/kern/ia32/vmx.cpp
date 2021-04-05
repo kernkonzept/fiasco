@@ -7,24 +7,6 @@ INTERFACE [vmx]:
 #include <cstdio>
 #include <cstring>
 
-class Vm_vmx_ept_tlb
-{
-public:
-  enum Context
-  {
-    Single = 0x1,
-    Global = 0x2,
-  };
-
-  static void invept(Context type, Mword eptp = 0)
-  {
-    struct Op
-    {
-      Unsigned64 eptp, resv;
-    } op = {eptp, 0};
-    asm volatile ("invept %0, %[type]" : : "m"(op), [type] "r"((Mword)type));
-  }
-};
 
 class Vmx_info
 {
@@ -949,10 +931,6 @@ Vmx::Vmx(Cpu_number cpu)
     panic("VMX: vmptrld: VMFailInvalid, vmcs pointer not valid\n");
 
   Pm_object::register_pm(cpu);
-
-  // Clean out residual ept tlb entries during boot.
-  if (info.procbased_ctls2.allowed(Vmx_info::PRB2_enable_ept))
-    Vm_vmx_ept_tlb::invept(Vm_vmx_ept_tlb::Global);
 }
 
 /// Some compile-time VMCS field calculations

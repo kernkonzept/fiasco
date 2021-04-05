@@ -2,6 +2,67 @@ INTERFACE [vmx]:
 
 #include "vm_vmx.h"
 #include "ptab_base.h"
+#include "tlbs.h"
+
+class Vm_vmx_ept_tlb : public Tlb
+{
+public:
+  enum Context
+  {
+    Single = 0x1,
+    Global = 0x2,
+  };
+
+  static void invept(Context type, Mword eptp = 0)
+  {
+    struct Op
+    {
+      Unsigned64 eptp, resv;
+    } op = {eptp, 0};
+    asm volatile ("invept %0, %[type]" : : "m"(op), [type] "r"((Mword)type));
+  }
+
+  /**
+   * Flush only the TLB entries corresponding to the given EPT.
+   */
+  static void flush_single(Mword ept_phys)
+  {
+    if (Vmx::cpus.current().info.has_invept_single())
+      invept(Single, ept_phys);
+    else
+      invept(Global);
+  }
+
+  /**
+   * Flush the complete EPT TLB.
+   */
+  static void flush()
+  {
+    invept(Global);
+  }
+
+
+  explicit Vm_vmx_ept_tlb(Cpu_number cpu)
+  {
+    auto const &vmx = Vmx::cpus.cpu(cpu);
+    if (!vmx.info.procbased_ctls2.allowed(Vmx_info::PRB2_enable_ept))
+      // EPT is not enabled, no need for EPT TLB maintenance.
+      return;
+
+    // Clean out residual EPT TLB entries during boot.
+    Vm_vmx_ept_tlb::flush();
+
+    register_cpu_tlb(cpu);
+  }
+
+  inline void tlb_flush() override
+  {
+    Vm_vmx_ept_tlb::flush();
+  }
+
+private:
+  static Per_cpu<Vm_vmx_ept_tlb> cpu_tlbs;
+};
 
 class Vm_vmx_ept : public Vm_vmx_t<Vm_vmx_ept>
 {
@@ -180,12 +241,7 @@ PUBLIC
 void
 Vm_vmx_ept::tlb_flush(bool) override
 {
-  auto const &vmx = Vmx::cpus.current();
-
-  if (vmx.info.has_invept_single())
-    Vm_vmx_ept_tlb::invept(Vm_vmx_ept_tlb::Single, _ept_phys);
-  else
-    Vm_vmx_ept_tlb::invept(Vm_vmx_ept_tlb::Global);
+  Vm_vmx_ept_tlb::flush_single(_ept_phys);
 }
 
 PUBLIC
@@ -379,5 +435,9 @@ Vm_vmx_ept::init()
 
 STATIC_INITIALIZE(Vm_vmx_ept);
 
+// -------------------------------------------------------------------------
+IMPLEMENTATION[vmx]:
 
-
+// Must be constructed after Vmx::cpus.
+DEFINE_PER_CPU_LATE Per_cpu<Vm_vmx_ept_tlb>
+  Vm_vmx_ept_tlb::cpu_tlbs(Per_cpu_data::Cpu_num);
