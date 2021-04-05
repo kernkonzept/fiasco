@@ -440,11 +440,20 @@ Pdir::destroy(Va _start, Va _end, ALLOC const &alloc)
         }
 
       if (start >= end)
-        return;
+        break;
 
       start += (1UL << l_shift[n]);
       while (n && ((start >> l_shift[n]) & l_mask[n]) == 0)
-        --n;
+        {
+          alloc.free((void *)(p[n]), Bytes(sizeof(Mword) << l_bits[n]));
+          --n;
+        }
+    }
+
+  while (n)
+    {
+      alloc.free((void *)(p[n]), Bytes(sizeof(Mword) << l_bits[n]));
+      --n;
     }
 }
 
