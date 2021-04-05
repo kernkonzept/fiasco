@@ -185,8 +185,6 @@ IMPLEMENTATION:
 JDB_DEFINE_TYPENAME(Thread,  "\033[32mThread\033[m");
 DEFINE_PER_CPU Per_cpu<unsigned long> Thread::nested_trap_recover;
 
-extern "C" void leave_and_kill_myself(void) FIASCO_NORETURN;
-
 IMPLEMENT
 Thread::Dbg_stack::Dbg_stack()
 {
@@ -563,14 +561,21 @@ Thread::do_kill()
   return true;
 }
 
+PRIVATE inline
+void
+Thread::prepare_kill()
+{
+  extern void  FIASCO_NORETURN leave_and_kill_myself() asm ("leave_and_kill_myself");
+  state_add_dirty(Thread_cancel | Thread_ready);
+  _exc_cont.restore(regs()); // overwrite an already triggered exception
+  do_trigger_exception(regs(), (void*)&leave_and_kill_myself);
+}
+
 PRIVATE static
 Context::Drq::Result
 Thread::handle_remote_kill(Drq *, Context *self, void *)
 {
-  Thread *c = nonull_static_cast<Thread*>(self);
-  c->state_add_dirty(Thread_cancel | Thread_ready);
-  c->_exc_cont.restore(c->regs());
-  c->do_trigger_exception(c->regs(), (void*)&leave_and_kill_myself);
+  nonull_static_cast<Thread*>(self)->prepare_kill();
   return Drq::done();
 }
 
@@ -585,10 +590,8 @@ Thread::kill() override
 
   if (home_cpu() == current_cpu())
     {
-      state_add_dirty(Thread_cancel | Thread_ready);
+      prepare_kill();
       Sched_context::rq.current().deblock(sched(), current()->sched());
-      _exc_cont.restore(regs()); // overwrite an already triggered exception
-      do_trigger_exception(regs(), (void*)&leave_and_kill_myself);
       return true;
     }
 
