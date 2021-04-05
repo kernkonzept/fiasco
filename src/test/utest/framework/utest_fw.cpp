@@ -11,7 +11,9 @@ INTERFACE:
 #include <cstdlib>
 #include <cstring>
 
+#include "timer.h"
 #include "l4_error.h"
+#include "processor.h"
 
 
 extern "C" void gcov_print() __attribute__((weak));
@@ -458,3 +460,21 @@ utest_format_print_value(char const *val) { printf("%s", val); }
 inline
 void
 utest_format_print_value(char *val) { printf("%s", val); }
+
+/**
+ * Wait for a defined period of time.
+ *
+ * \param ms  Milliseconds to wait.
+ */
+PUBLIC static
+void
+Utest::wait(unsigned long ms)
+{
+  // convert to system_clock us resolution.
+  Unsigned64 us = static_cast<Unsigned64>(ms) * 1000;
+  Unsigned64 ctime = Timer::system_clock();
+
+  // Busy waiting is ok, as nothing else happens on this core anyway.
+  while (Timer::system_clock() < ctime + us)
+    Proc::pause();
+}
