@@ -26,7 +26,7 @@ Mem_space::make_current()
       "msr TTBR0_EL1, %0            \n" // set TTBR
       "isb                          \n"
       :
-      : "r" (Phys_mem_addr::val(_dir_phys) | (asid() << 48)));
+      : "r" (cxx::int_value<Phys_mem_addr>(_dir_phys) | (asid() << 48)));
   _current.current() = this;
 }
 
@@ -41,7 +41,7 @@ Mem_space::make_current()
       "msr VTTBR_EL2, %0            \n" // set TTBR
       "isb                          \n"
       :
-      : "r" (Phys_mem_addr::val(_dir_phys) | (asid() << 48)));
+      : "r" (cxx::int_value<Phys_mem_addr>(_dir_phys) | (asid() << 48)));
 
   _current.current() = this;
 }

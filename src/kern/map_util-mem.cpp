@@ -123,9 +123,9 @@ init_mapdb_mem(Space *sigma0)
         c = last_bits - Page_order(12);
       else
         ++ps;
-      printf("MDB: use page size: %u\n", Page_order::val(c));
+      printf("MDB: use page size: %u\n", cxx::int_value<Page_order>(c));
       assert (idx < Max_num_page_sizes);
-      page_sizes[idx++] = Page_order::val(c) - Config::PAGE_SHIFT;
+      page_sizes[idx++] = cxx::int_value<Page_order>(c) - Config::PAGE_SHIFT;
       last_bits = c;
     }
 

@@ -299,7 +299,7 @@ Address
 Jdb_ptab::disp_virt(int idx)
 {
   Pdir::Va e((Mword)idx << Pdir::lsb_for_level(cur_pt_level));
-  return Virt_addr::val(e) + virt_base;
+  return cxx::int_value<Virt_addr>(e) + virt_base;
 }
 
 PUBLIC

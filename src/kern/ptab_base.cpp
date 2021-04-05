@@ -581,7 +581,7 @@ namespace Ptab
     enum { Shift = SHIFT };
     typedef N Value_type;
     static typename N::Value val(N a)
-    { return N::val(a); }
+    { return cxx::int_value<N>(a); }
 
     static typename Value_type::Diff_type::Value
     val(typename Value_type::Diff_type a)

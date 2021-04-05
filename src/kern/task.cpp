@@ -128,7 +128,7 @@ Task::alloc_ku_mem_chunk(User<void>::Ptr u_addr, unsigned size, void **k_addr)
     {
       Virt_addr kern_va = base + i;
       Virt_addr user_va = Virt_addr((Address)u_addr.get()) + i;
-      Mem_space::Phys_addr pa(pmem_to_phys(Virt_addr::val(kern_va)));
+      Mem_space::Phys_addr pa(pmem_to_phys(cxx::int_value<Virt_addr>(kern_va)));
 
       // must be valid physical address
       assert(pa != Mem_space::Phys_addr(~0UL));
@@ -141,18 +141,19 @@ Task::alloc_ku_mem_chunk(User<void>::Ptr u_addr, unsigned size, void **k_addr)
         {
         case Mem_space::Insert_ok: break;
         case Mem_space::Insert_err_nomem:
-          free_ku_mem_chunk(p, u_addr, size, Virt_size::val(i));
+          free_ku_mem_chunk(p, u_addr, size, cxx::int_value<Virt_size>(i));
           return -L4_err::ENomem;
 
         case Mem_space::Insert_err_exists:
-          free_ku_mem_chunk(p, u_addr, size, Virt_size::val(i));
+          free_ku_mem_chunk(p, u_addr, size, cxx::int_value<Virt_size>(i));
           return -L4_err::EExists;
 
         default:
           printf("UTCB mapping failed: va=%p, ph=%p, res=%d\n",
-              (void*)Virt_addr::val(user_va), (void*)Virt_addr::val(kern_va), res);
+                 (void *)cxx::int_value<Virt_addr>(user_va),
+                 (void *)cxx::int_value<Virt_addr>(kern_va), res);
           kdb_ke("BUG in utcb allocation");
-          free_ku_mem_chunk(p, u_addr, size, Virt_size::val(i));
+          free_ku_mem_chunk(p, u_addr, size, cxx::int_value<Virt_size>(i));
           return 0;
         }
     }
@@ -179,7 +180,7 @@ Task::alloc_ku_mem(L4_fpage ku_area)
   if (!m)
     return -L4_err::ENomem;
 
-  User<void>::Ptr u_addr((void*)Virt_addr::val(ku_area.mem_address()));
+  User<void>::Ptr u_addr((void *)cxx::int_value<Virt_addr>(ku_area.mem_address()));
 
   void *p = 0;
   if (int e = alloc_ku_mem_chunk(u_addr, sz, &p))
@@ -646,7 +647,7 @@ Task::Log_map_unmap::print(String_buffer *buf) const
       buf->printf("spc] fpage=%lx", fpage);
       break;
     case L4_fpage::Memory:
-      buf->printf("mem] addr=%lx", Virt_addr::val(fp.mem_address()));
+      buf->printf("mem] addr=%lx", cxx::int_value<Virt_addr>(fp.mem_address()));
       break;
     case L4_fpage::Io:
       buf->printf("io] port=%lx", cxx::int_value<Port_number>(fp.io_address()));

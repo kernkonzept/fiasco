@@ -260,8 +260,8 @@ Jdb::access_mem_task(Jdb_address addr, bool)
       return (static_cast<Mem_space *>(addr.space())
                 ->v_lookup(va, &phys, &size, 0))
                ? (unsigned char *)Kmem::phys_to_virt(
-                 Mem_space::Phys_addr::val(phys)
-                 + Virt_size::val(cxx::get_lsb(va, size)))
+                 cxx::int_value<Mem_space::Phys_addr>(phys)
+                 + cxx::int_value<Virt_size>(cxx::get_lsb(va, size)))
                : nullptr;
     }
 }

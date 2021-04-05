@@ -155,8 +155,8 @@ Mem_op::__arm_mem_cache_maint(int op, void const *start, void const *end)
         {
           Virt_addr vstart = Virt_addr(phys_addr) | offs;
           Virt_addr vend = vstart + sz;
-          __arm_kmem_cache_maint(op, (void *)Virt_addr::val(vstart),
-                                 (void *)Virt_addr::val(vend));
+          __arm_kmem_cache_maint(op, (void *)cxx::int_value<Virt_addr>(vstart),
+                                 (void *)cxx::int_value<Virt_addr>(vend));
         }
       v += sz;
     }
@@ -302,7 +302,7 @@ Mem_op::outer_cache_op(Address start, Address end, FUNC &&f)
         {
           Virt_addr vstart = Virt_addr(phys_addr) | offs;
           Virt_addr vend = vstart + sz;
-          f(Virt_addr::val(vstart), Virt_addr::val(vend), false);
+          f(cxx::int_value<Virt_addr>(vstart), cxx::int_value<Virt_addr>(vend), false);
         }
       v += sz;
     }

@@ -157,7 +157,7 @@ Mem_space::user_to_kernel(T const *addr, bool write)
           // See if we want to write and are not allowed to
           // Generic check because INTEL_PTE_WRITE == INTEL_PDE_WRITE
           if (!write || (attr.rights & Page::Rights::W()))
-            return (T*)Mem_layout::phys_to_pmem(Phys_addr::val(phys));
+            return (T*)Mem_layout::phys_to_pmem(cxx::int_value<Phys_addr>(phys));
 
           error |= PF_ERR_PRESENT;
         }
@@ -175,7 +175,7 @@ Mem_space::user_to_kernel(T const *addr, bool write)
       // Pretend open interrupts, we restore the current state afterwards.
       Cpu_lock::Status was_locked = cpu_lock.test();
 
-      thread_page_fault(Virt_addr::val(virt), error, 0, Proc::processor_state() | EFLAGS_IF, 0);
+      thread_page_fault(cxx::int_value<Virt_addr>(virt), error, 0, Proc::processor_state() | EFLAGS_IF, 0);
 
       cpu_lock.set (was_locked);
     }

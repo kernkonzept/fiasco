@@ -585,7 +585,8 @@ Jdb_thread_list::action(int cmd, void *&argbuf, char const *&fmt, int &) overrid
 		  if (Cpu::online(cpu))
 		    list_threads(Jdb::get_thread(cpu), 'r');
 		  else
-		    printf("\nCPU %u is not online!\n", Cpu_number::val(cpu));
+		    printf("\nCPU %u is not online!\n",
+			   cxx::int_value<Cpu_number>(cpu));
 		  cpu = Cpu_number::first();
 		  break;
 	case 't': Jdb::execute_command("lt"); break; // other module

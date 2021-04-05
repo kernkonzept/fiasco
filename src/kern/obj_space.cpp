@@ -118,7 +118,7 @@ PUBLIC template< typename SPACE >
 static inline
 Mword
 Generic_obj_space<SPACE>::xlate_flush(L4_fpage::Rights rights)
-{ return L4_fpage::Rights::val(rights); }
+{ return cxx::int_value<L4_fpage::Rights>(rights); }
 
 PUBLIC template< typename SPACE >
 static inline

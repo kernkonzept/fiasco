@@ -29,7 +29,7 @@ Task::map_gicc_page(L4_msg_tag tag, Utcb *utcb)
       || gicc_page.order() < Config::PAGE_SHIFT)
     return commit_result(-L4_err::EInval);
 
-  User<void>::Ptr u_addr((void *)Virt_addr::val(gicc_page.mem_address()));
+  User<void>::Ptr u_addr((void *)cxx::int_value<Virt_addr>(gicc_page.mem_address()));
 
   Mem_space *ms = static_cast<Mem_space *>(this);
   Mem_space::Status res =

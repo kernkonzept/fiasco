@@ -193,7 +193,7 @@ PUBLIC inline
 void
 Gic_dist::set_cpu(Mword pin, Cpu_phys_id cpu, V3)
 {
-  Unsigned64 v = Cpu_phys_id::val(cpu);
+  Unsigned64 v = cxx::int_value<Cpu_phys_id>(cpu);
   _dist.write<Unsigned64>(v & 0xff00ffffff, GICD_IROUTER + 8 * pin);
 }
 
