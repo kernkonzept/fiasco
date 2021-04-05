@@ -36,7 +36,7 @@ Kmem_alloc::map_pmem(unsigned long phy, unsigned long size)
   return true;
 }
 
-PUBLIC inline NEEDS["kmem_space.h"]
+PUBLIC inline NEEDS["kmem_space.h", "mem_layout.h"]
 Address
 Kmem_alloc::to_phys(void *v) const
 {
@@ -94,7 +94,7 @@ Kmem_alloc::Kmem_alloc()
 //----------------------------------------------------------------------------
 IMPLEMENTATION [arm && !noncont_mem]:
 
-PUBLIC inline
+PUBLIC inline NEEDS["mem_layout.h"]
 Address
 Kmem_alloc::to_phys(void *v) const
 { return (Address)v - Mem_layout::Map_base + Mem_layout::Sdram_phys_base; }
