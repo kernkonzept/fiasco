@@ -232,6 +232,7 @@ Gic_dist::cpu_init(V3)
 IMPLEMENTATION:
 
 #include "l4_types.h"
+#include "lock_guard.h"
 
 PUBLIC inline
 Unsigned32
@@ -289,7 +290,7 @@ Gic_dist::init_regs(unsigned from, unsigned to)
     _dist.write<Unsigned32>(0xffffffff, GICD_ICENABLER + i * 4 / 32);
 }
 
-PUBLIC inline NEEDS["l4_types.h"]
+PUBLIC inline NEEDS["l4_types.h", "lock_guard.h"]
 int
 Gic_dist::set_mode(Mword pin, Irq_chip::Mode m)
 {
@@ -335,7 +336,7 @@ Gic_dist::is_edge_triggered(Mword pin) const
   return (v >> ((pin & 15) * 2)) & 2;
 }
 
-PUBLIC inline
+PUBLIC inline NEEDS["lock_guard.h"]
 void
 Gic_dist::setup_pin(Mword pin)
 {
@@ -348,7 +349,7 @@ Gic_dist::setup_pin(Mword pin)
   _dist.modify<Unsigned32>(0x40 << shift, 0xff << shift, GICD_IPRIORITYR + (pin & ~3));
 }
 
-PUBLIC inline
+PUBLIC inline NEEDS["lock_guard.h"]
 void
 Gic_dist::set_pending_irq(unsigned idx, Unsigned32 val)
 {
