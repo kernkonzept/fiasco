@@ -1152,7 +1152,7 @@ Context::Drq_q::enq(Drq *rq)
   enqueue(rq);
 }
 
-IMPLEMENT inline
+IMPLEMENT inline NEEDS["logdefs.h"]
 bool
 Context::Drq_q::execute_request(Drq *r, Drop_mode drop, bool local)
 {
@@ -1259,7 +1259,7 @@ bool
 Context::drq_pending() const
 { return _drq_q.first(); }
 
-PUBLIC inline
+PUBLIC inline NEEDS["thread_state.h"]
 void
 Context::try_finish_migration()
 {
@@ -1391,7 +1391,7 @@ Context::set_home_cpu(Cpu_number cpu)
  * This function must be used to change the state of contexts that are
  * potentially running on a different CPU.
  */
-PUBLIC inline NEEDS[Context::pending_rqq_enqueue]
+PUBLIC inline NEEDS[Context::pending_rqq_enqueue, "thread_state.h"]
 bool
 Context::xcpu_state_change(Mword mask, Mword add, bool lazy_q = false)
 {
@@ -1432,7 +1432,7 @@ Context::xcpu_state_change(Mword mask, Mword add, bool lazy_q = false)
  *
  * This function enqueues a DRQ and blocks the current context for a reply DRQ.
  */
-PUBLIC inline NEEDS[Context::enqueue_drq, "logdefs.h"]
+PUBLIC inline NEEDS[Context::enqueue_drq, "logdefs.h", "thread_state.h"]
 void
 Context::drq(Drq *drq, Drq::Request_func *func, void *arg,
              Drq::Wait_mode wait = Drq::Wait)
@@ -2224,7 +2224,7 @@ IMPLEMENTATION [fpu && lazy_fpu]:
 
 #include "fpu.h"
 
-PUBLIC inline
+PUBLIC inline NEEDS["fpu.h"]
 void
 Context::spill_fpu_if_owner()
 {
@@ -2260,7 +2260,7 @@ Context::spill_current_fpu(Cpu_number cpu)
 }
 
 
-PUBLIC inline
+PUBLIC inline NEEDS["fpu.h"]
 void
 Context::release_fpu_if_owner()
 {
