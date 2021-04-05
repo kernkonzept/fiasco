@@ -176,7 +176,7 @@ IMPLEMENTATION [arm && cpu_virt]:
 
 #include "irq_mgr.h"
 
-PUBLIC inline
+PUBLIC inline NEEDS[Thread::save_fpu_state_to_utcb]
 void
 Thread::vcpu_vgic_upcall(unsigned virq)
 {

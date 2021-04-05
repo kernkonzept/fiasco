@@ -529,7 +529,7 @@ public:
   static void kern_kdebug_ipi_entry() asm("kern_kdebug_ipi_entry");
 };
 
-PUBLIC static inline
+PUBLIC static inline NEEDS["ipi.h"]
 void
 Thread::handle_debug_remote_requests_irq()
 {
