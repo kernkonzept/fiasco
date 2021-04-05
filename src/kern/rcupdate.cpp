@@ -319,7 +319,7 @@ Rcu::enter_idle(Cpu_number cpu)
   rdp->enter_idle(rcu());
 }
 
-PUBLIC static inline
+PUBLIC static inline NEEDS["lock_guard.h"]
 void
 Rcu::leave_idle(Cpu_number cpu)
 {
