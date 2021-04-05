@@ -170,13 +170,13 @@ Note: all assert statements generate a single TAP line with the same
 
 ## Write a test
 
-Define the symbol `void init_workload()` and place your code in this function.
+Define the symbol `void init_unittest()` and place your code in this function.
 
 ```
 #include "utest_fw.h"
 
 void
-init_workload()
+init_unittest()
 {
   Utest_fw::tap_log.start();
   Utest_fw::new_test("group_name", "test_name");
@@ -205,3 +205,20 @@ All supported `UTEST_` macros are listed in `utest_fw.cpp`.
 After you decided on a test filename which must start with "test_" add the
 filename to `INTERFACES_UTEST` list in the `Modules.utest` file of your test
 directory.
+
+
+## Tests using multiple cores
+
+To use multiple cores in your test you need to define `void
+init_unittest_app_core()`.
+Each core which is not the boot core will invoke this function if it is
+defined.
+When `init_unittest_app_core()` returns the core goes into idle.
+
+Your test needs to decide which core shall do what.
+It can decide to only use a single additional core, or all that register with
+this function.
+See the `Cpu` class on how to identify a core.
+
+Currently, there is no central knowledge on how many cores the system contains,
+so the test needs to be able to handle this.

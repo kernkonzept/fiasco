@@ -108,6 +108,15 @@ App_cpu_thread::bootstrap(Mword resume)
         printf("CPU[%u]: goes to idle loop\n", cxx::int_value<Cpu_number>(ccpu));
     }
 
+  if (init_unittest_app_core)
+    init_unittest_app_core();
+
   for (;;)
     idle_op();
 }
+
+/**
+ * unit test interface for app cores.
+ */
+void
+init_unittest_app_core() __attribute__((weak));
