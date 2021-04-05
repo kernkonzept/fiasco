@@ -116,7 +116,7 @@ Switch_lock::initialize()
  *  @return current owner of the lock.  0 if there is no owner.
  */
 PUBLIC
-inline
+inline NEEDS["lock_guard.h", "cpu_lock.h"]
 Context * NO_INSTRUMENT
 Switch_lock::lock_owner() const
 {
@@ -129,7 +129,7 @@ Switch_lock::lock_owner() const
             the lock does not exist (see valid()).
  */
 PUBLIC
-inline
+inline NEEDS["lock_guard.h", "cpu_lock.h"]
 Switch_lock::Status NO_INSTRUMENT
 Switch_lock::test() const
 {
@@ -362,7 +362,7 @@ IMPLEMENTATION:
  * @post switch_dirty() must be called in the same atomical section
  */
 PROTECTED
-inline NEEDS[Switch_lock::clear_lock_owner]
+inline NEEDS[Switch_lock::clear_lock_owner, "context.h"]
 Switch_lock::Lock_context NO_INSTRUMENT
 Switch_lock::clear_no_switch_dirty()
 {
