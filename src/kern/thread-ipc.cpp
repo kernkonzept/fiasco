@@ -156,6 +156,8 @@ Thread::ipc_receiver_aborted() override
   assert (wait_queue());
   set_wait_queue(0);
 
+  utcb().access()->error = L4_error::Canceled;
+
   if (xcpu_state_change(~0UL, Thread_transfer_failed | Thread_ready, true))
     current()->switch_to_locked(this);
 }
@@ -177,7 +179,11 @@ Thread::ipc_send_msg(Receiver *recv, bool open_wait) override
   if (Receiver::prepared())
     // same as in Receiver::prepare_receive_dirty_2
     state_add |= Thread_receive_wait;
-
+  if (EXPECT_FALSE(!success))
+    {
+      state_del = 0;
+      state_add = Thread_transfer_failed | Thread_ready;
+    }
   if (xcpu_state_change(~state_del, state_add, true))
     recv->switch_to_locked(this);
 }
@@ -1109,7 +1115,6 @@ Thread::do_send_wait(Thread *partner, L4_timeout snd_t)
   if (EXPECT_FALSE(ipc_state & Thread_transfer_failed))
     {
       state_del_dirty(Thread_full_ipc_mask);
-      utcb().access()->error = L4_error::Canceled;
       return false;
     }
 
