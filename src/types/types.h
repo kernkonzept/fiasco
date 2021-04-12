@@ -25,7 +25,7 @@ a nonull_static_cast( b p )
   return reinterpret_cast<a>( reinterpret_cast<Address>(p) + d);
 }
 
-template< typename T >
+template< typename T > inline
 T access_once(T const *a)
 {
 #if 1
