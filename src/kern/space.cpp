@@ -93,6 +93,11 @@ protected:
   Space(Ram_quota *q, Mem_space::Dir_type* pdir, Caps c)
   : Mem_space(q, pdir), _caps(c) {}
 
+  bool initialize()
+  {
+    return Mem_space::initialize() && Generic_obj_space<Space>::initialize();
+  }
+
   const Caps _caps;
 
 protected:

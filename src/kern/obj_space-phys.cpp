@@ -9,6 +9,8 @@ private:
   typedef Obj_space_phys<Generic_obj_space< SPACE > > Base;
 
 public:
+  using Base::initialize;
+
   static Ram_quota *ram_quota(Base const *base)
   {
     assert_opt (base);

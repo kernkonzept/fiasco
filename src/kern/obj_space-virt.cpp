@@ -8,6 +8,8 @@ INTERFACE:
 EXTENSION class Generic_obj_space : Obj_space_virt<Generic_obj_space<SPACE> >
 {
   typedef Obj_space_virt<Generic_obj_space<SPACE> > Base;
+public:
+  using Base::initialize;
 };
 
 IMPLEMENTATION:

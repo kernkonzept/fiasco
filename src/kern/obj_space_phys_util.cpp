@@ -65,6 +65,11 @@ class Obj_space_phys_override :
   typedef Obj_space_phys< Obj_space_phys_override<BASE> > Obj_space;
 
 public:
+  bool initialize()
+  {
+    return BASE::initialize() && Obj_space::initialize();
+  }
+
   using BASE::ram_quota;
   static Ram_quota *ram_quota(Obj_space const *obj_sp)
   { return static_cast<Obj_space_phys_override<BASE> const *>(obj_sp)->ram_quota(); }
@@ -139,12 +144,14 @@ IMPLEMENTATION:
 
 PUBLIC template< typename SPACE >
 inline NEEDS["static_assert.h"]
-Obj_space_phys<SPACE>::Obj_space_phys()
+bool
+Obj_space_phys<SPACE>::initialize()
 {
   static_assert(sizeof(Cap_dir) == Config::PAGE_SIZE, "cap_dir size mismatch");
   _dir = (Cap_dir*)Kmem_alloc::allocator()->q_alloc(ram_quota(), Config::page_size());
   if (_dir)
     Mem::memset_mwords(_dir, 0, Config::PAGE_SIZE / sizeof(Mword));
+  return _dir;
 }
 
 PRIVATE template< typename SPACE >

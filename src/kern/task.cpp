@@ -240,14 +240,14 @@ Task::free_ku_mem()
 }
 
 
-/** Allocate space for the UTCBs of all threads in this task.
- *  @ return true on success, false if not enough memory for the UTCBs
+/** Allocate resources for this task (e.g. UTCBs, page/cap directories).
+ *  @ return true on success, false if not enough memory
  */
 PUBLIC
 bool
 Task::initialize()
 {
-  if (!Mem_space::initialize())
+  if (!Space::initialize())
     return false;
 
   // For UX, map the UTCB pointer page. For ia32, do nothing

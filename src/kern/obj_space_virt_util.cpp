@@ -18,6 +18,9 @@ public:
   typedef Cap_diff V_pfc;
   typedef Order Page_order;
 
+  bool initialize()
+  { return true; }
+
   bool v_lookup(V_pfn const &virt, Phys_addr *phys,
                 Page_order *size, Attr *attribs);
 
