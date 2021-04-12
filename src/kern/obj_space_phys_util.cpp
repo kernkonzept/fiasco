@@ -171,6 +171,9 @@ PRIVATE template< typename SPACE >
 typename Obj_space_phys<SPACE>::Entry *
 Obj_space_phys<SPACE>::caps_alloc(Cap_index virt)
 {
+  if (EXPECT_FALSE(!_dir))
+    return 0;
+
   static_assert(sizeof(Cap_table) == Config::PAGE_SIZE, "cap table size mismatch");
   unsigned d_idx = cxx::int_value<Cap_index>(virt) >> Obj::Caps_per_page_ld2;
   if (EXPECT_FALSE(d_idx >= Slots_per_dir))
