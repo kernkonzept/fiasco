@@ -177,6 +177,9 @@ public:
 
   Virt_addr(void *a) : ::Addr::Addr<ARCH_PAGE_SHIFT>(Address(a)) {}
 
+  explicit operator void * () const
+  { return (void *)_v; }
+
   Virt_addr() = default;
 };
 
