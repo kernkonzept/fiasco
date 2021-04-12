@@ -54,8 +54,9 @@ INTERFACE:
  * if the sending and the receiving thread are in the same task.
  *
  * Bits 7..4 (\a attr): This bits contain extra attributes that influence the
- * mapping itself. For memory mapping these bits contain cachebility information.
- * For object mappings these bits contain extra rights on the object.
+ * mapping itself. For memory mapping these bits contain cacheability
+ * information. For object mappings these bits contain extra rights on the
+ * object.
  *
  * Bits x..12 (\a hot_spot): These bits are the so called hot spot and are used
  * to disambiguate the cases where either the send flex page or the receive flex
@@ -115,7 +116,7 @@ public:
   };
 
   /**
-   * Create a message item from its binary represenation.
+   * Create a message item from its binary representation.
    * \param raw is the binary representation of the message item.
    */
   explicit L4_msg_item(Mword raw) : _raw(raw) {}
@@ -129,7 +130,7 @@ public:
   Mword compound() const { return _raw & 1; }
 
   /**
-   * Is the item a a void item?
+   * Is the item a \a void item?
    * \return true if the item is \a void, false if it is valid.
    */
   bool is_void() const { return _raw == 0; }
@@ -210,7 +211,7 @@ public:
   CXX_BITFIELD_MEMBER_UNSHIFTED( 4, 7, attr, _raw);
 
   /** \name the hot-spot address encoded in the message item
-   *  \note Usefule for memory message items. */
+   *  \note Useful for memory message items. */
   CXX_BITFIELD_MEMBER_UNSHIFTED(Addr_shift, sizeof(_raw)*8-1, address, _raw);
 
   /** \name the hot-spot index encoded in the message item
