@@ -668,8 +668,7 @@ void Mem_space::switchin_context(Mem_space *)
 
   CNT_ADDR_SPACE_SWITCH;
 
-  Mem_unit::set_current_asid(asid());
-  _current.current() = this;
+  make_current();
   // no ehb here as we use the mappings after the eret only
 }
 
