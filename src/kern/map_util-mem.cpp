@@ -21,9 +21,11 @@ Static_object<Mapdb> mapdb_mem;
     @param fp_from_{page, size, write, grant} flexpage description for
 	virtual-address space range in source address space
     @param to destination address space
-    @param fp_to_{page, size} flexpage descripton for virtual-address
+    @param fp_to_{page, size} flexpage description for virtual-address
 	space range in destination address space
-    @param offs sender-specified offset into destination flexpage
+    @param control message send item containing the sender-specified offset
+        into the destination flexpage, the caching attributes and the grant
+        flag.
     @return IPC error code that describes the status of the operation
  */
 L4_error __attribute__((nonnull(1, 3)))
