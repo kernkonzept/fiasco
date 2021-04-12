@@ -207,12 +207,17 @@ Vm_vmx::load_vm_memory(void const *src)
       // for 32bit we can just load the Vm pdbr
       Vmx::vmwrite(Vmx::F_guest_cr3, (Mword)phys_dir());
     }
+
+  tlb_mark_used();
 }
 
 PUBLIC inline
 void
 Vm_vmx::store_vm_memory(void *)
-{}
+{
+  // we flush the tlb on each entry
+  tlb_mark_unused();
+}
 
 PRIVATE template<typename X>
 void

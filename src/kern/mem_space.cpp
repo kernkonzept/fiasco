@@ -258,30 +258,108 @@ private:
   static bool _glbl_page_sizes_finished;
 };
 
-
 //---------------------------------------------------------------------------
-INTERFACE [mp]:
+INTERFACE [need_xcpu_tlb_flush]:
 
 EXTENSION class Mem_space
 {
 public:
-  enum { Need_xcpu_tlb_flush = true };
+  /**
+   * The option need_xcpu_tlb_flush indicates that memory spaces with a TLB
+   * type of Tlb_per_cpu_asid or Tlb_per_cpu_global need cross-CPU TLB flushes
+   * coordinated via IPIs.
+   *
+   * To avoid sending IPIs to all cores, track for each memory space the cores
+   * it might have TLB entries, which then allows to limit sending of IPIs to
+   * these cores.
+   */
+  enum { Need_xcpu_tlb_flush = 1 };
+
+  Cpu_mask const &tlb_active_on_cpu() const
+  { return _tlb_active_on_cpu; }
+
+  /**
+   * Ensure that setting the active bit in _tlb_active_on_cpu for a memory space
+   * on the current CPU is visible to all other CPUs, before any page table
+   * entry of the memory space is accessed on the current CPU, thus potentially
+   * cached in the TLB.
+   */
+  static void sync_write_tlb_active_on_cpu();
+
+  /**
+   * Ensure that all changes to page tables made on the current CPU are visible
+   * to all other CPUs, before accessing _tlb_active_on_cpu on the current CPU.
+   */
+  static void sync_read_tlb_active_on_cpu();
+
+protected:
+  /**
+   * Mark this memory space as potentially having TLB entries on the
+   * current CPU.
+   */
+  inline void tlb_mark_used()
+  {
+    if (!_tlb_active_on_cpu.atomic_get_and_set_if_unset(current_cpu()))
+      // If the memory space was not already marked as active, we have to
+      // execute a synchronization operation.
+      Mem_space::sync_write_tlb_active_on_cpu();
+  }
+
+  /**
+   * Mark this memory space as having no TLB entries on the current CPU.
+   */
+  inline void tlb_mark_unused()
+  { _tlb_active_on_cpu.atomic_clear_if_set(current_cpu()); }
 
 private:
+  /**
+   * Mark this memory space as having no TLB entries on the current CPU if it
+   * is not the current memory space on the CPU.
+   */
+  inline void tlb_mark_unused_if_non_current()
+  {
+    if (_current.current() != this)
+      tlb_mark_unused();
+  }
+
+  /**
+   * Track on which CPUs this memory space is currently "active", i.e. on which
+   * CPUs it could potentially have TLB entries. Each CPU bit must only be set
+   * from the corresponding CPU!
+   *
+   * TODO: this could be pretty CL-bouncing. Is it worth having a per-cpu-style
+   * mechanisms for bits/booleans?
+   */
+  Cpu_mask _tlb_active_on_cpu;
+
   static Cpu_mask _tlb_active;
 };
 
-
-
 //---------------------------------------------------------------------------
-INTERFACE [!mp]:
+INTERFACE [!need_xcpu_tlb_flush]:
 
 EXTENSION class Mem_space
 {
 public:
-  enum { Need_xcpu_tlb_flush = false };
-};
+  /**
+   * This is the case where no IPI-based cross-CPU TLB flushes are needed,
+   * e.g. because multi processor support is not enabled in the kernel
+   * configuration or the platform provides mechanisms for global TLB
+   * invalidation without IPIs.
+   */
+  enum { Need_xcpu_tlb_flush = 0 };
 
+  Cpu_mask tlb_active_on_cpu() const { return Cpu_mask(); }
+  static void sync_write_tlb_active_on_cpu() {};
+  static void sync_read_tlb_active_on_cpu() {};
+
+protected:
+  void tlb_mark_used() {};
+  void tlb_mark_unused() {};
+
+private:
+  void tlb_mark_unused_if_non_current() {};
+};
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION:
@@ -380,7 +458,8 @@ bool
 Mem_space::is_sigma0() const
 { return false; }
 
-IMPLEMENT_DEFAULT inline NEEDS["kmem.h", "logdefs.h"]
+IMPLEMENT_DEFAULT inline NEEDS["kmem.h", "logdefs.h",
+                               Mem_space::tlb_track_space_usage]
 void
 Mem_space::switchin_context(Mem_space *from)
 {
@@ -394,13 +473,19 @@ Mem_space::switchin_context(Mem_space *from)
 
   if (from != this)
     {
+      // Kernel-space never needs TLB flushes.
+      if (this != kernel_space())
+        tlb_mark_used();
+
       CNT_ADDR_SPACE_SWITCH;
       make_current();
+
+      from->tlb_track_space_usage();
     }
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [!mp]:
+IMPLEMENTATION [!need_xcpu_tlb_flush]:
 
 PUBLIC static inline
 void
@@ -415,14 +500,15 @@ Mem_space::disable_tlb(Cpu_number)
 PUBLIC static inline
 Cpu_mask
 Mem_space::active_tlb()
-{
-  Cpu_mask c;
-  c.set(Cpu_number::boot_cpu());
-  return c;
-}
+{ return Cpu_mask(); }
+
+PRIVATE inline
+void
+Mem_space::tlb_track_space_usage()
+{}
 
 // ----------------------------------------------------------
-IMPLEMENTATION [mp]:
+IMPLEMENTATION [need_xcpu_tlb_flush]:
 
 Cpu_mask Mem_space::_tlb_active;
 
@@ -441,4 +527,31 @@ void
 Mem_space::disable_tlb(Cpu_number cpu)
 { _tlb_active.atomic_clear(cpu); }
 
-
+/**
+ * Update the TLB usage state of this memory space when switching away from it.
+ */
+PRIVATE inline
+void
+Mem_space::tlb_track_space_usage()
+{
+  // Use regular_tlb_type() instead of tlb_type(), to allow for compile-time
+  // optimization of the following branch conditions. This is safe,
+  // as tlb_track_space_usage() must and can only be invoked from a regular
+  // Mem_space, which can be assigned as the current Mem_space on a CPU
+  // (_current).
+  // Mem_space overrides like Dmar_space or Vm_vmx_ept have to implement their
+  // own TLB usage tracking mechanism.
+  if (regular_tlb_type() == Tlb_per_cpu_global)
+    {
+      /* Without ASIDs, when we switched away from this space, the TLB
+       * will have forgotten us. */
+      assert(_current.current() != this);
+      tlb_mark_unused();
+    }
+  else if (regular_tlb_type() == Tlb_per_cpu_asid)
+    {
+      /* With ASIDs the TLB has data until we flush it explicitly,
+       * thus _tlb_active_on_cpu needs to keep its info */
+      assert(_current.current() != this);
+    }
+}

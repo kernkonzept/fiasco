@@ -93,7 +93,10 @@ Mem_space::tlb_flush(bool force = false)
   if (!Have_asids)
     Mem_unit::tlb_flush();
   else if (force && c_asid() != Mem_unit::Asid_invalid)
-    Mem_unit::tlb_flush(c_asid());
+    {
+      Mem_unit::tlb_flush(c_asid());
+      tlb_mark_unused_if_non_current();
+    }
 
   // else do nothing, we manage ASID local flushes in v_* already
   // Mem_unit::tlb_flush();
@@ -459,4 +462,40 @@ Mem_space::init_page_sizes()
   add_page_size(Page_order(21)); // 2MB
   add_page_size(Page_order(30)); // 1GB
   add_page_size(Page_order(39)); // 512GB
+}
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [arm && need_xcpu_tlb_flush]:
+
+IMPLEMENT inline
+void
+Mem_space::sync_write_tlb_active_on_cpu()
+{
+  // Ensure that the write to _tlb_active_on_cpu (store) is visible to all other
+  // CPUs, before any page table entry of this memory space is accessed on the
+  // current CPU, thus potentially cached in the TLB. Or rather before returning
+  // to user space, because only page table entries "not from a translation
+  // regime for an Exception level that is lower than the current Exception
+  // level can be allocated to a TLB at any time" (see ARM DDI 0487 H.a
+  // D5-4907).
+  //
+  // However, the only way to ensure a globally visible order between an
+  // ordinary store (write to _tlb_active_on_cpu) and an access by the page
+  // table walker seems to be the DSB instruction. Since a DSB instruction is
+  // not necessarily on the return path to user mode, we need to execute one
+  // here.
+  Mem::dsb();
+}
+
+IMPLEMENT inline
+void
+Mem_space::sync_read_tlb_active_on_cpu()
+{
+  // Ensure that all changes to page tables (store) are visible to all other
+  // CPUs, before accessing _tlb_active_on_cpu (load) on the current CPU. This
+  // has to be DSB, because the page table walker is considered to be a separate
+  // observer, for which a store to a page table "is only guaranteed to be
+  // observable after the execution of a DSB instruction by the PE that executed
+  // the store" (see ARM DDI 0487 H.a D5-4927)
+  Mem::dsb();
 }

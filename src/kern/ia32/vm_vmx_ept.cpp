@@ -242,6 +242,7 @@ void
 Vm_vmx_ept::tlb_flush(bool) override
 {
   Vm_vmx_ept_tlb::flush_single(_ept_phys);
+  tlb_mark_unused();
 }
 
 PUBLIC
@@ -400,6 +401,8 @@ Vm_vmx_ept::load_vm_memory(void *src)
 {
   load(Vmx::F_guest_cr3, src);
   Vmx::vmwrite(Vmx::F_ept_ptr, _ept_phys | 6 | (3 << 3));
+
+  tlb_mark_used();
 }
 
 PUBLIC inline

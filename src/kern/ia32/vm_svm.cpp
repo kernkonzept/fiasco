@@ -554,6 +554,7 @@ Vm_svm::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, Vmcb *vmcb_s)
         }
     }
 
+  tlb_mark_used();
 
   // set MCE according to host
   kernel_vmcb_s->state_save_area.cr4 |= Cpu::get_cr4() & CR4_MCE;
@@ -632,6 +633,9 @@ Vm_svm::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, Vmcb *vmcb_s)
       vmcb_s->state_save_area.cr3 = kernel_vmcb_s->state_save_area.cr3;
       vmcb_s->state_save_area.cr4 = kernel_vmcb_s->state_save_area.cr4;
     }
+
+  // we flush the tlb on each entry
+  tlb_mark_unused();
 
   copy_control_area_back(vmcb_s, kernel_vmcb_s);
 

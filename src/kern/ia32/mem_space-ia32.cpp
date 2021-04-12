@@ -685,5 +685,25 @@ Mem_space::tlb_flush(bool = false)
 {
   auto asid = c_asid();
   if (asid != Mem_unit::Asid_invalid)
-    Mem_unit::tlb_flush(asid);
+    {
+      Mem_unit::tlb_flush(asid);
+      tlb_mark_unused_if_non_current();
+    }
+}
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [(ia32 || ux || amd64) && need_xcpu_tlb_flush]:
+
+IMPLEMENT inline
+void
+Mem_space::sync_write_tlb_active_on_cpu()
+{
+  // No barrier needed
+}
+
+IMPLEMENT inline
+void
+Mem_space::sync_read_tlb_active_on_cpu()
+{
+  // No barrier needed
 }

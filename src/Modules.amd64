@@ -15,7 +15,7 @@ PREPROCESS_PARTS 	+= arch $(CONFIG_ABI) 64bit iofp \
 			   $(CONFIG_XARCH) i8259 pc i8254 fpu \
 			   auto_map_kip io realmode libuart
 
-PREPROCESS_PARTS-$(CONFIG_MP)                += mp
+PREPROCESS_PARTS-$(CONFIG_MP)                += mp need_xcpu_tlb_flush
 PREPROCESS_PARTS-$(CONFIG_JDB)               += debug log
 PREPROCESS_PARTS-$(CONFIG_SCHED_PIT)         += pit_timer
 PREPROCESS_PARTS-$(CONFIG_SCHED_RTC)         += rtc_timer

@@ -477,7 +477,7 @@ Mem_space::make_current()
 //--------------------------------------------------------------
 IMPLEMENTATION [!mips_vz]:
 
-IMPLEMENT inline NEEDS ["kmem.h", "logdefs.h", Mem_space::c_asid]
+IMPLEMENT_OVERRIDE inline NEEDS ["kmem.h", "logdefs.h", Mem_space::c_asid]
 void Mem_space::switchin_context(Mem_space *)
 {
 #if 0
@@ -485,6 +485,7 @@ void Mem_space::switchin_context(Mem_space *)
   if (this == kernel_space())
     return;
 #endif
+  tlb_mark_used();
 
   CNT_ADDR_SPACE_SWITCH;
   make_current();
@@ -495,7 +496,10 @@ void
 Mem_space::tlb_flush(bool force = false)
 {
   if (force)
-    Mem_unit::tlb_flush(c_asid(), 0);
+    {
+      Mem_unit::tlb_flush(c_asid(), 0);
+      tlb_mark_unused_if_non_current();
+    }
 }
 
 
@@ -615,6 +619,7 @@ Mem_space::tlb_flush(bool force = false)
   Cpu_number cpu = current_cpu();
   Mem_unit::tlb_flush(Asid_ops::get_id(this, cpu),
                       Guest_id_ops::get_id(this, cpu));
+  tlb_mark_unused_if_non_current();
 }
 
 PRIVATE inline
@@ -639,7 +644,7 @@ Mem_space::set_guest_ctl1_rid(bool guest)
       : : "r"(gid));
 }
 
-IMPLEMENT inline NEEDS ["kmem.h", Mem_space::asid, "logdefs.h", "alternatives.h"]
+IMPLEMENT_OVERRIDE inline NEEDS ["kmem.h", "logdefs.h", "alternatives.h"]
 void Mem_space::switchin_context(Mem_space *)
 {
 #if 0
@@ -647,6 +652,8 @@ void Mem_space::switchin_context(Mem_space *)
   if (this == kernel_space())
     return;
 #endif
+  tlb_mark_used();
+
   asm volatile (ALTERNATIVE_INSN(
         "nop",
         "mtc0 %0, $10, 4",  // Load GuestCtl1 with guest ID
@@ -665,6 +672,8 @@ unsigned Mem_space::switchin_guest_context()
   auto c = current_cpu();
   unsigned guest_id = _guest_id_alloc.cpu(c).alloc(this, c);
 
+  tlb_mark_used();
+
   asm volatile (ALTERNATIVE_INSN(
         "nop",
         "mtc0 %0, $10, 4",  // Load GuestCtl1 with guest ID
@@ -677,3 +686,25 @@ unsigned Mem_space::switchin_guest_context()
   return guest_id;
 }
 
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [mips && need_xcpu_tlb_flush]:
+
+IMPLEMENT inline
+void
+Mem_space::sync_write_tlb_active_on_cpu()
+{
+  // Ensure that the write to _tlb_active_on_cpu (store) is visible to all
+  // other CPUs, before any page table entry of this memory space is accessed
+  // (load) on the current CPU, thus potentially cached in the TLB.
+  Mem::mp_mb();
+}
+
+IMPLEMENT inline
+void
+Mem_space::sync_read_tlb_active_on_cpu()
+{
+  // Ensure that all changed page table entries (store) are visible to all other
+  // CPUs, before accessing _tlb_active_on_cpu (load) on the current CPU.
+  Mem::mp_mb();
+}
