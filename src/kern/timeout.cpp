@@ -246,21 +246,6 @@ Timeout::expire()
   _flags.hit = 1;
   return expired();
 }
-/**
- * Dequeue an expired timeout.
- * @return true if a reschedule is necessary, false otherwise.
- */
-PUBLIC inline
-bool
-Timeout::dequeue(bool is_expired = true)
-{
-  To_list::remove(this);
-
-  if (is_expired)
-    return expire();
-  else
-    return false;
-}
 
 /**
  * Handles the timeouts, i.e. call expired() for the expired timeouts
