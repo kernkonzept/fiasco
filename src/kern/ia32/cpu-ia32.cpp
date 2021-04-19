@@ -972,6 +972,9 @@ void
 Cpu::update_features_info()
 {
   cpuid(1, &_version, &_brand, &_ext_features, &_features);
+
+  if (family() == 6 && model() == 0x5c) // Apollo Lake
+    _ext_features &= ~FEATX_MONITOR;
 }
 
 PRIVATE FIASCO_INIT_CPU
