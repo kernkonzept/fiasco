@@ -187,14 +187,6 @@ Receiver::set_timeout(Timeout *t, Unsigned64 tval)
 
 PUBLIC inline
 void
-Receiver::dequeue_timeout()
-{
-  if (_timeout)
-    _timeout->dequeue(_timeout->has_hit());
-}
-
-PUBLIC inline
-void
 Receiver::enqueue_timeout_again()
 {
   if (_timeout && Cpu::online(home_cpu()))
