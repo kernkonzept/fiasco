@@ -150,8 +150,7 @@ Task::alloc_ku_mem_chunk(User<void>::Ptr u_addr, unsigned size, void **k_addr)
 
         default:
           printf("UTCB mapping failed: va=%p, ph=%p, res=%d\n",
-                 (void *)cxx::int_value<Virt_addr>(user_va),
-                 (void *)cxx::int_value<Virt_addr>(kern_va), res);
+                 (void *)user_va, (void *)kern_va, res);
           kdb_ke("BUG in utcb allocation");
           free_ku_mem_chunk(p, u_addr, size, cxx::int_value<Virt_size>(i));
           return 0;
@@ -180,7 +179,7 @@ Task::alloc_ku_mem(L4_fpage ku_area)
   if (!m)
     return -L4_err::ENomem;
 
-  User<void>::Ptr u_addr((void *)cxx::int_value<Virt_addr>(ku_area.mem_address()));
+  User<void>::Ptr u_addr((void *)ku_area.mem_address());
 
   void *p = 0;
   if (int e = alloc_ku_mem_chunk(u_addr, sz, &p))

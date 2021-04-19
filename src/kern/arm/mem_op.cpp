@@ -155,8 +155,7 @@ Mem_op::__arm_mem_cache_maint(int op, void const *start, void const *end)
         {
           Virt_addr vstart = Virt_addr(phys_addr) | offs;
           Virt_addr vend = vstart + sz;
-          __arm_kmem_cache_maint(op, (void *)cxx::int_value<Virt_addr>(vstart),
-                                 (void *)cxx::int_value<Virt_addr>(vend));
+          __arm_kmem_cache_maint(op, (void *)vstart, (void *)vend);
         }
       v += sz;
     }
