@@ -1506,7 +1506,7 @@ Jdb::leave_wait_for_others()
 	    {
 	      // notify other CPU
               Jdb::remote_func.cpu(c).reset_mp_safe();
-//	      printf("JDB: wait for CPU[%2u] to leave\n", c);
+//	      printf("JDB: wait for CPU[%2u] to leave\n", cxx::int_value<Cpu_number>(c));
 	      all_there = false;
 	    }
 	}
