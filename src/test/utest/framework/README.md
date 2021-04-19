@@ -197,6 +197,8 @@ test will not terminate, if the comparison returns false.
 To allow for post-processing please provide a group and a test name to the
 framework with `Utest_fw::tap_log.new_test()`.
 This allows to create a TAP line for each finished test.
+For tooling purposes, either directly define the `group_name` in the call to
+`new_test()` or use a variable of `static char const *` type.
 
 You need to call `Utest_fw::tap_log.finish()` at the end of the test suite.
 
