@@ -51,7 +51,7 @@ SECTIONS {
     *(.bootstrap.anno)
 
   } : btext
-  
+
   . = ALIGN(0x10);
   .bss_boot : {
       *(.bootstrap.bss .bootstrap.gnu.linkonce.b.*)
@@ -219,7 +219,7 @@ SECTIONS {
     __CTOR_LIST__ = .;
 
     . = ALIGN(0x10);
-    __DTOR_END__ = .;    
+    __DTOR_END__ = .;
     KEEP (*(SORT (.dtors.*)))
     KEEP (*(.dtors))
     __DTOR_LIST__ = .;
