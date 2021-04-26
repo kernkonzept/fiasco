@@ -1711,7 +1711,7 @@ private:
      */
     bool try_dispatch()
     {
-      if (_s)
+      if (access_once(&_s))
         return false;
 
       return mp_cas(&_s, Not_running, Running);
