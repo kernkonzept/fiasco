@@ -17,6 +17,12 @@ public:
   typedef Cap_diff V_pfc;
   typedef Order Page_order;
 
+  Obj_space_phys() : _dir(nullptr)
+  {}
+
+  bool initialize()
+  { return alloc_dir(); }
+
   bool v_lookup(V_pfn const &virt, Phys_addr *phys,
                 Page_order *size, Attr *attribs);
 
@@ -142,10 +148,10 @@ IMPLEMENTATION:
 #include "ram_quota.h"
 #include "static_assert.h"
 
-PUBLIC template< typename SPACE >
+PRIVATE template< typename SPACE >
 inline NEEDS["static_assert.h"]
 bool
-Obj_space_phys<SPACE>::initialize()
+Obj_space_phys<SPACE>::alloc_dir()
 {
   static_assert(sizeof(Cap_dir) == Config::PAGE_SIZE, "cap_dir size mismatch");
   _dir = (Cap_dir*)Kmem_alloc::allocator()->q_alloc(ram_quota(), Config::page_size());
@@ -178,7 +184,7 @@ PRIVATE template< typename SPACE >
 typename Obj_space_phys<SPACE>::Entry *
 Obj_space_phys<SPACE>::caps_alloc(Cap_index virt)
 {
-  if (EXPECT_FALSE(!_dir))
+  if (EXPECT_FALSE(!_dir && !alloc_dir()))
     return 0;
 
   static_assert(sizeof(Cap_table) == Config::PAGE_SIZE, "cap table size mismatch");
