@@ -148,7 +148,7 @@ SECTIONS {
     KEEP (*(SORT (.ctors.*)))
     __CTOR_LIST__ = .;
 
-    __DTOR_END__ = .;    
+    __DTOR_END__ = .;
     KEEP (*(SORT (.dtors.*)))
     KEEP (*(.dtors))
     __DTOR_LIST__ = .;
