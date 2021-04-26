@@ -61,14 +61,14 @@ SECTIONS {
 	      
   . = kernel_load_addr + 0x1000;
 	      
-  .text : {
+  .text kernel_load_addr + 0x1000 : {
     MWORD(_start_kernel)
     MWORD(my_kernel_info_page)
     KEEP(*(.bootstrap.info))
     ASSERT (ABSOLUTE(.) == end_of_bootstrap_info, "invalid size of bootstrap.info");
 
     . = ABSOLUTE(start_of_loader);
-    *(.bootstrap.text)
+    KEEP(*(.bootstrap.text))
   } :bstrap
 
   . = ALIGN(4K);

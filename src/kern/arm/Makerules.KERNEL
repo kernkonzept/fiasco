@@ -21,20 +21,32 @@ bootstrap_ldflags += -T$(bootstrap_lds)
 
 bootstrap_export   = _start start_of_loader end_of_bootstrap_info
 bootstrap_strip    = --strip-all $(addprefix --keep-symbol=,$(bootstrap_export))
+bootstrap_syms     = end_of_bootstrap_info|_start|start_of_loader
+bootstrap_sed      = 's/^0*([0-9a-f]*) [a-zA-Z] ($(bootstrap_syms))/\2 = 0x\1;/p'
 
 bootstrap.$(KERNEL).pre.o: $(OBJ_BOOTSTRAP) $(LIBGCC) $(bootstrap_lds)
 	$(LINK_MESSAGE)
 	$(VERBOSE)$(LD) $(bootstrap_ldflags) $(OBJ_BOOTSTRAP) $(LIBGCC) -o $@
 
-bootstrap.$(KERNEL).o: bootstrap.$(KERNEL).pre.o
-	$(LINK_MESSAGE)
-	$(VERBOSE)$(OBJCOPY) $(bootstrap_strip) $< $@
+bootstrap.$(KERNEL).bin: bootstrap.$(KERNEL).pre.o
+	$(COMP_MESSAGE)
+	$(VERBOSE)$(OBJCOPY) -O binary --only-section=.bootstrap.text $< $@
+
+bootstrap.$(KERNEL).rel: bootstrap.$(KERNEL).bin
+	$(COMP_MESSAGE)
+	$(VERBOSE)$(OBJCOPY) -I binary -O $(OBJCOPY_BFDNAME) -B $(OBJCOPY_BFDARCH) \
+	--rename-section .data=.bootstrap.text $< $@
+
+# The linker will treat this file as linker script.
+bootstrap.$(KERNEL).sym: bootstrap.$(KERNEL).pre.o
+	$(COMP_MESSAGE)
+	$(VERBOSE)$(NM) $< | sed -n -E $(bootstrap_sed) > $@
 
 # $(1) = fiasco - variable
 # $(2) = fiasco.debug - variable
 # $(3) = Additional $(OBJ_X), e.g. OBJ_<unittest>
 define gen_kernel_rules =
-$(2): kernel.arm.lds $$(CRT0) bootstrap.$$(KERNEL).o $$(OBJ_KERNEL_noboot) $(3) $$(JDB) $$(LIBK) $$(KERNEL_EXTRA_LIBS) $$(LIBDISASM) $$(ABI) libdrivers.a $$(LIBUART) $$(CXXLIB) $$(MINILIBC) $$(LIBGCC) $$(MINILIBC) libgluedriverslibc.a
+$(2): kernel.arm.lds $$(CRT0) bootstrap.$$(KERNEL).rel bootstrap.$$(KERNEL).sym $$(OBJ_KERNEL_noboot) $(3) $$(JDB) $$(LIBK) $$(KERNEL_EXTRA_LIBS) $$(LIBDISASM) $$(ABI) libdrivers.a $$(LIBUART) $$(CXXLIB) $$(MINILIBC) $$(LIBGCC) $$(MINILIBC) libgluedriverslibc.a
 	$$(LINK_MESSAGE)
 	$$(VERBOSE)$$(LD) $$(LDFLAGS) -m $$(LD_EMULATION) $$(KERNEL_LDFLAGS) -N -defsym kernel_load_addr=$$(CONFIG_KERNEL_LOAD_ADDR) \
 	-T $$< -o $$@ $$(filter-out $$<,$$+)
