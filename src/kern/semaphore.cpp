@@ -147,8 +147,11 @@ Semaphore::down(Thread *ct)
 
 PRIVATE inline NEEDS["assert_opt.h"] NOEXPORT ALWAYS_INLINE
 L4_msg_tag
-Semaphore::sys_down(L4_timeout t, Utcb const *utcb)
+Semaphore::sys_down(L4_fpage::Rights rights, L4_timeout t, Utcb const *utcb)
 {
+  if (EXPECT_FALSE(!(rights & L4_fpage::Rights::CS())))
+    return commit_result(-L4_err::EPerm);
+
   Thread *const c_thread = ::current_thread();
   assert_opt (c_thread);
 
@@ -191,7 +194,7 @@ Semaphore::sys_down(L4_timeout t, Utcb const *utcb)
 
 PUBLIC
 L4_msg_tag
-Semaphore::kinvoke(L4_obj_ref, L4_fpage::Rights /*rights*/, Syscall_frame *f,
+Semaphore::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
                    Utcb const *utcb, Utcb *)
 {
   L4_msg_tag tag = f->tag();
@@ -209,7 +212,7 @@ Semaphore::kinvoke(L4_obj_ref, L4_fpage::Rights /*rights*/, Syscall_frame *f,
       switch (op)
         {
         case Op_down:
-          return sys_down(f->timeout().rcv, utcb);
+          return sys_down(rights, f->timeout().rcv, utcb);
 
         default:
           return commit_result(-L4_err::ENosys);
