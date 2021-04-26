@@ -241,7 +241,8 @@ PF::is_read_error(Mword cause)
 {
   // bit 0 in the exception code denotes a write / store access
   // in all TLB, Address, and bus errors
-  return !(cause & 4);
+  // 0x13 is triggered on a read access if the RI (read inhibit) bit is set.
+  return !(cause & 4) || ((cause & 0x7c) == (0x13 << 2));
 }
 
 PUBLIC static inline NEEDS["trap_state.h"]
