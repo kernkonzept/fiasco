@@ -472,9 +472,12 @@ Irq_sender::hit_edge_irq(Irq_base *i, Upstream_irq const *ui)
 
 PRIVATE
 L4_msg_tag
-Irq_sender::sys_bind(L4_msg_tag tag, Utcb const *utcb,
+Irq_sender::sys_bind(L4_msg_tag tag, L4_fpage::Rights rights, Utcb const *utcb,
                      Syscall_frame *)
 {
+  if (EXPECT_FALSE(!(rights & L4_fpage::Rights::CS())))
+    return commit_result(-L4_err::EPerm);
+
   Thread *thread;
 
   if (tag.items())
@@ -523,7 +526,7 @@ Irq_sender::sys_detach()
 
 PUBLIC
 L4_msg_tag
-Irq_sender::kinvoke(L4_obj_ref, L4_fpage::Rights /*rights*/, Syscall_frame *f,
+Irq_sender::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
                     Utcb const *utcb, Utcb *)
 {
   L4_msg_tag tag = f->tag();
@@ -538,7 +541,7 @@ Irq_sender::kinvoke(L4_obj_ref, L4_fpage::Rights /*rights*/, Syscall_frame *f,
       switch (op)
         {
         case Op_bind: // the Rcv_endpoint opcode (equal to Ipc_gate::bind_thread)
-          return sys_bind(tag, utcb, f);
+          return sys_bind(tag, rights, utcb, f);
         default:
           return commit_result(-L4_err::ENosys);
         }
