@@ -207,9 +207,12 @@ void Ipc_gate_obj::operator delete (void *_f)
 
 PRIVATE inline NOEXPORT NEEDS["assert_opt.h"]
 L4_msg_tag
-Ipc_gate_ctl::bind_thread(L4_obj_ref, L4_fpage::Rights,
+Ipc_gate_ctl::bind_thread(L4_obj_ref, L4_fpage::Rights rights,
                           Syscall_frame *f, Utcb const *in, Utcb *)
 {
+  if (EXPECT_FALSE(!(rights & L4_fpage::Rights::CS())))
+    return commit_result(-L4_err::EPerm);
+
   L4_msg_tag tag = f->tag();
 
   if (tag.words() < 2)
