@@ -297,10 +297,7 @@ Thread::call_nested_trap_handler(Trap_state *ts)
   } p;
 
   if (!ntr)
-    {
-      LOG_MSG(current(), "===== enter jdb =====");
-      p.stack = dbg_stack.cpu(log_cpu).stack_top;
-    }
+    p.stack = dbg_stack.cpu(log_cpu).stack_top;
   else
     p.stack = 0;
 
