@@ -156,7 +156,7 @@ Thread::ipc_receiver_aborted() override
   assert (wait_queue());
   set_wait_queue(0);
 
-  if (xcpu_state_change(~0UL, Thread_canceled | Thread_ready, true))
+  if (xcpu_state_change(~0UL, Thread_transfer_failed | Thread_ready, true))
     current()->switch_to_locked(this);
 }
 
@@ -1106,7 +1106,7 @@ Thread::do_send_wait(Thread *partner, L4_timeout snd_t)
   if (EXPECT_TRUE(!(ipc_state & Thread_send_wait)))
     return true;
 
-  if (EXPECT_FALSE(ipc_state & Thread_canceled))
+  if (EXPECT_FALSE(ipc_state & Thread_transfer_failed))
     {
       state_del_dirty(Thread_full_ipc_mask);
       utcb().access()->error = L4_error::Canceled;
