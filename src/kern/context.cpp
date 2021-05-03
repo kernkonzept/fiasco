@@ -462,11 +462,11 @@ Context_ptr::ptr(Space *s, L4_fpage::Rights *rights) const
 
 /**
  * Initialize a context.
- * 
+ *
  * After setup, a switch_exec_locked to this context results in a return to user
  * code using the return registers at regs(). The return registers are not
  * initialized however; neither is the Space to be used in thread switching.
- * 
+ *
  * \pre (_kernel_sp == 0)  &&  (* (stack end) == 0)
  */
 PUBLIC inline NEEDS ["atomic.h", "entry_frame.h", <cstdio>]
