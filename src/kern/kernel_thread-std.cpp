@@ -94,7 +94,7 @@ Kernel_thread::init_workload()
 
   assert_opt (boot_task);
   check(boot_task->alloc_ku_mem(L4_fpage::mem(Mem_layout::Utcb_addr,
-                                              Config::PAGE_SHIFT+2))
+                                              Config::PAGE_SHIFT))
         >= 0);
 
   // prevent deletion of this thing
