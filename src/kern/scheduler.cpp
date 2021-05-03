@@ -31,6 +31,7 @@ IMPLEMENTATION:
 #include "l4_buf_iter.h"
 #include "l4_types.h"
 #include "entry_frame.h"
+#include "sched_context.h"
 
 
 JDB_DEFINE_TYPENAME(Scheduler, "\033[34mSched\033[m");
@@ -57,33 +58,31 @@ Scheduler::sys_run(L4_fpage::Rights, Syscall_frame *f, Utcb const *utcb)
   L4_msg_tag tag = f->tag();
   Cpu_number const curr_cpu = current_cpu();
 
-  if (EXPECT_FALSE(tag.words() < 5))
+  unsigned long sz = tag.words() * sizeof(Mword);
+  if (EXPECT_FALSE(sz < sizeof(L4_sched_param) + sizeof(Mword)))
     return commit_result(-L4_err::EInval);
-
-  unsigned long sz = sizeof (L4_sched_param_legacy);
-
-    {
-      L4_sched_param const *sched_param = reinterpret_cast<L4_sched_param const*>(&utcb->values[1]);
-      if (sched_param->sched_class < 0)
-        sz = sched_param->length;
-
-      sz += sizeof(Mword) - 1;
-      sz /= sizeof(Mword);
-
-      if (sz + 1 > tag.words())
-	return commit_result(-L4_err::EInval);
-    }
+  sz -= sizeof(Mword); // skip first Mword containing the Opcode
 
   Ko::Rights rights;
   Thread *thread = Ko::deref<Thread>(&tag, utcb, &rights);
   if (!thread)
     return tag;
 
-
-  Mword _store[sz];
-  memcpy(_store, &utcb->values[1], sz * sizeof(Mword));
+  Mword _store[sz / sizeof(Mword)];
+  memcpy(_store, &utcb->values[1], sz);
 
   L4_sched_param const *sched_param = reinterpret_cast<L4_sched_param const *>(_store);
+
+  if (!sched_param->is_legacy())
+    if (EXPECT_FALSE(sched_param->length > sz))
+      return commit_result(-L4_err::EInval);
+
+  static_assert(sizeof(L4_sched_param_legacy) <= sizeof(L4_sched_param),
+                "Adapt above check");
+
+  int ret = Sched_context::check_param(sched_param);
+  if (EXPECT_FALSE(ret < 0))
+    return commit_result(ret);
 
   Thread::Migration info;
 

@@ -80,22 +80,32 @@ Sched_context::owner() const
   return context();
 }
 
-PUBLIC
+PUBLIC static inline
 int
-Sched_context::set(L4_sched_param const *_p)
+Sched_context::check_param(L4_sched_param const *_p)
 {
   Sp const *p = reinterpret_cast<Sp const *>(_p);
   if (p->p.sched_class != L4_sched_param_wfq::Class)
     return -L4_err::ERange;
 
+  if (!_p->check_length<L4_sched_param_wfq>())
+    return -L4_err::EInval;
+
   if (p->wfq.quantum == 0 || p->wfq.weight == 0)
     return -L4_err::EInval;
 
+  return 0;
+}
+
+PUBLIC
+void
+Sched_context::set(L4_sched_param const *_p)
+{
+  Sp const *p = reinterpret_cast<Sp const *>(_p);
   _dl = 0;
   _q = p->wfq.quantum;
   _w = p->wfq.weight;
   _qdw =  p->wfq.quantum / p->wfq.weight;
-  return 0;
 }
 
 /**

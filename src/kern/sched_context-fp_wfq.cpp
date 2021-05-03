@@ -155,12 +155,40 @@ unsigned
 Sched_context::prio() const
 { return _sc.fp._p; }
 
-PUBLIC
+PUBLIC static inline
 int
+Sched_context::check_param(L4_sched_param const *_p)
+{
+  Sp const *p = reinterpret_cast<Sp const *>(_p);
+  switch (p->p.sched_class)
+    {
+    case L4_sched_param_fixed_prio::Class:
+      if (!_p->check_length<L4_sched_param_fixed_prio>())
+        return -L4_err::EInval;
+      break;
+
+    case L4_sched_param_wfq::Class:
+      if (!_p->check_length<L4_sched_param_wfq>())
+        return -L4_err::EInval;
+      if (p->wfq.quantum == 0 || p->wfq.weight == 0)
+        return -L4_err::EInval;
+      break;
+
+    default:
+      if (!_p->is_legacy())
+        return -L4_err::ERange;
+      break;
+    }
+
+  return 0;
+}
+
+PUBLIC
+void
 Sched_context::set(L4_sched_param const *_p)
 {
   Sp const *p = reinterpret_cast<Sp const *>(_p);
-  if (p->p.sched_class >= 0)
+  if (_p->is_legacy())
     {
       // legacy fixed prio
       _t = Fixed_prio;
@@ -171,8 +199,9 @@ Sched_context::set(L4_sched_param const *_p)
       _sc.fp._q = p->legacy_fixed_prio.quantum;
       if (p->legacy_fixed_prio.quantum == 0)
         _sc.fp._q = Config::Default_time_slice;
-      return 0;
+      return;
     }
+
   switch (p->p.sched_class)
     {
     case L4_sched_param_fixed_prio::Class:
@@ -188,18 +217,17 @@ Sched_context::set(L4_sched_param const *_p)
 
       break;
     case L4_sched_param_wfq::Class:
-      if (p->wfq.quantum == 0 || p->wfq.weight == 0)
-        return -L4_err::EInval;
       _t = Wfq;
       _sc.wfq._p = 0;
       _sc.wfq._q = p->wfq.quantum;
       _sc.wfq._w = p->wfq.weight;
       _sc.wfq._qdw =  p->wfq.quantum / p->wfq.weight;
       break;
+
     default:
-      return L4_err::ERange;
+      assert(false && "Missing check_param()?");
+      break;
     };
-  return 0;
 }
 
 

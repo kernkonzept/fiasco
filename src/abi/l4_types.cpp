@@ -640,6 +640,12 @@ struct L4_sched_param
   L4_cpu_set cpus;
   Smword sched_class; // legacy prio when positive
   Mword length;       // sizeof (...)
+
+  template<typename T>
+  bool check_length() const { return length >= sizeof(T); }
+
+  inline bool is_legacy() const
+  { return sched_class >= 0; }
 };
 
 struct L4_sched_param_legacy

@@ -92,12 +92,33 @@ Sched_context::prio() const
   return _prio;
 }
 
-PUBLIC
+PUBLIC static inline
 int
+Sched_context::check_param(L4_sched_param const *_p)
+{
+  Sp const *p = reinterpret_cast<Sp const *>(_p);
+  switch (p->p.sched_class)
+    {
+    case L4_sched_param_fixed_prio::Class:
+      if (!_p->check_length<L4_sched_param_fixed_prio>())
+        return -L4_err::EInval;
+      break;
+
+    default:
+      if (!_p->is_legacy())
+        return -L4_err::ERange;
+      break;
+    }
+
+  return 0;
+}
+
+PUBLIC
+void
 Sched_context::set(L4_sched_param const *_p)
 {
   Sp const *p = reinterpret_cast<Sp const *>(_p);
-  if (p->p.sched_class >= 0)
+  if (_p->is_legacy())
     {
       // legacy fixed prio
       _prio = p->legacy_fixed_prio.prio;
@@ -107,7 +128,7 @@ Sched_context::set(L4_sched_param const *_p)
       _quantum = p->legacy_fixed_prio.quantum;
       if (p->legacy_fixed_prio.quantum == 0)
         _quantum = Config::Default_time_slice;
-      return 0;
+      return;
     }
 
   switch (p->p.sched_class)
@@ -123,9 +144,9 @@ Sched_context::set(L4_sched_param const *_p)
       break;
 
     default:
-      return L4_err::ERange;
-    };
-  return 0;
+      assert(false && "Missing check_param()?");
+      break;
+    }
 }
 
 /**
