@@ -421,6 +421,7 @@ INTERFACE [arm_v6 || arm_v7 || arm_v8]:
 
 #include "types.h"
 #include "spin_lock.h"
+#include <asid_alloc.h>
 
 /*
    The ARM reference manual suggests to use the same address space id
@@ -470,148 +471,16 @@ INTERFACE [arm_v6 || arm_v7 || arm_v8]:
 
 EXTENSION class Mem_space
 {
-private:
-  /** Asid storage format:
-   * 63                        X      0
-   * +------------------------+--------+
-   * |   generation count     | ASID   |
-   * +------------------------+--------+
-   * X = Asid_bits - 1
-   *
-   * As the generation count increases it might happen that it wraps
-   * around and starts at 0 again. If we have address spaces which are
-   * not active for a "long time" we might see <generation, asid>
-   * tuples of the same value for different spaces after a wrap
-   * around. To decrease the likelyhood that this actually happens we
-   * use a large generation count. Under worst case assumptions
-   * (working set constantly generating new ASIDs every 100 cycles on
-   * a 1GHz processor) a wrap around happens after 429 seconds with 32
-   * bits and after 58494 years with 64 bit. We use 64bit to be on the
-   * save side.
-   */
-  struct Asid
-  {
-    enum
-    {
-      Generation_inc = 1ULL << Asid_bits,
-      Mask      = Generation_inc - 1,
-      Invalid   = ~0ULL,
-    };
-
-    typedef unsigned long long Value;
-
-    Value a;
-
-    Asid() = default;
-    Asid(unsigned long long a) : a(a) {}
-
-    bool is_valid() const
-    {
-      if (sizeof(a) == sizeof(Mword))
-        return a != Invalid;
-      else
-        return ((Unsigned32)(a >> 32) & (Unsigned32)a) != Unsigned32(~0);
-    }
-
-    bool is_invalid_generation() const
-    {
-      return a == (Invalid & ~Mask);
-    }
-
-    Value asid() const { return a & Mask; }
-
-    bool is_same_generation(Asid generation) const
-    { return (a & ~Mask) == generation.a; }
-
-    bool operator == (Asid o) const
-    { return a == o.a; }
-
-    bool operator != (Asid o) const
-    { return a != o.a; }
-  };
-
-  enum
-  {
-    // Allocate ASIDs in [Asid_base, Debug_asid_allocation] if
-    // Debug_asid_allocation != 0
-    Debug_asid_allocation = 0,
-  };
-
 public:
-  /**
-   * Keep track of reserved Asids
-   *
-   * If a generation roll over happens we have to keep track of ASIDs
-   * active on other CPUs. These ASIDs are marked as reserved in the
-   * bitmap.
-   */
-  class Asid_bitmap : public Bitmap<Asid_num>
-  {
-  public:
-    /**
-     * Reset all bits and set first available ASID to Asid_base
-     */
-    void reset()
-    {
-      clear_all();
-      _current_idx = Asid_base;
-    }
-
-    /**
-     * Find next free ASID
-     *
-     * \return First free ASID or Asid_num if no ASID is available
-     */
-    unsigned find_next();
-
-    Asid_bitmap()
-    {
-      reset();
-    }
-
-  private:
-    unsigned _current_idx;
-  };
-
-  /**
-   * Per CPU active and reserved ASIDs
-   */
-  struct Asids
-  {
-    /**
-     * Currently active ASID on a CPU.
-     *
-     * written using atomic_xchg outside of spinlock and
-     * atomic_write under protection of spinlock
-     */
-    Asid active = Asid::Invalid;
-
-    /**
-     * reserved ASID on a CPU, active during last generation change.
-     *
-     * written under protection of spinlock
-     */
-    Asid reserved = Asid::Invalid;
-  };
-
-public:
+  using Asid_alloc = Asid_alloc_t<Unsigned64, Asid_bits, Asid_base>;
+  using Asid = Asid_alloc::Asid;
+  using Asids = Asid_alloc::Asids_per_cpu;
   enum { Have_asids = 1 };
 
 private:
   /// active/reserved ASID (per CPU)
   static Per_cpu<Asids> _asids;
-
-  /// Protect elements changed during generation roll over
-  static Spin_lock<> _asid_lock;
-
-  /// current ASID generation, protected by _asid_lock
-  static Asid _generation;
-
-  /// keep track of reserved ASIDs, protected by _asid_lock
-  static Asid_bitmap _asid_bitmap;
-
-  /// keep track of pending TLB flush operations, protected by _asid_lock
-  static Cpu_mask _tlb_flush_pending;
+  static Asid_alloc _asid_alloc;
 
   /// current asid of mem_space, protected by _asid_lock
   Asid _asid = Asid::Invalid;
@@ -621,25 +490,7 @@ private:
 IMPLEMENTATION [arm_v6 || arm_v7 || arm_v8]:
 #include "cpu.h"
 #include "cpu_lock.h"
-#include "lock_guard.h"
 
-IMPLEMENT unsigned
-Mem_space::Asid_bitmap::find_next()
-{
-  if (Debug_asid_allocation && _current_idx > Debug_asid_allocation)
-    return Asid_num;
-
-  // assume a sparsely populated bitmap - the next free bit is
-  // normally found during first iteration
-  for (unsigned i = _current_idx; i < Asid_num; ++i)
-    if (operator[](i) == 0)
-      {
-        _current_idx = i + 1;
-        return i;
-      }
-
-  return Asid_num;
-}
 
 PUBLIC inline NEEDS["atomic.h"]
 unsigned long
@@ -653,120 +504,6 @@ Mem_space::c_asid() const
     return Mem_unit::Asid_invalid;
 }
 
-PRIVATE static inline NEEDS["cpu.h"]
-bool
-Mem_space::check_and_update_reserved(Asid asid, Asid update)
-{
-  bool res = false;
-
-  for (Cpu_number cpu = Cpu_number::first(); cpu < Config::max_num_cpus();
-       ++cpu)
-    {
-      if (!Cpu::online(cpu))
-        continue;
-
-      if (_asids.cpu(cpu).reserved == asid)
-        {
-          _asids.cpu(cpu).reserved = update;
-          res = true;
-        }
-    }
-  return res;
-}
-
-/**
- * Reset allocation data structures, reserve currently active ASIDs,
- * mark TLB flush pending for all CPUs
- *
- * \pre
- *   * _asid_lock held
- *
- * \post
- *   * _asids.cpu(x).reserved == ASID currently used on cpu x
- *   * _asids.cpu(x).active   == Mem_unit::Asid_invalid
- *   * _asid_bitmap[x]   != 0 for x in { _asdis.cpu(cpu).reserved }
- *   * _asid_lock held
- *
- */
-PRIVATE static inline NEEDS["atomic.h"]
-void
-Mem_space::roll_over()
-{
-  _asid_bitmap.reset();
-
-  // update reserved asids
-  for (Cpu_number cpu = Cpu_number::first(); cpu < Config::max_num_cpus();
-       ++cpu)
-    {
-      if (!Cpu::online(cpu))
-        continue;
-
-      Asid asid = atomic_exchange(&_asids.cpu(cpu).active, Asid::Invalid);
-
-      // keep reserved asid, if there already was a roll over
-      if (asid.is_valid())
-        _asids.cpu(cpu).reserved = asid;
-      else
-        asid = _asids.cpu(cpu).reserved;
-
-      if (asid.is_valid())
-        _asid_bitmap.set_bit(asid.asid());
-    }
-
-  _tlb_flush_pending = Cpu::online_mask();
-}
-
-/**
- * Get a new ASID
- *
- * Check whether the ASID is a reserved one (was in use on any cpu
- * during roll over). If it is, update generation and return.
- * Otherwise allocate a new one and handle generation roll over if
- * necessary.
- *
- * \pre
- *   * _asid_lock held
- *
- * \post
- *   * if a generation roll over happens, generation increased by Generation_inc
- *   * returned ASID is marked in _asid_bitmap and has current generation
- *   * _asid_lock held
- *
- */
-PRIVATE
-Mem_space::Asid FIASCO_FLATTEN
-Mem_space::new_asid(Asid asid, Asid generation)
-{
-  if (asid.is_valid() && _asid_bitmap[asid.asid()])
-    {
-      Asid update = asid.asid() | generation.a;
-      if (EXPECT_TRUE(check_and_update_reserved(asid, update)))
-        {
-          // This ASID was active during a roll over and therefore is
-          // still valid. Return the asid with its updated generation.
-          return update;
-        }
-    }
-
-  // Get a new ASID
-  unsigned new_asid = _asid_bitmap.find_next();
-  if (EXPECT_FALSE(new_asid == Asid_num))
-    {
-      generation = atomic_add_fetch(&_generation, Asid::Generation_inc);
-
-      if (EXPECT_FALSE(generation.is_invalid_generation()))
-        {
-          // Skip problematic generation value
-          generation = atomic_add_fetch(&_generation, Asid::Generation_inc);
-        }
-
-      roll_over();
-      new_asid = _asid_bitmap.find_next();
-    }
-
-  return new_asid | generation.a;
-}
-
 /**
  * Get a valid ASID
  *
@@ -774,57 +511,25 @@ Mem_space::new_asid(Asid asid, Asid generation)
  * current ASID, otherwise allocate a new one and invalidate TLB if
  * necessary.
  */
-PUBLIC inline NEEDS["atomic.h"]
+PUBLIC inline NEEDS[<asid_alloc.h>]
 unsigned long
 Mem_space::asid()
 {
+  Asid *active_asid = _asid_alloc.get_active_asid();
+  if (_asid_alloc.can_use_asid(&_asid, active_asid))
+    return _asid.asid();
 
-  auto *active_asid = &_asids.current().active;
-
-    {
-      Asid asid       = atomic_load(&_asid);
-      Asid generation = atomic_load(&_generation);
-
-      // is_same_generation implicitely checks for asid != Asid_invalid
-      if (   EXPECT_TRUE(asid.is_same_generation(generation))
-          && EXPECT_TRUE(atomic_exchange(active_asid, asid).is_valid()))
-        return asid.asid();
-    }
-
-  auto guard = lock_guard(_asid_lock);
-
-  // Re-read data
-  Asid asid       = atomic_load(&_asid);
-  Asid generation = atomic_load(&_generation);
-
-  // We either have an older generation or a roll over happened on
-  // another cpu - find out which one it was
-  if (!asid.is_same_generation(generation))
-    {
-      // We have an asid from an older generation - get a fresh one
-      asid = new_asid(asid, generation);
-      atomic_store(&_asid, asid);
-    }
-
-  // Is a tlb flush pending?
-  if (_tlb_flush_pending.atomic_get_and_clear(current_cpu()))
+  if (_asid_alloc.alloc_asid(&_asid, active_asid))
     {
       Mem_unit::tlb_flush();
       Mem::dsb();
     }
 
-  // Set active asid, needs to be atomic since this value is written
-  // above using atomic_xchg()
-  atomic_store(active_asid, asid);
-
-  return asid.asid();
+  return _asid.asid();
 };
 
 DEFINE_PER_CPU Per_cpu<Mem_space::Asids> Mem_space::_asids;
-Mem_space::Asid        Mem_space::_generation = Mem_space::Asid::Generation_inc;
-Mem_space::Asid_bitmap Mem_space::_asid_bitmap;
-Cpu_mask               Mem_space::_tlb_flush_pending;
-Spin_lock<>            Mem_space::_asid_lock;
+Mem_space::Asid_alloc  Mem_space::_asid_alloc(&_asids);
 
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_lpae]:
