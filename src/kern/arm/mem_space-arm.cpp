@@ -424,49 +424,8 @@ INTERFACE [arm_v6 || arm_v7 || arm_v8]:
 #include <asid_alloc.h>
 
 /*
-   The ARM reference manual suggests to use the same address space id
-   across multiple CPUs. Here we introduce a global allocation scheme
-   for ASIDs that uses a tuple of <generation, asid> to quickly decide
-   whether an address space id is valid or not.
-
-   Address space ids become invalid if all ASIDs are allocated and an
-   address space needs a new ASID. In this case we invalidate all
-   ASIDs except the ones currently used on a CPU by increasing the
-   generation and starting to allocate new ASIDs.
-
-   The scheme relies on three fields, "active", "reserved" and
-   "generation":
-   * "generation" is a global variable keeping track of the current
-      generation of ASIDs.
-   * "active" keeps track of the address space id which is currently used
-      on a CPU.
-   * "reserved" keeps track of asids active during a generation change
-
-   If the asid of an address space has an old generation or "active"
-   contains an invalid asid we might need a new ASID. So we enter a
-   critical region and
-
-   * check whether the ASID is a reserved one which can stay as is,
-     otherwise allocate a new ASID if possible
-   * if no ASID is available
-     * invalidate allocated ASIDs by incrementing the generation and by
-       resetting the reserved bitmap
-     * save all valid active ASIDs in "reserved" and mark them as reserved
-       in a bitmap
-     * set active ASID to invalid
-     * mark a tlb flush pending
-
-   "active", "generation" and the asid attribut of a mem_space are
-   read outside of the critical region and are therefore manipulated
-   using atomic operations.
-
-   The usage of a counter for the generation may lead to two address
-   spaces having the same <generation, asid> tuple after the
-   generation overflows and starts with 0 again. With 32 bit and
-   permanent ASID allocation this takes about 400 seconds and the
-   address space has a probability of 2^-24 to get the same generation
-   number. With 64bit it takes about 50000 years.
-
+  The ARM reference manual suggests to use the same address space id
+  across multiple CPUs.
 */
 
 EXTENSION class Mem_space
@@ -482,7 +441,7 @@ private:
   static Per_cpu<Asids> _asids;
   static Asid_alloc _asid_alloc;
 
-  /// current asid of mem_space, protected by _asid_lock
+  /// current ASID of mem_space, provided by _asid_alloc
   Asid _asid = Asid::Invalid;
 };
 

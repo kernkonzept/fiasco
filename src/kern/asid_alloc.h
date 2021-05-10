@@ -24,8 +24,9 @@
  * use a large generation count. Under worst case assumptions
  * (working set constantly generating new ASIDs every 100 cycles on
  * a 1GHz processor) a wrap around happens after 429 seconds with 32
- * bits and after 58494 years with 64 bit. We use 64bit to be on the
- * save side.
+ * bits and after 58494 years with 64 bit. If the architecture has
+ * support for 64 bit wide atomic operations, it is recommended to use
+ * 64 bit to be on the save side.
  */
 template<typename ASID_TYPE, unsigned ASID_BITS>
 class Asid_t
@@ -77,7 +78,7 @@ public:
  * active on other CPUs. These ASIDs are marked as reserved in the
  * bitmap.
  */
-template<unsigned ASID_BITS, unsigned long ASID_BASE>
+template<unsigned ASID_BITS, unsigned ASID_BASE>
 class Asid_bitmap_t : public Bitmap<(1UL << ASID_BITS)>
 {
 public:
@@ -157,6 +158,53 @@ public:
 };
 
 
+/**
+ * A global ASID allocator.
+ *
+ * This ASID allocator is designed for the scenario where we use the
+ * same address space id across multiple CPUs. Accordingly, the allocator
+ * implements a global allocation scheme for ASIDs that uses a tuple of
+ * <generation, asid> to quickly decide whether an address space id is
+ * valid or not.
+ *
+ * Address space ids become invalid if all ASIDs are allocated and an
+ * address space needs a new ASID. In this case we invalidate all
+ * ASIDs except the ones currently used on a CPU by increasing the
+ * generation and starting to allocate new ASIDs.
+ *
+ * The scheme relies on three fields, "active", "reserved" and
+ * "generation":
+ * * "generation" is a global variable keeping track of the current
+ *    generation of ASIDs.
+ * * "active" keeps track of the address space id which is currently used
+ *    on a CPU.
+ * * "reserved" keeps track of asids active during a generation change
+ *
+ * If the asid of an address space has an old generation or "active"
+ * contains an invalid asid we might need a new ASID. So we enter a
+ * critical region and
+ *
+ * * check whether the ASID is a reserved one which can stay as is,
+ *   otherwise allocate a new ASID if possible
+ * * if no ASID is available
+ *   * invalidate allocated ASIDs by incrementing the generation and by
+ *     resetting the reserved bitmap
+ *   * save all valid active ASIDs in "reserved" and mark them as reserved
+ *     in a bitmap
+ *   * set active ASID to invalid
+ *   * mark a tlb flush pending
+ *
+ * "active", "generation" and the asid attribut of a mem_space are
+ * read outside of the critical region and are therefore manipulated
+ * using atomic operations.
+ *
+ * The usage of a counter for the generation may lead to two address
+ * spaces having the same <generation, asid> tuple after the
+ * generation overflows and starts with 0 again. With 32 bit and
+ * permanent ASID allocation this takes about 400 seconds and the
+ * address space has a probability of 2^-24 to get the same generation
+ * number. With 64bit it takes about 50000 years.
+ */
 template<typename ASID_TYPE, unsigned ASID_BITS, unsigned ASID_BASE>
 class Asid_alloc_t
 {
@@ -192,7 +240,7 @@ private:
    * \post
    *   * _asids.cpu(x).reserved == ASID currently used on cpu x
    *   * _asids.cpu(x).active   == Mem_unit::Asid_invalid
-   *   * _asid_bitmap[x]   != 0 for x in { _asdis.cpu(cpu).reserved }
+   *   * _reserved[x] != 0 for x in { _asdis.cpu(cpu).reserved }
    *   * _lock held
    *
    */
@@ -236,7 +284,7 @@ private:
    *
    * \post
    *   * if a generation roll over happens, generation increased by Generation_inc
-   *   * returned ASID is marked in _asid_bitmap and has current generation
+   *   * returned ASID is marked in _reserved and has current generation
    *   * _lock held
    *
    */
@@ -322,4 +370,3 @@ private:
   /// keep track of reserved ASIDs, protected by _lock
   Asid_bitmap _reserved;
 };
-
