@@ -127,8 +127,8 @@ static void
 Jdb_tbuf_show::show_perf_event_unit_mask_entry(Mword nr, Mword idx,
                                                Mword unit_mask, int exclusive)
 {
-  const char *desc;
-  Mword value;
+  const char *desc = nullptr;
+  Mword value = 0;
 
   Perf_cnt::get_unit_mask_entry(nr, idx, &value, &desc);
   if (!desc || !*desc)
@@ -142,8 +142,8 @@ Jdb_tbuf_show::show_perf_event_unit_mask_entry(Mword nr, Mword idx,
 static void
 Jdb_tbuf_show::show_perf_event(Mword nr)
 {
-  const char *name, *desc;
-  unsigned evntsel;
+  const char *name = nullptr, *desc = nullptr;
+  unsigned evntsel = 0;
   Mword add_kcnt = Config::Jdb_accounting ? Kern_cnt::Valid_ctrs : 0;
 
   if (nr < add_kcnt)
@@ -170,9 +170,9 @@ Jdb_tbuf_show::select_perf_event_unit_mask(Mword nr, Mword unit_mask)
   Mword max_absy = 0;
   Mword lines    = 10;
 
-  Mword default_value, nvalues, value;
-  Perf_cnt::Unit_mask_type type;
-  const char *desc;
+  Mword default_value = 0, nvalues = 0, value = 0;
+  Perf_cnt::Unit_mask_type type = Perf_cnt::None;
+  const char *desc = nullptr;
 
   Perf_cnt::get_unit_mask(nr, &type, &default_value, &nvalues);
   int  exclusive = (type == Perf_cnt::Exclusive);
