@@ -463,22 +463,11 @@ Mem_space::c_asid() const
     return Mem_unit::Asid_invalid;
 }
 
-/**
- * Get a valid ASID
- *
- * Check validity of current ASID. If it is valid, return the
- * current ASID, otherwise allocate a new one and invalidate TLB if
- * necessary.
- */
 PUBLIC inline NEEDS[<asid_alloc.h>]
 unsigned long
 Mem_space::asid()
 {
-  Asid *active_asid = _asid_alloc.get_active_asid();
-  if (_asid_alloc.can_use_asid(&_asid, active_asid))
-    return _asid.asid();
-
-  if (_asid_alloc.alloc_asid(&_asid, active_asid))
+  if (_asid_alloc.get_or_alloc_asid(&_asid))
     {
       Mem_unit::tlb_flush();
       Mem::dsb();

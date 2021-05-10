@@ -323,6 +323,14 @@ private:
 public:
   Asid_alloc_t(Asids const &asids) : _asids(asids) {}
 
+  /**
+   * Check validity of given ASID.
+   *
+   * \param asid        The ASID to check.
+   * \param active_asid The active ASID of the current CPU.
+   *
+   * \return True if the given ASID is valid.
+   */
   bool can_use_asid(Asid *asid, Asid *active_asid)
   {
     Asid a = atomic_load(asid);
@@ -331,6 +339,15 @@ public:
            && EXPECT_TRUE(atomic_exchange(active_asid, a).is_valid());
   }
 
+  /**
+   * Allocate a new ASID, if necessary, and set it as the active ASID of
+   * the current CPU.
+   *
+   * \param asid        The ASID to reuse or allocate.
+   * \param active_asid The active ASID of the current CPU.
+   *
+   * \return True if TLB invalidation is required.
+   */
   bool alloc_asid(Asid *asid, Asid *active_asid)
   {
     auto guard = lock_guard(_lock);
@@ -356,6 +373,28 @@ public:
     return _tlb_flush_pending.atomic_get_and_clear(current_cpu());
   }
 
+  /**
+   * Get a valid ASID.
+   *
+   * Check validity of the given ASID (without grabbing the lock).
+   * If it is not valid, allocate a new one.
+   *
+   * \param asid The ASID to use or allocate.
+   *
+   * \return True if TLB invalidation is required.
+   */
+  bool get_or_alloc_asid(Asid *asid)
+  {
+    Asid *active_asid = get_active_asid();
+    if (can_use_asid(asid, active_asid))
+      return false;
+
+    return alloc_asid(asid, active_asid);
+  }
+
+  /**
+   * \return The active ASID on the current CPU.
+   */
   Asid *get_active_asid() { return &_asids.current().active; }
 
 private:
