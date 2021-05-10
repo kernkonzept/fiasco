@@ -29,6 +29,8 @@ public:
     Caps_start           = 0xf5000000,
     Caps_end             = 0xfd000000,
     Kernel_image         = 0xfd000000,
+
+    Tbuf_buffer_size     = 0x2000000,
   };
 private:
   static unsigned short __ph_to_pm[1UL << (32 - Config::SUPERPAGE_SHIFT)];

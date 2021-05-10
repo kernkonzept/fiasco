@@ -29,6 +29,8 @@ public:
     Caps_start           = 0xf5000000,
     Caps_end             = 0xfd000000,
     Kernel_image         = 0xfd000000,
+
+    Tbuf_buffer_size     = 0x2000000,
   };
 
   static Address Tbuf_buffer_area;
