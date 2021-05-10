@@ -78,15 +78,23 @@ public:
  * active on other CPUs. These ASIDs are marked as reserved in the
  * bitmap.
  */
-template<unsigned ASID_BITS, unsigned ASID_BASE>
+template<unsigned ASID_BITS, unsigned ASID_BASE, unsigned (*ASID_NUM)()>
 class Asid_bitmap_t : public Bitmap<(1UL << ASID_BITS)>
 {
 public:
   enum
   {
     Asid_base = ASID_BASE,
-    Asid_num = 1UL << ASID_BITS
+    Asid_num_max = 1UL << ASID_BITS
   };
+
+  static inline unsigned asid_num()
+  {
+    if (ASID_NUM != nullptr)
+      return ASID_NUM();
+
+    return Asid_num_max;
+  }
 
   /**
    * Reset all bits and set first available ASID to Asid_base
@@ -106,14 +114,14 @@ public:
   {
     // assume a sparsely populated bitmap - the next free bit is
     // normally found during first iteration
-    for (unsigned i = _current_idx; i < Asid_num; ++i)
+    for (unsigned i = _current_idx; i < asid_num(); ++i)
       if ((*this)[i] == 0)
         {
           _current_idx = i + 1;
           return i;
         }
 
-    return Asid_num;
+    return asid_num();
   }
 
   Asid_bitmap_t()
@@ -205,14 +213,15 @@ public:
  * address space has a probability of 2^-24 to get the same generation
  * number. With 64bit it takes about 50000 years.
  */
-template<typename ASID_TYPE, unsigned ASID_BITS, unsigned ASID_BASE>
+template<typename ASID_TYPE, unsigned ASID_BITS, unsigned ASID_BASE,
+         unsigned (*ASID_NUM)() = nullptr>
 class Asid_alloc_t
 {
 public:
   using Asid = Asid_t<ASID_TYPE, ASID_BITS>;
   using Asids_per_cpu = Asids_per_cpu_t<ASID_TYPE, ASID_BITS>;
   using Asids = Per_cpu_ptr<Asids_per_cpu>;
-  using Asid_bitmap = Asid_bitmap_t<ASID_BITS, ASID_BASE>;
+  using Asid_bitmap = Asid_bitmap_t<ASID_BITS, ASID_BASE, ASID_NUM>;
 
 private:
   bool check_and_update_reserved(Asid asid, Asid update)
@@ -303,7 +312,7 @@ private:
 
     // Get a new ASID
     unsigned new_asid = _reserved.find_next();
-    if (EXPECT_FALSE(new_asid == Asid_bitmap::Asid_num))
+    if (EXPECT_FALSE(new_asid == Asid_bitmap::asid_num()))
       {
         generation = atomic_add_fetch(&_gen, Asid::Generation_inc);
 
