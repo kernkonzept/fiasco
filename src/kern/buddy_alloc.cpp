@@ -28,6 +28,9 @@ protected:
 template< unsigned long MIN_LOG2_SIZE, int NUM_SIZES>
 class Buddy_t_base : public Buddy_base
 {
+  template <unsigned long, int>
+  friend class Buddy_t_base_tester;
+
 private:
   struct Freemap : Bitmap_base_base<unsigned long *>
   {
