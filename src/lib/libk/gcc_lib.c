@@ -1,6 +1,8 @@
 
 unsigned long long __umoddi3(unsigned long long, unsigned long long);
 unsigned long long __udivdi3(unsigned long long, unsigned long long);
+unsigned long long __udivmoddi4(unsigned long long, unsigned long long,
+                                unsigned long long *);
 
 struct llmoddiv_t
 {
@@ -31,15 +33,15 @@ static struct llmoddiv_t llmoddiv(unsigned long long div, unsigned long long s)
   while (1)
     {
       if (div >= s)
-	{
-	  div -= s;
-	  i |= tmp;
-	}
+        {
+          div -= s;
+          i |= tmp;
+        }
       if (div == 0)
-	break;
+        break;
       tmp >>= 1;
       if (!tmp)
-	break;
+        break;
       s >>= 1;
     }
 
@@ -47,8 +49,39 @@ static struct llmoddiv_t llmoddiv(unsigned long long div, unsigned long long s)
 }
 
 
+/**
+ * 64-bit unsigned modulo for 32-bit machines.
+ *
+ * \param div  Dividend.
+ * \param s    Divisor.
+ * \return div / s.
+ */
 unsigned long long __umoddi3(unsigned long long div, unsigned long long s)
-{ return llmoddiv(div,s).mod; }
+{ return llmoddiv(div, s).mod; }
 
+/**
+ * 64-bit unsigned division for 32-bit machines.
+ *
+ * \param div  Dividend.
+ * \param s    Divisor.
+ * \return div / s.
+ */
 unsigned long long __udivdi3(unsigned long long div, unsigned long long s)
-{ return llmoddiv(div,s).div; }
+{ return llmoddiv(div, s).div; }
+
+/**
+ * 64-bit unsigned division + modulo for 32-bit machines.
+ *
+ * \param n       Dividend.
+ * \param d       Divisor.
+ * \param[out] r  Pointer to the result holding div % s.
+ * \return div / s.
+ */
+unsigned long long __udivmoddi4(unsigned long long div, unsigned long long s,
+                                unsigned long long *r)
+{
+  struct llmoddiv_t md = llmoddiv(div, s);
+  if (r)
+    *r = md.mod;
+  return md.div;
+}
