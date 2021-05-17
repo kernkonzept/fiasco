@@ -232,10 +232,10 @@ Utest_fw::parse_feature_string()
       break;
     }
 
-  Utest_debug().printf("Utest_fw: external config\n"
-                       "verbose %d, restart %d, debug %d, cores %u\n",
-                       ext_info.verbose, ext_info.restart,
-                       ext_info.debug, ext_info.cores);
+  Utest_debug::printf("Utest_fw: external config\n"
+                      "verbose %d, restart %d, debug %d, cores %u\n",
+                      ext_info.verbose, ext_info.restart,
+                      ext_info.debug, ext_info.cores);
 }
 
 /**
@@ -322,7 +322,7 @@ Utest_fw::new_test(char const *group, char const *test)
       name_group_test(group, test);
     }
 
-  Utest_debug().printf("New test %s::%s/%u\n", group, test, _instance_counter);
+  Utest_debug::printf("New test %s::%s/%u\n", group, test, _instance_counter);
 }
 
 /// Emit a TAP line for the current test, if the TAP Line wasn't printed before.
@@ -447,8 +447,8 @@ Utest_fw::binary_cmp(bool finish_on_failure, bool result,
   if (result)
     {
       // Print debug output, not a TAP line.
-      Utest_debug().printf("%s::%s/%u - %s (line %i)\n", group_name(),
-                           test_name(), _instance_counter, msg, line);
+      Utest_debug::printf("%s::%s/%u - %s (line %i)\n", group_name(),
+                          test_name(), _instance_counter, msg, line);
     }
   else
     {
@@ -469,9 +469,9 @@ Utest_fw::print_eval(char const *eval, A &&val, char const *str) const
   printf("\t(%s)\n", str);
 }
 
-PUBLIC inline
+PUBLIC static inline
 int
-Utest_debug::printf(char const *fmt, ...) const
+Utest_debug::printf(char const *fmt, ...)
 {
   if (!Utest_fw::ext_info.verbose)
     return 0;
