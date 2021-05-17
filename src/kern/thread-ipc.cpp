@@ -172,15 +172,21 @@ Thread::ipc_send_msg(Receiver *recv, bool open_wait) override
   sender_dequeue(recv->sender_list());
   recv->vcpu_update_state();
   //printf("  done\n");
-  regs->tag(L4_msg_tag(regs->tag(), success ? 0 : L4_msg_tag::Error));
 
-  Mword state_del = Thread_ipc_mask | Thread_ipc_transfer;
-  Mword state_add = Thread_ready;
-  if (Receiver::prepared())
-    // same as in Receiver::prepare_receive_dirty_2
-    state_add |= Thread_receive_wait;
-  if (EXPECT_FALSE(!success))
+  Mword state_del;
+  Mword state_add;
+  if (EXPECT_TRUE(success))
     {
+      regs->tag(L4_msg_tag(regs->tag(), 0));
+      state_del = Thread_ipc_mask | Thread_ipc_transfer;
+      state_add = Thread_ready;
+      if (Receiver::prepared())
+        // same as in Receiver::prepare_receive_dirty_2
+        state_add |= Thread_receive_wait;
+    }
+  else
+    {
+      regs->tag(L4_msg_tag(regs->tag(), L4_msg_tag::Error));
       state_del = 0;
       state_add = Thread_transfer_failed | Thread_ready;
     }
