@@ -1968,6 +1968,15 @@ Cpu::init()
         wrmsr(0, 0, MSR_TSC);
     }
 
+  // See Attribs_enum on how PA0, PA2 and PA3 are used.
+  // PA0 (used):   Write back (WB).
+  // PA1 (unused): Write through (WT).
+  // PA2 (used):   Write combining (WC).
+  // PA3 (used:    Uncacheable (UC).
+  // PA4 (unused): Write back (WB).
+  // PA5 (unused): Write through (WT).
+  // PA6 (unused): Uncached, can be overridden by WC in MTRRs (UC-).
+  // PA7 (unused): Uncacheable (UC).
   if ((features() & FEAT_PAT) && can_wrmsr())
     wrmsr(0x00010406, 0x00070406, MSR_PAT);
 
