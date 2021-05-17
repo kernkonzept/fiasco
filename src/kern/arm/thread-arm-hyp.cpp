@@ -113,10 +113,10 @@ extern "C" void hyp_mode_fault(Mword abort_type, Trap_state *ts)
     case 0:
     case 1:
       ts->esr.ec() = abort_type ? 0x11 : 0;
-      printf("KERNEL%d: %s fault at %lx hsr=%lx\n",
+      printf("KERNEL%d: %s fault at lr=%lx pc=%lx hsr=%lx\n",
              cxx::int_value<Cpu_number>(current_cpu()),
              abort_type ? "SWI" : "Undefined instruction",
-             ts->km_lr, hsr);
+             ts->km_lr, ts->pc, hsr);
       break;
     case 2:
       ts->esr.ec() = 0x21;
