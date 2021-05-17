@@ -17,7 +17,8 @@ public:
     DISABLED    =     0,
     INENABLED   =     1, ///< input channel of console enabled
     OUTENABLED  =     2, ///< output channel of console enabled
-    ENABLED     =     INENABLED | OUTENABLED ///< console fully enabled
+    ENABLED     =     INENABLED | OUTENABLED, ///< console fully enabled
+    DETECT_ESC  =     4, ///< detect escape sequences
   };
 
   enum Console_attr
