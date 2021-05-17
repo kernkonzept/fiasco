@@ -14,6 +14,7 @@ INTERFACE:
 #include "timer.h"
 #include "l4_error.h"
 #include "processor.h"
+#include "kip.h"
 
 
 extern "C" void gcov_print() __attribute__((weak));
@@ -31,10 +32,7 @@ struct Utest
  */
 class Utest_debug
 {
-private:
-  bool _verbose = false;
 };
-
 
 /**
  * Printer for tap output.
@@ -50,7 +48,20 @@ private:
 class Utest_fw
 {
 public:
+  /// Data structure to store the unit test information.
+  struct External_info
+  {
+    // command line parameters
+    bool verbose = false;
+    bool restart = false;
+    bool debug   = false;
+
+    // Hardware information
+    Unsigned32 cores = 0;
+  };
+
   static Utest_fw tap_log;
+  static External_info ext_info;
 
   void test_name(char const *name) { _test_name = name; }
   void group_name(char const *name) { _group_name = name; }
@@ -157,11 +168,73 @@ private:
 // ---------------------------------------------------------------------------
 IMPLEMENTATION:
 
+#include <feature.h>
+/**
+ * Define a feature placeholder for external information filled in by
+ * bootstrap. "utest_opts=" is intended to recognize the placeholder.
+ * structure: verbose, restart, debug, reserved flags
+ *            4 digit core count
+ */
+KIP_KERNEL_FEATURE(
+    "utest_opts=aaaaaaaa");
+
 /**
  * Single instance of the test interface.
  */
 Utest_fw Utest_fw::tap_log;
+/*
+ * External information structure.
+ */
+Utest_fw::External_info Utest_fw::ext_info;
 
+/**
+ * Parse the KIP feature prefixed with utest_opts containing external
+ * information for the framework.
+ */
+PUBLIC inline
+void
+Utest_fw::parse_feature_string()
+{
+  char const *prefix = "utest_opts=";
+  unsigned const prefix_len = strlen(prefix);
+
+  // features strings start behind the version string.
+  char const *feature =  Kip::k()->version_string();
+  feature += strlen(feature) + 1; // advance ptr to first feature string.
+
+  for (; *feature; feature += strlen(feature) + 1)
+    {
+      if (0 != strncmp(feature, prefix, prefix_len))
+        continue;
+
+      feature += prefix_len; // first placeholder character;
+
+      // placeholder not changed, return.
+      if (feature[0] == 'a')
+        return;
+
+      // decode the string
+      ext_info.verbose = feature[0] == '1';
+      ext_info.restart = feature[1] == '1';
+      ext_info.debug   = feature[2] == '1';
+      // feature[3] is reserved
+
+      if (feature[4] != 'a')
+        {
+          // parse a 4 digit number from single characters
+          ext_info.cores =
+            (feature[4] - '0') * 1000 + (feature[5] - '0') * 100
+            + (feature[6] - '0') * 10 + (feature[7] - '0');
+        }
+
+      break;
+    }
+
+  Utest_debug().printf("Utest_fw: external config\n"
+                       "verbose %d, restart %d, debug %d, cores %u\n",
+                       ext_info.verbose, ext_info.restart,
+                       ext_info.debug, ext_info.cores);
+}
 
 /**
  * Print the TAP header and set a group and test name.
@@ -172,6 +245,7 @@ PUBLIC inline
 void
 Utest_fw::start(char const *group = nullptr, char const *test = nullptr)
 {
+  parse_feature_string();
   name_group_test(group, test);
   printf("\nKUT TAP TEST START\n");
 }
@@ -389,7 +463,7 @@ PUBLIC inline
 int
 Utest_debug::printf(char const *fmt, ...) const
 {
-  if (!_verbose)
+  if (!Utest_fw::ext_info.verbose)
     return 0;
 
   int ret;
