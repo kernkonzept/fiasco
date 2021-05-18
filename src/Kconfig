@@ -319,6 +319,18 @@ config VIRT_OBJ_SPACE
 	depends on !DISABLE_VIRT_OBJ_SPACE
 	depends on !KERNEL_ISOLATION
 
+config PHYS_OBJ_SPACE_AVL
+	bool "Use AVL tree for object space"
+	depends on EXPERIMENTAL
+	help
+	  Usually objects in a space are stored in a page-based two-level
+	  tree. Depending on the distribution of the capabilites this might
+	  waste some memory but is always O(1).
+
+          By enabling this option the object space is stored in an AVL tree.
+          This allocates less memory at the expense of an O(log n) lookup
+          time.
+
 config DISABLE_MAPDB
 	bool "Disable mapdb"
 	depends on EXPERIMENTAL
