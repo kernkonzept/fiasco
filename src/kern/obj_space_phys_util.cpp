@@ -1,9 +1,11 @@
-INTERFACE:
+// ------------------------------------------------------------------------
+INTERFACE [!obj_space_phys_avl]:
 
 #include "assert_opt.h"
 #include "obj_space_types.h"
 #include "ram_quota.h"
 
+// Two level page-sized mapping table
 template< typename SPACE >
 class Obj_space_phys
 {
@@ -36,12 +38,93 @@ public:
 private:
   enum
   {
-    Slots_per_dir = Config::PAGE_SIZE / sizeof(void*)
+    Slots_per_dir = Config::PAGE_SIZE / sizeof(void*),
+    Map_max_address = Slots_per_dir * Obj::Caps_per_page,
   };
 
   struct Cap_table { Entry e[Obj::Caps_per_page]; };
   struct Cap_dir   { Cap_table *d[Slots_per_dir]; };
   Cap_dir *_dir;
+
+  Ram_quota *ram_quota() const
+  {
+    assert_opt (this);
+    return SPACE::ram_quota(this);
+  }
+};
+
+// ------------------------------------------------------------------------
+INTERFACE [obj_space_phys_avl]:
+
+#include "assert_opt.h"
+#include "obj_space_types.h"
+#include "ram_quota.h"
+#include "cxx/avl_map"
+#include "kmem_slab.h"
+#include "spin_lock.h"
+
+template< typename _Type >
+class Obj_space_phys_allocator
+{
+  static Kmem_slab_t<_Type> _cap_allocator;
+
+  Ram_quota *_q;
+
+public:
+  enum { can_free = true };
+
+  Obj_space_phys_allocator(Ram_quota *q) throw() : _q(q) {}
+  Obj_space_phys_allocator(Obj_space_phys_allocator const &other) throw()
+  : _q(other._q)
+  {}
+
+  _Type *alloc() throw()
+  { return static_cast<_Type*>(_cap_allocator.q_alloc(_q)); }
+
+  void free(_Type *t) throw()
+  { _cap_allocator.q_free(_q, t); }
+};
+
+template< typename _Type >
+Kmem_slab_t<_Type> Obj_space_phys_allocator<_Type>::_cap_allocator("Cap");
+
+// AVL tree based mapping table
+template< typename SPACE >
+class Obj_space_phys
+{
+public:
+  typedef Obj::Attr Attr;
+  typedef Obj::Capability Capability;
+  typedef Obj::Entry Entry;
+  typedef Kobject_iface *Phys_addr;
+
+  typedef Obj::Cap_addr V_pfn;
+  typedef Cap_diff V_pfc;
+  typedef Order Page_order;
+
+  bool initialize()
+  { return true; }
+
+  bool v_lookup(V_pfn const &virt, Phys_addr *phys,
+                Page_order *size, Attr *attribs);
+
+  L4_fpage::Rights v_delete(V_pfn virt, Page_order size,
+                            L4_fpage::Rights page_attribs);
+  Obj::Insert_result v_insert(Phys_addr phys, V_pfn const &virt,
+                              Page_order size, Attr page_attribs);
+
+  Capability lookup(Cap_index virt);
+
+private:
+  enum
+  {
+    Map_max_address = 1UL << 20, /* 20bit obj index */
+  };
+
+  typedef cxx::Avl_map<Cap_index, Entry, cxx::Lt_functor,
+                       Obj_space_phys_allocator> Entries;
+  Entries _map;
+  Spin_lock<> _lock;
 
   Ram_quota *ram_quota() const
   {
@@ -135,17 +218,11 @@ public:
 };
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION:
+IMPLEMENTATION [!obj_space_phys_avl]:
 
-#include <cstring>
-#include <cassert>
-
-#include "atomic.h"
 #include "config.h"
-#include "cpu.h"
 #include "kmem_alloc.h"
 #include "mem.h"
-#include "mem_layout.h"
 #include "ram_quota.h"
 #include "static_assert.h"
 
@@ -159,6 +236,16 @@ Obj_space_phys<SPACE>::alloc_dir()
   if (_dir)
     Mem::memset_mwords(_dir, 0, Config::PAGE_SIZE / sizeof(Mword));
   return _dir;
+}
+
+PRIVATE template< typename SPACE >
+typename Obj_space_phys<SPACE>::Entry *
+Obj_space_phys<SPACE>::get_cap(Cap_index index, bool alloc)
+{
+  if (auto e = get_cap(index))
+    return e;
+
+  return alloc ? caps_alloc(index) : nullptr;
 }
 
 PRIVATE template< typename SPACE >
@@ -229,6 +316,52 @@ Obj_space_phys<SPACE>::caps_free()
   a->q_free(ram_quota(), Config::page_size(), d);
 }
 
+//----------------------------------------------------------------------------
+IMPLEMENTATION [obj_space_phys_avl]:
+
+#include "lock_guard.h"
+
+PUBLIC template< typename SPACE >
+inline
+Obj_space_phys<SPACE>::Obj_space_phys()
+: _map(Entries::Node_allocator(ram_quota()))
+{
+  _lock.init();
+}
+
+PRIVATE template< typename SPACE >
+typename Obj_space_phys<SPACE>::Entry *
+Obj_space_phys<SPACE>::get_cap(Cap_index index, bool alloc)
+{
+  auto guard = lock_guard(_lock);
+
+  auto e = _map.find_node(index);
+  if (e)
+    return const_cast<Entry*>(&e->second);
+
+  if (!alloc)
+    return nullptr;
+
+  auto n = _map.emplace(index);
+  if (n.second == -Entries::E_nomem)
+    return nullptr;
+
+  return &n.first->second;
+}
+
+PUBLIC template< typename SPACE >
+void
+Obj_space_phys<SPACE>::caps_free()
+{
+  auto guard = lock_guard(_lock);
+  _map.clear();
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION:
+
+#include <cassert>
+
 //
 // Utilities for map<Obj_space_phys> and unmap<Obj_space_phys>
 //
@@ -240,7 +373,7 @@ Obj_space_phys<SPACE>::v_lookup(V_pfn const &virt, Phys_addr *phys,
                                 Page_order *size, Attr *attribs)
 {
   if (size) *size = Page_order(0);
-  Entry *cap = get_cap(virt);
+  Entry *cap = get_cap(virt, false);
 
   if (EXPECT_FALSE(!cap))
     {
@@ -261,7 +394,7 @@ inline NEEDS [Obj_space_phys::get_cap]
 typename Obj_space_phys<SPACE>::Capability FIASCO_FLATTEN
 Obj_space_phys<SPACE>::lookup(Cap_index virt)
 {
-  Capability *c = get_cap(virt);
+  Capability *c = get_cap(virt, false);
 
   if (EXPECT_FALSE(!c))
     return Capability(0); // void
@@ -274,7 +407,7 @@ inline
 Kobject_iface *
 Obj_space_phys<SPACE>::lookup_local(Cap_index virt, L4_fpage::Rights *rights)
 {
-  Entry *c = get_cap(virt);
+  Entry *c = get_cap(virt, false);
 
   if (EXPECT_FALSE(!c))
     return 0;
@@ -296,7 +429,7 @@ Obj_space_phys<SPACE>::v_delete(V_pfn virt, Page_order size,
 {
   (void)size;
   assert (size == Page_order(0));
-  Entry *c = get_cap(virt);
+  Entry *c = get_cap(virt, false);
 
   if (c && c->valid())
     {
@@ -310,7 +443,7 @@ Obj_space_phys<SPACE>::v_delete(V_pfn virt, Page_order size,
 }
 
 IMPLEMENT template< typename SPACE >
-inline NEEDS[Obj_space_phys::caps_alloc]
+inline
 typename Obj::Insert_result FIASCO_FLATTEN
 Obj_space_phys<SPACE>::v_insert(Phys_addr phys, V_pfn const &virt, Page_order size,
                                 Attr page_attribs)
@@ -318,9 +451,9 @@ Obj_space_phys<SPACE>::v_insert(Phys_addr phys, V_pfn const &virt, Page_order si
   (void)size;
   assert (size == Page_order(0));
 
-  Entry *c = get_cap(virt);
+  Entry *c = get_cap(virt, true);
 
-  if (!c && !(c = caps_alloc(virt)))
+  if (!c)
     return Obj::Insert_err_nomem;
 
   if (c->valid())
@@ -348,7 +481,7 @@ inline
 typename Obj_space_phys<SPACE>::V_pfn
 Obj_space_phys<SPACE>::obj_map_max_address() const
 {
-  return V_pfn(Slots_per_dir * Obj::Caps_per_page);
+  return V_pfn(Map_max_address);
 }
 
 // ------------------------------------------------------------------------------
@@ -357,7 +490,7 @@ IMPLEMENTATION [debug]:
 PUBLIC template< typename SPACE >
 typename Obj_space_phys<SPACE>::Entry *
 Obj_space_phys<SPACE>::jdb_lookup_cap(Cap_index index)
-{ return get_cap(index); }
+{ return get_cap(index, false); }
 
 // ------------------------------------------------------------------------------
 IMPLEMENTATION [obj_space_virt && debug]:

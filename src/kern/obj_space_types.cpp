@@ -19,7 +19,9 @@ namespace Obj {
   : cxx::int_type_base<unsigned char, Attr>,
     cxx::int_bit_ops<Attr>
   {
-    Attr() = default;
+    Attr()
+    : cxx::int_type_base<unsigned char, Attr>(0) {}
+
     explicit Attr(unsigned char r)
     : cxx::int_type_base<unsigned char, Attr>(r) {}
 
@@ -41,7 +43,7 @@ namespace Obj {
   class Capability
   {
   private:
-    Mword _obj;
+    Mword _obj = 0;
 
   public:
     Capability() = default;
@@ -97,7 +99,7 @@ namespace Obj {
   class Entry : public Capability, public Mapping
   {
   public:
-    Entry() {}
+    Entry() : Capability(), Mapping() {}
     explicit Entry(Mword v) : Capability(v) {}
 
     Attr rights() const
