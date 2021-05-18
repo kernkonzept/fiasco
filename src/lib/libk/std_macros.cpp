@@ -24,7 +24,11 @@ INTERFACE:
 #define FIASCO_WARN_RESULT      __attribute__ ((warn_unused_result))
 
 #define FIASCO_NORETURN         __attribute__ ((__noreturn__))
+#ifdef CONFIG_OPTIMIZE_FOR_SIZE
+#define FIASCO_FLATTEN
+#else
 #define FIASCO_FLATTEN          __attribute__((__flatten__))
+#endif
 
 #ifdef __clang__
 # define FIASCO_NO_UNROLL_LOOPS
