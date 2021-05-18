@@ -42,6 +42,7 @@ PREPROCESS_PARTS += obj_space_$(OBJ_SPACE_TYPE)
 INTERFACES_KERNEL-$(CONFIG_VIRT_OBJ_SPACE) += obj_space_virt_util
 INTERFACES_KERNEL-y$(CONFIG_NDEBUG) += assertion
 obj_space_IMPL = obj_space obj_space-$(OBJ_SPACE_TYPE)
+PREPROCESS_PARTS-$(CONFIG_MAPDB)           += mapdb
 
 
 platform_control_IMPL   := platform_control

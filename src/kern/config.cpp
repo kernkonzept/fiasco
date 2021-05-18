@@ -248,6 +248,9 @@ bool Config::getchar_does_hlt_works_ok = false;
 #ifdef CONFIG_FINE_GRAINED_CPUTIME
 KIP_KERNEL_FEATURE("fi_gr_cputime");
 #endif
+#ifdef CONFIG_MAPDB
+KIP_KERNEL_FEATURE("mapdb");
+#endif
 
 //-----------------------------------------------------------------------------
 IMPLEMENTATION:

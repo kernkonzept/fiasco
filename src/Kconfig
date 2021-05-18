@@ -319,6 +319,23 @@ config VIRT_OBJ_SPACE
 	depends on !DISABLE_VIRT_OBJ_SPACE
 	depends on !KERNEL_ISOLATION
 
+config DISABLE_MAPDB
+	bool "Disable mapdb"
+	depends on EXPERIMENTAL
+	help
+	  This option disables the mapping database that tracks memory resource
+	  delegation in the system. This saves kernel memory that is normally
+	  required to find the task and the location where memory has been
+	  mapped. Enabling this option will make unmap only work on the
+	  affected task and child mappings cannot be (recursively) revoked any
+	  more!
+
+	  Say N unless you really know what you're doing.
+
+config MAPDB
+	def_bool y
+	depends on !DISABLE_MAPDB
+
 config KERNEL_ISOLATION
 	bool "Enable Kernel Address-Space Isolation" if AMD64
 	depends on AMD64
