@@ -1,4 +1,4 @@
-IMPLEMENTATION:
+IMPLEMENTATION[mapdb]:
 
 #include <cstdio>
 
@@ -417,7 +417,7 @@ Jdb_kobject_mapdb_hdl::help_text(Kobject_common *) const override
 STATIC_INITIALIZE(Jdb_kobject_mapdb_hdl);
 
 // --------------------------------------------------------------------------
-IMPLEMENTATION:
+IMPLEMENTATION[mapdb]:
 
 #include "dbg_page_info.h"
 

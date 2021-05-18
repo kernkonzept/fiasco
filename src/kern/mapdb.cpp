@@ -1,4 +1,4 @@
-INTERFACE:
+INTERFACE[mapdb]:
 
 #include "slab_cache.h"
 #include "l4_types.h"
@@ -226,7 +226,31 @@ private:
   Treemap *const _treemap;
 };
 
-IMPLEMENTATION:
+//--------------------------------------------------------------------
+INTERFACE[!mapdb]:
+
+#include "l4_types.h"
+#include "mapping.h"
+
+class Mapdb
+{
+public:
+  using Mapping = ::Mapping;
+  using Pfn =     Mapping::Pfn;
+  using Pcnt =    Mapping::Pcnt;
+  using Order =   Mdb_types::Order;
+
+  class Frame
+  {
+  public:
+    bool same_lock(Frame const &) const { return false; }
+    void clear() {}
+    void might_clear() {}
+  };
+};
+
+//--------------------------------------------------------------------
+IMPLEMENTATION[mapdb]:
 
 /* The mapping database.
 
@@ -1100,3 +1124,57 @@ Mapdb::lookup_src_dst(Space const *src, Pfn src_phys, Pfn src_va,
                                   dst, dst_phys - Pfn(0), dst_va,
                                   src_frame, dst_frame);
 }
+
+//--------------------------------------------------------------------
+IMPLEMENTATION[!mapdb]:
+
+PUBLIC
+Mapdb::Mapdb(Space *, Order, size_t const *, unsigned)
+{}
+
+PUBLIC inline
+Mapping *
+Mapdb::insert(Frame const &, Space *, Pfn, Pfn, Pcnt)
+{
+  return (Mapping *)1;
+}
+
+PUBLIC inline
+bool
+Mapdb::lookup(Space const *, Pfn, Pfn, Frame *)
+{
+  return true;
+}
+
+PUBLIC static inline
+void
+Mapdb::flush(Frame const &, L4_map_mask, Pfn, Pfn)
+{}
+
+PUBLIC inline
+bool
+Mapdb::grant(Frame const &, Space *, Pfn)
+{
+  return true;
+}
+
+PUBLIC inline
+int
+Mapdb::lookup_src_dst(Space const *, Pfn, Pfn,
+                      Space const *, Pfn, Pfn,
+                      Frame *, Frame *)
+{
+  return 0;
+}
+
+PUBLIC inline
+bool
+Mapdb::valid_address(Pfn)
+{
+  return true;
+}
+
+PUBLIC template<typename F> static inline
+void
+Mapdb::foreach_mapping(Frame const &, Mapdb::Pfn, Mapdb::Pfn, F &&)
+{}
