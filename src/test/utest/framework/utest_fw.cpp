@@ -376,8 +376,8 @@ Utest_fw::tap_msg(bool success,
  *
  * \param msg  Message to print.
  *
- * A TODO test is always considered a failure. The test count and failure
- * count are increased accordingly.
+ * A TODO test is always considered a failure. The failure count is
+ * increased accordingly.
  *
  * \note tap_todo() must be called after new_test() and before the first
  *       UTEST_ macro.
@@ -390,6 +390,24 @@ Utest_fw::tap_todo(char const *msg)
   tap_msg(false, msg, "# TODO ");
 
   ++_sum_failed;
+}
+
+/**
+ * Print a TAP SKIP message.
+ *
+ * \param msg  Message to print.
+ *
+ * A SKIP test is always considered sucessful.
+ *
+ * \note tap_skip() must be called after new_test() and before the first
+ *       UTEST_ macro.
+ */
+PUBLIC inline
+void
+Utest_fw::tap_skip(char const *msg)
+{
+  // If tap_msg() was called before for this test, this call has no effect.
+  tap_msg(true, msg, "# SKIP ");
 }
 
 /**
