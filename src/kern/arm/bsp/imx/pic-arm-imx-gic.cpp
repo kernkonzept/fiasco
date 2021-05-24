@@ -70,7 +70,7 @@ Pic::init()
                                             Gic_dist::Size));
   gic = new Boot_object<Gic_v3>(dist.get_mmio_base(),
                                 Kmem::mmio_remap(Mem_layout::Gic_redist_phys_base,
-                                                 Mem_layout::Gic_redist_phys_size));
+                                                 Mem_layout::Gic_redist_size));
   m->add_chip(0, gic, gic->nr_irqs());
 
   Irq_mgr::mgr = m;

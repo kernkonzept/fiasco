@@ -33,7 +33,7 @@ void Pic::init()
       // assume GICv3
       printf("GICv3\n");
       Address redist_addr = Mem_layout::Gic_redist_phys_base;
-      Address redist_size = Mem_layout::Gic_redist_phys_size;
+      Address redist_size = Mem_layout::Gic_redist_size;
       gic = new Boot_object<Gic_v3>(dist.get_mmio_base(),
                                     Kmem::mmio_remap(redist_addr, redist_size));
     }

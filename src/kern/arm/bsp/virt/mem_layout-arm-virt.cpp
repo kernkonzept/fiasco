@@ -10,6 +10,6 @@ public:
     Gic_h_phys_base      = 0x08030000,
     Gic_v_phys_base      = 0x08040000,
     Gic_redist_phys_base = 0x080A0000,
-    Gic_redist_phys_size = 0x00F60000,
+    Gic_redist_size      = 0x00F60000,
   };
 };
