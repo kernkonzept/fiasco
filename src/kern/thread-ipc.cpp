@@ -479,15 +479,28 @@ Thread::activate_ipc_partner(Thread *partner, Cpu_number current_cpu,
 }
 
 /**
- * Send an IPC message.
- *        Block until we can send the message or the timeout hits.
- * @param partner the receiver of our message
- * @param t a timeout specifier
- * @param regs sender's IPC registers
- * @pre cpu_lock must be held
- * @return sender's IPC error code
+ * Send an IPC message and/or receive an IPC message.
  *
- * @todo review closed wait handling of sender during possible
+ * \param tag           message tag; specifies details about the send phase
+ * \param have_send     enable/disable send phase
+ * \param partner       communication partner in the send phase; ignored if
+ *                      `have_send` is `false`
+ * \param have_receive  enable/disable receive phase
+ * \param sender        communication partner in the receive phase; use
+ *                      `nullptr` to accept any communication partner (open
+ *                      wait)
+ * \param t             timeouts for send phase and receive phase
+ * \param regs          IPC registers of the initiator of this IPC
+ * \param rights        object permissions; usually the permissions of the
+ *                      invoked capability during a syscall
+ *
+ * \pre `cpu_lock` must be held
+ * \pre may only be called on current_thread()
+ *
+ * This function blocks until the message can be sent/received, the respective
+ * timeout hits, the IPC is canceled, or the thread is killed.
+ *
+ * \todo review closed wait handling of sender during possible
  *       quiescent states and blocking.
  */
 PUBLIC
