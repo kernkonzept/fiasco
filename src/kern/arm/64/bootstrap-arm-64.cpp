@@ -119,9 +119,8 @@ Bootstrap::map_ram(Kpdir *kd, Bs_alloc &alloc)
         continue;
 
       if (md.type() == Mem_desc::Conventional)
-          map_ram_range(kd, alloc, md.start(), md.end(), Virt_ofs);
+        map_ram_range(kd, alloc, md.start(), md.end(), Virt_ofs);
   }
-
 }
 
 
