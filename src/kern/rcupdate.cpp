@@ -282,7 +282,7 @@ Rcu_glbl::start_batch()
 {
   if (_next_pending && _completed == _current)
     {
-      _next_pending = 0;
+      _next_pending = false;
       Mem::mp_wmb();
       ++_current;
       Mem::mp_mb();
@@ -304,7 +304,7 @@ Rcu_data::enter_idle(Rcu_glbl *rgp)
       if (_q_batch != rgp->_current || _pending)
         {
           _q_batch = rgp->_current;
-          _pending = 0;
+          _pending = false;
           rgp->cpu_quiet(_cpu);
           assert (!pending(rgp));
         }
@@ -353,8 +353,8 @@ Rcu_data::check_quiescent_state(Rcu_glbl *rgp)
   if (_q_batch != rgp->_current)
     {
       // start new grace period
-      _pending = 1;
-      _q_passed = 0;
+      _pending = true;
+      _q_passed = false;
       _q_batch = rgp->_current;
       return;
     }
@@ -368,7 +368,7 @@ Rcu_data::check_quiescent_state(Rcu_glbl *rgp)
   if (!_q_passed)
     return;
 
-  _pending = 0;
+  _pending = false;
 
   auto guard = lock_guard(rgp->_lock);
 
@@ -451,7 +451,7 @@ Rcu_data::process_callbacks(Rcu_glbl *rgp)
 	{
 	  // start the batch and schedule start if it's a new batch
 	  auto guard = lock_guard(rgp->_lock);
-	  rgp->_next_pending = 1;
+	  rgp->_next_pending = true;
 	  rgp->start_batch();
 	}
     }
@@ -517,7 +517,7 @@ Rcu::idle(Cpu_number cpu)
 PUBLIC static inline
 void
 Rcu::inc_q_cnt(Cpu_number cpu)
-{ _rcu_data.cpu(cpu)._q_passed = 1; }
+{ _rcu_data.cpu(cpu)._q_passed = true; }
 
 PUBLIC static
 void
