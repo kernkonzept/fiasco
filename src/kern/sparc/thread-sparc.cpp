@@ -21,8 +21,6 @@ enum {
   FSR_PERMISSION  = 0x0d,
 };
 
-DEFINE_PER_CPU Per_cpu<Thread::Dbg_stack> Thread::dbg_stack;
-
 PRIVATE static
 void
 Thread::print_page_fault_error(Mword e)

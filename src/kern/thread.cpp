@@ -79,16 +79,6 @@ public:
     Vcpu_ctl_extended_vcpu = 0x10000,
   };
 
-  class Dbg_stack
-  {
-  public:
-    enum { Stack_size = Config::PAGE_SIZE };
-    void *stack_top;
-    Dbg_stack();
-  };
-
-  static Per_cpu<Dbg_stack> dbg_stack;
-
 public:
   typedef void (Utcb_copy_func)(Thread *sender, Thread *receiver);
 
@@ -158,6 +148,23 @@ protected:
   static const unsigned magic = 0xf001c001;
 };
 
+// ------------------------------------------------------------------------
+INTERFACE[debug]:
+
+EXTENSION class Thread
+{
+public:
+  class Dbg_stack
+  {
+  public:
+    enum { Stack_size = Config::PAGE_SIZE };
+    void *stack_top;
+    Dbg_stack();
+  };
+
+  static Per_cpu<Dbg_stack> dbg_stack;
+};
+
 
 IMPLEMENTATION:
 
@@ -184,15 +191,6 @@ IMPLEMENTATION:
 
 JDB_DEFINE_TYPENAME(Thread,  "\033[32mThread\033[m");
 DEFINE_PER_CPU Per_cpu<unsigned long> Thread::nested_trap_recover;
-
-IMPLEMENT
-Thread::Dbg_stack::Dbg_stack()
-{
-  stack_top = Kmem_alloc::allocator()->alloc(Bytes(Stack_size));
-  if (stack_top)
-    stack_top = (char *)stack_top + Stack_size;
-  //printf("JDB STACK start= %p - %p\n", (char *)stack_top - Stack_size, (char *)stack_top);
-}
 
 
 PUBLIC inline
@@ -1333,6 +1331,17 @@ IMPLEMENTATION [debug]:
 #include "string_buffer.h"
 #include "kdb_ke.h"
 #include "terminate.h"
+
+IMPLEMENT
+Thread::Dbg_stack::Dbg_stack()
+{
+  stack_top = Kmem_alloc::allocator()->alloc(Bytes(Stack_size));
+  if (stack_top)
+    stack_top = (char *)stack_top + Stack_size;
+  //printf("JDB STACK start= %p - %p\n", (char *)stack_top - Stack_size, (char *)stack_top);
+}
+
+DEFINE_PER_CPU Per_cpu<Thread::Dbg_stack> Thread::dbg_stack;
 
 PUBLIC static
 void FIASCO_NORETURN

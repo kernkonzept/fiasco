@@ -621,8 +621,6 @@ IMPLEMENTATION[ia32 || amd64]:
 #include "static_init.h"
 #include "terminate.h"
 
-DEFINE_PER_CPU Per_cpu<Thread::Dbg_stack> Thread::dbg_stack;
-
 IMPLEMENT static inline NEEDS ["gdt.h"]
 Mword
 Thread::exception_cs()

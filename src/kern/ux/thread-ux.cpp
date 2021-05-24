@@ -10,8 +10,6 @@ IMPLEMENTATION [ux]:
 #include "per_cpu_data.h"
 #include "utcb_init.h"
 
-DEFINE_PER_CPU Per_cpu<Thread::Dbg_stack> Thread::dbg_stack;
-
 
 IMPLEMENT static inline NEEDS ["emulation.h"]
 Mword

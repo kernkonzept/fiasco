@@ -10,8 +10,6 @@ IMPLEMENTATION [mips]:
 #include "processor.h"
 #include "types.h"
 
-DEFINE_PER_CPU Per_cpu<Thread::Dbg_stack> Thread::dbg_stack;
-
 PROTECTED inline
 int
 Thread::sys_control_arch(Utcb const *, Utcb *)
