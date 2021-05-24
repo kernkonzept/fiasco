@@ -215,20 +215,21 @@ Cpu::disable_dcache()
 //--------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_v8]:
 
-PUBLIC static inline NEEDS[Cpu::midr]
+PRIVATE static inline NEEDS[Cpu::midr]
 bool
-Cpu::is_smp_capable()
+Cpu::needs_ectl_enable()
 {
-  // Check for ARM Cortex A53+ CPUs
   Mword id = midr();
+  if ((id & 0xff0ffff0) == 0x410fd0f0) // FVP AEM-V8
+    return false;
   return (id & 0xff0fff00) == 0x410fd000;
 }
 
-PUBLIC static inline
+PUBLIC static inline NEEDS[Cpu::needs_ectl_enable]
 void
 Cpu::enable_smp()
 {
-  if (!is_smp_capable())
+  if (!needs_ectl_enable())
     return;
 
   Mword cpuectl;
@@ -237,11 +238,11 @@ Cpu::enable_smp()
     asm volatile ("msr S3_1_C15_C2_1, %0" : : "r" (cpuectl | (1 << 6)));
 }
 
-PUBLIC static inline
+PUBLIC static inline NEEDS[Cpu::needs_ectl_enable]
 void
 Cpu::disable_smp()
 {
-  if (!is_smp_capable())
+  if (!needs_ectl_enable())
     return;
 
   Mword cpuectl;
