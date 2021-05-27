@@ -1,0 +1,105 @@
+// vi:set ft=cpp: -*- Mode: C++ -*-
+/**
+ * \file
+ * \brief Pair implementation
+ */
+/*
+ * (c) 2008-2009 Alexander Warg <warg@os.inf.tu-dresden.de>
+ *     economic rights: Technische Universität Dresden (Germany)
+ *
+ * This file is part of TUD:OS and distributed under the terms of the
+ * GNU General Public License 2.
+ * Please see the COPYING-GPL-2 file for details.
+ *
+ * As a special exception, you may use this file as part of a free software
+ * library without restriction.  Specifically, if other files instantiate
+ * templates or use macros or inline functions from this file, or you compile
+ * this file and link it with other files to produce an executable, this
+ * file does not by itself cause the resulting executable to be covered by
+ * the GNU General Public License.  This exception does not however
+ * invalidate any other reasons why the executable file might be covered by
+ * the GNU General Public License.
+ */
+#pragma once
+
+namespace cxx {
+
+/**
+ * \ingroup cxx_api
+ * \brief Pair of two values.
+ *
+ * Standard container for a pair of values.
+ * \param First Type of the first value.
+ * \param Second Type of the second value.
+ */
+template< typename First, typename Second >
+struct Pair
+{
+  /// Type of first value.
+  typedef First First_type;
+  /// Type of second value.
+  typedef Second Second_type;
+
+  /// First value.
+  First first;
+  /// Second value.
+  Second second;
+
+  /**
+   * \brief Create a pair from the two values.
+   * \param first The first value.
+   * \param second The second value.
+   */
+  template<typename A1, typename A2>
+  Pair(A1 &&first, A2 &&second)
+  : first(first), second(second) {}
+
+  /// Default construction.
+  Pair() = default;
+};
+
+template< typename F, typename S >
+Pair<F,S> pair(F const &f, S const &s)
+{ return cxx::Pair<F,S>(f,s); }
+
+
+/**
+ * \brief Comparison functor for Pair.
+ * \param Cmp Comparison functor for the first value of the pair.
+ * \param Typ The pair type.
+ *
+ * This functor can be used to compare Pair values with respect to the
+ * first value.
+ */
+template< typename Cmp, typename Typ >
+class Pair_first_compare
+{
+private:
+  Cmp const &_cmp;
+
+public:
+  /**
+   * \brief Construction.
+   * \param cmp The comparison functor used for the first value.
+   */
+  Pair_first_compare(Cmp const &cmp = Cmp()) : _cmp(cmp) {}
+
+  /**
+   * \brief Do the comaprison based on the first value.
+   * \param l The lefthand value.
+   * \param r The righthand value.
+   */
+  bool operator () (Typ const &l, Typ const &r) const
+  { return _cmp(l.first,r.first); }
+};
+
+}
+
+template< typename OS, typename A, typename B >
+inline
+OS &operator << (OS &os, cxx::Pair<A,B> const &p)
+{
+  os << p.first << ';' << p.second;
+  return os;
+}
+
