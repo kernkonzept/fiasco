@@ -25,6 +25,7 @@
 #pragma GCC system_header
 
 #include "fiasco_defs.h"
+#include "bits/type_traits.h"
 
 namespace cxx {
 

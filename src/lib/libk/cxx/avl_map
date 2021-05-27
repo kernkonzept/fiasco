@@ -1,0 +1,145 @@
+// vi:set ft=cpp: -*- Mode: C++ -*-
+/**
+ * \file
+ * \brief AVL map
+ */
+/*
+ * (c) 2008-2009 Alexander Warg <warg@os.inf.tu-dresden.de>
+ *     economic rights: Technische Universität Dresden (Germany)
+ *
+ * This file is part of TUD:OS and distributed under the terms of the
+ * GNU General Public License 2.
+ * Please see the COPYING-GPL-2 file for details.
+ *
+ * As a special exception, you may use this file as part of a free software
+ * library without restriction.  Specifically, if other files instantiate
+ * templates or use macros or inline functions from this file, or you compile
+ * this file and link it with other files to produce an executable, this
+ * file does not by itself cause the resulting executable to be covered by
+ * the GNU General Public License.  This exception does not however
+ * invalidate any other reasons why the executable file might be covered by
+ * the GNU General Public License.
+ */
+
+#pragma once
+
+#include "std_alloc"
+#include "std_ops"
+#include "pair"
+#include "avl_set"
+
+namespace cxx {
+namespace Bits {
+
+/// Key-getter for Avl_map
+template<typename KEY_TYPE>
+struct Avl_map_get_key
+{
+  typedef KEY_TYPE Key_type;
+  template<typename NODE>
+  static Key_type const &key_of(NODE const *n)
+  { return n->item.first; }
+};
+}
+
+/**
+ * AVL tree based associative container.
+ *
+ * \tparam KEY_TYPE   Type of the key values.
+ * \tparam DATA_TYPE  Type of the data values.
+ * \tparam COMPARE    Type comparison functor for the key values.
+ * \tparam ALLOC      Type of the allocator used for the nodes.
+ */
+template< typename KEY_TYPE, typename DATA_TYPE,
+  template<typename A> class COMPARE = Lt_functor,
+  template<typename B> class ALLOC = New_allocator >
+class Avl_map :
+  public Bits::Base_avl_set<Pair<KEY_TYPE, DATA_TYPE>,
+                            COMPARE<KEY_TYPE>, ALLOC,
+                            Bits::Avl_map_get_key<KEY_TYPE> >
+{
+private:
+  typedef Pair<KEY_TYPE, DATA_TYPE> Local_item_type;
+  typedef Bits::Base_avl_set<Local_item_type, COMPARE<KEY_TYPE>, ALLOC,
+                             Bits::Avl_map_get_key<KEY_TYPE> > Base_type;
+
+public:
+  /// Type of the comparison functor.
+  typedef COMPARE<KEY_TYPE> Key_compare;
+  /// Type of the key values.
+  typedef KEY_TYPE Key_type;
+  /// Type of the data values.
+  typedef DATA_TYPE Data_type;
+  /// Return type for find.
+  typedef typename Base_type::Node Node;
+  /// Type of the allocator
+  typedef typename Base_type::Node_allocator Node_allocator;
+
+  typedef typename Base_type::Iterator Iterator;
+  typedef typename Base_type::Iterator iterator;
+  typedef typename Base_type::Const_iterator Const_iterator;
+  typedef typename Base_type::Const_iterator const_iterator;
+  typedef typename Base_type::Rev_iterator Rev_iterator;
+  typedef typename Base_type::Rev_iterator reverse_iterator;
+  typedef typename Base_type::Const_rev_iterator Const_rev_iterator;
+  typedef typename Base_type::Const_rev_iterator const_reverse_iterator;
+
+  /**
+   * \brief Create an empty AVL-tree based map.
+   * \param alloc The node allocator.
+   */
+  Avl_map(Node_allocator const &alloc = Node_allocator())
+    : Base_type(alloc)
+  {}
+
+  /**
+   * Insert a <key, data> pair into the map.
+   *
+   * \param key   The key value.
+   * \param data  The data value to insert.
+   *
+   * \return A pair of iterator (`first`) and return value (`second`).
+   *         `second` will be 0 if the element was inserted into the set
+   *         and `-#E_exist` if the key was already in the set and the
+   *         set was therefore not updated.
+   *         In both cases, `first` contains an iterator that points to
+   *         the element.
+   *         `second` may also be `-#E_nomem` when memory for the new node
+   *         could not be allocated. `first` is then invalid.
+   */
+  cxx::Pair<Iterator, int> insert(Key_type const &key, Data_type const &data)
+  { return Base_type::insert(Pair<Key_type, Data_type>(key, data)); }
+
+  template<typename... Args>
+  cxx::Pair<Iterator, int> emplace(Args &&...args)
+  { return Base_type::emplace(cxx::forward<Args>(args)...); }
+
+  /**
+   * \brief Get the data for the given key.
+   * \param key The key value to use for lookup.
+   * \pre A <key, data> pair for the given key value must exist.
+   */
+  Data_type const &operator [] (Key_type const &key) const
+  { return this->find_node(key)->second; }
+
+  /**
+   * Get or insert data for the given key.
+   *
+   * \param key The key value to use for lookup.
+   *
+   * \return If the item already exists, a reference to the data item.
+   *         Otherwise a new data item is default-constructed and inserted
+   *         under the given key before a reference is returned.
+   */
+  Data_type &operator [] (Key_type const &key)
+  {
+    Node n = this->find_node(key);
+    if (n)
+      return const_cast<Data_type&>(n->second);
+    else
+      return insert(key, Data_type()).first->second;
+  }
+};
+
+}
+

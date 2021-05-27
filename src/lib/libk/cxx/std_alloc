@@ -1,0 +1,78 @@
+// vi:set ft=cpp: -*- Mode: C++ -*-
+/*
+ * (c) 2008-2009 Adam Lackorzynski <adam@os.inf.tu-dresden.de>,
+ *               Alexander Warg <warg@os.inf.tu-dresden.de>
+ *     economic rights: Technische Universität Dresden (Germany)
+ *
+ * This file is part of TUD:OS and distributed under the terms of the
+ * GNU General Public License 2.
+ * Please see the COPYING-GPL-2 file for details.
+ *
+ * As a special exception, you may use this file as part of a free software
+ * library without restriction.  Specifically, if other files instantiate
+ * templates or use macros or inline functions from this file, or you compile
+ * this file and link it with other files to produce an executable, this
+ * file does not by itself cause the resulting executable to be covered by
+ * the GNU General Public License.  This exception does not however
+ * invalidate any other reasons why the executable file might be covered by
+ * the GNU General Public License.
+ */
+
+#pragma once
+
+#include <stddef.h>
+namespace cxx {
+/** 
+ * \ingroup cxx_api
+ * \brief Helper type to distinguish the <c> oeprator new </c> version
+ *        that does not throw exceptions.
+ */
+class Nothrow {};
+}
+
+/**
+ * \ingroup cxx_api
+ * \brief Simple placement new operator.
+ * \param mem the address of the memory block to place the new object.
+ * \return the address given by \a mem.
+ */
+inline void *operator new (size_t, void *mem, cxx::Nothrow const &) throw()
+{ return mem; }
+
+/**
+ * \ingroup cxx_api
+ * \brief New operator that does not throw exceptions.
+ */
+void *operator new (size_t, cxx::Nothrow const &) throw();
+
+namespace cxx {
+
+
+/**
+ * \ingroup cxx_api
+ * \brief Standard allocator based on <c>operator new () </c>.
+ *
+ * This allocator is the default allocator used for the \em cxx
+ * \em Containers, such as cxx::Avl_set and cxx::Avl_map, to allocate
+ * the internal data structures.
+ */
+template< typename _Type >
+class New_allocator
+{
+public:
+  enum { can_free = true };
+
+  New_allocator() throw() {}
+  New_allocator(New_allocator const &) throw() {}
+
+  ~New_allocator() throw() {}
+  
+  _Type *alloc() throw()
+  { return static_cast<_Type*>(::operator new(sizeof (_Type), cxx::Nothrow())); }
+  
+  void free(_Type *t) throw()
+  { ::operator delete(t); }
+};
+
+}
+
