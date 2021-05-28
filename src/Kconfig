@@ -233,18 +233,51 @@ config KMEM_SIZE_KB
 	  be overridden by the kernel command line parameter "-kmemsize" passed
 	  to the boot loader.
 
-config CONTEXT_8K
-	bool #"TCB size of 8k"
+choice
+	prompt "Thread control block size"
+	default CONTEXT_SIZE_AUTO
 	help
-	  Use this option to use 8K kernel stacks. Only disable this option
+	  Chose the stack size of each thread in the kernel.
+
+config CONTEXT_SIZE_AUTO
+	bool "Automatic"
+	help
+	  Uses 8k stack size on 64-bit systems, otherwise 4k stacks.
+
+config CONTEXT_SIZE_8K
+	bool "8k stacks"
+	depends on EXPERIMENTAL
+	help
+	  Use this option to use 8K kernel stacks. Only choose this option
 	  when you know what you're doing.
 
-config CONTEXT_4K
-	bool #"TCB size of 4k"
-	default y if !CONTEXT_8K
+config CONTEXT_SIZE_4K
+	bool "4k stacks"
+	depends on EXPERIMENTAL
 	help
-	  Use this option to use 4K kernel stacks. Only disable this option
+	  Use this option to use 4K kernel stacks. Only choose this option
 	  when you know what you're doing.
+
+config CONTEXT_SIZE_2K
+	bool "2k stacks"
+	depends on EXPERIMENTAL
+	help
+	  Use this option to use 2K kernel stacks. Only choose this option
+	  when you know what you're doing.
+
+endchoice
+
+config CONTEXT_8K
+	bool
+	default y if CONTEXT_SIZE_8K || (CONTEXT_SIZE_AUTO && BIT64)
+
+config CONTEXT_4K
+	bool
+	default y if CONTEXT_SIZE_4K || (CONTEXT_SIZE_AUTO && !BIT64)
+
+config CONTEXT_2K
+	bool
+	default y if CONTEXT_SIZE_2K
 
 config SLOW_RTC
 	bool "Use RTC with 100 ticks per second"
@@ -707,7 +740,6 @@ config BIT32
 	bool
 
 config BIT64
-	select CONTEXT_8K
 	bool
 
 config WARN_LEVEL
