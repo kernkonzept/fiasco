@@ -18,7 +18,6 @@ class Thread;
 class Irq : public Irq_base, public cxx::Dyn_castable<Irq, Kobject>
 {
   MEMBER_OFFSET();
-  typedef Slab_cache Allocator;
 
 public:
   enum Op
@@ -583,13 +582,22 @@ Irq_sender::obj_id() const override
 
  // Irq implementation
 
-static Kmem_slab _irq_allocator(sizeof (Irq_sender),
-                                __alignof__ (Irq), "Irq");
+static Kmem_slab_t<Irq_sender> _irq_allocator("Irq");
 
 PRIVATE static
-Irq::Allocator *
-Irq::allocator()
-{ return &_irq_allocator; }
+void *
+Irq::q_alloc(Ram_quota *q)
+{ return _irq_allocator.q_alloc(q); }
+
+PRIVATE static
+void
+Irq::q_free(Ram_quota *q, void *f)
+{
+  if (q)
+    _irq_allocator.q_free(q, f);
+  else
+    _irq_allocator.free(f);
+}
 
 PUBLIC inline
 void *
@@ -601,18 +609,15 @@ void
 Irq::operator delete (void *_l)
 {
   Irq *l = reinterpret_cast<Irq*>(_l);
-  if (l->_q)
-    allocator()->q_free(l->_q, l);
-  else
-    allocator()->free(l);
+  q_free(l->_q, l);
 }
 
-PUBLIC template<typename T> inline NEEDS[Irq::allocator, Irq::operator new]
+PUBLIC template<typename T> inline NEEDS[Irq::q_alloc, Irq::operator new]
 static
 T*
 Irq::allocate(Ram_quota *q)
 {
-  void *nq =allocator()->q_alloc(q);
+  void *nq = q_alloc(q);
   if (nq)
     return new (nq) T(q);
 

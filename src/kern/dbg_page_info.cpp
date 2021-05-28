@@ -20,11 +20,9 @@ private:
   char *b() { return reinterpret_cast<char*>(_buf); }
   char const *b() const { return reinterpret_cast<char const*>(_buf); }
 
-  typedef Slab_cache Allocator;
-
 public:
-  void *operator new (size_t) throw() { return alloc()->alloc(); }
-  void operator delete (void *p, size_t) { alloc()->free(p); }
+  void *operator new (size_t) throw() { return alloc(); }
+  void operator delete (void *p, size_t) { free(p); }
 
   enum { Buffer_size = sizeof(Buf) };
 
@@ -79,9 +77,14 @@ Dbg_page_info::table()
 static Kmem_slab_t<Dbg_page_info> _dbg_page_info_allocator("Dbg_page_info");
 
 PRIVATE static
-Dbg_page_info::Allocator *
+void *
 Dbg_page_info::alloc()
-{ return _dbg_page_info_allocator.slab(); }
+{ return _dbg_page_info_allocator.alloc(); }
+
+PRIVATE static
+void
+Dbg_page_info::free(void *f)
+{ return _dbg_page_info_allocator.free(f); }
 
 
 PUBLIC template<typename B, typename E> static inline

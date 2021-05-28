@@ -35,7 +35,6 @@ class Ipc_gate_obj :
   public cxx::Dyn_castable<Ipc_gate_obj, Ipc_gate, Ipc_gate_ctl>
 {
   friend class Ipc_gate;
-  typedef Slab_cache Self_alloc;
 
 public:
   bool put() override { return Ipc_gate::put(); }
@@ -172,9 +171,14 @@ Ipc_gate_obj::operator new (size_t, void *b) throw()
 static Kmem_slab_t<Ipc_gate_obj> _ipc_gate_allocator("Ipc_gate");
 
 PRIVATE static
-Ipc_gate_obj::Self_alloc *
-Ipc_gate_obj::allocator()
-{ return _ipc_gate_allocator.slab(); }
+void *
+Ipc_gate_obj::alloc()
+{ return _ipc_gate_allocator.alloc(); }
+
+PRIVATE static
+void
+Ipc_gate_obj::free(void *f)
+{ _ipc_gate_allocator.free(f); }
 
 PUBLIC static
 Ipc_gate_obj *
@@ -185,7 +189,7 @@ Ipc_gate::create(Ram_quota *q, Thread *t, Mword id)
   if (EXPECT_FALSE(!quota))
     return 0;
 
-  void *nq = Ipc_gate_obj::allocator()->alloc();
+  void *nq = Ipc_gate_obj::alloc();
   if (EXPECT_FALSE(!nq))
     return 0;
 
@@ -200,7 +204,7 @@ void Ipc_gate_obj::operator delete (void *_f)
   Ram_quota *p = f->_quota;
   asm ("" : "=m"(*f));
 
-  allocator()->free(f);
+  free(f);
   if (p)
     p->free(sizeof(Ipc_gate_obj));
 }

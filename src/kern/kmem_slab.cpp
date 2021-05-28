@@ -51,8 +51,6 @@ public:
   template<typename Q> static
   void q_free(Q *q, void *e) { _s.template q_free<Q>(q, e); }
 
-  static Slab_cache *slab() { return &_s; }
-
 protected:
   static Kmem_slab _s;
 };

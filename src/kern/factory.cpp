@@ -6,9 +6,7 @@ INTERFACE:
 #include "kobject_helper.h"
 
 class Factory : public Ram_quota, public Kobject_h<Factory>
-{
-  typedef Slab_cache Self_alloc;
-};
+{};
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION:
@@ -41,9 +39,14 @@ Factory::Factory(Ram_quota *q, Mword max)
 static Kmem_slab_t<Factory> _factory_allocator("Factory");
 
 PRIVATE static
-Factory::Self_alloc *
-Factory::allocator()
-{ return _factory_allocator.slab(); }
+void *
+Factory::alloc()
+{ return _factory_allocator.alloc(); }
+
+PRIVATE static
+void
+Factory::free(void *f)
+{ _factory_allocator.free(f); }
 
 PUBLIC static inline
 Factory * FIASCO_PURE
@@ -76,7 +79,7 @@ Factory::create_factory(Mword max)
   if (EXPECT_FALSE(!q))
     return 0;
 
-  void *nq = allocator()->alloc();
+  void *nq = alloc();
   if (EXPECT_FALSE(!nq))
     return 0;
 
@@ -97,7 +100,7 @@ void Factory::operator delete (void *_f)
   auto limit = f->limit();
   asm ("" : "=m"(*f));
 
-  allocator()->free(f);
+  free(f);
   if (p)
     p->free(sizeof(Factory) + limit);
 }

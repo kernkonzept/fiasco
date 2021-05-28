@@ -63,8 +63,6 @@ IMPLEMENTATION:
 #include "paging.h"
 
 JDB_DEFINE_TYPENAME(Task, "\033[31mTask\033[m");
-static Kmem_slab_t<Task::Ku_mem> _k_u_mem_list_alloc("Ku_mem");
-Slab_cache *Space::Ku_mem::a = _k_u_mem_list_alloc.slab();
 
 extern "C" void vcpu_resume(Trap_state *, Return_frame *sp)
    FIASCO_FASTCALL FIASCO_NORETURN;

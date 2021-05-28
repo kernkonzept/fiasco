@@ -69,13 +69,11 @@ public:
     void *k_addr;
     unsigned size;
 
-    static Slab_cache *a;
-
     void *operator new (size_t, Ram_quota *q) throw()
-    { return a->q_alloc(q); }
+    { return Space::alloc_ku_mem(q); }
 
     void free(Ram_quota *q) throw()
-    { a->q_free(q, this); }
+    { Space::free_ku_mem(q, this); }
 
     template<typename T>
     T *kern_addr(Smart_ptr<T, Simple_ptr_policy, User_ptr_discr> ua) const
@@ -115,6 +113,9 @@ IMPLEMENTATION:
 #include "config.h"
 #include "globalconfig.h"
 #include "l4_types.h"
+#include "kmem_slab.h"
+
+static Kmem_slab_t<Space::Ku_mem> _k_u_mem_list_alloc("Ku_mem");
 
 //
 // class Space
@@ -165,3 +166,12 @@ Space::is_user_memory(Address address, Mword len)
          && Mem_layout::User_max - address >= len - 1;
 }
 
+PRIVATE static
+void *
+Space::alloc_ku_mem(Ram_quota *q) throw()
+{ return _k_u_mem_list_alloc.q_alloc(q); }
+
+PRIVATE static
+void
+Space::free_ku_mem(Ram_quota *q, void *k) throw()
+{ _k_u_mem_list_alloc.q_free(q, k); }
