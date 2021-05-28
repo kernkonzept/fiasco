@@ -576,7 +576,7 @@ Treemap::create(Order parent_page_shift, Space *owner_id,
   if (EXPECT_FALSE(!pf))
     return 0;
 
-  void *m = allocator()->alloc();
+  void *m = alloc();
   if (EXPECT_FALSE(!m))
     {
       Physframe::free(pf, cxx::int_value<Page>(key_end), owner_id);
@@ -591,9 +591,14 @@ Treemap::create(Order parent_page_shift, Space *owner_id,
 static Kmem_slab_t<Treemap> _treemap_allocator("Treemap");
 
 static
-Slab_cache *
-Treemap::allocator()
-{ return _treemap_allocator.slab(); }
+void *
+Treemap::alloc()
+{ return _treemap_allocator.alloc(); }
+
+static
+void
+Treemap::free(void *e)
+{ _treemap_allocator.free(e); }
 
 
 PUBLIC inline
@@ -604,7 +609,7 @@ Treemap::operator delete (void *block)
   Space *id = t->_owner_id;
   auto end = t->_key_end;
   asm ("" : "=m"(t->_owner_id), "=m"(t->_key_end));
-  allocator()->free(block);
+  free(block);
   Mapping_tree::quota(id)->free(Treemap::quota_size(end));
 }
 

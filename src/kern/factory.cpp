@@ -3,18 +3,20 @@ INTERFACE:
 #include "fiasco_defs.h"
 #include "ram_quota.h"
 #include "slab_cache.h"
+#include "kmem_slab.h"
 #include "kobject_helper.h"
 
 class Factory : public Ram_quota, public Kobject_h<Factory>
 {
   friend struct Factory_test;
-  typedef Slab_cache Self_alloc;
+
+public:
+  using Ram_quota::alloc;
 };
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION:
 
-#include "kmem_slab.h"
 #include "static_init.h"
 #include "l4_buf_iter.h"
 #include "l4_types.h"
@@ -42,9 +44,14 @@ Factory::Factory(Ram_quota *q, Mword max)
 static Kmem_slab_t<Factory> _factory_allocator("Factory");
 
 PRIVATE static
-Factory::Self_alloc *
-Factory::allocator()
-{ return _factory_allocator.slab(); }
+void *
+Factory::alloc()
+{ return _factory_allocator.alloc(); }
+
+PRIVATE static
+void
+Factory::free(void *f)
+{ _factory_allocator.free(f); }
 
 PUBLIC static inline
 Factory * FIASCO_PURE
@@ -77,7 +84,7 @@ Factory::create_factory(Mword max)
   if (EXPECT_FALSE(!q))
     return 0;
 
-  void *nq = allocator()->alloc();
+  void *nq = alloc();
   if (EXPECT_FALSE(!nq))
     return 0;
 
@@ -95,7 +102,7 @@ void Factory::operator delete (void *_f)
   auto limit = f->limit();
   asm ("" : "=m"(*f));
 
-  allocator()->free(f);
+  free(f);
   if (p)
     p->free(sizeof(Factory) + limit);
 }
@@ -246,3 +253,11 @@ Factory::Log_entry::print(String_buffer *buf) const
   buf->printf("factory=%lx [%s] new=%lx cap=[C:%lx] ram=%lx",
               id, _op, newo, cxx::int_value<Cap_index>(buffer), ram);
 }
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [test_support_code]:
+
+PRIVATE static
+Slab_cache *
+Factory::allocator()
+{ return _factory_allocator.slab(); }

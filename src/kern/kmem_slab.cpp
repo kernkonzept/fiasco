@@ -60,8 +60,6 @@ public:
   template<typename Q>
   void q_free(Q *q, void *e) { _s.template q_free<Q>(q, e); }
 
-  Slab_cache *slab() { return &_s; }
-
 protected:
   Kmem_slab _s;
 };
@@ -189,6 +187,16 @@ public:
   }
 };
 
+//---------------------------------------------------------------------------
+INTERFACE [test_support_code]:
+
+EXTENSION class Kmem_slab_for_size
+{
+public:
+  Slab_cache *slab() { return &_s; }
+};
+
+//---------------------------------------------------------------------------
 IMPLEMENTATION:
 
 Kmem_slab::Reap_list Kmem_slab::reap_list;
