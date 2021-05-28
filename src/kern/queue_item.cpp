@@ -10,7 +10,7 @@ class Queue_item : public cxx::D_list_item
 
 private:
   Queue *_q;
-} __attribute__((aligned(16)));
+};
 
 
 //--------------------------------------------------------------------------
