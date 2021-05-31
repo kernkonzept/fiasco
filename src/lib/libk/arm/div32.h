@@ -3,12 +3,12 @@
 
 #include "std_macros.h"
 
-/** return (divident / divisor) with divisor<2^32 */
+/** return (dividend / divisor) with divisor<2^32 */
 extern inline FIASCO_CONST
 unsigned long long
-div32(unsigned long long divident, unsigned long divisor)
+div32(unsigned long long dividend, unsigned long divisor)
 {
-  return divident/divisor;
+  return dividend/divisor;
 }
 
 #endif
