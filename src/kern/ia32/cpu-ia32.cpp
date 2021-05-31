@@ -2050,11 +2050,9 @@ Cpu::calibrate_tsc()
        :"=a" (tsc_to_ns_div), "=d" (dummy)
        :"r" ((Unsigned32)tsc_end), "a" (0), "d" (calibrate_time));
 
-  // scaler_tsc_to_ns = (tsc_to_ns_div * 1000) / 32
-  // not using muldiv(tsc_to_ns_div, 1000, 1 << 5), as div result > (1 << 32)
-  // will get trap0 if system frequency is too low
-  scaler_tsc_to_ns  = tsc_to_ns_div * 31;
-  scaler_tsc_to_ns += tsc_to_ns_div / 4;
+  // In 'A*1000/32', 'A*1000' could result in a value '>= 2^32' if A is too big
+  // (CPU is too slow). Use 'A*(1000/32) = A*31.25' instead.
+  scaler_tsc_to_ns  = tsc_to_ns_div * 31 + tsc_to_ns_div / 4;
   scaler_tsc_to_us  = tsc_to_ns_div;
   scaler_ns_to_tsc  = muldiv(1 << 31, ((Unsigned32)tsc_end),
                              calibrate_time * 1000 >> 1 * 1 << 5);
