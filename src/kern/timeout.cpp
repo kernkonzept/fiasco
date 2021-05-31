@@ -184,6 +184,14 @@ Timeout::has_hit()
 }
 
 
+/**
+ * Program timeout to expire at the specified wakeup time.
+ *
+ * \param clock  Wakeup time
+ * \param cpu    CPU on which the timeout shall be queued
+ * \pre `cpu` == current CPU
+ * \pre Timeout must not be set
+ */
 PUBLIC inline NEEDS [<cassert>, "cpu_lock.h", "lock_guard.h",
                      Timeout_q::enqueue, Timeout::is_set]
 void
@@ -191,6 +199,7 @@ Timeout::set(Unsigned64 clock, Cpu_number cpu)
 {
   // XXX uses global kernel lock
   auto guard = lock_guard(cpu_lock);
+  assert(cpu == current_cpu());
 
   assert (!is_set());
 
@@ -208,6 +217,14 @@ Timeout::get_timeout(Unsigned64 clock)
   return _wakeup - clock;
 }
 
+/**
+ * Program reset timeout to expire at the originally set wakeup time, unless
+ * it already has been hit.
+ *
+ * \param cpu  CPU on which the timeout shall be queued
+ * \pre `cpu` == current CPU
+ * \pre Timeout must not be set
+ */
 PUBLIC inline NEEDS [<cassert>, "cpu_lock.h", "lock_guard.h",
                      Timeout::is_set, Timeout_q::enqueue, Timeout::has_hit]
 void
@@ -215,6 +232,7 @@ Timeout::set_again(Cpu_number cpu)
 {
   // XXX uses global kernel lock
   auto guard = lock_guard(cpu_lock);
+  assert(cpu == current_cpu());
 
   assert(! is_set());
   if (has_hit())
@@ -223,8 +241,12 @@ Timeout::set_again(Cpu_number cpu)
   Timeout_q::timeout_queue.cpu(cpu).enqueue(this);
 }
 
-PUBLIC inline NEEDS ["cpu_lock.h", "lock_guard.h", "timer.h",
-                     "kdb_ke.h", Timeout::is_set]
+/**
+ * Reset timeout, preventing its expiration.
+ *
+ * \pre `cpu_lock` must be held
+ */
+PUBLIC inline NEEDS [<cassert>, "cpu_lock.h"]
 void
 Timeout::reset()
 {
