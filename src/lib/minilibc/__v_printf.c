@@ -13,13 +13,17 @@ static inline unsigned int skip_to(const char *format) {
 
 #define A_WRITE(fn,buf,sz)	((fn)->put((buf),(sz),(fn)->data))
 
-static int visible_strlen(char const *s, unsigned int *wh_sz)
+static int visible_strlen(char const *s, unsigned int maxlen,
+                          unsigned int *wh_sz)
 {
   int l = 0;
   int in_esc = 0;
   *wh_sz = 0;
   for ( ; *s; ++s, ++(*wh_sz))
     {
+      if (maxlen && *wh_sz >= maxlen)
+        break;
+
       if (in_esc == 2)
 	{
 	  if (!(*s >= '0' && *s <= '9') && *s != ';')
@@ -170,8 +174,8 @@ inn_printf:
       case 's':
 	s=va_arg(arg_ptr,char *);
 	if (!s) s="(null)";
-	sz = visible_strlen(s, &wh_sz);
-	// FIXME: could not limit output when invisibible charachters are
+	sz = visible_strlen(s, preci, &wh_sz);
+	// FIXME: could not limit output when invisible characters are
 	// in the output
 	if (sz == wh_sz && flag_dot && sz>preci)
 	  {
