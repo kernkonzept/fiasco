@@ -91,7 +91,8 @@ Mem_space::page_map(Address phys, Address virt, Address size, Attr attr)
 
   *(trampoline + 1) = virt;
   *(trampoline + 2) = size;
-  *(trampoline + 3) = PROT_READ | (attr.rights & Page::Rights::W() ? PROT_WRITE : 0);
+  *(trampoline + 3) = PROT_READ | (attr.rights & Page::Rights::W() ? PROT_WRITE : 0)
+                                | (attr.rights & Page::Rights::X() ? PROT_EXEC : 0);
   *(trampoline + 4) = MAP_SHARED | MAP_FIXED;
   *(trampoline + 5) = Boot_info::fd();
 
@@ -124,7 +125,8 @@ Mem_space::page_protect(Address virt, Address size, unsigned attr)
   auto guard = lock_guard(cpu_lock);
 
   Trampoline::syscall(pid(), __NR_mprotect, virt, size,
-                      PROT_READ | (attr & Page_writable ? PROT_WRITE : 0));
+                      PROT_READ | (attr & Page_writable ? PROT_WRITE : 0)
+                                | (attr & Pt_entry::XD ? 0 : PROT_EXEC));
 }
 
 
