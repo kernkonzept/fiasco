@@ -96,6 +96,7 @@ Startup::stage2()
   Apic::apic.cpu(Cpu_number::boot_cpu()).construct(Cpu_number::boot_cpu());
   Ipi::init(Cpu_number::boot_cpu());
   Timer::init(Cpu_number::boot_cpu());
+  Kip_init::init_kip_clock();
   int timer_irq = Timer::irq();
   if (use_io_apic)
     {

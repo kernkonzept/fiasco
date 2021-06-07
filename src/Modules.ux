@@ -199,7 +199,7 @@ vcpu_host_regs_IMPL	:= vcpu_host_regs-ia32
 spin_lock_IMPL		:= spin_lock spin_lock-ia32
 
 CXXSRC_KERNEL		:= libc_backend_nolock.cc glue_libc_ux.cc tb_entry_output.cc
-ASSRC_KERNEL		:= entry-ux.S entry.S sighandler.S \
+ASSRC_KERNEL		:= entry-ux.S entry.S sighandler.S kip-time.S \
                            sys_call_page-asm.S 
 
 ifeq ($(CONFIG_MP),y)

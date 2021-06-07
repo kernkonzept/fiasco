@@ -77,7 +77,7 @@ $(ALL_TESTS): $(ABI) $(JABI) $(DRIVERS) $(LIBK) $(LIBAMM)
 $(ALL_TESTS): kernel.ux.lds
 
 # XXX Hacks
-$(ALL_TESTS): sighandler.o
+$(ALL_TESTS): sighandler.o kip-time.o
 
 #
 # Compilation Rules

@@ -86,7 +86,7 @@ public:
 
   /* 0xA0   0x140 */
   volatile Cpu_time clock;
-  Unsigned64 _res6;
+  Unsigned64 _res6;  // might be later used for clock-related time stamp offset
 
   /* 0xB0   0x150 */
   Mword      frequency_cpu;
@@ -106,6 +106,13 @@ public:
   /* 0x800-0x900:
    * Code for syscall invocation. */
 
+  /* 0x900-0x97F:
+   * Code for reading the KIP clock with fine-grained resolution (us). */
+
+  /* 0x980-0x9FF:
+   * Code for reading the system clock with nanoseconds accuracy. Depending
+   * on the configuration, this clock might or might not be synchronized with
+   * the KIP clock. */
 
 private:
   static Kip *global_kip asm ("GLOBAL_KIP");

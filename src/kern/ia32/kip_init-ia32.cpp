@@ -121,6 +121,32 @@ void Kip_init::init()
     }
 }
 
+PUBLIC static FIASCO_INIT
+void
+Kip_init::init_kip_clock()
+{
+  union K
+  {
+    Kip       k;
+    Unsigned8 b[Config::PAGE_SIZE];
+  };
+  extern char kip_time_fn_read_us[];
+  extern char kip_time_fn_read_us_end[];
+  extern char kip_time_fn_read_ns[];
+  extern char kip_time_fn_read_ns_end[];
+
+  K *k = reinterpret_cast<K *>(Kip::k());
+
+  Cpu cpu = Cpu::cpus.cpu(Cpu_number::boot_cpu());
+  *(Mword*)(k->b + 0x9f0) = cpu.get_scaler_tsc_to_us();
+  *(Mword*)(k->b + 0x9f8) = cpu.get_scaler_tsc_to_ns();
+
+  memcpy(k->b + 0x900, kip_time_fn_read_us,
+         kip_time_fn_read_us_end - kip_time_fn_read_us);
+  memcpy(k->b + 0x980, kip_time_fn_read_ns,
+         kip_time_fn_read_ns_end - kip_time_fn_read_ns);
+}
+
 //----------------------------------------------------------------------------
 IMPLEMENTATION [amd64]:
 

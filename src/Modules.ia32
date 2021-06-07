@@ -207,7 +207,8 @@ endif
 
 
 CXXSRC_KERNEL		:= kernel_panic.cc libc_backend_lock.cc
-ASSRC_KERNEL		:= entry.S entry-native.S sys_call_page-asm.S
+ASSRC_KERNEL		:= entry.S entry-native.S sys_call_page-asm.S \
+			   kip-time.S
 
 ASSRC_KERNEL-$(CONFIG_MP)               += tramp-mp.S entry-mp.S
 ASSRC_KERNEL-y                          += tramp-realmode.S tramp-acpi.S
