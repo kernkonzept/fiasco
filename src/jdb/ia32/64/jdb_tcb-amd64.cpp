@@ -74,7 +74,6 @@ Jdb_tcb::info_thread_state(Thread *t)
   switch (state)
     {
     case Jdb::s_ipc:
-    case Jdb::s_syscall:
       printf("RAX=%016lx  RSI=%016lx\n"
 	     "RBX=%016lx  RDI=%016lx\n"
              "RCX=%016lx  RBP=%016lx\n"

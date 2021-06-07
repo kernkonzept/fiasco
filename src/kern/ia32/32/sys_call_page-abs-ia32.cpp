@@ -22,8 +22,6 @@ enum
   Offs_se_invoke         = 0x000,
   Offs_kip_invoke        = 0x800,
   Offs_kip_se_invoke     = 0x800,
-  Offs_debugger          = 0x200,
-  Offs_kip_debugger      = 0x900,
 };
 
 
@@ -46,7 +44,6 @@ Sys_call_page::init()
 {
   SYSCALL_SYMS(invoke);
   SYSCALL_SYMS(se_invoke);
-  SYSCALL_SYMS(debugger);
 
   if (!Vmem_alloc::page_alloc((void*)Mem_layout::Syscalls, 
 	Vmem_alloc::ZERO_FILL, Vmem_alloc::User))
@@ -61,8 +58,6 @@ Sys_call_page::init()
     COPY_SYSCALL(se_invoke);
   else
     COPY_SYSCALL(invoke);
-
-  COPY_SYSCALL(debugger);
 
   Kernel_task::kernel_task()->set_attributes(
       Virt_addr(Mem_layout::Syscalls),

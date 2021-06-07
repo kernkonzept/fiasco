@@ -16,8 +16,6 @@ enum
   Offs_se_invoke         = 0x000,
   Offs_kip_invoke        = 0x800,
   Offs_kip_se_invoke     = 0x800,
-  Offs_debugger          = 0x200,
-  Offs_kip_debugger      = 0x900,
 };
 
 
@@ -36,12 +34,10 @@ void
 Sys_call_page::init()
 {
   SYSCALL_SYMS(invoke);
-  SYSCALL_SYMS(debugger);
 
   Kip *ki = Kip::k();
 
   ki->kip_sys_calls       = 2;
 
   COPY_SYSCALL(invoke);
-  COPY_SYSCALL(debugger);
 }

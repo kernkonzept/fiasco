@@ -62,7 +62,6 @@ Jdb_tcb::info_thread_state(Thread *t)
   switch (state)
     {
     case Jdb::s_ipc:
-    case Jdb::s_syscall:
       printf("EAX=%08lx  ESI=%08lx\n"
 	     "EBX=%08lx  EDI=%08lx\n"
     	     "ECX=%08lx  EBP=%08lx\n"

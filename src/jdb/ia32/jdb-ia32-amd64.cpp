@@ -32,7 +32,7 @@ public:
 
   typedef enum
     {
-      s_unknown, s_ipc, s_syscall, s_pagefault, s_fputrap,
+      s_unknown, s_ipc, s_pagefault, s_fputrap,
       s_interrupt, s_timer_interrupt, s_slowtrap, s_user_invoke,
     } Guessed_thread_state;
 
@@ -459,7 +459,7 @@ Jdb::is_adapter_memory(Jdb_address addr)
 extern "C" char in_slowtrap, in_page_fault, in_handle_fputrap;
 extern "C" char in_interrupt, in_timer_interrupt, in_timer_interrupt_slow;
 extern "C" char in_slow_ipc4 WEAK, in_slow_ipc5;
-extern "C" char in_sc_ipc1 WEAK, in_sc_ipc2 WEAK, in_syscall WEAK;
+extern "C" char in_sc_ipc1 WEAK, in_sc_ipc2 WEAK;
 #undef WEAK
 
 // Try to guess the thread state of t by walking down the kernel stack and
@@ -486,8 +486,6 @@ Jdb::guess_thread_state(Thread *t)
 #endif
 	     0)
 	    state = s_ipc;
-	  else if (ktop[i] == (Mword)&in_syscall)
-	    state = s_syscall;
 	  else if (ktop[i] == (Mword)&Thread::user_invoke)
 	    state = s_user_invoke;
 	  else if (ktop[i] == (Mword)&in_handle_fputrap)

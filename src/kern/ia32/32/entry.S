@@ -527,7 +527,6 @@ in_slow_ipc4:
 #endif // CONFIG_JDB
 
         // these labels help show_tcb to guess the thread state
-	.globl	in_syscall
 	.globl	in_slowtrap
 	.globl	in_page_fault
 	.globl	in_handle_fputrap
@@ -535,36 +534,6 @@ in_slow_ipc4:
 	.globl	in_timer_interrupt
 	.globl	in_timer_interrupt_slow
 
-.macro	SYSTEM_CALL int, name
-	GATE_ENTRY	\int, entry_\name, (ACC_PL_U | ACC_INTR_GATE)
-	.p2align 3
-entry_\name:
-	pushl	%eax
-	movl	$(syscall_table+4*(\int-0x30)), %eax
-	jmp	.Lall_syscalls
-.endm
-
-	.p2align 4
-	.type	.Lall_syscalls,@function
-.Lall_syscalls:
-	SAVE_STATE						;\
-	cld
-	RESET_KERNEL_SEGMENTS_FORCE_DS_ES
-	ESP_TO_TCB_AT %ebx
-	testl	$VAL__Thread_alien_or_vcpu_user, OFS__THREAD__STATE (%ebx)
-	jnz	.Lalien_sys_call
-	RESET_THREAD_CANCEL_AT %ebx
-	call	*(%eax)			/* interrupts enabled in wrappers */
-in_syscall:
-
-ret_from_syscall:
-	CHECK_SANITY $3			/* scratches ecx */
-	RESTORE_STATE
-	popl	%eax
-	iret
-
-
-SYSTEM_CALL	0x32, sys_invoke_debug
 
 #ifndef CONFIG_PF_UX
 /* these functions are implemented in entry-native.S */
@@ -594,39 +563,6 @@ GATE_INITTAB_END
 	POST_ALIEN_IPC
 #endif
 
-/*
- * input:  eax: address to syscall function
- * output: eax: error code
- */
-.macro SC_ADDR_TO_ERR val
-	sub 	$syscall_table , %eax	/* eax = byte offset to syscall */
-	shr	$2, %eax		/* convert eax to syscall nr */
-	add 	$0x30, %eax		/* convert eax to syscall int nr */
-	shl	$3, %eax		/* construct error code */
-	orl	$\val, %eax		/* -"- */
-.endm
-
-.Lalien_sys_call:
-	btrl	$17, OFS__THREAD__STATE (%ebx) /* Thread_dis_alien */
-	jc	1f
-	RESTORE_STATE
-	subl	$2, 4(%esp)		/* Correct EIP to point to insn */
-	SC_ADDR_TO_ERR 2
-2:	pushl	$0xd
-	xchgl	4(%esp), %eax
-	pusha
-	jmp	.L_slowtraps
-
-1:	/* do alien syscall and trap afterwards */
-	RESET_THREAD_CANCEL_AT %ebx
-	pushl 	%eax
-	call	*(%eax)			/* call with ENABLED interrupts */
-	cli
-	CHECK_SANITY $3			/* scratches ecx */
-	popl	%eax
-	RESTORE_STATE
-	SC_ADDR_TO_ERR 6
-	jmp	2b
 
 #define OFS__VCPU_STATE__REGS_IRET (VAL__SIZEOF_TRAP_STATE - 20 + OFS__VCPU_STATE__TREX)
 

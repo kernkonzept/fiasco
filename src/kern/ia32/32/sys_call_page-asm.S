@@ -8,11 +8,6 @@ sys_call_invoke:
 	ret
 sys_call_invoke_end:
 
-sys_call_debugger:
-	int	$0x32
-	ret
-sys_call_debugger_end:
-
 sys_call_se_invoke:
 	pop	%ebx
 	mov	%esp, %ebp
@@ -32,8 +27,6 @@ sys_call_se_invoke_end:
 
 	.global	sys_call_invoke
 	.global	sys_call_invoke_end
-	.global	sys_call_debugger
-	.global	sys_call_debugger_end
 	.global	sys_call_se_invoke
 	.global	sys_call_se_invoke_end
 
