@@ -21,6 +21,10 @@ struct Smc_user : Kobject_h<Smc_user, Kobject>
 
     register Mword r0 FIASCO_ARM_ASM_REG(0) = access_once(&in->values[0]);
 
+    // only allow fast calls
+    if (!(r0 & 0x80000000))
+      return commit_result(-L4_err::ENosys);
+
     // only allow calls to trusted applications or a trusted OS
     if ((r0 & 0x3F000000) < 0x30000000)
       return commit_result(-L4_err::ENosys);
