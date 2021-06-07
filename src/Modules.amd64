@@ -200,6 +200,7 @@ jdb_ptab_IMPL		:= jdb_ptab jdb_ptab-amd64
 jdb_screen_IMPL		:= jdb_screen jdb_screen-ia32
 jdb_tcb_IMPL		+= jdb_tcb-amd64
 jdb_trace_set_IMPL	:= jdb_trace_set jdb_trace_set-ia32-ux
+jdb_tbuf_fe_IMPL	:= jdb_tbuf_fe jdb_tbuf_fe-ia32
 
 INTERFACES_JDB-$(CONFIG_JDB_MISC)	+= jdb_tetris
 
