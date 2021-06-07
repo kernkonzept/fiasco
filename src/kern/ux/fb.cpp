@@ -93,14 +93,13 @@ Fb::setup_mbi()
   if (!Boot_info::fb_size())
     return;
 
-  Multiboot_info *mbi = Boot_info::mbi_virt();
+  L4mod_info *mbi = Boot_info::mbi_virt();
 
   struct Multiboot_vbe_controller *vbe = reinterpret_cast
 	<Multiboot_vbe_controller *>(Boot_info::mbi_vbe());
   struct Multiboot_vbe_mode *vbi = reinterpret_cast
 	<Multiboot_vbe_mode *>((char *) vbe + sizeof (*vbe));
 
-  mbi->flags             |= Multiboot_info::Video_info;
   mbi->vbe_control_info   = Boot_info::mbi_phys()
                              + ((char *) vbe - (char *) mbi);
   mbi->vbe_mode_info      = Boot_info::mbi_phys()

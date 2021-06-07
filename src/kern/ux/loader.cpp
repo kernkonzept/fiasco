@@ -4,7 +4,7 @@ INTERFACE:
 #include <cstdio>			// for FILE *
 #include "types.h"
 
-class Multiboot_module;
+class L4mod_mod;
 
 class Loader
 {
@@ -16,14 +16,14 @@ public:
   static FILE *open_module (const char * const path);
 
   static char const * load_module (const char * const path,
-				   Multiboot_module *module,
+				   unsigned long *entry,
 				   unsigned long int memsize,
                                    bool quiet,
                                    unsigned long *start,
                                    unsigned long *end);
 
   static char const * copy_module (const char * const path,
-				   Multiboot_module *module,
+				   L4mod_mod *mod,
 				   Address *load_addr,
 				   bool quiet);
 };
@@ -100,7 +100,7 @@ Loader::open_module (const char * const path)
 IMPLEMENT FIASCO_INIT
 char const *
 Loader::load_module (const char * const path,
-                     Multiboot_module *module,
+                     unsigned long *entry,
                      unsigned long int memsize,
                      bool quiet,
                      unsigned long *start,
@@ -140,10 +140,9 @@ Loader::load_module (const char * const path,
       return errors[3];
     }
 
-  // Record entry point (initial EIP)
-  module->reserved  = eh.e_entry;
-  *start            = 0xffffffff;
-  *end              = 0;
+  *entry = eh.e_entry;
+  *start = 0xffffffff;
+  *end   = 0;
 
   // Load all program sections
   for (i = 0, offset = eh.e_phoff; i < eh.e_phnum; i++) {
@@ -199,7 +198,7 @@ Loader::load_module (const char * const path,
 IMPLEMENT FIASCO_INIT
 char const *
 Loader::copy_module (const char * const path,
-		     Multiboot_module *module,
+		     L4mod_mod *mod,
                      Address *load_addr,
 		     bool quiet)
 {
@@ -224,12 +223,12 @@ Loader::copy_module (const char * const path,
       return errors[7];
     }
 
-  module->mod_start = *load_addr;
-  module->mod_end   = *load_addr + s.st_size;
+  mod->mod_start = *load_addr;
+  mod->mod_end   = *load_addr + s.st_size;
 
   if (! quiet)
     printf ("Copying Module 0x" L4_PTR_FMT "-0x" L4_PTR_FMT " [%s]\n",
-	    (Address)module->mod_start, (Address)module->mod_end, path);
+	    (Address)mod->mod_start, (Address)mod->mod_end, path);
 
   fclose (fp);
   return 0;

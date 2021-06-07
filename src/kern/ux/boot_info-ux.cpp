@@ -14,7 +14,7 @@ EXTENSION class Boot_info
 {
 public:
   static Address mbi_phys();
-  static Multiboot_info *mbi_virt();
+  static L4mod_info *mbi_virt();
 
 private:
   static int                            _fd;            // Physmem FD
@@ -42,6 +42,9 @@ private:
   static unsigned long                  _root_start;
   static unsigned long                  _root_end;
   static unsigned long                  _min_mappable_address;
+  static unsigned long                  _max_mappable_address;
+  static unsigned long                  _entry_sigma0;
+  static unsigned long                  _entry_roottask;
 };
 
 IMPLEMENTATION[ux]:
@@ -94,6 +97,9 @@ unsigned long           Boot_info::_sigma0_end;
 unsigned long           Boot_info::_root_start;
 unsigned long           Boot_info::_root_end;
 unsigned long           Boot_info::_min_mappable_address;
+unsigned long           Boot_info::_max_mappable_address;
+unsigned long           Boot_info::_entry_sigma0;
+unsigned long           Boot_info::_entry_roottask;
 
 
 // If you add options here, add them to getopt_long and help below
@@ -165,7 +171,7 @@ PUBLIC static
 Address
 Boot_info::kmem_start(Address mem_max)
 {
-  Address end_addr = (mbi_virt()->mem_upper + 1024) << 10;
+  Address end_addr = _max_mappable_address;
   Address size, base;
 
   if (end_addr > mem_max)
@@ -202,8 +208,8 @@ Boot_info::init()
   bool                          quiet = false;
   unsigned int                  modcount = 6, skip = 3;
   unsigned long int             memsize = 64 << 20;
-  Multiboot_info *              mbi;
-  Multiboot_module *            mbm;
+  L4mod_info                    *mbi;
+  L4mod_mod                     *mbm;
   struct utsname                uts;
 #if 0
   char const *                  symbols_file = "Symbols";
@@ -444,13 +450,11 @@ Boot_info::init()
             memsize >> 20, _fb_size >> 10, _input_size >> 10, _fd);
 
   mbi             = mbi_virt();
-  mbi->flags      = Multiboot_info::Memory | Multiboot_info::Cmdline |
-                    Multiboot_info::Mods;
-  mbi->mem_lower  = 0;
-  mbi->mem_upper  = (memsize >> 10) - 1024;            /* in KB */
+  mbi->flags      = 0;
+  _max_mappable_address = memsize;
   mbi->mods_count = modcount - skip;
   mbi->mods_addr  = mbi_phys() + sizeof (*mbi);
-  mbm = reinterpret_cast<Multiboot_module *>((char *) mbi + sizeof (*mbi));
+  mbm = reinterpret_cast<L4mod_mod *>((char *) mbi + sizeof (*mbi));
   str = reinterpret_cast<char *>(mbm + modcount - skip);
 
   // Copying of modules starts at the top, right below the kmem reserved area
@@ -479,13 +483,22 @@ Boot_info::init()
 	{
 	  mbm->mod_start = 0;
 	  mbm->mod_end = 0;
+	  mbm->flags = 1; // Tag kernel
 	  error = 0;
 	}
+      // Load sigma0 and roottask, just copy the rest
+      else if (m == _modules + 1)
+        {
+          mbm->flags = 2; // Tag sigma0
+          error = Loader::load_module (*m, &_entry_sigma0, memsize, quiet, &start, &end);
+        }
+      else if (m == _modules + 2)
+        {
+          mbm->flags = 3; // Tag roottask
+          error = Loader::load_module (*m, &_entry_roottask, memsize, quiet, &start, &end);
+        }
       else
-	// Load sigma0 and roottask, just copy the rest
-	error = m < _modules + 3 ?
-              Loader::load_module (*m, mbm, memsize, quiet, &start, &end) :
-              Loader::copy_module (*m, mbm, &load_addr, quiet);
+        error = Loader::copy_module (*m, mbm, &load_addr, quiet);
 
       if (error)
         {
@@ -497,7 +510,7 @@ Boot_info::init()
       if (cmd)
         *cmd = ' ';
 
-      mbm->string = str - (char *) mbi + mbi_phys();
+      mbm->cmdline = str - (char *) mbi + mbi_phys();
 
       // Copy module name with path and command line
       str = stpcpy (str, *m) + 1;
@@ -585,10 +598,10 @@ Boot_info::mbi_phys()
 }
 
 IMPLEMENT inline NEEDS ["mem_layout.h"]
-Multiboot_info *
+L4mod_info *
 Boot_info::mbi_virt()
 {
-  return reinterpret_cast<Multiboot_info *>
+  return reinterpret_cast<L4mod_info *>
     (Mem_layout::Physmem + mbi_phys());
 }
 
@@ -717,6 +730,21 @@ PUBLIC static inline
 unsigned long
 Boot_info::min_mappable_address()
 { return _min_mappable_address; }
+
+PUBLIC static inline
+unsigned long
+Boot_info::max_mappable_address()
+{ return _max_mappable_address; }
+
+PUBLIC static inline
+unsigned long
+Boot_info::entry_sigma0()
+{ return _entry_sigma0; }
+
+PUBLIC static inline
+unsigned long
+Boot_info::entry_roottask()
+{ return _entry_roottask; }
 
 PUBLIC inline static
 unsigned

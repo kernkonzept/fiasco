@@ -20,7 +20,7 @@ PRIVATE static FIASCO_INIT
 void
 Kip_init::setup_ux(Kip *k)
 {
-  Multiboot_module *mbm = reinterpret_cast <Multiboot_module*>
+  L4mod_mod *mbm = reinterpret_cast<L4mod_mod *>
     (Kmem::phys_to_virt (Boot_info::mbi_virt()->mods_addr));
   k->user_ptr  = Boot_info::mbi_phys();
   Mem_desc *m  = k->mem_descs_a().begin();
@@ -28,13 +28,13 @@ Kip_init::setup_ux(Kip *k)
   // start at 64k because on some distributions (like Ubuntu 8.04) it's
   // not allowed to map below a certain treshold
   *(m++) = Mem_desc(Boot_info::min_mappable_address(),
-                    ((Boot_info::mbi_virt()->mem_upper + 1024) << 10) - 1,
+                    Boot_info::max_mappable_address(),
                     Mem_desc::Conventional);
   *(m++) = Mem_desc(Kmem::kernel_image_start(), Kmem::kcode_end() - 1,
                     Mem_desc::Reserved);
 
   mbm++;
-  k->sigma0_ip		= mbm->reserved;
+  k->sigma0_ip = Boot_info::entry_sigma0();
   if ((Boot_info::sigma0_start() & Config::PAGE_MASK)
       != ((Boot_info::sigma0_end() + (Config::PAGE_SIZE-1))
 	   & Config::PAGE_MASK))
@@ -47,7 +47,7 @@ Kip_init::setup_ux(Kip *k)
     cxx::int_value<L4_fpage::Rights>(L4_fpage::Rights::RWX());
 
   mbm++;
-  k->root_ip		= mbm->reserved;
+  k->root_ip = Boot_info::entry_roottask();
   if ((Boot_info::root_start() & Config::PAGE_MASK)
       != ((Boot_info::root_end() + (Config::PAGE_SIZE-1)) & Config::PAGE_MASK))
     *(m++) = Mem_desc(Boot_info::root_start() & Config::PAGE_MASK,
