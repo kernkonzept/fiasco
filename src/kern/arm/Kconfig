@@ -215,6 +215,12 @@ config ARM_ALIGNMENT_CHECK
 	help
 	  Enable if you want to have alignment check enabled.
 
+config ARM_SYNC_CLOCK
+	bool "Sync KIP clock"
+	depends on ARM
+	help
+	  Synchronize the internal kernel clock with the timer.
+
 choice
 	prompt "Execution Model"
 	depends on ARM

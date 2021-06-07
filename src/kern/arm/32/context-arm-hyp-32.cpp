@@ -54,6 +54,7 @@ Context::arm_hyp_load_non_vm_state(bool vgic)
                 : : "r" ((Cpu::sctlr | Cpu::Cp15_c1_cache_bits) & ~Cpu::Cp15_c1_mmu));
   asm volatile ("mcr p15, 0, %0,  c1, c0, 2" : : "r" (0xf00000));
   asm volatile ("mcr p15, 0, %0, c13, c0, 0" : : "r" (0));
+  asm volatile("mcr p15, 4, %0, c14, c1, 0" : : "r"(Host_cnthctl));
 
   if (vgic)
     Gic_h_global::gic->disable();
@@ -164,6 +165,7 @@ Context::arm_ext_vcpu_switch_to_host(Vcpu_state *vcpu, Vm_state *v)
   asm volatile ("mrc p15, 0, %0, c14, c3, 1" : "=r" (v->guest_regs.cntv_ctl));
   // disable VTIMER
   asm volatile ("mcr p15, 0, %0, c14, c3, 1" : : "r"(0));
+  asm volatile ("mcr p15, 4, %0, c14, c1, 0" : : "r"(Host_cnthctl));
 }
 
 PRIVATE inline NEEDS[Context::arm_host_sctlr]
@@ -202,6 +204,7 @@ Context::arm_ext_vcpu_switch_to_guest(Vcpu_state *, Vm_state *v)
 
   asm volatile ("mcr  p15, 4, %0, c0, c0, 5" : : "r" (v->vmpidr));
   asm volatile ("mcr  p15, 4, %0, c0, c0, 0" : : "r" (v->vpidr));
+  asm volatile ("mcr  p15, 4, %0, c14, c1, 0" : : "r" (Guest_cnthctl));
 }
 
 PRIVATE inline

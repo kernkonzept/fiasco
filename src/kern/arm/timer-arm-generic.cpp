@@ -59,6 +59,11 @@ void Timer::init(Cpu_number cpu)
       _interval = (Unsigned64)_freq0 * Config::Scheduler_granularity / 1000000;
       printf("ARM generic timer: freq=%ld interval=%ld cnt=%lld\n", _freq0, _interval, Gtimer::counter());
       assert(_freq0);
+
+      freq_to_scaler_shift(1000000000, _freq0,
+                           &_scaler_ts_to_ns, &_shift_ts_to_ns);
+      freq_to_scaler_shift(1000000, _freq0,
+                           &_scaler_ts_to_us, &_shift_ts_to_us);
     }
   else if (_freq0 != frequency())
     {
@@ -103,6 +108,11 @@ Timer::system_clock()
     return 0;
   return Kip::k()->clock();
 }
+
+IMPLEMENT_OVERRIDE inline
+Unsigned64
+Timer::time_stamp()
+{ return Gtimer::counter(); }
 
 // --------------------------------------------------------------------------
 INTERFACE [arm && arm_generic_timer && jdb]:

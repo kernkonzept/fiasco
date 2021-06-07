@@ -79,5 +79,6 @@ Startup::stage2()
   Fpu::init(boot_cpu, false);
   Ipi::init(boot_cpu);
   Timer::init(boot_cpu);
+  Kip_init::init_kip_clock();
   Utcb_init::init();
 }
