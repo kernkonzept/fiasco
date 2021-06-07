@@ -160,32 +160,27 @@ get_char:
       if (ch == 27)
         {
           ibuf[pos++] = 27;
-          if (!(Console::state() & DETECT_ESC))
-            return KEY_SINGLE_ESC;
+          int nc = getchar_timeout(csi_timeout);
+          if (nc == -1)
+            {
+              pos = 0;
+              return KEY_SINGLE_ESC;
+            }
           else
             {
-              int nc = getchar_timeout(csi_timeout);
-              if (nc == -1)
+              if (pos < sizeof(ibuf))
+                ibuf[pos++] = nc;
+              if (nc == '[' || nc == 'O')
                 {
-                  pos = 0;
-                  return KEY_SINGLE_ESC;
+                  arg = 0;
+                  memset(args, 0, sizeof(args));
+                  state = GOT_CSI;
+                  break;
                 }
               else
                 {
-                  if (pos < sizeof(ibuf))
-                    ibuf[pos++] = nc;
-                  if (nc == '[' || nc == 'O')
-                    {
-                      arg = 0;
-                      memset(args, 0, sizeof(args));
-                      state = GOT_CSI;
-                      break;
-                    }
-                  else
-                    {
-                      state = UNKNOWN_ESC;
-                      goto get_char;
-                    }
+                  state = UNKNOWN_ESC;
+                  goto get_char;
                 }
             }
         }

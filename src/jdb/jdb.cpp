@@ -660,8 +660,6 @@ Jdb::open_debug_console(Cpu_number cpu)
   if (!Jdb_screen::direct_enabled())
     Kconsole::console()->
       change_state(Console::DIRECT, 0, ~Console::OUTENABLED, 0);
-  Kconsole::console()->
-    change_state(Console::IN, 0, ~0UL, Console::DETECT_ESC);
 
   return true;
 }
@@ -680,8 +678,6 @@ Jdb::close_debug_console(Cpu_number cpu)
       while (Kconsole::console()->getchar(false)!=-1)
 	;
 
-      Kconsole::console()->
-        change_state(Console::IN, 0, ~Console::DETECT_ESC, 0);
       Kconsole::console()->
 	change_state(Console::DIRECT, 0, ~0UL, Console::OUTENABLED);
 
