@@ -18,6 +18,7 @@ public:
   static void setup_kmem_region (Address kmem_base, Address kmem_size);
 };
 
+//----------------------------------------------------------------------------
 IMPLEMENTATION [!ux]:
 
 PRIVATE static inline
@@ -25,6 +26,7 @@ void
 Kip_init::setup_ux(Kip *)
 {}
 
+//----------------------------------------------------------------------------
 IMPLEMENTATION [ia32,ux,amd64]:
 
 #include <cstring>
@@ -119,7 +121,7 @@ void Kip_init::init()
     }
 }
 
-
+//----------------------------------------------------------------------------
 IMPLEMENTATION [amd64]:
 
 PRIVATE static inline NOEXPORT NEEDS["kip.h"]
@@ -131,6 +133,7 @@ Kip_init::reserve_amd64_hole()
 	                   Mem_desc::Reserved, true));
 }
 
+//----------------------------------------------------------------------------
 IMPLEMENTATION [!amd64]:
 
 PRIVATE static inline NOEXPORT
@@ -138,6 +141,7 @@ void
 Kip_init::reserve_amd64_hole()
 {}
 
+//---------------------------------------------------------------------------
 IMPLEMENTATION [!ux]:
 
 PUBLIC static FIASCO_INIT
