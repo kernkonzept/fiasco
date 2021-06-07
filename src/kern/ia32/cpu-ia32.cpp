@@ -2063,7 +2063,7 @@ Cpu::calibrate_tsc()
   return;
 
 bad_ctc:
-  if (Config::Kip_timer_uses_rdtsc)
+  if (Config::Kip_clock_uses_rdtsc)
     panic("Can't calibrate tsc");
 }
 

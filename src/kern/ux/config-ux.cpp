@@ -28,7 +28,7 @@ public:
     // address space size is different, do not go below 2GB (0x80000000)
     Host_as_size       = 0xc0000000U,
 
-    Kip_timer_uses_rdtsc = false,
+    Kip_clock_uses_rdtsc = false,
     Pic_prio_modify = true,
   };
 

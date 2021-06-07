@@ -78,9 +78,9 @@ public:
   {
     Pic_prio_modify = true,
 #ifdef CONFIG_SYNC_TSC
-    Kip_timer_uses_rdtsc = true,
+    Kip_clock_uses_rdtsc = true,
 #else
-    Kip_timer_uses_rdtsc = false,
+    Kip_clock_uses_rdtsc = false,
 #endif
   };
 
