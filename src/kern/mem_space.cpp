@@ -139,16 +139,20 @@ public:
   struct Fit_size
   {
     typedef cxx::array<Page_order, Page_order, 65> Size_array;
-    Size_array const &o;
+    Size_array o;
     Page_order operator () (Page_order i) const { return o[i]; }
 
-    explicit Fit_size(Size_array const &o) :o(o) {}
+    void add_page_order(Page_order order)
+      {
+        for (Page_order c = order; c < o.size() && o[c] < order; ++c)
+          o[c] = order;
+      }
   };
 
   FIASCO_SPACE_VIRTUAL
-  Fit_size mem_space_fitting_sizes() const __attribute__((pure));
+  Fit_size const &mem_space_fitting_sizes() const __attribute__((pure));
 
-  Fit_size fitting_sizes() const
+  Fit_size const &fitting_sizes() const
   { return mem_space_fitting_sizes(); }
 
   static Mdb_types::Pfn to_pfn(Phys_addr p)
@@ -245,7 +249,7 @@ DEFINE_PER_CPU Per_cpu<Mem_space *> Mem_space::_current;
 char const * const Mem_space::name = "Mem_space";
 Mem_space *Mem_space::_kernel_space;
 
-static Mem_space::Fit_size::Size_array __mfs;
+static Mem_space::Fit_size __mfs;
 Mem_space::Page_order Mem_space::_glbl_page_sizes[Max_num_global_page_sizes];
 unsigned Mem_space::_num_glbl_page_sizes;
 bool Mem_space::_glbl_page_sizes_finished;
@@ -281,15 +285,14 @@ void
 Mem_space::add_page_size(Page_order o)
 {
   add_global_page_size(o);
-  for (Page_order c = o; c < __mfs.size(); ++c)
-    __mfs[c] = o;
+  __mfs.add_page_order(o);
 }
 
 IMPLEMENT
-Mem_space::Fit_size
+Mem_space::Fit_size const &
 Mem_space::mem_space_fitting_sizes() const
 {
-  return Fit_size(__mfs);
+  return __mfs;
 }
 
 PUBLIC inline

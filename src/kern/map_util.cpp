@@ -399,7 +399,7 @@ map(MAPDB* mapdb,
   V_pfn const rcv_start = rcv_addr;
   V_pfc const rcv_size = snd_size;
 
-  auto const to_fit_size = to->fitting_sizes();
+  auto const &to_fit_size = to->fitting_sizes();
 
   // We now loop through all the pages we want to send from the
   // sender's address space, looking up appropriate parent mappings in

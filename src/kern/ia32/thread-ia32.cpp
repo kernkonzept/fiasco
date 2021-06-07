@@ -435,7 +435,7 @@ bool
 Thread::handle_sigma0_page_fault(Address pfa)
 {
   Mem_space::Page_order size = mem_space()->largest_page_size(); // take a page size less than 16MB (1<<24)
-  auto f = mem_space()->fitting_sizes();
+  auto const &f = mem_space()->fitting_sizes();
   Virt_addr va = Virt_addr(pfa);
 
   // Check if mapping a superpage doesn't exceed the size of physical memory
