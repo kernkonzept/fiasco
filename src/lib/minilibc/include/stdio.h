@@ -17,7 +17,6 @@ int FIASCO_COLD sprintf(char *str, const char *format, ...)
 int FIASCO_COLD snprintf(char *str, size_t size, const char *format, ...)
   __attribute__((format(printf,3,4)));
 int FIASCO_COLD getchar(void);
-char* FIASCO_COLD gets(char *s);
 
 #include <stdarg.h>
 

@@ -364,7 +364,7 @@ MINILIBC	:= libc.a
 VPATH		+= lib/minilibc/ia32 lib/minilibc
 CSRC_MINILIBC	:= printf.c __v_printf.c \
 		   vprintf.c lltostr.c __ltostr.c \
-		   putchar.c puts.c gets.c sprintf.c \
+		   putchar.c puts.c sprintf.c \
 		   snprintf.c vsnprintf.c vsprintf.c fprintf.c \
 		   memccpy.c  memchr.c   memcpy.c   memmove.c  memset.c \
 		   strcpy.c   strlen.c   strstr.c   \
