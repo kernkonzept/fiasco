@@ -138,12 +138,12 @@ private:
   Order _page_shift;		///< Page size of mapping trees
   Physframe* _physframe;	///< Pointer to Physframe array
   const size_t* const _sub_shifts; ///< Pointer to array of sub-page sizes
-  const unsigned _sub_shifts_max;  ///< Number of valid _page_sizes entries
+  const unsigned _sub_shifts_num;  ///< Number of valid _sub_shifts entries
 
 public:
   Treemap(Page key_end, Space *owner_id,
           Pfn page_offset, Order page_shift,
-          const size_t* sub_shifts, unsigned sub_shifts_max,
+          const size_t* sub_shifts, unsigned sub_shifts_num,
           Physframe *physframe)
   : _key_end(key_end),
     _owner_id(owner_id),
@@ -151,7 +151,7 @@ public:
     _page_shift(page_shift),
     _physframe(physframe),
     _sub_shifts(sub_shifts),
-    _sub_shifts_max(sub_shifts_max)
+    _sub_shifts_num(sub_shifts_num)
   {}
 
   ~Treemap()
@@ -538,7 +538,7 @@ PUBLIC static
 Treemap *
 Treemap::create(Order parent_page_shift, Space *owner_id,
                 Pfn page_offset,
-                const size_t* shifts, unsigned shifts_max)
+                const size_t* shifts, unsigned shifts_num)
 {
   Order page_shift(shifts[0]);
   Page key_end = Page(1) << (parent_page_shift - page_shift);
@@ -561,7 +561,7 @@ Treemap::create(Order parent_page_shift, Space *owner_id,
 
   quota.release();
   return new (m) Treemap(key_end, owner_id, page_offset, page_shift, shifts + 1,
-                         shifts_max - 1, pf);
+                         shifts_num - 1, pf);
 }
 
 static Kmem_slab_t<Treemap> _treemap_allocator("Treemap");
@@ -848,10 +848,10 @@ Treemap::insert(Physframe* frame, Mapping_tree::Iterator const &parent,
           return *free;
         }
 
-      assert (_sub_shifts_max > 0);
+      assert (_sub_shifts_num > 0);
 
       submap = Treemap::create(_page_shift, parent_space, parent_va,
-                               _sub_shifts, _sub_shifts_max);
+                               _sub_shifts, _sub_shifts_num);
       if (! submap)
         {
           // free the mapping got with allocate
@@ -1007,9 +1007,9 @@ Mapdb::foreach_mapping(Frame const &f,
  */
 PUBLIC inline NEEDS[<cassert>]
 Mapdb::Mapdb(Space *owner, Order parent_page_shift, size_t const *page_shifts,
-             unsigned page_shifts_max)
+             unsigned page_shifts_num)
 : _treemap(Treemap::create(parent_page_shift, owner,
-                           Pfn(0), page_shifts, page_shifts_max))
+                           Pfn(0), page_shifts, page_shifts_num))
 {
   // assert (boot_time);
   assert (_treemap);
