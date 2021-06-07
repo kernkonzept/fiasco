@@ -100,7 +100,12 @@ public:
   Mword      vhw_offset;
   Mword      _res8[2];
 
-  /* 0xF0   0x1E0 */
+  /* 0xF0   0x1E0:
+   * Platform info. */
+
+  /* 0x800-0x900:
+   * Code for syscall invocation. */
+
 
 private:
   static Kip *global_kip asm ("GLOBAL_KIP");
