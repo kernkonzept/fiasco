@@ -49,7 +49,7 @@ namespace KIP_namespace
 	/* 50/A0  */ 0, (sizeof(Kip) << (sizeof(Mword)*4)) | Num_mem_descs, {},
 	/* 60/C0  */ {},
 	/* A0/140 */ 0, 0, 0, 0,
-	/* B0/160 */ {},
+	/* B8/160 */ {},
 	/* E0/1C0 */ 0, 0, {},
 	/* F0/1D0 */ {"", 0}, {},
       },
