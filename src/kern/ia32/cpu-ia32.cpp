@@ -1959,7 +1959,8 @@ Cpu::init()
   init_lbr_type();
   init_bts_type();
 
-  calibrate_tsc();
+  if (!tsc_frequency_from_cpuid_15h())
+    calibrate_tsc();
 
   Unsigned32 cr4 = get_cr4();
 
@@ -2079,7 +2080,6 @@ Cpu::calibrate_tsc()
   scaler_tsc_to_us  = tsc_to_ns_div;
   scaler_ns_to_tsc  = muldiv(1 << 31, ((Unsigned32)tsc_end),
                              calibrate_time * 1000 >> 1 * 1 << 5);
-
   if (scaler_tsc_to_ns)
     _frequency = ns_to_tsc(1000000000UL);
 
@@ -2088,6 +2088,69 @@ Cpu::calibrate_tsc()
 bad_ctc:
   if (Config::Kip_clock_uses_rdtsc)
     panic("Can't calibrate tsc");
+}
+
+PRIVATE
+void
+Cpu::set_frequency_and_scalers(Unsigned64 freq)
+{
+  scaler_tsc_to_ns = muldiv(1 << 27, 1000000000, freq);
+  scaler_tsc_to_us = muldiv(1 << 31, 1000000*2, freq);
+  scaler_ns_to_tsc = muldiv(1 << 27, freq, 1000000000);
+
+  _frequency = freq;
+}
+
+/**
+ * Determine the frequency of the TSC.
+ *
+ * See Intel Manual Volume 3 Chapter 18.7.3 for details.
+ *
+ * CPUID_15 is quite accurate.
+ *
+ * CPUID_16 is less accurate and should be probably only used for informational
+ * purposes. For instance, for a Kaby Lake processor, CPUID_16 returned a value
+ * of 2800MHz while the actual CPU frequency is 2808MHz.
+ *
+ * MSR_PLATFORM_INFO is less accurate as well. On the mentioned Kaby Lake CPU,
+ * bits 15:8 report 28 defining a frequency of 28*100=2800MHz.
+ *
+ * Calibrating the TSC delivers results which are still more accurate than the
+ * rounded information from CPUID_16 and MSR_PLATFORM_INFO, even on QEMU.
+ */
+PRIVATE
+bool
+Cpu::tsc_frequency_from_cpuid_15h()
+{
+  if (_vendor != Vendor_intel || cpuid_eax(0) < 0x15 || family() != 6)
+    return false;
+
+  Unsigned32 eax, ebx, ecx, edx;
+  cpuid(0x15, &eax, &ebx, &ecx, &edx);
+
+  if (eax == 0 || ebx == 0)
+    return false;
+
+  // See Intel Manual Volume 3 Chapter 18.7.3 / table 18-85.
+  Unsigned64 crystal_clock = 0;
+  if (ecx != 0)
+    crystal_clock = ecx;
+  else if (model() == 0x55)     // Cascade Lake
+    crystal_clock = 25000000;
+  else if (   model() == 0x4e   // Skylake
+           || model() == 0x5e   // Skylake
+           || model() == 0x8e   // Coffee Lake
+           || model() == 0x9e   // Coffee Lake
+          )
+    crystal_clock = 24000000;
+  else if (model() == 0x5c)     // Atom Goldmont
+    crystal_clock = 19200000;
+
+  if (!crystal_clock)
+    return false;
+
+  set_frequency_and_scalers((crystal_clock * ebx) / eax);
+  return true;
 }
 
 IMPLEMENT inline
