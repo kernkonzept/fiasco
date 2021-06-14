@@ -466,9 +466,8 @@ struct Ia32_intel_microcode
 
   static Unsigned64 get_sig()
   {
-    Unsigned32 a, b, c, d;
     Cpu::wrmsr(0, 0x8b); // IA32_BIOS_SIGN_ID
-    Cpu::cpuid(1, &a, &b, &c, &d);
+    Unsigned32 a = Cpu::cpuid_eax(1);
     return (Cpu::rdmsr(0x8b) & 0xffffffff00000000) | a;
   }
 
@@ -967,6 +966,42 @@ Cpu::cpuid(Unsigned32 mode, Unsigned32 ecx_val,
                         : "a" (mode), "c" (ecx_val));
 }
 
+PUBLIC static inline FIASCO_INIT_CPU_AND_PM
+Unsigned32
+Cpu::cpuid_eax(Unsigned32 mode)
+{
+  Unsigned32 eax, dummy;
+  cpuid(mode, &eax, &dummy, &dummy, &dummy);
+  return eax;
+}
+
+PUBLIC static inline FIASCO_INIT_CPU_AND_PM
+Unsigned32
+Cpu::cpuid_ebx(Unsigned32 mode)
+{
+  Unsigned32 ebx, dummy;
+  cpuid(mode, &dummy, &ebx, &dummy, &dummy);
+  return ebx;
+}
+
+PUBLIC static inline FIASCO_INIT_CPU_AND_PM
+Unsigned32
+Cpu::cpuid_ecx(Unsigned32 mode)
+{
+  Unsigned32 ecx, dummy;
+  cpuid(mode, &dummy, &dummy, &ecx, &dummy);
+  return ecx;
+}
+
+PUBLIC static inline FIASCO_INIT_CPU_AND_PM
+Unsigned32
+Cpu::cpuid_edx(Unsigned32 mode)
+{
+  Unsigned32 edx, dummy;
+  cpuid(mode, &dummy, &dummy, &dummy, &edx);
+  return edx;
+}
+
 PUBLIC
 void
 Cpu::update_features_info()
@@ -1111,8 +1146,7 @@ PRIVATE FIASCO_INIT_CPU
 void
 Cpu::addr_size_info()
 {
-  Unsigned32 eax, ebx, ecx, edx;
-  cpuid(0x80000008, &eax, &ebx, &ecx, &edx);
+  Unsigned32 eax = cpuid_eax(0x80000008);
 
   _phys_bits = eax & 0xff;
   _virt_bits = (eax & 0xff00) >> 8;
@@ -1122,8 +1156,7 @@ PUBLIC static
 unsigned
 Cpu::amd_cpuid_mnc()
 {
-  Unsigned32 eax, ebx, ecx, edx;
-  cpuid(0x80000008, &eax, &ebx, &ecx, &edx);
+  Unsigned32 ecx = cpuid_ecx(0x80000008);
 
   unsigned apicidcoreidsize = (ecx >> 12) & 0xf;
   if (apicidcoreidsize == 0)
@@ -1176,20 +1209,10 @@ Cpu::get_features()
   if (!((get_flags() ^ eflags) & EFLAGS_ID))
     return 0;
 
-  Unsigned32 max;
-  char vendor_id[12];
-
-  cpuid(0, &max, (Unsigned32 *)(vendor_id),
-                 (Unsigned32 *)(vendor_id + 8),
-                 (Unsigned32 *)(vendor_id + 4));
-
-  if (!max)
+  if (cpuid_eax(0) < 1)
     return 0;
 
-  Unsigned32 dummy, dummy1, dummy2, features;
-  cpuid(1, &dummy, &dummy1, &dummy2, &features);
-
-  return features;
+  return cpuid_edx(1);
 }
 
 
@@ -1316,7 +1339,7 @@ Cpu::identify()
       }
 
     // Get maximum number for extended functions
-    cpuid(0x80000000, &max, &i, &i, &i);
+    max = cpuid_eax(0x80000000);
 
     if (max > 0x80000000)
       {
@@ -2139,12 +2162,10 @@ Cpu::init_indirect_branch_mitigation()
 {
   if (_vendor == Vendor_intel)
     {
-      Unsigned32 a, b, c, d;
-      cpuid(0, &a, &b, &c, &d);
-      if (a < 7)
+      if (cpuid_eax(0) < 7)
         panic("intel CPU does not support IBRS, IBPB, STIBP (cpuid max < 7)\n");
 
-      cpuid(7, 0, &a, &b, &c, &d);
+      Unsigned32 d = cpuid_edx(7);
       if (!(d & FEATX_IBRS_IBPB))
         panic("IBRS / IBPB not supported by CPU: %x\n", d);
 
