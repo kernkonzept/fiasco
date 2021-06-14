@@ -107,7 +107,6 @@ Jdb::_wait_for_input()
   if (i == tt->pin())
     {
       kernel_uart_irq_ack();
-      tt->chip()->ack(i);
       tt->ack();
     }
   else
