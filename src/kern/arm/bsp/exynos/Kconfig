@@ -115,7 +115,6 @@ config PF_EXYNOS_EXTGIC
 
 config PF_EXYNOS_TICKLESS_IDLE
         bool "Tickless idle"
-        default n
         help
           When a CPU core goes idle, disable the timer interrupt on that
           core and try to put that core offline.
