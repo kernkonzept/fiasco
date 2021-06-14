@@ -50,12 +50,10 @@ template< typename T >
 class Static_object
 {
 public:
-#if 0 // GCC <= 4.5 does not allow this, when static objects are used in unions
   // prohibit copies
   Static_object(Static_object const &) = delete;
   Static_object &operator = (Static_object const &) = delete;
   Static_object() = default;
-#endif
 
   T *get() const
   {
