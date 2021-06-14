@@ -1195,7 +1195,7 @@ Context::Drq_q::execute_request(Drq *r, Drop_mode drop, bool local)
           if (local)
             {
               c->state_change_dirty(~Thread_drq_wait, Thread_ready);
-              return need_resched || !(c->state() & Thread_ready_mask);
+              return need_resched;
             }
           else
             need_resched |= c->enqueue_drq(r);
