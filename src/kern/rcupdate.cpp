@@ -91,16 +91,16 @@ class Rcu_data
 public:
 
   Rcu_batch _q_batch;   ///< batch no. for grace period
-  bool _q_passed;       ///< quiescent state passed?
-  bool _pending;        ///< wait for quiescent state
-  bool _idle;
+  bool _q_passed;       ///< quiescent state for batch `_q_batch` passed?
+  bool _pending;        ///< waiting for quiescent state for batch `_q_batch`?
+  bool _idle;           ///< `false` iff CPU `_cpu` is participating in RCU
 
-  Rcu_batch _batch;
-  Rcu_list _n;
-  long _len;
-  Rcu_list _c;
-  Rcu_list _d;
-  Cpu_number _cpu;
+  Rcu_batch _batch;     ///< batch no. assigned to the items in `_c`
+  Rcu_list _n;          ///< new items: waiting for being assigned to a batch
+  long _len;            ///< number of items in `_n + _c + _d` (for debugging)
+  Rcu_list _c;          ///< current items: assigned to batch `_batch`
+  Rcu_list _d;          ///< done items: waited a full grace period
+  Cpu_number _cpu;      ///< the CPU this `Rcu_data` instance is assigned to
 };
 
 
@@ -116,11 +116,11 @@ class Rcu_glbl
 private:
   Rcu_batch _current;      ///< current batch
   Rcu_batch _completed;    ///< last completed batch
-  bool _next_pending;      ///< next batch already pending?
+  bool _next_pending;      ///< Are there items in batch `_current + 1`?
   Spin_lock<> _lock;
-  Cpu_mask _cpus;
+  Cpu_mask _cpus;          ///< CPUs waiting for a quiescent state
 
-  Cpu_mask _active_cpus;
+  Cpu_mask _active_cpus;   ///< CPUs participating in RCU
 
 };
 
@@ -276,6 +276,12 @@ Rcu_data::do_batch()
   return need_resched;
 }
 
+/**
+ * Start a new grace period if there are callbacks queued for the next batch and
+ * the current batch is completed.
+ *
+ * \pre #_lock must be locked
+ */
 PRIVATE inline NOEXPORT
 void
 Rcu_glbl::start_batch()
@@ -334,6 +340,16 @@ Rcu::leave_idle(Cpu_number cpu)
 }
 
 
+/**
+ * Announce a quiescent state of a CPU.
+ *
+ * If no CPU is left waiting for a quiescent state, the current grace period is
+ * finished and the current batch is completed. If additionally there are
+ * callbacks queued for the next batch (#_next_pending), a new grace period is
+ * started (cf. start_batch()).
+ *
+ * \pre #_lock must be locked
+ */
 PRIVATE inline NOEXPORT
 void
 Rcu_glbl::cpu_quiet(Cpu_number cpu)
