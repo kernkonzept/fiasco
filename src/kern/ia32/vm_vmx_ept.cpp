@@ -173,7 +173,7 @@ void
 Vm_vmx_ept::add_page_size(Mem_space::Page_order o)
 {
   add_global_page_size(o);
-  __ept_ps.add_page_order(o);
+  __ept_ps.add_page_size(o);
 }
 
 PUBLIC

@@ -142,11 +142,11 @@ public:
     Size_array o;
     Page_order operator () (Page_order i) const { return o[i]; }
 
-    void add_page_order(Page_order order)
-      {
-        for (Page_order c = order; c < o.size() && o[c] < order; ++c)
-          o[c] = order;
-      }
+    void add_page_size(Page_order order)
+    {
+      for (Page_order c = order; c < o.size() && o[c] < order; ++c)
+        o[c] = order;
+    }
   };
 
   FIASCO_SPACE_VIRTUAL
@@ -285,7 +285,7 @@ void
 Mem_space::add_page_size(Page_order o)
 {
   add_global_page_size(o);
-  __mfs.add_page_order(o);
+  __mfs.add_page_size(o);
 }
 
 IMPLEMENT

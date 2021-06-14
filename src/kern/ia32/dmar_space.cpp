@@ -460,7 +460,7 @@ void
 Dmar_space::add_page_size(Mem_space::Page_order o)
 {
   add_global_page_size(o);
-  __dmar_ps.add_page_order(o);
+  __dmar_ps.add_page_size(o);
 }
 
 PUBLIC
