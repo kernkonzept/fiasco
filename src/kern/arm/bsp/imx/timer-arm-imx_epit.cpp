@@ -67,5 +67,5 @@ Timer::system_clock()
   if (Config::Scheduler_one_shot)
     return 0;
   else
-    return Kip::k()->clock;
+    return Kip::k()->clock();
 }

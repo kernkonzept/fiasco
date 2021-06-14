@@ -64,7 +64,7 @@ PUBLIC
 void
 Mux_console::set_ignore_input(Unsigned64 delta)
 {
-  _ignore_input_until = Kip::k()->clock + delta;
+  _ignore_input_until = Kip::k()->clock() + delta;
 }
 
 PRIVATE
@@ -73,7 +73,7 @@ Mux_console::check_input_ignore()
 {
   if (_ignore_input_until)
     {
-      if (Kip::k()->clock > _ignore_input_until)
+      if (Kip::k()->clock() > _ignore_input_until)
         _ignore_input_until = 0;
       else
         {

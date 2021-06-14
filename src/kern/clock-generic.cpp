@@ -17,7 +17,7 @@ IMPLEMENT inline NEEDS["kip.h"]
 Clock::Counter
 Clock::read_counter() const
 {
-  return Kip::k()->clock;
+  return Kip::k()->clock();
 }
 
 IMPLEMENT inline

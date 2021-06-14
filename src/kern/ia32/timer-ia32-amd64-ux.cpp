@@ -10,9 +10,9 @@ void
 Timer::init_system_clock()
 {
   if (Config::Kip_clock_uses_rdtsc)
-    Kip::k()->clock = Cpu::cpus.cpu(_cpu).time_us();
+    Kip::k()->clock(Cpu::cpus.cpu(_cpu).time_us());
   else
-    Kip::k()->clock = 0;
+    Kip::k()->clock(0);
 }
 
 IMPLEMENT inline NEEDS ["config.h", "cpu.h", "globals.h", "kip.h"]
@@ -21,9 +21,13 @@ Timer::system_clock()
 {
   if (current_cpu() == Cpu_number::boot_cpu()
       && Config::Kip_clock_uses_rdtsc)
-    Kip::k()->clock = Cpu::cpus.cpu(_cpu).time_us();
+    {
+      Cpu_time time = Cpu::cpus.cpu(_cpu).time_us();
+      Kip::k()->clock(time);
+      return time;
+    }
 
-  return Kip::k()->clock;
+  return Kip::k()->clock();
 }
 
 IMPLEMENT inline NEEDS ["config.h", "cpu.h", "globals.h", "kip.h"]
@@ -34,7 +38,7 @@ Timer::update_system_clock(Cpu_number cpu)
     return;
 
   if (Config::Kip_clock_uses_rdtsc)
-    Kip::k()->clock = Cpu::cpus.cpu(Cpu_number::boot_cpu()).time_us();
+    Kip::k()->clock(Cpu::cpus.cpu(Cpu_number::boot_cpu()).time_us());
   else
-    Kip::k()->clock += Config::Scheduler_granularity;
+    Kip::k()->add_to_clock(Config::Scheduler_granularity);
 }

@@ -15,7 +15,7 @@ public:
 
   void set(unsigned poll_time_us)
   {
-    _timeout = Kip::k()->clock + poll_time_us;
+    _timeout = Kip::k()->clock() + poll_time_us;
     _last_check = true;
   }
 
@@ -28,7 +28,7 @@ public:
       return false;
 
     Proc::irq_chance();
-    return _last_check = Kip::k()->clock < _timeout;
+    return _last_check = Kip::k()->clock() < _timeout;
   }
 
   bool timed_out() const { return !_last_check; }

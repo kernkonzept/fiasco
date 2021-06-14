@@ -96,9 +96,9 @@ PUBLIC static
 void
 Timer::periodic_next_event(Cpu_number cpu, Unsigned64 next_wakeup)
 {
-  assert(next_wakeup >= Kip::k()->clock);
+  assert(next_wakeup >= Kip::k()->clock());
 
-  Unsigned64 d = next_wakeup - Kip::k()->clock;
+  Unsigned64 d = next_wakeup - Kip::k()->clock();
 
   d = (d / Config::Scheduler_granularity) * Config::Scheduler_granularity;
 
@@ -116,7 +116,7 @@ IMPLEMENT inline
 void
 Timer::update_one_shot(Unsigned64 wakeup)
 {
-  Unsigned64 now = Kip::k()->clock;
+  Unsigned64 now = Kip::k()->clock();
   Mword interval_mct;
   if (EXPECT_FALSE(wakeup <= now))
     interval_mct = 1;
@@ -133,5 +133,5 @@ Timer::system_clock()
   if (Config::Scheduler_one_shot)
     return 0;
   else
-    return Kip::k()->clock;
+    return Kip::k()->clock();
 }

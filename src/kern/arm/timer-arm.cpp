@@ -21,7 +21,7 @@ PRIVATE static inline NEEDS["mem_unit.h"]
 void
 Timer::kipclock_cache()
 {
-  Mem_unit::clean_dcache((void *)&Kip::k()->clock);
+  Mem_unit::clean_dcache((void *)&Kip::k()->_clock);
 }
 
 // ------------------------------------------------------------------------
@@ -44,7 +44,7 @@ IMPLEMENT inline NEEDS["kip.h"]
 void
 Timer::init_system_clock()
 {
-  Kip::k()->clock = 0;
+  Kip::k()->clock(0);
 }
 
 IMPLEMENT inline NEEDS["config.h", "globals.h", "kip.h", "watchdog.h", Timer::kipclock_cache]
@@ -53,7 +53,7 @@ Timer::update_system_clock(Cpu_number cpu)
 {
   if (cpu == Cpu_number::boot_cpu())
     {
-      Kip::k()->clock += Config::Scheduler_granularity;
+      Kip::k()->add_to_clock(Config::Scheduler_granularity);
       kipclock_cache();
       Watchdog::touch();
     }

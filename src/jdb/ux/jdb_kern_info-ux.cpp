@@ -27,9 +27,8 @@ PUBLIC
 void
 Jdb_kern_info_misc::show() override
 {
-  printf ("clck: %08x.%08x\n",
-	  (unsigned) (Kip::k()->clock >> 32), 
-	  (unsigned) (Kip::k()->clock));
+  Cpu_time clock = Kip::k()->clock();
+  printf ("clck: %08x.%08x\n", (unsigned)(clock >> 32), (unsigned)clock);
   show_pdir();
 }
 

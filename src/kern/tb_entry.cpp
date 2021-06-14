@@ -344,7 +344,7 @@ Tb_entry::set_global(char type, Context const *ctx, Address ip)
   _type   = type;
   _ctx    = ctx;
   _ip     = ip;
-  _kclock = (Unsigned32)Kip::k()->clock;
+  _kclock = (Unsigned32)Kip::k()->clock();
   _cpu    = cxx::int_value<Cpu_number>(current_cpu());
 }
 

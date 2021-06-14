@@ -234,7 +234,7 @@ Jdb_list_timeouts::list_timeouts_show_timeout(Timeout *t)
   char const *type;
   char ownerstr[32] = "";
   Thread *owner;
-  Signed64 timeout = t->get_timeout(Kip::k()->clock);
+  Signed64 timeout = t->get_timeout(Kip::k()->clock());
 
   Kconsole::console()->getchar_chance();
 

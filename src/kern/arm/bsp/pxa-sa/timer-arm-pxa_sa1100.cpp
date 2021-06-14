@@ -69,7 +69,7 @@ Timer::ack()
 {
   if (Config::Scheduler_one_shot)
     {
-      Kip::k()->clock += timer_to_us(read<Unsigned32>(OSCR));
+      Kip::k()->add_to_clock(timer_to_us(read<Unsigned32>(OSCR)));
       //puts("Reset timer");
       write<Mword>(0, OSCR);
       write<Mword>(0xffffffff, OSMR0);
@@ -94,9 +94,9 @@ void
 Timer::update_one_shot(Unsigned64 wakeup)
 {
   Unsigned32 apic;
-  Kip::k()->clock += timer_to_us(_timer->read<Unsigned32>(OSCR));
+  Kip::k()->add_to_clock(timer_to_us(_timer->read<Unsigned32>(OSCR)));
   _timer->write(0, OSCR);
-  Unsigned64 now = Kip::k()->clock;
+  Unsigned64 now = Kip::k()->clock();
 
   if (EXPECT_FALSE (wakeup <= now) )
     // already expired
@@ -122,7 +122,7 @@ Unsigned64
 Timer::system_clock()
 {
   if (Config::Scheduler_one_shot)
-    return Kip::k()->clock + timer_to_us(_timer->read<Unsigned32>(OSCR));
+    return Kip::k()->clock() + timer_to_us(_timer->read<Unsigned32>(OSCR));
   else
-    return Kip::k()->clock;
+    return Kip::k()->clock();
 }

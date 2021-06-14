@@ -53,7 +53,7 @@ void
 Timer::update_one_shot(Unsigned64 wakeup)
 {
   Unsigned32 apic;
-  Unsigned64 now = Kip::k()->clock;
+  Unsigned64 now = Kip::k()->clock();
   if (EXPECT_FALSE (wakeup <= now))
     // already expired
     apic = 1;

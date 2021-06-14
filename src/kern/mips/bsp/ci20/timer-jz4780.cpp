@@ -62,7 +62,7 @@ void
 Timer::init_system_clock()
 {
   // FIXME: may be sync to counter register
-  Kip::k()->clock = 0;
+  Kip::k()->clock(0);
 }
 
 IMPLEMENT inline NEEDS ["kip.h"]
@@ -70,7 +70,7 @@ Unsigned64
 Timer::system_clock()
 {
   // FIXME: use local counter directly
-  return Kip::k()->clock;
+  return Kip::k()->clock();
 }
 
 IMPLEMENT inline NEEDS ["config.h", "kip.h"]
@@ -78,7 +78,7 @@ void
 Timer::update_system_clock(Cpu_number cpu)
 {
   if (cpu == Cpu_number::boot_cpu())
-    Kip::k()->clock += Config::Scheduler_granularity;
+    Kip::k()->add_to_clock(Config::Scheduler_granularity);
 }
 
 IMPLEMENT inline

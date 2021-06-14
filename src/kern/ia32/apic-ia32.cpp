@@ -680,7 +680,7 @@ Apic::check_still_getting_interrupts()
     return 0;
 
   Unsigned64 tsc_until;
-  Cpu_time clock_start = Kip::k()->clock;
+  Cpu_time clock_start = Kip::k()->clock();
 
   tsc_until = Cpu::rdtsc();
   tsc_until += 0x01000000; // > 10 Mio cycles should be sufficient until
@@ -688,8 +688,8 @@ Apic::check_still_getting_interrupts()
   do
     {
       // kernel clock by timer interrupt updated?
-      if (Kip::k()->clock != clock_start)
-	// yes, succesful
+      if (Kip::k()->clock() != clock_start)
+	// yes, successful
 	return 1;
     } while (Cpu::rdtsc() < tsc_until);
 

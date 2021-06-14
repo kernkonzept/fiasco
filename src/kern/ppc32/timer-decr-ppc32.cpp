@@ -61,14 +61,14 @@ IMPLEMENT inline NEEDS ["kip.h"]
 void
 Timer::init_system_clock()
 {
-  Kip::k()->clock = 0;
+  Kip::k()->clock(0);
 }
 
 IMPLEMENT inline NEEDS ["globals.h", "kip.h"]
 Unsigned64
 Timer::system_clock()
 {
-  return Kip::k()->clock;
+  return Kip::k()->clock();
 }
 
 IMPLEMENT inline NEEDS ["decrementer.h", "config.h", "kip.h"]
@@ -78,7 +78,7 @@ Timer::update_system_clock(Cpu_number cpu)
   if (cpu == Cpu_number::boot_cpu())
     {
       Decrementer::d()->set();
-      Kip::k()->clock += Config::Scheduler_granularity;
+      Kip::k()->add_to_clock(Config::Scheduler_granularity);
     }
 }
 

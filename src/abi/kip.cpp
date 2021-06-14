@@ -47,6 +47,8 @@ public:
 
   char const *version_string() const;
 
+  Cpu_time clock() const;
+
   /* 0x00 */
   Mword      magic;
   Mword      version;
@@ -85,7 +87,7 @@ public:
   Mword      _res5[16];
 
   /* 0xA0   0x140 */
-  volatile Cpu_time clock;
+  volatile Cpu_time _clock; // don't access directly, use clock() instead!
   Unsigned64 _res6;  // might be later used for clock-related time stamp offset
 
   /* 0xB0   0x150 */
@@ -243,6 +245,21 @@ char const *Kip::version_string() const
   return reinterpret_cast <char const *> (this) + (offset_version_strings << 4);
 }
 
+PUBLIC inline
+void
+Kip::clock(Cpu_time c)
+{ _clock = c; }
+
+PUBLIC inline
+void
+Kip::add_to_clock(Cpu_time c)
+{
+  // This function does not force an atomic update. The caller needs to be
+  // aware about this. Either the update is performed a single specific CPU
+  // (the boot CPU) or the callers have to use a lock.
+  _clock += c;
+}
+
 #ifdef TARGET_NAME
 #define TARGET_NAME_PHRASE " for " TARGET_NAME
 #else
@@ -256,3 +273,25 @@ asm(".section .initkip.version, \"a\", %progbits        \n"
 asm(".section .initkip.features.end, \"a\", %progbits   \n"
     ".string \"\"                                       \n"
     ".previous                                          \n");
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION[32bit]:
+
+IMPLEMENT inline Cpu_time Kip::clock() const
+{
+  Unsigned32 *c = (Unsigned32 *)&_clock;
+  Unsigned32 lo, hi;
+  do
+    {
+      hi = access_once(&c[1]);
+      lo = access_once(&c[0]);
+    }
+  while (hi != access_once(&c[1]));
+  return ((Cpu_time)hi << 32) | lo;
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION[64bit]:
+
+IMPLEMENT inline Cpu_time Kip::clock() const
+{ return _clock; }

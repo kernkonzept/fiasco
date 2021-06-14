@@ -28,12 +28,12 @@ Delay::measure()
   unsigned count = 0;
 
   Kip *k = Kip::k();
-  Cpu_time t = k->clock;
+  Cpu_time t = k->clock();
   Timer::update_timer(t + 1000); // 1ms
-  while (t == (t1 = k->clock))
+  while (t == (t1 = k->clock()))
     Proc::pause();
-  Timer::update_timer(k->clock + 1000); // 1ms
-  while (t1 == k->clock)
+  Timer::update_timer(k->clock() + 1000); // 1ms
+  while (t1 == k->clock())
     {
       ++count;
       Proc::pause();
@@ -64,7 +64,7 @@ Delay::delay(unsigned ms)
       unsigned c = count;
       while (c--)
         {
-	  (void)k->clock;
+	  (void)k->clock();
 	  Proc::pause();
 	}
     }

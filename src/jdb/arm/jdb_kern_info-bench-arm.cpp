@@ -21,4 +21,4 @@ IMPLEMENTATION[arm && !pf_realview]:
 IMPLEMENT inline NEEDS["kip.h"]
 Unsigned64
 Jdb_kern_info_bench::get_time_now()
-{ return Kip::k()->clock; }
+{ return Kip::k()->clock(); }

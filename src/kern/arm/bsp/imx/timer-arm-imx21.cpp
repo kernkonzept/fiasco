@@ -91,8 +91,8 @@ Unsigned64
 Timer::system_clock()
 {
   if (Config::Scheduler_one_shot)
-    //return Kip::k()->clock + timer_to_us(Io::read<Unsigned32>(OSCR));
+    //return Kip::k()->clock() + timer_to_us(Io::read<Unsigned32>(OSCR));
     return 0;
   else
-    return Kip::k()->clock;
+    return Kip::k()->clock();
 }

@@ -602,7 +602,7 @@ whole_screen:
   putstr("\t\t\ttimeout  : ");
   if (t->_timeout && t->_timeout->is_set())
     {
-      Signed64 diff = (t->_timeout->get_timeout(Kip::k()->clock)) * 1000;
+      Signed64 diff = (t->_timeout->get_timeout(Kip::k()->clock())) * 1000;
       if (diff < 0)
         time_str.printf("over");
       else
