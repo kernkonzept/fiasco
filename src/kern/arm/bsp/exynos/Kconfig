@@ -113,3 +113,13 @@ config PF_EXYNOS_EXTGIC
         help
           Use internal or external GIC.
 
+config PF_EXYNOS_TICKLESS_IDLE
+        bool "Tickless idle"
+        default n
+        help
+          When a CPU core goes idle, disable the timer interrupt on that
+          core and try to put that core offline.
+
+          Currently there is a problem with updating the KIP clock if the
+          boot CPU is idle, hence this option is disabled by default.
+
