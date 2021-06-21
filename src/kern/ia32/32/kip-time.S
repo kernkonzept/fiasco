@@ -64,15 +64,18 @@ kip_time_fn_read_ns:
 2:      pop     %ebx
 #ifdef CONFIG_SYNC_TSC
         rdtsc
-        movl    %edx, %ecx
+        push    %ebp
+        movl    %edx, %ecx      // eax = tsc.lo, edx = tsc.hi
         mull    KIP_VAL(KIP_SCALER_TIME_STAMP_TO_NS)
-        movl    %ecx, %eax
-        movl    %edx, %ecx
+        movl    %eax, %ebp      // ebp = (tsc.lo * scaler).lo
+        movl    %ecx, %eax      // eax = tsc.hi
+        movl    %edx, %ecx      // ecx = (tsc.lo * scaler).hi
         mull    KIP_VAL(KIP_SCALER_TIME_STAMP_TO_NS)
         addl    %ecx, %eax
-        adcl    $0, %edx
+        adcl    $0, %edx        // edx:eax:ebp = tsc * scaler
         shld    $5, %eax, %edx
-        shll    $5, %eax
+        shld    $5, %ebp, %eax
+        pop     %ebp            // edx:eax = (tsc * scaler) >> (32 - 5)
 #else
 3:      movl    KIP_VAL_HI(KIP_CLOCK), %edx
         movl    KIP_VAL_LO(KIP_CLOCK), %eax

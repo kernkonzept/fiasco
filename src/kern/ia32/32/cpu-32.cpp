@@ -40,19 +40,20 @@ PUBLIC inline
 Unsigned64
 Cpu::tsc_to_ns(Unsigned64 tsc) const
 {
-  Unsigned32 dummy;
+  Unsigned32 dummy1, dummy2;
   Unsigned64 ns;
   asm volatile
 	("movl  %%edx, %%ecx		\n\t"
-	 "mull	%3			\n\t"
+	 "mull	%4			\n\t"
+	 "movl  %%eax, %2		\n\t"
 	 "movl	%%ecx, %%eax		\n\t"
 	 "movl	%%edx, %%ecx		\n\t"
-	 "mull	%3			\n\t"
+	 "mull	%4			\n\t"
 	 "addl	%%ecx, %%eax		\n\t"
 	 "adcl	$0, %%edx		\n\t"
 	 "shld	$5, %%eax, %%edx	\n\t"
-	 "shll	$5, %%eax		\n\t"
-	:"=A" (ns), "=&c" (dummy)
+	 "shld  $5, %2, %%eax		\n\t"
+	:"=A" (ns), "=&c" (dummy1), "=&r" (dummy2)
 	: "0" (tsc), "b" (scaler_tsc_to_ns)
 	);
   return ns;
