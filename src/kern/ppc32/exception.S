@@ -25,7 +25,7 @@ sys_call_table:
   .long sys_kdb_ke         // +0x8  srr0 points to instr after 'sc', see
   SYSCALL(ipc)             // +0xC  system_call function below)
   .long sys_kdb_ke         // +0x10
-  SYSCALL(invoke_debug)    // +0x14
+  .long sys_kdb_ke         // +0x10
   .long sys_kdb_ke         // +0x18
   .long sys_kdb_ke         // +0x1C
   .long sys_kdb_ke         // +0x20
