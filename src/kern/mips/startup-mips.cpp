@@ -85,6 +85,7 @@ Startup::stage2()
   Ipi::init(boot_cpu);
   //Thread_ipi::init(boot_cpu);
   Timer::init(boot_cpu);
+  Kip_init::init_kip_clock();
   Perf_cnt::init_ap();
 }
 

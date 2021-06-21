@@ -184,7 +184,7 @@ INTERFACES_JDB		+= $(INTERFACES_JDB-y)
 endif
 
 CXXSRC_KERNEL		:= kernel_panic.cc libc_backend_lock.cc
-ASSRC_KERNEL		:= exception.S
+ASSRC_KERNEL		:= exception.S kip-time.S
 #ASSRC_KERNEL-$(CONFIG_MP) += tramp-mp.S
 ASSRC_KERNEL              += $(ASSRC_KERNEL-y)
 
