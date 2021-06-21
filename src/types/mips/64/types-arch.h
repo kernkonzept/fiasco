@@ -8,8 +8,8 @@
 #define L4_PTR_FMT             "%016lx"
 #define L4_MWORD_FMT           "%016lx"
 #define L4_X64_FMT             "%016llx"
-#define L4_ADDR_INPUT_FMT      "%16x"
-#define L4_FRAME_INPUT_FMT     "%10x"
+#define L4_ADDR_INPUT_FMT      "%16lx"
+#define L4_FRAME_INPUT_FMT     "%10lx"
 
 /// standard fixed-width types
 typedef unsigned char          Unsigned8;
