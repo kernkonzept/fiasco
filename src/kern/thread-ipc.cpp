@@ -522,6 +522,8 @@ Thread::do_ipc(L4_msg_tag const &tag, Thread *partner,
 
   if (partner)
     {
+      reset_caller(partner);
+
       assert(!in_sender_list());
       do_switch = tag.do_switch();
 
