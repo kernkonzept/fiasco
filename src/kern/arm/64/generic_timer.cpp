@@ -15,7 +15,7 @@ namespace Generic_timer {
     static Unsigned64 counter() // use the virtual counter
     { Unsigned64 v; asm volatile("mrs %0, CNTVCT_EL0" : "=r" (v)); return v; }
 
-    static Unsigned64 compare()
+    static Unsigned64 compare() // use virtual compare
     { Unsigned64 v; asm volatile("mrs %0, CNTV_CVAL_EL0" : "=r" (v)); return v; }
 
     static void compare(Unsigned64 v)
@@ -46,10 +46,10 @@ namespace Generic_timer {
     /* In non-HYP mode we use always the virtual counter and the
      * virtual timer
      */
-    static Unsigned64 counter() // use the virtual counter
+    static Unsigned64 counter() // use the physical counter
     { Unsigned64 v; asm volatile("mrs %0, CNTPCT_EL0" : "=r" (v)); return v; }
 
-    static Unsigned64 compare()
+    static Unsigned64 compare() // use PL1 physical compare
     { Unsigned64 v; asm volatile("mrs %0, CNTP_CVAL_EL0" : "=r" (v)); return v; }
 
     static void compare(Unsigned64 v)
@@ -83,7 +83,7 @@ namespace Generic_timer {
     static Unsigned64 counter() // use the physical counter
     { Unsigned64 v; asm volatile("mrs %0, CNTPCT_EL0" : "=r" (v)); return v; }
 
-    static Unsigned64 compare()
+    static Unsigned64 compare() // use PL2 physical compare
     { Unsigned64 v; asm volatile("mrs %0, CNTHP_CVAL_EL2" : "=r" (v)); return v; }
 
     static void compare(Unsigned64 v)
