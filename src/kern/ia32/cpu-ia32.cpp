@@ -2090,13 +2090,34 @@ bad_ctc:
     panic("Can't calibrate tsc");
 }
 
+/**
+ * Set the scalers according to the CPU frequency.
+ *
+ * We divide the frequency by 4 to extend the frequency range up to 4<<32 Hz.
+ * Loosing the lower 2 bits of the frequency value is to be acceptable. Modern
+ * Intel/AMD CPUs could have a higher frequency than 4GHz.
+ *
+ *                     2^32 * 1000000000     2^(27-2) * 1000000000
+ * scaler_tsc_to_ns = ------------------- = -----------------------
+ *                      frequency * 2^5           frequency/4
+ *
+ *                     2^32 * 1000000        2^(31-2) * 1000000*2
+ * scaler_tsc_to_us = ----------------    = ----------------------
+ *                       frequency               frequency/4
+ *
+ * This function sets the scalers exactly like in calibrate_tsc, but instead of
+ * using the number of ticks in 50ms, this function uses the frequency (ticks
+ * per second).
+ */
 PRIVATE
 void
 Cpu::set_frequency_and_scalers(Unsigned64 freq)
 {
-  scaler_tsc_to_ns = muldiv(1 << 27, 1000000000, freq);
-  scaler_tsc_to_us = muldiv(1 << 31, 1000000*2, freq);
-  scaler_ns_to_tsc = muldiv(1 << 27, freq, 1000000000);
+  if (freq >= 4ULL << 32)
+    panic("Frequency too high -- adapt Cpu::set_frequency_and_scalers");
+  scaler_tsc_to_ns = muldiv(1 << (27 - 2), 1000000000, freq >> 2);
+  scaler_tsc_to_us = muldiv(1 << (31 - 2), 1000000 << 1, freq >> 2);
+  scaler_ns_to_tsc = muldiv(1 << (27 + 2), freq >> 2, 1000000000);
 
   _frequency = freq;
 }
