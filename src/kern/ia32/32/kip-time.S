@@ -29,7 +29,7 @@ kip_time_fn_read_us:
         call    2f
 2:      pop     %ebx
 #ifdef CONFIG_SYNC_TSC
-3:      rdtsc
+        rdtsc
         movl    %edx, %ecx
         mull    KIP_VAL(KIP_SCALER_TIME_STAMP_TO_US)
         movl    %ecx, %eax
@@ -62,6 +62,7 @@ kip_time_fn_read_ns:
 1:      push    %ebx
         call    2f
 2:      pop     %ebx
+#ifdef CONFIG_SYNC_TSC
         rdtsc
         movl    %edx, %ecx
         mull    KIP_VAL(KIP_SCALER_TIME_STAMP_TO_NS)
@@ -72,6 +73,19 @@ kip_time_fn_read_ns:
         adcl    $0, %edx
         shld    $5, %eax, %edx
         shll    $5, %eax
+#else
+3:      movl    KIP_VAL_HI(KIP_CLOCK), %edx
+        movl    KIP_VAL_LO(KIP_CLOCK), %eax
+        cmpl    %edx, KIP_VAL_HI(KIP_CLOCK)
+        jne     3b
+        movl    $1000, %ebx
+        movl    %eax, %ecx      // ecx = clock.lo
+        movl    %edx, %eax      // eax = clock.hi
+        mull    %ebx            // eax = clock.hi * 1000, ignore bits in edx
+        xchg    %ecx, %eax      // eax = clock.lo, ecx = (clock.hi * 1000).lo
+        mull    %ebx            // edx:eax = clock.lo * 1000
+        addl    %ecx, %edx      // (clock.lo * 1000).hi += (clock.hi * 1000).lo
+#endif
         pop     %ebx
         ret
 #undef KIP_OFFS

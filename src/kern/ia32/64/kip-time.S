@@ -48,12 +48,19 @@ kip_time_fn_read_us_end:
         .global kip_time_fn_read_ns_end
 #define KIP_OFFS(v)     1b - OFFS__KIP_FN_READ_NS + OFFS__ ##v
 kip_time_fn_read_ns:
-1:      rdtsc
+1:
+#ifdef CONFIG_SYNC_TSC
+        rdtsc
         and     $0xffffffff, %eax       // that's actually not necessary
         shl     $32, %rdx
         or      %rdx, %rax
         mulq    KIP_VAL(KIP_SCALER_TIME_STAMP_TO_NS)
         shrd    $27, %rdx, %rax
+#else
+        movq    KIP_VAL(KIP_CLOCK), %rax
+        movl    $1000, %edx
+        mulq    %rdx
+#endif
         ret
 #undef KIP_OFFS
 kip_time_fn_read_ns_end:
