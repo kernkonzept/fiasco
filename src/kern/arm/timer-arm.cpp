@@ -48,6 +48,7 @@ IMPLEMENTATION [arm]:
 #include "globals.h"
 #include "kip.h"
 #include "watchdog.h"
+#include "warn.h"
 
 Unsigned32 Timer::_scaler_ts_to_ns;
 Unsigned32 Timer::_scaler_ts_to_us;
@@ -59,14 +60,32 @@ Unsigned64
 Timer::time_stamp()
 { return 0; }
 
-IMPLEMENT inline NEEDS["kip.h"]
+IMPLEMENT inline NEEDS["kip.h", "warn.h"]
 void
 Timer::init_system_clock()
 {
   if (Config::Kip_clock_uses_timer)
-    Kip::k()->set_clock(ts_to_us(time_stamp()));
+    {
+      Cpu_time time = ts_to_us(time_stamp());
+      Kip::k()->set_clock(time);
+      if (time >= Kip::Clock_1_year)
+        WARN("KIP clock initialized to %llu on boot CPU\n", time);
+    }
   else
     Kip::k()->set_clock(0);
+}
+
+IMPLEMENT_OVERRIDE inline NEEDS["kip.h", "warn.h"]
+void
+Timer::init_system_clock_ap(Cpu_number cpu)
+{
+  if (Config::Kip_clock_uses_timer)
+    {
+      Cpu_time time = ts_to_us(time_stamp());
+      if (time >= Kip::Clock_1_year)
+        WARN("KIP clock initialized to %llu on CPU%u\n",
+             time, cxx::int_value<Cpu_number>(cpu));
+    }
 }
 
 IMPLEMENT inline NEEDS["config.h", "globals.h", "kip.h", "watchdog.h", Timer::kipclock_cache]

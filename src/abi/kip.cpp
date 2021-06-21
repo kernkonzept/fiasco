@@ -43,6 +43,14 @@ INTERFACE:
 class Kip
 {
 public:
+  enum : Cpu_time
+  {
+    Clock_1_second = 1000000ULL,
+    Clock_1_hour   = 3600ULL * Clock_1_second,
+    Clock_1_day    = 24ULL * Clock_1_hour,
+    Clock_1_year   = 365UL * Clock_1_day,
+  };
+
   void print() const;
 
   char const *version_string() const;

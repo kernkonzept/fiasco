@@ -165,6 +165,7 @@ int FIASCO_FASTCALL boot_ap_cpu()
     }
 
   Timer::init(_cpu);
+  Timer::init_system_clock_ap(_cpu);
 
   if (cpu_is_new)
     Platform_control::init(_cpu);
