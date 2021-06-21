@@ -457,7 +457,7 @@ Thread::get_next_sender(Sender *sender)
 PRIVATE inline
 bool
 Thread::activate_ipc_partner(Thread *partner, Cpu_number current_cpu,
-                             bool do_switch, bool closed_wait, L4_timeout t_rcv)
+                             bool do_switch, bool closed_wait)
 {
   if (partner->home_cpu() == current_cpu)
     {
@@ -465,19 +465,13 @@ Thread::activate_ipc_partner(Thread *partner, Cpu_number current_cpu,
       Sched_context *cs = rq.current_sched();
       do_switch = do_switch && (closed_wait || cs != sched());
       partner->state_change_dirty(~Thread_ipc_transfer, Thread_ready);
-      IPC_timeout timeout;
-      if (EXPECT_FALSE(t_rcv.is_finite() && !t_rcv.is_zero()))
-        setup_timer(t_rcv, utcb().access(true), &timeout);
-      bool ret;
       if (do_switch)
         {
           schedule_if(switch_exec_locked(partner, Not_Helping) != Switch::Ok);
-          ret = true;
+          return true;
         }
       else
-        ret = deblock_and_schedule(partner);
-      reset_timeout();
-      return ret;
+        return deblock_and_schedule(partner);
     }
 
   partner->xcpu_state_change(~Thread_ipc_transfer, Thread_ready);
@@ -620,7 +614,7 @@ Thread::do_ipc(L4_msg_tag const &tag, bool have_send, Thread *partner,
 
   if (activate_partner
       && activate_ipc_partner(partner, current_cpu, do_switch && !next,
-                              have_receive && sender, t.rcv))
+                              have_receive && sender))
     {
       // blocked so might have a new sender queued
       have_receive = state() & Thread_receive_wait;
