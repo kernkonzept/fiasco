@@ -277,7 +277,10 @@ asm(".section .initkip.features.end, \"a\", %progbits   \n"
 //----------------------------------------------------------------------------
 IMPLEMENTATION[32bit]:
 
-IMPLEMENT inline Cpu_time Kip::clock() const
+#include "mem.h"
+
+IMPLEMENT inline NEEDS["mem.h"]
+Cpu_time Kip::clock() const
 {
   Unsigned32 *c = (Unsigned32 *)&_clock;
   Unsigned32 lo, hi;
@@ -285,6 +288,7 @@ IMPLEMENT inline Cpu_time Kip::clock() const
     {
       hi = access_once(&c[1]);
       lo = access_once(&c[0]);
+      Mem::mp_rmb();
     }
   while (hi != access_once(&c[1]));
   return ((Cpu_time)hi << 32) | lo;
