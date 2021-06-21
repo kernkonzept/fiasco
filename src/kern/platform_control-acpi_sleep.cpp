@@ -107,6 +107,10 @@ suspend_ap_cpus()
           Pm_object::run_on_suspend_hooks(cpun);
           cpu.pm_suspend();
           check (Context::take_cpu_offline(cpun, true));
+          // We assume that Platform_control::cpu_suspend() does never return
+          // under any circumstances -- otherwise we'd run with inconsistent
+          // state into the scheduler.
+          Sched_context::rq.cpu(cpun).schedule_in_progress = 0;
           Platform_control::prepare_cpu_suspend(cpun);
           _cpus_to_suspend.atomic_clear(current_cpu());
           Platform_control::cpu_suspend(cpun);
