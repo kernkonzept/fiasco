@@ -4,6 +4,8 @@ INTERFACE [arm]:
 
 EXTENSION class Timer
 {
+  friend class Kip_test;
+
 public:
   static Irq_chip::Mode irq_mode()
   { return Irq_chip::Mode::F_raising_edge; }
