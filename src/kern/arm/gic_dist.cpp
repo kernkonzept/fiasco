@@ -393,9 +393,11 @@ Gic_dist::init(VERSION, unsigned cpu_prio, int nr_irqs_override = -1)
   init_regs(32, num);
   igroup_init(VERSION(), num);
 
-  init_targets(num, VERSION());
-
   enable(VERSION());
+
+  // Initialize interrupt targets last, since for the GICv3 affinity routing
+  // must be enabled before interrupt affinities (targets) can be assigned.
+  init_targets(num, VERSION());
 
   if (Config_mxc_tzic)
     {
