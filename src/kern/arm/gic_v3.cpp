@@ -16,12 +16,46 @@ class Gic_v3 : public Gic_mixin<Gic_v3, Gic_cpu_v3>
 public:
   using Version = Gic_dist::V3;
 
-  explicit Gic_v3(Address dist_base, Address redist_base)
+  explicit Gic_v3(Address dist_base, Address redist_base, Address its_base = 0)
   : Gic(dist_base, -1), _redist_base(redist_base)
   {
+    init_lpi(its_base);
+
     cpu_local_init(Cpu_number::boot_cpu());
     _cpu.enable();
   }
+};
+
+//-------------------------------------------------------------------
+INTERFACE [arm_gic_msi]:
+
+#include "gic_its.h"
+#include "gic_msi.h"
+
+EXTENSION class Gic_v3
+{
+private:
+  enum
+  {
+    // Limit the number of supported LPIs to avoid excessive memory
+    // allocations.
+    Max_num_lpis = 512,
+  };
+
+  bool _has_lpis = false;
+  Gic_its *_its = nullptr;
+  Gic_msi *_msi = nullptr;
+};
+
+//-------------------------------------------------------------------
+INTERFACE [have_arm_gic_msi && !arm_gic_msi]:
+
+class Gic_msi;
+
+EXTENSION class Gic_v3
+{
+public:
+  Gic_msi *msi_chip() { return nullptr; };
 };
 
 //-------------------------------------------------------------------
@@ -68,6 +102,8 @@ Gic_v3::cpu_local_init(Cpu_number cpu)
   _sgi_template[cpu] = (1u << (mpidr & 0xf))
                        | ((mpidr & (Unsigned64)0xff00) << 8)
                        | ((mpidr & (Unsigned64)0xff00ff0000) << 16);
+
+  cpu_local_init_lpi(cpu);
 }
 
 PUBLIC
@@ -123,4 +159,71 @@ Gic_v3::irq_prio_bootcpu(unsigned irq) override
   return _redist.cpu(Cpu_number::boot_cpu()).irq_prio(irq);
 }
 
+//-------------------------------------------------------------------
+IMPLEMENTATION[arm_gic_msi]:
 
+PRIVATE
+void
+Gic_v3::init_lpi(Address its_base)
+{
+  unsigned hw_num_lpis = _dist.hw_nr_lpis();
+  _has_lpis = hw_num_lpis > 0;
+  if (_has_lpis)
+    {
+      unsigned num_lpis = min<unsigned>(hw_num_lpis, Max_num_lpis);
+
+      Gic_redist::init_lpi(num_lpis);
+      _its = new Boot_object<Gic_its>();
+      _its->init(&_cpu, its_base, num_lpis);
+      _msi = new Boot_object<Gic_msi>();
+      _msi->init(_its, num_lpis);
+      printf("GIC: Supports up to %u LPIs, using %u.\n", hw_num_lpis, num_lpis);
+    }
+  else
+    WARN("GIC: Does not implement LPIs...\n");
+}
+
+PRIVATE
+void
+Gic_v3::cpu_local_init_lpi(Cpu_number cpu)
+{
+  if (_has_lpis)
+  {
+    _redist.cpu(cpu).cpu_init_lpi();
+    _its->cpu_init(cpu, _redist.cpu(cpu));
+  }
+}
+
+/**
+ * \return The MSI Irq_chip for this GIC, might be nullptr if the GIC does not
+ *         support LPIs or MSI support has been disabled in the Kconfig.
+ */
+PUBLIC inline
+Gic_msi *
+Gic_v3::msi_chip()
+{
+  return _msi;
+}
+
+PUBLIC
+Irq_base *
+Gic_v3::irq(Mword pin) const override
+{
+  if (_has_lpis && pin >= Gic_dist::Lpi_intid_base)
+    return _msi->Gic_msi::irq(pin - Gic_dist::Lpi_intid_base);
+
+  return this->Gic::irq(pin);
+}
+
+//-------------------------------------------------------------------
+IMPLEMENTATION[!arm_gic_msi]:
+
+PROTECTED inline
+void
+Gic_v3::init_lpi(Address)
+{}
+
+PROTECTED inline
+void
+Gic_v3::cpu_local_init_lpi(Cpu_number)
+{}

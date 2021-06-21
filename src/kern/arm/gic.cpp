@@ -159,7 +159,7 @@ public:
     if (EXPECT_FALSE(num == 0x3ff))
       return;
 
-    handle_irq<Gic>(num, u);
+    handle_irq<IMPL>(num, u);
   }
 
   static void cascade_hit(Irq_base *_self, Upstream_irq const *u)

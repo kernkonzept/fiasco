@@ -4,6 +4,8 @@ INTERFACE:
 #include "mmio_register_block.h"
 #include "spin_lock.h"
 
+#include <cxx/bitfield>
+
 class Gic_dist
 {
 private:
@@ -46,6 +48,24 @@ public:
 
     MXC_TZIC_CTRL_NSEN       = 1 << 16,
     MXC_TZIC_CTRL_NSENMASK   = 1 << 31,
+
+    Lpi_intid_base = 8192,
+  };
+
+  struct Typer
+  {
+    Unsigned32 raw;
+    explicit Typer(Unsigned32 v) : raw(v) {}
+    CXX_BITFIELD_MEMBER_RO( 0,  4, num_spis, raw);
+    CXX_BITFIELD_MEMBER_RO(10, 10, security_extn, raw);
+  };
+
+  struct Typer_v3 : public Typer
+  {
+    explicit Typer_v3(Unsigned32 v) : Typer(v) {}
+    CXX_BITFIELD_MEMBER_RO(11, 15, num_lpis, raw);
+    CXX_BITFIELD_MEMBER_RO(17, 17, lpis, raw);
+    CXX_BITFIELD_MEMBER_RO(19, 23, id_bits, raw);
   };
 };
 
@@ -191,6 +211,27 @@ IMPLEMENTATION [have_arm_gicv3]:
 #include "cpu.h"
 
 PUBLIC inline
+unsigned
+Gic_dist::hw_nr_lpis()
+{
+  Typer_v3 t = typer<Typer_v3>();
+  if (!t.lpis())
+    return 0;
+
+  Unsigned64 num_intids = 1ULL << (t.id_bits() + 1);
+  if (num_intids <= Lpi_intid_base)
+    return 0;
+
+  unsigned num_lpis = t.num_lpis();
+  if (num_lpis == 0)
+    // Number of supported LPIs is indicated by GICD_TYPER.IDbits.
+    return num_intids - Lpi_intid_base;
+
+  // Number of supported LPIs = 2^(num_lpis+1)
+  return 1U << (num_lpis + 1);
+}
+
+PUBLIC inline
 void
 Gic_dist::set_cpu(Mword pin, Cpu_phys_id cpu, V3)
 {
@@ -249,18 +290,25 @@ Gic_dist::Gic_dist(Address dist_base)
   : _dist(dist_base)
 {}
 
+PUBLIC template <typename TYPER> inline
+TYPER
+Gic_dist::typer()
+{
+  return TYPER(_dist.read<Unsigned32>(GICD_TYPER));
+}
+
 PUBLIC inline
 unsigned
 Gic_dist::hw_nr_irqs()
 {
-  return ((_dist.read<Unsigned32>(GICD_TYPER) & 0x1f) + 1) * 32;
+  return (typer<Typer>().num_spis() + 1) * 32;
 }
 
 PUBLIC inline
 bool
 Gic_dist::has_sec_ext()
 {
-  return _dist.read<Unsigned32>(GICD_TYPER) & (1 << 10);
+  return typer<Typer>().security_extn();
 }
 
 PUBLIC inline

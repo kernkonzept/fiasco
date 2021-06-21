@@ -109,6 +109,9 @@ config HAVE_ARM_GICV2
 config HAVE_ARM_GICV3
         bool
 
+config HAVE_ARM_GIC_MSI
+	bool
+
 config ARM_IOMMU_COHERENT
         bool
 
@@ -233,6 +236,13 @@ config HAVE_ARM_SECMONIF_NONE
 
 config HAVE_ARM_SECMONIF_MC
 	bool
+
+config ARM_GIC_MSI
+	bool "Enable MSI support (GIC LPIs)"
+	default y
+	depends on HAVE_ARM_GIC_MSI
+	help
+	  Build Fiasco with support for message-based interrupts (MSIs).
 
 config ARM_ALIGNMENT_CHECK
 	bool "Enable alignment check"
