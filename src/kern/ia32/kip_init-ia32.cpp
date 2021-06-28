@@ -93,7 +93,7 @@ void Kip_init::init()
 
   Kip::init_global_kip(kinfo);
 
-  Kip::k()->clock(0);
+  Kip::k()->set_clock(0);
 
   setup_user_virtual(kinfo);
 

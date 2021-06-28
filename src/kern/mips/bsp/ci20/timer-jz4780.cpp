@@ -62,7 +62,7 @@ void
 Timer::init_system_clock()
 {
   // FIXME: may be sync to counter register
-  Kip::k()->clock(0);
+  Kip::k()->set_clock(0);
 }
 
 IMPLEMENT inline NEEDS ["kip.h"]

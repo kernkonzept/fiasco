@@ -48,6 +48,8 @@ public:
   char const *version_string() const;
 
   Cpu_time clock() const;
+  void set_clock(Cpu_time c);
+  void add_to_clock(Cpu_time plus);
 
   /* 0x00 */
   Mword      magic;
@@ -245,20 +247,10 @@ char const *Kip::version_string() const
   return reinterpret_cast <char const *> (this) + (offset_version_strings << 4);
 }
 
-PUBLIC inline
+IMPLEMENT inline
 void
-Kip::clock(Cpu_time c)
+Kip::set_clock(Cpu_time c)
 { _clock = c; }
-
-PUBLIC inline
-void
-Kip::add_to_clock(Cpu_time c)
-{
-  // This function does not force an atomic update. The caller needs to be
-  // aware about this. Either the update is performed a single specific CPU
-  // (the boot CPU) or the callers have to use a lock.
-  _clock += c;
-}
 
 #ifdef TARGET_NAME
 #define TARGET_NAME_PHRASE " for " TARGET_NAME
@@ -275,27 +267,114 @@ asm(".section .initkip.features.end, \"a\", %progbits   \n"
     ".previous                                          \n");
 
 //----------------------------------------------------------------------------
+IMPLEMENTATION[64bit]:
+
+IMPLEMENT inline
+Cpu_time
+Kip::clock() const
+{ return _clock; }
+
+IMPLEMENT inline
+void
+Kip::add_to_clock(Cpu_time plus)
+{ _clock += plus; }
+
+//----------------------------------------------------------------------------
 IMPLEMENTATION[32bit]:
 
 #include "mem.h"
 
-IMPLEMENT inline NEEDS["mem.h"]
-Cpu_time Kip::clock() const
+IMPLEMENT_DEFAULT inline NEEDS["config.h", "mem.h"]
+Cpu_time
+Kip::clock() const
 {
   Unsigned32 *c = (Unsigned32 *)&_clock;
   Unsigned32 lo, hi;
   do
     {
-      hi = access_once(&c[1]);
-      lo = access_once(&c[0]);
+      hi = access_once(&c[Config::Big_endian ? 0 : 1]);
+      Mem::mp_rmb();
+      lo = access_once(&c[Config::Big_endian ? 1 : 0]);
       Mem::mp_rmb();
     }
   while (hi != access_once(&c[1]));
   return ((Cpu_time)hi << 32) | lo;
 }
 
-//----------------------------------------------------------------------------
-IMPLEMENTATION[64bit]:
+IMPLEMENT_DEFAULT inline NEEDS["config.h", "mem.h"]
+void
+Kip::add_to_clock(Cpu_time plus)
+{
+  // This function does not force a full atomic update. The caller needs to be
+  // aware about this: Either the update is performed by a single specific CPU
+  // (the boot CPU) or the callers have to use a lock.
+  // However, on ARM < v7, the update of the 64-bit clock can be observed in
+  // any order defeating the user-level retry loop for reading the clock which
+  // assumes that low word is written before the high word.
+  Unsigned64 new_clock = _clock + plus;
+  Unsigned32 *c = (Unsigned32 *)&_clock;
+  write_now(&c[Config::Big_endian ? 1 : 0], new_clock & 0xffffffff);
+  Mem::mp_wmb();
+  write_now(&c[Config::Big_endian ? 0 : 1], new_clock >> 32);
+}
 
-IMPLEMENT inline Cpu_time Kip::clock() const
-{ return _clock; }
+//----------------------------------------------------------------------------
+IMPLEMENTATION[32bit && ia32]:
+
+IMPLEMENT_OVERRIDE inline
+Cpu_time
+Kip::clock() const
+{
+  // Always little endian!
+  Unsigned32 *c = (Unsigned32 *)&_clock;
+  Unsigned32 lo, hi;
+  do
+    {
+      hi = access_once(&c[1]);
+      lo = access_once(&c[0]);
+    }
+  while (hi != access_once(&c[1]));
+  return ((Cpu_time)hi << 32) | lo;
+}
+
+IMPLEMENT_OVERRIDE inline
+void
+Kip::add_to_clock(Cpu_time plus)
+{
+  // 32-bit host: This function does not force an atomic update. The caller
+  // needs to be aware about this: Either the update is performed by a single
+  // specific CPU (the boot CPU) or the callers have to use a lock. However, we
+  // need to ensure that the low word is written before the high word as the
+  // user-level retry loop for reading the clock depends on that behavior.
+  Unsigned64 clock = _clock + plus;
+  // Always little endian!
+  Unsigned32 *c = (Unsigned32 *)&_clock;
+  write_now(&c[0], clock & 0xffffffff);
+  write_now(&c[1], clock >> 32);
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION[32bit && arm && ((arm_v7 && arm_lpae) || arm_v8plus)]:
+
+IMPLEMENT_OVERRIDE inline
+Cpu_time
+Kip::clock() const
+{
+  Unsigned64 res;
+  asm volatile ("ldrd %0, %H0, %1" : "=r" (res) : "m"(_clock));
+  return res;
+}
+
+IMPLEMENT_OVERRIDE inline NEEDS["mem.h"]
+void
+Kip::add_to_clock(Cpu_time plus)
+{
+  Unsigned64 res;
+  asm volatile ("ldrd %[res], %H[res], %[mem]   \n\t"
+                "adds %[res], %[res], %[val]    \n\t"
+                "adc  %H[res], %H[res], %H[val] \n\t"
+                "strd %[res], %H[res], %[mem]   \n\t"
+                : [res] "=&r"(res), [mem] "+m"(_clock)
+                : [val] "r"(plus)
+                : "cc");
+}

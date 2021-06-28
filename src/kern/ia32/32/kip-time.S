@@ -15,6 +15,10 @@
 #define KIP_VAL_LO(v)   (KIP_OFFS(v))(%ebx)
 #define KIP_VAL_HI(v)   (4 + KIP_OFFS(v))(%ebx)
 
+#ifdef CONFIG_BIG_ENDIAN
+#error "Adapt KIP_VAL_LO/KIP_VAL_HI to big endian!"
+#endif
+
 // Provide the KIP clock value with a fine-grained resolution + accuracy.
 //
 // In case CONFIG_SYNC_TSC is disabled, just provide the normal KIP clock.

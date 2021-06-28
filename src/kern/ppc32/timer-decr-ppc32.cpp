@@ -61,7 +61,7 @@ IMPLEMENT inline NEEDS ["kip.h"]
 void
 Timer::init_system_clock()
 {
-  Kip::k()->clock(0);
+  Kip::k()->set_clock(0);
 }
 
 IMPLEMENT inline NEEDS ["globals.h", "kip.h"]
