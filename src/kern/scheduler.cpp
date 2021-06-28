@@ -214,21 +214,19 @@ L4_msg_tag
 Scheduler::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,
                    Utcb const *iutcb, Utcb *outcb)
 {
-  switch (f->tag().proto())
-    {
-    case L4_msg_tag::Label_irq:
-      return Icu::icu_invoke(ref, rights, f, iutcb,outcb);
-    case L4_msg_tag::Label_scheduler:
-      break;
-    default:
-      return commit_result(-L4_err::EBadproto);
-    }
+  L4_msg_tag tag = f->tag();
+
+  if (tag.proto() == L4_msg_tag::Label_irq)
+    return Icu::icu_invoke(ref, rights, f, iutcb, outcb);
+
+  if (!Ko::check_basics(&tag, rights, L4_msg_tag::Label_scheduler))
+    return tag;
 
   switch (iutcb->values[0])
     {
-    case Info:       return Msg_sched_info::call(this, f->tag(), iutcb, outcb);
+    case Info:       return Msg_sched_info::call(this, tag, iutcb, outcb);
     case Run_thread: return sys_run(rights, f, iutcb);
-    case Idle_time:  return Msg_sched_idle::call(this, f->tag(), iutcb, outcb);
+    case Idle_time:  return Msg_sched_idle::call(this, tag, iutcb, outcb);
     default:         return commit_result(-L4_err::ENosys);
     }
 }
