@@ -389,8 +389,7 @@ Ipc_gate::invoke(L4_obj_ref /*self*/, L4_fpage::Rights rights,
   else
     {
       ipc_f->from(_id | cxx::int_value<L4_fpage::Rights>(rights));
-      ct->do_ipc(f->tag(), partner, partner, have_rcv, sender,
-                 f->timeout(), f, rights);
+      ct->do_ipc(f->tag(), partner, have_rcv, sender, f->timeout(), f, rights);
     }
 }
 

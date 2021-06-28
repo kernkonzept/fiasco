@@ -482,9 +482,8 @@ Thread::activate_ipc_partner(Thread *partner, Cpu_number current_cpu,
  * Send an IPC message and/or receive an IPC message.
  *
  * \param tag           message tag; specifies details about the send phase
- * \param have_send     enable/disable send phase
- * \param partner       communication partner in the send phase; ignored if
- *                      `have_send` is `false`
+ * \param partner       communication partner in the send phase; nullptr if
+ *                      there is no send phase
  * \param have_receive  enable/disable receive phase
  * \param sender        communication partner in the receive phase; use
  *                      `nullptr` to accept any communication partner (open
@@ -505,7 +504,7 @@ Thread::activate_ipc_partner(Thread *partner, Cpu_number current_cpu,
  */
 PUBLIC
 void
-Thread::do_ipc(L4_msg_tag const &tag, bool have_send, Thread *partner,
+Thread::do_ipc(L4_msg_tag const &tag, Thread *partner,
                bool have_receive, Sender *sender,
                L4_timeout_pair t, Syscall_frame *regs,
                L4_fpage::Rights rights)
@@ -521,7 +520,7 @@ Thread::do_ipc(L4_msg_tag const &tag, bool have_send, Thread *partner,
   bool activate_partner = false;
   Cpu_number current_cpu = ::current_cpu();
 
-  if (have_send)
+  if (partner)
     {
       assert(!in_sender_list());
       do_switch = tag.do_switch();

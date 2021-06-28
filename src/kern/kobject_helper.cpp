@@ -57,7 +57,7 @@ public:
           {
             Thread *t = current_thread();
             Sender *s = (self.op() & L4_obj_ref::Ipc_open_wait) ? 0 : _sender(t, static_cast<T*>(this));
-            t->do_ipc(f->tag(), 0, 0, true, s, f->timeout(), f, rights);
+            t->do_ipc(f->tag(), 0, true, s, f->timeout(), f, rights);
             return;
           }
         else
