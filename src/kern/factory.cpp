@@ -140,17 +140,13 @@ Factory::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,
   Context *const c_thread = ::current();
   Task *const c_space = static_cast<Task*>(c_thread->space());
 
-  if (EXPECT_FALSE(f->tag().proto() != L4_msg_tag::Label_factory))
-    return commit_result(-L4_err::EBadproto);
-
-  if (EXPECT_FALSE(!(rights & L4_fpage::Rights::CS())))
-    return commit_result(-L4_err::EPerm);
+  L4_msg_tag tag = f->tag();
+  if (!Ko::check_basics(&tag, rights, L4_msg_tag::Label_factory,
+                        L4_fpage::Rights::CS()))
+    return tag;
 
   if (EXPECT_FALSE(!ref.have_recv()))
     return commit_result(0);
-
-  if (f->tag().words() < 1)
-    return commit_result(-L4_err::EInval);
 
   L4_fpage buffer(0);
 
