@@ -134,8 +134,8 @@ Icu_h<REAL_ICU>::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights,
 {
   L4_msg_tag tag = f->tag();
 
-  if (EXPECT_FALSE(tag.proto() != L4_msg_tag::Label_irq))
-    return Kobject_iface::commit_result(-L4_err::EBadproto);
+  if (!Ko::check_basics(&tag, rights, L4_msg_tag::Label_irq))
+    return tag;
 
   return icu_invoke(ref, rights, f, in, out);
 }
