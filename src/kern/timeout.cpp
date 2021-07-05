@@ -281,14 +281,14 @@ Timeout_q::do_timeouts()
 {
   bool reschedule = false;
 
-  // We test if the time between 2 activiations of this function is greater
+  // We test if the time between 2 activations of this function is greater
   // than the distance between two timeout queues.
-  // To avoid to lose timeouts, we calculating the missed queues and
-  // scan them too.
-  // This can only happen, if we dont enter the timer interrupt for a long
-  // time, usual with one shot timer.
-  // Because we initalize old_dequeue_time with zero,
-  // we can get an "miss" on the first timerinterrupt.
+  // To avoid losing timeouts, we calculate the missed queues and scan them
+  // too.
+  // This can only happen, if we don't enter the timer interrupt for a long
+  // time, usual with one-shot timer.
+  // Because we initialize old_dequeue_time with zero,
+  // we can get a "miss" on the first timer interrupt.
   // But this is booting the system, which is uncritical.
 
   // Calculate which timeout queues needs to be checked.
@@ -333,7 +333,7 @@ Timeout_q::do_timeouts()
     {
       // scan all queues for the next minimum
       //_current = (Unsigned64) ULONG_LONG_MAX;
-      _current = Kip::k()->clock() + 10000; //ms
+      _current = Kip::k()->clock() + 10000; // 10ms
       bool update_timer = true;
 
       for (int i = 0; i < Wakeup_queue_count; i++)
