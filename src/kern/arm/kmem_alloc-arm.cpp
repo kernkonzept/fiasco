@@ -165,7 +165,6 @@ IMPLEMENTATION [arm && debug]:
 
 #include <cstdio>
 
-#include "kip_init.h"
 #include "panic.h"
 
 PUBLIC
