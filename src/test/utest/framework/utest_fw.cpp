@@ -34,6 +34,8 @@ struct Utest
  */
 class Utest_debug
 {
+public:
+  static int printf(char const *fmt, ...) __attribute__((format(printf,1,2)));
 };
 
 /**
@@ -487,7 +489,7 @@ Utest_fw::print_eval(char const *eval, A &&val, char const *str) const
   printf("\t(%s)\n", str);
 }
 
-PUBLIC static inline
+IMPLEMENT inline
 int
 Utest_debug::printf(char const *fmt, ...)
 {
