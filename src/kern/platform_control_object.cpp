@@ -71,7 +71,7 @@ public:
     if (t.proto() == L4_msg_tag::Label_irq)
       return Icu::icu_invoke(ref, rights, f, r_msg, s_msg);
 
-    if (!Ko::check_basics(&t, rights, 0))
+    if (!Ko::check_basics(&t, 0))
       return t;
 
     switch (static_cast<Op>(r_msg->values[0]))

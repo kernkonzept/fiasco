@@ -281,7 +281,7 @@ Jdb_object::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
       return commit_result(0);
     }
 
-  if (!Ko::check_basics(&tag, rights, L4_msg_tag::Label_debugger))
+  if (!Ko::check_basics(&tag, L4_msg_tag::Label_debugger))
     return tag;
 
   unsigned op =  access_once(&r_msg->values[0]);
@@ -339,12 +339,12 @@ static Jdb_object __jdb_kobject;
 
 IMPLEMENT_OVERRIDE
 L4_msg_tag
-Jdb_object::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
+Jdb_object::kinvoke(L4_obj_ref, L4_fpage::Rights, Syscall_frame *f,
                     Utcb const *r_msg, Utcb *)
 {
   L4_msg_tag tag = f->tag();
 
-  if (!Ko::check_basics(&tag, rights, L4_msg_tag::Label_debugger))
+  if (!Ko::check_basics(&tag, L4_msg_tag::Label_debugger))
     return tag;
 
   unsigned op =  access_once(&r_msg->values[0]);

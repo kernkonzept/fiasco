@@ -54,8 +54,7 @@ check_rights(Rights rights, Rights need, L4_msg_tag *tag = 0)
  * label, and sufficient rights.
  */
 inline bool
-check_basics(L4_msg_tag *tag, Rights rights, long label,
-             Rights need = Rights(0))
+check_basics(L4_msg_tag *tag, Rights rights, long label, Rights need)
 {
   if (EXPECT_FALSE(tag->proto() != label))
     {
@@ -74,6 +73,13 @@ check_basics(L4_msg_tag *tag, Rights rights, long label,
 
   return true;
 }
+
+/**
+ * Check the label and correct minimum message size of an RPC.
+ */
+inline bool
+check_basics(L4_msg_tag *tag, long label)
+{ return check_basics(tag, Rights(0), label, Rights(0)); }
 
 /**
  * Helper function to dereference a capability send message

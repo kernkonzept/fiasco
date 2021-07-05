@@ -168,7 +168,7 @@ Scheduler::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,
   if (tag.proto() == L4_msg_tag::Label_irq)
     return Icu::icu_invoke(ref, rights, f, iutcb, outcb);
 
-  if (!Ko::check_basics(&tag, rights, L4_msg_tag::Label_scheduler))
+  if (!Ko::check_basics(&tag, L4_msg_tag::Label_scheduler))
     return tag;
 
   switch (iutcb->values[0])
