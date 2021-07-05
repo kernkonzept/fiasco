@@ -295,7 +295,8 @@ Timeout_q::do_timeouts()
 
   // Calculate which timeout queues needs to be checked.
   int start = (_old_clock >> Wakeup_queue_distance);
-  int diff  = (Kip::k()->clock() >> Wakeup_queue_distance) - start;
+  Unsigned64 now = Kip::k()->clock();
+  int diff  = (now >> Wakeup_queue_distance) - start;
   int end   = (start + diff + 1) & (Wakeup_queue_count - 1);
 
   // wrap around
@@ -306,7 +307,7 @@ Timeout_q::do_timeouts()
     start = end = 0; // scan all queues
 
   // update old_clock for the next run
-  _old_clock = Kip::k()->clock();
+  _old_clock = now;
 
   // ensure we always terminate
   assert((end >= 0) && (end < Wakeup_queue_count));
@@ -317,7 +318,7 @@ Timeout_q::do_timeouts()
       Iterator timeout = q.begin();
 
       // now scan this queue for timeouts below current clock
-      while (timeout != q.end() && timeout->_wakeup <= (Kip::k()->clock()))
+      while (timeout != q.end() && timeout->_wakeup <= now)
         {
           Timeout *to = *timeout;
           timeout = q.erase(timeout);
@@ -335,7 +336,7 @@ Timeout_q::do_timeouts()
     {
       // scan all queues for the next minimum
       //_current = (Unsigned64) ULONG_LONG_MAX;
-      _current = Kip::k()->clock() + 10000; // 10ms
+      _current = now + 10000; // 10ms
       bool update_timer = true;
 
       for (int i = 0; i < Wakeup_queue_count; i++)
