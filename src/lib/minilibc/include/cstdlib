@@ -30,10 +30,10 @@ namespace std {
 #endif
 
   inline long
-  abs(long i) { return labs(i); }
+  abs(long i) { return __builtin_labs(i); }
 
   inline long long
-  abs(long long i) { return llabs(i); }
+  abs(long long i) { return __builtin_llabs(i); }
 
   inline ldiv_t 
   div( long i, long j ) { return ldiv(i,j); }
