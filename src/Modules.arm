@@ -128,7 +128,7 @@ kip_IMPL	:= kip kip-debug kip-arm
 # KERNEL subsystem
 #
 KERNEL 		:= fiasco
-KERNEL_EXTRA 	:= Symbols kernel.arm.lds
+KERNEL_EXTRA 	:= Symbols kernel.arm.lds fiasco.debug
 VPATH 		+= kern/$(CONFIG_XARCH)/$(BITS) kern/$(CONFIG_XARCH) kern
 VPATH		+= jdb/arm/$(BITS) jdb/arm jdb
 PRIVATE_INCDIR 	+= kern/$(CONFIG_XARCH)/$(BITS) kern/$(CONFIG_XARCH) kern

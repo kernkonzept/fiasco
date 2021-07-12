@@ -101,7 +101,7 @@ l4_types_IMPL	:= l4_types l4_types-debug
 # KERNEL subsystem
 #
 KERNEL 		:= fiasco
-KERNEL_EXTRA 	:= Symbols kernel.sparc.lds
+KERNEL_EXTRA 	:= Symbols kernel.sparc.lds fiasco.debug
 VPATH 		+= kern/$(CONFIG_XARCH) kern
 VPATH		+= jdb/$(CONFIG_XARCH) jdb
 PRIVATE_INCDIR 	+= kern/$(CONFIG_XARCH) kern
