@@ -63,7 +63,7 @@ Bootstrap::enable_paging(Mword pdir)
   Mem::dsb();
 
   asm volatile("mcr p15, 4, %[control], c1, c0" // HSCTLR
-      : : [control] "r" (1 | 2 | 4 | 32 | 0x1000));
+      : : [control] "r" (1 | 4 | 32 | 0x1000));
   Mem::isb();
 }
 

@@ -166,7 +166,7 @@ _tramp_mp_entry:
         ldr r0, [r0]
         mov r1, #0
         mcrr p15, 4, r0, r1, c2     // HTBR
-        movw r0, #(1 | 2 | 4 | 32 | 0x1000)
+        movw r0, #(1 | 4 | 32 | 0x1000)
         mcr  p15, 4, r0, c1, c0     // HSCTLR
 
 #else
