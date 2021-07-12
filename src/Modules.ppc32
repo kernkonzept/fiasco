@@ -98,7 +98,7 @@ l4_types_IMPL	:= l4_types l4_types-debug
 # KERNEL subsystem
 #
 KERNEL 		:= fiasco
-KERNEL_EXTRA 	:= Symbols
+KERNEL_EXTRA 	:= Symbols kernel.ppc32.lds
 VPATH 		+= kern/$(CONFIG_XARCH) kern
 VPATH		+= jdb/$(CONFIG_XARCH) jdb
 PRIVATE_INCDIR 	+= kern/$(CONFIG_XARCH) kern

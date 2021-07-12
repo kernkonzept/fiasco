@@ -103,7 +103,7 @@ l4_types_IMPL	:= l4_types l4_types-mips l4_types-debug
 # KERNEL subsystem
 #
 KERNEL 		:= fiasco
-KERNEL_EXTRA 	:= Symbols
+KERNEL_EXTRA 	:= Symbols kernel.mips.lds
 VPATH 		+= kern/mips/$(BITS) kern/mips kern
 VPATH		+= jdb/mips/$(BITS) jdb/mips jdb
 PRIVATE_INCDIR 	+= kern/mips/$(BITS) kern/mips kern
