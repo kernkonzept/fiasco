@@ -506,15 +506,23 @@ static
 void
 Jdb_mapdb::dump_all_obj_mappings(char const *arg)
 {
-  if (!Kconsole::console()->find_console(Console::GZIP))
+  auto *c = Kconsole::console();
+  if (!c->find_console(Console::UART))
     return;
+  bool gzip = c->find_console(Console::GZIP);
 
+  Mux_console::Save_state state;
+  c->save_state(&state);
+
+  c->start_exclusive(Console::UART);
   int len = arg ? __builtin_strlen(arg) : 0;
-
-  Kconsole::console()->start_exclusive(Console::GZIP);
-  printf("========= OBJECT DUMP BEGIN ===================\n"
+  printf("@@ ObjectSpaceDump @< BLOCK\n"
          "dump format version number: 0\n"
-         "user space tag:%s%.*s\n", len ? " " : "", len, len ? arg : "");
+         "user space tag:%s%.*s%s",
+         len ? " " : "", len, len ? arg : "", gzip ? "" : "\n");
+
+  if (gzip)
+    c->start_exclusive(Console::GZIP);
   for (auto *d: Kobject_dbg::_kobjects)
     {
       Kobject *f = Kobject::from_dbg(d);
@@ -529,6 +537,10 @@ Jdb_mapdb::dump_all_obj_mappings(char const *arg)
           printf("\n");
         }
     }
-  printf("========= OBJECT DUMP END ===================\n");
-  Kconsole::console()->end_exclusive(Console::GZIP);
+
+  if (gzip)
+    c->start_exclusive(Console::UART);
+  printf("@@ ObjectSpaceDump BLOCK >@\n");
+
+  c->restore_state(&state);
 }
