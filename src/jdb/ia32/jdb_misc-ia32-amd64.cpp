@@ -308,7 +308,7 @@ Jdb_misc_info::action(int cmd, void *&args, char const *&fmt, int &) override
 	  if (first_char == 'r' || first_char == 'w')
 	    {
 	      putchar(first_char);
-	      fmt  = "%8x";
+	      fmt  = L4_ADDR_INPUT_FMT;
 	      args = &addr;
 	      return EXTRA_INPUT;
 	    }
