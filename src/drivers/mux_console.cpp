@@ -18,6 +18,11 @@ public:
     SIZE = 8  ///< The maximum number of consoles to be multiplexed.
   };
 
+  struct Save_state
+  {
+    Mword cons[SIZE];
+  };
+
   int  write(char const *str, size_t len) override;
   int  getchar(bool blocking = true) override;
   int  char_avail() const override;
@@ -319,6 +324,29 @@ Mux_console::end_exclusive(Mword any_true)
   change_state(0, any_true, ~0UL, (OUTENABLED|INENABLED));
 }
 
+/**
+ * Save the state of all muxed consoles.
+ */
+PUBLIC
+void
+Mux_console::save_state(Save_state *state) const
+{
+  for (int i = 0; i < _items; i++)
+    if (_cons[i])
+      state->cons[i] = _cons[i]->state();
+}
+
+/**
+ * Restore the state of the muxed consoles.
+ */
+PUBLIC
+void
+Mux_console::restore_state(Save_state const *state)
+{
+  for (int i = 0; i < _items; i++)
+    if (_cons[i])
+      _cons[i]->state(state->cons[i]);
+}
 
 IMPLEMENTATION[debug]:
 
