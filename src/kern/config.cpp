@@ -107,6 +107,11 @@ public:
 #else
     Max_num_cpus = 1,
 #endif
+#ifdef CONFIG_BIG_ENDIAN
+    Big_endian = true,
+#else
+    Big_endian = false,
+#endif
   };
 
   static Cpu_number max_num_cpus() { return Cpu_number(Max_num_cpus); }
