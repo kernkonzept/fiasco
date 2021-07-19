@@ -169,8 +169,14 @@ Per_cpu_data::init_ctors()
 
 IMPLEMENT inline
 void
-Per_cpu_data::run_ctors(Cpu_number)
+Per_cpu_data::run_ctors(Cpu_number cpu)
 {
+  // The run_ctors function is invoked twice, once for the boot CPU and
+  // once for the invalid CPU, although in uniprocessor mode there is no
+  // separate instance for the latter.
+  if (cpu != Cpu_number::boot_cpu())
+    return;
+
   extern ctor_function_t __PER_CPU_INIT_ARRAY_START__[];
   extern ctor_function_t __PER_CPU_INIT_ARRAY_END__[];
   run_ctor_functions(__PER_CPU_INIT_ARRAY_START__, __PER_CPU_INIT_ARRAY_END__);
@@ -182,8 +188,14 @@ Per_cpu_data::run_ctors(Cpu_number)
 
 IMPLEMENT inline
 void
-Per_cpu_data::run_late_ctors(Cpu_number)
+Per_cpu_data::run_late_ctors(Cpu_number cpu)
 {
+  // The run_late_ctors function is invoked twice, once for the boot CPU and
+  // once for the invalid CPU, although in uniprocessor mode there is no
+  // separate instance for the latter.
+  if (cpu != Cpu_number::boot_cpu())
+    return;
+
   extern ctor_function_t __PER_CPU_LATE_INIT_ARRAY_START__[];
   extern ctor_function_t __PER_CPU_LATE_INIT_ARRAY_END__[];
   run_ctor_functions(__PER_CPU_LATE_INIT_ARRAY_START__,
