@@ -68,8 +68,13 @@ public:
   static Mword entry_hi()
   { return Mips::mfc0(Mips::Cp0_entry_hi); }
 
-  static void make_coherent_to_pou(void const *addr)
-  { Mips::synci(addr); }
+  static void make_coherent_to_pou(void const *start, size_t size)
+  {
+    // Unfortunately 'synci_step' is not available on certain processors
+    for (Unsigned8 const *m = (Unsigned8 const*)start;
+         m < (Unsigned8 const *)start + size; m += sizeof(Mword))
+      Mips::synci(m);
+  }
 
 private:
   static void (*_tlb_flush)(long asid, unsigned guest_id);

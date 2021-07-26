@@ -22,7 +22,7 @@ IMPLEMENTATION[ia32 || amd64]:
 
 PUBLIC static inline ALWAYS_INLINE
 void
-Mem_unit::make_coherent_to_pou(void const *)
+Mem_unit::make_coherent_to_pou(void const *, size_t)
 {}
 
 PUBLIC static inline ALWAYS_INLINE

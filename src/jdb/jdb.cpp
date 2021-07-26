@@ -1046,7 +1046,7 @@ Jdb::poke_task(Jdb_address addr, void const *value, int width)
     return -1;
 
   memcpy(mem, value, width);
-  Mem_unit::make_coherent_to_pou(mem);
+  Mem_unit::make_coherent_to_pou(mem, width);
   return 0;
 }
 
