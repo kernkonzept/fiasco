@@ -105,6 +105,7 @@ $(foreach m, $(GENERATED_MODULES), auto/stamp-$(m).ready): $(MODULES_FILES)
 	@echo "Cleaning up build directory"
 	$(VERBOSE)$(RM_R) *.lds *.o fiasco *.d .*.d .*.d.new *.d.new
 	$(VERBOSE)$(RM_R) auto/*.cc auto/*.h auto/*.S auto/stamp-*.ready
+	$(VERBOSE)$(RM) dump_tcboffsets
 	@echo "Creating $@"
 	@($(foreach mod, $(GENERATED_MODULES),				\
 	    echo 'auto/stamp-$(mod).ready:				\
