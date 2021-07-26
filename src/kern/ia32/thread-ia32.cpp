@@ -514,7 +514,7 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
   vcpu_state->host.ds = 0;
   vcpu_state->host.es = 0;
   vcpu_state->host.fs = 0;
-  vcpu_state->host.ds = 0;
+  vcpu_state->host.gs = 0;
   vcpu_state->host.user_ds32 = Gdt::gdt_data_user | Gdt::Selector_user;
   vcpu_state->host.user_cs64 = Gdt::gdt_code_user | Gdt::Selector_user;
   vcpu_state->host.user_cs32 = Gdt::gdt_code_user32 | Gdt::Selector_user;
