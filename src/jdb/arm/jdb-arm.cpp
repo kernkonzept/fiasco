@@ -290,6 +290,13 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
                 break;
               }
 
+          // Don't automatically tap into MMIO memory in Sigma0 as this usually
+          // results into some data abort exception -- aborting the current 'd'
+          // view.
+          if (mem_type == Page::Type::Uncached()
+              && addr.space()->is_sigma0())
+            return 0;
+
           pte.set_page(
             pte.make_page(Phys_mem_addr(cxx::mask_lsb(phys, pte.page_order())),
                           Page::Attr(Page::Rights::RW(), mem_type)));
