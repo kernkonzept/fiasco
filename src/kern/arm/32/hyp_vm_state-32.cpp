@@ -91,7 +91,7 @@ public:
   };
 
   // we need to store all banked registers for PL1 modes
-  // because a hyp keernel runs applications in system mode (PL1)
+  // because a hyp kernel runs applications in system mode (PL1)
   Banked_fiq_regs fiq;
   Banked_mode_regs irq, svc, abt, und;
 };
