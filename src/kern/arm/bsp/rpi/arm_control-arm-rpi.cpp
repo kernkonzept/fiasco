@@ -1,7 +1,8 @@
-INTERFACE [pf_rpi_rpi2 || pf_rpi_rpi3]: // --------------------------------
+INTERFACE [pf_rpi_rpi2 || pf_rpi_rpi3 || pf_rpi_rpi4]: // -----------------
 
 #include "assert.h"
 #include "kmem.h"
+#include "mem_layout.h"
 #include "mmio_register_block.h"
 
 class Arm_control
@@ -26,15 +27,28 @@ public:
   };
 
   Arm_control()
-  : r(Kmem::mmio_remap(0x40000000, 0x100))
+  : r(Kmem::mmio_remap(Mem_layout::Local_intc, 0x100))
   {
     r.r<32>(Control) = 0;
     r.r<32>(Prescaler) =  1 << 31;
   }
 
+  static void init()
+  { _arm_control.construct(); };
+
+  static Arm_control *o() { return _arm_control.get(); }
+
 private:
   Mmio_register_block r;
 
+  static Static_object<Arm_control> _arm_control;
+};
+
+INTERFACE [pf_rpi_rpi2 || pf_rpi_rpi3]: // --------------------------------
+
+EXTENSION class Arm_control
+{
+private:
   static unsigned cpu_off(Cpu_phys_id cpu)
   { return (cxx::int_value<Cpu_phys_id>(cpu) & 0xffu) * 4u; }
 
@@ -81,30 +95,22 @@ public:
     r.r<32>(mbox0_rdclk) = 1 << m;
     return m;
   }
-
-  static void init()
-  { _arm_control.construct(); };
-
-  static Arm_control *o() { return _arm_control.get(); }
-
-private:
-  static Static_object<Arm_control> _arm_control;
 };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [pf_rpi_rpi2 || pf_rpi_rpi3]:
+IMPLEMENTATION [pf_rpi_rpi2 || pf_rpi_rpi3 || (pf_rpi_rpi4 && !64bit)]:
 
 Static_object<Arm_control> Arm_control::_arm_control;
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [mp && (pf_rpi_rpi2 || pf_rpi_rpi3) && !64bit]:
+IMPLEMENTATION [mp && (pf_rpi_rpi2 || pf_rpi_rpi3 || pf_rpi_rpi4) && !64bit]:
 
 PUBLIC
 void
 Arm_control::do_boot_cpu(Cpu_phys_id phys_cpu, Address paddr)
 {
   unsigned cpu_num = cxx::int_value<Cpu_phys_id>(phys_cpu);
-  unsigned mbox3_offset = 16 * cpu_num + 0xc;
+  r.r<32>(Mailbox_set_base + 0xc + cpu_num * 0x10) = paddr;
   Mem::dsb();
-  r.r<32>(Mailbox_set_base + mbox3_offset) = paddr;
+  asm volatile("sev");
 }

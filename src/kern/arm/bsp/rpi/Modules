@@ -24,6 +24,7 @@ INTERFACES_KERNEL-$(CONFIG_PF_RPI_RPI1)  += arm_control irq_handler
 INTERFACES_KERNEL-$(CONFIG_PF_RPI_RPI2)  += arm_control irq_handler
 INTERFACES_KERNEL-$(CONFIG_PF_RPI_RPI3)  += arm_control irq_handler
 INTERFACES_KERNEL-$(CONFIG_PF_RPI_RPIZW) += arm_control irq_handler
+INTERFACES_KERNEL-$(CONFIG_PF_RPI_RPI4)  += $(if $(CONFIG_BIT64),,arm_control)
 
 arm_control_IMPL      += arm_control-arm-rpi
 config_IMPL           += config-arm-rpi

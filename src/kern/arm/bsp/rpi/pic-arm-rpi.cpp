@@ -118,6 +118,22 @@ Pic::handle_irq()
 }
 
 // ------------------------------------------------------------------------
+IMPLEMENTATION [arm && pf_rpi && !64bit]:
+
+#include "arm_control.h"
+
+PRIVATE static FIASCO_INIT
+void Pic::arm_control_init()
+{ Arm_control::init(); }
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && pf_rpi && 64bit]:
+
+PRIVATE static FIASCO_INIT
+void Pic::arm_control_init()
+{}
+
+// ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pf_rpi && (pf_rpi_rpi1 || pf_rpi_rpizw)]:
 
 PUBLIC static FIASCO_INIT
@@ -129,13 +145,11 @@ void Pic::init()
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pf_rpi && (pf_rpi_rpi2 || pf_rpi_rpi3)]:
 
-#include "arm_control.h"
-
 PUBLIC static FIASCO_INIT
 void Pic::init()
 {
   Irq_mgr::mgr = mgr.construct();
-  Arm_control::init();
+  arm_control_init();
 }
 
 // ------------------------------------------------------------------------
@@ -180,6 +194,8 @@ Pic::init()
   m->add_chip(0, gic, gic->nr_irqs());
 
   Irq_mgr::mgr = m;
+
+  arm_control_init();
 }
 
 // ------------------------------------------------------------------------

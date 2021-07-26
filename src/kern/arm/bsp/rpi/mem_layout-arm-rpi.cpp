@@ -25,6 +25,7 @@ EXTENSION class Mem_layout
 {
 public:
   enum Phys_layout_bcm283x : Address {
+    Local_intc           = 0x40000000,
     Pic_phys_base        = Bcm283x_base + 0x0000b200,
     Timer_phys_base      = Bcm283x_base + 0x00003000,
     Watchdog_phys_base   = Bcm283x_base + 0x00100000,
@@ -38,6 +39,7 @@ EXTENSION class Mem_layout
 public:
   enum Phys_layout_bcm2711 : Address {
     Bcm2711_base       = 0xfe000000,
+    Local_intc         = 0xff800000,
     Watchdog_phys_base = Bcm2711_base + 0x00100000,
     Gic_cpu_phys_base  = 0xff842000,
     Gic_dist_phys_base = 0xff841000,

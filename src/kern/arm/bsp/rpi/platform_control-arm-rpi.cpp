@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && mp && (pf_rpi_rpi2 || pf_rpi_rpi3) && !64bit]:
+IMPLEMENTATION [arm && mp && (pf_rpi_rpi2 || pf_rpi_rpi3 || pf_rpi_rpi4) && !64bit]:
 
 #include "arm_control.h"
 #include "cpu.h"
@@ -9,13 +9,22 @@ void
 Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
 {
   Cpu_phys_id myid = Proc::cpu_id();
+  int seq = 1;
   for (unsigned i = 0; i < min<unsigned>(4, Config::Max_num_cpus); ++i)
     if (myid != Cpu_phys_id(i))
-      Arm_control::o()->do_boot_cpu(Cpu_phys_id(i), phys_tramp_mp_addr);
+      {
+        Arm_control::o()->do_boot_cpu(Cpu_phys_id(i), phys_tramp_mp_addr);
+        while (!Cpu::online(Cpu_number(seq)))
+          {
+            Mem::barrier();
+            Proc::pause();
+          }
+        ++seq;
+      }
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && mp && ((pf_rpi_rpi3 && 64bit) || pf_rpi_rpi4)]:
+IMPLEMENTATION [arm && mp && 64bit && (pf_rpi_rpi3 || pf_rpi_rpi4)]:
 
 #include "cpu.h"
 #include "kmem.h"
@@ -26,7 +35,7 @@ PUBLIC static
 void
 Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
 {
-  static Mmio_register_block a(Kmem::mmio_remap(0xd8, 0x28));
+  Mmio_register_block a(Kmem::mmio_remap(0xd8, 0x28));
   Cpu_phys_id myid = Proc::cpu_id();
   int seq = 1;
   for (unsigned i = 0; i < min<unsigned>(4, Config::Max_num_cpus); ++i)
