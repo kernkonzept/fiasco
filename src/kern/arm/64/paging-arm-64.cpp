@@ -39,9 +39,6 @@ public:
   };
   Pte_ptr() = default;
   Pte_ptr(void *p, unsigned char level) : Pte_ptr_t(p, level) {}
-
-  unsigned char page_order() const
-  { return Ptab::Level<Ptab_traits_vpn>::shift(level) + Ptab_traits_vpn::Head::Base_shift; }
 };
 
 typedef Pdir_t<Pte_ptr, Ptab_traits_vpn, Ptab_va_vpn> Pdir;
@@ -80,3 +77,12 @@ public:
   };
 };
 
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && cpu_virt]:
+
+PUBLIC inline
+unsigned char
+Pte_ptr::page_order() const
+{
+  return Pdir::page_order_for_level(level);
+}
