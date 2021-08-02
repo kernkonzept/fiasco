@@ -1,10 +1,29 @@
-INTERFACE [arm && cpu_virt]:
+INTERFACE [arm && cpu_virt && !arm_pt_48]: // -----------------------------
+
+EXTENSION class Mem_layout
+{
+public:
+  enum Virt_layout_kern_user_max : Address {
+    User_max             = 0x0000007fffffffff,
+  };
+};
+
+INTERFACE [arm && cpu_virt && arm_pt_48]: // ------------------------------
+
+EXTENSION class Mem_layout
+{
+public:
+  enum Virt_layout_kern_user_max : Address {
+    User_max             = 0x0000ffffffffffff,
+  };
+};
+
+INTERFACE [arm && cpu_virt]: // -------------------------------------------
 
 EXTENSION class Mem_layout
 {
 public:
   enum Virt_layout_kern : Address {
-    User_max             = 0x0000007fffffffff,
     Utcb_addr            = User_max + 1 - 0x10000,
     Map_base             = RAM_PHYS_BASE,
     Vmap_base            = (Map_base > 0x800000000000) ? 0x40000000 : 0x800000000000,

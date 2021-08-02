@@ -139,12 +139,21 @@ void
 Cpu::init_hyp_mode()
 {
   extern char exception_vector[];
+
+  // Feature availability check for 48bit address space size
+  if (phys_bits() == 48) // arm_pt_48
+    {
+      Mword id_aa64mmfr2_el1;
+      asm("mrs %0, S3_0_C0_C7_2" : "=r"(id_aa64mmfr2_el1));
+      if ((id_aa64mmfr2_el1 & (0xf << 28)) == 0) // ST
+        panic("48bit address spaces not available on this platform.");
+    }
+
   asm volatile ("msr VBAR_EL2, %x0" : : "r"(&exception_vector));
   asm volatile ("msr VTCR_EL2, %x0" : :
                 "r"(  (1UL << 31) // RES1
                     | (Page::Tcr_attribs << 8)
-                    // sl = 1       PS = 40bit   t0sz = 40bit
-                    | (1UL << 6) | (2UL << 16) | 25));
+                    | Page::Vtcr_bits));
 
   asm volatile ("msr MDCR_EL2, %x0" : : "r"((Mword)Mdcr_bits));
 

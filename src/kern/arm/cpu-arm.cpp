@@ -445,9 +445,14 @@ IMPLEMENTATION [arm && !arm_lpae]:
 PUBLIC static inline unsigned Cpu::phys_bits() { return 32; }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_lpae]:
+IMPLEMENTATION [arm && arm_lpae && !arm_pt_48]:
 
 PUBLIC static inline unsigned Cpu::phys_bits() { return 40; }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && arm_lpae && arm_pt_48]:
+
+PUBLIC static inline unsigned Cpu::phys_bits() { return 48; }
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && !arm_v6plus]:

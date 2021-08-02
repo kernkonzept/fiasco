@@ -205,6 +205,9 @@ config HAVE_ARM_SECMONIF_NONE
 config HAVE_ARM_SECMONIF_MC
 	bool
 
+config ARM_PT48
+	bool
+	depends on CPU_VIRT && BIT64
 
 config ARM_ALIGNMENT_CHECK
 	bool "Enable alignment check"

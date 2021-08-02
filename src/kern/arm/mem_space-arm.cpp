@@ -480,7 +480,7 @@ DEFINE_PER_CPU Per_cpu<Mem_space::Asids> Mem_space::_asids;
 Mem_space::Asid_alloc  Mem_space::_asid_alloc(&_asids);
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_lpae]:
+IMPLEMENTATION [arm && arm_lpae && !arm_pt_48]:
 
 PUBLIC static
 void
@@ -489,4 +489,17 @@ Mem_space::init_page_sizes()
   add_page_size(Page_order(Config::PAGE_SHIFT));
   add_page_size(Page_order(21)); // 2MB
   add_page_size(Page_order(30)); // 1GB
+}
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [arm && arm_lpae && arm_pt_48]:
+
+PUBLIC static
+void
+Mem_space::init_page_sizes()
+{
+  add_page_size(Page_order(Config::PAGE_SHIFT));
+  add_page_size(Page_order(21)); // 2MB
+  add_page_size(Page_order(30)); // 1GB
+  add_page_size(Page_order(39)); // 512GB
 }
