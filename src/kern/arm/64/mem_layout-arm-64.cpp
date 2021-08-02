@@ -1,8 +1,5 @@
 INTERFACE [arm && cpu_virt]:
 
-#include "config.h"
-#include "template_math.h"
-
 EXTENSION class Mem_layout
 {
 public:
@@ -26,7 +23,6 @@ public:
 //---------------------------------------------------------------------------
 INTERFACE [arm && !cpu_virt]:
 
-#include "config.h"
 #include "template_math.h"
 
 EXTENSION class Mem_layout
