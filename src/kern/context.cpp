@@ -1621,13 +1621,6 @@ Context::enqueue_drq(Drq *rq)
   return do_sched;
 }
 
-
-PRIVATE inline NOEXPORT
-void
-Context::shutdown_drqs()
-{ _drq_q.handle_requests(Drq_q::Drop); }
-
-
 PUBLIC inline
 void
 Context::rcu_wait()
@@ -2139,22 +2132,6 @@ Context::enqueue_drq(Drq *rq)
 
   return false;
 }
-
-
-PRIVATE inline NOEXPORT
-void
-Context::shutdown_drqs()
-{
-  if (_pending_rq.queued())
-    {
-      auto guard = lock_guard(_pending_rq.queue()->q_lock());
-      if (_pending_rq.queued())
-        _pending_rq.queue()->dequeue(&_pending_rq);
-    }
-
-  _drq_q.handle_requests(Drq_q::Drop);
-}
-
 
 /**
  * Block and wait for the next grace period.
