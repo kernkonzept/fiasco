@@ -173,6 +173,7 @@ Svm::Svm(Cpu_number cpu)
   set_msr_perm(MSR_GS_BASE, Msr_rw);
   set_msr_perm(MSR_FS_BASE, Msr_rw);
   set_msr_perm(MSR_KERNEL_GS_BASE, Msr_rw);
+  set_msr_perm(MSR_STAR, Msr_rw);
   set_msr_perm(MSR_CSTAR, Msr_rw);
   set_msr_perm(MSR_LSTAR, Msr_rw);
   set_msr_perm(MSR_SFMASK, Msr_rw);
