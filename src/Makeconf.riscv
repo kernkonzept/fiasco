@@ -1,0 +1,33 @@
+# -*- makefile -*-
+# vi:se ft=make:
+BITS-$(CONFIG_BIT32) = 32
+BITS-$(CONFIG_BIT64) = 64
+BITS = $(BITS-y)
+
+CROSS_COMPILE             ?= riscv64-linux-gnu-
+
+LD_EMULATION_CHOICE       := elf$(BITS)lriscv
+
+OBJCOPY_BFDNAME          := elf$(BITS)-littleriscv
+OBJCOPY_BFDARCH          := riscv
+
+RISCV_FPU_EXT-$(CONFIG_RISCV_FPU_SINGLE) = f
+RISCV_FPU_EXT-$(CONFIG_RISCV_FPU_DOUBLE) = fd
+RISCV_ISA_C-$(CONFIG_RISCV_ISA_C) = c
+
+# Prevent compiler from generating floating-point instructions
+SHARED_FLAGS-gcc += -march=rv$(BITS)ima$(RISCV_ISA_C-y)
+# Allow explicit usage of floating-point instructions in (inline) assembly
+SHARED_FLAGS-gcc += -Wa,-march=rv$(BITS)ima$(RISCV_FPU_EXT-y)$(RISCV_ISA_C-y)
+
+# With clang allowing only explicit floating-point instructions is not yet
+# possible, let's just assume that clang doesn't create implicit floating point
+# instructions, or should it start to do so, introduces the -mno-implicit-float
+# option available for other architectures also for RISC-V.
+SHARED_FLAGS-clang += -march=rv$(BITS)ima$(RISCV_FPU_EXT-y)$(RISCV_ISA_C-y)
+
+# Supported ABIs: ilp32 ilp32d ilp32e ilp32f lp64 lp64d lp64f
+SHARED_FLAGS-$(CONFIG_BIT32) += -mabi=ilp32
+SHARED_FLAGS-$(CONFIG_BIT64) += -mabi=lp64
+
+SHARED_FLAGS += -mcmodel=medany

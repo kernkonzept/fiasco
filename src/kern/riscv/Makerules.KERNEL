@@ -1,0 +1,73 @@
+# -*- makefile -*-
+# vim:se ft=make:
+
+# Add future prerequisites somewhere among the list of libraries.
+# You really should not have to add anything in the $(LD) line.
+#
+# Don't link against libgcc to avoid link errors with toolchains that were built
+# with incompatible code model (-mcmodel) or floating point configuration
+# (-march and -mabi). The few functions needed from libgcc are instead
+# implemented in gcc_lib.c.
+
+OBJ_KERNEL_noboot = $(filter-out bootstrap%,$(OBJ_KERNEL))
+OBJ_BOOTSTRAP = $(filter  bootstrap%,$(OBJ_KERNEL))
+
+-include .kernel.riscv.lds.d
+
+bootstrap_lds      = $(srcdir)/kern/riscv/bootstrap.riscv.ld
+
+bootstrap_ldflags  = $(LDFLAGS) -m $(LD_EMULATION) --strip-debug
+bootstrap_ldflags += -defsym kernel_load_addr=$(CONFIG_KERNEL_LOAD_ADDR)
+bootstrap_ldflags += -T$(bootstrap_lds)
+
+bootstrap_syms     = end_of_bootstrap_info|_start|_start_hsm|start_of_loader
+bootstrap_sed      = 's/^0*([0-9a-f]*) [a-zA-Z] ($(bootstrap_syms))/\2 = 0x\1;/p'
+
+bootstrap.$(KERNEL).pre.o: $(OBJ_BOOTSTRAP) gcc_lib.o $(bootstrap_lds)
+	$(LINK_MESSAGE)
+	$(VERBOSE)$(LD) $(bootstrap_ldflags) $(OBJ_BOOTSTRAP) gcc_lib.o -o $@
+
+bootstrap.$(KERNEL).bin: bootstrap.$(KERNEL).pre.o
+	$(COMP_MESSAGE)
+	$(VERBOSE)$(OBJCOPY) -O binary --only-section=.bootstrap.text $< $@
+
+bootstrap.$(KERNEL).rel: bootstrap.$(KERNEL).bin
+	$(COMP_MESSAGE)
+	$(VERBOSE)$(OBJCOPY) -I binary -O $(OBJCOPY_BFDNAME) -B $(OBJCOPY_BFDARCH) \
+	--rename-section .data=.bootstrap.text $< $@
+
+# The linker will treat this file as linker script.
+bootstrap.$(KERNEL).sym: bootstrap.$(KERNEL).pre.o
+	$(COMP_MESSAGE)
+	$(VERBOSE)$(NM) $< | sed -n -E $(bootstrap_sed) > $@
+
+# $(1) = fiasco - variable
+# $(2) = fiasco.debug - variable
+# $(3) = Additional $(OBJ_X), e.g. OBJ_<unittest>
+define gen_kernel_rules =
+$(2): kernel.riscv.lds $$(CRT0) bootstrap.$$(KERNEL).rel bootstrap.$$(KERNEL).sym $$(OBJ_KERNEL_noboot) $(3) $$(JDB) $$(LIBK) $$(KERNEL_EXTRA_LIBS) $$(LIBDISASM) $$(ABI) libdrivers.a $$(LIBUART) $$(CXXLIB) $$(MINILIBC) libgluedriverslibc.a
+	$$(LINK_MESSAGE)
+	$$(VERBOSE)$$(LD) $$(LDFLAGS) -m $$(LD_EMULATION) $$(KERNEL_LDFLAGS) -N \
+	-defsym kernel_load_addr=$$(CONFIG_KERNEL_LOAD_ADDR) \
+	-defsym kernel_virt_addr=$$(CONFIG_KERNEL_VIRT_ADDR) \
+	-T $$< -o $$@ $$(filter-out $$<,$$+)
+	$$(call ADD_CONFIGFILE,$$@)
+
+$(1): $(2)
+	$$(LINK_MESSAGE)
+	$$(VERBOSE)$$(STRIP) $$< -o $$@
+	$$(VERBOSE)$$(OBJCOPY) --add-gnu-debuglink=$$< $$@
+	$$(VERBOSE)chmod 755 $$@
+endef
+
+# generate $(KERNEL) rule
+$(eval $(call gen_kernel_rules,$(KERNEL),$(KERNEL).debug,))
+
+Symbols: $(KERNEL).debug
+	$(COMP_MESSAGE)
+	$(VERBOSE)$(NM) $(KERNEL).debug | $(CROSS_COMPILE)c++filt | sort > $@.new
+	$(VERBOSE)mv $@.new $@
+	$(VERBOSE)chmod 644 $@
+
+clean-KERNEL:
+	$(VERBOSE)$(RM) $(foreach s,bin rel sym,bootstrap.$(KERNEL).$(s))

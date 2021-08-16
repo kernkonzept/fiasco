@@ -1,0 +1,280 @@
+# -*- makefile -*-
+# vi:se ft=make:
+
+###############################################################################
+
+include $(srcdir)/Modules.generic
+
+SUBSYSTEMS := ABI KERNEL LIBK DRIVERS MINILIBC CXXLIB CRT0 \
+              VERSION JABI TCBOFFSET
+
+ifeq ($(CONFIG_UNIT_TEST),y)
+  # UTEST depends on KERNEL and CHECKSUM, must be listed after them
+  SUBSYSTEMS += UTEST
+endif
+
+
+PREPROCESS_PARTS += $(CONFIG_XARCH) $(CONFIG_ABI) libuart
+PREPROCESS_PARTS-$(CONFIG_BIT32) += 32bit riscv32
+PREPROCESS_PARTS-$(CONFIG_BIT64) += 64bit riscv64
+BITS-$(CONFIG_BIT32) = 32
+BITS-$(CONFIG_BIT64) = 64
+BITS = $(BITS-y)
+
+PREPROCESS_PARTS-$(CONFIG_MP)     += need_xcpu_tlb_flush
+PREPROCESS_PARTS-$(CONFIG_SERIAL) += serial force_vkey
+PREPROCESS_PARTS-$(CONFIG_JDB)    += debug jdb log
+PREPROCESS_PARTS += $(PREPROCESS_PARTS-y)
+
+#
+# TYPES subsystem
+#
+PRIVATE_INCDIR += types/$(CONFIG_XARCH)/$(BITS) types/$(CONFIG_XARCH) types
+
+#
+# UART subsystem
+#
+VPATH_LIBUART   := $(srcdir)/lib/uart
+PRIVATE_INCDIR  += lib/uart
+SUBSYSTEMS      += LIBUART
+LIBUART         := uart/libuart.a
+OBJECTS_LIBUART  = uart_sbi.o
+
+#
+# DRIVERS Subsystem
+#
+DRIVERS            := libdrivers.a libgluedriverslibc.a
+VPATH              += drivers/$(CONFIG_XARCH)/$(BITS) drivers/$(CONFIG_XARCH) drivers
+PRIVATE_INCDIR     += drivers/$(CONFIG_XARCH)/$(BITS) drivers/$(CONFIG_XARCH) drivers
+INTERFACES_DRIVERS := mux_console console mem reset uart filter_console \
+                      processor delayloop io mmu sbi
+mem_IMPL           := mem mem-riscv
+reset_IMPL         := reset-riscv
+uart_IMPL          := uart uart-libuart
+processor_IMPL     := processor processor-riscv
+CXXSRC_DRIVERS     := glue_libc.cc
+#NOOPT             += $(patsubst %.o, %, $(OBJ_DRIVERS))
+
+#
+# MINILIBC Subsystem
+#
+MINILIBC        := libc.a
+VPATH           += lib/minilibc/$(CONFIG_XARCH)/$(BITS) \
+                   lib/minilibc/$(CONFIG_XARCH) lib/minilibc
+PRIVATE_INCDIR  += lib/minilibc/$(CONFIG_XARCH)/$(BITS)/include \
+                   lib/minilibc/$(CONFIG_XARCH)/include lib/minilibc/include
+CSRC_MINILIBC   := atexit.c memccpy.c memcmp.c memmove.c memset.c memcpy.c \
+                   memchr.c panic.c strchr.c strcmp.c strcpy.c strlen.c \
+                   strncmp.c strncpy.c strstr.c printf.c \
+                   __v_printf.c vprintf.c strtol.c strtoul.c __lltostr.c \
+                   __ltostr.c putchar.c puts.c getchar.c \
+                   sprintf.c snprintf.c vsnprintf.c vsprintf.c \
+                   longjmp.c isalnum.c isalpha.c isascii.c isblank.c \
+                   iscntrl.c isdigit.c isgraph.c islower.c isprint.c \
+                   ispunct.c isspace.c isupper.c isxdigit.c strspn.c \
+                   strcspn.c tolower.c
+ASSRC_MINILIBC  := setjmp.S
+NOBUILTIN       += $(patsubst %.o, %, $(OBJ_MINILIBC))
+
+
+#
+# JABI Subsystem
+#
+JABI            := libjabi.a
+VPATH           += jabi/$(CONFIG_XARCH)/$(BITS) jabi/$(CONFIG_XARCH) jabi
+INTERFACES_JABI := jdb_ktrace
+
+
+#
+# ABI Subsystem
+#
+ABI             := libabi.a
+VPATH           += abi/$(CONFIG_XARCH)/$(BITS) abi/$(CONFIG_XARCH) abi
+INTERFACES_ABI  := kip l4_types l4_fpage l4_msg_item l4_buf_desc l4_error
+
+kip_IMPL        := kip kip-debug kip-riscv
+l4_types_IMPL   := l4_types l4_types-debug l4_types-riscv
+
+#
+# KERNEL subsystem
+#
+KERNEL          := fiasco
+KERNEL_EXTRA    := Symbols kernel.riscv.lds fiasco.debug
+VPATH           += kern/$(CONFIG_XARCH)/$(BITS) kern/$(CONFIG_XARCH) kern
+VPATH           += jdb/riscv/$(BITS) jdb/riscv jdb
+PRIVATE_INCDIR  += kern/$(CONFIG_XARCH)/$(BITS) kern/$(CONFIG_XARCH) kern
+
+INTERFACES_KERNEL += __main boot_uart_init csr irq_chip_generic
+INTERFACES_KERNEL += bootstrap boot_infos
+
+INTERFACES_KERNEL-$(CONFIG_SERIAL)     += uart_console
+
+INTERFACES_KERNEL += $(INTERFACES_KERNEL-y)
+
+
+clock_IMPL              := clock
+config_IMPL             := config config-riscv
+context_IMPL            := context context-riscv context-vcpu
+continuation_IMPL       := continuation-riscv
+cpu_IMPL                := cpu cpu-riscv
+cpu_lock_IMPL           := cpu_lock cpu_lock-generic
+entry_frame_IMPL        := entry_frame-riscv
+fpu_IMPL                := fpu fpu-riscv
+ipi_IMPL                := ipi ipi-riscv
+kdb_ke_IMPL             += kdb_ke-riscv
+kernel_task_IMPL        := kernel_task
+kernel_thread_IMPL      := kernel_thread kernel_thread-std kernel_thread-riscv
+kernel_uart_IMPL        := kernel_uart kernel_uart-libuart
+kmem_alloc_IMPL         := kmem_alloc kmem_alloc-riscv
+map_util_IMPL           := map_util map_util-mem map_util-objs
+mem_layout_IMPL         := mem_layout mem_layout-riscv mem_layout-riscv$(BITS)
+mem_unit_IMPL           := mem_unit-riscv
+mem_space_IMPL          := mem_space mem_space-user mem_space-riscv
+obj_space_IMPL          := obj_space obj_space-phys
+paging_IMPL             := paging paging-riscv
+perf_cnt_IMPL           := perf_cnt # perf_cnt-riscv
+platform_control_IMPL   += platform_control-riscv
+cpc_IMPL                := cpc
+pic_IMPL                := pic
+sched_context_IMPL      := sched_context-wfq sched_context-fixed_prio \
+                           sched_context-fp_wfq sched_context
+space_IMPL              := space
+spin_lock_IMPL          := spin_lock spin_lock-riscv
+startup_IMPL            := startup startup-riscv
+sys_call_page_IMPL      := sys_call_page
+task_IMPL               := task task-riscv
+timer_IMPL              ?= timer timer-riscv
+timer_tick_IMPL         := timer_tick timer_tick-riscv
+thread_IMPL             := thread thread-log thread-pagefault \
+                           thread-riscv thread-ipc thread-jdb \
+                           thread-vcpu
+vmem_alloc_IMPL         := vmem_alloc vmem_alloc-riscv
+tb_entry_IMPL           := tb_entry tb_entry-riscv
+
+ifeq ("$(CONFIG_JDB)","y")
+JDB                     := jdb_compound.o
+SUBSYSTEMS              += JDB
+
+CXXSRC_JDB := tb_entry_output.cc
+
+jdb_IMPL                += jdb-riscv
+jdb_tcb_IMPL            += jdb_tcb-riscv
+jdb_entry_frame_IMPL    := jdb_entry_frame-riscv
+jdb_trace_set_IMPL      += jdb_trace_set jdb_trace_set-riscv
+jdb_kern_info_IMPL      := jdb_kern_info
+jdb_tbuf_init_IMPL      := jdb_tbuf_init
+jdb_tbuf_fe_IMPL        := jdb_tbuf_fe jdb_tbuf_fe-riscv
+jdb_ptab_IMPL           := jdb_ptab jdb_ptab-riscv
+thread_IMPL             += thread-debug
+INTERFACES_JDB          += jdb_log jdb_trace_set jdb_ptab
+INTERFACES_JDB          += $(INTERFACES_JDB-y)
+endif
+
+CXXSRC_KERNEL             := kernel_panic.cc libc_backend_lock.cc
+ASSRC_KERNEL              := exception.S bootstrap_crt0.S kip-time.S
+ASSRC_KERNEL-$(CONFIG_MP) += tramp-mp.S
+ASSRC_KERNEL              += $(ASSRC_KERNEL-y)
+CPPFLAGS                  += -DRAM_PHYS_BASE=$(RAM_PHYS_BASE)
+
+NOOPT                   += $(filter jdb%,\
+                             $(foreach in,$(INTERFACES_KERNEL), \
+                               $(if $($(in)_IMPL),$($(in)_IMPL),$(in))))
+NOOPT                   += tb_entry tb_entry_output
+
+#
+# CRT0 subsystem
+#
+CRT0            := crt0.o
+ASSRC_CRT0      := crt0.S
+
+
+#
+# CXXLIB Subsystem
+#
+CXXLIB            := libcxx.a
+VPATH             += lib/cxxlib
+INTERFACES_CXXLIB := paranoia
+
+#
+# LIBK subsystem
+#
+LIBK            := libk.a
+VPATH           += lib/libk/$(CONFIG_XARCH)/$(BITS) lib/libk/$(CONFIG_XARCH) lib/libk
+PRIVATE_INCDIR  += lib/libk/$(CONFIG_XARCH)/$(BITS) lib/libk/$(CONFIG_XARCH) lib/libk
+
+INTERFACES_LIBK := atomic lock_guard std_macros
+CSRC_LIBK       += gcc_lib.c
+CXXSRC_LIBK     += construction.cc
+atomic_IMPL     := atomic atomic-riscv
+
+#
+# SIMPLEMALLOC
+#
+SIMPLEMALLOC        := libsimple_malloc.a
+VPATH               += lib/simple_malloc
+PRIVATE_INCDIR      += lib/simple_malloc
+CXXSRC_SIMPLEMALLOC  = simple_malloc.cc
+
+#
+# LIBDISASM subsystem (only for Jdb)
+#
+ifeq ("$(CONFIG_JDB_DISASM)","y")
+  # $(srcdir)/lib/disasm may be removed
+  ifeq ($(wildcard $(srcdir)/lib/disasm),)
+    $(error $(srcdir)/lib/disasm is missing, disable CONFIG_JDB_DISASM)
+  endif
+  SUBSYSTEMS          += LIBDISASM
+  KERNEL_EXTRA_LIBS   += $(LIBDISASM)
+  PREPROCESS_PARTS    += jdb_disasm
+
+  SUBSYSTEMS          += SIMPLEMALLOC
+  KERNEL_EXTRA_LIBS   += $(SIMPLEMALLOC)
+
+  LIBDISASM           := libdisasm.a
+  VPATH               += lib/disasm lib/disasm/capstone \
+                         lib/disasm/capstone/arch/RISCV
+  PRIVATE_INCDIR      += lib/disasm lib/disasm/capstone/include
+  CXXSRC_LIBDISASM    := disasm.cc
+  CSRC_LIBDISASM      := cs.c utils.c \
+                         MCInst.c MCInstrDesc.c MCRegisterInfo.c SStream.c \
+                         RISCVModule.c RISCVInstPrinter.c \
+                         RISCVDisassembler.c RISCVMapping.c
+  CPPFLAGS            += -DCAPSTONE_HAS_RISCV
+  CFLAGS_RISCVInstPrinter  = -Wno-unused-parameter -Wno-missing-field-initializers \
+                             -Wno-bad-function-cast -Wno-implicit-fallthrough
+  CFLAGS_RISCVMapping      = -Wno-unused-parameter -Wno-sign-compare
+  CFLAGS_RISCVDisassembler = -Wno-unused-parameter -Wno-missing-field-initializers \
+                             -Wno-implicit-fallthrough
+endif
+
+#
+# VERSION subsystem
+#
+VERSION          := version.h
+
+TCBOFFSET        := tcboffset.h
+CXXSRC_TCBOFFSET := tcboffset.cc dump_tcboffsets.cc
+
+#
+# BSP subsystem
+#
+BSP_NAME         := $(patsubst "%",%,$(CONFIG_BSP_NAME))
+BSP_SRC_DIR      := kern/riscv/bsp/$(BSP_NAME)
+MODULES_FILE_BSP := $(srcdir)/$(BSP_SRC_DIR)/Modules
+ifeq ($(wildcard $(MODULES_FILE_BSP)),)
+  $(error No BSP name defined or no BSP Modules file available)
+endif
+
+include $(MODULES_FILE_BSP)
+VPATH += $(BSP_SRC_DIR)
+
+ifeq ("$(filter LIBUART, $(SUBSYSTEMS))","LIBUART")
+  LIBUART := uart/libuart.a
+endif
+
+CONFIG_KERNEL_LOAD_ADDR    := $$(($(RAM_PHYS_BASE) + 0x800000))
+CONFIG_KERNEL_VIRT_ADDR-32 := 0xf0000000
+CONFIG_KERNEL_VIRT_ADDR-64 := 0xfffffff000000000
+CONFIG_KERNEL_VIRT_ADDR    := $(CONFIG_KERNEL_VIRT_ADDR-$(BITS))
+
+MODULES_FILES += $(MODULES_FILE) $(MODULES_FILE_BSP)

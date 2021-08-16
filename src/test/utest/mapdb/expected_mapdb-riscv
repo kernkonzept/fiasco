@@ -1,0 +1,749 @@
+=== NEW TEST ===
+Lookup @sigma0 node at phys=0
+0:     space=sigma0 vaddr=0x0 size=0x200000
+
+Lookup @sigma0 node at phys=0 after inserting sub-mapping
+0:     space=sigma0 vaddr=0x0 size=0x200000
+1: ==>  space=other vaddr=0x2000 size=0x1000
+
+Lookup @sigma0 at phys=2*2M
+0:     space=sigma0 vaddr=0x400000 size=0x200000
+
+Lookup @sigma0 at phys=2*superpage after inserting sub-mapping
+0:     space=sigma0 vaddr=0x400000 size=0x200000
+1: ==>  space=other vaddr=0x800000 size=0x200000
+
+Lookup @other at phys=4*superpage
+1:      space=other vaddr=0x800000 size=0x200000
+
+Lookup @sigma0 node at phys=2*superpage after inserting sub-mapping
+0:     space=sigma0 vaddr=0x400000 size=0x200000
+1:      space=other vaddr=0x800000 size=0x200000
+1:      space=client vaddr=0xf000 size=0x1000
+
+=== DONE TEST ===
+
+
+=== NEW TEST ===
+Lookup @grandfather phys=0
+0:     space=sigma0 vaddr=0x0 size=0x200000
+
+Insert father mapping
+0:     space=sigma0 vaddr=0x0 size=0x200000
+1:      space=father vaddr=0x0 size=0x1000
+
+Lookup @father at phys=0
+0:     space=sigma0 vaddr=0x0 size=0x1000
+1:      space=father vaddr=0x0 size=0x1000
+
+Insert son mapping
+0:     space=sigma0 vaddr=0x0 size=0x1000
+1:      space=father vaddr=0x0 size=0x1000
+2:       space=son vaddr=0x0 size=0x1000
+
+Lookup @father at phys=0
+0:     space=sigma0 vaddr=0x0 size=0x1000
+1:      space=father vaddr=0x0 size=0x1000
+2:       space=son vaddr=0x0 size=0x1000
+
+Insert daughter mapping
+0:     space=sigma0 vaddr=0x0 size=0x1000
+1:      space=father vaddr=0x0 size=0x1000
+2:       space=daughter vaddr=0x0 size=0x1000
+2:       space=son vaddr=0x0 size=0x1000
+
+Lookup @son at phys=0
+0:     space=sigma0 vaddr=0x0 size=0x1000
+1:      space=father vaddr=0x0 size=0x1000
+2:       space=daughter vaddr=0x0 size=0x1000
+2:       space=son vaddr=0x0 size=0x1000
+
+mapping tree: { sigma0 va=0x0 size=0x200000
+  header info: lock: 0
+  : subtree...
+  mapping tree: { sigma0 va=0x0 size=0x1000
+    header info: lock: 1
+    :   va=0x0 space=father depth=1
+    :     va=0x0 space=daughter depth=2
+    :     va=0x0 space=son depth=2
+  } // mapping tree: sigma0 va=0x0
+} // mapping tree: sigma0 va=0x0
+
+Son has accident on return from disco
+mapping tree: { sigma0 va=0x0 size=0x200000
+  header info: lock: 0
+  : subtree...
+  mapping tree: { sigma0 va=0x0 size=0x1000
+    header info: lock: 0
+    :   va=0x0 space=father depth=1
+    :     va=0x0 space=daughter depth=2
+  } // mapping tree: sigma0 va=0x0
+} // mapping tree: sigma0 va=0x0
+
+Lost aunt returns from holiday
+0:     space=sigma0 vaddr=0x0 size=0x200000
+1:      space=father vaddr=0x0 size=0x1000
+2:       space=daughter vaddr=0x0 size=0x1000
+
+Insert @aunt mapping
+0:     space=sigma0 vaddr=0x0 size=0x200000
+1:      space=aunt vaddr=0x0 size=0x1000
+1:      space=father vaddr=0x0 size=0x1000
+2:       space=daughter vaddr=0x0 size=0x1000
+
+mapping tree: { sigma0 va=0x0 size=0x200000
+  header info: lock: 0
+  : subtree...
+  mapping tree: { sigma0 va=0x0 size=0x1000
+    header info: lock: 0
+    :   va=0x0 space=aunt depth=1
+    :   va=0x0 space=father depth=1
+    :     va=0x0 space=daughter depth=2
+  } // mapping tree: sigma0 va=0x0
+} // mapping tree: sigma0 va=0x0
+
+Lookup @daughter at phys=0
+0:     space=sigma0 vaddr=0x0 size=0x1000
+1:      space=aunt vaddr=0x0 size=0x1000
+1:      space=father vaddr=0x0 size=0x1000
+2:       space=daughter vaddr=0x0 size=0x1000
+
+=== DONE TEST ===
+
+
+=== NEW TEST ===
+Lookup @grandfather
+0:     space=sigma0 vaddr=0x0 size=0x200000
+
+Inserting father mapping
+0:     space=sigma0 vaddr=0x0 size=0x200000
+1:      space=father vaddr=0x0 size=0x1000
+
+Lookup father at phys=0
+0:     space=sigma0 vaddr=0x0 size=0x1000
+1:      space=father vaddr=0x0 size=0x1000
+
+Insert son mapping
+0:     space=sigma0 vaddr=0x0 size=0x1000
+1:      space=father vaddr=0x0 size=0x1000
+2:       space=son vaddr=0x0 size=0x1000
+
+Lost aunt returns from holidays
+0:     space=sigma0 vaddr=0x0 size=0x200000
+1:      space=father vaddr=0x0 size=0x1000
+2:       space=son vaddr=0x0 size=0x1000
+
+Insert aunt mapping
+0:     space=sigma0 vaddr=0x0 size=0x200000
+1:      space=aunt vaddr=0x0 size=0x1000
+1:      space=father vaddr=0x0 size=0x1000
+2:       space=son vaddr=0x0 size=0x1000
+
+Lookup father at phys=0
+0:     space=sigma0 vaddr=0x0 size=0x1000
+1:      space=aunt vaddr=0x0 size=0x1000
+1:      space=father vaddr=0x0 size=0x1000
+2:       space=son vaddr=0x0 size=0x1000
+
+Father is killed by his new love
+0:     space=sigma0 vaddr=0x0 size=0x1000
+1:      space=aunt vaddr=0x0 size=0x1000
+
+=== DONE TEST ===
+
+
+=== NEW TEST ===
+Lookup @sigma0 node at phys=0
+0:     space=sigma0 vaddr=0x0 size=0x40000000
+
+Lookup @sigma0 node at phys=0 after inserting sub-mapping
+0:     space=sigma0 vaddr=0x0 size=0x40000000
+1: ==>  space=other vaddr=0x2000 size=0x1000
+
+Lookup @sigma0 at phys=2*2M
+0:     space=sigma0 vaddr=0x0 size=0x40000000
+1: ==>  space=other vaddr=0x2000 size=0x1000
+
+Lookup @sigma0 at phys=2*superpage after inserting sub-mapping
+0:     space=sigma0 vaddr=0x0 size=0x40000000
+1:      space=other vaddr=0x2000 size=0x1000
+1: ==>  space=other vaddr=0x800000 size=0x200000
+
+Lookup @other at phys=4*superpage
+1:      space=other vaddr=0x800000 size=0x200000
+
+Lookup @sigma0 node at phys=2*superpage after inserting sub-mapping
+0:     space=sigma0 vaddr=0x400000 size=0x200000
+1:      space=other vaddr=0x800000 size=0x200000
+1:      space=client vaddr=0xf000 size=0x1000
+
+=== DONE TEST ===
+
+
+=== NEW TEST ===
+Lookup @grandfather phys=0
+0:     space=sigma0 vaddr=0x0 size=0x40000000
+
+Insert father mapping
+0:     space=sigma0 vaddr=0x0 size=0x40000000
+1:      space=father vaddr=0x0 size=0x1000
+
+Lookup @father at phys=0
+0:     space=sigma0 vaddr=0x0 size=0x1000
+1:      space=father vaddr=0x0 size=0x1000
+
+Insert son mapping
+0:     space=sigma0 vaddr=0x0 size=0x1000
+1:      space=father vaddr=0x0 size=0x1000
+2:       space=son vaddr=0x0 size=0x1000
+
+Lookup @father at phys=0
+0:     space=sigma0 vaddr=0x0 size=0x1000
+1:      space=father vaddr=0x0 size=0x1000
+2:       space=son vaddr=0x0 size=0x1000
+
+Insert daughter mapping
+0:     space=sigma0 vaddr=0x0 size=0x1000
+1:      space=father vaddr=0x0 size=0x1000
+2:       space=daughter vaddr=0x0 size=0x1000
+2:       space=son vaddr=0x0 size=0x1000
+
+Lookup @son at phys=0
+0:     space=sigma0 vaddr=0x0 size=0x1000
+1:      space=father vaddr=0x0 size=0x1000
+2:       space=daughter vaddr=0x0 size=0x1000
+2:       space=son vaddr=0x0 size=0x1000
+
+mapping tree: { sigma0 va=0x0 size=0x40000000
+  header info: lock: 0
+  : subtree...
+  mapping tree: { sigma0 va=0x0 size=0x400000
+    header info: lock: 0
+    : subtree...
+    mapping tree: { sigma0 va=0x0 size=0x200000
+      header info: lock: 0
+      : subtree...
+      mapping tree: { sigma0 va=0x0 size=0x1000
+        header info: lock: 1
+        :   va=0x0 space=father depth=1
+        :     va=0x0 space=daughter depth=2
+        :     va=0x0 space=son depth=2
+      } // mapping tree: sigma0 va=0x0
+    } // mapping tree: sigma0 va=0x0
+  } // mapping tree: sigma0 va=0x0
+} // mapping tree: sigma0 va=0x0
+
+Son has accident on return from disco
+mapping tree: { sigma0 va=0x0 size=0x40000000
+  header info: lock: 0
+  : subtree...
+  mapping tree: { sigma0 va=0x0 size=0x400000
+    header info: lock: 0
+    : subtree...
+    mapping tree: { sigma0 va=0x0 size=0x200000
+      header info: lock: 0
+      : subtree...
+      mapping tree: { sigma0 va=0x0 size=0x1000
+        header info: lock: 0
+        :   va=0x0 space=father depth=1
+        :     va=0x0 space=daughter depth=2
+      } // mapping tree: sigma0 va=0x0
+    } // mapping tree: sigma0 va=0x0
+  } // mapping tree: sigma0 va=0x0
+} // mapping tree: sigma0 va=0x0
+
+Lost aunt returns from holiday
+0:     space=sigma0 vaddr=0x0 size=0x40000000
+1:      space=father vaddr=0x0 size=0x1000
+2:       space=daughter vaddr=0x0 size=0x1000
+
+Insert @aunt mapping
+0:     space=sigma0 vaddr=0x0 size=0x40000000
+1:      space=aunt vaddr=0x0 size=0x1000
+1:      space=father vaddr=0x0 size=0x1000
+2:       space=daughter vaddr=0x0 size=0x1000
+
+mapping tree: { sigma0 va=0x0 size=0x40000000
+  header info: lock: 0
+  : subtree...
+  mapping tree: { sigma0 va=0x0 size=0x400000
+    header info: lock: 0
+    : subtree...
+    mapping tree: { sigma0 va=0x0 size=0x200000
+      header info: lock: 0
+      : subtree...
+      mapping tree: { sigma0 va=0x0 size=0x1000
+        header info: lock: 0
+        :   va=0x0 space=aunt depth=1
+        :   va=0x0 space=father depth=1
+        :     va=0x0 space=daughter depth=2
+      } // mapping tree: sigma0 va=0x0
+    } // mapping tree: sigma0 va=0x0
+  } // mapping tree: sigma0 va=0x0
+} // mapping tree: sigma0 va=0x0
+
+Lookup @daughter at phys=0
+0:     space=sigma0 vaddr=0x0 size=0x1000
+1:      space=aunt vaddr=0x0 size=0x1000
+1:      space=father vaddr=0x0 size=0x1000
+2:       space=daughter vaddr=0x0 size=0x1000
+
+=== DONE TEST ===
+
+
+=== NEW TEST ===
+Lookup @grandfather
+0:     space=sigma0 vaddr=0x0 size=0x40000000
+
+Inserting father mapping
+0:     space=sigma0 vaddr=0x0 size=0x40000000
+1:      space=father vaddr=0x0 size=0x1000
+
+Lookup father at phys=0
+0:     space=sigma0 vaddr=0x0 size=0x1000
+1:      space=father vaddr=0x0 size=0x1000
+
+Insert son mapping
+0:     space=sigma0 vaddr=0x0 size=0x1000
+1:      space=father vaddr=0x0 size=0x1000
+2:       space=son vaddr=0x0 size=0x1000
+
+Lost aunt returns from holidays
+0:     space=sigma0 vaddr=0x0 size=0x40000000
+1:      space=father vaddr=0x0 size=0x1000
+2:       space=son vaddr=0x0 size=0x1000
+
+Insert aunt mapping
+0:     space=sigma0 vaddr=0x0 size=0x40000000
+1:      space=aunt vaddr=0x0 size=0x1000
+1:      space=father vaddr=0x0 size=0x1000
+2:       space=son vaddr=0x0 size=0x1000
+
+Lookup father at phys=0
+0:     space=sigma0 vaddr=0x0 size=0x1000
+1:      space=aunt vaddr=0x0 size=0x1000
+1:      space=father vaddr=0x0 size=0x1000
+2:       space=son vaddr=0x0 size=0x1000
+
+Father is killed by his new love
+0:     space=sigma0 vaddr=0x0 size=0x1000
+1:      space=aunt vaddr=0x0 size=0x1000
+
+=== DONE TEST ===
+
+
+=== NEW TEST ===
+# Lookup Sigma0_addr_4
+0:     space=sigma0 vaddr=0xc0000000 size=0x40000000
+
+# Insert sub-mapping page @other
+Insert: other va=0x2000 pa=0xd2001000 order=0
+0:     space=sigma0 vaddr=0xc0000000 size=0x40000000
+1: ==>  space=other vaddr=0x2000 size=0x1000
+
+# Get that mapping again
+1:      space=other vaddr=0x2000 size=0x1000
+
+# Insert sub-mapping 2M @other
+Insert: other va=0x400000 pa=0xd2200000 order=9
+0:     space=sigma0 vaddr=0xc0000000 size=0x40000000
+1:      space=other vaddr=0x2000 size=0x1000
+1: ==>  space=other vaddr=0x400000 size=0x200000
+
+# Get that mapping again
+1:      space=other vaddr=0x400000 size=0x200000
+
+# Insert sub-mapping 2M @aunt
+Insert: aunt va=0x200000 pa=0xd2000000 order=9
+0:     space=sigma0 vaddr=0xc0000000 size=0x40000000
+1:      space=other vaddr=0x2000 size=0x1000
+1: ==>  space=aunt vaddr=0x200000 size=0x200000
+1:      space=other vaddr=0x400000 size=0x200000
+
+# Map page FROM 4M @other TO Son_addr_2 @son
+Insert: son va=0xa0000000 pa=0xd2200000 order=0
+1:      space=other vaddr=0x400000 size=0x200000
+1: ==>  space=son vaddr=0xa0000000 size=0x1000
+
+# Unmap 2M FROM 4M @other...
+unmap son va=0xa0000000 for node:
+state after flush
+# Unmap 2M FROM poffs + 2M @sigma0...
+unmap other va=0x400000 for node:
+state after flush
+# Unmap 1 page FROM 2*page @other
+state after flush
+# Map 2*4MB FROM Sigma0_addr_3 @sigma0 TO Father_addr @father
+Insert: father va=0x3000000 pa=0x51000000 order=10
+0:     space=sigma0 vaddr=0x40000000 size=0x40000000
+1: ==>  space=father vaddr=0x3000000 size=0x400000
+
+Insert: father va=0x3400000 pa=0x51400000 order=10
+0:     space=sigma0 vaddr=0x40000000 size=0x40000000
+1:      space=father vaddr=0x3000000 size=0x400000
+1: ==>  space=father vaddr=0x3400000 size=0x400000
+
+# Get first 8MB mapping
+1:      space=father vaddr=0x3000000 size=0x400000
+
+# Map 3*2MB FROM Father_addr + 2M @father TO Aunt_addr_2 @aunt
+Insert: aunt va=0x4000000 pa=0x51200000 order=9
+1:      space=father vaddr=0x3000000 size=0x400000
+1: ==>  space=aunt vaddr=0x4000000 size=0x200000
+
+Insert: aunt va=0x4200000 pa=0x51400000 order=9
+1:      space=father vaddr=0x3400000 size=0x400000
+1: ==>  space=aunt vaddr=0x4200000 size=0x200000
+
+Insert: aunt va=0x4400000 pa=0x51600000 order=9
+1:      space=father vaddr=0x3400000 size=0x400000
+1:      space=aunt vaddr=0x4200000 size=0x200000
+1: ==>  space=aunt vaddr=0x4400000 size=0x200000
+
+# Map 3 pages FROM Aunt_addr_2 + page @aunt TO Client_addr_1 @client
+Insert: client va=0x2000 pa=0x51201000 order=0
+1:      space=aunt vaddr=0x4000000 size=0x200000
+1: ==>  space=client vaddr=0x2000 size=0x1000
+
+Insert: client va=0x3000 pa=0x51202000 order=0
+1:      space=aunt vaddr=0x4000000 size=0x200000
+1:      space=client vaddr=0x2000 size=0x1000
+1: ==>  space=client vaddr=0x3000 size=0x1000
+
+Insert: client va=0x4000 pa=0x51203000 order=0
+1:      space=aunt vaddr=0x4000000 size=0x200000
+1:      space=client vaddr=0x2000 size=0x1000
+1:      space=client vaddr=0x3000 size=0x1000
+1: ==>  space=client vaddr=0x4000 size=0x1000
+
+# Unmap 1 page FROM Father_addr + 2M + 2*page @father
+unmap aunt va=0x4000000 for node:
+unmap client va=0x2000 for node:
+unmap client va=0x3000 for node:
+unmap client va=0x4000 for node:
+state after flush
+# Map 4M FROM Father_addr @father TO Aunt_addr_3 @aunt
+Insert: aunt va=0x5000000 pa=0x51000000 order=10
+1:      space=father vaddr=0x3000000 size=0x400000
+2: ==>   space=aunt vaddr=0x5000000 size=0x400000
+
+# Map 3 pages FROM aunt at Aunt_addr_3 + 2M + page TO client at Client_addr_2
+Insert: client va=0x42000 pa=0x51201000 order=0
+2:       space=aunt vaddr=0x5000000 size=0x400000
+1: ==>  space=client vaddr=0x42000 size=0x1000
+
+Insert: client va=0x43000 pa=0x51202000 order=0
+2:       space=aunt vaddr=0x5000000 size=0x400000
+1:      space=client vaddr=0x42000 size=0x1000
+1: ==>  space=client vaddr=0x43000 size=0x1000
+
+Insert: client va=0x44000 pa=0x51203000 order=0
+2:       space=aunt vaddr=0x5000000 size=0x400000
+1:      space=client vaddr=0x42000 size=0x1000
+1:      space=client vaddr=0x43000 size=0x1000
+1: ==>  space=client vaddr=0x44000 size=0x1000
+
+# Unmap 1 page FROM Aunt_addr_3 + 2M + page + page @aunt
+unmap client va=0x43000 for node:
+state after flush
+# Map 3 pages FROM Sigma0_addr_2 - page @sigma0 TO Client_addr_3 @client
+Insert: client va=0x82000 pa=0x31ff000 order=0
+0:     space=sigma0 vaddr=0x0 size=0x40000000
+1: ==>  space=client vaddr=0x82000 size=0x1000
+
+Insert: client va=0x83000 pa=0x3200000 order=0
+0:     space=sigma0 vaddr=0x0 size=0x40000000
+1:      space=client vaddr=0x82000 size=0x1000
+1: ==>  space=client vaddr=0x83000 size=0x1000
+
+Insert: client va=0x84000 pa=0x3201000 order=0
+0:     space=sigma0 vaddr=0x0 size=0x40000000
+1:      space=client vaddr=0x82000 size=0x1000
+1:      space=client vaddr=0x83000 size=0x1000
+1: ==>  space=client vaddr=0x84000 size=0x1000
+
+# Map 1G from Sigma0_addr_1 @sigma0 to Daughter_addr @daughter
+Insert: daughter va=0x40000000 pa=0x0 order=18
+0:     space=sigma0 vaddr=0x0 size=0x40000000
+1:      space=client vaddr=0x82000 size=0x1000
+1:      space=client vaddr=0x83000 size=0x1000
+1:      space=client vaddr=0x84000 size=0x1000
+1: ==>  space=daughter vaddr=0x40000000 size=0x40000000
+
+# Map 3 pages FROM daughter TO client at Client_addr_4
+Insert: client va=0xc2000 pa=0x31ff000 order=0
+1:      space=daughter vaddr=0x40000000 size=0x40000000
+1: ==>  space=client vaddr=0xc2000 size=0x1000
+
+Insert: client va=0xc3000 pa=0x3200000 order=0
+1:      space=daughter vaddr=0x40000000 size=0x40000000
+1:      space=client vaddr=0xc2000 size=0x1000
+1: ==>  space=client vaddr=0xc3000 size=0x1000
+
+Insert: client va=0xc4000 pa=0x3201000 order=0
+1:      space=daughter vaddr=0x40000000 size=0x40000000
+1:      space=client vaddr=0xc2000 size=0x1000
+1:      space=client vaddr=0xc3000 size=0x1000
+1: ==>  space=client vaddr=0xc4000 size=0x1000
+
+# Map 2*2M FROM Daughter_addr + 3*16M @daughter to Client_addr_6 @client
+Insert: client va=0x20000000 pa=0x3000000 order=9
+1:      space=daughter vaddr=0x40000000 size=0x40000000
+1:      space=client vaddr=0xc2000 size=0x1000
+1: ==>  space=client vaddr=0x20000000 size=0x200000
+1:      space=client vaddr=0xc3000 size=0x1000
+1:      space=client vaddr=0xc4000 size=0x1000
+
+Insert: client va=0x20200000 pa=0x3200000 order=9
+1:      space=daughter vaddr=0x40000000 size=0x40000000
+1:      space=client vaddr=0xc2000 size=0x1000
+1:      space=client vaddr=0x20000000 size=0x200000
+1:      space=client vaddr=0xc3000 size=0x1000
+1:      space=client vaddr=0xc4000 size=0x1000
+1: ==>  space=client vaddr=0x20200000 size=0x200000
+
+# Map 4M from Daughter_addr + 3*16M @daughter to Son_addr_1 @son
+Insert: son va=0x20000000 pa=0x3000000 order=10
+1:      space=daughter vaddr=0x40000000 size=0x40000000
+1:      space=client vaddr=0xc2000 size=0x1000
+1:      space=client vaddr=0x20000000 size=0x200000
+1:      space=client vaddr=0xc3000 size=0x1000
+1:      space=client vaddr=0xc4000 size=0x1000
+1:      space=client vaddr=0x20200000 size=0x200000
+1: ==>  space=son vaddr=0x20000000 size=0x400000
+
+# Map page from Son_addr_1 + 2M @son to Client_addr_5 @client
+Insert: client va=0x100000 pa=0x3200000 order=0
+1:      space=son vaddr=0x20000000 size=0x400000
+1: ==>  space=client vaddr=0x100000 size=0x1000
+
+# Map page from Son_addr_1 + 2M + page @son to Client_addr_5 + page @client
+Insert: client va=0x101000 pa=0x3201000 order=0
+1:      space=son vaddr=0x20000000 size=0x400000
+1:      space=client vaddr=0x100000 size=0x1000
+1: ==>  space=client vaddr=0x101000 size=0x1000
+
+mapping tree: { sigma0 va=0x0 size=0x40000000
+  header info: lock: 0
+  : subtree...
+  mapping tree: { sigma0 va=0x3000000 size=0x400000
+    header info: lock: 0
+    : subtree...
+    mapping tree: { sigma0 va=0x3000000 size=0x200000
+      header info: lock: 0
+      : subtree...
+      mapping tree: { sigma0 va=0x31ff000 size=0x1000
+        header info: lock: 0
+        :   va=0x82000 space=client depth=1
+      } // mapping tree: sigma0 va=0x31ff000
+    } // mapping tree: sigma0 va=0x3000000
+    mapping tree: { sigma0 va=0x3200000 size=0x200000
+      header info: lock: 0
+      : subtree...
+      mapping tree: { sigma0 va=0x3200000 size=0x1000
+        header info: lock: 0
+        :   va=0x83000 space=client depth=1
+      } // mapping tree: sigma0 va=0x3200000
+      mapping tree: { sigma0 va=0x3201000 size=0x1000
+        header info: lock: 0
+        :   va=0x84000 space=client depth=1
+      } // mapping tree: sigma0 va=0x3201000
+    } // mapping tree: sigma0 va=0x3200000
+  } // mapping tree: sigma0 va=0x3000000
+  :   va=0x40000000 space=daughter depth=1
+  : subtree...
+    mapping tree: { daughter va=0x43000000 size=0x400000
+      header info: lock: 0
+      : subtree...
+      mapping tree: { daughter va=0x43000000 size=0x200000
+        header info: lock: 0
+        : subtree...
+        mapping tree: { daughter va=0x431ff000 size=0x1000
+          header info: lock: 1
+          :   va=0xc2000 space=client depth=1
+        } // mapping tree: daughter va=0x431ff000
+        :   va=0x20000000 space=client depth=1
+      } // mapping tree: daughter va=0x43000000
+      mapping tree: { daughter va=0x43200000 size=0x200000
+        header info: lock: 0
+        : subtree...
+        mapping tree: { daughter va=0x43200000 size=0x1000
+          header info: lock: 0
+          :   va=0xc3000 space=client depth=1
+        } // mapping tree: daughter va=0x43200000
+        mapping tree: { daughter va=0x43201000 size=0x1000
+          header info: lock: 0
+          :   va=0xc4000 space=client depth=1
+        } // mapping tree: daughter va=0x43201000
+        :   va=0x20200000 space=client depth=1
+      } // mapping tree: daughter va=0x43200000
+      :   va=0x20000000 space=son depth=1
+      : subtree...
+        mapping tree: { son va=0x20200000 size=0x200000
+          header info: lock: 0
+          : subtree...
+          mapping tree: { son va=0x20200000 size=0x1000
+            header info: lock: 1
+            :   va=0x100000 space=client depth=1
+          } // mapping tree: son va=0x20200000
+          mapping tree: { son va=0x20201000 size=0x1000
+            header info: lock: 1
+            :   va=0x101000 space=client depth=1
+          } // mapping tree: son va=0x20201000
+        } // mapping tree: son va=0x20200000
+    } // mapping tree: daughter va=0x43000000
+} // mapping tree: sigma0 va=0x0
+# Unmap 1 page FROM Daughter_addr + 3*16M + 2M @daughter
+unmap client va=0xc3000 for node:
+unmap client va=0x20200000 for node:
+unmap son va=0x20000000 for node:
+unmap client va=0x100000 for node:
+unmap client va=0x101000 for node:
+state after flush
+mapping tree: { sigma0 va=0x0 size=0x40000000
+  header info: lock: 0
+  : subtree...
+  mapping tree: { sigma0 va=0x3000000 size=0x400000
+    header info: lock: 0
+    : subtree...
+    mapping tree: { sigma0 va=0x3000000 size=0x200000
+      header info: lock: 0
+      : subtree...
+      mapping tree: { sigma0 va=0x31ff000 size=0x1000
+        header info: lock: 0
+        :   va=0x82000 space=client depth=1
+      } // mapping tree: sigma0 va=0x31ff000
+    } // mapping tree: sigma0 va=0x3000000
+    mapping tree: { sigma0 va=0x3200000 size=0x200000
+      header info: lock: 0
+      : subtree...
+      mapping tree: { sigma0 va=0x3200000 size=0x1000
+        header info: lock: 0
+        :   va=0x83000 space=client depth=1
+      } // mapping tree: sigma0 va=0x3200000
+      mapping tree: { sigma0 va=0x3201000 size=0x1000
+        header info: lock: 0
+        :   va=0x84000 space=client depth=1
+      } // mapping tree: sigma0 va=0x3201000
+    } // mapping tree: sigma0 va=0x3200000
+  } // mapping tree: sigma0 va=0x3000000
+  :   va=0x40000000 space=daughter depth=1
+  : subtree...
+    mapping tree: { daughter va=0x43000000 size=0x400000
+      header info: lock: 0
+      : subtree...
+      mapping tree: { daughter va=0x43000000 size=0x200000
+        header info: lock: 0
+        : subtree...
+        mapping tree: { daughter va=0x431ff000 size=0x1000
+          header info: lock: 1
+          :   va=0xc2000 space=client depth=1
+        } // mapping tree: daughter va=0x431ff000
+        :   va=0x20000000 space=client depth=1
+      } // mapping tree: daughter va=0x43000000
+      mapping tree: { daughter va=0x43200000 size=0x200000
+        header info: lock: 0
+        : subtree...
+        mapping tree: { daughter va=0x43201000 size=0x1000
+          header info: lock: 0
+          :   va=0xc4000 space=client depth=1
+        } // mapping tree: daughter va=0x43201000
+      } // mapping tree: daughter va=0x43200000
+    } // mapping tree: daughter va=0x43000000
+} // mapping tree: sigma0 va=0x0
+# Map page from Daughter_addr + 3*16M + 2M @daughter to Client_addr_4 + page @client
+Insert: client va=0xc3000 pa=0x3200000 order=0
+1:      space=daughter vaddr=0x40000000 size=0x40000000
+1:      space=client vaddr=0xc2000 size=0x1000
+1:      space=client vaddr=0x20000000 size=0x200000
+1: ==>  space=client vaddr=0xc3000 size=0x1000
+1:      space=client vaddr=0xc4000 size=0x1000
+
+# Unmap 1 page FROM Sigma0_addr_2 @sigma0
+mapping tree: { sigma0 va=0x0 size=0x40000000
+  header info: lock: 0
+  : subtree...
+  mapping tree: { sigma0 va=0x3000000 size=0x400000
+    header info: lock: 0
+    : subtree...
+    mapping tree: { sigma0 va=0x3000000 size=0x200000
+      header info: lock: 0
+      : subtree...
+      mapping tree: { sigma0 va=0x31ff000 size=0x1000
+        header info: lock: 0
+        :   va=0x82000 space=client depth=1
+      } // mapping tree: sigma0 va=0x31ff000
+    } // mapping tree: sigma0 va=0x3000000
+    mapping tree: { sigma0 va=0x3200000 size=0x200000
+      header info: lock: 0
+      : subtree...
+      mapping tree: { sigma0 va=0x3200000 size=0x1000
+        header info: lock: 0
+        :   va=0x83000 space=client depth=1
+      } // mapping tree: sigma0 va=0x3200000
+      mapping tree: { sigma0 va=0x3201000 size=0x1000
+        header info: lock: 0
+        :   va=0x84000 space=client depth=1
+      } // mapping tree: sigma0 va=0x3201000
+    } // mapping tree: sigma0 va=0x3200000
+  } // mapping tree: sigma0 va=0x3000000
+  :   va=0x40000000 space=daughter depth=1
+  : subtree...
+    mapping tree: { daughter va=0x43000000 size=0x400000
+      header info: lock: 0
+      : subtree...
+      mapping tree: { daughter va=0x43000000 size=0x200000
+        header info: lock: 0
+        : subtree...
+        mapping tree: { daughter va=0x431ff000 size=0x1000
+          header info: lock: 1
+          :   va=0xc2000 space=client depth=1
+        } // mapping tree: daughter va=0x431ff000
+        :   va=0x20000000 space=client depth=1
+      } // mapping tree: daughter va=0x43000000
+      mapping tree: { daughter va=0x43200000 size=0x200000
+        header info: lock: 0
+        : subtree...
+        mapping tree: { daughter va=0x43200000 size=0x1000
+          header info: lock: 1
+          :   va=0xc3000 space=client depth=1
+        } // mapping tree: daughter va=0x43200000
+        mapping tree: { daughter va=0x43201000 size=0x1000
+          header info: lock: 1
+          :   va=0xc4000 space=client depth=1
+        } // mapping tree: daughter va=0x43201000
+      } // mapping tree: daughter va=0x43200000
+    } // mapping tree: daughter va=0x43000000
+} // mapping tree: sigma0 va=0x0
+unmap client va=0x83000 for node:
+unmap daughter va=0x40000000 for node:
+unmap client va=0xc2000 for node:
+unmap client va=0x20000000 for node:
+unmap client va=0xc3000 for node:
+unmap client va=0xc4000 for node:
+state after flush
+mapping tree: { sigma0 va=0x0 size=0x40000000
+  header info: lock: 0
+  : subtree...
+  mapping tree: { sigma0 va=0x3000000 size=0x400000
+    header info: lock: 0
+    : subtree...
+    mapping tree: { sigma0 va=0x3000000 size=0x200000
+      header info: lock: 0
+      : subtree...
+      mapping tree: { sigma0 va=0x31ff000 size=0x1000
+        header info: lock: 1
+        :   va=0x82000 space=client depth=1
+      } // mapping tree: sigma0 va=0x31ff000
+    } // mapping tree: sigma0 va=0x3000000
+    mapping tree: { sigma0 va=0x3200000 size=0x200000
+      header info: lock: 0
+      : subtree...
+      mapping tree: { sigma0 va=0x3201000 size=0x1000
+        header info: lock: 1
+        :   va=0x84000 space=client depth=1
+      } // mapping tree: sigma0 va=0x3201000
+    } // mapping tree: sigma0 va=0x3200000
+  } // mapping tree: sigma0 va=0x3000000
+} // mapping tree: sigma0 va=0x0
+=== DONE TEST ===

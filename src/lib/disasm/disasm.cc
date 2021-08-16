@@ -145,6 +145,10 @@ disasm_bytes(char *buffer, unsigned len, Jdb_address addr,
                               CS_MODE_BIG_ENDIAN
 # endif
                              ), &handle);
+#elif defined(CONFIG_RISCV) && defined(CONFIG_BIT32)
+      ret = cs_open(CS_ARCH_RISCV, (cs_mode)(CS_MODE_RISCV32|CS_MODE_LITTLE_ENDIAN), &handle);
+#elif defined(CONFIG_RISCV) && defined(CONFIG_BIT64)
+      ret = cs_open(CS_ARCH_RISCV, (cs_mode)(CS_MODE_RISCV64|CS_MODE_LITTLE_ENDIAN), &handle);
 #endif
       if (ret != CS_ERR_OK)
         handle = (csh)0;

@@ -1,0 +1,600 @@
+INTERFACE [riscv]:
+
+EXTENSION class Thread
+{
+public:
+  static int
+  thread_handle_trap(Mword cause, Mword val,
+                     Return_frame *ret_frame) asm ("thread_handle_trap");
+
+  static int thread_handle_slow_trap(Trap_state *ts)
+    asm ("thread_handle_slow_trap");
+};
+
+typedef void (*Handler)(Mword cause, Mword epc, Mword val);
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [riscv]:
+
+#include "cpu.h"
+#include "pic.h"
+#include "sbi.h"
+#include "trap_state.h"
+#include "types.h"
+
+#include "warn.h"
+#include <cassert>
+
+IMPLEMENT inline NEEDS[Thread::exception_triggered]
+Mword
+Thread::user_ip() const
+{ return regs()->ip(); }
+
+IMPLEMENT inline NEEDS[Thread::exception_triggered]
+void
+Thread::user_ip(Mword ip)
+{ regs()->ip(ip); }
+
+IMPLEMENT inline
+Mword
+Thread::user_sp() const
+{ return regs()->sp(); }
+
+IMPLEMENT inline
+void
+Thread::user_sp(Mword sp)
+{ return regs()->sp(sp); }
+
+IMPLEMENT inline
+Mword
+Thread::user_flags() const
+{ return 0; }
+
+IMPLEMENT
+Thread::Thread(Ram_quota *q)
+: Sender(0),
+  _pager(Thread_ptr::Invalid),
+  _exc_handler(Thread_ptr::Invalid),
+  _quota(q),
+  _del_observer(0)
+{
+  assert (state(false) == 0);
+
+  inc_ref();
+  _space.space(Kernel_task::kernel_task());
+
+  if (Config::Stack_depth)
+    std::memset(reinterpret_cast<char *>(this) + sizeof(Thread), '5',
+                Thread::Size - sizeof(Thread) - 64);
+
+  // set a magic value -- we use it later to verify the stack hasn't
+  // been overrun
+  _magic = magic;
+  _recover_jmpbuf = 0;
+  _timeout = 0;
+
+  prepare_switch_to(&user_invoke);
+
+  // clear out user regs that can be returned from the thread_ex_regs
+  // system call to prevent covert channel
+  Entry_frame *r = regs();
+  memset(r, 0, sizeof(*r));
+  // not really necessary, as return_from_user_invoke ignores the status field
+  r->status = 0;
+  r->user_mode(true);
+
+  alloc_eager_fpu_state();
+
+  state_add_dirty(Thread_dead, false);
+
+  // ok, we're ready to go!
+}
+
+PUBLIC inline NEEDS[Thread::riscv_fast_exit]
+void FIASCO_NORETURN
+Thread::fast_return_to_user(Mword ip, Mword sp, void *arg)
+{
+  Entry_frame *r = regs();
+  assert(r->user_mode());
+
+  r->ip(ip);
+  r->sp(sp);
+
+  assert(!(_state & Thread_vcpu_user));
+  // On RISC-V, in addition to ip and sp, also the gp and tp registers
+  // are required for a minimal execution environment.
+  vcpu_restore_host_regs(r);
+
+  // XXX Is it a problem that the contents of kernel registers are leaked?
+
+  extern char fast_sret[];
+  riscv_fast_exit(nonull_static_cast<Return_frame*>(r), fast_sret, arg);
+  panic("__builtin_trap()");
+}
+
+IMPLEMENT
+void
+Thread::user_invoke()
+{
+  user_invoke_generic();
+  assert (current()->state() & Thread_ready);
+
+  auto *ct = current_thread();
+  auto *regs = ct->regs();
+  Trap_state *ts = nonull_static_cast<Trap_state*>
+    (nonull_static_cast<Return_frame*>(regs));
+
+  if (ct->space()->is_sigma0())
+    ts->arg0(Kmem::kdir->virt_to_phys(reinterpret_cast<Address>(Kip::k())));
+
+  Proc::cli();
+  extern char return_from_user_invoke[];
+  riscv_fast_exit(ts, return_from_user_invoke, ts);
+  panic("should never be reached");
+}
+
+IMPLEMENT inline NEEDS["space.h", "types.h", "config.h"]
+bool
+Thread::handle_sigma0_page_fault(Address pfa)
+{
+  return mem_space()
+    ->v_insert(Mem_space::Phys_addr((pfa & Config::SUPERPAGE_MASK)),
+               Virt_addr(pfa & Config::SUPERPAGE_MASK),
+               Virt_order(Config::SUPERPAGE_SHIFT) /*mem_space()->largest_page_size()*/,
+               Mem_space::Attr(L4_fpage::Rights::URWX()))
+    != Mem_space::Insert_err_nomem;
+}
+
+IMPLEMENT inline
+bool
+Thread::pagein_tcb_request(Return_frame *)
+{
+  return false;
+}
+
+PRIVATE static
+void
+Thread::print_page_fault_error(Mword e)
+{
+  printf("%s%s (%lx), %s(%c)",
+         PF::is_instruction_error(e)
+           ? "inst" : (PF::is_read_error(e) ? "load" : "store"),
+         PF::is_translation_error(e) ? "" : " access", e,
+         PF::is_usermode_error(e) ? "user" : "kernel",
+         PF::is_read_error(e) ? 'r' : 'w');
+}
+
+PROTECTED inline
+int
+Thread::do_trigger_exception(Entry_frame *r, void *ret_handler)
+{
+  if (!_exc_cont.valid(r))
+    {
+      _exc_cont.activate(r, ret_handler);
+      return 1;
+    }
+  return 0;
+}
+
+PROTECTED inline
+int
+Thread::sys_control_arch(Utcb const *, Utcb *)
+{
+  return 0;
+}
+
+PROTECTED inline
+L4_msg_tag
+Thread::invoke_arch(L4_msg_tag, Utcb *, Utcb *)
+{
+  return commit_result(-L4_err::ENosys);
+}
+
+PRIVATE static inline
+void
+Thread::save_fpu_state_to_utcb(Trap_state *, Utcb *)
+{}
+
+PRIVATE static inline
+bool FIASCO_WARN_RESULT
+Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
+                        L4_fpage::Rights rights)
+{
+  // only a complete state will be used.
+  if (EXPECT_FALSE(tag.words() < (sizeof(Trex) / sizeof(Mword))))
+    return true;
+
+  Trap_state *ts = reinterpret_cast<Trap_state*>(rcv->_utcb_handler);
+  Utcb *snd_utcb = snd->utcb().access();
+
+  Trex const *r = reinterpret_cast<Trex const *>(snd_utcb->values);
+  ts->copy_and_sanitize(&r->s);
+
+  if (tag.transfer_fpu() && (rights & L4_fpage::Rights::CS()))
+    snd->transfer_fpu(rcv);
+
+  bool ret = transfer_msg_items(tag, snd, snd_utcb,
+                                rcv, rcv->utcb().access(), rights);
+
+  return ret;
+}
+
+PRIVATE static inline
+bool FIASCO_WARN_RESULT
+Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
+                        L4_fpage::Rights rights)
+{
+  Trap_state *ts = reinterpret_cast<Trap_state*>(snd->_utcb_handler);
+  {
+    auto guard = lock_guard(cpu_lock);
+    Utcb *rcv_utcb = rcv->utcb().access();
+    Trex *r = reinterpret_cast<Trex *>(rcv_utcb->values);
+    r->s = *ts;
+
+    if (rcv_utcb->inherit_fpu() && (rights & L4_fpage::Rights::CS()))
+      snd->transfer_fpu(rcv);
+  }
+
+  return true;
+}
+
+PUBLIC static inline
+void
+Thread::riscv_fast_exit(void *sp, void *pc, void *arg)
+{
+  register void *a0 asm("a0") = arg;
+  __asm__ __volatile__ (
+    "  mv   sp, %[stack] \n"
+    "  jr   %[rfe]       \n"
+    : :
+    [stack]   "r" (sp),
+    [rfe]     "r" (pc),
+              "r" (a0));
+}
+
+extern "C" void leave_by_vcpu_upcall(Trap_state *ts)
+{
+  Thread *c = current_thread();
+  Vcpu_state *vcpu = c->vcpu_state().access();
+  Mem::memcpy_mwords(vcpu->_regs.s.regs, ts->regs,
+                     sizeof(ts->regs) / sizeof(ts->regs[0]));
+  vcpu->_regs.s._pc = ts->_pc;
+  vcpu->_regs.s.status = ts->status;
+
+  c->fast_return_to_user(vcpu->_entry_ip, vcpu->_entry_sp,
+                         c->vcpu_state().usr().get());
+}
+
+IMPLEMENT
+int
+Thread::thread_handle_trap(Mword cause, Mword val, Return_frame *ret_frame)
+{
+  int result = 0;
+  switch (cause)
+    {
+    // Supervisor timer interrupt
+    case Cpu::Int_supervisor_timer:
+      result = thread_handle_timer_interrupt();
+      break;
+
+    case Cpu::Int_supervisor_software:
+      result = current_thread()->handle_software_interrupt();
+      break;
+
+    case Cpu::Int_supervisor_external:
+      result = current_thread()->handle_external_interrupt();
+      break;
+
+    // Page fault
+    case Cpu::Exc_inst_page_fault:
+    case Cpu::Exc_load_page_fault:
+    case Cpu::Exc_store_page_fault:
+      result = thread_handle_page_fault(cause, val, ret_frame);
+      Proc::cli();
+      if (!result)
+        {
+          result = current_thread()->handle_slow_trap(
+            static_cast<Trap_state *>(ret_frame));
+        }
+      break;
+
+    // Environment call
+    case Cpu::Exc_ecall:
+      result = current_thread()->handle_ecall(ret_frame);
+      break;
+
+    // Illegal instruction
+    case Cpu::Exc_illegal_inst:
+      result = current_thread()->handle_fpu_trap(ret_frame);
+      break;
+
+    // Breakpoint
+    case Cpu::Exc_breakpoint:
+      result = current_thread()->handle_breakpoint(ret_frame);
+      break;
+
+    // PMA/PMP check failed
+    case Cpu::Exc_inst_access:
+    case Cpu::Exc_load_acesss:
+    case Cpu::Exc_store_acesss:
+
+    default:
+      WARN("Unhandled Trap: Cause=" L4_MWORD_FMT ", Epc=" L4_MWORD_FMT ", Val=" L4_MWORD_FMT "\n",
+           cause, ret_frame->ip(), val);
+      result = current_thread()->handle_slow_trap(
+            static_cast<Trap_state *>(ret_frame));
+    }
+
+    if (!result)
+      WARN("Trap handling failed: Cause=" L4_MWORD_FMT ", Epc=" L4_MWORD_FMT ", Val=" L4_MWORD_FMT "\n",
+           cause, ret_frame->ip(), val);
+
+    return result;
+}
+
+PROTECTED static inline
+int
+Thread::thread_handle_timer_interrupt()
+{
+  Timer::handle_interrupt();
+  current_thread()->handle_timer_interrupt();
+
+  return 1;
+}
+
+PROTECTED inline
+int
+Thread::handle_software_interrupt()
+{
+  return handle_ipi();
+}
+
+PROTECTED inline NEEDS["pic.h"]
+int
+Thread::handle_external_interrupt()
+{
+  Pic::handle_interrupt();
+  return 1;
+}
+
+PROTECTED static inline
+int
+Thread::thread_handle_page_fault(Mword cause, Mword pfa,
+                                 Return_frame *ret_frame)
+{
+  Thread *t = current_thread();
+
+  // RISC-V does not indicate whether a page fault was caused
+  // by a missing mapping or by insufficient permissions.
+  Mword error_code = 0;
+
+  if (ret_frame->user_mode())
+    error_code |= PF::Err_usermode;
+
+  switch (cause)
+    {
+    case Cpu::Exc_inst_page_fault:
+      error_code |= PF::Err_inst;
+      break;
+
+    case Cpu::Exc_load_page_fault:
+      error_code |= PF::Err_load;
+      break;
+
+    case Cpu::Exc_store_page_fault:
+      error_code |= PF::Err_store;
+      break;
+    }
+
+  // Pagefault in user mode
+  if (EXPECT_TRUE(PF::is_usermode_error(error_code))
+      && t->vcpu_pagefault(pfa, cause, ret_frame->ip()))
+    return 1;
+
+  // Enable interrupts, except for kernel page faults in TCB area.
+  if (EXPECT_TRUE(PF::is_usermode_error(error_code))
+      || ret_frame->interrupts_enabled()
+      || !Kmem::is_kmem_page_fault(pfa, error_code))
+    Proc::sti();
+
+  return t->handle_page_fault(pfa, error_code, ret_frame->ip(), ret_frame);
+}
+
+IMPLEMENT
+int
+Thread::thread_handle_slow_trap(Trap_state *ts)
+{
+  Thread *ct = current_thread();
+  return ct->handle_slow_trap(ts);
+}
+
+PROTECTED inline
+int
+Thread::handle_slow_trap(Trap_state *ts)
+{
+  LOG_TRAP;
+
+  if (!ts->user_mode())
+    return !Thread::call_nested_trap_handler(ts);
+
+  // send exception IPC if requested
+  if (send_exception(ts))
+    return 1;
+
+  kill();
+  return 0;
+}
+
+PROTECTED inline
+int
+Thread::handle_ecall(Return_frame *ret_frame)
+{
+  Mword state = this->state();
+  state_del(Thread_cancel);
+
+  if (state & (Thread_vcpu_user | Thread_alien))
+    {
+      if (state & Thread_dis_alien)
+        {
+          state_del_dirty(Thread_dis_alien);
+          handle_syscall(ret_frame);
+          ret_frame->cause = Return_frame::Ec_l4_alien_after_syscall;
+        }
+
+      return handle_slow_trap(static_cast<Trap_state *>(ret_frame));
+    }
+
+  handle_syscall(ret_frame);
+  return 1;
+}
+
+PROTECTED inline
+void
+Thread::handle_syscall(Return_frame *ret_frame)
+{
+  // Advance ip to continue execution after ecall instruction
+  ret_frame->ip(ret_frame->ip() + 4);
+
+  do_syscall();
+}
+
+PROTECTED inline
+int
+Thread::handle_breakpoint(Return_frame *ret_frame)
+{
+  if (ret_frame->user_mode())
+    return handle_slow_trap(static_cast<Trap_state *>(ret_frame));
+
+  // Breakpoint in kernel
+  call_nested_trap_handler(static_cast<Trap_state *>(ret_frame));
+  // Advance ip to continue execution after ebreak instruction.
+  ret_frame->ip(ret_frame->ip() + Cpu::inst_size(ret_frame->ip()));
+
+  return 1;
+}
+
+IMPLEMENT_OVERRIDE inline
+void
+Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool)
+{
+  vcpu_state->version = Vcpu_arch_version;
+  vcpu_state->host.saved = false;
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [riscv && fpu]:
+
+PROTECTED inline
+int
+Thread::handle_fpu_trap(Return_frame *ret_frame)
+{
+  // FPU is enabled, so it can't be an FPU trap.
+  if (Fpu::is_enabled())
+    return handle_slow_trap(static_cast<Trap_state *>(ret_frame));
+
+  // Assume that the illegal instruction exception was caused
+  // by a floating point instruction in combination with a disabled FPU.
+  // In the case where the exception was actually caused by an illegal
+  // instruction, another illegal instruction exception will be thrown
+  // when returning from the trap handler. This time the FPU is enabled,
+  // therefore we know the cause can't be an FPU trap (see above).
+  if (!ret_frame->user_mode())
+    panic("FPU trap or illegal instruction exception from inside the kernel!");
+
+  if (!switchin_fpu())
+    return handle_slow_trap(static_cast<Trap_state *>(ret_frame));
+
+  return 1;
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [riscv && !fpu]:
+
+PROTECTED inline
+int
+Thread::handle_fpu_trap(Return_frame *ret_frame)
+{
+  return handle_slow_trap(static_cast<Trap_state *>(ret_frame));
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [riscv && mp]:
+
+#include "ipi.h"
+
+PROTECTED inline
+int
+Thread::handle_ipi()
+{
+  // Clear pending IPI
+  Cpu::clear_software_interrupt();
+
+  auto ipis = Ipi::pending_ipis_reset(current_cpu());
+  if (ipis & Ipi::Request)
+    Thread::handle_remote_requests_irq();
+
+  if (ipis & Ipi::Global_request)
+    Thread::handle_global_remote_requests_irq();
+
+  if (ipis & Ipi::Debug)
+    {
+      Ipi::eoi(Ipi::Debug, current_cpu());
+      // Fake trap-state for the nested trap handler and set cause to debug ipi.
+      Trap_state ts;
+      ts.cause = Trap_state::Ec_l4_debug_ipi;
+      Thread::call_nested_trap_handler(&ts);
+    }
+
+  return 1;
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [riscv && !mp]:
+
+PROTECTED inline int Thread::handle_ipi() { return 0; }
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [riscv && !debug]:
+
+extern "C" void sys_ipc_wrapper();
+
+PROTECTED static
+void
+Thread::do_syscall()
+{
+  sys_ipc_wrapper();
+}
+
+//----------------------------------------------------------------------------
+INTERFACE [riscv && debug]:
+
+EXTENSION class Thread
+{
+public:
+  typedef void (*Sys_call)(void);
+
+protected:
+  static Sys_call sys_call_entry;
+};
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [riscv && debug]:
+
+#include "vkey.h"
+
+extern "C" void sys_ipc_wrapper();
+Thread::Sys_call Thread::sys_call_entry = sys_ipc_wrapper;
+
+PUBLIC static inline
+void
+Thread::set_sys_call_entry(Sys_call e)
+{
+  sys_call_entry = e;
+}
+
+PROTECTED static
+void
+Thread::do_syscall()
+{
+  sys_call_entry();
+}

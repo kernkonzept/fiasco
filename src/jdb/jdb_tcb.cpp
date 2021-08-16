@@ -154,6 +154,7 @@ class Jdb_tcb : public Jdb_module, public Jdb_kobject_handler
   static char    auto_tcb;
 
 private:
+  static unsigned stack_y();
   static void print_return_frame_regs(Jdb_tcb_ptr const &current, Mword ksp);
   static void print_entry_frame_regs(Thread *t);
   static void info_thread_state(Thread *t);
@@ -212,6 +213,13 @@ Jdb_stack_view::init(Address ksp, Jdb_entry_frame *_ef, bool _is_current)
   addy = 0;
   ef = _ef;
   is_current = _is_current;
+}
+
+PUBLIC inline
+void
+Jdb_stack_view::set_y(unsigned y)
+{
+  start_y = y;
 }
 
 PUBLIC
@@ -487,6 +495,13 @@ Jdb_tcb::Jdb_tcb()
   Jdb_kobject::module()->register_handler(this);
 }
 
+IMPLEMENT_DEFAULT
+unsigned
+Jdb_tcb::stack_y()
+{
+  return Stack_y;
+}
+
 static void
 Jdb_tcb::at_jdb_enter()
 {
@@ -586,6 +601,7 @@ Jdb_tcb::show(Thread *t, int level, bool dump_only)
   Address tcb  = (Address)context_of((void*)ksp);
 #endif
   _stack_view.init(ksp, ef, is_current_thread);
+  _stack_view.set_y(stack_y());
 
 whole_screen:
 

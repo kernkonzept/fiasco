@@ -148,3 +148,117 @@ unsigned long long __udivmoddi4(unsigned long long div, unsigned long long s,
     *r = md.mod;
   return md.div;
 }
+
+union llval_t
+{
+  struct {
+#ifdef CONFIG_BIG_ENDIAN
+    int high;
+    unsigned low;
+#else
+    unsigned low;
+    int high;
+#endif
+  };
+  long long ll;
+};
+
+long long __ashldi3(long long, int);
+long long __ashrdi3(long long, int);
+
+/**
+ * 64-bit left shift for 32-bit machines.
+ *
+ * \param[in] val   Value
+ * \param[in] bits  Bits to shift
+ *
+ * \pre 0 <= bits <= 63
+ * \return val << bits
+ */
+long long __ashldi3(long long val, int bits)
+{
+  union llval_t v;
+  v.ll = val;
+
+  if (bits >= 32)
+    {
+      v.high = v.low << (bits - 32);
+      v.low = 0;
+    }
+  else if (bits != 0)
+    {
+      v.high = (v.high << bits) | (v.low >> (32 - bits));
+      v.low = v.low << bits;
+    }
+
+  return v.ll;
+}
+
+/**
+ * 64-bit right shift for 32-bit machines.
+ *
+ * \param[in] val   Value
+ * \param[in] bits  Bits to shift
+ *
+ * \pre 0 <= bits <= 63
+ * \return val >> bits
+ */
+long long __ashrdi3(long long val, int bits)
+{
+  union llval_t v;
+  v.ll = val;
+
+  if (bits >= 32)
+    {
+      v.low = v.high >> (bits - 32);
+      v.high = v.high >> 31; // fill v.high with leftmost bit
+    }
+  else if (bits != 0)
+    {
+      v.low = (v.high << (32 - bits)) | (v.low >> bits);
+      v.high = v.high >> bits;
+    }
+
+  return v.ll;
+}
+
+int __ffssi2(int val);
+int __ffsdi2(long long val);
+
+/**
+ * Return the index of the least significant 1-bit in val,
+ * or zero if val is zero. The least significant bit is index one.
+ *
+ * \param[in] val  Value
+ *
+ * \return Index of least significant 1-bit in val
+ */
+int __ffssi2(int val)
+{
+  for (unsigned i = 1; i <= 32; i++, val >>= 1)
+    {
+      if (val & 1)
+        return i;
+    }
+
+  return 0;
+}
+
+/**
+ * Return the index of the least significant 1-bit in val,
+ * or zero if val is zero. The least significant bit is index one.
+ *
+ * \param[in] val  Value
+ *
+ * \return Index of least significant 1-bit in val
+ */
+int __ffsdi2(long long val)
+{
+  for (unsigned i = 1; i <= 64; i++, val >>= 1)
+    {
+      if (val & 1)
+        return i;
+    }
+
+  return 0;
+}

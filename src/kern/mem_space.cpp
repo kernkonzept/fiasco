@@ -307,7 +307,7 @@ public:
    * entry of the memory space is accessed on the current CPU, thus potentially
    * cached in the TLB.
    */
-  static void sync_write_tlb_active_on_cpu();
+  void sync_write_tlb_active_on_cpu();
 
   /**
    * Ensure that all changes to page tables made on the current CPU are visible
@@ -325,7 +325,7 @@ protected:
     if (!_tlb_active_on_cpu.atomic_get_and_set_if_unset(current_cpu()))
       // If the memory space was not already marked as active, we have to
       // execute a synchronization operation.
-      Mem_space::sync_write_tlb_active_on_cpu();
+      sync_write_tlb_active_on_cpu();
   }
 
   /**

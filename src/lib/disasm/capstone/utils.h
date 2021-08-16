@@ -36,6 +36,10 @@ typedef struct insn_map {
 	uint16_t regs_use[3]; // list of implicit registers used by this instruction
 	uint16_t regs_mod[6]; // list of implicit registers modified by this instruction
 	unsigned char groups[8]; // list of group this instruction belong to
+# elif defined(CAPSTONE_HAS_RISCV) // Fiasco: optimize space!
+	uint16_t regs_use[2]; // list of implicit registers used by this instruction
+	uint16_t regs_mod[2]; // list of implicit registers modified by this instruction
+	unsigned char groups[4]; // list of group this instruction belong to
 # else
 #  warning optimize insn_map.reg_use/mod/groups
 	uint16_t regs_use[12]; // list of implicit registers used by this instruction

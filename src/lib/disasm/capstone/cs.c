@@ -64,6 +64,7 @@
 //#include "arch/TMS320C64x/TMS320C64xModule.h"
 #include "arch/X86/X86Module.h"
 //#include "arch/XCore/XCoreModule.h"
+#include "arch/RISCV/RISCVModule.h"
 
 // constructor initialization for all archs
 static cs_err (*cs_arch_init[MAX_ARCH])(cs_struct *) = {
@@ -124,6 +125,11 @@ static cs_err (*cs_arch_init[MAX_ARCH])(cs_struct *) = {
 #endif
 #ifdef CAPSTONE_HAS_EVM
 	EVM_global_init,
+#else
+	NULL,
+#endif
+#ifdef CAPSTONE_HAS_RISCV
+	RISCV_global_init,
 #else
 	NULL,
 #endif
@@ -188,6 +194,11 @@ static cs_err (*cs_arch_option[MAX_ARCH]) (cs_struct *, cs_opt_type, size_t valu
 #endif
 #ifdef CAPSTONE_HAS_EVM
 	EVM_option,
+#else
+	NULL,
+#endif
+#ifdef CAPSTONE_HAS_RISCV
+	RISCV_option,
 #else
 	NULL,
 #endif
@@ -263,6 +274,11 @@ static cs_mode cs_arch_disallowed_mode_mask[MAX_ARCH] = {
 #else
 	0,
 #endif
+#ifdef CAPSTONE_HAS_RISCV
+	~(CS_MODE_RISCV32 | CS_MODE_RISCV64 | CS_MODE_RISCVC),
+#else
+	0,
+#endif
 };
 
 // bitmask of enabled architectures
@@ -302,6 +318,12 @@ static uint32_t all_arch = 0
 #endif
 #ifdef CAPSTONE_HAS_EVM
 	| (1 << CS_ARCH_EVM)
+#endif
+  |
+#ifdef CAPSTONE_HAS_RISCV
+	(1 << CS_ARCH_RISCV)
+#else
+	0
 #endif
 ;
 
@@ -373,7 +395,8 @@ bool CAPSTONE_API cs_support(int query)
 				(1 << CS_ARCH_PPC) | (1 << CS_ARCH_SPARC) |
 				(1 << CS_ARCH_SYSZ) | (1 << CS_ARCH_XCORE) |
 				(1 << CS_ARCH_M68K) | (1 << CS_ARCH_TMS320C64X) |
-				(1 << CS_ARCH_M680X) | (1 << CS_ARCH_EVM));
+				(1 << CS_ARCH_M680X) | (1 << CS_ARCH_EVM) |
+				(1 << CS_ARCH_RISCV));
 
 	if ((unsigned int)query < CS_ARCH_MAX)
 		return all_arch & (1 << query);
@@ -641,6 +664,11 @@ static uint8_t skipdata_size(cs_struct *handle)
 		case CS_ARCH_EVM:
 			// EVM alignment is 1.
 			return 1;
+		case CS_ARCH_RISCV:
+			// special compress mode
+			if (handle->mode & CS_MODE_RISCVC)
+				return 2;
+			return 4;
 	}
 }
 
@@ -1384,6 +1412,11 @@ int CAPSTONE_API cs_op_count(csh ud, const cs_insn *insn, unsigned int op_type)
 #endif
 			break;
 #endif
+		case CS_ARCH_RISCV:
+			for (i = 0; i < insn->detail->riscv.op_count; i++)
+				if (insn->detail->riscv.operands[i].type == (riscv_op_type)op_type)
+					count++;
+			break;
 	}
 
 	return count;
@@ -1541,6 +1574,16 @@ int CAPSTONE_API cs_op_index(csh ud, const cs_insn *insn, unsigned int op_type,
 					return i;
 			}
 #endif
+			break;
+#endif
+#ifdef CAPSTONE_HAS_RISCV
+		case CS_ARCH_RISCV:
+			for (i = 0; i < insn->detail->riscv.op_count; i++) {
+				if (insn->detail->riscv.operands[i].type == (riscv_op_type)op_type)
+					count++;
+				if (count == post)
+					return i;
+			}
 			break;
 #endif
 	}
