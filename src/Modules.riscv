@@ -83,6 +83,7 @@ INTERFACES_KERNEL += __main boot_uart_init csr irq_chip_generic
 INTERFACES_KERNEL += bootstrap boot_infos
 
 INTERFACES_KERNEL-$(CONFIG_SERIAL)     += uart_console
+INTERFACES_KERNEL-$(CONFIG_CPU_VIRT)   += hyp_ext_state
 
 INTERFACES_KERNEL += $(INTERFACES_KERNEL-y)
 
@@ -91,7 +92,7 @@ clock_IMPL              := clock
 config_IMPL             := config config-riscv
 context_IMPL            := context context-riscv context-vcpu
 continuation_IMPL       := continuation-riscv
-cpu_IMPL                := cpu cpu-riscv
+cpu_IMPL                := cpu cpu-riscv cpu-riscv-hyp
 cpu_lock_IMPL           := cpu_lock cpu_lock-generic
 entry_frame_IMPL        := entry_frame-riscv
 fpu_IMPL                := fpu fpu-riscv

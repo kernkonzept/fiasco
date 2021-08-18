@@ -141,13 +141,48 @@ public:
 };
 
 //---------------------------------------------------------------------------
+INTERFACE [riscv && !cpu_virt]:
+
+EXTENSION class Return_frame
+{
+public:
+  Mword _reserved; // hstatus if virtualization is enabled.
+};
+
+//---------------------------------------------------------------------------
+INTERFACE [riscv && cpu_virt]:
+
+EXTENSION class Return_frame
+{
+public:
+  Mword hstatus;
+
+  bool virt_mode() const
+  { return hstatus & Cpu::Hstatus_spv; }
+
+  void virt_mode(bool enable)
+  {
+    if (enable)
+      hstatus |= Cpu::Hstatus_spv;
+    else
+      hstatus &= ~Cpu::Hstatus_spv;
+  }
+
+  /// Control usage of hypervisor load/store instructions
+  void allow_vmm_hyp_load_store(bool allow)
+  {
+    if (allow)
+      hstatus |= Cpu::Hstatus_hu;
+    else
+      hstatus &= ~Cpu::Hstatus_hu;
+  }
+};
+
+//---------------------------------------------------------------------------
 IMPLEMENTATION [riscv]:
 
 #include "cpu.h"
 #include "mem.h"
-
-static_assert(sizeof(Entry_frame) == Cpu::stack_align(sizeof(Entry_frame)),
-              "Size of entry frame is not a multiple of stack alignment.");
 
 PUBLIC inline NEEDS["mem.h"]
 void
@@ -156,9 +191,12 @@ Entry_frame::copy_and_sanitize(Entry_frame const *src)
   // Omit eret_work, cause, tval
   Mem::memcpy_mwords(&regs[0], &src->regs[0], sizeof(regs) / sizeof(regs[0]));
   _pc = src->_pc;
+
   // Sanitize status register.
   status = access_once(&src->status) & Cpu::Sstatus_user_mask;
   status |= Cpu::Sstatus_user_default;
+
+  copy_and_sanitize_hstatus(src);
 }
 
 IMPLEMENT
@@ -189,4 +227,33 @@ Entry_frame::dump(bool extended) const
         a0, a1, a2, a3, a4, a5, a6, a7, t0, t1, t2, t3, t4, t5, t6,
         s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11);
     }
+}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [riscv && !cpu_virt]:
+
+PUBLIC inline void Entry_frame::init_hstatus() {}
+PUBLIC inline void Entry_frame::copy_hstatus(Return_frame const *) {}
+PUBLIC inline void Entry_frame::copy_and_sanitize_hstatus(Entry_frame const *) {}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [riscv && cpu_virt]:
+
+PUBLIC inline
+void
+Entry_frame::init_hstatus()
+{ hstatus = Cpu::Hstatus_user_default; }
+
+PUBLIC inline
+void
+Entry_frame::copy_hstatus(Return_frame const *src)
+{ hstatus = src->hstatus; }
+
+PUBLIC inline
+void
+Entry_frame::copy_and_sanitize_hstatus(Entry_frame const *src)
+{
+  // Sanitize hstatus register.
+  hstatus = access_once(&src->hstatus) & Cpu::Hstatus_user_mask;
+  hstatus |= Cpu::Hstatus_user_default;
 }

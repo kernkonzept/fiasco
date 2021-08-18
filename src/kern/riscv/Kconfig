@@ -72,6 +72,14 @@ config RISCV_ISA_C
 config RISCV_ASID
 	bool
 
+config CAN_RISCV_VMID
+  bool
+
+config RISCV_VMID
+  depends on CPU_VIRT && CAN_RISCV_VMID
+  bool
+  default y
+
 config EMULATE_PERIODIC_TIMER
 	bool "Emulate periodic timer"
 	default y

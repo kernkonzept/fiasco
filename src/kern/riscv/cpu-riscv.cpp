@@ -147,6 +147,8 @@ public:
   };
 
 private:
+  void init_hypervisor_ext();
+
   static Cpu *_boot_cpu;
 
   Proc::Hart_context _hart_context;
@@ -285,6 +287,7 @@ Cpu::init(bool is_boot_cpu)
   Proc::hart_context(&_hart_context);
 
   init_trap_handler();
+  init_hypervisor_ext();
 }
 
 PUBLIC static inline
@@ -330,6 +333,14 @@ Cpu::init_trap_handler()
   // Enable Supervisor Software Interrupts (IPI) and External Interrupts (PLIC)
   csr_set(sie, Sie_ssie | Sie_seie);
 }
+
+IMPLEMENT_DEFAULT inline
+void
+Cpu::init_hypervisor_ext()
+{}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [riscv]:
 
 PUBLIC static inline
 void

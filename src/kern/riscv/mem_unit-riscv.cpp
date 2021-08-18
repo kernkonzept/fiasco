@@ -44,6 +44,32 @@ public:
 };
 
 //----------------------------------------------------------------------------
+INTERFACE [riscv && riscv_vmid]:
+
+EXTENSION class Mem_unit
+{
+public:
+  enum : Mword
+  {
+    Vmid_disabled = 0UL,
+    Vmid_invalid  = ~0UL,
+  };
+
+  enum { Have_vmids = 1 };
+
+  static Mword _vmid_num;
+};
+
+//----------------------------------------------------------------------------
+INTERFACE [riscv && !riscv_vmid]:
+
+EXTENSION class Mem_unit
+{
+public:
+  enum { Have_vmids = 0 };
+};
+
+//----------------------------------------------------------------------------
 IMPLEMENTATION [riscv]:
 
 unsigned Mem_unit::_asid_num = 0;
@@ -162,4 +188,168 @@ void
 Mem_unit::init_asids()
 {
   _asid_num = 0;
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [riscv && riscv_vmid]:
+
+#include "cpu.h"
+#include "panic.h"
+
+Mword Mem_unit::_vmid_num = 0;
+
+PUBLIC static inline
+unsigned
+Mem_unit::vmid_num()
+{
+  return _vmid_num;
+}
+
+PUBLIC static
+void
+Mem_unit::init_vmids()
+{
+  Mword prev_vmid = Cpu::get_vmid();
+
+  // Write one to every VMID bit, then read back the value. The number of
+  // implemented VMID bits corresponds to the bits that are still one.
+  Cpu::set_vmid((1 << Cpu::Hgatp_vmid_bits) - 1);
+  Mword max_vmid = Cpu::get_vmid();
+
+  // Restore previous VMID bits
+  if (prev_vmid != max_vmid)
+    {
+      Cpu::set_vmid(prev_vmid);
+      hfence_gvma_vmid(max_vmid);
+    }
+
+  _vmid_num = max_vmid ? max_vmid + 1 : 0;
+  printf("Cpu implements %lu VMIDs.\n", _vmid_num);
+
+  if (_vmid_num < Config::Max_num_cpus)
+    panic("Cpu does not provide enough VMIDs.");
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [riscv && !riscv_vmid]:
+
+PUBLIC static inline
+void
+Mem_unit::init_vmids()
+{
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [riscv && cpu_virt]:
+
+PUBLIC static inline
+void
+Mem_unit::hfence_gvma()
+{
+  /*
+   * rs1 = zero
+   * rs2 = zero
+   * HFENCE.GVMA
+   * 0110001 00000 00000 000 00000 1110011
+   */
+  __asm__ __volatile__ (".word 0x62000073" : : : "memory" );
+}
+
+PUBLIC static inline
+void
+Mem_unit::hfence_gvma_gpa(Address guest_addr)
+{
+  register Mword a0 __asm__("a0") = guest_addr;
+  /*
+   * rs1 = a0 (GPA)
+   * rs2 = zero
+   * HFENCE.GVMA zero, a0
+   * 0110001 00000 01010 000 00000 1110011
+   */
+  __asm__ __volatile__ (".word 0x62050073" : : "r"(a0) : "memory");
+}
+
+PUBLIC static inline
+void
+Mem_unit::hfence_gvma_vmid(Mword vmid)
+{
+  register Mword a0 __asm__("a0") = vmid;
+  /*
+   * rs1 = zero
+   * rs2 = a0 (VMID)
+   * HFENCE.GVMA zero, a0
+   * 0110001 01010 00000 000 00000 1110011
+   */
+  __asm__ __volatile__ (".word 0x62a00073" : : "r"(a0) : "memory");
+}
+
+PUBLIC static inline
+void
+Mem_unit::hfence_gvma_gpa_vmid(Mword guest_addr, Mword vmid)
+{
+  register Mword a0 __asm__("a0") = guest_addr;
+  register Mword a1 __asm__("a1") = vmid;
+  /*
+   * rs1 = a0 (GPA)
+   * rs2 = a1 (VMID)
+   * HFENCE.GVMA a0, a1
+   * 0110001 01011 01010 000 00000 1110011
+   */
+  __asm__ __volatile__ (".word 0x62b50073" : : "r"(a0), "r"(a1) : "memory");
+}
+
+PUBLIC static inline
+void
+Mem_unit::hfence_vvma()
+{
+  /*
+   * rs1 = zero
+   * rs2 = zero
+   * HFENCE.VVMA
+   * 0010001 00000 00000 000 00000 1110011
+   */
+  __asm__ __volatile__ (".word 0x22000073" : : : "memory" );
+}
+
+PUBLIC static inline
+void
+Mem_unit::hfence_vvma_va(Address virt_addr)
+{
+  register Mword a0 __asm__("a0") = virt_addr;
+  /*
+   * rs1 = a0 (VA)
+   * rs2 = zero
+   * HFENCE.VVMA zero, a0
+   * 0010001 00000 01010 000 00000 1110011
+   */
+  __asm__ __volatile__ (".word 0x22050073" : : "r"(a0) : "memory");
+}
+
+PUBLIC static inline
+void
+Mem_unit::hfence_vvma_asid(Mword asid)
+{
+  register Mword a0 __asm__("a0") = asid;
+  /*
+   * rs1 = zero
+   * rs2 = a0 (ASID)
+   * HFENCE.VVMA zero, a0
+   * 0010001 01010 00000 000 00000 1110011
+   */
+  __asm__ __volatile__ (".word 0x22a00073" : : "r"(a0) : "memory");
+}
+
+PUBLIC static inline
+void
+Mem_unit::hfence_vvma_va_asid(Mword virt_addr, Mword asid)
+{
+  register Mword a0 __asm__("a0") = virt_addr;
+  register Mword a1 __asm__("a1") = asid;
+  /*
+   * rs1 = a0 (VA)
+   * rs2 = a1 (ASID)
+   * HFENCE.VVMA a0, a1
+   * 0010001 01011 01010 000 00000 1110011
+   */
+  __asm__ __volatile__ (".word 0x22b50073" : : "r"(a0), "r"(a1) : "memory");
 }

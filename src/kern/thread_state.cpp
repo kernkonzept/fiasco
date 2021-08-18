@@ -84,6 +84,7 @@ enum Thread_state
   Thread_ext_vcpu_enabled     = 0x2000000,
 
   // 0x4000000 used by MIPS
+  // 0x4000000 used by RISC-V
 
   Thread_vcpu_state_mask      = Thread_vcpu_enabled | Thread_vcpu_user
                                 | Thread_vcpu_fpu_disabled

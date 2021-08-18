@@ -81,6 +81,7 @@ Thread::Thread(Ram_quota *q)
   memset(r, 0, sizeof(*r));
   // return to user-mode with interrupts enabled.
   r->status = Cpu::Sstatus_user_default;
+  r->init_hstatus();
 
   alloc_eager_fpu_state();
 
@@ -255,6 +256,7 @@ extern "C" void leave_by_vcpu_upcall(Trap_state *ts)
                      sizeof(ts->regs) / sizeof(ts->regs[0]));
   vcpu->_regs.s._pc = ts->_pc;
   vcpu->_regs.s.status = ts->status;
+  vcpu->_regs.s.copy_hstatus(ts);
 
   c->vcpu_return_to_kernel(vcpu->_entry_ip, vcpu->_sp,
                            c->vcpu_state().usr().get());
@@ -267,6 +269,14 @@ Thread::thread_handle_trap(Mword cause, Mword val, Return_frame *ret_frame)
   assert(cpu_lock.test());
 
   Thread *t = current_thread();
+
+  // Handle hypervisor traps
+  if (t->handle_hyp_ext_trap(cause, val, ret_frame))
+    {
+      assert(cpu_lock.test());
+      return 1;
+    }
+
   int result = 0;
   switch (cause)
     {
@@ -411,6 +421,7 @@ Thread::handle_slow_trap(Trap_state *ts)
   if (!ts->user_mode())
     return !Thread::call_nested_trap_handler(ts);
 
+  assert(ts == regs());
   // send exception IPC if requested
   if (send_exception(ts))
     return 1;
@@ -465,14 +476,6 @@ Thread::handle_breakpoint(Return_frame *ret_frame)
   ret_frame->ip(ret_frame->ip() + Cpu::inst_size(ret_frame->ip()));
 
   return 1;
-}
-
-IMPLEMENT_OVERRIDE inline
-void
-Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool)
-{
-  vcpu_state->version = Vcpu_arch_version;
-  vcpu_state->host.saved = false;
 }
 
 //----------------------------------------------------------------------------
@@ -547,6 +550,179 @@ Thread::handle_ipi()
 IMPLEMENTATION [riscv && !mp]:
 
 PROTECTED inline int Thread::handle_ipi() { return 0; }
+
+//----------------------------------------------------------
+IMPLEMENTATION [riscv && !cpu_virt]:
+
+IMPLEMENT_OVERRIDE inline
+void
+Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool)
+{
+  vcpu_state->version = Vcpu_arch_version;
+  vcpu_state->host.saved = false;
+}
+
+PRIVATE inline
+bool
+Thread::handle_hyp_ext_trap(Mword, Mword, Return_frame *)
+{ return false; }
+
+//----------------------------------------------------------
+IMPLEMENTATION [riscv && cpu_virt]:
+
+IMPLEMENT_OVERRIDE inline NEEDS["cpu.h"]
+bool
+Thread::arch_ext_vcpu_enabled()
+{ return Cpu::has_isa_ext(Cpu::Isa_ext_h); }
+
+PRIVATE
+void
+Thread::arch_ext_update_guest_space()
+{
+  if (vcpu_user_space() && nonull_static_cast<Task*>(vcpu_user_space())->is_vm())
+    {
+      state_add_dirty(Thread_ext_vcpu_has_guest_space);
+      regs()->allow_vmm_hyp_load_store(true);
+    }
+  else
+    {
+      state_del_dirty(Thread_ext_vcpu_has_guest_space);
+      regs()->allow_vmm_hyp_load_store(false);
+    }
+
+  // Ensure guest context is activated (so that VMM can use hypervisor
+  // load-store instructions) or if guest context has no space (anymore)
+  // reset guest context.
+  if (this == current())
+    switchin_guest_context();
+}
+
+IMPLEMENT_OVERRIDE inline
+Mword
+Thread::arch_check_vcpu_state(bool ext)
+{
+  if (ext && !check_for_current_cpu())
+    return -L4_err::EInval;
+
+  return 0;
+}
+
+IMPLEMENT_OVERRIDE
+void
+Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
+{
+  vcpu_state->version = Vcpu_arch_version;
+  vcpu_state->host.saved = false;
+
+  if (!ext || (state() & Thread_ext_vcpu_enabled))
+    return;
+
+  Hyp_ext_state *v = vm_state(vcpu_state);
+  v->hlsi_failed = false;
+  v->remote_fence = Hyp_ext_state::Rfnc_none;
+  v->remote_fence_hart_mask = 0;
+  v->remote_fence_start_addr = 0;
+  v->remote_fence_size = 0;
+  v->remote_fence_asid = 0;
+
+  arch_ext_update_guest_space();
+}
+
+IMPLEMENT_OVERRIDE
+void
+Thread::arch_vcpu_set_user_space()
+{
+  assert(this == current());
+  if (state(false) & Thread_ext_vcpu_enabled)
+    arch_ext_update_guest_space();
+}
+
+PRIVATE inline NEEDS["cpu.h", Thread::handle_slow_trap]
+bool
+Thread::handle_hyp_ext_trap(Mword cause, Mword val, Return_frame *ret_frame)
+{
+  // The trap comes from virtualization mode.
+  if (ret_frame->virt_mode())
+    {
+      // For traps from VS-mode the return frame is marked as not coming from
+      // user mode, which is technically correct but confuses Fiasco, because in
+      // several locations Return_frame::user_mode() is used to decide whether
+      // it comes from within Fiasco or not. Therefore, we always mark
+      // virtualization return frames as user mode frames. Whether the guest was
+      // in VS-mode or VU-mode is already represented in hstatus.SPVP.
+      ret_frame->user_mode(true);
+
+      // Assume the illegal instruction exception is a FPU trap caused by lazy
+      // FPU switching(see Thread::handle_fpu_trap)
+      if (cause == Cpu::Exc_illegal_inst && handle_hyp_ext_fpu_trap())
+        return true;
+
+      if (cause & Cpu::Msb)
+        {
+          // Interrupts, not necessarily related to guest execution
+          switch(cause)
+            {
+              case Cpu::Int_virtual_supervisor_software:
+              case Cpu::Int_virtual_supervisor_timer:
+              case Cpu::Int_virtual_supervisor_external:
+              // TODO: Supervisor guest external interrupt?
+                break;
+              default:
+                // Not originating from within the guest.
+                return false;
+            }
+        }
+
+      assert(ret_frame == regs());
+      if (!send_exception(static_cast<Trap_state *>(ret_frame)))
+        {
+          WARN("Hypervisor trap handling failed: Cause=" L4_MWORD_FMT ", Epc=" L4_MWORD_FMT ", Val=" L4_MWORD_FMT "\n",
+               cause, ret_frame->ip(), val);
+          kdb_ke("Hypervisor trap handling failed!");
+          kill();
+        }
+
+      return true;
+    }
+  else if (ret_frame->hstatus & Cpu::Hstatus_gva)
+    {
+      // If hstatus.SPV is not set and hstatus.GVA is set, the cause
+      // of the exception must be a failed hypervisor load store instruction.
+      assert(ret_frame->user_mode());
+      assert((state() & Thread_ext_vcpu_enabled));
+
+      // HLV, HLVX, or HSV failed
+      vm_state(vcpu_state().access())->hlsi_failed = true;
+      // Skip instruction
+      ret_frame->ip(ret_frame->ip() + 4);
+
+      return true;
+    }
+  else
+    return false;
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [riscv && cpu_virt && fpu && lazy_fpu]:
+
+PRIVATE inline
+bool
+Thread::handle_hyp_ext_fpu_trap()
+{
+  // FPU is enabled, so it can't be an FPU trap.
+  if (Fpu::is_enabled())
+    return false;
+
+  return switchin_fpu();
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [riscv && cpu_virt && (!fpu || !lazy_fpu)]:
+
+PRIVATE inline
+bool
+Thread::handle_hyp_ext_fpu_trap()
+{ return false; }
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION [riscv && !debug]:

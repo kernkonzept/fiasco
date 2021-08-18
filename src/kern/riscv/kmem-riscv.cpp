@@ -81,6 +81,7 @@ void
 Kmem::init()
 {
   Mem_unit::init_asids();
+  Mem_unit::init_vmids();
 }
 
 PUBLIC static

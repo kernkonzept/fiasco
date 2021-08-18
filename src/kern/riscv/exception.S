@@ -1,6 +1,7 @@
 /* -*- asm -*- */
 
 #include "asm_riscv.h"
+#include "globalconfig.h"
 
 #define SR_SIE  0x00000002 /* Supervisor Interrupt Enable */
 #define SR_SPIE 0x00000020 /* Previous Supervisor Interrupt Enable */
@@ -8,8 +9,9 @@
 
 #define FS_MASK 0x00006000 /* FS */
 
-/* Frame size, must be a multiple of 16 byte (stack alignment is 16 byte) */
-#define TS_FRAME (36 * SZREG)
+#define hstatus 0x600
+#define HSTATUS_SPV  0x00000080
+#define HSTATUS_SPVP 0x00000100
 
 #define TS_ERETW  (0 * SZREG)
 #define TS_ra     (1 * SZREG)
@@ -47,6 +49,12 @@
 #define TS_STATUS (33 * SZREG)
 #define TS_CAUSE  (34 * SZREG)
 #define TS_TVAL   (35 * SZREG)
+/* Only used if virtualization is enabled. */
+#define TS_HSTATUS (36 * SZREG)
+
+/* Frame size, must be a multiple of 16 byte (stack alignment is 16 byte) */
+#define TS_FRAME_PAD (16 - (1 * SZREG))
+#define TS_FRAME     ((37 * SZREG) + TS_FRAME_PAD)
 
 /* Hart context */
 #define HC_KSP    (0 * SZREG)
@@ -167,6 +175,12 @@ _save_trap_state\@:
     csrr t0, stval
     REG_S t0, TS_TVAL(sp)
 
+#ifdef CONFIG_CPU_VIRT
+    /* Save hstatus */
+    csrr t0, hstatus
+    REG_S t0, TS_HSTATUS(sp)
+#endif
+
     /* Set sscratch to zero, so that a nested trap knows it came from kernel. */
     csrw sscratch, x0
 .endm
@@ -184,16 +198,32 @@ _save_trap_state\@:
     REG_L t0, TS_STATUS(\base)
     clear_bits t0, t2, FS_MASK
     set_bits t0, t1
-    csrw sstatus, t0
 
+#ifdef CONFIG_CPU_VIRT
+    /* Restore hstatus */
+    REG_L t1, TS_HSTATUS(\base)
+    csrw hstatus, t1
+
+    /* Returning to virt mode? */
+    andi t2, t1, HSTATUS_SPV
+    beqz t2, _ret_non_virt_mode\@
+
+    /* Set SR_SPP to HSTATUS_SPVP */
+    clear_bits t0, t2, SR_SPP
+    andi t2, t1, HSTATUS_SPVP
+    set_bits t0, t2 /* SR_SPP and HSTATUS_SPVP flags have the same offset */
+    j _save_kernel_sptp\@
+#endif
+
+_ret_non_virt_mode\@:
     /* Returning to userspace or kernel? */
-    andi t0, t0, SR_SPP
-    bnez t0, _skip_save_kernel_sptp\@
+    andi t1, t0, SR_SPP
+    bnez t1, _skip_save_kernel_sptp\@
 
-_save_kernel_sptp\@: /* Returning to userspace */
+_save_kernel_sptp\@: /* Returning to userspace or virt mode */
     /* Save kernel stack pointer in hart context. */
-    add t0, sp, TS_FRAME
-    REG_S t0, HC_KSP(tp)
+    add t1, sp, TS_FRAME
+    REG_S t1, HC_KSP(tp)
 
     /* Save kernel thread pointer in sscratch. */
     csrw sscratch, tp
@@ -207,6 +237,8 @@ _save_kernel_sptp\@: /* Returning to userspace */
     restore_reg tp, TS_tp, \base
 
 _skip_save_kernel_sptp\@:
+    /* Restore sstatus */
+    csrw sstatus, t0
 .endm
 
 .macro restore_all base=sp base_offset=TS_sp

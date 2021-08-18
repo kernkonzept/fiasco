@@ -119,10 +119,37 @@ public:
   public:
     static void remote_fence_i(Mword hart_mask, Mword hart_mask_base);
 
+    static void remote_sfence_vma(
+      Mword hart_mask, Mword hart_mask_base, Mword start_addr, Mword size);
+
+    static void remote_sfence_vma_asid(
+      Mword hart_mask, Mword hart_mask_base,
+      Mword start_addr, Mword size, Mword asid);
+
+    static void remote_hfence_gvma_vmid(
+      Mword hart_mask, Mword hart_mask_base,
+      Mword start_addr, Mword size, Mword vmid);
+
+    static void remote_hfence_gvma(
+      Mword hart_mask, Mword hart_mask_base, Mword start_addr, Mword size);
+
+    static void remote_hfence_vvma_asid(
+      Mword hart_mask, Mword hart_mask_base,
+      Mword start_addr, Mword size, Mword asid);
+
+    static void remote_hfence_vvma(
+      Mword hart_mask, Mword hart_mask_base, Mword start_addr, Mword size);
+
   private:
     enum
     {
-      Func_remote_fence_i  = 0,
+      Func_remote_fence_i          = 0,
+      Func_remote_sfence_vma       = 1,
+      Func_remote_sfence_vma_asid  = 2,
+      Func_remote_hfence_gvma_vmid = 3,
+      Func_remote_hfence_gvma      = 4,
+      Func_remote_hfence_vvma_asid = 5,
+      Func_remote_hfence_vvma      = 6,
     };
   };
 
@@ -411,9 +438,61 @@ IMPLEMENT
 void
 Sbi::Rfnc::remote_fence_i(Mword hart_mask, Mword hart_mask_base)
 {
-  auto ret = sbi_call(Func_remote_fence_i, hart_mask, hart_mask_base);
-  if (ret.error != Sbi_success)
-    WARN("remote_fence_i: failed (error [%ld])\n", ret.error);
+  sbi_call(Func_remote_fence_i, hart_mask, hart_mask_base);
+}
+
+IMPLEMENT
+void
+Sbi::Rfnc::remote_sfence_vma(Mword hart_mask, Mword hart_mask_base,
+                             Mword start_addr, Mword size)
+{
+  sbi_call(Func_remote_sfence_vma,
+           hart_mask, hart_mask_base, start_addr, size);
+}
+
+IMPLEMENT
+void
+Sbi::Rfnc::remote_sfence_vma_asid(Mword hart_mask, Mword hart_mask_base,
+                                  Mword start_addr, Mword size, Mword asid)
+{
+  sbi_call(Func_remote_sfence_vma_asid,
+           hart_mask, hart_mask_base, start_addr, size, asid);
+}
+
+IMPLEMENT
+void
+Sbi::Rfnc::remote_hfence_gvma_vmid(Mword hart_mask, Mword hart_mask_base,
+                                   Mword start_addr, Mword size, Mword vmid)
+{
+  sbi_call(Func_remote_hfence_gvma_vmid,
+           hart_mask, hart_mask_base, start_addr, size, vmid);
+}
+
+IMPLEMENT
+void
+Sbi::Rfnc::remote_hfence_gvma(Mword hart_mask, Mword hart_mask_base,
+                              Mword start_addr, Mword size)
+{
+  sbi_call(Func_remote_hfence_gvma,
+           hart_mask, hart_mask_base, start_addr, size);
+}
+
+IMPLEMENT
+void
+Sbi::Rfnc::remote_hfence_vvma_asid(Mword hart_mask, Mword hart_mask_base,
+                                   Mword start_addr, Mword size, Mword asid)
+{
+  sbi_call(Func_remote_hfence_vvma_asid,
+           hart_mask, hart_mask_base, start_addr, size, asid);
+}
+
+IMPLEMENT
+void
+Sbi::Rfnc::remote_hfence_vvma(Mword hart_mask, Mword hart_mask_base,
+                              Mword start_addr, Mword size)
+{
+  sbi_call(Func_remote_hfence_vvma,
+           hart_mask, hart_mask_base, start_addr, size);
 }
 
 IMPLEMENT

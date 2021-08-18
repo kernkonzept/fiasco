@@ -61,11 +61,20 @@ bool
 Jdb_stack_view::edit_registers()
 { return false; }
 
+EXTENSION class Jdb_tcb_ptr
+{
+  // Entry frame might be padded from the bottom of the stack to align it with
+  // stack alignment required by architecture.
+  static constexpr unsigned Frame_pad_size =
+    Cpu::stack_round(sizeof(Trap_state)) - sizeof(Trap_state);
+};
+
 IMPLEMENT inline
 bool
 Jdb_tcb_ptr::is_user_value() const
 {
-  return _offs >= Context::Size - sizeof(Trap_state);
+  return    _offs >= Context::Size - sizeof(Trap_state)
+         && _offs < Context::Size - Frame_pad_size;
 }
 
 IMPLEMENT inline
@@ -74,7 +83,7 @@ Jdb_tcb_ptr::user_value_desc() const
 {
   const char *const desc[] =
     {
-      "tval", "cause", "status", "pc",
+      "hstatus", "tval", "cause", "status", "pc",
       "t6", "t5", "t4", "t3",
       "s11", "s10", "s9", "s8", "s7", "s6", "s5", "s4", "s3", "s2",
       "a7", "a6", "a5", "a4", "a3", "a2", "a1", "a0",
@@ -84,14 +93,15 @@ Jdb_tcb_ptr::user_value_desc() const
       "eret_work"
     };
   static_assert(
-    (sizeof(Trap_state) / sizeof(Mword)) <= (sizeof(desc) / sizeof(desc[0])),
+    (sizeof(Trap_state) / sizeof(Mword)) == (sizeof(desc) / sizeof(desc[0])),
     "desc entries do not match the sizeof Trap_state");
-  return desc[(Context::Size - _offs) / sizeof(Mword) - 1];
+  return desc[(Context::Size - Frame_pad_size - _offs) / sizeof(Mword) - 1];
 }
 
 IMPLEMENT_OVERRIDE
 Address
 Jdb_tcb_ptr::user_ip() const
 {
-  return top_value(-4);
+  unsigned pc_offs = sizeof(Trap_state) - offsetof(Trap_state, _pc);
+  return top_value(-(Frame_pad_size + pc_offs) / sizeof(Mword));
 }

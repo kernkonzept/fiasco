@@ -1,3 +1,21 @@
+INTERFACE [riscv && cpu_virt]:
+
+EXTENSION class Context
+{
+protected:
+  // must not collide with any bit in Thread_state
+  enum
+  {
+    /**
+     * Indicates whether a thread in extended vCPU mode has a valid guest space
+     * (Vm kernel object). Used when switching to the VMM to decide whether to
+     * switch in the guest space and enable hypervisor load/store instructions.
+     */
+    Thread_ext_vcpu_has_guest_space = 0x4000000,
+  };
+};
+
+//----------------------------------------------------------------------------
 IMPLEMENTATION [riscv]:
 
 #include "asm_riscv.h"
@@ -62,16 +80,27 @@ Context::switchin_context(Context *from)
 
   from->handle_lock_holder_preemption();
 
-  // switch to our page directory if necessary
+  // switch in guest context if any
+  switchin_guest_context();
+
+  // switch to our page directory
   vcpu_aware_space()->switchin_context(from->vcpu_aware_space());
 }
 
-IMPLEMENT inline NEEDS["asm_riscv.h", "cpu.h"]
+IMPLEMENT inline NEEDS[Context::switch_hyp_ext_state, Context::switch_gp_regs]
 void
 Context::switch_cpu(Context *t)
 {
   update_consumed_time();
 
+  switch_hyp_ext_state(t);
+  switch_gp_regs(t);
+}
+
+PRIVATE inline NEEDS["asm_riscv.h", "cpu.h"]
+void
+Context::switch_gp_regs(Context *t)
+{
   // Arguments for t->switchin_context(this)
   register Context *new_this asm("a0") = t;
   register Context *old_this asm("a1") = this;
@@ -170,4 +199,110 @@ Context::vcpu_copy_host_regs(Vcpu_state *vcpu)
 {
   vcpu->_regs.s.tp = regs()->tp;
   vcpu->_regs.s.gp = regs()->gp;
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [riscv && !cpu_virt]:
+
+PRIVATE inline
+bool
+Context::switchin_guest_context()
+{ return false; }
+
+PRIVATE inline
+void
+Context::switch_hyp_ext_state(Context *)
+{}
+
+//----------------------------------------------------------------------------
+INTERFACE [riscv && cpu_virt]:
+
+#include "hyp_ext_state.h"
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [riscv && cpu_virt]:
+
+PUBLIC static inline
+Hyp_ext_state *
+Context::vm_state(Vcpu_state *vs)
+{
+  static_assert(sizeof(Vcpu_state) <= 0x400, "vCPU state is too large.");
+  return offset_cast<Hyp_ext_state *>(vs,  0x400);
+}
+
+PROTECTED inline
+void
+Context::switchin_guest_context()
+{
+  Mword _state = state();
+  // Extended vCPU is enabled
+  if (_state & Thread_ext_vcpu_enabled)
+    {
+      // Extended vCPU is in guest mode (VM)
+      if (_state & Thread_vcpu_user)
+        {
+          // Switch to guest space
+          assert(_state & Thread_ext_vcpu_has_guest_space);
+          vcpu_user_space()->switchin_guest_space();
+          return;
+        }
+      else if (_state & Thread_ext_vcpu_has_guest_space)
+        {
+          // Load g-stage page table for the VMM: hgatp and hstatus must be set
+          // properly, even when switching to vCPU host mode, so that the user
+          // mode VMM can use the hypervisor load/store instructions.
+          vcpu_user_space()->switchin_guest_space();
+          return;
+        }
+    }
+
+  // Reset the current guest space, when switching to non-virtualization enabled
+  // context or VMM without guest space. Even though the current context cannot
+  // interact with the guest space, this is necessary for the case that the vCPU
+  // belonging to the guest space is migrated to another CPU.
+  Mem_space::reset_guest_space();
+}
+
+PRIVATE inline
+void
+Context::switch_hyp_ext_state(Context *to)
+{
+  Mword _state = state();
+  Mword _to_state = to->state();
+
+  if ((_state & Thread_ext_vcpu_enabled) && (_state & Thread_vcpu_user))
+    vm_state(vcpu_state().access())->save();
+
+  if ((_to_state & Thread_ext_vcpu_enabled))
+    {
+      if (_to_state & Thread_vcpu_user)
+        vm_state(to->vcpu_state().access())->load();
+      else
+        vm_state(to->vcpu_state().access())->load_vmm();
+    }
+}
+
+IMPLEMENT_OVERRIDE inline NEEDS[Context::vm_state]
+void Context::vcpu_pv_switch_to_kernel(Vcpu_state *vcpu, bool current)
+{
+  if (!(state() & Thread_ext_vcpu_enabled))
+    return;
+
+  // Coming from guest?
+  if (regs()->virt_mode())
+    {
+      assert(vcpu_user_space() != nullptr);
+      // A vCPU running in vCPU user mode must always have a vCPU user space.
+      assert(state() & Thread_ext_vcpu_has_guest_space);
+
+      // Disable virtualization mode on VM exit, but enable hypervisor
+      // load/store instructions for use by the VMM.
+      regs()->virt_mode(false);
+      regs()->allow_vmm_hyp_load_store(true);
+
+      if (current)
+        // Save VM state from architectural registers in vCPU state so it is
+        // accessible to the VMM.
+        vm_state(vcpu)->save();
+    }
 }

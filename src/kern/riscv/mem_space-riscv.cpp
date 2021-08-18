@@ -76,6 +76,39 @@ private:
 };
 
 //----------------------------------------------------------------------------
+INTERFACE [riscv && riscv_vmid]:
+
+#include "asid_alloc.h"
+#include "cpu.h"
+#include "mem_unit.h"
+
+EXTENSION class Mem_space
+{
+private:
+  enum
+  {
+    Vmid_base    = 0,
+    Vmid_bits    = Cpu::Hgatp_vmid_bits,
+  };
+
+  /// As RV32 has no support for 64-bit atomic operations, we have to use a
+  /// 32-bit VMID counter there.
+  using Vmid_value_type = Mword;
+
+  using Vmid_alloc = Asid_alloc_t<Vmid_value_type, Vmid_bits, Vmid_base,
+                                  Mem_unit::vmid_num>;
+  using Vmid = Vmid_alloc::Asid;
+  using Vmids = Vmid_alloc::Asids_per_cpu;
+
+  /// active/reserved VMID (per CPU)
+  static Per_cpu<Vmids> _vmids;
+  static Vmid_alloc _vmid_alloc;
+
+  /// current VMID of mem_space, provided by _vmid_alloc
+  Vmid _vmid = Vmid::Invalid;
+};
+
+//----------------------------------------------------------------------------
 IMPLEMENTATION[riscv]:
 
 #include "cpu.h"
@@ -95,15 +128,30 @@ Mem_space::Mem_space(Ram_quota *q, Dir_type *pdir)
   _dir_phys = Phys_mem_addr(Kmem::kdir->virt_to_phys(dir_addr));
 }
 
+PROTECTED inline virtual
+Mem_space::Dir_type *
+Mem_space::alloc_dir()
+{
+  Dir_type *dir = _dir_alloc.q_new(ram_quota());
+  if (dir)
+    dir->clear(true);
+  return dir;
+}
+
+PROTECTED inline virtual
+void
+Mem_space::free_dir(Mem_space::Dir_type *dir)
+{
+  _dir_alloc.q_free(ram_quota(), dir);
+}
+
 PROTECTED inline
 bool
 Mem_space::initialize()
 {
-  _dir = _dir_alloc.q_new(ram_quota());
+  _dir = alloc_dir();
   if (!_dir)
     return false;
-
-  _dir->clear(true);
   _dir_phys =
     Phys_mem_addr(Kmem::kdir->virt_to_phys(reinterpret_cast<Address>(_dir)));
 
@@ -165,7 +213,7 @@ Mem_space::tlb_flush_current_cpu()
   return tlb_flush_space(true);
 }
 
-PUBLIC inline NEEDS["mem_unit.h"]
+IMPLEMENT inline NEEDS["mem_unit.h"]
 void
 Mem_space::tlb_flush_space(bool with_asid)
 {
@@ -177,6 +225,13 @@ Mem_space::tlb_flush_space(bool with_asid)
       Mem_unit::tlb_flush(c_asid());
       tlb_mark_unused_if_non_current();
     }
+}
+
+IMPLEMENT inline NEEDS["mem_unit.h"]
+void
+Mem_space::tlb_flush_on_sync()
+{
+  Mem_unit::tlb_flush(asid());
 }
 
 IMPLEMENT inline
@@ -288,7 +343,7 @@ Mem_space::~Mem_space()
       _dir->destroy(Virt_addr(Mem_layout::User_max + 1),
                     Virt_addr(Pdir::Max_addr), 0, Pdir::Super_level,
                     Kmem_alloc::q_allocator(_quota));
-      _dir_alloc.q_free(ram_quota(), _dir);
+      free_dir(_dir);
     }
 }
 
@@ -307,7 +362,7 @@ Mem_space::make_current(Switchin_flags)
   Cpu::set_satp(asid_with_fence(),
                 Cpu::phys_to_ppn(cxx::int_value<Phys_mem_addr>(_dir_phys)));
   // If ASIDs are not supported, flush the TLB after switching the page table.
-  tlb_flush_space(false);
+  Mem_space::tlb_flush_space(false);
   _current.current() = this;
 }
 
@@ -457,8 +512,9 @@ Mem_space::sync_write_tlb_active_on_cpu()
   // the ASID anyway. Even though it may seem contradictory to then execute a
   // "TLB flush" despite the TLB being empty, it is required because of the
   // ordering guarantees that the SFENCE.VMA instruction provides!
-  if (Mem_unit::Have_asids)
-    // Make sure to allocate an ASID for this memory space, if it does no yet
+
+  if (Mem_unit::Have_asids || Mem_unit::Have_vmids)
+    // Make sure to allocate an ASID for this memory space, if it does not yet
     // have one, as otherwise, when executed with an invalid ASID, the
     // SFENCE.VMA instruction would not affect this memory space. If a new ASID
     // was allocated, either because the memory space did not have one or an
@@ -467,7 +523,7 @@ Mem_space::sync_write_tlb_active_on_cpu()
     // sync_write_tlb_active_on_cpu() or rather tlb_mark_used() is invoked
     // immediately before Mem_space::make_current() which makes this memory
     // space the current memory space on the current CPU anyway.
-    Mem_unit::tlb_flush(asid());
+    tlb_flush_on_sync();
 }
 
 IMPLEMENT inline
@@ -477,4 +533,137 @@ Mem_space::sync_read_tlb_active_on_cpu()
   // Ensure that all changed page table entries (store) are visible to all other
   // CPUs, before accessing _tlb_active_on_cpu (load) on the current CPU.
   Mem::mp_mb();
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [riscv && cpu_virt && riscv_vmid]:
+
+PUBLIC inline
+Mword FIASCO_PURE
+Mem_space::c_vmid() const
+{
+  Vmid vmid = atomic_load(&_vmid);
+
+  if (EXPECT_TRUE(vmid.is_valid()))
+    return vmid.asid();
+  else
+    return Mem_unit::Vmid_invalid;
+}
+
+PUBLIC inline
+Mword
+Mem_space::vmid()
+{
+  if (_vmid_alloc.get_or_alloc_asid(&_vmid))
+    {
+      Mem_unit::hfence_gvma();
+    }
+
+  return _vmid.asid();
+}
+
+DEFINE_PER_CPU Per_cpu<Mem_space::Vmids> Mem_space::_vmids;
+Mem_space::Vmid_alloc  Mem_space::_vmid_alloc(&_vmids);
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [riscv && cpu_virt && !riscv_vmid]:
+
+PUBLIC inline
+Mword FIASCO_PURE
+Mem_space::c_vmid() const
+{ return Mem_unit::Vmid_disabled; }
+
+PUBLIC inline
+Mword
+Mem_space::vmid()
+{ return Mem_unit::Vmid_disabled; }
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [riscv && !cpu_virt]:
+
+EXTENSION class Mem_space
+{
+public:
+  void tlb_flush_space(bool);
+  void tlb_flush_on_sync();
+};
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [riscv && cpu_virt]:
+
+EXTENSION class Mem_space
+{
+public:
+  virtual void tlb_flush_space(bool);
+  virtual void tlb_flush_on_sync();
+
+protected:
+  // Be careful with the case that this is not cleared when a VM task is
+  // destroyed, and then a VM task reallocated shortly after could be falsely
+  // detect as current althoguh it is not!
+  static Per_cpu<Mem_space *> _current_guest;
+};
+
+DEFINE_PER_CPU Per_cpu<Mem_space *> Mem_space::_current_guest;
+
+PUBLIC inline NEEDS[Mem_space::vmid_with_fence]
+void
+Mem_space::switchin_guest_space()
+{
+  // Current guest space might be nullptr if previously either a
+  // non-virtualization enabled context or a VMM without a user task was active.
+  Mem_space *from = _current_guest.current();
+  if (from == this)
+    return;
+
+  tlb_mark_used();
+
+  Cpu::set_hgatp(vmid_with_fence(),
+                 Cpu::phys_to_ppn(cxx::int_value<Phys_mem_addr>(_dir_phys)));
+
+  // Full flush if we don't use VMIDs
+  if (!Mem_unit::Have_vmids)
+    Mem_unit::hfence_gvma();
+
+  _current_guest.current() = this;
+
+  if (!Mem_unit::Have_vmids && from)
+    // Without VMIDs, after switching away from a space, the TLB got flushed and
+    // thus will have forgotten about it.
+    from->tlb_mark_unused();
+}
+
+PUBLIC static inline
+void
+Mem_space::reset_guest_space()
+{
+  _current_guest.current() = nullptr;
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [riscv && cpu_virt && mp]:
+
+PRIVATE inline
+unsigned long
+Mem_space::vmid_with_fence()
+{
+  // For an explanation see asid_with_fence().
+  return vmid();
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [riscv &&  cpu_virt && !mp]:
+
+PRIVATE inline
+unsigned long
+Mem_space::vmid_with_fence()
+{
+  // When a new VMID is allocated, either because the memory space did not have
+  // one or an VMID rollover took place, we need to execute a TLB fence with the
+  // new VMID.
+  unsigned long current_vmid = c_vmid();
+  unsigned long new_vmid = vmid();
+  if (current_vmid != new_vmid)
+    Mem_unit::hfence_gvma_vmid(new_vmid);
+  return new_vmid;
 }
