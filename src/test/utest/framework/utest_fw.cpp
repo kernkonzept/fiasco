@@ -281,7 +281,8 @@ Utest_fw::finish()
   if (ext_info.restart)
     platform_reset();
 
-  exit(_sum_failed);
+  // Exit kernel without calling destructors.
+  _exit(_sum_failed);
 }
 
 /// Use a new `group` and `test` name for subsequent TAP output.
