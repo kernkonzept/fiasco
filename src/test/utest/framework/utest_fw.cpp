@@ -17,6 +17,7 @@ INTERFACE:
 #include "kip.h"
 #include "reset.h"
 #include "kdb_ke.h"
+#include "thread_object.h"
 
 
 extern "C" void gcov_print() __attribute__((weak));
@@ -27,6 +28,14 @@ struct Utest
 {
   /// Constants to use with the UTEST_ macros.
   enum : bool { Assert = true, Expect = false };
+
+  struct Thread_args
+  {
+    Thread_args() = delete;
+    Thread_args(cxx::functor<void ()> const &f) : fn(f) {}
+    bool started = false;
+    cxx::functor<void ()> const &fn;
+  };
 };
 
 /*
@@ -582,4 +591,91 @@ Utest::wait(unsigned long ms)
   // Busy waiting is ok, as nothing else happens on this core anyway.
   while (Timer::system_clock() < ctime + us)
     Proc::pause();
+}
+
+/**
+ * Worker function for Utest::start_thread().
+ */
+PRIVATE static
+void
+Utest::thread_fn()
+{
+  auto *args = reinterpret_cast<Thread_args *>(current_thread()->user_ip());
+  cxx::functor<void ()> const &fn = args->fn;
+  write_now(&args->started, true);
+
+  // Cf. Thread::user_invoke_generic(): Release CPU lock explicitly, because
+  // * the context that switched to us holds the CPU lock
+  // * we run on a newly-created stack without a CPU lock guard
+  cpu_lock.clear();
+
+  fn();
+
+    {
+      auto guard = lock_guard(cpu_lock);
+      Sched_context::rq.current().deblock(current()->sched(),
+                                          current()->sched());
+      Thread::do_leave_and_kill_myself();
+    }
+}
+
+/**
+ * Start a kernel thread.
+ *
+ * \param fn    The thread code.
+ * \param cpu   The CPU number to run this thread on.
+ * \param prio  The priority of the thread.
+ * \param thr   Pre-allocated thread, may be nullptr.
+ * \retval true Thread was successfully started.
+ * \retval false It was not possible to start the thread.
+ *
+ * \post This function affects memory allocation.
+ *
+ * The corresponding thread resources are automatically destroyed when the
+ * thread function returns. Actually the thread destruction is delayed (RCU
+ * grace period) so the thread remains visible for some time after termination.
+ */
+PUBLIC static
+bool
+Utest::start_thread(cxx::functor<void ()> fn, Cpu_number cpu,
+                    unsigned short prio, Thread_object *thr = nullptr)
+{
+  Thread_object *t = thr;
+  if (!t)
+    t = new (Ram_quota::root) Thread_object(Ram_quota::root);
+  if (!t)
+    return false;
+
+  Thread_args args(fn);
+
+  t->prepare_switch_to(thread_fn);
+
+  // Fixed-priority scheduler only so far!
+  L4_sched_param_fixed_prio sp;
+  sp.sched_class = L4_sched_param_fixed_prio::Class;
+  sp.quantum = Config::Default_time_slice;
+  sp.prio = prio;
+
+  Thread::Migration info;
+  info.cpu = cpu;
+  info.sp = &sp;
+
+  // This call has two purposes:
+  //  1. Set the user IP to the address of the local thread parameters. The
+  //     user IP is not used (thread never leaves the kernel), hence that
+  //     address is used to pass the required parameters.
+  //  2. Remove the 'Thread_dead' state bit.
+  t->ex_regs((Address)&args, 0UL, 0, 0, 0, 0);
+  t->activate();
+
+    {
+      auto guard = lock_guard(cpu_lock);
+      t->migrate(&info);
+    }
+
+  // Only leave this scope when 'args' was fully evaluated by 'thread_fn()'.
+  while (!access_once(&args.started))
+    Proc::pause();
+
+  return true;
 }
