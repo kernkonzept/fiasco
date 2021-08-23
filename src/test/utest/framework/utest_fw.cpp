@@ -511,7 +511,7 @@ template <typename T> inline
 void
 utest_format_print_value(T const &val)
 {
-  utest_format_print_value(cxx::int_value<T>(val));
+  utest_format_print_value((unsigned long)cxx::int_value<T>(val));
 }
 
 inline
