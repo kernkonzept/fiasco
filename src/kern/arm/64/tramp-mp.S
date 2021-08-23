@@ -236,16 +236,15 @@ defvar _tramp_mp_gic_cpu_base
 _tramp_mp_virt:
 	// spinlock on cpu-init
 	adr	x0, _tramp_mp_spinlock
-1:	ldr	x1, [x0]
-	cbz	x1, 2f
-	wfe
-	b	1b
-
-2:	ldxr	x1, [x0]
-	cbnz	x1, 1b
-	mov	x1, #2
-	stxr	w2, x1, [x0]
-	cbnz	w2, 1b
+	sevl
+	prfm	pstl1keep, [x0]
+1:	wfe
+	ldaxr	x1, [x0]
+	tst	x1, #2
+	bne	1b
+	orr	x2, x1, #2
+	stxr	w1, x2, [x0]
+	cbnz	w1, 1b
 
 	adr	x8, _tramp_mp_init_stack_top
 	mov	sp, x8
