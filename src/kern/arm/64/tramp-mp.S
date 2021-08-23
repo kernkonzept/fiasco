@@ -31,21 +31,15 @@
 	.section .mp_tramp, "awx"
 	.p2align 12
 
-#ifdef CONFIG_ARM_V8
-cache_invalidate_v8:
-	// B2.2.7
+cache_invalidate_l1:
 	mrs     x0, CLIDR_EL1
 	ands    x3, x0, #0x07000000
 	orr     x3, xzr, x3, lsr #23
 	b.eq    finished
-	mov     x10, #0
-loop1:
-	add     x2, x10, x10, lsr #1
-	lsrv    x1, x0, x2
-	and     x1, x1, #7
+	and     x1, x0, #7
 	cmp     x1, #2
 	b.lt    skip
-	msr     CSSELR_EL1, x10
+	msr     CSSELR_EL1, xzr
 	isb
 	mrs     x1, CCSIDR_EL1
 	and     x2, x1, #7
@@ -54,30 +48,25 @@ loop1:
 	ands    w4, w4, w1, lsr #3
 	clz     w5, w4
 	mov     x9, x4
-loop2:
+loop1:
 	movz    w7, #0x7fff
 	ands    w7, w7, w1, lsr #13
-loop3:
-	lslv    x17, x9, x5
-	orr     x11, x10, x17
+loop2:
+	lslv    x11, x9, x5
 	lslv    x18, x7, x2
 	orr     x11, x11, x18
 	dc      isw, x11
 	subs    x7, x7, #1
-	b.ge    loop3
-	subs    x9, x9, #1
 	b.ge    loop2
+	subs    x9, x9, #1
+	b.ge    loop1
 skip:
-	add     x10, x10, #2
-	cmp     x3, x10
-	b.gt    loop1
 	dsb     sy
 finished:
 	msr     CSSELR_EL1, xzr
 	dsb     sy
 	isb     sy
 	ret
-#endif
 
 	.global _tramp_mp_entry
 _tramp_mp_entry:
@@ -110,7 +99,7 @@ _tramp_mp_entry:
 	movk	x18, #:abs_g1:SCR_EL3_DEFAULT_BITS
 	msr	scr_el3, x18
 	mrs	x20, sctlr_el3
-	bl	cache_invalidate_v8
+	bl	cache_invalidate_l1
 	and	x18, x20, #(1 << 25)
 	.equ	sctlr_val, (  (3 << 4) | (1 << 11) | (1 << 16) \
 		            | (1 << 18)| (3 << 22) | (3 << 28) \
