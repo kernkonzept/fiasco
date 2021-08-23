@@ -179,7 +179,7 @@ INTERFACE [!ux && 64bit]:
 EXTENSION class Config
 {
 public:
-  // 6 percent of total RAM, >=17066MB RAM => 1024MB kmem
+  // 6 percent of total RAM, >=55466MB RAM => 3328MB kmem
   static const unsigned kernel_mem_per_cent = 6;
   enum
   {
