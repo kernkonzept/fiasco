@@ -29,6 +29,7 @@ class Context;
 class Switch_lock
 {
   MEMBER_OFFSET();
+  friend class Locks_test;
 
 private:
   // Warning: This lock's member variables must not need a

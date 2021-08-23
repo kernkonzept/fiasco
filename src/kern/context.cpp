@@ -1639,6 +1639,7 @@ EXTENSION class Context
 {
 private:
   friend class Switch_lock;
+  friend class Locks_test;
 
   /**
    * The running-under-lock state machine.
@@ -1657,6 +1658,8 @@ private:
    */
   class Running_under_lock
   {
+    friend class Locks_test; // Locks_test::test_switch_lock_acquire_free()
+
     // FIXME: could be a byte, but nee cas byte for that
     enum State : Mword
     {
