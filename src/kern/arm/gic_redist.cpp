@@ -57,9 +57,9 @@ Gic_redist::find(Address base, Unsigned64 mpidr, Cpu_number cpu)
     {
       Mmio_register_block r(base + o);
 
-      unsigned id = r.read<Unsigned32>(GICR_PIDR2);
-      if (   id != 0x3b    // No GICv3
-          && id != 0x4b)   // and no GICv4
+      unsigned arch_rev = (r.read<Unsigned32>(GICR_PIDR2) >> 4) & 0xf;
+      if (arch_rev != 0x3 && arch_rev != 0x4)
+        // No GICv3 and no GICv4
         break;
 
       gicr_typer = r.read<Unsigned64>(GICR_TYPER);
