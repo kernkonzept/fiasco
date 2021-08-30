@@ -81,6 +81,13 @@ Sched_context::owner() const
 }
 
 PUBLIC static inline
+Mword
+Sched_context::sched_classes()
+{
+  return 1UL << (-L4_sched_param_wfq::Class);
+}
+
+PUBLIC static inline
 int
 Sched_context::check_param(L4_sched_param const *_p)
 {

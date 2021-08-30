@@ -22,7 +22,8 @@ public:
 private:
   Irq_base *_irq;
 
-  L4_RPC(Info,      sched_info, (L4_cpu_set_descr set, Mword *rm, Mword *max_cpus));
+  L4_RPC(Info,      sched_info, (L4_cpu_set_descr set, Mword *rm,
+                                 Mword *max_cpus, Mword *sched_classes));
   L4_RPC(Idle_time, sched_idle, (L4_cpu_set cpus, Cpu_time *time));
 };
 
@@ -125,7 +126,8 @@ Scheduler::op_sched_idle(L4_cpu_set const &cpus, Cpu_time *time)
 
 PRIVATE
 L4_msg_tag
-Scheduler::op_sched_info(L4_cpu_set_descr const &s, Mword *m, Mword *max_cpus)
+Scheduler::op_sched_info(L4_cpu_set_descr const &s, Mword *m, Mword *max_cpus,
+                         Mword *sched_classes)
 {
   Mword rm = 0;
   Cpu_number max = Config::max_num_cpus();
@@ -144,6 +146,8 @@ Scheduler::op_sched_info(L4_cpu_set_descr const &s, Mword *m, Mword *max_cpus)
 
   *m = rm;
   *max_cpus = Config::Max_num_cpus;
+  *sched_classes = Sched_context::sched_classes();
+
   return commit_result(0);
 }
 
