@@ -67,7 +67,7 @@ public:
   Unsigned64 sp_el1;
   Unsigned64 elr_el1;
   Unsigned64 vbar;
-  Unsigned32 cpacr = 0x5555555;
+  Unsigned32 cpacr = 0x0300000;
   // we need to store all banked registers for PL1 modes
   // because a hyp kernel runs applications in system mode (PL1)
   Unsigned32 spsr_fiq, spsr_irq, spsr_svc, spsr_abt, spsr_und;
