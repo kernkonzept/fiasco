@@ -539,8 +539,9 @@ Acpi_rsdp::locate()
     return r;
 
   Address ebda = *reinterpret_cast<Unsigned16 const *>(ebda_segment) << 4;
-  if (Acpi_rsdp const *r = locate_in_region(ebda, ebda + 1024))
-    return r;
+  if (ebda > 0x80000 && ebda < 0x100000 - 1024) // sanity check
+    if (Acpi_rsdp const *r = locate_in_region(ebda, ebda + 1024))
+      return r;
 
   return 0;
 }

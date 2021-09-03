@@ -28,6 +28,12 @@ PHDRS {
 }
 
 SECTIONS {
+  . = FIASCO_MP_TRAMP_PAGE;
+  .realmode_tramp : {
+      *(.realmode_tramp*)
+      . = ALIGN(0x1000);
+  } : tramp = 0x00
+
   /*
    * The correct section attribute would be NOLOAD but in that case ld.lld
    * would wrongly merge the ".bda" content with the "tramp" output section.
@@ -35,16 +41,11 @@ SECTIONS {
    * is still supported and does the right thing. See also the ld.lld docu:
    * "COPY, INFO, OVERLAY: clear the SHF_ALLOC bit in sh_flags."
    */
-  .bda 0x400 (INFO) : {
+  .bda FIASCO_BDA_PAGE + 0x400 (INFO) : {
     . += 0xe;
     ebda_segment = .;
+    . += 0x2;
   }
-
-  . = FIASCO_MP_TRAMP_PAGE;
-  .realmode_tramp : {
-      *(.realmode_tramp*)
-      . = ALIGN(0x1000);
-  } : tramp = 0x00
 
   . = _boot_sys_start;
   .text_boot : ALIGN(0x1000) {

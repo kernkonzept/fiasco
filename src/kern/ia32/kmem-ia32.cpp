@@ -194,33 +194,62 @@ Kmem::map_phys_page(Address phys, Address virt,
     *offs = phys - pte;
 }
 
-//--------------------------------------------------------------------------
-IMPLEMENTATION [ia32 || (amd64 && !kernel_nx)]:
-
 PRIVATE static FIASCO_INIT
 void
 Kmem::map_initial_ram()
 {
   Kmem_alloc *const alloc = Kmem_alloc::allocator();
 
-  // set up the kernel mapping for physical memory.  mark all pages as
+  // Set up the kernel mapping for physical memory.  Mark all pages as
   // referenced and modified (so when touching the respective pages
   // later, we save the CPU overhead of marking the pd/pt entries like
-  // this)
+  // this).
 
-  // we also set up a one-to-one virt-to-phys mapping for two reasons:
+  // We also set up a one-to-one virt-to-phys mapping for two reasons:
   // (1) so that we switch to the new page table early and re-use the
   //     segment descriptors set up by boot_cpu.cc.  (we'll set up our
   //     own descriptors later.) we only need the first 4MB for that.
   // (2) a one-to-one phys-to-virt mapping in the kernel's page directory
-  //     sometimes comes in handy (mostly useful for debugging)
+  //     sometimes comes in handy (mostly useful for debugging).
 
-  // first 4MB page
-  if (!kdir->map(0, Virt_addr(0UL), Virt_size(4 << 20),
-                 Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced,
-                 Pt_entry::super_level(), false, pdir_alloc(alloc)))
+  bool ok = true;
+
+  // Omit the area between 0 and the trampoline page!
+
+  // Real mode trampoline code is RWX
+  ok &= kdir->map(FIASCO_MP_TRAMP_PAGE, Virt_addr(FIASCO_MP_TRAMP_PAGE),
+                  Virt_size(Config::PAGE_SIZE),
+                  Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced,
+                  Pdir::Depth, false, pdir_alloc(alloc));
+
+  // BIOS data segment at 0x40E is RW (map the whole page).
+  ok &= kdir->map(0x0, Virt_addr(FIASCO_BDA_PAGE),
+                  Virt_size(Config::PAGE_SIZE),
+                  conf_xd() | Pt_entry::Dirty | Pt_entry::Writable
+                  | Pt_entry::Referenced,
+                  Pdir::Depth, false, pdir_alloc(alloc));
+
+  // The rest of the first 4M is RW (2x2M on amd64, 1x4M on x86)
+  ok &= kdir->map(FIASCO_BDA_PAGE + Config::PAGE_SIZE,
+                  Virt_addr(FIASCO_BDA_PAGE + Config::PAGE_SIZE),
+                  Virt_size(Config::SUPERPAGE_SIZE - FIASCO_BDA_PAGE
+                            - Config::PAGE_SIZE),
+                  conf_xd() | Pt_entry::Dirty | Pt_entry::Writable
+                  | Pt_entry::Referenced,
+                  Pdir::Depth, false, pdir_alloc(alloc));
+  if (sizeof(long) == 8)
+    ok &= kdir->map(Config::SUPERPAGE_SIZE, Virt_addr(Config::SUPERPAGE_SIZE),
+                    Virt_size(Config::SUPERPAGE_SIZE),
+                    conf_xd() | Pt_entry::Dirty | Pt_entry::Writable
+                    | Pt_entry::Referenced,
+                    Pt_entry::super_level(), false, pdir_alloc(alloc));
+
+  if (!ok)
     panic("Cannot map initial memory");
 }
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION [ia32 || (amd64 && !kernel_nx)]:
 
 PRIVATE static FIASCO_INIT_CPU
 void
@@ -236,60 +265,6 @@ Kmem::map_kernel_virt(Kpdir *dir)
 
 //--------------------------------------------------------------------------
 IMPLEMENTATION [amd64 && kernel_nx]:
-
-PRIVATE static FIASCO_INIT
-void
-Kmem::map_initial_ram()
-{
-  Kmem_alloc *const alloc = Kmem_alloc::allocator();
-
-  // set up the kernel mapping for physical memory.  mark all pages as
-  // referenced and modified (so when touching the respective pages
-  // later, we save the CPU overhead of marking the pd/pt entries like
-  // this)
-
-  // we also set up a one-to-one virt-to-phys mapping for two reasons:
-  // (1) so that we switch to the new page table early and re-use the
-  //     segment descriptors set up by boot_cpu.cc.  (we'll set up our
-  //     own descriptors later.) we only need the first 6MB for that.
-  // (2) a one-to-one phys-to-virt mapping in the kernel's page directory
-  //     sometimes comes in handy (mostly useful for debugging)
-
-  bool ok = true;
-
-  // first 2M
-
-  // Beginning of physical memory up to the realmode trampoline code is RW
-  ok &= kdir->map(0, Virt_addr(0), Virt_size(FIASCO_MP_TRAMP_PAGE),
-                  Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
-                  | Pt_entry::Referenced,
-                  Pdir::Depth, false, pdir_alloc(alloc));
-
-  // Realmode trampoline code is RWX
-  ok &= kdir->map(FIASCO_MP_TRAMP_PAGE, Virt_addr(FIASCO_MP_TRAMP_PAGE),
-                  Virt_size(Config::PAGE_SIZE),
-                  Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced,
-                  Pdir::Depth, false, pdir_alloc(alloc));
-
-  // The rest of the first 2M is RW
-  ok &= kdir->map(FIASCO_MP_TRAMP_PAGE + Config::PAGE_SIZE,
-                  Virt_addr(FIASCO_MP_TRAMP_PAGE + Config::PAGE_SIZE),
-                  Virt_size(Config::SUPERPAGE_SIZE - FIASCO_MP_TRAMP_PAGE
-                            - Config::PAGE_SIZE),
-                  Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
-                  | Pt_entry::Referenced,
-                  Pdir::Depth, false, pdir_alloc(alloc));
-
-  // Second 2M is RW
-  ok &= kdir->map(Config::SUPERPAGE_SIZE, Virt_addr(Config::SUPERPAGE_SIZE),
-                  Virt_size(Config::SUPERPAGE_SIZE),
-                  Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
-                  | Pt_entry::Referenced,
-                  Pt_entry::super_level(), false, pdir_alloc(alloc));
-
-  if (!ok)
-    panic("Cannot map initial memory");
-}
 
 PRIVATE static FIASCO_INIT_CPU
 void
