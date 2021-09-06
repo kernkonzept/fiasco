@@ -109,6 +109,7 @@ PUBLIC inline
 void
 Gic_dist::set_cpu(Mword pin, Unsigned8 target, V2)
 {
+  // GICD_ITARGETSR<0..31> are read-only
   _dist.write<Unsigned8>(target, GICD_ITARGETSR + pin);
 }
 
@@ -193,6 +194,8 @@ PUBLIC inline
 void
 Gic_dist::set_cpu(Mword pin, Cpu_phys_id cpu, V3)
 {
+  if (pin < 32) // GICD_IROUTER<0..31> are reserved
+    return;
   Unsigned64 v = cxx::int_value<Cpu_phys_id>(cpu);
   _dist.write<Unsigned64>(v & 0xff00ffffff, GICD_IROUTER + 8 * pin);
 }
