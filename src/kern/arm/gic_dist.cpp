@@ -15,7 +15,7 @@ private:
 public:
   using V2 = cxx::integral_constant<int, 2>;
   using V3 = cxx::integral_constant<int, 3>;
-  enum
+  enum : unsigned
   {
     GICD_CTRL         = 0x000,
     GICD_TYPER        = 0x004,
@@ -45,9 +45,10 @@ public:
     GICD_CTRL_ENGR1          = 0x01,
     GICD_CTRL_ENGR1A         = 0x02,
     GICD_CTRL_ARE_NS         = 0x10,
+    GICD_CTRL_RWP            = 0x80000000,
 
-    MXC_TZIC_CTRL_NSEN       = 1 << 16,
-    MXC_TZIC_CTRL_NSENMASK   = 1 << 31,
+    MXC_TZIC_CTRL_NSEN       = 1U << 16,
+    MXC_TZIC_CTRL_NSENMASK   = 1U << 31,
 
     Lpi_intid_base = 8192,
   };
@@ -207,10 +208,18 @@ Gic_dist::cpu_init_v2()
     }
 }
 
+PUBLIC inline
+void
+Gic_dist::sync_rwp(V2)
+{}
+
 //-------------------------------------------------------------------
 IMPLEMENTATION [have_arm_gicv3]:
 
 #include "cpu.h"
+#include "poll_timeout_counter.h"
+#include "processor.h"
+#include "warn.h"
 
 PUBLIC inline
 unsigned
@@ -267,12 +276,25 @@ Gic_dist::enable(V3)
 {
   Unsigned32 dist_enable = GICD_CTRL_ENGR1 | GICD_CTRL_ENGR1A | GICD_CTRL_ARE_NS;
   _dist.write<Unsigned32>(dist_enable, GICD_CTRL);
+  sync_rwp(V3());
 }
 
 PUBLIC inline
 void
 Gic_dist::cpu_init(V3)
 {}
+
+PUBLIC inline NEEDS["poll_timeout_counter.h", "processor.h", "warn.h"]
+void
+Gic_dist::sync_rwp(V3)
+{
+  L4::Poll_timeout_counter i(1U << 27); // ~134ms @ 1GHz
+  while (i.test(_dist.read<Unsigned32>(GICD_CTRL) & GICD_CTRL_RWP))
+    Proc::pause();
+
+  if (EXPECT_FALSE(i.timed_out()))
+    WARNX(Error, "GICD: RWP timed out!\n");
+}
 
 //-------------------------------------------------------------------
 IMPLEMENTATION:
@@ -321,10 +343,12 @@ Gic_dist::softint(Unsigned32 sgi)
 }
 
 PUBLIC inline
+template<typename VERSION>
 void
-Gic_dist::disable()
+Gic_dist::disable(VERSION)
 {
   _dist.write<Unsigned32>(0, GICD_CTRL);
+  sync_rwp(VERSION());
 }
 
 PUBLIC inline
@@ -410,10 +434,14 @@ Gic_dist::set_pending_irq(unsigned idx, Unsigned32 val)
     }
 }
 
-PUBLIC inline
+PUBLIC
+template<typename VERSION>
 void
-Gic_dist::disable_irq(unsigned irq)
-{ _dist.write<Unsigned32>(1 << (irq % 32), GICD_ICENABLER + (irq / 32) * 4); }
+Gic_dist::disable_irq(VERSION, unsigned irq)
+{
+  _dist.write<Unsigned32>(1 << (irq % 32), GICD_ICENABLER + (irq / 32) * 4);
+  sync_rwp(VERSION());
+}
 
 PUBLIC inline
 void
@@ -427,7 +455,7 @@ Gic_dist::init(VERSION, unsigned cpu_prio, int nr_irqs_override = -1)
 {
   _lock.init();
 
-  disable();
+  disable(VERSION());
 
   unsigned num = hw_nr_irqs();
   if (nr_irqs_override != -1)

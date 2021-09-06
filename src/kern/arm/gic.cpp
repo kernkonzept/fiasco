@@ -115,6 +115,12 @@ public:
       _cpu.ack(irq);
   }
 
+  void mask(Mword pin) override
+  {
+    assert (cpu_lock.test());
+    disable_locked(pin);
+  }
+
   void mask_and_ack(Mword pin) override
   {
     assert (cpu_lock.test());
@@ -165,6 +171,9 @@ public:
 
   unsigned get_pmr() override { return _cpu.pmr(); }
   void set_pmr(unsigned prio) override { _cpu.pmr(prio); }
+  void disable_locked(unsigned irq)
+  { _dist.disable_irq(typename IMPL::Version(), irq); }
+
 };
 
 template<typename IMPL, typename CPU>
@@ -191,21 +200,8 @@ Gic::hw_nr_irqs()
 { return _dist.hw_nr_irqs(); }
 
 PUBLIC inline
-void Gic::disable_locked(unsigned irq)
-{ _dist.disable_irq(irq); }
-
-PUBLIC inline
 void Gic::enable_locked(unsigned irq)
 { _dist.enable_irq(irq); }
-
-
-PUBLIC
-void
-Gic::mask(Mword pin) override
-{
-  assert (cpu_lock.test());
-  disable_locked(pin);
-}
 
 PUBLIC
 void
