@@ -113,7 +113,7 @@ Jdb_object::sys_tbuf(L4_msg_tag tag, unsigned op,
           tb->msg.set_buf(i, str[i]);
 
         tb->msg.term_buf(length);
-        Jdb_tbuf::commit_entry();
+        Jdb_tbuf::commit_entry(tb);
         return commit_result(0);
       }
 
@@ -136,7 +136,7 @@ Jdb_object::sys_tbuf(L4_msg_tag tag, unsigned op,
         for (unsigned i = 0; i < length; ++i)
           tb->set_buf(i, str[i]);
 
-        Jdb_tbuf::commit_entry();
+        Jdb_tbuf::commit_entry(tb);
         return commit_result(0);
       }
 
@@ -166,7 +166,7 @@ Jdb_object::sys_tbuf(L4_msg_tag tag, unsigned op,
           tb->msg.set_buf(i, str[i]);
 
         tb->msg.term_buf(length);
-        Jdb_tbuf::commit_entry();
+        Jdb_tbuf::commit_entry(tb);
         return commit_result(0);
       }
 

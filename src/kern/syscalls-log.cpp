@@ -51,7 +51,7 @@ IMPLEMENT void FIASCO_FLATTEN sys_ipc_log_wrapper()
       entry_event_num = tb->number();
 
       if (EXPECT_TRUE(Jdb_ipc_trace::log_buf()))
-	Jdb_tbuf::commit_entry();
+	Jdb_tbuf::commit_entry(tb);
       else
 	Jdb_tbuf::direct_log_entry(tb, "IPC");
     }
@@ -70,7 +70,7 @@ IMPLEMENT void FIASCO_FLATTEN sys_ipc_log_wrapper()
 	      entry_event_num, have_snd, false);
 
       if (EXPECT_TRUE(Jdb_ipc_trace::log_buf()))
-	Jdb_tbuf::commit_entry();
+	Jdb_tbuf::commit_entry(tb);
       else
 	Jdb_tbuf::direct_log_entry(tb, "IPC result");
     }
@@ -104,7 +104,7 @@ IMPLEMENT void FIASCO_FLATTEN sys_ipc_trace_wrapper()
   tb->set(curr, ef->ip(), orig_tsc, snd_dst, regs->from_spec(),
           L4_msg_tag(0,0,0,0), 0, 0);
 
-  Jdb_tbuf::commit_entry();
+  Jdb_tbuf::commit_entry(tb);
 }
 
 

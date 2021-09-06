@@ -142,7 +142,7 @@ Jdb_tbuf::new_entry()
  * does nothing. */
 PUBLIC static inline
 void
-Jdb_tbuf::commit_entry()
+Jdb_tbuf::commit_entry(Tb_entry *)
 {}
 
 /** Return number of entries currently allocated in tracebuffer.

@@ -402,7 +402,7 @@ Breakpoint::test_log(Thread *t)
       // is called with disabled interrupts
       Tb_entry_bp *tb = static_cast<Tb_entry_bp*>(Jdb_tbuf::new_entry());
       tb->set(t, e->ip(), mode, len, value, addr.addr());
-      Jdb_tbuf::commit_entry();
+      Jdb_tbuf::commit_entry(tb);
     }
 }
 
