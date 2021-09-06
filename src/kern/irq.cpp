@@ -375,7 +375,7 @@ Irq_sender::handle_remote_hit(Context::Drq *, Context *target, void *arg)
       if (EXPECT_TRUE(irq->send_msg(t, false)))
         return Context::Drq::no_answer_resched();
     }
-  else
+  else if (EXPECT_TRUE(is_valid_thread(t)))
     t->drq(&irq->_drq, handle_remote_hit, irq,
            Context::Drq::No_wait);
 
