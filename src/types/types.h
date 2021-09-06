@@ -136,6 +136,7 @@ struct Diff
   Diff(Diff const &) = default;
   explicit Diff(Address a) : Base_class(a) {}
   //Diff(::Order o) : Base_class(o) {}
+  Diff &operator= (Diff const &) = default;
 
   template< int OSHIFT >
   Diff(Diff<OSHIFT> o) : Base_class(Diff<OSHIFT>::val(o), OSHIFT) {}
@@ -151,6 +152,7 @@ struct Addr
   Addr() = default;
   Addr(Addr const &) = default;
   explicit Addr(Address a) : Base_class(a) {}
+  Addr &operator= (Addr const &) = default;
 
   template< int OSHIFT >
   Addr(Addr<OSHIFT> o) : Base_class(Addr<OSHIFT>::val(o), OSHIFT) {}
