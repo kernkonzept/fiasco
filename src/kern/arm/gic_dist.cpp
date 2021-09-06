@@ -30,7 +30,7 @@ public:
     GICD_ICFGR        = 0xc00,
     GICD_SGIR         = 0xf00,
 
-    GICD_IROUTER      = 0x6100,
+    GICD_IROUTER      = 0x6000, // n = 0..31 reserved, n = 32...1019 valid
 
     // covers GICv2 and GICv3
     Size              = 0x10000,
@@ -207,7 +207,7 @@ Gic_dist::init_targets(unsigned max, V3)
   Unsigned64 t = Cpu::mpidr();
 
   for (unsigned i = 32; i < max; ++i)
-    _dist.write<Unsigned64>(t & 0xff00ffffff, GICD_IROUTER + i * 8);
+    _dist.write<Unsigned64>(t & 0xff00ffffff, GICD_IROUTER + 8 * i);
 }
 
 PRIVATE
