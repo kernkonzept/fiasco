@@ -2,6 +2,7 @@ INTERFACE:
 
 #include <cxx/bitfield>
 
+#include "atomic.h"
 #include "types.h"
 #include "spin_lock.h"
 
@@ -132,9 +133,9 @@ class Irq_base
 public:
 
   typedef void (*Hit_func)(Irq_base *, Upstream_irq const *);
-  enum Flags
+  enum Flags : Mword
   {
-    F_enabled = 1,
+    F_enabled = 1, // This flags needs to be set atomically.
   };
 
   Irq_base() : _flags(0), _irq_lock(Spin_lock<>::Unlocked), _next(0)
@@ -163,13 +164,48 @@ public:
 
   void set_cpu(Cpu_number cpu) { _chip->set_cpu(_pin, cpu); }
 
-  bool masked() const { return !(_flags & F_enabled); }
-  Mword flags() const { return _flags; }
-
   void unbind() { _chip->unbind(this); }
 
-  bool __mask() { bool o = masked(); _flags &= ~F_enabled; return o; }
-  bool __unmask() { bool o = masked(); _flags |= F_enabled; return o; }
+  bool masked() const { return !(access_once(&_flags) & F_enabled); }
+  Mword flags() const { return access_once(&_flags); }
+
+  /**
+   * Set the local IRQ state to `masked` (clear the `F_enabled` bit).
+   * \retval false the IRQ was not masked before and is now masked.
+   * \retval true the IRQ was masked before and the state was NOT changed.
+   */
+  bool __mask()
+  {
+    Mword old;
+    // Replace by atomic_fetch_and()!
+    do
+      {
+        old = _flags;
+        if (!(old & F_enabled))
+          return true;
+      }
+    while (!mp_cas(&_flags, old, old & ~F_enabled));
+    return false;
+  }
+
+  /**
+   * Set the local state to `unmasked` (set the `F_enabled` bit).
+   * \retval false the IRQ was not masked before and the state was NOT changed.
+   * \retval true the IRQ was masked before and is now unmasked.
+   */
+  bool __unmask()
+  {
+    Mword old;
+    // Replace by atomic_fetch_or()!
+    do
+      {
+        old = _flags;
+        if (old & F_enabled)
+          return false;
+      }
+    while (!mp_cas(&_flags, old, old | F_enabled));
+    return true;
+  }
 
   void set_hit(Hit_func f) { hit_func = f; }
   virtual void switch_mode(bool is_edge_triggered) = 0;
@@ -180,7 +216,7 @@ protected:
 
   Irq_chip *_chip;
   Mword _pin;
-  unsigned short _flags;
+  Mword _flags;
   Spin_lock<> _irq_lock;
 
   template<typename T>
