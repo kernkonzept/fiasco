@@ -143,6 +143,8 @@ disasm_bytes(char *buffer, unsigned len, Jdb_address addr,
 # endif
                              ), &handle);
 #endif
+      if (ret != CS_ERR_OK)
+        handle = (csh)0;
     }
   if (buffer)
     *buffer = '\0';
@@ -150,7 +152,7 @@ disasm_bytes(char *buffer, unsigned len, Jdb_address addr,
   if (handle)
     {
 #if defined(CONFIG_IA32) || defined(CONFIG_AMD64)
-      ret = cs_option(handle, CS_OPT_SYNTAX,
+      (void)cs_option(handle, CS_OPT_SYNTAX,
                       show_intel_syntax ? CS_OPT_SYNTAX_INTEL : CS_OPT_SYNTAX_ATT);
 #endif
       cs_insn *insn = NULL;
