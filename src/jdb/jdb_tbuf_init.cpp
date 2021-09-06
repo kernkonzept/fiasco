@@ -74,7 +74,11 @@ void Jdb_tbuf_init::init()
       if (Koptions::o()->opt(Koptions::F_tbuf_entries))
         want_entries = Koptions::o()->tbuf_entries;
 
-      // Must be a power of 2 (for performance reasons). Also use a sane upper
+      static_assert((sizeof(Tb_entry_union) & (sizeof(Tb_entry_union) - 1)) == 0,
+                    "Tb_entry_size must be a power of two");
+
+      // Must be a power of 2 for performance reasons and because the buffer
+      // pointer is determined by binary AND of size-1. Also use a sane upper
       // limit which fits into 4GB. The allocate function limits the buffer to
       // the available window in the virtual memory layout.
       for (n = Config::PAGE_SIZE / sizeof(Tb_entry_union);
@@ -85,7 +89,6 @@ void Jdb_tbuf_init::init()
       if (n < want_entries)
         panic("Cannot allocate more than %u entries for tracebuffer.\n", n);
 
-      max_entries(n);
       unsigned size = n * sizeof(Tb_entry_union);
       unsigned got = allocate(size);
       if (got < size)
@@ -96,7 +99,7 @@ void Jdb_tbuf_init::init()
       status()->scaler_tsc_to_us = Cpu::boot_cpu()->get_scaler_tsc_to_us();
       status()->scaler_ns_to_tsc = Cpu::boot_cpu()->get_scaler_ns_to_tsc();
 
-      _tbuf_max    = buffer() + max_entries();
+      _max_entries = n;
       _size        = size;
 
       clear_tbuf();

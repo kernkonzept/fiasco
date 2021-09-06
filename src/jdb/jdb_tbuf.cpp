@@ -23,16 +23,12 @@ public:
   };
 
 protected:
-  static Tb_entry_union *_tbuf_act;	// current entry
-  static Tb_entry_union *_tbuf_max;
-  static Mword		_entries;	// number of occupied entries
   static Mword		_max_entries;	// maximum number of entries
   static Mword          _filter_enabled;// !=0 if filter is active
   static Mword		_number;	// current event number
   static Address        _size;		// size of memory area for tbuffer
   static Tracebuffer_status *_status;
   static Tb_entry_union *_buffer;
-  static Spin_lock<>    _lock;
 };
 
 #ifdef CONFIG_JDB_LOGGING
@@ -56,10 +52,12 @@ protected:
 
 IMPLEMENTATION:
 
+#include "atomic.h"
 #include "config.h"
 #include "cpu_lock.h"
 #include "initcalls.h"
 #include "lock_guard.h"
+#include "mem.h"
 #include "std_macros.h"
 
 // read only: initialized at boot
@@ -67,16 +65,12 @@ Tracebuffer_status *Jdb_tbuf::_status;
 Tb_entry_union *Jdb_tbuf::_buffer;
 Address Jdb_tbuf::_size;
 Mword Jdb_tbuf::_max_entries;
-Tb_entry_union *Jdb_tbuf::_tbuf_max;
 
 // read mostly (only modified in JDB)
 Mword Jdb_tbuf::_filter_enabled;
 
 // modified often (for each new entry)
-Tb_entry_union *Jdb_tbuf::_tbuf_act;
-Mword Jdb_tbuf::_entries;
 Mword Jdb_tbuf::_number;
-Spin_lock<> Jdb_tbuf::_lock;
 
 
 static void direct_log_dummy(Tb_entry*, const char*)
@@ -98,8 +92,7 @@ Jdb_tbuf::clear_tbuf()
   for (i = 0; i < _max_entries; i++)
     buffer()[i].clear();
 
-  _tbuf_act = buffer();
-  _entries = 0;
+  _number = 0;
 }
 
 /** Return pointer to new tracebuffer entry. */
@@ -107,20 +100,19 @@ PUBLIC static
 Tb_entry*
 Jdb_tbuf::new_entry()
 {
-  Tb_entry *tb;
-  {
-    auto guard = lock_guard(_lock);
+  Mword n;
+  // use atomic_add() when available!
+  do
+    n = access_once(&_number);
+  while (!mp_cas(&_number, n, n + 1));
 
-    tb = _tbuf_act;
-
-    if (++_tbuf_act >= _tbuf_max)
-      _tbuf_act = buffer();
-
-    if (_entries < _max_entries)
-      _entries++;
-
-    tb->number(++_number);
-  }
+  Tb_entry_union *tb = buffer() + (n & (_max_entries - 1));
+  // As long as not all information is written, write an invalid number which
+  // can be easily corrected in commit_entry(). See the 'committed' parameter
+  // in  Jdb_tbuf::event(). There is still a short race between setting _number
+  // and setting the entry's number field. Let's ignore that for now.
+  tb->number(n + 1000);
+  Mem::barrier();
 
   tb->rdtsc();
   tb->rdpmc1();
@@ -142,8 +134,10 @@ Jdb_tbuf::new_entry()
  * does nothing. */
 PUBLIC static inline
 void
-Jdb_tbuf::commit_entry(Tb_entry *)
-{}
+Jdb_tbuf::commit_entry(Tb_entry *tb)
+{
+  tb->number(tb->number() - 1000);
+}
 
 /** Return number of entries currently allocated in tracebuffer.
  * @return number of entries */
@@ -151,7 +145,7 @@ PUBLIC static inline
 Mword
 Jdb_tbuf::unfiltered_entries()
 {
-  return _entries;
+  return _number > _max_entries ? _max_entries : _number;
 }
 
 PUBLIC static
@@ -179,14 +173,6 @@ Jdb_tbuf::max_entries()
   return _max_entries;
 }
 
-/** Set maximum number of entries in tracebuffer. */
-PUBLIC static inline
-void
-Jdb_tbuf::max_entries (Mword num)
-{
-  _max_entries = num;
-}
-
 /** Check if event is valid.
  * @param idx position of event in tracebuffer
  * @return 0 if not valid, 1 if valid */
@@ -194,7 +180,7 @@ PUBLIC static inline
 int
 Jdb_tbuf::event_valid(Mword idx)
 {
-  return idx < _entries;
+  return idx < unfiltered_entries();
 }
 
 /** Return pointer to tracebuffer event.
@@ -211,12 +197,7 @@ Jdb_tbuf::unfiltered_lookup(Mword idx)
   if (!event_valid(idx))
     return 0;
 
-  Tb_entry_union *e = _tbuf_act - idx - 1;
-
-  if (e < buffer())
-    e += _max_entries;
-
-  return e;
+  return buffer() + ((_number - idx - 1) & (_max_entries - 1));
 }
 
 /** Return pointer to tracebuffer event.
@@ -251,13 +232,8 @@ PUBLIC static
 Mword
 Jdb_tbuf::unfiltered_idx(Tb_entry const *e)
 {
-  Tb_entry_union const *ef = static_cast<Tb_entry_union const *>(e);
-  Mword idx = _tbuf_act - ef - 1;
-
-  if (idx > _max_entries)
-    idx += _max_entries;
-
-  return idx;
+  auto *ef = static_cast<Tb_entry_union const *>(e);
+  return (_number - (ef - buffer()) - 1) & (_max_entries - 1);
 }
 
 /** Tb_entry => tracebuffer index. */
@@ -268,6 +244,7 @@ Jdb_tbuf::idx(Tb_entry const *e)
   if (!_filter_enabled)
     return unfiltered_idx(e);
 
+  Tb_entry_union const *ef_next = buffer() + (_number & (_max_entries - 1));
   Tb_entry_union const *ef = static_cast<Tb_entry_union const*>(e);
   Mword idx = (Mword) - 1;
 
@@ -278,7 +255,7 @@ Jdb_tbuf::idx(Tb_entry const *e)
       ef++;
       if (ef >= buffer() + _max_entries)
 	ef -= _max_entries;
-      if (ef == _tbuf_act)
+      if (ef == ef_next)
 	break;
     }
 
@@ -334,15 +311,20 @@ Jdb_tbuf::search_to_idx(Mword nr)
 }
 
 /** Return some information about log event.
- * @param idx number of event to determine the info
- * @retval number event number
- * @retval tsc event value of CPU cycles
- * @retval pmc event value of perf counter cycles
- * @return 0 if something wrong, 1 if everything ok */
+ * @param idx             index of event to determine the info
+ *                        (0 = most recent event, 1 = penultimate event, ...)
+ * @param[out] number     event number
+ * @param[out] klock      event value of kernel clock
+ * @param[out] tsc        event value of CPU cycles
+ * @param[out] pmc1       event value of perf counter 1 cycles
+ * @param[out] pmc2       event value of perf counter 2 cycles
+ * @param[out] committed  false: event not yet committed
+ * @return 0 if something wrong, 1 if everything OK */
 PUBLIC static
 int
 Jdb_tbuf::event(Mword idx, Mword *number, Unsigned32 *kclock,
-		Unsigned64 *tsc, Unsigned32 *pmc1, Unsigned32 *pmc2)
+		Unsigned64 *tsc, Unsigned32 *pmc1, Unsigned32 *pmc2,
+		bool *committed = nullptr)
 {
   Tb_entry *e = lookup(idx);
 
@@ -358,6 +340,8 @@ Jdb_tbuf::event(Mword idx, Mword *number, Unsigned32 *kclock,
     *pmc1 = e->pmc1();
   if (pmc2)
     *pmc2 = e->pmc2();
+  if (committed)
+    *committed = (e->number() < _number);
   return true;
 }
 

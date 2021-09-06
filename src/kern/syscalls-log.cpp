@@ -48,12 +48,12 @@ IMPLEMENT void FIASCO_FLATTEN sys_ipc_log_wrapper()
       tb->set(curr, regs->ip(), ipc_regs, utcb,
 	      dbg_id, curr->sched_context()->left());
 
-      entry_event_num = tb->number();
-
       if (EXPECT_TRUE(Jdb_ipc_trace::log_buf()))
 	Jdb_tbuf::commit_entry(tb);
       else
 	Jdb_tbuf::direct_log_entry(tb, "IPC");
+
+      entry_event_num = tb->number();
     }
 
 

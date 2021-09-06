@@ -377,8 +377,17 @@ Jdb_tbuf_show::show_events(Mword n, Mword ref, Mword count, Unsigned8 mode,
       Kconsole::console()->getchar_chance();
       _buffer_str.reset();
 
-      if (!Jdb_tbuf::event(n, &number, &kclock, &utsc, &upmc1, &upmc2))
+      bool ok = false;
+      if (!Jdb_tbuf::event(n, &number, &kclock, &utsc, &upmc1, &upmc2, &ok))
         break;
+
+      if (!ok)
+        {
+          // event not committed (missing data)
+          printf("event not yet committed%s", count != 1 ? "\n" : "");
+          ++n;
+          continue;
+        }
 
       if (long_output)
         {
