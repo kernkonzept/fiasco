@@ -601,7 +601,7 @@ void
 Utest::thread_fn()
 {
   auto *args = reinterpret_cast<Thread_args *>(current_thread()->user_ip());
-  cxx::functor<void ()> const &fn = args->fn;
+  cxx::functor<void ()> fn = args->fn;
   write_now(&args->started, true);
 
   // Cf. Thread::user_invoke_generic(): Release CPU lock explicitly, because
