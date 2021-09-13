@@ -204,10 +204,10 @@ PUBLIC inline NEEDS["cpu.h"]
 void
 Gic_dist::init_targets(unsigned max, V3)
 {
-  Unsigned64 t = Cpu::mpidr();
+  Unsigned64 t = Cpu::mpidr() & 0xff00ffffff;
 
   for (unsigned i = 32; i < max; ++i)
-    _dist.write<Unsigned64>(t & 0xff00ffffff, GICD_IROUTER + 8 * i);
+    _dist.write<Unsigned64>(t, GICD_IROUTER + 8 * i);
 }
 
 PRIVATE
