@@ -257,9 +257,9 @@ IMPLEMENTATION:
  * This array is a pre-order encoding of the following tree:
  * 
  *                   0
- * 	          /     \ 
+ * 	          /     \
  *               1       7
- *            /  |  \                   
+ *            /  |  \
  *           2   3   5
  *               |   |
  *        	 4   6
@@ -314,7 +314,7 @@ IMPLEMENTATION:
  * physical address (or just the address of the tree header) in the
  * Mapdb-user-visible Mapping (which could be different from the
  * internal tree representation).  (XXX: Implementing one of these
- * ideas is probably worthwile doing!)
+ * ideas is probably worthwhile doing!)
 
  * Instead of copying whole trees around when they grow or shrink a
  * lot, or copying parts of trees when inserting an element, we could
