@@ -103,7 +103,7 @@
     Tb_entry_ke *tb = static_cast<Tb_entry_ke*>(Jdb_tbuf::new_entry()); \
     tb->set(context, Proc::program_counter());                          \
     tb->msg.set_const(text);                                            \
-    Jdb_tbuf::commit_entry(l);                                          \
+    Jdb_tbuf::commit_entry(tb);                                         \
   } while (0)
 
 /*
@@ -115,7 +115,7 @@
     tb->set(context, Proc::program_counter());                          \
     tb->v[0] = v1; tb->v[1] = v2; tb->v[2] = v3;                        \
     tb->msg.set_const(text);                                            \
-    Jdb_tbuf::commit_entry(l);                                          \
+    Jdb_tbuf::commit_entry(tb);                                         \
   } while (0)
 
 #endif // !CONFIG_JDB
