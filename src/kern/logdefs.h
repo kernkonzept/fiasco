@@ -67,8 +67,7 @@
 #define LOG_TRAP                                                        \
   LOG_TRACE_COND("Exceptions", "exc", current(), Tb_entry_trap,         \
                  (!ts->exclude_logging()),                              \
-    l->set(ts->ip(), ts);                                               \
-    Jdb_tbuf::commit_entry() )
+    l->set(ts->ip(), ts))
 
 #define LOG_TRAP_CN(curr, n)                                            \
   LOG_TRACE("Exceptions", "exc", curr, Tb_entry_trap,                   \
