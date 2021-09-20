@@ -23,9 +23,9 @@ public:
   static unsigned state_size();
   static unsigned state_align();
   static void init_state(Fpu_state *);
-  static void restore_state(Fpu_state *);
+  static void restore_state(Fpu_state const *);
   static void save_state(Fpu_state *);
-  static void copy_state(Fpu_state *, Fpu_state *);
+  static void copy_state(Fpu_state *, Fpu_state const *);
 
   static Per_cpu<Fpu> fpu;
 };
@@ -46,8 +46,6 @@ private:
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION:
-
-#include "fpu_state.h"
 
 DEFINE_PER_CPU Per_cpu<Fpu> Fpu::fpu;
 
@@ -76,11 +74,11 @@ void Fpu::save_state(Fpu_state *)
 {}
 
 IMPLEMENT inline
-void Fpu::restore_state(Fpu_state *)
+void Fpu::restore_state(Fpu_state const *)
 {}
 
 IMPLEMENT inline
-void Fpu::copy_state(Fpu_state *, Fpu_state *)
+void Fpu::copy_state(Fpu_state *, Fpu_state const *)
 {}
 
 PUBLIC static inline
@@ -97,7 +95,7 @@ IMPLEMENTATION [fpu]:
 #include <cstring>
 
 IMPLEMENT_DEFAULT inline NEEDS[<cstring>]
-void Fpu::copy_state(Fpu_state *to, Fpu_state *from)
+void Fpu::copy_state(Fpu_state *to, Fpu_state const *from)
 {
-  memcpy(to->state_buffer(), from->state_buffer(), Fpu::state_size());
+  memcpy(to, from, Fpu::state_size());
 }

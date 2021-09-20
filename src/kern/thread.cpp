@@ -799,12 +799,12 @@ IMPLEMENTATION [fpu && !ux && lazy_fpu]:
 
 #include "fpu.h"
 #include "fpu_alloc.h"
-#include "fpu_state.h"
+#include "fpu_state_ptr.h"
 
 /*
  * Handle FPU trap for this context. Assumes disabled interrupts
  */
-PUBLIC inline NEEDS ["fpu_alloc.h","fpu_state.h"]
+PUBLIC inline NEEDS ["fpu_alloc.h","fpu_state_ptr.h"]
 int
 Thread::switchin_fpu(bool alloc_new_fpu = true)
 {
@@ -818,7 +818,7 @@ Thread::switchin_fpu(bool alloc_new_fpu = true)
   assert (f.owner() != this);
 
   // Allocate FPU state slab if we didn't already have one
-  if (!fpu_state()->state_buffer()
+  if (!fpu_state().valid()
       && (EXPECT_FALSE((!alloc_new_fpu
                         || (state() & Thread_alien))
                        || !Fpu_alloc::alloc_state(_quota, fpu_state()))))
@@ -832,7 +832,7 @@ Thread::switchin_fpu(bool alloc_new_fpu = true)
     f.owner()->spill_fpu();
 
   // Become FPU owner and restore own FPU state
-  f.restore_state(fpu_state());
+  f.restore_state(fpu_state().get());
 
   state_add_dirty(Thread_fpu_owner);
   f.set_owner(this);
@@ -848,11 +848,11 @@ PUBLIC inline NEEDS["fpu.h", "fpu_alloc.h"]
 void
 Thread::transfer_fpu(Thread *to) //, Trap_state *trap_state, Utcb *to_utcb)
 {
-  if (to->fpu_state()->state_buffer())
+  if (to->fpu_state().valid())
     Fpu_alloc::free_state(to->fpu_state());
 
-  to->fpu_state()->state_buffer(fpu_state()->state_buffer());
-  fpu_state()->state_buffer(0);
+  to->fpu_state().set(fpu_state().get());
+  fpu_state().set(nullptr);
 
   if (home_cpu() != to->home_cpu())
     {
@@ -892,7 +892,7 @@ IMPLEMENTATION [fpu && !ux && !lazy_fpu]:
 
 #include "fpu.h"
 #include "fpu_alloc.h"
-#include "fpu_state.h"
+#include "fpu_state_ptr.h"
 
 /*
  * Handle FPU trap for this context. Assumes disabled interrupts
@@ -915,17 +915,17 @@ Thread::alloc_eager_fpu_state()
   return Fpu_alloc::alloc_state(_quota, fpu_state());
 }
 
-PUBLIC inline NEEDS["fpu.h", "fpu_state.h"]
+PUBLIC inline NEEDS["fpu.h", "fpu_state_ptr.h"]
 void
 Thread::transfer_fpu(Thread *to) //, Trap_state *trap_state, Utcb *to_utcb)
 {
   auto *curr = current();
   if (this == curr)
-    Fpu::save_state(to->fpu_state());
+    Fpu::save_state(to->fpu_state().get());
   else if (curr == to)
-    Fpu::restore_state(fpu_state());
+    Fpu::restore_state(fpu_state().get());
   else
-    Fpu::copy_state(to->fpu_state(), fpu_state());
+    Fpu::copy_state(to->fpu_state().get(), fpu_state().get());
 }
 
 //---------------------------------------------------------------------------

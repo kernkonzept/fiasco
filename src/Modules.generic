@@ -26,7 +26,7 @@ INTERFACES_KERNEL	:= cpu_mask rcupdate kobject_mapdb context_base pm \
 			   kernel_thread map_util irq banner warn            \
 			   app_cpu_thread globals watchdog kernel_uart       \
 			   main config vmem_alloc paging fpu                 \
-			   fpu_state fpu_alloc cpu entry_frame               \
+			   fpu_state_ptr fpu_alloc cpu entry_frame               \
 			   kernel_console ipc_gate task sigma0_task          \
                            kernel_task platform_control_object          \
 			   irq_controller irq_chip irq_mgr terminate         \

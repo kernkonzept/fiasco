@@ -5,7 +5,7 @@ INTERFACE:
 #include "clock.h"
 #include "config.h"
 #include "continuation.h"
-#include "fpu_state.h"
+#include "fpu_state_ptr.h"
 #include "globals.h"
 #include "l4_types.h"
 #include "member_offs.h"
@@ -325,7 +325,7 @@ private:
   Sched_context *_sched;
 
   // Pointer to floating point register state
-  Fpu_state _fpu_state;
+  Fpu_state_ptr _fpu_state;
   // Implementation-specific consumed CPU time (TSC ticks or usecs)
   Clock::Time _consumed_time;
 
@@ -930,10 +930,10 @@ Context::set_kernel_sp(Mword * const esp)
 }
 
 PUBLIC inline
-Fpu_state *
+Fpu_state_ptr &
 Context::fpu_state()
 {
-  return &_fpu_state;
+  return _fpu_state;
 }
 
 /**
@@ -2134,10 +2134,10 @@ Context::spill_fpu()
   // If we own the FPU, we should never be getting an "FPU unavailable" trap
   assert (Fpu::fpu.current().owner() == this);
   assert (state() & Thread_fpu_owner);
-  assert (fpu_state());
+  assert (fpu_state().valid());
 
   // Save the FPU state of the previous FPU owner (lazy) if applicable
-  Fpu::save_state(fpu_state());
+  Fpu::save_state(fpu_state().get());
   state_del_dirty(Thread_fpu_owner);
 }
 
@@ -2221,10 +2221,10 @@ PUBLIC inline NEEDS ["fpu.h"]
 void
 Context::spill_fpu()
 {
-  assert (fpu_state());
+  assert (fpu_state().valid());
 
   // Save the FPU state of the previous FPU owner
-  Fpu::save_state(fpu_state());
+  Fpu::save_state(fpu_state().get());
 }
 
 IMPLEMENT inline NEEDS ["fpu.h"]
@@ -2237,7 +2237,7 @@ Context::switch_fpu(Context *t)
     f.enable();
 
   spill_fpu();
-  f.restore_state(t->fpu_state());
+  f.restore_state(t->fpu_state().get());
 
   if (t->state() & Thread_vcpu_fpu_disabled)
     f.disable();

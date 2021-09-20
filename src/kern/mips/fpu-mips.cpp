@@ -39,6 +39,7 @@ private:
   Fir _fir;
 };
 
+class Fpu_state : public Fpu::Fpu_regs {};
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [mips && fpu]:
@@ -47,7 +48,6 @@ IMPLEMENTATION [mips && fpu]:
 #include <cstdio>
 #include <cstring>
 
-#include "fpu_state.h"
 #include "kdb_ke.h"
 #include "mem.h"
 #include "processor.h"
@@ -85,12 +85,10 @@ Fpu::fcr_read()
   return fcr;
 }
 
-PUBLIC static inline NEEDS ["fpu_state.h", <cassert>]
+PUBLIC static inline NEEDS [<cassert>]
 Mword
-Fpu::fcr(Fpu_state *s)
+Fpu::fcr(Fpu_state *fpu_regs)
 {
-  Fpu_regs *fpu_regs = reinterpret_cast<Fpu_regs *>(s->state_buffer());
-
   assert(fpu_regs);
   return fpu_regs->fcsr;
 }
@@ -269,7 +267,7 @@ Fpu::fpu_save_16odd(Fpu_regs *r)
 
 PRIVATE static inline
 void
-Fpu::fpu_restore_16even(Fpu_regs *r)
+Fpu::fpu_restore_16even(Fpu_regs const *r)
 {
   Mword tmp;
 
@@ -301,7 +299,7 @@ Fpu::fpu_restore_16even(Fpu_regs *r)
 
 PRIVATE static inline
 void
-Fpu::fpu_restore_16odd(Fpu_regs *r)
+Fpu::fpu_restore_16odd(Fpu_regs const *r)
 {
   set_mipsr2_fp64();
   asm volatile(".set   push                   \n"
@@ -330,10 +328,8 @@ Fpu::fpu_restore_16odd(Fpu_regs *r)
 
 IMPLEMENT
 void
-Fpu::save_state(Fpu_state *s)
+Fpu::save_state(Fpu_state *fpu_regs)
 {
-  Fpu_regs *fpu_regs = reinterpret_cast<Fpu_regs *>(s->state_buffer());
-
   assert(fpu_regs);
 
   if (Fpu::mode_64bit())
@@ -344,10 +340,8 @@ Fpu::save_state(Fpu_state *s)
 
 IMPLEMENT
 void
-Fpu::restore_state(Fpu_state *s)
+Fpu::restore_state(Fpu_state const *fpu_regs)
 {
-  Fpu_regs *fpu_regs = reinterpret_cast<Fpu_regs *>(s->state_buffer());
-
   assert(fpu_regs);
 
   if (Fpu::mode_64bit())
@@ -368,9 +362,8 @@ Fpu::state_align()
 
 IMPLEMENT
 void
-Fpu::init_state(Fpu_state *s)
+Fpu::init_state(Fpu_state *fpu_regs)
 {
-  Fpu_regs *fpu_regs = reinterpret_cast<Fpu_regs *>(s->state_buffer());
   static_assert(!(sizeof (*fpu_regs) % sizeof(Mword)),
                 "Non-mword size of Fpu_regs");
 

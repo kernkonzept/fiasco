@@ -15,6 +15,8 @@ public:
   };
 };
 
+class Fpu_state : public Fpu::Fpu_regs {};
+
 // ------------------------------------------------------------------------
 INTERFACE [arm && !fpu]:
 
@@ -45,7 +47,6 @@ IMPLEMENTATION [arm && fpu]:
 #include <cstring>
 
 #include "cpu.h"
-#include "fpu_state.h"
 #include "mem.h"
 #include "processor.h"
 #include "static_assert.h"
@@ -105,7 +106,7 @@ Fpu::save_fpu_regs(Fpu_regs *r)
 
 PRIVATE static inline
 void
-Fpu::restore_fpu_regs(Fpu_regs *r)
+Fpu::restore_fpu_regs(Fpu_regs const *r)
 {
   asm volatile("ldp     q0, q1,   [%[s], #16 *  0]        \n"
                "ldp     q2, q3,   [%[s], #16 *  2]        \n"
@@ -133,20 +134,16 @@ Fpu::restore_fpu_regs(Fpu_regs *r)
 
 IMPLEMENT
 void
-Fpu::save_state(Fpu_state *s)
+Fpu::save_state(Fpu_state *fpu_regs)
 {
-  Fpu_regs *fpu_regs = reinterpret_cast<Fpu_regs *>(s->state_buffer());
-
   assert(fpu_regs);
   save_fpu_regs(fpu_regs);
 }
 
 IMPLEMENT_DEFAULT
 void
-Fpu::restore_state(Fpu_state *s)
+Fpu::restore_state(Fpu_state const *fpu_regs)
 {
-  Fpu_regs *fpu_regs = reinterpret_cast<Fpu_regs *>(s->state_buffer());
-
   assert(fpu_regs);
   restore_fpu_regs(fpu_regs);
 }
@@ -197,11 +194,10 @@ Fpu::show(Cpu_number)
 //-------------------------------------------------------------------------
 IMPLEMENTATION [arm && fpu && !cpu_virt]:
 
-IMPLEMENT inline NEEDS ["fpu_state.h", "mem.h", "static_assert.h", <cstring>]
+IMPLEMENT inline NEEDS ["mem.h", "static_assert.h", <cstring>]
 void
-Fpu::init_state(Fpu_state *s)
+Fpu::init_state(Fpu_state *fpu_regs)
 {
-  Fpu_regs *fpu_regs = reinterpret_cast<Fpu_regs *>(s->state_buffer());
   static_assert(!(sizeof (*fpu_regs) % sizeof(Mword)),
                 "Non-mword size of Fpu_regs");
   Mem::memset_mwords(fpu_regs, 0, sizeof (*fpu_regs) / sizeof(Mword));
@@ -244,11 +240,10 @@ Fpu::disable()
 //-------------------------------------------------------------------------
 IMPLEMENTATION [arm && fpu && cpu_virt]:
 
-IMPLEMENT inline NEEDS ["fpu_state.h", "mem.h", "static_assert.h", <cstring>]
+IMPLEMENT inline NEEDS ["mem.h", "static_assert.h", <cstring>]
 void
-Fpu::init_state(Fpu_state *s)
+Fpu::init_state(Fpu_state *fpu_regs)
 {
-  Fpu_regs *fpu_regs = reinterpret_cast<Fpu_regs *>(s->state_buffer());
   static_assert(!(sizeof (*fpu_regs) % sizeof(Mword)),
                 "Non-mword size of Fpu_regs");
   Mem::memset_mwords(fpu_regs, 0, sizeof (*fpu_regs) / sizeof(Mword));

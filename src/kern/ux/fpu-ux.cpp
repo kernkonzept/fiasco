@@ -29,11 +29,11 @@ IMPLEMENT
 void
 Fpu::save_state(Fpu_state *s)
 {
-  assert (s->state_buffer());
+  assert (s);
 
   // FIXME: assume UP here (current_meme_space(0))
   ptrace(Cpu::boot_cpu()->features() & FEAT_FXSR ? PTRACE_GETFPXREGS : PTRACE_GETFPREGS,
-         Mem_space::current_mem_space(Cpu_number::boot_cpu())->pid(), NULL, s->state_buffer());
+         Mem_space::current_mem_space(Cpu_number::boot_cpu())->pid(), NULL, s);
 }
 
 /**
@@ -42,13 +42,13 @@ Fpu::save_state(Fpu_state *s)
  */
 IMPLEMENT
 void
-Fpu::restore_state(Fpu_state *s)
+Fpu::restore_state(Fpu_state const *s)
 {
-  assert (s->state_buffer());
+  assert (s);
 
   // FIXME: assume UP here (current_meme_space(0))
   ptrace(Cpu::boot_cpu()->features() & FEAT_FXSR ? PTRACE_SETFPXREGS : PTRACE_SETFPREGS,
-         Mem_space::current_mem_space(Cpu_number::boot_cpu())->pid(), NULL, s->state_buffer());
+         Mem_space::current_mem_space(Cpu_number::boot_cpu())->pid(), NULL, s);
 }
 
 /**

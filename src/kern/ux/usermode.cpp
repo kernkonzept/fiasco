@@ -517,7 +517,7 @@ Usermode::iret_to_user_mode(Cpu_number _cpu,
   else
     assert(r == 0);
 
-  Fpu::restore_state (t->fpu_state());
+  Fpu::restore_state (t->fpu_state().get());
 
   for (;;)
     {
@@ -551,7 +551,7 @@ Usermode::iret_to_user_mode(Cpu_number _cpu,
   Cpu::set_fs(regs.xfs);
   Cpu::set_gs(regs.xgs);
 
-  Fpu::save_state (t->fpu_state());
+  Fpu::save_state (t->fpu_state().get());
 }
 
 /**

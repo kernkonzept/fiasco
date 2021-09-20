@@ -1,6 +1,7 @@
 INTERFACE:
 
 #include "fpu.h"
+#include "fpu_state_ptr.h"
 #include "slab_cache.h"
 
 class Ram_quota;
@@ -11,7 +12,6 @@ class Fpu_alloc : public Fpu
 
 IMPLEMENTATION:
 
-#include "fpu_state.h"
 #include "kmem_slab.h"
 #include "ram_quota.h"
 
@@ -35,7 +35,7 @@ Fpu_alloc::quota_offset(unsigned state_size)
 
 PUBLIC static
 bool
-Fpu_alloc::alloc_state(Ram_quota *q, Fpu_state *s)
+Fpu_alloc::alloc_state(Ram_quota *q, Fpu_state_ptr &s)
 {
   unsigned long sz = Fpu::state_size();
   void *b;
@@ -44,22 +44,21 @@ Fpu_alloc::alloc_state(Ram_quota *q, Fpu_state *s)
     return false;
 
   *((Ram_quota **)((char*)b + quota_offset(sz))) = q;
-  s->_state_buffer = b;
-  Fpu::init_state(s);
+  s.set((Fpu_state *)b);
+  Fpu::init_state(s.get());
 
   return true;
 }
 
 PUBLIC static
 void
-Fpu_alloc::free_state(Fpu_state *s)
+Fpu_alloc::free_state(Fpu_state_ptr &s)
 {
-  if (s->_state_buffer)
-    {
-      unsigned long sz = Fpu::state_size();
-      Ram_quota *q = *((Ram_quota **)((char*)(s->_state_buffer)
-                                      + quota_offset(sz)));
-      slab_alloc()->q_free(q, s->_state_buffer);
-      s->_state_buffer = 0;
-    }
+  if (!s.valid())
+    return;
+
+  unsigned long sz = Fpu::state_size();
+  Ram_quota *q = *((Ram_quota **)((char*)(s.get()) + quota_offset(sz)));
+  slab_alloc()->q_free(q, s.get());
+  s.set(nullptr);
 }

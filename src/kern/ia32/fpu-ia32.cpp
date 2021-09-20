@@ -56,7 +56,7 @@ IMPLEMENT inline NEEDS [<cassert>,"globals.h", "regdefs.h", "cpu.h"]
 void
 Fpu::save_state(Fpu_state *s)
 {
-  assert (s->state_buffer());
+  assert (s);
 
   // Both fxsave and fnsave are non-waiting instructions and thus
   // cannot cause exception #16 for pending FPU exceptions.
@@ -64,13 +64,13 @@ Fpu::save_state(Fpu_state *s)
   switch (fpu.current()._variant)
     {
     case Variant_xsave:
-      asm volatile("xsave (%2)" : : "a" (~0UL), "d" (~0UL), "r" (s->state_buffer()) : "memory");
+      asm volatile("xsave (%2)" : : "a" (~0UL), "d" (~0UL), "r" (s) : "memory");
       break;
     case Variant_fxsr:
-      asm volatile ("fxsave (%0)" : : "r" (s->state_buffer()) : "memory");
+      asm volatile ("fxsave (%0)" : : "r" (s) : "memory");
       break;
     case Variant_fpu:
-      asm volatile ("fnsave (%0)" : : "r" (s->state_buffer()) : "memory");
+      asm volatile ("fnsave (%0)" : : "r" (s) : "memory");
       break;
     }
 }
@@ -81,9 +81,9 @@ Fpu::save_state(Fpu_state *s)
 IMPLEMENT inline NEEDS ["globals.h", "globalconfig.h", <cassert>,"regdefs.h",
                         "cpu.h"]
 void
-Fpu::restore_state(Fpu_state *s)
+Fpu::restore_state(Fpu_state const *s)
 {
-  assert (s->state_buffer());
+  assert (s);
 
   // Only fxrstor is a non-waiting instruction and thus
   // cannot cause exception #16 for pending FPU exceptions.
@@ -92,12 +92,12 @@ Fpu::restore_state(Fpu_state *s)
   switch (f._variant)
     {
     case Variant_xsave:
-      asm volatile ("xrstor (%2)" : : "a" (~0UL), "d" (~0UL), "r" (s->state_buffer()));
+      asm volatile ("xrstor (%2)" : : "a" (~0UL), "d" (~0UL), "r" (s));
       break;
     case Variant_fxsr:
         {
 #if !defined (CONFIG_WORKAROUND_AMD_FPU_LEAK)
-          asm volatile ("fxrstor (%0)" : : "r" (s->state_buffer()));
+          asm volatile ("fxrstor (%0)" : : "r" (s));
 #else
           /* The code below fixes a security leak on AMD CPUs, where
            * some registers of the FPU are not restored from the state_buffer
@@ -115,7 +115,7 @@ Fpu::restore_state(Fpu_state *s)
               "1: fildl %1      \n\t"   // dummy load which sets the
               // affected to def. values
               "fxrstor (%0)     \n\t"   // finally restore the state
-              : : "r" (s->state_buffer()), "m" (int_dummy) : "ax");
+              : : "r" (s), "m" (int_dummy) : "ax");
 #endif
         }
       break;
@@ -133,7 +133,7 @@ Fpu::restore_state(Fpu_state *s)
         asm volatile ("fnclex");
 #endif
 
-      asm volatile ("frstor (%0)" : : "r" (s->state_buffer()));
+      asm volatile ("frstor (%0)" : : "r" (s));
       break;
     }
 }

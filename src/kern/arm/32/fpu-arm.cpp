@@ -47,6 +47,8 @@ private:
   static bool save_32r;
 };
 
+class Fpu_state : public Fpu::Fpu_regs {};
+
 // ------------------------------------------------------------------------
 INTERFACE [arm && !fpu]:
 
@@ -114,7 +116,6 @@ IMPLEMENTATION [arm && fpu]:
 #include <cstdio>
 #include <cstring>
 
-#include "fpu_state.h"
 #include "mem.h"
 #include "processor.h"
 #include "static_assert.h"
@@ -285,7 +286,7 @@ Fpu::save_fpu_regs(Fpu_regs *r)
 
 PRIVATE static inline
 void
-Fpu::restore_fpu_regs(Fpu_regs *r)
+Fpu::restore_fpu_regs(Fpu_regs const *r)
 {
   Mword tmp;
   asm volatile(".fpu neon\n "
@@ -299,9 +300,8 @@ Fpu::restore_fpu_regs(Fpu_regs *r)
 
 IMPLEMENT
 void
-Fpu::save_state(Fpu_state *s)
+Fpu::save_state(Fpu_state *fpu_regs)
 {
-  Fpu_regs *fpu_regs = reinterpret_cast<Fpu_regs *>(s->state_buffer());
   Mword tmp;
 
   assert(fpu_regs);
@@ -327,10 +327,8 @@ Fpu::save_state(Fpu_state *s)
 
 IMPLEMENT_DEFAULT
 void
-Fpu::restore_state(Fpu_state *s)
+Fpu::restore_state(Fpu_state const *fpu_regs)
 {
-  Fpu_regs *fpu_regs = reinterpret_cast<Fpu_regs *>(s->state_buffer());
-
   assert(fpu_regs);
 
   restore_fpu_regs(fpu_regs);
@@ -355,7 +353,8 @@ Fpu::state_align()
 
 PUBLIC static inline NEEDS["trap_state.h", <cassert>, Fpu::fpexc]
 void
-Fpu::save_user_exception_state(bool owner, Fpu_state *s, Trap_state *ts, Exception_state_user *esu)
+Fpu::save_user_exception_state(bool owner, Fpu_state *fpu_regs,
+                               Trap_state *ts, Exception_state_user *esu)
 {
   if (!(ts->esr.ec() == 7 && ts->esr.cpt_cpnr() == 10))
     return;
@@ -380,15 +379,12 @@ Fpu::save_user_exception_state(bool owner, Fpu_state *s, Trap_state *ts, Excepti
       return;
     }
 
-  if (!s->state_buffer())
+  if (!fpu_regs)
     {
       esu->fpexc = 0;
       return;
     }
 
-  assert (s->state_buffer());
-
-  Fpu_regs *fpu_regs = reinterpret_cast<Fpu_regs *>(s->state_buffer());
   esu->fpexc = fpu_regs->fpexc;
   if (fpu_regs->fpexc & FPEXC_EX)
     {
@@ -445,11 +441,10 @@ Fpu::show(Cpu_number)
 //-------------------------------------------------------------------------
 IMPLEMENTATION [arm && fpu && !cpu_virt]:
 
-IMPLEMENT inline NEEDS ["fpu_state.h", "mem.h", "static_assert.h", <cstring>]
+IMPLEMENT inline NEEDS ["mem.h", "static_assert.h", <cstring>]
 void
-Fpu::init_state(Fpu_state *s)
+Fpu::init_state(Fpu_state *fpu_regs)
 {
-  Fpu_regs *fpu_regs = reinterpret_cast<Fpu_regs *>(s->state_buffer());
   static_assert(!(sizeof (*fpu_regs) % sizeof(Mword)),
                 "Non-mword size of Fpu_regs");
   Mem::memset_mwords(fpu_regs, 0, sizeof (*fpu_regs) / sizeof(Mword));
@@ -488,11 +483,10 @@ private:
   Mword _fpexc;
 };
 
-IMPLEMENT inline NEEDS ["fpu_state.h", "mem.h", "static_assert.h", <cstring>]
+IMPLEMENT inline NEEDS ["mem.h", "static_assert.h", <cstring>]
 void
-Fpu::init_state(Fpu_state *s)
+Fpu::init_state(Fpu_state *fpu_regs)
 {
-  Fpu_regs *fpu_regs = reinterpret_cast<Fpu_regs *>(s->state_buffer());
   static_assert(!(sizeof (*fpu_regs) % sizeof(Mword)),
                 "Non-mword size of Fpu_regs");
   Mem::memset_mwords(fpu_regs, 0, sizeof (*fpu_regs) / sizeof(Mword));
@@ -550,10 +544,8 @@ Fpu::disable()
 
 IMPLEMENT_OVERRIDE
 void
-Fpu::restore_state(Fpu_state *s)
+Fpu::restore_state(Fpu_state const *fpu_regs)
 {
-  Fpu_regs *fpu_regs = reinterpret_cast<Fpu_regs *>(s->state_buffer());
-
   assert(fpu_regs);
 
   asm volatile (".fpu vfp\n"

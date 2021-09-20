@@ -568,7 +568,7 @@ IMPLEMENTATION[ia32 || amd64]:
 
 #include "fpu.h"
 #include "fpu_alloc.h"
-#include "fpu_state.h"
+#include "fpu_state_ptr.h"
 #include "gdt.h"
 #include "globalconfig.h"
 #include "idt.h"

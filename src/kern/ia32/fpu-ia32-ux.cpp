@@ -83,7 +83,6 @@ IMPLEMENTATION[ia32,amd64,ux]:
 
 #include <cstring>
 #include "cpu.h"
-#include "fpu_state.h"
 #include "regdefs.h"
 #include "globals.h"
 #include "static_assert.h"
@@ -96,7 +95,7 @@ unsigned Fpu::_state_align;
  * We don't use finit, because it is slow. Initializing the context in
  * memory and fetching it via restore_state is supposedly faster
  */
-IMPLEMENT inline NEEDS ["cpu.h", "fpu_state.h", "globals.h", "regdefs.h",
+IMPLEMENT inline NEEDS ["cpu.h", "globals.h", "regdefs.h",
                         "static_assert.h", <cstring>]
 void
 Fpu::init_state(Fpu_state *s)
@@ -105,7 +104,7 @@ Fpu::init_state(Fpu_state *s)
   if (_cpu.features() & FEAT_FXSR)
     {
       assert (_state_size >= sizeof (sse_regs));
-      sse_regs *sse = reinterpret_cast<sse_regs *>(s->state_buffer());
+      sse_regs *sse = reinterpret_cast<sse_regs *>(s);
 
       memset(sse, 0, sizeof (*sse));
       sse->cwd = 0x37f;
@@ -114,14 +113,14 @@ Fpu::init_state(Fpu_state *s)
 	sse->mxcsr = 0x1f80;
 
       if (_cpu.has_xsave())
-        memset(reinterpret_cast<Xsave_buffer *>(s->state_buffer())->header, 0,
+        memset(reinterpret_cast<Xsave_buffer *>(s)->header, 0,
 	       sizeof (Xsave_buffer::header));
 
       static_assert(sizeof (sse_regs) == 512, "SSE-regs size not 512 bytes");
     }
   else
     {
-      fpu_regs *fpu = reinterpret_cast<fpu_regs *>(s->state_buffer());
+      fpu_regs *fpu = reinterpret_cast<fpu_regs *>(s);
 
       assert (_state_size >= sizeof (*fpu));
       memset(fpu, 0, sizeof (*fpu));
