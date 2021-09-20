@@ -10,6 +10,7 @@ class Fpu_alloc : public Fpu
 {
 };
 
+//------------------------------------------------------------------------
 IMPLEMENTATION:
 
 #include "kmem_slab.h"
@@ -33,32 +34,100 @@ Fpu_alloc::quota_offset(unsigned state_size)
   return (state_size + alignof(Ram_quota *) - 1) & ~(alignof(Ram_quota *) - 1);
 }
 
-PUBLIC static
+PROTECTED static inline
 bool
-Fpu_alloc::alloc_state(Ram_quota *q, Fpu_state_ptr &s)
+Fpu_alloc::alloc_state(Ram_quota *q, Fpu_state_ptr &s,
+                       Slab_cache *alloc, unsigned state_size)
 {
-  unsigned long sz = Fpu::state_size();
   void *b;
 
-  if (!(b = slab_alloc()->q_alloc(q)))
+  if (!(b = alloc->q_alloc(q)))
     return false;
 
-  *((Ram_quota **)((char*)b + quota_offset(sz))) = q;
+  *((Ram_quota **)((char*)b + quota_offset(state_size))) = q;
   s.set((Fpu_state *)b);
-  Fpu::init_state(s.get());
 
   return true;
 }
 
-PUBLIC static
+PROTECTED static inline
 void
-Fpu_alloc::free_state(Fpu_state_ptr &s)
+Fpu_alloc::free_state(Fpu_state_ptr &s, Slab_cache *alloc, unsigned state_size)
 {
   if (!s.valid())
     return;
 
-  unsigned long sz = Fpu::state_size();
-  Ram_quota *q = *((Ram_quota **)((char*)(s.get()) + quota_offset(sz)));
-  slab_alloc()->q_free(q, s.get());
+  Ram_quota *q = *((Ram_quota **)((char*)(s.get()) + quota_offset(state_size)));
+  alloc->q_free(q, s.get());
   s.set(nullptr);
+}
+
+//------------------------------------------------------------------------
+IMPLEMENTATION [!fpu_alloc_typed]:
+
+PUBLIC static inline
+void
+Fpu_alloc::init()
+{}
+
+PUBLIC static inline
+bool
+Fpu_alloc::alloc_state(Ram_quota *q, Fpu_state_ptr &s)
+{
+  if (!alloc_state(q, s, slab_alloc(), Fpu::state_size()))
+    return false;
+
+  Fpu::init_state(s.get());
+  return true;
+}
+
+PUBLIC static inline
+void
+Fpu_alloc::free_state(Fpu_state_ptr &s)
+{
+  return free_state(s, slab_alloc(), Fpu::state_size());
+}
+
+PUBLIC static inline
+void
+Fpu_alloc::ensure_compatible_state(Ram_quota *,
+                                   Fpu_state_ptr &, Fpu_state_ptr const &)
+{}
+
+//------------------------------------------------------------------------
+IMPLEMENTATION [fpu_alloc_typed]:
+
+PUBLIC static inline
+bool
+Fpu_alloc::alloc_state(Ram_quota *q, Fpu_state_ptr &s,
+                       Fpu::State_type type = Fpu::Default_state_type)
+{
+  if (!alloc_state(q, s, slab_alloc(type), Fpu::state_size(type)))
+    return false;
+
+  Fpu::init_state(s.get(), type);
+  return true;
+}
+
+PUBLIC static inline
+void
+Fpu_alloc::free_state(Fpu_state_ptr &s)
+{
+  if (s.valid())
+    {
+      Fpu::State_type type = s.get()->type();
+      return free_state(s, slab_alloc(type), Fpu::state_size(type));
+    }
+}
+
+PUBLIC static inline
+void
+Fpu_alloc::ensure_compatible_state(Ram_quota *q,
+                                   Fpu_state_ptr &to, Fpu_state_ptr const &from)
+{
+  if (to.get()->type() != from.get()->type())
+  {
+    Fpu_alloc::free_state(to);
+    Fpu_alloc::alloc_state(q, to, from.get()->type());
+  }
 }

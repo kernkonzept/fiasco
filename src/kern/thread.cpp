@@ -919,6 +919,8 @@ PUBLIC inline NEEDS["fpu.h", "fpu_state_ptr.h"]
 void
 Thread::transfer_fpu(Thread *to) //, Trap_state *trap_state, Utcb *to_utcb)
 {
+  Fpu_alloc::ensure_compatible_state(to->_quota, to->fpu_state(), fpu_state());
+
   auto *curr = current();
   if (this == curr)
     Fpu::save_state(to->fpu_state().get());
