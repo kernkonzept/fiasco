@@ -1,6 +1,6 @@
 #! /usr/bin/perl -W
 #
-# Adam Lackorzynski <adam@os.inf.tu-dresden.de>
+# Adam Lackorzynski <adam@l4re.org>
 #
 # Input to this script is the output of dumpmapdbobjs from Fiasco-jdb
 # Output of this script is a dot graph
@@ -30,6 +30,7 @@ my %obj_colors = (
   'Gate'   => 'magenta',
 );
 
+my $dbgid;
 while (<>)
   {
     chomp;
@@ -43,42 +44,38 @@ while (<>)
       {
 	last; # done, we only consider the first one
       }
+    elsif (/^(dump format version number|user space tag:)/)
+      {
+        # ignore
+      }
     elsif (!$ignore)
       {
-	my $dbgid;
-	my $obj_type;
-	my $intask;
-	my $name;
-	$dbgid = $1 if /^([\da-fA-F]+)\s+/;
-	$obj_type = $1 if /\s\[([^\s\]]+)/;
-	$intask   = $1 if /intask=(\S+)/;
-	$name     = $1 if /\s{([^\s}]+)/;
-
-        #print "$line: $_\n";
-        if (not defined $dbgid or not defined $obj_type)
-	  {
-	    print "ERROR: parse or content error in line $line: $_\n";
-	    last;
-	  }
-
-        $obj_type =~ s/\[.*?m//g;
-
-        $obj_to_connector{$dbgid} = $1
-          if $obj_type eq 'Gate' and (/ D=([\da-fA-Z]+)/);
-        $obj_to_connector{$dbgid} = $1
-          if $obj_type eq 'IRQ' and (/ T=([\da-fA-Z]+)/);
-	$obj_to_connector{$dbgid} = $1
-	  if $obj_type eq 'Thread' and (/ S=D:([\da-fA-Z]+)/);
-
-	$kobjstype{$dbgid} = $obj_type;
-	$names{$dbgid} = $name if defined $name;
-
-        if (defined $intask)
+        if (/^([\da-fA-F]+)\s+([\da-fA-F]+)\s+\[(.+)\]\s+({(.+?)})?/)
           {
-	    $intasks{$dbgid} = [ map { /^\[(.+)\]$/ } split(/,/, $intask) ];
+            $dbgid = $1;
+            my $obj_type = $3;
+            my $name = $5;
 
-            $intasks{$dbgid}[0] =~ /^([^:]+)/;
-            $obj_to_root_space{$dbgid} = $1;
+            $obj_type =~ s/\[.*?m//g;
+
+            #print "obj_type = $obj_type\n";
+
+            $obj_to_connector{$dbgid} = $1 ? $1 : $3
+              if $obj_type eq 'Gate' and (/ D=([\da-fA-Z]+)(\/([\da-fA-Z]+))?/);
+            $obj_to_connector{$dbgid} = $1
+              if $obj_type =~ /^IRQ/ and (/ T=([\da-fA-Z]+)/);
+            $obj_to_connector{$dbgid} = $2
+              if $obj_type eq 'Thread' and (/ S=(D:)?([\da-fA-Z]+)/);
+
+            $kobjstype{$dbgid} = $obj_type;
+            $names{$dbgid} = $name if defined $name;
+          }
+        elsif (/^\s+[\da-fA-F]+\[C:[\da-fA-F]+\]:\s+space=(D:)?([\da-fA-F]+)/)
+          {
+            die "no dbgid set?!" unless defined $dbgid;
+
+            push @{$intasks{$dbgid}}, $2;
+            $obj_to_root_space{$dbgid} = $2 unless defined $obj_to_root_space{$dbgid};
           }
       }
   }
@@ -94,7 +91,7 @@ sub id_to_name($)
 {
   my $a = shift;
   return "$a".":".id_to_objtype($a).":".$names{$a} if defined $names{$a};
-  return $a;
+  return "$a".":".id_to_objtype($a);
 }
 
 print "digraph A {\n";
@@ -109,20 +106,15 @@ if (0)
 
 foreach my $t (keys %kobjstype)
   {
-    next unless
-      $kobjstype{$t} eq 'Task';
+    next unless $kobjstype{$t} eq 'Task';
 
     print "  subgraph cluster_$t { label = \"", id_to_name($t), "\";".
           " style=filled; \n";
 
     foreach my $o (keys %intasks)
       {
-	foreach my $i (@{$intasks{$o}})
+	foreach my $space (@{$intasks{$o}})
 	  {
-	    $i =~ /([\da-fA-F]+):(\d+)/;
-	    my $space = $1;
-	    my $lvl = $2;
-
 	    if ($t eq $space)
 	      {
 		print "    s$space"."o$o [label = \"".id_to_name($o)."\"";
@@ -131,28 +123,20 @@ foreach my $t (keys %kobjstype)
                   if defined $obj_colors{$kobjstype{$o}};
                 print "];\n";
 	      }
-
-	    #print "$o: $space - $lvl\n";
 	  }
       }
 
     print "  }\n";
   }
 
-# mapping correlations
+# mappings
 foreach my $o (keys %intasks)
   {
-    my $lvl = 0;
     my @stack;
 
-    foreach my $i (@{$intasks{$o}})
+    my $l = 0;
+    foreach my $space (@{$intasks{$o}})
       {
-        $i =~ /([\da-fA-F]+):(\d+)/;
-        my $space = $1;
-        my $l = $2;
-
-        #print STDERR "$i -- l=$l\n";
-
         $stack[$l] = $space;
 
         if ($l > 0)
@@ -162,7 +146,7 @@ foreach my $o (keys %intasks)
               if defined $obj_colors{$kobjstype{$o}};
             print ";\n";
           }
-        #print "$o: $space - $l\n";
+        ++$l;
       }
   }
 
@@ -172,7 +156,7 @@ foreach my $t (keys %kobjstype)
     next unless
       $kobjstype{$t} eq 'Task';
 
-    if ($obj_to_root_space{$t} ne $t)
+    if (defined $obj_to_root_space{$t} and $obj_to_root_space{$t} ne $t)
       {
         print " s$obj_to_root_space{$t}o$t -> cluster_$t [style=dashed];\n";
       }
