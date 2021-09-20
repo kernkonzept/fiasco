@@ -1,5 +1,6 @@
 # PF: IMX
 # PFDESCR: NXP/Freescale i.MX
+# PFSELECT: HAS_IOMMU_OPTION
 # PFDEPENDS: ARM
 
 choice
@@ -122,3 +123,11 @@ config PF_IMX_6_TIMER_EPIT
         bool "Use EPIT timer"
 
 endchoice
+
+config ARM_IOMMU_NUM
+  int
+  default 1 if IOMMU
+
+config IOMMU_ARM_SMMU_500
+  bool
+  default y if IOMMU

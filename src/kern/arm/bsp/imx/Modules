@@ -81,3 +81,5 @@ reset_IMPL            += reset-arm-imx
 outer_cache_IMPL      += outer_cache-arm-imx6
 clock_IMPL            += clock-generic
 platform_control_IMPL += platform_control-arm-imx
+dmar_space_IMPL       += dmar_space-smmuv2
+iommu_IMPL            += iommu-arm-smmuv2 iommu-arm-smmu-500-imx
