@@ -36,6 +36,16 @@ struct Utest
     bool started = false;
     cxx::functor<void ()> const &fn;
   };
+
+  template <typename T>
+  struct Deleter
+  {
+    void operator()(T *s) const
+    {
+      if (s)
+        Kmem_slab_t<T>::del(s);
+    }
+  };
 };
 
 /*
@@ -678,4 +688,20 @@ Utest::start_thread(cxx::functor<void ()> fn, Cpu_number cpu,
     Proc::pause();
 
   return true;
+}
+
+/**
+ * Use the kernel allocator to create an object encapsulated by unique_ptr.
+ *
+ * Alignment: `Kmem_slab_t` uses the buddy allocator for objects >= 1K and the
+ * slab allocator for smaller objects. The `Kmem_slab_t` objects are aligned
+ * with their size, for example a 16-byte chunk is 16-byte aligned.
+ */
+PUBLIC
+template <typename T, typename... A>
+static cxx::unique_ptr<T, Utest::Deleter<T>>
+Utest::kmem_create(A&& ... args)
+{
+  return cxx::unique_ptr<T, Utest::Deleter<T>>(
+    Kmem_slab_t<T>::new_obj(cxx::forward<A>(args)...));
 }
