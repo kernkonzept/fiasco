@@ -15,14 +15,22 @@ IMPLEMENTATION:
 #include "kmem_slab.h"
 #include "ram_quota.h"
 
-static Kmem_slab _fpu_state_allocator(Fpu::state_size() + sizeof(Ram_quota *),
-                                      Fpu::state_align(), "Fpu state");
+static Kmem_slab _fpu_state_allocator(
+  Fpu_alloc::quota_offset(Fpu::state_size()) + sizeof(Ram_quota *),
+  Fpu::state_align(), "Fpu state");
 
 PRIVATE static
 Slab_cache *
 Fpu_alloc::slab_alloc()
 {
   return &_fpu_state_allocator;
+}
+
+PUBLIC static inline
+unsigned
+Fpu_alloc::quota_offset(unsigned state_size)
+{
+  return (state_size + alignof(Ram_quota *) - 1) & ~(alignof(Ram_quota *) - 1);
 }
 
 PUBLIC static
@@ -35,7 +43,7 @@ Fpu_alloc::alloc_state(Ram_quota *q, Fpu_state *s)
   if (!(b = slab_alloc()->q_alloc(q)))
     return false;
 
-  *((Ram_quota **)((char*)b + sz)) = q;
+  *((Ram_quota **)((char*)b + quota_offset(sz))) = q;
   s->_state_buffer = b;
   Fpu::init_state(s);
 
@@ -49,7 +57,8 @@ Fpu_alloc::free_state(Fpu_state *s)
   if (s->_state_buffer)
     {
       unsigned long sz = Fpu::state_size();
-      Ram_quota *q = *((Ram_quota **)((char*)(s->_state_buffer) + sz));
+      Ram_quota *q = *((Ram_quota **)((char*)(s->_state_buffer)
+                                      + quota_offset(sz)));
       slab_alloc()->q_free(q, s->_state_buffer);
       s->_state_buffer = 0;
     }
