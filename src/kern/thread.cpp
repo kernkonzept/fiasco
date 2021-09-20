@@ -172,7 +172,6 @@ IMPLEMENTATION:
 
 #include <cassert>
 #include <cstdlib>		// panic()
-#include <cstring>
 #include "atomic.h"
 #include "entry_frame.h"
 #include "fpu_alloc.h"
@@ -907,7 +906,7 @@ Thread::transfer_fpu(Thread *to) //, Trap_state *trap_state, Utcb *to_utcb)
   else if (curr == to)
     Fpu::fpu.current().restore_state(fpu_state());
   else
-    memcpy(to->fpu_state()->state_buffer(), fpu_state()->state_buffer(), Fpu::state_size());
+    Fpu::copy_state(to->fpu_state(), fpu_state());
 }
 
 //---------------------------------------------------------------------------

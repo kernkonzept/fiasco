@@ -25,6 +25,7 @@ public:
   static void init_state(Fpu_state *);
   static void restore_state(Fpu_state *);
   static void save_state(Fpu_state *);
+  static void copy_state(Fpu_state *, Fpu_state *);
 
   static Per_cpu<Fpu> fpu;
 };
@@ -78,6 +79,10 @@ IMPLEMENT inline
 void Fpu::restore_state(Fpu_state *)
 {}
 
+IMPLEMENT inline
+void Fpu::copy_state(Fpu_state *, Fpu_state *)
+{}
+
 PUBLIC static inline
 void Fpu::disable()
 {}
@@ -85,3 +90,14 @@ void Fpu::disable()
 PUBLIC static inline
 void Fpu::enable()
 {}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [fpu]:
+
+#include <cstring>
+
+IMPLEMENT_DEFAULT inline NEEDS[<cstring>]
+void Fpu::copy_state(Fpu_state *to, Fpu_state *from)
+{
+  memcpy(to->state_buffer(), from->state_buffer(), Fpu::state_size());
+}
