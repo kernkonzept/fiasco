@@ -114,6 +114,9 @@ Bootstrap::read_pfr0()
   return pfr0;
 }
 
+// -----------------------------------------------------------------
+IMPLEMENTATION [arm && !arm_sve]:
+
 PUBLIC static inline void
 Bootstrap::config_feature_traps(Mword, bool leave_el3, bool leave_el2)
 {
@@ -124,6 +127,47 @@ Bootstrap::config_feature_traps(Mword, bool leave_el3, bool leave_el2)
   if (leave_el2)
     // Disable traps to EL2.
     asm volatile ("msr CPTR_EL2, %0" : : "r"(Cpu::Cptr_el2_generic));
+}
+
+// -----------------------------------------------------------------
+IMPLEMENTATION [arm && arm_sve]:
+
+PUBLIC static inline void
+Bootstrap::config_feature_traps(Mword pfr0, bool leave_el3, bool leave_el2)
+{
+  bool has_sve = ((pfr0 >> 32) & 0xf) == 1;
+  if (has_sve)
+    {
+      if (leave_el3)
+        {
+          // Disable traps to EL3, including SVE traps.
+          asm volatile ("msr CPTR_EL3, %0" : : "r"(Cpu::Cptr_el3_ez));
+
+          // Allow all available SVE vector lengths.
+          asm volatile (".arch_extension sve\n"
+                        "msr ZCR_EL3, %0" : : "r" (0xfUL));
+        }
+
+      if (leave_el2)
+        {
+          // Disable traps to EL2, including SVE traps.
+          asm volatile ("msr CPTR_EL2, %0" : : "r"(Cpu::Cptr_el2_generic & ~Cpu::Cptr_el2_tz));
+
+          // Allow all available SVE vector lengths.
+          asm volatile (".arch_extension sve\n"
+                        "msr ZCR_EL2, %0" : : "r" (0xfUL));
+        }
+    }
+  else
+    {
+      if (leave_el3)
+        // Disable traps to EL3.
+        asm volatile ("msr CPTR_EL3, %0" : : "r"(0UL));
+
+      if (leave_el2)
+        // Disable traps to EL2.
+        asm volatile ("msr CPTR_EL2, %0" : : "r"(Cpu::Cptr_el2_generic));
+    }
 }
 
 IMPLEMENTATION [arm && pic_gic && !have_arm_gicv3]:

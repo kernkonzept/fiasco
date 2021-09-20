@@ -250,6 +250,66 @@ Thread::handle_fpu_trap(Trap_state *ts)
 }
 
 // ------------------------------------------------------------------------
+IMPLEMENTATION [arm && 64bit && arm_sve]:
+
+PRIVATE
+bool
+Thread::alloc_sve_state(bool inherit_simd_state)
+{
+  // Free FP/SIMD state if any.
+  Fpu_alloc::free_state(fpu_state());
+
+  // Allocate SVE state.
+  if (!Fpu_alloc::alloc_state(_quota, fpu_state(), Fpu::State_type::Sve))
+    return false;
+
+  if (inherit_simd_state)
+    Fpu::init_sve_from_simd(fpu_state().get());
+
+  // Restore SVE state.
+  Fpu::restore_state(fpu_state().get());
+  return true;
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && 64bit && lazy_fpu && arm_sve]:
+
+IMPLEMENT_OVERRIDE
+bool
+Thread::handle_sve_trap(Trap_state *)
+{
+  assert(Fpu::has_sve());
+
+  bool inherit_simd_state = fpu_state().valid();
+
+  // If we do not own the FPU, become the FPU owner.
+  if (Fpu::fpu.current().owner() != this && !switchin_fpu())
+    return false;
+
+  // Thread already has SVE enabled, so this was just a lazy FPU trap.
+  if (fpu_state().get()->type() == Fpu::State_type::Sve)
+    return true;
+
+  return alloc_sve_state(inherit_simd_state);
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && 64bit && !lazy_fpu && arm_sve]:
+
+IMPLEMENT_OVERRIDE
+bool
+Thread::handle_sve_trap(Trap_state *)
+{
+  assert(Fpu::has_sve());
+
+  // We should never get an SVE trap if the thread already has SVE enabled.
+  assert(!(fpu_state().valid()
+           && fpu_state().get()->type() == Fpu::State_type::Sve));
+
+  return alloc_sve_state(fpu_state().valid());
+}
+
+// ------------------------------------------------------------------------
 IMPLEMENTATION [arm && 64bit && !fpu]:
 
 PUBLIC static

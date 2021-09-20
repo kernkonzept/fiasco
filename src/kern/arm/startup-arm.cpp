@@ -64,6 +64,7 @@ Startup::stage2()
   Platform_control::init(boot_cpu);
   Psci::init(boot_cpu);
   Fpu::init(boot_cpu, false);
+  Fpu_alloc::init();
   Ipi::init(boot_cpu);
   Timer::init(boot_cpu);
   Kip_init::init_kip_clock();

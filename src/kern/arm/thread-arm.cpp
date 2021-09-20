@@ -8,6 +8,9 @@ public:
   static void init_per_cpu(Cpu_number cpu, bool resume);
   static bool check_and_handle_linux_cache_api(Trap_state *);
   bool check_and_handle_coproc_faults(Trap_state *);
+
+private:
+  bool handle_sve_trap(Trap_state *);
 };
 
 // ------------------------------------------------------------------------
@@ -647,6 +650,13 @@ Thread::check_and_handle_coproc_faults(Trap_state *)
   return false;
 }
 
+IMPLEMENT_DEFAULT inline
+bool
+Thread::handle_sve_trap(Trap_state *)
+{
+  return false;
+}
+
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && !cpu_virt]:
 
@@ -746,6 +756,13 @@ Thread::arm_esr_entry(Return_frame *rf)
            || esr.cpt_cpnr() == 10  // CP10: Floating-point
            || esr.cpt_cpnr() == 11) // CP11: Advanced SIMD
           && Thread::handle_fpu_trap(ts))
+        return;
+
+      ct->send_exception(ts);
+      break;
+
+    case 0x19: // SVE
+      if (ct->handle_sve_trap(ts))
         return;
 
       ct->send_exception(ts);

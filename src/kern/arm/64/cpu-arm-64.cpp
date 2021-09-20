@@ -63,10 +63,6 @@ public:
 
     // Trap advanced SIMD and floating-point instructions at both EL0 and EL1.
     Cpacr_el1_fpen_full = 3UL << 20,
-    // When we run at EL2 we have to make sure that CPACR_EL1.FPEN is 3 when
-    // user-mode runs with HCR.TGE = 1, otherwise we get undefined instruction
-    // exceptions instead of FPU traps into EL2.
-    Cpacr_el1_generic_hyp = Cpacr_el1_fpen_full,
   };
 
   struct has_aarch32_el1 : public Alternative_static_functor<has_aarch32_el1>
@@ -79,6 +75,48 @@ public:
     }
   };
 };
+
+//----------------------------------------------------------------------
+INTERFACE [arm && !arm_sve]:
+
+EXTENSION class Cpu
+{
+public:
+  enum : Mword
+  {
+    // When we run at EL2 we have to make sure that CPACR_EL1.FPEN is 3 when
+    // user-mode runs with HCR.TGE = 1, otherwise we get undefined instruction
+    // exceptions instead of FPU traps into EL2.
+    Cpacr_el1_generic_hyp = Cpacr_el1_fpen_full,
+  };
+};
+
+//----------------------------------------------------------------------
+INTERFACE [arm && arm_sve]:
+
+EXTENSION class Cpu
+{
+public:
+  enum : Mword
+  {
+    Cptr_el3_ez            = 1UL << 8, // Do not trap SVE instructions.
+
+    Cptr_el2_tz            = 1UL << 8, // Trap SVE instructions.
+
+    // Trap advanced SVE instructions at both EL0 and EL1.
+    Cpacr_el1_zen_full     = 3UL << 16,
+    // When we run at EL2 we have to make sure that CPACR_EL1.FPEN is 3 and
+    // CPACR_EL1.ZEN is 3 when user-mode runs with HCR.TGE = 1, otherwise we get
+    // undefined instruction exceptions instead of FPU/SVE traps into EL2.
+    Cpacr_el1_generic_hyp  = Cpacr_el1_zen_full | Cpacr_el1_fpen_full,
+
+    Zcr_vl_128             = 0,
+    Zcr_vl_2048            = 15,
+    Zcr_vl_max             = Zcr_vl_2048,
+    Zcr_vl_mask            = 0xf,
+  };
+};
+
 
 //--------------------------------------------------------------------------
 IMPLEMENTATION [arm && !cpu_virt]:
@@ -231,6 +269,11 @@ bool
 Cpu::has_generic_timer()
 { return true; }
 
+PUBLIC inline
+bool
+Cpu::has_sve() const
+{ return ((_cpu_id._pfr[0] >> 32) & 0xf) == 1; }
+
 PUBLIC static inline
 Mword
 Cpu::midr()
@@ -318,4 +361,75 @@ void
 Cpu::hcr(Unsigned64 hcr)
 {
   asm volatile ("msr HCR_EL2, %0" : : "r"(hcr));
+}
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION [arm && arm_v8 && arm_sve]:
+
+PUBLIC static inline
+unsigned
+Cpu::sve_vl()
+{
+  Mword vl;
+  asm volatile (".arch_extension sve\n"
+                "rdvl %0, #1" : "=r"(vl));
+  // rdvl returns the vector length in bytes, but we measure the vector length
+  // in quad-words (128-bits).
+  return vl / 16;
+}
+
+PUBLIC static inline
+Mword
+Cpu::zcr_el1()
+{
+  Unsigned64 r;
+  asm volatile (".arch_extension sve\n"
+                "mrs %0, ZCR_EL1" : "=r"(r));
+  return r;
+}
+
+PUBLIC static inline
+void
+Cpu::zcr_el1(Unsigned64 zcr)
+{
+  asm volatile (".arch_extension sve\n"
+                "msr ZCR_EL1, %0" : : "r"(zcr));
+}
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION [arm && arm_v8 && arm_sve && cpu_virt]:
+
+PUBLIC static inline
+Mword
+Cpu::zcr()
+{
+  Unsigned64 r;
+  asm volatile (".arch_extension sve\n"
+                "mrs %0, ZCR_EL2" : "=r"(r));
+  return r;
+}
+
+PUBLIC static inline
+void
+Cpu::zcr(Unsigned64 zcr)
+{
+  asm volatile (".arch_extension sve\n"
+                "msr ZCR_EL2, %0" : : "r"(zcr));
+}
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION [arm && arm_v8 && arm_sve && !cpu_virt]:
+
+PUBLIC static inline
+Mword
+Cpu::zcr()
+{
+  return zcr_el1();
+}
+
+PUBLIC static inline
+void
+Cpu::zcr(Unsigned64 zcr)
+{
+  return zcr_el1(zcr);
 }

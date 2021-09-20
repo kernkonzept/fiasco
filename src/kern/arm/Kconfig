@@ -129,6 +129,9 @@ config ARM_ASID16
         depends on ARM_V8 && BIT64
         bool
 
+config HAS_ARM_SVE
+	bool
+
 # SECTION: CPU
 
 choice
@@ -259,6 +262,21 @@ config ARM_GIC_MSI
 	depends on HAVE_ARM_GIC_MSI
 	help
 	  Build Fiasco with support for message-based interrupts (MSIs).
+
+config ARM_SVE
+	bool "Scalable Vector Extension support"
+	default n
+	depends on ARM_V8 && BIT64
+	depends on HAS_ARM_SVE
+	help
+	  The ARM Scalable Vector Extension (SVE) extends the SIMD functionality
+	  of the AArch64 execution state with support for larger and flexible
+	  vector lengths.
+
+	  This option also enables the SVE2 extension on CPUs that support it.
+
+	  Enabling this option adds a small amount of overhead to FPU context
+	  switching, even for contexts that do not make use of SVE.
 
 config ARM_ALIGNMENT_CHECK
 	bool "Enable alignment check"
