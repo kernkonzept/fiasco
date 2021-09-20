@@ -19,13 +19,19 @@ Please group tests with the help of the naming structure, e.g.
 
 ## Test directory
 
-The `Modules.utest` file within a test directory is expected to just contain
-a single line:
+The `Modules.utest` file within a test directory is expected to at most contain
+the following lines:
 ```
 INTERFACES_UTEST +=
+UTEST_EXPECTED +=
 ```
 
 `INTERFACES_UTEST` shall list all test files explicitly.
+
+`UTEST_EXPECED` shall list the files for output matching with the expectation.
+The expectation files shall replace the `test_` prefix with `expected_`. The
+expected output can be architecture and bit-width specific. See section
+[Matching expected output of tests](#matching-expected-output-of-tests).
 
 If a test file needs additional files, an
 `\_IMPL` variable must be added. This variable must list all source files in
@@ -224,3 +230,42 @@ See the `Cpu` class on how to identify a core.
 
 Currently, there is no central knowledge on how many cores the system contains,
 so the test needs to be able to handle this.
+
+
+## Matching expected output of tests
+
+In some cases it might make sense that it's more convenient for the test case
+writer to only a limited number of UTEST assert macros and to rather compare
+the generated output of the test case with expected pattern, in particular when
+the test case output can differ between the kernel architectures.
+
+The L4Re tool `gen_kunit_test` detects the presence of `expected_foo` in the
+`utest/` subdirectory of the kernel build directory belonging to `test_foo.cpp`
+and starts the unit test accordingly.
+
+To generate the `expected_foo` file, it is required to start the test without
+specifying the `expected_foo` file (e.g. by removing it from the `utest/`
+directory and filter the combined output of stdout+stderr through the
+'filter-expected.sh' script. In the following example it is assumed that the
+following environment variables are defined:
+
+ - `l4_src`: the L4 source directory
+ - `l4_obj`: the L4 build directory
+ - `fiasco_src`: the Fiasco source directory
+ - `fiasco_obj`: the Fiasco build directory
+
+Assuming we want to generate the expected output for `test_mapdb.cpp`, perform
+the following actions:
+
+    $ rm ${fiasco_obj}/utest/mapdb/expected_mapdb
+    $ ${l4_src}/tool/bin/gen_kunit_test \
+        --sdir=${fiasco_obj}/utest \
+        --ddir=${l4_obj}/tests/kunit \
+        --obj-base=${l4_obj}
+    $ ${l4_obj}/tests/kunit/test_mapdb.t 2>&1 \
+      | ${fiasco_src}/test/utest/mapdb/filter-expected.sh \
+      > ${fiasco_src}/test/utest/mapdb/expected_mapdb
+
+It is possible to provide a single default `expected` file per test case, an
+`expected-XARCH` file and an `expected-XARCH-BITS` file where `XARCH` and
+`BITS` are replaced according to the kernel configuration.

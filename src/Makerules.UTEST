@@ -21,6 +21,9 @@ UTEST_FRAMEWORK = $(filter utest_fw%,$(OBJ_UTEST))
 # default target for the UTEST subsystem, add all test binaries as prerequisites.
 utest_subsys: $(UTEST_BINARIES)
 
+# the expected_* files go into the utest/ folder as well.
+utest_expected: $(addprefix utest/,$(UTEST_EXPECTED))
+
 # Ensure the utest folder exists before the target is build
 $(UTEST_BINARIES): | utest
 
@@ -28,14 +31,33 @@ $(UTEST_BINARIES): | utest
 utest:
 	@mkdir -p utest
 
-# generate link rules for each unit test binary.
+# Generate link rules for each unit test binary.
 $(foreach tname,$(UTEST_TESTS),\
 	$(eval $(call gen_kernel_rules,\
 		utest/$(tname),\
 		$(tname).debug,\
 		$$(UTEST_FRAMEWORK) $$(filter $(tname)%,$$(OBJ_UTEST)))))
 
-# generate checksum rules for each unit test binary.
+define gen_utest_expected_rule
+$(1): $(2)
+	$$(INST_MESSAGE)
+	$$(VERBOSE)$$(CP) $$< $$@
+endef
+
+# Generate copy rule for each 'expected_' file.
+# By default, for 'test_foo.cpp', 'expected_foo' is used
+# unless expected_foo-XARCH (e.g. 'expected_foo-ia32') exists
+# unless expected_foo-XARCH-BITS (e.g. 'expected_foo-mips-64') exists.
+$(foreach tname,$(UTEST_EXPECTED),\
+	$(eval $(call gen_utest_expected_rule,\
+		utest/$(tname),\
+		$(firstword $(wildcard $(foreach d,$(ALL_UTEST_DIRS),\
+			$(foreach f,\
+				$(tname)-$(CONFIG_XARCH)-$(BITS) \
+				$(tname)-$(CONFIG_XARCH) $(tname),\
+				$(srcdir)/$(d)/$(f))))))))
+
+# Generate checksum rules for each unit test binary.
 ifneq ($(filter CHECKSUM,$(SUBSYSTEMS)),)
 $(foreach tname,$(UTEST_TESTS),\
 	$(eval $(call all_checksum_rules,\
@@ -43,5 +65,5 @@ $(foreach tname,$(UTEST_TESTS),\
 endif
 
 clean-UTEST:
-	$(RM) $(OBJ_UTEST) $(addprefix utest/,$(UTEST_TESTS)) \
+	$(RM) $(OBJ_UTEST) $(addprefix utest/,$(UTEST_TESTS) $(UTEST_EXPECTED)) \
 		$(patsubst %,%.debug,$(UTEST_TESTS))
