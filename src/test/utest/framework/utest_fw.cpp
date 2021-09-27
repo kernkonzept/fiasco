@@ -188,6 +188,14 @@ private:
                                    rhs_res, ">", MSG, __FILE__, __LINE__);    \
     } while (false)
 
+#define UTEST_NOERR(F, ACT, MSG)                                              \
+  do                                                                          \
+    {                                                                         \
+      Utest_fw::tap_log.binary_cmp(F, true == (ACT).ok(), "true", #ACT ".ok()",\
+                                   true, (ACT).ok(), "==", MSG, __FILE__,     \
+                                   __LINE__);                                 \
+    } while (false)
+
 // ---------------------------------------------------------------------------
 IMPLEMENTATION:
 
