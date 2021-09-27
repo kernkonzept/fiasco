@@ -27,26 +27,6 @@ Kernel_thread::init_workload()
 
   auto g = lock_guard(cpu_lock);
 
-  if (Config::Jdb &&
-      !Koptions::o()->opt(Koptions::F_nojdb) &&
-      Koptions::o()->opt(Koptions::F_jdb_cmd))
-    {
-      // extract the control sequence from the command line
-      char ctrl[128];
-      char const *s = Koptions::o()->jdb_cmd;
-      char *d;
-
-      for (d=ctrl; d < ctrl+sizeof(ctrl)-1 && *s && *s != ' '; *d++ = *s++)
-	;
-      *d = '\0';
-
-      kdb_ke_sequence(ctrl, d - ctrl);
-    }
-
-  // kernel debugger rendezvous
-  if (Koptions::o()->opt(Koptions::F_wait))
-    kdb_ke("Wait");
-
   //
   // create sigma0
   //

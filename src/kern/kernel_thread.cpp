@@ -124,6 +124,9 @@ Kernel_thread::run()
   kernel_context(home_cpu(), this);
 
   Rcu::leave_idle(home_cpu());
+
+  check_debug_koptions();
+
   // init_workload cannot be an initcall, because it fires up the userland
   // applications which then have access to initcall frames as per kinfo page.
   if (init_unittest)
@@ -133,6 +136,29 @@ Kernel_thread::run()
 
   for (;;)
     idle_op();
+}
+
+PRIVATE
+void
+Kernel_thread::check_debug_koptions()
+{
+  auto g = lock_guard(cpu_lock);
+
+  if (Config::Jdb &&
+      !Koptions::o()->opt(Koptions::F_nojdb) &&
+      Koptions::o()->opt(Koptions::F_jdb_cmd))
+    {
+      // extract the control sequence from the command line
+      String_buf<128> cmd;
+      for (char const *s = Koptions::o()->jdb_cmd; *s && *s != ' '; ++s)
+        cmd.append(*s);
+
+      kdb_ke_sequence(cmd.c_str(), cmd.length());
+    }
+
+  // kernel debugger rendezvous
+  if (Koptions::o()->opt(Koptions::F_wait))
+    kdb_ke("Wait");
 }
 
 // ------------------------------------------------------------------------
