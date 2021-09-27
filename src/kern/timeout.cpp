@@ -14,6 +14,7 @@ class Timeout : public cxx::H_list_item
   friend class Jdb_timeout_list;
   friend class Jdb_list_timeouts;
   friend class Timeout_q;
+  friend class Timeouts_test;
 
 public:
   typedef cxx::H_list<Timeout> To_list;
@@ -46,6 +47,7 @@ private:
 
 class Timeout_q
 {
+  friend class Timeouts_test;
 private:
   /**
    * Timeout queue count (2^n) and  distance between two queues in 2^n.
