@@ -50,9 +50,10 @@ class Mapdb_test
 public:
   enum : Address
   {
-    _16K = 16 << 10,
-    _64K = 64 << 10,
-    _1M  =  1 << 20,
+    _16K  =  16 << 10,
+    _64K  =  64 << 10,
+    _512K = 512 << 10,
+    _1M   =   1 << 20,
     S_page = Config::PAGE_SIZE,
     S_super = Config::SUPERPAGE_SIZE,
     Pages_per_super = Config::SUPERPAGE_SIZE / Config::PAGE_SIZE,
@@ -231,6 +232,8 @@ Mapdb_test::test_map_util()
   unsigned const order_max = have_superpages() ? O_super : O_page;
   Fake_factory rq;
 
+  static_assert(S_super >= _1M, "Adapt test for smaller superpage size");
+
   auto sigma0 = Utest::kmem_create<Sigma0_space>(&rq);
 
   printf("Page=%ldKB, Superpage=%ldMB, largest_page_size=%d\n",
@@ -311,20 +314,20 @@ Mapdb_test::test_map_util()
   print_node(&*sigma0, to_pfn(_64K), _64K, _64K + _16K);
 
   // 4: Partially unmap superpage sigma0[0/superpage]
-  printf("UNMAP sigma0[1M/%ldK]\n"
+  printf("UNMAP sigma0[512K/%ldK]\n"
          "=> remove couple of page mappings from server\n",
-         1UL << (O_super - 2 - 10));
+         1UL << (O_super - 3 - 10));
   UTEST_TRUE(Utest::Assert,
-             ms(&*server)->v_lookup(to_vaddr(_1M + _16K), &phys, &order, &attr),
+             ms(&*server)->v_lookup(to_vaddr(_512K + _16K), &phys, &order, &attr),
              "VA server:1M + 16K mapped");
   UTEST_EQ(Utest::Expect, Page_order(O_page), order,
-           "VA server:1M+16K mapped with expected order");
-  UTEST_EQ(Utest::Expect, Phys_addr(_1M + _16K), phys,
-           "VA server:1M+16K mapped with expected physical address");
+           "VA server:512K+16K mapped with expected order");
+  UTEST_EQ(Utest::Expect, Phys_addr(_512K + _16K), phys,
+           "VA server:512K+16K mapped with expected physical address");
   UTEST_EQ(Utest::Expect, Rights::URX(), attr.rights,
-           "VA server:1M+16K mapped with expected attributes");
+           "VA server:512K+16K mapped with expected attributes");
   fpage_unmap(&*sigma0,
-              L4_fpage::mem(_1M, O_super - 2, Rights::URWX()),
+              L4_fpage::mem(_512K, O_super - 3, Rights::URWX()),
               not_me(), rl.list());
   print_node(&*sigma0, to_pfn(0));
 

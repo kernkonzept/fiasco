@@ -79,7 +79,7 @@
 .*MapDB node at 0x10000
 .* space=server vaddr=0x10000 size=0x4000
 .*
-.*UNMAP sigma0\[1M/512K\]
+.*UNMAP sigma0\[512K/256K\]
 .*=> remove couple of page mappings from server
 .*MapDB node at 0x0
 .* space=server vaddr=0x0 size=0x4000
@@ -114,22 +114,6 @@
 .* space=server vaddr=0x74000 size=0x4000
 .* space=server vaddr=0x78000 size=0x4000
 .* space=server vaddr=0x7c000 size=0x4000
-.* space=server vaddr=0x80000 size=0x4000
-.* space=server vaddr=0x84000 size=0x4000
-.* space=server vaddr=0x88000 size=0x4000
-.* space=server vaddr=0x8c000 size=0x4000
-.* space=server vaddr=0x90000 size=0x4000
-.* space=server vaddr=0x94000 size=0x4000
-.* space=server vaddr=0x98000 size=0x4000
-.* space=server vaddr=0x9c000 size=0x4000
-.* space=server vaddr=0xa0000 size=0x4000
-.* space=server vaddr=0xa4000 size=0x4000
-.* space=server vaddr=0xa8000 size=0x4000
-.* space=server vaddr=0xac000 size=0x4000
-.* space=server vaddr=0xb0000 size=0x4000
-.* space=server vaddr=0xb4000 size=0x4000
-.* space=server vaddr=0xb8000 size=0x4000
-.* space=server vaddr=0xbc000 size=0x4000
 .* space=server vaddr=0xc0000 size=0x4000
 .* space=server vaddr=0xc4000 size=0x4000
 .* space=server vaddr=0xc8000 size=0x4000

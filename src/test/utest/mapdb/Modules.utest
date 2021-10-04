@@ -4,3 +4,8 @@
 # mapping database
 INTERFACES_UTEST += test_mapdb
 UTEST_EXPECTED += expected_mapdb
+
+ifeq ($(CONFIG_XARCH)-$(CONFIG_ARM_LPAE),arm-)
+# ARM w/o LPAE uses 1MB superpages instead of 2MB.
+expected_mapdb-config := arm-nolpae
+endif
