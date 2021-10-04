@@ -86,12 +86,21 @@ kip_time_fn_read_ns:
         lw      $t0, KIP_VAL_HI(KIP_CLOCK)
         bne     $v1, $t0, 1b
           nop
+                                // v0 = ts.lo
+                                // v1 = ts.hi
         li      $t0, 1000       // t0 = 1000
+# ifdef _MIPS_ARCH_MIPS32R6
+        muhu    $t1, $v0, $t0   // t1 = (ts.lo * 1000).hi
+        mulu    $v0, $v0, $t0   // v0 = (ts.lo * 1000).lo
+        mulu    $v1, $v1, $t0   // v1 = (ts.hi * 1000).lo
+# else
         multu   $t0, $v0        // hi:lo = ts.lo * 1000
         mflo    $v0             // v0 = (ts.lo * 1000).lo
         mfhi    $t1             // t1 = (ts.lo * 1000).hi
         multu   $t0, $v1        // hi:lo = ts.hi * 1000
         mflo    $v1             // v1 = (ts.hi * 1000).lo
+# endif
+                                // v0 = (ts.lo * 1000).lo
         add     $v1, $v1, $t1   // v1 = (ts.hi * 1000).lo + (ts.lo * 1000).hi
 #endif
         jr      $ra
