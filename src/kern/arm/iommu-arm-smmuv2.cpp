@@ -503,6 +503,7 @@ private:
     Context_bank *_cb = nullptr;
     Unsigned32 _idx;
     Unsigned16 _sid;
+    unsigned _mask;
 
     template<typename REG>
     void write_reg(REG reg) const
@@ -516,10 +517,11 @@ private:
     Unsigned16 sid() const
     { return _sid; }
 
-    void init(Iommu *mmu, Unsigned32 idx)
+    void init(Iommu *mmu, Unsigned32 idx, unsigned mask)
     {
       _mmu = mmu;
       _idx = idx;
+      _mask = mask;
       reset();
     }
 
@@ -587,7 +589,7 @@ private:
        */
       Smr smr;
       smr.id() = _sid;
-      smr.mask() = ~0U << _mmu->_num_stream_id_bits;
+      smr.mask() = _mask;
       smr.valid() = 1;
       write_reg(smr);
     }
@@ -684,8 +686,11 @@ private:
 
   /**
    * Configures and enables the IOMMU.
+   *
+   * The mask allows to remove common unrelated parts when comparing the stream
+   * id's. This can be for example the encoded TBU's (Translation Buffer Units).
    */
-  void setup(Version version, Address base_addr);
+  void setup(Version version, Address base_addr, unsigned mask = ~0U);
 
   /**
    * Allocates and configures fault reporting interrupts for the IOMMU.
@@ -771,7 +776,7 @@ Iommu::remove(Address pt_phys)
 
 IMPLEMENT
 void
-Iommu::setup(Version version, Address base_addr)
+Iommu::setup(Version version, Address base_addr, unsigned mask)
 {
   _version = version;
   _gr0 = Mmio_register_block(base_addr);
@@ -829,8 +834,12 @@ Iommu::setup(Version version, Address base_addr)
   _sm = Sm_vect(new Boot_object<Stream_mapping>[num_stream_mapping_groups],
                 num_stream_mapping_groups);
 
+  if (mask == ~0U)
+    // Auto set mask if not provided
+    mask = ~0U << _num_stream_id_bits;
+
   for (unsigned i = 0; i < num_stream_mapping_groups; ++i)
-    _sm[i].init(this, i);
+    _sm[i].init(this, i, mask);
 
   // Clear GFSR
   write_reg<Gfsr>(~0U);
