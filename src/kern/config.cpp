@@ -81,7 +81,6 @@ public:
 #else
     Have_frame_ptr = 1,
 #endif
-    Mapdb_ram_only = 0,
 #ifdef CONFIG_JDB
     Jdb = 1,
 #else

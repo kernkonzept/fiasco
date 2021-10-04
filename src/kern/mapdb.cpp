@@ -1002,8 +1002,6 @@ Mapdb::foreach_mapping(Frame const &f,
 // 
 
 /** Constructor.
-    @param End physical end address of RAM.  (Used only if 
-           Config::Mapdb_ram_only is true.) 
  */
 PUBLIC inline NEEDS[<cassert>]
 Mapdb::Mapdb(Space *owner, Order parent_page_shift, size_t const *page_shifts,
