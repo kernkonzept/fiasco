@@ -137,8 +137,8 @@ private:
 #define UTEST_EQ(F, LHS, RHS, MSG)                                             \
   do                                                                           \
     {                                                                          \
-      auto rhs_res = RHS;                                                      \
-      auto lhs_res = LHS;                                                      \
+      auto rhs_res = (RHS);                                                    \
+      auto lhs_res = (LHS);                                                    \
       Utest_fw::tap_log.binary_cmp(F, lhs_res == rhs_res, #LHS, #RHS, lhs_res, \
                                    rhs_res, "==", MSG, __FILE__, __LINE__);    \
     } while (false)
@@ -146,8 +146,8 @@ private:
 #define UTEST_NE(F, LHS, RHS, MSG)                                             \
   do                                                                           \
     {                                                                          \
-      auto rhs_res = RHS;                                                      \
-      auto lhs_res = LHS;                                                      \
+      auto rhs_res = (RHS);                                                    \
+      auto lhs_res = (LHS);                                                    \
       Utest_fw::tap_log.binary_cmp(F, lhs_res != rhs_res, #LHS, #RHS, lhs_res, \
                                    rhs_res, "!=", MSG, __FILE__, __LINE__);    \
     } while (false)
@@ -155,8 +155,8 @@ private:
 #define UTEST_LT(F, LHS, RHS, MSG)                                            \
   do                                                                          \
     {                                                                         \
-      auto rhs_res = RHS;                                                     \
-      auto lhs_res = LHS;                                                     \
+      auto rhs_res = (RHS);                                                   \
+      auto lhs_res = (LHS);                                                   \
       Utest_fw::tap_log.binary_cmp(F, lhs_res < rhs_res, #LHS, #RHS, lhs_res, \
                                    rhs_res, "<", MSG, __FILE__, __LINE__);    \
     } while (false)
@@ -164,8 +164,8 @@ private:
 #define UTEST_LE(F, LHS, RHS, MSG)                                             \
   do                                                                           \
     {                                                                          \
-      auto rhs_res = RHS;                                                      \
-      auto lhs_res = LHS;                                                      \
+      auto rhs_res = (RHS);                                                    \
+      auto lhs_res = (LHS);                                                    \
       Utest_fw::tap_log.binary_cmp(F, lhs_res <= rhs_res, #LHS, #RHS, lhs_res, \
                                    rhs_res, "<=", MSG, __FILE__, __LINE__);    \
     } while (false)
@@ -173,8 +173,8 @@ private:
 #define UTEST_GE(F, LHS, RHS, MSG)                                             \
   do                                                                           \
     {                                                                          \
-      auto rhs_res = RHS;                                                      \
-      auto lhs_res = LHS;                                                      \
+      auto rhs_res = (RHS);                                                    \
+      auto lhs_res = (LHS);                                                    \
       Utest_fw::tap_log.binary_cmp(F, lhs_res >= rhs_res, #LHS, #RHS, lhs_res, \
                                    rhs_res, ">=", MSG, __FILE__, __LINE__);    \
     } while (false)
@@ -182,8 +182,8 @@ private:
 #define UTEST_GT(F, LHS, RHS, MSG)                                            \
   do                                                                          \
     {                                                                         \
-      auto rhs_res = RHS;                                                     \
-      auto lhs_res = LHS;                                                     \
+      auto rhs_res = (RHS);                                                   \
+      auto lhs_res = (LHS);                                                   \
       Utest_fw::tap_log.binary_cmp(F, lhs_res > rhs_res, #LHS, #RHS, lhs_res, \
                                    rhs_res, ">", MSG, __FILE__, __LINE__);    \
     } while (false)
