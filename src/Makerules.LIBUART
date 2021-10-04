@@ -1,9 +1,7 @@
 # vim:set ft=make:
 
-rel2abs	= $(foreach f, $(1),$(shell cd $(f); pwd))
-
-LIBUART_srcdir    := $(strip $(call rel2abs, $(srcdir)))
-LIBUART_VPATH_abs := $(call rel2abs, $(VPATH_LIBUART))
+LIBUART_srcdir    := $(strip $(abspath $(srcdir)))
+LIBUART_VPATH_abs := $(abspath $(VPATH_LIBUART))
 
 $(LIBUART): FORCE | $(dir $(LIBUART))
 	$(MAKE_MESSAGE)      
