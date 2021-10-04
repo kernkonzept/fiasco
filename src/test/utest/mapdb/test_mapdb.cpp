@@ -64,8 +64,15 @@ public:
     O_super = Config::SUPERPAGE_SHIFT,
   };
 
+  Mapdb_test()
+  {
+    // mapdb_mem only exported from map_util-mem for debug builds
+    extern Static_object<Mapdb> mapdb_mem;
+    mapdb = mapdb_mem.get();
+  }
+
 private:
-  Mapdb *mapdb = mapdb_mem.get();
+  Mapdb *mapdb;
 };
 
 class Test_space : public Space
