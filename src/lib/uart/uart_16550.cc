@@ -57,8 +57,8 @@ namespace L4
     _regs->write<unsigned char>(IER, _ier_bits);
     /* rts, and dtr enabled */
     _regs->write<unsigned char>(MCR, _mcr_bits | 3);
-    /* enable fifo + clear rcv+xmit fifo */
-    _regs->write<unsigned char>(FCR, _fcr_bits | 7);
+    /* enable fifo */
+    _regs->write<unsigned char>(FCR, _fcr_bits | 1);
     /* clear line control register: set to (8N1) */
     _regs->write<unsigned char>(LCR, 3);
 
