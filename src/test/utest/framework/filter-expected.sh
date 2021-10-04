@@ -11,15 +11,15 @@
 # Only content between 'KUT TAP TEST START' and 'KUT TAP TEST FINISHED' is
 # considered.
 
-fromdos $@ | \
-  sed -n \
-    -e '/^KUT TAP TEST START/,/KUT TAP TEST FINISHED$/!d' \
+sed -n \
+    -e '/^KUT TAP TEST START/,/KUT TAP TEST FINISHED/!d' \
     -e '/\[DONTCHECK\]/d' \
     -e '/^MDB:.*/d' \
     -e 's/\*/\\*/g' \
     -e 's/\+/\\+/g' \
     -e 's/\[/\\[/g' \
     -e 's/\]/\\]/g' \
+    -e 's/\r$//g' \
     -e 's/ *$//g' \
     -e 's/^/.*/' \
-    -e 'p'
+    -e 'p' $@
