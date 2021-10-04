@@ -47,12 +47,16 @@ endef
 # Generate copy rule for each 'expected_' file.
 # By default, for 'test_foo.cpp', 'expected_foo' is used
 # unless expected_foo-XARCH (e.g. 'expected_foo-ia32') exists
-# unless expected_foo-XARCH-BITS (e.g. 'expected_foo-mips-64') exists.
+# unless expected_foo-XARCH-BITS (e.g. 'expected_foo-mips-64') exists
+# unless expected_foo-bar (e.g. 'expected_foo-arm-nolpae') exists where
+# 'bar' is evaluated from $(expected_foo-config).
 $(foreach tname,$(UTEST_EXPECTED),\
 	$(eval $(call gen_utest_expected_rule,\
 		utest/$(tname),\
 		$(firstword $(wildcard $(foreach d,$(ALL_UTEST_DIRS),\
 			$(foreach f,\
+				$(if $($(tname)-config),\
+					$(tname)-$($(tname)-config),) \
 				$(tname)-$(CONFIG_XARCH)-$(BITS) \
 				$(tname)-$(CONFIG_XARCH) $(tname),\
 				$(srcdir)/$(d)/$(f))))))))
