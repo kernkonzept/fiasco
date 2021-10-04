@@ -70,7 +70,7 @@ IMPLEMENTATION:
 #include "config.h"
 
 /** Set address space.
-    @param space the address space into which the frame is mapped. 
+    @param space the address space into which the frame is mapped.
  */
 PUBLIC inline
 void
@@ -115,7 +115,7 @@ Mapping::set_depth(unsigned char depth)
   _virt = (_virt & ~0xffUL) | depth;
 }
 
-PUBLIC inline 
+PUBLIC inline
 bool
 Mapping::is_root() const
 {

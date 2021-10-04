@@ -133,7 +133,7 @@ private:
 
   // DATA
   Page _key_end;		///< Number of Physframe entries
-  Space *_owner_id;	///< ID of owner of mapping trees 
+  Space *_owner_id;	///< ID of owner of mapping trees
   Pfn _page_offset;	///< Virt. page address in owner's addr space
   Order _page_shift;		///< Page size of mapping trees
   Physframe* _physframe;	///< Pointer to Physframe array
@@ -236,11 +236,11 @@ IMPLEMENTATION:
  * we set up a slab allocator.  To grow or shrink the size of an
  * array, we have to allocate a larger or smaller tree from the
  * corresponding allocator and then copy the array elements.
- * 
+ *
  * The array elements (Mapping) contain a tree depth element.  This
  * depth and the relative position in the array is all information we
  * need to derive tree structure information.  Here is an example:
- * 
+ *
  * array
  * element   depth
  * number    value    comment
@@ -253,17 +253,17 @@ IMPLEMENTATION:
  * 5         2        child of element #1 with depth 1
  * 6         3        child of element #5 with depth 2
  * 7         1        child of element #0 with depth 0
- * 
+ *
  * This array is a pre-order encoding of the following tree:
- * 
- *                   0
- * 	          /     \
- *               1       7
+ *
+ *                  0
+ *                /   \
+ *               1     7
  *            /  |  \
  *           2   3   5
  *               |   |
- *        	 4   6
-       	       	   
+ *               4   6
+
  * The mapping database (Mapdb) is organized in a hierarchy of
  * frame-number-keyed maps of Mapping_trees (Treemap).  The top-level
  * Treemap contains mapping trees for superpages.  These mapping trees
@@ -272,7 +272,7 @@ IMPLEMENTATION:
  *
  *        Treemap
  *        -------------------------------
- *     	  | | | | | | | | | | | | | | | | array of ptr to 4M Mapping_tree's
+ *        | | | | | | | | | | | | | | | | array of ptr to 4M Mapping_tree's
  *        ---|---------------------------
  *           |
  *           v a Mapping_tree
@@ -288,7 +288,7 @@ IMPLEMENTATION:
  *                                  ---|---------------------------
  *                                     |
  *                                     v a Mapping_tree
- *                             	       ---------------
+ *                                     ---------------
  *                                     |             | tree header
  *                                     |-------------|
  *                                     |             | 4K Mapping
@@ -297,7 +297,7 @@ IMPLEMENTATION:
  *                                     |             |
  *                                     ---------------
 
- * IDEAS for enhancing this implementation: 
+ * IDEAS for enhancing this implementation:
 
  * We often have to find a tree header corresponding to a mapping.
  * Currently, we do this by iterating backwards over the array
@@ -346,7 +346,7 @@ Physframe::Physframe ()
 
 inline
 void *
-Physframe::operator new (size_t, void *p) 
+Physframe::operator new (size_t, void *p)
 { return p; }
 #endif
 
@@ -396,7 +396,7 @@ Physframe::~Physframe()
 }
 
 static // inline NEEDS[Physframe::~Physframe]
-void 
+void
 Physframe::free(Physframe *block, size_t size, Space *owner)
 {
   for (unsigned i = 0; i < size; ++i)
@@ -839,7 +839,7 @@ Treemap::insert(Physframe* frame, Mapping_tree::Iterator const &parent,
 
       Iterator free = frame->alloc_mapping(payer, parent, insert_submap);
       if (EXPECT_FALSE(!*free))
-        return 0; 
+        return 0;
 
       // Check for submap entry.
       if (! insert_submap)	// Not a submap entry
@@ -998,9 +998,9 @@ Mapdb::foreach_mapping(Frame const &f,
 }
 
 
-// 
+//
 // class Mapdb
-// 
+//
 
 /** Constructor.
  */
@@ -1025,7 +1025,7 @@ Mapdb::Mapdb(Space *owner, Order parent_page_shift, size_t const *page_shifts,
     @param space  Number of the address space into which the mapping is entered
     @param va     Virtual address of the mapped page.
     @param size   Size of the mapping.  For memory mappings, 4K or 4M.
-    @return If successful, new mapping.  If out of memory or mapping 
+    @return If successful, new mapping.  If out of memory or mapping
            tree full, 0.
     @post  All Mapping* pointers pointing into this mapping tree,
            except "parent" and its parents, will be invalidated.
@@ -1041,13 +1041,13 @@ Mapdb::insert(Frame const &frame, Space *space,
 } // insert()
 
 
-/** 
+/**
  * Lookup a mapping and lock the corresponding mapping tree.  The returned
  * mapping pointer, and all other mapping pointers derived from it, remain
- * valid until free() is called on one of them.  We guarantee that at most 
- * one insert() operation succeeds between one lookup()/free() pair of calls 
+ * valid until free() is called on one of them.  We guarantee that at most
+ * one insert() operation succeeds between one lookup()/free() pair of calls
  * (it succeeds unless the mapping tree is full).
- * @param space Number of virtual address space in which the mapping 
+ * @param space Number of virtual address space in which the mapping
  *              was entered
  * @param va    Virtual address of the mapping
  * @param phys  Physical address of the mapped page frame
@@ -1064,7 +1064,7 @@ Mapdb::lookup(Space const *space, Pfn va, Pfn phys,
 /** Delete mappings from a tree.  This function deletes mappings
     recursively.
     @param m Mapping that denotes the subtree that should be deleted.
-    @param me_too If true, delete m as well; otherwise, delete only 
+    @param me_too If true, delete m as well; otherwise, delete only
            submappings.
  */
 PUBLIC static inline
@@ -1085,7 +1085,7 @@ Mapdb::flush(Frame const &f, L4_map_mask mask,
 
 /** Change ownership of a mapping.
     @param m Mapping to be modified.
-    @param new_space Number of address space the mapping should be 
+    @param new_space Number of address space the mapping should be
                      transferred to
     @param va Virtual address of the mapping in the new address space
  */
@@ -1107,5 +1107,3 @@ Mapdb::lookup_src_dst(Space const *src, Pfn src_phys, Pfn src_va, Pcnt src_size,
                                   dst, dst_phys - Pfn(0), dst_va, dst_size,
                                   src_frame, dst_frame);
 }
-
-
