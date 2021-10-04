@@ -82,11 +82,6 @@ public:
     Have_frame_ptr = 1,
 #endif
     Mapdb_ram_only = 0,
-#ifdef CONFIG_DEBUG_KERNEL_PAGE_FAULTS
-    Log_kernel_page_faults = 1,
-#else
-    Log_kernel_page_faults = 0,
-#endif
 #ifdef CONFIG_JDB
     Jdb = 1,
 #else

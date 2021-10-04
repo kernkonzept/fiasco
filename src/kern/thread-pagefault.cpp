@@ -33,27 +33,6 @@ IMPLEMENT inline NEEDS[<cstdio>,"kdb_ke.h","processor.h",
 int Thread::handle_page_fault(Address pfa, Mword error_code, Mword pc,
                               Return_frame *regs)
 {
-  //if (Config::Log_kernel_page_faults && !PF::is_usermode_error(error_code))
-  if (0 && current_cpu() != Cpu_number::boot_cpu())
-    {
-      auto guard = lock_guard(cpu_lock);
-      printf("*KP[cpu=%u, sp=%lx, pfa=%lx, pc=%lx, error=(%lx)",
-             cxx::int_value<Cpu_number>(current_cpu()),
-             Proc::stack_pointer(), pfa, pc, error_code);
-      print_page_fault_error(error_code);
-      printf("]\n");
-    }
-
-#if 0
-  printf("Translation error ? %x\n"
-	 "  current space has mapping : %08x\n"
-	 "  Kernel space has mapping  : %08x\n",
-	 PF::is_translation_error(error_code),
-	 current_mem_space()->lookup((void*)pfa),
-	 Space::kernel_space()->lookup((void*)pfa));
-#endif
-
-
   CNT_PAGE_FAULT;
 
   // TODO: put this into a debug_page_fault_handler

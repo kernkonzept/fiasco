@@ -360,12 +360,4 @@ config VMEM_ALLOC_TEST
 	bool "Run test for Vmem_alloc allocator"
 	depends on ARM
 
-config DEBUG_KERNEL_PAGE_FAULTS
-	bool "Debugging of kernel page-faults"
-	depends on ARM
-	help
-	  This option enables logging of kernel page-faults (aka page faults
-	  from kernel mode). The page faults are logged to the normal
-	  console in the format *KP[pfa, error_code, ip].
-
 endmenu
