@@ -113,7 +113,6 @@ public:
   static bool getchar_does_hlt_works_ok;
   static bool esc_hack;
   static unsigned tbuf_entries;
-  static unsigned num_ap_cpus asm("config_num_ap_cpus");
 
   static constexpr Order page_order()
   { return Order(PAGE_SHIFT); }
@@ -247,7 +246,6 @@ int  Config::serial_esc = Config::SERIAL_NO_ESC;
 
 unsigned Config::tbuf_entries = 0x20000 / sizeof(Mword); //1024;
 bool Config::getchar_does_hlt_works_ok = false;
-unsigned Config::num_ap_cpus;
 
 #ifdef CONFIG_FINE_GRAINED_CPUTIME
 KIP_KERNEL_FEATURE("fi_gr_cputime");
