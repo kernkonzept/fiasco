@@ -247,6 +247,7 @@ config SYNC_TSC
 
 config FINE_GRAINED_CPUTIME
 	bool "Fine-grained CPU time"
+	depends on !PERFORMANCE
 	help
 	  Measure CPU time consumed by a thread from switching to the thread
 	  until switching to another thread. Induces an overhead during each
@@ -395,6 +396,18 @@ endmenu # kernel options
 
 menu "Debugging"
 
+config PERFORMANCE
+	bool "Performance configuration"
+	select INLINE
+	select NDEBUG
+	select NO_FRAME_PTR
+	select LAZY_FPU
+	help
+	  Setup the kernel such that performance is chosen over
+	  being friendly for debugging. With this option, no
+	  assertions are included and additional run-time functionality
+	  is de-selected.
+
 config INLINE
 	bool "Generate inline code"
 	default y
@@ -419,6 +432,7 @@ config NO_FRAME_PTR
 
 config STACK_DEPTH
 	bool "Measure stack depth of threads"
+	depends on !PERFORMANCE
 	help
 	  When this option is enabled, each thread control block is marked
 	  with magic numbers while creation. The function ``show thread
@@ -428,6 +442,7 @@ config STACK_DEPTH
 config BEFORE_IRET_SANITY
 	bool "Sanity checks at syscall entry/exit"
 	depends on PF_PC
+	depends on !PERFORMANCE
 	help
 	  Perform the following additional sanity checks before returning to
 	  usermode:

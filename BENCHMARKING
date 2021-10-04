@@ -1,13 +1,17 @@
 
-IMPORTANT NOTE ON BENCHMARKING Fiasco.OC/L4RE SOFTWARE
+IMPORTANT NOTE ON BENCHMARKING Fiasco.OC/L4Re SOFTWARE
 ======================================================
 
 Owing to the flexibility of configurations possible with this software we
 urge you to send any benchmarking results for review prior to publication to
 
-  benchmarking@os.inf.tu-dresden.de
+  benchmarking@l4re.org
 
 to get feedback and an 'OK' from our side that the presented figures are
 reasonable.
 
-Thanks.
+In any case, for doing benchmarks and performance analysis, please ensure
+to have CONFIG_PERFORMANCE selected in Fiasco's configuration.
+
+
+Thank you.
