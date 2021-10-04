@@ -2,7 +2,7 @@
 # vi:se ft=make:
 
 # mapping database
-INTERFACES_UTEST += test_mapdb
+INTERFACES_UTEST += test_mapdb test_map_util common_test_mapdb
 UTEST_EXPECTED += expected_mapdb
 
 ifeq ($(CONFIG_XARCH)-$(CONFIG_ARM_LPAE),arm-)
