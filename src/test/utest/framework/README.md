@@ -26,7 +26,9 @@ INTERFACES_UTEST +=
 UTEST_EXPECTED +=
 ```
 
-`INTERFACES_UTEST` shall list all test files explicitly.
+`INTERFACES_UTEST` shall list all test files explicitly. Modules starting with
+`test_` are considered as independent tests. Modules starting with `common_`
+shall contain implemented classes relevant for multiple test modules.
 
 `UTEST_EXPECED` shall list the files for output matching with the expectation.
 The expectation files shall replace the `test_` prefix with `expected_`. The
