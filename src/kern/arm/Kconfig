@@ -351,13 +351,3 @@ config ARM_1176_CACHE_ALIAS_FIX
 config ARM_CPU_ERRATA
         bool "Enable CPU errata workarounds"
         depends on ARM
-
-# SECTION: DEBUG
-
-menu "ARM debugging options"
-
-config VMEM_ALLOC_TEST
-	bool "Run test for Vmem_alloc allocator"
-	depends on ARM
-
-endmenu
