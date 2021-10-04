@@ -1,0 +1,6 @@
+# -*- makefile -*-
+# vi:se ft=make:
+
+# mapping database
+INTERFACES_UTEST += test_mapdb
+UTEST_EXPECTED += expected_mapdb
