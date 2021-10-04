@@ -37,6 +37,7 @@ IMPLEMENTATION:
 #include "kernel_task.h"
 #include "per_cpu_data_alloc.h"
 #include "processor.h"
+#include "string_buffer.h"
 #include "task.h"
 #include "thread.h"
 #include "thread_state.h"
