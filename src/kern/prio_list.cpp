@@ -140,7 +140,7 @@ bool Prio_list_elem::in_list() const { return S_list::in_list(this); }
  * Dequeue a given element from the list.
  * @param e the element to dequeue
  */
-PUBLIC inline
+PUBLIC inline NEEDS[Prio_list::next]
 void
 Prio_list::dequeue(Prio_list_elem *e, Prio_list_elem **next = 0)
 {
@@ -162,12 +162,7 @@ Prio_list::dequeue(Prio_list_elem *e, Prio_list_elem **next = 0)
   else
     {
       if (next)
-	{
-	  if (P_list::in_list(*++S_list::iter(e))) // actually we are the last on our priority
-	    *next = *++P_list::iter(e);
-	  else
-	    *next = *++S_list::iter(e);
-	}
+        *next = Prio_list::next(e);
     }
   S_list::remove(e);
 }
