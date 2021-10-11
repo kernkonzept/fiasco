@@ -70,7 +70,7 @@ private:
   void const *_partner;     // IPC partner I'm waiting for/involved with
   Syscall_frame *_rcv_regs; // registers used for receive
   Mword _caller;
-  Iteratable_prio_list _sender_list;
+  Iterable_prio_list _sender_list;
 };
 
 typedef Context_ptr_base<Receiver> Receiver_ptr;
@@ -175,7 +175,7 @@ Receiver::rcv_regs() const
     @return a reference to the receiver's list of senders
  */
 PUBLIC inline
-Iteratable_prio_list *
+Iterable_prio_list *
 Receiver::sender_list()
 {
   return &_sender_list;

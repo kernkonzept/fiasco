@@ -20,7 +20,7 @@ public:
 
 protected:
   Sender() = default;
-  Iteratable_prio_list *_wq;
+  Iterable_prio_list *_wq;
 
 private:
 
@@ -59,7 +59,7 @@ Sender::Sender (int /*ignored*/)
     @return receiver this sender is currently trying to send a message to.
  */
 PUBLIC inline
-Iteratable_prio_list *
+Iterable_prio_list *
 Sender::wait_queue() const
 { return _wq; }
 
@@ -68,7 +68,7 @@ Sender::wait_queue() const
  */
 PUBLIC inline
 void
-Sender::set_wait_queue(Iteratable_prio_list *wq)
+Sender::set_wait_queue(Iterable_prio_list *wq)
 {
   _wq = wq;
 }

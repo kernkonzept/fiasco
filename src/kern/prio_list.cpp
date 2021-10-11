@@ -19,9 +19,9 @@ class Prio_list_elem;
  * Priority sorted list.
  *
  * The list is organized in a way that the highest priority member can be
- * found with O(1). Ever dequeue operation is also O(1).
+ * found with O(1). Every dequeue operation is also O(1).
  *
- * There is a forward iteratable list with at most one element per priority.
+ * There is a forward-iterable list with at most one element per priority.
  * Elements with the same priority are handled in a double-linked circular
  * list for each priority. This double-linked list implements FIFO policy for
  * finding the next element.
@@ -41,7 +41,7 @@ public:
   Prio_list_elem *first() const { return front(); }
 };
 
-class Iteratable_prio_list : public Prio_list
+class Iterable_prio_list : public Prio_list
 {
 public:
   Spin_lock<> *lock() { return &_lock; }
@@ -51,7 +51,7 @@ private:
   Spin_lock<> _lock;
 };
 
-typedef Iteratable_prio_list Locked_prio_list;
+typedef Iterable_prio_list Locked_prio_list;
 
 
 /**
@@ -173,7 +173,7 @@ Prio_list::dequeue(Prio_list_elem *e, Prio_list_elem **next = 0)
 }
 
 PUBLIC inline
-Iteratable_prio_list::Iteratable_prio_list() : _cursor(0), _lock(Spin_lock<>::Unlocked) {}
+Iterable_prio_list::Iterable_prio_list() : _cursor(0), _lock(Spin_lock<>::Unlocked) {}
 
 /**
  * Dequeue a given element from the list.
@@ -181,7 +181,7 @@ Iteratable_prio_list::Iteratable_prio_list() : _cursor(0), _lock(Spin_lock<>::Un
  */
 PUBLIC inline NEEDS[Prio_list::dequeue]
 void
-Iteratable_prio_list::dequeue(Prio_list_elem *e)
+Iterable_prio_list::dequeue(Prio_list_elem *e)
 {
   Prio_list_elem **c = 0;
   if (EXPECT_FALSE(_cursor != 0) && EXPECT_FALSE(_cursor == e))
@@ -192,11 +192,11 @@ Iteratable_prio_list::dequeue(Prio_list_elem *e)
 
 PUBLIC inline
 void
-Iteratable_prio_list::cursor(Prio_list_elem *e)
+Iterable_prio_list::cursor(Prio_list_elem *e)
 { _cursor = e; }
 
 PUBLIC inline
 Prio_list_elem *
-Iteratable_prio_list::cursor() const
+Iterable_prio_list::cursor() const
 { return _cursor; }
 
