@@ -17,6 +17,7 @@ class Sched_context : public cxx::D_list_item
   MEMBER_OFFSET();
   friend class Jdb_list_timeouts;
   friend class Jdb_thread_list;
+  friend class Sched_ctxts_test;
 
   template<typename T>
   friend struct Jdb_thread_list_policy;

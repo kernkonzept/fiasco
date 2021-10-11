@@ -20,6 +20,7 @@ class Ready_queue_fp
   friend class Jdb_thread_list;
   template<typename T>
   friend struct Jdb_thread_list_policy;
+  friend class Sched_ctxts_test;
 
 private:
   typedef typename E::Fp_list List;

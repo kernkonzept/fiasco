@@ -155,6 +155,8 @@ template<
 >
 class Sd_list : public D_list_cyclic<T, C>
 {
+  friend class Sched_ctxts_test;
+
 private:
   typedef D_list_cyclic<T, C> Base;
 
