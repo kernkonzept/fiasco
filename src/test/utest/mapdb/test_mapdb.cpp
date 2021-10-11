@@ -236,8 +236,10 @@ Mapdb_test::test_map_util()
 
   auto sigma0 = Utest::kmem_create<Sigma0_space>(&rq);
 
-  printf("Page=%ldKB, Superpage=%ldMB, largest_page_size=%d\n",
-         S_page >> 10, S_super >> 20,
+  printf("Page = %ldKB, Superpage = %ldMB\n", S_page >> 10, S_super >> 20);
+
+  // Support for pages > superpage is optional.
+  printf("[DONTCHECK] largest_page_size = %d\n",
          cxx::int_value<Mem_space::Page_order>(sigma0->largest_page_size()));
 
   printf("have_superpages = %s\n\n", have_superpages() ? "yes" : "no");

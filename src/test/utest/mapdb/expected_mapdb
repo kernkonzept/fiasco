@@ -1,5 +1,5 @@
 .*KUT TAP TEST START
-.*Page=4KB, Superpage=2MB, largest_page_size=30
+.*Page = 4KB, Superpage = 2MB
 .*have_superpages = yes
 .*
 .*MAP sigma0\[64K/page\] -> server\[ALL:page\]
