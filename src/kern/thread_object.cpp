@@ -667,7 +667,10 @@ PRIVATE inline NOEXPORT
 Context::Drq::Result
 Thread_object::sys_thread_stats_remote(void *data)
 {
-  update_consumed_time();
+  // For threads whose home CPU is the invalid CPU, this method is executed in
+  // the context of another thread, don't consume CPU time in that case.
+  if (this == current())
+    update_consumed_time();
   *(Clock::Time *)data = consumed_time();
   return Drq::done();
 }
