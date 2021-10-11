@@ -1045,11 +1045,11 @@ Mapdb::insert(Frame const &frame, Space *space,
  * mapping pointer, and all other mapping pointers derived from it, remain
  * valid until free() is called on one of them.  We guarantee that at most 
  * one insert() operation succeeds between one lookup()/free() pair of calls 
- * (it succeeds unless the mapping tree is fu68,ll).
+ * (it succeeds unless the mapping tree is full).
  * @param space Number of virtual address space in which the mapping 
  *              was entered
  * @param va    Virtual address of the mapping
- * @param phys  Physical address of the mapped pag frame
+ * @param phys  Physical address of the mapped page frame
  * @return mapping, if found; otherwise, 0
  */
 PUBLIC inline
@@ -1061,7 +1061,7 @@ Mapdb::lookup(Space *space, Pfn va, Pfn phys,
 }
 
 /** Delete mappings from a tree.  This function deletes mappings
-    recusively.
+    recursively.
     @param m Mapping that denotes the subtree that should be deleted.
     @param me_too If true, delete m as well; otherwise, delete only 
            submappings.
