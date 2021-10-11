@@ -21,6 +21,13 @@ class Treemap;
  */
 class Mapping : public cxx::S_list_item
 {
+  /** Memory efficient pointer with compile-time-defined most-significant bits.
+   *
+   * \tparam T         Target type of the pointer.
+   * \tparam INTERNAL  Integer type used for storing the least significant bits
+   *                   of the pointer.
+   * \tparam PREFIX    The most significant bits of the pointer.
+   */
   template<typename T,
            typename INTERNAL = Mword,
            unsigned long PREFIX = 0>
