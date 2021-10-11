@@ -37,16 +37,6 @@ public:
     void activate(Sched_context *s)
     { _current_sched = s; }
     Sched_context *current_sched() const { return _current_sched; }
-    void ready_enqueue(Sched_context *sc)
-    {
-      assert(cpu_lock.test());
-
-      // Don't enqueue threads which are already enqueued
-      if (EXPECT_FALSE (sc->in_ready_list()))
-        return;
-
-      enqueue(sc, sc == current_sched());
-    }
 
   private:
     Sched_context *_current_sched;
