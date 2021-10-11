@@ -30,6 +30,7 @@ class Prio_list : private cxx::H_list<Prio_list_elem>
 {
   MEMBER_OFFSET();
   friend class Jdb_sender_list;
+  friend class Prio_list_tester;
 public:
   typedef cxx::H_list<Prio_list_elem> P_list;
   typedef cxx::D_list_cyclic<Prio_list_elem> S_list;
