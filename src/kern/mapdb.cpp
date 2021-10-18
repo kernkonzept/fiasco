@@ -668,10 +668,9 @@ Treemap::lookup(Pcnt key, Space const *search_space, Pfn search_va,
 
 PUBLIC inline NEEDS[Treemap::_lookup, "assert_opt.h"]
 int
-Treemap::lookup_src_dst(
-  Space const *src, Pcnt src_key, Pfn src_va, Pcnt src_size,
-  Space const *dst, Pcnt dst_key, Pfn dst_va, Pcnt dst_size,
-  Frame *src_frame, Frame *dst_frame)
+Treemap::lookup_src_dst(Space const *src, Pcnt src_key, Pfn src_va, Pcnt src_size,
+                        Space const *dst, Pcnt dst_key, Pfn dst_va, Pcnt dst_size,
+                        Frame *src_frame, Frame *dst_frame)
 {
   assert_opt (!src_frame->frame);
   assert_opt (!dst_frame->frame);
