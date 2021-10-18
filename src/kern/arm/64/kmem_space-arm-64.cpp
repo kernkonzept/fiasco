@@ -13,8 +13,9 @@ IMPLEMENTATION [arm && !cpu_virt]:
 K_ptab_array kernel_l0_dir;
 static K_ptab_array kernel_l0_vdir;
 
-// Bootstrap should be able to map up to 256TB RAM with six pages
-enum { Num_scratch_pages = 6 };
+// Bootstrap should be able to map up to 256TB RAM with six pages,
+// plus some more pages for non-full regions
+enum { Num_scratch_pages = 8 };
 static K_ptab_array pdir_scratch[Num_scratch_pages];
 
 Kpdir *Mem_layout::kdir = (Kpdir *)&kernel_l0_vdir;
@@ -34,8 +35,9 @@ IMPLEMENTATION [arm && cpu_virt]:
 #include "boot_infos.h"
 
 K_ptab_array kernel_l0_dir;
-// Bootstrap should be able to map up to 256TB RAM with six pages
-enum { Num_scratch_pages = 6 };
+// Bootstrap should be able to map up to 256TB RAM with six pages,
+// plus some more pages for non-full regions
+enum { Num_scratch_pages = 8 };
 static K_ptab_array pdir_scratch[Num_scratch_pages];
 
 Kpdir *Mem_layout::kdir = (Kpdir *)&kernel_l0_dir;
