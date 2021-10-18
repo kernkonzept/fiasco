@@ -103,6 +103,7 @@ private:
   bool _tap_line_printed = false;
   char const *_group_name = nullptr;
   char const *_test_name = nullptr;
+  char const *_test_uuid = nullptr;
 };
 
 // --- unit test macros -------------------------------------------------------
@@ -332,7 +333,8 @@ Utest_fw::name_group_test(char const *group, char const *test)
  */
 PUBLIC inline
 void
-Utest_fw::new_test(char const *group, char const *test)
+Utest_fw::new_test(char const *group, char const *test,
+                   char const *uuid)
 {
   // finish previous test if this isn't the first.
   if (_num_tests > 0)
@@ -350,6 +352,7 @@ Utest_fw::new_test(char const *group, char const *test)
     {
       _instance_counter = 0;
       name_group_test(group, test);
+      test_uuid(uuid);
     }
 
   Utest_debug::printf("New test %s::%s/%u\n", group, test, _instance_counter);
@@ -363,6 +366,14 @@ Utest_fw::test_done()
   // tap_msg() checks if a TAP line was already printed, if it wasn't the test
   // was successful.
   tap_msg(true);
+}
+
+/// Set UUID of the current test
+PUBLIC inline
+void
+Utest_fw::test_uuid(char const *uuid)
+{
+  _test_uuid = uuid;
 }
 
 /**
@@ -399,6 +410,8 @@ Utest_fw::tap_msg(bool success,
            _instance_counter,
            todo_skip ? todo_skip : "",
            msg ? msg : "");
+
+  printf("# Test-uuid: %s\n", _test_uuid);
 }
 
 /**

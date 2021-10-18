@@ -148,7 +148,8 @@ PUBLIC
 void
 Mapdb_util_test::test_map_util()
 {
-  Utest_fw::tap_log.new_test(Mapdb_group, __func__);
+  Utest_fw::tap_log.new_test(Mapdb_group, __func__,
+                             "d32fa52b-7faa-4a17-abb3-3c5ceeac3e0f");
 
   unsigned const order_max = have_superpages() ? O_super : O_page;
   Test_fake_factory rq;
