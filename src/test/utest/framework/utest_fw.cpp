@@ -202,6 +202,8 @@ private:
 IMPLEMENTATION:
 
 #include <feature.h>
+#include "mem.h"
+
 /**
  * Define a feature placeholder for external information filled in by
  * bootstrap. "utest_opts=" is intended to recognize the placeholder.
@@ -713,8 +715,31 @@ Utest::start_thread(cxx::functor<void ()> fn, Cpu_number cpu,
   return true;
 }
 
+PUBLIC
+template <typename T, Unsigned8 FILL, typename...A>
+static cxx::unique_ptr<T, Utest::Deleter<T>>
+Utest::kmem_create_fill(A&&... args)
+{
+  void *p = Kmem_slab_t<T>::alloc();
+  if (p)
+    {
+      memset(p, FILL, sizeof(T));
+      Mem::barrier(); // prevent the compiler from optimizing memset() away
+      new (p) T(cxx::forward<A>(args)...);
+    }
+  return cxx::unique_ptr<T, Utest::Deleter<T>>(static_cast<T *>(p));
+}
+
+
 /**
- * Use the kernel allocator to create an object encapsulated by unique_ptr.
+ * Use the kernel allocator to create an object encapsulated by unique_ptr
+ * where the object storage is initialized with 0x55 before the constructor is
+ * called.
+ *
+ * Initializing the memory with 0x55 is supposed to trigger cases where the
+ * object constructor does not initialize all class members. Code accessing
+ * such uninitialized members could read zeroed memory which isn't guaranteed
+ * in production.
  *
  * Alignment: `Kmem_slab_t` uses the buddy allocator for objects >= 1K and the
  * slab allocator for smaller objects. The `Kmem_slab_t` objects are aligned
@@ -723,8 +748,26 @@ Utest::start_thread(cxx::functor<void ()> fn, Cpu_number cpu,
 PUBLIC
 template <typename T, typename... A>
 static cxx::unique_ptr<T, Utest::Deleter<T>>
-Utest::kmem_create(A&& ... args)
+Utest::kmem_create(A&&... args)
 {
-  return cxx::unique_ptr<T, Utest::Deleter<T>>(
-    Kmem_slab_t<T>::new_obj(cxx::forward<A>(args)...));
+  return kmem_create_fill<T, 0x55, A...>(cxx::forward<A>(args)...);
+}
+
+/**
+ * Use the kernel allocator to create an object encapsulated by unique_ptr
+ * where the object storage is cleared before the constructor is called.
+ *
+ * This is required for objects which are normally stored in the BSS and would
+ * be implicitly initialized at kernel boot time.
+ *
+ * Alignment: `Kmem_slab_t` uses the buddy allocator for objects >= 1K and the
+ * slab allocator for smaller objects. The `Kmem_slab_t` objects are aligned
+ * with their size, for example a 16-byte chunk is 16-byte aligned.
+ */
+PUBLIC
+template <typename T, typename... A>
+static cxx::unique_ptr<T, Utest::Deleter<T>>
+Utest::kmem_create_clear(A&&... args)
+{
+  return kmem_create_fill<T, 0x00, A...>(cxx::forward<A>(args)...);
 }
