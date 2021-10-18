@@ -44,7 +44,7 @@ public:
   using Order   = Mdb_types::Order;
 
 private:
-  bool match(Mapping const *m, Space *spc, Pfn va) const
+  bool match(Mapping const *m, Space const *spc, Pfn va) const
   {
     return (m->space() == spc)
            && (vaddr(m) == cxx::mask_lsb(va, _page_shift));
@@ -597,7 +597,8 @@ Treemap::tree(Page key)
 
 PRIVATE inline
 Mapping_tree::Iterator
-Treemap::_lookup(Physframe *f, Mapping_tree::Iterator m, Space *spc, Pcnt key, Pfn va,
+Treemap::_lookup(Physframe *f, Mapping_tree::Iterator m,
+                 Space const *spc, Pcnt key, Pfn va,
                  Frame *res, int *root_depth = 0, int *current_depth = 0)
 {
   auto subkey = cxx::get_lsb(key, _page_shift);
@@ -631,7 +632,7 @@ Treemap::_lookup(Physframe *f, Mapping_tree::Iterator m, Space *spc, Pcnt key, P
 
 PUBLIC
 bool
-Treemap::lookup(Pcnt key, Space *search_space, Pfn search_va,
+Treemap::lookup(Pcnt key, Space const *search_space, Pfn search_va,
                 Frame *res)
 {
   // get and lock the tree.
@@ -667,9 +668,10 @@ Treemap::lookup(Pcnt key, Space *search_space, Pfn search_va,
 
 PUBLIC inline NEEDS[Treemap::_lookup, "assert_opt.h"]
 int
-Treemap::lookup_src_dst(Space *src, Pcnt src_key, Pfn src_va, Pcnt src_size,
-                        Space *dst, Pcnt dst_key, Pfn dst_va, Pcnt dst_size,
-                        Frame *src_frame, Frame *dst_frame)
+Treemap::lookup_src_dst(
+  Space const *src, Pcnt src_key, Pfn src_va, Pcnt src_size,
+  Space const *dst, Pcnt dst_key, Pfn dst_va, Pcnt dst_size,
+  Frame *src_frame, Frame *dst_frame)
 {
   assert_opt (!src_frame->frame);
   assert_opt (!dst_frame->frame);
@@ -1054,7 +1056,7 @@ Mapdb::insert(Frame const &frame, Space *space,
  */
 PUBLIC inline
 bool
-Mapdb::lookup(Space *space, Pfn va, Pfn phys,
+Mapdb::lookup(Space const *space, Pfn va, Pfn phys,
               Frame *res)
 {
   return _treemap->lookup(phys - Pfn(0), space, va, res);
@@ -1098,8 +1100,8 @@ Mapdb::grant(Frame const &f, Space *new_space,
 
 PUBLIC inline
 int
-Mapdb::lookup_src_dst(Space *src, Pfn src_phys, Pfn src_va, Pcnt src_size,
-                      Space *dst, Pfn dst_phys, Pfn dst_va, Pcnt dst_size,
+Mapdb::lookup_src_dst(Space const *src, Pfn src_phys, Pfn src_va, Pcnt src_size,
+                      Space const *dst, Pfn dst_phys, Pfn dst_va, Pcnt dst_size,
                       Frame *src_frame, Frame *dst_frame)
 {
   return _treemap->lookup_src_dst(src, src_phys - Pfn(0), src_va, src_size,
