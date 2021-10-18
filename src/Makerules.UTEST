@@ -44,8 +44,8 @@ $(foreach tname,$(UTEST_TESTS),\
 			$$(filter $(UTEST_COMMON)%,$$(OBJ_UTEST))))))
 
 define gen_utest_expected_rule
-$(1): $(2)
-	$$(INST_MESSAGE)
+$(1): $(2) globalconfig.out
+	$$(COMP_MESSAGE)
 	$$(VERBOSE)$$(CP) $$< $$@
 endef
 
