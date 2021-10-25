@@ -136,18 +136,3 @@ Mapping::set_submap(Treemap *treemap)
   _submap = treemap;
   _space = 0;
 }
-
-// -------------------------------------------------------------
-IMPLEMENTATION [debug]:
-
-// this is all dummy code to make jdb_mapdb happy
-
-PUBLIC inline
-bool
-Mapping::is_end_tag() const
-{ return false; }
-
-PUBLIC inline
-bool
-Mapping::unused() const
-{ return false; }

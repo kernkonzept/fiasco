@@ -89,7 +89,6 @@ Jdb_mapdb::show_tree(Treemap* pages, Mapping::Pcnt offset, Mdb_types::Order base
 
   screenline += 2;
 
-  unsigned empty = 0;
   unsigned c_depth = 0;
   for(i=0; *m; i++, ++m)
     {
@@ -111,13 +110,6 @@ Jdb_mapdb::show_tree(Treemap* pages, Mapping::Pcnt offset, Mdb_types::Order base
 
           if (m->is_root())
             printf("root");
-          else if (m->unused())
-            {
-              printf("empty");
-              ++empty;
-            }
-          else if (m->is_end_tag())
-            printf("end");
           else
             printf("%u", c_depth);
         }
