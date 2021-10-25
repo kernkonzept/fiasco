@@ -68,26 +68,25 @@ Jdb_mapdb::show_tree(Treemap* pages, Mapping::Pcnt offset, Mdb_types::Order base
   unsigned      i;
   int           c;
 
-  if (!t || !*t->begin())
+  printf(" mapping tree for %s-page %012llx of task %lx\033[K\n",
+         size_str(1ULL << cxx::int_value<Mdb_types::Order>(pages->_page_shift + base_size)),
+         val(pages->frame_vaddr(f), base_size),
+         Kobject_dbg::pointer_to_id(pages->owner()));
+
+  printf(" frame number 0x%lx, header at " L4_PTR_FMT ", info: lock=%u\033[K\n",
+         cxx::int_value<Mapping::Page>(page), (Address)t, f->lock.test());
+
+  screenline += 2;
+
+  assert(t);
+  if (!*t->begin())
     {
-      printf(" no mapping tree registered for frame number 0x%lx\033[K\n",
-             cxx::int_value<Mapping::Page>(page));
+      puts(" mapping tree empty\033[K");
       screenline++;
       return true;
     }
 
-  printf(" mapping tree for %s-page %012llx of task %lx - header at "
-         L4_PTR_FMT "\033[K\n",
-         size_str(1ULL << cxx::int_value<Mdb_types::Order>(pages->_page_shift + base_size)),
-         val(pages->vaddr(*t->begin()), base_size),
-         Kobject_dbg::pointer_to_id(t->begin()->space()),
-         (Address)t);
-
-  printf(" header info: lock=%u\033[K\n", f->lock.test());
-
   auto m = t->begin();
-
-  screenline += 2;
 
   unsigned c_depth = 0;
   for(i=0; *m; i++, ++m)
