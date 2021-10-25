@@ -41,6 +41,7 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
     {
       asm volatile ("mcr p15, 4, %0, c1, c1, 0" : : "r"(Cpu::Hcr_host_bits));
       asm volatile ("mcr p15, 0, %0, c1, c0, 0" : : "r"(v->sctlr));
+      asm volatile ("mcr p15, 4, %0, c1, c1, 3" : : "r"(Cpu::Hstr_vm)); // HSTR
     }
 
   // use the real MPIDR as initial value, we might change this later
@@ -388,5 +389,6 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
     {
       asm volatile ("msr SCTLR_EL1, %x0"   : : "r"(v->sctlr));
       asm volatile ("msr CNTVOFF_EL2, %x0" : : "r"(v->cntvoff));
+      asm volatile ("msr HSTR_EL2, %x0" : : "r"(Cpu::Hstr_vm)); // HSTR
     }
 }
