@@ -403,14 +403,16 @@ Utest_fw::tap_msg(bool success,
 
   // Print in a single printf statement to avoid line splitting in SMP setups.
   if (_instance_counter == 0)
-    printf("\nKUT %s %i %s::%s %s%s\n", success ? "ok" : "not ok", _num_tests,
+    printf("\nKUT %s %i %s::%s%s%s%s\n", success ? "ok" : "not ok", _num_tests,
            group_name(), test_name(),
+           (todo_skip || msg) ? " " : "",
            todo_skip ? todo_skip : "",
            msg ? msg : "");
   else
-    printf("\nKUT %s %i %s::%s/%u %s%s\n", success ? "ok" : "not ok", _num_tests,
+    printf("\nKUT %s %i %s::%s/%u%s%s%s\n", success ? "ok" : "not ok", _num_tests,
            group_name(), test_name(),
            _instance_counter,
+           (todo_skip || msg) ? " " : "",
            todo_skip ? todo_skip : "",
            msg ? msg : "");
 
