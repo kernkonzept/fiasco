@@ -255,6 +255,9 @@ PUBLIC
 Mapping_tree::Iterator
 Mapping_tree::allocate(Ram_quota *payer, Iterator parent)
 {
+  if (*parent && parent->has_max_depth())
+    return end();
+
   Mapping *m = _mapping_allocator.q_new(payer);
   if (!m)
     return end();
