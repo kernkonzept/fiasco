@@ -37,6 +37,7 @@ namespace L4_kernel_options
   enum
   {
     Magic = 0x4C344B43,
+    Version_current = 1,
   };
 
   enum Uart_type

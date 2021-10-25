@@ -15,7 +15,7 @@ namespace Koptions_ns
   Koptions::Options o __attribute__((section(".koptions"))) =
     {
       Koptions::Magic,
-      1,              // version
+      Koptions::Version_current,
       0,              // flags
       0,              // kmemsize
       { 0, 0, 0, 0, 0, 0 }, // uart
