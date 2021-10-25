@@ -55,6 +55,24 @@ Jdb_mapdb::val(Mdb_types::Pfn p, Mdb_types::Order base_size)
 }
 
 
+/**
+ * Print ID of given space and the debug name of its task when available.
+ */
+static
+void
+Jdb_mapdb::show_space(Space* space)
+{
+  printf("%lx", Kobject_dbg::pointer_to_id(space));
+
+  Jdb_kobject_name *ex
+    = Jdb_kobject_extension::find_extension<Jdb_kobject_name>(
+        static_cast<Task*>(space));
+
+  if (ex)
+    printf(" {%.*s}", ex->max_len(), ex->name());
+}
+
+
 static
 bool
 Jdb_mapdb::show_tree(Treemap* pages, Mapping::Pcnt offset, Mdb_types::Order base_size,
@@ -68,10 +86,11 @@ Jdb_mapdb::show_tree(Treemap* pages, Mapping::Pcnt offset, Mdb_types::Order base
   unsigned      i;
   int           c;
 
-  printf(" mapping tree for %s-page %012llx of task %lx\033[K\n",
+  printf(" mapping tree for %s-page %012llx of task ",
          size_str(1ULL << cxx::int_value<Mdb_types::Order>(pages->_page_shift + base_size)),
-         val(pages->frame_vaddr(f), base_size),
-         Kobject_dbg::pointer_to_id(pages->owner()));
+         val(pages->frame_vaddr(f), base_size));
+  show_space(pages->owner());
+  puts("\033[K");
 
   printf(" frame number 0x%lx, header at " L4_PTR_FMT ", info: lock=%u\033[K\n",
          cxx::int_value<Mapping::Page>(page), (Address)t, f->lock.test());
@@ -101,12 +120,13 @@ Jdb_mapdb::show_tree(Treemap* pages, Mapping::Pcnt offset, Mdb_types::Order base
       else
         {
           c_depth = m->depth();
-          printf("%*u: %lx  va=%012llx  task=%lx  depth=",
+          printf("%*u: %lx  va=%012llx  task=",
                  indent + c_depth > 10 ? 0 : (int)(indent + c_depth),
                  i+1, (Address) *m,
-                 val(pages->vaddr(*m), base_size),
-                 Kobject_dbg::pointer_to_id(m->space()));
+                 val(pages->vaddr(*m), base_size));
+          show_space(m->space());
 
+          printf("  depth=");
           if (m->is_root())
             printf("root");
           else
