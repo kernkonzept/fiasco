@@ -58,6 +58,8 @@ public:
 //------------------------------------------------------------------------
 IMPLEMENTATION  [cpu_virt && vgic]:
 
+#include "mem.h"
+
 Static_object<Gic_h_v2> Gic_h_v2::gic;
 
 PUBLIC inline Gic_h_v2::Hcr  Gic_h_v2::hcr() const { return Hcr(read<Unsigned32>(HCR)); }
@@ -95,6 +97,11 @@ PUBLIC
 Address
 Gic_h_v2::gic_v_address() const override
 { return Mem_layout::Gic_v_phys_base; }
+
+PUBLIC static inline NEEDS["mem.h"]
+void
+Gic_h_v2::vgic_barrier()
+{ Mem::dsb(); /* Ensure vgic completion before running user-land */ }
 
 #include "boot_alloc.h"
 #include "vgic_global.h"

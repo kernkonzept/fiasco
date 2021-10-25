@@ -26,6 +26,14 @@ IMPLEMENTATION [vgic && cpu_virt]:
 #include "vgic_global.h"
 #include "pic.h"
 
+PUBLIC static inline
+void
+Gic_h_v3::vgic_barrier()
+{
+  // eret has implicit isb semantics, so no need here to ensure vgic
+  // completion before running user-land
+}
+
 namespace {
 
 struct Gic_h_v3_init

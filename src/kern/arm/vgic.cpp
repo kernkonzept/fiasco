@@ -126,7 +126,7 @@ public:
   void save_and_disable(Arm_vgic *g) override
   {
     if (Gic_h_mixin::save_full(g))
-      self()->hcr(Hcr(0));
+      disable();
   }
 
   void load_full(Arm_vgic const *to, bool enabled) override
@@ -153,8 +153,11 @@ public:
       l = 0;
   }
 
-  void disable() override
-  { self()->hcr(Hcr(0)); }
+  void disable() override final
+  {
+    self()->hcr(Hcr(0));
+    IMPL::vgic_barrier(); // Ensure vgic is disabled before going to user-level
+  }
 
   unsigned version() const override
   { return IMPL::Version; }
