@@ -106,10 +106,21 @@ static
 void
 print_msgtag(String_buffer *buf, L4_msg_tag const &tag)
 {
+  char const msg_tag_flags[4] = { 'F', 'S', 'P', 'E' };
+  char flag_buf[5];
+  int i, fb = 0;
+  for (i = 0; i < 4; ++i)
+    if (tag.raw() & (1 << (i + 12)))
+      flag_buf[fb++] = msg_tag_flags[i];
+  flag_buf[fb] = 0;
+
   if (char const *s = tag_to_string(tag))
-    buf->printf("%s%04lx", s, tag.raw() & 0xffff);
+    buf->printf("%s", s);
   else
-    buf->printf(L4_PTR_FMT, tag.raw());
+    buf->printf("%lx", tag.proto());
+
+  buf->printf(",%s%sw=%d,i=%d",
+              flag_buf, fb ? "," : "", tag.words(), tag.items());
 }
 
 class Tb_entry_ipc_fmt : public Tb_entry_formatter
