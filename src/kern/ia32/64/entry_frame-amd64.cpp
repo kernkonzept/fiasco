@@ -66,8 +66,9 @@ Address
 Return_frame::ip_syscall_page_user() const
 {
   Address rip = ip();
-  if ((rip & Mem_layout::Syscalls) == Mem_layout::Syscalls)
-     rip = *(Mword*)sp();
+  if ((rip & Mem_layout::Syscalls) == Mem_layout::Syscalls
+      && (int)Config::Access_user_mem == Config::Access_user_mem_direct)
+    rip = *(Mword *)sp();
   return rip;
 }
 
