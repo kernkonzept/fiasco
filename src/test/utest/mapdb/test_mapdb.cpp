@@ -865,7 +865,7 @@ Mapdb_ext_test::test_mapdb_multilevel()
   //    +-------> aunt:
   //              2M @ Aunt_addr_1
 
-  printf("# Map page FROM 4M @other TO Son_addr_2 @son");
+  printf("# Map page FROM 4M @other TO Son_addr_2 @son\n");
   UTEST_TRUE(Utest::Expect, map(m, &*other, to_pfn(_4M),
                                 &*son, to_pfn(Son_addr_2),
                                 to_po(O_page)),

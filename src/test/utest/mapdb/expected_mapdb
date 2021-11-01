@@ -375,7 +375,8 @@
 .*1: ==>  space=aunt vaddr=0x200000 size=0x200000
 .*1:      space=other vaddr=0x400000 size=0x200000
 .*
-.*# Map page FROM 4M @other TO Son_addr_2 @sonInsert: son va=0xa0000000 pa=0xd2200000 order=0
+.*# Map page FROM 4M @other TO Son_addr_2 @son
+.*Insert: son va=0xa0000000 pa=0xd2200000 order=0
 .*1:      space=other vaddr=0x400000 size=0x200000
 .*1: ==>  space=son vaddr=0xa0000000 size=0x1000
 .*
