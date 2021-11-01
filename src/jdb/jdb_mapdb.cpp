@@ -462,6 +462,9 @@ Jdb_mapdb::show_simple_tree(Kobject_common *f, unsigned indent = 1)
 
   putchar('\r');
   Jdb::line();
+  putchar('\n');
+  screenline++;
+
   if (!f || f->map_root()->_root.empty())
     {
       printf(" no mapping tree registered for frame number 0x%lx\033[K\n",
