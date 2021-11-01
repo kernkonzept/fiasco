@@ -172,14 +172,6 @@ Lock_guard<LOCK, POLICY>::~Lock_guard()
     Policy::set(_lock, _state);
 }
 
-PUBLIC template<typename LOCK, template< typename L > class POLICY>
-inline
-bool
-Lock_guard<LOCK, POLICY>::was_set(void)
-{
-  return _state; //!_lock;
-}
-
 PUBLIC template<typename LOCK>
 inline
 Lock_guard_2<LOCK>::Lock_guard_2()
