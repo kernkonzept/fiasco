@@ -13,7 +13,6 @@
 
 use strict;
 
-my $ignore = 1;
 my $line = 0;
 #my %spaces;
 my %intasks;
@@ -36,47 +35,32 @@ while (<>)
     chomp;
     ++$line;
     s/$//;
-    if (/^========= OBJECT DUMP BEGIN ===============/)
+    if (/^([\da-fA-F]+)\s+([\da-fA-F]+)\s+\[(.+)\]\s+({(.+?)})?/)
       {
-	$ignore = 0;
+        $dbgid = $1;
+        my $obj_type = $3;
+        my $name = $5;
+
+        $obj_type =~ s/\[.*?m//g;
+
+        #print "obj_type = $obj_type\n";
+
+        $obj_to_connector{$dbgid} = $1 ? $1 : $3
+          if $obj_type eq 'Gate' and (/ D=([\da-fA-Z]+)(\/([\da-fA-Z]+))?/);
+        $obj_to_connector{$dbgid} = $1
+          if $obj_type =~ /^IRQ/ and (/ T=([\da-fA-Z]+)/);
+        $obj_to_connector{$dbgid} = $2
+          if $obj_type eq 'Thread' and (/ S=(D:)?([\da-fA-Z]+)/);
+
+        $kobjstype{$dbgid} = $obj_type;
+        $names{$dbgid} = $name if defined $name;
       }
-    elsif (/^========= OBJECT DUMP END ===============/)
+    elsif (/^\s+[\da-fA-F]+\[C:[\da-fA-F]+\]:\s+space=(D:)?([\da-fA-F]+)/)
       {
-	last; # done, we only consider the first one
-      }
-    elsif (/^(dump format version number|user space tag:)/)
-      {
-        # ignore
-      }
-    elsif (!$ignore)
-      {
-        if (/^([\da-fA-F]+)\s+([\da-fA-F]+)\s+\[(.+)\]\s+({(.+?)})?/)
-          {
-            $dbgid = $1;
-            my $obj_type = $3;
-            my $name = $5;
+        die "no dbgid set?!" unless defined $dbgid;
 
-            $obj_type =~ s/\[.*?m//g;
-
-            #print "obj_type = $obj_type\n";
-
-            $obj_to_connector{$dbgid} = $1 ? $1 : $3
-              if $obj_type eq 'Gate' and (/ D=([\da-fA-Z]+)(\/([\da-fA-Z]+))?/);
-            $obj_to_connector{$dbgid} = $1
-              if $obj_type =~ /^IRQ/ and (/ T=([\da-fA-Z]+)/);
-            $obj_to_connector{$dbgid} = $2
-              if $obj_type eq 'Thread' and (/ S=(D:)?([\da-fA-Z]+)/);
-
-            $kobjstype{$dbgid} = $obj_type;
-            $names{$dbgid} = $name if defined $name;
-          }
-        elsif (/^\s+[\da-fA-F]+\[C:[\da-fA-F]+\]:\s+space=(D:)?([\da-fA-F]+)/)
-          {
-            die "no dbgid set?!" unless defined $dbgid;
-
-            push @{$intasks{$dbgid}}, $2;
-            $obj_to_root_space{$dbgid} = $2 unless defined $obj_to_root_space{$dbgid};
-          }
+        push @{$intasks{$dbgid}}, $2;
+        $obj_to_root_space{$dbgid} = $2 unless defined $obj_to_root_space{$dbgid};
       }
   }
 
