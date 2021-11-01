@@ -9,7 +9,7 @@
 .*0:     space=sigma0 vaddr=0x0 size=0x200000
 .*1: ==>  space=other vaddr=0x2000 size=0x1000
 .*
-.*Lookup @sigma0 at phys=2\*superpage
+.*Lookup @sigma0 at phys=2\*2M
 .*0:     space=sigma0 vaddr=0x400000 size=0x200000
 .*
 .*Lookup @sigma0 at phys=2\*superpage after inserting sub-mapping
@@ -169,7 +169,7 @@
 .*0:     space=sigma0 vaddr=0x0 size=0x40000000
 .*1: ==>  space=other vaddr=0x2000 size=0x1000
 .*
-.*Lookup @sigma0 at phys=2\*superpage
+.*Lookup @sigma0 at phys=2\*2M
 .*0:     space=sigma0 vaddr=0x0 size=0x40000000
 .*1: ==>  space=other vaddr=0x2000 size=0x1000
 .*

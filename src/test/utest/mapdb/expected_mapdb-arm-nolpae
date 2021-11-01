@@ -3,25 +3,25 @@
 .*
 .*=== NEW TEST ===
 .*Lookup @sigma0 node at phys=0
-.*0:     space=sigma0 vaddr=0x0 size=0x100000
+.*0:     space=sigma0 vaddr=0x0 size=0x200000
 .*
 .*Lookup @sigma0 node at phys=0 after inserting sub-mapping
-.*0:     space=sigma0 vaddr=0x0 size=0x100000
+.*0:     space=sigma0 vaddr=0x0 size=0x200000
 .*1: ==>  space=other vaddr=0x2000 size=0x1000
 .*
-.*Lookup @sigma0 at phys=2\*superpage
-.*0:     space=sigma0 vaddr=0x200000 size=0x100000
+.*Lookup @sigma0 at phys=2\*2M
+.*0:     space=sigma0 vaddr=0x400000 size=0x200000
 .*
 .*Lookup @sigma0 at phys=2\*superpage after inserting sub-mapping
-.*0:     space=sigma0 vaddr=0x200000 size=0x100000
-.*1: ==>  space=other vaddr=0x400000 size=0x100000
+.*0:     space=sigma0 vaddr=0x400000 size=0x200000
+.*1: ==>  space=other vaddr=0x800000 size=0x200000
 .*
 .*Lookup @other at phys=4\*superpage
-.*1:      space=other vaddr=0x400000 size=0x100000
+.*1:      space=other vaddr=0x800000 size=0x200000
 .*
 .*Lookup @sigma0 node at phys=2\*superpage after inserting sub-mapping
-.*0:     space=sigma0 vaddr=0x200000 size=0x100000
-.*1:      space=other vaddr=0x400000 size=0x100000
+.*0:     space=sigma0 vaddr=0x400000 size=0x200000
+.*1:      space=other vaddr=0x800000 size=0x200000
 .*1:      space=client vaddr=0xf000 size=0x1000
 .*
 .*=== DONE TEST ===
@@ -31,10 +31,10 @@
 .*
 .*=== NEW TEST ===
 .*Lookup @grandfather phys=0
-.*0:     space=sigma0 vaddr=0x0 size=0x100000
+.*0:     space=sigma0 vaddr=0x0 size=0x200000
 .*
 .*Insert father mapping
-.*0:     space=sigma0 vaddr=0x0 size=0x100000
+.*0:     space=sigma0 vaddr=0x0 size=0x200000
 .*1:      space=father vaddr=0x0 size=0x1000
 .*
 .*Lookup @father at phys=0
@@ -63,7 +63,7 @@
 .*2:       space=daughter vaddr=0x0 size=0x1000
 .*2:       space=son vaddr=0x0 size=0x1000
 .*
-.*mapping tree: { sigma0 va=0x0 size=0x100000
+.*mapping tree: { sigma0 va=0x0 size=0x200000
 .*  header info: lock: 0
 .*  : subtree...
 .*  mapping tree: { sigma0 va=0x0 size=0x1000
@@ -75,7 +75,7 @@
 .*} // mapping tree: sigma0 va=0x0
 .*
 .*Son has accident on return from disco
-.*mapping tree: { sigma0 va=0x0 size=0x100000
+.*mapping tree: { sigma0 va=0x0 size=0x200000
 .*  header info: lock: 0
 .*  : subtree...
 .*  mapping tree: { sigma0 va=0x0 size=0x1000
@@ -86,17 +86,17 @@
 .*} // mapping tree: sigma0 va=0x0
 .*
 .*Lost aunt returns from holiday
-.*0:     space=sigma0 vaddr=0x0 size=0x100000
+.*0:     space=sigma0 vaddr=0x0 size=0x200000
 .*1:      space=father vaddr=0x0 size=0x1000
 .*2:       space=daughter vaddr=0x0 size=0x1000
 .*
 .*Insert @aunt mapping
-.*0:     space=sigma0 vaddr=0x0 size=0x100000
+.*0:     space=sigma0 vaddr=0x0 size=0x200000
 .*1:      space=aunt vaddr=0x0 size=0x1000
 .*1:      space=father vaddr=0x0 size=0x1000
 .*2:       space=daughter vaddr=0x0 size=0x1000
 .*
-.*mapping tree: { sigma0 va=0x0 size=0x100000
+.*mapping tree: { sigma0 va=0x0 size=0x200000
 .*  header info: lock: 0
 .*  : subtree...
 .*  mapping tree: { sigma0 va=0x0 size=0x1000
@@ -120,10 +120,10 @@
 .*
 .*=== NEW TEST ===
 .*Lookup @grandfather
-.*0:     space=sigma0 vaddr=0x0 size=0x100000
+.*0:     space=sigma0 vaddr=0x0 size=0x200000
 .*
 .*Inserting father mapping
-.*0:     space=sigma0 vaddr=0x0 size=0x100000
+.*0:     space=sigma0 vaddr=0x0 size=0x200000
 .*1:      space=father vaddr=0x0 size=0x1000
 .*
 .*Lookup father at phys=0
@@ -136,12 +136,12 @@
 .*2:       space=son vaddr=0x0 size=0x1000
 .*
 .*Lost aunt returns from holidays
-.*0:     space=sigma0 vaddr=0x0 size=0x100000
+.*0:     space=sigma0 vaddr=0x0 size=0x200000
 .*1:      space=father vaddr=0x0 size=0x1000
 .*2:       space=son vaddr=0x0 size=0x1000
 .*
 .*Insert aunt mapping
-.*0:     space=sigma0 vaddr=0x0 size=0x100000
+.*0:     space=sigma0 vaddr=0x0 size=0x200000
 .*1:      space=aunt vaddr=0x0 size=0x1000
 .*1:      space=father vaddr=0x0 size=0x1000
 .*2:       space=son vaddr=0x0 size=0x1000
@@ -169,20 +169,21 @@
 .*0:     space=sigma0 vaddr=0x0 size=0x40000000
 .*1: ==>  space=other vaddr=0x2000 size=0x1000
 .*
-.*Lookup @sigma0 at phys=2\*superpage
+.*Lookup @sigma0 at phys=2\*2M
 .*0:     space=sigma0 vaddr=0x0 size=0x40000000
 .*1: ==>  space=other vaddr=0x2000 size=0x1000
 .*
 .*Lookup @sigma0 at phys=2\*superpage after inserting sub-mapping
 .*0:     space=sigma0 vaddr=0x0 size=0x40000000
 .*1:      space=other vaddr=0x2000 size=0x1000
+.*1: ==>  space=other vaddr=0x800000 size=0x200000
 .*
 .*Lookup @other at phys=4\*superpage
-.*1:      space=other vaddr=0x400000 size=0x100000
+.*1:      space=other vaddr=0x800000 size=0x200000
 .*
 .*Lookup @sigma0 node at phys=2\*superpage after inserting sub-mapping
-.*0:     space=sigma0 vaddr=0x200000 size=0x100000
-.*1:      space=other vaddr=0x400000 size=0x100000
+.*0:     space=sigma0 vaddr=0x400000 size=0x200000
+.*1:      space=other vaddr=0x800000 size=0x200000
 .*1:      space=client vaddr=0xf000 size=0x1000
 .*
 .*=== DONE TEST ===

@@ -203,7 +203,7 @@ public:
   {
     enum { Phys_bits = 32 };
     parent_page_shift = Mapping::Order(Phys_bits - O_page);
-    static size_t pz[] = { O_super - O_page, 0 };
+    static size_t pz[] = { O_2M - O_page, 0 };
     page_shifts = pz;
     page_shifts_num = sizeof(sizeof(pz) / sizeof(pz[0]));
   }
@@ -548,15 +548,16 @@ Mapdb_ext_test::test_mapdb_basic()
   f.clear();
 
   UTEST_TRUE(Utest::Expect,
-             m.lookup(&*sigma0, to_pfn(2 * S_super), to_pfn(2 * S_super), &f),
-             "Lookup @sigma0 at phys=2*superpage");
-  printf("Lookup @sigma0 at phys=2*superpage\n");
+             m.lookup(&*sigma0, to_pfn(2 * _2M), to_pfn(2 * _2M), &f),
+             "Lookup @sigma0 at phys=2*2M");
+  printf("Lookup @sigma0 at phys=2*2M\n");
   print_node(f, sub);
 
   UTEST_TRUE(Utest::Assert,
-             sub = m.insert(f, &*other, to_pfn(4 * S_super),
-                            to_pfn(2 * S_super), to_pcnt(O_super)),
+             sub = m.insert(f, &*other, to_pfn(4 * _2M),
+                            to_pfn(2 * _2M), to_pcnt(O_2M)),
            "Insert sub-mapping @other");
+
   printf("Lookup @sigma0 at phys=2*superpage after inserting sub-mapping\n");
   print_node(f, sub);
 
@@ -564,13 +565,13 @@ Mapdb_ext_test::test_mapdb_basic()
 
   f.clear();
   UTEST_TRUE(Utest::Expect,
-             m.lookup(&*other, to_pfn(4 * S_super), to_pfn(2 * S_super), &f),
+             m.lookup(&*other, to_pfn(4 * _2M), to_pfn(2 * _2M), &f),
              "Lookup @other at phys=4*superpage");
   printf("Lookup @other at phys=4*superpage\n");
   print_node(f);
 
   UTEST_EQ(Utest::Expect,
-           f.treemap->page_shift(), Mapdb::Order(O_super - O_page),
+           f.treemap->page_shift(), Mapdb::Order(O_2M - O_page),
            "Page order equal");
 
   UTEST_TRUE(Utest::Assert,
