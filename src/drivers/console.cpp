@@ -17,7 +17,8 @@ public:
     DISABLED    =     0,
     INENABLED   =     1, ///< input channel of console enabled
     OUTENABLED  =     2, ///< output channel of console enabled
-    ENABLED     =     INENABLED | OUTENABLED ///< console fully enabled
+    ENABLED     =     INENABLED | OUTENABLED, ///< console fully enabled
+    FAILED      = 0x200, ///< initialization failed
   };
 
   enum Console_attr
@@ -34,7 +35,6 @@ public:
     GZIP        =  0x40, ///< gzip+uuencode output and sent to uart console
     BUFFER      =  0x80, ///< ring buffer
     DEBUG       = 0x100, ///< kdb interface
-    FAILED      = 0x200, ///< initialization failed
   };
 
   /**
@@ -184,7 +184,10 @@ Console::str_state() const
   static char const * const state_str[] =
     { "Disabled       ", "Output disabled",
       "Input disabled ", "Enabled        " };
-  return state_str[state() & ENABLED];
+  if (!failed())
+    return state_str[state() & ENABLED];
+  else
+    return "FAILED!        ";
 }
 
 PUBLIC
@@ -192,7 +195,7 @@ const char*
 Console::str_attr(Mword bit) const
 {
   static char const * const attr_str[] =
-    { "Direct", "Uart", "UX", "Push", "Gzip", "Buffer", "Kdb", "FAILED!" };
+    { "Direct", "Uart", "UX", "Push", "Gzip", "Buffer", "Kdb" };
 
   return (bit < 2 || bit >= (sizeof(attr_str)/sizeof(attr_str[0]))+2)
     ? "???"
