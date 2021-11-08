@@ -108,10 +108,6 @@ PUBLIC inline
 Apic::Apic(Cpu_number cpu) : _id(get_id()) { register_pm(cpu); }
 
 
-PRIVATE static
-Cpu &
-Apic::cpu() { return *Cpu::boot_cpu(); }
-
 // FIXME: workaround for missing lambdas in gcc < 4.5
 namespace {
 struct By_id
@@ -363,17 +359,17 @@ static FIASCO_INIT_AND_PM
 int
 Apic::test_cpu()
 {
-  if (!cpu().can_wrmsr() || !(cpu().features() & FEAT_TSC))
+  if (!Cpu::boot_cpu()->can_wrmsr() || !(Cpu::boot_cpu()->features() & FEAT_TSC))
     return 0;
 
-  if (cpu().vendor() == Cpu::Vendor_intel)
+  if (Cpu::boot_cpu()->vendor() == Cpu::Vendor_intel)
     {
-      if (cpu().family() == 15)
+      if (Cpu::boot_cpu()->family() == 15)
 	return 1;
-      if (cpu().family() >= 6)
+      if (Cpu::boot_cpu()->family() >= 6)
 	return 1;
     }
-  if (cpu().vendor() == Cpu::Vendor_amd && cpu().family() >= 6)
+  if (Cpu::boot_cpu()->vendor() == Cpu::Vendor_amd && Cpu::boot_cpu()->family() >= 6)
     return 1;
 
   return 0;
@@ -384,7 +380,7 @@ static inline
 int
 Apic::test_present()
 {
-  return cpu().features() & FEAT_APIC;
+  return Cpu::boot_cpu()->features() & FEAT_APIC;
 }
 
 PUBLIC static inline
@@ -668,7 +664,7 @@ Apic::activate_by_msr()
   Cpu::wrmsr(msr, APIC_base_msr);
 
   // now the CPU feature flags may have changed
-  cpu().update_features_info();
+  Cpu::boot_cpu()->update_features_info();
 }
 
 // check if we still receive interrupts after we changed the IRQ routing
@@ -728,13 +724,13 @@ Apic::calibrate_timer()
       timer_set_divisor(1);
       timer_reg_write(1000000000);
 
-      if (cpu().tsc_frequency_accurate())
+      if (Cpu::boot_cpu()->tsc_frequency_accurate())
         {
           auto guard = lock_guard(cpu_lock);
           tt1 = timer_reg_read();
-          cpu().busy_wait_ns(50000000ULL);  // 20Hz
+          Cpu::boot_cpu()->busy_wait_ns(50000000ULL);  // 20Hz
           tt2 = timer_reg_read();
-          count = cpu().ns_to_tsc(50000000ULL);
+          count = Cpu::boot_cpu()->ns_to_tsc(50000000ULL);
         }
       else
         {
@@ -850,7 +846,7 @@ Apic::init(bool resume)
   // FIXME: reset cached CPU features, we should add a special function
   // for the apic bit
   if(resume)
-    cpu().update_features_info();
+    Cpu::boot_cpu()->update_features_info();
 
   was_present = present = test_present();
 
