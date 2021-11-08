@@ -728,6 +728,15 @@ Apic::calibrate_timer()
       timer_set_divisor(1);
       timer_reg_write(1000000000);
 
+      if (cpu().tsc_frequency_accurate())
+        {
+          auto guard = lock_guard(cpu_lock);
+          tt1 = timer_reg_read();
+          cpu().busy_wait_ns(50000000ULL);  // 20Hz
+          tt2 = timer_reg_read();
+          count = cpu().ns_to_tsc(50000000ULL);
+        }
+      else
         {
           auto guard = lock_guard(cpu_lock);
 
