@@ -14,7 +14,7 @@ INTERFACES_KERNEL	:= cpu_mask rcupdate kobject_mapdb context_base pm \
 			   kobject_iface kobject ready_queue_wfq             \
                            obj_space_types obj_space_phys_util \
 			   ready_queue_fp obj_space ptab_base ram_quota      \
-			   ref_obj mem_space space string_buffer \
+			   ref_obj mem_space space \
 			   vlog kmem kmem_alloc slab_cache mem_layout        \
 			   kmem_slab switch_lock kip_init   \
 			   helping_lock cpu_lock timer timeout   \
@@ -73,7 +73,7 @@ jdb_tcb_IMPL	+= jdb_tcb
 
 ifeq ("$(CONFIG_JDB)","y")
 INTERFACES_KERNEL += \
-	jdb_tbuf jdb_tbuf_init tb_entry jdb_trace
+	jdb_tbuf jdb_tbuf_init tb_entry jdb_trace string_buffer
 endif
 
 # - do not profile all of MINILIBC, because it is used in the BOOT subsystem

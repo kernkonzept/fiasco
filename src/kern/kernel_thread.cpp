@@ -18,6 +18,7 @@ private:
   void bootstrap_arch();
   void run();
   void do_idle() __attribute__((noreturn));
+  void check_debug_koptions();
 
 protected:
   void init_workload();
@@ -37,7 +38,6 @@ IMPLEMENTATION:
 #include "kernel_task.h"
 #include "per_cpu_data_alloc.h"
 #include "processor.h"
-#include "string_buffer.h"
 #include "task.h"
 #include "thread.h"
 #include "thread_state.h"
@@ -139,7 +139,17 @@ Kernel_thread::run()
     idle_op();
 }
 
-PRIVATE
+IMPLEMENT_DEFAULT
+void
+Kernel_thread::check_debug_koptions()
+{}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [debug]:
+
+#include "string_buffer.h"
+
+IMPLEMENT_OVERRIDE
 void
 Kernel_thread::check_debug_koptions()
 {
