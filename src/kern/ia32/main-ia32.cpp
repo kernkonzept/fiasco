@@ -147,6 +147,8 @@ int FIASCO_FASTCALL boot_ap_cpu()
 
   Cpu &cpu = Cpu::cpus.cpu(_cpu);
 
+  // the CPU feature flags may have changed after activating the Apic
+  cpu.update_features_info();
 
   if (cpu_is_new)
     {

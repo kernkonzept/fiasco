@@ -357,19 +357,19 @@ Apic::map_apic_page()
 // check CPU type if APIC could be present
 static FIASCO_INIT_AND_PM
 int
-Apic::test_cpu()
+Apic::test_cpu(Cpu *cpu)
 {
-  if (!Cpu::boot_cpu()->can_wrmsr() || !(Cpu::boot_cpu()->features() & FEAT_TSC))
+  if (!cpu->can_wrmsr() || !(cpu->features() & FEAT_TSC))
     return 0;
 
-  if (Cpu::boot_cpu()->vendor() == Cpu::Vendor_intel)
+  if (cpu->vendor() == Cpu::Vendor_intel)
     {
-      if (Cpu::boot_cpu()->family() == 15)
+      if (cpu->family() == 15)
 	return 1;
-      if (Cpu::boot_cpu()->family() >= 6)
+      if (cpu->family() >= 6)
 	return 1;
     }
-  if (Cpu::boot_cpu()->vendor() == Cpu::Vendor_amd && Cpu::boot_cpu()->family() >= 6)
+  if (cpu->vendor() == Cpu::Vendor_amd && cpu->family() >= 6)
     return 1;
 
   return 0;
@@ -378,9 +378,9 @@ Apic::test_cpu()
 // test if APIC present
 static inline
 int
-Apic::test_present()
+Apic::test_present(Cpu *cpu)
 {
-  return Cpu::boot_cpu()->features() & FEAT_APIC;
+  return cpu->features() & FEAT_APIC;
 }
 
 PUBLIC static inline
@@ -663,8 +663,7 @@ Apic::activate_by_msr()
   msr |= (1<<11);
   Cpu::wrmsr(msr, APIC_base_msr);
 
-  // now the CPU feature flags may have changed
-  Cpu::boot_cpu()->update_features_info();
+  // later we have to call update_feature_info() as the flags may have changed
 }
 
 // check if we still receive interrupts after we changed the IRQ routing
@@ -710,7 +709,7 @@ Apic::set_perf_nmi()
 
 static FIASCO_INIT_CPU_AND_PM
 void
-Apic::calibrate_timer()
+Apic::calibrate_timer(Cpu *cpu)
 {
   const unsigned calibrate_time = 50;
   Unsigned32 count, tt1, tt2, result, dummy;
@@ -724,13 +723,13 @@ Apic::calibrate_timer()
       timer_set_divisor(1);
       timer_reg_write(1000000000);
 
-      if (Cpu::boot_cpu()->tsc_frequency_accurate())
+      if (cpu->tsc_frequency_accurate())
         {
           auto guard = lock_guard(cpu_lock);
           tt1 = timer_reg_read();
-          Cpu::boot_cpu()->busy_wait_ns(50000000ULL);  // 20Hz
+          cpu->busy_wait_ns(50000000ULL);  // 20Hz
           tt2 = timer_reg_read();
-          count = Cpu::boot_cpu()->ns_to_tsc(50000000ULL);
+          count = cpu->ns_to_tsc(50000000ULL);
         }
       else
         {
@@ -822,9 +821,9 @@ Apic::done()
 
 PRIVATE static FIASCO_INIT_CPU_AND_PM
 void
-Apic::init_timer()
+Apic::init_timer(Cpu *cpu)
 {
-  calibrate_timer();
+  calibrate_timer(cpu);
   timer_set_divisor(1);
   enable_errors();
 }
@@ -842,24 +841,27 @@ IMPLEMENT
 void
 Apic::init(bool resume)
 {
+  Cpu *cpu = Cpu::boot_cpu();
+
   int was_present;
   // FIXME: reset cached CPU features, we should add a special function
   // for the apic bit
   if(resume)
-    Cpu::boot_cpu()->update_features_info();
+    cpu->update_features_info();
 
-  was_present = present = test_present();
+  was_present = present = test_present(cpu);
 
   if (!was_present)
     {
-      good_cpu = test_cpu();
+      good_cpu = test_cpu(cpu);
 
       if (good_cpu && Config::apic)
         {
           // activate; this could lead an disabled APIC to appear
           // set base address of I/O registers to be able to access the registers
           activate_by_msr();
-          present = test_present();
+          cpu->update_features_info();
+          present = test_present(cpu);
         }
     }
 
@@ -898,5 +900,5 @@ Apic::init(bool resume)
   dump_info();
 
   apic_io_base = Mem_layout::Local_apic_page;
-  init_timer();
+  init_timer(cpu);
 }
