@@ -639,10 +639,6 @@ Treemap::lookup(Pcnt key, Space const *search_space, Pfn search_va,
   assert (trunc_to_page(key) < _key_end);
   Physframe *f = tree(trunc_to_page(key)); // returns locked frame
 
-  // FIXME: should we return an OOM here ?
-  if (!f)
-    return false;
-
   // special sigma0 case for synthetic 1. level mapping nodes
   if (search_space->is_sigma0())
     {
