@@ -668,8 +668,8 @@ Treemap::lookup(Pcnt key, Space const *search_space, Pfn search_va,
 
 PUBLIC inline NEEDS[Treemap::_lookup, "assert_opt.h"]
 int
-Treemap::lookup_src_dst(Space const *src, Pcnt src_key, Pfn src_va, Pcnt src_size,
-                        Space const *dst, Pcnt dst_key, Pfn dst_va, Pcnt dst_size,
+Treemap::lookup_src_dst(Space const *src, Pcnt src_key, Pfn src_va,
+                        Space const *dst, Pcnt dst_key, Pfn dst_va,
                         Frame *src_frame, Frame *dst_frame)
 {
   assert_opt (!src_frame->frame);
@@ -720,8 +720,8 @@ Treemap::lookup_src_dst(Space const *src, Pcnt src_key, Pfn src_va, Pcnt src_siz
         {
           auto const dst_subkey = cxx::get_lsb(dst_key, ps);
           auto const src_subkey = cxx::get_lsb(src_key, ps);
-          int r = sub->lookup_src_dst(src, src_subkey, src_va, src_size,
-                                      dst, dst_subkey, dst_va, dst_size,
+          int r = sub->lookup_src_dst(src, src_subkey, src_va,
+                                      dst, dst_subkey, dst_va,
                                       src_frame, dst_frame);
           if (r >= 0)
             {
@@ -1098,11 +1098,11 @@ Mapdb::grant(Frame const &f, Space *new_space,
 
 PUBLIC inline
 int
-Mapdb::lookup_src_dst(Space const *src, Pfn src_phys, Pfn src_va, Pcnt src_size,
-                      Space const *dst, Pfn dst_phys, Pfn dst_va, Pcnt dst_size,
+Mapdb::lookup_src_dst(Space const *src, Pfn src_phys, Pfn src_va,
+                      Space const *dst, Pfn dst_phys, Pfn dst_va,
                       Frame *src_frame, Frame *dst_frame)
 {
-  return _treemap->lookup_src_dst(src, src_phys - Pfn(0), src_va, src_size,
-                                  dst, dst_phys - Pfn(0), dst_va, dst_size,
+  return _treemap->lookup_src_dst(src, src_phys - Pfn(0), src_va,
+                                  dst, dst_phys - Pfn(0), dst_va,
                                   src_frame, dst_frame);
 }

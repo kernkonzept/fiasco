@@ -505,9 +505,8 @@ map(MAPDB* mapdb,
           Frame rcv_frame;
           int r = mapdb->lookup_src_dst(from_id, SPACE::to_pfn(s_phys),
                                         SPACE::to_pfn(SPACE::page_address(snd_addr, s_order)),
-                                        SPACE::to_pcnt(s_order),
                                         to_id, SPACE::to_pfn(r_phys), SPACE::to_pfn(rcv_addr),
-                                        SPACE::to_pcnt(r_order), &sender_frame, &rcv_frame);
+                                        &sender_frame, &rcv_frame);
 
           if (r < 0)
             // nothing found

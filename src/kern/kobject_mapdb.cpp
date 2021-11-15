@@ -88,8 +88,8 @@ Kobject_mapdb::lookup(Space *, Vaddr va, Phys_addr obj,
 
 PUBLIC inline static
 int
-Kobject_mapdb::lookup_src_dst(Space *sspc, Phys_addr sobj, Vaddr sva, Obj_space::V_pfc,
-                              Space *dspc, Phys_addr dobj, Vaddr dva, Obj_space::V_pfc,
+Kobject_mapdb::lookup_src_dst(Space *sspc, Phys_addr sobj, Vaddr sva,
+                              Space *dspc, Phys_addr dobj, Vaddr dva,
                               Frame *sframe, Frame *dframe)
 {
   Kobject_mappable *srn = sobj->map_root();
