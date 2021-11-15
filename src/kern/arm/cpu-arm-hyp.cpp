@@ -5,22 +5,27 @@ IMPLEMENTATION [arm && cpu_virt]:
 EXTENSION class Cpu
 {
 public:
-  enum : Unsigned32
+  enum : Mword
   {
-    Hcr_vm   = 1 << 0,
-    Hcr_swio = 1 << 1,
-    Hcr_ptw  = 1 << 2,
-    Hcr_fmo = 1 << 3,
-    Hcr_imo = 1 << 4,
-    Hcr_amo = 1 << 5,
-    Hcr_dc  = 1 << 12,
-    Hcr_tsc = 1 << 19,
-    Hcr_tidcp = 1 << 20,
-    Hcr_tactlr = 1 << 21,
-    Hcr_tsw  = 1 << 22,
-    Hcr_ttlb = 1 << 25,
-    Hcr_tvm  = 1 << 26,
-    Hcr_tge  = 1 << 27,
+    Hcr_vm     = 1UL << 0,  ///< Virtualization enable
+    Hcr_swio   = 1UL << 1,  ///< Set/way invalidation override
+    Hcr_ptw    = 1UL << 2,  ///< Protected table walk
+    Hcr_fmo    = 1UL << 3,  ///< Physical FIQ routing
+    Hcr_imo    = 1UL << 4,  ///< Physical IRQ routing
+    Hcr_amo    = 1UL << 5,  ///< Physical SError interrupt routing
+    Hcr_dc     = 1UL << 12, ///< Default cacheability
+    Hcr_tid2   = 1UL << 17, ///< Trap CTR, CESSLR, etc.
+    Hcr_tid3   = 1UL << 18, ///< Trap ID, etc.
+    Hcr_tsc    = 1UL << 19, ///< Trap SMC instructions
+    Hcr_tidcp  = 1UL << 20, ///< Trap implementation defined functionality
+    Hcr_tactlr = 1UL << 21, ///< Trap ACTLR, etc.
+    Hcr_tsw    = 1UL << 22, ///< Trap cache maintenance instructions
+    Hcr_ttlb   = 1UL << 25, ///< Trap TLB maintenance instructions
+    Hcr_tvm    = 1UL << 26, ///< Trap virtual memory controls
+    Hcr_tge    = 1UL << 27, ///< Trap General Exceptions
+    Hcr_hcd    = 1UL << 29, ///< HVC instruction disable
+    Hcr_trvm   = 1UL << 30, ///< Trap reads of virtual memory controls
+    Hcr_rw     = 1UL << 31, ///< EL1 is AArch64
   };
 };
 

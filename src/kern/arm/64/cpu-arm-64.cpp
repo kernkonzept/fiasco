@@ -6,17 +6,20 @@ EXTENSION class Cpu
 public:
   enum Scr_bits
   {
-    Scr_ns  = 1UL <<  0, ///< Non-Secure mode
-    Scr_irq = 1UL <<  1, ///< IRQ to EL3
-    Scr_fiq = 1UL <<  2, ///< FIQ to EL3
-    Scr_ea  = 1UL <<  3, ///< External Abort and SError to EL3
-    Scr_smd = 1UL <<  7, ///< SMC disable
-    Scr_hce = 1UL <<  8, ///< HVC enable at EL1, EL2, and EL3
-    Scr_sif = 1UL <<  9, ///< Secure instruction fetch enable
-    Scr_rw  = 1UL << 10, ///< EL2 / EL1 is AArch64
-    Scr_st  = 1UL << 11, ///< Trap Secure EL1 access to timer to EL3
-    Scr_twi = 1UL << 12, ///< Trap WFI to EL3
-    Scr_twe = 1UL << 13, ///< Trap WFE to EL3
+    Scr_ns   = 1UL <<  0, ///< Non-Secure mode
+    Scr_irq  = 1UL <<  1, ///< IRQ to EL3
+    Scr_fiq  = 1UL <<  2, ///< FIQ to EL3
+    Scr_ea   = 1UL <<  3, ///< External Abort and SError to EL3
+    Scr_smd  = 1UL <<  7, ///< SMC disable
+    Scr_hce  = 1UL <<  8, ///< HVC enable at EL1, EL2, and EL3
+    Scr_sif  = 1UL <<  9, ///< Secure instruction fetch enable
+    Scr_rw   = 1UL << 10, ///< EL2 / EL1 is AArch64
+    Scr_st   = 1UL << 11, ///< Trap Secure EL1 access to timer to EL3
+    Scr_twi  = 1UL << 12, ///< Trap WFI to EL3
+    Scr_twe  = 1UL << 13, ///< Trap WFE to EL3
+    Scr_apk  = 1UL << 16, ///< Do not trap on Pointer Authentication key accesses
+    Scr_api  = 1UL << 17, ///< Do not trap on Pointer Authentication instructions
+    Scr_eel2 = 1UL << 18, ///< Secure EL2 enable
   };
 
   enum {
@@ -81,9 +84,6 @@ EXTENSION class Cpu
 public:
   enum : Unsigned64
   {
-    Hcr_tid2 = 1ul << 17, // protects CTR CESSLR etc.
-    Hcr_rw = 1UL << 31,
-    Hcr_trvm = 1ul << 30,
     Hcr_must_set_bits = Hcr_vm | Hcr_swio | Hcr_ptw
                       | Hcr_amo | Hcr_imo | Hcr_fmo
                       | Hcr_tidcp | Hcr_tsc | Hcr_tactlr,
