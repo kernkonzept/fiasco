@@ -480,18 +480,13 @@ Irq_sender::sys_bind(L4_msg_tag tag, L4_fpage::Rights rights, Utcb const *utcb,
 
   Thread *thread;
 
-  if (tag.items())
-    {
-      Ko::Rights rights;
-      thread = Ko::deref<Thread>(&tag, utcb, &rights);
-      if (!thread)
-        return tag;
+  Ko::Rights t_rights;
+  thread = Ko::deref<Thread>(&tag, utcb, &t_rights);
+  if (!thread)
+    return tag;
 
-      if (EXPECT_FALSE(!(rights & L4_fpage::Rights::CS())))
-        return commit_result(-L4_err::EPerm);
-    }
-  else
-    thread = current_thread();
+  if (EXPECT_FALSE(!(t_rights & L4_fpage::Rights::CS())))
+    return commit_result(-L4_err::EPerm);
 
   Reap_list rl;
   int res = alloc(thread, rl.list());
