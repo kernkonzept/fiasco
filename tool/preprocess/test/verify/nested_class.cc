@@ -4,7 +4,7 @@
 #include "nested_class_i.h"
 
 
-#line 13 "nested_class.cpp"
+#line 25 "nested_class.cpp"
 
 
 void *

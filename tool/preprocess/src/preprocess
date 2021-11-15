@@ -1215,6 +1215,9 @@ sub handle_function
 
 	  handle_classdef(name => $func->{class},
 	                  syntax => "class",
+                          # Mark nested class as template if applicable.
+                          pretext => defined $func->{class_templateargs}
+                                     ? "template" : "",
 	                  nested_class => 1);
 	  $block_pos = $save_pos;
 	}
