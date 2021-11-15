@@ -769,13 +769,12 @@ Treemap::lookup_src_dst(Space const *src, Pcnt src_key, Pfn src_va, Pcnt src_siz
           return 1;
         }
 
-        if (r_depth == c_depth
-            && dst_frame->m->depth() == f->min_depth())
-          return 0;
+      if (r_depth == c_depth && dst_frame->m->depth() == f->min_depth())
+        return 0;
 
-        // found dst and src, do not unlock because src_frame
-        // needs to be kept locked
-        return 1;
+      // found dst and src, do not unlock because src_frame
+      // needs to be kept locked
+      return 1;
     }
   else
     {
