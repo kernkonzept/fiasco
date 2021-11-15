@@ -66,11 +66,11 @@ void Mem_unit::tlb_flush(void *va, unsigned long asid)
     return;
 
   Mem::dsb();
-  Mword tmp;
+  Mword vttbr;
   // FIXME: could do a compare for the current VMID before loading
   // the vttbr and the isb
   asm volatile(
-      "mrs %[tmp], vttbr_el2  \n"
+      "mrs %[vttbr], vttbr_el2\n"
       "msr vttbr_el2, %[asid] \n"
       "isb                    \n"
       "dsb ishst              \n"
@@ -78,9 +78,9 @@ void Mem_unit::tlb_flush(void *va, unsigned long asid)
       "dsb ish                \n"
       "tlbi vmalle1           \n"
       "dsb ish                \n"
-      "msr vttbr_el2, %[tmp]  \n"
+      "msr vttbr_el2, %[vttbr]\n"
       :
-      [tmp] "=&r" (tmp)
+      [vttbr] "=&r" (vttbr)
       :
       [ipa] "r" ((unsigned long)va >> 12),
       [asid] "r" (asid << 48)
@@ -93,19 +93,19 @@ void Mem_unit::tlb_flush(unsigned long asid)
 {
   btc_flush();
   Mem::dsb();
-  Mword tmp;
+  Mword vttbr;
   // FIXME: could do a compare for the current VMID before loading
   // the vttbr and the isb
   asm volatile(
-      "mrs %[tmp], vttbr_el2  \n"
+      "mrs %[vttbr], vttbr_el2\n"
       "msr vttbr_el2, %[asid] \n"
       "isb                    \n"
       "dsb ishst              \n"
       "tlbi vmalls12e1        \n"
       "dsb ish                \n"
-      "msr vttbr_el2, %[tmp]  \n"
+      "msr vttbr_el2, %[vttbr]\n"
       :
-      [tmp] "=&r" (tmp)
+      [vttbr] "=&r" (vttbr)
       :
       [asid] "r" (asid << 48)
       :
