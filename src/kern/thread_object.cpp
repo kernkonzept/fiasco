@@ -127,7 +127,8 @@ Thread_object::invoke(L4_obj_ref self, L4_fpage::Rights rights,
           return;
         }
 
-      ct->do_ipc(f->tag(), partner, have_rcv, sender, f->timeout(), f, rights);
+      ct->do_ipc(f->tag(), f->from_spec(), partner, have_rcv, sender,
+                 f->timeout(), f, rights);
       return;
     }
 
@@ -237,7 +238,7 @@ Thread_object::sys_vcpu_resume(L4_msg_tag const &tag, Utcb const *utcb, Utcb *)
       && (vcpu->sticky_flags & Vcpu_state::Sf_irq_pending))
     {
       assert(cpu_lock.test());
-      do_ipc(L4_msg_tag(), 0, true, 0,
+      do_ipc(L4_msg_tag(), 0, 0, true, 0,
              L4_timeout_pair(L4_timeout::Zero, L4_timeout::Zero),
              &vcpu->_ipc_regs, L4_fpage::Rights::FULL());
 

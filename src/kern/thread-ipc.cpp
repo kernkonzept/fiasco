@@ -61,7 +61,6 @@ protected:
   {
     L4_msg_tag tag;
     Thread *partner;
-    Syscall_frame *regs;
     L4_fpage::Rights rights;
     bool timeout;
     bool have_rcv;
@@ -70,6 +69,7 @@ protected:
   };
 
   Syscall_frame *_snd_regs;
+  Mword _from_spec;
   L4_fpage::Rights _ipc_send_rights;
 };
 
@@ -167,7 +167,7 @@ void
 Thread::ipc_send_msg(Receiver *recv, bool open_wait) override
 {
   Syscall_frame *regs = _snd_regs;
-  bool success = transfer_msg(regs->tag(), nonull_static_cast<Thread*>(recv), regs,
+  bool success = transfer_msg(regs->tag(), nonull_static_cast<Thread*>(recv),
                               _ipc_send_rights, open_wait);
   sender_dequeue(recv->sender_list());
   recv->vcpu_update_state();
@@ -198,8 +198,7 @@ PUBLIC
 void
 Thread::modify_label(Mword const *todo, int cnt) override
 {
-  assert (_snd_regs);
-  Mword l = _snd_regs->from_spec();
+  Mword l = _from_spec;
   for (int i = 0; i < cnt*4; i += 4)
     {
       Mword const test_mask = todo[i];
@@ -210,7 +209,7 @@ Thread::modify_label(Mword const *todo, int cnt) override
           Mword const add_mask = todo[i+3];
 
           l = (l & ~del_mask) | add_mask;
-          _snd_regs->from(l);
+          _from_spec = l;
           return;
         }
     }
@@ -482,6 +481,7 @@ Thread::activate_ipc_partner(Thread *partner, Cpu_number current_cpu,
  * Send an IPC message and/or receive an IPC message.
  *
  * \param tag           message tag; specifies details about the send phase
+ * \param from_spec     label for the receiver
  * \param partner       communication partner in the send phase; nullptr if
  *                      there is no send phase
  * \param have_receive  enable/disable receive phase
@@ -504,10 +504,9 @@ Thread::activate_ipc_partner(Thread *partner, Cpu_number current_cpu,
  */
 PUBLIC
 void
-Thread::do_ipc(L4_msg_tag const &tag, Thread *partner,
-               bool have_receive, Sender *sender,
-               L4_timeout_pair t, Syscall_frame *regs,
-               L4_fpage::Rights rights)
+Thread::do_ipc(L4_msg_tag const &tag, Mword from_spec, Thread *partner,
+               bool have_receive, Sender *sender, L4_timeout_pair t,
+               Syscall_frame *regs, L4_fpage::Rights rights)
 {
   assert (cpu_lock.test());
   assert (this == current());
@@ -531,6 +530,7 @@ Thread::do_ipc(L4_msg_tag const &tag, Thread *partner,
       Check_sender result;
 
       set_ipc_send_rights(rights);
+      _from_spec = from_spec;
 
       if (EXPECT_TRUE(current_cpu == partner->home_cpu()))
         result = handshake_receiver(partner, t.snd);
@@ -575,8 +575,7 @@ Thread::do_ipc(L4_msg_tag const &tag, Thread *partner,
           if (EXPECT_TRUE(current_cpu == partner->home_cpu()))
             partner->reset_timeout();
 
-          ok = transfer_msg(tag, partner, regs, rights,
-                            result.is_open_wait());
+          ok = transfer_msg(tag, partner, rights, result.is_open_wait());
 
           // transfer is also a possible migration point
           current_cpu = ::current_cpu();
@@ -676,7 +675,6 @@ Thread::do_ipc(L4_msg_tag const &tag, Thread *partner,
 PRIVATE inline NEEDS [Thread::copy_utcb_to]
 bool
 Thread::transfer_msg(L4_msg_tag tag, Thread *receiver,
-                     Syscall_frame *sender_regs,
                      L4_fpage::Rights rights, bool open_wait)
 {
   Syscall_frame* dst_regs = receiver->rcv_regs();
@@ -684,7 +682,7 @@ Thread::transfer_msg(L4_msg_tag tag, Thread *receiver,
   bool success = copy_utcb_to(tag, receiver, rights);
   tag.set_error(!success);
   dst_regs->tag(tag);
-  dst_regs->from(sender_regs->from_spec());
+  dst_regs->from(_from_spec);
 
   // setup the reply capability in case of a call
   if (success && open_wait && is_partner(receiver))
@@ -1165,12 +1163,11 @@ Thread::remote_ipc_send(Ipc_remote_request *rq)
   LOG_MSG_3VAL(this, "rsend", (Mword)src, 0, 0);
   printf("CPU[%u]: remote IPC send ...\n"
          "  partner=%p [%u]\n"
-         "  sender =%p [%u] regs=%p\n"
+         "  sender =%p [%u]\n"
          "  timeout=%u\n",
          current_cpu(),
          rq->partner, rq->partner->cpu(),
          src, src->cpu(),
-         rq->regs,
          rq->timeout);
 #endif
 
@@ -1204,8 +1201,8 @@ Thread::remote_ipc_send(Ipc_remote_request *rq)
       rq->result = r;
       return true;
     }
-  bool success = transfer_msg(rq->tag, rq->partner, rq->regs, _ipc_send_rights,
-                              r.is_open_wait());
+  bool success = transfer_msg(rq->tag, rq->partner,
+                              _ipc_send_rights, r.is_open_wait());
   if (success && rq->have_rcv)
     xcpu_state_change(~Thread_send_wait, Thread_receive_wait);
   else
@@ -1244,9 +1241,8 @@ Thread::remote_handshake_receiver(L4_msg_tag const &tag, Thread *partner,
   rq.have_rcv = have_receive;
   rq.partner = partner;
   rq.timeout = !snd_t.is_zero();
-  rq.regs = regs;
   rq.rights = rights;
-  _snd_regs = regs;
+  snd_regs(regs);
 
   set_wait_queue(partner->sender_list());
 

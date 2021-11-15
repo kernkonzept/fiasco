@@ -352,7 +352,6 @@ void
 Ipc_gate::invoke(L4_obj_ref /*self*/, L4_fpage::Rights rights,
                  Syscall_frame *f, Utcb *utcb) override
 {
-  Syscall_frame *ipc_f = f;
   //LOG_MSG_3VAL(current(), "gIPC", Mword(_thread), _id, f->obj_2_flags());
   //printf("Invoke: Ipc_gate(%lx->%p)...\n", _id, _thread);
   Thread *ct = current_thread();
@@ -388,8 +387,8 @@ Ipc_gate::invoke(L4_obj_ref /*self*/, L4_fpage::Rights rights,
     f->tag(commit_error(utcb, L4_error::Not_existent));
   else
     {
-      ipc_f->from(_id | cxx::int_value<L4_fpage::Rights>(rights));
-      ct->do_ipc(f->tag(), partner, have_rcv, sender, f->timeout(), f, rights);
+      Mword const from_spec = _id | cxx::int_value<L4_fpage::Rights>(rights);
+      ct->do_ipc(f->tag(), from_spec, partner, have_rcv, sender, f->timeout(), f, rights);
     }
 }
 
