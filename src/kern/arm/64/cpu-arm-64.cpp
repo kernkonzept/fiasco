@@ -66,6 +66,11 @@ public:
                     | Sctlr_m
                     | (Config::Cp15_c1_use_alignment_check ?  Sctlr_a : 0)
   };
+
+  enum : Unsigned64
+  {
+    Scr_default_bits = Scr_ns | Scr_rw | Scr_smd,
+  };
 };
 
 IMPLEMENT_OVERRIDE inline
@@ -82,6 +87,11 @@ IMPLEMENTATION [arm && cpu_virt]:
 EXTENSION class Cpu
 {
 public:
+  enum : Unsigned64
+  {
+    Scr_default_bits = Scr_ns | Scr_rw | Scr_smd | Scr_hce,
+  };
+
   enum : Unsigned64
   {
     Hcr_must_set_bits = Hcr_vm | Hcr_swio | Hcr_ptw

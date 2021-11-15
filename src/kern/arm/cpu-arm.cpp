@@ -49,6 +49,29 @@ public:
     Copro_dbg_model_v8_4          = 9,
   };
 
+  enum : Mword
+  {
+    Hcr_vm     = 1UL << 0,  ///< Virtualization enable
+    Hcr_swio   = 1UL << 1,  ///< Set/way invalidation override
+    Hcr_ptw    = 1UL << 2,  ///< Protected table walk
+    Hcr_fmo    = 1UL << 3,  ///< Physical FIQ routing
+    Hcr_imo    = 1UL << 4,  ///< Physical IRQ routing
+    Hcr_amo    = 1UL << 5,  ///< Physical SError interrupt routing
+    Hcr_dc     = 1UL << 12, ///< Default cacheability
+    Hcr_tid2   = 1UL << 17, ///< Trap CTR, CESSLR, etc.
+    Hcr_tid3   = 1UL << 18, ///< Trap ID, etc.
+    Hcr_tsc    = 1UL << 19, ///< Trap SMC instructions
+    Hcr_tidcp  = 1UL << 20, ///< Trap implementation defined functionality
+    Hcr_tactlr = 1UL << 21, ///< Trap ACTLR, etc.
+    Hcr_tsw    = 1UL << 22, ///< Trap cache maintenance instructions
+    Hcr_ttlb   = 1UL << 25, ///< Trap TLB maintenance instructions
+    Hcr_tvm    = 1UL << 26, ///< Trap virtual memory controls
+    Hcr_tge    = 1UL << 27, ///< Trap General Exceptions
+    Hcr_hcd    = 1UL << 29, ///< HVC instruction disable
+    Hcr_trvm   = 1UL << 30, ///< Trap reads of virtual memory controls
+    Hcr_rw     = 1UL << 31, ///< EL1 is AArch64
+  };
+
   unsigned copro_dbg_model() const { return _cpu_id._dfr0 & 0xf; }
 
 private:

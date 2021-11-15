@@ -3,6 +3,21 @@
 
 #include TRAMP_MP_ASM_INCLUDE
 
+#define SCR_NS  (1 << 0)
+#define SCR_SMD (1 << 7)
+#define SCR_RW  (1 << 10)
+
+#define HCR_HCD (1 << 29)
+#define HCR_RW  (1 << 31)
+
+#define SCR_EL3_DEFAULT_BITS (SCR_NS | SCR_SMD | SCR_RW)
+
+#ifndef CONFIG_CPU_VIRT
+
+#define HCR_EL2_DEFAULT_BITS (HCR_HCD | HCR_RW)
+
+#endif
+
 #ifndef HAVE_MACRO_BSP_EARLY_INIT
 .macro bsp_early_init tmp1, tmp2
 .endm
@@ -91,7 +106,8 @@ _tramp_mp_entry:
 	// switch from EL3 to EL2...
 	tlbi	alle2is
 	dsb	sy
-	mov	x18, #((1 << 0) | (1 << 7) | (1 << 10))
+	movz	x18, #:abs_g0_nc:SCR_EL3_DEFAULT_BITS
+	movk	x18, #:abs_g1:SCR_EL3_DEFAULT_BITS
 	msr	scr_el3, x18
 	mrs	x20, sctlr_el3
 	bl	cache_invalidate_v8
@@ -103,7 +119,7 @@ _tramp_mp_entry:
 	movk	x17, #:abs_g1:sctlr_val
 	orr	x18, x18, x17
 #ifdef CONFIG_CPU_VIRT
-	mov	x6, #(1<< 31) // RW: EL1 = 64bit
+	mov	x6, #HCR_RW
 	msr	HCR_EL2, x6
 	msr	sctlr_el2, x18
 	mov	x18, #((0xf << 6) | 9) // => EL2
@@ -112,7 +128,7 @@ _tramp_mp_entry:
 	ubfx	x6, x6, #8, #4
 	cmp	x6, #0
 	b.eq	1f
-	mov	x6, #((1 << 29) | (1<< 31)) // RW + HCD
+	mov	x6, #HCR_EL2_DEFAULT_BITS
 	msr	HCR_EL2, x6
 1:	msr	sctlr_el1, x18
 	mov	x18, #((0xf << 6) | 5) // => EL1
@@ -128,7 +144,7 @@ _tramp_mp_entry:
 	cmp	x17, #2
 #ifndef CONFIG_CPU_VIRT
 	b.ne  2f
-	mov	x6, #((1 << 29) | (1<< 31)) // RW + HCD
+	mov	x6, #HCR_EL2_DEFAULT_BITS
 	msr	HCR_EL2, x6
 	movz	x17, #((0xf << 6) | 5) // DAIF + EL1 / SPSEL
 	msr	SPSR_EL2, x17

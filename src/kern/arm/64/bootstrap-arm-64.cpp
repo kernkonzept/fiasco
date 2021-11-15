@@ -150,6 +150,11 @@ IMPLEMENTATION [arm && !cpu_virt]:
 
 #include "cpu.h"
 
+enum : Unsigned64
+{
+  Hcr_default_bits = Cpu::Hcr_hcd | Cpu::Hcr_rw,
+};
+
 PUBLIC static inline NEEDS["cpu.h"]
 void
 Bootstrap::enable_paging(Mword)
@@ -177,7 +182,7 @@ switch_from_el3_to_el1()
   if (((pfr0 >> 8) & 0xf) != 0)
     {
       // EL2 supported, set HCR (RW and HCD)
-      asm volatile ("msr HCR_EL2, %0" : : "r"((1UL << 29) | (1UL << 31)));
+      asm volatile ("msr HCR_EL2, %0" : : "r"(Hcr_default_bits));
     }
 
   // flush all E1 TLBs
@@ -191,7 +196,7 @@ switch_from_el3_to_el1()
   // setup SCR (disable monitor completely)
   asm volatile ("msr scr_el3, %0"
                 : :
-                "r"((Mword)(Cpu::Scr_ns | Cpu::Scr_rw | Cpu::Scr_smd)));
+                "r"(Cpu::Scr_default_bits));
 
   Mword sctlr_el3;
   Mword sctlr_el1;
@@ -237,7 +242,7 @@ Bootstrap::leave_hyp_mode()
       // flush all E1 TLBs
       asm volatile ("tlbi alle1");
       // set HCR (RW and HCD)
-      asm volatile ("msr HCR_EL2, %0" : : "r"((1UL << 29) | (1UL << 31)));
+      asm volatile ("msr HCR_EL2, %0" : : "r"(Hcr_default_bits));
       asm volatile ("   mov %[tmp], sp       \n"
                     "   msr spsr_el2, %[psr] \n"
                     "   adr x4, 1f           \n"
@@ -360,7 +365,7 @@ Bootstrap::leave_el3()
         ;
     }
 
-  asm volatile ("msr HCR_EL2, %0" : : "r"(1UL << 31));
+  asm volatile ("msr HCR_EL2, %0" : : "r"(Cpu::Hcr_rw));
 
   // flush all E2 TLBs
   asm volatile ("tlbi alle2is");
@@ -368,7 +373,7 @@ Bootstrap::leave_el3()
   // setup SCR (disable monitor completely)
   asm volatile ("msr scr_el3, %0"
                 : :
-                "r"((Mword)(Cpu::Scr_ns | Cpu::Scr_rw | Cpu::Scr_smd | Cpu::Scr_hce)));
+                "r"(Cpu::Scr_default_bits));
 
   Mword sctlr_el3;
   Mword sctlr;
