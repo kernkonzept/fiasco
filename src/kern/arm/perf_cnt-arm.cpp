@@ -212,7 +212,7 @@ Perf_cnt::init_cpu()
 
   pmcr(PMNC_ENABLE | PMNC_PERF_RESET | PMNC_CNT_RESET);
 
-  cntens((1 << 31) | ((1 << _nr_counters) - 1));
+  cntens((1ul << 31) | ((1ul << _nr_counters) - 1));
 
   //set_event_type(0, 8);
 
