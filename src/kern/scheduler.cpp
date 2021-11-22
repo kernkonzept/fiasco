@@ -6,6 +6,8 @@ INTERFACE:
 
 class Scheduler : public Icu_h<Scheduler>, public Irq_chip_soft
 {
+  friend class Scheduler_test;
+
   typedef Icu_h<Scheduler> Icu;
 
 public:

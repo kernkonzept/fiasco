@@ -40,6 +40,7 @@ class Thread :
   friend class Jdb_list_timeouts;
   friend class Jdb_tbuf_show;
   friend struct Utest; // do_leave_and_kill_myself()
+  friend class Scheduler_test; // do_leave_and_kill_myself()
 
 public:
   enum Context_mode_kernel { Kernel = 0 };

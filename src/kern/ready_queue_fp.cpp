@@ -21,6 +21,7 @@ class Ready_queue_fp
   template<typename T>
   friend struct Jdb_thread_list_policy;
   friend class Sched_ctxts_test;
+  friend class Scheduler_test;
 
 private:
   typedef typename E::Fp_list List;

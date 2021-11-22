@@ -576,6 +576,8 @@ public:
 
 class L4_cpu_set_descr
 {
+  friend class L4_cpu_set_tester;
+
 private:
   Mword _w;
 
@@ -593,6 +595,8 @@ public:
 
 class L4_cpu_set : public L4_cpu_set_descr
 {
+  friend class L4_cpu_set_tester;
+
 private:
   Mword _map;
 
