@@ -237,6 +237,7 @@ Fpu::disable()
                "bic  %0, %0, %1     \n"
                "msr  CPACR_EL1, %0  \n"
                : "=r"(t) : "I" (3UL << 20));
+  Mem::isb();
 }
 
 //-------------------------------------------------------------------------
@@ -273,6 +274,7 @@ Fpu::enable()
       "bic %0, %0, #(1 << 10)   \n"
       "msr CPTR_EL2, %0         \n"
       : "=&r" (dummy) );
+  Mem::isb();
 }
 
 PUBLIC inline
@@ -285,5 +287,5 @@ Fpu::disable()
       "orr  %0, %0, #(1 << 10)     \n"
       "msr  CPTR_EL2, %0           \n"
       : "=&r" (dummy));
+  Mem::isb();
 }
-

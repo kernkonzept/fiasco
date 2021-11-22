@@ -467,6 +467,7 @@ void
 Fpu::enable()
 {
   fpexc((fpexc() | FPEXC_EN)); // & ~FPEXC_EX);
+  Mem::isb();
 }
 
 PUBLIC static inline
@@ -474,6 +475,7 @@ void
 Fpu::disable()
 {
   fpexc(fpexc() & ~FPEXC_EN);
+  Mem::isb();
 }
 
 //-------------------------------------------------------------------------
@@ -515,6 +517,7 @@ Fpu::enable()
       "bic %0, %0, #0xc00        \n"
       "mcr p15, 4, %0, c1, c1, 2 \n" : "=&r" (dummy) );
   fpexc(_fpexc);
+  Mem::isb();
 }
 
 PUBLIC inline
@@ -540,6 +543,7 @@ Fpu::disable()
       "mrc p15, 4, %0, c1, c1, 2 \n"
       "orr %0, %0, #0xc00        \n"
       "mcr p15, 4, %0, c1, c1, 2 \n" : "=&r" (dummy) );
+  Mem::isb();
 }
 
 
