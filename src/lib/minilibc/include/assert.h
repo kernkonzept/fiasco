@@ -4,7 +4,7 @@
 #include <cdefs.h>
 
 #ifdef NDEBUG
-# define assert(expr) do { } while (0)
+# define assert(expr) ((void) 0)
 # define check(expr)  (void)(expr)
 #else
 # include <stdio.h>

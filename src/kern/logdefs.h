@@ -21,16 +21,16 @@
 
 #if !defined(CONFIG_JDB)
 
-#define LOG_TRACE_COND(name, sc, ctx, fmt, cond, code...) do { } while (0)
-#define LOG_TRACE(name, sc, ctx, fmt, code...) do { } while (0)
-#define LOG_CONTEXT_SWITCH                     do { } while (0)
-#define LOG_TRAP                               do { } while (0)
-#define LOG_TRAP_N(n)                          do { } while (0)
-#define LOG_TRAP_CN(c, n)                      do { } while (0)
-#define LOG_SCHED_SAVE(n)                      do { } while (0)
-#define LOG_SCHED_LOAD(n)                      do { } while (0)
-#define LOG_MSG(ctx, txt)                      do { } while (0)
-#define LOG_MSG_3VAL(ctx, txt, v1, v2, v3)     do { } while (0)
+#define LOG_TRACE_COND(name, sc, ctx, fmt, cond, code...) ((void) 0)
+#define LOG_TRACE(name, sc, ctx, fmt, code...) ((void) 0)
+#define LOG_CONTEXT_SWITCH                     ((void) 0)
+#define LOG_TRAP                               ((void) 0)
+#define LOG_TRAP_N(n)                          ((void) 0)
+#define LOG_TRAP_CN(c, n)                      ((void) 0)
+#define LOG_SCHED_SAVE(n)                      ((void) 0)
+#define LOG_SCHED_LOAD(n)                      ((void) 0)
+#define LOG_MSG(ctx, txt)                      ((void) 0)
+#define LOG_MSG_3VAL(ctx, txt, v1, v2, v3)     ((void) 0)
 
 #else
 
@@ -139,20 +139,20 @@
 
 #else
 
-#define CNT_CONTEXT_SWITCH	do { } while (0)
-#define CNT_ADDR_SPACE_SWITCH	do { } while (0)
-#define CNT_IRQ			do { } while (0)
-#define CNT_PAGE_FAULT		do { } while (0)
-#define CNT_IO_FAULT		do { } while (0)
-#define CNT_SCHEDULE		do { } while (0)
-#define CNT_EXC_IPC             do { } while (0)
+#define CNT_CONTEXT_SWITCH	((void) 0)
+#define CNT_ADDR_SPACE_SWITCH	((void) 0)
+#define CNT_IRQ			((void) 0)
+#define CNT_PAGE_FAULT		((void) 0)
+#define CNT_IO_FAULT		((void) 0)
+#define CNT_SCHEDULE		((void) 0)
+#define CNT_EXC_IPC             ((void) 0)
 
 // FIXME: currently unused entries below
-#define CNT_SHORTCUT_FAILED	do { } while (0)
-#define CNT_SHORTCUT_SUCCESS	do { } while (0)
-#define CNT_IPC_LONG		do { } while (0)
-#define CNT_TASK_CREATE		do { } while (0)
-#define CNT_IOBMAP_TLB_FLUSH	do { } while (0)
+#define CNT_SHORTCUT_FAILED	((void) 0)
+#define CNT_SHORTCUT_SUCCESS	((void) 0)
+#define CNT_IPC_LONG		((void) 0)
+#define CNT_TASK_CREATE		((void) 0)
+#define CNT_IOBMAP_TLB_FLUSH	((void) 0)
 
 #endif // CONFIG_JDB && CONFIG_JDB_ACCOUNTING
 
