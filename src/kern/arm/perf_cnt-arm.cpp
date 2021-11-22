@@ -149,7 +149,10 @@ Perf_cnt::is_avail()
     {
       case Cpu::Copro_dbg_model_v7:
       case Cpu::Copro_dbg_model_v7_1:
-      case Cpu::Copro_dbg_model_v8:   return true;
+      case Cpu::Copro_dbg_model_v8:
+      case Cpu::Copro_dbg_model_v8_plus_vhe:
+      case Cpu::Copro_dbg_model_v8_2:
+      case Cpu::Copro_dbg_model_v8_4: return true;
       default: return false;
     }
 }

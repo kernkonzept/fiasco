@@ -44,6 +44,9 @@ public:
     Copro_dbg_model_v7            = 4,
     Copro_dbg_model_v7_1          = 5,
     Copro_dbg_model_v8            = 6,
+    Copro_dbg_model_v8_plus_vhe   = 7,
+    Copro_dbg_model_v8_2          = 8,
+    Copro_dbg_model_v8_4          = 9,
   };
 
   unsigned copro_dbg_model() const { return _cpu_id._dfr0 & 0xf; }
