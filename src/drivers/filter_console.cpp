@@ -62,48 +62,7 @@ Filter_console::write(char const *str, size_t len) override
   if (!(_o->state() & OUTENABLED))
     return len;
 
-  char const *start = str;
-  char const *stop  = str;
-
-  static char seq[18];
-  char const *const home = "\033[H";
-  char const *const cel  = "\033[K";
-
-  for (; stop < str + len; ++stop)
-    {
-      switch (*stop)
-        {
-        case 1:
-          if (stop - start)
-            _o->write(start, stop - start);
-          start = stop + 1;
-          _o->write(home, 3);
-          break;
-        case 5:
-          if (stop - start)
-            _o->write(start, stop - start);
-          start = stop + 1;
-          _o->write(cel, 3);
-          break;
-        case 6:
-          if (stop - start)
-            _o->write(start, stop - start);
-          if (stop + 2 < str + len)
-            {
-              snprintf(seq, sizeof(seq), "\033[%d;%dH",
-                       stop[1] + 1, stop[2] + 1);
-              _o->write(seq, strlen(seq));
-            }
-          stop += 2;
-          start = stop + 1;
-          break;
-      }
-    }
-
-  if (stop-start)
-    _o->write(start, stop-start);
-
-  return len;
+  return _o->write(str, len);
 }
 
 PRIVATE inline
