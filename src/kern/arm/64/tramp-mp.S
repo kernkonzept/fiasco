@@ -158,24 +158,6 @@ _tramp_mp_entry:
 2:
 	msr	DAIFSet, #0xf
 
-	// Enable SMP via implementation defined CPUECTRL_EL1 which
-	// is available on Arm Silicon implementations
-	mrs	x0, midr_el1
-	lsr	w1, w0, #24
-	cmp	w1, #0x41
-	b.ne	5f
-	and	w0, w0, #0xfff0   // Check for ARM FVP AEMv8
-	mov	w1, #0xd0f0
-	cmp	w0, w1
-	b.eq	5f
-
-	mrs	x0, S3_1_C15_C2_1 // CPUECTRL_EL1
-	tbnz	w0, #6, 5f
-	orr	x0, x0, #(1 << 6)
-	msr	S3_1_C15_C2_1, x0 // CPUECTRL_EL1
-5:
-	bl	cache_invalidate_v8
-
 	ic	iallu
 	isb	sy
 	dsb	sy

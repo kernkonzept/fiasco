@@ -252,41 +252,15 @@ Cpu::disable_dcache()
 //--------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_v8]:
 
-PRIVATE static inline NEEDS[Cpu::midr]
-bool
-Cpu::needs_ectl_enable()
-{
-  Mword id = midr();
-  if ((id & 0xff0ffff0) == 0x410fd0f0) // FVP AEM-V8
-    return false;
-  return (id & 0xff0fff00) == 0x410fd000;
-}
-
-PUBLIC static inline NEEDS[Cpu::needs_ectl_enable]
+PUBLIC static inline
 void
 Cpu::enable_smp()
-{
-  if (!needs_ectl_enable())
-    return;
+{}
 
-  Mword cpuectl;
-  asm volatile ("mrs %0, S3_1_C15_C2_1" : "=r" (cpuectl));
-  if (!(cpuectl & (1 << 6)))
-    asm volatile ("msr S3_1_C15_C2_1, %0" : : "r" (cpuectl | (1 << 6)));
-}
-
-PUBLIC static inline NEEDS[Cpu::needs_ectl_enable]
+PUBLIC static inline
 void
 Cpu::disable_smp()
-{
-  if (!needs_ectl_enable())
-    return;
-
-  Mword cpuectl;
-  asm volatile ("mrs %0, S3_1_C15_C2_1" : "=r" (cpuectl));
-  if (cpuectl & (1 << 6))
-    asm volatile ("msr S3_1_C15_C2_1, %0" : : "r" (cpuectl & ~(1UL << 6)));
-}
+{}
 
 PUBLIC static inline
 Unsigned64
