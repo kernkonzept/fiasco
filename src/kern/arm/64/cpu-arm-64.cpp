@@ -1,6 +1,8 @@
 //----------------------------------------------------------------------
 INTERFACE [arm && arm_v8]:
 
+#include "alternatives.h"
+
 EXTENSION class Cpu
 {
 public:
@@ -65,6 +67,16 @@ public:
     // user-mode runs with HCR.TGE = 1, otherwise we get undefined instruction
     // exceptions instead of FPU traps into EL2.
     Cpacr_el1_generic_hyp = Cpacr_el1_fpen_full,
+  };
+
+  struct has_aarch32_el1 : public Alternative_static_functor<has_aarch32_el1>
+  {
+    static bool probe()
+    {
+      Mword pfr0;
+      asm ("mrs %0, ID_AA64PFR0_EL1": "=r" (pfr0));
+      return pfr0 & 0x20;
+    }
   };
 };
 
