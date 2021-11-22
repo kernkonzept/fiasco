@@ -28,7 +28,7 @@ namespace KIP_namespace
 {
   enum
   {
-    Num_mem_descs = 20,
+    Num_mem_descs = 64,
     Max_len_version = 512,
 
     Size_mem_descs = sizeof(Mword) * 2 * Num_mem_descs,
