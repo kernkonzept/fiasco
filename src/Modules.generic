@@ -9,7 +9,7 @@ PREPROCESS_PARTS-$(CONFIG_JDB_LOGGING)       += jdb_logging
 INTERFACES_KERNEL	:= cpu_mask rcupdate kobject_mapdb context_base pm \
 			   mem_region per_cpu_data startup                   \
 			   queue queue_item l4_buf_iter bitmap               \
-			   mapping spin_lock mapping_tree mappable           \
+			   mapping spin_lock mapping_tree                    \
 			   dbg_page_info mapdb pic kobject_dbg koptions      \
 			   kobject_iface kobject ready_queue_wfq             \
                            obj_space_types obj_space_phys_util \

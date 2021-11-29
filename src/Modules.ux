@@ -99,7 +99,7 @@ INTERFACES_KERNEL	:= string_buffer mem_region simpleio kernel_console panic warn
 			   cpu_call context \
 			   helping_lock \
 			   usermode \
-			   mapping mapping_tree mappable                  \
+			   mapping mapping_tree                           \
 			   mapdb kobject_mapdb map_util \
 			   hostproc task sigma0_task kernel_task prio_list \
 			   timeslice_timeout	  \

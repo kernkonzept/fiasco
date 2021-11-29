@@ -10,7 +10,6 @@ IMPLEMENTATION:
 
 #include "obj_space.h"
 #include "l4_types.h"
-#include "mappable.h"
 
 L4_error
 obj_map(Space *from, L4_fpage const &fp_from,
