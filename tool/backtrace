@@ -1,7 +1,8 @@
-#! /usr/bin/perl -W
+#!/usr/bin/env perl
 
-use Math::BigInt;
 use strict;
+use warnings;
+use Math::BigInt;
 
 my %sym_tab = (new Math::BigInt(0) => "ERRRRRRROR");
 my $sections = "BdDdTtVvWwuU";

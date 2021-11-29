@@ -1,4 +1,4 @@
-#! /usr/bin/perl -W
+#!/usr/bin/env perl
 #
 # Adam Lackorzynski <adam@l4re.org>
 #
@@ -12,6 +12,7 @@
 # To be improved...
 
 use strict;
+use warnings;
 
 my $line = 0;
 #my %spaces;

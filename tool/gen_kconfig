@@ -1,6 +1,7 @@
-#! /usr/bin/perl -W
+#!/usr/bin/env perl
 
 use strict;
+use warnings;
 
 my $kconfig_src_file = shift;
 my $kconfig_obj_file = shift;

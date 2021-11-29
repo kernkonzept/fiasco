@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w
+#!/usr/bin/env perl
 # -*- perl -*-
 
 #
@@ -31,8 +31,9 @@
 #
 
 require 5.006;
-use Getopt::Std;
 use strict;
+use warnings;
+use Getopt::Std;
 
 sub print_expand($);
 sub print_funcdecl($);

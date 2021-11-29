@@ -1,8 +1,9 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 
 # we use BigInts for handling 64-bit values on IA32 systems
 
 use strict;
+use warnings;
 use Getopt::Long;
 use Pod::Usage;
 use Math::BigInt;
