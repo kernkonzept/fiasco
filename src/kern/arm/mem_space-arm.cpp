@@ -115,23 +115,6 @@ Mem_space::set_attributes(Virt_addr virt, Attr page_attribs,
   return true;
 }
 
-IMPLEMENT inline NEEDS ["kmem.h", "logdefs.h", Mem_space::c_asid]
-void Mem_space::switchin_context(Mem_space *from)
-{
-#if 0
-  // never switch to kernel space (context of the idle thread)
-  if (this == kernel_space())
-    return;
-#endif
-
-  if (from != this)
-    {
-      CNT_ADDR_SPACE_SWITCH;
-      make_current();
-    }
-}
-
-
 IMPLEMENT inline
 void Mem_space::kernel_space(Mem_space *_k_space)
 {

@@ -120,15 +120,6 @@ Mem_space::sync_kernel()
                     Kmem_alloc::q_allocator(_quota));
 }
 
-
-IMPLEMENT inline NEEDS ["kmem.h", "logdefs.h", <cstdio>]
-void Mem_space::switchin_context(Mem_space *from)
-{
-  (void)from;
-  printf("Mem_space::switchin_context FIXME\n");
-  CNT_ADDR_SPACE_SWITCH;
-}
-
 PUBLIC static inline
 bool
 Mem_space::is_full_flush(L4_fpage::Rights rights)

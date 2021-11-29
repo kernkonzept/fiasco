@@ -380,6 +380,25 @@ bool
 Mem_space::is_sigma0() const
 { return false; }
 
+IMPLEMENT_DEFAULT inline NEEDS["kmem.h", "logdefs.h"]
+void
+Mem_space::switchin_context(Mem_space *from)
+{
+  // FIXME: this optimization breaks SMP task deletion, an idle thread
+  // may run on an already deleted page table
+#if 0
+  // never switch to kernel space (context of the idle thread)
+  if (this == kernel_space())
+    return;
+#endif
+
+  if (from != this)
+    {
+      CNT_ADDR_SPACE_SWITCH;
+      make_current();
+    }
+}
+
 //----------------------------------------------------------------------------
 IMPLEMENTATION [!mp]:
 

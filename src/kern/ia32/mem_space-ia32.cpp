@@ -418,25 +418,6 @@ void
 Mem_space::page_unmap(Address, Address)
 {}
 
-IMPLEMENT inline NEEDS["kmem.h", "logdefs.h"]
-void
-Mem_space::switchin_context(Mem_space *from)
-{
-  // FIXME: this optimization breaks SMP task deletion, an idle thread
-  // may run on an already deleted page table
-#if 0
-  // never switch to kernel space (context of the idle thread)
-  if (dir() == Kmem::dir())
-    return;
-#endif
-
-  if (from != this)
-    {
-      CNT_ADDR_SPACE_SWITCH;
-      make_current();
-    }
-}
-
 IMPLEMENT inline NEEDS ["cpu.h", Mem_space::prepare_pt_switch,
                         Mem_space::switch_page_table]
 void

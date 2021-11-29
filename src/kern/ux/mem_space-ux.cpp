@@ -68,17 +68,6 @@ void
 Mem_space::set_pid(pid_t pid)
 { _pid = pid; }
 
-IMPLEMENT inline NEEDS["logdefs.h"]
-void
-Mem_space::switchin_context(Mem_space *from)
-{
-  if (this == from)
-    return;
-
-  CNT_ADDR_SPACE_SWITCH;
-  make_current();
-}
-
 IMPLEMENT inline NEEDS [<asm/unistd.h>, <sys/mman.h>, "boot_info.h",
                         "cpu_lock.h", "lock_guard.h", "mem_layout.h",
                         "trampoline.h"]
