@@ -376,7 +376,7 @@ config NO_IO_PAGEFAULT
 	default y if  IA32 || AMD64
 	help
 	  Disable page-fault IPC for IO-Port accesses. If this option is
-	  eanbled the kernel does not generate page-fault IPC for failed
+	  enabled the kernel does not generate page-fault IPC for failed
 	  IO-Port accesses instead an excpetion IPC with a #GP is generated.
 
 config NO_LDT
