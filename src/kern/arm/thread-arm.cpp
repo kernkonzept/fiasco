@@ -692,7 +692,7 @@ Thread::arm_esr_entry(Return_frame *rf)
 
   switch (esr.ec())
     {
-    case 0x20:
+    case 0x20: // Instruction abort from a lower exception level
       tmp = get_fault_pfa(esr, true, state & Thread_ext_vcpu_enabled);
       if (!pagefault_entry(tmp, esr.raw(), rf->pc, rf))
         {
@@ -703,7 +703,7 @@ Thread::arm_esr_entry(Return_frame *rf)
       Proc::cli();
       return;
 
-    case 0x24:
+    case 0x24: // Data abort from a lower exception Level
       tmp = get_fault_pfa(esr, false, state & Thread_ext_vcpu_enabled);
       if (!pagefault_entry(tmp, esr.raw(), rf->pc, rf))
         {
@@ -714,14 +714,14 @@ Thread::arm_esr_entry(Return_frame *rf)
       Proc::cli();
       return;
 
-    case 0x12: // HVC
-    case 0x11: // SVC
-    case 0x15: // SVC from aarch64
-    case 0x16: // HVC from aarch64
+    case 0x11: // SVC instruction execution on AArch32
+    case 0x12: // HVC instruction execution on AArch32
+    case 0x15: // SVC instruction execution on AArch64
+    case 0x16: // HVC instruction execution on AArch64
       current_thread()->handle_svc(ts);
       return;
 
-    case 0x00: // undef opcode with HCR.TGE=1
+    case 0x00: // Unknown reason, undefined opcode with HCR.TGE=1
         {
           ct->state_del(Thread_cancel);
           Mword state = ct->state();
@@ -749,7 +749,7 @@ Thread::arm_esr_entry(Return_frame *rf)
         }
       break;
 
-    case 0x07:
+    case 0x07: // SVE, Advanced SIMD or floating-point trap
       if ((sizeof(Mword) == 8
            || esr.cpt_simd()
            || esr.cpt_cpnr() == 10
@@ -760,7 +760,7 @@ Thread::arm_esr_entry(Return_frame *rf)
       ct->send_exception(ts);
       break;
 
-    case 0x03: // CP15 trapped
+    case 0x03: // MCR or MRC CP15 access trap on AArch32
       if (esr.mcr_coproc_register() == esr.mrc_coproc_register(0, 1, 0, 1))
         {
           ts->r[esr.mcr_rt()] = 1 << 6;
