@@ -91,14 +91,14 @@ public:
     /**
      * HCR value to be used for the VMM.
      *
-     * The AArch64 VMM is currently running in EL0 (hence TGE)
+     * The AArch64 VMM is currently running in EL1.
      */
     Hcr_host_bits = Hcr_must_set_bits | Hcr_rw | Hcr_dc,
 
     /**
-     * HCR value to bue used for normal threads.
+     * HCR value to be used for normal threads.
      *
-     * On AArch64 (with virtualization support) running in EL0
+     * On AArch64 (with virtualization support) running in EL1.
      */
     Hcr_non_vm_bits = Hcr_must_set_bits | Hcr_rw | Hcr_dc | Hcr_tsw
                       | Hcr_ttlb | Hcr_tvm | Hcr_trvm
