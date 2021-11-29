@@ -1758,7 +1758,6 @@ protected:
   class Pending_rqq : public Queue
   {
   public:
-    static void enq(Context *c);
     bool handle_requests(Context **);
   };
 
@@ -1850,28 +1849,6 @@ Context::need_help(Mword const *lock, Mword val)
   _running_under_lock.reset();
   return false;
 }
-
-/**
- * \brief Enqueue the given \a c into its CPUs queue.
- * \param c the context to enqueue for DRQ handling.
- */
-IMPLEMENT inline NEEDS["globals.h", "lock_guard.h"]
-void
-Context::Pending_rqq::enq(Context *c)
-{
-  // FIXME: is it safe to do the check without a locked queue, or may
-  //        we loose DRQs then?
-
-  //if (!c->_pending_rq.queued())
-    {
-      Queue &q = Context::_pending_rqq.cpu(c->home_cpu());
-      auto guard = lock_guard(q.q_lock());
-      if (c->_pending_rq.queued())
-        return;
-      q.enqueue(&c->_pending_rq);
-    }
-}
-
 
 /**
  * \brief Wakeup all contexts with pending DRQs.
