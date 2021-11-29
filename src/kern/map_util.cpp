@@ -59,7 +59,63 @@ private:
       // got an overflow, we have to flush all
       all = true;
     }
+  };
 
+  struct Cpu_flush_store : public Flush_store<4>
+  {
+    void add_space(Mem_space *space)
+    {
+      Flush_store<4>::add_space(space);
+
+      if (Mem_space::Need_xcpu_tlb_flush && all)
+        {
+          // When we run out of spaces, we have to record the affected CPUs
+          // directly, which depending on the architecture requires an expensive
+          // synchronization operation for each space added.
+          //
+          // But we have no choice, falling back sending an IPI to all CPUs is
+          // not an option. We have to ensure that IPIs are only sent to CPUs on
+          // which at least one of the involved memory spaces is active.
+          // Otherwise it is not possible to safely partition the system,
+          // because for example one partition could influence the other
+          // partition by causing TLB flush induced IPI storms.
+          Mem_space::sync_read_tlb_active_on_cpu();
+          _all_affected_cpus |= space->tlb_active_on_cpu();
+        }
+    }
+
+    /*
+     * \pre cpu == current_cpu()
+     */
+    void flush_stored(Cpu_number cpu)
+    {
+      for (unsigned i = 0; i < N_spaces && spaces[i]; ++i)
+        {
+          if (!Mem_space::Need_xcpu_tlb_flush || spaces[i]->tlb_active_on_cpu().get(cpu))
+            spaces[i]->tlb_flush(true);
+        }
+    }
+
+    Cpu_mask affected_cpus() const
+    {
+      Cpu_mask affected_cpus;
+      for (unsigned i = 0; i < N_spaces && spaces[i]; ++i)
+        affected_cpus |= spaces[i]->tlb_active_on_cpu();
+
+      if (all)
+        affected_cpus |= _all_affected_cpus;
+
+      return affected_cpus;
+    }
+
+  private:
+    // Fallback to record affected CPUs for spaces that did not fit
+    // into the spaces array.
+    Cpu_mask _all_affected_cpus;
+  };
+
+  struct Iommu_flush_store : public Flush_store<4>
+  {
     void flush_stored()
     {
       for (unsigned i = 0; i < N_spaces && spaces[i]; ++i)
@@ -67,38 +123,62 @@ private:
     }
   };
 
-  Flush_store<4> _cpu_tlb;
-  Flush_store<4> _iommu_tlb;
+  Cpu_flush_store _cpu_tlb;
+  Iommu_flush_store _iommu_tlb;
 
   /*
-   * This is called on the target/remote CPU to flush CPU-local TLBs.
+   * This is called on the local CPU and target/remote CPUs to flush
+   * CPU-local TLBs.
    *
    * \pre cpu == current_cpu()
    */
   void do_flush_cpu_op(Cpu_number cpu)
   {
-    if (_cpu_tlb.all)
+    if (EXPECT_FALSE(_cpu_tlb.all))
       {
         // flush all CPU-local TLBs, e.g. MMU, ept, npt
         Tlb::flush_all_cpu(cpu);
       }
     else
-      _cpu_tlb.flush_stored();
+      _cpu_tlb.flush_stored(cpu);
   }
 
   /*
    * This is called on the CPU that made the changes requiring a TLB Flush,
-   * to flush the affected CPU-local TLBs on all active CPUs.
+   * to flush the affected CPU-local TLBs on all affected CPUs.
    */
   void do_flush_cpu()
   {
     if (_cpu_tlb.empty)
       return;
 
-    Cpu_call::cpu_call_many(Mem_space::active_tlb(), [this](Cpu_number cpu) {
-      this->do_flush_cpu_op(cpu);
-      return false;
-    });
+    if (Mem_space::Need_xcpu_tlb_flush)
+      {
+        // To prevent a race condition that could potentially lead to the use of
+        // outdated page table entries on other cores, we have to execute a
+        // memory barrier that ensures that our PTE changes are visible to all
+        // other cores, before we access tlb_active_on_cpu(). Otherwise, if the
+        // Mem_space gets active on another core, shortly after we read
+        // tlb_active_on_cpu() where it was reported as non-active, we won't
+        // send a TLB flush to the other core, but it might not yet see our PTE
+        // changes.
+        Mem_space::sync_read_tlb_active_on_cpu();
+
+        Cpu_mask affected_cpus = _cpu_tlb.affected_cpus();
+
+        // Limit to CPUs for which TLB management is enabled. If TLB management
+        // gets deactivated for a CPU, this is always combined with a full flush
+        // of all CPU-dependent TLBs. Therefore we can skip flushing on this CPU
+        // here without any risk of stale TLB entries remaining.
+        affected_cpus &= Mem_space::active_tlb();
+
+        Cpu_call::cpu_call_many(affected_cpus, [this](Cpu_number cpu) {
+          this->do_flush_cpu_op(cpu);
+          return false;
+        });
+      }
+    else
+      do_flush_cpu_op(current_cpu());
   }
 
   /*
