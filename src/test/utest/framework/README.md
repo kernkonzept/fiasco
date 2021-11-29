@@ -30,7 +30,7 @@ UTEST_EXPECTED +=
 `test_` are considered as independent tests. Modules starting with `common_`
 shall contain implemented classes relevant for multiple test modules.
 
-`UTEST_EXPECED` shall list the files for output matching with the expectation.
+`UTEST_EXPECTED` shall list the files for output matching with the expectation.
 The expectation files shall replace the `test_` prefix with `expected_`. The
 expected output can be architecture and bit-width specific. See section
 [Matching expected output of tests](#matching-expected-output-of-tests).
