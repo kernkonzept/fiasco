@@ -276,14 +276,14 @@ asm(".section .initkip.features.end, \"a\", %progbits   \n"
     ".previous                                          \n");
 
 
-IMPLEMENT_DEFAULT inline NEEDS["config.h", "mem.h"]
+IMPLEMENT_DEFAULT inline NEEDS["mem.h"]
 Cpu_time
 Kip::clock() const
 {
   return Mem::read64_consistent(const_cast<Cpu_time const *>(&_clock));
 }
 
-IMPLEMENT_DEFAULT inline NEEDS["config.h", "mem.h"]
+IMPLEMENT_DEFAULT inline NEEDS["mem.h"]
 void
 Kip::add_to_clock(Cpu_time plus)
 {
