@@ -815,34 +815,32 @@ Treemap::insert(Physframe* frame, Mapping_tree::Iterator const &parent,
                 Space *space, Pfn va, Pcnt phys, Pcnt size)
 {
   using Iterator = Mapping_tree::Iterator;
-  Treemap* submap = 0;
-  Ram_quota *payer;
-  Order const psz = _page_shift;
-  bool insert_submap = page_size() != size;
 
-  // Inserting subpage mapping?  See if we can find a submap.  If so,
-  // we don't have to allocate a new Mapping entry.
-  if (insert_submap)
-    submap = frame->find_submap(parent);
-
-  if (! submap) // Need allocation of new entry -- for submap or
-		// normal mapping
+  if (page_size() == size)  // normal mapping
     {
-      // first check quota! In case of a new submap the parent pays for
-      // the node...
-      payer = Mapping_tree::quota(insert_submap ? parent_space : space);
-
-      Iterator free = frame->alloc_mapping(payer, parent, insert_submap);
+      Iterator free = frame->tree()->allocate(Mapping_tree::quota(space),
+                                              parent);
       if (EXPECT_FALSE(!*free))
         return 0;
 
-      // Check for submap entry.
-      if (! insert_submap)	// Not a submap entry
-        {
-          free->set_space(space);
-          set_vaddr(*free, va);
-          return *free;
-        }
+      free->set_space(space);
+      set_vaddr(*free, va);
+      return *free;
+    }
+
+  // Inserting subpage mapping.  See if we can find a submap.  If so,
+  // we don't have to allocate a new Mapping entry.
+  Treemap* submap = frame->find_submap(parent);
+
+  if (! submap)  // Need allocation of new entry for submap
+    {
+      // first check quota! In case of a new submap the parent pays for
+      // the node...
+      Ram_quota *payer = Mapping_tree::quota(parent_space);
+
+      Iterator free = frame->tree()->allocate_submap(payer, parent);
+      if (EXPECT_FALSE(!*free))
+        return 0;
 
       assert (_sub_shifts_num > 0);
 
@@ -858,15 +856,15 @@ Treemap::insert(Physframe* frame, Mapping_tree::Iterator const &parent,
       free->set_submap(submap);
     }
 
-  Pcnt subframe_offset = cxx::mask_lsb(cxx::get_lsb(phys, psz), submap->page_shift());
+  Pcnt subframe_offset = cxx::mask_lsb(cxx::get_lsb(phys, _page_shift),
+                                       submap->page_shift());
   Physframe* subframe = submap->tree(submap->trunc_to_page(subframe_offset));
   if (! subframe)
     return 0;
 
   Mapping* ret = submap->insert(subframe, subframe->insertion_head(),
                                 parent_space, parent_va + subframe_offset,
-                                space, va,
-                                cxx::get_lsb(phys, psz), size);
+                                space, va, phys, size);
 
   subframe->release();
 

@@ -426,16 +426,3 @@ Base_mappable::flush(Mapping_tree::Iterator parent, bool me_too,
   _tree.flush(parent, me_too, offs_begin, offs_end,
               cxx::forward<SUBMAP_OPS>(submap_ops));
 }
-
-PUBLIC inline
-Mapping_tree::Iterator
-Base_mappable::alloc_mapping(Ram_quota *q,
-                             Mapping_tree::Iterator parent,
-                             bool submap)
-{
-  if (submap)
-    return _tree.allocate_submap(q, parent);
-  else
-    return _tree.allocate(q, parent);
-}
-
