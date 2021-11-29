@@ -157,6 +157,14 @@ public:
     Invalid_icid = Num_cols + 1,
   };
 
+  struct Rd_base
+  {
+    Unsigned64 raw = 0;
+
+    CXX_BITFIELD_MEMBER_UNSHIFTED(16, 50, phys_base_addr, raw);
+    CXX_BITFIELD_MEMBER          (16, 31, processor_nr, raw);
+  };
+
   class Table
   {
   public:
@@ -196,7 +204,7 @@ public:
   struct Collection
   {
     Icid icid = Invalid_icid;
-    Address redist_base;
+    Rd_base redist_base;
 
     inline bool is_valid() const
     { return icid != Invalid_icid; }
@@ -306,10 +314,10 @@ public:
      * This command ensures that the effects of all previous physical commands
      * associated with the specified redistributor are globally observable.
      */
-    static Cmd sync(Address rd_base)
+    static Cmd sync(Rd_base rd_base)
     {
       Cmd cmd(Op_sync);
-      cmd.rd_base() = rd_base;
+      cmd.rd_base() = rd_base.raw;
       return cmd;
     }
 
@@ -338,14 +346,14 @@ public:
     /**
      * This command maps a collection to a redistributor.
      */
-    static Cmd mapc(Icid icid, Address rd_base)
+    static Cmd mapc(Icid icid, Rd_base rd_base, bool valid)
     {
       Cmd cmd(Op_mapc);
       cmd.icid() = icid;
-      if (rd_base)
+      if (valid)
         {
           // Map ICID to target redistributor
-          cmd.rd_base() = rd_base;
+          cmd.rd_base() = rd_base.raw;
           cmd.valid() = true;
         }
       else
@@ -410,6 +418,7 @@ private:
   Spin_lock<> _lock;
 
   Collection _cols[Num_cols];
+  bool _redist_pta;
 
   using Lpi_vect = cxx::static_vector<Lpi>;
   Lpi_vect _lpis;
@@ -586,11 +595,9 @@ Gic_its::init(Gic_cpu_v3 *gic_cpu, Address base, unsigned num_lpis)
   _device_alloc_lock.init();
 
   Typer typer(_its.read<Unsigned64>(GITS_TYPER));
+  _redist_pta = typer.pta();
   _max_device_id = (1ULL << (typer.dev_bits() + 1)) - 1;
   _itt_entry_size = typer.itt_entry_size() + 1;
-
-  if (!typer.pta())
-    panic("ITS: Expects processor number for RDbase.\n");
 
   Unsigned64 num_events = 1ULL << (typer.id_bits() + 1);
   if (num_lpis > num_events)
@@ -666,9 +673,12 @@ Gic_its::cpu_init(Cpu_number cpu, Gic_redist const &redist)
   unsigned cpu_index = cxx::int_value<Cpu_number>(cpu);
 
   Collection tmp;
-  tmp.redist_base = Gic_mem::to_phys(redist.get_base());
+  if (_redist_pta)
+    tmp.redist_base.phys_base_addr() = Gic_mem::to_phys(redist.get_base());
+  else
+    tmp.redist_base.processor_nr() = redist.get_processor_nr();
   tmp.icid = cpu_index;
-  send_cmd(Cmd::mapc(tmp.icid, tmp.redist_base), &tmp);
+  send_cmd(Cmd::mapc(tmp.icid, tmp.redist_base, true), &tmp);
   send_cmd(Cmd::invall(tmp.icid), &tmp);
 
   Collection &col = _cols[cpu_index];
