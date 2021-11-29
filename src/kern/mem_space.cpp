@@ -41,6 +41,26 @@ public:
   // Each architecture must provide these members:
   void switchin_context(Mem_space *from);
 
+  enum Tlb_type
+  {
+    /* CPU-TLB with ASIDs, like Arm-v7, or x86-with-PCID */
+    Tlb_per_cpu_asid,
+
+    /* CPU-TLB that flushes when switching spaces, like x86-without-PCID, or
+     * ARM-v5 */
+    Tlb_per_cpu_global,
+
+    /* IOMMU-TLB, assumed to be global, only needing a single flush to be
+       effective everywhere */
+    Tlb_iommu,
+  };
+
+  /**
+   * Returns the TLB type of this memory space.
+   */
+  Tlb_type tlb_type() const
+  { return _tlb_type; }
+
   FIASCO_SPACE_VIRTUAL
   void tlb_flush(bool);
 
@@ -209,7 +229,24 @@ public:
     return _glbl_page_sizes;
   }
 
+protected:
+  /**
+   * TLB type of this memory space.
+   *
+   * The TLB type is typically a compile-time constant per Mem_space
+   * implementation, so initially this is set to the TLB type of regular address
+   * spaces.
+   * Mem_space overrides, such as VM address spaces or DMA address spaces, might
+   * set a different TLB type in their constructor.
+   */
+  Tlb_type _tlb_type = regular_tlb_type();
+
 private:
+  /**
+   * Return TLB type of regular address spaces.
+   */
+  static Tlb_type regular_tlb_type();
+
   Mem_space(const Mem_space &) = delete;
 
   Ram_quota *_quota;

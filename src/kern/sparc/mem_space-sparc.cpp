@@ -143,6 +143,13 @@ Mem_space::has_superpages()
   return Cpu::have_superpages();
 }
 
+IMPLEMENT inline
+Mem_space::Tlb_type
+Mem_space::regular_tlb_type()
+{
+  return Tlb_per_cpu_global;
+}
+
 //we flush tlb in htab implementation
 IMPLEMENT static inline NEEDS["mem_unit.h"]
 void

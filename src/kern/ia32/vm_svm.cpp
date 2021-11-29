@@ -150,7 +150,9 @@ IMPLEMENTATION [svm]:
 PUBLIC
 Vm_svm::Vm_svm(Ram_quota *q)
   : Vm(q)
-{}
+{
+  _tlb_type = Tlb_per_cpu_global;
+}
 
 PUBLIC inline
 void *
@@ -169,6 +171,12 @@ Vm_svm::operator delete (void *ptr)
   Kmem_slab_t<Vm_svm>::q_free(t->ram_quota(), ptr);
 }
 
+PUBLIC
+void
+Vm_svm::tlb_flush(bool) override
+{
+  // Nothing to do here, we flush on each entry!
+}
 
 // to do:
 //   - handle cr2

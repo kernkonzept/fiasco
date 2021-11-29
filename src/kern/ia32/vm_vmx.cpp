@@ -58,7 +58,9 @@ Vm_vmx_t<X>::Vm_vmx_t(Ram_quota *q) : Vm_vmx_b(q)
 
 PUBLIC
 Vm_vmx::Vm_vmx(Ram_quota *q) : Vm_vmx_t<Vm_vmx>(q)
-{}
+{
+  _tlb_type = Tlb_per_cpu_global;
+}
 
 PUBLIC inline
 void *
@@ -75,6 +77,13 @@ Vm_vmx::operator delete (void *ptr)
 {
   Vm_vmx *t = reinterpret_cast<Vm_vmx*>(ptr);
   Kmem_slab_t<Vm_vmx>::q_free(t->ram_quota(), ptr);
+}
+
+PUBLIC
+void
+Vm_vmx::tlb_flush(bool) override
+{
+  // Nothing to do here, we flush on each entry!
 }
 
 PRIVATE static inline

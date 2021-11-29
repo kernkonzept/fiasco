@@ -484,7 +484,9 @@ PUBLIC inline
 Dmar_space::Dmar_space(Ram_quota *q)
 : Dyn_castable_class(q, Caps::mem()),
   _dmarpt(0), _did(0)
-{}
+{
+  _tlb_type = Tlb_iommu;
+}
 
 PRIVATE
 void

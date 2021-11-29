@@ -632,6 +632,13 @@ IMPLEMENTATION [!ia32_pcid]:
 PUBLIC explicit inline
 Mem_space::Mem_space(Ram_quota *q) : _quota(q), _dir(0) {}
 
+IMPLEMENT inline
+Mem_space::Tlb_type
+Mem_space::regular_tlb_type()
+{
+  return Tlb_per_cpu_global;
+}
+
 IMPLEMENT inline NEEDS["mem_unit.h"]
 void
 Mem_space::tlb_flush(bool = false)
@@ -682,6 +689,13 @@ Mem_space::reset_asid()
 {
   for (Cpu_number i = Cpu_number::first(); i < Config::max_num_cpus(); ++i)
     _asid_alloc.cpu(i).free(this, i);
+}
+
+IMPLEMENT inline
+Mem_space::Tlb_type
+Mem_space::regular_tlb_type()
+{
+  return Tlb_per_cpu_asid;
 }
 
 IMPLEMENT inline NEEDS["mem_unit.h"]

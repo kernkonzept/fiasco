@@ -77,6 +77,13 @@ Mem_space::is_full_flush(L4_fpage::Rights rights)
   return (bool)(rights & L4_fpage::Rights::R());
 }
 
+IMPLEMENT inline
+Mem_space::Tlb_type
+Mem_space::regular_tlb_type()
+{
+  return  Have_asids ? Tlb_per_cpu_asid : Tlb_per_cpu_global;
+}
+
 // Mapping utilities
 
 IMPLEMENT inline NEEDS["mem_unit.h"]

@@ -304,7 +304,10 @@ Vm_vmx_ept::operator delete (void *ptr)
 }
 
 PUBLIC inline
-Vm_vmx_ept::Vm_vmx_ept(Ram_quota *q) : Vm_vmx_t<Vm_vmx_ept>(q) {}
+Vm_vmx_ept::Vm_vmx_ept(Ram_quota *q) : Vm_vmx_t<Vm_vmx_ept>(q)
+{
+  _tlb_type = Tlb_per_cpu_asid;
+}
 
 PUBLIC
 Vm_vmx_ept::~Vm_vmx_ept()
