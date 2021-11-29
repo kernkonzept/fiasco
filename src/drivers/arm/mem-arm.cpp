@@ -225,3 +225,29 @@ IMPLEMENT inline static void Mem::mp_release() { dmb(); }
 IMPLEMENT inline static void Mem::mp_rmb() { dmb(); }
 IMPLEMENT inline static void Mem::mp_wmb() { dmbst(); }
 
+//----------------------------------------------------------------------
+IMPLEMENTATION[32bit && arm && ((arm_v7 && arm_lpae) || arm_v8plus)]:
+
+#include "types.h"
+
+IMPLEMENT_OVERRIDE static inline NEEDS["types.h"]
+template<typename T>
+T
+Mem::read64_consistent(T const *t)
+{
+  static_assert(sizeof(T) == sizeof(Unsigned64), "value has invalid size");
+
+  T res;
+  asm volatile ("ldrd %0, %H0, %1" : "=r" (res) : "m"(*t));
+  return res;
+}
+
+IMPLEMENT_OVERRIDE static inline NEEDS["types.h"]
+template<typename T>
+void
+Mem::write64_consistent(T *t, T val)
+{
+  static_assert(sizeof(T) == sizeof(Unsigned64), "value has invalid size");
+  asm volatile ("strd %1, %H1, %0" : "=m"(*t) : "r"(val));
+}
+
