@@ -5,7 +5,7 @@ CXXFLAGS_uart-libuart += $(call LIBUART_UART, pl011)
 PREPROCESS_PARTS      += generic_tickless_idle \
                          arm_generic_timer pic_gic psci
 INTERFACES_KERNEL     += generic_timer
-RAM_PHYS_BASE         := 0x81000000
+RAM_PHYS_BASE         := 0x80000000
 
 config_IMPL           += config-arm-lx2160
 mem_layout_IMPL       += mem_layout-arm-lx2160
