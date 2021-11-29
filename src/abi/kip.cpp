@@ -295,29 +295,3 @@ Kip::add_to_clock(Cpu_time plus)
   // assumes that low word is written before the high word.
   Mem::write64_consistent(const_cast<Cpu_time *>(&_clock), _clock + plus);
 }
-
-//----------------------------------------------------------------------------
-IMPLEMENTATION[32bit && arm && ((arm_v7 && arm_lpae) || arm_v8plus)]:
-
-IMPLEMENT_OVERRIDE inline
-Cpu_time
-Kip::clock() const
-{
-  Unsigned64 res;
-  asm volatile ("ldrd %0, %H0, %1" : "=r" (res) : "m"(_clock));
-  return res;
-}
-
-IMPLEMENT_OVERRIDE inline NEEDS["mem.h"]
-void
-Kip::add_to_clock(Cpu_time plus)
-{
-  Unsigned64 res;
-  asm volatile ("ldrd %[res], %H[res], %[mem]   \n\t"
-                "adds %[res], %[res], %[val]    \n\t"
-                "adc  %H[res], %H[res], %H[val] \n\t"
-                "strd %[res], %H[res], %[mem]   \n\t"
-                : [res] "=&r"(res), [mem] "+m"(_clock)
-                : [val] "r"(plus)
-                : "cc");
-}
