@@ -19,56 +19,72 @@ struct Auto_tlb_flush
 template<>
 struct Auto_tlb_flush<Mem_space>
 {
-  enum { N_spaces = 4 };
-  bool all;
-  bool empty;
-
-  Mem_space *spaces[N_spaces];
-  Auto_tlb_flush() : all(false), empty(true)
+private:
+  template<unsigned NUM_SPACES>
+  struct Flush_store
   {
-    for (unsigned i = 0; i < N_spaces; ++i)
-      spaces[i] = 0;
-  }
+    enum { N_spaces = NUM_SPACES };
+    bool all = false;
+    bool empty = true;
 
-  void add_page(Mem_space *space, Mem_space::V_pfn, Mem_space::Page_order)
-  {
-    if (all)
-      return;
+    Mem_space *spaces[N_spaces];
 
-    empty = false;
+    Flush_store()
+    {
+      for (unsigned i = 0; i < N_spaces; ++i)
+        spaces[i] = 0;
+    }
 
-    for (unsigned i = 0; i < N_spaces; ++i)
-      {
-        if (spaces[i] == 0)
-          {
-            spaces[i] = space;
+    void add_space(Mem_space *space)
+    {
+      if (all)
+        return;
+
+      empty = false;
+
+      for (unsigned i = 0; i < N_spaces; ++i)
+        {
+          if (spaces[i] == 0)
+            {
+              spaces[i] = space;
+              return;
+            }
+
+          if (spaces[i] == space)
+            // Memory space is already registered
             return;
-          }
+        }
 
-        if (spaces[i] == space)
-          return;
-      }
+      // got an overflow, we have to flush all
+      all = true;
+    }
 
-    // got an overflow, we have to flush all
-    all = true;
-  }
+    void flush_stored()
+    {
+      for (unsigned i = 0; i < N_spaces && spaces[i]; ++i)
+        spaces[i]->tlb_flush(true);
+    }
+  };
 
+  Flush_store<4> _cpu_tlb;
+
+  /*
+   * This is called on the target/remote CPU.
+   */
   void do_flush()
   {
-    if (all)
+    if (_cpu_tlb.all)
       {
         // do a full flush locally
         Mem_unit::tlb_flush();
-        return;
       }
-
-    for (unsigned i = 0; i < N_spaces && spaces[i]; ++i)
-      spaces[i]->tlb_flush(true);
+    else
+      _cpu_tlb.flush_stored();
   }
 
   void global_flush()
   {
-    if (empty)
+    if (_cpu_tlb.empty)
       return;
 
     Cpu_call::cpu_call_many(Mem_space::active_tlb(), [this](Cpu_number) {
@@ -77,7 +93,17 @@ struct Auto_tlb_flush<Mem_space>
     });
   }
 
-  ~Auto_tlb_flush() { global_flush(); }
+public:
+  void add_page(Mem_space *space, Mem_space::V_pfn, Mem_space::Page_order)
+  {
+    /* At a later stage, also use the addresses given here. */
+   _cpu_tlb.add_space(space);
+  }
+
+  ~Auto_tlb_flush()
+  {
+    global_flush();
+  }
 };
 
 
