@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env -S perl -w
 
 # we use BigInts for handling 64-bit values on IA32 systems
 

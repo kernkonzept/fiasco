@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
 # This little script generates the 'expected' output for mapdb-related tests.
 # The following modifications are done:

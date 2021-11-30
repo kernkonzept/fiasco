@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 # SPDX-License-Identifier: GPL-2.0
 
 PKG="Qt5Core Qt5Gui Qt5Widgets"
