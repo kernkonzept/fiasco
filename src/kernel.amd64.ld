@@ -22,9 +22,9 @@ PHDRS {
   tramp PT_LOAD;
   btext PT_LOAD;
   bdata PT_LOAD;
-  kip PT_LOAD;
-  koptions PT_LOAD;
   ktext PT_LOAD;
+  koptions PT_LOAD;
+  kip PT_LOAD;
   kdata PT_LOAD;
   kitext PT_LOAD;
   kidata PT_LOAD;
@@ -73,26 +73,7 @@ SECTIONS {
 
   . = _kernel_image + _load;
 
-  .kip : AT(ADDR(.kip) - _fiasco_image_offset) {
-    _kernel_image_start = .;
-    *(.kernel_info_page)
-    _initkip_start = .;
-    KEEP(*(.initkip.version))
-    KEEP(*(.initkip.features))
-    KEEP(*(.initkip.features.end))
-    _initkip_end = .;
-    /* See KIP layout in abi/kip.cpp. The feature strings are terminated by '\0'! */
-    ASSERT (_initkip_end < my_kernel_info_page + 0x900, "Kernel version strings too long");
-    . = ALIGN(4K);
-  } :kip :l4_kip = 0
-
-  .koptions : AT (ADDR(.koptions) - _fiasco_image_offset) {
-    *(.koptions)
-  } :koptions :l4_koptions = 0
-
-#ifdef CONFIG_KERNEL_NX
-  . = ALIGN(2M);
-#endif
+  _kernel_image_start = .;
 
   .text : AT (ADDR(.text) - _fiasco_image_offset) {
     PROVIDE ( _kernel_text_start = . );
@@ -136,6 +117,10 @@ SECTIONS {
     PROVIDE (_etext = .);
   } : ktext = 0x90909090
 
+  .koptions : AT (ADDR(.koptions) - _fiasco_image_offset) {
+    *(.koptions)
+  } :koptions :l4_koptions = 0
+
 #ifdef CONFIG_KERNEL_NX
   /*
    * This section serves the purpose of taking up the remainder of the last 2M
@@ -149,7 +134,21 @@ SECTIONS {
   }
 #endif
 
+  . = ALIGN(4K);
+  .kip : AT(ADDR(.kip) - _fiasco_image_offset) {
+    *(.kernel_info_page)
+    _initkip_start = .;
+    KEEP(*(.initkip.version))
+    KEEP(*(.initkip.features))
+    KEEP(*(.initkip.features.end))
+    _initkip_end = .;
+    /* See KIP layout in abi/kip.cpp. The feature strings are terminated by '\0'! */
+    ASSERT (_initkip_end < my_kernel_info_page + 0x900, "Kernel version strings too long");
+    . = ALIGN(4K);
+  } :kip :l4_kip = 0
+
   .data : AT (ADDR(.data) - _fiasco_image_offset) {
+    . = ALIGN(0x20);
     PROVIDE (_kernel_data_start = .);
     *(.data .data.* .gnu.linkonce.d.*)
     *(.anno)

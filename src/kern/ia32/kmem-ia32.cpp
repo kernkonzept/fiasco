@@ -304,26 +304,26 @@ PRIVATE static FIASCO_INIT_CPU
 void
 Kmem::map_kernel_virt(Kpdir *dir)
 {
+  extern char _kernel_text_start[];
+  extern char _kernel_data_start[];
+  extern char _initcall_end[];
+
+  Address virt = Mem_layout::Kernel_image;
+  Address text = (Address)&_kernel_text_start;
+  Address data = Super_pg::trunc((Address)&_kernel_data_start);
+  Address kend = Super_pg::round((Address)&_initcall_end);
+
   Kmem_alloc *const alloc = Kmem_alloc::allocator();
   bool ok = true;
-  // The first 2M of kernel are RW
-  ok &= dir->map(Mem_layout::Kernel_image_phys, Virt_addr(Mem_layout::Kernel_image),
-                 Virt_size(Config::SUPERPAGE_SIZE),
-                 Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
-                 | Pt_entry::Referenced | Pt_entry::global(),
-                 Pt_entry::super_level(), false, pdir_alloc(alloc));
-
   // Kernel text is RX
-  ok &= dir->map(Mem_layout::Kernel_image_phys + Config::SUPERPAGE_SIZE,
-                 Virt_addr(Mem_layout::Kernel_image + Config::SUPERPAGE_SIZE),
-                 Virt_size(Config::SUPERPAGE_SIZE),
+  ok &= dir->map(Mem_layout::Kernel_image_phys + (text - virt), Virt_addr(text),
+                 Virt_size(data - text),
                  Pt_entry::Referenced | Pt_entry::global(), Pt_entry::super_level(),
                  false, pdir_alloc(alloc));
 
-  // Kernel data is RW
-  ok &= dir->map(Mem_layout::Kernel_image_phys + 2 * Config::SUPERPAGE_SIZE,
-                 Virt_addr(Mem_layout::Kernel_image + 2 * Config::SUPERPAGE_SIZE),
-                 Virt_size(Config::SUPERPAGE_SIZE),
+  // Kernel data is RW + XD
+  ok &= dir->map(Mem_layout::Kernel_image_phys + (data - virt), Virt_addr(data),
+                 Virt_size(kend - data),
                  Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
                  | Pt_entry::Referenced | Pt_entry::global(),
                  Pt_entry::super_level(), false, pdir_alloc(alloc));
