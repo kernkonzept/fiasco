@@ -13,6 +13,9 @@ public:
 private:
   class Lock_n_ptr : public Inner_lock
   {
+    static_assert(__alignof__(Queue_item) >= 8,
+                  "Lock_n_ptr uses 3 LSBs of item pointer");
+
   public:
     Queue_item *item() const
     { return reinterpret_cast<Queue_item*>(get_unused() & ~5UL); }
