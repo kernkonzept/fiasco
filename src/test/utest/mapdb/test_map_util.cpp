@@ -50,14 +50,18 @@ class Mapdb_util_test : public Mapdb_test_base
 {
 public:
   Mapdb_util_test()
+  : sigma0(&rq)
   {
     // mapdb_mem only exported from map_util-mem for debug builds
     extern Static_object<Mapdb> mapdb_mem;
+    init_mapdb_mem(&sigma0);
     mapdb = mapdb_mem.get();
   }
 
 private:
   Mapdb *mapdb;
+  Test_fake_factory rq;
+  Test_s0_space sigma0;
 };
 
 /**
@@ -152,21 +156,16 @@ Mapdb_util_test::test_map_util()
                              "d32fa52b-7faa-4a17-abb3-3c5ceeac3e0f");
 
   unsigned const order_max = have_superpages() ? O_super : O_page;
-  Test_fake_factory rq;
 
   static_assert(S_super >= _1M, "Adapt test for smaller superpage size");
-
-  auto sigma0 = Utest::kmem_create<Test_s0_space>(&rq);
 
   printf("Page = %ldKB, Superpage = %ldMB\n", S_page >> 10, S_super >> 20);
 
   // Support for pages > superpage is optional.
   printf("[DONTCHECK] largest_page_size = %d\n",
-         cxx::int_value<Mem_space::Page_order>(sigma0->largest_page_size()));
+         cxx::int_value<Mem_space::Page_order>(sigma0.largest_page_size()));
 
   printf("have_superpages = %s\n\n", have_superpages() ? "yes" : "no");
-
-  init_mapdb_mem(&*sigma0);
 
   auto server = Utest::kmem_create<Test_space>(&rq, "server");
   auto client = Utest::kmem_create<Test_space>(&rq, "client");
@@ -188,7 +187,7 @@ Mapdb_util_test::test_map_util()
               ms(&*server)->v_lookup(to_vaddr(_16K), &phys, &order, &attr),
               "VA server:16K nothing mapped");
   UTEST_NOERR(Utest::Assert,
-              fpage_map(&*sigma0, L4_fpage::mem(_64K, O_page, Rights::URWX()),
+              fpage_map(&sigma0, L4_fpage::mem(_64K, O_page, Rights::URWX()),
                         &*server, L4_fpage::all_spaces(), map_base(_16K), &rl),
               "Map sigma0[64K/page] to server[16K]");
   UTEST_TRUE(Utest::Assert,
@@ -200,7 +199,7 @@ Mapdb_util_test::test_map_util()
            "VA 16K mapped to expected physical address");
   UTEST_EQ(Utest::Expect, Rights::URWX(), attr.rights,
            "VA 16K mapped with expected rights");
-  print_node(&*sigma0, to_pfn(_64K));
+  print_node(&sigma0, to_pfn(_64K));
 
   // 2: MAP sigma0[0/superpage] -> server[ALL:0]
   //    Should map many pages and overmap previous mapping
@@ -210,7 +209,7 @@ Mapdb_util_test::test_map_util()
               ms(&*server)->v_lookup(to_vaddr(0), &phys, &order, &attr),
               "VA server:0 nothing mapped");
   UTEST_NOERR(Utest::Assert,
-              fpage_map(&*sigma0, L4_fpage::mem(0, O_super, Rights::URX()),
+              fpage_map(&sigma0, L4_fpage::mem(0, O_super, Rights::URX()),
                         &*server, L4_fpage::all_spaces(), map_base(0), &rl),
               "Map sigma0[0/superpage] to server[0]");
   UTEST_TRUE(Utest::Assert,
@@ -222,7 +221,7 @@ Mapdb_util_test::test_map_util()
            "VA 0 mapped to expected physical address");
   UTEST_EQ(Utest::Expect, Rights::URX(), attr.rights,
            "VA 0 mapped with expected rights");
-  print_node(&*sigma0, to_pfn(_64K), 0UL, S_super);
+  print_node(&sigma0, to_pfn(_64K), 0UL, S_super);
 
   // 3: Verify that the MapDB entry for 64K has changed.
   printf("Verify that the MapDB entry for 64K has changed\n");
@@ -235,7 +234,7 @@ Mapdb_util_test::test_map_util()
            "VA server:16K mapped to changed physical address");
   UTEST_EQ(Utest::Expect, Rights::URX(), attr.rights,
            "VA server:16K mapped with changed rights");
-  print_node(&*sigma0, to_pfn(_64K), _64K, _64K + _16K);
+  print_node(&sigma0, to_pfn(_64K), _64K, _64K + _16K);
 
   // 4: Partially unmap superpage sigma0[0/superpage]
   printf("UNMAP sigma0[512K/%ldK]\n"
@@ -250,10 +249,10 @@ Mapdb_util_test::test_map_util()
            "VA server:512K+16K mapped with expected physical address");
   UTEST_EQ(Utest::Expect, Rights::URX(), attr.rights,
            "VA server:512K+16K mapped with expected attributes");
-  fpage_unmap(&*sigma0,
+  fpage_unmap(&sigma0,
               L4_fpage::mem(_512K, O_super - 3, Rights::URWX()),
               not_me(), rl.list());
-  print_node(&*sigma0, to_pfn(0));
+  print_node(&sigma0, to_pfn(0));
 
   // 5: MAP sigma0[superpage/superpage] -> server[2*superpage/superpage:0]
   printf("MAP sigma0[superpage/superpage] -> server[2*superpage/superpage:0]\n"
@@ -262,7 +261,7 @@ Mapdb_util_test::test_map_util()
               ms(&*server)->v_lookup(to_vaddr(2 * S_super), &phys, &order, &attr),
               "VA server:2*superpage nothing mapped");
   UTEST_NOERR(Utest::Assert,
-              fpage_map(&*sigma0, L4_fpage::mem(S_super, O_super, Rights::URWX()),
+              fpage_map(&sigma0, L4_fpage::mem(S_super, O_super, Rights::URWX()),
                         &*server, L4_fpage::mem(2 * S_super, O_super),
                         map_base(0), &rl),
               "Map sigma0[superpage/superpage] to server[2*superpage]");
@@ -275,7 +274,7 @@ Mapdb_util_test::test_map_util()
            "VA server:2*superpage mapped with expected physical address");
   UTEST_EQ(Utest::Expect, Rights::URWX(), attr.rights,
            "VA server:2*superpage mapped with expected rights");
-  print_node(&*sigma0, to_pfn(S_super), S_super, S_super + S_super);
+  print_node(&sigma0, to_pfn(S_super), S_super, S_super + S_super);
 
   // 6: MAP server[2*superpage+page/page] -> client[WHOLE:8*page]
   printf("MAP server[2*superpage+page/page] -> client[WHOLE:8*page]\n"
@@ -298,7 +297,7 @@ Mapdb_util_test::test_map_util()
            "VA client:8*page mapped with expected physical address");
   UTEST_EQ(Utest::Expect, Rights::URWX(), attr.rights,
            "VA client:8*page mapped with expected rights");
-  print_node(&*sigma0, to_pfn(S_super), S_super, S_super + S_super);
+  print_node(&sigma0, to_pfn(S_super), S_super, S_super + S_super);
 
   // 7: Overmap an RX. The writable attribute should not be flushed.
   UTEST_NOERR(Utest::Assert,
