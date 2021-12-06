@@ -19,7 +19,6 @@ public:
   static const char initcall_start[] asm ("_initcall_start");
   static const char initcall_end[]   asm ("_initcall_end");
 
-  static Mword in_tcbs (Address a); // FIXME
   static Mword in_kernel (Address a); // XXX: not right for UX
   static Kpdir *kdir;
 };
