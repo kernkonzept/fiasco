@@ -110,7 +110,15 @@ Jdb::_wait_for_input()
       tt->ack();
     }
   else
-    printf("JDB: Unexpected interrupt %d\n", i);
+    {
+      static bool spurious_warned;
+      if (!spurious_warned)
+        {
+          spurious_warned = true;
+          printf("JDB: Unexpected interrupt %d\n", i);
+        }
+      Proc::pause();
+    }
 }
 
 // ------------------------------------------------------------------------
