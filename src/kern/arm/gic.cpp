@@ -138,11 +138,16 @@ public:
 
     Unsigned32 ack = _cpu.iar();
 
-    // IPIs/SGIs need to take the whole ack value
-    if ((ack & 0x3ff) < 16)
+    // For SGIs, bits [12:10] identify the source CPU interface. For all
+    // other interrupts these bits are zero.
+    Unsigned32 intid = ack & Cpu::Cpu_iar_intid_mask;
+
+    // Ack SGIs (IPIs) immediately, the whole ack value must be used,
+    // including the source CPU interface identifier.
+    if (intid < 16)
       _cpu.ack(ack);
 
-    return ack & 0x3ff;
+    return intid;
   }
 
   unsigned get_pending() override

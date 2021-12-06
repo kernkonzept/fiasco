@@ -26,6 +26,8 @@ public:
     GICC_CTRL_ENABLE         = GICC_CTRL_ENABLE_GRP0,
     GICC_CTRL_FIQEn          = 1 << 3,
 
+    Cpu_iar_intid_mask = 0x3ff,
+
     Cpu_prio_val      = 0xf0,
   };
 };

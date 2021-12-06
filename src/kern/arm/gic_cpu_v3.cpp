@@ -7,6 +7,8 @@ class Gic_cpu_v3
 public:
   enum
   {
+    Cpu_iar_intid_mask = 0xffe3ff,
+
     Cpu_prio_val      = 0xf0,
   };
 
