@@ -100,6 +100,9 @@ config ARM_V8PLUS
 config ARM_V8
 	bool
 
+config ARM_ACPI
+	bool
+
 config ARM_GIC
 	bool
 

@@ -148,6 +148,7 @@ INTERFACES_KERNEL += 	__main mem_op kmem_space boot_uart_init     \
 			outer_cache utcb_support cascade_irq   \
 			irq_mgr_multi_chip smc_call psci mem_chunk
 
+INTERFACES_KERNEL-$(CONFIG_ARM_ACPI) += acpi acpi_fadt
 INTERFACES_KERNEL-$(CONFIG_ARM_MPCORE) += scu
 INTERFACES_KERNEL-$(CONFIG_ARM_CORTEX_A9) += scu
 INTERFACES_KERNEL-$(CONFIG_BIT32) += kern_lib_page

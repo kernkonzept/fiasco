@@ -54,7 +54,9 @@ class Acpi_madt : public Acpi_table_head
 public:
   enum Type
   { LAPIC, IOAPIC, Irq_src_ovr, NMI, LAPIC_NMI, LAPIC_adr_ovr, IOSAPIC,
-    LSAPIC, Irq_src };
+    LSAPIC, Irq_src,
+    GICC = 0xb, GICD, GICM, GICR, ITS,
+  };
 
   struct Apic_head
   {
@@ -88,6 +90,55 @@ public:
     Unsigned16 flags;
   } __attribute__((packed));
 
+  struct Gic_cpu_if : public Apic_head
+  {
+    enum { ID = GICC };
+    enum { Enabled = 0x1, Perf_irq_edge = 0x2, Vgic_irq_edge = 0x4 };
+    Unsigned8 reserved[2];
+    Unsigned32 cpu_if_num;
+    Unsigned32 uid;
+    Unsigned32 flags;
+    Unsigned32 parking_protocol_version;
+    Unsigned32 perf_gsiv;
+    Unsigned64 parked_addr;
+    Unsigned64 gicc_base;
+    Unsigned64 gicv_base;
+    Unsigned64 gich_base;
+    Unsigned32 vgic_maintenance_irq;
+    Unsigned64 gicr_base;
+    Unsigned64 mpidr;
+    Unsigned8  power_efficiency_class;
+    Unsigned8  reserved2;
+    Unsigned16 spe_overflow_irq;
+  } __attribute__((packed));
+
+  struct Gic_distributor_if : public Apic_head
+  {
+    enum { ID = GICD };
+    enum { V1 = 1, V2, V3, V4 };
+    Unsigned8   reserved[2];
+    Unsigned32  id;
+    Unsigned64  base;
+    Unsigned32  reserved2;
+    Unsigned8   version;
+  } __attribute__((packed));
+
+  struct Gic_redistributor_if : public Apic_head
+  {
+    enum { ID = GICR };
+    Unsigned8   reserved[2];
+    Unsigned64  base;
+    Unsigned32  length;
+  } __attribute__((packed));
+
+  struct Gic_its_if : public Apic_head
+  {
+    enum { ID = ITS };
+    Unsigned8   reserved[2];
+    Unsigned32  id;
+    Unsigned64  base;
+  } __attribute__((packed));
+
 public:
   Unsigned32 local_apic;
   Unsigned32 apic_flags;
@@ -109,6 +160,7 @@ IMPLEMENTATION:
 
 #include "boot_alloc.h"
 #include "kmem.h"
+#include "panic.h"
 #include "warn.h"
 #include <cctype>
 
@@ -447,6 +499,32 @@ Acpi_madt::find(int idx) const
 }
 
 
+PRIVATE static
+Acpi_rsdp const *
+Acpi_rsdp::locate_via_kip()
+{
+  // If we are booted from UEFI, bootstrap reads the RSDP pointer from
+  // UEFI and creates a memory descriptor with sub type 5 for it
+  for (auto const &md: Kip::k()->mem_descs_a())
+    if (   md.type() == Mem_desc::Info
+        && md.ext_type() == Mem_desc::Info_acpi_rsdp)
+      {
+        // Rover across first page in memory descriptor. The actual RSDP
+        // address was rounded down to page alignment by bootstrap...
+        for (unsigned off = 0; off < Config::PAGE_SIZE; off += sizeof(void*))
+          {
+            Acpi_rsdp const *r = Acpi::map_table_head<Acpi_rsdp>(md.start() + off);
+            if (   Acpi::check_signature(r->signature, "RSD PTR ")
+                && r->checksum_ok())
+              return r;
+          }
+
+        panic("RSDP memory descriptor from bootstrap invalid");
+      }
+
+  return 0;
+}
+
 // ------------------------------------------------------------------------
 IMPLEMENTATION [ia32,amd64]:
 
@@ -479,19 +557,8 @@ Acpi_rsdp::locate()
     BDA_EBDA_SEGMENT       = 0x00040E,
   };
 
-  // If we are booted from UEFI, bootstrap reads the RSDP pointer from
-  // UEFI and creates a memory descriptor with sub type 5 for it
-  for (auto const &md: Kip::k()->mem_descs_a())
-    if (   md.type() == Mem_desc::Info
-        && md.ext_type() == Mem_desc::Info_acpi_rsdp)
-      {
-        Acpi_rsdp const *r = Acpi::map_table_head<Acpi_rsdp>(md.start());
-        if (   Acpi::check_signature(r->signature, "RSD PTR ")
-            && r->checksum_ok())
-          return r;
-        else
-          panic("RSDP memory descriptor from bootstrap invalid");
-      }
+  if (Acpi_rsdp const *r = locate_via_kip())
+    return r;
 
   if (Acpi_rsdp const *r = locate_in_region(ACPI20_PC99_RSDP_START,
                                             ACPI20_PC99_RSDP_END))
@@ -502,4 +569,14 @@ Acpi_rsdp::locate()
     return r;
 
   return 0;
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm]:
+
+IMPLEMENT
+Acpi_rsdp const *
+Acpi_rsdp::locate()
+{
+  return locate_via_kip();
 }
