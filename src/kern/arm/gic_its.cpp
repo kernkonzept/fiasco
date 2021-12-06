@@ -34,9 +34,11 @@ INTERFACE:
  * kernel does not directly write to these tables, but instead configures the
  * ITS through commands issued via a command queue.
  *
- * We use a global EventID space, where the LPI INTID corresponding to an
- * EventID is derived by adding `Lpi_intid_base` (8192) to the EventID.
- *
+ * Because there can be multiple ITSs in the system, which might each be
+ * responsible for a different subset of devices, the assignment of an LPI
+ * to an ITS is not decided until user space binds the corresponding MSI to
+ * a device. Thus, LPIs are not managed inside a Gic_its object, but in the
+ * MSI interrupt controller (Gic_msi).
  *
  * To avoid deadlocks, locks may only be grabbed in the following order:
  *   1. If necessary, grab an LPI lock.
@@ -210,22 +212,48 @@ public:
     { return icid != Invalid_icid; }
   };
 
-  struct Lpi
+  /**
+   * LPI base class that contains all the state of an LPI relevant for the
+   * ITS, and from which the MSI interrupt controller (Gic_msi) derives its LPI state
+   * representation class.
+   */
+  class Lpi
   {
-    Lpi() : lock(Spin_lock<>::Unlocked) {}
+  public:
+    Lpi() : lock(Spin_lock<>::Unlocked) { reset(); }
 
-    Event_id event_id;
-    Device *device = nullptr;
-    Collection const *col = nullptr;
-    bool enabled = false;
-    Spin_lock<> lock;
+    // Index of this LPI, assigned by the MSI interrupt controller.
+    unsigned index;
+    // Coordinates concurrent operations on this LPI.
+    mutable Spin_lock<> lock;
+
+  private:
+    friend class Gic_its;
+
+    Device *device;
+    Collection const *col;
 
     inline void reset()
     {
-      enabled = false;
       device = nullptr;
       col = nullptr;
     }
+
+    /**
+     * We use a global EventID space, where the EventID of an LPI corresponds
+     * to its index.
+     *
+     * With a per device EventID space we could save resources due to smaller
+     * ITTs, but we would need a per device EventID allocation scheme, such as
+     * a bitmap.
+     * However, an ITT size tailored to the specific requirements of the device
+     * is not possible because of the limitations of the Fiasco MSI userspace
+     * API. Thus, the ITT size would decrease to the number of MSIs needed by
+     * the device with the highest demand, instead of the sum of MSIs required
+     * by all devices.
+     */
+    Event_id event_id() const { return index; }
+    unsigned intid() const { return Gic_dist::Lpi_intid_base + index; }
   };
 
   class Device : public cxx::H_list_item
@@ -243,7 +271,7 @@ public:
     void free_itt();
     unsigned itt_size();
 
-    void bind_lpi(Lpi &lpi, unsigned intid);
+    void bind_lpi(Lpi &lpi);
     void unbind_lpi(Lpi &lpi);
 
     inline Dev_id id()
@@ -420,8 +448,7 @@ private:
   Collection _cols[Num_cols];
   bool _redist_pta;
 
-  using Lpi_vect = cxx::static_vector<Lpi>;
-  Lpi_vect _lpis;
+  unsigned _num_lpis;
 
   Table _tables[GITS_baser_num];
   Table *_device_table;
@@ -603,15 +630,10 @@ Gic_its::init(Gic_cpu_v3 *gic_cpu, Address base, unsigned num_lpis)
   if (num_lpis > num_events)
   {
     // TODO: Use per-device EventID space instead of global EventID space?
-    WARN("ITS: Limit number of LPIs %u to number of supported EventIDs %llu.\n",
-         num_lpis, num_events);
-
-    num_lpis = num_events;
+    WARN("ITS: Number of LPIs %u exceeds number of supported EventIDs %llu.\n",
+         _num_lpis, num_events);
   }
-
-  _lpis = Lpi_vect(new Boot_object<Lpi>[num_lpis], num_lpis);
-  for (unsigned i = 0; i < _lpis.size(); i++)
-    _lpis[i].event_id = i;
+  _num_lpis = num_lpis;
 
   Ctlr ctlr(_its.read<Unsigned32>(GITS_CTLR));
   if (ctlr.enabled() || !ctlr.quiescent())
@@ -626,7 +648,7 @@ Gic_its::init(Gic_cpu_v3 *gic_cpu, Address base, unsigned num_lpis)
   _its.write<Unsigned32>(ctlr.raw, GITS_CTLR);
 
   printf("ITS: %lx rev=%x num_lpis=%u num_cols=%u num_devs=%u dev_bits=%u\n",
-         base, arch_rev, num_lpis, Num_cols, Max_num_devs,
+         base, arch_rev, _num_lpis, Num_cols, Max_num_devs,
          cxx::log2u(_max_device_id + 1));
 }
 
@@ -849,20 +871,18 @@ Gic_its::unbind_lpi_from_device(Lpi &lpi)
     }
 }
 
+/**
+ * \pre The lpi.lock must be held.
+ */
 PUBLIC
 int
-Gic_its::bind_lpi_to_device(unsigned pin, Unsigned64 src, Irq_mgr::Msi_info *inf)
+Gic_its::bind_lpi_to_device(Lpi &lpi, Unsigned32 src, Irq_mgr::Msi_info *inf)
 {
-  assert(pin < _lpis.size());
-
   if (src > _max_device_id)
     {
-      WARN("ITS: 0x%llx is not a valid DeviceID!\n", src);
+      WARN("ITS: 0x%x is not a valid DeviceID!\n", src);
       return -L4_err::ERange;
     }
-
-  Lpi &lpi = _lpis[pin];
-  auto g = lock_guard(lpi.lock);
 
   if (!lpi.device || lpi.device->id() != src)
     {
@@ -874,36 +894,40 @@ Gic_its::bind_lpi_to_device(unsigned pin, Unsigned64 src, Irq_mgr::Msi_info *inf
       if (!device)
         return -L4_err::ENomem;
 
-      device->bind_lpi(lpi, to_intid(pin));
+      device->bind_lpi(lpi);
     }
 
-  inf->data = lpi.event_id;
+  inf->data = lpi.event_id();
   // TODO: Must be mapped in the DMA space of the device if IOMMU is enabled.
   inf->addr = Gic_mem::to_phys(_its.get_mmio_base()) + GITS_TRANSLATER;
   return 0;
 }
 
+/**
+ * \pre The lpi.lock must be held.
+ */
 PUBLIC
 void
-Gic_its::free_lpi(unsigned pin)
+Gic_its::free_lpi(Lpi &lpi)
 {
-  assert(pin < _lpis.size());
-
-  Lpi &lpi = _lpis[pin];
-  auto g = lock_guard(lpi.lock);
-
   auto guard = lock_guard(_device_alloc_lock);
   unbind_lpi_from_device(lpi);
   lpi.reset();
 }
 
-PUBLIC inline NEEDS [Gic_its::to_intid]
+/**
+ * \pre The lpi.lock must be held.
+ */
+PUBLIC inline
 void
-Gic_its::ack_lpi(unsigned pin)
+Gic_its::ack_lpi(Lpi &lpi)
 {
-  assert(pin < _lpis.size());
-
-  _gic_cpu->ack(to_intid(pin));
+  // TODO: Acknowledging an LPI could and probably should be optimized by
+  // moving it out of Gic_its into Gic_msi. Gic_msi would not even have to
+  // lookup the Lpi, but instead could directly invoke
+  // _gic_cpu->ack(Gic_dist::Lpi_intid_base + pin), see the implementation of
+  // Lpi::intid().
+  _gic_cpu->ack(lpi.intid());
 }
 
 /**
@@ -911,56 +935,48 @@ Gic_its::ack_lpi(unsigned pin)
  */
 PRIVATE inline
 void
-Gic_its::update_lpi_config(unsigned pin, Lpi &lpi)
+Gic_its::update_lpi_config(Lpi &lpi, bool enable)
 {
-  Gic_redist::enable_lpi(pin, lpi.enabled);
+  Gic_redist::enable_lpi(lpi.intid() - Gic_dist::Lpi_intid_base, enable);
 
   if (lpi.device && lpi.col)
   {
-    send_cmd(Cmd::inv(lpi.device->id(), lpi.event_id), lpi.col);
+    send_cmd(Cmd::inv(lpi.device->id(), lpi.event_id()), lpi.col);
   }
 }
 
 PUBLIC inline NEEDS [Gic_its::update_lpi_config]
+/**
+ * \pre The lpi.lock must be held.
+ */
 void
-Gic_its::mask_lpi(unsigned pin)
+Gic_its::mask_lpi(Lpi &lpi)
 {
-  assert(pin < _lpis.size());
-
-  Lpi &lpi = _lpis[pin];
-  auto g = lock_guard(lpi.lock);
-
-  lpi.enabled = false;
-  update_lpi_config(pin, lpi);
+  update_lpi_config(lpi, false);
 }
 
+/**
+ * \pre The lpi.lock must be held.
+ */
 PUBLIC inline NEEDS [Gic_its::update_lpi_config]
 void
-Gic_its::unmask_lpi(unsigned pin)
+Gic_its::unmask_lpi(Lpi &lpi)
 {
-  assert(pin < _lpis.size());
-
-  Lpi &lpi = _lpis[pin];
-  auto g = lock_guard(lpi.lock);
-
-  lpi.enabled = true;
-  update_lpi_config(pin, lpi);
+  update_lpi_config(lpi, true);
 }
 
+/**
+ * \pre The lpi.lock must be held.
+ */
 PUBLIC
 void
-Gic_its::assign_lpi_to_cpu(unsigned pin, Cpu_number cpu)
+Gic_its::assign_lpi_to_cpu(Lpi &lpi, Cpu_number cpu)
 {
-  assert(pin < _lpis.size());
-
-  Lpi &lpi = _lpis[pin];
-  auto g = lock_guard(lpi.lock);
-
   Collection const *col = get_col(cpu);
   if (EXPECT_FALSE(!col->is_valid()))
     {
       WARN("ITS: Tried to assign LPI %u to uninitialized CPU %u.\n",
-           pin, cxx::int_value<Cpu_number>(cpu));
+           lpi.intid(), cxx::int_value<Cpu_number>(cpu));
       return;
     }
 
@@ -968,11 +984,11 @@ Gic_its::assign_lpi_to_cpu(unsigned pin, Cpu_number cpu)
     {
       if (lpi.device && lpi.col)
         {
-          send_cmd(Cmd::movi(lpi.device->id(), lpi.event_id, col->icid), col);
+          send_cmd(Cmd::movi(lpi.device->id(), lpi.event_id(), col->icid), col);
         }
       else if (lpi.device)
         {
-          send_cmd(Cmd::mapti(lpi.device->id(), lpi.event_id, to_intid(pin),
+          send_cmd(Cmd::mapti(lpi.device->id(), lpi.event_id(), lpi.intid(),
                               col->icid), col);
         }
 
@@ -991,14 +1007,7 @@ PUBLIC inline
 unsigned
 Gic_its::num_lpis() const
 {
-  return _lpis.size();
-}
-
-PRIVATE inline
-unsigned
-Gic_its::to_intid(unsigned pin) const
-{
-  return Gic_dist::Lpi_intid_base + pin;
+  return _num_lpis;
 }
 
 /**
@@ -1054,7 +1063,7 @@ Gic_its::Device::itt_size()
  */
 IMPLEMENT
 void
-Gic_its::Device::bind_lpi(Lpi &lpi, unsigned intid)
+Gic_its::Device::bind_lpi(Lpi &lpi)
 {
   assert(lpi.device == nullptr);
 
@@ -1062,7 +1071,8 @@ Gic_its::Device::bind_lpi(Lpi &lpi, unsigned intid)
   _lpi_count++;
 
   if (lpi.col)
-    _its.send_cmd(Cmd::mapti(_id, lpi.event_id, intid, lpi.col->icid), lpi.col);
+    _its.send_cmd(Cmd::mapti(_id, lpi.event_id(), lpi.intid(), lpi.col->icid),
+                  lpi.col);
 }
 
 /**
@@ -1076,7 +1086,7 @@ Gic_its::Device::unbind_lpi(Lpi &lpi)
   assert(lpi.device == this);
 
   if (lpi.col)
-    _its.send_cmd(Cmd::discard(_id, lpi.event_id), lpi.col);
+    _its.send_cmd(Cmd::discard(_id, lpi.event_id()), lpi.col);
 
   lpi.device = nullptr;
   _lpi_count--;

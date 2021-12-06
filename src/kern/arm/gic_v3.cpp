@@ -16,10 +16,10 @@ class Gic_v3 : public Gic_mixin<Gic_v3, Gic_cpu_v3>
 public:
   using Version = Gic_dist::V3;
 
-  explicit Gic_v3(Address dist_base, Address redist_base, Address its_base = 0)
+  explicit Gic_v3(Address dist_base, Address redist_base)
   : Gic(dist_base, -1), _redist_base(redist_base)
   {
-    init_lpi(its_base);
+    init_lpi();
 
     cpu_local_init(Cpu_number::boot_cpu());
     _cpu.enable();
@@ -32,19 +32,42 @@ INTERFACE [arm_gic_msi]:
 #include "gic_its.h"
 #include "gic_msi.h"
 
+#include "cxx/static_vector"
+
 EXTENSION class Gic_v3
 {
+public:
+  enum { Have_lpis = 1 };
+
 private:
   enum
   {
+    Max_num_its = 16,
+
     // Limit the number of supported LPIs to avoid excessive memory
     // allocations.
     Max_num_lpis = 512,
   };
 
   bool _has_lpis = false;
-  Gic_its *_its = nullptr;
+  using Its_vec = cxx::static_vector<Gic_its *>;
+  Its_vec _its_vec;
+  unsigned _num_its = 0;
   Gic_msi *_msi = nullptr;
+};
+
+//-------------------------------------------------------------------
+INTERFACE [!arm_gic_msi]:
+
+class Gic_msi;
+
+EXTENSION class Gic_v3
+{
+public:
+  enum { Have_lpis = 0 };
+private:
+  void init_lpi() {}
+  void cpu_local_init_lpi(Cpu_number) {}
 };
 
 //-------------------------------------------------------------------
@@ -55,6 +78,7 @@ class Gic_msi;
 EXTENSION class Gic_v3
 {
 public:
+  bool add_its(Address) { return true; };
   Gic_msi *msi_chip() { return nullptr; };
 };
 
@@ -164,7 +188,7 @@ IMPLEMENTATION[arm_gic_msi]:
 
 PRIVATE
 void
-Gic_v3::init_lpi(Address its_base)
+Gic_v3::init_lpi()
 {
   unsigned hw_num_lpis = _dist.hw_nr_lpis();
   _has_lpis = hw_num_lpis > 0;
@@ -173,10 +197,9 @@ Gic_v3::init_lpi(Address its_base)
       unsigned num_lpis = min<unsigned>(hw_num_lpis, Max_num_lpis);
 
       Gic_redist::init_lpi(num_lpis);
-      _its = new Boot_object<Gic_its>();
-      _its->init(&_cpu, its_base, num_lpis);
-      _msi = new Boot_object<Gic_msi>();
-      _msi->init(_its, num_lpis);
+      _its_vec = Its_vec(Boot_alloced::allocate<Gic_its *>(Max_num_its),
+                         Max_num_its);
+      _msi = new Boot_object<Gic_msi>(this, num_lpis);
       printf("GIC: Supports up to %u LPIs, using %u.\n", hw_num_lpis, num_lpis);
     }
   else
@@ -190,8 +213,39 @@ Gic_v3::cpu_local_init_lpi(Cpu_number cpu)
   if (_has_lpis)
   {
     _redist.cpu(cpu).cpu_init_lpi();
-    _its->cpu_init(cpu, _redist.cpu(cpu));
+    for (unsigned i = 0; i < _num_its; i++)
+      _its_vec[i]->cpu_init(cpu, _redist.cpu(cpu));
   }
+}
+
+PUBLIC
+bool
+Gic_v3::add_its(Address its_base)
+{
+  if (!_has_lpis)
+    return false;
+
+  if (_num_its >= _its_vec.size())
+  {
+    WARN("Maximum number of ITS exceeded.");
+    return false;
+  }
+
+  Gic_its *its = new Boot_object<Gic_its>();
+  its->init(&_cpu, its_base, _msi->nr_irqs());
+  its->cpu_init(Cpu_number::boot_cpu(), _redist.cpu(Cpu_number::boot_cpu()));
+  _its_vec[_num_its++] = its;
+  return true;
+}
+
+PUBLIC inline
+Gic_its *
+Gic_v3::get_its(unsigned its_num)
+{
+  if (its_num >= _num_its)
+    return nullptr;
+
+  return _its_vec[its_num];
 }
 
 /**
@@ -214,16 +268,3 @@ Gic_v3::irq(Mword pin) const override
 
   return this->Gic::irq(pin);
 }
-
-//-------------------------------------------------------------------
-IMPLEMENTATION[!arm_gic_msi]:
-
-PROTECTED inline
-void
-Gic_v3::init_lpi(Address)
-{}
-
-PROTECTED inline
-void
-Gic_v3::cpu_local_init_lpi(Cpu_number)
-{}
