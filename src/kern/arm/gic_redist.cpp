@@ -65,9 +65,8 @@ Gic_redist::find(Address base, Unsigned64 mpidr, Cpu_number cpu)
       gicr_typer = r.read<Unsigned64>(GICR_TYPER);
       if ((gicr_typer & 0xffffffff00000000) == typer_aff)
         {
-          printf("CPU%d: GIC Redistributor at %lx/%lx for 0x%llx\n",
+          printf("CPU%d: GIC Redistributor at %lx for 0x%llx\n",
                  cxx::int_value<Cpu_number>(cpu),
-                 (Address)Mem_layout::Gic_redist_phys_base + o,
                  r.get_mmio_base(), mpidr & ~0xc0000000ull);
           _redist = r;
           return;
