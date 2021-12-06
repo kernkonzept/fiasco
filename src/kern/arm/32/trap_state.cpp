@@ -60,6 +60,8 @@ Trap_state::copy_and_sanitize(Trap_state const *src)
 //-----------------------------------------------------------------
 IMPLEMENTATION:
 
+#include "mem_layout.h"
+
 #include <cstdio>
 
 PUBLIC inline
@@ -120,4 +122,15 @@ Trap_state::dump()
          "R[8]: %08lx %08lx %08lx %08lx  %08lx %08lx %08lx %08lx\n",
 	 r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7],
 	 r[8], r[9], r[10], r[11], r[12], usp, ulr, pc);
+
+  Mword lower_limit = (Mword)&Mem_layout::start;
+  Mword upper_limit = (Mword)&Mem_layout::initcall_end;
+  if (lower_limit <= pc && pc < upper_limit)
+    {
+      printf("Data around PC at 0x%lx:\n", pc);
+      for (Mword d = pc - 24; d < pc + 28; d += 4)
+        if (lower_limit <= d && d < upper_limit)
+          printf("%s0x%08lx: %08x\n", d == pc ? "->" : "  ", d,
+                                      *reinterpret_cast<unsigned *>(d));
+    }
 }

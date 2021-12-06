@@ -32,6 +32,8 @@ struct Trex
 
 IMPLEMENTATION:
 
+#include "mem_layout.h"
+
 #include <cstdio>
 
 PUBLIC
@@ -78,4 +80,15 @@ Trap_state::dump()
          r[24], r[25], r[26], r[27],
          r[28], r[29], r[30],
          usp, pc);
+
+  Mword lower_limit = (Mword)&Mem_layout::start;
+  Mword upper_limit = (Mword)&Mem_layout::initcall_end;
+  if (lower_limit <= pc && pc < upper_limit)
+    {
+      printf("Data around PC at 0x%lx:\n", pc);
+      for (Mword d = pc - 24; d < pc + 28; d += 4)
+        if (lower_limit <= d && d < upper_limit)
+          printf("%s0x%012lx: %08x\n", d == pc ? "->" : "  ", d,
+                                       *reinterpret_cast<unsigned *>(d));
+    }
 }
