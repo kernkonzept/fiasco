@@ -90,8 +90,8 @@ kip_time_fn_read_us:
         push    {r4, r5, r6, r7}
         ldr     r6, KIP_VAL(KIP_SCALER_TIME_STAMP_TO_US)  /* scaler */
         ldr     r7, KIP_VAL(KIP_SHIFT_TIME_STAMP_TO_US)   /* shift */
-        umull   r0, r3, r0, r6
-        umull   r4, r5, r1, r6
+        umull   r0, r3, r6, r0
+        umull   r4, r5, r6, r1
         adds    r1, r4, r3
         adc     r2, r5, #0      /* {r2,r1,r0} contains (timer * scaler) */
         mov     r3, #32
@@ -129,8 +129,8 @@ kip_time_fn_read_ns:
         push    {r4, r5, r6, r7}
         ldr     r6, KIP_VAL(KIP_SCALER_TIME_STAMP_TO_NS)
         ldr     r7, KIP_VAL(KIP_SHIFT_TIME_STAMP_TO_NS)
-        umull   r0, r3, r0, r6
-        umull   r4, r5, r1, r6
+        umull   r0, r3, r6, r0
+        umull   r4, r5, r6, r1
         adds    r1, r4, r3
         adc     r2, r5, #0
         mov     r3, #32
@@ -143,10 +143,10 @@ kip_time_fn_read_ns:
 #else
         read_64bit KIP_VAL(KIP_CLOCK)
         mov     r3, #1000
-        umull   r0, r2, r0, r3
-        umull   r1, r3, r1, r3
+        umull   r0, r2, r3, r0  /* {r2,r0} = r3 * r0 */
+        umull   r1, r12, r3, r1 /* {r12,r1} = r3 * r1 */
         adds    r1, r1, r2
-        /* Just ignore the upper few bits in r3 and return {r1,r0}. */
+        /* Just ignore the upper few bits in r12 and return {r1,r0}. */
 #endif
         bx      lr
 #undef KIP_VAL

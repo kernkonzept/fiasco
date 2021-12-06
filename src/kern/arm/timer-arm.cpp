@@ -168,8 +168,8 @@ Timer::timer_value_to_time(Unsigned64 v, Mword scaler, Mword shift)
   // This code is written in Assembler so that it doesn't require libgcc. It
   // should be also very similar to kip_time_fn_read_us()/kip_time_fn_read_us()
   // used by userland to get the same results as the kernel code.
-  asm ("umull   %0, %3, %0, %[scaler]   \n\t"
-       "umull   %4, %5, %1, %[scaler]   \n\t"
+  asm ("umull   %0, %3, %[scaler], %0   \n\t"
+       "umull   %4, %5, %[scaler], %1   \n\t"
        "adds    %1, %4, %3              \n\t"
        "adc     %2, %5, #0              \n\t"
        "mov     %3, #32                 \n\t"
