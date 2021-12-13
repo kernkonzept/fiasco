@@ -134,13 +134,23 @@ class S_list_tail : public S_list<T, POLICY>
 {
 private:
   typedef S_list<T, POLICY> Base;
+  void add(T *e) = delete;
 
 public:
+  using Iterator = typename Base::Iterator;
   S_list_tail() : Base(), _tail(&this->_f) {}
 
   S_list_tail(S_list_tail &&t) : Base(static_cast<Base&&>(t)), _tail(t._tail)
   {
     t._tail = &t._f;
+  }
+
+  void push_front(T *e)
+  {
+    if (Base::empty())
+      _tail = &e->_n;
+
+    Base::push_front(e);
   }
 
   S_list_tail &operator = (S_list_tail &&t)
@@ -173,6 +183,19 @@ public:
     o.clear();
   }
 
+  T *pop_front()
+  {
+    T *t = Base::pop_front();
+    if (t && Base::empty())
+      _tail = &this->_f;
+    return t;
+  }
+
+private:
+  static void insert(T *e, Iterator const &pred);
+  static void insert_before(T *e, Iterator const &succ);
+  static void replace(Iterator const &p, T*e);
+  static Iterator erase(Iterator const &e);
 
 private:
   S_list_item **_tail;
