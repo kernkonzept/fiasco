@@ -673,12 +673,36 @@ public:
 };
 
 //-----------------------------------------------------------------------------
+INTERFACE [arm && arm_lpae && !cpu_virt]:
+
+// Kernel and user space are using stage-1 PTs and use the same page table
+// attributes.
+typedef Page Kernel_page_attr;
+
+//-----------------------------------------------------------------------------
+INTERFACE [arm && arm_lpae && cpu_virt]:
+
+// Fiasco is running with stage-1 PTs and the page attributes are an index into
+// MAIR. OTOH user space is running on a stage-2 PT which stores the memory
+// attributes directly (see class Page).
+struct Kernel_page_attr
+{
+  enum Attribs_enum
+  {
+    Cache_mask    = 0x01c,
+    NONCACHEABLE  = 0x000, ///< Caching is off
+    CACHEABLE     = 0x008, ///< Cache is enabled
+    BUFFERED      = 0x004, ///< Write buffer enabled -- Normal, non-cached
+  };
+};
+
+//-----------------------------------------------------------------------------
 INTERFACE [arm && arm_lpae]:
 
 class K_pte_ptr :
   public Pte_long_desc<K_pte_ptr>,
   public Pte_generic<K_pte_ptr, Unsigned64>,
-  public Pte_long_attribs<K_pte_ptr, Page>
+  public Pte_long_attribs<K_pte_ptr, Kernel_page_attr>
 {
 public:
   K_pte_ptr() = default;
