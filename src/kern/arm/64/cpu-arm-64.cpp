@@ -149,15 +149,14 @@ void
 Cpu::init_hyp_mode()
 {
   extern char exception_vector[];
+  static char const pa_range[16] = { 32, 36, 40, 42, 44, 48, 52 };
 
-  // Feature availability check for 48bit address space size
-  if (phys_bits() == 48) // arm_pt_48
-    {
-      Mword id_aa64mmfr2_el1;
-      asm("mrs %0, S3_0_C0_C7_2" : "=r"(id_aa64mmfr2_el1));
-      if ((id_aa64mmfr2_el1 & (0xf << 28)) == 0) // ST
-        panic("48bit address spaces not available on this platform.");
-    }
+  // Feature availability check for IPA address space size
+  Mword id_aa64mmfr0_el1;
+  asm("mrs %0, S3_0_C0_C7_0" : "=r"(id_aa64mmfr0_el1));
+  if (pa_range[id_aa64mmfr0_el1 & 0x0fU] < phys_bits())
+    panic("IPA address size too small: HW provides %d bits, required %d bits!",
+          pa_range[id_aa64mmfr0_el1 & 0x0fU], phys_bits());
 
   asm volatile ("msr VBAR_EL2, %x0" : : "r"(&exception_vector));
   asm volatile ("msr VTCR_EL2, %x0" : :
