@@ -38,9 +38,7 @@ void Pic::init()
                                     Kmem::mmio_remap(redist_addr, redist_size));
     }
   else
-    {
-      panic("GIC not found or not supported\n");
-    }
+    panic("GIC not found or not supported");
 
   Mgr *m = new Boot_object<Mgr>(1);
   m->add_chip(0, gic, gic->nr_irqs());
