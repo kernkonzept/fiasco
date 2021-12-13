@@ -8,7 +8,7 @@ INTERFACE:
 class Queue
 {
 public:
-  typedef Spin_lock_coloc<Mword> Inner_lock;
+  typedef Spin_lock_coloc<Queue_item *> Inner_lock;
 
 private:
   class Lock_n_ptr : public Inner_lock
@@ -18,28 +18,10 @@ private:
 
   public:
     Queue_item *item() const
-    { return reinterpret_cast<Queue_item*>(get_unused() & ~5UL); }
+    { return get_unused(); }
 
     void set_item(Queue_item *i)
-    {
-      assert (!(Mword(i) & 5));
-      set_unused((Mword)i | (get_unused() & 5));
-    }
-
-    bool blocked() const
-    { return get_unused() & 1; }
-
-    void block()
-    { return set_unused(get_unused() | 1); }
-
-    void unblock()
-    { set_unused(get_unused() & ~1); }
-
-    bool invalid() const
-    { return get_unused() & 4; }
-
-    void invalidate()
-    { set_unused(get_unused() | 4); }
+    { set_unused(i); }
   };
 
   struct Queue_head_policy
@@ -99,41 +81,3 @@ PUBLIC inline
 Queue_item *
 Queue::first() const
 { return _m.front(); }
-
-PUBLIC inline
-bool
-Queue::blocked() const
-{ return _m.head().blocked(); }
-
-PUBLIC inline NEEDS["assert.h"]
-void
-Queue::block()
-{
-  assert (_m.head().test());
-  _m.head().block();
-}
-
-PUBLIC inline NEEDS["assert.h"]
-void
-Queue::unblock()
-{
-  assert (_m.head().test());
-  _m.head().unblock();
-}
-
-PUBLIC inline NEEDS["assert.h"]
-bool
-Queue::invalid() const
-{
-  assert (_m.head().test());
-  return _m.head().invalid();
-}
-
-PUBLIC inline NEEDS["assert.h"]
-void
-Queue::invalidate()
-{
-  assert (_m.head().test());
-  _m.head().invalidate();
-}
-
