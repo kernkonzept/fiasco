@@ -256,7 +256,7 @@ simple_malloc(size_t size)
   ((__alloc_t*)ptr)->size=need;
 
   // play safe: this is required by cs_mem_malloc()!
-  memset(BLOCK_RET(ptr), 0, size);
+  memset(BLOCK_RET(ptr), 0, size - sizeof(__alloc_t));
   return BLOCK_RET(ptr);
 }
 
