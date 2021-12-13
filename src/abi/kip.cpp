@@ -37,7 +37,6 @@ class Vhw_descriptor {};
 //----------------------------------------------------------------------------
 INTERFACE:
 
-#include "mem_region.h"
 #include "types.h"
 
 class Kip
