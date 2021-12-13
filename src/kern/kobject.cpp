@@ -19,7 +19,8 @@ private:
 
   /// List of mappings (cap slots) pointing to this kernel object.
   Obj::Mapping::List _root;
-  /// Capability reference count of this kernel object.
+  /// Number of non-weak capabilities referencing this object
+  /// (see Obj::Mapping::ref_cnt()).
   Smword _cnt;
   /// Lock that protects the list of mappings and capability reference count of
   /// this kernel object.

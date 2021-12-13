@@ -252,74 +252,39 @@ public:
 //--------------------------------------------------------------------
 IMPLEMENTATION[mapdb]:
 
-/* The mapping database.
-
- * This implementation encodes mapping trees in very compact arrays of
- * fixed sizes, prefixed by a tree header (Mapping_tree).  Array
- * sizes can vary from 4 mappings to 4<<15 mappings.  For each size,
- * we set up a slab allocator.  To grow or shrink the size of an
- * array, we have to allocate a larger or smaller tree from the
- * corresponding allocator and then copy the array elements.
+/** \file
+ * The mapping database.
  *
- * The array elements (Mapping) contain a tree depth element.  This
- * depth and the relative position in the array is all information we
- * need to derive tree structure information.  Here is an example:
+ * \internal
+ * # Implementation details
  *
- * array
- * element   depth
- * number    value    comment
- * --------------------------
- * 0         0        Sigma0 mapping
- * 1         1        child of element #0 with depth 0
- * 2         2        child of element #1 with depth 1
- * 3         2        child of element #1 with depth 1
- * 4         3        child of element #3 with depth 2
- * 5         2        child of element #1 with depth 1
- * 6         3        child of element #5 with depth 2
- * 7         1        child of element #0 with depth 0
+ * A mapping database (#Mapdb) is organized in a hierarchy of frame-number-keyed
+ * maps (#Treemap) to mapping trees (#Mapping_tree, #Mapping). The
+ * top-level #Treemap contains mapping trees for the largest page granularity.
+ * These mapping trees may contain references to #Treemap instances for
+ * subpages. (Original credits for this idea: Christan Szmajda.)
  *
- * This array is a pre-order encoding of the following tree:
- *
- *                  0
- *                /   \
- *               1     7
- *            /  |  \
- *           2   3   5
- *               |   |
- *               4   6
-
- * The mapping database (Mapdb) is organized in a hierarchy of
- * frame-number-keyed maps of Mapping_trees (Treemap).  The top-level
- * Treemap contains mapping trees for superpages.  These mapping trees
- * may contain references to Treemaps for subpages.  (Original credits
- * for this idea: Christan Szmajda.)
- *
- *        Treemap
- *        -------------------------------
- *        | | | | | | | | | | | | | | | | array of ptr to 4M Mapping_tree's
- *        ---|---------------------------
- *           |
- *           v a Mapping_tree
- *           ---------------
- *           |             | tree header
- *           |-------------|
- *           |             | 4M Mapping *or* ptr to nested Treemap
- *           |             | e.g.
- *           |      ----------------| Treemap
- *           |             |        v array of ptr to 4K Mapping_tree's
- *           ---------------        -------------------------------
- *                                  | | | | | | | | | | | | | | | |
- *                                  ---|---------------------------
- *                                     |
- *                                     v a Mapping_tree
- *                                     ---------------
- *                                     |             | tree header
- *                                     |-------------|
- *                                     |             | 4K Mapping
- *                                     |             |
- *                                     |             |
- *                                     |             |
- *                                     ---------------
+ *     Treemap
+ *     -------------------------------
+ *     | | | | | | | | | | | | | | | | array of ptr to 4M Mapping_tree's
+ *     ---|---------------------------
+ *        |
+ *        v a Mapping_tree
+ *       ---    ---    ---    ---    ---    ---    ---
+ *       | |--->| |--->| |--->| |--->| |--->| |--->| |
+ *       ---    ---    -|-    ---    ---    ---    ---
+ *                      | 4M Mapping *or* ptr to nested Treemap
+ *                      | e.g.
+ *                      ---------| Treemap
+ *                               v array of ptr to 4K Mapping_tree's
+ *                               -------------------------------
+ *                               | | | | | | | | | | | | | | | |
+ *                               ---|---------------------------
+ *                                  |
+ *                                  v a Mapping_tree
+ *                                 ---    ---    ---    ---
+ *                                 | |--->| |--->| |--->| |
+ *                                 ---    ---    ---    ---
 
  * IDEAS for enhancing this implementation:
 
@@ -339,15 +304,7 @@ IMPLEMENTATION[mapdb]:
  * Mapdb-user-visible Mapping (which could be different from the
  * internal tree representation).  (XXX: Implementing one of these
  * ideas is probably worthwhile doing!)
-
- * Instead of copying whole trees around when they grow or shrink a
- * lot, or copying parts of trees when inserting an element, we could
- * give up the array representation and add a "next" pointer to the
- * elements -- that is, keep the tree of mappings in a
- * pre-order-encoded singly-linked list (credits to: Christan Szmajda
- * and Adam Wiggins).  24 bits would probably be enough to encode that
- * pointer.  Disadvantages: Mapping entries would be larger, and the
- * cache-friendly space-locality of tree entries would be lost.
+ * \endinternal
  */
 
 #include <cassert>
@@ -626,6 +583,31 @@ Treemap::tree(Page key)
   return f;
 }
 
+/**
+ * Lookup a mapping, starting from a mapping in locked #Physframe and optionally
+ * return whether the returned mapping is in a subtree of `m`.
+ *
+ * \param[in]    f            Locked #Physframe containing the mapping to start
+ *                            the lookup from.
+ * \param[in]    m            Mapping to start the lookup from.
+ * \param[in]    spc          Virtual address space in which the mapping was entered.
+ * \param[in]    key          Physical key of the mapped page frame.
+ * \param[in]    va           Virtual address of the mapping. Required to select
+ *                            the correct mapping if the address space contains
+ *                            multiple mappings of the same physical address at
+ *                            different virtual addresses.
+ * \param[out]   res          If found, iterator pointing to found Mapping,
+ *                            pointer to the containing #Treemap, and pointer to
+ *                            the containing #Physframe.
+ * \param[in,out] root_depth  If not `nullptr`, must point to depth of `m`. Is
+ *                            set to `-3` when the returned Mapping is not in a
+ *                            subtree of `m`. Only considered if also
+ *                            `current_depth != nullptr`.
+ * \param[out] current_depth  If not `nullptr`, outputs depth of returned
+ *                            Mapping.
+ * \return `m` or a successor of `m` where `res` was found, or end() if not
+ *         found.
+ */
 PRIVATE inline
 Mapping_tree::Iterator
 Treemap::_lookup(Physframe *f, Mapping_tree::Iterator m,
@@ -661,6 +643,9 @@ Treemap::_lookup(Physframe *f, Mapping_tree::Iterator m,
   return m;
 }
 
+/**
+ * \see Mapdb::lookup()
+ */
 PUBLIC
 bool
 Treemap::lookup(Pcnt key, Space const *search_space, Pfn search_va,
@@ -693,6 +678,9 @@ Treemap::lookup(Pcnt key, Space const *search_space, Pfn search_va,
   return false;
 }
 
+/**
+ * \see Mapdb::lookup_src_dst()
+ */
 PUBLIC inline NEEDS[Treemap::_lookup, "assert_opt.h"]
 int
 Treemap::lookup_src_dst(Space const *src, Pcnt src_key, Pfn src_va,
@@ -839,6 +827,9 @@ Treemap::lookup_src_dst(Space const *src, Pcnt src_key, Pfn src_va,
     }
 }
 
+/**
+ * \see Mapdb::insert()
+ */
 PUBLIC
 Mapping *
 Treemap::insert(Physframe* frame, Mapping_tree::Iterator const &parent,
@@ -912,6 +903,9 @@ Treemap::flush(Physframe* f, Pcnt offs_begin, Pcnt offs_end)
   return;
 } // Treemap::flush()
 
+/**
+ * \see Mapdb::flush()
+ */
 PUBLIC
 void
 Treemap::flush(Physframe* f, Mapping_tree::Iterator parent,
@@ -924,6 +918,9 @@ Treemap::flush(Physframe* f, Mapping_tree::Iterator parent,
   return;
 } // Treemap::flush()
 
+/**
+ * \see Mapdb::grant()
+ */
 PUBLIC
 bool
 Treemap::grant(Physframe* f, Mapping_tree::Iterator m, Space *new_space, Pfn va)
@@ -1010,6 +1007,23 @@ Mapdb::_foreach_mapping(unsigned min_depth,
   _for_full_subtree(min_depth, cursor, size, cxx::forward<F>(func));
 }
 
+/**
+ * Iterate over descendant mappings of a mapping.
+ *
+ * \param[in] f         The root of the subtree that is iterated over.
+ * \param[in] va_begin  Begin of virtual address range of mappings to consider.
+ * \param[in] va_end    End of virtual address range (exclusive) of mappings to
+ *                      consider.
+ * \param[in] func      A callable taking as arguments a Mapping_tree::Iterator
+ *                      and a Mapdb::Order.
+ *
+ * \pre `f.frame->lock.test() == Locked`
+ *
+ * Iterate over all descendant mappings of `f` within the physical address range
+ * corresponding to the virtual address range from `va_begin` to `va_end` for
+ * `f`. For each of those mappings, `func` is called with a pointer to the
+ * mapping and the size of the corresponding frame.
+ */
 PUBLIC template<typename F> static inline
 void
 Mapdb::foreach_mapping(Frame const &f,
@@ -1026,8 +1040,22 @@ Mapdb::foreach_mapping(Frame const &f,
 // class Mapdb
 //
 
-/** Constructor.
- */
+ /**
+  * Constructor.
+  *
+  * \param owner              The root of all mapping trees in this #Mapdb.
+  * \param parent_page_shift  Log₂ size of physical address space managed by
+  *                           this #Mapdb.
+  * \param page_shifts        Array of log₂ sizes of allowed subdivisions of the
+  *                           physical address space.
+  * \param page_shifts_num    Length of `page_shifts`.
+  *
+  * \pre `parent_page_shift` > `page_shifts[0]` > `page_shifts[1]` > …
+  *      > `page_shifts[page_shifts_num - 1]`
+  *
+  * \attention The entries of `page_shifts` must not be changed as long as this
+  *            constructed instance of #Mapdb exists.
+  */
 PUBLIC inline NEEDS[<cassert>]
 Mapdb::Mapdb(Space *owner, Order parent_page_shift, size_t const *page_shifts,
              unsigned page_shifts_num)
@@ -1038,21 +1066,29 @@ Mapdb::Mapdb(Space *owner, Order parent_page_shift, size_t const *page_shifts,
   assert (_treemap.get());
 } // Mapdb()
 
-/** Insert a new mapping entry with the given values as child of
-    "parent".
-    We assume that there is at least one free entry at the end of the
-    array so that at least one insert() operation can succeed between a
-    lookup()/free() pair of calls.  This is guaranteed by the free()
-    operation which allocates a larger tree if the current one becomes
-    to small.
-    @param parent Parent mapping of the new mapping.
-    @param space  Number of the address space into which the mapping is entered
-    @param va     Virtual address of the mapped page.
-    @param size   Size of the mapping.  For memory mappings, 4K or 4M.
-    @return If successful, new mapping.  If out of memory or mapping
-           tree full, 0.
-    @post  All Mapping* pointers pointing into this mapping tree,
-           except "parent" and its parents, will be invalidated.
+/**
+ * Insert a new mapping with the given parent.
+ *
+ * \param[in] frame  The parent of the new mapping.
+ * \param[in] space  The target space and owner of the new mapping
+ * \param[in] va     The virtual address of the mapping within `space`.
+ * \param[in] phys   Start of the physical address range being mapped.
+ * \param[in] size   The length of the mapped range. Must be one of the lengths
+ *                   the mapping database was initialized with and at most as
+ *                   large as the mapped range of `frame`.
+ *
+ * \retval nullptr    Insertion failed. Possible causes:
+ *                    - out of quota
+ *                    - out of memory
+ *                    - insertion would exceed maximal depth of mapping tree
+ * \retval otherwise  Pointer to the new #Mapping.
+ *
+ * \pre `frame.frame->lock.test() == Locked`
+ * \pre `size` must be one of `frame.treemap->page_size()` or the corresponding
+ *       size for an element in `frame.treemap->_sub_shifts`.
+ *
+ * Insert a new child mapping for `frame`. The insertion takes quota from
+ * `space` and potentially also from the owner of `frame`.
  */
 PUBLIC inline
 Mapping *
@@ -1066,16 +1102,28 @@ Mapdb::insert(Frame const &frame, Space *space,
 
 
 /**
- * Lookup a mapping and lock the corresponding mapping tree.  The returned
- * mapping pointer, and all other mapping pointers derived from it, remain
- * valid until free() is called on one of them.  We guarantee that at most
- * one insert() operation succeeds between one lookup()/free() pair of calls
- * (it succeeds unless the mapping tree is full).
- * @param space Number of virtual address space in which the mapping
- *              was entered
- * @param va    Virtual address of the mapping
- * @param phys  Physical address of the mapped page frame
- * @return mapping, if found; otherwise, 0
+ * Lookup a mapping and lock the corresponding #Physframe/#Mapping_tree.
+ *
+ * \param[in]  space  Virtual address space in which the mapping was entered.
+ * \param[in]  va     Virtual address of the mapping. Required to select the
+ *                    correct mapping if the address space contains multiple
+ *                    mappings of the same physical address at different virtual
+ *                    addresses.
+ * \param[in]  phys   Physical address of the mapped page frame.
+ * \param[out] res    If found, iterator pointing to found Mapping, pointer to
+ *                    the containing #Treemap, and pointer to the containing
+ *                    #Physframe. If `space` is Sigma0, then the iterator points
+ *                    to Mapping_tree::end().
+ *
+ * \retval true   The mapping was found.
+ * \retval false  The mapping was not found.
+ *
+ * \post If the mappings was found, then `res->frame->lock.test() == Locked`.
+ *
+ * Lookup the mapping that maps the physical address `phys` to the virtual
+ * address `va` in `space`. If the mapping exists, the corresponding
+ * #Physframe/#Mapping_tree is locked. Eventually the lock must be released with
+ * one of the clearing methods of `res` (cf. Frame::clear() etc.).
  */
 PUBLIC inline
 bool
@@ -1085,11 +1133,28 @@ Mapdb::lookup(Space const *space, Pfn va, Pfn phys,
   return _treemap->lookup(phys - Pfn(0), space, va, res);
 }
 
-/** Delete mappings from a tree.  This function deletes mappings
-    recursively.
-    @param m Mapping that denotes the subtree that should be deleted.
-    @param me_too If true, delete m as well; otherwise, delete only
-           submappings.
+/**
+ * Recursively delete mappings from a tree.
+ *
+ * \param[in] f         The root of the subtree to delete.
+ * \param[in] mask      Indicates if `f` itself shall also be deleted (see
+ *                      L4_map_mask::self_unmap()).
+ * \param[in] va_start  Begin of virtual address range of mappings to delete.
+ * \param[in] va_end    End of virtual address range (exclusive) of mappings to
+ *                      delete.
+ *
+ * \pre `f.frame->lock.test() == Locked`
+ *
+ * Delete all descendant mappings of `f` within the physical address range
+ * corresponding to the virtual address range from `va_start` to `va_end` for
+ * `f`. The deletion does not split mappings, i.e. partially overlapping
+ * mappings are deleted entirely.
+ *
+ * If `mask.self_unmap()`, then also the mapping `f` is deleted. Because of the
+ * "no split" rule, the entire mapping `f` gets deleted, and thus also all
+ * descendants are deleted regardless of `va_start` and `va_end`.
+ *
+ * The quota of all the deleted mappings is freed.
  */
 PUBLIC static inline
 void
@@ -1107,11 +1172,23 @@ Mapdb::flush(Frame const &f, L4_map_mask mask,
   f.treemap->flush(f.frame, f.m, mask.self_unmap(), offs_begin, offs_end);
 } // flush()
 
-/** Change ownership of a mapping.
-    @param m Mapping to be modified.
-    @param new_space Number of address space the mapping should be
-                     transferred to
-    @param va Virtual address of the mapping in the new address space
+/**
+ * Change ownership of a mapping.
+ *
+ * \param[in] f          Mapping to be modified.
+ * \param[in] new_space  New owner.
+ * \param[in] va         Virtual address of the mapping in the new address
+ *                       space.
+ *
+ * \retval true   Success.
+ * \retval false  Failed. New owner is out of quota.
+ *
+ * \pre `f.frame->lock.test() == Locked`
+ *
+ * Transfer the mapping `f` to the new owner `new_space`. The child mappings of
+ * `f` are kept, i.e., they remain children of `f` despite the new owner. The
+ * necessary quota for the mapping is freed for the old owner and taken from the
+ * new owner. The operation fails if the new owner is out of quota.
  */
 PUBLIC inline
 bool
@@ -1121,6 +1198,50 @@ Mapdb::grant(Frame const &f, Space *new_space,
   return f.treemap->grant(f.frame, f.m, new_space, va);
 }
 
+/**
+ * Lookup two mappings, respectively lock the corresponding
+ * #Physframe/#Mapping_tree, and return the relation of the mappings to each
+ * other, which indicates what the caller needs to do when mapping from src to
+ * dst (see the description of the return values).
+ *
+ * \param[in]  src        Virtual address space in which the src mapping was
+ *                        entered.
+ * \param[in]  src_phys   Physical address of the mapped page frame for src.
+ * \param[in]  src_va     Virtual address of the src mapping.
+ * \param[in]  dst        Virtual address space in which the dst mapping was
+ *                        entered.
+ * \param[in]  dst_phys   Physical address of the mapped page frame for dst.
+ * \param[in]  dst_va     Virtual address of the dst mapping.
+ * \param[out] src_frame  Returns the src mapping if found.
+ *                        Initially, `src_frame->frame` must be `nullptr`.
+ * \param[out] dst_frame  Returns the dst mapping if found.
+ *                        Initially, `dst_frame->frame` must be `nullptr`.
+ *
+ * \retval -1  Dst mapping, src mapping, or both not found.
+ * \retval  0  Dst is a child mapping of src.
+ *             When mapping from src to dst, dst can be reused/upgraded.
+ * \retval  1  Dst and src are found and none of the other cases applies.
+ *             When mapping from src to dst, dst must be unmapped before src can
+ *             be mapped to dst.
+ * \retval  2  Dst is equal to or an ancestor of src.
+ *             When mapping from src to dst, dst must be unmapped inducing also
+ *             unmapping of src.
+ *
+ * \pre `src_frame->frame == nullptr && dst_frame->frame == nullptr`
+ * \post If both mappings are found, then
+ *       `src_frame->frame->lock.test() == Locked` and
+ *       `dst_frame->frame->lock.test() == Locked`.
+ *       With the exception of "Dst is equal to or an ancestor of src", then
+ *       only the `dst_frame` is set and locked.
+ *
+ * Simultaneously lookup two mappings, one called src, the other called dst. The
+ * return value indicates if both mappings are found, and, if so, how they
+ * relate to each other. If both mappings are found, the respectively
+ * corresponding #Physframe/#Mapping_tree is locked; otherwise, nothing is
+ * locked.
+ *
+ * \see lookup()
+ */
 PUBLIC inline
 int
 Mapdb::lookup_src_dst(Space const *src, Pfn src_phys, Pfn src_va,

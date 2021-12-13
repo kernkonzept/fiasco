@@ -50,6 +50,10 @@ class Mapping : public cxx::S_list_item
 
   Kptr<Space> _space = nullptr;
 
+  /**
+   * When `_space != nullptr`, then `_virt` is valid otherwise `_submap` is
+   * valid.
+   */
   union {
     unsigned long _virt = 0;
     Treemap *_submap;
