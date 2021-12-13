@@ -43,9 +43,9 @@ public:
   {
     Page_order operator () (Page_order o) const
     {
-      return o >= Order(Map_superpage_shift)
-             ? Order(Map_superpage_shift)
-             : Order(0);
+      return o >= Page_order(Map_superpage_shift)
+             ? Page_order(Map_superpage_shift)
+             : Page_order(0);
     }
   };
 
@@ -90,7 +90,7 @@ public:
 
 
   FIASCO_SPACE_VIRTUAL
-  Status v_insert(Phys_addr phys, V_pfn virt, Order size, Attr page_attribs);
+  Status v_insert(Phys_addr phys, V_pfn virt, Page_order size, Attr page_attribs);
 
   FIASCO_SPACE_VIRTUAL
   bool v_lookup(V_pfn virt, Phys_addr *phys = 0, Page_order *order = 0,
@@ -99,7 +99,7 @@ public:
   bool v_fabricate(V_pfn address, Phys_addr *phys, Page_order *order,
                    Attr *attribs = 0);
   FIASCO_SPACE_VIRTUAL
-  Rights v_delete(V_pfn virt, Order size, Rights page_attribs);
+  Rights v_delete(V_pfn virt, Page_order size, Rights page_attribs);
 
 private:
   // DATA
@@ -221,13 +221,13 @@ Generic_io_space<SPACE>::v_lookup(V_pfn virt, Phys_addr *phys,
 {
   if (is_superpage())
     {
-      if (order) *order = Order(Map_superpage_shift);
+      if (order) *order = Page_order(Map_superpage_shift);
       if (phys) *phys = Phys_addr(0);
       if (attribs) *attribs = Attr::URW();
       return true;
     }
 
-  if (order) *order = Order(0);
+  if (order) *order = Page_order(0);
 
   if (io_lookup(cxx::int_value<V_pfn>(virt)))
     {
@@ -238,7 +238,7 @@ Generic_io_space<SPACE>::v_lookup(V_pfn virt, Phys_addr *phys,
 
   if (get_io_counter() == 0)
     {
-      if (order) *order = Order(Map_superpage_shift);
+      if (order) *order = Page_order(Map_superpage_shift);
       if (phys) *phys = Phys_addr(0);
     }
 
@@ -248,14 +248,14 @@ Generic_io_space<SPACE>::v_lookup(V_pfn virt, Phys_addr *phys,
 IMPLEMENT template< typename SPACE >
 inline NEEDS [Generic_io_space::is_superpage]
 L4_fpage::Rights FIASCO_FLATTEN
-Generic_io_space<SPACE>::v_delete(V_pfn virt, Order size, Rights page_attribs)
+Generic_io_space<SPACE>::v_delete(V_pfn virt, Page_order size, Rights page_attribs)
 {
   if (!(page_attribs & L4_fpage::Rights::FULL()))
     return L4_fpage::Rights(0);
 
   if (is_superpage())
     {
-      assert (size == Order(Map_superpage_shift));
+      assert (size == Page_order(Map_superpage_shift));
 
       for (unsigned p = 0; p < Map_max_address; ++p)
 	io_delete(p);
@@ -265,7 +265,7 @@ Generic_io_space<SPACE>::v_delete(V_pfn virt, Order size, Rights page_attribs)
     }
 
   (void)size;
-  assert (size == Order(0));
+  assert (size == Page_order(0));
 
   io_delete(cxx::int_value<V_pfn>(virt));
   return L4_fpage::Rights(0);
@@ -274,17 +274,17 @@ Generic_io_space<SPACE>::v_delete(V_pfn virt, Order size, Rights page_attribs)
 IMPLEMENT template< typename SPACE >
 inline
 typename Generic_io_space<SPACE>::Status FIASCO_FLATTEN
-Generic_io_space<SPACE>::v_insert(Phys_addr phys, V_pfn virt, Order size,
+Generic_io_space<SPACE>::v_insert(Phys_addr phys, V_pfn virt, Page_order size,
                                   Attr page_attribs)
 {
   (void)phys;
   (void)page_attribs;
 
   assert (phys == virt);
-  if (is_superpage() && size == Order(Map_superpage_shift))
+  if (is_superpage() && size == Page_order(Map_superpage_shift))
     return Insert_warn_exists;
 
-  if (get_io_counter() == 0 && size == Order(Map_superpage_shift))
+  if (get_io_counter() == 0 && size == Page_order(Map_superpage_shift))
     {
       for (unsigned p = 0; p < Map_max_address; ++p)
 	io_insert(p);
@@ -293,7 +293,7 @@ Generic_io_space<SPACE>::v_insert(Phys_addr phys, V_pfn virt, Order size,
       return Insert_ok;
     }
 
-  assert (size == Order(0));
+  assert (size == Page_order(0));
 
   return typename Generic_io_space::Status(io_insert(cxx::int_value<V_pfn>(virt)));
 }

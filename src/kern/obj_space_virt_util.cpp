@@ -24,10 +24,10 @@ public:
   bool v_lookup(V_pfn const &virt, Phys_addr *phys,
                 Page_order *size, Attr *attribs);
 
-  L4_fpage::Rights v_delete(V_pfn virt, Order size,
+  L4_fpage::Rights v_delete(V_pfn virt, Page_order size,
                             L4_fpage::Rights page_attribs);
-  Obj::Insert_result v_insert(Phys_addr phys, V_pfn const &virt, Order size,
-                              Attr page_attribs);
+  Obj::Insert_result v_insert(Phys_addr phys, V_pfn const &virt,
+                              Page_order size, Attr page_attribs);
 
   Capability lookup(Cap_index virt);
 
@@ -161,7 +161,7 @@ bool FIASCO_FLATTEN
 Obj_space_virt<SPACE>::v_lookup(V_pfn const &virt, Phys_addr *phys,
                                    Page_order *size, Attr *attribs)
 {
-  if (size) *size = Order(0);
+  if (size) *size = Page_order(0);
   Entry *cap;
 
   if (Optimize_local
@@ -172,7 +172,7 @@ Obj_space_virt<SPACE>::v_lookup(V_pfn const &virt, Phys_addr *phys,
 
   if (EXPECT_FALSE(!cap))
     {
-      if (size) *size = Order(Obj::Caps_per_page_ld2);
+      if (size) *size = Page_order(Obj::Caps_per_page_ld2);
       return false;
     }
 
@@ -230,11 +230,11 @@ Obj_space_virt<SPACE>::lookup_local(Cap_index virt, L4_fpage::Rights *rights)
 IMPLEMENT template< typename SPACE >
 inline NEEDS[<cassert>, Obj_space_virt::cap_virt, Obj_space_virt::get_cap]
 L4_fpage::Rights FIASCO_FLATTEN
-Obj_space_virt<SPACE>::v_delete(V_pfn virt, Order size,
+Obj_space_virt<SPACE>::v_delete(V_pfn virt, Page_order size,
                                    L4_fpage::Rights page_attribs)
 {
   (void)size;
-  assert (size == Order(0));
+  assert (size == Page_order(0));
 
   Entry *c;
   if (Optimize_local
@@ -266,11 +266,11 @@ IMPLEMENT  template< typename SPACE >
 inline NEEDS[Obj_space_virt::cap_virt, Obj_space_virt::caps_alloc,
              Obj_space_virt::get_cap, <cassert>]
 typename Obj::Insert_result FIASCO_FLATTEN
-Obj_space_virt<SPACE>::v_insert(Phys_addr phys, V_pfn const &virt, Order size,
-                                Attr page_attribs)
+Obj_space_virt<SPACE>::v_insert(Phys_addr phys, V_pfn const &virt,
+                                Page_order size, Attr page_attribs)
 {
   (void)size;
-  assert (size == Order(0));
+  assert (size == Page_order(0));
 
   Entry *c;
 

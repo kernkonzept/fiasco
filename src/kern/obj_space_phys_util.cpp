@@ -26,10 +26,10 @@ public:
   bool v_lookup(V_pfn const &virt, Phys_addr *phys,
                 Page_order *size, Attr *attribs);
 
-  L4_fpage::Rights v_delete(V_pfn virt, Order size,
+  L4_fpage::Rights v_delete(V_pfn virt, Page_order size,
                             L4_fpage::Rights page_attribs);
-  Obj::Insert_result v_insert(Phys_addr phys, V_pfn const &virt, Order size,
-                              Attr page_attribs);
+  Obj::Insert_result v_insert(Phys_addr phys, V_pfn const &virt,
+                              Page_order size, Attr page_attribs);
 
   Capability lookup(Cap_index virt);
 
@@ -88,14 +88,15 @@ public:
   { return Obj_space::v_lookup(virt, phys, size, attribs); }
 
   L4_fpage::Rights FIASCO_FLATTEN
-  v_delete(typename Obj_space::V_pfn virt, Order size,
+  v_delete(typename Obj_space::V_pfn virt,
+           typename Obj_space::Page_order size,
            L4_fpage::Rights page_attribs) override
   { return Obj_space::v_delete(virt, size, page_attribs); }
 
   Obj::Insert_result FIASCO_FLATTEN
   v_insert(typename Obj_space::Phys_addr phys,
            typename Obj_space::V_pfn const &virt,
-           Order size,
+           typename Obj_space::Page_order size,
            typename Obj_space::Attr page_attribs) override
   { return Obj_space::v_insert(phys, virt, size, page_attribs); }
 

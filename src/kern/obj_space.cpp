@@ -49,24 +49,24 @@ public:
 
   struct Fit_size
   {
-    Order operator () (Order s) const
+    Page_order operator () (Page_order s) const
     {
-      return s >= Order(Obj::Caps_per_page_ld2)
-             ? Order(Obj::Caps_per_page_ld2)
-             : Order(0);
+      return s >= Page_order(Obj::Caps_per_page_ld2)
+             ? Page_order(Obj::Caps_per_page_ld2)
+             : Page_order(0);
     }
   };
 
   Fit_size fitting_sizes() const { return Fit_size(); }
 
-  static Phys_addr page_address(Phys_addr o, Order) { return o; }
+  static Phys_addr page_address(Phys_addr o, Page_order) { return o; }
   static Phys_addr subpage_address(Phys_addr addr, V_pfc) { return addr; }
-  static V_pfn page_address(V_pfn addr, Order) { return addr; }
-  static V_pfc subpage_offset(V_pfn addr, Order o) { return cxx::get_lsb(addr, o); }
+  static V_pfn page_address(V_pfn addr, Page_order) { return addr; }
+  static V_pfc subpage_offset(V_pfn addr, Page_order o) { return cxx::get_lsb(addr, o); }
 
   static Phys_addr to_pfn(Phys_addr p) { return p; }
   static V_pfn to_pfn(V_pfn p) { return p; }
-  static V_pfc to_pcnt(Order s) { return V_pfc(1) << s; }
+  static V_pfc to_pcnt(Page_order s) { return V_pfc(1) << s; }
 
   static V_pfc to_size(Page_order p)
   { return V_pfc(1) << p; }
@@ -76,11 +76,11 @@ public:
                 Page_order *size = 0, Attr *attribs = 0);
 
   FIASCO_SPACE_VIRTUAL
-  L4_fpage::Rights v_delete(V_pfn virt, Order size,
+  L4_fpage::Rights v_delete(V_pfn virt, Page_order size,
                             L4_fpage::Rights page_attribs);
 
   FIASCO_SPACE_VIRTUAL
-  Status v_insert(Phys_addr phys, V_pfn const &virt, Order size,
+  Status v_insert(Phys_addr phys, V_pfn const &virt, Page_order size,
                   Attr page_attribs);
 
   FIASCO_SPACE_VIRTUAL
