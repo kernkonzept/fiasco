@@ -70,7 +70,7 @@ public:
   static Phys_addr subpage_address(Phys_addr addr, V_pfc offset)
   { return addr | offset; }
 
-  static V_pfn subpage_offset(V_pfn addr, Page_order size)
+  static V_pfc subpage_offset(V_pfn addr, Page_order size)
   { return cxx::get_lsb(addr, size); }
 
   static Mdb_types::Pfn to_pfn(V_pfn p)
