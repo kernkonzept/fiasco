@@ -24,7 +24,6 @@ public:
   typedef Port_number Phys_addr;
   typedef Order Page_order;
   typedef L4_fpage::Rights Attr;
-  typedef L4_fpage::Rights Rights;
 
   enum
   {
@@ -99,7 +98,8 @@ public:
   bool v_fabricate(V_pfn address, Phys_addr *phys, Page_order *order,
                    Attr *attribs = 0);
   FIASCO_SPACE_VIRTUAL
-  Rights v_delete(V_pfn virt, Page_order size, Rights page_attribs);
+  L4_fpage::Rights v_delete(V_pfn virt, Page_order size,
+                            L4_fpage::Rights page_attribs);
 
 private:
   // DATA
@@ -248,7 +248,8 @@ Generic_io_space<SPACE>::v_lookup(V_pfn virt, Phys_addr *phys,
 IMPLEMENT template< typename SPACE >
 inline NEEDS [Generic_io_space::is_superpage]
 L4_fpage::Rights FIASCO_FLATTEN
-Generic_io_space<SPACE>::v_delete(V_pfn virt, Page_order size, Rights page_attribs)
+Generic_io_space<SPACE>::v_delete(V_pfn virt, Page_order size,
+                                  L4_fpage::Rights page_attribs)
 {
   if (!(page_attribs & L4_fpage::Rights::FULL()))
     return L4_fpage::Rights(0);
