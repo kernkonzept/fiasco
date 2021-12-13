@@ -77,6 +77,35 @@ Bootstrap::map_ram_range(PDIR *kd, Bs_alloc &alloc,
     }
 }
 
+struct Elf64_dyn
+{
+  enum { Reloc = 7 /* RELA */, Reloc_count = 0x6ffffff9 /* RELACOUNT */ };
+
+  Signed64 tag;
+  union {
+    Unsigned64 val;
+    Unsigned64 ptr;
+  };
+};
+
+struct Elf64_rela
+{
+  Unsigned64  offset;
+  Unsigned64  info;
+  Signed64    addend;
+
+  inline void apply(unsigned long load_addr)
+  {
+    auto *addr = (unsigned long *)(load_addr + offset);
+    *addr = load_addr + addend;
+  }
+};
+
+PUBLIC static unsigned long
+Bootstrap::relocate()
+{
+  return Elf<Elf64_dyn, Elf64_rela>::relocate();
+}
 
 
 IMPLEMENTATION [arm && pic_gic && !have_arm_gicv3]:
@@ -232,7 +261,7 @@ Bootstrap::init_paging()
 
   // map kernel to desired virtual address
   map_ram_range(kd, alloc, bs_info.kernel_start_phys, bs_info.kernel_end_phys,
-                Virt_ofs);
+                Virt_ofs + load_addr);
 
   set_mair0(Page::Mair0_prrr_bits);
 
@@ -266,9 +295,13 @@ asm
 ".type _start,#function                \n"
 ".global _start                        \n"
 "_start:                               \n"
-"     ldr x9, =_stack                  \n"
+"     ldr x9, .Lstack_offs             \n"
+"     adr x10, _start                  \n"
+"     add x9, x9, x10                  \n"
 "     mov sp, x9                       \n"
 "     bl	bootstrap_main         \n"
+".p2align 3                            \n"  // running uncached -> align!
+".Lstack_offs: .8byte (_stack - _start)\n"
 ".previous                             \n"
 ".section .bss                         \n"
 ".p2align 4                            \n"
@@ -378,10 +411,10 @@ Bootstrap::init_paging()
 
   // map kernel to desired virtual address
   map_ram_range(d, alloc, bs_info.kernel_start_phys, bs_info.kernel_end_phys,
-                Virt_ofs);
+                Virt_ofs + load_addr);
 
   // Add 1:1 mapping if not already done so above. Needed by add_initial_pmem().
-  if (Virt_ofs != 0)
+  if (Virt_ofs + load_addr != 0)
     map_ram_range(d, alloc, bs_info.kernel_start_phys, bs_info.kernel_end_phys, 0);
 
   asm volatile (

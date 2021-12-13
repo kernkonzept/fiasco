@@ -29,6 +29,75 @@ public:
     Virt_ofs = Mem_layout::Sdram_phys_base - Mem_layout::Map_base,
   };
 
+  /**
+   * Relative load address.
+   *
+   * Represents the load base address, that is the offset, that was added to
+   * the ELF PHDRs when the image was loaded. If Fiasco was loaded at its link
+   * address, it will be zero.
+   */
+  static unsigned long load_addr;
+};
+
+/**
+ * Helper to apply REL(A) relocations at startup.
+ *
+ * It requires that relocations are combined in a single section and that only
+ * relative relocations exist.
+ *
+ * \param DYN   The dynamic section entry type
+ * \param RELOC The sole relocation entry type (REL or RELA)
+ */
+template<typename DYN, typename RELOC>
+struct Elf
+{
+  static inline unsigned long
+  elf_dynamic_link_addr()
+  {
+    extern unsigned long const _GLOBAL_OFFSET_TABLE_[]
+      __attribute__ ((visibility ("hidden")));
+    return _GLOBAL_OFFSET_TABLE_[0];
+  }
+
+  static inline unsigned long
+  elf_dynamic_section()
+  {
+    extern char _DYNAMIC[] __attribute__ ((visibility ("hidden")));
+    return (unsigned long)&_DYNAMIC[0];
+  }
+
+  static inline unsigned long
+  elf_load_address()
+  {
+    return elf_dynamic_section() - elf_dynamic_link_addr();
+  }
+
+  static inline unsigned long
+  relocate()
+  {
+    unsigned long load_addr = elf_load_address();
+    DYN *dyn = (DYN *)elf_dynamic_section();
+    unsigned long relcnt = 0;
+    RELOC *rel = 0;
+
+    if (!load_addr)
+      return 0;
+
+    for (int i = 0; dyn[i].tag != 0; i++)
+      switch (dyn[i].tag)
+        {
+        case DYN::Reloc:       rel = (RELOC*)(dyn[i].ptr + load_addr); break;
+        case DYN::Reloc_count: relcnt = dyn[i].val; break;
+        }
+
+    if (!rel || !relcnt)
+      return load_addr;
+
+    for (; relcnt; relcnt--, rel++)
+      rel->apply(load_addr);
+
+    return load_addr;
+  }
 };
 
 //---------------------------------------------------------------------------
@@ -113,6 +182,7 @@ IMPLEMENTATION [arm]:
 #include "paging.h"
 
 Bootstrap_info FIASCO_BOOT_PAGING_INFO bs_info;
+unsigned long Bootstrap::load_addr;
 
 static inline NEEDS[Bootstrap::map_page_order]
 Bootstrap::Phys_addr
@@ -159,11 +229,16 @@ PUBLIC static inline ALWAYS_INLINE
 void *
 Bootstrap::kern_to_boot(void *a)
 {
-  return (void *)((Mword)a + Bootstrap::Virt_ofs);
+  return (void *)((Mword)a + Bootstrap::Virt_ofs + load_addr);
 }
 
 extern "C" void bootstrap_main()
 {
+  Bootstrap::load_addr = Bootstrap::relocate();
+
+  bs_info.kernel_start_phys += Bootstrap::load_addr;
+  bs_info.kernel_end_phys   += Bootstrap::load_addr;
+
   Unsigned32 tbbr = cxx::int_value<Bootstrap::Phys_addr>(Bootstrap::init_paging())
                     | Page::Ttbr_bits;
 

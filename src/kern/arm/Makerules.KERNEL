@@ -11,11 +11,18 @@ tramp-mp.o: $(TCBOFFSET)
 OBJ_KERNEL_noboot = $(filter-out bootstrap%,$(OBJ_KERNEL))
 OBJ_BOOTSTRAP = $(filter  bootstrap%,$(OBJ_KERNEL))
 
+define gen_bootstrap_flags =
+CXXFLAGS_$(basename $(notdir $(1))) = -fPIC
+endef
+
+$(foreach obj,$(OBJ_BOOTSTRAP),$(eval $(call gen_bootstrap_flags, $(obj))))
+
 -include .kernel.arm.lds.d
 
 bootstrap_lds      = $(srcdir)/kern/arm/bootstrap.arm.ld
 
-bootstrap_ldflags  = $(LDFLAGS) -m $(LD_EMULATION) --strip-debug
+bootstrap_ldflags  = $(LDFLAGS) -m $(LD_EMULATION)
+bootstrap_ldflags += -static -pie --no-dynamic-linker -z text
 bootstrap_ldflags += -defsym kernel_load_addr=$(CONFIG_KERNEL_LOAD_ADDR)
 bootstrap_ldflags += -T$(bootstrap_lds)
 
@@ -28,9 +35,14 @@ bootstrap.$(KERNEL).pre.o: $(OBJ_BOOTSTRAP) $(LIBGCC) $(bootstrap_lds)
 	$(LINK_MESSAGE)
 	$(VERBOSE)$(LD) $(bootstrap_ldflags) $(OBJ_BOOTSTRAP) $(LIBGCC) -o $@
 
+# Make a raw binary. The linker script is already minimal. Only explicitly drop
+# the things that are still unneeded (dynamic symbols) and what is expected to
+# come from fiasco instead (.bootstrap.dropped_info).
 bootstrap.$(KERNEL).bin: bootstrap.$(KERNEL).pre.o
 	$(COMP_MESSAGE)
-	$(VERBOSE)$(OBJCOPY) -O binary --only-section=.bootstrap.text $< $@
+	$(VERBOSE)$(OBJCOPY) -O binary --remove-section=.bootstrap.dropped_info \
+	                     --remove-section=.dynsym \
+	                     --remove-section=.dynstr $< $@
 
 bootstrap.$(KERNEL).rel: bootstrap.$(KERNEL).bin
 	$(COMP_MESSAGE)
