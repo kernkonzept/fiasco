@@ -87,6 +87,7 @@ Thread::arm_kernel_sync_entry(Trap_state *ts)
       ts->psr &= ~(Proc::Status_mode_mask | Proc::Status_interrupts_mask);
       ts->psr |= Proc::Status_mode_user | Proc::Status_always_mask;
       ts->esr.ec() = 0xe;
+      ts->pf_address = 0UL;
       current_thread()->send_exception(ts);
       return;
     }
