@@ -1917,7 +1917,7 @@ Cpu::print_errata()
  *
  * See Intel Manual Volume 3 Chapter 14.4 for details.
  */
-PRIVATE FIASCO_INIT_CPU
+PRIVATE FIASCO_INIT_CPU_AND_PM
 void
 Cpu::try_enable_hw_performance_states(bool resume)
 {
