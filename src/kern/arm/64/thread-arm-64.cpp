@@ -95,7 +95,10 @@ Thread::arm_kernel_sync_entry(Trap_state *ts)
     {
     case 0x25: // data abort from kernel mode
       if (EXPECT_FALSE(!handle_cap_area_fault(ts)))
-        call_nested_trap_handler(ts);
+        {
+          ts->pf_address = get_fault_pfa(esr, false, false);
+          call_nested_trap_handler(ts);
+        }
       break;
 
     case 0x3c: // BRK
@@ -104,6 +107,7 @@ Thread::arm_kernel_sync_entry(Trap_state *ts)
       break;
 
     default:
+      ts->pf_address = get_fault_pfa(esr, false, false);
       call_nested_trap_handler(ts);
       break;
     }
