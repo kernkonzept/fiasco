@@ -18,6 +18,7 @@ INTERFACE:
 #include "reset.h"
 #include "kdb_ke.h"
 #include "thread_object.h"
+#include "unique_ptr.h"
 
 
 extern "C" void gcov_print() __attribute__((weak));
