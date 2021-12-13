@@ -128,10 +128,10 @@ Mem_space::xlate_flush(unsigned char rights)
 
 //XXX cbass: check;
 PUBLIC static inline
-L4_fpage::Rights
+bool
 Mem_space::is_full_flush(L4_fpage::Rights rights)
 {
-  return rights & L4_fpage::Rights::R(); // CHECK!
+  return (bool)(rights & L4_fpage::Rights::R()); // CHECK!
 }
 
 #if 0
