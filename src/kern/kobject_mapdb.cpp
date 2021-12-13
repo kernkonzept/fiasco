@@ -70,7 +70,7 @@ IMPLEMENTATION:
 
 PUBLIC inline static
 bool
-Kobject_mapdb::lookup(Space *, Vaddr va, Phys_addr obj,
+Kobject_mapdb::lookup(Space const *, Vaddr va, Phys_addr obj,
                       Frame *out)
 {
   Kobject_mappable *rn = obj->map_root(); 
@@ -88,8 +88,8 @@ Kobject_mapdb::lookup(Space *, Vaddr va, Phys_addr obj,
 
 PUBLIC inline static
 int
-Kobject_mapdb::lookup_src_dst(Space *sspc, Phys_addr sobj, Vaddr sva,
-                              Space *dspc, Phys_addr dobj, Vaddr dva,
+Kobject_mapdb::lookup_src_dst(Space const *sspc, Phys_addr sobj, Vaddr sva,
+                              Space const *dspc, Phys_addr dobj, Vaddr dva,
                               Frame *sframe, Frame *dframe)
 {
   Kobject_mappable *srn = sobj->map_root();
