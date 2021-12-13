@@ -183,6 +183,7 @@ Platform_control::cpuboot(Mword startup_vector, Cpu_phys_id cpu)
 IMPLEMENTATION [arm && pf_exynos && mp]:
 
 #include "pic.h"
+#include "ipi.h"
 #include "kmem.h"
 #include "mem_unit.h"
 #include "outer_cache.h"
