@@ -32,6 +32,7 @@ IMPLEMENTATION:
 #include "utest_fw.h"
 #include "kmem_alloc.h"
 #include "mapdb.h"
+#include "map_util.h"
 #include "ram_quota.h"
 #include "space.h"
 #include "common_test_mapdb.h"
