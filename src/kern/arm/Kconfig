@@ -216,10 +216,6 @@ config HAVE_ARM_SECMONIF_NONE
 config HAVE_ARM_SECMONIF_MC
 	bool
 
-config ARM_PT48
-	bool
-	depends on CPU_VIRT && BIT64
-
 config ARM_ALIGNMENT_CHECK
 	bool "Enable alignment check"
 	depends on ARM
@@ -313,6 +309,14 @@ config ARM_LPAE
         depends on ARM_CORTEX_A15 || ARM_CORTEX_A7 || ARM_V8
         help
           Use the extended page table format (LPAE).
+
+config ARM_PT48
+	bool "Support user-level address space of 48bits (256TB)"
+	depends on CPU_VIRT && BIT64
+	help
+	  Build Fiasco with 4-level page-tables for user-level tasks.
+	  Requires a CPU model that supports 48bit address spaces in stage-2
+	  page-tables.
 
 config HAS_ARM_PSCI
         bool
