@@ -81,7 +81,8 @@ Trap_state::dump()
          r[28], r[29], r[30],
          usp, pc);
 
-  Mword lower_limit = (Mword)&Mem_layout::start;
+  extern char virt_address[] asm ("virt_address");
+  Mword lower_limit = (Mword)&virt_address;
   Mword upper_limit = (Mword)&Mem_layout::initcall_end;
   if (lower_limit <= pc && pc < upper_limit)
     {
