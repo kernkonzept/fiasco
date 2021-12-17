@@ -625,6 +625,17 @@ namespace Ptab
       Base_shift = L0::Base_shift,
     };
 
+    enum : Address
+    {
+      // Attention: Must use 64 bit arithmetic because some page tables (namely
+      // ia32 EPT) have more virtual address bits than what fits into the
+      // Address type.
+      Max_addr = (Address)(~0ULL >> (sizeof(unsigned long long) * 8
+                                      - L0::Base_shift
+                                      - L0::Shift
+                                      - L0::Size)),
+    };
+
   private:
     typedef Ptab::Walk<_Traits, PTE_PTR> Walk;
 
