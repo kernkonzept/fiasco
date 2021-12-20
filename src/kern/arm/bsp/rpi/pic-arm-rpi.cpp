@@ -118,7 +118,7 @@ Pic::handle_irq()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pf_rpi && !64bit]:
+IMPLEMENTATION [arm && pf_rpi && !64bit && !pf_rpi_rpizw]:
 
 #include "arm_control.h"
 
@@ -127,7 +127,7 @@ void Pic::arm_control_init()
 { Arm_control::init(); }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pf_rpi && 64bit]:
+IMPLEMENTATION [arm && pf_rpi && (64bit || pf_rpi_rpizw)]:
 
 PRIVATE static FIASCO_INIT
 void Pic::arm_control_init()
