@@ -335,7 +335,8 @@ Fpu::restore_state(Fpu_state *s)
 
   restore_fpu_regs(fpu_regs);
 
-  asm volatile ("vmsr fpexc, %0  \n"
+  asm volatile (".fpu vfp        \n"
+                "vmsr fpexc, %0  \n"
                 "vmsr fpscr, %1  \n"
                 :
                 : "r" ((fpu_regs->fpexc | FPEXC_EN) & ~FPEXC_EX),
