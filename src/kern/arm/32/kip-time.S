@@ -23,7 +23,6 @@
          * CNTKCTL: PL0VCTEN=1, PL0PCTEN=1.
          * Kernel uses physical counter.
          * Access to physical counter from PL0 allowed. */
-         */
         mrrc    p15, 0, r0, r1, c14
 #else
         /* Generic_timer::T<Virtual>: R1=physical, R2=hyp:
