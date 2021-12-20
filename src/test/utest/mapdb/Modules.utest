@@ -1,6 +1,8 @@
 # -*- makefile -*-
 # vi:se ft=make:
 
+# utest framework works with fixed-prio scheduler only
+ifeq ($(CONFIG_SCHED_FIXED_PRIO),y)
 # mapping database
 INTERFACES_UTEST += test_mapdb test_map_util common_test_mapdb
 UTEST_EXPECTED += expected_mapdb expected_map_util
@@ -10,3 +12,4 @@ ifeq ($(CONFIG_XARCH)-$(CONFIG_ARM_LPAE),arm-)
 expected_mapdb-config := arm-nolpae
 expected_map_util-config := arm-nolpae
 endif
+endif # CONFIG_SCHED_FIXED_PRIO
