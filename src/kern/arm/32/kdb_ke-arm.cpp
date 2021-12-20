@@ -1,5 +1,7 @@
 INTERFACE [arm && debug]:
 
+#include "std_macros.h"
+
 void kdb_ke(char const *msg) asm ("kern_kdebug_cstr_entry")
 FIASCO_LONGCALL;
 
