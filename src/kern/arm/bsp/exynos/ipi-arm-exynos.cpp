@@ -3,9 +3,9 @@ IMPLEMENTATION [mp && pf_exynos && exynos_extgic]:
 #include "pic.h"
 #include "gic.h"
 
-IMPLEMENT inline NEEDS["processor.h"]
+IMPLEMENT inline
 void
-Ipi::init(Cpu_number cpu)
+Ipi::init(Cpu_number)
 {}
 
 PUBLIC static inline NEEDS["pic.h"]

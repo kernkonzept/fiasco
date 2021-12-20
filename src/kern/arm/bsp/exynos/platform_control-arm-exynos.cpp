@@ -180,6 +180,26 @@ Platform_control::cpuboot(Mword startup_vector, Cpu_phys_id cpu)
 }
 
 //--------------------------------------------------------------------------
+IMPLEMENTATION [arm && pf_exynos && mp && exynos_extgic]:
+
+PRIVATE static
+void
+Platform_control::send_boot_ipi(unsigned val)
+{
+  Pic::gic.current()->softint_phys(Ipi::Global_request, 1u << (16 + val));
+}
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION [arm && pf_exynos && mp && !exynos_extgic]:
+
+PRIVATE static
+void
+Platform_control::send_boot_ipi(unsigned val)
+{
+  Pic::gic->softint_phys(Ipi::Global_request, 1u << (16 + val));
+}
+
+//--------------------------------------------------------------------------
 IMPLEMENTATION [arm && pf_exynos && mp]:
 
 #include "pic.h"
@@ -205,7 +225,7 @@ Platform_control::boot_ap_cpus(Address phys_reset_vector)
           power_up_core(Cpu_phys_id(i));
           if (Platform::is_4412())
             cpuboot(phys_reset_vector, Cpu_phys_id(i));
-          Pic::gic->softint_phys(Ipi::Global_request, 1u << (16 + i));
+	  send_boot_ipi(i);
         }
 
       return;
@@ -214,7 +234,7 @@ Platform_control::boot_ap_cpus(Address phys_reset_vector)
   unsigned const second = 1;
   power_up_core(Cpu_phys_id(second));
   cpuboot(phys_reset_vector, Cpu_phys_id(second));
-  Pic::gic->softint_phys(Ipi::Global_request, 1u << (16 + second));
+  send_boot_ipi(second);
 }
 
 
