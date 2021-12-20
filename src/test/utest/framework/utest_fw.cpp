@@ -11,12 +11,13 @@ INTERFACE:
 #include <cstdlib>
 #include <cstring>
 
-#include "timer.h"
+#include "kdb_ke.h"
+#include "kip.h"
+#include "kmem_slab.h"
 #include "l4_error.h"
 #include "processor.h"
-#include "kip.h"
 #include "reset.h"
-#include "kdb_ke.h"
+#include "timer.h"
 #include "thread_object.h"
 #include "unique_ptr.h"
 
