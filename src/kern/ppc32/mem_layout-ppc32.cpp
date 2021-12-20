@@ -94,6 +94,7 @@ Mem_layout::read_special_safe(T const *a)
 IMPLEMENTATION [ppc32 && debug]:
 
 #include "kip_init.h"
+#include "mem_region.h"
 
 PUBLIC static FIASCO_INIT
 void

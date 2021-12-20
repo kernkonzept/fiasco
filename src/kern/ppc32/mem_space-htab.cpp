@@ -31,6 +31,7 @@ IMPLEMENTATION [ppc32]:
 #include <cstdio>
 #include "config.h"
 #include "kip_init.h"
+#include "mem_region.h"
 #include "panic.h"
 #include "util.h"
 
