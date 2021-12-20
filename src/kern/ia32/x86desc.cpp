@@ -309,7 +309,7 @@ X86desc::dpl() const
 PUBLIC inline NEEDS[X86desc::present, X86desc::dpl]
 bool
 X86desc::unsafe() const
-{ return present() && (dpl() != 3); }
+{ return present() && ((dpl() != 3) || !(access() & 0x10)); }
 
 PUBLIC inline
 Pseudo_descriptor::Pseudo_descriptor()
