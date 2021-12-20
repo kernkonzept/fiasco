@@ -4,42 +4,42 @@ inline
 void
 atomic_mp_and(Mword *l, Mword value)
 {
-  asm volatile ("lock; andq %1, %2" : "=m"(*l) : "ir"(value), "m"(*l));
+  asm volatile ("lock; andq %1, %2" : "=m"(*l) : "er"(value), "m"(*l));
 }
 
 inline
 void
 atomic_mp_or(Mword *l, Mword value)
 {
-  asm volatile ("lock; orq %1, %2" : "=m"(*l) : "ir"(value), "m"(*l));
+  asm volatile ("lock; orq %1, %2" : "=m"(*l) : "er"(value), "m"(*l));
 }
 
 inline
 void
 atomic_mp_add(Mword *l, Mword value)
 {
-  asm volatile ("lock; addq %1, %2" : "=m"(*l) : "ir"(value), "m"(*l));
+  asm volatile ("lock; addq %1, %2" : "=m"(*l) : "er"(value), "m"(*l));
 }
 
 inline
 void
 atomic_add(Mword *l, Mword value)
 {
-  asm volatile ("addq %1, %2" : "=m"(*l) : "ir"(value), "m"(*l));
+  asm volatile ("addq %1, %2" : "=m"(*l) : "er"(value), "m"(*l));
 }
 
 inline
 void
 atomic_and(Mword *l, Mword mask)
 {
-  asm volatile ("andq %1, %2" : "=m"(*l) : "ir"(mask), "m"(*l));
+  asm volatile ("andq %1, %2" : "=m"(*l) : "er"(mask), "m"(*l));
 }
 
 inline
 void
 atomic_or(Mword *l, Mword bits)
 {
-  asm volatile ("orq %1, %2" : "=m"(*l) : "ir"(bits), "m"(*l));
+  asm volatile ("orq %1, %2" : "=m"(*l) : "er"(bits), "m"(*l));
 }
 
 // ``unsafe'' stands for no safety according to the size of the given type.
