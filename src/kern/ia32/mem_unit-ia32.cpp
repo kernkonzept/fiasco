@@ -94,8 +94,6 @@ Mem_unit::tlb_flush_kernel(Address addr)
 //----------------------------------------------------------------------------
 IMPLEMENTATION[amd64 && ia32_pcid]:
 
-#include "context.h"
-
 /**
  * Flush the TLB, either at a virtual address or flush all mappings associated
  * with a PCID.
