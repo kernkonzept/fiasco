@@ -269,7 +269,7 @@ endchoice
 
 config ARM_SMC_USER
 	bool "Enable SMC user interface"
-	depends on !ARM_EM_TZ
+	depends on !ARM_EM_TZ && ARM_V6PLUS && !ARM_1136
 	help
 	  When enabled then Fiasco offers an interface that allows user
 	  threads to talk to Trusted Applications and a Trusted OS on the
