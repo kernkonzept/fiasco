@@ -209,7 +209,6 @@ public:
 
   void alloc(Cpu_number cpu)
   {
-    printf("Allocate ARM PPI %d to virtual %d\n", _irq, _virq);
     check (Irq_mgr::mgr->alloc(this, _irq, false));
     chip()->unmask_percpu(cpu, pin());
   }
