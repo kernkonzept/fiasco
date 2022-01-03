@@ -32,13 +32,14 @@ enum Thread_state
   Thread_dead                 = 0x200,// tcb allocated, but inactive (not in any q)
   Thread_suspended            = 0x400,// thread must not execute user code
 
+  // 0x800 is free
+
   Thread_finish_migration     = 0x1000,
   Thread_need_resched         = 0x2000,
   Thread_switch_hazards       = Thread_finish_migration | Thread_need_resched,
 
-  // 0x800, 0x1000 are free
-  //Thread_delayed_deadline     = 0x2000, // delayed until periodic deadline
-  //Thread_delayed_ipc          = 0x4000, // delayed until periodic ipc event
+  // 0x4000 is free
+
   Thread_fpu_owner            = 0x8000, // currently owns the fpu
   Thread_alien                = 0x10000, // Thread is an alien, is not allowed
                                      // to do system calls
@@ -46,6 +47,8 @@ enum Thread_state
                                      // system call is allowed
   Thread_in_exception         = 0x40000, // Thread has sent an exception but still
                                      // got no reply
+
+  // 0x80000 is free
 
   Thread_drq_wait             = 0x100000, // Thread polls for DRQs
   Thread_waiting              = 0x200000, // Thread waits for a lock
