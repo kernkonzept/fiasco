@@ -439,7 +439,6 @@ map(MAPDB* mapdb,
       // receiver address spaces.
 
       // Sender lookup.
-      // make gcc happy, initialized later anyway
       typename SPACE::Phys_addr s_phys, i_phys;
       Page_order s_order;
       Attr i_attribs;
@@ -719,7 +718,6 @@ unmap(MAPDB* mapdb, SPACE* space, Space *space_id,
   V_pfn end = start + size;
   V_pfn const map_max = space->map_max_address();
 
-  // make gcc happy, initialized later anyway
   typename SPACE::Phys_addr phys;
   V_pfc phys_size;
   V_pfn page_address;
