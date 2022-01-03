@@ -245,7 +245,7 @@ Jdb_disasm::action(int cmd, void *&args, char const *&fmt, int &next_char) overr
 
       code = Jdb_input_task_addr::action(args, fmt, next_char);
       if (code == Jdb_module::NOTHING
-	  && Jdb_input_task_addr::space() != 0)
+	  && !Jdb_input_task_addr::address().is_null())
 	{
 	  auto addr = Jdb_input_task_addr::address();
 	  return show(addr, 0) ? GO_BACK : NOTHING;
