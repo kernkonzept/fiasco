@@ -128,12 +128,6 @@ Kobject_mapdb::valid_address(Phys_addr obj)
 { return obj; }
 
 
-// FAKE
-PUBLIC static inline 
-Page_number
-Kobject_mapdb::vaddr(Frame const &)
-{ return Page_number(0); }
-
 PUBLIC inline static
 Kobject_mapdb::Mapping *
 Kobject_mapdb::insert(Frame const &, Space *,
