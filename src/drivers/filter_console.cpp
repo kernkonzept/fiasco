@@ -119,14 +119,16 @@ get_char:
       if (ch == 27)
         {
           ibuf[pos++] = 27;
-          int nc = getchar_timeout(csi_timeout);
-          if (nc == -1)
+          int nc;
+          if (!(_o->get_attributes() & Console::UART)
+              || ((nc = getchar_timeout(csi_timeout)) == -1))
             {
               pos = 0;
               return KEY_SINGLE_ESC;
             }
           else
             {
+              /* Detect ANSI escape sequences from UART console. */
               if (pos < sizeof(ibuf))
                 ibuf[pos++] = nc;
               if (nc == '[' || nc == 'O')
