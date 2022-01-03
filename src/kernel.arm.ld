@@ -200,6 +200,10 @@ SECTIONS {
   .initcall : AT(ADDR(.initcall) - phys_offset) {
     _initcall_start = .;
     *(.initcall.*)
+    PROVIDE (_alt_insns_begin = .);
+    KEEP(*(SORT(.alt_insns)))
+    PROVIDE (_alt_insns_end = .);
+    *(.alt_insn_replacement)
     . = ALIGN(4K);
     _initcall_end = .;
   } :initcall

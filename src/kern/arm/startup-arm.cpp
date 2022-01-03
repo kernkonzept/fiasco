@@ -19,6 +19,7 @@ IMPLEMENTATION [arm]:
 #include "thread.h"
 #include "timer.h"
 #include "utcb_init.h"
+#include "alternatives.h"
 
 #include <cstdlib>
 #include <cstdio>
@@ -46,6 +47,7 @@ Startup::stage2()
 
   Kip_init::init();
   Kmem_alloc::init();
+  Alternative_insn::init();
 
   // Initialize cpu-local data management and run constructors for CPU 0
   Per_cpu_data::init_ctors();
