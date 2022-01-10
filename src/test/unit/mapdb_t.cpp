@@ -951,6 +951,7 @@ void multilevel3(Mapdb &m)
 #include "boot_info.h"
 #include "cpu.h"
 #include "config.h"
+#include "kernel_console.h"
 #include "kip_init.h"
 #include "kmem.h"
 #include "kmem_alloc.h"
@@ -966,6 +967,7 @@ STATIC_INITIALIZER_P(init2, POST_CPU_LOCAL_INIT_PRIO);
 
 static void init()
 {
+  Kconsole::init();
   Usermode::init(Cpu_number::boot_cpu());
   Boot_info::init();
   Kip_init::init();
