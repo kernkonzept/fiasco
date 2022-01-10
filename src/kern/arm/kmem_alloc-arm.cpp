@@ -31,7 +31,8 @@ Kmem_alloc::map_pmem(unsigned long phy, unsigned long size)
                                  Page::Attr(Page::Rights::RW(),
                                             Page::Type::Normal(),
                                             Page::Kern::Global())));
-      pte.write_back_if(true, Mem_unit::Asid_kernel);
+      pte.write_back_if(true);
+      Mem_unit::kernel_tlb_flush((void *)(next_map + i));
     }
   Mem_layout::add_pmem(phy, next_map, size);
   next_map += size;

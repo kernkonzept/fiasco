@@ -30,7 +30,8 @@ void Kern_lib_page::init()
                                            + Mem_layout::Sdram_phys_base),
                              Page::Attr(Page::Rights::URX(), Page::Type::Normal(),
                                         Page::Kern::Global())));
-  pte.write_back_if(true, Mem_unit::Asid_kernel);
+  pte.write_back_if(true);
+  Mem_unit::kernel_tlb_flush((void *)Kmem_space::Kern_lib_base);
 }
 
 STATIC_INITIALIZE(Kern_lib_page);

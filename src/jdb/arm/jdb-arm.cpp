@@ -308,10 +308,9 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
           pte.set_page(
             pte.make_page(Phys_mem_addr(cxx::mask_lsb(phys, pte.page_order())),
                           Page::Attr(Page::Rights::RW(), mem_type)));
-          pte.write_back_if(true, Mem_unit::Asid_kernel);
+          pte.write_back_if(true);
+          Mem_unit::kernel_tlb_flush((void *)Mem_layout::Jdb_tmp_map_area);
     }
-
-  Mem_unit::kernel_tlb_flush();
 
   return (unsigned char *)(Mem_layout::Jdb_tmp_map_area
                            + (phys & (Config::SUPERPAGE_SIZE - 1)));

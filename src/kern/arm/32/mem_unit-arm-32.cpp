@@ -1,14 +1,3 @@
-IMPLEMENTATION [arm && !cpu_virt]:
-
-IMPLEMENT inline
-void Mem_unit::dtlb_flush(void *va)
-{
-  Mem::dsbst();
-  asm volatile("mcr p15, 0, %0, c8, c6, 1" // DTLBIMVA
-               : : "r" ((unsigned long)va & 0xfffff000) : "memory");
-  Mem::dsb();
-}
-
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_v5]:
 
@@ -34,6 +23,18 @@ IMPLEMENT inline
 void Mem_unit::tlb_flush(unsigned long)
 {
   tlb_flush();
+}
+
+IMPLEMENT inline
+void Mem_unit::kernel_tlb_flush()
+{ tlb_flush(); }
+
+IMPLEMENT inline
+void Mem_unit::kernel_tlb_flush(void *va)
+{
+  // No ASIDs on ARMv5, so just use the regular tlb_flush() implementation
+  // passing a dummy ASID value that is ignored anyway.
+  tlb_flush(va, 0);
 }
 
 //---------------------------------------------------------------------------
@@ -71,6 +72,34 @@ void Mem_unit::tlb_flush(unsigned long asid)
   Mem::dsb();
 }
 
+IMPLEMENT inline
+void Mem_unit::kernel_tlb_flush()
+{ tlb_flush(); }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && (arm_v6 || (arm_v7 && !mp))]:
+
+IMPLEMENT inline
+void Mem_unit::kernel_tlb_flush(void *)
+{
+  // On ARMv6 and ARMv7 without multiprocessing extension, it is not possible to
+  // flush all non-global TLB entries for an address without considering the
+  // associated ASID, thus perform a full TLB flush.
+  kernel_tlb_flush();
+}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && ((arm_v7 && mp) || arm_v8) && !cpu_virt]:
+
+IMPLEMENT inline
+void Mem_unit::kernel_tlb_flush(void *va)
+{
+  Mem::dsbst();
+  asm volatile("mcr p15, 0, %0, c8, c7, 3" // TLBIMVAA
+               : : "r" ((unsigned long)va & 0xfffff000) : "memory");
+  Mem::dsb();
+}
+
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_v7plus && cpu_virt]:
 
@@ -84,7 +113,7 @@ void Mem_unit::tlb_flush()
 }
 
 IMPLEMENT inline
-void Mem_unit::dtlb_flush(void *va)
+void Mem_unit::kernel_tlb_flush(void *va)
 {
   Mem::dsbst();
   asm volatile("mcr p15, 4, %0, c8, c7, 1" // TLBIMVAH
@@ -130,7 +159,7 @@ void Mem_unit::tlb_flush(unsigned long asid)
       : "memory");
 }
 
-IMPLEMENT_OVERRIDE inline
+IMPLEMENT inline
 void Mem_unit::kernel_tlb_flush()
 {
   Mem::dsbst();

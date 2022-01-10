@@ -9,7 +9,7 @@ void Mem_unit::tlb_flush()
 }
 
 IMPLEMENT inline
-void Mem_unit::dtlb_flush(void *va)
+void Mem_unit::kernel_tlb_flush(void *va)
 {
   Mem::dsbst();
   asm volatile("tlbi vaae1, %0"
@@ -40,10 +40,14 @@ void Mem_unit::tlb_flush(unsigned long asid)
   Mem::dsb();
 }
 
+IMPLEMENT inline
+void Mem_unit::kernel_tlb_flush()
+{ tlb_flush(); }
+
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && cpu_virt]:
 
-IMPLEMENT_OVERRIDE inline
+IMPLEMENT inline
 void Mem_unit::kernel_tlb_flush()
 {
   Mem::dsbst();
@@ -60,7 +64,7 @@ void Mem_unit::tlb_flush()
 }
 
 IMPLEMENT inline
-void Mem_unit::dtlb_flush(void *va)
+void Mem_unit::kernel_tlb_flush(void *va)
 {
   Mem::dsbst();
   asm volatile("tlbi vae2, %0"

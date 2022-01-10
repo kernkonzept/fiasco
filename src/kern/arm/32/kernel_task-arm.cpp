@@ -24,7 +24,8 @@ Kernel_task::map_syscall_page(void *p)
   pte.set_page(pte.make_page(Phys_mem_addr(Kmem::kdir->virt_to_phys((Address)p)),
                              Page::Attr(Page::Rights::URX(), Page::Type::Normal(),
                                         Page::Kern::Global())));
-  pte.write_back_if(true, Mem_unit::Asid_kernel);
+  pte.write_back_if(true);
+  Mem_unit::kernel_tlb_flush((void *)Kmem_space::Syscalls);
 }
 
 IMPLEMENTATION[arm && cpu_virt]:

@@ -8,7 +8,6 @@ class Mem_unit : public Mmu< Mem_layout::Cache_flush_area >
 public:
   enum : Mword
   {
-    Asid_kernel  = 0UL,
     Asid_invalid = ~0UL
   };
 
@@ -45,7 +44,7 @@ public:
    */
 
   static void kernel_tlb_flush();
-  static void dtlb_flush(void *va);
+  static void kernel_tlb_flush(void *va);
 };
 
 //---------------------------------------------------------------------------
@@ -65,13 +64,6 @@ EXTENSION class Mem_unit
 public:
   enum { Asid_bits = 8 };
 };
-
-//---------------------------------------------------------------------------
-IMPLEMENTATION [arm]:
-
-IMPLEMENT_DEFAULT inline NEEDS[Mem_unit::tlb_flush]
-void Mem_unit::kernel_tlb_flush()
-{ tlb_flush(); }
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && !arm_v7plus]:

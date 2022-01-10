@@ -122,7 +122,8 @@ Cpu::init_supervisor_mode(bool is_boot_cpu)
   pte.set_page(pte.make_page(Phys_mem_addr((unsigned long)&ivt_start),
                              Page::Attr(Page::Rights::RWX(),
                              Page::Type::Normal(), Page::Kern::Global())));
-  pte.write_back_if(true, Mem_unit::Asid_kernel);
+  pte.write_back_if(true);
+  Mem_unit::kernel_tlb_flush((void *)Kmem_space::Ivt_base);
 }
 
 //---------------------------------------------------------------------------
