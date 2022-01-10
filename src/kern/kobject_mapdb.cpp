@@ -33,8 +33,6 @@ public:
     Kobject_mappable* frame = 0;
     Mapping *m = 0;
 
-    inline size_t size() const;
-
     void clear(bool = false)
     {
       frame->_lock.clear();
