@@ -33,13 +33,13 @@ public:
     Kobject_mappable* frame = 0;
     Mapping *m = 0;
 
-    void clear(bool = false)
+    void clear()
     {
       frame->_lock.clear();
       frame = nullptr;
     }
 
-    void might_clear(bool = false)
+    void might_clear()
     {
       if (frame)
         clear();
