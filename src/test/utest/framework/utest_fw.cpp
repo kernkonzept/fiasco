@@ -48,6 +48,35 @@ struct Utest
         Kmem_slab_t<T>::del(s);
     }
   };
+
+  struct Bool_cpu_array : cxx::array<bool, Cpu_number, Config::Max_num_cpus>
+  {
+    Bool_cpu_array()
+    {
+      for (auto &b : *this)
+        b = false;
+    }
+  };
+
+  /// Support for running tests with disabled timer tick.
+  struct Tick_disabler
+  {
+    Tick_disabler();
+    ~Tick_disabler();
+
+    static bool supported();
+    static void wait(unsigned long ms);
+    static void wait_timer_periods(unsigned long periods);
+    static bool wait_for_event(bool const *done, unsigned long timeout);
+    static bool wait_for_events(Bool_cpu_array const &done, unsigned long timeout);
+
+  private:
+    static void wait_us(Unsigned64 us);
+    static Unsigned64 timestamp();
+
+    static Unsigned32 count_prev;
+    static Unsigned64 count_epoch;
+  };
 };
 
 /*
@@ -205,6 +234,8 @@ IMPLEMENTATION:
 
 #include <feature.h>
 #include "mem.h"
+#include "poll_timeout_kclock.h"
+#include "timer_tick.h"
 
 /**
  * Define a feature placeholder for external information filled in by
@@ -219,10 +250,19 @@ KIP_KERNEL_FEATURE(
  * Single instance of the test interface.
  */
 Utest_fw Utest_fw::tap_log;
-/*
+
+/**
  * External information structure.
  */
 Utest_fw::External_info Utest_fw::ext_info;
+
+/**
+ * Static members for emulating 64bit timestamps
+ * on platforms that only provide 32bit timestamps
+ * in hardware.
+ */
+Unsigned32 Utest::Tick_disabler::count_prev;
+Unsigned64 Utest::Tick_disabler::count_epoch;
 
 /**
  * Parse the KIP feature prefixed with utest_opts containing external
@@ -628,8 +668,75 @@ Utest::wait(unsigned long ms)
   Unsigned64 ctime = Timer::system_clock();
 
   // Busy waiting is ok, as nothing else happens on this core anyway.
-  while (Timer::system_clock() < ctime + us)
+  while (Timer::system_clock() - ctime < us)
     Proc::pause();
+}
+
+/**
+ * Wait for an event with a timeout.
+ *
+ * The event is indicated by a different thread by setting a shared
+ * variable to true.
+ *
+ * \param done    Shared variable that is set by a different thread to
+ *                indicate the event.
+ * \param timeout Timeout for waiting (in ms).
+ *
+ * \retval True  The event occurred (before the timeout).
+ * \retval False The timeout occurred before the event.
+ */
+PUBLIC static
+bool
+Utest::wait_for_event(bool const *done, unsigned long timeout)
+{
+  Poll_timeout_kclock pt(timeout * 1000);
+
+  while (pt.test(!access_once(done)))
+    Proc::pause();
+
+  return !pt.timed_out();
+}
+
+/**
+ * Wait for an event on all CPUs (except the current CPU) with a timeout.
+ *
+ * The event is indicated by a different thread on each CPU by setting
+ * the appropriate index in a shared array to true. The current CPU and
+ * any offline CPUs are skipped for this purpose.
+ *
+ * Note that we wait for the CPUs sequentially, thus the worst case wait
+ * time is the timeout multiplied by the number of CPUs (minus one and minus
+ * the number of offline CPUs).
+ *
+ * \param done    Shared array where each index is set by a different thread
+ *                on a given CPU to indicate the event.
+ * \param timeout Timeout for waiting (in ms).
+ *
+ * \retval True  The event occurred on all CPUs (before the timeout).
+ * \retval False The timeout occurred before the event at least on one
+ *               of the CPUs.
+ */
+PUBLIC static
+bool
+Utest::wait_for_events(Bool_cpu_array const &done, unsigned long timeout)
+{
+  bool occurred = true;
+
+  for (auto i = Cpu_number::first(); i < Config::max_num_cpus(); ++i)
+  {
+    // Skip the current and offline CPUs.
+    if (i == current_cpu() || !Cpu::online(i))
+      continue;
+
+    if (!wait_for_event(&done[i], timeout))
+    {
+      // The waiting has timed out on the i-th CPU.
+      occurred = false;
+      break;
+    }
+  }
+
+  return occurred;
 }
 
 /**
@@ -774,4 +881,260 @@ static cxx::unique_ptr<T, Utest::Deleter<T>>
 Utest::kmem_create_clear(A&&... args)
 {
   return kmem_create_fill<T, 0x00, A...>(cxx::forward<A>(args)...);
+}
+
+/**
+ * Construct object that disables kernel tick. The timer
+ * tick is reenabled again then the object is destructed
+ * (e.g. when the object on stack goes out of scope).
+ */
+IMPLEMENT
+Utest::Tick_disabler::Tick_disabler()
+{
+  auto guard = lock_guard(cpu_lock);
+  Timer_tick::disable(current_cpu());
+}
+
+/**
+ * Reenable kernel tick again.
+ */
+IMPLEMENT
+Utest::Tick_disabler::~Tick_disabler()
+{
+  auto guard = lock_guard(cpu_lock);
+  Timer_tick::enable(current_cpu());
+}
+
+/**
+ * Wait for a defined period of time. This method is guaranteed
+ * to work even if the kernel tick is disabled.
+ *
+ * \param ms  Milliseconds to wait.
+ */
+IMPLEMENT static
+void
+Utest::Tick_disabler::wait(unsigned long ms)
+{
+  wait_us(static_cast<Unsigned64>(ms) * 1000UL);
+}
+
+/**
+ * Wait for a defined number of timer periods. This method is guaranteed
+ * to work even if the kernel tick is disabled.
+ *
+ * \param periods Timer periods to wait.
+ */
+IMPLEMENT static
+void
+Utest::Tick_disabler::wait_timer_periods(unsigned long periods)
+{
+  Unsigned64 period = static_cast<Unsigned64>(Config::Scheduler_granularity);
+  Unsigned64 count = static_cast<Unsigned64>(periods);
+
+  wait_us(period * count);
+}
+
+/**
+ * Wait for a defined period of time in us. This method is guaranteed
+ * to work even if the kernel tick is disabled.
+ *
+ * \param us  Microseconds to wait.
+ */
+IMPLEMENT static
+void
+Utest::Tick_disabler::wait_us(Unsigned64 us)
+{
+  Unsigned64 ctime = timestamp();
+
+  // Busy waiting is ok, as nothing else happens on this core anyway.
+  while (timestamp() - ctime < us)
+    Proc::pause();
+}
+
+/**
+ * Wait for an event with a timeout. This method is guaranteed
+ * to work even if the kernel tick is disabled.
+ *
+ * The event is indicated by a different thread by setting a shared
+ * variable to true.
+ *
+ * \param done    Shared variable that is set by a different thread to
+ *                indicate the event.
+ * \param timeout Timeout for waiting (in ms).
+ *
+ * \retval True  The event occurred (before the timeout).
+ * \retval False The timeout occurred before the event.
+ */
+IMPLEMENT static
+bool
+Utest::Tick_disabler::wait_for_event(bool const *done, unsigned long timeout)
+{
+  Unsigned64 us = static_cast<Unsigned64>(timeout) * 1000;
+  Unsigned64 ctime = timestamp();
+
+  while (timestamp() - ctime < us)
+    if (access_once(done))
+      return true;
+
+  return false;
+}
+
+/**
+ * Wait for an event on all CPUs (except the current CPU) with a timeout.
+ * This method is guaranteed to work even if the kernel tick is disabled.
+ *
+ * The event is indicated by a different thread on each CPU by setting
+ * the appropriate index in a shared array to true. The current CPU and
+ * any offline CPUs are skipped for this purpose.
+ *
+ * Note that we wait for the CPUs sequentially, thus the worst case wait
+ * time is the timeout multiplied by the number of CPUs (minus one and minus
+ * the number of offline CPUs).
+ *
+ * \param done    Shared array where each index is set by a different thread
+ *                on a given CPU to indicate the event.
+ * \param timeout Timeout for waiting (in ms).
+ *
+ * \retval True  The event occurred on all CPUs (before the timeout).
+ * \retval False The timeout occurred before the event at least on one
+ *               of the CPUs.
+ */
+IMPLEMENT static
+bool
+Utest::Tick_disabler::wait_for_events(Bool_cpu_array const &done, unsigned long timeout)
+{
+  bool occurred = true;
+
+  for (auto i = Cpu_number::first(); i < Config::max_num_cpus(); ++i)
+  {
+    // Skip the current and offline CPUs.
+    if (i == current_cpu() || !Cpu::online(i))
+      continue;
+
+    if (!Tick_disabler::wait_for_event(&done[i], timeout))
+    {
+      // The waiting has timed out on the i-th CPU.
+      occurred = false;
+      break;
+    }
+  }
+
+  return occurred;
+}
+
+/**
+ * Indicate whether tickless operation is supported.
+ *
+ * For the tickless operation to be supported, we need a reliable
+ * plaform-specific timestamp counter that is independent from the
+ * Timer_tick. We indicate no support by default and override the
+ * implementation on a platform-specific basis.
+ *
+ * \return Indication whether tickless operation is supported.
+ */
+IMPLEMENT_DEFAULT static
+bool
+Utest::Tick_disabler::supported()
+{
+  return false;
+}
+
+/// Dummy timestamp implementation.
+IMPLEMENT_DEFAULT static
+Unsigned64
+Utest::Tick_disabler::timestamp()
+{
+  return 0;
+}
+
+IMPLEMENTATION[ia32 || amd64]:
+
+/// Tickless operation is supported on IA-32 and AMD64.
+IMPLEMENT_OVERRIDE static
+bool
+Utest::Tick_disabler::supported()
+{
+  return true;
+}
+
+/**
+ * Get current timestamp in us.
+ *
+ * \return Current timestamp in us.
+ */
+IMPLEMENT_OVERRIDE static
+Unsigned64
+Utest::Tick_disabler::timestamp()
+{
+  return Cpu::cpus.cpu(current_cpu()).time_us();
+}
+
+IMPLEMENTATION[mips]:
+
+/// Tickless operation is supported on MIPS.
+IMPLEMENT_OVERRIDE static
+bool
+Utest::Tick_disabler::supported()
+{
+  return true;
+}
+
+/**
+ * Get current timestamp in us.
+ *
+ * \return Current timestamp in us.
+ */
+IMPLEMENT_OVERRIDE static
+Unsigned64
+Utest::Tick_disabler::timestamp()
+{
+  Unsigned32 count = Mips::mfc0_32(Mips::Cp0_count);
+
+  /*
+   * This is a crude overflow solution that creates an illusion
+   * that the counter increases monotonically not only up to 2^32 - 1
+   * (which wraps around in a magnitude of seconds), but up to 2^64 - 1
+   * (which wraps around in a magnitude of hundreds of years).
+   *
+   * Of course, if this method is called with a period longer than
+   * the underlying wraparound period, the wraparound event could be
+   * completely missed and the actual number of the wraparound events
+   * cannot be known. This leads to inaccurate time measurements
+   * (slower time passage than in reality). However, we assume that
+   * this method is always called in a tight busy loop and therefore
+   * the potentially missed wraparound events are not a real problem.
+   */
+  if (count_prev > count)
+    count_epoch += (static_cast<Unsigned32>(~0UL)) - count_prev;
+
+  count_prev = count;
+
+  Unsigned64 freq = Cpu::frequency() / 2;
+
+  return ((count_epoch + static_cast<Unsigned64>(count)) * 1000000UL) / freq;
+}
+
+IMPLEMENTATION[arm && arm_generic_timer]:
+
+/// Tickless operation is supported on ARM with a generic timer.
+IMPLEMENT_OVERRIDE static
+bool
+Utest::Tick_disabler::supported()
+{
+  return true;
+}
+
+/**
+ * Get current timestamp in us.
+ *
+ * \return Current timestamp in us.
+ */
+IMPLEMENT_OVERRIDE static
+Unsigned64
+Utest::Tick_disabler::timestamp()
+{
+  Unsigned64 count = Generic_timer::Gtimer::counter();
+  Unsigned64 freq = Generic_timer::Gtimer::frequency();
+
+  return (count * 1000000UL) / freq;
 }
