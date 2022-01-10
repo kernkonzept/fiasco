@@ -26,20 +26,22 @@ template< unsigned long Flush_area, bool Ram >
 void Mmu<Flush_area, Ram>::flush_cache(void const *start,
 				       void const *end)
 {
-  unsigned i = icache_line_size(), d = dcache_line_size();
-  __asm__ __volatile__ (
-      "1:  mcr p15, 0, %[i], c7, c14, 1  \n" // DCCIMVAC
-      "    mcr p15, 0, %[i], c7, c5, 1   \n" // ICIMVAU
-      "    add %[i], %[i], %[clsz]       \n"
-      "    cmp %[i], %[end]              \n"
-      "    blo 1b                        \n"
-      : [i]     "=&r" (start)
-      :         "0"   ((unsigned long)start & ~((i < d ? d : i) - 1)),
-        [end]   "r"   (end),
-	[clsz]  "ir"  (i < d ? i : d)
-      : "r0", "memory");
-  btc_inv();
-  Mem::dsb();
+  unsigned long s = (unsigned long)start;
+  unsigned long e = (unsigned long)end;
+  unsigned long is = icache_line_size(), ds = dcache_line_size();
+
+  for (unsigned long i = s & ~(ds - 1U); i < e; i += ds)
+    __asm__ __volatile__ ("mcr p15, 0, %0, c7, c14, 1" : : "r"(i));  // DCCIMVAC
+
+  Mem::dsb(); // make sure data cache changes are visible to instruction cache
+
+  for (unsigned long i = s & ~(is - 1U); i < e; i += is)
+    __asm__ __volatile__ (
+        "mcr p15, 0, %0, c7, c5, 1   \n"  // ICIMVAU
+        "mcr p15, 0, %0, c7, c5, 7   \n"  // BPIMVA
+        : : "r"(i));
+
+  Mem::dsb(); // ensure completion of instruction cache invalidation
 }
 
 IMPLEMENT inline
