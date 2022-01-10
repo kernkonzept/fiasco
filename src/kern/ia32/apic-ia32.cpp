@@ -11,6 +11,7 @@ class Cpu;
 class Apic : public Pm_object
 {
 public:
+  static void map_registers() FIASCO_INIT;
   static void init(bool resume = false) FIASCO_INIT_AND_PM;
   Unsigned32 apic_id() const { return _id; }
   Unsigned32 cpu_id() const { return _id >> 24; }
@@ -27,7 +28,7 @@ private:
   static void			error_interrupt(Return_frame *regs)
 				asm ("apic_error_interrupt") FIASCO_FASTCALL;
 
-  static int			present;
+  static unsigned		present;
   static int			good_cpu;
   static const			Address io_base;
   static Address		phys_base;
@@ -90,6 +91,12 @@ private:
   enum
   {
     APIC_base_msr		= 0x1b,
+  };
+
+  enum
+  {
+    Present = 0x01,
+    Present_before_msr = 0x02,
   };
 };
 
@@ -219,7 +226,7 @@ unsigned apic_spurious_interrupt_cnt;
 unsigned apic_error_cnt;
 Address  apic_io_base;
 
-int        Apic::present;
+unsigned   Apic::present;
 int        Apic::good_cpu;
 const Address Apic::io_base = Mem_layout::Local_apic_page;
 Address    Apic::phys_base;
@@ -499,14 +506,14 @@ PUBLIC static inline
 int
 Apic::have_pcint()
 {
-  return (present && (get_max_lvt() >= 4));
+  return (is_present() && (get_max_lvt() >= 4));
 }
 
 PUBLIC static inline
 int
 Apic::have_tsint()
 {
-  return (present && (get_max_lvt() >= 5));
+  return (is_present() && (get_max_lvt() >= 5));
 }
 
 // check if APIC is working (check timer functionality)
@@ -696,7 +703,42 @@ PUBLIC static
 inline int
 Apic::is_present()
 {
-  return present;
+  return ((present & Present) == Present);
+}
+
+PUBLIC static
+inline int
+Apic::is_present_before_msr()
+{
+  return ((present & Present_before_msr) == Present_before_msr);
+}
+
+PUBLIC static
+void
+Apic::set_present()
+{
+  present |= Present;
+}
+
+PUBLIC static
+void
+Apic::set_present_before_msr()
+{
+  present |= Present_before_msr;
+}
+
+PUBLIC static
+void
+Apic::clear_present()
+{
+  present &= ~Present;
+}
+
+PUBLIC static
+void
+Apic::clear_present_before_msr()
+{
+  present &= ~Present_before_msr;
 }
 
 PUBLIC static
@@ -807,7 +849,7 @@ Apic::done()
 {
   Unsigned64 val;
 
-  if (!present)
+  if (!is_present())
     return;
 
   val = reg_read(APIC_spiv);
@@ -837,21 +879,32 @@ Apic::dump_info()
            get_id() >> 24, get_version(), get_max_lvt());
 }
 
+/**
+ * \brief Map the Local APIC device registers
+ *
+ * This method needs to be called before Local APIC registers are accessed
+ * (which includes the Apic::get_id() and Apic::get_version() methods) and
+ * also before the Apic::init() method is called. It runs the basic detection
+ * of the Local APIC presence and maps its device registers.
+ */
 IMPLEMENT
 void
-Apic::init(bool resume)
+Apic::map_registers()
 {
   Cpu *cpu = Cpu::boot_cpu();
 
-  int was_present;
-  // FIXME: reset cached CPU features, we should add a special function
-  // for the apic bit
-  if(resume)
-    cpu->update_features_info();
+  if (test_present(cpu))
+    {
+      set_present();
+      set_present_before_msr();
+    }
+  else
+    {
+      clear_present();
+      clear_present_before_msr();
+    }
 
-  was_present = present = test_present(cpu);
-
-  if (!was_present)
+  if (!is_present_before_msr())
     {
       good_cpu = test_cpu(cpu);
 
@@ -861,7 +914,8 @@ Apic::init(bool resume)
           // set base address of I/O registers to be able to access the registers
           activate_by_msr();
           cpu->update_features_info();
-          present = test_present(cpu);
+          if (test_present(cpu))
+            set_present();
         }
     }
 
@@ -869,12 +923,37 @@ Apic::init(bool resume)
     return;
 
   // initialize if available
-  if (present)
-    {
-      // map the Local APIC device registers
-      if (!resume)
-        map_apic_page();
+  if (is_present())
+    // map the Local APIC device registers
+    map_apic_page();
+}
 
+/**
+ * \brief Initialize the Local APIC
+ *
+ * This method does the initialization of the Local APIC either on bootstrap
+ * or on power resume. Before this method is called for the first time,
+ * the Apic::map_registers() method needs to be called.
+ *
+ * \param resume Initialization after power resume.
+ */
+IMPLEMENT
+void
+Apic::init(bool resume)
+{
+  Cpu *cpu = Cpu::boot_cpu();
+
+  // FIXME: reset cached CPU features, we should add a special function
+  // for the apic bit
+  if (resume)
+    cpu->update_features_info();
+
+  if (!Config::apic)
+    return;
+
+  // initialize if available
+  if (is_present())
+    {
       // set some interrupt vectors to appropriate values
       init_lvt();
 
@@ -885,16 +964,18 @@ Apic::init(bool resume)
       init_tpr();
 
       // test if local timer counts down
-      if ((present = check_working()))
+      if (check_working())
         {
-          if (!was_present)
+          if (!is_present_before_msr())
             // APIC _was_ not present before writing to msr so we have
             // to set APIC_lvt0 and APIC_lvt1 to appropriate values
             route_pic_through_apic();
         }
+      else
+        clear_present();
     }
 
-  if (!present)
+  if (!is_present())
     panic("Local APIC not found");
 
   dump_info();

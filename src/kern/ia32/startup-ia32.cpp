@@ -72,6 +72,8 @@ Startup::stage2()
 
   Intel::Io_mmu::init(Cpu_number::boot_cpu());
   // also has a fallback to IO-APIC without remapping
+  Apic::map_registers();
+  Apic::apic.cpu(Cpu_number::boot_cpu()).construct(Cpu_number::boot_cpu());
   bool use_io_apic = Io_apic_remapped::init_apics();
   if (use_io_apic)
     {
@@ -93,7 +95,6 @@ Startup::stage2()
   Idt::init();
   Fpu::init(Cpu_number::boot_cpu(), false);
   Apic::init();
-  Apic::apic.cpu(Cpu_number::boot_cpu()).construct(Cpu_number::boot_cpu());
   Ipi::init(Cpu_number::boot_cpu());
   Timer::init(Cpu_number::boot_cpu());
   Kip_init::init_kip_clock();
