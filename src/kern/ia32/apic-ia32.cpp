@@ -81,6 +81,7 @@ private:
     Tmict   = 0x380,    // Timer: Initial count register
     Tmcct   = 0x390,    // Timer: Current count register
     Tdcr    = 0x3E0,    // Timer: Divide configuration register
+    X2selfipi = 0x3F0,  // x2APIC only: Self-IPI register
   };
 
   enum

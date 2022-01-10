@@ -50,6 +50,11 @@ void
 Ipi::bcast(Message, Cpu_number /* from_cpu */)
 {}
 
+PUBLIC static inline
+void
+Ipi::self(Message)
+{}
+
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION[mp]:

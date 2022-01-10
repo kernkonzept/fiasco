@@ -97,6 +97,28 @@ Apic::mp_send_ipi(Ipi_dest_shrt dest_shrt, Apic_id dest,
 
 PUBLIC static inline
 void
+Apic::mp_self_ipi(Unsigned8 vector, Apic_id dest)
+{
+  while (!mp_ipi_idle())
+    Proc::pause();
+
+  if (use_x2apic())
+    {
+      asm volatile ("mfence; lfence"); // enforce serializing as in xAPIC mode
+      reg_write(Reg::X2selfipi, vector);
+    }
+  else
+    {
+      // Specifically the semantics are identical to the following settings for
+      // an inter-processor interrupt sent via the ICR - Destination Shorthand
+      // (ICR[19:18] = 01 (Self)), Trigger Mode (ICR[15] = 0 (Edge)),
+      // Delivery Mode (ICR[10:8] = 000 (Fixed)), Vector (ICR[7:0] = Vector).
+      mp_send_ipi(Ipi_dest_shrt::Self, dest, Ipi_delivery_mode::Fixed, vector);
+    }
+}
+
+PUBLIC static inline
+void
 Apic::mp_ipi_ack()
 {
   reg_write(Reg::Eoi, 0);

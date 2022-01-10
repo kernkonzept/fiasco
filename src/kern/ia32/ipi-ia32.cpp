@@ -74,6 +74,14 @@ Ipi::bcast(Message m, Cpu_number /* from_cpu */)
                     Apic::Ipi_delivery_mode::Fixed, Unsigned8{m});
 }
 
+PUBLIC static inline NEEDS["apic.h"]
+void
+Ipi::self(Message m)
+{
+  Apic::mp_self_ipi(Unsigned8{m}, _ipi.cpu(current_cpu())._apic_id);
+  stat_sent(current_cpu());
+}
+
 #if defined(CONFIG_IRQ_SPINNER)
 
 // debug

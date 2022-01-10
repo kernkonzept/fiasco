@@ -715,7 +715,7 @@ Vm_vmx_ept::resume_vcpu(Context *ctxt, Vcpu_state *vcpu,
           // NOTE: However, the timer is broken on many CPUs or may not
           // NOTE: be supported at all. So keep it simple for now.
           assert(cpu_lock.test());
-          Ipi::send(Ipi::Global_request, current_cpu(), current_cpu());
+          Ipi::self(Ipi::Global_request);
         }
       else if (   !(vcpu->_saved_state & Vcpu_state::F_irqs)
                && (vcpu->sticky_flags & Vcpu_state::Sf_irq_pending))
