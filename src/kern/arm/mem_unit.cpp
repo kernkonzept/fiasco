@@ -23,11 +23,14 @@ public:
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
-#include "mmu.h"
-
 IMPLEMENT_DEFAULT inline NEEDS[Mem_unit::tlb_flush]
 void Mem_unit::kernel_tlb_flush()
 { tlb_flush(); }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && !arm_v7plus]:
+
+#include "mmu.h"
 
 PUBLIC static inline ALWAYS_INLINE NEEDS["mmu.h"]
 void

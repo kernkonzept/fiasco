@@ -121,3 +121,27 @@ void Mem_unit::kernel_tlb_flush()
 {
   asm volatile("mcr p15, 4, r0, c8, c7, 0" : : : "memory"); // TLBIALLH
 }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && arm_v7plus]:
+
+PUBLIC static inline
+void
+Mem_unit::make_coherent_to_pou(void const *start, size_t size)
+{
+  unsigned long end = (unsigned long)start + size;
+  unsigned long is = icache_line_size(), ds = dcache_line_size();
+
+  for (auto i = (unsigned long)start & ~(ds - 1U); i < end; i += ds)
+    __asm__ __volatile__ ("mcr p15, 0, %0, c7, c11, 1" : : "r"(i));  // DCCMVAU
+
+  Mem::dsb(); // make sure data cache changes are visible to instruction cache
+
+  for (auto i = (unsigned long)start & ~(is - 1U); i < end; i += is)
+    __asm__ __volatile__ (
+        "mcr p15, 0, %0, c7, c5, 1   \n"  // ICIMVAU
+        "mcr p15, 0, %0, c7, c5, 7   \n"  // BPIMVA
+        : : "r"(i));
+
+  Mem::dsb(); // ensure completion of instruction cache invalidation
+}

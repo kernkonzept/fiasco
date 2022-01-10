@@ -111,3 +111,24 @@ void Mem_unit::tlb_flush(unsigned long asid)
       :
       "memory");
 }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && arm_v8plus]:
+
+PUBLIC static inline
+void
+Mem_unit::make_coherent_to_pou(void const *start, size_t size)
+{
+  unsigned long end = (unsigned long)start + size;
+  unsigned long is = icache_line_size(), ds = dcache_line_size();
+
+  for (auto i = (unsigned long)start & ~(ds - 1U); i < end; i += ds)
+    __asm__ __volatile__ ("dc cvau, %0" : : "r"(i));
+
+  Mem::dsb(); // make sure data cache changes are visible to instruction cache
+
+  for (auto i = (unsigned long)start & ~(is - 1U); i < end; i += is)
+    __asm__ __volatile__ ("ic ivau, %0" : : "r"(i));
+
+  Mem::dsb(); // ensure completion of instruction cache invalidation
+}
