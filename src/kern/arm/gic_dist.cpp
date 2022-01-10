@@ -300,11 +300,6 @@ Gic_dist::set_mode(Mword pin, Irq_chip::Mode m)
   if (!m.set_mode())
     return 0;
 
-  // QEMU workaround, as QEMU has a buggy implementation of
-  // GICD_ICFGR up to and including version 2.1
-  if (pin < 32)
-    return 0;
-
   if (pin < 16)
     return -L4_err::EInval;
 
