@@ -37,7 +37,12 @@ Mword Timer::_freq0;
 
 IMPLEMENT_OVERRIDE
 Irq_chip::Mode Timer::irq_mode()
-{ return Irq_chip::Mode::F_level_low; }
+{
+  // Some sources describe this IRQ as "level/low" but the GIC code only allows
+  // "level/high" or "edge/high". The GIC redistributor doesn't distinguish
+  // between "low" and "high" so just use the accepted level-sensitive value.
+  return Irq_chip::Mode::F_level_high;
+}
 
 IMPLEMENT_DEFAULT
 static inline
