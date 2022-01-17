@@ -29,7 +29,7 @@ namespace Generic_timer {
 
     static void setup_timer_access()
     {
-      // CNTKCTL: allow access to virtual counter from PL0
+      // CNTKCTL: allow access to virtual counter from EL0
       asm volatile("msr CNTKCTL_EL1, %0" : : "r"(0x2UL));
     }
 
@@ -49,7 +49,7 @@ namespace Generic_timer {
     static Unsigned64 counter() // use the physical counter
     { Unsigned64 v; asm volatile("mrs %0, CNTPCT_EL0" : "=r" (v)); return v; }
 
-    static Unsigned64 compare() // use PL1 physical compare
+    static Unsigned64 compare() // use EL1 physical compare
     { Unsigned64 v; asm volatile("mrs %0, CNTP_CVAL_EL0" : "=r" (v)); return v; }
 
     static void compare(Unsigned64 v)
@@ -63,7 +63,7 @@ namespace Generic_timer {
 
     static void setup_timer_access()
     {
-       // CNTKCTL: allow access to virtual and physical counter from PL0
+       // CNTKCTL: allow access to virtual and physical counter from EL0
       asm volatile("msr CNTKCTL_EL1, %0" : : "r"(0x3UL));
     }
 
@@ -83,7 +83,7 @@ namespace Generic_timer {
     static Unsigned64 counter() // use the physical counter
     { Unsigned64 v; asm volatile("mrs %0, CNTPCT_EL0" : "=r" (v)); return v; }
 
-    static Unsigned64 compare() // use PL2 physical compare
+    static Unsigned64 compare() // use EL2 physical compare
     { Unsigned64 v; asm volatile("mrs %0, CNTHP_CVAL_EL2" : "=r" (v)); return v; }
 
     static void compare(Unsigned64 v)
@@ -97,9 +97,9 @@ namespace Generic_timer {
 
     static void setup_timer_access()
     {
-      // CNTKCTL: allow access to virtual and physical counter from PL0
+      // CNTKCTL: allow access to virtual and physical counter from EL0
       asm volatile("msr CNTKCTL_EL1, %0" : : "r"(0x3UL));
-      // CNTHCTL: allow access to physical timer from PL0 and PL1
+      // CNTHCTL: allow access to physical timer from EL0 and EL1
       asm volatile("msr CNTHCTL_EL2, %0" : : "r"(0x1UL));
     }
 
