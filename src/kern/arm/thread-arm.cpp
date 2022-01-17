@@ -337,14 +337,6 @@ Thread::save_fpu_state_to_utcb(Trap_state *ts, Utcb *u)
                                  ts, (Fpu::Exception_state_user *)esu);
 }
 
-PRIVATE inline
-bool
-Thread::invalid_ipc_buffer(void const *a)
-{
-  return Mem_layout::in_kernel(((Address)a & Config::SUPERPAGE_MASK)
-                               + Config::SUPERPAGE_SIZE - 1);
-}
-
 PROTECTED inline
 int
 Thread::do_trigger_exception(Entry_frame *r, void *ret_handler)
