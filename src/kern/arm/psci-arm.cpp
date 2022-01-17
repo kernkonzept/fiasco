@@ -120,6 +120,8 @@ Psci::psci_call(Mword fn_id,
                 Mword a4 = 0, Mword a5 = 0,
                 Mword a6 = 0)
 {
+  invoke_test_callback(psci_fn(fn_id), a0, a1, a2, a3, a4, a5, a6);
+
   register Mword r0 FIASCO_ARM_ASM_REG(0) = psci_fn(fn_id);
   register Mword r1 FIASCO_ARM_ASM_REG(1) = a0;
   register Mword r2 FIASCO_ARM_ASM_REG(2) = a1;
@@ -192,3 +194,40 @@ Psci::system_off()
   psci_call(Psci_system_off);
   printf("PSCI system-off failed.\n");
 }
+
+// ------------------------------------------------------------------------
+INTERFACE [arm && arm_psci && test_support_code]:
+
+#include <cxx/function>
+
+EXTENSION class Psci
+{
+public:
+  using Test_callback = cxx::functor<void (Mword fn_id, Mword a0,
+                                           Mword a1, Mword a2, Mword a3,
+                                           Mword a4, Mword a5, Mword a6)>;
+  static Test_callback test_cb;
+};
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && arm_psci && test_support_code]:
+
+Psci::Test_callback Psci::test_cb;
+
+PUBLIC static inline
+void
+Psci::invoke_test_callback(Mword fn_id, Mword a0, Mword a1, Mword a2,
+                           Mword a3, Mword a4, Mword a5, Mword a6)
+{
+  if (test_cb)
+    test_cb(fn_id, a0, a1, a2, a3, a4, a5, a6);
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && arm_psci && !test_support_code]:
+
+PUBLIC static inline
+void
+Psci::invoke_test_callback(Mword, Mword, Mword, Mword,
+                           Mword, Mword, Mword, Mword)
+{}

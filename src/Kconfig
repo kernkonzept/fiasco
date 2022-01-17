@@ -484,8 +484,15 @@ config SERIAL
 
 config UNIT_TEST
 	bool "Compile unit tests"
+	select TEST_SUPPORT_CODE
 	help
 	  Compile fiasco unit tests.
+
+config TEST_SUPPORT_CODE
+	bool "Compile test support code"
+	default n
+	help
+	  Include test support code when compiling Fiasco.
 
 menuconfig JDB
 	bool "JDB kernel debugger"
