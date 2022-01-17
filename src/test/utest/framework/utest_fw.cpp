@@ -79,6 +79,33 @@ struct Utest
   };
 };
 
+/**
+ * Format class useful for printf-formatted statements in assertion text.
+ *
+ * As a side effect, this class allocates the string buffer using kmem_create()
+ * to save (rare) kernel stack. The buffer has a fixed size which should be
+ * sufficient for regular usage.
+ */
+struct Utest_fmt
+{
+  struct Buffer { char b[1024]; };
+  using Buffer_ptr = decltype(Utest::kmem_create<Buffer>());
+
+  __attribute__((format(printf,2,3))) Utest_fmt(char const *fmt, ...)
+  {
+    va_list args;
+
+    va_start(args, fmt);
+    (void)vsnprintf(msg->b, sizeof(Buffer), fmt, args);
+    va_end(args);
+  }
+
+  char const * operator()() const
+  { return msg->b; }
+
+  Buffer_ptr msg = Utest::kmem_create<Buffer>();
+};
+
 /*
  * Printf wrapper filtering depending on verbosity setting.
  */
@@ -567,6 +594,24 @@ Utest_fw::binary_cmp(bool finish_on_failure, bool result,
       if (finish_on_failure)
         finish();
     }
+}
+
+/**
+ * \copydoc Utest_fw::binary_cmp.
+ *
+ * This function accepts the reference to a Utest_fmt object allowing to
+ * specify a message string constructed at runtime.
+ */
+PUBLIC template <typename A, typename B> inline
+void
+Utest_fw::binary_cmp(bool finish_on_failure, bool result,
+                     char const *lhs_str, char const *rhs_str,
+                     A &&lhs, B &&rhs,
+                     char const *op, Utest_fmt const &fmt,
+                     char const *file, int line)
+{
+  return binary_cmp(finish_on_failure, result, lhs_str, rhs_str, lhs, rhs,
+                    op, fmt(), file, line);
 }
 
 PUBLIC template <typename A> inline
