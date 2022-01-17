@@ -198,10 +198,12 @@ _tramp_mp_entry:
 
 	adr r0, .LC_tramp_mp_startup_pdbr
 	ldr r0, [r0]
-	tst r1, #(1 << 31)
-	movne  r1, #0
-	mcrrne p15, 0, r0, r1, c2
-	mcreq  p15, 0, r0, c2, c0
+#ifdef CONFIG_ARM_LPAE
+	mov r1, #0
+	mcrr p15, 0, r0, r1, c2
+#else
+	mcr p15, 0, r0, c2, c0
+#endif
 #endif
 
 	adr r0, .LC_tramp_mp_startup_cp15_c1
