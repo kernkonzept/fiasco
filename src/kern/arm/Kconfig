@@ -54,6 +54,9 @@ config CAN_ARM_CPU_CORTEX_A9
 config CAN_ARM_CPU_CORTEX_A15
 	bool
 
+config CAN_ARM_CPU_KRAIT
+	bool
+
 config CAN_ARM_CACHE_L2CXX0
 	bool
 
@@ -229,6 +232,12 @@ config ARM_NEOVERSE_N1
 	select HAS_MP_OPTION
 	select HAS_CPU_VIRT if ARM_GIC
 	select HAS_64BIT
+
+config ARM_KRAIT
+	bool "Qualcomm Krait"
+	depends on CAN_ARM_CPU_KRAIT
+	select ARM_V7
+	select HAS_MP_OPTION
 
 endchoice
 
