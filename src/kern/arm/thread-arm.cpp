@@ -486,9 +486,25 @@ Thread::set_tpidruro(Trex const *t)
 
 PRIVATE inline
 void
+Thread::set_tpidrurw(Trex const *t)
+{
+  _tpidrurw = access_once(&t->tpidrurw);
+  if (this == current_thread())
+    load_tpidrurw();
+}
+
+PRIVATE inline
+void
 Thread::store_tpidruro(Trex *t)
 {
   t->tpidruro = _tpidruro;
+}
+
+PRIVATE inline
+void
+Thread::store_tpidrurw(Trex *t)
+{
+  t->tpidrurw = _tpidrurw;
 }
 
 // ------------------------------------------------------------------------

@@ -675,7 +675,7 @@ INTERFACE [arm && 32bit]:
 EXTENSION class L4_exception_ipc
 {
 public:
-  enum { Msg_size = 21 };
+  enum { Msg_size = 22 };
 };
 
 //----------------------------------------------------------------------------
@@ -684,7 +684,7 @@ INTERFACE [arm && 64bit]:
 EXTENSION class L4_exception_ipc
 {
 public:
-  enum { Msg_size = 39 };
+  enum { Msg_size = 40 };
 };
 
 //----------------------------------------------------------------------------

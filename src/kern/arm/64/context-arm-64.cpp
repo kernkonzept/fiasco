@@ -72,14 +72,14 @@ Context::spill_user_state()
                 : [rf] "=r" (ef->usp));
 }
 
-PRIVATE inline
+PROTECTED inline
 void
 Context::store_tpidrurw()
 {
   asm volatile ("mrs %0, TPIDR_EL0" : "=r" (_tpidrurw));
 }
 
-PRIVATE inline
+PROTECTED inline
 void
 Context::load_tpidrurw() const
 {

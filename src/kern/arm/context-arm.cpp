@@ -25,10 +25,8 @@ INTERFACE [arm_v6plus]:
 
 EXTENSION class Context
 {
-private:
-  Mword _tpidrurw;
-
 protected:
+  Mword _tpidrurw;
   Mword _tpidruro;
 };
 

@@ -77,7 +77,7 @@ Context::store_tpidrurw()
   asm volatile ("mrc p15, 0, %0, c13, c0, 2" : "=r" (_tpidrurw));
 }
 
-PRIVATE inline
+PROTECTED inline
 void
 Context::load_tpidrurw() const
 {

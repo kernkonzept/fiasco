@@ -161,7 +161,8 @@ Thread::get_lr_for_mode(Return_frame const *rf)
   return rf->r[30];
 }
 
-PRIVATE static inline
+PRIVATE static inline NEEDS[Thread::set_tpidruro, Thread::set_tpidrurw,
+                            "trap_state.h"]
 bool FIASCO_WARN_RESULT
 Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
                         L4_fpage::Rights rights)
@@ -177,6 +178,7 @@ Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
   // this skips the eret/continuation work already
   ts->copy_and_sanitize(&r->s);
   rcv->set_tpidruro(r);
+  rcv->set_tpidrurw(r);
 
   if (tag.transfer_fpu() && (rights & L4_fpage::Rights::CS()))
     snd->transfer_fpu(rcv);
@@ -189,6 +191,7 @@ Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
 
 PRIVATE static inline NEEDS[Thread::save_fpu_state_to_utcb,
                             Thread::store_tpidruro,
+                            Thread::store_tpidrurw,
                             "trap_state.h"]
 bool FIASCO_WARN_RESULT
 Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
@@ -202,6 +205,7 @@ Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
     Trex *r = reinterpret_cast<Trex *>(rcv_utcb->values);
     r->s = *ts;
     snd->store_tpidruro(r);
+    snd->store_tpidrurw(r);
 
     if (rcv_utcb->inherit_fpu() && (rights & L4_fpage::Rights::CS()))
       snd->transfer_fpu(rcv);

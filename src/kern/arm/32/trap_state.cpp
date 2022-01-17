@@ -31,6 +31,7 @@ struct Trex
 {
   Trap_state s;
   Mword tpidruro;
+  Mword tpidrurw;
   void set_ipc_upcall()
   { s.esr.ec() = 0x3f; }
 
