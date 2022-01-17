@@ -35,7 +35,7 @@ IMPLEMENTATION [arm && arm_generic_timer]:
 Mword Timer::_interval;
 Mword Timer::_freq0;
 
-IMPLEMENT
+IMPLEMENT_OVERRIDE
 Irq_chip::Mode Timer::irq_mode()
 { return Irq_chip::Mode::F_level_low; }
 
