@@ -365,6 +365,9 @@ config ARM_PT48
 config HAS_ARM_PSCI
         bool
 
+config HAS_ARM_PSCI_DYNAMIC
+        bool
+
 config FORCE_ARM_PSCI_SMC
         bool
 
@@ -381,11 +384,13 @@ config ARM_PSCI
 choice
         prompt "PSCI call method"
         depends on ARM_PSCI
-        default ARM_PSCI_SMC if !FORCE_ARM_PSCI_HVC || CPU_VIRT
-        default ARM_PSCI_HVC if FORCE_ARM_PSCI_HVC && !CPU_VIRT
+        default ARM_PSCI_SMC if !HAS_ARM_PSCI_DYNAMIC && (!FORCE_ARM_PSCI_HVC || CPU_VIRT)
+        default ARM_PSCI_HVC if !HAS_ARM_PSCI_DYNAMIC && FORCE_ARM_PSCI_HVC && !CPU_VIRT
+        default ARM_PSCI_DYN if HAS_ARM_PSCI_DYNAMIC
 
 config ARM_PSCI_SMC
         bool "SMC"
+        depends on !HAS_ARM_PSCI_DYNAMIC
         depends on !FORCE_ARM_PSCI_HVC || CPU_VIRT
         help
           Choose this if the platform uses SMC as a conduit to
@@ -393,10 +398,18 @@ config ARM_PSCI_SMC
 
 config ARM_PSCI_HVC
         bool "HVC"
+        depends on !HAS_ARM_PSCI_DYNAMIC
         depends on HAS_CPU_VIRT && !CPU_VIRT && !FORCE_ARM_PSCI_SMC
         help
           Choose this if the platform uses HVC as a conduit to
           access PSCI functions.
+
+config ARM_PSCI_DYN
+        bool "dynamic"
+        depends on HAS_ARM_PSCI_DYNAMIC
+        help
+          Choose this if the platform supports dynamic configuration
+          at runtime.
 
 endchoice
 

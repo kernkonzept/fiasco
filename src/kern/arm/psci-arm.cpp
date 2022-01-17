@@ -74,15 +74,28 @@ Psci::init(Cpu_number)
 INTERFACE [arm && arm_psci && arm_psci_smc]:
 
 #define FIASCO_ARM_PSCI_CALL_ASM_FUNC "smc #0"
+#define FIASCO_ARM_PSCI_CALL_ASM_OPERANDS FIASCO_ARM_SMC_CALL_ASM_OPERANDS
 
 // ------------------------------------------------------------------------
 INTERFACE [arm && arm_psci && arm_psci_hvc]:
 
 #define FIASCO_ARM_PSCI_CALL_ASM_FUNC "hvc #0"
+#define FIASCO_ARM_PSCI_CALL_ASM_OPERANDS FIASCO_ARM_SMC_CALL_ASM_OPERANDS
+
+// ------------------------------------------------------------------------
+INTERFACE [arm && arm_psci && arm_psci_dyn]:
+
+#define FIASCO_ARM_PSCI_CALL_ASM_FUNC ALTERNATIVE_INSN("smc #0", "hvc #0")
+
+#define FIASCO_ARM_PSCI_CALL_ASM_OPERANDS \
+    : FIASCO_ARM_SMC_CALL_ASM_OUTPUTS \
+    : FIASCO_ARM_SMC_CALL_ASM_INPUTS, [alt_probe] "i"(Psci::is_hvc) \
+    : FIASCO_ARM_SMC_CALL_ASM_CLOBBERS
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_psci]:
 
+#include "alternatives.h"
 #include "mem.h"
 #include "mmio_register_block.h"
 #include "kmem.h"
@@ -112,7 +125,7 @@ Psci::psci_fn(unsigned fn)
     };
 }
 
-PUBLIC static inline NEEDS ["smc_call.h"]
+PUBLIC static inline NEEDS ["alternatives.h", "smc_call.h"]
 Psci::Result
 Psci::psci_call(Mword fn_id,
                 Mword a0 = 0, Mword a1 = 0,
@@ -132,7 +145,7 @@ Psci::psci_call(Mword fn_id,
   register Mword r7 FIASCO_ARM_ASM_REG(7) = a6;
 
   asm volatile(FIASCO_ARM_PSCI_CALL_ASM_FUNC
-               FIASCO_ARM_SMC_CALL_ASM_OPERANDS);
+               FIASCO_ARM_PSCI_CALL_ASM_OPERANDS);
 
   Result res = { r0, r1, r2, r3 };
   return res;
