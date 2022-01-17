@@ -494,10 +494,11 @@ map(MAPDB* mapdb,
 
       // Loop increment is size of insertion
       size = i_size;
-      bool const s_valid = mapdb->valid_address(SPACE::to_pfn(s_phys));
-      Frame sender_frame;
-      if (!s_valid)
+
+      if (!mapdb->valid_address(SPACE::to_pfn(s_phys)))
         continue; // no valid sender mapping, skip
+
+      Frame sender_frame;
 
       if (rcv_page_mapped)
         {
@@ -581,14 +582,10 @@ map(MAPDB* mapdb,
         case SPACE::Insert_warn_attrib_upgrade:
         case SPACE::Insert_ok:
           {
-            assert (s_valid || status == SPACE::Insert_ok);
-            // Never doing upgrades for mapdb-unmanaged memory
-
             if (grant)
               {
-                if (s_valid
-                    && EXPECT_FALSE(!mapdb->grant(sender_frame, to_id,
-                                                  SPACE::to_pfn(rcv_addr))))
+                if (EXPECT_FALSE(!mapdb->grant(sender_frame, to_id,
+                                               SPACE::to_pfn(rcv_addr))))
                   {
                     // Error -- remove mapping again.
                     to->v_delete(rcv_addr, i_order, L4_fpage::Rights::FULL());
