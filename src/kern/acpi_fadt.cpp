@@ -54,10 +54,21 @@ public:
   Unsigned8  century;
   Unsigned16 iapc_boot_arch;
   Unsigned8  _res1;
+  enum Flag : Unsigned32
+  {
+    Reset_reg_sup   = 1U << 10,
+    Hw_reduced_acpi = 1UL << 20,
+  };
   Unsigned32 flags;
   Acpi_gas   reset_regs;
   Unsigned8  reset_value;
-  Unsigned8  _res2[3];
+  enum Arm_boot_flags : Unsigned16
+  {
+    Psci_compliant  = 1U << 0,
+    Psci_use_hvc    = 1U << 1,
+  };
+  Unsigned16 arm_boot_flags;
+  Unsigned8  minor_revision;
   Unsigned64 x_facs_addr;
   Unsigned64 x_dsdt_addr;
   Acpi_gas   x_pm1a_evt_blk;
@@ -71,6 +82,8 @@ public:
   Acpi_gas   sleep_cntl_reg;
   Acpi_gas   sleep_status_reg;
 } __attribute__((packed));
+
+static_assert(sizeof(Acpi_fadt) == 268, "size of Acpi_fadt");
 
 class Acpi_facs
 {
@@ -92,3 +105,5 @@ public:
   Unsigned8  f_64bit_wake;
   Unsigned8  _res3[31];
 } __attribute__((packed));
+
+static_assert(sizeof(Acpi_facs) == 128, "size of Acpi_facs");
