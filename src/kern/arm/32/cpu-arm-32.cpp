@@ -211,3 +211,13 @@ Cpu::hcr(Unsigned64 hcr)
   asm volatile ("mcr p15, 4, %0, c1, c1, 0" : : "r"(hcr & 0xffffffff));
   asm volatile ("mcr p15, 4, %0, c1, c1, 4" : : "r"(hcr >> 32));
 }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && !arm_lpae]:
+
+PUBLIC static inline unsigned Cpu::phys_bits() { return 32; }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && arm_lpae]:
+
+PUBLIC static inline unsigned Cpu::phys_bits() { return 40; }

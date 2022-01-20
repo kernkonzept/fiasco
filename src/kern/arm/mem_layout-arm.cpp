@@ -9,6 +9,16 @@ public:
     Sdram_phys_base      = RAM_PHYS_BASE,
   };
 
+  /**
+   * Return maximum HW supported user space address.
+   *
+   * The page tables always provide up to User_max bits of virtual address
+   * space. At least on arm64 cpu_virt the HW supported stage1 output size
+   * (maximum IPA size) is additionally constrained by the available physical
+   * address size of the MMU.
+   */
+  static Address hw_user_max();
+
 private:
   // At least two entries are expected: the kernel image and the heap. If the
   // RAM is not contiguous there might be more than one heap region needed,
@@ -92,6 +102,10 @@ Mem_layout::add_pmem(Address phys, Address virt, unsigned long size)
 
   return true;
 }
+
+IMPLEMENT_DEFAULT inline Address
+Mem_layout::hw_user_max()
+{ return User_max; }
 
 // -------------------------------------------------------------------------
 IMPLEMENTATION [arm && virt_obj_space]:

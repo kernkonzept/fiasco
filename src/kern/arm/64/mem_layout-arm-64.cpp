@@ -24,9 +24,6 @@ EXTENSION class Mem_layout
 {
 public:
   enum Virt_layout_kern : Address {
-    // These are guest physical addresses
-    Utcb_addr            = User_max + 1 - 0x10000,
-
     // The following are kernel virtual addresses. Mind that kernel and user
     // space live in different address spaces! Move to the top to minimize the
     // risk of colliding with physical memory which is still mapped 1:1.
@@ -46,6 +43,8 @@ public:
 
     Cache_flush_area     = 0x0, // dummy
   };
+
+  static Address const Utcb_addr;
 };
 
 //---------------------------------------------------------------------------
@@ -118,3 +117,18 @@ Mem_layout::_read_special_safe(Mword const *address, Mword &v)
                 : "cc");
   return ret;
 }
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION [arm && cpu_virt]:
+
+#include "cpu.h"
+#include "paging.h"
+#include "static_init.h"
+
+IMPLEMENT_OVERRIDE Address
+Mem_layout::hw_user_max()
+{
+  return (1ULL << Page::ipa_bits(Cpu::pa_range())) - 1U;
+}
+
+Address const Mem_layout::Utcb_addr = hw_user_max() + 1U - 0x10000U;

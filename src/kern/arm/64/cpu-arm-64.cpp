@@ -218,14 +218,6 @@ public:
   };
 };
 
-PUBLIC inline
-unsigned
-Cpu::supported_pa_range() const
-{
-  static Unsigned8 const pa_range[16] = { 32, 36, 40, 42, 44, 48, 52 };
-  return pa_range[_cpu_id._mmfr[0] & 0x0fU];
-}
-
 PRIVATE inline
 unsigned
 Cpu::vmid_bits() const
@@ -237,11 +229,6 @@ Cpu::init_hyp_mode()
 {
   extern char exception_vector[];
 
-  // Feature availability check for IPA address space size
-  if (supported_pa_range() < phys_bits())
-    panic("IPA address size too small: HW provides %d bits, required %d bits!",
-          supported_pa_range(), phys_bits());
-
   if (vmid_bits() < Mem_unit::Asid_bits)
     panic("VMID size too small: HW provides %d bits, configured %d bits!",
           vmid_bits(), Mem_unit::Asid_bits);
@@ -250,7 +237,7 @@ Cpu::init_hyp_mode()
   asm volatile ("msr VTCR_EL2, %x0" : :
                 "r"(  (1UL << 31) // RES1
                     | (Page::Tcr_attribs << 8)
-                    | Page::Vtcr_bits));
+                    | Page::vtcr_bits(pa_range())));
 
   asm volatile ("msr MDCR_EL2, %x0" : : "r"((Mword)Mdcr_bits));
 
@@ -335,6 +322,23 @@ Cpu::disable_dcache()
                "bic     %0, %0, %1    \n"
                "msr     SCTLR_EL1, %0 \n"
                : "=&r" (r) : "r" ((Mword)(Sctlr_c | Sctlr_i)));
+}
+
+PUBLIC static inline
+unsigned
+Cpu::pa_range()
+{
+  Mword id_aa64mmfr0_el1;
+  asm("mrs %0, S3_0_C0_C7_0" : "=r"(id_aa64mmfr0_el1));
+  return id_aa64mmfr0_el1 & 0x0fU;
+}
+
+PUBLIC static inline
+unsigned
+Cpu::phys_bits()
+{
+  static char const pa_range_bits[16] = { 32, 36, 40, 42, 44, 48, 52 };
+  return pa_range_bits[pa_range()];
 }
 
 //--------------------------------------------------------------------------
