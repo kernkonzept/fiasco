@@ -633,11 +633,11 @@ map(MAPDB* mapdb,
           break;
 
         case SPACE::Insert_err_exists:
-          WARN("map (%s) skipping area (%p/%lx): " L4_PTR_FMT
-               " -> %p/%lx: " L4_PTR_FMT "(%lx)", SPACE::name,
-               from_id, Kobject_dbg::pointer_to_id(from_id),
+          WARN("map (%s) skipping area (%p): " L4_PTR_FMT
+               " -> %p: " L4_PTR_FMT "(%lx)", SPACE::name,
+               from_id,
                (unsigned long)cxx::int_value<V_pfn>(snd_addr),
-               to_id, Kobject_dbg::pointer_to_id(to_id),
+               to_id,
                (unsigned long)cxx::int_value<V_pfn>(rcv_addr),
                (unsigned long)cxx::int_value<V_pfc>(i_size));
           // Do not flag an error here -- because according to L4
@@ -653,12 +653,12 @@ map(MAPDB* mapdb,
 
   // FIXME: make this debugging code optional
   if (EXPECT_FALSE(no_page_mapped))
-    WARN("nothing mapped: (%s) from [%p/%lx]: " L4_PTR_FMT
-         " size: " L4_PTR_FMT " to [%p/%lx]\n", SPACE::name,
-         from_id, Kobject_dbg::pointer_to_id(from_id),
+    WARN("nothing mapped: (%s) from [%p]: " L4_PTR_FMT
+         " size: " L4_PTR_FMT " to [%p]\n", SPACE::name,
+         from_id,
          (unsigned long)cxx::int_value<V_pfn>(snd_addr),
          (unsigned long)cxx::int_value<V_pfc>(rcv_size),
-         to_id, Kobject_dbg::pointer_to_id(to_id));
+         to_id);
 
   return condition;
 }
