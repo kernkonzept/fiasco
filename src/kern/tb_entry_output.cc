@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <cctype>
 
 #include "config.h"
 #include "jdb_tbuf_output.h"
@@ -275,11 +276,12 @@ void
 formatter_pf(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidlen)
 {
   Tb_entry_pf *e = static_cast<Tb_entry_pf*>(tb);
+  Mword mw = PF::addr_to_msgword0(e->pfa(), e->error());
+  char cause = (mw & 4) ? 'X' : (mw & 2) ? 'W' : 'R';
   buf->printf("pf:  %-*s pfa=" L4_PTR_FMT " ip=" L4_PTR_FMT " (%c%c) spc=%p err=%lx",
       tidlen, tidstr, e->pfa(), e->ip(),
-      !PF::is_read_error(e->error()) ? (e->error() & 4 ? 'w' : 'W')
-                                     : (e->error() & 4 ? 'r' : 'R'),
-      !PF::is_translation_error(e->error()) ? 'p' : '-',
+      PF::is_usermode_error(e->error()) ? tolower(cause) : cause,
+      PF::is_translation_error(e->error()) ? '-' : 'p',
       e->space(), e->error());
 }
 
