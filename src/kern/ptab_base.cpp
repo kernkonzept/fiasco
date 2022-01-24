@@ -501,23 +501,6 @@ namespace Ptab
 
   };
 
-  template< typename _E, typename PT >
-  struct Pte_ptr
-  {
-    Pte_ptr(_E *e, unsigned char level) : e(e), l(level) {}
-
-    template< typename _I2 >
-    Pte_ptr(_I2 const &o) : e(o.e), l(o.l) {}
-
-    unsigned char level() const { return l; }
-
-    unsigned page_order() const
-    { return PT::page_order_for_level(l); }
-
-    _E *e;
-    unsigned char l;
-  };
-
   template
   <
     typename _Entry,
