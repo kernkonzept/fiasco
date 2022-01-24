@@ -802,12 +802,20 @@ Utest::thread_fn()
 
   fn();
 
-    {
-      auto guard = lock_guard(cpu_lock);
-      Sched_context::rq.current().deblock(current()->sched(),
-                                          current()->sched());
-      Thread::do_leave_and_kill_myself();
-    }
+  kill_current_thread();
+}
+
+/**
+ * Kill the current thread.
+ */
+PUBLIC static
+void
+Utest::kill_current_thread()
+{
+  auto guard = lock_guard(cpu_lock);
+  Sched_context::rq.current().deblock(current()->sched(),
+                                      current()->sched());
+  Thread::do_leave_and_kill_myself();
 }
 
 /**
