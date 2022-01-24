@@ -4,6 +4,7 @@ INTERFACE [vmx]:
 #include "per_cpu_data.h"
 #include "vm.h"
 #include "vmx.h"
+#include "ipi.h"
 
 class Vmcs;
 
@@ -561,14 +562,33 @@ Vm_vmx_t<X>::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode) overri
     {
       // in the case of disabled IRQs and a pending IRQ directly simulate an
       // external interrupt intercept
-      if (   !(vcpu->_saved_state & Vcpu_state::F_irqs)
-          && (vcpu->sticky_flags & Vcpu_state::Sf_irq_pending))
+      Unsigned32 int_info = read<Unsigned32>(vmcs_s, Vmx::F_entry_int_info);
+      bool int_info_valid = int_info & (1U << 31);
+      bool immediate_exit = int_info & (1U << 30); // l4 specific bit use
+
+      if (immediate_exit)
+        {
+          // zero l4 specific bit
+          write<Unsigned32>(vmcs_s, Vmx::F_entry_int_info,
+                            int_info & ~(1U << 30));
+
+          // We have a request for immediate exit after VM exit after the
+          // interrupt injection. To achieve this we trigger a self-IPI with
+          // closed interrupts which will lead to an immediate VM exit after
+          // the event injection.
+          // NOTE: It is possible to use the preemption timer for this
+          // NOTE: However, the timer is broken on many CPUs or may not
+          // NOTE: be supported at all. So keep it simple for now.
+          assert(cpu_lock.test());
+          Ipi::send(Ipi::Global_request, current_cpu(), current_cpu());
+        }
+      else if (   !(vcpu->_saved_state & Vcpu_state::F_irqs)
+               && (vcpu->sticky_flags & Vcpu_state::Sf_irq_pending))
         {
           // when injection did not yet occur (the valid bit in the interrupt
           // information field is still 1), tell the VMM we were interrupted
           // during event delivery
-          Unsigned32 int_info = read<Unsigned32>(vmcs_s, Vmx::F_entry_int_info);
-          if (int_info & (1 << 31))
+          if (int_info_valid)
             {
               write<Unsigned32>(vmcs_s, Vmx::F_vectoring_info, int_info);
               write<Unsigned32>(vmcs_s, Vmx::F_exit_insn_len,
@@ -587,7 +607,7 @@ Vm_vmx_t<X>::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode) overri
       int r = do_resume_vcpu(ctxt, vcpu, vmcs_s);
 
       // test for error or non-IRQ exit reason
-      if (r <= 0)
+      if (r <= 0 || immediate_exit)
         {
           ctxt->arch_load_vcpu_kern_state(vcpu, true);
           force_kern_entry_vcpu_state(vcpu);
