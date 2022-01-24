@@ -1690,7 +1690,10 @@ private:
       if (_s)
         return false; // either running or already trying
 
-      return mp_cas(&_s, Not_running, Trying);
+      bool ret = mp_cas(&_s, Not_running, Trying);
+      if (ret)
+        Mem::mp_acquire();
+      return ret;
     }
 
     /**
@@ -1710,7 +1713,10 @@ private:
       if (access_once(&_s))
         return false;
 
-      return mp_cas(&_s, Not_running, Running);
+      bool ret = mp_cas(&_s, Not_running, Running);
+      if (ret)
+        Mem::mp_acquire();
+      return ret;
     }
 
     /**
@@ -1727,7 +1733,11 @@ private:
      * This method is to be used to abort an unsuccessful attempt to help
      * or after clearing the last lock when running on the home CPU.
      */
-    void reset() { write_now(&_s, Not_running); }
+    void reset()
+    {
+      Mem::mp_release();
+      write_now(&_s, Not_running);
+    }
 
     /**
      * Safe transition from Running to Not_running.
@@ -1738,7 +1748,10 @@ private:
     void preempt()
     {
       if (_s == Running)
-        write_now(&_s, Not_running);
+        {
+          Mem::mp_release();
+          write_now(&_s, Not_running);
+        }
     }
 
     /// Check the current running under lock state.
@@ -1836,8 +1849,6 @@ Context::need_help(Mword const *lock, Mword val)
 {
   if (EXPECT_FALSE(!_running_under_lock.try_to_help()))
     return false;
-
-  Mem::mp_mb();
 
   // double check if the lock is held by us
   if (EXPECT_TRUE(access_once(&_lock_cnt) != 0 && access_once(lock) == val))
