@@ -134,6 +134,7 @@ class Rcu
 {
   friend class Rcu_data;
   friend class Jdb_rcupdate;
+  friend class Rcu_tester;
 
 public:
   /// The lock to prevent a quiescent state.
