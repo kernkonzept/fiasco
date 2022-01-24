@@ -198,7 +198,8 @@ private:
   Mword	_error;		///< pagefault error code
   Space	*_space;
 public:
-  void print(String_buffer *buf) const;
+  // Unused because PF logging type < Tbuf_dynentries, see formatter_default()
+  void print(String_buffer *) const {}
 };
 
 /** logged kernel event. */

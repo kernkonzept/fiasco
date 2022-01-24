@@ -283,18 +283,6 @@ formatter_pf(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidlen)
       e->space(), e->error());
 }
 
-// pagefault
-void
-Tb_entry_pf::print(String_buffer *buf) const
-{
-  buf->printf("pfa=" L4_PTR_FMT " ip=" L4_PTR_FMT " (%c%c) spc=%p",
-      pfa(), ip(),
-      !PF::is_read_error(error()) ? (error() & 4 ? 'w' : 'W')
-                                  : (error() & 4 ? 'r' : 'R'),
-      !PF::is_translation_error(error()) ? 'p' : '-',
-      space());
-}
-
 // kernel event (enter_kdebug("*..."))
 static
 void
