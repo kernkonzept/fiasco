@@ -10,6 +10,7 @@ class Kobject_mappable
 private:
   friend class Kobject_mapdb;
   friend class Jdb_mapdb;
+  friend class Obj_mapdb_test;
 
   Obj::Mapping::List _root;
   Smword _cnt;
