@@ -700,6 +700,26 @@ void
 utest_format_print_value(char *val) { printf("%s", val); }
 
 /**
+ * Return the next online CPU starting at `cpu`.
+ *
+ * \param[in,out] cpu  First CPU to consider as the next online CPU.
+ *                     Returns the next online CPU, if any is found.
+ *
+ * \retval True  A next online CPU was found.
+ * \retval False No next online CPU was found.
+ */
+PUBLIC static inline
+bool
+Utest::next_online_cpu(Cpu_number *cpu)
+{
+  for (; *cpu < Config::max_num_cpus(); ++(*cpu))
+    if (Cpu::present_mask().get(*cpu))
+      return true;
+
+  return false;
+}
+
+/**
  * Wait for a defined period of time.
  *
  * \param ms  Milliseconds to wait.
