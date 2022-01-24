@@ -527,8 +527,18 @@ Gic_its::Table::alloc(Reg r, Typer typer)
       return;
     }
 
-  // TODO: Detect supported page sizes and select optimal page size.
-  _page_size = 0x1000;
+  // Detect supported page size. We try to stick with 4k pages to keep the
+  // alignment overhead low. But if the HW forces us to use larger pages so be
+  // it...
+  baser.page_size() = Baser::Page_size_4k;
+  r.write(baser.raw);
+  baser.raw = r.read();
+  switch (baser.page_size())
+    {
+    case Baser::Page_size_4k:   _page_size =  0x1000; break;
+    case Baser::Page_size_16k:  _page_size =  0x4000; break;
+    default:                    _page_size = 0x10000; break;
+    }
 
   if (_indirect)
     {
@@ -551,7 +561,6 @@ Gic_its::Table::alloc(Reg r, Typer typer)
   unsigned num_pages = size / _page_size;
   assert(num_pages <= Baser::Size_max);
   baser.size() = num_pages - 1;
-  baser.page_size() = Baser::Page_size_4k;
   // The physical bits 51:48 of the physical address must be zero!
   assert((_mem.phys_addr() & (0xfULL << 48)) == 0UL);
   baser.pa() = _mem.phys_addr();
@@ -564,10 +573,6 @@ Gic_its::Table::alloc(Reg r, Typer typer)
     printf("ITS: Allocated table of type=%u with size=0x%llx "
            "indirect=%u page_size=%u entry_size=%u pages=%u.\n",
            _type, size, _indirect, _page_size, _entry_size, num_pages);
-
-  if (baser.page_size() != Baser(r.read()).page_size())
-    panic("ITS: Page size %u is not supported for table of type=%u.\n",
-          _page_size, _type);
 }
 
 IMPLEMENT
