@@ -596,6 +596,9 @@ Vm_vmx_t<X>::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode) overri
               if (int_info & (1 << 11))
                 write<Unsigned32>(vmcs_s,  Vmx::F_vectoring_error_code,
                                   read<Unsigned32>(vmcs_s, Vmx::F_entry_exc_error_code));
+              // invalidate VM-entry interrupt information
+              write<Unsigned32>(vmcs_s, Vmx::F_entry_int_info,
+                                int_info & ~(1U << 31));
             }
 
           // XXX: check if this is correct, we set external irq exit as reason
