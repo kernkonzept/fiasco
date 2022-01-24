@@ -34,6 +34,14 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
 }
 
 // ------------------------------------------------------------------------
+IMPLEMENTATION [arm && mp && pf_imx_6ul]:
+
+PUBLIC static
+void
+Platform_control::boot_ap_cpus(Address)
+{}
+
+// ------------------------------------------------------------------------
 IMPLEMENTATION [arm && mp && pf_imx_7 && !arm_psci]:
 
 #include "ipi.h"

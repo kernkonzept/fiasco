@@ -77,7 +77,7 @@ Pic::init()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && mp && (pf_imx_6 || pf_imx_7 || arm_v8)]:
+IMPLEMENTATION [arm && pic_gic && mp && (pf_imx_6 || pf_imx_6ul || pf_imx_7 || arm_v8)]:
 
 PUBLIC static
 void Pic::init_ap(Cpu_number cpu, bool resume)
