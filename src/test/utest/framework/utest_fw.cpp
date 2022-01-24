@@ -720,6 +720,35 @@ Utest::next_online_cpu(Cpu_number *cpu)
 }
 
 /**
+ * Wait until all app CPUs are done booting.
+ */
+PUBLIC static
+void
+Utest::wait_for_app_cpus()
+{
+  /* Loop until the map of online CPUs doesn't change anymore */
+  enum { Silent_period = 500 /*ms*/ };
+  auto online_mask = Cpu::online_mask();
+  for (;;)
+    {
+      Utest::wait(Silent_period);
+
+      auto new_online_mask = Cpu::online_mask();
+      auto cpu = Cpu_number::first();
+      for (; cpu < Config::max_num_cpus(); ++cpu)
+        if (new_online_mask.get(cpu) != online_mask.get(cpu))
+          break;
+
+      if (cpu >= Config::max_num_cpus())
+        // Loop was not terminated early, thus the online state of all CPUs was
+        // identical in the old and the new online_mask.
+        return;
+
+      online_mask = new_online_mask;
+    }
+}
+
+/**
  * Wait for a defined period of time.
  *
  * \param ms  Milliseconds to wait.
