@@ -164,13 +164,12 @@ namespace Ptab
   public:
     enum { Max_depth = 0 };
     enum { Depth = DEPTH };
-    typedef _Last Level;
     typedef typename _Last::Entry Entry;
     typedef _Last Traits;
 
   private:
     typedef Walk<_Last, PTE_PTR, DEPTH> This;
-    typedef Entry_vec<Level> Vec;
+    typedef Entry_vec<Traits> Vec;
     Vec _e;
 
   public:
@@ -290,7 +289,6 @@ namespace Ptab
   {
   public:
     typedef Walk<_Tail, PTE_PTR, DEPTH + 1> Next;
-    typedef typename Next::Level Level;
     typedef typename _Head::Entry Entry;
     typedef _Head Traits;
 
