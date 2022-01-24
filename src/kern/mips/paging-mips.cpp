@@ -164,14 +164,6 @@ public:
     }
   };
 
-  struct Null_alloc
-  {
-    static void *alloc(Bytes) { return 0; }
-    static void free(void *) {}
-    static bool valid() { return false; }
-    static unsigned to_phys(void *) { return 0; }
-  };
-
   enum : Mword
   {
     Valid = Tlb_entry::Valid << PWField_ptei,
@@ -339,7 +331,7 @@ Pdir::virt_to_phys(Address virt) const
   return v;
 }
 
-PUBLIC template<typename ALLOC = Pdir::Null_alloc> inline
+PUBLIC template<typename ALLOC = Ptab::Null_alloc> inline
 Pdir::Walk_res
 Pdir::walk(Va _virt, unsigned isize = 0,
            ALLOC const &alloc = ALLOC())

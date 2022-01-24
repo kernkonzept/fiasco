@@ -83,15 +83,6 @@ public:
 };
 
 
-class Pdir_alloc_null
-{
-public:
-  Pdir_alloc_null() {}
-  void *alloc(unsigned long) const { return 0; }
-  void free(void *, unsigned long) const {}
-  bool valid() const { return false; }
-};
-
 template<typename ALLOC>
 class Pdir_alloc_simple
 {
