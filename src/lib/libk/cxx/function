@@ -37,6 +37,7 @@ public:
   functor(functor const &) = default;
   functor &operator = (functor const &) = default;
 
+  explicit operator bool () const { return _f; }
 
   Res operator () (Args ...a) const
   { return _f(_d, cxx::forward<Args>(a)...); }
