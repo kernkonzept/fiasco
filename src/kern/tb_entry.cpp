@@ -189,20 +189,6 @@ public:
   void print(String_buffer *buf) const;
 };
 
-/** logged ipc for user level tracing with Vampir. */
-class Tb_entry_ipc_trace : public Tb_entry
-{
-private:
-  Unsigned64	_snd_tsc;	///< entry tsc
-  L4_msg_tag	_result;	///< result
-  L4_obj_ref	_snd_dst;	///< send destination
-  Mword	_rcv_dst;	///< rcv partner
-  Unsigned8	_snd_desc;
-  Unsigned8	_rcv_desc;
-public:
-  void print(String_buffer *buf) const;
-};
-
 
 /** logged pagefault. */
 class Tb_entry_pf : public Tb_entry
@@ -538,22 +524,6 @@ Mword
 Tb_entry_ipc_res::pair_event() const
 { return _pair_event; }
 
-
-PUBLIC inline
-void
-Tb_entry_ipc_trace::set(Context const *ctx, Mword ip, Unsigned64 snd_tsc,
-			L4_obj_ref const &snd_dst, Mword rcv_dst,
-			L4_msg_tag result, Unsigned8 snd_desc,
-			Unsigned8 rcv_desc)
-{
-  set_global(Tbuf_ipc_trace, ctx, ip);
-  _snd_tsc  = snd_tsc;
-  _snd_dst  = snd_dst;
-  _rcv_dst  = rcv_dst;
-  _result   = result;
-  _snd_desc = snd_desc;
-  _rcv_desc = rcv_desc;
-}
 
 PUBLIC inline
 void

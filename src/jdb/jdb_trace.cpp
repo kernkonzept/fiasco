@@ -19,7 +19,6 @@ public:
   static int         _log;
   static int         _log_to_buf;
   static int         _log_result;
-  static int         _trace;
   static int         _slow_ipc;
   friend class Jdb_set_trace;
 };
@@ -54,7 +53,6 @@ int         Jdb_ipc_trace::_snd_only;
 int         Jdb_ipc_trace::_log;
 int         Jdb_ipc_trace::_log_to_buf;
 int         Jdb_ipc_trace::_log_result;
-int         Jdb_ipc_trace::_trace;
 int         Jdb_ipc_trace::_slow_ipc;
 
 int         Jdb_pf_trace::_other_thread;
@@ -101,9 +99,7 @@ PUBLIC static
 void
 Jdb_ipc_trace::show()
 {
-  if (_trace)
-    putstr("IPC tracing to tracebuffer enabled");
-  else if (_log)
+  if (_log)
     {
       printf("IPC logging%s%s enabled%s",
 	  _log_result ? " incl. results" : "",

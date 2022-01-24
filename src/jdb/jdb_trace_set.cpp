@@ -14,7 +14,7 @@ IMPLEMENTATION:
 class Jdb_set_trace : public Jdb_module
 {
 public:
-  enum Mode { Off, Log, Log_to_buf, Trace, Use_slow_path };
+  enum Mode { Off, Log, Log_to_buf, Use_slow_path };
 
   Jdb_set_trace() FIASCO_INIT;
   void ipc_tracing(Mode mode);
@@ -62,7 +62,6 @@ Jdb_set_trace::action(int cmd, void *&args, char const *&fmt, int &) override
 	    case 'R': // results on
 	    case 'S': // use slow ipc path
 	    case 'C': // use C shortcut
-	    case 'T': // use special tracing format
 	      putchar(first_char);
 	      fmt  = "%C";
 	      args = &second_char;
@@ -116,15 +115,6 @@ Jdb_set_trace::action(int cmd, void *&args, char const *&fmt, int &) override
 	    case 'S':
 	      if (second_char == '+')
 		ipc_tracing(Use_slow_path);
-	      else if (second_char == '-')
-		ipc_tracing(Off);
-	      else
-		return ERROR;
-	      putchar(second_char);
-	      break;
-	    case 'T':
-	      if (second_char == '+')
-		ipc_tracing(Trace);
 	      else if (second_char == '-')
 		ipc_tracing(Off);
 	      else

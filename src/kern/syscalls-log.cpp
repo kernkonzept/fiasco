@@ -75,36 +75,3 @@ IMPLEMENT void FIASCO_FLATTEN sys_ipc_log_wrapper()
 	Jdb_tbuf::direct_log_entry(tb, "IPC result");
     }
 }
-
-/** IPC tracing.
- */
-extern "C" void sys_ipc_trace_wrapper(void);
-extern "C" void sys_ipc_wrapper();
-
-
-
-IMPLEMENT void FIASCO_FLATTEN sys_ipc_trace_wrapper()
-{
-  Thread *curr = current_thread();
-  Entry_frame *ef      = curr->regs();
-  Syscall_frame *regs  = ef->syscall_frame();
-
-  //Mword      from_spec = regs->from_spec();
-  L4_obj_ref snd_dst   = regs->ref();
-
-  Unsigned64 orig_tsc  = Cpu::rdtsc();
-
-  // first try the fastpath, then the "slowpath"
-  sys_ipc_wrapper();
-
-  // kernel is locked here => no Lock_guard <...> needed
-  Tb_entry_ipc_trace *tb =
-    static_cast<Tb_entry_ipc_trace*>(Jdb_tbuf::new_entry());
-
-  tb->set(curr, ef->ip(), orig_tsc, snd_dst, regs->from_spec(),
-          L4_msg_tag(0,0,0,0), 0, 0);
-
-  Jdb_tbuf::commit_entry(tb);
-}
-
-
