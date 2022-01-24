@@ -12,8 +12,6 @@ public:
   /* These things must be defined in arch part in
      the most efficent way according to the architecture.
 
-  typedef int Attribs;
-
   enum Attribs_enum {
     USER_NO  = xxx, ///< User No access
     USER_RO  = xxx, ///< User Read only

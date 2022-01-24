@@ -99,7 +99,6 @@ public:
 EXTENSION class Page
 {
 public:
-  //typedef Unsigned32 Attribs;
   enum Attribs_enum
   {
     //Cache_mask   = 0x00000078,
