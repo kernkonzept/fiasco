@@ -49,11 +49,10 @@ public:
   /** Insert a page-table entry, or upgrade an existing entry with new
    *  attributes.
    *
-   * @param phys Physical address (page-aligned).
-   * @param virt Virtual address for which an entry should be created.
-   * @param size Size of the page frame -- 4KB or 4MB.
-   * @param page_attribs Attributes for the mapping (see
-   *                     Mem_space::Page_attrib).
+   * @param phys  Physical address.
+   * @param virt  Virtual address for which an entry should be created.
+   * @param size  log2 of the page frame size.
+   * @param page_attribs  Attributes for the mapping (see Page::Attr).
    * @return Insert_ok if a new mapping was created;
    *         Insert_warn_exists if the mapping already exists;
    *         Insert_warn_attrib_upgrade if the mapping already existed but
@@ -63,7 +62,9 @@ public:
    *         Insert_err_exists if the mapping could not be inserted because
    *                           another mapping occupies the virtual-address
    *                           range
-   * @pre phys and virt need to be size-aligned according to the size argument.
+   * @pre phys and virt need to be aligned according to the size argument.
+   * @pre size must match one of the frame sizes used in the page table.
+   *      See fitting_sizes().
    */
   FIASCO_SPACE_VIRTUAL
   Status v_insert(Phys_addr phys, Vaddr virt, Page_order size,
@@ -71,40 +72,60 @@ public:
 
   /** Look up a page-table entry.
    *
-   * @param virt Virtual address for which we try the look up.
-   * @param phys Meaningful only if we find something (and return true).
-   *             If not 0, we fill in the physical address of the found page
-   *             frame.
-   * @param page_attribs Meaningful only if we find something (and return
-   *             true). If not 0, we fill in the page attributes for the
-   *             found page frame (see Mem_space::Page_attrib).
-   * @param size If not 0, we fill in the size of the page-table slot.  If an
-   *             entry was found (and we return true), this is the size
-   *             of the page frame.  If no entry was found (and we
-   *             return false), this is the size of the free slot.  In
-   *             either case, it is either 4KB or 4MB.
+   * @param virt  Virtual address for which we try the lookup.
+   * @param[out] phys  Meaningful only if we find something (and return true).
+   *              If not 0, we fill in the physical address of the found page
+   *              frame.
+   * @param[out] order  If not 0, we fill in the size of the page-table slot.
+   *              If an entry was found (and we return true), this is log2 of
+   *              the size of the page frame.  If no entry was found (and we
+   *              return false), this is the size of the free slot.  In either
+   *              case, it is equal to one of the frame sizes used in the page
+   *              table. See fitting_sizes().
+   * @param[out] page_attribs  Meaningful only if we find something (and return
+   *              true). If not 0, we fill in the page attributes for the
+   *              found page frame (see Page::Attr).
    * @return True if an entry was found, false otherwise.
    */
   FIASCO_SPACE_VIRTUAL
   bool v_lookup(Vaddr virt, Phys_addr *phys = 0, Page_order *order = 0,
                 Attr *page_attribs = 0);
 
-  /** Delete page-table entries, or some of the entries' attributes.
+  /** Invalidate page-table entries, or some of the entries' attributes.
    *
-   * This function works for one or multiple mappings (in contrast to
-   * v_insert!).
+   * @param virt  Virtual address of the memory region that should be changed.
+   * @param size  log2 size of the memory region that should be changed.
+   * @param page_attribs  Revoke only the given page rights (bit-ORed, see
+   *         L4_fpage::Rights). If #L4_fpage::Rights::R() is part of the
+   *         bitmask, the entry is invalidated.
    *
-   * @param virt Virtual address of the memory region that should be changed.
-   * @param size Size of the memory region that should be changed.
-   * @param page_attribs If nonzero, delete only the given page attributes.
-   *                     Otherwise, delete the whole entries.
-   * @return Combined (bit-ORed) page attributes that were removed.  In
-   *         case of errors, ~Page_all_attribs is additionally bit-ORed in.
+   * @retval #L4_fpage::Rights::empty()  The entry was already invalid or the
+   *         page access flags were unset before the entry was touched (by this
+   *         function), or page access flags are not supported.
+   * @retval otherwise  Combined (bit-ORed) page access flags of the entry
+   *         before it was modified. Support for this information is
+   *         platform-dependent.
+   *
+   * @pre `virt` needs to be aligned according to the size argument.
+   * @pre `size` must match one of the frame sizes used in the page table.
+   *      See fitting_sizes().
+   *
+   * @note No memory memory is freed.
    */
   FIASCO_SPACE_VIRTUAL
   L4_fpage::Rights v_delete(Vaddr virt, Page_order size,
                             L4_fpage::Rights page_attribs);
 
+  /**
+   * Set the page access flags on platforms where this feature is supported.
+   *
+   * @param virt  Virtual address of the affected memory region.
+   * @param access_flags  #L4_fpage::Rights::R(): page was referenced.
+   *                      #L4_fpage::Rights::W(): page is dirty.
+   *
+   * @note Support for setting the page access flags is platform-dependent.
+   *       If this feature is not supported, this function does nothing.
+   */
   FIASCO_SPACE_VIRTUAL
   void v_set_access_flags(Vaddr virt, L4_fpage::Rights access_flags);
 
