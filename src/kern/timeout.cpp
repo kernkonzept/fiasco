@@ -267,7 +267,7 @@ Timeout::expire()
  * and programs the "oneshot timer" to the next timeout.
  * @return true if a reschedule is necessary, false otherwise.
  */
-PUBLIC inline NEEDS [<cassert>, <climits>, "kip.h", "timer.h", "config.h",
+PUBLIC inline NEEDS [<cassert>, <climits>, "timer.h", "config.h",
                      Timeout::expire]
 bool
 Timeout_q::do_timeouts()
@@ -286,7 +286,7 @@ Timeout_q::do_timeouts()
 
   // Calculate which timeout queues needs to be checked.
   int start = (_old_clock >> Wakeup_queue_distance);
-  Unsigned64 now = Kip::k()->clock();
+  Unsigned64 now = Timer::system_clock();
   int diff  = (now >> Wakeup_queue_distance) - start;
   int end   = (start + diff + 1) & (Wakeup_queue_count - 1);
 
