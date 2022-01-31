@@ -25,9 +25,28 @@ if (!defined $ARGV[0])
   exit 1;
 }
 
-my $nm = 'nm';
-$nm = "$ENV{'CROSS_COMPILE'}$nm" if defined $ENV{"CROSS_COMPILE"};
-$nm = 'arm-linux-nm' if !(system("file -L $ARGV[0] | grep -qw ARM") >> 8);
+# Use CROSS_COMPILE if available, otherwise find something probably useful
+# and finally go with just nm (hoping it works and/or is
+# multi-architecture).
+my $cross_compile = $ENV{'CROSS_COMPILE'} || '';
+if ($cross_compile eq '')
+  {
+    my $fileo = `file -L $ARGV[0]`;
+    if ($fileo =~ /aarch64/) {
+      $cross_compile = 'aarch64-linux-gnu-'
+    } elsif ($fileo =~ /ARM/) {
+      foreach my $p (qw/arm-linux- arm-linux-gnueabihf-/)
+        {
+          `dash -c "command -v $p-nm"`;
+          if ($? == 0)
+            {
+              $cross_compile = $p;
+              last;
+            }
+        }
+    }
+  }
+my $nm = $cross_compile."nm";
 
 while (@ARGV)
   {
