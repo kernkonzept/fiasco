@@ -8,6 +8,8 @@ INTERFACE:
 #include "spin_lock.h"
 
 #include "slab_cache.h"		// Slab_cache
+#include "minmax.h"
+
 #include <cxx/slist>
 #include <cxx/type_traits>
 
@@ -31,6 +33,10 @@ class Kmem_slab : public Slab_cache, public cxx::S_list_item
 template< unsigned SIZE, unsigned ALIGN = 8 >
 class Kmem_slab_for_size
 {
+  static_assert(
+      Slab_cache::entry_size(SIZE, ALIGN) >= Slab_cache::Min_obj_size,
+      "objects too small for slab");
+
 public:
   static void *alloc() { return _s.alloc(); }
 
@@ -115,9 +121,10 @@ struct Kmem_slab_s : _Kmem_alloc<(SIZE >= 0x400), SIZE, ALIGN> {};
  * \tparam ALIGN  Alignment of the objects (in bytes, usually alignof(T)).
  */
 template< typename T, unsigned ALIGN = __alignof(T) >
-struct Kmem_slab_t : Kmem_slab_s<sizeof(T), ALIGN>
+struct Kmem_slab_t
+: Kmem_slab_s<sizeof(T), max<unsigned>(ALIGN, Slab_cache::Min_obj_align)>
 {
-  typedef Kmem_slab_s<sizeof(T), ALIGN> Slab;
+  typedef Kmem_slab_s<sizeof(T), max<unsigned>(ALIGN, Slab_cache::Min_obj_align)> Slab;
 public:
   explicit Kmem_slab_t(char const *) {}
   Kmem_slab_t() = default;

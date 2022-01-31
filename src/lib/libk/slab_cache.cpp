@@ -11,6 +11,13 @@ INTERFACE:
 
 class Slab : public cxx::H_list_item
 {
+public:
+  enum
+  {
+    Min_obj_align = __alignof(cxx::S_list_item),
+    Min_obj_size  = sizeof(cxx::S_list_item),
+  };
+
 private:
   Slab(const Slab&);	// copy constructors remain undefined
 
@@ -24,6 +31,16 @@ private:
 
 class Slab_cache
 {
+public:
+  enum
+  {
+    Min_obj_align = Slab::Min_obj_align,
+    Min_obj_size  = Slab::Min_obj_size,
+  };
+
+  static constexpr unsigned entry_size(unsigned elem_size, unsigned alignment)
+  { return (elem_size + alignment - 1) & ~(alignment - 1); }
+
 protected:
   friend class Slab;
   friend class Slab_cache_tester;
@@ -142,16 +159,10 @@ Slab::operator new(size_t, void *block) throw()
   return block;
 }
 
-
-PUBLIC static inline
-unsigned
-Slab_cache::entry_size(unsigned elem_size, unsigned alignment)
-{ return (elem_size + alignment - 1) & ~(alignment - 1); }
-
 // 
 // Slab_cache
 // 
-PUBLIC inline NEEDS[Slab_cache::entry_size]
+PUBLIC inline
 Slab_cache::Slab_cache(unsigned elem_size, 
 				 unsigned alignment,
 				 char const * name, 
