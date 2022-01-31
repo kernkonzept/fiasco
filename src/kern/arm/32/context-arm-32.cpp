@@ -48,14 +48,6 @@ IMPLEMENTATION [arm && !cpu_virt]:
 
 IMPLEMENT inline
 void
-Context::sanitize_user_state(Return_frame *dst) const
-{
-  dst->psr &= ~(Proc::Status_mode_mask | Proc::Status_interrupts_mask);
-  dst->psr |= Proc::Status_mode_user | Proc::Status_always_mask;
-}
-
-IMPLEMENT inline
-void
 Context::fill_user_state()
 {
   // do not use 'Return_frame const *rf = regs();' here as it triggers an

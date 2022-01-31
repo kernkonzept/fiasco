@@ -101,6 +101,17 @@ Context::is_kernel_mem_op_hit_and_clear()
 }
 
 // ------------------------------------------------------------------------
+IMPLEMENTATION [arm && !cpu_virt]:
+
+IMPLEMENT inline
+void
+Context::sanitize_user_state(Return_frame *dst) const
+{
+  dst->psr &= ~(Proc::Status_mode_mask | Proc::Status_interrupts_mask);
+  dst->psr |= Proc::Status_mode_user | Proc::Status_always_mask;
+}
+
+// ------------------------------------------------------------------------
 IMPLEMENTATION [arm_v6plus]:
 
 PROTECTED inline void Context::arch_setup_utcb_ptr()

@@ -92,14 +92,3 @@ Context::load_tpidruro() const
 {
   asm volatile ("msr TPIDRRO_EL0, %0" : : "r" (_tpidruro));
 }
-
-// ---------------------------------------------------------------
-IMPLEMENTATION [arm && !cpu_virt]:
-
-IMPLEMENT inline
-void
-Context::sanitize_user_state(Return_frame *dst) const
-{
-  dst->psr &= ~(Proc::Status_mode_mask | Proc::Status_interrupts_mask);
-  dst->psr |= Proc::Status_mode_user | Proc::Status_always_mask;
-}
