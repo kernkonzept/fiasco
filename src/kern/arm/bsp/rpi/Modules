@@ -20,10 +20,10 @@ PREPROCESS_PARTS-$(CONFIG_PF_RPI_RPIZW) += arm_single_ipi_irq
 PREPROCESS_PARTS-$(CONFIG_ARM_GIC)          += pic_gic
 
 INTERFACES_KERNEL-$(CONFIG_ARM_V7PLUS)   += generic_timer
-INTERFACES_KERNEL-$(CONFIG_PF_RPI_RPI1)  += arm_control irq_handler
+INTERFACES_KERNEL-$(CONFIG_PF_RPI_RPI1)  += irq_handler
 INTERFACES_KERNEL-$(CONFIG_PF_RPI_RPI2)  += arm_control irq_handler
 INTERFACES_KERNEL-$(CONFIG_PF_RPI_RPI3)  += arm_control irq_handler
-INTERFACES_KERNEL-$(CONFIG_PF_RPI_RPIZW) += arm_control irq_handler
+INTERFACES_KERNEL-$(CONFIG_PF_RPI_RPIZW) += irq_handler
 INTERFACES_KERNEL-$(CONFIG_PF_RPI_RPI4)  += $(if $(CONFIG_BIT64),,arm_control)
 
 arm_control_IMPL      += arm_control-arm-rpi
