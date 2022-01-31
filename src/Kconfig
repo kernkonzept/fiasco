@@ -490,7 +490,6 @@ config UNIT_TEST
 
 config TEST_SUPPORT_CODE
 	bool "Compile test support code"
-	default n
 	help
 	  Include test support code when compiling Fiasco.
 
