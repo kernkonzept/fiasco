@@ -539,7 +539,7 @@ Thread::do_kill()
 
   arch_vcpu_ext_shutdown();
 
-  state_change_dirty(0, Thread_dead);
+  state_change_dirty(~Thread_dying, Thread_dead);
 
   // dequeue from system queues
   Sched_context::rq.current().ready_dequeue(sched());
@@ -570,7 +570,12 @@ void
 Thread::prepare_kill()
 {
   extern void  FIASCO_NORETURN leave_and_kill_myself() asm ("leave_and_kill_myself");
-  state_add_dirty(Thread_cancel | Thread_ready);
+
+  if (state() & (Thread_dying | Thread_dead))
+    return;
+
+  inc_ref();
+  state_add_dirty(Thread_dying | Thread_cancel | Thread_ready);
   _exc_cont.restore(regs()); // overwrite an already triggered exception
   do_trigger_exception(regs(), (void*)&leave_and_kill_myself);
 }
@@ -589,8 +594,6 @@ bool
 Thread::kill()
 {
   auto guard = lock_guard(cpu_lock);
-  inc_ref();
-
 
   if (home_cpu() == current_cpu())
     {
@@ -1107,7 +1110,6 @@ Thread::migrate(Migration *info)
   while (!access_once(&info->in_progress))
     Proc::pause();
   cpu_lock.lock();
-
 }
 
 PRIVATE inline NOEXPORT

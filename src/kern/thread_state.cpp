@@ -30,8 +30,8 @@ enum Thread_state
                                 | Thread_ipc_transfer,
 
   Thread_dead                 = 0x200,// tcb allocated, but inactive (not in any q)
+  Thread_dying                = 0x400,// thread is about to be killed
 
-  // 0x400 is free
   // 0x800 is free
 
   Thread_finish_migration     = 0x1000,
