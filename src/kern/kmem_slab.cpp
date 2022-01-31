@@ -26,13 +26,16 @@ class Kmem_slab : public Slab_cache, public cxx::S_list_item
 /**
  * Slab allocator for the given size and alignment.
  * \tparam SIZE   Size of an object in bytes.
- * \tparam ALIGN  Alignment of an object in bytes.
+ * \tparam ALIGN  Alignment of an object in bytes. Must be power of 2.
  *
  * This class provides a per-size instance of a slab cache.
  */
 template< unsigned SIZE, unsigned ALIGN = 8 >
 class Kmem_slab_for_size
 {
+  static_assert(
+      (ALIGN > 0) && !(ALIGN & (ALIGN - 1)),
+      "alignment must be power of 2");
   static_assert(
       Slab_cache::entry_size(SIZE, ALIGN) >= Slab_cache::Min_obj_size,
       "objects too small for slab");
@@ -93,19 +96,31 @@ public:
  * \tparam BUDDY  If true the allocator will use Kmem_buddy_for_size, if
  *                false Kmem_slab_for_size.
  * \tparam SIZE   Size of an object (in bytes) that shall be allocated.
- * \tparam ALIGN  Alignment for each object in bytes.
+ * \tparam ALIGN  Alignment for each object in bytes. Must be power of 2.
  */
 template<bool BUDDY, unsigned SIZE, unsigned ALIGN>
 struct _Kmem_alloc : Kmem_slab_for_size<SIZE, ALIGN> {};
 
 /* Specialization using the buddy allocator */
 template<unsigned SIZE, unsigned ALIGN>
-struct _Kmem_alloc<true, SIZE, ALIGN> : Kmem_buddy_for_size<SIZE> {};
+struct _Kmem_alloc<true, SIZE, ALIGN> : Kmem_buddy_for_size<SIZE>
+{
+  static_assert(
+      (ALIGN > 0) && !(ALIGN & (ALIGN - 1)),
+      "alignment must be power of 2");
+  static_assert(
+      ALIGN <= SIZE,
+      "alignment constraint too strict for buddy allocator");
+  static_assert(
+      SIZE <= Buddy_alloc::Max_size,
+      "size cannot be bigger than maximum buddy allocator block size");
+};
 
 /**
  * Generic allocator for objects of the given size and alignment.
  * \tparam SIZE   The size of an object in bytes.
  * \tparam ALIGN  The alignment of each allocated object (in bytes).
+ *                Must be power of 2.
  *
  * This allocator uses _Kmem_alloc<> to select between a slab allocator or
  * the buddy allocator depending on the given size of the objects.
@@ -119,6 +134,7 @@ struct Kmem_slab_s : _Kmem_alloc<(SIZE >= 0x400), SIZE, ALIGN> {};
  * Allocator for objects of the given type.
  * \tparam T      Type of the object to be allocated.
  * \tparam ALIGN  Alignment of the objects (in bytes, usually alignof(T)).
+ *                Must be power of 2.
  */
 template< typename T, unsigned ALIGN = __alignof(T) >
 struct Kmem_slab_t
