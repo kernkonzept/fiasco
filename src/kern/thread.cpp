@@ -1007,13 +1007,13 @@ Thread::migrate_to(Cpu_number target_cpu, bool)
       return false;
     }
 
-  auto &rq = Sched_context::rq.current();
-  if (state() & Thread_ready_mask && !in_ready_list())
-    rq.ready_enqueue(sched());
+  bool resched = false;
+  if (state() & Thread_ready_mask)
+    resched = Sched_context::rq.current().deblock(sched(), current()->sched());
 
   enqueue_timeout_again();
 
-  return false;
+  return resched;
 }
 
 PUBLIC
