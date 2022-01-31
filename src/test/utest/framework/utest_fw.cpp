@@ -641,6 +641,57 @@ Utest_fw::print_eval(char const *eval, A &&val, char const *str) const
   printf("\t(%s)\n", str);
 }
 
+/**
+ * Print an error message and abort the test if `result` is false.
+ *
+ * This function shall be used to verify conditions in unit test setup /
+ * cleanup code which are not relevant for the actual test.
+ *
+ * \param result  Result which must be true.
+ * \param msg     Message to be printed in case of failure.
+ */
+PUBLIC static inline
+void
+Utest_fw::chk(bool result, char const *msg)
+{
+  if (EXPECT_FALSE(!result))
+    Utest_fw::tap_log.check_failed(msg);
+}
+
+/**
+ * Print an error message and abort the test if `result` is false.
+ *
+ * This function shall be used to verify conditions in unit test setup /
+ * cleanup code which are not relevant for the actual test.
+ *
+ * \param result  Result which must be true.
+ * \param msg     Message to be printed in case of failure.
+ */
+PUBLIC static inline
+void
+Utest_fw::chk(bool result, Utest_fmt const &msg)
+{
+  if (EXPECT_FALSE(!result))
+    Utest_fw::tap_log.check_failed(msg());
+}
+
+/**
+ * Handle failures during test setup and immediately abort the tests.
+ *
+ * Serves as back end implementation for utest_check().
+ *
+ * \param msg  Message to print with TAP output.
+ */
+PUBLIC
+void
+Utest_fw::check_failed(char const *msg)
+{
+  tap_msg(false);
+  printf("\nKUT # Failure in test setup: %s\n", msg);
+  ++_sum_failed;
+  finish();
+}
+
 IMPLEMENT inline
 int
 Utest_debug::printf(char const *fmt, ...)
