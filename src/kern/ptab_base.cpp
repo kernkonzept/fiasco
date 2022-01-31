@@ -427,10 +427,9 @@ namespace Ptab
             continue;
 
           Next *n = (Next*)mem.phys_to_pmem(e.next_level());
-          if (Depth < end_level)
-            n->destroy(idx > idx_start ? 0 : start,
-                       idx + 1 < idx_end ? (1UL << Traits::Shift)-1 : end,
-                       start_level, end_level, alloc, mem);
+          n->destroy(idx > idx_start ? 0 : start,
+                     idx + 1 < idx_end ? (1UL << Traits::Shift)-1 : end,
+                     start_level, end_level, alloc, mem);
           if (Depth >= start_level)
             {
               //printf("destroy: %*.sfree: %p: %p(%zd)\n", Depth*2, "            ", this, n, sizeof(Next));
