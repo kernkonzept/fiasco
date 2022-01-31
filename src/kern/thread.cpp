@@ -526,6 +526,7 @@ Thread::do_kill()
 
   release_fpu_if_owner();
 
+  vcpu_enter_kernel_mode(vcpu_state().access());
   vcpu_update_state();
 
   unbind();
