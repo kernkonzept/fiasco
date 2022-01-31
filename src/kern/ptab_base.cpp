@@ -3,15 +3,18 @@ INTERFACE:
 //#include <cstdio>
 #include <cxx/type_traits>
 
+#include "assert.h"
+
 namespace Ptab
 {
 
   struct Null_alloc
   {
-    static void *alloc(Bytes) { return 0; }
-    static void free(void *, Bytes) {}
+    // As valid() is false, none of the other methods shall be used.
+    static void *alloc(Bytes) { assert(false); return 0; }
+    static void free(void *, Bytes) { assert(false); }
     static bool valid() { return false; }
-    static unsigned to_phys(void *) { return 0; }
+    static unsigned to_phys(void *) { assert(false); return 0; }
   };
 
   template< typename _Head, typename _Tail >
