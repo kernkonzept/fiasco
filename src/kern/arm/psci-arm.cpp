@@ -5,15 +5,6 @@ INTERFACE [arm]:
 class Psci
 {
 public:
-  static void init(Cpu_number cpu);
-};
-
-// ------------------------------------------------------------------------
-INTERFACE [arm && arm_psci]:
-
-EXTENSION class Psci
-{
-public:
   struct Result
   {
     Mword res[4];
@@ -32,6 +23,8 @@ public:
     Psci_disabled           = -8,
     Psci_invalid_address    = -9,
   };
+
+  static void init(Cpu_number cpu);
 
 private:
   enum Functions
