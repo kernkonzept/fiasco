@@ -58,8 +58,6 @@ private:
     Psci_stat_residency      = 16,
     Psci_stat_count          = 17,
   };
-
-  static bool is_v1;
 };
 
 // ------------------------------------------------------------------------
@@ -102,8 +100,6 @@ IMPLEMENTATION [arm && arm_psci]:
 #include "smc_call.h"
 
 #include <cstdio>
-
-bool Psci::is_v1;
 
 PRIVATE static
 unsigned long
@@ -162,7 +158,7 @@ Psci::init(Cpu_number cpu)
   Result r = psci_call(Psci_version);
   printf("Detected PSCI v%ld.%ld\n", r.res[0] >> 16, r.res[0] & 0xffff);
 
-  is_v1 = (r.res[0] >> 16) >= 1;
+  bool is_v1 = (r.res[0] >> 16) >= 1;
 
   if (is_v1)
     {
