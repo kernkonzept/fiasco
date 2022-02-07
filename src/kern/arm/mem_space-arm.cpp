@@ -273,10 +273,6 @@ Mem_space::v_delete(Vaddr virt, Page_order size,
 
 
 
-/**
- * \brief Free all memory allocated for this Mem_space.
- * \pre Runs after the destructor!
- */
 PUBLIC
 Mem_space::~Mem_space()
 {
@@ -298,14 +294,6 @@ Mem_space::~Mem_space()
 }
 
 
-/** Constructor.  Creates a new address space and registers it with
-  * Space_index.
-  *
-  * Registration may fail (if a task with the given number already
-  * exists, or if another thread creates an address space for the same
-  * task number concurrently).  In this case, the newly-created
-  * address space should be deleted again.
-  */
 PUBLIC inline
 Mem_space::Mem_space(Ram_quota *q)
 : _quota(q), _dir(0)

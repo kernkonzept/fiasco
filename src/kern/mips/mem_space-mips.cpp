@@ -113,14 +113,6 @@ IMPLEMENTATION [mips]:
 DEFINE_PER_CPU Per_cpu<Mem_space::Asid_alloc> Mem_space::_asid_alloc;
 
 
-/** Constructor.  Creates a new address space and registers it with
-  * Space_index.
-  *
-  * Registration may fail (if a task with the given number already
-  * exists, or if another thread creates an address space for the same
-  * task number concurrently).  In this case, the newly-created
-  * address space should be deleted again.
-  */
 PUBLIC inline NEEDS[Mem_space::guest_id_init]
 Mem_space::Mem_space(Ram_quota *q)
 : _quota(q), _dir(0)
@@ -399,10 +391,6 @@ Mem_space::add_tlb_entry(Vaddr virt, bool write_access, bool need_probe, bool gu
   return true;
 }
 
-/**
- * \brief Free all memory allocated for this Mem_space.
- * \pre Runs after the destructor!
- */
 PUBLIC
 Mem_space::~Mem_space()
 {

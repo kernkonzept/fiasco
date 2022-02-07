@@ -190,10 +190,6 @@ void
 Mem_space::destroy()
 {}
 
-/**
- * Destructor.  Deletes the address space and unregisters it from
- * Space_index.
- */
 PRIVATE
 void
 Mem_space::dir_shutdown()

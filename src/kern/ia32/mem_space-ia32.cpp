@@ -353,10 +353,6 @@ Mem_space::v_delete(Vaddr virt, Page_order size, L4_fpage::Rights page_attribs)
   return ret;
 }
 
-/**
- * Destructor.  Deletes the address space and unregisters it from
- * Space_index.
- */
 PRIVATE
 void
 Mem_space::dir_shutdown()
@@ -373,10 +369,6 @@ Mem_space::dir_shutdown()
                 Kmem_alloc::q_allocator(_quota));
 }
 
-/**
- * \brief Free all memory allocated for this Mem_space.
- * \pre Runs after the destructor!
- */
 PUBLIC
 Mem_space::~Mem_space()
 {
