@@ -120,7 +120,7 @@ private:
   using Mappings = cxx::S_list<Mapping>;
 
 public:
-  ~Mapping_tree() { erase(nullptr); }
+  ~Mapping_tree() { assert(!front()); }
 
   static Iterator insertion_head() { return Iterator(); }
   static Ram_quota *quota(Space *space) { return space->ram_quota(); }
