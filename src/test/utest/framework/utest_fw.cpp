@@ -49,13 +49,31 @@ struct Utest
     }
   };
 
-  struct Bool_cpu_array : cxx::array<bool, Cpu_number, Config::Max_num_cpus>
+  /**
+   * Dynamically allocated array of bools with the size equal to the maximal
+   * number of CPUs.
+   */
+  struct Bool_cpu_array
   {
+    typedef cxx::array<bool, Cpu_number, Config::Max_num_cpus> array_type;
+
     Bool_cpu_array()
     {
-      for (auto &b : *this)
-        b = false;
+      array = Utest::kmem_create_clear<array_type>();
     }
+
+    bool &operator[](Cpu_number const &cpu)
+    {
+      return (*array)[cpu];
+    }
+
+    bool const &operator[](Cpu_number const &cpu) const
+    {
+      return (*array)[cpu];
+    }
+
+  private:
+    cxx::unique_ptr<array_type, Utest::Deleter<array_type>> array;
   };
 
   /// Support for running tests with disabled timer tick.
