@@ -123,7 +123,7 @@ Watchdog::init()
       || !Perf_cnt::have_watchdog())
     panic("Cannot initialize watchdog (no/bad Local APIC)");
 
-  // attach performance counter interrupt tom NMI
+  // attach performance counter interrupt to NMI
   Apic::set_perf_nmi();
 
   // start counter
