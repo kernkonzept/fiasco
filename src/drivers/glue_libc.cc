@@ -1,30 +1,37 @@
 #include "libc_backend.h"
 #include "console.h"
 
-int __libc_backend_outs(const char *s, size_t len)
+int __libc_backend_outs(const char *str, size_t len)
 {
   if (!Console::stdout)
     return len;
 
-  char const *e = s + len;
-  char const *p = s;
-  while (s < e)
-    {
-      for (; p < e && *p != '\n'; ++p)
-        ;
+  char const *end = str + len;
+  char const *delim = str;
 
-      while (s < p)
+  while (str < end)
+    {
+      // Find the delimiter in the current part of the string which points
+      // either to the next newline character or to the end of the string.
+      while (delim < end && *delim != '\n')
+        ++delim;
+
+      // Output the current part up to (but not including) the delimiter.
+      while (str < delim)
         {
-          int written = Console::stdout->write(s, p - s);
+          int written = Console::stdout->write(str, delim - str);
           if (written < 0)
             return written;
-          s += written;
+
+          str += written;
         }
 
-      if (p < e && *p == '\n')
+      // If the delimiter is a newline, then output CR+LF.
+      if (delim < end && *delim == '\n')
         {
-          Console::stdout->write("\r", 1);
-          ++p;
+          Console::stdout->write("\r\n", 2);
+          ++delim;
+          ++str;
         }
     }
 
