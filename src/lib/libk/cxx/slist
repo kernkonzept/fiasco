@@ -140,7 +140,8 @@ public:
   using Iterator = typename Base::Iterator;
   S_list_tail() : Base(), _tail(&this->_f) {}
 
-  S_list_tail(S_list_tail &&t) : Base(static_cast<Base&&>(t)), _tail(t._tail)
+  S_list_tail(S_list_tail &&t)
+  : Base(static_cast<Base&&>(t)), _tail(t.empty() ? &this->_f : t._tail)
   {
     t._tail = &t._f;
   }
@@ -156,7 +157,7 @@ public:
   S_list_tail &operator = (S_list_tail &&t)
   {
     Base::operator = (static_cast<Base &&>(t));
-    _tail = t._tail;
+    _tail = t.empty() ? &this->_f : t._tail;
     t._tail = &t._f;
     return *this;
   }
