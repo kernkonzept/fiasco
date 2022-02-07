@@ -353,29 +353,23 @@ Mem_space::v_delete(Vaddr virt, Page_order size, L4_fpage::Rights page_attribs)
   return ret;
 }
 
-PRIVATE
-void
-Mem_space::dir_shutdown()
-{
-  // free all page tables we have allocated for this address space
-  // except the ones in kernel space which are always shared
-  _dir->destroy(Virt_addr(0UL),
-                Virt_addr(Mem_layout::User_max), 0, Pdir::Depth,
-                Kmem_alloc::q_allocator(_quota));
-
-  // free all unshared page table levels for the kernel space
-  _dir->destroy(Virt_addr(Mem_layout::User_max + 1),
-                Virt_addr(~0UL), 0, Pdir::Super_level,
-                Kmem_alloc::q_allocator(_quota));
-}
-
 PUBLIC
 Mem_space::~Mem_space()
 {
   reset_asid();
   if (_dir)
     {
-      dir_shutdown();
+      // free all page tables we have allocated for this address space
+      // except the ones in kernel space which are always shared
+      _dir->destroy(Virt_addr(0UL),
+                    Virt_addr(Mem_layout::User_max), 0, Pdir::Depth,
+                    Kmem_alloc::q_allocator(_quota));
+
+      // free all unshared page table levels for the kernel space
+      _dir->destroy(Virt_addr(Mem_layout::User_max + 1),
+                    Virt_addr(~0UL), 0, Pdir::Super_level,
+                    Kmem_alloc::q_allocator(_quota));
+
       Kmem_alloc::allocator()->q_free(_quota, Config::page_order(), _dir);
     }
 }
