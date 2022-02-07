@@ -98,7 +98,6 @@ public:
     Trampoline_page    = 0xbfff1000 - Host_as_offset,  ///< % 4KB
     Kip_auto_map       = 0xbfff2000 - Host_as_offset,  ///< % 4KB
     Tbuf_ustatus_page  = 0xbfff3000 - Host_as_offset,  ///< % 4KB
-    Space_index        = 0xc0000000,  ///< % 4MB   v2
     Kip_index          = 0xc0800000,  ///< % 4MB
     Syscalls           = 0xeacff000,  ///< % 4KB   syscall page
   };
