@@ -1,6 +1,7 @@
 INTERFACE:
 
 #include <cstddef>		// size_t
+#include "boot_alloc.h"
 #include "buddy_alloc.h"
 #include "kmem_alloc.h"
 #include "config.h"
@@ -12,6 +13,47 @@ INTERFACE:
 
 #include <cxx/slist>
 #include <cxx/type_traits>
+
+class Global_alloc
+{
+  typedef Spin_lock<> Lock;
+  static Lock _lock;
+
+protected:
+  static void *unaligned_alloc(size_t size)
+  {
+    auto guard = lock_guard(_lock);
+    return Boot_alloced::alloc(size);
+  }
+
+  template<typename Q> static
+  void *q_unaligned_alloc(Q *quota, size_t size)
+  {
+    Auto_quota<Q> q(quota, size);
+    if (EXPECT_FALSE(!q))
+      return 0;
+
+    void *b;
+    if (EXPECT_FALSE(!(b=unaligned_alloc(size))))
+      return 0;
+
+    q.release();
+    return b;
+  }
+
+  static void unaligned_free(size_t size, void *e)
+  {
+    auto guard = lock_guard(_lock);
+    Boot_alloced::free(size, e);
+  }
+
+  template<typename Q> static
+  void q_unaligned_free(Q* quota, size_t size, void *e)
+  {
+    Boot_alloced::free(size, e);
+    quota->free(size);
+  }
+};
 
 class Kmem_slab : public Slab_cache, public cxx::S_list_item
 {
@@ -29,6 +71,9 @@ class Kmem_slab : public Slab_cache, public cxx::S_list_item
  * \tparam ALIGN  Alignment of an object in bytes. Must be power of 2.
  *
  * This class provides a per-size instance of a slab cache.
+ *
+ * Note: Kmem_buddy_for_size, Kmem_slab_for_size and Global_for_size must
+ * provide compatible interfaces in order to be used interchangeably.
  */
 template< unsigned SIZE, unsigned ALIGN = 8 >
 class Kmem_slab_for_size
@@ -66,8 +111,8 @@ Kmem_slab Kmem_slab_for_size<SIZE, ALIGN>::_s(SIZE, ALIGN, "fixed size");
  * Note: This allocator uses the buddy allocator and allocates memory in sizes
  * supported by the buddy allocator.
  *
- * Note: Kmem_buddy_for_size and Kmem_slab_for_size must provide compatible
- * interfaces in order to be used interchangeably.
+ * Note: Kmem_buddy_for_size, Kmem_slab_for_size and Global_for_size must
+ * provide compatible interfaces in order to be used interchangeably.
  */
 template<unsigned SIZE>
 class Kmem_buddy_for_size
@@ -88,20 +133,58 @@ public:
   { Kmem_alloc::allocator()->q_free(q, Bytes(SIZE), e); }
 };
 
+
 /**
- * Meta allocator to select between Kmem_slab_for_size and Kmem_buddy_for_size.
+ * Allocator for fixed-size objects using the global Boot_alloced allocator.
+ * \tparam SIZE  The size of an object in bytes.
  *
+ * This allocator re-uses the slow best-fit boot time allocator. It should only
+ * be used on resource constrained systems where saving memory is paramount
+ * compared to the slower allocation speed.
+ *
+ * Note: Kmem_buddy_for_size, Kmem_slab_for_size and Global_for_size must
+ * provide compatible interfaces in order to be used interchangeably.
+ */
+template<unsigned SIZE>
+class Global_for_size : public Global_alloc
+{
+public:
+  static void *alloc()
+  { return unaligned_alloc(SIZE); }
+
+  template<typename Q> static
+  void *q_alloc(Q *q)
+  { return q_unaligned_alloc<Q>(q, SIZE); }
+
+  static void free(void *e)
+  { unaligned_free(SIZE, e); }
+
+  template<typename Q> static
+  void q_free(Q *q, void *e)
+  { q_unaligned_free<Q>(q, SIZE, e); }
+};
+
+/**
+ * Meta allocator to select between Global_for_size, Kmem_slab_for_size and
+ * Kmem_buddy_for_size.
+ *
+ * \tparam SLABS  If true some sort of slab allocator will be used. Otherwise
+ *                Global_for_size is always used.
  * \tparam BUDDY  If true the allocator will use Kmem_buddy_for_size, if
  *                false Kmem_slab_for_size.
  * \tparam SIZE   Size of an object (in bytes) that shall be allocated.
  * \tparam ALIGN  Alignment for each object in bytes. Must be power of 2.
  */
-template<bool BUDDY, unsigned SIZE, unsigned ALIGN>
+template<bool SLABS, bool BUDDY, unsigned SIZE, unsigned ALIGN>
 struct _Kmem_alloc : Kmem_slab_for_size<SIZE, ALIGN> {};
+
+/* Specialization using the global allocator without slab */
+template<bool BUDDY, unsigned SIZE, unsigned ALIGN>
+struct _Kmem_alloc<false, BUDDY, SIZE, ALIGN> : Global_for_size<SIZE> {};
 
 /* Specialization using the buddy allocator */
 template<unsigned SIZE, unsigned ALIGN>
-struct _Kmem_alloc<true, SIZE, ALIGN> : Kmem_buddy_for_size<SIZE>
+struct _Kmem_alloc<true, true, SIZE, ALIGN> : Kmem_buddy_for_size<SIZE>
 {
   static_assert(
       (ALIGN > 0) && !(ALIGN & (ALIGN - 1)),
@@ -126,7 +209,9 @@ struct _Kmem_alloc<true, SIZE, ALIGN> : Kmem_buddy_for_size<SIZE>
  * buddy allocator.)
  */
 template<unsigned SIZE, unsigned ALIGN = 8>
-struct Kmem_slab_s : _Kmem_alloc<(SIZE >= 0x400), SIZE, ALIGN> {};
+struct Kmem_slab_s
+: _Kmem_alloc<Config::Slab_allocators, (SIZE >= 0x400), SIZE, ALIGN>
+{};
 
 /**
  * Allocator for objects of the given type.
@@ -176,6 +261,8 @@ public:
 };
 
 IMPLEMENTATION:
+
+Global_alloc::Lock Global_alloc::_lock;
 
 Kmem_slab::Reap_list Kmem_slab::reap_list;
 

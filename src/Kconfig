@@ -451,6 +451,13 @@ config NO_LDT
 	  table (LDT).  This reduces some overhead. However, this
 	  also makes the use of the LDT in L4Linux impossible.
 
+config DISABLE_SLAB
+	bool "Disable SLAB allocators"
+	depends on EXPERIMENTAL
+	help
+	  Enabling this option will save the overhead of slabs at the expense
+	  of allocation speed.
+
 # PF_SECTION: KERNEL
 
 endmenu # kernel options

@@ -104,6 +104,11 @@ public:
 #else
     Big_endian = false,
 #endif
+#ifdef CONFIG_DISABLE_SLAB
+    Slab_allocators = false,
+#else
+    Slab_allocators = true,
+#endif
   };
 
   static Cpu_number max_num_cpus() { return Cpu_number(Max_num_cpus); }

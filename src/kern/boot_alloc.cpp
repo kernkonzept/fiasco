@@ -3,13 +3,21 @@ INTERFACE:
 #include <cstddef>
 #include <cxx/slist>
 #include <cxx/type_traits>
+#include "types.h"
 
 class Boot_alloced
 {
 private:
   enum { Debug_boot_alloc };
   struct Block : cxx::S_list_item
-  { size_t size; };
+  {
+    size_t size;
+
+    inline Block *next()
+    {
+      return (Block *)((Address)this + size);
+    }
+  };
 
   typedef cxx::S_list_bss<Block> Block_list;
 
@@ -71,11 +79,8 @@ Boot_alloced::alloc(size_t size)
       if (!b)
 	return 0;
 
-      b->size = alloc_size;
-      _free.add(b);
-      best = _free.begin();
+      best = free_block(alloc_size, b);
     }
-
 
   void *b = *best;
   Block *rem = (Block *)(((Address)b + size + sizeof(Block) - 1) & ~(sizeof(Block) - 1));
@@ -94,6 +99,77 @@ Boot_alloced::alloc(size_t size)
 
   memset(b, 0, size);
   return b;
+}
+
+/**
+ * Insert a free block into the free list.
+ *
+ * The list is kept sorted by address to make merging free blocks possible. We
+ * may want to pass back complete buddies back to the buddy allocator in the
+ * future.
+ *
+ * \pre The block pointer and size must be sizeof(Block) aligned.
+ */
+PRIVATE static
+Boot_alloced::Block_list::Iterator
+Boot_alloced::free_block(unsigned long size, Block *b)
+{
+  b->size = size;
+
+  Block_list::Iterator prev = _free.end();
+  Block_list::Iterator next = _free.begin();
+  while (next != _free.end())
+    {
+      if (*next < b)
+	break;
+      prev = next;
+      ++next;
+    }
+
+  if (prev == _free.end())
+    {
+      if (next != _free.end() && *next == b->next())
+	{
+	  b->size += next->size;
+	  _free.replace(next, b);
+	}
+      else
+        _free.add(b);
+
+      return _free.begin();
+    }
+  else
+    {
+      // Merge with 'next' block first (if adjacent) to keep 'prev' iterator
+      // valid!
+      if (next != _free.end() && *next == b->next())
+	{
+	  b->size += next->size;
+	  _free.erase(next);
+	}
+
+      if (prev->next() == b)
+	{
+	  prev->size += b->size;
+	  return prev;
+	}
+      else
+	{
+	  _free.insert(b, prev);
+	  return ++prev;
+	}
+    }
+}
+
+PUBLIC static
+void
+Boot_alloced::free(unsigned long size, void *b)
+{
+  if (!size || !b)
+    return;
+
+  size = (size + sizeof(Block) - 1U) & ~(sizeof(Block) - 1U);
+  free_block(size, (Block *)b);
 }
 
 PUBLIC template<typename T> static
