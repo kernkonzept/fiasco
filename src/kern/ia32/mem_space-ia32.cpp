@@ -159,13 +159,6 @@ Mem_space::has_superpages()
   return Cpu::have_superpages();
 }
 
-IMPLEMENT inline
-Mem_space *
-Mem_space::current_mem_space(Cpu_number cpu) /// XXX: do not fix, deprecated, remove!
-{
-  return _current.cpu(cpu);
-}
-
 PUBLIC inline
 bool
 Mem_space::set_attributes(Virt_addr virt, Attr page_attribs)

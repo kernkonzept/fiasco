@@ -158,14 +158,6 @@ Mem_space::is_full_flush(L4_fpage::Rights rights)
 // Mapping utilities
 
 IMPLEMENT inline
-Mem_space *
-Mem_space::current_mem_space(Cpu_number cpu)
-{
-  return _current.cpu(cpu);
-}
-
-
-IMPLEMENT inline
 void Mem_space::kernel_space(Mem_space *_k_space)
 {
   _kernel_space = _k_space;

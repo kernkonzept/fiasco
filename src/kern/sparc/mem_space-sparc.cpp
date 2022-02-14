@@ -208,13 +208,6 @@ Mem_space::dir_shutdown()
   NOT_IMPL_PANIC;
 }
 
-IMPLEMENT inline
-Mem_space *
-Mem_space::current_mem_space(Cpu_number cpu) /// XXX: do not fix, deprecated, remove!
-{
-  return _current.cpu(cpu);
-}
-
 /** Insert a page-table entry, or upgrade an existing entry with new
     attributes.
     @param phys Physical address (page-aligned).

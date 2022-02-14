@@ -21,9 +21,6 @@ class Mem_space
 {
   MEMBER_OFFSET();
 
-  // Space reverse lookup
-  friend inline Mem_space* current_mem_space();
-
 public:
   typedef int Status;
   static char const *const name;
@@ -117,7 +114,9 @@ public:
   static Mem_space *kernel_space()
   { return _kernel_space; }
 
-  static inline Mem_space *current_mem_space(Cpu_number cpu);
+  /** Return the current memory space of this CPU. */
+  static inline Mem_space *current_mem_space(Cpu_number cpu)
+  { return _current.cpu(cpu); }
 
 
   virtual
