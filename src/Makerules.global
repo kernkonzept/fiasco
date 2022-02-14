@@ -47,11 +47,16 @@ comp_prof_flgs = $(if $(filter $(1),$(NOPROFILE)$(NOOPT)),,$(PROF_FLAGS))
 # INST_FLAGS: Only for files in INSTRUMENT.
 comp_inst_flgs = $(if $(filter $(1),$(INSTRUMENT)),$(INST_FLAGS))
 
+# NOBUILTIN
+comp_nobuiltin = $(if $(filter $(1),$(NOBUILTIN)),-fno-builtin)
+
 # Put it all together.
 c_flgs = $(CPPFLAGS) $(call comp_c_flgs,$(1)) $(call comp_c_opt_flgs,$(1)) \
-         $(call comp_prof_flgs,$(1)) $(call comp_inst_flgs,$(1))
+         $(call comp_prof_flgs,$(1)) $(call comp_inst_flgs,$(1)) \
+         $(call comp_nobuiltin,$(1))
 cc_flgs = $(CPPFLAGS) $(call comp_cc_flgs,$(1)) $(call comp_cc_opt_flgs,$(1)) \
-          $(call comp_prof_flgs,$(1)) $(call comp_inst_flgs,$(1))
+          $(call comp_prof_flgs,$(1)) $(call comp_inst_flgs,$(1)) \
+          $(call comp_nobuiltin,$(1))
 
 as_flgs = $(CPPFLAGS) $(ASFLAGS)
 

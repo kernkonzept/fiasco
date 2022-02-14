@@ -173,8 +173,6 @@ NOOPT_CFLAGS	+= $(NOOPT_SHARED_FLAGS)
 NOOPT_CXXFLAGS	+= $(NOOPT_SHARED_FLAGS)
 CPPFLAGS	+= $(L4STD_INCDIR) $(L4ALL_INCDIR) $(L4STD_INCDIR_LAST)
 
-CPPFLAGS-clang  += -fno-builtin
-
 CXXFLAGS	+= $(call CHECKCXX,-fno-threadsafe-statics,)
 CXXFLAGS	+= $(call CHECKCXX,-Wno-non-virtual-dtor,)
 

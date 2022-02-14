@@ -372,3 +372,4 @@ strcmp.c   strcspn.c  strncmp.c  strspn.c
 
 # do not profile all of MINILIBC, because it is used in the BOOT subsystem
 NOOPT		+= $(patsubst %.o, %, $(OBJ_MINILIBC))
+NOBUILTIN	+= $(patsubst %.o, %, $(OBJ_MINILIBC))

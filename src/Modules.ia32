@@ -396,6 +396,7 @@ CSRC_MINILIBC	:= atexit.c memccpy.c memcmp.c memmove.c memset.c memcpy.c \
 		   isgraph.c islower.c isprint.c ispunct.c isspace.c \
 		   isupper.c isxdigit.c tolower.c strcspn.c strspn.c panic.c
 ASSRC_MINILIBC	:= setjmp.S
+NOBUILTIN	+= $(patsubst %.o, %, $(OBJ_MINILIBC))
 
 
 ifeq ("$(CONFIG_JDB)","y")

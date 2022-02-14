@@ -393,6 +393,7 @@ CSRC_MINILIBC	:= atexit.c memccpy.c memcmp.c memmove.c memset.c memcpy.c \
 		   isalpha.c isascii.c isblank.c iscntrl.c isdigit.c \
 		   isgraph.c islower.c isprint.c ispunct.c isspace.c \
 		   isupper.c isxdigit.c tolower.c strcspn.c strspn.c panic.c
+NOBUILTIN	+= $(patsubst %.o, %, $(OBJ_MINILIBC))
 ASSRC_MINILIBC	:= setjmp.S
 
 
