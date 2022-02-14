@@ -608,10 +608,45 @@ namespace Ptab
     static unsigned page_order_for_level(unsigned level)
     { return Levels::shift(level) + Base_shift; }
 
+    /**
+     * Create or lookup a page table entry for a virtual address on a particular
+     * page table level.
+     *
+     * \tparam _Alloc  Memory allocator type.
+     * \tparam MEM     Memory layout type.
+     * \param  virt    Virtual address for page table walk.
+     * \param  level   Level in the page table hierarchy; root is at level 0.
+     * \param  force_write_back  If true, `PTE_PTR::write_back()` is called on
+     *                           created/changed page table entries.
+     * \param  alloc   Memory allocator used for allocating new page tables.
+     * \param  mem     A memory layout.
+     *
+     * \return Pointer to a page table entry and its level wrapped in `PTE_PTR`.
+     *         If the allocation of a new page table of some level *n* fails,
+     *         then the entry from level *n−1* on the page table walk is
+     *         returned instead.
+     *
+     * During the page table walk, new page tables are created as needed using
+     * `alloc`.
+     */
     template< typename _Alloc, typename MEM = MEM_DFLT >
     PTE_PTR walk(Va virt, unsigned level, bool force_write_back, _Alloc &&alloc, MEM &&mem = MEM())
     { return _base.walk(_Addr::val(virt), level, force_write_back, cxx::forward<_Alloc>(alloc), cxx::forward<MEM>(mem)); }
 
+    /**
+     * Lookup a page table entry for a virtual address on a particular
+     * page table level.
+     *
+     * \tparam MEM    Memory layout type.
+     * \param  virt   Virtual address for page table walk.
+     * \param  level  Level in the page table hierarchy; root is at level 0.
+     * \param  mem    A memory layout.
+     *
+     * \return Pointer to a page table entry and its level wrapped in PTE_PTR.
+     *         If there is no page table entry for `virt` on level `level` yet,
+     *         then the last existing entry on the page table walk is returned
+     *         instead.
+     */
     template< typename MEM = MEM_DFLT >
     PTE_PTR walk(Va virt, unsigned level = Depth, MEM &&mem = MEM()) const
     { return const_cast<Walk&>(_base).walk(_Addr::val(virt), level, false, Null_alloc(), cxx::forward<MEM>(mem)); }
@@ -667,6 +702,15 @@ namespace Ptab
                         cxx::forward<MEM>(mem));
     }
 
+    /**
+     * Clear all page table entries in the root page table.
+     *
+     * \param force_write_back  If true, `PTE_PTR::write_back()` is called on
+     *                          the cleared page table entries.
+     *
+     * \note Page tables of non-root-level are left untouched and might get
+     *       unreachable if not referenced otherwise.
+     */
     void clear(bool force_write_back)
     { _base.clear(force_write_back); }
 
@@ -689,6 +733,23 @@ namespace Ptab
                 cxx::forward<MEM>(mem));
     }
 
+    /**
+     * Deallocate page tables.
+     *
+     * \tparam _Alloc       Memory allocator type.
+     * \tparam MEM          Memory layout type.
+     * \param  start        Begin of virtual address range (inclusive).
+     * \param  end          End of virtual address range (inclusive).
+     * \param  start_level  Begin of page table level range (exclusive).
+     * \param  end_level    End of page table level range (inclusive).
+     * \param  alloc        Memory allocator used for deallocating page tables.
+     * \param  mem          A memory layout.
+     *
+     * Within the virtual address range from `start` to `end` (inclusive),
+     * deallocate the page tables with `start_level < level <= end_level` where
+     * `level` is the level of the page table in the page table hierarchy. The
+     * page table entries themselves are left untouched.
+     */
     template< typename _Alloc, typename MEM = MEM_DFLT >
     void destroy(Va start, Va end, unsigned start_level, unsigned end_level,
                  _Alloc &&alloc = _Alloc(), MEM &&mem = MEM())
