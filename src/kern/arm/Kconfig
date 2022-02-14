@@ -69,6 +69,9 @@ config CAN_ARM_CPU_CORTEX_A57
 config CAN_ARM_CPU_CORTEX_A72
 	bool
 
+config CAN_ARM_CPU_CORTEX_A76
+	bool
+
 config CAN_ARM_CPU_NEOVERSE_N1
 	bool
 
@@ -193,6 +196,14 @@ config ARM_CORTEX_A57
 config ARM_CORTEX_A72
 	bool "ARM Cortex-A72 CPU"
 	depends on CAN_ARM_CPU_CORTEX_A72
+	select ARM_V8
+	select HAS_MP_OPTION
+	select HAS_CPU_VIRT if ARM_GIC
+	select HAS_64BIT
+
+config ARM_CORTEX_A76
+	bool "ARM Cortex-A76 CPU"
+	depends on CAN_ARM_CPU_CORTEX_A76
 	select ARM_V8
 	select HAS_MP_OPTION
 	select HAS_CPU_VIRT if ARM_GIC
