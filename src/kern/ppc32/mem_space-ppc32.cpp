@@ -476,10 +476,3 @@ IMPLEMENT inline
 void
 Mem_space::v_set_access_flags(Vaddr, L4_fpage::Rights)
 {}
-
-PUBLIC static inline NEEDS["mem_unit.h"]
-void
-Mem_space::tlb_flush_spaces(bool all, Mem_space *s1, Mem_space *s2)
-{
-  (void)all; (void)s1; (void)s2;
-}

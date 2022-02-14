@@ -92,21 +92,6 @@ Mem_space::tlb_flush(bool force = false)
   // Mem_unit::tlb_flush();
 }
 
-PUBLIC static inline NEEDS["mem_unit.h"]
-void
-Mem_space::tlb_flush_spaces(bool all, Mem_space *s1, Mem_space *s2)
-{
-  if (all || !Have_asids)
-    Mem_unit::tlb_flush();
-  else
-    {
-      if (s1)
-	s1->tlb_flush(true);
-      if (s2)
-	s2->tlb_flush(true);
-    }
-}
-
 
 PUBLIC inline
 bool

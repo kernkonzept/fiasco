@@ -158,13 +158,6 @@ Generic_obj_space<SPACE>::v_fabricate(V_pfn const &address,
 PUBLIC template< typename SPACE >
 inline static
 void
-Generic_obj_space<SPACE>::tlb_flush_spaces(bool, Generic_obj_space<SPACE> *,
-                                           Generic_obj_space<SPACE> *)
-{}
-
-PUBLIC template< typename SPACE >
-inline static
-void
 Generic_obj_space<SPACE>::tlb_flush()
 {}
 
