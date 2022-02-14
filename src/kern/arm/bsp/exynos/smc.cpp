@@ -59,11 +59,6 @@ public:
 // ------------------------------------------------------------------------
 IMPLEMENTATION [pf_exynos && arm_em_ns && arm_secmonif_mc]:
 
-#include "mem_space.h"
-#include "mem_unit.h"
-#include "platform.h"
-#include <cstdio>
-
 IMPLEMENT
 void
 Exynos_smc::l2cache_setup(unsigned tag_lat, unsigned data_lat,
