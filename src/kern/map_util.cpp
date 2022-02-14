@@ -468,19 +468,19 @@ map(MAPDB* mapdb,
       Attr r_attribs;
 
       Page_order i_order = to_fit_size(s_order);
-      V_pfc i_size = SPACE::to_size(i_order);
+      size = SPACE::to_size(i_order);
       bool const rcv_page_mapped = to->v_lookup(rcv_addr, &r_phys, &r_order, &r_attribs);
 
-      while (i_size > snd_size
+      while (size > snd_size
           // want to send less than a superpage?
           || i_order > r_order         // not enough space for superpage map?
           || SPACE::subpage_offset(snd_addr, i_order) != V_pfc(0) // snd page not aligned?
           || SPACE::subpage_offset(rcv_addr, i_order) != V_pfc(0) // rcv page not aligned?
-          || (rcv_addr + i_size > rcv_start + rcv_size))
+          || (rcv_addr + size > rcv_start + rcv_size))
         // rcv area to small?
         {
           i_order = to_fit_size(--i_order);
-          i_size = SPACE::to_size(i_order);
+          size = SPACE::to_size(i_order);
           if (grant)
             {
               WARN("XXX Can't GRANT page from superpage (%p: " L4_PTR_FMT
@@ -491,9 +491,6 @@ map(MAPDB* mapdb,
               grant = 0;
             }
         }
-
-      // Loop increment is size of insertion
-      size = i_size;
 
       if (!mapdb->valid_address(SPACE::to_pfn(s_phys)))
         continue; // no valid sender mapping, skip
@@ -639,7 +636,7 @@ map(MAPDB* mapdb,
                (unsigned long)cxx::int_value<V_pfn>(snd_addr),
                to_id,
                (unsigned long)cxx::int_value<V_pfn>(rcv_addr),
-               (unsigned long)cxx::int_value<V_pfc>(i_size));
+               (unsigned long)cxx::int_value<V_pfc>(size));
           // Do not flag an error here -- because according to L4
           // semantics, it isn't.
           break;
