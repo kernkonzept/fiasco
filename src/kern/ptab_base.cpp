@@ -223,6 +223,29 @@ namespace Ptab
       size -= (unsigned long)cnt << Traits::Shift;
     }
 
+    void skip(Address &virt, unsigned long &size)
+    {
+      unsigned idx = Vec::idx(virt);
+      unsigned cnt = size >> Traits::Shift;
+      if (cnt + idx > Vec::Length)
+        cnt = Vec::Length - idx;
+
+      virt += (unsigned long)cnt << Traits::Shift;
+      size -= (unsigned long)cnt << Traits::Shift;
+    }
+
+    void skip(Address &phys, Address &virt, unsigned long &size)
+    {
+      unsigned idx = Vec::idx(virt);
+      unsigned cnt = size >> Traits::Shift;
+      if (cnt + idx > Vec::Length)
+        cnt = Vec::Length - idx;
+
+      phys += (unsigned long)cnt << (Traits::Shift + Traits::Base_shift);
+      virt += (unsigned long)cnt << Traits::Shift;
+      size -= (unsigned long)cnt << Traits::Shift;
+    }
+
     template< typename _Alloc, typename MEM >
     void destroy(Address, Address, unsigned, unsigned, _Alloc &&, MEM &&)
     {}
@@ -350,6 +373,22 @@ namespace Ptab
         }
     }
 
+    void skip(Address &start, unsigned long &size, unsigned level)
+    {
+      if (!level)
+        reinterpret_cast<This*>(this)->skip(start, size);
+      else
+        skip(start, size, level - 1);
+    }
+
+    void skip(Address &phys, Address &virt, unsigned long &size, unsigned level)
+    {
+      if (!level)
+        reinterpret_cast<This*>(this)->skip(phys, virt, size);
+      else
+        skip(phys, virt, size, level - 1);
+    }
+
     template< typename MEM >
     void unmap(Address &start, unsigned long &size, unsigned level,
                bool force_write_back, MEM &&mem)
@@ -367,7 +406,10 @@ namespace Ptab
           PTE_PTR e(&_e[Vec::idx(start)], Depth);
 
           if (!e.is_valid() || e.is_leaf())
-            continue;
+            {
+              skip(start, size, level - 1);
+              continue;
+            }
 
           Next *n = (Next*)mem.phys_to_pmem(e.next_level());
           n->unmap(start, size, level - 1, force_write_back,
@@ -396,14 +438,21 @@ namespace Ptab
           if (!e.is_valid())
             {
               if (alloc.valid() && (n = alloc_next(e, alloc, force_write_back)))
-                n->map(phys, virt, size, attr, level - 1,
-                       force_write_back, alloc, mem);
+                {
+                  n->map(phys, virt, size, attr, level - 1,
+                         force_write_back, alloc, mem);
+                  continue;
+                }
 
+              skip(phys, virt, size, level - 1);
               continue;
             }
 
           if (_Head::May_be_leaf && e.is_leaf())
-            continue;
+            {
+              skip(phys, virt, size, level - 1);
+              continue;
+            }
 
           n = (Next*)mem.phys_to_pmem(e.next_level());
           n->map(phys, virt, size, attr, level - 1, force_write_back, alloc, mem);
