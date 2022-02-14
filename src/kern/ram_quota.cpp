@@ -86,7 +86,7 @@ Ram_quota::alloc(Mword bytes)
     }
 }
 
-PUBLIC
+PUBLIC inline
 bool
 Ram_quota::alloc(Bytes size)
 {
