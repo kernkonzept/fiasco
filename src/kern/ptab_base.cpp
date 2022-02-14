@@ -602,10 +602,10 @@ namespace Ptab
 
     typedef Level<Traits> Levels;
 
-    static unsigned lsb_for_level(unsigned level)
+    static constexpr unsigned lsb_for_level(unsigned level)
     { return Levels::shift(level); }
 
-    static unsigned page_order_for_level(unsigned level)
+    static constexpr unsigned page_order_for_level(unsigned level)
     { return Levels::shift(level) + Base_shift; }
 
     /**
