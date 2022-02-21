@@ -33,7 +33,7 @@ pic_IMPL              += pic-arm-rpi
 pic_IMPL              += $(if $(CONFIG_ARM_GIC),pic-gic)
 timer_IMPL            += timer-arm-rpi
 timer_IMPL            += $(if $(CONFIG_ARM_V7PLUS),timer-arm-generic)
-timer_IMPL            += $(if $(CONFIG_PF_RPI_RPI4),timer-arm-generic-rpi)
+timer_IMPL            += $(if $(CONFIG_PF_RPI_RPI4),timer-arm-generic-bsp-std)
 timer_tick_IMPL       += $(if $(CONFIG_ARM_V7PLUS),timer_tick-arm-rpi,\
 			                           timer_tick-single-vector)
 timer_tick_IMPL       += $(if $(CONFIG_PF_RPI_RPI4),timer_tick-single-vector)

@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm_generic_timer && pf_sunxi]:
+IMPLEMENTATION [arm_generic_timer]:
 
 PUBLIC static
 unsigned Timer::irq()
@@ -13,5 +13,4 @@ unsigned Timer::irq()
 
 IMPLEMENT
 void Timer::bsp_init(Cpu_number)
-{
-}
+{}
