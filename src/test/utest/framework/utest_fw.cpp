@@ -31,12 +31,13 @@ struct Utest
   /// Constants to use with the UTEST_ macros.
   enum : bool { Assert = true, Expect = false };
 
+  template <typename F>
   struct Thread_args
   {
     Thread_args() = delete;
-    Thread_args(cxx::functor<void ()> const &f) : fn(f) {}
+    Thread_args(F const &f) : fn(f) {}
     bool started = false;
-    cxx::functor<void ()> const &fn;
+    F const &fn;
   };
 
   template <typename T>
@@ -906,11 +907,12 @@ Utest::wait_for_events(Bool_cpu_array const &done, unsigned long timeout)
  * Worker function for Utest::start_thread().
  */
 PRIVATE static
+template <typename F>
 void
 Utest::thread_fn()
 {
-  auto *args = reinterpret_cast<Thread_args *>(current_thread()->user_ip());
-  cxx::functor<void ()> fn = args->fn;
+  auto *args = reinterpret_cast<Thread_args<F> *>(current_thread()->user_ip());
+  F fn = args->fn;
   write_now(&args->started, true);
 
   // Cf. Thread::user_invoke_generic(): Release CPU lock explicitly, because
@@ -953,8 +955,9 @@ Utest::kill_current_thread()
  * grace period) so the thread remains visible for some time after termination.
  */
 PUBLIC static
+template <typename F>
 bool
-Utest::start_thread(cxx::functor<void ()> fn, Cpu_number cpu,
+Utest::start_thread(F const &fn, Cpu_number cpu,
                     unsigned short prio, Thread_object *thr = nullptr)
 {
   Thread_object *t = thr;
@@ -963,9 +966,9 @@ Utest::start_thread(cxx::functor<void ()> fn, Cpu_number cpu,
   if (!t)
     return false;
 
-  Thread_args args(fn);
+  Thread_args<F> args(fn);
 
-  t->prepare_switch_to(thread_fn);
+  t->prepare_switch_to(thread_fn<F>);
 
   // Fixed-priority scheduler only so far!
   L4_sched_param_fixed_prio sp;
