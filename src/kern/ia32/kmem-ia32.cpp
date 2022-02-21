@@ -51,9 +51,6 @@ private:
 public:
   static Device_map dev_map;
 
-  static void init_pageing(Cpu const &boot_cpu);
-  static void init_boot_cpu(Cpu const &boot_cpu);
-  static void init_app_cpu(Cpu const &cpu);
   static Mword is_kmem_page_fault(Address pfa, Mword error);
   static Mword is_ipc_page_fault(Address pfa, Mword error);
   static Mword is_io_bitmap_page_fault(Address pfa);
