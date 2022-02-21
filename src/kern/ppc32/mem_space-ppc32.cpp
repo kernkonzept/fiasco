@@ -110,22 +110,6 @@ Mem_space::Mem_space(Ram_quota *q, Dir_type* pdir)
   _current.cpu(Cpu_number::boot_cpu()) = this;
 }
 
-#if 0
-//XXX cbass: check;
-PUBLIC static inline
-Mword
-Mem_space::xlate_flush(unsigned char rights)
-{
-  Mword a = Page_references;
-  if (rights & L4_fpage::RX)
-    a |= Page_all_attribs;
-  else if (rights & L4_fpage::W)
-    a |= Page_writable;
-
-  return a;
-}
-#endif
-
 //XXX cbass: check;
 PUBLIC static inline
 bool
@@ -133,22 +117,6 @@ Mem_space::is_full_flush(L4_fpage::Rights rights)
 {
   return (bool)(rights & L4_fpage::Rights::R()); // CHECK!
 }
-
-#if 0
-PUBLIC static inline
-unsigned char
-Mem_space::xlate_flush_result(Mword attribs)
-{
-  unsigned char r = 0;
-  if (attribs & Page_referenced)
-    r |= L4_fpage::RX;
-
-  if (attribs & Page_dirty)
-    r |= L4_fpage::W;
-
-  return r;
-}
-#endif
 
 PUBLIC inline NEEDS["cpu.h"]
 static bool

@@ -116,21 +116,9 @@ IMPLEMENTATION:
 
 PUBLIC template< typename SPACE >
 static inline
-Mword
-Generic_obj_space<SPACE>::xlate_flush(L4_fpage::Rights rights)
-{ return cxx::int_value<L4_fpage::Rights>(rights); }
-
-PUBLIC template< typename SPACE >
-static inline
 bool
 Generic_obj_space<SPACE>::is_full_flush(L4_fpage::Rights rights)
 { return (bool)(rights & L4_fpage::Rights::CR()); }
-
-PUBLIC template< typename SPACE >
-static inline
-L4_fpage::Rights
-Generic_obj_space<SPACE>::xlate_flush_result(Mword /*attribs*/)
-{ return L4_fpage::Rights(0); }
 
 PUBLIC template< typename SPACE >
 inline
