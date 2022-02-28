@@ -536,8 +536,10 @@ Thread::do_ipc(L4_msg_tag const &tag, Thread *partner,
         result = handshake_receiver(partner, t.snd);
       else
         {
-          // we have either per se X-CPU IPC or we ran into a
-          // IPC during migration (indicated by the pending DRQ)
+          // We have either per se X-CPU IPC or we ran into an IPC during
+          // migration (indicated by the pending DRQ).
+          // This flag also prevents the receive path from accessing the thread
+          // state of a remote sender.
           do_switch = false;
           result = remote_handshake_receiver(tag, partner, have_receive, t.snd,
                                              regs, rights);
@@ -1237,9 +1239,6 @@ Thread::remote_handshake_receiver(L4_msg_tag const &tag, Thread *partner,
                                   L4_timeout snd_t, Syscall_frame *regs,
                                   L4_fpage::Rights rights)
 {
-  // Flag that there must be no switch in the receive path.
-  // This flag also prevents the receive path from accessing
-  // the thread state of a remote sender.
   Ipc_remote_request rq;
   rq.tag = tag;
   rq.have_rcv = have_receive;
