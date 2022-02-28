@@ -416,20 +416,14 @@ namespace Ptab
           Next *n;
           if (!e.is_valid())
             {
-              if (alloc.valid() && (n = alloc_next(e, alloc, force_write_back)))
-                {
-                  if (n->map(phys, virt, size, attr, level - 1,
-                             force_write_back, alloc, mem))
-                    continue;
-                }
-
-              return false;
+              if (!alloc.valid() || !(n = alloc_next(e, alloc, force_write_back)))
+                return false;
             }
-
-          if (_Head::May_be_leaf && e.is_leaf())
+          else if (_Head::May_be_leaf && e.is_leaf())
             return false;
+          else
+            n = (Next*)mem.phys_to_pmem(e.next_level());
 
-          n = (Next*)mem.phys_to_pmem(e.next_level());
           if (!n->map(phys, virt, size, attr, level - 1, force_write_back,
                       alloc, mem))
             return false;
