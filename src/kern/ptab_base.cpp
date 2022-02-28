@@ -203,7 +203,7 @@ namespace Ptab
     }
 
     template< typename _Alloc, typename MEM >
-    void map(Address &phys, Address &virt, unsigned long &size,
+    bool map(Address &phys, Address &virt, unsigned long &size,
              unsigned long attr, unsigned, bool force_write_back,
              _Alloc &&, MEM &&)
     {
@@ -221,6 +221,8 @@ namespace Ptab
 
       virt += (unsigned long)cnt << Traits::Shift;
       size -= (unsigned long)cnt << Traits::Shift;
+
+      return true;
     }
 
     void skip(Address &virt, unsigned long &size)
@@ -230,18 +232,6 @@ namespace Ptab
       if (cnt + idx > Vec::Length)
         cnt = Vec::Length - idx;
 
-      virt += (unsigned long)cnt << Traits::Shift;
-      size -= (unsigned long)cnt << Traits::Shift;
-    }
-
-    void skip(Address &phys, Address &virt, unsigned long &size)
-    {
-      unsigned idx = Vec::idx(virt);
-      unsigned cnt = size >> Traits::Shift;
-      if (cnt + idx > Vec::Length)
-        cnt = Vec::Length - idx;
-
-      phys += (unsigned long)cnt << (Traits::Shift + Traits::Base_shift);
       virt += (unsigned long)cnt << Traits::Shift;
       size -= (unsigned long)cnt << Traits::Shift;
     }
@@ -381,14 +371,6 @@ namespace Ptab
         skip(start, size, level - 1);
     }
 
-    void skip(Address &phys, Address &virt, unsigned long &size, unsigned level)
-    {
-      if (!level)
-        reinterpret_cast<This*>(this)->skip(phys, virt, size);
-      else
-        skip(phys, virt, size, level - 1);
-    }
-
     template< typename MEM >
     void unmap(Address &start, unsigned long &size, unsigned level,
                bool force_write_back, MEM &&mem)
@@ -418,18 +400,15 @@ namespace Ptab
     }
 
     template< typename _Alloc, typename MEM >
-    void map(Address &phys, Address &virt, unsigned long &size,
+    bool map(Address &phys, Address &virt, unsigned long &size,
              unsigned long attr, unsigned level, bool force_write_back,
              _Alloc &&alloc, MEM &&mem)
     {
       if (!level)
-        {
-          reinterpret_cast<This*>(this)->map(phys, virt, size, attr, 0,
-                                             force_write_back,
-                                             cxx::forward<_Alloc>(alloc),
-                                             cxx::forward<MEM>(mem));
-          return;
-        }
+        return reinterpret_cast<This*>(this)->map(phys, virt, size, attr, 0,
+                                                  force_write_back,
+                                                  cxx::forward<_Alloc>(alloc),
+                                                  cxx::forward<MEM>(mem));
 
       while (size)
         {
@@ -439,24 +418,24 @@ namespace Ptab
             {
               if (alloc.valid() && (n = alloc_next(e, alloc, force_write_back)))
                 {
-                  n->map(phys, virt, size, attr, level - 1,
-                         force_write_back, alloc, mem);
-                  continue;
+                  if (n->map(phys, virt, size, attr, level - 1,
+                             force_write_back, alloc, mem))
+                    continue;
                 }
 
-              skip(phys, virt, size, level - 1);
-              continue;
+              return false;
             }
 
           if (_Head::May_be_leaf && e.is_leaf())
-            {
-              skip(phys, virt, size, level - 1);
-              continue;
-            }
+            return false;
 
           n = (Next*)mem.phys_to_pmem(e.next_level());
-          n->map(phys, virt, size, attr, level - 1, force_write_back, alloc, mem);
+          if (!n->map(phys, virt, size, attr, level - 1, force_write_back,
+                      alloc, mem))
+            return false;
         }
+
+      return true;
     }
 
     template< typename _Alloc, typename MEM >
@@ -772,14 +751,14 @@ namespace Ptab
     }
 
     template< typename _Alloc, typename MEM = MEM_DFLT >
-    void map(Address phys, Va virt, Vs size, unsigned long attr,
+    bool map(Address phys, Va virt, Vs size, unsigned long attr,
              unsigned level, bool force_write_back,
              _Alloc &&alloc = _Alloc(), MEM &&mem = MEM())
     {
       Address va = _Addr::val(virt);
       unsigned long sz = _Addr::val(size);
-      _base.map(phys, va, sz, attr, level, force_write_back, cxx::forward<_Alloc>(alloc),
-                cxx::forward<MEM>(mem));
+      return _base.map(phys, va, sz, attr, level, force_write_back,
+                       cxx::forward<_Alloc>(alloc), cxx::forward<MEM>(mem));
     }
 
     /**
