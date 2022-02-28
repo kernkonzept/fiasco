@@ -1,3 +1,13 @@
+IMPLEMENTATION [arm && cpu_virt]:
+
+IMPLEMENT_OVERRIDE inline
+bool
+Thread::arch_check_vcpu_state(bool ext)
+{
+  return !ext || check_for_current_cpu();
+}
+
+
 IMPLEMENTATION [arm && 32bit && cpu_virt]:
 
 #include "slowtrap_entry.h"
@@ -10,8 +20,6 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
 
   if (!ext || (state() & Thread_ext_vcpu_enabled))
     return;
-
-  assert (check_for_current_cpu());
 
   Vm_state::Vm_info *info
     = reinterpret_cast<Vm_state::Vm_info *>((char *)vcpu_state + 0x200);
@@ -50,7 +58,6 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
 
   // use the real MIDR as initial value
   asm ("mrc p15, 0, %0, c0, c0, 0" : "=r" (v->vpidr));
-
 }
 
 PUBLIC static inline template<typename T>
@@ -359,8 +366,6 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
 
   if (!ext || (state() & Thread_ext_vcpu_enabled))
     return;
-
-  assert (check_for_current_cpu());
 
   Vm_state::Vm_info *info
     = reinterpret_cast<Vm_state::Vm_info *>((char *)vcpu_state + 0x200);
