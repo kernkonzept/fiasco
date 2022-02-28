@@ -10,8 +10,6 @@ INTERFACE:
 #include "types.h"
 #include "mapdb_types.h"
 
-class Space;
-
 /**
  * An address space.
  *
