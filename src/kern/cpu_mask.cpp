@@ -50,6 +50,9 @@ public:
   void atomic_set(Cpu_number cpu)
   { _b.atomic_set_bit(cxx::int_value<Cpu_number>(cpu)); }
 
+  bool atomic_get_and_set_if_unset(Cpu_number cpu)
+  { return _b.atomic_get_and_set_if_unset(cxx::int_value<Cpu_number>(cpu)); }
+
   void atomic_clear(Cpu_number cpu)
   { _b.atomic_clear_bit(cxx::int_value<Cpu_number>(cpu)); }
 

@@ -127,6 +127,25 @@ public:
     return v & (1UL << b);
   }
 
+  // Same functionality as atomic_get_and_set() except that _bits is not
+  // written if the bit was already set (and the function returns true).
+  bool atomic_get_and_set_if_unset(unsigned long bit)
+  {
+    unsigned long idx = bit / Bpl;
+    unsigned long b   = bit % Bpl;
+    unsigned long v;
+
+    do
+      {
+        v = this->_bits[idx];
+        if (v & (1UL << bit))
+          return true;
+      }
+    while (!mp_cas(&this->_bits[idx], v, v | (1UL << b)));
+
+    return false;
+  }
+
   void atomic_set_bit(unsigned long bit)
   {
     unsigned long idx = bit / Bpl;
@@ -275,6 +294,22 @@ public:
     while (!mp_cas(&_bits, v, v | (1UL << bit)));
 
     return v & (1UL << bit);
+  }
+
+  // Same functionality as atomic_get_and_set() except that _bits is not
+  // written if the bit was already set (and the function returns true).
+  bool atomic_get_and_set_if_unset(unsigned long bit)
+  {
+    unsigned long v;
+    do
+      {
+        v = _bits;
+        if (v & (1UL << bit))
+          return true;
+      }
+    while (!mp_cas(&_bits, v, v | (1UL << bit)));
+
+    return false;
   }
 
   void atomic_set_bit(unsigned long bit)
