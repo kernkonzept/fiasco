@@ -36,9 +36,7 @@ Utcb::print(char const *clreol_lf = "\n") const
   if ((sizeof(buffers) / sizeof(buffers[0])) % 4)
     putstr(clreol_lf);
 
-  printf("Xfer timeout: ");
-  xfer.print();
-  putstr(clreol_lf);
+  printf("Free marker: " L4_MWORD_FMT "%s", free_marker, clreol_lf);
 
   printf("Error:       %16lx%s", error.raw(), clreol_lf);
   printf("User values: %16lx %16lx %16lx%s", user[0], user[1], user[2], clreol_lf);

@@ -527,6 +527,10 @@ Thread::do_kill()
         }
     }
 
+  if (utcb().kern())
+    utcb().access()->free_marker = Utcb::Free_marker;
+  // No UTCB access beyond this point!
+
   release_fpu_if_owner();
 
   vcpu_enter_kernel_mode(vcpu_state().access());

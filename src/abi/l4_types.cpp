@@ -769,8 +769,9 @@ public:
 
   enum
   {
-    Max_words = 63,  ///< Number of MRs.
-    Max_buffers = 58 ///< Number of BRs.
+    Max_words = 63,   ///< Number of MRs.
+    Max_buffers = 58, ///< Number of BRs.
+    Free_marker = 0,  ///< Magic value for `free_marker`.
   };
 
   /// The message registers (MRs).
@@ -795,8 +796,11 @@ public:
 
   /// The error code for IPC (TCR).
   L4_error        error;
-  /// \deprecated transfer timeout is not used currently (TCR).
-  L4_timeout_pair xfer;
+
+  /// The kernel sets this register to `Free_marker` when it is guaranteed that
+  /// the UTCB is no longer read/written by the kernel (TCR).
+  Mword           free_marker;
+
   /// The user-level registers for TLS (TCR).
   Mword           user[3];
 };
