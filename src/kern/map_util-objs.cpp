@@ -112,12 +112,7 @@ map(Kobject_iface *o, Obj_space* to, Space *to_id, Cap_index rcv_addr,
   switch (status)
     {
     case SPACE::Insert_ok:
-      if (!o->map_root()->insert(0, to_id, ra))
-        {
-          to->v_delete(Obj_space::V_pfn(rcv_addr), Size(0),
-                       L4_fpage::Rights::FULL());
-          return 0;
-        }
+      o->map_root()->insert_root_mapping(ra);
       break;
 
     case SPACE::Insert_err_nomem:

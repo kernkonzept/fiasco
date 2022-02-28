@@ -22,13 +22,11 @@ public:
   /**
    * Insert the root mapping of an object.
    */
-  template<typename M>
-  bool insert(void *, Space *, M &m)
+  void insert_root_mapping(Obj::Cap_addr &m)
   {
     m._c->put_as_root();
     _root.add(m._c);
     _cnt = 1;
-    return true;
   }
 };
 
