@@ -507,8 +507,11 @@ Irq_sender::sys_bind(L4_msg_tag tag, L4_fpage::Rights rights, Utcb const *utcb,
 
 PRIVATE
 L4_msg_tag
-Irq_sender::sys_detach()
+Irq_sender::sys_detach(L4_fpage::Rights rights)
 {
+  if (EXPECT_FALSE(!(rights & L4_fpage::Rights::CS())))
+    return commit_result(-L4_err::EPerm);
+
   Reap_list rl;
   auto res = free(rl.list());
   _irq_id = ~0UL;
@@ -548,7 +551,7 @@ Irq_sender::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
       switch (op)
         {
         case Op_detach:
-          return sys_detach();
+          return sys_detach(rights);
 
         default:
           return commit_result(-L4_err::ENosys);
