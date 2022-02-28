@@ -60,24 +60,28 @@ Fb::set_color_mapping(Multiboot_vbe_mode *vbi)
   switch (Boot_info::fb_depth())
     {
     case 15:
-      vbi->red_mask_size   = 5; vbi->red_field_position   = 10;
-      vbi->green_mask_size = 5; vbi->green_field_position = 5;
-      vbi->blue_mask_size  = 5; vbi->blue_field_position  = 0;
+      vbi->red_mask_size      = 5; vbi->red_field_position      = 10;
+      vbi->green_mask_size    = 5; vbi->green_field_position    = 5;
+      vbi->blue_mask_size     = 5; vbi->blue_field_position     = 0;
+      vbi->reserved_mask_size = 0; vbi->reserved_field_position = 0;
       break;
     case 16:
-      vbi->red_mask_size   = 5; vbi->red_field_position   = 11;
-      vbi->green_mask_size = 6; vbi->green_field_position = 5;
-      vbi->blue_mask_size  = 5; vbi->blue_field_position  = 0;
+      vbi->red_mask_size      = 5; vbi->red_field_position      = 11;
+      vbi->green_mask_size    = 6; vbi->green_field_position    = 5;
+      vbi->blue_mask_size     = 5; vbi->blue_field_position     = 0;
+      vbi->reserved_mask_size = 0; vbi->reserved_field_position = 0;
       break;
     case 24:
-      vbi->red_mask_size   = 8; vbi->red_field_position   = 16;
-      vbi->green_mask_size = 8; vbi->green_field_position = 8;
-      vbi->blue_mask_size  = 8; vbi->blue_field_position  = 0;
+      vbi->red_mask_size      = 8; vbi->red_field_position      = 16;
+      vbi->green_mask_size    = 8; vbi->green_field_position    = 8;
+      vbi->blue_mask_size     = 8; vbi->blue_field_position     = 0;
+      vbi->reserved_mask_size = 0; vbi->reserved_field_position = 0;
       break;
     case 32:
-      vbi->red_mask_size   = 8; vbi->red_field_position   = 16;
-      vbi->green_mask_size = 8; vbi->green_field_position = 8;
-      vbi->blue_mask_size  = 8; vbi->blue_field_position  = 0;
+      vbi->red_mask_size      = 8; vbi->red_field_position      = 16;
+      vbi->green_mask_size    = 8; vbi->green_field_position    = 8;
+      vbi->blue_mask_size     = 8; vbi->blue_field_position     = 0;
+      vbi->reserved_mask_size = 8; vbi->reserved_field_position = 24;
       break;
     default:
       WARN("Unknown frame buffer color depth %d.", Boot_info::fb_depth());
