@@ -582,7 +582,7 @@ Thread::handle_remote_kill(Drq *, Context *self, void *)
 
 PUBLIC
 bool
-Thread::kill() override
+Thread::kill()
 {
   auto guard = lock_guard(cpu_lock);
   inc_ref();

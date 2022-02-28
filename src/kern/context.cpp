@@ -270,8 +270,6 @@ public:
    */
   Cpu_time consumed_time();
 
-  virtual bool kill() = 0;
-
   void spill_user_state();
   void fill_user_state();
   void copy_and_sanitize_trap_state(Trap_state *dst,
