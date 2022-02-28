@@ -145,14 +145,15 @@ Device_map::map(Address phys, bool /*cache*/)
   for (unsigned i = 0; i < Max; ++i)
     if (_map[i] == ~0UL)
       {
-	Kmem::kdir->map(p,
-                        Virt_addr(Virt_base + (i * Config::SUPERPAGE_SIZE)),
-                        Virt_size(Config::SUPERPAGE_SIZE),
-                        Pt_entry::Dirty | Pt_entry::Writable
-                        | Pt_entry::Referenced,
-                        Pt_entry::super_level(), false, pdir_alloc(alloc));
-	_map[i] = p;
+        if (!Kmem::kdir->map(p,
+                             Virt_addr(Virt_base + (i * Config::SUPERPAGE_SIZE)),
+                             Virt_size(Config::SUPERPAGE_SIZE),
+                             Pt_entry::Dirty | Pt_entry::Writable
+                             | Pt_entry::Referenced,
+                             Pt_entry::super_level(), false, pdir_alloc(alloc)))
+          return ~0UL;
 
+	_map[i] = p;
 	return (Virt_base + (i * Config::SUPERPAGE_SIZE))
 	       | (phys & ~(~0UL << Config::SUPERPAGE_SHIFT));
       }
@@ -345,20 +346,22 @@ Kmem::map_initial_ram()
   //     sometimes comes in handy (mostly useful for debugging)
 
   // first 4MB page
-  kdir->map(0, Virt_addr(0UL), Virt_size(4 << 20),
-            Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced,
-            Pt_entry::super_level(), false, pdir_alloc(alloc));
+  if (!kdir->map(0, Virt_addr(0UL), Virt_size(4 << 20),
+                 Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced,
+                 Pt_entry::super_level(), false, pdir_alloc(alloc)))
+    panic("Cannot map initial memory");
 }
 
 PRIVATE static FIASCO_INIT_CPU
 void
 Kmem::map_kernel_virt(Kpdir *dir)
 {
-  dir->map(Mem_layout::Kernel_image_phys, Virt_addr(Kernel_image),
-           Virt_size(Mem_layout::Kernel_image_size),
-           Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced
-           | Pt_entry::global(),
-           Pt_entry::super_level(), false, pdir_alloc(Kmem_alloc::allocator()));
+  if (!dir->map(Mem_layout::Kernel_image_phys, Virt_addr(Kernel_image),
+                Virt_size(Mem_layout::Kernel_image_size),
+                Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced
+                | Pt_entry::global(),
+                Pt_entry::super_level(), false, pdir_alloc(Kmem_alloc::allocator())))
+    panic("Cannot map initial memory");
 }
 
 //--------------------------------------------------------------------------
@@ -382,36 +385,40 @@ Kmem::map_initial_ram()
   // (2) a one-to-one phys-to-virt mapping in the kernel's page directory
   //     sometimes comes in handy (mostly useful for debugging)
 
+  bool ok = true;
 
   // first 2M
 
   // Beginning of physical memory up to the realmode trampoline code is RW
-  kdir->map(0, Virt_addr(0), Virt_size(FIASCO_MP_TRAMP_PAGE),
-            Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
-            | Pt_entry::Referenced,
-            Pdir::Depth, false, pdir_alloc(alloc));
+  ok &= kdir->map(0, Virt_addr(0), Virt_size(FIASCO_MP_TRAMP_PAGE),
+                  Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
+                  | Pt_entry::Referenced,
+                  Pdir::Depth, false, pdir_alloc(alloc));
 
   // Realmode trampoline code is RWX
-  kdir->map(FIASCO_MP_TRAMP_PAGE, Virt_addr(FIASCO_MP_TRAMP_PAGE),
-            Virt_size(Config::PAGE_SIZE),
-            Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced,
-            Pdir::Depth, false, pdir_alloc(alloc));
+  ok &= kdir->map(FIASCO_MP_TRAMP_PAGE, Virt_addr(FIASCO_MP_TRAMP_PAGE),
+                  Virt_size(Config::PAGE_SIZE),
+                  Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced,
+                  Pdir::Depth, false, pdir_alloc(alloc));
 
   // The rest of the first 2M is RW
-  kdir->map(FIASCO_MP_TRAMP_PAGE + Config::PAGE_SIZE,
-            Virt_addr(FIASCO_MP_TRAMP_PAGE + Config::PAGE_SIZE),
-            Virt_size(Config::SUPERPAGE_SIZE - FIASCO_MP_TRAMP_PAGE
-                      - Config::PAGE_SIZE),
-            Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
-            | Pt_entry::Referenced,
-            Pdir::Depth, false, pdir_alloc(alloc));
+  ok &= kdir->map(FIASCO_MP_TRAMP_PAGE + Config::PAGE_SIZE,
+                  Virt_addr(FIASCO_MP_TRAMP_PAGE + Config::PAGE_SIZE),
+                  Virt_size(Config::SUPERPAGE_SIZE - FIASCO_MP_TRAMP_PAGE
+                            - Config::PAGE_SIZE),
+                  Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
+                  | Pt_entry::Referenced,
+                  Pdir::Depth, false, pdir_alloc(alloc));
 
   // Second 2M is RW
-  kdir->map(Config::SUPERPAGE_SIZE, Virt_addr(Config::SUPERPAGE_SIZE),
-            Virt_size(Config::SUPERPAGE_SIZE),
-            Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
-            | Pt_entry::Referenced,
-            Pt_entry::super_level(), false, pdir_alloc(alloc));
+  ok &= kdir->map(Config::SUPERPAGE_SIZE, Virt_addr(Config::SUPERPAGE_SIZE),
+                  Virt_size(Config::SUPERPAGE_SIZE),
+                  Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
+                  | Pt_entry::Referenced,
+                  Pt_entry::super_level(), false, pdir_alloc(alloc));
+
+  if (!ok)
+    panic("Cannot map initial memory");
 }
 
 PRIVATE static FIASCO_INIT_CPU
@@ -419,27 +426,31 @@ void
 Kmem::map_kernel_virt(Kpdir *dir)
 {
   Kmem_alloc *const alloc = Kmem_alloc::allocator();
+  bool ok = true;
   // The first 2M of kernel are RW
-  dir->map(Mem_layout::Kernel_image_phys, Virt_addr(Mem_layout::Kernel_image),
-           Virt_size(Config::SUPERPAGE_SIZE),
-           Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
-           | Pt_entry::Referenced | Pt_entry::global(),
-           Pt_entry::super_level(), false, pdir_alloc(alloc));
+  ok &= dir->map(Mem_layout::Kernel_image_phys, Virt_addr(Mem_layout::Kernel_image),
+                 Virt_size(Config::SUPERPAGE_SIZE),
+                 Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
+                 | Pt_entry::Referenced | Pt_entry::global(),
+                 Pt_entry::super_level(), false, pdir_alloc(alloc));
 
   // Kernel text is RX
-  dir->map(Mem_layout::Kernel_image_phys + Config::SUPERPAGE_SIZE,
-           Virt_addr(Mem_layout::Kernel_image + Config::SUPERPAGE_SIZE),
-           Virt_size(Config::SUPERPAGE_SIZE),
-           Pt_entry::Referenced | Pt_entry::global(), Pt_entry::super_level(),
-           false, pdir_alloc(alloc));
+  ok &= dir->map(Mem_layout::Kernel_image_phys + Config::SUPERPAGE_SIZE,
+                 Virt_addr(Mem_layout::Kernel_image + Config::SUPERPAGE_SIZE),
+                 Virt_size(Config::SUPERPAGE_SIZE),
+                 Pt_entry::Referenced | Pt_entry::global(), Pt_entry::super_level(),
+                 false, pdir_alloc(alloc));
 
   // Kernel data is RW
-  dir->map(Mem_layout::Kernel_image_phys + 2 * Config::SUPERPAGE_SIZE,
-           Virt_addr(Mem_layout::Kernel_image + 2 * Config::SUPERPAGE_SIZE),
-           Virt_size(Config::SUPERPAGE_SIZE),
-           Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
-           | Pt_entry::Referenced | Pt_entry::global(),
-           Pt_entry::super_level(), false, pdir_alloc(alloc));
+  ok &= dir->map(Mem_layout::Kernel_image_phys + 2 * Config::SUPERPAGE_SIZE,
+                 Virt_addr(Mem_layout::Kernel_image + 2 * Config::SUPERPAGE_SIZE),
+                 Virt_size(Config::SUPERPAGE_SIZE),
+                 Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
+                 | Pt_entry::Referenced | Pt_entry::global(),
+                 Pt_entry::super_level(), false, pdir_alloc(alloc));
+
+  if (!ok)
+    panic("Cannot map initial memory");
 }
 
 //--------------------------------------------------------------------------
@@ -473,19 +484,24 @@ Kmem::init_mmu()
   map_initial_ram();
   map_kernel_virt(kdir);
 
+  bool ok = true;
+
   if (!Mem_layout::Adap_in_kernel_image)
-    kdir->map(Mem_layout::Adap_image_phys, Virt_addr(Mem_layout::Adap_image),
-              Virt_size(Config::SUPERPAGE_SIZE),
-              Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
-              | Pt_entry::Referenced | Pt_entry::global(),
-              Pt_entry::super_level(), false, pdir_alloc(alloc));
+    ok &= kdir->map(Mem_layout::Adap_image_phys, Virt_addr(Mem_layout::Adap_image),
+                    Virt_size(Config::SUPERPAGE_SIZE),
+                    Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
+                    | Pt_entry::Referenced | Pt_entry::global(),
+                    Pt_entry::super_level(), false, pdir_alloc(alloc));
 
   // map the last 64MB of physical memory as kernel memory
-  kdir->map(Mem_layout::pmem_to_phys(Mem_layout::Physmem),
-            Virt_addr(Mem_layout::Physmem), Virt_size(Mem_layout::pmem_size),
-            Pt_entry::XD | Pt_entry::Writable | Pt_entry::Referenced
-            | Pt_entry::global(),
-            Pt_entry::super_level(), false, pdir_alloc(alloc));
+  ok &= kdir->map(Mem_layout::pmem_to_phys(Mem_layout::Physmem),
+                  Virt_addr(Mem_layout::Physmem), Virt_size(Mem_layout::pmem_size),
+                  Pt_entry::XD | Pt_entry::Writable | Pt_entry::Referenced
+                  | Pt_entry::global(),
+                  Pt_entry::super_level(), false, pdir_alloc(alloc));
+
+  if (!ok)
+    panic("Cannot map initial memory");
 
   // The service page directory entry points to an universal usable
   // page table which is currently used for the Local APIC and the
@@ -812,11 +828,12 @@ Kmem::setup_cpu_structures_isolation(Cpu &cpu, Kpdir *cpu_dir, cxx::Simple_alloc
   // FIXME: Move entry + exit code into dedicated sections and link
   // into compact area to avoid mapping all kernel code to user land
   // FIXME: Make sure we can and do share level 1 to 3 among all CPUs
-  cpu_dir[1].map(ki_page - Kernel_image_offset, Virt_addr(ki_page),
-                 Virt_size(kie_page - ki_page),
-                 Pt_entry::Referenced | Pt_entry::global(),
-                 Pdir::Depth,
-                 false, pdir_alloc(Kmem_alloc::allocator()));
+  if (!cpu_dir[1].map(ki_page - Kernel_image_offset, Virt_addr(ki_page),
+                      Virt_size(kie_page - ki_page),
+                      Pt_entry::Referenced | Pt_entry::global(),
+                      Pdir::Depth,
+                      false, pdir_alloc(Kmem_alloc::allocator())))
+    panic("Cannot map initial memory");
 
   prepare_kernel_entry_points(cpu_m, cpu_dir);
 
@@ -843,17 +860,22 @@ Kmem::prepare_kernel_entry_points(cxx::Simple_alloc *, Kpdir *cpu_dir)
     printf("kernel entry data: %p(%lx)-%p(%lx)\n", _kernel_data_entry_start,
            kd_page, _kernel_data_entry_end, kde_page);
 
-  cpu_dir[1].map(kd_page - Kernel_image_offset, Virt_addr(kd_page),
-                 Virt_size(kde_page - kd_page),
-                 Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Referenced
-                 | Pt_entry::global(),
-                 Pdir::Depth, false, pdir_alloc(Kmem_alloc::allocator()));
+  bool ok = true;
+
+  ok &= cpu_dir[1].map(kd_page - Kernel_image_offset, Virt_addr(kd_page),
+                       Virt_size(kde_page - kd_page),
+                       Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Referenced
+                       | Pt_entry::global(),
+                       Pdir::Depth, false, pdir_alloc(Kmem_alloc::allocator()));
 
   extern char const syscall_entry_code[];
-  cpu_dir[1].map(virt_to_phys(syscall_entry_code),
-                 Virt_addr(Kentry_cpu_page_text), Virt_size(Config::PAGE_SIZE),
-                 Pt_entry::Referenced | Pt_entry::global(), Pdir::Depth, false,
-                 pdir_alloc(Kmem_alloc::allocator()));
+  ok &= cpu_dir[1].map(virt_to_phys(syscall_entry_code),
+                       Virt_addr(Kentry_cpu_page_text), Virt_size(Config::PAGE_SIZE),
+                       Pt_entry::Referenced | Pt_entry::global(), Pdir::Depth, false,
+                       pdir_alloc(Kmem_alloc::allocator()));
+
+  if (!ok)
+    panic("Cannot map initial memory");
 }
 
 //--------------------------------------------------------------------------
@@ -1019,27 +1041,32 @@ Kmem::init_cpu(Cpu &cpu)
 
   map_kernel_virt(cpu_dir);
 
+  bool ok = true;
+
   if (!Adap_in_kernel_image)
-    cpu_dir->map(Adap_image_phys, Virt_addr(Adap_image),
-                 Virt_size(Config::SUPERPAGE_SIZE),
-                 Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
-                 | Pt_entry::Referenced | Pt_entry::global(),
-                 Pt_entry::super_level(), false, pdir_alloc(alloc));
+    ok &= cpu_dir->map(Adap_image_phys, Virt_addr(Adap_image),
+                       Virt_size(Config::SUPERPAGE_SIZE),
+                       Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
+                       | Pt_entry::Referenced | Pt_entry::global(),
+                       Pt_entry::super_level(), false, pdir_alloc(alloc));
 
   Address cpu_dir_pa = Mem_layout::pmem_to_phys(cpu_dir);
-  cpu_dir->map(cpu_dir_pa, Virt_addr(Kentry_cpu_pdir), Virt_size(cpu_dir_sz),
-               Pt_entry::XD | Pt_entry::Writable | Pt_entry::Referenced
-               | Pt_entry::Dirty | Pt_entry::global(),
-               Pdir::Depth, false, pdir_alloc(alloc));
+  ok &= cpu_dir->map(cpu_dir_pa, Virt_addr(Kentry_cpu_pdir), Virt_size(cpu_dir_sz),
+                     Pt_entry::XD | Pt_entry::Writable | Pt_entry::Referenced
+                     | Pt_entry::Dirty | Pt_entry::global(),
+                     Pdir::Depth, false, pdir_alloc(alloc));
 
   unsigned const cpu_mx_sz = Config::PAGE_SIZE;
   void *cpu_mx = alloc->alloc(Bytes(cpu_mx_sz));
   auto cpu_mx_pa = Mem_layout::pmem_to_phys(cpu_mx);
 
-  cpu_dir->map(cpu_mx_pa, Virt_addr(Kentry_cpu_page), Virt_size(cpu_mx_sz),
-               conf_xd() | Pt_entry::Writable
-               | Pt_entry::Referenced | Pt_entry::Dirty | Pt_entry::global(),
-               Pdir::Depth, false, pdir_alloc(alloc));
+  ok &= cpu_dir->map(cpu_mx_pa, Virt_addr(Kentry_cpu_page), Virt_size(cpu_mx_sz),
+                     conf_xd() | Pt_entry::Writable
+                     | Pt_entry::Referenced | Pt_entry::Dirty | Pt_entry::global(),
+                     Pdir::Depth, false, pdir_alloc(alloc));
+
+  if (!ok)
+    panic("Cannot map initial CPU memory");
 
   _per_cpu_dir.cpu(cpu.id()) = cpu_dir;
   Cpu::set_pdbr(cpu_dir_pa);
