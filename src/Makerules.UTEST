@@ -25,8 +25,8 @@ UTEST_COMMON = $(filter common_%,$(INTERFACES_UTEST))
 # default target for the UTEST subsystem, add all test binaries as prerequisites.
 utest_subsys: $(UTEST_BINARIES)
 
-# the expected_* files go into the utest/ folder as well.
-utest_expected: $(addprefix utest/,$(UTEST_EXPECTED))
+# the expected_* and config_* files go into the utest/ folder as well.
+utest_suppl: $(addprefix utest/,$(UTEST_SUPPL))
 
 # Ensure the utest folder exists before the target is build
 $(UTEST_BINARIES): | utest
@@ -44,7 +44,7 @@ $(foreach tname,$(UTEST_TESTS),\
 		$$(if $$(UTEST_COMMON),\
 			$$(filter $(UTEST_COMMON)%,$$(OBJ_UTEST))))))
 
-define gen_utest_expected_rule
+define gen_utest_suppl_rule
 $(1): $(2) globalconfig.out
 	$$(COMP_MESSAGE)
 	$$(VERBOSE)$$(CP) $$< $$@
@@ -56,8 +56,8 @@ endef
 # unless expected_foo-XARCH-BITS (e.g. 'expected_foo-mips-64') exists
 # unless expected_foo-bar (e.g. 'expected_foo-arm-nolpae') exists where
 # 'bar' is evaluated from $(expected_foo-config).
-$(foreach tname,$(UTEST_EXPECTED),\
-	$(eval $(call gen_utest_expected_rule,\
+$(foreach tname,$(UTEST_SUPPL),\
+	$(eval $(call gen_utest_suppl_rule,\
 		utest/$(tname),\
 		$(firstword $(wildcard $(foreach d,$(ALL_UTEST_DIRS),\
 			$(foreach f,\
@@ -75,5 +75,5 @@ $(foreach tname,$(UTEST_TESTS),\
 endif
 
 clean-UTEST:
-	$(RM) $(OBJ_UTEST) $(addprefix utest/,$(UTEST_TESTS) $(UTEST_EXPECTED)) \
+	$(RM) $(OBJ_UTEST) $(addprefix utest/,$(UTEST_TESTS) $(UTEST_SUPPL)) \
 		$(patsubst %,%.debug,$(UTEST_TESTS))

@@ -12,6 +12,12 @@ INTERFACE:
 #include "types.h"
 #include "utest_fw.h"
 
+// Intermediate solution for Utest_fw::prtag() or something similar which will
+// - perform a single printf() call for printing the tag and the format +
+//   parameters
+// - prefix every line with the tag in multi-line formats
+#define pr_tag(format, ...) printf("@@ mdb:" format, ##__VA_ARGS__)
+
 class Mapdb_test_base
 {
 public:
@@ -47,11 +53,15 @@ public:
   };
 
   Mapdb_test_base()
-  { printf("\n\n=== NEW TEST ===\n"); }
+  {
+    pr_tag("\n");
+    pr_tag("=== NEW TEST ===\n");
+  }
 
   ~Mapdb_test_base()
   {
-    printf("=== DONE TEST ===\n");
+    pr_tag("=== DONE TEST ===\n");
+    pr_tag("\n");
     Utest_fw::tap_log.test_done();
   }
 };

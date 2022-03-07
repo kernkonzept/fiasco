@@ -114,29 +114,29 @@ void
 Mapdb_util_test::print_node(Space *space, Mapdb::Pfn pfn,
                             Address va_begin = 0UL, Address va_end = ~0UL)
 {
-  printf("MapDB node at 0x%lx\n", to_virt(pfn));
+  pr_tag("MapDB node at 0x%lx\n", to_virt(pfn));
   Mapdb::Frame frame;
   if (!mapdb->lookup(space, pfn, pfn, &frame))
     {
-      printf("no mappings\n");
+      pr_tag("no mappings\n");
       return;
     }
 
   auto const node = *frame.m ? frame.m : frame.frame->first();
   UTEST_NE(Utest::Assert, nullptr, *node, "Page frame has node");
 
-  printf("[DONTCHECK] space=%s vaddr=0x%lx size=0x%lx\n",
+  printf(" space=%s vaddr=0x%lx size=0x%lx\n",
          node_name(frame.pspace()), to_virt(frame.pvaddr()),
          to_virt(Mapdb::Pfn(1) << frame.treemap->page_shift()));
 
   Mapdb::foreach_mapping(frame, to_pfn(va_begin), to_pfn(va_end),
                          [](Mapping *node, Mapdb::Order order)
     {
-      printf("%*sspace=%s vaddr=0x%lx size=0x%lx\n",
+      pr_tag("%*sspace=%s vaddr=0x%lx size=0x%lx\n",
              (int)node->depth() + 1, "", node_name(node->space()),
              to_virt(node->pfn(order)), to_virt(Mapdb::Pfn(1) << order));
     });
-  printf("\n");
+  pr_tag("\n");
 }
 
 /**
@@ -160,14 +160,15 @@ Mapdb_util_test::test_map_util()
 
   static_assert(S_super >= _1M, "Adapt test for smaller superpage size");
 
-  printf("Page = %ldKB, Superpage = %ldMB\n",
+  pr_tag("Page = %ldKB, Superpage = %ldMB\n",
          (Address)S_page >> 10, (Address)S_super >> 20);
 
   // Support for pages > superpage is optional.
-  printf("[DONTCHECK] largest_page_size = %d\n",
+  printf(" largest_page_size = %d\n",
          cxx::int_value<Mem_space::Page_order>(sigma0.largest_page_size()));
 
-  printf("have_superpages = %s\n\n", have_superpages() ? "yes" : "no");
+  pr_tag("have_superpages = %s\n", have_superpages() ? "yes" : "no");
+  pr_tag("\n");
 
   auto server = Utest::kmem_create<Test_space>(&rq, "server");
   auto client = Utest::kmem_create<Test_space>(&rq, "client");
@@ -183,8 +184,8 @@ Mapdb_util_test::test_map_util()
   Kobject::Reap_list rl;
 
   // 1: MAP sigma0[64K/page] -> server[ALL:16K]
-  printf("MAP sigma0[64K/page] -> server[ALL:page]\n"
-         "=> single page mapped to server\n");
+  pr_tag("MAP sigma0[64K/page] -> server[ALL:page]\n");
+  pr_tag("=> single page mapped to server\n");
   UTEST_FALSE(Utest::Assert,
               ms(&*server)->v_lookup(to_vaddr(_16K), &phys, &order, &attr),
               "VA server:16K nothing mapped");
@@ -205,8 +206,8 @@ Mapdb_util_test::test_map_util()
 
   // 2: MAP sigma0[0/superpage] -> server[ALL:0]
   //    Should map many pages and overmap previous mapping
-  printf("MAP sigma0[0/superpage] -> server[ALL:0]\n"
-         "=> many pages mapped to server overmapping previous mapping\n");
+  pr_tag("MAP sigma0[0/superpage] -> server[ALL:0]\n");
+  pr_tag("=> many pages mapped to server overmapping previous mapping\n");
   UTEST_FALSE(Utest::Assert,
               ms(&*server)->v_lookup(to_vaddr(0), &phys, &order, &attr),
               "VA server:0 nothing mapped");
@@ -226,7 +227,7 @@ Mapdb_util_test::test_map_util()
   print_node(&sigma0, to_pfn(_64K), 0UL, S_super);
 
   // 3: Verify that the MapDB entry for 64K has changed.
-  printf("Verify that the MapDB entry for 64K has changed\n");
+  pr_tag("Verify that the MapDB entry for 64K has changed\n");
   UTEST_TRUE(Utest::Assert,
              ms(&*server)->v_lookup(to_vaddr(_16K), &phys, &order, &attr),
              "VA server:16K mapped");
@@ -239,9 +240,8 @@ Mapdb_util_test::test_map_util()
   print_node(&sigma0, to_pfn(_64K), _64K, _64K + _16K);
 
   // 4: Partially unmap superpage sigma0[0/superpage]
-  printf("UNMAP sigma0[512K/%ldK]\n"
-         "=> remove couple of page mappings from server\n",
-         1UL << (O_super - 3 - 10));
+  pr_tag("UNMAP sigma0[512K/%ldK]\n", 1UL << (O_super - 3 - 10));
+  pr_tag("=> remove couple of page mappings from server\n");
   UTEST_TRUE(Utest::Assert,
              ms(&*server)->v_lookup(to_vaddr(_512K + _16K), &phys, &order, &attr),
              "VA server:1M + 16K mapped");
@@ -257,8 +257,8 @@ Mapdb_util_test::test_map_util()
   print_node(&sigma0, to_pfn(0));
 
   // 5: MAP sigma0[superpage/superpage] -> server[2*superpage/superpage:0]
-  printf("MAP sigma0[superpage/superpage] -> server[2*superpage/superpage:0]\n"
-         "=> additional 1 superpage mapped to server\n");
+  pr_tag("MAP sigma0[superpage/superpage] -> server[2*superpage/superpage:0]\n");
+  pr_tag("=> additional 1 superpage mapped to server\n");
   UTEST_FALSE(Utest::Assert,
               ms(&*server)->v_lookup(to_vaddr(2 * S_super), &phys, &order, &attr),
               "VA server:2*superpage nothing mapped");
@@ -279,8 +279,8 @@ Mapdb_util_test::test_map_util()
   print_node(&sigma0, to_pfn(S_super), S_super, S_super + S_super);
 
   // 6: MAP server[2*superpage+page/page] -> client[WHOLE:8*page]
-  printf("MAP server[2*superpage+page/page] -> client[WHOLE:8*page]\n"
-         "=> 1 client mapping added\n");
+  pr_tag("MAP server[2*superpage+page/page] -> client[WHOLE:8*page]\n");
+  pr_tag("=> 1 client mapping added\n");
   UTEST_FALSE(Utest::Assert,
               ms(&*client)->v_lookup(to_vaddr(8 * S_page), &phys, &order, &attr),
               "VA client:8*page not nothing mapped");

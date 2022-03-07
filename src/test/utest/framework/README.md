@@ -23,17 +23,25 @@ The `Modules.utest` file within a test directory is expected to at most contain
 the following lines:
 ```
 INTERFACES_UTEST +=
-UTEST_EXPECTED +=
+UTEST_SUPPL +=
 ```
 
 `INTERFACES_UTEST` shall list all test files explicitly. Modules starting with
 `test_` are considered as independent tests. Modules starting with `common_`
 shall contain implemented classes relevant for multiple test modules.
 
-`UTEST_EXPECTED` shall list the files for output matching with the expectation.
-The expectation files shall replace the `test_` prefix with `expected_`. The
-expected output can be architecture and bit-width specific. See section
-[Matching expected output of tests](#matching-expected-output-of-tests).
+`UTEST_SUPPL` shall list supplemental files required for test execution. The
+following files are supported:
+
+- `config_` files contain configuration information. The current supported use
+  case is output matching of the test case by specifying a `TEST_TAP_PLUGINS`
+  line. The parameters contain a reference to an expected file.
+
+- `expected_` files contain the output the test case is expected to generate.
+
+These files shall have the name of the test case where `test_` is replaced by
+`config_` or `expected_`. The files can be architecture and bit-width specific.
+See [Matching expected output of tests](#matching-expected-output-of-tests).
 
 If a test file needs additional files, an
 `\_IMPL` variable must be added. This variable must list all source files in
@@ -241,32 +249,22 @@ writer to only a limited number of UTEST assert macros and to rather compare
 the generated output of the test case with expected pattern, in particular when
 the test case output can differ between the kernel architectures.
 
-The L4Re tool `gen_kunit_test` detects the presence of `expected_foo` in the
+The L4Re tool `gen_kunit_test` detects the presence of `config_foo` in the
 `utest/` subdirectory of the kernel build directory belonging to `test_foo.cpp`
 and starts the unit test accordingly.
 
-To generate the `expected_foo` file, it is required to start the test without
-specifying the `expected_foo` file (e.g. by removing it from the `utest/`
-directory and filter the combined output of stdout+stderr through the
-'filter-expected.sh' script. In the following example it is assumed that the
-following environment variables are defined:
+The `config_foo` file contains configuration information like this:
+```
+TEST_TAP_PLUGINS=TaggedOutputMatch:tag=mapdb,file=expected_mapdb,literal=1
+```
 
- - `l4_src`: the L4 source directory
- - `l4_obj`: the L4 build directory
- - `fiasco_src`: the Fiasco source directory
- - `fiasco_obj`: the Fiasco build directory
+For details about the syntax have a look at the `TaggedOutputMatch` plugin
+in the L4Re tool directory.
 
-Assuming we want to generate the expected output for `test_mapdb.cpp`, perform
-the following actions:
-
-    $ rm ${fiasco_obj}/utest/mapdb/expected_mapdb
-    $ ${l4_src}/tool/bin/gen_kunit_test \
-        --sdir=${fiasco_obj}/utest \
-        --ddir=${l4_obj}/tests/kunit \
-        --obj-base=${l4_obj}
-    $ ${l4_obj}/tests/kunit/test_mapdb.t 2>&1 \
-      | ${fiasco_src}/test/utest/mapdb/filter-expected.sh \
-      > ${fiasco_src}/test/utest/mapdb/expected_mapdb
+To generate the referenced `expected_foo` file, it is required to start the
+test without specifying the `expected_foo` file (e.g. by removing `config_foo`
+from the `utest/` directory. The captured test output can be stored in an
+`expected_foo` file.
 
 It is possible to provide a single default `expected` file per test case, an
 `expected-XARCH` file and an `expected-XARCH-BITS` file where `XARCH` and

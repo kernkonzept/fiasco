@@ -281,7 +281,7 @@ Mapdb_ext_test::print_node(Mapdb::Frame const &frame, Mapping const *sub = 0)
 {
   auto node = *frame.m ? frame.m : frame.frame->first();
   int const n_depth = *frame.m ? node->depth() + 1 : 0;
-  printf("%u:%s%*sspace=%s vaddr=0x%lx size=0x%lx\n",
+  pr_tag("%u:%s%*sspace=%s vaddr=0x%lx size=0x%lx\n",
          n_depth, *frame.m && *node == sub ? " ==> " : "     ",
          n_depth, "", node_name(frame.pspace()), to_virt(frame.pvaddr()),
          to_virt(Mapdb::Pfn(1) << frame.page_shift()));
@@ -290,12 +290,12 @@ Mapdb_ext_test::print_node(Mapdb::Frame const &frame, Mapping const *sub = 0)
                          [sub](Mapping *node, Mapdb::Order order)
     {
       int const n_depth = node->depth() + 1;
-      printf("%u:%s%*sspace=%s vaddr=0x%lx size=0x%lx\n",
+      pr_tag("%u:%s%*sspace=%s vaddr=0x%lx size=0x%lx\n",
              n_depth, node == sub ? " ==> " : "     ",
              n_depth, "", node_name(node->space()), to_virt(node->pfn(order)),
              to_virt((Mapdb::Pfn(1) << order)));
     });
-  printf("\n");
+  pr_tag("\n");
 }
 
 PRIVATE
@@ -314,17 +314,17 @@ Mapdb_ext_test::show_tree(Treemap *pages,
 
   auto frame_va = offset + pages->page_offset();
 
-  printf("%*smapping tree: { %s va=0x%lx size=0x%lx\n",
+  pr_tag("%*smapping tree: { %s va=0x%lx size=0x%lx\n",
          indent, "", node_name(pages->owner()),
          to_virt(frame_va),
          to_virt(Mapdb::Pfn(1) << pages->page_shift()));
 
-  printf("%*sheader info: lock: %d\n", indent + 2, "", f->lock.test());
+  pr_tag("%*sheader info: lock: %d\n", indent + 2, "", f->lock.test());
 
   int ind = 0;
   for (auto m: *f->tree())
     {
-      printf("%*s: ", indent + 2, "");
+      pr_tag("%*s: ", indent + 2, "");
 
       if (m->submap())
         printf("subtree...\n");
@@ -347,7 +347,7 @@ Mapdb_ext_test::show_tree(Treemap *pages,
           show_tree(m->submap(), subo, base_size, indent + 2 + ind);
     }
 
-  printf("%*s} // mapping tree: %s va=0x%lx\n",
+  pr_tag("%*s} // mapping tree: %s va=0x%lx\n",
          indent, "", node_name(pages->owner()), to_virt(frame_va));
 }
 
@@ -359,7 +359,7 @@ Mapdb_ext_test::show_tree_nl(Treemap *pages,
                              int indent = 0)
 {
   show_tree(pages, offset, base_size, indent);
-  printf("\n");
+  pr_tag("\n");
 }
 
 PRIVATE
@@ -377,7 +377,7 @@ Mapdb_ext_test::insert(Mapdb &m, Mapdb::Frame const &frame,
                        Test_space_w_tlb *space, Mapdb::Pfn virt,
                        Mapdb::Pfn phys, Mapdb::Order order)
 {
-  printf("Insert: %s va=0x%lx pa=0x%lx order=%d\n",
+  pr_tag("Insert: %s va=0x%lx pa=0x%lx order=%d\n",
          node_name(space), to_virt(virt), to_virt(phys),
          cxx::int_value<Mapdb::Order>(order));
 
@@ -508,13 +508,13 @@ Mapdb_ext_test::unmap(Mapdb &m, Test_tlb<Base> *space, Mapdb::Pfn va_start,
     {
       Test_space_w_tlb *s = static_cast<Test_space_w_tlb *>(m->space());
       Mapdb::Pfn page = m->pfn(size);
-      printf("unmap %s va=0x%lx for node:\n", node_name(s), to_virt(page));
+      pr_tag("unmap %s va=0x%lx for node:\n", node_name(s), to_virt(page));
       s->remove(page);
     });
 
   m.flush(f, me_too ? L4_map_mask::full() : L4_map_mask(0), va_start, va_end);
   f.clear();
-  printf("state after flush\n");
+  pr_tag("state after flush\n");
   return true;
 }
 
@@ -536,21 +536,21 @@ Mapdb_ext_test::test_mapdb_basic()
   UTEST_TRUE(Utest::Expect,
              m.lookup(&*sigma0, to_pfn(0), to_pfn(0), &f),
              "Lookup @sigma0 at phys=0");
-  printf("Lookup @sigma0 node at phys=0\n");
+  pr_tag("Lookup @sigma0 node at phys=0\n");
   print_node(f);
 
   UTEST_TRUE(Utest::Assert,
              sub = m.insert(f, &*other, to_pfn(2 * S_page),
                             to_pfn(S_page), to_pcnt(O_page)),
            "Insert sub-mapping @other");
-  printf("Lookup @sigma0 node at phys=0 after inserting sub-mapping\n");
+  pr_tag("Lookup @sigma0 node at phys=0 after inserting sub-mapping\n");
   print_node(f, sub);
   f.clear();
 
   UTEST_TRUE(Utest::Expect,
              m.lookup(&*sigma0, to_pfn(2 * _2M), to_pfn(2 * _2M), &f),
              "Lookup @sigma0 at phys=2*2M");
-  printf("Lookup @sigma0 at phys=2*2M\n");
+  pr_tag("Lookup @sigma0 at phys=2*2M\n");
   print_node(f, sub);
 
   UTEST_TRUE(Utest::Assert,
@@ -558,7 +558,7 @@ Mapdb_ext_test::test_mapdb_basic()
                             to_pfn(2 * _2M), to_pcnt(O_2M)),
            "Insert sub-mapping @other");
 
-  printf("Lookup @sigma0 at phys=2*superpage after inserting sub-mapping\n");
+  pr_tag("Lookup @sigma0 at phys=2*superpage after inserting sub-mapping\n");
   print_node(f, sub);
 
   auto parent_ma = f.m;
@@ -567,7 +567,7 @@ Mapdb_ext_test::test_mapdb_basic()
   UTEST_TRUE(Utest::Expect,
              m.lookup(&*other, to_pfn(4 * _2M), to_pfn(2 * _2M), &f),
              "Lookup @other at phys=4*superpage");
-  printf("Lookup @other at phys=4*superpage\n");
+  pr_tag("Lookup @other at phys=4*superpage\n");
   print_node(f);
 
   UTEST_EQ(Utest::Expect,
@@ -580,7 +580,7 @@ Mapdb_ext_test::test_mapdb_basic()
              "Insert 4K sub-mapping");
 
   f.m = parent_ma;
-  printf("Lookup @sigma0 node at phys=2*superpage after inserting sub-mapping\n");
+  pr_tag("Lookup @sigma0 node at phys=2*superpage after inserting sub-mapping\n");
   print_node(f);
 
   f.clear();
@@ -600,13 +600,13 @@ Mapdb_ext_test::test_mapdb_maphole()
   Mapdb &m = create_mapdb(M());
   Mapdb::Frame f;
 
-  printf("Lookup @grandfather phys=0\n");
+  pr_tag("Lookup @grandfather phys=0\n");
   UTEST_TRUE(Utest::Expect,
              m.lookup(&*grandfather, to_pfn(0), to_pfn(0), &f),
              "Lookup @grandfather at phys=0");
   print_whole_tree(f);
 
-  printf("Insert father mapping\n");
+  pr_tag("Insert father mapping\n");
   UTEST_TRUE(Utest::Expect,
              m.insert(f, &*father, to_pfn(0), to_pfn(0), to_pcnt(O_page)),
              "Insert mapping @father at phys=0");
@@ -615,13 +615,13 @@ Mapdb_ext_test::test_mapdb_maphole()
 
   // GF -> F
 
-  printf("Lookup @father at phys=0\n");
+  pr_tag("Lookup @father at phys=0\n");
   UTEST_TRUE(Utest::Expect,
              m.lookup(&*father, to_pfn(0), to_pfn(0), &f),
              "Lookup @grandfather at phys=0");
   print_whole_tree(f);
 
-  printf("Insert son mapping\n");
+  pr_tag("Insert son mapping\n");
   UTEST_TRUE(Utest::Expect,
              m.insert(f, &*son, to_pfn(0), to_pfn(0), to_pcnt(O_page)),
              "Insert mapping @son at phys=0");
@@ -630,13 +630,13 @@ Mapdb_ext_test::test_mapdb_maphole()
 
   // GF -> F -> S
 
-  printf("Lookup @father at phys=0\n");
+  pr_tag("Lookup @father at phys=0\n");
   UTEST_TRUE(Utest::Expect,
              m.lookup(&*father, to_pfn(0), to_pfn(0), &f),
              "Lookup @father at phys=0");
   print_whole_tree(f);
 
-  printf("Insert daughter mapping\n");
+  pr_tag("Insert daughter mapping\n");
   UTEST_TRUE(Utest::Expect,
              m.insert(f, &*daughter, to_pfn(0), to_pfn(0), to_pcnt(O_page)),
              "Insert mapping @daughter at phys=0");
@@ -646,27 +646,27 @@ Mapdb_ext_test::test_mapdb_maphole()
   // GF -> F -> S
   //         -> D
 
-  printf("Lookup @son at phys=0\n");
+  pr_tag("Lookup @son at phys=0\n");
   UTEST_TRUE(Utest::Expect,
              m.lookup(&*son, to_pfn(0), to_pfn(0), &f),
              "Lookup @son at phys=0");
   print_whole_tree(f);
   show_tree_nl(m.dbg_treemap());
 
-  printf("Son has accident on return from disco\n");
+  pr_tag("Son has accident on return from disco\n");
   m.flush(f, L4_map_mask::full(), to_pfn(0), to_pfn(S_page));
   f.clear();
   show_tree_nl(m.dbg_treemap());
 
   // GF -> F -> D
 
-  printf("Lost aunt returns from holiday\n");
+  pr_tag("Lost aunt returns from holiday\n");
   UTEST_TRUE(Utest::Expect,
              m.lookup(&*grandfather, to_pfn(0), to_pfn(0), &f),
              "Lookup @grandfather at phys=0");
   print_whole_tree(f);
 
-  printf("Insert @aunt mapping\n");
+  pr_tag("Insert @aunt mapping\n");
   UTEST_TRUE(Utest::Expect,
              m.insert(f, &*aunt, to_pfn(0), to_pfn(0), to_pcnt(O_page)),
              "Insert mapping @aunt at phys=0");
@@ -677,7 +677,7 @@ Mapdb_ext_test::test_mapdb_maphole()
   // GF -> F -> D
   //    -> A
 
-  printf("Lookup @daughter at phys=0\n");
+  pr_tag("Lookup @daughter at phys=0\n");
   UTEST_TRUE(Utest::Expect,
              m.lookup(&*daughter, to_pfn(0), to_pfn(0), &f),
              "Lookup @daughter at phys=0");
@@ -699,12 +699,12 @@ Mapdb_ext_test::test_mapdb_flushtest()
   Mapdb &m = create_mapdb(M());
   Mapdb::Frame f;
 
-  printf("Lookup @grandfather\n");
+  pr_tag("Lookup @grandfather\n");
   UTEST_TRUE(Utest::Expect, m.lookup(&*grandfather, to_pfn(0), to_pfn(0), &f),
              "Lookup @grandfather");
   print_whole_tree(f);
 
-  printf("Inserting father mapping\n");
+  pr_tag("Inserting father mapping\n");
   UTEST_TRUE(Utest::Expect,
              m.insert (f, &*father, to_pfn(0), to_pfn(0), to_pcnt(O_page)),
              "Insert @father");
@@ -713,12 +713,12 @@ Mapdb_ext_test::test_mapdb_flushtest()
 
   // GF -> F
 
-  printf("Lookup father at phys=0\n");
+  pr_tag("Lookup father at phys=0\n");
   UTEST_TRUE(Utest::Expect, m.lookup(&*father, to_pfn(0), to_pfn(0), &f),
              "Lookup @father");
   print_whole_tree(f);
 
-  printf("Insert son mapping\n");
+  pr_tag("Insert son mapping\n");
   UTEST_TRUE(Utest::Expect,
              m.insert (f, &*son, to_pfn(0), to_pfn(0), to_pcnt(O_page)),
              "Insert @son");
@@ -727,12 +727,12 @@ Mapdb_ext_test::test_mapdb_flushtest()
 
   // GF -> F -> S
 
-  printf("Lost aunt returns from holidays\n");
+  pr_tag("Lost aunt returns from holidays\n");
   UTEST_TRUE(Utest::Expect, m.lookup(&*grandfather, to_pfn(0), to_pfn(0), &f),
              "Lookup @grandfather");
   print_whole_tree(f);
 
-  printf("Insert aunt mapping\n");
+  pr_tag("Insert aunt mapping\n");
   UTEST_TRUE(Utest::Expect,
              m.insert(f, &*aunt, to_pfn(0), to_pfn(0), to_pcnt(O_page)),
              "Insert @aunt");
@@ -742,13 +742,13 @@ Mapdb_ext_test::test_mapdb_flushtest()
   // GF -> F -> S
   //    -> A
 
-  printf("Lookup father at phys=0\n");
+  pr_tag("Lookup father at phys=0\n");
   UTEST_TRUE(Utest::Expect, m.lookup(&*father, to_pfn(0), to_pfn(0), &f),
              "Lookup @father");
 
   print_whole_tree(f);
 
-  printf("Father is killed by his new love\n");
+  pr_tag("Father is killed by his new love\n");
   m.flush(f, L4_map_mask::full(), to_pfn(0), to_pfn(S_page));
   print_whole_tree(f);
   f.clear();
@@ -804,13 +804,13 @@ Mapdb_ext_test::test_mapdb_multilevel()
 
   // In the following we ignore mappings from Sigma0: Sigma0 has 4 x 1GB mapped.
 
-  printf("# Lookup Sigma0_addr_4\n");
+  pr_tag("# Lookup Sigma0_addr_4\n");
   UTEST_TRUE(Utest::Expect, lookup(m, &*sigma0, poffs, &f),
              "Lookup @sigma0 Sigma0_addr_4");
   s0_f = f;
   print_node(f);
 
-  printf("# Insert sub-mapping page @other\n");
+  pr_tag("# Insert sub-mapping page @other\n");
   UTEST_TRUE(Utest::Assert, sub = insert(m, s0_f, &*other, to_pfn(2*S_page),
                                          poffs + to_pcnt(O_page),
                                          to_po(O_page)),
@@ -821,7 +821,7 @@ Mapdb_ext_test::test_mapdb_multilevel()
   // other:
   // 1p @ 2p
 
-  printf("# Get that mapping again\n");
+  pr_tag("# Get that mapping again\n");
   UTEST_TRUE(Utest::Expect,
              lookup(m, &*other, to_pfn(2*S_page), &f),
              "Lookup @other at 2*page");
@@ -829,7 +829,7 @@ Mapdb_ext_test::test_mapdb_multilevel()
   UTEST_EQ(Utest::Expect, f.treemap->page_shift(), Mapdb::Order(0),
            "Expected order");
 
-  printf("# Insert sub-mapping 2M @other\n");
+  pr_tag("# Insert sub-mapping 2M @other\n");
   UTEST_TRUE(Utest::Expect, sub = insert(m, s0_f, &*other, to_pfn(_4M),
                                          poffs + to_pcnt(Order(O_2M)),
                                          to_po(O_2M)),
@@ -841,7 +841,7 @@ Mapdb_ext_test::test_mapdb_multilevel()
   // 1p @ 2p
   // 2M @ 4M
 
-  printf("# Get that mapping again\n");
+  pr_tag("# Get that mapping again\n");
   UTEST_TRUE(Utest::Expect,
              lookup(m, &*other, to_pfn(_4M), &f),
              "Lookup @other at 4M");
@@ -850,7 +850,7 @@ Mapdb_ext_test::test_mapdb_multilevel()
            f.treemap->page_shift(), Mapdb::Order(O_2M - O_page),
            "Expected order");
 
-  printf("# Insert sub-mapping 2M @aunt\n");
+  pr_tag("# Insert sub-mapping 2M @aunt\n");
   UTEST_TRUE(Utest::Expect, sub = insert(m, s0_f, &*aunt, to_pfn(Aunt_addr_1),
                                          poffs,
                                          to_po(O_2M)),
@@ -865,7 +865,7 @@ Mapdb_ext_test::test_mapdb_multilevel()
   //    +-------> aunt:
   //              2M @ Aunt_addr_1
 
-  printf("# Map page FROM 4M @other TO Son_addr_2 @son\n");
+  pr_tag("# Map page FROM 4M @other TO Son_addr_2 @son\n");
   UTEST_TRUE(Utest::Expect, map(m, &*other, to_pfn(_4M),
                                 &*son, to_pfn(Son_addr_2),
                                 to_po(O_page)),
@@ -881,7 +881,7 @@ Mapdb_ext_test::test_mapdb_multilevel()
   //    +-------> son:
   //              2M @ Son_addr_2
 
-  printf("# Unmap 2M FROM 4M @other...\n");
+  pr_tag("# Unmap 2M FROM 4M @other...\n");
   UTEST_TRUE(Utest::Expect, unmap(m, &*other,
                                   to_pfn(_4M),
                                   to_pfn(_4M + _2M), false),
@@ -891,7 +891,7 @@ Mapdb_ext_test::test_mapdb_multilevel()
   // 1p @ 2p
   // 2M @ 4M
 
-  printf("# Unmap 2M FROM poffs + 2M @sigma0...\n");
+  pr_tag("# Unmap 2M FROM poffs + 2M @sigma0...\n");
   UTEST_TRUE(Utest::Expect, unmap(m, &*sigma0,
                                   poffs + to_pcnt(O_2M),
                                   poffs + to_pcnt(O_2M) + to_pcnt(O_2M), false),
@@ -904,7 +904,7 @@ Mapdb_ext_test::test_mapdb_multilevel()
              lookup(m, &*other, to_pfn(2*S_page), &f),
              "Lookup @other at 2*pages");
 
-  printf("# Unmap 1 page FROM 2*page @other\n");
+  pr_tag("# Unmap 1 page FROM 2*page @other\n");
   UTEST_TRUE(Utest::Expect, unmap(m, &*other,
                                   to_pfn(2 * S_page),
                                   to_pfn(2 * S_page + S_page), true),
@@ -916,7 +916,7 @@ Mapdb_ext_test::test_mapdb_multilevel()
               lookup(m, &*other, to_pfn(2*S_page), &f),
               "Lookup @other at 2*pages");
 
-  printf("# Map 2*4MB FROM Sigma0_addr_3 @sigma0 TO Father_addr @father\n");
+  pr_tag("# Map 2*4MB FROM Sigma0_addr_3 @sigma0 TO Father_addr @father\n");
   UTEST_TRUE(Utest::Expect, map(m, &*sigma0, to_pfn(Sigma0_addr_3),
                                 &*father, to_pfn(Father_addr),
                                 to_po(O_4M)),
@@ -930,14 +930,14 @@ Mapdb_ext_test::test_mapdb_multilevel()
   // 8M @ Father_addr
 
   sub = *f.m;
-  printf("# Get first 8MB mapping\n");
+  pr_tag("# Get first 8MB mapping\n");
   UTEST_TRUE(Utest::Expect,
              lookup(m, &*father, to_pfn(Father_addr), &f),
              "Lookup @father at Father_addr");
   print_node(f, sub);
   f.clear();
 
-  printf("# Map 3*2MB FROM Father_addr + 2M @father TO Aunt_addr_2 @aunt\n");
+  pr_tag("# Map 3*2MB FROM Father_addr + 2M @father TO Aunt_addr_2 @aunt\n");
   for (unsigned i = 0; i < 3; ++i)
     UTEST_TRUE(Utest::Expect, map(m, &*father,
                                     to_pfn(Father_addr + _2M + (i<<(O_2M))),
@@ -953,7 +953,7 @@ Mapdb_ext_test::test_mapdb_multilevel()
   //              2M @ Aunt_addr_2+2M
   //              2M @ Aunt_addr_2+4M
 
-  printf("# Map 3 pages FROM Aunt_addr_2 + page @aunt TO Client_addr_1 @client\n");
+  pr_tag("# Map 3 pages FROM Aunt_addr_2 + page @aunt TO Client_addr_1 @client\n");
   for (unsigned i = 0; i < 3; ++i)
     UTEST_TRUE(Utest::Expect, map(m, &*aunt,
                                     to_pfn(Aunt_addr_2 + S_page + (i<<O_page)),
@@ -988,7 +988,7 @@ Mapdb_ext_test::test_mapdb_multilevel()
               lookup(m, &*client, to_pfn(Client_addr_1 + 3*S_page), &f),
               "Lookup @client at Client_addr_1 + 3*page");
 
-  printf("# Unmap 1 page FROM Father_addr + 2M + 2*page @father\n");
+  pr_tag("# Unmap 1 page FROM Father_addr + 2M + 2*page @father\n");
   UTEST_TRUE(Utest::Expect, unmap(m, &*father,
                                   to_pfn(Father_addr + _2M + S_page*2),
                                   to_pfn(Father_addr + _2M + S_page*3),
@@ -1023,7 +1023,7 @@ Mapdb_ext_test::test_mapdb_multilevel()
               lookup(m, &*client, to_pfn(Client_addr_1 + 3*S_page), &f),
               "Lookup @client at Client_addr_1 + 3*page");
 
-  printf("# Map 4M FROM Father_addr @father TO Aunt_addr_3 @aunt\n");
+  pr_tag("# Map 4M FROM Father_addr @father TO Aunt_addr_3 @aunt\n");
   UTEST_TRUE(Utest::Expect, map(m, &*father, to_pfn(Father_addr),
                                 &*aunt, to_pfn(Aunt_addr_3),
                                 to_po(O_4M)),
@@ -1035,7 +1035,7 @@ Mapdb_ext_test::test_mapdb_multilevel()
   //    +------> aunt:
   //             4M @ Aunt_addr_3
 
-  printf("# Map 3 pages FROM aunt at Aunt_addr_3 + 2M + page TO client at Client_addr_2\n");
+  pr_tag("# Map 3 pages FROM aunt at Aunt_addr_3 + 2M + page TO client at Client_addr_2\n");
   for (unsigned i = 0; i < 3; ++i)
     UTEST_TRUE(Utest::Expect, map(m, &*aunt, to_pfn(Aunt_addr_3 + _2M
                                                     + S_page + (i<<O_page)),
@@ -1054,7 +1054,7 @@ Mapdb_ext_test::test_mapdb_multilevel()
   //                                                     1p @ Client_addr_2+1p
   //                                                     1p @ Client_addr_2+2p
 
-  printf("# Unmap 1 page FROM Aunt_addr_3 + 2M + page + page @aunt\n");
+  pr_tag("# Unmap 1 page FROM Aunt_addr_3 + 2M + page + page @aunt\n");
   UTEST_TRUE(Utest::Expect, unmap(m, &*aunt,
                                   to_pfn(Aunt_addr_3 + _2M + S_page + S_page*1),
                                   to_pfn(Aunt_addr_3 + _2M + S_page + S_page*2),
@@ -1093,7 +1093,7 @@ Mapdb_ext_test::test_mapdb_multilevel()
               lookup(m, &*client, to_pfn(Client_addr_2 + 3*S_page), &f),
               "Lookup @client at Client_addr_2 + 3*page");
 
-  printf("# Map 3 pages FROM Sigma0_addr_2 - page @sigma0 TO Client_addr_3 @client\n");
+  pr_tag("# Map 3 pages FROM Sigma0_addr_2 - page @sigma0 TO Client_addr_3 @client\n");
   for (unsigned i = 0; i < 3; ++i)
     UTEST_TRUE(Utest::Expect, map(m, &*sigma0, to_pfn(Sigma0_addr_2 - S_page
                                                       + (i<<O_page)),
@@ -1134,7 +1134,7 @@ Mapdb_ext_test::test_mapdb_multilevel()
               lookup(m, &*client, to_pfn(Client_addr_3 + 3*S_page), &f),
               "Lookup @client at Client_addr_3 + 3*page");
 
-  printf("# Map 1G from Sigma0_addr_1 @sigma0 to Daughter_addr @daughter\n");
+  pr_tag("# Map 1G from Sigma0_addr_1 @sigma0 to Daughter_addr @daughter\n");
   UTEST_TRUE(Utest::Expect, map(m, &*sigma0, to_pfn(Sigma0_addr_1),
                                 &*daughter, to_pfn(Daughter_addr),
                                 to_po(O_1G)),
@@ -1170,7 +1170,7 @@ Mapdb_ext_test::test_mapdb_multilevel()
               lookup(m, &*daughter, to_pfn(Daughter_addr + _1G), &f),
               "Lookup @daughter at Daughter_addr + 1G");
 
-  printf("# Map 3 pages FROM daughter TO client at Client_addr_4\n");
+  pr_tag("# Map 3 pages FROM daughter TO client at Client_addr_4\n");
   for (unsigned i = 0; i < 3; ++i)
     UTEST_TRUE(Utest::Expect, map(m, &*daughter, to_pfn(Daughter_addr
                                                         + 3 * _16M
@@ -1206,7 +1206,7 @@ Mapdb_ext_test::test_mapdb_multilevel()
   //                                                     1p @ Client_addr_4+1p
   //                                                     1p @ Client_addr_4+2p
 
-  printf("# Map 2*2M FROM Daughter_addr + 3*16M @daughter to Client_addr_6 @client\n");
+  pr_tag("# Map 2*2M FROM Daughter_addr + 3*16M @daughter to Client_addr_6 @client\n");
   UTEST_TRUE(Utest::Expect, map(m, &*daughter, to_pfn(Daughter_addr + 3*_16M),
                                 &*client, to_pfn(Client_addr_6),
                                 to_po(Order(O_2M))),
@@ -1268,7 +1268,7 @@ Mapdb_ext_test::test_mapdb_multilevel()
              lookup(m, &*client, to_pfn(Client_addr_6 + _2M), &f),
              "Lookup @client at Client_addr_6 + 2M");
 
-  printf("# Map 4M from Daughter_addr + 3*16M @daughter to Son_addr_1 @son\n");
+  pr_tag("# Map 4M from Daughter_addr + 3*16M @daughter to Son_addr_1 @son\n");
   UTEST_TRUE(Utest::Expect, map(m, &*daughter, to_pfn(Daughter_addr + 3*_16M),
                                 &*son, to_pfn(Son_addr_1),
                                 to_po(O_4M)),
@@ -1306,7 +1306,7 @@ Mapdb_ext_test::test_mapdb_multilevel()
   //                           +- +48M -> son:
   //                                      4M @ Son_addr_1
 
-  printf("# Map page from Son_addr_1 + 2M @son to Client_addr_5 @client\n");
+  pr_tag("# Map page from Son_addr_1 + 2M @son to Client_addr_5 @client\n");
   UTEST_TRUE(Utest::Expect, map(m, &*son, to_pfn(Son_addr_1 + _2M),
                                 &*client, to_pfn(Client_addr_5),
                                 to_po(O_page)),
@@ -1347,7 +1347,7 @@ Mapdb_ext_test::test_mapdb_multilevel()
   //                                         +- +2M ---> client:
   //                                                     1p @ Client_addr_5
 
-  printf("# Map page from Son_addr_1 + 2M + page @son to Client_addr_5 + page @client\n");
+  pr_tag("# Map page from Son_addr_1 + 2M + page @son to Client_addr_5 + page @client\n");
   UTEST_TRUE(Utest::Expect, map(m, &*son, to_pfn(Son_addr_1 + _2M + S_page),
                                 &*client, to_pfn(Client_addr_5 + S_page),
                                 to_po(O_page)),
@@ -1400,7 +1400,7 @@ Mapdb_ext_test::test_mapdb_multilevel()
 
   show_tree(m.dbg_treemap());
 
-  printf("# Unmap 1 page FROM Daughter_addr + 3*16M + 2M @daughter\n");
+  pr_tag("# Unmap 1 page FROM Daughter_addr + 3*16M + 2M @daughter\n");
   UTEST_TRUE(Utest::Expect, unmap(m, &*daughter,
                                   to_pfn(Daughter_addr + 3*_16M + _2M),
                                   to_pfn(Daughter_addr + 3*_16M + _2M + S_page), false),
@@ -1452,7 +1452,7 @@ Mapdb_ext_test::test_mapdb_multilevel()
              lookup(m, &*client, to_pfn(Client_addr_4 + 2*S_page), &f),
              "Lookup @client at Client_addr_4 + 2*page");
 
-  printf("# Map page from Daughter_addr + 3*16M + 2M @daughter to Client_addr_4 + page @client\n");
+  pr_tag("# Map page from Daughter_addr + 3*16M + 2M @daughter to Client_addr_4 + page @client\n");
   UTEST_TRUE(Utest::Expect, map(m, &*daughter, to_pfn(Daughter_addr + 3*_16M + _2M),
                                 &*client, to_pfn(Client_addr_4 + S_page),
                                 to_po(O_page)),
@@ -1493,7 +1493,7 @@ Mapdb_ext_test::test_mapdb_multilevel()
              lookup(m, &*client, to_pfn(Client_addr_4 + S_page), &f),
              "Lookup @client at Client_addr_4 + page");
 
-  printf("# Unmap 1 page FROM Sigma0_addr_2 @sigma0\n");
+  pr_tag("# Unmap 1 page FROM Sigma0_addr_2 @sigma0\n");
   show_tree(m.dbg_treemap());
   UTEST_TRUE(Utest::Expect, unmap(m, &*sigma0,
                                   to_pfn(Sigma0_addr_2),

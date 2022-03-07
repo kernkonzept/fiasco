@@ -1,1 +1,1 @@
-TEST_EXPECTED=expected_map_util
+TEST_TAP_PLUGINS=TaggedOutputMatch:tag=mdb,file=expected_map_util,literal=1
