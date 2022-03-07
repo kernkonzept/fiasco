@@ -44,14 +44,14 @@ Kernel_thread::init_workload()
   init_mapdb_mem(sigma0);
   init_mapdb_io(sigma0);
 
-  check (map(sigma0,          sigma0, sigma0, C_task, 0));
-  check (map(Factory::root(), sigma0, sigma0, C_factory, 0));
+  check (map_obj_initially(sigma0,          sigma0, sigma0, C_task, 0));
+  check (map_obj_initially(Factory::root(), sigma0, sigma0, C_factory, 0));
 
   for (Cap_index c = Initial_kobjects::first(); c < Initial_kobjects::end(); ++c)
     {
       Kobject_iface *o = initial_kobjects.obj(c);
       if (o)
-	check(map(o, sigma0, sigma0, c, 0));
+	check(map_obj_initially(o, sigma0, sigma0, c, 0));
     }
 
   Thread_object *sigma0_thread = new (Ram_quota::root) Thread_object(Ram_quota::root);
@@ -60,7 +60,7 @@ Kernel_thread::init_workload()
 
   // prevent deletion of this thing
   sigma0_thread->inc_ref();
-  check (map(sigma0_thread, sigma0, sigma0, C_thread, 0));
+  check (map_obj_initially(sigma0_thread, sigma0, sigma0, C_thread, 0));
 
   check (sigma0_thread->control(Thread_ptr(Thread_ptr::Null), Thread_ptr(Thread_ptr::Null)) == 0);
   check (sigma0_thread->bind(sigma0, User<Utcb>::Ptr((Utcb*)Mem_layout::Utcb_addr)));
@@ -87,8 +87,8 @@ Kernel_thread::init_workload()
   // prevent deletion of this thing
   boot_thread->inc_ref();
 
-  check (map(boot_task,   boot_task, boot_task, C_task, 0));
-  check (map(boot_thread, boot_task, boot_task, C_thread, 0));
+  check (map_obj_initially(boot_task,   boot_task, boot_task, C_task, 0));
+  check (map_obj_initially(boot_thread, boot_task, boot_task, C_thread, 0));
 
   check (boot_thread->control(Thread_ptr(C_pager), Thread_ptr(Thread_ptr::Null)) == 0);
   check (boot_thread->bind(boot_task, User<Utcb>::Ptr((Utcb*)Mem_layout::Utcb_addr)));
@@ -97,7 +97,7 @@ Kernel_thread::init_workload()
   Ipc_gate *s0_b_gate = Ipc_gate::create(Ram_quota::root, sigma0_thread, 4 << 4);
 
   check (s0_b_gate);
-  check (map(s0_b_gate, boot_task, boot_task, C_pager, 0));
+  check (map_obj_initially(s0_b_gate, boot_task, boot_task, C_pager, 0));
 
   sigma0_thread->set_home_cpu(Cpu_number::boot_cpu());
   boot_thread->set_home_cpu(Cpu_number::boot_cpu());

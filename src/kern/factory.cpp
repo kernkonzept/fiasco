@@ -122,7 +122,7 @@ Factory::map_obj(Kobject_iface *o, Cap_index cap, Task *_c_space,
       return commit_error(utcb, L4_error(L4_error::Overflow, L4_error::Rcv));
     }
 
-  if (!map(o, o_space, c_space.get(), cap, rl.list()))
+  if (!map_obj_initially(o, o_space, c_space.get(), cap, rl.list()))
     {
       delete o;
       return commit_result(-L4_err::ENomem);
