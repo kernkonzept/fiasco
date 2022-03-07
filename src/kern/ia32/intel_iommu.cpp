@@ -179,7 +179,7 @@ public:
     CXX_BITFIELD_MEMBER(27, 31, im, l)
     CXX_BITFIELD_MEMBER(32, 47, iidx, l);
 
-    // type 0x01 IEC
+    // type 0x01 CCI
     CXX_BITFIELD_MEMBER( 4,  5, cc_g, l);
     CXX_BITFIELD_MEMBER(16, 31, cc_did, l);
     CXX_BITFIELD_MEMBER(32, 47, cc_src_id, l);
