@@ -144,7 +144,15 @@ Kobject_mapdb::insert(Frame const &, Space *,
 
   Obj::Entry *e = static_cast<Obj::Entry*>(m);
   if (e->ref_cnt()) // counted
-    ++rn->_cnt;
+    {
+      // No overflow check required. The counter has type Smword and can count
+      // half of the addresses in the virtual address space. A capability has a
+      // size of at least one Mword but in fact a capability mapping occupies
+      // more memory than a single Mword.
+      static_assert(sizeof(rn->_cnt) >= sizeof(void*)/2,
+                    "Wrong type for reference counter");
+      ++rn->_cnt;
+    }
 
   return m;
 }
