@@ -169,7 +169,8 @@ Kobject_mapdb::grant(Frame &f, Space *, Vaddr va)
   Mapping::List::replace(se, re);
 
   if (se->ref_cnt() && !re->ref_cnt())
-    --f.frame->_cnt;
+    if (--f.frame->_cnt <= 0)
+      f.frame->invalidate_mappings();
 
   return true;
 }
@@ -198,17 +199,6 @@ Kobject_mapdb::flush(Frame const &f, L4_map_mask mask,
     }
 
   if (flush)
-    {
-      for (auto const &&i: f.frame->_root)
-        {
-          Obj::Entry *e = static_cast<Obj::Entry*>(i);
-          if (e->ref_cnt()) // counted
-            --f.frame->_cnt;
-          e->invalidate();
-        }
-      f.frame->_root.clear();
-    }
+    f.frame->invalidate_mappings();
 
 } // flush()
-
-

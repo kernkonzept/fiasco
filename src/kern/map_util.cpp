@@ -733,6 +733,7 @@ map(MAPDB* mapdb,
                 from->v_delete(SPACE::page_address(snd_addr, s_order), s_order,
                                L4_fpage::Rights::FULL());
                 tlb.add_page(from, SPACE::page_address(snd_addr, s_order), s_order);
+                Map_traits<SPACE>::free_object(s_phys, reap_list);
               }
             else if (status == SPACE::Insert_ok)
               {

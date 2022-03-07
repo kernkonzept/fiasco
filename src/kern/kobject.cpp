@@ -28,6 +28,22 @@ public:
     _root.add(m._c);
     _cnt = 1;
   }
+
+private:
+  void invalidate_mappings()
+  {
+    assert(_lock.test());
+
+    for (auto const &&i: _root)
+      {
+        Obj::Entry *e = static_cast<Obj::Entry*>(i);
+        if (e->ref_cnt()) // counted
+          --_cnt;
+        e->invalidate();
+      }
+
+    _root.clear();
+  }
 };
 
 
