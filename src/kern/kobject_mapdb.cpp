@@ -149,7 +149,7 @@ Kobject_mapdb::insert(Frame const &, Space *,
       // half of the addresses in the virtual address space. A capability has a
       // size of at least one Mword but in fact a capability mapping occupies
       // more memory than a single Mword.
-      static_assert(sizeof(rn->_cnt) >= sizeof(void*)/2,
+      static_assert(sizeof(rn->_cnt) >= sizeof(void*),
                     "Wrong type for reference counter");
       ++rn->_cnt;
     }
