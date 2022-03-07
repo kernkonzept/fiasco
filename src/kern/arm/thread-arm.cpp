@@ -64,7 +64,10 @@ Thread::fast_return_to_user(Mword ip, Mword sp, Vcpu_state *arg)
 
   // make sure the VMM executes in the correct mode
   if (Proc::Is_hyp)
-    r->psr_set_mode(Proc::Status_mode_user);
+    {
+      r->psr_set_mode(Proc::Status_mode_user);
+      r->psr |= 0x1c0; // mask PSTATE.{I,A,F}
+    }
 
   assert(r->check_valid_user_psr());
   arm_fast_exit(nonull_static_cast<Return_frame*>(r), __iret, arg);
