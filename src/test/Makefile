@@ -1,5 +1,5 @@
 L4DIR		?= ../../../..
 
-TARGET		= wrappers mapdb space map_util
+TARGET		= wrappers space
 
 include $(L4DIR)/mk/subdir.mk
