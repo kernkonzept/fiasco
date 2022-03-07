@@ -251,6 +251,9 @@ PRIVATE inline NOEXPORT NEEDS["cpu_lock.h", "lock_guard.h"]
 bool
 Rcu_data::do_batch()
 {
+  // This function may not properly work if called without CPU lock.
+  assert(cpu_lock.test());
+
   int count = 0;
   bool need_resched = false;
   for (Rcu_list::Const_iterator l = _d.begin(); l != _d.end();)
@@ -263,14 +266,15 @@ Rcu_data::do_batch()
     }
 
   // XXX: I do not know why this and the former stuff is w/o cpu lock
-  //      but the couting needs it?
+  //      but the counting needs it?
+  //      Actually this function is always called with taken CPU lock.
   _d.clear();
 
   // XXX: we use clear, we seemingly worked through the whole list
   //_d.head(l);
 
     {
-      auto guard = lock_guard(cpu_lock);
+      // auto guard = lock_guard(cpu_lock); -- See function precondition
       _len -= count;
     }
 
@@ -444,6 +448,9 @@ PUBLIC
 bool FIASCO_WARN_RESULT
 Rcu_data::process_callbacks(Rcu_glbl *rgp)
 {
+  // This function may not work properly if called without CPU lock.
+  assert(cpu_lock.test());
+
   LOG_TRACE("Rcu callbacks", "rcu", ::current(), Rcu::Log_rcu,
       l->cpu = _cpu;
       l->item = 0;
@@ -455,7 +462,7 @@ Rcu_data::process_callbacks(Rcu_glbl *rgp)
   if (!_n.empty() && _c.empty())
     {
 	{
-	  auto guard = lock_guard(cpu_lock);
+	  // auto guard = lock_guard(cpu_lock); -- See function precondition.
 	  _c = cxx::move(_n);
 	}
 
