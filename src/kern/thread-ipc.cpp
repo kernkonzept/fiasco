@@ -787,7 +787,7 @@ Thread::exception(Kobject_iface *handler, Trap_state *ts, L4_fpage::Rights right
  * return 0 if not for send_exception and halt thread
  */
 PUBLIC inline NEEDS["task.h", "trap_state.h",
-                    Thread::fast_return_to_user,
+                    Thread::vcpu_return_to_kernel,
                     Thread::save_fpu_state_to_utcb]
 int
 Thread::send_exception(Trap_state *ts)
@@ -824,7 +824,7 @@ Thread::send_exception(Trap_state *ts)
           l->space = vcpu_user_space() ? static_cast<Task*>(vcpu_user_space())->dbg_id() : ~0;
           );
       vcpu->_regs.s = *ts;
-      fast_return_to_user(vcpu->_entry_ip, vcpu->_sp, vcpu_state().usr().get());
+      vcpu_return_to_kernel(vcpu->_entry_ip, vcpu->_sp, vcpu_state().usr().get());
     }
 
   L4_fpage::Rights rights = L4_fpage::Rights(0);

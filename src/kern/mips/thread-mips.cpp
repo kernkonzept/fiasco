@@ -332,7 +332,7 @@ thread_unhandled_trap(Mword, Trap_state *ts)
 //
 PUBLIC inline NEEDS[<cassert>, "cp0_status.h"]
 void FIASCO_NORETURN
-Thread::fast_return_to_user(Mword ip, Mword sp, void *arg)
+Thread::vcpu_return_to_kernel(Mword ip, Mword sp, void *arg)
 {
   assert (cpu_lock.test());
   assert (current() == this);
@@ -365,7 +365,7 @@ extern "C" void leave_by_vcpu_upcall()
   c->regs()->r[0] = 0; // reset continuation
   Vcpu_state *vcpu = c->vcpu_state().access();
   vcpu->_regs.s = *nonull_static_cast<Trap_state*>(c->regs());
-  c->fast_return_to_user(vcpu->_entry_ip, vcpu->_entry_sp, c->vcpu_state().usr().get());
+  c->vcpu_return_to_kernel(vcpu->_entry_ip, vcpu->_entry_sp, c->vcpu_state().usr().get());
 }
 
 PRIVATE static inline
@@ -636,7 +636,7 @@ thread_handle_gva_tlb_fault(Mword cause, Trap_state *ts, Mword pfa)
   vcpu->_regs.s = *ts;
   vcpu->_regs.s.bad_v_addr = pfa;
   Context::vm_state(vcpu)->ctl_0 = (Context::vm_state(vcpu)->ctl_0 & ~0x3c) | (10 << 2);
-  t->fast_return_to_user(vcpu->_entry_ip, vcpu->_sp, t->vcpu_state().usr().get());
+  t->vcpu_return_to_kernel(vcpu->_entry_ip, vcpu->_sp, t->vcpu_state().usr().get());
 }
 
 extern "C" FIASCO_FASTCALL FIASCO_FLATTEN

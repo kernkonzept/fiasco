@@ -215,8 +215,8 @@ Vm::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode)
       if (t->continuation_test_and_restore())
         {
           ctxt->arch_load_vcpu_kern_state(vcpu, true);
-          t->fast_return_to_user(vcpu->_entry_ip, vcpu->_entry_sp,
-                                 t->vcpu_state().usr().get());
+          t->vcpu_return_to_kernel(vcpu->_entry_ip, vcpu->_entry_sp,
+                                   t->vcpu_state().usr().get());
         }
     }
 }

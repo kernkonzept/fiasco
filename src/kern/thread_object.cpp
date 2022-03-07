@@ -265,7 +265,7 @@ Thread_object::sys_vcpu_resume(L4_msg_tag const &tag, Utcb const *utcb, Utcb *)
               l->space = static_cast<Task*>(_space.vcpu_aware())->dbg_id();
               );
 
-          fast_return_to_user(vcpu->_entry_ip, sp, vcpu_state().usr().get());
+          vcpu_return_to_kernel(vcpu->_entry_ip, sp, vcpu_state().usr().get());
         }
     }
 

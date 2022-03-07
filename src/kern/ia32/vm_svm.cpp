@@ -707,8 +707,8 @@ Vm_svm::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode) override
         {
           force_kern_entry_vcpu_state(vcpu);
           ctxt->arch_load_vcpu_kern_state(vcpu, true);
-          t->fast_return_to_user(vcpu->_entry_ip, vcpu->_entry_sp,
-                                 t->vcpu_state().usr().get());
+          t->vcpu_return_to_kernel(vcpu->_entry_ip, vcpu->_entry_sp,
+                                   t->vcpu_state().usr().get());
         }
     }
 }

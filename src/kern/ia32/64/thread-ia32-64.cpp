@@ -5,7 +5,7 @@ IMPLEMENTATION [amd64 && !kernel_isolation]:
 
 PUBLIC template<typename T> inline
 void FIASCO_NORETURN
-Thread::fast_return_to_user(Mword ip, Mword sp, T arg)
+Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
 {
   assert(cpu_lock.test());
   assert(current() == this);
@@ -27,7 +27,7 @@ IMPLEMENTATION [amd64 && kernel_isolation]:
 
 PUBLIC template<typename T> inline
 void FIASCO_NORETURN
-Thread::fast_return_to_user(Mword ip, Mword sp, T arg)
+Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
 {
   assert(cpu_lock.test());
   assert(current() == this);

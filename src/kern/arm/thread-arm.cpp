@@ -47,7 +47,7 @@ Thread::print_page_fault_error(Mword e)
 
 PUBLIC inline NEEDS[Thread::arm_fast_exit]
 void FIASCO_NORETURN
-Thread::fast_return_to_user(Mword ip, Mword sp, Vcpu_state *arg)
+Thread::vcpu_return_to_kernel(Mword ip, Mword sp, Vcpu_state *arg)
 {
   extern char __iret[];
   Entry_frame *r = regs();
