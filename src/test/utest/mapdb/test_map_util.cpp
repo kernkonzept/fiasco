@@ -40,6 +40,10 @@ IMPLEMENTATION:
 void
 init_unittest()
 {
+  // As we do output matching, wait until all app CPUs are done booting to
+  // prevent concurrent screen output.
+  Utest::wait_for_app_cpus();
+
   Utest_fw::tap_log.start();
 
   Mapdb_util_test().test_map_util();
