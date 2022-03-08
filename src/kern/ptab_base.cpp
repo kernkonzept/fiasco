@@ -383,20 +383,24 @@ namespace Ptab
           return;
         }
 
-      while (size)
+      if (!size)
+        return;
+
+      Address const table = start >> (Traits::Shift + Traits::Size);
+      do
         {
           PTE_PTR e(&_e[Vec::idx(start)], Depth);
 
           if (!e.is_valid() || e.is_leaf())
+            skip(start, size, level - 1);
+          else
             {
-              skip(start, size, level - 1);
-              continue;
+              Next *n = (Next*)mem.phys_to_pmem(e.next_level());
+              n->unmap(start, size, level - 1, force_write_back,
+                       cxx::forward<MEM>(mem));
             }
-
-          Next *n = (Next*)mem.phys_to_pmem(e.next_level());
-          n->unmap(start, size, level - 1, force_write_back,
-                   cxx::forward<MEM>(mem));
         }
+      while (size && table == (start >> (Traits::Shift + Traits::Size)));
     }
 
     template< typename _Alloc, typename MEM >
@@ -411,7 +415,11 @@ namespace Ptab
                                                   cxx::forward<_Alloc>(alloc),
                                                   cxx::forward<MEM>(mem));
 
-      while (size)
+      if (!size)
+        return true;
+
+      Address const table = virt >> (Traits::Shift + Traits::Size);
+      do
         {
           PTE_PTR e(&_e[Vec::idx(virt)], Depth);
           Next *n;
@@ -429,7 +437,7 @@ namespace Ptab
                       alloc, mem))
             return false;
         }
-
+      while (size && table == (virt >> (Traits::Shift + Traits::Size)));
       return true;
     }
 
@@ -742,6 +750,11 @@ namespace Ptab
     {
       Address va = _Addr::val(virt);
       unsigned long sz = _Addr::val(size);
+      unsigned long mask = (1UL << Levels::shift(level)) - 1;
+
+      assert(!(va & mask));
+      assert(!(sz & mask));
+
       _base.unmap(va, sz, level, force_write_back, cxx::forward<MEM>(mem));
     }
 
@@ -753,6 +766,12 @@ namespace Ptab
     {
       Address va = _Addr::val(virt);
       unsigned long sz = _Addr::val(size);
+      unsigned long mask = (1UL << Levels::shift(level)) - 1;
+
+      assert(!(va & mask));
+      assert(!((phys >> Base_shift) & mask));
+      assert(!(sz & mask));
+
       return _base.map(phys, va, sz, attr, level, force_write_back,
                        cxx::forward<_Alloc>(alloc), cxx::forward<MEM>(mem));
     }
