@@ -495,7 +495,7 @@ IMPLEMENT
 void
 Gic_its::Table::alloc(Reg r, Typer typer)
 {
-  Baser baser(r.read());
+  Baser baser(r.read_non_atomic());
 
   _type = static_cast<Baser::Type>(baser.type().get());
   _entry_size = baser.entry_size() + 1;
@@ -541,8 +541,8 @@ Gic_its::Table::alloc(Reg r, Typer typer)
   // alignment overhead low. But if the HW forces us to use larger pages so be
   // it...
   baser.page_size() = Baser::Page_size_4k;
-  r.write(baser.raw);
-  baser.raw = r.read();
+  r.write_non_atomic(baser.raw);
+  baser.raw = r.read_non_atomic();
   switch (baser.page_size())
     {
     case Baser::Page_size_4k:   _page_size =  0x1000; break;
@@ -640,7 +640,7 @@ Gic_its::init(Gic_cpu_v3 *gic_cpu, Address base, unsigned num_lpis)
   _cmd_queue_lock.init();
   _device_alloc_lock.init();
 
-  Typer typer(_its.read<Unsigned64>(GITS_TYPER));
+  Typer typer(_its.read_non_atomic<Unsigned64>(GITS_TYPER));
   _redist_pta = typer.pta();
   _max_device_id = (1ULL << (typer.dev_bits() + 1)) - 1;
   _itt_entry_size = typer.itt_entry_size() + 1;
@@ -704,7 +704,7 @@ Gic_its::init_cmd_queue()
   _cmd_queue.make_coherent();
   // GITS_CREADR is cleared to 0 when GITS_CBASER is written.
   _cmd_queue_write_off = 0;
-  _its.write<Unsigned64>(_cmd_queue_write_off, GITS_CWRITER);
+  _its.write_non_atomic<Unsigned64>(_cmd_queue_write_off, GITS_CWRITER);
 }
 
 PUBLIC

@@ -249,7 +249,7 @@ Gic_dist::set_cpu(Mword pin, Cpu_phys_id cpu, V3)
   if (pin < 32) // GICD_IROUTER<0..31> are reserved
     return;
   Unsigned64 v = cxx::int_value<Cpu_phys_id>(cpu);
-  _dist.write<Unsigned64>(v & 0xff00ffffff, GICD_IROUTER + 8 * pin);
+  _dist.write_non_atomic<Unsigned64>(v & 0xff00ffffff, GICD_IROUTER + 8 * pin);
 }
 
 PUBLIC inline NEEDS["cpu.h"]
@@ -259,7 +259,7 @@ Gic_dist::init_targets(unsigned max, V3)
   Unsigned64 t = Cpu::mpidr() & 0xff00ffffff;
 
   for (unsigned i = 32; i < max; ++i)
-    _dist.write<Unsigned64>(t, GICD_IROUTER + 8 * i);
+    _dist.write_non_atomic<Unsigned64>(t, GICD_IROUTER + 8 * i);
 }
 
 PRIVATE

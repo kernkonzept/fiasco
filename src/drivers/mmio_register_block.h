@@ -3,6 +3,7 @@
 #pragma once
 
 #include "types.h"
+#include "asm_access.h"
 #include <cxx/type_traits>
 
 class Mmio_register_block
@@ -20,8 +21,14 @@ public:
 
     Type read() const
     {
-      return *reinterpret_cast<Type volatile *>
-        (static_cast<REG const *>(this)->_r);
+      return Asm_access::read(reinterpret_cast<Type const *>(
+                                static_cast<REG const *>(this)->_r));
+    }
+
+    Type read_non_atomic() const
+    {
+      return Asm_access::read_non_atomic(reinterpret_cast<Type const *>(
+                                           static_cast<REG const *>(this)->_r));
     }
 
     operator Type () const { return read(); }
@@ -36,8 +43,14 @@ public:
 
     void write(Type val)
     {
-      *reinterpret_cast<Type volatile *>
-        (static_cast<REG *>(this)->_r) = val;
+      Asm_access::write(val, reinterpret_cast<Type *>(
+                               static_cast<REG *>(this)->_r));
+    }
+
+    void write_non_atomic(Type val)
+    {
+      Asm_access::write_non_atomic(val, reinterpret_cast<Type *>(
+                                          static_cast<REG *>(this)->_r));
     }
 
     void operator = (Type val) { write(val); }
@@ -162,12 +175,22 @@ public:
   /** Deprecated write to register: use `r<>()` */
   template< typename T >
   void write(T t, Address reg) const
-  { r<T>(reg) = t; }
+  { r<T>(reg).write(t); }
+
+  /** Deprecated write to register: use `r<>()` */
+  template< typename T >
+  void write_non_atomic(T t, Address reg) const
+  { r<T>(reg).write_non_atomic(t); }
 
   /** Deprecated read to register: use `r<>()` */
   template< typename T >
   T read(Address reg) const
-  { return r<T>(reg); }
+  { return r<T>(reg).read(); }
+
+  /** Deprecated read to register: use `r<>()` */
+  template< typename T >
+  T read_non_atomic(Address reg) const
+  { return r<T>(reg).read_non_atomic(); }
 
   /** Deprecated read to register: use `r<>().modify()` */
   template< typename T >
