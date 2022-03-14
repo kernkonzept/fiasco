@@ -270,8 +270,9 @@ private:
 #define UTEST_NOERR(F, ACT, MSG)                                              \
   do                                                                          \
     {                                                                         \
-      Utest_fw::tap_log.binary_cmp(F, true == (ACT).ok(), "true", #ACT ".ok()",\
-                                   true, (ACT).ok(), "==", MSG, __FILE__,     \
+      auto act_res = (ACT).ok();                                              \
+      Utest_fw::tap_log.binary_cmp(F, true == act_res, "true", #ACT ".ok()",  \
+                                   true, act_res, "==", MSG, __FILE__,        \
                                    __LINE__);                                 \
     } while (false)
 
