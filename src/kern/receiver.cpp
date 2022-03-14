@@ -93,9 +93,7 @@ IMPLEMENTATION:
 // Interface for receivers
 
 IMPLEMENT inline Receiver::~Receiver() {}
-/** Constructor.
-    @param space_context the space context 
- */
+
 PROTECTED inline
 Receiver::Receiver()
 : Context(), _caller(0)

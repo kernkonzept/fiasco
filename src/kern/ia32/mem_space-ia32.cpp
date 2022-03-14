@@ -280,7 +280,7 @@ Mem_space::pmem_to_phys(Address virt) const
 /**
  * Simple page-table lookup.
  *
- * This method is similar to Space_context's virt_to_phys().
+ * This method is similar to virt_to_phys().
  * The difference is that this version handles Sigma0's
  * address space with a special case:  For Sigma0, we do not
  * actually consult the page table -- it is meaningless because we

@@ -166,10 +166,6 @@ Context::vcpu_set_irq_pending()
     vcpu_state().access()->sticky_flags |= Vcpu_state::Sf_irq_pending;
 }
 
-/** Return the space context.
-    @return space context used for this execution context.
-            Set with set_space_context().
- */
 PUBLIC inline
 Space *
 Context::vcpu_user_space() const

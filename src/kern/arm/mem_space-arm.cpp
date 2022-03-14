@@ -193,8 +193,8 @@ Mem_space::virt_to_phys(Address virt) const
 }
 
 
-/** Simple page-table lookup.  This method is similar to Mem_space's
-    lookup().  The difference is that this version handles
+/** Simple page-table lookup.  This method is similar to
+    virt_to_phys().  The difference is that this version handles
     Sigma0's address space with a special case: For Sigma0, we do not
     actually consult the page table -- it is meaningless because we
     create new mappings for Sigma0 transparently; instead, we return the
