@@ -43,6 +43,10 @@ private:
     Whole_space = 20,
     Map_max_address = 1UL << 20, /* 20bit obj index */
   };
+
+  static_assert(sizeof(Entry) * Map_max_address <=
+                Mem_layout::Caps_end - Mem_layout::Caps_start,
+                "Adapt capability mapping area");
 };
 
 IMPLEMENTATION:
