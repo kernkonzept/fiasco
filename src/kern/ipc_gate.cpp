@@ -43,7 +43,12 @@ public:
   Thread *thread() const { return _thread; }
   Mword id() const { return _id; }
   Mword obj_id() const override { return _id; }
-  bool is_local(Space *s) const override { return _thread && _thread->space() == s; }
+
+  bool is_local(Space *s) const override
+  {
+    Thread *t = access_once(&_thread);
+    return t && t->space() == s;
+  }
 };
 
 //---------------------------------------------------------------------------
@@ -228,15 +233,20 @@ Ipc_gate_ctl::bind_thread(L4_obj_ref, L4_fpage::Rights rights,
 
   Ipc_gate_obj *g = static_cast<Ipc_gate_obj*>(this);
   g->_id = in->values[1];
-  Mem::mp_wmb();
   t->inc_ref();
-  Thread *tmp = access_once(&g->_thread);
-  g->_thread = t;
-  Mem::mp_wmb();
+
+  Mem::mp_wmb(); // Ensure visibility of _id before _thread
+
+  Thread *old;
+  do
+    {
+      old = access_once(&g->_thread);
+    }
+  while (!mp_cas(&g->_thread, old, t));
 
   Kobject::Reap_list r;
-  if (tmp)
-    tmp->put_n_reap(r.list());
+  if (old)
+    old->put_n_reap(r.list());
 
   if (EXPECT_FALSE(!r.empty()))
     {
@@ -360,7 +370,8 @@ Ipc_gate::invoke(L4_obj_ref /*self*/, L4_fpage::Rights rights,
   Thread *partner = 0;
   bool have_rcv = false;
 
-  if (EXPECT_FALSE(!_thread))
+  Thread *t = access_once(&_thread);
+  if (EXPECT_FALSE(!t))
     {
       L4_error e = block(ct, f->timeout().snd, utcb);
       if (!e.ok())
@@ -369,18 +380,21 @@ Ipc_gate::invoke(L4_obj_ref /*self*/, L4_fpage::Rights rights,
 	  return;
 	}
 
-      if (EXPECT_FALSE(!_thread))
+      t = access_once(&_thread);
+      if (EXPECT_FALSE(!t))
 	{
 	  f->tag(commit_error(utcb, L4_error::Not_existent));
 	  return;
 	}
     }
 
-  bool ipc = _thread->check_sys_ipc(f->ref().op(), &partner, &sender, &have_rcv);
+  bool ipc = t->check_sys_ipc(f->ref().op(), &partner, &sender, &have_rcv);
+
+  Mem::mp_rmb(); // Ensure that _id is initialized.
 
   LOG_TRACE("IPC Gate invoke", "gate", current(), Log_ipc_gate_invoke,
       l->gate_dbg_id = dbg_id();
-      l->thread_dbg_id = _thread->dbg_id();
+      l->thread_dbg_id = t->dbg_id();
       l->label = _id | cxx::int_value<L4_fpage::Rights>(rights);
   );
 
