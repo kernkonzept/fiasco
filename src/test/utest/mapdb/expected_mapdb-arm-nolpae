@@ -23,8 +23,6 @@ Lookup @sigma0 node at phys=2*superpage after inserting sub-mapping
 
 === DONE TEST ===
 
-KUT ok 1 Mapdb::test_mapdb_basic
-
 
 === NEW TEST ===
 Lookup @grandfather phys=0
@@ -112,8 +110,6 @@ Lookup @daughter at phys=0
 
 === DONE TEST ===
 
-KUT ok 2 Mapdb::test_mapdb_maphole
-
 
 === NEW TEST ===
 Lookup @grandfather
@@ -155,8 +151,6 @@ Father is killed by his new love
 
 === DONE TEST ===
 
-KUT ok 3 Mapdb::test_mapdb_flushtest
-
 
 === NEW TEST ===
 Lookup @sigma0 node at phys=0
@@ -184,8 +178,6 @@ Lookup @sigma0 node at phys=2*superpage after inserting sub-mapping
 1:      space=client vaddr=0xf000 size=0x1000
 
 === DONE TEST ===
-
-KUT ok 4 Mapdb::test_mapdb_basic
 
 
 === NEW TEST ===
@@ -298,8 +290,6 @@ Lookup @daughter at phys=0
 
 === DONE TEST ===
 
-KUT ok 5 Mapdb::test_mapdb_maphole
-
 
 === NEW TEST ===
 Lookup @grandfather
@@ -340,8 +330,6 @@ Father is killed by his new love
 1:      space=aunt vaddr=0x0 size=0x1000
 
 === DONE TEST ===
-
-KUT ok 6 Mapdb::test_mapdb_flushtest
 
 
 === NEW TEST ===
