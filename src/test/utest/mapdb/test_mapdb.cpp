@@ -133,12 +133,14 @@ Test_tlb<Base>::insert(Mapdb::Pfn virt, Mapdb::Pfn phys, Mapdb::Order order)
       {
         if (0)
           {
+            unsigned long va =
+              cxx::int_value<Mem_space::V_pfn>(Mem_space::to_virt(virt))
+                << Virt_addr::Shift;
             printf("PT INSERT: %s pa=%lx:%lx va=%lx:%lx order=%d\n",
                    Base::name,
                    cxx::int_value<Mapdb::Pfn>(phys) << Virt_addr::Shift,
                    cxx::int_value<Mapdb::Pfn>(cxx::mask_lsb(phys, order)),
-                   cxx::int_value<Mem_space::V_pfn>(Mem_space::to_virt(virt))
-                                                    << Virt_addr::Shift,
+                   va,
                    cxx::int_value<Mapdb::Pfn>(cxx::mask_lsb(virt, order)),
                    cxx::int_value<Mapdb::Order>(order));
           }
@@ -172,10 +174,11 @@ Test_tlb<Base>::remove(Mapdb::Pfn virt)
 
   if (0)
     {
+      unsigned long va =
+        cxx::int_value<Mem_space::V_pfn>(Mem_space::to_virt(e->virt))
+          << Virt_addr::Shift;
       printf("PT REMOVE: %s va=0x%lx pa=0x%lx order=%d\n",
-             Base::name,
-             cxx::int_value<Mem_space::V_pfn>(Mem_space::to_virt(e->virt))
-                                              << Virt_addr::Shift,
+             Base::name, va,
              cxx::int_value<Mapdb::Pfn>(e->phys) << Virt_addr::Shift,
              cxx::int_value<Mapdb::Order>(e->order));
     }
