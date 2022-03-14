@@ -629,8 +629,8 @@ Utest_fw::binary_cmp(bool finish_on_failure, bool result,
                      char const *op, Utest_fmt const &fmt,
                      char const *file, int line)
 {
-  return binary_cmp(finish_on_failure, result, lhs_str, rhs_str, lhs, rhs,
-                    op, fmt(), file, line);
+  binary_cmp(finish_on_failure, result, lhs_str, rhs_str, lhs, rhs, op, fmt(),
+             file, line);
 }
 
 PUBLIC template <typename A> inline
