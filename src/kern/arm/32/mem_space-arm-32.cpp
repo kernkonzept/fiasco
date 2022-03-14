@@ -97,7 +97,7 @@ void Mem_space::make_current()
   asm volatile (
       "mcr p15, 0, %2, c7, c5, 6    \n" // bt flush
       "mcr p15, 0, r0, c7, c10, 4   \n" // dsb
-      "mcr p15, 0, %0, c2, c0       \n" // set TTBR
+      "mcr p15, 0, %0, c2, c0       \n" // set TTBR0
       "mcr p15, 0, r0, c7, c10, 4   \n" // dsb
       "mcr p15, 0, %1, c13, c0, 1   \n" // set new ASID value
       "mcr p15, 0, r0, c7, c5, 4    \n" // isb
@@ -123,7 +123,7 @@ Mem_space::make_current()
       "dsb                          \n"
       "mcr p15, 0, %2, c13, c0, 1   \n" // change ASID to 0
       "isb                          \n"
-      "mcr p15, 0, %0, c2, c0       \n" // set TTBR
+      "mcr p15, 0, %0, c2, c0       \n" // set TTBR0
       "isb                          \n"
       "mcr p15, 0, %1, c13, c0, 1   \n" // set new ASID value
       "isb                          \n"
@@ -145,7 +145,7 @@ Mem_space::make_current()
   asm volatile (
       "mcr p15, 0, %2, c7, c5, 6    \n" // bt flush
       "isb                          \n"
-      "mcrr p15, 0, %0, %1, c2      \n" // set TTBR
+      "mcrr p15, 0, %0, %1, c2      \n" // set TTBR0
       "isb                          \n"
       "mcr p15, 0, %2, c7, c5, 6    \n" // bt flush
       "isb                          \n"
@@ -166,7 +166,7 @@ Mem_space::make_current()
   asm volatile (
       "mcr p15, 0, %2, c7, c5, 6    \n" // bt flush
       "isb                          \n"
-      "mcrr p15, 6, %0, %1, c2      \n" // set TTBR
+      "mcrr p15, 6, %0, %1, c2      \n" // set VTTBR
       "isb                          \n"
       "mcr p15, 0, %2, c7, c5, 6    \n" // bt flush
       "isb                          \n"
