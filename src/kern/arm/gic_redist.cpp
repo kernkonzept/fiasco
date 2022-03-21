@@ -43,6 +43,7 @@ public:
 IMPLEMENTATION:
 
 #include "cpu.h"
+#include "l4_types.h"
 #include "panic.h"
 #include "poll_timeout_counter.h"
 #include <cstdio>
@@ -142,7 +143,7 @@ Gic_redist::irq_prio(unsigned irq)
   return _redist.read<Unsigned8>(GICR_IPRIORITYR0 + irq);
 }
 
-PUBLIC inline
+PUBLIC inline NEEDS["l4_types.h"]
 int
 Gic_redist::set_mode(Mword pin, Irq_chip::Mode m)
 {
