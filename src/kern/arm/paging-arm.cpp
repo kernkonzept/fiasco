@@ -648,6 +648,30 @@ public:
   }
 };
 
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [arm && (arm_v5 || arm_v6)]:
+
+PUBLIC static inline
+bool
+Page::is_attribs_upgrade_safe(Page::Attr, Page::Attr)
+{
+  // No break-before-make required on ARMv5 and ARMv6, thus all attribute
+  // upgrades are considered safe.
+  return true;
+}
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [arm && arm_v7plus]:
+
+PUBLIC static inline
+bool
+Page::is_attribs_upgrade_safe(Page::Attr old_attr, Page::Attr new_attr)
+{
+  // Break-before-make sequence is necessary if memory type or Global flag
+  // are changed.
+  return old_attr.type == new_attr.type && old_attr.kern == new_attr.kern;
+}
+
 //-------------------------------------------------------------------------------------
 INTERFACE [arm && !arm_lpae]:
 

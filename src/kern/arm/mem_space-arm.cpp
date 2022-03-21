@@ -159,6 +159,24 @@ Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order size,
       if (EXPECT_FALSE(i.entry() == entry))
         return Insert_warn_exists;
 
+      // Does the attribute upgrade require a break-before-make sequence?
+      if (!Page::is_attribs_upgrade_safe(i.attribs(), page_attribs))
+        {
+          // The following is only a complete break-before-make sequence in
+          // a multi-core system if broadcast TLB flush instructions are in use,
+          // thus no IPI based TLB shootdown is necessary! This should never be
+          // a problem, because the need for a break-before-make sequence for
+          // certain attribute upgrades only exists since ARMv7, which coincides
+          // with our use of broadcast TLB flush instructions.
+          assert(!Need_xcpu_tlb_flush);
+
+          // Replace the old entry with an invalid entry.
+          i.clear();
+          // Ensure the invalid entry is visible to all CPUs.
+          i.write_back_if(flush, c_asid());
+          // Now we can safely write the new entry.
+        }
+
       i.set_page(entry);
       i.write_back_if(flush, c_asid());
       return Insert_warn_attrib_upgrade;
