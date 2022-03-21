@@ -930,7 +930,7 @@ public:
     Cache_mask    = 0x03c,
     NONCACHEABLE  = 0x000, ///< Caching is off
     CACHEABLE     = 0x03c, ///< Cache is enabled
-    BUFFERED      = 0x004, ///< Write buffer enabled -- Normal, non-cached
+    BUFFERED      = 0x014, ///< Write buffer enabled -- Normal, non-cached
   };
 };
 
