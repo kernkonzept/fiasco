@@ -156,6 +156,9 @@ public:
 
   S_list_tail &operator = (S_list_tail &&t)
   {
+    if (&t == this)
+      return *this;
+
     Base::operator = (static_cast<Base &&>(t));
     _tail = t.empty() ? &this->_f : t._tail;
     t._tail = &t._f;
