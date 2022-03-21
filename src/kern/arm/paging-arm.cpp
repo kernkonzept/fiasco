@@ -919,7 +919,6 @@ public:
 //-----------------------------------------------------------------------------
 INTERFACE [arm && arm_lpae && cpu_virt]:
 
-#include "ptab_base.h"
 #include "types.h"
 
 EXTENSION class Page
