@@ -15,6 +15,7 @@ INTERFACE:
 #include "kip.h"
 #include "kmem_slab.h"
 #include "l4_error.h"
+#include "per_cpu_data.h"
 #include "processor.h"
 #include "reset.h"
 #include "timer.h"
@@ -93,8 +94,8 @@ struct Utest
     static void wait_us(Unsigned64 us);
     static Unsigned64 timestamp();
 
-    static Unsigned32 count_prev;
-    static Unsigned64 count_epoch;
+    static Per_cpu<Unsigned32> count_prev;
+    static Per_cpu<Unsigned64> count_epoch;
   };
 };
 
@@ -308,8 +309,8 @@ Utest_fw::External_info Utest_fw::ext_info;
  * on platforms that only provide 32bit timestamps
  * in hardware.
  */
-Unsigned32 Utest::Tick_disabler::count_prev;
-Unsigned64 Utest::Tick_disabler::count_epoch;
+DEFINE_PER_CPU Per_cpu<Unsigned32> Utest::Tick_disabler::count_prev;
+DEFINE_PER_CPU Per_cpu<Unsigned64> Utest::Tick_disabler::count_epoch;
 
 /**
  * Parse the KIP feature prefixed with utest_opts containing external
@@ -1279,14 +1280,15 @@ Utest::Tick_disabler::timestamp()
    * this method is always called in a tight busy loop and therefore
    * the potentially missed wraparound events are not a real problem.
    */
-  if (count_prev > count)
-    count_epoch += (static_cast<Unsigned32>(~0UL)) - count_prev;
+  if (count_prev.current() > count)
+    count_epoch.current() += static_cast<Unsigned32>(~0UL);
 
-  count_prev = count;
+  count_prev.current() = count;
 
   Unsigned64 freq = Cpu::frequency() / 2;
 
-  return ((count_epoch + static_cast<Unsigned64>(count)) * 1000000UL) / freq;
+  return ((count_epoch.current() + static_cast<Unsigned64>(count)) * 1000000UL)
+         / freq;
 }
 
 IMPLEMENTATION[arm && arm_generic_timer]:
