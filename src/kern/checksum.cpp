@@ -1,9 +1,8 @@
 INTERFACE:
 
-class Checksum 
+class Checksum
 {
 };
-
 
 IMPLEMENTATION:
 
@@ -11,12 +10,12 @@ IMPLEMENTATION:
 #include "boot_info.h"
 
 // calculate simple checksum over kernel text section and read-only data
-PUBLIC static 
+PUBLIC static
 unsigned Checksum::get_checksum_ro()
 {
   unsigned *p, sum = 0;
 
-  for (p = (unsigned*)&Mem_layout::start; 
+  for (p = (unsigned*)&Mem_layout::start;
        p < (unsigned*)&Mem_layout::etext; sum += *p++)
     ;
 
@@ -27,7 +26,6 @@ PUBLIC static
 bool
 Checksum::check_ro()
 { return Boot_info::get_checksum_ro() == get_checksum_ro(); }
-
 
 // calculate simple checksum over kernel data section
 PUBLIC static
@@ -41,4 +39,3 @@ unsigned Checksum::get_checksum_rw()
 
   return sum;
 }
-
