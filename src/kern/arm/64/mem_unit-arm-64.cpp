@@ -4,7 +4,7 @@ IMPLEMENT inline
 void Mem_unit::tlb_flush()
 {
   Mem::dsbst();
-  asm volatile("tlbi vmalle1" : : : "memory");
+  asm volatile("tlbi vmalle1is" : : : "memory");
   Mem::dsb();
 }
 
@@ -12,7 +12,7 @@ IMPLEMENT inline
 void Mem_unit::tlb_flush(unsigned long asid)
 {
   Mem::dsbst();
-  asm volatile("tlbi aside1, %0" // TLBIASID
+  asm volatile("tlbi aside1is, %0"
                : : "r" (asid << 48) : "memory");
   Mem::dsb();
 }
@@ -24,7 +24,7 @@ void Mem_unit::tlb_flush(void *va, unsigned long asid)
     return;
 
   Mem::dsbst();
-  asm volatile("tlbi vae1, %0"
+  asm volatile("tlbi vae1is, %0"
                : : "r" (((unsigned long)va >> 12)
                         | (asid << 48)) : "memory");
   Mem::dsb();
@@ -38,7 +38,7 @@ IMPLEMENT inline
 void Mem_unit::kernel_tlb_flush(void *va)
 {
   Mem::dsbst();
-  asm volatile("tlbi vaae1, %0"
+  asm volatile("tlbi vaae1is, %0"
                : : "r" ((((unsigned long)va) >> 12) & 0x00000ffffffffffful)
                : "memory");
   Mem::dsb();
@@ -51,7 +51,7 @@ IMPLEMENT inline
 void Mem_unit::tlb_flush()
 {
   Mem::dsbst();
-  asm volatile("tlbi alle1" : : : "memory");
+  asm volatile("tlbi alle1is" : : : "memory");
   Mem::dsb();
 }
 
@@ -66,7 +66,7 @@ void Mem_unit::tlb_flush(unsigned long asid)
       "msr vttbr_el2, %[asid] \n"
       "isb                    \n"
       "dsb ishst              \n"
-      "tlbi vmalls12e1        \n"
+      "tlbi vmalls12e1is      \n"
       "dsb ish                \n"
       "msr vttbr_el2, %[vttbr]\n"
       :
@@ -91,9 +91,9 @@ void Mem_unit::tlb_flush(void *va, unsigned long asid)
       "msr vttbr_el2, %[asid] \n"
       "isb                    \n"
       "dsb ishst              \n"
-      "tlbi ipas2e1, %[ipa]   \n"
+      "tlbi ipas2e1is, %[ipa] \n"
       "dsb ish                \n"
-      "tlbi vmalle1           \n"
+      "tlbi vmalle1is         \n"
       "dsb ish                \n"
       "msr vttbr_el2, %[vttbr]\n"
       :
@@ -109,7 +109,7 @@ IMPLEMENT inline
 void Mem_unit::kernel_tlb_flush()
 {
   Mem::dsbst();
-  asm volatile("tlbi alle2" : : : "memory");
+  asm volatile("tlbi alle2is" : : : "memory");
   Mem::dsb();
 }
 
@@ -117,7 +117,7 @@ IMPLEMENT inline
 void Mem_unit::kernel_tlb_flush(void *va)
 {
   Mem::dsbst();
-  asm volatile("tlbi vae2, %0"
+  asm volatile("tlbi vae2is, %0"
                : : "r" ((((unsigned long)va) >> 12) & 0x00000ffffffffffful)
                : "memory");
   Mem::dsb();
