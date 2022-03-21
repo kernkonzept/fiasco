@@ -2,7 +2,7 @@ IMPLEMENTATION [(ia32 || amd64) && no_ldt]:
 
 PRIVATE inline
 bool
-Task::invoke_arch(L4_msg_tag, Utcb *)
+Task::invoke_arch(L4_msg_tag &, Utcb *)
 { return false; }
 
 
