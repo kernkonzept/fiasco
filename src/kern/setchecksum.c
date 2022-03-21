@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
     }
 
   fd = open(argv[1], O_RDWR | O_EXCL);
-  if (fd<0)
+  if (fd < 0)
     {
       fprintf(stderr, "error opening kernel image: '%s': ", argv[1]);
       perror("");
@@ -44,14 +44,14 @@ int main(int argc, char *argv[])
 
   if (fstat(fd, &stats) < 0)
     {
-      perror("error: can't stat kernel image: ");
+      perror("error: can't stat kernel image");
       exit(1);
     }
 
   image = mmap(NULL, stats.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   if (image == MAP_FAILED)
     {
-      perror("error: can't mmap kernel image: ");
+      perror("error: can't mmap kernel image");
       exit(1);
     }
 
@@ -81,10 +81,9 @@ int main(int argc, char *argv[])
 
   if (munmap(image, stats.st_size) < 0)
     {
-      perror("error: can't unmap kernel image: ");
+      perror("error: can't unmap kernel image");
       exit(1);
     }
-  
 
   if (close(fd) < 0)
     {
