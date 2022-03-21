@@ -11,18 +11,18 @@ void Mem_unit::tlb_flush()
 }
 
 IMPLEMENT inline
+void Mem_unit::tlb_flush(unsigned long)
+{
+  tlb_flush();
+}
+
+IMPLEMENT inline
 void Mem_unit::tlb_flush(void *va, unsigned long)
 {
   Mem::dsb();
   asm volatile("mcr p15, 0, %0, c8, c7, 1" // TLBIMVA
                : : "r" ((unsigned long)va & 0xfffff000) : "memory");
   Mem::dsb();
-}
-
-IMPLEMENT inline
-void Mem_unit::tlb_flush(unsigned long)
-{
-  tlb_flush();
 }
 
 IMPLEMENT inline
@@ -51,6 +51,16 @@ void Mem_unit::tlb_flush()
 }
 
 IMPLEMENT inline
+void Mem_unit::tlb_flush(unsigned long asid)
+{
+  btc_flush();
+  Mem::dsbst();
+  asm volatile("mcr p15, 0, %0, c8, c7, 2" // TLBIASID
+               : : "r" (asid) : "memory");
+  Mem::dsb();
+}
+
+IMPLEMENT inline
 void Mem_unit::tlb_flush(void *va, unsigned long asid)
 {
   if (asid == Asid_invalid)
@@ -59,16 +69,6 @@ void Mem_unit::tlb_flush(void *va, unsigned long asid)
   Mem::dsbst();
   asm volatile("mcr p15, 0, %0, c8, c7, 1" // TLBIMVA
                : : "r" (((unsigned long)va & 0xfffff000) | asid) : "memory");
-  Mem::dsb();
-}
-
-IMPLEMENT inline
-void Mem_unit::tlb_flush(unsigned long asid)
-{
-  btc_flush();
-  Mem::dsbst();
-  asm volatile("mcr p15, 0, %0, c8, c7, 2" // TLBIASID
-               : : "r" (asid) : "memory");
   Mem::dsb();
 }
 
@@ -113,12 +113,21 @@ void Mem_unit::tlb_flush()
 }
 
 IMPLEMENT inline
-void Mem_unit::kernel_tlb_flush(void *va)
+void Mem_unit::tlb_flush(unsigned long asid)
 {
-  Mem::dsbst();
-  asm volatile("mcr p15, 4, %0, c8, c7, 1" // TLBIMVAH
-               : : "r" ((unsigned long)va & 0xfffff000) : "memory");
-  Mem::dsb();
+  btc_flush();
+  Mword t1, t2;
+  asm volatile(
+      "mrrc p15, 6, %[tmp1], %[tmp2], c2 \n" // save VTTBR
+      "mcrr p15, 6, %[tmp1], %[asid], c2 \n" // write VMID to VTTBR
+      "isb \n"
+      "dsb ishst \n"
+      "mcr  p15, 0, %[tmp1], c8, c7, 0 \n" // TLBIALL
+      "dsb ish \n"
+      "mcrr p15, 6, %[tmp1], %[tmp2], c2 \n" // restore VTTBR
+      : [tmp1] "=&r" (t1), [tmp2] "=&r" (t2)
+      : [asid] "r" (asid << 16)
+      : "memory");
 }
 
 IMPLEMENT inline
@@ -142,28 +151,19 @@ void Mem_unit::tlb_flush(void *va, unsigned long asid)
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush(unsigned long asid)
-{
-  btc_flush();
-  Mword t1, t2;
-  asm volatile(
-      "mrrc p15, 6, %[tmp1], %[tmp2], c2 \n" // save VTTBR
-      "mcrr p15, 6, %[tmp1], %[asid], c2 \n" // write VMID to VTTBR
-      "isb \n"
-      "dsb ishst \n"
-      "mcr  p15, 0, %[tmp1], c8, c7, 0 \n" // TLBIALL
-      "dsb ish \n"
-      "mcrr p15, 6, %[tmp1], %[tmp2], c2 \n" // restore VTTBR
-      : [tmp1] "=&r" (t1), [tmp2] "=&r" (t2)
-      : [asid] "r" (asid << 16)
-      : "memory");
-}
-
-IMPLEMENT inline
 void Mem_unit::kernel_tlb_flush()
 {
   Mem::dsbst();
   asm volatile("mcr p15, 4, r0, c8, c7, 0" : : : "memory"); // TLBIALLH
+  Mem::dsb();
+}
+
+IMPLEMENT inline
+void Mem_unit::kernel_tlb_flush(void *va)
+{
+  Mem::dsbst();
+  asm volatile("mcr p15, 4, %0, c8, c7, 1" // TLBIMVAH
+               : : "r" ((unsigned long)va & 0xfffff000) : "memory");
   Mem::dsb();
 }
 

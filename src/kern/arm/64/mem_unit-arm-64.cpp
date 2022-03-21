@@ -9,12 +9,11 @@ void Mem_unit::tlb_flush()
 }
 
 IMPLEMENT inline
-void Mem_unit::kernel_tlb_flush(void *va)
+void Mem_unit::tlb_flush(unsigned long asid)
 {
   Mem::dsbst();
-  asm volatile("tlbi vaae1, %0"
-               : : "r" ((((unsigned long)va) >> 12) & 0x00000ffffffffffful)
-               : "memory");
+  asm volatile("tlbi aside1, %0" // TLBIASID
+               : : "r" (asid << 48) : "memory");
   Mem::dsb();
 }
 
@@ -32,28 +31,21 @@ void Mem_unit::tlb_flush(void *va, unsigned long asid)
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush(unsigned long asid)
-{
-  Mem::dsbst();
-  asm volatile("tlbi aside1, %0" // TLBIASID
-               : : "r" (asid << 48) : "memory");
-  Mem::dsb();
-}
-
-IMPLEMENT inline
 void Mem_unit::kernel_tlb_flush()
 { tlb_flush(); }
 
-//---------------------------------------------------------------------------
-IMPLEMENTATION [arm && cpu_virt]:
-
 IMPLEMENT inline
-void Mem_unit::kernel_tlb_flush()
+void Mem_unit::kernel_tlb_flush(void *va)
 {
   Mem::dsbst();
-  asm volatile("tlbi alle2" : : : "memory");
+  asm volatile("tlbi vaae1, %0"
+               : : "r" ((((unsigned long)va) >> 12) & 0x00000ffffffffffful)
+               : "memory");
   Mem::dsb();
 }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && cpu_virt]:
 
 IMPLEMENT inline
 void Mem_unit::tlb_flush()
@@ -64,15 +56,26 @@ void Mem_unit::tlb_flush()
 }
 
 IMPLEMENT inline
-void Mem_unit::kernel_tlb_flush(void *va)
+void Mem_unit::tlb_flush(unsigned long asid)
 {
-  Mem::dsbst();
-  asm volatile("tlbi vae2, %0"
-               : : "r" ((((unsigned long)va) >> 12) & 0x00000ffffffffffful)
-               : "memory");
-  Mem::dsb();
+  Mword vttbr;
+  // FIXME: could do a compare for the current VMID before loading
+  // the vttbr and the isb
+  asm volatile(
+      "mrs %[vttbr], vttbr_el2\n"
+      "msr vttbr_el2, %[asid] \n"
+      "isb                    \n"
+      "dsb ishst              \n"
+      "tlbi vmalls12e1        \n"
+      "dsb ish                \n"
+      "msr vttbr_el2, %[vttbr]\n"
+      :
+      [vttbr] "=&r" (vttbr)
+      :
+      [asid] "r" (asid << 48)
+      :
+      "memory");
 }
-
 
 IMPLEMENT inline
 void Mem_unit::tlb_flush(void *va, unsigned long asid)
@@ -103,25 +106,21 @@ void Mem_unit::tlb_flush(void *va, unsigned long asid)
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush(unsigned long asid)
+void Mem_unit::kernel_tlb_flush()
 {
-  Mword vttbr;
-  // FIXME: could do a compare for the current VMID before loading
-  // the vttbr and the isb
-  asm volatile(
-      "mrs %[vttbr], vttbr_el2\n"
-      "msr vttbr_el2, %[asid] \n"
-      "isb                    \n"
-      "dsb ishst              \n"
-      "tlbi vmalls12e1        \n"
-      "dsb ish                \n"
-      "msr vttbr_el2, %[vttbr]\n"
-      :
-      [vttbr] "=&r" (vttbr)
-      :
-      [asid] "r" (asid << 48)
-      :
-      "memory");
+  Mem::dsbst();
+  asm volatile("tlbi alle2" : : : "memory");
+  Mem::dsb();
+}
+
+IMPLEMENT inline
+void Mem_unit::kernel_tlb_flush(void *va)
+{
+  Mem::dsbst();
+  asm volatile("tlbi vae2, %0"
+               : : "r" ((((unsigned long)va) >> 12) & 0x00000ffffffffffful)
+               : "memory");
+  Mem::dsb();
 }
 
 //---------------------------------------------------------------------------
