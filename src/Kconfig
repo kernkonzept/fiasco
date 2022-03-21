@@ -44,6 +44,7 @@ config IA32
 	select HAS_JDB_DISASM_OPTION
 	select HAS_JDB_GZIP_OPTION
 	select FPU
+	select HAS_FPU_OPTION
 	select HAS_LAZY_FPU
 
 config AMD64
@@ -53,6 +54,7 @@ config AMD64
 	select HAS_JDB_GZIP_OPTION
 	select BIT64
 	select FPU
+	select HAS_FPU_OPTION
 	select HAS_LAZY_FPU
 
 #  ARCH_CHOICE
