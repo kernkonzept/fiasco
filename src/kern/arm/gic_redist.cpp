@@ -1,5 +1,6 @@
 INTERFACE:
 
+#include "irq_chip.h"
 #include "mmio_register_block.h"
 
 class Gic_redist
@@ -25,6 +26,7 @@ public:
     GICR_ISACTIVER0   = GICR_SGI_BASE + 0x0300,
     GICR_ICACTIVER0   = GICR_SGI_BASE + 0x0380,
     GICR_IPRIORITYR0  = GICR_SGI_BASE + 0x0400,
+    GICR_ICFGR0       = GICR_SGI_BASE + 0x0c00,
 
     GICR_frame_size   = 0x10000,
 
@@ -140,3 +142,28 @@ Gic_redist::irq_prio(unsigned irq)
   return _redist.read<Unsigned8>(GICR_IPRIORITYR0 + irq);
 }
 
+PUBLIC inline
+int
+Gic_redist::set_mode(Mword pin, Irq_chip::Mode m)
+{
+  if (!m.set_mode())
+    return 0;
+
+  unsigned v = 0;
+  switch (m.flow_type())
+    {
+    case Irq_chip::Mode::Trigger_level | Irq_chip::Mode::Polarity_high:
+      break;
+    case Irq_chip::Mode::Trigger_edge  | Irq_chip::Mode::Polarity_high:
+      v = 2;
+      break;
+    default:
+      return -L4_err::EInval;
+    };
+
+  unsigned shift = (pin & 15) * 2;
+
+  _redist.modify<Unsigned32>(v << shift, 3 << shift, GICR_ICFGR0 + (pin >> 4) * 4);
+
+  return 0;
+}

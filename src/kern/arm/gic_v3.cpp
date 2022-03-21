@@ -95,6 +95,14 @@ Gic_v3::unmask_percpu(Cpu_number cpu, Mword pin) override
   _redist.cpu(cpu).unmask(pin);
 }
 
+PUBLIC
+int
+Gic_v3::set_mode_percpu(Cpu_number cpu, Mword pin, Mode m) override
+{
+  assert(pin < 32);
+  assert (cpu_lock.test());
+  return _redist.cpu(cpu).set_mode(pin, m);
+}
 
 //-------------------------------------------------------------------
 IMPLEMENTATION [debug]:

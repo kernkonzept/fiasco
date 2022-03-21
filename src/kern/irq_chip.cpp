@@ -72,6 +72,8 @@ public:
    * Set the trigger mode and polarity.
    */
   virtual int set_mode(Mword pin, Mode) = 0;
+  virtual int set_mode_percpu(Cpu_number, Mword pin, Mode m)
+  { return set_mode(pin, m); }
   virtual bool is_edge_triggered(Mword pin) const = 0;
 
   /**

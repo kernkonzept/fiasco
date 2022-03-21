@@ -24,7 +24,8 @@ Timer_tick::setup(Cpu_number cpu)
   if (!allocate_irq(_glbl_timer, Timer::irq()))
     panic("Could not allocate scheduling IRQ %d\n", Timer::irq());
 
-  _glbl_timer->chip()->set_mode(_glbl_timer->pin(), Timer::irq_mode());
+  _glbl_timer->chip()->set_mode_percpu(cpu, _glbl_timer->pin(),
+                                       Timer::irq_mode());
 }
 
 IMPLEMENT
