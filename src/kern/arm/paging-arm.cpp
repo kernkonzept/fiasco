@@ -667,7 +667,18 @@ public:
   enum
   {
     Ttbcr_bits      = 0,
+    /**
+     * Primary Region Remap (PRRR)
+     * TR0, NOS0: Device-nGnRnE memory, Inner Shareable
+     * TR1, NOS1: Normal memory, Inner Shareable
+     * TR2, NOS2: Normal memory, Inner Shareable
+     */
     Mair0_prrr_bits = 0xff0a0028,
+    /**
+     * Normal Memory Remap (NMRR)
+     * IR1/OR1: Inner/Outer Non-cacheable
+     * IR2/OR2: Inner/Outer Write-Back Write-Allocate Cacheable
+     */
     Mair1_nmrr_bits = 0x00100010,
   };
 };
@@ -720,6 +731,12 @@ public:
                  | (1UL << 2)  // ORGN0
                  | (1UL << 0), // IRGN0
 
+    /**
+     * Memory Attribute Indirection (MAIR0)
+     * Attr0: Device-nGnRnE memory
+     * Attr1: Normal memory, Inner/Outer Non-cacheable
+     * Attr2: Normal memory, RW, Inner/Outer Write-Back Cacheable (Non-transient)
+     */
     Mair0_prrr_bits = 0x00ff4400,
     Mair1_nmrr_bits = 0,
   };
