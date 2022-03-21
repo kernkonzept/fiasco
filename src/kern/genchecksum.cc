@@ -3,14 +3,13 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <cstring>
+#include <stdlib.h>
 
 static char buffer[128];
 static int  buf_idx;
 static int  buf_chars;
 
 static char const *hexchars = "0123456789abcdef";
-
-extern "C" void exit(int status);
 
 int
 fill_buffer(int fd)
@@ -40,12 +39,12 @@ skip_line(int fd)
   for (;;)
     {
       char c;
-      
+
       if (! this_char(fd, &c))
 	return 0;
 
       buf_idx++;
-      
+
       if (c == '\n')
 	return 1;
     }
@@ -57,14 +56,14 @@ skip_to_hex(int fd)
   for (;;)
     {
       char c;
-  
-      if (! this_char(fd, &c))
+
+      if (!this_char(fd, &c))
 	return 0;
 
       if (strchr(hexchars, c))
 	return 1;
 
-      if (! skip_line(fd))
+      if (!skip_line(fd))
 	return 0;
     }
 }
@@ -76,7 +75,7 @@ skip_preamble(int fd)
     {
       char c;
 
-      if (! this_char(fd, &c))
+      if (!this_char(fd, &c))
 	return 0;
 
       if (!strchr(hexchars, c))
@@ -96,21 +95,21 @@ read_byte(int fd, unsigned *byte)
 {
   unsigned hex = 0;
   int i;
-  
-  for (i=0; i<2; i++)
+
+  for (i = 0; i < 2; i++)
     {
       char c;
       const char *idx;
-      
-      if (! this_char(fd, &c))
+
+      if (!this_char(fd, &c))
 	return 0;
 
       if (!(idx = strchr(hexchars, c)))
 	exit(-1);
-      
+
       hex *= 16;
       hex += (idx-hexchars);
-      
+
       buf_idx++;
     }
 
@@ -125,17 +124,17 @@ read_dword(int fd, unsigned *dword)
   unsigned hex = 0;
   unsigned factor = 1;
   int i;
-  
-  if (! skip_to_hex(fd))
+
+  if (!skip_to_hex(fd))
     return 0;
-  
-  for (i=0, factor=1; i<4; i++, factor*=256)
+
+  for (i = 0, factor = 1; i < 4; i++, factor *= 256)
     {
       unsigned byte;
-      
-      if (! read_byte(fd, &byte))
+
+      if (!read_byte(fd, &byte))
 	return 0;
-      
+
       hex += byte * factor;
     }
 
@@ -165,4 +164,3 @@ main(int argc, char **argv)
 
   return 0;
 }
-
