@@ -27,6 +27,7 @@ void
 Context::copy_and_sanitize_trap_state(Trap_state *dst,
                                       Trap_state const *src) const
 {
+  // copy pf_addresss, esr, r0..r12, usp, ulr, km_lr
   Mem::memcpy_mwords(dst, src, 18);
   dst->pc = src->pc;
   dst->psr = access_once(&src->psr);

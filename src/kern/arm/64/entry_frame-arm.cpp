@@ -119,6 +119,7 @@ PUBLIC inline NEEDS["processor.h", "mem.h"]
 void
 Entry_frame::copy_and_sanitize(Entry_frame const *src)
 {
+  // omit eret_work, ksp, esr, pf_address
   Mem::memcpy_mwords(&r[0], &src->r[0], 31);
   usp = src->usp;
   pc  = src->pc;

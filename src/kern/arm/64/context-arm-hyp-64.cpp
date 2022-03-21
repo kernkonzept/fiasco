@@ -20,6 +20,7 @@ void
 Context::copy_and_sanitize_trap_state(Trap_state *dst,
                                       Trap_state const *src) const
 {
+  // omit eret_work, ksp, esr, pf_address
   Mem::memcpy_mwords(&dst->r[0], &src->r[0], 31);
   dst->usp = src->usp;
   dst->pc = src->pc;

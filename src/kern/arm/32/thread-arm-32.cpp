@@ -82,7 +82,7 @@ Thread::copy_utcb_to_ts(L4_msg_tag tag, Thread *snd, Thread *rcv,
 
   if (EXPECT_FALSE(rcv->exception_triggered()))
     {
-      // triggered exception pending
+      // triggered exception pending -- copy pf_address, esr, r0..r12
       Mem::memcpy_mwords(ts, snd_utcb->values, 15);
       Return_frame rf = access_once(static_cast<Return_frame const *>(&sregs->s));
       rcv->sanitize_user_state(&rf);
@@ -122,6 +122,7 @@ Thread::copy_ts_to_utcb(L4_msg_tag, Thread *snd, Thread *rcv,
 
     snd->store_tpidruro(rregs);
 
+    // copy pf_address, esr, r0..r12
     Mem::memcpy_mwords(rcv_utcb->values, ts, 15);
     Continuation::User_return_frame *d
       = reinterpret_cast<Continuation::User_return_frame *>((char*)&rcv_utcb->values[15]);

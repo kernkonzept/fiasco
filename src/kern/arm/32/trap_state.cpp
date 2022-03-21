@@ -49,9 +49,8 @@ PUBLIC inline NEEDS["processor.h", "mem.h"]
 void
 Trap_state::copy_and_sanitize(Trap_state const *src)
 {
-  // copy up to and including ulr
+  // copy pf_address, esr, r0..r12, usp, ulr / omit km_lr
   Mem::memcpy_mwords(this, src, 17);
-  // skip km_lr
   pc = src->pc;
   psr = access_once(&src->psr);
   psr &= ~(Proc::Status_mode_mask | Proc::Status_interrupts_mask);
