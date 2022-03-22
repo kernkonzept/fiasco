@@ -89,7 +89,11 @@ Thread::arm_fast_exit(void *sp, void *pc, void *arg)
   register void *r0 asm("r0") = arg;
   asm volatile
     ("  mov sp, %[stack_p]    \n"    // set stack pointer to regs structure
+#ifdef __thumb__
+     "  bx      %[rfe]        \n"
+#else
      "  mov pc, %[rfe]        \n"
+#endif
      : :
      [stack_p] "r" (sp),
      [rfe]     "r" (pc),

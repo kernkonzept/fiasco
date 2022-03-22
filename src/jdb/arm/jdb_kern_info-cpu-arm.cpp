@@ -26,7 +26,11 @@ asm (
   ".section \".text.jdb\"                     \t\n"
   ".global jdb_mrc_insn                       \t\n"
   "jdb_mrc_insn:   mrc p0, 0, r0, c0, c0, 0   \t\n"
+#ifdef __thumb__
+  "                bx lr                      \t\n"
+#else
   "                mov pc, lr                 \t\n"
+#endif
   ".previous                                  \t\n");
 
 PRIVATE

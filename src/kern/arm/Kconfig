@@ -446,3 +446,9 @@ config KMEM_SIZE
 	help
 	  Size of the kernel heap. This memory is reserved for internal data
 	  structures and kernel-user memory allocations.
+
+# SECTION: COMPILING
+
+config THUMB2
+	bool "Compile to Thumb-2 object code"
+	depends on ARM && ARM_V7PLUS && !BIT64

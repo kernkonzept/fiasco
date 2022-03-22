@@ -704,9 +704,14 @@ Cpu::tz_switch_to_ns(Mword *nonsecure_state)
                "mov    r2, sp     \n" // copy sp_svc to sp_mon
                "cps    #0x16      \n" // switch to monitor mode
                "mov    sp, r2     \n"
-               "adr    r3, 1f     \n" // save return eip
                "mrs    r4, cpsr   \n" // save return psr
+#ifdef __thumb__
+               "adr    r3, (1f + 1)\n" // save return eip
+               "bx     r1         \n" // go nonsecure!
+#else
+               "adr    r3, 1f     \n" // save return eip
                "mov    pc, r1     \n" // go nonsecure!
+#endif
                "1:                \n"
                "mov    r0, sp     \n" // copy sp_mon to sp_svc
                "cps    #0x13      \n" // switch to svc mode

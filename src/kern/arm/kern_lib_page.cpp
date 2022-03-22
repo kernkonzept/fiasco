@@ -40,6 +40,7 @@ IMPLEMENTATION [arm && !arm_v6plus]:
 
 asm (
     ".p2align 12                         \n"
+    ".arm                                \n"
     "kern_lib_start:                     \n"
 
     // atomic add
@@ -91,6 +92,7 @@ IMPLEMENTATION [arm && arm_v6plus]:
 
 asm (
     ".p2align 12                         \n"
+    ".arm                                \n"
     ".global kern_lib_start              \n" // need this for mem_space.cpp
     "kern_lib_start:                     \n"
 

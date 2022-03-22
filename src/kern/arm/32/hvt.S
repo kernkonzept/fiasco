@@ -133,6 +133,7 @@ hyp_trap_entry:
 	ldr	pc, 1f
 	add	sp, sp, #8
 .global fast_ret_from_irq
+.type fast_ret_from_irq, function
 fast_ret_from_irq:
 	ldmia	sp, {r0 - r12}		@ Restore user state
 	disable_irqs
@@ -142,6 +143,7 @@ GEN_IRET
 
 # r0 = registers, r1 = temp stack
 .global	vcpu_resume
+.type vcpu_resume,function
 vcpu_resume:
 #ifdef CONFIG_MPU
 	stmdb	sp!, {r0 - r3}

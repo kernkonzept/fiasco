@@ -30,7 +30,7 @@ SHARED_FLAGS-$(CONFIG_ARM_CORTEX_R82) += $(call CHECKCC,-mcpu=cortex-r82,-march=
 SHARED_FLAGS-$(CONFIG_BIT32)      += -Wno-psabi
 SHARED_FLAGS-$(CONFIG_BIT32)      += -mfloat-abi=soft
 SHARED_FLAGS-$(CONFIG_BIT32)      += $(call CHECKCC,-mno-thumb-interwork)
-SHARED_FLAGS-$(CONFIG_BIT32)      += -marm -mabi=aapcs
+SHARED_FLAGS-$(CONFIG_BIT32)      += $(if $(CONFIG_THUMB2),-mthumb -Xassembler -mimplicit-it=always,-marm) -mabi=aapcs
 SHARED_FLAGS-$(CONFIG_BIT64)      += -mgeneral-regs-only
 SHARED_FLAGS-clang                += $(if $(CONFIG_BIT32),-no-integrated-as,)
 LDFLAGS-$(CONFIG_BIT32)           += --no-warn-mismatch
