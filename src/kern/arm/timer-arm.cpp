@@ -201,10 +201,19 @@ Timer::timer_value_to_time(Unsigned64 v, Mword scaler, Mword shift)
        "adc     %2, %5, #0              \n\t"
        "mov     %3, #32                 \n\t"
        "sub     %3, %3, %[shift]        \n\t"
+#ifdef __thumb__
+       "lsl     %4, %1, %[shift]        \n\t"
+       "lsl     %5, %2, %[shift]        \n\t"
+       "lsr     %0, %0, %3              \n\t"
+       "orr     %0, %0, %4              \n\t"
+       "lsr     %1, %1, %3              \n\t"
+       "orr     %1, %1, %5              \n\t"
+#else
        "lsr     %0, %0, %3              \n\t"
        "orr     %0, %0, %1, LSL %[shift]\n\t"
        "lsr     %1, %1, %3              \n\t"
        "orr     %1, %1, %2, LSL %[shift]\n\t"
+#endif
        : "+r"(lo), "+r"(hi),
          "=&r"(dummy1), "=&r"(dummy2), "=&r"(dummy3), "=&r"(dummy4)
        : [scaler]"r"(scaler), [shift]"r"(shift)

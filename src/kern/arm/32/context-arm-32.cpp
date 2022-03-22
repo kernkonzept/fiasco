@@ -37,7 +37,11 @@ Context::arm_switch_gp_regs(Context *t)
   asm volatile
     (// save context of old thread
      "   stmdb sp!, {fp}          \n"
+#ifdef __thumb__
+     "   adr   lr, (1f + 1)       \n" // make sure to return to thumb mode
+#else
      "   adr   lr, 1f             \n"
+#endif
      "   str   lr, [sp, #-4]!     \n"
      "   str   sp, [%[old_sp]]    \n"
 
@@ -81,7 +85,7 @@ Context::is_kernel_mem_op_hit_and_clear()
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !cpu_virt]:
+IMPLEMENTATION [arm && !cpu_virt && !thumb2]:
 
 IMPLEMENT inline
 void
@@ -103,6 +107,33 @@ Context::spill_user_state()
   asm volatile ("stmia %[rf], {sp, lr}^"
       : "=m"(ef->usp), "=m"(ef->ulr) : [rf] "r" (&ef->usp));
 }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && !cpu_virt && thumb2]:
+
+IMPLEMENT inline
+void
+Context::fill_user_state()
+{
+  Entry_frame const *ef = regs();
+  asm volatile ("msr SP_usr, %0 \n"
+                "msr LR_usr, %1 \n"
+      : : "r"(ef->usp), "r"(ef->ulr));
+}
+
+IMPLEMENT inline
+void
+Context::spill_user_state()
+{
+  Entry_frame *ef = regs();
+  assert (current() == this);
+  asm volatile ("mrs %0 ,SP_usr \n"
+                "mrs %1 ,LR_usr \n"
+      : "=r"(ef->usp), "=r"(ef->ulr));
+}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && !cpu_virt]:
 
 PROTECTED inline
 void

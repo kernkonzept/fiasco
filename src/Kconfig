@@ -787,6 +787,8 @@ config LABEL
 	  Text string with a name for this configuration. To be displayed in
 	  the kernel boot-up.
 
+# PF_SECTION: COMPILING
+
 endmenu
 
 config EXPERIMENTAL

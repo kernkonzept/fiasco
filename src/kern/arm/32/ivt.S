@@ -207,6 +207,7 @@
 	adr	lr, 2f
 1:	ldr	pc, [r0, +r5, LSL #2]
 .global fast_ret_from_irq
+.type fast_ret_from_irq, #function
 fast_ret_from_irq:
 2:      ldmia	sp, {r0 - r12}
 	disable_irqs
@@ -1014,6 +1015,7 @@ go_nonsecure:
 
 .text
 	.global	vcpu_resume
+	.type vcpu_resume, #function
 vcpu_resume:
 	add	sp, r1, #RF_SIZE
 	add	lr, r0, #8			@ pfa, err

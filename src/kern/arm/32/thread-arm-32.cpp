@@ -60,7 +60,7 @@ Thread::arm_fast_exit(void *sp, void *pc, void *arg)
   register void *r0 asm("r0") = arg;
   asm volatile
     ("  mov sp, %[stack_p]    \n"    // set stack pointer to regs structure
-     "  mov pc, %[rfe]        \n"
+     "  bx      %[rfe]        \n"
      : :
      [stack_p] "r" (sp),
      [rfe]     "r" (pc),
@@ -496,7 +496,13 @@ T Thread::peek_user(T const *adr, Context *c)
 {
   T v;
   c->set_ignore_mem_op_in_progress(true);
-  v = *adr;
+  // Must always be a 4 byte instruction because check_and_handle_mem_op_fault()
+  // relies on this. Unfortunaltely the ".w" suffix is not valid in ARM mode.
+  asm volatile("ldr"
+#ifdef __thumb__
+                   ".w"
+#endif
+                      " %0, [%1]" : "=r"(v) : "r"(adr)); // v = *adr;
   c->set_ignore_mem_op_in_progress(false);
   return v;
 }

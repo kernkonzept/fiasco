@@ -442,3 +442,9 @@ config ARM_1176_CACHE_ALIAS_FIX
 config ARM_CPU_ERRATA
 	bool "Enable CPU errata workarounds"
 	depends on ARM
+
+# SECTION: COMPILING
+
+config THUMB2
+	bool "Compile to Thumb-2 object code"
+	depends on ARM && ARM_V7PLUS && !BIT64

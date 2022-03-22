@@ -51,6 +51,7 @@ sys_call_table:
 .macro GEN_VCPU_UPCALL THREAD_VCPU
 .align 4
 .global leave_by_vcpu_upcall;
+.type leave_by_vcpu_upcall, #function
 
 #define OFS__VCPU_STATE__RF (VAL__SIZEOF_TRAP_STATE - RF_SIZE + OFS__VCPU_STATE__TREX)
 
@@ -163,16 +164,19 @@ leave_by_vcpu_upcall:
 
 .macro GEN_DEBUGGER_ENTRIES
 	.global	kern_kdebug_cstr_entry
+	.type kern_kdebug_cstr_entry, #function
 	.align 4
 kern_kdebug_cstr_entry:
 	DEBUGGER_ENTRY 0
 
 	.global	kern_kdebug_nstr_entry
+	.type kern_kdebug_nstr_entry, #function
 	.align 4
 kern_kdebug_nstr_entry:
 	DEBUGGER_ENTRY 1
 
 	.global	kern_kdebug_sequence_entry
+	.type kern_kdebug_sequence_entry, #function
 	.align 4
 kern_kdebug_sequence_entry:
 	DEBUGGER_ENTRY 2
@@ -180,6 +184,7 @@ kern_kdebug_sequence_entry:
 #ifdef CONFIG_MP
 	.section ".text"
 	.global	kern_kdebug_ipi_entry
+	.type kern_kdebug_ipi_entry, #function
 	.align 4
 kern_kdebug_ipi_entry:
 	DEBUGGER_ENTRY 3
@@ -209,6 +214,7 @@ kern_kdebug_ipi_entry:
 
 .macro GEN_EXCEPTION_RETURN
 	.global __return_from_user_invoke
+	.type __return_from_user_invoke, #function
 exception_return:
 	disable_irqs
 	ldr	sp, [sp]
@@ -220,6 +226,7 @@ __return_from_user_invoke:
 
 .macro GEN_IRET
 	.global __iret
+	.type __iret, #function
 __iret:
 	/*
 	 * Clear all registers before returning to vCPU entry handler. Spare r0
@@ -245,6 +252,7 @@ __iret_safe:
 .macro GEN_LEAVE_BY_TRIGGER_EXCEPTION
 .align 4
 .global leave_by_trigger_exception
+.type leave_by_trigger_exception, #function
 
 leave_by_trigger_exception:
 	sub 	sp, sp, #RF_SIZE   @ restore old return frame
@@ -267,6 +275,7 @@ leave_by_trigger_exception:
 .macro GEN_LEAVE_AND_KILL_MYSELF
 .align 4
 .global leave_and_kill_myself
+.type leave_and_kill_myself, #function
 
 leave_and_kill_myself:
         // make space for a dummy Return_frame accessible by the callee

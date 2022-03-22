@@ -53,6 +53,7 @@ public:
   void activate(Return_frame *regs, void *cont_func)
   {
     save(regs);
+    // We do *not* support cont_func to be a thumb function.
     regs->pc = reinterpret_cast<Mword>(cont_func);
     regs->psr &= ~(Proc::Status_mode_mask | Proc::Status_thumb); // clear mode
     regs->psr |= Proc::Status_mode_supervisor | Proc::Status_interrupts_disabled;

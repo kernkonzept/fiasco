@@ -27,8 +27,9 @@ SHARED_FLAGS-$(CONFIG_ARM_NEOVERSE_N1) += $(call CHECKCC,-mcpu=neoverse-n1,-marc
 SHARED_FLAGS-$(CONFIG_ARM_KRAIT) += $(call CHECKCC,-mcpu=krait,-mcpu=cortex-a15)
 SHARED_FLAGS-$(CONFIG_BIT32)      += -Wno-psabi
 SHARED_FLAGS-$(CONFIG_BIT32)      += -mfloat-abi=soft
+SHARED_FLAGS-$(CONFIG_BIT32)      += -masm-syntax-unified
 SHARED_FLAGS-$(CONFIG_BIT32)      += $(call CHECKCC,-mno-thumb-interwork)
-SHARED_FLAGS-$(CONFIG_BIT32)      += -marm -mabi=aapcs
+SHARED_FLAGS-$(CONFIG_BIT32)      += $(if $(CONFIG_THUMB2),-mthumb -Xassembler -mimplicit-it=always,-marm) -mabi=aapcs
 SHARED_FLAGS-$(CONFIG_BIT64)      += -mgeneral-regs-only
 SHARED_FLAGS-$(CONFIG_BIT64)      += $(call CHECKCC,-mno-outline-atomics)
 SHARED_FLAGS-clang                += $(if $(CONFIG_BIT32),-no-integrated-as,)
