@@ -33,6 +33,13 @@ public:
     CXX_BITFIELD_MEMBER(  5,  5, pending, raw);   ///< vtimer ppi pending
     CXX_BITFIELD_MEMBER(  6,  6, enabled, raw);   ///< vtimer ppi enabled
     CXX_BITFIELD_MEMBER(  7,  7, direct, raw);    ///< directly inject into vcpu
+
+    /**
+     * Physical irq priority while being in guest. Given as Fiasco thread
+     * priority 0..255.
+     */
+    CXX_BITFIELD_MEMBER(  8,  15, host_prio, raw);
+
     CXX_BITFIELD_MEMBER( 23, 23, grp1, raw);      ///< set if group1 irq
     CXX_BITFIELD_MEMBER( 24, 31, vgic_prio, raw); ///< Prio value in vgic LR
   };

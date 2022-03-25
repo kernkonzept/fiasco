@@ -342,6 +342,7 @@ protected:
 
 public:
   void arch_load_vcpu_kern_state(Vcpu_state *vcpu, bool do_load);
+  void arch_set_sched(Sched_context const * sched);
 
 protected:
   void arch_load_vcpu_user_state(Vcpu_state *vcpu, bool do_load);
@@ -846,6 +847,7 @@ void
 Context::set_sched(Sched_context * const sched)
 {
   _sched = sched;
+  arch_set_sched(sched);
 }
 
 // queue operations
@@ -1510,6 +1512,11 @@ Context::xcpu_tlb_flush(...)
 IMPLEMENT_DEFAULT inline
 void
 Context::arch_load_vcpu_kern_state(Vcpu_state *, bool)
+{}
+
+IMPLEMENT_DEFAULT inline
+void
+Context::arch_set_sched(Sched_context const *)
 {}
 
 IMPLEMENT_DEFAULT inline

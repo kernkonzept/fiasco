@@ -8,6 +8,7 @@ class Irq_mgr_multi_chip : public Irq_mgr
 public:
   unsigned nr_irqs() const override { return _nchips << Bits_per_entry; }
   unsigned nr_msis() const override { return 0; }
+  void set_priority_mask(Unsigned8 prio) override;
 
 private:
   struct Chip
@@ -80,4 +81,14 @@ Irq_mgr_multi_chip<Bits_per_entry>::add_chip(unsigned irq_base,
       _chips[i].chip = c;
       _chips[i].mask = mask;
     }
+}
+
+IMPLEMENT
+template< unsigned Bits_per_entry >
+void
+Irq_mgr_multi_chip<Bits_per_entry>::set_priority_mask(Unsigned8 prio)
+{
+  for (unsigned i = 0; i < _nchips; i++)
+    if (_chips[i].chip)
+      _chips[i].chip->set_priority_mask(prio);
 }

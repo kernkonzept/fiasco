@@ -18,6 +18,7 @@ public:
       cpu_local_init(Cpu_number::boot_cpu());
 
     _cpu.enable();
+    init_priority_mask();
   }
 
   Gic_v2(Address cpu_base, Address dist_base, Gic *master_mapping)

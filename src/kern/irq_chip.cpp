@@ -2,6 +2,7 @@ INTERFACE:
 
 #include <cxx/bitfield>
 
+#include "l4_types.h"
 #include "types.h"
 #include "spin_lock.h"
 
@@ -84,6 +85,11 @@ public:
   virtual void set_cpu(Mword pin, Cpu_number cpu) = 0;
   virtual void unbind(Irq_base *irq);
   virtual ~Irq_chip() = 0;
+
+  virtual int set_priority(Mword /*pin*/, Unsigned8 /*prio*/)
+  { return -L4_err::ENosys; }
+  virtual int set_priority_percpu(Cpu_number, Mword pin, Unsigned8 prio)
+  { return set_priority(pin, prio); }
 };
 
 /**
@@ -115,6 +121,7 @@ public:
   virtual bool alloc(Irq_base *irq, Mword pin, bool init = true) = 0;
   virtual Irq_base *irq(Mword pin) const = 0;
   virtual unsigned nr_irqs() const = 0;
+  virtual void set_priority_mask(Unsigned8 /*prio*/) {}
   virtual ~Irq_chip_icu() = 0;
 };
 

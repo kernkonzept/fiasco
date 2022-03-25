@@ -116,14 +116,15 @@ PROTECTED template< typename Derived >
 inline  NEEDS["config.h","globals.h", "thread_state.h",
               Ipc_sender_base::handle_shortcut]
 bool
-Ipc_sender<Derived>::send_msg(Receiver *receiver, bool is_not_xcpu)
+Ipc_sender<Derived>::send_msg(Receiver *receiver, unsigned short prio,
+                              bool is_not_xcpu)
 {
   set_wait_queue(receiver->sender_list());
 
   if (!Config::Irq_shortcut)
     {
       // enqueue _after_ shortcut if still necessary
-      sender_enqueue(receiver->sender_list(), 255);
+      sender_enqueue(receiver->sender_list(), prio);
       receiver->vcpu_set_irq_pending();
     }
 
@@ -139,7 +140,7 @@ Ipc_sender<Derived>::send_msg(Receiver *receiver, bool is_not_xcpu)
 
       if (derived()->requeue_sender())
 	{
-	  sender_enqueue(receiver->sender_list(), 255);
+	  sender_enqueue(receiver->sender_list(), prio);
 	  receiver->vcpu_set_irq_pending();
 	}
 
@@ -176,7 +177,7 @@ Ipc_sender<Derived>::send_msg(Receiver *receiver, bool is_not_xcpu)
   if (Config::Irq_shortcut)
     {
       // enqueue after shortcut if still necessary
-      sender_enqueue(receiver->sender_list(), 255);
+      sender_enqueue(receiver->sender_list(), prio);
       receiver->vcpu_set_irq_pending();
     }
   return false;

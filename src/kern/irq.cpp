@@ -52,6 +52,7 @@ public:
     Op_mask_vcpu = 3,
     Op_unmask_vcpu = 4,
     Op_clear_vcpu = 5,
+    Op_set_priority = 6,
     Op_bind     = 0x10,
   };
 
@@ -83,6 +84,7 @@ private:
 
   Mword _irq_id;
   bool _vcpu_enabled;
+  Unsigned8 _irq_prio;
 };
 
 
@@ -284,7 +286,7 @@ Irq_sender::free(Kobject ***rl)
 PUBLIC explicit
 Irq_sender::Irq_sender(Ram_quota *q = 0)
 : Kobject_h<Irq_sender, Irq>(q), _queued(0), _irq_thread(0), _irq_id(~0UL),
-  _vcpu_enabled(false)
+  _vcpu_enabled(false), _irq_prio(255)
 {
   hit_func = &hit_level_irq;
 }
@@ -395,10 +397,13 @@ Irq_sender::send(Mword dest, bool is_not_xcpu)
     {
       if (_vcpu_enabled)
         t->arch_inject_vcpu_irq(_irq_id, this);
+      // FIXME: we should increase the irq priority if we injected into a
+      // running guest. Otherwise lower priority irqs of the guest may still
+      // trap into Fiasco!
       return false;
     }
   else
-    return send_msg(t, is_not_xcpu);
+    return send_msg(t, _irq_prio, is_not_xcpu);
 }
 
 PRIVATE static
@@ -547,7 +552,12 @@ Irq_sender::sys_bind(L4_msg_tag tag, L4_fpage::Rights rights, Utcb const *utcb,
   // thread. The user is responsible to synchronize Irq::attach calls to prevent
   // this.
   if (res >= 0)
-    _irq_id = access_once(&utcb->values[1]);
+    {
+      _irq_id = access_once(&utcb->values[1]);
+      if (_irq_prio > thread->sched_context()->prio())
+        _irq_prio = thread->sched_context()->prio();
+      _chip->set_priority(pin(), _irq_prio);
+    }
 
   // re-inject if it was queued before
   if (res > 0)
@@ -581,6 +591,21 @@ Irq_sender::sys_detach(L4_fpage::Rights rights)
   return commit_result(res);
 }
 
+PRIVATE
+L4_msg_tag
+Irq_sender::sys_set_priority(Utcb const *utcb)
+{
+  int prio = access_once(&utcb->values[1]);
+  if (prio < 0 || prio > 255)
+    return commit_result(-L4_err::EInval);
+
+  Mword t = access_once(&_irq_thread);
+  if (is_valid_thread(t) && prio > as_thread(t)->sched_context()->prio())
+    prio = as_thread(t)->sched_context()->prio();
+
+  _irq_prio = prio;
+  return commit_result(_chip->set_priority(pin(), _irq_prio));
+}
 
 PUBLIC
 L4_msg_tag
@@ -620,6 +645,8 @@ Irq_sender::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
           return sys_unmask_vcpu();
         case Op_clear_vcpu:
           return sys_clear_vcpu();
+        case Op_set_priority:
+          return sys_set_priority(utcb);
 
         default:
           return commit_result(-L4_err::ENosys);

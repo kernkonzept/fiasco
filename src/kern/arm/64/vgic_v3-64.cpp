@@ -127,12 +127,15 @@ Gic_h_v3::save_lrs(Gic_h::Arm_vgic::Lrs *lr, unsigned n)
 #undef TRANSFER_LR
 }
 
-PUBLIC static inline ALWAYS_INLINE void
+PUBLIC static inline ALWAYS_INLINE Unsigned8
 Gic_h_v3::load_lrs(Gic_h::Arm_vgic::Lrs const *lr, unsigned n)
 {
+  Unsigned8 ret = 0xff;
+
 #define TRANSFER_LR(ul,v,x) \
   asm ("msr S3_4_C12_" #ul "_" #v ", %x0" : : "r"(lr->lr64[x])); \
-  if (n <= x + 1) return
+  { Lr l(lr->lr64[x]); if (l.state() != Lr::Empty && l.prio() < ret) ret = l.prio(); } \
+  if (n <= x + 1) return ret
 
   TRANSFER_LR(c12, 0, 0);
   TRANSFER_LR(c12, 1, 1);
@@ -151,6 +154,8 @@ Gic_h_v3::load_lrs(Gic_h::Arm_vgic::Lrs const *lr, unsigned n)
   TRANSFER_LR(c13, 6, 14);
   TRANSFER_LR(c13, 7, 15);
 #undef TRANSFER_LR
+
+  return ret;
 }
 
 PUBLIC inline void

@@ -66,6 +66,22 @@ public:
     CXX_BITFIELD_MEMBER(  7,  7, grp1_d, raw);
   };
 
+  struct Irq_prio_cfg
+  {
+    Unsigned32 raw;
+    Irq_prio_cfg() = default;
+    explicit Irq_prio_cfg(Unsigned32 v) : raw(v) {}
+
+    CXX_BITFIELD_MEMBER(  0,  7, base, raw);
+    CXX_BITFIELD_MEMBER(  8, 15, mult, raw);
+    CXX_BITFIELD_MEMBER( 16, 16, map, raw);   ///< Enable priority map
+
+    Unsigned8 map_irq_prio(Unsigned8 irq_prio) const
+    {
+      return map() ? ((255U - irq_prio) * mult() / 255U + base()) : 0xff;
+    }
+  };
+
   // Attention: keep compatible to Hyp_vm_state::Vtmr
   struct Vcpu_irq_cfg
   {
@@ -96,6 +112,7 @@ public:
     Unsigned32 elsr;
     Lrs lr;
     Unsigned32 aprs[8];
+    Irq_prio_cfg irq_prio_cfg;
     Unsigned32 injected;
   };
 
@@ -103,10 +120,12 @@ public:
 
   virtual bool save_full(Arm_vgic *g) = 0;
   virtual void save_and_disable(Arm_vgic *g) = 0;
-  virtual void load_full(Arm_vgic const *g, bool enabled) = 0;
-  virtual unsigned inject(Arm_vgic *g, Vcpu_irq_cfg cfg, bool load) = 0;
+  virtual Unsigned8 load_full(Arm_vgic const *g, bool enabled) = 0;
+  virtual unsigned inject(Arm_vgic *g, Vcpu_irq_cfg cfg, bool load,
+                          Unsigned8 *irq_prio) = 0;
   virtual bool revoke(Arm_vgic *g, unsigned lr, bool reap) = 0;
   virtual bool handle_maintenance(Arm_vgic *g, Unsigned32 *eois) = 0;
+  virtual Unsigned8 calc_irq_priority(Arm_vgic *g) = 0;
 
   virtual void disable() = 0;
   virtual unsigned version() const = 0;
@@ -153,14 +172,16 @@ public:
       disable();
   }
 
-  void load_full(Arm_vgic const *to, bool enabled) override
+  Unsigned8 load_full(Arm_vgic const *to, bool enabled) override
   {
+    Unsigned8 ret = 0xff;
     auto hcr = access_once(&to->hcr);
     if (hcr.en())
       {
+        Irq_prio_cfg cfg = access_once(&to->irq_prio_cfg);
         self()->vmcr(to->vmcr);
         self()->load_aprs(to->aprs);
-        self()->load_lrs(&to->lr, Arm_vgic::N_lregs);
+        ret = cfg.map_irq_prio(self()->load_lrs(&to->lr, Arm_vgic::N_lregs));
         self()->hcr(hcr);
         IMPL::vgic_barrier();
       }
@@ -169,9 +190,12 @@ public:
         self()->hcr(hcr);
         IMPL::vgic_barrier();
       }
+
+    return ret;
   }
 
-  unsigned inject(Arm_vgic *g, Vcpu_irq_cfg cfg, bool load) override
+  unsigned inject(Arm_vgic *g, Vcpu_irq_cfg cfg, bool load,
+                  Unsigned8 *irq_prio) override
   {
     unsigned idx = __builtin_ffs((load ? self()->elsr() : g->elsr) &
                                  ((1UL << Arm_vgic::N_lregs) - 1U));
@@ -180,7 +204,13 @@ public:
 
     self()->build_lr(&g->lr, idx-1, cfg, load);
     g->injected |= 1UL << (idx-1);
-    if (!load)
+    if (load)
+      {
+        Irq_prio_cfg prio_cfg = access_once(&g->irq_prio_cfg);
+        if (irq_prio)
+          *irq_prio = prio_cfg.map_irq_prio(cfg.prio());
+      }
+    else
       g->elsr &= ~(1UL << (idx-1));
 
     return idx;
@@ -218,6 +248,15 @@ public:
       }
 
     return self()->misr().raw == 0;
+  }
+
+  Unsigned8 calc_irq_priority(Arm_vgic *g) override
+  {
+    Irq_prio_cfg cfg = access_once(&g->irq_prio_cfg);
+    if (!cfg.map())
+      return 0xff;
+
+    return cfg.map_irq_prio(self()->scan_lrs(&g->lr, Arm_vgic::N_lregs));
   }
 
   void setup_state(Arm_vgic *s) const override

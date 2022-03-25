@@ -41,6 +41,8 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
   v->guest_regs.hcr = Cpu::Hcr_tge | Cpu::Hcr_must_set_bits;
   v->guest_regs.sctlr = 0;
 
+  v->vtmr.host_prio() = 0xff;
+
   v->host_regs.hcr = Cpu::Hcr_host_bits;
 
   Gic_h_global::gic->setup_state(&v->gic);
@@ -211,6 +213,7 @@ Thread::vcpu_vgic_maintenance()
 
   Unsigned32 eois;
   bool upcall = !Gic_h_global::gic->handle_maintenance(&v->gic, &eois);
+  bool recalculate = false;
 
   if (eois)
     {
@@ -224,16 +227,18 @@ Thread::vcpu_vgic_maintenance()
               if (irq->vcpu_eoi())
                 {
                   // Because this was an EOI it is guaranteed that an LR is
-                  // free.
+                  // free. As we re-insert the same irq the irq priority will
+                  // also not change.
                   irq->lr = Gic_h_global::gic->inject(&v->gic,
                                                       Gic_h::Vcpu_irq_cfg(irq->vcpu_irq_id()),
-                                                      true);
+                                                      true, nullptr);
                   ++it;
                 }
               else
                 {
                   irq->lr = 0;
                   it = _injected_irqs.erase(it);
+                  recalculate = true;
                 }
             }
           else
@@ -245,6 +250,8 @@ Thread::vcpu_vgic_maintenance()
     vcpu_vgic_upcall(vcpu, 0);
   else
     {
+      if (recalculate)
+        recalculate_irq_priority(v);
       vcpu_handle_pending_injects(v, true);
       vcpu_prepare_vtimer();
     }
@@ -488,6 +495,8 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
   v->guest_regs.sctlr = 0;
 
   v->host_regs.hcr = Cpu::Hcr_host_bits;
+
+  v->vtmr.host_prio() = 0xff;
 
   Gic_h_global::gic->setup_state(&v->gic);
 

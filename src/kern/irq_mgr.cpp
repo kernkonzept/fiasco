@@ -64,6 +64,8 @@ public:
 
   virtual void set_cpu(Mword irqnum, Cpu_number cpu) const;
 
+  virtual void set_priority_mask(Unsigned8 prio);
+
   /// The pointer to the single global instance of the actual IRQ manager.
   static Irq_mgr *mgr;
 
@@ -144,3 +146,8 @@ Irq_mgr::set_cpu(Mword irqnum, Cpu_number cpu) const
 
   return i.chip->set_cpu(i.pin, cpu);
 }
+
+IMPLEMENT
+void
+Irq_mgr::set_priority_mask(Unsigned8)
+{}

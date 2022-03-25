@@ -58,6 +58,21 @@ Gic_h_v3::vgic_barrier()
   // completion before running user-land
 }
 
+PUBLIC static inline Unsigned8
+Gic_h_v3::scan_lrs(Gic_h::Arm_vgic::Lrs const *lr, unsigned n)
+{
+  Unsigned8 ret = 0xff;
+
+  for (unsigned i = 0; i < n; i++)
+    {
+      Lr l(lr->lr64[i]);
+      if (l.state() != Lr::Empty && l.prio() < ret)
+        ret = l.prio();
+    }
+
+  return ret;
+}
+
 namespace {
 
 struct Gic_h_v3_init

@@ -51,6 +51,7 @@ protected:
   Vcpu_irq_list _injected_irqs;
   Mword _pending_injections;
   Vtimer_vcpu_irq _vtimer_irq;
+  Unsigned8 _vtimer_irq_priority;
 };
 
 //---------------------------------------------------------------------------
@@ -115,10 +116,12 @@ Context::arch_load_vcpu_kern_state(Vcpu_state *vcpu, bool do_load)
   if (all_priv_vm)
     {
       // save guest state, load full host state
+      _irq_priority = sched_context()->prio();
       if (do_load)
         {
           arm_ext_vcpu_switch_to_host(vcpu, v);
           Gic_h_global::gic->save_and_disable(&v->gic);
+          Irq_mgr::mgr->set_priority_mask(_irq_priority);
         }
       else
         arm_ext_vcpu_switch_to_host_no_load(vcpu, v);
@@ -159,7 +162,21 @@ Context::arch_load_vcpu_user_state(Vcpu_state *vcpu, bool do_load)
       if (do_load)
         {
           arm_ext_vcpu_switch_to_guest(vcpu, v);
-          Gic_h_global::gic->load_full(&v->gic, true);
+
+          _vtimer_irq_priority = access_once(&v->vtmr).host_prio();
+          if (_vtimer_irq_priority > _irq_priority)
+            _vtimer_irq_priority = _irq_priority;
+
+          auto vtimer = Irq_mgr::mgr->chip(27);
+          vtimer.chip->set_priority_percpu(current_cpu(), vtimer.pin,
+                                           _vtimer_irq_priority);
+
+          Unsigned8 irq_prio = Gic_h_global::gic->load_full(&v->gic, true);
+          if (irq_prio < _irq_priority)
+            {
+              _irq_priority = irq_prio;
+              Irq_mgr::mgr->set_priority_mask(irq_prio);
+            }
         }
       else
         arm_ext_vcpu_switch_to_guest_no_load(vcpu, v);
@@ -211,6 +228,9 @@ Context::switch_vm_state(Context *t)
     {
       Vm_state const *v = vm_state(t->vcpu_state().access());
       t->load_ext_vcpu_state(_to_state, v);
+      auto vtimer = Irq_mgr::mgr->chip(27);
+      vtimer.chip->set_priority_percpu(current_cpu(), vtimer.pin,
+                                       t->_vtimer_irq_priority);
 
       if (_to_state & Thread_vcpu_user)
         Gic_h_global::gic->load_full(&v->gic, vgic);
@@ -227,6 +247,47 @@ Context::init_virt_state()
 {
   _doorbell_irq = 0;
   _pending_injections = 0;
+}
+
+/**
+ * Adjust the threads irq priority to a newly injected interrupt.
+ *
+ * \pre The thread is currently running.
+ */
+PRIVATE
+void
+Context::adjust_irq_priority(Unsigned8 injected_prio)
+{
+  Unsigned8 max_priority = sched_context()->prio();
+  if (EXPECT_FALSE(injected_prio >= max_priority))
+    injected_prio = max_priority;
+
+  if (injected_prio > _irq_priority)
+    {
+      _irq_priority = injected_prio;
+      Irq_mgr::mgr->set_priority_mask(injected_prio);
+    }
+}
+
+/**
+ * Re-calculate the current irq priority from pending/active virqs.
+ *
+ * \pre The thread is currently running.
+ */
+PROTECTED
+void
+Context::recalculate_irq_priority(Vm_state *v)
+{
+  Unsigned8 irq_prio = Gic_h_global::gic->calc_irq_priority(&v->gic);
+  Unsigned8 max_priority = sched_context()->prio();
+  if (irq_prio >= max_priority)
+    irq_prio = max_priority;
+
+  if (irq_prio != _irq_priority)
+    {
+      _irq_priority = irq_prio;
+      Irq_mgr::mgr->set_priority_mask(irq_prio);
+    }
 }
 
 /**
@@ -259,11 +320,16 @@ Context::arch_inject_vcpu_irq(Mword irq_id, Vcpu_irq_list_item *irq)
       // We've interrupted the guest and can directly inject the IRQ
       Vcpu_state *vcpu = vcpu_state().access();
       Vm_state *v = vm_state(vcpu);
+      bool load = current() == this;
+      Unsigned8 irq_prio;
       irq->lr = Gic_h_global::gic->inject(&v->gic, Gic_h::Vcpu_irq_cfg(irq_id),
-                                          current() == this);
+                                          load, &irq_prio);
       if (!irq->lr)
         // TODO: preempt an LR if this irq has higher priority
+        // TODO: we should still raise the threads irq priority
         _pending_injections++;
+      else if (load)
+        adjust_irq_priority(irq_prio);
     }
   else
     {
@@ -323,6 +389,7 @@ Context::arch_revoke_vcpu_irq(Vcpu_irq_list_item *irq, bool reap)
       // FIXME: instead we re-insert it on the new vCPU :(
       (void)active;
 
+      recalculate_irq_priority(v);
       return true;
     }
   else
@@ -346,11 +413,15 @@ Context::vcpu_handle_pending_injects(Vm_state *v, bool load)
       if (irq->lr)
         continue;
 
+      Unsigned8 irq_prio;
       irq->lr = Gic_h_global::gic->inject(&v->gic,
                                           Gic_h::Vcpu_irq_cfg(irq->vcpu_irq_id()),
-                                          load);
+                                          load, &irq_prio);
       if (irq->lr)
         {
+          if (load)
+            adjust_irq_priority(irq_prio);
+
           --_pending_injections;
           if (!_pending_injections)
             break;

@@ -96,11 +96,20 @@ Gic_h_v2::save_lrs(Gic_h::Arm_vgic::Lrs *l, unsigned n) const
     l->lr32[i] = read<Unsigned32>(LRn + (i << 2));
 }
 
-PUBLIC inline void
+PUBLIC inline Unsigned8
 Gic_h_v2::load_lrs(Gic_h::Arm_vgic::Lrs const *l, unsigned n)
 {
+  Unsigned8 ret = 0xff;
+
   for (unsigned i = 0; i < n; ++i)
-    write(l->lr32[i], LRn + (i << 2));
+    {
+      Lr lr(l->lr32[i]);
+      if (lr.state() != Lr::Empty && lr.prio() < ret)
+        ret = lr.prio();
+      write(l->lr32[i], LRn + (i << 2));
+    }
+
+  return ret;
 }
 
 PUBLIC inline void
@@ -147,6 +156,21 @@ PUBLIC static inline NEEDS["mem.h"]
 void
 Gic_h_v2::vgic_barrier()
 { Mem::dsb(); /* Ensure vgic completion before running user-land */ }
+
+PUBLIC static inline Unsigned8
+Gic_h_v2::scan_lrs(Gic_h::Arm_vgic::Lrs const *lr, unsigned n)
+{
+  Unsigned8 ret = 0xff;
+
+  for (unsigned i = 0; i < n; i++)
+    {
+      Lr l(lr->lr32[i]);
+      if (l.state() != Lr::Empty && l.prio() < ret)
+        ret = l.prio();
+    }
+
+  return ret;
+}
 
 #include "boot_alloc.h"
 #include "vgic_global.h"

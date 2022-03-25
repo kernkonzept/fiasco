@@ -32,6 +32,12 @@ public:
     return Irq();
   }
 
+  void set_priority_mask(Unsigned8 prio) override
+  {
+    for (unsigned i = 0; i < _used; ++i)
+      _chips[i].chip->set_priority_mask(prio);
+  }
+
   /**
    * Add a chip starting its range at `pos`.
    * \param chip  The chip to add.

@@ -23,6 +23,7 @@ public:
 
     cpu_local_init(Cpu_number::boot_cpu());
     _cpu.enable();
+    init_priority_mask();
   }
 };
 
@@ -162,6 +163,26 @@ Gic_v3::set_mode_percpu(Cpu_number cpu, Mword pin, Mode m) override
   assert(pin < 32);
   assert (cpu_lock.test());
   return _redist.cpu(cpu).set_mode(pin, m);
+}
+
+PUBLIC
+int
+Gic_v3::set_priority(Mword pin, Unsigned8 prio) override
+{
+  assert(pin >= 32);
+  return Gic::set_priority(pin, prio);
+}
+
+PUBLIC
+int
+Gic_v3::set_priority_percpu(Cpu_number cpu, Mword pin, Unsigned8 prio) override
+{
+  assert(pin < 32);
+  unsigned p = 255U - prio;
+  if (p >= _prio_mask)
+    p = _prio_mask - _prio_step; // make sure the irq is not permanently masked
+  _redist.cpu(cpu).irq_prio(pin, p);
+  return 0;
 }
 
 //-------------------------------------------------------------------

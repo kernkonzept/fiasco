@@ -178,7 +178,7 @@ Gic_redist::cpu_init()
   _redist.write<Unsigned32>(0xffffffff, GICR_ICACTIVER0); // clear active
 
   for (unsigned g = 0; g < 32; g += 4)
-    _redist.write<Unsigned32>(0xa0a0a0a0, GICR_IPRIORITYR0 + g);
+    _redist.write<Unsigned32>(0x00000000, GICR_IPRIORITYR0 + g);
 }
 
 PUBLIC

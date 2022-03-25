@@ -18,6 +18,9 @@ private:
     Unsigned8 hit;
   };
   Kernel_mem_op _kernel_mem_op;
+
+protected:
+  Unsigned8 _irq_priority;
 };
 
 // ------------------------------------------------------------------------
@@ -44,10 +47,11 @@ IMPLEMENTATION [arm]:
 #include "space.h"
 #include "thread_state.h"
 #include "utcb_support.h"
+#include "irq_mgr.h"
 
 IMPLEMENT inline NEEDS[Context::spill_user_state, Context::store_tpidrurw,
                        Context::load_tpidrurw, Context::load_tpidruro,
-                       Context::arm_switch_gp_regs]
+                       Context::arm_switch_gp_regs, "irq_mgr.h"]
 void
 Context::switch_cpu(Context *t)
 {
@@ -59,6 +63,7 @@ Context::switch_cpu(Context *t)
   t->fill_user_state();
   t->load_tpidrurw();
   t->load_tpidruro();
+  Irq_mgr::mgr->set_priority_mask(t->_irq_priority);
   arm_switch_gp_regs(t);
 }
 
@@ -96,6 +101,18 @@ Context::is_kernel_mem_op_hit_and_clear()
   if (h)
     _kernel_mem_op.hit = 0;
   return h;
+}
+
+IMPLEMENT_OVERRIDE inline
+void
+Context::arch_set_sched(Sched_context const * sched)
+{
+  // FIXME: iterate through bound Irqs and make sure their Priority is in
+  // range
+  // FIXME: this is wrong when thread is currently in vCPU
+  _irq_priority = sched->prio();
+  if (current() == this)
+    Irq_mgr::mgr->set_priority_mask(_irq_priority);
 }
 
 // ------------------------------------------------------------------------

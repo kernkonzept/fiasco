@@ -50,6 +50,8 @@ private:
 
 protected:
   Cpu _cpu;
+  Unsigned8 _prio_mask;
+  Unsigned8 _prio_step;
 
   static IMPL *primary;
 
@@ -60,6 +62,13 @@ protected:
   {
     primary = self();
     Gic::set_irq_handler(_glbl_irq_handler);
+  }
+
+  void init_priority_mask()
+  {
+    _cpu.pmr(0xff);
+    _prio_mask = _cpu.pmr();
+    _prio_step = (~_prio_mask & 0xffU) + 1U;
   }
 
 public:
@@ -176,6 +185,24 @@ public:
 
   unsigned get_pmr() override { return _cpu.pmr(); }
   void set_pmr(unsigned prio) override { _cpu.pmr(prio); }
+
+  void set_priority_mask(Unsigned8 prio) override
+  {
+    // Allow interrupts on same or higher priority
+    unsigned mask = 255U - prio + _prio_step;
+    if (mask > 0xff)
+      mask = 0xff;
+    set_pmr(mask);
+  }
+
+  int set_priority(Mword pin, Unsigned8 prio) override
+  {
+    unsigned p = 255U - prio;
+    if (p >= _prio_mask)
+      p = _prio_mask - _prio_step; // make sure the irq is not permanently masked
+    _dist.irq_prio(pin, p);
+    return 0;
+  }
 };
 
 template<typename IMPL, typename CPU>
