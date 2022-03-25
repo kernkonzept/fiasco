@@ -41,27 +41,48 @@ protected:
  */
 class Irq_sender
 : public Kobject_h<Irq_sender, Irq>,
-  public Ipc_sender<Irq_sender>
+  public Ipc_sender<Irq_sender>,
+  public Vcpu_irq_list_item
 {
 public:
   enum Op {
     Op_attach = 0,
     Op_detach = 1,
+    Op_bind_vcpu = 2,
+    Op_mask_vcpu = 3,
+    Op_unmask_vcpu = 4,
+    Op_clear_vcpu = 5,
     Op_bind     = 0x10,
   };
 
 protected:
-  static Thread *detach_in_progress()
-  { return reinterpret_cast<Thread *>(1); }
+  static Mword detach_in_progress()
+  { return 3; }
 
-  static bool is_valid_thread(Thread const *t)
+  static bool is_valid_thread(Mword t)
   { return t > detach_in_progress(); }
 
   Smword _queued;
-  Thread *_irq_thread;
+  Mword _irq_thread;
 
 private:
+  static inline Thread *as_thread(Mword t)
+  { return reinterpret_cast<Thread *>(t & ~(Mword)1); }
+
+  static inline Mword as_irq_sender(Thread *t)
+  { return (Mword)t; }
+
+  static inline Mword as_vcpu_irq(Thread *t)
+  { return (Mword)t | 1U; }
+
+  static inline bool is_irq_sender(Mword t)
+  { return (t & 1U) == 0; }
+
+  static inline bool is_vcpu_irq(Mword t)
+  { return (t & 1U) != 0; }
+
   Mword _irq_id;
+  bool _vcpu_enabled;
 };
 
 
@@ -149,23 +170,23 @@ Irq::dispatch_irq_proto(Unsigned16 op, bool may_unmask)
  */
 PUBLIC inline NEEDS ["atomic.h", "cpu_lock.h", "lock_guard.h"]
 int
-Irq_sender::alloc(Thread *t, Kobject ***rl)
+Irq_sender::alloc(Mword t, Kobject ***rl)
 {
-  if (t == nullptr)
+  if (!is_valid_thread(t))
     return -L4_err::EInval;
 
-  Thread *old;
+  Mword prev;
   for (;;)
     {
-      old = access_once(&_irq_thread);
+      prev = access_once(&_irq_thread);
 
-      if (old == t)
+      if (prev == t)
         return 0;
 
-      if (EXPECT_FALSE(old == detach_in_progress()))
+      if (EXPECT_FALSE(prev == detach_in_progress()))
         return -L4_err::EBusy;
 
-      if (mp_cas(&_irq_thread, old, t))
+      if (mp_cas(&_irq_thread, prev, t))
         break;
     }
 
@@ -174,45 +195,42 @@ Irq_sender::alloc(Thread *t, Kobject ***rl)
   auto g = lock_guard(cpu_lock);
   bool reinject = false;
 
-  if (is_valid_thread(old))
+  if (is_valid_thread(prev))
     {
-      switch (old->Receiver::abort_send(this))
-        {
-        case Receiver::Abt_ipc_done:
-          break; // was not queued
+      Thread *old = as_thread(prev);
+      if (is_irq_sender(prev))
+        switch (old->Receiver::abort_send(this))
+          {
+          case Receiver::Abt_ipc_done:
+            break; // was not queued
 
-        case Receiver::Abt_ipc_cancel:
-          reinject = true;
-          break;
+          case Receiver::Abt_ipc_cancel:
+            reinject = true;
+            break;
 
-        default:
-          // this must not happen as this is only the case
-          // for IPC including message items and an IRQ never
-          // sends message items.
-          panic("IRQ IPC flagged as in progress");
-        }
+          default:
+            // this must not happen as this is only the case
+            // for IPC including message items and an IRQ never
+            // sends message items.
+            panic("IRQ IPC flagged as in progress");
+          }
+      else
+        reinject = old->arch_revoke_vcpu_irq(this, is_irq_sender(t));
 
       old->put_n_reap(rl);
     }
 
-  t->inc_ref();
-  if (Cpu::online(t->home_cpu()))
-    _chip->set_cpu(pin(), t->home_cpu());
+  Thread *next = as_thread(t);
+  next->inc_ref();
+  if (Cpu::online(next->home_cpu()))
+    _chip->set_cpu(pin(), next->home_cpu());
 
-  if (reinject)
-    {
-      // might have changed between the CAS and taking the lock
-      t = access_once(&_irq_thread);
-      if (EXPECT_TRUE(is_valid_thread(t)))
-        send(t);
-    }
-
-  return 0;
+  return reinject ? 1 : 0;
 }
 
 PUBLIC
 Receiver *
-Irq_sender::owner() const { return _irq_thread; }
+Irq_sender::owner() const { return as_thread(_irq_thread); }
 
 /**
  * Release an interrupt.
@@ -230,7 +248,7 @@ int
 Irq_sender::free(Kobject ***rl)
 {
   Mem::mp_release();
-  Thread *t;
+  Mword t;
   for (;;)
     {
       t = access_once(&_irq_thread);
@@ -238,7 +256,7 @@ Irq_sender::free(Kobject ***rl)
       if (t == detach_in_progress())
         return -L4_err::EBusy;
 
-      if (t == nullptr)
+      if (t == 0)
         return -L4_err::ENoent;
 
       if (EXPECT_TRUE(mp_cas(&_irq_thread, t, detach_in_progress())))
@@ -248,20 +266,25 @@ Irq_sender::free(Kobject ***rl)
   auto guard = lock_guard(cpu_lock);
   mask();
 
-  t->Receiver::abort_send(this);
+  Thread *old = as_thread(t);
+  if (is_irq_sender(t))
+    old->Receiver::abort_send(this);
+  else
+    old->arch_revoke_vcpu_irq(this, true);
 
   Mem::mp_release();
-  write_now(&_irq_thread, nullptr);
+  write_now(&_irq_thread, 0);
   // release cpu-lock early, actually before delete
   guard.reset();
 
-  t->put_n_reap(rl);
+  old->put_n_reap(rl);
   return 0;
 }
 
 PUBLIC explicit
 Irq_sender::Irq_sender(Ram_quota *q = 0)
-: Kobject_h<Irq_sender, Irq>(q), _queued(0), _irq_thread(0), _irq_id(~0UL)
+: Kobject_h<Irq_sender, Irq>(q), _queued(0), _irq_thread(0), _irq_id(~0UL),
+  _vcpu_enabled(false)
 {
   hit_func = &hit_level_irq;
 }
@@ -364,6 +387,19 @@ Irq_sender::modify_label(Mword const *todo, int cnt) override
     }
 }
 
+PRIVATE bool
+Irq_sender::send(Mword dest, bool is_not_xcpu)
+{
+  Thread *t = as_thread(dest);
+  if (is_vcpu_irq(dest))
+    {
+      if (_vcpu_enabled)
+        t->arch_inject_vcpu_irq(_irq_id, this);
+      return false;
+    }
+  else
+    return send_msg(t, is_not_xcpu);
+}
 
 PRIVATE static
 Context::Drq::Result
@@ -371,13 +407,14 @@ Irq_sender::handle_remote_hit(Context::Drq *, Context *target, void *arg)
 {
   Irq_sender *irq = (Irq_sender*)arg;
   irq->set_cpu(current_cpu());
-  auto t = access_once(&irq->_irq_thread);
+  auto dest = access_once(&irq->_irq_thread);
+  Thread *t = as_thread(dest);
   if (EXPECT_TRUE(t == target))
     {
-      if (EXPECT_TRUE(irq->send_msg(t, false)))
+      if (EXPECT_TRUE(irq->send(dest, false)))
         return Context::Drq::no_answer_resched();
     }
-  else if (EXPECT_TRUE(is_valid_thread(t)))
+  else if (EXPECT_TRUE(is_valid_thread(dest)))
     t->drq(&irq->_drq, handle_remote_hit, irq,
            Context::Drq::No_wait);
 
@@ -398,13 +435,14 @@ Irq_sender::queue()
 
 PRIVATE inline
 void
-Irq_sender::send(Thread *t)
+Irq_sender::send(Mword dest)
 {
+  Thread *t = as_thread(dest);
   if (EXPECT_FALSE(t->home_cpu() != current_cpu()))
     t->drq(&_drq, handle_remote_hit, this,
            Context::Drq::No_wait);
   else
-    send_msg(t, true);
+    send(dest, true);
 }
 
 
@@ -485,7 +523,7 @@ Irq_sender::hit_edge_irq(Irq_base *i, Upstream_irq const *ui)
 PRIVATE
 L4_msg_tag
 Irq_sender::sys_bind(L4_msg_tag tag, L4_fpage::Rights rights, Utcb const *utcb,
-                     Syscall_frame *)
+                     Syscall_frame *, bool to_vcpu)
 {
   if (EXPECT_FALSE(!(rights & L4_fpage::Rights::CS())))
     return commit_result(-L4_err::EPerm);
@@ -501,20 +539,30 @@ Irq_sender::sys_bind(L4_msg_tag tag, L4_fpage::Rights rights, Utcb const *utcb,
     return commit_result(-L4_err::EPerm);
 
   Reap_list rl;
-  int res = alloc(thread, rl.list());
+  int res = alloc(to_vcpu ? as_vcpu_irq(thread) : as_irq_sender(thread),
+                  rl.list());
 
   // note: this is a possible race on user-land
   // where the label of an IRQ might become inconsistent with the attached
   // thread. The user is responsible to synchronize Irq::attach calls to prevent
   // this.
-  if (res == 0)
+  if (res >= 0)
     _irq_id = access_once(&utcb->values[1]);
+
+  // re-inject if it was queued before
+  if (res > 0)
+    {
+      // might have changed between the CAS and taking the lock
+      Mword t = access_once(&_irq_thread);
+      if (EXPECT_TRUE(is_valid_thread(t)))
+        send(t);
+    }
 
   cpu_lock.clear();
   rl.del();
   cpu_lock.lock();
 
-  return commit_result(res);
+  return commit_result(res >= 0 ? 0 : res);
 }
 
 PRIVATE
@@ -551,7 +599,7 @@ Irq_sender::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
       switch (op)
         {
         case Op_bind: // the Rcv_endpoint opcode (equal to Ipc_gate::bind_thread)
-          return sys_bind(tag, rights, utcb, f);
+          return sys_bind(tag, rights, utcb, f, false);
         default:
           return commit_result(-L4_err::ENosys);
         }
@@ -564,6 +612,14 @@ Irq_sender::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
         {
         case Op_detach:
           return sys_detach(rights);
+        case Op_bind_vcpu:
+          return sys_bind_vcpu(tag, rights, utcb, f);
+        case Op_mask_vcpu:
+          return sys_mask_vcpu();
+        case Op_unmask_vcpu:
+          return sys_unmask_vcpu();
+        case Op_clear_vcpu:
+          return sys_clear_vcpu();
 
         default:
           return commit_result(-L4_err::ENosys);
@@ -651,4 +707,101 @@ register_factory()
 {
   Kobject_iface::set_factory(L4_msg_tag::Label_irq_sender, irq_sender_factory);
 }
+}
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [irq_direct_inject]:
+
+PUBLIC
+bool
+Irq_sender::vcpu_eoi() override
+{
+  bool pending = consume() > 0;
+  if (_queued < 1)
+    unmask();
+  return pending;
+}
+
+PUBLIC
+Mword
+Irq_sender::vcpu_irq_id() const override
+{ return _irq_id; }
+
+PRIVATE
+L4_msg_tag
+Irq_sender::sys_bind_vcpu(L4_msg_tag tag, L4_fpage::Rights rights,
+                          Utcb const *utcb, Syscall_frame *f)
+{
+  return sys_bind(tag, rights, utcb, f, true);
+}
+
+PRIVATE
+L4_msg_tag
+Irq_sender::sys_mask_vcpu()
+{
+  _vcpu_enabled = false;
+
+  Mword t = access_once(&_irq_thread);
+  if (is_valid_thread(t) && is_vcpu_irq(t))
+    as_thread(t)->arch_revoke_vcpu_irq(this, false);
+
+  return commit_result(0);
+}
+
+PRIVATE
+L4_msg_tag
+Irq_sender::sys_unmask_vcpu()
+{
+  _vcpu_enabled = true;
+
+  bool pending = _queued > 0;
+  Mword t = access_once(&_irq_thread);
+  if (is_valid_thread(t) && is_vcpu_irq(t) && pending)
+    send(t);
+
+  return commit_result(0);
+}
+
+PRIVATE
+L4_msg_tag
+Irq_sender::sys_clear_vcpu()
+{
+  _queued = 0;
+  Mword t = access_once(&_irq_thread);
+  if (is_valid_thread(t) && is_vcpu_irq(t))
+    as_thread(t)->arch_revoke_vcpu_irq(this, false);
+
+  return commit_result(0);
+}
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [!irq_direct_inject]:
+
+PRIVATE
+L4_msg_tag
+Irq_sender::sys_bind_vcpu(L4_msg_tag, L4_fpage::Rights, Utcb const *,
+                          Syscall_frame *)
+{
+  return commit_result(-L4_err::ENosys);
+}
+
+PRIVATE
+L4_msg_tag
+Irq_sender::sys_mask_vcpu()
+{
+  return commit_result(-L4_err::ENosys);
+}
+
+PRIVATE
+L4_msg_tag
+Irq_sender::sys_unmask_vcpu()
+{
+  return commit_result(-L4_err::ENosys);
+}
+
+PRIVATE
+L4_msg_tag
+Irq_sender::sys_clear_vcpu()
+{
+  return commit_result(-L4_err::ENosys);
 }

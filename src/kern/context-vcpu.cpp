@@ -7,9 +7,20 @@ EXTENSION class Context
 public:
   void vcpu_pv_switch_to_kernel(Vcpu_state *, bool);
   void vcpu_pv_switch_to_user(Vcpu_state *, bool);
+  void arch_inject_vcpu_irq(Mword irq_id, Vcpu_irq_list_item *irq);
+  bool arch_revoke_vcpu_irq(Vcpu_irq_list_item *irq, bool reap);
 
 protected:
   Ku_mem_ptr<Vcpu_state> _vcpu_state;
+};
+
+// ---------------------------------------------------------------------
+INTERFACE [irq_direct_inject]:
+
+EXTENSION class Context
+{
+protected:
+  Irq_base *_doorbell_irq;
 };
 
 // ---------------------------------------------------------------------
@@ -51,6 +62,14 @@ void Context::vcpu_pv_switch_to_kernel(Vcpu_state *, bool) {}
 
 IMPLEMENT_DEFAULT inline
 void Context::vcpu_pv_switch_to_user(Vcpu_state *, bool) {}
+
+IMPLEMENT_DEFAULT inline
+void Context::arch_inject_vcpu_irq(Mword, Vcpu_irq_list_item *)
+{}
+
+IMPLEMENT_DEFAULT inline
+bool Context::arch_revoke_vcpu_irq(Vcpu_irq_list_item *, bool)
+{ return false; }
 
 PUBLIC inline
 Context::Ku_mem_ptr<Vcpu_state> const &

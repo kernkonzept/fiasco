@@ -24,6 +24,25 @@ public:
 
   typedef Gic_h::Arm_vgic Gic;
 
+  // Attention: keep compatible to Gic_h::Vcpu_irq_cfg
+  struct Vtmr
+  {
+    Unsigned32 raw;
+    Vtmr() = default;
+    explicit Vtmr(Unsigned32 v) : raw(v) {}
+
+    // Mask to convert Vtmr to Vcpu_irq_cfg: keep vid, grp1 and vgic_prio
+    // fields.
+    enum { Vcpu_irq_cfg_mask = 0xff80001f };
+
+    CXX_BITFIELD_MEMBER(  0,  4, vid, raw);       ///< PPI irq id in LR
+    CXX_BITFIELD_MEMBER(  5,  5, pending, raw);   ///< vtimer ppi pending
+    CXX_BITFIELD_MEMBER(  6,  6, enabled, raw);   ///< vtimer ppi enabled
+    CXX_BITFIELD_MEMBER(  7,  7, direct, raw);    ///< directly inject into vcpu
+    CXX_BITFIELD_MEMBER( 23, 23, grp1, raw);      ///< set if group1 irq
+    CXX_BITFIELD_MEMBER( 24, 31, vgic_prio, raw); ///< Prio value in vgic LR
+  };
+
   /* The following part is our user API */
   Regs_h host_regs;
   Regs_g guest_regs;
@@ -33,7 +52,8 @@ public:
   Unsigned32 vmpidr;
   Unsigned32 vpidr;
 
-  Unsigned32 _res0[2];
+  Vtmr vtmr;
+  Unsigned32 _res0[1];
 
   // size depdens on gic version, numer of LRs and APRs
   Gic  gic;

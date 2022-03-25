@@ -177,17 +177,10 @@ IMPLEMENTATION [arm && cpu_virt]:
 
 #include "irq_mgr.h"
 
-PUBLIC inline NEEDS[Thread::save_fpu_state_to_utcb]
+PUBLIC
 void
-Thread::vcpu_vgic_upcall(unsigned virq)
+Thread::vcpu_vgic_upcall(Vcpu_state *vcpu, unsigned virq)
 {
-  assert (state() & Thread_ext_vcpu_enabled);
-  assert (state() & Thread_vcpu_user);
-  assert (!_exc_cont.valid(regs()));
-
-  Vcpu_state *vcpu = vcpu_state().access();
-  assert (vcpu_exceptions_enabled(vcpu));
-
   Trap_state *ts = static_cast<Trap_state *>((Return_frame *)regs());
 
   // Before entering kernel mode to have original fpu state before
@@ -202,6 +195,75 @@ Thread::vcpu_vgic_upcall(unsigned virq)
   vcpu->_regs.s.esr.svc_imm() = virq;
 
   vcpu_save_state_and_upcall();
+}
+
+PUBLIC
+void
+Thread::vcpu_vgic_maintenance()
+{
+  assert (state() & Thread_ext_vcpu_enabled);
+  assert (state() & Thread_vcpu_user);
+  assert (!_exc_cont.valid(regs()));
+
+  Vcpu_state *vcpu = vcpu_state().access();
+  assert (vcpu_exceptions_enabled(vcpu));
+  Vm_state *v = vm_state(vcpu);
+
+  Unsigned32 eois;
+  bool upcall = !Gic_h_global::gic->handle_maintenance(&v->gic, &eois);
+
+  if (eois)
+    {
+      auto g = lock_guard(_injected_irqs.lock());
+      auto it = _injected_irqs.begin();
+      while (it != _injected_irqs.end())
+        {
+          Vcpu_irq_list_item *irq = *it;
+          if (irq->lr && eois & (1UL << (irq->lr - 1)))
+            {
+              if (irq->vcpu_eoi())
+                {
+                  // Because this was an EOI it is guaranteed that an LR is
+                  // free.
+                  irq->lr = Gic_h_global::gic->inject(&v->gic,
+                                                      Gic_h::Vcpu_irq_cfg(irq->vcpu_irq_id()),
+                                                      true);
+                  ++it;
+                }
+              else
+                {
+                  irq->lr = 0;
+                  it = _injected_irqs.erase(it);
+                }
+            }
+          else
+            ++it;
+        }
+    }
+
+  if (upcall)
+    vcpu_vgic_upcall(vcpu, 0);
+  else
+    vcpu_handle_pending_injects(v, true);
+}
+
+PUBLIC
+void
+Thread::vcpu_vtimer_hit()
+{
+  assert (state() & Thread_ext_vcpu_enabled);
+  assert (state() & Thread_vcpu_user);
+  assert (!_exc_cont.valid(regs()));
+
+  Vcpu_state *vcpu = vcpu_state().access();
+  assert (vcpu_exceptions_enabled(vcpu));
+
+  if (_vtimer_irq.upcall())
+    vcpu_vgic_upcall(vcpu, 1);
+  else if (_vtimer_irq.set_pending())
+    // This is guaranteed to *not* take the Irq_shortcut because the thread is
+    // in vcpu user mode.
+    arch_inject_vcpu_irq(_vtimer_irq.vcpu_irq_id(), &_vtimer_irq);
 }
 
 
@@ -231,7 +293,7 @@ PUBLIC inline FIASCO_FLATTEN
 void
 Arm_ppi_virt::handle(Upstream_irq const *ui)
 {
-  current_thread()->vcpu_vgic_upcall(_virq);
+  current_thread()->vcpu_vgic_maintenance();
   chip()->ack(pin());
   Upstream_irq::ack(ui);
 }
@@ -261,7 +323,7 @@ void
 Arm_vtimer_ppi::handle(Upstream_irq const *ui)
 {
   mask();
-  current_thread()->vcpu_vgic_upcall(1);
+  current_thread()->vcpu_vtimer_hit();
   chip()->ack(pin());
   Upstream_irq::ack(ui);
 }

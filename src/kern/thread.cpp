@@ -55,6 +55,7 @@ public:
     Op_register_del_irq = 5,
     Op_modify_senders = 6,
     Op_vcpu_control = 7,
+    Op_register_doorbell_irq = 8,
     Op_gdt_x86 = 0x10,
     Op_set_tpidruro_arm = 0x10,
     Op_set_segment_base_amd64 = 0x12,

@@ -9,10 +9,49 @@ public:
 
 protected:
   Context_hyp _hyp;
+
+  class Vtimer_vcpu_irq final : public Vcpu_irq_list_item
+  {
+    Hyp_vm_state::Vtmr _vtmr;
+
+  public:
+    bool vcpu_eoi() override
+    {
+      _vtmr.pending() = 0;
+      return false;
+    }
+
+    Mword vcpu_irq_id() const override
+    { return _vtmr.raw & Hyp_vm_state::Vtmr::Vcpu_irq_cfg_mask; }
+
+    void load(Hyp_vm_state::Vtmr vtmr)
+    { _vtmr = vtmr; }
+
+    void save(Hyp_vm_state::Vtmr *vtmr) const
+    { *vtmr = _vtmr; }
+
+    bool set_pending()
+    {
+      _vtmr.pending() = 1;
+      return _vtmr.direct() && _vtmr.enabled();
+    }
+
+    bool upcall() const { return !_vtmr.direct(); }
+
+    bool queue() const
+    { return _vtmr.direct() && _vtmr.enabled() && _vtmr.pending(); }
+  };
+
+  Vcpu_irq_list _injected_irqs;
+  Mword _pending_injections;
+  Vtimer_vcpu_irq _vtimer_irq;
 };
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && cpu_virt]:
+
+#include "irq.h"
+#include "irq_mgr.h"
 
 EXTENSION class Context
 {
@@ -176,6 +215,181 @@ Context::switch_vm_state(Context *t)
     arm_hyp_load_non_vm_state(vgic);
 }
 
+PROTECTED inline
+void
+Context::init_virt_state()
+{
+  _doorbell_irq = 0;
+  _pending_injections = 0;
+}
+
+/**
+ * Inject vIRQ into the vCPU.
+ *
+ * If possible it will be inserted directly. If the thread is not in vCPU user
+ * mode the doorbell irq will be triggered to tell the vmm that an irq was
+ * queued.
+ *
+ * \attention If the context is not currently in vcpu user mode the function
+ *            may take the Irq_shortcut. This implies that
+ *            arch_inject_vcpu_irq() might not always return!
+ */
+IMPLEMENT_OVERRIDE
+void
+Context::arch_inject_vcpu_irq(Mword irq_id, Vcpu_irq_list_item *irq)
+{
+  assert(cpu_lock.test());
+
+  auto g = lock_guard(_injected_irqs.lock());
+  if(_injected_irqs.in_list(irq))
+    return;
+
+  assert(!irq->lr);
+  _injected_irqs.push_front(irq);
+
+  if ((state() & (Thread_vcpu_user | Thread_ext_vcpu_enabled)) ==
+                 (Thread_vcpu_user | Thread_ext_vcpu_enabled))
+    {
+      // We've interrupted the guest and can directly inject the IRQ
+      Vcpu_state *vcpu = vcpu_state().access();
+      Vm_state *v = vm_state(vcpu);
+      irq->lr = Gic_h_global::gic->inject(&v->gic, Gic_h::Vcpu_irq_cfg(irq_id),
+                                          current() == this);
+      if (!irq->lr)
+        // TODO: preempt an LR if this irq has higher priority
+        _pending_injections++;
+    }
+  else
+    {
+      _pending_injections++;
+
+      // Attention: this *must* be the last statement because it will usually
+      // take the Irq_shortcut straight back to user space!
+      g.reset();
+      if (Irq_base *doorbell = access_once(&_doorbell_irq))
+        doorbell->hit(0);
+    }
+}
+
+/**
+ * Revoke a possibly injected vIRQ from the vCPU.
+ *
+ * If \p reap is true the interrupt is removed unconditionally, regardless of
+ * its current state. Otherwise, if the vIRQ is currently active, it will be
+ * left active on the vCPU and eoi'ed once the vCPU is finshed with it (or the
+ * thread dies).
+ *
+ * The pending/active irq should not be revoked from a foreign thread. We
+ * cannot update the vCPU state in this case and the vIRQ will stay injected on
+ * the the vCPU!
+ *
+ * \return True if irq was pending, false otherwise.
+ */
+IMPLEMENT_OVERRIDE
+bool
+Context::arch_revoke_vcpu_irq(Vcpu_irq_list_item *irq, bool reap)
+{
+  auto g = lock_guard(_injected_irqs.lock());
+  if (!_injected_irqs.in_list(irq))
+    return false;
+
+  _injected_irqs.remove(irq);
+  if (irq->lr)
+    {
+      if (current() != this)
+        {
+          irq->lr = 0;
+          return true;
+        }
+
+      Vcpu_state *vcpu = vcpu_state().access();
+      Vm_state *v = vm_state(vcpu);
+      bool active = Gic_h_global::gic->revoke(&v->gic, irq->lr-1U, reap);
+      irq->lr = 0;
+
+      // FIXME: we somehow have to wait for the vCPU to eoi the interrupt
+      // without having it queued here. Currently it will be unmasked too early
+      // and the new vCPU will possibly get the IRQ in parallel!
+      //if (active)
+      //  queue_somewhere_else_and_wait_for_guest_eoi();
+      //return !active;
+
+      // FIXME: instead we re-insert it on the new vCPU :(
+      (void)active;
+
+      return true;
+    }
+  else
+    _pending_injections--;
+
+  return false;
+}
+
+PROTECTED
+void
+Context::vcpu_handle_pending_injects(Vm_state *v, bool load)
+{
+  assert(cpu_lock.test());
+  auto g = lock_guard(_injected_irqs.lock());
+
+  if (EXPECT_TRUE(!_pending_injections))
+    return;
+
+  for (auto && irq : _injected_irqs)
+    {
+      if (irq->lr)
+        continue;
+
+      irq->lr = Gic_h_global::gic->inject(&v->gic,
+                                          Gic_h::Vcpu_irq_cfg(irq->vcpu_irq_id()),
+                                          load);
+      if (irq->lr)
+        {
+          --_pending_injections;
+          if (!_pending_injections)
+            break;
+        }
+      else
+        break;
+    }
+}
+
+IMPLEMENT_OVERRIDE inline
+void Context::vcpu_pv_switch_to_user(Vcpu_state *vcpu, bool current)
+{
+  if (!(state() & Thread_ext_vcpu_enabled))
+    return;
+
+  check(current);
+  assert(state() & Thread_vcpu_user);
+
+  Vm_state *v = vm_state(vcpu);
+  bool old_queued = _vtimer_irq.queue();
+  _vtimer_irq.load(access_once(&v->vtmr));
+
+  if (!old_queued && _vtimer_irq.queue())
+    // This is guaranteed to *not* take the Irq_shortcut because the thread is
+    // in vcpu user mode.
+    arch_inject_vcpu_irq(_vtimer_irq.vcpu_irq_id(), &_vtimer_irq);
+  else if (old_queued && !_vtimer_irq.queue())
+    arch_revoke_vcpu_irq(&_vtimer_irq, false);
+
+  vcpu_handle_pending_injects(v, current);
+}
+
+IMPLEMENT_OVERRIDE inline
+void Context::vcpu_pv_switch_to_kernel(Vcpu_state *vcpu, bool)
+{
+  if (state() & Thread_ext_vcpu_enabled)
+    _vtimer_irq.save(&vm_state(vcpu)->vtmr);
+}
+
+//---------------------------------------------------------------------------
 IMPLEMENTATION [arm && !cpu_virt]:
 
 PUBLIC inline void Context::switch_vm_state(Context *) {}
+
+PROTECTED inline
+void
+Context::init_virt_state()
+{}

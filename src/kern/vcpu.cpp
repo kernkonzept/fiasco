@@ -45,3 +45,30 @@ public:
   Mword _sp;
   Vcpu_host_regs host;
 };
+
+// ---------------------------------------------------------------------
+INTERFACE [irq_direct_inject]:
+
+#include <cxx/hlist>
+
+class Vcpu_irq_list_item : public cxx::H_list_item
+{
+public:
+  virtual bool vcpu_eoi() = 0;
+  virtual Mword vcpu_irq_id() const = 0;
+};
+
+class Vcpu_irq_list : public cxx::H_list<Vcpu_irq_list_item>
+{
+public:
+  Spin_lock<> *lock() { return &_lock; }
+
+private:
+  Spin_lock<> _lock;
+};
+
+// ---------------------------------------------------------------------
+INTERFACE [!irq_direct_inject]:
+
+struct Vcpu_irq_list_item {};
+struct Vcpu_irq_list {};

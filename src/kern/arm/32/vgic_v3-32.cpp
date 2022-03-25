@@ -159,3 +159,89 @@ Gic_h_v3::load_lrs(Gic_h::Arm_vgic::Lrs const *lr, unsigned n)
 #undef TRANSFER_LR
 }
 
+PUBLIC inline void
+Gic_h_v3::build_lr(Gic_h::Arm_vgic::Lrs *lr, unsigned idx,
+                   Gic_h::Vcpu_irq_cfg cfg, bool load)
+{
+  Lr new_lr(0);
+  new_lr.state() = Lr::Pending;
+  new_lr.eoi()   = 1; // need an EOI IRQ
+  new_lr.vid()   = cfg.vid();
+  new_lr.prio()  = cfg.prio();
+  new_lr.grp1()  = cfg.grp1();
+
+  lr->lr64[idx] = new_lr.raw;
+
+#define TRANSFER_LR(ul,uh,v,x) \
+  if (x < Gic_h::Arm_vgic::N_lregs) \
+    { \
+      asm ("mcr p15, 4, %0, c12, " #ul", " #v : : "r"((Unsigned32)new_lr.raw)); \
+      asm ("mcr p15, 4, %0, c12, " #uh", " #v : : "r"((Unsigned32)(new_lr.raw >> 32))); \
+    }
+
+  if (load)
+    switch (idx)
+      {
+        case  0: TRANSFER_LR(c12, c14, 0, 0); break;
+        case  1: TRANSFER_LR(c12, c14, 1, 1); break;
+        case  2: TRANSFER_LR(c12, c14, 2, 2); break;
+        case  3: TRANSFER_LR(c12, c14, 3, 3); break;
+        case  4: TRANSFER_LR(c12, c14, 4, 4); break;
+        case  5: TRANSFER_LR(c12, c14, 5, 5); break;
+        case  6: TRANSFER_LR(c12, c14, 6, 6); break;
+        case  7: TRANSFER_LR(c12, c14, 7, 7); break;
+        case  8: TRANSFER_LR(c13, c15, 0, 8); break;
+        case  9: TRANSFER_LR(c13, c15, 1, 9); break;
+        case 10: TRANSFER_LR(c13, c15, 2, 10); break;
+        case 11: TRANSFER_LR(c13, c15, 3, 11); break;
+        case 12: TRANSFER_LR(c13, c15, 4, 12); break;
+        case 13: TRANSFER_LR(c13, c15, 5, 13); break;
+        case 14: TRANSFER_LR(c13, c15, 6, 14); break;
+        case 15: TRANSFER_LR(c13, c15, 7, 15); break;
+      }
+
+#undef TRANSFER_LR
+}
+
+PUBLIC inline void
+Gic_h_v3::clear_lr(unsigned idx)
+{
+#define TRANSFER_LR(uh,v,x) \
+  if (x < Gic_h::Arm_vgic::N_lregs) \
+    asm ("mcr p15, 4, %0, c12, " #uh", " #v : : "r"(0));
+
+  switch (idx)
+    {
+      case  0: TRANSFER_LR(c14, 0, 0); break;
+      case  1: TRANSFER_LR(c14, 1, 1); break;
+      case  2: TRANSFER_LR(c14, 2, 2); break;
+      case  3: TRANSFER_LR(c14, 3, 3); break;
+      case  4: TRANSFER_LR(c14, 4, 4); break;
+      case  5: TRANSFER_LR(c14, 5, 5); break;
+      case  6: TRANSFER_LR(c14, 6, 6); break;
+      case  7: TRANSFER_LR(c14, 7, 7); break;
+      case  8: TRANSFER_LR(c15, 0, 8); break;
+      case  9: TRANSFER_LR(c15, 1, 9); break;
+      case 10: TRANSFER_LR(c15, 2, 10); break;
+      case 11: TRANSFER_LR(c15, 3, 11); break;
+      case 12: TRANSFER_LR(c15, 4, 12); break;
+      case 13: TRANSFER_LR(c15, 5, 13); break;
+      case 14: TRANSFER_LR(c15, 6, 14); break;
+      case 15: TRANSFER_LR(c15, 7, 15); break;
+    }
+
+#undef TRANSFER_LR
+}
+
+PUBLIC inline bool
+Gic_h_v3::teardown_lr(Gic_h::Arm_vgic::Lrs *lr, unsigned idx, bool reap)
+{
+  Lr reg(lr->lr64[idx]);
+  if (!reg.active() || reap)
+    {
+      lr->lr64[idx] = 0;
+      return false;
+    }
+  else
+    return true;
+}
