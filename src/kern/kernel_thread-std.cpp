@@ -54,6 +54,7 @@ Kernel_thread::init_workload()
   // Task just newly created, no need for locking or remote TLB flush.
   check(sigma0->alloc_ku_mem(L4_fpage::mem(utcb_addr(), Config::PAGE_SHIFT),
                              false) >= 0);
+  sigma0->map_all_segs(Mem_desc::Dedicated);
   // prevent deletion of this thing
   sigma0->inc_ref();
 
@@ -94,6 +95,7 @@ Kernel_thread::init_workload()
   // Task just newly created, no need for locking or remote TLB flush.
   check(boot_task->alloc_ku_mem(L4_fpage::mem(utcb_addr(), Config::PAGE_SHIFT),
                                 false) >= 0);
+  boot_task->map_all_segs(Mem_desc::Bootloader);
 
   // prevent deletion of this thing
   boot_task->inc_ref();

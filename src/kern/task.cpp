@@ -38,6 +38,17 @@ public:
   virtual int resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode);
   virtual void cleanup_vcpu(Context *ctxt, Vcpu_state *vcpu);
 
+  /**
+   * Map regions marked as eligible for eager mapping.
+   *
+   * MPU platforms provide only a limited number of MPU regions, so it is
+   * essential to have contiguous regions in tasks. On the other hand we cannot
+   * simply map too much because MPU regions must not overlap with the kernel.
+   * Instead, bootstraps mark precisely the regions that shall be mapped
+   * eagerly, and this function then maps them.
+   */
+  void map_all_segs(Mem_desc::Mem_type mt);
+
 private:
   /// map the global utcb pointer page into this task
   void map_utcb_ptr_page();
@@ -674,6 +685,10 @@ register_factory()
 }
 
 }
+
+IMPLEMENT_DEFAULT inline void
+Task::map_all_segs(Mem_desc::Mem_type)
+{}
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [!ux]:
