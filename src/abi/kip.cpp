@@ -176,6 +176,10 @@ PUBLIC inline ALWAYS_INLINE
 unsigned Mem_desc::is_virtual() const
 { return _l & 0x200; }
 
+PUBLIC inline ALWAYS_INLINE
+unsigned Mem_desc::eager_map() const
+{ return _l & 0x100; }
+
 PUBLIC inline
 bool Mem_desc::contains(Address addr) const
 {

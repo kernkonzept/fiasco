@@ -39,6 +39,7 @@ Kernel_thread::init_workload()
                                        Config::PAGE_SHIFT);
   check(sigma0->alloc_ku_mem(sigma0_utcb)
         >= 0);
+  sigma0->map_all_segs(Mem_desc::Dedicated);
   // prevent deletion of this thing
   sigma0->inc_ref();
 
@@ -78,6 +79,7 @@ Kernel_thread::init_workload()
                                      Config::PAGE_SHIFT);
   check(boot_task->alloc_ku_mem(root_utcb)
         >= 0);
+  boot_task->map_all_segs(Mem_desc::Bootloader);
 
   // prevent deletion of this thing
   boot_task->inc_ref();

@@ -1,3 +1,32 @@
+IMPLEMENTATION [arm && mpu]:
+
+IMPLEMENT_OVERRIDE inline void
+Task::map_all_segs(Mem_desc::Mem_type mt)
+{
+  for (auto const &md: Kip::k()->mem_descs_a())
+    {
+      if (!md.valid() || md.is_virtual())
+        continue;
+      if (md.type() != mt)
+        continue;
+      if (!md.eager_map())
+        continue;
+
+      auto attr = Mem_space::Attr(md.ext_type()
+        ? (L4_fpage::Rights(md.ext_type()) | L4_fpage::Rights::U())
+        : L4_fpage::Rights::URWX());
+      for (auto addr = md.start() & Config::PAGE_MASK;
+           addr < md.end();
+           addr += Config::PAGE_SIZE)
+        {
+          Mem_space::v_insert(Mem_space::Phys_addr(addr),
+                                    Virt_addr(addr),
+                                    Virt_order(Config::PAGE_SHIFT),
+                                    attr);
+        }
+    }
+}
+
 IMPLEMENTATION [arm && !cpu_virt]:
 
 PRIVATE inline
