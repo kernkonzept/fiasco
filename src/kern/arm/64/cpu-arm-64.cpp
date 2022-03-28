@@ -74,6 +74,19 @@ public:
       return pfr0 & 0x20;
     }
   };
+
+  struct has_vmsa : public Alternative_static_functor<has_vmsa>
+  {
+    // See Armv8-R AArch64 supplement (ARM DDI 0600A)
+    static bool probe()
+    {
+      Mword mmfr0;
+      asm ("mrs %0, ID_AA64MMFR0_EL1": "=r" (mmfr0));
+      unsigned msa = (mmfr0 >> 48) & 0x0fU;
+      unsigned msa_frac = (mmfr0 >> 52) & 0x0fU;
+      return msa == 0 || (msa == 0xf && msa_frac == 2);
+    }
+  };
 };
 
 //----------------------------------------------------------------------

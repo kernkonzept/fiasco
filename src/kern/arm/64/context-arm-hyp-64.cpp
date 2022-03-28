@@ -70,7 +70,8 @@ Context::save_ext_vcpu_state(Mword /*_state*/, Vm_state *v)
   // always trapped: asm volatile ("mrs %0, ACTLR_EL1" : "=r"(v->actlr));
   asm volatile ("mrs %x0, TCR_EL1"   : "=r"(v->tcr));
   asm volatile ("mrs %x0, TTBR0_EL1" : "=r"(v->ttbr0));
-  asm volatile ("mrs %x0, TTBR1_EL1" : "=r"(v->ttbr1));
+  if (EXPECT_TRUE(Cpu::has_vmsa()))
+    asm volatile ("mrs %x0, TTBR1_EL1" : "=r"(v->ttbr1));
 
   asm volatile ("mrs %x0, SCTLR_EL1" : "=r"(v->sctlr));
   asm volatile ("mrs %x0, ESR_EL1"   : "=r"(v->esr));
