@@ -70,7 +70,7 @@ Context::spill_user_state()
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_v6plus]:
 
-PRIVATE inline
+PROTECTED inline
 void
 Context::store_tpidrurw()
 {

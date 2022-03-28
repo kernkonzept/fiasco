@@ -504,6 +504,14 @@ PRIVATE inline
 void
 Thread::store_tpidrurw(Trex *t)
 {
+  // If this thread is the current thread, the value stored in the _tpidrurw
+  // field might be outdated, as the _tpidrurw field is only updated when
+  // switching away from a thread. So for a thread that recently changed its
+  // TPIDRURW register, the new value will not yet be reflected in the _tpidrurw
+  // field if the thread was not switched away from since the change.
+  if (this == current_thread())
+    // Ensure the _tpidrurw field is up-to-date with the TPIDRURW register.
+    Context::store_tpidrurw();
   t->tpidrurw = _tpidrurw;
 }
 
