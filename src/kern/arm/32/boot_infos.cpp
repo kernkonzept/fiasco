@@ -4,7 +4,7 @@ INTERFACE [arm && 32bit]:
   __attribute__((section(".bootstrap.info"), used))
 
 // --------------------------------------------------
-INTERFACE [arm && 32bit && !arm_lpae]:
+INTERFACE [arm && 32bit && mmu && !arm_lpae]:
 
 struct Boot_paging_info
 {
@@ -12,10 +12,18 @@ struct Boot_paging_info
 };
 
 //---------------------------------------------------
-INTERFACE [arm && 32bit && arm_lpae]:
+INTERFACE [arm && 32bit && mmu && arm_lpae]:
 
 struct Boot_paging_info
 {
   void *kernel_page_directory;
   void *kernel_lpae_dir;
+};
+
+//---------------------------------------------------
+INTERFACE [arm && 32bit && !mmu]:
+
+struct Boot_paging_info
+{
+  void *dummy;
 };

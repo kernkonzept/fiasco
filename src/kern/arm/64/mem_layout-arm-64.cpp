@@ -1,4 +1,4 @@
-INTERFACE [arm && cpu_virt && !arm_pt_48]: // -----------------------------
+INTERFACE [arm && mmu && cpu_virt && !arm_pt_48]: // ----------------------
 
 EXTENSION class Mem_layout
 {
@@ -8,7 +8,7 @@ public:
   };
 };
 
-INTERFACE [arm && cpu_virt && arm_pt_48]: // ------------------------------
+INTERFACE [arm && mmu && cpu_virt && arm_pt_48]: // -----------------------
 
 EXTENSION class Mem_layout
 {
@@ -18,7 +18,7 @@ public:
   };
 };
 
-INTERFACE [arm && cpu_virt]: // -------------------------------------------
+INTERFACE [arm && mmu && cpu_virt]: // ------------------------------------
 
 EXTENSION class Mem_layout
 {
@@ -40,7 +40,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && !cpu_virt]:
+INTERFACE [arm && mmu && !cpu_virt]:
 
 #include "template_math.h"
 
@@ -70,6 +70,22 @@ public:
     utcb_ptr_align       = Tl_math::Ld<sizeof(void*)>::Res,
   };
 
+};
+
+//--------------------------------------------------------------------------
+INTERFACE [arm && !mmu]:
+
+#include "config.h"
+
+EXTENSION class Mem_layout
+{
+public:
+  enum Virt_layout : Address {
+    Cache_flush_area     = 0x00000000, // dummy
+    Map_base             = RAM_PHYS_BASE, // 1:1
+    Utcb_addr            = 0, // dynamically determined at allocation time
+    User_max             = 0xffffffffffffffff,
+  };
 };
 
 //--------------------------------------------------------------------------

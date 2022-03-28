@@ -16,6 +16,11 @@
   DUMP_MEMBER1 (THREAD, Thread, _exc_cont._ip,          EXCEPTION_IP)
   DUMP_MEMBER1 (THREAD, Thread, _exc_cont._psr,         EXCEPTION_PSR)
 #endif
+#if defined(CONFIG_ARM) && defined(CONFIG_MPU)
+  DUMP_MEMBER1 (THREAD, Context, _mpu_usr_regions,      MPU_USR_REGIONS)
+  DUMP_MEMBER1 (THREAD, Context, _mpu_prbar2,           MPU_PRBAR2)
+  DUMP_MEMBER1 (THREAD, Context, _mpu_prlar2,           MPU_PRLAR2)
+#endif
   DUMP_MEMBER1 (THREAD, Thread, _magic,			MAGIC)
   DUMP_OFFSET  (THREAD, MAX, sizeof (Thread))
 

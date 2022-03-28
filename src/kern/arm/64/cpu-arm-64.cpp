@@ -164,6 +164,26 @@ unsigned
 Cpu::vmid_bits() const
 { return (_cpu_id._mmfr[1] & 0xf0U) == 0x20 ? 16 : 8; }
 
+//--------------------------------------------------------------------------
+INTERFACE [arm && cpu_virt && mmu]:
+
+#include "paging.h"
+
+EXTENSION class Cpu
+{
+public:
+  enum
+  {
+    Vtcr_bits = (1UL << 31) // RES1
+                | (Page::Tcr_attribs << 8)
+                | Page::Vtcr_bits,
+    Vtcr_usr_mask = 0,
+  };
+};
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION [arm && cpu_virt && mmu]:
+
 IMPLEMENT_OVERRIDE
 void
 Cpu::init_hyp_mode()
@@ -180,10 +200,7 @@ Cpu::init_hyp_mode()
           vmid_bits(), Mem_unit::Asid_bits);
 
   asm volatile ("msr VBAR_EL2, %x0" : : "r"(&exception_vector));
-  asm volatile ("msr VTCR_EL2, %x0" : :
-                "r"(  (1UL << 31) // RES1
-                    | (Page::Tcr_attribs << 8)
-                    | Page::Vtcr_bits));
+  asm volatile ("msr VTCR_EL2, %x0" : : "r"(Vtcr_bits));
 
   asm volatile ("msr MDCR_EL2, %x0" : : "r"((Mword)Mdcr_bits));
 
@@ -199,6 +216,42 @@ Cpu::init_hyp_mode()
                "r" (  0x33ffUL     // TCP: 0-9, 12-13
                     | (1 << 20))); // TTA
 }
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION [arm && cpu_virt && !mmu]:
+
+EXTENSION class Cpu
+{
+public:
+  enum
+  {
+    Vtcr_bits = 0,		// PMSA@EL1 by default
+    Vtcr_usr_mask = 3UL << 30,	// MSA, NSA
+  };
+};
+
+IMPLEMENT_OVERRIDE
+void
+Cpu::init_hyp_mode()
+{
+  extern char exception_vector[];
+  asm volatile ("msr VBAR_EL2, %x0" : : "r"(&exception_vector));
+  asm volatile ("msr VTCR_EL2, %x0" : : "r"(Vtcr_bits));
+  asm volatile ("msr S3_4_C2_C6_2, %0" : : "r"(1UL << 31)); // VSTCR_EL2
+
+  asm volatile ("msr MDCR_EL2, %x0" : : "r"((Mword)Mdcr_bits));
+
+  asm volatile ("msr SCTLR_EL1, %x0" : : "r"((Mword)Sctlr_el1_generic));
+  asm volatile ("msr HCR_EL2, %x0" : : "r" (Hcr_non_vm_bits));
+
+  Mem::dsb();
+  Mem::isb();
+
+  asm volatile("msr CPTR_EL2, %x0" : :
+               "r" (  0x33ffUL     // TCP: 0-9, 12-13
+                    | (1 << 20))); // TTA
+}
+
 //--------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 

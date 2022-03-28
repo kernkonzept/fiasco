@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm]:
+IMPLEMENTATION [arm && mmu]:
 
 typedef Unsigned64 K_ptab_array[512] __attribute__((aligned(0x1000)));
 
@@ -6,7 +6,7 @@ typedef Unsigned64 K_ptab_array[512] __attribute__((aligned(0x1000)));
 IMPLEMENT inline void Kmem_space::init() {}
 
 // -----------------------------------------------------------------
-IMPLEMENTATION [arm && !cpu_virt]:
+IMPLEMENTATION [arm && mmu && !cpu_virt]:
 
 #include "boot_infos.h"
 
@@ -30,7 +30,7 @@ static Boot_paging_info FIASCO_BOOT_PAGING_INFO _bs_pgin_dta =
 };
 
 // -----------------------------------------------------------------
-IMPLEMENTATION [arm && cpu_virt]:
+IMPLEMENTATION [arm && mmu && cpu_virt]:
 
 #include "boot_infos.h"
 
@@ -49,3 +49,10 @@ static Boot_paging_info FIASCO_BOOT_PAGING_INFO _bs_pgin_dta =
   pdir_scratch,
   (1 << Num_scratch_pages) - 1
 };
+
+// -----------------------------------------------------------------
+IMPLEMENTATION [arm && !mmu]:
+
+IMPLEMENT inline
+void Kmem_space::init()
+{}

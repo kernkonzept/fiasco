@@ -1,4 +1,21 @@
-IMPLEMENTATION [arm && !cpu_virt]:
+IMPLEMENTATION [arm && !mmu]:
+
+PROTECTED inline
+int
+Mem_space::sync_kernel()
+{
+  return 0;
+}
+
+PUBLIC inline
+Address
+Mem_space::pmem_to_phys(Address virt) const
+{
+  return virt;
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [arm && mmu && !cpu_virt]:
 
 PROTECTED inline NEEDS["kmem_alloc.h"]
 int
@@ -19,7 +36,7 @@ Mem_space::pmem_to_phys(Address virt) const
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [arm && 32bit && cpu_virt]:
+IMPLEMENTATION [arm && mmu && 32bit && cpu_virt]:
 
 static Address __mem_space_syscall_page;
 
@@ -89,7 +106,7 @@ Mem_space::pmem_to_phys(Address virt) const
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm_v6]:
+IMPLEMENTATION [arm_v6 && mmu]:
 
 IMPLEMENT inline NEEDS[Mem_space::asid]
 void Mem_space::make_current()
@@ -112,7 +129,7 @@ void Mem_space::make_current()
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [(arm_v7 || arm_v8) && !arm_lpae]:
+IMPLEMENTATION [(arm_v7 || arm_v8) && mmu && !arm_lpae]:
 
 IMPLEMENT inline NEEDS[Mem_space::asid]
 void
@@ -136,7 +153,7 @@ Mem_space::make_current()
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [(arm_v7 || arm_v8) && arm_lpae && !cpu_virt]:
+IMPLEMENTATION [(arm_v7 || arm_v8) && mmu && arm_lpae && !cpu_virt]:
 
 IMPLEMENT inline NEEDS[Mem_space::asid]
 void
@@ -156,7 +173,7 @@ Mem_space::make_current()
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [(arm_v7 || arm_v8) && arm_lpae && cpu_virt]:
+IMPLEMENTATION [(arm_v7 || arm_v8) && mmu && arm_lpae && cpu_virt]:
 
 IMPLEMENT inline NEEDS[Mem_space::asid]
 void
@@ -173,6 +190,69 @@ Mem_space::make_current()
       :
       : "r" (cxx::int_value<Phys_mem_addr>(_dir_phys)), "r"(asid() << 16), "r" (0)
       : "r1");
+
+  _current.current() = this;
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [(arm_v7 || arm_v8) && mpu && !cpu_virt]:
+
+#include "mpu.h"
+#include "context.h"
+
+IMPLEMENT
+void
+Mem_space::make_current()
+{
+  current()->load_mpu_enable(this);
+  Mpu::update(_dir);
+
+  // No need for dsb/isb yet. This is done on kernel exit when the regions
+  // are actually enabled.
+  asm volatile (
+      "mcr p15, 0, %0, c13, c0, 1   \n" // set new ASID value
+      :
+      : "r"(asid()));
+
+  _current.current() = this;
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [arm_v8 && mpu && cpu_virt]:
+
+#include "mpu.h"
+#include "context.h"
+
+IMPLEMENT
+void
+Mem_space::make_current()
+{
+  current()->load_mpu_enable(this);
+  Mpu::update(_dir);
+
+  // No need for dsb/isb yet. This is done on kernel exit when the regions
+  // are actually enabled.
+  asm volatile (
+      "mcr p15, 4, %0, c2, c0, 0   \n" // VSCTLR - set new VMID value
+      :
+      : "r"(asid() << 16));
+
+  _current.current() = this;
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [(arm_v7 || arm_v8) && !mmu && !mpu]:
+
+#include "context.h"
+
+IMPLEMENT inline NEEDS[Mem_space::asid]
+void
+Mem_space::make_current()
+{
+  asm volatile (
+      "mcr p15, 0, %0, c13, c0, 1   \n" // set new ASID value
+      :
+      : "r"(asid()));
 
   _current.current() = this;
 }

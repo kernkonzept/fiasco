@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && !cpu_virt]:
+IMPLEMENTATION [arm && mmu && !cpu_virt]:
 
 #include <panic.h>
 

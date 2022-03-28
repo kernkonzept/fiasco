@@ -85,6 +85,9 @@ _tramp_mp_entry:
 	bsp_early_init x0, x1
 	mrs	x17, CurrentEL
 	lsr	x17, x17, #2
+
+	// EL3 is only available on A-profile
+#ifdef CONFIG_ARM_PROFILE_A
 	cmp	x17, #3 // running at EL3
 	b.ne	.Lnot_el3
 
@@ -142,6 +145,8 @@ _tramp_mp_entry:
 1:	mov	sp, x18
 	b	2f
 .Lnot_el3:
+#endif
+
 	cmp	x17, #2
 #ifndef CONFIG_CPU_VIRT
 	b.ne  2f
@@ -163,6 +168,7 @@ _tramp_mp_entry:
 	isb	sy
 	dsb	sy
 
+#if defined(CONFIG_MMU)
 #ifdef CONFIG_CPU_VIRT
 	// TLB flush
 	tlbi	alle2
@@ -233,6 +239,49 @@ defvar _tramp_mp_gic_cpu_base
 
 	// we run paged now
 _tramp_mp_virt:
+#elif defined(CONFIG_MPU)
+	ic	iallu
+	// TODO: flush cache
+
+	ldr	x0, _tramp_mp_startup_mair
+	ldr	x1, _tramp_mp_startup_prbar0
+	ldr	x2, _tramp_mp_startup_prlar0
+
+#ifdef CONFIG_CPU_VIRT
+	msr	MAIR_EL2, x0
+	msr	S3_4_c6_c2_1, xzr // PRSELR_EL2
+	isb
+	msr	S3_4_c6_c8_0, x1  // PRBAR_EL2
+	msr	S3_4_c6_c8_1, x2  // PRLAR_EL2
+#else
+	msr	MAIR_EL1, x0
+	msr	S3_0_c6_c2_1, xzr // PRSELR_EL1
+	isb
+	msr	S3_0_c6_c8_0, x1  // PRBAR_EL1
+	msr	S3_0_c6_c8_1, x2  // PRLAR_EL1
+#endif
+
+	ldr	x0, _tramp_mp_startup_sctlr
+	dsb	sy
+#ifdef CONFIG_CPU_VIRT
+	msr	SCTLR_EL2, x0
+#else
+	msr	SCTLR_EL1, x0
+#endif
+	isb
+	b _mpu_enabled
+
+	.align 3
+.global _tramp_mp_boot_info
+_tramp_mp_boot_info:
+defvar _tramp_mp_startup_sctlr
+defvar _tramp_mp_startup_mair
+defvar _tramp_mp_startup_prbar0
+defvar _tramp_mp_startup_prlar0
+
+_mpu_enabled:
+#endif
+
 	// spinlock on cpu-init
 	adr	x0, _tramp_mp_spinlock
 	sevl

@@ -54,7 +54,7 @@ public:
   Unsigned32 vpidr;
 
   Vtmr vtmr;
-  Unsigned32 _rsvd[2];
+  Unsigned64 vtcr;
 
   // size depdens on gic version, numer of LRs and APRs
   Gic  gic;
@@ -84,6 +84,14 @@ public:
   Unsigned32 dacr32;
   Unsigned32 fpexc32;
   Unsigned32 ifsr32;
+
+  struct {
+    Unsigned64 prselr;
+    struct {
+      Unsigned64 prbar;
+      Unsigned64 prlar;
+    } r[32];
+  } mpu;
 };
 
 EXTENSION struct Context_hyp

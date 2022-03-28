@@ -1,4 +1,4 @@
-INTERFACE [arm]:
+INTERFACE [arm && mmu]:
 
 #include "auto_quota.h"
 #include "kmem.h"		// for "_unused_*" virtual memory regions
@@ -50,7 +50,109 @@ private:
 };
 
 //---------------------------------------------------------------------------
+INTERFACE [arm && !mmu]:
+
+#include "auto_quota.h"
+#include "kmem.h"		// for "_unused_*" virtual memory regions
+#include "kmem_slab.h"
+#include "member_offs.h"
+#include "paging.h"
+#include "types.h"
+#include "ram_quota.h"
+#include "config.h"
+
+EXTENSION class Mem_space
+{
+  friend class Jdb;
+
+  enum {
+    Debug_failures = 1,
+    Debug_allocation = 0,
+    Debug_free = 0,
+  };
+
+public:
+  typedef Pdir Dir_type;
+
+  /** Return status of v_insert. */
+  enum // Status
+  {
+    Insert_ok = 0,		///< Mapping was added successfully.
+    Insert_err_exists, ///< A mapping already exists at the target addr
+    Insert_warn_attrib_upgrade,	///< Mapping already existed, attribs upgrade
+    Insert_err_nomem,  ///< Couldn't alloc new page table
+    Insert_warn_exists,		///< Mapping already existed
+
+  };
+
+  // Mapping utilities
+  enum				// Definitions for map_util
+  {
+    Need_insert_tlb_flush = 1,
+    Map_page_size = Config::PAGE_SIZE,
+    Page_shift = Config::PAGE_SHIFT,
+    Whole_space = 32,
+    Identity_map = 1,
+  };
+
+  static void kernel_space(Mem_space *);
+
+private:
+  Dir_type *_dir;
+  Dir_type _regions;
+};
+
+//---------------------------------------------------------------------------
+INTERFACE [arm && mpu]:
+
+EXTENSION class Mem_space
+{
+  Unsigned32 _ku_mem_regions = 0;
+
+  inline void ku_mem_added(Unsigned32 touched)
+  { _ku_mem_regions |= touched; }
+
+public:
+  // Return what needs to be written to PRENR when leaving the kernel.
+  inline Unsigned32 ku_mem_mpu_regions() const
+  { return _ku_mem_regions; }
+};
+
+//---------------------------------------------------------------------------
+INTERFACE [arm && !mmu && !mpu]:
+
+EXTENSION class Mem_space
+{
+  inline void ku_mem_added(Unsigned32) {}
+
+public:
+  inline Unsigned32 ku_mem_mpu_regions() const
+  { return 0; }
+};
+
+//---------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
+
+#include "mem_unit.h"
+
+PUBLIC static inline
+bool
+Mem_space::is_full_flush(L4_fpage::Rights rights)
+{
+  return (bool)(rights & L4_fpage::Rights::R());
+}
+
+IMPLEMENT inline
+Mem_space::Tlb_type
+Mem_space::regular_tlb_type()
+{
+  return  Have_asids ? Tlb_per_cpu_asid : Tlb_per_cpu_global;
+}
+
+
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && mmu]:
 
 #include <cassert>
 #include <cstring>
@@ -66,23 +168,6 @@ IMPLEMENTATION [arm]:
 #include "kmem.h"
 #include "kmem_alloc.h"
 #include "mem_unit.h"
-
-Kmem_slab_t<Mem_space::Dir_type,
-            sizeof(Mem_space::Dir_type)> Mem_space::_dir_alloc;
-
-PUBLIC static inline
-bool
-Mem_space::is_full_flush(L4_fpage::Rights rights)
-{
-  return (bool)(rights & L4_fpage::Rights::R());
-}
-
-IMPLEMENT inline
-Mem_space::Tlb_type
-Mem_space::regular_tlb_type()
-{
-  return  Have_asids ? Tlb_per_cpu_asid : Tlb_per_cpu_global;
-}
 
 // Mapping utilities
 
@@ -102,6 +187,8 @@ Mem_space::tlb_flush(bool force = false)
   // Mem_unit::tlb_flush();
 }
 
+Kmem_slab_t<Mem_space::Dir_type,
+            sizeof(Mem_space::Dir_type)> Mem_space::_dir_alloc;
 
 PUBLIC inline
 bool
@@ -127,7 +214,7 @@ void Mem_space::kernel_space(Mem_space *_k_space)
 IMPLEMENT
 Mem_space::Status
 Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order size,
-                    Attr page_attribs)
+                    Attr page_attribs, bool)
 {
   bool const flush = _current.current() == this;
   assert (cxx::is_zero(cxx::get_lsb(Phys_addr(phys), size)));
@@ -282,7 +369,237 @@ Page_number
 Mem_space::canonize(Page_number v)
 { return v; }
 
-IMPLEMENTATION [arm && !arm_lpae]:
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && !mmu]:
+
+#include <cassert>
+#include <cstring>
+#include <new>
+
+#include "atomic.h"
+#include "config.h"
+#include "context.h"
+#include "globals.h"
+#include "l4_types.h"
+#include "logdefs.h"
+#include "panic.h"
+#include "paging.h"
+#include "kmem.h"
+#include "kmem_alloc.h"
+#include "mem_unit.h"
+
+IMPLEMENT
+void
+Mem_space::tlb_flush(bool = false)
+{
+  if (_current.current() == this)
+    {
+      Mpu::update(_dir);
+      current()->load_mpu_enable(this);
+      Mem_unit::tlb_flush(c_asid());
+    }
+  else
+    tlb_mark_unused();
+}
+
+IMPLEMENT_OVERRIDE static
+void
+Mem_space::reload_current()
+{
+  auto *mem_space = current_mem_space(current_cpu());
+  Mpu::update(mem_space->_dir);
+  current()->load_mpu_enable(mem_space);
+}
+
+PUBLIC inline
+bool
+Mem_space::set_attributes(Virt_addr, Attr, bool, Mword)
+{
+  // FIXME: seems unused
+  return false;
+}
+
+IMPLEMENT inline
+void Mem_space::kernel_space(Mem_space *_k_space)
+{
+  _kernel_space = _k_space;
+}
+
+IMPLEMENT
+Mem_space::Status
+Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order size,
+                    Attr page_attribs, bool ku_mem)
+{
+  bool const writeback = _current.current() == this;
+  check (phys == virt);
+  assert (cxx::is_zero(cxx::get_lsb(Phys_addr(phys), size)));
+  assert (cxx::is_zero(cxx::get_lsb(Virt_addr(virt), size)));
+  Mword start = Vaddr::val(virt);
+  Mword end = Vaddr::val(virt) + (1UL << Page_order::val(size)) - 1U;
+  Mpu_region_attr attr = Mpu_region_attr::make_attr(page_attribs.rights,
+                                                    page_attribs.type,
+                                                    !ku_mem);
+  Mem_space::Status ret = Insert_ok;
+
+  auto touched = _dir->add(start, end, attr);
+
+  if (EXPECT_FALSE(touched == Mpu_regions::Error_no_mem))
+    {
+      WARN("Mem_space::v_insert(%p): no region available for [" L4_MWORD_FMT ":" L4_MWORD_FMT "]\n",
+           this, start, end);
+      if (Debug_failures)
+        _dir->dump();
+      return Insert_err_nomem;
+    }
+
+  if (EXPECT_FALSE(touched == Mpu_regions::Error_collision))
+    {
+      // Punch hole with new attributes! Will probably occupy two new regions
+      // in the end!
+      // FIXME: make the delete-and-add an atomic transaction
+      // FIXME: do nothing in case the attributes do not change
+      Mpu_region_attr old_attr;
+      touched = _dir->del(start, end, &old_attr);
+      attr.add_rights(old_attr.rights());
+      auto added = _dir->add(start, end, attr);
+      if (EXPECT_FALSE(added & Mpu_regions::Error))
+        {
+          WARN("Mem_space::v_insert(%p): dropped [" L4_MWORD_FMT ":" L4_MWORD_FMT "]\n",
+               this, start, end);
+          if (Debug_failures)
+            _dir->dump();
+          ret = Insert_err_nomem;
+        }
+      else
+        {
+          touched |= added;
+          if (attr == old_attr)
+            ret = Insert_warn_exists;
+          else
+            ret = Insert_warn_attrib_upgrade;
+        }
+    }
+
+  if (ku_mem)
+    ku_mem_added(touched);
+
+  if (writeback)
+    {
+      Mpu::sync(_dir, touched);
+      current()->load_mpu_enable(this);
+      Mem_unit::tlb_flush(c_asid());
+    }
+
+  if (Debug_allocation)
+    {
+      printf("Mem_space::v_insert(%p, " L4_MWORD_FMT "/%u): ", this, start,
+        Page_order::val(size));
+      _dir->dump();
+    }
+
+  return ret;
+}
+
+PUBLIC inline
+Address
+Mem_space::virt_to_phys(Address virt) const
+{
+  return virt;
+}
+
+IMPLEMENT
+bool
+Mem_space::v_lookup(Vaddr virt, Phys_addr *phys,
+                    Page_order *order, Attr *page_attribs)
+{
+  // MUST be reported in any case! The mapdb relies on this information.
+  if (order) *order = Page_order(Config::SUPERPAGE_SHIFT);
+
+  auto r = _dir->find(Vaddr::val(virt));
+  if (!r)
+    return false;
+
+  if (order) *order = Page_order(Config::PAGE_SHIFT);
+  if (phys) *phys = virt;
+  if (page_attribs) *page_attribs = Attr(r->attr().rights(), r->attr().type());
+
+  return true;
+}
+
+IMPLEMENT
+L4_fpage::Rights
+Mem_space::v_delete(Vaddr virt, Page_order size,
+                    L4_fpage::Rights rights)
+{
+  assert (cxx::is_zero(cxx::get_lsb(Virt_addr(virt), size)));
+  bool const writeback = _current.current() == this;
+  Mword start = Vaddr::val(virt);
+  Mword end = Vaddr::val(virt) + (1UL << Page_order::val(size)) - 1U;
+  Mpu_region_attr attr;
+
+  Unsigned32 ret = _dir->del(start, end, &attr);
+  if (EXPECT_FALSE(!ret))
+    return L4_fpage::Rights(0);
+
+  // Re-add if page stays readable. If the attributes are compatible the
+  // regions will be joined again.
+  if (!(rights & L4_fpage::Rights::R()))
+    {
+      Mpu_region_attr new_attr = attr;
+      new_attr.del_rights(rights);
+      auto added = _dir->add(start, end, new_attr);
+      if (EXPECT_FALSE(added & Mpu_regions::Error))
+        WARN("Mem_space::v_delete(%p): dropped [" L4_MWORD_FMT ":" L4_MWORD_FMT "]\n",
+             this, start, end);
+      else
+        ret |= added;
+    }
+
+  if (writeback)
+    {
+      Mpu::sync(_dir, ret);
+      current()->load_mpu_enable(this);
+      Mem_unit::tlb_flush(c_asid());
+    }
+
+  if (Debug_free)
+    {
+      printf("Mem_space::v_delete(%p, " L4_MWORD_FMT "/%u): ", this, start,
+        Page_order::val(size));
+      _dir->dump();
+    }
+
+  return attr.rights();
+}
+
+PUBLIC inline
+Mem_space::Mem_space(Ram_quota *q)
+: _quota(q), _dir(&_regions), _regions(Mem_layout::kdir->used())
+{}
+
+PROTECTED inline
+bool
+Mem_space::initialize()
+{ return true; }
+
+PUBLIC
+Mem_space::Mem_space(Ram_quota *q, Dir_type* pdir)
+  : _quota(q), _dir (pdir), _regions(0)
+{}
+
+PUBLIC
+Mem_space::~Mem_space()
+{
+  // FIXME: do we need to handle _quota?
+}
+
+PUBLIC static inline
+Page_number
+Mem_space::canonize(Page_number v)
+{ return v; }
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [arm && mmu && !arm_lpae]:
 
 PUBLIC static
 void
@@ -425,7 +742,7 @@ DEFINE_PER_CPU Per_cpu<Mem_space::Asids> Mem_space::_asids;
 Mem_space::Asid_alloc  Mem_space::_asid_alloc(&_asids);
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_lpae && !arm_pt_48]:
+IMPLEMENTATION [arm && mmu && arm_lpae && !arm_pt_48]:
 
 PUBLIC static
 void
@@ -437,7 +754,7 @@ Mem_space::init_page_sizes()
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_lpae && arm_pt_48]:
+IMPLEMENTATION [arm && mmu && arm_lpae && arm_pt_48]:
 
 PUBLIC static
 void
@@ -483,4 +800,15 @@ Mem_space::sync_read_tlb_active_on_cpu()
   // observable after the execution of a DSB instruction by the PE that executed
   // the store" (see ARM DDI 0487 H.a D5-4927)
   Mem::dsb();
+}
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [arm && !mmu]:
+
+PUBLIC static
+void
+Mem_space::init_page_sizes()
+{
+  add_page_size(Page_order(Config::PAGE_SHIFT));
+  add_page_size(Page_order(20)); // 1MB
 }

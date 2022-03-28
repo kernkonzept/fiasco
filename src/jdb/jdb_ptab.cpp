@@ -1,4 +1,4 @@
-IMPLEMENTATION:
+IMPLEMENTATION[mmu]:
 
 #include <cstdio>
 
@@ -415,7 +415,7 @@ Jdb_ptab_m::Jdb_ptab_m()
 
 static Jdb_ptab_m jdb_ptab_m INIT_PRIORITY(JDB_MODULE_INIT_PRIO);
 
-IMPLEMENTATION[32bit]:
+IMPLEMENTATION[mmu && 32bit]:
 
 PRIVATE
 void
@@ -424,7 +424,7 @@ Jdb_ptab::print_invalid()
     putstr("   ###  ");
 }
 
-IMPLEMENTATION[64bit]:
+IMPLEMENTATION[mmu && 64bit]:
 
 PRIVATE
 void

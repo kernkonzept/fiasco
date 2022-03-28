@@ -384,7 +384,7 @@ PUBLIC
 Mem_space::Status
 Dmar_space::v_insert(Mem_space::Phys_addr phys, Mem_space::Vaddr virt,
                      Mem_space::Page_order order,
-                     Mem_space::Attr page_attribs) override
+                     Mem_space::Attr page_attribs, bool) override
 {
   assert (cxx::is_zero(cxx::get_lsb(Mem_space::Phys_addr(phys), order)));
   assert (cxx::is_zero(cxx::get_lsb(Virt_addr(virt), order)));

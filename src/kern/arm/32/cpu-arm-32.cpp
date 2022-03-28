@@ -104,7 +104,7 @@ Cpu::disable_dcache()
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !cpu_virt]:
+IMPLEMENTATION [arm && !cpu_virt && mmu]:
 
 IMPLEMENT_OVERRIDE
 void
@@ -123,6 +123,40 @@ Cpu::init_supervisor_mode(bool is_boot_cpu)
                              Page::Attr(Page::Rights::RWX(),
                              Page::Type::Normal(), Page::Kern::Global())));
   pte.write_back_if(true, Mem_unit::Asid_kernel);
+}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && !cpu_virt && !mmu && arm_v8]:
+
+IMPLEMENT_OVERRIDE
+void
+Cpu::init_supervisor_mode(bool)
+{
+  // set VBAR system register to exception vector address
+  extern char ivt_start;
+  asm volatile("mcr p15, 0, %0, c12, c0, 0 \n\t"
+               :  : "r" (&ivt_start));
+
+  // make sure vectors are executed in A32 state
+  unsigned long r;
+  asm volatile("mrc p15, 0, %0, c1, c0, 0" : "=r" (r) : : "memory");
+  r &= ~(1UL << 30);
+  asm volatile("mcr p15, 0, %0, c1, c0, 0" : : "r" (r) : "memory");
+}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && !cpu_virt && !mmu && !arm_v8]:
+
+IMPLEMENT_OVERRIDE
+void
+Cpu::init_supervisor_mode(bool)
+{
+  // FIXME: just assume that vectors and entry code are already at right place?
+  // The VBAR system register does not exist on ARMv7 PMSA but Qemu still
+  // works.
+  extern char ivt_start;
+  asm volatile("mcr p15, 0, %0, c12, c0, 0 \n\t"
+               :  : "r" (&ivt_start));
 }
 
 //---------------------------------------------------------------------------

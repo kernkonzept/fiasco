@@ -79,3 +79,56 @@ Kmem::mmio_remap(Address phys, Address size)
   return phys_to_pmem(phys);
 }
 
+// -----------------------------------------------------------------
+IMPLEMENTATION [arm && mpu]:
+
+#include "kmem_space.h"
+
+PUBLIC static
+Address
+Kmem::mmio_remap(Address phys, Address size)
+{
+  Address start = phys & ~63UL;
+  Address end = (phys + size - 1U) | 63U;
+
+  // Attention: this only works before the first user space task is created.
+  // Otherwise the mpu regions will collide!
+  auto diff = kdir->add(
+    start, end,
+    Mpu_region_attr::make_attr(L4_fpage::Rights::RW(),
+                               L4_msg_item::Memory_type::Uncached()));
+  assert(!(diff & Mpu_regions::Error));
+  Mpu::sync(kdir, diff);
+  Mem::isb();
+
+  return phys;
+}
+
+PUBLIC static
+void
+Kmem::mmio_unmap(Address virt, Address size)
+{
+  Mem::dsb();
+
+  Address start = virt & ~63UL;
+  Address end = (virt + size - 1U) | 63U;
+
+  auto diff = kdir->del(start, end, nullptr);
+  Mpu::sync(kdir, diff);
+  Mem::isb();
+}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && !mmu && !mpu]:
+
+PUBLIC static
+Address
+Kmem::mmio_remap(Address phys, Address /*size*/)
+{
+  return phys;
+}
+
+PUBLIC static
+void
+Kmem::mmio_unmap(Address, Address)
+{}

@@ -319,6 +319,7 @@ Thread::Thread(Ram_quota *q)
 
   alloc_eager_fpu_state();
   init_virt_state();
+  init_mpu_state();
 
   state_add_dirty(Thread_dead, false);
 

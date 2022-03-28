@@ -4,7 +4,7 @@
 # ARCHSELECT:     BIT32 if !BIT64
 # ARCHSELECT:     HAS_FPU_OPTION
 # ARCHSELECT:     FPU if CPU_VIRT
-# ARCHSELECT:     ARM_LPAE if CPU_VIRT || BIT64
+# ARCHSELECT:     ARM_LPAE if CPU_VIRT || BIT64 || (ARM_V8PLUS && !MMU)
 # ARCHSELECT:     HAS_SERIAL_OPTION
 # ARCHSELECT:     HAS_JDB_DISASM_OPTION
 # ARCHSELECT:     HAS_JDB_GZIP_OPTION
@@ -398,7 +398,8 @@ config ARM_CPU_ERRATA
 
 config KMEM_SIZE
 	int "Kernel heap size (KiB)"
-	default 16384
+	default 16384 if MMU
+	default 4096 if !MMU
 	help
 	  Size of the kernel heap. This memory is reserved for internal data
 	  structures and kernel-user memory allocations.

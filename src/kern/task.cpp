@@ -122,6 +122,11 @@ Task::alloc_ku_mem_chunk(User<void>::Ptr *u_addr, unsigned size, void **k_addr)
   if (size >= Config::SUPERPAGE_SIZE)
     page_size = Mem_space::Page_order(Config::SUPERPAGE_SHIFT);
 
+#ifndef CONFIG_MMU
+  // Need to use physical address on systems without MMU
+  *u_addr = User<void>::Ptr(p);
+#endif
+
   for (Virt_size i = Virt_size(0); i < Virt_size(size);
        i += Virt_size(1) << page_size)
     {
@@ -134,7 +139,7 @@ Task::alloc_ku_mem_chunk(User<void>::Ptr *u_addr, unsigned size, void **k_addr)
 
       Mem_space::Status res =
         static_cast<Mem_space*>(this)->v_insert(pa, user_va, page_size,
-            Mem_space::Attr(L4_fpage::Rights::URW()));
+            Mem_space::Attr(L4_fpage::Rights::URW()), true);
 
       switch (res)
         {

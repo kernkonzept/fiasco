@@ -50,7 +50,11 @@ public:
 
   enum
   {
+#if defined(CONFIG_MMU) || defined(CONFIG_MPU)
     Cache_enabled = true,
+#else
+    Cache_enabled = false,
+#endif
   };
 
   enum
@@ -81,7 +85,7 @@ public:
 };
 
 // -----------------------------------------------------------------------
-INTERFACE [arm && arm_lpae]:
+INTERFACE [arm && mmu && arm_lpae]:
 
 EXTENSION class Config
 {
@@ -96,7 +100,22 @@ public:
 };
 
 // -----------------------------------------------------------------------
-INTERFACE [arm && !arm_lpae]:
+INTERFACE [arm && mmu && !arm_lpae]:
+
+EXTENSION class Config
+{
+public:
+
+  enum
+  {
+    SUPERPAGE_SHIFT = 20,
+    SUPERPAGE_SIZE  = 1 << SUPERPAGE_SHIFT,
+    SUPERPAGE_MASK  = ~(SUPERPAGE_SIZE -1)
+  };
+};
+
+// -----------------------------------------------------------------------
+INTERFACE [arm && !mmu]:
 
 EXTENSION class Config
 {

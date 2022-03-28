@@ -86,7 +86,7 @@ public:
    */
   FIASCO_SPACE_VIRTUAL
   Status v_insert(Phys_addr phys, Vaddr virt, Page_order size,
-                  Attr page_attribs);
+                  Attr page_attribs, bool ku_mem = false);
 
   /** Look up a page-table entry.
    *
@@ -149,6 +149,14 @@ public:
 
   /** Set this memory space as the current on this CPU. */
   void make_current();
+
+  /**
+   * Reload current Mem_space state on this CPU.
+   *
+   * This is only needed on MPU systems. On MMU systems the hardware does
+   * the page walk independently (after TLB was evicted).
+   */
+  static void reload_current();
 
   static Mem_space *kernel_space()
   { return _kernel_space; }
@@ -379,6 +387,32 @@ private:
 };
 
 //---------------------------------------------------------------------------
+INTERFACE [mmu]:
+
+EXTENSION class Mem_space
+{
+public:
+  /**
+   * The MMU is a separate observer and always needs to be maintained.
+   */
+  enum { Need_local_tlb_flush = 1 };
+};
+
+//---------------------------------------------------------------------------
+INTERFACE [!mmu]:
+
+EXTENSION class Mem_space
+{
+public:
+  /**
+   * A MPU is updated incrementally on the local CPU and there is no need for
+   * further maintenance. Obviously this includes the case where neither an MMU
+   * nor an MPU is used.
+   */
+  enum { Need_local_tlb_flush = 0 };
+};
+
+//---------------------------------------------------------------------------
 IMPLEMENTATION:
 
 //
@@ -500,6 +534,11 @@ Mem_space::switchin_context(Mem_space *from)
       from->tlb_track_space_usage();
     }
 }
+
+IMPLEMENT_DEFAULT static inline
+void
+Mem_space::reload_current()
+{}
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION [!need_xcpu_tlb_flush]:

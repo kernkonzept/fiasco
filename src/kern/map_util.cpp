@@ -138,6 +138,7 @@ private:
       {
         // flush all CPU-local TLBs, e.g. MMU, ept, npt
         Tlb::flush_all_cpu(cpu);
+        Mem_space::reload_current();
       }
     else
       _cpu_tlb.flush_stored(cpu);
@@ -172,12 +173,16 @@ private:
         // here without any risk of stale TLB entries remaining.
         affected_cpus &= Mem_space::active_tlb();
 
+        // For MPU systems no maintenance is required on the local CPU.
+        if (!Mem_space::Need_local_tlb_flush)
+          affected_cpus.clear(current_cpu());
+
         Cpu_call::cpu_call_many(affected_cpus, [this](Cpu_number cpu) {
           this->do_flush_cpu_op(cpu);
           return false;
         });
       }
-    else
+    else if (Mem_space::Need_local_tlb_flush)
       do_flush_cpu_op(current_cpu());
   }
 

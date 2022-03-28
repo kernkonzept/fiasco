@@ -21,12 +21,30 @@ public:
 
   typedef cxx::int_type<unsigned, Order_t> Order;
   typedef cxx::int_type_order<Mword, Virt_addr_t, Order> Virt_addr;
+};
 
+//---------------------------------------------------------------------------
+INTERFACE [arm && mmu]:
+
+EXTENSION class Bootstrap
+{
+public:
   enum
   {
     Virt_ofs = Mem_layout::Sdram_phys_base - Mem_layout::Map_base,
   };
+};
 
+//---------------------------------------------------------------------------
+INTERFACE [arm && !mmu]:
+
+EXTENSION class Bootstrap
+{
+public:
+  enum
+  {
+    Virt_ofs = 0,
+  };
 };
 
 //---------------------------------------------------------------------------
@@ -39,7 +57,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && arm_lpae]:
+INTERFACE [arm && mmu && arm_lpae]:
 
 #include <cxx/cxx_int>
 
@@ -51,7 +69,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_lpae]:
+IMPLEMENTATION [arm && mmu && arm_lpae]:
 
 static inline NEEDS[Bootstrap::map_page_order]
 Bootstrap::Phys_addr
@@ -73,7 +91,7 @@ Bootstrap::pt_entry(Phys_addr pa, bool cache, bool local)
 }
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && !arm_lpae]:
+INTERFACE [arm && mmu && !arm_lpae]:
 
 #include <cxx/cxx_int>
 
@@ -85,7 +103,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !arm_lpae]:
+IMPLEMENTATION [arm && mmu && !arm_lpae]:
 
 #include "paging.h"
 
@@ -112,6 +130,33 @@ IMPLEMENTATION [arm]:
 
 Bootstrap_info FIASCO_BOOT_PAGING_INFO bs_info;
 
+#ifndef NDEBUG
+void assert_fail(char const * /*expr*/, char const * /*file*/, unsigned int /*line*/)
+{
+  for (;;);
+}
+#endif
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && mmu && arm_v5]:
+
+static inline void Bootstrap::set_asid() {}
+static inline void Bootstrap::set_ttbcr() {}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && !arm_1176_cache_alias_fix]:
+
+PUBLIC static inline
+void
+Bootstrap::do_arm_1176_cache_alias_workaround() {}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && mmu]:
+
+#include "kmem_space.h"
+#include "mmu.h"
+#include "globalconfig.h"
+
 static inline NEEDS[Bootstrap::map_page_order]
 Bootstrap::Phys_addr
 Bootstrap::map_page_size_phys()
@@ -130,27 +175,6 @@ Bootstrap::map_memory(void volatile *pd, Virt_addr va, Phys_addr pa,
   p[cxx::int_value<Virt_addr>(va >> map_page_order())]
     = pt_entry(pa, cache, local);
 }
-
-
-//---------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_v5]:
-
-static inline void Bootstrap::set_asid() {}
-static inline void Bootstrap::set_ttbcr() {}
-
-//---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !arm_1176_cache_alias_fix]:
-
-PUBLIC static inline
-void
-Bootstrap::do_arm_1176_cache_alias_workaround() {}
-
-//---------------------------------------------------------------------------
-IMPLEMENTATION [arm]:
-
-#include "kmem_space.h"
-#include "mmu.h"
-#include "globalconfig.h"
 
 PUBLIC static inline ALWAYS_INLINE
 void *
@@ -176,3 +200,18 @@ extern "C" void bootstrap_main()
     ;
 }
 
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && !mmu]:
+
+#include "globalconfig.h"
+
+extern "C" void bootstrap_main()
+{
+  Bootstrap::leave_hyp_mode();
+
+  // force to construct an absolute relocation because GCC may not do it.
+  bs_info.entry();
+
+  while(1)
+    ;
+}

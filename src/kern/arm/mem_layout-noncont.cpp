@@ -67,7 +67,7 @@ Mem_layout::add_pmem(Address phys, Address virt, unsigned long size)
 
 
 //------------------------------------------------------------------------
-IMPLEMENTATION [!noncont_mem]:
+IMPLEMENTATION [!noncont_mem && mmu]:
 
 #include <cstdio>
 
@@ -93,3 +93,20 @@ Address
 Mem_layout::phys_to_pmem(Address phys)
 { return phys - Sdram_phys_base + Map_base; }
 
+//------------------------------------------------------------------------
+IMPLEMENTATION [!noncont_mem && !mmu]:
+
+PUBLIC static
+Address
+Mem_layout::pmem_to_phys(Address addr)
+{ return addr; }
+
+PUBLIC static inline
+Address
+Mem_layout::pmem_to_phys(void const *addr)
+{ return Address(addr); }
+
+PUBLIC static inline
+Address
+Mem_layout::phys_to_pmem(Address phys)
+{ return phys; }

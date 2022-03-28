@@ -1,4 +1,4 @@
-INTERFACE [arm]:
+INTERFACE [arm && mmu]:
 
 #include "mem_layout.h"
 #include "mmio_register_block.h"
@@ -46,7 +46,8 @@ EXTENSION class Bootstrap
   };
 };
 
-IMPLEMENTATION [arm]:
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && mmu]:
 
 PRIVATE static inline void
 Bootstrap::map_ram_range(Kpdir *kd, Bs_alloc &alloc,
@@ -124,6 +125,7 @@ Bootstrap::map_ram(Kpdir *kd, Bs_alloc &alloc)
 }
 
 
+//---------------------------------------------------------------------------
 IMPLEMENTATION [arm && pic_gic && !have_arm_gicv3]:
 
 PUBLIC static void
@@ -141,12 +143,14 @@ Bootstrap::config_gic_ns()
   Mmu<Bootstrap::Cache_flush_area, true>::flush_cache();
 }
 
+//---------------------------------------------------------------------------
 IMPLEMENTATION [arm && (!pic_gic || have_arm_gicv3)]:
 
 PUBLIC static inline void
 Bootstrap::config_gic_ns() {}
 
-IMPLEMENTATION [arm && !cpu_virt]:
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && mmu && !cpu_virt]:
 
 #include "cpu.h"
 
@@ -243,7 +247,9 @@ Bootstrap::leave_hyp_mode()
       asm volatile ("tlbi alle1");
       // set HCR (RW and HCD)
       asm volatile ("msr HCR_EL2, %0" : : "r"(Hcr_default_bits));
-      asm volatile ("   mov %[tmp], sp       \n"
+      asm volatile ("   mrs %[tmp], MIDR_EL1 \n"
+                    "   msr VPIDR_EL2, %[tmp]\n"
+                    "   mov %[tmp], sp       \n"
                     "   msr spsr_el2, %[psr] \n"
                     "   adr x4, 1f           \n"
                     "   msr elr_el2, x4      \n"
@@ -291,12 +297,53 @@ Bootstrap::init_paging()
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm]:
+IMPLEMENTATION [arm && mpu && !cpu_virt]:
+
+PUBLIC static void
+Bootstrap::leave_hyp_mode()
+{
+  Mword cel;
+  asm volatile ("mrs %0, CurrentEL" : "=r"(cel));
+  cel >>= 2;
+  cel &= 3;
+  Mword tmp;
+
+  switch (cel)
+    {
+    case 2:
+      // set HCR (RAO/WI and HCD)
+      asm volatile ("msr HCR_EL2, %0" : : "r"(Hcr_default_bits));
+      asm volatile ("msr VTCR_EL2, %0" : : "r"(0));
+      asm volatile ("msr S3_4_C2_C6_2, %0" : : "r"(1UL << 31)); // VSTCR_EL2
+      asm volatile ("   mrs %[tmp], MIDR_EL1 \n"
+                    "   msr VPIDR_EL2, %[tmp]\n"
+                    "   mov %[tmp], sp       \n"
+                    "   msr spsr_el2, %[psr] \n"
+                    "   adr x4, 1f           \n"
+                    "   msr elr_el2, x4      \n"
+                    "   eret                 \n"
+                    "1: mov sp, %[tmp]       \n"
+                    : [tmp]"=&r"(tmp)
+                    : [psr]"r"((0xfUL << 6) | 5UL)
+                    : "cc", "x4");
+      break;
+    case 3: // ARMv8-R AArch64 has no EL3
+    case 1:
+    default:
+      break;
+    }
+}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && mmu && arm_lpae]:
 
 static inline
 Bootstrap::Order
 Bootstrap::map_page_order()
 { return Order(30); }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm]:
 
 PUBLIC static inline void
 Bootstrap::add_initial_pmem()
@@ -320,7 +367,7 @@ asm
 );
 
 // -----------------------------------------------------------------
-IMPLEMENTATION [arm && cpu_virt]:
+IMPLEMENTATION [arm && mmu && cpu_virt]:
 
 #include "cpu.h"
 
@@ -426,3 +473,10 @@ Bootstrap::init_paging()
 
   return Phys_addr(0);
 }
+
+// -----------------------------------------------------------------
+IMPLEMENTATION [arm && mpu && cpu_virt]:
+
+PUBLIC static inline void
+Bootstrap::leave_hyp_mode()
+{}

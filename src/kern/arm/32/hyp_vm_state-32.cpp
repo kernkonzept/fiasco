@@ -74,12 +74,6 @@ public:
   Unsigned32 actlr;
   Unsigned32 cpacr;
 
-  Unsigned64 ttbr0;
-  Unsigned64 ttbr1;
-  Unsigned32 ttbcr;
-
-  Unsigned32 dacr;
-
   Unsigned32 dfsr;
   Unsigned32 ifsr;
   Unsigned32 adfsr;
@@ -100,6 +94,23 @@ public:
 
   Unsigned32 fpinst;
   Unsigned32 fpinst2;
+
+  union {
+    struct {
+      Unsigned64 ttbr0;
+      Unsigned64 ttbr1;
+      Unsigned32 ttbcr;
+      Unsigned32 dacr;
+    } mmu;
+
+    struct {
+      Unsigned32 prselr;
+      struct {
+        Unsigned32 prbar;
+        Unsigned32 prlar;
+      } r[32];
+    } mpu;
+  };
 };
 
 EXTENSION struct Context_hyp

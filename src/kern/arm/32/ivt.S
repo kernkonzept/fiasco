@@ -52,6 +52,33 @@
 .endm
 
 /**
+ * Reconfigure MPU to kernel state.
+ *
+ * Disables all user mode regions, make KIP writable and cover all kernel heap.
+ */
+.macro mpu_kernel_enter
+#ifdef CONFIG_MPU
+	stmdb	sp!, {r0 - r4, lr}
+	bl	__mpu_kernel_enter
+	ldmia	sp!, {r0 - r4, lr}
+#endif
+.endm
+
+/**
+ * Reconfigure MPU to user space state.
+ *
+ * Constrain heap region to stack, make KIP read-only and enable all user
+ * regions.
+ */
+.macro mpu_kernel_leave
+#ifdef CONFIG_MPU
+	stmdb	sp!, {r0 - r4, lr}
+	bl	__mpu_kernel_leave
+	ldmia	sp!, {r0 - r4, lr}
+#endif
+.endm
+
+/**
  * switch to kernel mode and
  *
  * \param reg           scratch register (used if not_svc on ARMv5)
@@ -109,6 +136,7 @@
 .endm
 .macro  switch_to_kernel adjust atomic_fixup not_svc
 	__switch_to_kernel r14 \adjust \atomic_fixup \not_svc
+	mpu_kernel_enter
 .endm
 
 /*************************************************************************
@@ -118,6 +146,7 @@
  * \post `sp` points to the top of the stack (pops the return frame)
  */
 .macro 	return_from_exception
+	mpu_kernel_leave
 	ldr	lr, [sp, #RF(PSR,0)]		@ Unstack SPSR
 	tst	lr, #0x0f			@ Mask all but relevant mode bits
 	add	sp, sp, #RF_SIZE		@ SP to top of stack
@@ -212,9 +241,10 @@
 1:	ldr	pc, [r0]
 .global fast_ret_from_irq
 fast_ret_from_irq:
-2:      ldmia	sp, {r0 - r12}
+2:      ldmia	sp!, {r0 - r12}
 	disable_irqs
-	add	sp, sp, #(13*4 + RF_SIZE)
+	mpu_kernel_leave
+	add	sp, sp, #(RF_SIZE)
 
         // XXX: use rfe here
 	/* Return */
@@ -545,6 +575,105 @@ irq_entry:
 __irq_handler_irq:
 1:	.word	irq_handler
 
+#ifdef CONFIG_MPU
+__mpu_kernel_enter:
+	ldr	r0, [sp, #RF(PSR, 6*4)]	@ get spsr from stack
+	tst	r0, #0x0f		@ Mask all but relevant mode bits
+	bne	4f			@ Kernel re-entry
+
+	CONTEXT_OF r0, sp
+
+	// We remove the user mappings. Make sure all accesses in-flight are
+	// retired with the old MPU settings to prevent false faults.
+	dsb
+
+	// disable all user regions
+	ldr	r1, [r0, #(OFS__THREAD__MPU_USR_REGIONS)]
+	
+	mov	r3, #1
+1:	clz	r2, r1
+	rsbs	r2, r2, #31
+	bmi	2f
+
+	mcr	p15, 0, r2, c6, c2, 1	// PRSELR
+	bic	r1, r1, r3, LSL r2	// clear bit in mask
+	mrc	p15, 0, r2, c6, c3, 1	// read PRLAR
+	bic	r2, r2, #1		// clear EN
+	mcr	p15, 0, r2, c6, c3, 1	// write back PRLAR
+
+	b	1b
+2:
+	// make KIP writable
+	mcr	p15, 0, r3, c6, c2, 1	// PRSELR = 1
+	mrc	p15, 0, r2, c6, c3, 0	// read PRBAR
+	bfc	r2, #1, #2		// AP[2:1] = b00 -> RW@EL1
+	mcr	p15, 0, r2, c6, c3, 0	// write back PRBAR
+
+	// restore regular heap region
+	mov	r3, #2
+	ldr	r1, [r0, #(OFS__THREAD__MPU_PRBAR2)]
+	mcr	p15, 0, r3, c6, c2, 1	// PRSELR = 2
+	ldr	r2, [r0, #(OFS__THREAD__MPU_PRLAR2)]
+	mcr	p15, 0, r1, c6, c3, 0	// write PRBAR
+	mcr	p15, 0, r2, c6, c3, 1	// write PRLAR
+3:
+	isb
+
+4:
+	bx	lr
+
+__mpu_kernel_leave:
+	ldr	r0, [sp, #RF(PSR, 6*4)]	@ get spsr from stack
+	tst	r0, #0x0f		@ Mask all but relevant mode bits
+	bne	3f			@ Kernel re-entry
+
+	CONTEXT_OF r0, sp
+
+	// Make sure all in-kernel memory accesses are retired before we change
+	// the MPU.
+	dsb
+
+	// constrain heap region to stack
+	mov	r3, #2
+	mcr	p15, 0, r3, c6, c2, 1	// PRSELR = 2
+
+	mrc	p15, 0, r1, c6, c3, 0	// read PRBAR
+	and	r1, r1, #0x3f
+	orr	r1, r1, r0
+	mcr	p15, 0, r1, c6, c3, 0	// write PRBAR
+
+	mrc	p15, 0, r1, c6, c3, 1	// read PRLAR
+	and	r1, r1, #0x3f
+	add	r2, r0, #((THREAD_BLOCK_SIZE-1) & ~0x3f)
+	orr	r2, r2, r1
+	mcr	p15, 0, r2, c6, c3, 1	// write back PRLAR
+
+	// make KIP read only
+	mov	r3, #1
+	mcr	p15, 0, r3, c6, c2, 1	// PRSELR = 1
+	mrc	p15, 0, r2, c6, c3, 0	// read PRBAR
+	orr	r2, r2, #(3 << 1)	// AP[2:1] = b11 -> RO@EL1/0
+	mcr	p15, 0, r2, c6, c3, 0	// write back PRBAR
+
+	// enable all user regions
+	mov	r3, #1
+	ldr	r1, [r0, #(OFS__THREAD__MPU_USR_REGIONS)]
+
+1:	clz	r2, r1
+	rsbs	r2, r2, #31
+	bmi	2f
+
+	mcr	p15, 0, r2, c6, c2, 1	// PRSELR
+	bic	r1, r1, r3, LSL r2	// clear bit in mask
+	mrc	p15, 0, r2, c6, c3, 1	// read PRLAR
+	orr	r2, r2, #1		// set EN
+	mcr	p15, 0, r2, c6, c3, 1	// write back PRLAR
+
+	b	1b
+2:
+3:
+	bx	lr
+#endif
 
 /******************************************************************************
  * Exception fiq ()
@@ -665,7 +794,8 @@ alien_syscall: @ Do it for an alien ---------------------------------------
 1:	@ Resume the alien system call ------------------------------------
 	str	r0, [r1, #(OFS__THREAD__STATE)]
 	ldr	r0, [sp, #RF(SVC_LR, 13*4)] @ read orig excpetion PC
-	adr	r1, sys_call_table
+	movw	r1, #:lower16:sys_call_table
+	movt	r1, #:upper16:sys_call_table
 	sub	r0, r1, r0
 	adr	lr, 2f
 	ldr	pc, [r0]

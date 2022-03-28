@@ -85,6 +85,7 @@ kernel_main()
   static Kernel_thread *kernel = new (Ram_quota::root) Kernel_thread(Ram_quota::root);
   Task *const ktask = Kernel_task::kernel_task();
   kernel->kbind(ktask);
+  kernel->init_mpu_state();
   assert(((Mword)kernel->init_stack() & 7) == 0);
 
   Mem_unit::tlb_flush();
@@ -92,6 +93,26 @@ kernel_main()
   extern char call_bootstrap[];
   // switch to stack of kernel thread and bootstrap the kernel
   Thread::arm_fast_exit(kernel->init_stack(), call_bootstrap, kernel);
+}
+
+//------------------------------------------------------------------------
+IMPLEMENTATION[arm && mp && !mpu]:
+
+static void init_ap_cpu_mpu()
+{}
+
+//------------------------------------------------------------------------
+IMPLEMENTATION[arm && mp && mpu]:
+
+#include "mem_layout.h"
+#include "mpu.h"
+
+static void init_ap_cpu_mpu()
+{
+  Mpu::init();
+  Mpu::sync(*Mem_layout::kdir, (*Mem_layout::kdir)->used(), true);
+  Mpu::enable();
+  Mem::isb();
 }
 
 //------------------------------------------------------------------------
@@ -115,6 +136,8 @@ int boot_ap_cpu() __asm__("BOOT_AP_CPU");
 
 int boot_ap_cpu()
 {
+  init_ap_cpu_mpu();
+
   static Cpu_number last_cpu; // keep track of the last cpu ever appeared
 
   Cpu_number _cpu = Cpu::cpus.find_cpu(Cpu::By_phys_id(Proc::cpu_id()));
@@ -153,6 +176,7 @@ int boot_ap_cpu()
 
   // create kernel thread
   Kernel_thread *kernel = App_cpu_thread::may_be_create(_cpu, cpu_is_new);
+  kernel->init_mpu_state();
 
   void *sp = kernel->init_stack();
     {

@@ -180,7 +180,7 @@ Mem_space::destroy()
 IMPLEMENT
 Mem_space::Status
 Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order size,
-                    Attr page_attribs)
+                    Attr page_attribs, bool)
 {
   // insert page into page table
 

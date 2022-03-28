@@ -1,4 +1,4 @@
-IMPLEMENTATION[arm]:
+IMPLEMENTATION[arm && mmu]:
 
 #include "globals.h"
 #include "kmem_space.h"
@@ -10,4 +10,14 @@ Kernel_task::Kernel_task()
 : Task(Ram_quota::root, reinterpret_cast<Pdir*>(&kernel_l0_dir), Caps::none())
 {}
 
+//---------------------------------------------------------------------------
+IMPLEMENTATION[arm && !mmu]:
+
+#include "globals.h"
+#include "kmem.h"
+
+PRIVATE
+Kernel_task::Kernel_task()
+: Task(Ram_quota::root, reinterpret_cast<Pdir*>(Kmem::kdir), Caps::none())
+{}
 

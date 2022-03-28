@@ -1,4 +1,4 @@
-IMPLEMENTATION [!noncont_mem]:
+IMPLEMENTATION [!noncont_mem && mmu]:
 
 PRIVATE static
 bool

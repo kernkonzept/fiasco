@@ -34,6 +34,17 @@ protected:
 };
 
 // ------------------------------------------------------------------------
+INTERFACE [arm && mpu]:
+
+EXTENSION class Context
+{
+private:
+  Unsigned32 _mpu_usr_regions;
+  Mword _mpu_prbar2;
+  Mword _mpu_prlar2;
+};
+
+// ------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
 #include <cassert>
@@ -51,7 +62,8 @@ IMPLEMENTATION [arm]:
 
 IMPLEMENT inline NEEDS[Context::spill_user_state, Context::store_tpidrurw,
                        Context::load_tpidrurw, Context::load_tpidruro,
-                       Context::arm_switch_gp_regs, "irq_mgr.h"]
+                       Context::arm_switch_gp_regs, Context::load_mpu_enable,
+                       "irq_mgr.h"]
 void
 Context::switch_cpu(Context *t)
 {
@@ -63,6 +75,7 @@ Context::switch_cpu(Context *t)
   t->fill_user_state();
   t->load_tpidrurw();
   t->load_tpidruro();
+  t->load_mpu_enable(static_cast<Mem_space*>(t->_space.space()));
   Irq_mgr::mgr->set_priority_mask(t->_irq_priority);
   arm_switch_gp_regs(t);
 }
@@ -211,3 +224,36 @@ Context::tpidruro() const
   return 0;
 }
 
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && mpu]:
+
+#include "mem_layout.h"
+
+PUBLIC inline
+void
+Context::load_mpu_enable(Mem_space *mem_space)
+{
+  _mpu_usr_regions = mem_space->ku_mem_mpu_regions();
+}
+
+PUBLIC
+void
+Context::init_mpu_state()
+{
+  auto const &kd = **Mem_layout::kdir;
+  _mpu_prbar2 = kd[Kpdir::Kernel_heap]->prbar;
+  _mpu_prlar2 = kd[Kpdir::Kernel_heap]->prlar | 1U; // set EN
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && !mpu]:
+
+PUBLIC inline
+void
+Context::load_mpu_enable(Mem_space *) const
+{}
+
+PUBLIC inline
+void
+Context::init_mpu_state()
+{}

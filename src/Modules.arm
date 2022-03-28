@@ -32,8 +32,10 @@ PREPROCESS_PARTS-$(CONFIG_ARM_920T)                 += arm_v5 vcache
 PREPROCESS_PARTS-$(CONFIG_ARM_926)                  += arm_v5 vcache
 PREPROCESS_PARTS-$(CONFIG_CPU_VIRT)                 += vgic arm_esr_traps \
                                                        irq_direct_inject
+ifeq ($(CONFIG_MMU),y)
 PREPROCESS_PARTS-y$(CONFIG_CPU_VIRT)$(CONFIG_BIT64) += noncont_mem
 PREPROCESS_PARTS-$(CONFIG_ARM_PT48)                 += arm_pt_48
+endif
 
 PREPROCESS_PARTS-$(CONFIG_IOMMU)                    += virtual_space_iface
 
@@ -147,7 +149,7 @@ PRIVATE_INCDIR 	+= kern/$(CONFIG_XARCH)/$(BITS) kern/$(CONFIG_XARCH) kern
 INTERFACES_KERNEL += 	__main mem_op kmem_space boot_uart_init     \
 			irq_chip_generic bootstrap                  \
 			outer_cache utcb_support cascade_irq   \
-			irq_mgr_multi_chip smc_call psci mem_chunk
+			irq_mgr_multi_chip smc_call psci mem_chunk mpu
 
 INTERFACES_KERNEL-$(CONFIG_ARM_MPCORE) += scu
 INTERFACES_KERNEL-$(CONFIG_ARM_CORTEX_A9) += scu
@@ -233,6 +235,7 @@ vgic_v3_IMPL		:= vgic_v3 vgic_v3-$(BITS)
 vmem_alloc_IMPL	  	:= vmem_alloc vmem_alloc-arch
 tb_entry_IMPL		:= tb_entry tb_entry-arm
 vcpu_IMPL		:= vcpu vcpu-arm
+mpu_IMPL                := mpu mpu-arm mpu-arm-$(BITS)
 
 
 ifeq ("$(CONFIG_JDB)","y")

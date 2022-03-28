@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm]:
+IMPLEMENTATION [arm && mmu]:
 
 // always 16kB also for LPAE we use 4 consecutive second level tables
 char kernel_page_directory[0x4000]
@@ -16,7 +16,7 @@ void Kmem_space::init()
 }
 
 //----------------------------------------------------------------------------------
-IMPLEMENTATION[arm && arm_lpae]:
+IMPLEMENTATION[arm && mmu && arm_lpae]:
 
 #include "boot_infos.h"
 
@@ -30,7 +30,7 @@ static Boot_paging_info FIASCO_BOOT_PAGING_INFO _bs_pgin_dta =
 };
 
 //----------------------------------------------------------------------------------
-IMPLEMENTATION[arm && !arm_lpae]:
+IMPLEMENTATION[arm && mmu && !arm_lpae]:
 
 #include "boot_infos.h"
 
@@ -40,3 +40,10 @@ static Boot_paging_info FIASCO_BOOT_PAGING_INFO _bs_pgin_dta =
 {
   kernel_page_directory
 };
+
+//----------------------------------------------------------------------------------
+IMPLEMENTATION[arm && !mmu]:
+
+IMPLEMENT inline
+void Kmem_space::init()
+{}

@@ -1,10 +1,10 @@
-IMPLEMENTATION [arm]:
+IMPLEMENTATION [arm && mmu]:
 
 #include "paging.h"
 #include "simpleio.h"
 
 // -----------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_v5]:
+IMPLEMENTATION [arm && mmu && arm_v5]:
 
 PRIVATE inline
 bool
@@ -32,7 +32,7 @@ Jdb_ptab::ap_char(unsigned ap)
 
 
 // -----------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_v6plus && !arm_lpae]:
+IMPLEMENTATION [arm && mmu && arm_v6plus && !arm_lpae]:
 
 PRIVATE inline
 bool
@@ -72,7 +72,7 @@ Jdb_ptab::ap_char(unsigned ap)
 }
 
 // -----------------------------------------------------------------------
-IMPLEMENTATION [arm && !arm_lpae]:
+IMPLEMENTATION [arm && mmu && !arm_lpae]:
 
 IMPLEMENT
 void
@@ -123,7 +123,7 @@ Jdb_ptab::print_entry(Pte_ptr const &entry)
 }
 
 // -----------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_lpae && !cpu_virt]:
+IMPLEMENTATION [arm && mmu && arm_lpae && !cpu_virt]:
 
 PRIVATE inline
 char
@@ -134,7 +134,7 @@ Jdb_ptab::ap_char(Pte_ptr const &entry)
 }
 
 // -----------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_lpae && cpu_virt]:
+IMPLEMENTATION [arm && mmu && arm_lpae && cpu_virt]:
 
 PRIVATE inline
 char
@@ -144,7 +144,7 @@ Jdb_ptab::ap_char(Pte_ptr const &entry)
 }
 
 // -----------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_lpae]:
+IMPLEMENTATION [arm && mmu && arm_lpae]:
 
 PRIVATE inline
 bool

@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && mp && pic_gic && have_arm_gicv2]:
+IMPLEMENTATION [arm && mp && mmu && pic_gic && have_arm_gicv2]:
 
 PRIVATE static inline NOEXPORT
 void
@@ -8,7 +8,7 @@ Kernel_thread::boot_app_cpu_gic(Mp_boot_info volatile *inf)
   inf->gic_cpu_base = Mem_layout::Gic_cpu_phys_base;
 }
 
-IMPLEMENTATION [arm && mp && (!pic_gic || !have_arm_gicv2)]:
+IMPLEMENTATION [arm && mp && mmu && (!pic_gic || !have_arm_gicv2)]:
 
 PRIVATE static inline NOEXPORT
 void
@@ -17,7 +17,7 @@ Kernel_thread::boot_app_cpu_gic(Mp_boot_info volatile *inf)
   inf->gic_dist_base = 0;
 }
 
-IMPLEMENTATION [arm && mp]:
+IMPLEMENTATION [arm && mp && mmu]:
 
 #include "io.h"
 #include "platform_control.h"
@@ -62,4 +62,42 @@ Kernel_thread::boot_app_cpus()
   Mem_unit::clean_dcache();
 
   Platform_control::boot_ap_cpus(Kmem::kdir->virt_to_phys((Address)_tramp_mp_entry));
+}
+
+//------------------------------------------------------------------------
+IMPLEMENTATION [arm && mp && !mmu]:
+
+#include "mmu.h"
+#include "mem_layout.h"
+#include "platform_control.h"
+
+EXTENSION class Kernel_thread
+{
+  struct Mp_boot_info
+  {
+    Mword sctlr;
+    Mword mair;
+    Mword prbar0;
+    Mword prlar0;
+  };
+};
+
+PUBLIC
+static void
+Kernel_thread::boot_app_cpus()
+{
+  extern char _tramp_mp_boot_info[];
+  Mp_boot_info volatile *_tmp;
+  _tmp = reinterpret_cast<Mp_boot_info*>(_tramp_mp_boot_info);
+
+  _tmp->sctlr = Proc::sctlr();
+  _tmp->mair  = Mpu::Mair_bits;
+  _tmp->prbar0 = (*(*Mem_layout::kdir))[Kpdir::Kernel_text]->prbar;
+  _tmp->prlar0 = (*(*Mem_layout::kdir))[Kpdir::Kernel_text]->prlar;
+
+  asm volatile ("dsb sy" : : : "memory");
+  Mem_unit::clean_dcache();
+
+  extern char _tramp_mp_entry[];
+  Platform_control::boot_ap_cpus((Address)_tramp_mp_entry);
 }

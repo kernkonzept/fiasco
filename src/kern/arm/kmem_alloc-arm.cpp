@@ -8,7 +8,7 @@ IMPLEMENTATION [arm]:
 #include "ram_quota.h"
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [arm && !cpu_virt && noncont_mem]:
+IMPLEMENTATION [arm && mmu && !cpu_virt && noncont_mem]:
 
 #include "mem_layout.h"
 #include "kmem_space.h"
@@ -92,12 +92,7 @@ Kmem_alloc::Kmem_alloc()
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [arm && !noncont_mem]:
-
-PUBLIC inline NEEDS["mem_layout.h"]
-Address
-Kmem_alloc::to_phys(void *v) const
-{ return (Address)v - Mem_layout::Map_base + Mem_layout::Sdram_phys_base; }
+IMPLEMENTATION [arm && mmu && !noncont_mem]:
 
 IMPLEMENT
 Kmem_alloc::Kmem_alloc()
@@ -159,6 +154,80 @@ Kmem_alloc::Kmem_alloc()
       a->add_mem((void *)(f.start + offset), f.size());
     }
 }
+
+PUBLIC inline NEEDS["mem_layout.h"]
+Address
+Kmem_alloc::to_phys(void *v) const
+{ return (Address)v - Mem_layout::Map_base + Mem_layout::Sdram_phys_base; }
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [arm && !mmu]:
+
+#include "mem_layout.h"
+#include "paging.h"
+
+/**
+ * Map desired region as kernel heap and initalize buddy allocator.
+ */
+PRIVATE void
+Kmem_alloc::init(unsigned long start, unsigned long end)
+{
+  auto touched =
+    Mem_layout::kdir->add(start, end,
+                          Mpu_region_attr::make_attr(L4_fpage::Rights::RW()),
+                          false, Kpdir::Kernel_heap);
+  if (touched & Mpu_regions::Error)
+    panic("Error creating MPU regions!\n");
+  Mpu::sync(Mem_layout::kdir, touched);
+  Mem::isb();
+
+  unsigned long freemap_size = Alloc::free_map_bytes(start, end);
+  unsigned long freemap_addr = end - freemap_size + 1U;
+  end -= freemap_size;
+
+  a->init(start);
+  a->setup_free_map((unsigned long *)freemap_addr, freemap_size);
+  a->add_mem((void *)start, end - start + 1U);
+}
+
+IMPLEMENT
+Kmem_alloc::Kmem_alloc()
+{
+  Mword alloc_size = Config::KMEM_SIZE;
+  Mem_region_map<64> map;
+  unsigned long available_size = create_free_map(Kip::k(), &map);
+
+  if (available_size < alloc_size)
+    panic("Kmem_alloc: No kernel memory available (%ld)\n",
+          available_size);
+
+  unsigned long start = ~0UL;
+  unsigned long end;
+
+  for (int i = map.length() - 1; i >= 0 && alloc_size > 0; --i)
+    {
+      Mem_region &f = map[i];
+      if (f.size() < alloc_size)
+        continue;
+      if (f.size() > alloc_size)
+        f.start += (f.size() - alloc_size);
+
+      Kip::k()->add_mem_region(Mem_desc(f.start, f.end, Mem_desc::Reserved));
+      start = f.start;
+      end = f.end;
+      break;
+    }
+
+  if (start == ~0UL)
+    panic("Kmem_alloc: regions too small");
+
+  init(start, end);
+}
+
+PUBLIC inline
+Address
+Kmem_alloc::to_phys(void *v) const
+{ return (Address)v; }
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION [arm && debug]:

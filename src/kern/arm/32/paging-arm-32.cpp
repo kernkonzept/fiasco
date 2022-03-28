@@ -1,4 +1,4 @@
-INTERFACE [arm && arm_lpae]:
+INTERFACE [arm && mmu && arm_lpae]:
 
 EXTENSION class K_pte_ptr
 {
@@ -28,13 +28,13 @@ typedef Ptab::Shift<Ptab_traits, Virt_addr::Shift>::List Ptab_traits_vpn;
 typedef Ptab::Page_addr_wrap<Page_number, Virt_addr::Shift> Ptab_va_vpn;
 
 //---------------------------------------------------------------------------
-INTERFACE [arm]:
+INTERFACE [arm && mmu]:
 
 /** for ARM 32bit we use identical page-table layouts for kernel and user */
 class Kpdir : public Pdir_t<K_pte_ptr, Ptab_traits_vpn, Ptab_va_vpn> {};
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && cpu_virt]:
+INTERFACE [arm && mmu && cpu_virt]:
 
 /** when using stage 2 paging the attributes in the page-tables differ */
 class Pte_ptr : public Pte_ptr_t<Pte_ptr>
@@ -55,9 +55,8 @@ public:
 typedef Pdir_t<Pte_ptr, Ptab_traits_vpn, Ptab_va_vpn> Pdir;
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && !cpu_virt]:
+INTERFACE [arm && mmu && !cpu_virt]:
 
 /** without stage 2 paging kernel and user use the same page table. */
 typedef K_pte_ptr Pte_ptr;
 typedef Pdir_t<Pte_ptr, Ptab_traits_vpn, Ptab_va_vpn> Pdir;
-

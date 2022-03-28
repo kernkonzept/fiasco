@@ -414,6 +414,18 @@ Thread::is_syscall_pc(Address pc)
 }
 
 PRIVATE static inline
+Arm_esr
+Thread::get_esr()
+{
+  Arm_esr hsr;
+  asm ("mrc p15, 4, %0, c5, c2, 0" : "=r" (hsr));
+  return hsr;
+}
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [arm && 32bit && cpu_virt && mmu]:
+
+PRIVATE static inline
 Address
 Thread::get_fault_pfa(Arm_esr hsr, bool insn_abt, bool ext_vcpu)
 {
@@ -458,13 +470,20 @@ Thread::get_fault_pfa(Arm_esr hsr, bool insn_abt, bool ext_vcpu)
   return (par & 0xfffff000UL) | (far & 0xfff);
 }
 
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [arm && 32bit && cpu_virt && !mmu]:
+
 PRIVATE static inline
-Arm_esr
-Thread::get_esr()
+Address
+Thread::get_fault_pfa(Arm_esr /*hsr*/, bool insn_abt, bool /*ext_vcpu*/)
 {
-  Arm_esr hsr;
-  asm ("mrc p15, 4, %0, c5, c2, 0" : "=r" (hsr));
-  return hsr;
+  Unsigned32 far;
+  if (insn_abt)
+    asm ("mrc p15, 4, %0, c6, c0, 2" : "=r" (far));
+  else
+    asm ("mrc p15, 4, %0, c6, c0, 0" : "=r" (far));
+
+  return far;
 }
 
 // ---------------------------------------------------------------

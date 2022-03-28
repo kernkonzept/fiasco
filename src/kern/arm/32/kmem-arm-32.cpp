@@ -1,4 +1,4 @@
-IMPLEMENTATION [!noncont_mem]:
+IMPLEMENTATION [!noncont_mem && mmu]:
 
 PUBLIC static
 Address
@@ -30,4 +30,3 @@ Kmem::mmio_remap(Address phys, Address size)
 
   return phys;
 }
-

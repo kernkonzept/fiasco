@@ -24,7 +24,7 @@ IMPLEMENTATION [arm]:
 #include <cstdio>
 
 //------------------------------------------------------------------
-IMPLEMENTATION [arm && 32bit && !cpu_virt]:
+IMPLEMENTATION [arm && 32bit && mmu && !cpu_virt]:
 
 #include "static_init.h"
 

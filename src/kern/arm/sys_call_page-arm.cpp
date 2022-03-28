@@ -3,7 +3,7 @@ INTERFACE:
 #include "types.h"
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION[arm && !arm_v6plus]:
+IMPLEMENTATION[arm && mmu && !arm_v6plus]:
 
 PRIVATE static inline NOEXPORT NEEDS["types.h"]
 void
@@ -20,7 +20,7 @@ Sys_call_page::set_utcb_get_code(Unsigned32 *sys_calls)
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION[arm && arm_v6plus]:
+IMPLEMENTATION[arm && mmu && arm_v6plus]:
 
 PRIVATE static inline NOEXPORT NEEDS["types.h"]
 void
@@ -50,7 +50,7 @@ Sys_call_page::set_utcb_get_code(Unsigned32 *sys_calls)
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION[arm && arm_v5]:
+IMPLEMENTATION[arm && mmu && arm_v5]:
 
 PRIVATE static inline NOEXPORT NEEDS["types.h"]
 void
@@ -62,7 +62,7 @@ Sys_call_page::set_dmb(Unsigned32 *m)
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION[arm && arm_v6]:
+IMPLEMENTATION[arm && mmu && arm_v6]:
 
 PRIVATE static inline NOEXPORT NEEDS["types.h"]
 void
@@ -73,7 +73,7 @@ Sys_call_page::set_dmb(Unsigned32 *m)
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION[arm && arm_v7plus]:
+IMPLEMENTATION[arm && mmu && arm_v7plus]:
 
 PRIVATE static inline NOEXPORT NEEDS["types.h"]
 void
@@ -84,7 +84,7 @@ Sys_call_page::set_dmb(Unsigned32 *m)
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION:
+IMPLEMENTATION [mmu]:
 
 #include <cstring>
 #include "kernel_task.h"
@@ -113,3 +113,10 @@ Sys_call_page::init()
 
   Kernel_task::map_syscall_page(sys_calls);
 }
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [!mmu]:
+IMPLEMENT static
+void
+Sys_call_page::init()
+{}

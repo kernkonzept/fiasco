@@ -1,4 +1,4 @@
-IMPLEMENTATION[arm && !cpu_virt]:
+IMPLEMENTATION[arm && mmu && !cpu_virt]:
 
 #include "config.h"
 #include "globals.h"
@@ -27,7 +27,7 @@ Kernel_task::map_syscall_page(void *p)
   pte.write_back_if(true, Mem_unit::Asid_kernel);
 }
 
-IMPLEMENTATION[arm && cpu_virt]:
+IMPLEMENTATION[arm && mmu && cpu_virt]:
 
 #include "config.h"
 #include "globals.h"
@@ -46,3 +46,19 @@ Kernel_task::map_syscall_page(void *p)
 }
 
 
+IMPLEMENTATION[arm && !mmu]:
+
+#include "config.h"
+#include "globals.h"
+#include "kmem.h"
+
+PRIVATE inline NEEDS["globals.h", "kmem.h"]
+Kernel_task::Kernel_task()
+: Task(Ram_quota::root, reinterpret_cast<Pdir*>(Kmem::kdir), Caps::none())
+{}
+
+PUBLIC static inline
+void
+Kernel_task::map_syscall_page(void * /*p*/)
+{
+}

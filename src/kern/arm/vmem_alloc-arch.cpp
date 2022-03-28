@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm]:
+IMPLEMENTATION [arm && mmu]:
 
 #include "mem.h"
 #include "paging.h"

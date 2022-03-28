@@ -31,6 +31,9 @@ config HAS_MP_OPTION
 config HAS_CPU_VIRT
 	bool
 
+config HAS_CPU_MPU
+	bool
+
 menu "Target configuration"
 
 choice
@@ -94,6 +97,16 @@ config ABI_VF
 	def_bool y
 
 # PF_SECTION: CPU
+
+config MMU
+	bool "MMU support"
+	default y
+	depends on !HAS_CPU_MPU
+
+config MPU
+	bool "MPU support"
+	default y
+	depends on HAS_CPU_MPU
 
 config CPU_VIRT
 	bool "Virtualization"
@@ -339,13 +352,14 @@ config IOMMU
 
 config DISABLE_VIRT_OBJ_SPACE
 	bool "No virtually mapped array for cap tables" if HAS_VIRT_OBJ_SPACE_OPTION
-	depends on HAS_VIRT_OBJ_SPACE_OPTION &&  EXPERIMENTAL
+	depends on HAS_VIRT_OBJ_SPACE_OPTION && EXPERIMENTAL && MMU
 
 config VIRT_OBJ_SPACE
 	def_bool y
 	depends on HAS_VIRT_OBJ_SPACE_OPTION
 	depends on !DISABLE_VIRT_OBJ_SPACE
 	depends on !KERNEL_ISOLATION
+	depends on MMU
 
 config PHYS_OBJ_SPACE_AVL
 	bool "Use AVL tree for object space"

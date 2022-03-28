@@ -1,6 +1,6 @@
 
 SECTIONS {
-  . = kernel_load_addr + 0x1000;
+  . = kernel_load_addr + 0x3000;
   .bootstrap.dropped_info : {
     *(.bootstrap.info)
     end_of_bootstrap_info = ABSOLUTE(.);

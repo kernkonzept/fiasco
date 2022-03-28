@@ -5,7 +5,7 @@
 
 /* this file defines the construction of the kernel's virtual address
    space */
-#ifdef CONFIG_CPU_VIRT
+#if !defined(CONFIG_MMU) || defined(CONFIG_CPU_VIRT)
 virt_address       = kernel_load_addr;
 #elif defined CONFIG_BIT32
 virt_address       = 0xf0000000;
@@ -58,10 +58,28 @@ SECTIONS {
 		*(.exitcall.exit)
                 *(.bootstrap.dropped*)
 	      }
-	
-  . = kernel_load_addr + 0x1000;
-	
-  .text kernel_load_addr + 0x1000 : {
+
+  . = virt_address + 0x1000;
+
+  .kip : AT (ADDR(.kip) - phys_offset) {
+    _kip_start = .;
+    *(.kernel_info_page)
+    _initkip_start = .;
+    KEEP(*(.initkip.version))
+    KEEP(*(.initkip.features))
+    KEEP(*(.initkip.features.end))
+    _initkip_end = .;
+    . = ALIGN(4K);
+  } :kip :l4_kip
+
+  .koptions : AT (ADDR(.koptions) - phys_offset) {
+    _kernel_image_start = .;
+    *(.koptions)
+  } :koptions :l4_koptions
+
+  . = kernel_load_addr + 0x3000;
+
+  .text : {
     MWORD(_start_kernel)
     MWORD(my_kernel_info_page)
     KEEP(*(.bootstrap.info))
@@ -76,24 +94,17 @@ SECTIONS {
 
   . = end_of_loader - kernel_load_addr + virt_address;
 
-  .kip : AT (end_of_loader) {
-    _kernel_image_start = .;
-    *(.kernel_info_page)
-    _initkip_start = .;
-    KEEP(*(.initkip.version))
-    KEEP(*(.initkip.features))
-    KEEP(*(.initkip.features.end))
-    _initkip_end = .;
-    . = ALIGN(4K);
-  } :kip :l4_kip
-
-  .koptions : AT (ADDR(.koptions) - phys_offset) {
-    *(.koptions)
-  } :koptions :l4_koptions
-
   .mp_tramp : AT (ADDR(.mp_tramp) - phys_offset) {
     KEEP(*(.mp_tramp))
   } :tramp
+
+#if !defined(CONFIG_MMU)
+  .excp ALIGN(32) : AT (ADDR(.excp) - phys_offset) {
+    ivt_start = .;
+    KEEP (*(.vect)) *(.excp.text)
+    *(.vect.extra)
+  } :excpt
+#endif
 
   .text_kernel : AT (ADDR(.text_kernel) - phys_offset) {
     crt0.o(.text)
@@ -233,13 +244,14 @@ SECTIONS {
   }
   __end_of_the_kernel = .;
 
+#if defined(CONFIG_MMU)
   ivt_start = ADDR(.bss) + SIZEOF(.bss) - phys_offset;
   .excp 0xffff0000 : AT (ivt_start) {
     KEEP (*(.vect)) *(.excp.text)
     *(.vect.extra)
   } :excpt
-
   . = __end_of_the_kernel + SIZEOF(.excp);
+#endif
 
   PROVIDE( _end = . );
 

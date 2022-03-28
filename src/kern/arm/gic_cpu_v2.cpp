@@ -19,7 +19,7 @@ public:
     GICC_RPR          = 0x14,
     GICC_HPPIR        = 0x18,
 
-    Size              = 0x2000,
+    Size              = 0x1000,
 
     GICC_CTRL_ENABLE_GRP0    = 1 << 0,
     GICC_CTRL_ENABLE_GRP1    = 1 << 1,

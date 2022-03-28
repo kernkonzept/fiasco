@@ -66,6 +66,7 @@ IMPLEMENT
 void Kip_init::init()
 {
   Kip *kinfo = reinterpret_cast<Kip*>(&KIP_namespace::my_kernel_info_page);
+  map_kip(kinfo);
   Kip::init_global_kip(kinfo);
   kinfo->add_mem_region(Mem_desc(0, Mem_layout::User_max,
                         Mem_desc::Conventional, true));
@@ -141,4 +142,31 @@ IMPLEMENTATION[32bit]:
 PRIVATE static inline
 void
 Kip_init::init_syscalls(Kip *)
+{}
+
+//--------------------------------------------------------------
+IMPLEMENTATION[mpu]:
+
+#include "kmem.h"
+
+PRIVATE static inline
+void
+Kip_init::map_kip(Kip *k)
+{
+  auto diff = (*Kmem::kdir)->add((Mword)k, (Mword)k + 0xfffU,
+                                 Mpu_region_attr::make_attr(L4_fpage::Rights::RWX()),
+                                 false, Kpdir::Kip);
+
+  if (diff & Mpu_regions::Error)
+    panic("Cannot map KIP\n");
+
+  Mpu::sync(*Kmem::kdir, diff, true);
+}
+
+//--------------------------------------------------------------
+IMPLEMENTATION[!mpu]:
+
+PRIVATE static inline
+void
+Kip_init::map_kip(Kip *)
 {}
