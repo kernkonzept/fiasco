@@ -42,7 +42,8 @@ Task *
 Kernel_thread::create_sigma0_task()
 {
   int err;
-  Task *sigma0 = Task::create<Sigma0_task>(Ram_quota::root, L4_msg_tag(), 0, &err);
+  Task *sigma0 = Task::create<Sigma0_task>(Ram_quota::root, L4_msg_tag(), 0, 0,
+                                           &err, 0);
   assert_opt (sigma0);
   // prevent deletion of the sigma0 task
   sigma0->inc_ref();
@@ -69,7 +70,8 @@ Task *
 Kernel_thread::create_boot_task(Task *sigma0, Thread *sigma0_thread)
 {
   int err;
-  Task *boot_task = Task::create<Task>(Ram_quota::root, L4_msg_tag(), 0, &err);
+  Task *boot_task = Task::create<Task>(Ram_quota::root, L4_msg_tag(), 0, 0,
+                                       &err, 0);
   assert_opt (boot_task);
   // prevent deletion of the boot task
   boot_task->inc_ref();
@@ -104,11 +106,13 @@ Kernel_thread::create_user_thread(Task *task, Thread_ptr const &pager, Address i
   check (map_obj_initially(thread, task, task, C_thread, 0));
 
   // Task just newly created, no need for locking or remote TLB flush.
-  check(task->alloc_ku_mem(L4_fpage::mem(utcb_addr(), Config::PAGE_SHIFT),
-                           false) >= 0);
+  L4_fpage utcb_fp = L4_fpage::mem(utcb_addr(), Config::PAGE_SHIFT);
+  check(task->alloc_ku_mem(&utcb_fp, false) >= 0);
 
   check (thread->control(pager, Thread_ptr(Thread_ptr::Null)) == 0);
-  check (thread->bind(task, User_ptr<Utcb>(reinterpret_cast<Utcb*>(utcb_addr()))));
+  auto utcb_usr_ptr = User_ptr<Utcb>(
+    reinterpret_cast<Utcb*>(cxx::int_value<Virt_addr>(utcb_fp.mem_address())));
+  check (thread->bind(task, utcb_usr_ptr));
   check (thread->ex_regs(ip, 0));
 
   thread->set_home_cpu(Cpu_number::boot_cpu());

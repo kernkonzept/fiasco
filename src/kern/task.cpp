@@ -119,7 +119,7 @@ Task::put() override
  */
 PRIVATE
 int
-Task::alloc_ku_mem_chunk(User_ptr<void> u_addr, unsigned size, void **k_addr,
+Task::alloc_ku_mem_chunk(User_ptr<void> *u_addr, unsigned size, void **k_addr,
                          bool need_remote_tlb_flush)
 {
   assert((size & (size - 1)) == 0);
@@ -136,11 +136,15 @@ Task::alloc_ku_mem_chunk(User_ptr<void> u_addr, unsigned size, void **k_addr,
   Virt_addr base(p);
   Mem_space::Page_order page_order(Config::PAGE_SHIFT);
 
+  // Need to use physical address on systems without MMU
+  if (!Config::Have_mmu)
+    *u_addr = User_ptr<void>(p);
+
   for (Virt_size i = Virt_size(0); i < Virt_size(size);
        i += Virt_size(1) << page_order)
     {
       Virt_addr kern_va = base + i;
-      Virt_addr user_va = Virt_addr(u_addr.get()) + i;
+      Virt_addr user_va = Virt_addr(u_addr->get()) + i;
       Mem_space::Phys_addr pa(pmem_to_phys(cxx::int_value<Virt_addr>(kern_va)));
 
       // must be valid physical address
@@ -154,12 +158,12 @@ Task::alloc_ku_mem_chunk(User_ptr<void> u_addr, unsigned size, void **k_addr,
         {
         case Mem_space::Insert_ok: break;
         case Mem_space::Insert_err_nomem:
-          free_ku_mem_chunk(p, u_addr, size, cxx::int_value<Virt_size>(i),
+          free_ku_mem_chunk(p, *u_addr, size, cxx::int_value<Virt_size>(i),
                             true, need_remote_tlb_flush);
           return -L4_err::ENomem;
 
         case Mem_space::Insert_err_exists:
-          free_ku_mem_chunk(p, u_addr, size, cxx::int_value<Virt_size>(i),
+          free_ku_mem_chunk(p, *u_addr, size, cxx::int_value<Virt_size>(i),
                             true, need_remote_tlb_flush);
           return -L4_err::EExists;
 
@@ -167,7 +171,7 @@ Task::alloc_ku_mem_chunk(User_ptr<void> u_addr, unsigned size, void **k_addr,
           printf("UTCB mapping failed: va=%p, ph=%p, res=%d\n",
                  static_cast<void *>(user_va), static_cast<void *>(kern_va), res);
           kdb_ke("BUG in utcb allocation");
-          free_ku_mem_chunk(p, u_addr, size, cxx::int_value<Virt_size>(i),
+          free_ku_mem_chunk(p, *u_addr, size, cxx::int_value<Virt_size>(i),
                             true, need_remote_tlb_flush);
           return 0;
         }
@@ -205,15 +209,15 @@ Task::alloc_ku_mem_chunk(User_ptr<void> u_addr, unsigned size, void **k_addr,
  */
 PUBLIC
 int
-Task::alloc_ku_mem(L4_fpage ku_area, bool need_remote_tlb_flush)
+Task::alloc_ku_mem(L4_fpage *ku_area, bool need_remote_tlb_flush)
 {
   // The limit comes from the kernel allocator (Buddy_alloc).
-  if (ku_area.order() < Config::PAGE_SHIFT || ku_area.order() > 17)
+  if (ku_area->order() < Config::PAGE_SHIFT || ku_area->order() > 17)
     return -L4_err::EInval;
 
-  Mword sz = 1UL << ku_area.order();
+  Mword sz = 1UL << ku_area->order();
 
-  if (ku_area.mem_address() > Virt_addr(Mem_layout::User_max - sz + 1))
+  if (ku_area->mem_address() > Virt_addr(Mem_layout::User_max - sz + 1))
     return -L4_err::EInval;
 
   Ku_mem *m = new (ram_quota()) Ku_mem();
@@ -221,10 +225,10 @@ Task::alloc_ku_mem(L4_fpage ku_area, bool need_remote_tlb_flush)
   if (!m)
     return -L4_err::ENomem;
 
-  User_ptr<void> u_addr(static_cast<void *>(ku_area.mem_address()));
+  User_ptr<void> u_addr(static_cast<void *>(ku_area->mem_address()));
 
   void *p = 0;
-  if (int e = alloc_ku_mem_chunk(u_addr, sz, &p, need_remote_tlb_flush))
+  if (int e = alloc_ku_mem_chunk(&u_addr, sz, &p, need_remote_tlb_flush))
     {
       m->free(ram_quota());
       return e;
@@ -233,6 +237,8 @@ Task::alloc_ku_mem(L4_fpage ku_area, bool need_remote_tlb_flush)
   m->u_addr = u_addr;
   m->k_addr = p;
   m->size = sz;
+  *ku_area = L4_fpage::mem(reinterpret_cast<Mword>(u_addr.get()),
+                           ku_area->order());
 
   _ku_mem.add(m, cas<cxx::S_list_item*>);
 
@@ -389,8 +395,8 @@ PUBLIC template<typename TASK_TYPE, bool MUST_SYNC_KERNEL = true,
                 int UTCB_AREA_MR = 0> static
 TASK_TYPE * FIASCO_FLATTEN
 Task::create(Ram_quota *q,
-             L4_msg_tag t, Utcb const *u,
-             int *err)
+             L4_msg_tag t, Utcb const *u, Utcb *out,
+             int *err, unsigned *words)
 {
   static_assert(UTCB_AREA_MR == 0 || UTCB_AREA_MR >= 2,
                 "invalid value for UTCB_AREA_MR");
@@ -418,11 +424,16 @@ Task::create(Ram_quota *q,
       if (utcb_area.is_valid())
         {
           // Task just newly created, no need for locking or remote TLB flush.
-          int e = v->alloc_ku_mem(utcb_area, false);
+          int e = v->alloc_ku_mem(&utcb_area, false);
           if (e < 0)
             {
               *err = -e;
               return 0;
+            }
+          else
+            {
+              *words = 1;
+              out->values[0] = utcb_area.raw();
             }
         }
     }
@@ -434,10 +445,10 @@ PUBLIC template<typename TASK_TYPE, bool MUST_SYNC_KERNEL = false,
                 int UTCB_AREA_MR = 0> static
 Kobject_iface * FIASCO_FLATTEN
 Task::generic_factory(Ram_quota *q, Space *,
-                      L4_msg_tag t, Utcb const *u, Utcb *,
-                      int *err, unsigned *)
+                      L4_msg_tag t, Utcb const *u, Utcb *o,
+                      int *err, unsigned *w)
 {
-  return create<TASK_TYPE, MUST_SYNC_KERNEL, UTCB_AREA_MR>(q, t, u, err);
+  return create<TASK_TYPE, MUST_SYNC_KERNEL, UTCB_AREA_MR>(q, t, u, o, err, w);
 }
 
 /**
@@ -591,7 +602,7 @@ Task::sys_caps_equal(Syscall_frame *, Utcb *utcb)
 
 PRIVATE inline NOEXPORT
 L4_msg_tag
-Task::sys_add_ku_mem(Syscall_frame *f, Utcb *utcb)
+Task::sys_add_ku_mem(Syscall_frame *f, Utcb *utcb, Utcb *out)
 {
   if (EXPECT_FALSE(!(caps() & Task::Caps::kumem())))
     return commit_result(-L4_err::ENosys);
@@ -610,6 +621,7 @@ Task::sys_add_ku_mem(Syscall_frame *f, Utcb *utcb)
   // remote TLB flushes).
   auto guard_cpu = lock_guard<Lock_guard_inverse_policy>(cpu_lock);
 
+  unsigned words = 0;
   unsigned const w = f->tag().words();
   for (unsigned i = 1; i < w; ++i)
     {
@@ -617,12 +629,15 @@ Task::sys_add_ku_mem(Syscall_frame *f, Utcb *utcb)
       if (!ku_fp.is_valid() || !ku_fp.is_mempage())
         return commit_result(-L4_err::EInval);
 
-      int e = alloc_ku_mem(ku_fp, true);
+      int e = alloc_ku_mem(&ku_fp, true);
       if (e < 0)
         return commit_result(e);
+
+      if (out)
+        out->values[words++] = ku_fp.raw();
     }
 
-  return commit_result(0);
+  return commit_result(0, words);
 }
 
 PRIVATE inline NOEXPORT
@@ -642,7 +657,7 @@ Task::sys_cap_info(Syscall_frame *f, Utcb *utcb)
 
 PUBLIC
 void
-Task::invoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f, Utcb *utcb) override
+Task::invoke(L4_obj_ref self, L4_fpage::Rights rights, Syscall_frame *f, Utcb *utcb) override
 {
   if (EXPECT_FALSE(f->tag().proto() != L4_msg_tag::Label_task))
     {
@@ -650,28 +665,33 @@ Task::invoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f, Utcb *utcb) 
       return;
     }
 
+  Utcb *out = self.have_recv() ? utcb : nullptr;
+  L4_msg_tag tag;
   switch (utcb->values[0])
     {
     case Map:
-      f->tag(sys_map(rights, f, utcb));
-      return;
+      tag = sys_map(rights, f, utcb);
+      break;
     case Unmap:
-      f->tag(sys_unmap(f, utcb));
-      return;
+      tag = sys_unmap(f, utcb);
+      break;
     case Cap_info:
-      f->tag(sys_cap_info(f, utcb));
-      return;
+      tag = sys_cap_info(f, utcb);
+      break;
     case Add_ku_mem:
-      f->tag(sys_add_ku_mem(f, utcb));
-      return;
+      tag = sys_add_ku_mem(f, utcb, out);
+      break;
     default:
-      L4_msg_tag tag = f->tag();
-      if (invoke_arch(tag, utcb))
-        f->tag(tag);
+      L4_msg_tag arch_tag = f->tag();
+      if (invoke_arch(arch_tag, utcb))
+        tag = arch_tag;
       else
-        f->tag(commit_result(-L4_err::ENosys));
-      return;
+        tag = commit_result(-L4_err::ENosys);
+      break;
     }
+
+  if (self.have_recv() || tag.has_error())
+    f->tag(tag);
 }
 
 namespace {
