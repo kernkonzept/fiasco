@@ -99,13 +99,13 @@ public:
     cxx::int_bit_ops<Memory_type>
   {
     Memory_type() = default;
-    explicit Memory_type(unsigned char v)
+    constexpr explicit Memory_type(unsigned char v)
     : cxx::int_type_base<unsigned char, Memory_type>(v) {}
 
-    static Memory_type Set() { return Memory_type(0x10); }
-    static Memory_type Normal() { return Memory_type(0x20); }
-    static Memory_type Buffered() { return Memory_type(0x40); }
-    static Memory_type Uncached() { return Memory_type(0x00); }
+    static constexpr Memory_type Set() { return Memory_type(0x10); }
+    static constexpr Memory_type Normal() { return Memory_type(0x20); }
+    static constexpr Memory_type Buffered() { return Memory_type(0x40); }
+    static constexpr Memory_type Uncached() { return Memory_type(0x00); }
   };
 
   Memory_type mem_type() const { return Memory_type(attr() & 0x70); }
