@@ -200,10 +200,13 @@ Irq_sender::alloc(Thread *t, Kobject ***rl)
   if (Cpu::online(t->home_cpu()))
     _chip->set_cpu(pin(), t->home_cpu());
 
-  if (old == nullptr)
-    _queued = 0;
-  else if (reinject)
-    send();
+  if (reinject)
+    {
+      // might have changed between the CAS and taking the lock
+      t = access_once(&_irq_thread);
+      if (EXPECT_TRUE(is_valid_thread(t)))
+        send(t);
+    }
 
   return 0;
 }
@@ -396,12 +399,8 @@ Irq_sender::queue()
 
 PRIVATE inline
 void
-Irq_sender::send()
+Irq_sender::send(Thread *t)
 {
-  auto t = access_once(&_irq_thread);
-  if (EXPECT_FALSE(!is_valid_thread(t)))
-    return;
-
   if (EXPECT_FALSE(t->home_cpu() != current_cpu()))
     t->drq(&_drq, handle_remote_hit, this,
            Context::Drq::No_wait);
@@ -426,8 +425,13 @@ Irq_sender::_hit_level_irq(Upstream_irq const *ui)
   assert (cpu_lock.test());
   mask_and_ack();
   Upstream_irq::ack(ui);
+
+  auto t = access_once(&_irq_thread);
+  if (EXPECT_FALSE(!is_valid_thread(t)))
+    return;
+
   if (queue() == 0)
-    send();
+    send(t);
 }
 
 PRIVATE static
@@ -449,6 +453,15 @@ Irq_sender::_hit_edge_irq(Upstream_irq const *ui)
   // LOG_MSG_3VAL(current(), "IRQ", dbg_id(), 0, _queued);
 
   assert (cpu_lock.test());
+
+  auto t = access_once(&_irq_thread);
+  if (EXPECT_FALSE(!is_valid_thread(t)))
+    {
+      mask_and_ack();
+      Upstream_irq::ack(ui);
+      return;
+    }
+
   Smword q = queue();
 
   // if we get a second edge triggered IRQ before the first is
@@ -461,7 +474,7 @@ Irq_sender::_hit_edge_irq(Upstream_irq const *ui)
 
   Upstream_irq::ack(ui);
   if (q == 0)
-    send();
+    send(t);
 }
 
 PRIVATE static
