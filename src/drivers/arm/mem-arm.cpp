@@ -172,6 +172,8 @@ PUBLIC static inline void Mem::isb() { barrier(); }
 PUBLIC static inline void Mem::dsb()
 { __asm__ __volatile__ ("mcr p15, 0, %0, c7, c10, 4" : : "r" (0) : "memory"); }
 
+PUBLIC static inline void Mem::dsbst() { dsb(); }
+
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm_v6]:
 
@@ -186,6 +188,8 @@ PUBLIC static inline void Mem::isb()
 
 PUBLIC static inline void Mem::dsb()
 { __asm__ __volatile__ ("mcr p15, 0, r0, c7, c10, 4" : : : "memory"); }
+
+PUBLIC static inline void Mem::dsbst() { dsb(); }
 
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [32bit && ((arm_v7 && mp) || arm_v8)]:
@@ -211,6 +215,9 @@ PUBLIC static inline void Mem::isb()
 
 PUBLIC static inline void Mem::dsb()
 { __asm__ __volatile__ ("dsb ish" : : : "memory"); }
+
+PUBLIC static inline void Mem::dsbst()
+{ __asm__ __volatile__ ("dsb ishst" : : : "memory"); }
 
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && mp]:
