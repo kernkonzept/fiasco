@@ -43,11 +43,6 @@ Trap_state::copy_and_sanitize(Trap_state const *)
 
 PUBLIC inline
 unsigned long
-Trap_state::ip() const
-{ return srr0; }
-
-PUBLIC inline
-unsigned long
 Trap_state::trapno() const
 { return error_code; }
 

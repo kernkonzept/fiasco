@@ -75,11 +75,6 @@ Trap_state::set_pagefault(Mword pfa, Mword error)
 
 PUBLIC inline
 unsigned long
-Trap_state::ip() const
-{ return pc; }
-
-PUBLIC inline
-unsigned long
 Trap_state::trapno() const
 { return esr.ec(); }
 
