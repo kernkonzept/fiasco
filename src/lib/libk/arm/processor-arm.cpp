@@ -74,6 +74,29 @@ public:
   CXX_BITFIELD_MEMBER( 7,  7, pf_s1ptw, _raw);
   CXX_BITFIELD_MEMBER( 6,  6, pf_write, _raw);
   CXX_BITFIELD_MEMBER( 0,  5, pf_fsc, _raw);
+
+  /// \pre ec == 0x34 || ec == 0x35
+  CXX_BITFIELD_MEMBER( 8,  8, wp_cache_maint, _raw);
+  CXX_BITFIELD_MEMBER( 6,  6, wp_write, _raw);
+  CXX_BITFIELD_MEMBER( 0,  5, wp_dfsc, _raw);
+
+  static Arm_esr make_breakpoint()
+  { return Arm_esr((0x30U << 26) | (1U << 25) | 0x22U); }
+
+  static Arm_esr make_watchpoint(Mword cm, Mword wnr)
+  {
+    Arm_esr esr((0x34U << 26) | (1U << 25));
+    esr.wp_cache_maint() = cm;
+    esr.wp_write() = wnr;
+    esr.wp_dfsc() = 0x22;
+    return esr;
+  }
+
+  static Arm_esr make_bkpt_insn(Mword il)
+  { return Arm_esr((0x38 << 26) | (il << 25)); }
+
+  static Arm_esr make_vector_catch_aarch32()
+  { return Arm_esr((0x3aU << 26) | (1U << 25) | 0x22U); }
 };
 
 EXTENSION class Proc

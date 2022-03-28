@@ -229,7 +229,7 @@ extern "C" {
 
     if (Thread::is_debug_exception(ts->esr))
       {
-        Thread::handle_debug_exception(ts);
+        t->handle_debug_exception(ts);
         return;
       }
 

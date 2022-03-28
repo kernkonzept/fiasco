@@ -206,10 +206,55 @@ Thread::is_debug_exception(Arm_esr esr)
   return is_fsr_exception(esr) && esr.pf_fsc() == Hsr_fsc_debug;
 }
 
-PUBLIC static inline NEEDS[Thread::call_nested_trap_handler]
+PUBLIC inline NEEDS[Thread::call_nested_trap_handler]
 void
 Thread::handle_debug_exception(Trap_state *ts)
 {
+  if (PF::is_usermode_error(ts->error_code))
+    {
+      // Convert DBGDSCR.MOE to corresponding AArch64 Trap_state::esr syndromes
+      // so that it is accessible to user space.
+      Mword v;
+      asm volatile("mrc p14, 0, %0, c0, c1, 0" : "=r" (v)); // DBGDSCR
+      Mword moe = (v >> 2) & 0xf;
+      Arm_esr esr = ts->esr;
+      switch (moe)
+        {
+        case 1: // Breakpoint debug event
+          ts->esr = Arm_esr::make_breakpoint();
+          break;
+
+        case 2: // Asynchronous watchpoint debug event
+        case 10: // Synchronous watchpoint debug event
+          ts->esr = Arm_esr::make_watchpoint(esr.pf_cache_maint(),
+                                             esr.pf_write());
+          break;
+
+        case 3: // BKPT instruction debug event
+          // Unfortunaltely the immediate of the bkpt instruction is not
+          // available. We always report it as zero.
+          ts->esr = Arm_esr::make_bkpt_insn(esr.il());
+          break;
+
+        case 5: // Vector catch debug event
+          ts->esr = Arm_esr::make_vector_catch_aarch32();
+          break;
+
+        default:
+          // Reserved or should only be triggered by an external debugger.
+          ts->esr = esr;
+          call_nested_trap_handler(ts);
+          return;
+        }
+
+      if (send_exception(ts))
+        return;
+
+      // Restore original esr so that JDB sees the truth.
+      ts->esr = esr;
+    }
+
+  // Debug exception from within the kernel or if exception IPC failed.
   call_nested_trap_handler(ts);
 }
 
