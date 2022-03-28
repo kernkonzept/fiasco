@@ -24,6 +24,9 @@ SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A72) += $(call CHECKCC,-mcpu=cortex-a72,-march=
 SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A73) += $(call CHECKCC,-mcpu=cortex-a73,-march=armv8-a)
 SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A76) += $(call CHECKCC,-mcpu=cortex-a76,-march=armv8-a)
 SHARED_FLAGS-$(CONFIG_ARM_NEOVERSE_N1) += $(call CHECKCC,-mcpu=neoverse-n1,-march=armv8.2-a)
+SHARED_FLAGS-$(CONFIG_ARM_CORTEX_R5) += $(call CHECKCC,-mcpu=cortex-r5,-march=armv7-r)
+SHARED_FLAGS-$(CONFIG_ARM_CORTEX_R52) += $(call CHECKCC,-mcpu=cortex-r52,-march=armv8-r)
+SHARED_FLAGS-$(CONFIG_ARM_CORTEX_R82) += $(call CHECKCC,-mcpu=cortex-r82,-march=armv8-a) # FIXME: use armv8-r starting with GCC-11
 SHARED_FLAGS-$(CONFIG_BIT32)      += -Wno-psabi
 SHARED_FLAGS-$(CONFIG_BIT32)      += -mfloat-abi=soft
 SHARED_FLAGS-$(CONFIG_BIT32)      += $(call CHECKCC,-mno-thumb-interwork)

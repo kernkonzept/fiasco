@@ -75,6 +75,15 @@ config CAN_ARM_CPU_CORTEX_A76
 config CAN_ARM_CPU_NEOVERSE_N1
 	bool
 
+config CAN_ARM_CPU_CORTEX_R5
+	bool
+
+config CAN_ARM_CPU_CORTEX_R52
+	bool
+
+config CAN_ARM_CPU_CORTEX_R82
+	bool
+
 config DEFAULT_ARM_EM_TZ
         bool
 
@@ -86,7 +95,8 @@ config ARM_V6
 
 config ARM_V7
 	def_bool y if ARM_CORTEX_A8 || ARM_CORTEX_A9 \
-	              || ARM_CORTEX_A5 || ARM_CORTEX_A7 || ARM_CORTEX_A15
+	              || ARM_CORTEX_A5 || ARM_CORTEX_A7 || ARM_CORTEX_A15 \
+	              || ARM_CORTEX_R5
 
 config ARM_V6PLUS
 	def_bool y if ARM_V6 || ARM_V7 || ARM_V8
@@ -232,6 +242,32 @@ config ARM_NEOVERSE_N1
 	select ARM_V8
 	select HAS_MP_OPTION
 	select HAS_CPU_VIRT if ARM_GIC
+	select HAS_64BIT
+
+config ARM_CORTEX_R5
+	bool "ARM Cortex-R5 CPU"
+	select HAS_CPU_MPU
+	select ARM_PROFILE_R
+	depends on CAN_ARM_CPU_CORTEX_R5
+
+config ARM_CORTEX_R52
+	bool "ARM Cortex-R52 CPU"
+	depends on CAN_ARM_CPU_CORTEX_R52
+	select ARM_V8
+	select ARM_PROFILE_R
+	select HAS_CPU_MPU
+	select HAS_CPU_VIRT
+	select HAS_AMP_OPTION
+
+config ARM_CORTEX_R82
+	bool "ARM Cortex-R82 CPU"
+	depends on CAN_ARM_CPU_CORTEX_R82
+	select ARM_V8
+	select ARM_PROFILE_R
+	select BIT64_CHOICE
+	select HAS_CPU_MPU
+	select HAS_CPU_VIRT
+	select HAS_MP_OPTION
 	select HAS_64BIT
 
 endchoice
