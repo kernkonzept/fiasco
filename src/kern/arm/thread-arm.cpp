@@ -157,7 +157,7 @@ extern "C" {
         return false;
       }
 
-    if (EXPECT_FALSE(Thread::is_debug_exception(error_code, true)))
+    if (EXPECT_FALSE(Thread::is_debug_exception_fsr(error_code)))
       return 0;
 
     Thread *t = current_thread();
@@ -178,7 +178,7 @@ extern "C" {
         error_code = Thread::mangle_kernel_lib_page_fault(pc, error_code);
 
         // TODO: Avoid calling Thread::map_fsr_user here everytime!
-        if (t->vcpu_pagefault(pfa, Thread::map_fsr_user(error_code, true), pc))
+        if (t->vcpu_pagefault(pfa, Thread::map_fsr_user(error_code), pc))
           return 1;
         t->state_del(Thread_cancel);
       }
@@ -193,7 +193,8 @@ extern "C" {
 
   void slowtrap_entry(Trap_state *ts)
   {
-    ts->error_code = Thread::map_fsr_user(ts->error_code, false);
+    if (Thread::is_fsr_exception(ts->esr))
+      ts->error_code = Thread::map_fsr_user(ts->error_code);
 
     if (0)
       printf("Trap: pfa=%08lx pc=%08lx err=%08lx psr=%lx\n", ts->pf_address, ts->pc, ts->error_code, ts->psr);
@@ -217,7 +218,7 @@ extern "C" {
     if (t->check_and_handle_coproc_faults(ts))
       return;
 
-    if (Thread::is_debug_exception(ts->error_code))
+    if (Thread::is_debug_exception(ts->esr))
       {
         Thread::handle_debug_exception(ts);
         return;
@@ -230,39 +231,6 @@ extern "C" {
     t->kill();
   }
 };
-
-PUBLIC static inline NEEDS[Thread::call_nested_trap_handler]
-void
-Thread::handle_debug_exception(Trap_state *ts)
-{
-  call_nested_trap_handler(ts);
-}
-
-//---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !arm_lpae]:
-
-PUBLIC static inline
-Mword
-Thread::is_debug_exception(Mword error_code, bool just_native_type = false)
-{
-  if (just_native_type)
-    return (error_code & 0x4f) == 2;
-
-  // LPAE type as already converted
-  return (error_code & 0xc000003f) == 0x80000022;
-}
-
-//---------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_lpae]:
-
-PUBLIC static inline
-Mword
-Thread::is_debug_exception(Mword error_code, bool just_native_type = false)
-{
-  if (just_native_type)
-    return ((error_code >> 26) & 0x3f) == 0x22;
-  return (error_code & 0xc000003f) == 0x80000022;
-}
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
@@ -378,9 +346,32 @@ Thread::arch_ext_vcpu_enabled()
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && !arm_lpae]:
 
+/**
+ * Map from Short-descriptor FSR format (FS[10, 3:0]) to Long-descriptor FSR
+ * format (STATUS[5:0]).
+ *
+ * In order to provide consistent error bits to user-space regardless of the
+ * underlying CPU type, Fiasco exposes a HSR based error description to
+ * user-mode, even if Hyp mode is not enabled/available. Thus, the non-Hyp mode
+ * exception vector already partially translates the error description reported
+ * by the hardware in the (I/D)FSR register into an HSR error description.
+ * Hence, the `fsr` argument received by this method is a mixture of (I/D)FSR
+ * and HSR encodings, for example HSR.EC, HSR.ISS.WnR were already translated,
+ * but FS[10, 3:0] (and also other bits) were passed on untouched.
+ *
+ * This method only takes care of mapping the fault status. The other (I/F)FSR
+ * bits, are currently not translated into the corresponding HSR bits. The
+ * assumption is that these bits are not tested anywhere, and therefore it would
+ * not be worth the effort.
+ *
+ * The encoding of the fault status code ISS.(I/D)FSC in HSR is equivalent to
+ * the fault status of the Long-descriptor FSR format. Therefore, only for the
+ * short-descriptor FSR format a translation of the fault status code is
+ * necessary.
+ */
 PUBLIC static inline
 Mword
-Thread::map_fsr_user(Mword fsr, bool is_only_pf)
+Thread::map_fsr_user(Mword fsr)
 {
   static Unsigned16 const pf_map[32] =
   {
@@ -388,7 +379,7 @@ Thread::map_fsr_user(Mword fsr, bool is_only_pf)
     /*  0x1 */ 0x21, /* Alignment */
     /*  0x2 */ 0x22, /* Debug */
     /*  0x3 */ 0x08, /* Access flag (1st level) */
-    /*  0x4 */ 0x2000, /* Insn cache maint */
+    /*  0x4 */ 0,    /* Insn cache maint */
     /*  0x5 */ 0x04, /* Transl (1st level) */
     /*  0x6 */ 0x09, /* Access flag (2nd level) */
     /*  0x7 */ 0x05, /* Transl (2nd level) */
@@ -418,10 +409,7 @@ Thread::map_fsr_user(Mword fsr, bool is_only_pf)
     /* 0x1f */ 0,
   };
 
-  if (is_only_pf || (fsr & 0xc0000000) == 0x80000000)
-    return pf_map[((fsr >> 10) & 1) | (fsr & 0xf)] | (fsr & ~0x43f);
-
-  return fsr;
+  return pf_map[((fsr >> 10) & 1) | (fsr & 0xf)] | (fsr & ~0x43f);
 }
 
 // ------------------------------------------------------------------------
@@ -429,7 +417,7 @@ IMPLEMENTATION [arm && arm_lpae]:
 
 PUBLIC static  inline
 Mword
-Thread::map_fsr_user(Mword fsr, bool)
+Thread::map_fsr_user(Mword fsr)
 { return fsr; }
 
 // ------------------------------------------------------------------------

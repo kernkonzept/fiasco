@@ -218,6 +218,11 @@ Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
   return true;
 }
 
+PUBLIC static inline bool Thread::is_fsr_exception(Arm_esr) { return false; }
+PUBLIC static inline bool Thread::is_debug_exception(Arm_esr) { return false; }
+PUBLIC static inline void Thread::handle_debug_exception(Trap_state *) {}
+PUBLIC static inline bool Thread::is_debug_exception_fsr(Mword) { return false; }
+
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && 64bit && fpu]:
 

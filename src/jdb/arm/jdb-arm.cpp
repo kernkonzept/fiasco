@@ -170,7 +170,7 @@ IMPLEMENT inline
 bool
 Jdb::handle_conditional_breakpoint(Cpu_number cpu, Jdb_entry_frame *e)
 {
-  return Thread::is_debug_exception(e->error_code)
+  return Thread::is_debug_exception(e->esr)
          && bp_test_log_only && bp_test_log_only(cpu);
 }
 
@@ -189,7 +189,7 @@ Jdb::handle_debug_traps(Cpu_number cpu)
   Jdb_entry_frame *ef = entry_frame.cpu(cpu);
   error_buffer.cpu(cpu).clear();
 
-  if (Thread::is_debug_exception(ef->error_code)
+  if (Thread::is_debug_exception(ef->esr)
       && bp_test_break)
     return bp_test_break(cpu, &error_buffer.cpu(cpu));
 

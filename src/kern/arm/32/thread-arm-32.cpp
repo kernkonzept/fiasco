@@ -175,6 +175,76 @@ Thread::condition_valid(unsigned char cond, Unsigned32 psr)
   return (v[cond] >> (psr >> 28)) & 1;
 }
 
+PUBLIC static inline
+bool
+Thread::is_fsr_exception(Arm_esr esr)
+{
+  enum
+  {
+    Hsr_ec_prefetch_abort_lower = 0x20,
+    Hsr_ec_prefetch_abort       = 0x21,
+    Hsr_ec_data_abort_lower     = 0x24,
+    Hsr_ec_data_abort           = 0x25,
+  };
+
+  return    esr.ec() == Hsr_ec_prefetch_abort_lower
+         || esr.ec() == Hsr_ec_prefetch_abort
+         || esr.ec() == Hsr_ec_data_abort_lower
+         || esr.ec() == Hsr_ec_data_abort;
+}
+
+PUBLIC static inline
+bool
+Thread::is_debug_exception(Arm_esr esr)
+{
+  enum
+  {
+    Hsr_fsc_debug               = 0x22,
+  };
+
+  // LPAE type or non-LPAE converted to LPAE by map_fsr_user.
+  return is_fsr_exception(esr) && esr.pf_fsc() == Hsr_fsc_debug;
+}
+
+PUBLIC static inline NEEDS[Thread::call_nested_trap_handler]
+void
+Thread::handle_debug_exception(Trap_state *ts)
+{
+  call_nested_trap_handler(ts);
+}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && 32bit && !arm_lpae]:
+
+PUBLIC static inline
+bool
+Thread::is_debug_exception_fsr(Mword error_code)
+{
+  enum
+  {
+    Fsr_fs_mask  = 0x40f,
+    Fsr_fs_debug = 0x2,
+  };
+
+  return (error_code & Fsr_fs_mask) == Fsr_fs_debug;
+}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && 32bit && arm_lpae]:
+
+PUBLIC static inline
+bool
+Thread::is_debug_exception_fsr(Mword error_code)
+{
+  enum
+  {
+    Fsr_status_mask  = 0x3f,
+    Fsr_status_debug = 0x22,
+  };
+
+  return (error_code & Fsr_status_mask) == Fsr_status_debug;
+}
+
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && 32bit && fpu]:
 
