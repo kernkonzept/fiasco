@@ -10,9 +10,19 @@ choice
 config PF_LS1021A
 	bool "LS1021A"
 	select CAN_ARM_CPU_CORTEX_A7
+	select HAS_IOMMU_OPTION
 
 config PF_LS1012A
 	bool "LS1012A"
 	select CAN_ARM_CPU_CORTEX_A53
 
 endchoice
+
+config ARM_IOMMU_NUM
+  int
+  default 4 if IOMMU
+
+config IOMMU_ARM_SMMU_400
+  bool
+  select ARM_IOMMU_COHERENT
+  default y if IOMMU
