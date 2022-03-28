@@ -308,8 +308,8 @@ namespace {
 
 static Kobject_iface * FIASCO_FLATTEN
 semaphore_factory(Ram_quota *q, Space *,
-                  L4_msg_tag, Utcb const *,
-                  int *err)
+                  L4_msg_tag, Utcb const *, Utcb *,
+                  int *err, unsigned *)
 {
   static_assert(sizeof(Semaphore) <= sizeof(Irq_sender),
                 "invalid allocator for semaphore used");
