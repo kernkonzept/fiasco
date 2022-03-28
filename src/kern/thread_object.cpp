@@ -713,8 +713,8 @@ Thread_object::sys_thread_stats(L4_msg_tag const &/*tag*/, Utcb const * /*utcb*/
 namespace {
 static Kobject_iface * FIASCO_FLATTEN
 thread_factory(Ram_quota *q, Space *,
-               L4_msg_tag, Utcb const *,
-               int *err)
+               L4_msg_tag, Utcb const *, Utcb *,
+               int *err, int *)
 {
   *err = L4_err::ENomem;
   return new (q) Thread_object(q);

@@ -352,8 +352,8 @@ PUBLIC template<typename TASK_TYPE, bool MUST_SYNC_KERNEL = false,
                 int UTCB_AREA_MR = 0> static
 Kobject_iface * FIASCO_FLATTEN
 Task::generic_factory(Ram_quota *q, Space *,
-                      L4_msg_tag t, Utcb const *u,
-                      int *err)
+                      L4_msg_tag t, Utcb const *u, Utcb *,
+                      int *err, int *)
 {
   return create<TASK_TYPE, MUST_SYNC_KERNEL, UTCB_AREA_MR>(q, t, u, err);
 }

@@ -35,7 +35,8 @@ public:
   typedef Kobject_iface *Factory_func(Ram_quota *q,
                                       Space *current_space,
                                       L4_msg_tag tag,
-                                      Utcb const *utcb, int *err);
+                                      Utcb const *utcb, Utcb *out,
+                                      int *err, int *words);
   enum { Max_factory_index = -L4_msg_tag::Max_factory_label };
   static Factory_func *factory[Max_factory_index + 1];
 };
@@ -89,14 +90,15 @@ PUBLIC static inline
 Kobject_iface *
 Kobject_iface::manufacture(long label, Ram_quota *q,
                            Space *current_space,
-                           L4_msg_tag tag, Utcb const *utcb, int *err)
+                           L4_msg_tag tag, Utcb const *utcb, Utcb *out,
+                           int *err, int *words)
 {
   *err = L4_err::ENodev;
   if (EXPECT_FALSE(label > 0 || -label > Max_factory_index
                    || !factory[-label]))
     return 0;
 
-  return factory[-label](q, current_space, tag, utcb, err);
+  return factory[-label](q, current_space, tag, utcb, out, err, words);
 }
 
 // ------------------------------------------------------------------------

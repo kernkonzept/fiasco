@@ -400,8 +400,8 @@ Ipc_gate::invoke(L4_obj_ref /*self*/, L4_fpage::Rights rights,
 namespace {
 static Kobject_iface * FIASCO_FLATTEN
 ipc_gate_factory(Ram_quota *q, Space *space,
-                 L4_msg_tag tag, Utcb const *utcb,
-                 int *err)
+                 L4_msg_tag tag, Utcb const *utcb, Utcb *,
+                 int *err, int *)
 {
   L4_snd_item_iter snd_items(utcb, tag.words());
   Thread *thread = 0;

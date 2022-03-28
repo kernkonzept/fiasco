@@ -108,7 +108,7 @@ void Factory::operator delete (void *_f)
 PRIVATE
 L4_msg_tag
 Factory::map_obj(Kobject_iface *o, Cap_index cap, Task *_c_space,
-                 Obj_space *o_space, Utcb const *utcb)
+                 Obj_space *o_space, Utcb const *utcb, int words)
 {
   // must be before the lock guard
   Ref_ptr<Task> c_space(_c_space);
@@ -132,7 +132,7 @@ Factory::map_obj(Kobject_iface *o, Cap_index cap, Task *_c_space,
     }
 
   // return a tag with one typed item for the returned capability
-  return commit_result(0, 0, 1);
+  return commit_result(0, words, 1);
 }
 
 PUBLIC
@@ -168,11 +168,13 @@ Factory::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,
 
   Kobject_iface *new_o;
   int err = L4_err::ENomem;
+  int words = 0;
 
   auto cpu_lock_guard = lock_guard<Lock_guard_inverse_policy>(cpu_lock);
 
   new_o = Kobject_iface::manufacture((long)access_once(utcb->values + 0),
-                                     this, c_space, f->tag(), utcb, &err);
+                                     this, c_space, f->tag(), utcb, utcb_out,
+                                     &err, &words);
 
   LOG_TRACE("Kobject create", "new", ::current(), Log_entry,
     l->op = utcb->values[0];
@@ -183,8 +185,8 @@ Factory::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,
 
   if (new_o)
     {
-      utcb_out->values[0] = (0 << 6) | (L4_fpage::Obj << 4) | L4_msg_item::Map;
-      return map_obj(new_o, buffer.obj_index(), c_space, c_space, utcb);
+      utcb_out->values[words] = (0 << 6) | (L4_fpage::Obj << 4) | L4_msg_item::Map;
+      return map_obj(new_o, buffer.obj_index(), c_space, c_space, utcb, words);
     }
   else
     return commit_result(-err);
@@ -193,8 +195,8 @@ Factory::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,
 namespace {
 static Kobject_iface * FIASCO_FLATTEN
 factory_factory(Ram_quota *q, Space *,
-                L4_msg_tag, Utcb const *u,
-                int *err)
+                L4_msg_tag, Utcb const *u, Utcb *,
+                int *err, int *)
 {
   *err = L4_err::ENomem;
   return static_cast<Factory*>(q)->create_factory(u->values[2]);

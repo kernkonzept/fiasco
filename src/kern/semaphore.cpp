@@ -226,8 +226,8 @@ Semaphore::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
 namespace {
 static Kobject_iface * FIASCO_FLATTEN
 semaphore_factory(Ram_quota *q, Space *,
-                  L4_msg_tag, Utcb const *,
-                  int *err)
+                  L4_msg_tag, Utcb const *, Utcb *,
+                  int *err, int *)
 {
   static_assert(sizeof(Semaphore) <= sizeof(Irq_sender),
                 "invalid allocator for semaphore used");
