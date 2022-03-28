@@ -41,7 +41,7 @@ public:
 
   enum
   {
-    KMEM_SIZE = 16 << 20,
+    KMEM_SIZE = CONFIG_KMEM_SIZE << 10,
   };
 
   // the default uart to use for serial console

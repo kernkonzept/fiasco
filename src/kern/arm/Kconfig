@@ -395,3 +395,10 @@ config ARM_1176_CACHE_ALIAS_FIX
 config ARM_CPU_ERRATA
         bool "Enable CPU errata workarounds"
         depends on ARM
+
+config KMEM_SIZE
+	int "Kernel heap size (KiB)"
+	default 16384
+	help
+	  Size of the kernel heap. This memory is reserved for internal data
+	  structures and kernel-user memory allocations.
