@@ -44,8 +44,6 @@
 .align 4
 .global sys_call_table
 sys_call_table:
-	.word 0
-	.word 0
 	.word sys_ipc_wrapper
 	.word sys_arm_mem_op
 .endm

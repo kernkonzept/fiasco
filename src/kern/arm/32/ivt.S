@@ -194,10 +194,7 @@
  * lr: must contain fault addr (from switch_to_kernel)
  */
 .macro  enter_sys_call no_sys_call
-	ldr	lr, [sp, #RF(PC,  0)]
-	cmn	lr, #0x0d		@ Range Check !!! UNSIGNED !!!
-	bls	\no_sys_call		@ no syscall
-	cmn	lr, #0x08
+	cmp	r7, #1
 	bhi	\no_sys_call
 
 	add	lr, sp, #RF(PC, 0)
@@ -209,9 +206,8 @@
 	RESET_THREAD_CANCEL_AT r1       @ sets r0 to state 
 	tst	r0, #VAL__Thread_alien_or_vcpu_user
 	bne	alien_syscall
-	ldr	r0, [sp, #RF(SVC_LR, 13*4)]     @ read exception PC from stack (km_lr)
-	adr	r1, sys_call_table
-	sub	r0, r1, r0
+	adr	r0, sys_call_table
+	add	r0, r0, r7, LSL #2
 	adr	lr, 2f
 1:	ldr	pc, [r0]
 .global fast_ret_from_irq

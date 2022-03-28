@@ -306,13 +306,11 @@ void
 Thread::handle_svc(Trap_state *ts)
 {
   extern void slowtrap_entry(Trap_state *ts) asm ("slowtrap_entry");
-  Unsigned32 pc = ts->pc;
-  if (!is_syscall_pc(pc))
+  if (EXPECT_FALSE(ts->r[7] > 1))
     {
       slowtrap_entry(ts);
       return;
     }
-  ts->pc = get_lr_for_mode(ts);
   Mword state = this->state();
   state_del(Thread_cancel);
   if (state & (Thread_vcpu_user | Thread_alien))
@@ -328,6 +326,6 @@ Thread::handle_svc(Trap_state *ts)
 
   typedef void Syscall(void);
   extern Syscall *sys_call_table[];
-  sys_call_table[(-pc) / 4]();
+  sys_call_table[ts->r[7]]();
 }
 
