@@ -47,7 +47,6 @@ EXTENSION class Timer_tick
 public:
   struct Log : public Tb_entry
   {
-    Irq_base *obj;
     Address user_ip;
     void print(String_buffer *) const;
   };
@@ -78,7 +77,7 @@ Timer_tick::handle_timer(Irq_base *_s, Upstream_irq const *ui,
       if (Kconsole::console()->char_avail() > 0 && !Vkey::check_())
         kdb_ke("SERIAL_ESC");
     }
-  self->log_timer();
+  log_timer();
   t->handle_timer_interrupt();
 }
 
@@ -105,7 +104,7 @@ Timer_tick::handler_app(Irq_base *_s, Upstream_irq const *ui)
   Timer_tick *self = nonull_static_cast<Timer_tick *>(_s);
   self->ack();
   Upstream_irq::ack(ui);
-  self->log_timer();
+  log_timer();
   current_thread()->handle_timer_interrupt();
 }
 
@@ -131,13 +130,12 @@ Timer_tick::Log::print(String_buffer *buf) const
   buf->printf("u-ip=0x%lx", user_ip);
 }
 
-PUBLIC inline NEEDS["logdefs.h"]
+PUBLIC static inline NEEDS["logdefs.h"]
 void
 Timer_tick::log_timer()
 {
   Context *c = current();
   LOG_TRACE("Timer IRQs (kernel scheduling)", "timer", c, Log,
       l->user_ip  = c->regs()->ip();
-      l->obj      = this;
   );
 }
