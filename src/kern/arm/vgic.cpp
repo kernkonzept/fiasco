@@ -138,9 +138,13 @@ public:
         self()->load_aprs(to->aprs);
         self()->load_lrs(&to->lr, Arm_vgic::N_lregs);
         self()->hcr(hcr);
+        IMPL::vgic_barrier();
       }
     else if (enabled)
-      self()->hcr(hcr);
+      {
+        self()->hcr(hcr);
+        IMPL::vgic_barrier();
+      }
   }
 
   void setup_state(Arm_vgic *s) const override
