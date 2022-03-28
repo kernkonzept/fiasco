@@ -371,8 +371,10 @@ Thread_object::sys_register_delete_irq(L4_msg_tag tag, Utcb const *in, Utcb * /*
   if (EXPECT_FALSE(!(irq_rights & L4_fpage::Rights::CW())))
     return Kobject_iface::commit_result(-L4_err::EPerm);
 
-  register_delete_irq(irq);
-  return Kobject_iface::commit_result(0);
+  if (register_delete_irq(irq))
+    return Kobject_iface::commit_result(0);
+  else
+    return Kobject_iface::commit_result(-L4_err::EBusy);
 }
 
 

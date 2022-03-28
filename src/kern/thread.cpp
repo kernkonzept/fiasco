@@ -332,7 +332,7 @@ Mword Del_irq_chip::pin(Thread *t)
 PUBLIC inline
 void
 Del_irq_chip::unbind(Irq_base *irq) override
-{ thread(irq->pin())->remove_delete_irq(); }
+{ thread(irq->pin())->remove_delete_irq(irq); }
 
 
 PUBLIC inline NEEDS["irq_chip.h"]
@@ -346,24 +346,27 @@ Thread::ipc_gate_deleted(Mword id)
 }
 
 PUBLIC
-void
+bool
 Thread::register_delete_irq(Irq_base *irq)
 {
+  if (_del_observer)
+    return false;
+
+  auto g = lock_guard(irq->irq_lock());
   irq->unbind();
   Del_irq_chip::chip.bind(irq, (Mword)this);
-  _del_observer = irq;
+  if (mp_cas(&_del_observer, (Irq_base *)nullptr, irq))
+    return true;
+
+  irq->unbind();
+  return false;
 }
 
 PUBLIC
 void
-Thread::remove_delete_irq()
+Thread::remove_delete_irq(Irq_base *irq)
 {
-  if (!_del_observer)
-    return;
-
-  Irq_base *tmp = _del_observer;
-  _del_observer = 0;
-  tmp->unbind();
+  mp_cas(&_del_observer, irq, (Irq_base *)nullptr);
 }
 
 // end of: IPC-gate deletion stuff -------------------------------
