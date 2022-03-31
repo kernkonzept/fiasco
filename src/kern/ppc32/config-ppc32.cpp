@@ -19,6 +19,8 @@ public:
     SUPERPAGE_MASK  = ~(SUPERPAGE_SIZE -1),
     hlt_works_ok = 1,
     Irq_shortcut = 0, //TODO: set
+
+    Ext_vcpu_state_size = PAGE_SIZE,
   };
 
   enum

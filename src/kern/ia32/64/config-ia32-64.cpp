@@ -26,5 +26,7 @@ public:
     PTE_MASK		= 0x1ff,
 
     Irq_shortcut = 1,
+
+    Ext_vcpu_state_size = PAGE_SIZE,
   };
 };

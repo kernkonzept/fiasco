@@ -14,5 +14,7 @@ public:
     SUPERPAGE_MASK      = ~( SUPERPAGE_SIZE - 1 ),
 
     Irq_shortcut        = 1,
+
+    Ext_vcpu_state_size = PAGE_SIZE,
   };
 };

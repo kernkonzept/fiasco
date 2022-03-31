@@ -22,7 +22,7 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
     return;
 
   Vm_state::Vm_info *info
-    = reinterpret_cast<Vm_state::Vm_info *>((char *)vcpu_state + 0x200);
+    = reinterpret_cast<Vm_state::Vm_info *>((char *)vcpu_state + 0x100);
 
   info->setup();
 

@@ -20,6 +20,8 @@ public:
     have_superpages = 0,
     hlt_works_ok = 1,
     Irq_shortcut = 1,
+
+    Ext_vcpu_state_size = PAGE_SIZE,
   };
 
   enum

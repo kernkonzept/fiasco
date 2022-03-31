@@ -26,7 +26,7 @@ public:
     }
   };
 
-  static_assert(sizeof(Vm_info) <= 0x200, "Vm_info must less than 0x200 bytes");
+  static_assert(sizeof(Vm_info) <= 0x80, "Vm_info must be <= 0x80 bytes");
 };
 
 struct Context_hyp

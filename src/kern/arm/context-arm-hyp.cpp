@@ -75,7 +75,10 @@ protected:
 PROTECTED static inline
 Context::Vm_state *
 Context::vm_state(Vcpu_state *vs)
-{ return reinterpret_cast<Vm_state *>(reinterpret_cast<char *>(vs) + 0x400); }
+{
+  return reinterpret_cast<Vm_state *>(reinterpret_cast<char *>(vs)
+                                      + Config::Ext_vcpu_state_offset);
+}
 
 IMPLEMENT_OVERRIDE
 void

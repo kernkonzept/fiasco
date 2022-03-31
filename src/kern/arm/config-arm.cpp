@@ -129,6 +129,32 @@ public:
   };
 };
 
+// -----------------------------------------------------------------------
+INTERFACE [arm && 32bit]:
+
+EXTENSION class Config
+{
+public:
+  enum Ext_vcpu_info
+  {
+    Ext_vcpu_state_offset = 0x180,
+    Ext_vcpu_state_size = 0x400,
+  };
+};
+
+// -----------------------------------------------------------------------
+INTERFACE [arm && 64bit]:
+
+EXTENSION class Config
+{
+public:
+  enum Ext_vcpu_info
+  {
+    Ext_vcpu_state_offset = 0x280,
+    Ext_vcpu_state_size = 0x800,
+  };
+};
+
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
