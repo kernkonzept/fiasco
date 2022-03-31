@@ -129,15 +129,7 @@ public:
   static constexpr unsigned kmem_per_cent();
   static constexpr unsigned long kmem_max();
 
-  // Attention: this enum is used by the Lauterbach Trace32 OS awareness.
-  enum Ext_vcpu_info
-  {
-    Ext_vcpu_infos_offset = 0x200,
-    Ext_vcpu_state_offset = 0x400,
-  };
-
-  static constexpr Mword ext_vcpu_size()
-  { return PAGE_SIZE; }
+  static constexpr unsigned long ext_vcpu_size();
 };
 
 #define GREETING_COLOR_ANSI_TITLE  "\033[1;32m"
@@ -183,6 +175,19 @@ public:
   static const int serial_esc = 0;
 };
 
+//---------------------------------------------------------------------------
+INTERFACE [!arm]:
+
+EXTENSION class Config
+{
+public:
+  // Attention: this enum is used by the Lauterbach Trace32 OS awareness.
+  enum Ext_vcpu_info : Mword
+  {
+    Ext_vcpu_infos_offset = 0x200,
+    Ext_vcpu_state_offset = 0x400,
+  };
+};
 
 //---------------------------------------------------------------------------
 INTERFACE [!virtual_space_iface]:
@@ -270,6 +275,9 @@ Config::kmem_size([[maybe_unused]] unsigned long available_size)
   return static_cast<unsigned long>(CONFIG_KMEM_SIZE_KB) << 10;
 #endif
 }
+
+IMPLEMENT_DEFAULT
+constexpr unsigned long Config::ext_vcpu_size() { return PAGE_SIZE; }
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [!64bit]:

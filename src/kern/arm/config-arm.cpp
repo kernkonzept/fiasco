@@ -121,6 +121,34 @@ public:
   };
 };
 
+// -----------------------------------------------------------------------
+INTERFACE [arm && 32bit]:
+
+EXTENSION class Config
+{
+public:
+  // Attention: this enum is used by the Lauterbach Trace32 OS awareness.
+  enum Ext_vcpu_info
+  {
+    Ext_vcpu_infos_offset = 0x100,
+    Ext_vcpu_state_offset = 0x180,
+  };
+};
+
+// -----------------------------------------------------------------------
+INTERFACE [arm && 64bit]:
+
+EXTENSION class Config
+{
+public:
+  // Attention: this enum is used by the Lauterbach Trace32 OS awareness.
+  enum Ext_vcpu_info
+  {
+    Ext_vcpu_infos_offset = 0x200,
+    Ext_vcpu_state_offset = 0x280,
+  };
+};
+
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
@@ -139,6 +167,12 @@ IMPLEMENTATION [arm_v6plus]:
 KIP_KERNEL_FEATURE("armv6plus");
 
 //---------------------------------------------------------------------------
+IMPLEMENTATION [arm && 32bit]:
+
+IMPLEMENT_OVERRIDE
+constexpr unsigned long Config::ext_vcpu_size() { return 0x400; }
+
+//---------------------------------------------------------------------------
 IMPLEMENTATION [arm && 64bit]:
 
 IMPLEMENT_OVERRIDE inline ALWAYS_INLINE
@@ -149,3 +183,6 @@ constexpr unsigned long Config::kmem_max()
   // for the kernel image that is mapped in Pmem too.
   return (1024UL - 8UL) << 20;
 }
+
+IMPLEMENT_OVERRIDE
+constexpr unsigned long Config::ext_vcpu_size() { return 0x800; }
