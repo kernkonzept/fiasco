@@ -4,7 +4,7 @@ INTERFACE:
 #include "icu_helper.h"
 #include "types.h"
 
-class Scheduler : public Icu_h<Scheduler>, public Irq_chip_soft
+class Scheduler : public Icu_h<Scheduler>, public Irq_chip_virt<1>
 {
   friend class Scheduler_test;
 
@@ -19,9 +19,8 @@ public:
   };
 
   static Scheduler scheduler;
-private:
-  Irq_base *_irq;
 
+private:
   L4_RPC(Info,      sched_info, (L4_cpu_set_descr set, Mword *rm,
                                  Mword *max_cpus, Mword *sched_classes));
   L4_RPC(Idle_time, sched_idle, (L4_cpu_set cpus, Cpu_time *time));
@@ -48,7 +47,7 @@ Scheduler::operator delete (void *)
 }
 
 PUBLIC inline
-Scheduler::Scheduler() : _irq(0)
+Scheduler::Scheduler()
 {
   initial_kobjects.register_obj(this, Initial_kobjects::Scheduler);
 }
@@ -152,61 +151,11 @@ Scheduler::op_sched_info(L4_cpu_set_descr const &s, Mword *m, Mword *max_cpus,
 }
 
 PUBLIC inline
-Irq_base *
-Scheduler::icu_get_irq(unsigned irqnum)
-{
-  if (irqnum > 0)
-    return 0;
-
-  return _irq;
-}
-
-PUBLIC inline
-L4_msg_tag
-Scheduler::op_icu_get_info(Mword *features, Mword *num_irqs, Mword *num_msis)
-{
-  *features = 0; // supported features (only normal irqs)
-  *num_irqs = 1;
-  *num_msis = 0;
-  return L4_msg_tag(0);
-}
-
-PUBLIC
-L4_msg_tag
-Scheduler::op_icu_bind(unsigned irqnum, Ko::Cap<Irq> const &irq)
-{
-  if (irqnum > 0)
-    return commit_result(-L4_err::EInval);
-
-  if (_irq)
-    _irq->unbind();
-
-  if (!Ko::check_rights(irq.rights, Ko::Rights::CW()))
-    return commit_result(-L4_err::EPerm);
-
-  Irq_chip_soft::bind(irq.obj, irqnum);
-  _irq = irq.obj;
-  return commit_result(0);
-}
-
-PUBLIC
-L4_msg_tag
-Scheduler::op_icu_set_mode(Mword pin, Irq_chip::Mode)
-{
-  if (pin != 0)
-    return commit_result(-L4_err::EInval);
-
-  if (_irq)
-    _irq->switch_mode(true);
-  return commit_result(0);
-}
-
-PUBLIC inline
 void
 Scheduler::trigger_hotplug_event()
 {
-  if (_irq)
-    _irq->hit(0);
+  if (auto i = icu_get_irq(0))
+    i->hit(0);
 }
 
 PUBLIC

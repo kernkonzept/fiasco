@@ -42,6 +42,9 @@ public:
 
     /// The pin number local to \a chip.
     Mword pin;
+
+    Irq_base *irq() const
+    { return chip->irq(pin); }
   };
 
   /// Map legacy (IA32) IRQ numbers to valid IRQ numbers.

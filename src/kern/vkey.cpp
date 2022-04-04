@@ -14,11 +14,11 @@ IMPLEMENTATION:
 
 #include "irq_chip.h"
 
-static Irq_base *vkey_irq;
+static Irq_base *const *vkey_irq;
 
 PUBLIC static
 void
-Vkey::irq(Irq_base *i)
+Vkey::irq(Irq_base *const *i)
 { vkey_irq = i; }
 
 // ------------------------------------------------------------------------
@@ -102,8 +102,9 @@ PRIVATE static
 void
 Vkey::trigger()
 {
-  if (vkey_irq)
-    vkey_irq->hit(0);
+  Irq_base *i = access_once(vkey_irq);
+  if (i)
+    i->hit(0);
 }
 
 PUBLIC static
