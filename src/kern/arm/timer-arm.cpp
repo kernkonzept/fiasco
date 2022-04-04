@@ -46,6 +46,7 @@ Timer::kipclock_cache()
 IMPLEMENTATION [arm]:
 
 #include "config.h"
+#include "context_base.h"
 #include "globals.h"
 #include "kip.h"
 #include "watchdog.h"
@@ -113,12 +114,21 @@ void
 Timer::update_one_shot(Unsigned64 /*wakeup*/)
 {}
 
-IMPLEMENT_DEFAULT inline NEEDS["config.h", "kip.h"]
+IMPLEMENT_DEFAULT inline NEEDS["config.h", "cpu.h", "context_base.h", "kip.h"]
 Unsigned64
 Timer::system_clock()
 {
   if (Config::Scheduler_one_shot)
     return 0;
+  if (current_cpu() == Cpu_number::boot_cpu()
+      && Config::Kip_clock_uses_timer)
+    {
+      Cpu_time time = ts_to_us(time_stamp());
+      Kip::k()->set_clock(time);
+      kipclock_cache();
+      return time;
+    }
+
   return Kip::k()->clock();
 }
 
