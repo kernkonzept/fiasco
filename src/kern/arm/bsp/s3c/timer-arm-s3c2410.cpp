@@ -55,8 +55,6 @@ public:
 // -----------------------------------------------------------------------
 IMPLEMENTATION [arm && (pf_s3c2410 || pf_exynos)]:
 
-#include "config.h"
-#include "kip.h"
 #include "io.h"
 
 #include <cstdio>
@@ -97,20 +95,4 @@ Timer::acknowledge()
 {
   if (Tint_cstat_entable)
     _timer->modify<Mword>(1 << (Timer_nr + 5), 0, TINT_CSTAT);
-}
-
-IMPLEMENT inline
-void
-Timer::update_one_shot(Unsigned64 wakeup)
-{
-  (void)wakeup;
-}
-
-IMPLEMENT inline NEEDS["config.h", "kip.h"]
-Unsigned64
-Timer::system_clock()
-{
-  if (Config::Scheduler_one_shot)
-    return 0;
-  return Kip::k()->clock();
 }

@@ -35,8 +35,6 @@ private:
 // ----------------------------------------------------------------------
 IMPLEMENTATION [arm && pf_kirkwood]:
 
-#include "config.h"
-#include "kip.h"
 #include "io.h"
 
 Static_object<Timer> Timer::_timer;
@@ -67,19 +65,4 @@ void
 Timer::acknowledge()
 {
   _timer->modify<Unsigned32>(0, Timer0_bridge_num, Bridge_cause);
-}
-
-IMPLEMENT inline
-void
-Timer::update_one_shot(Unsigned64 /*wakeup*/)
-{
-}
-
-IMPLEMENT inline NEEDS["config.h", "kip.h"]
-Unsigned64
-Timer::system_clock()
-{
-  if (Config::Scheduler_one_shot)
-    return 0;
-  return Kip::k()->clock();
 }

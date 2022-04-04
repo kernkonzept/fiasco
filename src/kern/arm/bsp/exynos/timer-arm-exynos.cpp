@@ -112,7 +112,7 @@ Timer::periodic_default_freq(Cpu_number cpu)
   timers.cpu(cpu)->set_interval(Interval);
 }
 
-IMPLEMENT inline
+IMPLEMENT_OVERRIDE inline
 void
 Timer::update_one_shot(Unsigned64 wakeup)
 {
@@ -124,14 +124,4 @@ Timer::update_one_shot(Unsigned64 wakeup)
     interval_mct = us_to_mct(wakeup - now);
 
   timers.cpu(current_cpu())->set_interval(interval_mct);
-}
-
-IMPLEMENT inline NEEDS["config.h", "kip.h"]
-Unsigned64
-Timer::system_clock()
-{
-  if (Config::Scheduler_one_shot)
-    return 0;
-  else
-    return Kip::k()->clock();
 }

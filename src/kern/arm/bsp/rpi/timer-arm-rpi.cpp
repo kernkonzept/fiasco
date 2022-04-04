@@ -62,8 +62,6 @@ unsigned Timer::irq()
 // ----------------------------------------------------------------------
 IMPLEMENTATION [arm && pf_rpi && (pf_rpi_rpi1 || pf_rpi_rpizw)]:
 
-#include "config.h"
-#include "kip.h"
 #include "kmem.h"
 #include "mem_layout.h"
 
@@ -92,20 +90,4 @@ Timer::acknowledge()
 {
   _timer->set_next();
   _timer->write<Mword>(1 << Timer_nr, CS);
-}
-
-IMPLEMENT inline
-void
-Timer::update_one_shot(Unsigned64 wakeup)
-{
-  (void)wakeup;
-}
-
-IMPLEMENT inline NEEDS["kip.h"]
-Unsigned64
-Timer::system_clock()
-{
-  if (Config::Scheduler_one_shot)
-    return 0;
-  return Kip::k()->clock();
 }

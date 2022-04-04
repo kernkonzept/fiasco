@@ -31,7 +31,6 @@ private:
 IMPLEMENTATION [arm && pf_integrator]:
 
 #include "config.h"
-#include "kip.h"
 #include "kmem.h"
 #include "mem_layout.h"
 
@@ -63,21 +62,3 @@ Timer::acknowledge()
 {
   _timer->write(1, TIMER1_BASE + TIMER_INTCLR);
 }
-
-IMPLEMENT inline
-void
-Timer::update_one_shot(Unsigned64 wakeup)
-{
-  (void)wakeup;
-}
-
-IMPLEMENT inline NEEDS["kip.h"]
-Unsigned64
-Timer::system_clock()
-{
-  if (Config::Scheduler_one_shot)
-    return 0;
-  else
-    return Kip::k()->clock();
-}
-

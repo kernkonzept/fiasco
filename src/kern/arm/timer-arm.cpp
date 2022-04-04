@@ -108,6 +108,20 @@ Timer::update_system_clock(Cpu_number cpu)
     }
 }
 
+IMPLEMENT_DEFAULT inline
+void
+Timer::update_one_shot(Unsigned64 /*wakeup*/)
+{}
+
+IMPLEMENT_DEFAULT inline NEEDS["config.h", "kip.h"]
+Unsigned64
+Timer::system_clock()
+{
+  if (Config::Scheduler_one_shot)
+    return 0;
+  return Kip::k()->clock();
+}
+
 IMPLEMENT inline NEEDS[Timer::update_one_shot, "config.h"]
 void
 Timer::update_timer(Unsigned64 wakeup)

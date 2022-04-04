@@ -63,17 +63,3 @@ Timer::acknowledge()
 {
   _tmr->write<Mword>(1 << 30, Reg::PCR);
 }
-
-IMPLEMENT inline
-void
-Timer::update_one_shot(Unsigned64)
-{}
-
-IMPLEMENT inline NEEDS["config.h", "kip.h"]
-Unsigned64
-Timer::system_clock()
-{
-  if (Config::Scheduler_one_shot)
-    return 0;
-  return Kip::k()->clock();
-}

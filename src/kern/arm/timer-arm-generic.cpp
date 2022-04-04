@@ -30,7 +30,6 @@ IMPLEMENTATION [arm && arm_generic_timer]:
 #include "config.h"
 #include "cpu.h"
 #include "io.h"
-#include "kip.h"
 
 Mword Timer::_interval;
 Mword Timer::_freq0;
@@ -100,22 +99,6 @@ PUBLIC static inline
 void Timer::acknowledge()
 {
   Gtimer::compare(Gtimer::compare() + _interval);
-}
-
-IMPLEMENT inline
-void
-Timer::update_one_shot(Unsigned64 wakeup)
-{
-  (void)wakeup;
-}
-
-IMPLEMENT inline NEEDS["config.h", "kip.h"]
-Unsigned64
-Timer::system_clock()
-{
-  if (Config::Scheduler_one_shot)
-    return 0;
-  return Kip::k()->clock();
 }
 
 IMPLEMENT_OVERRIDE inline

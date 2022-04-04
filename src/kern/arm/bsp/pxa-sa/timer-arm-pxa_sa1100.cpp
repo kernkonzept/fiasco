@@ -89,7 +89,7 @@ Timer::acknowledge()
   _timer->ack();
 }
 
-IMPLEMENT inline NEEDS["kip.h", Timer::timer_to_us, Timer::us_to_timer]
+IMPLEMENT_OVERRIDE inline NEEDS["kip.h", Timer::timer_to_us, Timer::us_to_timer]
 void
 Timer::update_one_shot(Unsigned64 wakeup)
 {
@@ -117,7 +117,7 @@ Timer::update_one_shot(Unsigned64 wakeup)
   _timer->write<Mword>(1, OSSR); // clear all status bits
 }
 
-IMPLEMENT inline NEEDS["config.h", "kip.h", Timer::timer_to_us]
+IMPLEMENT_OVERRIDE inline NEEDS["config.h", "kip.h", Timer::timer_to_us]
 Unsigned64
 Timer::system_clock()
 {

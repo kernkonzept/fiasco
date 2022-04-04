@@ -32,8 +32,6 @@ private:
 IMPLEMENTATION [arm && mptimer]:
 
 #include <cstdio>
-#include "config.h"
-#include "kip.h"
 
 #include "globals.h"
 
@@ -80,20 +78,4 @@ void
 Timer::acknowledge()
 {
   Cpu::scu->write<Mword>(Timer_int_stat_event, Timer_int_stat_reg);
-}
-
-IMPLEMENT inline
-void
-Timer::update_one_shot(Unsigned64 wakeup)
-{
-  (void)wakeup;
-}
-
-IMPLEMENT inline NEEDS["config.h", "kip.h"]
-Unsigned64
-Timer::system_clock()
-{
-  if (Config::Scheduler_one_shot)
-    return 0;
-  return Kip::k()->clock();
 }

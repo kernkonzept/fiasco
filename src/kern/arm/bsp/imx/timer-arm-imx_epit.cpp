@@ -38,7 +38,6 @@ public:
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && imx_epit]:
 
-#include "kip.h"
 #include "mem_layout.h"
 
 Static_object<Timer_imx_epit> Timer::_timer;
@@ -53,19 +52,4 @@ void
 Timer::acknowledge()
 {
   _timer->acknowledge();
-}
-
-IMPLEMENT inline
-void
-Timer::update_one_shot(Unsigned64 /*wakeup*/)
-{}
-
-IMPLEMENT inline NEEDS["config.h", "kip.h"]
-Unsigned64
-Timer::system_clock()
-{
-  if (Config::Scheduler_one_shot)
-    return 0;
-  else
-    return Kip::k()->clock();
 }

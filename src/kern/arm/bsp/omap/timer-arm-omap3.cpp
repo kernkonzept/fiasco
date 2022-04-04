@@ -119,26 +119,3 @@ void Timer::acknowledge()
   else
     _gentimer->acknowledge();
 }
-
-// -----------------------------------------------------------------------
-IMPLEMENTATION [arm && pf_omap3]:
-
-#include "config.h"
-#include "kip.h"
-
-IMPLEMENT inline
-void
-Timer::update_one_shot(Unsigned64 wakeup)
-{
-  (void)wakeup;
-}
-
-IMPLEMENT inline NEEDS["config.h", "kip.h"]
-Unsigned64
-Timer::system_clock()
-{
-  if (Config::Scheduler_one_shot)
-    return 0;
-  else
-    return Kip::k()->clock();
-}

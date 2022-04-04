@@ -43,8 +43,6 @@ private:
 // ----------------------------------------------------------------------
 IMPLEMENTATION [arm && pf_imx_21]:
 
-#include "config.h"
-#include "kip.h"
 #include "io.h"
 
 #include <cstdio>
@@ -78,21 +76,4 @@ void
 Timer::acknowledge()
 {
   _timer->acknowledge();
-}
-
-IMPLEMENT inline
-void
-Timer::update_one_shot(Unsigned64 /*wakeup*/)
-{
-}
-
-IMPLEMENT inline NEEDS["config.h", "kip.h", "io.h"]
-Unsigned64
-Timer::system_clock()
-{
-  if (Config::Scheduler_one_shot)
-    //return Kip::k()->clock() + timer_to_us(Io::read<Unsigned32>(OSCR));
-    return 0;
-  else
-    return Kip::k()->clock();
 }
