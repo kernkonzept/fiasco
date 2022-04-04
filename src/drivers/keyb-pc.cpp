@@ -100,6 +100,7 @@ IMPLEMENTATION[pc]:
 
 #include "processor.h"
 #include "io.h"
+#include "keycodes.h"
 
 enum {
   SHIFT = 0xff,
@@ -107,7 +108,7 @@ enum {
 
 static unsigned char keymap[][2] = {
   {0       },		/* 0 */
-  {27,	27 },		/* 1 - ESC */
+  {KEY_ESC, KEY_ESC},
   {'1',	'!'},		/* 2 */
   {'2',	'@'},
   {'3',	'#'},
@@ -120,7 +121,7 @@ static unsigned char keymap[][2] = {
   {'0',	')'},
   {'-',	'_'},
   {'=',	'+'},
-  {8,	8  },		/* 14 - Backspace */
+  {KEY_BACKSPACE, KEY_BACKSPACE},
   {'\t','\t'},		/* 15 */
   {'q',	'Q'},
   {'w',	'W'},
@@ -177,19 +178,19 @@ static unsigned char keymap[][2] = {
   {0,	 0},		/* 68 - F10 */
   {0,	 0},		/* 69 - Num Lock */
   {0,	 0},		/* 70 - Scroll Lock */
-  {0xb7,0xb7},		/* 71 - Numeric keypad 7 */
-  {0xb8,0xb8},		/* 72 - Numeric keypad 8 */
-  {0xb9,0xb9},		/* 73 - Numeric keypad 9 */
-  {'-',	'-'},		/* 74 - Numeric keypad '-' */
-  {0xb4,0xb4},		/* 75 - Numeric keypad 4 */
-  {0xb5,0xb5},		/* 76 - Numeric keypad 5 */
-  {0xb6,0xb6},		/* 77 - Numeric keypad 6 */
-  {'+',	'+'},		/* 78 - Numeric keypad '+' */
-  {0xb1,0xb1},		/* 79 - Numeric keypad 1 */
-  {0xb2,0xb2},		/* 80 - Numeric keypad 2 */
-  {0xb3,0xb3},		/* 81 - Numeric keypad 3 */
-  {0xb0,0xb0},		/* 82 - Numeric keypad 0 */
-  {0xae,0xae},		/* 83 - Numeric keypad '.' */
+  {KEY_CURSOR_HOME, KEY_CURSOR_HOME},	/* 71 - Numeric keypad 7 */
+  {KEY_CURSOR_UP, KEY_CURSOR_UP},	/* 72 - Numeric keypad 8 */
+  {KEY_PAGE_UP, KEY_PAGE_UP},		/* 73 - Numeric keypad 9 */
+  {'-',	'-'},           		/* 74 - Numeric keypad '-' */
+  {KEY_CURSOR_LEFT, KEY_CURSOR_LEFT},	/* 75 - Numeric keypad 4 */
+  {0, 0},	                      	/* 76 - Numeric keypad 5 */
+  {KEY_CURSOR_RIGHT, KEY_CURSOR_RIGHT},	/* 77 - Numeric keypad 6 */
+  {'+',	'+'},           		/* 78 - Numeric keypad '+' */
+  {KEY_CURSOR_END, KEY_CURSOR_END},	/* 79 - Numeric keypad 1 */
+  {KEY_CURSOR_DOWN, KEY_CURSOR_DOWN},	/* 80 - Numeric keypad 2 */
+  {KEY_PAGE_DOWN, KEY_PAGE_DOWN},	/* 81 - Numeric keypad 3 */
+  {KEY_INSERT, KEY_INSERT},		/* 82 - Numeric keypad 0 */
+  {KEY_DELETE, KEY_DELETE},		/* 83 - Numeric keypad '.' */
 };
 
 IMPLEMENT
