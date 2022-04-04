@@ -15,8 +15,9 @@ class Bar;
 class Foo
 {
 
-#line 2 "multifile2.cpp"
 private:
+
+#line 4 "multifile2.cpp"
 
   int more;
 

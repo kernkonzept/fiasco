@@ -20,8 +20,9 @@ protected:
   int foo( int );
   
 
-#line 2 "dropsection-ext.cpp"
 private:
+
+#line 4 "dropsection-ext.cpp"
 
 public:
   int extra_var;
@@ -49,8 +50,9 @@ class Gen_foo_ext : private Gen_foo, public Ixdebix
 protected:
   unsigned stuff;
 
-#line 8 "dropsection-ext.cpp"
 private:
+
+#line 10 "dropsection-ext.cpp"
 
 private:
   char *extension;

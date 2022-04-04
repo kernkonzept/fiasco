@@ -542,7 +542,7 @@ sub to_string
 { return $_[0]->{file}.':'.$_[0]->{line}; }
 
 sub to_line_directive
-{ return "\n#line " . $_[0]->{line} . " \"" . $_[0]->{file} . "\"\n"; }
+{ return "\n#line " . ($_[0]->{line} + $_[1]) . " \"" . $_[0]->{file} . "\"\n"; }
 
 sub in_implementation
 { return $_[0]->{section} eq 'IMPLEMENTATION'; }
@@ -848,27 +848,18 @@ sub parse_file
 	    }
 	  
 	  # Type declaration extension?
-	  if (/^$s EXTENSION $s (?:struct|class) $s ($identifier) 
-	       $s (?::(?!:) $s ([^\{]*))?\{ (.*) \} $s ; $s $/sx)
+	  if (/^( $s EXTENSION $s (?:struct|class) $s ($identifier)
+	       $s (?::(?!:) $s ([^\{]*))?\{ ) (.*) \} $s ; $s $/sx)
 	    {
-	      my $super = $2;
-	      my $name = $1;
-	      my $string = $3;
+	      my $super = $3;
+	      my $name = $2;
+	      my $string = $4;
+              my $voided = $1;
 
 	      if (! exists $classes{$name})
 		{
 		  error($src_pos, "Class extension for undefined class "
                         . $name);
-		}
-
-	      # XXX XXX we should not handle line directives here --
-	      # this is the job of the output functions.  However, as
-	      # we don't generate a new codechunk for this extension,
-	      # we just add the extension's line number here.
-
-	      if ($doing_linenumbers)
-		{
-		  $classes{$name}->{pretext} .= $block_pos->to_line_directive;
 		}
 
 		my $txt = \($classes{$name}->{pretext});
@@ -890,7 +881,35 @@ sub parse_file
 		      }
 		  }
 
-	      $classes{$name}->{pretext} .= "private:\n" . $string;
+              $$txt .= "\nprivate:\n";
+
+              # XXX XXX we should not handle line directives here --
+              # this is the job of the output functions.  However, as
+              # we don't generate a new codechunk for this extension,
+              # we just add the extension's line number here.
+
+              if ($doing_linenumbers)
+                {
+                  # The lines that the EXTENSION statement spanned, which are
+                  # not incorporated in the preprocessed code, must be added as
+                  # an offset to the line directive to preserve a correct line
+                  # mapping.
+                  my @voided_lines = split(/\n/, "$voided", -1);
+
+                  # Subtract one from the number of voided lines, because the
+                  # remainder of the line containing the opening { is preserved.
+                  $$txt .= $block_pos->to_line_directive(@voided_lines - 1);
+
+                  # If code is on the same line as the replaced EXTENSION
+                  # statement, add an equivalent number of spaces to ensure
+                  # correct character alignment in the line.
+                  if ($string !~ /^\s*\n/)
+                    {
+                      $$txt .= " " x length($voided_lines[-1])
+                    }
+                }
+
+              $$txt .= $string;
 
 	      next NEXTLINE;
 	    }
