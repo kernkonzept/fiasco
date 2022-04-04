@@ -120,7 +120,7 @@ get_char:
         {
           ibuf[pos++] = 27;
           int nc;
-          if (!(_o->get_attributes() & Console::UART)
+          if (!(_o->get_attributes() & (Console::UART | Console::UX))
               || ((nc = getchar_timeout(csi_timeout)) == -1))
             {
               pos = 0;
