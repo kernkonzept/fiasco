@@ -460,6 +460,9 @@ Jdb::input_short_mode(Jdb::Cmd *cmd, char const **args, int &cmd_key)
       if (c == KEY_F1)
 	c = 'h';
 
+      if (c >= 0x100) // see keycodes.h: no special keys on command line
+        continue;
+
       printf("\033[K%c", c); // clreol + print key
 
       char cmd_buffer[2] = { (char)c, 0 };
@@ -591,6 +594,9 @@ Jdb::input_long_mode(Jdb::Cmd *cmd, char const **args)
 	  break;
 
 	default:
+          if (c >= 0x100) // see keycodes.h: no special keys on command line
+            continue;
+
 	  buf.append(c);
 	  printf("\033[K%c", c);
 	  continue;
