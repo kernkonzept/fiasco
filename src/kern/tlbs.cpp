@@ -2,7 +2,6 @@ INTERFACE:
 
 #include <cxx/hlist>
 #include "per_cpu_data.h"
-#include "tlbs.h"
 #include "mem_unit.h"
 
 /**
