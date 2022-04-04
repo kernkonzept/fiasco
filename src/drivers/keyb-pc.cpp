@@ -106,7 +106,7 @@ enum {
   SHIFT = 0xff,
 };
 
-static unsigned char keymap[][2] = {
+static unsigned short keymap[][2] = {
   {0       },		/* 0 */
   {KEY_ESC, KEY_ESC},
   {'1',	'!'},		/* 2 */
