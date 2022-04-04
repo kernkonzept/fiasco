@@ -102,6 +102,8 @@ IMPLEMENTATION [arm && mp && arm_v8 && arm_psci]:
 #include "psci.h"
 #include "minmax.h"
 
+#include <cstdio>
+
 PUBLIC static
 void
 Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
