@@ -83,9 +83,11 @@ Kmem::init_mmu(Cpu const &boot_cpu)
   // segment descriptors set up by bootstrap.c.  (we'll set up our own
   // descriptors later.)  (2) a one-to-one phys-to-virt mapping in the
   // kernel's page directory sometimes comes in handy
-  kdir->map(0, Virt_addr(Mem_layout::Physmem), Virt_size(Mem_layout::pmem_size),
-            Pt_entry::Writable | Pt_entry::Referenced | Pt_entry::global(),
-            Pt_entry::super_level(), false, pdir_alloc(alloc));
+  if (!kdir->map(0, Virt_addr(Mem_layout::Physmem),
+                 Virt_size(Mem_layout::pmem_size),
+                 Pt_entry::Writable | Pt_entry::Referenced | Pt_entry::global(),
+                 Pt_entry::super_level(), false, pdir_alloc(alloc)))
+    panic("Cannot map initial memory");
 
   // now switch to our new page table
   Emulation::set_pdir_addr (Mem_layout::pmem_to_phys (kdir));
