@@ -294,8 +294,7 @@ Thread::handle_slow_trap(Trap_state *ts)
   _recover_jmpbuf = 0;
 
 check_exception:
-  // backward compatibility cruft: check for those insane "int3" debug
-  // messaging command sequences
+  // see kdb_ke(), kdb_ke_nstr(), kdb_ke_nsequence()
   if (!from_user && (ts->_trapno == 3))
     goto generic_debug;
 
