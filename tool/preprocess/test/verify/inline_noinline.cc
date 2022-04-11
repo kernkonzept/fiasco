@@ -4,6 +4,11 @@
 #include "inline_noinline_i.h"
 
 
+//
+// IMPLEMENTATION follows
+//
+
+
 #line 83 "inline.cpp"
 
 

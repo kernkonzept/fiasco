@@ -4,7 +4,7 @@
 #define implement_default_h
 
 //
-// INTERFACE definition follows 
+// INTERFACE definition follows
 //
 
 #line 2 "implement_default.cpp"

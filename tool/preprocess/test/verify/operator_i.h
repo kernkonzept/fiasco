@@ -3,6 +3,11 @@
 #ifndef operator_i_h
 #define operator_i_h
 #include "operator.h"
+
+//
+// INTERFACE internal declaration follows
+//
+
 #line 40 "operator.cpp"
 
 // Some systematic tests (contributed by Matthias Daum)

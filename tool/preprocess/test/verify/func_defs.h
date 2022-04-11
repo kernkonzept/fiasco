@@ -4,7 +4,7 @@
 #define func_defs_h
 
 //
-// INTERFACE definition follows 
+// INTERFACE definition follows
 //
 
 #line 2 "func_defs.cpp"

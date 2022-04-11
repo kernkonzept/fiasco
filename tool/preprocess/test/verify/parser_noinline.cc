@@ -3,6 +3,11 @@
 #include "parser_noinline.h"
 #include "parser_noinline_i.h"
 
+
+//
+// IMPLEMENTATION follows
+//
+
 #line 46 "parser.cpp"
 
 // Try to initialize a nested structure object.

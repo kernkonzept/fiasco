@@ -4,7 +4,7 @@
 #define c_preproc_h
 
 //
-// INTERFACE definition follows 
+// INTERFACE definition follows
 //
 
 

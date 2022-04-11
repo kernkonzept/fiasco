@@ -4,6 +4,11 @@
 #include "tag_enabled_i.h"
 
 
+//
+// IMPLEMENTATION follows
+//
+
+
 #line 8 "tag_enabled.cpp"
 
 

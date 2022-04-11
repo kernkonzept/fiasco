@@ -4,7 +4,7 @@
 #define line_not_h
 
 //
-// INTERFACE definition follows 
+// INTERFACE definition follows
 //
 
 

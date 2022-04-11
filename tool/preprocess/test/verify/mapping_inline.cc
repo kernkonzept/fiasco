@@ -3,6 +3,11 @@
 #include "mapping_inline.h"
 #include "mapping_inline_i.h"
 
+
+//
+// IMPLEMENTATION follows
+//
+
 #line 48 "mapping.cpp"
 
 // The mapping database.

@@ -4,6 +4,11 @@
 #include "interface_i.h"
 
 
+//
+// IMPLEMENTATION follows
+//
+
+
 #line 9 "interface.cpp"
 
 

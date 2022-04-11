@@ -3,6 +3,11 @@
 #include "extern_c.h"
 #include "extern_c_i.h"
 
+
+//
+// IMPLEMENTATION follows
+//
+
 #line 4 "extern_c.cpp"
 
 extern "C" 

@@ -4,7 +4,7 @@
 #define inline_h
 
 //
-// INTERFACE definition follows 
+// INTERFACE definition follows
 //
 
 #line 2 "inline.cpp"

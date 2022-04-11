@@ -4,6 +4,11 @@
 #include "func_defs_i.h"
 
 
+//
+// IMPLEMENTATION follows
+//
+
+
 #line 8 "func_defs.cpp"
 
 

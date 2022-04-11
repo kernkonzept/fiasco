@@ -3,6 +3,11 @@
 #include "static.h"
 #include "static_i.h"
 
+
+//
+// IMPLEMENTATION follows
+//
+
 #line 4 "static.cpp"
 
 extern "C" {

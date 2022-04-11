@@ -4,6 +4,11 @@
 #include "multifile_i.h"
 
 
+//
+// IMPLEMENTATION follows
+//
+
+
 #line 13 "multifile2.cpp"
 
 

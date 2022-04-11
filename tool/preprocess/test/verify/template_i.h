@@ -3,6 +3,11 @@
 #ifndef template_i_h
 #define template_i_h
 #include "template.h"
+
+//
+// INTERFACE internal declaration follows
+//
+
 #line 200 "template.cpp"
 
 // 

@@ -3,6 +3,11 @@
 #include "default_args.h"
 #include "default_args_i.h"
 
+
+//
+// IMPLEMENTATION follows
+//
+
 #line 26 "default_args.cpp"
 
 extern "C"

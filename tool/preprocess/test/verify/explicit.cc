@@ -4,6 +4,11 @@
 #include "explicit_i.h"
 
 
+//
+// IMPLEMENTATION follows
+//
+
+
 #line 8 "explicit.cpp"
 
 

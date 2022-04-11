@@ -3,6 +3,11 @@
 #include "comment_in_string.h"
 #include "comment_in_string_i.h"
 
+
+//
+// IMPLEMENTATION follows
+//
+
 #line 4 "comment_in_string.cpp"
 
 int foo(char *s);

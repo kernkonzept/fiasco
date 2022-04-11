@@ -4,6 +4,11 @@
 #include "drop_single2_i.h"
 
 
+//
+// IMPLEMENTATION follows
+//
+
+
 #line 20 "dropsection.cpp"
 
 void

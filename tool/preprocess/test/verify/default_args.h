@@ -4,7 +4,7 @@
 #define default_args_h
 
 //
-// INTERFACE definition follows 
+// INTERFACE definition follows
 //
 
 

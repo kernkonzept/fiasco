@@ -4,6 +4,11 @@
 #include "random_i.h"
 
 
+//
+// INTERFACE implementation function declaration follows
+//
+
+
 #line 208 "random.cpp"
 static void function60();
 
@@ -18,6 +23,11 @@ static void function63();
 
 #line 220 "random.cpp"
 static void function64();
+
+//
+// IMPLEMENTATION follows
+//
+
 
 #line 23 "random.cpp"
 

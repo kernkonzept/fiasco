@@ -4,6 +4,11 @@
 #include "nested_class_i.h"
 
 
+//
+// IMPLEMENTATION follows
+//
+
+
 #line 25 "nested_class.cpp"
 
 

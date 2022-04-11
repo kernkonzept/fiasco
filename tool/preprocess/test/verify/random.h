@@ -7,7 +7,7 @@
 #include "bar.h"
 
 //
-// INTERFACE definition follows 
+// INTERFACE definition follows
 //
 
 #line 5 "random.cpp"

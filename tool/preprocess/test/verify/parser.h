@@ -4,7 +4,7 @@
 #define parser_h
 
 //
-// INTERFACE definition follows 
+// INTERFACE definition follows
 //
 
 #line 2 "parser.cpp"

@@ -4,6 +4,11 @@
 #include "line_i.h"
 
 
+//
+// IMPLEMENTATION follows
+//
+
+
 #line 9 "line.cpp"
 
 // A long, multiline comment in front of this function definition.

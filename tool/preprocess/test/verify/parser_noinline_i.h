@@ -6,6 +6,11 @@
 #line 16 "parser.cpp"
 
 #include "foo.h"
+
+//
+// INTERFACE internal declaration follows
+//
+
 #line 41 "parser.cpp"
 
 // Try function-pointer typedef

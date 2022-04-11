@@ -280,7 +280,7 @@ foreach my $i (grep {$_->{type} eq 'include'} @{$Chunk::sections{"INTERFACE"}})
 
 print_head ("\n" .
 	    "//\n" .
-	    "// INTERFACE definition follows \n" .
+	    "// INTERFACE definition follows\n" .
 	    "//\n\n");
 
 foreach my $i ( (grep {$_->{type} eq 'classdef' 
@@ -384,6 +384,11 @@ foreach my $i (grep { $_->{type} eq 'include' }
     print_code $i;
   }
 
+print_head ("\n" .
+            "//\n" .
+            "// INTERFACE internal declaration follows\n" .
+            "//\n\n");
+
 foreach my $i 
   ( (grep {$_->{type} eq 'classdef' && $_->{syntax} eq 'forwarddecl'}
      @{$Chunk::sections{"IMPLEMENTATION"}}),  # first all forward declarations,
@@ -396,6 +401,7 @@ foreach my $i
 
 # XXX should we print #defines here?
 
+clear_head();
 print_head ("\n" . 
 	    "//\n" .
 	    "// IMPLEMENTATION of inline functions follows\n".
@@ -443,12 +449,23 @@ foreach my $part (keys %impl_parts)
     print OUT "#include \"${public_base}.$header_ext\"\n" .
               "#include \"${incfile_base}_i.$header_ext\"\n\n";
 
+    print_head ("\n" .
+                "//\n" .
+                "// INTERFACE implementation function declaration follows\n" .
+                "//\n\n");
+
     foreach my $i (grep {$_->{type} eq 'function' && ! $_->is_member
 			&& $_->{static}} 
 		     grep {$_->{part_ext} eq $part} @{$Chunk::sections{"IMPLEMENTATION"}})
       {
 	print_funcdecl $i;
       }
+
+    clear_head();
+    print_head ("\n" .
+                "//\n" .
+                "// IMPLEMENTATION follows\n" .
+                "//\n\n");
 
     # Print unparsed code first -- make private inline functions see
     # static variables
@@ -473,6 +490,8 @@ foreach my $part (keys %impl_parts)
 	print_funcdef $i;
 	$empty = 0;
       }
+
+    clear_head();
 
     truncate OUT,0 if $empty && $opt_t;
     close OUT;

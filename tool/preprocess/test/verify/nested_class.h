@@ -4,7 +4,7 @@
 #define nested_class_h
 
 //
-// INTERFACE definition follows 
+// INTERFACE definition follows
 //
 
 #line 2 "nested_class.cpp"

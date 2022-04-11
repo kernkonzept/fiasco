@@ -4,7 +4,7 @@
 #define explicit_h
 
 //
-// INTERFACE definition follows 
+// INTERFACE definition follows
 //
 
 #line 2 "explicit.cpp"

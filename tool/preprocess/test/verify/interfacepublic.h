@@ -4,7 +4,7 @@
 #define interface_h
 
 //
-// INTERFACE definition follows 
+// INTERFACE definition follows
 //
 
 #line 2 "interface.cpp"

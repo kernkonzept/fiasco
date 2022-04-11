@@ -4,7 +4,7 @@
 #define extension_inherit_h
 
 //
-// INTERFACE definition follows 
+// INTERFACE definition follows
 //
 
 #line 2 "extension_inherit.cpp"

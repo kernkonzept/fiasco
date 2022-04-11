@@ -4,7 +4,7 @@
 #define operator_h
 
 //
-// INTERFACE definition follows 
+// INTERFACE definition follows
 //
 
 #line 2 "operator.cpp"

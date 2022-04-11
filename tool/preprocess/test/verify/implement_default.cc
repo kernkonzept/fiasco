@@ -4,6 +4,11 @@
 #include "implement_default_i.h"
 
 
+//
+// IMPLEMENTATION follows
+//
+
+
 #line 19 "implement_default.cpp"
 void Test::warn_func1()         { /* this is the override */ }
 

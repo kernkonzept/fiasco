@@ -4,7 +4,7 @@
 #define multifile_h
 
 //
-// INTERFACE definition follows 
+// INTERFACE definition follows
 //
 
 #line 7 "multifile2.cpp"

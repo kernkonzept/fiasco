@@ -4,7 +4,7 @@
 #define comment_in_string_h
 
 //
-// INTERFACE definition follows 
+// INTERFACE definition follows
 //
 
 

@@ -4,7 +4,7 @@
 #define template_base_class_h
 
 //
-// INTERFACE definition follows 
+// INTERFACE definition follows
 //
 
 #line 2 "template_base_class.cpp"

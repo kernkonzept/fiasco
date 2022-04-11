@@ -3,6 +3,11 @@
 #include "mapping.h"
 #include "mapping_i.h"
 
+
+//
+// IMPLEMENTATION follows
+//
+
 #line 48 "mapping.cpp"
 
 // The mapping database.

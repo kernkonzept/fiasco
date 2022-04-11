@@ -4,6 +4,11 @@
 #include "operator_i.h"
 
 
+//
+// IMPLEMENTATION follows
+//
+
+
 #line 8 "operator.cpp"
 
 

@@ -3,6 +3,11 @@
 #ifndef parser_i_h
 #define parser_i_h
 #include "parser.h"
+
+//
+// INTERFACE internal declaration follows
+//
+
 #line 41 "parser.cpp"
 
 // Try function-pointer typedef

@@ -4,6 +4,11 @@
 #include "template_i.h"
 
 
+//
+// IMPLEMENTATION follows
+//
+
+
 #line 185 "template.cpp"
 
 

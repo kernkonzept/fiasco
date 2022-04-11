@@ -4,6 +4,11 @@
 #include "inline_i.h"
 
 
+//
+// IMPLEMENTATION follows
+//
+
+
 #line 60 "inline.cpp"
 
 // This inline funtion is public only because it is needed by an

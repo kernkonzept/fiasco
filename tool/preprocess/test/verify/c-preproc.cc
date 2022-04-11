@@ -3,6 +3,11 @@
 #include "c-preproc.h"
 #include "c-preproc_i.h"
 
+
+//
+// IMPLEMENTATION follows
+//
+
 #line 4 "c-preproc.cpp"
 
 // set CS (missing from OSKIT)

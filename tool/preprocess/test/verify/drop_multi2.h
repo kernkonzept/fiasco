@@ -4,7 +4,7 @@
 #define drop_multi2_h
 
 //
-// INTERFACE definition follows 
+// INTERFACE definition follows
 //
 
 #line 2 "dropsection.cpp"

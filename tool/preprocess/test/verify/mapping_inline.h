@@ -9,7 +9,7 @@
 #include "space.h"		// for space_index_t
 
 //
-// INTERFACE definition follows 
+// INTERFACE definition follows
 //
 
 #line 7 "mapping.cpp"

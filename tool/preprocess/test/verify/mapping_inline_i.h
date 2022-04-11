@@ -17,6 +17,11 @@
 #include "lock.h"
 #line 391 "mapping.cpp"
 #include "kmem_slab.h"
+
+//
+// INTERFACE internal declaration follows
+//
+
 #line 155 "mapping.cpp"
 
 // For implementation of mapping_t functions, we need mapping_tree_t.

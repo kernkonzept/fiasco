@@ -3,6 +3,11 @@
 #ifndef inline_noinline_i_h
 #define inline_noinline_i_h
 #include "inline_noinline.h"
+
+//
+// INTERFACE internal declaration follows
+//
+
 #line 18 "inline.cpp"
 
 // Test dependency-chain resolver
