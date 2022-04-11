@@ -114,7 +114,7 @@ void
 Timer::update_one_shot(Unsigned64 /*wakeup*/)
 {}
 
-IMPLEMENT_DEFAULT inline NEEDS["config.h", "cpu.h", "context_base.h", "kip.h"]
+IMPLEMENT_DEFAULT inline NEEDS["config.h", "context_base.h", "kip.h"]
 Unsigned64
 Timer::system_clock()
 {
