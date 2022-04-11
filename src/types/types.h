@@ -25,6 +25,28 @@ a nonull_static_cast( b p )
   return reinterpret_cast<a>( reinterpret_cast<Address>(p) + d);
 }
 
+/**
+ * Read the value at an address exactly once.
+ *
+ * The compiler is disallowed to reuse a previous read at the same address, for
+ * example:
+ * ```
+ * val1 = *a;
+ * val2 = access_once(a);  // compiler may not replace this by val2 = val1;
+ * ```
+ *
+ * The compiler is also disallowed to repeat the read, for example:
+ * ```
+ * val1 = access_once(a);
+ * val2 = val1;  // compiler may not replace this by val2 = *a;
+ * ```
+ *
+ * The above implies that the compiler is also disallowed to move the read out
+ * of or into loops.
+ *
+ * \note The read might still be moved relative to other code.
+ * \note The value might be read from a hardware cache, not from RAM.
+ */
 template< typename T > inline
 T access_once(T const *a)
 {
@@ -38,6 +60,24 @@ T access_once(T const *a)
 #endif
 }
 
+/**
+ * Write a value at an address exactly once.
+ *
+ * The compiler is disallowed to skip the write, for example:
+ * ```
+ * *a = val;
+ * write_now(a, val);  // compiler may not skip this line
+ * ```
+ *
+ * The compiler is also disallowed to repeat the write.
+ *
+ * The above implies that the compiler is also disallowed to move the write out
+ * of or into loops.
+ *
+ * \note The write might still be moved relative to other code.
+ * \note The value might be written just to a hardware cache for the moment, not
+ *       immediately to RAM.
+ */
 template< typename T, typename VAL >
 void write_now(T *a, VAL &&val)
 {
