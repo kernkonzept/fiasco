@@ -547,8 +547,8 @@ Mapdb_ext_test::test_mapdb_basic()
   print_node(f);
 
   UTEST_TRUE(Utest::Assert,
-             sub = m.insert(f, &*other, to_pfn(2 * S_page),
-                            to_pfn(S_page), to_pcnt(O_page)),
+             (sub = m.insert(f, &*other, to_pfn(2 * S_page),
+                             to_pfn(S_page), to_pcnt(O_page))),
            "Insert sub-mapping @other");
   pr_tag("Lookup @sigma0 node at phys=0 after inserting sub-mapping\n");
   print_node(f, sub);
@@ -561,8 +561,8 @@ Mapdb_ext_test::test_mapdb_basic()
   print_node(f, sub);
 
   UTEST_TRUE(Utest::Assert,
-             sub = m.insert(f, &*other, to_pfn(4 * _2M),
-                            to_pfn(2 * _2M), to_pcnt(O_2M)),
+             (sub = m.insert(f, &*other, to_pfn(4 * _2M),
+                             to_pfn(2 * _2M), to_pcnt(O_2M))),
            "Insert sub-mapping @other");
 
   pr_tag("Lookup @sigma0 at phys=2*superpage after inserting sub-mapping\n");
@@ -818,9 +818,9 @@ Mapdb_ext_test::test_mapdb_multilevel()
   print_node(f);
 
   pr_tag("# Insert sub-mapping page @other\n");
-  UTEST_TRUE(Utest::Assert, sub = insert(m, s0_f, &*other, to_pfn(2*S_page),
-                                         poffs + to_pcnt(O_page),
-                                         to_po(O_page)),
+  UTEST_TRUE(Utest::Assert, (sub = insert(m, s0_f, &*other, to_pfn(2*S_page),
+                                          poffs + to_pcnt(O_page),
+                                          to_po(O_page))),
            "Insert sub-mapping page @other");
   print_node(s0_f, sub);
   //s0_f.clear(true);
@@ -837,9 +837,9 @@ Mapdb_ext_test::test_mapdb_multilevel()
            "Expected order");
 
   pr_tag("# Insert sub-mapping 2M @other\n");
-  UTEST_TRUE(Utest::Expect, sub = insert(m, s0_f, &*other, to_pfn(_4M),
-                                         poffs + to_pcnt(Order(O_2M)),
-                                         to_po(O_2M)),
+  UTEST_TRUE(Utest::Expect, (sub = insert(m, s0_f, &*other, to_pfn(_4M),
+                                          poffs + to_pcnt(Order(O_2M)),
+                                          to_po(O_2M))),
              "Insert sub-mapping 2M @other");
   print_node(s0_f, sub);
   //s0_f.clear(true);
@@ -858,9 +858,9 @@ Mapdb_ext_test::test_mapdb_multilevel()
            "Expected order");
 
   pr_tag("# Insert sub-mapping 2M @aunt\n");
-  UTEST_TRUE(Utest::Expect, sub = insert(m, s0_f, &*aunt, to_pfn(Aunt_addr_1),
-                                         poffs,
-                                         to_po(O_2M)),
+  UTEST_TRUE(Utest::Expect, (sub = insert(m, s0_f, &*aunt, to_pfn(Aunt_addr_1),
+                                          poffs,
+                                          to_po(O_2M))),
            "Insert sub-mapping 2M @aunt");
   print_node(s0_f, sub);
   //s0_f.clear();
