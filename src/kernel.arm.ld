@@ -89,7 +89,7 @@ SECTIONS {
     KEEP(*(.bootstrap.text))
   } :bstrap
 
-  . = ALIGN(4K);
+  . = ALIGN(16);
   end_of_loader = .;
 
   . = end_of_loader - kernel_load_addr + virt_address;
@@ -229,7 +229,7 @@ SECTIONS {
 
 
 
-  . = ALIGN(4K);
+  . = ALIGN(16);
   .bss : AT (ADDR(.bss) - phys_offset) {
     PROVIDE(__bss_start = .);
     . = ALIGN(4);
@@ -240,7 +240,9 @@ SECTIONS {
     *(.bss .bss.* COMMON .gnu.linkonce.b.*)
     *(.bss.jdb)
     PROVIDE(__bss_end = .);
+#if defined(CONFIG_MMU)
     . = ALIGN(4K);
+#endif
   }
   __end_of_the_kernel = .;
 
@@ -255,11 +257,15 @@ SECTIONS {
 
   PROVIDE( _end = . );
 
-  . = ALIGN(4K);
+  . = ALIGN(16);
   .initcall : AT(ADDR(.initcall) - phys_offset) {
     _initcall_start = .;
     *(.initcall.*)
+#if defined(CONFIG_MMU)
     . = ALIGN(4K);
+#else
+    . = ALIGN(64);
+#endif
     _initcall_end = .;
   } :initcall
 
