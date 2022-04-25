@@ -265,13 +265,6 @@ Mem_space::virt_to_phys(Address virt) const
 }
 
 PUBLIC inline
-virtual Address
-Mem_space::virt_to_phys_s0(void *a) const
-{
-  return dir()->virt_to_phys((Address)a);
-}
-
-PUBLIC inline
 Address
 Mem_space::pmem_to_phys(Address virt) const
 {

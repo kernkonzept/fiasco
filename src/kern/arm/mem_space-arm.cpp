@@ -186,22 +186,6 @@ Mem_space::virt_to_phys(Address virt) const
 }
 
 
-/** Simple page-table lookup.  This method is similar to
-    virt_to_phys().  The difference is that this version handles
-    Sigma0's address space with a special case: For Sigma0, we do not
-    actually consult the page table -- it is meaningless because we
-    create new mappings for Sigma0 transparently; instead, we return the
-    logically-correct result of physical address == virtual address.
-    @param a Virtual address.  This address does not need to be page-aligned.
-    @return Physical address corresponding to a.
- */
-PUBLIC inline
-virtual Address
-Mem_space::virt_to_phys_s0(void *a) const
-{
-  return virt_to_phys((Address)a);
-}
-
 IMPLEMENT
 bool
 Mem_space::v_lookup(Vaddr virt, Phys_addr *phys,
