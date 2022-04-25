@@ -144,19 +144,24 @@ public:
 
 IMPLEMENT_OVERRIDE inline void Cpu::init_mmu(bool) {}
 
+PUBLIC inline
+unsigned
+Cpu::supported_pa_range() const
+{
+  static Unsigned8 const pa_range[16] = { 32, 36, 40, 42, 44, 48, 52 };
+  return pa_range[_cpu_id._mmfr[0] & 0x0fU];
+}
+
 IMPLEMENT_OVERRIDE
 void
 Cpu::init_hyp_mode()
 {
   extern char exception_vector[];
-  static char const pa_range[16] = { 32, 36, 40, 42, 44, 48, 52 };
 
   // Feature availability check for IPA address space size
-  Mword id_aa64mmfr0_el1;
-  asm("mrs %0, S3_0_C0_C7_0" : "=r"(id_aa64mmfr0_el1));
-  if (pa_range[id_aa64mmfr0_el1 & 0x0fU] < phys_bits())
+  if (supported_pa_range() < phys_bits())
     panic("IPA address size too small: HW provides %d bits, required %d bits!",
-          pa_range[id_aa64mmfr0_el1 & 0x0fU], phys_bits());
+          supported_pa_range(), phys_bits());
 
   asm volatile ("msr VBAR_EL2, %x0" : : "r"(&exception_vector));
   asm volatile ("msr VTCR_EL2, %x0" : :
