@@ -240,41 +240,20 @@ IMPLEMENTATION:
 
 #include "processor.h"
 
-IMPLEMENT_DEFAULT
+// A tool like minicom is attached at the other end of the serial line and
+// responds to the magical escape sequence.
+IMPLEMENT
 int
 Jdb_pcm::wait_for_escape(Console *cons)
 {
-  for (Mword cnt=100000; ; cnt--)
+  // 100ms timeout should be more than reasonable.
+  for (unsigned cnt = 100;; --cnt)
     {
       int c = cons->getchar(false);
       if (c == KEY_ESC || c == KEY_SINGLE_ESC)
-	return 1;
-      if (!cnt)
-	return 0;
-      Proc::pause();
-    }
-}
-
-IMPLEMENTATION[ia32 || ux || amd64]:
-
-#include "cpu.h"
-
-IMPLEMENT_OVERRIDE
-int
-Jdb_pcm::wait_for_escape(Console *cons)
-{
-  Unsigned64 to = Cpu::boot_cpu()->ns_to_tsc (Cpu::boot_cpu()->tsc_to_ns (Cpu::rdtsc()) + 200000000);
-
-  // This is just a sanity check to ensure that a tool like minicom is attached
-  // at the other end of the serial line and this tools responds to the magical
-  // escape sequence.
-  for (;;)
-    {
-      int c = cons->getchar(false);
-      if (c == KEY_ESC || c == KEY_SINGLE_ESC)
-	return 1;
-      if (c != -1 || Cpu::rdtsc() > to)
-	return 0;
-      Proc::pause();
+        return 1;
+      if (c != -1 || !cnt)
+        return 0;
+      Delay::delay(1);
     }
 }
