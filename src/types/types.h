@@ -78,7 +78,7 @@ T access_once(T const *a)
  * \note The value might be written just to a hardware cache for the moment, not
  *       immediately to RAM.
  */
-template< typename T, typename VAL >
+template< typename T, typename VAL > inline
 void write_now(T *a, VAL &&val)
 {
   __asm__ __volatile__ ( "" : "=m"(*a));
