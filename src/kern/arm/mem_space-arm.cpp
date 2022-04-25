@@ -354,6 +354,11 @@ EXTENSION class Mem_space
 {
   enum
   {
+    // ASID 0 is reserved for synchronizing the update of ASID and translation
+    // table base address, which is necessary when using the short-descriptor
+    // translation table format, because with this format different registers
+    // hold these two values, so an atomic update is not possible (see
+    // "Synchronization of changes of ASID and TTBR" in ARM DDI 0487H.a).
     Asid_base      = 1,
     Asid_bits      = 8,
     Asid_num       = 1UL << Asid_bits
