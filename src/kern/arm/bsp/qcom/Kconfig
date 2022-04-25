@@ -22,6 +22,8 @@ config PF_QCOM_MSM8909
   select CAN_ARM_CPU_CORTEX_A7
   select HAVE_ARM_GICV2
   select HAS_ARM_PSCI
+  select HAS_IOMMU_OPTION
+  select ARM_IOMMU_COHERENT
   select PF_QCOM_UART_DM
   help
     Choose for Qualcomm Snapdragon 210 (MSM8909) platform.
@@ -31,6 +33,8 @@ config PF_QCOM_MSM8916
   select CAN_ARM_CPU_CORTEX_A53
   select HAVE_ARM_GICV2
   select HAS_ARM_PSCI
+  select HAS_IOMMU_OPTION
+  select ARM_IOMMU_COHERENT
   select PF_QCOM_UART_DM
   help
     Choose for Qualcomm Snapdragon 410 (MSM8916) platform.
@@ -40,6 +44,8 @@ config PF_QCOM_MSM8939
   select CAN_ARM_CPU_CORTEX_A53
   select HAVE_ARM_GICV2
   select HAS_ARM_PSCI
+  select HAS_IOMMU_OPTION
+  select ARM_IOMMU_COHERENT
   select PF_QCOM_UART_DM
   help
     Choose for Qualcomm Snapdragon 615 (MSM8939) platform.
@@ -60,6 +66,8 @@ config PF_QCOM_SM8150
   select ARM_GIC_NOT_COHERENT
   select HAS_ARM_PSCI
   select ARM_PSCI
+  select HAS_IOMMU_OPTION
+  select ARM_IOMMU_COHERENT
   select PF_QCOM_UART_GENI
   help
     Choose for Qualcomm Snapdragon 855 (SM8150) platform.
@@ -71,6 +79,15 @@ config PF_QCOM_UART_DM
 
 config PF_QCOM_UART_GENI
   bool
+
+config ARM_IOMMU_NUM
+  int
+  default 1 if IOMMU && PF_QCOM_SM8150
+  default 2 if IOMMU && !PF_QCOM_SM8150
+
+config IOMMU_ARM_SMMU_500
+  bool
+  default y if IOMMU
 
 config PF_QCOM_RAM_PHYS_BASE
   hex
