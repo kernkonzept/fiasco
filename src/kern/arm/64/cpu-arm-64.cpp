@@ -73,12 +73,21 @@ public:
   };
 };
 
-IMPLEMENT_OVERRIDE inline
+PRIVATE inline
+unsigned
+Cpu::asid_bits() const
+{ return (_cpu_id._mmfr[0] & 0xf0U) == 0x20 ? 16 : 8; }
+
+IMPLEMENT_OVERRIDE
 void
 Cpu::init_supervisor_mode(bool)
 {
   extern char exception_vector[];
   asm volatile ("msr VBAR_EL1, %0" : : "r"(&exception_vector));
+
+  if (asid_bits() < Mem_unit::Asid_bits)
+    panic("ASID size too small: HW provides %d bits, configured %d bits!",
+          asid_bits(), Mem_unit::Asid_bits);
 }
 
 //--------------------------------------------------------------------------
@@ -150,6 +159,11 @@ Cpu::supported_pa_range() const
   return pa_range[_cpu_id._mmfr[0] & 0x0fU];
 }
 
+PRIVATE inline
+unsigned
+Cpu::vmid_bits() const
+{ return (_cpu_id._mmfr[1] & 0xf0U) == 0x20 ? 16 : 8; }
+
 IMPLEMENT_OVERRIDE
 void
 Cpu::init_hyp_mode()
@@ -160,6 +174,10 @@ Cpu::init_hyp_mode()
   if (supported_pa_range() < phys_bits())
     panic("IPA address size too small: HW provides %d bits, required %d bits!",
           supported_pa_range(), phys_bits());
+
+  if (vmid_bits() < Mem_unit::Asid_bits)
+    panic("VMID size too small: HW provides %d bits, configured %d bits!",
+          vmid_bits(), Mem_unit::Asid_bits);
 
   asm volatile ("msr VBAR_EL2, %x0" : : "r"(&exception_vector));
   asm volatile ("msr VTCR_EL2, %x0" : :

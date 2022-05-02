@@ -21,6 +21,24 @@ public:
 };
 
 //---------------------------------------------------------------------------
+INTERFACE [arm && arm_asid16]:
+
+EXTENSION class Mem_unit
+{
+public:
+  enum { Asid_bits = 16 };
+};
+
+//---------------------------------------------------------------------------
+INTERFACE [arm && !arm_asid16]:
+
+EXTENSION class Mem_unit
+{
+public:
+  enum { Asid_bits = 8 };
+};
+
+//---------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
 IMPLEMENT_DEFAULT inline NEEDS[Mem_unit::tlb_flush]

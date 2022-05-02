@@ -51,6 +51,7 @@ public:
     Vtcr_bits =   (1UL  <<  6) // SL0
                 | (2UL  << 16) // PS
                 | (25UL <<  0) // T0SZ
+                | ((Mem_unit::Asid_bits == 16) << 19) // VS
   };
 };
 
@@ -86,6 +87,7 @@ public:
     Vtcr_bits =   (2UL  <<  6) // SL0
                 | (5UL  << 16) // PS
                 | (16UL <<  0) // T0SZ
+                | ((Mem_unit::Asid_bits == 16) << 19) // VS
   };
 };
 
@@ -123,6 +125,8 @@ public:
                  | (0UL  << 14) // (TG0)  Page granularity 4kb
                  | (2UL  << 30) // (TG1)  Page granularity 4kb
                  | (5UL  << 32) // (IPS)  Physical address size 48bits
+                                // (AS)   ASID Size
+                 | ((Mem_unit::Asid_bits == 16 ? 1UL : 0UL) << 36)
   };
 };
 

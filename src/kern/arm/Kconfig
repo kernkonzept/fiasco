@@ -112,6 +112,10 @@ config HAVE_ARM_GICV3
 config ARM_IOMMU_COHERENT
         bool
 
+config ARM_ASID16
+        depends on ARM_V8 && BIT64
+        bool
+
 # SECTION: CPU
 
 choice

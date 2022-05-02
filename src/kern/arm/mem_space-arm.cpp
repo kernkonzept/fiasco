@@ -342,8 +342,6 @@ EXTENSION class Mem_space
   enum
   {
     Asid_base      = 0,
-    Asid_bits      = 8,
-    Asid_num       = 1UL << Asid_bits
   };
 };
 
@@ -360,8 +358,6 @@ EXTENSION class Mem_space
     // hold these two values, so an atomic update is not possible (see
     // "Synchronization of changes of ASID and TTBR" in ARM DDI 0487H.a).
     Asid_base      = 1,
-    Asid_bits      = 8,
-    Asid_num       = 1UL << Asid_bits
   };
 };
 
@@ -380,7 +376,7 @@ INTERFACE [arm_v6 || arm_v7 || arm_v8]:
 EXTENSION class Mem_space
 {
 public:
-  using Asid_alloc = Asid_alloc_t<Unsigned64, Asid_bits, Asid_base>;
+  using Asid_alloc = Asid_alloc_t<Unsigned64, Mem_unit::Asid_bits, Asid_base>;
   using Asid = Asid_alloc::Asid;
   using Asids = Asid_alloc::Asids_per_cpu;
   enum { Have_asids = 1 };
