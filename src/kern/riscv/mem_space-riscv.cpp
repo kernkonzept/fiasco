@@ -249,6 +249,7 @@ L4_fpage::Rights
 Mem_space::v_delete(Vaddr virt, Page_order size,
                     L4_fpage::Rights page_attribs)
 {
+  (void)size;
   assert (cxx::is_zero(cxx::get_lsb(Virt_addr(virt), size)));
   auto i = _dir->walk(virt);
 

@@ -514,6 +514,7 @@ IMPLEMENT inline NEEDS[<cassert>]
 void
 Sbi::send_ipi(Mword hart_mask, Mword hart_mask_base = 0)
 {
+  (void)hart_mask_base;
   assert(hart_mask_base == 0);
   Ipi::send_ipi(hart_mask);
 }
