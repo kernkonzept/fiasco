@@ -34,6 +34,8 @@ PREPROCESS_PARTS-$(CONFIG_CPU_VIRT)                 += vgic arm_esr_traps
 PREPROCESS_PARTS-y$(CONFIG_CPU_VIRT)$(CONFIG_BIT64) += noncont_mem
 PREPROCESS_PARTS-$(CONFIG_ARM_PT48)                 += arm_pt_48
 
+PREPROCESS_PARTS-$(CONFIG_IOMMU)                    += virtual_space_iface
+
 
 #
 # TYPES subsystem
@@ -155,6 +157,7 @@ INTERFACES_KERNEL-$(CONFIG_HAVE_ARM_GICV3) += gic_redist
 INTERFACES_KERNEL-$(CONFIG_HAVE_ARM_GICV2) += gic_v2 gic_cpu_v2
 INTERFACES_KERNEL-$(CONFIG_HAVE_ARM_GICV3) += gic_v3 gic_cpu_v3
 
+INTERFACES_KERNEL-$(CONFIG_IOMMU) += iommu arm_dmar dmar_space
 INTERFACES_KERNEL += boot_infos
 
 
@@ -168,6 +171,7 @@ context_IMPL	  	:= context context-arm context-arm-$(BITS) \
 continuation_IMPL	:= continuation-arm
 cpu_IMPL	  	:= cpu cpu-arm cpu-arm-hyp cpu-arm-$(BITS)
 cpu_lock_IMPL  	  	:= cpu_lock cpu_lock-generic
+dmar_space_IMPL		:= dmar_space
 ifeq ($(CONFIG_BIT64),y)
   entry_frame_IMPL	:= entry_frame-arm
 else
@@ -178,6 +182,7 @@ gic_IMPL		:= gic
 gic_cpu_v3_IMPL		:= gic_cpu_v3 gic_cpu_v3-$(BITS)
 gic_dist_IMPL		:= gic_dist
 hyp_vm_state_IMPL	:= hyp_vm_state hyp_vm_state-$(BITS)
+iommu_IMPL		:= iommu-arm
 ipi_IMPL		:= ipi ipi-arm
 kdb_ke_IMPL		+= kdb_ke-arm
 kernel_task_IMPL	:= kernel_task kernel_task-arm

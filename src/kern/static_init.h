@@ -32,6 +32,9 @@
 #define WATCHDOG_INIT		 DEPENDS_ON(PERF_CNT_INIT_PRIO)
 #define JDB_INIT_PRIO		 DEPENDS_ON(JDB_MODULE_INIT_PRIO)
 
+#define IOMMU_INIT_PRIO          DEPENDS_ON(STARTUP_INIT_PRIO)
+#define DMAR_INIT_PRIO           DEPENDS_ON(IOMMU_INIT_PRIO)
+
 #define INIT_PRIORITY(a) __attribute__((init_priority(a)))
 
 //@}

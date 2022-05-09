@@ -109,6 +109,9 @@ config HAVE_ARM_GICV2
 config HAVE_ARM_GICV3
         bool
 
+config ARM_IOMMU_COHERENT
+        bool
+
 # SECTION: CPU
 
 choice
