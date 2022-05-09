@@ -272,7 +272,8 @@ void
 Ipc_gate_ctl::invoke(L4_obj_ref self, L4_fpage::Rights rights,
                      Syscall_frame *f, Utcb *utcb) override
 {
-  if (f->tag().proto() == L4_msg_tag::Label_kobject)
+  if (f->tag().proto() == L4_msg_tag::Label_kobject
+      && (f->ref().op() & L4_obj_ref::Ipc_send))
     Kobject_h<Ipc_gate_ctl, Kobject_iface>::invoke(self, rights, f, utcb);
   else
     static_cast<Ipc_gate_obj*>(this)->Ipc_gate::invoke(self, rights, f, utcb);
