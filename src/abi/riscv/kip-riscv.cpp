@@ -43,6 +43,9 @@ public:
   Unsigned8 __pad[(16 - (sizeof(Platform_info) % 16)) % 16];
 };
 
+//---------------------------------------------------------------------------
+IMPLEMENTATION [riscv]:
+
 PUBLIC inline
 int
 Kip::hart_idx(Mword hart_id)
