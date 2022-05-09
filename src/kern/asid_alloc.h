@@ -71,6 +71,8 @@ public:
   { return a != o.a; }
 };
 
+using Asid_num_fn = unsigned (*)();
+
 /**
  * Keep track of reserved Asids
  *
@@ -78,7 +80,7 @@ public:
  * active on other CPUs. These ASIDs are marked as reserved in the
  * bitmap.
  */
-template<unsigned ASID_BITS, unsigned ASID_BASE, unsigned (*ASID_NUM)()>
+template<unsigned ASID_BITS, unsigned ASID_BASE, Asid_num_fn ASID_NUM>
 class Asid_bitmap_t : public Bitmap<(1UL << ASID_BITS)>
 {
 public:
@@ -88,9 +90,17 @@ public:
     Asid_num_max = 1UL << ASID_BITS
   };
 
+  template<Asid_num_fn asid_num_fn = ASID_NUM>
+  static typename cxx::enable_if<asid_num_fn != nullptr, bool>::type
+  has_asid_num_fn() { return true; }
+
+  template<Asid_num_fn asid_num_fn = ASID_NUM>
+  static typename cxx::enable_if<asid_num_fn == nullptr, bool>::type
+  has_asid_num_fn() { return false; }
+
   static inline unsigned asid_num()
   {
-    if (ASID_NUM != nullptr)
+    if (has_asid_num_fn())
       return ASID_NUM();
 
     return Asid_num_max;
@@ -214,7 +224,7 @@ public:
  * number. With 64bit it takes about 50000 years.
  */
 template<typename ASID_TYPE, unsigned ASID_BITS, unsigned ASID_BASE,
-         unsigned (*ASID_NUM)() = nullptr>
+         Asid_num_fn ASID_NUM = nullptr>
 class Asid_alloc_t
 {
 public:
