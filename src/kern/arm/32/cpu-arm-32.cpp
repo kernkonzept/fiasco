@@ -108,7 +108,7 @@ IMPLEMENTATION [arm && !cpu_virt]:
 
 IMPLEMENT_OVERRIDE
 void
-Cpu::init_mmu(bool is_boot_cpu)
+Cpu::init_supervisor_mode(bool is_boot_cpu)
 {
   if (!is_boot_cpu)
     return;

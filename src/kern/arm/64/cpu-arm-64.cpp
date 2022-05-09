@@ -75,7 +75,7 @@ public:
 
 IMPLEMENT_OVERRIDE inline
 void
-Cpu::init_mmu(bool)
+Cpu::init_supervisor_mode(bool)
 {
   extern char exception_vector[];
   asm volatile ("msr VBAR_EL1, %0" : : "r"(&exception_vector));

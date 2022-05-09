@@ -12,7 +12,6 @@ class Cpu
 {
 public:
   void init(bool resume, bool is_boot_cpu);
-  static void init_mmu(bool is_boot_cpu);
 
   static void early_init();
 
@@ -75,6 +74,7 @@ public:
   unsigned copro_dbg_model() const { return _cpu_id._dfr0 & 0xf; }
 
 private:
+  void init_supervisor_mode(bool is_boot_cpu);
   void init_hyp_mode();
   static void early_init_platform();
 
@@ -437,13 +437,14 @@ Cpu::init(bool /*resume*/, bool is_boot_cpu)
   init_tz();
   id_init();
   init_errata_workarounds();
+  init_supervisor_mode(is_boot_cpu);
   init_hyp_mode();
   bsp_init(is_boot_cpu);
 }
 
 IMPLEMENT_DEFAULT inline
 void
-Cpu::init_mmu(bool)
+Cpu::init_supervisor_mode(bool)
 {}
 
 IMPLEMENT_DEFAULT inline

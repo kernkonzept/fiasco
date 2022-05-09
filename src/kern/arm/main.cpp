@@ -142,10 +142,7 @@ int boot_ap_cpu()
   if (cpu_is_new)
     Per_cpu_data::run_ctors(_cpu);
 
-  Cpu &cpu = Cpu::cpus.cpu(_cpu);
-  cpu.init_mmu(false);
-  cpu.init(!cpu_is_new, false);
-
+  Cpu::cpus.cpu(_cpu).init(!cpu_is_new, false);
   Pic::init_ap(_cpu, !cpu_is_new);
   Thread::init_per_cpu(_cpu, !cpu_is_new);
   Platform_control::init(_cpu);
