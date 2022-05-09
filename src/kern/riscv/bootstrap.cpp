@@ -34,7 +34,7 @@ IMPLEMENTATION [riscv]:
 
 Bootstrap_info FIASCO_BOOT_PAGING_INFO bs_info;
 
-PUBLIC static inline ALWAYS_INLINE
+PUBLIC static inline
 Address
 Bootstrap::kern_to_boot(Virt_addr virt_addr)
 {

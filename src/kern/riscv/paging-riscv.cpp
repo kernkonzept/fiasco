@@ -146,14 +146,14 @@ Pte_ptr::pte_ppn_to_phys(Mword pte_ppn)
   return cxx::mask_lsb(pte_ppn, Pte_attribs_size) << Pte_ppn_shift;
 }
 
-PUBLIC inline
+PUBLIC inline ALWAYS_INLINE
 bool
 Pte_ptr::is_valid() const
 {
   return access_once(pte) & Pte_valid;
 }
 
-PUBLIC inline
+PUBLIC inline ALWAYS_INLINE
 bool
 Pte_ptr::is_leaf() const
 {
@@ -170,7 +170,7 @@ Pte_ptr::entry() const
 /**
  * \pre is_leaf() == false
  */
-PUBLIC inline NEEDS[Pte_ptr::pte_ppn_to_phys]
+PUBLIC inline ALWAYS_INLINE NEEDS[Pte_ptr::pte_ppn_to_phys]
 Mword
 Pte_ptr::next_level() const
 {
@@ -180,14 +180,14 @@ Pte_ptr::next_level() const
 /**
  * \pre cxx::get_lsb(phys_addr, Config::PAGE_SHIFT) == 0
  */
-PUBLIC inline
+PUBLIC inline ALWAYS_INLINE NEEDS[Pte_ptr::phys_to_pte_ppn]
 void
 Pte_ptr::set_next_level(Mword phys_addr)
 {
   write_now(pte, phys_to_pte_ppn(phys_addr) | Pte_default_non_leaf);
 }
 
-PUBLIC inline
+PUBLIC inline ALWAYS_INLINE NEEDS[Pte_ptr::phys_to_pte_ppn]
 void
 Pte_ptr::set_page(Mword phys, Mword attr)
 {
@@ -235,7 +235,7 @@ Pte_ptr::set_attribs(Page::Attr attr)
     cxx::mask_lsb(access_once(pte), Pte_attribs_size) | make_attribs(attr));
 }
 
-PUBLIC static inline ALWAYS_INLINE
+PUBLIC static inline
 NEEDS[Pte_ptr::phys_to_pte_ppn, Pte_ptr::make_attribs]
 Mword
 Pte_ptr::make_page(Phys_mem_addr addr, Page::Attr attr)
@@ -292,19 +292,19 @@ Pte_ptr::del_rights(L4_fpage::Rights r)
     write_now(pte, access_once(pte) & ~Pte_x);
 }
 
-PUBLIC inline
+PUBLIC inline ALWAYS_INLINE
 void
 Pte_ptr::clear()
 {
   write_now(pte, 0);
 }
 
-PUBLIC static inline
+PUBLIC static inline ALWAYS_INLINE
 void
 Pte_ptr::write_back(void *, void *)
 {}
 
-PUBLIC static inline
+PUBLIC static inline ALWAYS_INLINE
 void
 Pte_ptr::write_back_if(bool)
 {}

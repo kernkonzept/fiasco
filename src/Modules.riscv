@@ -54,6 +54,7 @@ uart_IMPL          := uart uart-libuart
 processor_IMPL     := processor processor-riscv
 CXXSRC_DRIVERS     := glue_libc.cc
 #NOOPT             += $(patsubst %.o, %, $(OBJ_DRIVERS))
+ALWAYS_INLINE      += mem sbi
 
 #
 # MINILIBC Subsystem

@@ -382,7 +382,7 @@ Cpu::set_satp_unchecked(Mword asid, Mword ppn)
   csr_write(satp, Satp_mode | (asid << Satp_asid_shift) | ppn);
 }
 
-PUBLIC static inline ALWAYS_INLINE NEEDS[<cassert>]
+PUBLIC static inline NEEDS[<cassert>]
 void
 Cpu::set_satp(Mword asid, Mword ppn)
 {
@@ -392,14 +392,14 @@ Cpu::set_satp(Mword asid, Mword ppn)
   set_satp_unchecked(asid, ppn);
 }
 
-PUBLIC static inline ALWAYS_INLINE
+PUBLIC static inline
 Mword
 Cpu::get_asid()
 {
   return cxx::get_lsb(csr_read(satp) >> Satp_asid_shift, Satp_asid_bits);
 }
 
-PUBLIC static inline ALWAYS_INLINE
+PUBLIC static inline
 void
 Cpu::set_asid(Mword asid)
 {

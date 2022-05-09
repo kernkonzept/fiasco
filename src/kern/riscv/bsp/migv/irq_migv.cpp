@@ -108,7 +108,7 @@ Irq_chip_migv::Irq_chip_migv(Address mmio)
     priority(pin, 1);
 }
 
-PRIVATE static inline ALWAYS_INLINE
+PRIVATE static inline
 unsigned
 Irq_chip_migv::pin_bit(Mword pin)
 {
@@ -129,7 +129,7 @@ Irq_chip_migv::handle_pending()
   return true;
 }
 
-PRIVATE static inline ALWAYS_INLINE
+PRIVATE static inline
 unsigned
 Irq_chip_migv::priority_offset(Mword pin)
 {
@@ -139,7 +139,7 @@ Irq_chip_migv::priority_offset(Mword pin)
   return Priority_base + ((pin - 1) / 8) * sizeof(Unsigned32);
 }
 
-PRIVATE static inline ALWAYS_INLINE
+PRIVATE static inline
 unsigned
 Irq_chip_migv::priority_shift(Mword pin)
 {

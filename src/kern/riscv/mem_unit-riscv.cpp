@@ -55,28 +55,28 @@ Mem_unit::tlb_flush()
   __asm__ __volatile__ ("sfence.vma" : : : "memory");
 }
 
-PUBLIC static inline ALWAYS_INLINE
+PUBLIC static inline
 void
 Mem_unit::tlb_flush(Mword asid)
 {
   __asm__ __volatile__ ("sfence.vma x0, %0" : : "r"(asid) : "memory");
 }
 
-PUBLIC static inline ALWAYS_INLINE
+PUBLIC static inline
 void
 Mem_unit::tlb_flush_page(Address addr)
 {
   __asm__ __volatile__ ("sfence.vma %0" : : "r"(addr) : "memory");
 }
 
-PUBLIC static inline ALWAYS_INLINE
+PUBLIC static inline
 void
 Mem_unit::tlb_flush_page(Address addr, Mword asid)
 {
   __asm__ __volatile__ ("sfence.vma %0, %1" : : "r"(addr), "r"(asid) : "memory");
 }
 
-PUBLIC static inline ALWAYS_INLINE
+PUBLIC static inline
 void
 Mem_unit::local_flush_icache()
 {
@@ -93,7 +93,7 @@ Mem_unit::asid_num()
 //----------------------------------------------------------------------------
 IMPLEMENTATION [riscv && !mp]:
 
-PUBLIC static inline ALWAYS_INLINE
+PUBLIC static inline
 void
 Mem_unit::make_coherent_to_pou(void const *v, size_t)
 {
@@ -107,7 +107,7 @@ IMPLEMENTATION [riscv && mp]:
 #include "cpu.h"
 #include "sbi.h"
 
-PUBLIC static inline ALWAYS_INLINE NEEDS["cpu.h", "sbi.h"]
+PUBLIC static inline NEEDS["cpu.h", "sbi.h"]
 void
 Mem_unit::make_coherent_to_pou(void const *v, size_t)
 {

@@ -241,7 +241,7 @@ Sbi::spec_minor_version()
   return spec_version & 0xffffff;
 }
 
-IMPLEMENT static inline ALWAYS_INLINE
+IMPLEMENT static inline
 Mword
 Sbi::Legacy::sbi_call(Mword ext_id, Mword arg0, Mword arg1)
 {
@@ -327,7 +327,7 @@ Sbi::shutdown()
 // We have to move the inline assembly into a separate function,
 // because gcc ignores assigned registers in template functions.
 // Bug 33661 (fixed with gcc 8.5.0, 9.4.0, 10.3.0 and 11.1.0)
-IMPLEMENT inline ALWAYS_INLINE
+IMPLEMENT inline
 Sbi::Ret
 Sbi::_sbi_call(Mword ext_id, Mword func_id, Mword arg0, Mword arg1,
                Mword arg2, Mword arg3, Mword arg4, Mword arg5)
@@ -353,7 +353,7 @@ Sbi::_sbi_call(Mword ext_id, Mword func_id, Mword arg0, Mword arg1,
   return ret;
 }
 
-IMPLEMENT template<Signed32 Ext_id> inline ALWAYS_INLINE
+IMPLEMENT template<Signed32 Ext_id> inline
 Sbi::Ret
 Sbi::Ext<Ext_id>::sbi_call(Mword func_id,
                            Mword arg0 = 0, Mword arg1 = 0, Mword arg2 = 0,
