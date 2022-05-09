@@ -3,6 +3,7 @@ IMPLEMENTATION [riscv]:
 #include "banner.h"
 #include "config.h"
 #include "cpu.h"
+#include "fpu.h"
 #include "ipi.h"
 #include "kernel_task.h"
 #include "kernel_uart.h"

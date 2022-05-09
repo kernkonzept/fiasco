@@ -17,6 +17,7 @@ IMPLEMENTATION [riscv]:
 #include "kernel_thread.h"
 #include "kernel_task.h"
 #include "kernel_console.h"
+#include "pic.h"
 #include "processor.h"
 #include "reset.h"
 #include "space.h"
