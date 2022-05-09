@@ -233,14 +233,14 @@ SECTIONS {
   PROVIDE (_end = .);
 
   .initcall.text : AT(ADDR(.initcall.text) - phys_offset) {
-  PROVIDE (_initcall_start = .);
+    _initcall_start = .;
     *(.initcall.text*)
   } : kitext
 
   .initcall.data : AT(ADDR(.initcall.data) - phys_offset) {
     *(.initcall.data*)
     . = ALIGN(4K);
-    PROVIDE (_initcall_end = .);
+    _initcall_end = .;
   } : kidata
 
   _phys_image_end = . - phys_offset;
