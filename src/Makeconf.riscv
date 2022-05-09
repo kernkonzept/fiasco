@@ -15,20 +15,28 @@ RISCV_FPU_EXT-$(CONFIG_RISCV_FPU_SINGLE) = f
 RISCV_FPU_EXT-$(CONFIG_RISCV_FPU_DOUBLE) = fd
 RISCV_ISA_C-$(CONFIG_RISCV_ISA_C) = c
 
+# Supported ABIs: ilp32 ilp32d ilp32e ilp32f lp64 lp64d lp64f
+RISCV_MABI-$(CONFIG_BIT32) := ilp32
+RISCV_MABI-$(CONFIG_BIT64) := lp64
+SHARED_FLAGS += -mabi=$(RISCV_MABI-y)
+
+RISCV_MARCH_BASE = rv$(BITS)ima$(RISCV_FPU_EXT-y)$(RISCV_ISA_C-y)
+# Since version 2.38, binutils by default targets the ISA specification version
+# 20191213, where the CSR instructions and the FENCE.I instruction have been
+# moved from the I extension into separate extensions: Zicsr and Zifencei
+RISCV_ZICSR_ZIFENCEI = $(if $(call CHECKCC,-march=$(RISCV_MARCH_BASE)_zicsr_zifencei -mabi=$(RISCV_MABI-y)),_zicsr_zifencei)
+RISCV_MARCH = $(RISCV_MARCH_BASE)$(RISCV_ZICSR_ZIFENCEI)
+
 # With gcc-12 it is no longer possible to allow use of floating-point
 # instructions in (inline) assembly, while disabling it for compiler-generated
 # code. Until gcc adds such an option for RISC-V we have to assume that it does
 # not implicitly generate floating-point instructions!
-SHARED_FLAGS-gcc += -march=rv$(BITS)ima$(RISCV_FPU_EXT-y)$(RISCV_ISA_C-y)
+SHARED_FLAGS-gcc += -march=$(RISCV_MARCH)
 
 # With clang allowing only explicit floating-point instructions is not yet
 # possible, let's just assume that clang doesn't create implicit floating point
 # instructions, or should it start to do so, introduces the -mno-implicit-float
 # option available for other architectures also for RISC-V.
-SHARED_FLAGS-clang += -march=rv$(BITS)ima$(RISCV_FPU_EXT-y)$(RISCV_ISA_C-y)
-
-# Supported ABIs: ilp32 ilp32d ilp32e ilp32f lp64 lp64d lp64f
-SHARED_FLAGS-$(CONFIG_BIT32) += -mabi=ilp32
-SHARED_FLAGS-$(CONFIG_BIT64) += -mabi=lp64
+SHARED_FLAGS-clang += -march=$(RISCV_MARCH)
 
 SHARED_FLAGS += -mcmodel=medany
