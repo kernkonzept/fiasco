@@ -31,6 +31,9 @@ config HAS_MP_OPTION
 config HAS_COV_OPTION
 	bool
 
+config HAS_AMP_OPTION
+	bool
+
 config HAS_CPU_VIRT
 	bool
 
@@ -213,17 +216,27 @@ endmenu # target
 menu "Kernel options"
 
 config MP
-	bool "Enable multi-processor support"
+	bool "Enable symmetric multi-processor support"
 	default y
 	depends on HAS_MP_OPTION
 	help
-	  Enable support for machines with multiple processors.
+	  Enable support for machines with cache-coherent, symmetric multiple
+	  processors.
+
+config AMP
+	bool "Enable homogeneous asymmetric multi-processor support"
+	depends on HAS_AMP_OPTION
+	help
+	  Enable support for machines with non-cache-coherent, homogeneous
+	  multiple processors.
 
 config MP_MAX_CPUS
 	int "Maximal supported number of CPUs"
-	depends on MP
-	range 1 8192
-	default 16
+	depends on MP || AMP
+	range 1 8192 if MP
+	default 16 if MP
+	range 1 16 if AMP
+	default 4 if AMP
 	help
 	  The maximum number of CPUs the kernel supports.
 

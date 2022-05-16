@@ -95,7 +95,7 @@ public:
 #else
     Jdb_accounting = 0,
 #endif
-#ifdef CONFIG_MP
+#if defined(CONFIG_MP) || defined(CONFIG_AMP)
     Max_num_cpus = CONFIG_MP_MAX_CPUS,
 #else
     Max_num_cpus = 1,
