@@ -25,11 +25,11 @@ class List_iterator_end_ptr
 {
 private:
   template< typename U > friend class Basic_list;
-  static void *_end;
+  static void * const _end;
 };
 
 template< typename T >
-void *List_iterator_end_ptr<T>::_end;
+void * const List_iterator_end_ptr<T>::_end = 0;
 
 template< typename VALUE_T, typename TYPE >
 struct Basic_list_policy
@@ -76,7 +76,7 @@ public:
     friend class Basic_list;
     static Internal_type __end()
     {
-      union X { Internal_type l; void **v; } z;
+      union X { Internal_type l; void * const *v; } z;
       z.v = &Bits::List_iterator_end_ptr<void>::_end;
       return z.l;
     }
