@@ -15,7 +15,6 @@ void kernel_main(void);
 extern "C"
 void __main()
 {
-  atexit(&static_destruction);
   static_construction();
   kernel_main();
   terminate(0);
