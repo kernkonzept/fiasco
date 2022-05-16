@@ -15,10 +15,11 @@ RISCV_FPU_EXT-$(CONFIG_RISCV_FPU_SINGLE) = f
 RISCV_FPU_EXT-$(CONFIG_RISCV_FPU_DOUBLE) = fd
 RISCV_ISA_C-$(CONFIG_RISCV_ISA_C) = c
 
-# Prevent compiler from generating floating-point instructions
-SHARED_FLAGS-gcc += -march=rv$(BITS)ima$(RISCV_ISA_C-y)
-# Allow explicit usage of floating-point instructions in (inline) assembly
-SHARED_FLAGS-gcc += -Wa,-march=rv$(BITS)ima$(RISCV_FPU_EXT-y)$(RISCV_ISA_C-y)
+# With gcc-12 it is no longer possible to allow use of floating-point
+# instructions in (inline) assembly, while disabling it for compiler-generated
+# code. Until gcc adds such an option for RISC-V we have to assume that it does
+# not implicitly generate floating-point instructions!
+SHARED_FLAGS-gcc += -march=rv$(BITS)ima$(RISCV_FPU_EXT-y)$(RISCV_ISA_C-y)
 
 # With clang allowing only explicit floating-point instructions is not yet
 # possible, let's just assume that clang doesn't create implicit floating point
