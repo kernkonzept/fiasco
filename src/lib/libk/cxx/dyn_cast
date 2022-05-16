@@ -19,6 +19,7 @@
 #pragma once
 
 #include <cxx/type_traits>
+#include <globalconfig.h>
 
 namespace cxx {
 
@@ -167,7 +168,11 @@ template<typename SELF>
 Type_info const Dyn_castable<SELF>::_cxx_dyn_static_type =
 {
   0, // no base classes
+#ifdef CONFIG_AMP
+  "base",
+#else
   _dyn::name_of<SELF>(),
+#endif
   0, // number of base classes = 0
   sizeof(SELF)
 };
@@ -220,7 +225,11 @@ template<typename SELF, typename BASE, typename ...BASES>
 Type_info const Dyn_castable<SELF, BASE, BASES...>::_cxx_dyn_static_type =
 {
   _cxx_dyn_type_bases,
+#ifdef CONFIG_AMP
+  "derived",
+#else
   _dyn::name_of<SELF>(),
+#endif
   _cxx_dyn_num_bases,
   sizeof(SELF)
 };
