@@ -262,6 +262,31 @@ Bootstrap::leave_hyp_mode()
 {}
 
 //---------------------------------------------------------------------------
+IMPLEMENTATION [arm && !mmu && amp && cpu_virt]:
+
+PUBLIC static inline void
+Bootstrap::init_node_data()
+{
+  asm("mcr p15, 4, %0, c13, c0, 2" : : "r"(0)); // HTPIDR
+}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && !mmu && amp && !cpu_virt]:
+
+PUBLIC static inline void
+Bootstrap::init_node_data()
+{
+  asm("mcr p15, 0, %0, c13, c0, 4" : : "r"(0)); // TPIDRPRW
+}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && !mmu && !amp]:
+
+PUBLIC static inline void
+Bootstrap::init_node_data()
+{}
+
+//---------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
 static inline void

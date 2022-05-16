@@ -480,3 +480,10 @@ IMPLEMENTATION [arm && mpu && cpu_virt]:
 PUBLIC static inline void
 Bootstrap::leave_hyp_mode()
 {}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && !mmu]:
+
+PUBLIC static inline void
+Bootstrap::init_node_data()
+{}

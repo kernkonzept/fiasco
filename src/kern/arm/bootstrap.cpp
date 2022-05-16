@@ -208,6 +208,7 @@ IMPLEMENTATION [arm && !mmu]:
 extern "C" void bootstrap_main()
 {
   Bootstrap::leave_hyp_mode();
+  Bootstrap::init_node_data();
 
   // force to construct an absolute relocation because GCC may not do it.
   bs_info.entry();
