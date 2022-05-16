@@ -28,6 +28,9 @@ config HAS_IOMMU_OPTION
 config HAS_MP_OPTION
 	bool
 
+config HAS_AMP_OPTION
+	bool
+
 config HAS_CPU_VIRT
 	bool
 
@@ -209,14 +212,22 @@ endmenu # target
 menu "Kernel options"
 
 config MP
-	bool "Enable multi processor support"
+	bool "Enable symmetric multi processor support"
 	depends on HAS_MP_OPTION
 	help
-	  Enable support for machines with multiple processors.
+          Enable support for machines with cache coherent, symmetric multiple
+          processors.
+
+config AMP
+	bool "Enable homogeneous asymmetric multiprocessing support"
+	depends on HAS_AMP_OPTION
+	help
+          Enable support for machines with non cache coherent, homogeneous
+          multiple processors.
 
 config MP_MAX_CPUS
 	int "Maximal supported number of CPUs"
-	depends on MP
+	depends on MP || AMP
 	range 1 128
 	default 4
 	help
