@@ -321,7 +321,7 @@ struct Midr_match
   void (*func)(Unsigned64 mask, Unsigned64 value);
 };
 
-static Midr_match _enable_smp[] =
+static Midr_match const _enable_smp[] =
 {
   { 0xff0ffff0, 0x410fc050, 0x41, 0x41, &modify_actl },   // Cortex-A5
   { 0xff0ffff0, 0x410fc070, 0x40, 0x40, &modify_actl },   // Cortex-A7
