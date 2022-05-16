@@ -34,8 +34,8 @@ AWKP		?= gawk --posix
 CCACHE		?= ccache
 CFLAGS		:=
 CXXFLAGS	:= -std=c++0x
-OPT_CFLAGS	:= $(if $(CONFIG_OPTIMIZE_FOR_SIZE),-Os,-O3)
-OPT_CXXFLAGS	:= $(if $(CONFIG_OPTIMIZE_FOR_SIZE),-Os,-O3)
+OPT_CFLAGS	:= $(if $(CONFIG_OPTIMIZE_FOR_SIZE),-Os,-O3) -ffunction-sections -fdata-sections
+OPT_CXXFLAGS	:= $(if $(CONFIG_OPTIMIZE_FOR_SIZE),-Os,-O3) -ffunction-sections -fdata-sections
 NOOPT_CFLAGS	:= -Os
 NOOPT_CXXFLAGS	:= -Os
 ARFLAGS		:= crsU
