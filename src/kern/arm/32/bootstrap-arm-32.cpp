@@ -288,6 +288,23 @@ Bootstrap::leave_hyp_mode()
 }
 
 //---------------------------------------------------------------------------
+IMPLEMENTATION [arm && !mmu && amp]:
+
+#include "global_data.h"
+
+PUBLIC static inline NEEDS["global_data.h"]
+void
+Bootstrap::init_node_data()
+{ Global_data_base::set_amp_offset(0); }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && !mmu && !amp]:
+
+PUBLIC static inline void
+Bootstrap::init_node_data()
+{}
+
+//---------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
 static inline void
