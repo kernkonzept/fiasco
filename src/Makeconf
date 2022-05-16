@@ -145,7 +145,7 @@ CCVER_SEQ               := $(CCVER_SEQ-$(CC_TYPE))
 L4ALL_INCDIR     	?= $(addprefix -I, $(PRIVATE_INCDIR))
 L4STD_INCDIR    	?= -nostdinc
 L4STD_INCDIR_LAST	?= -isystem $(GCCINCDIR)
-KERNEL_LDFLAGS		+= -gc-sections
+KERNEL_LDFLAGS		+= -gc-sections -Map=fiasco.map
 SHARED_FLAGS            += -fno-pic
 SHARED_FLAGS            += -ffunction-sections -fdata-sections
 SHARED_FLAGS-gcc        += -fno-defer-pop

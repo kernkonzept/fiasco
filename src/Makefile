@@ -260,7 +260,7 @@ endif
 
 clean: $(foreach subsys, $(SUBSYSTEMS), clean-$(subsys))
 	$(RM) $(ALL)
-	$(RM) *.o fiasco
+	$(RM) *.o fiasco fiasco.map
 	$(RM) auto/*.cc auto/*.h auto/*.S auto/stamp-*.ready
 	$(RM) .Clean-auto .Compiler-config .$(KCONFIG_FILE).parts
 
