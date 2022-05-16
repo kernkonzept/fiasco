@@ -1,10 +1,9 @@
 #include "uart_sifive.h"
 #include "poll_timeout_counter.h"
-#include "types.h"
 
 namespace L4
 {
-  enum : Unsigned32
+  enum : unsigned
   {
     UARTSFV_TXDATA = 0x00, // Transmit data register
     UARTSFV_RXDATA = 0x04, // Receive data register
@@ -29,35 +28,35 @@ namespace L4
     _regs = regs;
 
     // Disable TX and RX interrupts
-    _regs->write<Unsigned32>(UARTSFV_IE, 0);
+    _regs->write<unsigned>(UARTSFV_IE, 0);
 
     // Enable RX and TX
-    _regs->write<Unsigned32>(UARTSFV_TXCTRL, UARTSFV_TXCTRL_TXEN);
-    _regs->write<Unsigned32>(UARTSFV_RXCTRL, UARTSFV_RXCTRL_RXEN);
+    _regs->write<unsigned>(UARTSFV_TXCTRL, UARTSFV_TXCTRL_TXEN);
+    _regs->write<unsigned>(UARTSFV_RXCTRL, UARTSFV_RXCTRL_RXEN);
 
     return true;
   }
 
   void Uart_sifive::shutdown()
   {
-    _regs->write<Unsigned32>(UARTSFV_IE, 0);
-    _regs->write<Unsigned32>(UARTSFV_TXCTRL, 0);
-    _regs->write<Unsigned32>(UARTSFV_RXCTRL, 0);
+    _regs->write<unsigned>(UARTSFV_IE, 0);
+    _regs->write<unsigned>(UARTSFV_TXCTRL, 0);
+    _regs->write<unsigned>(UARTSFV_RXCTRL, 0);
   }
 
   bool Uart_sifive::enable_rx_irq(bool enable)
   {
     if (enable)
-      _regs->set<Unsigned32>(UARTSFV_IE, UARTSFV_IE_RXWM);
+      _regs->set<unsigned>(UARTSFV_IE, UARTSFV_IE_RXWM);
     else
-      _regs->clear<Unsigned32>(UARTSFV_IE, UARTSFV_IE_RXWM);
+      _regs->clear<unsigned>(UARTSFV_IE, UARTSFV_IE_RXWM);
     return true;
   }
 
   bool Uart_sifive::change_mode(Transfer_mode, Baud_rate r)
   {
-    Unsigned32 div = _freq / r;
-    _regs->write<Unsigned32>(UARTSFV_DIV, div);
+    unsigned div = _freq / r;
+    _regs->write<unsigned>(UARTSFV_DIV, div);
 
     return true;
   }
@@ -77,7 +76,7 @@ namespace L4
   {
     if (_bufchar == -1)
       {
-        Unsigned32 data = _regs->read<Unsigned32>(UARTSFV_RXDATA);
+        unsigned data = _regs->read<unsigned>(UARTSFV_RXDATA);
         if (!(data & UARTSFV_RXDATA_EMPTY))
           _bufchar = data & UARTSFV_RXDATA_DATA;
       }
@@ -87,10 +86,10 @@ namespace L4
   void Uart_sifive::out_char(char c) const
   {
     Poll_timeout_counter i(3000000);
-    while (i.test(_regs->read<Unsigned32>(UARTSFV_TXDATA)
+    while (i.test(_regs->read<unsigned>(UARTSFV_TXDATA)
                   & UARTSFV_TXDATA_FULL))
       ;
-    _regs->write<Unsigned32>(UARTSFV_TXDATA, c);
+    _regs->write<unsigned>(UARTSFV_TXDATA, c);
   }
 
   int Uart_sifive::write(char const *s, unsigned long count) const
