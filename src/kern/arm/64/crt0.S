@@ -11,7 +11,7 @@ ENTRY(start)
 
      /* never returns */
 
-.section ".init.data"
+.section ".init.bss", "w", %nobits
 .p2align 4
 .globl _sstack
 _sstack:

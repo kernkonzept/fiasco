@@ -18,7 +18,7 @@ __init_data:
 
 
 
-.section ".init.data"
+.section ".init.bss", "w", %nobits
 .p2align 3
 .globl _sstack
 _sstack:
