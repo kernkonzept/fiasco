@@ -21,8 +21,8 @@ class Gic_v3 : public Gic_mixin<Gic_v3, Gic_cpu_v3>
 public:
   using Version = Gic_dist::V3;
 
-  explicit Gic_v3(Address dist_base, Address redist_base)
-  : Gic(dist_base, -1), _redist_base(redist_base)
+  explicit Gic_v3(Address dist_base, Address redist_base, bool dist_init = true)
+  : Gic(dist_base, -1, dist_init), _redist_base(redist_base)
   {
     init_lpi();
 
