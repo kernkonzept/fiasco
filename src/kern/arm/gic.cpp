@@ -53,17 +53,6 @@ protected:
   Unsigned8 _prio_mask;
   Unsigned8 _prio_step;
 
-  static IMPL *primary;
-
-  static void _glbl_irq_handler()
-  { primary->hit(nullptr); }
-
-  void init_global_irq_handler()
-  {
-    primary = self();
-    Gic::set_irq_handler(_glbl_irq_handler);
-  }
-
   void init_priority_mask()
   {
     _cpu.pmr(0xff);
@@ -204,9 +193,6 @@ public:
     return 0;
   }
 };
-
-template<typename IMPL, typename CPU>
-IMPL *Gic_mixin<IMPL, CPU>::primary;
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pic_gic]:

@@ -13,6 +13,11 @@ class Gic_v3 : public Gic_mixin<Gic_v3, Gic_cpu_v3>
 
   Address _redist_base;
 
+  static Gic_v3 *primary;
+
+  static void _glbl_irq_handler()
+  { primary->hit(nullptr); }
+
 public:
   using Version = Gic_dist::V3;
 
@@ -24,6 +29,12 @@ public:
     cpu_local_init(Cpu_number::boot_cpu());
     _cpu.enable();
     init_priority_mask();
+  }
+
+  void init_global_irq_handler()
+  {
+    primary = this;
+    Gic::set_irq_handler(_glbl_irq_handler);
   }
 };
 
@@ -86,6 +97,7 @@ public:
 //-------------------------------------------------------------------
 IMPLEMENTATION:
 
+Gic_v3 *Gic_v3::primary;
 DEFINE_PER_CPU Per_cpu<Gic_redist> Gic_v3::_redist;
 
 PUBLIC inline
