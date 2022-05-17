@@ -51,17 +51,6 @@ private:
 protected:
   Cpu _cpu;
 
-  static IMPL *primary;
-
-  static void _glbl_irq_handler()
-  { primary->hit(nullptr); }
-
-  void init_global_irq_handler()
-  {
-    primary = self();
-    Gic::set_irq_handler(_glbl_irq_handler);
-  }
-
 public:
   template<typename ...CPU_ARGS>
   Gic_mixin(Address dist_base, int nr_irqs_override, CPU_ARGS &&...args)
@@ -180,9 +169,6 @@ public:
   { _dist.disable_irq(typename IMPL::Version(), irq); }
 
 };
-
-template<typename IMPL, typename CPU>
-IMPL *Gic_mixin<IMPL, CPU>::primary;
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pic_gic]:

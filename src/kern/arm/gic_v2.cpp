@@ -8,6 +8,11 @@ class Gic_v2 : public Gic_mixin<Gic_v2, Gic_cpu_v2>
   using Gic = Gic_mixin<Gic_v2, Gic_cpu_v2>;
   Per_cpu_array<Unsigned32> _sgi_template;
 
+  static Gic_v2 *primary;
+
+  static void _glbl_irq_handler()
+  { primary->hit(nullptr); }
+
 public:
   using Version = Gic_dist::V2;
 
@@ -23,10 +28,18 @@ public:
   Gic_v2(Address cpu_base, Address dist_base, Gic *master_mapping)
   : Gic(dist_base, master_mapping, cpu_base)
   {}
+
+  void init_global_irq_handler()
+  {
+    primary = this;
+    Gic::set_irq_handler(_glbl_irq_handler);
+  }
 };
 
 //-------------------------------------------------------------------
 IMPLEMENTATION:
+
+Gic_v2 *Gic_v2::primary;
 
 PUBLIC inline
 void
