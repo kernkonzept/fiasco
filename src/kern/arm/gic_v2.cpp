@@ -17,7 +17,7 @@ public:
   using Version = Gic_dist::V2;
 
   Gic_v2(Address cpu_base, Address dist_base, int num_override = -1)
-  : Gic(dist_base, num_override, cpu_base)
+  : Gic(dist_base, num_override, true, cpu_base)
   {
     if (!Gic_dist::Config_mxc_tzic)
       cpu_local_init(Cpu_number::boot_cpu());

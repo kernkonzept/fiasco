@@ -53,10 +53,10 @@ protected:
 
 public:
   template<typename ...CPU_ARGS>
-  Gic_mixin(Address dist_base, int nr_irqs_override, CPU_ARGS &&...args)
+  Gic_mixin(Address dist_base, int nr_irqs_override, bool dist_init, CPU_ARGS &&...args)
   : Gic(dist_base), _cpu(cxx::forward<CPU_ARGS>(args)...)
   {
-    unsigned num = init(true, nr_irqs_override);
+    unsigned num = init(dist_init, nr_irqs_override);
     printf("Number of IRQs available at this GIC: %d\n", num);
     Irq_chip_gen::init(num);
   }
@@ -87,16 +87,15 @@ public:
     _cpu.disable();
   }
 
-  unsigned init(bool primary_gic, int nr_irqs_override = -1)
+  unsigned init(bool dist_init, int nr_irqs_override = -1)
   {
-    if (!primary_gic)
-      {
-        self()->cpu_local_init(Cpu_number::boot_cpu());
-        return 0;
-      }
+    unsigned num;
 
-    unsigned num = _dist.init(typename IMPL::Version(),
-                              Cpu::Cpu_prio_val, nr_irqs_override);
+    if (dist_init)
+      num = _dist.init(typename IMPL::Version(), Cpu::Cpu_prio_val,
+                       nr_irqs_override);
+    else
+      num = nr_irqs_override != -1 ? nr_irqs_override : _dist.hw_nr_irqs();
 
     self()->init_global_irq_handler();
 
