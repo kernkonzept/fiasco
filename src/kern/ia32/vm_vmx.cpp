@@ -42,6 +42,8 @@ IMPLEMENTATION [vmx]:
 #include "idt.h"
 #include "cpu.h"
 
+static Kmem_slab_t<Vm_vmx> _vmx_allocator("Vm_vmx");
+
 PUBLIC inline
 Vm_vmx_b::Vm_vmx_b(Ram_quota *q) : Vm(q)
 {}
@@ -54,6 +56,12 @@ PUBLIC
 Vm_vmx::Vm_vmx(Ram_quota *q) : Vm_vmx_t<Vm_vmx>(q)
 {
   _tlb_type = Tlb_per_cpu_global;
+}
+
+PUBLIC static
+Vm_vmx *Vm_vmx::alloc(Ram_quota *q)
+{
+  return _vmx_allocator.q_new(q, q);
 }
 
 PUBLIC inline
@@ -70,7 +78,7 @@ void
 Vm_vmx::operator delete (void *ptr)
 {
   Vm_vmx *t = reinterpret_cast<Vm_vmx*>(ptr);
-  Kmem_slab_t<Vm_vmx>::q_free(t->ram_quota(), ptr);
+  _vmx_allocator.q_free(t->ram_quota(), ptr);
 }
 
 PUBLIC

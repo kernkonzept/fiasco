@@ -109,10 +109,18 @@ IMPLEMENTATION [arm]:
 
 JDB_DEFINE_TYPENAME(Vm, "\033[33;1mVm\033[m");
 
+static Kmem_slab_t<Vm> _vm_allocator("Vm");
+
 PUBLIC inline virtual
 Page_number
 Vm::map_max_address() const
 { return Page_number(1UL << (MWORD_BITS - Mem_space::Page_shift)); }
+
+PUBLIC static
+Vm *Vm::alloc(Ram_quota *q)
+{
+  return _vm_allocator.q_new(q, q);
+}
 
 PUBLIC inline
 void *
@@ -127,7 +135,7 @@ void
 Vm::operator delete(void *ptr)
 {
   Vm *t = reinterpret_cast<Vm*>(ptr);
-  Kmem_slab_t<Vm>::q_free(t->ram_quota(), ptr);
+  _vm_allocator.q_free(t->ram_quota(), ptr);
 }
 
 // ------------------------------------------------------------------------

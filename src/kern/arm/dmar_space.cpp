@@ -201,6 +201,14 @@ Dmar_space::add_page_size(Mem_space::Page_order o)
   __dmar_ps.add_page_size(o);
 }
 
+static Kmem_slab_t<Dmar_space> _dmar_space_allocator("Dmar_space");
+
+PUBLIC static
+Dmar_space *Dmar_space::alloc(Ram_quota *q)
+{
+  return _dmar_space_allocator.q_new(q, q);
+}
+
 PUBLIC
 void *
 Dmar_space::operator new ([[maybe_unused]] size_t size, void *p) noexcept
@@ -214,7 +222,7 @@ void
 Dmar_space::operator delete (void *ptr)
 {
   Dmar_space *t = reinterpret_cast<Dmar_space *>(ptr);
-  Kmem_slab_t<Dmar_space>::q_free(t->ram_quota(), ptr);
+  _dmar_space_allocator.q_free(t->ram_quota(), ptr);
 }
 
 PUBLIC inline

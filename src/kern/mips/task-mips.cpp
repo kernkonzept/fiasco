@@ -94,6 +94,22 @@ Vz_vm::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode) override
   vcpu_resume(&ts, ctxt->regs());
 }
 
+static Kmem_slab_t<Vz_vm> _vz_vm_allocator("Vz_vm");
+
+PUBLIC static
+Vz_vm *Vz_vm::alloc(Ram_quota *q)
+{
+  return _vz_vm_allocator.q_new(q, q);
+}
+
+PUBLIC
+void
+Vz_vm::operator delete (void *ptr)
+{
+  Vz_vm *t = reinterpret_cast<Vz_vm*>(ptr);
+  _vz_vm_allocator.q_free(t->ram_quota(), ptr);
+}
+
 namespace {
 
 static inline void

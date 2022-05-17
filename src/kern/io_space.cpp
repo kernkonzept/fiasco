@@ -123,8 +123,6 @@ public:
                             L4_fpage::Rights page_attribs);
 
 private:
-  using Io_bitmap_allocator = Kmem_slab_t<Generic_io_bitmap>;
-
   /**
    * IO bitmap.
    *
@@ -218,6 +216,22 @@ IMPLEMENTATION [io]:
 #include "cpu_mask.h"
 #include "cpu_call.h"
 
+static Kmem_slab_t<Generic_io_bitmap> _io_bitmap_alloc("Io_bmap");
+
+PUBLIC static
+Generic_io_bitmap *
+Generic_io_bitmap::alloc(Ram_quota *quota)
+{
+  return _io_bitmap_alloc.q_new(quota);
+}
+
+PUBLIC static
+void
+Generic_io_bitmap::free(Ram_quota *quota, Generic_io_bitmap *bitmap)
+{
+  _io_bitmap_alloc.q_del(quota, bitmap);
+}
+
 /**
  * IO bitmap storage constructor.
  *
@@ -278,7 +292,7 @@ PUBLIC template<typename SPACE>
 Generic_io_space<SPACE>::~Generic_io_space()
 {
   if (_bitmap != nullptr)
-    Io_bitmap_allocator::q_del(ram_quota(), _bitmap);
+    Generic_io_bitmap::free(ram_quota(), _bitmap);
 }
 
 PUBLIC template<typename SPACE>
@@ -485,7 +499,7 @@ Generic_io_space<SPACE>::io_enable(Address port)
 
   if (_bitmap == nullptr)
     {
-      _bitmap = Io_bitmap_allocator::q_new(ram_quota());
+      _bitmap = Generic_io_bitmap::alloc(ram_quota());
       if (_bitmap == nullptr)
         return Insert_err_nomem;
     }
