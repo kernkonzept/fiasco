@@ -296,6 +296,12 @@ Task::Task(Ram_quota *q, Mem_space::Dir_type* pdir, Caps c)
 // The allocator for tasks
 static Kmem_slab_t<Task> _task_allocator("Task");
 
+PRIVATE static
+Task *Task::alloc(Ram_quota *q)
+{
+  return _task_allocator.q_new(q, q);
+}
+
 PUBLIC //inline
 void
 Task::operator delete (void *ptr)
@@ -307,7 +313,7 @@ Task::operator delete (void *ptr)
             l->type = cxx::Typeid<Task>::get();
             l->ram = t->ram_quota()->current());
 
-  Kmem_slab_t<Task>::q_free(t->ram_quota(), ptr);
+  _task_allocator.q_free(t->ram_quota(), ptr);
 }
 
 PUBLIC template<typename TASK_TYPE, bool MUST_SYNC_KERNEL = true,
@@ -325,9 +331,8 @@ Task::create(Ram_quota *q,
       return 0;
     }
 
-  typedef Kmem_slab_t<TASK_TYPE> Alloc;
   *err = L4_err::ENomem;
-  cxx::unique_ptr<TASK_TYPE> v(Alloc::q_new(q, q));
+  cxx::unique_ptr<TASK_TYPE> v(TASK_TYPE::alloc(q));
 
   if (EXPECT_FALSE(!v))
     return 0;

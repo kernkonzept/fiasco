@@ -161,6 +161,7 @@ Dmar_space::Dmar_pt *Dmar_space::identity_map;
 bool Dmar_space::_initialized;
 Dmar_space::Did_map *Dmar_space::_free_dids;
 unsigned Dmar_space::_max_did;
+static Kmem_slab_t<Dmar_space> _dmar_allocator("Dmar_space");
 
 
 PUBLIC
@@ -463,6 +464,12 @@ Dmar_space::add_page_size(Mem_space::Page_order o)
   __dmar_ps.add_page_size(o);
 }
 
+PUBLIC static
+Dmar_space *Dmar_space::alloc(Ram_quota *q)
+{
+  return _dmar_allocator.q_new(q, q);
+}
+
 PUBLIC
 void *
 Dmar_space::operator new (size_t size, void *p) throw()
@@ -477,7 +484,7 @@ void
 Dmar_space::operator delete (void *ptr)
 {
   Dmar_space *t = reinterpret_cast<Dmar_space *>(ptr);
-  Kmem_slab_t<Dmar_space>::q_free(t->ram_quota(), ptr);
+  _dmar_allocator.q_free(t->ram_quota(), ptr);
 }
 
 PUBLIC inline

@@ -212,6 +212,8 @@ Vm_vmx_ept::Epte_ptr::set(Unsigned64 v)
 // -------------------------------------------------------------------------
 IMPLEMENTATION [vmx]:
 
+static Kmem_slab_t<Vm_vmx_ept> _ept_allocator("Vm_vmx_ept");
+
 IMPLEMENT inline
 unsigned char
 Vm_vmx_ept::Epte_ptr::page_order() const
@@ -343,6 +345,12 @@ void
 Vm_vmx_ept::v_set_access_flags(Mem_space::Vaddr, L4_fpage::Rights) override
 {}
 
+PUBLIC static
+Vm_vmx_ept *Vm_vmx_ept::alloc(Ram_quota *q)
+{
+  return _ept_allocator.q_new(q, q);
+}
+
 PUBLIC inline
 void *
 Vm_vmx_ept::operator new (size_t size, void *p) throw()
@@ -357,7 +365,7 @@ void
 Vm_vmx_ept::operator delete (void *ptr)
 {
   Vm_vmx_ept *t = reinterpret_cast<Vm_vmx_ept*>(ptr);
-  Kmem_slab_t<Vm_vmx_ept>::q_free(t->ram_quota(), ptr);
+  _ept_allocator.q_free(t->ram_quota(), ptr);
 }
 
 PUBLIC inline

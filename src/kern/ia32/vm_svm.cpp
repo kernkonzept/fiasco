@@ -147,11 +147,19 @@ Vm_svm::get_vm_cr3(Vmcb *v)
 //----------------------------------------------------------------------------
 IMPLEMENTATION [svm]:
 
+static Kmem_slab_t<Vm_svm> _svm_allocator("Vm_svm");
+
 PUBLIC
 Vm_svm::Vm_svm(Ram_quota *q)
   : Vm(q)
 {
   _tlb_type = Tlb_per_cpu_global;
+}
+
+PUBLIC static
+Vm_svm *Vm_svm::alloc(Ram_quota *q)
+{
+  return _svm_allocator.q_new(q, q);
 }
 
 PUBLIC inline
@@ -168,7 +176,7 @@ void
 Vm_svm::operator delete (void *ptr)
 {
   Vm_svm *t = reinterpret_cast<Vm_svm*>(ptr);
-  Kmem_slab_t<Vm_svm>::q_free(t->ram_quota(), ptr);
+  _svm_allocator.q_free(t->ram_quota(), ptr);
 }
 
 PUBLIC

@@ -86,22 +86,21 @@ class Kmem_slab_for_size
       "objects too small for slab");
 
 public:
-  static void *alloc() { return _s.alloc(); }
+  Kmem_slab_for_size() : _s(SIZE, ALIGN, "fixed size") {}
 
-  template<typename Q> static
+  void *alloc() { return _s.alloc(); }
+
+  template<typename Q>
   void *q_alloc(Q *q) { return _s.template q_alloc<Q>(q); }
 
-  static void free(void *e) { _s.free(e); }
+  void free(void *e) { _s.free(e); }
 
-  template<typename Q> static
+  template<typename Q>
   void q_free(Q *q, void *e) { _s.template q_free<Q>(q, e); }
 
 protected:
-  static Kmem_slab _s;
+  Kmem_slab _s;
 };
-
-template< unsigned SIZE, unsigned ALIGN >
-Kmem_slab Kmem_slab_for_size<SIZE, ALIGN>::_s(SIZE, ALIGN, "fixed size");
 
 
 /**
@@ -228,7 +227,7 @@ public:
   explicit Kmem_slab_t(char const *) {}
   Kmem_slab_t() = default;
 
-  template<typename ...ARGS> static
+  template<typename ...ARGS>
   T *new_obj(ARGS &&...args)
   {
     void *c = Slab::alloc();
@@ -237,7 +236,7 @@ public:
     return 0;
   }
 
-  template<typename Q, typename ...ARGS> static
+  template<typename Q, typename ...ARGS>
   T *q_new(Q *q, ARGS &&...args)
   {
     void *c = Slab::template q_alloc<Q>(q);
@@ -246,13 +245,13 @@ public:
     return 0;
   }
 
-  static void del(T *e)
+  void del(T *e)
   {
     e->~T();
     Slab::free(e);
   }
 
-  template<typename Q> static
+  template<typename Q>
   void q_del(Q *q, T *e)
   {
     e->~T();
