@@ -39,16 +39,28 @@ INTERFACE [!mp]:
 
 #define DEFINE_PER_CPU_CTOR_DATA(id)
 
+INTERFACE [!amp]:
+
+#define DEFINE_PER_CPU_P(p) \
+  DEFINE_PER_CPU_CTOR_DATA(__COUNTER__) \
+  __attribute__((section(".per_cpu.data"),init_priority(0xfffe - p)))
+
+
+INTERFACE [amp && !mp]:
+
+// So far, each AMP node only has a single CPU. Just piggyback on the
+// Global_data infrastructure...
+#define DEFINE_PER_CPU_P(p) \
+  DEFINE_PER_CPU_CTOR_DATA(__COUNTER__) \
+  __attribute__((section(".global_data"),init_priority(0xfffe - p)))
+
 INTERFACE:
 
 #include "static_init.h"
 #include "config.h"
 #include "context_base.h"
+#include "global_data.h"
 #include <cxx/type_traits>
-
-#define DEFINE_PER_CPU_P(p) \
-  DEFINE_PER_CPU_CTOR_DATA(__COUNTER__) \
-  __attribute__((section(".per_cpu.data"),init_priority(0xfffe - p)))
 
 #define DEFINE_PER_CPU      DEFINE_PER_CPU_P(9)
 #define DEFINE_PER_CPU_LATE DEFINE_PER_CPU_P(19)
@@ -93,7 +105,7 @@ public:
   }
 
 private:
-  T _d;
+  Global_data<T> _d;
 };
 
 template< typename T >
@@ -139,11 +151,11 @@ Per_cpu_data::valid([[maybe_unused]] Cpu_number cpu)
 
 IMPLEMENT inline
 template< typename T >
-T const &Per_cpu<T>::cpu(Cpu_number) const { return _d; }
+T const &Per_cpu<T>::cpu(Cpu_number) const { return _d.unwrap(); }
 
 IMPLEMENT inline
 template< typename T >
-T &Per_cpu<T>::cpu(Cpu_number) { return _d; }
+T &Per_cpu<T>::cpu(Cpu_number) { return _d.unwrap(); }
 
 IMPLEMENT
 template< typename T >
