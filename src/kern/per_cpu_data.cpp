@@ -39,16 +39,26 @@ INTERFACE [!mp]:
 
 #define DEFINE_PER_CPU_CTOR_DATA(id)
 
+INTERFACE [!amp]:
+
+#define DEFINE_PER_CPU_P(p) \
+  DEFINE_PER_CPU_CTOR_DATA(__COUNTER__) \
+  __attribute__((section(".per_cpu.data"),init_priority(0xfffe - p)))
+
+
+INTERFACE [amp]:
+
+#define DEFINE_PER_CPU_P(p) \
+  DEFINE_PER_CPU_CTOR_DATA(__COUNTER__) \
+  __attribute__((section(".per_node.data"),init_priority(0xfffe - p)))
+
 INTERFACE:
 
 #include "static_init.h"
 #include "config.h"
 #include "context_base.h"
+#include "per_node_data.h"
 #include <cxx/type_traits>
-
-#define DEFINE_PER_CPU_P(p) \
-  DEFINE_PER_CPU_CTOR_DATA(__COUNTER__) \
-  __attribute__((section(".per_cpu.data"),init_priority(0xfffe - p)))
 
 #define DEFINE_PER_CPU      DEFINE_PER_CPU_P(9)
 #define DEFINE_PER_CPU_LATE DEFINE_PER_CPU_P(19)
@@ -93,7 +103,7 @@ public:
   }
 
 private:
-  T _d;
+  Per_node_data<T> _d;
 };
 
 template< typename T >
@@ -106,7 +116,7 @@ public:
     Per_cpu<typename cxx::remove_cv<T>::type> >::type Per_cpu_type;
 
   Per_cpu_ptr() {}
-  Per_cpu_ptr(Per_cpu_type *o) : _p(&o->_d) {}
+  Per_cpu_ptr(Per_cpu_type *o) : _p(o->_d.get()) {}
   Per_cpu_ptr &operator = (Per_cpu_type *o)
   {
     _p = &o->_d;
@@ -140,11 +150,11 @@ Per_cpu_data::valid(Cpu_number cpu)
 
 IMPLEMENT inline
 template< typename T >
-T const &Per_cpu<T>::cpu(Cpu_number) const { return _d; }
+T const &Per_cpu<T>::cpu(Cpu_number) const { return *_d; }
 
 IMPLEMENT inline
 template< typename T >
-T &Per_cpu<T>::cpu(Cpu_number) { return _d; }
+T &Per_cpu<T>::cpu(Cpu_number) { return *_d; }
 
 IMPLEMENT
 template< typename T >
@@ -265,11 +275,11 @@ Per_cpu_data::valid(Cpu_number cpu)
 
 IMPLEMENT inline template< typename T >
 T const &Per_cpu<T>::cpu(Cpu_number cpu) const
-{ return *reinterpret_cast<T const *>((char  const *)&_d + _offsets[cpu]); }
+{ return *reinterpret_cast<T const *>((char  const *)_d.get() + _offsets[cpu]); }
 
 IMPLEMENT inline template< typename T >
 T &Per_cpu<T>::cpu(Cpu_number cpu)
-{ return *reinterpret_cast<T*>((char *)&_d + _offsets[cpu]); }
+{ return *reinterpret_cast<T*>((char *)_d.get() + _offsets[cpu]); }
 
 IMPLEMENT
 template< typename T >
