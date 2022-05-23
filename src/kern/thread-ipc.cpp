@@ -778,7 +778,7 @@ Thread::exception(Kobject_iface *handler, Trap_state *ts, L4_fpage::Rights right
   Mem::barrier();
   vcpu_restore_irqs(vcpu_irqs);
 
-  // FIXME: handle not existing pager properly
+  // FIXME: handle not existing exception handler properly
   // for now, just ignore any errors
   return 1;
 }
@@ -828,11 +828,11 @@ Thread::send_exception(Trap_state *ts)
     }
 
   L4_fpage::Rights rights = L4_fpage::Rights(0);
-  Kobject_iface *pager = _exc_handler.ptr(space(), &rights);
+  Kobject_iface *handler = _exc_handler.ptr(space(), &rights);
 
-  if (EXPECT_FALSE(!pager))
+  if (EXPECT_FALSE(!handler))
     {
-      /* no pager (anymore), just ignore the exception, return success */
+      /* no exception handler (anymore), put thread to sleep */
       LOG_TRACE("Exception invalid handler", "ieh", this, Log_exc_invalid,
                 l->cap_idx = _exc_handler.raw());
       if (EXPECT_FALSE(space()->is_sigma0()))
@@ -842,12 +842,12 @@ Thread::send_exception(Trap_state *ts)
           panic("...");
         }
 
-      pager = this; // block on ourselves
+      handler = this; // block on ourselves
     }
 
   state_change(~Thread_cancel, Thread_in_exception);
 
-  return exception(pager, ts, rights);
+  return exception(handler, ts, rights);
 }
 
 PRIVATE static
