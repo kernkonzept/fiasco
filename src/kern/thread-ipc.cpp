@@ -1025,6 +1025,8 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
                   auto c_lock = lock_guard<Lock_guard_inverse_policy>(cpu_lock);
                   err = fpage_map(snd->space(), sfp,
                                   rcv_t.get(), L4_fpage(buf->d), item->b, &rl);
+                  if (err.empty_map())
+                    rcv_word[-2] |= 2;
                 }
 
               if (EXPECT_FALSE(!err.ok()))
