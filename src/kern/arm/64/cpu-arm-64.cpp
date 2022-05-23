@@ -142,8 +142,6 @@ public:
   };
 };
 
-IMPLEMENT_OVERRIDE inline void Cpu::init_mmu(bool) {}
-
 PUBLIC inline
 unsigned
 Cpu::supported_pa_range() const

@@ -62,8 +62,6 @@ public:
   };
 };
 
-IMPLEMENT_OVERRIDE inline void Cpu::init_mmu(bool) {}
-
 IMPLEMENT_OVERRIDE
 void
 Cpu::init_hyp_mode()

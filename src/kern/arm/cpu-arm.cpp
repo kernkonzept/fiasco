@@ -416,25 +416,6 @@ Unsigned64
 Cpu::rdtsc (void)
 { return 0; }
 
-IMPLEMENT_DEFAULT
-void
-Cpu::init_mmu(bool is_boot_cpu)
-{
-  if (!is_boot_cpu)
-    return;
-
-  extern char ivt_start;
-  // map the interrupt vector table to 0xffff0000
-  auto pte = Mem_layout::kdir->walk(Virt_addr(Kmem_space::Ivt_base),
-                                    Kpdir::Depth, true,
-                                    Kmem_alloc::q_allocator(Ram_quota::root));
-
-  pte.set_page(pte.make_page(Phys_mem_addr((unsigned long)&ivt_start),
-                             Page::Attr(Page::Rights::RWX(),
-                             Page::Type::Normal(), Page::Kern::Global())));
-  pte.write_back_if(true, Mem_unit::Asid_kernel);
-}
-
 PUBLIC inline
 Cpu_phys_id
 Cpu::phys_id() const
@@ -459,6 +440,11 @@ Cpu::init(bool /*resume*/, bool is_boot_cpu)
   init_hyp_mode();
   bsp_init(is_boot_cpu);
 }
+
+IMPLEMENT_DEFAULT inline
+void
+Cpu::init_mmu(bool)
+{}
 
 IMPLEMENT_DEFAULT inline
 void
