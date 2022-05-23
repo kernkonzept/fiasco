@@ -9,6 +9,7 @@ EXTENSION class Mmu
 public:
   static void btc_flush();
   static void btc_inv();
+  static void inv_cache();
 };
 
 //---------------------------------------------------------------------------
@@ -264,6 +265,18 @@ void Mmu<Flush_area, Ram>::clean_dcache()
 {
   Mem::dsb();
   set_way_full_loop(dc_csw);
+}
+
+IMPLEMENT
+template< unsigned long Flush_area, bool Ram >
+void Mmu<Flush_area, Ram>::inv_cache()
+{
+  // No need for a DSB here. The cache must be disabled when calling the
+  // function, otherwise dirty data would be lost. Therefore all memory
+  // accesses bypass the cache already and we don't have to wait for them to
+  // retire.
+  ic_iallu();
+  set_way_full_loop(dc_isw);
 }
 
 //-----------------------------------------------------------------------------
