@@ -183,6 +183,11 @@ EXTENSION class Mmu
     asm volatile("mcr p15, 0, %0, c7, c10, 2" : : "r" (v) : "memory");
   }
 
+  static void dc_isw(Mword v)
+  {
+    asm volatile("mcr p15, 0, %0, c7, c6, 2" : : "r" (v) : "memory");
+  }
+
   static void ic_iallu()
   {
     asm volatile("mcr p15, 0, r0, c7, c5, 0" : : : "memory");

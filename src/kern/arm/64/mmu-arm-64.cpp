@@ -143,6 +143,11 @@ EXTENSION class Mmu
     asm volatile("dc csw, %0" : : "r" (v) : "memory");
   }
 
+  static void dc_isw(Mword v)
+  {
+    asm volatile("dc isw, %0" : : "r" (v) : "memory");
+  }
+
   static void ic_iallu()
   {
     asm volatile("ic iallu" : : : "memory");
