@@ -23,6 +23,7 @@ namespace Koptions_ns
       "",             // jdb_cmd
       0,              // tbuf_entries
       0,              // out_buf
+      0,              // node
     };
 }
 

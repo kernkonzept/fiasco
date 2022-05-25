@@ -44,7 +44,7 @@ namespace KIP_namespace
         /* 00/00  */ L4_KERNEL_INFO_MAGIC,
                      Config::Kernel_version_id,
                      (Size_mem_descs + sizeof(Kip)) >> 4,
-                     {}, 0, {},
+                     {}, 0, 0, {},
         /* 10/20  */ 0, {},
         /* 20/40  */ 0, 0, {},
         /* 30/60  */ 0, 0, {},

@@ -37,7 +37,7 @@ namespace L4_kernel_options
   enum
   {
     Magic = 0x4C344B43,
-    Version_current = 3,
+    Version_current = 4,
   };
 
   enum Uart_type
@@ -83,5 +83,6 @@ namespace L4_kernel_options
 
     Unsigned32  opt(Flags flag) const { return flags & flag; }
 
+    Unsigned32  node;             /// The AMP node ID where the options apply
   } __attribute__((packed));
 };

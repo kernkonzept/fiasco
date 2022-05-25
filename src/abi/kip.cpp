@@ -64,7 +64,8 @@ public:
   Unsigned8  offset_version_strings;
   Unsigned8  fill0[sizeof(Mword) - 1];
   Unsigned8  kip_sys_calls;
-  Unsigned8  fill1[sizeof(Mword) - 1];
+  Unsigned8  node;
+  Unsigned8  fill1[sizeof(Mword) - 2];
 
   /* the following stuff is undocumented; we assume that the kernel
      info page is located at offset 0x1000 into the L4 kernel boot
