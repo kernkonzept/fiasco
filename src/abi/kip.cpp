@@ -249,6 +249,13 @@ Kip::init_global_kip(Kip *kip)
   //assert(kip->sigma0_ip && kip->root_ip && kip->user_ptr);
 }
 
+PUBLIC static inline
+void
+Kip::set_global_kip(Kip *kip)
+{
+  *global_kip = kip;
+}
+
 PUBLIC static inline Kip *Kip::k() { return *global_kip; }
 
 IMPLEMENT

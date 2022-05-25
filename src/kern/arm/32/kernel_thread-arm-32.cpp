@@ -41,3 +41,22 @@ Kernel_thread::boot_app_cpus()
   Platform_control::boot_ap_cpus(Kmem::kdir->virt_to_phys((Address)_tramp_mp_entry));
 }
 
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && amp && cpu_virt]:
+
+PRIVATE
+static inline void
+Kernel_thread::set_amp_offset(Mword off)
+{
+  asm volatile ("mcr p15, 4, %0, c13, c0, 2" : : "r"(off)); // HTPIDR
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && amp && !cpu_virt]:
+
+PRIVATE
+static inline void
+Kernel_thread::set_amp_offset(Mword off)
+{
+  asm volatile ("mcr p15, 0, %0, c13, c0, 4" : : "r"(off)); // TPIDRPRW
+}

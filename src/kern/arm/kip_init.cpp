@@ -18,6 +18,7 @@ IMPLEMENTATION [arm]:
 #include "mem_layout.h"
 #include "mem_unit.h"
 #include "timer.h"
+#include "platform_control.h"
 
 
 // Make the stuff below apearing only in this compilation unit.
@@ -63,12 +64,22 @@ namespace KIP_namespace
 IMPLEMENT
 void Kip_init::init()
 {
-  Kip *kinfo = reinterpret_cast<Kip*>(&KIP_namespace::my_kernel_info_page);
-  map_kip(kinfo);
-  Kip::init_global_kip(kinfo);
-  kinfo->add_mem_region(Mem_desc(0, Mem_layout::User_max,
-                        Mem_desc::Conventional, true));
-  init_syscalls(kinfo);
+  if (Kip *kip = Kip::k())
+    {
+      // Running on AMP where additional nodes have a Kip provided by the boot
+      // node.
+      map_kip(kip);
+    }
+  else
+    {
+      Kip *kinfo = reinterpret_cast<Kip*>(&KIP_namespace::my_kernel_info_page);
+      map_kip(kinfo);
+      Kip::init_global_kip(kinfo);
+      kinfo->node = Platform_control::node_id();
+      kinfo->add_mem_region(Mem_desc(0, Mem_layout::User_max,
+                            Mem_desc::Conventional, true));
+      init_syscalls(kinfo);
+    }
 }
 
 PUBLIC static
