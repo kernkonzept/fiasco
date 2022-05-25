@@ -26,6 +26,7 @@ IMPLEMENTATION:
 #include "thread_object.h"
 #include "types.h"
 #include "ram_quota.h"
+#include "warn.h"
 
 IMPLEMENT_DEFAULT inline NEEDS["mem_layout.h"]
 Address
@@ -123,18 +124,26 @@ IMPLEMENT
 void
 Kernel_thread::init_workload()
 {
+  if (!Kip::k()->sigma0_ip)
+    {
+      WARN("No sigma0! Check your setup.\n");
+      return;
+    }
+
   auto g = lock_guard(cpu_lock);
 
   // create sigma0
   Task *sigma0 = create_sigma0_task();
   Thread_object *sigma0_thread =
     create_user_thread(sigma0, Thread_ptr(Thread_ptr::Null), Kip::k()->sigma0_ip);
+  sigma0_thread->activate();
+
+  if (!Kip::k()->root_ip)
+    return;
 
   // create the boot task
   Task *boot_task = create_boot_task(sigma0, sigma0_thread);
   Thread_object *boot_thread =
     create_user_thread(boot_task, Thread_ptr(C_pager), Kip::k()->root_ip);
-
-  sigma0_thread->activate();
   boot_thread->activate();
 }
