@@ -15,6 +15,7 @@ IMPLEMENTATION:
 #include "thread_object.h"
 #include "types.h"
 #include "ram_quota.h"
+#include "platform_control.h"
 
 IMPLEMENT
 void
@@ -25,6 +26,7 @@ Kernel_thread::init_workload()
   Cap_index const C_thread  = Cap_index(Initial_kobjects::Thread);
   Cap_index const C_pager   = Cap_index(Initial_kobjects::Pager);
 
+  unsigned node = Platform_control::node_id();
   auto g = lock_guard(*cpu_lock);
 
   //
@@ -39,7 +41,7 @@ Kernel_thread::init_workload()
                                        Config::PAGE_SHIFT);
   check(sigma0->alloc_ku_mem(sigma0_utcb)
         >= 0);
-  sigma0->map_all_segs(Mem_desc::Dedicated);
+  sigma0->map_all_segs(Mem_desc::Dedicated, node);
   // prevent deletion of this thing
   sigma0->inc_ref();
 
@@ -66,7 +68,7 @@ Kernel_thread::init_workload()
 
   check (sigma0_thread->control(Thread_ptr(Thread_ptr::Null), Thread_ptr(Thread_ptr::Null)) == 0);
   check (sigma0_thread->bind(sigma0, User<Utcb>::Ptr((Utcb*)Virt_addr::val(sigma0_utcb.mem_address()))));
-  check (sigma0_thread->ex_regs(Kip::k()->sigma0_ip, 0));
+  check (sigma0_thread->ex_regs(Kip::k()->sigma0[node], 0));
 
   //
   // create the boot task
@@ -79,7 +81,7 @@ Kernel_thread::init_workload()
                                      Config::PAGE_SHIFT);
   check(boot_task->alloc_ku_mem(root_utcb)
         >= 0);
-  boot_task->map_all_segs(Mem_desc::Bootloader);
+  boot_task->map_all_segs(Mem_desc::Bootloader, node);
 
   // prevent deletion of this thing
   boot_task->inc_ref();
@@ -96,7 +98,7 @@ Kernel_thread::init_workload()
 
   check (boot_thread->control(Thread_ptr(C_pager), Thread_ptr(Thread_ptr::Null)) == 0);
   check (boot_thread->bind(boot_task, User<Utcb>::Ptr((Utcb*)Virt_addr::val(root_utcb.mem_address()))));
-  check (boot_thread->ex_regs(Kip::k()->root_ip, 0));
+  check (boot_thread->ex_regs(Kip::k()->root[node], 0));
 
   Ipc_gate *s0_b_gate = Ipc_gate::create(*Ram_quota::root, sigma0_thread, 4 << 4);
 

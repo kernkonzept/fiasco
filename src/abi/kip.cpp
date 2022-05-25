@@ -65,7 +65,8 @@ public:
   Unsigned8  offset_version_strings;
   Unsigned8  fill0[sizeof(Mword) - 1];
   Unsigned8  kip_sys_calls;
-  Unsigned8  fill1[sizeof(Mword) - 1];
+  Unsigned8  node;
+  Unsigned8  fill1[sizeof(Mword) - 2];
 
   /* the following stuff is undocumented; we assume that the kernel
      info page is located at offset 0x1000 into the L4 kernel boot
@@ -77,24 +78,16 @@ public:
   Mword      _res1[3];
 
   /* 0x20   0x40 */
-  Mword      sigma0_sp, sigma0_ip;
-  Mword      _res2[2];
-
-  /* 0x30   0x60 */
-  Mword      sigma1_sp, sigma1_ip;
-  Mword      _res3[2];
+  Mword      sigma0[8];
 
   /* 0x40   0x80 */
-  Mword      root_sp, root_ip;
-  Mword      _res4[2];
-
-  /* 0x50   0xA0 */
-  Mword      _res_50;
-  Mword      _mem_info;
-  Mword      _res_58[2];
+  Mword      root[8];
 
   /* 0x60   0xC0 */
-  Mword      _res5[16];
+  Mword      _mem_info;
+  Mword      _mem_assign_base;
+  Mword      _mem_assign_len;
+  Mword      _res5[13];
 
   /* 0xA0   0x140 */
   volatile Cpu_time _clock; // don't access directly, use clock() instead!
@@ -146,10 +139,10 @@ IMPLEMENTATION:
 
 PUBLIC inline
 Mem_desc::Mem_desc(Address start, Address end, Mem_type t, bool v = false,
-                   unsigned st = 0)
+                   unsigned st = 0, unsigned nodes = 0xff)
 : _l((start & ~0x3ffUL) | (t & 0x0f) | ((st << 4) & 0x0f0)
      | (v?0x0200:0x0)),
-  _h(end)
+  _h((end & ~0x3ffUL) | (nodes & 0xffU))
 {}
 
 PUBLIC inline ALWAYS_INLINE
@@ -180,6 +173,10 @@ unsigned Mem_desc::is_virtual() const
 PUBLIC inline ALWAYS_INLINE
 unsigned Mem_desc::eager_map() const
 { return _l & 0x100; }
+
+PUBLIC inline ALWAYS_INLINE
+unsigned Mem_desc::nodes() const
+{ return _h & 0xff; }
 
 PUBLIC inline
 bool Mem_desc::contains(Address addr) const

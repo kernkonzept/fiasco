@@ -1,7 +1,7 @@
 IMPLEMENTATION [arm && mpu]:
 
 IMPLEMENT_OVERRIDE inline void
-Task::map_all_segs(Mem_desc::Mem_type mt)
+Task::map_all_segs(Mem_desc::Mem_type mt, unsigned node)
 {
   for (auto const &md: Kip::k()->mem_descs_a())
     {
@@ -10,6 +10,8 @@ Task::map_all_segs(Mem_desc::Mem_type mt)
       if (md.type() != mt)
         continue;
       if (!md.eager_map())
+        continue;
+      if ((md.nodes() & (1U << node)) == 0)
         continue;
 
       auto attr = Mem_space::Attr(md.ext_type()

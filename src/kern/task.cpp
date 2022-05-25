@@ -36,7 +36,7 @@ public:
   };
 
   virtual int resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode);
-  void map_all_segs(Mem_desc::Mem_type mt);
+  void map_all_segs(Mem_desc::Mem_type mt, unsigned node);
 
 private:
   /// map the global utcb pointer page into this task
@@ -624,7 +624,7 @@ register_factory()
 }
 
 IMPLEMENT_DEFAULT inline void
-Task::map_all_segs(Mem_desc::Mem_type)
+Task::map_all_segs(Mem_desc::Mem_type, unsigned)
 {}
 
 //---------------------------------------------------------------------------

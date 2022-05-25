@@ -88,6 +88,7 @@ IMPLEMENTATION:
 #include "buddy_alloc.h"
 #include "panic.h"
 #include "static_init.h"
+#include "platform_control.h"
 
 static DECLARE_PER_NODE_PRIO(BOOTSTRAP_INIT_PRIO) Per_node_data<Static_object<Kmem_alloc>> al;
 static DECLARE_PER_NODE_PRIO(BOOTSTRAP_INIT_PRIO) Per_node_data<Kmem_alloc::Alloc> _a;
@@ -204,6 +205,7 @@ unsigned long
 Kmem_alloc::create_free_map(Kip const *kip, Mem_region_map_base *map)
 {
   unsigned long available_size = 0;
+  unsigned nodes = 1U << Platform_control::node_id();
 
   for (auto const &md: kip->mem_descs_a())
     {
@@ -224,6 +226,8 @@ Kmem_alloc::create_free_map(Kip const *kip, Mem_region_map_base *map)
       switch (md.type())
         {
         case Mem_desc::Conventional:
+          if ((md.nodes() & nodes) == 0)
+            break;
           s = (s + Config::PAGE_SIZE - 1) & ~(Config::PAGE_SIZE - 1);
           e = ((e + 1) & ~(Config::PAGE_SIZE - 1)) - 1;
           if (e <= s)

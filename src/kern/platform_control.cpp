@@ -11,6 +11,15 @@ public:
   static int system_suspend(Mword extra);
   static void system_off();
   static void system_reboot();
+
+  /**
+   * Get node-id of current CPU.
+   *
+   * *Must* be an inline function that is completely inlineable. It's used
+   * by Platform_control::amp_boot_info_idx() which is called without a
+   * stack!
+   */
+  static inline unsigned node_id();
 };
 
 // ------------------------------------------------------------------------
@@ -50,3 +59,8 @@ Platform_control::system_reboot()
 {
   platform_reset();
 }
+
+IMPLEMENT_DEFAULT inline
+unsigned
+Platform_control::node_id()
+{ return 0; }
