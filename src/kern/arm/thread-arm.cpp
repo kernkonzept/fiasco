@@ -136,9 +136,9 @@ IMPLEMENT inline NEEDS["space.h", "types.h", "config.h"]
 bool Thread::handle_sigma0_page_fault(Address pfa)
 {
   return mem_space()
-    ->v_insert(Mem_space::Phys_addr((pfa & Config::SUPERPAGE_MASK)),
-               Virt_addr(pfa & Config::SUPERPAGE_MASK),
-               Virt_order(Config::SUPERPAGE_SHIFT) /*mem_space()->largest_page_size()*/,
+    ->v_insert(Mem_space::Phys_addr((pfa & Config::PAGE_MASK)),
+               Virt_addr(pfa & Config::PAGE_MASK),
+               Virt_order(Config::PAGE_SHIFT) /*mem_space()->largest_page_size()*/,
                Mem_space::Attr(L4_fpage::Rights::URWX()))
     != Mem_space::Insert_err_nomem;
 }
