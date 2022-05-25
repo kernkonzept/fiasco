@@ -25,6 +25,35 @@ private:
 };
 
 // ------------------------------------------------------------------------
+INTERFACE [arm && mmu]:
+
+#include "config.h"
+#include "paging_bits.h"
+
+EXTENSION class Thread
+{
+  enum : unsigned { Sigma0_pf_page_shift = Config::SUPERPAGE_SHIFT };
+
+  typedef Super_pg Sigma0_pg;
+};
+
+// ------------------------------------------------------------------------
+INTERFACE [arm && !mmu]:
+
+#include "config.h"
+#include "paging_bits.h"
+
+EXTENSION class Thread
+{
+  // Must not map too much on no-MMU systems because sigma0 is usually
+  // adjacent to Fiasco but the MPU regions must *not* intersect! Otherwise
+  // a translation fault is triggered.
+  enum : unsigned { Sigma0_pf_page_shift = Config::PAGE_SHIFT };
+
+  typedef Pg Sigma0_pg;
+};
+
+// ------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
 #include <cassert>
@@ -35,7 +64,6 @@ IMPLEMENTATION [arm]:
 #include "thread_state.h"
 #include "types.h"
 #include "warn.h"
-#include "paging_bits.h"
 
 enum {
   FSR_STATUS_MASK = 0x0d,
@@ -149,9 +177,9 @@ IMPLEMENT inline NEEDS["space.h", "types.h", "config.h", "paging_bits.h"]
 bool Thread::handle_sigma0_page_fault(Address pfa)
 {
   return mem_space()
-    ->v_insert(Mem_space::Phys_addr(Super_pg::trunc(pfa)),
-               Virt_addr(Super_pg::trunc(pfa)),
-               Virt_order(Config::SUPERPAGE_SHIFT) /*mem_space()->largest_page_size()*/,
+    ->v_insert(Mem_space::Phys_addr(Sigma0_pg::trunc(pfa)),
+               Virt_addr(Sigma0_pg::trunc(pfa)),
+               Virt_order(Sigma0_pf_page_shift),
                Mem_space::Attr::space_local(L4_fpage::Rights::URWX()))
     != Mem_space::Insert_err_nomem;
 }
