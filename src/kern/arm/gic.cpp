@@ -156,7 +156,9 @@ public:
   void hit(Upstream_irq const *u)
   {
     Unsigned32 num = pending();
-    if (EXPECT_FALSE(num == 0x3ff))
+
+    // INTIDs 1020 - 1023 are spurious on GIC v2 and v3 and do not need an EOI
+    if (EXPECT_FALSE((num & 0xfffffffc) == 0x3fc))
       return;
 
     handle_irq<IMPL>(num, u);
