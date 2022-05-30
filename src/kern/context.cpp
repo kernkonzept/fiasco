@@ -1296,13 +1296,6 @@ Context::handle_drq()
 
   //LOG_MSG_3VAL(this, "xdrq", state(), 0, cpu_lock.test());
 
-  /*
-   * When the context is marked as dead (Thread_dead) then we must not execute
-   * any usual context code, however DRQ handlers may run.
-   */
-  if (state() & Thread_dead)
-    state_del_dirty(Thread_ready_mask);
-
   return resched || !(state() & Thread_ready_mask);
 }
 
