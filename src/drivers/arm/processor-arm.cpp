@@ -24,7 +24,7 @@ public:
   CXX_BITFIELD_MEMBER(14, 16, mcr_opc1, _raw);
   CXX_BITFIELD_MEMBER(10, 13, mcr_crn, _raw);
   CXX_BITFIELD_MEMBER(10, 13, mcrr_rt2, _raw);
-  CXX_BITFIELD_MEMBER( 5,  8, mcr_rt, _raw);
+  CXX_BITFIELD_MEMBER( 5,  9, mcr_rt, _raw);
   CXX_BITFIELD_MEMBER( 1,  4, mcr_crm, _raw);
   CXX_BITFIELD_MEMBER( 0,  0, mcr_read, _raw);
 
