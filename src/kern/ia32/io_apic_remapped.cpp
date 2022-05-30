@@ -348,7 +348,7 @@ Io_apic_remapped::init_apics()
   if (!irt)
     panic("IOMMU: could not allocate interrupt remapping table\n");
 
-  Address irt_pa = Kmem::virt_to_phys(const_cast<Intel::Io_mmu::Irte*>(irt));
+  Address irt_pa = Kmem::virt_to_phys(irt);
   for (auto &i: Intel::Io_mmu::iommus)
     i.set_irq_remapping_table(irt, irt_pa, IRT_size);
 
