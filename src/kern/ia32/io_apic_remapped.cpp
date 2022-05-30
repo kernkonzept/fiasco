@@ -173,20 +173,8 @@ Irq_chip_rmsi::ack(Mword) override
 PUBLIC void
 Irq_chip_rmsi::mask_and_ack(Mword pin) override
 {
-  unsigned vect = vector(pin);
-  if (!vect)
-    return;
-
-  Intel::Io_mmu::Irte volatile &irte = _irt[vect];
-  Intel::Io_mmu::Irte e = irte;
-  if (!e.present())
-    return;
-
-  e.present() = 0;
-  irte = e;
-  asm volatile ("wbinvd"); // FIXME: use a single chanline writeback here
-  inv_iec(vect);
-  ::Apic::irq_ack();
+  Irq_chip_rmsi::mask(pin);
+  Irq_chip_rmsi::ack(pin);
 }
 
 PUBLIC void
