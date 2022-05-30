@@ -129,36 +129,44 @@ Dmar::find_mmu(Unsigned64 src_id, bool try_default = false)
   return 0;
 }
 
+PRIVATE
+Mword
+Dmar::parse_src_id(Unsigned64 src_id, Unsigned8 *bus, unsigned *dfs,
+                   unsigned *dfe, Intel::Io_mmu **mmu)
+{
+  Unsigned8 type = (src_id >> 18) & 3;
+  *bus = src_id >> 8;
+  switch (type)
+    {
+    case 1:
+      *dfs = src_id & 0xff;
+      *dfe = *dfs + 1;
+      src_id = ((Unsigned64)bus << 8) | *dfs;
+      break;
+    case 2:
+      *dfs = 0;
+      *dfe = 0x100;
+      src_id = (Unsigned64)*bus << 8;
+      break;
+    default:
+      return -L4_err::EInval;
+    }
+
+  *mmu = find_mmu(src_id & 0xffff);
+  if (!*mmu)
+    *mmu = find_mmu(src_id & 0xffff, true);
+  return *mmu ? 0 : -L4_err::EInval;
+}
 
 PRIVATE
 L4_msg_tag
 Dmar::op_bind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space)
 {
-  Unsigned8 type = (src_id >> 18) & 3;
-  Unsigned8 bus = src_id >> 8;
-  unsigned dfs;
-  unsigned dfe;
-  switch (type)
-    {
-    case 1:
-      dfs = src_id & 0xff;
-      dfe = dfs + 1;
-      src_id = ((Unsigned64)bus << 8) | dfs;
-      break;
-    case 2:
-      dfs = 0;
-      dfe = 0x100;
-      src_id = (Unsigned64)bus << 8;
-      break;
-    default:
-      return Kobject_iface::commit_result(-L4_err::EInval);
-    }
-
-  auto mmu = find_mmu(src_id & 0xffff);
-  if (!mmu)
-    mmu = find_mmu(src_id & 0xffff, true);
-  if (!mmu)
-    return Kobject_iface::commit_result(-L4_err::EInval);
+  Unsigned8 bus;
+  unsigned dfs, dfe;
+  Intel::Io_mmu *mmu;
+  if (Mword err = parse_src_id(src_id, &bus, &dfs, &dfe, &mmu))
+    return Kobject_iface::commit_result(err);
 
   // no free domain id left
   if (EXPECT_FALSE(space.obj->get_did() == ~0UL))
@@ -194,31 +202,11 @@ PRIVATE
 L4_msg_tag
 Dmar::op_unbind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space)
 {
-  Unsigned8 type = (src_id >> 18) & 3;
-  Unsigned8 bus = src_id >> 8;
-  unsigned dfs;
-  unsigned dfe;
-  switch (type)
-    {
-    case 1:
-      dfs = src_id & 0xff;
-      dfe = dfs + 1;
-      src_id = ((Unsigned64)bus << 8) | dfs;
-      break;
-    case 2:
-      dfs = 0;
-      dfe = 0x100;
-      src_id = (Unsigned64)bus << 8;
-      break;
-    default:
-      return Kobject_iface::commit_result(-L4_err::EInval);
-    }
-
-  auto mmu = find_mmu(src_id & 0xffff);
-  if (!mmu)
-    mmu = find_mmu(src_id & 0xffff, true);
-  if (!mmu)
-    return Kobject_iface::commit_result(-L4_err::EInval);
+  Unsigned8 bus;
+  unsigned dfs, dfe;
+  Intel::Io_mmu *mmu;
+  if (Mword err = parse_src_id(src_id, &bus, &dfs, &dfe, &mmu))
+    return Kobject_iface::commit_result(err);
 
   bool need_wait = false;
   for (unsigned df = dfs; df < dfe; ++df)
