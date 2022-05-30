@@ -42,8 +42,8 @@ class Irq_chip_rmsi : public Irq_chip_icu, private Irq_chip_ia32
 public:
   // this is somehow arbitrary
   enum { Max_msis = Int_vector_allocator::End - Int_vector_allocator::Base - 0x8 };
-  explicit Irq_chip_rmsi(Intel::Io_mmu::Irte volatile *irt)
-  : Irq_chip_ia32(Max_msis), _irt(irt)
+  explicit Irq_chip_rmsi(Intel::Io_mmu::Irte volatile *irt, bool coherent)
+  : Irq_chip_ia32(Max_msis), _irt(irt), _coherent(coherent)
   {}
 
   unsigned nr_irqs() const override { return Irq_chip_ia32::nr_irqs(); }
@@ -51,6 +51,8 @@ public:
   Irq_base *irq(Mword pin) const override { return Irq_chip_ia32::irq(pin); }
 
   Intel::Io_mmu::Irte volatile *_irt;
+  /// Whether IOMMUs access to the IRT is cache coherent.
+  bool _coherent;
 };
 
 class Irq_mgr_rmsi : public Io_apic_mgr
@@ -58,6 +60,15 @@ class Irq_mgr_rmsi : public Io_apic_mgr
 public:
   mutable Irq_chip_rmsi _chip;
 };
+
+PRIVATE
+void
+Irq_chip_rmsi::clean_dcache(Intel::Io_mmu::Irte volatile const *irte) const
+{
+  if (!_coherent)
+    Mem_unit::clean_dcache(const_cast<Intel::Io_mmu::Irte const *>(irte),
+                           const_cast<Intel::Io_mmu::Irte const *>(irte) + 1);
+}
 
 PRIVATE inline NOEXPORT
 void
@@ -81,7 +92,7 @@ Irq_chip_rmsi::unbind(Irq_base *irq) override
   unsigned vect = vector(irq->pin());
 
   _irt[vect].clear();
-  asm volatile ("wbinvd");
+  clean_dcache(&_irt[vect]);
   inv_iec(vect);
 
   vfree(irq, &entry_int_apic_ignore);
@@ -107,7 +118,7 @@ Irq_chip_rmsi::msg(Mword pin, Unsigned64 src, Irq_mgr::Msi_info *inf)
   e.src_info() = src;
 
   _irt[vect] = e;
-  asm volatile ("wbinvd");
+  clean_dcache(&_irt[vect]);
 
   if (need_flush)
     inv_iec(vect);
@@ -142,7 +153,7 @@ Irq_chip_rmsi::set_cpu(Mword pin, Cpu_number cpu) override
 
   e.dst_xapic() = target;
   irte = e;
-  asm volatile ("wbinvd");
+  clean_dcache(&irte);
 
   if (e.present())
     inv_iec(vect);
@@ -162,7 +173,7 @@ Irq_chip_rmsi::mask(Mword pin) override
 
   e.present() = 0;
   irte = e;
-  asm volatile ("wbinvd"); // FIXME: use a single chanline writeback here
+  clean_dcache(&irte);
   inv_iec(vect);
 }
 
@@ -195,13 +206,13 @@ Irq_chip_rmsi::unmask(Mword pin) override
 
   e.present() = 1;
   irte = e;
-  asm volatile ("wbinvd"); // FIXME: use a single chanline writeback here
+  clean_dcache(&irte);
 }
 
 
 PUBLIC inline explicit
-Irq_mgr_rmsi::Irq_mgr_rmsi(Intel::Io_mmu::Irte volatile *irt)
-: _chip(irt)
+Irq_mgr_rmsi::Irq_mgr_rmsi(Intel::Io_mmu::Irte volatile *irt, bool coherent)
+: _chip(irt, coherent)
 {}
 
 PUBLIC Irq_mgr::Irq
@@ -348,9 +359,13 @@ Io_apic_remapped::init_apics()
   if (!irt)
     panic("IOMMU: could not allocate interrupt remapping table\n");
 
+  bool coherent = true;
   Address irt_pa = Kmem::virt_to_phys(irt);
   for (auto &i: Intel::Io_mmu::iommus)
-    i.set_irq_remapping_table(irt, irt_pa, IRT_size);
+    {
+      i.set_irq_remapping_table(irt, irt_pa, IRT_size);
+      coherent &= i.coherent();
+    }
 
   int n_apics;
   for (n_apics = 0;
@@ -415,7 +430,7 @@ Io_apic_remapped::init_apics()
     printf("IO-APIC: dual 8259: %s\n", madt->apic_flags & 1 ? "yes" : "no");
 
   Irq_mgr_rmsi *m;
-  Irq_mgr::mgr = m = new Boot_object<Irq_mgr_rmsi>(irt);
+  Irq_mgr::mgr = m = new Boot_object<Irq_mgr_rmsi>(irt, coherent);
 
   return true;
 }
