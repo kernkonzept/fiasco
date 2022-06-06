@@ -227,13 +227,35 @@ public:
     }
 
     /**
-     * *flag will be set to 0 when completed
+     * Wait for completion of preceeding invalidation descriptors.
+     *
+     * \param flag_phys_addr  Physical address of a 32-bit wait flag,
+     *                        will be set to 0 when completed.
      */
-    static Inv_desc wait(Unsigned32 volatile *flag, bool fence = false)
+    static Inv_desc wait_phys(Address flag_phys_addr, bool fence = false)
+    { return Inv_desc(0x25 | wait_fn_bfm_t::val(fence), flag_phys_addr); }
+
+    /**
+     * Wait for completion of preceeding invalidation descriptors.
+     *
+     * \param flag  Wait flag located in pmem, will be set to 0 when completed.
+     */
+    static Inv_desc wait_pmem(Unsigned32 volatile *flag, bool fence = false)
     {
-      Address p = Mem_layout::pmem_to_phys((Address)flag);
-      *flag = 1;
-      return Inv_desc(0x25 | wait_fn_bfm_t::val(fence), p);
+      Address flag_addr = reinterpret_cast<Address>(flag);
+      assert (Mem_layout::in_pmem(flag_addr));
+      return wait_phys(Mem_layout::pmem_to_phys(flag_addr), fence);
+    }
+
+    /**
+     * Wait for completion of preceeding invalidation descriptors.
+     *
+     * \param flag  Wait flag, will be set to 0 when completed.
+     */
+    static Inv_desc wait_virt(Unsigned32 volatile *flag, bool fence = false)
+    {
+      Address flag_addr = reinterpret_cast<Address>(flag);
+      return wait_phys(Kmem::kdir->virt_to_phys(flag_addr), fence);
     }
 
     /// global IOTLB invalidation
@@ -626,7 +648,7 @@ public:
   void flush_iotlb_wait()
   {
     Unsigned32 volatile flag = 1;
-    invalidate(Inv_desc::wait(&flag));
+    invalidate(Inv_desc::wait_pmem(&flag));
 
     // XXX: AW: spin-loop, I suspect we should add a
     // preemption point in the loop
