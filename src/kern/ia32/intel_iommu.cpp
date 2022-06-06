@@ -6,6 +6,7 @@ INTERFACE:
 #include "cxx/type_traits"
 #include "cxx/protected_ptr"
 #include "cxx/static_vector"
+#include "mem.h"
 #include "pm.h"
 #include "tlbs.h"
 #include "mem_unit.h"
@@ -147,6 +148,7 @@ public:
     Inv_completion_event_data = 0xa4,
     Inv_completion_event_addr = 0xa8,
     Inv_completion_event_upper_addr = 0xac,
+    Inv_q_error               = 0xb0,
   };
 
   enum class Reg_64
@@ -168,6 +170,17 @@ public:
 
     volatile Unsigned32 &operator [] (Reg_32 index)
     { return *(Unsigned32 volatile *)(va + (unsigned)index); }
+  };
+
+  enum
+  {
+    Fault_status_iqe = 1 << 4,
+    Fault_status_ice = 1 << 5,
+    Fault_status_ite = 1 << 6,
+
+    Fault_status_mask = Fault_status_iqe | Fault_status_ice | Fault_status_ite,
+
+    Inv_q_error_iqei = 0xf,
   };
 
   /// Invalidation descriptor
@@ -257,6 +270,13 @@ public:
       return Inv_desc(0x31 | cc_did_bfm_t::val(did)
                       | cc_src_id_bfm_t::val((bus << 8) | dev)
                       | cc_fm_bfm_t::val(fm));
+    }
+
+    /// Invalidation descriptor that does nothing
+    static Inv_desc nop()
+    {
+      // Wait descriptor without notification.
+      return Inv_desc(0x5);
     }
   };
 
@@ -362,25 +382,96 @@ public:
   void tlb_flush() override;
 
   /**
-   * \return true for success, false if the queue is full
+   * Detect and handle error conditions of the invalidation queue.
+   *
+   * \pre `_inv_q_lock` must not be held.
    */
-  bool invalidate(Inv_desc const &id)
+  void queue_check_error()
+  {
+    bool error_pending = regs[Reg_32::Fault_status] & Fault_status_mask;
+    if (EXPECT_TRUE(!error_pending))
+      return;
+
+    // Handle errors with the queue lock held, then release it before reporting
+    // the errors.
+    Unsigned32 queue_errors;
+    {
+      auto g = lock_guard(_inv_q_lock);
+      queue_errors = regs[Reg_32::Fault_status];
+
+      // Invalidation Queue Error
+      if (queue_errors & Fault_status_iqe)
+        {
+          // Head register points to the descriptor associated with the
+          // invalidation queue error.
+          Inv_desc *desc = inv_desc(regs[Reg_64::Inv_q_head] / sizeof(Inv_desc));
+
+          // Replace the failing command with a nop descriptor.
+          write_now(desc, Inv_desc::nop());
+        }
+
+      // NOTE: Invalidation Completion and Invalidation Time-out errors should
+      //       never occur, because we do not use device TLBs.
+
+      // Clear errors.
+      regs[Reg_32::Fault_status] = queue_errors & Fault_status_mask;
+    }
+
+    WARN("IOMMU: Invalidation queue error(s): 0x%x\n", queue_errors);
+  }
+
+  /**
+   * Return the number of free slots in the invalidation queue.
+   *
+   * \pre `_inv_q_lock` must be held.
+   */
+  unsigned queue_num_free_slots()
+  {
+      unsigned hw_head = regs[Reg_64::Inv_q_head] / sizeof(Inv_desc);
+      return (hw_head - inv_q_tail - 1u) & inv_q_size;
+  }
+
+  /**
+   * Submit invalidation descriptors to the invalidation queue.
+   *
+   * \param  descs  Invalidation descriptors to submit.
+   *
+   * \pre `sizeof...(descs)` < `inv_q_size`
+   */
+  void invalidate(Inv_desc desc)
   {
     auto g = lock_guard(_inv_q_lock);
-    unsigned hw_head = regs[Reg_64::Inv_q_head];
-    unsigned new_tail = (inv_q_tail + 1) & inv_q_size;
-    if (new_tail * sizeof(Inv_desc) == hw_head)
-      return false; // overrun
 
-    Inv_desc *d = inv_desc(inv_q_tail);
-    write_now(d, id);
-    inv_q_tail = new_tail;
+    // Wait until the queue has at least one free slot.
+    for(;;)
+      {
+        // Check if queue has enough free slots.
+        if (EXPECT_TRUE(queue_num_free_slots() >= 1))
+          break;
 
-    // write the new hw tail pointer under spin-lock too might be we
-    // could move this outside of the lock with some nice tricks.
-    regs[Reg_64::Inv_q_tail] = new_tail * sizeof(Inv_desc);
+        // Release lock.
+        g.reset();
 
-    return true;
+        // Handle queue errors to ensure that the queue makes progress.
+        queue_check_error();
+
+        // Queue is full, wait for free entries.
+        // TODO: We might want to add a preemption point here!
+        Proc::pause();
+
+        // Reacquire lock.
+        g.lock(&_inv_q_lock);
+      }
+
+    // Put descriptor into queue.
+    *inv_desc(inv_q_tail) = desc;
+    inv_q_tail = (inv_q_tail + 1) & inv_q_size;
+
+    // Force compiler to write descriptors before updating tail pointer.
+    Mem::barrier();
+
+    // Update the hardware tail pointer.
+    regs[Reg_64::Inv_q_tail] = inv_q_tail * sizeof(Inv_desc);
   }
 
   void set_irq_mapping(Irte const &irte, unsigned index, bool flush)
@@ -517,18 +608,18 @@ public:
   }
 
   void flush_cc()
-  { check (invalidate(Inv_desc::cc_full())); }
+  { invalidate(Inv_desc::cc_full()); }
 
   void flush_cc(Unsigned8 bus, Unsigned8 dev, unsigned did)
-  { check (invalidate(Inv_desc::cc_dev(did, bus, dev))); }
+  { invalidate(Inv_desc::cc_dev(did, bus, dev)); }
 
   void flush_iotlb(unsigned did)
-  { check (invalidate(Inv_desc::iotlb_did(did))); }
+  { invalidate(Inv_desc::iotlb_did(did)); }
 
   void flush_iotlb_wait()
   {
     Unsigned32 volatile flag = 1;
-    check (invalidate(Inv_desc::wait(&flag)));
+    invalidate(Inv_desc::wait(&flag));
 
     // XXX: AW: spin-loop, I suspect we should add a
     // preemption point in the loop
