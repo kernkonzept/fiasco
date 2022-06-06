@@ -93,7 +93,7 @@ Thread::Thread(Ram_quota *q)
 
 PUBLIC inline NEEDS[Thread::riscv_fast_exit]
 void FIASCO_NORETURN
-Thread::fast_return_to_user(Mword ip, Mword sp, void *arg)
+Thread::vcpu_return_to_kernel(Mword ip, Mword sp, void *arg)
 {
   Entry_frame *r = regs();
   assert(r->user_mode());
@@ -262,8 +262,8 @@ extern "C" void leave_by_vcpu_upcall(Trap_state *ts)
   vcpu->_regs.s._pc = ts->_pc;
   vcpu->_regs.s.status = ts->status;
 
-  c->fast_return_to_user(vcpu->_entry_ip, vcpu->_entry_sp,
-                         c->vcpu_state().usr().get());
+  c->vcpu_return_to_kernel(vcpu->_entry_ip, vcpu->_entry_sp,
+                           c->vcpu_state().usr().get());
 }
 
 IMPLEMENT

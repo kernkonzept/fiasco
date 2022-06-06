@@ -20,7 +20,7 @@ enum { Vcpu_arch_version = 0x00 };
  *
  * Later, when the vCPU switches back from vCPU user mode to vCPU host mode, it
  * restores the saved host mode registers before invoking the vCPU entry
- * handler (see Thread::fast_return_to_user()).
+ * handler (see Thread::vcpu_return_to_kernel()).
  *
  * When trapping from vCPU host mode into vCPU host mode the vCPU does not touch
  * preserved registers, which is controlled by the saved field in
