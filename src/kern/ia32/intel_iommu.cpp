@@ -758,8 +758,5 @@ Intel::Io_mmu::get_context_entry(Unsigned8 bus, Unsigned8 df, bool may_alloc)
 
   clean_dcache(rte.unsafe_ptr());
 
-  if (caps.cm())
-    flush_cc(bus, df, 0);
-
   return ((Cte *)ctx) + df;
 }
