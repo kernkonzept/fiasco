@@ -763,7 +763,8 @@ Thread::arm_esr_entry(Return_frame *rf)
     case 0x03: // MCR or MRC CP15 access trap on AArch32
       if (esr.mcr_coproc_register() == esr.mrc_coproc_register(0, 1, 0, 1))
         {
-          ts->r[esr.mcr_rt()] = 1 << 6;
+          if (esr.mcr_rt() < sizeof(ts->r) / sizeof(ts->r[0]))
+            ts->r[esr.mcr_rt()] = 1 << 6;
           ts->pc += 2 << esr.il();
           return;
         }
