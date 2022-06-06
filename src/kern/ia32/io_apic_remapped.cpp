@@ -74,9 +74,17 @@ PRIVATE inline NOEXPORT
 void
 Irq_chip_rmsi::inv_iec(unsigned vect)
 {
+  // All IOMMUs use the same interrupt remapping table.
   for (auto &i: Intel::Io_mmu::iommus)
-    if (i.irq_remapping_table() == _irt)
-      i.invalidate_iec(vect);
+    i.invalidate(Intel::Io_mmu::Inv_desc::iec(vect));
+}
+
+PRIVATE inline NOEXPORT
+void
+Irq_chip_rmsi::inv_iec_and_wait(unsigned vect)
+{
+  // All IOMMUs use the same interrupt remapping table.
+  Intel::Io_mmu::queue_and_wait_on_all_iommus(Intel::Io_mmu::Inv_desc::iec(vect));
 }
 
 PUBLIC
@@ -93,7 +101,7 @@ Irq_chip_rmsi::unbind(Irq_base *irq) override
 
   _irt[vect].clear();
   clean_dcache(&_irt[vect]);
-  inv_iec(vect);
+  inv_iec_and_wait(vect);
 
   vfree(irq, &entry_int_apic_ignore);
   Irq_chip_icu::unbind(irq);
@@ -116,12 +124,16 @@ Irq_chip_rmsi::msg(Mword pin, Unsigned64 src, Irq_mgr::Msi_info *inf)
   e.fpd() = 1;
   e.vector() = vect;
   e.src_info() = src;
+  // To avoid having to wait for the invalidation of the interrupt remapping
+  // table entry to complete whenever the target CPU of an IRQ is changed (in
+  // set_cpu), directly assign a valid destination CPU ID here.
+  e.dst_xapic() = ::Apic::apic.cpu(Cpu_number::boot_cpu())->cpu_id();
 
   _irt[vect] = e;
   clean_dcache(&_irt[vect]);
 
   if (need_flush)
-    inv_iec(vect);
+    inv_iec_and_wait(vect);
 
   inf->data = 0;
   inf->addr = 0xfee00010 | (vect << 5);
@@ -156,6 +168,14 @@ Irq_chip_rmsi::set_cpu(Mword pin, Cpu_number cpu) override
   clean_dcache(&irte);
 
   if (e.present())
+    // There is no need to wait for the IRTE invalidation to complete. If an IRQ
+    // occurs while the old CPU is still targeted by an IRT cache entry that has
+    // not yet been invalidated, the old CPU will forward the IRQ to the new
+    // CPU. The case that a cache entry points to a CPU that went offline,
+    // resulting in IRQs being lost, is not relevant because we always assign a
+    // valid target CPU to the entry in msg() and Fiasco does not yet implement
+    // a mechanism to move IRQs to another online CPU before taking a CPU
+    // offline.
     inv_iec(vect);
 }
 
@@ -174,6 +194,11 @@ Irq_chip_rmsi::mask(Mword pin) override
   e.present() = 0;
   irte = e;
   clean_dcache(&irte);
+  // There is no need to wait for the IRTE invalidation to complete, because
+  // masking MSIs (edge triggered) is anyway only used by the kernel to protect
+  // itself against devices triggering excessive numbers of interrupts. So it
+  // doesn't really matter if an MSI still hits after returning from mask, due
+  // to a not yet completed IRTE invalidation.
   inv_iec(vect);
 }
 
@@ -272,7 +297,11 @@ Io_apic_remapped::alloc(Irq_base *irq, Mword pin, bool init = true) override
   i.tm() = e.trigger();
   i.svt() = 1;
   i.sid() = _src_id;
-  _iommu->set_irq_mapping(i, v, false);
+  // To avoid having to wait for the invalidation of the interrupt remapping
+  // table entry to complete whenever the target CPU of an IRQ is changed (in
+  // set_cpu), directly assign a valid destination CPU ID here.
+  i.dst_xapic() = ::Apic::apic.cpu(Cpu_number::boot_cpu())->cpu_id();
+  _iommu->set_irq_mapping(i, v, Intel::Io_mmu::Flush_op::No_flush);
 
   e.format() = 1;
   e.vector() = v;
@@ -286,7 +315,8 @@ void
 Io_apic_remapped::unbind(Irq_base *irq) override
 {
   unsigned vect = vector(irq->pin());
-  _iommu->set_irq_mapping(Intel::Io_mmu::Irte(), vect, true);
+  _iommu->set_irq_mapping(Intel::Io_mmu::Irte(), vect,
+                          Intel::Io_mmu::Flush_op::Flush_and_wait);
   Io_apic::unbind(irq);
 }
 
@@ -307,7 +337,7 @@ Io_apic_remapped::set_mode(Mword pin, Mode mode) override
   if (tm != i.tm())
     {
       i.tm() = tm;
-      _iommu->set_irq_mapping(i, vect, true);
+      _iommu->set_irq_mapping(i, vect, Intel::Io_mmu::Flush_op::Flush_and_wait);
     }
 
   return 0;
@@ -328,7 +358,14 @@ Io_apic_remapped::set_cpu(Mword pin, Cpu_number cpu) override
     return;
 
   e.dst_xapic() = target;
-  _iommu->set_irq_mapping(e, vect, true);
+  // There is no need to wait for the IRTE invalidation to complete. If an IRQ
+  // occurs while the old CPU is still targeted by an IRT cache entry that has
+  // not yet been invalidated, the old CPU will forward the IRQ to the new CPU.
+  // The case that a cache entry points to a CPU that went offline, resulting in
+  // IRQs being lost, is not relevant because we always assign a valid target
+  // CPU to the entry in alloc() and Fiasco does not yet implement a mechanism
+  // to move IRQs to another online CPU before taking a CPU offline.
+  _iommu->set_irq_mapping(e, vect, Intel::Io_mmu::Flush_op::Flush);
 }
 
 

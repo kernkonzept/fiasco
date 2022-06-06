@@ -392,13 +392,14 @@ public:
   bool probe(ACPI::Dmar_drhd const *drhd);
   void setup(Cpu_number cpu);
 
+  FIASCO_INIT
   void set_irq_remapping_table(Irte *irt, Unsigned64 irt_pa, unsigned order)
   {
     _irq_remapping_table = irt;
     _irq_remap_table_size = order;
     regs[Reg_64::Irt_addr] = irt_pa | (order - 1);
     modify_cmd(Cmd_sirtp);
-    invalidate(Inv_desc::global_iec());
+    queue_and_wait<false>(Inv_desc::global_iec());
     modify_cmd(Cmd_ire, Cmd_cfi);
   }
 
@@ -593,16 +594,26 @@ public:
   static void queue_and_wait_on_all_iommus(Inv_descs... descs)
   { return queue_and_wait_on_iommus(nullptr, descs...); }
 
-  void set_irq_mapping(Irte const &irte, unsigned index, bool flush)
+  enum class Flush_op
+  {
+    No_flush,
+    Flush,
+    Flush_and_wait,
+  };
+
+  void set_irq_mapping(Irte const &irte, unsigned index, Flush_op flush)
   {
     _irq_remapping_table[index] = irte;
     clean_dcache(&_irq_remapping_table[index]);
-    if (flush)
-      invalidate(Inv_desc::iec(index));
-  }
 
-  void invalidate_iec(unsigned index)
-  { invalidate(Inv_desc::iec(index)); }
+    Inv_desc inv_desc = Inv_desc::iec(index);
+    switch (flush)
+      {
+      case Flush_op::No_flush: break;
+      case Flush_op::Flush: invalidate(inv_desc); break;
+      case Flush_op::Flush_and_wait: queue_and_wait(inv_desc); break;
+      };
+  }
 
   Irte get_irq_mapping(unsigned index)
   {
@@ -916,7 +927,7 @@ Intel::Io_mmu::pm_on_resume(Cpu_number cpu)
       Address irt_pa = Kmem::virt_to_phys(const_cast<Irte*>(_irq_remapping_table));
       regs[Reg_64::Irt_addr] = irt_pa | (_irq_remap_table_size - 1);
       modify_cmd(Cmd_sirtp);
-      invalidate(Inv_desc::global_iec());
+      queue_and_wait(Inv_desc::global_iec());
       modify_cmd(Cmd_ire, Cmd_cfi);
     }
 
