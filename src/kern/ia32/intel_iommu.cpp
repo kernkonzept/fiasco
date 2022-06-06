@@ -288,11 +288,7 @@ public:
     /// Device specific context-cache invalidation
     static Inv_desc cc_dev(unsigned did, unsigned bus, unsigned dev,
                            unsigned fm = 0)
-    {
-      return Inv_desc(0x31 | cc_did_bfm_t::val(did)
-                      | cc_src_id_bfm_t::val((bus << 8) | dev)
-                      | cc_fm_bfm_t::val(fm));
-    }
+    { return cc_src(did, (bus << 8) | dev, fm); }
 
     /// Invalidation descriptor that does nothing
     static Inv_desc nop()
