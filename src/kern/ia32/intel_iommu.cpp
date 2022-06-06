@@ -366,9 +366,8 @@ public:
    */
   bool invalidate(Inv_desc const &id)
   {
-    unsigned hw_head = regs[Reg_64::Inv_q_head];
-
     auto g = lock_guard(_inv_q_lock);
+    unsigned hw_head = regs[Reg_64::Inv_q_head];
     unsigned new_tail = (inv_q_tail + 1) & inv_q_size;
     if (new_tail * sizeof(Inv_desc) == hw_head)
       return false; // overrun
