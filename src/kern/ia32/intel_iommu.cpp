@@ -389,7 +389,8 @@ public:
     return v;
   }
 
-  void setup(Cpu_number cpu, ACPI::Dmar_drhd const *drhd);
+  bool probe(ACPI::Dmar_drhd const *drhd);
+  void setup(Cpu_number cpu);
 
   void set_irq_remapping_table(Irte *irt, Unsigned64 irt_pa, unsigned order)
   {
@@ -763,8 +764,8 @@ unsigned Intel::Io_mmu::hw_addr_width;
 enum { Print_infos = 0 };
 
 IMPLEMENT
-void
-Intel::Io_mmu::setup(Cpu_number cpu, ACPI::Dmar_drhd const *drhd)
+bool
+Intel::Io_mmu::probe(ACPI::Dmar_drhd const *drhd)
 {
   base_addr = drhd->register_base;
   devs      = drhd->devs();
@@ -792,15 +793,22 @@ Intel::Io_mmu::setup(Cpu_number cpu, ACPI::Dmar_drhd const *drhd)
   if (caps.rwbf())
     {
       WARN("IOMMU: cannot handle IOMMUs that need write-buffer flushes\n");
-      return;
+      return false;
     }
 
   if (!(ecaps & (1 << 1)))
     {
       WARN("IOMMU: queued invalidation not supported, will not use IOMMU\n");
-      return;
+      return false;
     }
 
+  return true;
+}
+
+IMPLEMENT
+void
+Intel::Io_mmu::setup(Cpu_number cpu)
+{
   inv_q_size = 256 - 1;
   inv_q = Kmem_alloc::allocator()->alloc_array<Inv_desc>(inv_q_size + 1);
   Address inv_q_pa = Kmem::virt_to_phys(inv_q);
@@ -846,10 +854,20 @@ Intel::Io_mmu::init(Cpu_number cpu)
   for (ACPI::Dmar_head const &de: *d)
     if (ACPI::Dmar_drhd const *i = de.cast<ACPI::Dmar_drhd>())
       {
-        iommus[units++].setup(cpu, i);
+        if (!iommus[units++].probe(i))
+          {
+            // Probing the IOMMU failed, not using IOMMUs.
+            dmar_flags.raw = 0;
+            iommus = Io_mmu_vect();
+            return false;
+          }
+
         if (i->segment != 0)
           WARN("IOMMU: no proper support for PCI Segment Groups\n");
       }
+
+  for (auto &iommu: Intel::Io_mmu::iommus)
+    iommu.setup(cpu);
 
   return true;
 }
