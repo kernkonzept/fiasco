@@ -434,30 +434,27 @@ public:
    */
   Cte::Ptr get_context_entry(Unsigned8 bus, Unsigned8 df, bool may_alloc);
 
-  void _set_context_entry(Cte::Ptr entry, Unsigned8 bus,
-                          Unsigned8 df, Cte old, Cte new_cte)
+  void _flush_context_entry(Cte::Ptr entry, Unsigned8 bus,
+                           Unsigned8 df, Cte old, Cte new_cte)
   {
-    /*
-     * Clear present bit, then flush, then modify remaining entry.
-     * see section 11.4: Modifying Root and Context Entries.
-     */
-
-    // if the entry either the new or the old entry is present
-    // we need a cache flush
-    // if neither entry is present we can skip all flushes (sw only)
-
-    if (new_cte.present() || old.present())
-      clean_dcache(entry.unsafe_ptr());
-    else
+    // If neither entry is present we can skip all flushes.
+    if (!new_cte.present() && !old.present())
       return;
 
-    // flush the caches:
-    //   1. if the old entry was present
-    //   2. if the old entry was not present but the
-    //      new entry is and caps.cm() is true
-    //      (flush on upgrade is needed)
+    // If either the new or the old entry is present we need a cache flush.
+    clean_dcache(entry.unsafe_ptr());
+
+    // Flush the IOMMU caches:
+    //   1. if the old entry was present.
+    //   2. if the old entry was not present but the new entry is and the IOMMU
+    //      might cache invalid entries (caps.cm() is true).
     if (old.present() || (caps.cm() && new_cte.present()))
       {
+        // If the IOMMU caches a non-present context entry, the cache entry is
+        // tagged with the reserved domain id 0. When invalidating context-table
+        // entries we set them to all zeroes, thus also for non-present entries
+        // passing old.did() as the domain id for the context-cache invalidation
+        // descriptor is correct.
         flush_cc(bus, df, old.did());
 
         if (old.did())
@@ -467,6 +464,14 @@ public:
       }
   }
 
+  /**
+   * Set the context entry for the given device.
+   *
+   * \param entry    Pointer to the context entry.
+   * \param bus      PCI bus number.
+   * \param df       Device + Function ID (device << 3 | function).
+   * \param new_cte  New context entry to set.
+   */
   void set_context_entry(Cte::Ptr entry, Unsigned8 bus,
                          Unsigned8 df, Cte new_cte)
   {
@@ -481,9 +486,21 @@ public:
         write_consistent(entry.unsafe_ptr(), new_cte);
       }
 
-    _set_context_entry(entry, bus, df, old, new_cte);
+    _flush_context_entry(entry, bus, df, old, new_cte);
   }
 
+  /**
+   * Compare and swap the context entry for the given device.
+   *
+   * \param entry    Pointer to the context entry.
+   * \param bus      PCI bus number.
+   * \param df       Device + Function ID (device << 3 | function).
+   * \param old      Old context entry which is compared before setting the new
+   *                 context entry.
+   * \param new_cte  New context entry to set.
+   *
+   * \return Whether the context entry was set to the new value.
+   */
   bool cas_context_entry(Cte::Ptr entry, Unsigned8 bus,
                          Unsigned8 df, Cte old, Cte new_cte)
   {
@@ -495,7 +512,7 @@ public:
         write_consistent(entry.unsafe_ptr(), new_cte);
       }
 
-    _set_context_entry(entry, bus, df, old, new_cte);
+    _flush_context_entry(entry, bus, df, old, new_cte);
     return true;
   }
 
