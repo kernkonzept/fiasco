@@ -15,7 +15,7 @@ public:
     F_exceptions  = 0x4,
     F_user_mode   = 0x20,
     F_fpu_enabled = 0x80,
-    F_traps       = F_irqs | F_page_faults, // | F_exceptions,
+    F_traps       = F_irqs | F_page_faults | F_exceptions,
   };
 
   enum Sticky_flags

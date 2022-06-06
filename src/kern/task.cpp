@@ -84,7 +84,7 @@ Task::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode)
   if (user_mode)
     {
       ctxt->state_add_dirty(Thread_vcpu_user);
-      vcpu->state |= Vcpu_state::F_traps | Vcpu_state::F_exceptions;
+      vcpu->state |= Vcpu_state::F_traps;
 
       ctxt->vcpu_pv_switch_to_user(vcpu, true);
     }
