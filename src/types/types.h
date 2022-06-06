@@ -407,6 +407,16 @@ write_consistent(typename cxx::enable_if<(sizeof(T) > sizeof(Mword)), T>::type *
     }
 }
 
+namespace cxx {
+
+/** Return the number of elements of a fixed-sized C array. */
+template<typename T, unsigned N>
+constexpr unsigned
+size(const T(&)[N]) noexcept
+{ return N; }
+
+}
+
 #endif
 
 /// standard size type
