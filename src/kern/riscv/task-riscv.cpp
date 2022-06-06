@@ -18,7 +18,7 @@ Task::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode)
     {
       ctxt->vcpu_save_host_regs(vcpu);
       ctxt->state_add_dirty(Thread_vcpu_user);
-      vcpu->state |= Vcpu_state::F_traps | Vcpu_state::F_exceptions;
+      vcpu->state |= Vcpu_state::F_traps;
     }
   else
     // When resuming to vCPU host mode populate the host mode preserved
