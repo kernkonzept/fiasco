@@ -94,9 +94,8 @@ Dmar::enable_dmar(Intel::Io_mmu *mmu, bool passthrough)
 
   if (!mmu->coherent())
     Mem_unit::clean_dcache();
-  mmu->flush_cc();
-  mmu->invalidate(Intel::Io_mmu::Inv_desc::iotlb_glbl());
-
+  mmu->queue_and_wait<false>(Intel::Io_mmu::Inv_desc::cc_full(),
+                             Intel::Io_mmu::Inv_desc::iotlb_glbl());
   mmu->modify_cmd(Intel::Io_mmu::Cmd_te);
 }
 
@@ -165,6 +164,7 @@ Dmar::op_bind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space)
   if (EXPECT_FALSE(space.obj->get_did() == ~0UL))
     return Kobject_iface::commit_result(-L4_err::ENomem);
 
+  bool need_wait = false;
   for (unsigned df = dfs; df < dfe; ++df)
     {
       auto entryp = mmu->get_context_entry(bus, df, true);
@@ -182,8 +182,11 @@ Dmar::op_bind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space)
       entry.os() = 1;
       entry.present() = 1;
 
-      mmu->set_context_entry(entryp, bus, df, entry);
+      need_wait |= mmu->set_context_entry(entryp, bus, df, entry);
     }
+  if (need_wait)
+    mmu->queue_and_wait();
+
   return Kobject_iface::commit_result(0);
 }
 
@@ -217,6 +220,7 @@ Dmar::op_unbind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space)
   if (!mmu)
     return Kobject_iface::commit_result(-L4_err::EInval);
 
+  bool need_wait = false;
   for (unsigned df = dfs; df < dfe; ++df)
     {
       auto entryp = mmu->get_context_entry(bus, df, false);
@@ -231,8 +235,11 @@ Dmar::op_unbind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space)
 
       // when the CAS fails someone else already unbound this slot,
       // so ignore that case
-      mmu->cas_context_entry(entryp, bus, df, entry, Intel::Io_mmu::Cte());
+      mmu->cas_context_entry(entryp, bus, df, entry, Intel::Io_mmu::Cte(),
+                             &need_wait);
     }
+  if (need_wait)
+    mmu->queue_and_wait();
 
   return Kobject_iface::commit_result(0);
 }

@@ -353,8 +353,8 @@ void
 Dmar_space::tlb_flush(bool)
 {
   if (_did)
-    for (auto &mmu: Intel::Io_mmu::iommus)
-      mmu.flush_iotlb(_did);
+    Intel::Io_mmu::queue_and_wait_on_all_iommus(
+      Intel::Io_mmu::Inv_desc::iotlb_did(_did));
 }
 
 PUBLIC
@@ -500,8 +500,11 @@ Dmar_space::remove_from_all_iommus()
   if (!mp_cas(&_did, did, 0ul))
     return;
 
+  bool need_wait[Intel::Io_mmu::iommus.size()];
   for (auto &mmu: Intel::Io_mmu::iommus)
     {
+      need_wait[mmu.idx()] = false;
+
       for (unsigned bus = 0; bus < 255; ++bus)
         for (unsigned df = 0; df < 255; ++df)
           {
@@ -529,11 +532,13 @@ Dmar_space::remove_from_all_iommus()
 
             // when the CAS fails someone else already unbound this slot,
             // so ignore that case
-            mmu.cas_context_entry(entryp, bus, df, entry, Intel::Io_mmu::Cte());
+            mmu.cas_context_entry(entryp, bus, df, entry, Intel::Io_mmu::Cte(),
+                                  &need_wait[mmu.idx()]);
           }
     }
 
   free_did(did);
+  Intel::Io_mmu::queue_and_wait_on_iommus(need_wait);
 }
 
 PUBLIC

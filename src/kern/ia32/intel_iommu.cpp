@@ -352,6 +352,9 @@ public:
   : _lock(Spin_lock<>::Unlocked), _inv_q_lock(Spin_lock<>::Unlocked)
   {}
 
+  unsigned idx() const
+  { return this - iommus.begin(); }
+
   Irte volatile *irq_remapping_table() const
   { return _irq_remapping_table; }
 
@@ -640,12 +643,12 @@ public:
    */
   Cte::Ptr get_context_entry(Unsigned8 bus, Unsigned8 df, bool may_alloc);
 
-  void _flush_context_entry(Cte::Ptr entry, Unsigned8 bus,
+  bool _flush_context_entry(Cte::Ptr entry, Unsigned8 bus,
                            Unsigned8 df, Cte old, Cte new_cte)
   {
     // If neither entry is present we can skip all flushes.
     if (!new_cte.present() && !old.present())
-      return;
+      return false;
 
     // If either the new or the old entry is present we need a cache flush.
     clean_dcache(entry.unsafe_ptr());
@@ -661,28 +664,37 @@ public:
         // entries we set them to all zeroes, thus also for non-present entries
         // passing old.did() as the domain id for the context-cache invalidation
         // descriptor is correct.
-        flush_cc(bus, df, old.did());
-
+        Inv_desc inv_cc = Inv_desc::cc_dev(old.did(), bus, df);
         if (old.did())
-          flush_iotlb(old.did());
-
-        flush_iotlb_wait();
+          invalidate(inv_cc, Inv_desc::iotlb_did(old.did()));
+        else
+          invalidate(inv_cc);
+        return true;
       }
+
+    return false;
   }
 
   /**
    * Set the context entry for the given device.
    *
-   * \param entry    Pointer to the context entry.
-   * \param bus      PCI bus number.
-   * \param df       Device + Function ID (device << 3 | function).
-   * \param new_cte  New context entry to set.
+   * \param      entry    Pointer to the context entry.
+   * \param      bus      PCI bus number.
+   * \param      df       Device + Function ID (device << 3 | function).
+   * \param      new_cte  New context entry to set.
+   *
+   * \return Whether invalidation descriptors were submitted to the
+   *         invalidation queue.
+   *
+   * \note Waiting for the execution of invalidation descriptors submitted
+   *       according to `flushed` to complete is the responsibility of the
+   *       caller of this method.
    */
-  void set_context_entry(Cte::Ptr entry, Unsigned8 bus,
+  bool set_context_entry(Cte::Ptr entry, Unsigned8 bus,
                          Unsigned8 df, Cte new_cte)
   {
     if (EXPECT_FALSE(!entry))
-      return;
+      return false;
 
     Cte old;
 
@@ -692,23 +704,29 @@ public:
         write_consistent(entry.unsafe_ptr(), new_cte);
       }
 
-    _flush_context_entry(entry, bus, df, old, new_cte);
+    return _flush_context_entry(entry, bus, df, old, new_cte);
   }
 
   /**
    * Compare and swap the context entry for the given device.
    *
-   * \param entry    Pointer to the context entry.
-   * \param bus      PCI bus number.
-   * \param df       Device + Function ID (device << 3 | function).
-   * \param old      Old context entry which is compared before setting the new
-   *                 context entry.
-   * \param new_cte  New context entry to set.
+   * \param      entry    Pointer to the context entry.
+   * \param      bus      PCI bus number.
+   * \param      df       Device + Function ID (device << 3 | function).
+   * \param      old      Old context entry which is compared before setting
+   *                      the new context entry.
+   * \param      new_cte  New context entry to set.
+   * \param[out] flushed  Set to true if invalidation descriptors were submitted
+   *                      to the invalidation queue.
    *
    * \return Whether the context entry was set to the new value.
+   *
+   * \note Waiting for the execution of invalidation descriptors submitted
+   *       according to `flushed` to complete is the responsibility of the
+   *       caller of this method.
    */
   bool cas_context_entry(Cte::Ptr entry, Unsigned8 bus,
-                         Unsigned8 df, Cte old, Cte new_cte)
+                         Unsigned8 df, Cte old, Cte new_cte, bool *flushed)
   {
       {
         auto g = lock_guard(_lock);
@@ -718,28 +736,8 @@ public:
         write_consistent(entry.unsafe_ptr(), new_cte);
       }
 
-    _flush_context_entry(entry, bus, df, old, new_cte);
+    *flushed |= _flush_context_entry(entry, bus, df, old, new_cte);
     return true;
-  }
-
-  void flush_cc()
-  { invalidate(Inv_desc::cc_full()); }
-
-  void flush_cc(Unsigned8 bus, Unsigned8 dev, unsigned did)
-  { invalidate(Inv_desc::cc_dev(did, bus, dev)); }
-
-  void flush_iotlb(unsigned did)
-  { invalidate(Inv_desc::iotlb_did(did)); }
-
-  void flush_iotlb_wait()
-  {
-    Unsigned32 volatile flag = 1;
-    invalidate(Inv_desc::wait_pmem(&flag));
-
-    // XXX: AW: spin-loop, I suspect we should add a
-    // preemption point in the loop
-    while (flag)
-      Proc::pause();
   }
 
   unsigned num_domains() const
@@ -910,8 +908,7 @@ Intel::Io_mmu::pm_on_resume(Cpu_number cpu)
 
       regs[Reg_64::Root_table_addr] = root_table_pa;
       modify_cmd(Cmd_srtp);
-      invalidate(Inv_desc::cc_full());
-      invalidate(Inv_desc::iotlb_glbl());
+      queue_and_wait(Inv_desc::cc_full(), Inv_desc::iotlb_glbl());
       modify_cmd(Cmd_te);
     }
 }
@@ -920,7 +917,7 @@ IMPLEMENT
 void
 Intel::Io_mmu::tlb_flush()
 {
-  invalidate(Inv_desc::iotlb_glbl());
+  queue_and_wait(Inv_desc::iotlb_glbl());
 }
 
 IMPLEMENT
