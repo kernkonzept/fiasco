@@ -531,8 +531,6 @@ Dmar_space::remove_from_all_iommus()
             // so ignore that case
             mmu.cas_context_entry(entryp, bus, df, entry, Intel::Io_mmu::Cte());
           }
-
-      mmu.flush_iotlb(did);
     }
 
   free_did(did);
