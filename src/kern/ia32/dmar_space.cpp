@@ -509,6 +509,19 @@ Dmar_space::remove_from_all_iommus()
             if (!entryp)
               break; // complete bus is empty
 
+            // There is no need for grabbing the IOMMU lock when accessing the
+            // entry, since remove_from_all_iommus() is only used during the
+            // destruction of a Dmar_space:
+            // 1. From destroy(), which is invoked during the first destruction
+            //    phase, i.e. before waiting for RCU grace period. We might miss
+            //    some entries here, when entries are created for Dmar_space
+            //    concurrently. In addition these entries might have a different
+            //    DID, because remove_from_all_iommus() resets the DID.
+            //
+            // 2. From ~Dmar_space(), which is invoked during the second
+            //    destruction phase, i.e. after waiting the RCU grace period.
+            //    Now we clean up all the remaining context entries, if any were
+            //    created since the first invocation of remove_from_all_iommus().
             Intel::Io_mmu::Cte entry = access_once(entryp.unsafe_ptr());
             // different space bound, skip
             if (entry.slptptr() != get_root(mmu.aw()))
