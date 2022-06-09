@@ -17,7 +17,6 @@ INTERFACE:
 namespace Intel {
 
 class Io_mmu :
-  public Tlb,
   public Pm_object
 {
 public:
@@ -442,8 +441,6 @@ public:
   void pm_on_resume(Cpu_number) override;
   void pm_on_suspend(Cpu_number) override {}
 
-  void tlb_flush() override;
-
   /**
    * Detect and handle error conditions of the invalidation queue.
    *
@@ -659,7 +656,13 @@ public:
   // static data
   typedef cxx::static_vector<Io_mmu> Io_mmu_vect;
 
+  struct Tlb_handler : public Tlb
+  {
+    void tlb_flush() override;
+  };
+
   static Io_mmu_vect iommus;
+  static Tlb_handler tlb;
   static Acpi_dmar::Flags dmar_flags;
   static unsigned hw_addr_width;
   static FIASCO_INIT bool init(Cpu_number cpu);
@@ -815,6 +818,7 @@ IMPLEMENTATION:
 #include "warn.h"
 
 Intel::Io_mmu::Io_mmu_vect Intel::Io_mmu::iommus;
+Intel::Io_mmu::Tlb_handler Intel::Io_mmu::tlb;
 Acpi_dmar::Flags Intel::Io_mmu::dmar_flags;
 unsigned Intel::Io_mmu::hw_addr_width;
 
@@ -885,7 +889,6 @@ Intel::Io_mmu::setup(Cpu_number cpu)
   modify_cmd(Cmd_qie);
 
   register_pm(cpu);
-  register_iommu_tlb();
 }
 
 /**
@@ -944,6 +947,8 @@ Intel::Io_mmu::init(Cpu_number cpu)
 
   for (auto &iommu: Intel::Io_mmu::iommus)
     iommu.setup(cpu);
+
+  tlb.register_iommu_tlb();
 
   return true;
 }
@@ -1019,10 +1024,8 @@ Intel::Io_mmu::pm_on_resume(Cpu_number cpu)
 
 IMPLEMENT
 void
-Intel::Io_mmu::tlb_flush()
-{
-  queue_and_wait(Inv_desc::iotlb_glbl());
-}
+Intel::Io_mmu::Tlb_handler::tlb_flush()
+{ queue_and_wait_on_all_iommus(Inv_desc::iotlb_glbl()); }
 
 IMPLEMENT
 Intel::Io_mmu::Cte::Ptr
