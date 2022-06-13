@@ -9,6 +9,8 @@ CHECKCC         = $(if $(shell $(CC)  $(1) -S -o /dev/null -xc   /dev/null 2>&1)
 
 CHECKCXX        = $(if $(shell $(CXX) $(1) -S -o /dev/null -xc++ /dev/null 2>&1),$(2),$(1))
 
+CHECKLD         = $(shell if $(LD) -v "$1" > /dev/null 2>&1; then echo "$(1)"; else echo "$(2)"; fi)
+
 eval_impl	= $(if $($(1)_IMPL),$($(1)_IMPL),$(1))
 
 include $(objbase)/globalconfig.out
@@ -148,6 +150,9 @@ OPT_CFLAGS-gcc		+= $(call CHECKCC,-fweb,)
 OPT_SHARED_FLAGS-gcc	+= $(call CHECKCC,-frename-registers,)
 OPT_SHARED_FLAGS-gcc	+= $(call CHECKCC,-fgcse-after-reload,)
 CXXFLAGS-gcc		+= -fno-implement-inlines
+
+LDFLAGS			+= $(call CHECKLD,--no-warn-rwx-segments,) \
+			   $(call CHECKLD,--no-warn-execstack,)
 
 -include $(objbase)/.Host-config
 
