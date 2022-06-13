@@ -180,8 +180,8 @@ public:
    *             left.
    * \param order the order of the I/O flex page, size is 2^\a order ports.
    */
-  static L4_fpage io(Mword port, unsigned char order)
-  { return L4_fpage(Io, adr_bfm_t::val_dirty(port), order, Rights(0)); }
+  static L4_fpage io(Mword port, unsigned char order, Rights rights = Rights(0))
+  { return L4_fpage(Io, adr_bfm_t::val_dirty(port), order, rights); }
 
   /**
    * Create an object flex page.
