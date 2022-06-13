@@ -117,7 +117,8 @@ public:
     g->vmcr = self()->vmcr();
     g->misr = self()->misr();
     g->eisr = self()->eisr();
-    g->elsr = self()->elsr();
+    // Only report saved/loaded LR registers as free
+    g->elsr = self()->elsr() & ((1U << Arm_vgic::N_lregs) - 1U);
     self()->save_lrs(&g->lr, Arm_vgic::N_lregs);
     self()->save_aprs(g->aprs);
     return true;
@@ -151,6 +152,10 @@ public:
   {
     s->hcr = Hcr(0);
     s->vtr = self()->vtr();
+    // Clamp number of supported LRs to the actually saved/loaded LRs. The
+    // others are not usable to user space.
+    if (s->vtr.list_regs() >= Arm_vgic::N_lregs)
+      s->vtr.list_regs() = Arm_vgic::N_lregs - 1;
     for (auto &a: s->aprs)
       a = 0;
     for (auto &l: s->lr.lr64)
