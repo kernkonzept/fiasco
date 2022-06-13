@@ -340,6 +340,18 @@ PUBLIC inline
 bool
 Thread::update_local_map(Address pfa, Mword /*error_code*/)
 {
+  // This function assumes 4-level paging on AMD64. The page map level 4 table
+  // is indexed by bits 47..39 of a linear address. Thus each entry covers 512G.
+  static_assert(255 == (Mem_layout::User_max >> 39),
+                "Mem_layout::User_max must lie in 512G slot 255.");
+  // 512G slot 259 is used for context-specific kernel data.
+  static_assert(259 == ((Mem_layout::Io_bitmap >> 39) & 0x1ff),
+                "Mem_layout::Io_bitmap must lie in 512G slot 259.");
+  static_assert(259 == ((Mem_layout::Caps_start >> 39) & 0x1ff),
+                "Mem_layout::Caps_start must lie in 512G slot 259.");
+  static_assert(259 == (((Mem_layout::Caps_end - 1) >> 39) & 0x1ff),
+                "Mem_layout::Caps_end - 1 must lie in 512G slot 259.");
+
   unsigned idx = (pfa >> 39) & 0x1ff;
   if (EXPECT_FALSE((idx > 255) && idx != 259))
     return false;
