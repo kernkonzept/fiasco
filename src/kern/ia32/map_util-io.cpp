@@ -64,29 +64,30 @@ io_map(Space *from, L4_fpage const &fp_from,
   Io_space::V_pfc rcv_size = Io_space::V_pfc(1) << ro;
   Io_space::V_pfc snd_size = Io_space::V_pfc(1) << so;
 
+  Io_space::V_pfn map_addr;
   if (rcv_addr > snd_addr)
     {
-      if (rcv_addr - snd_addr < snd_size)
-        snd_size -= rcv_addr - snd_addr;
-      else
+      if (rcv_addr - snd_addr >= snd_size)
         return L4_error::None;
-
-      snd_addr = rcv_addr;
+      map_addr = rcv_addr;
+    }
+  else
+    {
+      if (snd_addr - rcv_addr >= rcv_size)
+        return L4_error::None;
+      map_addr = snd_addr;
     }
 
-  if (snd_size > rcv_size)
-    snd_size = rcv_size;
-
-  if (snd_size == Io_space::V_pfc(0))
-    return L4_error::None;
+  // because of alignment, the overlap must be one of snd_size or rcv_size
+  Io_space::V_pfc const map_size = snd_size < rcv_size ? snd_size : rcv_size;
 
   Mu::Auto_tlb_flush<Io_space> tlb;
 
-  return map<Io_space>(mapdb_io.get(), from, from, snd_addr,
-             snd_size,
-             to, to, snd_addr,
-             control.is_grant(), fp_from.rights(), tlb,
-             (Io_space::Reap_list**)0);
+  return map<Io_space>(mapdb_io.get(), from, from, map_addr,
+                       map_size,
+                       to, to, map_addr,
+                       control.is_grant(), fp_from.rights(), tlb,
+                       (Io_space::Reap_list**)0);
 }
 
 /** Unmap IO mappings.
