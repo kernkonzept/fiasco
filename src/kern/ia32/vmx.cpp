@@ -286,8 +286,8 @@ public:
   enum Vmcs_64bit_ctl_fields
   {
     F_tsc_offset         = 0x2010,
-    F_ept_ptr            = 0x201a,
     F_apic_access_addr   = 0x2014,
+    F_ept_ptr            = 0x201a,
 
     // .. skip ...
 
@@ -408,7 +408,7 @@ public:
   {
     F_guest_cr3               = 0x6802,
     // ... skip ...
-    F_guest_ia32_sysenter_eip = 0x682e,
+    F_guest_ia32_sysenter_eip = 0x6826,
 
     F_sw_guest_cr2            = 0x683e,
 
