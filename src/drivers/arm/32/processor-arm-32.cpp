@@ -151,7 +151,7 @@ void Proc::halt()
                "mcr     15, 0, r1, c1, c0, 0        @ Restore ICache enable \n\t"
                :::"memory",
                "r0", "r1", "r2", "r3", "r4", "r5",
-               "r6", "r7", "r8", "r9", "r10", "r11",
+               "r6", "r7", "r8", "r9", "r10", /* r11: fp */
                "r12", "r14"
       );
   sti_restore(f);
