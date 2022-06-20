@@ -135,7 +135,7 @@ Factory::map_obj(Kobject_iface *o, Cap_index cap, Task *_c_space,
 PUBLIC
 L4_msg_tag
 Factory::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,
-                 Utcb const *utcb, Utcb *)
+                 Utcb const *utcb, Utcb *utcb_out)
 {
   Context *const c_thread = ::current();
   Task *const c_space = static_cast<Task*>(c_thread->space());
@@ -179,7 +179,10 @@ Factory::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,
     l->newo = new_o ? new_o->dbg_info()->dbg_id() : ~0);
 
   if (new_o)
-    return map_obj(new_o, buffer.obj_index(), c_space, c_space, utcb);
+    {
+      utcb_out->values[0] = (0 << 6) | (L4_fpage::Obj << 4) | L4_msg_item::Map;
+      return map_obj(new_o, buffer.obj_index(), c_space, c_space, utcb);
+    }
   else
     return commit_result(-err);
 }
