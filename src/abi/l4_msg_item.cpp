@@ -38,7 +38,7 @@ INTERFACE:
  * \a hot_spot to avoid overlapping mappings.
  *
  * Bit 1 (\a g/s): On a send map item a set \a g bit flags a grant operation.
- * This means, the sender delegates access to the receiver and atomically
+ * This means, the sender delegates access to the receiver and
  * removes the own rights (basically a move operation). On a receive buffer
  * a set \a s bit flags a small object buffer. This means, the whole buffer
  * item is just a single buffer register in size and provides a receive buffer
