@@ -340,6 +340,7 @@ Thread::get_fault_pfa(Arm_esr hsr, bool insn_abt, bool ext_vcpu)
 
   Unsigned64 par;
   asm ("mcr p15, 0, %1, c7, c8, 0 \n"
+       "isb                       \n"
        "mrrc p15, 0, %Q0, %R0, c7 \n" : "=r"(par) : "r"(far));
   if (par & 1)
     return ~0UL;

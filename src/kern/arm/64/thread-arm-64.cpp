@@ -326,6 +326,7 @@ Thread::get_fault_pfa(Arm_esr hsr, bool /*insn_abt*/, bool ext_vcpu)
   Mword par_tmp, res;
   asm ("mrs %[tmp], PAR_EL1 \n"
        "at  s1e1r, %[va]    \n"
+       "isb                 \n"
        "mrs %[res], PAR_EL1 \n"
        "msr PAR_EL1, %[tmp] \n"
        : [tmp] "=&r" (par_tmp),
