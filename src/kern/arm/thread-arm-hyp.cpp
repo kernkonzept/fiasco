@@ -338,10 +338,14 @@ Thread::get_fault_pfa(Arm_esr hsr, bool insn_abt, bool ext_vcpu)
       return (ipa << 8) | (far & 0xfff);
     }
 
-  Unsigned64 par;
-  asm ("mcr p15, 0, %1, c7, c8, 0 \n"
+  Unsigned64 par, tmp;
+  asm ("mrrc p15, 0, %Q0, %R0, c7 \n" // save guest PAR
+       "mcr p15, 0, %2, c7, c8, 0 \n" // write guest virtual address to ATS1CPR
        "isb                       \n"
-       "mrrc p15, 0, %Q0, %R0, c7 \n" : "=r"(par) : "r"(far));
+       "mrrc p15, 0, %Q1, %R1, c7 \n" // read translation result from PAR
+       "mcrr p15, 0, %Q0, %R0, c7 \n" // restore guest PAR
+       : "=&r"(tmp), "=r"(par)
+       : "r"(far));
   if (par & 1)
     return ~0UL;
   return (par & 0xfffff000UL) | (far & 0xfff);
