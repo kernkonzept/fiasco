@@ -98,10 +98,10 @@ private:
     CXX_BITFIELD_MEMBER          (62, 62, ptz, raw);
   };
 
-  Gic_mem::Mem_chunk _lpi_pending_table;
+  Gic_mem _lpi_pending_table;
 
   static unsigned num_lpi_intid_bits;
-  static Gic_mem::Mem_chunk lpi_config_table;
+  static Gic_mem lpi_config_table;
 };
 
 // ------------------------------------------------------------------------
@@ -243,7 +243,7 @@ IMPLEMENTATION[arm_gic_msi]:
 #include <arithmetic.h>
 
 unsigned Gic_redist::num_lpi_intid_bits = 0;
-Gic_mem::Mem_chunk Gic_redist::lpi_config_table;
+Gic_mem Gic_redist::lpi_config_table;
 
 PUBLIC
 static void

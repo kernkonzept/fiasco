@@ -180,7 +180,7 @@ public:
     inline bool is_valid() const
     { return _mem.is_valid(); }
 
-    inline Gic_mem::Mem_chunk const &mem() const
+    inline Gic_mem const &mem() const
     { return _mem; }
 
     void alloc(Reg r, Typer typer);
@@ -191,7 +191,7 @@ public:
 
   private:
     Baser::Type _type = Baser::Type_none;
-    Gic_mem::Mem_chunk _mem;
+    Gic_mem _mem;
     unsigned _page_size = 0;
     unsigned _entry_size = 0;
     bool _indirect = false;
@@ -283,7 +283,7 @@ public:
   private:
     Dev_id _id;
     Gic_its &_its;
-    Gic_mem::Mem_chunk _itt;
+    Gic_mem _itt;
     unsigned _lpi_count = 0;
   };
 
@@ -453,7 +453,7 @@ private:
   Table _tables[GITS_baser_num];
   Table *_device_table;
 
-  Gic_mem::Mem_chunk _cmd_queue;
+  Gic_mem _cmd_queue;
   unsigned _cmd_queue_write_off;
   Spin_lock<> _cmd_queue_lock;
 
@@ -590,7 +590,7 @@ Gic_its::Table::ensure_id_present(unsigned id)
     // Second level table is already allocated.
     return true;
 
-  Gic_mem::Mem_chunk l2_table = Gic_mem::alloc_zmem(_page_size, _page_size);
+  Gic_mem l2_table = Gic_mem::alloc_zmem(_page_size, _page_size);
   if (l2_table.is_valid())
     {
       e.pa() = l2_table.phys_addr();
