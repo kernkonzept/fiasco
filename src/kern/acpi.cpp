@@ -417,7 +417,7 @@ Acpi_rsdp::checksum_ok() const
     return true;
 
   // Extended Checksum
-  for (unsigned i = 0; i < len && i < 4096; ++i)
+  for (unsigned i = 0; i < len; ++i)
     sum += *((Unsigned8 *)this + i);
 
   return !sum;
@@ -428,7 +428,7 @@ bool
 Acpi_table_head::checksum_ok() const
 {
   Unsigned8 sum = 0;
-  for (unsigned i = 0; i < len && i < 4096; ++i)
+  for (unsigned i = 0; i < len; ++i)
     sum += *((Unsigned8 *)this + i);
 
   return !sum;
