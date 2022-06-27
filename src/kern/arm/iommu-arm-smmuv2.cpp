@@ -709,6 +709,8 @@ public:
 // ------------------------------------------------------------------
 IMPLEMENTATION [iommu]:
 
+#include "panic.h"
+
 PUBLIC
 int
 Iommu::bind(Unsigned32 stream_id, Address pt_phys, Space_id *space_id)
