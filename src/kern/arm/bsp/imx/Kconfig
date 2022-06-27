@@ -1,6 +1,5 @@
 # PF: IMX
 # PFDESCR: NXP/Freescale i.MX
-# PFSELECT: HAS_IOMMU_OPTION
 # PFDEPENDS: ARM
 
 choice
@@ -97,6 +96,7 @@ config PF_IMX_8XQ
         select ARM_PSCI
         select ARM_GIC
         select HAVE_ARM_GICV3
+        select HAS_IOMMU_OPTION
 	help
 	  Choose for i.MX8X and i.MX8Q platforms.
 
