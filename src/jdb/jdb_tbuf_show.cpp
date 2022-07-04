@@ -384,7 +384,7 @@ Jdb_tbuf_show::show_events(Mword n, Mword ref, Mword count, Unsigned8 mode,
       if (!ok)
         {
           // event not committed (missing data)
-          printf("event not yet committed%s", count != 1 ? "\n" : "");
+          printf("event not yet committed\033[K%s", count != 1 ? "\n" : "");
           ++n;
           continue;
         }
