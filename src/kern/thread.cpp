@@ -1122,9 +1122,13 @@ Thread::force_to_invalid_cpu()
 {
   // make sure this thread really never runs again by migrating it
   // to the 'invalid' CPU forcefully.
+  Queue &q = Context::_pending_rqq.current();
+
     {
-      auto g = lock_guard(_pending_rqq.current().q_lock());
+      auto g = lock_guard(q.q_lock());
       set_home_cpu(Cpu::invalid());
+      if (_pending_rq.queued())
+        q.dequeue(&_pending_rq);
     }
   handle_drq();
 }
