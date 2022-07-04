@@ -102,6 +102,11 @@ ifneq ($(CONFIG_JDB_GZIP),)
   PRIVATE_INCDIR	+= lib/gzip
   CSRC_LIBGZIP	:= adler32.c crc32.c gzip.c trees.c deflate.c zutil.c
   NOOPT		+= $(patsubst %.o, %, $(OBJ_LIBGZIP))
+  CFLAGS_adler32 = $(WNO_DEPRECATED_NON_PROTOTYPE)
+  CFLAGS_crc32   = $(WNO_DEPRECATED_NON_PROTOTYPE) -Wno-strict-prototypes
+  CFLAGS_deflate = $(WNO_DEPRECATED_NON_PROTOTYPE)
+  CFLAGS_trees   = $(WNO_DEPRECATED_NON_PROTOTYPE) -Wno-strict-prototypes
+  CFLAGS_zutil   = $(WNO_DEPRECATED_NON_PROTOTYPE) -Wno-strict-prototypes
 endif
 
 
