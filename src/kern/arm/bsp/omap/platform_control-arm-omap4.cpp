@@ -18,10 +18,12 @@ Platform_control::aux(unsigned cmd, Mword arg0, Mword arg1)
 
   asm volatile(".arch_extension sec\n"
                "dsb                \n"
+               "push {r11}         \n"
                "smc #0             \n"
+               "pop {r11}          \n"
                : : "r" (r0), "r" (r1), "r" (r12)
                : "r2", "r3", "r4", "r5", "r6",
-                 "r7", "r8", "r9", "r10", "r11", "lr", "memory");
+                 "r7", "r8", "r9", "r10", "lr", "memory");
 }
 
 IMPLEMENTATION [arm && mp && pf_omap4]: // -----------------------------------
