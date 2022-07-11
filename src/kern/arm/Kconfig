@@ -132,6 +132,13 @@ config ARM_ASID16
 config HAS_ARM_SVE
 	bool
 
+config ARM_PROFILE_A
+        bool
+        default y if !ARM_PROFILE_R
+
+config ARM_PROFILE_R
+        bool
+
 # SECTION: CPU
 
 choice
