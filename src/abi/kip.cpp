@@ -118,12 +118,14 @@ public:
    * Code for syscall invocation. */
 
   /* 0x900-0x97F:
-   * Code for reading the KIP clock with fine-grained resolution (us). */
+   * Code for reading the system clock with microsecond resolution. Depending on
+   * the configuration, this clock might or might not be synchronized with the
+   * KIP clock. */
 
   /* 0x980-0x9FF:
-   * Code for reading the system clock with nanoseconds accuracy. Depending
-   * on the configuration, this clock might or might not be synchronized with
-   * the KIP clock. */
+   * Code for reading the system clock with nanosecond resolution. Depending on
+   * the configuration, this clock might or might not be synchronized with the
+   * KIP clock. */
 
 private:
   static Kip *global_kip asm ("GLOBAL_KIP");
