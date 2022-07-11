@@ -22,7 +22,7 @@
          *   CNTKCTL_EL1: EL0VCTEN=1, EL0PCTEN=0.
          *   Kernel uses virtual counter.
          *   Access to virtual counter from PL0 allowed.
-         * Generic_timer::T<Hyp>:
+         * Generic_timer::T<Hyp>, Generic_timer::T<Secure_hyp>:
          *   CNTKCTL_EL1: EL0VCTEN=1, EL0PCTEN=1.
          *   CNTHCTL_EL2: EL1PCEN=0, EL1PCTEN=0.
          *   CNTVOFF_EL2: 0

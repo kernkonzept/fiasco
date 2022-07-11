@@ -22,7 +22,7 @@
          *   CNTKCTL: PL0VCTEN=1, PL0PCTEN=0.
          *   Kernel uses virtual counter.
          *   Access to virtual counter from PL0 allowed.
-         * Generic_timer::T<Hyp>:
+         * Generic_timer::T<Hyp>, Generic_timer::T<Secure_hyp>:
          *   CNTKCTL: PL0VCTEN=1, PL0PCTEN=1.
          *   CNTHCTL: PL1PCEN=0, PL1PCTEN=0.
          *   CNTVOFF: 0

@@ -2,7 +2,13 @@ INTERFACE [arm && arm_generic_timer]:
 
 namespace Generic_timer {
 
-  enum Timer_type { Physical, Virtual, Hyp };
+  enum Timer_type
+  {
+    Physical,   ///< EL1 physical timer
+    Virtual,    ///< EL1 virtual timer
+    Hyp,        ///< Non-secure EL2 physical timer
+    Secure_hyp, ///< Secure EL2 physical timer
+  };
 
   template<unsigned Type>  struct T;
 
@@ -97,6 +103,45 @@ namespace Generic_timer {
 
     static void control(Unsigned32 v)
     { asm volatile("mcr p15, 4, %0, c14, c2, 1" : : "r" (v)); }
+
+    static void setup_timer_access()
+    {
+      // CNTKCTL: allow access to virtual and physical counter from PL0
+      asm volatile("mcr p15, 0, %0, c14, c1, 0" : : "r"(0x3));
+      // CNTHCTL: forbid access to physical timer from PL0 and PL1
+      asm volatile("mcr p15, 4, %0, c14, c1, 0" : : "r"(0x0));
+      // CNTVOFF: sync virtual and physical counter
+      asm volatile ("mcrr p15, 4, %Q0, %R0, c14" : : "r"(0ULL));
+    }
+
+    static Unsigned32 frequency()
+    { Unsigned32 v; asm volatile ("mrc p15, 0, %0, c14, c0, 0": "=r" (v)); return v; }
+
+    static void frequency(Unsigned32 v)
+    { asm volatile ("mcr p15, 0, %0, c14, c0, 0": :"r" (v)); }
+  };
+
+  template<> struct T<Secure_hyp>
+  {
+    static constexpr int Type = Secure_hyp;
+
+    /* In secure HYP mode we use the physical counter and the
+     * secure HYP mode timer
+     */
+    static Unsigned64 counter() // use the physical counter
+    { Unsigned64 v; asm volatile("mrrc p15, 0, %Q0, %R0, c14" : "=r" (v)); return v; }
+
+    static Unsigned64 compare() // use CNTHPS_CVAL - secure PL2 physical compare
+    { Unsigned64 v; asm volatile("mrrc p15, 2, %Q0, %R0, c14" : "=r" (v)); return v; }
+
+    static void compare(Unsigned64 v)
+    { asm volatile("mcrr p15, 2, %Q0, %R0, c14" : : "r" (v)); }
+
+    static Unsigned32 control() // use CNTHPS_CTL
+    { Unsigned32 v; asm volatile("mrc p15, 0, %0, c14, c2, 1" : "=r" (v)); return v; }
+
+    static void control(Unsigned32 v)
+    { asm volatile("mcr p15, 0, %0, c14, c2, 1" : : "r" (v)); }
 
     static void setup_timer_access()
     {
