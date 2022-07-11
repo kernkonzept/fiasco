@@ -138,8 +138,8 @@ public:
 
     Unsigned32 ack = _cpu.iar();
 
-    // For SGIs, bits [12:10] identify the source CPU interface. For all
-    // other interrupts these bits are zero.
+    // GICv2 only: for SGIs, bits [12:10] identify the source CPU interface.
+    // For all other interrupts these bits are zero.
     Unsigned32 intid = ack & Cpu::Cpu_iar_intid_mask;
 
     // Ack SGIs (IPIs) immediately, the whole ack value must be used,
