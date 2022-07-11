@@ -150,14 +150,21 @@ IMPLEMENTATION:
 #include "static_assert.h"
 
 PRIVATE template< typename SPACE >
-inline NEEDS["static_assert.h"]
+inline NEEDS["static_assert.h", "mem.h"]
 bool
 Obj_space_phys<SPACE>::alloc_dir()
 {
   static_assert(sizeof(Cap_dir) == Config::PAGE_SIZE, "cap_dir size mismatch");
-  _dir = (Cap_dir*)Kmem_alloc::allocator()->q_alloc(ram_quota(), Config::page_size());
-  if (_dir)
-    Mem::memset_mwords(_dir, 0, Config::PAGE_SIZE / sizeof(Mword));
+  auto *dir = (Cap_dir*)Kmem_alloc::allocator()->q_alloc(ram_quota(),
+                                                         Config::page_size());
+  if (dir)
+    Mem::memset_mwords(dir, 0, Config::PAGE_SIZE / sizeof(Mword));
+
+  // Page clearing must be observable *before* the pointer to the table is
+  // visible! The lookup in get_cap() happens without a lock.
+  Mem::mp_wmb();
+
+  _dir = dir;
   return _dir;
 }
 
@@ -201,6 +208,10 @@ Obj_space_phys<SPACE>::caps_alloc(Cap_index virt)
   Obj::add_cap_page_dbg_info(mem, SPACE::get_space(this),  cxx::int_value<Cap_index>(virt));
 
   Mem::memset_mwords(mem, 0, Config::PAGE_SIZE / sizeof(Mword));
+
+  // Page clearing must be observable *before* the pointer to the table is
+  // visible! The lookup in get_cap() happens without a lock.
+  Mem::mp_wmb();
 
   Cap_table *tab = _dir->d[d_idx] = (Cap_table*)mem;
   return &tab->e[ cxx::get_lsb(cxx::int_value<Cap_index>(virt), Obj::Caps_per_page_ld2)];

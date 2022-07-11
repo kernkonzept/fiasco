@@ -100,6 +100,10 @@ Obj_space_virt<SPACE>::caps_alloc(Cap_index virt)
 
   Mem::memset_mwords(mem, 0, Config::PAGE_SIZE / sizeof(Mword));
 
+  // Page clearing must be observable *before* the pointer to the page is
+  // visible! The lookup in get_cap() happens without a lock.
+  Mem::mp_wmb();
+
   Mem_space::Status s;
   s = SPACE::mem_space(this)->v_insert(
       Mem_space::Phys_addr(Kmem::kdir->virt_to_phys((Address)mem)),
