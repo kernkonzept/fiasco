@@ -1,0 +1,19 @@
+# vim:set ft=make:
+
+OBJECTS_LIBUART       += uart_dcc-v6.o
+CXXFLAGS_uart-libuart += $(call LIBUART_UART, dcc-v6, dcc_v6)
+PREPROCESS_PARTS      += generic_tickless_idle \
+                         arm_generic_timer pic_gic
+INTERFACES_KERNEL     += generic_timer
+RAM_PHYS_BASE         := 0x60000000
+
+amp_node_IMPL         := amp_node amp_node-arm-sr6p7g7
+config_IMPL           += config-arm-sr6p7g7
+kmem_alloc_IMPL       += kmem_alloc-arm-sr6p7g7
+mem_layout_IMPL       += mem_layout-arm-sr6p7g7
+pic_IMPL              += pic-gic pic-arm-sr6p7g7
+timer_IMPL            += timer-arm-generic timer-arm-generic-sr6p7g7
+timer_tick_IMPL       += timer_tick-single-vector
+reset_IMPL            += reset-arm-sr6p7g7
+clock_IMPL            += clock-generic
+platform_control_IMPL += platform_control-arm-sr6p7g7
