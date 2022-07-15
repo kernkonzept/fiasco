@@ -204,8 +204,16 @@ PRIVATE static FIASCO_INIT
 unsigned long
 Kmem_alloc::create_free_map(Kip const *kip, Mem_region_map_base *map)
 {
+  return create_free_map(kip, map, Platform_control::node_id());
+}
+
+PRIVATE static FIASCO_INIT
+unsigned long
+Kmem_alloc::create_free_map(Kip const *kip, Mem_region_map_base *map,
+                            unsigned node)
+{
   unsigned long available_size = 0;
-  unsigned nodes = 1U << Platform_control::node_id();
+  unsigned nodes = 1U << node;
 
   for (auto const &md: kip->mem_descs_a())
     {

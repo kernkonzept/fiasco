@@ -167,6 +167,34 @@ IMPLEMENTATION [arm && !mmu]:
 #include "paging.h"
 
 /**
+ * Reserve kernel memory for other nodes.
+ *
+ * Just mark it reserved in the Kip and return the base address.
+ */
+PUBLIC static unsigned long
+Kmem_alloc::reserve_kmem(unsigned node)
+{
+  Mword alloc_size = Config::KMEM_SIZE;
+  Mem_region_map<64> map;
+  create_free_map(Kip::k(), &map, node);
+
+  for (int i = map.length() - 1; i >= 0; --i)
+    {
+      Mem_region &f = map[i];
+      if (f.size() < alloc_size)
+        continue;
+
+      f.start += (f.size() - alloc_size);
+
+      Kip::k()->add_mem_region(Mem_desc(f.start, f.end, Mem_desc::Reserved));
+      return f.start;
+    }
+
+  panic("Cannot reserve kmem\n");
+  return 0;
+}
+
+/**
  * Map desired region as kernel heap and initalize buddy allocator.
  */
 PRIVATE void
@@ -190,8 +218,11 @@ Kmem_alloc::init(unsigned long start, unsigned long end)
   (*a)->add_mem((void *)start, end - start + 1U);
 }
 
-IMPLEMENT
-Kmem_alloc::Kmem_alloc()
+/**
+ * Allocate kernel heap and map it in the MPU.
+ */
+PRIVATE void
+Kmem_alloc::init_alloc()
 {
   Mword alloc_size = Config::KMEM_SIZE;
   Mem_region_map<64> map;
@@ -222,6 +253,27 @@ Kmem_alloc::Kmem_alloc()
     panic("Kmem_alloc: regions too small");
 
   init(start, end);
+}
+
+/**
+ * Map pre-reserved region as kernel heap.
+ */
+PRIVATE void
+Kmem_alloc::init_prealloc(Kip *k)
+{
+  unsigned long start = k->_mem_assign_base;
+  unsigned long end = start + k->_mem_assign_len - 1U;
+  init(start, end);
+}
+
+IMPLEMENT
+Kmem_alloc::Kmem_alloc()
+{
+  Kip *k = Kip::k();
+  if (k->_mem_assign_len)
+    init_prealloc(k);
+  else
+    init_alloc();
 }
 
 PUBLIC inline
