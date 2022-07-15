@@ -154,9 +154,14 @@ namespace Generic_timer {
 }
 
 // --------------------------------------------------------------------------
-INTERFACE [arm && arm_generic_timer && cpu_virt]:
+INTERFACE [arm && arm_generic_timer && cpu_virt && arm_profile_a]:
 
 namespace Generic_timer { typedef Generic_timer::T<Generic_timer::Hyp> Gtimer; }
+
+// --------------------------------------------------------------------------
+INTERFACE [arm && arm_generic_timer && cpu_virt && arm_profile_r]:
+
+namespace Generic_timer { typedef Generic_timer::T<Generic_timer::Secure_hyp> Gtimer; }
 
 // --------------------------------------------------------------------------
 INTERFACE [arm && arm_generic_timer && arm_em_tz]:
