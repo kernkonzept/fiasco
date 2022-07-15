@@ -576,6 +576,13 @@ Kmem_alloc::q_free(Q *quota, Bytes size, void *obj)
   quota->free(size);
 }
 
+PUBLIC static inline
+unsigned long
+Kmem_alloc::orig_free()
+{
+  return _orig_free;
+}
+
 
 Kmem_alloc_reaper::Reaper_list Kmem_alloc_reaper::mem_reapers;
 

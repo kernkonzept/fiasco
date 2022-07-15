@@ -138,8 +138,42 @@ STATIC_INITIALIZER_P(add_initial_pmem, BOOTSTRAP_INIT_PRIO);
 //----------------------------------------------------------------------------
 IMPLEMENTATION [arm && mpu]:
 
+#include "amp_node.h"
 #include "kmem.h"
 #include "paging.h"
+
+/**
+ * Reserve kernel memory for additional AMP nodes.
+ *
+ * Just mark it reserved in the Kip and return the base address.
+ *
+ * \param node The logical AMP node-id for which the memory shall be resered.
+ */
+PUBLIC static void
+Kmem_alloc::reserve_amp_heap(unsigned node)
+{
+  unsigned phys_node = cxx::int_value<Amp_phys_id>(Amp_node::phys_id(node));
+  Mem_region_map<64> map;
+  create_free_map(Kip::all_instances()[node], &map);
+  unsigned long alloc_size = Kmem_alloc::orig_free();
+
+  for (int i = map.length() - 1; i >= 0; --i)
+    {
+      Mem_region &f = map[i];
+      if (f.size() < alloc_size)
+        continue;
+
+      f.start += (f.size() - alloc_size);
+
+      for (auto k : Kip::all_instances())
+        k->add_mem_region(Mem_desc(f.start, f.end,
+                                   k->node == phys_node ? Mem_desc::Kernel_tmp
+                                                        : Mem_desc::Reserved));
+      return;
+    }
+
+  panic("Cannot reserve kmem for node %u\n", node);
+}
 
 /**
  * Map desired region as kernel heap and initalize buddy allocator.
@@ -161,11 +195,15 @@ Kmem_alloc::map_heap(unsigned long start, unsigned long end)
   setup_kmem_from_kip_md_tmp(freemap_size, min_addr_kern);
 }
 
-IMPLEMENT
-Kmem_alloc::Kmem_alloc()
+/**
+ * Allocate kernel heap and map it in the MPU.
+ */
+PRIVATE void
+Kmem_alloc::init_alloc()
 {
+  Kip *kip = Kip::k();
   Mem_region_map<64> map;
-  unsigned long available_size = create_free_map(Kip::k(), &map);
+  unsigned long available_size = create_free_map(kip, &map);
   unsigned long alloc_size = determine_kmem_alloc_size(available_size);
 
   if (available_size < alloc_size)
@@ -183,7 +221,10 @@ Kmem_alloc::Kmem_alloc()
       if (f.size() > alloc_size)
         f.start += (f.size() - alloc_size);
 
-      Kip::k()->add_mem_region(Mem_desc(f.start, f.end, Mem_desc::Kernel_tmp));
+      for (auto k : Kip::all_instances())
+        k->add_mem_region(Mem_desc(f.start, f.end,
+                                   k == kip ? Mem_desc::Kernel_tmp
+                                            : Mem_desc::Reserved));
       start = f.start;
       end = f.end;
       break;
@@ -193,4 +234,32 @@ Kmem_alloc::Kmem_alloc()
     panic("Kmem_alloc: regions too small");
 
   map_heap(start, end);
+}
+
+/**
+ * Map pre-reserved region as kernel heap.
+ */
+PRIVATE bool
+Kmem_alloc::init_prealloc(Kip *k)
+{
+  for (auto &md: k->mem_descs_a())
+    {
+      if (md.type() == Mem_desc::Kernel_tmp)
+        {
+          unsigned long start = md.start();
+          unsigned long end = md.end();
+          map_heap(start, end);
+          return true;
+        }
+    }
+
+  return false;
+}
+
+IMPLEMENT
+Kmem_alloc::Kmem_alloc()
+{
+  Kip *k = Kip::k();
+  if (!init_prealloc(k))
+    init_alloc();
 }
