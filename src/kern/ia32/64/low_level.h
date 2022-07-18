@@ -69,16 +69,20 @@
 	sar     $16, %rcx
 #ifdef CONFIG_KERNEL_ISOLATION
 	mov	$VAL__MEM_LAYOUT__KENTRY_CPU_PAGE, %r15
-# ifdef CONFIG_INTEL_IA32_BRANCH_BARRIERS
+# if defined(CONFIG_INTEL_IA32_BRANCH_BARRIERS) || defined(CONFIG_INTEL_MDS_MITIGATION)
 	mov	CPUE_EXIT(%r15), %r11
 	test	$(CPUE_EXIT_NEED_IBPB), %r11
 	jz	333f
 	and	$(~CPUE_EXIT_NEED_IBPB), %r11
 	mov	%r11, CPUE_EXIT(%r15)
+#  ifdef CONFIG_INTEL_IA32_BRANCH_BARRIERS
 	IA32_IBPB
+#  endif
+#  ifdef CONFIG_INTEL_MDS_MITIGATION
         /* Only the memory-operand variant guarantees the CPU buffer flush
          * functionality according to the documentation. */
 	verw	verw_gdt_data_kernel
+#  endif
 333:
 # endif
 	mov	CPUE_CR3U(%r15), %r15

@@ -372,6 +372,14 @@ config INTEL_IA32_BRANCH_BARRIERS
 	    (c) IBPB after address space switches to prevent cross
 	        application attacks.
 
+config INTEL_MDS_MITIGATION
+        bool "Enable MDS mitigation" if AMD64 && KERNEL_ISOLATION
+        depends on AMD64 && KERNEL_ISOLATION
+        help
+          Use CPU buffer clearing to prevent forwarding of speculative data to
+          a disclosure gadget which allows to infer the value via a cache side
+          channel attack.
+
 config NO_IO_PAGEFAULT
 	bool "Disable IO-Port fault IPC" if (IA32 || AMD64) && !KERNEL_ISOLATION
 	depends on IA32 || AMD64

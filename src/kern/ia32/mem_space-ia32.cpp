@@ -432,7 +432,7 @@ Mem_space::set_current_pcid()
 {}
 
 // --------------------------------------------------------------------
-IMPLEMENTATION [(amd64 || ia32) && cpu_local_map && intel_ia32_branch_barriers]:
+IMPLEMENTATION [(amd64 || ia32) && cpu_local_map && (intel_ia32_branch_barriers || intel_mds_mitigation)]:
 
 PRIVATE inline NEEDS[Mem_space::cpu_val]
 void
@@ -443,7 +443,7 @@ Mem_space::set_needs_ibpb()
 }
 
 // --------------------------------------------------------------------
-IMPLEMENTATION [(amd64 || ia32) && !intel_ia32_branch_barriers]:
+IMPLEMENTATION [(amd64 || ia32) && !(intel_ia32_branch_barriers || intel_mds_mitigation)]:
 
 PRIVATE inline
 void

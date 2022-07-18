@@ -34,12 +34,16 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
 
   Address *p = (Address *)Mem_layout::Kentry_cpu_page;
 
-#ifdef CONFIG_INTEL_IA32_BRANCH_BARRIERS
+#if defined(CONFIG_INTEL_IA32_BRANCH_BARRIERS) || defined(CONFIG_INTEL_MDS_MITIGATION)
   if (p[2] & 1)
     {
       p[2] &= ~1UL;
+# ifdef CONFIG_INTEL_IA32_BRANCH_BARRIERS
       Cpu::wrmsr(0, 0, 0x49);
+# endif
+# ifdef CONFIG_INTEL_MDS_MITIGATION
       asm volatile ("verw  verw_gdt_data_kernel");
+# endif
     }
 #endif
 
