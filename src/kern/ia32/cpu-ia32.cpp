@@ -948,16 +948,6 @@ Cpu::exception_string(Mword trapno)
   return exception_strings[trapno];
 }
 
-PUBLIC static inline FIASCO_INIT_CPU_AND_PM
-void
-Cpu::cpuid(Unsigned32 mode,
-           Unsigned32 *eax, Unsigned32 *ebx,
-           Unsigned32 *ecx, Unsigned32 *edx)
-{
-  asm volatile ("cpuid" : "=a" (*eax), "=b" (*ebx), "=c" (*ecx), "=d" (*edx)
-                        : "a" (mode));
-}
-
 PUBLIC static inline FIASCO_INIT_CPU
 void
 Cpu::cpuid(Unsigned32 mode, Unsigned32 ecx_val,
@@ -966,6 +956,15 @@ Cpu::cpuid(Unsigned32 mode, Unsigned32 ecx_val,
 {
   asm volatile ("cpuid" : "=a" (*eax), "=b" (*ebx), "=c" (*ecx), "=d" (*edx)
                         : "a" (mode), "c" (ecx_val));
+}
+
+PUBLIC static inline FIASCO_INIT_CPU_AND_PM
+void
+Cpu::cpuid(Unsigned32 mode,
+           Unsigned32 *eax, Unsigned32 *ebx,
+           Unsigned32 *ecx, Unsigned32 *edx)
+{
+  cpuid(mode, 0, eax, ebx, ecx, edx);
 }
 
 PUBLIC static inline FIASCO_INIT_CPU_AND_PM
