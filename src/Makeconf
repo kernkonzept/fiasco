@@ -144,6 +144,7 @@ SHARED_FLAGS		+= -Wundef
 SHARED_FLAGS		+= $(call CHECKCC,-Wformat=2,)
 SHARED_FLAGS		+= $(call CHECKCC,-fno-stack-protector,)
 SHARED_FLAGS		+= $(call CHECKCC,-fdiagnostics-show-option)
+SHARED_FLAGS		+= $(call CHECKCC,-fno-builtin-bcmp)
 
 OPT_CXXFLAGS-gcc	+= $(call CHECKCXX,-fweb,)
 OPT_CFLAGS-gcc		+= $(call CHECKCC,-fweb,)
