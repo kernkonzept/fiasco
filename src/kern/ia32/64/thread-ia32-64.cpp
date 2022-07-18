@@ -39,6 +39,7 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
     {
       p[2] &= ~1UL;
       Cpu::wrmsr(0, 0, 0x49);
+      asm volatile ("verw  verw_gdt_data_kernel");
     }
 #endif
 
