@@ -2,6 +2,7 @@ IMPLEMENTATION:
 
 #include <cstdio>
 #include "cpu.h"
+#include "config_gdt.h"
 #include "div32.h"
 #include "gdt.h"
 #include "simpleio.h"
@@ -68,6 +69,26 @@ Jdb_kern_info_bench::get_time_now()
 
 #define inst_apic_timer_read						\
   asm volatile ("" : : "r"(Apic::timer_reg_read()))
+
+asm (".p2align 1                                        \n\t"
+     "bench_verify_selector:                            \n\t"
+     ".word " FIASCO_STRINGIFY(GDT_DATA_KERNEL) "       \n\t");
+
+#define inst_verr_reg                                                   \
+  asm volatile ("mov " FIASCO_STRINGIFY(GDT_DATA_KERNEL) ", %%r13 \n\t" \
+                "verr %%r13w                                    \n\t"   \
+                : : : "r13");
+
+#define inst_verw_reg                                                   \
+  asm volatile ("mov " FIASCO_STRINGIFY(GDT_DATA_KERNEL) ", %%r13 \n\t" \
+                "verw %%r13w                                    \n\t"   \
+                : : : "r13");
+
+#define inst_verr_mem                                                   \
+  asm volatile ("verr bench_verify_selector");
+
+#define inst_verw_mem                                                   \
+  asm volatile ("verw bench_verify_selector");
 
 #define BENCH(name, instruction, rounds)				\
   do									\
@@ -175,6 +196,10 @@ Jdb_kern_info_bench::show_arch()
       time = Cpu::rdtsc() - time;
       show_time(time, 200000, "modify ES + load ES:mem");
     }
+  BENCH("verr reg",             inst_verr_reg,     200000);
+  BENCH("verw reg",             inst_verw_reg,     200000);
+  BENCH("verr mem",             inst_verr_mem,     200000);
+  BENCH("verw mem",             inst_verw_mem,     200000);
   BENCH("push RAX + pop RAX",	inst_push_pop,     200000);
   BENCH("push flags + pop RAX", inst_pushf_pop,    200000);
     {
