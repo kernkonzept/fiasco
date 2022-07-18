@@ -264,7 +264,7 @@ safe_iret:
 
 	mov	$VAL__MEM_LAYOUT__KENTRY_CPU_PAGE, %r14
 	mov	%r13, CPUE_STACK(-56, %r14)
-#ifdef CONFIG_INTEL_IA32_BRANCH_BARRIERS
+# ifdef CONFIG_INTEL_IA32_BRANCH_BARRIERS
 	/* check for exit flags (need IBTPB?) */
 	mov	CPUE_EXIT(%r14), %r13
 	test	$(CPUE_EXIT_NEED_IBPB), %r13
@@ -272,10 +272,11 @@ safe_iret:
 	and	$(~CPUE_EXIT_NEED_IBPB), %r13
 	mov	%r13, CPUE_EXIT(%r14)
 	IA32_IBPB
-	mov	GDT_DATA_KERNEL, %r13
-	verw	%r13w
+        /* Only the memory-operand variant guarantees the CPU buffer flush
+         * functionality according to the documentation. */
+	verw	verw_gdt_data_kernel
 22:
-#endif
+# endif
 	mov	(%rsp), %r13
 	mov	%r13, CPUE_STACK(-48, %r14)
 	mov	32(%rsp), %r13
@@ -303,5 +304,12 @@ safe_iret:
 	ASM_KEX 6b, 0, iretq_exception_handler
 	/* the in kernel iret should actually never trigger this */
 	ASM_KEX 5b, 0, iretq_exception_handler
+
+# ifdef CONFIG_INTEL_IA32_BRANCH_BARRIERS
+        .p2align 1
+.global verw_gdt_data_kernel
+verw_gdt_data_kernel:
+        .word   GDT_DATA_KERNEL
+# endif
 #endif
 

@@ -76,8 +76,9 @@
 	and	$(~CPUE_EXIT_NEED_IBPB), %r11
 	mov	%r11, CPUE_EXIT(%r15)
 	IA32_IBPB
-	mov	GDT_DATA_KERNEL, %r11
-	verw	%r11w
+        /* Only the memory-operand variant guarantees the CPU buffer flush
+         * functionality according to the documentation. */
+	verw	verw_gdt_data_kernel
 333:
 # endif
 	mov	CPUE_CR3U(%r15), %r15
