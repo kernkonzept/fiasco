@@ -350,7 +350,7 @@ private:
 };
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION[ia32,amd64,ux]:
+IMPLEMENTATION[ia32,amd64]:
 
 #include <cstdio>
 #include <cstring>
@@ -560,6 +560,23 @@ struct Ia32_intel_microcode
     return true;
   }
 };
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION[ux]:
+
+struct Ia32_intel_microcode
+{
+  static bool load()
+  { return false; }
+};
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION[ia32,amd64,ux]:
+
+#include <cstdio>
+#include <cstring>
+#include "config.h"
+#include "panic.h"
 
 DEFINE_PER_CPU_P(0) Per_cpu<Cpu> Cpu::cpus(Per_cpu_data::Cpu_num);
 Cpu *Cpu::_boot_cpu;
