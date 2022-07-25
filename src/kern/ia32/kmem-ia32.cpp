@@ -179,6 +179,8 @@ Device_map::unmap(void const *phys)
 
   Kmem::kdir->unmap(Virt_addr(v), Virt_size(Config::SUPERPAGE_SIZE),
                     Pdir::Depth, false);
+
+  _map[idx] = ~0U;
 }
 
 
