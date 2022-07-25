@@ -259,8 +259,6 @@ INTERFACE [ia32, amd64]:
 #include "initcalls.h"
 #include "per_cpu_data.h"
 #include "gdt.h"
-#include "lock_guard.h"
-#include "spin_lock.h"
 
 class Gdt;
 class Tss;
