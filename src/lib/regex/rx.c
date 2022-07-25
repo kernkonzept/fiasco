@@ -16,6 +16,7 @@ extern void  regex_free(void *ptr);
 
 #define realloc simple_realloc
 #define free    simple_free
+#undef alloca
 #define alloca  __builtin_alloca
 
 
