@@ -43,6 +43,13 @@ Context::store_tpidruro()
   asm volatile ("mrc p15, 0, %0, c13, c0, 3" : "=r"(_tpidruro));
 }
 
+PRIVATE static inline
+void
+Context::load_cnthctl(Unsigned32 cnthctl)
+{
+  asm volatile ("mcr p15, 4, %0, c14, c1, 0" : : "r"(cnthctl));
+}
+
 PRIVATE inline
 void
 Context::arm_hyp_load_non_vm_state(bool vgic)

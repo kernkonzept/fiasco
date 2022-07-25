@@ -135,6 +135,7 @@ Context::arch_load_vcpu_user_state(Vcpu_state *vcpu, bool do_load)
 PUBLIC inline NEEDS[Context::arm_hyp_load_non_vm_state,
                     Context::vm_state,
                     Context::store_tpidruro,
+                    Context::load_cnthctl,
                     Context::save_ext_vcpu_state,
                     Context::load_ext_vcpu_state]
 void
@@ -168,9 +169,16 @@ Context::switch_vm_state(Context *t)
       t->load_ext_vcpu_state(_to_state, v);
 
       if (_to_state & Thread_vcpu_user)
-        Gic_h_global::gic->load_full(&v->gic, vgic);
-      else if (vgic)
-        Gic_h_global::gic->disable();
+        {
+          load_cnthctl(Guest_cnthctl);
+          Gic_h_global::gic->load_full(&v->gic, vgic);
+        }
+      else
+        {
+          load_cnthctl(Host_cnthctl);
+          if (vgic)
+            Gic_h_global::gic->disable();
+        }
     }
   else
     arm_hyp_load_non_vm_state(vgic);
