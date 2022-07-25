@@ -108,19 +108,18 @@ void Proc::irq_chance()
   pause();
 }
 
-
 PUBLIC static inline
 Unsigned64
 Proc::rdmsr(Unsigned32 msr)
 {
   Unsigned32 h, l;
   asm volatile ("rdmsr" : "=a" (l), "=d" (h) : "c" (msr));
-  return (((Mword)h) << 32) | l;
+  return (((Unsigned64)h) << 32) | l;
 }
 
 PUBLIC static inline
 void
-Proc::wrmsr(Unsigned32 msr, Unsigned64 value)
+Proc::wrmsr(Unsigned64 value, Unsigned32 msr)
 {
   asm volatile ("wrmsr": :
                 "a" ((Unsigned32)value),
@@ -136,4 +135,55 @@ Proc::efer()
 PUBLIC static inline
 void
 Proc::efer(Mword value)
-{ wrmsr(0xc0000080, value); }
+{ wrmsr(value, 0xc0000080); }
+
+PUBLIC static inline
+void
+Proc::cpuid(Unsigned32 mode, Unsigned32 ecx_val,
+            Unsigned32 *eax, Unsigned32 *ebx, Unsigned32 *ecx, Unsigned32 *edx)
+{
+  asm volatile ("cpuid" : "=a" (*eax), "=b" (*ebx), "=c" (*ecx), "=d" (*edx)
+                        : "a" (mode), "c" (ecx_val));
+}
+
+PUBLIC static inline
+void
+Proc::cpuid(Unsigned32 mode,
+            Unsigned32 *eax, Unsigned32 *ebx, Unsigned32 *ecx, Unsigned32 *edx)
+{ cpuid(mode, 0, eax, ebx, ecx, edx); }
+
+PUBLIC static inline
+Unsigned32
+Proc::cpuid_eax(Unsigned32 mode)
+{
+  Unsigned32 eax, dummy;
+  cpuid(mode, &eax, &dummy, &dummy, &dummy);
+  return eax;
+}
+
+PUBLIC static inline
+Unsigned32
+Proc::cpuid_ebx(Unsigned32 mode)
+{
+  Unsigned32 ebx, dummy;
+  cpuid(mode, &dummy, &ebx, &dummy, &dummy);
+  return ebx;
+}
+
+PUBLIC static inline
+Unsigned32
+Proc::cpuid_ecx(Unsigned32 mode)
+{
+  Unsigned32 ecx, dummy;
+  cpuid(mode, &dummy, &dummy, &ecx, &dummy);
+  return ecx;
+}
+
+PUBLIC static inline
+Unsigned32
+Proc::cpuid_edx(Unsigned32 mode)
+{
+  Unsigned32 edx, dummy;
+  cpuid(mode, &dummy, &dummy, &dummy, &edx);
+  return edx;
+}

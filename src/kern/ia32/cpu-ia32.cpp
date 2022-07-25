@@ -951,57 +951,34 @@ Cpu::exception_string(Mword trapno)
 PUBLIC static inline FIASCO_INIT_CPU
 void
 Cpu::cpuid(Unsigned32 mode, Unsigned32 ecx_val,
-           Unsigned32 *eax, Unsigned32 *ebx,
-           Unsigned32 *ecx, Unsigned32 *edx)
-{
-  asm volatile ("cpuid" : "=a" (*eax), "=b" (*ebx), "=c" (*ecx), "=d" (*edx)
-                        : "a" (mode), "c" (ecx_val));
-}
+           Unsigned32 *eax, Unsigned32 *ebx, Unsigned32 *ecx, Unsigned32 *edx)
+{ Proc::cpuid(mode, ecx_val, eax, ebx, ecx, edx); }
 
 PUBLIC static inline FIASCO_INIT_CPU_AND_PM
 void
 Cpu::cpuid(Unsigned32 mode,
-           Unsigned32 *eax, Unsigned32 *ebx,
-           Unsigned32 *ecx, Unsigned32 *edx)
-{
-  cpuid(mode, 0, eax, ebx, ecx, edx);
-}
+           Unsigned32 *eax, Unsigned32 *ebx, Unsigned32 *ecx, Unsigned32 *edx)
+{ Proc::cpuid(mode, 0, eax, ebx, ecx, edx); }
 
 PUBLIC static inline FIASCO_INIT_CPU_AND_PM
 Unsigned32
 Cpu::cpuid_eax(Unsigned32 mode)
-{
-  Unsigned32 eax, dummy;
-  cpuid(mode, &eax, &dummy, &dummy, &dummy);
-  return eax;
-}
+{ return Proc::cpuid_eax(mode); }
 
 PUBLIC static inline FIASCO_INIT_CPU_AND_PM
 Unsigned32
 Cpu::cpuid_ebx(Unsigned32 mode)
-{
-  Unsigned32 ebx, dummy;
-  cpuid(mode, &dummy, &ebx, &dummy, &dummy);
-  return ebx;
-}
+{ return Proc::cpuid_ebx(mode); }
 
 PUBLIC static inline FIASCO_INIT_CPU_AND_PM
 Unsigned32
 Cpu::cpuid_ecx(Unsigned32 mode)
-{
-  Unsigned32 ecx, dummy;
-  cpuid(mode, &dummy, &dummy, &ecx, &dummy);
-  return ecx;
-}
+{ return Proc::cpuid_ecx(mode); }
 
 PUBLIC static inline FIASCO_INIT_CPU_AND_PM
 Unsigned32
 Cpu::cpuid_edx(Unsigned32 mode)
-{
-  Unsigned32 edx, dummy;
-  cpuid(mode, &dummy, &dummy, &dummy, &edx);
-  return edx;
-}
+{ return Proc::cpuid_edx(mode); }
 
 PUBLIC
 void
@@ -1705,12 +1682,7 @@ Cpu::can_wrmsr() const
 PUBLIC static inline
 Unsigned64
 Cpu::rdmsr(Unsigned32 reg)
-{
-  Unsigned32 l,h;
-
-  asm volatile ("rdmsr" : "=a" (l), "=d" (h) : "c" (reg));
-  return ((Unsigned64)h << 32) + (Unsigned64)l;
-}
+{ return Proc::rdmsr(reg); }
 
 PUBLIC static inline
 Unsigned64
@@ -1725,12 +1697,12 @@ Cpu::rdpmc(Unsigned32 idx, Unsigned32)
 PUBLIC static inline
 void
 Cpu::wrmsr(Unsigned32 low, Unsigned32 high, Unsigned32 reg)
-{ asm volatile ("wrmsr" : : "a" (low), "d" (high), "c" (reg)); }
+{ Proc::wrmsr(((Unsigned64)high << 32) | low, reg); }
 
 PUBLIC static inline
 void
 Cpu::wrmsr(Unsigned64 msr, Unsigned32 reg)
-{ asm volatile ("wrmsr" : : "a" ((Unsigned32)msr), "d" ((Unsigned32)(msr >> 32)), "c" (reg)); }
+{ Proc::wrmsr(msr, reg); }
 
 PUBLIC static inline
 void
