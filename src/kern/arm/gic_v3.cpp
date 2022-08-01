@@ -199,7 +199,9 @@ Gic_v3::init_lpi()
       Gic_redist::init_lpi(num_lpis);
       _its_vec = Its_vec(Boot_alloced::allocate<Gic_its *>(Max_num_its),
                          Max_num_its);
-      _msi = new Boot_object<Gic_msi>(this, num_lpis);
+      _msi = new Boot_object<Gic_msi>(num_lpis, [this](unsigned its_num) {
+        return its_num < _num_its ? _its_vec[its_num] : nullptr;
+      });
       printf("GIC: Supports up to %u LPIs, using %u.\n", hw_num_lpis, num_lpis);
     }
   else
@@ -236,16 +238,6 @@ Gic_v3::add_its(Address its_base)
   its->cpu_init(Cpu_number::boot_cpu(), _redist.cpu(Cpu_number::boot_cpu()));
   _its_vec[_num_its++] = its;
   return true;
-}
-
-PUBLIC inline
-Gic_its *
-Gic_v3::get_its(unsigned its_num)
-{
-  if (its_num >= _num_its)
-    return nullptr;
-
-  return _its_vec[its_num];
 }
 
 /**

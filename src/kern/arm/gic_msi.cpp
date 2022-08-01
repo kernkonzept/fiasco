@@ -3,9 +3,8 @@ INTERFACE:
 #include "gic_its.h"
 #include "irq_chip.h"
 
+#include <cxx/function>
 #include "cxx/static_vector"
-
-class Gic_v3;
 
 class Gic_msi : public Irq_chip_icu
 {
@@ -128,18 +127,17 @@ private:
     Gic_its *_its;
   };
 
-  Gic_v3 *_gic;
   using Lpi_vec = cxx::static_vector<Lpi>;
   Lpi_vec _lpis;
+  using Its_lookup = cxx::functor<Gic_its *(unsigned)>;
+  Its_lookup _lookup_its;
 };
 
 IMPLEMENTATION:
 
-#include "gic_v3.h"
-
 PUBLIC
-Gic_msi::Gic_msi(Gic_v3 *gic, unsigned num_lpis)
-: _gic(gic)
+Gic_msi::Gic_msi(unsigned num_lpis, Its_lookup &&lookup_its)
+: _lookup_its(lookup_its)
 {
   _lpis = Lpi_vec(new Boot_object<Lpi>[num_lpis], num_lpis);
   for (unsigned i = 0; i < _lpis.size(); i++)
@@ -246,7 +244,7 @@ int
 Gic_msi::msg(Mword pin, Unsigned64 src, Irq_mgr::Msi_info *inf)
 {
   Msi_src msi_src(src);
-  Gic_its *its = _gic->get_its(msi_src.its_num());
+  Gic_its *its = _lookup_its(msi_src.its_num());
   if (!its)
     return -L4_err::ERange;
 
