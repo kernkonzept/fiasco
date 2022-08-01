@@ -70,7 +70,8 @@ Ipc_sender_base::handle_shortcut(Syscall_frame *dst_regs,
         // also: no shortcut for alien threads, they need to see the
         // after-syscall exception
         && !(receiver->state()
-          & (Thread_drq_wait | Thread_ready_mask | Thread_alien))
+          & (Thread_drq_wait | Thread_ready_mask | Thread_alien
+             | Thread_switch_hazards))
         && !rq.schedule_in_progress))) // no schedule in progress
     {
       // we don't need to manipulate the state in a safe way
