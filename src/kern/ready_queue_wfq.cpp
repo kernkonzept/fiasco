@@ -153,6 +153,9 @@ Ready_queue_wfq<E>::enqueue(E *i, bool /*is_current_sched**/)
 
   unsigned n = _cnt++;
 
+  if (EXPECT_FALSE(n >= cxx::size(_heap)))
+    panic("WFQ scheduler: Too many threads ready");
+
   E *&h = _heap[n];
   h = i;
   _e(i)->_ready_link = &h;
