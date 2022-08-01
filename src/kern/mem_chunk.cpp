@@ -55,6 +55,7 @@ IMPLEMENTATION:
 
 #include <arithmetic.h>
 #include <cstring>
+#include <minmax.h>
 
 /**
  * Allocate uninitialized memory with alignment requirements.
