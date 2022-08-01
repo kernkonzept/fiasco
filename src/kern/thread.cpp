@@ -1239,6 +1239,9 @@ Thread::migrate_away(Migration *inf, bool remote)
       assert (!in_ready_list());
       assert (!_pending_rq.queued());
 
+      // The migration must be finished on the new CPU core before executing any
+      // userland code. This will be done by Context::switch_handle_drq() after
+      // the next context switch to this context was performed on the new CPU.
       state_add_dirty(Thread_finish_migration);
       set_home_cpu(target_cpu);
       Mem::mp_mb();
