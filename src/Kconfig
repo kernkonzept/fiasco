@@ -345,7 +345,7 @@ config INTEL_IA32_BRANCH_BARRIERS
 
 config INTEL_MDS_MITIGATION
         bool "Enable MDS mitigation" if AMD64 && KERNEL_ISOLATION
-        depends on AMD64 && KERNEL_ISOLATION
+        default y if AMD64 && KERNEL_ISOLATION
         help
           Use CPU buffer clearing to prevent forwarding of speculative data to
           a disclosure gadget which allows to infer the value via a cache side
