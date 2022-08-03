@@ -44,13 +44,13 @@ public:
     Kern_lib_base	 = 0xffffe000,
     Syscalls		 = 0xfffff000,
 
-    Service_page         = 0xeac00000,
-    Tbuf_status_page     = Service_page + 0x5000,
-    Tbuf_ustatus_page    = Tbuf_status_page,
-    Tbuf_buffer_area	 = Service_page + 0x200000,
-    Tbuf_buffer_size	 = 0x200000,
-    Tbuf_ubuffer_area    = Tbuf_buffer_area,
-    Jdb_tmp_map_area     = Service_page + 0x400000,
+    // Service area: 0xea000000 ... 0xeaffffff (16MiB)
+    Tbuf_status_page     = 0xea000000,  // page-aligned
+    Jdb_tmp_map_area     = 0xea200000,  // superpage-aligned
+    Tbuf_buffer_area     = 0xea800000,  // page-aligned
+    Tbuf_buffer_area_end = 0xeb000000,  // Tbuf_buffer_size 2^n
+    Tbuf_buffer_size     = Tbuf_buffer_area_end - Tbuf_buffer_area,
+
     Mmio_map_start       = 0xed000000,
     Mmio_map_end         = 0xef000000,
     Map_base             = 0xf0000000,
@@ -59,6 +59,8 @@ public:
 
     Ivt_base             = 0xffff0000,
   };
+
+  static_assert(Tbuf_buffer_size == 1UL << 23); // max 2^17 entries @ 32B
 };
 
 //---------------------------------------------------------------------------
