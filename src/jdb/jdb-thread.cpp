@@ -20,30 +20,6 @@ IMPLEMENTATION:
 #include "thread.h"
 #include "mem_layout.h"
 
-class Jdb_tid_ext : public Jdb_prompt_ext
-{
-public:
-  void ext() override;
-  void update() override;
-};
-
-IMPLEMENT
-void
-Jdb_tid_ext::ext()
-{
-  if (Jdb::get_current_active())
-    printf("(%p) ", Jdb::get_current_active());
-}
-
-IMPLEMENT
-void
-Jdb_tid_ext::update()
-{
-  Jdb::get_current(Jdb::current_cpu);
-}
-
-//static Jdb_tid_ext jdb_tid_ext INIT_PRIORITY(JDB_MODULE_INIT_PRIO);
-
 IMPLEMENT_DEFAULT
 Thread *
 Jdb::get_thread(Cpu_number cpu)
