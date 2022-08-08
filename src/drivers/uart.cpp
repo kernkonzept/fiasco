@@ -94,18 +94,18 @@ public:
   /**
    * (abstract) Write str.
    */
-  int write( char const *str, size_t len) override;
+  int write(char const *str, size_t len) override;
 
   /**
    * (abstract) Read a character.
    */
-  int getchar( bool blocking = true) override;
+  int getchar(bool blocking = true) override;
 
   /**
    * (abstract) Is there anything to read?
    */
   int char_avail() const override;
-  
+
   Mword get_attributes() const override;
 };
 
