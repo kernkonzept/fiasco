@@ -527,7 +527,7 @@ config JDB_GZIP
 	bool "GZIP compressed dumps" if HAS_JDB_GZIP_OPTION
 	default y if HAS_JDB_GZIP_OPTION
 	help
-	  Add supprt for gzip compressed dumps of the trace buffer.
+	  Add support for gzip compressed dumps of the trace buffer.
 	  Increases memory foot-print, only enabled when needed.
 
 config JDB_ACCOUNTING
