@@ -1,1 +1,1 @@
-TEST_TAP_PLUGINS=TaggedOutputMatch:tag=mdb,file=expected_mapdb,literal=1
+TEST_TAP_PLUGINS=TaggedOutputMatch:tag=mdb,file=expected_mapdb,literal=1,uuid=1b5cc99e-cfbc-4e0c-93d5-3c70ff598b3a
