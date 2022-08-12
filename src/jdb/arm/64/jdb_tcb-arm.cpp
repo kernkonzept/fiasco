@@ -39,7 +39,7 @@ IMPLEMENT
 void
 Jdb_tcb::print_entry_frame_regs(Thread *t)
 {
-  Jdb_entry_frame *ef = Jdb::get_entry_frame(Jdb::current_cpu);
+  Jdb_entry_frame *ef = Jdb::get_entry_frame(t->get_current_cpu());
   bool user = ef->from_user();
 
   printf("Regs (before debug entry from %s mode):\n",

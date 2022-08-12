@@ -572,21 +572,18 @@ PUBLIC static
 Jdb_module::Action_code
 Jdb_tcb::show(Thread *t, int level, bool dump_only)
 {
-  Thread *t_current      = Jdb::get_current_active();
-  bool is_current_thread;
-  bool redraw_screen     = !dump_only;
-  Jdb_entry_frame *ef    = Jdb::get_entry_frame(Jdb::current_cpu);
+  bool redraw_screen = !dump_only;
 #if 0
-  Address bt_start       = 0;
+  Address bt_start   = 0;
 #endif
 
-  if (!t && !t_current)
-    return NOTHING;
+  if (!t)
+    t = Jdb::get_thread(Jdb::current_cpu);
 
   if (!t)
-    t = t_current;
+    return NOTHING;
 
-  is_current_thread = t == t_current;
+  Jdb_entry_frame *ef = Jdb::get_entry_frame(t->get_current_cpu());
 
   if (level == 0)
     {
@@ -594,13 +591,13 @@ Jdb_tcb::show(Thread *t, int level, bool dump_only)
       redraw_screen = false;
     }
 
-  Address ksp  = is_current_thread ? ef->ksp()
-                                   : (Address)t->get_kernel_sp();
+  Address ksp  = is_current(t) ? ef->ksp()
+                               : (Address)t->get_kernel_sp();
 
 #if 0
   Address tcb  = (Address)context_of((void*)ksp);
 #endif
-  _stack_view.init(ksp, ef, is_current_thread);
+  _stack_view.init(ksp, ef, is_current(t));
   _stack_view.set_y(stack_y());
 
 whole_screen:
@@ -684,13 +681,13 @@ whole_screen:
     {
       if (t->_ready_next)
         Jdb_kobject::print_uid(Thread::lookup(t->_ready_next), 3);
-      else if (is_current_thread)
+      else if (is_current(t))
         putstr(" ???.??");
       else
         putstr("\033[31;1m???.??\033[m");
       if (t->_ready_prev)
         Jdb_kobject::print_uid(Thread::lookup(t->_ready_prev), 4);
-      else if (is_current_thread)
+      else if (is_current(t))
         putstr(" ???.??");
       else
         putstr(" \033[31;1m???.??\033[m");
@@ -720,7 +717,7 @@ whole_screen:
   else
     putstr("---\nvCPU    : ---\n");
 
-  if (is_current_thread)
+  if (is_current(t))
     {
       if (!dump_only)
         Jdb::cursor(11, 1);
@@ -791,7 +788,7 @@ dump_stack:
                 }
               break;
             case KEY_TAB:
-              //bt_start = search_bt_start(tcb, (Mword*)ksp, is_current_thread);
+              //bt_start = search_bt_start(tcb, (Mword*)ksp, is_current(t));
               redraw = true;
               break;
             case ' ':
@@ -1105,27 +1102,19 @@ class Jdb_thread_name_ext : public Jdb_prompt_ext
 {
 public:
   void ext() override;
-  void update() override;
 };
 
 IMPLEMENT
 void
 Jdb_thread_name_ext::ext()
 {
-  if (Jdb::get_current_active())
+  Thread *thread = Jdb::get_thread(Jdb::current_cpu);
+  if (thread)
     {
-      Jdb_kobject_name *nx = Jdb_kobject_extension::find_extension<Jdb_kobject_name>(Jdb::get_current_active());
+      Jdb_kobject_name *nx = Jdb_kobject_extension::find_extension<Jdb_kobject_name>(thread);
       if (nx && nx->name()[0])
         printf("[%*.*s] ", nx->max_len(), nx->max_len(), nx->name());
     }
 }
 
-IMPLEMENT
-void
-Jdb_thread_name_ext::update()
-{
-  Jdb::get_current(Jdb::current_cpu);
-}
-
 static Jdb_thread_name_ext jdb_thread_name_ext INIT_PRIORITY(JDB_MODULE_INIT_PRIO);
-

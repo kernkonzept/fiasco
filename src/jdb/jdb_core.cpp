@@ -90,7 +90,6 @@ public:
   static void prompt_end();
   static void prompt();
   static int  prompt_len();
-  static void update_prompt();
   static int set_prompt_color(char v);
 
   /**
@@ -175,12 +174,6 @@ PUBLIC static
 void
 Jdb_core::print_prompt()
 { prompt_start(); prompt(); prompt_end(); }
-
-IMPLEMENT
-void Jdb_core::update_prompt()
-{
-  Jdb_prompt_ext::update_all();
-}
 
 IMPLEMENT
 void Jdb_core::prompt_start()

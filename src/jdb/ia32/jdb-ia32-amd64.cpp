@@ -729,7 +729,7 @@ Jdb::handle_trapX(Cpu_number cpu, Jdb_entry_frame *ef)
   error_buffer.cpu(cpu).printf("%s", Cpu::exception_string(ef->_trapno));
   if (   ef->_trapno >= 10
       && ef->_trapno <= 14)
-    error_buffer.cpu(cpu).printf("(ERR=" L4_PTR_FMT ")", ef->_err);
+    error_buffer.cpu(cpu).printf(" (ERR=" L4_PTR_FMT ")", ef->_err);
 
   return 1;
 }

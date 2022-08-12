@@ -138,9 +138,9 @@ IMPLEMENT
 void
 Jdb_bp::at_jdb_leave()
 {
-  if (Jdb::get_current_active()
-      && Jdb::get_current_active()->space() != Kernel_task::kernel_task())
-    write_debug_register(6, 0, Jdb::get_current_active()->space());
+  Thread *thread = Jdb::get_thread(Jdb::current_cpu);
+  if (thread && thread->space() != Kernel_task::kernel_task())
+    write_debug_register(6, 0, thread->space());
 }
 
 IMPLEMENT

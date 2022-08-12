@@ -576,7 +576,7 @@ Jdb_thread_list::action(int cmd, void *&argbuf, char const *&fmt, int &) overrid
 	  return EXTRA_INPUT;
 	}
 
-      Thread *t = Jdb::get_current_active();
+      Thread *t = Jdb::get_thread(Jdb::current_cpu);
       switch (subcmd)
 	{
         case 'r': cpu = Cpu_number::first(); list_threads(t, 'r'); break;
@@ -595,7 +595,7 @@ Jdb_thread_list::action(int cmd, void *&argbuf, char const *&fmt, int &) overrid
     }
   else if (cmd == 1)
     {
-      Thread *t = Jdb::get_current_active();
+      Thread *t = Jdb::get_thread(Jdb::current_cpu);
 
       {
         // Hm, we are in JDB, however we have to make the assertion in

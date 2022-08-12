@@ -29,16 +29,10 @@ Jdb::get_thread(Cpu_number cpu)
   return static_cast<Thread*>(context_of(c));
 }
 
-PUBLIC
-static void
-Jdb::get_current(Cpu_number cpu)
-{
-  current_active = get_thread(cpu);
-}
-
 PUBLIC static inline NEEDS["thread.h"]
 Space*
-Jdb::get_current_space()
+Jdb::get_space(Cpu_number cpu)
 {
-  return current_active ? current_active->space() : 0;
+  Thread *thread = Jdb::get_thread(cpu);
+  return thread ? thread->space() : nullptr;
 }

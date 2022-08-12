@@ -29,7 +29,7 @@ IMPLEMENT
 void
 Jdb_tcb::print_entry_frame_regs(Thread *t)
 {
-  Jdb_entry_frame *ef = Jdb::get_entry_frame(Jdb::current_cpu);
+  Jdb_entry_frame *ef = Jdb::get_entry_frame(t->get_current_cpu());
   char pfa[32] = "";
 
   if (ef->_trapno == 14)

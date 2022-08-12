@@ -101,8 +101,6 @@ private:
   static Per_cpu<String_buf<81> > error_buffer;
   static bool was_input_error;
 
-  static Thread  *current_active;
-
   static const char *toplevel_cmds;
   static const char *non_interactive_cmds;
 
@@ -170,7 +168,6 @@ char Jdb::next_cmd;			// next global command to execute
 char Jdb::hide_statline;		// show status line on enter_kdebugger
 DEFINE_PER_CPU Per_cpu<Jdb_entry_frame*> Jdb::entry_frame;
 Cpu_number Jdb::current_cpu;              // current CPU JDB is running on
-Thread *Jdb::current_active;		// current running thread
 bool Jdb::was_input_error;		// error in command sequence
 
 DEFINE_PER_CPU Per_cpu<Jdb::Remote_func> Jdb::remote_func;
@@ -905,13 +902,6 @@ Jdb::write_tsc(String_buffer *buf, Signed64 tsc, bool sign)
 }
 
 PUBLIC static inline
-Thread*
-Jdb::get_current_active()
-{
-  return current_active;
-}
-
-PUBLIC static inline
 Jdb_entry_frame*
 Jdb::get_entry_frame(Cpu_number cpu)
 {
@@ -1236,9 +1226,6 @@ Jdb::enter_jdb(Jdb_entry_frame *e, Cpu_number cpu)
 
   if (!never_break && really_break) 
     {
-      // determine current task/thread from stack pointer
-      update_prompt();
-
       do
 	{
 	  screen_scroll(1, Jdb_screen::height());

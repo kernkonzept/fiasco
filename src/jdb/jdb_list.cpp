@@ -357,7 +357,7 @@ Jdb_thread_list::action(int cmd, void *&argbuf, char const *&fmt, int &)
 	  return EXTRA_INPUT;
 	}
 
-      Thread *t = Jdb::get_current_active();
+      Thread *t = Jdb::get_thread(Jdb::current_cpu);
       switch (subcmd)
 	{
 	case 'r': cpu = 0; list_threads(t, 'r'); break;
@@ -377,7 +377,7 @@ Jdb_thread_list::action(int cmd, void *&argbuf, char const *&fmt, int &)
       Console *gzip = Kconsole::console()->find_console(Console::GZIP);
       if (gzip)
 	{
-	  Thread *t = Jdb::get_current_active();
+	  Thread *t = Jdb::get_thread(Jdb::current_cpu);
 	  gzip->state(gzip->state() | Console::OUTENABLED);
 	  long_output = 1;
 	  Jdb_thread_list::init('p', t);
