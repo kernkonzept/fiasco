@@ -137,7 +137,7 @@ IMPLEMENTATION:
 
 PUBLIC
 Gic_msi::Gic_msi(unsigned num_lpis, Its_lookup &&lookup_its)
-: _lookup_its(lookup_its)
+: _lookup_its(cxx::move(lookup_its))
 {
   _lpis = Lpi_vec(new Boot_object<Lpi>[num_lpis], num_lpis);
   for (unsigned i = 0; i < _lpis.size(); i++)
