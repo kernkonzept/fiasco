@@ -437,6 +437,8 @@ Utest_fw::new_test(char const *group, char const *test,
   // initialize for new test.
   _tap_line_printed = false;
 
+  test_uuid(uuid);
+
   // same group and test name as before.
   if (   group && test && _group_name && _test_name
       && !strcmp(group, _group_name) && !strcmp(test, _test_name))
@@ -445,7 +447,6 @@ Utest_fw::new_test(char const *group, char const *test,
     {
       _instance_counter = 0;
       name_group_test(group, test);
-      test_uuid(uuid);
     }
 
   Utest_debug::printf("New test %s::%s/%u\n", group, test, _instance_counter);
