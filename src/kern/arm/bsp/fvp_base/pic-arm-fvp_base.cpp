@@ -7,7 +7,6 @@ INTERFACE [arm && pic_gic && pf_fvp_base]:
 IMPLEMENTATION [arm && pic_gic && pf_fvp_base]:
 
 #include "irq_mgr_msi.h"
-#include "irq_mgr_multi_chip.h"
 #include "gic_v3.h"
 #include "kmem.h"
 
