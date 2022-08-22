@@ -11,5 +11,7 @@ public:
     Gic_v_phys_base      = 0x08040000,
     Gic_redist_phys_base = 0x080A0000,
     Gic_redist_size      = 0x00F60000,
+    Gic_its_phys_base    = 0x08080000,
+    Gic_its_size         = 0x00020000,
   };
 };
