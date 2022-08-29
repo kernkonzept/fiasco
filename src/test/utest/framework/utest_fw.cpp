@@ -277,7 +277,7 @@ private:
                                    __LINE__);                                 \
     } while (false)
 
-// ---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 IMPLEMENTATION:
 
 #include <feature.h>
@@ -1224,6 +1224,7 @@ Utest::Tick_disabler::timestamp()
   return 0;
 }
 
+//---------------------------------------------------------------------------
 IMPLEMENTATION[ia32 || amd64]:
 
 /// Tickless operation is supported on IA-32 and AMD64.
@@ -1246,6 +1247,7 @@ Utest::Tick_disabler::timestamp()
   return Cpu::cpus.cpu(current_cpu()).time_us();
 }
 
+//---------------------------------------------------------------------------
 IMPLEMENTATION[mips]:
 
 /// Tickless operation is supported on MIPS.
@@ -1292,6 +1294,7 @@ Utest::Tick_disabler::timestamp()
          / freq;
 }
 
+//---------------------------------------------------------------------------
 IMPLEMENTATION[arm && arm_generic_timer]:
 
 /// Tickless operation is supported on ARM with a generic timer.
