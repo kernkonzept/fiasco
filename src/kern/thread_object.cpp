@@ -222,11 +222,13 @@ Thread_object::sys_vcpu_resume(L4_msg_tag const &tag, Utcb const *utcb, Utcb *)
         L4_snd_item_iter::Item const *const item = snd_items.get();
         L4_fpage sfp(item->d);
 
-        Reap_list rl;
-        L4_error err = fpage_map(space(), sfp,
-                                 vcpu_user_space(), L4_fpage::all_spaces(),
-                                 item->b, &rl);
-        rl.del();
+        L4_error err;
+
+          {
+            Reap_list rl;
+            err = fpage_map(space(), sfp, vcpu_user_space(),
+                            L4_fpage::all_spaces(), item->b, &rl);
+          }
 
         cpu_lock.lock();
 

@@ -409,7 +409,6 @@ Task::sys_map(L4_fpage::Rights rights, Syscall_frame *f, Utcb *utcb)
       sfp.mask_rights(mask);
     }
 
-  Kobject::Reap_list rl;
   L4_error ret;
 
     {
@@ -423,16 +422,12 @@ Task::sys_map(L4_fpage::Rights rights, Syscall_frame *f, Utcb *utcb)
       if (!guard.check_and_lock(&existence_lock, &from->existence_lock))
         return commit_result(-L4_err::EInval);
 
+      Kobject::Reap_list rl;
       cpu_lock.clear();
-
       ret = fpage_map(from.get(), sfp, this,
                       L4_fpage::all_spaces(), L4_msg_item(utcb->values[1]), &rl);
       cpu_lock.lock();
     }
-
-  cpu_lock.clear();
-  rl.del();
-  cpu_lock.lock();
 
   // FIXME: treat reaped stuff
   if (ret.ok())
@@ -477,10 +472,6 @@ Task::sys_unmap(Syscall_frame *f, Utcb *utcb)
         }
       cpu_lock.lock();
     }
-
-  cpu_lock.clear();
-  rl.del();
-  cpu_lock.lock();
 
   return commit_result(0, words);
 }

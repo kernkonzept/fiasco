@@ -72,6 +72,7 @@ INTERFACE:
  * (either of the last capability, or with delete flag and delete rights),
  * the kernel runs the 2-phase destruction protocol for kernel objects
  * (implemented in Kobject::Reap_list::del()):
+ * - Release the CPU lock.
  * - Call Kobject::destroy(). Mark this object as invalid. When this function
  *   returns, the object cannot be longer referenced. One object reference is
  *   still maintained to prevent the final removal before all other objects
@@ -79,6 +80,7 @@ INTERFACE:
  * - Block for an RCU grace period.
  * - Call Kobject::put(). Release the final reference to the object preparing
  *   the object deletion.
+ * - Re-acquire the CPU lock.
  *
  * If Kobject::put() returns true, the kernel object is to be deleted.
  * If there are any other non-capability references to a kernel object,
@@ -108,6 +110,13 @@ private:
 public:
   using Dyn_castable<Kobject, Kobject_iface>::_cxx_dyn_type;
 
+  /**
+   * Automatic deletion of a list of kernel objects from the destructor of
+   * this class.
+   *
+   * \note The destructor temporarily releases the CPU lock while objects are
+   *       destroyed like described in Kobject.
+   */
   class Reap_list
   {
   private:
@@ -122,6 +131,7 @@ public:
     void del_1();
     void del_2();
 
+  private:
     /**
      * Delete kernel objects without capability references.
      */
@@ -130,6 +140,7 @@ public:
       if (EXPECT_TRUE(empty()))
         return;
 
+      auto c_lock = lock_guard<Lock_guard_inverse_policy>(cpu_lock);
       del_1();
       current()->rcu_wait();
       del_2();

@@ -512,16 +512,11 @@ Irq_sender::sys_bind(L4_msg_tag tag, L4_fpage::Rights rights, Utcb const *utcb,
   Reap_list rl;
   int res = alloc(thread, rl.list());
 
-  // note: this is a possible race on user-land
-  // where the label of an IRQ might become inconsistent with the attached
-  // thread. The user is responsible to synchronize Irq::attach calls to prevent
-  // this.
+  // note: this is a possible race on user-land where the label of an IRQ might
+  // become inconsistent with the attached thread. The user is responsible to
+  // synchronize Irq::attach calls to prevent this.
   if (res == 0)
     _irq_id = access_once(&utcb->values[1]);
-
-  cpu_lock.clear();
-  rl.del();
-  cpu_lock.lock();
 
   return commit_result(res);
 }
@@ -536,9 +531,7 @@ Irq_sender::sys_detach(L4_fpage::Rights rights)
   Reap_list rl;
   auto res = free(rl.list());
   _irq_id = ~0UL;
-  cpu_lock.clear();
-  rl.del();
-  cpu_lock.lock();
+
   return commit_result(res);
 }
 
