@@ -98,8 +98,21 @@ endif
 CPP			:= $(if $(filter undefined default,$(origin CPP)),cpp,$(CPP))
 CPP			:= $(CROSS_COMPILE)$(CPP)$(CCXX_SUFFIX)
 
-CC			:= $(CCXX_WRAP) $(if $(USE_CCACHE),$(CCACHE)) $(CROSS_COMPILE)$(CC)$(CCXX_SUFFIX)
-CXX			:= $(CCXX_WRAP) $(if $(USE_CCACHE),$(CCACHE)) $(CROSS_COMPILE)$(CXX)$(CCXX_SUFFIX)
+CXX_TYPE		:= $(if $(findstring clang,$(shell $(CXX) --version)),clang,gcc)
+CC_TYPE			:= $(if $(findstring clang,$(shell $(CC) --version)),clang,gcc)
+CLANG_TARGET_FLAG = $(addprefix --target=, $(notdir $(CROSS_COMPILE:%-=%)))
+
+ifeq ($(CC_TYPE),clang)
+  CC			:= $(CCXX_WRAP) $(if $(USE_CCACHE),$(CCACHE)) $(CC)$(CCXX_SUFFIX) $(CLANG_TARGET_FLAG)
+else
+  CC			:= $(CCXX_WRAP) $(if $(USE_CCACHE),$(CCACHE)) $(CROSS_COMPILE)$(CC)$(CCXX_SUFFIX)
+endif
+
+ifeq ($(CXX_TYPE),clang)
+  CXX			:= $(CCXX_WRAP) $(if $(USE_CCACHE),$(CCACHE)) $(CXX)$(CCXX_SUFFIX) $(CLANG_TARGET_FLAG)
+else
+  CXX			:= $(CCXX_WRAP) $(if $(USE_CCACHE),$(CCACHE)) $(CROSS_COMPILE)$(CXX)$(CCXX_SUFFIX)
+endif
 
 CCVER_ID_MAJOR-gcc        := __GNUC__
 CCVER_ID_MINOR-gcc        := __GNUC_MINOR__
@@ -108,7 +121,6 @@ CCVER_ID_MAJOR-clang      := __clang_major__
 CCVER_ID_MINOR-clang      := __clang_minor__
 CCVER_ID_PATCHLEVEL-clang := __clang_patchlevel__
 
-CC_TYPE                 := $(if $(findstring clang,$(shell $(CXX) --version)),clang,gcc)
 CCVER_MAJOR		:= $(call get_cc_version_part, $(CCVER_ID_MAJOR-$(CC_TYPE)))
 CCVER_MINOR		:= $(call get_cc_version_part, $(CCVER_ID_MINOR-$(CC_TYPE)))
 CCVER_PATCHLEVEL	:= $(call get_cc_version_part, $(CCVER_ID_PATCHLEVEL-$(CC_TYPE)))
