@@ -741,8 +741,20 @@ Mword
 Vmx::vmread_insn(Mword field)
 {
   Mword val;
-  asm volatile("vmread %1, %0" : "=r" (val) : "r" (field));
+  asm volatile("vmread %1, %0" : "=r" (val) : "r" (field) : "cc");
   return val;
+}
+
+PUBLIC static inline
+Mword
+Vmx::vmwrite_insn(Mword field, Mword value)
+{
+  Mword err;
+  asm volatile("vmwrite %1, %2  \n\t"
+               "pushf           \n\t"
+               "pop %0          \n\t"
+               : "=r" (err) : "r" ((Mword)value), "r" (field) : "cc");
+  return err;
 }
 
 PUBLIC static inline NEEDS[Vmx::vmread_insn]
@@ -761,8 +773,7 @@ template< typename T >
 void
 Vmx::vmwrite(Mword field, T value)
 {
-  Mword err;
-  asm volatile("vmwrite %1, %2; pushf; pop %0" : "=r" (err) : "r" ((Mword)value), "r" (field));
+  Mword err = vmwrite_insn(field, (Mword)value);
   if (EXPECT_FALSE(err & 0x1))
     WARNX(Info, "VMX: VMfailInvalid vmwrite(0x%04lx, %llx) => %lx\n",
           field, (Unsigned64)value, err);
@@ -770,9 +781,7 @@ Vmx::vmwrite(Mword field, T value)
     WARNX(Info, "VMX: VMfailValid vmwrite(0x%04lx, %llx) => %lx, insn error: 0x%x\n",
           field, (Unsigned64)value, err, vmread<Unsigned32>(F_vm_instruction_error));
   if (sizeof(T) > sizeof(Mword))
-    asm volatile("vmwrite %0, %1"
-                 : : "r" ((Mword)((Unsigned64)value >> 32)),
-                     "r" (field + 1));
+    vmwrite_insn(field + 1, ((Unsigned64)value >> 32));
 }
 
 PRIVATE
@@ -805,13 +814,14 @@ Vmx::pm_on_resume(Cpu_number) override
   check (handle_bios_lock());
 
   // enable vmx operation
-  asm volatile("vmxon %0" : :"m"(_vmxon_base_pa):);
+  asm volatile("vmxon %0" : : "m"(_vmxon_base_pa) : "cc");
 
   Mword eflags;
   // make kernel vmcs current
   asm volatile("vmptrld %1 \n\t"
 	       "pushf      \n\t"
-	       "pop %0     \n\t" : "=r"(eflags) : "m"(_kernel_vmcs_pa):);
+	       "pop %0     \n\t"
+               : "=r"(eflags) : "m"(_kernel_vmcs_pa) : "cc");
 
   // FIXME: MUST NOT PANIC ON CPU HOTPLUG
   if (eflags & 0x41)
@@ -826,7 +836,8 @@ Vmx::pm_on_suspend(Cpu_number) override
   Mword eflags;
   asm volatile("vmclear %1 \n\t"
 	       "pushf      \n\t"
-	       "pop %0     \n\t" : "=r"(eflags) : "m"(_kernel_vmcs_pa):);
+	       "pop %0     \n\t"
+               : "=r"(eflags) : "m"(_kernel_vmcs_pa) : "cc");
   if (eflags & 0x41)
     WARN("VMX: vmclear: vmcs pointer not valid\n");
 }
@@ -907,7 +918,7 @@ Vmx::Vmx(Cpu_number cpu)
   *(unsigned *)_vmxon = (info.basic & 0xFFFFFFFF);
 
   // enable vmx operation
-  asm volatile("vmxon %0" : :"m"(_vmxon_base_pa):);
+  asm volatile("vmxon %0" : : "m"(_vmxon_base_pa) : "cc");
   _vmx_enabled = true;
 
   if (cpu == Cpu_number::boot_cpu())
@@ -916,7 +927,8 @@ Vmx::Vmx(Cpu_number cpu)
   Mword eflags;
   asm volatile("vmclear %1 \n\t"
 	       "pushf      \n\t"
-	       "pop %0     \n\t" : "=r"(eflags) : "m"(_kernel_vmcs_pa):);
+	       "pop %0     \n\t"
+               : "=r"(eflags) : "m"(_kernel_vmcs_pa) : "cc");
   // FIXME: MUST NOT PANIC ON CPU HOTPLUG
   if (eflags & 0x41)
     panic("VMX: vmclear: VMFailInvalid, vmcs pointer not valid\n");
@@ -924,7 +936,8 @@ Vmx::Vmx(Cpu_number cpu)
   // make kernel vmcs current
   asm volatile("vmptrld %1 \n\t"
 	       "pushf      \n\t"
-	       "pop %0     \n\t" : "=r"(eflags) : "m"(_kernel_vmcs_pa):);
+	       "pop %0     \n\t"
+               : "=r"(eflags) : "m"(_kernel_vmcs_pa) : "cc");
 
   // FIXME: MUST NOT PANIC ON CPU HOTPLUG
   if (eflags & 0x41)

@@ -86,7 +86,7 @@ Jdb_exit_module::vmx_off() const
     Jdb::on_each_cpu([](Cpu_number cpu)
     {
       if (Vmx::cpus.cpu(cpu).vmx_enabled())
-        asm volatile("vmxoff");
+        asm volatile("vmxoff" ::: "cc");
     });
 }
 
