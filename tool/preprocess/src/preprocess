@@ -376,6 +376,7 @@ open(OUT, ">${outfile_base}_i.$header_ext")
 print OUT "// AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-\n\n";
 print OUT "#ifndef ${incfile_base_macro}_i_$header_ext\n" .
           "#define ${incfile_base_macro}_i_$header_ext\n";
+print OUT "#include \"${public_base}.$header_ext\"\n";
 
 foreach my $i (grep { $_->{type} eq 'include' }
 	       @{$Chunk::sections{"IMPLEMENTATION"}})
