@@ -50,7 +50,19 @@ Sys_call_page::set_utcb_get_code(Unsigned32 *sys_calls)
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION[arm && !arm_v7plus]:
+IMPLEMENTATION[arm && arm_v5]:
+
+PRIVATE static inline NOEXPORT NEEDS["types.h"]
+void
+Sys_call_page::set_dmb(Unsigned32 *m)
+{
+  // There is no DMB on ARMv5 and DSB (back then called "Drain Write Buffer")
+  // is not available from user mode (MCR is a privileged instruction on ARMv5)
+  m[0] = 0xe1a0f00e; // mov pc, lr
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION[arm && arm_v6]:
 
 PRIVATE static inline NOEXPORT NEEDS["types.h"]
 void
