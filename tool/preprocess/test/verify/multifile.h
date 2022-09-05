@@ -15,7 +15,7 @@ class Bar;
 class Foo
 {
 
-private:
+private: // EXTENSION
 
 #line 4 "multifile2.cpp"
 

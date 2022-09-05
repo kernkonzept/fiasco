@@ -23,7 +23,7 @@ protected:
   int foo( int );
   
 
-private:
+private: // EXTENSION
 
 #line 8 "dropsection-ext.cpp"
 
@@ -56,7 +56,7 @@ class Gen_foo_ext : private Gen_foo, public Ixdebix
 protected:
   unsigned stuff;
 
-private:
+private: // EXTENSION
 
 #line 14 "dropsection-ext.cpp"
 

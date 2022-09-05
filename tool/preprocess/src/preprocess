@@ -923,7 +923,7 @@ sub parse_file
 		      }
 		  }
 
-              $$txt .= "\nprivate:\n";
+              $$txt .= "\nprivate: // EXTENSION\n";
 
               # XXX XXX we should not handle line directives here --
               # this is the job of the output functions.  However, as

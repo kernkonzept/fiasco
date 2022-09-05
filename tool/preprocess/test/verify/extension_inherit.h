@@ -19,7 +19,7 @@ class Class_b0_e1
 #line 6 "extension_inherit.cpp"
 {
 
-private:
+private: // EXTENSION
 
 #line 10 "extension_inherit.cpp"
 
@@ -38,12 +38,12 @@ class Class_b0_e1_e1
 #line 15 "extension_inherit.cpp"
 {
 
-private:
+private: // EXTENSION
 
 #line 19 "extension_inherit.cpp"
 
 
-private:
+private: // EXTENSION
 
 #line 23 "extension_inherit.cpp"
 
@@ -59,7 +59,7 @@ class Class_b0_e2
 #line 28 "extension_inherit.cpp"
 {
 
-private:
+private: // EXTENSION
 
 #line 32 "extension_inherit.cpp"
 
@@ -78,12 +78,12 @@ class Class_b0_e2_e1
 #line 37 "extension_inherit.cpp"
 {
 
-private:
+private: // EXTENSION
 
 #line 41 "extension_inherit.cpp"
 
 
-private:
+private: // EXTENSION
 
 #line 45 "extension_inherit.cpp"
 
@@ -99,7 +99,7 @@ class Class_b1_e1 : Base_0
 #line 50 "extension_inherit.cpp"
 {
 
-private:
+private: // EXTENSION
 
 #line 54 "extension_inherit.cpp"
 
@@ -118,12 +118,12 @@ class Class_b1_e1_e1 : Base_0
 #line 59 "extension_inherit.cpp"
 {
 
-private:
+private: // EXTENSION
 
 #line 63 "extension_inherit.cpp"
 
 
-private:
+private: // EXTENSION
 
 #line 67 "extension_inherit.cpp"
 
@@ -139,7 +139,7 @@ class Class_b1_e2 : Base_0
 #line 72 "extension_inherit.cpp"
 {
 
-private:
+private: // EXTENSION
 
 #line 76 "extension_inherit.cpp"
 
@@ -158,12 +158,12 @@ class Class_b1_e2_e1 : Base_0
 #line 81 "extension_inherit.cpp"
 {
 
-private:
+private: // EXTENSION
 
 #line 85 "extension_inherit.cpp"
 
 
-private:
+private: // EXTENSION
 
 #line 89 "extension_inherit.cpp"
 
@@ -179,7 +179,7 @@ class Class_b2_e1 : Base_0, Base_1
 #line 94 "extension_inherit.cpp"
 {
 
-private:
+private: // EXTENSION
 
 #line 98 "extension_inherit.cpp"
 
@@ -198,12 +198,12 @@ class Class_b2_e1_e1 : Base_0, Base_1
 #line 103 "extension_inherit.cpp"
 {
 
-private:
+private: // EXTENSION
 
 #line 107 "extension_inherit.cpp"
 
 
-private:
+private: // EXTENSION
 
 #line 111 "extension_inherit.cpp"
 
@@ -219,7 +219,7 @@ class Class_b2_e2 : Base_0, Base_1
 #line 116 "extension_inherit.cpp"
 {
 
-private:
+private: // EXTENSION
 
 #line 120 "extension_inherit.cpp"
 
@@ -238,12 +238,12 @@ class Class_b2_e2_e1 : Base_0, Base_1
 #line 125 "extension_inherit.cpp"
 {
 
-private:
+private: // EXTENSION
 
 #line 129 "extension_inherit.cpp"
 
 
-private:
+private: // EXTENSION
 
 #line 133 "extension_inherit.cpp"
 
@@ -267,17 +267,17 @@ that wraps around */
 #line 141 "extension_inherit.cpp"
                      {
 
-private:
+private: // EXTENSION
 
 #line 146 "extension_inherit.cpp"
 
 
-private:
+private: // EXTENSION
 
 #line 150 "extension_inherit.cpp"
 
 
-private:
+private: // EXTENSION
 
 #line 153 "extension_inherit.cpp"
                                          };
