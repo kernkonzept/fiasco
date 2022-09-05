@@ -6,6 +6,7 @@ INTERFACE [arm && pic_gic && pf_fvp_base]:
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pic_gic && pf_fvp_base]:
 
+#include "boot_alloc.h"
 #include "irq_mgr_msi.h"
 #include "gic_v3.h"
 #include "kmem.h"
