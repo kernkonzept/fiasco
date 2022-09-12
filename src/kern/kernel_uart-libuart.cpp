@@ -118,5 +118,8 @@ bool Kernel_uart::startup(unsigned, int irq)
         }
     }
 
+  if (Koptions::o()->uart.access_type == Koptions::Uart_type_msr)
+    return this->Uart::startup(0, irq, Koptions::o()->uart.base_baud);
+
   return false;
 }

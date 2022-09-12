@@ -45,6 +45,7 @@ namespace L4_kernel_options
     Uart_type_invalid = 0,
     Uart_type_ioport  = 1,
     Uart_type_mmio    = 2,
+    Uart_type_msr     = 3,
   };
 
   enum
