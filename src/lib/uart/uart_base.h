@@ -138,7 +138,7 @@ namespace L4
      *                   successful transmitted. Otherwise do not wait.
      * \return           The number of successful written characters.
      */
-    template <typename Uart_driver>
+    template <typename Uart_driver, bool Timeout_guard = true>
     int generic_write(char const *s, unsigned long count,
                       bool blocking = true) const
     {
@@ -150,9 +150,17 @@ namespace L4
           if (!blocking && !self->tx_avail())
             break;
 
-          Poll_timeout_counter i(3000000);
-          while (i.test(!self->tx_avail()))
-            ;
+          if constexpr (Timeout_guard)
+            {
+              Poll_timeout_counter i(3000000);
+              while (i.test(!self->tx_avail()))
+                ;
+            }
+          else
+            {
+              while (!self->tx_avail())
+                ;
+            }
 
           self->out_char(*s++);
         }

@@ -9,7 +9,6 @@
  * Please see the COPYING-GPL-2 file for details.
  */
 #include "uart_dcc-v6.h"
-#include "poll_timeout_counter.h"
 
 namespace {
 
@@ -80,8 +79,7 @@ namespace L4
   {
 #ifdef __arm__
     // The DCC interface allows only to check if the TX queue is full.
-    Poll_timeout_counter i(100000);
-    while (i.test(get_status() & DCC_STATUS_TX))
+    while (get_status() & DCC_STATUS_TX)
       ;
 #endif
   }
@@ -99,7 +97,7 @@ namespace L4
                          bool blocking) const
   {
 #ifdef __arm__
-    return generic_write<Uart_dcc_v6>(s, count, blocking);
+    return generic_write<Uart_dcc_v6, false>(s, count, blocking);
 #else
     (void)s;
     (void)count;
