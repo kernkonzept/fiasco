@@ -9,6 +9,8 @@ INTERFACE:
 class Gic_redist
 {
 private:
+  bool cmp_affinity(Unsigned32 x, Unsigned32 y);
+
   Mmio_register_block _redist;
 
 public:
@@ -117,6 +119,11 @@ IMPLEMENTATION:
 #include <cstdio>
 #include <string.h>
 
+IMPLEMENT_DEFAULT inline
+bool
+Gic_redist::cmp_affinity(Unsigned32 x, Unsigned32 y)
+{ return x == y; }
+
 PUBLIC
 void
 Gic_redist::find(Address base, Unsigned64 mpidr, Cpu_number cpu)
@@ -134,7 +141,7 @@ Gic_redist::find(Address base, Unsigned64 mpidr, Cpu_number cpu)
         break;
 
       gicr_typer.raw = r.read_non_atomic<Unsigned64>(GICR_TYPER);
-      if (gicr_typer.affinity() == typer_aff)
+      if (cmp_affinity(gicr_typer.affinity(), typer_aff))
         {
           printf("CPU%d: GIC Redistributor at %lx for 0x%llx\n",
                  cxx::int_value<Cpu_number>(cpu),
@@ -349,4 +356,15 @@ unsigned
 Gic_redist::get_processor_nr() const
 {
   return Typer(_redist.read_non_atomic<Unsigned64>(GICR_TYPER)).processor_nr();
+}
+
+//-------------------------------------------------------------------
+IMPLEMENTATION[arm_cortex_r52]:
+
+IMPLEMENT_OVERRIDE inline
+bool
+Gic_redist::cmp_affinity(Unsigned32 x, Unsigned32 y)
+{
+  // Arm erraturm 2743885 workaround for broken Aff1/2 field on clusters.
+  return (x & 0xffU) == (y & 0xffU);
 }
