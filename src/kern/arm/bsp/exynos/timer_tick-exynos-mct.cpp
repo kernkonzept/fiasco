@@ -119,7 +119,7 @@ Timer_tick::ack()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [debug && arm && exynos_mct]:
+IMPLEMENTATION [jdb && arm && exynos_mct]:
 
 IMPLEMENT
 Timer_tick *

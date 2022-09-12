@@ -20,7 +20,7 @@ private:
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [svm && debug]:
+INTERFACE [svm && trace]:
 
 #include "tb_entry.h"
 
@@ -734,7 +734,7 @@ register_factory()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [svm && debug]:
+IMPLEMENTATION [svm && trace]:
 
 #include "string_buffer.h"
 

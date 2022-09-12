@@ -76,7 +76,7 @@ Gic_v2::set_cpu(Mword pin, Cpu_number cpu) override
 }
 
 //-------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [jdb]:
 
 PUBLIC
 void

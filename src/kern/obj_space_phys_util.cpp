@@ -497,7 +497,7 @@ Obj_space_phys<SPACE>::obj_map_max_address() const
 }
 
 // ------------------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [jdb]:
 
 PUBLIC template< typename SPACE >
 typename Obj_space_phys<SPACE>::Entry *
@@ -505,7 +505,7 @@ Obj_space_phys<SPACE>::jdb_lookup_cap(Cap_index index)
 { return get_cap(index, false); }
 
 // ------------------------------------------------------------------------------
-IMPLEMENTATION [obj_space_virt && debug]:
+IMPLEMENTATION [obj_space_virt && jdb]:
 
 PUBLIC template<typename BASE> static inline
 Obj_space_phys_override<BASE> *
@@ -518,7 +518,7 @@ Obj_space_phys_override<BASE>::jdb_lookup_cap(Cap_index index) override
 { return Obj_space::jdb_lookup_cap(index); }
 
 // ------------------------------------------------------------------------------
-IMPLEMENTATION [obj_space_virt && !debug]:
+IMPLEMENTATION [obj_space_virt && !jdb]:
 
 PUBLIC template<typename BASE> static inline
 Obj_space_phys_override<BASE> *

@@ -332,7 +332,7 @@ Obj_space_virt<SPACE>::obj_map_max_address() const
 }
 
 // ------------------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [jdb]:
 
 PUBLIC  template< typename SPACE >
 typename Obj_space_virt<SPACE>::Entry *

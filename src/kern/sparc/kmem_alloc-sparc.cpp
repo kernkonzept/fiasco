@@ -49,7 +49,7 @@ Kmem_alloc::to_phys(void *v) const
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [sparc && debug]:
+IMPLEMENTATION [sparc && jdb]:
 
 PUBLIC
 void Kmem_alloc::debug_dump()

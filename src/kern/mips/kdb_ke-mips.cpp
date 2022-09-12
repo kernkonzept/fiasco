@@ -4,7 +4,7 @@
  * Author: Yann Le Du <ledu@kymasys.com>
  */
 
-INTERFACE [mips && debug]:
+INTERFACE [mips && jdb]:
 
 void kdb_ke(char const *msg) asm ("kern_kdebug_cstr_entry");
 void kdb_ke_nstr(char const *msg, unsigned len) asm ("kern_kdebug_nstr_entry");

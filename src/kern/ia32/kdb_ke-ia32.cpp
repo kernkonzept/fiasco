@@ -1,4 +1,4 @@
-IMPLEMENTATION [(ia32,ux,amd64) && debug]:
+IMPLEMENTATION [(ia32,ux,amd64) && jdb]:
 
 inline void kdb_ke(char const *msg)
 {

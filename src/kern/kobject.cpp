@@ -264,7 +264,7 @@ Kobject::Reap_list::del_2()
 
 
 //---------------------------------------------------------------------------
-INTERFACE [debug]:
+INTERFACE [trace]:
 
 #include "tb_entry.h"
 
@@ -282,9 +282,19 @@ protected:
 };
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [trace]:
 
 #include "string_buffer.h"
+
+IMPLEMENT
+void
+Kobject::Log_destroy::print(String_buffer *buf) const
+{
+  buf->printf("obj=%lx [%p] (%p) ram=%lx", id, type, obj, ram);
+}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [debug]:
 
 PUBLIC static inline
 Kobject *
@@ -304,10 +314,3 @@ PUBLIC
 Kobject_dbg *
 Kobject::dbg_info() const override
 { return const_cast<Kobject*>(this); }
-
-IMPLEMENT
-void
-Kobject::Log_destroy::print(String_buffer *buf) const
-{
-  buf->printf("obj=%lx [%p] (%p) ram=%lx", id, type, obj, ram);
-}

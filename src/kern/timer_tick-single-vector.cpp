@@ -53,7 +53,7 @@ Timer_tick::ack()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [jdb]:
 
 IMPLEMENT
 Timer_tick *

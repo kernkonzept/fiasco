@@ -288,7 +288,7 @@ Thread::check_trap13_kernel (Trap_state * /*ts*/)
 { return 1; }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [amd64 & (debug | kdb)]:
+IMPLEMENTATION [amd64 & (jdb | kdb)]:
 
 #include "kernel_task.h"
 

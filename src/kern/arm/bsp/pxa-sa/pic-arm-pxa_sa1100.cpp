@@ -145,7 +145,7 @@ void irq_handler()
 }
 
 // -------------------------------------------------------------
-IMPLEMENTATION [arm && debug && (pf_sa1100 || pf_xscale)]:
+IMPLEMENTATION [arm && trace && (pf_sa1100 || pf_xscale)]:
 
 PUBLIC
 char const *

@@ -961,7 +961,7 @@ void Pic::init_ap(Cpu_number cpu, bool resume)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [debug && pf_exynos]:
+IMPLEMENTATION [trace && pf_exynos]:
 
 PUBLIC
 char const *

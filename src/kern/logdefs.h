@@ -19,7 +19,7 @@
 
 #include "globalconfig.h"
 
-#if !defined(CONFIG_JDB)
+#if !defined(CONFIG_TRACE)
 
 #define LOG_TRACE_COND(name, sc, ctx, fmt, cond, code...) do { } while (0)
 #define LOG_TRACE(name, sc, ctx, fmt, code...) do { } while (0)
@@ -118,7 +118,7 @@
     Jdb_tbuf::commit_entry(tb);                                         \
   } while (0)
 
-#endif // !CONFIG_JDB
+#endif // !CONFIG_TRACE
 
 #if defined(CONFIG_JDB) && defined(CONFIG_JDB_ACCOUNTING)
 

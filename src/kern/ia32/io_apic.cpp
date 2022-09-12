@@ -626,7 +626,7 @@ bool
 Io_apic::active()
 { return _first; }
 
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [trace]:
 
 PUBLIC inline
 char const *

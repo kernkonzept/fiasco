@@ -741,7 +741,7 @@ Cpu::tz_scr(Mword val)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [!debug]:
+IMPLEMENTATION [!trace]:
 
 PUBLIC inline
 void
@@ -749,7 +749,7 @@ Cpu::print_infos() const
 {}
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [debug && arm_v6plus]:
+IMPLEMENTATION [trace && arm_v6plus]:
 
 PRIVATE
 void
@@ -762,7 +762,7 @@ Cpu::id_print_infos() const
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [debug && !arm_v6plus]:
+IMPLEMENTATION [trace && !arm_v6plus]:
 
 PRIVATE
 void
@@ -771,7 +771,7 @@ Cpu::id_print_infos() const
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [trace]:
 
 PUBLIC
 void

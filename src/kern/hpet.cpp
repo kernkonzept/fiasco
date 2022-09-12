@@ -221,7 +221,7 @@ Hpet::init()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [jdb]:
 
 PUBLIC static
 Hpet_device *

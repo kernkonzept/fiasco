@@ -199,7 +199,7 @@ Gic_v3::set_priority_percpu(Cpu_number cpu, Mword pin, Unsigned8 prio) override
 }
 
 //-------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [jdb]:
 
 PUBLIC
 void

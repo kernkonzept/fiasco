@@ -1,4 +1,4 @@
-INTERFACE [debug]:
+INTERFACE [trace]:
 
 #include "tb_entry.h"
 
@@ -97,7 +97,7 @@ private:
 
 
 // ------------------------------------------------------------------------
-INTERFACE [debug]:
+INTERFACE [trace]:
 
 #include "tb_entry.h"
 
@@ -1257,7 +1257,7 @@ Thread::remote_handshake_receiver(L4_msg_tag const &tag, Thread *partner,
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [trace]:
 
 #include "string_buffer.h"
 

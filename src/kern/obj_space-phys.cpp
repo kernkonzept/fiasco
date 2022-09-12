@@ -66,7 +66,7 @@ Generic_obj_space<SPACE>::obj_map_max_address() const
 { return Base::obj_map_max_address(); }
 
 // ------------------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [jdb]:
 
 PUBLIC template< typename SPACE > static inline
 SPACE *
@@ -79,7 +79,7 @@ Generic_obj_space<SPACE>::jdb_lookup_cap(Cap_index index)
 { return Base::jdb_lookup_cap(index); }
 
 // ------------------------------------------------------------------------------
-IMPLEMENTATION [!debug]:
+IMPLEMENTATION [!jdb]:
 
 PUBLIC template< typename SPACE > static inline
 SPACE *

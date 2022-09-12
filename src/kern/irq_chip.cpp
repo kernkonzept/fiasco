@@ -206,7 +206,7 @@ public:
 
 
 //----------------------------------------------------------------------------
-INTERFACE [debug]:
+INTERFACE [trace]:
 
 EXTENSION class Irq_chip
 {
@@ -216,7 +216,7 @@ public:
 
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION[debug]:
+IMPLEMENTATION[trace]:
 
 PUBLIC
 char const *
@@ -326,12 +326,12 @@ Irq_base::destroy()
 
 
 // --------------------------------------------------------------------------
-IMPLEMENTATION [!debug]:
+IMPLEMENTATION [!trace]:
 
 PUBLIC inline void Irq_base::log() {}
 
 //-----------------------------------------------------------------------------
-INTERFACE [debug]:
+INTERFACE [trace]:
 
 #include "tb_entry.h"
 
@@ -349,7 +349,7 @@ public:
 
 
 // --------------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [trace]:
 
 #include <cstdio>
 

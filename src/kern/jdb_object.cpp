@@ -15,10 +15,8 @@
 IMPLEMENTATION [debug]:
 
 #include "globals.h"
-#include "jdb.h"
 #include "kobject_helper.h"
 #include "kobject_rpc.h"
-#include "minmax.h"
 #include "per_node_data.h"
 
 class Jdb_object : public Kobject_h<Jdb_object, Kobject>
@@ -75,6 +73,44 @@ Jdb_object::sys_kobject_debug(L4_msg_tag tag, unsigned op,
     }
   return commit_result(0);
 }
+
+PUBLIC
+L4_msg_tag
+Jdb_object::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
+                    Utcb const *r_msg, Utcb *s_msg)
+{
+  L4_msg_tag tag = f->tag();
+  if ((tag.words() == 0) && (tag.items() == 0)
+      && (tag.proto() == L4_msg_tag::Label_debugger))
+    {
+      kdb_ke("user");
+      return commit_result(0);
+    }
+
+  if (!Ko::check_basics(&tag, rights, L4_msg_tag::Label_debugger))
+    return tag;
+
+  unsigned op =  access_once(&r_msg->values[0]);
+  auto group = op >> 8;
+  switch (group)
+    {
+    case 1:
+      //XXX: there must be a better way...
+      current_thread()->utcb().access()->values[0] &= 0xff;
+      return sys_kobject_debug(tag, op & 0xff, rights, f, r_msg, s_msg);
+
+    case 2:
+      return sys_tbuf(tag, op & 0xff, rights, f, r_msg, s_msg);
+
+    default:
+      return sys_jdb(tag, op & 0xff, rights, f, r_msg, s_msg);
+    }
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [trace]:
+
+#include "minmax.h"
 
 PRIVATE inline NOEXPORT
 L4_msg_tag
@@ -176,6 +212,24 @@ Jdb_object::sys_tbuf(L4_msg_tag tag, unsigned op,
     }
 }
 
+//----------------------------------------------------------------------------
+IMPLEMENTATION [debug && !trace]:
+
+PRIVATE inline NOEXPORT
+L4_msg_tag
+Jdb_object::sys_tbuf(L4_msg_tag, unsigned,
+                     L4_fpage::Rights,
+                     Syscall_frame *,
+                     Utcb const *, Utcb *)
+{
+  return commit_result(-L4_err::ENosys);
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [jdb]:
+
+#include "jdb.h"
+
 PRIVATE inline NOEXPORT
 L4_msg_tag
 Jdb_object::sys_jdb(L4_msg_tag tag, unsigned op,
@@ -246,37 +300,15 @@ Jdb_object::sys_jdb(L4_msg_tag tag, unsigned op,
     }
 }
 
+//----------------------------------------------------------------------------
+IMPLEMENTATION [debug && !jdb]:
 
-PUBLIC
+PRIVATE inline NOEXPORT
 L4_msg_tag
-Jdb_object::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
-                    Utcb const *r_msg, Utcb *s_msg)
+Jdb_object::sys_jdb(L4_msg_tag, unsigned,
+                    L4_fpage::Rights,
+                    Syscall_frame *,
+                    Utcb const *, Utcb *)
 {
-  L4_msg_tag tag = f->tag();
-  if ((tag.words() == 0) && (tag.items() == 0)
-      && (tag.proto() == L4_msg_tag::Label_debugger))
-    {
-      kdb_ke("user");
-      return commit_result(0);
-    }
-
-  if (!Ko::check_basics(&tag, rights, L4_msg_tag::Label_debugger))
-    return tag;
-
-  unsigned op =  access_once(&r_msg->values[0]);
-  auto group = op >> 8;
-  switch (group)
-    {
-    case 1:
-      //XXX: there must be a better way...
-      current_thread()->utcb().access()->values[0] &= 0xff;
-      return sys_kobject_debug(tag, op & 0xff, rights, f, r_msg, s_msg);
-
-    case 2:
-      return sys_tbuf(tag, op & 0xff, rights, f, r_msg, s_msg);
-
-    default:
-      return sys_jdb(tag, op & 0xff, rights, f, r_msg, s_msg);
-    }
+  return commit_result(-L4_err::ENosys);
 }
-

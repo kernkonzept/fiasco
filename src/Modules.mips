@@ -160,7 +160,7 @@ timer_IMPL		?= timer timer-mips
 timer_tick_IMPL         := timer_tick
 thread_IMPL		:= thread thread-log thread-pagefault \
 			   thread-mips thread-ipc thread-jdb \
-			   thread-vcpu
+			   thread-vcpu thread-debug
 vmem_alloc_IMPL		:= vmem_alloc
 tb_entry_IMPL		:= tb_entry tb_entry-mips
 
@@ -178,7 +178,6 @@ jdb_trace_set_IMPL	+= jdb_trace_set jdb_trace_set-mips
 jdb_kern_info_IMPL	:= jdb_kern_info
 jdb_tbuf_init_IMPL	:= jdb_tbuf_init jdb_tbuf_init-mips
 jdb_ptab_IMPL		:= jdb_ptab jdb_ptab-mips
-thread_IMPL		+= thread-debug
 INTERFACES_JDB		+= jdb_log jdb_trace_set jdb_ptab jdb_mips_tlb \
 			   jdb_console_buffer
 INTERFACES_JDB		+= $(INTERFACES_JDB-y)

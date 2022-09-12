@@ -295,7 +295,7 @@ Gic::set_pending_irq(unsigned idx, Unsigned32 val)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [trace]:
 PUBLIC
 char const *
 Gic::chip_type() const override

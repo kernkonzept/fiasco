@@ -166,7 +166,7 @@ namespace Obj {
 }
 
 // ------------------------------------------------------------------------
-INTERFACE [debug]:
+INTERFACE [jdb]:
 
 #include "dbg_page_info.h"
 #include "warn.h"
@@ -208,7 +208,7 @@ namespace Obj
 
 
 // ------------------------------------------------------------------------
-INTERFACE [!debug]:
+INTERFACE [!jdb]:
 
 namespace Obj {
   static inline void add_cap_page_dbg_info(void *, void *, Address) {}

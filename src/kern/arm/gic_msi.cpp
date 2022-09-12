@@ -254,7 +254,7 @@ Gic_msi::msg(Mword pin, Unsigned64 src, Irq_mgr::Msi_info *inf)
   return err;
 }
 
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [trace]:
 
 PUBLIC inline
 char const *

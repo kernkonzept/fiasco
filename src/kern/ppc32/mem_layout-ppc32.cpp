@@ -91,7 +91,7 @@ Mem_layout::read_special_safe(T const *a)
   return T(res);
 }
 
-IMPLEMENTATION [ppc32 && debug]:
+IMPLEMENTATION [ppc32 && trace]:
 
 #include "kip_init.h"
 #include "mem_region.h"
@@ -131,7 +131,7 @@ Mem_layout::init()
       panic("Could not allocate trace buffer");
 }
 
-IMPLEMENTATION [ppc32 && !debug]:
+IMPLEMENTATION [ppc32 && !trace]:
 
 PUBLIC static FIASCO_INIT
 void

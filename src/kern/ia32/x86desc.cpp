@@ -183,7 +183,7 @@ Idt_entry::Idt_entry(Unsigned16, Unsigned8)
 { panic("AMD64 does not support task gates"); }
 
 
-IMPLEMENTATION[debug]:
+IMPLEMENTATION[jdb]:
 
 #include <cstdio>
 

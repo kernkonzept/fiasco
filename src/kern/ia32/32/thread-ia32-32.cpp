@@ -267,7 +267,7 @@ Thread::invoke_arch(L4_msg_tag tag, Utcb const *utcb, Utcb *out)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [ia32 & (debug | kdb)]:
+IMPLEMENTATION [ia32 & (jdb | kdb)]:
 
 #include "kernel_task.h"
 

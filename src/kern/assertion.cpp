@@ -5,7 +5,7 @@ IMPLEMENTATION:
 #include <stdlib.h>
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [jdb]:
 
 #include "kernel_console.h"
 #include "thread.h"
@@ -23,7 +23,7 @@ assert_fail(char const *expr_msg, char const *file, unsigned int line)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [!debug]:
+IMPLEMENTATION [!jdb]:
 
 #include "terminate.h"
 

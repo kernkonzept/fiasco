@@ -142,7 +142,7 @@ handle_irq(unsigned long irq)
 }
 
 
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [trace]:
 
 PUBLIC char const *
 Mips_cpu_irq_chip::chip_type() const override

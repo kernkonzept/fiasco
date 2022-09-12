@@ -46,7 +46,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [debug]:
+INTERFACE [trace]:
 
 #include "tb_entry.h"
 
@@ -443,12 +443,15 @@ register_factory()
 //---------------------------------------------------------------------------
 IMPLEMENTATION [debug]:
 
-#include "string_buffer.h"
-
 PUBLIC
 ::Kobject_dbg *
 Ipc_gate_obj::dbg_info() const override
 { return Ipc_gate::dbg_info(); }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [trace]:
+
+#include "string_buffer.h"
 
 IMPLEMENT
 void

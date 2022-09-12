@@ -163,7 +163,7 @@ Pic::set_pending_irq(unsigned group32num, Unsigned32 val)
 }
 
 //-------------------------------------------------------------------------
-IMPLEMENTATION [debug && pf_omap3]:
+IMPLEMENTATION [trace && pf_omap3]:
 
 PUBLIC
 char const *

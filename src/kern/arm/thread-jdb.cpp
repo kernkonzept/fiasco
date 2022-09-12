@@ -6,7 +6,7 @@ protected:
   static int call_nested_trap_handler(Trap_state *ts) asm ("call_nested_trap_handler");
 };
 
-INTERFACE [arm-debug]:
+INTERFACE [arm-jdb]:
 
 #include "trap_state.h"
 
@@ -17,19 +17,19 @@ protected:
 };
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && debug && (64bit || cpu_virt)]:
+IMPLEMENTATION [arm && jdb && (64bit || cpu_virt)]:
 
 PRIVATE static inline NOEXPORT bool
 Thread::debugger_needs_switch_to_kdir() { return false; }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && debug && !(64bit || cpu_virt)]:
+IMPLEMENTATION [arm && jdb && !(64bit || cpu_virt)]:
 
 PRIVATE static inline NOEXPORT bool
 Thread::debugger_needs_switch_to_kdir() { return true; }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && debug]:
+IMPLEMENTATION [arm && jdb]:
 
 #include "kernel_task.h"
 #include "mem_layout.h"
@@ -78,7 +78,7 @@ Thread::call_nested_trap_handler(Trap_state *ts)
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm-!debug]:
+IMPLEMENTATION [arm-!jdb]:
 
 IMPLEMENT
 int

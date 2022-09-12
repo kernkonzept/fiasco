@@ -147,7 +147,7 @@ private:
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [debug]:
+INTERFACE [trace]:
 
 #include "tb_entry.h"
 
@@ -172,7 +172,7 @@ public:
 
 
 // --------------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [trace]:
 
 #include "logdefs.h"
 #include "string_buffer.h"

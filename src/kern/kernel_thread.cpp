@@ -145,7 +145,7 @@ Kernel_thread::check_debug_koptions()
 {}
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [jdb]:
 
 #include "string_buffer.h"
 

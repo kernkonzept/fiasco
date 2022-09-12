@@ -1,4 +1,4 @@
-IMPLEMENTATION[debug]:
+IMPLEMENTATION[jdb]:
 
 #include <cstdio>
 #include "simpleio.h"

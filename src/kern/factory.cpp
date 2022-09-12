@@ -212,7 +212,7 @@ register_factory()
 }
 
 // ------------------------------------------------------------------------
-INTERFACE [debug]:
+INTERFACE [trace]:
 
 #include "tb_entry.h"
 
@@ -231,7 +231,7 @@ private:
 };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [trace]:
 
 #include "string_buffer.h"
 

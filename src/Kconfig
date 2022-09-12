@@ -588,9 +588,26 @@ config TEST_SUPPORT_CODE
 	help
 	  Include test support code when compiling Fiasco.
 
+config DEBUG
+	bool "Runtime debug information"
+	default y
+	help
+	  Adds support for the debugger kernel object, e.g. to set the name of
+	  objects. This information may be used by a debugger to enable OS
+	  aware debugging.
+
+config TRACE
+	bool "Runtime tracing"
+	select DEBUG
+	help
+	  Enable the tracing infrastructure to record the dynamic behaviour of
+	  the system.
+
 menuconfig JDB
 	bool "JDB kernel debugger"
 	default y
+	select DEBUG
+	select TRACE
 	help
 	  The powerful Fiasco kernel debugger.
 

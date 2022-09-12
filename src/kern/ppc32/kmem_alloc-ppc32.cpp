@@ -51,7 +51,7 @@ Kmem_alloc::to_phys(void *v) const
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [ppc32 && debug]:
+IMPLEMENTATION [ppc32 && jdb]:
 
 PUBLIC
 void Kmem_alloc::debug_dump()

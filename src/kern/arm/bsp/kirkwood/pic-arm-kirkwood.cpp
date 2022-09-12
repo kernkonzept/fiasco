@@ -115,7 +115,7 @@ void irq_handler()
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [debug && pf_kirkwood]:
+IMPLEMENTATION [trace && pf_kirkwood]:
 
 PUBLIC
 char const *

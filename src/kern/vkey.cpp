@@ -23,7 +23,7 @@ Vkey::irq(Irq_base *i)
 { *vkey_irq = i; }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [serial && !ux && debug]:
+IMPLEMENTATION [serial && !ux && jdb]:
 
 PRIVATE static inline
 bool
@@ -33,7 +33,7 @@ Vkey::is_debugger_entry_key(int key)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [serial && !ux && !debug]:
+IMPLEMENTATION [serial && !ux && !jdb]:
 
 PRIVATE static inline
 bool

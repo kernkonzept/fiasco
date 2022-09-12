@@ -91,7 +91,7 @@ Irq_chip_ingenic::set_cpu(Mword, Cpu_number) override
 {}
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [trace]:
 
 PUBLIC
 char const *

@@ -1,4 +1,4 @@
-INTERFACE [debug]:
+INTERFACE [trace]:
 
 #include "tb_entry.h"
 
@@ -13,7 +13,7 @@ protected:
 };
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [trace]:
 
 #include <cstdio>
 #include "config.h"

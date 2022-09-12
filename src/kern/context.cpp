@@ -365,7 +365,7 @@ private:
 };
 
 
-INTERFACE [debug]:
+INTERFACE [trace]:
 
 #include "tb_entry.h"
 
@@ -2315,7 +2315,7 @@ Context::switch_fpu(Context *)
 {}
 
 //----------------------------------------------------------------------------
-INTERFACE [debug]:
+INTERFACE [trace]:
 
 #include "tb_entry.h"
 
@@ -2338,7 +2338,7 @@ public:
 
 
 // --------------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [trace]:
 
 #include "kobject_dbg.h"
 #include "string_buffer.h"

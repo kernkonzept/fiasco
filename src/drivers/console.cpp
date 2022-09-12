@@ -167,7 +167,7 @@ Mword Console::get_attributes() const
   return 0;
 }
 
-IMPLEMENTATION[debug]:
+IMPLEMENTATION[jdb]:
 
 PUBLIC
 const char*

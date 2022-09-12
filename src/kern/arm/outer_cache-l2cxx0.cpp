@@ -217,7 +217,7 @@ Outer_cache::init()
 STATIC_INITIALIZE_P(Outer_cache, STARTUP_INIT_PRIO);
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_cache_l2cxx0 && !debug]:
+IMPLEMENTATION [arm && arm_cache_l2cxx0 && !trace]:
 
 PRIVATE static
 void
@@ -225,7 +225,7 @@ Outer_cache::show_info(unsigned, Mword, Mword)
 {}
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_cache_l2cxx0 && debug]:
+IMPLEMENTATION [arm && arm_cache_l2cxx0 && trace]:
 
 #include "io.h"
 #include <cstdio>

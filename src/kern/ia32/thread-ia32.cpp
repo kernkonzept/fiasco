@@ -752,12 +752,12 @@ Thread::sys_control_arch(Utcb const *, Utcb *)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [(ia32 | amd64) & (debug | kdb) & !mp]:
+IMPLEMENTATION [(ia32 | amd64) & (jdb | kdb) & !mp]:
 
 PRIVATE static inline Cpu_number Thread::dbg_find_cpu() { return Cpu_number::boot_cpu(); }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [(ia32 | amd64) & (debug | kdb) & mp]:
+IMPLEMENTATION [(ia32 | amd64) & (jdb | kdb) & mp]:
 
 #include "apic.h"
 
@@ -777,7 +777,7 @@ Thread::dbg_find_cpu()
 
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [(ia32 |amd64) & !(debug | kdb)]:
+IMPLEMENTATION [(ia32 |amd64) & !(jdb | kdb)]:
 
 /** There is no nested trap handler if both jdb and kdb are disabled.
  * Important: We don't need the nested_handler_stack here.

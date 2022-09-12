@@ -73,7 +73,7 @@ private:
 };
 
 //-----------------------------------------------------------------------------
-INTERFACE [debug && arm_em_tz]:
+INTERFACE [trace && arm_em_tz]:
 
 #include "tb_entry.h"
 
@@ -264,7 +264,7 @@ Vm::get_fpu()
 { return true; }
 
 // --------------------------------------------------------------------------
-IMPLEMENTATION [debug && arm_em_tz]:
+IMPLEMENTATION [jdb && arm_em_tz]:
 
 #include "jdb.h"
 #include "string_buffer.h"
@@ -317,6 +317,11 @@ Vm::show_short(String_buffer *buf)
   buf->printf(" utcb:%lx pc:%lx ", (Mword)state_for_dbg, (Mword)jdb_get(&state_for_dbg->pc));
 }
 
+// --------------------------------------------------------------------------
+IMPLEMENTATION [trace && arm_em_tz]:
+
+#include "string_buffer.h"
+
 IMPLEMENT
 void
 Vm::Vm_log::print(String_buffer *buf) const
@@ -342,7 +347,7 @@ Vm::log_vm(Vm_state *state, bool is_entry)
 }
 
 // --------------------------------------------------------------------------
-IMPLEMENTATION [!debug && arm_em_tz]:
+IMPLEMENTATION [!trace && arm_em_tz]:
 
 PUBLIC static inline
 void

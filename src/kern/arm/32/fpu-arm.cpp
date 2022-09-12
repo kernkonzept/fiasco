@@ -419,7 +419,7 @@ Fpu::finish_init()
 {}
 
 //-------------------------------------------------------------------------
-IMPLEMENTATION [arm && fpu && debug]:
+IMPLEMENTATION [arm && fpu && trace]:
 
 PRIVATE static
 void
@@ -433,7 +433,7 @@ Fpu::show(Cpu_number cpu)
 }
 
 //-------------------------------------------------------------------------
-IMPLEMENTATION [arm && fpu && !debug]:
+IMPLEMENTATION [arm && fpu && !trace]:
 
 PRIVATE static inline
 void

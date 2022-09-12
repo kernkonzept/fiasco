@@ -146,7 +146,7 @@ Irq_mgr_msi::init()
 
 STATIC_INITIALIZE(Irq_mgr_msi);
 
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [trace]:
 
 PUBLIC inline
 char const *

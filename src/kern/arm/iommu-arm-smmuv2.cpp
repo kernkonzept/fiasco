@@ -919,7 +919,7 @@ Iommu::tlb_invalidate_space(Space_id const &space_id)
 }
 
 // ------------------------------------------------------------------
-IMPLEMENTATION [iommu && !debug]:
+IMPLEMENTATION [iommu && !trace]:
 
 #include "irq_mgr.h"
 
@@ -941,7 +941,7 @@ Iommu::setup_irqs(unsigned *, unsigned, unsigned)
 }
 
 // ------------------------------------------------------------------
-IMPLEMENTATION [iommu && debug]:
+IMPLEMENTATION [iommu && trace]:
 
 #include "config.h"
 #include "irq_mgr.h"

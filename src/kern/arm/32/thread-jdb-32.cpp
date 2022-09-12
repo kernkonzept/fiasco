@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && 32bit && debug]:
+IMPLEMENTATION [arm && 32bit && jdb]:
 
 PRIVATE static inline int
 Thread::arm_enter_debugger(Trap_state *ts, Cpu_number log_cpu,

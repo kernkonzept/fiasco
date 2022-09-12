@@ -1,4 +1,4 @@
-INTERFACE [debug]:
+INTERFACE [jdb]:
 
 #include "types.h"
 #include "lock_guard.h"
@@ -60,7 +60,7 @@ private:
 
 
 
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [jdb]:
 
 #include "kmem_slab.h"
 

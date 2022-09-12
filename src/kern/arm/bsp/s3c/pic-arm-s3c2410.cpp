@@ -243,7 +243,7 @@ void irq_handler()
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [debug && pf_s3c2410]:
+IMPLEMENTATION [trace && pf_s3c2410]:
 
 PUBLIC
 char const *

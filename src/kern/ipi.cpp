@@ -57,7 +57,7 @@ IMPLEMENTATION[mp]:
 DEFINE_PER_CPU Per_cpu<Ipi> Ipi::_ipi;
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION[!(mp && debug)]:
+IMPLEMENTATION[!(mp && trace)]:
 
 PUBLIC static inline
 void
@@ -70,7 +70,7 @@ Ipi::stat_received(Cpu_number on_cpu)
 { (void)on_cpu; }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION[mp && debug]:
+IMPLEMENTATION[mp && trace]:
 
 #include "atomic.h"
 #include "globals.h"

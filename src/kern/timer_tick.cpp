@@ -38,7 +38,7 @@ private:
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [debug]:
+INTERFACE [trace]:
 
 #include "tb_entry.h"
 
@@ -109,7 +109,7 @@ Timer_tick::handler_app(Irq_base *_s, Upstream_irq const *ui)
 }
 
 // --------------------------------------------------------------------------
-IMPLEMENTATION [!debug]:
+IMPLEMENTATION [!trace]:
 
 PUBLIC static inline
 void
@@ -117,7 +117,7 @@ Timer_tick::log_timer()
 {}
 
 // --------------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [trace]:
 
 #include "logdefs.h"
 #include "irq_chip.h"

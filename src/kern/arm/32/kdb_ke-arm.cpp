@@ -1,4 +1,4 @@
-INTERFACE [arm && debug]:
+INTERFACE [arm && jdb]:
 
 #include "std_macros.h"
 

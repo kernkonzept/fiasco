@@ -22,7 +22,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [mips && debug]:
+IMPLEMENTATION [mips && jdb]:
 
 IMPLEMENT inline
 void

@@ -1,4 +1,4 @@
-INTERFACE [sparc && debug]:
+INTERFACE [sparc && jdb]:
 
 #include "trap_state.h"
 #include "util.h"
@@ -15,7 +15,7 @@ protected:
 };
 
 //------------------------------------------------------------------------------
-IMPLEMENTATION [sparc && debug]:
+IMPLEMENTATION [sparc && jdb]:
 
 Thread::Dbg_extension_entry Thread::dbg_extension[64];
 Trap_state::Handler Thread::nested_trap_handler FIASCO_FASTCALL;
@@ -71,7 +71,7 @@ Thread::call_nested_trap_handler(Trap_state * /*ts*/)
   return 0;
 }
 
-IMPLEMENTATION [sparc && !debug]:
+IMPLEMENTATION [sparc && !jdb]:
 
 extern "C" void sys_kdb_ke()
 {

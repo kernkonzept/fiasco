@@ -1,4 +1,4 @@
-INTERFACE [ppc32 && debug]:
+INTERFACE [ppc32 && jdb]:
 
 #include "trap_state.h"
 #include "util.h"
@@ -15,7 +15,7 @@ protected:
 };
 
 //------------------------------------------------------------------------------
-IMPLEMENTATION [ppc32 && debug]:
+IMPLEMENTATION [ppc32 && jdb]:
 
 Thread::Dbg_extension_entry Thread::dbg_extension[64];
 Trap_state::Handler Thread::nested_trap_handler FIASCO_FASTCALL;
@@ -110,7 +110,7 @@ Thread::call_nested_trap_handler(Trap_state *ts)
   }
 }
 
-IMPLEMENTATION [ppc32 && !debug]:
+IMPLEMENTATION [ppc32 && !jdb]:
 
 extern "C" void sys_kdb_ke()
 {

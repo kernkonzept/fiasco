@@ -192,7 +192,7 @@ Context::vcpu_user_space() const
 
 
 // --------------------------------------------------------------------------
-INTERFACE [debug]:
+INTERFACE [trace]:
 
 EXTENSION class Context
 {
@@ -202,7 +202,7 @@ EXTENSION class Context
 
 
 // --------------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [trace]:
 
 #include "kobject_dbg.h"
 #include "string_buffer.h"

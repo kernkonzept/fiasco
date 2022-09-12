@@ -5,7 +5,7 @@
  * Author: Alexander Warg <alexander.warg@kernkonzept.com>
  */
 
-INTERFACE [mips && debug]:
+INTERFACE [mips && jdb]:
 
 #include "trap_state.h"
 
@@ -28,7 +28,7 @@ private:
 };
 
 //------------------------------------------------------------------------------
-IMPLEMENTATION [mips && debug]:
+IMPLEMENTATION [mips && jdb]:
 
 #include "kernel_task.h"
 #include "mem_layout.h"
@@ -154,7 +154,7 @@ Thread::call_nested_trap_handler(Trap_state *ts)
   return ret;
 }
 
-IMPLEMENTATION [mips && !debug]:
+IMPLEMENTATION [mips && !jdb]:
 
 extern "C" void sys_kdb_ke()
 {}

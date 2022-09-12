@@ -342,7 +342,7 @@ Gic::set_cpu(Mword, Cpu_number) override
 {}
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [trace]:
 
 PUBLIC
 char const *

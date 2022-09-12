@@ -1,4 +1,4 @@
-IMPLEMENTATION [amd64-debug]:
+IMPLEMENTATION [amd64-jdb]:
 
 IMPLEMENT inline
 void

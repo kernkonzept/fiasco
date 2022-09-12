@@ -103,7 +103,7 @@ char const * const Generic_obj_space<SPACE>::name = "Obj_space";
 
 
 // ------------------------------------------------------------------------------
-INTERFACE [debug]:
+INTERFACE [jdb]:
 
 EXTENSION class Generic_obj_space
 {

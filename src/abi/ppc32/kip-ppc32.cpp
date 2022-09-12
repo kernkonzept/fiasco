@@ -21,7 +21,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [ppc32 && debug]:
+IMPLEMENTATION [ppc32 && jdb]:
 
 IMPLEMENT inline
 void

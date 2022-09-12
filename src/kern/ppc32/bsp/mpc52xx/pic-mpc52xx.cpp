@@ -271,7 +271,7 @@ Pic::post_pending_irqs()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [debug && ppc32]:
+IMPLEMENTATION [trace && ppc32]:
 
 PUBLIC
 char const *

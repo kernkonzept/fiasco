@@ -420,7 +420,7 @@ Io_apic_remapped::init_apics()
   return true;
 }
 
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [trace]:
 
 PUBLIC inline
 char const *

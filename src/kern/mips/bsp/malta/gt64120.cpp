@@ -136,7 +136,7 @@ Gt64120::set_cpu(Mword, Cpu_number) override
 {}
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [gt64120_irq && debug]:
+IMPLEMENTATION [gt64120_irq && trace]:
 
 PUBLIC
 char const *

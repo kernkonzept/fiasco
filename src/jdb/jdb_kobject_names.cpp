@@ -122,25 +122,12 @@ char *
 Jdb_kobject_name::name()
 { return _name; }
 
+
 class Jdb_name_hdl : public Jdb_kobject_handler
 {
 public:
-  bool show_kobject(Kobject_common *, int) override { return true; }
   virtual ~Jdb_name_hdl() {}
 };
-
-PUBLIC
-void
-Jdb_name_hdl::show_kobject_short(String_buffer *buf, Kobject_common *o,
-                                 bool dense) override
-{
-  Jdb_kobject_name *ex
-    = Jdb_kobject_extension::find_extension<Jdb_kobject_name>(o);
-
-  if (ex)
-    buf->printf(" {%-*.*s}",
-                dense ? 0 : ex->max_len(), ex->max_len(), ex->name());
-}
 
 PUBLIC
 bool
@@ -198,6 +185,30 @@ Jdb_name_hdl::invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb) override
     }
   return false;
 }
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION [jdb]:
+
+PUBLIC
+bool
+Jdb_name_hdl::show_kobject(Kobject_common *, int) override
+{ return true; }
+
+PUBLIC
+void
+Jdb_name_hdl::show_kobject_short(String_buffer *buf, Kobject_common *o,
+                                 bool dense) override
+{
+  Jdb_kobject_name *ex
+    = Jdb_kobject_extension::find_extension<Jdb_kobject_name>(o);
+
+  if (ex)
+    buf->printf(" {%-*.*s}",
+                dense ? 0 : ex->max_len(), ex->max_len(), ex->name());
+}
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION:
 
 DECLARE_PER_NODE static Per_node_data<Jdb_name_hdl> hdl;
 

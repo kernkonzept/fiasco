@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && debug]:
+IMPLEMENTATION [arm && jdb]:
 
 #include "types.h"
 

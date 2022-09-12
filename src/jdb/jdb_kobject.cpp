@@ -1,14 +1,16 @@
 INTERFACE:
 
-#include "jdb_module.h"
-#include "jdb_list.h"
 #include "kobject.h"
-#include "string_buffer.h"
 
 #include <cxx/slist>
 
 class Kobject;
 class Jdb_kobject_handler;
+
+//--------------------------------------------------------------------------
+INTERFACE[jdb]:
+
+#include "jdb_module.h"
 
 class Jdb_kobject : public Jdb_module
 {
@@ -25,6 +27,22 @@ private:
   static void *kobjp;
 };
 
+//--------------------------------------------------------------------------
+INTERFACE[!jdb]:
+
+class Jdb_kobject
+{
+public:
+  typedef cxx::S_list_tail<Jdb_kobject_handler> Handler_list;
+  typedef Handler_list::Const_iterator Handler_iter;
+
+  Handler_list handlers;
+  Handler_list global_handlers;
+};
+
+
+//--------------------------------------------------------------------------
+INTERFACE:
 
 class Jdb_kobject_handler : public cxx::S_list_item
 {
@@ -35,13 +53,8 @@ public:
   Jdb_kobject_handler(T const *) : kobj_type(cxx::Typeid<T>::get()) {}
   Jdb_kobject_handler() : kobj_type(0) {}
   cxx::Type_info const *kobj_type;
-  virtual bool show_kobject(Kobject_common *o, int level) = 0;
-  virtual void show_kobject_short(String_buffer *, Kobject_common *, bool) {}
-  virtual Kobject_common *follow_link(Kobject_common *o) { return o; }
   virtual ~Jdb_kobject_handler() {}
   virtual bool invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb);
-  virtual bool handle_key(Kobject_common *, int /*keycode*/) { return false; }
-  virtual char const *help_text(Kobject_common *) const { return 0; };
   virtual Kobject *parent(Kobject_common *) { return 0; }
   char const *kobject_type(Kobject_common *o) const
   { return _kobject_type(o); }
@@ -78,6 +91,22 @@ class Jdb_kobject_extension : public Kobject_dbg::Dbg_extension
 public:
   virtual ~Jdb_kobject_extension() {}
   virtual char const *type() const = 0;
+};
+
+//--------------------------------------------------------------------------
+INTERFACE[jdb]:
+
+#include "jdb_list.h"
+#include "string_buffer.h"
+
+EXTENSION class Jdb_kobject_handler
+{
+public:
+  virtual bool show_kobject(Kobject_common *o, int level) = 0;
+  virtual void show_kobject_short(String_buffer *, Kobject_common *, bool) {}
+  virtual Kobject_common *follow_link(Kobject_common *o) { return o; }
+  virtual bool handle_key(Kobject_common *, int /*keycode*/) { return false; }
+  virtual char const *help_text(Kobject_common *) const { return 0; };
 };
 
 class Jdb_kobject_list : public Jdb_list
@@ -124,6 +153,92 @@ IMPLEMENTATION:
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
+
+#include "thread.h"
+
+extern "C" void
+sys_invoke_debug(Kobject_iface *o, Syscall_frame *f)
+{
+  if (!o)
+    {
+      f->tag(Kobject_iface::commit_result(-L4_err::EInval));
+      return;
+    }
+
+  Utcb *utcb = current_thread()->utcb().access();
+  //printf("sys_invoke_debug: [%p] -> %p\n", o, f);
+  Jdb_kobject_handler *h = Jdb_kobject::module()->find_handler(o);
+  if (h && h->invoke(o, f, utcb))
+    return;
+
+  for (Jdb_kobject::Handler_iter i = Jdb_kobject::module()->global_handlers.begin();
+       i != Jdb_kobject::module()->global_handlers.end(); ++i)
+    if (i->invoke(o, f, utcb))
+      return;
+
+  f->tag(Kobject_iface::commit_result(-L4_err::ENosys));
+}
+
+PUBLIC
+template< typename T >
+static
+T *
+Jdb_kobject_extension::find_extension(Kobject_common const *o)
+{
+  for (auto const &&ex: o->dbg_info()->_jdb_data)
+    {
+      if (!ex)
+        return 0;
+
+      Jdb_kobject_extension *je = static_cast<Jdb_kobject_extension*>(ex);
+      if (je->type() == T::static_type)
+	return static_cast<T*>(je);
+    }
+
+  return 0;
+}
+
+PUBLIC
+void
+Jdb_kobject::register_handler(Jdb_kobject_handler *h)
+{
+  if (h->is_global())
+    global_handlers.push_back(h);
+  else
+    handlers.push_back(h);
+}
+
+PUBLIC
+Jdb_kobject_handler *
+Jdb_kobject::find_handler(Kobject_common *o)
+{
+  for (Handler_iter h = handlers.begin(); h != handlers.end(); ++h)
+    {
+      auto r = o->_cxx_dyn_type();
+      if (r.type == h->kobj_type)
+        return *h;
+
+      // XXX: may be we should sort the handlers: most derived first
+      cxx::uintptr_t delta;
+      if (r.type->do_cast(h->kobj_type, cxx::Typeid<Kobject_common>::get(),
+                          (cxx::uintptr_t)o - (cxx::uintptr_t)r.base, &delta))
+        return *h;
+    }
+
+  return 0;
+}
+
+static DECLARE_PER_NODE_PRIO(BOOTSTRAP_INIT_PRIO) Per_node_data<Jdb_kobject> jdb_kobj_module;
+
+PUBLIC static
+Jdb_kobject *
+Jdb_kobject::module()
+{
+  return jdb_kobj_module.get();
+}
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION[jdb]:
 
 #include "entry_frame.h"
 #include "jdb.h"
@@ -374,37 +489,6 @@ Jdb_kobject::Jdb_kobject()
   : Jdb_module("INFO")
 {}
 
-
-PUBLIC
-void
-Jdb_kobject::register_handler(Jdb_kobject_handler *h)
-{
-  if (h->is_global())
-    global_handlers.push_back(h);
-  else
-    handlers.push_back(h);
-}
-
-PUBLIC
-Jdb_kobject_handler *
-Jdb_kobject::find_handler(Kobject_common *o)
-{
-  for (Handler_iter h = handlers.begin(); h != handlers.end(); ++h)
-    {
-      auto r = o->_cxx_dyn_type();
-      if (r.type == h->kobj_type)
-        return *h;
-
-      // XXX: may be we should sort the handlers: most derived first
-      cxx::uintptr_t delta;
-      if (r.type->do_cast(h->kobj_type, cxx::Typeid<Kobject_common>::get(),
-                          (cxx::uintptr_t)o - (cxx::uintptr_t)r.base, &delta))
-        return *h;
-    }
-
-  return 0;
-}
-
 PUBLIC
 bool
 Jdb_kobject::handle_obj(Kobject *o, int lvl)
@@ -594,15 +678,6 @@ Jdb_kobject::init()
   module()->register_handler(&id_hdl);
 }
 
-static DECLARE_PER_NODE_PRIO(BOOTSTRAP_INIT_PRIO) Per_node_data<Jdb_kobject> jdb_kobj_module;
-
-PUBLIC static
-Jdb_kobject *
-Jdb_kobject::module()
-{
-  return jdb_kobj_module.get();
-}
-
 // Be robust if this object is invalid
 PUBLIC static
 void
@@ -622,49 +697,6 @@ Jdb_kobject::print_uid(Kobject_common *o, int task_format = 0)
 
   printf("\033[31;1m%*s%p\033[m", task_format, "???", o);
   return;
-}
-
-
-extern "C" void
-sys_invoke_debug(Kobject_iface *o, Syscall_frame *f)
-{
-  if (!o)
-    {
-      f->tag(Kobject_iface::commit_result(-L4_err::EInval));
-      return;
-    }
-
-  Utcb *utcb = current_thread()->utcb().access();
-  //printf("sys_invoke_debug: [%p] -> %p\n", o, f);
-  Jdb_kobject_handler *h = Jdb_kobject::module()->find_handler(o);
-  if (h && h->invoke(o, f, utcb))
-    return;
-
-  for (Jdb_kobject::Handler_iter i = Jdb_kobject::module()->global_handlers.begin();
-       i != Jdb_kobject::module()->global_handlers.end(); ++i)
-    if (i->invoke(o, f, utcb))
-      return;
-
-  f->tag(Kobject_iface::commit_result(-L4_err::ENosys));
-}
-
-PUBLIC
-template< typename T >
-static
-T *
-Jdb_kobject_extension::find_extension(Kobject_common const *o)
-{
-  for (auto const &&ex: o->dbg_info()->_jdb_data)
-    {
-      if (!ex)
-        return 0;
-
-      Jdb_kobject_extension *je = static_cast<Jdb_kobject_extension*>(ex);
-      if (je->type() == T::static_type)
-	return static_cast<T*>(je);
-    }
-
-  return 0;
 }
 
 static Jdb_kobject_list::Mode INIT_PRIORITY(JDB_MODULE_INIT_PRIO) all("[ALL]", 0);

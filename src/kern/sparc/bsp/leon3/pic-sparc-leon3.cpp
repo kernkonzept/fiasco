@@ -114,7 +114,7 @@ void irq_handler(unsigned irq)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [sparc && debug]:
+IMPLEMENTATION [sparc && trace]:
 
 PUBLIC
 char const *

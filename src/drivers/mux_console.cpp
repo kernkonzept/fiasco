@@ -350,7 +350,7 @@ Mux_console::restore_state(Save_state const *state)
       _cons[i]->state(state->cons[i]);
 }
 
-IMPLEMENTATION[debug]:
+IMPLEMENTATION[jdb]:
 
 PUBLIC
 void

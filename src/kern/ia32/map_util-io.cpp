@@ -2,7 +2,7 @@
  * Fiasco-ia32
  * Specific code for I/O port protection
  */
-INTERFACE[(ia32|amd64) & io & debug]:
+INTERFACE[(ia32|amd64) & io & jdb]:
 
 #include "mapdb.h"
 #include "types.h"

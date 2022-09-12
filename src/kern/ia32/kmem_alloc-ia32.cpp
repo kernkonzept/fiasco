@@ -225,7 +225,7 @@ Kmem_alloc::Kmem_alloc()
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [{ia32,ux,amd64}-debug]:
+IMPLEMENTATION [{ia32,ux,amd64}-jdb]:
 
 #include "div32.h"
 

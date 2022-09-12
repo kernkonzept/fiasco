@@ -29,7 +29,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && debug]:
+IMPLEMENTATION [arm && jdb]:
 
 IMPLEMENT inline
 void

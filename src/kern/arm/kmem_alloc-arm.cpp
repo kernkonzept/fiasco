@@ -282,7 +282,7 @@ Kmem_alloc::to_phys(void *v) const
 { return (Address)v; }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [arm && debug]:
+IMPLEMENTATION [arm && jdb]:
 
 #include <cstdio>
 

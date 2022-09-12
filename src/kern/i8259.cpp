@@ -354,7 +354,7 @@ Irq_chip_i8259<IO>::mask_and_ack(Mword pin) override
 }
 
 // -----------------------------------------------------------------
-IMPLEMENTATION [i8259 && debug]:
+IMPLEMENTATION [i8259 && trace]:
 
 PUBLIC template<typename IO>
 char const *

@@ -1,4 +1,4 @@
-INTERFACE[debug]:
+INTERFACE[jdb]:
 
 #include "types.h"
 
@@ -117,7 +117,7 @@ public:
 };
 
 
-IMPLEMENTATION[debug]:
+IMPLEMENTATION[jdb]:
 
 inline
 Jdb_address operator + (Jdb_address const &a, long diff)

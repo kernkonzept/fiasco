@@ -99,7 +99,7 @@ Pic::set_pending_irq(unsigned group32num, Unsigned32 val)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [debug && pf_integrator]:
+IMPLEMENTATION [trace && pf_integrator]:
 
 PUBLIC
 char const *

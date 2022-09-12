@@ -208,7 +208,7 @@ void Pic::init_ap(Cpu_number cpu, bool resume)
 }
 
 //-------------------------------------------------------------------------
-IMPLEMENTATION [debug && pf_rpi && !pic_gic]:
+IMPLEMENTATION [trace && pf_rpi && !pic_gic]:
 
 PUBLIC
 char const *

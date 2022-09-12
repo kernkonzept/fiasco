@@ -131,7 +131,7 @@ Sched_context::Ready_queue::deblock(Sched_context *sc, Sched_context *crs, bool 
   return res;
 }
 
-INTERFACE [debug]:
+INTERFACE [trace]:
 
 #include "tb_entry.h"
 
@@ -150,7 +150,7 @@ public:
 } __attribute__((packed));
 
 
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [trace]:
 
 #include "kobject_dbg.h"
 #include "string_buffer.h"

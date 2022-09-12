@@ -83,7 +83,7 @@ Kmem_alloc::Kmem_alloc()
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [mips && debug]:
+IMPLEMENTATION [mips && jdb]:
 
 #include <cstdio>
 

@@ -108,7 +108,7 @@ void irq_handler()
 { mgr->c.irq_handler(); }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [debug && pf_imx]:
+IMPLEMENTATION [trace && pf_imx]:
 
 PUBLIC
 char const *

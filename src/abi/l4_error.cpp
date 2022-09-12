@@ -45,7 +45,7 @@ private:
 
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [trace]:
 
 static char const *__errors[] =
 { "OK", "timeout", "not existent", "canceled", "overflow",

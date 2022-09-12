@@ -21,7 +21,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [sparc && debug]:
+IMPLEMENTATION [sparc && jdb]:
 
 IMPLEMENT inline
 void

@@ -225,7 +225,7 @@ task_IMPL		:= task task-arm
 thread_IMPL	  	:= thread thread-arm thread-arm-hyp \
 			   thread-jdb thread-jdb-$(BITS) thread-ipc \
 			   thread-pagefault  thread-log \
-			   thread-vcpu thread-arm-$(BITS)
+			   thread-vcpu thread-arm-$(BITS) thread-debug
 timer_IMPL		:= timer timer-arm
 timer_tick_IMPL		:= timer_tick timer_tick-arm
 utcb_init_IMPL		:= utcb_init utcb_init-arm
@@ -259,7 +259,6 @@ jdb_entry_frame_IMPL	:= jdb_entry_frame-arm
 jdb_trace_set_IMPL	:= jdb_trace_set jdb_trace_set-arm \
 			   jdb_trace_set-arm-$(BITS)
 jdb_bp_IMPL		:= jdb_bp-arm
-thread_IMPL		+= thread-debug
 jdb_tbuf_fe_IMPL        := jdb_tbuf_fe jdb_tbuf_fe-arm
 
 endif

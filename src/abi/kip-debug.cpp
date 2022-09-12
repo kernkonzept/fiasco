@@ -1,4 +1,4 @@
-INTERFACE [debug]:
+INTERFACE [jdb]:
 
 EXTENSION class Kip
 {
@@ -6,7 +6,7 @@ private:
   void debug_print_syscalls() const;
 };
 
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [jdb]:
 
 
 #include <cstdio>

@@ -1,4 +1,4 @@
-INTERFACE [debug]:
+INTERFACE [jdb]:
 
 #include "mapdb.h"
 #include "types.h"

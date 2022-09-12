@@ -98,7 +98,7 @@ Irq_chip_ux::Irq_chip_ux(bool is_main) : Irq_chip_ia32(Num_irqs)
 }
 
 // -----------------------------------------------------------------
-IMPLEMENTATION [ux && debug]:
+IMPLEMENTATION [ux && trace]:
 
 PUBLIC
 char const *

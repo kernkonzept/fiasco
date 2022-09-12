@@ -143,7 +143,7 @@ task_IMPL		:= task task-sparc
 timer_IMPL		:= timer timer-decr-sparc
 thread_IMPL		:= thread thread-log thread-pagefault \
 			   thread-sparc thread-ipc thread-jdb \
-			   thread-vcpu
+			   thread-vcpu thread-debug
 utcb_init_IMPL		:= utcb_init utcb_init-sparc
 utcb_support_IMPL	:= utcb_support utcb_support-sparc
 vmem_alloc_IMPL		:= vmem_alloc vmem_alloc-sparc
@@ -160,7 +160,6 @@ CXXSRC_JDB := tb_entry_output.cc
 jdb_IMPL		+= jdb-sparc
 jdb_tcb_IMPL		+= jdb_tcb-sparc
 jdb_entry_frame_IMPL	+= jdb_entry_frame-sparc
-thread_IMPL		+= thread-debug
 
 INTERFACES_JDB		+= $(INTERFACES_JDB-y)
 endif

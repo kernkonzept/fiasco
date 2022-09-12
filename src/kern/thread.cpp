@@ -152,7 +152,7 @@ protected:
 };
 
 // ------------------------------------------------------------------------
-INTERFACE[debug]:
+INTERFACE[jdb]:
 
 EXTENSION class Thread
 {
@@ -1058,7 +1058,7 @@ Thread::force_to_invalid_cpu()
 }
 
 //----------------------------------------------------------------------------
-INTERFACE [debug]:
+INTERFACE [trace]:
 
 #include "tb_entry.h"
 
@@ -1347,9 +1347,8 @@ Thread::migrate_xcpu(Cpu_number cpu)
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [jdb]:
 
-#include "string_buffer.h"
 #include "kdb_ke.h"
 #include "terminate.h"
 
@@ -1372,15 +1371,6 @@ Thread::system_abort()
     kdb_ke("abort");
 
   terminate(EXIT_FAILURE);
-}
-
-IMPLEMENT
-void
-Thread::Migration_log::print(String_buffer *buf) const
-{
-  buf->printf("migrate from %u to %u (state=%lx user ip=%lx)",
-              cxx::int_value<Cpu_number>(src_cpu),
-              cxx::int_value<Cpu_number>(target_cpu), state, user_ip);
 }
 
 PUBLIC
@@ -1409,7 +1399,21 @@ Thread::halt_current()
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [!debug]:
+IMPLEMENTATION [trace]:
+
+#include "string_buffer.h"
+
+IMPLEMENT
+void
+Thread::Migration_log::print(String_buffer *buf) const
+{
+  buf->printf("migrate from %u to %u (state=%lx user ip=%lx)",
+              cxx::int_value<Cpu_number>(src_cpu),
+              cxx::int_value<Cpu_number>(target_cpu), state, user_ip);
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [!jdb]:
 
 #include "terminate.h"
 

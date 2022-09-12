@@ -143,7 +143,7 @@ timer_IMPL		:= timer timer-decr-ppc32
 timer_tick_IMPL         := timer_tick timer_tick-ppc32
 thread_IMPL		:= thread thread-log thread-pagefault \
 			   thread-ppc32 thread-ipc thread-jdb \
-			   thread-vcpu
+			   thread-vcpu thread-debug
 utcb_init_IMPL		:= utcb_init utcb_init-ppc32
 utcb_support_IMPL	:= utcb_support utcb_support-ppc32
 vmem_alloc_IMPL		:= vmem_alloc vmem_alloc-ppc32
@@ -160,7 +160,6 @@ CXXSRC_JDB := tb_entry_output.cc
 jdb_IMPL		+= jdb-ppc32
 jdb_tcb_IMPL		+= jdb_tcb-ppc32
 jdb_entry_frame_IMPL	:= jdb_entry_frame-ppc32
-thread_IMPL		+= thread-debug
 
 INTERFACES_JDB		+= $(INTERFACES_JDB-y)
 endif

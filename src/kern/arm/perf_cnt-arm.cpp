@@ -225,7 +225,6 @@ IMPLEMENTATION [arm && perf_cnt]:
 
 #include <cstdio>
 #include "static_init.h"
-#include "tb_entry.h"
 
 Perf_cnt::Perf_read_fn Perf_cnt::read_pmc[Max_slot] =
 { dummy_read_pmc, dummy_read_pmc };
@@ -340,6 +339,11 @@ Perf_cnt::mode(Mword slot, const char **mode, const char **name,
 
   return 1;
 }
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && perf_cnt && trace]:
+
+#include "tb_entry.h"
 
 PUBLIC static
 int
