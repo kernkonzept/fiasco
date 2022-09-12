@@ -1,0 +1,3 @@
+INTERFACE [arm && pf_s32z]:
+
+#define TARGET_NAME "NXP S32Z2/S32E2"
