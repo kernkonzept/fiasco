@@ -14,7 +14,7 @@ namespace L4
 
   int Uart_dcc_v6::get_char(bool /*blocking*/) const
   {
-#ifdef ARCH_arm
+#ifdef __arm__
     int c;
     asm volatile("mrc p14, 0, %0, c0, c5, 0": "=r" (c));
     return c & 0xff;
@@ -25,7 +25,7 @@ namespace L4
 
   int Uart_dcc_v6::char_avail() const
   {
-#ifdef ARCH_arm
+#ifdef __arm__
     unsigned long s;
     asm volatile("mrc p14, 0, %0, c0, c1, 0" : "=r" (s));
     return s & 0x40000000;
@@ -36,7 +36,7 @@ namespace L4
 
   void Uart_dcc_v6::out_char(char c) const
   {
-#ifdef ARCH_arm
+#ifdef __arm__
     unsigned long s;
     Poll_timeout_counter cnt(100000);
     do
