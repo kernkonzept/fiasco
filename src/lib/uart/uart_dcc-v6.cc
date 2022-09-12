@@ -1,5 +1,4 @@
 #include "uart_dcc-v6.h"
-#include "poll_timeout_counter.h"
 
 namespace L4
 {
@@ -38,11 +37,9 @@ namespace L4
   {
 #ifdef __arm__
     unsigned long s;
-    Poll_timeout_counter cnt(100000);
     do
       asm volatile("mrc p14, 0, %0, c0, c1, 0" : "=r" (s));
-    while (cnt.test(s & 0x20000000))
-      ;
+    while (s & 0x20000000);
     asm volatile("mcr p14, 0, %0, c0, c5, 0": : "r" (c & 0xff));
 #else
     (void)c;
