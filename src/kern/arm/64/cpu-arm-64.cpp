@@ -104,7 +104,7 @@ public:
   enum : Unsigned64
   {
     Hcr_must_set_bits = Hcr_vm | Hcr_swio | Hcr_ptw
-                      | Hcr_amo | Hcr_imo | Hcr_fmo
+                      | Hcr_imo | Hcr_fmo
                       | Hcr_tidcp | Hcr_tsc | Hcr_tactlr,
 
     /**
