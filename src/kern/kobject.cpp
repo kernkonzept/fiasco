@@ -299,6 +299,17 @@ IMPLEMENTATION [debug]:
 
 #include "string_buffer.h"
 
+IMPLEMENT
+void
+Kobject::Log_destroy::print(String_buffer *buf) const
+{
+  buf->printf("obj=%lx [%p] (%p) ram=%lx", id, static_cast<void const *>(type),
+              static_cast<void *>(obj), ram);
+}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [rt_dbg]:
+
 PUBLIC static inline
 Kobject *
 Kobject::from_dbg(Kobject_dbg *d)
@@ -317,11 +328,3 @@ PUBLIC
 Kobject_dbg *
 Kobject::dbg_info() const override
 { return const_cast<Kobject*>(this); }
-
-IMPLEMENT
-void
-Kobject::Log_destroy::print(String_buffer *buf) const
-{
-  buf->printf("obj=%lx [%p] (%p) ram=%lx", id, static_cast<void const *>(type),
-              static_cast<void *>(obj), ram);
-}

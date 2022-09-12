@@ -100,6 +100,6 @@ Kobject_iface::manufacture(long label, Ram_quota *q,
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [rt_dbg]:
 
 PUBLIC virtual Kobject_dbg *Kobject_common::dbg_info() const = 0;

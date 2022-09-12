@@ -99,6 +99,7 @@ processor_IMPL		:= processor processor-amd64
 #
 KERNEL			:= fiasco.debug
 VPATH			+= kern/$(CONFIG_XARCH) kern/ia32/64 kern/ia32 kern
+VPATH			+= jdb/ia32/64 jdb/ia32 jdb
 PRIVATE_INCDIR		+= kern/$(CONFIG_XARCH) kern/ia32/64 kern/ia32 kern
 
 INTERFACES_KERNEL	+= __main acpi acpi_fadt acpi_dmar \
@@ -186,7 +187,6 @@ endif
 ifeq ("$(CONFIG_JDB)","y")
 JDB			:= jdb_compound.o
 SUBSYSTEMS		+= JDB
-VPATH			+= jdb/ia32/64 jdb/ia32 jdb
 INTERFACES_JDB		+= jdb_io_ports jdb_ptab jdb_trace_set \
 			   jdb_console_buffer loadcnt jdb_io_apic \
 			   jdb_bt jdb_log jdb_iomap jdb_misc \

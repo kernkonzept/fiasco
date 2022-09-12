@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------
-INTERFACE[debug]:
+INTERFACE[rt_dbg]:
 
 #include "spin_lock.h"
 #include "lock_guard.h"
@@ -60,7 +60,7 @@ private:
 };
 
 //----------------------------------------------------------------------------
-INTERFACE[!debug]:
+INTERFACE[!rt_dbg]:
 
 #define JDB_DEFINE_TYPENAME(type, name)
 
@@ -71,7 +71,7 @@ public:
 };
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION[debug]:
+IMPLEMENTATION[rt_dbg]:
 
 #include "static_init.h"
 
@@ -155,7 +155,7 @@ Kobject_dbg::~Kobject_dbg()
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [!debug]:
+IMPLEMENTATION [!rt_dbg]:
 
 PUBLIC inline
 unsigned long

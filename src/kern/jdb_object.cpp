@@ -12,7 +12,7 @@
  * for reference.
  */
 
-IMPLEMENTATION [debug || cov]:
+IMPLEMENTATION [rt_dbg || cov]:
 
 #include "globals.h"
 #include "kobject_helper.h"
@@ -42,9 +42,8 @@ Jdb_object::kinvoke(L4_obj_ref, L4_fpage::Rights, Syscall_frame *,
 
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [rt_dbg]:
 
-#include "jdb.h"
 #include "kobject_rpc.h"
 #include "minmax.h"
 
@@ -96,6 +95,9 @@ Jdb_object::sys_kobject_debug(L4_msg_tag tag, unsigned /* op */,
     }
   return commit_result(0);
 }
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [rt_dbg && debug]:
 
 PRIVATE inline NOEXPORT
 L4_msg_tag
@@ -267,6 +269,32 @@ Jdb_object::sys_jdb(L4_msg_tag tag, unsigned op,
     }
 }
 
+//----------------------------------------------------------------------------
+IMPLEMENTATION [rt_dbg && !debug]:
+
+PRIVATE inline NOEXPORT
+L4_msg_tag
+Jdb_object::sys_tbuf(L4_msg_tag, unsigned,
+                     L4_fpage::Rights,
+                     Syscall_frame *,
+                     Utcb const *, Utcb *)
+{
+  return commit_result(-L4_err::ENosys);
+}
+
+PRIVATE inline NOEXPORT
+L4_msg_tag
+Jdb_object::sys_jdb(L4_msg_tag, unsigned,
+                    L4_fpage::Rights,
+                    Syscall_frame *,
+                    Utcb const *, Utcb *)
+{
+  return commit_result(-L4_err::ENosys);
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [rt_dbg]:
+
 IMPLEMENT_OVERRIDE
 L4_msg_tag
 Jdb_object::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
@@ -317,7 +345,7 @@ Jdb_object::sys_print_cov_data()
 }
 
 //------------------------------------------------------------------
-IMPLEMENTATION [debug && !cov]:
+IMPLEMENTATION [rt_dbg && !cov]:
 
 IMPLEMENT
 L4_msg_tag
@@ -328,7 +356,7 @@ Jdb_object::sys_print_cov_data()
 
 
 //------------------------------------------------------------------
-IMPLEMENTATION [!debug && cov]:
+IMPLEMENTATION [!rt_dbg && cov]:
 
 #include "kobject_rpc.h"
 

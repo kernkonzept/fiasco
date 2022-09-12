@@ -61,7 +61,7 @@ INTERFACES_JDB += \
 	jdb jdb_util jdb_core jdb_module jdb_prompt_ext jdb_list           \
 	jdb_handler_queue jdb_attach_irq jdb_entry_frame                   \
 	jdb_exit_module jdb_bp jdb_factory jdb_input jdb_ipc_gate          \
-	jdb_kobject jdb_kobject_names jdb_prompt_module                    \
+	jdb_prompt_module                    \
 	jdb_obj_space jdb_screen jdb_space jdb_table jdb_tcb               \
 	jdb_thread jdb_thread_list kern_cnt jdb_counters push_console      \
 	jdb_regex jdb_disasm jdb_tbuf_output jdb_input_task jdb_tbuf_show  \
@@ -73,6 +73,11 @@ INTERFACES_JDB += \
 jdb_IMPL	+= jdb jdb-ansi jdb-thread
 jdb_tbuf_IMPL	+= jdb_tbuf jdb_tbuf-$(CONFIG_XARCH)
 jdb_tcb_IMPL	+= jdb_tcb
+
+ifeq ($(CONFIG_RT_DBG),y)
+INTERFACES_KERNEL += \
+	jdb_kobject jdb_kobject_names
+endif
 
 ifeq ("$(CONFIG_JDB)","y")
 INTERFACES_KERNEL += \

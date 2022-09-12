@@ -460,14 +460,17 @@ register_factory()
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [debug]:
-
-#include "string_buffer.h"
+IMPLEMENTATION [rt_dbg]:
 
 PUBLIC
 ::Kobject_dbg *
 Ipc_gate_obj::dbg_info() const override
 { return Ipc_gate::dbg_info(); }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [debug]:
+
+#include "string_buffer.h"
 
 IMPLEMENT
 void
