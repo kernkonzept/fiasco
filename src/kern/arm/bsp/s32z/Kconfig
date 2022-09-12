@@ -1,0 +1,53 @@
+# PF: S32Z
+# PFDESCR: NXP S32Z2/S32E2
+# PFSELECT: CAN_ARM_CPU_CORTEX_R52 ARM_GIC HAVE_ARM_GICV3
+# PFDEPENDS: ARM
+
+choice
+	prompt "RTU config"
+	default PF_S32Z_RTU_ALL
+
+config PF_S32Z_RTU_ALL
+	bool "RTU0+RTU1"
+
+config PF_S32Z_RTU_0
+	bool "RTU0"
+
+config PF_S32Z_RTU_1
+	bool "RTU1"
+
+endchoice
+
+config PF_S32Z_AUTO_RAM_BASE
+	bool "Automatically choose RAM_BASE"
+	default y
+	help
+	  Use default RAM base address. Uses CRAM0 of the respective cluster:
+
+	  RTU0: 0x32100000
+	  RTU1: 0x36100000
+
+config PF_S32Z_MANUAL_RAM_BASE
+	hex "Custom RAM_BASE"
+	depends on !PF_S32Z_AUTO_RAM_BASE
+	default 0x32100000
+
+choice
+	prompt "AMP boot method"
+	default PF_S32Z_AMP_SPIN_ADDR
+	depends on AMP
+	help
+	  Method how the kernel is booted on multiple CPUs.
+
+config PF_S32Z_AMP_SPIN_ADDR
+	bool "Spin address"
+	help
+	  CPUs are started by another firmware.
+
+config PF_S32Z_AMP_RELEASE
+	bool "Release reset"
+	help
+	  Except the boot CPU all other cores are in reset. The other cores
+	  are started by programming MC_ME and MC_RGM directly.
+
+endchoice
