@@ -11,6 +11,8 @@
  */
 #pragma once
 
+#include <cxx/type_traits>
+
 namespace cxx {
 
 /**
@@ -41,7 +43,7 @@ struct Pair
    */
   template<typename A1, typename A2>
   Pair(A1 &&first, A2 &&second)
-  : first(first), second(second) {}
+  : first(cxx::forward<A1>(first)), second(cxx::forward<A2>(second)) {}
 
   /**
    * \brief Create a pair from one value, default-constructing the second value.
