@@ -24,10 +24,12 @@ IMPLEMENT void FIASCO_FLATTEN sys_ipc_log_wrapper()
   Unsigned8 have_snd       = (ipc_regs->ref().op() & L4_obj_ref::Ipc_send)
                              || (ipc_regs->ref().op() == L4_obj_ref::Ipc_call);
   Utcb *utcb = curr->utcb().access(true);
-  int do_log               = Jdb_ipc_trace::log() &&
-				Jdb_ipc_trace::check_restriction (curr->dbg_id(),
-					 static_cast<Task*>(curr->space())->dbg_id(),
-					 ipc_regs, 0);
+  Task *curr_task = static_cast<Task*>(curr->space());
+  int do_log = Jdb_ipc_trace::log()
+               && Jdb_ipc_trace::check_restriction(curr->dbg_id(),
+                                                   curr_task->dbg_id(),
+                                                   ipc_regs, 0)
+               && ipc_regs->tag().proto() != L4_msg_tag::Label_debugger;
 
   if (do_log)
     {
