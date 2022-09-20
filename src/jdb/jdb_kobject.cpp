@@ -83,6 +83,7 @@ protected:
     Op_switch_log       = 4,
     Op_get_name         = 5,
     Op_query_log_name   = 6,
+    Op_add_image_info   = 7,
   };
 };
 
@@ -183,7 +184,7 @@ PUBLIC
 template< typename T >
 static
 T *
-Jdb_kobject_extension::find_extension(Kobject_common const *o)
+Jdb_kobject_extension::find_extension(Kobject_common const *o, unsigned idx = 0)
 {
   for (auto const &&ex: o->dbg_info()->_jdb_data)
     {
@@ -191,7 +192,7 @@ Jdb_kobject_extension::find_extension(Kobject_common const *o)
         return 0;
 
       Jdb_kobject_extension *je = static_cast<Jdb_kobject_extension*>(ex);
-      if (je->type() == T::static_type)
+      if (je->type() == T::static_type && idx-- == 0)
 	return static_cast<T*>(je);
     }
 

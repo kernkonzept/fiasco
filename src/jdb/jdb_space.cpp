@@ -1,3 +1,29 @@
+//-----------------------------------------------------------------------
+INTERFACE:
+
+#include "config.h"
+#include "jdb_kobject.h"
+#include "l4_types.h"
+#include "initcalls.h"
+
+
+class Jdb_space_image_info : public Jdb_kobject_extension
+{
+public:
+  static char const *const static_type;
+  virtual char const *type() const override { return static_type; }
+
+  Jdb_space_image_info(Mword base, char const *name, int size);
+  ~Jdb_space_image_info() {}
+
+  void operator delete (void *);
+
+private:
+  Mword _base;
+  char _name[16];
+};
+
+//-----------------------------------------------------------------------
 IMPLEMENTATION:
 
 #include <climits>
@@ -17,6 +43,48 @@ IMPLEMENTATION:
 #include "task.h"
 #include "thread_object.h"
 #include "static_init.h"
+#include "kmem_slab.h"
+
+static Kmem_slab_t<Jdb_space_image_info> _sii_allocator("Jdb_space_image_info");
+char const *const Jdb_space_image_info::static_type = "Jdb_space_image_info";
+
+IMPLEMENT
+void
+Jdb_space_image_info::operator delete (void *p)
+{
+  _sii_allocator.del(reinterpret_cast<Jdb_space_image_info*>(p));
+}
+
+IMPLEMENT
+Jdb_space_image_info::Jdb_space_image_info(Mword base, char const *name, int size)
+: _base(base)
+{
+  int i = 0;
+  if (size > max_len())
+    size = max_len();
+  for (; name[i] && i < size; ++i)
+    _name[i] = name[i];
+
+  for (; i < max_len(); ++i)
+    _name[i] = 0;
+}
+
+PUBLIC inline
+int
+Jdb_space_image_info::max_len()
+{ return sizeof(_name); }
+
+PUBLIC inline
+Mword
+Jdb_space_image_info::base() const
+{ return _base; }
+
+PUBLIC inline
+char const *
+Jdb_space_image_info::name() const
+{ return _name; }
+
+
 
 class Jdb_space : public Jdb_module, public Jdb_kobject_handler
 {
@@ -61,6 +129,38 @@ Jdb_space::show_kobject_short(String_buffer *buf, Kobject_common *o, bool) overr
   buf->printf(" R=%ld", t->ref_cnt());
 }
 
+PUBLIC
+bool
+Jdb_space::invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb) override
+{
+  switch (utcb->values[0])
+    {
+    case Op_add_image_info:
+        {
+          if (f->tag().words() < 2)
+            {
+              f->tag(Kobject_iface::commit_result(-L4_err::EInval));
+              return true;
+            }
+
+          Jdb_space_image_info *ne =
+            _sii_allocator.new_obj((Mword)utcb->values[1],
+                                   reinterpret_cast<char const *>(&utcb->values[2]),
+                                   (f->tag().words() - 2) * sizeof(Mword));
+          if (!ne)
+            {
+              f->tag(Kobject_iface::commit_result(-L4_err::ENomem));
+              return true;
+            }
+
+          o->dbg_info()->_jdb_data.add(ne);
+          f->tag(Kobject_iface::commit_result(0));
+          return true;
+        }
+    }
+  return false;
+}
+
 PRIVATE static
 void
 Jdb_space::print_space(Space *s)
@@ -92,6 +192,13 @@ Jdb_space::show(Task *t)
       printf("of %lu (%luKB) @%p%s\n",
              l, l/1024, t->ram_quota(), Jdb::clear_to_eol_str());
     }
+
+  for (int i = 0;
+       auto *info = Jdb_kobject_extension::find_extension<Jdb_space_image_info>(t, i);
+       i++)
+    printf("  image: %s@0x%lx%s\n", info->name(), info->base(),
+           Jdb::clear_to_eol_str());
+
   Jdb::line();
 }
 
