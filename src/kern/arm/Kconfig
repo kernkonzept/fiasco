@@ -476,6 +476,16 @@ config ARM_CPU_ERRATA
 	bool "Enable CPU errata workarounds"
 	depends on ARM
 
+config EXPLICIT_ASID
+	bool "Explicit ASID/VMID allocation"
+	depends on ARM_CORTEX_R52 && CPU_VIRT
+	help
+	  On Cortex-R52 based platforms, the VMID is transmitted on the bus for
+	  device memory accesses. This is used by some SOCs as requester
+	  authentication in their IO-MPU. Allow a privileged component in the
+	  system to explicitly set the VMID to grant access for applications or
+	  virtual machines.
+
 # SECTION: COMPILING
 
 config THUMB2

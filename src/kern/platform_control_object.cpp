@@ -14,6 +14,7 @@ class Pfc : public Kobject_h<Pfc, Icu>
     Suspend_system     = 0x0,
     Shutdown_system    = 0x1,
     Allow_cpu_shutdown = 0x2,
+    Set_task_asid_arm  = 0x10,
   };
 
   L4_msg_tag sys_cpu_allow_shutdown(L4_fpage::Rights, Syscall_frame *f,
