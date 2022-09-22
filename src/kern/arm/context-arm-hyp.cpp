@@ -40,6 +40,12 @@ protected:
 
     bool queue() const
     { return _vtmr.direct() && _vtmr.enabled() && _vtmr.pending(); }
+
+    // Re-enable vtimer PPI? This implies a single GIC register write which is
+    // cheap. Hence we only want to prevent re-enabling the PPI if it should
+    // definitely not be taken.
+    bool reenable_ppi() const
+    { return !(_vtmr.direct() && _vtmr.enabled() && _vtmr.pending()); }
   };
 
   Vcpu_irq_list _injected_irqs;
@@ -354,6 +360,11 @@ Context::vcpu_handle_pending_injects(Vm_state *v, bool load)
     }
 }
 
+PROTECTED virtual
+void
+Context::vcpu_prepare_vtimer()
+{}
+
 IMPLEMENT_OVERRIDE inline
 void Context::vcpu_pv_switch_to_user(Vcpu_state *vcpu, bool current)
 {
@@ -375,6 +386,7 @@ void Context::vcpu_pv_switch_to_user(Vcpu_state *vcpu, bool current)
     arch_revoke_vcpu_irq(&_vtimer_irq, false);
 
   vcpu_handle_pending_injects(v, current);
+  vcpu_prepare_vtimer();
 }
 
 IMPLEMENT_OVERRIDE inline

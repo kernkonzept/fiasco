@@ -244,11 +244,14 @@ Thread::vcpu_vgic_maintenance()
   if (upcall)
     vcpu_vgic_upcall(vcpu, 0);
   else
-    vcpu_handle_pending_injects(v, true);
+    {
+      vcpu_handle_pending_injects(v, true);
+      vcpu_prepare_vtimer();
+    }
 }
 
 PUBLIC
-void
+Vcpu_state *
 Thread::vcpu_vtimer_hit()
 {
   assert (state() & Thread_ext_vcpu_enabled);
@@ -259,11 +262,13 @@ Thread::vcpu_vtimer_hit()
   assert (vcpu_exceptions_enabled(vcpu));
 
   if (_vtimer_irq.upcall())
-    vcpu_vgic_upcall(vcpu, 1);
+    return vcpu;
   else if (_vtimer_irq.set_pending())
     // This is guaranteed to *not* take the Irq_shortcut because the thread is
     // in vcpu user mode.
     arch_inject_vcpu_irq(_vtimer_irq.vcpu_irq_id(), &_vtimer_irq);
+
+  return nullptr;
 }
 
 
@@ -313,23 +318,56 @@ public:
     chip()->unmask_percpu(cpu, pin());
   }
 
+  void unmask()
+  {
+    chip()->unmask_percpu(current_cpu(), pin());
+  }
+
 private:
   void switch_mode(bool) override {}
   unsigned _irq;
 };
 
+/**
+ * Handle VTIMER guest interrupt.
+ *
+ * The VTIMER can be handled in two ways:
+ *   - the legacy model where an upcall to the vmm is made and the VTIMER is
+ *     masked in the guests CNTV_CTL register, or
+ *   - the direct injection model where Fiasco handles all the details and
+ *     keeps the PPI masked until the guest EOIed.
+ */
 PUBLIC inline NEEDS[Arm_vtimer_ppi::mask] FIASCO_FLATTEN
 void
 Arm_vtimer_ppi::handle(Upstream_irq const *ui)
 {
-  mask();
-  current_thread()->vcpu_vtimer_hit();
+  auto *t = current_thread();
+  Vcpu_state *upcall_vcpu = t->vcpu_vtimer_hit();
+  if (upcall_vcpu)
+    {
+      // Order is important here. The vcpu_vgic_upcall() will save the vtimer
+      // state. The vtimer must be masked before, otherwise it will be unmasked
+      // immediately when returning to the guest.
+      mask();
+      t->vcpu_vgic_upcall(upcall_vcpu, 1);
+    }
+  else
+    chip()->mask_percpu(current_cpu(), pin());
+
   chip()->ack(pin());
   Upstream_irq::ack(ui);
 }
 
 static Arm_ppi_virt __vgic_irq(25, 0);  // virtual GIC
 static Arm_vtimer_ppi __vtimer_irq(27); // virtual timer
+
+PROTECTED
+void
+Thread::vcpu_prepare_vtimer() override final
+{
+  if (EXPECT_TRUE(_vtimer_irq.reenable_ppi()))
+    __vtimer_irq.unmask();
+}
 
 namespace {
 struct Local_irq_init
