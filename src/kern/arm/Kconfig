@@ -447,6 +447,10 @@ config KMEM_SIZE
 	  Size of the kernel heap. This memory is reserved for internal data
 	  structures and kernel-user memory allocations.
 
+config EXPLICIT_ASID
+	bool "Explicit ASID/VMID allocation"
+	depends on ARM && !MMU
+
 # SECTION: COMPILING
 
 config THUMB2

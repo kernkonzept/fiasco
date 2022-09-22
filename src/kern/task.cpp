@@ -33,6 +33,7 @@ public:
     Add_ku_mem    = 3,
     Ldt_set_x86   = 0x11,
     Vgicc_map_arm = 0x12,
+    Set_asid_arm  = 0x13,
   };
 
   virtual int resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode);

@@ -95,19 +95,50 @@ Task::map_gicc_page(L4_msg_tag, Utcb *)
 }
 
 // ------------------------------------------------------------------------
+IMPLEMENTATION [arm && explicit_asid]:
+
+PRIVATE
+L4_msg_tag
+Task::set_asid(L4_msg_tag tag, Utcb *utcb)
+{
+  if (tag.words() < 2)
+    return commit_result(-L4_err::EInval);
+
+  // FIXME: restrict allowed values by some kind of bitmap? Could be treated
+  // like Io_space...
+  asid(utcb->values[1]);
+
+  return commit_result(0);
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && !explicit_asid]:
+
+PRIVATE
+L4_msg_tag
+Task::set_asid(L4_msg_tag, Utcb *)
+{
+  return commit_result(-L4_err::ENosys);
+}
+
+// ------------------------------------------------------------------------
 IMPLEMENTATION [arm && cpu_virt]:
 
 PRIVATE inline
 bool
 Task::invoke_arch(L4_msg_tag &tag, Utcb *utcb)
 {
-  if (utcb->values[0] == Vgicc_map_arm)
+  switch (utcb->values[0])
     {
-      tag = map_gicc_page(tag, utcb);
-      return true;
+      case Vgicc_map_arm:
+        tag = map_gicc_page(tag, utcb);
+        return true;
+      case Set_asid_arm:
+        tag = set_asid(tag, utcb);
+        return true;
+      default:
+        return false;
     }
-
-  return false;
 }
 
 namespace {

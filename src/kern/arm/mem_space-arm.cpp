@@ -643,7 +643,7 @@ void Mem_space::make_current()
 }
 
 //----------------------------------------------------------------------------
-INTERFACE [!(arm_v6 || arm_v7 || arm_v8)]:
+INTERFACE [!(arm_v6 || arm_v7 || arm_v8) || explicit_asid]:
 
 EXTENSION class Mem_space
 {
@@ -679,7 +679,7 @@ EXTENSION class Mem_space
 };
 
 //----------------------------------------------------------------------------
-INTERFACE [arm_v6 || arm_v7 || arm_v8]:
+INTERFACE [(arm_v6 || arm_v7 || arm_v8) && !explicit_asid]:
 
 #include "types.h"
 #include "spin_lock.h"
@@ -709,7 +709,7 @@ private:
 };
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [arm_v6 || arm_v7 || arm_v8]:
+IMPLEMENTATION [(arm_v6 || arm_v7 || arm_v8) && !explicit_asid]:
 #include "cpu.h"
 #include "cpu_lock.h"
 
@@ -741,6 +741,42 @@ Mem_space::asid()
 
 DEFINE_PER_CPU Per_cpu<Mem_space::Asids> Mem_space::_asids;
 DECLARE_PER_NODE Per_node_data<Mem_space::Asid_alloc> Mem_space::_asid_alloc(&_asids);
+
+//----------------------------------------------------------------------------
+INTERFACE [(arm_v6 || arm_v7 || arm_v8) && explicit_asid]:
+
+#include "types.h"
+
+EXTENSION class Mem_space
+{
+  unsigned _asid = 0;
+};
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [(arm_v6 || arm_v7 || arm_v8) && explicit_asid]:
+
+#include "cpu.h"
+
+PUBLIC inline NEEDS["atomic.h"]
+unsigned long
+Mem_space::c_asid() const
+{
+  return atomic_load(&_asid);
+}
+
+PUBLIC inline
+unsigned long
+Mem_space::asid()
+{
+  return _asid;
+};
+
+PUBLIC inline NEEDS["atomic.h"]
+void
+Mem_space::asid(unsigned asid)
+{
+  atomic_store(&_asid, asid);
+};
 
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && mmu && arm_lpae && !arm_pt_48]:
