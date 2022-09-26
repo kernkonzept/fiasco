@@ -80,7 +80,6 @@ else # ! no ABI
 # .Modules.deps, then restart using Makefile.sub1, Makefile.sub2.
 #
 
-$(srcdir)/Makeconf: globalconfig.tags globalconfig.out
 .PRECIOUS: globalconfig.tags
 
 # Read Make configuration

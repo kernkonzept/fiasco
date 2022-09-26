@@ -11,8 +11,6 @@ all: do-all
 
 BUILD_SOURCES=true
 
-$(srcdir)/Makeconf: globalconfig.out globalconfig.tags
-
 include $(srcdir)/Makeconf	# also reads srcdir/Makeconf.local
                                 # and        objdir/Makeconf.local
 include globalconfig.tags
