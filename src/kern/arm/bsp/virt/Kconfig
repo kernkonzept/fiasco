@@ -7,7 +7,7 @@
 
 # SMMUv3 implementation in Fiasco currently only supports the AArch64 page table
 # format, which is not defined on Aarch32, so limit the IOMMU option to 64-bit.
-config HAS_IOMMU_OPTION_64
+config PF_ARM_VIRT_HAS_IOMMU_OPTION_64
   bool
   select HAS_IOMMU_OPTION
   default y if BIT64
