@@ -688,7 +688,7 @@ Kmem::setup_global_cpu_structures(bool superpages)
   auto *alloc = Kmem_alloc::allocator();
   assert((Mem_layout::Io_bitmap & ~Config::SUPERPAGE_MASK) == 0);
 
-  enum { Tss_mem_size = 0x10 + Config::Max_num_cpus * (sizeof(Tss) + 256) };
+  enum { Tss_mem_size = 0x10 + Config::Max_num_cpus * cxx::ceil_lsb(sizeof(Tss) + 256, 4) };
 
   /* Per-CPU TSS required to use IO-bitmap for more CPUs */
   static_assert(Tss_mem_size < 0x10000, "Too many CPUs configured.");
