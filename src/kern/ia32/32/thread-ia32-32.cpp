@@ -4,7 +4,7 @@ PUBLIC template<typename T> inline
 void FIASCO_NORETURN
 Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
   assert(current() == this);
   assert(Config::Is_ux || (regs()->cs() & 3) == 3);
 
@@ -48,7 +48,7 @@ PUBLIC inline
 void
 Thread::restore_exc_state()
 {
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
   _exc_cont.restore(regs());
 #if 0
 
@@ -133,7 +133,7 @@ Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
   Utcb *rcv_utcb = rcv->utcb().access();
   Trex *dst = reinterpret_cast<Trex *>(rcv_utcb->values);
     {
-      auto guard = lock_guard(cpu_lock);
+      auto guard = lock_guard(*cpu_lock);
       if (EXPECT_FALSE(snd->exception_triggered()))
         {
           Mem::memcpy_mwords(&dst->s, ts, Ts::Reg_words + Ts::Code_words);

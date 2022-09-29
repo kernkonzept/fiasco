@@ -2,11 +2,12 @@ INTERFACE:
 
 #include <cstddef>
 #include <types.h>
+#include "per_node_data.h"
 
 class Ram_quota
 {
 public:
-  static Ram_quota *root;
+  static Per_node_data<Ram_quota *> root;
   virtual ~Ram_quota() = 0;
 
 private:
@@ -24,7 +25,7 @@ IMPLEMENTATION:
 
 #include "atomic.h"
 
-Ram_quota *Ram_quota::root;
+DECLARE_PER_NODE Per_node_data<Ram_quota *> Ram_quota::root;
 
 IMPLEMENT inline Ram_quota::~Ram_quota() {}
 
@@ -46,7 +47,7 @@ PUBLIC
 Ram_quota::Ram_quota()
   : _parent(0), _current(0), _max(0)
 {
-  root = this;
+  *root = this;
 }
 
 PUBLIC

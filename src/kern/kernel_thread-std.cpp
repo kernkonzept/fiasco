@@ -25,14 +25,14 @@ Kernel_thread::init_workload()
   Cap_index const C_thread  = Cap_index(Initial_kobjects::Thread);
   Cap_index const C_pager   = Cap_index(Initial_kobjects::Pager);
 
-  auto g = lock_guard(cpu_lock);
+  auto g = lock_guard(*cpu_lock);
 
   //
   // create sigma0
   //
 
   int err;
-  Task *sigma0 = Task::create<Sigma0_task>(Ram_quota::root, L4_msg_tag(), 0, 0, &err, 0);
+  Task *sigma0 = Task::create<Sigma0_task>(*Ram_quota::root, L4_msg_tag(), 0, 0, &err, 0);
 
   assert_opt (sigma0);
   L4_fpage sigma0_utcb = L4_fpage::mem(Mem_layout::Utcb_addr,
@@ -51,12 +51,12 @@ Kernel_thread::init_workload()
 
   for (Cap_index c = Initial_kobjects::first(); c < Initial_kobjects::end(); ++c)
     {
-      Kobject_iface *o = initial_kobjects.obj(c);
+      Kobject_iface *o = initial_kobjects->obj(c);
       if (o)
 	check(map(o, sigma0, sigma0, c, 0));
     }
 
-  Thread_object *sigma0_thread = new (Ram_quota::root) Thread_object(Ram_quota::root);
+  Thread_object *sigma0_thread = new (*Ram_quota::root) Thread_object(*Ram_quota::root);
 
   assert(sigma0_thread);
 
@@ -72,7 +72,7 @@ Kernel_thread::init_workload()
   // create the boot task
   //
 
-  Task *boot_task = Task::create<Task>(Ram_quota::root, L4_msg_tag(), 0, 0, &err, 0);
+  Task *boot_task = Task::create<Task>(*Ram_quota::root, L4_msg_tag(), 0, 0, &err, 0);
 
   assert_opt (boot_task);
   L4_fpage root_utcb = L4_fpage::mem(Mem_layout::Utcb_addr,
@@ -84,7 +84,7 @@ Kernel_thread::init_workload()
   // prevent deletion of this thing
   boot_task->inc_ref();
 
-  Thread_object *boot_thread = new (Ram_quota::root) Thread_object(Ram_quota::root);
+  Thread_object *boot_thread = new (*Ram_quota::root) Thread_object(*Ram_quota::root);
 
   assert (boot_thread);
 
@@ -98,7 +98,7 @@ Kernel_thread::init_workload()
   check (boot_thread->bind(boot_task, User<Utcb>::Ptr((Utcb*)Virt_addr::val(root_utcb.mem_address()))));
   check (boot_thread->ex_regs(Kip::k()->root_ip, 0));
 
-  Ipc_gate *s0_b_gate = Ipc_gate::create(Ram_quota::root, sigma0_thread, 4 << 4);
+  Ipc_gate *s0_b_gate = Ipc_gate::create(*Ram_quota::root, sigma0_thread, 4 << 4);
 
   check (s0_b_gate);
   check (map(s0_b_gate, boot_task, boot_task, C_pager, 0));
@@ -110,7 +110,7 @@ Kernel_thread::init_workload()
   check (obj_map(sigma0, C_factory, 1, boot_task, C_factory, 0).error() == 0);
   for (Cap_index c = Initial_kobjects::first(); c < Initial_kobjects::end(); ++c)
     {
-      Kobject_iface *o = initial_kobjects.obj(c);
+      Kobject_iface *o = initial_kobjects->obj(c);
       if (o)
 	check(obj_map(sigma0, c, 1, boot_task, c, 0).error() == 0);
     }

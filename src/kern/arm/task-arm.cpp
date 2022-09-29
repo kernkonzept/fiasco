@@ -48,7 +48,7 @@ Task::map_gicc_page(L4_msg_tag tag, Utcb *utcb)
   if (tag.words() < 2)
     return commit_result(-L4_err::EInval);
 
-  auto addr = Gic_h_global::gic->gic_v_address();
+  auto addr = (*Gic_h_global::gic)->gic_v_address();
   if (!addr)
     return commit_result(-L4_err::ENosys);
 

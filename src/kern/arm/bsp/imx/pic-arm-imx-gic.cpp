@@ -48,7 +48,7 @@ Pic::init()
                                                  Gic_dist::Size));
   m->add_chip(0, gic, gic->nr_irqs());
 
-  Irq_mgr::mgr = m;
+  *Irq_mgr::mgr = m;
 }
 
 // ------------------------------------------------------------------------
@@ -73,7 +73,7 @@ Pic::init()
                                                  Mem_layout::Gic_redist_size));
   m->add_chip(0, gic, gic->nr_irqs());
 
-  Irq_mgr::mgr = m;
+  *Irq_mgr::mgr = m;
 }
 
 // ------------------------------------------------------------------------

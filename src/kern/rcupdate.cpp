@@ -4,6 +4,7 @@ INTERFACE:
 #include "per_cpu_data.h"
 #include "spin_lock.h"
 #include <cxx/slist>
+#include "per_node_data.h"
 
 class Rcu_glbl;
 class Rcu_data;
@@ -139,9 +140,9 @@ class Rcu
 public:
   /// The lock to prevent a quiescent state.
   typedef Cpu_lock Lock;
-  static Rcu_glbl *rcu() { return &_rcu; }
+  static Rcu_glbl *rcu() { return _rcu.get(); }
 private:
-  static Rcu_glbl _rcu;
+  static Per_node_data<Rcu_glbl> _rcu;
   static Per_cpu<Rcu_data> _rcu_data;
 };
 
@@ -213,7 +214,7 @@ Rcu_timeout::expired() override
 { return Rcu::process_callbacks(); }
 
 
-Rcu_glbl Rcu::_rcu INIT_PRIORITY(EARLY_INIT_PRIO);
+DECLARE_PER_NODE_PRIO(EARLY_INIT_PRIO) Per_node_data<Rcu_glbl> Rcu::_rcu;
 DEFINE_PER_CPU Per_cpu<Rcu_data> Rcu::_rcu_data(Per_cpu_data::Cpu_num);
 DEFINE_PER_CPU static Per_cpu<Rcu_timeout> _rcu_timeout;
 
@@ -252,7 +253,7 @@ bool
 Rcu_data::do_batch()
 {
   // This function may not properly work if called without CPU lock.
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
 
   int count = 0;
   bool need_resched = false;
@@ -274,7 +275,7 @@ Rcu_data::do_batch()
   //_d.head(l);
 
     {
-      // auto guard = lock_guard(cpu_lock); -- See function precondition
+      // auto guard = lock_guard(*cpu_lock); -- See function precondition
       _len -= count;
     }
 
@@ -409,7 +410,7 @@ Rcu::call(Rcu_item *i, bool (*cb)(Rcu_item *))
       l->item = i;
       l->cb = (void*)cb);
 
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
 
   Rcu_data *rdp = &_rcu_data.current();
   rdp->enqueue(i);
@@ -419,7 +420,7 @@ PRIVATE
 void
 Rcu_data::move_batch(Rcu_list &l)
 {
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
   _n.append(l);
 }
 
@@ -449,7 +450,7 @@ bool FIASCO_WARN_RESULT
 Rcu_data::process_callbacks(Rcu_glbl *rgp)
 {
   // This function may not work properly if called without CPU lock.
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
 
   LOG_TRACE("Rcu callbacks", "rcu", ::current(), Rcu::Log_rcu,
       l->cpu = _cpu;
@@ -462,7 +463,7 @@ Rcu_data::process_callbacks(Rcu_glbl *rgp)
   if (!_n.empty() && _c.empty())
     {
 	{
-	  // auto guard = lock_guard(cpu_lock); -- See function precondition.
+	  // auto guard = lock_guard(*cpu_lock); -- See function precondition.
 	  _c = cxx::move(_n);
 	}
 
@@ -516,18 +517,18 @@ Rcu_data::pending(Rcu_glbl *rgp) const
 PUBLIC static inline NEEDS["globals.h"]
 bool FIASCO_WARN_RESULT
 Rcu::process_callbacks()
-{ return _rcu_data.current().process_callbacks(&_rcu); }
+{ return _rcu_data.current().process_callbacks(_rcu.get()); }
 
 PUBLIC static inline NEEDS["globals.h"]
 bool FIASCO_WARN_RESULT
 Rcu::process_callbacks(Cpu_number cpu)
-{ return _rcu_data.cpu(cpu).process_callbacks(&_rcu); }
+{ return _rcu_data.cpu(cpu).process_callbacks(_rcu.get()); }
 
 PUBLIC static inline
 bool
 Rcu::pending(Cpu_number cpu)
 {
-  return _rcu_data.cpu(cpu).pending(&_rcu);
+  return _rcu_data.cpu(cpu).pending(_rcu.get());
 }
 
 PUBLIC static inline
@@ -535,7 +536,7 @@ bool
 Rcu::idle(Cpu_number cpu)
 {
   Rcu_data const *d = &_rcu_data.cpu(cpu);
-  return d->_c.empty() && !d->pending(&_rcu);
+  return d->_c.empty() && !d->pending(_rcu.get());
 }
 
 PUBLIC static inline
@@ -555,7 +556,7 @@ Rcu::schedule_callbacks(Cpu_number cpu, Unsigned64 clock)
 PUBLIC static inline NEEDS["cpu_lock.h"]
 Rcu::Lock *
 Rcu::lock()
-{ return &cpu_lock; }
+{ return cpu_lock.get(); }
 
 
 PUBLIC static inline

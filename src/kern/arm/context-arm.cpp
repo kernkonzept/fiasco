@@ -76,7 +76,7 @@ Context::switch_cpu(Context *t)
   t->load_tpidrurw();
   t->load_tpidruro();
   t->load_mpu_enable(static_cast<Mem_space*>(t->_space.space()));
-  Irq_mgr::mgr->set_priority_mask(t->_irq_priority);
+  (*Irq_mgr::mgr)->set_priority_mask(t->_irq_priority);
   arm_switch_gp_regs(t);
 }
 
@@ -125,7 +125,7 @@ Context::arch_set_sched(Sched_context const * sched)
   // FIXME: this is wrong when thread is currently in vCPU
   _irq_priority = sched->prio();
   if (current() == this)
-    Irq_mgr::mgr->set_priority_mask(_irq_priority);
+    (*Irq_mgr::mgr)->set_priority_mask(_irq_priority);
 }
 
 // ------------------------------------------------------------------------

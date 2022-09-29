@@ -120,7 +120,7 @@ public:
 
   void mask_and_ack(Mword pin) override
   {
-    assert (cpu_lock.test());
+    assert (cpu_lock->test());
     disable_locked(pin);
     acknowledge_locked(pin);
   }
@@ -231,7 +231,7 @@ PUBLIC
 void
 Gic::mask(Mword pin) override
 {
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
   disable_locked(pin);
 }
 
@@ -239,7 +239,7 @@ PUBLIC
 void
 Gic::unmask(Mword pin) override
 {
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
   enable_locked(pin);
 }
 

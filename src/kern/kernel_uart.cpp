@@ -54,13 +54,13 @@ IMPLEMENTATION [serial]:
 #include "panic.h"
 #include "vkey.h"
 
-static Static_object<Filter_console> _fcon;
-static Static_object<Kernel_uart> _kernel_uart;
+static DECLARE_PER_NODE Per_node_data<Static_object<Filter_console>> _fcon;
+static DECLARE_PER_NODE Per_node_data<Static_object<Kernel_uart>> _kernel_uart;
 
 PUBLIC static FIASCO_CONST
 Uart *
 Kernel_uart::uart()
-{ return _kernel_uart; }
+{ return *_kernel_uart.get(); }
 
 
 IMPLEMENT_DEFAULT inline
@@ -78,10 +78,10 @@ Kernel_uart::init(Init_mode init_mode = Init_before_mmu)
   if (Koptions::o()->opt(Koptions::F_noserial)) // do not use serial uart
     return true;
 
-  _kernel_uart.construct();
-  _fcon.construct(_kernel_uart);
+  _kernel_uart->construct();
+  _fcon->construct(*_kernel_uart);
 
-  Kconsole::console()->register_console(_fcon, 0);
+  Kconsole::console()->register_console(*_fcon, 0);
   return true;
 }
 
@@ -124,7 +124,7 @@ Kernel_uart::pm_on_suspend(Cpu_number cpu) override
 
   uart()->state(Console::DISABLED);
 
-  if(Config::serial_esc != Config::SERIAL_ESC_NOIRQ)
+  if(*Config::serial_esc != Config::SERIAL_ESC_NOIRQ)
     uart()->disable_rcv_irq();
 }
 
@@ -136,7 +136,7 @@ Kernel_uart::pm_on_resume(Cpu_number cpu) override
   static_cast<Kernel_uart*>(Kernel_uart::uart())->setup();
   uart()->state(Console::ENABLED);
 
-  if(Config::serial_esc != Config::SERIAL_ESC_NOIRQ)
+  if(*Config::serial_esc != Config::SERIAL_ESC_NOIRQ)
     uart()->enable_rcv_irq();
 }
 
@@ -157,16 +157,16 @@ public:
   }
 };
 
+static DECLARE_PER_NODE_PRIO(BOOTSTRAP_INIT_PRIO) Per_node_data<Kuart_irq> uart_irq;
 
 IMPLEMENT
 void
 Kernel_uart::enable_rcv_irq()
 {
-  static Kuart_irq uart_irq;
-  auto mgr = Irq_mgr::mgr;
-  if (mgr->alloc(&uart_irq, mgr->legacy_override(uart()->irq())))
+  auto mgr = *Irq_mgr::mgr;
+  if (mgr->alloc(uart_irq.get(), mgr->legacy_override(uart()->irq())))
     {
-      uart_irq.unmask();
+      uart_irq->unmask();
       uart()->enable_rcv_irq();
     }
 }

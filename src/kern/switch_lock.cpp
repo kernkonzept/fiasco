@@ -115,7 +115,7 @@ inline NEEDS["lock_guard.h", "cpu_lock.h"]
 Context * NO_INSTRUMENT
 Switch_lock::lock_owner() const
 {
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
   return (Context*)(_lock_owner & ~1UL);
 }
 
@@ -131,7 +131,7 @@ inline NEEDS["lock_guard.h", "cpu_lock.h"]
 Switch_lock::Status NO_INSTRUMENT
 Switch_lock::test() const
 {
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
   Address o = access_once(&_lock_owner);
   if (EXPECT_FALSE(o & 1))
     return Invalid;
@@ -152,7 +152,7 @@ PUBLIC
 Switch_lock::Status NO_INSTRUMENT
 Switch_lock::lock()
 {
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
   return lock_dirty();
 }
 
@@ -179,7 +179,7 @@ inline NEEDS["context.h", "processor.h", Switch_lock::set_lock_owner]
 Switch_lock::Status NO_INSTRUMENT
 Switch_lock::lock_dirty()
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
 
   Mword o = access_once(&_lock_owner);
   if (EXPECT_FALSE(o & 1))
@@ -398,7 +398,7 @@ PUBLIC
 void NO_INSTRUMENT
 Switch_lock::clear()
 {
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
 
   switch_dirty(clear_no_switch_dirty());
 }
@@ -427,7 +427,7 @@ inline
 void NO_INSTRUMENT
 Switch_lock::clear_dirty()
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
 
   switch_dirty(clear_no_switch_dirty());
 }
@@ -436,7 +436,7 @@ PUBLIC inline
 void NO_INSTRUMENT
 Switch_lock::invalidate()
 {
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
   atomic_mp_or(&_lock_owner, 1);
 }
 
@@ -444,7 +444,7 @@ PUBLIC
 void NO_INSTRUMENT
 Switch_lock::wait_free()
 {
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
   Context *c = current();
 
   assert (!valid());
@@ -458,7 +458,7 @@ Switch_lock::wait_free()
 
   for(;;)
     {
-      assert(cpu_lock.test());
+      assert(cpu_lock->test());
 
       Address _owner = access_once(&_lock_owner);
       Context *owner = (Context *)(_owner & ~1UL);

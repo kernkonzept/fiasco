@@ -34,7 +34,7 @@ Mips_bsp_irqs::init(Cpu_number cpu)
     return;
 
   auto *m =  new Boot_object<Irq_mgr_flex<10> >();
-  Irq_mgr::mgr = m;
+  *Irq_mgr::mgr = m;
 
   if (0) // currently we do not expose the MIPS CPU IRQs to the user
     m->add_chip(Mips_cpu_irqs::chip, 0);

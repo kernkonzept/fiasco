@@ -22,7 +22,7 @@ public:
   bool test(bool expression = true)
   {
     // need open interrupts, otherwise clock won't tick
-    assert(!cpu_lock.test());
+    assert(!cpu_lock->test());
 
     if (!expression)
       return false;

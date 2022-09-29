@@ -202,7 +202,7 @@ void
 Pic::init()
 {
   assert(Boot_info::pic_base());
-  Irq_mgr::mgr = mgr.construct(Boot_info::pic_base());
+  *Irq_mgr::mgr = mgr.construct(Boot_info::pic_base());
 }
 
 //------------------------------------------------------------------------------

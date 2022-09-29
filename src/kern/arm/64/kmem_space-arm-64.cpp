@@ -9,6 +9,7 @@ IMPLEMENT inline void Kmem_space::init() {}
 IMPLEMENTATION [arm && mmu && !cpu_virt]:
 
 #include "boot_infos.h"
+#include "static_init.h"
 
 K_ptab_array kernel_l0_dir;
 static K_ptab_array kernel_l0_vdir;
@@ -18,7 +19,7 @@ static K_ptab_array kernel_l0_vdir;
 enum { Num_scratch_pages = 8 };
 static K_ptab_array pdir_scratch[Num_scratch_pages];
 
-Kpdir *Mem_layout::kdir = (Kpdir *)&kernel_l0_vdir;
+DECLARE_PER_NODE_PRIO(BOOTSTRAP_INIT_PRIO) Per_node_data<Kpdir *> Mem_layout::kdir((Kpdir *)&kernel_l0_vdir);
 
 // provide the initial infos for bootstrap.cpp
 static Boot_paging_info FIASCO_BOOT_PAGING_INFO _bs_pgin_dta =
@@ -33,6 +34,7 @@ static Boot_paging_info FIASCO_BOOT_PAGING_INFO _bs_pgin_dta =
 IMPLEMENTATION [arm && mmu && cpu_virt]:
 
 #include "boot_infos.h"
+#include "static_init.h"
 
 K_ptab_array kernel_l0_dir;
 // Bootstrap should be able to map up to 256TB RAM with six pages,
@@ -40,7 +42,7 @@ K_ptab_array kernel_l0_dir;
 enum { Num_scratch_pages = 8 };
 static K_ptab_array pdir_scratch[Num_scratch_pages];
 
-Kpdir *Mem_layout::kdir = (Kpdir *)&kernel_l0_dir;
+DECLARE_PER_NODE_PRIO(BOOTSTRAP_INIT_PRIO) Per_node_data<Kpdir *> Mem_layout::kdir((Kpdir *)&kernel_l0_dir);
 
 // provide the initial infos for bootstrap.cpp
 static Boot_paging_info FIASCO_BOOT_PAGING_INFO _bs_pgin_dta =

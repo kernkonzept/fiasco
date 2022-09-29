@@ -200,7 +200,7 @@ Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
   Trap_state *ts = (Trap_state*)snd->_utcb_handler;
 
   {
-    auto guard = lock_guard(cpu_lock);
+    auto guard = lock_guard(*cpu_lock);
     Utcb *rcv_utcb = rcv->utcb().access();
     Trex *r = reinterpret_cast<Trex *>(rcv_utcb->values);
     r->s = *ts;

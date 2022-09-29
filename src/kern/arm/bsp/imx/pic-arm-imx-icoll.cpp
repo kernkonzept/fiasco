@@ -46,7 +46,7 @@ PUBLIC
 void
 Irq_chip_imx_icoll::mask(Mword irq)
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
   _reg[HW_ICOLL_INTERRUPT0_CLR + irq * 0x10] = HW_ICOLL_INTERRUPT_ENABLE;
 }
 
@@ -54,7 +54,7 @@ PUBLIC
 void
 Irq_chip_imx_icoll::mask_and_ack(Mword irq)
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
   mask(irq);
   ack(irq);
 }
@@ -63,7 +63,7 @@ PUBLIC
 void
 Irq_chip_imx_icoll::unmask(Mword irq)
 {
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
   _reg[HW_ICOLL_INTERRUPT0_SET + irq * 0x10] = HW_ICOLL_INTERRUPT_ENABLE;
 }
 
@@ -85,7 +85,7 @@ static Static_object<Irq_mgr_single_chip<Irq_chip_imx_icoll> > mgr;
 PUBLIC static FIASCO_INIT
 void Pic::init()
 {
-  Irq_mgr::mgr = mgr.construct();
+  *Irq_mgr::mgr = mgr.construct();
 }
 
 PUBLIC inline

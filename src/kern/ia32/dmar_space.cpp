@@ -319,7 +319,7 @@ Dmar_space::create_identity_map()
     {
       auto i = identity_map->walk(Mem_space::V_pfn(pfn),
                                   Dmar_pt::Depth, false,
-                                  Kmem_alloc::q_allocator(Ram_quota::root));
+                                  Kmem_alloc::q_allocator(*Ram_quota::root));
       if (i.page_order() != 12)
         panic("IOMMU: cannot allocate identity IO page table, OOM\n");
 

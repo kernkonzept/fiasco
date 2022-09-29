@@ -549,7 +549,7 @@ Mgr_int::set_cpu(Mword irqnum, Cpu_number cpu) const
 PUBLIC static FIASCO_INIT
 void Pic::init()
 {
-  Irq_mgr::mgr = new Boot_object<Mgr_int>();
+  *Irq_mgr::mgr = new Boot_object<Mgr_int>();
 }
 
 PUBLIC static
@@ -735,7 +735,7 @@ PUBLIC static FIASCO_INIT
 void Pic::init()
 {
   Mgr_ext *m = new Boot_object<Mgr_ext>();
-  Irq_mgr::mgr = m;
+  *Irq_mgr::mgr = m;
   gic = &m->_gic;
   Gic::set_irq_handler(&Mgr_ext::exynos_irq_handler);
 }
@@ -944,7 +944,7 @@ Mgr::set_cpu(Mword irqnum, Cpu_number cpu) const
 PUBLIC static FIASCO_INIT
 void Pic::init()
 {
-  Irq_mgr::mgr = new Boot_object<Mgr>();
+  *Irq_mgr::mgr = new Boot_object<Mgr>();
 }
 
 PUBLIC static

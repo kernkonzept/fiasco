@@ -137,6 +137,10 @@ SECTIONS {
     *(.anno)
     *(.data.jdb)
 
+#if defined(CONFIG_AMP)
+    ASSERT(. == _etext, "No DATA allowed");
+#endif
+
     *(.init.data)
 
 /* Constructor and destructor lists, ordered by priority.  The lists
@@ -239,12 +243,28 @@ SECTIONS {
     _per_cpu_ctor_data_end = .;
     *(.bss .bss.* COMMON .gnu.linkonce.b.*)
     *(.bss.jdb)
+#if defined(CONFIG_AMP)
+    ASSERT(. == __bss_start, "No BSS allowed");
+#endif
     *(.init.bss)
     PROVIDE(__bss_end = .);
 #if defined(CONFIG_MMU)
     . = ALIGN(4K);
 #endif
-  }
+  } :kernel
+
+#if defined(CONFIG_AMP)
+  . = ALIGN(64);
+  .per_node : AT (ADDR(.per_node) - phys_offset) {
+    PROVIDE(__per_node_start = .);
+    *(.per_node.data)
+    . = ALIGN(64);
+    PROVIDE(__per_node_end = .);
+
+    . = . + (__per_node_end - __per_node_start) * (CONFIG_MP_MAX_CPUS - 1);
+  } :kernel
+#endif
+
   __end_of_the_kernel = .;
 
 #if defined(CONFIG_MMU)

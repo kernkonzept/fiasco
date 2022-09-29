@@ -6,6 +6,7 @@ INTERFACE [arm]:
 #include "types.h"
 #include "per_cpu_data.h"
 #include "processor.h"
+#include "per_node_data.h"
 
 EXTENSION
 class Cpu
@@ -16,7 +17,7 @@ public:
   static void early_init();
 
   static Per_cpu<Cpu> cpus;
-  static Cpu *boot_cpu() { return _boot_cpu; }
+  static Cpu *boot_cpu() { return *_boot_cpu; }
 
   enum {
     Cp15_c1_mmu             = 1 << 0,
@@ -78,7 +79,7 @@ private:
   void init_hyp_mode();
   static void early_init_platform();
 
-  static Cpu *_boot_cpu;
+  static Per_node_data<Cpu *> _boot_cpu;
 
   Cpu_phys_id _phys_id;
   Ids _cpu_id;
@@ -428,7 +429,7 @@ IMPLEMENTATION [arm]:
 #include "ram_quota.h"
 
 DEFINE_PER_CPU_P(0) Per_cpu<Cpu> Cpu::cpus(Per_cpu_data::Cpu_num);
-Cpu *Cpu::_boot_cpu;
+DECLARE_PER_NODE Per_node_data<Cpu *> Cpu::_boot_cpu;
 
 IMPLEMENT_DEFAULT inline void Cpu::early_init_platform() {}
 
@@ -490,7 +491,7 @@ Cpu::init(bool /*resume*/, bool is_boot_cpu)
 {
   if (is_boot_cpu)
     {
-      _boot_cpu = this;
+      *_boot_cpu = this;
       set_present(1);
       set_online(1);
     }

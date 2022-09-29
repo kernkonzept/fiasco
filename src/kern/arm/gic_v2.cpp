@@ -2,16 +2,17 @@ INTERFACE:
 
 #include "gic.h"
 #include "gic_cpu_v2.h"
+#include "per_node_data.h"
 
 class Gic_v2 : public Gic_mixin<Gic_v2, Gic_cpu_v2>
 {
   using Gic = Gic_mixin<Gic_v2, Gic_cpu_v2>;
   Per_cpu_array<Unsigned32> _sgi_template;
 
-  static Gic_v2 *primary;
+  static Per_node_data<Gic_v2 *> primary;
 
   static void _glbl_irq_handler()
-  { primary->hit(nullptr); }
+  { (*primary)->hit(nullptr); }
 
 public:
   using Version = Gic_dist::V2;
@@ -32,7 +33,7 @@ public:
 
   void init_global_irq_handler()
   {
-    primary = this;
+    *primary = this;
     Gic::set_irq_handler(_glbl_irq_handler);
   }
 };
@@ -40,7 +41,7 @@ public:
 //-------------------------------------------------------------------
 IMPLEMENTATION:
 
-Gic_v2 *Gic_v2::primary;
+DECLARE_PER_NODE Per_node_data<Gic_v2 *> Gic_v2::primary;
 
 PUBLIC inline
 void

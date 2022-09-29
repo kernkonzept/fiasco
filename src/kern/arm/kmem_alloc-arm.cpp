@@ -145,13 +145,13 @@ Kmem_alloc::Kmem_alloc()
   if (freemap_addr == ~0UL)
     panic("could not allocate freemap for buddy allocator\n");
 
-  a->init(map[0].start + offset);
-  a->setup_free_map((unsigned long *)freemap_addr, freemap_size);
+  (*a)->init(map[0].start + offset);
+  (*a)->setup_free_map((unsigned long *)freemap_addr, freemap_size);
 
   for (int i = map.length() - 1; i >= 0; --i)
     {
       Mem_region f = map[i];
-      a->add_mem((void *)(f.start + offset), f.size());
+      (*a)->add_mem((void *)(f.start + offset), f.size());
     }
 }
 
@@ -173,21 +173,21 @@ PRIVATE void
 Kmem_alloc::init(unsigned long start, unsigned long end)
 {
   auto touched =
-    Mem_layout::kdir->add(start, end,
-                          Mpu_region_attr::make_attr(L4_fpage::Rights::RW()),
-                          false, Kpdir::Kernel_heap);
+    (*Mem_layout::kdir)->add(start, end,
+                             Mpu_region_attr::make_attr(L4_fpage::Rights::RW()),
+                             false, Kpdir::Kernel_heap);
   if (touched & Mpu_regions::Error)
     panic("Error creating MPU regions!\n");
-  Mpu::sync(Mem_layout::kdir, touched);
+  Mpu::sync(*Mem_layout::kdir, touched);
   Mem::isb();
 
   unsigned long freemap_size = Alloc::free_map_bytes(start, end);
   unsigned long freemap_addr = end - freemap_size + 1U;
   end -= freemap_size;
 
-  a->init(start);
-  a->setup_free_map((unsigned long *)freemap_addr, freemap_size);
-  a->add_mem((void *)start, end - start + 1U);
+  (*a)->init(start);
+  (*a)->setup_free_map((unsigned long *)freemap_addr, freemap_size);
+  (*a)->add_mem((void *)start, end - start + 1U);
 }
 
 IMPLEMENT
@@ -239,9 +239,9 @@ IMPLEMENTATION [arm && debug]:
 PUBLIC
 void Kmem_alloc::debug_dump()
 {
-  a->dump();
+  (*a)->dump();
 
-  unsigned long free = a->avail();
+  unsigned long free = (*a)->avail();
   printf("Used %ldKB out of %dKB of Kmem\n",
 	 (Config::KMEM_SIZE - free + 1023)/1024,
 	 (Config::KMEM_SIZE        + 1023)/1024);

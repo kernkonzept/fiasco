@@ -69,7 +69,7 @@ void Jdb_tbuf_init::init()
       init_done = 1;
 
       unsigned n;
-      unsigned want_entries = Config::tbuf_entries;
+      unsigned want_entries = *Config::tbuf_entries;
 
       if (Koptions::o()->opt(Koptions::F_tbuf_entries))
         want_entries = Koptions::o()->tbuf_entries;

@@ -124,7 +124,7 @@ void
 Jdb_kern_info_bench::do_mp_benchmark()
 {
   // IPI bench matrix
-  if (Config::serial_esc == Config::SERIAL_ESC_IRQ)
+  if (*Config::serial_esc == Config::SERIAL_ESC_IRQ)
     {
       // The serial interrupt triggers as soon as we do Proc::sti()
       // in wait_for_ipi(). It even doesn't help to disable or unask

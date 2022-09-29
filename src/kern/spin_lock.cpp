@@ -114,15 +114,15 @@ PUBLIC template<typename Lock_t> inline
 typename Spin_lock<Lock_t>::Status
 Spin_lock<Lock_t>::test() const
 {
-  return (!!cpu_lock.test()) | (_lock & Arch_lock);
+  return (!!cpu_lock->test()) | (_lock & Arch_lock);
 }
 
 PUBLIC template<typename Lock_t> inline NEEDS[<cassert>, Spin_lock::lock_arch, "mem.h"]
 void
 Spin_lock<Lock_t>::lock()
 {
-  assert(!cpu_lock.test());
-  cpu_lock.lock();
+  assert(!cpu_lock->test());
+  cpu_lock->lock();
   lock_arch();
   Mem::mp_acquire();
 }
@@ -140,8 +140,8 @@ PUBLIC template<typename Lock_t> inline NEEDS[Spin_lock::lock_arch, "mem.h"]
 typename Spin_lock<Lock_t>::Status
 Spin_lock<Lock_t>::test_and_set()
 {
-  Status s = !!cpu_lock.test();
-  cpu_lock.lock();
+  Status s = !!cpu_lock->test();
+  cpu_lock->lock();
   lock_arch();
   Mem::mp_acquire();
   return s;
@@ -156,7 +156,7 @@ Spin_lock<Lock_t>::set(Status s)
     unlock_arch();
 
   if (!(s & 1))
-    cpu_lock.clear();
+    cpu_lock->clear();
 }
 
 

@@ -605,7 +605,7 @@ void
 Apic::route_pic_through_apic()
 {
   Unsigned32 tmp_val;
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
 
   // mask 8259 interrupts
   Unsigned16 old_irqs = Pic::disable_all_save();
@@ -632,7 +632,7 @@ static FIASCO_INIT_CPU_AND_PM
 void
 Apic::init_lvt()
 {
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
 
   // mask timer interrupt and set vector to _not_ invalid value
   reg_write(APIC_lvtt, reg_read(APIC_lvtt) | APIC_lvt_masked | 0xff);
@@ -767,7 +767,7 @@ Apic::calibrate_timer(Cpu *cpu)
 
       if (cpu->tsc_frequency_accurate())
         {
-          auto guard = lock_guard(cpu_lock);
+          auto guard = lock_guard(*cpu_lock);
           tt1 = timer_reg_read();
           cpu->busy_wait_ns(50000000ULL);  // 20Hz
           tt2 = timer_reg_read();
@@ -775,7 +775,7 @@ Apic::calibrate_timer(Cpu *cpu)
         }
       else
         {
-          auto guard = lock_guard(cpu_lock);
+          auto guard = lock_guard(*cpu_lock);
 
           Pit::setup_channel2_to_20hz();
 
@@ -823,7 +823,7 @@ Apic::error_interrupt(Return_frame *regs)
   err2 = Apic::get_num_errors();
   Apic::irq_ack();
 
-  cpu_lock.clear();
+  cpu_lock->clear();
 
   if (err1 == 0x80 || err2 == 0x80)
     {

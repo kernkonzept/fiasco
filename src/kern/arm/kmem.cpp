@@ -93,12 +93,12 @@ Kmem::mmio_remap(Address phys, Address size)
 
   // Attention: this only works before the first user space task is created.
   // Otherwise the mpu regions will collide!
-  auto diff = kdir->add(
+  auto diff = (*kdir)->add(
     start, end,
     Mpu_region_attr::make_attr(L4_fpage::Rights::RW(),
                                L4_msg_item::Memory_type::Uncached()));
   assert(!(diff & Mpu_regions::Error));
-  Mpu::sync(kdir, diff);
+  Mpu::sync(*kdir, diff);
   Mem::isb();
 
   return phys;
@@ -113,8 +113,8 @@ Kmem::mmio_unmap(Address virt, Address size)
   Address start = virt & ~63UL;
   Address end = (virt + size - 1U) | 63U;
 
-  auto diff = kdir->del(start, end, nullptr);
-  Mpu::sync(kdir, diff);
+  auto diff = (*kdir)->del(start, end, nullptr);
+  Mpu::sync(*kdir, diff);
   Mem::isb();
 }
 

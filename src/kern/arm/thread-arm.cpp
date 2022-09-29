@@ -107,7 +107,7 @@ Thread::user_invoke()
   Mem::memset_mwords(&ts->r[0], 0, sizeof(ts->r) / sizeof(ts->r[0]));
 
   if (ct->space()->is_sigma0())
-    ts->r[0] = Kmem::kdir->virt_to_phys((Address)Kip::k());
+    ts->r[0] = (*Kmem::kdir)->virt_to_phys((Address)Kip::k());
 
   // load KIP syscall code into r1/x1 to allow user processes to
   // do syscalls even without access to the KIP.
@@ -645,10 +645,10 @@ class Arm_ipis
 public:
   Arm_ipis()
   {
-    check(Irq_mgr::mgr->alloc(&remote_rq_ipi, Ipi::Request, false));
-    check(Irq_mgr::mgr->alloc(&glbl_remote_rq_ipi, Ipi::Global_request, false));
-    check(Irq_mgr::mgr->alloc(&debug_ipi, Ipi::Debug, false));
-    check(Irq_mgr::mgr->alloc(&timer_ipi, Ipi::Timer, false));
+    check((*Irq_mgr::mgr)->alloc(&remote_rq_ipi, Ipi::Request, false));
+    check((*Irq_mgr::mgr)->alloc(&glbl_remote_rq_ipi, Ipi::Global_request, false));
+    check((*Irq_mgr::mgr)->alloc(&debug_ipi, Ipi::Debug, false));
+    check((*Irq_mgr::mgr)->alloc(&timer_ipi, Ipi::Timer, false));
   }
 
   Thread_remote_rq_irq remote_rq_ipi;

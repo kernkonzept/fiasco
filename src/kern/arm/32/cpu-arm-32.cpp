@@ -1,5 +1,7 @@
 INTERFACE [arm]:
 
+#include "per_node_data.h"
+
 EXTENSION class Cpu
 {
 public:
@@ -8,14 +10,14 @@ public:
     Cp15_c1_cache_disabled = Cp15_c1_generic,
   };
 
-  static Unsigned32 sctlr;
+  static Per_node_data<Unsigned32> sctlr;
   bool has_generic_timer() const { return (_cpu_id._pfr[1] & 0xf0000) == 0x10000; }
 };
 
 //-------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
-Unsigned32 Cpu::sctlr;
+DECLARE_PER_NODE Per_node_data<Unsigned32> Cpu::sctlr;
 
 PUBLIC static inline
 Mword
@@ -53,13 +55,13 @@ Cpu::check_for_swp_enable()
   if (((mpidr() >> 31) & 1) == 0)
     return; // CPU has no MP extensions -> no swp enable
 
-  sctlr |= Cp15_c1_v7_sw;
+  *sctlr |= Cp15_c1_v7_sw;
 }
 
 IMPLEMENT
 void Cpu::early_init()
 {
-  sctlr = Config::Cache_enabled
+  *sctlr = Config::Cache_enabled
           ? Cp15_c1_cache_enabled : Cp15_c1_cache_disabled;
 
   check_for_swp_enable();
@@ -73,7 +75,7 @@ void Cpu::early_init()
 
                  " mcr  p15, 0, %0, c1, c0  \n"
                  :
-                 : "r" (sctlr),
+                 : "r" (*sctlr),
                    "r" (Proc::Status_mode_supervisor
                         | Proc::Status_interrupts_disabled)
                  : "r2", "r3");

@@ -2,6 +2,7 @@
 INTERFACE [arm && arm_generic_timer]:
 
 #include "generic_timer.h"
+#include "per_node_data.h"
 
 EXTENSION class Timer
 {
@@ -19,8 +20,8 @@ private:
   static void bsp_init(Cpu_number);
   static Unsigned32 frequency();
 
-  static Mword _interval;
-  static Mword _freq0;
+  static Per_node_data<Mword> _interval;
+  static Per_node_data<Mword> _freq0;
 };
 
 // --------------------------------------------------------------
@@ -31,8 +32,8 @@ IMPLEMENTATION [arm && arm_generic_timer]:
 #include "cpu.h"
 #include "io.h"
 
-Mword Timer::_interval;
-Mword Timer::_freq0;
+DECLARE_PER_NODE Per_node_data<Mword> Timer::_interval;
+DECLARE_PER_NODE Per_node_data<Mword> Timer::_freq0;
 
 IMPLEMENT_OVERRIDE
 Irq_chip::Mode Timer::irq_mode()
@@ -63,20 +64,20 @@ void Timer::init(Cpu_number cpu)
 
   if (cpu == Cpu_number::boot_cpu())
     {
-      _freq0 = frequency();
-      _interval = (Unsigned64)_freq0 * Config::Scheduler_granularity / 1000000;
-      printf("ARM generic timer: freq=%ld interval=%ld cnt=%lld\n", _freq0, _interval, Gtimer::counter());
-      assert(_freq0);
+      *_freq0 = frequency();
+      *_interval = (Unsigned64)*_freq0 * Config::Scheduler_granularity / 1000000;
+      printf("ARM generic timer: freq=%ld interval=%ld cnt=%lld\n", *_freq0, *_interval, Gtimer::counter());
+      assert(*_freq0);
 
-      freq_to_scaler_shift(1000000000, _freq0,
-                           &_scaler_ts_to_ns, &_shift_ts_to_ns);
-      freq_to_scaler_shift(1000000, _freq0,
-                           &_scaler_ts_to_us, &_shift_ts_to_us);
+      freq_to_scaler_shift(1000000000, *_freq0,
+                           _scaler_ts_to_ns.get(), _shift_ts_to_ns.get());
+      freq_to_scaler_shift(1000000, *_freq0,
+                           _scaler_ts_to_us.get(), _shift_ts_to_us.get());
     }
-  else if (_freq0 != frequency())
+  else if (*_freq0 != frequency())
     {
       printf("Different frequency on AP CPUs");
-      Gtimer::frequency(_freq0);
+      Gtimer::frequency(*_freq0);
     }
 
   Gtimer::setup_timer_access();
@@ -91,14 +92,14 @@ IMPLEMENT_OVERRIDE
 void
 Timer::enable()
 {
-  Gtimer::compare(Gtimer::counter() + _interval);
+  Gtimer::compare(Gtimer::counter() + *_interval);
   Gtimer::control(CTL_ENABLE);
 }
 
 PUBLIC static inline
 void Timer::acknowledge()
 {
-  Gtimer::compare(Gtimer::compare() + _interval);
+  Gtimer::compare(Gtimer::compare() + *_interval);
 }
 
 IMPLEMENT_OVERRIDE inline
@@ -126,7 +127,7 @@ void
 Timer::switch_freq_jdb()
 {
   if (mp_cas(&_using_interval_jdb, (Mword)false, (Mword)true))
-    _interval *= 10;
+    *_interval *= 10;
 }
 
 IMPLEMENT_OVERRIDE
@@ -134,5 +135,5 @@ void
 Timer::switch_freq_system()
 {
   if (mp_cas(&_using_interval_jdb, (Mword)true, (Mword)false))
-    _interval /= 10;
+    *_interval /= 10;
 }

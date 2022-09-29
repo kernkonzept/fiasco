@@ -3,6 +3,7 @@ INTERFACE:
 #include "context.h"
 #include "icu_helper.h"
 #include "types.h"
+#include "per_node_data.h"
 
 class Scheduler : public Icu_h<Scheduler>, public Irq_chip_soft
 {
@@ -18,7 +19,7 @@ public:
     Idle_time  = 2,
   };
 
-  static Scheduler scheduler;
+  static Per_node_data<Scheduler> scheduler;
 private:
   Irq_base *_irq;
 
@@ -38,7 +39,7 @@ IMPLEMENTATION:
 
 
 JDB_DEFINE_TYPENAME(Scheduler, "\033[34mSched\033[m");
-Scheduler Scheduler::scheduler;
+DECLARE_PER_NODE Per_node_data<Scheduler> Scheduler::scheduler;
 
 PUBLIC void
 Scheduler::operator delete (void *)
@@ -50,7 +51,7 @@ Scheduler::operator delete (void *)
 PUBLIC inline
 Scheduler::Scheduler() : _irq(0)
 {
-  initial_kobjects.register_obj(this, Initial_kobjects::Scheduler);
+  initial_kobjects->register_obj(this, Initial_kobjects::Scheduler);
 }
 
 

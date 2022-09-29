@@ -1,6 +1,7 @@
 INTERFACE [arm]:
 
 #include "irq_chip.h"
+#include "per_node_data.h"
 
 EXTENSION class Timer
 {
@@ -8,18 +9,18 @@ EXTENSION class Timer
 
 public:
   static Irq_chip::Mode irq_mode();
-  static Unsigned32 get_scaler_ts_to_ns() { return _scaler_ts_to_ns; }
-  static Unsigned32 get_shift_ts_to_ns() { return _shift_ts_to_ns; }
-  static Unsigned32 get_scaler_ts_to_us() { return _scaler_ts_to_us; }
-  static Unsigned32 get_shift_ts_to_us() { return _shift_ts_to_us; }
+  static Unsigned32 get_scaler_ts_to_ns() { return *_scaler_ts_to_ns; }
+  static Unsigned32 get_shift_ts_to_ns() { return *_shift_ts_to_ns; }
+  static Unsigned32 get_scaler_ts_to_us() { return *_scaler_ts_to_us; }
+  static Unsigned32 get_shift_ts_to_us() { return *_shift_ts_to_us; }
 
 private:
   static inline void update_one_shot(Unsigned64 wakeup);
   static Unsigned64 time_stamp();
-  static Unsigned32 _scaler_ts_to_ns;
-  static Unsigned32 _scaler_ts_to_us;
-  static Unsigned32 _shift_ts_to_ns;
-  static Unsigned32 _shift_ts_to_us;
+  static Per_node_data<Unsigned32> _scaler_ts_to_ns;
+  static Per_node_data<Unsigned32> _scaler_ts_to_us;
+  static Per_node_data<Unsigned32> _shift_ts_to_ns;
+  static Per_node_data<Unsigned32> _shift_ts_to_us;
 };
 
 // ------------------------------------------------------------------------
@@ -52,10 +53,10 @@ IMPLEMENTATION [arm]:
 #include "watchdog.h"
 #include "warn.h"
 
-Unsigned32 Timer::_scaler_ts_to_ns;
-Unsigned32 Timer::_scaler_ts_to_us;
-Unsigned32 Timer::_shift_ts_to_ns;
-Unsigned32 Timer::_shift_ts_to_us;
+DECLARE_PER_NODE Per_node_data<Unsigned32> Timer::_scaler_ts_to_ns;
+DECLARE_PER_NODE Per_node_data<Unsigned32> Timer::_scaler_ts_to_us;
+DECLARE_PER_NODE Per_node_data<Unsigned32> Timer::_shift_ts_to_ns;
+DECLARE_PER_NODE Per_node_data<Unsigned32> Timer::_shift_ts_to_us;
 
 IMPLEMENT_DEFAULT
 Unsigned64
@@ -143,12 +144,12 @@ Timer::update_timer(Unsigned64 wakeup)
 PUBLIC static inline NEEDS[Timer::timer_value_to_time]
 Unsigned64
 Timer::ts_to_ns(Unsigned64 ts)
-{ return timer_value_to_time(ts, _scaler_ts_to_ns, _shift_ts_to_ns); }
+{ return timer_value_to_time(ts, *_scaler_ts_to_ns, *_shift_ts_to_ns); }
 
 PUBLIC static inline NEEDS[Timer::timer_value_to_time]
 Unsigned64
 Timer::ts_to_us(Unsigned64 ts)
-{ return timer_value_to_time(ts, _scaler_ts_to_us, _shift_ts_to_us); }
+{ return timer_value_to_time(ts, *_scaler_ts_to_us, *_shift_ts_to_us); }
 
 /**
  * Determine scaling factor and shift value for transforming a time stamp

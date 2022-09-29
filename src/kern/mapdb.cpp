@@ -362,6 +362,7 @@ IMPLEMENTATION[mapdb]:
 #include "ram_quota.h"
 #include "std_macros.h"
 #include <new>
+#include "per_node_data.h"
 
 #if 0 // Optimization: do this using memset in Physframe::alloc()
 inline
@@ -588,17 +589,17 @@ Treemap::create(Order parent_page_shift, Space *owner_id,
                          shifts_num - 1, pf);
 }
 
-static Kmem_slab_t<Treemap> _treemap_allocator("Treemap");
+static DECLARE_PER_NODE Per_node_data<Kmem_slab_t<Treemap>> _treemap_allocator("Treemap");
 
 static
 void *
 Treemap::alloc()
-{ return _treemap_allocator.alloc(); }
+{ return _treemap_allocator->alloc(); }
 
 static
 void
 Treemap::free(void *e)
-{ _treemap_allocator.free(e); }
+{ _treemap_allocator->free(e); }
 
 
 PUBLIC inline

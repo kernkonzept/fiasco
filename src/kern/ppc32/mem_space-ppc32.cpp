@@ -262,7 +262,7 @@ Mem_space::try_htab_fault(Address virt)
   Status status;
   // insert in htab
   {
-     auto guard = lock_guard(cpu_lock);
+     auto guard = lock_guard(*cpu_lock);
 
      status = v_insert_htab(phys, virt, &pte_ptr, &evict);
 

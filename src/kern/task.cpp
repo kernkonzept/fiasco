@@ -62,6 +62,7 @@ IMPLEMENTATION:
 #include "ram_quota.h"
 #include "thread_state.h"
 #include "paging.h"
+#include "per_node_data.h"
 
 JDB_DEFINE_TYPENAME(Task, "\033[31mTask\033[m");
 
@@ -294,12 +295,12 @@ Task::Task(Ram_quota *q, Mem_space::Dir_type* pdir, Caps c)
 }
 
 // The allocator for tasks
-static Kmem_slab_t<Task> _task_allocator("Task");
+static DECLARE_PER_NODE Per_node_data<Kmem_slab_t<Task>> _task_allocator("Task");
 
 PRIVATE static
 Task *Task::alloc(Ram_quota *q)
 {
-  return _task_allocator.q_new(q, q);
+  return _task_allocator->q_new(q, q);
 }
 
 PUBLIC //inline
@@ -313,7 +314,7 @@ Task::operator delete (void *ptr)
             l->type = cxx::Typeid<Task>::get();
             l->ram = t->ram_quota()->current());
 
-  _task_allocator.q_free(t->ram_quota(), ptr);
+  _task_allocator->q_free(t->ram_quota(), ptr);
 }
 
 PUBLIC template<typename TASK_TYPE, bool MUST_SYNC_KERNEL = true,
@@ -438,16 +439,16 @@ Task::sys_map(L4_fpage::Rights rights, Syscall_frame *f, Utcb *utcb)
       if (!guard.check_and_lock(&existence_lock, &from->existence_lock))
         return commit_result(-L4_err::EInval);
 
-      cpu_lock.clear();
+      cpu_lock->clear();
 
       ret = fpage_map(from.get(), sfp, this,
                       L4_fpage::all_spaces(), L4_msg_item(utcb->values[1]), &rl);
-      cpu_lock.lock();
+      cpu_lock->lock();
     }
 
-  cpu_lock.clear();
+  cpu_lock->clear();
   rl.del();
-  cpu_lock.lock();
+  cpu_lock->lock();
 
   // FIXME: treat reaped stuff
   if (ret.ok())
@@ -478,7 +479,7 @@ Task::sys_unmap(Syscall_frame *f, Utcb *utcb)
       if (!guard.check_and_lock(&existence_lock))
         return commit_error(utcb, L4_error::Not_existent);
 
-      cpu_lock.clear();
+      cpu_lock->clear();
 
       L4_map_mask m(utcb->values[1]);
 
@@ -490,12 +491,12 @@ Task::sys_unmap(Syscall_frame *f, Utcb *utcb)
           utcb->values[i] = (utcb->values[i] & ~0xfUL)
                           | cxx::int_value<L4_fpage::Rights>(flushed);
         }
-      cpu_lock.lock();
+      cpu_lock->lock();
     }
 
-  cpu_lock.clear();
+  cpu_lock->clear();
   rl.del();
-  cpu_lock.lock();
+  cpu_lock->lock();
 
   return commit_result(0, words);
 }

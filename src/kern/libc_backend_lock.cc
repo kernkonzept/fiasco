@@ -4,35 +4,37 @@
 #include <cpu_lock.h>
 #include "mem.h"
 #include "processor.h"
+#include "per_node_data.h"
+#include "static_init.h"
 
-static Mword __libc_backend_printf_spinlock = ~0UL;
+static DECLARE_PER_NODE_PRIO(BOOTSTRAP_INIT_PRIO) Per_node_data<Mword> __libc_backend_printf_spinlock(~0UL);
 
 void __libc_backend_printf_local_force_unlock()
 {
   Mword pid = cxx::int_value<Cpu_phys_id>(Proc::cpu_id());
-  if (__libc_backend_printf_spinlock == pid)
-    write_now(&__libc_backend_printf_spinlock, ~0UL);
+  if (*__libc_backend_printf_spinlock == pid)
+    write_now(__libc_backend_printf_spinlock.get(), ~0UL);
 }
 
 unsigned long __libc_backend_printf_lock()
 {
-  unsigned long r = cpu_lock.test() ? 1 : 0;
-  cpu_lock.lock();
+  unsigned long r = cpu_lock->test() ? 1 : 0;
+  cpu_lock->lock();
 
   Mword pid = cxx::int_value<Cpu_phys_id>(Proc::cpu_id());
 
   // support nesting
-  if (__libc_backend_printf_spinlock == pid)
+  if (*__libc_backend_printf_spinlock == pid)
     return r | 2;
 
   for (;;)
     {
       Proc::pause();
-      auto x = access_once(&__libc_backend_printf_spinlock);
+      auto x = access_once(__libc_backend_printf_spinlock.get());
       if (x != ~0UL)
         continue;
 
-      if (mp_cas(&__libc_backend_printf_spinlock, (Mword)~0UL, pid))
+      if (mp_cas(__libc_backend_printf_spinlock.get(), (Mword)~0UL, pid))
         return r;
     }
 }
@@ -40,10 +42,10 @@ unsigned long __libc_backend_printf_lock()
 void __libc_backend_printf_unlock(unsigned long state)
 {
   if (!(state & 2))
-    write_now(&__libc_backend_printf_spinlock, ~0UL);
+    write_now(__libc_backend_printf_spinlock.get(), ~0UL);
 
   if (!(state & 1))
-    cpu_lock.clear();
+    cpu_lock->clear();
 
   Mem::mp_wmb();
 }

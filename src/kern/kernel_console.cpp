@@ -2,6 +2,7 @@ INTERFACE:
 
 #include "mux_console.h"
 #include "std_macros.h"
+#include "per_node_data.h"
 
 class Kconsole : public Mux_console
 {
@@ -10,10 +11,10 @@ public:
   void getchar_chance();
 
   static Mux_console *console() FIASCO_CONST
-  { return _c; }
+  { return *_c; }
 
 private:
-  static Static_object<Kconsole> _c;
+  static Per_node_data<Static_object<Kconsole>> _c;
 };
 
 IMPLEMENTATION:
@@ -23,7 +24,7 @@ IMPLEMENTATION:
 #include "mux_console.h"
 #include "processor.h"
 
-Static_object<Kconsole> Kconsole::_c;
+DECLARE_PER_NODE Per_node_data<Static_object<Kconsole>> Kconsole::_c;
 
 
 IMPLEMENT
@@ -38,7 +39,7 @@ int Kconsole::getchar(bool blocking)
       if ((c = Mux_console::getchar(false)) != -1)
         return c;
 
-      if (Config::getchar_does_hlt_works_ok // wakeup timer is enabled
+      if (*Config::getchar_does_hlt_works_ok // wakeup timer is enabled
           && Proc::interrupts())            // does'nt work without ints
         Proc::halt();
       else
@@ -50,15 +51,15 @@ int Kconsole::getchar(bool blocking)
 PUBLIC inline
 Kconsole::Kconsole()
 {
-  Console::stdout = this;
-  Console::stderr = this;
-  Console::stdin  = this;
+  *Console::stdout = this;
+  *Console::stderr = this;
+  *Console::stdin  = this;
 }
 
 
 PUBLIC static FIASCO_NOINLINE
 void
 Kconsole::init()
-{ _c.construct(); }
+{ _c->construct(); }
 
 

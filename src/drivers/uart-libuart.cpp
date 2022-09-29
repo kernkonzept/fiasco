@@ -12,7 +12,9 @@ private:
 //------------------------------------------------------
 IMPLEMENTATION [libuart]:
 
-Static_object<FIASCO_UART_TYPE> _the_uart;
+#include "per_node_data.h"
+
+DECLARE_PER_NODE Per_node_data<Static_object<FIASCO_UART_TYPE>> _the_uart;
 
 IMPLEMENT
 Uart::Uart() : Console(DISABLED) {}
@@ -27,9 +29,9 @@ PROTECTED bool
 Uart::startup(L4::Io_register_block const *reg, int irq, Unsigned32 base_baud)
 {
   _irq = irq;
-  _the_uart.construct(base_baud);
+  _the_uart->construct(base_baud);
 
-  if (!_the_uart->startup(reg))
+  if (!(*_the_uart)->startup(reg))
     return false;
 
   add_state(ENABLED);
@@ -39,5 +41,5 @@ Uart::startup(L4::Io_register_block const *reg, int irq, Unsigned32 base_baud)
 IMPLEMENT L4::Uart *
 Uart::uart()
 {
-  return _the_uart.get();
+  return _the_uart->get();
 }

@@ -4,6 +4,7 @@ INTERFACE:
 #include "irq_chip.h"
 #include "l4_types.h"
 #include <cxx/type_traits>
+#include "per_node_data.h"
 
 /**
  * Interface used to manage hardware IRQs on a platform.
@@ -67,7 +68,7 @@ public:
   virtual void set_priority_mask(Unsigned8 prio);
 
   /// The pointer to the single global instance of the actual IRQ manager.
-  static Irq_mgr *mgr;
+  static Per_node_data<Irq_mgr *> mgr;
 
   /// Prevent generation of a real virtual delete function
   virtual ~Irq_mgr() = 0;
@@ -93,7 +94,7 @@ IMPLEMENTATION:
 
 #include "warn.h"
 
-Irq_mgr *Irq_mgr::mgr;
+DECLARE_PER_NODE Per_node_data<Irq_mgr *> Irq_mgr::mgr;
 
 IMPLEMENT inline Irq_mgr::~Irq_mgr() {}
 

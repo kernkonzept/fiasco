@@ -229,8 +229,8 @@ PUBLIC static
 void
 Idt::set_vectors_run()
 {
-  Address func = (Config::esc_hack || Config::watchdog ||
-		  Config::serial_esc==Config::SERIAL_ESC_NOIRQ)
+  Address func = (*Config::esc_hack || Config::watchdog ||
+		  *Config::serial_esc==Config::SERIAL_ESC_NOIRQ)
 		    ? (Address)entry_int_timer_slow // slower for debugging
 		    : (Address)entry_int_timer;     // non-debugging
 

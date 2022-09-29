@@ -59,7 +59,7 @@ Ipi::init(Cpu_number)
 PUBLIC static inline NEEDS["pic.h"]
 void Ipi::send(Message m, Cpu_number from_cpu, Cpu_number to_cpu)
 {
-  Pic::gic->softint_cpu(to_cpu, m);
+  (*Pic::gic)->softint_cpu(to_cpu, m);
   stat_sent(from_cpu);
 }
 PUBLIC static inline NEEDS["pic.h"]
@@ -67,5 +67,5 @@ void
 Ipi::bcast(Message m, Cpu_number from_cpu)
 {
   (void)from_cpu;
-  Pic::gic->softint_bcast(m);
+  (*Pic::gic)->softint_bcast(m);
 }

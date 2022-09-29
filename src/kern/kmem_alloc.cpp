@@ -6,6 +6,7 @@ INTERFACE:
 #include "spin_lock.h"
 #include "lock_guard.h"
 #include "initcalls.h"
+#include "per_node_data.h"
 
 class Buddy_alloc;
 class Mem_region_map_base;
@@ -17,16 +18,16 @@ class Kmem_alloc
 {
   friend class Kmem_alloc_tester;
 
-  Kmem_alloc();
 
 public:
+  Kmem_alloc();
   typedef Buddy_alloc Alloc;
 private:
   typedef Spin_lock<> Lock;
-  static Lock lock;
-  static Alloc *a;
-  static unsigned long _orig_free;
-  static Kmem_alloc *_alloc;
+  static Per_node_data<Lock> lock;
+  static Per_node_data<Alloc *> a;
+  static Per_node_data<unsigned long> _orig_free;
+  static Per_node_data<Kmem_alloc *> _alloc;
 };
 
 
@@ -36,7 +37,7 @@ class Kmem_alloc_reaper : public cxx::S_list_item
 
 private:
   typedef cxx::S_list_bss<Kmem_alloc_reaper> Reaper_list;
-  static Reaper_list mem_reapers;
+  static Per_node_data<Reaper_list> mem_reapers;
 };
 
 template<typename Q>
@@ -86,19 +87,21 @@ IMPLEMENTATION:
 #include "mem_region.h"
 #include "buddy_alloc.h"
 #include "panic.h"
+#include "static_init.h"
 
-static Kmem_alloc::Alloc _a;
-Kmem_alloc::Alloc *Kmem_alloc::a = &_a;
-unsigned long Kmem_alloc::_orig_free;
-Kmem_alloc::Lock Kmem_alloc::lock;
-Kmem_alloc *Kmem_alloc::_alloc;
+static DECLARE_PER_NODE_PRIO(BOOTSTRAP_INIT_PRIO) Per_node_data<Static_object<Kmem_alloc>> al;
+static DECLARE_PER_NODE_PRIO(BOOTSTRAP_INIT_PRIO) Per_node_data<Kmem_alloc::Alloc> _a;
+DECLARE_PER_NODE_PRIO(BOOTSTRAP_INIT_PRIO) Per_node_data<Kmem_alloc::Alloc *> Kmem_alloc::a(_a.get());
+DECLARE_PER_NODE_PRIO(BOOTSTRAP_INIT_PRIO) Per_node_data<unsigned long> Kmem_alloc::_orig_free;
+DECLARE_PER_NODE_PRIO(BOOTSTRAP_INIT_PRIO) Per_node_data<Kmem_alloc::Lock> Kmem_alloc::lock;
+DECLARE_PER_NODE_PRIO(BOOTSTRAP_INIT_PRIO) Per_node_data<Kmem_alloc *> Kmem_alloc::_alloc;
 
 PUBLIC static inline NEEDS[<cassert>]
 Kmem_alloc *
 Kmem_alloc::allocator()
 {
-  assert (_alloc /* uninitialized use of Kmem_alloc */);
-  return _alloc;
+  assert (*_alloc /* uninitialized use of Kmem_alloc */);
+  return *_alloc;
 }
 
 
@@ -106,29 +109,29 @@ PUBLIC template<typename Q> static inline NEEDS[<cassert>]
 Kmem_q_alloc<Q>
 Kmem_alloc::q_allocator(Q *quota)
 {
-  assert (_alloc /* uninitialized use of Kmem_alloc */);
-  return Kmem_q_alloc<Q>(quota, _alloc);
+  assert (*_alloc /* uninitialized use of Kmem_alloc */);
+  return Kmem_q_alloc<Q>(quota, *_alloc);
 }
 
 PROTECTED static
 void
 Kmem_alloc::allocator(Kmem_alloc *a)
 {
-  _alloc = a;
+  *_alloc = a;
 }
 
 PUBLIC static FIASCO_INIT
 void
 Kmem_alloc::init()
 {
-  static Kmem_alloc al;
-  Kmem_alloc::allocator(&al);
+  al->construct();
+  Kmem_alloc::allocator(al->get());
 }
 
 PUBLIC
 void
 Kmem_alloc::dump() const
-{ a->dump(); }
+{ (*a)->dump(); }
 
 PUBLIC inline //NEEDS [Kmem_alloc::alloc]
 void *
@@ -170,16 +173,16 @@ Kmem_alloc::alloc(Bytes size)
   void* ret;
 
   {
-    auto guard = lock_guard(lock);
-    ret = a->alloc(sz);
+    auto guard = lock_guard(*lock);
+    ret = (*a)->alloc(sz);
   }
 
   if (!ret)
     {
       Kmem_alloc_reaper::morecore (/* desperate= */ true);
 
-      auto guard = lock_guard(lock);
-      ret = a->alloc(sz);
+      auto guard = lock_guard(*lock);
+      ret = (*a)->alloc(sz);
     }
 
   return ret;
@@ -191,8 +194,8 @@ Kmem_alloc::free(Bytes size, void *page)
 {
   const size_t sz = cxx::int_value<Bytes>(size);
   assert(sz >= 8 /* NEW INTERFACE PARANOIA */);
-  auto guard = lock_guard(lock);
-  a->free(page, sz);
+  auto guard = lock_guard(*lock);
+  (*a)->free(page, sz);
 }
 
 
@@ -318,13 +321,13 @@ Kmem_alloc::q_free(Q *quota, Bytes size, void *obj)
 }
 
 
-Kmem_alloc_reaper::Reaper_list Kmem_alloc_reaper::mem_reapers;
+DECLARE_PER_NODE Per_node_data<Kmem_alloc_reaper::Reaper_list> Kmem_alloc_reaper::mem_reapers;
 
 PUBLIC inline NEEDS["atomic.h"]
 Kmem_alloc_reaper::Kmem_alloc_reaper(size_t (*reap)(bool desperate))
 : _reap(reap)
 {
-  mem_reapers.add(this, mp_cas<cxx::S_list_item *>);
+  mem_reapers->add(this, mp_cas<cxx::S_list_item *>);
 }
 
 PUBLIC static
@@ -333,8 +336,8 @@ Kmem_alloc_reaper::morecore(bool desperate = false)
 {
   size_t freed = 0;
 
-  for (Reaper_list::Const_iterator reaper = mem_reapers.begin();
-       reaper != mem_reapers.end(); ++reaper)
+  for (Reaper_list::Const_iterator reaper = mem_reapers->begin();
+       reaper != mem_reapers->end(); ++reaper)
     freed += reaper->_reap(desperate);
 
   return freed;

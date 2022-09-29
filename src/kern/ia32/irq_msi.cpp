@@ -136,11 +136,11 @@ PUBLIC static FIASCO_INIT
 void
 Irq_mgr_msi::init()
 {
-  if (Irq_mgr::mgr && Irq_mgr::mgr->nr_msis() > 0)
+  if (*Irq_mgr::mgr && (*Irq_mgr::mgr)->nr_msis() > 0)
     return;
 
   Irq_mgr_msi *m;
-  Irq_mgr::mgr = m =  new Boot_object<Irq_mgr_msi>(Irq_mgr::mgr);
+  *Irq_mgr::mgr = m =  new Boot_object<Irq_mgr_msi>(*Irq_mgr::mgr);
   printf("Enable MSI support: chained IRQ mgr @ %p\n", m->_orig);
 }
 

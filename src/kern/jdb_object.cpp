@@ -19,6 +19,7 @@ IMPLEMENTATION [debug]:
 #include "kobject_helper.h"
 #include "kobject_rpc.h"
 #include "minmax.h"
+#include "per_node_data.h"
 
 class Jdb_object : public Kobject_h<Jdb_object, Kobject>
 {
@@ -45,13 +46,13 @@ public:
 
   Jdb_object()
   {
-    initial_kobjects.register_obj(this, Initial_kobjects::Jdb);
+    initial_kobjects->register_obj(this, Initial_kobjects::Jdb);
   }
 };
 
 JDB_DEFINE_TYPENAME(Jdb_object, "Jdb");
 
-static Jdb_object __jdb_kobject;
+static DECLARE_PER_NODE Per_node_data<Jdb_object> __jdb_kobject;
 
 extern "C" void sys_invoke_debug(Kobject_iface *o, Syscall_frame *f) __attribute__((weak));
 

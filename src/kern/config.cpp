@@ -7,6 +7,7 @@ INTERFACE:
 #include <globalconfig.h>
 #include "config_tcbsize.h"
 #include "l4_types.h"
+#include "per_node_data.h"
 
 // special magic to allow old compilers to inline constants
 
@@ -94,7 +95,7 @@ public:
 #else
     Jdb_accounting = 0,
 #endif
-#ifdef CONFIG_MP
+#if defined(CONFIG_MP) || defined(CONFIG_AMP)
     Max_num_cpus = CONFIG_MP_MAX_CPUS,
 #else
     Max_num_cpus = 1,
@@ -113,9 +114,9 @@ public:
 
   static Cpu_number max_num_cpus() { return Cpu_number(Max_num_cpus); }
 
-  static bool getchar_does_hlt_works_ok;
-  static bool esc_hack;
-  static unsigned tbuf_entries;
+  static Per_node_data<bool> getchar_does_hlt_works_ok;
+  static Per_node_data<bool> esc_hack;
+  static Per_node_data<unsigned> tbuf_entries;
 
   static constexpr Order page_order()
   { return Order(PAGE_SHIFT); }
@@ -194,7 +195,7 @@ INTERFACE [serial]:
 EXTENSION class Config
 {
 public:
-  static int  serial_esc;
+  static Per_node_data<int>  serial_esc;
 };
 
 //---------------------------------------------------------------------------
@@ -203,7 +204,9 @@ INTERFACE [!serial]:
 EXTENSION class Config
 {
 public:
-  static const int serial_esc = 0;
+  static const struct {
+    constexpr int operator*() { return 0; }
+  } serial_esc;
 };
 
 
@@ -238,17 +241,18 @@ IMPLEMENTATION:
 #include "koptions.h"
 #include "panic.h"
 #include "std_macros.h"
+#include "static_init.h"
 
 KIP_KERNEL_ABI_VERSION(FIASCO_STRINGIFY(FIASCO_KERNEL_SUBVERSION));
 
 // class variables
-bool Config::esc_hack = false;
+DECLARE_PER_NODE_PRIO(BOOTSTRAP_INIT_PRIO) Per_node_data<bool> Config::esc_hack;
 #ifdef CONFIG_SERIAL
-int  Config::serial_esc = Config::SERIAL_NO_ESC;
+DECLARE_PER_NODE_PRIO(BOOTSTRAP_INIT_PRIO) Per_node_data<int>  Config::serial_esc(Config::SERIAL_NO_ESC);
 #endif
 
-unsigned Config::tbuf_entries = 0x20000 / sizeof(Mword); //1024;
-bool Config::getchar_does_hlt_works_ok = false;
+DECLARE_PER_NODE_PRIO(BOOTSTRAP_INIT_PRIO) Per_node_data<unsigned> Config::tbuf_entries(0x20000 / sizeof(Mword)); //1024;
+DECLARE_PER_NODE_PRIO(BOOTSTRAP_INIT_PRIO) Per_node_data<bool> Config::getchar_does_hlt_works_ok;
 
 #ifdef CONFIG_FINE_GRAINED_CPUTIME
 KIP_KERNEL_FEATURE("fi_gr_cputime");
@@ -268,14 +272,14 @@ void Config::init()
   init_arch();
 
   if (Koptions::o()->opt(Koptions::F_esc))
-    esc_hack = true;
+    *esc_hack = true;
 
 #ifdef CONFIG_SERIAL
   if (    Koptions::o()->opt(Koptions::F_serial_esc)
       && !Koptions::o()->opt(Koptions::F_noserial)
       && !Koptions::o()->opt(Koptions::F_nojdb))
     {
-      serial_esc = SERIAL_ESC_IRQ;
+      *serial_esc = SERIAL_ESC_IRQ;
     }
 #endif
 }

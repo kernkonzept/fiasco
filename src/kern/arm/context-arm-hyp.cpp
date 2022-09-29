@@ -123,8 +123,8 @@ Context::arch_load_vcpu_kern_state(Vcpu_state *vcpu, bool do_load)
       if (do_load)
         {
           arm_ext_vcpu_switch_to_host(vcpu, v);
-          Gic_h_global::gic->save_and_disable(&v->gic);
-          Irq_mgr::mgr->set_priority_mask(_irq_priority);
+          (*Gic_h_global::gic)->save_and_disable(&v->gic);
+          (*Irq_mgr::mgr)->set_priority_mask(_irq_priority);
         }
       else
         arm_ext_vcpu_switch_to_host_no_load(vcpu, v);
@@ -170,15 +170,15 @@ Context::arch_load_vcpu_user_state(Vcpu_state *vcpu, bool do_load)
           if (_vtimer_irq_priority > _irq_priority)
             _vtimer_irq_priority = _irq_priority;
 
-          auto vtimer = Irq_mgr::mgr->chip(27);
+          auto vtimer = (*Irq_mgr::mgr)->chip(27);
           vtimer.chip->set_priority_percpu(current_cpu(), vtimer.pin,
                                            _vtimer_irq_priority);
 
-          Unsigned8 irq_prio = Gic_h_global::gic->load_full(&v->gic, true);
+          Unsigned8 irq_prio = (*Gic_h_global::gic)->load_full(&v->gic, true);
           if (irq_prio < _irq_priority)
             {
               _irq_priority = irq_prio;
-              Irq_mgr::mgr->set_priority_mask(irq_prio);
+              (*Irq_mgr::mgr)->set_priority_mask(irq_prio);
             }
         }
       else
@@ -224,21 +224,21 @@ Context::switch_vm_state(Context *t)
       save_ext_vcpu_state(_state, v);
 
       if ((_state & Thread_vcpu_user))
-        vgic = Gic_h_global::gic->save_full(&v->gic);
+        vgic = (*Gic_h_global::gic)->save_full(&v->gic);
     }
 
   if (_to_state & Thread_ext_vcpu_enabled)
     {
       Vm_state const *v = vm_state(t->vcpu_state().access());
       t->load_ext_vcpu_state(_to_state, v);
-      auto vtimer = Irq_mgr::mgr->chip(27);
+      auto vtimer = (*Irq_mgr::mgr)->chip(27);
       vtimer.chip->set_priority_percpu(current_cpu(), vtimer.pin,
                                        t->_vtimer_irq_priority);
 
       if (_to_state & Thread_vcpu_user)
-        Gic_h_global::gic->load_full(&v->gic, vgic);
+        (*Gic_h_global::gic)->load_full(&v->gic, vgic);
       else if (vgic)
-        Gic_h_global::gic->disable();
+        (*Gic_h_global::gic)->disable();
     }
   else
     arm_hyp_load_non_vm_state(vgic);
@@ -268,7 +268,7 @@ Context::adjust_irq_priority(Unsigned8 injected_prio)
   if (injected_prio > _irq_priority)
     {
       _irq_priority = injected_prio;
-      Irq_mgr::mgr->set_priority_mask(injected_prio);
+      (*Irq_mgr::mgr)->set_priority_mask(injected_prio);
     }
 }
 
@@ -281,7 +281,7 @@ PROTECTED
 void
 Context::recalculate_irq_priority(Vm_state *v)
 {
-  Unsigned8 irq_prio = Gic_h_global::gic->calc_irq_priority(&v->gic);
+  Unsigned8 irq_prio = (*Gic_h_global::gic)->calc_irq_priority(&v->gic);
   Unsigned8 max_priority = sched_context()->prio();
   if (irq_prio >= max_priority)
     irq_prio = max_priority;
@@ -289,7 +289,7 @@ Context::recalculate_irq_priority(Vm_state *v)
   if (irq_prio != _irq_priority)
     {
       _irq_priority = irq_prio;
-      Irq_mgr::mgr->set_priority_mask(irq_prio);
+      (*Irq_mgr::mgr)->set_priority_mask(irq_prio);
     }
 }
 
@@ -308,7 +308,7 @@ IMPLEMENT_OVERRIDE
 void
 Context::arch_inject_vcpu_irq(Mword irq_id, Vcpu_irq_list_item *irq)
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
 
   auto g = lock_guard(_injected_irqs.lock());
   if(_injected_irqs.in_list(irq))
@@ -325,8 +325,9 @@ Context::arch_inject_vcpu_irq(Mword irq_id, Vcpu_irq_list_item *irq)
       Vm_state *v = vm_state(vcpu);
       bool load = current() == this;
       Unsigned8 irq_prio;
-      irq->lr = Gic_h_global::gic->inject(&v->gic, Gic_h::Vcpu_irq_cfg(irq_id),
-                                          load, &irq_prio);
+      irq->lr = (*Gic_h_global::gic)->inject(&v->gic,
+                                             Gic_h::Vcpu_irq_cfg(irq_id), load,
+                                             &irq_prio);
       if (!irq->lr)
         // TODO: preempt an LR if this irq has higher priority
         // TODO: we should still raise the threads irq priority
@@ -379,7 +380,7 @@ Context::arch_revoke_vcpu_irq(Vcpu_irq_list_item *irq, bool reap)
 
       Vcpu_state *vcpu = vcpu_state().access();
       Vm_state *v = vm_state(vcpu);
-      bool active = Gic_h_global::gic->revoke(&v->gic, irq->lr-1U, reap);
+      bool active = (*Gic_h_global::gic)->revoke(&v->gic, irq->lr-1U, reap);
       irq->lr = 0;
 
       // FIXME: we somehow have to wait for the vCPU to eoi the interrupt
@@ -405,7 +406,7 @@ PROTECTED
 void
 Context::vcpu_handle_pending_injects(Vm_state *v, bool load)
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
   auto g = lock_guard(_injected_irqs.lock());
 
   if (EXPECT_TRUE(!_pending_injections))
@@ -417,9 +418,9 @@ Context::vcpu_handle_pending_injects(Vm_state *v, bool load)
         continue;
 
       Unsigned8 irq_prio;
-      irq->lr = Gic_h_global::gic->inject(&v->gic,
-                                          Gic_h::Vcpu_irq_cfg(irq->vcpu_irq_id()),
-                                          load, &irq_prio);
+      irq->lr = (*Gic_h_global::gic)->inject(&v->gic,
+                                             Gic_h::Vcpu_irq_cfg(irq->vcpu_irq_id()),
+                                             load, &irq_prio);
       if (irq->lr)
         {
           if (load)

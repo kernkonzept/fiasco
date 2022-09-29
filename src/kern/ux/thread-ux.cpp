@@ -31,7 +31,7 @@ Thread::arch_init()
     // FIXME, space()==0 for sigma0 (or even more)
     Fpu_alloc::alloc_state(space()->ram_quota(), fpu_state());
   else
-    Fpu_alloc::alloc_state(Ram_quota::root, fpu_state());
+    Fpu_alloc::alloc_state(*Ram_quota::root, fpu_state());
 
   // clear out user regs that can be returned from the thread_ex_regs
   // system call to prevent covert channel

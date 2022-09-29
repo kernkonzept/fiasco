@@ -89,7 +89,7 @@ Timer_tick::setup(Cpu_number cpu)
     printf("Timer for CPU%d is at IRQ %d\n", cxx::int_value<Cpu_number>(cpu), irq);
 
   if (!Platform::is_4412())
-    Irq_mgr::mgr->set_cpu(irq, cpu);
+    (*Irq_mgr::mgr)->set_cpu(irq, cpu);
 
   _timer_ticks.cpu(cpu)->_timer = Timer::timers.cpu(cpu).get();
 }

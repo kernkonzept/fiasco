@@ -34,7 +34,7 @@ Mips_bsp_irqs::init(Cpu_number cpu)
     return;
 
   auto *m =  new Boot_object<Irq_mgr_flex<10> >();
-  Irq_mgr::mgr = m;
+  *Irq_mgr::mgr = m;
 
   Address my_gic_base = 0x1bdc0000;
   Cm::cm->set_gic_base_and_enable(my_gic_base);

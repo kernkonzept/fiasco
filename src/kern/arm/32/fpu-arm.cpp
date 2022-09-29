@@ -44,7 +44,7 @@ public:
 
 private:
   Fpsid _fpsid;
-  static bool save_32r;
+  static Per_node_data<bool> save_32r;
 };
 
 // ------------------------------------------------------------------------
@@ -119,8 +119,9 @@ IMPLEMENTATION [arm && fpu]:
 #include "processor.h"
 #include "static_assert.h"
 #include "trap_state.h"
+#include "per_node_data.h"
 
-bool Fpu::save_32r;
+DECLARE_PER_NODE Per_node_data<bool> Fpu::save_32r;
 
 PUBLIC static inline
 Mword
@@ -258,7 +259,7 @@ Fpu::init(Cpu_number cpu, bool resume)
   Fpu &f = fpu.cpu(cpu);
   f._fpsid = Fpsid(fpsid_read());
   if (cpu == Cpu_number::boot_cpu() && f._fpsid.arch_version() > 1)
-    save_32r = (mvfr0() & 0xf) == 2;
+    *save_32r = (mvfr0() & 0xf) == 2;
 
   if (!resume)
     show(cpu);
@@ -277,7 +278,7 @@ Fpu::save_fpu_regs(Fpu_regs *r)
                "beq 1f                 \n"
                "vstm   %0!, {d16-d31}  \n"
                "1:                     \n"
-               : "=r" (tmp) : "0" (r->state), "r" (save_32r));
+               : "=r" (tmp) : "0" (r->state), "r" (*save_32r));
 }
 
 PRIVATE static inline
@@ -291,7 +292,7 @@ Fpu::restore_fpu_regs(Fpu_regs *r)
                "beq 1f                 \n"
                "vldm   %0!, {d16-d31} \n"
                "1:                     \n"
-               : "=r" (tmp) : "0" (r->state), "r" (save_32r));
+               : "=r" (tmp) : "0" (r->state), "r" (*save_32r));
 }
 
 IMPLEMENT

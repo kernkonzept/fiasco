@@ -2,6 +2,7 @@ INTERFACE [vgic && cpu_virt]:
 
 #include "types.h"
 #include "vgic.h"
+#include "per_node_data.h"
 
 #include <cxx/bitfield>
 
@@ -79,11 +80,11 @@ struct Gic_h_v3_init
 {
   explicit Gic_h_v3_init()
   {
-    unsigned v = Pic::gic->gic_version();
+    unsigned v = (*Pic::gic)->gic_version();
     if (v < 3 || v > 4)
       return;
 
-    Gic_h_global::gic = new Boot_object<Gic_h_v3>();
+    *Gic_h_global::gic = new Boot_object<Gic_h_v3>();
   }
 };
 

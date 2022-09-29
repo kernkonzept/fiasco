@@ -76,14 +76,14 @@ IMPLEMENTATION [{amd64,ia32}-serial]:
 static
 void Jdb::init_serial_console()
 {
-  if (Config::serial_esc == Config::SERIAL_ESC_IRQ &&
+  if (*Config::serial_esc == Config::SERIAL_ESC_IRQ &&
       !Kernel_uart::uart()->failed())
     {
       int irq;
 
       if ((irq = Kernel_uart::uart()->irq()) == -1)
 	{
-	  Config::serial_esc = Config::SERIAL_ESC_NOIRQ;
+	  *Config::serial_esc = Config::SERIAL_ESC_NOIRQ;
 	  puts("SERIAL ESC: Using serial hack in slow timer handler.");
 	}
       else
@@ -240,7 +240,7 @@ Jdb::save_disable_irqs(Cpu_number cpu)
 	{
 	  Watchdog::disable();
 	  pic_status = Pic::disable_all_save();
-          if (Config::getchar_does_hlt_works_ok)
+          if (*Config::getchar_does_hlt_works_ok)
             Timer_tick::disable(Cpu_number::boot_cpu());
 	}
       if (Io_apic::active() && Apic::is_present())
@@ -249,7 +249,7 @@ Jdb::save_disable_irqs(Cpu_number cpu)
 	  Apic::tpr(APIC_IRQ_BASE - 0x08);
 	}
 
-      if (cpu == Cpu_number::boot_cpu() && Config::getchar_does_hlt_works_ok)
+      if (cpu == Cpu_number::boot_cpu() && *Config::getchar_does_hlt_works_ok)
 	{
 	  // set timer interrupt does nothing than wakeup from hlt
 	  Timer_tick::set_vectors_stop();
@@ -258,7 +258,7 @@ Jdb::save_disable_irqs(Cpu_number cpu)
 
     }
 
-  if (cpu == Cpu_number::boot_cpu() && Config::getchar_does_hlt_works_ok)
+  if (cpu == Cpu_number::boot_cpu() && *Config::getchar_does_hlt_works_ok)
     // explicit enable interrupts because the timer interrupt is
     // needed to wakeup from "hlt" state in getchar(). All other
     // interrupts are disabled at the pic.
@@ -284,7 +284,7 @@ Jdb::restore_irqs(Cpu_number cpu)
 	}
 
       // reset timer interrupt vector
-      if (cpu == Cpu_number::boot_cpu() && Config::getchar_does_hlt_works_ok)
+      if (cpu == Cpu_number::boot_cpu() && *Config::getchar_does_hlt_works_ok)
       	Idt::set_vectors_run();
 
       // reset interrupt flags
@@ -322,7 +322,7 @@ Jdb::get_thread(Cpu_number cpu)
   if (foreach_cpu(On_dbg_stack(sp), false))
     return 0;
 
-  if (!Helping_lock::threading_system_active)
+  if (!*Helping_lock::threading_system_active)
     return 0;
 
   return static_cast<Thread*>(context_of((const void*)sp));
@@ -773,7 +773,7 @@ void
 Jdb::handle_nested_trap(Jdb_entry_frame *e)
 {
   // re-enable interrupts if we need them because they are disabled
-  if (Config::getchar_does_hlt_works_ok)
+  if (*Config::getchar_does_hlt_works_ok)
     Proc::sti();
 
   switch (e->_trapno)

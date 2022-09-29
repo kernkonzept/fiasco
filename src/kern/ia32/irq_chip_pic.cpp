@@ -87,7 +87,7 @@ PUBLIC static FIASCO_INIT
 void
 Irq_chip_ia32_pic::init()
 {
-  Irq_mgr::mgr = new Boot_object<Pic_irq_mgr>();
+  *Irq_mgr::mgr = new Boot_object<Pic_irq_mgr>();
 }
 
 // ------------------------------------------------------------------------
@@ -99,7 +99,7 @@ PUBLIC
 Irq_chip_ia32_pic::Irq_chip_ia32_pic()
 : Irq_chip_i8259<Io>(0x20, 0xa0), Irq_chip_ia32(16)
 {
-  Irq_mgr::mgr = this;
+  *Irq_mgr::mgr = this;
   bool sfn = !Koptions::o()->opt(Koptions::F_nosfn);
   init(Base_vector, sfn,
        Config::Pic_prio_modify

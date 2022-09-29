@@ -152,7 +152,7 @@ PUBLIC
 void
 Thread::ipc_receiver_aborted() override
 {
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
   assert (wait_queue());
   set_wait_queue(0);
 
@@ -236,7 +236,7 @@ Thread::handle_page_fault_pager(Thread_ptr const &_pager,
   if (EXPECT_FALSE((state() & Thread_alien)))
     return false;
 
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
 
   L4_fpage::Rights rights;
   Kobject_iface *pager = _pager.ptr(space(), &rights);
@@ -403,7 +403,7 @@ PRIVATE inline NEEDS["logdefs.h"]
 Thread::Check_sender
 Thread::handshake_receiver(Thread *partner, L4_timeout snd_t)
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
 
   Check_sender r = partner->check_sender(this, !snd_t.is_zero());
   switch (r.s)
@@ -508,7 +508,7 @@ Thread::do_ipc(L4_msg_tag const &tag, Mword from_spec, Thread *partner,
                bool have_receive, Sender *sender, L4_timeout_pair t,
                Syscall_frame *regs, L4_fpage::Rights rights)
 {
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
   assert (this == current());
 
   bool do_switch = false;
@@ -792,7 +792,7 @@ PUBLIC inline NEEDS["task.h", "trap_state.h",
 int
 Thread::send_exception(Trap_state *ts)
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
 
   Vcpu_state *vcpu = vcpu_state().access();
 
@@ -886,7 +886,7 @@ bool FIASCO_WARN_RESULT
 Thread::copy_utcb_to_utcb(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
                           L4_fpage::Rights rights)
 {
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
 
   Utcb *snd_utcb = snd->utcb().access();
   Utcb *rcv_utcb = rcv->utcb().access();
@@ -1022,7 +1022,7 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
                       return false;
                     }
 
-                  auto c_lock = lock_guard<Lock_guard_inverse_policy>(cpu_lock);
+                  auto c_lock = lock_guard<Lock_guard_inverse_policy>(*cpu_lock);
                   err = fpage_map(snd->space(), sfp,
                                   rcv_t.get(), L4_fpage(buf->d), item->b, &rl);
                 }

@@ -1,6 +1,7 @@
 INTERFACE:
 
 #include "l4_types.h"
+#include "per_node_data.h"
 
 class Kpdir;
 
@@ -20,7 +21,7 @@ public:
   static const char initcall_end[]   asm ("_initcall_end");
 
   static Mword in_kernel (Address a); // XXX: not right for UX
-  static Kpdir *kdir;
+  static Per_node_data<Kpdir *> kdir;
 };
 
 IMPLEMENTATION [obj_space_virt]:

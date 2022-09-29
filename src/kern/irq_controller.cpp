@@ -33,7 +33,7 @@ PUBLIC inline NEEDS["irq_mgr.h"]
 Irq_base *
 Icu::icu_get_irq(unsigned irqnum)
 {
-  return Irq_mgr::mgr->irq(irqnum);
+  return (*Irq_mgr::mgr)->irq(irqnum);
 }
 
 
@@ -47,7 +47,7 @@ Icu::op_icu_bind(unsigned irqnum, Ko::Cap<Irq> const &irq)
   auto g = lock_guard(irq.obj->irq_lock());
   irq.obj->unbind();
 
-  if (!Irq_mgr::mgr->alloc(irq.obj, irqnum))
+  if (!(*Irq_mgr::mgr)->alloc(irq.obj, irqnum))
     return commit_result(-L4_err::EInval);
 
   return commit_result(0);
@@ -57,7 +57,7 @@ PUBLIC inline NEEDS["irq_mgr.h"]
 L4_msg_tag
 Icu::op_icu_set_mode(Mword pin, Irq_chip::Mode mode)
 {
-  Irq_mgr::Irq i = Irq_mgr::mgr->chip(pin);
+  Irq_mgr::Irq i = (*Irq_mgr::mgr)->chip(pin);
 
   if (!i.chip)
     return commit_result(-L4_err::ENodev);
@@ -80,8 +80,8 @@ PUBLIC inline NEEDS["irq_mgr.h"]
 L4_msg_tag
 Icu::op_icu_get_info(Mword *features, Mword *num_irqs, Mword *num_msis)
 {
-  *num_irqs = Irq_mgr::mgr->nr_irqs();
-  *num_msis = Irq_mgr::mgr->nr_msis();
+  *num_irqs = (*Irq_mgr::mgr)->nr_irqs();
+  *num_msis = (*Irq_mgr::mgr)->nr_msis();
   *features = *num_msis ? (unsigned)Msi_bit : 0;
   return L4_msg_tag(0);
 }
@@ -90,13 +90,13 @@ PUBLIC inline NEEDS["irq_mgr.h"]
 L4_msg_tag
 Icu::op_icu_msi_info(Mword msi, Unsigned64 source, Irq_mgr::Msi_info *out)
 {
-  return commit_result(Irq_mgr::mgr->msg(msi, source, out));
+  return commit_result((*Irq_mgr::mgr)->msg(msi, source, out));
 }
 
 
 PUBLIC inline
 Icu::Icu()
 {
-  initial_kobjects.register_obj(this, Initial_kobjects::Icu);
+  initial_kobjects->register_obj(this, Initial_kobjects::Icu);
 }
 

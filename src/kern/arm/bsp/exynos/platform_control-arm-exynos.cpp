@@ -404,7 +404,7 @@ Platform_control::do_core_n_off(Cpu_number cpu)
 
   do_print_cpu_info(phys_cpu);
 
-  assert(cpu_lock.test()); // required for wfi
+  assert(cpu_lock->test()); // required for wfi
 
   pmu->core_write(0, phys_cpu, Pmu::Config);
 

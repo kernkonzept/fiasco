@@ -21,7 +21,7 @@ public:
     void setup()
     {
       version = Version;
-      gic_version = Gic_h_global::gic->version();
+      gic_version = (*Gic_h_global::gic)->version();
       features = 0;
     }
   };

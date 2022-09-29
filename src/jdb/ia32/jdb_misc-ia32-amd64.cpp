@@ -33,7 +33,7 @@ Jdb_misc_general::action(int cmd, void *&, char const *&, int &) override
       if (first_char == '+' || first_char == '-')
 	{
 	  putchar(first_char);
-	  Config::esc_hack = (first_char == '+');
+	  *Config::esc_hack = (first_char == '+');
 	  putchar('\n');
 	  return NOTHING;
 	}

@@ -74,7 +74,7 @@ IMPLEMENT inline NEEDS [<asm/unistd.h>, <sys/mman.h>, "boot_info.h",
 void
 Mem_space::page_map(Address phys, Address virt, Address size, Attr attr)
 {
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
 
   Mword *trampoline = (Mword *)Mem_layout::kernel_trampoline_page;
 
@@ -101,7 +101,7 @@ IMPLEMENT inline NEEDS [<asm/unistd.h>, "cpu_lock.h", "lock_guard.h",
 void
 Mem_space::page_unmap(Address virt, Address size)
 {
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
 
   Trampoline::syscall(pid(), __NR_munmap, virt, size);
 }
@@ -111,7 +111,7 @@ IMPLEMENT inline NEEDS [<asm/unistd.h>, "cpu_lock.h", "lock_guard.h",
 void
 Mem_space::page_protect(Address virt, Address size, unsigned attr)
 {
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
 
   Trampoline::syscall(pid(), __NR_mprotect, virt, size,
                       PROT_READ | (attr & Page_writable ? PROT_WRITE : 0)
@@ -164,11 +164,11 @@ Mem_space::user_to_kernel(T const *addr, bool write)
 
       // No mapping or insufficient access rights, raise pagefault.
       // Pretend open interrupts, we restore the current state afterwards.
-      Cpu_lock::Status was_locked = cpu_lock.test();
+      Cpu_lock::Status was_locked = cpu_lock->test();
 
       thread_page_fault(cxx::int_value<Virt_addr>(virt), error, 0, Proc::processor_state() | EFLAGS_IF, 0);
 
-      cpu_lock.set (was_locked);
+      cpu_lock->set (was_locked);
     }
 }
 
@@ -183,7 +183,7 @@ Mem_space::peek_user(T const *addr)
   if (((Address)addr                   & Config::PAGE_MASK) ==
      (((Address)addr + sizeof (T) - 1) & Config::PAGE_MASK))
     {
-      auto guard = lock_guard(cpu_lock);
+      auto guard = lock_guard(*cpu_lock);
       value = *user_to_kernel(addr, false);
     }
   else
@@ -201,7 +201,7 @@ Mem_space::poke_user(T *addr, T value)
   if (((Address)addr                   & Config::PAGE_MASK) ==
      (((Address)addr + sizeof (T) - 1) & Config::PAGE_MASK))
     {
-      auto guard = lock_guard(cpu_lock);
+      auto guard = lock_guard(*cpu_lock);
       *user_to_kernel(addr, true) = value;
     }
   else
@@ -213,7 +213,7 @@ template< typename T >
 void
 Mem_space::copy_from_user(T *kdst, T const *usrc, size_t n)
 {
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
 
   char *ptr = (char *)usrc;
   char *dst = (char *)kdst;
@@ -236,7 +236,7 @@ template< typename T >
 void
 Mem_space::copy_to_user(T *udst, T const *ksrc, size_t n)
 {
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
 
   char *ptr = (char *)udst;
   char *src = (char *)ksrc;

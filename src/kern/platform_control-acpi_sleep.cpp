@@ -196,7 +196,7 @@ IMPLEMENT_OVERRIDE
 static int
 Platform_control::system_suspend(Mword extra)
 {
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
 
   if (!_system_suspend_enabled)
     return -L4_err::ENodev;
@@ -217,7 +217,7 @@ IMPLEMENT_OVERRIDE
 static void
 Platform_control::system_reboot()
 {
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
 
   if (!_system_suspend_enabled)
     return;

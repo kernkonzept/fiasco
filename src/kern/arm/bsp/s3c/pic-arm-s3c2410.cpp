@@ -196,7 +196,7 @@ PUBLIC
 void
 S3c_chip::mask_and_ack(Mword irq)
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
   mask(irq);
   ack(irq);
 }
@@ -208,7 +208,7 @@ static Static_object<Irq_mgr_single_chip<S3c_chip> > mgr;
 PUBLIC static FIASCO_INIT
 void Pic::init()
 {
-  Irq_mgr::mgr = mgr.construct();
+  *Irq_mgr::mgr = mgr.construct();
 }
 
 PUBLIC inline

@@ -141,7 +141,7 @@ PUBLIC
 Mem_space::Mem_space(Ram_quota *q, Dir_type* pdir)
   : _quota(q), _dir(pdir)
 {
-  _kernel_space = this;
+  *_kernel_space = this;
   _current.cpu(Cpu_number::boot_cpu()) = this;
 }
 

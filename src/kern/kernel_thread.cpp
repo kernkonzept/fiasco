@@ -68,7 +68,7 @@ void
 Kernel_thread::bootstrap()
 {
   // Initializations done -- Helping_lock can now use helping lock
-  Helping_lock::threading_system_active = true;
+  *Helping_lock::threading_system_active = true;
 
   // we need per CPU data for our never running dummy CPU too
   // FIXME: we in fact need only the _pending_rqq lock
@@ -153,7 +153,7 @@ IMPLEMENT_OVERRIDE
 void
 Kernel_thread::check_debug_koptions()
 {
-  auto g = lock_guard(cpu_lock);
+  auto g = lock_guard(*cpu_lock);
 
   if (Config::Jdb &&
       !Koptions::o()->opt(Koptions::F_nojdb) &&
@@ -211,7 +211,7 @@ Kernel_thread::idle_op()
 {
   // this version must run with disabled IRQs and a wakeup must continue
   // directly after the wait for event.
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
   Cpu_number cpu = home_cpu();
   ++_idle_counter.cpu(cpu);
   // 1. check for latency requirements that prevent low power modes

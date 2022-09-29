@@ -10,6 +10,7 @@ INTERFACE:
 
 #include "slab_cache.h"		// Slab_cache
 #include "minmax.h"
+#include "per_node_data.h"
 
 #include <cxx/slist>
 #include <cxx/type_traits>
@@ -17,12 +18,12 @@ INTERFACE:
 class Global_alloc
 {
   typedef Spin_lock<> Lock;
-  static Lock _lock;
+  static Per_node_data<Lock> _lock;
 
 protected:
   static void *unaligned_alloc(size_t size)
   {
-    auto guard = lock_guard(_lock);
+    auto guard = lock_guard(*_lock);
     return Boot_alloced::alloc(size);
   }
 
@@ -43,7 +44,7 @@ protected:
 
   static void unaligned_free(size_t size, void *e)
   {
-    auto guard = lock_guard(_lock);
+    auto guard = lock_guard(*_lock);
     Boot_alloced::free(size, e);
   }
 
@@ -61,7 +62,7 @@ class Kmem_slab : public Slab_cache, public cxx::S_list_item
   typedef cxx::S_list_bss<Kmem_slab> Reap_list;
 
   // STATIC DATA
-  static Reap_list reap_list;
+  static Per_node_data<Reap_list> reap_list;
 };
 
 
@@ -261,9 +262,9 @@ public:
 
 IMPLEMENTATION:
 
-Global_alloc::Lock Global_alloc::_lock;
+DECLARE_PER_NODE Per_node_data<Global_alloc::Lock> Global_alloc::_lock;
 
-Kmem_slab::Reap_list Kmem_slab::reap_list;
+DECLARE_PER_NODE Per_node_data<Kmem_slab::Reap_list> Kmem_slab::reap_list;
 
 // Kmem_slab -- A type-independent slab cache allocator for Fiasco,
 // derived from a generic slab cache allocator (Slab_cache in
@@ -288,7 +289,7 @@ Kmem_slab::Kmem_slab(unsigned long slab_size,
 				   char const *name)
   : Slab_cache(slab_size, elem_size, alignment, name)
 {
-  reap_list.add(this, mp_cas<cxx::S_list_item*>);
+  reap_list->add(this, mp_cas<cxx::S_list_item*>);
 }
 
 // Specializations providing their own block_alloc()/block_free() can
@@ -301,7 +302,7 @@ Kmem_slab::Kmem_slab(unsigned elem_size,
                      unsigned long max_size = Buddy_alloc::Max_size)
   : Slab_cache(elem_size, alignment, name, min_size, max_size)
 {
-  reap_list.add(this, mp_cas<cxx::S_list_item*>);
+  reap_list->add(this, mp_cas<cxx::S_list_item*>);
 }
 
 PUBLIC
@@ -339,7 +340,7 @@ Kmem_slab::reap_all (bool desperate)
 {
   size_t freed = 0;
 
-  for (auto *alloc: reap_list)
+  for (auto *alloc: *reap_list)
     {
       size_t got;
       do
@@ -353,4 +354,4 @@ Kmem_slab::reap_all (bool desperate)
   return freed;
 }
 
-static Kmem_alloc_reaper kmem_slab_reaper(Kmem_slab::reap_all);
+static DECLARE_PER_NODE Per_node_data<Kmem_alloc_reaper> kmem_slab_reaper(Kmem_slab::reap_all);

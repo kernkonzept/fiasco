@@ -191,6 +191,7 @@ IMPLEMENTATION:
 #include "task.h"
 #include "thread_state.h"
 #include "timeout.h"
+#include "per_node_data.h"
 
 JDB_DEFINE_TYPENAME(Thread,  "\033[32mThread\033[m");
 DEFINE_PER_CPU Per_cpu<unsigned long> Thread::nested_trap_recover;
@@ -317,10 +318,10 @@ Thread::~Thread()		// To be called in locked state.
 class Del_irq_chip : public Irq_chip_soft
 {
 public:
-  static Del_irq_chip chip;
+  static Per_node_data<Del_irq_chip> chip;
 };
 
-Del_irq_chip Del_irq_chip::chip;
+DECLARE_PER_NODE Per_node_data<Del_irq_chip> Del_irq_chip::chip;
 
 PUBLIC static inline
 Thread *Del_irq_chip::thread(Mword pin)
@@ -341,7 +342,7 @@ void
 Thread::ipc_gate_deleted(Mword id)
 {
   (void) id;
-  auto g = lock_guard(cpu_lock);
+  auto g = lock_guard(*cpu_lock);
   if (_del_observer)
     _del_observer->hit(0);
 }
@@ -355,7 +356,7 @@ Thread::register_delete_irq(Irq_base *irq)
 
   auto g = lock_guard(irq->irq_lock());
   irq->unbind();
-  Del_irq_chip::chip.bind(irq, (Mword)this);
+  Del_irq_chip::chip->bind(irq, (Mword)this);
   if (mp_cas(&_del_observer, (Irq_base *)nullptr, irq))
     return true;
 
@@ -433,7 +434,7 @@ Thread::user_invoke_generic()
   // release CPU lock explicitly, because
   // * the context that switched to us holds the CPU lock
   // * we run on a newly-created stack without a CPU lock guard
-  cpu_lock.clear();
+  cpu_lock->clear();
 }
 
 
@@ -485,7 +486,7 @@ Thread::do_kill()
   // But first prevent it from being woken up by asynchronous events
 
   {
-    auto guard = lock_guard(cpu_lock);
+    auto guard = lock_guard(*cpu_lock);
 
     // if IPC timeout active, reset it
     if (_timeout)
@@ -504,7 +505,7 @@ Thread::do_kill()
   // if other threads want to send me IPC messages, abort these
   // operations
   {
-    auto guard = lock_guard(cpu_lock);
+    auto guard = lock_guard(*cpu_lock);
     while (Sender *s = Sender::cast(sender_list()->first()))
       {
         s->sender_dequeue(sender_list());
@@ -540,7 +541,7 @@ Thread::do_kill()
   unbind();
   vcpu_set_user_space(0);
 
-  cpu_lock.lock();
+  cpu_lock->lock();
 
   arch_vcpu_ext_shutdown();
 
@@ -598,7 +599,7 @@ PUBLIC
 bool
 Thread::kill()
 {
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
 
   if (home_cpu() == current_cpu())
     {
@@ -711,7 +712,7 @@ PRIVATE inline
 Thread::Migration *
 Thread::start_migration()
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
   Migration *m = _migration;
 
   assert (!((Mword)m & 0x3)); // ensure alignment
@@ -969,7 +970,7 @@ bool
 Thread::migrate_away(Migration *inf, bool remote)
 {
   assert (current() != this);
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
   bool resched = false;
 
   Cpu_number cpu = inf->cpu;
@@ -1032,7 +1033,7 @@ PUBLIC
 void
 Thread::migrate(Migration *info)
 {
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
 
   LOG_TRACE("Thread migration", "mig", this, Migration_log,
       l->state = state(false);
@@ -1085,7 +1086,7 @@ PUBLIC
 void
 Thread::migrate(Migration *info)
 {
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
 
   LOG_TRACE("Thread migration", "mig", this, Migration_log,
       l->state = state(false);
@@ -1110,11 +1111,11 @@ Thread::migrate(Migration *info)
   else
     current()->schedule_if(migrate_xcpu(cpu));
 
-  cpu_lock.clear();
+  cpu_lock->clear();
   // FIXME: use monitor & mwait or wfe & sev if available
   while (!access_once(&info->in_progress))
     Proc::pause();
-  cpu_lock.lock();
+  cpu_lock->lock();
 }
 
 PRIVATE inline NOEXPORT
@@ -1138,7 +1139,7 @@ IMPLEMENT
 void
 Thread::handle_remote_requests_irq()
 {
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
   // printf("CPU[%2u]: > RQ IPI (current=%p)\n", current_cpu(), current());
   Context *const c = current();
   Ipi::eoi(Ipi::Request, current_cpu());
@@ -1174,7 +1175,7 @@ IMPLEMENT
 void
 Thread::handle_global_remote_requests_irq()
 {
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
   // printf("CPU[%2u]: > RQ IPI (current=%p)\n", current_cpu(), current());
   Ipi::eoi(Ipi::Global_request, current_cpu());
   Cpu_call::handle_global_requests();
@@ -1186,7 +1187,7 @@ Thread::migrate_away(Migration *inf, bool remote)
 {
   assert (check_for_current_cpu());
   assert (current() != this);
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
   bool resched = false;
 
   if (_timeout)

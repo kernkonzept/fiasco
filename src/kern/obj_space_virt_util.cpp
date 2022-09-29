@@ -102,7 +102,7 @@ Obj_space_virt<SPACE>::caps_alloc(Cap_index virt)
 
   Mem_space::Status s;
   s = SPACE::mem_space(this)->v_insert(
-      Mem_space::Phys_addr(Kmem::kdir->virt_to_phys((Address)mem)),
+      Mem_space::Phys_addr((*Kmem::kdir)->virt_to_phys((Address)mem)),
       cxx::mask_lsb(Virt_addr(cv), Mem_space::Page_order(Config::PAGE_SHIFT)),
       Mem_space::Page_order(Config::PAGE_SHIFT),
       Mem_space::Attr(L4_fpage::Rights::RW()));

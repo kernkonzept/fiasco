@@ -38,6 +38,7 @@ class Vhw_descriptor {};
 INTERFACE:
 
 #include "types.h"
+#include "per_node_data.h"
 
 class Kip
 {
@@ -128,7 +129,7 @@ public:
    * KIP clock. */
 
 private:
-  static Kip *global_kip asm ("GLOBAL_KIP");
+  static Per_node_data<Kip *> global_kip;
 };
 
 #define L4_KERNEL_INFO_MAGIC (0x4BE6344CL) /* "L4µK" */
@@ -236,13 +237,13 @@ Mem_desc *Kip::add_mem_region(Mem_desc const &md)
   return 0;
 }
 
-Kip *Kip::global_kip;
+DECLARE_PER_NODE Per_node_data<Kip *> Kip::global_kip;
 
 PUBLIC static inline ALWAYS_INLINE NEEDS["config.h"]
 void
 Kip::init_global_kip(Kip *kip)
 {
-  global_kip = kip;
+  *global_kip = kip;
 
   kip->platform_info.is_mp = Config::Max_num_cpus > 1;
   kip->sched_granularity = Config::Scheduler_granularity;
@@ -251,7 +252,7 @@ Kip::init_global_kip(Kip *kip)
   //assert(kip->sigma0_ip && kip->root_ip && kip->user_ptr);
 }
 
-PUBLIC static inline Kip *Kip::k() { return global_kip; }
+PUBLIC static inline Kip *Kip::k() { return *global_kip; }
 
 IMPLEMENT
 char const *Kip::version_string() const

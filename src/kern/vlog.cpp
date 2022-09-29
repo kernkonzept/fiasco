@@ -53,6 +53,7 @@ IMPLEMENTATION:
 #include "vkey.h"
 #include "irq.h"
 #include "irq_controller.h"
+#include "per_node_data.h"
 
 JDB_DEFINE_TYPENAME(Vlog, "Vlog");
 
@@ -62,7 +63,7 @@ Vlog::Vlog()
   _i_flags(F_ICRNL), _o_flags(F_ONLCR), _l_flags(F_ECHO)
 {
   Vkey::set_echo(Vkey::Echo_crnl);
-  initial_kobjects.register_obj(this, Initial_kobjects::Log);
+  initial_kobjects->register_obj(this, Initial_kobjects::Log);
 }
 
 PUBLIC void
@@ -270,5 +271,5 @@ Vlog::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,
 }
 
 
-static Vlog __vlog;
+static DECLARE_PER_NODE Per_node_data<Vlog> __vlog;
 

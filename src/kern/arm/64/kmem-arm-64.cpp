@@ -8,7 +8,7 @@ Kmem::cont_mapped(Address phys_beg, Address phys_end, Address virt)
        p < phys_end && v < Mem_layout::Registers_map_end;
        p += Config::SUPERPAGE_SIZE, v += Config::SUPERPAGE_SIZE)
     {
-      auto e = kdir->walk(Virt_addr(v), K_pte_ptr::Super_level);
+      auto e = (*kdir)->walk(Virt_addr(v), K_pte_ptr::Super_level);
       if (!e.is_valid() || p != e.page_addr())
         return false;
     }
@@ -41,7 +41,7 @@ Kmem::mmio_remap(Address phys, Address size)
 
       ndev += Config::SUPERPAGE_SIZE;
 
-      auto m = kdir->walk(Virt_addr(dm), K_pte_ptr::Super_level);
+      auto m = (*kdir)->walk(Virt_addr(dm), K_pte_ptr::Super_level);
       assert (!m.is_valid());
       assert (m.page_order() == Config::SUPERPAGE_SHIFT);
       m.set_page(m.make_page(Phys_mem_addr(p),

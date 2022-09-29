@@ -71,7 +71,7 @@ PUBLIC
 void
 Chip::mask(Mword irq)
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
   modify<Mword>(0, 1 << irq, Pic::ICMR);
 }
 
@@ -79,7 +79,7 @@ PUBLIC
 void
 Chip::mask_and_ack(Mword irq)
 {
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
   modify<Mword>(0, 1 << irq, Pic::ICMR);
   // ack is empty
 }
@@ -115,7 +115,7 @@ static Static_object<Irq_mgr_single_chip<Chip> > mgr;
 PUBLIC static FIASCO_INIT
 void Pic::init()
 {
-  Irq_mgr::mgr = mgr.construct();
+  *Irq_mgr::mgr = mgr.construct();
 }
 
 // for JDB only

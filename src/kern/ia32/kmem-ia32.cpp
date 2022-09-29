@@ -145,12 +145,12 @@ Device_map::map(Address phys, bool /*cache*/)
   for (unsigned i = 0; i < Max; ++i)
     if (_map[i] == ~0UL)
       {
-        if (!Kmem::kdir->map(p,
-                             Virt_addr(Virt_base + (i * Config::SUPERPAGE_SIZE)),
-                             Virt_size(Config::SUPERPAGE_SIZE),
-                             Pt_entry::Dirty | Pt_entry::Writable
-                             | Pt_entry::Referenced,
-                             Pt_entry::super_level(), false, pdir_alloc(alloc)))
+        if (!(*Kmem::kdir)->map(p,
+                                Virt_addr(Virt_base + (i * Config::SUPERPAGE_SIZE)),
+                                Virt_size(Config::SUPERPAGE_SIZE),
+                                Pt_entry::Dirty | Pt_entry::Writable
+                                | Pt_entry::Referenced,
+                                Pt_entry::super_level(), false, pdir_alloc(alloc)))
           return ~0UL;
 
 	_map[i] = p;
@@ -177,8 +177,8 @@ Device_map::unmap(void const *phys)
 
   Address v = Virt_base + (idx * Config::SUPERPAGE_SIZE);
 
-  Kmem::kdir->unmap(Virt_addr(v), Virt_size(Config::SUPERPAGE_SIZE),
-                    Pdir::Depth, false);
+  (*Kmem::kdir)->unmap(Virt_addr(v), Virt_size(Config::SUPERPAGE_SIZE),
+                       Pdir::Depth, false);
 }
 
 
@@ -213,7 +213,7 @@ Kmem::virt_to_phys(const void *addr)
   if (EXPECT_TRUE(Mem_layout::in_kernel_image(a)))
     return a - Mem_layout::Kernel_image_offset;
 
-  return kdir->virt_to_phys(a);
+  return (*kdir)->virt_to_phys(a);
 }
 
 
@@ -291,8 +291,8 @@ void
 Kmem::map_phys_page(Address phys, Address virt,
                     bool cached, bool global, Address *offs = 0)
 {
-  auto i = kdir->walk(Virt_addr(virt), Pdir::Depth, false,
-                      pdir_alloc(Kmem_alloc::allocator()));
+  auto i = (*kdir)->walk(Virt_addr(virt), Pdir::Depth, false,
+                         pdir_alloc(Kmem_alloc::allocator()));
   Mword pte = phys & Config::PAGE_MASK;
 
   assert(i.level == Pdir::Depth);
@@ -346,9 +346,9 @@ Kmem::map_initial_ram()
   //     sometimes comes in handy (mostly useful for debugging)
 
   // first 4MB page
-  if (!kdir->map(0, Virt_addr(0UL), Virt_size(4 << 20),
-                 Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced,
-                 Pt_entry::super_level(), false, pdir_alloc(alloc)))
+  if (!(*kdir)->map(0, Virt_addr(0UL), Virt_size(4 << 20),
+                    Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced,
+                    Pt_entry::super_level(), false, pdir_alloc(alloc)))
     panic("Cannot map initial memory");
 }
 
@@ -390,32 +390,32 @@ Kmem::map_initial_ram()
   // first 2M
 
   // Beginning of physical memory up to the realmode trampoline code is RW
-  ok &= kdir->map(0, Virt_addr(0), Virt_size(FIASCO_MP_TRAMP_PAGE),
-                  Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
-                  | Pt_entry::Referenced,
-                  Pdir::Depth, false, pdir_alloc(alloc));
+  ok &= (*kdir)->map(0, Virt_addr(0), Virt_size(FIASCO_MP_TRAMP_PAGE),
+                     Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
+                     | Pt_entry::Referenced,
+                     Pdir::Depth, false, pdir_alloc(alloc));
 
   // Realmode trampoline code is RWX
-  ok &= kdir->map(FIASCO_MP_TRAMP_PAGE, Virt_addr(FIASCO_MP_TRAMP_PAGE),
-                  Virt_size(Config::PAGE_SIZE),
-                  Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced,
-                  Pdir::Depth, false, pdir_alloc(alloc));
+  ok &= (*kdir)->map(FIASCO_MP_TRAMP_PAGE, Virt_addr(FIASCO_MP_TRAMP_PAGE),
+                     Virt_size(Config::PAGE_SIZE),
+                     Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced,
+                     Pdir::Depth, false, pdir_alloc(alloc));
 
   // The rest of the first 2M is RW
-  ok &= kdir->map(FIASCO_MP_TRAMP_PAGE + Config::PAGE_SIZE,
-                  Virt_addr(FIASCO_MP_TRAMP_PAGE + Config::PAGE_SIZE),
-                  Virt_size(Config::SUPERPAGE_SIZE - FIASCO_MP_TRAMP_PAGE
-                            - Config::PAGE_SIZE),
-                  Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
-                  | Pt_entry::Referenced,
-                  Pdir::Depth, false, pdir_alloc(alloc));
+  ok &= (*kdir)->map(FIASCO_MP_TRAMP_PAGE + Config::PAGE_SIZE,
+                     Virt_addr(FIASCO_MP_TRAMP_PAGE + Config::PAGE_SIZE),
+                     Virt_size(Config::SUPERPAGE_SIZE - FIASCO_MP_TRAMP_PAGE
+                               - Config::PAGE_SIZE),
+                     Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
+                     | Pt_entry::Referenced,
+                     Pdir::Depth, false, pdir_alloc(alloc));
 
   // Second 2M is RW
-  ok &= kdir->map(Config::SUPERPAGE_SIZE, Virt_addr(Config::SUPERPAGE_SIZE),
-                  Virt_size(Config::SUPERPAGE_SIZE),
-                  Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
-                  | Pt_entry::Referenced,
-                  Pt_entry::super_level(), false, pdir_alloc(alloc));
+  ok &= (*kdir)->map(Config::SUPERPAGE_SIZE, Virt_addr(Config::SUPERPAGE_SIZE),
+                     Virt_size(Config::SUPERPAGE_SIZE),
+                     Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
+                     | Pt_entry::Referenced,
+                     Pt_entry::super_level(), false, pdir_alloc(alloc));
 
   if (!ok)
     panic("Cannot map initial memory");
@@ -463,8 +463,8 @@ Kmem::init_mmu()
   dev_map.init();
   Kmem_alloc *const alloc = Kmem_alloc::allocator();
 
-  kdir = (Kpdir*)alloc->alloc(Config::page_order());
-  memset (kdir, 0, Config::PAGE_SIZE);
+  *kdir = (Kpdir*)alloc->alloc(Config::page_order());
+  memset (*kdir, 0, Config::PAGE_SIZE);
 
   unsigned long cpu_features = Cpu::get_features();
   bool superpages = cpu_features & FEAT_PSE;
@@ -482,23 +482,23 @@ Kmem::init_mmu()
     }
 
   map_initial_ram();
-  map_kernel_virt(kdir);
+  map_kernel_virt(*kdir);
 
   bool ok = true;
 
   if (!Mem_layout::Adap_in_kernel_image)
-    ok &= kdir->map(Mem_layout::Adap_image_phys, Virt_addr(Mem_layout::Adap_image),
-                    Virt_size(Config::SUPERPAGE_SIZE),
-                    Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
-                    | Pt_entry::Referenced | Pt_entry::global(),
-                    Pt_entry::super_level(), false, pdir_alloc(alloc));
+    ok &= (*kdir)->map(Mem_layout::Adap_image_phys, Virt_addr(Mem_layout::Adap_image),
+                       Virt_size(Config::SUPERPAGE_SIZE),
+                       Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
+                       | Pt_entry::Referenced | Pt_entry::global(),
+                       Pt_entry::super_level(), false, pdir_alloc(alloc));
 
   // map the last 64MB of physical memory as kernel memory
-  ok &= kdir->map(Mem_layout::pmem_to_phys(Mem_layout::Physmem),
-                  Virt_addr(Mem_layout::Physmem), Virt_size(Mem_layout::pmem_size),
-                  Pt_entry::XD | Pt_entry::Writable | Pt_entry::Referenced
-                  | Pt_entry::global(),
-                  Pt_entry::super_level(), false, pdir_alloc(alloc));
+  ok &= (*kdir)->map(Mem_layout::pmem_to_phys(Mem_layout::Physmem),
+                     Virt_addr(Mem_layout::Physmem), Virt_size(Mem_layout::pmem_size),
+                     Pt_entry::XD | Pt_entry::Writable | Pt_entry::Referenced
+                     | Pt_entry::global(),
+                     Pt_entry::super_level(), false, pdir_alloc(alloc));
 
   if (!ok)
     panic("Cannot map initial memory");
@@ -508,14 +508,14 @@ Kmem::init_mmu()
   // jdb adapter page.
   assert((Mem_layout::Service_page & ~Config::SUPERPAGE_MASK) == 0);
 
-  kdir->walk(Virt_addr(Mem_layout::Service_page), Pdir::Depth,
-             false, pdir_alloc(alloc));
+  (*kdir)->walk(Virt_addr(Mem_layout::Service_page), Pdir::Depth,
+                false, pdir_alloc(alloc));
 
   // kernel mode should acknowledge write-protected page table entries
   Cpu::set_cr0(Cpu::get_cr0() | CR0_WP);
 
   // now switch to our new page table
-  Cpu::set_pdbr(Mem_layout::pmem_to_phys(kdir));
+  Cpu::set_pdbr(Mem_layout::pmem_to_phys(*kdir));
 
   setup_global_cpu_structures(superpages);
 
@@ -598,7 +598,7 @@ IMPLEMENTATION [ia32,ux,amd64]:
 #include "tss.h"
 
 // static class variables
-Kpdir *Mem_layout::kdir;
+DECLARE_PER_NODE Per_node_data<Kpdir *> Mem_layout::kdir;
 
 /**
  * Compute a kernel-virtual address for a physical address.
@@ -622,7 +622,7 @@ Kmem::phys_to_virt(Address addr)
  * upon page fault.
  * @return kernel's global page directory
  */
-PUBLIC static inline const Pdir* Kmem::dir() { return kdir; }
+PUBLIC static inline const Pdir* Kmem::dir() { return *kdir; }
 
 
 //--------------------------------------------------------------------------
@@ -675,7 +675,7 @@ PUBLIC static inline
 Kpdir *
 Kmem::current_cpu_kdir()
 {
-  return kdir;
+  return *kdir;
 }
 
 //--------------------------------------------------------------------------
@@ -707,8 +707,8 @@ Kmem::setup_global_cpu_structures(bool superpages)
     {
       // can map as 4MB page because the cpu_page will land within a
       // 16-bit range from io_bitmap
-      auto e = kdir->walk(Virt_addr(Mem_layout::Io_bitmap - Config::SUPERPAGE_SIZE),
-                          Pdir::Super_level, false, pdir_alloc(alloc));
+      auto e = (*kdir)->walk(Virt_addr(Mem_layout::Io_bitmap - Config::SUPERPAGE_SIZE),
+                             Pdir::Super_level, false, pdir_alloc(alloc));
 
       e.set_page(tss_mem_pm & Config::SUPERPAGE_MASK,
                  Pt_entry::XD | Pt_entry::Writable | Pt_entry::Referenced
@@ -724,8 +724,8 @@ Kmem::setup_global_cpu_structures(bool superpages)
       unsigned i;
       for (i = 0; (i << Config::PAGE_SHIFT) < tss_mem_size; ++i)
         {
-          auto e = kdir->walk(Virt_addr(Mem_layout::Io_bitmap - Config::PAGE_SIZE * (i+1)),
-                              Pdir::Depth, false, pdir_alloc(alloc));
+          auto e = (*kdir)->walk(Virt_addr(Mem_layout::Io_bitmap - Config::PAGE_SIZE * (i+1)),
+                                 Pdir::Depth, false, pdir_alloc(alloc));
 
           e.set_page(tss_mem_pm + i * Config::PAGE_SIZE,
                      Pt_entry::XD | Pt_entry::Writable | Pt_entry::Referenced
@@ -756,7 +756,7 @@ Kmem::init_cpu(Cpu &cpu)
     printf("Allocate cpu_mem @ %p\n", cpu_mem_vm.block());
 
   // now switch to our new page table
-  Cpu::set_pdbr(Mem_layout::pmem_to_phys(kdir));
+  Cpu::set_pdbr(Mem_layout::pmem_to_phys(*kdir));
 
   setup_cpu_structures(cpu, &cpu_mem_vm, &tss_mem_vm);
 }
@@ -765,7 +765,7 @@ PUBLIC static inline
 void
 Kmem::resume_cpu(Cpu_number)
 {
-  Cpu::set_pdbr(pmem_to_phys(kdir));
+  Cpu::set_pdbr(pmem_to_phys(*kdir));
 }
 
 
@@ -949,7 +949,7 @@ Kmem::init_cpu(Cpu &cpu)
   Kpdir *cpu_dir = (Kpdir*)alloc->alloc(Bytes(cpu_dir_sz));
   memset (cpu_dir, 0, cpu_dir_sz);
 
-  auto src = kdir->walk(Virt_addr(0), 0);
+  auto src = (*kdir)->walk(Virt_addr(0), 0);
   auto dst = cpu_dir->walk(Virt_addr(0), 0);
   write_now(dst.pte, *src.pte);
 
@@ -958,7 +958,7 @@ Kmem::init_cpu(Cpu &cpu)
 
   for (unsigned i = 0; i < ((Kglobal_area_end - Kglobal_area) >> 30); ++i)
     {
-      auto src = kdir->walk(Virt_addr(Kglobal_area + (((Address)i) << 30)), 1);
+      auto src = (*kdir)->walk(Virt_addr(Kglobal_area + (((Address)i) << 30)), 1);
       auto dst = cpu_dir->walk(Virt_addr(Kglobal_area + (((Address)i) << 30)), 1,
                                false, pdir_alloc(alloc));
 
@@ -980,7 +980,7 @@ Kmem::init_cpu(Cpu &cpu)
       if ((a & ((1UL << 30) - 1)) || ((Physmem_end - (1UL << 30)) < a))
         {
           // copy a superpage slot
-          auto src = kdir->walk(Virt_addr(a), 2);
+          auto src = (*kdir)->walk(Virt_addr(a), 2);
 
           if (src.level != 2)
             panic("could not setup per-cpu page table, invalid source mapping: %d\n", __LINE__);
@@ -1010,7 +1010,7 @@ Kmem::init_cpu(Cpu &cpu)
       else
         {
           // copy a 1GB slot
-          auto src = kdir->walk(Virt_addr(a), 1);
+          auto src = (*kdir)->walk(Virt_addr(a), 1);
           if (src.level != 1)
             panic("could not setup per-cpu page table, invalid source mapping: %d\n", __LINE__);
 

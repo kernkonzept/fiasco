@@ -79,6 +79,7 @@ IMPLEMENTATION:
 #include "thread.h"
 #include "thread_state.h"
 #include "timer.h"
+#include "per_node_data.h"
 
 JDB_DEFINE_TYPENAME(Ipc_gate_obj, "\033[35mGate\033[m");
 
@@ -119,7 +120,7 @@ Ipc_gate_obj::unblock_all()
 {
   while (::Prio_list_elem *h = _wait_q.first())
     {
-      auto g1 = lock_guard(cpu_lock);
+      auto g1 = lock_guard(*cpu_lock);
       Thread *w;
 	{
 	  auto g2 = lock_guard(_wait_q.lock());
@@ -168,17 +169,17 @@ void *
 Ipc_gate_obj::operator new (size_t, void *b) throw()
 { return b; }
 
-static Kmem_slab_t<Ipc_gate_obj> _ipc_gate_allocator("Ipc_gate");
+static DECLARE_PER_NODE Per_node_data<Kmem_slab_t<Ipc_gate_obj>> _ipc_gate_allocator("Ipc_gate");
 
 PRIVATE static
 void *
 Ipc_gate_obj::alloc()
-{ return _ipc_gate_allocator.alloc(); }
+{ return _ipc_gate_allocator->alloc(); }
 
 PRIVATE static
 void
 Ipc_gate_obj::free(void *f)
-{ _ipc_gate_allocator.free(f); }
+{ _ipc_gate_allocator->free(f); }
 
 PUBLIC static
 Ipc_gate_obj *
@@ -244,7 +245,7 @@ Ipc_gate_ctl::bind_thread(L4_obj_ref, L4_fpage::Rights rights,
 
   if (EXPECT_FALSE(!r.empty()))
     {
-      auto l = lock_guard<Lock_guard_inverse_policy>(cpu_lock);
+      auto l = lock_guard<Lock_guard_inverse_policy>(*cpu_lock);
       r.del_1();
     }
 
@@ -254,7 +255,7 @@ Ipc_gate_ctl::bind_thread(L4_obj_ref, L4_fpage::Rights rights,
 
   if (EXPECT_FALSE(!r.empty()))
     {
-      auto l = lock_guard<Lock_guard_inverse_policy>(cpu_lock);
+      auto l = lock_guard<Lock_guard_inverse_policy>(*cpu_lock);
       r.del_2();
     }
 

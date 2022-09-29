@@ -7,7 +7,7 @@ PUBLIC template<typename T> inline
 void FIASCO_NORETURN
 Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
   assert(current() == this);
 
   asm volatile
@@ -29,7 +29,7 @@ PUBLIC template<typename T> inline
 void FIASCO_NORETURN
 Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
   assert(current() == this);
 
   Address *p = (Address *)Mem_layout::Kentry_cpu_page;
@@ -215,7 +215,7 @@ Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
   Utcb *rcv_utcb = rcv->utcb().access();
   Trex *dst = reinterpret_cast<Trex *>(rcv_utcb->values);
     {
-      auto guard = lock_guard(cpu_lock);
+      auto guard = lock_guard(*cpu_lock);
 
       dst->ds = snd->_ds;
       dst->es = snd->_es;

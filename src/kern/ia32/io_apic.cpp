@@ -363,8 +363,8 @@ PUBLIC static FIASCO_INIT
 void
 Io_apic::init(Cpu_number)
 {
-  if (!Irq_mgr::mgr)
-    Irq_mgr::mgr = new Boot_object<Io_apic_mgr>();
+  if (!*Irq_mgr::mgr)
+    *Irq_mgr::mgr = new Boot_object<Io_apic_mgr>();
 
   _state_save_area = new Boot_object<Io_apic_entry>[_nr_irqs];
   read_overrides();

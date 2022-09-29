@@ -39,7 +39,7 @@ PUBLIC static
 void Pic::init_ap(Cpu_number cpu, bool resume)
 {
   gic->init_ap(cpu, resume);
-  static_cast<Gic*>(Irq_mgr::mgr->chip(256).chip)->init_ap(cpu, resume);
+  static_cast<Gic*>((*Irq_mgr::mgr)->chip(256).chip)->init_ap(cpu, resume);
 }
 
 
@@ -56,7 +56,7 @@ void Pic::init()
   gic = g;
 
   Mgr *m = new Boot_object<Mgr>(2);
-  Irq_mgr::mgr = m;
+  *Irq_mgr::mgr = m;
 
   m->add_chip(0, g, g->nr_irqs());
 
@@ -96,7 +96,7 @@ void Pic::init()
 
   Mgr *m = new Boot_object<Mgr>(1);
   m->add_chip(0, g, g->nr_irqs());
-  Irq_mgr::mgr = m;
+  *Irq_mgr::mgr = m;
 }
 
 PUBLIC static

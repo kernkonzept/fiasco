@@ -22,7 +22,7 @@ Trap_state::Handler Thread::nested_trap_handler FIASCO_FASTCALL;
 
 extern "C" void sys_kdb_ke()
 {
-  cpu_lock.lock();
+  cpu_lock->lock();
   Thread *t = current_thread();
 
   //arriving from outx function

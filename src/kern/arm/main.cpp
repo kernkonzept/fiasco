@@ -22,13 +22,14 @@ IMPLEMENTATION [arm]:
 #include "terminate.h"
 
 #include "processor.h"
+#include "per_node_data.h"
 
-static int exit_question_active = 0;
+static DECLARE_PER_NODE Per_node_data<int> exit_question_active;
 
 extern "C" void __attribute__ ((noreturn))
 _exit(int)
 {
-  if (exit_question_active)
+  if (*exit_question_active)
     platform_reset();
 
   while (1)
@@ -41,7 +42,7 @@ _exit(int)
 
 static void exit_question()
 {
-  exit_question_active = 1;
+  *exit_question_active = 1;
 
   while (1)
     {
@@ -82,7 +83,7 @@ kernel_main()
   //  pic_disable_all();
 
   // create kernel thread
-  static Kernel_thread *kernel = new (Ram_quota::root) Kernel_thread(Ram_quota::root);
+  Kernel_thread *kernel = new (*Ram_quota::root) Kernel_thread(*Ram_quota::root);
   Task *const ktask = Kernel_task::kernel_task();
   kernel->kbind(ktask);
   kernel->init_mpu_state();

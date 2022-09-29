@@ -220,7 +220,7 @@ Thread_object::sys_vcpu_resume(L4_msg_tag const &tag, Utcb const *utcb, Utcb *)
         if (!guard.check_and_lock(&static_cast<Task *>(vcpu_user_space())->existence_lock))
           return commit_result(-L4_err::ENoent);
 
-        cpu_lock.clear();
+        cpu_lock->clear();
 
         L4_snd_item_iter::Item const *const item = snd_items.get();
         L4_fpage sfp(item->d);
@@ -231,7 +231,7 @@ Thread_object::sys_vcpu_resume(L4_msg_tag const &tag, Utcb const *utcb, Utcb *)
                                  item->b, &rl);
         rl.del();
 
-        cpu_lock.lock();
+        cpu_lock->lock();
 
         if (EXPECT_FALSE(!err.ok()))
           return commit_error(utcb, err);
@@ -240,7 +240,7 @@ Thread_object::sys_vcpu_resume(L4_msg_tag const &tag, Utcb const *utcb, Utcb *)
   if ((vcpu->_saved_state & Vcpu_state::F_irqs)
       && (vcpu->sticky_flags & Vcpu_state::Sf_irq_pending))
     {
-      assert(cpu_lock.test());
+      assert(cpu_lock->test());
       do_ipc(L4_msg_tag(), 0, 0, true, 0,
              L4_timeout_pair(L4_timeout::Zero, L4_timeout::Zero),
              &vcpu->_ipc_regs, L4_fpage::Rights::FULL());
@@ -367,7 +367,7 @@ Thread_object::sys_register_delete_irq(L4_msg_tag tag, Utcb const *in, Utcb * /*
   Space *const c_space = c_thread->space();
   L4_fpage::Rights irq_rights = L4_fpage::Rights(0);
   Irq_base *irq
-    = Irq_base::dcast(c_space->lookup_local(bind_irq.obj_index(), &irq_rights));
+    = (*Irq_base::dcast)(c_space->lookup_local(bind_irq.obj_index(), &irq_rights));
 
   if (!irq)
     return Kobject_iface::commit_result(-L4_err::EInval);
@@ -740,13 +740,15 @@ Thread_object::sys_register_doorbell_irq(L4_msg_tag, Utcb const *)
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [irq_direct_inject]:
 
+#include "per_node_data.h"
+
 class Doorbell_irq_chip : public Irq_chip_soft
 {
 public:
-  static Doorbell_irq_chip chip;
+  static Per_node_data<Doorbell_irq_chip> chip;
 };
 
-Doorbell_irq_chip Doorbell_irq_chip::chip;
+DECLARE_PER_NODE Per_node_data<Doorbell_irq_chip> Doorbell_irq_chip::chip;
 
 PUBLIC static inline
 Thread_object *Doorbell_irq_chip::thread_object(Mword pin)
@@ -778,7 +780,7 @@ Thread_object::sys_register_doorbell_irq(L4_msg_tag tag, Utcb const *in)
   Space *const c_space = c_thread->space();
   L4_fpage::Rights irq_rights = L4_fpage::Rights(0);
   Irq_base *irq
-    = Irq_base::dcast(c_space->lookup_local(bind_irq.obj_index(), &irq_rights));
+    = (*Irq_base::dcast)(c_space->lookup_local(bind_irq.obj_index(), &irq_rights));
 
   if (!irq)
     return Kobject_iface::commit_result(-L4_err::EInval);
@@ -788,7 +790,7 @@ Thread_object::sys_register_doorbell_irq(L4_msg_tag tag, Utcb const *in)
 
   auto g = lock_guard(irq->irq_lock());
   irq->unbind();
-  Doorbell_irq_chip::chip.bind(irq, (Mword)this);
+  Doorbell_irq_chip::chip->bind(irq, (Mword)this);
   if (mp_cas(&_doorbell_irq, (Irq_base *)nullptr, irq))
     return Kobject_iface::commit_result(0);
 

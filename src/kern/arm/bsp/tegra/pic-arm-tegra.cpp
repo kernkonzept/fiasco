@@ -25,7 +25,7 @@ void Pic::init()
                                                  Gic_dist::Size));
   m->add_chip(0, gic, gic->nr_irqs());
 
-  Irq_mgr::mgr = m;
+  *Irq_mgr::mgr = m;
 }
 
 //-------------------------------------------------------------------

@@ -594,12 +594,13 @@ Jdb_kobject::init()
   module()->register_handler(&id_hdl);
 }
 
+static DECLARE_PER_NODE_PRIO(BOOTSTRAP_INIT_PRIO) Per_node_data<Jdb_kobject> jdb_kobj_module;
+
 PUBLIC static
 Jdb_kobject *
 Jdb_kobject::module()
 {
-  static Jdb_kobject jdb_kobj_module;
-  return &jdb_kobj_module;
+  return jdb_kobj_module.get();
 }
 
 // Be robust if this object is invalid

@@ -13,13 +13,14 @@ public:
 IMPLEMENTATION:
 
 #include "irq_chip.h"
+#include "per_node_data.h"
 
-static Irq_base *vkey_irq;
+static DECLARE_PER_NODE Per_node_data<Irq_base *> vkey_irq;
 
 PUBLIC static
 void
 Vkey::irq(Irq_base *i)
-{ vkey_irq = i; }
+{ *vkey_irq = i; }
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [serial && !ux && debug]:
@@ -52,15 +53,15 @@ IMPLEMENTATION [serial && !ux]:
 #include "kernel_console.h"
 #include "keycodes.h"
 
-static Vkey::Echo_type vkey_echo;
-static char     vkey_buffer[256];
-static unsigned vkey_tail, vkey_head;
+static DECLARE_PER_NODE Per_node_data<Vkey::Echo_type> vkey_echo;
+static DECLARE_PER_NODE Per_node_data<char[256]> vkey_buffer;
+static DECLARE_PER_NODE Per_node_data<unsigned> vkey_tail, vkey_head;
 
 PUBLIC static
 void
 Vkey::set_echo(Echo_type echo)
 {
-  vkey_echo = echo;
+  *vkey_echo = echo;
 }
 
 PRIVATE static
@@ -68,21 +69,21 @@ bool
 Vkey::add(int c)
 {
   bool hit = false;
-  unsigned nh = (vkey_head + 1) % sizeof(vkey_buffer);
-  unsigned oh = vkey_head;
-  if (nh != vkey_tail)
+  unsigned nh = (*vkey_head + 1) % sizeof(*vkey_buffer);
+  unsigned oh = *vkey_head;
+  if (nh != *vkey_tail)
     {
-      vkey_buffer[vkey_head] = c;
-      vkey_head = nh;
+      (*vkey_buffer)[*vkey_head] = c;
+      *vkey_head = nh;
     }
 
-  if (oh == vkey_tail)
+  if (oh == *vkey_tail)
     hit = true;
 
-  if (vkey_echo == Vkey::Echo_crnl && c == '\r')
+  if (*vkey_echo == Vkey::Echo_crnl && c == '\r')
     c = '\n';
 
-  if (vkey_echo)
+  if (*vkey_echo)
     putchar(c);
 
   return hit;
@@ -102,8 +103,8 @@ PRIVATE static
 void
 Vkey::trigger()
 {
-  if (vkey_irq)
-    vkey_irq->hit(0);
+  if (*vkey_irq)
+    (*vkey_irq)->hit(0);
 }
 
 PUBLIC static
@@ -173,8 +174,8 @@ PUBLIC static
 int
 Vkey::get()
 {
-  if (vkey_tail != vkey_head)
-    return vkey_buffer[vkey_tail];
+  if (*vkey_tail != *vkey_head)
+    return (*vkey_buffer)[*vkey_tail];
 
   return -1;
 }
@@ -183,8 +184,8 @@ PUBLIC static
 void
 Vkey::clear()
 {
-  if (vkey_tail != vkey_head)
-    vkey_tail = (vkey_tail + 1) % sizeof(vkey_buffer);
+  if (*vkey_tail != *vkey_head)
+    *vkey_tail = (*vkey_tail + 1) % sizeof(*vkey_buffer);
 }
 
 //----------------------------------------------------------------------------

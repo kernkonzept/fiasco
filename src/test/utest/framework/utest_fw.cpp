@@ -921,7 +921,7 @@ Utest::thread_fn()
   // Cf. Thread::user_invoke_generic(): Release CPU lock explicitly, because
   // * the context that switched to us holds the CPU lock
   // * we run on a newly-created stack without a CPU lock guard
-  cpu_lock.clear();
+  cpu_lock->clear();
 
   fn();
 
@@ -935,7 +935,7 @@ PUBLIC static
 void
 Utest::kill_current_thread()
 {
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
   Sched_context::rq.current().deblock(current()->sched(),
                                       current()->sched());
   Thread::do_leave_and_kill_myself();
@@ -965,7 +965,7 @@ Utest::start_thread(F const &fn, Cpu_number cpu,
 {
   Thread_object *t = thr;
   if (!t)
-    t = new (Ram_quota::root) Thread_object(Ram_quota::root);
+    t = new (*Ram_quota::root) Thread_object(*Ram_quota::root);
   if (!t)
     return false;
 
@@ -992,7 +992,7 @@ Utest::start_thread(F const &fn, Cpu_number cpu,
   t->activate();
 
     {
-      auto guard = lock_guard(cpu_lock);
+      auto guard = lock_guard(*cpu_lock);
       t->migrate(&info);
     }
 
@@ -1068,7 +1068,7 @@ Utest::kmem_create_clear(A&&... args)
 IMPLEMENT
 Utest::Tick_disabler::Tick_disabler()
 {
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
   Timer_tick::disable(current_cpu());
 }
 
@@ -1078,7 +1078,7 @@ Utest::Tick_disabler::Tick_disabler()
 IMPLEMENT
 Utest::Tick_disabler::~Tick_disabler()
 {
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
   Timer_tick::enable(current_cpu());
 }
 

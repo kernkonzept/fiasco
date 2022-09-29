@@ -102,7 +102,7 @@ PUBLIC inline NEEDS [Mem_space::virt_to_phys, "kmem.h"]
 Address
 Mem_space::pmem_to_phys(Address virt) const
 {
-  return Kmem::kdir->virt_to_phys(virt);
+  return (*Kmem::kdir)->virt_to_phys(virt);
 }
 
 //-----------------------------------------------------------------------------

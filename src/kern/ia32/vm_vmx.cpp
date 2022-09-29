@@ -432,7 +432,7 @@ PROTECTED inline template<typename X>
 int
 Vm_vmx_t<X>::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, void *vmcs_s)
 {
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
 
   /* these 4 must not use ldt entries */
   assert (!(Cpu::get_cs() & (1 << 2)));
@@ -587,7 +587,7 @@ Vm_vmx_t<X>::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode) overri
           // NOTE: It is possible to use the preemption timer for this
           // NOTE: However, the timer is broken on many CPUs or may not
           // NOTE: be supported at all. So keep it simple for now.
-          assert(cpu_lock.test());
+          assert(cpu_lock->test());
           Ipi::send(Ipi::Global_request, current_cpu(), current_cpu());
         }
       else if (   !(vcpu->_saved_state & Vcpu_state::F_irqs)

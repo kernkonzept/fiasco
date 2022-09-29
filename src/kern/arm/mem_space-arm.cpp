@@ -208,7 +208,7 @@ Mem_space::set_attributes(Virt_addr virt, Attr page_attribs,
 IMPLEMENT inline
 void Mem_space::kernel_space(Mem_space *_k_space)
 {
-  _kernel_space = _k_space;
+  *_kernel_space = _k_space;
 }
 
 IMPLEMENT
@@ -351,7 +351,7 @@ Mem_space::initialize()
     return false;
 
   _dir->clear(Pte_ptr::need_cache_write_back(false));
-  _dir_phys = Phys_mem_addr(Kmem::kdir->virt_to_phys((Address)_dir));
+  _dir_phys = Phys_mem_addr((*Kmem::kdir)->virt_to_phys((Address)_dir));
 
   return true;
 }
@@ -361,7 +361,7 @@ Mem_space::Mem_space(Ram_quota *q, Dir_type* pdir)
   : _quota(q), _dir (pdir)
 {
   _current.cpu(Cpu_number::boot_cpu()) = this;
-  _dir_phys = Phys_mem_addr(Kmem::kdir->virt_to_phys((Address)_dir));
+  _dir_phys = Phys_mem_addr((*Kmem::kdir)->virt_to_phys((Address)_dir));
 }
 
 PUBLIC static inline
@@ -422,7 +422,7 @@ Mem_space::set_attributes(Virt_addr, Attr, bool, Mword)
 IMPLEMENT inline
 void Mem_space::kernel_space(Mem_space *_k_space)
 {
-  _kernel_space = _k_space;
+  *_kernel_space = _k_space;
 }
 
 IMPLEMENT
@@ -574,7 +574,7 @@ Mem_space::v_delete(Vaddr virt, Page_order size,
 
 PUBLIC inline
 Mem_space::Mem_space(Ram_quota *q)
-: _quota(q), _dir(&_regions), _regions(Mem_layout::kdir->used())
+: _quota(q), _dir(&_regions), _regions((*Mem_layout::kdir)->used())
 {}
 
 PROTECTED inline
@@ -684,6 +684,7 @@ INTERFACE [arm_v6 || arm_v7 || arm_v8]:
 #include "types.h"
 #include "spin_lock.h"
 #include <asid_alloc.h>
+#include "per_node_data.h"
 
 /*
   The ARM reference manual suggests to use the same address space id
@@ -701,7 +702,7 @@ public:
 private:
   /// active/reserved ASID (per CPU)
   static Per_cpu<Asids> _asids;
-  static Asid_alloc _asid_alloc;
+  static Per_node_data<Asid_alloc> _asid_alloc;
 
   /// current ASID of mem_space, provided by _asid_alloc
   Asid _asid = Asid::Invalid;
@@ -729,7 +730,7 @@ PUBLIC inline NEEDS[<asid_alloc.h>]
 unsigned long
 Mem_space::asid()
 {
-  if (_asid_alloc.get_or_alloc_asid(&_asid))
+  if (_asid_alloc->get_or_alloc_asid(&_asid))
     {
       Mem_unit::tlb_flush();
       Mem::dsb();
@@ -739,7 +740,7 @@ Mem_space::asid()
 };
 
 DEFINE_PER_CPU Per_cpu<Mem_space::Asids> Mem_space::_asids;
-Mem_space::Asid_alloc  Mem_space::_asid_alloc(&_asids);
+DECLARE_PER_NODE Per_node_data<Mem_space::Asid_alloc> Mem_space::_asid_alloc(&_asids);
 
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && mmu && arm_lpae && !arm_pt_48]:

@@ -23,7 +23,7 @@ Pic::init()
 
   M *m = new Boot_object<M>(1);
   m->add_chip(0, gic, gic->nr_irqs());
-  Irq_mgr::mgr = m;
+  *Irq_mgr::mgr = m;
 }
 
 // ------------------------------------------------------------------------

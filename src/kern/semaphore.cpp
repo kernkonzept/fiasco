@@ -62,7 +62,7 @@ PRIVATE inline NOEXPORT ALWAYS_INLINE
 void
 Semaphore::_hit_edge_irq(Upstream_irq const *ui)
 {
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
   Thread *t = 0;
   Smword q = count_up(&t);
 
@@ -88,7 +88,7 @@ PRIVATE inline NOEXPORT ALWAYS_INLINE
 void
 Semaphore::_hit_level_irq(Upstream_irq const *ui)
 {
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
   mask_and_ack();
   Upstream_irq::ack(ui);
   Thread *t = 0;

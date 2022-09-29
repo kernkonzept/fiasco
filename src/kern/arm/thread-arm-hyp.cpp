@@ -29,7 +29,7 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
   Vm_state *v = vm_state(vcpu_state);
 
   v->csselr = 0;
-  v->sctlr = (Cpu::sctlr | Cpu::Cp15_c1_cache_bits) & ~(Cpu::Cp15_c1_mmu | (1 << 28));
+  v->sctlr = (*Cpu::sctlr | Cpu::Cp15_c1_cache_bits) & ~(Cpu::Cp15_c1_mmu | (1 << 28));
   v->actlr = 0;
   v->cpacr = 0x5755555;
   v->fcseidr = 0;
@@ -45,7 +45,7 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
 
   v->host_regs.hcr = Cpu::Hcr_host_bits;
 
-  Gic_h_global::gic->setup_state(&v->gic);
+  (*Gic_h_global::gic)->setup_state(&v->gic);
 
   if (current() == this)
     {
@@ -178,6 +178,7 @@ Thread::handle_fpu_trap(Trap_state *ts)
 IMPLEMENTATION [arm && cpu_virt]:
 
 #include "irq_mgr.h"
+#include "per_node_data.h"
 
 PUBLIC
 void
@@ -212,7 +213,7 @@ Thread::vcpu_vgic_maintenance()
   Vm_state *v = vm_state(vcpu);
 
   Unsigned32 eois;
-  bool upcall = !Gic_h_global::gic->handle_maintenance(&v->gic, &eois);
+  bool upcall = !(*Gic_h_global::gic)->handle_maintenance(&v->gic, &eois);
   bool recalculate = false;
 
   if (eois)
@@ -229,7 +230,7 @@ Thread::vcpu_vgic_maintenance()
                   // Because this was an EOI it is guaranteed that an LR is
                   // free. As we re-insert the same irq the irq priority will
                   // also not change.
-                  irq->lr = Gic_h_global::gic->inject(&v->gic,
+                  irq->lr = (*Gic_h_global::gic)->inject(&v->gic,
                                                       Gic_h::Vcpu_irq_cfg(irq->vcpu_irq_id()),
                                                       true, nullptr);
                   ++it;
@@ -290,7 +291,7 @@ public:
 
   void alloc(Cpu_number cpu)
   {
-    check (Irq_mgr::mgr->alloc(this, _irq, false));
+    check ((*Irq_mgr::mgr)->alloc(this, _irq, false));
     chip()->unmask_percpu(cpu, pin());
   }
 
@@ -321,7 +322,7 @@ public:
   void alloc(Cpu_number cpu)
   {
     printf("Allocate ARM PPI %d to virtual %d\n", _irq, 1);
-    check (Irq_mgr::mgr->alloc(this, _irq, false));
+    check ((*Irq_mgr::mgr)->alloc(this, _irq, false));
     chip()->unmask_percpu(cpu, pin());
   }
 
@@ -365,15 +366,15 @@ Arm_vtimer_ppi::handle(Upstream_irq const *ui)
   Upstream_irq::ack(ui);
 }
 
-static Arm_ppi_virt __vgic_irq(25, 0);  // virtual GIC
-static Arm_vtimer_ppi __vtimer_irq(27); // virtual timer
+static DECLARE_PER_NODE Per_node_data<Arm_ppi_virt> __vgic_irq(25, 0);  // virtual GIC
+static DECLARE_PER_NODE Per_node_data<Arm_vtimer_ppi> __vtimer_irq(27); // virtual timer
 
 PROTECTED
 void
 Thread::vcpu_prepare_vtimer() override final
 {
   if (EXPECT_TRUE(_vtimer_irq.reenable_ppi()))
-    __vtimer_irq.unmask();
+    __vtimer_irq->unmask();
 }
 
 namespace {
@@ -384,8 +385,8 @@ struct Local_irq_init
     if (cpu >= Cpu::invalid())
       return;
 
-    __vgic_irq.alloc(cpu);
-    __vtimer_irq.alloc(cpu);
+    __vgic_irq->alloc(cpu);
+    __vtimer_irq->alloc(cpu);
   }
 };
 
@@ -517,7 +518,7 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
 
   v->vtmr.host_prio() = 0xff;
 
-  Gic_h_global::gic->setup_state(&v->gic);
+  (*Gic_h_global::gic)->setup_state(&v->gic);
 
   v->vmpidr = _hyp.vmpidr;
   v->vpidr = _hyp.vpidr;

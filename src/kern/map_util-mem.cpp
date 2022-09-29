@@ -2,8 +2,9 @@ INTERFACE [debug]:
 
 #include "mapdb.h"
 #include "types.h"
+#include "per_node_data.h"
 
-extern Static_object<Mapdb> mapdb_mem;
+extern Per_node_data<Static_object<Mapdb>> mapdb_mem;
 
 IMPLEMENTATION:
 
@@ -11,8 +12,9 @@ IMPLEMENTATION:
 #include "mapdb.h"
 #include "mem_space.h"
 #include <minmax.h>
+#include "per_node_data.h"
 
-Static_object<Mapdb> mapdb_mem;
+DECLARE_PER_NODE Per_node_data<Static_object<Mapdb>> mapdb_mem;
 
 /** Map the region described by "fp_from" of address space "from" into
     region "fp_to" at offset "offs" of address space "to", updating the
@@ -70,7 +72,7 @@ mem_map(Space *from, L4_fpage const &fp_from,
 
   Mu::Auto_tlb_flush<Mem_space> tlb;
 
-  return map<Mem_space>(mapdb_mem.get(),
+  return map<Mem_space>(mapdb_mem->get(),
                         from, from, snd_addr,
                         Pfc(1) << so, to, to,
                         rcv_addr, control.is_grant(), attribs, tlb,
@@ -101,13 +103,13 @@ mem_fpage_unmap(Space *space, L4_fpage fp, L4_map_mask mask)
 
   start = cxx::mask_lsb(start, o);
   Mu::Auto_tlb_flush<Mem_space> tlb;
-  return unmap<Mem_space>(mapdb_mem.get(), space, space,
+  return unmap<Mem_space>(mapdb_mem->get(), space, space,
                start, size,
                fp.rights(), mask, tlb, (Mem_space::Reap_list**)0);
 }
 
-
-
+enum { Max_num_page_sizes = 7 };
+static DECLARE_PER_NODE Per_node_data<size_t[Max_num_page_sizes]> page_sizes;
 
 /** The mapping database.
     This is the system's instance of the mapping database.
@@ -115,9 +117,7 @@ mem_fpage_unmap(Space *space, L4_fpage fp, L4_map_mask mask)
 void
 init_mapdb_mem(Space *sigma0)
 {
-  enum { Max_num_page_sizes = 7 };
-  static size_t page_sizes[Max_num_page_sizes]
-    = { Config::SUPERPAGE_SHIFT - Config::PAGE_SHIFT, 0 };
+  (*page_sizes)[0] = Config::SUPERPAGE_SHIFT - Config::PAGE_SHIFT;
 
   typedef Mem_space::Page_order Page_order;
   Page_order const *ps = Mem_space::get_global_page_sizes();
@@ -137,16 +137,16 @@ init_mapdb_mem(Space *sigma0)
         ++ps;
       printf("MDB: use page size: %u\n", cxx::int_value<Page_order>(c));
       assert (idx < Max_num_page_sizes);
-      page_sizes[idx++] = cxx::int_value<Page_order>(c) - Config::PAGE_SHIFT;
+      (*page_sizes)[idx++] = cxx::int_value<Page_order>(c) - Config::PAGE_SHIFT;
       last_bits = c;
     }
 
   if (0)
     printf("MDB: phys_bits=%u levels = %u\n", Cpu::boot_cpu()->phys_bits(), idx);
 
-  mapdb_mem.construct(sigma0,
-                      Mapping::Order(phys_bits - Config::PAGE_SHIFT),
-                      page_sizes, idx);
+  mapdb_mem->construct(sigma0,
+                       Mapping::Order(phys_bits - Config::PAGE_SHIFT),
+                       *page_sizes, idx);
 }
 
 

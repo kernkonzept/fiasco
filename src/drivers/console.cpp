@@ -2,6 +2,7 @@ INTERFACE:
 
 #include <cstddef>
 #include "l4_types.h"
+#include "per_node_data.h"
 
 /**
  * The abstract interface for a text I/O console.
@@ -88,11 +89,11 @@ public:
 
 public:
   /// stdout for libc glue.
-  static Console *stdout;
+  static Per_node_data<Console *> stdout;
   /// stderr for libc glue.
-  static Console *stderr;
+  static Per_node_data<Console *> stderr;
   /// stdin for libc glue.
-  static Console *stdin;
+  static Per_node_data<Console *> stdin;
 
 protected:
   Mword  _state;
@@ -105,9 +106,9 @@ IMPLEMENTATION:
 #include <cstring>
 #include <cctype>
 
-Console *Console::stdout;
-Console *Console::stderr;
-Console *Console::stdin;
+DECLARE_PER_NODE Per_node_data<Console *> Console::stdout;
+DECLARE_PER_NODE Per_node_data<Console *> Console::stderr;
+DECLARE_PER_NODE Per_node_data<Console *> Console::stdin;
 
 IMPLEMENT Console::~Console()
 {}

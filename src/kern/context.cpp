@@ -450,7 +450,7 @@ IMPLEMENT inline NEEDS["assert.h"]
 Kobject_iface * __attribute__((nonnull(2, 3)))
 Context_ptr::ptr(Space *s, L4_fpage::Rights *rights) const
 {
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
 
   return static_cast<Obj_space*>(s)->lookup_local(_t, rights);
 }
@@ -573,7 +573,7 @@ Context::state_add(Mword bits)
 /**
  * Add bits in state flags. Unsafe (non-atomic) and
  *        fast version -- you must hold the kernel lock when you use it.
- * @pre cpu_lock.test() == true
+ * @pre cpu_lock->test() == true
  * @param bits bits to be added to state flags
  */
 PUBLIC inline
@@ -601,7 +601,7 @@ Context::state_del(Mword bits)
 /**
  * Delete bits in state flags. Unsafe (non-atomic) and
  *        fast version -- you must hold the kernel lock when you use it.
- * @pre cpu_lock.test() == true
+ * @pre cpu_lock->test() == true
  * @param bits bits to be removed from state flags
  */
 PUBLIC inline
@@ -656,7 +656,7 @@ Context::state_change(Mword mask, Mword bits)
 /**
  * Delete and add bits in state flags. Unsafe (non-atomic) and
  *        fast version -- you must hold the kernel lock when you use it.
- * @pre cpu_lock.test() == true
+ * @pre cpu_lock->test() == true
  * @param mask Bits not set in mask shall be deleted from state flags
  * @param bits Bits to be added to state flags
  */
@@ -724,7 +724,7 @@ PUBLIC
 void
 Context::schedule()
 {
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
   assert (!Sched_context::rq.current().schedule_in_progress);
 
   // we give up the CPU as a helpee, so we have no helper anymore
@@ -890,7 +890,7 @@ PUBLIC
 void
 Context::activate()
 {
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
   if (xcpu_state_change(~0UL, Thread_ready, true))
     current()->switch_to_locked(this);
 }
@@ -984,7 +984,7 @@ Context::Switch FIASCO_WARN_RESULT
 Context::schedule_switch_to_locked(Context *t)
 {
    // Must be called with CPU lock held
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
 
   Sched_context::Ready_queue &rq = Sched_context::rq.current();
   // Switch to destination thread's scheduling context
@@ -1034,7 +1034,7 @@ Context::switch_exec_locked(Context *t, enum Helping_mode mode)
 {
   // Must be called with CPU lock held
   assert (t);
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
   assert (current() != t);
   assert (current() == this);
 
@@ -1087,7 +1087,7 @@ Context::switch_exec_helping(Context *t, Mword const *lock, Mword val)
 {
   // Must be called with CPU lock held
   assert (t);
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
   assert (current() != t);
   assert (current() == this);
 
@@ -1137,7 +1137,7 @@ IMPLEMENT inline NEEDS["lock_guard.h", "assert.h"]
 void
 Context::Drq_q::enq(Drq *rq)
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
   auto guard = lock_guard(q_lock());
   enqueue(rq);
 }
@@ -1263,7 +1263,7 @@ Context::try_finish_migration()
 
 /**
  * \brief Handle all pending DRQs.
- * \pre cpu_lock.test() (The CPU lock must be held).
+ * \pre cpu_lock->test() (The CPU lock must be held).
  * \pre current() == this (only the currently running context is allowed to
  *      call this function).
  * \return true if re-scheduling is needed (ready queue has changed),
@@ -1275,7 +1275,7 @@ Context::handle_drq()
 {
 
   assert (check_for_current_cpu());
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
 
   bool resched = false;
   Mword st = state();
@@ -1296,7 +1296,7 @@ Context::handle_drq()
   resched |= _drq_q.handle_requests();
   state_del_dirty(Thread_drq_ready);
 
-  //LOG_MSG_3VAL(this, "xdrq", state(), 0, cpu_lock.test());
+  //LOG_MSG_3VAL(this, "xdrq", state(), 0, cpu_lock->test());
 
   return resched || !(state() & Thread_ready_mask);
 }
@@ -1492,7 +1492,7 @@ PRIVATE static
 bool
 Context::rcu_unblock(Rcu_item *i)
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
   return static_cast<Context*>(i)->xcpu_state_change(~Thread_waiting, Thread_ready);
 }
 
@@ -1596,7 +1596,7 @@ PUBLIC
 bool
 Context::enqueue_drq(Drq *rq)
 {
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
 
   LOG_TRACE("DRQ handling", "drq", current(), Drq_log,
       l->type = rq->context() == this
@@ -2063,7 +2063,7 @@ PUBLIC
 bool
 Context::enqueue_drq(Drq *rq)
 {
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
 
   Cpu_number cpu = access_once(&_home_cpu);
   Cpu_number current_cpu = ::current_cpu();
@@ -2129,7 +2129,7 @@ PUBLIC inline NEEDS["cpu_lock.h", "lock_guard.h"]
 void
 Context::rcu_wait()
 {
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
   state_change_dirty(~Thread_ready, Thread_waiting);
   Rcu::call(this, &rcu_unblock);
   while (state() & Thread_waiting)

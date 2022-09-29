@@ -74,7 +74,7 @@ Mips_bsp_irqs::init(Cpu_number cpu)
   i8259->init(0);
   printf("GT64120: %p  i8259: %p\n", syscon, i8259);
   auto *m =  new Boot_object<Irq_mgr_flex<10> >();
-  Irq_mgr::mgr = m;
+  *Irq_mgr::mgr = m;
   m->add_chip(i8259, 0);
 
   auto *pic_c = new Boot_object<Cascade_irq>(i8259, i8259_gt64120_hit);

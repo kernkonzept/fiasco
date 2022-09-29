@@ -192,7 +192,7 @@ Jdb_mapdb::show(Mapping::Pfn page, char which_mapdb)
         {
         case 'm':
           type = "Phys frame";
-          mapdb = mapdb_mem.get();
+          mapdb = mapdb_mem->get();
           base_size = Order(Config::PAGE_SHIFT);
           super_shift = Mdb_types::Order(Config::SUPERPAGE_SHIFT - Config::PAGE_SHIFT);
           break;
@@ -526,7 +526,7 @@ Jdb_mapdb::dump_all_obj_mappings(char const *arg)
 
   if (gzip)
     c->start_exclusive(Console::GZIP);
-  for (auto *d: Kobject_dbg::_kobjects)
+  for (auto *d: *Kobject_dbg::_kobjects)
     {
       Kobject *f = Kobject::from_dbg(d);
       String_buf<130> s;

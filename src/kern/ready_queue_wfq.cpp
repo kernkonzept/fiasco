@@ -145,7 +145,7 @@ template<typename E>
 void
 Ready_queue_wfq<E>::enqueue(E *i, bool /*is_current_sched**/)
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
 
   // Don't enqueue threads which are already enqueued
   if (EXPECT_FALSE (i->in_ready_list()))
@@ -171,7 +171,7 @@ template<typename E>
 void
 Ready_queue_wfq<E>::dequeue(E *i)
 {
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
 
   // Don't dequeue threads which aren't enqueued
   if (EXPECT_FALSE (!i->in_ready_list() || i == idle))

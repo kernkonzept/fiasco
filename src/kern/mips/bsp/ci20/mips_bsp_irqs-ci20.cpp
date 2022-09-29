@@ -32,7 +32,7 @@ Mips_bsp_irqs::init(Cpu_number cpu)
     return;
 
   auto *m =  new Boot_object<Irq_mgr_flex<10> >();
-  Irq_mgr::mgr = m;
+  *Irq_mgr::mgr = m;
 
   _ic[0] = new Boot_object<Irq_chip_ingenic>(0xb0001000);
   m->add_chip(_ic[0], 0);

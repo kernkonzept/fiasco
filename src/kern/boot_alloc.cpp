@@ -4,6 +4,7 @@ INTERFACE:
 #include <cxx/slist>
 #include <cxx/type_traits>
 #include "types.h"
+#include "per_node_data.h"
 
 class Boot_alloced
 {
@@ -21,7 +22,7 @@ private:
 
   typedef cxx::S_list_bss<Block> Block_list;
 
-  static Block_list _free;
+  static Per_node_data<Block_list> _free;
 };
 
 template< typename Base >
@@ -43,7 +44,7 @@ IMPLEMENTATION:
 #include "kmem_alloc.h"
 #include "warn.h"
 
-Boot_alloced::Block_list Boot_alloced::_free;
+DECLARE_PER_NODE Per_node_data<Boot_alloced::Block_list> Boot_alloced::_free;
 
 PUBLIC static
 void *
@@ -54,15 +55,15 @@ Boot_alloced::alloc(size_t size)
 
   // this is best fit list-based allocation
 
-  Block_list::Iterator best = _free.end();
-  for (Block_list::Iterator curr = _free.begin(); curr != _free.end(); ++curr)
+  Block_list::Iterator best = _free->end();
+  for (Block_list::Iterator curr = _free->begin(); curr != _free->end(); ++curr)
     {
-      if (((best == _free.end()) || curr->size < best->size)
+      if (((best == _free->end()) || curr->size < best->size)
 	  && curr->size >= size)
 	best = curr;
     }
 
-  if (best == _free.end())
+  if (best == _free->end())
     {
       // start from 1k
       unsigned long alloc_size = 1024;
@@ -90,12 +91,12 @@ Boot_alloced::alloc(size_t size)
   if (rem_sz > (long)sizeof(Block))
     {
       rem->size = rem_sz;
-      _free.replace(best, rem);
+      _free->replace(best, rem);
       if (Debug_boot_alloc)
         printf("Boot_alloc: remaining free block @ %p (size=%lx)\n", rem, (unsigned long)rem_sz);
     }
   else
-    _free.erase(best);
+    _free->erase(best);
 
   memset(b, 0, size);
   return b;
@@ -116,9 +117,9 @@ Boot_alloced::free_block(unsigned long size, Block *b)
 {
   b->size = size;
 
-  Block_list::Iterator prev = _free.end();
-  Block_list::Iterator next = _free.begin();
-  while (next != _free.end())
+  Block_list::Iterator prev = _free->end();
+  Block_list::Iterator next = _free->begin();
+  while (next != _free->end())
     {
       if (*next < b)
 	break;
@@ -126,26 +127,26 @@ Boot_alloced::free_block(unsigned long size, Block *b)
       ++next;
     }
 
-  if (prev == _free.end())
+  if (prev == _free->end())
     {
-      if (next != _free.end() && *next == b->next())
+      if (next != _free->end() && *next == b->next())
 	{
 	  b->size += next->size;
-	  _free.replace(next, b);
+	  _free->replace(next, b);
 	}
       else
-        _free.add(b);
+        _free->add(b);
 
-      return _free.begin();
+      return _free->begin();
     }
   else
     {
       // Merge with 'next' block first (if adjacent) to keep 'prev' iterator
       // valid!
-      if (next != _free.end() && *next == b->next())
+      if (next != _free->end() && *next == b->next())
 	{
 	  b->size += next->size;
-	  _free.erase(next);
+	  _free->erase(next);
 	}
 
       if (prev->next() == b)
@@ -155,7 +156,7 @@ Boot_alloced::free_block(unsigned long size, Block *b)
 	}
       else
 	{
-	  _free.insert(b, prev);
+	  _free->insert(b, prev);
 	  return ++prev;
 	}
     }

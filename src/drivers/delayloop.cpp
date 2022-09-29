@@ -2,11 +2,12 @@ INTERFACE:
 
 #include "std_macros.h"
 #include "initcalls.h"
+#include "per_node_data.h"
 
 class Delay
 {
 private:
-  static unsigned count;
+  static Per_node_data<unsigned> count;
 
 public:
   static void init() FIASCO_INIT;
@@ -18,7 +19,7 @@ IMPLEMENTATION:
 #include "processor.h"
 #include "timer.h"
 
-unsigned Delay::count;
+DECLARE_PER_NODE Per_node_data<unsigned> Delay::count;
 
 PRIVATE static
 unsigned
@@ -45,10 +46,10 @@ Delay::measure()
 IMPLEMENT void
 Delay::init()
 {
-  count = measure();
+  *count = measure();
   unsigned c2 = measure();
-  if (c2 > count)
-    count = c2;
+  if (c2 > *count)
+    *count = c2;
 }
 
 /**
@@ -61,7 +62,7 @@ Delay::delay(unsigned ms)
   Kip *k = Kip::k();
   while (ms--)
     {
-      unsigned c = count;
+      unsigned c = *count;
       while (c--)
         {
 	  (void)k->clock();

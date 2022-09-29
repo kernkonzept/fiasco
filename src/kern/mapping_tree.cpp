@@ -178,11 +178,12 @@ IMPLEMENTATION:
 #include "ram_quota.h"
 #include "space.h"
 #include "std_macros.h"
+#include "per_node_data.h"
 
 
 // Helpers
 
-static Kmem_slab_t<Mapping> _mapping_allocator("Mapping");
+static DECLARE_PER_NODE Per_node_data<Kmem_slab_t<Mapping>> _mapping_allocator("Mapping");
 
 //
 // class Mapping_tree
@@ -209,7 +210,7 @@ Mapping_tree::erase(Space *owner)
 
       Mapping *m = *d;
       d = Mappings::erase(d);
-      _mapping_allocator.q_del(q, m);
+      _mapping_allocator->q_del(q, m);
     }
 }
 
@@ -235,7 +236,7 @@ PUBLIC
 Mapping_tree::Iterator
 Mapping_tree::allocate_submap(Ram_quota *payer, Iterator parent)
 {
-  Mapping *m = _mapping_allocator.q_new(payer);
+  Mapping *m = _mapping_allocator->q_new(payer);
   if (!m)
     return end();
 
@@ -258,7 +259,7 @@ Mapping_tree::allocate(Ram_quota *payer, Iterator parent)
   if (*parent && parent->has_max_depth())
     return end();
 
-  Mapping *m = _mapping_allocator.q_new(payer);
+  Mapping *m = _mapping_allocator->q_new(payer);
   if (!m)
     return end();
 
@@ -296,7 +297,7 @@ Mapping_tree::free_mapping(Ram_quota *q, Iterator m)
 {
   auto d = *m;
   m = Mappings::erase(m);
-  _mapping_allocator.q_del(q, d);
+  _mapping_allocator->q_del(q, d);
   return m;
 }
 

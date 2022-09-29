@@ -19,9 +19,10 @@ void Kmem_space::init()
 IMPLEMENTATION[arm && mmu && arm_lpae]:
 
 #include "boot_infos.h"
+#include "static_init.h"
 
 Unsigned64 kernel_lpae_dir[4] __attribute__((aligned(4 * sizeof(Unsigned64))));
-Kpdir *Mem_layout::kdir = (Kpdir *)&kernel_lpae_dir;
+DECLARE_PER_NODE_PRIO(BOOTSTRAP_INIT_PRIO) Per_node_data<Kpdir *> Mem_layout::kdir((Kpdir *)&kernel_lpae_dir);
 
 static Boot_paging_info FIASCO_BOOT_PAGING_INFO _bs_pgin_dta =
 {
@@ -33,8 +34,9 @@ static Boot_paging_info FIASCO_BOOT_PAGING_INFO _bs_pgin_dta =
 IMPLEMENTATION[arm && mmu && !arm_lpae]:
 
 #include "boot_infos.h"
+#include "static_init.h"
 
-Kpdir *Mem_layout::kdir = (Kpdir *)&kernel_page_directory;
+DECLARE_PER_NODE_PRIO(BOOTSTRAP_INIT_PRIO) Per_node_data<Kpdir *> Mem_layout::kdir((Kpdir *)&kernel_page_directory);
 
 static Boot_paging_info FIASCO_BOOT_PAGING_INFO _bs_pgin_dta =
 {

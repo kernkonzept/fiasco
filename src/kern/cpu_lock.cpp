@@ -1,6 +1,7 @@
 INTERFACE:
 
 #include "types.h"
+#include "per_cpu_data.h"
 
 /** 
  * Global CPU lock. When held, irqs are disabled on the current CPU 
@@ -62,13 +63,13 @@ private:
  * The global CPU lock, contains the locking data necessary for some
  * special implementations.
  */
-extern Cpu_lock cpu_lock;
+extern Per_node_data<Cpu_lock> cpu_lock;
 
 IMPLEMENTATION:
 
 #include "static_init.h"
 
-Cpu_lock cpu_lock INIT_PRIORITY(EARLY_INIT_PRIO);
+DECLARE_PER_NODE_PRIO(EARLY_INIT_PRIO) Per_node_data<Cpu_lock> cpu_lock;
 
 IMPLEMENT inline //NEEDS [Cpu_lock::lock, Cpu_lock::test]
 Cpu_lock::Status Cpu_lock::test_and_set()

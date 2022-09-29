@@ -30,7 +30,7 @@ void *Vmem_alloc::page_alloc(void *address, Zero_fill zf, unsigned mode)
 
   auto pte = Kmem::kdir->walk(Virt_addr(address),
                               Pdir::Depth, true,
-                              Kmem_alloc::q_allocator(Ram_quota::root));
+                              Kmem_alloc::q_allocator(*Ram_quota::root));
 
   Page::Rights r = Page::Rights::RWX();
   if (mode & User)

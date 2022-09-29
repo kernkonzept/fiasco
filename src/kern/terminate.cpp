@@ -9,6 +9,7 @@ IMPLEMENTATION:
 #include "helping_lock.h"
 #include "kernel_console.h"
 #include "reset.h"
+#include "per_node_data.h"
 
 /**
  * The exit handler as long as exit_question() is not installed.
@@ -28,11 +29,11 @@ raw_exit()
 }
 
 
-static void (*exit_question)(void) = &raw_exit;
+static DECLARE_PER_NODE Per_node_data<void (*)(void)> exit_question(&raw_exit);
 
 void set_exit_question(void (*eq)(void))
 {
-  exit_question = eq;
+  *exit_question = eq;
 }
 
 
@@ -42,10 +43,10 @@ FIASCO_NORETURN
 void
 terminate (int exit_value)
 {
-  Helping_lock::threading_system_active = false;
+  *Helping_lock::threading_system_active = false;
 
-  if (exit_question)
-    exit_question();
+  if (*exit_question)
+    (*exit_question)();
 
   puts("\nShutting down...");
 

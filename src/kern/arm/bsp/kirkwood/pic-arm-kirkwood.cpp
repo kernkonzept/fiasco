@@ -54,7 +54,7 @@ PUBLIC
 void
 Irq_chip_kirkwood::mask(Mword irq)
 {
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
   modify<Unsigned32>(0, 1 << (irq & 0x1f),
                      Main_Irq_mask_low_reg + ((irq & 0x20) >> 1));
 }
@@ -63,7 +63,7 @@ PUBLIC
 void
 Irq_chip_kirkwood::mask_and_ack(Mword irq)
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
   mask(irq);
   // ack is empty
 }
@@ -72,7 +72,7 @@ PUBLIC
 void
 Irq_chip_kirkwood::unmask(Mword irq)
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
   modify<Unsigned32>(1 << (irq & 0x1f), 0,
                      Main_Irq_mask_low_reg + ((irq & 0x20) >> 1));
 }
@@ -82,7 +82,7 @@ static Static_object<Irq_mgr_single_chip<Irq_chip_kirkwood> > mgr;
 PUBLIC static FIASCO_INIT
 void Pic::init()
 {
-  Irq_mgr::mgr = mgr.construct();
+  *Irq_mgr::mgr = mgr.construct();
 }
 
 PUBLIC inline

@@ -3,6 +3,7 @@ INTERFACE:
 #include "gic.h"
 #include "gic_redist.h"
 #include "gic_cpu_v3.h"
+#include "per_node_data.h"
 
 class Gic_v3 : public Gic_mixin<Gic_v3, Gic_cpu_v3>
 {
@@ -13,10 +14,10 @@ class Gic_v3 : public Gic_mixin<Gic_v3, Gic_cpu_v3>
 
   Address _redist_base;
 
-  static Gic_v3 *primary;
+  static Per_node_data<Gic_v3 *> primary;
 
   static void _glbl_irq_handler()
-  { primary->hit(nullptr); }
+  { (*primary)->hit(nullptr); }
 
 public:
   using Version = Gic_dist::V3;
@@ -33,7 +34,7 @@ public:
 
   void init_global_irq_handler()
   {
-    primary = this;
+    *primary = this;
     Gic::set_irq_handler(_glbl_irq_handler);
   }
 };
@@ -97,7 +98,7 @@ public:
 //-------------------------------------------------------------------
 IMPLEMENTATION:
 
-Gic_v3 *Gic_v3::primary;
+DECLARE_PER_NODE Per_node_data<Gic_v3 *> Gic_v3::primary;
 DEFINE_PER_CPU Per_cpu<Gic_redist> Gic_v3::_redist;
 
 PUBLIC inline
@@ -155,7 +156,7 @@ void
 Gic_v3::mask_percpu(Cpu_number cpu, Mword pin) override
 {
   assert(pin < 32);
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
   _redist.cpu(cpu).mask(pin);
 }
 
@@ -164,7 +165,7 @@ void
 Gic_v3::unmask_percpu(Cpu_number cpu, Mword pin) override
 {
   assert(pin < 32);
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
   _redist.cpu(cpu).unmask(pin);
 }
 
@@ -173,7 +174,7 @@ int
 Gic_v3::set_mode_percpu(Cpu_number cpu, Mword pin, Mode m) override
 {
   assert(pin < 32);
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
   return _redist.cpu(cpu).set_mode(pin, m);
 }
 

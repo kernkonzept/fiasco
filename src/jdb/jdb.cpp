@@ -1137,7 +1137,7 @@ PRIVATE inline static
 void
 Jdb::rcv_uart_enable()
 {
-  if (Config::serial_esc == Config::SERIAL_ESC_IRQ)
+  if (*Config::serial_esc == Config::SERIAL_ESC_IRQ)
     Kernel_uart::enable_rcv_irq();
 }
 

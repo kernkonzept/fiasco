@@ -415,7 +415,7 @@ Io_apic_remapped::init_apics()
     printf("IO-APIC: dual 8259: %s\n", madt->apic_flags & 1 ? "yes" : "no");
 
   Irq_mgr_rmsi *m;
-  Irq_mgr::mgr = m = new Boot_object<Irq_mgr_rmsi>(irt);
+  *Irq_mgr::mgr = m = new Boot_object<Irq_mgr_rmsi>(irt);
 
   return true;
 }

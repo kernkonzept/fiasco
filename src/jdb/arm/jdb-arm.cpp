@@ -317,7 +317,7 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
 
   if (addr.is_kmem())
     {
-      auto p = Kmem::kdir->walk(Virt_addr(addr.addr()));
+      auto p = (*Kmem::kdir)->walk(Virt_addr(addr.addr()));
       if (!p.is_valid())
         return 0;
 
@@ -336,14 +336,14 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
   unsigned long kaddr = Mem_layout::phys_to_pmem(phys);
   if (kaddr != (Address)-1)
     {
-      auto pte = Kmem::kdir->walk(Virt_addr(kaddr));
+      auto pte = (*Kmem::kdir)->walk(Virt_addr(kaddr));
       if (pte.is_valid()
           && (!write || pte.attribs().rights & Page::Rights::W()))
         return (unsigned char *)kaddr;
     }
 
   Mem_unit::flush_vdcache();
-  auto pte = Kmem::kdir
+  auto pte = (*Kmem::kdir)
     ->walk(Virt_addr(Mem_layout::Jdb_tmp_map_area), K_pte_ptr::Super_level);
 
   if (!pte.is_valid()

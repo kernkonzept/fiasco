@@ -5,6 +5,7 @@ INTERFACE:
 #include "jdb_kobject.h"
 #include "l4_types.h"
 #include "initcalls.h"
+#include "per_node_data.h"
 
 
 class Jdb_kobject_name : public Jdb_kobject_extension
@@ -22,7 +23,7 @@ private:
 
   char _name[16];
 
-  static Jdb_kobject_name *_names;
+  static Per_node_data<Jdb_kobject_name *> _names;
 };
 
 //-----------------------------------------------------------------------
@@ -49,7 +50,7 @@ enum
 
 
 char const *const Jdb_kobject_name::static_type = "Jdb_kobject_names";
-Jdb_kobject_name *Jdb_kobject_name::_names;
+DECLARE_PER_NODE Per_node_data<Jdb_kobject_name *> Jdb_kobject_name::_names;
 
 
 PUBLIC
@@ -61,19 +62,19 @@ PUBLIC
 Jdb_kobject_name::Jdb_kobject_name()
 { _name[0] = 0; }
 
-static Spin_lock<> allocator_lock;
+DECLARE_PER_NODE static Per_node_data<Spin_lock<>> allocator_lock;
 
 IMPLEMENT
 void *
 Jdb_kobject_name::operator new (size_t) throw()
 {
-  Jdb_kobject_name *n = _names;
+  Jdb_kobject_name *n = *_names;
   while (1)
     {
       void **o = reinterpret_cast<void**>(n);
       if (!*o)
 	{
-	  auto g = lock_guard(allocator_lock);
+	  auto g = lock_guard(*allocator_lock);
 	  if (!*o)
 	    {
 	      *o = (void*)10;
@@ -83,7 +84,7 @@ Jdb_kobject_name::operator new (size_t) throw()
 
       ++n;
 
-      if ((n - _names) >= Name_entries)
+      if ((n - *_names) >= Name_entries)
 	return 0;
     }
 }
@@ -92,7 +93,7 @@ IMPLEMENT
 void
 Jdb_kobject_name::operator delete (void *p)
 {
-  auto g = lock_guard(allocator_lock);
+  auto g = lock_guard(*allocator_lock);
   void **o = reinterpret_cast<void**>(p);
   *o = 0;
 }
@@ -198,19 +199,20 @@ Jdb_name_hdl::invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb) override
   return false;
 }
 
+DECLARE_PER_NODE static Per_node_data<Jdb_name_hdl> hdl;
+
 PUBLIC static FIASCO_INIT
 void
 Jdb_kobject_name::init()
 {
-  _names = (Jdb_kobject_name*)Kmem_alloc::allocator()->alloc(Bytes(Name_buffer_size));
-  if (!_names)
+  *_names = (Jdb_kobject_name*)Kmem_alloc::allocator()->alloc(Bytes(Name_buffer_size));
+  if (!*_names)
     panic("No memory for thread names");
 
   for (int i=0; i<Name_entries; i++)
-    *reinterpret_cast<unsigned long*>(_names + i) = 0;
+    *reinterpret_cast<unsigned long*>(*_names + i) = 0;
 
-  static Jdb_name_hdl hdl;
-  Jdb_kobject::module()->register_handler(&hdl);
+  Jdb_kobject::module()->register_handler(hdl.get());
 }
 
 

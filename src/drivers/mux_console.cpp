@@ -41,6 +41,7 @@ IMPLEMENTATION:
 #include "kip.h"
 #include "processor.h"
 #include "string.h"
+#include "per_node_data.h"
 
 PUBLIC
 Mux_console::Mux_console()
@@ -72,6 +73,8 @@ Mux_console::set_ignore_input(Unsigned64 delta)
   _ignore_input_until = Kip::k()->clock() + delta;
 }
 
+static DECLARE_PER_NODE Per_node_data<unsigned> releasepos;
+
 PRIVATE
 int
 Mux_console::check_input_ignore()
@@ -82,7 +85,6 @@ Mux_console::check_input_ignore()
         _ignore_input_until = 0;
       else
         {
-          static unsigned releasepos;
           const char *releasestring = "input";
 
           // when we ignore input we read everything which comes in even if
@@ -93,19 +95,19 @@ Mux_console::check_input_ignore()
                 int r;
                 while ((r = _cons[i]->getchar(false)) != -1)
                   {
-                    if (releasestring[releasepos] == r)
+                    if (releasestring[*releasepos] == r)
                       {
-                        releasepos++;
-                        if (releasepos == strlen(releasestring))
+                        (*releasepos)++;
+                        if (*releasepos == strlen(releasestring))
                           {
                             printf("\nJDB: Input activated.\n");
                             _ignore_input_until = 0;
-                            releasepos = 0;
+                            *releasepos = 0;
                             return 0;
                           }
                       }
                     else
-                      releasepos = 0;
+                      *releasepos = 0;
                   }
               }
           return 1;

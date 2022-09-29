@@ -12,7 +12,7 @@ public:
     bool deblock(Sched_context *sc, Sched_context *crs, bool lazy_q = false);
     void ready_enqueue(Sched_context *sc)
     {
-      assert(cpu_lock.test());
+      assert(cpu_lock->test());
 
       // Don't enqueue threads which are already enqueued
       if (EXPECT_FALSE (sc->in_ready_list()))
@@ -23,7 +23,7 @@ public:
 
     void ready_dequeue(Sched_context *sc)
     {
-      assert (cpu_lock.test());
+      assert (cpu_lock->test());
 
       // Don't dequeue threads which aren't enqueued
       if (EXPECT_FALSE (!sc->in_ready_list()))
@@ -34,7 +34,7 @@ public:
 
     void switch_sched(Sched_context *from, Sched_context *to)
     {
-      assert (cpu_lock.test());
+      assert (cpu_lock->test());
 
       // If we're leaving the global timeslice, invalidate it This causes
       // schedule() to select a new timeslice via set_current_sched()
@@ -106,7 +106,7 @@ IMPLEMENT inline NEEDS[<cassert>]
 bool
 Sched_context::Ready_queue::deblock(Sched_context *sc, Sched_context *crs, bool lazy_q)
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
 
   Sched_context *cs = current_sched();
   bool res = true;

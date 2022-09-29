@@ -334,7 +334,7 @@ PUBLIC inline NEEDS[<cassert>, "cp0_status.h"]
 void FIASCO_NORETURN
 Thread::vcpu_return_to_kernel(Mword ip, Mword sp, void *arg)
 {
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
   assert (current() == this);
 
   {
@@ -409,7 +409,7 @@ Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
   Trap_state *ts = (Trap_state*)snd->_utcb_handler;
 
   {
-    auto guard = lock_guard(cpu_lock);
+    auto guard = lock_guard(*cpu_lock);
     Utcb *rcv_utcb = rcv->utcb().access();
     Trex *r = reinterpret_cast<Trex *>(rcv_utcb->values);
     r->s = *ts;

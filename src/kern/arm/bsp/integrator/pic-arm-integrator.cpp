@@ -47,7 +47,7 @@ PUBLIC
 void
 Irq_chip_arm_integr::mask(Mword irq)
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
   write<Mword>(1 << (irq - PIC_START), IRQ_ENABLE_CLEAR);
 }
 
@@ -55,7 +55,7 @@ PUBLIC
 void
 Irq_chip_arm_integr::mask_and_ack(Mword irq)
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
   write<Mword>(1 << (irq - PIC_START), IRQ_ENABLE_CLEAR);
   // ack is empty
 }
@@ -64,7 +64,7 @@ PUBLIC
 void
 Irq_chip_arm_integr::unmask(Mword irq)
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
   write<Mword>(1 << (irq - PIC_START), IRQ_ENABLE_SET);
 }
 
@@ -73,7 +73,7 @@ static Static_object<Irq_mgr_single_chip<Irq_chip_arm_integr> > mgr;
 PUBLIC static FIASCO_INIT
 void Pic::init()
 {
-  Irq_mgr::mgr = mgr.construct();
+  *Irq_mgr::mgr = mgr.construct();
 }
 
 PUBLIC inline

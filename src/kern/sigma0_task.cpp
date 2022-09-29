@@ -14,6 +14,8 @@ public:
 
 IMPLEMENTATION:
 
+#include "per_node_data.h"
+
 PUBLIC
 bool
 Sigma0_task::v_fabricate(Mem_space::Vaddr address,
@@ -35,11 +37,11 @@ Page_number
 Sigma0_task::mem_space_map_max_address() const override
 { return Page_number(1UL << (MWORD_BITS - Mem_space::Page_shift)); }
 
-static Static_object<Sigma0_task> sigma0_task;
+static DECLARE_PER_NODE Per_node_data<Static_object<Sigma0_task>> sigma0_task;
 
 PUBLIC static
 Sigma0_task *Sigma0_task::alloc(Ram_quota *q)
 {
-  sigma0_task.construct(q);
-  return sigma0_task.get();
+  sigma0_task->construct(q);
+  return sigma0_task->get();
 }

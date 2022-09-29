@@ -92,7 +92,7 @@ PUBLIC
 void
 Irq_chip_arm_omap3::mask(Mword irq)
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
   write<Mword>(1 << (irq & 31), INTCPS_MIR_SETn_base + (irq & 0xe0));
 }
 
@@ -100,7 +100,7 @@ PUBLIC
 void
 Irq_chip_arm_omap3::mask_and_ack(Mword irq)
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
   write<Mword>(1 << (irq & 31), INTCPS_MIR_SETn_base + (irq & 0xe0));
   write<Mword>(1, INTCPS_CONTROL);
 }
@@ -117,7 +117,7 @@ PUBLIC
 void
 Irq_chip_arm_omap3::unmask(Mword irq)
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
   write<Mword>(1 << (irq & 31), INTCPS_MIR_CLEARn_base + (irq & 0xe0));
 }
 
@@ -126,7 +126,7 @@ static Static_object<Irq_mgr_single_chip<Irq_chip_arm_omap3> > mgr;
 PUBLIC static FIASCO_INIT
 void Pic::init()
 {
-  Irq_mgr::mgr = mgr.construct();
+  *Irq_mgr::mgr = mgr.construct();
 }
 
 PUBLIC inline

@@ -90,7 +90,7 @@ Task::~Task()
 {
   free_ku_mem();
 
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
 
   pid_t hostpid = pid();
   ptrace (PTRACE_KILL, hostpid, NULL, NULL);

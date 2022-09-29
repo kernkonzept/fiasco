@@ -64,7 +64,7 @@ Context::arm_hyp_load_non_vm_state(bool vgic)
   asm volatile("msr CNTKCTL_EL1, %x0"   : : "r"(0x3UL));
   asm volatile("msr CNTHCTL_EL2, %x0"   : : "r"(Host_cnthctl));
   if (vgic)
-    Gic_h_global::gic->disable();
+    (*Gic_h_global::gic)->disable();
 }
 
 PRIVATE inline

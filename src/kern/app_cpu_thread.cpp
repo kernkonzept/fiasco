@@ -44,7 +44,7 @@ App_cpu_thread::may_be_create(Cpu_number cpu, bool cpu_never_seen_before)
       return static_cast<Kernel_thread *>(kernel_context(cpu));
     }
 
-  Kernel_thread *t = new (Ram_quota::root) App_cpu_thread(Ram_quota::root);
+  Kernel_thread *t = new (*Ram_quota::root) App_cpu_thread(*Ram_quota::root);
   assert (t);
 
   t->set_home_cpu(cpu);
@@ -97,9 +97,9 @@ App_cpu_thread::bootstrap(Mword resume)
   if (!resume)
     Per_cpu_data::run_late_ctors(ccpu);
 
-  Scheduler::scheduler.trigger_hotplug_event();
+  Scheduler::scheduler->trigger_hotplug_event();
   Timer_tick::enable(ccpu);
-  cpu_lock.clear();
+  cpu_lock->clear();
 
   if (!resume)
     {

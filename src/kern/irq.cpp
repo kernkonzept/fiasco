@@ -107,6 +107,7 @@ IMPLEMENTATION:
 #include "thread_state.h"
 #include "l4_buf_iter.h"
 #include "vkey.h"
+#include "per_node_data.h"
 
 JDB_DEFINE_TYPENAME(Irq_sender, "\033[37mIRQ ipc\033[m");
 
@@ -117,7 +118,7 @@ static Irq_base *irq_base_dcast(Kobject_iface *o)
 struct Irq_base_cast
 {
   Irq_base_cast()
-  { Irq_base::dcast = &irq_base_dcast; }
+  { *Irq_base::dcast = &irq_base_dcast; }
 };
 
 static Irq_base_cast register_irq_base_cast;
@@ -194,7 +195,7 @@ Irq_sender::alloc(Mword t, Kobject ***rl)
 
   Mem::mp_acquire();
 
-  auto g = lock_guard(cpu_lock);
+  auto g = lock_guard(*cpu_lock);
   bool reinject = false;
 
   if (is_valid_thread(prev))
@@ -265,7 +266,7 @@ Irq_sender::free(Kobject ***rl)
         break;
     }
 
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
   mask();
 
   Thread *old = as_thread(t);
@@ -302,7 +303,7 @@ PUBLIC
 void
 Irq_sender::destroy(Kobject ***rl) override
 {
-  auto g = lock_guard(cpu_lock);
+  auto g = lock_guard(*cpu_lock);
   (void)free(rl);
   Irq::destroy(rl);
 }
@@ -464,7 +465,7 @@ Irq_sender::_hit_level_irq(Upstream_irq const *ui)
 
   // LOG_MSG_3VAL(current(), "IRQ", dbg_id(), 0, _queued);
 
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
   mask_and_ack();
   Upstream_irq::ack(ui);
 
@@ -494,7 +495,7 @@ Irq_sender::_hit_edge_irq(Upstream_irq const *ui)
 
   // LOG_MSG_3VAL(current(), "IRQ", dbg_id(), 0, _queued);
 
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
 
   auto t = access_once(&_irq_thread);
   if (EXPECT_FALSE(!is_valid_thread(t)))
@@ -568,9 +569,9 @@ Irq_sender::sys_bind(L4_msg_tag tag, L4_fpage::Rights rights, Utcb const *utcb,
         send(t);
     }
 
-  cpu_lock.clear();
+  cpu_lock->clear();
   rl.del();
-  cpu_lock.lock();
+  cpu_lock->lock();
 
   return commit_result(res >= 0 ? 0 : res);
 }
@@ -585,9 +586,9 @@ Irq_sender::sys_detach(L4_fpage::Rights rights)
   Reap_list rl;
   auto res = free(rl.list());
   _irq_id = ~0UL;
-  cpu_lock.clear();
+  cpu_lock->clear();
   rl.del();
-  cpu_lock.lock();
+  cpu_lock->lock();
   return commit_result(res);
 }
 
@@ -665,21 +666,21 @@ Irq_sender::obj_id() const override
 
  // Irq implementation
 
-static Kmem_slab_t<Irq_sender> _irq_allocator("Irq");
+static DECLARE_PER_NODE Per_node_data<Kmem_slab_t<Irq_sender>> _irq_allocator("Irq");
 
 PRIVATE static
 void *
 Irq::q_alloc(Ram_quota *q)
-{ return _irq_allocator.q_alloc(q); }
+{ return _irq_allocator->q_alloc(q); }
 
 PRIVATE static
 void
 Irq::q_free(Ram_quota *q, void *f)
 {
   if (q)
-    _irq_allocator.q_free(q, f);
+    _irq_allocator->q_free(q, f);
   else
-    _irq_allocator.free(f);
+    _irq_allocator->free(f);
 }
 
 PUBLIC inline

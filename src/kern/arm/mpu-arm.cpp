@@ -7,8 +7,8 @@ IMPLEMENTATION [arm && !mmu]:
 static Boot_paging_info FIASCO_BOOT_PAGING_INFO _bs_mpu_dta =
 {};
 
-static Kpdir kmpu INIT_PRIORITY(BOOTSTRAP_INIT_PRIO);
-Kpdir *Mem_layout::kdir = &kmpu;
+static DECLARE_PER_NODE_PRIO(BOOTSTRAP_INIT_PRIO) Per_node_data<Kpdir> kmpu;
+DECLARE_PER_NODE_PRIO(BOOTSTRAP_INIT_PRIO) Per_node_data<Kpdir *> Mem_layout::kdir(kmpu.get());
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && mpu]:
@@ -30,10 +30,10 @@ extern char _initcall_end[];
 static void
 setup_mpu()
 {
-  auto diff = kmpu.add((Mword)_kernel_image_start,
-                       (Mword)_initcall_end - 1U,
-                       Mpu_region_attr::make_attr(L4_fpage::Rights::RWX()),
-                       false, Kpdir::Kernel_text);
+  auto diff = kmpu->add((Mword)_kernel_image_start,
+                        (Mword)_initcall_end - 1U,
+                        Mpu_region_attr::make_attr(L4_fpage::Rights::RWX()),
+                        false, Kpdir::Kernel_text);
 
   // Will probably be never seen because UART is not setup yet. :(
   if (diff & Mpu_regions::Error)
@@ -43,7 +43,7 @@ setup_mpu()
   // as the MPU might already be used if the platform default background
   // region is not suitable.
   Mpu::init();
-  Mpu::sync(&kmpu, diff, true);
+  Mpu::sync(kmpu.get(), diff, true);
   if (!Mpu::enabled())
     Mmu<0, true>::inv_cache();
   Mpu::enable();

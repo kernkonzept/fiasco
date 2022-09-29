@@ -9,7 +9,7 @@ Kmem::mmio_remap(Address phys, Address size)
 
   for (Address p = phys_page; p < phys_end; p += Config::SUPERPAGE_SIZE)
     {
-      auto m = kdir->walk(Virt_addr(p), K_pte_ptr::Super_level);
+      auto m = (*kdir)->walk(Virt_addr(p), K_pte_ptr::Super_level);
       if (m.is_valid())
         {
           assert (m.page_order() >= Config::SUPERPAGE_SHIFT);

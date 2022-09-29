@@ -48,7 +48,7 @@ PUBLIC
 void
 Irq_chip_bcm::mask(Mword irq)
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
   write<Unsigned32>(1 << (irq & 0x1f), Disable_IRQs_1 + ((irq & 0x60) >> 3));
 }
 
@@ -64,7 +64,7 @@ PUBLIC
 void
 Irq_chip_bcm::unmask(Mword irq)
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
   write<Unsigned32>(1 << (irq & 0x1f), Enable_IRQs_1 + ((irq & 0x60) >> 3));
 }
 
@@ -139,7 +139,7 @@ IMPLEMENTATION [arm && pf_rpi && (pf_rpi_rpi1 || pf_rpi_rpizw)]:
 PUBLIC static FIASCO_INIT
 void Pic::init()
 {
-  Irq_mgr::mgr = mgr.construct();
+  *Irq_mgr::mgr = mgr.construct();
 }
 
 // ------------------------------------------------------------------------
@@ -148,7 +148,7 @@ IMPLEMENTATION [arm && pf_rpi && (pf_rpi_rpi2 || pf_rpi_rpi3)]:
 PUBLIC static FIASCO_INIT
 void Pic::init()
 {
-  Irq_mgr::mgr = mgr.construct();
+  *Irq_mgr::mgr = mgr.construct();
   arm_control_init();
 }
 
@@ -193,7 +193,7 @@ Pic::init()
 				                 Gic_dist::Size));
   m->add_chip(0, gic, gic->nr_irqs());
 
-  Irq_mgr::mgr = m;
+  *Irq_mgr::mgr = m;
 
   arm_control_init();
 }

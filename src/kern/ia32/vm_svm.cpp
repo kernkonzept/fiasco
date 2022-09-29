@@ -348,7 +348,7 @@ PRIVATE inline NOEXPORT
 int
 Vm_svm::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, Vmcb *vmcb_s)
 {
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
 
   /* these 4 must not use ldt entries */
   assert (!(Cpu::get_cs() & (1 << 2)));

@@ -200,7 +200,7 @@ void
 Timeout::set(Unsigned64 clock, Cpu_number cpu)
 {
   // XXX uses global kernel lock
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
   assert(cpu == current_cpu());
 
   assert (!is_set());
@@ -233,7 +233,7 @@ void
 Timeout::set_again(Cpu_number cpu)
 {
   // XXX uses global kernel lock
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
   assert(cpu == current_cpu());
 
   assert(! is_set());
@@ -252,7 +252,7 @@ PUBLIC inline NEEDS [<cassert>, "cpu_lock.h"]
 void
 Timeout::reset()
 {
-  assert (cpu_lock.test());
+  assert (cpu_lock->test());
   To_list::remove(this);
 
   // Normaly we should reprogramm the timer in one shot mode

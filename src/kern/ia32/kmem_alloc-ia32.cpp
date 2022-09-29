@@ -186,8 +186,8 @@ Kmem_alloc::Kmem_alloc()
     printf("Kmem_alloc: allocator base = %014lx\n",
            Kmem_alloc::Alloc::calc_base_addr(min_addr_kern));
 
-  a->init(min_addr_kern);
-  a->setup_free_map(reinterpret_cast<unsigned long *>(bm_kern), freemap_size);
+  (*a)->init(min_addr_kern);
+  (*a)->setup_free_map(reinterpret_cast<unsigned long *>(bm_kern), freemap_size);
 
   unsigned long size = bmmd->end() - bmmd->start() + 1;
   if (size > freemap_size)
@@ -196,8 +196,8 @@ Kmem_alloc::Kmem_alloc()
       if (0)
         printf("  Kmem_alloc: block %014lx(%014lx) size=%lx\n",
                bm_kern + freemap_size, min_addr_kern, sz);
-      a->add_mem((void*)(bm_kern + freemap_size), sz);
-      _orig_free += sz;
+      (*a)->add_mem((void*)(bm_kern + freemap_size), sz);
+      *_orig_free += sz;
     }
 
   bmmd->type(Mem_desc::Reserved);
@@ -216,9 +216,9 @@ Kmem_alloc::Kmem_alloc()
       if (0)
         printf("  Kmem_alloc: block %014lx(%014lx) size=%lx\n",
                s_v, s, e - s + 1);
-      a->add_mem((void *)s_v, e - s + 1);
+      (*a)->add_mem((void *)s_v, e - s + 1);
       md.type(Mem_desc::Reserved);
-      _orig_free += e - s + 1;
+      *_orig_free += e - s + 1;
     }
   if (0)
     printf("Kmem_alloc: construction done\n");
@@ -233,9 +233,9 @@ PUBLIC
 void
 Kmem_alloc::debug_dump()
 {
-  a->dump();
+  (*a)->dump();
 
-  unsigned long free = a->avail();
+  unsigned long free = (*a)->avail();
   printf("Used %lu%%, %luKB out of %luKB of Kmem\n",
          (unsigned long)div32(100ULL * (orig_free() - free), orig_free()),
 	 (orig_free() - free + 1023) / 1024,
@@ -246,5 +246,5 @@ PRIVATE inline
 unsigned long
 Kmem_alloc::orig_free()
 {
-  return _orig_free;
+  return *_orig_free;
 }

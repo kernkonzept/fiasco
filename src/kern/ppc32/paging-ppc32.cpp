@@ -363,7 +363,7 @@ bool
 Pte_htab::pte_lookup(Pte_ptr *e, Address *phys = 0,
                      unsigned *page_attribs = 0)
 {
-  auto guard = lock_guard(cpu_lock);
+  auto guard = lock_guard(*cpu_lock);
 
   Address raw;
 

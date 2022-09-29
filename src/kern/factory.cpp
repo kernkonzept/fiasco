@@ -4,6 +4,7 @@ INTERFACE:
 #include "ram_quota.h"
 #include "slab_cache.h"
 #include "kobject_helper.h"
+#include "per_node_data.h"
 
 class Factory : public Ram_quota, public Kobject_h<Factory>
 {};
@@ -20,10 +21,11 @@ IMPLEMENTATION:
 #include "logdefs.h"
 #include "entry_frame.h"
 #include "task.h"
+#include "per_node_data.h"
 
 JDB_DEFINE_TYPENAME(Factory, "\033[33;1mFactory\033[m");
 
-static Factory _root_factory INIT_PRIORITY(ROOT_FACTORY_INIT_PRIO);
+static DECLARE_PER_NODE_PRIO(ROOT_FACTORY_INIT_PRIO) Per_node_data<Factory> _root_factory;
 
 PUBLIC inline
 Factory::Factory()
@@ -36,22 +38,22 @@ Factory::Factory(Ram_quota *q, Mword max)
 {}
 
 
-static Kmem_slab_t<Factory> _factory_allocator("Factory");
+static DECLARE_PER_NODE Per_node_data<Kmem_slab_t<Factory>> _factory_allocator("Factory");
 
 PRIVATE static
 void *
 Factory::alloc()
-{ return _factory_allocator.alloc(); }
+{ return _factory_allocator->alloc(); }
 
 PRIVATE static
 void
 Factory::free(void *f)
-{ _factory_allocator.free(f); }
+{ _factory_allocator->free(f); }
 
 PUBLIC static inline
 Factory * FIASCO_PURE
 Factory::root()
-{ return nonull_static_cast<Factory*>(Ram_quota::root); }
+{ return nonull_static_cast<Factory*>(*Ram_quota::root); }
 
 PUBLIC
 void
@@ -170,7 +172,7 @@ Factory::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,
   int err = L4_err::ENomem;
   int words = 0;
 
-  auto cpu_lock_guard = lock_guard<Lock_guard_inverse_policy>(cpu_lock);
+  auto cpu_lock_guard = lock_guard<Lock_guard_inverse_policy>(*cpu_lock);
 
   new_o = Kobject_iface::manufacture((long)access_once(utcb->values + 0),
                                      this, c_space, f->tag(), utcb, utcb_out,

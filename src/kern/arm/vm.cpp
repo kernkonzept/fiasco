@@ -143,7 +143,7 @@ Vm::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode)
   (void)user_mode;
   assert(user_mode);
 
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
 
   if (EXPECT_FALSE(!(ctxt->state(true) & Thread_ext_vcpu_enabled)))
     {
@@ -188,7 +188,7 @@ Vm::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode)
 
       Cpu::cpus.current().tz_switch_to_ns((Mword *)state);
 
-      assert(cpu_lock.test());
+      assert(cpu_lock->test());
 
       log_vm(state, 0);
 

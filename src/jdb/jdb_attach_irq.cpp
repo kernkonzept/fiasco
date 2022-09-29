@@ -54,10 +54,10 @@ Jdb_attach_irq::action( int cmd, void *&args, char const *&, int & ) override
             {
               Irq_base *r;
               putchar('\n');
-	      unsigned n = Irq_mgr::mgr->nr_irqs();
+	      unsigned n = (*Irq_mgr::mgr)->nr_irqs();
               for (unsigned i = 0; i < n; ++i)
                 {
-                  r = static_cast<Irq*>(Irq_mgr::mgr->irq(i));
+                  r = static_cast<Irq*>((*Irq_mgr::mgr)->irq(i));
                   if (!r)
                     continue;
                   printf("IRQ %02x/%02u\n", i, i);

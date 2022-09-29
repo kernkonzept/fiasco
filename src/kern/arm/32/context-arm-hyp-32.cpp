@@ -59,13 +59,13 @@ Context::arm_hyp_load_non_vm_state(bool vgic)
   asm volatile ("mcr p15, 4, %0, c1, c1, 3" : : "r"(Cpu::Hstr_non_vm)); // HSTR
   // load normal SCTLR ...
   asm volatile ("mcr p15, 0, %0, c1, c0, 0"
-                : : "r" ((Cpu::sctlr | Cpu::Cp15_c1_cache_bits) & ~Cpu::Cp15_c1_mmu));
+                : : "r" ((*Cpu::sctlr | Cpu::Cp15_c1_cache_bits) & ~Cpu::Cp15_c1_mmu));
   asm volatile ("mcr p15, 0, %0,  c1, c0, 2" : : "r" (0xf00000));
   asm volatile ("mcr p15, 0, %0, c13, c0, 0" : : "r" (0));
   asm volatile("mcr p15, 4, %0, c14, c1, 0" : : "r"(Host_cnthctl));
 
   if (vgic)
-    Gic_h_global::gic->disable();
+    (*Gic_h_global::gic)->disable();
 }
 
 PRIVATE inline
@@ -144,7 +144,7 @@ Context::load_ext_vcpu_state(Mword /*_to_state*/, Vm_state const *v)
 PRIVATE static inline
 Unsigned32 Context::arm_host_sctlr()
 {
-  return (Cpu::sctlr | Cpu::Cp15_c1_cache_bits) & ~(Cpu::Cp15_c1_mmu | (1 << 28));
+  return (*Cpu::sctlr | Cpu::Cp15_c1_cache_bits) & ~(Cpu::Cp15_c1_mmu | (1 << 28));
 }
 
 PRIVATE inline NEEDS[Context::arm_host_sctlr]

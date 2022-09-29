@@ -3,6 +3,7 @@ INTERFACE:
 #include "kobject.h"
 #include "thread.h"
 #include <cxx/type_traits>
+#include "per_node_data.h"
 
 template<typename T, typename Base = Kobject> class Kobject_h;
 
@@ -10,10 +11,15 @@ class Kobject_helper_base
 {
   template<typename T, typename Base> friend class Kobject_h;
 protected:
-  static Mword _utcb_dummy[];
+  enum
+  {
+    Utcb_dummy_words = (sizeof(Utcb) + sizeof(Mword) - 1) / sizeof(Mword)
+  };
+
+  static Per_node_data<Mword[Utcb_dummy_words]> _utcb_dummy;
   static Utcb *utcb_dummy()
   {
-    char *x = reinterpret_cast<char*>(&_utcb_dummy);
+    char *x = reinterpret_cast<char*>(*_utcb_dummy);
     return reinterpret_cast<Utcb*>(x);
   }
 
@@ -70,5 +76,5 @@ public:
 
 IMPLEMENTATION:
 
-Mword Kobject_helper_base::_utcb_dummy[(sizeof(Utcb) + sizeof(Mword) - 1) / sizeof(Mword)];
+DECLARE_PER_NODE Per_node_data<Mword[Kobject_helper_base::Utcb_dummy_words]> Kobject_helper_base::_utcb_dummy;
 

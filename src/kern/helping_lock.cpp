@@ -2,6 +2,7 @@ INTERFACE:
 
 #include "lock_guard.h"
 #include "switch_lock.h"
+#include "per_node_data.h"
 
 #ifdef NO_INSTRUMENT
 #undef NO_INSTRUMENT
@@ -28,7 +29,7 @@ public:
   using Switch_lock::valid;
   using Switch_lock::wait_free;
 
-  static bool threading_system_active;
+  static Per_node_data<bool> threading_system_active;
 };
 
 #undef NO_INSTRUMENT
@@ -42,7 +43,7 @@ IMPLEMENTATION:
 
 
 /** Threading system activated. */
-bool Helping_lock::threading_system_active = false;
+DECLARE_PER_NODE Per_node_data<bool> Helping_lock::threading_system_active;
 
 /** Constructor. */
 PUBLIC inline
@@ -61,7 +62,7 @@ PUBLIC inline
 Helping_lock::Status NO_INSTRUMENT
 Helping_lock::test_and_set ()
 {
-  if (! threading_system_active) // still initializing?
+  if (! *threading_system_active) // still initializing?
     return Not_locked;
   
   return Switch_lock::test_and_set();
@@ -85,7 +86,7 @@ PUBLIC inline NEEDS["std_macros.h"]
 Helping_lock::Status NO_INSTRUMENT
 Helping_lock::test ()
 {
-  if (EXPECT_FALSE( ! threading_system_active) ) // still initializing?
+  if (EXPECT_FALSE( ! *threading_system_active) ) // still initializing?
     return Not_locked;
 
   return Switch_lock::test();
@@ -96,7 +97,7 @@ PUBLIC inline NEEDS["std_macros.h"]
 void NO_INSTRUMENT
 Helping_lock::clear()
 {
-  if (EXPECT_FALSE( ! threading_system_active) ) // still initializing?
+  if (EXPECT_FALSE( ! *threading_system_active) ) // still initializing?
     return;
 
   Switch_lock::clear();
@@ -120,7 +121,7 @@ PUBLIC inline NEEDS["std_macros.h", "globals.h"]
 Context* NO_INSTRUMENT
 Helping_lock::lock_owner () const
 {
-  if (EXPECT_FALSE( ! threading_system_active) ) // still initializing?
+  if (EXPECT_FALSE( ! *threading_system_active) ) // still initializing?
     return current();
 
   return Switch_lock::lock_owner();

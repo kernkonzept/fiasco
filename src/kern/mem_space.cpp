@@ -159,7 +159,7 @@ public:
   static void reload_current();
 
   static Mem_space *kernel_space()
-  { return _kernel_space; }
+  { return *_kernel_space; }
 
   /** Return the current memory space of this CPU. */
   static inline Mem_space *current_mem_space(Cpu_number cpu)
@@ -250,8 +250,8 @@ public:
   static Page_order const *get_global_page_sizes(bool finalize = true)
   {
     if (finalize)
-      _glbl_page_sizes_finished = true;
-    return _glbl_page_sizes;
+      *_glbl_page_sizes_finished = true;
+    return *_glbl_page_sizes;
   }
 
 protected:
@@ -277,10 +277,10 @@ private:
   Ram_quota *_quota;
 
   static Per_cpu<Mem_space *> _current;
-  static Mem_space *_kernel_space;
-  static Page_order _glbl_page_sizes[Max_num_global_page_sizes];
-  static unsigned _num_glbl_page_sizes;
-  static bool _glbl_page_sizes_finished;
+  static Per_node_data<Mem_space *> _kernel_space;
+  static Per_node_data<Page_order[Max_num_global_page_sizes]> _glbl_page_sizes;
+  static Per_node_data<unsigned> _num_glbl_page_sizes;
+  static Per_node_data<bool> _glbl_page_sizes_finished;
 };
 
 //---------------------------------------------------------------------------
@@ -426,42 +426,43 @@ IMPLEMENTATION:
 #include "mem_unit.h"
 #include "paging.h"
 #include "panic.h"
+#include "per_node_data.h"
 
 DEFINE_PER_CPU Per_cpu<Mem_space *> Mem_space::_current;
 
 
 char const * const Mem_space::name = "Mem_space";
-Mem_space *Mem_space::_kernel_space;
+DECLARE_PER_NODE Per_node_data<Mem_space *> Mem_space::_kernel_space;
 
-static Mem_space::Fit_size __mfs;
-Mem_space::Page_order Mem_space::_glbl_page_sizes[Max_num_global_page_sizes];
-unsigned Mem_space::_num_glbl_page_sizes;
-bool Mem_space::_glbl_page_sizes_finished;
+static DECLARE_PER_NODE Per_node_data<Mem_space::Fit_size> __mfs;
+DECLARE_PER_NODE Per_node_data<Mem_space::Page_order[Mem_space::Max_num_global_page_sizes]> Mem_space::_glbl_page_sizes;
+DECLARE_PER_NODE Per_node_data<unsigned> Mem_space::_num_glbl_page_sizes;
+DECLARE_PER_NODE Per_node_data<bool> Mem_space::_glbl_page_sizes_finished;
 
 PROTECTED static
 void
 Mem_space::add_global_page_size(Page_order o)
 {
-  assert (!_glbl_page_sizes_finished);
+  assert (!*_glbl_page_sizes_finished);
   unsigned i;
-  for (i = 0; i < _num_glbl_page_sizes; ++i)
+  for (i = 0; i < *_num_glbl_page_sizes; ++i)
     {
-      if (_glbl_page_sizes[i] == o)
+      if ((*_glbl_page_sizes)[i] == o)
         return;
 
-      if (_glbl_page_sizes[i] < o)
+      if ((*_glbl_page_sizes)[i] < o)
         break;
     }
 
-  assert (_num_glbl_page_sizes + 1 < Max_num_global_page_sizes);
+  assert (*_num_glbl_page_sizes + 1 < Max_num_global_page_sizes);
 
-  for (unsigned x = _num_glbl_page_sizes; x > i; --x)
-    _glbl_page_sizes[x] = _glbl_page_sizes[x - 1];
+  for (unsigned x = *_num_glbl_page_sizes; x > i; --x)
+    (*_glbl_page_sizes)[x] = (*_glbl_page_sizes)[x - 1];
 
-  _glbl_page_sizes[i] = o;
-  assert (_glbl_page_sizes[_num_glbl_page_sizes] <= Page_order(Config::PAGE_SHIFT));
+  (*_glbl_page_sizes)[i] = o;
+  assert ((*_glbl_page_sizes)[*_num_glbl_page_sizes] <= Page_order(Config::PAGE_SHIFT));
 
-  ++_num_glbl_page_sizes;
+  ++(*_num_glbl_page_sizes);
 }
 
 PUBLIC static
@@ -469,14 +470,14 @@ void
 Mem_space::add_page_size(Page_order o)
 {
   add_global_page_size(o);
-  __mfs.add_page_size(o);
+  __mfs->add_page_size(o);
 }
 
 IMPLEMENT
 Mem_space::Fit_size const &
 Mem_space::mem_space_fitting_sizes() const
 {
-  return __mfs;
+  return *__mfs;
 }
 
 PUBLIC inline

@@ -22,7 +22,7 @@ Thread::page_fault_log(Address pfa, unsigned error_code, unsigned long eip)
 {
   if (Jdb_pf_trace::check_restriction(current_thread()->dbg_id(), pfa))
     {
-      auto guard = lock_guard(cpu_lock);
+      auto guard = lock_guard(*cpu_lock);
 
       Tb_entry_pf _local;
       Tb_entry_pf *tb = static_cast<Tb_entry_pf*>

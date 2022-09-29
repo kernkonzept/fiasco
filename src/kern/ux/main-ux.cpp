@@ -43,7 +43,7 @@ int boot_ap_cpu(Cpu_number _cpu)
   puts("");
 
   // create kernel thread
-  App_cpu_thread *kernel = new (Ram_quota::root) App_cpu_thread();
+  App_cpu_thread *kernel = new (*Ram_quota::root) App_cpu_thread();
   set_cpu_of(kernel, _cpu);
   check(kernel->bind(Kernel_task::kernel_task(), User<Utcb>::Ptr(0)));
 

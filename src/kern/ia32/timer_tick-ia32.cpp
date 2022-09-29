@@ -12,11 +12,11 @@ Timer_tick::allocate_irq(Irq_base *irq, unsigned irqnum)
   // actually route the IRQ vector through the IRQ object.
   // However, IA32 uses a vector that points to thread_timer_interrupt below,
   // bypassing the IRQ object infrastructure
-  irqnum = Irq_mgr::mgr->legacy_override(irqnum);
-  bool res = Irq_mgr::mgr->reserve(irqnum);
+  irqnum = (*Irq_mgr::mgr)->legacy_override(irqnum);
+  bool res = (*Irq_mgr::mgr)->reserve(irqnum);
   if (res)
     {
-      Irq_mgr::Irq i = Irq_mgr::mgr->chip(irqnum);
+      Irq_mgr::Irq i = (*Irq_mgr::mgr)->chip(irqnum);
       i.chip->bind(irq, i.pin);
 
       // from now we can save energy in getchar()

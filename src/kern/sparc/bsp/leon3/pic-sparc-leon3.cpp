@@ -57,7 +57,7 @@ PUBLIC
 void
 Irq_chip_sparc::mask(Mword irq) override
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
   printf("IRQ-mask: irq=%ld\n", irq);
 
   r<32>(PIMASK + 4 * cpu()).clear(1 << irq);
@@ -74,7 +74,7 @@ PUBLIC
 void
 Irq_chip_sparc::mask_and_ack(Mword irq) override
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
   printf("IRQ-mask+ack: irq=%ld\n", irq);
   mask(irq);
   ack(irq);
@@ -84,7 +84,7 @@ PUBLIC
 void
 Irq_chip_sparc::unmask(Mword irq) override
 {
-  assert(cpu_lock.test());
+  assert(cpu_lock->test());
   printf("IRQ-unmask: irq=%ld\n", irq);
   r<32>(PIMASK + 4 * cpu()).set(1 << irq);
 }
@@ -101,7 +101,7 @@ static Static_object<Irq_mgr_single_chip<Irq_chip_sparc> > mgr;
 PUBLIC static FIASCO_INIT
 void Pic::init()
 {
-  Irq_mgr::mgr = mgr.construct();
+  *Irq_mgr::mgr = mgr.construct();
 }
 
 extern "C"

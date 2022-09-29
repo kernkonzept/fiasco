@@ -4,4 +4,4 @@ IMPLEMENTATION [ppc32]:
 
 IMPLEMENT bool
 Timer_tick::allocate_irq(Irq_base *irq, unsigned irqnum)
-{ return Irq_mgr::mgr->alloc(irq, irqnum); }
+{ return (*Irq_mgr::mgr)->alloc(irq, irqnum); }

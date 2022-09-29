@@ -14,8 +14,9 @@ IMPLEMENTATION:
 #include "fpu_state.h"
 #include "kmem_slab.h"
 #include "ram_quota.h"
+#include "per_node_data.h"
 
-static Kmem_slab _fpu_state_allocator(
+static DECLARE_PER_NODE Per_node_data<Kmem_slab> _fpu_state_allocator(
   Fpu_alloc::quota_offset(Fpu::state_size()) + sizeof(Ram_quota *),
   Fpu::state_align(), "Fpu state");
 
@@ -23,7 +24,7 @@ PRIVATE static
 Slab_cache *
 Fpu_alloc::slab_alloc()
 {
-  return &_fpu_state_allocator;
+  return _fpu_state_allocator.get();
 }
 
 PUBLIC static inline

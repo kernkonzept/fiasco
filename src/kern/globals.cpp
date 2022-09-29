@@ -5,6 +5,7 @@ INTERFACE:
 #include "panic.h"
 #include "per_cpu_data.h"
 #include "types.h"
+#include "per_node_data.h"
 
 class Timeout;
 
@@ -71,12 +72,12 @@ private:
 };
 
 
-extern Initial_kobjects initial_kobjects;
+extern Per_node_data<Initial_kobjects> initial_kobjects;
 
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION:
 
-Initial_kobjects initial_kobjects;
+DECLARE_PER_NODE Per_node_data<Initial_kobjects> initial_kobjects;
 
 
