@@ -176,6 +176,17 @@ Dmar::op_bind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space)
   auto aw = mmu->aw();
   auto slptptr = space.obj->get_root(aw);
 
+  // Prevent the Dmar_space from being deleted while using it without holding
+  // the CPU lock.
+  Lock_guard<Lock> guard;
+  if (!guard.check_and_lock(&space.obj->existence_lock))
+    return commit_result(-L4_err::EInval);
+
+  // Release CPU lock because when binding a Dmar_space, it may be necessary
+  // to execute one or more invalidation descriptors via the IOMMU invalidation
+  // queue. While waiting for these to execute, we must be interruptible.
+  auto guard_cpu = lock_guard<Lock_guard_inverse_policy>(cpu_lock);
+
   bool need_wait = false;
   for (unsigned df = dfs; df < dfe; ++df)
     {
@@ -213,6 +224,17 @@ Dmar::op_unbind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space)
     return Kobject_iface::commit_result(err);
 
   auto slptptr = space.obj->get_root(mmu->aw());
+
+  // Prevent the Dmar_space from being deleted while using it without holding
+  // the CPU lock.
+  Lock_guard<Lock> guard;
+  if (!guard.check_and_lock(&space.obj->existence_lock))
+    return commit_result(-L4_err::EInval);
+
+  // Release CPU lock because when unbinding a Dmar_space, it may be necessary
+  // to execute one or more invalidation descriptors via the IOMMU invalidation
+  // queue. While waiting for these to execute, we must be interruptible.
+  auto guard_cpu = lock_guard<Lock_guard_inverse_policy>(cpu_lock);
 
   bool need_wait = false;
   for (unsigned df = dfs; df < dfe; ++df)
