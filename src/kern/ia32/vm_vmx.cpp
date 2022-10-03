@@ -493,9 +493,18 @@ Vm_vmx_t<X>::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, void *vmcs_s)
     Cpu::wrmsr(1UL, MSR_IA32_FLUSH_CMD);
 
   unsigned long ret = resume_vm_vmx(&vcpu->_regs);
-  // vmread error?
+  Unsigned32 error = 0;
+
   if (EXPECT_FALSE(ret))
-    return -L4_err::EInval;
+    {
+      // We read the VM instruction error here to make sure that the original
+      // value has not been accidentally overwritten by any following VMX
+      // instruction (e.g. VMREAD).
+      //
+      // However, we defer the actual handling of the resume failure until the
+      // host state has been properly restored.
+      error = Vmx::vmread<Unsigned32>(Vmx::F_vm_instruction_error);
+    }
 
   if (guest_long_mode)
     {
@@ -523,6 +532,14 @@ Vm_vmx_t<X>::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, void *vmcs_s)
     asm volatile("" : : "m" (*e));
     Cpu::set_tr(Gdt::gdt_tss);
   }
+
+  if (EXPECT_FALSE(ret))
+    {
+      // Handle the resume failure. Since the guest state has not been altered,
+      // we do not have to bother with storing the complete guest state.
+      write(vmcs_s, Vmx::F_vm_instruction_error, error);
+      return -L4_err::EInval;
+    }
 
   store_guest_state(cpu, vmcs_s);
   store_exit_info(cpu, vmcs_s);
