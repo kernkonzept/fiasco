@@ -2,5 +2,17 @@ Do "make DEPS" for full fine-grained dependency information.
 
 ---
 
+    iommu
+dmar_space
+    iommu
+
+---
+
+    dmar_space
+iommu
+    dmar_space
+
+---
+
 TOTAL CIRCULAR DEPS:
-0
+2
