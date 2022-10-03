@@ -19,16 +19,23 @@ public:
     {
       Unsigned64 eptp, resv;
     } op = {eptp, 0};
-    asm volatile ("invept %0, %[type]" : : "m"(op), [type] "r"((Mword)type));
+
+    asm volatile (
+      "invept %[op], %[type]\n"
+      :
+      : [op] "m" (op),
+        [type] "r" ((Mword) type)
+      : "cc"
+    );
   }
 
   /**
-   * Flush only the TLB entries corresponding to the given EPT.
+   * Flush only the TLB entries corresponding to the given EPTP.
    */
-  static void flush_single(Mword ept_phys)
+  static void flush_single(Mword eptp)
   {
     if (Vmx::cpus.current().info.has_invept_single())
-      invept(Single, ept_phys);
+      invept(Single, eptp);
     else
       invept(Global);
   }
@@ -40,7 +47,6 @@ public:
   {
     invept(Global);
   }
-
 
   explicit Vm_vmx_ept_tlb(Cpu_number cpu)
   {
@@ -177,7 +183,7 @@ private:
   typedef Ptab::Page_addr_wrap<Page_number, 12> Ept_va_vpn;
   typedef Ptab::Base<Epte_ptr, Ept_traits_vpn, Ept_va_vpn, Mem_layout> Ept;
 
-  Mword _ept_phys;
+  Mword _eptp;
   Ept *_ept;
 };
 
@@ -241,7 +247,7 @@ PUBLIC
 void
 Vm_vmx_ept::tlb_flush(bool) override
 {
-  Vm_vmx_ept_tlb::flush_single(_ept_phys);
+  Vm_vmx_ept_tlb::flush_single(_eptp);
   tlb_mark_unused();
 }
 
@@ -375,7 +381,7 @@ Vm_vmx_ept::~Vm_vmx_ept()
                     Kmem_alloc::q_allocator(ram_quota()));
       Kmem_alloc::allocator()->q_free(ram_quota(), Config::page_order(), _ept);
       _ept = 0;
-      _ept_phys = 0;
+      _eptp = 0;
     }
 }
 
@@ -390,7 +396,7 @@ Vm_vmx_ept::initialize()
 
   _ept = static_cast<Ept*>(b);
   _ept->clear(false);	// initialize to zero
-  _ept_phys = Mem_layout::pmem_to_phys(_ept);
+  _eptp = Mem_layout::pmem_to_phys(_ept) | 6 | (3 << 3);
   return true; // success
 
 }
@@ -400,7 +406,7 @@ void
 Vm_vmx_ept::load_vm_memory(void *src)
 {
   load(Vmx::F_guest_cr3, src);
-  Vmx::vmwrite(Vmx::F_ept_ptr, _ept_phys | 6 | (3 << 3));
+  Vmx::vmwrite(Vmx::F_ept_ptr, _eptp);
 
   tlb_mark_used();
 }
