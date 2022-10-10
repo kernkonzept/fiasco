@@ -81,9 +81,11 @@ Thread::arm_kernel_sync_entry(Trap_state *ts)
   auto esr = Thread::get_esr();
   ts->esr = esr;
 
-  // test for illegal execution state bit in PSR
   if (ts->psr & (1UL << 20))
     {
+      // Illegal execution state: This could happen in hyp mode if PPSR_EL2
+      // contains an invalid mode during ERET (``Illegal return event from
+      // AArch64 state'').
       ts->psr &= ~(Proc::Status_mode_mask | Proc::Status_interrupts_mask);
       ts->psr |= Proc::Status_mode_user | Proc::Status_always_mask;
       ts->esr.ec() = 0xe;
