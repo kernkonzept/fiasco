@@ -284,8 +284,8 @@ Irq_sender::destroy(Kobject ***rl) override
 }
 
 
-/** Consume one interrupt.
-    @return number of IRQs that are still pending.
+/** Consume all interrupts.
+    @return number of IRQs that are still pending -- this is always 0.
  */
 PRIVATE inline NEEDS ["atomic.h"]
 Smword
@@ -297,13 +297,13 @@ Irq_sender::consume()
     {
       old = _queued;
     }
-  while (!mp_cas (&_queued, old, old - 1));
+  while (!mp_cas (&_queued, old, 0L));
   Mem::mp_acquire();
 
-  if (old == 2 && hit_func == &hit_edge_irq)
+  if (old >= 2 && hit_func == &hit_edge_irq)
     unmask();
 
-  return old - 1;
+  return 0L;
 }
 
 PUBLIC inline
