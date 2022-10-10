@@ -438,7 +438,7 @@ public:
       return cmd;
     }
   };
-  static_assert(sizeof(Cmd) == Cmd::Size);
+  static_assert(sizeof(Cmd) == Cmd::Size, "Invalid size of Cmd");
 
 private:
   Gic_cpu_v3 *_gic_cpu;
