@@ -24,9 +24,19 @@ IMPLEMENT inline
 void
 Context::sanitize_user_state(Return_frame *dst) const
 {
-  Unsigned32 const forbidden = ~0x888f0000U;  // allow all but hyp mode
-  if ((1UL << (dst->psr & Proc::Status_mode_mask)) & forbidden)
-    dst->psr = (dst->psr & ~Proc::Status_mode_mask) | Proc::PSR_m_sys;
+  if (_hyp.hcr & Cpu::Hcr_tge)
+    {
+      // Must run in user mode if HCR.TGE is set. Otherwise the behaviour
+      // is undefined (Armv7) or leads to an illegal exception return (Armv8).
+      dst->psr = (dst->psr & ~Proc::Status_mode_mask) | Proc::PSR_m_usr;
+    }
+  else
+    {
+      // allow all but hyp or mon mode
+      Unsigned32 const forbidden = ~0x888f0000U;
+      if ((1UL << (dst->psr & Proc::Status_mode_mask)) & forbidden)
+        dst->psr = (dst->psr & ~Proc::Status_mode_mask) | Proc::PSR_m_sys;
+    }
 }
 
 IMPLEMENT_OVERRIDE inline NEEDS["mem.h", Context::sanitize_user_state]
