@@ -6,7 +6,7 @@ typedef struct
   void *arg;
 } atexit_t;
 
-#define NUM_ATEXIT	80
+#define NUM_ATEXIT	96
 
 static atexit_t __atexitlist[NUM_ATEXIT];
 static int atexit_counter;
