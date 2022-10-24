@@ -4,7 +4,7 @@
 int __libc_backend_outs(const char *str, size_t len)
 {
   if (!Console::stdout)
-    return len;
+    return 1;
 
   char const *end = str + len;
   char const *delim = str;
@@ -21,7 +21,7 @@ int __libc_backend_outs(const char *str, size_t len)
         {
           int written = Console::stdout->write(str, delim - str);
           if (written < 0)
-            return written;
+            return 0;
 
           str += written;
         }
@@ -29,13 +29,16 @@ int __libc_backend_outs(const char *str, size_t len)
       // If the delimiter is a newline, then output CR+LF.
       if (delim < end && *delim == '\n')
         {
-          Console::stdout->write("\r\n", 2);
+          int written = Console::stdout->write("\r\n", 2);
+          if (written < 0)
+            return 0;
+
           ++delim;
           ++str;
         }
     }
 
-  return len;
+  return 1;
 }
 
 int __libc_backend_ins(char *s, size_t len)

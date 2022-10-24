@@ -8,7 +8,10 @@
 static int __libc_backend_outs_wrapper(char const *s, size_t len, void *ignore)
 {
   (void)ignore;
-  return __libc_backend_outs(s, len);
+  if (__libc_backend_outs(s, len))
+    return len;
+
+  return 0;
 }
 
 int vprintf(const char *format, va_list ap)
