@@ -74,6 +74,7 @@ Cpu::init_hyp_mode()
   asm volatile (
         "mrc p15, 4, r0, c1, c1, 1 \n"
         "orr r0, #(0xf << 8) \n" // enable TDE, TDA, TDOSA, TDRA
+        "orr r0, #(0x3 << 5) \n" // enable TPMCR, TPM
         "mcr p15, 4, r0, c1, c1, 1 \n"
 
         "mcr p15, 4, %0, c2, c1, 2 \n"
