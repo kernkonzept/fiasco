@@ -59,11 +59,11 @@ Space::Ldt::~Ldt()
 
 IMPLEMENT_OVERRIDE inline NEEDS["cpu.h", "globals.h"]
 void
-Space::switchin_context(Space *from)
+Space::switchin_context(Space *from, Mem_space::Switchin_flags flags)
 {
   if (this != from)
     {
-      Mem_space::switchin_context(from);
+      Mem_space::switchin_context(from, flags);
       Cpu::cpus.cpu(current_cpu()).enable_ldt(_ldt.addr(), _ldt.size());
     }
 }
