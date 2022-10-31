@@ -42,7 +42,7 @@ $(foreach tname,$(UTEST_TESTS),\
 		$(tname).debug,\
 		$$(UTEST_FRAMEWORK) $$(filter $(tname)%,$$(OBJ_UTEST))\
 		$$(if $$(UTEST_COMMON),\
-			$$(filter $(UTEST_COMMON)%,$$(OBJ_UTEST))))))
+			$$(filter $$(addsuffix %,$$(UTEST_COMMON)),$$(OBJ_UTEST))))))
 
 define gen_utest_suppl_rule
 $(1): $(2) globalconfig.out
