@@ -69,7 +69,8 @@ IMPLEMENTATION [amd64 && kernel_isolation]:
 
 #define FIASCO_ASM_IRET "jmp safe_iret \n\t"
 
-PUBLIC template<typename T> inline
+PUBLIC template<typename T> inline NEEDS[Thread::handle_ia32_branch_barriers,
+                                         Thread::handle_mds_mitigations]
 void FIASCO_NORETURN
 Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
 {
