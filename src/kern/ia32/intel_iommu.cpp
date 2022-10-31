@@ -438,15 +438,19 @@ public:
    *
    * \pre `sizeof...(descs)` < `inv_q_size`
    */
-  void invalidate(Inv_desc desc)
+  template<typename... Inv_descs>
+  void invalidate(Inv_descs... descs)
   {
+    constexpr unsigned desc_num = sizeof...(descs);
+    Inv_desc desc_array[desc_num] = {descs...};
+
     auto g = lock_guard(_inv_q_lock);
 
-    // Wait until the queue has at least one free slot.
+    // Wait until the queue has at least desc_num free slots.
     for(;;)
       {
         // Check if queue has enough free slots.
-        if (EXPECT_TRUE(queue_num_free_slots() >= 1))
+        if (EXPECT_TRUE(desc_num <= queue_num_free_slots()))
           break;
 
         // Release lock.
@@ -463,9 +467,12 @@ public:
         g.lock(&_inv_q_lock);
       }
 
-    // Put descriptor into queue.
-    *inv_desc(inv_q_tail) = desc;
-    inv_q_tail = (inv_q_tail + 1) & inv_q_size;
+    // Put descriptors into queue.
+    for (unsigned i = 0; i < desc_num; i++)
+      {
+        *inv_desc(inv_q_tail) = desc_array[i];
+        inv_q_tail = (inv_q_tail + 1) & inv_q_size;
+      }
 
     // Force compiler to write descriptors before updating tail pointer.
     Mem::barrier();
