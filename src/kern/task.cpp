@@ -524,6 +524,9 @@ PRIVATE inline NOEXPORT
 L4_msg_tag
 Task::sys_add_ku_mem(Syscall_frame *f, Utcb *utcb)
 {
+  if (EXPECT_FALSE(!(caps() & Task::Caps::kumem())))
+    return commit_result(-L4_err::ENosys);
+
   unsigned const w = f->tag().words();
   for (unsigned i = 1; i < w; ++i)
     {

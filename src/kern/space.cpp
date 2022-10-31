@@ -57,6 +57,8 @@ public:
     static constexpr Caps obj() { return Caps(2); }
     static constexpr Caps io() { return Caps(4); }
     static constexpr Caps threads() { return Caps(8); }
+    // alias threads until there are other KUmem usecases
+    static constexpr Caps kumem() { return Caps(8); }
     static constexpr Caps all() { return Caps(0xf); }
   };
 
