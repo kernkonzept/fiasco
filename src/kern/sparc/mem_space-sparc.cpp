@@ -99,7 +99,7 @@ Mem_space::Mem_space(Ram_quota *q, Dir_type* pdir)
 
 IMPLEMENT inline NEEDS[<cstdio>]
 void
-Mem_space::make_current()
+Mem_space::make_current(Switchin_flags)
 {
   printf("%s checkme\n", __func__);
   _current.current() = this;

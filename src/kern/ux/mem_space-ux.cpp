@@ -50,7 +50,7 @@ Mem_space::current_pdir()
 
 IMPLEMENT inline NEEDS ["kmem.h", "emulation.h"]
 void
-Mem_space::make_current()
+Mem_space::make_current(Switchin_flags)
 {
   Emulation::set_pdir_addr(Kmem::virt_to_phys(_dir));
   _current.cpu(current_cpu()) = this;

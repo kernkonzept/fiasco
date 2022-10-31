@@ -401,10 +401,10 @@ Mem_space::page_unmap(Address, Address)
 IMPLEMENT inline NEEDS ["cpu.h", Mem_space::prepare_pt_switch,
                         Mem_space::switch_page_table]
 void
-Mem_space::make_current()
+Mem_space::make_current(Switchin_flags flags)
 {
   prepare_pt_switch();
-  switch_page_table();
+  switch_page_table(flags);
   _current.cpu(current_cpu()) = this;
 }
 
@@ -436,10 +436,16 @@ IMPLEMENTATION [(amd64 || ia32) && cpu_local_map && (intel_ia32_branch_barriers 
 
 PRIVATE inline NEEDS[Mem_space::cpu_val]
 void
-Mem_space::set_needs_ibpb()
+Mem_space::set_needs_ibpb_verw(Switchin_flags flags)
 {
   // set EXIT flags CPUE_EXIT_NEED_IBPB
-  cpu_val()[2] |= 1;
+  Mword exit_flags = 1;
+  if (!(flags & Vcpu_user_to_kern))
+    {
+      // set EXIT flags CPUE_EXIT_NEED_VERW
+      exit_flags |= 2;
+    }
+  cpu_val()[2] |= exit_flags;
 }
 
 // --------------------------------------------------------------------
@@ -447,20 +453,20 @@ IMPLEMENTATION [(amd64 || ia32) && !(intel_ia32_branch_barriers || intel_mds_mit
 
 PRIVATE inline
 void
-Mem_space::set_needs_ibpb()
+Mem_space::set_needs_ibpb_verw(Switchin_flags)
 {}
 
 // --------------------------------------------------------------------
 IMPLEMENTATION [(amd64 || ia32) && cpu_local_map && kernel_isolation]:
 
 PRIVATE inline NEEDS [Mem_space::set_current_pcid,
-                      Mem_space::set_needs_ibpb]
+                      Mem_space::set_needs_ibpb_verw]
 void
-Mem_space::switch_page_table()
+Mem_space::switch_page_table(Switchin_flags flags)
 {
   // We are currently running on the kernel page table. Prepare for switching
   // to the user page table on kernel exit.
-  set_needs_ibpb();
+  set_needs_ibpb_verw(flags);
   set_current_pcid();
 }
 
@@ -469,7 +475,7 @@ IMPLEMENTATION [(amd64 || ia32) && cpu_local_map && !kernel_isolation]:
 
 PRIVATE inline NEEDS[Mem_space::cpu_val]
 void
-Mem_space::switch_page_table()
+Mem_space::switch_page_table(Switchin_flags)
 {
   // switch page table directly
   Cpu::set_pdbr(access_once(&cpu_val()[0]));
@@ -525,7 +531,7 @@ Mem_space::prepare_pt_switch()
 
 PRIVATE inline NEEDS["kmem.h"]
 void
-Mem_space::switch_page_table()
+Mem_space::switch_page_table(Switchin_flags)
 {
   // switch page table directly
   Cpu::set_pdbr(Mem_layout::pmem_to_phys(_dir));

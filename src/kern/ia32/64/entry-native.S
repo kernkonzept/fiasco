@@ -267,10 +267,11 @@ safe_iret:
 # if defined(CONFIG_INTEL_IA32_BRANCH_BARRIERS) || defined(CONFIG_INTEL_MDS_MITIGATION)
 	/* check for exit flags (need IBTPB?) */
 	mov	CPUE_EXIT(%r14), %r13
+        // Here, CPUE_EXIT_NEED_IBPB and CPUE_EXIT_NEED_VERW are always set
+        // together, therefore only a single test is required.
 	test	$(CPUE_EXIT_NEED_IBPB), %r13
 	jz	22f
-	and	$(~CPUE_EXIT_NEED_IBPB), %r13
-	mov	%r13, CPUE_EXIT(%r14)
+	andl	$(~(CPUE_EXIT_NEED_IBPB|CPUE_EXIT_NEED_VERW)), CPUE_EXIT(%r14)
 #  ifdef CONFIG_INTEL_IA32_BRANCH_BARRIERS
 	IA32_IBPB
 #  endif

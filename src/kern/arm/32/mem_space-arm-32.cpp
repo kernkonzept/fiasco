@@ -92,7 +92,7 @@ Mem_space::pmem_to_phys(Address virt) const
 IMPLEMENTATION [arm_v6]:
 
 IMPLEMENT inline NEEDS[Mem_space::asid]
-void Mem_space::make_current()
+void Mem_space::make_current(Switchin_flags)
 {
   asm volatile (
       "mcr p15, 0, %2, c7, c5, 6    \n" // bt flush
@@ -116,7 +116,7 @@ IMPLEMENTATION [(arm_v7 || arm_v8) && !arm_lpae]:
 
 IMPLEMENT inline NEEDS[Mem_space::asid]
 void
-Mem_space::make_current()
+Mem_space::make_current(Switchin_flags)
 {
   asm volatile (
       "mcr p15, 0, %2, c7, c5, 6    \n" // bt flush
@@ -140,7 +140,7 @@ IMPLEMENTATION [(arm_v7 || arm_v8) && arm_lpae && !cpu_virt]:
 
 IMPLEMENT inline NEEDS[Mem_space::asid]
 void
-Mem_space::make_current()
+Mem_space::make_current(Switchin_flags)
 {
   asm volatile (
       "mcr p15, 0, %2, c7, c5, 6    \n" // bt flush
@@ -160,7 +160,7 @@ IMPLEMENTATION [(arm_v7 || arm_v8) && arm_lpae && cpu_virt]:
 
 IMPLEMENT inline NEEDS[Mem_space::asid]
 void
-Mem_space::make_current()
+Mem_space::make_current(Switchin_flags)
 {
 // FIXME: flush bt only when reassigning ASIDs not on switch !!!!!!!
   asm volatile (

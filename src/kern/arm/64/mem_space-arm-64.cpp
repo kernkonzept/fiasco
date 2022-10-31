@@ -20,7 +20,7 @@ IMPLEMENTATION [arm_v8 && arm_lpae && !cpu_virt]:
 
 IMPLEMENT inline NEEDS[Mem_space::asid]
 void
-Mem_space::make_current()
+Mem_space::make_current(Switchin_flags)
 {
   asm volatile (
       "msr TTBR0_EL1, %0            \n" // set TTBR
@@ -35,7 +35,7 @@ IMPLEMENTATION [arm_v8 && arm_lpae && cpu_virt]:
 
 IMPLEMENT inline NEEDS[Mem_space::asid]
 void
-Mem_space::make_current()
+Mem_space::make_current(Switchin_flags)
 {
   asm volatile (
       "msr VTTBR_EL2, %0            \n" // set TTBR

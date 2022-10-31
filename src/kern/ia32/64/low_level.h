@@ -24,7 +24,12 @@
 #define CPUE_CR3(reg) 0(reg)
 #define CPUE_EXIT(reg) 16(reg)
 #define CPUE_CR3U(reg) 24(reg)
+// IBPB predication barrier required at kernel exit. In certain cases this flag
+// shows also the requirement of MDS mitigation at kernel exit.
 #define CPUE_EXIT_NEED_IBPB 1
+// MDS mitigation (VERW instruction )required at kernel exit. In most cases,
+// CPUE_EXIT_NEED_IBPB contains CPUE_EXIT_NEED_VERW.
+#define CPUE_EXIT_NEED_VERW 2
 #define CPUE_SCRATCH(reg) 32(reg)
 #define CPUE_SCRATCH_OFS 32
 
@@ -71,10 +76,11 @@
 	mov	$VAL__MEM_LAYOUT__KENTRY_CPU_PAGE, %r15
 # if defined(CONFIG_INTEL_IA32_BRANCH_BARRIERS) || defined(CONFIG_INTEL_MDS_MITIGATION)
 	mov	CPUE_EXIT(%r15), %r11
+        // Here, CPUE_EXIT_NEED_IBPB and CPUE_EXIT_NEED_VERW are always set
+        // together, therefore only a single test is required.
 	test	$(CPUE_EXIT_NEED_IBPB), %r11
 	jz	333f
-	and	$(~CPUE_EXIT_NEED_IBPB), %r11
-	mov	%r11, CPUE_EXIT(%r15)
+	andl	$(~(CPUE_EXIT_NEED_IBPB|CPUE_EXIT_NEED_VERW)), CPUE_EXIT(%r15)
 #  ifdef CONFIG_INTEL_IA32_BRANCH_BARRIERS
 	IA32_IBPB
 #  endif

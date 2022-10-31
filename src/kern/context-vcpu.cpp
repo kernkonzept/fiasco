@@ -124,7 +124,10 @@ Context::vcpu_enter_kernel_mode(Vcpu_state *vcpu)
             {
               vcpu_enable_fpu_if_disabled(s);
 
-              space()->switchin_context(vcpu_user_space());
+              // Space::switchin_context() may optimize the switch of a thread
+              // in vCPU user mode to vCPU kernel mode.
+              space()->switchin_context(vcpu_user_space(),
+                                        Mem_space::Vcpu_user_to_kern);
               return true;
             }
         }

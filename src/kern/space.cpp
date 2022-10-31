@@ -87,7 +87,7 @@ public:
 
   Caps caps() const { return _caps; }
 
-  void switchin_context(Space *from);
+  void switchin_context(Space *from, Mem_space::Switchin_flags flags = None);
 
 protected:
   Space(Ram_quota *q, Mem_space::Dir_type* pdir, Caps c)
@@ -151,9 +151,9 @@ Space::find_ku_mem(User<void>::Ptr p, unsigned size)
 
 IMPLEMENT_DEFAULT inline
 void
-Space::switchin_context(Space *from)
+Space::switchin_context(Space *from, Mem_space::Switchin_flags flags)
 {
-  Mem_space::switchin_context(from);
+  Mem_space::switchin_context(from, flags);
 }
 
 

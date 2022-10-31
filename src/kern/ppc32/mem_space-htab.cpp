@@ -85,7 +85,7 @@ Mem_space::vsid_to_dir(Mword vsid)
 
 IMPLEMENT inline NEEDS["cpu.h", Mem_space::vsid]
 void
-Mem_space::make_current()
+Mem_space::make_current(Switchin_flags)
 {
   Cpu::set_vsid(vsid(0));
   _current.cpu(current_cpu()) = this;

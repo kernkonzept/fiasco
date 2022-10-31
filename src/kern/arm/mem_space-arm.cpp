@@ -309,7 +309,7 @@ Mem_space::c_asid() const
 { return 0; }
 
 IMPLEMENT inline
-void Mem_space::make_current()
+void Mem_space::make_current(Switchin_flags)
 {
   _current.current() = this;
   Mem_unit::flush_vcache();
