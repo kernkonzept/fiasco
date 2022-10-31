@@ -21,6 +21,50 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
 }
 
 //----------------------------------------------------------------------------
+IMPLEMENTATION [amd64 && kernel_isolation && intel_ia32_branch_barriers]:
+
+PRIVATE static inline
+void
+Thread::handle_ia32_branch_barriers(Address *return_flags)
+{
+  if (*return_flags & 1)
+    {
+      *return_flags &= ~1UL;
+      Cpu::wrmsr(0, 0, 0x49);
+    }
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [amd64 && kernel_isolation && !intel_ia32_branch_barriers]:
+
+PRIVATE static inline
+void
+Thread::handle_ia32_branch_barriers(Address *)
+{}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [amd64 && kernel_isolation && intel_mds_mitigation]:
+
+PRIVATE static inline
+void
+Thread::handle_mds_mitigations(Address *return_flags)
+{
+  if (*return_flags & 2)
+    {
+      *return_flags &= ~2UL;
+      asm volatile ("verw  verw_gdt_data_kernel");
+    }
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [amd64 && kernel_isolation && !intel_mds_mitigation]:
+
+PRIVATE static inline
+void
+Thread::handle_mds_mitigations(Address *)
+{}
+
+//----------------------------------------------------------------------------
 IMPLEMENTATION [amd64 && kernel_isolation]:
 
 #define FIASCO_ASM_IRET "jmp safe_iret \n\t"
@@ -33,23 +77,8 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
   assert(current() == this);
 
   Address *p = (Address *)Mem_layout::Kentry_cpu_page;
-
-#if defined(CONFIG_INTEL_IA32_BRANCH_BARRIERS) || defined(CONFIG_INTEL_MDS_MITIGATION)
-# ifdef CONFIG_INTEL_IA32_BRANCH_BARRIERS
-  if (p[2] & 1)
-    {
-      p[2] &= ~1UL;
-      Cpu::wrmsr(0, 0, 0x49);
-    }
-# endif
-# ifdef CONFIG_INTEL_MDS_MITIGATION
-  if (p[2] & 2)
-    {
-      p[2] &= ~2UL;
-      asm volatile ("verw  verw_gdt_data_kernel");
-    }
-# endif
-#endif
+  handle_ia32_branch_barriers(&p[2]);
+  handle_mds_mitigations(&p[2]);
 
   asm volatile
     ("mov %[sp], %%rsp \t\n"
