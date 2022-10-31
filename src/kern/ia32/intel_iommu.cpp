@@ -503,6 +503,92 @@ public:
     regs[Reg_64::Inv_q_tail] = inv_q_tail * sizeof(Inv_desc);
   }
 
+  /**
+   * Submit the given invalidation descriptors and wait for their completion.
+   *
+   * \tparam Stack_in_pmem  Whether this code is executed with a stack that is
+   *                        allocated from pmem. Only relevant during initial
+   *                        IOMMU setup phase where the kernel executes with a
+   *                        pre-allocated stack not located in pmem.
+   *
+   * \param descs  Invalidation descriptors to submit.
+   */
+  template<bool Stack_in_pmem = true, typename... Inv_descs>
+  void queue_and_wait(Inv_descs... descs)
+  {
+    Unsigned32 volatile flag = 1;
+    invalidate(descs..., Stack_in_pmem ? Inv_desc::wait_pmem(&flag)
+                                       : Inv_desc::wait_virt(&flag));
+
+    while (flag)
+      {
+        // Handle queue errors to ensure that the queue makes progress.
+        queue_check_error();
+
+        // TODO: We might want to add a preemption point here!
+        Proc::pause();
+      }
+  }
+
+  /**
+   * Submit the given invalidation descriptors on all IOMMUs for which the need
+   * for invalidation is indicated and wait for their completion.
+   *
+   * \param need_inv    Array which indicates for each IOMMU whether it shall
+   *                    participate in the invalidation and wait.
+   * \param descs       Invalidation descriptors to submit.
+   */
+  template<typename... Inv_descs>
+  static void queue_and_wait_on_iommus(bool const *need_inv, Inv_descs... descs)
+  {
+    Unsigned32 volatile wait_flags[iommus.size()];
+    for (unsigned i = 0; i < iommus.size(); i++)
+      {
+        // Skip if this IOMMU does not need invalidation.
+        if (need_inv != nullptr && !need_inv[i])
+          {
+            wait_flags[i] = 0;
+            continue;
+          }
+
+        wait_flags[i] = 1;
+        iommus[i].invalidate(descs..., Inv_desc::wait_pmem(&wait_flags[i]));
+      }
+
+    for(;;)
+      {
+        bool any_wait = false;
+        for (unsigned i = 0; i < iommus.size(); i++)
+          {
+            if (wait_flags[i])
+              {
+                // This IOMMU has not yet completed the wait descriptor.
+                any_wait = true;
+
+                // Handle queue errors to ensure that the queue makes progress.
+                iommus[i].queue_check_error();
+              }
+          }
+
+        if (any_wait)
+          // TODO: We might want to add a preemption point here!
+          Proc::pause();
+        else
+          // All IOMMUs are done executing.
+          break;
+      };
+  }
+
+  /**
+   * Submit the given invalidation descriptors on all IOMMUs and wait for their
+   * completion.
+   *
+   * \param descs  Invalidation descriptors to submit.
+   */
+  template<typename... Inv_descs>
+  static void queue_and_wait_on_all_iommus(Inv_descs... descs)
+  { return queue_and_wait_on_iommus(nullptr, descs...); }
+
   void set_irq_mapping(Irte const &irte, unsigned index, bool flush)
   {
     _irq_remapping_table[index] = irte;
