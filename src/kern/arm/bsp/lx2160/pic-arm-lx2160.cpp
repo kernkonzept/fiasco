@@ -20,9 +20,8 @@ Pic::init()
                             Kmem::mmio_remap(Mem_layout::Gic_redist_phys_base,
                                              Mem_layout::Gic_redist_size));
 
-  if (Gic_v3::Have_lpis)
-    g->add_its(Kmem::mmio_remap(Mem_layout::Gic_its_phys_base,
-                                Mem_layout::Gic_its_size));
+  g->add_its(Kmem::mmio_remap(Mem_layout::Gic_its_phys_base,
+                              Mem_layout::Gic_its_size));
 
   gic = g;
 

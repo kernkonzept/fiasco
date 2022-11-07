@@ -1,50 +1,9 @@
 INTERFACE:
 
-#include "boot_alloc.h"
-#include "cpu.h"
-#include "gic_cpu_v3.h"
-#include "gic_dist.h"
-#include "gic_mem.h"
-#include "gic_redist.h"
-#include "irq_mgr.h"
-#include "kmem_slab.h"
-#include "mmio_register_block.h"
-#include "spin_lock.h"
-
-#include <arithmetic.h>
+#include "types.h"
 #include <cxx/bitfield>
-#include <cxx/hlist>
-#include "cxx/static_vector"
 
-/**
- * The GICv3 architecture provides support for message-based interrupts, e.g.
- * Message Signaled Interrupts (MSI), with the help of the Interrupt
- * Translation Service (ITS) component.
- *
- * The kernel configures the ITS to map the combination of a DeviceID and an
- * EventID to a Locality-specific Peripheral Interrupt (LPI) directed to a
- * redistributor (i.e. to a CPU). To trigger an LPI, a device has to write the
- * corresponding EventID to the GITS_TRANSLATER register of the ITS. The
- * DeviceID for a write, which is unique for each device, is presented to the
- * ITS in a way that cannot be spoofed. Thus, the ITS can ensure that a device
- * can only trigger the LPIs that have been mapped for it.
- *
- * For the translation of MSIs (devices writing EventIDs to GITS_TRANSLATER)
- * into LPIs, the ITS uses memory tables provided by the kernel. However, the
- * kernel does not directly write to these tables, but instead configures the
- * ITS through commands issued via a command queue.
- *
- * Because there can be multiple ITSs in the system, which might each be
- * responsible for a different subset of devices, the assignment of an LPI
- * to an ITS is not decided until user space binds the corresponding MSI to
- * a device. Thus, LPIs are not managed inside a Gic_its object, but in the
- * MSI interrupt controller (Gic_msi).
- *
- * To avoid deadlocks, locks may only be grabbed in the following order:
- *   1. If necessary, grab an LPI lock.
- *   2. If necessary, grab the `_device_alloc_lock`.
- *   3. If necessary, grab the `_cmd_queue_lock`.
- */
+// Common constants also required if we disable ITS.
 class Gic_its
 {
 public:
@@ -80,7 +39,58 @@ public:
     CXX_BITFIELD_MEMBER   ( 8,  8, umsi_irq, raw);
     CXX_BITFIELD_MEMBER_RO(31, 31, quiescent, raw);
   };
+};
 
+// ------------------------------------------------------------------------
+INTERFACE[arm_gic_msi]:
+
+#include "boot_alloc.h"
+#include "cpu.h"
+#include "gic_cpu_v3.h"
+#include "gic_dist.h"
+#include "gic_mem.h"
+#include "gic_redist.h"
+#include "irq_mgr.h"
+#include "kmem_slab.h"
+#include "mmio_register_block.h"
+#include "spin_lock.h"
+
+#include <arithmetic.h>
+#include <cxx/hlist>
+#include "cxx/static_vector"
+
+/**
+ * The GICv3 architecture provides support for message-based interrupts, e.g.
+ * Message Signaled Interrupts (MSI), with the help of the Interrupt
+ * Translation Service (ITS) component.
+ *
+ * The kernel configures the ITS to map the combination of a DeviceID and an
+ * EventID to a Locality-specific Peripheral Interrupt (LPI) directed to a
+ * redistributor (i.e. to a CPU). To trigger an LPI, a device has to write the
+ * corresponding EventID to the GITS_TRANSLATER register of the ITS. The
+ * DeviceID for a write, which is unique for each device, is presented to the
+ * ITS in a way that cannot be spoofed. Thus, the ITS can ensure that a device
+ * can only trigger the LPIs that have been mapped for it.
+ *
+ * For the translation of MSIs (devices writing EventIDs to GITS_TRANSLATER)
+ * into LPIs, the ITS uses memory tables provided by the kernel. However, the
+ * kernel does not directly write to these tables, but instead configures the
+ * ITS through commands issued via a command queue.
+ *
+ * Because there can be multiple ITSs in the system, which might each be
+ * responsible for a different subset of devices, the assignment of an LPI
+ * to an ITS is not decided until user space binds the corresponding MSI to
+ * a device. Thus, LPIs are not managed inside a Gic_its object, but in the
+ * MSI interrupt controller (Gic_msi).
+ *
+ * To avoid deadlocks, locks may only be grabbed in the following order:
+ *   1. If necessary, grab an LPI lock.
+ *   2. If necessary, grab the `_device_alloc_lock`.
+ *   3. If necessary, grab the `_cmd_queue_lock`.
+ */
+EXTENSION class Gic_its
+{
+public:
   struct Typer
   {
     Unsigned64 raw;
@@ -470,7 +480,7 @@ private:
 };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION:
+IMPLEMENTATION[arm_gic_msi]:
 
 #include "cpu.h"
 #include "kmem_alloc.h"
@@ -1095,4 +1105,44 @@ Gic_its::Device::unbind_lpi(Lpi &lpi)
 
   lpi.device = nullptr;
   _lpi_count--;
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION[!arm_gic_msi]:
+
+#include "mmio_register_block.h"
+#include "panic.h"
+#include "poll_timeout_counter.h"
+#include "processor.h"
+
+/**
+ * Disable the ITS to prevent triggering of unexpected LPIs.
+ */
+PUBLIC static
+void
+Gic_its::disable(Address base)
+{
+  auto its = Mmio_register_block(base);
+
+  unsigned arch_rev = (its.read<Unsigned32>(GITS_PIDR2) >> 4) & 0xf;
+  if (arch_rev != 0x3 && arch_rev != 0x4)
+    // No GICv3 and no GICv4 -- we cannot disable ITS!
+    panic("ITS: Version %u is not supported.\n", arch_rev);
+
+  Ctlr ctlr(its.read<Unsigned32>(GITS_CTLR));
+  if (!ctlr.enabled() && ctlr.quiescent())
+    return;
+
+  ctlr.umsi_irq() = false;
+  ctlr.enabled() = false;
+  its.write<Unsigned32>(ctlr.raw, GITS_CTLR);
+
+  // Wait for quiescent state
+  L4::Poll_timeout_counter i(5000000);
+  while (i.test(!Ctlr(its.read<Unsigned32>(GITS_CTLR)).quiescent()))
+    Proc::pause();
+  if (Ctlr(its.read<Unsigned32>(GITS_CTLR)).quiescent())
+    printf("ITS: Disabled.\n");
+  else
+    panic("ITS: Trying to disable: Not in quiescent state!\n");
 }

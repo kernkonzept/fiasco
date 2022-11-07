@@ -41,9 +41,9 @@ void Pic::init()
                                      Mem_layout::Gic_redist_size);
       auto gic_v3 = new Boot_object<Gic_v3>(dist.get_mmio_base(), redist);
 
-      if (Gic_v3::Have_lpis)
-        gic_v3->add_its(Kmem::mmio_remap(Mem_layout::Gic_its_phys_base,
-                                         Mem_layout::Gic_its_size));
+      gic_v3->add_its(Kmem::mmio_remap(Mem_layout::Gic_its_phys_base,
+                                       Mem_layout::Gic_its_size));
+
       gic = gic_v3;
 
       typedef Irq_mgr_msi<Gic_v3, Gic_msi> Mgr;

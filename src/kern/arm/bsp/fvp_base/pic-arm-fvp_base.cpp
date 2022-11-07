@@ -21,13 +21,13 @@ Pic::init()
                             Kmem::mmio_remap(Mem_layout::Gic_redist_phys_base,
                                              Mem_layout::Gic_redist_size));
 
-  if (Gic_v3::Have_lpis)
-    g->add_its(Kmem::mmio_remap(Mem_layout::Gic_its_phys_base,
-                                Mem_layout::Gic_its_size));
+  g->add_its(Kmem::mmio_remap(Mem_layout::Gic_its_phys_base,
+                              Mem_layout::Gic_its_size));
 
   gic = g;
-  Irq_mgr::mgr = new Boot_object<Irq_mgr_msi<Gic_v3, Gic_msi>>(g,
-                                                               g->msi_chip());
+
+  typedef Irq_mgr_msi<Gic_v3, Gic_msi> Mgr;
+  Irq_mgr::mgr = new Boot_object<Mgr>(g, g->msi_chip());
 }
 
 // ------------------------------------------------------------------------
