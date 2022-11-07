@@ -7,25 +7,27 @@ INTERFACE [arm && pic_gic && pf_lx2160]:
 IMPLEMENTATION [arm && pic_gic && pf_lx2160]:
 
 #include "gic_v3.h"
-#include "irq_mgr_multi_chip.h"
+#include "irq_mgr_msi.h"
 #include "kmem.h"
 
 PUBLIC static FIASCO_INIT
 void
 Pic::init()
 {
-  typedef Irq_mgr_multi_chip<9> M;
+  auto *g =
+    new Boot_object<Gic_v3>(Kmem::mmio_remap(Mem_layout::Gic_dist_phys_base,
+                                             Gic_dist::Size),
+                            Kmem::mmio_remap(Mem_layout::Gic_redist_phys_base,
+                                             Mem_layout::Gic_redist_size));
 
-  M *m = new Boot_object<M>(1);
+  if (Gic_v3::Have_lpis)
+    g->add_its(Kmem::mmio_remap(Mem_layout::Gic_its_phys_base,
+                                Mem_layout::Gic_its_size));
 
-  gic = new Boot_object<Gic_v3>(Kmem::mmio_remap(Mem_layout::Gic_dist_phys_base,
-                                                 Gic_dist::Size),
-                                Kmem::mmio_remap(Mem_layout::Gic_redist_phys_base,
-                                                 Mem_layout::Gic_redist_size));
+  gic = g;
 
-  m->add_chip(0, gic, gic->nr_irqs());
-
-  Irq_mgr::mgr = m;
+  typedef Irq_mgr_msi<Gic_v3, Gic_msi> Mgr;
+  Irq_mgr::mgr = new Boot_object<Mgr>(g, g->msi_chip());
 }
 
 // ------------------------------------------------------------------------

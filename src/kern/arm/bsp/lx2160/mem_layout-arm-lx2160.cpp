@@ -9,5 +9,7 @@ public:
     Gic_redist_size      =   0x200000,
     Gic_h_phys_base      = 0x0c0d0000,
     Gic_v_phys_base      = 0x0c0e0000,
+    Gic_its_phys_base    = 0x06020000,
+    Gic_its_size         = 0x00020000,
   };
 };
