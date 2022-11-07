@@ -52,6 +52,7 @@ VPATH			+= drivers/ux drivers/ia32 drivers
 PRIVATE_INCDIR		+= drivers/ux drivers/ia32 drivers
 INTERFACES_DRIVERS	:= mux_console console filter_console processor \
 			   delayloop mem
+INTERFACES_DRIVERS	+= $(if $(CONFIG_UART_CHECKSUM),stream_crc32)
 
 processor_IMPL		:= processor processor-ux
 mem_IMPL		:= mem mem-ia32

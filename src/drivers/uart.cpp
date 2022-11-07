@@ -109,6 +109,21 @@ public:
   Mword get_attributes() const override;
 };
 
+INTERFACE[uart_checksum]:
+
+#include "stream_crc32.h"
+
+EXTENSION class Uart
+{
+private:
+  void checksum_tag();
+
+  /**
+   * Current data checksum
+   */
+  Stream_crc32 crc32;
+};
+
 IMPLEMENTATION:
 
 IMPLEMENT
@@ -155,7 +170,6 @@ public:
 //---------------------------------------------------------------------------
 IMPLEMENTATION [libuart]:
 
-
 IMPLEMENT inline Uart::~Uart()
 { }
 
@@ -170,7 +184,7 @@ IMPLEMENT inline bool Uart::change_mode(TransferMode m, BaudRate baud)
   return uart()->change_mode(m, baud);
 }
 
-IMPLEMENT inline
+IMPLEMENT_DEFAULT inline
 int Uart::write(const char *s, __SIZE_TYPE__ count)
 {
   return uart()->write(s, count);
@@ -213,3 +227,109 @@ IMPLEMENTATION [!libuart]:
 IMPLEMENT_DEFAULT
 void Uart::irq_ack()
 {}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [uart_checksum]:
+
+/**
+ * Output the current data checksum tag.
+ *
+ * The checksum tag size is 12 characters and it has the format:
+ *
+ *   "\n{hhhhhhhh} "
+ *
+ * In this template, the 'h' characters represent lower-case hexadecimal
+ * characters that encode the CRC32 checksum of all the previous characters
+ * (including newline characters, but excluding the actual checksum tag, i.e.
+ * the curly brackets, the hexadecimal characters in between them and the
+ * tailing space character).
+ *
+ * We assume the newline character is already present in the output prior to
+ * calling this method.
+ *
+ * The checksumming starts only after the first checksum tag which is:
+ *
+ *   "\n{00000000} "
+ */
+IMPLEMENT inline
+void Uart::checksum_tag()
+{
+  Unsigned32 val = crc32.get();
+  char dump[11];
+
+  dump[0] = '{';
+  dump[9] = '}';
+  dump[10] = ' ';
+
+  for (unsigned int i = 8; i > 0; --i)
+    {
+      Unsigned8 nibble = val & 0x0f;
+
+      // Encode nibble
+      if (nibble < 10)
+        dump[i] = '0' + nibble;
+      else
+        dump[i] = 'a' + (nibble - 10);
+
+      val >>= 4;
+    }
+
+  uart()->write(dump, 11);
+}
+
+IMPLEMENT_OVERRIDE inline
+int Uart::write(char const *str, __SIZE_TYPE__ count)
+{
+  if (crc32.empty())
+    {
+      // We are about to print the first characters. Thus indicate we initialize
+      // the checksumming by printing the first checksum tag.
+      //
+      // This might actually produce an extra newline in the output stream which
+      // we have inherited from the boot loader, but the newline character is
+      // essential.
+      uart()->write("\r\n", 2);
+      checksum_tag();
+    }
+
+  char const *cur = str;
+  char const *end = str + count;
+  char const *delim = str;
+
+  while (cur < end)
+    {
+      // Find the delimiter in the current part of the string which points
+      // either to the next newline character or to the end of the string.
+      while (delim < end && *delim != '\n')
+        ++delim;
+
+      // Output the current part up to (but not including) the delimiter.
+      while (cur < delim)
+        {
+          int out = uart()->write(cur, delim - cur);
+          if (out < 0)
+            return out;
+
+          crc32.checksum(cur, delim - cur);
+          cur += out;
+        }
+
+      // If the current delimiter is a newline, then output LF followed by
+      // a checksum tag and move to the next part of the string.
+      if (delim < end && *delim == '\n')
+        {
+          int out = uart()->write("\n", 1);
+          if (out < 0)
+            return out;
+
+          // Output the checksum tag. The newline character is a valid part of
+          // the checksum, but it is also the start of the checksum tag.
+          crc32.checksum("\n", 1);
+          checksum_tag();
+          ++delim;
+          ++cur;
+        }
+    }
+
+  return count;
+}

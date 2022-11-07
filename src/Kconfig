@@ -682,6 +682,38 @@ config WARN_ANY
 
 endchoice # warn levels
 
+config UART_CHECKSUM
+	bool "UART checksumming"
+	default n
+	help
+	  Ensure serial output integrity by adding checksums to it. This
+	  ensures that the output transmitted over a serial line is not
+	  accidentally altered, thus potentially turning a failing test
+	  into a passing test, etc.
+
+	  If enabled, the UART output is checksummed continously using
+	  a CRC32 algorithm and the current checksum is printed periodically
+	  with each newline using a checksum tag. A counterpart decoding
+	  filter that checks the consistency of the checksums and removes
+	  the checksum tags from the output is available.
+
+	  The checksum tag size is 12 characters and it has the following
+	  format:
+
+	    "\n{hhhhhhhh} "
+
+	  In this template, the 'h' characters represent lower-case
+	  hexadecimal characters that encode the CRC32 checksum of all the
+	  previous characters in the output (including newline characters,
+	  but excluding the actual checksum tag, i.e. the curly brackets,
+	  the hexadecimal characters in between them and the tailing space
+	  character).
+
+	  The checksumming starts only after the first checksum tag which
+	  is:
+
+	    "\n{00000000} "
+
 # PF_SECTION: DEBUG
 
 endmenu # debugging

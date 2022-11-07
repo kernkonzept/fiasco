@@ -56,6 +56,7 @@ VPATH			+= drivers/mips/$(BITS) drivers/mips drivers
 PRIVATE_INCDIR		+= drivers/mips/$(BITS) drivers/mips drivers
 INTERFACES_DRIVERS	:= mux_console console mem reset uart filter_console \
 			   processor delayloop io mmu
+INTERFACES_DRIVERS	+= $(if $(CONFIG_UART_CHECKSUM),stream_crc32)
 mem_IMPL		:= mem mem-mips
 uart_IMPL		:= uart uart-libuart
 processor_IMPL		:= processor processor-mips
