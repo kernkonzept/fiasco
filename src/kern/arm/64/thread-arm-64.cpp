@@ -266,8 +266,11 @@ Thread::get_esr()
 
 PRIVATE static inline
 Address
-Thread::get_fault_pfa(Arm_esr /*hsr*/, bool /*insn_abt*/, bool /*ext_vcpu*/)
+Thread::get_fault_pfa(Arm_esr hsr, bool /*insn_abt*/, bool /*ext_vcpu*/)
 {
+  if (EXPECT_FALSE(hsr.pf_fnv())) // bit is RES0 on IFSC!=0x10 / DFSC!=0x10
+    return ~0UL;
+
   Address a;
   asm volatile ("mrs %0, FAR_EL1" : "=r"(a));
   return a;
@@ -312,6 +315,9 @@ PRIVATE static inline
 Address
 Thread::get_fault_pfa(Arm_esr hsr, bool /*insn_abt*/, bool ext_vcpu)
 {
+  if (EXPECT_FALSE(hsr.pf_fnv())) // bit is RES0 on IFSC!=0x10 / DFSC!=0x10
+    return ~0UL;
+
   Address a;
   asm volatile ("mrs %0, FAR_EL2" : "=r"(a));
   if (EXPECT_TRUE(!ext_vcpu) || !(Proc::sctlr_el1() & Cpu::Sctlr_m))

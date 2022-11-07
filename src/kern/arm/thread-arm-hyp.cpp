@@ -306,10 +306,13 @@ Thread::is_syscall_pc(Address pc)
   return Address(-0x0c) <= pc && pc <= Address(-0x08);
 }
 
-PRIVATE static inline
+PRIVATE static inline NEEDS[Thread::invalid_pfa]
 Address
 Thread::get_fault_pfa(Arm_esr hsr, bool insn_abt, bool ext_vcpu)
 {
+  if (invalid_pfa(hsr))
+    return ~0UL;
+
   Unsigned32 far;
   if (insn_abt)
     asm ("mrc p15, 4, %0, c6, c0, 2" : "=r" (far));
@@ -358,6 +361,28 @@ Thread::get_esr()
   Arm_esr hsr;
   asm ("mrc p15, 4, %0, c5, c2, 0" : "=r" (hsr));
   return hsr;
+}
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [arm && 32bit && cpu_virt && arm_v8plus]:
+
+PRIVATE static inline
+bool
+Thread::invalid_pfa(Arm_esr hsr)
+{
+  // FSC == 0b010001 is only documented for data aborts so this code works also
+  // for instruction aborts.
+  return hsr.pf_fsc() == 0x11 || hsr.pf_fnv();
+}
+
+// ---------------------------------------------------------------
+IMPLEMENTATION [arm && 32bit && cpu_virt && !arm_v8plus]:
+
+PRIVATE static inline
+bool
+Thread::invalid_pfa(Arm_esr)
+{
+  return false;
 }
 
 // ---------------------------------------------------------------

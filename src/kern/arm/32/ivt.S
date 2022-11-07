@@ -332,7 +332,13 @@ inst_abort_entry:
 	bic	r1, r1, #GET_HSR(0x3f)
 	orr	r1, r1, #GET_HSR(0x20)  @ Set read bit and prefetch abort
 #if defined(CONFIG_ARM_V6PLUS) && !defined(CONFIG_ARM_1136) && !defined(CONFIG_ARM_MPCORE)
+# if defined(CONFIG_ARM_V8PLUS)
+	tst	r1, #(1<<16)            @ IFSR.FnV
+	mrceq	p15, 0, r0, c6, c0, 2   @ Read PFA if IFSR.FnV==0, for T2: pfa != pc
+	movne	r0, #0xffffffff         @ Use PFA=0xffffffff if IFSR.FnV==1
+# else
 	mrc	p15, 0, r0, c6, c0, 2   @ Read fault address, for T2: pfa != pc
+# endif
 #else
 	ldr	r0, [sp, #RF(PC, 5*4)]  @ Get PC from RF and use as pfa
 #endif
@@ -417,7 +423,13 @@ data_abort_entry:
         bic     r1, r1, #((1 << 6) | (1 << 11)) @ clear HSR & FSR WnR
         orr     r1, r1, r2, lsr #5      @ make HSR.Wnr from FSR.WnR
 	bic	r1, r1, #GET_HSR(0x3f)
+# ifdef CONFIG_ARM_V8PLUS
+	tst	r1, #(1<<16)		@ DFSR.FnV
+	mrceq	p15, 0, r0, c6, c0, 0	@ Load DFAR into r0 if DFSR.FnV==0
+	movne	r0, #0xffffffff		@ Set r0=0xffffffff if DFSR.FnV==1
+# else
 	mrc     p15, 0, r0, c6, c0, 0	@ Load DFAR into r0
+# endif
 
 	ldr	r2, [sp, #RF(PC,  5*4)] @ Load PC into r2
 	ldr	lr, [sp, #RF(PSR, 5*4)]	@ load spsr, from stack 

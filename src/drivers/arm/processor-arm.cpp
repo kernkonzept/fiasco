@@ -55,6 +55,7 @@ public:
   CXX_BITFIELD_MEMBER(22, 23, pf_sas, _raw);
   CXX_BITFIELD_MEMBER(21, 21, pf_sse, _raw);
   CXX_BITFIELD_MEMBER(16, 19, pf_srt, _raw);
+  CXX_BITFIELD_MEMBER(10, 10, pf_fnv, _raw);
   CXX_BITFIELD_MEMBER( 9,  9, pf_ea, _raw);
   CXX_BITFIELD_MEMBER( 8,  8, pf_cache_maint, _raw);
   CXX_BITFIELD_MEMBER( 7,  7, pf_s1ptw, _raw);
