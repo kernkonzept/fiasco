@@ -1118,6 +1118,7 @@ IMPLEMENTATION:
 #include "panic.h"
 #include "poll_timeout_counter.h"
 #include "processor.h"
+#include <cstdio>
 
 /**
  * Disable the ITS to prevent triggering of unexpected LPIs.
