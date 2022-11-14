@@ -78,13 +78,21 @@ class Gic_msi;
 EXTENSION class Gic_v3
 {
 public:
-  bool add_its(Address its_base)
-  {
-    Gic_its::disable(its_base)
-    return true;
-  };
   Gic_msi *msi_chip() { return nullptr; };
 };
+
+//-------------------------------------------------------------------
+IMPLEMENTATION [have_arm_gic_msi && !arm_gic_msi]:
+
+#include "gic_its.h"
+
+PUBLIC
+bool
+Gic_v3::add_its(Address its_base)
+{
+  Gic_its::disable(its_base);
+  return true;
+}
 
 //-------------------------------------------------------------------
 IMPLEMENTATION:
