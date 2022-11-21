@@ -138,7 +138,7 @@ public:
     do
       {
         v = this->_bits[idx];
-        if (v & (1UL << bit))
+        if (v & (1UL << b))
           return true;
       }
     while (!mp_cas(&this->_bits[idx], v, v | (1UL << b)));
