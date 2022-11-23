@@ -43,14 +43,18 @@ namespace L4
 #endif
   }
 
-  int Uart_dcc_v6::get_char(bool /*blocking*/) const
+  int Uart_dcc_v6::get_char(bool blocking) const
   {
 #ifdef __arm__
+    while (!char_avail())
+      if (!blocking)
+        return -1;
+
     int c;
     asm volatile("mrc p14, 0, %0, c0, c5, 0": "=r" (c));
     return c & 0xff;
 #else
-    return 0;
+    return -1;
 #endif
   }
 
