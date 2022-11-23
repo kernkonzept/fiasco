@@ -64,10 +64,9 @@ public:
   /**
    * Is input available?
    *
-   * This method can be implemented.
-   * It must return -1 if no information is available, 
-   * 1 if at least one character is available, and 0 if
-   * no character is available.
+   * This method can be implemented. It must return -1 if no information is
+   * available, >= 1 if at least one character is available, and 0 if no
+   * character is available.
    */
   virtual int char_avail() const;
 
