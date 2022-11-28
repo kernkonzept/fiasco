@@ -220,6 +220,7 @@ IMPLEMENTATION[ia32,amd64]:
 #include "regdefs.h"
 #include "pic.h"
 #include "pit.h"
+#include "warn.h"
 
 unsigned apic_spurious_interrupt_bug_cnt;
 unsigned apic_spurious_interrupt_cnt;
@@ -591,7 +592,7 @@ Apic::enable_errors()
       if (get_max_lvt() > 3)
 	clear_num_errors();
       after = get_num_errors();
-      if (Config::Warn_level >= 2)
+      if (Warn::is_enabled(Info))
         printf("APIC ESR value before/after enabling: %08x/%08x\n",
                before, after);
     }
@@ -874,7 +875,7 @@ PUBLIC static
 void
 Apic::dump_info()
 {
-  if (Config::Warn_level >= 2)
+  if (Warn::is_enabled(Info))
     printf("Local APIC[%02x]: version=%02x max_lvt=%d\n",
            get_id() >> 24, get_version(), get_max_lvt());
 }

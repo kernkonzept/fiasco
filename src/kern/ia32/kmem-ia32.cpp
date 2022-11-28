@@ -683,6 +683,8 @@ Kmem::current_cpu_kdir()
 //--------------------------------------------------------------------------
 IMPLEMENTATION [(amd64 || ia32) && !cpu_local_map]:
 
+#include "warn.h"
+
 PRIVATE static inline
 void
 Kmem::setup_global_cpu_structures(bool superpages)
@@ -754,7 +756,7 @@ void
 Kmem::init_cpu(Cpu &cpu)
 {
   cxx::Simple_alloc cpu_mem_vm(Kmem_alloc::allocator()->alloc(Bytes(1024)), 1024);
-  if (Config::Warn_level >= 2)
+  if (Warn::is_enabled(Info))
     printf("Allocate cpu_mem @ %p\n", cpu_mem_vm.block());
 
   // now switch to our new page table

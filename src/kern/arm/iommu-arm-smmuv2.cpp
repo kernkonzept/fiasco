@@ -954,7 +954,7 @@ public:
   enum
   {
     Debug      = 1,
-    Log_faults = Config::Warn_level >= (int)Warn_level::Info,
+    Log_faults = Warn::is_enabled(Info),
   };
 };
 

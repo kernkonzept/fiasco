@@ -8,6 +8,7 @@ IMPLEMENTATION [apic_timer]:
 #include "logdefs.h"
 #include "pit.h"
 #include "std_macros.h"
+#include "warn.h"
 
 // no IRQ line for the LAPIC
 PUBLIC static inline int Timer::irq() { return -1; }
@@ -36,7 +37,7 @@ Timer::init(Cpu_number)
     // from now we can save energy in getchar()
     Config::getchar_does_hlt_works_ok = false && Config::hlt_works_ok;
 
-  if (Config::Warn_level >= 2)
+  if (Warn::is_enabled(Info))
     printf ("Using the Local APIC timer on vector %x (%s Mode) for scheduling\n",
             (unsigned)Config::Apic_timer_vector,
             Config::Scheduler_one_shot ? "One-Shot" : "Periodic");

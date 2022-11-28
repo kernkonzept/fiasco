@@ -515,7 +515,7 @@ Gic_its::Table::alloc(Reg r, Typer typer)
         {
           // ITS can store a sufficient amount of collection table entries in
           // internal memory, no need to allocate an external collection table.
-          if ((int)Config::Warn_level >= Info)
+          if (Warn::is_enabled(Info))
             printf("ITS: Using internal memory to store collections.\n");
           return;
         }
@@ -579,7 +579,7 @@ Gic_its::Table::alloc(Reg r, Typer typer)
   _mem.setup_reg(r, baser);
   _mem.make_coherent();
 
-  if ((int)Config::Warn_level >= Info)
+  if (Warn::is_enabled(Info))
     printf("ITS: Allocated table of type=%u with size=0x%llx "
            "indirect=%u page_size=%u entry_size=%u pages=%u.\n",
            _type, size, _indirect, _page_size, _entry_size, num_pages);

@@ -28,6 +28,7 @@ IMPLEMENTATION [mp]:
 #include "timer.h"
 #include "timer_tick.h"
 #include "spin_lock.h"
+#include "warn.h"
 
 PUBLIC explicit inline
 App_cpu_thread::App_cpu_thread(Ram_quota *q)
@@ -104,7 +105,7 @@ App_cpu_thread::bootstrap(Mword resume)
   if (!resume)
     {
       Cpu::cpus.current().print_infos();
-      if (Config::Warn_level >= 2)
+      if (Warn::is_enabled(Info))
         printf("CPU[%u]: goes to idle loop\n", cxx::int_value<Cpu_number>(ccpu));
     }
 
