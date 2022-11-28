@@ -6,6 +6,7 @@ INTERFACE [arm && pic_gic && pf_lx2160]:
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pic_gic && pf_lx2160]:
 
+#include "boot_alloc.h"
 #include "gic_v3.h"
 #include "irq_mgr_msi.h"
 #include "kmem.h"
