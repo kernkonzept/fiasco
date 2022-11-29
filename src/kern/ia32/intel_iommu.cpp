@@ -13,6 +13,7 @@ INTERFACE:
 #include "tlbs.h"
 #include "mem_unit.h"
 #include "processor.h"
+#include "warn.h"
 
 namespace Intel {
 
@@ -455,6 +456,8 @@ public:
     // Handle errors with the queue lock held, then release it before reporting
     // the errors.
     Unsigned32 queue_errors;
+    Unsigned32 err;
+    Inv_desc err_desc;
     {
       auto g = lock_guard(_inv_q_lock);
       queue_errors = regs[Reg_32::Fault_status];
@@ -466,18 +469,36 @@ public:
           // invalidation queue error.
           Inv_desc *desc = inv_desc(regs[Reg_64::Inv_q_head] / sizeof(Inv_desc));
 
+          // Save error details for subsequent warn printf.
+          if (Warn::is_enabled(Warning))
+            {
+              err = regs[Reg_32::Inv_q_error] & Inv_q_error_iqei;
+              err_desc = *desc;
+            }
+
           // Replace the failing command with a nop descriptor.
           write_now(desc, Inv_desc::nop());
         }
-
-      // NOTE: Invalidation Completion and Invalidation Time-out errors should
-      //       never occur, because we do not use device TLBs.
 
       // Clear errors.
       regs[Reg_32::Fault_status] = queue_errors & Fault_status_mask;
     }
 
-    WARN("IOMMU: Invalidation queue error(s): 0x%x\n", queue_errors);
+    // Invalidation Queue Error
+    if (queue_errors & Fault_status_iqe)
+      WARN("IOMMU: Invalidation queue error %u for command 0x%llx 0x%llx.\n",
+           err, err_desc.l, err_desc.h);
+
+    // Invalidation Completion Error
+    if (queue_errors & Fault_status_ice)
+      // Should never occur, we do not use device TLBs.
+      WARN("IOMMU: Invalidation Completion Error.\n");
+
+    // Invalidation Time-out Error
+    if (queue_errors & Fault_status_ite)
+      // Should never occur, we do not use device TLBs.
+      // Aborts wait descriptors, we would have to handle that...
+      WARN("IOMMU: Invalidation Time-out Error.\n");
   }
 
   /**
