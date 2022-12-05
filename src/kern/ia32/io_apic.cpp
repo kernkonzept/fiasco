@@ -91,6 +91,7 @@ IMPLEMENTATION:
 #include "assert.h"
 #include "kmem.h"
 #include "kip.h"
+#include "pic.h"
 #include "lock_guard.h"
 #include "boot_alloc.h"
 #include "warn.h"
