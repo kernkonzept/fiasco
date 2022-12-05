@@ -122,8 +122,9 @@ IMPLEMENTATION [ia32 || ux || amd64]:
 #include "mem_layout.h"
 #include "paging.h"
 #include "std_macros.h"
+#include "kmem_alloc.h"
 
-PROTECTED inline
+PROTECTED inline NEEDS["kmem_alloc.h"]
 bool
 Mem_space::initialize()
 {
