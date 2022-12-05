@@ -8,11 +8,6 @@ public:
   enum Phys_layout : Address {
     Sdram_phys_base      = RAM_PHYS_BASE
   };
-
-  static inline unsigned long round_superpage(unsigned long addr)
-  { return (addr + Config::SUPERPAGE_SIZE - 1) & ~(Config::SUPERPAGE_SIZE-1); }
-  static inline unsigned long trunc_superpage(unsigned long addr)
-  { return addr & ~(Config::SUPERPAGE_SIZE-1); }
 };
 
 // -------------------------------------------------------------------------
