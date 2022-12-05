@@ -450,6 +450,8 @@ Acpi_madt::find(int idx) const
 // ------------------------------------------------------------------------
 IMPLEMENTATION [ia32,amd64]:
 
+#include "panic.h"
+
 PRIVATE static
 Acpi_rsdp const *
 Acpi_rsdp::locate_in_region(Address start, Address end)
