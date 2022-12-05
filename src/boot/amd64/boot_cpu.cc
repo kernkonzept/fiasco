@@ -12,7 +12,7 @@
 
 enum
 {
-  PML4ESHIFT		= 38,
+  PML4ESHIFT		= 39,
   PML4EMASK		= 0x1ff,
   PDPESHIFT		= 30,
   PDPEMASK		= 0x1ff,
