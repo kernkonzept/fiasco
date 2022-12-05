@@ -90,7 +90,8 @@ PUBLIC
 bool
 Gic_v3::add_its(Address its_base)
 {
-  Gic_its::disable(its_base);
+  if (_dist.hw_nr_lpis() > 0)
+    Gic_its::disable(its_base);
   return true;
 }
 
