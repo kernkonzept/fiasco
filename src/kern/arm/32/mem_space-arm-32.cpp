@@ -62,7 +62,7 @@ Mem_space::sync_kernel()
   pte.set_page(pte.make_page(pa, Page::Attr(Page::Rights::URX(),
                                             Page::Type::Normal())));
 
-  pte.write_back_if(true, Mem_unit::Asid_kernel);
+  pte.write_back_if(true, c_asid());
 
   pte = _dir->walk(Virt_addr(Mem_layout::Syscalls),
       Pdir::Depth, true, Kmem_alloc::q_allocator(ram_quota()));
@@ -74,7 +74,7 @@ Mem_space::sync_kernel()
   pte.set_page(pte.make_page(pa, Page::Attr(Page::Rights::URX(),
                                             Page::Type::Normal())));
 
-  pte.write_back_if(true, Mem_unit::Asid_kernel);
+  pte.write_back_if(true, c_asid());
 
   return 0;
 }
