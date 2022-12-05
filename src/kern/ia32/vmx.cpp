@@ -487,6 +487,7 @@ IMPLEMENTATION[vmx]:
 #include "l4_types.h"
 #include <cstring>
 #include "idt.h"
+#include "panic.h"
 #include "warn.h"
 
 class Vmx_init_host_state
