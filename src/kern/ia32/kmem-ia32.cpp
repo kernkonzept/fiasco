@@ -829,8 +829,6 @@ Kmem::setup_cpu_structures_isolation(Cpu &cpu, Kpdir *cpu_dir, cxx::Simple_alloc
     printf("kernel code: %p(%lx)-%p(%lx)\n", _kernel_text_start,
            ki_page, _kernel_text_entry_end, kie_page);
 
-  // FIXME: Move entry + exit code into dedicated sections and link
-  // into compact area to avoid mapping all kernel code to user land
   // FIXME: Make sure we can and do share level 1 to 3 among all CPUs
   if (!cpu_dir[1].map(ki_page - Kernel_image_offset, Virt_addr(ki_page),
                       Virt_size(kie_page - ki_page),
