@@ -66,6 +66,7 @@ IMPLEMENTATION[svm]:
 #include "kmem.h"
 #include "l4_types.h"
 #include "warn.h"
+#include "kmem_alloc.h"
 #include <cstring>
 
 DEFINE_PER_CPU_LATE Per_cpu<Svm> Svm::cpus(Per_cpu_data::Cpu_num);
