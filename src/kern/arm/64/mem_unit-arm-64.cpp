@@ -12,7 +12,7 @@ IMPLEMENT inline
 void Mem_unit::dtlb_flush(void *va)
 {
   Mem::dsbst();
-  asm volatile("tlbi vae1, %0"
+  asm volatile("tlbi vaae1, %0"
                : : "r" ((((unsigned long)va) >> 12) & 0x00000ffffffffffful)
                : "memory");
   Mem::dsb();
