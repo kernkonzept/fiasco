@@ -77,6 +77,7 @@ ifeq ("$(CONFIG_SERIAL)","y")
 INTERFACES_DRIVERS	+= filter_console uart
 INTERFACES_DRIVERS	+= $(if $(CONFIG_UART_CHECKSUM),stream_crc32)
 endif
+INTERFACES_DRIVERS	+= fb_console
 reset_IMPL		:= reset-amd64
 uart_IMPL		:= uart uart-libuart
 CXXFLAGS_uart-libuart   := $(call LIBUART_UART, 16550)
@@ -89,6 +90,17 @@ keyb_IMPL		:= keyb keyb-pc
 io_IMPL			:= io io-amd64
 mem_IMPL		:= mem mem-amd64
 processor_IMPL		:= processor processor-amd64
+
+#
+# FONTS subsystem
+#
+SUBSYSTEMS		+= FONTS
+FONTS			:= libfonts.a
+FONT_FILES		:= vgafont.psf
+VPATH			+= ../data/fonts
+OBJ_FONTS		:= $(addsuffix .bin.o,$(FONT_FILES))
+NOOPT			+= $(patsubst %.o, %, $(OBJ_FONTS))
+KERNEL_EXTRA_LIBS	+= $(FONTS)
 
 #
 # KERNEL subsystem

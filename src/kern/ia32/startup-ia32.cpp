@@ -36,6 +36,8 @@ IMPLEMENTATION[ia32,amd64]:
 #include "io_apic_remapped.h"
 #include "intel_iommu.h"
 
+#include "fb_console.h"
+
 IMPLEMENT FIASCO_INIT FIASCO_NOINLINE
 void
 Startup::stage1()
@@ -58,6 +60,9 @@ Startup::stage2()
   // initialize initial page tables (also used for other CPUs later)
   Mem_space::init_page_sizes();
   Kmem::init_mmu();
+
+  // earliest point for the FB because of previous MMU setup
+  Fb_console::init();
 
   if (Kernel_uart::init(Kernel_uart::Init_after_mmu))
     Banner::init();

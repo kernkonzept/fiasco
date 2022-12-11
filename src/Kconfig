@@ -757,6 +757,13 @@ config UART_CHECKSUM
 
 	    "\n{00000000} "
 
+config FB_CONSOLE
+	bool "Enable kernel framebuffer console"
+	depends on IA32 || AMD64
+	help
+	  This enables the kernel framebuffer console and, if a framebuffer
+	  is available, will output kernel messages.
+
 # PF_SECTION: DEBUG
 
 endmenu # debugging

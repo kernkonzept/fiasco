@@ -1,0 +1,19 @@
+# -*- makefile -*-
+
+define bin_to_asm_recipe
+	$(ECHO_E) ".section .rodata, \"a\"\n"    \
+	          ".global _binary_$(3)_start\n" \
+	          ".global _binary_$(3)_end\n"   \
+	          ".p2align 3\n"                 \
+	          "_binary_$(3)_start:\n"        \
+	          ".incbin \"$(1)\"\n"           \
+	          "_binary_$(3)_end:\n" > $(2)
+endef
+
+$(addsuffix .bin.S,$(FONT_FILES)): %.bin.S: %
+	$(VERBOSE)$(call bin_to_asm_recipe,$<,$@,$(subst -,_,$(subst /,_,$(subst .,_,$(strip $(*F))))))
+
+libfonts.a: $(OBJ_FONTS)
+	$(AR_MESSAGE)
+	$(VERBOSE)$(RM) $@
+	$(VERBOSE)$(AR) $(ARFLAGS) $@ $^
