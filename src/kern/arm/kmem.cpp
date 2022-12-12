@@ -22,12 +22,6 @@ IMPLEMENTATION [arm]:
 #include <cassert>
 
 IMPLEMENT inline
-Mword Kmem::is_kmem_page_fault(Mword pfa, Mword)
-{
-  return in_kernel(pfa);
-}
-
-IMPLEMENT inline
 Mword Kmem::is_io_bitmap_page_fault(Mword)
 {
   return 0;
@@ -78,4 +72,22 @@ Kmem::mmio_remap(Address phys, Address size)
 
   return phys_to_pmem(phys);
 }
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && !cpu_virt]:
 
+IMPLEMENT inline
+Mword Kmem::is_kmem_page_fault(Mword pfa, Mword)
+{
+  return in_kernel(pfa);
+}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && cpu_virt]:
+
+#include "paging.h"
+
+IMPLEMENT inline
+Mword Kmem::is_kmem_page_fault(Mword, Mword ec)
+{
+  return !PF::is_usermode_error(ec);
+}
