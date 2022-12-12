@@ -86,6 +86,9 @@ NOOPT			+= $(patsubst %.o, %,\
 LIBUART_UART = -include uart_$(strip $(1)).h \
 	       -DFIASCO_UART_TYPE=L4::Uart_$(strip $(if $(2),$(2),$(1)))
 
+LIBUART_UART2 = -include uart_$(strip $(1)).h \
+		-DFIASCO_UART2_TYPE=L4::Uart_$(strip $(if $(2),$(2),$(1)))
+
 #
 # COV Subsystem
 #
