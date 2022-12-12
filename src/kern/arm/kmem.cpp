@@ -72,7 +72,7 @@ Kmem::mmio_remap(Address phys, Address size)
       assert (!m.is_valid());
       assert (m.page_order() == Config::SUPERPAGE_SHIFT);
       m.set_page(m.make_page(Phys_mem_addr(p),
-                             Page::Attr(Page::Rights::RWX(),
+                             Page::Attr(Page::Rights::RW(),
                                         Page::Type::Uncached(),
                                         Page::Kern::Global())));
 
