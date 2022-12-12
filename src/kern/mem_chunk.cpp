@@ -93,7 +93,7 @@ PUBLIC template<typename MEM = Mem_chunk> static
 MEM
 Mem_chunk::alloc_zmem(unsigned size, unsigned align = 1)
 {
-  MEM mem = alloc_mem(size, align);
+  MEM mem = alloc_mem<MEM>(size, align);
   if (mem.is_valid())
     memset(mem.virt_ptr(), 0, size);
   return mem;
