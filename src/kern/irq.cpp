@@ -146,7 +146,8 @@ Irq::dispatch_irq_proto(Unsigned16 op, bool may_unmask)
  *
  * \retval 0        on success, `t` is the new IRQ handler thread
  * \retval -EINVAL  if `t` is not a valid thread.
- * \retval -EBUSY   if another detach operation is in progress.
+ * \retval -EBUSY   if another detach operation is in progress or object already
+ *                  destroyed.
  */
 PUBLIC inline NEEDS ["atomic.h", "cpu_lock.h", "lock_guard.h"]
 int
@@ -154,6 +155,10 @@ Irq_sender::alloc(Thread *t, Kobject ***rl)
 {
   if (t == nullptr)
     return -L4_err::EInval;
+
+  Lock_guard<Lock> guard;
+  if (!guard.check_and_lock(&existence_lock))
+    return -L4_err::EBusy;
 
   Thread *old;
   for (;;)
@@ -279,8 +284,10 @@ void
 Irq_sender::destroy(Kobject ***rl) override
 {
   auto g = lock_guard(cpu_lock);
-  (void)free(rl);
   Irq::destroy(rl);
+  // Must be done after returning from Irq::destroy() so we have the existence
+  // lock acquired -- see also Irq_sender::alloc().
+  (void)free(rl);
 }
 
 
