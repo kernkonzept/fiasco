@@ -60,8 +60,7 @@ Mem_space::sync_kernel()
   Phys_mem_addr pa((Address)kern_lib_start - Mem_layout::Map_base
                    + Mem_layout::Sdram_phys_base);
   pte.set_page(pte.make_page(pa, Page::Attr(Page::Rights::URX(),
-                                            Page::Type::Normal(),
-                                            Page::Kern::Global())));
+                                            Page::Type::Normal())));
 
   pte.write_back_if(true, Mem_unit::Asid_kernel);
 
@@ -73,8 +72,7 @@ Mem_space::sync_kernel()
 
   pa = Phys_mem_addr(__mem_space_syscall_page);
   pte.set_page(pte.make_page(pa, Page::Attr(Page::Rights::URX(),
-                                            Page::Type::Normal(),
-                                            Page::Kern::Global())));
+                                            Page::Type::Normal())));
 
   pte.write_back_if(true, Mem_unit::Asid_kernel);
 
