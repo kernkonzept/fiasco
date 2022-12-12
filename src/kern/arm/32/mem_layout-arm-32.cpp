@@ -96,6 +96,8 @@ public:
     Tbuf_buffer_size	 = 0x200000,
     Tbuf_ubuffer_area    = Tbuf_buffer_area,
     Jdb_tmp_map_area     = Service_page + 0x400000,
+    Registers_map_start  = 0xed000000,
+    Registers_map_end    = 0xef000000,
     Map_base             = RAM_PHYS_BASE,
     Ivt_base             = 0xffff0000,
   };

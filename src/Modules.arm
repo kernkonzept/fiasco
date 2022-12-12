@@ -203,7 +203,7 @@ mem_op_IMPL		:= mem_op mem_op-arm-$(BITS)
 mem_space_IMPL		:= mem_space mem_space-arm mem_space-arm-$(BITS) \
 			   mem_space-user
 mem_unit_IMPL		:= mem_unit mem_unit-arm-$(BITS)
-kmem_IMPL		:= kmem kmem-arm-$(BITS)
+kmem_IMPL		:= kmem
 kmem_alloc_IMPL		:= kmem_alloc kmem_alloc-arm
 kmem_space_IMPL		:= kmem_space kmem_space-arm-$(BITS)
 outer_cache_IMPL	:= outer_cache outer_cache-l2cxx0
