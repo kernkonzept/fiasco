@@ -332,7 +332,7 @@ Bootstrap::enable_paging(Mword)
 
   Mem::dsb();
   asm volatile("tlbi alle2is");
-  asm volatile("tlbi vmalle1is");
+  asm volatile("tlbi alle1is");
   Mem::dsb();
   asm volatile("msr SCTLR_EL2, %[control]" : : [control] "r" (control));
   Mem::isb();
