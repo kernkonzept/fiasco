@@ -99,4 +99,4 @@ Gic_mem::alloc_mem(unsigned size, unsigned align = 1)
 PUBLIC static inline
 Gic_mem
 Gic_mem::alloc_zmem(unsigned size, unsigned align = 1)
-{ return Mem_chunk::alloc_mem<Gic_mem>(size, align); }
+{ return Mem_chunk::alloc_zmem<Gic_mem>(size, align); }
