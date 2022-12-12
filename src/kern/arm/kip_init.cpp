@@ -20,7 +20,7 @@ IMPLEMENTATION [arm]:
 #include "timer.h"
 
 
-// Make the stuff below apearing only in this compilation unit.
+// Make the stuff below appearing only in this compilation unit.
 // Trick Preprocess to let the struct reside in the cc file rather
 // than putting it into the _i.h file which is perfectly wrong in 
 // this case.
@@ -65,7 +65,12 @@ namespace KIP_namespace
 IMPLEMENT
 void Kip_init::init()
 {
-  Kip *kinfo = reinterpret_cast<Kip*>(&KIP_namespace::my_kernel_info_page);
+  // Don't reference KIP::my_kernel_info_page directly because the actual
+  // object contains more data: The linker script adds version information and
+  // also extends the size to 4KiB. Using KIP::my_kernel_info_page directly
+  // worries the compiler.
+  extern char my_kernel_info_page[];
+  Kip *kinfo = reinterpret_cast<Kip*>(my_kernel_info_page);
   Kip::init_global_kip(kinfo);
   kinfo->add_mem_region(Mem_desc(0, Mem_layout::User_max,
                         Mem_desc::Conventional, true));
@@ -111,11 +116,10 @@ Kip_init::init_syscalls(Kip *kinfo)
   union K
   {
     Kip k;
-    Mword w[512];
+    Mword w[0x1000 / sizeof(Mword)];
   };
-
   K *k = reinterpret_cast<K *>(kinfo);
-  k->w[0x100] = 0xd65f03c0d4000001; // svc #0; ret
+  k->w[0x800 / sizeof(Mword)] = 0xd65f03c0d4000001; // svc #0; ret
 }
 
 //--------------------------------------------------------------
@@ -128,11 +132,10 @@ Kip_init::init_syscalls(Kip *kinfo)
   union K
   {
     Kip k;
-    Mword w[512];
+    Mword w[0x1000 / sizeof(Mword)];
   };
-
   K *k = reinterpret_cast<K *>(kinfo);
-  k->w[0x100] = 0xd65f03c0d4000002; // hvc #0; ret
+  k->w[0x800 / sizeof(Mword)] = 0xd65f03c0d4000002; // hvc #0; ret
 }
 
 //--------------------------------------------------------------
