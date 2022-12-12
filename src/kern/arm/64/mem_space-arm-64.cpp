@@ -8,13 +8,6 @@ Mem_space::sync_kernel()
   return 0;
 }
 
-PUBLIC inline NEEDS [Mem_space::virt_to_phys]
-Address
-Mem_space::pmem_to_phys(Address virt) const
-{
-  return virt - Mem_layout::Map_base + Mem_layout::Sdram_phys_base;
-}
-
 //----------------------------------------------------------------------------
 IMPLEMENTATION [arm_v8 && arm_lpae && !cpu_virt]:
 

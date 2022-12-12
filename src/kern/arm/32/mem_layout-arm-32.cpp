@@ -98,6 +98,8 @@ public:
     Jdb_tmp_map_area     = Service_page + 0x400000,
     Registers_map_start  = 0xed000000,
     Registers_map_end    = 0xef000000,
+    Pmem_start           = 0xf0000000,
+    Pmem_end             = 0xf8000000,
     Map_base             = RAM_PHYS_BASE,
     Ivt_base             = 0xffff0000,
   };

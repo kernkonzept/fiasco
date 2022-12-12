@@ -11,13 +11,6 @@ Mem_space::sync_kernel()
                     Kmem_alloc::q_allocator(_quota));
 }
 
-PUBLIC inline NEEDS [Mem_space::virt_to_phys]
-Address
-Mem_space::pmem_to_phys(Address virt) const
-{
-  return virt_to_phys(virt);
-}
-
 //----------------------------------------------------------------------------
 IMPLEMENTATION [arm && 32bit && cpu_virt]:
 
@@ -43,7 +36,7 @@ PROTECTED static
 void
 Mem_space::set_syscall_page(void *p)
 {
-  __mem_space_syscall_page = (Address)p;
+  __mem_space_syscall_page = pmem_to_phys((Address)p);
 }
 
 PROTECTED
@@ -77,13 +70,6 @@ Mem_space::sync_kernel()
   pte.write_back_if(true, c_asid());
 
   return 0;
-}
-
-PUBLIC inline NEEDS [Mem_space::virt_to_phys, "kmem.h"]
-Address
-Mem_space::pmem_to_phys(Address virt) const
-{
-  return Kmem::kdir->virt_to_phys(virt);
 }
 
 //-----------------------------------------------------------------------------

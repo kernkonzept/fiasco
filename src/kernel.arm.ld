@@ -10,7 +10,7 @@ virt_address       = kernel_load_addr;
 #elif defined CONFIG_BIT32
 virt_address       = 0xf0000000;
 #elif defined CONFIG_BIT64
-virt_address       = 0xffff000040000000 + (RAM_PHYS_BASE & ((1 << 30) - 1));
+virt_address       = 0xffff000080000000 + (RAM_PHYS_BASE & ((1 << 30) - 1));
 #endif
 phys_offset        = virt_address - kernel_load_addr;
 

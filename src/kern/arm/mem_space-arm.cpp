@@ -77,6 +77,13 @@ Mem_space::is_full_flush(L4_fpage::Rights rights)
   return (bool)(rights & L4_fpage::Rights::R());
 }
 
+PUBLIC static inline
+Address
+Mem_space::pmem_to_phys(Address virt)
+{
+  return Mem_layout::pmem_to_phys(virt);
+}
+
 IMPLEMENT inline
 Mem_space::Tlb_type
 Mem_space::regular_tlb_type()
