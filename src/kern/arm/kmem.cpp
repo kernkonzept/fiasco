@@ -69,7 +69,8 @@ Kmem::mmio_remap(Address phys, Address size, bool cache = false)
         return (phys & ~Config::SUPERPAGE_MASK) | (a & Config::SUPERPAGE_MASK);
     }
 
-  static_assert((Mem_layout::Registers_map_start & ~Config::SUPERPAGE_MASK) == 0);
+  static_assert((Mem_layout::Registers_map_start & ~Config::SUPERPAGE_MASK) == 0,
+                "Registers_map_start must be superpage-aligned");
   Address map_addr = Mem_layout::Registers_map_start + ndev;
 
   for (Address p = phys_page; p < phys_end; p+= Config::SUPERPAGE_SIZE)
