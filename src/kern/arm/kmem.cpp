@@ -69,7 +69,7 @@ Kmem::mmio_remap(Address phys, Address size, bool cache = false)
         return (phys & ~Config::SUPERPAGE_MASK) | (a & Config::SUPERPAGE_MASK);
     }
 
-
+  static_assert((Mem_layout::Registers_map_start & ~Config::SUPERPAGE_MASK) == 0);
   Address map_addr = Mem_layout::Registers_map_start + ndev;
 
   for (Address p = phys_page; p < phys_end; p+= Config::SUPERPAGE_SIZE)
@@ -91,7 +91,7 @@ Kmem::mmio_remap(Address phys, Address size, bool cache = false)
       m.write_back_if(true, Mem_unit::Asid_kernel);
     }
 
-  return (phys & ~Config::SUPERPAGE_MASK) | (map_addr & Config::SUPERPAGE_MASK);
+  return (phys & ~Config::SUPERPAGE_MASK) | map_addr;
 }
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && !cpu_virt]:
