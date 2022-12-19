@@ -68,7 +68,6 @@
   DUMP_CONSTANT (MEM_LAYOUT__TBUF_STATUS_PAGE, Mem_layout::Tbuf_status_page)
 #endif
 #ifdef CONFIG_PF_PC
-  DUMP_CONSTANT (MEM_LAYOUT__LAPIC,            Mem_layout::Local_apic_page)
   DUMP_CONSTANT (MEM_LAYOUT__IO_BITMAP,        Mem_layout::Io_bitmap)
 # ifdef CONFIG_IA32
   DUMP_CONSTANT (MEM_LAYOUT__SYSCALLS,         Mem_layout::Syscalls)

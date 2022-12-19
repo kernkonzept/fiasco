@@ -15,20 +15,6 @@ INTERFACE [ia32,amd64,ux]:
 class Cpu;
 class Tss;
 
-class Device_map
-{
-public:
-  enum
-  {
-    Max = 16,
-    Virt_base = 0x20000000,
-  };
-
-private:
-  Address _map[Max];
-
-};
-
 /**
  * The system's base facilities for kernel-memory management.
  * The kernel memory is a singleton object.  We access it through a
@@ -36,7 +22,6 @@ private:
  */
 class Kmem : public Mem_layout
 {
-  friend class Device_map;
   friend class Jdb;
   friend class Jdb_dbinfo;
   friend class Jdb_kern_info_misc;
@@ -49,8 +34,6 @@ private:
   Kmem (const Kmem&);
 
 public:
-  static Device_map dev_map;
-
   static Mword is_kmem_page_fault(Address pfa, Mword error);
   static Mword is_ipc_page_fault(Address pfa, Mword error);
   static Mword is_io_bitmap_page_fault(Address pfa);
@@ -97,96 +80,8 @@ IMPLEMENTATION [ia32, amd64]:
 
 enum { Print_info = 0 };
 
-PUBLIC
-void
-Device_map::init()
-{
-  for (unsigned i = 0; i < Max; ++i)
-    _map[i] = ~0UL;
-}
-
-PRIVATE
-unsigned
-Device_map::lookup_idx(Address phys)
-{
-  Address p = phys & (~0UL << Config::SUPERPAGE_SHIFT);
-  for (unsigned i = 0; i < Max; ++i)
-    if (p == _map[i])
-      return i;
-
-  return ~0U;
-}
-
-
-PUBLIC
-template< typename T >
-T *
-Device_map::lookup(T *phys)
-{
-  unsigned idx = lookup_idx((Address)phys);
-  if (idx == ~0U)
-    return (T*)~0UL;
-
-  return (T*)((Virt_base + idx * Config::SUPERPAGE_SIZE)
-      | ((Address)phys & ~(~0UL << Config::SUPERPAGE_SHIFT)));
-}
-
-PRIVATE
-Address
-Device_map::map(Address phys, bool /*cache*/)
-{
-  unsigned idx = lookup_idx(phys);
-  if (idx != ~0U)
-    return (Virt_base + idx * Config::SUPERPAGE_SIZE)
-           | (phys & ~(~0UL << Config::SUPERPAGE_SHIFT));
-
-  Address p = phys & (~0UL << Config::SUPERPAGE_SHIFT);
-  Kmem_alloc *const alloc = Kmem_alloc::allocator();
-  for (unsigned i = 0; i < Max; ++i)
-    if (_map[i] == ~0UL)
-      {
-        if (!Kmem::kdir->map(p,
-                             Virt_addr(Virt_base + (i * Config::SUPERPAGE_SIZE)),
-                             Virt_size(Config::SUPERPAGE_SIZE),
-                             Pt_entry::Dirty | Pt_entry::Writable
-                             | Pt_entry::Referenced,
-                             Pt_entry::super_level(), false, pdir_alloc(alloc)))
-          return ~0UL;
-
-	_map[i] = p;
-	return (Virt_base + (i * Config::SUPERPAGE_SIZE))
-	       | (phys & ~(~0UL << Config::SUPERPAGE_SHIFT));
-      }
-
-  return ~0UL;
-}
-
-PUBLIC
-template< typename T >
-T *
-Device_map::map(T *phys, bool cache = true)
-{ return (T*)map((Address)phys, cache); }
-
-PUBLIC
-void
-Device_map::unmap(void const *phys)
-{
-  unsigned idx = lookup_idx((Address)phys);
-  if (idx == ~0U)
-    return;
-
-  Address v = Virt_base + (idx * Config::SUPERPAGE_SIZE);
-
-  Kmem::kdir->unmap(Virt_addr(v), Virt_size(Config::SUPERPAGE_SIZE),
-                    Pdir::Depth, false);
-
-  _map[idx] = ~0U;
-}
-
-
 Unsigned8    *Kmem::io_bitmap_delimiter;
 Address Kmem::kphys_start, Kmem::kphys_end;
-Device_map Kmem::dev_map;
 
 
 PUBLIC static inline
@@ -288,6 +183,7 @@ Kmem::is_kmem_page_fault(Address addr, Mword /*error*/)
 //
 
 // Establish a 4k-mapping
+// TODO: Implement this via ioremap
 PUBLIC static
 void
 Kmem::map_phys_page(Address phys, Address virt,
@@ -308,22 +204,65 @@ Kmem::map_phys_page(Address phys, Address virt,
     *offs = phys - pte;
 }
 
+// Taken from arm64 -> merge
+PRIVATE static
+bool
+Kmem::cont_mapped(Address phys_beg, Address phys_end, Address virt)
+{
+  for (Address p = phys_beg, v = virt;
+       p < phys_end && v < Mem_layout::Registers_map_end;
+       p += Config::SUPERPAGE_SIZE, v += Config::SUPERPAGE_SIZE)
+    {
+      auto e = kdir->walk(Virt_addr(v), kdir->Super_level);
+      if (!e.is_valid() || p != e.page_addr())
+        return false;
+    }
 
+  return true;
+}
+
+// Taken from arm64 -> merge
+// Not thread-safe.
 PUBLIC static
 Address
-Kmem::mmio_remap(Address phys, Address size)
+Kmem::mmio_remap(Address phys, Address size, bool cache = false, bool with_exec = false)
 {
-  assert(size <= Config::PAGE_SIZE);
-  (void)size;
+  static Address ndev = 0;
+  Address phys_page = cxx::mask_lsb(phys, Config::SUPERPAGE_SHIFT);
+  Address phys_end  = Mem_layout::round_superpage(phys + size);
 
-  Address offs;
-  Address va = alloc_io_vmem(Config::PAGE_SIZE);
+  for (Address a = Mem_layout::Registers_map_start;
+       a < Mem_layout::Registers_map_end; a += Config::SUPERPAGE_SIZE)
+    {
+      if (cont_mapped(phys_page, phys_end, a))
+        return (phys & ~Config::SUPERPAGE_MASK) | (a & Config::SUPERPAGE_MASK);
+    }
 
-  if (!va)
-    return ~0UL;
+  static_assert((Mem_layout::Registers_map_start & ~Config::SUPERPAGE_MASK) == 0,
+                "Registers_map_start must be superpage-aligned");
+  Address map_addr = Mem_layout::Registers_map_start + ndev;
 
-  Kmem::map_phys_page(phys, va, false, true, &offs);
-  return va + offs;
+  for (Address p = phys_page; p < phys_end; p+= Config::SUPERPAGE_SIZE)
+    {
+      Address dm = Mem_layout::Registers_map_start + ndev;
+      assert(dm < Mem_layout::Registers_map_end);
+
+      ndev += Config::SUPERPAGE_SIZE;
+
+      auto m = kdir->walk(Virt_addr(dm), Pdir::Super_level);
+      assert (!m.is_valid());
+      assert (m.page_order() == Config::SUPERPAGE_SHIFT);
+      m.set_page(m.make_page(Phys_mem_addr(p),
+                             Page::Attr(with_exec ? Page::Rights::RWX() : Page::Rights::RW(),
+                                        cache ? Page::Type::Normal()
+                                              : Page::Type::Uncached(),
+                                        Page::Kern::Global())));
+
+      //m.write_back_if(true, Mem_unit::Asid_kernel);
+      Mem_unit::tlb_flush_kernel(dm);
+    }
+
+  return (phys & ~Config::SUPERPAGE_MASK) | map_addr;
 }
 
 //--------------------------------------------------------------------------
@@ -462,7 +401,6 @@ PUBLIC static FIASCO_INIT
 void
 Kmem::init_mmu()
 {
-  dev_map.init();
   Kmem_alloc *const alloc = Kmem_alloc::allocator();
 
   kdir = (Kpdir*)alloc->alloc(Config::page_order());

@@ -4,15 +4,9 @@ INTERFACE [arm]:
 #include "mem_layout.h"
 #include "paging.h"
 
-class Device_map
-{
-};
-
 class Kmem : public Mem_layout
 {
 public:
-  static Device_map dev_map;
-
   static Mword is_kmem_page_fault(Mword pfa, Mword error);
   static Mword is_ipc_page_fault(Mword pfa, Mword error);
   static Mword is_io_bitmap_page_fault(Mword pfa);
@@ -25,12 +19,6 @@ IMPLEMENTATION [arm]:
 #include "mem_unit.h"
 #include "paging.h"
 #include <cassert>
-
-PUBLIC
-template< typename T >
-T *
-Device_map::map(T *phys, bool cache = true)
-{ return (T*)Kmem::mmio_remap((Address)phys, Config::SUPERPAGE_SIZE, cache); }
 
 IMPLEMENT inline
 Mword Kmem::is_io_bitmap_page_fault(Mword)
@@ -46,7 +34,7 @@ Kmem::cont_mapped(Address phys_beg, Address phys_end, Address virt)
        p < phys_end && v < Mem_layout::Registers_map_end;
        p += Config::SUPERPAGE_SIZE, v += Config::SUPERPAGE_SIZE)
     {
-      auto e = kdir->walk(Virt_addr(v), K_pte_ptr::Super_level);
+      auto e = kdir->walk(Virt_addr(v), kdir->Super_level);
       if (!e.is_valid() || p != e.page_addr())
         return false;
     }

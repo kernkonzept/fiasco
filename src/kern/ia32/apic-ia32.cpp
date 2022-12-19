@@ -30,7 +30,7 @@ private:
 
   static unsigned		present;
   static int			good_cpu;
-  static const			Address io_base;
+  static Address                io_base asm ("apic_io_base");
   static Address		phys_base;
   static unsigned		timer_divisor;
   static unsigned		frequency_khz;
@@ -103,7 +103,6 @@ private:
 extern unsigned apic_spurious_interrupt_bug_cnt;
 extern unsigned apic_spurious_interrupt_cnt;
 extern unsigned apic_error_cnt;
-
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION:
@@ -225,11 +224,10 @@ IMPLEMENTATION[ia32,amd64]:
 unsigned apic_spurious_interrupt_bug_cnt;
 unsigned apic_spurious_interrupt_cnt;
 unsigned apic_error_cnt;
-Address  apic_io_base;
 
 unsigned   Apic::present;
 int        Apic::good_cpu;
-const Address Apic::io_base = Mem_layout::Local_apic_page;
+Address    Apic::io_base;
 Address    Apic::phys_base;
 unsigned   Apic::timer_divisor = 1;
 unsigned   Apic::frequency_khz;
@@ -349,17 +347,14 @@ static FIASCO_INIT_AND_PM
 void
 Apic::map_apic_page()
 {
-  Address offs;
   Address base = apic_page_phys();
   // We should not change the physical address of the Local APIC page if
   // possible since some versions of VMware would complain about a
   // non-implemented feature
-  Kmem::map_phys_page(base, Mem_layout::Local_apic_page,
-		      false, true, &offs);
+  assert(!io_base); // Ensure only called once
+  io_base = Kmem::mmio_remap(base, Config::PAGE_SIZE);
 
   Kip::k()->add_mem_region(Mem_desc(base, base + Config::PAGE_SIZE - 1, Mem_desc::Reserved));
-
-  assert(offs == 0);
 }
 
 // check CPU type if APIC could be present
@@ -981,6 +976,5 @@ Apic::init(bool resume)
 
   dump_info();
 
-  apic_io_base = Mem_layout::Local_apic_page;
   init_timer(cpu);
 }

@@ -29,7 +29,6 @@ public:
     Kglobal_area      = 0xffffffff00000000UL,    ///< % 1GB to share 1GB tables (start)
     Kglobal_area_end  = 0xffffffff80000000UL,    ///< % 1GB to share 1GB tables (end)
     Service_page      = Kglobal_area,            ///< % 4MB global mappings
-    Local_apic_page   = Service_page + 0x0000,   ///< % 4KB
     Kmem_tmp_page_1   = Service_page + 0x2000,   ///< % 4KB size 8KB
     Kmem_tmp_page_2   = Service_page + 0x4000,   ///< % 4KB size 8KB
     Tbuf_status_page  = Service_page + 0x6000,   ///< % 4KB
@@ -40,11 +39,8 @@ public:
     Tbuf_buffer_size  = 0x200000,
     Tbuf_ubuffer_area = Tbuf_buffer_area,
     // 0xffffffffeb800000-0xfffffffffec000000 (8MB) free
-    Io_map_area_start = Kglobal_area + 0xc000000UL,
-    Io_map_area_end   = Kglobal_area + 0xc800000UL,
-    ___free_3         = Kglobal_area + 0xc800000UL, ///< % 4MB
-    ___free_4         = Kglobal_area + 0xc880000UL, ///< % 4MB
-    // 0xffffffffee000000-0xffffffffef800000 (24MB) free
+    Registers_map_start = Kglobal_area + 0xc000000UL,
+    Registers_map_end   = Kglobal_area_end,
     Kstatic           = 0xffffffffef800000UL,    ///< % 4MB Io_bitmap
     Vmem_end          = 0xfffffffff0000000UL,
 

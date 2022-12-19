@@ -194,15 +194,11 @@ Io_apic::Io_apic(Unsigned64 phys, unsigned gsi_base)
   if (Print_info)
     printf("IO-APIC: addr=%lx\n", (Mword)phys);
 
-  Address offs;
-  Address va = Mem_layout::alloc_io_vmem(Config::PAGE_SIZE);
-  assert (va);
-
-  Kmem::map_phys_page(phys, va, false, true, &offs);
+  Address va = Kmem::mmio_remap(phys, Config::PAGE_SIZE);
 
   Kip::k()->add_mem_region(Mem_desc(phys, phys + Config::PAGE_SIZE -1, Mem_desc::Reserved));
 
-  Io_apic::Apic *a = (Io_apic::Apic*)(va + offs);
+  Io_apic::Apic *a = (Io_apic::Apic *)va;
   a->write(0, 0);
 
   _apic = a;

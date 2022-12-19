@@ -783,12 +783,7 @@ Intel::Io_mmu::probe(ACPI::Dmar_drhd const *drhd)
   segment   = drhd->segment;
   flags     = drhd->flags;
 
-  Address va = Mem_layout::alloc_io_vmem(Config::PAGE_SIZE);
-  assert (va);
-
-  Address offs;
-  Kmem::map_phys_page(base_addr, va, false, true, &offs);
-  assert (offs == 0);
+  Address va = Kmem::mmio_remap(base_addr, Config::PAGE_SIZE);
 
   Kip::k()->add_mem_region(Mem_desc(base_addr, base_addr + Config::PAGE_SIZE -1,
                                     Mem_desc::Reserved));

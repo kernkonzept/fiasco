@@ -12,14 +12,14 @@ IMPLEMENTATION [ia32 || amd64 || ux]:
 
 #include "static_assert.h"
 
-Address Mem_layout::_io_map_ptr = Mem_layout::Io_map_area_end;
+Address Mem_layout::_io_map_ptr = Mem_layout::Registers_map_end;
 
 PUBLIC static inline
 Address
 Mem_layout::alloc_io_vmem(unsigned long bytes)
 {
   bytes = (bytes + Config::PAGE_SIZE - 1) & ~(Config::PAGE_SIZE - 1);
-  if (_io_map_ptr - bytes < Io_map_area_start)
+  if (_io_map_ptr - bytes < Registers_map_start)
     return 0;
 
   _io_map_ptr -= bytes;

@@ -272,7 +272,7 @@ Acpi::_map_table_head(Unsigned64 phys)
       return 0;
     }
 
-  void *t = Kmem::dev_map.map((void*)phys);
+  void *t = (void *)Kmem::mmio_remap(phys, Config::PAGE_SIZE, true);
   if (t == (void *)~0UL)
     {
       printf("ACPI: cannot map phys address %llx, map failed\n",
@@ -339,7 +339,7 @@ Acpi::init_virt()
 
   if (rsdp->rev && rsdp->xsdt_phys)
     {
-      Acpi_xsdt_p const *x = Kmem::dev_map.map((const Acpi_xsdt_p *)rsdp->xsdt_phys);
+      Acpi_xsdt_p const *x = (Acpi_xsdt_p const *)Kmem::mmio_remap(rsdp->xsdt_phys, sizeof(*x), true);
       if (x == (Acpi_xsdt_p const *)~0UL)
         WARN("ACPI: Could not map XSDT\n");
       else if (!x->checksum_ok())
@@ -358,7 +358,7 @@ Acpi::init_virt()
 
   if (rsdp->rsdt_phys)
     {
-      Acpi_rsdt_p const *r = Kmem::dev_map.map((const Acpi_rsdt_p *)(unsigned long)rsdp->rsdt_phys);
+      Acpi_rsdt_p const *r = (Acpi_rsdt_p const *)Kmem::mmio_remap(rsdp->rsdt_phys, sizeof(*r), true);
       if (r == (Acpi_rsdt_p const *)~0UL)
         WARN("ACPI: Could not map RSDT\n");
       else if (!r->checksum_ok())
@@ -459,7 +459,7 @@ Acpi_sdt_p<T>::find(char const *sig) const
 {
   for (unsigned i = 0; i < ((len-sizeof(Acpi_table_head))/sizeof(ptrs[0])); ++i)
     {
-      Acpi_table_head const *t = Kmem::dev_map.map((Acpi_table_head const*)ptrs[i]);
+      Acpi_table_head const *t = Kmem::mmio_remap(ptrs[i], sizeof(*t), true);
       if (t == (Acpi_table_head const *)~0UL)
 	continue;
 

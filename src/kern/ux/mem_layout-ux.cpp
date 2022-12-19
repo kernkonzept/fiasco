@@ -38,9 +38,9 @@ public:
     Service_page       = 0x5f000000,
     Idt                = 0x5f001000,
     Tbuf_status_page   = 0x5f002000,  ///< % 4KB   for jdb_tbuf
-    Io_map_area_start  = 0x5f003000,
-    Io_map_area_end    = 0x5f006000,
-    Tbuf_buffer_area   = 0x5f200000,  ///< % 2MB   tracebuffer
+    Registers_map_start= 0x5f100000,
+    Registers_map_end  = 0x5f600000,
+    Tbuf_buffer_area   = 0x5f600000,  ///< % 2MB   tracebuffer
     Tbuf_buffer_size   = 0x00200000,
     Io_bitmap          = 0x5f800000,  ///< % 4MB   dummy
     _Free_1            = 0x5fc00000,  ///< % 4MB   dummy
@@ -66,9 +66,9 @@ public:
     Service_page       = 0x2f000000,
     Idt                = 0x2f001000,
     Tbuf_status_page   = 0x2f002000,  ///< % 4KB   for jdb_tbuf
-    Io_map_area_start  = 0x2f003000,
-    Io_map_area_end    = 0x2f006000,
-    Tbuf_buffer_area   = 0x2f200000,  ///< % 2MB   tracebuffer
+    Registers_map_start= 0x2f100000,
+    Registers_map_end  = 0x2f600000,
+    Tbuf_buffer_area   = 0x2f600000,  ///< % 2MB   tracebuffer
     Tbuf_buffer_size   = 0x00200000,
     Io_bitmap          = 0x2f800000,  ///< % 4MB   dummy
     Glibc_mmap_start   = 0x40000000,  ///<         fixed, Linux kernel spec.
