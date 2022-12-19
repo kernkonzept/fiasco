@@ -519,7 +519,7 @@ Jdb_mapdb::dump_all_obj_mappings(char const *arg)
 
   c->start_exclusive(Console::UART);
   int len = arg ? __builtin_strlen(arg) : 0;
-  printf("@@ ObjectSpaceDump @< BLOCK\n"
+  printf("@@ ObjectSpaceDump @< BLOCK DUMP\n"
          "dump format version number: 0\n"
          "user space tag:%s%.*s%s",
          len ? " " : "", len, len ? arg : "", gzip ? "" : "\n");
