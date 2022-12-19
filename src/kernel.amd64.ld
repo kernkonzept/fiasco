@@ -33,6 +33,11 @@ PHDRS {
 }
 
 SECTIONS {
+  .bda 0x400 (NOLOAD) : {
+    . = 0xe;
+    ebda_segment = .;
+  }
+
   . = FIASCO_MP_TRAMP_PAGE;
   .realmode_tramp : {
       *(.realmode_tramp*)
