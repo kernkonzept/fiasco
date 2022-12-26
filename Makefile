@@ -14,7 +14,7 @@ CLEANSUBDIRS	:= $(wildcard $(MANSUBDIRS) $(DFLBUILDDIR))
 CONFIG_FILE	:= $(TEMPLDIR)/globalconfig.out
 TEST_TEMPLATES	:= $(patsubst $(CONFIG_FILE).%,%,$(wildcard $(CONFIG_FILE).*))
 TEST_TEMPLATES  := $(if $(TEMPLATE_FILTER),$(filter $(TEMPLATE_FILTER),$(TEST_TEMPLATES)),$(TEST_TEMPLATES))
-DFL_TEMPLATE	:= ia32-1
+DFL_TEMPLATE	:= amd64-dfl
 
 buildmakefile = mkdir -p "$(1)";                                        \
 		perl -p -e '$$s = "$(CURDIR)/src"; s/\@SRCDIR\@/$$s/'   \
