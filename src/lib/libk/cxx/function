@@ -17,6 +17,12 @@ namespace Bits {
 
 template< typename Signature > class functor;
 
+/**
+ * This implementation of functor stores only an address of the Functor object
+ * passed to its constructor, i.e. it does not copy the object itself. This
+ * means the caller must be careful not to pass a Functor object that is
+ * out-lived by the functor instance.
+ */
 template< typename Res, typename ...Args >
 class functor<Res(Args...)>
 {
