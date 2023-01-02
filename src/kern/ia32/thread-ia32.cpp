@@ -564,8 +564,10 @@ Thread::sys_gdt_x86(L4_msg_tag tag, Utcb const *utcb, Utcb *out)
       ++idx, ++entry_number)
     {
       Gdt_entry d = access_once((Gdt_entry *)&utcb->val64[Utcb::val64_idx(2) + idx]);
-      if (!d.unsafe())
-        _gdt_user_entries[entry_number] = d;
+      if (d.unsafe())
+        return Kobject_iface::commit_result(-L4_err::EInval);
+
+      _gdt_user_entries[entry_number] = d;
     }
 
   if (this == current_thread())
