@@ -148,6 +148,7 @@ Bootstrap::do_arm_1176_cache_alias_workaround() {}
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
+#include "infinite_loop.h"
 #include "kmem_space.h"
 #include "mmu.h"
 #include "globalconfig.h"
@@ -172,7 +173,6 @@ extern "C" void bootstrap_main()
   // force to construct an absolute relocation because GCC may not do it.
   bs_info.entry();
 
-  while(1)
-    ;
+  L4::infinite_loop();
 }
 

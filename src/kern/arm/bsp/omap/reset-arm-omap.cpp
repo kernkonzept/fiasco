@@ -1,5 +1,6 @@
 IMPLEMENTATION [arm && pf_omap3_35x]: //-----------------------------------
 
+#include "infinite_loop.h"
 #include "io.h"
 #include "kmem.h"
 
@@ -13,12 +14,12 @@ platform_reset(void)
 
   Io::write<Mword>(2, Kmem::mmio_remap(PRM_RSTCTRL, sizeof(Mword)));
 
-  for (;;)
-    ;
+  L4::infinite_loop();
 }
 
 IMPLEMENTATION [arm && pf_omap3_am33xx]: //--------------------------------
 
+#include "infinite_loop.h"
 #include "io.h"
 #include "kmem.h"
 
@@ -29,12 +30,12 @@ platform_reset(void)
 
   Io::write<Mword>(1, Kmem::mmio_remap(PRM_RSTCTRL, sizeof(Mword)));
 
-  for (;;)
-    ;
+  L4::infinite_loop();
 }
 
 IMPLEMENTATION [arm && pf_omap4]: //---------------------------------------
 
+#include "infinite_loop.h"
 #include "io.h"
 #include "kmem.h"
 
@@ -51,12 +52,12 @@ platform_reset(void)
   Io::set<Mword>(1, p);
   Io::read<Mword>(p);
 
-  for (;;)
-    ;
+  L4::infinite_loop();
 }
 
 IMPLEMENTATION [arm && pf_omap5]: //---------------------------------------
 
+#include "infinite_loop.h"
 #include "io.h"
 #include "kmem.h"
 
@@ -74,6 +75,5 @@ platform_reset(void)
   Io::set<Mword>(RST_GLOBAL_COLD_SW, p);
   Io::read<Mword>(p);
 
-  for (;;)
-    ;
+  L4::infinite_loop();
 }

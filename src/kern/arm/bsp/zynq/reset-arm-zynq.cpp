@@ -1,5 +1,6 @@
 IMPLEMENTATION [arm && pf_zynq]:
 
+#include "infinite_loop.h"
 #include "io.h"
 #include "kmem.h"
 #include "mmio_register_block.h"
@@ -11,6 +12,5 @@ platform_reset(void)
   slcr.write<Unsigned32>(0xdf0d, 0x8);
   slcr.write<Unsigned32>(1, 0x200);
 
-  for (;;)
-    ;
+  L4::infinite_loop();
 }

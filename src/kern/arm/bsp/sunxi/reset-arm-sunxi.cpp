@@ -1,5 +1,6 @@
 IMPLEMENTATION [arm && pf_sunxi]:
 
+#include "infinite_loop.h"
 #include "io.h"
 #include "kmem.h"
 
@@ -10,6 +11,5 @@ platform_reset(void)
   Io::write<Unsigned32>(3, wdt + 4);
   Io::write<Unsigned32>(1, wdt + 0);
 
-  for (;;)
-    ;
+  L4::infinite_loop();
 }

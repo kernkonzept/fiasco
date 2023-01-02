@@ -1,5 +1,6 @@
 IMPLEMENTATION [arm && pf_imx_21]:
 
+#include "infinite_loop.h"
 #include "io.h"
 #include "kmem.h"
 
@@ -21,13 +22,13 @@ platform_reset(void)
   // Assert Software reset signal by making the bit zero
   Io::mask<Unsigned16>(~WCR_SRS, Kmem::mmio_remap(WCR, sizeof(Unsigned16)));
 
-  for (;;)
-    ;
+  L4::infinite_loop();
 }
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pf_imx_28]:
 
+#include "infinite_loop.h"
 #include "kmem.h"
 #include "mmio_register_block.h"
 
@@ -38,8 +39,7 @@ platform_reset(void)
   r[0x50] = 1; // Watchdog counter
   r[0x04] = 1 << 4; // Watchdog enable
 
-  for (;;)
-    ;
+  L4::infinite_loop();
 }
 
 // ------------------------------------------------------------------------
@@ -72,6 +72,7 @@ void platform_imx_cpus_off()
 IMPLEMENTATION [arm && (pf_imx_35 || pf_imx_51 || pf_imx_53 || pf_imx_6
                         || pf_imx_6ul || pf_imx_7)]:
 
+#include "infinite_loop.h"
 #include "io.h"
 #include "kmem.h"
 
@@ -89,20 +90,18 @@ platform_reset(void)
   Io::modify<Unsigned16>(WCR_WDE, 0xff10, Kmem::mmio_remap(WCR,
                                                            sizeof(Unsigned16)));
 
-  for (;;)
-    ;
+  L4::infinite_loop();
 }
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_v8]:
 
+#include "infinite_loop.h"
 #include "psci.h"
 
 void __attribute__ ((noreturn))
 platform_reset(void)
 {
   Psci::system_reset();
-
-  for (;;)
-    ;
+  L4::infinite_loop();
 }

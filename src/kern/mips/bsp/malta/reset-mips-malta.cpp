@@ -5,6 +5,7 @@
  */
 IMPLEMENTATION [mips && malta]:
 
+#include "infinite_loop.h"
 #include "kmem.h"
 #include "mmio_register_block.h"
 
@@ -20,6 +21,5 @@ platform_reset()
   Register_block<32> r(Kmem::mmio_remap(SOFTRES_REGISTER, sizeof(Unsigned32)));
   r[0] = GORESET;
 
-  for(;;)
-    ;
+  L4::infinite_loop();
 }

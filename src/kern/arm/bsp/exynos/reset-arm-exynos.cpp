@@ -1,5 +1,6 @@
 IMPLEMENTATION [arm && pf_exynos]:
 
+#include "infinite_loop.h"
 #include "io.h"
 #include "kmem.h"
 
@@ -10,6 +11,5 @@ platform_reset(void)
                                        sizeof(Mword)));
 
   // we should reboot now
-  while (1)
-    ;
+  L4::infinite_loop();
 }

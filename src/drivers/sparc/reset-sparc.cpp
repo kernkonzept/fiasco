@@ -1,5 +1,6 @@
 IMPLEMENTATION [sparc && leon3]:
 
+#include "infinite_loop.h"
 #include "io.h"
 
 /**
@@ -9,7 +10,7 @@ void __attribute__ ((noreturn))
 platform_reset(void)
 {
   //in  case we return
-  for(;;) ;
+  L4::infinite_loop();
 }
 
 IMPLEMENTATION [sparc && !leon3]:
@@ -17,6 +18,6 @@ IMPLEMENTATION [sparc && !leon3]:
 void __attribute__ ((noreturn))
 platform_reset(void)
 {
-  for(;;);
+  L4::infinite_loop();
 }
 

@@ -1,5 +1,6 @@
 IMPLEMENTATION [mips && ci20]:
 
+#include "infinite_loop.h"
 #include "kmem.h"
 #include "mmio_register_block.h"
 #include <cstdio>
@@ -9,6 +10,5 @@ platform_reset()
 {
   printf("TODO: Implement reset\n");
 
-  for(;;)
-    ;
+  L4::infinite_loop();
 }

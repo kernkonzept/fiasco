@@ -1,5 +1,6 @@
 IMPLEMENTATION [arm && pf_s3c2410]:
 
+#include "infinite_loop.h"
 #include "mmio_register_block.h"
 #include "kmem.h"
 
@@ -25,6 +26,5 @@ platform_reset(void)
   wdg.write(WTCON_RST_EN | WTCON_EN | WTCON_PRESCALER, WTCON);
 
   // we should reboot now
-  while (1)
-    ;
+  L4::infinite_loop();
 }

@@ -1,5 +1,6 @@
 IMPLEMENTATION [mips && baikal_t]:
 
+#include "infinite_loop.h"
 #include "kmem.h"
 #include "mmio_register_block.h"
 
@@ -12,6 +13,5 @@ platform_reset(void)
   r[0x0] = r[0] | 1;
   r[0xc] = 0x76;
 
-  for (;;)
-    ;
+  L4::infinite_loop();
 }

@@ -322,6 +322,7 @@ asm
 // -----------------------------------------------------------------
 IMPLEMENTATION [arm && cpu_virt]:
 
+#include "infinite_loop.h"
 #include "cpu.h"
 
 PUBLIC static inline NEEDS["cpu.h"]
@@ -361,8 +362,7 @@ Bootstrap::leave_el3()
   if (((pfr0 >> 8) & 0xf) == 0)
     {
       // EL2 not supported, crash
-      for (;;)
-        ;
+      L4::infinite_loop();
     }
 
   asm volatile ("msr HCR_EL2, %0" : : "r"(Cpu::Hcr_rw));

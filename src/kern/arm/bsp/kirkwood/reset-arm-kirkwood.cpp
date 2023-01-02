@@ -1,5 +1,6 @@
 IMPLEMENTATION [arm && pf_kirkwood]:
 
+#include "infinite_loop.h"
 #include "io.h"
 #include "kmem.h"
 #include "mmio_register_block.h"
@@ -25,6 +26,5 @@ platform_reset(void)
   // do software reset
   r.write(1, Kirkwood_reset::Soft_reset_reg);
 
-  for (;;)
-    ;
+  L4::infinite_loop();
 }

@@ -1,5 +1,6 @@
 IMPLEMENTATION [arm && pf_integrator]:
 
+#include "infinite_loop.h"
 #include "io.h"
 #include "kmem.h"
 
@@ -12,6 +13,5 @@ platform_reset(void)
 
   Io::write(1 << 3, Kmem::mmio_remap(HDR_CTRL_OFFSET, sizeof(Mword)));
 
-  for (;;)
-    ;
+  L4::infinite_loop();
 }

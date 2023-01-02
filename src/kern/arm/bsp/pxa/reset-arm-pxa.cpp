@@ -1,5 +1,6 @@
 IMPLEMENTATION [arm && pf_xscale]:
 
+#include "infinite_loop.h"
 #include "mem_layout.h"
 #include "mmio_register_block.h"
 #include "kmem.h"
@@ -18,6 +19,5 @@ platform_reset(void)
   timer.write<Mword>(1, OWER);
   timer.write<Mword>(0xffffff00, OSCR);
 
-  for (;;)
-    ;
+  L4::infinite_loop();
 }

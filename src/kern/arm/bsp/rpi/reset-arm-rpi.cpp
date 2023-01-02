@@ -1,5 +1,6 @@
 IMPLEMENTATION [arm && pf_rpi]:
 
+#include "infinite_loop.h"
 #include "io.h"
 #include "kmem.h"
 
@@ -18,6 +19,5 @@ platform_reset(void)
                         | pw | 0x20,
                         base + Rstc);
 
-  for (;;)
-    ;
+  L4::infinite_loop();
 }

@@ -1,5 +1,6 @@
 IMPLEMENTATION [arm && pf_armada38x]:
 
+#include "infinite_loop.h"
 #include "io.h"
 #include "kmem.h"
 #include "mmio_register_block.h"
@@ -12,6 +13,5 @@ platform_reset(void)
   r.r<32>(0x60) = 1;
   r.r<32>(0x64) = 1;
 
-  for (;;)
-    ;
+  L4::infinite_loop();
 }

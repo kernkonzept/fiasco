@@ -31,12 +31,13 @@ static inline void do_reset()
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pf_realview]:
 
+#include "infinite_loop.h"
+
 void __attribute__ ((noreturn))
 platform_reset(void)
 {
   Platform::sys->write<Mword>(0xa05f, Platform::Sys::Lock);  // unlock for reset
   do_reset();
 
-  for (;;)
-    ;
+  L4::infinite_loop();
 }

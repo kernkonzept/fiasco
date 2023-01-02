@@ -1,5 +1,6 @@
 IMPLEMENTATION [ppc32 && mpc52xx]:
 
+#include "infinite_loop.h"
 #include "io.h"
 #include "boot_info.h"
 
@@ -25,7 +26,7 @@ platform_reset(void)
   Io::write<Unsigned32>(0x9004, mbar + Gp0_mode);
 
   //in  case we return
-  for(;;) ;
+  L4::infinite_loop();
 }
 
 IMPLEMENTATION [ppc32 && !mpc52xx]:
@@ -33,6 +34,6 @@ IMPLEMENTATION [ppc32 && !mpc52xx]:
 void __attribute__ ((noreturn))
 platform_reset(void)
 {
-  for(;;);
+  L4::infinite_loop();
 }
 
