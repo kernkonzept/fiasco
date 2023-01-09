@@ -90,7 +90,7 @@ special_l4_ops(bfd_vma memaddr)
 
 int
 disasm_bytes(char *buffer, unsigned len, Jdb_address addr,
-             int show_intel_syntax,
+             int show_intel_syntax, int show_arm_thumb,
              Peek_task peek_task, Is_adp_mem is_adp_mem)
 {
   // symbols / lines not supported ATM anyway
@@ -105,6 +105,7 @@ disasm_bytes(char *buffer, unsigned len, Jdb_address addr,
 #endif
 
   (void)show_intel_syntax;
+  (void)show_arm_thumb;
 
   int ret;
   static csh handle;
@@ -124,9 +125,11 @@ disasm_bytes(char *buffer, unsigned len, Jdb_address addr,
 #elif defined(CONFIG_AMD64)
       ret = cs_open(CS_ARCH_X86, (cs_mode)(CS_MODE_64), &handle);
 #elif defined(CONFIG_ARM) && defined(CONFIG_BIT32)
-      ret = cs_open(CS_ARCH_ARM, (cs_mode)(CS_MODE_ARM|CS_MODE_LITTLE_ENDIAN), &handle);
+      auto syntax = (cs_mode)(CS_MODE_ARM|CS_MODE_LITTLE_ENDIAN);
+      ret = cs_open(CS_ARCH_ARM, syntax, &handle);
 #elif defined(CONFIG_ARM) && defined(CONFIG_BIT64)
-      ret = cs_open(CS_ARCH_ARM64, (cs_mode)(CS_MODE_ARM|CS_MODE_LITTLE_ENDIAN), &handle);
+      auto syntax = (cs_mode)(CS_MODE_ARM|CS_MODE_LITTLE_ENDIAN);
+      ret = cs_open(show_arm_thumb ? CS_ARCH_ARM : CS_ARCH_ARM64, syntax, &handle);
 #elif defined(CONFIG_MIPS)
       ret = cs_open(CS_ARCH_MIPS,
                     (cs_mode)(
@@ -154,6 +157,9 @@ disasm_bytes(char *buffer, unsigned len, Jdb_address addr,
 #if defined(CONFIG_IA32) || defined(CONFIG_AMD64)
       (void)cs_option(handle, CS_OPT_SYNTAX,
                       show_intel_syntax ? CS_OPT_SYNTAX_INTEL : CS_OPT_SYNTAX_ATT);
+#elif defined(CONFIG_ARM) && defined(CONFIG_BIT64)
+      size_t mode = (size_t)(show_arm_thumb ? CS_MODE_THUMB : (cs_mode)0);
+      (void)cs_option(handle, CS_OPT_MODE, mode);
 #endif
       cs_insn *insn = NULL;
 

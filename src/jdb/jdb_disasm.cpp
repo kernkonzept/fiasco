@@ -26,6 +26,7 @@ public:
   static bool avail() { return true; }
 private:
   static char show_intel_syntax;
+  static char show_arm_thumb;
 };
 
 
@@ -65,6 +66,7 @@ IMPLEMENTATION [jdb_disasm]:
 #include "task.h"
 
 char Jdb_disasm::show_intel_syntax;
+char Jdb_disasm::show_arm_thumb;
 
 static
 bool
@@ -74,7 +76,7 @@ Jdb_disasm::disasm_line(char *buffer, int buflen,
   int len;
 
   if ((len = disasm_bytes(buffer, buflen, addr,
-                          show_intel_syntax, &Jdb::peek_task,
+                          show_intel_syntax, show_arm_thumb, &Jdb::peek_task,
                           &Jdb::is_adapter_memory)) < 0)
     {
       addr += 1;
@@ -188,6 +190,8 @@ Jdb_disasm::show(Jdb_address virt, int level)
 
 #if defined(CONFIG_IA32) || defined(CONFIG_AMD64)
       static char const * const syntax_mode[] = { "[AT&T]", "[Intel]" };
+#elif defined(CONFIG_ARM)
+      static char const * const arm_thumb[] = { "", "[thumb]" };
 #endif
       char s[16];
       Jdb::printf_statline("dis",
@@ -196,6 +200,8 @@ Jdb_disasm::show(Jdb_address virt, int level)
 			   virt.addr(), Jdb::addr_space_to_str(virt, s, sizeof(s)),
 #if defined(CONFIG_IA32) || defined(CONFIG_AMD64)
 			   syntax_mode[(int)show_intel_syntax]
+#elif defined(CONFIG_ARM)
+                           arm_thumb[(int)show_arm_thumb]
 #else
                            ""
 #endif
@@ -231,6 +237,10 @@ Jdb_disasm::show(Jdb_address virt, int level)
 #if defined(CONFIG_IA32) || defined(CONFIG_AMD64)
 	case KEY_TAB:
 	  show_intel_syntax ^= 1;
+	  break;
+#elif defined(CONFIG_ARM) && defined(CONFIG_BIT32)
+	case KEY_TAB:
+	  show_arm_thumb ^= 1;
 	  break;
 #endif
 	case KEY_CURSOR_HOME:

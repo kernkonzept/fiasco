@@ -11,7 +11,7 @@ typedef int (*Is_adp_mem)(Jdb_address addr);
 
 extern int
 disasm_bytes(char *buffer, unsigned len, Jdb_address addr,
-             int show_intel_syntax,
+             int show_intel_syntax, int show_arm_thumb,
              Peek_task peek_task, Is_adp_mem adp_mem);
 
 void disasm_init(void *ptr, unsigned size);
