@@ -31,11 +31,24 @@ builddir:
 		exit 1;					\
 	fi
 	@$(call buildmakefile,$(BUILDDIR))
-	@if [ -f "$(TEMPLDIR)/globalconfig.out.$(T)" ]; then		\
-		echo "Copying template configuration $(T)";		\
-		cp $(TEMPLDIR)/globalconfig.out.$(T) $(BUILDDIR)/globalconfig.out;		\
-		$(MAKE) -C $(BUILDDIR) olddefconfig;			\
-	fi
+	@t_dfl="$(TEMPLDIR)/globalconfig.out.$(DFL_TEMPLATE)";  \
+	if [ -n "$(T)" ]; then                                  \
+	  tfile="$(TEMPLDIR)/globalconfig.out.$(T)";            \
+	  [ -f "$$tfile" ] || {                                 \
+	    echo "Template \"$(T)\" does not exist as $$tfile"; \
+	    $(RM) -r $(BUILDDIR);                               \
+	    exit 1;                                             \
+	  };                                                    \
+	elif [ -f "$$t_dfl" ]; then                             \
+	  tfile="$$t_dfl";                                      \
+	else                                                    \
+	  echo "\"$$t_dfl\" does not exist.";                   \
+	  $(RM) -r $(BUILDDIR);                                 \
+	  exit 1;                                               \
+	fi;                                                     \
+	echo "Copying template configuration $$tfile";          \
+	cp "$$tfile" $(BUILDDIR)/globalconfig.out;              \
+	$(MAKE) -C $(BUILDDIR) olddefconfig
 	@echo "done."
 endif
 
