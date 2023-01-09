@@ -11,5 +11,4 @@
 #else
 #define FIASCO_IMAGE_VIRT_SIZE   0x600000 // must be superpage-aligned
 #endif
-#define FIASCO_KENTRY_SYSCALL_PAGE 0xffff817fffff8000
 #define FIASCO_IMAGE_PHYS_OFFSET (FIASCO_IMAGE_VIRT_START - (FIASCO_IMAGE_PHYS_START & 0xffffffffffc00000))
