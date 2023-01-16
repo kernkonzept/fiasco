@@ -15,7 +15,7 @@ resume_vm_vmx:
 	push	%rbp
 
 	push	%rdi               // store pointer to register struct
-	mov	$0x6c14, %eax      // save rsp in vmcs
+	mov	$0x6c14, %eax      // save RSP in Host RSP field (0x6c14)
 	vmwrite	%rsp, %rax
 	mov	(%rsp), %rsp
 
@@ -37,7 +37,15 @@ resume_vm_vmx:
 	mov	120(%rsp), %rax
 
 	vmresume
-	jnz 1f
+	jnz	1f
+
+	// check VM-Instruction Error field (0x4400) for
+	// non-launchend VMCS error (5)
+	mov	$0x4400, %rbx
+	vmread	%rbx, %rbx
+	cmpl	$5, %ebx
+	jne	1f
+
 	vmlaunch
 1:	// error path
 	mov	$0x6c14, %rbx
@@ -75,7 +83,7 @@ vm_vmx_exit_vec:
 
 	add	$8, %rsp           // adjust stack after regs pointer push on stack
 
-        // restore callee saved registers
+	// restore callee saved registers
 	pop	%rbp
 	pop	%r15
 	pop	%r14
@@ -85,4 +93,3 @@ vm_vmx_exit_vec:
 
 	xor	%rax, %rax
 	ret
-

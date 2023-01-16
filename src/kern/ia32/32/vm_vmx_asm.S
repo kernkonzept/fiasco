@@ -17,7 +17,7 @@ resume_vm_vmx:
 	push	%fs
 
 	push	%eax	        // store pointer to register struct
-	mov	$0x6c14, %eax	// save esp in vmcs
+	mov	$0x6c14, %eax	// save ESP in Host RSP field (0x6c14)
 	vmwrite	%esp, %eax
 	mov	(%esp), %esp
 
@@ -32,6 +32,14 @@ resume_vm_vmx:
 
 	vmresume
 	jnz	1f
+
+	// check VM-Instruction Error field (0x4400) for
+	// non-launchend VMCS error (5)
+	mov	$0x4400, %ebx
+	vmread	%ebx, %ebx
+	cmpl	$5, %ebx
+	jne	1f
+
 	vmlaunch
 1: // error path
 	mov	$0x6c14, %ebx  // restore stack pointer
