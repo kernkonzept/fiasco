@@ -17,6 +17,12 @@ private:
     EFER_LME = 1 << 8,
     EFER_LMA = 1 << 10,
   };
+
+  static Vmcb *ext_state(Vcpu_state *s)
+  {
+    // 0x400: offset into vCPU state page for VMCB start.
+    return reinterpret_cast<Vmcb *>(reinterpret_cast<char *>(s) + 0x400);
+  }
 };
 
 // ------------------------------------------------------------------------
@@ -392,8 +398,15 @@ Vm_svm::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, Vmcb *vmcb_s)
 
   // sanitize VMCB
 
+  // To ensure we use a unique vcpu state address, we explicitly acquire the
+  // kernel address of the KU memory of the current VMCB.
+  // See Ku_mem_ptr::access for cases where vmcb_s is NOT the kernel
+  // address.
+  Vcpu_state *vcpu_state_kaddr = ctxt->vcpu_state().kern();
+  Vmcb *vmcb_s_kaddr = ext_state(vcpu_state_kaddr);
+
   // this also handles the clean-bits for state caching
-  Vmcb *kernel_vmcb_s = s.kernel_vmcb(vmcb_s);
+  Vmcb *kernel_vmcb_s = s.kernel_vmcb(vmcb_s_kaddr);
   Vmcb_control_area::Clean_bits clean
     = kernel_vmcb_s->control_area.clean_bits;
 
@@ -668,7 +681,7 @@ Vm_svm::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode) override
       return -L4_err::EInval;
     }
 
-  Vmcb *vmcb_s = reinterpret_cast<Vmcb*>(reinterpret_cast<char *>(vcpu) + 0x400);
+  Vmcb *vmcb_s = ext_state(vcpu);
   for (;;)
     {
       // in the case of disabled IRQs and a pending IRQ directly simulate an
