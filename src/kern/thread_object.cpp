@@ -490,8 +490,9 @@ Thread_object::sys_vcpu_control(L4_fpage::Rights, L4_msg_tag const &tag,
       if (!vcpu_m)
         return commit_result(-L4_err::EInval);
 
-      if (!arch_check_vcpu_state(add_state & Thread_ext_vcpu_enabled))
-        return commit_result(-L4_err::EInval);
+      Mword ret = arch_check_vcpu_state(add_state & Thread_ext_vcpu_enabled);
+      if (ret != 0)
+        return commit_result(ret);
 
       add_state |= Thread_vcpu_enabled;
       _vcpu_state.set(vcpu, vcpu_m->kern_addr(vcpu));

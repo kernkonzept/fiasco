@@ -1,10 +1,13 @@
 IMPLEMENTATION [arm && cpu_virt]:
 
 IMPLEMENT_OVERRIDE inline
-bool
+Mword
 Thread::arch_check_vcpu_state(bool ext)
 {
-  return !ext || check_for_current_cpu();
+  if (ext && !check_for_current_cpu())
+    return -L4_err::EInval;
+
+  return 0;
 }
 
 
