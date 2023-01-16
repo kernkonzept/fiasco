@@ -228,11 +228,11 @@ void
 Gic_v3::cpu_local_init_lpi(Cpu_number cpu)
 {
   if (_has_lpis)
-  {
-    _redist.cpu(cpu).cpu_init_lpi();
-    for (unsigned i = 0; i < _num_its; i++)
-      _its_vec[i]->cpu_init(cpu, _redist.cpu(cpu));
-  }
+    {
+      _redist.cpu(cpu).cpu_init_lpi();
+      for (unsigned i = 0; i < _num_its; i++)
+        _its_vec[i]->cpu_init(cpu, _redist.cpu(cpu));
+    }
 }
 
 PUBLIC
@@ -243,10 +243,10 @@ Gic_v3::add_its(Address its_base)
     return false;
 
   if (_num_its >= _its_vec.size())
-  {
-    WARN("Maximum number of ITS exceeded.");
-    return false;
-  }
+    {
+      WARN("Maximum number of ITS exceeded.");
+      return false;
+    }
 
   Gic_its *its = new Boot_object<Gic_its>();
   its->init(&_cpu, its_base, _msi->nr_irqs());
