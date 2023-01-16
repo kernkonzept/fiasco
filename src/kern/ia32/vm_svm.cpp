@@ -473,8 +473,8 @@ Vm_svm::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, Vmcb *vmcb_s)
 
   // enable iopm and msrpm
   kernel_vmcb_s->control_area.intercept_instruction0 |= 0x18000000;
-  // intercept FERR_FREEZE and shutdown events
-  kernel_vmcb_s->control_area.intercept_instruction0 |= 0xc0000000;
+  // intercept FERR_FREEZE
+  kernel_vmcb_s->control_area.intercept_instruction0 |= (1 << 30);
   // intercept INTR/NMI/SMI/INIT
   kernel_vmcb_s->control_area.intercept_instruction0 |= 0xf;
   // intercept INVD
