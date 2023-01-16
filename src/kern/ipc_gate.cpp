@@ -414,6 +414,7 @@ ipc_gate_factory(Ram_quota *q, Space *space,
 {
   L4_snd_item_iter snd_items(utcb, tag.words());
   Thread *thread = 0;
+  Mword id = 0;
 
   if (tag.items() && snd_items.next())
     {
@@ -431,13 +432,23 @@ ipc_gate_factory(Ram_quota *q, Space *space,
           return 0;
         }
 
-      *err = L4_err::EPerm;
       if (EXPECT_FALSE(!(thread_rights & L4_fpage::Rights::CS())))
-        return 0;
+        {
+          *err = L4_err::EPerm;
+          return 0;
+        }
+
+      if (EXPECT_FALSE(tag.words() < 3))
+        {
+          *err = L4_err::EMsgtooshort;
+          return 0;
+        }
+
+      id = utcb->values[2];
     }
 
   *err = L4_err::ENomem;
-  return static_cast<Ipc_gate_ctl*>(Ipc_gate::create(q, thread, utcb->values[2]));
+  return static_cast<Ipc_gate_ctl*>(Ipc_gate::create(q, thread, id));
 }
 
 static inline void __attribute__((constructor)) FIASCO_INIT
