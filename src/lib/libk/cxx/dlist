@@ -318,6 +318,12 @@ public:
   Iterator begin() const { return this->__iter(C::next(const_cast<Internal_type *>(&_h))); }
   Iterator end() const { return this->__iter(const_cast<Internal_type *>(&_h)); }
 
+  bool has_sibling(T const *e)
+  {
+    return C::next(const_cast<T*>(e)) != &_h
+      || C::prev(const_cast<T*>(e)) != &_h;
+  }
+
 private:
   D_list(D_list const &);
   void operator = (D_list const &);
