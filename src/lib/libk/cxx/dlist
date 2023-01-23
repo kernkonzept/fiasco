@@ -234,9 +234,11 @@ public:
 
   Iterator erase(Iterator const &e)
   {
-    typename C::Item *n = C::next(*e);
+    Iterator next = e;
+    ++next;
+
     remove(*e);
-    return __iter(n);
+    return next;
   }
 
   void push(T *e, Pos pos)
