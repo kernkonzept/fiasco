@@ -157,7 +157,7 @@ disasm_bytes(char *buffer, unsigned len, Jdb_address addr,
 #if defined(CONFIG_IA32) || defined(CONFIG_AMD64)
       (void)cs_option(handle, CS_OPT_SYNTAX,
                       show_intel_syntax ? CS_OPT_SYNTAX_INTEL : CS_OPT_SYNTAX_ATT);
-#elif defined(CONFIG_ARM) && defined(CONFIG_BIT64)
+#elif defined(CONFIG_ARM) && defined(CONFIG_BIT32)
       size_t mode = (size_t)(show_arm_thumb ? CS_MODE_THUMB : (cs_mode)0);
       (void)cs_option(handle, CS_OPT_MODE, mode);
 #endif
