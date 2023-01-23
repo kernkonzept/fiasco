@@ -28,14 +28,16 @@ namespace Obj {
     {}
 
 
-    L4_fpage::Rights rights() const { return L4_fpage::Rights(_v & 0x0f); }
+    constexpr L4_fpage::Rights rights() const
+    { return L4_fpage::Rights(_v & 0x0f); }
+
     unsigned char extra() const { return _v & 0xf0; }
 
     static Attr Full() { return Attr(0xff); }
 
     /// when cap R right is missing the cap cannot be mapped
     constexpr bool empty() const
-    { return (_v & 0x4) == 0; }
+    { return (rights() & L4_fpage::Rights::CR()).empty(); }
   };
 
   class Capability
