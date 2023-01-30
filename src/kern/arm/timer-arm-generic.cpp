@@ -99,15 +99,34 @@ Timer::enable()
 }
 
 PUBLIC static inline
-void Timer::acknowledge()
+void
+Timer::acknowledge()
 {
-  Gtimer::compare(Gtimer::compare() + _interval);
+  if (!Config::Scheduler_one_shot)
+    Gtimer::compare(Gtimer::compare() + _interval);
+  // else done in Timer::update_timer()
 }
 
 IMPLEMENT_OVERRIDE inline
 Unsigned64
 Timer::time_stamp()
 { return Gtimer::counter(); }
+
+// --------------------------------------------------------------------------
+IMPLEMENTATION [arm && arm_generic_timer && one_shot]:
+
+IMPLEMENT
+void
+Timer::update_timer(Unsigned64 wakeup)
+{
+  Unsigned64 gtimer;
+  if (EXPECT_FALSE(wakeup == Infinite_timeout))
+    gtimer = 0xffffffffffffffffULL;
+  else
+    gtimer = us_to_ts(wakeup);
+
+  Gtimer::compare(gtimer);
+}
 
 // --------------------------------------------------------------------------
 INTERFACE [arm && arm_generic_timer && jdb]:
