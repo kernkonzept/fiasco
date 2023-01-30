@@ -1,3 +1,25 @@
+IMPLEMENTATION[arm]:
+
+#include <cxx/type_traits>
+
+template< typename T > inline NEEDS [<cxx/type_traits>]
+ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 4), T>::type
+atomic_load(T const *p)
+{
+  T res;
+  asm volatile ("ldr %0, %1" : "=r" (res) : "m"(*p));
+  return res;
+}
+
+template< typename T, typename V > inline NEEDS [<cxx/type_traits>]
+ALWAYS_INLINE void
+atomic_store(T *p, V value, typename cxx::enable_if<(sizeof(T) == 4), int>::type = 0)
+{
+  T val = value;
+  asm volatile ("str %1, %0" : "=m" (*p) : "r" (val));
+}
+
+// --------------------------------------------------------------------
 IMPLEMENTATION[arm && arm_v6plus]:
 
 #include "mem.h"
@@ -124,23 +146,6 @@ atomic_add_fetch(T *mem, V value)
       : [mem] "r" (mem), [val] "r" (val)
       : "cc");
   return res;
-}
-
-template< typename T > inline NEEDS [<cxx/type_traits>]
-ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 4), T>::type
-atomic_load(T const *p)
-{
-  T res;
-  asm volatile ("ldr %0, %1" : "=r" (res) : "m"(*p));
-  return res;
-}
-
-template< typename T, typename V > inline NEEDS [<cxx/type_traits>]
-ALWAYS_INLINE void
-atomic_store(T *p, V value, typename cxx::enable_if<(sizeof(T) == 4), int>::type = 0)
-{
-  T val = value;
-  asm volatile ("str %1, %0" : "=m" (*p) : "r" (val));
 }
 
 // --------------------------------------------------------------------
