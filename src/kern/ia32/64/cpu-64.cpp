@@ -199,6 +199,23 @@ Cpu::set_fs_gs_base(Mword *base, Mword reg)
      : "c" (reg) : "rax", "rdx");
 }
 
+PUBLIC static inline NEEDS["asm.h"]
+void
+Cpu::set_canonical_msr(Unsigned64 value, Mword reg)
+{
+  asm volatile (
+    "2: movq\t%%rax, %%rdx\n\t"
+    "   shrq\t$32, %%rdx\n\t"
+    "1: wrmsr\n\t"
+    ".pushsection\t\".fixup.%=\", \"ax?\"\n\t"
+    "3: movq\t$0, %%rax\n\t"
+    "   jmp\t2b\n\t"
+    ".popsection\n\t"
+    ASM_KEX(1b, 3b)
+     : "+a" (value)
+     : "c" (reg) : "rdx");
+}
+
 PUBLIC static inline NEEDS[Cpu::set_fs_gs_base]
 void
 Cpu::set_fs_base(Mword *base)

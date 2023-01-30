@@ -693,31 +693,18 @@ Vm_vmx_t<X>::save_guest_msrs(void *vmcs)
 }
 
 PRIVATE inline template<typename X>
-Unsigned64
-Vm_vmx_t<X>::canonize(Unsigned64 address)
-{
-  if (address & (1UL << 47))
-    address |= (~0UL << 48);
-  else
-    address &= ~(~0UL << 48);
-
-  return address;
-}
-
-PRIVATE inline template<typename X>
 void
 Vm_vmx_t<X>::load_guest_msrs(void const *vmcs)
 {
-  // lstar and kernel_gs_base need to be canonical or wrmsr will cause a GP fault
-  Unsigned64 guest_msr_lstar = read<Mword>(vmcs, Vmx::F_sw_msr_lstar);
-  Unsigned64 guest_msr_kernel_gs_base = read<Mword>(vmcs, Vmx::F_sw_msr_kernel_gs_base);
-
+  // Writing to CSTAR, LSTAR or KERNEL_GS_BASE triggers a #GP fault if the
+  // provided address is not canonical.
   Cpu::wrmsr(read<Mword>(vmcs, Vmx::F_sw_msr_syscall_mask), MSR_SFMASK);
-  Cpu::wrmsr(read<Mword>(vmcs, Vmx::F_sw_msr_cstar), MSR_CSTAR);
-  Cpu::wrmsr(canonize(guest_msr_lstar), MSR_LSTAR);
+  Cpu::set_canonical_msr(read<Mword>(vmcs, Vmx::F_sw_msr_cstar), MSR_CSTAR);
+  Cpu::set_canonical_msr(read<Mword>(vmcs, Vmx::F_sw_msr_lstar), MSR_LSTAR);
   Cpu::wrmsr(read<Mword>(vmcs, Vmx::F_sw_msr_star), MSR_STAR);
   // MSR_TSC_AUX
-  Cpu::wrmsr(canonize(guest_msr_kernel_gs_base), MSR_KERNEL_GS_BASE);
+  Cpu::set_canonical_msr(read<Mword>(vmcs, Vmx::F_sw_msr_kernel_gs_base),
+                         MSR_KERNEL_GS_BASE);
 }
 
 //------------------------------------------------------------------
