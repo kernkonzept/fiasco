@@ -183,7 +183,7 @@ Cpu::set_cs()
 
 PUBLIC static inline NEEDS["asm.h"]
 void
-Cpu::set_fs_base(Mword *base)
+Cpu::set_fs_gs_base(Mword *base, Mword reg)
 {
   asm volatile (
     "2: movq\t%0, %%rax\n\t"
@@ -195,26 +195,22 @@ Cpu::set_fs_base(Mword *base)
     "   jmp\t2b\n\t"
     ".popsection\n\t"
     ASM_KEX(1b, 3b)
-     : : "m" (*base),
-         "c" (MSR_FS_BASE) : "rax", "rdx");
+     : "+m" (*base)
+     : "c" (reg) : "rax", "rdx");
 }
 
-PUBLIC static inline NEEDS["asm.h"]
+PUBLIC static inline NEEDS[Cpu::set_fs_gs_base]
+void
+Cpu::set_fs_base(Mword *base)
+{
+  set_fs_gs_base(base, MSR_FS_BASE);
+}
+
+PUBLIC static inline NEEDS[Cpu::set_fs_gs_base]
 void
 Cpu::set_gs_base(Mword *base)
 {
-  asm volatile (
-    "2: movq\t%0, %%rax\n\t"
-    "   movq\t%%rax, %%rdx\n\t"
-    "   shrq\t$32, %%rdx\n\t"
-    "1: wrmsr\n\t"
-    ".pushsection\t\".fixup.%=\", \"ax?\"\n\t"
-    "3: movq\t$0, %0\n\t"
-    "   jmp\t2b\n\t"
-    ".popsection\n\t"
-    ASM_KEX(1b, 3b)
-     : : "m" (*base),
-         "c" (MSR_GS_BASE) : "rax", "rdx");
+  set_fs_gs_base(base, MSR_GS_BASE);
 }
 
 extern "C" Address dbf_stack_top;
