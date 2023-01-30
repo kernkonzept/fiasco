@@ -121,7 +121,7 @@ public:
   };
 };
 
-INTERFACE [arm && pf_imx_8m]: // ----------------------------------------
+INTERFACE [arm && (pf_imx_8m || pf_imx_8mp)]: // ------------------------
 
 EXTENSION class Mem_layout
 {

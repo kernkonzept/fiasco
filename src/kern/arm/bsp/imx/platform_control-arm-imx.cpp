@@ -3,6 +3,22 @@ INTERFACE [arm && mp && pf_imx_6]:
 #include "types.h"
 
 // ------------------------------------------------------------------------
+INTERFACE [arm && mp && arm_v8 && arm_psci && pf_imx_8mp]:
+
+EXTENSION class Platform_control
+{
+  enum { Num_cores = 4 };
+};
+
+// ------------------------------------------------------------------------
+INTERFACE [arm && mp && arm_v8 && arm_psci && !pf_imx_8mp]:
+
+EXTENSION class Platform_control
+{
+  enum { Num_cores = 6 };
+};
+
+// ------------------------------------------------------------------------
 IMPLEMENTATION [arm && mp && pf_imx_6]:
 
 #include "ipi.h"
@@ -109,9 +125,8 @@ void
 Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
 {
   int seq = 1;
-  enum { Num_cores = 6 };
-  unsigned coreid[Num_cores] = { 0x000, 0x001, 0x002, 0x003,
-                                 0x100, 0x101 };
+  unsigned coreid[] = { 0x000, 0x001, 0x002, 0x003,
+                        0x100, 0x101 };
 
   for (int i = 0; i < min<int>(Num_cores, Config::Max_num_cpus); ++i)
     {

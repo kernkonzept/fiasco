@@ -12,7 +12,7 @@ EXTENSION class Pic
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && pic_gic && (pf_imx_6 || pf_imx_6ul || pf_imx_7 || pf_imx_8m)]:
+INTERFACE [arm && pic_gic && (pf_imx_6 || pf_imx_6ul || pf_imx_7 || pf_imx_8m || pf_imx_8mp)]:
 
 EXTENSION class Pic
 {
