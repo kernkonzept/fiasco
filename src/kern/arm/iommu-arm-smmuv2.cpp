@@ -697,7 +697,7 @@ private:
    *
    * \pre setup() must have been invoked
    */
-  void setup_irqs(unsigned *irqs, unsigned num_irqs, unsigned num_global_irqs);
+  void setup_irqs(unsigned const *irqs, unsigned num_irqs, unsigned num_global_irqs);
 
 public:
   Iommu() :
@@ -936,7 +936,7 @@ public:
 
 IMPLEMENT
 void
-Iommu::setup_irqs(unsigned *, unsigned, unsigned)
+Iommu::setup_irqs(unsigned const *, unsigned, unsigned)
 {
 }
 
@@ -1056,7 +1056,7 @@ Iommu::handle_fault()
 
 IMPLEMENT
 void
-Iommu::setup_irqs(unsigned *irqs, unsigned num_irqs, unsigned num_global_irqs)
+Iommu::setup_irqs(unsigned const *irqs, unsigned num_irqs, unsigned num_global_irqs)
 {
   assert(num_irqs >= 1);
   assert(num_global_irqs <= num_irqs);
