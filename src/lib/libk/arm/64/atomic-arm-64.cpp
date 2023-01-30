@@ -147,9 +147,9 @@ atomic_add_fetch(T *mem, V value)
     case 8:
       asm (
           "     prfm   pstl1strm, [%[mem]] \n"
-          "1:   ldxr   %[res], [%[mem]] \n"
-          "     add    %[res], %[res], %[val] \n"
-          "     stxr   %w[tmp], %[res], [%[mem]] \n"
+          "1:   ldxr   %x[res], [%[mem]] \n"
+          "     add    %x[res], %x[res], %x[val] \n"
+          "     stxr   %w[tmp], %x[res], [%[mem]] \n"
           "     cmp    %[tmp], #0 \n"
           "     bne    1b "
           : [res] "=&r" (res), [tmp] "=&r" (tmp), "+Qo" (*mem)
