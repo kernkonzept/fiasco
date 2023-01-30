@@ -176,6 +176,16 @@ Thread::handle_fpu_trap(Trap_state *ts)
 }
 
 //-----------------------------------------------------------------------------
+INTERFACE [arm && cpu_virt]:
+
+class Hyp_irqs
+{
+public:
+  static unsigned vgic();
+  static unsigned vtimer();
+};
+
+//-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && cpu_virt]:
 
 #include "irq_mgr.h"
@@ -269,8 +279,16 @@ Arm_vtimer_ppi::handle(Upstream_irq const *ui)
   Upstream_irq::ack(ui);
 }
 
-static Arm_ppi_virt __vgic_irq(25, 0);  // virtual GIC
-static Arm_vtimer_ppi __vtimer_irq(27); // virtual timer
+IMPLEMENT_DEFAULT inline
+unsigned Hyp_irqs::vgic()
+{ return 25; }
+
+IMPLEMENT_DEFAULT inline
+unsigned Hyp_irqs::vtimer()
+{ return 27; }
+
+static Arm_ppi_virt __vgic_irq(Hyp_irqs::vgic(), 0);  // virtual GIC
+static Arm_vtimer_ppi __vtimer_irq(Hyp_irqs::vtimer()); // virtual timer
 
 namespace {
 struct Local_irq_init
