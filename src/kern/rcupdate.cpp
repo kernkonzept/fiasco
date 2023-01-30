@@ -165,6 +165,8 @@ public:
   {
     Rcu_call = 0,
     Rcu_process = 1,
+    Rcu_idle = 2,
+    Rcu_unidle = 3,
   };
 };
 
@@ -179,7 +181,7 @@ IMPLEMENT
 void
 Rcu::Log_rcu::print(String_buffer *buf) const
 {
-  char const *events[] = { "call", "process"};
+  char const *events[] = { "call", "process", "idle", "unidle" };
   buf->printf("rcu-%s (cpu=%u) item=%p", events[event],
               cxx::int_value<Cpu_number>(cpu), static_cast<void *>(item));
 }
@@ -289,8 +291,12 @@ Rcu_data::enter_idle(Rcu_glbl *rgp)
 {
   if (EXPECT_TRUE(!_idle))
     {
-      _idle = true;
+      LOG_TRACE("Rcu idle", "rcu", ::current(), Rcu::Log_rcu,
+          l->cpu = _cpu;
+          l->item = 0;
+          l->event = Rcu::Rcu_idle);
 
+      _idle = true;
       auto guard = lock_guard(rgp->_lock);
       rgp->_active_cpus.clear(_cpu);
 
@@ -312,13 +318,18 @@ Rcu::enter_idle(Cpu_number cpu)
   rdp->enter_idle(rcu());
 }
 
-PUBLIC static inline NEEDS["lock_guard.h"]
+PUBLIC static inline NEEDS["logdefs.h", "lock_guard.h"]
 void
 Rcu::leave_idle(Cpu_number cpu)
 {
   Rcu_data *rdp = &_rcu_data.cpu(cpu);
   if (EXPECT_FALSE(rdp->_idle))
     {
+      LOG_TRACE("Rcu idle", "rcu", ::current(), Rcu::Log_rcu,
+          l->cpu = cpu;
+          l->item = 0;
+          l->event = Rcu::Rcu_unidle);
+
       rdp->_idle = false;
       auto guard = lock_guard(rcu()->_lock);
       rcu()->_active_cpus.set(cpu);
