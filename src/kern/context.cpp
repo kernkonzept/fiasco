@@ -2021,12 +2021,11 @@ Context::take_cpu_offline(Cpu_number cpu, bool drain_rqq = false)
   // called during system suspend only), the loop safely drains all the RCU
   // queues of the current CPU without race conditions. And the enter_idle()
   // does safely remove the CPU from the list of active CPUs.
-  do
+  while (!Rcu::idle(cpu))
     {
       Rcu::do_pending_work(cpu);
       Proc::pause();
     }
-  while (!Rcu::idle(cpu));
   Rcu::enter_idle(cpu);
 
   Cpu_call::handle_global_requests();
