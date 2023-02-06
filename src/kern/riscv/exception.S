@@ -331,45 +331,12 @@ END(fast_sret)
 
 
 /**
- * \pre Interrupts must be disabled.
- */
-ENTRY(return_from_user_invoke)
-    /* Check for pending continuation */
-    handle_eret_work return_from_user_invoke
-
-    csrr t0, sstatus
-
-    /* Clear SPP to make sret return to user mode */
-    clear_bits t0, t1, SR_SPP
-
-    /* Clear SIE */
-    andi t2, t0, SR_SIE
-    clear_bits t0, t1, SR_SIE
-
-    /* Set SPIE according to previous value of SIE */
-    beqz t2, clear_spie
-    set_bits t0, t1, SR_SPIE
-    j store_status
-
-clear_spie:
-    clear_bits t0, t1, SR_SPIE
-
-store_status:
-    /* Store sstatus into trap state, will be restored later */
-    REG_S t0, TS_STATUS(sp)
-
-    restore_all
-
-    sret
-END(return_from_user_invoke)
-
-
-/**
  * First handle eret work if any, then restore state from Return_frame at sp.
  *
  * \pre Interrupts must be disabled.
  */
 ENTRY(return_from_exception)
+ENTRY(return_from_user_invoke)
     /* Check for pending continuation */
     handle_eret_work return_from_exception
 
@@ -377,6 +344,8 @@ ENTRY(return_from_exception)
 
     sret
 END(return_from_exception)
+END(return_from_user_invoke)
+
 
 /**
  * Restore state from Entry_frame at sp without checking for eret work.

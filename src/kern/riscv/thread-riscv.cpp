@@ -80,9 +80,10 @@ Thread::Thread(Ram_quota *q)
   // system call to prevent covert channel
   Entry_frame *r = regs();
   memset(r, 0, sizeof(*r));
-  // not really necessary, as return_from_user_invoke ignores the status field
+  // return to user-mode with interrupts enabled.
   r->status = 0;
   r->user_mode(true);
+  r->interrupts_enabled(true);
 
   alloc_eager_fpu_state();
 
