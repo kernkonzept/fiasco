@@ -13,7 +13,7 @@ _boot_start:
 	.long   0 - 0x1BADB002
 
 	.bss
-	.align	8
+	.align	16
 	.space	4096
 _stack:
 
