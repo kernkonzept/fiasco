@@ -1499,14 +1499,6 @@ void
 Context::recover_jmp_buf(jmp_buf *b)
 { _recover_jmpbuf = b; }
 
-PUBLIC static
-void
-Context::xcpu_tlb_flush(...)
-{
-  // This should always be optimized away
-  assert(0);
-}
-
 IMPLEMENT_DEFAULT inline
 void
 Context::arch_load_vcpu_kern_state(Vcpu_state *, bool)
