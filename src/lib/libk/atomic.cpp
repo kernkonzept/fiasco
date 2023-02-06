@@ -112,6 +112,10 @@ IMPLEMENTATION [mp]:
  * Atomically test and modify memory with protection against concurrent writes
  * from other CPUs (SMP-safe).
  *
+ * \note The implementation guarantees that the compiler knows that the memory
+ *       is clobbered, even if this was caused by a concurrent write from
+ *       another CPU.
+ *
  * \param ptr     Pointer to the memory to change.
  * \param oldval  Only write 'newval' if the memory contains this value.
  * \param newval  Write this value if the memory contains 'oldval'.
