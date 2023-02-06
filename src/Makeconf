@@ -289,7 +289,11 @@ ifneq ($(CC_LAST_BROKEN-SEQ-gcc),)
   endif
 endif
 
-ifneq ($(filter $(CC_BLACKLIST-$(CONFIG_XARCH)-$(CC_TYPE)),$(CCVER_RELEASE))$(filter $(CC_BLACKLIST-$(CC_TYPE)),$(CCVER_RELEASE)),)
+ifneq ($(strip \
+	$(filter $(CC_BLACKLIST-$(CONFIG_XARCH)-$(CC_TYPE)),$(CCVER_RELEASE)) \
+	$(filter $(CC_BLACKLIST-$(CC_TYPE)),$(CCVER_RELEASE)) \
+	$(filter $(CC_BLACKLIST-$(CONFIG_XARCH)-$(CC_TYPE)),$(CCVER_VERSION)) \
+	$(filter $(CC_BLACKLIST-$(CC_TYPE)),$(CCVER_VERSION))),)
   $(error $(CC_TYPE)-$(CCVER_FULL) is blacklisted, please update)
 endif
 
