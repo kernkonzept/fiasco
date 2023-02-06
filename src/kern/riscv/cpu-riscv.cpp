@@ -98,6 +98,13 @@ public:
     Fs_mask    = Fs_dirty,
   };
 
+  enum : Mword
+  {
+    /// Sstatus bits that are controllable from user-mode (currently none).
+    Sstatus_user_mask = 0UL,
+    /// Sstatus sits that are set for user mode context by default.
+    Sstatus_user_default = Sstatus_spie,
+  };
 
   void init(bool is_boot_cpu);
 

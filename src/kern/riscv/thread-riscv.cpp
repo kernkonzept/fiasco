@@ -81,9 +81,7 @@ Thread::Thread(Ram_quota *q)
   Entry_frame *r = regs();
   memset(r, 0, sizeof(*r));
   // return to user-mode with interrupts enabled.
-  r->status = 0;
-  r->user_mode(true);
-  r->interrupts_enabled(true);
+  r->status = Cpu::Sstatus_user_default;
 
   alloc_eager_fpu_state();
 

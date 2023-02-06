@@ -119,14 +119,6 @@ public:
   bool interrupts_enabled() const
   { return status & Cpu::Sstatus_spie; }
 
-  void interrupts_enabled(bool enable)
-  {
-    if (enable)
-      status |= Cpu::Sstatus_spie;
-    else
-      status &= ~Cpu::Sstatus_spie;
-  }
-
   Syscall_frame *syscall_frame()
   { return reinterpret_cast<Syscall_frame *>(&a0); }
 
@@ -161,11 +153,12 @@ PUBLIC inline NEEDS["mem.h"]
 void
 Entry_frame::copy_and_sanitize(Entry_frame const *src)
 {
+  // Omit eret_work, cause, tval
   Mem::memcpy_mwords(&regs[0], &src->regs[0], sizeof(regs) / sizeof(regs[0]));
   _pc = src->_pc;
-  status = src->status;
-  user_mode(true);
-  interrupts_enabled(true);
+  // Sanitize status register.
+  status = access_once(&src->status) & Cpu::Sstatus_user_mask;
+  status |= Cpu::Sstatus_user_default;
 }
 
 IMPLEMENT
