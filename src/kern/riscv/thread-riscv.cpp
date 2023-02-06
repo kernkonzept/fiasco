@@ -7,8 +7,8 @@ public:
   thread_handle_trap(Mword cause, Mword val,
                      Return_frame *ret_frame) asm ("thread_handle_trap");
 
-  static int thread_handle_slow_trap(Trap_state *ts)
-    asm ("thread_handle_slow_trap");
+  static int
+  thread_handle_slow_trap(Trap_state *ts) asm ("thread_handle_slow_trap");
 };
 
 typedef void (*Handler)(Mword cause, Mword epc, Mword val);
@@ -281,47 +281,47 @@ Thread::thread_handle_trap(Mword cause, Mword val, Return_frame *ret_frame)
 {
   assert(cpu_lock.test());
 
+  Thread *t = current_thread();
   int result = 0;
   switch (cause)
     {
     // Supervisor timer interrupt
     case Cpu::Int_supervisor_timer:
-      result = thread_handle_timer_interrupt();
+      result = t->handle_timer_interrupt_riscv();
       break;
 
     case Cpu::Int_supervisor_software:
-      result = current_thread()->handle_software_interrupt();
+      result = t->handle_software_interrupt();
       break;
 
     case Cpu::Int_supervisor_external:
-      result = current_thread()->handle_external_interrupt();
+      result = t->handle_external_interrupt();
       break;
 
     // Page fault
     case Cpu::Exc_inst_page_fault:
     case Cpu::Exc_load_page_fault:
     case Cpu::Exc_store_page_fault:
-      result = thread_handle_page_fault(cause, val, ret_frame);
+      result = t->handle_page_fault_riscv(cause, val, ret_frame);
       if (!result)
         {
-          result = current_thread()->handle_slow_trap(
-            static_cast<Trap_state *>(ret_frame));
+          result = t->handle_slow_trap(static_cast<Trap_state *>(ret_frame));
         }
       break;
 
     // Environment call
     case Cpu::Exc_ecall:
-      result = current_thread()->handle_ecall(ret_frame);
+      result = t->handle_ecall(ret_frame);
       break;
 
     // Illegal instruction
     case Cpu::Exc_illegal_inst:
-      result = current_thread()->handle_fpu_trap(ret_frame);
+      result = t->handle_fpu_trap(ret_frame);
       break;
 
     // Breakpoint
     case Cpu::Exc_breakpoint:
-      result = current_thread()->handle_breakpoint(ret_frame);
+      result = t->handle_breakpoint(ret_frame);
       break;
 
     // PMA/PMP check failed
@@ -332,8 +332,7 @@ Thread::thread_handle_trap(Mword cause, Mword val, Return_frame *ret_frame)
     default:
       WARN("Unhandled Trap: Cause=" L4_MWORD_FMT ", Epc=" L4_MWORD_FMT ", Val=" L4_MWORD_FMT "\n",
            cause, ret_frame->ip(), val);
-      result = current_thread()->handle_slow_trap(
-            static_cast<Trap_state *>(ret_frame));
+      result = t->handle_slow_trap(static_cast<Trap_state *>(ret_frame));
     }
 
     if (!result)
@@ -344,12 +343,12 @@ Thread::thread_handle_trap(Mword cause, Mword val, Return_frame *ret_frame)
     return result;
 }
 
-PROTECTED static inline
+PROTECTED inline
 int
-Thread::thread_handle_timer_interrupt()
+Thread::handle_timer_interrupt_riscv()
 {
   Timer::handle_interrupt();
-  current_thread()->handle_timer_interrupt();
+  handle_timer_interrupt();
 
   return 1;
 }
@@ -369,13 +368,10 @@ Thread::handle_external_interrupt()
   return 1;
 }
 
-PROTECTED static inline
+PROTECTED inline
 int
-Thread::thread_handle_page_fault(Mword cause, Mword pfa,
-                                 Return_frame *ret_frame)
+Thread::handle_page_fault_riscv(Mword cause, Mword pfa, Return_frame *ret_frame)
 {
-  Thread *t = current_thread();
-
   // RISC-V does not indicate whether a page fault was caused
   // by a missing mapping or by insufficient permissions.
   Mword error_code = 0;
@@ -400,7 +396,7 @@ Thread::thread_handle_page_fault(Mword cause, Mword pfa,
 
   // Pagefault in user mode
   if (EXPECT_TRUE(PF::is_usermode_error(error_code))
-      && t->vcpu_pagefault(pfa, cause, ret_frame->ip()))
+      && vcpu_pagefault(pfa, cause, ret_frame->ip()))
     return 1;
 
   // Enable interrupts, except for kernel page faults in TCB area.
@@ -410,7 +406,7 @@ Thread::thread_handle_page_fault(Mword cause, Mword pfa,
       || !Kmem::is_kmem_page_fault(pfa, error_code))
     guard.lock(&cpu_lock);
 
-  return t->handle_page_fault(pfa, error_code, ret_frame->ip(), ret_frame);
+  return handle_page_fault(pfa, error_code, ret_frame->ip(), ret_frame);
 }
 
 IMPLEMENT
