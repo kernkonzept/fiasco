@@ -278,6 +278,12 @@ public:
    */
   Cpu_time consumed_time();
 
+  /**
+   * Registers used when returning to user mode.
+   * @return user mode return registers
+   */
+  Entry_frame *regs() const;
+
   void spill_user_state();
   void fill_user_state();
   void copy_and_sanitize_trap_state(Trap_state *dst,
@@ -686,10 +692,7 @@ Space *
 Context::vcpu_aware_space() const
 { return _space.vcpu_aware(); }
 
-/** Registers used when iret'ing to user mode.
-    @return return registers
- */
-PUBLIC inline NEEDS["cpu.h", "entry_frame.h"]
+IMPLEMENT_DEFAULT inline NEEDS["cpu.h", "entry_frame.h"]
 Entry_frame *
 Context::regs() const
 {

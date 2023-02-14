@@ -5,6 +5,16 @@ IMPLEMENTATION [riscv]:
 
 #include <cassert>
 
+IMPLEMENT_OVERRIDE inline NEEDS["cpu.h", "entry_frame.h"]
+Entry_frame *
+Context::regs() const
+{
+  // If entry frame size is not a multiple of stack alignment, it is padded from
+  // the bottom of the stack to adjust its start to the required stack alignment.
+  return reinterpret_cast<Entry_frame *>(Cpu::stack_align(
+    reinterpret_cast<Mword>(this) + Size - sizeof(Entry_frame)));
+}
+
 PUBLIC inline
 void
 Context::prepare_switch_to(void (*fptr)())
