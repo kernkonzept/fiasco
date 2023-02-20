@@ -165,6 +165,7 @@ Thread::user_invoke()
       __asm__ __volatile__ (
           ASM_ADDIU "  $sp, %[ts], -%[cfs]   \n"
           "jr          %[ra]                 \n"
+          "nop                               \n"
           :
           : [ra] "r" (ra),
             [ts] "r" (a0),
