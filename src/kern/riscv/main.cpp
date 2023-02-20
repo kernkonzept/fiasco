@@ -65,7 +65,9 @@ static void exit_question()
     }
 }
 
-void kernel_main()
+FIASCO_NORETURN
+void
+kernel_main()
 {
   // caution: no stack variables in this function because we're going
   // to change the stack pointer!
@@ -86,6 +88,8 @@ void kernel_main()
   // switch to stack of kernel thread and bootstrap the kernel
   extern char call_bootstrap[];
   Thread::riscv_fast_exit(kernel->init_stack(), &call_bootstrap, kernel);
+
+  // never returns here
 }
 
 //---------------------------------------------------------------------------

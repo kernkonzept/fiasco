@@ -91,8 +91,8 @@ Thread::Thread(Ram_quota *q)
   // ok, we're ready to go!
 }
 
-PUBLIC inline NEEDS[Thread::riscv_fast_exit]
-void FIASCO_NORETURN
+PUBLIC inline FIASCO_NORETURN
+void
 Thread::vcpu_return_to_kernel(Mword ip, Mword sp, void *arg)
 {
   Entry_frame *r = regs();
@@ -110,10 +110,11 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, void *arg)
 
   extern char fast_sret[];
   riscv_fast_exit(nonull_static_cast<Return_frame*>(r), fast_sret, arg);
-  panic("__builtin_trap()");
+
+  // never returns here
 }
 
-IMPLEMENT
+IMPLEMENT FIASCO_NORETURN
 void
 Thread::user_invoke()
 {
@@ -131,7 +132,8 @@ Thread::user_invoke()
   Proc::cli();
   extern char return_from_user_invoke[];
   riscv_fast_exit(ts, return_from_user_invoke, ts);
-  panic("should never be reached");
+
+  // never returns here
 }
 
 IMPLEMENT inline NEEDS["space.h", "types.h", "config.h", "paging_bits.h"]
@@ -239,7 +241,7 @@ Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
   return true;
 }
 
-PUBLIC static inline
+PUBLIC static inline FIASCO_NORETURN
 void
 Thread::riscv_fast_exit(void *sp, void *pc, void *arg)
 {
@@ -251,6 +253,8 @@ Thread::riscv_fast_exit(void *sp, void *pc, void *arg)
     [stack]   "r" (sp),
     [rfe]     "r" (pc),
               "r" (a0));
+
+  __builtin_unreachable();
 }
 
 extern "C" void leave_by_vcpu_upcall(Trap_state *ts)
