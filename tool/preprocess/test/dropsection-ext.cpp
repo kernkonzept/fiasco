@@ -1,5 +1,9 @@
 INTERFACE [ext]:
 
+/**
+  * Preprocess should discard this comment and adjust the line directive
+  * accordingly.
+  */
 EXTENSION class Gen_foo : public Gen_bar
 {
 public:

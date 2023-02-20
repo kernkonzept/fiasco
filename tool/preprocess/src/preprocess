@@ -890,6 +890,12 @@ sub parse_file
 
               if ($doing_linenumbers)
                 {
+                  # Expand comments to ensure that the line directive offset is
+                  # adjusted correctly. This is necessary because the string we
+                  # are matching against here does not contain the comments
+                  # themselves but references to the comments array.
+                  $voided = expand_comments($voided);
+
                   # The lines that the EXTENSION statement spanned, which are
                   # not incorporated in the preprocessed code, must be added as
                   # an offset to the line directive to preserve a correct line
@@ -1521,8 +1527,7 @@ sub print_expand($)		# Expands comments and prints to OUT.
 
   $str =~ s/\n(?:[ \t]*\n)+/\n\n/sg if ! $doing_linenumbers;
 
-  while ( $str =~ s/([\001\002])([0-9]+)\1/$comments[$2]/sg )
-    {}
+  $str = expand_comments($str);
 
   if ($print_indent)
     {
@@ -1556,6 +1561,16 @@ sub print_lineno_sans_empty_lines($)
 
   print OUT "#line " . ($object->{line} + @startcomments - 1)
     . " \"" . $object->{file} . "\"\n";
+}
+
+sub expand_comments($) # Expand comment references
+{
+  my $str = $_[0];
+
+  while ( $str =~ s/([\001\002])([0-9]+)\1/$comments[$2]/sg )
+    {}
+
+  return $str;
 }
 
 sub weedout_whitespace		# Delete whitespace except on lines w/comments

@@ -22,7 +22,7 @@ protected:
 
 private:
 
-#line 4 "dropsection-ext.cpp"
+#line 8 "dropsection-ext.cpp"
 
 public:
   int extra_var;
@@ -37,7 +37,7 @@ public:
   tust( int y );
 
 private:  
-#line 17 "dropsection-ext.cpp"
+#line 21 "dropsection-ext.cpp"
   int
   do_something_private();
 };
@@ -52,7 +52,7 @@ protected:
 
 private:
 
-#line 10 "dropsection-ext.cpp"
+#line 14 "dropsection-ext.cpp"
 
 private:
   char *extension;
