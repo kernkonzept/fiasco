@@ -72,6 +72,8 @@ public:
 // ------------------------------------------------------------------------
 INTERFACE [arm && pic_gic_mxc_tzic]:
 
+#include <arithmetic.h>
+
 EXTENSION class Gic_dist
 {
 public:
@@ -84,7 +86,7 @@ public:
       {
         Unsigned32 v = _dist.read<Unsigned32>(a);
         if (v)
-          return g + 31 - __builtin_clz(v);
+          return g + cxx::log2u(v);
       }
     return 0;
   }

@@ -1,5 +1,6 @@
 IMPLEMENTATION:
 
+#include <arithmetic.h>
 #include <cstdio>
 #include <cctype>
 
@@ -113,12 +114,10 @@ struct Jdb_mips_tlb : Jdb_module
               0x4 /* VZ */)
             : "=r"(guest_id));
 
-        unsigned ps = (sizeof(Mword) * 8) - __builtin_clz(pm);
-
         auto *t = &tlbs[r++];
         t->index = i;
         t->gid = guest_id;
-        t->s = ps;
+        t->s = cxx::log2u(pm) + 1;
         t->hi = h;
         t->lo[0] = l0;
         t->lo[1] = l1;

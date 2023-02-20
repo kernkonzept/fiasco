@@ -1,5 +1,6 @@
 INTERFACE [pf_rpi_rpi2 || pf_rpi_rpi3 || pf_rpi_rpi4]: // -----------------
 
+#include "arithmetic.h"
 #include "assert.h"
 #include "kmem.h"
 #include "mem_layout.h"
@@ -91,7 +92,7 @@ public:
     unsigned mbox0_rdclk = Mailbox_rd_clr_base + 16 * cpu_num;
 
     Unsigned32 v = r.r<32>(mbox0_rdclk);
-    unsigned m = 31 - __builtin_clz(v);
+    unsigned m = cxx::log2u(v);
     r.r<32>(mbox0_rdclk) = 1 << m;
     return m;
   }
