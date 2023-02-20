@@ -186,12 +186,12 @@ Jdb_name_hdl::invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb) override
               return true;
             }
 
-          unsigned l = min<unsigned>(n->max_len(), sizeof(utcb->values));
+          unsigned l = min<unsigned>(n->max_len(), sizeof(utcb->values) - 1);
           char *dst = reinterpret_cast<char *>(utcb->values);
           strncpy(dst, n->name(), l);
-          dst[l - 1] = 0;
+          dst[l] = 0;
 
-          f->tag(Kobject_iface::commit_result(0, (l + sizeof(Mword) - 1) / sizeof(Mword)));
+          f->tag(Kobject_iface::commit_result(0, (l + 1 + sizeof(Mword) - 1) / sizeof(Mword)));
           return true;
         }
     }
