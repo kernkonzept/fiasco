@@ -6,19 +6,20 @@
 
 IMPLEMENTATION [arm && pf_qcom && arm_psci]:
 
+#include "infinite_loop.h"
 #include "psci.h"
 
 void __attribute__ ((noreturn))
 platform_reset(void)
 {
   Psci::system_reset();
-  for (;;)
-    ;
+  L4::infinite_loop();
 }
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pf_qcom && !arm_psci]:
 
+#include "infinite_loop.h"
 #include "io.h"
 #include "kmem.h"
 
@@ -27,6 +28,5 @@ platform_reset(void)
 {
   Address base = Kmem::mmio_remap(Mem_layout::Mpm_ps_hold, sizeof(Unsigned32));
   Io::write<Unsigned32>(0, base);
-  for (;;)
-    ;
+  L4::infinite_loop();
 }
