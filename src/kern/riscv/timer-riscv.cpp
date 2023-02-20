@@ -91,14 +91,6 @@ Timer::init(Cpu_number cpu)
       if (!Config::Scheduler_one_shot)
         _timer_period = us_to_ticks(Config::Scheduler_granularity);
     }
-
-  if (!Config::Scheduler_one_shot)
-    {
-      // Kick off the "periodic" timer
-      auto time = Cpu::rdtime();
-      _timer_next_trigger.cpu(cpu) = time;
-      reprogram_periodic_timer(cpu, time);
-    }
 }
 
 IMPLEMENT inline
@@ -155,19 +147,12 @@ Timer::update_timer(Unsigned64 wakeup_us)
 
 PRIVATE static inline NEEDS["sbi.h"]
 void
-Timer::reprogram_periodic_timer(Cpu_number cpu, Unsigned64 cur_time)
+Timer::reprogram_periodic_timer(Cpu_number cpu)
 {
   // Calculate next trigger time of timer
-  _timer_next_trigger.cpu(cpu) += _timer_period;
+  Unsigned64 next_trigger = _timer_next_trigger.cpu(cpu) + _timer_period;
 
-  Unsigned64 next_trigger = _timer_next_trigger.cpu(cpu);
-  // Make sure that we don't program the one-shot timer to a value in the past
-  // (e.g. the current timer interrupt came extremely late).
-  if (EXPECT_FALSE(next_trigger <= cur_time))
-    // If the next trigger time is in the past, program the timer to a value
-    // in the near future instead.
-    next_trigger = cur_time + _timer_period / 8;
-
+  _timer_next_trigger.cpu(cpu) = next_trigger;
   Sbi::set_timer(next_trigger);
 }
 
@@ -181,7 +166,6 @@ void
 Timer::handle_interrupt()
 {
   auto cpu = current_cpu();
-  auto time = Cpu::rdtime();
   if (Config::Scheduler_one_shot)
     {
       // Disable timer interrupts as the STIP flag is not cleared
@@ -191,10 +175,10 @@ Timer::handle_interrupt()
   else
     {
       // Emulate periodic timer
-      reprogram_periodic_timer(cpu, time);
+      reprogram_periodic_timer(cpu);
     }
 
-  Timer::update_system_clock(cpu, time);
+  Timer::update_system_clock(cpu, Cpu::rdtime());
 }
 
 PUBLIC static
@@ -209,6 +193,13 @@ Timer::enable(Cpu_number cpu, bool enable)
 
   if (Config::Scheduler_one_shot)
     _enabled.current() = enable;
+  else /* periodic timer */
+    if (enable)
+      {
+        // Kick off the periodic timer
+        _timer_next_trigger.cpu(cpu) = Cpu::rdtime();
+        reprogram_periodic_timer(cpu);
+      }
 
   Cpu::enable_timer_interrupt(enable);
 }
