@@ -15,8 +15,8 @@ Iommu::init_platform()
    * SMMU3 (eTSEC)               | 0x01300000 | 2
    * SMMU4 (qDMA)                | 0x01380000 | 3
    */
-  Address base_addrs[] = { 0x01200000, 0x01280000, 0x01300000, 0x01380000 };
-  unsigned nonsec_irqs[] = { 101, 103, 105, 206 };
+  Address const base_addrs[] = { 0x01200000, 0x01280000, 0x01300000, 0x01380000 };
+  unsigned const nonsec_irqs[] = { 101, 103, 105, 206 };
 
   for (unsigned i = 0; i < Num_iommus; ++i)
     {

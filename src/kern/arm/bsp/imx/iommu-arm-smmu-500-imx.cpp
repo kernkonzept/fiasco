@@ -7,7 +7,7 @@ bool
 Iommu::init_platform()
 {
   static_assert(Num_iommus == 1, "Unexpected number of IOMMUs.");
-  unsigned nonsec_irqs[] =
+  unsigned const nonsec_irqs[] =
   {
     // Global/Context Irq
     64,
