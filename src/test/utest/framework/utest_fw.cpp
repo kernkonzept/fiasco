@@ -156,7 +156,7 @@ public:
     bool verbose = false;
     bool restart = false;
     bool debug   = false;
-    bool record  = false;
+//     bool record  = false; // unused, but specified user-land interface
 
     // Hardware information
     Unsigned32 cores = 0;
@@ -342,7 +342,8 @@ Utest_fw::parse_feature_string()
       ext_info.verbose = feature[0] == '1';
       ext_info.restart = feature[1] == '1';
       ext_info.debug   = feature[2] == '1';
-      ext_info.record  = feature[3] == '1';
+      // unused, but specified user-land interface
+//      ext_info.record  = feature[3] == '1';
 
       if (feature[4] != 'a')
         {
@@ -507,7 +508,7 @@ Utest_fw::tap_msg(bool success,
            todo_skip ? todo_skip : "",
            msg ? msg : "");
 
-  if (ext_info.record)
+  if (_test_uuid)
     printf("KUT # Test-uuid: %s\n", _test_uuid);
 }
 
