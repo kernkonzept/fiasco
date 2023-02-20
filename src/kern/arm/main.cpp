@@ -1,5 +1,7 @@
 INTERFACE [arm]:
+
 #include <cstddef>
+#include "std_macros.h"
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
@@ -66,7 +68,7 @@ static void exit_question()
     }
 }
 
-void
+void FIASCO_NORETURN
 kernel_main()
 {
   // caution: no stack variables in this function because we're going
@@ -92,6 +94,8 @@ kernel_main()
   extern char call_bootstrap[];
   // switch to stack of kernel thread and bootstrap the kernel
   Thread::arm_fast_exit(kernel->init_stack(), call_bootstrap, kernel);
+
+  // never returns here
 }
 
 //------------------------------------------------------------------------

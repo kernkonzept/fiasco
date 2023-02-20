@@ -54,7 +54,7 @@ Thread::pagein_tcb_request(Return_frame *regs)
   return false;
 }
 
-PUBLIC static inline void
+PUBLIC static inline void FIASCO_NORETURN
 Thread::arm_fast_exit(void *sp, void *pc, void *arg)
 {
   register void *r0 asm("r0") = arg;
@@ -65,6 +65,7 @@ Thread::arm_fast_exit(void *sp, void *pc, void *arg)
      [stack_p] "r" (sp),
      [rfe]     "r" (pc),
      "r" (r0));
+  __builtin_unreachable();
 }
 
 PRIVATE static inline NEEDS[Thread::set_tpidruro]

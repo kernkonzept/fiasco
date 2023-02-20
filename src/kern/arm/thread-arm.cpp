@@ -71,7 +71,8 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, Vcpu_state *arg)
 
   assert(r->check_valid_user_psr());
   arm_fast_exit(nonull_static_cast<Return_frame*>(r), __iret, arg);
-  panic("__builtin_trap()");
+
+  // never returns here
 }
 
 IMPLEMENT_DEFAULT inline
@@ -85,7 +86,7 @@ Thread::init_per_cpu(Cpu_number, bool)
 //
 
 IMPLEMENT
-void
+void FIASCO_NORETURN
 Thread::user_invoke()
 {
   user_invoke_generic();
@@ -114,12 +115,6 @@ Thread::user_invoke()
   Proc::cli();
   extern char __return_from_user_invoke[];
   arm_fast_exit(ts, __return_from_user_invoke, ts);
-  panic("should never be reached");
-  while (1)
-    {
-      ct->state_del(Thread_ready);
-      ct->schedule();
-    };
 
   // never returns here
 }
