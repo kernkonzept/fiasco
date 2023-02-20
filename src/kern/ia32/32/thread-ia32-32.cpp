@@ -222,7 +222,7 @@ Thread::check_trap13_kernel(Trap_state *ts)
 
 
 IMPLEMENT
-void
+void FIASCO_NORETURN
 Thread::user_invoke()
 {
   user_invoke_generic();
@@ -248,6 +248,7 @@ Thread::user_invoke()
        "c" (cx)
      );
 
+  __builtin_unreachable();
   // never returns here
 }
 

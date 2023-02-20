@@ -283,7 +283,7 @@ Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
 
 
 IMPLEMENT
-void
+void FIASCO_NORETURN
 Thread::user_invoke()
 {
   user_invoke_generic();
@@ -318,6 +318,7 @@ Thread::user_invoke()
        "D" (di)
      );
 
+  __builtin_unreachable();
   // never returns here
 }
 

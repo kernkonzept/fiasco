@@ -132,7 +132,7 @@ extern "C" void thread_handle_fputrap (void) { panic ("fpu trap"); }
 extern "C" void thread_timer_interrupt_slow() {}
 
 IMPLEMENT
-void
+void FIASCO_NORETURN
 Thread::user_invoke()
 {
     {

@@ -91,7 +91,7 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
 }
 
 IMPLEMENT
-void
+void FIASCO_NORETURN
 Thread::user_invoke()
 {
   user_invoke_generic();

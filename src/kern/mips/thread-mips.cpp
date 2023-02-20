@@ -139,7 +139,7 @@ Thread::pagein_tcb_request(Return_frame *)
 
 // ERET to user mode
 IMPLEMENT
-void
+void FIASCO_NORETURN
 Thread::user_invoke()
 {
   user_invoke_generic();
@@ -174,13 +174,6 @@ Thread::user_invoke()
   while (0);
 
   __builtin_unreachable();
-  panic("should never be reached");
-  while (1)
-    {
-      current()->state_del(Thread_ready);
-      current()->schedule();
-    };
-
   // never returns
 }
 

@@ -111,7 +111,7 @@ private:
    * This function is the default routine run if a newly
    * initialized context is being switch_exec()'ed.
    */
-  static void user_invoke();
+  static void user_invoke() FIASCO_NORETURN;
 
   static void do_leave_and_kill_myself() asm("thread_do_leave_and_kill_myself");
 
