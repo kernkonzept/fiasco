@@ -2022,7 +2022,10 @@ Cpu::calibrate_tsc()
 
   // only do once
   if (scaler_tsc_to_ns)
-    return;
+    {
+      _frequency = ns_to_tsc(1000000000UL);
+      return;
+    }
 
   Unsigned64 tsc_start, tsc_end;
   Unsigned32 count, tsc_to_ns_div, dummy;
