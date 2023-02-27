@@ -6,6 +6,10 @@ INTERFACE:
 class Proc
 {
 public:
+  enum {
+    Is_32bit = sizeof(Mword) == 4,
+    Is_64bit = sizeof(Mword) == 8,
+  };
 
   typedef Mword Status;
 

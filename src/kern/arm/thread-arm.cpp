@@ -748,7 +748,7 @@ Thread::arm_esr_entry(Return_frame *rf)
       break;
 
     case 0x07: // SVE, Advanced SIMD or floating-point trap
-      if ((sizeof(Mword) == 8
+      if ((Proc::Is_64bit
            || esr.cpt_simd()
            || esr.cpt_cpnr() == 10
            || esr.cpt_cpnr() == 11)
