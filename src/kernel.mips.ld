@@ -51,6 +51,8 @@ SECTIONS {
     KEEP(*(.initkip.features))
     KEEP(*(.initkip.features.end))
     PROVIDE (_initkip_end = .);
+    /* See KIP layout in abi/kip.cpp. The feature strings are terminated by '\0'! */
+    ASSERT (_initkip_end < my_kernel_info_page + 0x800, "Kernel version strings too long");
   } :kip :l4_kip
 
   . = ALIGN(16K);

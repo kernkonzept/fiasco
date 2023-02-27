@@ -112,7 +112,13 @@ public:
   Mword      _res8[2];
 
   /* 0xF0   0x1E0:
-   * Platform info. */
+   * Platform_info. */
+
+  /* 0xF0 + sizeof(Platform_info) / 0x1E0 + sizeof(Platform_info):
+   * - Memory descriptors (2 Mwords per descriptor),
+   * - kernel version string ('\0'-terminated),
+   * - feature strings ('\0'-terminated)
+   * - terminating '\0'. */
 
   /* 0x800-0x900:
    * Code for syscall invocation. */

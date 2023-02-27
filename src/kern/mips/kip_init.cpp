@@ -21,6 +21,7 @@ IMPLEMENTATION [mips]:
 // this case.
 namespace KIP_namespace
 {
+  // See also restrictions about KIP layout in the kernel linker script!
   enum
   {
     Num_mem_descs = 20,
@@ -34,9 +35,6 @@ namespace KIP_namespace
     Kip kip;
     char mem_descs[Size_mem_descs];
   };
-
-  static_assert(sizeof(KIP) <= 0x800,
-                "Too many memory descriptors, bleeding into syscall range");
 
   KIP my_kernel_info_page asm("my_kernel_info_page") __attribute__((section(".kernel_info_page"))) =
     {
