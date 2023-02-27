@@ -13,10 +13,10 @@ public:
   {
     char name[16];
     Unsigned32 is_mp;
-    char arch_cpuinfo[252]; // Just placeholders
+    Unsigned32 arch_cpuinfo[23];
   };
 
-  /* 0xF0 */
+  /* 0xF0 / 0x1E0 */
   Platform_info platform_info;
 };
 
