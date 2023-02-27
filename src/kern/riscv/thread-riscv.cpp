@@ -108,6 +108,7 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, void *arg)
 
   // XXX Is it a problem that the contents of kernel registers are leaked?
 
+  assert(cpu_lock.test());
   extern char fast_sret[];
   riscv_fast_exit(nonull_static_cast<Return_frame*>(r), fast_sret, arg);
 
@@ -279,6 +280,8 @@ IMPLEMENT
 int
 Thread::thread_handle_trap(Mword cause, Mword val, Return_frame *ret_frame)
 {
+  assert(cpu_lock.test());
+
   int result = 0;
   switch (cause)
     {
@@ -338,6 +341,7 @@ Thread::thread_handle_trap(Mword cause, Mword val, Return_frame *ret_frame)
       WARN("Trap handling failed: Cause=" L4_MWORD_FMT ", Epc=" L4_MWORD_FMT ", Val=" L4_MWORD_FMT "\n",
            cause, ret_frame->ip(), val);
 
+    assert(cpu_lock.test());
     return result;
 }
 

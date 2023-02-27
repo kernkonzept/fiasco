@@ -282,10 +282,12 @@ ENTRY(handle_trap)
 END(handle_trap)
 
 
+/**
+ * Restore vCPU state and reset kernel stack pointer to top of stack.
+ *
+ * \pre Interrupts must be disabled.
+ */
 ENTRY(vcpu_resume)
-    /* Disable interrupts until sret */
-    csrrc t0, sstatus, SR_SIE
-
     /* Reset kernel stack pointer to return frame */
     mv sp, a1
 
@@ -314,10 +316,12 @@ ENTRY(leave_and_kill_myself)
 END(leave_and_kill_myself)
 
 
+/**
+ * Restores minimal execution environment from return frame.
+ *
+ * \pre Interrupts must be disabled.
+ */
 ENTRY(fast_sret)
-    /* Disable interrupts until sret */
-    csrrc t0, sstatus, SR_SIE
-
     restore_sret sp
     restore_reg gp, TS_gp, sp
     restore_reg sp, TS_sp, sp, true
@@ -326,12 +330,14 @@ ENTRY(fast_sret)
 END(fast_sret)
 
 
+/**
+ * \pre Interrupts must be disabled.
+ */
 ENTRY(return_from_user_invoke)
     /* Check for pending continuation */
     handle_eret_work return_from_user_invoke
 
-    /* Disable interrupts until sret */
-    csrrc t0, sstatus, SR_SIE
+    csrr t0, sstatus
 
     /* Clear SPP to make sret return to user mode */
     clear_bits t0, t1, SR_SPP
@@ -358,16 +364,27 @@ store_status:
 END(return_from_user_invoke)
 
 
+/**
+ * First handle eret work if any, then restore state from Return_frame at sp.
+ *
+ * \pre Interrupts must be disabled.
+ */
 ENTRY(return_from_exception)
     /* Check for pending continuation */
     handle_eret_work return_from_exception
-
-.global fast_ret_from_irq
-fast_ret_from_irq:
-    /* Disable interrupts until sret */
-    csrrc t0, sstatus, SR_SIE
 
     restore_all
 
     sret
 END(return_from_exception)
+
+/**
+ * Restore state from Entry_frame at sp without checking for eret work.
+ *
+ * \pre Interrupts must be disabled.
+ */
+ENTRY(fast_ret_from_irq)
+    restore_all
+
+    sret
+END(fast_ret_from_irq)

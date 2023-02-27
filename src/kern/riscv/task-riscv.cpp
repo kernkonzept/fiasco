@@ -14,6 +14,8 @@ IMPLEMENT_OVERRIDE
 int
 Task::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode)
 {
+  assert(cpu_lock.test());
+
   if (user_mode)
     {
       ctxt->vcpu_save_host_regs(vcpu);
