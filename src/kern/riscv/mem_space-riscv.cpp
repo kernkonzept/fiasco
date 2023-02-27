@@ -291,7 +291,7 @@ Mem_space::~Mem_space()
 
 IMPLEMENT inline NEEDS["cpu.h", "mem_layout.h", Mem_space::asid_with_fence]
 void
-Mem_space::make_current()
+Mem_space::make_current(Switchin_flags)
 {
   assert(_dir_phys);
   // On RISC-V the TLB maintenance instruction is specified not as a TLB flush
