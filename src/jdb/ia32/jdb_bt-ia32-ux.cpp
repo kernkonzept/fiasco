@@ -65,7 +65,7 @@ Jdb_bt::get_user_eip_ebp(Address &eip, Address &ebp)
       if (entry_ss & 3)
 	{
 	  // kernel entered from user level
-	  if (eip >= Mem_layout::Syscalls)
+	  if (syscall_from_user(eip))
 	    {
 	      if ((entry_esp & (sizeof(Mword)-1))
 		  || !Jdb::peek(Jdb_addr<Address>((Address *)entry_esp, task), eip))
@@ -405,3 +405,14 @@ Jdb_bt::Jdb_bt()
 
 static Jdb_bt jdb_bt INIT_PRIORITY(JDB_MODULE_INIT_PRIO);
 
+//----------------------------------------------------------------------------
+IMPLEMENTATION[ia32,ux]:
+
+PRIVATE static inline bool Jdb_bt::syscall_from_user(Address eip)
+{ return eip >= Mem_layout::Syscalls; }
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION[amd64]:
+
+PRIVATE static inline bool Jdb_bt::syscall_from_user(Address)
+{ return false; }
