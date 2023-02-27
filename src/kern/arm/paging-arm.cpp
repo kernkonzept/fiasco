@@ -433,10 +433,15 @@ public:
     typedef L4_fpage::Rights R;
     typedef Page::Type T;
 
-    Unsigned64 lower = 0x300 | (0x1 << 6); // inner sharable, readable
+    Unsigned64 lower = 0x300; // inner sharable
     if (attr.type == T::Normal())   lower |= ATTRIBS::CACHEABLE;
     if (attr.type == T::Buffered()) lower |= ATTRIBS::BUFFERED;
     if (attr.type == T::Uncached()) lower |= ATTRIBS::NONCACHEABLE;
+
+    // On AArch32 execution is only allowed if read access is permitted as well
+    // On AArch64 this is not necessary, pages can be mapped execute-only
+    if (attr.rights & R::R() || (Proc::Is_32bit && attr.rights & R::X()))
+      lower |= (0x1 << 6);
 
     if (attr.rights & R::W())
       lower |= (0x2 << 6);
@@ -455,8 +460,10 @@ public:
 
     auto c = access_once(_this()->pte);
 
-    R rights = R::R();
-    rights |= R::U();
+    R rights = R::U();
+
+    if (c & (0x1 << 6))
+      rights |= R::R();
 
     if (c & (0x2 << 6))
       rights |= R::W();
@@ -488,8 +495,12 @@ public:
   {
     Unsigned64 n_attr = 0;
     Mword a_attr = 0;
+
+    if (r & L4_fpage::Rights::R())
+      a_attr |= 0x1 << 6;
+
     if (r & L4_fpage::Rights::W())
-      a_attr = 0x2 << 6;
+      a_attr |= 0x2 << 6;
 
     if (r & L4_fpage::Rights::X())
       n_attr |= 0x0040000000000000;
