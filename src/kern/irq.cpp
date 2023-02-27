@@ -285,8 +285,9 @@ Irq_sender::destroy(Kobject ***rl) override
 {
   auto g = lock_guard(cpu_lock);
   Irq::destroy(rl);
-  // Must be done after returning from Irq::destroy() so we have the existence
-  // lock acquired -- see also Irq_sender::alloc().
+  // Must be done _after_ returning from Irq::destroy() to make sure that the
+  // existence lock was finally released by the last owner (the existence lock
+  // was already invalidated before) -- see also Irq_sender::alloc().
   (void)free(rl);
 }
 
@@ -634,8 +635,13 @@ PUBLIC
 void
 Irq::destroy(Kobject ***rl) override
 {
-  Irq_base::destroy();
+  // Irq_base::destroy() does unbind(). Therefore call Kobject::destroy() which
+  // waits until the existence lock was finally released by the last owner (the
+  // existence lock was already invalidated before). Otherwise this IRQ object
+  // could be immediately bound to another IRQ chip by the (current) owner of
+  // the existence lock of this IRQ object.
   Kobject::destroy(rl);
+  Irq_base::destroy();
 }
 
 namespace {
