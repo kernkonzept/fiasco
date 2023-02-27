@@ -161,6 +161,8 @@ Thread::user_invoke()
      : "a" (nonull_static_cast<Return_frame*>(current()->regs())),
        "c" (current()->space()->is_sigma0() // only Sigma0 gets the KIP
             ? Kmem::virt_to_phys(Kip::k()) : 0));
+
+  __builtin_unreachable();
 }
 
 PROTECTED inline
