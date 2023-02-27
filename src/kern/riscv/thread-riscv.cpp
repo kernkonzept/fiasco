@@ -300,7 +300,6 @@ Thread::thread_handle_trap(Mword cause, Mword val, Return_frame *ret_frame)
     case Cpu::Exc_load_page_fault:
     case Cpu::Exc_store_page_fault:
       result = thread_handle_page_fault(cause, val, ret_frame);
-      Proc::cli();
       if (!result)
         {
           result = current_thread()->handle_slow_trap(
@@ -402,10 +401,11 @@ Thread::thread_handle_page_fault(Mword cause, Mword pfa,
     return 1;
 
   // Enable interrupts, except for kernel page faults in TCB area.
+  auto guard = lock_guard_dont_lock<Lock_guard_inverse_policy>(cpu_lock);
   if (EXPECT_TRUE(PF::is_usermode_error(error_code))
       || ret_frame->interrupts_enabled()
       || !Kmem::is_kmem_page_fault(pfa, error_code))
-    Proc::sti();
+    guard.lock(&cpu_lock);
 
   return t->handle_page_fault(pfa, error_code, ret_frame->ip(), ret_frame);
 }
