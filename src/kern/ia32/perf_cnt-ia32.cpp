@@ -73,7 +73,6 @@ IMPLEMENTATION [(ia32 || amd64) && perf_cnt]:
 #include "cpu.h"
 #include "regdefs.h"
 #include "static_init.h"
-#include "tb_entry.h"
 
 Perf_cnt::Perf_read_fn Perf_cnt::read_pmc[Perf_cnt::Max_slot] =
 { dummy_read_pmc, dummy_read_pmc };
@@ -1101,6 +1100,11 @@ PUBLIC static inline
 char const *
 Perf_cnt::perf_type()
 { return perf_type_str; }
+
+// -----------------------------------------------------------------------
+IMPLEMENTATION [(ia32 || amd64) && perf_cnt && jdb]:
+
+#include "tb_entry.h"
 
 // set performance counter counting the selected event in slot #slot
 PUBLIC static

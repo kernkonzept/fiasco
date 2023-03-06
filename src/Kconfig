@@ -515,6 +515,24 @@ config PERFORMANCE
 	  assertions are included and additional run-time functionality
 	  is de-selected.
 
+config PERF_CNT
+	bool "Support for performance counters"
+	depends on (IA32 || AMD64 || ARM || ARM64 || MIPS)
+	default y if JDB
+	help
+	  Enable support for performance counters. On IA32/AMD64, enable support
+	  for fixed-function counters if supported by the target allowing to
+	  read these counters from all privilege levels.
+
+config PERF_CNT_COUNT_CPL0
+	bool "Enable performance counter to count while CPL=0"
+	depends on (IA32 || AMD64)
+	depends on PERF_CNT
+	help
+	  Enable the fixed counters (if available) to count while CPL=0. Be
+	  careful enabling this option because it generates overhead which
+	  could worsen the timing of guest kernels in particular on QEMU.
+
 config PERF_CNT_USER
 	bool "Allow user-level access to performance counters"
 	depends on PERF_CNT && EXPERT
@@ -664,24 +682,6 @@ config JDB_ACCOUNTING
 	  userland through the tbuf status page.
 
 	  Should be disabled for kernels which are used for measurements.
-
-config PERF_CNT
-	bool "Support for performance counters"
-	depends on (IA32 || AMD64 || ARM || ARM64 || MIPS)
-	default y if JDB
-	help
-	  Enable support for performance counters. On IA32/AMD64, enable support
-	  for fixed-function counters if supported by the target allowing to
-	  read these counters from all privilege levels.
-
-config PERF_CNT_COUNT_CPL0
-	bool "Enable performance counter to count while CPL=0"
-	depends on (IA32 || AMD64)
-	depends on PERF_CNT
-	help
-	  Enable the fixed counters (if available) to count while CPL=0. Be
-	  careful enabling this option because it generates overhead which
-	  could worsen the timing of guest kernels in particular on QEMU.
 
 endif # JDB
 

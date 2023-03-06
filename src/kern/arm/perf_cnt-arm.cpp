@@ -232,7 +232,6 @@ IMPLEMENTATION [arm && perf_cnt]:
 
 #include <cstdio>
 #include "static_init.h"
-#include "tb_entry.h"
 
 PUBLIC static
 Mword
@@ -339,6 +338,11 @@ Perf_cnt::mode(Mword slot, const char **mode, const char **name,
 
   return 1;
 }
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && perf_cnt && jdb]:
+
+#include "tb_entry.h"
 
 PUBLIC static
 int

@@ -36,8 +36,6 @@ private:
 // ------------------------------------------------------------------------
 IMPLEMENTATION [mips && perf_cnt]:
 
-#include "tb_entry.h"
-
 #include <cstdio>
 #include <string.h>
 
@@ -274,6 +272,11 @@ Perf_cnt::read_ctl(unsigned num)
     case 3: return Ctl_reg(Mips::mfc0_32(Mips::Cp0_perf_ctl_3));
     };
 }
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [mips && perf_cnt && jdb]:
+
+#include "tb_entry.h"
 
 PUBLIC static
 int
