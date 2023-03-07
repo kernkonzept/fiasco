@@ -17,6 +17,16 @@ public:
 
     Mc_rgm_base       = 0x41850000,
     Mc_me_base        = 0x41900000,
+
+    Rtu0_Mru0         = 0x76070000,
+    Rtu0_Mru1         = 0x76090000,
+    Rtu0_Mru2         = 0x76270000,
+    Rtu0_Mru3         = 0x76290000,
+    Rtu1_Mru0         = 0x76870000,
+    Rtu1_Mru1         = 0x76890000,
+    Rtu1_Mru2         = 0x76A70000,
+    Rtu1_Mru3         = 0x76A90000,
+    Mru_size          =    0x1000,
   };
 
   enum Mpu_layout { Mpu_regions = 20 };

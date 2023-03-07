@@ -48,3 +48,12 @@ config PF_S32Z_AMP_RELEASE
 	  are started by programming MC_ME and MC_RGM directly.
 
 endchoice
+
+config PF_S32Z_MRU
+	bool "MRU interrupt support"
+	default y
+	help
+	  The MRU is connected as PPI to each core. This driver enables support
+	  for receiving interrupts from MRU channels. Each MRU channel is
+	  available as dedicated interrupt, starting from 1024.
+
