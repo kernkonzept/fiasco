@@ -5,6 +5,32 @@ IMPLEMENTATION [arm && cpu_virt]:
 KIP_KERNEL_FEATURE("arm:hyp");
 
 //--------------------------------------------------------
+INTERFACE [arm && cpu_virt && !perf_cnt]:
+
+EXTENSION class Cpu
+{
+public:
+  enum Hstr_pmu_values
+  {
+    Hstr_non_vm_pmu = 1 << 9, // trap PMU c9
+  };
+
+};
+
+//--------------------------------------------------------
+INTERFACE [arm && cpu_virt && perf_cnt]:
+
+EXTENSION class Cpu
+{
+public:
+  enum Hstr_pmu_values
+  {
+    Hstr_non_vm_pmu = 0, // do not trap PMU c9
+  };
+
+};
+
+//--------------------------------------------------------
 INTERFACE [arm && cpu_virt && arm_v7]:
 
 EXTENSION class Cpu
@@ -12,7 +38,7 @@ EXTENSION class Cpu
 public:
   enum Hstr_values
   {
-    Hstr_non_vm = 0x39f6f, // ALL but crn=13,7 (TPIDxxR, DSB) CP15 traped
+    Hstr_non_vm = 0x39d6f | Hstr_non_vm_pmu, // ALL but crn=13,7 (TPIDxxR, DSB) CP15 traped
     Hstr_vm = 0x0, // none
   };
 
@@ -26,7 +52,7 @@ EXTENSION class Cpu
 public:
   enum Hstr_values
   {
-    Hstr_non_vm = 0x9f6f, // ALL but crn=13,7 (TPIDxxR, DSB) CP15 traped
+    Hstr_non_vm = 0x9d6f | Hstr_non_vm_pmu, // ALL but crn=13,7 (TPIDxxR, DSB) CP15 traped
     Hstr_vm = 0x0, // none
   };
 };
