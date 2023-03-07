@@ -608,6 +608,7 @@ menuconfig JDB
 	default y
 	select DEBUG
 	select TRACE
+	select PERF_CNT
 	help
 	  The powerful Fiasco kernel debugger.
 
@@ -739,7 +740,8 @@ config EXPERIMENTAL
 	  Use with caution!
 
 config PERF_CNT
-	def_bool y if JDB && (IA32 || AMD64 || ARM || ARM64 || MIPS)
+	bool "Performance counters"
+	depends on IA32 || AMD64 || ARM || ARM64 || MIPS
 
 config BIT32
 	bool
