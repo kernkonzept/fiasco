@@ -38,7 +38,7 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
   v->amair1 = 0;
   v->cntvoff = 0;
 
-  v->guest_regs.hcr = Cpu::Hcr_tge | Cpu::Hcr_must_set_bits;
+  v->guest_regs.hcr = Cpu::Hcr_tge | Cpu::Hcr_must_set_bits | Cpu::Hcr_dc;
   v->guest_regs.sctlr = 0;
 
   v->vtmr.host_prio() = 0xff;
@@ -511,7 +511,7 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
   v->amair = 0;
 
   v->cntvoff = 0;
-  v->guest_regs.hcr = Cpu::Hcr_tge;
+  v->guest_regs.hcr = Cpu::Hcr_tge | Cpu::Hcr_must_set_bits | Cpu::Hcr_dc;
   v->guest_regs.sctlr = 0;
 
   v->host_regs.hcr = Cpu::Hcr_host_bits;
