@@ -30,5 +30,9 @@ namespace L4
     inline void out_char(char c) const;
     int write(char const *s, unsigned long count,
               bool blocking = true) const override;
+  private:
+    void set_uartcr(bool fifo);
+    bool is_tx_fifo_enabled() const;
+    bool is_rx_fifo_enabled() const;
   };
 };
