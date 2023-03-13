@@ -20,7 +20,7 @@ panic(const char *format, ...)
   va_start (args, format);
   vprintf  (format, args);
   va_end   (args);
-  putstr("\033[m");
+  puts("\033[m");
 
   Thread::system_abort();
 }
