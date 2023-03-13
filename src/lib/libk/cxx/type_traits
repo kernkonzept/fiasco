@@ -42,6 +42,7 @@ typedef integral_constant<bool, false> false_type;
 template< typename T > struct remove_reference;
 
 template< typename T > struct identity { typedef T type; };
+template< typename T > using identity_t = typename identity<T>::type;
 
 template< typename T1, typename T2 > struct is_same;
 
@@ -254,6 +255,9 @@ template<> struct int_type_for_size<sizeof(long long), true, (sizeof(long long) 
 
 template<> struct int_type_for_size<sizeof(long long), false, (sizeof(long long) > sizeof(long))>
 { typedef unsigned long long type; };
+
+template< int SIZE, bool SIGN = false>
+using int_type_for_size_t = typename int_type_for_size<SIZE, SIGN>::type;
 
 template< typename T, class Enable = void > struct underlying_type {};
 
