@@ -467,9 +467,10 @@ Vm_svm::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, Vmcb *vmcb_s)
   // allow w access to cr0, cr2, cr3
   // allow r access to cr0, cr2, cr3, cr4
 
-  // allow r/w access to dr[0-7]
-  kernel_vmcb_s->control_area.intercept_rd_drX |= 0xff00;
-  kernel_vmcb_s->control_area.intercept_wr_drX |= 0xff00;
+  // enforce VMexit on DR read/write;
+  // DR6 & DR7 are allowed, because they are virtualized.
+  kernel_vmcb_s->control_area.intercept_rd_drX |= 0xff3f;
+  kernel_vmcb_s->control_area.intercept_wr_drX |= 0xff3f;
 
   // enable iopm and msrpm
   kernel_vmcb_s->control_area.intercept_instruction0 |= 0x18000000;
