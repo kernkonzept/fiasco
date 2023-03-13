@@ -220,7 +220,7 @@ TO dyn_cast(FROM *p)
   static_assert(is_pointer<TO>::value,
                 "cxx::dyn_cast<T>(): T is not a pointer");
 
-  typedef typename remove_pointer<TO>::type To_class;
+  typedef remove_pointer_t<TO> To_class;
   static_assert(!is_volatile<FROM>::value && !is_volatile<To_class>::value,
                 "cxx::dyn_cast<T>(): volatile types not supported");
   static_assert((!is_const<FROM>::value || is_const<To_class>::value),

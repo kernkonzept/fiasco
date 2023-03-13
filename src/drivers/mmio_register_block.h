@@ -132,9 +132,9 @@ public:
   /** Register wrapper with `BITS` default access size */
   template<unsigned BITS, bool READ = true, bool WRITE = true>
   struct Reg
-  : Reg_t<typename cxx::int_type_for_size<BITS / 8>::type, READ, WRITE>
+  : Reg_t<cxx::int_type_for_size_t<BITS / 8>, READ, WRITE>
   {
-    typedef typename cxx::int_type_for_size<BITS / 8>::type Type;
+    typedef cxx::int_type_for_size_t<BITS / 8> Type;
     Reg() = default;
     using Reg_t<Type, READ, WRITE>::operator =;
 

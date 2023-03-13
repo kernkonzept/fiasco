@@ -62,7 +62,7 @@ namespace cxx {
  */
 template< typename TYPE, typename = typename TYPE::Value > inline
 constexpr typename TYPE::Value
-int_value(typename cxx::identity<TYPE>::type const &v)
+int_value(cxx::identity_t<TYPE> const &v)
 { return TYPE::val(v); }
 
 
@@ -71,7 +71,7 @@ int_value(typename cxx::identity<TYPE>::type const &v)
  *
  * Currently do this for native integers directly.
  */
-template< typename TYPE > //, typename = typename cxx::enable_if<cxx::is_integral<TYPE>::value>::type > inline
+template< typename TYPE > //, typename = cxx::enable_if_t<cxx::is_integral<TYPE>::value> > inline
 inline constexpr TYPE
 int_value(TYPE const &v)
 { return v; }
@@ -512,7 +512,7 @@ get_lsb(TYPE const &v, ORDER const &o)
 { return v & ~(typename TYPE::Diff_type(~0) << o); }
 
 template< typename TYPE, typename ORDER > inline
-constexpr typename cxx::enable_if<cxx::is_integral<TYPE>::value, TYPE>::type
+constexpr cxx::enable_if_t<cxx::is_integral<TYPE>::value, TYPE>
 get_lsb(TYPE const &v, ORDER const &o)
 { return v & ~(TYPE(~0) << o); }
 
@@ -522,7 +522,7 @@ is_zero(TYPE const &v)
 { return cxx::int_value<TYPE>(v) == 0; }
 
 template< typename TYPE,
-  typename = typename cxx::enable_if<cxx::is_integral<TYPE>::value>::type > inline
+  typename = cxx::enable_if_t<cxx::is_integral<TYPE>::value> > inline
 constexpr bool
 is_zero(TYPE const &v)
 { return v == 0; }
@@ -561,7 +561,7 @@ private:
 };
 
 template< typename T >
-struct underlying_type<T, typename cxx::enable_if<!cxx::is_same<typename T::Value, void>::value>::type>
+struct underlying_type<T, cxx::enable_if_t<!cxx::is_same<typename T::Value, void>::value>>
 {
   typedef typename T::Value type;
 };

@@ -91,11 +91,11 @@ public:
   };
 
   template<Asid_num_fn asid_num_fn = ASID_NUM>
-  static typename cxx::enable_if<asid_num_fn != nullptr, bool>::type
+  static cxx::enable_if_t<asid_num_fn != nullptr, bool>
   has_asid_num_fn() { return true; }
 
   template<Asid_num_fn asid_num_fn = ASID_NUM>
-  static typename cxx::enable_if<asid_num_fn == nullptr, bool>::type
+  static cxx::enable_if_t<asid_num_fn == nullptr, bool>
   has_asid_num_fn() { return false; }
 
   static inline unsigned asid_num()

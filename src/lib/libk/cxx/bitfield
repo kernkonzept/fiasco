@@ -34,7 +34,7 @@ template<typename T, unsigned LSB, unsigned MSB>
 class Bitfield
 {
 private:
-  typedef typename remove_reference<T>::type Base_type;
+  typedef remove_reference_t<T> Base_type;
 
   static_assert(MSB >= LSB, "boundary mismatch in bit-field definition");
   static_assert(MSB < sizeof(Base_type) * 8, "MSB outside of bit-field type");
@@ -53,7 +53,7 @@ private:
       unsigned long,
       unsigned long long
     > Unsigned_types;
-    typedef typename cxx::find_type<Unsigned_types, Cmp>::type Type;
+    typedef cxx::find_type_t<Unsigned_types, Cmp> Type;
   };
 
 public:

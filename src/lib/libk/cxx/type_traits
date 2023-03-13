@@ -87,7 +87,7 @@ template< typename T > struct remove_volatile<T volatile> { typedef T type; };
 template< typename T > using remove_volatile_t = typename remove_volatile<T>::type;
 
 template< typename T >
-struct remove_cv { typedef typename remove_const<typename remove_volatile<T>::type>::type type; };
+struct remove_cv { typedef remove_const_t<remove_volatile_t<T>> type; };
 
 template< typename T >
 using remove_cv_t = typename remove_cv<T>::type;
@@ -100,7 +100,7 @@ template< typename T, typename I >
 struct __remove_pointer_h<T, I*> { typedef I type; };
 
 template< typename  T >
-struct remove_pointer : __remove_pointer_h<T, typename remove_cv<T>::type> {};
+struct remove_pointer : __remove_pointer_h<T, remove_cv_t<T>> {};
 
 template< typename T >
 using remove_pointer_t = typename remove_pointer<T>::type;
@@ -133,17 +133,17 @@ using remove_all_extents_t = typename remove_all_extents<T>::type;
 
 template< typename T >
 inline T &&
-forward(typename cxx::remove_reference<T>::type &t)
+forward(cxx::remove_reference_t<T> &t)
 { return static_cast<T &&>(t); }
 
 template< typename T >
 inline T &&
-forward(typename cxx::remove_reference<T>::type &&t)
+forward(cxx::remove_reference_t<T> &&t)
 { return static_cast<T &&>(t); }
 
 template< typename T >
-inline typename cxx::remove_reference<T>::type &&
-move(T &t) { return static_cast<typename cxx::remove_reference<T>::type &&>(t); }
+inline cxx::remove_reference_t<T> &&
+move(T &t) { return static_cast<cxx::remove_reference_t<T> &&>(t); }
 
 template< bool, typename T = void >
 struct enable_if {};
@@ -264,7 +264,7 @@ template< typename T, class Enable = void > struct underlying_type {};
 template< typename T >
 struct underlying_type<T, typename enable_if<is_enum<T>::value>::type >
 {
-  typedef typename int_type_for_size<sizeof(T), is_signed<T>::value>::type type;
+  typedef int_type_for_size_t<sizeof(T), is_signed<T>::value> type;
 };
 
 template< typename T >

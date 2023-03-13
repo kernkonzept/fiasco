@@ -1059,7 +1059,7 @@ Jdb::poke_task(Jdb_address addr, void const *value, int width)
 PUBLIC static
 template< typename T >
 bool
-Jdb::peek(Jdb_addr<T> addr, typename cxx::remove_const<T>::type &value)
+Jdb::peek(Jdb_addr<T> addr, cxx::remove_const_t<T> &value)
 {
   // use an Mword here instead of T as some implementations of peek_task use
   // an Mword in their operation which is potentially bigger than T

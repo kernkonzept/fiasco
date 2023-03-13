@@ -59,9 +59,9 @@ template< typename T, typename POLICY = Bits::Basic_list_policy< T, H_list_item>
 class H_list : public Bits::Basic_list<POLICY>
 {
 private:
-  typedef typename cxx::conditional<
+  typedef cxx::conditional_t<
     cxx::is_convertible<T, H_list_item_t<T> >::value,
-    H_list_item_t<T>, H_list_item>::type Item;
+    H_list_item_t<T>, H_list_item> Item;
   typedef Bits::Basic_list<POLICY> Base;
   H_list(H_list const &);
   void operator = (H_list const &);

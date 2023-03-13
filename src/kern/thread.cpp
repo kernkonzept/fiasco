@@ -1240,7 +1240,7 @@ Thread::migrate_away(Migration *inf, bool remote)
 
       auto g = !remote
                ? lock_guard(q.q_lock())
-               : Lock_guard<cxx::remove_pointer<decltype(q.q_lock())>::type>();
+               : Lock_guard<cxx::remove_pointer_t<decltype(q.q_lock())>>();
 
       assert (q.q_lock()->test());
       // potentially dequeue from our local queue

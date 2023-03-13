@@ -19,8 +19,8 @@ min(A const &a1, A const &a2, ARGS const &...a)
 // matches with explicit template type A
 template<typename A, typename ...ARGS>
 constexpr A const &
-min(typename cxx::identity<A>::type const &a1,
-    typename cxx::identity<A>::type const &a2,
+min(cxx::identity_t<A> const &a1,
+    cxx::identity_t<A> const &a2,
     ARGS const &...a)
 {
   return min<A>((a1 <= a2) ? a1 : a2, a...);
@@ -41,8 +41,8 @@ max(A const &a1, A const &a2, ARGS const &...a)
 // matches with explicit template type A
 template<typename A, typename ...ARGS>
 constexpr A const &
-max(typename cxx::identity<A>::type const &a1,
-    typename cxx::identity<A>::type const &a2,
+max(cxx::identity_t<A> const &a1,
+    cxx::identity_t<A> const &a2,
     ARGS const &...a)
 {
   return max<A>((a1 >= a2) ? a1 : a2, a...);

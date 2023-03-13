@@ -10,7 +10,7 @@ template< typename STORAGE_TYPE >
 class Bitmap_base_base
 {
 public:
-  typedef typename cxx::remove_pointer<typename cxx::remove_all_extents<STORAGE_TYPE>::type>::type
+  typedef cxx::remove_pointer_t<cxx::remove_all_extents_t<STORAGE_TYPE>>
     Bitmap_elem_type;
 
   enum { Bpl = sizeof(Bitmap_elem_type) * 8 };

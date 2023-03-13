@@ -3,7 +3,7 @@ IMPLEMENTATION[arm]:
 #include <cxx/type_traits>
 
 template< typename T > inline NEEDS [<cxx/type_traits>]
-ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 4), T>::type
+ALWAYS_INLINE cxx::enable_if_t<(sizeof(T) == 4), T>
 atomic_load(T const *p)
 {
   T res;
@@ -13,7 +13,7 @@ atomic_load(T const *p)
 
 template< typename T, typename V > inline NEEDS [<cxx/type_traits>]
 ALWAYS_INLINE void
-atomic_store(T *p, V value, typename cxx::enable_if<(sizeof(T) == 4), int>::type = 0)
+atomic_store(T *p, V value, cxx::enable_if_t<(sizeof(T) == 4), int> = 0)
 {
   T val = value;
   asm volatile ("str %1, %0" : "=m" (*p) : "r" (val));
@@ -109,7 +109,7 @@ cas_arch(Mword *m, Mword o, Mword n)
 }
 
 template<typename T, typename V> inline NEEDS["mem.h", <cxx/type_traits>]
-ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 4), T>::type
+ALWAYS_INLINE cxx::enable_if_t<(sizeof(T) == 4), T>
 atomic_exchange(T *mem, V value)
 {
   T val = value;
@@ -129,7 +129,7 @@ atomic_exchange(T *mem, V value)
 }
 
 template<typename T, typename V> inline NEEDS ["mem.h", <cxx/type_traits>]
-ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 4), T>::type
+ALWAYS_INLINE cxx::enable_if_t<(sizeof(T) == 4), T>
 atomic_add_fetch(T *mem, V value)
 {
   T val = value;
@@ -154,7 +154,7 @@ IMPLEMENTATION[arm && arm_v6plus && arm_lpae]:
 #include <cxx/type_traits>
 
 template< typename T > inline NEEDS [<cxx/type_traits>]
-ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 8), T>::type
+ALWAYS_INLINE cxx::enable_if_t<(sizeof(T) == 8), T>
 atomic_load(T const *p)
 {
   T res;
@@ -164,7 +164,7 @@ atomic_load(T const *p)
 
 template< typename T, typename V > inline NEEDS [<cxx/type_traits>]
 ALWAYS_INLINE void
-atomic_store(T *p, V value, typename cxx::enable_if<(sizeof(T) == 8), int>::type = 0)
+atomic_store(T *p, V value, cxx::enable_if_t<(sizeof(T) == 8), int> = 0)
 {
   T val = value;
   asm volatile ("strd %1, %H1, %0" : "=m" (*p) : "r" (val));
@@ -176,7 +176,7 @@ IMPLEMENTATION[arm && (arm_v7plus || (arm_v6 && mp))]:
 #include <cxx/type_traits>
 
 template<typename T, typename V> inline NEEDS ["mem.h", <cxx/type_traits>]
-ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 8), T>::type
+ALWAYS_INLINE cxx::enable_if_t<(sizeof(T) == 8), T>
 atomic_exchange(T *mem, V value)
 {
   T val = value;
@@ -195,7 +195,7 @@ atomic_exchange(T *mem, V value)
 }
 
 template<typename T, typename V> inline NEEDS ["mem.h", <cxx/type_traits>]
-ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 8), T>::type
+ALWAYS_INLINE cxx::enable_if_t<(sizeof(T) == 8), T>
 atomic_add_fetch(T *mem, V value)
 {
   T val = value;
@@ -221,7 +221,7 @@ IMPLEMENTATION[arm && arm_v6plus && mp && !arm_lpae]:
 #include <cxx/type_traits>
 
 template< typename T > inline NEEDS [<cxx/type_traits>]
-ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 8), T>::type
+ALWAYS_INLINE cxx::enable_if_t<(sizeof(T) == 8), T>
 atomic_load(T const *p)
 {
   T res;
@@ -231,7 +231,7 @@ atomic_load(T const *p)
 
 template< typename T, typename V > inline NEEDS ["mem.h", <cxx/type_traits>]
 ALWAYS_INLINE void
-atomic_store(T *p, V value, typename cxx::enable_if<(sizeof(T) == 8), int>::type = 0)
+atomic_store(T *p, V value, cxx::enable_if_t<(sizeof(T) == 8), int> = 0)
 {
   T val = value;
   long long tmp;
@@ -254,7 +254,7 @@ IMPLEMENTATION[arm && arm_v6 && !mp]:
 
 template<typename T, typename V> inline NEEDS ["mem.h", "processor.h",
                                                <cxx/type_traits>]
-ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 8), T>::type
+ALWAYS_INLINE cxx::enable_if_t<(sizeof(T) == 8), T>
 atomic_exchange(T *mem, V value)
 {
   Mword s = Proc::cli_save();
@@ -272,7 +272,7 @@ atomic_exchange(T *mem, V value)
 
 template<typename T, typename V> inline NEEDS ["mem.h", "processor.h",
                                                <cxx/type_traits>]
-ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 8), T>::type
+ALWAYS_INLINE cxx::enable_if_t<(sizeof(T) == 8), T>
 atomic_add_fetch(T *mem, V value)
 {
   Mword s = Proc::cli_save();
@@ -297,7 +297,7 @@ IMPLEMENTATION[arm && arm_v6plus && !mp && !arm_lpae]:
 #include <cxx/type_traits>
 
 template< typename T > inline NEEDS [<cxx/type_traits>]
-ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 8), T>::type
+ALWAYS_INLINE cxx::enable_if_t<(sizeof(T) == 8), T>
 atomic_load(T const *p)
 {
   T res;
@@ -307,7 +307,7 @@ atomic_load(T const *p)
 
 template< typename T, typename V > inline NEEDS [<cxx/type_traits>]
 ALWAYS_INLINE void
-atomic_store(T *p, V value, typename cxx::enable_if<(sizeof(T) == 8), int>::type = 0)
+atomic_store(T *p, V value, cxx::enable_if_t<(sizeof(T) == 8), int> = 0)
 {
   T val = value;
   asm volatile (

@@ -270,7 +270,7 @@ template< typename SIZE_TYPE >
 static typename SIZE_TYPE::Order_type
 get_order_from_fp(L4_fpage const &fp, int base_order = 0)
 {
-  typedef typename cxx::underlying_type<SIZE_TYPE>::type Value;
+  typedef cxx::underlying_type_t<SIZE_TYPE> Value;
   typedef typename SIZE_TYPE::Order_type Order;
 
   enum : int {
@@ -829,7 +829,7 @@ save_access_flags(Mem_space *space, typename Mem_space::V_pfn page_address, bool
 
 // do nothing for IO and OBJs
 template<typename MAPDB, typename SPACE,
-         typename = typename cxx::enable_if<!cxx::is_same<SPACE, Mem_space>::value>::type>
+         typename = cxx::enable_if_t<!cxx::is_same<SPACE, Mem_space>::value>>
 void
 save_access_flags(SPACE *, typename SPACE::V_pfn, bool,
                   typename MAPDB::Frame const &,

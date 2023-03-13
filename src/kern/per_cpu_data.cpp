@@ -100,10 +100,10 @@ template< typename T >
 class Per_cpu_ptr : private Per_cpu_data
 {
 public:
-  typedef typename cxx::conditional<
+  typedef cxx::conditional_t<
     cxx::is_const<T>::value,
-    Per_cpu<typename cxx::remove_cv<T>::type> const,
-    Per_cpu<typename cxx::remove_cv<T>::type> >::type Per_cpu_type;
+    Per_cpu<cxx::remove_cv_t<T>> const,
+    Per_cpu<cxx::remove_cv_t<T>> > Per_cpu_type;
 
   Per_cpu_ptr() {}
   Per_cpu_ptr(Per_cpu_type *o) : _p(&o->_d) {}

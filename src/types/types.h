@@ -412,13 +412,13 @@ struct Cpu_number : cxx::int_type_order_base<unsigned, Cpu_number, Order>
  */
 template<typename T>
 inline void
-write_consistent(typename cxx::enable_if<! (sizeof(T) > sizeof(Mword)), T>::type *t,
+write_consistent(cxx::enable_if_t<! (sizeof(T) > sizeof(Mword)), T> *t,
                  T const &v)
 { write_now(t, v); }
 
 template<typename T>
 inline void
-write_consistent(typename cxx::enable_if<(sizeof(T) > sizeof(Mword)), T>::type *t,
+write_consistent(cxx::enable_if_t<(sizeof(T) > sizeof(Mword)), T> *t,
                  T const &v)
 {
   static_assert ((sizeof(T) % sizeof(Mword)) == 0, "type must be a multiple of Mwords");

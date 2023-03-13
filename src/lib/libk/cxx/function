@@ -11,7 +11,7 @@ namespace Bits {
   {
     template< typename Functor >
     static Res invoke(void *functor, Args && ...args)
-    { return (*reinterpret_cast<typename cxx::remove_reference<Functor>::type *>(functor))(cxx::forward<Args>(args)...); }
+    { return (*reinterpret_cast<cxx::remove_reference_t<Functor> *>(functor))(cxx::forward<Args>(args)...); }
   };
 }
 

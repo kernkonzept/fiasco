@@ -83,7 +83,7 @@ atomic_add(Mword *l, Mword value)
 }
 
 template<typename T, typename V> inline NEEDS [<cxx/type_traits>, "processor.h"]
-ALWAYS_INLINE typename cxx::enable_if<(sizeof(T) == 4), T>::type
+ALWAYS_INLINE cxx::enable_if_t<(sizeof(T) == 4), T>
 atomic_add_fetch(T *mem, V value)
 {
   Proc::Status s = Proc::cli_save();
