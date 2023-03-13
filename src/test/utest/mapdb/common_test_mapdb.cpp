@@ -73,7 +73,7 @@ public:
   : Space(rq, Caps::all()), name(name)
   {
     inc_ref(); // Ensure space is not deleted by reference counting.
-    initialize();
+    Utest_fw::chk(initialize(), "Initialize space object");
   }
 
   char const *const name;
