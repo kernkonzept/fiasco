@@ -71,7 +71,10 @@ class Test_space : public Space
 public:
   Test_space(Ram_quota *rq, char const *name)
   : Space(rq, Caps::all()), name(name)
-  { initialize(); }
+  {
+    inc_ref(); // Ensure space is not deleted by reference counting.
+    initialize();
+  }
 
   char const *const name;
 };
