@@ -19,6 +19,7 @@ INTERFACE [iommu && iommu_arm_smmu_v3]:
 #include "panic.h"
 #include "poll_timeout_counter.h"
 #include "cxx/bitfield"
+#include "cxx/slist"
 #include "kmem_slab.h"
 
 class Dmar_space;
