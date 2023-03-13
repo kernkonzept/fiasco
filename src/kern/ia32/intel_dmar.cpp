@@ -141,7 +141,7 @@ Dmar::parse_src_id(Unsigned64 src_id, Unsigned8 *bus, unsigned *dfs,
     case 1:
       *dfs = src_id & 0xff;
       *dfe = *dfs + 1;
-      src_id = ((Unsigned64)bus << 8) | *dfs;
+      src_id = ((Unsigned64)*bus << 8) | *dfs;
       break;
     case 2:
       *dfs = 0;
