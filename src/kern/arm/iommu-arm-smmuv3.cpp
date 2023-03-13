@@ -1282,7 +1282,7 @@ Iommu::setup(Address base_addr, unsigned eventq_irq, unsigned gerror_irq)
   // `cpu max` the physical address size is 48-bit, but SMMU still only supports
   // 44-bit).
   if (_oas < Cpu::phys_bits())
-    // Unless to high physical addresses are mapped the SMMU is going to work
+    // Unless too high physical addresses are mapped, the SMMU is going to work
     // fine, so don't panic/disable the SMMU, only print a warning.
     WARN("IOMMU: Supported physical address size smaller than required: %u\n",
          _oas);
