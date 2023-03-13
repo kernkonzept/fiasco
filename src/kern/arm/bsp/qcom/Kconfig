@@ -23,7 +23,8 @@ config PF_QCOM_MSM8909
   select HAVE_ARM_GICV2
   select HAS_ARM_PSCI
   select HAS_IOMMU_OPTION
-  select ARM_IOMMU_COHERENT
+  # SMMU incorrectly reports that coherent page table walks are supported
+  #select ARM_IOMMU_COHERENT
   select PF_QCOM_UART_DM
   help
     Choose for Qualcomm Snapdragon 210 (MSM8909) platform.
