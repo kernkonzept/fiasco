@@ -1437,13 +1437,10 @@ Iommu::init_common()
       max_asids = min(max_asids, 1u << iommu._num_asid_bits);
 
       if (iommu._ias != Iommu::iommus()[0]._ias)
-        {
-          // If the assumption of a common IAS across all SMMUs does not hold,
-          // we have to use a separate context descriptor per SMMU.
-          WARN("IOMMU: Intermediate address size differs between IOMMUs: %u vs. %u\n",
-               Iommu::iommus()[0]._ias, iommu._ias);
-          break;
-        }
+        // If the assumption of a common IAS across all SMMUs does not hold,
+        // we have to use a separate context descriptor per SMMU.
+        panic("IOMMU: Intermediate address size differs between IOMMUs: %u vs. %u\n",
+              Iommu::iommus()[0]._ias, iommu._ias);
     }
 
   if (Iommu::Debug)
