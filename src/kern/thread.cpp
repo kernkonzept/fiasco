@@ -1442,3 +1442,24 @@ PUBLIC static
 void FIASCO_NORETURN
 Thread::system_abort()
 { terminate(EXIT_FAILURE); }
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [!mbt_counter]:
+
+PUBLIC inline void Thread::increment_mbt_counter() {}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [mbt_counter]:
+
+PUBLIC
+inline void
+Thread::increment_mbt_counter()
+{
+  // Model-Based Testing: increment testcounter if requested
+  Utcb *utcb = this->utcb().access(true);
+  if (utcb->user[2] == 0xdeadbeef)
+    {
+      atomic_add(&Kip::k()->mbt_counter, 1);
+      utcb->user[2] = 0;
+    }
+}

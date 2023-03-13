@@ -667,6 +667,11 @@ config POWERSAVE_GETCHAR
 	  prevent some P4 processors from being overheated. This option
 	  requires a working timer IRQ to wakeup getchar periodically.
 
+config MBT_COUNTER
+	bool "Enable model-based testing counter"
+	default n
+	depends on EXPERIMENTAL
+
 choice
 	prompt "Warn levels"
 	default WARN_WARNING

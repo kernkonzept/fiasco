@@ -104,7 +104,8 @@ public:
   Mword      frequency_bus;
 
   /* 0xB8   0x160 */
-  Mword      _res7[10 + ((sizeof(Mword) == 8) ? 2 : 0)];
+  Mword      mbt_counter; // only used for model-based testing
+  Mword      _res7[9 + ((sizeof(Mword) == 8) ? 2 : 0)];
 
   /* 0xE0   0x1C0 */
   Mword      user_ptr;

@@ -22,6 +22,9 @@ IMPLEMENT void FIASCO_FLATTEN sys_ipc_wrapper()
 
   Obj_cap obj = f->ref();
   Utcb *utcb = curr->utcb().access(true);
+
+  curr->increment_mbt_counter();
+
   L4_fpage::Rights rights;
   Kobject_iface *o = obj.deref(&rights);
   if (EXPECT_TRUE(o!=0))

@@ -272,6 +272,9 @@ Thread::handle_page_fault_pager(Thread_ptr const &_pager,
   Mword vcpu_irqs = vcpu_disable_irqs();
   Mem::barrier();
   Utcb *utcb = this->utcb().access(true);
+
+  increment_mbt_counter();
+
   Pf_msg_utcb_saver saved_utcb_fields(utcb);
 
 
