@@ -17,7 +17,7 @@ config CAN_RISCV_CPU_64IMA
 
 choice
   prompt "CPU"
-  default RISCV_CPU_32IMA
+  default RISCV_CPU_64IMA
 
 config RISCV_CPU_32IMA
   bool "RV32IMA"
