@@ -187,7 +187,7 @@ PUBLIC FIASCO_INIT_CPU
 void
 Cpu::init_gdt(Address gdt_mem, Address user_max)
 {
-  gdt = reinterpret_cast<Gdt*>(gdt_mem);
+  gdt = new ((void *)gdt_mem) Gdt();
 
   // make sure kernel cs/ds and user cs/ds are placed in the same
   // cache line, respectively; pre-set all "accessed" flags so that

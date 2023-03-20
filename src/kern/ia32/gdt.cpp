@@ -53,6 +53,12 @@ Gdt::set_entry_tss(int nr, Address base, Unsigned32 limit,
 //------------------------------------------------------------------
 IMPLEMENTATION:
 
+PUBLIC inline explicit
+Gdt::Gdt(unsigned nr_entries = Gdt::gdt_max / sizeof(Gdt_entry))
+{
+  for (Gdt_entry *e = _entries; e < _entries + nr_entries; ++e)
+    e->raw = 0;
+}
 
 PUBLIC inline
 void
