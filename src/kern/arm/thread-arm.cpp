@@ -409,7 +409,16 @@ Thread::map_fsr_user(Mword fsr)
     /* 0x1f */ 0,
   };
 
-  return pf_map[((fsr >> 10) & 1) | (fsr & 0xf)] | (fsr & ~0x43f);
+  enum
+  {
+    // Fault status (Short-descriptor FSR format): FS[10, 3:0]
+    Fsr_fs_mask      = 0x40f,
+    // Fault status (Long-descriptor FSR format): STATUS[5:0]
+    Fsr_status_mask  = 0x3f,
+  };
+
+  unsigned fs = ((fsr >> 6) & 0x10) | (fsr & 0xf); // Combine FS bits
+  return pf_map[fs] | (fsr & ~(Fsr_fs_mask | Fsr_status_mask));
 }
 
 // ------------------------------------------------------------------------
