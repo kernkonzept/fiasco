@@ -390,9 +390,6 @@ Thread_object::sys_control(L4_fpage::Rights rights, L4_msg_tag tag,
   if (EXPECT_FALSE(tag.words() < 6))
     return commit_result(-L4_err::EInval);
 
-  Task *task = 0;
-  User<Utcb>::Ptr utcb_addr(0);
-
   Mword flags = utcb->values[0];
 
   Mword _old_pager = cxx::int_value<Cap_index>(_pager.raw()) << L4_obj_ref::Cap_shift;
@@ -410,7 +407,7 @@ Thread_object::sys_control(L4_fpage::Rights rights, L4_msg_tag tag,
   if (flags & Ctl_bind_task)
     {
       L4_fpage::Rights task_rights = L4_fpage::Rights(0);
-      task = Ko::deref<Task>(&tag, utcb, &task_rights);
+      Task *task = Ko::deref<Task>(&tag, utcb, &task_rights);
       if (!task)
         return tag;
 
@@ -420,7 +417,7 @@ Thread_object::sys_control(L4_fpage::Rights rights, L4_msg_tag tag,
       if (EXPECT_FALSE(!(task->caps() & Task::Caps::threads())))
         return commit_result(-L4_err::EInval);
 
-      utcb_addr = User<Utcb>::Ptr((Utcb*)utcb->values[5]);
+      User<Utcb>::Ptr utcb_addr = User<Utcb>::Ptr((Utcb*)utcb->values[5]);
 
       if (EXPECT_FALSE(!bind(task, utcb_addr)))
         return commit_result(-L4_err::EInval); // unbind first !!
