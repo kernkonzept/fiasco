@@ -49,6 +49,12 @@ Thread::call_nested_trap_handler(Trap_state *ts)
   if (Kernel_task::kernel_task() != m)
     Kernel_task::kernel_task()->make_current();
 
+  if (EXPECT_FALSE(!nested_trap_handler))
+    {
+      ts->dump();
+      panic("Nested trap handler not yet initialized");
+    }
+
   int ret = riscv_enter_debugger(ts, log_cpu, &ntr, stack);
 
   if (m != Kernel_task::kernel_task())
