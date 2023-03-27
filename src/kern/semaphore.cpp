@@ -125,6 +125,14 @@ Semaphore::down(Thread *ct)
       auto g = lock_guard(_waiting.lock());
       if (_queued == 0)
         {
+          // This check is necessary to ensure that a thread does not enqueue
+          // itself into the semaphore´s waiting queue after the semaphore
+          // emptied its waiting queue and unblocked the waiters. Because then
+          // the thread would block forever (assuming it specified an infinite
+          // timeout).
+          if (!existence_lock.valid())
+            return true;
+
           run = false;
           // set fake partner to avoid IPCs to the thread
           ct->set_partner(sem_partner());
@@ -159,6 +167,9 @@ Semaphore::sys_down(L4_fpage::Rights rights, L4_timeout t, Utcb const *utcb)
                        | Thread_receive_wait
   };
 
+  // Reset IPC error -- Semaphore::destroy() could set it.
+  const_cast<Utcb*>(utcb)->error = L4_error::None;
+
   down(c_thread);
 
   IPC_timeout timeout;
@@ -187,7 +198,13 @@ Semaphore::sys_down(L4_fpage::Rights rights, L4_timeout t, Utcb const *utcb)
                                                     : L4_error::R_timeout);
     }
 
-  return commit_result(0);
+  // An IPC error might have been set by Semaphore::destroy() to indicate that
+  // the reason for unblocking the waiting thread was not the completion of the
+  // down operation, but the destruction of the semaphore.
+  if (utcb->error.ok())
+    return commit_result(0);
+  else
+    return L4_msg_tag(0, 0, L4_msg_tag::Error, 0);
 }
 
 PUBLIC
@@ -218,6 +235,33 @@ Semaphore::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
 
     default:
       return commit_result(-L4_err::EBadproto);
+    }
+}
+
+PUBLIC
+void
+Semaphore::destroy(Kobject ***reap_list) override
+{
+  Irq::destroy(reap_list);
+
+  for (;;)
+    {
+      Thread *t;
+        {
+          auto g = lock_guard(_waiting.lock());
+          Prio_list_elem *f = _waiting.first();
+          if (!f)
+            break;
+
+          _waiting.dequeue(f);
+          t = static_cast<Thread*>(Sender::cast(f));
+          // Do not reset t´s partner because t still has Thread_receive_wait
+          // set. The fake partner avoids IPCs to that thread.
+          t->set_wait_queue(0);
+          t->utcb().access(true)->error = L4_error::Not_existent;
+        }
+
+      t->activate();
     }
 }
 
