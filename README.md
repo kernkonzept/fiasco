@@ -1,13 +1,13 @@
-# The Fiasco.OC Microkernel Repository
+# The L4Re Microkernel Repository
 
-This repository contains the source code of the L4Re microkernel also known as
-the Fiasco.OC microkernel. User level applications are not included in this
+This repository contains the source code of the L4Re microkernel (also known as
+the Fiasco microkernel). User level applications are not included in this
 package.
 
-Fiasco is used to construct flexible systems that support running real-time,
-time-sharing and virtualization workloads concurrently on one system. The
-kernel scales from big and complex systems down to small and embedded
-applications. It supports the following architectures:
+The L4Re microkernel is used to construct flexible systems that support
+running real-time, time-sharing and virtualization workloads concurrently on
+one system. The kernel scales from big and complex systems down to small and
+embedded applications. It supports the following architectures:
 
 | Architecture | 32 bit | 64 bit |
 |:------------:|:------:|:------:|
@@ -61,5 +61,5 @@ instructions](https://l4re.org/fiasco/build.html).
 
 # License
 
-Fiasco is licensed under the GPLv2. If you require a different licensing scheme
-please contact us at **info@kernkonzept.com**.
+The L4Re microkernel is licensed under the GPLv2.
+For other licensing options, please contact **info@kernkonzept.com**.
