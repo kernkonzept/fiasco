@@ -1,7 +1,6 @@
 INTERFACE [arm && pic_gic]:
 
 #include "assert.h"
-#include "cascade_irq.h"
 #include "cpu.h"
 #include "kmem.h"
 #include "irq_chip_generic.h"
@@ -164,16 +163,6 @@ public:
     handle_irq<IMPL>(num, u);
   }
 
-  static void cascade_hit(Irq_base *_self, Upstream_irq const *u)
-  {
-    // this function calls some virtual functions that might be
-    // ironed out
-    Cascade_irq *self = nonull_static_cast<Cascade_irq*>(_self);
-    Self *gic = nonull_static_cast<Self*>(self->child());
-    Upstream_irq ui(self, u);
-    gic->hit(&ui);
-  }
-
   unsigned get_pmr() override { return _cpu.pmr(); }
   void set_pmr(unsigned prio) override { _cpu.pmr(prio); }
 };
@@ -321,3 +310,20 @@ Gic::set_irq_handler(void (*irq_handler)())
   Mem_unit::flush_cache(__irq_handler_b_irq, __irq_handler_b_irq + 1);
 }
 
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && pic_gic && cascade_irq]:
+
+#include "cascade_irq.h"
+
+PUBLIC
+template<typename IMPL, typename CPU>
+static void
+Gic_mixin<IMPL, CPU>::cascade_hit(Irq_base *_self, Upstream_irq const *u)
+{
+  // this function calls some virtual functions that might be
+  // ironed out
+  Cascade_irq *self = nonull_static_cast<Cascade_irq*>(_self);
+  IMPL *gic = nonull_static_cast<Self*>(self->child());
+  Upstream_irq ui(self, u);
+  gic->hit(&ui);
+}

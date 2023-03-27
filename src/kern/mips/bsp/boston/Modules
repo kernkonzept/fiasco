@@ -1,7 +1,7 @@
 # vim:set ft=make:
 
 RAM_PHYS_BASE      := 0x0
-PREPROCESS_PARTS   += boston
+PREPROCESS_PARTS   += boston cascade_irq
 OBJECTS_LIBUART    += uart_16550.o uart_16550_dw.o
 CXXFLAGS_uart-libuart += $(call LIBUART_UART, 16550_dw)
 INTERFACES_KERNEL  += irq_mgr_flex mips_bsp_irqs gic cascade_irq

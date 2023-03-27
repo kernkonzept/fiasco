@@ -1,7 +1,7 @@
 # vim:set ft=make:
 
 RAM_PHYS_BASE			:= 0x0
-PREPROCESS_PARTS		+= jz4780 ci20
+PREPROCESS_PARTS		+= jz4780 ci20 cascade_irq
 PREPROCESS_PARTS-$(CONFIG_MP)	+= pic_gic cps
 PREPROCESS_PARTS		+= $(PREPROCESS_PARTS-y)
 OBJECTS_LIBUART			+= uart_16550.o uart_16550_dw.o

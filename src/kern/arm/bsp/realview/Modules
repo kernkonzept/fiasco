@@ -3,7 +3,7 @@
 OBJECTS_LIBUART         += uart_pl011.o
 CXXFLAGS_uart-libuart   += $(call LIBUART_UART, pl011)
 
-PREPROCESS_PARTS        += pic_gic
+PREPROCESS_PARTS        += pic_gic cascade_irq
 PREPROCESS_PARTS        += $(if $(CONFIG_PF_REALVIEW_VEXPRESS_A9),realview_vexpress_legacy)
 PREPROCESS_PARTS        += generic_tickless_idle
 RAM_PHYS_BASE           := $(CONFIG_PF_REALVIEW_RAM_PHYS_BASE)
@@ -28,7 +28,7 @@ else
   endif
 endif
 
-INTERFACES_KERNEL     += platform board_check-arm-realview
+INTERFACES_KERNEL     += platform board_check-arm-realview cascade_irq
 
 timer_tick_IMPL       += timer_tick-single-vector
 config_IMPL           += config-arm-realview

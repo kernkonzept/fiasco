@@ -1,7 +1,7 @@
 # vim:set ft=make:
 
 RAM_PHYS_BASE			:= 0x0
-PREPROCESS_PARTS		+= malta i8259
+PREPROCESS_PARTS		+= malta i8259 cascade_irq
 PREPROCESS_PARTS-$(CONFIG_MP)	+= pic_gic cps
 PREPROCESS_PARTS		+= $(PREPROCESS_PARTS-y)
 OBJECTS_LIBUART			+= uart_16550.o
