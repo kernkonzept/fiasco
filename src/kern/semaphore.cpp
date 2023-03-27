@@ -127,8 +127,6 @@ Semaphore::down(Thread *ct)
         {
           run = false;
           // set fake partner to avoid IPCs to the thread
-          // TODO: make really sure that the partner pointer never gets
-          //       dereferenced (use C++ types)
           ct->set_partner(sem_partner());
           ct->state_change_dirty(~Thread_ready, Thread_receive_wait);
           ct->set_wait_queue(&_waiting);
