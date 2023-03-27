@@ -62,6 +62,12 @@ Thread::call_nested_trap_handler(Trap_state *ts)
   if (debugger_needs_switch_to_kdir() && (Kernel_task::kernel_task() != m))
     Kernel_task::kernel_task()->make_current();
 
+  if (EXPECT_FALSE(!nested_trap_handler))
+    {
+      ts->dump();
+      panic("Nested trap handler not yet initialized");
+    }
+
   int ret = arm_enter_debugger(ts, log_cpu, &ntr, stack);
 
   // the jdb-cpu might have changed things we shouldn't miss!
