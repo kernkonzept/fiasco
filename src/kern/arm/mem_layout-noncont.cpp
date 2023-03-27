@@ -17,14 +17,14 @@ private:
 IMPLEMENTATION [noncont_mem]:
 
 #include <config.h>
-#include <cstdio>
+#include "panic.h"
 
 
 PUBLIC static
 Address
 Mem_layout::pmem_to_phys(Address addr)
 {
-  printf("Mem_layout::pmem_to_phys(Address addr=%lx) is not implemented\n",
+  panic("Mem_layout::pmem_to_phys(Address addr=%lx) is not implemented\n",
          addr);
   return 0;
 }
@@ -69,14 +69,14 @@ Mem_layout::add_pmem(Address phys, Address virt, unsigned long size)
 //------------------------------------------------------------------------
 IMPLEMENTATION [!noncont_mem]:
 
-#include <cstdio>
+#include "panic.h"
 
 
 PUBLIC static
 Address
 Mem_layout::pmem_to_phys(Address addr)
 {
-  printf("Mem_layout::pmem_to_phys(Address addr=%lx) is not implemented\n",
+  panic("Mem_layout::pmem_to_phys(Address addr=%lx) is not implemented\n",
          addr);
   return 0;
 }
