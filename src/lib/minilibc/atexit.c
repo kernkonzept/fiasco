@@ -11,7 +11,6 @@ typedef struct
 static atexit_t __atexitlist[NUM_ATEXIT];
 static int atexit_counter;
 int __cxa_atexit(void (*func)(void*), void *arg, void *dso_handle);
-int __aeabi_atexit (void *arg, void (*func)(void*), void *dso_handle);
 
 int
 atexit(void (*func)(void))
@@ -36,12 +35,6 @@ __cxa_atexit(void (*func)(void*), void *arg, void *dso_handle)
   (void)dso_handle;
   atexit_counter++;
   return 0;
-}
-
-int
-__aeabi_atexit (void *arg, void (*func)(void*), void *dso_handle)
-{
-  return __cxa_atexit(func, arg, dso_handle);
 }
 
 void exit(int code)

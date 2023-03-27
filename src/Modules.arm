@@ -89,7 +89,7 @@ CSRC_MINILIBC	:= atexit.c memccpy.c memcmp.c memmove.c memset.c memcpy.c \
 		   longjmp.c isalnum.c isalpha.c isascii.c isblank.c \
 		   iscntrl.c isdigit.c isgraph.c islower.c isprint.c \
 		   ispunct.c isspace.c isupper.c isxdigit.c strspn.c \
-		   strcspn.c tolower.c raise.c aeabi.c
+		   strcspn.c tolower.c raise.c aeabi.c atexit-aeabi.c
 ASSRC_MINILIBC	:= setjmp.S
 NOBUILTIN	+= $(patsubst %.o, %, $(OBJ_MINILIBC))
 
