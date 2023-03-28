@@ -320,6 +320,9 @@ to ".cc" and ".h" but can be overridden using <code>-C</code> and
        \ref MAKEFILE \if man EXAMPLE MAKEFILE FRAGMENT \endif
        for a possible way to
        do this.) </dd>
+  <dt><code>-P</code> </dt>
+  <dd>Path to strip off from the beginning of file names in
+      <code>\#line</code> directives.</dd>
   <dt><code>-v</code> </dt>
   <dd>Be verbose: Print results of <code>preprocess</code>' parser pass.</dd>
   <dt><code>-d</code> </dt>

@@ -65,6 +65,8 @@ else
   PREPROCESS_FLAGS = -t
 endif
 
+PREPROCESS_FLAGS += $(if $(CONFIG_FULL_PATH_NAMES_IN_BINARIES),,-P $(abspath $(srcdir)/..)/)
+
 ifneq ($(SYSTEM_TARGET),)
   CROSS_COMPILE=$(SYSTEM_TARGET)
   $(info The variable SYSTEM_TARGET has been deprecated in favor of CROSS_COMPILE.)

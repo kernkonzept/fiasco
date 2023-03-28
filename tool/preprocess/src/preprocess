@@ -55,6 +55,7 @@ our $opt_i = 0;			# Doing inlines?
 our $opt_v = 0;			# Verboseness?
 our $opt_l = 0;			# Avoid generating #line directives?
 our $opt_L = 0;			# Avoid generatung #line dirs in headers only?
+our $opt_P = '';                # Prefix path to remove from file-name in #line
 # Support for new style FIASCO config
 our $opt_e = '';                # List of part tags
 our $opt_s = 0;
@@ -69,7 +70,7 @@ our $opt_H = "h";		# Default extenstion for header files
 our $opt_C = "cc";		# Default extention for source files
 our $opt_t = 0;
 
-getopts('e:o:c:p:h:H:C:ivlLsdwtW');
+getopts('e:o:c:p:h:H:C:P:ivlLsdwtW');
 
 sub usage
 {
@@ -95,6 +96,7 @@ OPTIONS
   -o <src_base>   Base name for generated source files (defaults to -c, and 
                   overrides -p)
   -p              Prefix for names of output files.
+  -P              Prefix path to remove from file-name in #line
   -s              Generate a single source file per .cpp file (not a file 
                   per section).
   -t              Truncate empty implementation files to zero length (so
@@ -520,6 +522,8 @@ sub new
 
   $arg0 = '<unknown file>' unless defined $arg0;
   $arg1 = 0 unless defined $arg1;
+
+  $arg0 =~ s,^$opt_P,, if $opt_P;
 
   return bless {
     file     => $arg0,
