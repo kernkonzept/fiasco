@@ -73,6 +73,8 @@ namespace L4_kernel_options
 
     Uart uart;                     ///< Kernel UART
 
+    Unsigned64  core_spin_addr;   ///< Boot address for secondary cores
+
     char         jdb_cmd[128];
     Unsigned32  tbuf_entries;
     Unsigned32  out_buf;
