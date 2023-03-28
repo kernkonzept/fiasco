@@ -65,7 +65,7 @@ else
   PREPROCESS_FLAGS = -t
 endif
 
-PREPROCESS_FLAGS += $(if $(CONFIG_FULL_PATH_NAMES_IN_BINARIES),,-P $(abspath $(srcdir)/..)/)
+PREPROCESS_FLAGS += $(if $(CONFIG_FULL_PATH_NAMES_IN_BINARIES),,$(if $(call CHECKCC,-fmacro-prefix-map=x=y),,-P $(abspath $(srcdir)/..)/))
 
 ifneq ($(SYSTEM_TARGET),)
   CROSS_COMPILE=$(SYSTEM_TARGET)
