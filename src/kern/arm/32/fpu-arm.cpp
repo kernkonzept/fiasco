@@ -243,9 +243,6 @@ Fpu::emulate_insns(Mword opcode, Trap_state *ts)
       return false;
     }
 
-  if (ts->psr & Proc::Status_thumb)
-    ts->pc += 2;
-
   return true;
 }
 
