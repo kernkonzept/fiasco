@@ -351,6 +351,22 @@ config SCHED_FP_WFQ
 
 endchoice
 
+config SCHED_GRANULARITY
+	int "Scheduler granularity"
+	depends on EXPERIMENTAL && !(PF_PC || PF_UX) && !ONE_SHOT
+	default 1000
+	range 10 1000000
+	help
+	  Scheduler tick granularity in microseconds.
+
+config SCHED_DEF_TIME_SLICE
+	int "Default thread time slice"
+	depends on EXPERIMENTAL && !(PF_PC || PF_UX) && !ONE_SHOT
+	default 10
+	range 1 1000000
+	help
+	  Default thread time slice in scheduler ticks.
+
 config IOMMU
 	bool "Enable support for DMA remapping" if HAS_IOMMU_OPTION
 	depends on HAS_IOMMU_OPTION
