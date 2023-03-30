@@ -33,8 +33,8 @@ public:
     Default_time_slice	        = 10000 * scheduler_granularity,
 #else
     Scheduler_one_shot		= 0,
-    Scheduler_granularity	= 1000UL,
-    Default_time_slice	        = 10 * Scheduler_granularity,
+    Scheduler_granularity	= CONFIG_SCHED_GRANULARITY,
+    Default_time_slice	        = CONFIG_SCHED_DEF_TIME_SLICE * Scheduler_granularity,
 #endif
   };
 
