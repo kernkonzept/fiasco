@@ -40,11 +40,11 @@ PUBLIC
 Timer::Timer()
 : Mmio_register_block(Kmem::mmio_remap(Mem_layout::Timer_phys_base, 0x20))
 {
-  write<Mword>(1,          OIER); // enable OSMR0
-  write<Mword>(0,          OWER); // disable Watchdog
-  write<Mword>(Timer_diff, OSMR0);
-  write<Mword>(0,          OSCR); // set timer counter to zero
-  write<Mword>(~0U,        OSSR); // clear all status bits
+  write<Unsigned32>(1,          OIER); // enable OSMR0
+  write<Unsigned32>(0,          OWER); // disable Watchdog
+  write<Unsigned32>(Timer_diff, OSMR0);
+  write<Unsigned32>(0,          OSCR); // set timer counter to zero
+  write<Unsigned32>(~0U,        OSSR); // clear all status bits
 }
 
 IMPLEMENT
@@ -71,12 +71,12 @@ Timer::ack()
     {
       Kip::k()->add_to_clock(timer_to_us(read<Unsigned32>(OSCR)));
       //puts("Reset timer");
-      write<Mword>(0, OSCR);
-      write<Mword>(0xffffffff, OSMR0);
+      write<Unsigned32>(0, OSCR);
+      write<Unsigned32>(0xffffffff, OSMR0);
     }
   else
-    write<Mword>(0, OSCR);
-  write<Mword>(1, OSSR); // clear all status bits
+    write<Unsigned32>(0, OSCR);
+  write<Unsigned32>(1, OSSR); // clear all status bits
 
   // hmmm?
   //enable();
@@ -95,7 +95,7 @@ Timer::update_one_shot(Unsigned64 wakeup)
 {
   Unsigned32 apic;
   Kip::k()->add_to_clock(timer_to_us(_timer->read<Unsigned32>(OSCR)));
-  _timer->write(0, OSCR);
+  _timer->write<Unsigned32>(0, OSCR);
   Unsigned64 now = Kip::k()->clock();
 
   if (EXPECT_FALSE (wakeup <= now) )
@@ -113,8 +113,8 @@ Timer::update_one_shot(Unsigned64 wakeup)
 
   //printf("%15lld: Set Timer to %lld [%08x]\n", now, wakeup, apic);
 
-  _timer->write<Mword>(apic, OSMR0);
-  _timer->write<Mword>(1, OSSR); // clear all status bits
+  _timer->write<Unsigned32>(apic, OSMR0);
+  _timer->write<Unsigned32>(1, OSSR); // clear all status bits
 }
 
 IMPLEMENT_OVERRIDE inline NEEDS["config.h", "kip.h", Timer::timer_to_us]
