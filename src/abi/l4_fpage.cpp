@@ -158,8 +158,8 @@ private:
   /**
    * Create a flex page with the given parameters.
    */
-  L4_fpage(Type type, Mword address, unsigned char order,
-           Rights rights)
+  constexpr L4_fpage(Type type, Mword address,
+                     unsigned char order, Rights rights)
   : _raw(  address | _rights_bfm_t::val_dirty(cxx::int_value<Rights>(rights))
          | order_bfm_t::val_dirty(order) | type_bfm_t::val_dirty(type))
   {}
@@ -180,7 +180,7 @@ public:
    *             left.
    * \param order the order of the I/O flex page, size is 2^\a order ports.
    */
-  static L4_fpage io(Mword port, unsigned char order, Rights rights = Rights(0))
+  static constexpr L4_fpage io(Mword port, unsigned char order, Rights rights = Rights(0))
   { return L4_fpage(Io, adr_bfm_t::val_dirty(port), order, rights); }
 
   /**
@@ -191,7 +191,7 @@ public:
    * \param order The size of the flex page is 2^\a order. The value in \a idx
    *              must be aligned to 2^(\a order + #Addr_shift.
    */
-  static L4_fpage obj(Mword idx, unsigned char order, Rights rights = Rights(0))
+  static constexpr L4_fpage obj(Mword idx, unsigned char order, Rights rights = Rights(0))
   { return L4_fpage(Obj, idx & adr_bfm_t::Mask, order, rights); }
 
   /**
@@ -201,13 +201,13 @@ public:
    *             considered, bits from 0 to \a order-1 are dropped.
    * \param order The size of the flex page is 2^\a order in bytes.
    */
-  static L4_fpage mem(Mword addr, unsigned char order, Rights rights = Rights(0))
+  static constexpr L4_fpage mem(Mword addr, unsigned char order, Rights rights = Rights(0))
   { return L4_fpage(Memory, addr & adr_bfm_t::Mask, order, rights); }
 
   /**
    * Create a nil (invalid) flex page.
    */
-  static L4_fpage nil()
+  static constexpr L4_fpage nil()
   { return L4_fpage(0); }
 
   /**
@@ -215,13 +215,13 @@ public:
    * all available address spaces at once. This is used
    * for page-fault and exception IPC.
    */
-  static L4_fpage all_spaces(Rights rights = Rights(0))
+  static constexpr L4_fpage all_spaces(Rights rights = Rights(0))
   { return L4_fpage(Special, 0, Whole_space, rights); }
 
   /**
    * Create a flex page from the raw value.
    */
-  explicit L4_fpage(Raw raw) : _raw(raw) {}
+  explicit constexpr L4_fpage(Raw raw) : _raw(raw) {}
 
   /**
    * The robust type for carrying virtual memory addresses.
@@ -234,7 +234,7 @@ public:
    * \pre type() must return #Memory to return a valid value.
    * \return The virtual memory base address of the flex page.
    */
-  Virt_addr mem_address() const
+  constexpr Virt_addr mem_address() const
   { return Virt_addr(adr_bfm_t::get_unshifted(_raw)); }
 
   /**
@@ -245,14 +245,14 @@ public:
    *         This value is not shifted, so it is a multiple of 0x1000.
    *         See obj_index() for reference.
    */
-  Mword obj_address() const { return adr_bfm_t::get_unshifted(_raw); }
+  constexpr Mword obj_address() const { return adr_bfm_t::get_unshifted(_raw); }
 
   /**
    * Get the I/O-port number of an I/O flex page.
    * \pre type() must return #Io to return a valid value.
    * \return The I/O-port index of this flex page.
    */
-  Port_number io_address() const { return (Port_number)(unsigned)adr(); }
+  constexpr Port_number io_address() const { return (Port_number)(unsigned)adr(); }
 
   /**
    * Get the capability index of an object flex page.
@@ -262,25 +262,25 @@ public:
    *         This value is shifted #Addr_shift to be a real index
    *         (opposed to obj_address()).
    */
-  Cap_index obj_index() const { return Cap_index((Mword)adr()); }
+  constexpr Cap_index obj_index() const { return Cap_index((Mword)adr()); }
 
   /**
    * Test for memory flex page (if type() is #Memory).
    * \return true if type() is #Memory.
    */
-  bool is_mempage() const { return type() == Memory; }
+  constexpr bool is_mempage() const { return type() == Memory; }
 
   /**
    * Test for I/O flex page (if type() is #Io).
    * \return true if type() is #Io.
    */
-  bool is_iopage() const { return type() == Io; }
+  constexpr bool is_iopage() const { return type() == Io; }
 
   /**
    * Test for object flex page (if type() is #Obj).
    * \return true if type() is #Obj.
    */
-  bool is_objpage() const { return type() == Obj; }
+  constexpr bool is_objpage() const { return type() == Obj; }
 
 
   /**
@@ -288,7 +288,7 @@ public:
    * @return not zero, if the flex page covers the
    *   whole address space.
    */
-  Mword is_all_spaces() const
+  constexpr Mword is_all_spaces() const
   { return (_raw & (type_bfm_t::Mask | order_bfm_t::Mask)) == order_bfm_t::val(Whole_space); }
 
   /**
@@ -296,13 +296,13 @@ public:
    * \return not zero if the flex page
    *    contains a value other than 0.
    */
-  Mword is_valid() const { return _raw; }
+  constexpr Mword is_valid() const { return _raw; }
 
   /**
    * Get the binary representation of the flex page.
    * \return this flex page in binary representation.
    */
-  Raw raw() const { return _raw; }
+  constexpr Raw raw() const { return _raw; }
 
 private:
   Raw _raw;
@@ -321,7 +321,7 @@ private:
 
 public:
 
-  Rights rights() const { return Rights(_rights()); }
+  constexpr Rights rights() const { return Rights(_rights()); }
 
   /**
    * Rights bits for flex pages.

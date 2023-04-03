@@ -124,7 +124,7 @@ struct Order : cxx::int_base<unsigned, Order<SHIFT> >, cxx::int_diff_ops<Order<S
 {
   typedef cxx::int_base<unsigned, Order<SHIFT> > Base_class;
   Order() = default;
-  explicit Order<SHIFT>(typename Base_class::Value v) : Base_class(v) {}
+  explicit constexpr Order<SHIFT>(typename Base_class::Value v) : Base_class(v) {}
 };
 
 
@@ -137,32 +137,32 @@ class Addr_val
 private:
   typedef cxx::int_base< Address, T > B;
 
-  static Address __shift(Address x, int oshift)
+  static constexpr Address __shift(Address x, int oshift)
   { return ((SHIFT - oshift) >= 0) ? (x << (SHIFT - oshift)) : (x >> (oshift - SHIFT)); }
 
 public:
   enum { Shift = SHIFT };
 
   template< int OSHIFT >
-  Addr_val(Addr_val<OSHIFT, T> o)
+  constexpr Addr_val(Addr_val<OSHIFT, T> o)
   : B(__shift(Addr_val<OSHIFT, T>::val(o), OSHIFT))
   {}
 
-  explicit Addr_val(Address a) : B(a) {}
+  explicit constexpr Addr_val(Address a) : B(a) {}
 
   //explicit Addr_val(::Order o) : B(Address(1) << (Order::val(o) - ARCH_PAGE_SHIFT + SHIFT)) {}
 
-  Addr_val(Addr_val const volatile &o) : B(o._v) {}
+  constexpr Addr_val(Addr_val const volatile &o) : B(o._v) {}
   Addr_val(Addr_val const &)  = default;
   Addr_val() = default;
   Addr_val &operator = (Addr_val const &o) = default;
 
   template< int OSHIFT >
-  T operator << (Order<OSHIFT> const &o) const
+  constexpr T operator << (Order<OSHIFT> const &o) const
   { return T(this->_v << (SHIFT + Order<OSHIFT>::val(o) - OSHIFT)); }
 
 protected:
-  Addr_val(typename B::Value v, int oshift) : B(__shift(v, oshift)) {}
+  constexpr Addr_val(typename B::Value v, int oshift) : B(__shift(v, oshift)) {}
 };
 
 template< int SHIFT >
@@ -174,12 +174,12 @@ struct Diff
   typedef Addr_val< SHIFT, Diff<SHIFT> > Base_class;
   Diff() = default;
   Diff(Diff const &) = default;
-  explicit Diff(Address a) : Base_class(a) {}
+  explicit constexpr Diff(Address a) : Base_class(a) {}
   //Diff(::Order o) : Base_class(o) {}
   Diff &operator= (Diff const &) = default;
 
   template< int OSHIFT >
-  Diff(Diff<OSHIFT> o) : Base_class(Diff<OSHIFT>::val(o), OSHIFT) {}
+  constexpr Diff(Diff<OSHIFT> o) : Base_class(Diff<OSHIFT>::val(o), OSHIFT) {}
 };
 
 template< int SHIFT >
@@ -191,11 +191,11 @@ struct Addr
   typedef Addr_val< SHIFT, Addr<SHIFT> > Base_class;
   Addr() = default;
   Addr(Addr const &) = default;
-  explicit Addr(Address a) : Base_class(a) {}
+  explicit constexpr Addr(Address a) : Base_class(a) {}
   Addr &operator= (Addr const &) = default;
 
   template< int OSHIFT >
-  Addr(Addr<OSHIFT> o) : Base_class(Addr<OSHIFT>::val(o), OSHIFT) {}
+  constexpr Addr(Addr<OSHIFT> o) : Base_class(Addr<OSHIFT>::val(o), OSHIFT) {}
 };
 
 } // namespace Addr
@@ -205,20 +205,20 @@ class Virt_addr
 {
 public:
   template< int OSHIFT >
-  Virt_addr(typename ::Addr::Addr<OSHIFT> const &o) : ::Addr::Addr<ARCH_PAGE_SHIFT>(o) {}
+  constexpr Virt_addr(typename ::Addr::Addr<OSHIFT> const &o) : ::Addr::Addr<ARCH_PAGE_SHIFT>(o) {}
 
   template< int OSHIFT >
-  Virt_addr(typename ::Addr::Addr<OSHIFT>::Type const &o) : ::Addr::Addr<ARCH_PAGE_SHIFT>(o) {}
+  constexpr Virt_addr(typename ::Addr::Addr<OSHIFT>::Type const &o) : ::Addr::Addr<ARCH_PAGE_SHIFT>(o) {}
 
-  explicit Virt_addr(Address a) : ::Addr::Addr<ARCH_PAGE_SHIFT>(a) {}
-  explicit Virt_addr(int a) : ::Addr::Addr<ARCH_PAGE_SHIFT>(a) {}
-  explicit Virt_addr(unsigned a) : ::Addr::Addr<ARCH_PAGE_SHIFT>(a) {}
-  explicit Virt_addr(long a) : ::Addr::Addr<ARCH_PAGE_SHIFT>(a) {}
+  explicit constexpr Virt_addr(Address a) : ::Addr::Addr<ARCH_PAGE_SHIFT>(a) {}
+  explicit constexpr Virt_addr(int a) : ::Addr::Addr<ARCH_PAGE_SHIFT>(a) {}
+  explicit constexpr Virt_addr(unsigned a) : ::Addr::Addr<ARCH_PAGE_SHIFT>(a) {}
+  explicit constexpr Virt_addr(long a) : ::Addr::Addr<ARCH_PAGE_SHIFT>(a) {}
 
-  Virt_addr(void *a) : ::Addr::Addr<ARCH_PAGE_SHIFT>(Address(a)) {}
+  Virt_addr(void *a) : ::Addr::Addr<ARCH_PAGE_SHIFT>(reinterpret_cast<Address>(a)) {}
 
   explicit operator void * () const
-  { return (void *)_v; }
+  { return reinterpret_cast<void *>(_v); }
 
   Virt_addr() = default;
 };
@@ -245,9 +245,9 @@ struct Simple_ptr_policy
   static void init(Storage_type &d, Storage_type const &s) { d = s; }
   static void copy(Storage_type &d, Storage_type const &s) { d = s; }
   static void destroy(Storage_type const &) {}
-  static Deref_type deref(Storage_type p) { return *p; }
-  static Member_type member(Storage_type p) { return p; }
-  static Ptr_type ptr(Storage_type p) { return p; }
+  static constexpr Deref_type deref(Storage_type p) { return *p; }
+  static constexpr Member_type member(Storage_type p) { return p; }
+  static constexpr Ptr_type ptr(Storage_type p) { return p; }
 };
 
 template<>
@@ -264,7 +264,7 @@ struct Simple_ptr_policy<void>
   static void destroy(Storage_type const &) {}
   static Deref_type deref(Storage_type p);
   static Member_type member(Storage_type p);
-  static Ptr_type ptr(Storage_type p) { return p; }
+  static constexpr Ptr_type ptr(Storage_type p) { return p; }
 };
 
 
@@ -287,17 +287,17 @@ protected:
   Storage_type _p;
 
 public:
-  Smart_ptr()
+  constexpr Smart_ptr()
   { Policy<T>::init(_p); }
 
-  explicit Smart_ptr(T *p)
+  explicit constexpr Smart_ptr(T *p)
   { Policy<T>::init(_p, p); }
 
-  Smart_ptr(Smart_ptr const &o)
+  constexpr Smart_ptr(Smart_ptr const &o)
   { Policy<T>::copy(_p, o._p); }
 
   template< typename RHT >
-  Smart_ptr(Smart_ptr<RHT, Policy, Discriminator> const &o)
+  constexpr Smart_ptr(Smart_ptr<RHT, Policy, Discriminator> const &o)
   { Policy<T>::copy(_p, o._p); }
 
   ~Smart_ptr()
@@ -313,16 +313,16 @@ public:
     return *this;
   }
 
-  Deref_type operator * () const
+  constexpr Deref_type operator * () const
   { return Policy<T>::deref(_p); }
 
-  Member_type operator -> () const
+  constexpr Member_type operator -> () const
   { return Policy<T>::member(_p); }
 
-  Ptr_type get() const
+  constexpr Ptr_type get() const
   { return Policy<T>::ptr(_p); }
 
-  operator Null_check_type const * () const
+  constexpr operator Null_check_type const * () const
   { return reinterpret_cast<Null_check_type const *>(Policy<T>::ptr(_p)); }
 };
 
@@ -337,12 +337,12 @@ struct User
 struct Cpu_number : cxx::int_type_order_base<unsigned, Cpu_number, Order>
 {
   Cpu_number() = default;
-  explicit Cpu_number(unsigned n) : cxx::int_type_order_base<unsigned, Cpu_number, Order>(n) {}
+  explicit constexpr Cpu_number(unsigned n) : cxx::int_type_order_base<unsigned, Cpu_number, Order>(n) {}
 
-  static Cpu_number boot_cpu() { return Cpu_number(0); }
-  static Cpu_number first()    { return Cpu_number(0); }
-  static Cpu_number second()   { return Cpu_number(1); }
-  static Cpu_number nil()      { return Cpu_number(~0); }
+  static constexpr Cpu_number boot_cpu() { return Cpu_number(0); }
+  static constexpr Cpu_number first()    { return Cpu_number(0); }
+  static constexpr Cpu_number second()   { return Cpu_number(1); }
+  static constexpr Cpu_number nil()      { return Cpu_number(~0); }
 };
 
 

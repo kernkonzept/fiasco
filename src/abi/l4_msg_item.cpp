@@ -99,16 +99,16 @@ public:
     cxx::int_bit_ops<Memory_type>
   {
     Memory_type() = default;
-    explicit Memory_type(unsigned char v)
+    constexpr explicit Memory_type(unsigned char v)
     : cxx::int_type_base<unsigned char, Memory_type>(v) {}
 
-    static Memory_type Set() { return Memory_type(0x10); }
-    static Memory_type Normal() { return Memory_type(0x20); }
-    static Memory_type Buffered() { return Memory_type(0x40); }
-    static Memory_type Uncached() { return Memory_type(0x00); }
+    static constexpr Memory_type Set() { return Memory_type(0x10); }
+    static constexpr Memory_type Normal() { return Memory_type(0x20); }
+    static constexpr Memory_type Buffered() { return Memory_type(0x40); }
+    static constexpr Memory_type Uncached() { return Memory_type(0x00); }
   };
 
-  Memory_type mem_type() const { return Memory_type(attr() & 0x70); }
+  Memory_type constexpr mem_type() const { return Memory_type(attr() & 0x70); }
 
   enum Type
   {
@@ -119,7 +119,7 @@ public:
    * Create a message item from its binary representation.
    * \param raw is the binary representation of the message item.
    */
-  explicit L4_msg_item(Mword raw) : _raw(raw) {}
+  explicit constexpr L4_msg_item(Mword raw) : _raw(raw) {}
 
   /**
    * Use the same receive buffer for the next send item.
@@ -127,13 +127,13 @@ public:
    * \return true if the next send item shall be handled with the
    *         same receive buffer as this one.
    */
-  Mword compound() const { return _raw & 1; }
+  Mword constexpr compound() const { return _raw & 1; }
 
   /**
    * Is the item a \a void item?
    * \return true if the item is \a void, false if it is valid.
    */
-  bool is_void() const { return _raw == 0; }
+  bool constexpr is_void() const { return _raw == 0; }
 
   /**
    * Is the buffer item a small object buffer?
@@ -142,7 +142,7 @@ public:
    * \return true if the buffer is a single-word single-object
    *         receive buffer, false else.
    */
-  Mword is_small_obj() const { return _raw & 2; }
+  Mword constexpr is_small_obj() const { return _raw & 2; }
 
   /**
    * Receiver tries to receive an object ID or a
@@ -153,7 +153,7 @@ public:
    * \return true if the receiver is willing to receive an object ID
    *         or a capability selector, if possible.
    */
-  Mword is_rcv_id() const { return _raw & 4; }
+  Mword constexpr is_rcv_id() const { return _raw & 4; }
 
   /**
    * Is the map item actually a grant item?
@@ -161,13 +161,13 @@ public:
    * \pre The item is a send item.
    * \return true if the sender does a grant operation.
    */
-  Mword is_grant() const { return _raw & 2; }
+  Mword constexpr is_grant() const { return _raw & 2; }
 
   /**
    * Get the binary representation of the item.
    * \return the binary representation of this item.
    */
-  Mword raw() const { return _raw; }
+  Mword constexpr raw() const { return _raw; }
 
   /**
    * Get the L4_fpage that represents the small buffer item.
@@ -176,14 +176,14 @@ public:
    * \return the flex page (L4_fpage) representing the single
    *         object slot with index index().
    */
-  L4_fpage get_small_buf()
+  L4_fpage constexpr get_small_buf() const
   { return L4_fpage::obj(_raw, 0, L4_fpage::Rights(attr() >> 4)); }
 
   /**
    * Create a map item.
    * \param base the hot spot address of the map item.
    */
-  static L4_msg_item map(Mword base) { return L4_msg_item(base | Map); }
+  static constexpr L4_msg_item map(Mword base) { return L4_msg_item(base | Map); }
 
 private:
   /**
