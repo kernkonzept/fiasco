@@ -88,17 +88,6 @@ JABI		:= libjabi.a
 VPATH		+= jabi/$(CONFIG_XARCH) jabi
 INTERFACES_JABI	:= jdb_ktrace jdb_obj_info
 
-
-#
-# ABI Subsystem
-#
-ABI 		:= libabi.a
-VPATH 		+= abi/$(CONFIG_XARCH) abi
-INTERFACES_ABI 	:= kip l4_types l4_fpage l4_msg_item l4_buf_desc l4_error
-
-kip_IMPL	:= kip kip-debug kip-sparc
-l4_types_IMPL	:= l4_types l4_types-debug
-
 #
 # KERNEL subsystem
 #

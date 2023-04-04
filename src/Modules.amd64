@@ -47,14 +47,10 @@ PRIVATE_INCDIR		+= types/$(CONFIG_XARCH) types
 #
 # ABI Subsystem
 #
-ABI			:= libabi.a
-VPATH			+= abi/$(CONFIG_XARCH) abi
-INTERFACES_ABI		:= l4_fpage l4_msg_item l4_buf_desc kip l4_types \
-			   l4_error virt
+INTERFACES_ABI		+= virt
 
-kip_IMPL		:= kip kip-debug kip-amd64 kip-amd64-debug
-l4_types_IMPL		:= l4_types l4_types-debug
-virt_IMPL		:= virt-ia32-amd64
+kip_IMPL		+= kip-amd64-debug
+virt_IMPL		+= virt-ia32-amd64
 
 #
 # JABI Subsystem
