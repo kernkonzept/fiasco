@@ -9,6 +9,7 @@ public:
   {
     Accessed            = 0x01,
     Access_kernel       = 0x00,
+    Access_type_user    = 0x10,
     Access_user         = 0x60,
     Access_present      = 0x80,
 
@@ -26,7 +27,6 @@ class Gdt_entry : public X86desc
 public:
   enum
   {
-    Access_type_user    = 0x10,
     Access_code_read    = 0x1a,
     Access_data_write   = 0x12,
     Size_32             = 0x04,
@@ -171,7 +171,7 @@ Gdt_entry::base() const
 {
   Address b = (Address)base_low | ((Address)base_med  << 16)
               | ((Address)base_high << 24);
-  if (access & 0x10)
+  if (access & Access_type_user)
     return b;
 
   return b | ((Unsigned64 const *)this)[1] << 32;
@@ -183,52 +183,125 @@ Idt_entry::Idt_entry(Unsigned16, Unsigned8)
 { panic("AMD64 does not support task gates"); }
 
 
+//----------------------------------------------------------------------------
 IMPLEMENTATION[debug]:
 
 #include <cstdio>
+#include "processor.h"
 
+PROTECTED
+bool
+X86desc::system_desc() const
+{
+  return !(access() & Access_type_user);
+}
 
 PUBLIC
-const char*
+unsigned
+X86desc::desc_size(unsigned index) const
+{
+  // First GDT entry always ignored.
+  if (index == 0 || Proc::Is_32bit || !system_desc())
+    return 8;
+  else if (   type() == 2  // LDT
+           || type() == 9  // 64-bit TSS (avail)
+           || type() == 11 // 64-bit TSS (busy)
+           || type() == 12 // 64-bit call gate
+           || type() == 14 // 64-bit interrupt gate
+           || type() == 15 // 64-bit trap gate
+          )
+    return 16;
+  else
+    return 8;
+}
+
+PUBLIC
+char const*
 X86desc::type_str() const
 {
   static char const * const desc_type[32] =
     {
-      "reserved",          "16-bit tss (avail)",
-      "ldt",               "16-bit tss (busy)",
+      "reserved",          "16-bit TSS (avail)",
+      "LDT",               "16-bit TSS (busy)",
       "16-bit call gate",  "task gate",
       "16-bit int gate",   "16-bit trap gate",
-      "reserved",          "32-bit tss (avail)",
-      "reserved",          "32-bit tss (busy)",
+      "reserved",          "32-bit TSS (avail)",
+      "reserved",          "32-bit TSS (busy)",
       "32-bit call gate",  "reserved",
       "32-bit int gate",   "32-bit trap gate",
       "data r/o",          "data r/o acc",
       "data r/w",          "data r/w acc",
       "data r/o exp-dn",   "data r/o exp-dn",
       "data r/w exp-dn",   "data r/w exp-dn acc",
-      "code x/o",          "code x/o acc", 
+      "code x/o",          "code x/o acc",
       "code x/r",          "code x/r acc",
       "code x/r conf",     "code x/o conf acc",
       "code x/r conf",     "code x/r conf acc"
     };
 
-  Unsigned8 const *t = (Unsigned8 const *)this;
+  return desc_type[type()];
+}
 
-  return desc_type[t[5] & 0x1f];
+PUBLIC
+char const*
+X86desc::sys_type_64_str() const
+{
+  static char const * const desc_type[16] =
+    {
+      "reserved",          "reserved",
+      "LDT",               "reserved",
+      "reserved",          "reserved",
+      "reserved",          "reserved",
+      "reserved",          "64-bit TSS (avail)",
+      "reserved",          "64-bit TSS (busy)",
+      "64-bit call gate",  "reserved",
+      "64-bit int gate",   "64-bit trap gate",
+    };
+
+  return desc_type[type() & 0xf];
 }
 
 PUBLIC
 void
-Gdt_entry::show() const
+Gdt_entry::show(unsigned index) const
 {
-  static char const modes[] = { 16, 64, 32, -1 };
-  // segment descriptor
-  Address b = base();
-  printf("%016lx-%016lx dpl=%d %dbit %s %02X (\033[33;1m%s\033[m)\n",
-         b, b + size(), (access & 0x60) >> 5,
-         modes[mode()],
-         access & 0x10 ? "code/data" : "system   ",
-         (unsigned)access & 0x1f, type_str());
+  if (index == 0)
+    {
+      // First GDT entry is always ignored.
+      printf("(ignored)\n");
+    }
+  else if (system_desc() && Proc::Is_64bit)
+    {
+      // 64-bit system descriptor (one entry occupies 16 bytes)
+      if ((access & 0xf) == 9 || (access & 0xf) == 11)
+        {
+          // TSS (avail or busy)
+          printf("%08lx-%08lx", base(), base() + size());
+        }
+      else
+        {
+          // unknown system descriptor in 64-bit mode -- print raw descriptor
+          printf("%016llx", raw);
+          if (desc_size(index) == 16)
+            printf(" %016llx", this[1].raw);
+          else
+            printf("%17s", "");
+        }
+      printf(" dpl=%d 64bit system    %02X (\033[33;1m%s\033[m)\n",
+             dpl(), type(), sys_type_64_str());
+    }
+  else
+    {
+      // 32-bit descriptor (one entry occupies 8 bytes)
+      static char const modes[] = { 16, 64, 32, -1 };
+      if (Proc::Is_64bit && type() != 9 && type() != 11)
+        printf("................-................"); // base/limit ignored
+      else
+        printf("%08lx-%08lx", base(), base() + size());
+      printf(" dpl=%d %dbit %s %02X (\033[33;1m%s\033[m)\n",
+             dpl(), modes[mode()], system_desc() ? "system   " : "code/data",
+             type(), type_str());
+    }
 }
 
 PUBLIC inline
@@ -243,30 +316,27 @@ Idt_entry::show() const
   if (type() == 0x5)
     {
       // Task gate
-
       printf("--------  sel=%04x dpl=%d %02X (\033[33;1m%s\033[m)\n",
              selector(), dpl(), (unsigned)type(), type_str());
     }
   else
     {
-      Address o = offset();
-
       printf("%016lx  sel=%04x dpl=%d %02X (\033[33;1m%s\033[m)\n",
-             o, selector(), dpl(), (unsigned)type(), type_str());
+             offset(), selector(), dpl(), (unsigned)type(), type_str());
     }
 }
 
 
 PUBLIC
 void
-X86desc::show() const
+X86desc::show(unsigned index) const
 {
   if (present())
     {
       if ((access() & 0x16) == 0x06)
 	static_cast<Idt_entry const*>(this)->show();
       else
-	static_cast<Gdt_entry const*>(this)->show();
+	static_cast<Gdt_entry const*>(this)->show(index);
     }
   else
     {
@@ -309,7 +379,7 @@ X86desc::dpl() const
 PUBLIC inline NEEDS[X86desc::present, X86desc::dpl]
 bool
 X86desc::unsafe() const
-{ return present() && ((dpl() != 3) || !(access() & 0x10)); }
+{ return present() && ((dpl() != 3) || !(access() & Access_type_user)); }
 
 PUBLIC inline
 Pseudo_descriptor::Pseudo_descriptor()

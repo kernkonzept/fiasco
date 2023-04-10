@@ -308,9 +308,11 @@ Jdb_kern_info_gdt::show_gdt(Cpu_number cpu)
   for (unsigned i = 0; i < entries; i++)
     {
       printf(" %02x: ", i * 8);
-      (*gdt)[i].show();
+      (*gdt)[i].show(i);
       if (!Jdb_core::new_line(line))
 	return;
+      if ((*gdt)[i].desc_size(i) == 16)
+        ++i;
     }
 }
 
