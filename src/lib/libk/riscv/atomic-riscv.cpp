@@ -9,7 +9,7 @@ IMPLEMENTATION [riscv]:
 
 inline NEEDS["asm_riscv.h"]
 bool
-cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
+local_cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
 {
   Mword prev;
   // Holds return value of SC instruction: 0 if successful, !0 otherwise
@@ -31,7 +31,7 @@ cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
 
 inline NEEDS["asm_riscv.h"]
 Mword
-atomic_and(Mword *l, Mword mask)
+local_atomic_and(Mword *l, Mword mask)
 {
   Mword prev;
 
@@ -46,7 +46,7 @@ atomic_and(Mword *l, Mword mask)
 
 inline NEEDS["asm_riscv.h"]
 Mword
-atomic_or(Mword *l, Mword bits)
+local_atomic_or(Mword *l, Mword bits)
 {
   Mword prev;
 
@@ -61,7 +61,7 @@ atomic_or(Mword *l, Mword bits)
 
 inline NEEDS["asm_riscv.h"]
 Mword
-atomic_add(Mword *l, Mword value)
+local_atomic_add(Mword *l, Mword value)
 {
   Mword prev;
 
@@ -77,7 +77,7 @@ atomic_add(Mword *l, Mword value)
 
 inline NEEDS["asm_riscv.h"]
 Mword
-atomic_xchg(Mword *l, Mword value)
+local_atomic_xchg(Mword *l, Mword value)
 {
   Mword prev;
 
@@ -196,28 +196,28 @@ inline
 Mword
 atomic_mp_and(Mword *l, Mword mask)
 {
-  return atomic_and(l, mask);
+  return local_atomic_and(l, mask);
 }
 
 inline
 Mword
 atomic_mp_or(Mword *l, Mword bits)
 {
-  return atomic_or(l, bits);
+  return local_atomic_or(l, bits);
 }
 
 inline
 Mword
 atomic_mp_add(Mword *l, Mword value)
 {
-  return atomic_add(l, value);
+  return local_atomic_add(l, value);
 }
 
 inline
 Mword
 atomic_mp_xchg(Mword *l, Mword value)
 {
-  return atomic_xchg(l, value);
+  return local_atomic_xchg(l, value);
 }
 
 //---------------------------------------------------------------------------
@@ -260,5 +260,5 @@ inline
 bool
 mp_cas_arch(Mword *m, Mword o, Mword n)
 {
-  return cas_unsafe(m, o, n);
+  return local_cas_unsafe(m, o, n);
 }
