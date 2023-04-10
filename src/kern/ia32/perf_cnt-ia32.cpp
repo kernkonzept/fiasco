@@ -874,15 +874,19 @@ Perf_cnt::init()
 
   if (cpu.tsc() && cpu.can_wrmsr())
     {
-      cpu.arch_perfmon_info(&eax, &ebx, &ecx);
-      if ((eax & 0xff) && (((eax>>8) & 0xff) > 1))
+      if (Cpu::cpuid_eax(0) >= 10)
         {
-          perfctr_type  = Perfctr_x86_arch_perfmon;
-          perf_type_str = "PA";
-          read_pmc_fns  = p6_read_pmc_fns;
-          pcnt          = &perf_cnt_ap;
+          cpu.arch_perfmon_info(&eax, &ebx, &ecx);
+          if ((eax & 0xff) && ((eax >> 8) & 0xff) > 1)
+            {
+              perfctr_type  = Perfctr_x86_arch_perfmon;
+              perf_type_str = "PA";
+              read_pmc_fns  = p6_read_pmc_fns;
+              pcnt          = &perf_cnt_ap;
+            }
+         // otherwise no performance counters supported!
         }
-      if (perfctr_type == Perfctr_x86_generic)
+      else
         {
           if (cpu.vendor() == cpu.Vendor_intel)
             {
@@ -890,20 +894,20 @@ Perf_cnt::init()
               switch (cpu.family())
                 {
                 case 5:
-                perf_event_type  = P5;
-                if (cpu.local_features() & Cpu::Lf_rdpmc)
-                  {
-                    perfctr_type  = Perfctr_x86_intel_p5mmx;
-                    perf_type_str = "P5MMX";
-                    read_pmc_fns  = p6_read_pmc_fns;
-                  }
-                else
-                  {
-                    perfctr_type  = Perfctr_x86_intel_p5;
-                    perf_type_str = "P5";
-                    read_pmc_fns  = p5_read_pmc_fns;
-                  }
-                pcnt = &perf_cnt_p5;
+                  perf_event_type  = P5;
+                  if (cpu.local_features() & Cpu::Lf_rdpmc)
+                    {
+                      perfctr_type  = Perfctr_x86_intel_p5mmx;
+                      perf_type_str = "P5MMX";
+                      read_pmc_fns  = p6_read_pmc_fns;
+                    }
+                  else
+                    {
+                      perfctr_type  = Perfctr_x86_intel_p5;
+                      perf_type_str = "P5";
+                      read_pmc_fns  = p5_read_pmc_fns;
+                    }
+                  pcnt = &perf_cnt_p5;
                 break;
 
                 case 6:
