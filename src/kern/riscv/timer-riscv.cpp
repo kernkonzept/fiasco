@@ -11,17 +11,18 @@ private:
   };
 
   // XXX Make the ticks <-> us conversions more efficient.
-  static Unsigned32 freq_scaler;
-  static Unsigned32 us_scaler;
+  static Unsigned32 _freq_scaler;
+  static Unsigned32 _us_scaler;
 
   static Unsigned64 us_to_ticks(Unsigned64 us)
-  { return (us * freq_scaler) / us_scaler; }
+  { return (us * _freq_scaler) / _us_scaler; }
 
   static Unsigned64 ticks_to_us(Unsigned64 ticks)
-  { return (ticks * us_scaler) / freq_scaler; }
+  { return (ticks * _us_scaler) / _freq_scaler; }
 
-  static Unsigned64 timer_period;
-  static Per_cpu<Unsigned64> timer_next_trigger;
+  // Period of periodic timer.
+  static Unsigned64 _timer_period;
+  static Per_cpu<Unsigned64> _timer_next_trigger;
 };
 
 //----------------------------------------------------------------------------
@@ -31,10 +32,10 @@ IMPLEMENTATION [riscv]:
 #include "panic.h"
 #include "sbi.h"
 
-Unsigned32 Timer::freq_scaler;
-Unsigned32 Timer::us_scaler;
-Unsigned64 Timer::timer_period;
-DEFINE_PER_CPU Per_cpu<Unsigned64> Timer::timer_next_trigger;
+Unsigned32 Timer::_freq_scaler;
+Unsigned32 Timer::_us_scaler;
+Unsigned64 Timer::_timer_period;
+DEFINE_PER_CPU Per_cpu<Unsigned64> Timer::_timer_next_trigger;
 
 PRIVATE static
 Unsigned32
@@ -63,29 +64,29 @@ Timer::init(Cpu_number cpu)
       if (frequency == 0)
         panic("Invalid timer frequency!");
 
-      freq_scaler = frequency;
-      us_scaler = Microsec_per_sec;
+      _freq_scaler = frequency;
+      _us_scaler = Microsec_per_sec;
 
       // Squash down scalers to avoid overflow while preserving precision
-      Unsigned32 div = gcd(freq_scaler, us_scaler);
-      freq_scaler /= div;
-      us_scaler /= div;
+      Unsigned32 div = gcd(_freq_scaler, _us_scaler);
+      _freq_scaler /= div;
+      _us_scaler /= div;
 
       Unsigned64 secs_till_overflow =
-        ~0ULL / (static_cast<Unsigned64>(frequency) * us_scaler);
+        ~0ULL / (static_cast<Unsigned64>(frequency) * _us_scaler);
       // ~135 years till overflow
       if (secs_till_overflow < (1ULL << 32))
         panic("Failed to calibrate timer!");
 
       if (!Config::Scheduler_one_shot)
-        timer_period = us_to_ticks(Config::Scheduler_granularity);
+        _timer_period = us_to_ticks(Config::Scheduler_granularity);
     }
 
   if (!Config::Scheduler_one_shot)
     {
       // Kick off the "periodic" timer
       auto time = Cpu::rdtime();
-      timer_next_trigger.cpu(cpu) = time;
+      _timer_next_trigger.cpu(cpu) = time;
       reprogram_periodic_timer(cpu, time);
       Cpu::enable_timer_interrupt(true);
     }
@@ -147,15 +148,15 @@ void
 Timer::reprogram_periodic_timer(Cpu_number cpu, Unsigned64 cur_time)
 {
   // Calculate next trigger time of timer
-  timer_next_trigger.cpu(cpu) += timer_period;
+  _timer_next_trigger.cpu(cpu) += _timer_period;
 
-  Unsigned64 next_trigger = timer_next_trigger.cpu(cpu);
+  Unsigned64 next_trigger = _timer_next_trigger.cpu(cpu);
   // Make sure that we don't program the one-shot timer to a value in the past
   // (e.g. the current timer interrupt came extremely late).
   if (EXPECT_FALSE(next_trigger <= cur_time))
     // If the next trigger time is in the past, program the timer to a value
     // in the near future instead.
-    next_trigger = cur_time + timer_period / 8;
+    next_trigger = cur_time + _timer_period / 8;
 
   Sbi::set_timer(next_trigger);
 }
