@@ -5,6 +5,7 @@ INTERFACE:
 
 class Timeslice_timeout : public Timeout
 {
+  friend class Test_timeslice_timeout;
 };
 
 IMPLEMENTATION:
