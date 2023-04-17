@@ -244,24 +244,24 @@ Ipc_gate_ctl::bind_thread(L4_obj_ref, L4_fpage::Rights rights,
     }
   while (!cas(&g->_thread, old, t));
 
-  Kobject::Reap_list r;
+  Kobject::Reap_list rl;
   if (old)
-    old->put_n_reap(r.list());
+    old->put_n_reap(rl.list());
 
-  if (EXPECT_FALSE(!r.empty()))
+  if (EXPECT_FALSE(!rl.empty()))
     {
       auto l = lock_guard<Lock_guard_inverse_policy>(cpu_lock);
-      r.del_1();
+      rl.del_1();
     }
 
   g->unblock_all();
   current()->rcu_wait();
   g->unblock_all();
 
-  if (EXPECT_FALSE(!r.empty()))
+  if (EXPECT_FALSE(!rl.empty()))
     {
       auto l = lock_guard<Lock_guard_inverse_policy>(cpu_lock);
-      r.del_2();
+      rl.del_2();
     }
 
   return commit_result(0);
