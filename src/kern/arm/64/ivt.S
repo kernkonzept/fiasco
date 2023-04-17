@@ -193,24 +193,19 @@ exception_vector:
 	# from kernel with SP_EL0
 	.align 7 /* 0 -- Sync */
 	ENTRY arm_kernel_sync_entry
-	b .
 
 	.align 7 /* 0x80 -- IRQ */
 	ENTRY_ESR call_nested_trap_handler
-	b .
 
 	.align 7 /* 0x100 -- FIQ */
 	ENTRY_ESR call_nested_trap_handler
-	b .
 
 	.align 7 /* 0x180 -- SError */
 	ENTRY_ESR call_nested_trap_handler
-	b .
 
 	# from kernel with SP_ELx
 	.align 7 /* 0x200 -- Sync */
 	ENTRY arm_kernel_sync_entry
-	b .
 
 	.align 7 /* 0x280 -- IRQ */
 	b	.Lirq_entry
@@ -237,18 +232,14 @@ exception_vector:
 	# from aarch32 user
 	.align 7 /* 0x600 -- Sync */
 	ENTRY arm_esr_entry
-	b .
 
 	.align 7 /* 0x680 -- IRQ */
 	b	.Lirq_entry
-	b .
 
 	.align 7 /* 0x700 -- FIQ */
 	b	.Lirq_entry
-	b .
 
 	.align 7 /* 0x780 -- SError */
 	b	.Lirq_entry
-	b .
 
 	.align 7 /* 0x800 */
