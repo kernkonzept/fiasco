@@ -245,7 +245,6 @@ static void
 Jdb_misc_debug::show_ldt()
 {
   Space *s = cxx::dyn_cast<Task*>(reinterpret_cast<Kobject*>(task));
-  Address addr, size;
 
   if (!s)
     {
@@ -253,8 +252,8 @@ Jdb_misc_debug::show_ldt()
       return;
     }
 
-  addr = s->_ldt.addr();
-  size = s->_ldt.size();
+  Address addr = s->_ldt.addr();
+  Address size = s->_ldt.size();
 
   if (!size)
     {
@@ -262,11 +261,12 @@ Jdb_misc_debug::show_ldt()
       return;
     }
 
-  printf("\nLDT of space %lx at " L4_PTR_FMT "-" L4_PTR_FMT "\n", task, addr, addr+size-1);
+  printf("\nLDT of space %lx at " L4_PTR_FMT "-" L4_PTR_FMT "\n",
+         task, addr, addr + size - 1);
 
   Gdt_entry *desc = reinterpret_cast<Gdt_entry *>(addr);
 
-  for (; size>=Cpu::Ldt_entry_size; size-=Cpu::Ldt_entry_size, desc++)
+  for (; size >= Cpu::Ldt_entry_size; size -= Cpu::Ldt_entry_size, ++desc)
     {
       if (desc->present())
         {
