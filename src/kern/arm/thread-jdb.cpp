@@ -4,6 +4,7 @@ EXTENSION class Thread
 {
 protected:
   static int call_nested_trap_handler(Trap_state *ts) asm ("call_nested_trap_handler");
+  static int arm_serror_handler(Trap_state *ts) asm ("arm_serror_handler");
 };
 
 INTERFACE [arm-debug]:
@@ -81,6 +82,19 @@ Thread::call_nested_trap_handler(Trap_state *ts)
     Cpu_call::handle_global_requests();
 
   return ret;
+}
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [arm]:
+
+#include "globals.h"
+
+IMPLEMENT
+int
+Thread::arm_serror_handler(Trap_state *)
+{
+  ++(num_serrors.cpu(current_cpu()));
+  return 0;
 }
 
 //-----------------------------------------------------------------------------

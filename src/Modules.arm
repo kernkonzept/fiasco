@@ -190,6 +190,7 @@ fpu_IMPL		:= fpu fpu-arm
 gic_IMPL		:= gic
 gic_cpu_v3_IMPL		:= gic_cpu_v3 gic_cpu_v3-$(BITS)
 gic_dist_IMPL		:= gic_dist
+globals_IMPL		:= globals globals-arm
 hyp_vm_state_IMPL	:= hyp_vm_state hyp_vm_state-$(BITS)
 iommu_IMPL		:= iommu-arm
 ipi_IMPL		:= ipi ipi-arm

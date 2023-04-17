@@ -31,7 +31,12 @@ Jdb_kern_info_misc::show() override
 	 (unsigned)(clock >> 32), (unsigned)clock,
          (unsigned long)Mem_space::current_mem_space(Cpu_number::boot_cpu())->dir());
 
-
+  printf("\nPercpu statistics\n");
+  Jdb::foreach_cpu([](Cpu_number c)
+    {
+      printf("CPU %u:\n"
+             "  SErrors: %lu\n",
+             cxx::int_value<Cpu_number>(c), num_serrors.cpu(c));
+    });
 }
-
 
