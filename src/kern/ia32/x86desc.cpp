@@ -198,10 +198,10 @@ X86desc::system_desc() const
 
 PUBLIC
 unsigned
-X86desc::desc_size(unsigned index) const
+X86desc::desc_size() const
 {
   // First GDT entry always ignored.
-  if (index == 0 || Proc::Is_32bit || !system_desc())
+  if (Proc::Is_32bit || !system_desc())
     return 8;
   else if (   type() == 2  // LDT
            || type() == 9  // 64-bit TSS (avail)
@@ -263,14 +263,9 @@ X86desc::sys_type_64_str() const
 
 PUBLIC
 void
-Gdt_entry::show(unsigned index) const
+Gdt_entry::show() const
 {
-  if (index == 0)
-    {
-      // First GDT entry is always ignored.
-      printf("(ignored)\n");
-    }
-  else if (system_desc() && Proc::Is_64bit)
+  if (system_desc() && Proc::Is_64bit)
     {
       // 64-bit system descriptor (one entry occupies 16 bytes)
       if ((access & 0xf) == 9 || (access & 0xf) == 11)
@@ -282,7 +277,7 @@ Gdt_entry::show(unsigned index) const
         {
           // unknown system descriptor in 64-bit mode -- print raw descriptor
           printf("%016llx", raw);
-          if (desc_size(index) == 16)
+          if (desc_size() == 16)
             printf(" %016llx", this[1].raw);
           else
             printf("%17s", "");
@@ -329,14 +324,14 @@ Idt_entry::show() const
 
 PUBLIC
 void
-X86desc::show(unsigned index) const
+X86desc::show() const
 {
   if (present())
     {
       if ((access() & 0x16) == 0x06)
 	static_cast<Idt_entry const*>(this)->show();
       else
-	static_cast<Gdt_entry const*>(this)->show(index);
+	static_cast<Gdt_entry const*>(this)->show();
     }
   else
     {
