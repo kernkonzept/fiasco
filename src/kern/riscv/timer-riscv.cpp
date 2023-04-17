@@ -1,6 +1,7 @@
 INTERFACE [riscv]:
 
 #include "cpu.h"
+#include "per_cpu_data.h"
 
 EXTENSION class Timer
 {
@@ -23,6 +24,13 @@ private:
   // Period of periodic timer.
   static Unsigned64 _timer_period;
   static Per_cpu<Unsigned64> _timer_next_trigger;
+
+  // Tracks whether the timer is enabled. Required for one-shot timer mode, as
+  // there the timer interrupt is temporarily disabled until the next wakeup
+  // event is programmed. Not used in periodic timer emulation mode because
+  // there the timer interrupt enable flag can be used directly to store the
+  // timer enable status.
+  static Per_cpu<bool> _enabled;
 };
 
 //----------------------------------------------------------------------------
@@ -31,11 +39,13 @@ IMPLEMENTATION [riscv]:
 #include "kip.h"
 #include "panic.h"
 #include "sbi.h"
+#include "warn.h"
 
 Unsigned32 Timer::_freq_scaler;
 Unsigned32 Timer::_us_scaler;
 Unsigned64 Timer::_timer_period;
 DEFINE_PER_CPU Per_cpu<Unsigned64> Timer::_timer_next_trigger;
+DEFINE_PER_CPU Per_cpu<bool> Timer::_enabled;
 
 PRIVATE static
 Unsigned32
@@ -88,7 +98,6 @@ Timer::init(Cpu_number cpu)
       auto time = Cpu::rdtime();
       _timer_next_trigger.cpu(cpu) = time;
       reprogram_periodic_timer(cpu, time);
-      Cpu::enable_timer_interrupt(true);
     }
 }
 
@@ -139,7 +148,8 @@ Timer::update_timer(Unsigned64 wakeup_us)
   if (Config::Scheduler_one_shot)
     {
       Sbi::set_timer(us_to_ticks(wakeup_us));
-      Cpu::enable_timer_interrupt(true);
+      if (_enabled.current())
+        Cpu::enable_timer_interrupt(true);
     }
 }
 
@@ -185,4 +195,20 @@ Timer::handle_interrupt()
     }
 
   Timer::update_system_clock(cpu, time);
+}
+
+PUBLIC static
+void
+Timer::enable(Cpu_number cpu, bool enable)
+{
+  if (cpu != current_cpu())
+    {
+      WARN("Cannot enable/disable timer of remote CPU.\n");
+      return;
+    }
+
+  if (Config::Scheduler_one_shot)
+    _enabled.current() = enable;
+
+  Cpu::enable_timer_interrupt(enable);
 }

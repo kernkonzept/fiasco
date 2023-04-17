@@ -1352,3 +1352,27 @@ Utest::Tick_disabler::timestamp()
 
   return (count * 1000000UL) / freq;
 }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION[riscv]:
+
+/// Tickless operation is supported on RISC-V.
+IMPLEMENT_OVERRIDE static
+bool
+Utest::Tick_disabler::supported()
+{
+  return true;
+}
+
+/**
+ * Get current timestamp in us.
+ *
+ * \return Current timestamp in us.
+ */
+IMPLEMENT_OVERRIDE static
+Unsigned64
+Utest::Tick_disabler::timestamp()
+{
+  Unsigned32 frequency = Kip::k()->platform_info.arch.timebase_frequency;
+  return (Cpu::rdtime() * 1000000ULL) / (frequency);
+}
