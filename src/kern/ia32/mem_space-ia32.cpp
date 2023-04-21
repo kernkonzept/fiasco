@@ -267,19 +267,6 @@ Mem_space::virt_to_phys(Address virt) const
   return dir()->virt_to_phys(virt);
 }
 
-/**
- * Simple page-table lookup.
- *
- * @param virt Virtual address.  This address does not need to be page-aligned.
- * @return Physical address corresponding to a.
- */
-PUBLIC inline NEEDS ["mem_layout.h"]
-Address
-Mem_space::pmem_to_phys(Address virt) const
-{
-  return Mem_layout::pmem_to_phys(virt);
-}
-
 IMPLEMENT
 bool
 Mem_space::v_lookup(Vaddr virt, Phys_addr *phys,

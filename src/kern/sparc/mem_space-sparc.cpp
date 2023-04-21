@@ -264,14 +264,12 @@ Mem_space::virt_to_phys(Address virt) const
   return dir()->virt_to_phys(virt);
 }
 
-PUBLIC inline
+IMPLEMENT_OVERRIDE inline
 Address
 Mem_space::pmem_to_phys(Address virt) const
 {
   return virt_to_phys(virt);
 }
-
-
 
 /** Look up a page-table entry.
     @param virt Virtual address for which we try the look up.

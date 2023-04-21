@@ -20,7 +20,7 @@ PROTECTED static
 void
 Mem_space::set_syscall_page(void *p)
 {
-  __mem_space_syscall_page = pmem_to_phys((Address)p);
+  __mem_space_syscall_page = Mem_layout::pmem_to_phys((Address)p);
 }
 
 PROTECTED

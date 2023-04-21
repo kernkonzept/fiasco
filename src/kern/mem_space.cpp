@@ -163,6 +163,16 @@ public:
   static inline Mem_space *current_mem_space(Cpu_number cpu)
   { return _current.cpu(cpu); }
 
+  /**
+   * Translate virtual address located in pmem to physical address.
+   *
+   * @param virt  Virtual address located in pmem.
+   *              This address does not need to be page-aligned.
+   *
+   * @return Physical address corresponding to virt.
+   */
+  Address pmem_to_phys(Address virt) const;
+
 /**
  * Simple page-table lookup.
  *
@@ -506,6 +516,11 @@ Mem_space::switchin_context(Mem_space *from, Switchin_flags flags)
       from->tlb_track_space_usage();
     }
 }
+
+IMPLEMENT_DEFAULT inline
+Address
+Mem_space::pmem_to_phys(Address virt) const
+{ return Mem_layout::pmem_to_phys(virt); }
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION [!need_xcpu_tlb_flush]:
