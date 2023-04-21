@@ -155,21 +155,14 @@ Mem_layout::kphys_base (Address base)
   physmem_offs = (Address)Physmem - base;
 }
 
-PUBLIC static inline
-Address
-Mem_layout::pmem_to_phys (void *addr)
-{
-  return (unsigned long)addr - Physmem;
-}
-
-PUBLIC static inline
+IMPLEMENT static inline
 Address
 Mem_layout::pmem_to_phys (Address addr)
 {
   return addr - Physmem;
 }
 
-PUBLIC static inline
+IMPLEMENT static inline
 Address
 Mem_layout::phys_to_pmem (Address addr)
 {

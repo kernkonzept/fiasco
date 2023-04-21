@@ -75,7 +75,7 @@ Mem_layout::phys_to_pmem_Old (Address addr)
   return ~0L;
 }
 
-PUBLIC static inline NEEDS["config.h"]
+IMPLEMENT static inline NEEDS["config.h"]
 Address
 Mem_layout::phys_to_pmem(Address phys)
 {
@@ -88,20 +88,13 @@ Mem_layout::phys_to_pmem(Address phys)
   return virt | (phys & (Config::SUPERPAGE_SIZE - 1));
 }
 
-PUBLIC static
+IMPLEMENT static
 Address
 Mem_layout::pmem_to_phys(Address addr)
 {
   printf("Mem_layout::pmem_to_phys(Address addr=%lx) is not implemented\n",
          addr);
   return ~0L;
-}
-
-PUBLIC static inline
-Address
-Mem_layout::pmem_to_phys(const void *ptr)
-{
-  return pmem_to_phys(reinterpret_cast<Address>(ptr));
 }
 
 PUBLIC static inline ALWAYS_INLINE NEEDS["config.h"]

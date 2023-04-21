@@ -26,6 +26,29 @@ public:
   static const char initcall_start[] asm ("_initcall_start");
   static const char initcall_end[]   asm ("_initcall_end");
 
+  /**
+   * Translate physical address located in pmem to virtual address.
+   *
+   * @param addr  Physical address located in pmem.
+   *              This address does not need to be page-aligned.
+   *
+   * @return Virtual address corresponding to addr.
+   */
+  static Address phys_to_pmem(Address addr);
+
+  /**
+   * Translate virtual address located in pmem to physical address.
+   *
+   * @param addr  Virtual address located in pmem.
+   *              This address does not need to be page-aligned.
+   *
+   * @return Physical address corresponding to addr.
+   */
+  static Address pmem_to_phys(Address addr);
+
+  static inline Address pmem_to_phys(const void *ptr)
+  { return pmem_to_phys(reinterpret_cast<Address>(ptr)); }
+
   static Mword in_kernel (Address a); // XXX: not right for UX
   static Kpdir *kdir;
 };

@@ -32,7 +32,7 @@ Mem_layout::pmem_phys_base(Address base)
   pmem_phys_offset = Pmem_start - base;
 }
 
-PUBLIC static inline NEEDS[<cassert>]
+IMPLEMENT static inline NEEDS[<cassert>]
 Address
 Mem_layout::pmem_to_phys(Address addr)
 {
@@ -40,14 +40,7 @@ Mem_layout::pmem_to_phys(Address addr)
   return addr - pmem_phys_offset;
 }
 
-PUBLIC static inline
-Address
-Mem_layout::pmem_to_phys(const void *ptr)
-{
-  return pmem_to_phys(reinterpret_cast<Address>(ptr));
-}
-
-PUBLIC static inline
+IMPLEMENT static inline
 Address
 Mem_layout::phys_to_pmem(Address addr)
 {

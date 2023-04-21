@@ -47,14 +47,14 @@ Address Mem_layout::Tbuf_ubuffer_area = 0;
 
 
 //no virtual memory in kernel mode
-PUBLIC static inline
+IMPLEMENT static inline
 Address
 Mem_layout::phys_to_pmem (Address addr)
 {
   return addr;
 }
 
-PUBLIC static inline
+IMPLEMENT static inline
 Address
 Mem_layout::pmem_to_phys (Address addr)
 {
@@ -65,13 +65,6 @@ Mem_layout::pmem_to_phys (Address addr)
 IMPLEMENTATION [ppc32 && virt_obj_space]:
 
 #include "panic.h"
-
-PUBLIC static inline
-Address
-Mem_layout::pmem_to_phys (const void *ptr)
-{
-  return reinterpret_cast<Address>(ptr);
-}
 
 PUBLIC static inline
 template< typename V >

@@ -150,25 +150,15 @@ Mem_layout::kphys_base (Address base)
   physmem_offs = (Address)Physmem - base;
 }
 
-PUBLIC static inline NEEDS[<cassert>]
+IMPLEMENT static inline NEEDS[<cassert>]
 Address
-Mem_layout::pmem_to_phys (Address addr)
+Mem_layout::pmem_to_phys(Address addr)
 {
   assert (in_pmem(addr));
   return addr - physmem_offs;
 }
 
-PUBLIC static inline NEEDS[<cassert>]
-Address
-Mem_layout::pmem_to_phys (const void *ptr)
-{
-  Address addr = reinterpret_cast<Address>(ptr);
-
-  assert (in_pmem(addr));
-  return addr - physmem_offs;
-}
-
-PUBLIC static inline
+IMPLEMENT static inline
 Address
 Mem_layout::phys_to_pmem(Address addr)
 {
