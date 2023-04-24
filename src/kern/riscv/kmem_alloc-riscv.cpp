@@ -16,8 +16,11 @@ Kmem_alloc::to_phys(void *v) const
 
 static unsigned long _freemap[
   Kmem_alloc::Alloc::free_map_bytes(Mem_layout::Pmem_start,
-                                    Mem_layout::Pmem_end - 1)
+                                    Mem_layout::Pmem_start + Config::KMEM_SIZE - 1)
   / sizeof(unsigned long)];
+
+static_assert(Config::KMEM_SIZE <= Mem_layout::Pmem_end - Mem_layout::Pmem_start,
+              "Kernel memory does not fit into Pmem range.");
 
 IMPLEMENT
 Kmem_alloc::Kmem_alloc()
@@ -32,8 +35,7 @@ Kmem_alloc::Kmem_alloc()
           available_size);
 
   a->init(Mem_layout::Pmem_start);
-  a->setup_free_map(_freemap, Kmem_alloc::Alloc::free_map_bytes(
-    Mem_layout::Pmem_start, Mem_layout::Pmem_end - 1));
+  a->setup_free_map(_freemap, sizeof(_freemap));
 
   for (int i = map.length() - 1; i >= 0 && alloc_size > 0; --i)
     {
