@@ -16,8 +16,9 @@ bool
 Kmem_alloc::map_pmem(unsigned long phy, unsigned long size)
 {
   static unsigned long next_map = Mem_layout::Pmem_start;
-  size = Mem_layout::round_superpage(size + (phy & ~Config::SUPERPAGE_MASK));
-  phy = Mem_layout::trunc_superpage(phy);
+
+  assert(cxx::get_lsb(phy, Config::SUPERPAGE_SHIFT) == 0);
+  assert(cxx::get_lsb(size, Config::SUPERPAGE_SHIFT) == 0);
 
   if (next_map + size > Mem_layout::Pmem_end)
     return false;
@@ -64,8 +65,11 @@ Kmem_alloc::Kmem_alloc()
   // The -Wframe-larger-than= warning for this function is known and
   // no problem, because the function runs only on our boot stack.
   Mword alloc_size = Config::KMEM_SIZE;
+  static_assert(!cxx::get_lsb((Address)Config::KMEM_SIZE, Config::SUPERPAGE_SHIFT),
+                "KMEM_SIZE must be superpage-aligned");
   Mem_region_map<64> map;
-  unsigned long available_size = create_free_map(Kip::k(), &map);
+  unsigned long available_size = create_free_map(Kip::k(), &map,
+                                                 Config::SUPERPAGE_SIZE);
 
   // sanity check whether the KIP has been filled out, number is arbitrary
   if (available_size < (1 << 18))

@@ -3,6 +3,7 @@ INTERFACE:
 #include <auto_quota.h>
 #include <cxx/slist>
 
+#include "config.h"
 #include "spin_lock.h"
 #include "lock_guard.h"
 #include "initcalls.h"
@@ -80,7 +81,6 @@ IMPLEMENTATION:
 #include <cassert>
 
 #include "atomic.h"
-#include "config.h"
 #include "kip.h"
 #include "mem_layout.h"
 #include "mem_region.h"
@@ -198,7 +198,8 @@ Kmem_alloc::free(Bytes size, void *page)
 
 PRIVATE static FIASCO_INIT
 unsigned long
-Kmem_alloc::create_free_map(Kip const *kip, Mem_region_map_base *map)
+Kmem_alloc::create_free_map(Kip const *kip, Mem_region_map_base *map,
+                            unsigned long alignment = Config::PAGE_SIZE)
 {
   unsigned long available_size = 0;
 
@@ -221,8 +222,8 @@ Kmem_alloc::create_free_map(Kip const *kip, Mem_region_map_base *map)
       switch (md.type())
         {
         case Mem_desc::Conventional:
-          s = (s + Config::PAGE_SIZE - 1) & ~(Config::PAGE_SIZE - 1);
-          e = ((e + 1) & ~(Config::PAGE_SIZE - 1)) - 1;
+          s = (s + alignment - 1) & ~(alignment - 1);
+          e = ((e + 1) & ~(alignment - 1)) - 1;
           if (e <= s)
             break;
           available_size += e - s + 1;
@@ -234,8 +235,8 @@ Kmem_alloc::create_free_map(Kip const *kip, Mem_region_map_base *map)
         case Mem_desc::Shared:
         case Mem_desc::Arch:
         case Mem_desc::Bootloader:
-          s = s & ~(Config::PAGE_SIZE - 1);
-          e = ((e + Config::PAGE_SIZE) & ~(Config::PAGE_SIZE - 1)) - 1;
+          s = s & ~(alignment - 1);
+          e = ((e + alignment) & ~(alignment - 1)) - 1;
           if (!map->sub(Mem_region(s, e)))
             panic("Kmem_alloc::create_free_map(): memory map too small");
           break;
