@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-2.0-only OR License-Ref-kk-custom */
+/*
+ * Copyright (C) 2023 Kernkonzept GmbH.
+ */
 /*
  * (c) 2017 Adam Lackorzynski <adam@l4re.org>
  *
@@ -48,7 +52,7 @@ namespace L4
 
   void Uart_mvebu::shutdown()
   {
-    _regs->write<unsigned>(CTRL, 0);
+    //_regs->write<unsigned>(CTRL, 0);
   }
 
   bool Uart_mvebu::change_mode(Transfer_mode, Baud_rate r)
@@ -71,21 +75,19 @@ namespace L4
     return _regs->read<unsigned>(STAT) & STAT_RX_RDY;
   }
 
-  void Uart_mvebu::out_char(char c) const
+  int Uart_mvebu::tx_avail() const
   {
-    Poll_timeout_counter i(3000000);
-    while (i.test(_regs->read<unsigned>(STAT) & STAT_TXFIFO_FULL))
-      ;
-
-    _regs->write<unsigned>(TSH, c);
+    return !(_regs->read<unsigned>(STAT) & STAT_TXFIFO_FULL);
   }
 
-  int Uart_mvebu::write(char const *s, unsigned long count) const
+  void Uart_mvebu::out_char(char c) const
   {
-    unsigned long c = count;
-    while (c--)
-      out_char(*s++);
+    _regs->write<unsigned>(TSH, c);
+    //_regs->clear<unsigned short>(SCFSR, SR_TEND | SR_TDFE);
+  }
 
-    return count;
+  int Uart_mvebu::write(char const *s, unsigned long count, bool blocking) const
+  {
+    return generic_write<Uart_mvebu>(s, count, blocking);
   }
 }

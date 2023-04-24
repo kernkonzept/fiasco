@@ -1,3 +1,16 @@
+/* SPDX-License-Identifier: GPL-2.0-only OR License-Ref-kk-custom */
+/*
+ * Copyright (C) 2023 Kernkonzept GmbH.
+ */
+/*
+ * (c) 2011 Adam Lackorzynski <adam@os.inf.tu-dresden.de>
+ *          Björn Döbel <doebel@os.inf.tu-dresden.de>
+ *     economic rights: Technische Universität Dresden (Germany)
+ *
+ * This file is part of TUD:OS and distributed under the terms of the
+ * GNU General Public License 2.
+ * Please see the COPYING-GPL-2 file for details.
+ */
 #include "uart_leon3.h"
 #include "poll_timeout_counter.h"
 
@@ -90,20 +103,26 @@ namespace L4
     return _regs->read<unsigned int>(STATUS_REG) & STATUS_DR;
   }
 
+  int Uart_leon3::tx_avail() const
+  {
+    return !(_regs->read<unsigned int>(STATUS_REG) & STATUS_TF);
+  }
+
+  void Uart_leon3::wait_tx_done() const
+  {
+    enum { Tx_empty = STATUS_TS | STATUS_TE }; /* be conservative */
+    Poll_timeout_counter i(3000000);
+    while (i.test((_regs->read<unsigned int>(STATUS_REG) & Tx_empty) != Tx_empty))
+      ;
+  }
+
   void Uart_leon3::out_char(char c) const
   {
-    Poll_timeout_counter i(3000000);
-    while (i.test(_regs->read<unsigned int>(STATUS_REG) & STATUS_TF))
-      ;
     _regs->write<unsigned int>(DATA_REG, c);
   }
 
-  int Uart_leon3::write(char const *s, unsigned long count) const
+  int Uart_leon3::write(char const *s, unsigned long count, bool blocking) const
   {
-    unsigned long c = count;
-    while (c--)
-      out_char(*s++);
-
-    return count;
+    return generic_write<Uart_leon3>(s, count, blocking);
   }
 };

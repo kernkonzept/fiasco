@@ -1,3 +1,15 @@
+/* SPDX-License-Identifier: GPL-2.0-only OR License-Ref-kk-custom */
+/*
+ * Copyright (C) 2023 Kernkonzept GmbH.
+ */
+/*
+ * (c) 2008-2011 Adam Lackorzynski <adam@os.inf.tu-dresden.de>
+ *     economic rights: Technische Universität Dresden (Germany)
+ *
+ * This file is part of TUD:OS and distributed under the terms of the
+ * GNU General Public License 2.
+ * Please see the COPYING-GPL-2 file for details.
+ */
 #include "uart_imx.h"
 #include "poll_timeout_counter.h"
 
@@ -163,24 +175,25 @@ namespace L4
     return _regs->read<unsigned int>(USR2) & USR2_RDR;
   }
 
-  void Uart_imx::out_char(char c) const
+  int Uart_imx::tx_avail() const
   {
-    Poll_timeout_counter i(3000000);
-    while (i.test(!(_regs->read<unsigned int>(USR1) & USR1_TRDY)))
-     ;
-    _regs->write<unsigned int>(UTXD, c);
+    return _regs->read<unsigned int>(USR1) & USR1_TRDY;
   }
 
-  int Uart_imx::write(char const *s, unsigned long count) const
+  void Uart_imx::wait_tx_done() const
   {
-    unsigned long c = count;
-    while (c--)
-      out_char(*s++);
-
     Poll_timeout_counter i(3000000);
     while (i.test(!(_regs->read<unsigned int>(USR2) & USR2_TXDC)))
       ;
+  }
 
-    return count;
+  void Uart_imx::out_char(char c) const
+  {
+    _regs->write<unsigned int>(UTXD, c);
+  }
+
+  int Uart_imx::write(char const *s, unsigned long count, bool blocking) const
+  {
+    return generic_write<Uart_imx>(s, count, blocking);
   }
 };

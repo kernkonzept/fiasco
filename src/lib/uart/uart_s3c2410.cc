@@ -1,3 +1,15 @@
+/* SPDX-License-Identifier: GPL-2.0-only OR License-Ref-kk-custom */
+/*
+ * Copyright (C) 2023 Kernkonzept GmbH.
+ */
+/*
+ * (c) 2009 Adam Lackorzynski <adam@os.inf.tu-dresden.de>
+ *     economic rights: Technische Universität Dresden (Germany)
+ *
+ * This file is part of TUD:OS and distributed under the terms of the
+ * GNU General Public License 2.
+ * Please see the COPYING-GPL-2 file for details.
+ */
 #include "uart_s3c2410.h"
 #include "poll_timeout_counter.h"
 
@@ -151,20 +163,24 @@ namespace L4
     return is_rx_fifo_non_empty();
   }
 
+  int Uart_s3c::tx_avail() const
+  {
+    return is_tx_fifo_not_full();
+  }
+
+  void Uart_s3c::wait_tx_done() const
+  {
+    wait_for_empty_tx_fifo();
+  }
+
   void Uart_s3c::out_char(char c) const
   {
-    wait_for_non_full_tx_fifo();
     _regs->write<unsigned int>(UTXH, c);
   }
 
-  int Uart_s3c::write(char const *s, unsigned long count) const
+  int Uart_s3c::write(char const *s, unsigned long count, bool blocking) const
   {
-    unsigned long c = count;
-    while (c--)
-      out_char(*s++);
-    wait_for_empty_tx_fifo();
-
-    return count;
+    return generic_write<Uart_s3c>(s, count, blocking);
   }
 
   // -----------------------
@@ -176,16 +192,14 @@ namespace L4
       ;
   }
 
-  void Uart_s3c2410::wait_for_non_full_tx_fifo() const
-  {
-    Poll_timeout_counter i(3000000);
-    while (i.test(_regs->read<unsigned int>(UFSTAT) & UFSTAT_2410_TxFULL))
-      ;
-  }
-
   unsigned Uart_s3c2410::is_rx_fifo_non_empty() const
   {
     return _regs->read<unsigned int>(UFSTAT) & (UFSTAT_2410_Rx_COUNT_MASK | UFSTAT_2410_RxFULL);
+  }
+
+  unsigned Uart_s3c2410::is_tx_fifo_not_full() const
+  {
+    return !(_regs->read<unsigned int>(UFSTAT) & UFSTAT_2410_TxFULL);
   }
 
   void Uart_s3c2410::auto_flow_control(bool on)
@@ -202,16 +216,14 @@ namespace L4
       ;
   }
 
-  void Uart_s3c64xx::wait_for_non_full_tx_fifo() const
-  {
-    Poll_timeout_counter i(3000000);
-    while (i.test(_regs->read<unsigned int>(UFSTAT) & UFSTAT_64XX_TxFULL))
-      ;
-  }
-
   unsigned Uart_s3c64xx::is_rx_fifo_non_empty() const
   {
     return _regs->read<unsigned int>(UFSTAT) & (UFSTAT_64XX_Rx_COUNT_MASK | UFSTAT_64XX_RxFULL);
+  }
+
+  unsigned Uart_s3c64xx::is_tx_fifo_not_full() const
+  {
+    return !(_regs->read<unsigned int>(UFSTAT) & UFSTAT_64XX_TxFULL);
   }
 
   void Uart_s3c64xx::ack_rx_irq() const
@@ -228,43 +240,19 @@ namespace L4
       ;
   }
 
-  void Uart_s5pv210::wait_for_non_full_tx_fifo() const
-  {
-    Poll_timeout_counter i(3000000);
-    while (i.test(_regs->read<unsigned int>(UFSTAT) & UFSTAT_S5PV210_TxFULL))
-      ;
-  }
-
   unsigned Uart_s5pv210::is_rx_fifo_non_empty() const
   {
     return _regs->read<unsigned int>(UFSTAT) & (UFSTAT_S5PV210_Rx_COUNT_MASK | UFSTAT_S5PV210_RxFULL);
   }
 
+  unsigned Uart_s5pv210::is_tx_fifo_not_full() const
+  {
+    return !(_regs->read<unsigned int>(UFSTAT) & UFSTAT_S5PV210_TxFULL);
+  }
+
   void Uart_s5pv210::ack_rx_irq() const
   {
     _regs->write<unsigned int>(UINTP, UINT_RXD);
-  }
-
-  void Uart_s5pv210::save(Save_block *b) const
-  {
-    b->ubrdiv   = _regs->read<unsigned>(UBRDIV);
-    b->uintm    = _regs->read<unsigned>(UINTM);
-    b->ufracval = _regs->read<unsigned>(UFRACVAL);
-    b->umcon    = _regs->read<unsigned>(UMCON);
-    b->ufcon    = _regs->read<unsigned>(UFCON);
-    b->ucon     = _regs->read<unsigned>(UCON);
-    b->ulcon    = _regs->read<unsigned>(ULCON);
-  }
-
-  void Uart_s5pv210::restore(Save_block const *b) const
-  {
-    _regs->write<unsigned>(UINTM,    b->uintm);
-    _regs->write<unsigned>(ULCON,    b->ulcon);
-    _regs->write<unsigned>(UCON,     b->ucon);
-    _regs->write<unsigned>(UFCON,    b->ufcon);
-    _regs->write<unsigned>(UMCON,    b->umcon);
-    _regs->write<unsigned>(UBRDIV,   b->ubrdiv);
-    _regs->write<unsigned>(UFRACVAL, b->ufracval);
   }
 };
 

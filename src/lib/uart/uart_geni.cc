@@ -90,7 +90,7 @@ namespace L4
 
   void Uart_geni::shutdown()
   {
-    flush();
+    wait_tx_done();
 
     // Abort RX and TX commands
     auto status = _regs->read32(STATUS);
@@ -147,28 +147,27 @@ namespace L4
     return _regs->read32(RX_FIFO_STATUS) & RX_FIFO_STATUS_WC;
   }
 
+  int Uart_geni::tx_avail() const
+  {
+    return !(_regs->read32(STATUS) & STATUS_M_GENI_CMD_ACTIVE);
+  }
+
+  void Uart_geni::wait_tx_done() const
+  {
+    Poll_timeout_counter i(3000000);
+    while (i.test(_regs->read32(STATUS) & STATUS_M_GENI_CMD_ACTIVE))
+      ;
+  }
+
   void Uart_geni::out_char(char c) const
   {
-    flush();
     _regs->write32(UART_TX_TRANS_LEN, 1);
     _regs->write32(M_CMD0, M_CMD0_OP_UART_START_TX);
     _regs->write32(TX_FIFOn, c);
   }
 
-  int Uart_geni::write(char const *s, unsigned long count) const
+  int Uart_geni::write(char const *s, unsigned long count, bool blocking) const
   {
-    unsigned long c = count;
-    while (c--)
-      out_char(*s++);
-
-    flush();
-    return count;
-  }
-
-  void Uart_geni::flush() const
-  {
-    Poll_timeout_counter i(3000000);
-    while (i.test(_regs->read32(STATUS) & STATUS_M_GENI_CMD_ACTIVE))
-      ;
+    return generic_write<Uart_geni>(s, count, blocking);
   }
 }

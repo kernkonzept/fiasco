@@ -1,3 +1,11 @@
+/*
+ * (c) 2009-2012 Adam Lackorzynski <adam@os.inf.tu-dresden.de>
+ *     economic rights: Technische Universität Dresden (Germany)
+ *
+ * This file is part of TUD:OS and distributed under the terms of the
+ * GNU General Public License 2.
+ * Please see the COPYING-GPL-2 file for details.
+ */
 #include "uart_omap35x.h"
 #include "poll_timeout_counter.h"
 
@@ -23,8 +31,9 @@ namespace L4
     LCD_REG_CHAR_PARITY_EN         = 1 << 3,
     LCD_REG_CHAR_PARITY_TYPE1_EVEN = 1 << 4,
 
-    LSR_REG_RX_FIFO_E_AVAIL        = 1 << 0,
-    LSR_REG_TX_FIFO_E_EMPTY        = 1 << 5,
+    LSR_REG_RX_FIFO_E              = 1 << 0, // at least one character in FIFO
+    LSR_REG_TX_FIFO_E              = 1 << 5, // transmit hold register empty
+    LSR_REG_TX_SR_E                = 1 << 6, // transmit+shift registers empty
 
     SSR_REG_TX_FIFO_FULL           = 1 << 0,
 
@@ -56,6 +65,7 @@ namespace L4
     _regs->write<unsigned int>(IER_REG, enable ? 1 : 0);
     return true;
   }
+
   bool Uart_omap35x::change_mode(Transfer_mode, Baud_rate r)
   {
     if (r != 115200)
@@ -75,30 +85,28 @@ namespace L4
 
   int Uart_omap35x::char_avail() const
   {
-    return _regs->read<unsigned int>(LSR_REG) & LSR_REG_RX_FIFO_E_AVAIL;
+    return _regs->read<unsigned int>(LSR_REG) & LSR_REG_RX_FIFO_E;
+  }
+
+  int Uart_omap35x::tx_avail() const
+  {
+    return _regs->read<unsigned int>(LSR_REG) & LSR_REG_TX_FIFO_E;
+  }
+
+  void Uart_omap35x::wait_tx_done() const
+  {
+    Poll_timeout_counter i(3000000);
+    while (i.test(!(_regs->read<unsigned char>(LSR_REG) & LSR_REG_TX_SR_E)))
+      ;
   }
 
   void Uart_omap35x::out_char(char c) const
   {
     _regs->write<unsigned int>(THR_REG, c);
-    Poll_timeout_counter i(3000000);
-    while (i.test(!(_regs->read<unsigned int>(LSR_REG) & LSR_REG_TX_FIFO_E_EMPTY)))
-      ;
   }
 
-  int Uart_omap35x::write(char const *s, unsigned long count) const
+  int Uart_omap35x::write(char const *s, unsigned long count, bool blocking) const
   {
-    unsigned long c = count;
-    while (c--)
-      out_char(*s++);
-#if 0
-    Poll_timeout_counter i(3000000);
-    while (i.test(_regs->read<unsigned int>(UART01x_FR) & UART01x_FR_BUSY))
-     ;
-#endif
-
-    return count;
+    return generic_write<Uart_omap35x>(s, count, blocking);
   }
-
 };
-

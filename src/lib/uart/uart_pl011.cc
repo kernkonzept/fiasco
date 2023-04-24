@@ -1,3 +1,15 @@
+/* SPDX-License-Identifier: GPL-2.0-only OR License-Ref-kk-custom */
+/*
+ * Copyright (C) 2023 Kernkonzept GmbH.
+ */
+/*
+ * (c) 2009-2012 Adam Lackorzynski <adam@os.inf.tu-dresden.de>
+ *     economic rights: Technische Universität Dresden (Germany)
+ *
+ * This file is part of TUD:OS and distributed under the terms of the
+ * GNU General Public License 2.
+ * Please see the COPYING-GPL-2 file for details.
+ */
 #include "uart_pl011.h"
 #include "poll_timeout_counter.h"
 
@@ -60,9 +72,7 @@ namespace L4
       set_rate(Default_baud);
     _regs->write<unsigned int>(UART011_LCRH, UART01x_LCRH_WLEN_8);
     _regs->write<unsigned int>(UART011_IMSC, 0);
-    Poll_timeout_counter i(3000000);
-    while (i.test() && _regs->read<unsigned int>(UART01x_FR) & UART01x_FR_BUSY)
-      ;
+    wait_tx_done();
     return true;
   }
 
@@ -118,24 +128,25 @@ namespace L4
     return !(_regs->read<unsigned int>(UART01x_FR) & UART01x_FR_RXFE);
   }
 
-  void Uart_pl011::out_char(char c) const
+  int Uart_pl011::tx_avail() const
   {
-    Poll_timeout_counter i(3000000);
-    while (i.test(_regs->read<unsigned int>(UART01x_FR) & UART01x_FR_TXFF))
-      ;
-    _regs->write<unsigned int>(UART01x_DR,c);
+    return !(_regs->read<unsigned int>(UART01x_FR) & UART01x_FR_TXFF);
   }
 
-  int Uart_pl011::write(char const *s, unsigned long count) const
+  void Uart_pl011::wait_tx_done() const
   {
-    unsigned long c = count;
-    while (c--)
-      out_char(*s++);
-
     Poll_timeout_counter i(3000000);
     while (i.test(_regs->read<unsigned int>(UART01x_FR) & UART01x_FR_BUSY))
-      ;
+       ;
+  }
 
-    return count;
+  void Uart_pl011::out_char(char c) const
+  {
+    _regs->write<unsigned int>(UART01x_DR, c);
+  }
+
+  int Uart_pl011::write(char const *s, unsigned long count, bool blocking) const
+  {
+    return generic_write<Uart_pl011>(s, count, blocking);
   }
 };

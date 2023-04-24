@@ -100,27 +100,25 @@ namespace L4
     return _regs->read32(DM_SR) & DM_SR_RXRDY;
   }
 
+  int Uart_dm::tx_avail() const
+  {
+    return _regs->read32(DM_SR) & DM_SR_TXRDY;
+  }
+
   void Uart_dm::out_char(char c) const
   {
-    // Wait until TX FIFO has space
-    Poll_timeout_counter i(3000000);
-    while (i.test(!(_regs->read32(DM_SR) & DM_SR_TXRDY)))
-      ;
-
     _regs->write32(DM_TF, c);
   }
 
-  int Uart_dm::write(char const *s, unsigned long count) const
+  void Uart_dm::wait_tx_done() const
   {
-    unsigned long c = count;
-    while (c--)
-      out_char(*s++);
-
-    // Wait until TX FIFO is empty (fully transmitted)
     Poll_timeout_counter i(3000000);
     while (i.test(!(_regs->read32(DM_SR) & DM_SR_TXEMT)))
       ;
+  }
 
-    return count;
+  int Uart_dm::write(char const *s, unsigned long count, bool blocking) const
+  {
+    return generic_write<Uart_dm>(s, count, blocking);
   }
 }

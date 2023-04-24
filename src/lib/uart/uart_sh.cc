@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-2.0-only OR License-Ref-kk-custom */
+/*
+ * Copyright (C) 2023 Kernkonzept GmbH.
+ */
 /*
  * (c) 2016 Adam Lackorzynski <adam@l4re.org>
  *
@@ -99,22 +103,19 @@ namespace L4
     return _regs->read<unsigned short>(SCFSR) & (SR_DR | SR_RDF | SR_BRK);
   }
 
+  int Uart_sh::tx_avail() const
+  {
+    return _regs->read<unsigned short>(SCFSR) & SR_TDFE;
+  }
+
   void Uart_sh::out_char(char c) const
   {
-    Poll_timeout_counter i(3000000);
-    while (!i.test(_regs->read<unsigned short>(SCFSR) & SR_TEND))
-      ;
-
     _regs->write<unsigned char>(SCFTDR, c);
     _regs->clear<unsigned short>(SCFSR, SR_TEND | SR_TDFE);
   }
 
-  int Uart_sh::write(char const *s, unsigned long count) const
+  int Uart_sh::write(char const *s, unsigned long count, bool blocking) const
   {
-    unsigned long c = count;
-    while (c--)
-      out_char(*s++);
-
-    return count;
+    return generic_write<Uart_sh>(s, count, blocking);
   }
 }

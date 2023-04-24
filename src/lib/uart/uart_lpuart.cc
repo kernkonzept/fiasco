@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-2.0-only OR License-Ref-kk-custom */
+/*
+ * Copyright (C) 2023 Kernkonzept GmbH.
+ */
 /*
  * (c) 2019 Adam Lackorzynski <adam@l4re.org>
  *
@@ -74,8 +78,7 @@ namespace L4
 
   int Uart_lpuart::get_char(bool blocking) const
   {
-    int sr;
-    while (!(sr = char_avail()))
+    while (!char_avail())
       if (!blocking)
         return -1;
 
@@ -87,22 +90,18 @@ namespace L4
     return !(_regs->read<unsigned>(FIFO) & FIFO_RXEMPT);
   }
 
+  int Uart_lpuart::tx_avail() const
+  {
+    return _regs->read<unsigned>(FIFO) & FIFO_TXEMPT;
+  }
+
   void Uart_lpuart::out_char(char c) const
   {
-    Poll_timeout_counter i(3000000);
-
-    while (i.test(!(_regs->read<unsigned>(FIFO) & FIFO_TXEMPT)))
-      ;
-
     _regs->write<unsigned char>(DATA, c);
   }
 
-  int Uart_lpuart::write(char const *s, unsigned long count) const
+  int Uart_lpuart::write(char const *s, unsigned long count, bool blocking) const
   {
-    unsigned long c = count;
-    while (c--)
-      out_char(*s++);
-
-    return count;
+    return generic_write<Uart_lpuart>(s, count, blocking);
   }
 }

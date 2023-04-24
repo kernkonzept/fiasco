@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-2.0-only OR License-Ref-kk-custom */
+/*
+ * Copyright (C) 2023 Kernkonzept GmbH.
+ */
 /*
  * (c) 2017 Adam Lackorzynski <adam@l4re.org>
  *
@@ -21,8 +25,11 @@ namespace L4
     bool change_mode(Transfer_mode m, Baud_rate r) override;
     int get_char(bool blocking = true) const override;
     int char_avail() const override;
-    void out_char(char c) const;
-    int write(char const *s, unsigned long count) const override;
+    int tx_avail() const;
+    void wait_tx_done() const {}
+    inline void out_char(char c) const;
+    int write(char const *s, unsigned long count,
+              bool blocking = true) const override;
   private:
     unsigned _baserate;
   };

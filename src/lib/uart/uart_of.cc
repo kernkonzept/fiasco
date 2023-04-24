@@ -1,3 +1,15 @@
+/* SPDX-License-Identifier: GPL-2.0-only OR License-Ref-kk-custom */
+/*
+ * Copyright (C) 2023 Kernkonzept GmbH.
+ */
+/*
+ * (c) 2009-2012 Adam Lackorzynski <adam@os.inf.tu-dresden.de>
+ *     economic rights: Technische Universität Dresden (Germany)
+ *
+ * This file is part of TUD:OS and distributed under the terms of the
+ * GNU General Public License 2.
+ * Please see the COPYING-GPL-2 file for details.
+ */
 #include "uart_of.h"
 #include <stdio.h>
 
@@ -42,8 +54,9 @@ namespace L4 {
     return len ? c :-1;
   }
 
-  int Uart_of::write(char const *s, unsigned long count) const
+  int Uart_of::write(char const *s, unsigned long count, bool) const
   {
+    /* non-blocked write ignored! */
     return prom_call("write", 3, 1, _serial, s, count);
   }
 
@@ -55,4 +68,5 @@ namespace L4 {
   /* UNIMPLEMENTED */
   bool Uart_of::change_mode(Transfer_mode, Baud_rate){ return true; }
   int  Uart_of::char_avail() const { return 1; }
+  int  Uart_of::tx_avail() const { return 1; }
 };

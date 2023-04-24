@@ -20,9 +20,10 @@ namespace L4
     void irq_ack() override;
     int get_char(bool blocking = true) const override;
     int char_avail() const override;
+    int tx_avail() const;
+    void wait_tx_done() const;
     void out_char(char c) const;
-    int write(char const *s, unsigned long count) const override;
-private:
-    void flush() const;
+    int write(char const *s, unsigned long count,
+              bool blocking = true) const override;
   };
 };

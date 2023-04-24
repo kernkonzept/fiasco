@@ -1,5 +1,16 @@
-#ifndef L4_CXX_UART_PL011_H__
-#define L4_CXX_UART_PL011_H__
+/* SPDX-License-Identifier: GPL-2.0-only OR License-Ref-kk-custom */
+/*
+ * Copyright (C) 2023 Kernkonzept GmbH.
+ */
+/*
+ * (c) 2009 Adam Lackorzynski <adam@os.inf.tu-dresden.de>
+ *     economic rights: Technische Universität Dresden (Germany)
+ *
+ * This file is part of TUD:OS and distributed under the terms of the
+ * GNU General Public License 2.
+ * Please see the COPYING-GPL-2 file for details.
+ */
+#pragma once
 
 #include "uart_base.h"
 
@@ -16,13 +27,14 @@ namespace L4
     bool enable_rx_irq(bool enable) override;
     int get_char(bool blocking = true) const override;
     int char_avail() const override;
+    int tx_avail() const;
+    void wait_tx_done() const;
     inline void out_char(char c) const;
-    int write(char const *s, unsigned long count) const override;
+    int write(char const *s, unsigned long count,
+              bool blocking = true) const override;
 
   private:
     void set_rate(Baud_rate r);
     unsigned _freq;
   };
 };
-
-#endif

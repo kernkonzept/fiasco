@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-2.0-only OR License-Ref-kk-custom */
+/*
+ * Copyright (C) 2023 Kernkonzept GmbH.
+ */
 /*
  * (c) 2013 Adam Lackorzynski <adam@os.inf.tu-dresden.de>
  *     economic rights: Technische Universität Dresden (Germany)
@@ -102,23 +106,19 @@ namespace L4
     return !(_regs->read<unsigned>(SR) & IXR_RXEMPTY);
   }
 
+  int Uart_cadence::tx_avail() const
+  {
+    return !(_regs->read<unsigned>(SR) & IXR_TXFULL);
+  }
+
   void Uart_cadence::out_char(char c) const
   {
-    // check for some free fifo space
-    Poll_timeout_counter i(3000000);
-    while (i.test(_regs->read<unsigned>(SR) & IXR_TXFULL))
-      ;
-
     _regs->write<unsigned>(FIFO, c);
   }
 
-  int Uart_cadence::write(char const *s, unsigned long count) const
+  int Uart_cadence::write(char const *s, unsigned long count, bool blocking) const
   {
-    unsigned long c = count;
-    while (c--)
-      out_char(*s++);
-
-    return count;
+    return generic_write<Uart_cadence>(s, count, blocking);
   }
 
   void Uart_cadence::irq_ack()

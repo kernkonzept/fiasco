@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-2.0-only OR License-Ref-kk-custom */
+/*
+ * Copyright (C) 2023 Kernkonzept GmbH.
+ */
 /*
  * (c) 2018 Adam Lackorzynski <adam@l4re.org>
  *
@@ -139,30 +143,32 @@ namespace L4
     return _regs->read<unsigned>(UARTSR) & UARTSR_RMB;
   }
 
-  void Uart_linflex::out_char(char c) const
+  int Uart_linflex::tx_avail() const
   {
-    Poll_timeout_counter i(3000000);
+    if (!Fifo_mode)
+      return true;
 
-    if (Fifo_mode)
-      while (i.test(_regs->read<unsigned>(UARTSR) & UARTSR_DTFTFF))
-        ;
+    return !(_regs->read<unsigned>(UARTSR) & UARTSR_DTFTFF);
+  }
 
-    _regs->write<unsigned char>(BDRL, c);
-
+  void Uart_linflex::wait_tx_done() const
+  {
     if (!Fifo_mode)
       {
+        Poll_timeout_counter i(3000000);
         while (!i.test(_regs->read<unsigned>(UARTSR) & UARTSR_DTFTFF))
           ;
         _regs->write<unsigned>(UARTSR, UARTSR_DTFTFF);
       }
   }
 
-  int Uart_linflex::write(char const *s, unsigned long count) const
+  void Uart_linflex::out_char(char c) const
   {
-    unsigned long c = count;
-    while (c--)
-      out_char(*s++);
+    _regs->write<unsigned char>(BDRL, c);
+  }
 
-    return count;
+  int Uart_linflex::write(char const *s, unsigned long count, bool blocking) const
+  {
+    return generic_write<Uart_linflex>(s, count, blocking);
   }
 }

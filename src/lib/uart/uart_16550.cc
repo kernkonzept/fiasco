@@ -1,11 +1,6 @@
-/*!
- * \file   uart_16550.cc
- * \brief  16550 UART implementation
- *
- * \date   2008-01-04
- * \author Adam Lackorzynski <adam@os.inf.tu-dresden.de>
- *         Alexander Warg <alexander.warg@os.inf.tu-dresden.de>
- *
+/* SPDX-License-Identifier: GPL-2.0-only OR License-Ref-kk-custom */
+/*
+ * Copyright (C) 2023 Kernkonzept GmbH.
  */
 /*
  * (c) 2008-2009 Author(s)
@@ -15,16 +10,21 @@
  * GNU General Public License 2.
  * Please see the COPYING-GPL-2 file for details.
  */
+
+/*!
+ * \file   uart_16550.cc
+ * \brief  16550 UART implementation
+ *
+ * \date   2008-01-04
+ * \author Adam Lackorzynski <adam@os.inf.tu-dresden.de>
+ *         Alexander Warg <alexander.warg@os.inf.tu-dresden.de>
+ *
+ */
 #include "uart_16550.h"
 #include "poll_timeout_counter.h"
 
 namespace L4
 {
-  enum
-  {
-    Base_ier_bits = 1 << 6, // pxa only?
-  };
-
   bool Uart_16550::startup(Io_register_block const *regs)
   {
     _regs = regs;
@@ -69,7 +69,7 @@ namespace L4
     _regs->read<unsigned char>(LSR); /* IRQID 3*/
 
     Poll_timeout_counter i(5000000);
-    while (i.test(_regs->read<unsigned char>(LSR) & 1/*DATA READY*/))
+    while (i.test(_regs->read<unsigned char>(LSR) & LSR_DR))
       _regs->read<unsigned char>(TRB);
 
     return true;
@@ -117,38 +117,36 @@ namespace L4
 
   int Uart_16550::char_avail() const
   {
-    return _regs->read<unsigned char>(LSR) & 1; // DATA READY
+    return _regs->read<unsigned char>(LSR) & LSR_DR;
+  }
+
+  int Uart_16550::tx_avail() const
+  {
+    return _regs->read<unsigned char>(LSR) & LSR_THRE;
+  }
+
+  void Uart_16550::wait_tx_done() const
+  {
+    Poll_timeout_counter i(5000000);
+    while (i.test(!(_regs->read<unsigned char>(LSR) & LSR_TSRE)))
+      ;
   }
 
   void Uart_16550::out_char(char c) const
   {
-    write(&c, 1);
+    _regs->write<unsigned char>(TRB, c);
   }
 
-  int Uart_16550::write(char const *s, unsigned long count) const
+  int Uart_16550::write(char const *s, unsigned long count, bool blocking) const
   {
-    /* disable uart irqs */
-    char old_ier;
-    unsigned i;
-    old_ier = _regs->read<unsigned char>(IER);
+    /* disable UART IRQs */
+    unsigned char old_ier = _regs->read<unsigned char>(IER);
     _regs->write<unsigned char>(IER, old_ier & ~0x0f);
 
-    /* transmission */
-    Poll_timeout_counter cnt(5000000);
-    for (i = 0; i < count; i++) {
-      cnt.set(5000000);
-      while (cnt.test(!(_regs->read<unsigned char>(LSR) & 0x20 /* THRE */)))
-        ;
-      _regs->write<unsigned char>(TRB, s[i]);
-    }
-
-    /* wait till everything is transmitted */
-    cnt.set(5000000);
-    while (cnt.test(!(_regs->read<unsigned char>(LSR) & 0x40 /* TSRE */)))
-      ;
+    int c = generic_write<Uart_16550>(s, count, blocking);
 
     _regs->write<unsigned char>(IER, old_ier);
-    return count;
+    return c;
   }
 
   bool Uart_16550::enable_rx_irq(bool enable)

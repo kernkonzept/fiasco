@@ -1,11 +1,6 @@
-/*!
- * \file   uart_sa1000.cc
- * \brief  SA1000 Uart
- *
- * \date   2008-01-02
- * \author Adam Lackorzynski <adam@os.inf.tu-dresden.de>
- *         Alexander Warg <alexander.warg@os.inf.tu-dresden.de>
- *
+/* SPDX-License-Identifier: GPL-2.0-only OR License-Ref-kk-custom */
+/*
+ * Copyright (C) 2023 Kernkonzept GmbH.
  */
 /*
  * (c) 2008-2009 Author(s)
@@ -14,6 +9,16 @@
  * This file is part of TUD:OS and distributed under the terms of the
  * GNU General Public License 2.
  * Please see the COPYING-GPL-2 file for details.
+ */
+
+/*!
+ * \file   uart_sa1000.cc
+ * \brief  SA1000 Uart
+ *
+ * \date   2008-01-02
+ * \author Adam Lackorzynski <adam@os.inf.tu-dresden.de>
+ *         Alexander Warg <alexander.warg@os.inf.tu-dresden.de>
+ *
  */
 
 #include "uart_sa1000.h"
@@ -115,9 +120,7 @@ namespace L4
     _regs->write<unsigned int>(UTCR3, (old_utcr3 & ~(UTCR3_RIE|UTCR3_TIE)));
     //proc_sti_restore(st);
 
-    Poll_timeout_counter i(3000000);
-    while (i.test(_regs->read<unsigned int>(UTSR1) & UTSR1_TBY))
-      ;
+    wait_tx_done();
 
     /* disable all */
     _regs->write<unsigned int>(UTCR3, 0);
@@ -142,18 +145,16 @@ namespace L4
 
   int Uart_sa1000::get_char(bool blocking) const
   {
-    int ch;
     unsigned long old_utcr3 = _regs->read<unsigned int>(UTCR3);
     _regs->write<unsigned int>(UTCR3, old_utcr3 & ~(UTCR3_RIE|UTCR3_TIE));
 
     while (!char_avail())
       if (!blocking)
-	return -1;
+        return -1;
 
-    ch = _regs->read<unsigned int>(UTDR);
+    int ch = _regs->read<unsigned int>(UTDR);
     _regs->write<unsigned int>(UTCR3, old_utcr3);
     return ch;
-
   }
 
   int Uart_sa1000::char_avail() const
@@ -161,33 +162,32 @@ namespace L4
     return !!(_regs->read<unsigned int>(UTSR1) & UTSR1_RNE);
   }
 
-  void Uart_sa1000::out_char(char c) const
+  int Uart_sa1000::tx_avail() const
   {
-    // do UTCR3 thing here as well?
-    Poll_timeout_counter i(3000000);
-    while(i.test(!(_regs->read<unsigned int>(UTSR1) & UTSR1_TNF)))
-      ;
-    _regs->write<unsigned int>(UTDR, c);
+    return _regs->read<unsigned int>(UTSR1) & UTSR1_TNF;
   }
 
-  int Uart_sa1000::write(char const *s, unsigned long count) const
+  void Uart_sa1000::wait_tx_done() const
   {
-    unsigned old_utcr3;
-    unsigned i;
-
-    old_utcr3 = _regs->read<unsigned int>(UTCR3);
-    _regs->write<unsigned int>(UTCR3, (old_utcr3 & ~(UTCR3_RIE | UTCR3_TIE)) | UTCR3_TXE );
-
-    /* transmission */
-    for (i = 0; i < count; i++)
-      out_char(s[i]);
-
-    /* wait till everything is transmitted */
     Poll_timeout_counter cnt(3000000);
     while (cnt.test(_regs->read<unsigned int>(UTSR1) & UTSR1_TBY))
       ;
+  }
 
-    _regs->write<unsigned int>(UTCR3, old_utcr3);
-    return count;
+  void Uart_sa1000::out_char(char c) const
+  {
+    // do UTCR3 thing here as well?
+    _regs->write<unsigned int>(UTDR, c);
+  }
+
+  int Uart_sa1000::write(char const *s, unsigned long count, bool blocking) const
+  {
+    unsigned old_utcr3 = _regs->read<unsigned>(UTCR3);
+    _regs->write<unsigned>(UTCR3, (old_utcr3 & ~(UTCR3_RIE | UTCR3_TIE)) | UTCR3_TXE );
+
+    int c = generic_write<Uart_sa1000>(s, count, blocking);
+
+    _regs->write<unsigned>(UTCR3, old_utcr3);
+    return c;
   }
 };
