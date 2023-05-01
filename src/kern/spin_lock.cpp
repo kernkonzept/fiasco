@@ -14,6 +14,18 @@ public:
  *
  * Also disables lock IRQs for the time the lock is held.
  * In the UP case it is in fact just the Cpu_lock.
+ *
+ * The memory order guarantees provided by the spin lock are not limited to the
+ * memory accesses within the critical section protected by the lock, but also
+ * apply to accesses before and after the critical section.
+ *
+ * In other words, the following rule applies:
+ * A CPU holding a lock sees all changes previously seen or made by any CPU
+ * before it released that same lock.
+ *
+ * And also the reverse of the rule applies:
+ * A CPU holding a lock does not see any changes subsequently made by any CPU
+ * after it acquired that same lock.
  */
 template<typename Lock_t = Small_atomic_int>
 class Spin_lock : public Spin_lock_base
