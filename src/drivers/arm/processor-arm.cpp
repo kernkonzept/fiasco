@@ -16,14 +16,17 @@ public:
   CXX_BITFIELD_MEMBER(24, 24, cv, _raw);
   CXX_BITFIELD_MEMBER(20, 23, cond, _raw);
 
-  /** \pre ec == 0x01 */
+  /// \pre ec == 0x01
+  /// Trapped WFE, WFI, WFET or WFIT access.
   CXX_BITFIELD_MEMBER( 0,  0, wfe_trapped, _raw);
 
+  /// \pre ec == 0x03 || ec == 0x4 || ec == 0x5
+  /// Trapped MCR, MRC, MCRR or MRRC access.
   CXX_BITFIELD_MEMBER(17, 19, mcr_opc2, _raw);
   CXX_BITFIELD_MEMBER(16, 19, mcrr_opc1, _raw);
   CXX_BITFIELD_MEMBER(14, 16, mcr_opc1, _raw);
   CXX_BITFIELD_MEMBER(10, 13, mcr_crn, _raw);
-  CXX_BITFIELD_MEMBER(10, 13, mcrr_rt2, _raw);
+  CXX_BITFIELD_MEMBER(10, 14, mcrr_rt2, _raw);
   CXX_BITFIELD_MEMBER( 5,  9, mcr_rt, _raw);
   CXX_BITFIELD_MEMBER( 1,  4, mcr_crm, _raw);
   CXX_BITFIELD_MEMBER( 0,  0, mcr_read, _raw);
@@ -39,18 +42,28 @@ public:
   static Mword mrc_coproc_register(unsigned opc1, unsigned crn, unsigned crm, unsigned opc2)
   { return mcr_coproc_register(opc1, crn, crm, opc2) | 1; }
 
+  /// \pre ec == 0x06
+  /// Trapped LDC or STC access.
   CXX_BITFIELD_MEMBER(12, 19, ldc_imm, _raw);
   CXX_BITFIELD_MEMBER( 5,  8, ldc_rn, _raw);
   CXX_BITFIELD_MEMBER( 4,  4, ldc_offset_form, _raw);
   CXX_BITFIELD_MEMBER( 1,  3, ldc_addressing_mode, _raw);
 
+  /// \pre ec == 0x07
+  /// Trapped SVE, SIMD or FP access.
   CXX_BITFIELD_MEMBER( 5,  5, cpt_simd, _raw);
   CXX_BITFIELD_MEMBER( 0,  3, cpt_cpnr, _raw);
 
+  /// \pre ec == 0x0a
+  /// ARMv7 only: Trapped BXJ instruction.
   CXX_BITFIELD_MEMBER( 0,  3, bxj_rm, _raw);
 
+  /// \pre ec == 0x11 || ec == 0x12 || ec == 0x15 || ec == 0x16
+  /// Trapped HCV or SVC instruction from Aarch32 or AArch64.
   CXX_BITFIELD_MEMBER( 0, 15, svc_imm, _raw);
 
+  /// \pre ec == 0x20 || ec == 0x21 || ec == 0x24 || ec == 0x25
+  /// Instruction abort, Data abort.
   CXX_BITFIELD_MEMBER(24, 24, pf_isv, _raw);
   CXX_BITFIELD_MEMBER(22, 23, pf_sas, _raw);
   CXX_BITFIELD_MEMBER(21, 21, pf_sse, _raw);
