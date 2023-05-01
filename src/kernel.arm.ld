@@ -77,7 +77,7 @@ SECTIONS {
   . = ALIGN(4K);
   end_of_loader = .;
 
-  . = end_of_loader - kernel_load_addr + virt_address;
+  . = end_of_loader + phys_offset;
 
   .kip : AT (end_of_loader) {
     _kernel_image_start = .;
