@@ -194,8 +194,25 @@ Semaphore::sys_down(L4_fpage::Rights rights, L4_timeout t, Utcb const *utcb)
 
   if (EXPECT_FALSE(s & (Thread_cancel | Thread_timeout)))
     {
-      if (c_thread->in_sender_list())
+      if (c_thread->wait_queue())
         {
+          // While waiting we released the CPU lock, therefore, we would
+          // normally have to assume that our ephemeral reference to the
+          // semaphore may have become invalid (semaphore has been deleted).
+          // However, if the current thread is still in the semaphore's waiting
+          // queue we know that our ephemeral reference to the semaphore object
+          // is still valid.
+          // The reason for this is that an RCU grace period must elapse between
+          // Semaphore::destroy(), which dequeues all waiting threads, and the
+          // subsequent deletion of the semaphore. Since an RCU grace period
+          // acts as a full memory barrier (on any CPU that has passed the grace
+          // period) and the grace period only begins after Semaphore::destroy(),
+          // when seeing that the current thread is still in the wait queue,
+          // we can be sure that an eventual semaphore destruction has not yet
+          // passed the RCU wait and will not pass it until we release the CPU
+          // lock the next time.
+          // Thus it is safe to access the semaphore's waiting lock here.
+          auto g = lock_guard(_waiting.lock());
           c_thread->set_wait_queue(0);
           c_thread->sender_dequeue(&_waiting);
         }
