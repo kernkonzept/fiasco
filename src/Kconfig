@@ -339,7 +339,7 @@ config INTEL_IA32_BRANCH_BARRIERS
 	  mitigation:
 	    (a) IBRS on all kernel entries to prevent in-kernel
 	        prediction attacks.
-	    (b) STIBP to prevent cross hyper-thred attacks.
+	    (b) STIBP to prevent cross hyper-thread attacks.
 	    (c) IBPB after address space switches to prevent cross
 	        application attacks.
 
