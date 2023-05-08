@@ -981,8 +981,11 @@ IMPLEMENTATION [iommu]:
 
 #include "cpu.h"
 #include "dmar_space.h"
+#include "feature.h"
 
 Static_object<Iommu::Asid_alloc> Iommu::_asid_alloc;
+
+KIP_KERNEL_FEATURE("arm,smmu-v3");
 
 /**
  * Send a command to the SMMU and wait for its completion.
