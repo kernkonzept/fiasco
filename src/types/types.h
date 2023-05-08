@@ -47,7 +47,7 @@ a nonull_static_cast( b p )
  * \note The read might still be moved relative to other code.
  * \note The value might be read from a hardware cache, not from RAM.
  */
-template< typename T > inline
+template< typename T > ALWAYS_INLINE inline
 T access_once(T const *a)
 {
 #if 1
@@ -78,7 +78,7 @@ T access_once(T const *a)
  * \note The value might be written just to a hardware cache for the moment, not
  *       immediately to RAM.
  */
-template< typename T, typename VAL > inline
+template< typename T, typename VAL > ALWAYS_INLINE inline
 void write_now(T *a, VAL &&val)
 {
   __asm__ __volatile__ ( "" : "=m"(*a));
