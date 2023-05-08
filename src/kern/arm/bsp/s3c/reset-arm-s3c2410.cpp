@@ -19,11 +19,11 @@ platform_reset(void)
     WTCON_PRESCALER = (0x10 << 8),
   };
 
-  wdg.write(0, WTCON); // disable
-  wdg.write(200, WTDAT); // set initial values
-  wdg.write(200, WTCNT);
+  wdg.write<Unsigned32>(0, WTCON); // disable
+  wdg.write<Unsigned32>(200, WTDAT); // set initial values
+  wdg.write<Unsigned32>(200, WTCNT);
 
-  wdg.write(WTCON_RST_EN | WTCON_EN | WTCON_PRESCALER, WTCON);
+  wdg.write<Unsigned32>(WTCON_RST_EN | WTCON_EN | WTCON_PRESCALER, WTCON);
 
   // we should reboot now
   L4::infinite_loop();
