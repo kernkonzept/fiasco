@@ -21,10 +21,10 @@ platform_reset(void)
 {
   Mmio_register_block r(Kmem::mmio_remap(Mem_layout::Reset_phys_base, 0x200));
   // enable software reset
-  r.write(1 << 2, Kirkwood_reset::Mask_reg);
+  r.write<Unsigned32>(1 << 2, Kirkwood_reset::Mask_reg);
 
   // do software reset
-  r.write(1, Kirkwood_reset::Soft_reset_reg);
+  r.write<Unsigned32>(1, Kirkwood_reset::Soft_reset_reg);
 
   L4::infinite_loop();
 }
