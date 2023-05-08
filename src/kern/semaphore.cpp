@@ -211,13 +211,27 @@ Semaphore::sys_down(L4_fpage::Rights rights, L4_timeout t, Utcb const *utcb)
           // we can be sure that an eventual semaphore destruction has not yet
           // passed the RCU wait and will not pass it until we release the CPU
           // lock the next time.
-          // Thus it is safe to access the semaphore's waiting lock here.
+          // Thus it is safe to access the semaphore's waiting queue here.
           auto g = lock_guard(_waiting.lock());
-          c_thread->set_wait_queue(0);
-          c_thread->sender_dequeue(&_waiting);
+
+          // Recheck under lock whether thread is still in semaphore's waiting
+          // queue.
+          if (c_thread->wait_queue())
+            {
+              c_thread->set_wait_queue(0);
+              c_thread->sender_dequeue(&_waiting);
+              return commit_error(utcb, (s & Thread_cancel) ? L4_error::R_canceled
+                                                            : L4_error::R_timeout);
+            }
+          // else fall-through (cancel/timeout raced with unblock)
         }
-      return commit_error(utcb, (s & Thread_cancel) ? L4_error::R_canceled
-                                                    : L4_error::R_timeout);
+
+      // While our wait was cancelled or timed out, Semaphore::count_up()
+      // completed the down operation, i.e. successfully dequeued the thread
+      // from the wait queue, unblocked it and adjusted the semaphore counter.
+      // Therefore, the semaphore down operation must be reported as successful!
+      // Also Semaphore::destroy() could be the reason why the thread was
+      // dequeued and unblocked.
     }
 
   // An IPC error might have been set by Semaphore::destroy() to indicate that
