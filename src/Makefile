@@ -169,7 +169,7 @@ DEPS_FILES=DEPS DEPS.a4 DEPS.tred
 #
 # Makefile.sub2: Create everything else.
 #
-all doc $(addsuffix .ps,$(DEPS_FILES)) $(addsuffix .svg,$(DEPS_FILES)) TAGS tags: \
+all doc $(addsuffix .ps,$(DEPS_FILES)) $(addsuffix .svg,$(DEPS_FILES)) TAGS tags compile_commands.json: \
   $(MODULES_FILES) .Modules.deps create-sources globalconfig.h globalconfig.tags
 	$(MAKE) srcdir=$(srcdir) objbase=$(objbase) -f $(srcdir)/Makefile.sub2 $@
 
