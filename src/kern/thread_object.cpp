@@ -544,6 +544,9 @@ Thread_object::ex_regs(Address ip, Address sp,
     // ex_regs_cap_handler and friends should still be called).
     return true;
 
+  if (!ex_regs_arch(ops))
+    return false;
+
   if (state() & Thread_dead)	// resurrect thread
     state_change_dirty(~Thread_dead, Thread_ready);
 

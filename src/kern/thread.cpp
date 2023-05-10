@@ -74,6 +74,7 @@ public:
   {
     Exr_cancel            = 0x10000,
     Exr_trigger_exception = 0x20000,
+    Exr_arch_mask         = 0xffUL << 24,
   };
 
   enum Vcpu_ctl_flags
@@ -149,6 +150,8 @@ public:
 
 protected:
   explicit Thread(Ram_quota *, Context_mode_kernel);
+
+  bool ex_regs_arch(Mword ops);
 
   // More ipc state
   Thread_ptr _pager;
@@ -678,6 +681,13 @@ Thread::assert_irq_entry()
 {
   assert(Sched_context::rq.current().schedule_in_progress
              || current_thread()->state() & (Thread_ready_mask | Thread_drq_wait | Thread_waiting | Thread_ipc_transfer));
+}
+
+IMPLEMENT_DEFAULT inline
+bool
+Thread::ex_regs_arch(Mword ops)
+{
+  return (ops & Exr_arch_mask) == 0;
 }
 
 // ---------------------------------------------------------------------------
