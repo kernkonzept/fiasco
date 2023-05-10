@@ -1,8 +1,9 @@
 //-------------------------------------------------------------------
 IMPLEMENTATION [arm && pf_arm_virt]:
 
+#include "boot_alloc.h"
+#include "irq_mgr.h"
 #include "irq_mgr_msi.h"
-#include "irq_mgr_multi_chip.h"
 #include "gic_v2.h"
 #include "gic_v3.h"
 #include "panic.h"
@@ -24,13 +25,11 @@ void Pic::init()
     {
       // assume GICv2
       printf("GICv2\n");
-      gic = new Boot_object<Gic_v2>(Kmem::mmio_remap(Mem_layout::Gic_cpu_phys_base,
+      typedef Irq_mgr_single_chip<Gic_v2> Mgr;
+      Mgr *m = new Boot_object<Mgr>(Kmem::mmio_remap(Mem_layout::Gic_cpu_phys_base,
                                                      Gic_cpu_v2::Size),
                                     dist.get_mmio_base());
-
-      typedef Irq_mgr_multi_chip<9> Mgr;
-      Mgr *m = new Boot_object<Mgr>(1);
-      m->add_chip(0, gic, gic->nr_irqs());
+      gic = &m->c;
       Irq_mgr::mgr = m;
     }
   else if ((dist.read<Unsigned32>(0xffe8) & 0x0f0) == 0x30)
