@@ -106,9 +106,8 @@ Return_frame::check_valid_user_psr() const
 { return (pstate & 0x1c) != 0x08; }
 
 // ------------------------------------------------------
-IMPLEMENTATION [arm && 64bit]:
+IMPLEMENTATION [arm && 64bit && !cpu_virt]:
 
-#include <cstdio>
 #include "processor.h"
 #include "mem.h"
 
@@ -124,6 +123,12 @@ Entry_frame::copy_and_sanitize(Entry_frame const *src)
   pstate &= ~(Proc::Status_mode_mask | Proc::Status_interrupts_mask);
   pstate |= Proc::Status_mode_user | Proc::Status_always_mask;
 }
+
+// ------------------------------------------------------
+IMPLEMENTATION [arm && 64bit]:
+
+#include <cstdio>
+#include "processor.h"
 
 PUBLIC inline NEEDS["processor.h"]
 void

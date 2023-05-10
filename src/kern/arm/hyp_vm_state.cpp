@@ -32,7 +32,7 @@ public:
 struct Context_hyp
 {
   Unsigned64 par;
-  Unsigned64 hcr = Cpu::Hcr_non_vm_bits;
+  Unsigned64 hcr = Cpu::Hcr_non_vm_bits_el0;
 
   Unsigned64 cntvoff;
   Unsigned64 cntv_cval;

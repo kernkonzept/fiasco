@@ -54,11 +54,13 @@ public:
     /**
      * HCR value to be used for normal threads.
      *
-     * On a hyp kernel all threads run per default in system mode (PL1).
+     * On a hyp kernel they can choose to run in PL1 or PL0.
      * However, all but the TPIDxyz CP15 accesses are disabled.
      */
-    Hcr_non_vm_bits = Hcr_must_set_bits | Hcr_dc | Hcr_tsw
-                      | Hcr_ttlb | Hcr_tvm
+    Hcr_non_vm_bits_common = Hcr_must_set_bits | Hcr_dc | Hcr_tsw
+                             | Hcr_ttlb | Hcr_tvm,
+    Hcr_non_vm_bits_el1    = Hcr_non_vm_bits_common,
+    Hcr_non_vm_bits_el0    = Hcr_non_vm_bits_common | Hcr_tge,
   };
 };
 
@@ -86,7 +88,7 @@ Cpu::init_hyp_mode()
         "mcr p15, 4, %1, c1, c1, 0 \n"
         : :
         "r" ((1UL << 31) | (Page::Tcr_attribs << 8) | (1 << 6)),
-        "r" (Hcr_non_vm_bits)
+        "r" (Hcr_non_vm_bits_el0)
         : "r0" );
 
   asm ("mcr p15, 4, %0, c1, c1, 3" : : "r"(Hstr_non_vm)); // HSTR

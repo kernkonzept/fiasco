@@ -108,7 +108,7 @@ Kip_init::init_kip_clock()
 }
 
 //--------------------------------------------------------------
-IMPLEMENTATION[64bit && !cpu_virt]:
+IMPLEMENTATION[64bit]:
 
 PRIVATE static inline
 void
@@ -121,22 +121,6 @@ Kip_init::init_syscalls(Kip *kinfo)
   };
   K *k = reinterpret_cast<K *>(kinfo);
   k->w[0x800 / sizeof(Mword)] = 0xd65f03c0d4000001; // svc #0; ret
-}
-
-//--------------------------------------------------------------
-IMPLEMENTATION[64bit && cpu_virt]:
-
-PRIVATE static inline
-void
-Kip_init::init_syscalls(Kip *kinfo)
-{
-  union K
-  {
-    Kip k;
-    Mword w[0x1000 / sizeof(Mword)];
-  };
-  K *k = reinterpret_cast<K *>(kinfo);
-  k->w[0x800 / sizeof(Mword)] = 0xd65f03c0d4000002; // hvc #0; ret
 }
 
 //--------------------------------------------------------------

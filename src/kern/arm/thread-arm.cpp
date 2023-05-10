@@ -5,6 +5,16 @@ class Trap_state;
 EXTENSION class Thread
 {
 public:
+  enum Ex_regs_flags_arm
+  {
+    Exr_arm_set_el_mask     = 0x3UL << 24,
+    Exr_arm_set_el_keep     = 0x0UL << 24,
+    Exr_arm_set_el_el0      = 0x1UL << 24,
+    Exr_arm_set_el_el1      = 0x2UL << 24,
+
+    Exr_arm_unassigned    = Exr_arch_mask & ~Exr_arm_set_el_mask,
+  };
+
   static void init_per_cpu(Cpu_number cpu, bool resume);
   static bool check_and_handle_linux_cache_api(Trap_state *);
   bool check_and_handle_mem_op_fault(Mword error_code, Return_frame *ret_frame);
@@ -66,11 +76,7 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, Vcpu_state *arg)
   r->psr &= ~(Proc::Status_thumb | (1UL << 20));
 
   // make sure the VMM executes in the correct mode
-  if (Proc::Is_hyp)
-    {
-      r->psr_set_mode(Proc::Status_mode_user);
-      r->psr |= 0x1c0; // mask PSTATE.{I,A,F}
-    }
+  sanitize_vmm_state(r);
 
   assert(r->check_valid_user_psr());
   arm_fast_exit(nonull_static_cast<Return_frame*>(r), __iret, arg);
@@ -274,11 +280,6 @@ IMPLEMENT inline
 void
 Thread::user_sp(Mword sp)
 { return regs()->sp(sp); }
-
-IMPLEMENT inline
-Mword
-Thread::user_flags() const
-{ return 0; }
 
 PRIVATE inline
 void
@@ -655,6 +656,31 @@ IMPLEMENT_DEFAULT inline
 bool
 Thread::handle_sve_trap(Trap_state *)
 {
+  return false;
+}
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [arm && !cpu_virt]:
+
+IMPLEMENT inline
+Mword
+Thread::user_flags() const
+{ return 0; }
+
+IMPLEMENT_OVERRIDE
+bool
+Thread::ex_regs_arch(Mword ops)
+{
+  if (ops & Exr_arm_unassigned)
+    return false;
+
+  switch (ops & Exr_arm_set_el_mask)
+    {
+    case Exr_arm_set_el_keep:
+    case Exr_arm_set_el_el0:
+      return true;
+    }
+
   return false;
 }
 

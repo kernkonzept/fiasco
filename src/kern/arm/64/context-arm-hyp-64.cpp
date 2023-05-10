@@ -48,7 +48,6 @@ PRIVATE inline
 void
 Context::arm_hyp_load_non_vm_state(bool vgic)
 {
-  asm volatile ("msr HCR_EL2, %x0"   : : "r"(Cpu::Hcr_non_vm_bits));
   asm volatile ("msr HSTR_EL2, %x0"  : : "r"(Cpu::Hstr_non_vm));
   // load normal SCTLR ...
   asm volatile ("msr SCTLR_EL1, %x0" : : "r"(Cpu::Sctlr_el1_generic));
@@ -170,10 +169,10 @@ Context::arm_ext_vcpu_switch_to_host_no_load(Vcpu_state *vcpu, Vm_state *v)
 
 PRIVATE inline
 void
-Context::arm_ext_vcpu_load_host_regs(Vcpu_state *vcpu, Vm_state *)
+Context::arm_ext_vcpu_load_host_regs(Vcpu_state *vcpu, Vm_state *, Unsigned64 hcr)
 {
   asm volatile ("msr TPIDRRO_EL0, %x0" : : "r"(vcpu->host.tpidruro));
-  asm volatile ("msr HCR_EL2, %x0"     : : "r"(Cpu::Hcr_host_bits));
+  asm volatile ("msr HCR_EL2, %x0"     : : "r"(hcr));
 }
 
 PRIVATE inline

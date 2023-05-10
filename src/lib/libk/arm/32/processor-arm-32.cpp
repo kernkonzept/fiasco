@@ -19,8 +19,9 @@ EXTENSION class Proc
 public:
   enum : unsigned
   {
-    // user threads on a hyp kernel run in system mode
-    Status_mode_user      = 0x1f, // sys
+    Status_mode_user_el0   = 0x10, // usr
+    Status_mode_user_el1   = 0x1f, // sys
+    Status_mode_user      = Status_mode_user_el0,
     Status_mode_always_on = 0x110,
   };
 };

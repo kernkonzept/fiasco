@@ -19,6 +19,15 @@ Context::Vm_state *
 Context::vm_state(Vcpu_state *vs)
 { return reinterpret_cast<Vm_state *>(reinterpret_cast<char *>(vs) + 0x400); }
 
+PROTECTED inline
+void
+Context::sanitize_vmm_state(Return_frame *r) const
+{
+  r->psr_set_mode((_hyp.hcr & Cpu::Hcr_tge) ? Proc::Status_mode_user_el0
+                                            : Proc::Status_mode_user_el1);
+  r->psr |= 0x1c0; // mask PSTATE.{I,A,F}
+}
+
 IMPLEMENT_OVERRIDE
 void
 Context::arch_vcpu_ext_shutdown()
@@ -27,7 +36,9 @@ Context::arch_vcpu_ext_shutdown()
     return;
 
   state_del_dirty(Thread_ext_vcpu_enabled);
-  _hyp.hcr = Cpu::Hcr_non_vm_bits;
+  regs()->psr = Proc::Status_mode_user_el0;
+  _hyp.hcr = Cpu::Hcr_non_vm_bits_el0;
+  Cpu::hcr(_hyp.hcr);
   arm_hyp_load_non_vm_state(true);
 }
 
@@ -41,19 +52,13 @@ Context::arch_load_vcpu_kern_state(Vcpu_state *vcpu, bool do_load)
   if (!(state() & Thread_ext_vcpu_enabled))
     {
       _tpidruro = vcpu->host.tpidruro;
-      // vCPU user state has TGE set, so we need to reload HCR here
-      _hyp.hcr = Cpu::Hcr_non_vm_bits;
       if (do_load)
-        {
-          Cpu::hcr(_hyp.hcr);
-          load_tpidruro();
-        }
+        load_tpidruro();
       return;
     }
 
   Vm_state *v = vm_state(vcpu);
 
-  v->guest_regs.hcr = _hyp.hcr;
   bool const all_priv_vm = !(_hyp.hcr & Cpu::Hcr_tge);
   if (all_priv_vm)
     {
@@ -68,9 +73,9 @@ Context::arch_load_vcpu_kern_state(Vcpu_state *vcpu, bool do_load)
     }
 
   _tpidruro = vcpu->host.tpidruro;
-  _hyp.hcr = Cpu::Hcr_host_bits;
+  _hyp.hcr = access_once(&v->host_regs.hcr) | Cpu::Hcr_must_set_bits;
   if (do_load)
-    arm_ext_vcpu_load_host_regs(vcpu, v);
+    arm_ext_vcpu_load_host_regs(vcpu, v, _hyp.hcr);
 }
 
 IMPLEMENT_OVERRIDE inline NEEDS[Context::vm_state,
@@ -82,9 +87,7 @@ Context::arch_load_vcpu_user_state(Vcpu_state *vcpu)
 
   if (!(state() & Thread_ext_vcpu_enabled))
     {
-      _hyp.hcr = Cpu::Hcr_non_vm_bits | Cpu::Hcr_tge;
       _tpidruro = vcpu->_regs.tpidruro;
-      Cpu::hcr(_hyp.hcr);
       load_tpidruro();
       return;
     }

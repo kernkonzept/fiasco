@@ -181,10 +181,13 @@ public:
     /**
      * HCR value to be used for normal threads.
      *
-     * On AArch64 (with virtualization support) running in EL1.
+     * On AArch64 (with virtualization support) they can choose to run in EL1
+     * or EL0.
      */
-    Hcr_non_vm_bits = Hcr_must_set_bits | Hcr_rw | Hcr_dc | Hcr_tsw
-                      | Hcr_ttlb | Hcr_tvm | Hcr_trvm
+    Hcr_non_vm_bits_common = Hcr_must_set_bits | Hcr_rw | Hcr_dc | Hcr_tsw
+                             | Hcr_ttlb | Hcr_tvm | Hcr_trvm,
+    Hcr_non_vm_bits_el1    = Hcr_non_vm_bits_common,
+    Hcr_non_vm_bits_el0    = Hcr_non_vm_bits_common | Hcr_tge,
   };
 
   enum
@@ -252,7 +255,7 @@ Cpu::init_hyp_mode()
   asm volatile ("msr MDCR_EL2, %x0" : : "r"((Mword)Mdcr_bits));
 
   asm volatile ("msr SCTLR_EL1, %x0" : : "r"((Mword)Sctlr_el1_generic));
-  asm volatile ("msr HCR_EL2, %x0" : : "r" (Hcr_non_vm_bits));
+  asm volatile ("msr HCR_EL2, %x0" : : "r" (Hcr_non_vm_bits_el0));
   asm volatile ("msr HSTR_EL2, %x0" : : "r" (Hstr_non_vm));
 
   Mem::dsb();

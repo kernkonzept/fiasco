@@ -146,7 +146,7 @@ Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
 
   Trex const *r = reinterpret_cast<Trex const *>(snd_utcb->values);
   // this skips the eret/continuation work already
-  ts->copy_and_sanitize(&r->s);
+  rcv->copy_and_sanitize_trap_state(ts, &r->s);
   rcv->set_tpidruro(r);
   rcv->set_tpidrurw(r);
 

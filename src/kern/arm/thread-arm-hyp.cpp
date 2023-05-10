@@ -10,6 +10,62 @@ Thread::arch_check_vcpu_state(bool ext)
   return 0;
 }
 
+IMPLEMENT inline
+Mword
+Thread::user_flags() const
+{
+  return ((_hyp.hcr & Cpu::Hcr_tge) ? Exr_arm_set_el_el0
+                                    : Exr_arm_set_el_el1);
+}
+
+IMPLEMENT_OVERRIDE
+bool
+Thread::ex_regs_arch(Mword ops)
+{
+  if (ops & Exr_arm_unassigned)
+    return false;
+
+  bool tge;
+
+  switch (ops & Exr_arm_set_el_mask)
+    {
+    case Exr_arm_set_el_keep:
+      return true;
+    case Exr_arm_set_el_el0:
+      tge = true;
+      break;
+    case Exr_arm_set_el_el1:
+      tge = false;
+      break;
+    default:
+      return false;
+    }
+
+  // No change of exception level allowed after extended vCPU was enabled. The
+  // state is then controlled by the corresponding
+  // Hyp_vm_state.{host_regs,guest_regs} fields instead!
+  if (state() & Thread_ext_vcpu_enabled)
+    return false;
+
+  if (tge)
+    {
+      regs()->psr &= ~Proc::Status_mode_mask;
+      regs()->psr |= Proc::Status_mode_user_el0;
+      _hyp.hcr |= Cpu::Hcr_tge;
+    }
+  else
+    {
+      regs()->psr &= ~Proc::Status_mode_mask;
+      regs()->psr |= Proc::Status_mode_user_el1;
+      _hyp.hcr &= ~Cpu::Hcr_tge;
+    }
+
+  if (current() == this)
+    Cpu::hcr(_hyp.hcr);
+
+  return true;
+}
+
 
 IMPLEMENTATION [arm && 32bit && cpu_virt]:
 
@@ -44,13 +100,12 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
   v->guest_regs.hcr = Cpu::Hcr_tge | Cpu::Hcr_must_set_bits | Cpu::Hcr_dc;
   v->guest_regs.sctlr = 0;
 
-  v->host_regs.hcr = Cpu::Hcr_host_bits;
+  v->host_regs.hcr = Cpu::Hcr_host_bits | (_hyp.hcr & Cpu::Hcr_tge);
 
   Gic_h_global::gic->setup_state(&v->gic);
 
   if (current() == this)
     {
-      asm volatile ("mcr p15, 4, %0, c1, c1, 0" : : "r"(Cpu::Hcr_host_bits));
       asm volatile ("mcr p15, 0, %0, c1, c0, 0" : : "r"(v->sctlr));
       asm volatile ("mcr p15, 4, %0, c1, c1, 3" : : "r"(Cpu::Hstr_vm)); // HSTR
     }
@@ -403,7 +458,7 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
   v->guest_regs.hcr = Cpu::Hcr_tge | Cpu::Hcr_must_set_bits | Cpu::Hcr_dc;
   v->guest_regs.sctlr = 0;
 
-  v->host_regs.hcr = Cpu::Hcr_host_bits;
+  v->host_regs.hcr = Cpu::Hcr_host_bits | (_hyp.hcr & Cpu::Hcr_tge);
 
   Gic_h_global::gic->setup_state(&v->gic);
 
