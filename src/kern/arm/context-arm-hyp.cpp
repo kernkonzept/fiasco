@@ -14,18 +14,6 @@ protected:
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && cpu_virt]:
 
-EXTENSION class Context
-{
-protected:
-  enum
-  {
-    Host_cntkctl = (1U << 8) | (1U << 1),
-    // see: generic_timer.cpp: setup_timer_access (Hyp)
-    Host_cnthctl = 1U,  // enable PL1+PL0 access to CNTPCT_EL0
-    Guest_cnthctl = 0U, // disable PL1+PL0 access to CNTPCT_EL0
-  };
-};
-
 PROTECTED static inline
 Context::Vm_state *
 Context::vm_state(Vcpu_state *vs)
@@ -153,12 +141,10 @@ Context::switch_vm_state(Context *t)
 
       if (_to_state & Thread_vcpu_user)
         {
-          load_cnthctl(Guest_cnthctl);
           Gic_h_global::gic->load_full(&v->gic, vgic);
         }
       else
         {
-          load_cnthctl(Host_cnthctl);
           if (vgic)
             Gic_h_global::gic->disable();
         }

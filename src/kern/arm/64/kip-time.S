@@ -11,14 +11,7 @@
 #define OFFS__KIP_FN_READ_NS                    0x980
 
 .macro read_timer_counter
-#if defined(CONFIG_CPU_VIRT)
-        /* Generic_timer::T<Hyp>: R1=physical, R2=virtual:
-         * CNTKCTL_EL1: EL0VTEN=1, EL0PTEN=1.
-         * CNTHCTL_EL2: EL0VCTEN=0, EL0PCTEN=1.
-         * Kernel uses physical counter.
-         * Access to physical counter from non-secure PL0/PL1 allowed. */
-        mrs     x0, CNTPCT_EL0
-#elif defined(CONFIG_ARM_EM_TZ)
+#if defined(CONFIG_ARM_EM_TZ)
         /* Generic_timer::T<Physical>: R1=hyp, R2=virtual:
          * CNTKCTL_EL1: EL0VTEN=1, EL0PTEN=1.
          * Kernel uses physical counter.
@@ -26,9 +19,17 @@
         mrs     x0, CNTPCT_EL0
 #else
         /* Generic_timer::T<Virtual>: R1=physical, R2=hyp:
-         * CNTKCTL_EL1: EL0VTEN=1, EL0PTEN=0.
-         * Kernel uses virtual counter.
-         * Access to virtual counter from PL0 allowed. */
+         *   CNTKCTL_EL1: EL0VCTEN=1, EL0PCTEN=0.
+         *   Kernel uses virtual counter.
+         *   Access to virtual counter from PL0 allowed.
+         * Generic_timer::T<Hyp>: R1=physical, R2=virtual:
+         *   CNTKCTL_EL1: EL0VCTEN=1, EL0PCTEN=1.
+         *   CNTHCTL_EL2: EL1PCEN=0, EL1PCTEN=0.
+         *   CNTVOFF_EL2: 0
+         *   Kernel uses physical counter. Virtual counter equals physical.
+         *   Access to physical counter from non-secure PL0/PL1 prohibited.
+         *   Access to virtual counter from non-secure PL0/PL1 allowed.
+         */
         mrs     x0, CNTVCT_EL0
 #endif
 .endm

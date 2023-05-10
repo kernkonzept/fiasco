@@ -60,7 +60,6 @@ Context::arm_hyp_load_non_vm_state(bool vgic)
   // CNTKCTL: allow access to virtual and physical counter from PL0
   // see: generic_timer.cpp: setup_timer_access (Hyp)
   asm volatile("msr CNTKCTL_EL1, %x0"   : : "r"(0x3UL));
-  asm volatile("msr CNTHCTL_EL2, %x0"   : : "r"(Host_cnthctl));
   if (vgic)
     Gic_h_global::gic->disable();
 }
@@ -144,12 +143,14 @@ Context::arm_ext_vcpu_switch_to_host(Vcpu_state *vcpu, Vm_state *v)
   asm volatile ("mrs %x0, CNTV_CTL_EL0" : "=r" (v->guest_regs.cntv_ctl));
   // disable VTIMER
   asm volatile ("msr CNTV_CTL_EL0, %x0" : : "r"(0UL));
-  asm volatile ("msr CNTHCTL_EL2, %x0"  : : "r"(Host_cnthctl));
+  asm volatile ("msr CNTVOFF_EL2, %x0" : : "r"(0));
   // disable all debug exceptions for non-vms, if we want debug
   // exceptions into JDB we need either per-thread or a global
   // setting for this value. (probably including the contextidr)
   asm volatile ("msr MDSCR_EL1, %x0" : : "r"(0UL));
   asm volatile ("msr SCTLR_EL1, %x0" : : "r"(Cpu::Sctlr_el1_generic));
+
+  _hyp.cntvoff = 0;
 }
 
 PRIVATE inline
@@ -162,6 +163,7 @@ Context::arm_ext_vcpu_switch_to_host_no_load(Vcpu_state *vcpu, Vm_state *v)
   v->guest_regs.cntv_ctl = _hyp.cntv_ctl;
 
   v->sctlr   = Cpu::Sctlr_el1_generic;
+  _hyp.cntvoff  = 0;
   _hyp.cntv_ctl = 0;
   _hyp.cpacr    = Cpu::Cpacr_el1_generic_hyp;
 }
@@ -185,7 +187,6 @@ Context::arm_ext_vcpu_switch_to_guest(Vcpu_state *, Vm_state *v)
   asm volatile ("msr CNTV_CTL_EL0, %x0": : "r"(v->guest_regs.cntv_ctl));
   asm volatile ("msr SCTLR_EL1, %x0"   : : "r"(v->guest_regs.sctlr));
   asm volatile ("msr CPACR_EL1, %x0"   : : "r"(v->guest_regs.cpacr));
-  asm volatile ("msr CNTHCTL_EL2, %x0" : : "r"(Guest_cnthctl));
 }
 
 PRIVATE inline

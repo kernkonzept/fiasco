@@ -99,8 +99,10 @@ namespace Generic_timer {
     {
       // CNTKCTL: allow access to virtual and physical counter from EL0
       asm volatile("msr CNTKCTL_EL1, %0" : : "r"(0x3UL));
-      // CNTHCTL: allow access to physical timer from EL0 and EL1
-      asm volatile("msr CNTHCTL_EL2, %0" : : "r"(0x1UL));
+      // CNTHCTL: forbid access to physical timer from EL0 and EL1
+      asm volatile("msr CNTHCTL_EL2, %0" : : "r"(0x0UL));
+      // CNTVOFF: sync virtual and physical counter
+      asm volatile ("msr CNTVOFF_EL2, %x0" : : "r"(0));
     }
 
     static Unsigned32 frequency()
