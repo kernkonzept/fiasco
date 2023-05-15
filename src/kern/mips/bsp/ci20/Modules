@@ -4,8 +4,9 @@ RAM_PHYS_BASE			:= 0x0
 PREPROCESS_PARTS		+= jz4780 ci20 cascade_irq
 PREPROCESS_PARTS-$(CONFIG_MP)	+= pic_gic cps
 PREPROCESS_PARTS		+= $(PREPROCESS_PARTS-y)
-OBJECTS_LIBUART			+= uart_16550.o uart_16550_dw.o
-CXXFLAGS_uart-libuart		+= $(call LIBUART_UART, 16550_dw)
+OBJECTS_LIBUART			+= uart_16550.o
+CXXFLAGS_uart-libuart		+= $(call LIBUART_UART, 16550) \
+                                   -DUART_16550_INIT_FCR=0x10
 
 INTERFACES_KERNEL		+= irq_mgr_flex irq_ingenic \
 				   mips_bsp_irqs cascade_irq \
