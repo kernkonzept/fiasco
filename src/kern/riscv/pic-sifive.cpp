@@ -6,7 +6,7 @@ INTERFACE [riscv]:
 IMPLEMENTATION [riscv]:
 
 #include "boot_alloc.h"
-#include "irq_mgr_flex.h"
+#include "irq_mgr.h"
 #include "irq_sifive.h"
 #include "kmem.h"
 

@@ -2,7 +2,7 @@
 
 RAM_PHYS_BASE           := 0x40000000
 
-INTERFACES_KERNEL     += irq_mgr_flex irq_migv
+INTERFACES_KERNEL     += irq_migv
 OBJECTS_LIBUART       += uart_16550.o
 CXXFLAGS_uart-libuart += $(call LIBUART_UART, 16550)
 
