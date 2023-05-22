@@ -1056,6 +1056,8 @@ Iommu::lookup_stream_table_entry(Unsigned32 stream_id, bool alloc)
         return nullptr;
 
       _strtab_l2_alloc_cnt++;
+      // Zero initialized second-level stream table must be observable by the
+      // SMMU before setting up the corresponding L1 stream table descriptor.
       make_observable(l2.virt_ptr<Ste>(),
                       l2.virt_ptr<Ste>() + Stream_table_l2_size);
 
@@ -1063,8 +1065,12 @@ Iommu::lookup_stream_table_entry(Unsigned32 stream_id, bool alloc)
       new_l1.span() = Stream_table_split + 1;
       new_l1.l2_ptr() = l2.phys_addr();
       // Store has to be atomic to ensure that SMMU never sees the L1 stream
-      // table entry in an inconsistent state.
+      // table descriptor in an inconsistent state.
       atomic_store(&l1, new_l1);
+      // Ensure L1 stream table descriptor is observable by the SMMU before
+      // configuring any L2 stream table entry (always requires invalidation
+      // commands, so make_observable_before_cmd is sufficient here).
+      make_observable_before_cmd(&l1, &l1 + 1);
     }
 
   Ste *l2 = reinterpret_cast<Ste *>(Mem_layout::phys_to_pmem(l1.l2_ptr()));
