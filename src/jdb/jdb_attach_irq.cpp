@@ -7,6 +7,7 @@ IMPLEMENTATION:
 #include "semaphore.h"
 #include "irq_mgr.h"
 #include "jdb_module.h"
+#include "jdb_obj_info.h"
 #include "kernel_console.h"
 #include "static_init.h"
 #include "thread.h"
@@ -149,6 +150,39 @@ Jdb_kobject_irq::show_kobject_short(String_buffer *buf,
   if (Semaphore *t = cxx::dyn_cast<Semaphore*>(i))
     buf->printf(" Q=%ld",
                 t->_queued);
+}
+
+PUBLIC
+bool
+Jdb_kobject_irq::info_kobject(Jobj_info *i, Kobject_common *o) override
+{
+  Irq *irq = cxx::dyn_cast<Irq*>(o);
+
+  if (Irq_sender *t = cxx::dyn_cast<Irq_sender*>(irq))
+    {
+      i->type = i->irq_sender.Type;
+      i->irq_sender.pin = irq->pin();
+      strncpy(i->irq_sender.chip_type, irq->chip()->chip_type(),
+              sizeof(i->irq_sender.chip_type));
+      i->irq_sender.flags = irq->flags();
+      i->irq_sender.label = t->id();
+      Kobject_common *w = follow_link(o);
+      i->irq_sender.target_id = w != o ? w->dbg_info()->dbg_id() : 0;
+      i->irq_sender.queued = t->queued();
+      return true;
+    }
+  else if (Semaphore *t = cxx::dyn_cast<Semaphore*>(irq))
+    {
+      i->type = i->irq_semaphore.Type;
+      i->irq_semaphore.pin = irq->pin();
+      strncpy(i->irq_semaphore.chip_type, irq->chip()->chip_type(),
+              sizeof(i->irq_semaphore.chip_type));
+      i->irq_semaphore.flags = irq->flags();
+      i->irq_semaphore.queued = t->_queued;
+      return true;
+    }
+
+  return false;
 }
 
 static

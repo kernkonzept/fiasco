@@ -9,6 +9,7 @@ IMPLEMENTATION:
 #include "jdb_module.h"
 #include "jdb_screen.h"
 #include "jdb_kobject.h"
+#include "jdb_obj_info.h"
 #include "simpleio.h"
 #include "static_init.h"
 #include "ipc_gate.h"
@@ -50,6 +51,20 @@ Jdb_ipc_gate::show_kobject_short(String_buffer *buf, Kobject_common *o, bool) ov
   buf->printf(" L=%s%08lx\033[0m D=%lx",
               (g->id() & 3) ? JDB_ANSI_COLOR(lightcyan) : "",
               g->id(), g->thread() ? g->thread()->dbg_info()->dbg_id() : 0);
+}
+
+PUBLIC
+bool
+Jdb_ipc_gate::info_kobject(Jobj_info *i, Kobject_common *o) override
+{
+  Ipc_gate_obj *g = cxx::dyn_cast<Ipc_gate_obj*>(Kobject::from_dbg(o->dbg_info()));
+  if (!g)
+    return false;
+
+  i->type = i->ipc_gate.Type;
+  i->ipc_gate.label = g->id();
+  i->ipc_gate.thread_id = g->thread() ? g->thread()->dbg_info()->dbg_id() : 0;
+  return true;
 }
 
 static Jdb_ipc_gate jdb_space INIT_PRIORITY(JDB_MODULE_INIT_PRIO);

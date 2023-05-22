@@ -17,6 +17,7 @@ IMPLEMENTATION[mapdb]:
 #include "jdb_kobject.h"
 #include "jdb_kobject_names.h"
 #include "paging_bits.h"
+#include "jdb_obj_info.h"
 
 class Jdb_mapdb : public Jdb_module
 {
@@ -454,6 +455,40 @@ Jdb_mapdb::print_obj_mapping(Obj::Mapping *m)
 }
 
 static
+void
+Jdb_mapdb::info_obj_mapping(Jobj_info *i, Obj::Mapping *m)
+{
+  Obj::Entry *e = static_cast<Obj::Entry*>(m);
+  Dbg_page_info *pi = Dbg_page_info::table()[Virt_addr(e)];
+
+  Mword space_id = ~0UL;
+  Address cap_idx = (reinterpret_cast<Address>(e) % Config::PAGE_SIZE)
+                    / sizeof(Obj::Entry);
+
+  i->type = i->mapping.Type;
+
+  if (pi)
+    {
+      Kobject_dbg *o =
+        static_cast<Task*>(pi->info<Obj::Cap_page_dbg_info>()->s)->dbg_info();
+      space_id = o->dbg_id();
+      Jdb_kobject_name *n =
+        Jdb_kobject_extension::find_extension<Jdb_kobject_name>(Kobject::from_dbg(o));
+      if (n)
+        strncpy(i->mapping.space_name, n->name(),
+                min<size_t>(sizeof(i->mapping.space_name), n->max_len()));
+      cap_idx += pi->info<Obj::Cap_page_dbg_info>()->offset;
+    }
+
+  i->mapping.mapping_ptr = reinterpret_cast<Address>(m);
+  i->mapping.cap_idx = cap_idx;
+  i->id = space_id;
+  i->mapping.entry_rights = cxx::int_value<Obj::Attr>(e->rights());
+  i->mapping.entry_flags = e->_flags;
+  i->mapping.entry_ptr = reinterpret_cast<Address>(e->obj());
+}
+
+static
 bool
 Jdb_mapdb::show_simple_tree(Kobject_common *f)
 {
@@ -547,3 +582,116 @@ Jdb_mapdb::dump_all_obj_mappings(char const *arg)
 
   c->restore_state(&state);
 }
+
+PUBLIC static
+void
+Jdb_mapdb::obj_info(Jobj_info *i,  Kobject_dbg *d)
+{
+  if (Jdb_kobject::obj_info(i, d))
+    return;
+
+  if (char const *s = Jdb_kobject::kobject_type(Kobject::from_dbg(d)))
+    {
+      if (!strcmp(s, "Jdb"))
+        i->type = Jobj_info::Jdb::Type;
+      else if (!strcmp(s, "\033[34mSched\033[m"))
+        i->type = Jobj_info::Scheduler::Type;
+      else if (!strcmp(s, "Vlog"))
+        i->type = Jobj_info::Vlog::Type;
+      else if (!strcmp(s, "Icu/Pfc"))
+        i->type = Jobj_info::Pfc::Type;
+      else if (!strcmp(s, "DMA"))
+        i->type = Jobj_info::Dmar_space::Type;
+      else if (!strcmp(s, "IOMMU"))
+        i->type = Jobj_info::Iommu::Type;
+      else if (!strcmp(s, "SMMU"))
+        i->type = Jobj_info::Smmu::Type;
+    }
+}
+
+PUBLIC static
+void
+Jdb_mapdb::info_all_obj_mappings(Jobj_info *i, Mword skip, Mword count,
+                                 Mword *count_result, Mword *count_all)
+{
+  Mword n = 0;
+  for (auto const &d : Kobject_dbg::_kobjects)
+    {
+      Kobject_mappable const *mr = Kobject::from_dbg(d)->map_root();
+      if (n < count && !skip)
+        {
+          i->id = d->dbg_id();
+          i->ref_cnt = mr->_cnt;
+          obj_info(i, d);
+        }
+      if (skip)
+        --skip;
+      else
+        {
+          ++i;
+          ++n;
+        }
+      for (auto const &&m : mr->_root)
+        {
+          if (n < count && !skip)
+            info_obj_mapping(i, m);
+          if (skip)
+            --skip;
+          else
+            {
+              ++i;
+              ++n;
+            }
+        }
+    }
+
+  *count_all = n;
+  *count_result = min(count, n);
+}
+
+class Jdb_obj_info_hdl : public Jdb_kobject_handler
+{
+public:
+  bool show_kobject(Kobject_common *, int) override { return true; }
+  virtual ~Jdb_obj_info_hdl() {}
+};
+
+PUBLIC
+bool
+Jdb_obj_info_hdl::invoke(Kobject_common *, Syscall_frame *f, Utcb *utcb) override
+{
+  if (utcb->values[0] != Op_obj_info)
+    return false;
+
+  if (f->tag().words() < 4)
+    {
+      f->tag(Kobject_iface::commit_result(-L4_err::EInval));
+      return true;
+    }
+
+  User_ptr<Jobj_info> mem(reinterpret_cast<Jobj_info*>(utcb->values[1]));
+  Mword size = utcb->values[2];
+  Space::Ku_mem const*ku_mem = current()->space()->find_ku_mem(mem, size);
+  Jobj_info *i = ku_mem->kern_addr(mem);
+  Mword skip = utcb->values[3];
+
+  Mword count_result = 0;
+  Mword count_all = 0;
+  Jdb_mapdb::info_all_obj_mappings(i, skip, size/sizeof(Jobj_info),
+                                   &count_result, &count_all);
+  utcb->values[0] = count_result;
+  utcb->values[1] = count_all;
+
+  f->tag(Kobject_iface::commit_result(0, 2));
+  return true;
+}
+
+PUBLIC static FIASCO_INIT
+void
+Jdb_obj_info_hdl::init()
+{
+  static Jdb_obj_info_hdl hdl;
+  Jdb_kobject::module()->register_handler(&hdl);
+}
+
+STATIC_INITIALIZE(Jdb_obj_info_hdl);

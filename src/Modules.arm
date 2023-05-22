@@ -117,7 +117,7 @@ endif
 #
 JABI			:= libjabi.a
 VPATH			+= jabi/$(CONFIG_XARCH)/$(BITS) jabi/$(CONFIG_XARCH) jabi
-INTERFACES_JABI		:= jdb_ktrace
+INTERFACES_JABI		:= jdb_ktrace jdb_obj_info
 
 #
 # ABI Subsystem

@@ -22,6 +22,7 @@ IMPLEMENTATION:
 #include "jdb_screen.h"
 #include "jdb_thread.h"
 #include "jdb_util.h"
+#include "jdb_obj_info.h"
 #include "kernel_console.h"
 #include "kernel_task.h"
 #include "keycodes.h"
@@ -1024,6 +1025,23 @@ Jdb_tcb::show_kobject_short(String_buffer *buf, Kobject_common *o, bool) overrid
                 t->ref_cnt(),
                 t->in_ready_list() ? " rdy" : "",
                 is_current ? " " JDB_ANSI_COLOR(green) "cur" JDB_ANSI_END : "");
+}
+
+PUBLIC
+bool
+Jdb_tcb::info_kobject(Jobj_info *i, Kobject_common *o) override
+{
+  Thread *t = cxx::dyn_cast<Thread *>(Kobject::from_dbg(o->dbg_info()));
+
+  i->type = i->thread.Type;
+  i->thread.is_kernel = t == Context::kernel_context(t->home_cpu());
+  i->thread.is_current = Jdb_tcb::is_current(t); // XXX bogus
+  i->thread.in_ready_list = t->in_ready_list();
+  i->thread.is_kernel_task = t->space() == Kernel_task::kernel_task();
+  i->thread.home_cpu = cxx::int_value<Cpu_number>(t->home_cpu());
+  i->thread.current_cpu = cxx::int_value<Cpu_number>(t->get_current_cpu());
+  i->thread.ref_cnt = t->ref_cnt();
+  return true;
 }
 
 PUBLIC

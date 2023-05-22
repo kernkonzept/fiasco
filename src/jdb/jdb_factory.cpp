@@ -9,6 +9,7 @@ IMPLEMENTATION:
 #include "jdb_module.h"
 #include "jdb_screen.h"
 #include "jdb_kobject.h"
+#include "jdb_obj_info.h"
 #include "kernel_console.h"
 #include "keycodes.h"
 #include "factory.h"
@@ -41,6 +42,17 @@ Jdb_factory::show_kobject_short(String_buffer *buf, Kobject_common *o, bool) ove
 {
   Factory *t = cxx::dyn_cast<Factory*>(o);
   buf->printf(" c=%lu l=%lu", t->current(), t->limit());
+}
+
+PUBLIC
+bool
+Jdb_factory::info_kobject(Jobj_info *i, Kobject_common *o) override
+{
+  Factory *t = cxx::dyn_cast<Factory*>(o);
+  i->type = i->factory.Type;
+  i->factory.current = t->current();
+  i->factory.limit = t->limit();
+  return true;
 }
 
 static Jdb_factory jdb_factory INIT_PRIORITY(JDB_MODULE_INIT_PRIO);

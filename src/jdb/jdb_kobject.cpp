@@ -2,6 +2,7 @@ INTERFACE:
 
 #include "jdb_module.h"
 #include "jdb_list.h"
+#include "jdb_obj_info.h"
 #include "kobject.h"
 #include "string_buffer.h"
 
@@ -36,6 +37,7 @@ public:
   cxx::Type_info const *kobj_type;
   virtual bool show_kobject(Kobject_common *o, int level) = 0;
   virtual void show_kobject_short(String_buffer *, Kobject_common *, bool) {}
+  virtual bool info_kobject(Jobj_info *, Kobject_common *) { return false; }
   virtual Kobject_common *follow_link(Kobject_common *o) { return o; }
   virtual ~Jdb_kobject_handler() {}
   virtual bool invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb);
@@ -69,6 +71,7 @@ protected:
     Op_switch_log       = 4,
     Op_get_name         = 5,
     Op_query_log_name   = 6,
+    Op_obj_info         = 16,
   };
 };
 
@@ -456,6 +459,25 @@ Jdb_kobject::obj_description(String_buffer *buffer, String_buffer *help_text,
       if (help_text && (ht = oh->help_text(k)))
         help_text->printf(" %s", ht);
     }
+}
+
+PUBLIC static
+bool
+Jdb_kobject::obj_info(Jobj_info *i, Kobject_dbg *o)
+{
+  Kobject *k = Kobject::from_dbg(o);
+
+  i->mapping_ptr = reinterpret_cast<Address>(k);
+
+  for (auto h : module()->global_handlers)
+    if (h->info_kobject(i, k))
+      return true;
+
+  if (Jdb_kobject_handler *oh = Jdb_kobject::module()->find_handler(k))
+    if (oh->info_kobject(i, k))
+      return true;
+
+  return false;
 }
 
 PUBLIC

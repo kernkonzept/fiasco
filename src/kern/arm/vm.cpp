@@ -320,6 +320,15 @@ Vm::show_short(String_buffer *buf)
               reinterpret_cast<Mword>(jdb_get(&state_for_dbg->pc)));
 }
 
+PUBLIC
+bool
+Vm::info_kobject(Address *utcb, Address *pc) override
+{
+  *utcb = (Address)state_for_dbg;
+  *pc = jdb_get(&state_for_dbg->pc);
+  return true;
+}
+
 IMPLEMENT
 void
 Vm::Vm_log::print(String_buffer *buf) const

@@ -42,7 +42,7 @@ l4_types_IMPL		:= l4_types l4_types-debug
 #
 JABI			:= libjabi.a
 VPATH			+= jabi/$(CONFIG_XARCH) jabi
-INTERFACES_JABI		:= jdb_ktrace
+INTERFACES_JABI		:= jdb_ktrace jdb_obj_info
 
 #
 # DRIVERS subsystem

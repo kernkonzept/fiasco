@@ -9,6 +9,7 @@ IMPLEMENTATION:
 #include "jdb_module.h"
 #include "jdb_screen.h"
 #include "jdb_kobject.h"
+#include "jdb_obj_info.h"
 #include "kernel_console.h"
 #include "kernel_task.h"
 #include "keycodes.h"
@@ -59,6 +60,18 @@ Jdb_space::show_kobject_short(String_buffer *buf, Kobject_common *o, bool) overr
     buf->printf(" {KERNEL}");
 
   buf->printf(" R=%ld", t->ref_cnt());
+}
+
+PUBLIC
+bool
+Jdb_space::info_kobject(Jobj_info *i, Kobject_common *o) override
+{
+  Task *t = cxx::dyn_cast<Task*>(o);
+
+  i->type = i->space.Type;
+  i->space.is_kernel = t == Kernel_task::kernel_task();
+  i->space.ref_cnt = t->ref_cnt();
+  return true;
 }
 
 PRIVATE static

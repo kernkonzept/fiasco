@@ -5,6 +5,7 @@ IMPLEMENTATION [arm_em_tz]:
 
 #include "jdb_module.h"
 #include "jdb_kobject.h"
+#include "jdb_obj_info.h"
 #include "static_init.h"
 #include "vm.h"
 
@@ -47,6 +48,14 @@ void
 Jdb_vm::show_kobject_short(String_buffer *buf, Kobject_common *o, bool) override
 {
   return cxx::dyn_cast<Vm *>(o)->show_short(buf);
+}
+
+PUBLIC
+bool
+Jdb_vm::info_kobject(Jobj_info *i, Kobject_common *o) override
+{
+  i->type = Jobj_info::Type_vm;
+  return cxx::dyn_cast<Vm *>(o)->info_kobject(i, o);
 }
 
 static Jdb_vm jdb_vm INIT_PRIORITY(JDB_MODULE_INIT_PRIO);
