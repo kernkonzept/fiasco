@@ -14,7 +14,6 @@ class Jdb_kobject : public Jdb_module
 {
 public:
   typedef cxx::S_list_tail<Jdb_kobject_handler> Handler_list;
-  typedef Handler_list::Const_iterator Handler_iter;
 
   Jdb_kobject();
 
@@ -168,10 +167,10 @@ PRIVATE
 void *
 Jdb_kobject_list::get_first()
 {
-  Kobject_dbg::Iterator f = Kobject_dbg::begin();
-  while (f != Kobject_dbg::end() && _filter && !_filter(Kobject::from_dbg(f)))
-    ++f;
-  return Kobject::from_dbg(f);
+  for (auto const &f : Kobject_dbg::_kobjects)
+    if (!_filter || _filter(Kobject::from_dbg(f)))
+      return Kobject::from_dbg(f);
+  return nullptr;
 }
 
 PUBLIC explicit
@@ -229,8 +228,7 @@ Jdb_kobject_list::handle_key(void *item, int keycode) override
   Jdb::cursor(3, 1);
 
   bool handled = false;
-  for (Jdb_kobject::Handler_iter h = Jdb_kobject::module()->global_handlers.begin();
-       h != Jdb_kobject::module()->global_handlers.end(); ++h)
+  for (auto const &h : Jdb_kobject::module()->global_handlers)
     handled |= h->handle_key(o, keycode);
 
   if (Jdb_kobject_handler *h = Jdb_kobject::module()->find_handler(o))
@@ -389,17 +387,17 @@ PUBLIC
 Jdb_kobject_handler *
 Jdb_kobject::find_handler(Kobject_common *o)
 {
-  for (Handler_iter h = handlers.begin(); h != handlers.end(); ++h)
+  for (auto const &h : handlers)
     {
       auto r = o->_cxx_dyn_type();
       if (r.type == h->kobj_type)
-        return *h;
+        return h;
 
       // XXX: may be we should sort the handlers: most derived first
       cxx::uintptr_t delta;
       if (r.type->do_cast(h->kobj_type, cxx::Typeid<Kobject_common>::get(),
                           (cxx::uintptr_t)o - (cxx::uintptr_t)r.base, &delta))
-        return *h;
+        return h;
     }
 
   return 0;
@@ -439,8 +437,7 @@ Jdb_kobject::obj_description(String_buffer *buffer, String_buffer *help_text,
 
   char const *ht;
 
-  for (Handler_iter h = module()->global_handlers.begin();
-       h != module()->global_handlers.end(); ++h)
+  for (auto const &h : module()->global_handlers)
     {
       if (buffer)
         h->show_kobject_short(buffer, k, dense);
@@ -639,8 +636,7 @@ sys_invoke_debug(Kobject_iface *o, Syscall_frame *f)
   if (h && h->invoke(o, f, utcb))
     return;
 
-  for (Jdb_kobject::Handler_iter i = Jdb_kobject::module()->global_handlers.begin();
-       i != Jdb_kobject::module()->global_handlers.end(); ++i)
+  for (auto const &i : Jdb_kobject::module()->global_handlers)
     if (i->invoke(o, f, utcb))
       return;
 

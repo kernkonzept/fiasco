@@ -77,8 +77,7 @@ Jdb_space::show(Task *t)
   printf("\nSpace %p (Kobject*)%p%s\n",
          t, static_cast<Kobject*>(t), Jdb::clear_to_eol_str());
 
-  for (Space::Ku_mem_list::Const_iterator m = t->_ku_mem.begin(); m != t->_ku_mem.end();
-       ++m)
+  for (auto const &m : t->_ku_mem)
     printf("  utcb area: user_va=%p kernel_va=%p size=%x%s\n",
            m->u_addr.get(), m->k_addr, m->size, Jdb::clear_to_eol_str());
 

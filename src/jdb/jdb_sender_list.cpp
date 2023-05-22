@@ -109,9 +109,8 @@ Jdb_sender_list::action(int cmd, void *&, char const *&, int &) override
   if (show_obj(object, 1))
     return NOTHING;
 
-  Kobject_dbg::Iterator o = Kobject_dbg::begin();
-  for (; o != Kobject_dbg::end(); ++o)
-    show_obj(Kobject::from_dbg(*o), 0);
+  for (auto const &o : Kobject_dbg::_kobjects)
+    show_obj(Kobject::from_dbg(o), 0);
 
   return NOTHING;
 }

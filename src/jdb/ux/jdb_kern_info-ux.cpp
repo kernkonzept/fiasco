@@ -106,15 +106,15 @@ PUBLIC
 void
 Jdb_kern_info_host::show() override
 {
-  for (Kobject_dbg::Iterator i = Kobject_dbg::begin(); i != Kobject_dbg::end(); ++i)
+  for (auto const &i : Kobject_dbg::_kobjects)
     {
-      Task const *task = cxx::dyn_cast<Task const *>(Kobject::from_dbg(*i));
+      Task const *task = cxx::dyn_cast<Task const *>(Kobject::from_dbg(i));
       if (!task)
 	continue;
 
       String_buf<64> buf;
 
-      Jdb_kobject::obj_description(&buf, nullptr, true, *i);
+      Jdb_kobject::obj_description(&buf, nullptr, true, i);
       printf("%s, host-pid=%d\n", buf.c_str(), task->pid());
 
       buf.reset();

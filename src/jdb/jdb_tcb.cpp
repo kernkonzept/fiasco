@@ -498,8 +498,7 @@ Jdb_tcb::handle_obj_key(int keycode, Mword addr)
       // in case of overlayprint
       Jdb::cursor(3, 1);
 
-      for (Jdb_kobject::Handler_iter h = Jdb_kobject::module()->global_handlers.begin();
-           h != Jdb_kobject::module()->global_handlers.end(); ++h)
+      for (auto const &h : Jdb_kobject::module()->global_handlers)
         handled |= h->handle_key(k, keycode);
 
       if (Jdb_kobject_handler *h = Jdb_kobject::module()->find_handler(k))

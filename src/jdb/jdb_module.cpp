@@ -351,15 +351,11 @@ char const * Jdb_category::description() const
 IMPLEMENT
 Jdb_category *Jdb_category::find(char const* name, bool _default)
 {
-  List::Const_iterator a;
-  for (a = categories.begin();
-       a != categories.end() && strcmp(a->name(), name) != 0; ++a)
-    ;
+  for (auto const &a : categories)
+    if (strcmp(a->name(), name) == 0)
+      return a;
 
-  if (_default && a == categories.end())
-    return &misc_cat;
-
-  return *a;
+  return _default ? &misc_cat : nullptr;
 }
 
 

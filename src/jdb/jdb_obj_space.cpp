@@ -164,8 +164,7 @@ Jdb_obj_space::handle_user_keys(int c, Kobject_iface *o)
   Jdb::cursor(3, 1);
 
   bool handled = false;
-  for (Jdb_kobject::Handler_iter h = Jdb_kobject::module()->global_handlers.begin();
-       h != Jdb_kobject::module()->global_handlers.end(); ++h)
+  for (auto const &h : Jdb_kobject::module()->global_handlers)
     handled |= h->handle_key(o, c);
 
   if (Jdb_kobject_handler *h = Jdb_kobject::module()->find_handler(o))
