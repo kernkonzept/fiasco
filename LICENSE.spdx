@@ -1,0 +1,117 @@
+SPDXVersion: SPDX-2.3
+DataLicense: CC0-1.0
+SPDXID: SPDXRef-DOCUMENT
+DocumentNamespace: spdx:kernkonzept/fiasco-82d172f7-db48-41d5-8b8c-4dea01dbefac
+DocumentName: fiasco
+Creator: Organization: Kernkonzept GmbH (info@kernkonzept.com)
+Created: 2023-05-23T00:00:00Z
+
+Relationship: SPDXRef-DOCUMENT DESCRIBES SPDXRef-fiasco
+Relationship: SPDXRef-DOCUMENT DESCRIBES SPDXRef-fiasco-capstone
+Relationship: SPDXRef-DOCUMENT DESCRIBES SPDXRef-fiasco-gzip
+Relationship: SPDXRef-DOCUMENT DESCRIBES SPDXRef-fiasco-quad
+Relationship: SPDXRef-DOCUMENT DESCRIBES SPDXRef-fiasco-perfctr
+Relationship: SPDXRef-DOCUMENT DESCRIBES SPDXRef-fiasco-regex
+Relationship: SPDXRef-DOCUMENT DESCRIBES SPDXRef-fiasco-gcov
+Relationship: SPDXRef-DOCUMENT DESCRIBES SPDXRef-fiasco-cov-llvm
+Relationship: SPDXRef-DOCUMENT DESCRIBES SPDXRef-fiasco-minilibc
+
+## Package Information
+PackageName: fiasco
+SPDXID: SPDXRef-fiasco
+PackageOriginator: Organization: Kernkonzept GmbH (info@kernkonzept.com)
+PackageLicenseDeclared: GPL-2.0-only
+PackageLicenseConcluded: GPL-2.0-only
+FilesAnalyzed: false
+PackageCopyrightText: NOASSERTION
+PackageDownloadLocation: NOASSERTION
+
+PackageName: fiasco-capstone
+SPDXID: SPDXRef-fiasco-capstone
+PackageFileName: ./src/lib/disasm/capstone
+PackageOriginator: Organization: Kernkonzept GmbH (info@kernkonzept.com)
+PackageLicenseDeclared: BSD-3-Clause-Attribution
+PackageLicenseConcluded: BSD-3-Clause-Attribution
+FilesAnalyzed: false
+PackageCopyrightText: NOASSERTION
+PackageDownloadLocation: NOASSERTION
+
+PackageName: fiasco-gzip
+SPDXID: SPDXRef-fiasco-gzip
+PackageFileName: ./src/lib/gzip
+PackageOriginator: Organization: Kernkonzept GmbH (info@kernkonzept.com)
+PackageLicenseDeclared: Zlib
+PackageLicenseConcluded: Zlib
+FilesAnalyzed: false
+PackageCopyrightText: NOASSERTION
+PackageDownloadLocation: NOASSERTION
+
+PackageName: fiasco-quad
+SPDXID: SPDXRef-fiasco-quad
+PackageFileName: ./src/lib/libk/quad
+PackageOriginator: Organization: Kernkonzept GmbH (info@kernkonzept.com)
+PackageLicenseDeclared: BSD-3-Clause
+PackageLicenseConcluded: BSD-3-Clause
+FilesAnalyzed: false
+PackageCopyrightText: NOASSERTION
+PackageDownloadLocation: NOASSERTION
+
+PackageName: fiasco-perfctr
+SPDXID: SPDXRef-fiasco-perfctr
+PackageFileName: ./src/lib/perfctr
+PackageOriginator: Organization: Kernkonzept GmbH (info@kernkonzept.com)
+PackageLicenseDeclared: LGPL-2.1-or-later
+PackageLicenseConcluded: LGPL-2.1-or-later
+FilesAnalyzed: false
+PackageCopyrightText: NOASSERTION
+PackageDownloadLocation: NOASSERTION
+
+PackageName: fiasco-regex
+SPDXID: SPDXRef-fiasco-regex
+PackageFileName: ./src/lib/regex
+PackageOriginator: Organization: Kernkonzept GmbH (info@kernkonzept.com)
+PackageLicenseDeclared: GPL-2.0-only
+PackageLicenseConcluded: GPL-2.0-only
+FilesAnalyzed: false
+PackageCopyrightText: NOASSERTION
+PackageDownloadLocation: NOASSERTION
+
+PackageName: fiasco-gcov
+SPDXID: SPDXRef-fiasco-gcov
+PackageFileName: ./src/lib/gcov
+PackageOriginator: Organization: Kernkonzept GmbH (info@kernkonzept.com)
+PackageLicenseDeclared: GPL-2.0-only
+PackageLicenseConcluded: GPL-2.0-only
+FilesAnalyzed: false
+PackageCopyrightText: NOASSERTION
+PackageDownloadLocation: NOASSERTION
+
+PackageName: fiasco-cov-llvm
+SPDXID: SPDXRef-fiasco-cov-llvm
+PackageFileName: ./src/lib/gcov/contrib/llvm_compiler-rt_profile
+PackageOriginator: Organization: Kernkonzept GmbH (info@kernkonzept.com)
+PackageLicenseDeclared: (MIT or NCSA)
+PackageLicenseConcluded: (MIT or NCSA)
+FilesAnalyzed: false
+PackageCopyrightText: NOASSERTION
+PackageDownloadLocation: NOASSERTION
+
+PackageName: fiasco-minilibc
+SPDXID: SPDXRef-fiasco-minilibc
+PackageFileName: ./src/lib/minilibc
+PackageOriginator: Organization: Kernkonzept GmbH (info@kernkonzept.com)
+PackageLicenseDeclared: GPL-2.0-only
+PackageLicenseConcluded: GPL-2.0-only
+FilesAnalyzed: false
+PackageCopyrightText: NOASSERTION
+PackageDownloadLocation: NOASSERTION
+PackageComment: <text>This package is a subset of the dietlibc.</text>
+
+Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-capstone
+Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-gzip
+Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-quad
+Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-perfctr
+Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-regex
+Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-gcov
+Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-cov-llvm
+Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-minilibc
