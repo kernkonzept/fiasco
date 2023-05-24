@@ -148,9 +148,9 @@ private:
     /// avoid exhausting kernel memory.
     Stream_table_l2_alloc_limit = 64,
 
-    /// Limit size of command queue to 64 entries, no reason to waste memory or
-    /// cache here.
-    Cmd_queue_max_bits          = 6,
+    /// Limit size of command queue to 256 entries (4k page), no reason to waste
+    /// memory or cache here.
+    Cmd_queue_max_bits          = 8,
 
     /// Limit size of event queue to 128 entries (4k page), no reason to waste
     /// memory or cache here.
