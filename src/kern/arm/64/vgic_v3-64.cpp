@@ -86,19 +86,19 @@ Gic_h_v3::load_aprs(Unsigned32 const *a)
 {
   // NOTE: we should use ASM patching to do this and just
   // replace instructions with NOPs
-#define READ_APR(x) do { \
+#define WRITE_APR(x) do { \
   asm ("msr S3_4_C12_C8_" #x ", %x0" : : "r"(a[x * 2])); \
   asm ("msr S3_4_C12_C9_" #x ", %x0" : : "r"(a[x * 2 + 1])); } while(0)
 
-  READ_APR(0);
+  WRITE_APR(0);
   if (n_aprs > 1)
-    READ_APR(1);
+    WRITE_APR(1);
   if (n_aprs > 2)
     {
-      READ_APR(2);
-      READ_APR(3);
+      WRITE_APR(2);
+      WRITE_APR(3);
     }
-#undef READ_APR
+#undef WRITE_APR
 }
 
 PUBLIC static inline ALWAYS_INLINE void
