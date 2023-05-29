@@ -10,7 +10,7 @@ IMPLEMENTATION [arm]:
 #include <construction.h>
 #include "terminate.h"
 
-void kernel_main(void);
+void kernel_main(void) FIASCO_NORETURN;
 
 extern "C"
 void __main()

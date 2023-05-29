@@ -95,5 +95,8 @@ int main()
 		 : [stack]"r" (kernel->init_stack()),
 		   [kernel]"r" (kernel)
 		 );
+
+  // No return from Kernel_thread::bootstrap().
+  __builtin_unreachable();
 }
 

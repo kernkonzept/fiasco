@@ -14,9 +14,9 @@ private:
    * unmapping it.
    */
   void free_initcall_section();
-  void bootstrap() asm ("call_bootstrap") FIASCO_FASTCALL;
+  void bootstrap() asm ("call_bootstrap") FIASCO_FASTCALL FIASCO_NORETURN;
   void bootstrap_arch();
-  void run();
+  void run() FIASCO_NORETURN;
   void do_idle() __attribute__((noreturn));
   void check_debug_koptions();
 
@@ -114,7 +114,7 @@ Kernel_thread::bootstrap()
  * The idle loop
  * NEVER inline this function, because our caller is an initcall
  */
-IMPLEMENT FIASCO_NOINLINE FIASCO_NORETURN
+IMPLEMENT FIASCO_NOINLINE
 void
 Kernel_thread::run()
 {

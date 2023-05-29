@@ -10,7 +10,7 @@ IMPLEMENTATION[ia32,amd64]:
 #include <cstdio>
 #include <construction.h>
 
-void kernel_main(void);
+void kernel_main(void) FIASCO_NORETURN;
 
 extern "C" FIASCO_FASTCALL FIASCO_INIT
 void
@@ -24,5 +24,4 @@ __main(unsigned checksum_ro)
   static_construction();
 
   kernel_main();
-  exit(0);
 }

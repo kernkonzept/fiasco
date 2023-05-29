@@ -1,5 +1,7 @@
 INTERFACE [mips]:
+
 #include <cstddef>
+#include "std_macros.h"
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [mips]:
@@ -67,7 +69,7 @@ static void exit_question()
     }
 }
 
-extern "C" void kernel_main()
+extern "C" void FIASCO_NORETURN kernel_main()
 {
   static_construction();
   // caution: no stack variables in this function because we're going
@@ -90,6 +92,9 @@ extern "C" void kernel_main()
     ("  move $29,%0             \n"	// switch stack
      "  jal call_bootstrap      \n"
      : : "r" (kernel->init_stack()), "r" (a0));
+
+  // No return from Kernel_thread::bootstrap().
+  __builtin_unreachable();
 }
 
 //------------------------------------------------------------------------

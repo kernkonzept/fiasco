@@ -24,7 +24,7 @@ IMPLEMENTATION[ia32,ux]:
 #include "kernel_thread.h"
 
 
-FIASCO_INIT
+FIASCO_INIT FIASCO_NORETURN
 void
 kernel_main(void)
 {
@@ -56,6 +56,9 @@ kernel_main(void)
      "	call call_bootstrap	\n\t"	// bootstrap kernel thread
      : "=a" (dummy), "=c" (dummy), "=d" (dummy)
      : "a"(kernel), "S" (kernel->init_stack()));
+
+  // No return from Kernel_thread::bootstrap().
+  __builtin_unreachable();
 }
 
 //------------------------------------------------------------------------

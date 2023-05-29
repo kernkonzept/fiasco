@@ -90,4 +90,7 @@ int main()
      "  ba  call_bootstrap   \n"
      "   mov %1, %%o0        \n"  // push "this" pointer
      : : "r" (kernel->init_stack()), "r" (kernel));
+
+  // No return from Kernel_thread::bootstrap().
+  __builtin_unreachable();
 }

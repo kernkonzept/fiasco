@@ -21,7 +21,7 @@ IMPLEMENTATION[amd64]:
 #include "kernel_thread.h"
 #include "kernel_task.h"
 
-FIASCO_INIT
+FIASCO_INIT FIASCO_NORETURN
 void
 kernel_main(void)
 {
@@ -52,6 +52,9 @@ kernel_main(void)
      "	call call_bootstrap	\n\t"	// bootstrap kernel thread
      : "=a" (dummy), "=c" (dummy), "=d" (dummy)
      : "S" (kernel->init_stack()), "D" (kernel));
+
+  // No return from Kernel_thread::bootstrap().
+  __builtin_unreachable();
 }
 
 

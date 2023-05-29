@@ -68,7 +68,8 @@ static void exit_question()
     }
 }
 
-void FIASCO_NORETURN
+FIASCO_NORETURN
+void
 kernel_main()
 {
   // caution: no stack variables in this function because we're going
