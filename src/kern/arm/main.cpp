@@ -115,9 +115,9 @@ IMPLEMENTATION[arm && mp]:
 #include "timer.h"
 #include "utcb_init.h"
 
-int boot_ap_cpu() __asm__("BOOT_AP_CPU");
+void FIASCO_NORETURN boot_ap_cpu() __asm__("BOOT_AP_CPU");
 
-int boot_ap_cpu()
+void boot_ap_cpu()
 {
   static Cpu_number last_cpu; // keep track of the last cpu ever appeared
 
@@ -170,5 +170,7 @@ int boot_ap_cpu()
          :
          : "r" (sp), "r" (r0), "r" (r1));
     }
-  return 0;
+
+  // No return from App_cpu_thread::bootstrap().
+  __builtin_unreachable();
 }

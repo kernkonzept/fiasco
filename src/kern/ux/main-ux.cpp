@@ -11,9 +11,9 @@ IMPLEMENTATION[ux && mp]:
 #include "per_cpu_data_alloc.h"
 #include "usermode.h"
 
-int FIASCO_FASTCALL boot_ap_cpu(Cpu_number _cpu) __asm__("BOOT_AP_CPU");
+void FIASCO_FASTCALL FIASCO_NORETURN boot_ap_cpu(Cpu_number _cpu) __asm__("BOOT_AP_CPU");
 
-int boot_ap_cpu(Cpu_number _cpu)
+void boot_ap_cpu(Cpu_number _cpu)
 {
   if (!Per_cpu_data_alloc::alloc(_cpu))
     {
@@ -48,7 +48,6 @@ int boot_ap_cpu(Cpu_number _cpu)
   check(kernel->bind(Kernel_task::kernel_task(), User<Utcb>::Ptr(0)));
 
   main_switch_ap_cpu_stack(kernel);
-  return 0;
 }
 
 IMPLEMENTATION[ux]:

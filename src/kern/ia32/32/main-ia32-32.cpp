@@ -63,6 +63,7 @@ IMPLEMENTATION[(ia32 || ux) && mp]:
 
 #include "kernel_thread.h"
 
+FIASCO_NORETURN
 void
 main_switch_ap_cpu_stack(Kernel_thread *kernel, bool resume)
 {
@@ -74,4 +75,7 @@ main_switch_ap_cpu_stack(Kernel_thread *kernel, bool resume)
      "	call call_ap_bootstrap	\n\t"	// bootstrap kernel thread
      :  "=a" (dummy), "=c" (dummy), "=d" (dummy)
      :	"a"(kernel), [esp]"r" (kernel->init_stack()), "d"(resume));
+
+  // No return from App_cpu_thread::bootstrap().
+  __builtin_unreachable();
 }

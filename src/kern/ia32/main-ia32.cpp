@@ -102,7 +102,7 @@ IMPLEMENTATION[(ia32,amd64) && mp]:
 #include "spin_lock.h"
 #include "utcb_init.h"
 
-int FIASCO_FASTCALL boot_ap_cpu() __asm__("BOOT_AP_CPU");
+void FIASCO_FASTCALL FIASCO_NORETURN boot_ap_cpu() __asm__("BOOT_AP_CPU");
 
 static void FIASCO_NORETURN
 stop_booting_ap_cpu(char const *msg, Unsigned32 apic_id)
@@ -115,7 +115,7 @@ stop_booting_ap_cpu(char const *msg, Unsigned32 apic_id)
     Proc::halt();
 }
 
-int FIASCO_FASTCALL boot_ap_cpu()
+void FIASCO_FASTCALL FIASCO_NORETURN boot_ap_cpu()
 {
   Apic::activate_by_msr();
 
@@ -180,5 +180,4 @@ int FIASCO_FASTCALL boot_ap_cpu()
   Kernel_thread *kernel = App_cpu_thread::may_be_create(_cpu, cpu_is_new);
 
   main_switch_ap_cpu_stack(kernel, !cpu_is_new);
-  return 0;
 }
