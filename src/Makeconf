@@ -142,6 +142,7 @@ L4STD_INCDIR    	?= -nostdinc
 L4STD_INCDIR_LAST	?= -isystem $(GCCINCDIR)
 KERNEL_LDFLAGS		+= -gc-sections
 SHARED_FLAGS            += -fno-pic
+SHARED_FLAGS            += -ffunction-sections
 SHARED_FLAGS-gcc        += -fno-defer-pop
 SHARED_FLAGS-gcc        += $(if $(CONFIG_FULL_PATH_NAMES_IN_BINARIES),,$(call CHECKCC,-fmacro-prefix-map=$(abspath $(srcdir)/../)=.))
 # gcc #57845
