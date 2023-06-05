@@ -2,13 +2,6 @@ INTERFACE:
 
 #include "types.h"
 
-extern "C" void cas_error_type_with_bad_size_used(void);
-
-#define MACRO_CAS_ASSERT(rs, cs) \
-  if ((rs) != (cs)) \
-    cas_error_type_with_bad_size_used()
-
-
 //---------------------------------------------------------------------------
 IMPLEMENTATION:
 
@@ -27,7 +20,8 @@ template< typename Type > inline
 bool
 local_cas(Type *ptr, Type oldval, Type newval)
 {
-  MACRO_CAS_ASSERT(sizeof(Type), sizeof(Mword));
+  static_assert(sizeof(Type) == sizeof(Mword), "CAS requires Mword-sized type.");
+
   return local_cas_unsafe(reinterpret_cast<Mword *>(ptr),
                          (Mword)oldval, (Mword)newval);
 }
@@ -125,7 +119,8 @@ template< typename T > inline
 bool
 mp_cas(T *ptr, T oldval, T newval)
 {
-  MACRO_CAS_ASSERT(sizeof(T),sizeof(Mword));
+  static_assert(sizeof(T) == sizeof(Mword), "CAS requires Mword-sized type.");
+
   return mp_cas_arch(reinterpret_cast<Mword*>(ptr),
                      Mword(oldval),
                      Mword(newval));
