@@ -227,6 +227,9 @@ Kobject::sys_dec_refcnt(L4_msg_tag tag, Utcb const *in, Utcb *out)
   return Kobject_iface::commit_result(0, 1);
 }
 
+/**
+ * \pre tag.words() >= 1
+ */
 PUBLIC
 L4_msg_tag
 Kobject::kobject_invoke(L4_obj_ref, L4_fpage::Rights /*rights*/,
@@ -235,8 +238,7 @@ Kobject::kobject_invoke(L4_obj_ref, L4_fpage::Rights /*rights*/,
 {
   L4_msg_tag tag = f->tag();
 
-  if (EXPECT_FALSE(tag.words() < 1))
-    return Kobject_iface::commit_result(-L4_err::EInval);
+  // The only caller, Ipc_gate_ctl::kinvoke(), tests for tag.words() >= 1.
 
   switch (in->values[0])
     {
