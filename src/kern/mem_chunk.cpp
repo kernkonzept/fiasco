@@ -110,5 +110,5 @@ PUBLIC static
 Address
 Mem_chunk::to_phys(Address virt)
 {
-  return Kmem::kdir->virt_to_phys(virt);
+  return Mem_layout::pmem_to_phys(virt);
 }
