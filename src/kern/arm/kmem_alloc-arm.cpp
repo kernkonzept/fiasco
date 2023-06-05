@@ -72,6 +72,12 @@ Kmem_alloc::Kmem_alloc()
     panic("Kmem_alloc: No kernel memory available (%ld)\n",
           available_size);
 
+  // Completely remove initial pmem accounted mapping. This was established in
+  // add_initial_pmem(). Otherwise we might try to add a page with a different
+  // virtual address again to the pmem map, which is forbidden.
+  map.sub(Mem_region(Mem_layout::Sdram_phys_base,
+                     Mem_layout::Sdram_phys_base + Mem_layout::Pmem_kernel_size - 1));
+
   a->init(Mem_layout::Pmem_start);
   a->setup_free_map(_freemap, sizeof(_freemap));
 
@@ -84,12 +90,12 @@ Kmem_alloc::Kmem_alloc()
       Kip::k()->add_mem_region(Mem_desc(f.start, f.end, Mem_desc::Reserved));
       if (0)
         printf("Kmem_alloc: [%08lx; %08lx] sz=%ld\n", f.start, f.end, f.size());
-      if (Mem_layout::phys_to_pmem(f.start) == ~0UL)
-        if (!map_pmem(f.start, f.size()))
-          {
-            WARN("Kmem_alloc: cannot map physical memory %p\n", (void*)f.start);
-            break;
-          }
+      if (!map_pmem(f.start, f.size()))
+        {
+          WARN("Kmem_alloc: cannot map heap memory [%08lx; %08lx]\n",
+               f.start, f.end);
+          break;
+        }
 
       a->add_mem((void *)Mem_layout::phys_to_pmem(f.start), f.size());
       alloc_size -= f.size();
@@ -104,12 +110,13 @@ Kmem_alloc::Kmem_alloc()
  *
  * Required to be called *before* any other function is called that needs to
  * know the phys-to-virt mapping. The function can rely on the fact that
- * Mem_layout::Map_base is always mapped with at least 4 MiB.
+ * Mem_layout::Map_base is always mapped with at least
+ * Mem_layout::Pmem_kernel_size bytes.
  */
 static void add_initial_pmem()
 {
   Mem_layout::add_pmem(Mem_layout::Sdram_phys_base, Mem_layout::Map_base,
-                       4 << 20);
+                       Mem_layout::Pmem_kernel_size);
 }
 
 STATIC_INITIALIZER_P(add_initial_pmem, BOOTSTRAP_INIT_PRIO);

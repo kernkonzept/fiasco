@@ -6,8 +6,12 @@ EXTENSION class Mem_layout
 {
 public:
   enum Phys_layout : Address {
-    Sdram_phys_base      = RAM_PHYS_BASE
+    Sdram_phys_base      = RAM_PHYS_BASE,
+    Pmem_kernel_size     = 4 << 20, // Kernel image mapping size in Pmem region
   };
+
+  static_assert((Pmem_kernel_size & ~Config::SUPERPAGE_MASK) == 0,
+                "Pmem_kernel_size must be multiple of super page size");
 
 private:
   // At least two entries are expected: the kernel image and the heap. If the
@@ -95,9 +99,24 @@ Mem_layout::add_pmem(Address phys, Address virt, unsigned long size)
   if (_num_pm_regions >= Max_pmem_regions)
     return false;
 
+  size--;
+
+  // The pmem map must be unambiguous in either direction. Make sure nothing
+  // intersects with existing records.
+  for (unsigned i = 0; i < _num_pm_regions; i++)
+    {
+      if (   phys + size >= _pm_regions[i].paddr
+          && phys        <= _pm_regions[i].paddr + _pm_regions[i].size)
+        return false;
+
+      if (   virt + size >= _pm_regions[i].vaddr
+          && virt        <= _pm_regions[i].vaddr + _pm_regions[i].size)
+        return false;
+    }
+
   _pm_regions[_num_pm_regions].paddr = phys;
   _pm_regions[_num_pm_regions].vaddr = virt;
-  _pm_regions[_num_pm_regions].size = size - 1U;
+  _pm_regions[_num_pm_regions].size = size;
   _num_pm_regions++;
 
   return true;

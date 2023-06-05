@@ -206,13 +206,13 @@ Bootstrap::create_initial_mappings()
 
   // map sdram linear from 0xf0000000
   for (va = Virt_addr(Mem_layout::Map_base), pa = Phys_addr(Mem_layout::Sdram_phys_base);
-       va < Virt_addr(Mem_layout::Map_base + (4 << 20));
+       va < Virt_addr(Mem_layout::Map_base + Mem_layout::Pmem_kernel_size);
        va += Bootstrap::map_page_size(), pa += Bootstrap::map_page_size_phys())
     Bootstrap::map_memory(page_dir, va, pa, true, false);
 
   // map sdram 1:1
   for (va = Virt_addr(Mem_layout::Sdram_phys_base);
-       va < Virt_addr(Mem_layout::Sdram_phys_base + (4 << 20));
+       va < Virt_addr(Mem_layout::Sdram_phys_base + Mem_layout::Pmem_kernel_size);
        va += Bootstrap::map_page_size())
     Bootstrap::map_memory(page_dir, va, Phys_addr(cxx::int_value<Virt_addr>(va)), true, true);
 }
