@@ -582,9 +582,10 @@ Irq_sender::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
     }
 }
 
-PUBLIC
+
+PUBLIC inline
 Mword
-Irq_sender::obj_id() const override
+Irq_sender::id() const
 { return _irq_id; }
 
 

@@ -145,8 +145,8 @@ Jdb_kobject_irq::show_kobject_short(String_buffer *buf,
 
   if (Irq_sender *t = cxx::dyn_cast<Irq_sender*>(i))
     buf->printf(" L=%lx T=%lx Q=%d",
-                i->obj_id(),
-                w != o ?  w->dbg_info()->dbg_id() : 0,
+                t->id(),
+                w != o ? w->dbg_info()->dbg_id() : 0,
                 t->queued());
 
   if (Semaphore *t = cxx::dyn_cast<Semaphore*>(i))
