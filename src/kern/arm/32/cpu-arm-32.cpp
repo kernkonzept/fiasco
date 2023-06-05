@@ -113,13 +113,16 @@ Cpu::init_supervisor_mode(bool is_boot_cpu)
   if (!is_boot_cpu)
     return;
 
-  extern char ivt_start;
+  extern char ivt_start; // physical address!
+
   // map the interrupt vector table to 0xffff0000
   auto pte = Mem_layout::kdir->walk(Virt_addr(Kmem_space::Ivt_base),
                                     Kpdir::Depth, true,
                                     Kmem_alloc::q_allocator(Ram_quota::root));
 
-  pte.set_page(pte.make_page(Phys_mem_addr((unsigned long)&ivt_start),
+  Address va = (Address)&ivt_start - Mem_layout::Sdram_phys_base
+                                   + Mem_layout::Map_base;
+  pte.set_page(pte.make_page(Phys_mem_addr(Kmem::kdir->virt_to_phys(va)),
                              Page::Attr(Page::Rights::RWX(),
                              Page::Type::Normal(), Page::Kern::Global())));
   pte.write_back_if(true);

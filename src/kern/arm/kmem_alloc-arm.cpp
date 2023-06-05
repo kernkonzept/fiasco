@@ -76,12 +76,6 @@ Kmem_alloc::Kmem_alloc()
     panic("Kmem_alloc: No kernel memory available (%ld)\n",
           available_size);
 
-  // Completely remove initial pmem accounted mapping. This was established in
-  // add_initial_pmem(). Otherwise we might try to add a page with a different
-  // virtual address again to the pmem map, which is forbidden.
-  map.sub(Mem_region(Mem_layout::Sdram_phys_base,
-                     Mem_layout::Sdram_phys_base + Mem_layout::Pmem_kernel_size - 1));
-
   a->init(Mem_layout::Pmem_start);
   a->setup_free_map(_freemap, sizeof(_freemap));
 
@@ -113,14 +107,37 @@ Kmem_alloc::Kmem_alloc()
  * Add initial phys->virt mapping of kernel image.
  *
  * Required to be called *before* any other function is called that needs to
- * know the phys-to-virt mapping. The function can rely on the fact that
- * Mem_layout::Map_base is always mapped with at least
- * Mem_layout::Pmem_kernel_size bytes.
+ * know the phys-to-virt mapping. The function can rely on the fact that the
+ * Fiasco bootstrap has created a 1:1 mapping when enabling paging which is
+ * still around.
  */
 static void add_initial_pmem()
 {
-  Mem_layout::add_pmem(Mem_layout::Sdram_phys_base, Mem_layout::Map_base,
-                       Mem_layout::Pmem_kernel_size);
+  extern char _kernel_image_start[];
+  extern char _initcall_end[];
+
+  struct Identity_map
+  {
+    static Address phys_to_pmem(Address a)
+    { return a; }
+  };
+
+  // Find out our virt->phys mapping simply by walking the page table. Relies
+  // on 1:1 mapping of the kernel image, or rather that the pages for
+  // initial/boot paging directory lie in the kernel image (see
+  // kmem_space-arm-32/64.cpp).
+  Address virt = Mem_layout::trunc_superpage((unsigned long)_kernel_image_start);
+  Address size = Mem_layout::round_superpage((unsigned long)_initcall_end)
+                  - virt;
+  auto pte = Mem_layout::kdir->walk(Virt_addr(virt),
+                                    Kpdir::Super_level, false,
+                                    Ptab::Null_alloc(), Identity_map());
+  assert(pte.is_valid());
+  unsigned long phys = pte.page_addr();
+  Mem_layout::add_pmem(phys, virt, size);
+
+  // The existing 1:1 mapping is *not* removed! In case of cpu_virt it is
+  // required to exist for Mem_op::arm_mem_cache_maint().
 }
 
 STATIC_INITIALIZER_P(add_initial_pmem, BOOTSTRAP_INIT_PRIO);

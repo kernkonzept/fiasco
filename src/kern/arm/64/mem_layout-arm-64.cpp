@@ -24,18 +24,25 @@ EXTENSION class Mem_layout
 {
 public:
   enum Virt_layout_kern : Address {
+    // These are guest physical addresses
     Utcb_addr            = User_max + 1 - 0x10000,
-    Map_base             = RAM_PHYS_BASE,
-    Vmap_base            = (Map_base > 0x800000000000) ? 0x40000000 : 0x800000000000,
-    Jdb_tmp_map_area     = Vmap_base,
-    Tbuf_status_page     = Vmap_base + 0x200000,
-    Tbuf_buffer_area     = Vmap_base + 0x400000,
-    Tbuf_buffer_size     = 0x2000000,
 
-    Registers_map_start  = Vmap_base + 0x40000000,
-    Registers_map_end    = Registers_map_start + 0x40000000,
-    Pmem_start           = Registers_map_end,
-    Pmem_end             = Pmem_start + 0x40000000,
+    // The following are kernel virtual addresses. Mind that kernel and user
+    // space live in different address spaces! Move to the top to minimize the
+    // risk of colliding with physical memory which is still mapped 1:1.
+    Registers_map_start  = 0x0000ffff00000000,
+    Registers_map_end    = 0x0000ffff40000000,
+
+    Map_base             = 0x0000ffff40000000,
+
+    Service_page         = 0x0000ffff50000000,
+    Tbuf_status_page     = Service_page + 0x5000,
+    Tbuf_buffer_area	 = Service_page + 0x200000,
+    Tbuf_buffer_size     = 0x200000,
+    Jdb_tmp_map_area     = Service_page + 0x400000,
+
+    Pmem_start           = 0x0000ffff80000000,
+    Pmem_end             = 0x0000ffffc0000000,
 
     Cache_flush_area     = 0x0, // dummy
   };
@@ -62,11 +69,7 @@ public:
     Cache_flush_area     = 0x0,
     Pmem_start           = 0xffff000040000000,
     Pmem_end             = 0xffff000080000000,
-
-    // Must be the last in the virtual address space because the system RAM
-    // is continuously mapped starting from this address as 1GiB pages.
-    Map_base             = 0xffff000080000000
-                              + (RAM_PHYS_BASE & ((1 << 30) - 1)),
+    Map_base             = 0xffff000080000000,
 
     Caps_start           = 0xff8005000000,
     Caps_end             = 0xff800d000000,

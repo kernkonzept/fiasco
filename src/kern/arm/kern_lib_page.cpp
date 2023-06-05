@@ -26,8 +26,7 @@ void Kern_lib_page::init()
     panic("FATAL: Error mapping kernel-lib page to %p\n",
           (void *)Kmem_space::Kern_lib_base);
 
-  pte.set_page(pte.make_page(Phys_mem_addr((Address)&kern_lib_start - Mem_layout::Map_base
-                                           + Mem_layout::Sdram_phys_base),
+  pte.set_page(pte.make_page(Phys_mem_addr(Kmem::kdir->virt_to_phys((Address)&kern_lib_start)),
                              Page::Attr(Page::Rights::URX(), Page::Type::Normal(),
                                         Page::Kern::Global())));
   pte.write_back_if(true);

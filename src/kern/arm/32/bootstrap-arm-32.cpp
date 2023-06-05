@@ -204,17 +204,19 @@ Bootstrap::create_initial_mappings()
   Virt_addr va;
   Phys_addr pa;
 
-  // map sdram linear from 0xf0000000
-  for (va = Virt_addr(Mem_layout::Map_base), pa = Phys_addr(Mem_layout::Sdram_phys_base);
-       va < Virt_addr(Mem_layout::Map_base + Mem_layout::Pmem_kernel_size);
+  // map kernel to desired virtual address
+  for (va = Virt_addr(Mem_layout::Map_base),
+       pa = Phys_addr(Mem_layout::trunc_superpage(bs_info.kernel_start_phys));
+       pa < Phys_addr(Mem_layout::round_superpage(bs_info.kernel_end_phys));
        va += Bootstrap::map_page_size(), pa += Bootstrap::map_page_size_phys())
     Bootstrap::map_memory(page_dir, va, pa, true, false);
 
-  // map sdram 1:1
-  for (va = Virt_addr(Mem_layout::Sdram_phys_base);
-       va < Virt_addr(Mem_layout::Sdram_phys_base + Mem_layout::Pmem_kernel_size);
-       va += Bootstrap::map_page_size())
-    Bootstrap::map_memory(page_dir, va, Phys_addr(cxx::int_value<Virt_addr>(va)), true, true);
+  // Map kernel 1:1. Needed by add_initial_pmem().
+  for (pa = Phys_addr(Mem_layout::trunc_superpage(bs_info.kernel_start_phys));
+       pa < Phys_addr(Mem_layout::round_superpage(bs_info.kernel_end_phys));
+       pa += Bootstrap::map_page_size_phys())
+    Bootstrap::map_memory(page_dir, Virt_addr(cxx::int_value<Phys_addr>(pa)),
+                          pa, true, true);
 }
 
 //---------------------------------------------------------------------------
@@ -231,6 +233,10 @@ Bootstrap::create_initial_mappings()
 
   void *page_dir = kern_to_boot(bs_info.pi.kernel_page_directory);
 
+  // Map whole RAM 1:1. This is needed by Fiasco because of
+  // Mem_op::arm_mem_cache_maint() needing to have access to potentially all
+  // RAM. Assumes that no platform ever has physical RAM above the lowest
+  // virtual address in the Mem_layout!
   Kip *kip = reinterpret_cast<Kip*>(kern_to_boot(bs_info.kip));
   for (auto const &md: kip->mem_descs_a())
     {
@@ -252,6 +258,16 @@ Bootstrap::create_initial_mappings()
             Bootstrap::map_memory(page_dir, va, pa, true, false);
         }
     }
+
+  Virt_addr va;
+  Phys_addr pa;
+
+  // map kernel to desired virtual address
+  for (va = Virt_addr(Mem_layout::Map_base),
+       pa = Phys_addr(Mem_layout::trunc_superpage(bs_info.kernel_start_phys));
+       pa < Phys_addr(Mem_layout::round_superpage(bs_info.kernel_end_phys));
+       va += Bootstrap::map_page_size(), pa += Bootstrap::map_page_size_phys())
+    Bootstrap::map_memory(page_dir, va, pa, true, false);
 }
 
 //---------------------------------------------------------------------------

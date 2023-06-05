@@ -7,11 +7,7 @@ EXTENSION class Mem_layout
 public:
   enum Phys_layout : Address {
     Sdram_phys_base      = RAM_PHYS_BASE,
-    Pmem_kernel_size     = 4 << 20, // Kernel image mapping size in Pmem region
   };
-
-  static_assert((Pmem_kernel_size & ~Config::SUPERPAGE_MASK) == 0,
-                "Pmem_kernel_size must be multiple of super page size");
 
 private:
   // At least two entries are expected: the kernel image and the heap. If the

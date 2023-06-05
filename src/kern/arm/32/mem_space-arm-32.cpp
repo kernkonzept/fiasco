@@ -50,8 +50,7 @@ Mem_space::sync_kernel()
 
   extern char kern_lib_start[];
 
-  Phys_mem_addr pa((Address)kern_lib_start - Mem_layout::Map_base
-                   + Mem_layout::Sdram_phys_base);
+  Phys_mem_addr pa(Kmem::kdir->virt_to_phys((Address)kern_lib_start));
   pte.set_page(pte.make_page(pa, Page::Attr(Page::Rights::URX(),
                                             Page::Type::Normal())));
 

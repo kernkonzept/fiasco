@@ -3,14 +3,15 @@
 #include "globalconfig.h"
 #include "kernel.ld.inc"
 
-/* this file defines the construction of the kernel's virtual address
-   space */
-#ifdef CONFIG_CPU_VIRT
-virt_address       = kernel_load_addr;
-#elif defined CONFIG_BIT32
+/* This file defines the construction of the kernel's virtual address
+   space. Has to be kept in sync with
+   src/kern/arm/{32,64}/mem_layout_-arm-*.cpp! */
+#if defined CONFIG_BIT32
 virt_address       = 0xf0000000;
-#elif defined CONFIG_BIT64
-virt_address       = 0xffff000080000000 + (RAM_PHYS_BASE & ((1 << 30) - 1));
+#elif defined CONFIG_CPU_VIRT
+virt_address       = 0x0000ffff40000000;
+#else
+virt_address       = 0xffff000080000000;
 #endif
 phys_offset        = virt_address - kernel_load_addr;
 
@@ -64,6 +65,8 @@ SECTIONS {
   .text kernel_load_addr + 0x1000 : {
     MWORD(_start_kernel)
     MWORD(my_kernel_info_page)
+    MWORD(_kernel_image_start - phys_offset)
+    MWORD(_initcall_end - phys_offset)
     KEEP(*(.bootstrap.info))
     ASSERT (ABSOLUTE(.) == end_of_bootstrap_info, "invalid size of bootstrap.info");
 

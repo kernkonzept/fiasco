@@ -8,6 +8,8 @@ struct Bootstrap_info
 {
   void (*entry)();
   void *kip;
+  Address kernel_start_phys;
+  Address kernel_end_phys;
   Boot_paging_info pi;
 };
 
