@@ -297,8 +297,7 @@ Ipc_gate_ctl::kinvoke(L4_obj_ref self, L4_fpage::Rights rights,
 {
   L4_msg_tag tag = f->tag();
 
-  if (EXPECT_FALSE(tag.proto() != L4_msg_tag::Label_kobject))
-    return commit_result(-L4_err::EBadproto);
+  // Check for 'L4_msg_tag::Label_kobject))' protocol in Ipc_gate_ctl::invoke().
 
   if (EXPECT_FALSE(tag.words() < 1))
     return commit_result(-L4_err::EInval);
