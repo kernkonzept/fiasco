@@ -252,7 +252,7 @@ PUBLIC inline
 Address
 Dmar_space::pt_phys_addr() const
 {
-  return Kmem::kdir->virt_to_phys(reinterpret_cast<Address>(_dmarpt));
+  return Mem_layout::pmem_to_phys(_dmarpt);
 }
 
 namespace {

@@ -1653,7 +1653,7 @@ Iommu::prepare_ste(Ste *ste, Iommu::Domain &domain)
   ste->config() = Ste::Config_enable | Ste::Config_s1_translate;
   // S1CDMax is set to zero (no substreams), thus S1Fmt is ignored and
   // S1ContextPtr points to single context descriptor.
-  ste->s1_context_ptr() = Kmem::kdir->virt_to_phys(reinterpret_cast<Address>(cd));
+  ste->s1_context_ptr() = Mem_layout::pmem_to_phys(cd);
   ste->s1_cir() = Cr1::Cache_wb;
   ste->s1_cor() = Cr1::Cache_wb;
   ste->s1_csh() = Cr1::Share_is;
