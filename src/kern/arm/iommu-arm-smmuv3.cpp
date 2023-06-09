@@ -642,8 +642,14 @@ private:
   };
   static_assert(sizeof(Cmd) == 16, "Cmd has unexpected size!");
 
+  /**
+   * The SMMU uses a rather complicated mechanism to track the read and write
+   * index of a queue, to avoid having an unusable entry in the queue.
+   * Specifically, a wrap flag, which is toggled on wrap-around, is used to
+   * distinguish an empty queue from a full queue.
+   */
   template<typename T, typename RBASE, typename RPROD, typename RCONS,
-           bool WRITE>
+           typename INDEX_TYPE, bool WRITE>
   class Queue
   {
     public:
@@ -677,14 +683,15 @@ private:
       bool is_empty() const
       {
         // "The two indexes are equal and their wrap bits are equal."
-        return _index == read_their_index();
+        return (_index & combined_mask()) == read_their_index();
       }
 
       bool is_full() const
       {
         unsigned i = read_their_index();
         // "The two indexes are equal and their wrap bits are different."
-        return (i & index_mask()) == (_index & index_mask()) && i != _index;
+        return   (i & index_mask()) == (_index & index_mask())
+               && i != (_index & combined_mask());
       }
 
       T *slot_at(unsigned index)
@@ -693,6 +700,9 @@ private:
       }
 
     protected:
+      unsigned capacity() const
+      { return (1 << _num_item_bits); }
+
       unsigned index_mask() const
       { return (1 << _num_item_bits) - 1; }
 
@@ -721,20 +731,25 @@ private:
           return nullptr;
 
         T *slot = _mem.virt_ptr<T>() + (_index & index_mask());
-        // Update next index
-        _index = (_index + 1) & combined_mask();
+        // Update next index (needs to be atomic, because _index is read
+        // without cmd_queue lock).
+        atomic_store(&_index, _index + 1);
         return slot;
       }
 
     protected:
       Iommu *_iommu;
       Mem_chunk _mem;
-      unsigned _index; // Next write index if WRITE, next read index otherwise.
+      /// Next write index if WRITE, next read index otherwise.
+      /// Unlike in the hardware register, the index stored in this field is not
+      /// truncated to `_num_item_bits`, which is helpful for checking whether
+      /// an item has been consumed (see `is_item_complete()`).
+      INDEX_TYPE _index;
       Unsigned8 _num_item_bits;
   };
 
   template<typename T, typename RBASE, typename RPROD, typename RCONS>
-  class Read_queue : public Queue<T, RBASE, RPROD, RCONS, false>
+  class Read_queue : public Queue<T, RBASE, RPROD, RCONS, unsigned, false>
   {
     public:
       template<typename OVERFLOW_CB>
@@ -765,10 +780,13 @@ private:
   };
 
   template<typename T, typename RBASE, typename RPROD, typename RCONS>
-  class Write_queue : public Queue<T, RBASE, RPROD, RCONS, true>
+  class Write_queue : public Queue<T, RBASE, RPROD, RCONS, Unsigned64, true>
   {
     public:
-      using Index = unsigned;
+      // Use 64-bit type to track the write queue index, so that it becomes
+      // effectively impossible for the index to wrap around and catch up again
+      // while waiting for a command to complete.
+      using Index = Unsigned64;
 
       /**
        * Write given item into queue.
@@ -802,19 +820,41 @@ private:
       /**
        * Determines whether the reader has consumed the given queue item.
        *
-       * \param wait_index  Index of the item whose completion is to be checked.
+       * \pre The queue did not consume more than `(2^64) - capacity()` items
+       *      since writing the item to the given index.
        *
-       * \pre The queue did not consume more than queue size items since writing
-       *      the item to the given index.
+       * \param wait_index  Index of the item whose completion is to be checked.
        */
       bool is_item_complete(Index wait_index)
       {
+        // A `wait_index` is always an `_index` from the past, i.e. the `_index`
+        // value directly after enqueuing an item. The distance between the
+        // current `_index` and `wait_index` therefore equals the number of
+        // items enqueued in the meantime. If this number is greater than or
+        // equal to the capacity of the queue, we know that the item has been
+        // overwritten. Wrap-around is handled gracefully thanks to unsigned
+        // integer.
+        if ((atomic_load(&this->_index) - wait_index) >= this->capacity())
+            // The item has been overwritten, which also implies that it has
+            // been consumed by the reader.
+            return true;
+
         unsigned read_index = this->read_their_index();
         unsigned wrap_flag_mask = this->wrap_flag_mask();
         unsigned index_mask = this->index_mask();
         if ((wait_index & wrap_flag_mask) == (read_index & wrap_flag_mask))
-          return read_index >= wait_index;
+          // Reader has passed awaited item and has not wrapped-around.
+          // --------------------------------
+          // |  O~~~W~~~~~~~~~~~~R          |
+          // -- ^ -------------- ^ ----------
+          //    | Reader before  | Reader now
+          return read_index >= (wait_index & this->combined_mask());
         else
+          // Reader has passed awaited item and has wrapped-around.
+          // --------------------------------
+          // | ~~R             O~~~W~~~~~~~ | (wrap-around)
+          // --- ^ ----------- ^ ------------
+          //     | Reader now  | Reader before
           return (wait_index & index_mask) > (read_index & index_mask);
       }
   };
