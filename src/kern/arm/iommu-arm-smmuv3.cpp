@@ -17,10 +17,10 @@ INTERFACE [iommu && iommu_arm_smmu_v3]:
 #include "minmax.h"
 #include "mmio_register_block.h"
 #include "panic.h"
-#include "poll_timeout_counter.h"
 #include "cxx/bitfield"
 #include "cxx/slist"
 #include "kmem_slab.h"
+#include "timer.h"
 
 class Dmar_space;
 
@@ -768,13 +768,23 @@ private:
   class Write_queue : public Queue<T, RBASE, RPROD, RCONS, true>
   {
     public:
-      enum Index : unsigned { Invalid_index = ~0u };
+      using Index = unsigned;
 
-      Index write(T const &item)
+      /**
+       * Write given item into queue.
+       *
+       * \param  item        The item to write
+       * \param  wait_index  The wait index for the item in the queue, can be
+       *                     passed to is_item_complete, only valid on success.
+       *
+       * \return true if the item was written to the queue, and false if the
+       *         queue was full.
+       */
+      bool write(T const &item, Index *wait_index = nullptr)
       {
-        T *slot = alloc_slot();
-        if (!slot)
-          return Invalid_index;
+        T *slot = this->next_slot();
+        if (EXPECT_FALSE(!slot))
+          return false;
 
         *slot = item;
         // Make item observable by the SMMU.
@@ -783,7 +793,10 @@ private:
         RPROD prod;
         prod.wr() = this->_index;
         this->_iommu->write_reg(prod);
-        return static_cast<Index>(this->_index);
+
+        if (wait_index)
+          *wait_index = this->_index;
+        return true;
       }
 
       /**
@@ -796,9 +809,6 @@ private:
        */
       bool is_item_complete(Index wait_index)
       {
-        if (EXPECT_FALSE(wait_index == Invalid_index))
-          return true;
-
         unsigned read_index = this->read_their_index();
         unsigned wrap_flag_mask = this->wrap_flag_mask();
         unsigned index_mask = this->index_mask();
@@ -806,26 +816,6 @@ private:
           return read_index >= wait_index;
         else
           return (wait_index & index_mask) > (read_index & index_mask);
-      }
-
-    private:
-      T *alloc_slot()
-      {
-        T *slot = this->next_slot();
-        L4::Poll_timeout_counter i(5000000);
-        while (i.test(slot == nullptr))
-          {
-            Proc::pause();
-            slot = this->next_slot();
-          }
-
-        if (EXPECT_FALSE(i.timed_out()))
-          {
-            WARNX(Error, "IOMMU: Queue slot allocation timed out!\n");
-            return nullptr;
-          }
-
-        return slot;
       }
   };
 
@@ -905,6 +895,34 @@ private:
     using Asid_map = Bitmap<Max_nr_asid>;
     Asid_map *_free_asids;
     Asid _max_asid;
+  };
+
+  /// Timeout after which to warn about long running command queue operation.
+  static constexpr unsigned Queue_warn_timeout_us = 1'000'000; // 1s
+
+  class Wait_warn_timeout
+  {
+  public:
+    inline bool check_warn(Unsigned64 timeout_us)
+    {
+      if (wait_start == 0)
+        {
+          wait_start = Timer::system_clock();
+          return false;
+        }
+
+      if (!warned && (Timer::system_clock() - wait_start) >= timeout_us)
+        {
+          warned = true;
+          return true;
+        }
+
+      return false;
+    }
+
+  private:
+    Unsigned64 wait_start = 0;
+    bool warned = false;
   };
 
   static Unsigned8 address_size(Unsigned8 encoded)
@@ -998,28 +1016,70 @@ Kmem_slab_t<Iommu::Domain::Binding>
   Iommu::Domain::_binding_allocator("Binding");
 
 /**
+ * Send commands to the SMMU, i.e. write them to the command queue.
+ *
+ * \pre CPU lock must not be held, as otherwise queue errors can not be handled.
+ *
+ * \param cmds  The commands to send.
+ *
+ * \return The wait index for the submitted commands.
+ */
+PRIVATE template<unsigned N>
+Iommu::Cmd_queue::Index
+Iommu::send_cmds(Cmd const (&cmds)[N])
+{
+  auto g = lock_guard(_cmd_queue_lock);
+
+  Wait_warn_timeout wait_warn_timeout;
+  Cmd_queue::Index wait_index;
+  for (Cmd cmd : cmds)
+    while (EXPECT_FALSE(!_cmd_queue.write(cmd, &wait_index)))
+      {
+        // Allow preemption, then retry to write the command.
+        g.reset();
+
+        if (wait_warn_timeout.check_warn(Queue_warn_timeout_us))
+          WARNX(Error, "IOMMU: Command write timed out!\n");
+
+        Proc::pause();
+
+        g.lock(&_cmd_queue_lock);
+      }
+
+  // We are done modifying the command queue, thus release the lock.
+
+  return wait_index;
+}
+
+/**
  * Send a command to the SMMU and wait for its completion.
  *
+ * \pre CPU lock must not be held, as otherwise queue errors can not be handled.
+ *
  * \param cmd  The command to send.
+ *
+ * \note Orders subsequent writes to the completion of the SYNC command.
  */
 PRIVATE
 void
 Iommu::send_cmd_sync(Cmd const &cmd)
 {
-  auto g = lock_guard(_cmd_queue_lock);
-  _cmd_queue.write(cmd);
-  auto wait_index = _cmd_queue.write(Cmd::sync(Cmd::Compl_signal_none));
-
-  // We are done modifying the command queue, thus release the lock.
-  g.reset();
+  Cmd sync_cmd = Cmd::sync(Cmd::Compl_signal_none);
+  Cmd_queue::Index wait_index = send_cmds({cmd, sync_cmd});
 
   // Wait until SMMU consumed all commands including the sync command.
   wait_cmd_queue(wait_index);
+
+  // Waiting for the SYNC command to finish is a control dependency that orders
+  // subsequent writes, i.e. writes following hereafter cannot pass the wait, and
+  // thus are not visible to the SMMU until the wait here is done!
 }
 
 /**
  * Wait until the SMMU has consumed all commands from the command queue up to
  * the given wait index.
+ *
+ * \pre CPU lock must not be held, as otherwise queue errors can not be handled.
  *
  * \param wait_index  Index of the command to wait for.
  */
@@ -1027,13 +1087,15 @@ PRIVATE
 void
 Iommu::wait_cmd_queue(Cmd_queue::Index wait_index)
 {
-  L4::Poll_timeout_counter i(5000000);
+  Wait_warn_timeout wait_warn_timeout;
   // Has SMMU consumed all commands up to the wait index?
-  while (i.test(!_cmd_queue.is_item_complete(wait_index)))
-    Proc::pause();
+  while (!_cmd_queue.is_item_complete(wait_index))
+    {
+      if (wait_warn_timeout.check_warn(Queue_warn_timeout_us))
+        WARNX(Error, "IOMMU: Command execution timed out!\n");
 
-  if (EXPECT_FALSE(i.timed_out()))
-    WARNX(Error, "IOMMU: Command execution timed out!\n");
+      Proc::pause();
+    }
 }
 
 /**
