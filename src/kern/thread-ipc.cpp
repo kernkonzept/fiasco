@@ -34,8 +34,9 @@ protected:
   {
     enum R
     {
-      Ok = 0,
-      Open_wait_flag = 0x1,
+      Open_wait_flag = 0x1, // not used as function return value
+      Ok_closed_wait = 0,
+      Ok_open_wait = 0 | Open_wait_flag,
       Queued = 2,
       Done   = 4,
       Failed = 5,
@@ -314,6 +315,16 @@ Thread::handle_page_fault_pager(Thread_ptr const &_pager,
   return success;
 }
 
+/**
+ * In the context of the receiver, check if the sender may send to us.
+ * \param sender   The sender to check.
+ * \param timeout  True if a timeout is set, false otherwise.
+ * \retval Check_sender::Ok_closed_wait Receiver ready to receive, closed wait.
+ * \retval Check_sender::Ok_open_wait Receiver ready to receive, open wait.
+ * \retval Check_sender::Failed (1) Receiver does not exist, or (2) Receiver
+ *                              not ready and no timeout specified.
+ * \retval Check_sender::Queued Receiver not ready and timeout specified.
+ */
 PRIVATE inline
 Thread::Check_sender
 Thread::check_sender(Thread *sender, bool timeout)
@@ -325,7 +336,7 @@ Thread::check_sender(Thread *sender, bool timeout)
     }
 
   if (auto ok = sender_ok(sender))
-    return ok;
+    return ok; // note Check_sender(Rcv_state) magic!
 
   if (!timeout)
     {
@@ -413,7 +424,7 @@ Thread::handshake_receiver(Thread *partner, L4_timeout snd_t)
     case Check_sender::Queued:
       state_add_dirty(Thread_send_wait);
       break;
-    default: // Ok
+    default: // Ok_closed_wait / Ok_open_wait
       partner->state_change_dirty(~(Thread_ipc_mask | Thread_ready), Thread_ipc_transfer);
       break;
     }
