@@ -105,7 +105,7 @@ IMPLEMENTATION [riscv && mp]:
 #include "spin_lock.h"
 #include "timer.h"
 
-void boot_ap_cpu(Mword hart_id) __asm__("BOOT_AP_CPU");
+void FIASCO_NORETURN boot_ap_cpu(Mword hart_id) __asm__("BOOT_AP_CPU");
 
 void boot_ap_cpu(Mword hart_id)
 {
@@ -172,4 +172,7 @@ void boot_ap_cpu(Mword hart_id)
     "  tail call_ap_bootstrap \n"
     :
     : [stack]   "r" (sp), "r" (a0), "r" (a1));
+
+  // No return from App_cpu_thread::bootstrap().
+  __builtin_unreachable();
 }
