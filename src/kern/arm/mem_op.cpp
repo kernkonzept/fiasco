@@ -36,30 +36,6 @@ IMPLEMENTATION [arm]:
 #include "space.h"
 #include "warn.h"
 
-PRIVATE static void
-Mem_op::l1_inv_dcache(Address start, Address end)
-{
-  Mword s = Mem_unit::dcache_line_size();
-  Mword m = s - 1;
-  if (start & m)
-    {
-      Mem_unit::flush_dcache((void *)start, (void *)start);
-      start += s;
-      start &= ~m;
-    }
-  if (end & m)
-    {
-      Mem_unit::flush_dcache((void *)end, (void *)end);
-      end &= ~m;
-    }
-
-  if (start < end)
-    Mem_unit::inv_dcache((void *)start, (void *)end);
-}
-
-// ------------------------------------------------------------------------
-IMPLEMENTATION [arm]:
-
 PRIVATE static inline void
 Mem_op::__arm_kmem_cache_maint(int op, void const *kstart, void const *kend)
 {
