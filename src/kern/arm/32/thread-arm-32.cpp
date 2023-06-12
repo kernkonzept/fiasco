@@ -1,5 +1,7 @@
 IMPLEMENTATION [arm && 32bit]:
 
+#include "mem_op.h"
+
 /**
  * Mangle the error code in case of a kernel lib page fault.
  *
@@ -211,6 +213,22 @@ void
 Thread::handle_debug_exception(Trap_state *ts)
 {
   call_nested_trap_handler(ts);
+}
+
+IMPLEMENT_OVERRIDE inline NEEDS["mem_op.h"]
+bool
+Thread::check_and_handle_linux_cache_api(Trap_state *ts)
+{
+  if (ts->esr.ec() == 0x11 && ts->r[7] == 0xf0002)
+    {
+      if (ts->r[2] == 0)
+        Mem_op::arm_mem_cache_maint(Mem_op::Op_cache_coherent,
+                                    (void *)ts->r[0], (void *)ts->r[1]);
+      ts->r[0] = 0;
+      return true;
+    }
+  else
+    return false;
 }
 
 //---------------------------------------------------------------------------

@@ -6,6 +6,7 @@ EXTENSION class Thread
 {
 public:
   static void init_per_cpu(Cpu_number cpu, bool resume);
+  static bool check_and_handle_linux_cache_api(Trap_state *);
   bool check_and_handle_coproc_faults(Trap_state *);
 };
 
@@ -17,7 +18,6 @@ IMPLEMENTATION [arm]:
 
 #include "globals.h"
 #include "kmem.h"
-#include "mem_op.h"
 #include "static_assert.h"
 #include "thread_state.h"
 #include "types.h"
@@ -202,18 +202,8 @@ extern "C" {
 
     LOG_TRAP;
 
-    if (Config::Support_arm_linux_cache_API)
-      {
-	if (   ts->esr.ec() == 0x11
-            && ts->r[7] == 0xf0002)
-	  {
-            if (ts->r[2] == 0)
-              Mem_op::arm_mem_cache_maint(Mem_op::Op_cache_coherent,
-                                          (void *)ts->r[0], (void *)ts->r[1]);
-            ts->r[0] = 0;
-            return;
-	  }
-      }
+    if (t->check_and_handle_linux_cache_api(ts))
+      return;
 
     if (t->check_and_handle_coproc_faults(ts))
       return;
@@ -643,6 +633,13 @@ static Arm_ipis _arm_ipis;
 
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
+
+IMPLEMENT_DEFAULT inline
+bool
+Thread::check_and_handle_linux_cache_api(Trap_state *)
+{
+  return false;
+}
 
 IMPLEMENT_DEFAULT inline
 bool
