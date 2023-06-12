@@ -66,7 +66,11 @@ public:
     Cp15_c1_use_alignment_check = 0,
 #endif
 
+#ifdef CONFIG_BIT32
     Support_arm_linux_cache_API = 1,
+#else
+    Support_arm_linux_cache_API = 0,
+#endif
   };
 
   enum
