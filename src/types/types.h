@@ -26,7 +26,12 @@ a nonull_static_cast( b p )
 }
 
 /**
- * Read the value at an address exactly once.
+ * Read the value at an address at most once.
+ *
+ * The read might be omitted if the result is not used by any code unless
+ * `typename` contains `volatile`. If the read operation has side effects and
+ * must not be omitted, use different means like #Mmio_register_block or
+ * similar.
  *
  * The compiler is disallowed to reuse a previous read at the same address, for
  * example:
