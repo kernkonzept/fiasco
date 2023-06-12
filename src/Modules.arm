@@ -143,7 +143,7 @@ VPATH 		+= kern/$(CONFIG_XARCH)/$(BITS) kern/$(CONFIG_XARCH) kern
 VPATH		+= jdb/arm/$(BITS) jdb/arm jdb
 PRIVATE_INCDIR 	+= kern/$(CONFIG_XARCH)/$(BITS) kern/$(CONFIG_XARCH) kern
 
-INTERFACES_KERNEL += 	__main mem_op kmem_space boot_uart_init     \
+INTERFACES_KERNEL += 	__main kmem_space boot_uart_init     \
 			irq_chip_generic bootstrap                  \
 			outer_cache utcb_support                    \
 			irq_mgr_multi_chip smc_call psci mem_chunk
@@ -151,7 +151,7 @@ INTERFACES_KERNEL += 	__main mem_op kmem_space boot_uart_init     \
 INTERFACES_KERNEL-$(CONFIG_ARM_ACPI) += acpi acpi_fadt
 INTERFACES_KERNEL-$(CONFIG_ARM_MPCORE) += scu
 INTERFACES_KERNEL-$(CONFIG_ARM_CORTEX_A9) += scu
-INTERFACES_KERNEL-$(CONFIG_BIT32) += kern_lib_page
+INTERFACES_KERNEL-$(CONFIG_BIT32) += kern_lib_page mem_op
 INTERFACES_KERNEL-$(CONFIG_SERIAL) += uart_console
 INTERFACES_KERNEL-$(CONFIG_ARM_EM_TZ) += vm
 INTERFACES_KERNEL-$(CONFIG_CPU_VIRT) += hyp_vm_state vgic vgic_global
@@ -201,7 +201,6 @@ kernel_uart_IMPL  	:= kernel_uart kernel_uart-libuart
 map_util_IMPL		:= map_util map_util-mem map_util-objs
 mem_layout_IMPL		:= mem_layout mem_layout-arm-$(BITS) \
 			   mem_layout-arm
-mem_op_IMPL		:= mem_op mem_op-arm-$(BITS)
 mem_space_IMPL		:= mem_space mem_space-arm mem_space-arm-$(BITS) \
 			   mem_space-user
 mem_unit_IMPL		:= mem_unit mem_unit-arm-$(BITS)
