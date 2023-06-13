@@ -191,6 +191,8 @@ private:
     CXX_BITFIELD_MEMBER_RO(12, 12, asid16, raw);
     /// Message Signalled Interrupts are supported.
     CXX_BITFIELD_MEMBER_RO(13, 13, msi, raw);
+    /// SMMU, and system, support generation of WFE wake-up events to PE.
+    CXX_BITFIELD_MEMBER_RO(14, 14, sev, raw);
     /// 16-bit VMID support.
     CXX_BITFIELD_MEMBER_RO(18, 18, vmid16, raw);
     /// Stall model support.
@@ -1002,6 +1004,8 @@ private:
   /// Coordinates concurrent operations on this SMMU (stream table management,
   /// domain configuration and partly TLB invalidation).
   Spin_lock<> _lock;
+  /// SMMU supports generation of WFE wake-up events.
+  bool _support_wfe;
 
   /// Register Page 0.
   Mmio_register_block _rp0;
@@ -1081,6 +1085,9 @@ Iommu::send_cmds(Cmd const (&cmds)[N])
         if (wait_warn_timeout.check_warn(Queue_warn_timeout_us))
           WARNX(Error, "IOMMU: Command write timed out!\n");
 
+        // Unfortunately, we cannot wait here with WFE, because if the command
+        // queue contains only non-sync commands, even though that is unlikely,
+        // the SMMU will not send a WFE event.
         Proc::pause();
 
         g.lock(&_cmd_queue_lock);
@@ -1104,7 +1111,7 @@ PRIVATE
 void
 Iommu::send_cmd_sync(Cmd const &cmd)
 {
-  Cmd sync_cmd = Cmd::sync(Cmd::Compl_signal_none);
+  Cmd sync_cmd = Cmd::sync(Cmd::Compl_signal_wfe);
   Cmd_queue::Index wait_index = send_cmds({cmd, sync_cmd});
 
   // Wait until SMMU consumed all commands including the sync command.
@@ -1120,6 +1127,7 @@ Iommu::send_cmd_sync(Cmd const &cmd)
  * the given wait index.
  *
  * \pre CPU lock must not be held, as otherwise queue errors can not be handled.
+ * \pre Awaited command must be a sync command with Compl_signal_wfe.
  *
  * \param wait_index  Index of the command to wait for.
  */
@@ -1134,7 +1142,14 @@ Iommu::wait_cmd_queue(Cmd_queue::Index wait_index)
       if (wait_warn_timeout.check_warn(Queue_warn_timeout_us))
         WARNX(Error, "IOMMU: Command execution timed out!\n");
 
-      Proc::pause();
+      if (_support_wfe)
+        // Not only SMMU sync command completion, but also exception return sets
+        // the WFE event of this CPU. So even if we are interrupted, by hardware
+        // interrupt or timer interrupt, the WFE event will be set when
+        // execution returns to us via eret.
+        asm volatile("wfe");
+      else
+        Proc::pause();
     }
 }
 
@@ -1413,14 +1428,16 @@ Iommu::setup(Address base_addr, unsigned eventq_irq, unsigned gerror_irq)
    // address size (physical address size).
    _ias = _oas;
 
+  _support_wfe = idr0.sev();
+
   if (Iommu::Debug)
     {
-      printf("IOMMU: IDR0 s2p=%d s1p=%d ttf=%d cohacc=%d btm=%d asid16=%d"
-             "msi=%d vmid16=%d stall_model=%d st_level=%d\n",
+      printf("IOMMU: IDR0 s2p=%d s1p=%d ttf=%d cohacc=%d btm=%d asid16=%d "
+             "msi=%d sev=%d vmid16=%d stall_model=%d st_level=%d\n",
              idr0.s2p().get(), idr0.s1p().get(), idr0.ttf().get(),
              idr0.cohacc().get(), idr0.btm().get(), idr0.asid16().get(),
-             idr0.msi().get(), idr0.vmid16().get(), idr0.stall_model().get(),
-             idr0.st_level().get());
+             idr0.msi().get(), idr0.sev().get(), idr0.vmid16().get(),
+             idr0.stall_model().get(), idr0.st_level().get());
 
       printf("IOMMU: IDR1 sidsize=%d ssidsize=%d eventqs=%d cmdqs=%d ecmdq=%d\n",
              idr1.sidsize().get(), idr1.ssidsize().get(), idr1.eventqs().get(),
