@@ -42,10 +42,10 @@ void *Vmem_alloc::page_alloc(void *address, Zero_fill zf, unsigned mode)
                              Page::Attr(r, Page::Type::Normal(),
                                         Page::Kern::Global())));
   pte.write_back_if(true);
-  Mem_unit::kernel_tlb_flush(address);
+  Mem_unit::tlb_flush_kernel((Address)address);
 
   if (zf == ZERO_FILL)
-    Mem::memset_mwords((unsigned long *)address, 0, Config::PAGE_SIZE / sizeof(Mword));
+    Mem::memset_mwords(address, 0, Config::PAGE_SIZE / sizeof(Mword));
 
   return address;
 }

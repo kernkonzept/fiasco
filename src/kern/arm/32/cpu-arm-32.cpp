@@ -128,7 +128,7 @@ Cpu::init_supervisor_mode(bool is_boot_cpu)
                              Page::Attr(Page::Rights::RWX(),
                              Page::Type::Normal(), Page::Kern::Global())));
   pte.write_back_if(true);
-  Mem_unit::kernel_tlb_flush((void *)Kmem_space::Ivt_base);
+  Mem_unit::tlb_flush_kernel(Kmem_space::Ivt_base);
 }
 
 //---------------------------------------------------------------------------

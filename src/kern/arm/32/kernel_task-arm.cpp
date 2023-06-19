@@ -25,7 +25,7 @@ Kernel_task::map_syscall_page(void *p)
                              Page::Attr(Page::Rights::URX(), Page::Type::Normal(),
                                         Page::Kern::Global())));
   pte.write_back_if(true);
-  Mem_unit::kernel_tlb_flush((void *)Kmem_space::Syscalls);
+  Mem_unit::tlb_flush_kernel(Kmem_space::Syscalls);
 }
 
 IMPLEMENTATION[arm && cpu_virt]:

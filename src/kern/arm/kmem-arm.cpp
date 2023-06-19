@@ -78,7 +78,7 @@ Kmem::mmio_remap(Address phys, Address size, bool cache = false)
                                         Page::Kern::Global())));
 
       m.write_back_if(true);
-      Mem_unit::kernel_tlb_flush((void *)dm);
+      Mem_unit::tlb_flush_kernel(dm);
     }
 
   return (phys & ~Config::SUPERPAGE_MASK) | map_addr;

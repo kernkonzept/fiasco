@@ -409,7 +409,7 @@ Platform_control::do_core_n_off(Cpu_number cpu)
 
   Mem_unit::flush_cache();
   Mem_unit::tlb_flush();
-  Mem_unit::kernel_tlb_flush();
+  Mem_unit::tlb_flush_kernel();
 
   Cpu::disable_smp();
   Cpu::disable_dcache();

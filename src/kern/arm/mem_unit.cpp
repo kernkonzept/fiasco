@@ -43,8 +43,8 @@ public:
    *            assumed that the kernel text does not change.
    */
 
-  static void kernel_tlb_flush();
-  static void kernel_tlb_flush(void *va);
+  static void tlb_flush_kernel();
+  static void tlb_flush_kernel(Address va);
 };
 
 //---------------------------------------------------------------------------

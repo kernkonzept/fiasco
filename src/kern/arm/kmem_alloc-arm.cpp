@@ -37,7 +37,7 @@ Kmem_alloc::map_pmem(unsigned long phy, unsigned long size)
                                             Page::Type::Normal(),
                                             Page::Kern::Global())));
       pte.write_back_if(true);
-      Mem_unit::kernel_tlb_flush((void *)(next_map + i));
+      Mem_unit::tlb_flush_kernel(next_map + i);
     }
 
   next_map += size;

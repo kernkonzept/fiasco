@@ -31,15 +31,15 @@ void Mem_unit::tlb_flush(void *va, unsigned long asid)
 }
 
 IMPLEMENT inline
-void Mem_unit::kernel_tlb_flush()
+void Mem_unit::tlb_flush_kernel()
 { tlb_flush(); }
 
 IMPLEMENT inline
-void Mem_unit::kernel_tlb_flush(void *va)
+void Mem_unit::tlb_flush_kernel(Address va)
 {
   Mem::dsbst();
   asm volatile("tlbi vaae1is, %0"
-               : : "r" ((((unsigned long)va) >> 12) & 0x00000ffffffffffful)
+               : : "r" ((va >> 12) & 0x00000ffffffffffful)
                : "memory");
   Mem::dsb();
 }
@@ -106,7 +106,7 @@ void Mem_unit::tlb_flush(void *va, unsigned long asid)
 }
 
 IMPLEMENT inline
-void Mem_unit::kernel_tlb_flush()
+void Mem_unit::tlb_flush_kernel()
 {
   Mem::dsbst();
   asm volatile("tlbi alle2is" : : : "memory");
@@ -114,11 +114,11 @@ void Mem_unit::kernel_tlb_flush()
 }
 
 IMPLEMENT inline
-void Mem_unit::kernel_tlb_flush(void *va)
+void Mem_unit::tlb_flush_kernel(Address va)
 {
   Mem::dsbst();
   asm volatile("tlbi vae2is, %0"
-               : : "r" ((((unsigned long)va) >> 12) & 0x00000ffffffffffful)
+               : : "r" ((va >> 12) & 0x00000ffffffffffful)
                : "memory");
   Mem::dsb();
 }
