@@ -191,9 +191,6 @@ public:
   Unsigned8  ext_chk_sum;
   char       reserved[3];
 
-  Acpi_rsdt_p const *rsdt() const;
-  Acpi_xsdt_p const *xsdt() const;
-
   bool checksum_ok() const;
 
   static Acpi_rsdp const *locate();
@@ -386,22 +383,6 @@ Acpi::find(const char *s)
 }
 
 IMPLEMENT
-Acpi_rsdt_p const *
-Acpi_rsdp::rsdt() const
-{
-  return (Acpi_rsdt_p const*)(unsigned long)rsdt_phys;
-}
-
-IMPLEMENT
-Acpi_xsdt_p const *
-Acpi_rsdp::xsdt() const
-{
-  if (rev == 0)
-    return 0;
-  return (Acpi_xsdt_p const*)xsdt_phys;
-}
-
-IMPLEMENT
 bool
 Acpi_rsdp::checksum_ok() const
 {
@@ -442,25 +423,6 @@ Acpi_sdt::find(char const *sig) const
     {
       Acpi_table_head const *t = _tables[i];
       if (!t)
-	continue;
-
-      if (Acpi::check_signature(t->signature, sig)
-          && t->checksum_ok())
-	return t;
-    }
-
-  return 0;
-}
-
-PUBLIC
-template< typename T >
-Acpi_table_head const *
-Acpi_sdt_p<T>::find(char const *sig) const
-{
-  for (unsigned i = 0; i < ((len-sizeof(Acpi_table_head))/sizeof(ptrs[0])); ++i)
-    {
-      Acpi_table_head const *t = Kmem::mmio_remap(ptrs[i], sizeof(*t), true);
-      if (t == (Acpi_table_head const *)~0UL)
 	continue;
 
       if (Acpi::check_signature(t->signature, sig)
