@@ -1735,6 +1735,86 @@ Iommu::is_domain_bound_to_ste(Ste *ste, Iommu::Domain &domain)
 }
 
 // ------------------------------------------------------------------
+IMPLEMENTATION [iommu]:
+
+namespace {
+
+template<typename T, typename F>
+class Smmu_irq : public Irq_base
+{
+public:
+  explicit Smmu_irq(T *obj, F func) : _obj(obj), _func(func)
+  { set_hit(handler_wrapper<Smmu_irq>); }
+
+  void FIASCO_FLATTEN handle(Upstream_irq const *ui)
+  {
+    (_obj->*_func)();
+    chip()->ack(pin());
+    Upstream_irq::ack(ui);
+  }
+
+private:
+  void switch_mode(bool) override {}
+  T *_obj;
+  F _func;
+};
+
+template<typename T, typename F>
+void setup_irq(unsigned pin, T *obj, F func)
+{
+  auto irq = new Boot_object<Smmu_irq<T, F>>(obj, func);
+  check(Irq_mgr::mgr->alloc(irq, pin));
+  // "Interrupts in SMMUv3 are required to be edge-triggered or MSIs."
+  irq->chip()->set_mode(irq->pin(), Irq_chip::Mode::F_raising_edge);
+  irq->unmask();
+}
+
+}
+
+PRIVATE
+void
+Iommu::handle_gerror_irq()
+{
+  Gerror gerror = read_reg<Gerror>();
+  Gerrorn gerrorn = read_reg<Gerrorn>();
+
+  Gerror active = Gerror::from_raw(gerror.raw ^ gerrorn.raw);
+  if (!active.raw)
+    // No active error conditions.
+    return;
+
+  if (active.cmdq_err())
+    // TODO: Handle cmd queue error and skip faulting command?
+    WARNX(Error, "IOMMU: Global error CMDQ_ERR occured.\n");
+  if (active.eventq_abt_err())
+    WARNX(Error, "IOMMU: Global error EVENTQ_ABT_ERR occured.\n");
+  if (active.priq_abt_err())
+    WARNX(Error, "IOMMU: Global error PRIQ_ABT_ERR occured.\n");
+  if (active.msi_cmdq_abt_err())
+    WARNX(Error, "IOMMU: Global error MSI_CMDQ_ABT_ERR occured.\n");
+  if (active.msi_eventq_abt_err())
+    WARNX(Error, "IOMMU: Global error MSI_EVENTQ_ABT_ERR occured.\n");
+  if (active.msi_priq_abt_err())
+    WARNX(Error, "IOMMU: Global error MSI_PRIQ_ABT_ERR occured.\n");
+  if (active.msi_gerror_abt_err())
+    WARNX(Error, "IOMMU: Global error MSI_GERROR_ABT_ERR occured.\n");
+  if (active.sfm_err())
+    WARNX(Error, "IOMMU: Global error SFM_ERR occured.\n");
+  if (active.cmdqp_err())
+    WARNX(Error, "IOMMU: Global error CMDQP_ERR occured.\n");
+
+  // Acknowledge error conditions.
+  write_reg<Gerrorn>(gerror.raw);
+}
+
+PRIVATE
+void
+Iommu::setup_gerror_handler(unsigned gerror_irq)
+{
+  setup_irq(gerror_irq, this, &Iommu::handle_gerror_irq);
+}
+
+// ------------------------------------------------------------------
 IMPLEMENTATION [iommu && !debug]:
 
 EXTENSION class Iommu
@@ -1747,7 +1827,6 @@ public:
   };
 
 private:
-  void setup_gerror_handler(unsigned) {}
   void setup_event_queue(unsigned, unsigned) {}
 };
 
@@ -1835,40 +1914,6 @@ private:
   Event_queue _event_queue;
 };
 
-namespace {
-
-template<typename T, typename F>
-class Smmu_irq : public Irq_base
-{
-public:
-  explicit Smmu_irq(T *obj, F func) : _obj(obj), _func(func)
-  { set_hit(handler_wrapper<Smmu_irq>); }
-
-  void FIASCO_FLATTEN handle(Upstream_irq const *ui)
-  {
-    (_obj->*_func)();
-    chip()->ack(pin());
-    Upstream_irq::ack(ui);
-  }
-
-private:
-  void switch_mode(bool) override {}
-  T *_obj;
-  F _func;
-};
-
-template<typename T, typename F>
-void setup_irq(unsigned pin, T *obj, F func)
-{
-  auto irq = new Boot_object<Smmu_irq<T, F>>(obj, func);
-  check(Irq_mgr::mgr->alloc(irq, pin));
-  // "Interrupts in SMMUv3 are required to be edge-triggered or MSIs."
-  irq->chip()->set_mode(irq->pin(), Irq_chip::Mode::F_raising_edge);
-  irq->unmask();
-}
-
-}
-
 PRIVATE
 void
 Iommu::handle_eventq_irq()
@@ -1889,49 +1934,6 @@ Iommu::handle_eventq_irq()
              event.type_str(), event.type().get(), event.stream_id().get(),
              event.raw[0], event.raw[1], event.raw[2], event.raw[3]);
     }
-}
-
-PRIVATE
-void
-Iommu::handle_gerror_irq()
-{
-  Gerror gerror = read_reg<Gerror>();
-  Gerrorn gerrorn = read_reg<Gerrorn>();
-
-  Gerror active = Gerror::from_raw(gerror.raw ^ gerrorn.raw);
-  if (!active.raw)
-    // No active error conditions.
-    return;
-
-  if (active.cmdq_err())
-    // TODO: Handle cmd queue error and skip faulting command?
-    printf("IOMMU: Global error CMDQ_ERR occured.\n");
-  if (active.eventq_abt_err())
-    printf("IOMMU: Global error EVENTQ_ABT_ERR occured.\n");
-  if (active.priq_abt_err())
-    printf("IOMMU: Global error PRIQ_ABT_ERR occured.\n");
-  if (active.msi_cmdq_abt_err())
-    printf("IOMMU: Global error MSI_CMDQ_ABT_ERR occured.\n");
-  if (active.msi_eventq_abt_err())
-    printf("IOMMU: Global error MSI_EVENTQ_ABT_ERR occured.\n");
-  if (active.msi_priq_abt_err())
-    printf("IOMMU: Global error MSI_PRIQ_ABT_ERR occured.\n");
-  if (active.msi_gerror_abt_err())
-    printf("IOMMU: Global error MSI_GERROR_ABT_ERR occured.\n");
-  if (active.sfm_err())
-    printf("IOMMU: Global error SFM_ERR occured.\n");
-  if (active.cmdqp_err())
-    printf("IOMMU: Global error CMDQP_ERR occured.\n");
-
-  // Acknowledge error conditions.
-  write_reg<Gerrorn>(gerror.raw);
-}
-
-PRIVATE
-void
-Iommu::setup_gerror_handler(unsigned gerror_irq)
-{
-  setup_irq(gerror_irq, this, &Iommu::handle_gerror_irq);
 }
 
 PRIVATE
