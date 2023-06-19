@@ -7,3 +7,7 @@ $(LIBGCOV): $(OBJ_LIBGCOV)
 
 clean-LIBGCOV:
 	$(VERBOSE)$(RM) *.gcno
+
+fiasco-covpath.o:
+	$(COMP_MESSAGE)
+	$(VERBOSE)echo 'char const *__COV_PATH="$(PWD)/fiasco";' | $(CC) -o $@ -c -xc -

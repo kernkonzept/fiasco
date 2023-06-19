@@ -124,6 +124,11 @@ SECTIONS {
 
     *(.text.jdb)
 
+    *(__llvm_covfun)
+    *(__llvm_covmap)
+    *(__llvm_prf_data)
+    *(__llvm_prf_names)
+
     PROVIDE (_ecode = .);
 
     *(.rodata .rodata.* .gnu.linkonce.r.* .rodata1)
@@ -144,6 +149,8 @@ SECTIONS {
     *(.gnu.linkonce.d*)
     *(.anno)
     *(.data.jdb)
+
+    *(__llvm_prf_cnts)
 
     *(.init.data)
 

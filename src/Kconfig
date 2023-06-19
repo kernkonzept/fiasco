@@ -412,8 +412,8 @@ config GCOV
 	bool "GCOV support"
 	depends on HAS_GCOV_OPTION
 	help
-	  Adds coverage support using gcov. Only available when compiled with gcc.
-	  Do not enable this on production systems.
+	  Adds coverage support using gcov or llvm depending on the compiler that
+	  is used. Do not enable this on production systems.
 
 config PERFORMANCE
 	bool "Performance configuration"

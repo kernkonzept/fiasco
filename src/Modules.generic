@@ -91,6 +91,23 @@ LIBUART_UART = -include uart_$(strip $(1)).h \
 LIBGCOV := libgcov.a
 VPATH += lib/gcov
 PRIVATE_INCDIR += lib/gcov/
-CSRC_LIBGCOV := libgcov.c gcov-plain.c
+
+CSRC_LIBGCOV-clang_contrib := \
+        InstrProfiling.c InstrProfilingBuffer.c InstrProfilingPlatformLinux.c \
+        InstrProfilingVersionVar.c InstrProfilingWriter.c                     \
+        InstrProfilingInternal.c
+
+CSRC_LIBGCOV-clang := llvmcov.c plain.c llvmcov-plain.c
+CSRC_LIBGCOV-clang += $(CSRC_LIBGCOV-clang_contrib)
+
+CSRC_LIBGCOV-gcc   := gcov.c plain.c gcov-plain.c
+
+CSRC_LIBGCOV        = output.c base64.c
+CSRC_LIBGCOV       += $(CSRC_LIBGCOV-$(CC_TYPE))
+
+# suppress compiler warnings for clang compiler-rt code
+$(foreach f, $(patsubst %.c, %, $(CSRC_LIBGCOV-clang_contrib)), \
+        $(eval CFLAGS_$(f) += -Wno-strict-prototypes -Wno-unused-parameter \
+                              -Wno-missing-prototypes -Wno-undef))
 
 NOOPT += $(patsubst %.o, %, $(OBJ_LIBGCOV))
