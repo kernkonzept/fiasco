@@ -35,7 +35,7 @@ menu "Target configuration"
 
 choice
 	prompt "Architecture"
-	default AMD64
+	default IA32
 
 config IA32
 	bool "Intel IA-32 processor family"
@@ -97,7 +97,6 @@ config ABI_VF
 
 config CPU_VIRT
 	bool "Virtualization"
-	default y
 	depends on HAS_CPU_VIRT
 	help
 	  Support virtualization extensions provided by CPUs, including
@@ -197,8 +196,7 @@ endmenu # target
 menu "Kernel options"
 
 config MP
-	bool "Enable multi-processor support"
-	default y
+	bool "Enable multi processor support"
 	depends on HAS_MP_OPTION
 	help
 	  Enable support for machines with multiple processors.
@@ -207,12 +205,13 @@ config MP_MAX_CPUS
 	int "Maximal supported number of CPUs"
 	depends on MP
 	range 1 128
-	default 16
+	default 4
 	help
 	  The maximum number of CPUs the kernel supports.
 
 config CONTEXT_8K
 	bool #"TCB size of 8k"
+	default n
 	help
 	  Use this option to use 8K kernel stacks. Only disable this option
 	  when you know what you're doing.
@@ -241,7 +240,6 @@ config ONE_SHOT
 
 config SYNC_TSC
 	bool "Use time-stamp counter for KIP and scheduling accounting"
-	default y
 	depends on PF_PC && (IA32 || AMD64)
 	help
 	  Synchronize the internal kernel clock with the CPU time stamp
@@ -299,7 +297,6 @@ endchoice
 
 config IOMMU
 	bool "Enable support for DMA remapping" if HAS_IOMMU_OPTION
-	default y
 	depends on HAS_IOMMU_OPTION
 	help
 	  This option enables support for DMA remapping (IO-MMUs).
