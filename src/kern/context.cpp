@@ -814,16 +814,14 @@ Context::schedule_if(bool s)
 }
 
 /**
- * Return Context's Sched_context with id 'id'; return time slice 0 as default.
- * @return Sched_context with id 'id' or 0
+ * Return Context's Sched_context
+ * @return Sched_context
  */
 PUBLIC inline
 Sched_context *
-Context::sched_context(unsigned short const id = 0) const
+Context::sched_context() const
 {
-  if (EXPECT_TRUE (!id))
-    return const_cast<Sched_context*>(&_sched_context);
-  return 0;
+  return const_cast<Sched_context*>(&_sched_context);
 }
 
 /**
