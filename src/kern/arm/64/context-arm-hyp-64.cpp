@@ -134,7 +134,7 @@ Context::arm_ext_vcpu_switch_to_host(Vcpu_state *vcpu, Vm_state *v)
   asm volatile ("mrs %x0, TPIDRRO_EL0" : "=r"(vcpu->_regs.tpidruro));
   asm volatile ("mrs %x0, SCTLR_EL1"   : "=r"(v->guest_regs.sctlr));
   asm volatile ("mrs %x0, CPACR_EL1"   : "=r"(v->guest_regs.cpacr));
-  asm volatile ("msr CPACR_EL1, %x0"   : : "r"(3UL << 20));
+  asm volatile ("msr CPACR_EL1, %x0"   : : "r"(Cpu::Cpacr_el1_generic_hyp));
 
   asm volatile ("mrs %x0, CNTV_CTL_EL0" : "=r" (v->guest_regs.cntv_ctl));
   // disable VTIMER
@@ -158,7 +158,7 @@ Context::arm_ext_vcpu_switch_to_host_no_load(Vcpu_state *vcpu, Vm_state *v)
 
   v->sctlr   = Cpu::Sctlr_el1_generic;
   _hyp.cntv_ctl = 0;
-  _hyp.cpacr    = 3UL << 20;
+  _hyp.cpacr    = Cpu::Cpacr_el1_generic_hyp;
 }
 
 PRIVATE inline

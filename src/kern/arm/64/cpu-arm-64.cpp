@@ -52,6 +52,20 @@ public:
                     | Sctlr_uci
                     | Sctlr_el1_res,
   };
+
+  enum : Mword
+  {
+    Cptr_el2_generic    = 0x33ffUL, // Reserved(RES1): 0-9, 12-13
+    Cptr_el2_tfp        = 1UL << 10, // Trap advanced SIMD and floating-point
+    Cptr_el2_tta        = 1UL << 20, // Trap accesses to trace registers
+
+    // Trap advanced SIMD and floating-point instructions at both EL0 and EL1.
+    Cpacr_el1_fpen_full = 3UL << 20,
+    // When we run at EL2 we have to make sure that CPACR_EL1.FPEN is 3 when
+    // user-mode runs with HCR.TGE = 1, otherwise we get undefined instruction
+    // exceptions instead of FPU traps into EL2.
+    Cpacr_el1_generic_hyp = Cpacr_el1_fpen_full,
+  };
 };
 
 //--------------------------------------------------------------------------
@@ -195,9 +209,7 @@ Cpu::init_hyp_mode()
   Mem::isb();
 
   // HCPTR
-  asm volatile("msr CPTR_EL2, %x0" : :
-               "r" (  0x33ffUL     // TCP: 0-9, 12-13
-                    | (1 << 20))); // TTA
+  asm volatile("msr CPTR_EL2, %x0" : : "r" (Cptr_el2_generic | Cptr_el2_tta));
 }
 //--------------------------------------------------------------------------
 IMPLEMENTATION [arm]:

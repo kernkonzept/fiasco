@@ -44,6 +44,7 @@ IMPLEMENTATION [arm && fpu]:
 #include <cstdio>
 #include <cstring>
 
+#include "cpu.h"
 #include "fpu_state.h"
 #include "mem.h"
 #include "processor.h"
@@ -65,7 +66,7 @@ Fpu::init(Cpu_number cpu, bool resume)
   // without HYP the disable below will disable it, so this does not hurt
   __asm__ __volatile__ (
       "msr  CPACR_EL1, %[cpacr_on]"
-      : : [cpacr_on]"r"(3UL << 20));
+      : : [cpacr_on]"r"(Cpu::Cpacr_el1_generic_hyp));
 
   f.finish_init();
 }
@@ -206,17 +207,17 @@ Fpu::init_state(Fpu_state *s)
   Mem::memset_mwords(fpu_regs, 0, sizeof (*fpu_regs) / sizeof(Mword));
 }
 
-PUBLIC static
+PUBLIC static inline NEEDS ["cpu.h"]
 bool
 Fpu::is_enabled()
 {
   Mword x;
   asm volatile ("mrs %0, CPACR_EL1" : "=r"(x));
-  return x & (3UL << 20);
+  return x & Cpu::Cpacr_el1_fpen_full;
 }
 
 
-PUBLIC static inline
+PUBLIC static inline NEEDS ["cpu.h"]
 void
 Fpu::enable()
 {
@@ -224,11 +225,11 @@ Fpu::enable()
   asm volatile("mrs  %0, CPACR_EL1  \n"
                "orr  %0, %0, %1     \n"
                "msr  CPACR_EL1, %0  \n"
-               : "=r"(t) : "I" (3UL << 20));
+               : "=r"(t) : "I" (Cpu::Cpacr_el1_fpen_full));
   Mem::isb();
 }
 
-PUBLIC static inline
+PUBLIC static inline NEEDS ["cpu.h"]
 void
 Fpu::disable()
 {
@@ -236,7 +237,7 @@ Fpu::disable()
   asm volatile("mrs  %0, CPACR_EL1  \n"
                "bic  %0, %0, %1     \n"
                "msr  CPACR_EL1, %0  \n"
-               : "=r"(t) : "I" (3UL << 20));
+               : "=r"(t) : "I" (Cpu::Cpacr_el1_fpen_full));
   Mem::isb();
 }
 
@@ -254,38 +255,37 @@ Fpu::init_state(Fpu_state *s)
   //fpu_regs->fpexc |= FPEXC_EN;
 }
 
-PUBLIC static
+PUBLIC static inline NEEDS ["cpu.h"]
 bool
 Fpu::is_enabled()
 {
   Mword dummy;
   __asm__ __volatile__ ("mrs %0, CPTR_EL2" : "=r"(dummy));
-  return !(dummy & (1 << 10));
+  return !(dummy & Cpu::Cptr_el2_tfp);
 }
 
-
-PUBLIC inline
+PUBLIC inline NEEDS ["cpu.h"]
 void
 Fpu::enable()
 {
   Mword dummy;
   __asm__ __volatile__ (
-      "mrs %0, CPTR_EL2         \n"
-      "bic %0, %0, #(1 << 10)   \n"
-      "msr CPTR_EL2, %0         \n"
-      : "=&r" (dummy) );
+      "mrs %0, CPTR_EL2  \n"
+      "bic %0, %0, %1    \n"
+      "msr CPTR_EL2, %0  \n"
+      : "=&r" (dummy) : "I" (Cpu::Cptr_el2_tfp));
   Mem::isb();
 }
 
-PUBLIC inline
+PUBLIC inline NEEDS ["cpu.h"]
 void
 Fpu::disable()
 {
   Mword dummy;
   __asm__ __volatile__ (
-      "mrs  %0, CPTR_EL2           \n"
-      "orr  %0, %0, #(1 << 10)     \n"
-      "msr  CPTR_EL2, %0           \n"
-      : "=&r" (dummy));
+      "mrs  %0, CPTR_EL2  \n"
+      "orr  %0, %0, %1    \n"
+      "msr  CPTR_EL2, %0  \n"
+      : "=&r" (dummy) : "I" (Cpu::Cptr_el2_tfp));
   Mem::isb();
 }
