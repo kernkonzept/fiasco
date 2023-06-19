@@ -54,7 +54,7 @@ protected:
     constexpr Check_sender(R s) noexcept : s(s) {}
     Check_sender() = default;
 
-    constexpr bool is_ok() const { return !(s & ~1u); }
+    constexpr bool is_ok() const { return s == Ok_closed_wait || s == Ok_open_wait; }
     constexpr bool is_open_wait() const { return s & Open_wait_flag; }
   };
 
