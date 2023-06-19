@@ -106,6 +106,8 @@ Cpu::disable_dcache()
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && !cpu_virt]:
 
+#include "kmem.h"
+
 IMPLEMENT_OVERRIDE
 void
 Cpu::init_supervisor_mode(bool is_boot_cpu)
