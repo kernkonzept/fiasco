@@ -27,7 +27,7 @@ public:
     { return chip->_irqs[pin]; }
   };
 
-  unsigned icu_num_irqs() const { return NIRQS; }
+  unsigned nr_irqs() const { return NIRQS; }
 
   Irq_base *icu_get_irq(unsigned pin) const
   {
@@ -191,7 +191,10 @@ Icu_h<REAL_ICU>::op_icu_set_mode(Mword irqnum, Irq_chip::Mode mode)
   auto i = this_icu()->icu_get_chip(irqnum);
 
   if (!i.chip)
-    return Kobject_iface::commit_result(-L4_err::ENodev);
+    return Kobject_iface::commit_result(-L4_err::EInval);
+
+  if (i.pin >= i.chip->nr_irqs())
+    return Kobject_iface::commit_result(-L4_err::EInval);
 
   int r = i.chip->set_mode(i.pin, mode);
 
