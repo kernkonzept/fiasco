@@ -62,10 +62,10 @@ dump_coverage(void)
   finalize_coverage_dump(to_write, written);
 }
 
-void gcov_print(void);
+void cov_print(void);
 
 void
-gcov_print(void)
+cov_print(void)
 {
   if (__llvmcov_dumped)
     return;

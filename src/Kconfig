@@ -28,7 +28,7 @@ config HAS_IOMMU_OPTION
 config HAS_MP_OPTION
 	bool
 
-config HAS_GCOV_OPTION
+config HAS_COV_OPTION
 	bool
 
 config HAS_CPU_VIRT
@@ -408,9 +408,9 @@ endmenu # kernel options
 
 menu "Debugging"
 
-config GCOV
-	bool "GCOV support"
-	depends on HAS_GCOV_OPTION
+config COV
+	bool "Coverage support"
+	depends on HAS_COV_OPTION
 	help
 	  Adds coverage support using gcov or llvm depending on the compiler that
 	  is used. Do not enable this on production systems.

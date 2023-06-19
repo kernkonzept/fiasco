@@ -23,7 +23,7 @@ INTERFACE:
 #include "unique_ptr.h"
 
 
-extern "C" void gcov_print() __attribute__((weak));
+extern "C" void cov_print(void) __attribute__((weak));
 
 
 /// Utest namespace for constants
@@ -389,8 +389,8 @@ Utest_fw::finish()
   if (_num_tests > 0)
     test_done();
 
-  if (gcov_print)
-    gcov_print();
+  if (cov_print)
+    cov_print();
 
   if (_sum_failed && ext_info.debug)
     kdb_ke("Test finish with failure & Debug flag set.");

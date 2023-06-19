@@ -12,7 +12,7 @@
  * for reference.
  */
 
-IMPLEMENTATION [debug || gcov]:
+IMPLEMENTATION [debug || cov]:
 
 #include "globals.h"
 #include "kobject_helper.h"
@@ -20,7 +20,7 @@ IMPLEMENTATION [debug || gcov]:
 class Jdb_object : public Kobject_h<Jdb_object, Kobject>
 {
 private:
-  L4_msg_tag sys_print_gcov_data();
+  L4_msg_tag sys_print_cov_data();
 public:
   Jdb_object()
   {
@@ -297,7 +297,7 @@ Jdb_object::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
       return sys_tbuf(tag, op & 0xff, rights, f, r_msg, s_msg);
 
     case 4:
-      return sys_print_gcov_data();
+      return sys_print_cov_data();
 
     default:
       return sys_jdb(tag, op & 0xff, rights, f, r_msg, s_msg);
@@ -305,31 +305,31 @@ Jdb_object::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
 }
 
 //------------------------------------------------------------------
-IMPLEMENTATION [gcov]:
+IMPLEMENTATION [cov]:
 
-extern "C" void gcov_print();
+extern "C" void cov_print(void) __attribute__ ((weak));
 
 IMPLEMENT
 L4_msg_tag
-Jdb_object::sys_print_gcov_data()
+Jdb_object::sys_print_cov_data()
 {
-  gcov_print();
+  cov_print();
   return commit_result(0);
 }
 
 //------------------------------------------------------------------
-IMPLEMENTATION [debug && !gcov]:
+IMPLEMENTATION [debug && !cov]:
 
 IMPLEMENT
 L4_msg_tag
-Jdb_object::sys_print_gcov_data()
+Jdb_object::sys_print_cov_data()
 {
   return commit_result(-L4_err::ENosys);
 }
 
 
 //------------------------------------------------------------------
-IMPLEMENTATION [!debug && gcov]:
+IMPLEMENTATION [!debug && cov]:
 
 #include "kobject_rpc.h"
 
@@ -352,7 +352,7 @@ Jdb_object::kinvoke(L4_obj_ref, L4_fpage::Rights, Syscall_frame *f,
   switch (group)
     {
     case 4:
-      return sys_print_gcov_data();
+      return sys_print_cov_data();
 
     default:
       return commit_result(-L4_err::ENosys);

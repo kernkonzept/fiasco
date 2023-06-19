@@ -16,7 +16,7 @@ COVFLAGS_bootstrap-clang := -fno-profile-instr-generate -fno-coverage-mapping
 
 define gen_bootstrap_flags =
 CXXFLAGS_$(basename $(notdir $(1))) = \
-  -fPIC $(if $(CONFIG_GCOV),$(COVFLAGS_bootstrap-$(CC_TYPE)))
+  -fPIC $(if $(CONFIG_COV),$(COVFLAGS_bootstrap-$(CC_TYPE)))
 endef
 
 $(foreach obj,$(OBJ_BOOTSTRAP),$(eval $(call gen_bootstrap_flags, $(obj))))

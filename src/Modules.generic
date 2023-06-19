@@ -86,30 +86,30 @@ LIBUART_UART = -include uart_$(strip $(1)).h \
 	       -DFIASCO_UART_TYPE=L4::Uart_$(strip $(if $(2),$(2),$(1)))
 
 #
-# GCOV Subsystem
+# COV Subsystem
 #
-LIBGCOV := libgcov.a
+LIBCOV := libcov.a
 VPATH += lib/gcov/src
 VPATH += lib/gcov/contrib/llvm_compiler-rt_profile/
 PRIVATE_INCDIR += lib/gcov/src
 PRIVATE_INCDIR += lib/gcov/contrib/llvm_compiler-rt_profile/
 
-CSRC_LIBGCOV-clang_contrib := \
+CSRC_LIBCOV-clang_contrib := \
         InstrProfiling.c InstrProfilingBuffer.c InstrProfilingPlatformLinux.c \
         InstrProfilingVersionVar.c InstrProfilingWriter.c                     \
         InstrProfilingInternal.c
 
-CSRC_LIBGCOV-clang := llvmcov.c plain.c llvmcov-plain.c
-CSRC_LIBGCOV-clang += $(CSRC_LIBGCOV-clang_contrib)
+CSRC_LIBCOV-clang := llvmcov.c plain.c llvmcov-plain.c
+CSRC_LIBCOV-clang += $(CSRC_LIBCOV-clang_contrib)
 
-CSRC_LIBGCOV-gcc   := gcov.c plain.c gcov-plain.c
+CSRC_LIBCOV-gcc   := gcov.c plain.c gcov-plain.c
 
-CSRC_LIBGCOV        = output.c base64.c
-CSRC_LIBGCOV       += $(CSRC_LIBGCOV-$(CC_TYPE))
+CSRC_LIBCOV        = output.c base64.c
+CSRC_LIBCOV       += $(CSRC_LIBCOV-$(CC_TYPE))
 
 # suppress compiler warnings for clang compiler-rt code
-$(foreach f, $(patsubst %.c, %, $(CSRC_LIBGCOV-clang_contrib)), \
+$(foreach f, $(patsubst %.c, %, $(CSRC_LIBCOV-clang_contrib)), \
         $(eval CFLAGS_$(f) += -Wno-strict-prototypes -Wno-unused-parameter \
                               -Wno-missing-prototypes -Wno-undef))
 
-NOOPT += $(patsubst %.o, %, $(OBJ_LIBGCOV))
+NOOPT += $(patsubst %.o, %, $(OBJ_LIBCOV))

@@ -11,43 +11,43 @@ IMPLEMENTATION:
 #include "static_init.h"
 #include "types.h"
 
-extern "C" void gcov_print();
+extern "C" void cov_print(void) __attribute__ ((weak));
 
-class Jdb_gcov_module : public Jdb_module
+class Jdb_cov_module : public Jdb_module
 {
 public:
-  Jdb_gcov_module() FIASCO_INIT;
+  Jdb_cov_module() FIASCO_INIT;
 };
 
-static Jdb_gcov_module jdb_gcov_module INIT_PRIORITY(JDB_MODULE_INIT_PRIO);
+static Jdb_cov_module jdb_cov_module INIT_PRIORITY(JDB_MODULE_INIT_PRIO);
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_gcov_module::action(int cmd, void *&, char const *&, int &)
+Jdb_cov_module::action(int cmd, void *&, char const *&, int &)
 {
   if (cmd == 0)
-    gcov_print();
+    cov_print();
 
   return NOTHING;
 }
 
 PUBLIC
 int
-Jdb_gcov_module::num_cmds() const
+Jdb_cov_module::num_cmds() const
 {
   return 1;
 }
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_gcov_module::cmds() const
+Jdb_cov_module::cmds() const
 {
-  static Cmd cs[] = { { 0, "&", "gcov", "", "&\tprint gcov info", 0 } };
+  static Cmd cs[] = { { 0, "&", "cov", "", "&\tprint cov info", 0 } };
 
   return cs;
 }
 
 IMPLEMENT
-Jdb_gcov_module::Jdb_gcov_module()
+Jdb_cov_module::Jdb_cov_module()
 : Jdb_module("GENERAL")
 {}

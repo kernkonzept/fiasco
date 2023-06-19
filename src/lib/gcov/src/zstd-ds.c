@@ -22,20 +22,20 @@ init_storage_backend(void)
 
   if (l4_is_invalid_cap(ds))
     {
-      vconprint("GCOV: ERROR: Could not allocate cap\n");
+      vconprint("COV: ERROR: Could not allocate cap\n");
       return -1;
     }
 
   if (l4re_ma_alloc(zstd_workspace_size, ds, 0))
     {
-      vconprint("GCOV: ERROR: Could not allocate\n");
+      vconprint("COV: ERROR: Could not allocate\n");
       return -1;
     }
 
   if (l4re_rm_attach(&zstd_workspace, zstd_workspace_size, L4RE_RM_F_SEARCH_ADDR | L4RE_RM_F_RW,
                      ds, 0, L4_SUPERPAGESHIFT))
     {
-      vconprint("GCOV: ERROR: Could attach DS\n");
+      vconprint("COV: ERROR: Could attach DS\n");
       return -1;
     }
   return 0;

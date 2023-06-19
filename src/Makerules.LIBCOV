@@ -1,11 +1,11 @@
 # -*- makefile -*-
 
-$(LIBGCOV): $(OBJ_LIBGCOV)
+$(LIBCOV): $(OBJ_LIBCOV)
 	$(AR_MESSAGE)
 	$(VERBOSE)$(RM) $@
 	$(VERBOSE)$(AR) $(ARFLAGS) $@ $^
 
-clean-LIBGCOV:
+clean-LIBCOV:
 	$(VERBOSE)$(RM) *.gcno
 
 fiasco-covpath.o:

@@ -18,14 +18,14 @@ init_zstd(void)
 
   if (init_storage_backend() != 0)
     {
-      vconprint("GCOV: ERROR: Failed to initialize ZSTD storage\n");
+      vconprint("COV: ERROR: Failed to initialize ZSTD storage\n");
       return;
     }
 
   ctx = ZSTD_initStaticCCtx((void *)zstd_workspace, zstd_workspace_size);
   if (ctx == NULL)
     {
-      vconprint("GCOV: ERROR: Failed to init ZSTD Context\n");
+      vconprint("COV: ERROR: Failed to init ZSTD Context\n");
       return;
     }
 

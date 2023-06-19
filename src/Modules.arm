@@ -295,11 +295,11 @@ LIBK 		:= libk.a
 VPATH          	+= lib/libk/$(CONFIG_XARCH)/$(BITS) lib/libk/$(CONFIG_XARCH) lib/libk
 PRIVATE_INCDIR 	+= lib/libk/$(CONFIG_XARCH)/$(BITS) lib/libk/$(CONFIG_XARCH) lib/libk
 
-ifneq ($(CONFIG_GCOV),)
- SUBSYSTEMS  += LIBGCOV
- KERNEL_EXTRA_LIBS += $(LIBGCOV)
+ifneq ($(CONFIG_COV),)
+ SUBSYSTEMS  += LIBCOV
+ KERNEL_EXTRA_LIBS += $(LIBCOV)
  PRIVATE_INCDIR += lib/gcov/include
- INTERFACES_KERNEL-$(CONFIG_JDB) += jdb_gcov_module
+ INTERFACES_KERNEL-$(CONFIG_JDB) += jdb_cov_module
 endif
 
 #INTERFACES_LIBK:= atomic lock_guard profile uuencode gmon unistd panic

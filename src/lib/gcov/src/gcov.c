@@ -138,12 +138,12 @@ __gcov_execvp(char const *file, char *const argv[]);
 int
 __gcov_execv(char const *file, char *const argv[]);
 void
-gcov_print(void);
+cov_print(void);
 
 struct gcov_master __gcov_master = {NULL, NULL, 0};
 
 void
-gcov_print()
+cov_print()
 {
   if (__gcov_master.dumped)
     return;
@@ -156,7 +156,7 @@ gcov_print()
 void
 __gcov_exit()
 {
-  gcov_print();
+  cov_print();
 }
 
 void
