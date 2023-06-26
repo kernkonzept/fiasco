@@ -249,7 +249,7 @@ jdb_kern_info_IMPL	:= jdb_kern_info jdb_kern_info-arm \
 			   jdb_kern_info-cpu-arm
 jdb_dump_entry_frame_IMPL:= jdb_dump_entry_frame-arm
 jdb_tcb_IMPL		+= jdb_tcb-arm
-jdb_ptab_IMPL		:= jdb_ptab jdb_ptab-ia32-ux-arm jdb_ptab-arm
+jdb_ptab_IMPL		:= jdb_ptab jdb_ptab-arm
 jdb_entry_frame_IMPL	:= jdb_entry_frame-arm
 jdb_trace_set_IMPL	:= jdb_trace_set jdb_trace_set-arm \
 			   jdb_trace_set-arm-$(BITS)
