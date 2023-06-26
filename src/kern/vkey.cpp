@@ -107,14 +107,6 @@ Vkey::trigger()
 }
 
 PUBLIC static
-void
-Vkey::add_char(int v)
-{
-  if (add(v))
-    trigger();
-}
-
-PUBLIC static
 int
 Vkey::check_()
 {
@@ -200,11 +192,6 @@ Vkey::set_echo(Echo_type)
 PUBLIC static inline
 void
 Vkey::clear()
-{}
-
-PUBLIC static inline
-void
-Vkey::add_char(int)
 {}
 
 PUBLIC static
