@@ -170,8 +170,6 @@ INTERFACES_KERNEL += boot_infos
 
 
 bootstrap_IMPL		:= bootstrap bootstrap-arm-$(BITS)
-CXXFLAGS_bootstrap      := -O3 $(if $(CONFIG_BIT64),-mcmodel=large)
-CXXFLAGS_bootstrap-arm-$(BITS) := $(CXXFLAGS_bootstrap)
 clock_IMPL              := clock
 config_IMPL	  	:= config config-arm
 context_IMPL	  	:= context context-arm context-arm-$(BITS) \
