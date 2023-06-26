@@ -194,7 +194,7 @@ jdb_kern_info_IMPL	:= jdb_kern_info jdb_kern_info-ia32-amd64 \
 			   jdb_kern_info-bench-ia32-32 \
 			   jdb_kern_info-dr jdb_kern_info-mtrr
 jdb_misc_IMPL		:= jdb_misc-ia32-amd64
-jdb_ptab_IMPL		:= jdb_ptab jdb_ptab-ia32-ux-arm
+jdb_ptab_IMPL		:= jdb_ptab jdb_ptab-ia32-ux
 jdb_screen_IMPL		:= jdb_screen jdb_screen-ia32
 jdb_tcb_IMPL		+= jdb_tcb-ia32-ux
 jdb_trace_set_IMPL	:= jdb_trace_set jdb_trace_set-ia32-ux
