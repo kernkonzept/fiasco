@@ -478,6 +478,8 @@ Vm_svm::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, Vmcb *vmcb_s)
   kernel_vmcb_s->control_area.intercept_instruction0 |= (1 << 30);
   // intercept INTR/NMI/SMI/INIT
   kernel_vmcb_s->control_area.intercept_instruction0 |= 0xf;
+  // intercept RDPMC
+  kernel_vmcb_s->control_area.intercept_instruction0 |= (1 << 15);
   // intercept INVD
   kernel_vmcb_s->control_area.intercept_instruction0 |= (1 << 22);
   // intercept HLT

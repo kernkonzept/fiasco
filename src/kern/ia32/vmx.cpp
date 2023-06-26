@@ -108,6 +108,7 @@ public:
 
   enum Primary_proc_based_ctls
   {
+    PRB1_rdpmc_exiting            = 11,
     PRB1_tpr_shadow               = 21,
     PRB1_mov_dr_exit              = 23,
     PRB1_unconditional_io_exit    = 24,
@@ -638,6 +639,9 @@ Vmx_info::init()
   procbased_ctls.enforce(Vmx_info::PRB1_mov_dr_exit, true);
 
   procbased_ctls.enforce(Vmx_info::PRB1_use_msr_bitmaps, false);
+
+  // exit on performance counter use
+  procbased_ctls.enforce(Vmx_info::PRB1_rdpmc_exiting, true);
 
   // virtual APIC not yet supported
   procbased_ctls.enforce(Vmx_info::PRB1_tpr_shadow, false);
