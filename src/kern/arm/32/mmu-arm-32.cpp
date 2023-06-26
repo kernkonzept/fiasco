@@ -185,7 +185,7 @@ EXTENSION class Mmu
 
   static void ic_iallu()
   {
-    asm volatile("mcr p15, 0, r0, c7, c5, 0" : : : "memory");
+    asm volatile("mcr p15, 0, %0, c7, c5, 0" : : "r" (0) : "memory");
   }
 
 };

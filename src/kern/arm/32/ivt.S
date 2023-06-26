@@ -720,6 +720,7 @@ GEN_DEBUGGER_ENTRIES
 #ifdef CONFIG_ARM_V7
 	isb
 #else
+	mov \reg, #0
 	mcr p15, 0, \reg, c7, c5, 4	@ cp15isb
 #endif
 .endm

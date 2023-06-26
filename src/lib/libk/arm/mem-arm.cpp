@@ -184,10 +184,10 @@ PUBLIC static inline void Mem::dmb()
 { __asm__ __volatile__ ("mcr p15, 0, r0, c7, c10, 5" : : : "memory"); }
 
 PUBLIC static inline void Mem::isb()
-{ __asm__ __volatile__ ("mcr p15, 0, r0, c7, c5, 4" : : : "memory"); }
+{ __asm__ __volatile__ ("mcr p15, 0, %0, c7, c5, 4" : : "r" (0) : "memory"); }
 
 PUBLIC static inline void Mem::dsb()
-{ __asm__ __volatile__ ("mcr p15, 0, r0, c7, c10, 4" : : : "memory"); }
+{ __asm__ __volatile__ ("mcr p15, 0, %0, c7, c10, 4" : : "r" (0) : "memory"); }
 
 PUBLIC static inline void Mem::dsbst() { dsb(); }
 

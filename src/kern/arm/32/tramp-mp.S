@@ -113,7 +113,7 @@ _tramp_mp_entry:
 #if defined(CONFIG_ARM_V7) && !defined(CONFIG_ARM_PSCI)
 	bl    cache_invalidate_l1_v7
 #endif
-
+	mov   r0, #0
 	mcr   p15, 0, r0, c7, c5, 0 // ICIALLU
 	mcr   p15, 0, r0, c7, c5, 6 // BPIALL
 	isb   sy
