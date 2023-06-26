@@ -6,13 +6,15 @@ template< unsigned Bits_per_entry >
 class Irq_mgr_multi_chip : public Irq_mgr
 {
 public:
-  unsigned nr_irqs() const override { return _nchips << Bits_per_entry; }
+  unsigned nr_irqs() const override { return _nchips * Irqs_per_entry; }
   unsigned nr_msis() const override { return 0; }
 
 private:
+  enum { Irqs_per_entry = 1UL << Bits_per_entry };
+
   struct Chip
   {
-    unsigned mask;
+    unsigned irq_base;
     Irq_chip_icu *chip;
   };
 
@@ -38,13 +40,13 @@ PUBLIC template< unsigned Bits_per_entry >
 Irq_mgr::Irq
 Irq_mgr_multi_chip<Bits_per_entry>::chip(Mword irqnum) const override
 {
-  unsigned c = irqnum >> Bits_per_entry;
+  unsigned c = irqnum / Irqs_per_entry;
   if (c >= _nchips)
     return Irq();
 
   Chip *ci = _chips + c;
 
-  return Irq(ci->chip, irqnum & ci->mask);
+  return Irq(ci->chip, irqnum - ci->irq_base);
 }
 
 
@@ -55,20 +57,10 @@ Irq_mgr_multi_chip<Bits_per_entry>::add_chip(unsigned irq_base,
                                              Irq_chip_icu *c, unsigned pins)
 {
   // check if the base is properly aligned
-  assert ((irq_base & ~(~0UL << Bits_per_entry)) == 0);
+  assert ((irq_base % Irqs_per_entry) == 0);
 
-  unsigned idx = irq_base >> Bits_per_entry;
-  unsigned num = (pins + (1UL << Bits_per_entry) - 1) >> Bits_per_entry;
-
-  unsigned mask = ~0U;
-  while (mask & (pins - 1))
-    mask <<= 1;
-
-  assert (mask);
-  mask = ~mask;
-
-  // base irq must be aligned according to the number of pins
-  assert (!(irq_base & mask));
+  unsigned idx = irq_base / Irqs_per_entry;
+  unsigned num = (pins + Irqs_per_entry - 1) / Irqs_per_entry;
 
   assert (num);
   assert (idx < _nchips);
@@ -78,6 +70,6 @@ Irq_mgr_multi_chip<Bits_per_entry>::add_chip(unsigned irq_base,
     {
       assert (!_chips[i].chip);
       _chips[i].chip = c;
-      _chips[i].mask = mask;
+      _chips[i].irq_base = irq_base;
     }
 }
