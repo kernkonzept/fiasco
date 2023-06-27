@@ -4,7 +4,7 @@ EXTENSION class Mem_layout
 {
 public:
   enum Virt_layout_kern_user_max : Address {
-    User_max             = 0x0000007fffffffff,
+    User_max             = 0x000000ffffffffff,
   };
 };
 
