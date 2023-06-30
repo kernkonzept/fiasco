@@ -48,6 +48,7 @@ EXTENSION class Page
 public:
   enum
   {
+    Min_pa_range = 0, // Can be used for everything smaller than 40 bits.
     Max_pa_range = 2, // 40 bits PA/IPA size (encoded as VTCR_EL2.PS)
     Vtcr_sl0 = 1,     // 3 level page table
   };
@@ -83,6 +84,7 @@ EXTENSION class Page
 public:
   enum
   {
+    Min_pa_range = 4, // 4-level stage2 PTs need at least 44 (I)PA bits!
     Max_pa_range = 5, // 48 bits PA/IPA size (encoded as VTCR_EL2.PS)
     Vtcr_sl0 = 2,     // 4 level page table
   };
