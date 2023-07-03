@@ -28,7 +28,7 @@ else
   endif
 endif
 
-INTERFACES_KERNEL     += platform board_check-arm-realview cascade_irq
+INTERFACES_KERNEL     += platform board_check-arm-realview irq_mgr_multi_chip cascade_irq
 
 timer_tick_IMPL       += timer_tick-single-vector
 config_IMPL           += config-arm-realview
