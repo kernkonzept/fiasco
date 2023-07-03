@@ -6,7 +6,8 @@ INTERFACE [arm && pic_gic && pf_s32g]:
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pic_gic && pf_s32g]:
 
-#include "irq_mgr_multi_chip.h"
+#include "boot_alloc.h"
+#include "irq_mgr.h"
 #include "gic_v3.h"
 #include "kmem.h"
 
