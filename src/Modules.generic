@@ -89,8 +89,10 @@ LIBUART_UART = -include uart_$(strip $(1)).h \
 # GCOV Subsystem
 #
 LIBGCOV := libgcov.a
-VPATH += lib/gcov
-PRIVATE_INCDIR += lib/gcov/
+VPATH += lib/gcov/src
+VPATH += lib/gcov/contrib/llvm_compiler-rt_profile/
+PRIVATE_INCDIR += lib/gcov/src
+PRIVATE_INCDIR += lib/gcov/contrib/llvm_compiler-rt_profile/
 
 CSRC_LIBGCOV-clang_contrib := \
         InstrProfiling.c InstrProfilingBuffer.c InstrProfilingPlatformLinux.c \
