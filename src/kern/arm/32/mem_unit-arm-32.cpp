@@ -38,7 +38,7 @@ void Mem_unit::kernel_tlb_flush(void *va)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && (arm_v6 || (arm_v7 && !mp))]:
+IMPLEMENTATION [arm && (arm_v6 || (arm_v7 && !mp)) && !cpu_virt]:
 
 IMPLEMENT inline
 void Mem_unit::tlb_flush()
@@ -134,7 +134,7 @@ void Mem_unit::kernel_tlb_flush(void *va)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_v7plus && cpu_virt && !(arm_v7 && !mp)]:
+IMPLEMENTATION [arm && arm_v7plus && cpu_virt]:
 
 IMPLEMENT inline
 void Mem_unit::tlb_flush()
