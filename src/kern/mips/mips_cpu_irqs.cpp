@@ -33,7 +33,12 @@ public:
   { return sizeof(_irqs) / sizeof(_irqs[0]); }
 
   Irq_base *irq(Mword pin) const override
-  { return _irqs[pin]; }
+  {
+    if (pin >= Mips_cpu_irq_chip::nr_irqs())
+      return nullptr;
+
+    return _irqs[pin];
+  }
 
   bool alloc(Irq_base *irq, Mword pin, bool init = true) override
   {
