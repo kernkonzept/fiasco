@@ -126,18 +126,14 @@ IMPLEMENTATION [arm && arm_lpae]:
 
 static inline NEEDS[Bootstrap::map_page_order]
 Bootstrap::Phys_addr
-Bootstrap::pt_entry(Phys_addr pa, bool cache, bool local)
+Bootstrap::pt_entry(Phys_addr pa, bool local)
 {
   Phys_addr res = cxx::mask_lsb(pa, map_page_order()) | Phys_addr(1); // this is a block
 
   if (local)
     res |= Phys_addr(1 << 11); // nG flag
 
-  if (cache)
-    res |= Phys_addr(8);
-  else
-    res |= Phys_addr(1ULL << 54); // assume XN for non-cachable memory
-
+  res |= Phys_addr(8); // Cached
   res |= Phys_addr(1 << 10); // AF
   res |= Phys_addr(3 << 8);  // Inner sharable
   return res;
@@ -166,10 +162,10 @@ Bootstrap::map_page_order() { return Order(20); }
 
 PUBLIC static inline NEEDS["paging.h"]
 Bootstrap::Phys_addr
-Bootstrap::pt_entry(Phys_addr pa, bool cache, bool local)
+Bootstrap::pt_entry(Phys_addr pa, bool local)
 {
   return cxx::mask_lsb(pa, map_page_order())
-                | Phys_addr(cache ? Page::Section_cachable : Page::Section_no_cache)
+                | Phys_addr(Page::Section_cachable)
                 | Phys_addr(local ? Page::Section_local : Page::Section_global);
 }
 
@@ -196,11 +192,10 @@ Bootstrap::map_page_size()
 
 static inline void
 Bootstrap::map_memory(void volatile *pd, Virt_addr va, Phys_addr pa,
-                      bool cache, bool local)
+                      bool local)
 {
   Phys_addr *const p = (Phys_addr*)pd;
-  p[cxx::int_value<Virt_addr>(va >> map_page_order())]
-    = pt_entry(pa, cache, local);
+  p[cxx::int_value<Virt_addr>(va >> map_page_order())] = pt_entry(pa, local);
 }
 
 

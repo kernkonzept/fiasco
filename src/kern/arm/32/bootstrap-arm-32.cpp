@@ -209,14 +209,14 @@ Bootstrap::create_initial_mappings()
        pa = Phys_addr(Mem_layout::trunc_superpage(bs_info.kernel_start_phys));
        pa < Phys_addr(Mem_layout::round_superpage(bs_info.kernel_end_phys));
        va += Bootstrap::map_page_size(), pa += Bootstrap::map_page_size_phys())
-    Bootstrap::map_memory(page_dir, va, pa, true, false);
+    Bootstrap::map_memory(page_dir, va, pa, false);
 
   // Map kernel 1:1. Needed by add_initial_pmem().
   for (pa = Phys_addr(Mem_layout::trunc_superpage(bs_info.kernel_start_phys));
        pa < Phys_addr(Mem_layout::round_superpage(bs_info.kernel_end_phys));
        pa += Bootstrap::map_page_size_phys())
     Bootstrap::map_memory(page_dir, Virt_addr(cxx::int_value<Phys_addr>(pa)),
-                          pa, true, true);
+                          pa, true);
 }
 
 //---------------------------------------------------------------------------
@@ -255,7 +255,7 @@ Bootstrap::create_initial_mappings()
           auto pa = Phys_addr(md.start());
           for (; va < Virt_addr(md.end());
                va += Bootstrap::map_page_size(), pa += Bootstrap::map_page_size_phys())
-            Bootstrap::map_memory(page_dir, va, pa, true, false);
+            Bootstrap::map_memory(page_dir, va, pa, false);
         }
     }
 
@@ -267,7 +267,7 @@ Bootstrap::create_initial_mappings()
        pa = Phys_addr(Mem_layout::trunc_superpage(bs_info.kernel_start_phys));
        pa < Phys_addr(Mem_layout::round_superpage(bs_info.kernel_end_phys));
        va += Bootstrap::map_page_size(), pa += Bootstrap::map_page_size_phys())
-    Bootstrap::map_memory(page_dir, va, pa, true, false);
+    Bootstrap::map_memory(page_dir, va, pa, false);
 }
 
 //---------------------------------------------------------------------------
