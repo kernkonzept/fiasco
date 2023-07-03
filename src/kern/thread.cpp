@@ -904,7 +904,7 @@ Thread::transfer_fpu(Thread *to) //, Trap_state *trap_state, Utcb *to_utcb)
   if (this == curr)
     Fpu::save_state(to->fpu_state());
   else if (curr == to)
-    Fpu::fpu.current().restore_state(fpu_state());
+    Fpu::restore_state(fpu_state());
   else
     Fpu::copy_state(to->fpu_state(), fpu_state());
 }
