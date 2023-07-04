@@ -153,18 +153,17 @@ namespace L4
 
   void Uart_linflex::wait_tx_done() const
   {
-    if (!Fifo_mode)
-      {
-        Poll_timeout_counter i(3000000);
-        while (!i.test(_regs->read<unsigned>(UARTSR) & UARTSR_DTFTFF))
-          ;
-        _regs->write<unsigned>(UARTSR, UARTSR_DTFTFF);
-      }
+    // Already done in out_char() after writing a single character.
   }
 
   void Uart_linflex::out_char(char c) const
   {
     _regs->write<unsigned char>(BDRL, c);
+
+    Poll_timeout_counter i(3000000);
+    while (i.test(!(_regs->read<unsigned>(UARTSR) & UARTSR_DTFTFF)))
+      ;
+    _regs->write<unsigned>(UARTSR, UARTSR_DTFTFF);
   }
 
   int Uart_linflex::write(char const *s, unsigned long count, bool blocking) const
