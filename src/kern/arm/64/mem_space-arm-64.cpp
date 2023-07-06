@@ -26,6 +26,9 @@ Mem_space::make_current(Switchin_flags)
 //----------------------------------------------------------------------------
 IMPLEMENTATION [arm_v8 && arm_lpae && cpu_virt]:
 
+#include "cpu.h"
+#include "paging.h"
+
 IMPLEMENT inline NEEDS[Mem_space::asid]
 void
 Mem_space::make_current(Switchin_flags)
@@ -39,3 +42,9 @@ Mem_space::make_current(Switchin_flags)
   _current.current() = this;
 }
 
+IMPLEMENT_OVERRIDE
+Address
+Mem_space::user_max()
+{
+  return (1ULL << Page::ipa_bits(Cpu::pa_range())) - 1U;
+}

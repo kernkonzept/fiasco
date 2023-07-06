@@ -1,6 +1,12 @@
 IMPLEMENTATION [arm]:
 
 #include "config.h"
+#include "mem_space.h"
+
+IMPLEMENT_OVERRIDE inline NEEDS["mem_space.h"]
+Address
+Kernel_thread::utcb_addr()
+{ return Mem_space::user_max() + 1U - 0x10000U; }
 
 IMPLEMENT inline
 void

@@ -43,8 +43,6 @@ public:
 
     Cache_flush_area     = 0x0, // dummy
   };
-
-  static Address const Utcb_addr;
 };
 
 //---------------------------------------------------------------------------
@@ -57,7 +55,6 @@ EXTENSION class Mem_layout
 public:
   enum Virt_layout_kern : Address {
     User_max             = 0x0000ff7fffffffff,
-    Utcb_addr            = User_max + 1 - 0x10000,
     Service_page         = 0xffff1000eac00000,
     Tbuf_status_page     = Service_page + 0x5000,
     Tbuf_buffer_area	 = Service_page + 0x200000,
@@ -117,18 +114,3 @@ Mem_layout::_read_special_safe(Mword const *address, Mword &v)
                 : "cc");
   return ret;
 }
-
-//--------------------------------------------------------------------------
-IMPLEMENTATION [arm && cpu_virt]:
-
-#include "cpu.h"
-#include "paging.h"
-#include "static_init.h"
-
-IMPLEMENT_OVERRIDE Address
-Mem_layout::hw_user_max()
-{
-  return (1ULL << Page::ipa_bits(Cpu::pa_range())) - 1U;
-}
-
-Address const Mem_layout::Utcb_addr = hw_user_max() + 1U - 0x10000U;

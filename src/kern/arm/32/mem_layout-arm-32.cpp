@@ -43,7 +43,6 @@ public:
   enum Virt_layout : Address {
     Kern_lib_base	 = 0xffffe000,
     Syscalls		 = 0xfffff000,
-    Utcb_addr            = User_max + 1 - 0x10000,
 
     Service_page         = 0xeac00000,
     Tbuf_status_page     = Service_page + 0x5000,

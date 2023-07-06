@@ -16,6 +16,7 @@ IMPLEMENTATION [arm]:
 
 #include "config.h"
 #include "mem_layout.h"
+#include "mem_space.h"
 #include "mem_unit.h"
 #include "timer.h"
 
@@ -73,7 +74,7 @@ void Kip_init::init()
   extern char my_kernel_info_page[];
   Kip *kinfo = reinterpret_cast<Kip*>(my_kernel_info_page);
   Kip::init_global_kip(kinfo);
-  kinfo->add_mem_region(Mem_desc(0, Mem_layout::hw_user_max(),
+  kinfo->add_mem_region(Mem_desc(0, Mem_space::user_max(),
                         Mem_desc::Conventional, true));
   init_syscalls(kinfo);
 }
