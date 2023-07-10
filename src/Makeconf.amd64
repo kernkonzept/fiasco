@@ -5,6 +5,8 @@
 #OPT_CXXFLAGS		+= $(call CHECKCXX,--param large-function-insns=10000)
 #OPT_CFLAGS		+= $(call CHECKCC,--param large-function-insns=10000)
 
+CROSS_COMPILE		?= x86_64-linux-gnu-
+
 # The -Os option of gcc-4.0 sets max-inline-insns-single to 5 which prevents
 # inlining of almost every function
 NOOPT_SHARED_FLAGS-gcc  += $(call CHECKCC,--param max-inline-insns-single=50)
