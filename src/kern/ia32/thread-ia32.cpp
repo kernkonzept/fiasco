@@ -90,29 +90,31 @@ Mword
 Thread::sanitize_user_flags(Mword flags)
 { return (flags & ~(EFLAGS_IOPL | EFLAGS_NT)) | EFLAGS_IF; }
 
-/** Check if the pagefault occurred at a special place: At some places in the
-    kernel we want to ensure that a specific address is mapped. The regular
-    case is "mapped", the exception or slow case is "not mapped". The fastest
-    way to check this is to touch into the memory. If there is no mapping for
-    the address we get a pagefault. Now the pagefault exception handler can
-    recognize that situation by scanning the code. The trick is that the
-    assembler instruction "andl $0xffffffff, %ss:(%ecx)" _clears_ the carry
-    flag normally (see Intel reference manual). The pager wants to inform the
-    code that there was a pagefault and therefore _sets_ the carry flag. So
-    the code has only to check if the carry flag is set. If yes, there was
-    a pagefault at this instruction.
-    @param ip pagefault address */
+/**
+ * Check if the pagefault occurred at a special place: At certain places in the
+ * kernel (Mem_layout::read_special_safe()), we want to ensure that a specific
+ * address is mapped.
+ * The regular case is "mapped", the exception or slow case is "not mapped".
+ * The fastest way to check this is to touch into the memory. If there is no
+ * mapping for the address we get a pagefault. The pagefault handler sets the
+ * carry and/or the zero flag which can be detected by the faulting code.
+ *
+ * @param regs  Pagefault return frame.
+ * @returns False or true whether this was a pagefault at a special region or
+ *          not. On true, the return frame got the carry flag and/or the zero
+ *          flag set (depending on the architecture).
+ */
 IMPLEMENT inline
 bool
 Thread::pagein_tcb_request(Return_frame *regs)
 {
+  // Counterpart: Mem_layout::read_special_safe()
   unsigned long new_ip = regs->ip();
   if (*(Unsigned8*)new_ip == 0x48) // REX.W
     new_ip += 1;
 
   Unsigned16 op = *(Unsigned16*)new_ip;
-  //LOG_MSG_3VAL(current(),"TCB", op, new_ip, 0);
-  if ((op & 0xc0ff) == 0x8b) // Context::is_tcb_mapped() and Context::state()
+  if ((op & 0xc0ff) == 0x8b)
     {
       regs->ip(new_ip + 2);
       // stack layout:
@@ -123,23 +125,11 @@ Thread::pagein_tcb_request(Return_frame *regs)
       //         edx/rdx
       //         ...
       Mword *reg = ((Mword*)regs) - 2 - Return_frame::Pf_ax_offset;
-#if 0
-      LOG_MSG_3VAL(current(),"TCB", op, regs->ip(), (Mword)reg);
-      LOG_MSG_3VAL(current(),"TCBX", reg[-3], reg[-4], reg[-5]);
-      LOG_MSG_3VAL(current(),"TCB0", reg[0], reg[-1], reg[-2]);
-      LOG_MSG_3VAL(current(),"TCB1", reg[1], reg[2], reg[3]);
-#endif
       assert((op >> 11) <= 2);
       reg[-(op>>11)] = 0; // op==0 => eax, op==1 => ecx, op==2 => edx
 
       // tell program that a pagefault occurred we cannot handle
       regs->flags(regs->flags() | 0x41); // set carry and zero flag in EFLAGS
-      return true;
-    }
-  else if (*(Unsigned32*)regs->ip() == 0xff01f636) // used in shortcut.S
-    {
-      regs->ip(regs->ip() + 4);
-      regs->flags(regs->flags() | 1);  // set carry flag in EFLAGS
       return true;
     }
 
