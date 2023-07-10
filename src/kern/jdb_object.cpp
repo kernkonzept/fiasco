@@ -331,6 +331,8 @@ Jdb_object::sys_print_gcov_data()
 //------------------------------------------------------------------
 IMPLEMENTATION [!debug && gcov]:
 
+#include "kobject_rpc.h"
+
 JDB_DEFINE_TYPENAME(Jdb_object, "Jdb");
 
 static Jdb_object __jdb_kobject;
