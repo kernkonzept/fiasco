@@ -95,7 +95,7 @@ public:
 };
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [arm]:
+IMPLEMENTATION [arm && virt_obj_space]:
 
 //---------------------------------
 // Workaround GCC BUG 33661
@@ -105,6 +105,7 @@ PUBLIC static inline
 Mword
 Mem_layout::_read_special_safe(Mword const *a)
 {
+  // Counterpart: Thread::pagein_tcb_request()
   register Mword const *res __asm__ ("r14") = a;
   __asm__ __volatile__ ("ldr %0, [%0]\n" : "=r" (res) : "r" (res) : "cc" );
   return Mword(res);
@@ -118,13 +119,13 @@ PUBLIC static inline
 bool
 Mem_layout::_read_special_safe(Mword const *address, Mword &v)
 {
+  // Counterpart: Thread::pagein_tcb_request()
   register Mword a asm("r14") = (Mword)address;
   Mword ret;
   asm volatile ("msr cpsr_f, #0    \n" // clear flags
                 "ldr %[a], [%[a]]  \n"
 		"movne %[ret], #1      \n"
 		"moveq %[ret], #0      \n"
-
                 : [a] "=r" (a), [ret] "=r" (ret)
                 : "0" (a)
                 : "cc");

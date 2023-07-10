@@ -52,7 +52,6 @@ public:
 IMPLEMENTATION [sparc]:
 
 #include "config.h"
-#include "panic.h"
 #include "paging.h"
 #include <cstdio>
 
@@ -117,6 +116,10 @@ Mem_layout::add_pmem(Address phys, Address virt, unsigned long size)
     }
 }
 
+//---------------------------------------------------------------------------
+IMPLEMENTATION [sparc && virt_obj_space]:
+
+#include "panic.h"
 
 PUBLIC static inline
 template< typename V >

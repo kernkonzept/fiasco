@@ -81,7 +81,7 @@ public:
 };
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [arm]:
+IMPLEMENTATION [arm && virt_obj_space]:
 
 //---------------------------------
 // Workaround GCC BUG 33661
@@ -92,6 +92,7 @@ Mword
 Mem_layout::_read_special_safe(Mword const *a)
 {
   Mword res;
+  // Counterpart: Thread::pagein_tcb_request()
   __asm__ __volatile__ ("ldr %0, %1\n" : "=r" (res) : "m" (*a) : "cc" );
   return res;
 }
@@ -105,13 +106,13 @@ bool
 Mem_layout::_read_special_safe(Mword const *address, Mword &v)
 {
   Mword ret;
+  // Counterpart: Thread::pagein_tcb_request()
   asm volatile ("msr  nzcv, xzr      \n" // clear flags
                 "mov  %[ret], #1     \n"
                 "ldr  %[val], %[adr] \n"
                 "b.ne 1f             \n"
                 "mov  %[ret], xzr    \n"
                 "1:                  \n"
-
                 : [val] "=r" (v), [ret] "=&r" (ret)
                 : [adr] "m" (*address)
                 : "cc");

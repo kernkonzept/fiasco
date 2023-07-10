@@ -30,10 +30,11 @@ void
 Thread::user_ip(Mword ip)
 { regs()->ip(ip); }
 
-IMPLEMENT inline
+IMPLEMENT_OVERRIDE inline
 bool
 Thread::pagein_tcb_request(Return_frame *regs)
 {
+  // Counterpart: Mem_layout::read_special_safe()
   assert (!regs->esr.pf_write()); // must be a read
   assert (regs->esr.il());        // must be a 32bit wide insn
   // we assume the instruction is a ldr with the target register

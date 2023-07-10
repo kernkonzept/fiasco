@@ -131,7 +131,7 @@ extern "C" {
 
 };
 
-IMPLEMENT inline
+IMPLEMENT_OVERRIDE inline
 bool
 Thread::pagein_tcb_request(Return_frame * /*regs*/)
 {

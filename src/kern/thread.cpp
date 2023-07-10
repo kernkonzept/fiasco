@@ -116,6 +116,20 @@ private:
   static void do_leave_and_kill_myself() asm("thread_do_leave_and_kill_myself");
 
 public:
+  /**
+   * Check if the pagefault occurred at a special place: At certain places in
+   * the kernel (Mem_layout::read_special_safe()), we want to ensure that a
+   * specific address is mapped.
+   * The regular case is "mapped", the exception or slow case is "not mapped".
+   * The fastest way to check this is to touch into the memory. If there is no
+   * mapping for the address we get a pagefault. The pagefault handler sets the
+   * carry and/or the zero flag which can be detected by the faulting code.
+   *
+   * @param regs  Pagefault return frame.
+   * @returns False or true whether this was a pagefault at a special region or
+   *          not. On true, the return frame got the carry flag and/or the zero
+   *          flag set (depending on the architecture).
+   */
   static bool pagein_tcb_request(Return_frame *regs);
 
   inline Mword user_ip() const;
@@ -774,6 +788,11 @@ PUBLIC
 void
 Thread::finish_migration() override
 { enqueue_timeout_again(); }
+
+IMPLEMENT_DEFAULT inline
+bool
+Thread::pagein_tcb_request(Return_frame *)
+{ return false; }
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [fpu && !ux && lazy_fpu]:

@@ -8,9 +8,8 @@ public:
   static Address _io_map_ptr;
 };
 
+//---------------------------------------------------------------------------
 IMPLEMENTATION [ia32 || amd64 || ux]:
-
-#include "static_assert.h"
 
 Address Mem_layout::_io_map_ptr = Mem_layout::Registers_map_end;
 
@@ -26,11 +25,17 @@ Mem_layout::alloc_io_vmem(unsigned long bytes)
   return _io_map_ptr;
 }
 
+//---------------------------------------------------------------------------
+IMPLEMENTATION [(ia32 || amd64 || ux) && virt_obj_space]:
+
+#include "static_assert.h"
+
 PUBLIC static inline NEEDS["static_assert.h"]
 template< typename V >
 bool
 Mem_layout::read_special_safe(V const *address, V &v)
 {
+  // Counterpart: Thread::pagein_tcb_request()
   static_assert(sizeof(v) <= sizeof(Mword), "wrong sized argument");
   Mword value;
   bool res;
@@ -47,10 +52,10 @@ template< typename T >
 T
 Mem_layout::read_special_safe(T const *a)
 {
+  // Counterpart: Thread::pagein_tcb_request()
   static_assert(sizeof(T) <= sizeof(Mword), "wrong sized return type");
   Mword res;
   asm volatile ("mov (%1), %0 \n\t"
       : "=acd" (res) : "acdbSD" (a) : "cc");
   return T(res);
-
 }

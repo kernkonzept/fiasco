@@ -129,14 +129,6 @@ Thread::Thread(Ram_quota *q)
   // ok, we're ready to go!
 }
 
-IMPLEMENT inline
-bool
-Thread::pagein_tcb_request(Return_frame *)
-{
-  assert(false);
-  return false;
-}
-
 // ERET to user mode
 IMPLEMENT
 void FIASCO_NORETURN

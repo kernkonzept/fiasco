@@ -42,9 +42,6 @@ public:
 // ------------------------------------------------------------------------
 IMPLEMENTATION [ppc32]:
 
-#include "panic.h"
-#include <cstdio>
-
 Address Mem_layout::Tbuf_buffer_area = 0;
 Address Mem_layout::Tbuf_ubuffer_area = 0;
 
@@ -63,6 +60,11 @@ Mem_layout::pmem_to_phys (Address addr)
 {
   return addr;
 }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [ppc32 && virt_obj_space]:
+
+#include "panic.h"
 
 PUBLIC static inline
 Address
@@ -91,10 +93,13 @@ Mem_layout::read_special_safe(T const *a)
   return T(res);
 }
 
+//---------------------------------------------------------------------------
 IMPLEMENTATION [ppc32 && debug]:
 
+#include <cstdio>
 #include "kip_init.h"
 #include "mem_region.h"
+#include "panic.h"
 
 PUBLIC static FIASCO_INIT
 void

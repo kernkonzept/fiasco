@@ -90,53 +90,6 @@ Mword
 Thread::sanitize_user_flags(Mword flags)
 { return (flags & ~(EFLAGS_IOPL | EFLAGS_NT)) | EFLAGS_IF; }
 
-/**
- * Check if the pagefault occurred at a special place: At certain places in the
- * kernel (Mem_layout::read_special_safe()), we want to ensure that a specific
- * address is mapped.
- * The regular case is "mapped", the exception or slow case is "not mapped".
- * The fastest way to check this is to touch into the memory. If there is no
- * mapping for the address we get a pagefault. The pagefault handler sets the
- * carry and/or the zero flag which can be detected by the faulting code.
- *
- * @param regs  Pagefault return frame.
- * @returns False or true whether this was a pagefault at a special region or
- *          not. On true, the return frame got the carry flag and/or the zero
- *          flag set (depending on the architecture).
- */
-IMPLEMENT inline
-bool
-Thread::pagein_tcb_request(Return_frame *regs)
-{
-  // Counterpart: Mem_layout::read_special_safe()
-  unsigned long new_ip = regs->ip();
-  if (*(Unsigned8*)new_ip == 0x48) // REX.W
-    new_ip += 1;
-
-  Unsigned16 op = *(Unsigned16*)new_ip;
-  if ((op & 0xc0ff) == 0x8b)
-    {
-      regs->ip(new_ip + 2);
-      // stack layout:
-      //         user eip
-      //         PF error code
-      // reg =>  eax/rax
-      //         ecx/rcx
-      //         edx/rdx
-      //         ...
-      Mword *reg = ((Mword*)regs) - 2 - Return_frame::Pf_ax_offset;
-      assert((op >> 11) <= 2);
-      reg[-(op>>11)] = 0; // op==0 => eax, op==1 => ecx, op==2 => edx
-
-      // tell program that a pagefault occurred we cannot handle
-      regs->flags(regs->flags() | 0x41); // set carry and zero flag in EFLAGS
-      return true;
-    }
-
-  return false;
-}
-
-
 extern "C" FIASCO_FASTCALL
 void
 thread_restore_exc_state()
@@ -778,3 +731,38 @@ PRIVATE static inline
 int
 Thread::call_nested_trap_handler(Trap_state *)
 { return -1; }
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [(ia32,amd64,ux) && virt_obj_space]:
+
+IMPLEMENT_OVERRIDE inline
+bool
+Thread::pagein_tcb_request(Return_frame *regs)
+{
+  // Counterpart: Mem_layout::read_special_safe()
+  unsigned long new_ip = regs->ip();
+  if (*(Unsigned8*)new_ip == 0x48) // REX.W
+    new_ip += 1;
+
+  Unsigned16 op = *(Unsigned16*)new_ip;
+  if ((op & 0xc0ff) == 0x8b)
+    {
+      regs->ip(new_ip + 2);
+      // stack layout:
+      //         user eip
+      //         PF error code
+      // reg =>  eax/rax
+      //         ecx/rcx
+      //         edx/rdx
+      //         ...
+      Mword *reg = ((Mword*)regs) - 2 - Return_frame::Pf_ax_offset;
+      assert((op >> 11) <= 2);
+      reg[-(op>>11)] = 0; // op==0 => eax, op==1 => ecx, op==2 => edx
+
+      // tell program that a pagefault occurred we cannot handle
+      regs->flags(regs->flags() | 0x41); // set carry and zero flag in EFLAGS
+      return true;
+    }
+
+  return false;
+}

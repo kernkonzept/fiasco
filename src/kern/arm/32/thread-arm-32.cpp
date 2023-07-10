@@ -37,25 +37,6 @@ Thread::user_ip(Mword ip)
     }
 }
 
-IMPLEMENT inline
-bool
-Thread::pagein_tcb_request(Return_frame *regs)
-{
-  //if ((*(Mword*)regs->pc & 0xfff00fff ) == 0xe5900000)
-  if (*(Mword*)regs->pc == 0xe59ee000)
-    {
-      // printf("TCBR: %08lx\n", *(Mword*)regs->pc);
-      // skip faulting instruction
-      regs->pc += 4;
-      // tell program that a pagefault occurred we cannot handle
-      regs->psr |= 0x40000000;	// set zero flag in psr
-      regs->km_lr = 0;
-
-      return true;
-    }
-  return false;
-}
-
 PUBLIC static inline void FIASCO_NORETURN
 Thread::arm_fast_exit(void *sp, void *pc, void *arg)
 {
@@ -403,3 +384,23 @@ Thread::handle_svc(Trap_state *ts)
   sys_call_table[(-pc) / 4]();
 }
 
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [arm && 32bit && virt_obj_space]:
+
+IMPLEMENT_OVERRIDE inline
+bool
+Thread::pagein_tcb_request(Return_frame *regs)
+{
+  // Counterpart: Mem_layout::read_special_safe()
+  if (*(Mword*)regs->pc == 0xe59ee000) // ldr lr,[lr]
+    {
+      // skip faulting instruction
+      regs->pc += 4;
+      // tell program that a pagefault occurred we cannot handle
+      regs->psr |= 0x40000000; // set zero flag in psr
+      regs->km_lr = 0;
+
+      return true;
+    }
+  return false;
+}

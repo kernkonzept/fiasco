@@ -29,31 +29,6 @@ private:
 // -------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
-PUBLIC static inline
-template< typename V >
-bool
-Mem_layout::read_special_safe(V const *address, V &v)
-{
-  Mword _v;
-  bool ret = _read_special_safe(reinterpret_cast<Mword const*>(address), _v);
-  v = V(_v);
-  return ret;
-}
-
-PUBLIC static inline
-template< typename T >
-T
-Mem_layout::read_special_safe(T const *a)
-{
-  return T(_read_special_safe((Mword const *)a));
-#if 0
-  Mword res;
-  asm volatile ("msr cpsr_f, #0; ldr %0, [%1]; moveq %0, #0\n"
-		: "=r" (res) : "r" (a) : "cc");
-  return T(res);
-#endif
-}
-
 Mem_layout::Pmem_region Mem_layout::_pm_regions[Mem_layout::Max_pmem_regions];
 unsigned Mem_layout::_num_pm_regions;
 
@@ -116,4 +91,26 @@ Mem_layout::add_pmem(Address phys, Address virt, unsigned long size)
   _num_pm_regions++;
 
   return true;
+}
+
+// -------------------------------------------------------------------------
+IMPLEMENTATION [arm && virt_obj_space]:
+
+PUBLIC static inline
+template< typename V >
+bool
+Mem_layout::read_special_safe(V const *address, V &v)
+{
+  Mword _v;
+  bool ret = _read_special_safe(reinterpret_cast<Mword const*>(address), _v);
+  v = V(_v);
+  return ret;
+}
+
+PUBLIC static inline
+template< typename T >
+T
+Mem_layout::read_special_safe(T const *a)
+{
+  return T(_read_special_safe((Mword const *)a));
 }
