@@ -28,7 +28,19 @@ UTEST_SUPPL +=
 
 `INTERFACES_UTEST` shall list all test files explicitly. Modules starting with
 `test_` are considered as independent tests. Modules starting with `common_`
-shall contain implemented classes relevant for multiple test modules.
+shall contain implemented classes relevant for multiple test modules. It is also
+possible to add other modules to `INTERFACE_UTEST` which can then be added to
+dedicated tests. Adding modules starting with `common_` or any other module to
+a specific test can be performed with the following lines:
+```
+INTERFACES_UTEST += common_test_functions_1 \
+                    common_test_functions_2 \
+                    specific_kernel_module
+UTEST_REQUIRES_test_foo_bar  = specific_kernel_module \
+                               common_test_functions_1
+UTEST_REQUIRES_test_foo_buzz = common_test_functions_1 \
+                               common_test_functions_2
+```
 
 `UTEST_SUPPL` shall list supplemental files required for test execution. The
 following files are supported:

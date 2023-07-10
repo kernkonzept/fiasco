@@ -18,9 +18,6 @@ UTEST_BINARIES = $(addprefix utest/,$(UTEST_TESTS))
 # select the utest framework files to add to each test build target.
 UTEST_FRAMEWORK = $(filter utest_fw%,$(OBJ_UTEST))
 
-# class implementations available for all test build targets.
-UTEST_COMMON = $(filter common_%,$(INTERFACES_UTEST))
-
 
 # default target for the UTEST subsystem, add all test binaries as prerequisites.
 utest_subsys: $(UTEST_BINARIES)
@@ -41,8 +38,8 @@ $(foreach tname,$(UTEST_TESTS),\
 		utest/$(tname),\
 		$(tname).debug,\
 		$$(UTEST_FRAMEWORK) $$(filter $(tname)%,$$(OBJ_UTEST))\
-		$$(if $$(UTEST_COMMON),\
-			$$(filter $$(addsuffix %,$$(UTEST_COMMON)),$$(OBJ_UTEST))))))
+		$$(foreach m,$$(UTEST_REQUIRES-$(tname)),\
+			$$(addsuffix .o,$$(call eval_impl,$$(m)))))))
 
 define gen_utest_suppl_rule
 $(1): $(2) globalconfig.out

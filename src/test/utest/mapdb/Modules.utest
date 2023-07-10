@@ -6,6 +6,8 @@ ifeq ($(CONFIG_SCHED_FIXED_PRIO),y)
 # mapping database
 INTERFACES_UTEST += test_mapdb test_map_util common_test_mapdb
 UTEST_SUPPL += expected_mapdb expected_map_util config_mapdb config_map_util
+UTEST_REQUIRES-test_mapdb = common_test_mapdb
+UTEST_REQUIRES-test_map_util = common_test_mapdb
 
 ifeq ($(CONFIG_XARCH)-$(CONFIG_ARM_LPAE),arm-)
 # ARM w/o LPAE uses 1MB superpages instead of 2MB.
