@@ -25,7 +25,7 @@ public:
    * This is a special variant of the \ref console() method that does not
    * check whether \ref _c has been constructed before. It is only supposed
    * to be called from the implementation of \ref assert_fail() to avoid
-   * infinite recustion.
+   * infinite recursion.
    *
    * \return Pointer to \ref _c.
    */
@@ -61,7 +61,7 @@ int Kconsole::getchar(bool blocking)
         return c;
 
       if (Config::getchar_does_hlt_works_ok // wakeup timer is enabled
-          && Proc::interrupts())            // does'nt work without ints
+          && Proc::interrupts())            // doesn't work without ints
         Proc::halt();
       else
         Proc::pause();
