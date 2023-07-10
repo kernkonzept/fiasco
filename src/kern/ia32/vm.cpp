@@ -49,21 +49,13 @@ Vm::load_guest_xcr0(Unsigned64 host_xcr0, Unsigned64 guest_xcr0)
   if (!Cpu::have_xsave() || !(host_xcr0 ^ guest_xcr0))
     return;
 
-  enum : Unsigned64
-  {
-    Xstate_fp           = 1 << 0,
-    Xstate_sse          = 1 << 1,
-    Xstate_avx          = 1 << 2,
-    Xstate_avx512       = 0x7 << 5,
-    Xstate_defined_bits = 0xe7,
-  };
-  guest_xcr0 &= Xstate_defined_bits; // allow only defined bits
-  guest_xcr0 |= Xstate_fp;           // fp must always be set
-  if (guest_xcr0 & Xstate_avx)       // if avx is set, sse must also be set
-    guest_xcr0 |= Xstate_sse;
-  if (guest_xcr0 & Xstate_avx512)
+  guest_xcr0 &= Cpu::Xstate_defined_bits; // allow only defined bits
+  guest_xcr0 |= Cpu::Xstate_fp;           // fp must always be set
+  if (guest_xcr0 & Cpu::Xstate_avx)       // if avx is set, sse must also be set
+    guest_xcr0 |= Cpu::Xstate_sse;
+  if (guest_xcr0 & Cpu::Xstate_avx512)
     // if any AVX-512 bit is set, all bits must be set as well as AVX and SSE
-    guest_xcr0 |= Xstate_avx512 | Xstate_avx | Xstate_sse;
+    guest_xcr0 |= Cpu::Xstate_avx512 | Cpu::Xstate_avx | Cpu::Xstate_sse;
 
   guest_xcr0 &= host_xcr0; // only allow bits that are available on the CPU
   Cpu::xsetbv(guest_xcr0, 0);
