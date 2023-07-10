@@ -229,7 +229,8 @@ Cpu::init_hyp_mode()
 {
   extern char exception_vector[];
 
-  if (pa_range() < Page::Min_pa_range)
+  // Prevent a compiler warning on Page::Min_pa_range==0.
+  if ((int)pa_range() < Page::Min_pa_range)
     panic("Not enough physical address bits! Disable CONFIG_ARM_PT48.\n");
 
   if (vmid_bits() < Mem_unit::Asid_bits)
