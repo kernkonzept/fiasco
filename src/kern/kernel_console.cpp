@@ -9,8 +9,30 @@ public:
   int  getchar(bool blocking = true) override;
   void getchar_chance();
 
+  /**
+   * Get the pointer to \ref _c.
+   *
+   * \return Pointer to \ref _c.
+   */
   static Mux_console *console() FIASCO_CONST
-  { return _c; }
+  {
+    return _c;
+  }
+
+  /**
+   * Get the pointer to \ref _c.
+   *
+   * This is a special variant of the \ref console() method that does not
+   * check whether \ref _c has been constructed before. It is only supposed
+   * to be called from the implementation of \ref assert_fail() to avoid
+   * infinite recustion.
+   *
+   * \return Pointer to \ref _c.
+   */
+  static Mux_console *console_unchecked() FIASCO_CONST
+  {
+    return _c.get_unchecked();
+  }
 
 private:
   static Static_object<Kconsole> _c;

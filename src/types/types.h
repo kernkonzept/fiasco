@@ -7,6 +7,7 @@
 
 #ifdef __cplusplus
 
+#include <cassert>
 #include <cxx/cxx_int>
 #include <cxx/type_traits>
 #include <new>
@@ -100,7 +101,29 @@ public:
   Static_object &operator = (Static_object const &) = delete;
   Static_object() = default;
 
+  /**
+   * Get the pointer to \ref _i.
+   *
+   * Asserts that the \ref construct() method has been called before.
+   *
+   * \return Pointer to \ref _i.
+   */
   T *get() const
+  {
+    assert(_constructed);
+    return get_unchecked();
+  }
+
+  /**
+   * Get the pointer to \ref _i.
+   *
+   * This method should only be called in specific circumstances where we
+   * explicitly do not want to call \ref assert() (potentially to avoid
+   * infinite recursion).
+   *
+   * \return Pointer to \ref _i.
+   */
+  T *get_unchecked() const
   {
     return reinterpret_cast<T*>(&_i[0]);
   }
@@ -109,14 +132,33 @@ public:
   T *operator -> () const { return get(); }
 
   T *construct()
-  { return new (_i) T; }
+  {
+    assert(!_constructed);
+    _constructed = true;
+
+    return new (_i) T;
+  }
 
   template< typename... A >
   T *construct(A&&... args)
-  { return new (_i) T(cxx::forward<A>(args)...); }
+  {
+    assert(!_constructed);
+    _constructed = true;
+
+    return new (_i) T(cxx::forward<A>(args)...);
+  }
 
 private:
   mutable char __attribute__((aligned(sizeof(Mword)*2))) _i[sizeof(T)];
+
+  /**
+   * Internal metadata indicating whether the \ref construct() method has been
+   * already called.
+   *
+   * Accessing \ref _i prior to construction might constitute undefined
+   * behavior.
+   */
+  mutable bool _constructed;
 };
 
 typedef cxx::int_type<unsigned, struct Order_t> Order;
