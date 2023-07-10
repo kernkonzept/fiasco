@@ -357,7 +357,6 @@ Platform_control::init(Cpu_number cpu)
 {
   if (cpu == Cpu_number::boot_cpu())
     {
-      assert (!pmu->get_mmio_base());
       pmu.construct(Kmem::mmio_remap(Mem_layout::Pmu_phys_base, 0x100));
 
       for (Cpu_phys_id i = Cpu_phys_id(0);
