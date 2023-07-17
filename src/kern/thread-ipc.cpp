@@ -683,7 +683,7 @@ Thread::do_ipc(L4_msg_tag const &tag, Mword from_spec, Thread *partner,
         // queued after we activated the IPC partner. In that case ignore the
         // timeout (clear the timeout flag) and transfer the message from the
         // pending sender anyway.
-        state_change_dirty(~Thread_ipc_mask | ~Thread_timeout, Thread_receive_in_progress);
+        state_change_dirty(~(Thread_ipc_mask | Thread_timeout), Thread_receive_in_progress);
         next->ipc_send_msg(this, !sender);
         state_del_dirty(Thread_ipc_mask);
       }
