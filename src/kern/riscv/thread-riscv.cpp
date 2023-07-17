@@ -153,13 +153,6 @@ Thread::handle_sigma0_page_fault(Address pfa)
   return success;
 }
 
-IMPLEMENT inline
-bool
-Thread::pagein_tcb_request(Return_frame *)
-{
-  return false;
-}
-
 PRIVATE static
 void
 Thread::print_page_fault_error(Mword e)
