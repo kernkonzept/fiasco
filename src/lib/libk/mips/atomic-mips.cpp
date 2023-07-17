@@ -26,7 +26,9 @@ local_cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
       "2:                               \n"
       "     .set    pop                 \n"
       : [ret] "=&r" (ret), [ptr] "+ZC" (*ptr)
-      : [old] "Jr" (oldval), [newval] "Jr" (newval));
+      : [old] "Jr" (oldval), [newval] "Jr" (newval)
+      : "memory"); // for some unknown reason this is necessary for newer
+                   // gcc compilers
 
   // true is ok
   // false is failed
