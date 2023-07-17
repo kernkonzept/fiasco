@@ -39,6 +39,15 @@ public:
     GICR_WAKER_Children_asleep = 1 << 2,
   };
 
+  struct Ctrl
+  {
+    Unsigned32 raw;
+    Ctrl() = default;
+    explicit Ctrl(Unsigned32 v) : raw(v) {}
+    CXX_BITFIELD_MEMBER          ( 0,  0, enable_lpis, raw);
+    CXX_BITFIELD_MEMBER          ( 3,  3, rwp,         raw);
+  };
+
   struct Typer
   {
     Unsigned64 raw;
@@ -66,14 +75,6 @@ private:
 
     GICR_config_table_align  = 0x1000,
     GICR_pending_table_align = 0x10000,
-  };
-
-  struct Ctrl
-  {
-    Unsigned32 raw;
-    Ctrl() = default;
-    explicit Ctrl(Unsigned32 v) : raw(v) {}
-    CXX_BITFIELD_MEMBER          ( 0,  0, enable_lpis, raw);
   };
 
   struct Propbaser
@@ -186,6 +187,7 @@ void
 Gic_redist::mask(Mword pin)
 {
   _redist.write<Unsigned32>(1u << pin, GICR_ICENABLER0);
+  sync_rwp();
 }
 
 PUBLIC
@@ -233,6 +235,18 @@ Gic_redist::set_mode(Mword pin, Irq_chip::Mode m)
   _redist.modify<Unsigned32>(v << shift, 3 << shift, GICR_ICFGR0 + (pin >> 4) * 4);
 
   return 0;
+}
+
+PRIVATE inline NEEDS["poll_timeout_counter.h"]
+void
+Gic_redist::sync_rwp()
+{
+  L4::Poll_timeout_counter i(1U << 27); // ~134ms @ 1GHz
+  while (i.test(Ctrl(_redist.read<Unsigned32>(GICR_CTRL)).rwp()))
+    Proc::pause();
+
+  if (EXPECT_FALSE(i.timed_out()))
+    WARNX(Error, "GICR: RWP timed out!\n");
 }
 
 //-------------------------------------------------------------------
