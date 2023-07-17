@@ -194,28 +194,28 @@ atomic_store(T *mem, V value)
 
 inline
 Mword
-atomic_mp_and(Mword *l, Mword mask)
+atomic_and(Mword *l, Mword mask)
 {
   return local_atomic_and(l, mask);
 }
 
 inline
 Mword
-atomic_mp_or(Mword *l, Mword bits)
+atomic_or(Mword *l, Mword bits)
 {
   return local_atomic_or(l, bits);
 }
 
 inline
 Mword
-atomic_mp_add(Mword *l, Mword value)
+atomic_add(Mword *l, Mword value)
 {
   return local_atomic_add(l, value);
 }
 
 inline
 Mword
-atomic_mp_xchg(Mword *l, Mword value)
+atomic_xchg(Mword *l, Mword value)
 {
   return local_atomic_xchg(l, value);
 }

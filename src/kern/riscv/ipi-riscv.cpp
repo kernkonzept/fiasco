@@ -13,13 +13,13 @@ public:
 
   static Mword pending_ipis_reset(Cpu_number cpu)
   {
-    return atomic_mp_xchg(&_ipi.cpu(cpu)._rq, 0);
+    return atomic_xchg(&_ipi.cpu(cpu)._rq, 0);
   }
 
 private:
   bool atomic_set(Message m)
   {
-    return !(atomic_mp_or(&_rq, m) & m);
+    return !(atomic_or(&_rq, m) & m);
   }
 
 private:
