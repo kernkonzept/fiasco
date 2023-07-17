@@ -225,7 +225,7 @@ IMPLEMENTATION [riscv && mp]:
 
 inline NEEDS["asm_riscv.h"]
 bool
-mp_cas_arch(Mword *ptr, Mword oldval, Mword newval)
+cas_arch(Mword *ptr, Mword oldval, Mword newval)
 {
   Mword prev;
   // Holds return value of SC instruction: 0 if successful, !0 otherwise
@@ -258,7 +258,7 @@ IMPLEMENTATION [riscv && !mp]:
 
 inline
 bool
-mp_cas_arch(Mword *m, Mword o, Mword n)
+cas_arch(Mword *m, Mword o, Mword n)
 {
   return local_cas_unsafe(m, o, n);
 }
