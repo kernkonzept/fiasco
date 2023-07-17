@@ -75,16 +75,16 @@ public:
 private:
   void init();
   Unsigned64 _frequency;
-  Unsigned32 _version;
-  Unsigned32 _brand;
-  Unsigned32 _features;
-  Unsigned32 _ext_features;
-  Unsigned32 _ext_07_ebx;
-  Unsigned32 _ext_07_edx;
-  Unsigned32 _ext_8000_0001_ecx;
-  Unsigned32 _ext_8000_0001_edx;
-  Unsigned32 _local_features;
-  Unsigned64 _arch_capabilities;
+  Unsigned32 _version;                  // CPUID(1).EAX
+  Unsigned32 _brand;                    // CPUID(1).EBX
+  Unsigned32 _ext_features;             // CPUID(1).ECX
+  Unsigned32 _features;                 // CPUID(1).EDX
+  Unsigned32 _ext_07_ebx;               // CPUID(7).EBX
+  Unsigned32 _ext_07_edx;               // CPUID(7).EDX
+  Unsigned32 _ext_8000_0001_ecx;        // CPUID(8000_0001).ECX
+  Unsigned32 _ext_8000_0001_edx;        // CPUID(8000_0001).EDX
+  Unsigned32 _local_features;           // See Local_features
+  Unsigned64 _arch_capabilities;        // MSR_IA32_ARCH_CAPABILITIES
 
   Unsigned16 _inst_tlb_4k_entries;
   Unsigned16 _data_tlb_4k_entries;
@@ -122,16 +122,16 @@ private:
   Vendor _vendor;
   char _model_str[52];
 
-  Unsigned32 _arch_perfmon_info_eax;
-  Unsigned32 _arch_perfmon_info_ebx;
-  Unsigned32 _arch_perfmon_info_ecx;
+  Unsigned32 _arch_perfmon_info_eax;    // CPUID(10).EAX
+  Unsigned32 _arch_perfmon_info_ebx;    // CPUID(10).EBX
+  Unsigned32 _arch_perfmon_info_ecx;    // CPUID(10).ECX
 
-  Unsigned32 _monitor_mwait_eax;
-  Unsigned32 _monitor_mwait_ebx;
-  Unsigned32 _monitor_mwait_ecx;
-  Unsigned32 _monitor_mwait_edx;
+  Unsigned32 _monitor_mwait_eax;        // CPUID(5).EAX
+  Unsigned32 _monitor_mwait_ebx;        // CPUID(5).EBX
+  Unsigned32 _monitor_mwait_ecx;        // CPUID(5).ECX
+  Unsigned32 _monitor_mwait_edx;        // CPUID(5).EDX
 
-  Unsigned32 _thermal_and_pm_eax;
+  Unsigned32 _thermal_and_pm_eax;       // CPUID(6).EAX
 
   static Unsigned32 scaler_tsc_to_ns;
   static Unsigned32 scaler_tsc_to_us;
