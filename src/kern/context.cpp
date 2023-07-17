@@ -1001,6 +1001,17 @@ Context::switch_to_locked(Context *t)
     schedule();
 }
 
+/**
+ * Deblock and switch to the target context.
+ *
+ * Deblock the target context's scheduling context and switch to the target
+ * context if it can preempt the current context.
+ *
+ * \param to  Target context to be deblocked and switched to.
+ *
+ * \returns Whether the target context preempted the current context, i.e. a
+ *          switch to the target context was attempted.
+ */
 PUBLIC inline NEEDS [Context::switch_to_locked]
 bool
 Context::deblock_and_schedule(Context *to)
