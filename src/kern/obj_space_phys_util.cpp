@@ -147,10 +147,9 @@ IMPLEMENTATION:
 #include "mem.h"
 #include "mem_layout.h"
 #include "ram_quota.h"
-#include "static_assert.h"
 
 PRIVATE template< typename SPACE >
-inline NEEDS["static_assert.h", "mem.h"]
+inline NEEDS["mem.h"]
 bool
 Obj_space_phys<SPACE>::alloc_dir()
 {

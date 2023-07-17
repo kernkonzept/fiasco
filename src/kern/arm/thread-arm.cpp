@@ -18,7 +18,6 @@ IMPLEMENTATION [arm]:
 
 #include "globals.h"
 #include "kmem.h"
-#include "static_assert.h"
 #include "thread_state.h"
 #include "types.h"
 #include "warn.h"

@@ -85,7 +85,6 @@ IMPLEMENTATION[ia32,amd64,ux]:
 #include "cpu.h"
 #include "regdefs.h"
 #include "globals.h"
-#include "static_assert.h"
 
 unsigned Fpu::_state_size;
 unsigned Fpu::_state_align;
@@ -95,8 +94,7 @@ unsigned Fpu::_state_align;
  * We don't use finit, because it is slow. Initializing the context in
  * memory and fetching it via restore_state is supposedly faster
  */
-IMPLEMENT inline NEEDS ["cpu.h", "globals.h", "regdefs.h",
-                        "static_assert.h", <cstring>]
+IMPLEMENT inline NEEDS ["cpu.h", "globals.h", "regdefs.h", <cstring>]
 void
 Fpu::init_state(Fpu_state *s)
 {

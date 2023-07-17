@@ -146,7 +146,6 @@ IMPLEMENTATION:
 #include "config.h"
 #include "mem.h"
 #include "panic.h"
-#include "static_assert.h"
 #include "version.h"
 
 PUBLIC inline

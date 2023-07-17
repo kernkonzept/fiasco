@@ -51,7 +51,6 @@ IMPLEMENTATION [mips && fpu]:
 #include "kdb_ke.h"
 #include "mem.h"
 #include "processor.h"
-#include "static_assert.h"
 #include "cp0_status.h"
 #include "cpu.h"
 

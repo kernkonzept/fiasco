@@ -28,9 +28,7 @@ Mem_layout::alloc_io_vmem(unsigned long bytes)
 //---------------------------------------------------------------------------
 IMPLEMENTATION [(ia32 || amd64 || ux) && virt_obj_space]:
 
-#include "static_assert.h"
-
-PUBLIC static inline NEEDS["static_assert.h"]
+PUBLIC static inline
 template< typename V >
 bool
 Mem_layout::read_special_safe(V const *address, V &v)
@@ -47,7 +45,7 @@ Mem_layout::read_special_safe(V const *address, V &v)
   return res;
 }
 
-PUBLIC static inline NEEDS["static_assert.h"]
+PUBLIC static inline
 template< typename T >
 T
 Mem_layout::read_special_safe(T const *a)

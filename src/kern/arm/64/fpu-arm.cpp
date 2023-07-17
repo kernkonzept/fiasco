@@ -49,7 +49,6 @@ IMPLEMENTATION [arm && fpu]:
 #include "cpu.h"
 #include "mem.h"
 #include "processor.h"
-#include "static_assert.h"
 #include "trap_state.h"
 
 IMPLEMENT
@@ -194,7 +193,7 @@ Fpu::show(Cpu_number)
 //-------------------------------------------------------------------------
 IMPLEMENTATION [arm && fpu && !cpu_virt]:
 
-IMPLEMENT inline NEEDS ["mem.h", "static_assert.h", <cstring>]
+IMPLEMENT inline NEEDS ["mem.h", <cstring>]
 void
 Fpu::init_state(Fpu_state *fpu_regs)
 {
@@ -240,7 +239,7 @@ Fpu::disable()
 //-------------------------------------------------------------------------
 IMPLEMENTATION [arm && fpu && cpu_virt]:
 
-IMPLEMENT inline NEEDS ["mem.h", "static_assert.h", <cstring>]
+IMPLEMENT inline NEEDS ["mem.h", <cstring>]
 void
 Fpu::init_state(Fpu_state *fpu_regs)
 {
