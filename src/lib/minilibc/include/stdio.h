@@ -3,7 +3,6 @@
 
 #include <cdefs.h>
 #include <stddef.h>
-#include <mini_defs.h>
 #include <fiasco_defs.h>
 
 __BEGIN_DECLS
