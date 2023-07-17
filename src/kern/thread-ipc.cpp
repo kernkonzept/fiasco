@@ -611,40 +611,42 @@ Thread::do_ipc(L4_msg_tag const &tag, Mword from_spec, Thread *partner,
       state_add_dirty(Thread_receive_wait);
     }
 
-  // only do direct switch on closed wait (call) or if we run on a foreign
-  // scheduling context
-  Sender *next = 0;
+  {
+    // only do direct switch on closed wait (call) or if we run on a foreign
+    // scheduling context
+    Sender *next = 0;
 
-  have_receive = state() & Thread_receive_wait;
+    have_receive = state() & Thread_receive_wait;
 
-  if (have_receive)
-    {
-      assert (!in_sender_list());
-      assert (!(state() & Thread_send_wait));
-      next = get_next_sender(sender);
-    }
-
-  if (activate_partner
-      && activate_ipc_partner(partner, current_cpu, do_switch && !next,
-                              have_receive && sender))
-    {
-      // blocked so might have a new sender queued
-      have_receive = state() & Thread_receive_wait;
-      if (have_receive && !next)
+    if (have_receive)
+      {
+        assert (!in_sender_list());
+        assert (!(state() & Thread_send_wait));
         next = get_next_sender(sender);
-    }
+      }
 
-  if (next)
-    {
-      state_change_dirty(~Thread_ipc_mask, Thread_receive_in_progress);
-      next->ipc_send_msg(this, !sender);
-      state_del_dirty(Thread_ipc_mask);
-    }
-  else if (have_receive)
-    {
-      if ((state() & Thread_full_ipc_mask) == Thread_receive_wait)
-        goto_sleep(t.rcv, sender, utcb().access(true));
-    }
+    if (activate_partner
+        && activate_ipc_partner(partner, current_cpu, do_switch && !next,
+                                have_receive && sender))
+      {
+        // blocked so might have a new sender queued
+        have_receive = state() & Thread_receive_wait;
+        if (have_receive && !next)
+          next = get_next_sender(sender);
+      }
+
+    if (next)
+      {
+        state_change_dirty(~Thread_ipc_mask, Thread_receive_in_progress);
+        next->ipc_send_msg(this, !sender);
+        state_del_dirty(Thread_ipc_mask);
+      }
+    else if (have_receive)
+      {
+        if ((state() & Thread_full_ipc_mask) == Thread_receive_wait)
+          goto_sleep(t.rcv, sender, utcb().access(true));
+      }
+  }
 
   if (sender && sender == partner)
     partner->reset_caller(this);
