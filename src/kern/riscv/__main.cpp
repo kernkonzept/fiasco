@@ -11,7 +11,7 @@ IMPLEMENTATION [riscv]:
 #include "processor.h"
 #include "terminate.h"
 
-void kernel_main(void);
+void kernel_main(void) FIASCO_NORETURN;
 
 extern "C"
 void __main(Mword hart_id)
