@@ -148,6 +148,12 @@
 	.if \adjust_pc != 0
 		ASM_ADDIU	k0, k0, \adjust_pc
 	.endif
+#ifndef CONFIG_CPU_MIPSR6
+	ASM_L	s1, TS_HI(\ts_offset)($\ptr)
+	ASM_L	s2, TS_LO(\ts_offset)($\ptr)
+	mthi	s1
+	mtlo	s2
+#endif
 	ASM_MTC0	k0, CP0_EPC
 	restore_cp0_status	$\ptr, \ts_offset
 	.irp reg, 16, 17, 18, 19, 20, 21, 22, 23, 26, 27, 28, 29, 30, 31
