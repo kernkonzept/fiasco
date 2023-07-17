@@ -993,6 +993,13 @@ Context::schedule_switch_to_locked(Context *t)
   return switch_exec_locked(t, Not_Helping);
 }
 
+/**
+ * Attempt to switch to the target context and reschedule on failure.
+ *
+ * \param t  Target context to switch to.
+ *
+ * \pre The CPU lock must be held (hence the _locked suffix).
+ */
 PUBLIC inline NEEDS [Context::schedule_switch_to_locked]
 void
 Context::switch_to_locked(Context *t)
