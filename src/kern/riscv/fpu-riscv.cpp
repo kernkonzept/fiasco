@@ -24,18 +24,21 @@ public:
 };
 
 // ------------------------------------------------------------------------
+INTERFACE [riscv && fpu]:
+
+class Fpu_state : public Fpu::Fpu_regs {};
+
+// ------------------------------------------------------------------------
 IMPLEMENTATION [riscv && fpu]:
 
 #include "asm_riscv.h"
 #include "cpu.h"
-#include "fpu_state.h"
 #include "mem.h"
 
-IMPLEMENT inline NEEDS["fpu_state.h", "mem.h"]
+IMPLEMENT inline NEEDS["mem.h"]
 void
-Fpu::init_state(Fpu_state *s)
+Fpu::init_state(Fpu_state *fpu_regs)
 {
-  Fpu_regs *fpu_regs = reinterpret_cast<Fpu_regs *>(s->state_buffer());
   static_assert(!(sizeof(*fpu_regs) % sizeof(Mword)),
                 "Non-mword size of Fpu_regs");
   Mem::memset_mwords(fpu_regs, 0, sizeof(*fpu_regs) / sizeof(Mword));
@@ -110,7 +113,7 @@ Fpu::save_fpu_regs(Fpu_regs *r)
 
 PRIVATE static inline
 void
-Fpu::restore_fpu_regs(Fpu_regs *r)
+Fpu::restore_fpu_regs(Fpu_regs const *r)
 {
   __asm__ __volatile__ (
     FREG_L "  f0, (%[fsz] *  0)(%[r]) \n"
@@ -155,17 +158,15 @@ Fpu::restore_fpu_regs(Fpu_regs *r)
 
 IMPLEMENT inline NEEDS[Fpu::save_fpu_regs]
 void
-Fpu::save_state(Fpu_state *s)
+Fpu::save_state(Fpu_state *fpu_regs)
 {
-  Fpu_regs *fpu_regs = reinterpret_cast<Fpu_regs *>(s->state_buffer());
   save_fpu_regs(fpu_regs);
 }
 
 IMPLEMENT inline NEEDS[Fpu::restore_fpu_regs]
 void
-Fpu::restore_state(Fpu_state *s)
+Fpu::restore_state(Fpu_state const *fpu_regs)
 {
-  Fpu_regs *fpu_regs = reinterpret_cast<Fpu_regs *>(s->state_buffer());
   restore_fpu_regs(fpu_regs);
 }
 
