@@ -98,9 +98,22 @@ Sched_context::Ready_queue::set_current_sched(Sched_context *sched)
 
 
 /**
- * \param sc Sched_context that shall be deblocked
- * \param crs the Sched_context of the currently running context
- * \param lazy_q queue lazily if applicable
+ * Deblock the given scheduling context, i.e. add the scheduling context to the
+ * ready queue.
+ *
+ * As an optimization, if requested by setting the `lazy_q` parameter, only adds
+ * the deblocked scheduling context to the ready queue if it cannot preempt the
+ * currently active scheduling context, i.e. rescheduling is not necessary.
+ * Otherwise the caller is responsible to switch to the lazily deblocked
+ * scheduling context via `switch_to_locked()`. This is required to ensure that
+ * the scheduler does not forget about the scheduling context.
+ *
+ * \param sc      Sched_context that shall be deblocked.
+ * \param crs     Sched_context of the currently running context.
+ * \param lazy_q  Queue lazily if applicable.
+ *
+ * \returns Whether a reschedule is necessary (deblocked scheduling context
+ *          can preempt the currently running scheduling context).
  */
 IMPLEMENT inline NEEDS[<cassert>]
 bool
