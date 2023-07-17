@@ -428,7 +428,7 @@ ipc_gate_factory(Ram_quota *q, Space *space,
 
       if (EXPECT_FALSE(!thread))
         {
-          *err = L4_err::ENoent;
+          *err = L4_err::EInval;
           return 0;
         }
 
