@@ -49,7 +49,7 @@ public:
   {
     // For non-ARM_PT48 the first page table is concatenated (10-bits), we skip
     // level zero.
-    return (Page::Vtcr_bits >> 6) & 0x11b;
+    return Page::Vtcr_sl0;
   }
 
 private:
