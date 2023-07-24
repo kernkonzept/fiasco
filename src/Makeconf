@@ -185,6 +185,16 @@ SHARED_FLAGS-$(CONFIG_GSTABS)           += -gstabs+
 SHARED_FLAGS-$(CONFIG_UNREACHABLE_CODE) += $(call CHECKCC,-Wunreachable-code,)
 SHARED_FLAGS += $(if $(CONFIG_NO_FRAME_PTR),-fomit-frame-pointer,-fno-omit-frame-pointer)
 
+# To enable all warnings, including those with false positives.
+ENABLE_ALL_WARNINGS ?= n
+ifeq ($(ENABLE_ALL_WARNINGS),y)
+  SHARED_FLAGS		+= $(call CHECKCC,-Wframe-larger-than=512)
+else
+  # The warning -Wmaybe-uninitialized is enabled as part of -Wall, but produces
+  # false positives with GCC on the -Os optimization level.
+  SHARED_FLAGS-gcc	+= $(call CHECKCC,-Wno-maybe-uninitialized)
+endif
+
 # Eagerly compute SHARED_FLAGS to avoid calling CHECKCC over and over again.
 SHARED_FLAGS       := $(SHARED_FLAGS) $(SHARED_FLAGS-y)
 SHARED_FLAGS       += $(SHARED_FLAGS-$(CC_TYPE))
@@ -249,29 +259,6 @@ endif
 SRC_ALL = $(SRC_S) $(SRC_CPP) $(SRC_C) $(SRC_CC)
 ifeq ($(filter clean cleanall mrproper,$(MAKECMDGOALS)),)
 DEPS	= $(foreach file,$(SRC_ALL), $(dir $(file)).$(notdir $(file)).d)
-
-# To enable all warning ...
-ENABLE_ALL_WARNINGS ?= n
-
-ifeq ($(CC_TYPE),gcc)
-  ifeq ($(ENABLE_ALL_WARNINGS),y)
-    tmp := $(call CHECKCC,-Wframe-larger-than=512)
-    CFLAGS   += $(tmp)
-    CXXFLAGS += $(tmp)
-    tmp :=
-  else
-    F_UNINITIALIZED := $(firstword $(call CHECKCC,-Wmaybe-uninitialized) \
-				   $(call CHECKCC,-Wuninitialized))
-    F_SET_NOT_USED  := $(call CHECKCC,-Wunused-but-set-variable)
-
-    F_UNINITIALIZED := $(patsubst -W%,-Wno-%,$(F_UNINITIALIZED))
-    F_SET_NOT_USED  := $(patsubst -W%,-Wno-%,$(F_SET_NOT_USED))
-
-    CFLAGS +=   $(F_UNINITIALIZED) $(F_SET_NOT_USED)
-    CXXFLAGS += $(F_UNINITIALIZED) $(F_SET_NOT_USED)
-  endif
-endif
-
 
 CC_WHITELIST-gcc     := 7 8 9 10 11 12 13
 CC_WHITELIST-clang   := 3.8 3.9 4 5 6 7 8 9 10 11 12 13 14 15 16
