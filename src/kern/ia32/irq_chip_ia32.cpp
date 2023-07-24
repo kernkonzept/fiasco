@@ -236,7 +236,7 @@ Irq_chip_ia32::_valloc(Mword pin, unsigned vector)
 }
 
 /**
- * \pre `irq->irqLock()` must be held
+ * \pre `irq->irq_lock()` must be held
  */
 PROTECTED template<typename CHIP> inline
 unsigned
@@ -253,7 +253,7 @@ Irq_chip_ia32::valloc(Irq_base *irq, Mword pin, unsigned vector, bool init)
 }
 
 /**
- * \pre `irq->irqLock()` must be held
+ * \pre `irq->irq_lock()` must be held
  */
 PROTECTED
 bool
