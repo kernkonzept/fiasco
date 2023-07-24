@@ -314,7 +314,7 @@ public:
   : _wu_gpio(gc), _pin(pin)
   { set_hit(&handler_wrapper<Gpio_cascade_wu01_irq>); }
 
-  void switch_mode(bool) {}
+  void switch_mode(bool) override {}
 
   void handle(Upstream_irq const *u)
   {
@@ -339,7 +339,7 @@ public:
   : _wu_gpio(gc)
   { set_hit(&handler_wrapper<Gpio_cascade_wu23_irq>); }
 
-  void switch_mode(bool) {}
+  void switch_mode(bool) override {}
 
 private:
   Gpio_wakeup_chip *_wu_gpio;
@@ -366,7 +366,7 @@ public:
   : _eint_gc(g), _special(special)
   { set_hit(&handler_wrapper<Gpio_cascade_xab_irq>); }
 
-  void switch_mode(bool) {}
+  void switch_mode(bool) override {}
 
 private:
   Gpio_eint_chip *_eint_gc;
@@ -406,7 +406,7 @@ public:
   : _combiner_nr(nr), _child(chld)
   { set_hit(&handler_wrapper<Combiner_cascade_irq>); }
 
-  void switch_mode(bool) {}
+  void switch_mode(bool) override {}
   unsigned irq_nr_base() const { return _combiner_nr * 8; }
 
 private:
@@ -757,7 +757,7 @@ public:
            cxx::int_value<Cpu_number>(current_cpu()));
   }
 private:
-  void switch_mode(bool) {}
+  void switch_mode(bool) override {}
 };
 
 DEFINE_PER_CPU static Per_cpu<Static_object<Check_irq0> > _check_irq0;

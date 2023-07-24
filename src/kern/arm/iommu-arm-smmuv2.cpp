@@ -975,7 +975,7 @@ public:
   }
 
 private:
-  void switch_mode(bool) {}
+  void switch_mode(bool) override {}
   T *_obj;
   F _func;
 };
