@@ -964,7 +964,7 @@ const char *Mips_group_name(csh handle, unsigned int id)
 mips_reg Mips_map_insn(const char *name)
 {
 	// handle special alias first
-	unsigned int i;
+	int i;
 
 	// NOTE: skip first NULL name in insn_name_maps
 	i = name2id(&insn_name_maps[1], ARR_SIZE(insn_name_maps) - 1, name);
