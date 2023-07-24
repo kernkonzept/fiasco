@@ -278,11 +278,11 @@ formatter_pf(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidlen)
   Tb_entry_pf *e = static_cast<Tb_entry_pf*>(tb);
   Mword mw = PF::addr_to_msgword0(e->pfa(), e->error());
   char cause = (mw & 4) ? 'X' : (mw & 2) ? 'W' : 'R';
-  buf->printf("pf:  %-*s pfa=" L4_PTR_FMT " ip=" L4_PTR_FMT " (%c%c) spc=%p err=%lx",
+  buf->printf("pf:  %-*s pfa=" L4_PTR_FMT " ip=" L4_PTR_FMT " (%c%c) spc=%p (DID=%lx) err=%lx",
       tidlen, tidstr, e->pfa(), e->ip(),
       PF::is_usermode_error(e->error()) ? tolower(cause) : cause,
-      PF::is_translation_error(e->error()) ? '-' : 'p',
-      e->space(), e->error());
+      PF::is_translation_error(e->error()) ? '-' : 'p', e->space(),
+      static_cast<Task*>(e->space())->dbg_info()->dbg_id(), e->error());
 }
 
 // kernel event (enter_kdebug("*..."))
