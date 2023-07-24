@@ -113,6 +113,7 @@ IMPLEMENTATION:
 #include "kmem_alloc.h"
 #include "panic.h"
 #include "poll_timeout_counter.h"
+#include "warn.h"
 #include <cstdio>
 #include <string.h>
 
@@ -237,7 +238,7 @@ Gic_redist::set_mode(Mword pin, Irq_chip::Mode m)
   return 0;
 }
 
-PRIVATE inline NEEDS["poll_timeout_counter.h"]
+PRIVATE inline NEEDS["poll_timeout_counter.h", "warn.h"]
 void
 Gic_redist::sync_rwp()
 {
