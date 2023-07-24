@@ -10,6 +10,7 @@
 #include "kobject_dbg.h"
 #include "static_init.h"
 #include "tb_entry.h"
+#include "task.h"
 #include "thread.h"
 #include "string_buffer.h"
 
