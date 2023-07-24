@@ -620,6 +620,10 @@ public:
 
   void set_next_level(Unsigned64 phys)
   {
+    // A new table was just allocated and cleared. Ensure the clearing is
+    // observable to the MMU before the updated table descriptor. Otherwise the
+    // next table walk might still see uninitialized PTEs.
+    Mem::dmbst();
     write_now(pte, phys | 3);
   }
 
