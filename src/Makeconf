@@ -165,6 +165,7 @@ OPT_CFLAGS-gcc		+= $(call CHECKCC,-fweb,)
 OPT_SHARED_FLAGS-gcc	+= $(call CHECKCC,-frename-registers,)
 OPT_SHARED_FLAGS-gcc	+= $(call CHECKCC,-fgcse-after-reload,)
 CXXFLAGS-gcc		+= -fno-implement-inlines
+CXXFLAGS		+= $(call CHECKCXX,-Wsuggest-override)
 
 LDFLAGS			+= $(call CHECKLD,--no-warn-rwx-segments,) \
 			   $(call CHECKLD,--no-warn-execstack,)
