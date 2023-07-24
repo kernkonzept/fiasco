@@ -262,11 +262,10 @@ formatter_ipc_res(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidl
     error = L4_error::None;
   const char *m = "answ"; //get_ipc_type(e);
 
-  buf->printf("     %s%-*s %s [%08lx] L=%lx err=%lx (%s) (%lx,%lx) ",
-			    e->is_np() ? "[np] " : "",
-			    tidlen, tidstr, m, e->tag().raw(), e->from(),
-                            error.raw(), error.str_error(), e->dword(0),
-			    e->dword(1));
+  buf->printf("     %s%-*s %s [%08lx] L=%lx err=%lx (%s/%s) (%lx,%lx) ",
+      e->is_np() ? "[np] " : "", tidlen, tidstr, m, e->tag().raw(), e->from(),
+      error.raw(), error.str_error(), error.snd_phase() ? "snd" : "rcv",
+      e->dword(0), e->dword(1));
 }
 
 
