@@ -701,18 +701,13 @@ private:
 
       T *next_slot()
       {
-        if (WRITE)
-          {
-            if (is_full())
-              // Queue is full, nothing can be written.
-              return nullptr;
-          }
-        else
-          {
-            if (is_empty())
-              // Queue is empty, nothing can be read.
-              return nullptr;
-          }
+        if (WRITE && is_full())
+            // Queue is full, nothing can be written.
+            return nullptr;
+
+        if (!WRITE && is_empty())
+          // Queue is empty, nothing can be read.
+          return nullptr;
 
         T *slot = _mem.virt_ptr<T>() + (_index & index_mask());
         // Update next index
