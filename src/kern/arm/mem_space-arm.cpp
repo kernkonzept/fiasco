@@ -192,6 +192,11 @@ Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order size,
     {
       i.set_page(entry);
       i.write_back_if(flush, Mem_unit::Asid_invalid);
+      // Because the entry was invalid before, no TLB maintenance is necessary.
+      // We still have to make sure that the MMU sees the new entry before
+      // potentially triggering a page walk on it. Otherwise we might get
+      // unexpected data-/prefetch-aborts...
+      Mem::dsb();
       return Insert_ok;
     }
 }
