@@ -60,28 +60,44 @@ private:
 
 PRIVATE
 L4_msg_tag
-Dmar::op_bind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space)
+Dmar::op_bind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space_cap)
 {
   Src_id s(src_id);
   Iommu *iommu = Iommu::iommu(s.smmu_idx());
   if (!iommu)
     return Kobject_iface::commit_result(-L4_err::EInval);
 
-  return Kobject_iface::commit_result(space.obj->bind_mmu(iommu,
-                                                          s.stream_id()));
+  // Prevent the Dmar_space from being deleted while using it without holding
+  // the CPU lock.
+  Ref_ptr<Dmar_space> space(space_cap.obj);
+
+  // Release CPU lock because when binding a Dmar_space, it may be necessary
+  // to execute one or more SMMU commands. While waiting for these to execute we
+  // must be interruptible.
+  auto guard_cpu = lock_guard<Lock_guard_inverse_policy>(cpu_lock);
+
+  return Kobject_iface::commit_result(space->bind_mmu(iommu, s.stream_id()));
 }
 
 PRIVATE
 L4_msg_tag
-Dmar::op_unbind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space)
+Dmar::op_unbind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space_cap)
 {
   Src_id s(src_id);
   Iommu *iommu = Iommu::iommu(s.smmu_idx());
   if (!iommu)
     return Kobject_iface::commit_result(-L4_err::EInval);
 
-  return Kobject_iface::commit_result(space.obj->unbind_mmu(iommu,
-                                                            s.stream_id()));
+  // Prevent the Dmar_space from being deleted while using it without holding
+  // the CPU lock.
+  Ref_ptr<Dmar_space> space(space_cap.obj);
+
+  // Release CPU lock because when unbinding a Dmar_space, it may be necessary
+  // to execute one or more SMMU commands. While waiting for these to execute we
+  // must be interruptible.
+  auto guard_cpu = lock_guard<Lock_guard_inverse_policy>(cpu_lock);
+
+  return Kobject_iface::commit_result(space->unbind_mmu(iommu, s.stream_id()));
 }
 
 static Static_object<Dmar> _glbl_iommu;
