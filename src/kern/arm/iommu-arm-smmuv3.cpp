@@ -42,8 +42,8 @@ class Dmar_space;
  * exists are blocked by the SMMU, and therefore cannot access physical memory
  * via DMA.
  *
- * Interrupts are only used for debug purposes, i.e. to log faults and global
- * errors. Thus, they are only enabled if the warning level is high enough.
+ * Interrupts are used to handle errors, and to log faults if the warning level
+ * is high enough.
  */
 EXTENSION class Iommu
 {
@@ -366,6 +366,14 @@ private:
 
   struct Cmdq_cons : public Smmu_reg<Cmdq_cons, Rs::Rp0, 0x009c>
   {
+    enum Err
+    {
+      Err_none         = 0x0,
+      Err_ill          = 0x1,
+      Err_abt          = 0x2,
+      Err_atc_inv_sync = 0x3,
+    };
+
     /// Command queue read index.
     CXX_BITFIELD_MEMBER_RO(0, 19, rd, raw);
     /// Error reason code.
@@ -539,10 +547,8 @@ private:
 
   struct Cmd
   {
-  private:
     Unsigned64 raw[2] = { 0 };
 
-  public:
     enum Op
     {
       Op_cfgi_ste       = 0x03,
@@ -679,6 +685,11 @@ private:
         unsigned i = read_their_index();
         // "The two indexes are equal and their wrap bits are different."
         return (i & index_mask()) == (_index & index_mask()) && i != _index;
+      }
+
+      T *slot_at(unsigned index)
+      {
+        return _mem.virt_ptr<T>() + (index & index_mask());
       }
 
     protected:
@@ -1773,6 +1784,47 @@ void setup_irq(unsigned pin, T *obj, F func)
 
 PRIVATE
 void
+Iommu::handle_cmdq_error()
+{
+  Cmdq_cons cmdq_cons = read_reg<Cmdq_cons>();
+  WARNX(Error, "IOMMU: Global error CMDQ_ERR occured: Err=%u Index=%u\n",
+        cmdq_cons.err().get(), cmdq_cons.rd().get());
+
+  switch (cmdq_cons.err())
+    {
+    case Cmdq_cons::Err_none:
+      // No error, should never occur.
+      return;
+    case Cmdq_cons::Err_ill:
+      // Command illegal, replace command with nop.
+      break;
+    case Cmdq_cons::Err_abt:
+      // Abort on command fetch, retry.
+      WARNX(Error, "IOMMU: Retrying command fetch.\n");
+      return;
+    case Cmdq_cons::Err_atc_inv_sync:
+      // ATC invalidation timeout, repeat the sync command with the assumption
+      // that the ATC invalidation will complete eventually.
+      // Should never occur as we do not use ATC.
+      return;
+    default:
+      // Unknown error, replace command with nop.
+      break;
+    }
+
+  Cmd *slot = _cmd_queue.slot_at(cmdq_cons.rd());
+  WARNX(Error, "IOMMU: Skipping illegal command:\n"
+               "  [  0: 63] 0x%016llx\n"
+               "  [ 64:127] 0x%016llx\n",
+               slot->raw[0], slot->raw[1]);
+
+  // Use sync command as nop-like replacement for illegal command.
+  *slot = Cmd::sync(Cmd::Compl_signal_wfe);
+  make_observable(slot);
+}
+
+PRIVATE
+void
 Iommu::handle_gerror_irq()
 {
   Gerror gerror = read_reg<Gerror>();
@@ -1784,8 +1836,7 @@ Iommu::handle_gerror_irq()
     return;
 
   if (active.cmdq_err())
-    // TODO: Handle cmd queue error and skip faulting command?
-    WARNX(Error, "IOMMU: Global error CMDQ_ERR occured.\n");
+    handle_cmdq_error();
   if (active.eventq_abt_err())
     WARNX(Error, "IOMMU: Global error EVENTQ_ABT_ERR occured.\n");
   if (active.priq_abt_err())
