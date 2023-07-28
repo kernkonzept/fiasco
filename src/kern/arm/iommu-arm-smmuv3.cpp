@@ -20,6 +20,7 @@ INTERFACE [iommu && iommu_arm_smmu_v3]:
 #include "cxx/bitfield"
 #include "cxx/slist"
 #include "kmem_slab.h"
+#include "simple_id_alloc.h"
 #include "timer.h"
 
 class Dmar_space;
@@ -51,7 +52,16 @@ private:
   struct Cd;
 
 public:
+  enum
+  {
+    First_asid   = 0,
+    Max_nr_asid  = 0x10000,
+    Invalid_asid = Max_nr_asid,
+    Default_vmid = 0,
+  };
+
   using Asid = unsigned long;
+  using Asid_alloc = Simple_id_alloc<Asid, First_asid, Max_nr_asid, Invalid_asid>;
 
   /**
    * Wrapper for a DMA space, which Iommu uses to associate internal state with
@@ -66,8 +76,8 @@ public:
 
     ~Domain();
     Dmar_space const *space() const { return _space; }
-    Asid get_asid() const { return _asid_alloc->get_asid(&_asid); }
-    Asid get_or_alloc_asid() { return _asid_alloc->get_or_alloc_asid(&_asid); }
+    Asid get_asid() const { return _asid_alloc->get_id(&_asid); }
+    Asid get_or_alloc_asid() { return _asid_alloc->get_or_alloc_id(&_asid); }
     Cd *get_cd(unsigned ias);
 
   private:
@@ -861,84 +871,6 @@ private:
       }
   };
 
-  enum
-  {
-    First_asid   = 0,
-    Max_nr_asid  = 0x10000,
-    Invalid_asid = Max_nr_asid,
-    Default_vmid = 0,
-  };
-
-  class Asid_alloc
-  {
-  public:
-    explicit Asid_alloc(Asid max_asid)
-    {
-      _free_asids = new Boot_object<Asid_map>();
-      _max_asid = max_asid;
-    }
-
-    Asid alloc_asid()
-    {
-      for (Asid asid = First_asid; asid < _max_asid; ++asid)
-        if (_free_asids->atomic_get_and_set_if_unset(asid) == false)
-          return asid;
-
-      // No ASID left.
-      return Invalid_asid;
-    }
-
-    void free_asid(Asid asid)
-    {
-      if (_free_asids->atomic_get_and_clear(asid) != true)
-        WARN("IOMMU: Freeing free ASID.\n");
-    }
-
-    static Asid get_asid(Asid const *asid_storage)
-    {
-      return access_once(asid_storage);
-    }
-
-    Asid get_or_alloc_asid(Asid *asid_storage)
-    {
-      Asid asid = access_once(asid_storage);
-      if (asid != Invalid_asid)
-        return asid;
-
-      // Otherwise try to allocate an ASID.
-      Asid new_asid = alloc_asid();
-      if (EXPECT_FALSE(new_asid == Invalid_asid))
-        return Invalid_asid;
-
-      if (!cas<Asid>(asid_storage, Invalid_asid, new_asid))
-        {
-          // Already allocated by someone else.
-          free_asid(new_asid);
-          return *asid_storage;
-        }
-
-      return new_asid;
-    }
-
-    void free_asid_if_valid(Asid *asid_storage)
-    {
-      Asid asid = access_once(asid_storage);
-      if (asid == Invalid_asid)
-        return;
-
-      if (!cas<Asid>(asid_storage, asid, Invalid_asid))
-        // Someone else changed the ASID.
-        return;
-
-      free_asid(asid);
-    }
-
-  private:
-    using Asid_map = Bitmap<Max_nr_asid>;
-    Asid_map *_free_asids;
-    Asid _max_asid;
-  };
-
   /// Timeout after which to warn about long running command queue operation.
   static constexpr unsigned Queue_warn_timeout_us = 1'000'000; // 1s
 
@@ -1584,7 +1516,7 @@ Iommu::init_common()
 IMPLEMENT
 Iommu::Domain::~Domain()
 {
-  _asid_alloc->free_asid_if_valid(&_asid);
+  _asid_alloc->free_id_if_valid(&_asid);
 
   if (Cd *cd = atomic_exchange(&_cd, nullptr))
     _cd_allocator.q_del(_space->ram_quota(), cd);
