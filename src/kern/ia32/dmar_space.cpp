@@ -2,7 +2,7 @@ INTERFACE [iommu]:
 
 #include "task.h"
 #include "ptab_base.h"
-#include "bitmap.h"
+#include "simple_id_alloc.h"
 
 class Dmar_space :
   public cxx::Dyn_castable<Dmar_space, Task>
@@ -128,23 +128,29 @@ private:
   typedef Ptab::Base<Dmar_ptr, Dmar_traits_vpn, Dmar_va_vpn, Mem_layout> Dmar_pt;
 
 public:
-  enum { Max_nr_did = 0x10000 };
   virtual void *debug_dir() const { return _dmarpt; }
   static void create_identity_map();
   static Dmar_pt *identity_map;
 
   void tlb_flush_current_cpu() override;
+  using Did = unsigned long;
+
+  enum
+  {
+    // DID 0 may be reserved by the architecture, DID 1 is identity map.
+    First_did   = 2,
+    Max_nr_did  = 0x10000,
+    Invalid_did = ~0UL,
+  };
 
 private:
   Dmar_pt *_dmarpt;
-  unsigned long _did;
+  Did _did;
 
   static bool _initialized;
 
-  typedef Bitmap<Max_nr_did> Did_map;
-
-  static Did_map *_free_dids;
-  static unsigned _max_did;
+  using Did_alloc = Simple_id_alloc<Did, First_did, Max_nr_did, Invalid_did>;
+  static Static_object<Did_alloc> _did_alloc;
 };
 
 // -----------------------------------------------------------
@@ -160,8 +166,7 @@ JDB_DEFINE_TYPENAME(Dmar_space, "DMA");
 
 Dmar_space::Dmar_pt *Dmar_space::identity_map;
 bool Dmar_space::_initialized;
-Dmar_space::Did_map *Dmar_space::_free_dids;
-unsigned Dmar_space::_max_did;
+Static_object<Dmar_space::Did_alloc> Dmar_space::_did_alloc;
 static Kmem_slab_t<Dmar_space> _dmar_allocator("Dmar_space");
 
 
@@ -210,27 +215,6 @@ Dmar_space::get_root(int aw_level) const
   return get_root(_dmarpt, aw_level);
 }
 
-PRIVATE static
-unsigned
-Dmar_space::alloc_did()
-{
-  /* DID 0 may be reserved by the architecture, DID 1 is identity map. */
-  for (unsigned did = 2; did < _max_did; ++did)
-    if (_free_dids->atomic_get_and_set(did) == false)
-      return did;
-
-  // No DID left
-  return ~0U;
-}
-
-PRIVATE static
-void
-Dmar_space::free_did(unsigned long did)
-{
-  if (_free_dids->atomic_get_and_clear(did) != true)
-    panic("DMAR: Freeing free DID");
-}
-
 PUBLIC static
 void
 Dmar_space::init(unsigned max_did)
@@ -238,8 +222,7 @@ Dmar_space::init(unsigned max_did)
   add_page_size(Mem_space::Page_order(Config::PAGE_SHIFT));
   /* XXX CEH: Add additional page sizes based on CAP_REG[34:37] */
 
-  _max_did = max_did;
-  _free_dids = new Boot_object<Did_map>();
+  _did_alloc.construct(max_did);
   _initialized = true;
 }
 
@@ -292,20 +275,10 @@ Dmar_space::Dmar_ptr::set(Unsigned64 v)
 }
 
 PUBLIC inline
-unsigned long
+Dmar_space::Did
 Dmar_space::get_did()
 {
-  // XXX: possibly need a loop here
-  if (_did == 0)
-    {
-      unsigned ndid = alloc_did();
-      if (EXPECT_FALSE(ndid == ~0U))
-        return ~0UL;
-
-      if (!cas<unsigned long>(&_did, 0UL, ndid))
-        free_did(ndid);
-    }
-  return _did;
+  return _did_alloc->get_or_alloc_id(&_did);
 }
 
 IMPLEMENT
@@ -370,9 +343,10 @@ IMPLEMENT
 void
 Dmar_space::tlb_flush_current_cpu()
 {
-  if (_did)
+  Did did = _did_alloc->get_id(&_did);
+  if (did != Invalid_did)
     Intel::Io_mmu::queue_and_wait_on_all_iommus(
-      Intel::Io_mmu::Inv_desc::iotlb_did(_did));
+      Intel::Io_mmu::Inv_desc::iotlb_did(did));
 }
 
 PUBLIC
@@ -506,7 +480,7 @@ Dmar_space::operator delete (void *ptr)
 PUBLIC inline
 Dmar_space::Dmar_space(Ram_quota *q)
 : Dyn_castable_class(q, Caps::mem()),
-  _dmarpt(0), _did(0)
+  _dmarpt(0), _did(Invalid_did)
 {
   _tlb_type = Tlb_iommu;
 }
@@ -515,12 +489,8 @@ PRIVATE
 void
 Dmar_space::remove_from_all_iommus()
 {
-  unsigned long did = access_once(&_did);
-  if (!did)
-    return;
-
-  // someone else changed the did
-  if (!cas(&_did, did, 0ul))
+  Did did = _did_alloc->reset_id_if_valid(&_did);
+  if (did == Invalid_did)
     return;
 
   bool need_wait[Intel::Io_mmu::Max_iommus];
@@ -560,7 +530,7 @@ Dmar_space::remove_from_all_iommus()
           }
     }
 
-  free_did(did);
+  _did_alloc->free_id(did);
   Intel::Io_mmu::queue_and_wait_on_iommus(need_wait);
 }
 
