@@ -36,15 +36,15 @@ private:
   Register_block<32> _reg;
 
 public:
-  int set_mode(Mword, Mode) { return 0; }
-  bool is_edge_triggered(Mword) const { return false; }
-  void set_cpu(Mword, Cpu_number) {}
-  void ack(Mword) { _reg[HW_ICOLL_LEVELACK] = 1 << PRIO_LEVEL; }
+  int set_mode(Mword, Mode) override { return 0; }
+  bool is_edge_triggered(Mword) const override { return false; }
+  void set_cpu(Mword, Cpu_number) override {}
+  void ack(Mword) override { _reg[HW_ICOLL_LEVELACK] = 1 << PRIO_LEVEL; }
 };
 
 PUBLIC
 void
-Irq_chip_imx_icoll::mask(Mword irq)
+Irq_chip_imx_icoll::mask(Mword irq) override
 {
   assert(cpu_lock.test());
   _reg[HW_ICOLL_INTERRUPT0_CLR + irq * 0x10] = HW_ICOLL_INTERRUPT_ENABLE;
@@ -52,7 +52,7 @@ Irq_chip_imx_icoll::mask(Mword irq)
 
 PUBLIC
 void
-Irq_chip_imx_icoll::mask_and_ack(Mword irq)
+Irq_chip_imx_icoll::mask_and_ack(Mword irq) override
 {
   assert(cpu_lock.test());
   mask(irq);
@@ -61,7 +61,7 @@ Irq_chip_imx_icoll::mask_and_ack(Mword irq)
 
 PUBLIC
 void
-Irq_chip_imx_icoll::unmask(Mword irq)
+Irq_chip_imx_icoll::unmask(Mword irq) override
 {
   assert (cpu_lock.test());
   _reg[HW_ICOLL_INTERRUPT0_SET + irq * 0x10] = HW_ICOLL_INTERRUPT_ENABLE;
@@ -112,5 +112,5 @@ IMPLEMENTATION [debug && pf_imx]:
 
 PUBLIC
 char const *
-Irq_chip_imx_icoll::chip_type() const
+Irq_chip_imx_icoll::chip_type() const override
 { return "i.MX-icoll IRQ"; }

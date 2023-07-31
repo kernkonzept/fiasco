@@ -44,15 +44,15 @@ public:
     modify<Unsigned32>(1 << Bridge_int_num, 0, Main_Irq_mask_low_reg);
   }
 
-  int set_mode(Mword, Mode) { return 0; }
-  bool is_edge_triggered(Mword) const { return false; }
-  void set_cpu(Mword, Cpu_number) {}
-  void ack(Mword) { /* ack is empty */ }
+  int set_mode(Mword, Mode) override { return 0; }
+  bool is_edge_triggered(Mword) const override { return false; }
+  void set_cpu(Mword, Cpu_number) override  {}
+  void ack(Mword) override  { /* ack is empty */ }
 };
 
 PUBLIC
 void
-Irq_chip_kirkwood::mask(Mword irq)
+Irq_chip_kirkwood::mask(Mword irq) override
 {
   assert (cpu_lock.test());
   modify<Unsigned32>(0, 1 << (irq & 0x1f),
@@ -61,7 +61,7 @@ Irq_chip_kirkwood::mask(Mword irq)
 
 PUBLIC
 void
-Irq_chip_kirkwood::mask_and_ack(Mword irq)
+Irq_chip_kirkwood::mask_and_ack(Mword irq) override
 {
   assert(cpu_lock.test());
   mask(irq);
@@ -70,7 +70,7 @@ Irq_chip_kirkwood::mask_and_ack(Mword irq)
 
 PUBLIC
 void
-Irq_chip_kirkwood::unmask(Mword irq)
+Irq_chip_kirkwood::unmask(Mword irq) override
 {
   assert(cpu_lock.test());
   modify<Unsigned32>(1 << (irq & 0x1f), 0,
@@ -119,5 +119,5 @@ IMPLEMENTATION [debug && pf_kirkwood]:
 
 PUBLIC
 char const *
-Irq_chip_kirkwood::chip_type() const
+Irq_chip_kirkwood::chip_type() const override
 { return "HW Kirkwood IRQ"; }

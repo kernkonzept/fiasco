@@ -57,9 +57,9 @@ private:
     INTCPS_ILRm_base         = 0x100,
   };
 public:
-  int set_mode(Mword, Mode) { return 0; }
-  bool is_edge_triggered(Mword) const { return false; }
-  void set_cpu(Mword, Cpu_number) {}
+  int set_mode(Mword, Mode) override { return 0; }
+  bool is_edge_triggered(Mword) const override { return false; }
+  void set_cpu(Mword, Cpu_number) override {}
 };
 
 PUBLIC inline
@@ -90,7 +90,7 @@ Irq_chip_arm_omap3::Irq_chip_arm_omap3()
 
 PUBLIC
 void
-Irq_chip_arm_omap3::mask(Mword irq)
+Irq_chip_arm_omap3::mask(Mword irq) override
 {
   assert(cpu_lock.test());
   write<Mword>(1 << (irq & 31), INTCPS_MIR_SETn_base + (irq & 0xe0));
@@ -98,7 +98,7 @@ Irq_chip_arm_omap3::mask(Mword irq)
 
 PUBLIC
 void
-Irq_chip_arm_omap3::mask_and_ack(Mword irq)
+Irq_chip_arm_omap3::mask_and_ack(Mword irq) override
 {
   assert(cpu_lock.test());
   write<Mword>(1 << (irq & 31), INTCPS_MIR_SETn_base + (irq & 0xe0));
@@ -107,7 +107,7 @@ Irq_chip_arm_omap3::mask_and_ack(Mword irq)
 
 PUBLIC
 void
-Irq_chip_arm_omap3::ack(Mword irq)
+Irq_chip_arm_omap3::ack(Mword irq) override
 {
   (void)irq;
   write<Mword>(1, INTCPS_CONTROL);
@@ -115,7 +115,7 @@ Irq_chip_arm_omap3::ack(Mword irq)
 
 PUBLIC
 void
-Irq_chip_arm_omap3::unmask(Mword irq)
+Irq_chip_arm_omap3::unmask(Mword irq) override
 {
   assert(cpu_lock.test());
   write<Mword>(1 << (irq & 31), INTCPS_MIR_CLEARn_base + (irq & 0xe0));
@@ -167,5 +167,5 @@ IMPLEMENTATION [debug && pf_omap3]:
 
 PUBLIC
 char const *
-Irq_chip_arm_omap3::chip_type() const
+Irq_chip_arm_omap3::chip_type() const override
 { return "HW OMAP3 IRQ"; }

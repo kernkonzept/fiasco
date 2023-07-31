@@ -48,10 +48,10 @@ IMPLEMENTATION [arm && (pf_xscale || pf_sa1100)]:
 class Chip : public Irq_chip_gen, private Mmio_register_block
 {
 public:
-  int set_mode(Mword, Mode) { return 0; }
-  bool is_edge_triggered(Mword) const { return false; }
-  void set_cpu(Mword, Cpu_number) {}
-  void ack(Mword) { /* ack is empty */ }
+  int set_mode(Mword, Mode) override { return 0; }
+  bool is_edge_triggered(Mword) const override { return false; }
+  void set_cpu(Mword, Cpu_number) override {}
+  void ack(Mword) override { /* ack is empty */ }
 };
 
 PUBLIC inline
@@ -69,7 +69,7 @@ Chip::Chip()
 
 PUBLIC
 void
-Chip::mask(Mword irq)
+Chip::mask(Mword irq) override
 {
   assert(cpu_lock.test());
   modify<Mword>(0, 1 << irq, Pic::ICMR);
@@ -77,7 +77,7 @@ Chip::mask(Mword irq)
 
 PUBLIC
 void
-Chip::mask_and_ack(Mword irq)
+Chip::mask_and_ack(Mword irq) override
 {
   assert (cpu_lock.test());
   modify<Mword>(0, 1 << irq, Pic::ICMR);
@@ -86,7 +86,7 @@ Chip::mask_and_ack(Mword irq)
 
 PUBLIC
 void
-Chip::unmask(Mword irq)
+Chip::unmask(Mword irq) override
 {
   modify<Mword>(1 << irq, 0, Pic::ICMR);
 }
@@ -149,5 +149,5 @@ IMPLEMENTATION [arm && debug && (pf_sa1100 || pf_xscale)]:
 
 PUBLIC
 char const *
-Chip::chip_type() const
+Chip::chip_type() const override
 { return "HW PXA/SA IRQ"; }

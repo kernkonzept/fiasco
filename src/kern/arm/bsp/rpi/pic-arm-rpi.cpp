@@ -29,10 +29,10 @@ public:
     Disable_Basic_IRQs = 0x24,
   };
 
-  int set_mode(Mword, Mode) { return 0; }
-  bool is_edge_triggered(Mword) const { return false; }
-  void set_cpu(Mword, Cpu_number) {}
-  void ack(Mword) { /* ack is empty */ }
+  int set_mode(Mword, Mode) override { return 0; }
+  bool is_edge_triggered(Mword) const override { return false; }
+  void set_cpu(Mword, Cpu_number) override {}
+  void ack(Mword) override { /* ack is empty */ }
 };
 
 PUBLIC
@@ -47,7 +47,7 @@ Irq_chip_bcm::Irq_chip_bcm()
 
 PUBLIC
 void
-Irq_chip_bcm::mask(Mword irq)
+Irq_chip_bcm::mask(Mword irq) override
 {
   assert(cpu_lock.test());
   write<Unsigned32>(1 << (irq & 0x1f), Disable_IRQs_1 + ((irq & 0x60) >> 3));
@@ -55,7 +55,7 @@ Irq_chip_bcm::mask(Mword irq)
 
 PUBLIC
 void
-Irq_chip_bcm::mask_and_ack(Mword irq)
+Irq_chip_bcm::mask_and_ack(Mword irq) override
 {
   mask(irq);
   // ack is empty
@@ -63,7 +63,7 @@ Irq_chip_bcm::mask_and_ack(Mword irq)
 
 PUBLIC
 void
-Irq_chip_bcm::unmask(Mword irq)
+Irq_chip_bcm::unmask(Mword irq) override
 {
   assert(cpu_lock.test());
   write<Unsigned32>(1 << (irq & 0x1f), Enable_IRQs_1 + ((irq & 0x60) >> 3));
@@ -211,5 +211,5 @@ IMPLEMENTATION [debug && pf_rpi && !pic_gic]:
 
 PUBLIC
 char const *
-Irq_chip_bcm::chip_type() const
+Irq_chip_bcm::chip_type() const override
 { return "Raspberry Pi"; }

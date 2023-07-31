@@ -23,8 +23,8 @@ protected:
   }
 
 public:
-  unsigned nr_irqs() const { return _nr_irqs; }
-  unsigned nr_msis() const { return 0; }
+  unsigned nr_irqs() const override { return _nr_irqs; }
+  unsigned nr_msis() const override { return 0; }
 
 protected:
   unsigned _nr_blocks;
@@ -65,19 +65,19 @@ public:
     : Irq_chip_gen(num_irqs), _gpio_base(gpio_base)
   {}
 
-  void mask(Mword pin)
+  void mask(Mword pin) override
   { Io::set<Mword>(1 << (pin & 7), _gpio_base + MASK + offs(pin)); }
 
-  void ack(Mword pin)
+  void ack(Mword pin) override
   { Io::set<Mword>(1 << (pin & 7), _gpio_base + PEND + offs(pin)); }
 
-  void mask_and_ack(Mword pin) { mask(pin); ack(pin); }
+  void mask_and_ack(Mword pin) override { mask(pin); ack(pin); }
 
-  void unmask(Mword pin)
+  void unmask(Mword pin) override
   { Io::clear<Mword>(1 << (pin & 7), _gpio_base + MASK + offs(pin)); }
 
-  void set_cpu(Mword, Cpu_number) {}
-  int set_mode(Mword pin, Mode m)
+  void set_cpu(Mword, Cpu_number) override {}
+  int set_mode(Mword pin, Mode m) override
   {
     unsigned v;
 
@@ -105,7 +105,7 @@ public:
     return 0;
   }
 
-  bool is_edge_triggered(Mword pin) const
+  bool is_edge_triggered(Mword pin) const override
   {
     unsigned v;
     Mword a = _gpio_base + INTCON + offs(pin);
@@ -137,19 +137,19 @@ public:
     _wakeup(0)
   {}
 
-  void mask(Mword pin)
+  void mask(Mword pin) override
   { modify<Mword>(1 << (pin & 7), 0, MASK + offs(pin)); }
 
-  void ack(Mword pin)
+  void ack(Mword pin) override
   { modify<Mword>(1 << (pin & 7), 0, PEND + offs(pin)); }
 
-  void mask_and_ack(Mword pin) { mask(pin); ack(pin); }
+  void mask_and_ack(Mword pin) override { mask(pin); ack(pin); }
 
-  void unmask(Mword pin)
+  void unmask(Mword pin) override
   { modify<Mword>(0, 1 << (pin & 7), MASK + offs(pin)); }
-  void set_cpu(Mword, Cpu_number) {}
+  void set_cpu(Mword, Cpu_number) override {}
 
-  int set_mode(Mword pin, Mode m)
+  int set_mode(Mword pin, Mode m) override
   {
     unsigned v;
 
@@ -182,7 +182,7 @@ public:
     return 0;
   }
 
-  bool is_edge_triggered(Mword pin) const
+  bool is_edge_triggered(Mword pin) const override
   {
     unsigned v;
     Mword a = INTCON + offs(pin);
@@ -241,23 +241,23 @@ public:
   Mword status(int irq) const
   { return read<Mword>(offset(irq) + Status) & bytemask(irq); }
 
-  void mask(Mword i)
+  void mask(Mword i) override
   { write<Mword>(1UL << (i & 31), offset(i / 8) + Enable_clear); }
 
-  void mask_and_ack(Mword i)
+  void mask_and_ack(Mword i) override
   { Combiner_chip::mask(i); }
 
-  void ack(Mword) {}
+  void ack(Mword) override {}
 
-  void set_cpu(Mword, Cpu_number) {}
+  void set_cpu(Mword, Cpu_number) override {}
 
-  int set_mode(Mword, Mode)
+  int set_mode(Mword, Mode) override
   { return 0; }
 
-  bool is_edge_triggered(Mword) const
+  bool is_edge_triggered(Mword) const override
   { return false; }
 
-  void unmask(Mword i)
+  void unmask(Mword i) override
   { write<Mword>(1UL << (i & 31), offset(i / 8) + Enable_set); }
 
   void init_irq(int irq) const
@@ -824,7 +824,7 @@ IMPLEMENTATION [pf_exynos5]:
 
 class Mgr : public Mgr_exynos
 {
-  Irq chip(Mword irqnum) const
+  Irq chip(Mword irqnum) const override
   {
     Mword origirq = irqnum;
 
@@ -928,7 +928,7 @@ Mgr::Mgr()
  */
 PUBLIC
 void
-Mgr::set_cpu(Mword irqnum, Cpu_number cpu) const
+Mgr::set_cpu(Mword irqnum, Cpu_number cpu) const override
 {
   // this handles only the MCT_L[0123] timers
   if (   irqnum == 152   // MCT_L0
@@ -965,15 +965,15 @@ IMPLEMENTATION [debug && pf_exynos]:
 
 PUBLIC
 char const *
-Combiner_chip::chip_type() const
+Combiner_chip::chip_type() const override
 { return "Comb"; }
 
 PUBLIC
 char const *
-Gpio_eint_chip::chip_type() const
+Gpio_eint_chip::chip_type() const override
 { return "EI-Gpio"; }
 
 PUBLIC
 char const *
-Gpio_wakeup_chip::chip_type() const
+Gpio_wakeup_chip::chip_type() const override
 { return "WU-GPIO"; }

@@ -53,15 +53,15 @@ private:
     INTCTL_NIDIS = 1 << 22, // Normal Interrupt Disable
   };
 public:
-  int set_mode(Mword, Mode) { return 0; }
-  bool is_edge_triggered(Mword) const { return false; }
-  void set_cpu(Mword, Cpu_number) {}
-  void ack(Mword) { /* ack is empty */ }
+  int set_mode(Mword, Mode) override { return 0; }
+  bool is_edge_triggered(Mword) const override { return false; }
+  void set_cpu(Mword, Cpu_number) override {}
+  void ack(Mword) override { /* ack is empty */ }
 };
 
 PUBLIC
 void
-Irq_chip_arm_imx::mask(Mword irq)
+Irq_chip_arm_imx::mask(Mword irq) override
 {
   assert(cpu_lock.test());
   write<Mword>(irq, INTDISNUM); // disable pin
@@ -69,7 +69,7 @@ Irq_chip_arm_imx::mask(Mword irq)
 
 PUBLIC
 void
-Irq_chip_arm_imx::mask_and_ack(Mword irq)
+Irq_chip_arm_imx::mask_and_ack(Mword irq) override
 {
   assert(cpu_lock.test());
   write<Mword>(irq, INTDISNUM); // disable pin
@@ -78,7 +78,7 @@ Irq_chip_arm_imx::mask_and_ack(Mword irq)
 
 PUBLIC
 void
-Irq_chip_arm_imx::unmask(Mword irq)
+Irq_chip_arm_imx::unmask(Mword irq) override
 {
   assert (cpu_lock.test());
   write<Mword>(irq, INTENNUM);
@@ -133,5 +133,5 @@ IMPLEMENTATION [debug && pf_imx]:
 
 PUBLIC
 char const *
-Irq_chip_arm_imx::chip_type() const
+Irq_chip_arm_imx::chip_type() const override
 { return "HW i.MX IRQ"; }

@@ -87,9 +87,9 @@ class S3c_chip : public Irq_chip_gen, Mmio_register_block
   };
 
 public:
-  int set_mode(Mword, Mode) { return 0; }
-  bool is_edge_triggered(Mword) const { return false; }
-  void set_cpu(Mword, Cpu_number) {}
+  int set_mode(Mword, Mode) override { return 0; }
+  bool is_edge_triggered(Mword) const override { return false; }
+  void set_cpu(Mword, Cpu_number) override {}
 };
 
 PUBLIC
@@ -137,7 +137,7 @@ S3c_chip::mask(Mword irq)
 
 PUBLIC
 void
-S3c_chip::unmask(Mword irq)
+S3c_chip::unmask(Mword irq) override
 {
   int mainirq;
 
@@ -165,7 +165,7 @@ S3c_chip::unmask(Mword irq)
 
 PUBLIC
 void
-S3c_chip::ack(Mword irq)
+S3c_chip::ack(Mword irq) override
 {
   int mainirq;
 
@@ -194,7 +194,7 @@ S3c_chip::ack(Mword irq)
 
 PUBLIC
 void
-S3c_chip::mask_and_ack(Mword irq)
+S3c_chip::mask_and_ack(Mword irq) override
 {
   assert(cpu_lock.test());
   mask(irq);
@@ -247,6 +247,6 @@ IMPLEMENTATION [debug && pf_s3c2410]:
 
 PUBLIC
 char const *
-S3c_chip::chip_type() const
+S3c_chip::chip_type() const override
 { return "HW S3C2410 IRQ"; }
 

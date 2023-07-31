@@ -45,7 +45,7 @@ Irq_chip_arm_integr::Irq_chip_arm_integr()
 
 PUBLIC
 void
-Irq_chip_arm_integr::mask(Mword irq)
+Irq_chip_arm_integr::mask(Mword irq) override
 {
   assert(cpu_lock.test());
   write<Mword>(1 << (irq - PIC_START), IRQ_ENABLE_CLEAR);
@@ -53,7 +53,7 @@ Irq_chip_arm_integr::mask(Mword irq)
 
 PUBLIC
 void
-Irq_chip_arm_integr::mask_and_ack(Mword irq)
+Irq_chip_arm_integr::mask_and_ack(Mword irq) override
 {
   assert(cpu_lock.test());
   write<Mword>(1 << (irq - PIC_START), IRQ_ENABLE_CLEAR);
@@ -62,7 +62,7 @@ Irq_chip_arm_integr::mask_and_ack(Mword irq)
 
 PUBLIC
 void
-Irq_chip_arm_integr::unmask(Mword irq)
+Irq_chip_arm_integr::unmask(Mword irq) override
 {
   assert(cpu_lock.test());
   write<Mword>(1 << (irq - PIC_START), IRQ_ENABLE_SET);
@@ -103,5 +103,5 @@ IMPLEMENTATION [debug && pf_integrator]:
 
 PUBLIC
 char const *
-Irq_chip_arm_integr::chip_type() const
+Irq_chip_arm_integr::chip_type() const override
 { return "Integrator"; }
