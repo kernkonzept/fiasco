@@ -1,13 +1,3 @@
-INTERFACE [iommu && iommu_arm_smmu_v3 && !arm_iommu_stage2]:
-
-EXTENSION class Iommu { enum { Stage2 = 0 }; };
-
-// ------------------------------------------------------------------
-INTERFACE [iommu && iommu_arm_smmu_v3 && arm_iommu_stage2]:
-
-EXTENSION class Iommu { enum { Stage2 = 1 }; };
-
-// ------------------------------------------------------------------
 INTERFACE [iommu && iommu_arm_smmu_v3]:
 
 #include "types.h"
@@ -483,8 +473,9 @@ private:
 
     CXX_BITFIELD_MEMBER( 0, 31, amair0, raw[4]);
     CXX_BITFIELD_MEMBER( 32, 63, amair1, raw[4]);
-  };
+  } __attribute__((aligned(64)));
   static_assert(sizeof(Cd) == 64, "Context Descriptor has unexpected size!");
+  static_assert(alignof(Cd) == 64, "Context Descriptor has unexpected alignment!");
 
   struct Cmd
   {
@@ -920,7 +911,6 @@ public:
   Dmar_space const *space() const { return _space; }
   Iommu::Asid get_asid() const { return Iommu::_asid_alloc->get_id(&_asid); }
   Iommu::Asid get_or_alloc_asid() { return Iommu::_asid_alloc->get_or_alloc_id(&_asid); }
-  Iommu::Cd *get_cd(unsigned ias);
 
 private:
   friend class Iommu;
@@ -960,12 +950,6 @@ private:
   // bound for the first time, freed only on destruction.
   Iommu::Asid _asid = Iommu::Invalid_asid;
 
-  // Context descriptor, used for all bindings of this domain (across SMMUs
-  // and across stream IDs). Allocated when the domain is bound for the first
-  // time, freed only on destruction.
-  static Kmem_slab_t<Iommu::Cd, 64> _cd_allocator;
-  Iommu::Cd *_cd = nullptr;
-
   // Track on which SMMUs the domain was bound for which stream IDs. Might be
   // outdated in case a different domain was bound for the same SMMU-Stream ID
   // combination. Bindings are freed on unbind or destruction of the domain.
@@ -975,6 +959,28 @@ private:
   using Bindings_array = cxx::array<Binding_list, unsigned, Iommu::Num_iommus>;
   Bindings_array _bindings;
 };
+
+// ------------------------------------------------------------------
+INTERFACE [iommu && iommu_arm_smmu_v3 && !arm_iommu_stage2]:
+
+EXTENSION class Iommu { enum { Stage2 = 0 }; };
+
+EXTENSION class Iommu_domain
+{
+private:
+  Iommu::Cd const *get_or_init_cd(unsigned ias);
+
+  /// Context descriptor, used for all bindings of this domain (across SMMUs
+  /// and across stream IDs). Initialized when the domain is bound for the first
+  /// time. The context descriptor is only required if the SMMU does not
+  /// support stage 2 translation.
+  Iommu::Cd _cd;
+};
+
+// ------------------------------------------------------------------
+INTERFACE [iommu && iommu_arm_smmu_v3 && arm_iommu_stage2]:
+
+EXTENSION class Iommu { enum { Stage2 = 1 }; };
 
 // ------------------------------------------------------------------
 IMPLEMENTATION [iommu]:
@@ -987,7 +993,6 @@ Static_object<Iommu::Asid_alloc> Iommu::_asid_alloc;
 
 KIP_KERNEL_FEATURE("arm,smmu-v3");
 
-Kmem_slab_t<Iommu::Cd, 64> Iommu_domain::_cd_allocator("Cd");
 Kmem_slab_t<Iommu_domain::Binding> Iommu_domain::_binding_allocator("Binding");
 
 /**
@@ -1516,74 +1521,6 @@ IMPLEMENT
 Iommu_domain::~Iommu_domain()
 {
   Iommu::_asid_alloc->free_id_if_valid(&_asid);
-
-  if (Iommu::Cd *cd = atomic_exchange(&_cd, nullptr))
-    _cd_allocator.q_del(_space->ram_quota(), cd);
-}
-
-IMPLEMENT
-Iommu::Cd *
-Iommu_domain::get_cd(unsigned ias)
-{
-  // No need for a memory barrier, as there is an address dependency between
-  // reading _cd and using its value to access the pointed to context descriptor.
-  if (Iommu::Cd *cd = atomic_load(&_cd))
-    return cd;
-
-  unsigned long asid = get_or_alloc_asid();
-  if (asid == Iommu::Invalid_asid)
-    // No ASID available.
-    return nullptr;
-
-  Iommu::Cd *new_cd = _cd_allocator.q_new(_space->ram_quota());
-  if (!new_cd)
-    return nullptr;
-
-  // Region size is 2^(64 - T0SZ) -> T0SZ = 64 - input_address_size
-  new_cd->t0sz() = 64 - Dmar_space::virt_addr_size();
-  new_cd->tg0() = 0; // 4k
-  new_cd->ir0() = Iommu::Cr1::Cache_wb;
-  new_cd->or0() = Iommu::Cr1::Cache_wb;
-  new_cd->sh0() = Iommu::Cr1::Share_is;
-  new_cd->epd0() = 0; // Enable TT0 translation table walk.
-  new_cd->endi() = 0; // Translation table endianness is little endian.
-  new_cd->epd1() = 1; // Disable TT1 translation table walk.
-  new_cd->v() = 1; // Valid
-  new_cd->ips() = Iommu::address_size_encode(ias);
-  new_cd->affd() = 1; // An Access flag fault never occurs.
-  new_cd->wxn() = 0;
-  new_cd->uwxn() = 0;
-  new_cd->aa64() = 1; // Use Aarch64 format
-  new_cd->hd() = 0; // Disable hardware update of Dirty flags
-  new_cd->ha() = 0; // Disable hardware update of Access flags
-  // Fault behavior
-  new_cd->s() = 0; // Do not stall faulting transactions.
-  new_cd->r() = Iommu::Log_faults; // Record faults in event queue.
-  new_cd->a() = 1; // Translation faults result in an abort or bus error being
-                   // returned to the device.
-  // The context is non-shared, do not participate in broadcast TLB.
-  new_cd->aset() = 1;
-  new_cd->asid() = asid;
-  new_cd->ttb0() = _space->pt_phys_addr();
-  new_cd->mair0() = Page::Mair0_prrr_bits;
-  new_cd->mair1() = Page::Mair1_nmrr_bits;
-  new_cd->amair0() = 0;
-  new_cd->amair1() = 0;
-
-  // Ensure context descriptor is visible to other CPUs before setting _cd.
-  Mem::mp_wmb();
-
-  if (!cas<Iommu::Cd *>(&_cd, nullptr, new_cd))
-    {
-      // Already allocated by someone else.
-      _cd_allocator.q_del(_space->ram_quota(), new_cd);
-      return _cd;
-    }
-
-  // Ensure context descriptor is observable by the SMMU.
-  Iommu::make_observable_before_cmd(new_cd);
-
-  return new_cd;
 }
 
 IMPLEMENT
@@ -1690,6 +1627,56 @@ Iommu::deconfigure_domain(Ste *ste, Unsigned32 stream_id, Iommu_domain &domain)
 // -----------------------------------------------------------
 IMPLEMENTATION [iommu && iommu_arm_smmu_v3 && !arm_iommu_stage2]:
 
+IMPLEMENT
+Iommu::Cd const *
+Iommu_domain::get_or_init_cd(unsigned ias)
+{
+  // Already initialized?
+  if (_cd.v())
+    return &_cd;
+
+  unsigned long asid = get_or_alloc_asid();
+  if (asid == Iommu::Invalid_asid)
+    // No ASID available.
+    return nullptr;
+
+  // Region size is 2^(64 - T0SZ) -> T0SZ = 64 - input_address_size
+  _cd.t0sz() = 64 - Dmar_space::virt_addr_size();
+  _cd.tg0() = 0; // 4k
+  _cd.ir0() = Iommu::Cr1::Cache_wb;
+  _cd.or0() = Iommu::Cr1::Cache_wb;
+  _cd.sh0() = Iommu::Cr1::Share_is;
+  _cd.epd0() = 0; // Enable TT0 translation table walk.
+  _cd.endi() = 0; // Translation table endianness is little endian.
+  _cd.epd1() = 1; // Disable TT1 translation table walk.
+  _cd.v() = 1; // Valid
+  _cd.ips() = Iommu::address_size_encode(ias);
+  _cd.affd() = 1; // An Access flag fault never occurs.
+  _cd.wxn() = 0;
+  _cd.uwxn() = 0;
+  _cd.aa64() = 1; // Use Aarch64 format
+  _cd.hd() = 0; // Disable hardware update of Dirty flags
+  _cd.ha() = 0; // Disable hardware update of Access flags
+  // Fault behavior
+  _cd.s() = 0; // Do not stall faulting transactions.
+  _cd.r() = Iommu::Log_faults; // Record faults in event queue.
+  _cd.a() = 1; // Translation faults result in an abort or bus error being
+               // returned to the device.
+  // The context is non-shared, do not participate in broadcast TLB.
+  _cd.aset() = 1;
+  _cd.asid() = asid;
+  _cd.ttb0() = _space->pt_phys_addr();
+  _cd.mair0() = Page::Mair0_prrr_bits;
+  _cd.mair1() = Page::Mair1_nmrr_bits;
+  _cd.amair0() = 0;
+  _cd.amair1() = 0;
+
+  // Ensure context descriptor is observable by the SMMU.
+  Iommu::make_observable_before_cmd(&_cd);
+
+  return &_cd;
+}
+
 PRIVATE
 void
 Iommu::tlb_invalidate_asid(Asid asid)
@@ -1704,7 +1691,7 @@ bool
 Iommu::prepare_ste(Ste *ste, Iommu_domain &domain)
 {
   // Get or allocate context descriptor.
-  Cd *cd = domain.get_cd(_ias);
+  Cd const *cd = domain.get_or_init_cd(_ias);
   if (!cd)
     return false;
 
