@@ -106,7 +106,7 @@ EXTENSION class Dmar_space
   using Dmarpt_alloc = Kmem_slab_t<Dmar_pdir, sizeof(Dmar_pdir)>;
   static Dmarpt_alloc _dmarpt_alloc;
 
-  Iommu::Domain _domain{this};
+  Iommu_domain _domain{this};
 };
 
 // -----------------------------------------------------------

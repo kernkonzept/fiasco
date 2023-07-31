@@ -24,6 +24,7 @@ INTERFACE [iommu && iommu_arm_smmu_v3]:
 #include "timer.h"
 
 class Dmar_space;
+class Iommu_domain;
 
 /*
  * Iommu implementation for ARM SMMUv3.
@@ -48,9 +49,6 @@ class Dmar_space;
  */
 EXTENSION class Iommu
 {
-private:
-  struct Cd;
-
 public:
   enum
   {
@@ -64,77 +62,6 @@ public:
   using Asid_alloc = Simple_id_alloc<Asid, First_asid, Max_nr_asid, Invalid_asid>;
 
   /**
-   * Wrapper for a DMA space, which Iommu uses to associate internal state with
-   * the DMA space.
-   *
-   * Can be bound to multiple Iommus, also with multiple stream IDs.
-   */
-  class Domain
-  {
-  public:
-    explicit Domain(Dmar_space const *space) : _space(space) {}
-
-    ~Domain();
-    Dmar_space const *space() const { return _space; }
-    Asid get_asid() const { return _asid_alloc->get_id(&_asid); }
-    Asid get_or_alloc_asid() { return _asid_alloc->get_or_alloc_id(&_asid); }
-    Cd *get_cd(unsigned ias);
-
-  private:
-    friend class Iommu;
-
-    /**
-     * Return whether the domain is bound to the Iommu.
-     *
-     * \pre The lock of iommu must be held.
-     */
-    bool is_bound(Iommu const *iommu) const;
-
-    /**
-     * Adds a binding with the given stream ID for the Iommu.
-     *
-     * \pre The lock of iommu must be held.
-     */
-    bool add_binding(Iommu const *iommu, unsigned stream_id);
-
-
-    /**
-     * Deletes a binding with the given stream ID for the Iommu.
-     *
-     * \pre The lock of iommu must be held.
-     */
-    bool del_binding(Iommu const *iommu, unsigned stream_id);
-
-    /**
-     * Clear all bindings for the given Iommu.
-     *
-     * \pre The lock of iommu must be held.
-     */
-    void clear_bindings(Iommu const *iommu);
-
-    Dmar_space const *_space;
-
-    // Address space identifier of this domain. Allocated when the domain is
-    // bound for the first time, freed only on destruction.
-    Asid _asid = Invalid_asid;
-
-    // Context descriptor, used for all bindings of this domain (across SMMUs
-    // and across stream IDs). Allocated when the domain is bound for the first
-    // time, freed only on destruction.
-    static Kmem_slab_t<Cd, 64> _cd_allocator;
-    Cd *_cd = nullptr;
-
-    // Track on which SMMUs the domain was bound for which stream IDs. Might be
-    // outdated in case a different domain was bound for the same SMMU-Stream ID
-    // combination. Bindings are freed on unbind or destruction of the domain.
-    struct Binding : cxx::S_list_item { unsigned stream_id; };
-    static Kmem_slab_t<Binding> _binding_allocator;
-    using Binding_list = cxx::S_list<Binding>;
-    using Bindings_array = cxx::array<Binding_list, unsigned, Num_iommus>;
-    Bindings_array _bindings;
-  };
-
-  /**
    * Invalidate the entire TLB of this Iommu.
    */
   void tlb_flush() override;
@@ -142,9 +69,11 @@ public:
   /**
    * Invalidate TLB for the given domain on all Iommus it is bound to.
    */
-  static void tlb_invalidate_domain(Domain const &domain);
+  static void tlb_invalidate_domain(Iommu_domain const &domain);
 
 private:
+  friend class Iommu_domain;
+
   enum
   {
     /// Limit size of stream table to cover at most 20 bits of stream ID,
@@ -976,6 +905,77 @@ public:
   {}
 };
 
+/**
+ * Wrapper for a DMA space, which Iommu uses to associate internal state with
+ * the DMA space.
+ *
+ * Can be bound to multiple Iommus, also with multiple stream IDs.
+ */
+class Iommu_domain
+{
+public:
+  explicit Iommu_domain(Dmar_space const *space) : _space(space) {}
+
+  ~Iommu_domain();
+  Dmar_space const *space() const { return _space; }
+  Iommu::Asid get_asid() const { return Iommu::_asid_alloc->get_id(&_asid); }
+  Iommu::Asid get_or_alloc_asid() { return Iommu::_asid_alloc->get_or_alloc_id(&_asid); }
+  Iommu::Cd *get_cd(unsigned ias);
+
+private:
+  friend class Iommu;
+
+  /**
+   * Return whether the domain is bound to the Iommu.
+   *
+   * \pre The lock of iommu must be held.
+   */
+  bool is_bound(Iommu const *iommu) const;
+
+  /**
+   * Adds a binding with the given stream ID for the Iommu.
+   *
+   * \pre The lock of iommu must be held.
+   */
+  bool add_binding(Iommu const *iommu, unsigned stream_id);
+
+
+  /**
+   * Deletes a binding with the given stream ID for the Iommu.
+   *
+   * \pre The lock of iommu must be held.
+   */
+  bool del_binding(Iommu const *iommu, unsigned stream_id);
+
+  /**
+   * Clear all bindings for the given Iommu.
+   *
+   * \pre The lock of iommu must be held.
+   */
+  void clear_bindings(Iommu const *iommu);
+
+  Dmar_space const *_space;
+
+  // Address space identifier of this domain. Allocated when the domain is
+  // bound for the first time, freed only on destruction.
+  Iommu::Asid _asid = Iommu::Invalid_asid;
+
+  // Context descriptor, used for all bindings of this domain (across SMMUs
+  // and across stream IDs). Allocated when the domain is bound for the first
+  // time, freed only on destruction.
+  static Kmem_slab_t<Iommu::Cd, 64> _cd_allocator;
+  Iommu::Cd *_cd = nullptr;
+
+  // Track on which SMMUs the domain was bound for which stream IDs. Might be
+  // outdated in case a different domain was bound for the same SMMU-Stream ID
+  // combination. Bindings are freed on unbind or destruction of the domain.
+  struct Binding : cxx::S_list_item { unsigned stream_id; };
+  static Kmem_slab_t<Binding> _binding_allocator;
+  using Binding_list = cxx::S_list<Binding>;
+  using Bindings_array = cxx::array<Binding_list, unsigned, Iommu::Num_iommus>;
+  Bindings_array _bindings;
+};
+
 // ------------------------------------------------------------------
 IMPLEMENTATION [iommu]:
 
@@ -987,9 +987,8 @@ Static_object<Iommu::Asid_alloc> Iommu::_asid_alloc;
 
 KIP_KERNEL_FEATURE("arm,smmu-v3");
 
-Kmem_slab_t<Iommu::Cd, 64> Iommu::Domain::_cd_allocator("Cd");
-Kmem_slab_t<Iommu::Domain::Binding>
-  Iommu::Domain::_binding_allocator("Binding");
+Kmem_slab_t<Iommu::Cd, 64> Iommu_domain::_cd_allocator("Cd");
+Kmem_slab_t<Iommu_domain::Binding> Iommu_domain::_binding_allocator("Binding");
 
 /**
  * Send commands to the SMMU, i.e. write them to the command queue.
@@ -1150,7 +1149,7 @@ Iommu::invalidate_ste(Ste *ste, Unsigned32 stream_id)
 PRIVATE
 void
 Iommu::deconfigure_domain_and_invalidate_tlb(Ste *ste, Unsigned32 stream_id,
-                                             Iommu::Domain &domain)
+                                             Iommu_domain &domain)
 {
   deconfigure_domain(ste, stream_id, domain);
 
@@ -1193,7 +1192,7 @@ Iommu::make_observable_before_cmd(T *start, T *end = nullptr)
 
 PUBLIC
 int
-Iommu::bind(Unsigned32 stream_id, Iommu::Domain &domain)
+Iommu::bind(Unsigned32 stream_id, Iommu_domain &domain)
 {
   auto g = lock_guard(_lock);
 
@@ -1218,7 +1217,7 @@ Iommu::bind(Unsigned32 stream_id, Iommu::Domain &domain)
 
 PUBLIC
 int
-Iommu::unbind(Unsigned32 stream_id, Iommu::Domain &domain)
+Iommu::unbind(Unsigned32 stream_id, Iommu_domain &domain)
 {
   auto g = lock_guard(_lock);
 
@@ -1239,7 +1238,7 @@ Iommu::unbind(Unsigned32 stream_id, Iommu::Domain &domain)
 
 PUBLIC
 void
-Iommu::remove(Iommu::Domain &domain)
+Iommu::remove(Iommu_domain &domain)
 {
   auto g = lock_guard(_lock);
 
@@ -1472,7 +1471,7 @@ Iommu::setup(Address base_addr, unsigned eventq_irq, unsigned gerror_irq)
 
 IMPLEMENT
 void
-Iommu::tlb_invalidate_domain(Domain const &domain)
+Iommu::tlb_invalidate_domain(Iommu_domain const &domain)
 {
   for (Iommu &iommu : Iommu::iommus())
     {
@@ -1514,43 +1513,43 @@ Iommu::init_common()
 }
 
 IMPLEMENT
-Iommu::Domain::~Domain()
+Iommu_domain::~Iommu_domain()
 {
-  _asid_alloc->free_id_if_valid(&_asid);
+  Iommu::_asid_alloc->free_id_if_valid(&_asid);
 
-  if (Cd *cd = atomic_exchange(&_cd, nullptr))
+  if (Iommu::Cd *cd = atomic_exchange(&_cd, nullptr))
     _cd_allocator.q_del(_space->ram_quota(), cd);
 }
 
 IMPLEMENT
 Iommu::Cd *
-Iommu::Domain::get_cd(unsigned ias)
+Iommu_domain::get_cd(unsigned ias)
 {
   // No need for a memory barrier, as there is an address dependency between
   // reading _cd and using its value to access the pointed to context descriptor.
-  if (Cd *cd = atomic_load(&_cd))
+  if (Iommu::Cd *cd = atomic_load(&_cd))
     return cd;
 
   unsigned long asid = get_or_alloc_asid();
-  if (asid == Invalid_asid)
+  if (asid == Iommu::Invalid_asid)
     // No ASID available.
     return nullptr;
 
-  Cd *new_cd = _cd_allocator.q_new(_space->ram_quota());
+  Iommu::Cd *new_cd = _cd_allocator.q_new(_space->ram_quota());
   if (!new_cd)
     return nullptr;
 
   // Region size is 2^(64 - T0SZ) -> T0SZ = 64 - input_address_size
   new_cd->t0sz() = 64 - Dmar_space::virt_addr_size();
   new_cd->tg0() = 0; // 4k
-  new_cd->ir0() = Cr1::Cache_wb;
-  new_cd->or0() = Cr1::Cache_wb;
-  new_cd->sh0() = Cr1::Share_is;
+  new_cd->ir0() = Iommu::Cr1::Cache_wb;
+  new_cd->or0() = Iommu::Cr1::Cache_wb;
+  new_cd->sh0() = Iommu::Cr1::Share_is;
   new_cd->epd0() = 0; // Enable TT0 translation table walk.
   new_cd->endi() = 0; // Translation table endianness is little endian.
   new_cd->epd1() = 1; // Disable TT1 translation table walk.
   new_cd->v() = 1; // Valid
-  new_cd->ips() = address_size_encode(ias);
+  new_cd->ips() = Iommu::address_size_encode(ias);
   new_cd->affd() = 1; // An Access flag fault never occurs.
   new_cd->wxn() = 0;
   new_cd->uwxn() = 0;
@@ -1574,7 +1573,7 @@ Iommu::Domain::get_cd(unsigned ias)
   // Ensure context descriptor is visible to other CPUs before setting _cd.
   Mem::mp_wmb();
 
-  if (!cas<Cd *>(&_cd, nullptr, new_cd))
+  if (!cas<Iommu::Cd *>(&_cd, nullptr, new_cd))
     {
       // Already allocated by someone else.
       _cd_allocator.q_del(_space->ram_quota(), new_cd);
@@ -1582,7 +1581,7 @@ Iommu::Domain::get_cd(unsigned ias)
     }
 
   // Ensure context descriptor is observable by the SMMU.
-  make_observable_before_cmd(new_cd);
+  Iommu::make_observable_before_cmd(new_cd);
 
   return new_cd;
 }
@@ -1596,14 +1595,14 @@ Iommu::tlb_flush()
 
 IMPLEMENT
 bool
-Iommu::Domain::is_bound(Iommu const *iommu) const
+Iommu_domain::is_bound(Iommu const *iommu) const
 {
   return !_bindings[iommu->_idx].empty();
 }
 
 IMPLEMENT
 bool
-Iommu::Domain::add_binding(Iommu const *iommu, unsigned stream_id)
+Iommu_domain::add_binding(Iommu const *iommu, unsigned stream_id)
 {
   // Already bound to this stream id?
   for (Binding const *binding : _bindings[iommu->_idx])
@@ -1622,7 +1621,7 @@ Iommu::Domain::add_binding(Iommu const *iommu, unsigned stream_id)
 
 IMPLEMENT
 bool
-Iommu::Domain::del_binding(Iommu const *iommu, unsigned stream_id)
+Iommu_domain::del_binding(Iommu const *iommu, unsigned stream_id)
 {
   auto &bindings = _bindings[iommu->_idx];
   for (auto iter = bindings.begin(); iter != bindings.end(); ++iter)
@@ -1638,7 +1637,7 @@ Iommu::Domain::del_binding(Iommu const *iommu, unsigned stream_id)
 
 IMPLEMENT
 void
-Iommu::Domain::clear_bindings(Iommu const *iommu)
+Iommu_domain::clear_bindings(Iommu const *iommu)
 {
   while (Binding *binding = _bindings[iommu->_idx].pop_front())
     _binding_allocator.q_del(_space->ram_quota(), binding);
@@ -1646,7 +1645,7 @@ Iommu::Domain::clear_bindings(Iommu const *iommu)
 
 PRIVATE
 bool
-Iommu::configure_domain(Ste *ste, Unsigned32 stream_id, Iommu::Domain &domain)
+Iommu::configure_domain(Ste *ste, Unsigned32 stream_id, Iommu_domain &domain)
 {
   // Stream table entry is already valid, invalidate it first to ensure the SMMU
   // does not see an illegal/inconsistent intermediate state.
@@ -1674,7 +1673,7 @@ Iommu::configure_domain(Ste *ste, Unsigned32 stream_id, Iommu::Domain &domain)
 
 PRIVATE
 bool
-Iommu::deconfigure_domain(Ste *ste, Unsigned32 stream_id, Iommu::Domain &domain)
+Iommu::deconfigure_domain(Ste *ste, Unsigned32 stream_id, Iommu_domain &domain)
 {
   // Stream table entry is invalid.
   if (!ste->v())
@@ -1702,7 +1701,7 @@ Iommu::tlb_invalidate_asid(Asid asid)
 
 PRIVATE
 bool
-Iommu::prepare_ste(Ste *ste, Iommu::Domain &domain)
+Iommu::prepare_ste(Ste *ste, Iommu_domain &domain)
 {
   // Get or allocate context descriptor.
   Cd *cd = domain.get_cd(_ias);
@@ -1734,7 +1733,7 @@ Iommu::prepare_ste(Ste *ste, Iommu::Domain &domain)
 
 PRIVATE
 bool
-Iommu::is_domain_bound_to_ste(Ste *ste, Iommu::Domain &domain)
+Iommu::is_domain_bound_to_ste(Ste *ste, Iommu_domain &domain)
 {
   Cd *cd = reinterpret_cast<Cd *>(Mem_layout::phys_to_pmem(ste->s1_context_ptr()));
   // Valid context descriptor pointer referring to the domain's page table.
@@ -1748,14 +1747,14 @@ PRIVATE
 void
 Iommu::tlb_invalidate_asid(Asid asid)
 {
-  // When Domain is not bound, it has the invalid ASID.
+  // When domain is not bound, it has the invalid ASID.
   if (asid != Invalid_asid)
     send_cmd_sync(Cmd::tlbi_s12_vmall(asid));
 }
 
 PRIVATE
 bool
-Iommu::prepare_ste(Ste *ste, Iommu::Domain &domain)
+Iommu::prepare_ste(Ste *ste, Iommu_domain &domain)
 {
   unsigned long vmid = domain.get_or_alloc_asid();
   if (vmid == Invalid_asid)
@@ -1790,7 +1789,7 @@ Iommu::prepare_ste(Ste *ste, Iommu::Domain &domain)
 
 PRIVATE
 bool
-Iommu::is_domain_bound_to_ste(Ste *ste, Iommu::Domain &domain)
+Iommu::is_domain_bound_to_ste(Ste *ste, Iommu_domain &domain)
 {
   // Stream table entry refers to the domain's page table.
   return ste->s2_ttb() == domain.space()->pt_phys_addr();
