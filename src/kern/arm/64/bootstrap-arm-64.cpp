@@ -60,7 +60,7 @@ template<typename PDIR>
 static inline void
 Bootstrap::map_ram_range(PDIR *kd, Bs_alloc &alloc,
                          unsigned long pstart, unsigned long pend,
-                         unsigned long va_offset)
+                         unsigned long va_offset, Page::Kern kern)
 {
   pstart = Mem_layout::trunc_superpage(pstart);
   pend = Mem_layout::round_superpage(pend);
@@ -72,8 +72,7 @@ Bootstrap::map_ram_range(PDIR *kd, Bs_alloc &alloc,
                           PDIR::Super_level, false, alloc, Bs_mem_map());
       pte.set_page(pte.make_page(Phys_mem_addr(pstart + i),
                                  Page::Attr(Page::Rights::RWX(),
-                                            Page::Type::Normal(),
-                                            Page::Kern::Global())));
+                                            Page::Type::Normal(), kern)));
     }
 }
 
@@ -282,13 +281,14 @@ Bootstrap::init_paging()
 
   // map kernel to desired virtual address
   map_ram_range(kd, alloc, bs_info.kernel_start_phys, bs_info.kernel_end_phys,
-                Virt_ofs + load_addr);
+                Virt_ofs + load_addr, Page::Kern::Global());
 
   set_mair0(Page::Mair0_prrr_bits);
 
   // Create 1:1 mapping of the kernel in the idle (user) page table. Needed by
   // add_initial_pmem().
-  map_ram_range(ud, alloc, bs_info.kernel_start_phys, bs_info.kernel_end_phys, 0);
+  map_ram_range(ud, alloc, bs_info.kernel_start_phys, bs_info.kernel_end_phys,
+                0, Page::Kern::None());
 
   asm volatile (
       "msr tcr_el1, %2   \n"
@@ -433,11 +433,12 @@ Bootstrap::init_paging()
 
   // map kernel to desired virtual address
   map_ram_range(d, alloc, bs_info.kernel_start_phys, bs_info.kernel_end_phys,
-                Virt_ofs + load_addr);
+                Virt_ofs + load_addr, Page::Kern::Global());
 
   // Add 1:1 mapping if not already done so above. Needed by add_initial_pmem().
   if (Virt_ofs + load_addr != 0)
-    map_ram_range(d, alloc, bs_info.kernel_start_phys, bs_info.kernel_end_phys, 0);
+    map_ram_range(d, alloc, bs_info.kernel_start_phys, bs_info.kernel_end_phys,
+                  0, Page::Kern::Global());
 
   asm volatile (
       "msr tcr_el2, %1   \n"
