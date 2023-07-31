@@ -300,7 +300,7 @@ Thread::update_local_map(Address pfa, Mword /*error_code*/)
     return false;
 
   auto *m = Kmem::pte_map();
-  if (EXPECT_FALSE(m->operator [](idx)))
+  if (EXPECT_FALSE((*m)[idx]))
     return false;
 
   auto s = Kmem::current_cpu_udir()->walk(Virt_addr(pfa), 0);

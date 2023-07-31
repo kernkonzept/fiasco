@@ -1,6 +1,7 @@
 INTERFACE:
 
 #include <cassert>
+#include <cstring>
 #include <cxx/hlist>
 #include "bitmap.h"
 #include "config.h"
@@ -32,13 +33,12 @@ class Buddy_t_base : public Buddy_base
   friend class Buddy_t_base_tester;
 
 private:
-  struct Freemap : Bitmap_base_base<unsigned long *>
+  struct Freemap : Bitmap_storage<unsigned long *>
   {
-    void setup(unsigned long *addr, unsigned long size_in_bytes)
+    void setup(unsigned long *addr, size_t size_in_bytes)
     {
       _bits = addr;
-      for (unsigned i = 0; i < size_in_bytes / sizeof(Bitmap_elem_type); ++i)
-        _bits[i] = 0;
+      memset(_bits, 0, size_in_bytes);
     }
   };
 
@@ -51,7 +51,7 @@ public:
     Max_size = Min_size << (NUM_SIZES - 1),
   };
 
-  static constexpr unsigned long
+  static constexpr size_t
   free_map_bytes(unsigned long min_addr, unsigned long max_addr)
   { return Freemap::size_in_bytes(buddy_bits(min_addr, max_addr)); }
 
@@ -59,7 +59,7 @@ public:
   free_map_align()
   { return alignof (unsigned long); }
 
-  void setup_free_map(unsigned long *addr, unsigned long size_in_bytes)
+  void setup_free_map(unsigned long *addr, size_t size_in_bytes)
   { _free_map.setup(addr, size_in_bytes); }
 
   static constexpr unsigned long
