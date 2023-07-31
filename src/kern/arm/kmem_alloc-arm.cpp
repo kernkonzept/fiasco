@@ -116,16 +116,18 @@ static void add_initial_pmem()
   extern char _kernel_image_start[];
   extern char _initcall_end[];
 
+  // Provides phys-to-virt address mapping required to walk the page table
+  // hierarchy, which is linked via physical addresses.
+  // Relies on 1:1 mapping of the kernel image, or rather that the pages for
+  // initial/boot paging directory lie in the kernel image (see
+  // kmem_space-arm-32/64.cpp).
   struct Identity_map
   {
     static Address phys_to_pmem(Address a)
     { return a; }
   };
 
-  // Find out our virt->phys mapping simply by walking the page table. Relies
-  // on 1:1 mapping of the kernel image, or rather that the pages for
-  // initial/boot paging directory lie in the kernel image (see
-  // kmem_space-arm-32/64.cpp).
+  // Find out our virt->phys mapping simply by walking the page table.
   Address virt = Mem_layout::trunc_superpage((unsigned long)_kernel_image_start);
   Address size = Mem_layout::round_superpage((unsigned long)_initcall_end)
                   - virt;
@@ -136,8 +138,8 @@ static void add_initial_pmem()
   unsigned long phys = pte.page_addr();
   Mem_layout::add_pmem(phys, virt, size);
 
-  // The existing 1:1 mapping is *not* removed! In case of cpu_virt it is
-  // required to exist for Mem_op::arm_mem_cache_maint().
+  // The existing 1:1 mapping is *not* removed! In case of cpu_virt on arm32 it
+  // is required to exist for Mem_op::arm_mem_cache_maint().
 }
 
 STATIC_INITIALIZER_P(add_initial_pmem, BOOTSTRAP_INIT_PRIO);
