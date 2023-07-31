@@ -348,7 +348,7 @@ Kmem::init_mmu()
   unsigned long cpu_features = Cpu::get_features();
   bool superpages = cpu_features & FEAT_PSE;
 
-  printf("Superpages: %s\n", superpages?"yes":"no");
+  printf("Superpages: %s\n", superpages ? "yes" : "no");
 
   Pt_entry::have_superpages(superpages);
   if (superpages)

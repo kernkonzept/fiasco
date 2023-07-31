@@ -303,7 +303,7 @@ private:
   /** debugctl value for activating lbr or bts */
   Unsigned32 debugctl_set;
 
-  /** debugctl value to reset activated lr/bts facilities in the double-faukt
+  /** debugctl value to reset activated lr/bts facilities in the double-fault
    *  handler
    */
   Unsigned32 debugctl_reset;

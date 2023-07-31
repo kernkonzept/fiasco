@@ -18,6 +18,7 @@
 #else
 # define NEXT_SYS_DESC(x) (x + 8)
 #endif
+
 #define NEXT_SEG_DESC(x) (x + 8)
 
 #define GDT_CODE_KERNEL		(0x08)		// #1

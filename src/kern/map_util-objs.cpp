@@ -82,7 +82,7 @@ obj_map(Space *from, Cap_index snd_addr, unsigned long snd_size,
 
 /**
  * Create the first mapping of a kernel object in the given object space and
- * register it with the object mapping databbase.
+ * register it with the object mapping database.
  *
  * \pre `o` must not be mapped anywhere yet.
  */

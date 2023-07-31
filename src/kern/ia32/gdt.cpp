@@ -1,4 +1,3 @@
-
 INTERFACE:
 
 #include "config_gdt.h"
@@ -9,7 +8,7 @@ class Gdt
 {
 public:
    /** Segment numbers. */
-  enum 
+  enum
   {
     gdt_tss             = GDT_TSS,
     gdt_code_kernel     = GDT_CODE_KERNEL,
@@ -42,8 +41,8 @@ IMPLEMENTATION [amd64]:
 
 PUBLIC inline
 void
-Gdt::set_entry_tss(int nr, Address base, Unsigned32 limit,
-		   Unsigned8 access, Unsigned8 szbits)
+Gdt::set_entry_tss(unsigned nr, Address base, Unsigned32 limit,
+                   Unsigned8 access, Unsigned8 szbits)
 {
   // system-segment descriptor is 16byte
   _entries[nr] = Gdt_entry(base, limit >> 12, access, szbits | 0x08);
@@ -62,29 +61,29 @@ Gdt::Gdt(unsigned nr_entries = Gdt::gdt_max / sizeof(Gdt_entry))
 
 PUBLIC inline
 void
-Gdt::set_entry_byte(int nr, Address base, Unsigned32 limit,
-		    Unsigned8 access, Unsigned8 szbits)
+Gdt::set_entry_byte(unsigned nr, Address base, Unsigned32 limit,
+                    Unsigned8 access, Unsigned8 szbits)
 {
   _entries[nr] = Gdt_entry(base, limit, access, szbits);
 }
 
 PUBLIC inline
 void
-Gdt::set_entry_4k(int nr, Address base, Unsigned32 limit,
-		  Unsigned8 access, Unsigned8 szbits)
+Gdt::set_entry_4k(unsigned nr, Address base, Unsigned32 limit,
+                  Unsigned8 access, Unsigned8 szbits)
 {
   _entries[nr] = Gdt_entry(base, limit >> 12, access, szbits | 0x08);
 }
 
 PUBLIC inline
 void
-Gdt::clear_entry(int nr)
+Gdt::clear_entry(unsigned nr)
 {
   _entries[nr].clear();
 }
 
 PUBLIC inline
-Gdt_entry*
+Gdt_entry *
 Gdt::entries()
 {
   return _entries;
@@ -92,32 +91,37 @@ Gdt::entries()
 
 PUBLIC inline
 Gdt_entry &
-Gdt::operator [] (unsigned idx)
-{ return _entries[idx]; }
+Gdt::operator [](unsigned idx)
+{
+  return _entries[idx];
+}
 
 PUBLIC inline
 Gdt_entry const &
-Gdt::operator [] (unsigned idx) const
-{ return _entries[idx]; }
-
+Gdt::operator [](unsigned idx) const
+{
+  return _entries[idx];
+}
 
 IMPLEMENTATION[ia32 | amd64]:
 
 PUBLIC static inline
 void
-Gdt::set (Pseudo_descriptor *desc)
+Gdt::set(Pseudo_descriptor *desc)
 {
   asm volatile ("lgdt %0" : : "m" (*desc));
 }
 
 PUBLIC static inline
 void
-Gdt::get (Pseudo_descriptor *desc)
+Gdt::get(Pseudo_descriptor *desc)
 {
   asm volatile ("sgdt %0" : "=m" (*desc) : : "memory");
 }
 
 PUBLIC static inline
 int
-Gdt::data_segment ()
-{ return gdt_data_user | Selector_user; }
+Gdt::data_segment()
+{
+  return gdt_data_user | Selector_user;
+}
