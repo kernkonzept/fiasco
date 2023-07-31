@@ -35,6 +35,7 @@ public:
     Kern() = default;
     explicit Kern(Value v) : cxx::int_type_base<unsigned char, Kern>(v) {}
 
+    static Kern None() { return Kern(0); }
     static Kern Global() { return Kern(1); }
   };
 
@@ -47,7 +48,7 @@ public:
     Kern kern;
 
     Attr() = default;
-    explicit Attr(Rights r, Type t = Type::Normal(), Kern k = Kern(0))
+    explicit Attr(Rights r, Type t = Type::Normal(), Kern k = Kern::None())
     : rights(r), type(t), kern(k) {}
 
     Attr apply(Attr o) const
