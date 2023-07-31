@@ -161,41 +161,45 @@ void
 Jdb_kern_info_misc::show() override
 {
   Cpu_time clock = Kip::k()->clock();
-  printf ("clck: %08x.%08x\n", (unsigned)(clock >> 32), (unsigned)clock);
+  printf("clck: %08x.%08x\n", (unsigned)(clock >> 32), (unsigned)clock);
 
   show_pdir();
 
   Pseudo_descriptor gdt_pseudo, idt_pseudo;
   Gdt::get (&gdt_pseudo);
   Idt::get (&idt_pseudo);
-  printf ("idt : base=" L4_PTR_FMT "  limit=%04x\n"
-	  "gdt : base=" L4_PTR_FMT "  limit=%04x\n",
-	  idt_pseudo.base(), (unsigned)(idt_pseudo.limit()+1)/8,
-	  gdt_pseudo.base(), (unsigned)(gdt_pseudo.limit()+1)/8);
+  printf("idt : base=" L4_PTR_FMT "  limit=%04x\n"
+         "gdt : base=" L4_PTR_FMT "  limit=%04x\n",
+         idt_pseudo.base(), (unsigned)(idt_pseudo.limit() + 1) / 8,
+         gdt_pseudo.base(), (unsigned)(gdt_pseudo.limit() + 1) / 8);
 
   // print LDT
   printf("ldt : %04x", (unsigned)Cpu::get_ldt());
   if (Cpu::get_ldt() != 0)
     {
-      Gdt_entry *e = Cpu::boot_cpu()->get_gdt()->entries() + (Cpu::boot_cpu()->get_ldt() >> 3);
+      Gdt_entry *e = Cpu::boot_cpu()->get_gdt()->entries()
+                     + (Cpu::boot_cpu()->get_ldt() >> 3);
       printf(": " L4_PTR_FMT "-" L4_PTR_FMT,
-	  e->base(), e->base()+ e->size());
+             e->base(), e->base()+ e->size());
     }
 
   // print TSS
   printf("\n"
-	 "tr  : %04x", (unsigned)Cpu::boot_cpu()->get_tr());
-  if(Cpu::get_tr() != 0)
+         "tr  : %04x", (unsigned)Cpu::boot_cpu()->get_tr());
+
+  if (Cpu::get_tr() != 0)
     {
-      Gdt_entry *e = Cpu::boot_cpu()->get_gdt()->entries() + (Cpu::boot_cpu()->get_tr() >> 3);
+      Gdt_entry *e = Cpu::boot_cpu()->get_gdt()->entries()
+                     + (Cpu::boot_cpu()->get_tr() >> 3);
       printf(": " L4_PTR_FMT "-" L4_PTR_FMT ", iobitmap at " L4_PTR_FMT,
-	     e->base(), e->base()+ e->size(),
-	     e->base() + (reinterpret_cast<Tss *>(e->base())->_io_bit_map_offset));
+             e->base(), e->base() + e->size(),
+             e->base() + (reinterpret_cast<Tss *>(e->base())->_io_bit_map_offset));
     }
+
   printf("\n"
-	 "cr0 : " L4_PTR_FMT "\n"
-	 "cr4 : " L4_PTR_FMT "\n",
-	 Cpu::get_cr0(), Cpu::get_cr4());
+         "cr0 : " L4_PTR_FMT "\n"
+         "cr4 : " L4_PTR_FMT "\n",
+         Cpu::get_cr0(), Cpu::get_cr4());
 }
 
 class Jdb_kern_info_cpu : public Jdb_kern_info_module
