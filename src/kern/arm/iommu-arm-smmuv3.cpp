@@ -8,7 +8,6 @@ INTERFACE [iommu && iommu_arm_smmu_v3]:
 #include "mmio_register_block.h"
 #include "panic.h"
 #include "cxx/bitfield"
-#include "cxx/slist"
 #include "kmem_slab.h"
 #include "simple_id_alloc.h"
 #include "timer.h"
@@ -353,6 +352,8 @@ private:
 
     /// Pointer to start of Level-2 array.
     CXX_BITFIELD_MEMBER_UNSHIFTED( 6, 51, l2_ptr, raw);
+
+    bool is_valid() { return span() > 0; }
   };
   static_assert(sizeof(L1std) == 8,
                 "Level 1 Stream Table Descriptor has unexpected size!");
@@ -915,34 +916,32 @@ public:
 private:
   friend class Iommu;
 
+  enum : Unsigned32
+  {
+    Max_bindings_per_iommu = ~0U,
+  };
+
   /**
-   * Return whether the domain is bound to the Iommu.
+   * Check whether domain is bound on the given Iommu.
    *
    * \pre The lock of iommu must be held.
    */
   bool is_bound(Iommu const *iommu) const;
 
   /**
-   * Adds a binding with the given stream ID for the Iommu.
+   * Adds a binding for the given Iommu.
    *
    * \pre The lock of iommu must be held.
    */
-  bool add_binding(Iommu const *iommu, unsigned stream_id);
-
-
-  /**
-   * Deletes a binding with the given stream ID for the Iommu.
-   *
-   * \pre The lock of iommu must be held.
-   */
-  bool del_binding(Iommu const *iommu, unsigned stream_id);
+  bool add_binding(Iommu const *iommu);
 
   /**
-   * Clear all bindings for the given Iommu.
+   * Deletes a binding for the given Iommu.
    *
    * \pre The lock of iommu must be held.
    */
-  void clear_bindings(Iommu const *iommu);
+  Unsigned32 del_binding(Iommu const *iommu);
+
 
   Dmar_space const *_space;
 
@@ -950,14 +949,23 @@ private:
   // bound for the first time, freed only on destruction.
   Iommu::Asid _asid = Iommu::Invalid_asid;
 
-  // Track on which SMMUs the domain was bound for which stream IDs. Might be
-  // outdated in case a different domain was bound for the same SMMU-Stream ID
-  // combination. Bindings are freed on unbind or destruction of the domain.
-  struct Binding : cxx::S_list_item { unsigned stream_id; };
-  static Kmem_slab_t<Binding> _binding_allocator;
-  using Binding_list = cxx::S_list<Binding>;
-  using Bindings_array = cxx::array<Binding_list, unsigned, Iommu::Num_iommus>;
-  Bindings_array _bindings;
+  /**
+   * Track on which SMMUs the domain was bound for how many stream IDs.
+   *
+   * The counters of a domain can be greater than the number of actual existing
+   * bindings, namely when a binding of the domain was overbound with a
+   * different domain. Generally, this overestimation is not a problem, but may
+   * result in additional overhead in the following operations:
+   *   - Flushing the TLB for the domain might execute a TLB flush on an SMMU
+   *     the domain is no longer bound to.
+   *   - `Iommu::remove()` has to scan the entire stream table, because the
+   *     `count == 0` early return condition is not satisfied.
+   */
+  Unsigned32 _bindings[Iommu::Num_iommus] = { 0 };
+
+  // OPTIMIZE: For the case that domain is only bound for a single stream id?
+  //           Storing that stream id, would allow us to skip iterating all stream
+  //           ids on destroy.
 };
 
 // ------------------------------------------------------------------
@@ -992,8 +1000,6 @@ IMPLEMENTATION [iommu]:
 Static_object<Iommu::Asid_alloc> Iommu::_asid_alloc;
 
 KIP_KERNEL_FEATURE("arm,smmu-v3");
-
-Kmem_slab_t<Iommu_domain::Binding> Iommu_domain::_binding_allocator("Binding");
 
 /**
  * Send commands to the SMMU, i.e. write them to the command queue.
@@ -1108,7 +1114,7 @@ Iommu::lookup_stream_table_entry(Unsigned32 stream_id, bool alloc)
 
   L1std &l1 = _strtab.virt_ptr<L1std>()[stream_id >> Stream_table_split];
   // No second-level table allocated!
-  if (l1.span() == 0)
+  if (!l1.is_valid())
     {
       if (!alloc || _strtab_l2_alloc_cnt >= Stream_table_l2_alloc_limit)
         return nullptr;
@@ -1140,6 +1146,35 @@ Iommu::lookup_stream_table_entry(Unsigned32 stream_id, bool alloc)
 }
 
 PRIVATE
+Iommu::Ste *
+Iommu::iter_ste_tables(Unsigned32 *stream_id, Unsigned32 *table_size) const
+{
+  if (!_strtab_2level)
+    {
+      *table_size = num_of_stream_ids();
+      return *stream_id == 0 ? _strtab.virt_ptr<Ste>() : nullptr;
+    }
+
+  assert(*stream_id % Stream_table_l2_size == 0);
+  while (*stream_id < num_of_stream_ids())
+    {
+      // Access must be atomic so that we never see the L1 stream table entry in
+      // an inconsistent state. This relies on the fact that L2 stream tables once
+      // allocated are never deallocated later on.
+      L1std l1 = atomic_load(&_strtab.virt_ptr<L1std>()[*stream_id >> Stream_table_split]);
+      if (l1.is_valid())
+        {
+          *table_size = Stream_table_l2_size;
+          return reinterpret_cast<Ste *>(Mem_layout::phys_to_pmem(l1.l2_ptr()));
+        }
+
+      *stream_id += Stream_table_l2_size;
+    }
+
+  return nullptr;
+}
+
+PRIVATE
 void
 Iommu::invalidate_ste(Ste *ste, Unsigned32 stream_id)
 {
@@ -1151,19 +1186,25 @@ Iommu::invalidate_ste(Ste *ste, Unsigned32 stream_id)
   send_cmd_sync(Cmd::cfgi_ste(stream_id, true));
 }
 
+/**
+ * Delete a binding from the domain and invalidate the SMMU TLB for the
+ * domain's ASID if it was its last remaining binding.
+ *
+ * \return Whether the removed binding was the last remaining.
+ */
 PRIVATE
-void
-Iommu::deconfigure_domain_and_invalidate_tlb(Ste *ste, Unsigned32 stream_id,
-                                             Iommu_domain &domain)
+bool
+Iommu::delete_binding_and_invalidate_tlb(Iommu_domain &domain)
 {
-  deconfigure_domain(ste, stream_id, domain);
+  if (domain.del_binding(this) != 0)
+    return false;
 
-  // If we just removed the last binding the domain had with this SMMU, flush
-  // the ASID from the TLB (because if a domain is not bound to the SMMU, we
-  // don't perform TLB flushes). This ensures that if the domain's ASID is later
+  // We just removed the last binding the domain had with this SMMU. Flush the
+  // ASID from the TLB (because if a domain is not bound to the SMMU, we don't
+  // perform TLB flushes). This ensures that if the domain's ASID is later
   // rebound on this SMMU, no outdated TLB entries exist.
-  if (!domain.is_bound(this))
-    tlb_invalidate_asid(domain.get_asid());
+  tlb_invalidate_asid(domain.get_asid());
+  return true;
 }
 
 /**
@@ -1208,12 +1249,12 @@ Iommu::bind(Unsigned32 stream_id, Iommu_domain &domain)
   if (!ste)
     return -L4_err::ENomem;
 
-  if (!configure_domain(ste, stream_id, domain))
+  if (!domain.add_binding(this))
     return -L4_err::ENomem;
 
-  if (!domain.add_binding(this, stream_id))
+  if (!configure_domain(ste, stream_id, domain))
     {
-      deconfigure_domain_and_invalidate_tlb(ste, stream_id, domain);
+      delete_binding_and_invalidate_tlb(domain);
       return -L4_err::ENomem;
     }
 
@@ -1230,11 +1271,8 @@ Iommu::unbind(Unsigned32 stream_id, Iommu_domain &domain)
     return -L4_err::ERange;
 
   Ste *ste = lookup_stream_table_entry(stream_id, false);
-  if (ste)
-    {
-      deconfigure_domain_and_invalidate_tlb(ste, stream_id, domain);
-      domain.del_binding(this, stream_id);
-    }
+  if (ste && deconfigure_domain(ste, stream_id, domain))
+    delete_binding_and_invalidate_tlb(domain);
 
   // Regardless of whether the deconfiguration was successful, i.e. whether the
   // domain was bound to the stream ID or not, we always return success.
@@ -1250,13 +1288,34 @@ Iommu::remove(Iommu_domain &domain)
   if (!domain.is_bound(this))
     return;
 
-  for (auto *binding : domain._bindings[_idx])
+  Unsigned32 base_stream_id = 0, table_size = 0;
+  while (Ste *ste_table = iter_ste_tables(&base_stream_id, &table_size))
     {
-      Ste *ste = lookup_stream_table_entry(binding->stream_id, false);
-      if (ste)
-        deconfigure_domain_and_invalidate_tlb(ste, binding->stream_id, domain);
+      for (unsigned i = 0; i < table_size; i++)
+        {
+          Ste *ste = &ste_table[i];
+          if (!deconfigure_domain(ste, base_stream_id + i, domain))
+            continue;
+
+          if (delete_binding_and_invalidate_tlb(domain))
+            // Optimization: Removed the last binding of this domain, we can
+            // stop the scan here!
+            return;
+        }
+
+      base_stream_id += table_size;
     }
-  domain.clear_bindings(this);
+
+  // After a domain has been removed with Iommu::remove() it can be deleted
+  // afterwards. But if the domain's binding count is out-of-sync,
+  // delete_binding_and_invalidate_tlb() call in the above loop never executes a
+  // TLB flush. So to ensure that no entries with the domain's ASID, which gets
+  // freed for reallocation once the domain is deleted, remain in the SMMU's
+  // TLB, we need to execute a TLB flush here.
+  tlb_invalidate_asid(domain.get_asid());
+
+  // OPTIMIZE: Execute only one SYNC in the end to wait for completion of all
+  //           invalidations?
 }
 
 /**
@@ -1530,54 +1589,40 @@ Iommu::tlb_flush()
   send_cmd_sync(Cmd::tlbi_nsnh_all());
 }
 
-IMPLEMENT
+IMPLEMENT inline
 bool
 Iommu_domain::is_bound(Iommu const *iommu) const
 {
-  return !_bindings[iommu->_idx].empty();
+  return atomic_load(&_bindings[iommu->_idx]) > 0;
 }
 
-IMPLEMENT
+IMPLEMENT inline
 bool
-Iommu_domain::add_binding(Iommu const *iommu, unsigned stream_id)
+Iommu_domain::add_binding(Iommu const *iommu)
 {
-  // Already bound to this stream id?
-  for (Binding const *binding : _bindings[iommu->_idx])
-    if (binding->stream_id == stream_id)
-      return true;
 
-  Binding *binding = _binding_allocator.q_new(_space->ram_quota());
-  if (!binding)
-    // Allocation failed!
+  if (EXPECT_FALSE(_bindings[iommu->_idx] >= Max_bindings_per_iommu))
     return false;
 
-  binding->stream_id = stream_id;
-  _bindings[iommu->_idx].add(binding);
+  atomic_store(&_bindings[iommu->_idx], _bindings[iommu->_idx] + 1);
   return true;
 }
 
-IMPLEMENT
-bool
-Iommu_domain::del_binding(Iommu const *iommu, unsigned stream_id)
+IMPLEMENT inline
+Unsigned32
+Iommu_domain::del_binding(Iommu const *iommu)
 {
-  auto &bindings = _bindings[iommu->_idx];
-  for (auto iter = bindings.begin(); iter != bindings.end(); ++iter)
-    if (iter->stream_id == stream_id)
-      {
-        Binding *binding = *iter;
-        bindings.erase(iter);
-        _binding_allocator.q_del(_space->ram_quota(), binding);
-        return true;
-      }
-  return false;
-}
-
-IMPLEMENT
-void
-Iommu_domain::clear_bindings(Iommu const *iommu)
-{
-  while (Binding *binding = _bindings[iommu->_idx].pop_front())
-    _binding_allocator.q_del(_space->ram_quota(), binding);
+  if (EXPECT_TRUE(_bindings[iommu->_idx] > 0))
+    {
+      auto new_count = _bindings[iommu->_idx] - 1;
+      atomic_store(&_bindings[iommu->_idx], new_count);
+      return new_count;
+    }
+  else
+    {
+      WARNX(Error, "IOMMU: Attempt to delete binding while no bindings exist.");
+      return 0;
+    }
 }
 
 PRIVATE
