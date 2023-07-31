@@ -11,6 +11,12 @@ INTERFACE [iommu && !arm_iommu_stage2 && 64bit]:
  */
 EXTENSION class Dmar_space
 {
+  static inline constexpr unsigned start_level()
+  {
+    // Not defined or used for stage 1 page tables.
+    return 0;
+  }
+
   /// For the SMMU we always use the NS-EL1&0 translation regime, just like the
   /// kernel does with virtualization disabled, whereas with virtualization
   /// enabled the kernel uses the EL2 translation regime. Therefore, we override
@@ -106,7 +112,7 @@ EXTENSION class Dmar_space
   using Dmarpt_alloc = Kmem_slab_t<Dmar_pdir, sizeof(Dmar_pdir)>;
   static Dmarpt_alloc _dmarpt_alloc;
 
-  Iommu_domain _domain{this};
+  Iommu_domain _domain;
 };
 
 // -----------------------------------------------------------
@@ -141,14 +147,15 @@ IMPLEMENT
 int
 Dmar_space::bind_mmu(Iommu *mmu, Unsigned32 stream_id)
 {
-  return mmu->bind(stream_id, _domain);
+  return mmu->bind(stream_id, _domain, pt_phys_addr(),
+                   virt_addr_size(), Dmar_space::start_level());
 }
 
 IMPLEMENT
 int
 Dmar_space::unbind_mmu(Iommu *mmu, Unsigned32 stream_id)
 {
-  return mmu->unbind(stream_id, _domain);
+  return mmu->unbind(stream_id, _domain, pt_phys_addr());
 }
 
 PRIVATE
@@ -156,5 +163,5 @@ void
 Dmar_space::remove_from_all_iommus()
 {
   for (auto &iommu : Iommu::iommus())
-    iommu.remove(_domain);
+    iommu.remove(_domain, pt_phys_addr());
 }

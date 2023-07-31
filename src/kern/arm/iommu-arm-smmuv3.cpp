@@ -12,7 +12,6 @@ INTERFACE [iommu && iommu_arm_smmu_v3]:
 #include "simple_id_alloc.h"
 #include "timer.h"
 
-class Dmar_space;
 class Iommu_domain;
 
 /*
@@ -906,10 +905,14 @@ public:
 class Iommu_domain
 {
 public:
-  explicit Iommu_domain(Dmar_space const *space) : _space(space) {}
-
+  Iommu_domain() = default;
   ~Iommu_domain();
-  Dmar_space const *space() const { return _space; }
+
+  Iommu_domain(Iommu_domain const &) = delete;
+  Iommu_domain operator = (Iommu_domain const &) = delete;
+  Iommu_domain(Iommu_domain &&) = delete;
+  Iommu_domain operator = (Iommu_domain &&) = delete;
+
   Iommu::Asid get_asid() const { return Iommu::_asid_alloc->get_id(&_asid); }
   Iommu::Asid get_or_alloc_asid() { return Iommu::_asid_alloc->get_or_alloc_id(&_asid); }
 
@@ -942,9 +945,6 @@ private:
    */
   Unsigned32 del_binding(Iommu const *iommu);
 
-
-  Dmar_space const *_space;
-
   // Address space identifier of this domain. Allocated when the domain is
   // bound for the first time, freed only on destruction.
   Iommu::Asid _asid = Iommu::Invalid_asid;
@@ -976,7 +976,8 @@ EXTENSION class Iommu { enum { Stage2 = 0 }; };
 EXTENSION class Iommu_domain
 {
 private:
-  Iommu::Cd const *get_or_init_cd(unsigned ias);
+  Iommu::Cd const *get_or_init_cd(unsigned ias, unsigned virt_addr_size,
+                                  Address pt_phys_addr);
 
   /// Context descriptor, used for all bindings of this domain (across SMMUs
   /// and across stream IDs). Initialized when the domain is bound for the first
@@ -994,7 +995,6 @@ EXTENSION class Iommu { enum { Stage2 = 1 }; };
 IMPLEMENTATION [iommu]:
 
 #include "cpu.h"
-#include "dmar_space.h"
 #include "feature.h"
 
 Static_object<Iommu::Asid_alloc> Iommu::_asid_alloc;
@@ -1236,9 +1236,26 @@ Iommu::make_observable_before_cmd(T *start, T *end = nullptr)
     make_observable(start, end);
 }
 
+/**
+ * Bind DMA domain to stream ID.
+ *
+ * \pre The arguments `virt_addr_size`, `start_level` and `pt_phys_addr` must
+ *      stay constant per domain.
+ *
+ * \param stream_id       Stream ID to bind the DMA domain to.
+ * \param domain          DMA domain to bind.
+ * \param pt_phys_addr    Physical address of DMA domain's page table.
+ * \param virt_addr_size  Size of the DMA virtual address size.
+ * \param start_level     Walk start level of DMA domain's page table
+ *                        (only-relevant for stage 2 SMMU).
+ *
+ * \retval  0, on success.
+ * \retval <0, on failure.
+ */
 PUBLIC
 int
-Iommu::bind(Unsigned32 stream_id, Iommu_domain &domain)
+Iommu::bind(Unsigned32 stream_id, Iommu_domain &domain, Address pt_phys_addr,
+            unsigned virt_addr_size, unsigned start_level)
 {
   auto g = lock_guard(_lock);
 
@@ -1252,7 +1269,8 @@ Iommu::bind(Unsigned32 stream_id, Iommu_domain &domain)
   if (!domain.add_binding(this))
     return -L4_err::ENomem;
 
-  if (!configure_domain(ste, stream_id, domain))
+  if (!configure_domain(ste, stream_id, domain, pt_phys_addr,
+                        virt_addr_size, start_level))
     {
       delete_binding_and_invalidate_tlb(domain);
       return -L4_err::ENomem;
@@ -1261,9 +1279,19 @@ Iommu::bind(Unsigned32 stream_id, Iommu_domain &domain)
   return 0;
 }
 
+/**
+ * Unbind DMA domain from stream ID.
+ *
+ * \param stream_id       Stream ID to unbind the DMA domain from.
+ * \param domain          DMA domain to unbind.
+ * \param pt_phys_addr    Physical address of DMA domain's page table.
+ *
+ * \retval  0, on success.
+ * \retval <0, on failure.
+ */
 PUBLIC
 int
-Iommu::unbind(Unsigned32 stream_id, Iommu_domain &domain)
+Iommu::unbind(Unsigned32 stream_id, Iommu_domain &domain, Address pt_phys_addr)
 {
   auto g = lock_guard(_lock);
 
@@ -1271,7 +1299,7 @@ Iommu::unbind(Unsigned32 stream_id, Iommu_domain &domain)
     return -L4_err::ERange;
 
   Ste *ste = lookup_stream_table_entry(stream_id, false);
-  if (ste && deconfigure_domain(ste, stream_id, domain))
+  if (ste && deconfigure_domain(ste, stream_id, domain, pt_phys_addr))
     delete_binding_and_invalidate_tlb(domain);
 
   // Regardless of whether the deconfiguration was successful, i.e. whether the
@@ -1279,9 +1307,20 @@ Iommu::unbind(Unsigned32 stream_id, Iommu_domain &domain)
   return 0;
 }
 
+/**
+ * Remove all stream ID bindings of this DMA domain.
+ *
+ * \param domain        DMA domain to remove.
+ * \param pt_phys_addr  Physical address of DMA domain's page table.
+ *
+ * \note If new bindings are created concurrently, there might still exist
+ *       bindings after remove returns. So if the caller relies on no bindings
+ *       to exist afterwards, it must ensure that no new bindings can be created
+ *       concurrently, e.g. by calling this from the destructor of Dmar_space).
+ */
 PUBLIC
 void
-Iommu::remove(Iommu_domain &domain)
+Iommu::remove(Iommu_domain &domain, Address pt_phys_addr)
 {
   auto g = lock_guard(_lock);
 
@@ -1294,7 +1333,7 @@ Iommu::remove(Iommu_domain &domain)
       for (unsigned i = 0; i < table_size; i++)
         {
           Ste *ste = &ste_table[i];
-          if (!deconfigure_domain(ste, base_stream_id + i, domain))
+          if (!deconfigure_domain(ste, base_stream_id + i, domain, pt_phys_addr))
             continue;
 
           if (delete_binding_and_invalidate_tlb(domain))
@@ -1627,7 +1666,9 @@ Iommu_domain::del_binding(Iommu const *iommu)
 
 PRIVATE
 bool
-Iommu::configure_domain(Ste *ste, Unsigned32 stream_id, Iommu_domain &domain)
+Iommu::configure_domain(Ste *ste, Unsigned32 stream_id, Iommu_domain &domain,
+                        Address pt_phys_addr, unsigned virt_addr_size,
+                        unsigned start_level)
 {
   // Stream table entry is already valid, invalidate it first to ensure the SMMU
   // does not see an illegal/inconsistent intermediate state.
@@ -1635,7 +1676,7 @@ Iommu::configure_domain(Ste *ste, Unsigned32 stream_id, Iommu_domain &domain)
     invalidate_ste(ste, stream_id);
 
   // 1. Initialize stream table entry, but do not set the valid flag for now.
-  if (!prepare_ste(ste, domain))
+  if (!prepare_ste(ste, domain, pt_phys_addr, virt_addr_size, start_level))
     return false;
 
   // 2. Ensure the stream table entry is observable by the SMMU.
@@ -1655,14 +1696,15 @@ Iommu::configure_domain(Ste *ste, Unsigned32 stream_id, Iommu_domain &domain)
 
 PRIVATE
 bool
-Iommu::deconfigure_domain(Ste *ste, Unsigned32 stream_id, Iommu_domain &domain)
+Iommu::deconfigure_domain(Ste *ste, Unsigned32 stream_id, Iommu_domain &domain,
+                          Address pt_phys_addr)
 {
   // Stream table entry is invalid.
   if (!ste->v())
     return false;
 
   // Stream table entry is bound to a different domain.
-  if (!is_domain_bound_to_ste(ste, domain))
+  if (!is_domain_bound_to_ste(ste, domain, pt_phys_addr))
     return false;
 
   invalidate_ste(ste, stream_id);
@@ -1674,7 +1716,7 @@ IMPLEMENTATION [iommu && iommu_arm_smmu_v3 && !arm_iommu_stage2]:
 
 IMPLEMENT
 Iommu::Cd const *
-Iommu_domain::get_or_init_cd(unsigned ias)
+Iommu_domain::get_or_init_cd(unsigned ias, unsigned virt_addr_size, Address pt_phys_addr)
 {
   // Already initialized?
   if (_cd.v())
@@ -1686,7 +1728,7 @@ Iommu_domain::get_or_init_cd(unsigned ias)
     return nullptr;
 
   // Region size is 2^(64 - T0SZ) -> T0SZ = 64 - input_address_size
-  _cd.t0sz() = 64 - Dmar_space::virt_addr_size();
+  _cd.t0sz() = 64 - virt_addr_size;
   _cd.tg0() = 0; // 4k
   _cd.ir0() = Iommu::Cr1::Cache_wb;
   _cd.or0() = Iommu::Cr1::Cache_wb;
@@ -1710,7 +1752,7 @@ Iommu_domain::get_or_init_cd(unsigned ias)
   // The context is non-shared, do not participate in broadcast TLB.
   _cd.aset() = 1;
   _cd.asid() = asid;
-  _cd.ttb0() = _space->pt_phys_addr();
+  _cd.ttb0() = pt_phys_addr;
   _cd.mair0() = Page::Mair0_prrr_bits;
   _cd.mair1() = Page::Mair1_nmrr_bits;
   _cd.amair0() = 0;
@@ -1733,10 +1775,11 @@ Iommu::tlb_invalidate_asid(Asid asid)
 
 PRIVATE
 bool
-Iommu::prepare_ste(Ste *ste, Iommu_domain &domain)
+Iommu::prepare_ste(Ste *ste, Iommu_domain &domain, Address pt_phys_addr,
+                   unsigned virt_addr_size, unsigned)
 {
   // Get or allocate context descriptor.
-  Cd const *cd = domain.get_or_init_cd(_ias);
+  Cd const *cd = domain.get_or_init_cd(_ias, virt_addr_size, pt_phys_addr);
   if (!cd)
     return false;
 
@@ -1765,11 +1808,12 @@ Iommu::prepare_ste(Ste *ste, Iommu_domain &domain)
 
 PRIVATE
 bool
-Iommu::is_domain_bound_to_ste(Ste *ste, Iommu_domain &domain)
+Iommu::is_domain_bound_to_ste(Ste *ste, Iommu_domain &,
+                              Address pt_phys_addr) const
 {
   Cd *cd = reinterpret_cast<Cd *>(Mem_layout::phys_to_pmem(ste->s1_context_ptr()));
   // Valid context descriptor pointer referring to the domain's page table.
-  return cd && cd->ttb0() == domain.space()->pt_phys_addr();
+  return cd && cd->ttb0() == pt_phys_addr;
 }
 
 // -----------------------------------------------------------
@@ -1786,7 +1830,8 @@ Iommu::tlb_invalidate_asid(Asid asid)
 
 PRIVATE
 bool
-Iommu::prepare_ste(Ste *ste, Iommu_domain &domain)
+Iommu::prepare_ste(Ste *ste, Iommu_domain &domain, unsigned virt_addr_size,
+                   unsigned start_level, Address pt_phys_addr)
 {
   unsigned long vmid = domain.get_or_alloc_asid();
   if (vmid == Invalid_asid)
@@ -1803,8 +1848,8 @@ Iommu::prepare_ste(Ste *ste, Iommu_domain &domain)
 
   ste->s2_vmid() = vmid;
   // Region size is 2^(64 - T0SZ) -> T0SZ = 64 - input_address_size
-  ste->s2_t0sz() = 64 - Dmar_space::virt_addr_size();
-  ste->s2_sl0() = Dmar_space::start_level();
+  ste->s2_t0sz() = 64 - virt_addr_size;
+  ste->s2_sl0() = start_level;
   ste->s2_ir0() = Cr1::Cache_wb;
   ste->s2_or0() = Cr1::Cache_wb;
   ste->s2_sh0() = Cr1::Share_is;
@@ -1814,17 +1859,18 @@ Iommu::prepare_ste(Ste *ste, Iommu_domain &domain)
   ste->s2_affd() = 1; // An Access flag fault never occurs.
   ste->s2_s() = 0; // Do not stall faulting transactions.
   ste->s2_r() = Iommu::Log_faults; // Record faults in event queue.
-  ste->s2_ttb() = domain.space()->pt_phys_addr();
+  ste->s2_ttb() = pt_phys_addr;
 
   return true;
 }
 
 PRIVATE
 bool
-Iommu::is_domain_bound_to_ste(Ste *ste, Iommu_domain &domain)
+Iommu::is_domain_bound_to_ste(Ste *ste, Iommu_domain &,
+                              Address pt_phys_addr) const
 {
   // Stream table entry refers to the domain's page table.
-  return ste->s2_ttb() == domain.space()->pt_phys_addr();
+  return ste->s2_ttb() == pt_phys_addr;
 }
 
 // ------------------------------------------------------------------
