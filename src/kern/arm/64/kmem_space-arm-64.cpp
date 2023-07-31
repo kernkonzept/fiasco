@@ -13,8 +13,9 @@ IMPLEMENTATION [arm && !cpu_virt]:
 K_ptab_array kernel_l0_dir;
 static K_ptab_array kernel_l0_vdir;
 
-// Bootstrap should be able to map up to 256TB RAM with six pages,
-// plus some more pages for non-full regions
+// Bootstrap will be able to use this many page tables under the top-level in
+// order to map MMIO registers, pmem page directory and the kernel image into
+// kernel_l0_vdir and the kernel image once again into kernel_l0_dir.
 enum { Num_scratch_pages = 8 };
 static K_ptab_array pdir_scratch[Num_scratch_pages];
 
@@ -35,8 +36,9 @@ IMPLEMENTATION [arm && cpu_virt]:
 #include "boot_infos.h"
 
 K_ptab_array kernel_l0_dir;
-// Bootstrap should be able to map up to 256TB RAM with six pages,
-// plus some more pages for non-full regions
+// Bootstrap will be able to use this many page tables under the top-level in
+// order to map MMIO registers, pmem page directory and twice the kernel image
+// into kernel_l0_dir.
 enum { Num_scratch_pages = 8 };
 static K_ptab_array pdir_scratch[Num_scratch_pages];
 
