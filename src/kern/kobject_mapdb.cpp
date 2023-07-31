@@ -184,21 +184,25 @@ Kobject_mapdb::flush(Frame const &f, L4_map_mask mask,
   if (!mask.self_unmap())
     return;
 
-  bool flush = false;
-
   if (mask.do_delete() && f.m->delete_rights())
-    flush = true;
-  else
     {
-      Obj::Entry *e = static_cast<Obj::Entry*>(f.m);
-      if (e->ref_cnt()) // counted
-	flush = --f.frame->_cnt <= 0;
-
-      if (!flush)
-	Mapping::List::remove(f.m);
+      f.frame->invalidate_mappings();
+      return;
     }
 
-  if (flush)
-    f.frame->invalidate_mappings();
+  if (!static_cast<Obj::Entry*>(f.m)->ref_cnt())  // not counted
+    {
+      Mapping::List::remove(f.m);
+      return;
+    }
+
+  if (f.frame->_cnt <= 1)
+    {
+      f.frame->invalidate_mappings();
+      return;
+    }
+
+  --f.frame->_cnt;
+  Mapping::List::remove(f.m);
 
 } // flush()
