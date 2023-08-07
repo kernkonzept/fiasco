@@ -18,7 +18,7 @@ namespace Koptions_ns
       Koptions::Version_current,
       0,              // flags
       0,              // kmemsize
-      { 0, 0, 0, 0, 0, 0 }, // uart
+      { 0, { 0 }, 0, 0, 0, 0, 0, 0 }, // uart
       0,              // core_spin_addr
       "",             // jdb_cmd
       0,              // tbuf_entries
