@@ -101,18 +101,13 @@ public:
   {
     using Type = T;
 
-    template<typename P>
-    using Has_no_base = cxx::is_same<P, void>;
-
-    template<typename P = PREV,
-             cxx::enable_if_t<Has_no_base<P>::value, bool> = true>
-    static constexpr unsigned off(unsigned)
-    { return 0; }
-
-    template<typename P = PREV,
-             cxx::enable_if_t<!Has_no_base<P>::value, bool> = true>
     static constexpr unsigned off(unsigned vl)
-    { return PREV::off(vl) + PREV::size(vl); }
+    {
+      if constexpr (cxx::is_same<PREV, void>::value)
+        return 0;
+      else
+        return PREV::off(vl) + PREV::size(vl);
+    }
 
     static constexpr unsigned size(unsigned vl)
     { return SIZE_CONST + vl * SIZE_VL; }
