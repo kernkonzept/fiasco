@@ -262,7 +262,7 @@ paging_enable(Address pml4)
 
   /* We need to check for the CPU feature otherwise setting the PCID bit may
    * trigger a #GP, see Intel manual. If needed we will complain later. */
-  if (Config::Pcid_enabled && (cpu_ext_feature_flags & CPUF_EXT_PCID))
+  if (Config::Pcid_enabled && !!(cpu_ext_feature_flags & CPUF_EXT_PCID))
     set_cr4(get_cr4() | CR4_PCID);
 
   /* Load the page map level 4.  */
