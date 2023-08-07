@@ -978,7 +978,6 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
                            Thread *rcv, Utcb *rcv_utcb,
                            L4_fpage::Rights rights)
 {
-  // LOG_MSG_3VAL(current(), "map bd=", rcv_utcb->buf_desc.raw(), 0, 0);
   Ref_ptr<Task> rcv_t(nonull_static_cast<Task*>(rcv->space()));
   L4_buf_iter mem_buffer(rcv_utcb, rcv_utcb->buf_desc.mem());
   L4_buf_iter io_buffer(rcv_utcb, rcv_utcb->buf_desc.io());
@@ -987,11 +986,9 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
   int items = tag.items();
   Mword *rcv_word = rcv_utcb->values + tag.words();
 
-  // XXX: damn X-CPU state modification
-  // snd->prepare_long_ipc(rcv);
   Reap_list rl;
 
-  for (;items > 0 && snd_item.more();)
+  while (items > 0 && snd_item.more())
     {
       if (EXPECT_FALSE(!snd_item.next()))
         {
@@ -1029,7 +1026,6 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
 
       if (EXPECT_FALSE(!buf_iter))
         {
-          // LOG_MSG_3VAL(snd, "lIPCm0", 0, 0, 0);
           snd->set_ipc_error(L4_error::Overflow, rcv);
           return false;
         }
@@ -1038,7 +1034,6 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
 
       if (EXPECT_FALSE(buf->b.is_void() || buf->b.type() != item->b.type()))
         {
-          // LOG_MSG_3VAL(snd, "lIPCm1", buf->b.raw(), item->b.raw(), 0);
           snd->set_ipc_error(L4_error::Overflow, rcv);
           return false;
         }
@@ -1050,7 +1045,7 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
 
           rcv_word += 2;
 
-          // diminish when sending via restricted ipc gates
+          // diminish when sending via restricted IPC gates
           if (sfp.type() == L4_fpage::Obj)
             sfp.mask_rights(rights | L4_fpage::Rights::CRW() | L4_fpage::Rights::CD());
 
