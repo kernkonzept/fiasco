@@ -152,6 +152,11 @@ Thread::ipc_receiver_aborted() override
     current()->switch_to_locked(this);
 }
 
+/**
+ * Receiver-ready callback. Receivers call this function in the context of a
+ * waiting sender when they get ready to receive a message from that sender
+ * (in this case a thread).
+ */
 PRIVATE
 void
 Thread::ipc_send_msg(Receiver *recv, bool open_wait) override
@@ -161,7 +166,6 @@ Thread::ipc_send_msg(Receiver *recv, bool open_wait) override
                               _ipc_send_rights, open_wait);
   sender_dequeue(recv->sender_list());
   recv->vcpu_update_state();
-  //printf("  done\n");
 
   Mword state_del;
   Mword state_add;
@@ -171,7 +175,6 @@ Thread::ipc_send_msg(Receiver *recv, bool open_wait) override
       state_del = Thread_ipc_mask | Thread_ipc_transfer;
       state_add = Thread_ready;
       if (Receiver::prepared())
-        // same as in Receiver::prepare_receive_dirty_2
         state_add |= Thread_receive_wait;
     }
   else
