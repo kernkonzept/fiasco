@@ -33,7 +33,7 @@ GREP		:= GREP_OPTIONS= grep
 AWKP		?= gawk --posix
 CCACHE		?= ccache
 CFLAGS		:=
-CXXFLAGS	:= -std=c++14 $(call CHECKCXX,-fno-sized-deallocation,)
+CXXFLAGS	:= -std=c++17 $(call CHECKCXX,-fno-sized-deallocation,)
 
 OPT_CFLAGS	:= $(if $(CONFIG_OPTIMIZE_FOR_SIZE),-Os,-O3)
 OPT_CXXFLAGS	:= $(if $(CONFIG_OPTIMIZE_FOR_SIZE),-Os,-O3)
