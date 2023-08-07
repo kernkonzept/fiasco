@@ -14,12 +14,15 @@ enum Thread_state
   Thread_send_wait           = 0x4,
   /// Waiting for a message.
   Thread_receive_wait        = 0x8,
-  /// Receiving a message (passively).
+  /// Actively receiving a message. A thread is carrying this flag while
+  /// performing the IPC transfer operation to itself in the context of the
+  /// next sender.
   Thread_receive_in_progress = 0x10,
 
   Thread_ipc_mask            = Thread_send_wait | Thread_receive_wait
                              | Thread_receive_in_progress,
 
+  /// Passively receiving a message until this flag is cleared.
   Thread_ipc_transfer        = 0x20,
 
   /// The IPC operation is canceled by the receiver.
@@ -33,6 +36,8 @@ enum Thread_state
   Thread_full_ipc_mask        = Thread_ipc_mask | Thread_cancel | Thread_transfer_failed
                                 | Thread_timeout | Thread_ipc_transfer,
 
+  /// If any of these flags is set, the IPC sender will stop waiting for the
+  /// receiver.
   Thread_ipc_abort_mask       = Thread_transfer_failed | Thread_cancel | Thread_timeout
                                 | Thread_ipc_transfer,
 
@@ -67,9 +72,15 @@ enum Thread_state
   /// Thread waits for a lock.
   Thread_waiting              = 0x200000,
 
+  /// vCPU state enabled.
   Thread_vcpu_enabled         = 0x400000,
+  /// Thread runs currently in vCPU "user" mode with a dedicated user space.
+  /// This flag is clear when the thread runs in vCPU "kernel" mode.
   Thread_vcpu_user            = 0x800000,
+  /// This thread running in vCPU "user" has no access to the FPU. Any FPU
+  /// operation will trigger a corresponding FPU fault.
   Thread_vcpu_fpu_disabled    = 0x1000000,
+  /// extended vCPU state enabled. This includes Thread_vcpu_enabled.
   Thread_ext_vcpu_enabled     = 0x2000000,
 
   // 0x4000000 used by MIPS

@@ -56,8 +56,12 @@ public:
 
   enum Abort_state
   {
+    /// IPC was already finished -- IPC not aborted. No error.
     Abt_ipc_done,
+    /// IPC was really aborted, error code will be set.
     Abt_ipc_cancel,
+    /// Abort while IPC already in progress. IPC operation will be finished.
+    /// No error.
     Abt_ipc_in_progress,
   };
 
