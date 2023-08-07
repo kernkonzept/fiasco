@@ -5,8 +5,10 @@ void
 Context::arch_setup_utcb_ptr()
 {
   _utcb.access()->utcb_addr = (Mword)_utcb.usr().get();
-  _gdt_user_entries[Gdt_user_entries] = Gdt_entry((Address)&_utcb.usr()->utcb_addr, 0xfffff, Gdt_entry::Access_user
-                                                  | Gdt_entry::Access_data_write | Gdt_entry::Accessed, Gdt_entry::Size_32 | 0x80);
+  _gdt_user_entries[Gdt_user_entries]
+    = Gdt_entry((Address)&_utcb.usr()->utcb_addr, 0xfffff, Gdt_entry::Accessed,
+                Gdt_entry::Data_write, Gdt_entry::User, Gdt_entry::Code_undef,
+                Gdt_entry::Size_32, Gdt_entry::Granularity_4k);
   _gs = _fs = Gdt::gdt_utcb | 3;
 }
 

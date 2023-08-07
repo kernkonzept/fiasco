@@ -238,8 +238,7 @@ Cpu::init_tss(Address tss_mem, size_t tss_size)
 {
   tss = reinterpret_cast<Tss*>(tss_mem);
 
-  gdt->set_entry_tss(Gdt::gdt_tss/8, tss_mem, tss_size,
-		     Gdt_entry::Access_kernel | Gdt_entry::Access_tss, 0);
+  gdt->set_entry_tss(Gdt::gdt_tss / 8, tss_mem, tss_size);
 
   // XXX setup pointer for clean double fault stack
   tss->_ist1 = (Address)&dbf_stack_top;
@@ -260,26 +259,26 @@ Cpu::init_gdt(Address gdt_mem, Address user_max)
   // cache line, respectively; pre-set all "accessed" flags so that
   // the CPU doesn't need to do this later
 
-  gdt->set_entry_4k(Gdt::gdt_code_kernel/8, 0, 0xffffffff,
-		  Gdt_entry::Access_kernel | 
-		  Gdt_entry::Access_code_read |
-  		  Gdt_entry::Accessed, Gdt_entry::Long_mode);
-  gdt->set_entry_4k(Gdt::gdt_data_kernel/8, 0, 0xffffffff,
-		  Gdt_entry::Access_kernel | 
-	  	  Gdt_entry::Access_data_write | 
-  		  Gdt_entry::Accessed, Gdt_entry::Size_32);
-  gdt->set_entry_4k(Gdt::gdt_code_user/8, 0, user_max,
-		  Gdt_entry::Access_user | 
-		  Gdt_entry::Access_code_read |
-		  Gdt_entry::Accessed, Gdt_entry::Long_mode);
-  gdt->set_entry_4k(Gdt::gdt_data_user/8, 0, user_max,
-		  Gdt_entry::Access_user |
-	  	  Gdt_entry::Access_data_write | 
-  		  Gdt_entry::Accessed, Gdt_entry::Size_32);
-  gdt->set_entry_4k(Gdt::gdt_code_user32/8, 0, user_max,
-		  Gdt_entry::Access_user |
-		  Gdt_entry::Access_code_read |
-		  Gdt_entry::Accessed, Gdt_entry::Size_32);
+  gdt->set_entry_4k(Gdt::gdt_code_kernel / 8, 0, 0xffffffff,
+                    Gdt_entry::Accessed, Gdt_entry::Code_read,
+                    Gdt_entry::Kernel, Gdt_entry::Code_64bit,
+                    Gdt_entry::Size_undef);
+  gdt->set_entry_4k(Gdt::gdt_data_kernel / 8, 0, 0xffffffff,
+                    Gdt_entry::Accessed, Gdt_entry::Data_write,
+                    Gdt_entry::Kernel, Gdt_entry::Code_undef,
+                    Gdt_entry::Size_32);
+  gdt->set_entry_4k(Gdt::gdt_code_user / 8, 0, user_max,
+                    Gdt_entry::Accessed, Gdt_entry::Code_read,
+                    Gdt_entry::User, Gdt_entry::Code_64bit,
+                    Gdt_entry::Size_undef);
+  gdt->set_entry_4k(Gdt::gdt_data_user / 8, 0, user_max,
+                    Gdt_entry::Accessed, Gdt_entry::Data_write,
+                    Gdt_entry::User, Gdt_entry::Code_undef,
+                    Gdt_entry::Size_32);
+  gdt->set_entry_4k(Gdt::gdt_code_user32 / 8, 0, user_max,
+                    Gdt_entry::Accessed, Gdt_entry::Code_read,
+                    Gdt_entry::User, Gdt_entry::Code_compat,
+                    Gdt_entry::Size_32);
 }
 
 

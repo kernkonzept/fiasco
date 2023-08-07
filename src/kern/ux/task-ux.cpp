@@ -51,12 +51,12 @@ Task::invoke_arch(L4_msg_tag &tag, Utcb *utcb)
               info.entry_number    = entry_number;
               info.base_addr       =  d->base();
               info.limit           =  d->limit();
-              info.seg_32bit       =  d->seg32();
-              info.contents        =  d->contents();
+              info.seg_32bit       =  d->default_size() == Gdt_entry::Size_32;
+              info.contents        = (d->type() & 0x06) >> 1;
               info.read_exec_only  = !d->writable();
               info.limit_in_pages  =  d->granularity();
               info.seg_not_present = !d->present();
-              info.useable         =  d->avl();
+              info.useable         =  d->available();
 
 
               // Set up data on trampoline

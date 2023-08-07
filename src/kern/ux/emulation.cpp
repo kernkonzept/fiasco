@@ -115,7 +115,7 @@ Emulation::idt_vector (Mword trap, bool user)
     return 0;
 
   // Gate permission check
-  if (user && !(gate->access() & X86desc::Access_user))
+  if (user && gate->dpl() != Idt_entry::User)
     return 0;
 
   assert(gate->present());

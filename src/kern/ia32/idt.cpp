@@ -16,10 +16,12 @@ class Idt_init_entry;
 class Idt
 {
   friend class Jdb_kern_info_bench;
+
 public:
   static const unsigned _idt_max = FIASCO_IDT_MAX;
+
 private:
-  static const Address  _idt = Mem_layout::Idt;
+  static const Address _idt = Mem_layout::Idt;
   static Address _idt_pa;
 };
 
@@ -64,11 +66,23 @@ Idt::init_table(Idt_init_entry *src, Idt_entry *idt)
 {
   while (src->entry)
     {
-      assert (src->vector < _idt_max);
-      idt[src->vector] =
-        ((src->type & 0x1f) == 0x05) // task gate?
-        ? Idt_entry(src->entry, src->type)
-        : Idt_entry(src->entry, Gdt::gdt_code_kernel, src->type);
+      assert(src->vector < _idt_max);
+
+      auto type = static_cast<Idt_entry::Type_system>(src->type & 0x1f);
+      auto dpl = static_cast<Idt_entry::Dpl>((src->type >> 5) & 0x03);
+
+      if (type == Idt_entry::Task_gate)
+        {
+          // Task gate
+          idt[src->vector] = Idt_entry(src->entry, dpl);
+        }
+      else
+        {
+          // Interrupt/trap gate
+          idt[src->vector] = Idt_entry(src->entry, Gdt::gdt_code_kernel, type,
+                                       dpl);
+        }
+
       src++;
     }
 }
@@ -149,28 +163,30 @@ Idt::get(unsigned vector)
 
 /**
  * IDT patching function.
- * Allows to change interrupt gate vectors at runtime.
- * It makes the IDT writable for the duration of this operation.
- * @param vector interrupt vector to be modified
- * @param func new handler function for this interrupt vector
- * @param user true if user mode can use this vector, false otherwise
+ *
+ * Allows to change interrupt gate vectors at runtime. It makes the IDT
+ * writable for the duration of this operation.
+ *
+ * \param vector  Interrupt vector to be modified.
+ * \param addr    Address of the new interrupt handler for the vector.
+ * \param user    True if user mode can use this vector, false otherwise.
  */
 PUBLIC static
 void
-Idt::set_entry(unsigned vector, Address entry, bool user)
+Idt::set_entry(unsigned vector, Address addr, bool user)
 {
-  assert (vector < _idt_max);
+  assert(vector < _idt_max);
 
   set_writable(true);
 
-  Idt_entry *entries = (Idt_entry*)_idt;
-  if (entry)
-    entries[vector] = Idt_entry(entry, Gdt::gdt_code_kernel,
-			        Idt_entry::Access_intr_gate |
-			        (user ? Idt_entry::Access_user 
-			              : Idt_entry::Access_kernel));
+  Idt_entry *entries = (Idt_entry *)_idt;
+
+  if (addr)
+    entries[vector] = Idt_entry(addr, Gdt::gdt_code_kernel,
+                                Idt_entry::Intr_gate,
+                                (user ? Idt_entry::User : Idt_entry::Kernel));
   else
-    entries[vector].clear();
+    entries[vector] = Idt_entry();
 
   set_writable(false);
 }

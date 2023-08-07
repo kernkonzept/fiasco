@@ -1581,9 +1581,9 @@ PUBLIC FIASCO_INIT_AND_PM
 void
 Cpu::pm_suspend()
 {
-  Gdt_entry tss_entry;
-  tss_entry = (*gdt)[Gdt::gdt_tss / 8];
-  tss_entry.access &= 0xfd;
+  Gdt_entry tss_entry = (*gdt)[Gdt::gdt_tss / 8];
+
+  tss_entry.tss_make_available();
   (*gdt)[Gdt::gdt_tss / 8] = tss_entry;
   _suspend_tsc = rdtsc();
 }
@@ -2199,12 +2199,12 @@ Cpu::enable_ldt(Address addr, int size)
 {
   if (!size)
     {
-      get_gdt()->clear_entry (Gdt::gdt_ldt / 8);
+      get_gdt()->clear_entry(Gdt::gdt_ldt / 8);
       set_ldt(0);
     }
   else
     {
-      get_gdt()->set_entry_byte(Gdt::gdt_ldt / 8, addr, size-1, 2/*=ldt*/, 0);
+      get_gdt()->set_entry_ldt(Gdt::gdt_ldt / 8, addr, size - 1);
       set_ldt(Gdt::gdt_ldt);
     }
 }

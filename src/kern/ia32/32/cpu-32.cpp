@@ -148,9 +148,7 @@ Cpu::init_tss_dbf(Address tss_dbf_mem, Address kdir)
 {
   tss_dbf = reinterpret_cast<Tss*>(tss_dbf_mem);
 
-  gdt->set_entry_byte(Gdt::gdt_tss_dbf / 8, tss_dbf_mem, sizeof(Tss) - 1,
-		      Gdt_entry::Access_kernel | Gdt_entry::Access_tss |
-		      Gdt_entry::Accessed, 0);
+  gdt->set_entry_tss(Gdt::gdt_tss_dbf / 8, tss_dbf_mem, sizeof(Tss) - 1);
 
   tss_dbf->_cs     = Gdt::gdt_code_kernel;
   tss_dbf->_ss     = Gdt::gdt_data_kernel;
@@ -173,8 +171,7 @@ Cpu::init_tss(Address tss_mem, size_t tss_size)
 {
   tss = reinterpret_cast<Tss*>(tss_mem);
 
-  gdt->set_entry_byte(Gdt::gdt_tss / 8, tss_mem, tss_size,
-		      Gdt_entry::Access_kernel | Gdt_entry::Access_tss, 0);
+  gdt->set_entry_tss(Gdt::gdt_tss / 8, tss_mem, tss_size);
 
   tss->set_ss0(Gdt::gdt_data_kernel);
   assert(Mem_layout::Io_bitmap - tss_mem
@@ -194,21 +191,21 @@ Cpu::init_gdt(Address gdt_mem, Address user_max)
   // the CPU doesn't need to do this later
 
   gdt->set_entry_4k(Gdt::gdt_code_kernel / 8, 0, 0xffffffff,
-                    Gdt_entry::Access_kernel |
-                    Gdt_entry::Access_code_read |
-                    Gdt_entry::Accessed, Gdt_entry::Size_32);
+                    Gdt_entry::Accessed, Gdt_entry::Code_read,
+                    Gdt_entry::Kernel, Gdt_entry::Code_undef,
+                    Gdt_entry::Size_32);
   gdt->set_entry_4k(Gdt::gdt_data_kernel / 8, 0, 0xffffffff,
-                    Gdt_entry::Access_kernel |
-                    Gdt_entry::Access_data_write |
-                    Gdt_entry::Accessed, Gdt_entry::Size_32);
+                    Gdt_entry::Accessed, Gdt_entry::Data_write,
+                    Gdt_entry::Kernel, Gdt_entry::Code_undef,
+                    Gdt_entry::Size_32);
   gdt->set_entry_4k(Gdt::gdt_code_user / 8, 0, user_max,
-		    Gdt_entry::Access_user |
-		    Gdt_entry::Access_code_read |
-		    Gdt_entry::Accessed, Gdt_entry::Size_32);
+                    Gdt_entry::Accessed, Gdt_entry::Code_read,
+                    Gdt_entry::User, Gdt_entry::Code_undef,
+                    Gdt_entry::Size_32);
   gdt->set_entry_4k(Gdt::gdt_data_user / 8, 0, user_max,
-                    Gdt_entry::Access_user |
-                    Gdt_entry::Access_data_write |
-                    Gdt_entry::Accessed, Gdt_entry::Size_32);
+                    Gdt_entry::Accessed, Gdt_entry::Data_write,
+                    Gdt_entry::User, Gdt_entry::Code_undef,
+                    Gdt_entry::Size_32);
 }
 
 PRIVATE inline

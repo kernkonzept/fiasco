@@ -37,16 +37,47 @@ private:
 };
 
 //------------------------------------------------------------------
-IMPLEMENTATION [amd64]:
+IMPLEMENTATION [ia32]:
 
+/**
+ * Setup a TSS entry.
+ *
+ * The entry is set up as TSS Available and usable by the kernel in the GDT.
+ *
+ * \param nr     Selector number.
+ * \param base   Address of the TSS.
+ * \param limit  Limit of the TSS (in bytes).
+ */
 PUBLIC inline
 void
-Gdt::set_entry_tss(unsigned nr, Address base, Unsigned32 limit,
-                   Unsigned8 access, Unsigned8 szbits)
+Gdt::set_entry_tss(unsigned nr, Address base, Unsigned32 limit)
 {
-  // system-segment descriptor is 16byte
-  _entries[nr] = Gdt_entry(base, limit >> 12, access, szbits | 0x08);
-  _entries[nr + 1].raw = base >> 32;
+  _entries[nr] = Gdt_entry(base, limit, Gdt_entry::Tss_available,
+                           Gdt_entry::Kernel, Gdt_entry::Granularity_bytes);
+}
+
+//------------------------------------------------------------------
+IMPLEMENTATION [amd64]:
+
+/**
+ * Setup a TSS entry.
+ *
+ * The entry is set up as TSS Available, usable by the kernel and with
+ * the 4K-granularity limit in the GDT.
+ *
+ * \note The TSS actually occupies two consecutive GDT entries.
+ *
+ * \param nr     Selector number.
+ * \param base   Address of the TSS.
+ * \param limit  Limit of the TSS (in bytes).
+ */
+PUBLIC inline
+void
+Gdt::set_entry_tss(unsigned nr, Address base, Unsigned32 limit)
+{
+  _entries[nr] = Gdt_entry(base, limit >> 12, Gdt_entry::Tss_available,
+                           Gdt_entry::Kernel, Gdt_entry::Granularity_4k);
+  _entries[nr + 1] = Gdt_entry(base);
 }
 
 //------------------------------------------------------------------
@@ -55,31 +86,34 @@ IMPLEMENTATION:
 PUBLIC inline explicit
 Gdt::Gdt(unsigned nr_entries = Gdt::gdt_max / sizeof(Gdt_entry))
 {
-  for (Gdt_entry *e = _entries; e < _entries + nr_entries; ++e)
-    e->raw = 0;
-}
-
-PUBLIC inline
-void
-Gdt::set_entry_byte(unsigned nr, Address base, Unsigned32 limit,
-                    Unsigned8 access, Unsigned8 szbits)
-{
-  _entries[nr] = Gdt_entry(base, limit, access, szbits);
+  for (unsigned i = 0; i < nr_entries; ++i)
+    _entries[i] = Gdt_entry();
 }
 
 PUBLIC inline
 void
 Gdt::set_entry_4k(unsigned nr, Address base, Unsigned32 limit,
-                  Unsigned8 access, Unsigned8 szbits)
+                  Gdt_entry::Access access, Gdt_entry::Type type,
+                  Gdt_entry::Dpl dpl, Gdt_entry::Code code,
+                  Gdt_entry::Default_size default_size)
 {
-  _entries[nr] = Gdt_entry(base, limit >> 12, access, szbits | 0x08);
+  _entries[nr] = Gdt_entry(base, limit >> 12, access, type, dpl, code,
+                           default_size, Gdt_entry::Granularity_4k);
+}
+
+PUBLIC inline
+void
+Gdt::set_entry_ldt(unsigned nr, Address base, Unsigned32 limit)
+{
+  _entries[nr] = Gdt_entry(base, limit, Gdt_entry::Ldt, Gdt_entry::Kernel,
+                           Gdt_entry::Granularity_bytes);
 }
 
 PUBLIC inline
 void
 Gdt::clear_entry(unsigned nr)
 {
-  _entries[nr].clear();
+  _entries[nr] = Gdt_entry();
 }
 
 PUBLIC inline

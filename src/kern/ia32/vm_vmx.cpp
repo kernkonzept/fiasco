@@ -528,7 +528,7 @@ Vm_vmx_t<X>::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, void *vmcs_s)
   {
     // clear busy flag
     Gdt_entry *e = &(*Cpu::cpus.cpu(cpu).get_gdt())[Gdt::gdt_tss / 8];
-    e->access &= ~(1 << 1);
+    e->tss_make_available();
     asm volatile("" : : "m" (*e));
     Cpu::set_tr(Gdt::gdt_tss);
   }

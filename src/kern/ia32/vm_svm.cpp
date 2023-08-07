@@ -629,10 +629,9 @@ Vm_svm::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, Vmcb *vmcb_s)
   restore_segments(ctxt, fs, gs);
 
   // clear busy flag
-  Gdt_entry tss_entry;
+  Gdt_entry tss_entry = (*cpu.get_gdt())[tr / 8];
 
-  tss_entry = (*cpu.get_gdt())[tr / 8];
-  tss_entry.access &= 0xfd;
+  tss_entry.tss_make_available();
   (*cpu.get_gdt())[tr / 8] = tss_entry;
 
   Cpu::set_tr(tr); // TODO move under stgi in asm
