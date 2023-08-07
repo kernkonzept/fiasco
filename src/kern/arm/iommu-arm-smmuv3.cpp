@@ -702,8 +702,8 @@ private:
       T *next_slot()
       {
         if (WRITE && is_full())
-            // Queue is full, nothing can be written.
-            return nullptr;
+          // Queue is full, nothing can be written.
+          return nullptr;
 
         if (!WRITE && is_empty())
           // Queue is empty, nothing can be read.
