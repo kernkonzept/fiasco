@@ -113,7 +113,7 @@ Factory::map_obj(Kobject_iface *o, Cap_index cap, Task *_c_space,
 
   auto space_lock_guard = lock_guard_dont_lock(c_space->existence_lock);
 
-  // We take the existence_lock for syncronizing maps...
+  // We take the existence_lock for synchronizing maps...
   // This is kind of coarse grained
   // try_lock fails if the lock is neither locked nor unlocked
   if (!space_lock_guard.check_and_lock(&c_space->existence_lock))
