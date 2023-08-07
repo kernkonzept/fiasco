@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------
-INTERFACE [arm_v8 && fpu]:
+INTERFACE [arm_v8]:
 
 EXTENSION class Fpu
 {
