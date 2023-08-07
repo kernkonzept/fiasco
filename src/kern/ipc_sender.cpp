@@ -116,7 +116,7 @@ PROTECTED template< typename Derived >
 inline  NEEDS["config.h","globals.h", "thread_state.h",
               Ipc_sender_base::handle_shortcut]
 bool
-Ipc_sender<Derived>::send_msg(Receiver *receiver, bool is_not_xcpu)
+Ipc_sender<Derived>::send_msg(Receiver *receiver, bool is_xcpu)
 {
   set_wait_queue(receiver->sender_list());
 
@@ -149,7 +149,7 @@ Ipc_sender<Derived>::send_msg(Receiver *receiver, bool is_not_xcpu)
       // in case a timeout was set
       receiver->reset_timeout();
 
-      if (is_not_xcpu
+      if (!is_xcpu
           || EXPECT_TRUE(current_cpu() == receiver->home_cpu()))
         {
           auto &rq = Sched_context::rq.current();

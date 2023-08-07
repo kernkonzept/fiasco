@@ -383,12 +383,11 @@ Irq_sender::handle_remote_hit(Context::Drq *, Context *target, void *arg)
   auto t = access_once(&irq->_irq_thread);
   if (EXPECT_TRUE(t == target))
     {
-      if (EXPECT_TRUE(irq->send_msg(t, false)))
+      if (EXPECT_TRUE(irq->send_msg(t, true)))
         return Context::Drq::no_answer_resched();
     }
   else if (EXPECT_TRUE(is_valid_thread(t)))
-    t->drq(&irq->_drq, handle_remote_hit, irq,
-           Context::Drq::No_wait);
+    t->drq(&irq->_drq, handle_remote_hit, irq, Context::Drq::No_wait);
 
   return Context::Drq::no_answer();
 }
@@ -410,10 +409,9 @@ void
 Irq_sender::send(Thread *t)
 {
   if (EXPECT_FALSE(t->home_cpu() != current_cpu()))
-    t->drq(&_drq, handle_remote_hit, this,
-           Context::Drq::No_wait);
+    t->drq(&_drq, handle_remote_hit, this, Context::Drq::No_wait);
   else
-    send_msg(t, true);
+    send_msg(t, false);
 }
 
 
