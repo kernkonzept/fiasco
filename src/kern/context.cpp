@@ -1411,10 +1411,12 @@ Context::xcpu_state_change(Mword mask, Mword add, bool lazy_q = false)
 
 /**
  * \brief Initiate a DRQ for the context.
- * \pre \a src must be the currently running context.
- * \param src the source of the DRQ (the context who initiates the DRQ).
- * \param func the DRQ handler.
- * \param arg the argument for the DRQ handler.
+ * \param drq   The DRQ context.
+ * \param func  The DRQ handler.
+ * \param arg   The argument for the DRQ handler.
+ * \param wait  On `Drq::Wait`, this function waits for the result of DRQ
+ *              handler; on `Drq::No_wait`, this function returns after the DRQ
+ *              was enqueued and the DRQ handler is executed asynchronously.
  *
  * DRQs are requests that any context can queue to any other context. DRQs are
  * the basic mechanism to initiate actions on remote CPUs in an MP system,
@@ -1431,7 +1433,8 @@ Context::drq(Drq *drq, Drq::Request_func *func, void *arg,
              Drq::Wait_mode wait = Drq::Wait)
 {
   if (0)
-    printf("CPU[%2u:%p]: > Context::drq(this=%p, func=%p, arg=%p)\n", cxx::int_value<Cpu_number>(current_cpu()), current(), this, func,arg);
+    printf("CPU[%2u:%p]: > Context::drq(this=%p, func=%p, arg=%p)\n",
+           cxx::int_value<Cpu_number>(current_cpu()), current(), this, func, arg);
   Context *cur = current();
   LOG_TRACE("DRQ handling", "drq", cur, Drq_log,
       l->type = Drq_log::Type::Send;
@@ -1441,20 +1444,17 @@ Context::drq(Drq *drq, Drq::Request_func *func, void *arg,
       l->target_cpu = home_cpu();
       l->wait = wait;
   );
-  //assert (current() == src);
-  assert (!(wait == Drq::Wait && (cur->state() & Thread_drq_ready)) || cur->home_cpu() == home_cpu());
-  assert (!((wait == Drq::Wait || drq == &_drq) && cur->state() & Thread_drq_wait));
-  assert (!drq->queued());
+  assert(!(wait == Drq::Wait && (cur->state() & Thread_drq_ready)) || cur->home_cpu() == home_cpu());
+  assert(!((wait == Drq::Wait || drq == &_drq) && cur->state() & Thread_drq_wait));
+  assert(!drq->queued());
 
-  drq->func  = func;
-  drq->arg   = arg;
+  drq->func = func;
+  drq->arg = arg;
   if (wait == Drq::Wait)
     cur->state_add(Thread_drq_wait);
 
-
   enqueue_drq(drq);
 
-  //LOG_MSG_3VAL(src, "<drq", src->state(), Mword(this), 0);
   while (wait == Drq::Wait && cur->state() & Thread_drq_wait)
     {
       cur->state_del(Thread_ready_mask);
@@ -1469,7 +1469,6 @@ Context::drq(Drq *drq, Drq::Request_func *func, void *arg,
       l->target_cpu = home_cpu();
       l->wait = wait;
   );
-  //LOG_MSG_3VAL(src, "drq>", src->state(), Mword(this), 0);
 }
 
 PUBLIC
