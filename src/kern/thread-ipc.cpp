@@ -600,7 +600,9 @@ Thread::do_ipc(L4_msg_tag const &tag, Mword from_spec, Thread *partner,
 
       if (EXPECT_FALSE(!ok))
         {
-          // send failed, so do not switch to receiver directly and skip receive phase
+          // Send failed. Skip the receive phase (Thread_receive_wait was not
+          // set) but still activate the partner (may include a switch to it)
+          // to inform the partner about the failed IPC.
           regs->tag(L4_msg_tag(0, 0, L4_msg_tag::Error, 0));
         }
     }
