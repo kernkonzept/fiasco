@@ -243,7 +243,7 @@ IMPLEMENTATION [arm && arm_em_tz]:
 
 PUBLIC
 bool
-Gic::alloc(Irq_base *irq, Mword pin, bool init = true)
+Gic::alloc(Irq_base *irq, Mword pin, bool init = true) override
 {
   if ((pin < 32 && irq->chip() == this && irq->pin() == pin)
       || Irq_chip_gen::alloc(irq, pin, init))
