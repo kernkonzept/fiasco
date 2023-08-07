@@ -68,6 +68,7 @@ protected:
     Thread::Check_sender result;
   };
 
+  // Used by Thread::ipc_send_msg().
   Syscall_frame *_snd_regs;
   Mword _from_spec;
   // Used when the IPC receiver executes ipc_send_msg() in the context of the
@@ -216,11 +217,6 @@ Thread::modify_label(Mword const *todo, int cnt) override
         }
     }
 }
-
-PRIVATE inline
-void
-Thread::snd_regs(Syscall_frame *r)
-{ _snd_regs = r; }
 
 
 /** Page fault handler.
@@ -565,8 +561,8 @@ Thread::do_ipc(L4_msg_tag const &tag, Mword from_spec, Thread *partner,
           // This flag also prevents the receive path from accessing the thread
           // state of a remote sender.
           do_switch = false;
-          result = remote_handshake_receiver(tag, partner, have_receive, t.snd,
-                                             regs);
+          _snd_regs = regs;
+          result = remote_handshake_receiver(tag, partner, have_receive, t.snd);
 
           // this may block, so we could have been migrated here
           current_cpu = ::current_cpu();
@@ -579,8 +575,8 @@ Thread::do_ipc(L4_msg_tag const &tag, Mword from_spec, Thread *partner,
           break;
 
         case Check_sender::Queued:
-          // set _snd_regs, to enable active receiving
-          snd_regs(regs);
+          // set _snd_regs to enable active receiving
+          _snd_regs = regs;
           ok = do_send_wait(partner, t.snd); // --- blocking point ---
           current_cpu = ::current_cpu();
           break;
@@ -1274,15 +1270,13 @@ Thread::handle_remote_ipc_send(Drq *src, Context *, void *_rq)
 PRIVATE
 Thread::Check_sender
 Thread::remote_handshake_receiver(L4_msg_tag const &tag, Thread *partner,
-                                  bool have_receive,
-                                  L4_timeout snd_t, Syscall_frame *regs)
+                                  bool have_receive, L4_timeout snd_t)
 {
   Ipc_remote_request rq;
   rq.tag = tag;
   rq.have_rcv = have_receive;
   rq.partner = partner;
   rq.timeout = !snd_t.is_zero();
-  snd_regs(regs);
 
   set_wait_queue(partner->sender_list());
 
