@@ -62,7 +62,7 @@ protected:
   {
     L4_msg_tag tag;
     Thread *partner;
-    bool timeout;
+    bool zero_timeout;
     bool have_rcv;
 
     Thread::Check_sender result;
@@ -314,17 +314,17 @@ Thread::handle_page_fault_pager(Thread_ptr const &_pager,
 
 /**
  * In the context of the receiver, check if the sender may send to us.
- * \param sender   The sender to check.
- * \param timeout  True if a timeout is set, false otherwise.
+ * \param sender        The sender to check.
+ * \param zero_timeout  True if a zero timeout was specified, false otherwise.
  * \retval Check_sender::Ok_closed_wait Receiver ready to receive, closed wait.
  * \retval Check_sender::Ok_open_wait Receiver ready to receive, open wait.
  * \retval Check_sender::Failed (1) Receiver does not exist, or (2) Receiver
- *                              not ready and no timeout specified.
+ *                              not ready and zero timeout specified.
  * \retval Check_sender::Queued Receiver not ready and timeout specified.
  */
 PRIVATE inline
 Thread::Check_sender
-Thread::check_sender(Thread *sender, bool timeout)
+Thread::check_sender(Thread *sender, bool zero_timeout)
 {
   if (EXPECT_FALSE(is_invalid()))
     {
@@ -335,7 +335,7 @@ Thread::check_sender(Thread *sender, bool timeout)
   if (auto ok = sender_ok(sender))
     return ok; // note Check_sender(Rcv_state) magic!
 
-  if (!timeout)
+  if (zero_timeout)
     {
       sender->utcb().access()->error = L4_error::Timeout;
       return Check_sender::Failed;
@@ -428,7 +428,7 @@ Thread::handshake_receiver(Thread *partner, L4_timeout snd_t)
 {
   assert(cpu_lock.test());
 
-  Check_sender r = partner->check_sender(this, !snd_t.is_zero());
+  Check_sender r = partner->check_sender(this, snd_t.is_zero());
   switch (r.s)
     {
     case Check_sender::Failed:
@@ -1210,7 +1210,7 @@ PRIVATE inline NOEXPORT
 bool
 Thread::remote_ipc_send(Ipc_remote_request *rq)
 {
-  Check_sender r = rq->partner->check_sender(this, rq->timeout);
+  Check_sender r = rq->partner->check_sender(this, rq->zero_timeout);
   switch (r.s)
     {
     case Check_sender::Failed:
@@ -1276,7 +1276,7 @@ Thread::remote_handshake_receiver(L4_msg_tag const &tag, Thread *partner,
   rq.tag = tag;
   rq.have_rcv = have_receive;
   rq.partner = partner;
-  rq.timeout = !snd_t.is_zero();
+  rq.zero_timeout = snd_t.is_zero();
 
   set_wait_queue(partner->sender_list());
 
