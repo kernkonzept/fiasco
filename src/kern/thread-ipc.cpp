@@ -1220,19 +1220,6 @@ PRIVATE inline NOEXPORT
 bool
 Thread::remote_ipc_send(Ipc_remote_request *rq)
 {
-
-#if 0
-  LOG_MSG_3VAL(this, "rsend", (Mword)src, 0, 0);
-  printf("CPU[%u]: remote IPC send ...\n"
-         "  partner=%p [%u]\n"
-         "  sender =%p [%u]\n"
-         "  timeout=%u\n",
-         current_cpu(),
-         rq->partner, rq->partner->cpu(),
-         src, src->cpu(),
-         rq->timeout);
-#endif
-
   Check_sender r = rq->partner->check_sender(this, rq->timeout);
   switch (r.s)
     {
@@ -1257,12 +1244,12 @@ Thread::remote_ipc_send(Ipc_remote_request *rq)
   // induces an overhead of two extra IPIs.
   if (rq->tag.items())
     {
-      //LOG_MSG_3VAL(rq->partner, "pull", dbg_id(), 0, 0);
       xcpu_state_change(~Thread_send_wait, Thread_ready);
       rq->partner->state_change_dirty(~(Thread_ipc_mask | Thread_ready), Thread_ipc_transfer);
       rq->result = r;
       return true;
     }
+
   bool success = transfer_msg(rq->tag, rq->partner,
                               _ipc_send_rights, r.is_open_wait());
   if (success && rq->have_rcv)
@@ -1284,7 +1271,6 @@ Thread::handle_remote_ipc_send(Drq *src, Context *, void *_rq)
 {
   Ipc_remote_request *rq = (Ipc_remote_request*)_rq;
   bool r = nonull_static_cast<Thread*>(src->context())->remote_ipc_send(rq);
-  //LOG_MSG_3VAL(src, "rse<", current_cpu(), (Mword)src, r);
   return r ? Drq::need_resched() : Drq::done();
 }
 
