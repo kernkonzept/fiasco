@@ -1291,7 +1291,7 @@ Thread::handle_remote_ipc_send(Drq *src, Context *, void *_rq)
 /**
  * \pre Runs on the sender CPU
  */
-PRIVATE //inline NEEDS ["mp_request.h"]
+PRIVATE
 Thread::Check_sender
 Thread::remote_handshake_receiver(L4_msg_tag const &tag, Thread *partner,
                                   bool have_receive,
