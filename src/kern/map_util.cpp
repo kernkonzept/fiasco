@@ -275,7 +275,7 @@ get_order_from_fp(L4_fpage const &fp, int base_order = 0)
 
   enum : int {
     Bits = sizeof(Value) * 8 - 1,
-    Max  = cxx::is_signed<Value>::value ? Bits - 1 : Bits
+    Max  = cxx::is_signed_v<Value> ? Bits - 1 : Bits
   };
 
   int shift = fp.order() - base_order;
@@ -829,7 +829,7 @@ save_access_flags(Mem_space *space, typename Mem_space::V_pfn page_address, bool
 
 // do nothing for IO and OBJs
 template<typename MAPDB, typename SPACE,
-         typename = cxx::enable_if_t<!cxx::is_same<SPACE, Mem_space>::value>>
+         typename = cxx::enable_if_t<!cxx::is_same_v<SPACE, Mem_space>>>
 void
 save_access_flags(SPACE *, typename SPACE::V_pfn, bool,
                   typename MAPDB::Frame const &,

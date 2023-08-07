@@ -61,11 +61,11 @@ struct Protected<T, false> : Protected_base<T>
   Protected(T *v) : Protected_base<T>(v) {}
 
   template<typename X,
-           typename = enable_if_t<is_convertible<X, T>::value>>
+           typename = enable_if_t<is_convertible_v<X, T>>>
   Protected(X *v) : Protected_base<T>(v) {}
 
   template<typename X,
-           typename = enable_if_t<is_convertible<X, T>::value>>
+           typename = enable_if_t<is_convertible_v<X, T>>>
   Protected(Protected<X, false> const &v)
   : Protected_base<T>(v.unsafe_ptr())
   {}
@@ -78,11 +78,11 @@ struct Protected<T, true> : Protected_base<T>
   Protected(T *v) : Protected_base<T>(v) {}
 
   template<typename X,
-           typename = enable_if_t<is_convertible<X, T>::value>>
+           typename = enable_if_t<is_convertible_v<X, T>>>
   Protected(X *v) : Protected_base<T>(v) {}
 
   template<typename X,
-           typename = enable_if_t<is_convertible<X, T>::value>>
+           typename = enable_if_t<is_convertible_v<X, T>>>
   Protected(Protected<X, true> const &v)
   : Protected_base<T>(v.unsafe_ptr())
   {}

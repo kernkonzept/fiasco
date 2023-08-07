@@ -101,7 +101,7 @@ class Per_cpu_ptr : private Per_cpu_data
 {
 public:
   typedef cxx::conditional_t<
-    cxx::is_const<T>::value,
+    cxx::is_const_v<T>,
     Per_cpu<cxx::remove_cv_t<T>> const,
     Per_cpu<cxx::remove_cv_t<T>> > Per_cpu_type;
 

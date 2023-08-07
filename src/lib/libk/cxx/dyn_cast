@@ -217,13 +217,13 @@ Type_info const Dyn_castable<SELF, BASE, BASES...>::_cxx_dyn_static_type =
 template<typename TO, typename FROM> inline
 TO dyn_cast(FROM *p)
 {
-  static_assert(is_pointer<TO>::value,
+  static_assert(is_pointer_v<TO>,
                 "cxx::dyn_cast<T>(): T is not a pointer");
 
   typedef remove_pointer_t<TO> To_class;
-  static_assert(!is_volatile<FROM>::value && !is_volatile<To_class>::value,
+  static_assert(!is_volatile_v<FROM> && !is_volatile_v<To_class>,
                 "cxx::dyn_cast<T>(): volatile types not supported");
-  static_assert((!is_const<FROM>::value || is_const<To_class>::value),
+  static_assert((!is_const_v<FROM> || is_const_v<To_class>),
                 "cxx::dyn_cast<T>(): casts away const qualifier");
 
   if (!p)

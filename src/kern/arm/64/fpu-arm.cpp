@@ -103,7 +103,7 @@ public:
 
     static constexpr unsigned off(unsigned vl)
     {
-      if constexpr (cxx::is_same<PREV, void>::value)
+      if constexpr (cxx::is_same_v<PREV, void>)
         return 0;
       else
         return PREV::off(vl) + PREV::size(vl);

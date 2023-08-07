@@ -60,7 +60,7 @@ class H_list : public Bits::Basic_list<POLICY>
 {
 private:
   typedef cxx::conditional_t<
-    cxx::is_convertible<T, H_list_item_t<T> >::value,
+    cxx::is_convertible_v<T, H_list_item_t<T> >,
     H_list_item_t<T>, H_list_item> Item;
   typedef Bits::Basic_list<POLICY> Base;
   H_list(H_list const &);
