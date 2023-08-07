@@ -98,19 +98,6 @@ private:
   Mword msg[2];
 };
 
-
-// ------------------------------------------------------------------------
-INTERFACE [debug]:
-
-#include "tb_entry.h"
-
-EXTENSION class Thread
-{
-protected:
-  static unsigned log_fmt_pf_invalid(Tb_entry *, int max, char *buf) asm ("__fmt_page_fault_invalid_pager");
-  static unsigned log_fmt_exc_invalid(Tb_entry *, int max, char *buf) asm ("__fmt_exception_invalid_handler");
-};
-
 // ------------------------------------------------------------------------
 IMPLEMENTATION:
 
