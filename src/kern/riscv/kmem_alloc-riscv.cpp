@@ -11,7 +11,7 @@ PUBLIC inline NEEDS["mem_layout.h"]
 Address
 Kmem_alloc::to_phys(void *v) const
 {
-  return Mem_layout::pmem_to_phys(reinterpret_cast<Address>(v));
+  return Mem_layout::pmem_to_phys(v);
 }
 
 static unsigned long _freemap[
