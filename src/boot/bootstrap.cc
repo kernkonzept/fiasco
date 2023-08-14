@@ -43,9 +43,10 @@ exit(int)
 }
 
 #ifndef NDEBUG
-void assert_fail(char const *expr, char const *file, unsigned int line)
+void assert_fail(char const *expr, char const *file, unsigned int line,
+                 void *caller)
 {
-  panic("Assertion failed at %s:%u: %s\n", file, line, expr);
+  panic("Assertion failed at %s:%u:%p: %s\n", file, line, caller, expr);
 }
 #endif
 
