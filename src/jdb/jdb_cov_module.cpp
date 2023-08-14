@@ -23,7 +23,7 @@ static Jdb_cov_module jdb_cov_module INIT_PRIORITY(JDB_MODULE_INIT_PRIO);
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_cov_module::action(int cmd, void *&, char const *&, int &)
+Jdb_cov_module::action(int cmd, void *&, char const *&, int &) override
 {
   if (cmd == 0)
     cov_print();
@@ -33,14 +33,14 @@ Jdb_cov_module::action(int cmd, void *&, char const *&, int &)
 
 PUBLIC
 int
-Jdb_cov_module::num_cmds() const
+Jdb_cov_module::num_cmds() const override
 {
   return 1;
 }
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_cov_module::cmds() const
+Jdb_cov_module::cmds() const override
 {
   static Cmd cs[] = { { 0, "&", "cov", "", "&\tprint cov info", 0 } };
 
