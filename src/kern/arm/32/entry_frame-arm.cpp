@@ -56,7 +56,7 @@ Return_frame::ip() const
 
 IMPLEMENT inline
 Mword
-Return_frame::ip_syscall_page_user() const
+Return_frame::ip_syscall_user() const
 { return Return_frame::pc; }
 
 IMPLEMENT inline
@@ -109,7 +109,6 @@ IMPLEMENT inline L4_msg_tag Syscall_frame::tag() const
 IMPLEMENT inline
 void Syscall_frame::tag(L4_msg_tag const &tag)
 { r[0] = tag.raw(); }
-
 
 //------------------------------------------------------------------
 IMPLEMENTATION [arm && !cpu_virt]:

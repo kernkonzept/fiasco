@@ -34,8 +34,12 @@ class Return_frame
 {
 public:
   Mword ip() const;
-  Mword ip_syscall_page_user() const;
   void  ip(Mword _pc);
+
+  /**
+   * User instruction pointer used for logging if kernel entered via syscall.
+   */
+  Mword ip_syscall_user() const;
 
   Mword sp() const;
   void  sp(Mword _sp);

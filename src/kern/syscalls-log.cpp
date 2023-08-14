@@ -47,7 +47,7 @@ IMPLEMENT void FIASCO_FLATTEN sys_ipc_log_wrapper()
       Tb_entry_ipc *tb = EXPECT_TRUE(Jdb_ipc_trace::log_buf())
                        ? Jdb_tbuf::new_entry<Tb_entry_ipc>()
                        : &_local;
-      tb->set(curr, regs->ip(), ipc_regs, utcb,
+      tb->set(curr, regs->ip_syscall_user(), ipc_regs, utcb,
 	      dbg_id, curr->sched_context()->left());
 
       if (EXPECT_TRUE(Jdb_ipc_trace::log_buf()))
@@ -68,7 +68,7 @@ IMPLEMENT void FIASCO_FLATTEN sys_ipc_log_wrapper()
       Tb_entry_ipc_res *tb = static_cast<Tb_entry_ipc_res*>
 	(EXPECT_TRUE(Jdb_ipc_trace::log_buf()) ? Jdb_tbuf::new_entry()
 					    : &_local);
-      tb->set(curr, regs->ip(), ipc_regs, utcb, utcb->error.raw(),
+      tb->set(curr, regs->ip_syscall_user(), ipc_regs, utcb, utcb->error.raw(),
 	      entry_event_num, have_snd, false);
 
       if (EXPECT_TRUE(Jdb_ipc_trace::log_buf()))

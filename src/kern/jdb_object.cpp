@@ -130,7 +130,7 @@ Jdb_object::sys_tbuf(L4_msg_tag tag, unsigned op,
 
         auto str = reinterpret_cast<char const *>(&r_msg->values[2]);
         Tb_entry_ke *tb = Jdb_tbuf::new_entry<Tb_entry_ke>();
-        tb->set(curr, curr->user_ip());
+        tb->set(curr, curr->regs()->ip_syscall_user());
 
         for (unsigned i = 0; i < length; ++i)
           tb->msg.set_buf(i, str[i]);
@@ -154,7 +154,7 @@ Jdb_object::sys_tbuf(L4_msg_tag tag, unsigned op,
 
         auto str = reinterpret_cast<char const *>(&r_msg->values[2]);
         Tb_entry_ke_bin *tb = Jdb_tbuf::new_entry<Tb_entry_ke_bin>();
-        tb->set(curr, curr->user_ip());
+        tb->set(curr, curr->regs()->ip_syscall_user());
 
         for (unsigned i = 0; i < length; ++i)
           tb->set_buf(i, str[i]);
@@ -175,7 +175,7 @@ Jdb_object::sys_tbuf(L4_msg_tag tag, unsigned op,
         //              but we must not read above utcb
         // values[5] == string
         Tb_entry_ke_reg *tb = Jdb_tbuf::new_entry<Tb_entry_ke_reg>();
-        tb->set(curr, curr->user_ip());
+        tb->set(curr, curr->regs()->ip_syscall_user());
         tb->v[0] = access_once(&r_msg->values[1]);
         tb->v[1] = access_once(&r_msg->values[2]);
         tb->v[2] = access_once(&r_msg->values[3]);

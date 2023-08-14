@@ -63,7 +63,7 @@ Return_frame::ip() const
 
 IMPLEMENT inline NEEDS["mem_layout.h"]
 Address
-Return_frame::ip_syscall_page_user() const
+Return_frame::ip_syscall_user() const
 { return ip(); }
 
 IMPLEMENT inline

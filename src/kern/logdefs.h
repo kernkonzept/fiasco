@@ -56,7 +56,7 @@
   LOG_TRACE("Context switch", "csw", this, Tb_entry_ctx_sw,             \
     Sched_context *cs = Sched_context::rq.current().current_sched();    \
     l->from_space = space();                                            \
-    l->_ip = regs()->ip_syscall_page_user();                            \
+    l->_ip = regs()->ip_syscall_user();                                 \
     l->dst = t;                                                         \
     l->dst_orig = t_orig;                                               \
     l->lock_cnt = t_orig->lock_cnt();                                   \

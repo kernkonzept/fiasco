@@ -147,5 +147,5 @@ void Syscall_frame::tag(L4_msg_tag const &tag)
 
 IMPLEMENT inline
 Mword
-Return_frame::ip_syscall_page_user() const
+Return_frame::ip_syscall_user() const
 { return Return_frame::srr0; }

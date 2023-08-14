@@ -132,7 +132,7 @@ public:
   void set_ipc_upcall()
   { cause = C_l4_ipc_upcall; }
 
-  Address ip_syscall_page_user() const
+  Address ip_syscall_user() const
   { return epc; }
 
   Syscall_frame *syscall_frame()
