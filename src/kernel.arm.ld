@@ -126,15 +126,6 @@ SECTIONS {
 
     PROVIDE (_ecode = .);
 
-    *(__llvm_covfun)
-    *(__llvm_covmap)
-    PROVIDE (__start___llvm_prf_data = .);
-    *(__llvm_prf_data)
-    PROVIDE (__stop___llvm_prf_data = .);
-    PROVIDE (__start___llvm_prf_names = .);
-    *(__llvm_prf_names)
-    PROVIDE (__stop___llvm_prf_names = .);
-
     *(.rodata .rodata.* .gnu.linkonce.r.* .rodata1)
 
     . = ALIGN(WORD_SIZE);
@@ -145,7 +136,14 @@ SECTIONS {
     . = ALIGN(0x40);
 
     PROVIDE (_etext = .);
+  } :kernel
 
+  __llvm_covmap : { KEEP(*(__llvm_covmap)) } :kernel
+  __llvm_covfun : { KEEP(*(__llvm_covfun)) } :kernel
+  __llvm_prf_data : { KEEP(*(__llvm_prf_data)) } :kernel
+  __llvm_prf_names : { KEEP(*(__llvm_prf_names)) } :kernel
+
+  .data_kernel : AT (ADDR(.data_kernel) - phys_offset) {
     *(.data .data.* .gnu.linkonce.d.*)
     *(.anno)
 
@@ -154,18 +152,15 @@ SECTIONS {
     *(.anno)
     *(.data.jdb)
 
-    PROVIDE (__start___llvm_prf_cnts = .);
-    *(__llvm_prf_cnts)
-    PROVIDE (__stop___llvm_prf_cnts = .);
-
     *(.init.data)
 
     . = ALIGN(8);
     DEFINE_INIT_ARRAYS
 
     PROVIDE(_edata  =  .);
-
   } :kernel
+
+  __llvm_prf_cnts : { KEEP(*(__llvm_prf_cnts)) } :kernel
 
   . = ALIGN(8);
   .per_cpu_data : AT (ADDR(.per_cpu_data) - phys_offset) {
@@ -173,14 +168,12 @@ SECTIONS {
     *(.per_cpu.data)
     . = ALIGN(8);
     PROVIDE (_per_cpu_data_end = .);
-  }
+  } :kernel
 
   /* ARM AEABI */
   . = ALIGN(8);
   .ARM.exidx : { *(.ARM.exidx.*) }
   .ARM.extab : { *(.ARM.extab.*) }
-
-
 
   . = ALIGN(4K);
   .bss : AT (ADDR(.bss) - phys_offset) {
@@ -194,7 +187,7 @@ SECTIONS {
     *(.bss.jdb)
     PROVIDE(__bss_end = .);
     . = ALIGN(4K);
-  }
+  } :kernel
   __end_of_the_kernel = .;
 
 #if defined NEED_EXCPT
@@ -210,7 +203,7 @@ SECTIONS {
   PROVIDE( _end = . );
 
   . = ALIGN(4K);
-  .initcall : AT(ADDR(.initcall) - phys_offset) {
+  .initcall : AT (ADDR(.initcall) - phys_offset) {
     _initcall_start = .;
     *(.initcall.*)
     PROVIDE (_alt_insns_begin = .);
