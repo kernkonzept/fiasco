@@ -34,6 +34,14 @@ lprofCustomWriter(ProfDataWriter *this,
           written += store_b64(io_vecs[i].Data, io_vecs[i].ElmSize,
                                io_vecs[i].NumElm);
         }
+      else
+        {
+          for (unsigned sz = io_vecs[i].ElmSize * io_vecs[i].NumElm; sz; --sz)
+            {
+              char const c[] = {0};
+              written += store_b64(c, 1, 1);
+            }
+        }
     }
   return 0;
 }
