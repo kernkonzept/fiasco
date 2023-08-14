@@ -291,7 +291,7 @@ CC_BLACKLIST-ia32-clang := 12 13 14
 
 CC_LAST_BROKEN-SEQ-gcc   := $(CC_LAST_BROKEN-SEQ-gcc-$(CCVER_MAJOR))
 
-
+ifneq ($(DISABLE_CC_CHECK),y)
 ifeq ($(filter $(CC_WHITELIST),$(CCVER_VERSION)),)
   $(error $(CC_TYPE)-$(CCVER_VERSION) is not supported. \
           Please use one of the following versions: $(CC_WHITELIST))
@@ -311,6 +311,7 @@ ifneq ($(strip \
 	$(filter $(CC_BLACKLIST-$(CONFIG_XARCH)-$(CC_TYPE)),$(CCVER_VERSION)) \
 	$(filter $(CC_BLACKLIST-$(CC_TYPE)),$(CCVER_VERSION))),)
   $(error $(CC_TYPE)-$(CCVER_FULL) is blacklisted, please update)
+endif
 endif
 
 else
