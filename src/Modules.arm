@@ -304,6 +304,10 @@ endif
 
 #INTERFACES_LIBK:= atomic lock_guard profile uuencode gmon unistd panic
 INTERFACES_LIBK := std_macros atomic lock_guard
+ifeq ($(CONFIG_BIT32),y)
+CSRC_LIBK       += gcc_lib.c
+ASSRC_LIBK      += gcc_lib-aeabi.S
+endif
 CXXSRC_LIBK     += construction.cc
 atomic_IMPL     := atomic atomic-arm-$(BITS) atomic-arm
 

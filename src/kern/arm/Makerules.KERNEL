@@ -35,9 +35,9 @@ bootstrap_strip    = --strip-all $(addprefix --keep-symbol=,$(bootstrap_export))
 bootstrap_syms     = end_of_bootstrap_info|_start|start_of_loader
 bootstrap_sed      = 's/^0*([0-9a-f]*) [a-zA-Z] ($(bootstrap_syms))/\2 = 0x\1;/p'
 
-bootstrap.$(KERNEL).pre.o: $(OBJ_BOOTSTRAP) $(LIBGCC) $(bootstrap_lds)
+bootstrap.$(KERNEL).pre.o: $(OBJ_BOOTSTRAP) $(bootstrap_lds)
 	$(LINK_MESSAGE)
-	$(VERBOSE)$(LD) $(bootstrap_ldflags) $(OBJ_BOOTSTRAP) $(LIBGCC) -o $@
+	$(VERBOSE)$(LD) $(bootstrap_ldflags) $(OBJ_BOOTSTRAP) -o $@
 
 # Make a raw binary. The linker script is already minimal. Only explicitly drop
 # the things that are still unneeded (dynamic symbols) and what is expected to
@@ -62,7 +62,7 @@ bootstrap.$(KERNEL).sym: bootstrap.$(KERNEL).pre.o
 # $(2) = fiasco.debug - variable
 # $(3) = Additional $(OBJ_X), e.g. OBJ_<unittest>
 define gen_kernel_rules =
-$(2): kernel.arm.lds $$(CRT0) bootstrap.$$(KERNEL).rel bootstrap.$$(KERNEL).sym $$(OBJ_KERNEL_noboot) $(3) $$(JDB) $$(LIBK) $$(KERNEL_EXTRA_LIBS) $$(LIBDISASM) $$(ABI) libdrivers.a $$(LIBUART) $$(CXXLIB) $$(MINILIBC) $$(LIBGCC) $$(MINILIBC) libgluedriverslibc.a
+$(2): kernel.arm.lds $$(CRT0) bootstrap.$$(KERNEL).rel bootstrap.$$(KERNEL).sym $$(OBJ_KERNEL_noboot) $(3) $$(JDB) $$(LIBK) $$(KERNEL_EXTRA_LIBS) $$(LIBDISASM) $$(ABI) libdrivers.a $$(LIBUART) $$(CXXLIB) $$(MINILIBC) $$(MINILIBC) libgluedriverslibc.a
 	$$(LINK_MESSAGE)
 	$$(VERBOSE)$$(LD) $$(LDFLAGS) -m $$(LD_EMULATION) $$(KERNEL_LDFLAGS) -N -defsym kernel_load_addr=$$(CONFIG_KERNEL_LOAD_ADDR) \
 	-T $$< -o $$@ $$(filter-out $$<,$$+)

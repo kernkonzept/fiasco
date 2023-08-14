@@ -229,8 +229,7 @@ OPT_CXXFLAGS    += $(OPT_CXXFLAGS-$(CC_TYPE))
 NOOPT_CFLAGS    += $(NOOPT_CFLAGS-$(CC_TYPE))
 NOOPT_CXXFLAGS  += $(NOOPT_CXXFLAGS-$(CC_TYPE))
 
-
-LIBGCC      := $(shell $(CXX) $(SHARED_FLAGS) -print-libgcc-file-name)
+# for stddef.h, ...
 GCCINCDIR   := $(shell $(CXX) $(SHARED_FLAGS) -print-file-name=include)
 
 

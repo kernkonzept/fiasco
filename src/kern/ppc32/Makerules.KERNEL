@@ -23,7 +23,7 @@ phys_mem.o: $(TCBOFFSET)
 define gen_kernel_rules =
 $(2): kernel.ppc32.lds $$(CRT0) $$(OBJ_KERNEL) $(3) $$(LIBK) $$(LIBDISASM) libdrivers.a $$(ABI) $$(LIBUART) $$(CXXLIB) $$(MINILIBC) libgluedriverslibc.a
 	$$(LINK_MESSAGE)
-	$$(VERBOSE)$$(LD) $$(LDFLAGS) -m $$(LD_EMULATION) -N -T $$< -o $$@ $$(filter-out $$<,$$+) $$(LIBGCC)
+	$$(VERBOSE)$$(LD) $$(LDFLAGS) -m $$(LD_EMULATION) -N -T $$< -o $$@ $$(filter-out $$<,$$+)
 	$$(call ADD_CONFIGFILE,$$@)
 
 $(1): $(2)
