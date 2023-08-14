@@ -1,6 +1,7 @@
 INTERFACE:
 
 #include "l4_types.h"
+#include "config.h"
 
 class Kpdir;
 
