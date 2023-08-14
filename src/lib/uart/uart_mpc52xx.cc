@@ -96,7 +96,7 @@ namespace L4
     mpc52xx_out_char(c);
   }
 
-  int Uart_mpc52xx::write(char const *s, unsigned long count) const
+  int Uart_mpc52xx::write(char const *s, unsigned long count, bool) const
   {
     Mmu_guard dcache;
     unsigned long c = count;
