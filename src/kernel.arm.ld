@@ -124,12 +124,16 @@ SECTIONS {
 
     *(.text.jdb)
 
+    PROVIDE (_ecode = .);
+
     *(__llvm_covfun)
     *(__llvm_covmap)
+    PROVIDE (__start___llvm_prf_data = .);
     *(__llvm_prf_data)
+    PROVIDE (__stop___llvm_prf_data = .);
+    PROVIDE (__start___llvm_prf_names = .);
     *(__llvm_prf_names)
-
-    PROVIDE (_ecode = .);
+    PROVIDE (__stop___llvm_prf_names = .);
 
     *(.rodata .rodata.* .gnu.linkonce.r.* .rodata1)
 
@@ -150,7 +154,9 @@ SECTIONS {
     *(.anno)
     *(.data.jdb)
 
+    PROVIDE (__start___llvm_prf_cnts = .);
     *(__llvm_prf_cnts)
+    PROVIDE (__stop___llvm_prf_cnts = .);
 
     *(.init.data)
 
