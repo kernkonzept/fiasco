@@ -52,36 +52,18 @@ template<typename DYN, typename RELOC>
 struct Elf
 {
   static inline unsigned long
-  elf_dynamic_link_addr()
-  {
-    extern unsigned long const _GLOBAL_OFFSET_TABLE_[]
-      __attribute__ ((visibility ("hidden")));
-    return _GLOBAL_OFFSET_TABLE_[0];
-  }
-
-  static inline unsigned long
   elf_dynamic_section()
   {
     extern char _DYNAMIC[] __attribute__ ((visibility ("hidden")));
     return (unsigned long)&_DYNAMIC[0];
   }
 
-  static inline unsigned long
-  elf_load_address()
+  static inline void
+  relocate(unsigned long load_addr)
   {
-    return elf_dynamic_section() - elf_dynamic_link_addr();
-  }
-
-  static inline unsigned long
-  relocate()
-  {
-    unsigned long load_addr = elf_load_address();
     DYN *dyn = (DYN *)elf_dynamic_section();
     unsigned long relcnt = 0;
     RELOC *rel = 0;
-
-    if (!load_addr)
-      return 0;
 
     for (int i = 0; dyn[i].tag != 0; i++)
       switch (dyn[i].tag)
@@ -90,13 +72,11 @@ struct Elf
         case DYN::Reloc_count: relcnt = dyn[i].val; break;
         }
 
-    if (!rel || !relcnt)
-      return load_addr;
-
-    for (; relcnt; relcnt--, rel++)
-      rel->apply(load_addr);
-
-    return load_addr;
+    if (rel && relcnt)
+      {
+        for (; relcnt; relcnt--, rel++)
+          rel->apply(load_addr);
+      }
   }
 };
 
@@ -227,12 +207,15 @@ Bootstrap::kern_to_boot(void *a)
   return (void *)((Mword)a + Bootstrap::Virt_ofs + load_addr);
 }
 
-extern "C" void bootstrap_main()
+extern "C" void bootstrap_main(unsigned long load_addr)
 {
-  Bootstrap::load_addr = Bootstrap::relocate();
-
-  bs_info.kernel_start_phys += Bootstrap::load_addr;
-  bs_info.kernel_end_phys   += Bootstrap::load_addr;
+  if (load_addr)
+    {
+      Bootstrap::relocate(load_addr);
+      Bootstrap::load_addr = load_addr;
+      bs_info.kernel_start_phys += load_addr;
+      bs_info.kernel_end_phys += load_addr;
+    }
 
   Unsigned32 tbbr = cxx::int_value<Bootstrap::Phys_addr>(Bootstrap::init_paging())
                     | Page::Ttbr_bits;
