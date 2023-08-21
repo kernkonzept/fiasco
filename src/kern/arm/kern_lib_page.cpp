@@ -2,8 +2,9 @@ IMPLEMENTATION [arm && !cpu_virt]:
 
 #include <panic.h>
 
-#include "kmem_alloc.h"
 #include "kmem.h"
+#include "kmem_alloc.h"
+#include "kmem_space.h"
 #include "ram_quota.h"
 #include "paging.h"
 #include "static_init.h"

@@ -107,6 +107,7 @@ Cpu::disable_dcache()
 IMPLEMENTATION [arm && !cpu_virt]:
 
 #include "kmem.h"
+#include "kmem_space.h"
 
 IMPLEMENT_OVERRIDE
 void

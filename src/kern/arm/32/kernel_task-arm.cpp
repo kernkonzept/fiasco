@@ -3,13 +3,14 @@ IMPLEMENTATION[arm && !cpu_virt]:
 #include "config.h"
 #include "globals.h"
 #include "kmem.h"
+#include "kmem_space.h"
 
 PRIVATE inline NEEDS["globals.h", "kmem.h"]
 Kernel_task::Kernel_task()
 : Task(Ram_quota::root, Kmem::kdir, Caps::none())
 {}
 
-PUBLIC static inline
+PUBLIC static inline NEEDS["kmem_space.h"]
 void
 Kernel_task::map_syscall_page(void *p)
 {
