@@ -18,9 +18,9 @@ struct Alternative_insn
 } __attribute__((packed));
 
 #if defined(__aarch64__)
-#define ASM_ALTERNATIVE_ENTRY_PTR ".dword %[alt_probe]"
+#define ASM_ALTERNATIVE_ENTRY_PTR ".dword %c[alt_probe]"
 #elif defined(__arm__)
-#define ASM_ALTERNATIVE_ENTRY_PTR ".word %[alt_probe]"
+#define ASM_ALTERNATIVE_ENTRY_PTR ".word %c[alt_probe]"
 #else
 #error "Implementation requires an ARM compiler!"
 #endif
