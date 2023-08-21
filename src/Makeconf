@@ -22,6 +22,7 @@ CONFIG_ABI	:= $(patsubst "%",%,$(CONFIG_ABI))
 SYSTEM		:= $(shell uname)
 CC		:= $(patsubst "%",%,$(CONFIG_CC))
 CXX		:= $(patsubst "%",%,$(CONFIG_CXX))
+LD		:= $(patsubst "%",%,$(CONFIG_LD))
 HOST_CC		:= $(patsubst "%",%,$(CONFIG_HOST_CC))
 HOST_CXX	:= $(patsubst "%",%,$(CONFIG_HOST_CXX))
 RM		:= rm -f
@@ -72,7 +73,6 @@ ifneq ($(SYSTEM_TARGET),)
 endif
 
 AS			= $(CROSS_COMPILE)as
-LD			= $(CROSS_COMPILE)ld
 AR			= $(CROSS_COMPILE)ar
 NM			= $(CROSS_COMPILE)nm
 RANLIB			= $(CROSS_COMPILE)ranlib
@@ -101,6 +101,7 @@ CPP			:= $(CROSS_COMPILE)$(CPP)$(CCXX_SUFFIX)
 
 CXX_TYPE		:= $(if $(findstring clang,$(shell $(CXX) --version)),clang,gcc)
 CC_TYPE			:= $(if $(findstring clang,$(shell $(CC) --version)),clang,gcc)
+LD_TYPE			:= $(if $(and $(LD),$(findstring LLD,$(shell $(LD) --version))),clang,gnu)
 CLANG_TARGET_FLAG = $(addprefix --target=, $(notdir $(CROSS_COMPILE:%-=%)))
 
 ifeq ($(CC_TYPE),clang)
@@ -113,6 +114,10 @@ ifeq ($(CXX_TYPE),clang)
   CXX			:= $(CCXX_WRAP) $(if $(USE_CCACHE),$(CCACHE)) $(CXX)$(CCXX_SUFFIX) $(CLANG_TARGET_FLAG)
 else
   CXX			:= $(CCXX_WRAP) $(if $(USE_CCACHE),$(CCACHE)) $(CROSS_COMPILE)$(CXX)$(CCXX_SUFFIX)
+endif
+
+ifneq ($(LD_TYPE),clang)
+  LD			:= $(CROSS_COMPILE)$(LD)
 endif
 
 CCVER_ID_MAJOR-gcc        := __GNUC__

@@ -606,6 +606,14 @@ config CXX
 	help
 	  Use this option to override the default C++ compiler (g++).
 
+config LD
+	string "LD linker"
+	default "ld"
+	help
+	  Use this operation to override the default linker (ld).
+	  It's especially useful to use the LLVM linker (lld) when using
+	  Clang/Clang++ for compilation.
+
 config HOST_CC
 	string "C host compiler"
 	default "gcc"
