@@ -7,6 +7,54 @@ INTERFACE [sched_fixed_prio || sched_fp_wfq]:
 #include "globals.h"
 
 
+template<unsigned BITS>
+class Hierarchical_bitmap
+{
+public:
+  enum : unsigned
+  {
+    Root_bits = sizeof(unsigned) * 8,
+    Num_words = (BITS + MWORD_BITS - 1U) / MWORD_BITS,
+  };
+
+  static_assert(Num_words <= Root_bits, "Depth of two is enough");
+
+  void clear(unsigned long bit)
+  {
+    unsigned w = bit / MWORD_BITS;
+    unsigned b = bit % MWORD_BITS;
+
+    _leaves[w] &= ~(1UL << b);
+    if (_leaves[w] == 0)
+      _root &= ~(1U << w);
+  }
+
+  void set(unsigned long bit)
+  {
+    unsigned w = bit / MWORD_BITS;
+    unsigned b = bit % MWORD_BITS;
+
+    _leaves[w] |= (1UL << b);
+    _root      |= (1U  << w);
+  }
+
+  unsigned find_highest_bit() const
+  {
+    if (!_root)
+      return 0;
+
+    unsigned w = Root_bits  - __builtin_clz(_root) - 1;
+    unsigned b = MWORD_BITS - __builtin_clzl(_leaves[w]) - 1;
+
+    return w * MWORD_BITS + b;
+  }
+
+private:
+  unsigned _root = 0;
+  Mword _leaves[Num_words] = { 0 };
+};
+
+
 struct L4_sched_param_fixed_prio : public L4_sched_param
 {
   enum : Smword { Class = -1 };
@@ -25,7 +73,9 @@ class Ready_queue_fp
 
 private:
   typedef typename E::Fp_list List;
+
   unsigned prio_highest;
+  Hierarchical_bitmap<256> prio_bmap;
   List prio_next[256];
 
 public:
@@ -73,6 +123,7 @@ Ready_queue_fp<E>::enqueue(E *i, bool is_current_sched)
     prio_highest = prio;
 
   prio_next[prio].push(i, is_current_sched ? List::Front : List::Back);
+  prio_bmap.set(prio);
 }
 
 /**
@@ -93,8 +144,11 @@ Ready_queue_fp<E>::dequeue(E *i)
 
   prio_next[prio].remove(i);
 
-  while (prio_next[prio_highest].empty() && prio_highest)
-    prio_highest--;
+  if (prio_next[prio].empty())
+    {
+      prio_bmap.clear(prio);
+      prio_highest = prio_bmap.find_highest_bit();
+    }
 }
 
 
