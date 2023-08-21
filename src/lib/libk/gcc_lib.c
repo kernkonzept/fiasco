@@ -4,22 +4,22 @@ unsigned long long __udivdi3(unsigned long long, unsigned long long);
 unsigned long long __udivmoddi4(unsigned long long, unsigned long long,
                                 unsigned long long *);
 
-struct llmoddiv_t
+struct ullmoddiv_t
 {
   unsigned long long div;
   unsigned long long mod;
 };
 
-static struct llmoddiv_t llmoddiv(unsigned long long div, unsigned long long s)
+static struct ullmoddiv_t ullmoddiv(unsigned long long div, unsigned long long s)
 {
   unsigned long long i;
   unsigned long long tmp;
 
   if (s == 0)
-    return (struct llmoddiv_t){.div = 0, .mod = 0};
+    return (struct ullmoddiv_t){.div = 0, .mod = 0};
 
   if (s > div)
-    return (struct llmoddiv_t){.div = 0, .mod = div};
+    return (struct ullmoddiv_t){.div = 0, .mod = div};
 
   tmp = 1;
   while (!(s & (1ULL<<63)) && s < div)
@@ -45,7 +45,7 @@ static struct llmoddiv_t llmoddiv(unsigned long long div, unsigned long long s)
       s >>= 1;
     }
 
-  return (struct llmoddiv_t){.div = i, .mod = div};
+  return (struct ullmoddiv_t){.div = i, .mod = div};
 }
 
 
@@ -57,7 +57,7 @@ static struct llmoddiv_t llmoddiv(unsigned long long div, unsigned long long s)
  * \return div / s.
  */
 unsigned long long __umoddi3(unsigned long long div, unsigned long long s)
-{ return llmoddiv(div, s).mod; }
+{ return ullmoddiv(div, s).mod; }
 
 /**
  * 64-bit unsigned division for 32-bit machines.
@@ -67,7 +67,7 @@ unsigned long long __umoddi3(unsigned long long div, unsigned long long s)
  * \return div / s.
  */
 unsigned long long __udivdi3(unsigned long long div, unsigned long long s)
-{ return llmoddiv(div, s).div; }
+{ return ullmoddiv(div, s).div; }
 
 /**
  * 64-bit unsigned division + modulo for 32-bit machines.
@@ -80,7 +80,7 @@ unsigned long long __udivdi3(unsigned long long div, unsigned long long s)
 unsigned long long __udivmoddi4(unsigned long long div, unsigned long long s,
                                 unsigned long long *r)
 {
-  struct llmoddiv_t md = llmoddiv(div, s);
+  struct ullmoddiv_t md = ullmoddiv(div, s);
   if (r)
     *r = md.mod;
   return md.div;
