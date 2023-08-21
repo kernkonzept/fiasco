@@ -274,7 +274,7 @@ IMPLEMENT
 template< unsigned long Flush_area, bool Ram >
 FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_cache()
 {
-  register Mword dummy;
+  Mword dummy;
   asm volatile (
       "     add %0, %1, #8192           \n" // 8k flush area
       " 1:  ldr r0, [%1], %2            \n" // 32 bytes cache line size
@@ -293,7 +293,7 @@ IMPLEMENT
 template< unsigned long Flush_area, bool Ram >
 FIASCO_NOINLINE void Mmu<Flush_area, Ram>::clean_dcache()
 {
-  register Mword dummy;
+  Mword dummy;
   asm volatile (
       "     add %0, %1, #8192 \n" // 8k flush area
       " 1:  ldr r0, [%1], %2  \n"
@@ -310,7 +310,7 @@ IMPLEMENT
 template< unsigned long Flush_area, bool Ram >
 FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_dcache()
 {
-  register Mword dummy;
+  Mword dummy;
   asm volatile (
       "     add %0, %1, #8192           \n" // 8k flush area
       " 1:  ldr r0, [%1], %2            \n"
@@ -332,7 +332,7 @@ IMPLEMENT
 template< unsigned long Flush_area, bool Ram >
 FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_cache()
 {
-  register Mword dummy1, dummy2;
+  Mword dummy1, dummy2;
   asm volatile
     (
      // write back data cache
@@ -356,7 +356,7 @@ IMPLEMENT
 template< unsigned long Flush_area, bool Ram >
 FIASCO_NOINLINE void Mmu<Flush_area, Ram>::clean_dcache()
 {
-  register Mword dummy1, dummy2;
+  Mword dummy1, dummy2;
   asm volatile
     (
      // write back data cache
@@ -379,7 +379,7 @@ IMPLEMENT
 template< unsigned long Flush_area, bool Ram >
 FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_dcache()
 {
-  register Mword dummy1, dummy2;
+  Mword dummy1, dummy2;
   asm volatile
     (
      // write back data cache
