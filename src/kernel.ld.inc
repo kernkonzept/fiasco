@@ -82,3 +82,8 @@
     KEEP (*(SORT(.dtors.*)))                    \
     KEEP (*(.dtors))                            \
     __DTOR_LIST__ = .;
+
+#if defined(CONFIG_COV)
+EXTERN(cov_print)
+ASSERT(DEFINED(cov_print), "cov_print not available")
+#endif
