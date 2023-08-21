@@ -56,8 +56,8 @@ PHDRS {
   l4_koptions 0x11;
 }
 
-EXTERN (_start_kernel)
-ASSERT (_start_kernel > 0, "invalid _start_kernel address")
+EXTERN(_start_kernel)
+ASSERT(DEFINED(_start_kernel), "invalid _start_kernel address")
 
 SECTIONS {
 
