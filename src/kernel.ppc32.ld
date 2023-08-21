@@ -67,6 +67,7 @@ SECTIONS {
     PROVIDE (_ecode = .);
 
     *(.rodata .rodata.* .gnu.linkonce.r.*)
+    KEEP(*(.rodata.log.*))
 
     . = ALIGN(4);
     JDB_TABLE(log);

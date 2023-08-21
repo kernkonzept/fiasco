@@ -127,6 +127,7 @@ SECTIONS {
     PROVIDE (_ecode = .);
 
     *(.rodata .rodata.* .gnu.linkonce.r.* .rodata1)
+    KEEP(*(.rodata.log.*))
 
     . = ALIGN(WORD_SIZE);
     JDB_TABLE(log);
