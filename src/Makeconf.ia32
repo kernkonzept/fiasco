@@ -24,5 +24,4 @@ SHARED_FLAGS                      += $(call CHECKCC,-mno-3dnow,)
 SHARED_FLAGS-clang                += $(call CHECKCC,-Wno-address-of-packed-member)
 
 ASFLAGS				  += -m32
-OFORMAT				  := elf32-i386
 LD_EMULATION_CHOICE               := elf_i386 elf_i386_fbsd
