@@ -439,8 +439,8 @@ Slab_cache::debug_dump()
     printf (", overhead = %lu B (%lu B)  = %lu%% (%lu%%) \n",
 	    total * _slab_size - total_elems * _entry_size,
 	    total_used * _slab_size - total_elems * _entry_size,
-	    100 - total_elems * _entry_size * 100 / (total * _slab_size),
-	    100 - total_elems * _entry_size * 100 / (total_used * _slab_size));
+	    100 - total_elems * _entry_size * 100U / (total * _slab_size),
+	    100 - total_elems * _entry_size * 100U / (total_used * _slab_size));
   else
     printf ("\n");
 }

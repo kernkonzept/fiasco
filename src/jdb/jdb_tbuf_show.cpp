@@ -720,7 +720,7 @@ restart:
         {
           Jdb::cursor(2, 1);
           printf("\033[31m%3lu%% filtered\033[m\n",
-                 entries * 100 / Jdb_tbuf::max_entries());
+                 entries * 100U / Jdb_tbuf::max_entries());
         }
       for (Mword i = 3; i < Tbuf_start_line; i++)
         puts("\033[K");
@@ -963,7 +963,7 @@ restart:
             case ' ': // mode switch
               if (mode != Index_mode)
                 {
-                  time_mode = (time_mode + 1) % 3;
+                  time_mode = (time_mode + 1) % 3U;
                   redraw = true;
                 }
               break;
