@@ -41,7 +41,7 @@ Kmem_alloc::Kmem_alloc()
     }
 }
 
-PUBLIC inline //NEEDS["kmem_space.h"]
+IMPLEMENT_OVERRIDE inline //NEEDS["kmem_space.h"]
 Address
 Kmem_alloc::to_phys(void *v) const
 {

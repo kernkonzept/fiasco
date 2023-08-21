@@ -39,7 +39,7 @@ Kmem_alloc::Kmem_alloc()
     }
 }
 
-PUBLIC inline NEEDS["kmem.h", "psr.h", <cstdio>]
+IMPLEMENT_OVERRIDE inline NEEDS["kmem.h", "psr.h", <cstdio>]
 Address
 Kmem_alloc::to_phys(void *v) const
 {

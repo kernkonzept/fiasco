@@ -12,13 +12,6 @@ IMPLEMENTATION [ia32,ux,amd64]:
 #include "panic.h"
 #include "types.h"
 
-PUBLIC static inline
-Phys_mem_addr::Value
-Kmem_alloc::to_phys(void *v)
-{
-  return Mem_layout::pmem_to_phys(v);
-}
-
 PUBLIC static FIASCO_INIT
 bool
 Kmem_alloc::base_init()
