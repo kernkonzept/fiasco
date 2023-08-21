@@ -32,7 +32,7 @@ PHDRS {
 
 SECTIONS {
   .bda 0x400 (NOLOAD) : {
-    . = 0xe;
+    . += 0xe;
     ebda_segment = .;
   }
 
