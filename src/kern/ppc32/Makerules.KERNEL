@@ -10,7 +10,7 @@ phys_mem.o: $(TCBOFFSET)
 #TODO: strip 
 #boot_img.o: bootstrap.o $(LIBUART) $(CXXLIB) $(MINILIBC) $(LIBK) boot_libc_glue.o 
 #	$(LINK_MESSAGE)
-#	$(VERBOSE)$(LD) -m $(LD_EMULATION) -o $@_x.o -q \
+#	$(VERBOSE)$(LD) $(LD_EMULATION_FLAG) -o $@_x.o -q \
 #	  -T $(srcdir)/kern/ppc32/bootstrap.ld  $^
 #	$(VERBOSE)$(OBJCOPY) -G _boot_start $@_x.o $@
 #	$(VERBOSE)$(RM) $@_x.o
@@ -23,7 +23,7 @@ phys_mem.o: $(TCBOFFSET)
 define gen_kernel_rules =
 $(2): kernel.ppc32.lds $$(CRT0) $$(OBJ_KERNEL) $(3) $$(LIBK) $$(LIBDISASM) libdrivers.a $$(ABI) $$(LIBUART) $$(CXXLIB) $$(MINILIBC) libgluedriverslibc.a
 	$$(LINK_MESSAGE)
-	$$(VERBOSE)$$(LD) $$(LDFLAGS) -m $$(LD_EMULATION) -N -T $$< -o $$@ $$(filter-out $$<,$$+)
+	$$(VERBOSE)$$(LD) $$(LDFLAGS) $$(LD_EMULATION_FLAG) -N -T $$< -o $$@ $$(filter-out $$<,$$+)
 	$$(call ADD_CONFIGFILE,$$@)
 
 $(1): $(2)

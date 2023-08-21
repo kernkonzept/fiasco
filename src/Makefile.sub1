@@ -53,7 +53,7 @@ define find_ld_emulation
 	for e in $$emulations; do                                         \
 	  for c in $(2); do                                               \
 	    if [ "$$e" = "$$c" ]; then                                    \
-	      echo LD_EMULATION = $$e >> $(1);                            \
+	      echo "LD_EMULATION_FLAG = -m $$e" >> $(1);                  \
 	      found_it=1;                                                 \
 	      break;                                                      \
 	    fi;                                                           \
@@ -88,9 +88,16 @@ endef
 	  && { $(RM) .*.d */.*.d; echo "CHANGED.  Recompiling."; }	\
 	  || echo "unchanged."
 
+# For the LLVM linker, -m cannot be detected as "ld.lld --help" does not list
+# the supported emulations. But apparently it's also not necessary to pass this
+# parameter.
+ifeq ($(LD_TYPE),clang)
+.Host-config:
+else
 .Host-config: force-the-rule
 	@$(call find_ld_emulation,$@.new,$(LD_EMULATION_CHOICE))
 	@$(MOVE_IF_CHANGE) $@.new $@ || true
+endif
 
 force-the-rule: ;
 

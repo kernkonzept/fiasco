@@ -14,7 +14,7 @@ boot_img.ren_syms: boot_img.x2
 
 boot_img.x1:	$(OBJ_BOOT) $(DRIVERS) $(MINILIBC) 
 	$(LINK_MESSAGE)
-	$(VERBOSE)$(LD) $(LDFLAGS) -m $(LD_EMULATION) -r -d -s -o $@ \
+	$(VERBOSE)$(LD) $(LDFLAGS) $(LD_EMULATION_FLAG) -r -d -s -o $@ \
 	-T $(srcdir)/boot/amd64/bootstrap.ld $^
 
 boot_img.x2:	boot_img.x1
@@ -45,7 +45,7 @@ endif
 define gen_kernel_rules =
 $(2):	kernel.amd64.lds boot_img.o $$(CRT0) $$(OBJ_KERNEL) $(3) $$(JDB) $$(LIBK) $$(KERNEL_EXTRA_LIBS) $$(ABI) $$(JABI) libdrivers.a $$(LIBUART) $$(CXXLIB) $$(MINILIBC) libgluedriverslibc.a $$(INTEL_MICROCODE_IMG)
 		$$(LINK_MESSAGE)
-		$$(VERBOSE)$$(LD) $$(LDFLAGS) -m $$(LD_EMULATION) -N -T $$< -gc-sections \
+		$$(VERBOSE)$$(LD) $$(LDFLAGS) $$(LD_EMULATION_FLAG) -N -T $$< -gc-sections \
 		-o $$@ $$(filter-out $$<,$$+) $$(KERNEL_UNRES_SYMS)
 		$$(call ADD_CONFIGFILE,$$@)
 
