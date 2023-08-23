@@ -224,10 +224,12 @@ long long __ashrdi3(long long val, int bits)
 
 int __ffssi2(int val);
 int __ffsdi2(long long val);
+int __ctzsi2(unsigned val);
+int __clzsi2(unsigned val);
 
 /**
- * Return the index of the least significant 1-bit in val,
- * or zero if val is zero. The least significant bit is index one.
+ * Return the index of the least significant 1-bit in `val`, or zero if `val`
+ * is zero. The least significant bit is index one.
  *
  * \param[in] val  Value
  *
@@ -245,8 +247,8 @@ int __ffssi2(int val)
 }
 
 /**
- * Return the index of the least significant 1-bit in val,
- * or zero if val is zero. The least significant bit is index one.
+ * Return the index of the least significant 1-bit in `val`, or zero if `val`
+ * is zero. The least significant bit is index one.
  *
  * \param[in] val  Value
  *
@@ -261,4 +263,85 @@ int __ffsdi2(long long val)
     }
 
   return 0;
+}
+
+/**
+ * Return the number of trailing 0-bits in `val`. This is actually the index of
+ * the least significant 1-bit starting at 0. This is __ffssi2() minus 1.
+ * Required by gcc for __builtin_ctz().
+ *
+ * \param[in] val  Value
+ *
+ * \return Number of trailing 0 bits in `val`.
+ */
+int __ctzsi2(unsigned val)
+{
+  if (!val)
+    return 32;
+
+  int c = 0;
+  if ((val & 0xffff) == 0)
+    {
+      val >>= 16;
+      c += 16;
+    }
+  if ((val & 0xff) == 0)
+    {
+      val >>= 8;
+      c += 8;
+    }
+  if ((val & 0xf) == 0)
+    {
+      val >>= 4;
+      c += 4;
+    }
+  if ((val & 0x3) == 0)
+    {
+      val >>= 2;
+      c += 2;
+    }
+  if ((val & 0x1) == 0)
+    ++c;
+
+  return c;
+}
+
+/**
+ * Return the number of leading 0-bits in `val`.
+ * Required by gcc for __builtin_clz().
+ *
+ * \param[in] val  Value
+ *
+ * \return Number of trailing 0 bits in `val`.
+ */
+int __clzsi2(unsigned val)
+{
+  if (!val)
+    return 32;
+
+  int c = 0;
+  if ((val & 0xffff0000) == 0)
+    {
+      val <<= 16;
+      c += 16;
+    }
+  if ((val & 0xff000000) == 0)
+    {
+      val <<= 8;
+      c += 8;
+    }
+  if ((val & 0xf0000000) == 0)
+    {
+      val <<= 4;
+      c += 4;
+    }
+  if ((val & 0xc0000000) == 0)
+    {
+      val <<= 2;
+      c += 2;
+    }
+  if ((val & 0x80000000) == 0)
+    ++c;
+
+  return c;
 }
