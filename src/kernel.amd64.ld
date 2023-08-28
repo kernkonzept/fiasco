@@ -33,7 +33,14 @@ PHDRS {
 }
 
 SECTIONS {
-  .bda 0x400 (NOLOAD) : {
+  /*
+   * The correct section attribute would be NOLOAD but in that case ld.lld
+   * would wrongly merge the ".bda" content with the "tramp" output section.
+   * The 'INFO' section type is marked as "legacy" by GNU ld but nevertheless
+   * is still supported and does the right thing. See also the ld.lld docu:
+   * "COPY, INFO, OVERLAY: clear the SHF_ALLOC bit in sh_flags."
+   */
+  .bda 0x400 (INFO) : {
     . += 0xe;
     ebda_segment = .;
   }
