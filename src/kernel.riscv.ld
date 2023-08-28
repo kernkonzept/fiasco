@@ -34,7 +34,7 @@ PHDRS {
 }
 
 EXTERN (_start_kernel)
-ASSERT (_start_kernel > 0, "invalid _start_kernel address")
+ASSERT (DEFINED(_start_kernel), "invalid _start_kernel address")
 #ifdef CONFIG_MP
 EXTERN (_tramp_mp_entry)
 #else
