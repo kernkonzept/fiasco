@@ -7,13 +7,6 @@ IMPLEMENTATION [riscv]:
 
 #include <cstdio>
 
-PUBLIC inline NEEDS["mem_layout.h"]
-Address
-Kmem_alloc::to_phys(void *v) const
-{
-  return Mem_layout::pmem_to_phys(v);
-}
-
 static unsigned long _freemap[
   Kmem_alloc::Alloc::free_map_bytes(Mem_layout::Pmem_start,
                                     Mem_layout::Pmem_start + Config::KMEM_SIZE - 1)
