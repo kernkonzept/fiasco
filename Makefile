@@ -164,7 +164,7 @@ $(addprefix $(ALLBUILDDIR)/,$(TEST_TEMPLATES)):
 	grep -2 ": warning: " $@/build.log > $@/warnings.log;                 \
 	test -s $@/warnings.log                                               \
 	  && mv $@/warnings.log $(ALLBUILDDIR)/warnings.$(@F);                \
-	if [ $$buildexitcode = 0 -o -e $@/buildcheck.ignore ];                \
+	if [ $$buildexitcode = 0 ];                                           \
 	then [ -z "$(KEEP_BUILD_DIRS)" ] && $(RM) -r $@;                      \
 	else echo $$buildexitcode > $@/build.failed; fi; true
 
