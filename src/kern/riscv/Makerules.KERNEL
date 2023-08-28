@@ -16,7 +16,7 @@ OBJ_BOOTSTRAP = $(filter  bootstrap%,$(OBJ_KERNEL))
 
 bootstrap_lds      = $(srcdir)/kern/riscv/bootstrap.riscv.ld
 
-bootstrap_ldflags  = $(LDFLAGS) -m $(LD_EMULATION) --strip-debug
+bootstrap_ldflags  = $(LDFLAGS) $(LD_EMULATION_FLAG) --strip-debug
 bootstrap_ldflags += -defsym kernel_load_addr=$(CONFIG_KERNEL_LOAD_ADDR)
 bootstrap_ldflags += -T$(bootstrap_lds)
 
@@ -47,7 +47,7 @@ bootstrap.$(KERNEL).sym: bootstrap.$(KERNEL).pre.o
 define gen_kernel_rules =
 $(2): kernel.riscv.lds $$(CRT0) bootstrap.$$(KERNEL).rel bootstrap.$$(KERNEL).sym $$(OBJ_KERNEL_noboot) $(3) $$(JDB) $$(LIBK) $$(KERNEL_EXTRA_LIBS) $$(LIBDISASM) $$(ABI) libdrivers.a $$(LIBUART) $$(CXXLIB) $$(MINILIBC) libgluedriverslibc.a
 	$$(LINK_MESSAGE)
-	$$(VERBOSE)$$(LD) $$(LDFLAGS) -m $$(LD_EMULATION) $$(KERNEL_LDFLAGS) -N \
+	$$(VERBOSE)$$(LD) $$(LDFLAGS) $$(LD_EMULATION_FLAG) $$(KERNEL_LDFLAGS) -N \
 	-defsym kernel_load_addr=$$(CONFIG_KERNEL_LOAD_ADDR) \
 	-defsym kernel_virt_addr=$$(CONFIG_KERNEL_VIRT_ADDR) \
 	-T $$< -o $$@ $$(filter-out $$<,$$+)
