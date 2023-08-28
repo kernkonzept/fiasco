@@ -13,7 +13,7 @@ public:
 };
 
 
-IMPLEMENTATION [mmu]:
+IMPLEMENTATION:
 
 #include <cassert>
 #include <cstdlib>
@@ -26,41 +26,8 @@ IMPLEMENTATION [mmu]:
 #include "jdb_ktrace.h"
 #include "koptions.h"
 #include "mem_layout.h"
-#include "vmem_alloc.h"
-#include "paging_bits.h"
 
 STATIC_INITIALIZE_P(Jdb_tbuf_init, JDB_MODULE_INIT_PRIO);
-
-IMPLEMENT_DEFAULT FIASCO_INIT
-unsigned
-Jdb_tbuf_init::max_size()
-{ return Mem_layout::Tbuf_buffer_size; }
-
-IMPLEMENT_DEFAULT FIASCO_INIT
-unsigned
-Jdb_tbuf_init::allocate(unsigned size)
-{
-  assert(Pg::aligned(size));
-
-  if (size > max_size())
-    return max_size();
-
-  _status =
-    reinterpret_cast<Tracebuffer_status *>(Mem_layout::Tbuf_status_page);
-  if (!Vmem_alloc::page_alloc(static_cast<void*>(status()),
-                              Vmem_alloc::ZERO_FILL))
-    panic("jdb_tbuf: alloc status page at %p failed",
-          static_cast<void *>(_status));
-
-  _buffer = reinterpret_cast<Tb_entry_union *>(Mem_layout::Tbuf_buffer_area);
-  Address va = reinterpret_cast<Address>(buffer());
-  for (unsigned i = 0; i < Pg::count(size); ++i, va += Config::PAGE_SIZE)
-    if (!Vmem_alloc::page_alloc(reinterpret_cast<void *>(va),
-                                Vmem_alloc::NO_ZERO_FILL))
-      return Pg::size(i);
-
-  return size;
-}
 
 // init trace buffer
 IMPLEMENT FIASCO_INIT
@@ -110,4 +77,68 @@ void Jdb_tbuf_init::init()
 
       clear_tbuf();
     }
+}
+
+// --------------------------------------------------------------------------
+IMPLEMENTATION [mmu]:
+
+#include "vmem_alloc.h"
+#include "paging_bits.h"
+
+IMPLEMENT_DEFAULT FIASCO_INIT
+unsigned
+Jdb_tbuf_init::max_size()
+{ return Mem_layout::Tbuf_buffer_size; }
+
+IMPLEMENT_DEFAULT FIASCO_INIT
+unsigned
+Jdb_tbuf_init::allocate(unsigned size)
+{
+  assert(Pg::aligned(size));
+
+  if (size > max_size())
+    return max_size();
+
+  _status =
+    reinterpret_cast<Tracebuffer_status *>(Mem_layout::Tbuf_status_page);
+  if (!Vmem_alloc::page_alloc(static_cast<void*>(status()),
+                              Vmem_alloc::ZERO_FILL))
+    panic("jdb_tbuf: alloc status page at %p failed",
+          static_cast<void *>(_status));
+
+  _buffer = reinterpret_cast<Tb_entry_union *>(Mem_layout::Tbuf_buffer_area);
+  Address va = reinterpret_cast<Address>(buffer());
+  for (unsigned i = 0; i < Pg::count(size); ++i, va += Config::PAGE_SIZE)
+    if (!Vmem_alloc::page_alloc(reinterpret_cast<void *>(va),
+                                Vmem_alloc::NO_ZERO_FILL))
+      return Pg::size(i);
+
+  return size;
+}
+
+// --------------------------------------------------------------------------
+IMPLEMENTATION [!mmu]:
+
+#include "kmem_alloc.h"
+
+IMPLEMENT_DEFAULT FIASCO_INIT
+unsigned
+Jdb_tbuf_init::max_size()
+{ return ~0U; }
+
+IMPLEMENT_DEFAULT FIASCO_INIT
+unsigned
+Jdb_tbuf_init::allocate(unsigned size)
+{
+  static Tracebuffer_status _tb_status;
+  _status = &_tb_status;
+
+  _buffer = reinterpret_cast<Tb_entry_union *>(Kmem_alloc::allocator()
+                                                ->alloc(Bytes(size)));
+  if (!_buffer)
+    return 0;
+
+  memset(_buffer, 0, size);
+
+  return size;
 }
