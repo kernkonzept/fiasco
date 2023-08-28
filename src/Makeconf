@@ -237,10 +237,17 @@ NOOPT_CXXFLAGS  += $(NOOPT_CXXFLAGS-$(CC_TYPE))
 GCCINCDIR   := $(shell $(CXX) $(SHARED_FLAGS) -print-file-name=include)
 
 
-# Output formatting, set V=1 to see command line, V=0 to prevent printing them
-VERBOSE		?= @
+# Output formatting:
+# - set V=0 to prevent printing them (default)
+# - set V=1 to see the command line of all tools except the preprocessor
+# - set V=2 to see the command line of all tools including the preprocessor
+VERBOSE         ?= @
+VERBOSE_PREP    ?= @
 ifeq ($(V),1)
   VERBOSE :=
+else ifeq ($(V),2)
+  VERBOSE :=
+  VERBOSE_PREP :=
   PREP_MESSAGE  ?= @$(ECHO) "  ... Preprocessing $(filter %.cpp,$^)"
 endif
 AR_MESSAGE	?= @$(ECHO) "  ==> Archiving into $@"

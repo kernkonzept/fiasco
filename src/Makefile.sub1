@@ -108,21 +108,21 @@ $(ALL_STAMPS): $(MODULES_FILES) .Modules.deps globalconfig.out \
 impl_name = $(basename $(firstword $(subst -, ,\
               $(firstword $(filter %.cpp, $(notdir $(1)))))))
 
+preprocess_cmd = $(PREPROCESS) $(PREPROCESS_FLAGS) \
+                   $(if $(filter $(call impl_name,$(1)),$(ALWAYS_INLINE)),-i,) \
+                   -p auto/new_ -e "$(PREPROCESS_PARTS)" -s -h $(2) \
+                   -c $(call impl_name,$(1)) $(filter %.cpp, $(1))
+
 $(ALL_STAMPS): auto/stamp-%.ready: $(PREPROCESS) | auto
 	$(PREP_MESSAGE)
-	$(VERBOSE)$(PREPROCESS) \
-	   $(PREPROCESS_FLAGS) \
-	   $(if $(filter $(call impl_name,$^),$(ALWAYS_INLINE)),-i,) \
-	   -p auto/new_ \
-	  -e "$(PREPROCESS_PARTS)" -s \
-	  -h $* -c $(call impl_name,$^) $(filter %.cpp, $^)
+	$(VERBOSE_PREP)$(call preprocess_cmd,$^,$*)
 	@for i in $*.h $(call impl_name,$^)_i.h \
 	    $(patsubst %.cpp, %.cc, $(filter %.cpp, $(notdir $^))); \
 	  do \
 	    $(MOVE_IF_CHANGE) auto/new_$$i auto/$$i || true; \
 	  done
 	$(OK_MESSAGE)  
-	$(VERBOSE)touch $@
+	$(VERBOSE_PREP)touch $@
 
 auto:
 	@mkdir -p auto
