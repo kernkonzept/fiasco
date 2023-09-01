@@ -349,3 +349,11 @@ Arm_vtimer_ppi::mask()
                "msr cntv_ctl_el0, %0\n" : "=r" (v));
 }
 
+PUBLIC inline
+bool
+Arm_vtimer_ppi::pending()
+{
+  Mword v;
+  asm volatile("mrs %0, cntv_ctl_el0" : "=r" (v));
+  return v & (1U << 2);
+}

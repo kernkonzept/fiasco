@@ -374,7 +374,20 @@ void
 Thread::vcpu_prepare_vtimer() override final
 {
   if (EXPECT_TRUE(_vtimer_irq.reenable_ppi()))
-    __vtimer_irq->unmask();
+    {
+      // If the vtimer is pending when going back to the guest, we must inject
+      // it immediately. Interrupts are disabled until we leave the kernel. If
+      // the guest is at a WFI instruction we won't get the vtimer interrupt
+      // because the WFI instruction trap has a higher priority than
+      // interrupts!
+      if (EXPECT_FALSE(!_vtimer_irq.upcall() && __vtimer_irq->pending()))
+        {
+          __vtimer_irq->log();
+          vcpu_vtimer_hit();
+        }
+      else
+        __vtimer_irq->unmask();
+    }
 }
 
 namespace {
@@ -405,6 +418,15 @@ Arm_vtimer_ppi::mask()
   asm volatile("mrc p15, 0, %0, c14, c3, 1\n"
                "orr %0, #0x2              \n"
                "mcr p15, 0, %0, c14, c3, 1\n" : "=r" (v));
+}
+
+PUBLIC inline
+bool
+Arm_vtimer_ppi::pending()
+{
+  Mword v;
+  asm volatile("mrc p15, 0, %0, c14, c3, 1" : "=r" (v));
+  return v & (1U << 2);
 }
 
 PRIVATE static inline
