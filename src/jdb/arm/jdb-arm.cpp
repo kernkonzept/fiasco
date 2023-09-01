@@ -382,11 +382,18 @@ IMPLEMENTATION [arm && !mmu]:
 
 PRIVATE static
 unsigned char *
-Jdb::access_mem_task(Jdb_address /*addr*/, bool /*write*/)
+Jdb::access_mem_task(Jdb_address addr, bool write)
 {
-  // TODO: implement: check if mapped in MPU, otherwise create temporary
-  // mapping
-  return 0;
+  // TODO: create temporary mapping if required
+  if (auto *r = (*Kmem::kdir)->find(addr.addr()))
+    {
+      if (write && !(r->attr().rights() & L4_fpage::Rights::W()))
+        return nullptr;
+
+      return (unsigned char *)addr.virt();
+    }
+
+  return nullptr;
 }
 
 //----------------------------------------------------------------------------
