@@ -355,7 +355,7 @@ Thread_object::sys_register_delete_irq(L4_msg_tag tag, Utcb const *in, Utcb * /*
 {
   L4_snd_item_iter snd_items(in, tag.words());
 
-  if (!tag.items() || !snd_items.next())
+  if (!tag.items() || !snd_items.more() || !snd_items.next())
     return Kobject_iface::commit_result(-L4_err::EInval);
 
   L4_fpage bind_irq(snd_items.get()->d);
