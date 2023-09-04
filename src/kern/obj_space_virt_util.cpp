@@ -60,6 +60,7 @@ IMPLEMENTATION:
 #include "kmem_alloc.h"
 #include "kmem.h"
 #include "mem_layout.h"
+#include "paging_bits.h"
 
 PRIVATE  template< typename SPACE >
 static inline NEEDS["mem_layout.h"]
@@ -127,7 +128,7 @@ Obj_space_virt<SPACE>::caps_alloc(Cap_index virt)
       return 0;
     };
 
-  unsigned long cap = (cv & (Config::PAGE_SIZE - 1)) | (unsigned long)mem;
+  unsigned long cap = (unsigned long)mem | Pg::offset(cv);
 
   return reinterpret_cast<Entry*>(cap);
 }

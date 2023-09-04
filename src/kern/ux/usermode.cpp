@@ -43,6 +43,7 @@ IMPLEMENTATION:
 #include "task.h"
 #include "thread.h"
 #include "thread_state.h"
+#include "paging_bits.h"
 
 PRIVATE static
 Mword
@@ -262,7 +263,7 @@ PRIVATE static inline NOEXPORT
 Mword
 Usermode::kip_syscall (Address eip)
 {
-  if ((eip & Config::PAGE_MASK) != Mem_layout::Syscalls || eip & 0xff)
+  if ((Pg::trunc(eip)) != Mem_layout::Syscalls || eip & 0xff)
     return 0;
 
   Mword trap = 0x30 + ((eip - Mem_layout::Syscalls) >> 8);

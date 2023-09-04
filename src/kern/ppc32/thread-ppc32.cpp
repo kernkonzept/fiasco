@@ -14,6 +14,7 @@ IMPLEMENTATION [ppc32]:
 #include "thread_state.h"
 #include "trap_state.h"
 #include "types.h"
+#include "paging_bits.h"
 
 enum {
   FSR_STATUS_MASK = 0x0d,
@@ -130,17 +131,14 @@ Thread::user_invoke()
   // never returns
 }
 
-IMPLEMENT inline NEEDS["space.h", <cstdio>, "types.h" ,"config.h"]
+IMPLEMENT inline NEEDS["space.h", "types.h", "config.h", "paging_bits.h"]
 bool Thread::handle_sigma0_page_fault(Address pfa)
 {
-  bool ret = (mem_space()->v_insert(Mem_space::Phys_addr(pfa & Config::PAGE_MASK),
-				    Virt_addr(pfa & Config::PAGE_MASK),
-				    Virt_order(Config::PAGE_SIZE),
-				    Mem_space::Attr(L4_fpage::Rights::URWX())
-				   )
-	!= Mem_space::Insert_err_nomem);
-
-  return ret;
+  return mem_space()
+    ->v_insert(Mem_space::Phys_addr(Pg::trunc(pfa)),
+               Virt_addr(Pg::trunc(pfa)), Virt_order(Config::PAGE_SIZE),
+               Mem_space::Attr(L4_fpage::Rights::URWX()))
+    != Mem_space::Insert_err_nomem;
 }
 
 extern "C" {
@@ -192,7 +190,8 @@ extern "C" {
       }
 
     //lookup in page cache
-    if (Mem_space::current_mem_space(current_cpu())->try_htab_fault((Address)(pfa & Config::PAGE_MASK)))
+    if (Mem_space::current_mem_space(current_cpu())->
+        try_htab_fault((Address)Pg::trunc(pfa)))
       return 1;
 
     int ret = current_thread()->handle_page_fault(pfa, error_code, pc, ret_frame);

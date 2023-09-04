@@ -3,6 +3,7 @@ IMPLEMENTATION:
 #include "config.h"
 #include "mem_layout.h"
 #include "paging.h"
+#include "paging_bits.h"
 
 PRIVATE static
 bool
@@ -27,17 +28,17 @@ Address
 Kmem::mmio_remap(Address phys, Address size, bool cache = false, bool with_exec = false)
 {
   static Address ndev = 0;
-  Address phys_page = cxx::mask_lsb(phys, Config::SUPERPAGE_SHIFT);
-  Address phys_end  = Mem_layout::round_superpage(phys + size);
+  Address phys_page = Super_pg::trunc(phys);
+  Address phys_end  = Super_pg::round(phys + size);
 
   for (Address a = Mem_layout::Registers_map_start;
        a < Mem_layout::Registers_map_end; a += Config::SUPERPAGE_SIZE)
     {
       if (cont_mapped(phys_page, phys_end, a))
-        return (phys & ~Config::SUPERPAGE_MASK) | (a & Config::SUPERPAGE_MASK);
+        return Super_pg::trunc(a) | Super_pg::offset(phys);
     }
 
-  static_assert((Mem_layout::Registers_map_start & ~Config::SUPERPAGE_MASK) == 0,
+  static_assert(Super_pg::aligned(Mem_layout::Registers_map_start),
                 "Registers_map_start must be superpage-aligned");
   Address map_addr = Mem_layout::Registers_map_start + ndev;
 
@@ -61,5 +62,5 @@ Kmem::mmio_remap(Address phys, Address size, bool cache = false, bool with_exec 
       Mem_unit::tlb_flush_kernel(dm);
     }
 
-  return (phys & ~Config::SUPERPAGE_MASK) | map_addr;
+  return map_addr | Super_pg::offset(phys);
 }

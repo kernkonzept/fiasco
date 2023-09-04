@@ -154,6 +154,7 @@ IMPLEMENTATION [iommu]:
 #include "intel_iommu.h"
 #include "kmem_slab.h"
 #include "warn.h"
+#include "paging_bits.h"
 
 JDB_DEFINE_TYPENAME(Dmar_space, "DMA");
 
@@ -310,10 +311,10 @@ Dmar_space::create_identity_map()
 
   Unsigned64 epfn;
   epfn = min(1ULL << (Intel::Io_mmu::hw_addr_width - Config::PAGE_SHIFT),
-             (max_phys + Config::PAGE_SIZE - 1) >> Config::PAGE_SHIFT);
+             Pg::count(max_phys + Config::PAGE_SIZE - 1));
 
-  printf("IOMMU: identity map 0 - 0x%llx (%lldGB)\n", epfn << Config::PAGE_SHIFT,
-         (epfn << Config::PAGE_SHIFT) >> 30);
+  printf("IOMMU: identity map 0 - 0x%llx (%llu GiB)\n", Pg::size(epfn),
+         Pg::size(epfn) >> 30);
   for (Unsigned64 pfn = 0; pfn <= epfn; ++pfn)
     {
       auto i = identity_map->walk(Mem_space::V_pfn(pfn),

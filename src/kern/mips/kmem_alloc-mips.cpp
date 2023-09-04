@@ -11,6 +11,7 @@ IMPLEMENTATION [mips]:
 #include "mem_region.h"
 #include "kmem.h"
 #include "koptions.h"
+#include "paging_bits.h"
 
 #include <cstdio>
 
@@ -39,8 +40,7 @@ Kmem_alloc::Kmem_alloc()
   if (alloc_size > (Config::Kmem_max_mb << 20))
     alloc_size = Config::Kmem_max_mb << 20;
 
-  alloc_size =    (alloc_size + Config::PAGE_SIZE - 1)
-               & ~(Config::PAGE_SIZE - 1);
+  alloc_size = Pg::round(alloc_size);
 
   // limit to KSEG0 size of 512MB
   unsigned long max = 0x20000000;

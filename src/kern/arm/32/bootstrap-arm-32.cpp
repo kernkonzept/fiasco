@@ -168,6 +168,7 @@ Bootstrap::init_paging()
 IMPLEMENTATION [arm && !cpu_virt]:
 
 #include "mem_layout.h"
+#include "paging_bits.h"
 
 static void
 Bootstrap::leave_hyp_mode()
@@ -190,7 +191,7 @@ Bootstrap::leave_hyp_mode()
     }
 }
 
-PUBLIC static inline NEEDS["mem_layout.h"]
+PUBLIC static inline NEEDS["mem_layout.h", "paging_bits.h"]
 void
 Bootstrap::create_initial_mappings()
 {
@@ -206,15 +207,15 @@ Bootstrap::create_initial_mappings()
 
   // map kernel to desired virtual address
   for (va = Virt_addr(Mem_layout::Map_base),
-       pa = Phys_addr(Mem_layout::trunc_superpage(bs_info.kernel_start_phys));
-       pa < Phys_addr(Mem_layout::round_superpage(bs_info.kernel_end_phys));
+       pa = Phys_addr(Super_pg::trunc(bs_info.kernel_start_phys));
+       pa < Phys_addr(Super_pg::round(bs_info.kernel_end_phys));
        va += Bootstrap::map_page_size(), pa += Bootstrap::map_page_size_phys())
     Bootstrap::map_memory(page_dir, va, pa, false);
 
   // Map kernel 1:1. Needed by Fiasco bootstrap and the mp trampoline after they
   // enable paging, and by add_initial_pmem().
-  for (pa = Phys_addr(Mem_layout::trunc_superpage(bs_info.kernel_start_phys));
-       pa < Phys_addr(Mem_layout::round_superpage(bs_info.kernel_end_phys));
+  for (pa = Phys_addr(Super_pg::trunc(bs_info.kernel_start_phys));
+       pa < Phys_addr(Super_pg::round(bs_info.kernel_end_phys));
        pa += Bootstrap::map_page_size_phys())
     Bootstrap::map_memory(page_dir, Virt_addr(cxx::int_value<Phys_addr>(pa)),
                           pa, true);
@@ -224,8 +225,9 @@ Bootstrap::create_initial_mappings()
 IMPLEMENTATION [arm && cpu_virt]:
 
 #include "kip.h"
+#include "paging_bits.h"
 
-PUBLIC static inline NEEDS["kip.h"]
+PUBLIC static inline NEEDS["kip.h", "paging_bits.h"]
 void
 Bootstrap::create_initial_mappings()
 {
@@ -265,8 +267,8 @@ Bootstrap::create_initial_mappings()
 
   // map kernel to desired virtual address
   for (va = Virt_addr(Mem_layout::Map_base),
-       pa = Phys_addr(Mem_layout::trunc_superpage(bs_info.kernel_start_phys));
-       pa < Phys_addr(Mem_layout::round_superpage(bs_info.kernel_end_phys));
+       pa = Phys_addr(Super_pg::trunc(bs_info.kernel_start_phys));
+       pa < Phys_addr(Super_pg::round(bs_info.kernel_end_phys));
        va += Bootstrap::map_page_size(), pa += Bootstrap::map_page_size_phys())
     Bootstrap::map_memory(page_dir, va, pa, false);
 }

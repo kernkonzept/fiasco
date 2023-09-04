@@ -11,10 +11,9 @@ public:
 
     PAGE_SHIFT = ARCH_PAGE_SHIFT,
     PAGE_SIZE  = 1 << PAGE_SHIFT,
-    PAGE_MASK  = ~(PAGE_SIZE - 1),
+
     SUPERPAGE_SHIFT = 21, // MUST be a odd number!
     SUPERPAGE_SIZE  = 1 << SUPERPAGE_SHIFT,
-    SUPERPAGE_MASK  = ~(SUPERPAGE_SIZE -1),
 
     // XXXKYMA: No large pages/TLBs yet, update paging-mips32 when enabled
     have_superpages = 0,

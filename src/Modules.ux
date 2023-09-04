@@ -89,7 +89,7 @@ INTERFACES_KERNEL	:= string_buffer mem_region simpleio kernel_console panic warn
 			   ram_quota kmem_alloc ptab_base per_cpu_data_alloc \
 			   ref_obj                                \
 			   slab_cache kmem_slab dbg_page_info   \
-			   vmem_alloc paging fpu_state_ptr fpu	  \
+			   vmem_alloc paging paging_bits fpu_state_ptr fpu	  \
 			   ready_queue_wfq ready_queue_fp \
 			   sched_context switch_lock timer timeout	  \
 			   obj_space kobject_dbg kobject kobject_iface    \

@@ -3,6 +3,7 @@ IMPLEMENTATION [ux]:
 #include "boot_info.h"
 #include "multiboot.h"
 #include "kip.h"
+#include "paging_bits.h"
 #include <cstring>
 
 PUBLIC static FIASCO_INIT
@@ -35,12 +36,11 @@ Kip_init::setup_ux(Kip *k)
 
   mbm++;
   k->sigma0_ip = Boot_info::entry_sigma0();
-  if ((Boot_info::sigma0_start() & Config::PAGE_MASK)
-      != ((Boot_info::sigma0_end() + (Config::PAGE_SIZE-1))
-	   & Config::PAGE_MASK))
-    *(m++) = Mem_desc(Boot_info::sigma0_start() & Config::PAGE_MASK,
-                      ((Boot_info::sigma0_end() + (Config::PAGE_SIZE - 1))
-                       & Config::PAGE_MASK) - 1,
+
+  if (Pg::trunc(Boot_info::sigma0_start())
+      != Pg::round(Boot_info::sigma0_end()))
+    *(m++) = Mem_desc(Pg::trunc(Boot_info::sigma0_start()),
+                      Pg::round(Boot_info::sigma0_end()) - 1,
                       Mem_desc::Reserved);
 
   constexpr unsigned rwx =
@@ -48,11 +48,11 @@ Kip_init::setup_ux(Kip *k)
 
   mbm++;
   k->root_ip = Boot_info::entry_roottask();
-  if ((Boot_info::root_start() & Config::PAGE_MASK)
-      != ((Boot_info::root_end() + (Config::PAGE_SIZE-1)) & Config::PAGE_MASK))
-    *(m++) = Mem_desc(Boot_info::root_start() & Config::PAGE_MASK,
-                      ((Boot_info::root_end() + (Config::PAGE_SIZE - 1))
-                       & Config::PAGE_MASK) - 1,
+
+  if (Pg::trunc(Boot_info::root_start())
+      != Pg::round(Boot_info::root_end()))
+    *(m++) = Mem_desc(Pg::trunc(Boot_info::root_start()),
+                      Pg::round(Boot_info::root_end()) - 1,
                       Mem_desc::Bootloader, false, rwx);
 
   unsigned long version_size = 0;
@@ -86,14 +86,13 @@ Kip_init::setup_ux(Kip *k)
 	mod_end = mbm[i].mod_end;
     }
 
-  mod_start &= ~(Config::PAGE_SIZE - 1);
-  mod_end = (mod_end + Config::PAGE_SIZE -1) & ~(Config::PAGE_SIZE - 1);
+  mod_start = Pg::trunc(mod_start);
+  mod_end = Pg::round(mod_end);
 
   if (mod_end > mod_start)
     *(m++) = Mem_desc(mod_start, mod_end - 1, Mem_desc::Bootloader, false, rwx);
 
   *(m++) = Mem_desc(Boot_info::mbi_phys(),
-                    ((Boot_info::mbi_phys() + Boot_info::mbi_size()
-                     + Config::PAGE_SIZE-1) & Config::PAGE_MASK) - 1,
-                    Mem_desc::Bootloader, false, rwx);
+                    Pg::round(Boot_info::mbi_phys() + Boot_info::mbi_size())
+                    - 1, Mem_desc::Bootloader, false, rwx);
 }

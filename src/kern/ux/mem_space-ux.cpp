@@ -180,8 +180,7 @@ Mem_space::peek_user(T const *addr)
   T value;
 
   // Check if we cross page boundaries
-  if (((Address)addr                   & Config::PAGE_MASK) ==
-     (((Address)addr + sizeof (T) - 1) & Config::PAGE_MASK))
+  if (Pg::trunc((Address)addr) == Pg::trunc((Address)addr + sizeof(T) - 1))
     {
       auto guard = lock_guard(cpu_lock);
       value = *user_to_kernel(addr, false);
@@ -198,8 +197,7 @@ void
 Mem_space::poke_user(T *addr, T value)
 {
   // Check if we cross page boundaries
-  if (((Address)addr                   & Config::PAGE_MASK) ==
-     (((Address)addr + sizeof (T) - 1) & Config::PAGE_MASK))
+  if (Pg::trunc((Address)addr) == Pg::trunc((Address)addr + sizeof(T) - 1))
     {
       auto guard = lock_guard(cpu_lock);
       *user_to_kernel(addr, true) = value;
@@ -223,7 +221,7 @@ Mem_space::copy_from_user(T *kdst, T const *usrc, size_t n)
 
   while (n--)
     {
-      if (!src || ((Address)ptr & ~Config::PAGE_MASK) == 0)
+      if (!src || Pg::aligned((Address)ptr))
         src = user_to_kernel(ptr, false);
 
       *dst++ = *src++;
@@ -246,7 +244,7 @@ Mem_space::copy_to_user(T *udst, T const *ksrc, size_t n)
 
   while (n--)
     {
-      if (!dst || ((Address)ptr & ~Config::PAGE_MASK) == 0)
+      if (!dst || Pg::aligned((Address)ptr))
         dst = user_to_kernel(ptr, true);
 
       *dst++ = *src++;

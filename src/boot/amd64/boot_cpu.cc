@@ -427,7 +427,7 @@ ptab_alloc(Address *out_ptab_pa)
     {
       initialized = 1;
       memset(pool, 0, sizeof(pool));
-      pdirs = ((Address)pool + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1);
+      pdirs = round_page((Address)pool);
     }
 
   if (pdirs > (Address)pool + sizeof(pool))

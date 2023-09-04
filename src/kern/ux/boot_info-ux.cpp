@@ -74,6 +74,7 @@ IMPLEMENTATION[ux]:
 #include "koptions.h"
 #include "loader.h"
 #include "mem_layout.h"
+#include "paging_bits.h"
 
 int                     Boot_info::_fd;
 pid_t                   Boot_info::_pid;
@@ -185,7 +186,7 @@ Boot_info::kmem_start(Address mem_max)
 	size = Config::kernel_mem_max;
     }
 
-  base = (end_addr - size) & Config::PAGE_MASK;
+  base = Pg::trunc(end_addr - size);
   if (Mem_layout::phys_to_pmem(base) < Mem_layout::Physmem)
     base = Mem_layout::pmem_to_phys(Mem_layout::Physmem);
 
@@ -305,8 +306,7 @@ Boot_info::init()
             == 3)
           {
             _fb_size = _fb_width * _fb_height * ((_fb_depth + 7) >> 3);
-            _fb_size += ~Config::SUPERPAGE_MASK;
-            _fb_size &=  Config::SUPERPAGE_MASK;        // Round up to 4 MB
+            _fb_size = Super_pg::round(_fb_size);  // Round up to 4 MB
 
             _input_size  = Config::PAGE_SIZE;
           }
@@ -338,8 +338,8 @@ Boot_info::init()
     }
   }
 
-  if (_sp < ((Mem_layout::Host_as_base - 1) & Config::SUPERPAGE_MASK)
-      && munmap((void *)((Mem_layout::Host_as_base - 1) & Config::PAGE_MASK),
+  if (_sp < Super_pg::trunc(Mem_layout::Host_as_base - 1)
+      && munmap((void *)(Pg::trunc(Mem_layout::Host_as_base - 1)),
 	        Config::PAGE_SIZE) == -1 && errno == EINVAL)
     {
       printf(" Fiasco-UX does only run with %dGB user address space size.\n"
@@ -557,8 +557,7 @@ Boot_info::get_minimum_map_address()
   if (r == -1)
     _min_mappable_address = 0x10000;
 
-  _min_mappable_address
-    = (_min_mappable_address + (Config::PAGE_SIZE - 1)) & Config::PAGE_MASK;
+  _min_mappable_address = Pg::round(_min_mappable_address);
 }
 
 PRIVATE static

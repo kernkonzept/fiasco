@@ -74,6 +74,7 @@ IMPLEMENTATION [ia32, amd64]:
 #include "pic.h"
 #include "std_macros.h"
 #include "simple_alloc.h"
+#include "paging_bits.h"
 
 #include <cstdio>
 
@@ -143,23 +144,27 @@ Kmem::map_phys_page_tmp(Address phys, Mword idx)
 
 PUBLIC static inline
 Address Kmem::kernel_image_start()
-{ return virt_to_phys(&Mem_layout::image_start) & Config::PAGE_MASK; }
+{
+  return Pg::trunc(virt_to_phys(&Mem_layout::image_start));
+}
 
 IMPLEMENT inline Address Kmem::kcode_start()
-{ return virt_to_phys(&Mem_layout::start) & Config::PAGE_MASK; }
+{
+  return Pg::trunc(virt_to_phys(&Mem_layout::start));
+}
 
 IMPLEMENT inline Address Kmem::kcode_end()
 {
-  return (virt_to_phys(&Mem_layout::end) + Config::PAGE_SIZE)
-         & Config::PAGE_MASK;
+  return Pg::trunc(virt_to_phys(&Mem_layout::end) + Config::PAGE_SIZE);
 }
 
-
 /** Return number of IPC slots to copy */
-PUBLIC static inline NEEDS["config.h"]
+PUBLIC static inline NEEDS["paging_bits.h"]
 unsigned
 Kmem::ipc_slots()
-{ return (8 << 20) / Config::SUPERPAGE_SIZE; }
+{
+  return Super_pg::count(8 << 20);
+}
 
 IMPLEMENT inline NEEDS["mem_layout.h"]
 Mword
@@ -190,7 +195,7 @@ Kmem::map_phys_page(Address phys, Address virt,
 {
   auto i = kdir->walk(Virt_addr(virt), Pdir::Depth, false,
                       pdir_alloc(Kmem_alloc::allocator()));
-  Mword pte = phys & Config::PAGE_MASK;
+  Mword pte = Pg::trunc(phys);
 
   assert(i.level == Pdir::Depth);
 
@@ -335,6 +340,8 @@ Kmem::map_kernel_virt(Kpdir *dir)
 //--------------------------------------------------------------------------
 IMPLEMENTATION [ia32, amd64]:
 
+#include "paging_bits.h"
+
 PUBLIC static FIASCO_INIT
 void
 Kmem::init_mmu()
@@ -384,7 +391,7 @@ Kmem::init_mmu()
   // The service page directory entry points to an universal usable
   // page table which is currently used for the Local APIC and the
   // jdb adapter page.
-  assert((Mem_layout::Service_page & ~Config::SUPERPAGE_MASK) == 0);
+  assert(Super_pg::aligned(Mem_layout::Service_page));
 
   kdir->walk(Virt_addr(Mem_layout::Service_page), Pdir::Depth,
              false, pdir_alloc(alloc));
@@ -399,8 +406,7 @@ Kmem::init_mmu()
 
 
   // did we really get the first byte ??
-  assert((reinterpret_cast<Address>(io_bitmap_delimiter)
-          & ~Config::PAGE_MASK) == 0);
+  assert(Pg::aligned(reinterpret_cast<Address>(io_bitmap_delimiter)));
   *io_bitmap_delimiter = 0xff;
 }
 
@@ -610,7 +616,7 @@ void
 Kmem::setup_global_cpu_structures(bool superpages)
 {
   auto *alloc = Kmem_alloc::allocator();
-  assert((Mem_layout::Io_bitmap & ~Config::SUPERPAGE_MASK) == 0);
+  assert(Super_pg::aligned(Mem_layout::Io_bitmap));
 
   enum { Tss_mem_size = 0x10 + Config::Max_num_cpus * cxx::ceil_lsb(sizeof(Tss) + 256, 4) };
 
@@ -627,38 +633,38 @@ Kmem::setup_global_cpu_structures(bool superpages)
   printf("Kmem:: TSS mem at %lx (%uBytes)\n", tss_mem_pm, tss_mem_size);
 
   if (superpages
-      && Config::SUPERPAGE_SIZE - (tss_mem_pm & ~Config::SUPERPAGE_MASK) < 0x10000)
+      && Config::SUPERPAGE_SIZE - (Super_pg::offset(tss_mem_pm)) < 0x10000)
     {
       // can map as 4MB page because the cpu_page will land within a
       // 16-bit range from io_bitmap
       auto e = kdir->walk(Virt_addr(Mem_layout::Io_bitmap - Config::SUPERPAGE_SIZE),
                           Pdir::Super_level, false, pdir_alloc(alloc));
 
-      e.set_page(tss_mem_pm & Config::SUPERPAGE_MASK,
+      e.set_page(Super_pg::trunc(tss_mem_pm),
                  Pt_entry::XD | Pt_entry::Writable | Pt_entry::Referenced
                  | Pt_entry::Dirty | Pt_entry::global());
 
-      tss_mem_vm = cxx::Simple_alloc(
-          (tss_mem_pm & ~Config::SUPERPAGE_MASK)
-          + (Mem_layout::Io_bitmap - Config::SUPERPAGE_SIZE),
-          tss_mem_size);
+      tss_mem_vm = cxx::Simple_alloc(Super_pg::offset(tss_mem_pm)
+                                     + (Mem_layout::Io_bitmap
+                                     - Config::SUPERPAGE_SIZE),
+                                     tss_mem_size);
     }
   else
     {
       unsigned i;
-      for (i = 0; (i << Config::PAGE_SHIFT) < tss_mem_size; ++i)
+      for (i = 0; Pg::size(i) < tss_mem_size; ++i)
         {
-          auto e = kdir->walk(Virt_addr(Mem_layout::Io_bitmap - Config::PAGE_SIZE * (i+1)),
+          auto e = kdir->walk(Virt_addr(Mem_layout::Io_bitmap
+                                        - Pg::size(i + 1)),
                               Pdir::Depth, false, pdir_alloc(alloc));
 
-          e.set_page(tss_mem_pm + i * Config::PAGE_SIZE,
+          e.set_page(tss_mem_pm + Pg::size(i),
                      Pt_entry::XD | Pt_entry::Writable | Pt_entry::Referenced
                      | Pt_entry::Dirty | Pt_entry::global());
         }
 
-      tss_mem_vm = cxx::Simple_alloc(
-          Mem_layout::Io_bitmap - Config::PAGE_SIZE * i,
-          tss_mem_size);
+      tss_mem_vm = cxx::Simple_alloc(Mem_layout::Io_bitmap - Pg::size(i),
+                                     tss_mem_size);
     }
 
   // the IO bitmap must be followed by one byte containing 0xff
@@ -742,8 +748,8 @@ Kmem::setup_cpu_structures_isolation(Cpu &cpu, Kpdir *cpu_dir, cxx::Simple_alloc
   // map kernel code to user space dir
   extern char _kernel_text_start[];
   extern char _kernel_text_entry_end[];
-  Address ki_page = ((Address)_kernel_text_start) & ~(Config::PAGE_SIZE - 1);
-  Address kie_page = (((Address)_kernel_text_entry_end) + (Config::PAGE_SIZE - 1)) & ~(Config::PAGE_SIZE - 1);
+  Address ki_page = Pg::trunc((Address)_kernel_text_start);
+  Address kie_page = Pg::round((Address)_kernel_text_entry_end);
 
   if (Print_info)
     printf("kernel code: %p(%lx)-%p(%lx)\n", _kernel_text_start,
@@ -775,8 +781,8 @@ Kmem::prepare_kernel_entry_points(cxx::Simple_alloc *, Kpdir *cpu_dir)
 {
   extern char _kernel_data_entry_start[];
   extern char _kernel_data_entry_end[];
-  Address kd_page = ((Address)_kernel_data_entry_start) & ~(Config::PAGE_SIZE - 1);
-  Address kde_page = (((Address)_kernel_data_entry_end) + (Config::PAGE_SIZE - 1)) & ~(Config::PAGE_SIZE - 1);
+  Address kd_page = Pg::trunc((Address)_kernel_data_entry_start);
+  Address kde_page = Pg::round((Address)_kernel_data_entry_end);
 
   if (Print_info)
     printf("kernel entry data: %p(%lx)-%p(%lx)\n", _kernel_data_entry_start,
@@ -893,12 +899,14 @@ Kmem::init_cpu(Cpu &cpu)
       write_now(dst.pte, *src.pte);
     }
 
-  static_assert((Physmem & (Config::SUPERPAGE_SIZE - 1)) == 0, "Physmem area must be superpage aligned");
-  static_assert((Physmem_end& (Config::SUPERPAGE_SIZE - 1)) == 0, "Physmem_end area must be superpage aligned");
+  static_assert(Super_pg::aligned(Physmem),
+                "Physmem area must be superpage aligned");
+  static_assert(Super_pg::aligned(Physmem_end),
+                "Physmem_end area must be superpage aligned");
 
-  for (unsigned i = 0; i < ((Physmem_end - Physmem) >> Config::SUPERPAGE_SHIFT);)
+  for (unsigned i = 0; i < Super_pg::count(Physmem_end - Physmem);)
     {
-      Address a = Physmem + (i << Config::SUPERPAGE_SHIFT);
+      Address a = Physmem + Super_pg::size(i);
       if ((a & ((1UL << 30) - 1)) || ((Physmem_end - (1UL << 30)) < a))
         {
           // copy a superpage slot

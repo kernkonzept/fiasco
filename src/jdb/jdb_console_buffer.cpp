@@ -12,6 +12,7 @@ IMPLEMENTATION:
 #include "kmem_alloc.h"
 #include "koptions.h"
 #include "static_init.h"
+#include "paging_bits.h"
 
 /**
  * A output console that stores the output in a buffer.
@@ -58,7 +59,7 @@ Console_buffer::Console_buffer() : Console(ENABLED)
   Jdb::jdb_enter.add(&enter);
   Jdb::jdb_leave.add(&leave);
 
-  size_t len = 2 * Config::PAGE_SIZE;
+  size_t len = Pg::size(2);
 
   if (Koptions::o()->opt(Koptions::F_out_buf))
     len = Koptions::o()->out_buf;
@@ -76,7 +77,7 @@ Console_buffer::alloc(size_t size)
 {
   if (!out_buf)
     {
-      out_buf_size = (size + Config::PAGE_SIZE - 1) & Config::PAGE_MASK;
+      out_buf_size = Pg::round(size);
       if (out_buf_size)
 	out_buf = (char *)Kmem_alloc::allocator()->
                             alloc(Bytes(out_buf_size));

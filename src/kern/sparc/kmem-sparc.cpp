@@ -22,6 +22,7 @@ private:
 IMPLEMENTATION [sparc]:
 
 #include "paging.h"
+#include "paging_bits.h"
 #include "panic.h"
 
 extern Mword kernel_srmmu_l1[256];
@@ -34,8 +35,8 @@ Kmem::mmio_remap(Address phys, Address size)
 {
   static Address ndev = 0;
 
-  Address phys_page = cxx::mask_lsb(phys, Config::SUPERPAGE_SHIFT);
-  Address phys_end = (phys + size + Config::SUPERPAGE_SIZE - 1) & ~(Config::SUPERPAGE_SIZE-1);
+  Address phys_page = Super_pg::trunc(phys);
+  Address phys_end = Super_pg::round(phys + size);
   bool needs_remap = false;
 
   for (Address p = phys_page; p < phys_end; p += Config::SUPERPAGE_SIZE)
@@ -46,7 +47,7 @@ Kmem::mmio_remap(Address phys, Address size)
 
   if (needs_remap)
     {
-      for (Address p = (phys & ~(Config::SUPERPAGE_SIZE-1));
+      for (Address p = Super_pg::trunc(phys));
            p < phys_end; p += Config::SUPERPAGE_SIZE)
         {
           Address dm = Mem_layout::Registers_map_start + ndev;

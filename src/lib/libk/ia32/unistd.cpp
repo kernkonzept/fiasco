@@ -23,6 +23,7 @@ IMPLEMENTATION:
 
 #include "kmem_alloc.h"
 #include "config.h"
+#include "paging_bits.h"
 #include "kernel_console.h"
 
 void 
@@ -49,14 +50,13 @@ close(int fd)
 
   return 0;
 }
-  
+
 void *
 sbrk(size_t size)
 {
-  void *ret = Kmem_alloc::allocator()
-    ->alloc(Bytes((size+Config::PAGE_SIZE-1) & ~(Config::PAGE_SIZE-1)));
-  if (ret == 0) 
-    ret = (void*)-1;
+  void *ret = Kmem_alloc::allocator()->alloc(Bytes(Pg::round(size)));
+  if (ret == 0)
+    ret = (void *)-1;
   else
     memset(ret, 0, size);
 

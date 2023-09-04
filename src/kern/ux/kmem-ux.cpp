@@ -17,6 +17,7 @@ IMPLEMENTATION [ux]:
 #include "boot_info.h"
 #include "kmem_alloc.h"
 #include "emulation.h"
+#include "paging_bits.h"
 
 
 IMPLEMENT inline Mword Kmem::is_io_bitmap_page_fault(Address)
@@ -88,24 +89,23 @@ Kmem::init_mmu(Cpu const &boot_cpu)
   Emulation::set_pdir_addr (Mem_layout::pmem_to_phys (kdir));
 
   // map the cpu_page we allocated earlier just before io_bitmap
-  assert((Mem_layout::Io_bitmap & ~Config::SUPERPAGE_MASK) == 0);
+  assert(Super_pg::aligned(Mem_layout::Io_bitmap));
 
   if (boot_cpu.superpages()
-      && Config::SUPERPAGE_SIZE - (tss_mem_pm & ~Config::SUPERPAGE_MASK) < 0x10000)
+      && Config::SUPERPAGE_SIZE - (Super_pg::offset(tss_mem_pm)) < 0x10000)
     {
       // can map as 4MB page because the cpu_page will land within a
       // 16-bit range from io_bitmap
       kdir->walk(Virt_addr(Mem_layout::Io_bitmap - Config::SUPERPAGE_SIZE),
                  Pdir::Super_level, false, pdir_alloc(alloc)).
-        set_page(tss_mem_pm & Config::SUPERPAGE_MASK,
-                 Pt_entry::Pse_bit
+        set_page(Super_pg::trunc(tss_mem_pm), Pt_entry::Pse_bit
                  | Pt_entry::Writable | Pt_entry::Referenced
                  | Pt_entry::Dirty | Pt_entry::global());
 
-      tss_mem_vm = cxx::Simple_alloc(
-          (tss_mem_pm & ~Config::SUPERPAGE_MASK)
-          + (Mem_layout::Io_bitmap - Config::SUPERPAGE_SIZE),
-          Config::PAGE_SIZE);
+      tss_mem_vm = cxx::Simple_alloc(Super_pg::offset(tss_mem_pm)
+                                     + (Mem_layout::Io_bitmap
+                                     - Config::SUPERPAGE_SIZE),
+                                     Config::PAGE_SIZE);
     }
   else
     {

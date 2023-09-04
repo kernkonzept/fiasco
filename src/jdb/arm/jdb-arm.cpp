@@ -125,6 +125,7 @@ Jdb::_wait_for_input()
 IMPLEMENTATION [arm]:
 
 #include "timer.h"
+#include "paging_bits.h"
 
 // disable interrupts before entering the kernel debugger
 IMPLEMENT
@@ -313,7 +314,7 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
     }
 
   return (unsigned char *)(Mem_layout::Jdb_tmp_map_area
-                           + (phys & (Config::SUPERPAGE_SIZE - 1)));
+                           + Super_pg::offset(phys));
 }
 
 PUBLIC static

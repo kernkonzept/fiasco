@@ -11,6 +11,7 @@ IMPLEMENTATION [arm]:
 #include "kmem_space.h"
 #include "minmax.h"
 #include "static_init.h"
+#include "paging_bits.h"
 
 PRIVATE //inline
 bool
@@ -18,8 +19,8 @@ Kmem_alloc::map_pmem(unsigned long phy, unsigned long size)
 {
   static unsigned long next_map = Mem_layout::Pmem_start;
 
-  assert(cxx::get_lsb(phy, Config::SUPERPAGE_SHIFT) == 0);
-  assert(cxx::get_lsb(size, Config::SUPERPAGE_SHIFT) == 0);
+  assert(Super_pg::aligned(phy));
+  assert(Super_pg::aligned(size));
 
   if (next_map + size > Mem_layout::Pmem_end)
     return false;
@@ -59,7 +60,7 @@ Kmem_alloc::Kmem_alloc()
   // The -Wframe-larger-than= warning for this function is known and
   // no problem, because the function runs only on our boot stack.
   Mword alloc_size = Config::KMEM_SIZE;
-  static_assert(!cxx::get_lsb((Address)Config::KMEM_SIZE, Config::SUPERPAGE_SHIFT),
+  static_assert(Super_pg::aligned(Config::KMEM_SIZE),
                 "KMEM_SIZE must be superpage-aligned");
   Mem_region_map<64> map;
   unsigned long available_size = create_free_map(Kip::k(), &map,
@@ -122,9 +123,8 @@ static void add_initial_pmem()
   };
 
   // Find out our virt->phys mapping simply by walking the page table.
-  Address virt = Mem_layout::trunc_superpage((unsigned long)_kernel_image_start);
-  Address size = Mem_layout::round_superpage((unsigned long)_initcall_end)
-                  - virt;
+  Address virt = Super_pg::trunc((Address)_kernel_image_start);
+  Address size = Super_pg::round((Address)_initcall_end) - virt;
   auto pte = Mem_layout::kdir->walk(Virt_addr(virt),
                                     Kpdir::Super_level, false,
                                     Ptab::Null_alloc(), Identity_map());
@@ -151,7 +151,7 @@ void Kmem_alloc::debug_dump()
   a->dump();
 
   unsigned long free = a->avail();
-  printf("Used %ldKB out of %dKB of Kmem\n",
-	 (Config::KMEM_SIZE - free + 1023)/1024,
-	 (Config::KMEM_SIZE        + 1023)/1024);
+  printf("Used %lu KiB out of %lu KiB of Kmem\n",
+         (Config::KMEM_SIZE - free + 1023) / 1024,
+         (Config::KMEM_SIZE        + 1023) / 1024);
 }

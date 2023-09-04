@@ -128,7 +128,7 @@ IMPLEMENTATION [io]:
 #include "kmem_alloc.h"
 #include "panic.h"
 #include "paging.h"
-
+#include "paging_bits.h"
 
 PUBLIC template< typename SPACE > inline
 typename Generic_io_space<SPACE>::Fit_size
@@ -395,7 +395,7 @@ Generic_io_space<SPACE>::io_insert(Address port_number)
       Mem_space::Status status =
 	mem_space()->v_insert(
 	    Mem_space::Phys_addr(Mem_layout::pmem_to_phys(page)),
-	    Virt_addr(port_virt & Config::PAGE_MASK),
+	    Virt_addr(Pg::trunc(port_virt)),
 	    Mem_space::Page_order(Config::PAGE_SHIFT),
             Mem_space::Attr(L4_fpage::Rights::RW()));
 

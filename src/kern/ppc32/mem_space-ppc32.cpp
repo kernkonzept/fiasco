@@ -76,9 +76,7 @@ IMPLEMENTATION [ppc32]:
 #include "lock_guard.h"
 #include "cpu_lock.h"
 #include "warn.h"
-
-
-
+#include "paging_bits.h"
 
 PUBLIC explicit inline
 Mem_space::Mem_space(Ram_quota *q) : _quota(q), _dir(0) {}
@@ -252,9 +250,9 @@ Mem_space::try_htab_fault(Address virt)
 
   if(super && !i.e->valid())
     {
-      i = dir->walk(Addr(virt & Config::SUPERPAGE_MASK));
+      i = dir->walk(Addr(Super_pg::trunc(virt)));
       phys = Pte_htab::pte_to_addr(i.e);
-      phys += (virt & Config::PAGE_MASK) - (phys & Config::PAGE_MASK);
+      phys += Pg::trunc(virt) - Pg::trunc(phys);
     }
   else
       phys = i.e->raw();
@@ -391,9 +389,8 @@ Mem_space::v_delete(Vaddr virt, Page_order size,
   Address offs = Virt_addr(virt).value() & (~0UL << shift);
   Pdir::Iter i = _dir->walk(Addr(offs));
   Pt_entry *e = nonull_static_cast<Pt_entry*>(i.e);
-  for(offs = 0;
-      offs < ((Virt_size(size).value() / Config::PAGE_SIZE) *sizeof(Mword));
-      offs += sizeof(Mword))
+  for (offs = 0; offs < Pg::count(Virt_size(size).value()) * sizeof(Mword));
+       offs += sizeof(Mword))
     {
       e = reinterpret_cast<Pt_entry*>(e + offs);
 

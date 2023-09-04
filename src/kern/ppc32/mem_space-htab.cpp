@@ -34,6 +34,7 @@ IMPLEMENTATION [ppc32]:
 #include "mem_region.h"
 #include "panic.h"
 #include "util.h"
+#include "paging_bits.h"
 
 Mword Mem_space::_htabmask = 0;
 Mword Mem_space::_htaborg  = 0;
@@ -211,8 +212,8 @@ Mem_space::pte_attrib_upgrade(Pte_ptr *e, size_t size, unsigned page_attribs)
   Pte_ptr *e2 = e;
   page_attribs = to_htab_fmt(page_attribs);
 
-  for(Address offs = 0; offs < (size / Config::PAGE_SIZE) * sizeof(Mword);
-      offs += sizeof(Mword))
+  for (Address offs = 0; offs < Pg::count(size) * sizeof(Mword);
+       offs += sizeof(Mword))
     {
       e2 = reinterpret_cast<Pt_entry *>(e2 + offs);
 
@@ -257,7 +258,7 @@ Mem_space::pte_attrib_upgrade(Address pte_addr, unsigned page_attribs)
 
 /*
   printf("DBG: %s: phys %08lx virt: %08lx vsid: %lx raw0: %08lx raw1: %08lx ptr %lx\n",
-          __func__, pte_phys->phys() & Config::PAGE_MASK, pte_phys->pte_to_ea(), 
+          __func__, Pg::trunc(pte_phys->phys()), pte_phys->pte_to_ea(), 
           vsid(pte_phys->pte_to_ea()), pte_phys->virt(), pte_phys->phys(), pte_phys);
 */
   return Insert_warn_attrib_upgrade;

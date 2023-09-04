@@ -9,6 +9,7 @@ IMPLEMENTATION [mips]:
 #include "trap_state.h"
 #include "processor.h"
 #include "types.h"
+#include "paging_bits.h"
 
 PROTECTED inline
 int
@@ -169,12 +170,12 @@ Thread::user_invoke()
   // never returns
 }
 
-IMPLEMENT inline NEEDS["space.h", "types.h", "config.h"]
+IMPLEMENT inline NEEDS["space.h", "types.h", "config.h", "paging_bits.h"]
 bool Thread::handle_sigma0_page_fault(Address pfa)
 {
   return mem_space()
-    ->v_insert(Mem_space::Phys_addr((pfa & Config::SUPERPAGE_MASK)),
-               Virt_addr(pfa & Config::SUPERPAGE_MASK),
+    ->v_insert(Mem_space::Phys_addr(Super_pg::trunc(pfa)),
+               Virt_addr(Super_pg::trunc(pfa)),
                Virt_order(Config::SUPERPAGE_SHIFT) /*mem_space()->largest_page_size()*/,
                Mem_space::Attr(L4_fpage::Rights::URWX()))
     != Mem_space::Insert_err_nomem;

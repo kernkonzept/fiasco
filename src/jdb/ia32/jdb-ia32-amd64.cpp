@@ -135,6 +135,7 @@ IMPLEMENTATION[ia32,amd64]:
 #include "trap_state.h"
 #include "vkey.h"
 #include "watchdog.h"
+#include "paging_bits.h"
 
 char Jdb::_connected;			// Jdb::init() was done
 // explicit single_step command
@@ -332,15 +333,14 @@ PUBLIC static inline
 bool
 Jdb::same_page(Address a1, Address a2)
 {
-  return (a1 & Config::PAGE_MASK) == (a2 & Config::PAGE_MASK);
+  return Pg::trunc(a1) == Pg::trunc(a2);
 }
 
 PUBLIC static inline
 bool
 Jdb::consecutive_pages(Address a1, Address a2)
 {
-  return (a1 & Config::PAGE_MASK) + Config::PAGE_SIZE
-      == (a2 & Config::PAGE_MASK);
+  return Pg::trunc(a1) + Config::PAGE_SIZE == Pg::trunc(a2);
 }
 
 PUBLIC static inline NEEDS[Jdb::same_page, Jdb::consecutive_pages]

@@ -40,6 +40,7 @@ IMPLEMENTATION:
 #include "initcalls.h"
 #include "mem_layout.h"
 #include "multiboot.h"
+#include "paging_bits.h"
 
 unsigned int Loader::phys_base = Mem_layout::Physmem;
 
@@ -215,7 +216,7 @@ Loader::copy_module (const char * const path,
     }
 
   *load_addr -= s.st_size;
-  *load_addr &= Config::PAGE_MASK;	// this may not be necessary
+  *load_addr = Pg::trunc(*load_addr);  // this may not be necessary
 
   if (fread ((void *)(phys_base + *load_addr), s.st_size, 1, fp) != 1)
     {

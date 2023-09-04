@@ -26,6 +26,7 @@ IMPLEMENTATION:
 #include "static_init.h"
 #include "types.h"
 #include "task.h"
+#include "paging_bits.h"
 
 class Jdb_dump : public Jdb_module, public Jdb_table
 {
@@ -212,33 +213,33 @@ Jdb_dump::key_pressed(int c, unsigned long &row, unsigned long &col) override
 
     case KEY_CURSOR_HOME: // return to previous or go home
       if (level == 0)
-	{
-	  Jdb_addr<Mword> v = virt(row, col);
-	  if (v.is_null())
-	    return Handled;
+        {
+          Jdb_addr<Mword> v = virt(row, col);
+          if (v.is_null())
+            return Handled;
 
-	  if ((v.addr() & ~Config::PAGE_MASK) == 0)
-	    row -= Config::PAGE_SIZE / 32;
-	  else
-	    {
-	      col = 1;
-	      row = (v.addr() & Config::PAGE_MASK) / 32;
-	    }
-	  return Redraw;
-	}
+          if (Pg::offset(v.addr()) == 0)
+            row -= Config::PAGE_SIZE / 32;
+          else
+            {
+              col = 1;
+              row = Pg::trunc(v.addr()) / 32;
+            }
+          return Redraw;
+        }
       return Back;
 
     case KEY_CURSOR_END:
-	{
-	  Jdb_addr<Mword> v = virt(row, col);
-	  if ((v.addr() & ~Config::PAGE_MASK) >> 2 == 0x3ff)
-	    row += Config::PAGE_SIZE / 32;
-	  else
-	    {
-	      col = Jdb_screen::cols() - 1;
-	      row = ((v.addr() & Config::PAGE_MASK) + Config::PAGE_SIZE - 4) / 32;
-	    }
-	}
+        {
+          Jdb_addr<Mword> v = virt(row, col);
+          if (Pg::offset(v.addr()) >> 2 == 0x3ff)
+            row += Config::PAGE_SIZE / 32;
+          else
+            {
+              col = Jdb_screen::cols() - 1;
+              row = (Pg::trunc(v.addr()) + (Config::PAGE_SIZE - 4)) / 32;
+            }
+        }
       return Redraw;
 
     case 'D':

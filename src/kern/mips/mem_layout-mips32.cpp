@@ -20,11 +20,6 @@ public:
 
     Exception_base = 0x80000000,
   };
-
-  static inline unsigned long round_page(unsigned long addr)
-  { return (addr + Config::PAGE_SIZE - 1) & ~(Config::PAGE_SIZE-1); }
-  static inline unsigned long trunc_page(unsigned long addr)
-  { return addr & ~(Config::PAGE_SIZE-1); }
 };
 
 

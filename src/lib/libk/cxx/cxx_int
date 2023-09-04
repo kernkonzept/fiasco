@@ -490,31 +490,83 @@ struct int_type_order_base : int_base<VALUE_T, TYPE_T>, int_diff_ops<TYPE_T, DIF
   constexpr int_type_order_base(Value_enum v) : Base(v) {}
 };
 
+/**
+ * Truncate value down to the previous alignment with 2^\a o.
+ *
+ * \param v  The value to truncate down to the previous order-alignment.
+ * \param o  The order of the alignment (log2).
+ *
+ * \return Truncated value.
+ */
 template< typename TYPE, typename ORDER > inline
 constexpr TYPE
 mask_lsb(TYPE const &v, ORDER const &o)
-{ return v & (TYPE(~0) << o); }
+{
+  return v & (TYPE(~0) << o);
+}
 
 /**
  * Round value up to the next alignment with 2^\a o.
  *
  * \param v  The value to round up to the next order-alignment.
  * \param o  The order of the alignment (log2).
+ *
+ * \return Rounded value.
  */
 template< typename TYPE, typename ORDER > inline
 constexpr TYPE
 ceil_lsb(TYPE const &v, ORDER const &o)
-{ return mask_lsb(v + ((TYPE(1) << o) - TYPE(1)), o); }
+{
+  return mask_lsb(v + ((TYPE(1) << o) - TYPE(1)), o);
+}
 
+/**
+ * Get the \a o least significant bits of the value.
+ *
+ * \param v  The value to examine.
+ * \param o  The number least significant bits to return.
+ *
+ * \return \a o least significant bits of \a v.
+ */
 template< typename TYPE, typename ORDER > inline
 constexpr typename TYPE::Diff_type
 get_lsb(TYPE const &v, ORDER const &o)
-{ return v & ~(typename TYPE::Diff_type(~0) << o); }
+{
+  return v & ~(typename TYPE::Diff_type(~0) << o);
+}
 
+/**
+ * Get the \a o least significant bits of the value.
+ *
+ * \param v  The value to examine.
+ * \param o  The number least significant bits to return.
+ *
+ * \return \a o least significant bits of \a v.
+ */
 template< typename TYPE, typename ORDER > inline
 constexpr cxx::enable_if_t<cxx::is_integral_v<TYPE>, TYPE>
 get_lsb(TYPE const &v, ORDER const &o)
-{ return v & ~(TYPE(~0) << o); }
+{
+  return v & ~(TYPE(~0) << o);
+}
+
+/**
+ * Get the \a o least significant bits of the value.
+ *
+ * This variant operates on enum contants and returns the bits in the
+ * underlying type.
+ *
+ * \param v  The value to examine.
+ * \param o  The number least significant bits to return.
+ *
+ * \return \a o least significant bits of \a v.
+ */
+template< typename TYPE, typename ORDER > inline
+constexpr cxx::enable_if_t<cxx::is_enum_v<TYPE>, cxx::underlying_type_t<TYPE>>
+get_lsb(TYPE const &v, ORDER const &o)
+{
+  return v & ~(TYPE(~0) << o);
+}
 
 template< typename TYPE > inline
 constexpr bool

@@ -11,13 +11,15 @@ public:
 //---------------------------------------------------------------------------
 IMPLEMENTATION [ia32 || amd64 || ux]:
 
+#include "paging_bits.h"
+
 Address Mem_layout::_io_map_ptr = Mem_layout::Registers_map_end;
 
-PUBLIC static inline
+PUBLIC static inline NEEDS["paging_bits.h"]
 Address
 Mem_layout::alloc_io_vmem(unsigned long bytes)
 {
-  bytes = (bytes + Config::PAGE_SIZE - 1) & ~(Config::PAGE_SIZE - 1);
+  bytes = Pg::round(bytes);
   if (_io_map_ptr - bytes < Registers_map_start)
     return 0;
 

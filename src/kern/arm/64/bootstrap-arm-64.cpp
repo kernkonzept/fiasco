@@ -48,6 +48,7 @@ EXTENSION class Bootstrap
 
 IMPLEMENTATION [arm]:
 
+#include "paging_bits.h"
 
 /**
  * Map RAM range with super pages.
@@ -62,8 +63,8 @@ Bootstrap::map_ram_range(PDIR *kd, Bs_alloc &alloc,
                          unsigned long pstart, unsigned long pend,
                          unsigned long va_offset, Page::Kern kern)
 {
-  pstart = Mem_layout::trunc_superpage(pstart);
-  pend = Mem_layout::round_superpage(pend);
+  pstart = Super_pg::trunc(pstart);
+  pend = Super_pg::round(pend);
   unsigned long size = pend - pstart;
 
   for (unsigned long i = 0; i < size; i += Config::SUPERPAGE_SIZE)

@@ -53,6 +53,7 @@ IMPLEMENTATION [sparc]:
 
 #include "config.h"
 #include "paging.h"
+#include "paging_bits.h"
 #include <cstdio>
 
 unsigned short Mem_layout::__ph_to_pm[1 << (32 - Config::SUPERPAGE_SHIFT)];
@@ -85,7 +86,7 @@ Mem_layout::phys_to_pmem(Address phys)
   if (!virt)
     return ~0UL;
 
-  return virt | (phys & (Config::SUPERPAGE_SIZE - 1));
+  return virt | Super_pg::offset(phys);
 }
 
 IMPLEMENT static

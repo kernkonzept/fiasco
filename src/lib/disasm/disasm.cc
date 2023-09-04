@@ -5,6 +5,7 @@
 
 #include "config.h"
 #include "simple_malloc.h"
+#include "paging_bits.h"
 #include <capstone/capstone.h>
 #include "disasm.h"
 
@@ -168,7 +169,7 @@ disasm_bytes(char *buffer, unsigned len, Jdb_address addr,
       cs_insn *insn = NULL;
 
       unsigned char code[16];
-      unsigned width1 = Config::PAGE_SIZE - (addr.addr() & ~Config::PAGE_MASK);
+      unsigned width1 = Config::PAGE_SIZE - Pg::offset(addr.addr());
       if (width1 > sizeof(code))
         width1 = sizeof(code);
       if (is_adp_mem(addr) || peek_task(addr, &code, width1) < 0)
