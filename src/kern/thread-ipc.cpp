@@ -990,14 +990,8 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
 
   Reap_list rl;
 
-  while (items > 0 && snd_item.more())
+  while (items > 0 && snd_item.next())
     {
-      if (EXPECT_FALSE(!snd_item.next()))
-        {
-          snd->set_ipc_error(L4_error::Overflow, rcv);
-          return false;
-        }
-
       L4_snd_item_iter::Item const *const item = snd_item.get();
 
       if (item->b.is_void())

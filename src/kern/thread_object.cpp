@@ -207,11 +207,8 @@ Thread_object::sys_vcpu_resume(L4_msg_tag const &tag, Utcb const *utcb, Utcb *)
   L4_snd_item_iter snd_items(utcb, tag.words());
   int items = tag.items();
   if (vcpu_user_space())
-    for (; items && snd_items.more(); --items)
+    for (; items && snd_items.next(); --items)
       {
-        if (EXPECT_FALSE(!snd_items.next()))
-          break;
-
         // in this case we already have a counted reference managed by vcpu_user_space()
         Lock_guard<Lock> guard;
         if (!guard.check_and_lock(&static_cast<Task *>(vcpu_user_space())->existence_lock))
@@ -355,7 +352,7 @@ Thread_object::sys_register_delete_irq(L4_msg_tag tag, Utcb const *in, Utcb * /*
 {
   L4_snd_item_iter snd_items(in, tag.words());
 
-  if (!tag.items() || !snd_items.more() || !snd_items.next())
+  if (!tag.items() || !snd_items.next())
     return Kobject_iface::commit_result(-L4_err::EInval);
 
   L4_fpage bind_irq(snd_items.get()->d);
