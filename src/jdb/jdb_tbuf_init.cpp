@@ -40,6 +40,8 @@ IMPLEMENT_DEFAULT FIASCO_INIT
 unsigned
 Jdb_tbuf_init::allocate(unsigned size)
 {
+  assert(Pg::aligned(size));
+
   if (size > max_size())
     return max_size();
 
