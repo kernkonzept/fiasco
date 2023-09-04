@@ -42,6 +42,7 @@ IMPLEMENTATION [riscv]:
 #include "mem_unit.h"
 #include "panic.h"
 #include "ram_quota.h"
+#include "paging_bits.h"
 
 #include <cassert>
 #include <cstdio>
@@ -141,7 +142,7 @@ Kmem::boot_map_pmem(Address phys, Mword size)
 {
   assert(Config::KMEM_SIZE == size);
 
-  if (phys != Mem_layout::trunc_superpage(phys))
+  if (!Super_pg::aligned(phys))
     panic("Pmem must be superpage aligned!");
 
   Mem_layout::pmem_phys_base(phys);
@@ -219,9 +220,8 @@ Kmem::mmio_remap(Address phys, Mword size)
 {
   static Address next_mmio_page = Mem_layout::Mmio_map_start;
 
-  Address phys_page = Mem_layout::trunc_superpage(phys);
-  Address map_size =
-    Mem_layout::round_superpage(size + (phys & ~Config::SUPERPAGE_MASK));
+  Address phys_page = Super_pg::trunc(phys);
+  Address map_size = Super_pg::round(size + Super_pg::offset(phys));
 
   // Check if the physical memory is already mapped.
   for (Address virt = Mem_layout::Mmio_map_start;
@@ -229,7 +229,7 @@ Kmem::mmio_remap(Address phys, Mword size)
        virt += Config::SUPERPAGE_SIZE)
     {
       if (is_mmio_mapped_at(phys_page, phys_page + map_size, virt))
-        return (phys & ~Config::SUPERPAGE_MASK) | virt;
+        return virt | Super_pg::offset(phys);
     }
 
   Address virt_page = next_mmio_page;
@@ -256,5 +256,5 @@ Kmem::mmio_remap(Address phys, Mword size)
   // Full tlb flush as global mappings have been changed.
   Mem_unit::tlb_flush();
 
-  return (phys & ~Config::SUPERPAGE_MASK) | virt_page;
+  return virt_page | Super_pg::offset(phys);
 }

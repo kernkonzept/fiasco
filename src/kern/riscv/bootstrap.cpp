@@ -30,6 +30,7 @@ IMPLEMENTATION [riscv]:
 #include "paging.h"
 #include "sbi.h"
 #include "std_macros.h"
+#include "paging_bits.h"
 
 Bootstrap_info FIASCO_BOOT_PAGING_INFO bs_info;
 
@@ -81,14 +82,14 @@ PRIVATE static
 void
 Bootstrap::map_kernel(Address start_addr, Address end_addr, Kpdir *kdir)
 {
-  if (start_addr != Mem_layout::trunc_superpage(start_addr))
+  if (!Super_pg::aligned(start_addr))
     panic("Start of kernel image is not superpage aligned!");
 
   if (end_addr - start_addr > Mem_layout::Max_kernel_image_size)
     panic("Kernel image is larger than maximum kernel image size!");
 
   auto attr = Pte_ptr::make_attribs(Page::Attr(Page::Rights::RWX()));
-  auto size = Mem_layout::round_superpage(end_addr - start_addr);
+  auto size = Super_pg::round(end_addr - start_addr);
 
   auto alloc = bs_info.pi.alloc_phys(&kern_to_boot);
   auto mem_map = bs_info.pi.mem_map();
@@ -99,9 +100,9 @@ Bootstrap::map_kernel(Address start_addr, Address end_addr, Kpdir *kdir)
     panic("Failed to map bootstrap code.");
 
   // Mapping for kernel code
-  static_assert(
-    Mem_layout::Map_base == Mem_layout::trunc_superpage(Mem_layout::Map_base),
-    "Virtual base address of the kernel image is not superpage-aligned.");
+  static_assert(Super_pg::aligned(Mem_layout::Map_base),
+                "Virtual base address of the kernel image is not "
+                "superpage-aligned.");
 
   if (!kdir->map(start_addr, Virt_addr(Mem_layout::Map_base), Virt_size(size),
                  attr, Kpdir::Super_level, false, alloc, mem_map))

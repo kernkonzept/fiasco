@@ -2,6 +2,7 @@ INTERFACE [riscv]:
 
 #include "types.h"
 #include "mem_layout.h"
+#include "paging_bits.h"
 
 #define FIASCO_BOOT_PAGING_INFO \
   __attribute__((section(".bootstrap.info"), used))
@@ -61,7 +62,7 @@ public:
 
       _free_map &= ~(1UL << (x - 1));
 
-      return reinterpret_cast<void *>(_base + Config::PAGE_SIZE * (x - 1));
+      return reinterpret_cast<void *>(_base + Pg::size(x - 1));
     }
 
     Address _base;
@@ -96,7 +97,7 @@ public:
 private:
   Address page_memory(unsigned page_num) const
   {
-      return Mem_layout::round_page(reinterpret_cast<Address>(_page_memory))
+      return Pg::round(reinterpret_cast<Address>(_page_memory))
              + page_num * Config::PAGE_SIZE;
   }
 

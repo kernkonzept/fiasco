@@ -4,16 +4,6 @@ INTERFACE [riscv]:
 
 EXTENSION class Mem_layout
 {
-public:
-  static constexpr Address round_superpage(Address addr)
-  { return (addr + Config::SUPERPAGE_SIZE - 1) & Config::SUPERPAGE_MASK; }
-
-  static constexpr Address trunc_superpage(Address addr)
-  { return addr & Config::SUPERPAGE_MASK; }
-
-  static constexpr Address round_page(Address addr)
-  { return (addr + Config::PAGE_SIZE - 1) & Config::PAGE_MASK; }
-
 private:
   static Address pmem_phys_offset;
 };

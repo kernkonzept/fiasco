@@ -3,6 +3,7 @@ IMPLEMENTATION [riscv]:
 #include "boot_infos.h"
 #include "config.h"
 #include "kmem.h"
+#include "paging_bits.h"
 
 #include <cstdio>
 
@@ -39,7 +40,7 @@ Kmem_alloc::Kmem_alloc()
       Mem_region f = map[i];
 
       // Align region start address to superpage size
-      Address region_start = Mem_layout::round_superpage(f.start);
+      Address region_start = Super_pg::round(f.start);
       Mword region_size = f.size() - (region_start - f.start);
 
       // Only contiguous mapping is supported for now
@@ -79,7 +80,7 @@ Kmem_alloc::debug_dump() const
   a->dump();
 
   unsigned long free = a->avail();
-  printf("Used %ldKB out of %dKB of Kmem\n",
-   (Config::KMEM_SIZE - free + 1023) / 1024,
-   (Config::KMEM_SIZE        + 1023) / 1024);
+  printf("Used %lu KiB out of %lu KiB of Kmem\n",
+         (Config::KMEM_SIZE - free + 1023) / 1024,
+         (Config::KMEM_SIZE        + 1023) / 1024);
 }

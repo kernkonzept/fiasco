@@ -21,6 +21,7 @@ IMPLEMENTATION [riscv]:
 #include "sbi.h"
 #include "trap_state.h"
 #include "types.h"
+#include "paging_bits.h"
 
 #include "warn.h"
 #include <cassert>
@@ -133,13 +134,13 @@ Thread::user_invoke()
   panic("should never be reached");
 }
 
-IMPLEMENT inline NEEDS["space.h", "types.h", "config.h"]
+IMPLEMENT inline NEEDS["space.h", "types.h", "config.h", "paging_bits.h"]
 bool
 Thread::handle_sigma0_page_fault(Address pfa)
 {
   return mem_space()
-    ->v_insert(Mem_space::Phys_addr((pfa & Config::SUPERPAGE_MASK)),
-               Virt_addr(pfa & Config::SUPERPAGE_MASK),
+    ->v_insert(Mem_space::Phys_addr(Super_pg::trunc(pfa)),
+               Virt_addr(Super_pg::trunc(pfa)),
                Virt_order(Config::SUPERPAGE_SHIFT) /*mem_space()->largest_page_size()*/,
                Mem_space::Attr(L4_fpage::Rights::URWX()))
     != Mem_space::Insert_err_nomem;
