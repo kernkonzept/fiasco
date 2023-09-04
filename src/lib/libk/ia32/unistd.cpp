@@ -66,8 +66,7 @@ sbrk(size_t size)
 void 
 sbrk_free(void* buf, size_t size)
 {
-  Kmem_alloc::allocator()
-    ->free(Bytes((size+Config::PAGE_SIZE-1)/Config::PAGE_SIZE), buf);
+  Kmem_alloc::allocator()->free(Bytes(Pg::round(size)), buf);
 }
 
 char *pr_base;
