@@ -10,7 +10,7 @@ class Page
 public:
 
   /* These things must be defined in arch part in
-     the most efficent way according to the architecture.
+     the most efficient way according to the architecture.
 
   enum Attribs_enum {
     USER_NO  = xxx, ///< User No access
@@ -21,7 +21,7 @@ public:
     USER_RWX = xxx, ///< User Read/Write/Execute
 
     NONCACHEABLE = xxx, ///< Caching is off
-    CACHEABLE    = xxx, ///< Cahe is enabled
+    CACHEABLE    = xxx, ///< Caching is enabled
   };
 
   */
