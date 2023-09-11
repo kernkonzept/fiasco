@@ -8,7 +8,6 @@ class Kmem : public Mem_layout
 {
 public:
   static Mword is_kmem_page_fault(Mword pfa, Mword error);
-  static Mword is_ipc_page_fault(Mword pfa, Mword error);
   static Mword is_io_bitmap_page_fault(Mword pfa);
 };
 

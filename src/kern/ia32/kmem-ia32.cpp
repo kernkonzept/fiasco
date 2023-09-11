@@ -35,7 +35,6 @@ private:
 
 public:
   static Mword is_kmem_page_fault(Address pfa, Mword error);
-  static Mword is_ipc_page_fault(Address pfa, Mword error);
   static Mword is_io_bitmap_page_fault(Address pfa);
   static Address kcode_start();
   static Address kcode_end();
