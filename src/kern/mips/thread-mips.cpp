@@ -24,11 +24,11 @@ Thread::cache_op(unsigned op, Address start, Address end)
   jmp_buf pf_recovery;
   if (setjmp(pf_recovery) != 0)
     {
-      recover_jmp_buf(0);
+      clear_recover_jmpbuf();
       return -L4_err::EFault;
     }
 
-  recover_jmp_buf(&pf_recovery);
+  set_recover_jmpbuf(&pf_recovery);
 
   switch (op)
     {
@@ -44,7 +44,7 @@ Thread::cache_op(unsigned op, Address start, Address end)
       break;
     }
 
-  recover_jmp_buf(0);
+  clear_recover_jmpbuf();
   return 0;
 }
 
@@ -112,8 +112,8 @@ Thread::Thread(Ram_quota *q)
   // set a magic value -- we use it later to verify the stack hasn't
   // been overrun
   _magic = magic;
-  _recover_jmpbuf = 0;
   _timeout = 0;
+  clear_recover_jmpbuf();
 
   prepare_switch_to(&user_invoke);
 

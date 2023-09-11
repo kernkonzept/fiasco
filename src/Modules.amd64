@@ -11,7 +11,7 @@ ifeq ($(CONFIG_UNIT_TEST),y)
 	SUBSYSTEMS += UTEST
 endif
 
-PREPROCESS_PARTS 	+= arch $(CONFIG_ABI) 64bit iofp \
+PREPROCESS_PARTS 	+= arch $(CONFIG_ABI) 64bit iofp recover_jmpbuf \
 			   $(CONFIG_XARCH) i8259 pc i8254 fpu \
 			   auto_map_kip io realmode libuart
 

@@ -101,8 +101,7 @@ int Thread::handle_page_fault(Address pfa, Mword error_code, Mword pc,
   // handler a kernel function may have set.
  error:
 
-  if (_recover_jmpbuf)
-    longjmp(*_recover_jmpbuf, 1);
+  longjmp_recover_jmpbuf();
 
   return 0;
 }

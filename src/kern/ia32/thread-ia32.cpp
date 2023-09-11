@@ -60,9 +60,9 @@ Thread::Thread(Ram_quota *q)
     std::memset((char*)this + sizeof(Thread), '5',
 		Thread::Size-sizeof(Thread)-64);
 
-  _magic          = magic;
-  _recover_jmpbuf = 0;
-  _timeout        = 0;
+  _magic = magic;
+  _timeout = 0;
+  clear_recover_jmpbuf();
 
   prepare_switch_to(&user_invoke);
 
@@ -151,6 +151,7 @@ int
 Thread::handle_slow_trap(Trap_state *ts)
 {
   int from_user = ts->cs() & 3;
+  int res_iopf;
 
   if (EXPECT_FALSE(ts->_trapno == 0xee)) //debug IPI
     {
@@ -220,21 +221,16 @@ Thread::handle_slow_trap(Trap_state *ts)
       goto fail_nomsg;
     }
 
-  _recover_jmpbuf = &pf_recovery;
+  set_recover_jmpbuf(&pf_recovery);
+  res_iopf = handle_io_page_fault(ts);
+  clear_recover_jmpbuf();
 
-  switch (handle_io_page_fault(ts))
+  switch (res_iopf)
     {
-    case 1:
-      _recover_jmpbuf = 0;
-      goto success;
-    case 2:
-      _recover_jmpbuf = 0;
-      goto fail;
-    default:
-      break;
+    case 1: goto success;
+    case 2: goto fail;
+    default: break;
     }
-
-  _recover_jmpbuf = 0;
 
 check_exception:
   // see kdb_ke(), kdb_ke_nstr(), kdb_ke_nsequence()
@@ -264,11 +260,11 @@ fail_nomsg:
   return 0;
 
 success:
-  _recover_jmpbuf = 0;
+  clear_recover_jmpbuf();
   return 0;
 
 generic_debug:
-  _recover_jmpbuf = 0;
+  clear_recover_jmpbuf();
 
   if (!nested_trap_handler)
     return handle_not_nested_trap(ts);

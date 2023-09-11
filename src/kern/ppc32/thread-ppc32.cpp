@@ -259,7 +259,6 @@ Thread::Thread(Ram_quota *q)
   // set a magic value -- we use it later to verify the stack hasn't
   // been overrun
   _magic = magic;
-  _recover_jmpbuf = 0;
   _timeout = 0;
 
   prepare_switch_to(&user_invoke);

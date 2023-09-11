@@ -140,6 +140,7 @@ public:
 //---------------------------------------------------------------------------
 IMPLEMENTATION:
 
+#include <csetjmp>
 #include <cstdio>
 #include <cstring>
 #include <ctype.h>

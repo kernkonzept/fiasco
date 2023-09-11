@@ -6,7 +6,7 @@ SUBSYSTEMS = JABI ABI DRIVERS KERNEL LIBK CXXLIB JDB \
 # remove the ia32 tag until we marked all ia32 non-ux section with some extra tag
 PREPROCESS_PARTS	:= $(filter-out ia32,$(PREPROCESS_PARTS))
 PREPROCESS_PARTS	+= arch $(CONFIG_ABI) 32bit $(CONFIG_XARCH)    \
-			   fpu jdb_thread_names iofp \
+			   fpu jdb_thread_names iofp recover_jmpbuf \
                            obj_space_phys abs_syscalls auto_map_kip \
                            kernel_can_exit
 

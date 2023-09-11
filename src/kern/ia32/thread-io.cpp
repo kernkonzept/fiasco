@@ -182,7 +182,7 @@ Thread::handle_io_page_fault(Trap_state *ts)
 	      // send (pagefault) exception to pager.
 	      ts->_trapno = 13;
               ts->_err = 0;
-              _recover_jmpbuf = 0;
+              clear_recover_jmpbuf();
 	      if (send_exception(ts))
 		return 1;
               else
@@ -195,7 +195,7 @@ Thread::handle_io_page_fault(Trap_state *ts)
 
           if (ipc_code)
             {
-              _recover_jmpbuf = 0;
+              clear_recover_jmpbuf();
               return 1;
             }
 
@@ -232,7 +232,7 @@ Thread::handle_io_page_fault(Trap_state *ts)
       ts->_cr2 = 0;
       ts->_trapno = 13;
       ts->_err = 0;
-      _recover_jmpbuf = 0;
+      clear_recover_jmpbuf();
       if (send_exception(ts))
         return 1;
       else

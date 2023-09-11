@@ -20,7 +20,7 @@ ifeq ($(CONFIG_BIT64),y)
 PREPROCESS_PARTS += 64bit arm_esr_traps
 BITS := 64
 else
-PREPROCESS_PARTS += 32bit abs_syscalls
+PREPROCESS_PARTS += 32bit abs_syscalls recover_jmpbuf
 BITS := 32
 endif
 

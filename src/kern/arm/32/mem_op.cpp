@@ -181,7 +181,7 @@ Mem_op::arm_mem_access(Mword *r)
 
   if ((e = setjmp(pf_recovery)) == 0)
     {
-      current()->recover_jmp_buf(&pf_recovery);
+      current()->set_recover_jmpbuf(&pf_recovery);
 
       switch (r[0])
 	{
@@ -226,7 +226,7 @@ Mem_op::arm_mem_access(Mword *r)
   else
     WARN("Unresolved memory access, skipping\n");
 
-  current()->recover_jmp_buf(0);
+  current()->clear_recover_jmpbuf();
 }
 
 extern "C" void sys_arm_mem_op()

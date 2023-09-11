@@ -1,6 +1,5 @@
 INTERFACE:
 
-#include <csetjmp>             // typedef jmp_buf
 #include "types.h"
 #include "clock.h"
 #include "config.h"
@@ -335,8 +334,6 @@ protected:
   // for trigger_exception
   Continuation _exc_cont;
 
-  jmp_buf *_recover_jmpbuf;     // setjmp buffer for page-fault recovery
-
   Migration *_migration;
 
 public:
@@ -362,6 +359,15 @@ private:
   static Per_cpu<Kernel_drq> _kernel_drq;
 };
 
+INTERFACE [recover_jmpbuf]:
+
+#include <csetjmp>
+
+EXTENSION class Context
+{
+private:
+  jmp_buf *_recover_jmpbuf; // setjmp buffer for page-fault recovery
+};
 
 INTERFACE [debug]:
 
@@ -1504,11 +1510,6 @@ Context::rcu_unblock(Rcu_item *i)
   return static_cast<Context*>(i)->xcpu_state_change(~Thread_waiting, Thread_ready);
 }
 
-PUBLIC inline
-void
-Context::recover_jmp_buf(jmp_buf *b)
-{ _recover_jmpbuf = b; }
-
 IMPLEMENT_DEFAULT inline
 void
 Context::arch_load_vcpu_kern_state(Vcpu_state *, bool)
@@ -1537,6 +1538,27 @@ Context::copy_and_sanitize_trap_state(Trap_state *dst,
 
 PUBLIC inline
 bool Context::migration_pending() const { return _migration; }
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [recover_jmpbuf]:
+
+PUBLIC inline void Context::set_recover_jmpbuf(jmp_buf *b)
+{ _recover_jmpbuf = b; }
+
+PUBLIC inline void Context::clear_recover_jmpbuf()
+{ _recover_jmpbuf = nullptr; }
+
+PROTECTED inline void Context::longjmp_recover_jmpbuf()
+{
+  if (_recover_jmpbuf)
+    longjmp(*_recover_jmpbuf, 1);
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [!recover_jmpbuf]:
+
+PROTECTED inline void Context::longjmp_recover_jmpbuf() {}
+PROTECTED inline void Context::clear_recover_jmpbuf() {}
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION [!mp]:
