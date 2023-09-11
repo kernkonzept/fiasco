@@ -110,21 +110,6 @@ Mem_space::tlb_flush(bool force = false)
 }
 
 
-PUBLIC inline
-bool
-Mem_space::set_attributes(Virt_addr virt, Attr page_attribs,
-                          bool writeback, Mword asid)
-{
-   auto i = _dir->walk(virt);
-
-  if (!i.is_valid())
-    return false;
-
-  i.set_attribs(page_attribs);
-  i.write_back_if(writeback, asid);
-  return true;
-}
-
 IMPLEMENT inline
 void Mem_space::kernel_space(Mem_space *_k_space)
 {

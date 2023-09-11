@@ -649,13 +649,6 @@ public:
     write_now(_this()->pte, p);
   }
 
-  void set_attribs(Page::Attr attr)
-  {
-    auto p = access_once(_this()->pte);
-    p = (p & _this()->_attribs_mask()) | _this()->_attribs(attr);
-    write_now(_this()->pte, p);
-  }
-
   Entry make_page(Phys_mem_addr addr, Page::Attr attr)
   {
     return _this()->_page_bits() | _this()->_attribs(attr)
