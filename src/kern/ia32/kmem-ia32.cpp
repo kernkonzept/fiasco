@@ -158,14 +158,6 @@ IMPLEMENT inline Address Kmem::kcode_end()
   return Pg::trunc(virt_to_phys(&Mem_layout::end) + Config::PAGE_SIZE);
 }
 
-/** Return number of IPC slots to copy */
-PUBLIC static inline NEEDS["paging_bits.h"]
-unsigned
-Kmem::ipc_slots()
-{
-  return Super_pg::count(8 << 20);
-}
-
 IMPLEMENT inline NEEDS["mem_layout.h"]
 Mword
 Kmem::is_io_bitmap_page_fault(Address addr)
