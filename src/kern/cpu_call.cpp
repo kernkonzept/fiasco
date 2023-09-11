@@ -94,8 +94,6 @@ public:
         Proc::pause();
   }
 
-  unsigned char used() const { return _used; }
-
 private:
   Cpu_call _cs[Max];
   unsigned char _used;
@@ -244,6 +242,10 @@ Cpu_call::cpu_call_many(Cpu_mask const &cpus,
                         bool async = false)
 {
   assert (async || !cpu_lock.test());
+
+  if (cpus.empty())
+    return true;
+
   Cpu_calls<8> cs;
   Cpu_number n;
   Cpu_call *c = cs.next();
@@ -256,11 +258,6 @@ Cpu_call::cpu_call_many(Cpu_mask const &cpus,
       if (c->remote_call(n, async))
         c = cs.next();
     }
-
-  // hmm, nothing to do, we should optimize this and check
-  // this before the loops
-  if (cs.used() == 0)
-    return true;
 
   for (; n < Config::max_num_cpus(); ++n)
     {
