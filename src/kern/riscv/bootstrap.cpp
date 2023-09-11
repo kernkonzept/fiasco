@@ -3,6 +3,7 @@ INTERFACE [riscv]:
 #include "boot_infos.h"
 #include "kip.h"
 #include "mem_layout.h"
+#include "paging.h"
 
 struct Bootstrap_info
 {
@@ -27,7 +28,6 @@ IMPLEMENTATION [riscv]:
 #include "cpu.h"
 #include "mem.h"
 #include "mem_unit.h"
-#include "paging.h"
 #include "sbi.h"
 #include "std_macros.h"
 #include "paging_bits.h"
