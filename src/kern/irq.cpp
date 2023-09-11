@@ -24,11 +24,8 @@ public:
   enum Op
   {
     Op_eoi_1      = 0, // Irq_sender + Irq_semaphore
-    Op_compat_attach     = 1,
     Op_trigger    = 2, // Irq_sender + Irq_semaphore
-    Op_compat_chain      = 3,
     Op_eoi_2      = 4, // Icu + Irq_sender + Irq_semaphore
-    Op_compat_detach     = 5,
   };
 
 protected:
