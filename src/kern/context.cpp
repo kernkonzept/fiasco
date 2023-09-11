@@ -777,7 +777,6 @@ Context::schedule()
         rq->ready_dequeue(next_to_run->sched());
       else switch (schedule_switch_to_locked(next_to_run))
         {
-        default:
         case Switch::Ok:      return;   // ok worked well
         case Switch::Failed:  break;    // not migrated, need preemption point
         case Switch::Resched:
