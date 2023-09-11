@@ -155,7 +155,7 @@ IMPLEMENT inline Address Kmem::kcode_start()
 
 IMPLEMENT inline Address Kmem::kcode_end()
 {
-  return Pg::trunc(virt_to_phys(&Mem_layout::end) + Config::PAGE_SIZE);
+  return Pg::round(virt_to_phys(&Mem_layout::end));
 }
 
 IMPLEMENT inline NEEDS["mem_layout.h"]
