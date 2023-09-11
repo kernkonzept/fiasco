@@ -3,19 +3,6 @@ INTERFACE [riscv]:
 #include "mem_layout.h"
 #include "paging.h"
 
-class Kmem : public Mem_layout
-{
-public:
-  static bool is_kmem_page_fault(Mword pfa, Mword /*cause*/)
-  {
-    return in_kernel(pfa);
-  }
-
-  static bool is_io_bitmap_page_fault(Mword)
-  { return false; }
-};
-
-
 // Number of statically allocated pages for the kernel bootstrap page tables.
 // The bootstrap page tables provide an identity mapping of the kernel, a
 // virtual mapping of the kernel, an MMIO page directory, and a mapping of the
@@ -69,6 +56,14 @@ static Boot_paging_info FIASCO_BOOT_PAGING_INFO
 static Boot_paging_info *bs_pgin_dta __attribute__((used)) = &_bs_pgin_dta;
 
 Kpdir *Mem_layout::kdir = nullptr;
+
+
+IMPLEMENT inline
+bool
+Kmem::is_kmem_page_fault(Mword pfa, Mword /*cause*/)
+{
+  return in_kernel(pfa);
+}
 
 PUBLIC static
 void
