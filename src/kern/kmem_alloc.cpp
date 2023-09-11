@@ -184,7 +184,7 @@ Kmem_alloc::alloc(Bytes size)
     }
 
   if (EXPECT_FALSE(!ret))
-    WARNX(Error, "Out of memory requesting 0x%lx bytes)\n",
+    WARNX(Error, "Out of memory requesting 0x%lx bytes!\n",
           cxx::int_value<Bytes>(size));
 
   return ret;
