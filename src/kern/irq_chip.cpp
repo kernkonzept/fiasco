@@ -9,14 +9,40 @@ INTERFACE:
 class Irq_base;
 class Irq_chip;
 
+INTERFACE [cascade_irq]:
+
+/**
+ * When cascading IRQ controllers, we need to ack upstream IRQs before
+ * activating the handler thread and after possibly masking the IRQ at the
+ * downstream controller. To do this we use a linked list of upstream IRQ
+ * objects on the callstack of the handler to describe the upstream IRQs to ack.
+ */
 class Upstream_irq
 {
 private:
   Irq_chip *const _c;
   Mword const _p;
   Upstream_irq const *const _prev;
-
 };
+
+INTERFACE [!cascade_irq]:
+
+/**
+ * The Upstream_irq mechanism is only required and used for cascading IRQ
+ * controllers. So in case that feature is disabled, reduce Upstream_irq to a
+ * immediately apparent nop, which is only a placeholder for generic IRQ
+ * handling code.
+ */
+class Upstream_irq
+{
+public:
+  // Upstream_irq cannot be instantiated.
+  Upstream_irq() = delete;
+  static void ack(Upstream_irq const *) {}
+};
+
+// --------------------------------------------------------------------------
+INTERFACE:
 
 /**
  * Abstraction for an IRQ controller chip.
@@ -251,6 +277,21 @@ char const *
 Irq_chip_soft::chip_type() const override
 { return "Soft"; }
 
+//--------------------------------------------------------------------------
+IMPLEMENTATION [cascade_irq]:
+
+PUBLIC inline explicit
+Upstream_irq::Upstream_irq(Irq_base const *b, Upstream_irq const *prev)
+: _c(b->chip()), _p(b->pin()), _prev(prev)
+{}
+
+PUBLIC static inline
+void
+Upstream_irq::ack(Upstream_irq const *ui)
+{
+  for (Upstream_irq const *c = ui; c; c = c->_prev)
+    c->_c->ack(c->_p);
+}
 
 //--------------------------------------------------------------------------
 IMPLEMENTATION:
@@ -266,19 +307,6 @@ Irq_base *(*Irq_base::dcast)(Kobject_iface *);
 IMPLEMENT inline Irq_chip::~Irq_chip() {}
 IMPLEMENT inline Irq_chip_icu::~Irq_chip_icu() {}
 IMPLEMENT inline Irq_base::~Irq_base() {}
-
-PUBLIC inline explicit
-Upstream_irq::Upstream_irq(Irq_base const *b, Upstream_irq const *prev)
-: _c(b->chip()), _p(b->pin()), _prev(prev)
-{}
-
-PUBLIC static inline
-void
-Upstream_irq::ack(Upstream_irq const *ui)
-{
-  for (Upstream_irq const *c = ui; c; c = c->_prev)
-    c->_c->ack(c->_p);
-}
 
 /**
  * \pre `irq->irq_lock()` must be held
