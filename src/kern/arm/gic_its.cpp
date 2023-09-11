@@ -1112,7 +1112,7 @@ Gic_its::Device::unbind_lpi(Lpi &lpi)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION:
+IMPLEMENTATION [have_arm_gic_msi]:
 
 #include "mmio_register_block.h"
 #include "panic.h"
