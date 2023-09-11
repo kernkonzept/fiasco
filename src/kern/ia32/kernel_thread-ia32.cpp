@@ -122,11 +122,9 @@ Kernel_thread::boot_app_cpus()
   Address tramp_page;
 
   _realmode_startup_pdbr = Kmem::get_realmode_startup_pdbr();
-
   _tramp_mp_startup_cr4 = Cpu::get_cr4();
   _tramp_mp_startup_cr0 = Cpu::get_cr0();
-  _tramp_mp_startup_gdt_pdesc
-    = Pseudo_descriptor((Address)Cpu::boot_cpu()->get_gdt(), Gdt::gdt_max -1);
+  _tramp_mp_startup_gdt_pdesc = Kmem::get_realmode_startup_gdt_pdesc();
 
   __asm__ __volatile__ ("" : : : "memory");
 

@@ -523,17 +523,52 @@ cxx::Simple_alloc Kmem::tss_mem_vm;
 //--------------------------------------------------------------------------
 IMPLEMENTATION [realmode && amd64]:
 
+/**
+ * Get real mode startup page directory physical address.
+ *
+ * This page directory is used for the startup code of application CPUs until
+ * the proper mapping is established. To avoid issues, a copy of the global
+ * kernel mapping with a physical address below 4 GiB is provided.
+ *
+ * \note In case of CPU local mapping, this page directory must map all the
+ *       memory that is needed until the CPU local mapping of the given
+ *       application CPU is established.
+ *
+ * \return Real mode startup page directory physical address.
+ */
 PUBLIC
 static Address
 Kmem::get_realmode_startup_pdbr()
 {
-  // for amd64 we need to make sure that our boot-up page directory is below
-  // 4GB in physical memory
-  static char _boot_pdir_page[Config::PAGE_SIZE] __attribute__((aligned(4096)));
-  void *pd = current_cpu_kdir();
-  memcpy(_boot_pdir_page, pd, sizeof(_boot_pdir_page));
+  // For amd64, we need to make sure that our boot-up page directory is below
+  // 4 GiB in physical memory.
+  static char _boot_pdir[Config::PAGE_SIZE] __attribute__((aligned(4096)));
 
-  return Kmem::virt_to_phys(_boot_pdir_page);
+  memcpy(_boot_pdir, kdir, sizeof(_boot_pdir));
+  return Kmem::virt_to_phys(_boot_pdir);
+}
+
+/**
+ * Get real mode startup Global Descriptor Table pseudo descriptor.
+ *
+ * This GDT pseudo descriptor is used for the startup code of application CPUs
+ * until the proper GDT is established. To avoid issues, a copy of the
+ * bootstrap CPU's GDT that is accessible via the \ref kdir mapping is
+ * provided.
+ *
+ * \return Real mode startup Global Descriptor Table pseudo descriptor.
+ */
+PUBLIC
+static Pseudo_descriptor
+Kmem::get_realmode_startup_gdt_pdesc()
+{
+  // For amd64, we need to make sure that our boot-up Global Descriptor Table
+  // is accessible via the kdir mapping.
+  static char _boot_gdt[Gdt::gdt_max] __attribute__((aligned(0x10)));
+
+  memcpy(_boot_gdt, Cpu::boot_cpu()->get_gdt(), sizeof(_boot_gdt));
+  return Pseudo_descriptor(reinterpret_cast<Address>(&_boot_gdt),
+                           Gdt::gdt_max - 1);
 }
 
 //--------------------------------------------------------------------------
@@ -544,6 +579,15 @@ static Address
 Kmem::get_realmode_startup_pdbr()
 {
   return Mem_layout::pmem_to_phys(Kmem::dir());
+}
+
+PUBLIC
+static Pseudo_descriptor
+Kmem::get_realmode_startup_gdt_pdesc()
+{
+  Gdt *_boot_gdt = Cpu::boot_cpu()->get_gdt();
+  return Pseudo_descriptor(reinterpret_cast<Address>(_boot_gdt),
+                           Gdt::gdt_max - 1);
 }
 
 //--------------------------------------------------------------------------
