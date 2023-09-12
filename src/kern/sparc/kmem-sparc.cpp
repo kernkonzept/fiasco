@@ -4,14 +4,11 @@ INTERFACE [sparc]:
 
 class Page_table;
 
-class Kmem : public Mem_layout
+EXTENSION class Kmem
 {
 public:
   static Mword *kernel_sp();
   static void kernel_sp(Mword *);
-
-  static Mword is_kmem_page_fault( Mword pfa, Mword error );
-  static Mword is_io_bitmap_page_fault( Mword pfa );
 
   static Address virt_to_phys(const void *addr);
 private:
@@ -86,13 +83,7 @@ Address Kmem::virt_to_phys(const void *addr)
 }
 
 IMPLEMENT inline
-Mword Kmem::is_kmem_page_fault(Mword pfa, Mword /*error*/)
+bool Kmem::is_kmem_page_fault(Mword pfa, Mword /*error*/)
 {
   return in_kernel(pfa);
-}
-
-IMPLEMENT inline
-Mword Kmem::is_io_bitmap_page_fault( Mword /*pfa*/ )
-{
-  return 0;
 }

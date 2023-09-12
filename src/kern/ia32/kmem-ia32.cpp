@@ -20,7 +20,7 @@ class Tss;
  * The kernel memory is a singleton object.  We access it through a
  * static class interface.
  */
-class Kmem : public Mem_layout
+EXTENSION class Kmem
 {
   friend class Jdb;
   friend class Jdb_dbinfo;
@@ -34,8 +34,6 @@ private:
   Kmem (const Kmem&);
 
 public:
-  static Mword is_kmem_page_fault(Address pfa, Mword error);
-  static Mword is_io_bitmap_page_fault(Address pfa);
   static Address kcode_start();
   static Address kcode_end();
   static Address virt_to_phys(const void *addr);
@@ -158,8 +156,8 @@ IMPLEMENT inline Address Kmem::kcode_end()
   return Pg::round(virt_to_phys(&Mem_layout::end));
 }
 
-IMPLEMENT inline NEEDS["mem_layout.h"]
-Mword
+IMPLEMENT_OVERRIDE inline NEEDS["mem_layout.h"]
+bool
 Kmem::is_io_bitmap_page_fault(Address addr)
 {
   return addr >= Mem_layout::Io_bitmap &&
@@ -167,7 +165,7 @@ Kmem::is_io_bitmap_page_fault(Address addr)
 }
 
 IMPLEMENT inline NEEDS["mem_layout.h"]
-Mword
+bool
 Kmem::is_kmem_page_fault(Address addr, Mword /*error*/)
 {
   return addr > Mem_layout::User_max;

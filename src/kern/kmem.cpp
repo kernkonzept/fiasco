@@ -1,9 +1,26 @@
+INTERFACE:
+
+#include "mem_layout.h"
+
+class Kmem : public Mem_layout
+{
+public:
+  static bool is_kmem_page_fault(Mword pfa, Mword error);
+  static bool is_io_bitmap_page_fault(Mword pfa);
+};
+
 IMPLEMENTATION:
 
 #include "config.h"
-#include "mem_layout.h"
 #include "paging.h"
 #include "paging_bits.h"
+
+IMPLEMENT_DEFAULT inline
+bool
+Kmem::is_io_bitmap_page_fault(Mword)
+{ return false; }
+
+IMPLEMENTATION [arm || ia32 || amd64]:
 
 PRIVATE static
 bool

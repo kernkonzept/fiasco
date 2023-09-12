@@ -20,11 +20,8 @@ IMPLEMENTATION [ux]:
 #include "paging_bits.h"
 
 
-IMPLEMENT inline Mword Kmem::is_io_bitmap_page_fault(Address)
-{ return false; }
-
 IMPLEMENT inline NEEDS ["regdefs.h"]
-Mword
+bool
 Kmem::is_kmem_page_fault(Address addr, Mword error)
 { return !(addr <= User_max && (error & PF_ERR_USERADDR)); }
 
