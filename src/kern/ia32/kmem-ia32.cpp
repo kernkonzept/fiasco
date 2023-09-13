@@ -472,7 +472,7 @@ IMPLEMENTATION [ia32,ux,amd64]:
 #include "tss.h"
 
 // static class variables
-Kpdir *Mem_layout::kdir;
+Kpdir *Kmem::kdir;
 
 /**
  * Compute a kernel-virtual address for a physical address.

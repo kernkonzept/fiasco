@@ -215,6 +215,8 @@ public:
   // end JDB
 };
 
+class Kpdir : public Pdir {};
+
 //---------------------------------------------------------------------------
 IMPLEMENTATION [mips]:
 

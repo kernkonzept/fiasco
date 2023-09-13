@@ -22,7 +22,7 @@ IMPLEMENTATION [ppc32]:
 #include "panic.h"
 
 char kernel_page_directory[sizeof(Pdir)];
-Kpdir *Mem_layout::kdir = (Kpdir *)&kernel_page_directory;
+Kpdir *Kmem::kdir = (Kpdir *)&kernel_page_directory;
 Mword *Kmem::_sp = 0;
 
 IMPLEMENT inline

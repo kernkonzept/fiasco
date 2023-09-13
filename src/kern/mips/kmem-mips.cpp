@@ -1,14 +1,3 @@
-INTERFACE [mips]:
-
-#include "paging.h"
-
-EXTENSION class Kmem
-{
-public:
-  // currently a dummy the kernel runs unpaged
-  static Pdir *const kdir;
-};
-
 IMPLEMENTATION [mips32]:
 
 IMPLEMENT inline
@@ -27,7 +16,8 @@ IMPLEMENTATION [mips]:
 
 #include <cassert>
 
-Pdir *const Kmem::kdir = 0;
+// currently a dummy, the kernel runs unpaged
+Kpdir *Kmem::kdir = nullptr;
 
 PUBLIC static
 Address

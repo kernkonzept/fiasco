@@ -23,7 +23,7 @@ IMPLEMENTATION [sparc]:
 #include "panic.h"
 
 extern Mword kernel_srmmu_l1[256];
-Kpdir *Mem_layout::kdir = (Kpdir *)kernel_srmmu_l1;
+Kpdir *Kmem::kdir = (Kpdir *)kernel_srmmu_l1;
 Mword *Kmem::_sp = 0;
 
 PUBLIC static

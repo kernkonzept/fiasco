@@ -1,18 +1,20 @@
 INTERFACE:
 
 #include "mem_layout.h"
+#include "paging.h"
 
 class Kmem : public Mem_layout
 {
 public:
   static bool is_kmem_page_fault(Mword pfa, Mword error);
   static bool is_io_bitmap_page_fault(Mword pfa);
+
+  static Kpdir *kdir;
 };
 
 IMPLEMENTATION:
 
 #include "config.h"
-#include "paging.h"
 #include "paging_bits.h"
 
 IMPLEMENT_DEFAULT inline
