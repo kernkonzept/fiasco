@@ -149,23 +149,10 @@ Pic::init()
   *gic = new Boot_object<Gic_v3>(regs, regs + Mem_layout::Gic_redist_offset,
                                  id == 0);
 
-  static Address const mru_base[] = {
-    Mem_layout::Rtu0_Mru0, Mem_layout::Rtu0_Mru1,
-    Mem_layout::Rtu0_Mru2, Mem_layout::Rtu0_Mru3,
-    Mem_layout::Rtu1_Mru0, Mem_layout::Rtu1_Mru1,
-    Mem_layout::Rtu1_Mru2, Mem_layout::Rtu1_Mru3,
-  };
-
-  Address mru_addr = mru_base[Platform_control::node_id()];
-  Kip::k()->add_mem_region(Mem_desc(mru_addr,
-                                    mru_addr + Mem_layout::Mru_size - 1,
-	                            Mem_desc::Reserved, false, 0,
-	                            1U << Platform_control::node_id()));
-  auto mru_regs = Kmem::mmio_remap(mru_addr, Mem_layout::Mru_size);
-
   M *m = new Boot_object<M>(2);
   m->add_chip(0, *gic, (*gic)->nr_irqs());
-  m->add_chip(1024, new Boot_object<Mru>(mru_regs, *gic), Mru::Nr_irqs);
+  if (auto *mru = Mru::create_mru(*gic))
+    m->add_chip(1024, mru, Mru::Nr_irqs);
 
   *Irq_mgr::mgr = m;
 }
@@ -293,6 +280,40 @@ void
 Mru::set_cpu(Mword /*pin*/, Cpu_number /*cpu*/) override
 {
   // single core / AMP platform
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && pic_gic && pf_s32z && pf_s32z_mru]:
+
+PUBLIC static
+Mru *
+Mru::create_mru(Gic *gic)
+{
+  static Address const mru_base[] = {
+    Mem_layout::Rtu0_Mru0, Mem_layout::Rtu0_Mru1,
+    Mem_layout::Rtu0_Mru2, Mem_layout::Rtu0_Mru3,
+    Mem_layout::Rtu1_Mru0, Mem_layout::Rtu1_Mru1,
+    Mem_layout::Rtu1_Mru2, Mem_layout::Rtu1_Mru3,
+  };
+
+  Address mru_addr = mru_base[Platform_control::node_id()];
+  Kip::k()->add_mem_region(Mem_desc(mru_addr,
+                                    mru_addr + Mem_layout::Mru_size - 1,
+	                            Mem_desc::Reserved, false, 0,
+	                            1U << Platform_control::node_id()));
+  auto mru_regs = Kmem::mmio_remap(mru_addr, Mem_layout::Mru_size);
+
+  return new Boot_object<Mru>(mru_regs, gic);
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && pic_gic && pf_s32z && !pf_s32z_mru]:
+
+PUBLIC static inline
+Mru *
+Mru::create_mru(Gic *)
+{
+  return nullptr;
 }
 
 // ------------------------------------------------------------------------
