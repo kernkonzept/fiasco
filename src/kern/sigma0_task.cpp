@@ -25,7 +25,7 @@ Sigma0_task::v_fabricate(Mem_space::Vaddr address,
   *phys = cxx::mask_lsb(Virt_addr(address), *size);
 
   if (attribs)
-    *attribs = Mem_space::Attr(L4_fpage::Rights::URWX());
+    *attribs = Mem_space::Attr::space_local(L4_fpage::Rights::URWX());
 
   return true;
 }

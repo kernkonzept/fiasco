@@ -44,7 +44,7 @@ Kmem::cont_mapped(Address phys_beg, Address phys_end, Address virt)
 // Note: Not thread-safe.
 PUBLIC static
 Address
-Kmem::mmio_remap(Address phys, Address size, bool cache = false, bool with_exec = false)
+Kmem::mmio_remap(Address phys, Address size, bool cache = false, bool exec = false)
 {
   static Address ndev = 0;
   Address phys_page = Super_pg::trunc(phys);
@@ -72,7 +72,8 @@ Kmem::mmio_remap(Address phys, Address size, bool cache = false, bool with_exec 
       assert (!m.is_valid());
       assert (m.page_order() == Config::SUPERPAGE_SHIFT);
       m.set_page(m.make_page(Phys_mem_addr(p),
-                             Page::Attr(with_exec ? Page::Rights::RWX() : Page::Rights::RW(),
+                             Page::Attr(exec ? Page::Rights::RWX()
+                                             : Page::Rights::RW(),
                                         cache ? Page::Type::Normal()
                                               : Page::Type::Uncached(),
                                         Page::Kern::Global())));

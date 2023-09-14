@@ -35,8 +35,7 @@ Mem_space::sync_kernel()
   extern char kern_lib_start[];
 
   Phys_mem_addr pa(Kmem::kdir->virt_to_phys((Address)kern_lib_start));
-  pte.set_page(pte.make_page(pa, Page::Attr(Page::Rights::URX(),
-                                            Page::Type::Normal())));
+  pte.set_page(pte.make_page(pa, Page::Attr::space_local(Page::Rights::URX())));
 
   pte.write_back_if(true, c_asid());
 
@@ -47,8 +46,7 @@ Mem_space::sync_kernel()
     return -1;
 
   pa = Phys_mem_addr(__mem_space_syscall_page);
-  pte.set_page(pte.make_page(pa, Page::Attr(Page::Rights::URX(),
-                                            Page::Type::Normal())));
+  pte.set_page(pte.make_page(pa, Page::Attr::space_local(Page::Rights::URX())));
 
   pte.write_back_if(true, c_asid());
 

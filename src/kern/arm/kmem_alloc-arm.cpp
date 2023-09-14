@@ -35,9 +35,7 @@ Kmem_alloc::map_pmem(unsigned long phy, unsigned long size)
       assert (!pte.is_valid());
       assert (pte.page_order() == Config::SUPERPAGE_SHIFT);
       pte.set_page(pte.make_page(Phys_mem_addr(phy + i),
-                                 Page::Attr(Page::Rights::RW(),
-                                            Page::Type::Normal(),
-                                            Page::Kern::Global())));
+                                 Page::Attr::kern_global(Page::Rights::RW())));
       pte.write_back_if(true);
       Mem_unit::tlb_flush_kernel(next_map + i);
     }

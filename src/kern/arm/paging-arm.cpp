@@ -155,7 +155,7 @@ public:
       case Page::BUFFERED:  type = T::Buffered(); break;
       case Page::NONCACHEABLE: type = T::Uncached(); break;
       }
-    return Page::Attr(rights, type);
+    return Page::Attr(rights, type, Page::Kern::None());
   }
 
   Page::Rights access_flags() const

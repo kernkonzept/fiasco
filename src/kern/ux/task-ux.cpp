@@ -113,6 +113,6 @@ Task::map_utcb_ptr_page()
 	    Mem_space::Phys_addr(Mem_layout::Utcb_ptr_frame),
 	    Virt_addr(Mem_layout::Utcb_ptr_page_user),
 	    Mem_space::Page_order(Config::PAGE_SHIFT),
-	    Mem_space::Attr(Page::Rights::URW()));
+	    Mem_space::Attr::space_local(Page::Rights::URW()));
 }
 

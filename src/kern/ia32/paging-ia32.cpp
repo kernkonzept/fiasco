@@ -170,7 +170,7 @@ Pte_ptr::attribs() const
     }
   // do not care for kernel special flags, as this is used for user
   // level mappings
-  return Page::Attr(r, t);
+  return Page::Attr(r, t, Page::Kern::None());
 }
 PUBLIC inline
 void

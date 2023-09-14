@@ -121,7 +121,7 @@ private:
         case (6 << 3): t = T::Normal(); break;
         }
 
-      return Attr(r, t);
+      return Attr(r, t, Page::Kern::None());
     }
 
     Unsigned64 entry() const { return *e; }

@@ -41,8 +41,7 @@ Sys_call_page::init()
 
   Kernel_task::kernel_task()
     ->set_attributes(Virt_addr(Mem_layout::Syscalls),
-	             Page::Attr(Page::Rights::URX(), Page::Type::Normal(),
-		                Page::Kern::Global()));
+	             Page::Attr::kern_global(Page::Rights::URX()));
 
   //Mem_unit::flush_cache();
 }

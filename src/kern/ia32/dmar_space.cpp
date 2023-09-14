@@ -53,7 +53,7 @@ private:
       R r = R::UR();
       if (raw & 2) r |= R::W();
 
-      return Attr(r, Page::Type::Normal());
+      return Attr::space_local(r);
     }
 
     bool add_attribs(Page::Attr attr)

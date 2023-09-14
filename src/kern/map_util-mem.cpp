@@ -57,7 +57,8 @@ mem_map(Space *from, L4_fpage const &fp_from,
   rcv_addr = cxx::mask_lsb(rcv_addr, ro);
   Mu::free_constraint(snd_addr, so, rcv_addr, ro, offs);
 
-  Mem_space::Attr attribs(fp_from.rights() | L4_fpage::Rights::U(), control.mem_type());
+  Mem_space::Attr attribs(fp_from.rights() | L4_fpage::Rights::U(),
+                          control.mem_type(), Page::Kern::None());
 
   Mu::Auto_tlb_flush<Mem_space> tlb;
 

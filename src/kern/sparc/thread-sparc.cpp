@@ -83,7 +83,7 @@ bool Thread::handle_sigma0_page_fault(Address pfa)
   return mem_space()
     ->v_insert(Mem_space::Phys_addr(Pg::trunc(pfa)),
                Virt_addr(Pg::trunc(pfa)), Virt_order(Config::PAGE_SIZE),
-               Mem_space::Attr(L4_fpage::Rights::URWX()))
+               Mem_space::Attr::space_local(L4_fpage::Rights::URWX()))
     != Mem_space::Insert_err_nomem;
 }
 

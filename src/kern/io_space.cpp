@@ -397,7 +397,7 @@ Generic_io_space<SPACE>::io_insert(Address port_number)
 	    Mem_space::Phys_addr(Mem_layout::pmem_to_phys(page)),
 	    Virt_addr(Pg::trunc(port_virt)),
 	    Mem_space::Page_order(Config::PAGE_SHIFT),
-            Mem_space::Attr(L4_fpage::Rights::RW()));
+            Mem_space::Attr::space_local(L4_fpage::Rights::RW()));
 
       if (status == Mem_space::Insert_err_nomem)
 	{

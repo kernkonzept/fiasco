@@ -36,7 +36,7 @@ Task::map_gicc_page(L4_msg_tag tag, Utcb *utcb)
     ms->v_insert(Mem_space::Phys_addr(addr),
                  Virt_addr((Address)u_addr.get()),
                  Mem_space::Page_order(Config::PAGE_SHIFT),
-                 Mem_space::Attr(L4_fpage::Rights::URW()));
+                 Mem_space::Attr::space_local(L4_fpage::Rights::URW()));
 
   switch (res)
     {

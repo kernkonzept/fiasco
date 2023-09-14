@@ -177,7 +177,7 @@ bool Thread::handle_sigma0_page_fault(Address pfa)
     ->v_insert(Mem_space::Phys_addr(Super_pg::trunc(pfa)),
                Virt_addr(Super_pg::trunc(pfa)),
                Virt_order(Config::SUPERPAGE_SHIFT) /*mem_space()->largest_page_size()*/,
-               Mem_space::Attr(L4_fpage::Rights::URWX()))
+               Mem_space::Attr::space_local(L4_fpage::Rights::URWX()))
     != Mem_space::Insert_err_nomem;
 }
 
