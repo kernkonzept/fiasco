@@ -21,8 +21,8 @@ Kernel_task::map_syscall_page(void *p)
   if (pte.level == 0) // allocation of second level faild
     panic("Error mapping syscall page to %p", (void *)Kmem_space::Syscalls);
 
-  pte.set_page(pte.make_page(Phys_mem_addr(Kmem::kdir->virt_to_phys((Address)p)),
-                             Page::Attr::kern_global(Page::Rights::URX())));
+  pte.set_page(Phys_mem_addr(Kmem::kdir->virt_to_phys((Address)p)),
+               Page::Attr::kern_global(Page::Rights::URX()));
   pte.write_back_if(true);
   Mem_unit::tlb_flush_kernel(Kmem_space::Syscalls);
 }

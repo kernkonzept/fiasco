@@ -125,8 +125,8 @@ Cpu::init_supervisor_mode(bool is_boot_cpu)
 
   Address va = (Address)&ivt_start - Mem_layout::Sdram_phys_base
                                    + Mem_layout::Map_base;
-  pte.set_page(pte.make_page(Phys_mem_addr(Kmem::kdir->virt_to_phys(va)),
-                             Page::Attr::kern_global(Page::Rights::RWX())));
+  pte.set_page(Phys_mem_addr(Kmem::kdir->virt_to_phys(va)),
+               Page::Attr::kern_global(Page::Rights::RWX()));
   pte.write_back_if(true);
   Mem_unit::tlb_flush_kernel(Kmem_space::Ivt_base);
 }

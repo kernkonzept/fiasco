@@ -306,9 +306,9 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
               && addr.space()->is_sigma0())
             return 0;
 
-          pte.set_page(
-            pte.make_page(Phys_mem_addr(cxx::mask_lsb(phys, pte.page_order())),
-                          Page::Attr(Page::Rights::RW(), mem_type, Page::Kern::None())));
+          pte.set_page(Phys_mem_addr(cxx::mask_lsb(phys, pte.page_order())),
+                       Page::Attr(Page::Rights::RW(), mem_type,
+                                  Page::Kern::None()));
           pte.write_back_if(true);
           Mem_unit::tlb_flush_kernel(Mem_layout::Jdb_tmp_map_area);
     }

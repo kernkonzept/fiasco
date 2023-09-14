@@ -660,6 +660,11 @@ public:
     return _this()->_page_bits() | _this()->_attribs(attr)
            | cxx::int_value<Phys_mem_addr>(addr);
   }
+
+  void set_page(Phys_mem_addr addr, Page::Attr attr)
+  {
+    set_page(make_page(addr, attr));
+  }
 };
 
 //-----------------------------------------------------------------------------
