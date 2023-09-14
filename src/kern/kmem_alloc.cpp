@@ -22,7 +22,7 @@ class Kmem_alloc
 
 public:
   typedef Buddy_alloc Alloc;
-  Address to_phys(void *v);
+  Address to_phys(void *v) const;
 private:
   typedef Spin_lock<> Lock;
   static Lock lock;
@@ -203,7 +203,7 @@ Kmem_alloc::free(Bytes size, void *page)
 
 IMPLEMENT_DEFAULT static inline NEEDS["mem_layout.h"]
 Address
-Kmem_alloc::to_phys(void *v)
+Kmem_alloc::to_phys(void *v) const
 {
   return Mem_layout::pmem_to_phys(v);
 }
