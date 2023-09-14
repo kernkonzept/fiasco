@@ -76,7 +76,7 @@ Mem_layout::phys_to_pmem_Old (Address addr)
   return ~0L;
 }
 
-IMPLEMENT static inline NEEDS["config.h"]
+IMPLEMENT static inline NEEDS["config.h", "paging_bits.h"]
 Address
 Mem_layout::phys_to_pmem(Address phys)
 {

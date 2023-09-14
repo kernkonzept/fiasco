@@ -44,7 +44,7 @@ Kmem::mmio_remap(Address phys, Address size)
 
   if (needs_remap)
     {
-      for (Address p = Super_pg::trunc(phys));
+      for (Address p = Super_pg::trunc(phys);
            p < phys_end; p += Config::SUPERPAGE_SIZE)
         {
           Address dm = Mem_layout::Registers_map_start + ndev;
