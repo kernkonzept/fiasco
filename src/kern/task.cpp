@@ -103,7 +103,8 @@ PRIVATE
 int
 Task::alloc_ku_mem_chunk(User<void>::Ptr u_addr, unsigned size, void **k_addr)
 {
-  assert ((size & (size - 1)) == 0);
+  assert((size & (size - 1)) == 0);
+  assert(size < Config::SUPERPAGE_SIZE);
 
   Kmem_alloc *const alloc = Kmem_alloc::allocator();
   void *p = alloc->q_alloc(ram_quota(), Bytes(size));
@@ -111,20 +112,13 @@ Task::alloc_ku_mem_chunk(User<void>::Ptr u_addr, unsigned size, void **k_addr)
   if (EXPECT_FALSE(!p))
     return -L4_err::ENomem;
 
-  // clean up utcbs
   memset(p, 0, size);
 
   Virt_addr base((Address)p);
-  Mem_space::Page_order page_size(Config::PAGE_SHIFT);
-
-  // the following works because the size is a power of two
-  // and once we have size larger than a super page we have
-  // always multiples of superpages
-  if (size >= Config::SUPERPAGE_SIZE)
-    page_size = Mem_space::Page_order(Config::SUPERPAGE_SHIFT);
+  Mem_space::Page_order page_order(Config::PAGE_SHIFT);
 
   for (Virt_size i = Virt_size(0); i < Virt_size(size);
-       i += Virt_size(1) << page_size)
+       i += Virt_size(1) << page_order)
     {
       Virt_addr kern_va = base + i;
       Virt_addr user_va = Virt_addr((Address)u_addr.get()) + i;
@@ -134,7 +128,7 @@ Task::alloc_ku_mem_chunk(User<void>::Ptr u_addr, unsigned size, void **k_addr)
       assert(pa != Mem_space::Phys_addr(~0UL));
 
       Mem_space::Status res =
-        static_cast<Mem_space*>(this)->v_insert(pa, user_va, page_size,
+        static_cast<Mem_space*>(this)->v_insert(pa, user_va, page_order,
             Mem_space::Attr::space_local(L4_fpage::Rights::URW()));
 
       switch (res)
@@ -166,7 +160,8 @@ PUBLIC
 int
 Task::alloc_ku_mem(L4_fpage ku_area)
 {
-  if (ku_area.order() < Config::PAGE_SHIFT || ku_area.order() > 20)
+  // The limit comes from the kernel allocator (Buddy_alloc).
+  if (ku_area.order() < Config::PAGE_SHIFT || ku_area.order() > 17)
     return -L4_err::EInval;
 
   Mword sz = 1UL << ku_area.order();
@@ -210,21 +205,15 @@ void
 Task::free_ku_mem_chunk(void *k_addr, User<void>::Ptr u_addr, unsigned size,
                         unsigned mapped_size)
 {
-
   Kmem_alloc * const alloc = Kmem_alloc::allocator();
-  Mem_space::Page_order page_size(Config::PAGE_SHIFT);
-
-  // the following works because the size is a power of two
-  // and once we have size larger than a super page we have
-  // always multiples of superpages
-  if (size >= Config::SUPERPAGE_SIZE)
-    page_size = Mem_space::Page_order(Config::SUPERPAGE_SHIFT);
+  Mem_space::Page_order page_order(Config::PAGE_SHIFT);
 
   for (Virt_size i = Virt_size(0); i < Virt_size(mapped_size);
-       i += Virt_size(1) << page_size)
+       i += Virt_size(1) << page_order)
     {
       Virt_addr user_va = Virt_addr((Address)u_addr.get()) + i;
-      static_cast<Mem_space*>(this)->v_delete(user_va, page_size, L4_fpage::Rights::FULL());
+      static_cast<Mem_space*>(this)->v_delete(user_va, page_order,
+                                              L4_fpage::Rights::FULL());
     }
 
   alloc->q_free(ram_quota(), Bytes(size), k_addr);
