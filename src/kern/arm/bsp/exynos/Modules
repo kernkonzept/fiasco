@@ -5,7 +5,7 @@ OBJECTS_LIBUART         += $(OBJECTS_LIBUART-y)
 CXXFLAGS-$(CONFIG_PF_EXYNOS_UART_NATIVE)_uart-libuart += $(call LIBUART_UART, s3c2410, s5pv210)
 CXXFLAGS_uart-libuart   += $(CXXFLAGS-y_uart-libuart)
 
-PREPROCESS_PARTS        += pic_gic watchdog bsp_cpu
+PREPROCESS_PARTS        += pic_gic watchdog bsp_cpu cascade_irq
 PREPROCESS_PARTS-$(CONFIG_PF_EXYNOS_TICKLESS_IDLE) += tickless_idle
 PREPROCESS_PARTS-$(CONFIG_PF_EXYNOS_TIMER_MCT) += exynos_mct
 PREPROCESS_PARTS-$(CONFIG_PF_EXYNOS_TIMER_MP)  += mptimer

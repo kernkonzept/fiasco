@@ -307,7 +307,7 @@ Gic::set_irq_handler(void (*irq_handler)())
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && cascade_irq]:
+IMPLEMENTATION [arm && pic_gic && cascade_irq && pf_realview]:
 
 #include "cascade_irq.h"
 
