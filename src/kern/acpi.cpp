@@ -159,6 +159,7 @@ struct Acpi_helper_get_msb<true>
 IMPLEMENTATION:
 
 #include "boot_alloc.h"
+#include "kip.h"
 #include "kmem.h"
 #include "panic.h"
 #include "warn.h"
