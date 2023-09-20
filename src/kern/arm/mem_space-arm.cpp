@@ -31,7 +31,7 @@ public:
   // Mapping utilities
   enum				// Definitions for map_util
   {
-    Need_insert_tlb_flush = 1,
+    Need_insert_tlb_flush = 0,
     Need_upgrade_tlb_flush = 1,
     Map_page_size = Config::PAGE_SIZE,
     Page_shift = Config::PAGE_SHIFT,
