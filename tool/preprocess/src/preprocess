@@ -848,13 +848,13 @@ sub parse_file
 	    }
 	  
 	  # Type declaration extension?
-	  if (/^( $s EXTENSION $s (?:struct|class) $s ($identifier)
-	       $s (?::(?!:) $s ([^\{]*))?\{ ) (.*) \} $s ; $s $/sx)
+	  if (/^(?<voided> $s EXTENSION $s (?:struct|class) $s (?<name> $identifier)
+	       $s (?::(?!:) $s (?<super>[^\{]*))?\{ ) (?<string> .*) \} $s ; $s $/sx)
 	    {
-	      my $super = $3;
-	      my $name = $2;
-	      my $string = $4;
-              my $voided = $1;
+              my $super = $+{super};
+              my $name = $+{name};
+              my $string = $+{string};
+              my $voided = $+{voided};
 
 	      if (! exists $classes{$name})
 		{
