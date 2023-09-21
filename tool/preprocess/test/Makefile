@@ -14,7 +14,7 @@ TOOL_TESTS = mapping mapping_inline random random_inline extern_c static \
   multifile variable line line_not line_nh interface comment_in_string \
   default_args drop_single1 drop_single2 drop_single3 drop_multi1 \
   drop_multi2 implement_template implement_default implement_default_err \
-  nested_class template_base_class func_defs
+  nested_class template_base_class func_defs extension_inherit
 
 mapping_inline_src = mapping
 mapping_inline_flags = -i
@@ -130,7 +130,7 @@ endif
 	@ERROR=0; \
 	for i in $(filter-out $($*_missing),$*.h $*_i.h $*.cc) $($*_extra); \
 	  do \
-	    if ! diff -u verify $$i; then ERROR=1; fi; \
+	    if ! diff --color -u verify $$i; then ERROR=1; fi; \
 	  done; \
 	test $$ERROR -eq 0
 	@echo "OK"

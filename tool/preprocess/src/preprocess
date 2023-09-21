@@ -848,12 +848,13 @@ sub parse_file
 	    }
 	  
 	  # Type declaration extension?
-	  if (/^(?<voided> $s EXTENSION $s (?:struct|class) $s (?<name> $identifier)
-	       $s (?::(?!:) $s (?<super>[^\{]*))?\{ ) (?<string> .*) \} $s ; $s $/sx)
+	  if (/^(?<voided> (?<voided_super> $s EXTENSION $s (?:struct|class) $s (?<name> $identifier)
+	       $s ) (?::(?!:) (?<super> $s [^\{]*))?\{ ) (?<string> .*) \} $s ; $s $/sx)
 	    {
               my $super = $+{super};
               my $name = $+{name};
               my $string = $+{string};
+              my $voided_super = $+{voided_super};
               my $voided = $+{voided};
 
 	      if (! exists $classes{$name})
@@ -869,14 +870,33 @@ sub parse_file
 		    if ($$txt =~ /^([^\{]*)/sx)
 		      {
 		        my $pre = $1;
+                        my $super_prefix = "";
+                        my $super_suffix = "";
+                        if ($doing_linenumbers)
+                          {
+                            # Add #line directive for the additional inheritance specifiers.
+                            $super_prefix = adjusted_line_directive($block_pos, $voided_super, 1);
+
+                            # For the first EXTENSION that extends the class with inheritance
+                            # specifiers, add a #line directive that continues the class body.
+                            # For all subsequent extensions, put the additional inheritance
+                            # specifieres before that #line directive, by removing it from $pre
+                            # before doing the regex replace in $txt.
+                            if ($pre !~ s/\n#line.*\n\s*$//)
+                              {
+                                # Add #line directive that continues the class body.
+                                $super_suffix = adjusted_line_directive($classes{$name}->pos, $pre, 1);
+                              }
+                          }
+
 			if ($pre =~ /^.*:(?!:)(.*)$/sx)
 			  {
-			    $$txt =~ s/^$pre/$pre\n, $super/s;
+			    $$txt =~ s/^$pre/${pre}${super_prefix},${super}${super_suffix}/s;
 #			    print "ADD super classes: , $super\n";
 			  }
 			else
 			  {
-			    $$txt =~ s/^$pre/$pre\n: $super/s;
+			    $$txt =~ s/^$pre/${pre}${super_prefix}:${super}${super_suffix}/s;
 			  }
 		      }
 		  }

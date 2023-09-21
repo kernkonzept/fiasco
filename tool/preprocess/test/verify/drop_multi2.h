@@ -11,7 +11,10 @@
 
 class Gen_foo
 
-: public Gen_bar
+#line 7 "dropsection-ext.cpp"
+                        : public Gen_bar
+
+#line 4 "dropsection.cpp"
 {
 public:
   int baz;
@@ -45,7 +48,10 @@ private:
 
 class Gen_foo_ext : private Gen_foo, public Ixdebix
 
-, public Gen_baz
+#line 13 "dropsection-ext.cpp"
+                            , public Gen_baz
+
+#line 14 "dropsection.cpp"
 {
 protected:
   unsigned stuff;
