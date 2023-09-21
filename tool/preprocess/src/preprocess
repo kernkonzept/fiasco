@@ -890,29 +890,12 @@ sub parse_file
 
               if ($doing_linenumbers)
                 {
-                  # Expand comments to ensure that the line directive offset is
-                  # adjusted correctly. This is necessary because the string we
-                  # are matching against here does not contain the comments
-                  # themselves but references to the comments array.
-                  $voided = expand_comments($voided);
-
-                  # The lines that the EXTENSION statement spanned, which are
-                  # not incorporated in the preprocessed code, must be added as
-                  # an offset to the line directive to preserve a correct line
-                  # mapping.
-                  my @voided_lines = split(/\n/, "$voided", -1);
-
-                  # Subtract one from the number of voided lines, because the
-                  # remainder of the line containing the opening { is preserved.
-                  $$txt .= $block_pos->to_line_directive(@voided_lines - 1);
-
                   # If code is on the same line as the replaced EXTENSION
                   # statement, add an equivalent number of spaces to ensure
                   # correct character alignment in the line.
-                  if ($string !~ /^\s*\n/)
-                    {
-                      $$txt .= " " x length($voided_lines[-1])
-                    }
+                  my $indent = $string !~ /^\s*\n/;
+
+                  $$txt .= adjusted_line_directive($block_pos, $voided, $indent);
                 }
 
               $$txt .= $string;
@@ -1571,6 +1554,35 @@ sub expand_comments($) # Expand comment references
     {}
 
   return $str;
+}
+
+sub adjusted_line_directive
+{
+  my ($base_pos, $voided, $indent) = @_;
+
+  # Expand comments to ensure that the line directive offset is adjusted
+  # correctly. This is necessary because the string we are matching against here
+  # does not contain the comments themselves but references to the comments
+  # array.
+  $voided = expand_comments($voided);
+
+  # The lines that the EXTENSION statement spanned, which are not incorporated
+  # in the preprocessed code, must be added as an offset to the line directive
+  # to preserve a correct line mapping.
+  my @voided_lines = split(/\n/, "$voided", -1);
+
+  # Subtract one from the number of voided lines, because the remainder of the
+  # last (partly) voided line is preserved.
+  my $line_directive = $base_pos->to_line_directive(@voided_lines - 1);
+
+  # If content continues on the last (partly) voided line, add an equivalent
+  # number of spaces to ensure correct character alignment in the line.
+  if ($indent)
+    {
+      $line_directive .= " " x length($voided_lines[-1])
+    }
+
+  return $line_directive;
 }
 
 sub weedout_whitespace		# Delete whitespace except on lines w/comments
