@@ -5,7 +5,6 @@
 #include "idt_init.h"
 #include <low_level.h>
 #include "regdefs.h"
-#include "shortcut.h"
 #include "tcboffset.h"
 
 	.section ".entry.text.debug_exc", "ax", @progbits

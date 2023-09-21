@@ -10,7 +10,6 @@
 #include "globalconfig.h"
 #include "idt_init.h"
 #include <low_level.h>
-#include "shortcut.h"
 #include "tcboffset.h"
 #include "regdefs.h"
 

@@ -131,8 +131,6 @@
 #define CNT_EXC_IPC             Jdb_tbuf::status()->kerncnts[Kern_cnt_exc_ipc]++;
 
 // FIXME: currently unused entries below
-#define CNT_SHORTCUT_FAILED     Jdb_tbuf::status()->kerncnts[Kern_cnt_shortcut_failed]++;
-#define CNT_SHORTCUT_SUCCESS    Jdb_tbuf::status()->kerncnts[Kern_cnt_shortcut_success]++;
 #define CNT_IPC_LONG            Jdb_tbuf::status()->kerncnts[Kern_cnt_ipc_long]++;
 #define CNT_TASK_CREATE         Jdb_tbuf::status()->kerncnts[Kern_cnt_task_create]++;
 #define CNT_IOBMAP_TLB_FLUSH    Jdb_tbuf::status()->kerncnts[Kern_cnt_iobmap_tlb_flush]++;
@@ -148,8 +146,6 @@
 #define CNT_EXC_IPC             ((void) 0)
 
 // FIXME: currently unused entries below
-#define CNT_SHORTCUT_FAILED	((void) 0)
-#define CNT_SHORTCUT_SUCCESS	((void) 0)
 #define CNT_IPC_LONG		((void) 0)
 #define CNT_TASK_CREATE		((void) 0)
 #define CNT_IOBMAP_TLB_FLUSH	((void) 0)

@@ -2,7 +2,6 @@
 #define ASM_SANITY_CHECK_H
 
 #include "globalconfig.h"
-#include "shortcut.h"
 
 #ifdef __ASSEMBLER__
 

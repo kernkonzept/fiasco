@@ -5,7 +5,6 @@
 #include "idt_init.h"
 #include <low_level.h>
 #include "regdefs.h"
-#include "shortcut.h"
 #include "tcboffset.h"
 
 .macro  PRE_FAST_ALIEN_IPC

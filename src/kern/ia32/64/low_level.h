@@ -3,7 +3,6 @@
 
 #include "asm.h"
 #include "regdefs.h"
-#include "shortcut.h"
 #include "tcboffset.h"
 #include "globalconfig.h"
 

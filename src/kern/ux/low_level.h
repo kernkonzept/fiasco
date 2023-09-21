@@ -1,7 +1,6 @@
 #ifndef LOW_LEVEL_H
 #define LOW_LEVEL_H
 
-#include "shortcut.h"
 #include "tcboffset.h"
 
 /** Some shared macros and stuff shared by the two different 
