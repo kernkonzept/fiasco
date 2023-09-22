@@ -16,6 +16,11 @@ public:
 
   enum : Mword
   {
+    utcb_ptr_align    = Tl_math::Ld<64>::Res,    // 64byte cachelines
+  };
+
+  enum : Mword
+  {
     Kentry_start      = 0xffff810000000000UL, ///< 512GB slot 258
     Kentry_cpu_page   = 0xffff817fffffc000UL, ///< last 16KB in slot 258
     Io_bitmap         = 0xffff818000000000UL, ///< 512GB slot 259 first page
@@ -33,14 +38,12 @@ public:
     Tbuf_status_page  = Service_page + 0x6000,   ///< % 4KB
     Tbuf_ustatus_page = Tbuf_status_page,
     Jdb_bench_page    = Service_page + 0x8000,   ///< % 4KB
-    utcb_ptr_align    = Tl_math::Ld<64>::Res,    // 64byte cachelines
     Tbuf_buffer_area  = Service_page + 0x200000, ///< % 2MB
     Tbuf_buffer_size  = 0x200000,
     Tbuf_ubuffer_area = Tbuf_buffer_area,
     // 0xffffffffeb800000-0xfffffffffec000000 (8MB) free
     Registers_map_start = Kglobal_area + 0xc000000UL,
     Registers_map_end   = Kglobal_area_end,
-    Kstatic           = 0xffffffffef800000UL,    ///< % 4MB Io_bitmap
     Vmem_end          = 0xfffffffff0000000UL,
 
     Kernel_image        = FIASCO_IMAGE_VIRT_START,
