@@ -28,7 +28,7 @@ skip0x:
       if(base==8) w = v << 3;
       //if(base==16) w = v << 4;
       if(base==10) w = (v << 3) + (v << 1);
-      if (w<v) {
+      if (w+c<v) {
 	return (unsigned long)-1;
       }
       v=w+c;
