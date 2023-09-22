@@ -107,7 +107,7 @@ INTERFACES_KERNEL	:= string_buffer mem_region simpleio kernel_console panic warn
 			   sender receiver ipc_sender thread thread_object \
 			   kobject_helper timer_tick platform_control     \
 			   syscalls ipc_gate irq_controller \
-			   kernel_thread dirq irq_chip irq_mgr \
+			   kernel_thread dirq allocator irq_chip irq_mgr \
 			   irq_chip_ia32 irq_chip_ux \
 			   banner fpu_alloc irq icu_helper main 	  \
 			   startup libc_support reset semaphore          \

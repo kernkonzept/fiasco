@@ -99,10 +99,9 @@ Kmem::init_mmu(Cpu const &boot_cpu)
                  | Pt_entry::Writable | Pt_entry::Referenced
                  | Pt_entry::Dirty | Pt_entry::global());
 
-      tss_mem_vm = cxx::Simple_alloc(Super_pg::offset(tss_mem_pm)
-                                     + (Mem_layout::Io_bitmap
-                                     - Config::SUPERPAGE_SIZE),
-                                     Config::PAGE_SIZE);
+      tss_mem_vm.construct(Super_pg::offset(tss_mem_pm)
+                           + (Mem_layout::Io_bitmap - Config::SUPERPAGE_SIZE),
+                           Config::PAGE_SIZE);
     }
   else
     {
@@ -114,18 +113,17 @@ Kmem::init_mmu(Cpu const &boot_cpu)
                   | Pt_entry::Referenced | Pt_entry::Dirty
                   | Pt_entry::global());
 
-      tss_mem_vm = cxx::Simple_alloc(
-          Mem_layout::Io_bitmap - Config::PAGE_SIZE,
-          Config::PAGE_SIZE);
+      tss_mem_vm.construct(Mem_layout::Io_bitmap - Config::PAGE_SIZE,
+                           Config::PAGE_SIZE);
     }
 
-  if (mmap (tss_mem_vm.block(), Config::PAGE_SIZE, PROT_READ
-            | PROT_WRITE, MAP_SHARED | MAP_FIXED, Boot_info::fd(), tss_mem_pm)
+  if (mmap(tss_mem_vm->ptr(), Config::PAGE_SIZE, PROT_READ
+           | PROT_WRITE, MAP_SHARED | MAP_FIXED, Boot_info::fd(), tss_mem_pm)
       == MAP_FAILED)
     printf ("CPU page mapping failed: %s\n", strerror (errno));
 
   kdir->walk(Virt_addr(Mem_layout::Service_page), Pdir::Depth,
              false, pdir_alloc(alloc));
 
-  Cpu::init_tss((Address)tss_mem_vm.alloc<Tss>(1, 0x10));
+  Cpu::init_tss((Address)tss_mem_vm->alloc<Tss>(1, 0x10));
 }

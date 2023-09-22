@@ -98,7 +98,7 @@ INTERFACES_KERNEL	+= __main acpi acpi_fadt acpi_dmar \
 			   boot_console syscall_entry \
 			   irq_msi io_space apic pit boot_info checksum \
 			   x86desc gdt idt tss timer_irq dirq \
-			   i8259
+			   i8259 allocator
 
 INTERFACES_KERNEL-$(CONFIG_IOMMU)    += intel_dmar dmar_space
 INTERFACES_KERNEL-$(CONFIG_CPU_VIRT) += svm vmx vm vm_svm vm_vmx vm_vmx_ept
