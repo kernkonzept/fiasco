@@ -55,6 +55,9 @@ public:
   inline bool valid() const
   { return _offs <= Context::Size-sizeof(Mword); }
 
+  inline bool mapped() const
+  { return Jdb_util::is_mapped((void const*)addr()); }
+
   bool operator > (int offs) const
   {
     return offs < 0 ? _offs > Context::Size + offs*sizeof(Mword)
@@ -215,7 +218,7 @@ PUBLIC
 void
 Jdb_stack_view::print_value(Jdb_tcb_ptr const &p, bool highl = false)
 {
-  if (!p.valid() || !Jdb_util::is_mapped((void const*)p.addr()))
+  if (!p.valid() || !p.mapped())
     {
       printf(" %.*s", (int)Jdb_screen::Mword_size_bmode, Jdb_screen::Mword_not_mapped);
       return;
@@ -254,6 +257,29 @@ Jdb_stack_view::print_value(Jdb_tcb_ptr const &p, bool highl = false)
   printf(" %s" ADDR_FMT "%s", s1, p.value(), s2);
 }
 
+PRIVATE
+void
+Jdb_stack_view::skip_zero_stack_range(Jdb_tcb_ptr *p, unsigned *y, unsigned ylen)
+{
+  bool entire_row_zero = true;
+  bool in_zero_range = false;
+  for (Jdb_tcb_ptr q = *p; *y < ylen; ++(*y), *p = q)
+    {
+      for (unsigned x = 0; x < cols(); ++x, q += 1)
+        if (q.valid() && q.mapped() && q.value())
+          {
+            entire_row_zero = false;
+            break;
+          }
+      if (!entire_row_zero)
+        break;
+      if (!in_zero_range)
+        {
+          in_zero_range = true;
+          puts("         --- zeros ---");
+        }
+    }
+}
 
 PUBLIC
 void
@@ -282,8 +308,10 @@ Jdb_stack_view::dump(bool dump_only)
 
       if (p.valid())
         {
+          if (dump_only && y >= (sizeof(Thread) / bytes_per_line()))
+            skip_zero_stack_range(&p, &y, ylen - 1);
           printf("   %04lx ", p.addr() & 0xffff);
-          for (unsigned x = 0; x < cols(); ++x, p+=1)
+          for (unsigned x = 0; x < cols(); ++x, p += 1)
             print_value(p);
           putchar('\n');
         }
