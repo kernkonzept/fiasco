@@ -275,8 +275,17 @@ public:
   enum { SIZE = 30 };
 };
 
+//---------------------------------------------------------------------------
+INTERFACE[64bit]:
+
+EXTENSION class Tb_entry_ipc
+{
+private:
+  Unsigned64  _to_abs_rcv;      ///< absolute receive timeout
+};
 
 
+//---------------------------------------------------------------------------
 IMPLEMENTATION:
 
 #include <cstring>
@@ -426,6 +435,7 @@ Tb_entry_ipc::set(Context const *ctx, Mword ip, Syscall_frame *ipc_regs, Utcb *u
   _dbg_id = dbg_id;
 
   _timeout   = ipc_regs->timeout();
+  set_abs_timeout(utcb);
   _tag       = ipc_regs->tag();
   // hint for gcc
   Mword tmp0 = utcb->values[0];
@@ -607,3 +617,32 @@ Tb_entry_ke_bin::set_buf(unsigned i, char c)
   if (i < sizeof(_msg)-1)
     _msg[i] = c;
 }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION[32bit]:
+
+PUBLIC inline void Tb_entry_ipc::set_abs_timeout(Utcb *)
+{
+  // ignore absolute timeouts due to lack of space
+}
+
+PUBLIC inline
+Unsigned64
+Tb_entry_ipc::timeout_abs_rcv() const
+{ return 0ULL; }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION[64bit]:
+
+PUBLIC inline NEEDS ["entry_frame.h"]
+void
+Tb_entry_ipc::set_abs_timeout(Utcb *utcb)
+{
+  if (_timeout.rcv.is_absolute())
+    _to_abs_rcv = _timeout.rcv.microsecs_abs(utcb);
+}
+
+PUBLIC inline
+Unsigned64
+Tb_entry_ipc::timeout_abs_rcv() const
+{ return _to_abs_rcv; }

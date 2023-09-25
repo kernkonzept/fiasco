@@ -239,11 +239,18 @@ formatter_ipc(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidlen)
     {
       if (to.rcv.is_absolute())
         {
-          // absolute receive timeout
-          if (0)
+          if (sizeof(Mword) == 8)
             {
-              Unsigned64 end = 0; // FIXME: to.rcv.microsecs_abs (e->kclock());
-              format_timeout(buf, (Mword)(end > e->kclock() ? end-e->kclock() : 0));
+              // absolute receive timeout
+              buf->printf("abs=%llu,rel=", e->timeout_abs_rcv());
+
+              if (e->timeout_abs_rcv() >= e->kclock())
+                format_timeout(buf, (Mword)(e->timeout_abs_rcv() - e->kclock()));
+              else
+                {
+                  buf->printf("-");
+                  format_timeout(buf, (Mword)(e->kclock() - e->timeout_abs_rcv()));
+                }
             }
           else
             buf->printf("abs-N/A");
