@@ -96,6 +96,31 @@ public:
                         Return_frame *regs);
 
 private:
+  struct Migration_state
+  {
+    static constexpr Migration_state done_need_resched(){ return Migration_state{1}; }
+    static constexpr Migration_state done_no_resched() { return Migration_state{2}; }
+    static Migration_state migrate(Migration *migration)
+    {
+      Mword migration_addr = reinterpret_cast<Mword>(migration);
+      assert(!(migration_addr & 0x3)); // ensure alignment
+      return Migration_state{migration_addr};
+    }
+
+    constexpr bool is_done() const { return _state & 3; }
+
+    // Only valid if is_done() is true.
+    constexpr bool need_resched() const { return _state & 1; }
+
+    // Only valid if is_done() is false.
+    Migration *migration() const { return reinterpret_cast<Migration *>(_state); }
+
+  private:
+    explicit constexpr Migration_state(Mword state) : _state(state) {}
+
+    Mword _state;
+  };
+
   struct Migration_helper_info
   {
     Migration *inf;
@@ -714,48 +739,46 @@ Thread::handle_migration_helper(Drq *rq, Context *, void *p)
 }
 
 PRIVATE inline
-Thread::Migration *
+Thread::Migration_state
 Thread::start_migration()
 {
   assert(cpu_lock.test());
   Migration *m = _migration;
 
-  assert (!(reinterpret_cast<Mword>(m) & 0x3)); // ensure alignment
-
   if (!m || !cas<Migration *>(&_migration, m, nullptr))
-    return reinterpret_cast<Migration*>(0x2); // bit one == 0 --> no need to reschedule
+    return Migration_state::done_no_resched();
 
   if (m->cpu == home_cpu())
     {
       set_sched_params(m->sp);
       Mem::mp_mb();
       write_now(&m->in_progress, true);
-      return reinterpret_cast<Migration*>(0x1); // bit one == 1 --> need to reschedule
+      return Migration_state::done_need_resched();
     }
 
-  return m; // need to do real migration
+  return Migration_state::migrate(m); // need to do real migration
 }
 
 PRIVATE
 bool
 Thread::do_migration()
 {
-  Migration *inf = start_migration();
-
-  if (reinterpret_cast<Mword>(inf) & 3)
-    return reinterpret_cast<Mword>(inf) & 1; // already migrated, nothing to do
+  Migration_state inf = start_migration();
+  if (inf.is_done())
+    return inf.need_resched(); // already migrated, nothing to do
 
   spill_fpu_if_owner();
 
+  Migration *m = inf.migration();
   if (current() == this)
     {
       assert (current_cpu() == home_cpu());
-      return kernel_context_drq(handle_migration_helper, inf);
+      return kernel_context_drq(handle_migration_helper, m);
     }
   else
     {
-      Cpu_number target_cpu = access_once(&inf->cpu);
-      bool resched = migrate_away(inf, false);
+      Cpu_number target_cpu = access_once(&m->cpu);
+      bool resched = migrate_away(m, false);
       resched |= migrate_to(target_cpu, false);
       return resched; // we already are chosen by the scheduler...
     }
@@ -765,15 +788,16 @@ bool
 Thread::initiate_migration() override
 {
   assert (current() != this);
-  Migration *inf = start_migration();
 
-  if (reinterpret_cast<Mword>(inf) & 3)
-    return reinterpret_cast<Mword>(inf) & 1;
+  Migration_state inf = start_migration();
+  if (inf.is_done())
+    return inf.need_resched(); // already migrated, nothing to do
 
   spill_fpu_if_owner();
 
-  Cpu_number target_cpu = access_once(&inf->cpu);
-  bool resched = migrate_away(inf, false);
+  Migration *m = inf.migration();
+  Cpu_number target_cpu = access_once(&m->cpu);
+  bool resched = migrate_away(m, false);
   resched |= migrate_to(target_cpu, false);
   return resched;
 }
@@ -1327,13 +1351,13 @@ Thread::migrate_xcpu(Cpu_number cpu)
       // we have the rqq lock of 'cpu'
       if (!Cpu::online(cpu))
         {
-          Migration *inf = start_migration();
+          Migration_state inf = start_migration();
+          if (inf.is_done())
+            return inf.need_resched(); // all done, nothing to do
 
-          if (reinterpret_cast<Mword>(inf) & 3)
-            return reinterpret_cast<Mword>(inf) & 1; // all done, nothing to do
-
-          Cpu_number target_cpu = access_once(&inf->cpu);
-          migrate_away(inf, true);
+          Migration *m = inf.migration();
+          Cpu_number target_cpu = access_once(&m->cpu);
+          migrate_away(m, true);
           g.reset();
           return migrate_to(target_cpu, true);
           // FIXME: Wie lange dauert es ready dequeue mit WFQ zu machen?
