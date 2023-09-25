@@ -8,19 +8,8 @@ static int construction_done = 0;
 
 void run_ctor_functions(ctor_function_t *start, ctor_function_t *end)
 {
-  if (start < end)
-    {
-      for (;start != end; ++start)
-        (*start)();
-    }
-  else
-    {
-      for (;start != end;)
-        {
-          --start;
-          (*start)();
-        }
-    }
+  for (;start != end; ++start)
+    (*start)();
 }
 
 void static_construction()
@@ -39,7 +28,7 @@ void static_construction()
 
 void static_destruction()
 {
-  if(!construction_done)
+  if (!construction_done)
     return;
 
   extern ctor_function_t __DTOR_END__[];

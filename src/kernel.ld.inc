@@ -10,9 +10,12 @@
   KEEP(*(SORT(.debug.jdb.name ## _table)));    \
   PROVIDE(_jdb_ ## name ## _table_end = .);
 
-/* Constructor and destructor lists, ordered by priority.  The lists
-   are traversed from end to start, therefore the *_END__ symbols
-   precede the *_LIST__ symbols. */
+/* 
+ * Note that SORT_BY_INIT_PRIORITY behaves differently depending on the passed
+ * sections:
+ * - For .init_array.NNNNN and .fini_array.NNNNN, NNNNN is the init_priority.
+ * - For .ctors.NNNNN and .dtors.NNNNN, NNNNN is 65535 minus the init_priority.
+ */
 #define DEFINE_INIT_ARRAYS                      \
                                                 \
     __PER_CPU_INIT_ARRAY_START__ = .;           \
@@ -42,46 +45,46 @@
     __PER_CPU_LATE_INIT_ARRAY_END__ = .;        \
                                                 \
     __INIT_ARRAY_START__ = .;                   \
-    KEEP (*(SORT (.init_array.*)))              \
+    KEEP (*(SORT_BY_INIT_PRIORITY (.init_array.*))) \
     KEEP (*(.init_array))                       \
     __INIT_ARRAY_END__ = .;                     \
                                                 \
-    __PER_CPU_CTORS_END__ = .;                  \
-    KEEP (*(.ctors.00010))                      \
-    KEEP (*(.ctors.00009))                      \
-    KEEP (*(.ctors.00008))                      \
-    KEEP (*(.ctors.00007))                      \
-    KEEP (*(.ctors.00006))                      \
-    KEEP (*(.ctors.00005))                      \
-    KEEP (*(.ctors.00004))                      \
-    KEEP (*(.ctors.00003))                      \
-    KEEP (*(.ctors.00002))                      \
-    KEEP (*(.ctors.00001))                      \
     __PER_CPU_CTORS_LIST__ = .;                 \
+    KEEP (*(.ctors.00001))                      \
+    KEEP (*(.ctors.00002))                      \
+    KEEP (*(.ctors.00003))                      \
+    KEEP (*(.ctors.00004))                      \
+    KEEP (*(.ctors.00005))                      \
+    KEEP (*(.ctors.00006))                      \
+    KEEP (*(.ctors.00007))                      \
+    KEEP (*(.ctors.00008))                      \
+    KEEP (*(.ctors.00009))                      \
+    KEEP (*(.ctors.00010))                      \
+    __PER_CPU_CTORS_END__ = .;                  \
                                                 \
-    __PER_CPU_LATE_CTORS_END__ = .;             \
-    KEEP (*(.ctors.00020))                      \
-    KEEP (*(.ctors.00019))                      \
-    KEEP (*(.ctors.00018))                      \
-    KEEP (*(.ctors.00017))                      \
-    KEEP (*(.ctors.00016))                      \
-    KEEP (*(.ctors.00015))                      \
-    KEEP (*(.ctors.00014))                      \
-    KEEP (*(.ctors.00013))                      \
-    KEEP (*(.ctors.00012))                      \
-    KEEP (*(.ctors.00011))                      \
     __PER_CPU_LATE_CTORS_LIST__ = .;            \
+    KEEP (*(.ctors.00011))                      \
+    KEEP (*(.ctors.00012))                      \
+    KEEP (*(.ctors.00013))                      \
+    KEEP (*(.ctors.00014))                      \
+    KEEP (*(.ctors.00015))                      \
+    KEEP (*(.ctors.00016))                      \
+    KEEP (*(.ctors.00017))                      \
+    KEEP (*(.ctors.00018))                      \
+    KEEP (*(.ctors.00019))                      \
+    KEEP (*(.ctors.00020))                      \
+    __PER_CPU_LATE_CTORS_END__ = .;             \
                                                 \
-    __CTOR_END__ = .;                           \
-    CONSTRUCTORS                                \
-    KEEP (*(.ctors))                            \
-    KEEP (*(SORT (.ctors.*)))                   \
     __CTOR_LIST__ = .;                          \
+    CONSTRUCTORS                                \
+    KEEP (*(SORT_BY_INIT_PRIORITY (.ctors.*)))  \
+    KEEP (*(.ctors))                            \
+    __CTOR_END__ = .;                           \
                                                 \
-    __DTOR_END__ = .;                           \
-    KEEP (*(SORT(.dtors.*)))                    \
+    __DTOR_LIST__ = .;                          \
     KEEP (*(.dtors))                            \
-    __DTOR_LIST__ = .;
+    KEEP (*(SORT_BY_INIT_PRIORITY (.dtors.*)))  \
+    __DTOR_END__ = .;
 
 #if defined(CONFIG_COV)
 EXTERN(cov_print)
