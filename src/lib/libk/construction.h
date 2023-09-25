@@ -6,7 +6,6 @@
 __BEGIN_DECLS
 
 void static_construction(void);
-void static_destruction(void);
 
 typedef void (*ctor_function_t)(void);
 

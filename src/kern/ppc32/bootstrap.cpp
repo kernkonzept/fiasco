@@ -25,7 +25,6 @@ extern "C" FIASCO_INIT
 int bootstrap_main(void * /* r3 */, Address prom_ptr /* r4 */)
 {
   Boot_info::set_prom(prom_ptr);
-  atexit(&static_destruction);
   static_construction();
   printf("Bootstrapped\n");
   terminate(main());

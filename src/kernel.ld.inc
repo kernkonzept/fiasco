@@ -79,12 +79,7 @@
     CONSTRUCTORS                                \
     KEEP (*(SORT_BY_INIT_PRIORITY (.ctors.*)))  \
     KEEP (*(.ctors))                            \
-    __CTOR_END__ = .;                           \
-                                                \
-    __DTOR_LIST__ = .;                          \
-    KEEP (*(.dtors))                            \
-    KEEP (*(SORT_BY_INIT_PRIORITY (.dtors.*)))  \
-    __DTOR_END__ = .;
+    __CTOR_END__ = .;
 
 #if defined(CONFIG_COV)
 EXTERN(cov_print)

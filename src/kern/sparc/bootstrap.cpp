@@ -15,7 +15,6 @@ extern "C" int main(void);
 extern "C" FIASCO_INIT
 int bootstrap_main(void *, Address)
 {
-  atexit(&static_destruction);
   static_construction();
   puts("Bootstrapped");
   terminate(main());
