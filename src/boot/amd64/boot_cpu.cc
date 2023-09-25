@@ -190,34 +190,29 @@ extern inline void set_ss(Unsigned16 ss)
 extern inline Unsigned16 get_ss()
 { Unsigned16 ss; asm volatile("mov %%ss,%w0" : "=r" (ss)); return ss; }
 
-#define set_idt(pseudo_desc) \
- asm volatile("lidt %0" : : "m"((pseudo_desc)->limit), "m"(*pseudo_desc))
+extern inline void set_idt(pseudo_descriptor *pdesc)
+{ asm volatile("lidt %0" : : "m"((pdesc)->limit), "m"(*pdesc)); }
 
-#define set_gdt(pseudo_desc) \
- asm volatile("lgdt %0" : : "m"((pseudo_desc)->limit), "m"(*pseudo_desc))
+extern inline void set_gdt(pseudo_descriptor *pdesc)
+{ asm volatile("lgdt %0" : : "m"((pdesc)->limit), "m"(*pdesc)); }
 
-#define	set_tr(seg) \
- asm volatile("ltr %0" : : "rm" ((Unsigned16)(seg)))
+extern inline void set_tr(Unsigned16 seg)
+{ asm volatile("ltr %0" : : "rm" (seg)); }
 
-#define get_esp() \
- ({ Unsigned64 _temp__; \
-    asm("mov %%rsp, %0" : "=r" (_temp__)); _temp__; })
+extern inline Unsigned64 get_esp()
+{ Unsigned64 rsp; asm("mov %%rsp, %0" : "=r" (rsp)); return rsp; }
 
-#define	get_cr0() \
- ({ Unsigned64 _temp__; \
-    asm volatile("mov %%cr0, %0" : "=r" (_temp__)); _temp__; })
+extern inline Unsigned64 get_cr0()
+{ Unsigned64 cr0; asm volatile("mov %%cr0, %0" : "=r" (cr0)); return cr0; }
 
-#define	set_cr3(value) \
- ({ Unsigned64 _temp__ = (value); \
-    asm volatile("mov %0, %%cr3" : : "r" (_temp__)); })
+extern inline void set_cr3(Unsigned64 cr3)
+{ asm volatile("mov %0, %%cr3" : : "r" (cr3)); }
 
-#define get_cr4() \
- ({ Unsigned64 _temp__; \
-    asm volatile("mov %%cr4, %0" : "=r" (_temp__)); _temp__; })
+extern inline Unsigned64 get_cr4()
+{ Unsigned64 cr4; asm volatile("mov %%cr4, %0" : "=r" (cr4)); return cr4; }
 
-#define set_cr4(value) \
- ({ Unsigned64 _temp__ = (value); \
-    asm volatile("mov %0, %%cr4" : : "r" (_temp__)); })
+extern inline void set_cr4(Unsigned64 cr4)
+{ asm volatile("mov %0, %%cr4" : : "r" (cr4)); }
 
 
 extern inline void enable_longmode()

@@ -15,11 +15,21 @@ private:
   static Mword		dr7;
 };
 
-#define write_debug_register(num, val) \
-    asm volatile("mov %0, %%db" #num : : "r" ((Mword)val))
+PUBLIC static inline ALWAYS_INLINE
+void
+Jdb_bp::write_debug_register(unsigned num, Mword val)
+{
+  asm volatile("mov %0, %%db%c1" :: "r" (val), "i"(num));
+}
 
-#define read_debug_register(num) \
-    ({Mword val; asm volatile("mov %%db" #num ",%0" : "=r"(val)); val;})
+PUBLIC static inline ALWAYS_INLINE
+Mword
+Jdb_bp::read_debug_register(unsigned num)
+{
+  Mword val;
+  asm volatile("mov %%db%c1, %0" : "=r"(val) : "i"(num));
+  return val;
+}
 
 IMPLEMENTATION[ia32,amd64]:
 
@@ -37,7 +47,7 @@ Breakpoint::set(Jdb_address _addr, Mword _len, Mode _mode, Log _log)
   len  = _len;
 }
 
-PUBLIC static inline
+PUBLIC static inline ALWAYS_INLINE NEEDS[Jdb_bp::read_debug_register]
 Mword
 Jdb_bp::get_dr(Mword i)
 {
