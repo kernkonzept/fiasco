@@ -732,9 +732,7 @@ Thread::handle_migration_helper(Drq *rq, Context *, void *p)
 {
   Migration *inf = reinterpret_cast<Migration *>(p);
   Thread *v = static_cast<Thread*>(static_cast<Kernel_drq*>(rq)->src);
-  Cpu_number target_cpu = access_once(&inf->cpu);
-  v->migrate_away(inf, false);
-  v->migrate_to(target_cpu, false);
+  v->do_migration_not_current(inf);
   return Drq::no_answer_resched();
 }
 
@@ -759,6 +757,24 @@ Thread::start_migration()
   return Migration_state::migrate(m); // need to do real migration
 }
 
+PRIVATE inline
+bool
+Thread::do_migration_current(Migration *m)
+{
+  assert (current_cpu() == home_cpu());
+  return kernel_context_drq(handle_migration_helper, m);
+}
+
+PRIVATE inline
+bool
+Thread::do_migration_not_current(Migration *m)
+{
+  Cpu_number target_cpu = access_once(&m->cpu);
+  bool resched = migrate_away(m, false);
+  resched |= migrate_to(target_cpu, false);
+  return resched; // we already are chosen by the scheduler...
+}
+
 PRIVATE
 bool
 Thread::do_migration()
@@ -769,20 +785,12 @@ Thread::do_migration()
 
   spill_fpu_if_owner();
 
-  Migration *m = inf.migration();
   if (current() == this)
-    {
-      assert (current_cpu() == home_cpu());
-      return kernel_context_drq(handle_migration_helper, m);
-    }
+    return do_migration_current(inf.migration());
   else
-    {
-      Cpu_number target_cpu = access_once(&m->cpu);
-      bool resched = migrate_away(m, false);
-      resched |= migrate_to(target_cpu, false);
-      return resched; // we already are chosen by the scheduler...
-    }
+    return do_migration_not_current(inf.migration());
 }
+
 PUBLIC
 bool
 Thread::initiate_migration() override
@@ -795,11 +803,7 @@ Thread::initiate_migration() override
 
   spill_fpu_if_owner();
 
-  Migration *m = inf.migration();
-  Cpu_number target_cpu = access_once(&m->cpu);
-  bool resched = migrate_away(m, false);
-  resched |= migrate_to(target_cpu, false);
-  return resched;
+  return do_migration_not_current(inf.migration());
 }
 
 PUBLIC
