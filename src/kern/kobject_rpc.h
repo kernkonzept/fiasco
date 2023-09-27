@@ -486,5 +486,5 @@ template<typename ...ARGS> struct Sig_msg<L4_msg_tag (ARGS...)> : Msg<ARGS...> {
       return  Self::call(tag, in, out, Fwd<OBJ>(o),    \
                          cxx::forward<ARGS>(args)...); \
     }                                                  \
-  };
+  }
 }
