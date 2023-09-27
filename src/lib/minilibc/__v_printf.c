@@ -193,11 +193,6 @@ print_out:
 	}
 	break;
 
-      /* print an integer value */
-      case 'b':
-	base=2;
-	sz=0;
-	goto num_printf;
       case 'p':
 	flag_hash=1;
 	if(sizeof(void*)>sizeof(unsigned)) 
