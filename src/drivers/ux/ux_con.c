@@ -253,8 +253,8 @@ static struct key_mapping key_map[] = {
 };
 
 FILE *log_fd;
-#define DO_LOG(x...) \
-  do { if (Do_logging) { fprintf(log_fd, x); fflush(log_fd); } } while (0)
+#define DO_LOG(...) \
+  do { if (Do_logging) { fprintf(log_fd, __VA_ARGS__); fflush(log_fd); } } while (0)
 
 static void start_logging(void)
 {

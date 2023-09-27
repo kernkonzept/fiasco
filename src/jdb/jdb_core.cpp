@@ -971,8 +971,8 @@ Help_m::Help_m()
   : Jdb_module("GENERAL")
 {}
 
-#define CAT(n, x...) \
-  static Jdb_category INIT_PRIORITY(JDB_CATEGORY_INIT_PRIO) jdb_cat_ ## n(x)
+#define CAT(n, ...) \
+  static Jdb_category INIT_PRIORITY(JDB_CATEGORY_INIT_PRIO) jdb_cat_ ## n(__VA_ARGS__)
 CAT(a, "GENERAL",    "general debugger commands",      0);
 CAT(b, "INFO",       "information about kernel state", 1);
 CAT(c, "MONITORING", "monitoring kernel events",       2);

@@ -465,8 +465,9 @@ template<typename ...ARGS> struct Sig_msg<L4_msg_tag (ARGS...)> : Msg<ARGS...> {
 /**
  * Define a message class `Msg_##name` for the given arguments.
  */
-#define L4_RPC(opcode, name, fargs...)                 \
-  struct Msg_##name : Ko::Sig_msg<L4_msg_tag fargs>    \
+#define L4_RPC(opcode, name, ...)                      \
+  struct Msg_##name :                                  \
+    Ko::Sig_msg<L4_msg_tag __VA_ARGS__>                \
   {                                                    \
     enum : Mword { Op = opcode };                      \
     template<typename OBJ> struct Fwd                  \
@@ -482,7 +483,7 @@ template<typename ...ARGS> struct Sig_msg<L4_msg_tag (ARGS...)> : Msg<ARGS...> {
                            Utcb const *in, Utcb *out,  \
                            ARGS &&...args)             \
     {                                                  \
-      typedef Ko::Sig_msg<L4_msg_tag fargs> Self;      \
+      typedef Ko::Sig_msg<L4_msg_tag __VA_ARGS__> Self;\
       return  Self::call(tag, in, out, Fwd<OBJ>(o),    \
                          cxx::forward<ARGS>(args)...); \
     }                                                  \

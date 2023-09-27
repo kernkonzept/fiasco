@@ -21,8 +21,8 @@
 
 #if !defined(CONFIG_JDB)
 
-#define LOG_TRACE_COND(name, sc, ctx, fmt, cond, code...) ((void) 0)
-#define LOG_TRACE(name, sc, ctx, fmt, code...) ((void) 0)
+#define LOG_TRACE_COND(name, sc, ctx, fmt, cond, ...) ((void) 0)
+#define LOG_TRACE(name, sc, ctx, fmt, ...)     ((void) 0)
 #define LOG_CONTEXT_SWITCH                     ((void) 0)
 #define LOG_TRAP                               ((void) 0)
 #define LOG_TRAP_N(n)                          ((void) 0)
@@ -38,19 +38,19 @@
 #include "jdb_tbuf.h"
 #include "processor.h"
 
-#define LOG_TRACE_COND(name, sc, ctx, fmt, cond, code...)               \
+#define LOG_TRACE_COND(name, sc, ctx, fmt, cond, ...)                   \
   BEGIN_LOG_EVENT(name, sc, fmt)                                        \
     if (cond)                                                           \
       {                                                                 \
         fmt *l = Jdb_tbuf::new_entry<fmt>();                            \
         l->set_global(__do_log__, ctx, Proc::program_counter());        \
-        {code;}                                                         \
+        {__VA_ARGS__;}                                                  \
         Jdb_tbuf::commit_entry(l);                                      \
       }                                                                 \
   END_LOG_EVENT
 
-#define LOG_TRACE(name, sc, ctx, fmt, code...)                          \
-  LOG_TRACE_COND(name, sc, ctx, fmt, true, code)
+#define LOG_TRACE(name, sc, ctx, fmt, ...)                              \
+  LOG_TRACE_COND(name, sc, ctx, fmt, true, __VA_ARGS__)
 
 #define LOG_CONTEXT_SWITCH                                              \
   LOG_TRACE("Context switch", "csw", this, Tb_entry_ctx_sw,             \
