@@ -326,7 +326,7 @@ base_idt_init(void)
 static void
 base_gdt_init(void)
 {
-  printf("base_tss @%p\n", &base_tss);
+  printf("base_tss @%p\n", (void *)&base_tss);
   /* Initialize the base TSS descriptor.  */
   fill_descriptor(&base_gdt[BASE_TSS / 8],
                   (Address)&base_tss, sizeof(base_tss) - 1,

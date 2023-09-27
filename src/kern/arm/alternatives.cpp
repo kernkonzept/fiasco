@@ -175,7 +175,7 @@ Alternative_insn::init()
       if (i->probe())
         {
           if (0)
-            printf("  replace insn at %p/%d\n", i->disabled_insn(), i->len);
+            printf("  replace insn at %p/%d\n", (void *)i->disabled_insn(), i->len);
           i->enable();
         }
     }

@@ -448,7 +448,7 @@ Jdb_mapdb::print_obj_mapping(Obj::Mapping *m)
   printf(L4_PTR_FMT "[C:%lx]: space=D:%lx%.*s rights=%x flags=%lx obj=%p",
          (Address)m, cap_idx, space_id, task_descr.length(), task_descr.begin(),
          (unsigned)cxx::int_value<Obj::Attr>(e->rights()),
-         (unsigned long)e->_flags, e->obj());
+         (unsigned long)e->_flags, (void *)e->obj());
 }
 
 static
@@ -476,7 +476,7 @@ Jdb_mapdb::show_simple_tree(Kobject_common *f, unsigned indent = 1)
     }
 
   printf(" mapping tree for object D:%lx (%p) ref_cnt=%ld\033[K\n",
-         f->dbg_info()->dbg_id(), f, f->map_root()->_cnt);
+         f->dbg_info()->dbg_id(), (void *)f, f->map_root()->_cnt);
 
   screenline += 2;
 

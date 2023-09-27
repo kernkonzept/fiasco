@@ -322,5 +322,5 @@ IMPLEMENT
 void
 Kobject::Log_destroy::print(String_buffer *buf) const
 {
-  buf->printf("obj=%lx [%p] (%p) ram=%lx", id, type, obj, ram);
+  buf->printf("obj=%lx [%p] (%p) ram=%lx", id, (void *)type, (void *)obj, ram);
 }

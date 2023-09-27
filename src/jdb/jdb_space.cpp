@@ -65,7 +65,7 @@ PRIVATE static
 void
 Jdb_space::print_space(Space *s)
 {
-  printf("%p", s);
+  printf("%p", (void *)s);
 }
 
 PRIVATE
@@ -75,7 +75,7 @@ Jdb_space::show(Task *t)
   Jdb::cursor(3, 1);
   Jdb::line();
   printf("\nSpace %p (Kobject*)%p%s\n",
-         t, static_cast<Kobject*>(t), Jdb::clear_to_eol_str());
+         (void *)t, (void *)static_cast<Kobject*>(t), Jdb::clear_to_eol_str());
 
   for (auto const &m : t->_ku_mem)
     printf("  utcb area: user_va=%p kernel_va=%p size=%x%s\n",
@@ -89,7 +89,7 @@ Jdb_space::show(Task *t)
     {
       unsigned long l = t->ram_quota()->limit();
       printf("of %lu (%luKB) @%p%s\n",
-             l, l/1024, t->ram_quota(), Jdb::clear_to_eol_str());
+             l, l/1024, (void *)t->ram_quota(), Jdb::clear_to_eol_str());
     }
   Jdb::line();
 }

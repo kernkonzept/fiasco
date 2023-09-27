@@ -35,7 +35,7 @@ bool
 Kmem_alloc::base_init()
 {
   if (0)
-    printf("Kmem_alloc::base_init(): kip=%p\n", Kip::k());
+    printf("Kmem_alloc::base_init(): kip=%p\n", (void *)Kip::k());
 
   Mem_region_map<64> map;
   unsigned long available_size = create_free_map(Kip::k(), &map);

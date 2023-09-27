@@ -80,7 +80,7 @@ Kobject_iface::set_factory(long label, Factory_func *f)
 
   if (factory[-label])
     panic("error: factory for protocol/label %ld already registered: %p\n",
-          label, factory[-label]);
+          label, (void *)factory[-label]);
 
   factory[-label] = f;
 }

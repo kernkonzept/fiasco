@@ -282,7 +282,7 @@ formatter_pf(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidlen)
   buf->printf("pf:  %-*s pfa=" L4_PTR_FMT " ip=" L4_PTR_FMT " (%c%c) spc=%p (DID=%lx) err=%lx",
       tidlen, tidstr, e->pfa(), e->ip(),
       PF::is_usermode_error(e->error()) ? tolower(cause) : cause,
-      PF::is_translation_error(e->error()) ? '-' : 'p', e->space(),
+      PF::is_translation_error(e->error()) ? '-' : 'p', (void *)e->space(),
       static_cast<Task*>(e->space())->dbg_info()->dbg_id(), e->error());
 }
 

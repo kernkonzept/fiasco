@@ -66,7 +66,7 @@ Boot_alloced::alloc(size_t size)
       Block *b = (Block*)Kmem_alloc::allocator()->alloc(Bytes(alloc_size));
       if (Debug_boot_alloc)
         printf("Boot_alloc: allocated extra memory block @%p (size=%lx)\n",
-               b, alloc_size);
+               (void *)b, alloc_size);
 
       if (!b)
 	return 0;
@@ -87,7 +87,8 @@ Boot_alloced::alloc(size_t size)
       rem->size = rem_sz;
       _free.replace(best, rem);
       if (Debug_boot_alloc)
-        printf("Boot_alloc: remaining free block @ %p (size=%lx)\n", rem, (unsigned long)rem_sz);
+        printf("Boot_alloc: remaining free block @ %p (size=%lx)\n",
+               (void *)rem, (unsigned long)rem_sz);
     }
   else
     _free.erase(best);

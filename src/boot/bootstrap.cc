@@ -81,7 +81,7 @@ bootstrap()
   Kip::init_global_kip(&my_kernel_info_page);
   Kconsole::init();
   Boot_console::init();
-  printf("Boot: KIP @ %p\n", Kip::k());
+  printf("Boot: KIP @ %p\n", (void *)Kip::k());
 
   printf("Boot: Kmem_alloc::base_init();\n");
   if (!Kmem_alloc::base_init())

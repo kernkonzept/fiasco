@@ -34,7 +34,7 @@ Platform_control::init(Cpu_number cpu)
     }
 
   facs = Acpi::map_table_head<Acpi_facs>(fadt->facs_addr);
-  printf("ACPI: FACS phys=%x virt=%p\n", fadt->facs_addr, facs);
+  printf("ACPI: FACS phys=%x virt=%p\n", fadt->facs_addr, (void *)facs);
 
   if (!facs)
     {

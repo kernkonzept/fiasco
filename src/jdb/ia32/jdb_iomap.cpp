@@ -37,7 +37,7 @@ Jdb_iomap::show()
 
   Jdb::clear_screen();
 
-  printf("\nIO bitmap for space %p ", space);
+  printf("\nIO bitmap for space %p ", (void *)space);
   if(bitmap_1 == ~0UL && bitmap_2 == ~0UL)
     { // no memory mapped for the IO bitmap
       puts("not mapped");

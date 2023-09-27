@@ -210,7 +210,7 @@ print_acpi_id(char const *id, int len)
 PUBLIC void
 Acpi_rsdp::print_info() const
 {
-  printf("ACPI: RSDP[%p]\tr%02x OEM:", this, (unsigned)rev);
+  printf("ACPI: RSDP[%p]\tr%02x OEM:", (void *)this, (unsigned)rev);
   print_acpi_id(oem, 6);
   printf("\n");
 }
@@ -220,7 +220,7 @@ Acpi_table_head::print_info() const
 {
   printf("ACPI: ");
   print_acpi_id(signature, 4);
-  printf("[%p]\tr%02x OEM:", this, (unsigned)rev);
+  printf("[%p]\tr%02x OEM:", (void *)this, (unsigned)rev);
   print_acpi_id(oem_id, 6);
   printf(" OEMTID:");
   print_acpi_id(oem_tid, 8);

@@ -66,9 +66,9 @@ Jdb_rcupdate::action(int cmd, void *&, char const *&, int &) override
 	  printf("    wait for quiescent state: %s\n", d->_pending?"yes":"no");
 	  printf("    batch=");
 	  print_batch(d->_batch); puts("");
-	  printf("    next list:    h=%p len=%ld\n", d->_n.front(), d->_len);
-	  printf("    current list: h=%p \n", d->_c.front());
-	  printf("    done list:    h=%p\n", d->_d.front());
+	  printf("    next list:    h=%p len=%ld\n", (void *)d->_n.front(), d->_len);
+	  printf("    current list: h=%p \n", (void *) d->_c.front());
+	  printf("    done list:    h=%p\n", (void *)d->_d.front());
 	}
     }
   return NOTHING;

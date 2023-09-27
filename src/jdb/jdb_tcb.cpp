@@ -1055,7 +1055,7 @@ static inline
 void
 Jdb_tcb::print_thread_uid_raw(Thread *t)
 {
-  printf(" <%p> ", t);
+  printf(" <%p> ", (void *)t);
 }
 
 PRIVATE static
@@ -1092,7 +1092,7 @@ Jdb_tcb::print_kobject(Thread *t, Cap_index capidx)
 
   if (Kobject_dbg::pointer_to_obj(c->obj()) == Kobject_dbg::end())
     {
-      printf("[C:%4lx] NOB: %p\n", cxx::int_value<Cap_index>(capidx), c->obj());
+      printf("[C:%4lx] NOB: %p\n", cxx::int_value<Cap_index>(capidx), (void *)c->obj());
       return;
     }
 

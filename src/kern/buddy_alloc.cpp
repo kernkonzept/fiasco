@@ -276,12 +276,12 @@ Buddy_t_base<A,B>::dump() const
       unsigned long c = 0;
       unsigned long avail = 0;
       B_list::Const_iterator h = _free[i].begin();
-      printf("  [%ld] %p(%lu)", (unsigned long)Min_size << i, *h, h != _free[i].end() ? h->index : 0UL);
+      printf("  [%ld] %p(%lu)", (unsigned long)Min_size << i, (void *)*h, h != _free[i].end() ? h->index : 0UL);
       while (h != _free[i].end())
 	{
 	  ++h;
 	  if (c < 5)
-	    printf(" -> %p(%lu)", *h, *h?h->index:0UL);
+	    printf(" -> %p(%lu)", (void *)*h, *h?h->index:0UL);
 	  else if (c == 5)
             printf(" ...");
 

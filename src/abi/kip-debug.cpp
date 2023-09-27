@@ -74,7 +74,7 @@ IMPLEMENT
 void Kip::print() const
 {
   Cpu_time c = clock();
-  printf("KIP @ %p\n", this);
+  printf("KIP @ %p\n", (void *)this);
   printf("magic: %.4s  version: 0x%lx\n", (char*)&magic, version);
   printf("clock: " L4_X64_FMT " (%llu)\n", c, c);
   printf("uptime: %llu day(s), %llu hour(s), %llu min(s), %llu sec(s)\n",

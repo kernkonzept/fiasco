@@ -182,7 +182,7 @@ Rcu::Log_rcu::print(String_buffer *buf) const
 {
   char const *events[] = { "call", "process"};
   buf->printf("rcu-%s (cpu=%u) item=%p", events[event],
-              cxx::int_value<Cpu_number>(cpu), item);
+              cxx::int_value<Cpu_number>(cpu), (void *)item);
 }
 
 

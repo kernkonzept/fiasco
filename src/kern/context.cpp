@@ -508,7 +508,8 @@ Context::check_for_current_cpu() const
   if (0 && EXPECT_FALSE(!r)) // debug output disabled
     printf("FAIL: cpu=%u (current=%u) %p current=%p\n",
            cxx::int_value<Cpu_number>(hc),
-           cxx::int_value<Cpu_number>(current_cpu()), this, current());
+           cxx::int_value<Cpu_number>(current_cpu()),
+           (void *)this, (void *)current());
   return r;
 }
 
@@ -1167,7 +1168,9 @@ Context::Drq_q::execute_request(Drq *r, bool local)
   bool need_resched = false;
   Context *const self = context();
   if (0)
-    printf("CPU[%2u:%p]: context=%p: handle request for %p (func=%p, arg=%p)\n", cxx::int_value<Cpu_number>(current_cpu()), current(), context(), r->context(), r->func, r->arg);
+    printf("CPU[%2u:%p]: context=%p: handle request for %p (func=%p, arg=%p)\n",
+           cxx::int_value<Cpu_number>(current_cpu()), (void *)current(),
+           (void *)context(), (void *)r->context(), (void *)r->func, (void *)r->arg);
   if (r->context() == self)
     {
       LOG_TRACE("DRQ handling", "drq", current(), Drq_log,
@@ -1234,7 +1237,8 @@ bool
 Context::Drq_q::handle_requests()
 {
   if (0)
-    printf("CPU[%2u:%p]: > Context::Drq_q::handle_requests() context=%p\n", cxx::int_value<Cpu_number>(current_cpu()), current(), context());
+    printf("CPU[%2u:%p]: > Context::Drq_q::handle_requests() context=%p\n",
+           cxx::int_value<Cpu_number>(current_cpu()), (void *)current(), (void *)context());
   bool need_resched = false;
   while (1)
     {
@@ -1250,7 +1254,9 @@ Context::Drq_q::handle_requests()
 
       Drq *r = static_cast<Drq*>(qi);
       if (0)
-        printf("CPU[%2u:%p]: context=%p: handle request for %p (func=%p, arg=%p)\n", cxx::int_value<Cpu_number>(current_cpu()), current(), context(), r->context(), r->func, r->arg);
+        printf("CPU[%2u:%p]: context=%p: handle request for %p (func=%p, arg=%p)\n",
+               cxx::int_value<Cpu_number>(current_cpu()), (void *)current(),
+               (void *)context(), (void *)r->context(), (void *)r->func, (void *)r->arg);
       need_resched |= execute_request(r, false);
     }
 }
@@ -1443,7 +1449,8 @@ Context::drq(Drq *drq, Drq::Request_func *func, void *arg,
 {
   if (0)
     printf("CPU[%2u:%p]: > Context::drq(this=%p, func=%p, arg=%p)\n",
-           cxx::int_value<Cpu_number>(current_cpu()), current(), this, func, arg);
+           cxx::int_value<Cpu_number>(current_cpu()),
+           (void *)current(), (void *)this, (void *)func, (void *)arg);
   Context *cur = current();
   LOG_TRACE("DRQ handling", "drq", cur, Drq_log,
       l->type = Drq_log::Type::Send;
@@ -1891,7 +1898,8 @@ Context::Pending_rqq::handle_requests(Context **mq)
 {
   //LOG_MSG_3VAL(current(), "phq", current_cpu(), 0, 0);
   if (0)
-    printf("CPU[%2u:%p]: Context::Pending_rqq::handle_requests() this=%p\n", cxx::int_value<Cpu_number>(current_cpu()), current(), this);
+    printf("CPU[%2u:%p]: Context::Pending_rqq::handle_requests() this=%p\n",
+           cxx::int_value<Cpu_number>(current_cpu()), (void *)current(), (void *)this);
   bool resched = false;
   Context *curr = current();
   while (1)
@@ -2383,8 +2391,8 @@ Context::Drq_log::print(String_buffer *buf) const
     t = _types[(unsigned)type];
 
   buf->printf("%s(%s) rq=%p to ctxt=%lx/%p (func=%p) cpu=%u",
-      t, wait ? "wait" : "no-wait", rq, Kobject_dbg::pointer_to_id(thread),
-      thread, func, cxx::int_value<Cpu_number>(target_cpu));
+      t, wait ? "wait" : "no-wait", (void *)rq, Kobject_dbg::pointer_to_id(thread),
+      (void *)thread, (void *)func, cxx::int_value<Cpu_number>(target_cpu));
 }
 
 // context switch

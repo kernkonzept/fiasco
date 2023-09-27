@@ -102,7 +102,7 @@ Alternative_insn::handle_alternatives(unsigned features)
         {
           if (0)
             printf("  replace insn at %p %08x -> %08x\n",
-                   i->orig_code(), *i->orig_code(), *i->alt_insn());
+                   (void *)i->orig_code(), *i->orig_code(), *i->alt_insn());
           i->replace();
         }
     }

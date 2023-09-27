@@ -141,7 +141,7 @@ Irq_mgr_msi::init()
 
   Irq_mgr_msi *m;
   Irq_mgr::mgr = m =  new Boot_object<Irq_mgr_msi>(Irq_mgr::mgr);
-  printf("Enable MSI support: chained IRQ mgr @ %p\n", m->_orig);
+  printf("Enable MSI support: chained IRQ mgr @ %p\n", (void *)m->_orig);
 }
 
 STATIC_INITIALIZE(Irq_mgr_msi);

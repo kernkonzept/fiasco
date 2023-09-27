@@ -384,7 +384,7 @@ Vz::State::save_guest_tlb_entry(int guest_id, unsigned i)
 
   if (0)
     printf("VZ[%p|%d]: saved TLB[%u] (%s) mask=%lx hi=%lx lo=%lx|%lx\n",
-           this, guest_id, i, (tlb.entry_hi & (1UL << 10)) ? "inv" : "ok",
+           (void *)this, guest_id, i, (tlb.entry_hi & (1UL << 10)) ? "inv" : "ok",
            tlb.mask, tlb.entry_hi, tlb.entry_lo[0],
            tlb.entry_lo[1]);
 }
@@ -435,7 +435,7 @@ Vz::State::save_full(int guest_id)
         w = Max_guest_wired;
 
       if (0 && w)
-        printf("VZ[%p]: guest=%d save wired: %lu\n", this, guest_id, w);
+        printf("VZ[%p]: guest=%d save wired: %lu\n", (void *)this, guest_id, w);
 
       for (unsigned i = 0; i < w; ++i)
         save_guest_tlb_entry(guest_id, i);
@@ -569,7 +569,7 @@ Vz::State::load_guest_tlb_entry(int guest_id, unsigned i)
   auto const &tlb = g_tlb_wired[i];
   if (0)
     printf("VZ[%p|%d]: load TLB[%u] (%s) mask=%lx hi=%lx lo=%lx|%lx\n",
-           this, guest_id, i, (tlb.entry_hi & (1UL << 10)) ? "inv" : "ok",
+           (void *)this, guest_id, i, (tlb.entry_hi & (1UL << 10)) ? "inv" : "ok",
            tlb.mask, tlb.entry_hi, tlb.entry_lo[0],
            tlb.entry_lo[1]);
 
@@ -620,7 +620,7 @@ Vz::State::load_full(int guest_id)
     w = Max_guest_wired;
 
   if (0 && w)
-    printf("VZ[%p]: guest=%d load wired: %u\n", this, guest_id, w);
+    printf("VZ[%p]: guest=%d load wired: %u\n", (void *)this, guest_id, w);
 
   for (unsigned i = 0; i < w; ++i)
     load_guest_tlb_entry(guest_id, i);
@@ -749,7 +749,7 @@ Vz::State::load_selective(int guest_id)
         w = Max_guest_wired;
 
       if (0 && w)
-        printf("VZ[%p]: guest=%d load wired: %u (sel)\n", this, guest_id, w);
+        printf("VZ[%p]: guest=%d load wired: %u (sel)\n", (void *)this, guest_id, w);
 
       for (unsigned i = 0; i < w; ++i)
         load_guest_tlb_entry(guest_id, i);

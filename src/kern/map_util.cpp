@@ -630,8 +630,9 @@ map(MAPDB* mapdb,
             {
               WARN("XXX Can't GRANT page from superpage (%p: " L4_PTR_FMT
                   " -> %p: " L4_PTR_FMT "), demoting to MAP\n",
-                  from_id,
-                  (unsigned long)cxx::int_value<V_pfn>(snd_addr), to_id,
+                  (void *)from_id,
+                  (unsigned long)cxx::int_value<V_pfn>(snd_addr),
+                  (void *)to_id,
                   (unsigned long)cxx::int_value<V_pfn>(rcv_addr));
               grant = 0;
             }
@@ -784,9 +785,9 @@ map(MAPDB* mapdb,
         case SPACE::Insert_err_exists:
           WARN("map (%s) skipping area (%p): " L4_PTR_FMT
                " -> %p: " L4_PTR_FMT "(%lx)", SPACE::name,
-               from_id,
+               (void *)from_id,
                (unsigned long)cxx::int_value<V_pfn>(snd_addr),
-               to_id,
+               (void *)to_id,
                (unsigned long)cxx::int_value<V_pfn>(rcv_addr),
                (unsigned long)cxx::int_value<V_pfc>(size));
           // Do not flag an error here -- because according to L4
@@ -804,10 +805,10 @@ map(MAPDB* mapdb,
   if (EXPECT_FALSE(no_page_mapped))
     WARN("nothing mapped: (%s) from [%p]: " L4_PTR_FMT
          " size: " L4_PTR_FMT " to [%p]\n", SPACE::name,
-         from_id,
+         (void *)from_id,
          (unsigned long)cxx::int_value<V_pfn>(snd_addr),
          (unsigned long)cxx::int_value<V_pfc>(rcv_size),
-         to_id);
+         (void *)to_id);
 
   if (condition.ok() && no_page_mapped)
     condition.set_empty_map();

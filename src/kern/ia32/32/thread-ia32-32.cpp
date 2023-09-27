@@ -190,28 +190,28 @@ Thread::check_trap13_kernel(Trap_state *ts)
       if (EXPECT_FALSE(ts->_ds & 0xfff8) == Gdt::gdt_code_user)
 	{
 	  WARN("%p eip=%08lx: code selector ds=%04lx",
-               this, ts->ip(), ts->_ds & 0xffff);
+               (void *)this, ts->ip(), ts->_ds & 0xffff);
 	  Cpu::set_ds(Gdt::data_segment());
 	  return 0;
 	}
       if (EXPECT_FALSE(ts->_es & 0xfff8) == Gdt::gdt_code_user)
 	{
 	  WARN("%p eip=%08lx: code selector es=%04lx",
-               this, ts->ip(), ts->_es & 0xffff);
+               (void *)this, ts->ip(), ts->_es & 0xffff);
 	  Cpu::set_es(Gdt::data_segment());
 	  return 0;
 	}
       if (EXPECT_FALSE(ts->_fs & 0xfff8) == Gdt::gdt_code_user)
 	{
 	  WARN("%p eip=%08lx: code selector fs=%04lx",
-               this, ts->ip(), ts->_fs & 0xffff);
+               (void *)this, ts->ip(), ts->_fs & 0xffff);
 	  ts->_fs = 0;
 	  return 0;
 	}
       if (EXPECT_FALSE(ts->_gs & 0xfff8) == Gdt::gdt_code_user)
 	{
 	  WARN("%p eip=%08lx: code selector gs=%04lx",
-               this, ts->ip(), ts->_gs & 0xffff);
+               (void *)this, ts->ip(), ts->_gs & 0xffff);
 	  ts->_gs = 0;
 	  return 0;
 	}

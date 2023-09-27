@@ -72,7 +72,7 @@ Mips_bsp_irqs::init(Cpu_number cpu)
       syscon->pci_io()->get_mmio_base() + 0xa0);
 
   i8259->init(0);
-  printf("GT64120: %p  i8259: %p\n", syscon, i8259);
+  printf("GT64120: %p  i8259: %p\n", (void *)syscon, (void *)i8259);
   auto *m =  new Boot_object<Irq_mgr_flex<10> >();
   Irq_mgr::mgr = m;
   m->add_chip(i8259, 0);

@@ -177,7 +177,7 @@ Jdb_tbuf_output::print_entry(String_buffer *buf, Tb_entry *tb)
   Thread const *t = static_cast<Thread const *>(tb->ctx());
 
   if (!t || !Kobject_dbg::is_kobj(t))
-    snprintf(tidstr, sizeof(tidstr), "p:%p", t);
+    snprintf(tidstr, sizeof(tidstr), "p:%p", (void *)t);
   else
     {
       int len = snprintf(tidstr, sizeof(tidstr), "%04lx", t->dbg_info()->dbg_id());

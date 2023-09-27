@@ -116,7 +116,8 @@ Thread::handle_kernel_exc(Trap_state *ts)
             {
               if (0)
                 printf("fixup exception(h): %ld: ip=%lx -> handler %p fixup %lx ts @ %p -> %lx\n",
-                       ts->trapno(), ts->ip(), e.handler, e.fixup, ts, reinterpret_cast<Mword const *>(ts)[-1]);
+                       ts->trapno(), ts->ip(), (void *)e.handler, e.fixup,
+                       (void *)ts, reinterpret_cast<Mword const *>(ts)[-1]);
               if (0)
                 ts->dump();
 
@@ -217,7 +218,7 @@ Thread::handle_slow_trap(Trap_state *ts)
   if (EXPECT_FALSE ((error = setjmp(pf_recovery)) != 0) )
     {
       WARN("%p killed:\n"
-           "\033[1mUnhandled page fault, code=%08x\033[m\n", this, error);
+           "\033[1mUnhandled page fault, code=%08x\033[m\n", (void *)this, error);
       goto fail_nomsg;
     }
 
@@ -250,7 +251,7 @@ check_exception:
 fail:
   // can't handle trap -- kill the thread
   WARN("%p killed:\n"
-       "\033[1mUnhandled trap \033[m\n", this);
+       "\033[1mUnhandled trap \033[m\n", (void *)this);
 
 fail_nomsg:
   if (Warn::is_enabled(Warning))
@@ -671,7 +672,7 @@ Thread::handle_not_nested_trap(Trap_state *ts)
 {
   // no kernel debugger present
   printf(" %p IP=" L4_PTR_FMT " Trap=%02lx [Ret/Esc]\n",
-	 this, ts->ip(), ts->_trapno);
+	 (void *)this, ts->ip(), ts->_trapno);
 
   int r;
   // cannot use normal getchar because it may block with hlt and irq's

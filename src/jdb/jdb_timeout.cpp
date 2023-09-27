@@ -244,7 +244,7 @@ Jdb_list_timeouts::list_timeouts_show_timeout(Timeout *t)
       type  = "timeslice";
       owner = get_owner(t);
       if (owner)
-        snprintf(ownerstr, sizeof(ownerstr), "  %p", owner);
+        snprintf(ownerstr, sizeof(ownerstr), "  %p", (void *)owner);
       else
        strcpy(ownerstr, "destruct");
       break;

@@ -608,7 +608,7 @@ Jdb_kobject::print_uid(Kobject_common *o, int task_format = 0)
       return;
     }
 
-  printf("\033[31;1m%*s%p\033[m", task_format, "???", o);
+  printf("\033[31;1m%*s%p\033[m", task_format, "???", (void *)o);
   return;
 }
 
