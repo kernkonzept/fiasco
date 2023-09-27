@@ -717,6 +717,9 @@ whole_screen:
   else
     putstr("---\nvCPU    : ---\n");
 
+  if (dump_only)
+    printf("kernel SP=" ADDR_FMT " ", ksp);
+
   if (is_current(t))
     {
       if (!dump_only)
@@ -744,8 +747,10 @@ whole_screen:
     {
       // kernel thread
       if (!dump_only)
-        Jdb::cursor(15, 1);
-      printf("kernel SP=" ADDR_FMT, ksp);
+        {
+          Jdb::cursor(15, 1);
+          printf("kernel SP=" ADDR_FMT, ksp);
+        }
     }
 
 dump_stack:
