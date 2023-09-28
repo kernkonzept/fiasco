@@ -30,7 +30,7 @@
 # Declarations
 #
 
-require 5.006;
+require 5.014;
 use strict;
 use warnings;
 use Getopt::Std;
