@@ -1,3 +1,12 @@
+INTERFACE [arm && mp]:
+
+EXTENSION class Spin_lock
+{
+  static_assert(   sizeof(Lock_t) == 1 || sizeof(Lock_t) == 2
+                || sizeof(Lock_t) == 4 || sizeof(Lock_t) == 8,
+                "unsupported spin-lock type for ARM");
+};
+
 IMPLEMENTATION [arm && mp]:
 
 #include "processor.h"
@@ -8,7 +17,7 @@ Spin_lock<Lock_t>::lock_arch()
 {
   Lock_t dummy, tmp;
 
-#define L(z,u) \
+#define LOCK_ARCH(z,u) \
   __asm__ __volatile__ ( \
       "   sevl                                      \n" \
       "   prfm pstl1keep, [%[lock]]                 \n" \
@@ -23,17 +32,16 @@ Spin_lock<Lock_t>::lock_arch()
       : [lock] "r" (&_lock) \
       : "cc" \
       )
-  extern char __use_of_invalid_type_for_Spin_lock__sizeof_is_invalid;
-  switch(sizeof(Lock_t))
+
+  switch (sizeof(Lock_t))
     {
-    case 1: L(b,w); break;
-    case 2: L(h,w); break;
-    case 4: L(,w); break;
-    case 8: L(,x); break;
-    default: __use_of_invalid_type_for_Spin_lock__sizeof_is_invalid = 10; break;
+    case 1: LOCK_ARCH(b,w); break;
+    case 2: LOCK_ARCH(h,w); break;
+    case 4: LOCK_ARCH(,w); break;
+    case 8: LOCK_ARCH(,x); break;
     }
 
-#undef L
+#undef LOCK_ARCH
 }
 
 PRIVATE template<typename Lock_t> inline
@@ -41,20 +49,21 @@ void
 Spin_lock<Lock_t>::unlock_arch()
 {
   Lock_t tmp;
-#define UNL(z,u) \
+
+#define UNLOCK_ARCH(z,u) \
   __asm__ __volatile__( \
       "ldr"#z " %" #u "[tmp], %[lock]              \n" \
       "bic %x[tmp], %x[tmp], #2                    \n" /* Arch_lock == #2 */ \
       "stlr"#z " %" #u "[tmp], %[lock]             \n" \
       : [lock] "=Q" (_lock), [tmp] "=&r" (tmp))
-  extern char __use_of_invalid_type_for_Spin_lock__sizeof_is_invalid;
+
   switch (sizeof(Lock_t))
     {
-    case 1: UNL(b,w); break;
-    case 2: UNL(h,w); break;
-    case 4: UNL(,w); break;
-    case 8: UNL(,x); break;
-    default: __use_of_invalid_type_for_Spin_lock__sizeof_is_invalid = 11; break;
+    case 1: UNLOCK_ARCH(b,w); break;
+    case 2: UNLOCK_ARCH(h,w); break;
+    case 4: UNLOCK_ARCH(,w); break;
+    case 8: UNLOCK_ARCH(,x); break;
     }
-#undef UNL
+
+#undef UNLOCK_ARCH
 }
