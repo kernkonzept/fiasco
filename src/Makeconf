@@ -179,7 +179,8 @@ WNO_DEPRECATED_NON_PROTOTYPE := $(if $(call CHECKCC,-Wdeprecated-non-prototype),
 
 ifneq ($(CONFIG_COV),)
   SHARED_FLAGS-gcc     += -fprofile-arcs -ftest-coverage
-  SHARED_FLAGS-clang   += -fprofile-instr-generate -fcoverage-mapping
+  SHARED_FLAGS-clang   += -fprofile-instr-generate -fcoverage-mapping \
+                          -mllvm -instrprof-atomic-counter-update-all
   KERNEL_LDFLAGS       += $(KERNEL_LDFLAGS-$(CC_TYPE))
   OBJ_KERNEL-clang     += fiasco-covpath.o
   OBJ_KERNEL           += $(OBJ_KERNEL-$(CC_TYPE))
