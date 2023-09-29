@@ -11,6 +11,7 @@ INTERFACE:
 class Buddy_alloc;
 class Mem_region_map_base;
 class Kip;
+class Mem_desc;
 
 template<typename Q> class Kmem_q_alloc;
 
@@ -272,6 +273,90 @@ Kmem_alloc::create_free_map(Kip const *kip, Mem_region_map_base *map,
     }
 
   return available_size;
+}
+
+/**
+ * Find a suitable "Kernel_tmp" KIP memory region with a minimal size.
+ * Panic if no such region was found.
+ */
+PRIVATE static FIASCO_INIT
+Mem_desc *
+Kmem_alloc::find_kip_md_tmp_chunk(unsigned long size)
+{
+  for (auto &md: Kip::k()->mem_descs_a())
+    if (md.type() == Mem_desc::Kernel_tmp && md.size() >= size)
+      return &md;
+
+  panic("Could not allocate buddy freemap.\n");
+}
+
+/**
+ * Add a "Kernel_tmp" KIP memory region marked to the kernel memory except a
+ * "remaining" part of size `skip` which shall be not considered, change the
+ * descriptor type to "Reserved" and update _orig_free.
+ */
+PRIVATE static FIASCO_INIT
+void
+Kmem_alloc::add_kip_md_tmp_to_kmem_sans_size(Mem_desc *md, unsigned long skip)
+{
+  if (md->size() > skip)
+    {
+      unsigned long add_sz = md->size() - skip;
+      unsigned long md_kern = Mem_layout::phys_to_pmem(md->start()) + skip;
+      a->add_mem((void*)md_kern, add_sz);
+
+      if (0)
+        printf("  Kmem_alloc: block %014lx(%014lx) size=%lx\n",
+               md_kern, md->start(), add_sz);
+
+      _orig_free += add_sz;
+    }
+
+  md->type(Mem_desc::Reserved);
+}
+
+/**
+ * Add all "Kernel_tmp" KIP memory regions completely to the kernel memory,
+ * change the descriptor types to "Reserved" and update _orig_free.
+ */
+PRIVATE static FIASCO_INIT
+void
+Kmem_alloc::add_kip_md_tmp_to_kmem()
+{
+  for (auto &md: Kip::k()->mem_descs_a())
+    if (md.type() == Mem_desc::Kernel_tmp)
+      add_kip_md_tmp_to_kmem_sans_size(&md, 0);
+}
+
+PRIVATE static FIASCO_INIT
+void
+Kmem_alloc::setup_kmem_from_kip_md_tmp(unsigned long freemap_size,
+                                       unsigned long min_addr_kern)
+{
+  if (0)
+    printf("Kmem_alloc: buddy freemap needs %lu bytes\n", freemap_size);
+
+  Mem_desc *bmmd = find_kip_md_tmp_chunk(freemap_size);
+  unsigned long bm_kern = Mem_layout::phys_to_pmem(bmmd->start());
+
+  // Strictly speaking this is not necessary but it also doesn't make sense to
+  // initialize the lower boundary of the kernel memory at the buddy freemap.
+  if (bm_kern == min_addr_kern)
+    min_addr_kern += freemap_size;
+
+  if (0)
+    printf("Kmem_alloc: allocator base = %014lx\n",
+           Kmem_alloc::Alloc::calc_base_addr(min_addr_kern));
+
+  a->init(min_addr_kern);
+  a->setup_free_map(reinterpret_cast<unsigned long *>(bm_kern), freemap_size);
+
+  // Add remaining the part of the KIP memory region containing the freemap but
+  // omit the freemap itself.
+  add_kip_md_tmp_to_kmem_sans_size(bmmd, freemap_size);
+
+  // Add all other KIP memory regions marked as "Kernel_tmp" to kernel memory.
+  add_kip_md_tmp_to_kmem();
 }
 
 PUBLIC template< typename Q >

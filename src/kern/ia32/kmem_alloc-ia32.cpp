@@ -160,68 +160,9 @@ Kmem_alloc::Kmem_alloc()
     panic("Cannot allocate kernel memory: Invalid reserved areas");
 
   unsigned long freemap_size = Alloc::free_map_bytes(min_addr, max_addr);
-
-  if (0)
-    printf("Kmem_alloc: buddy freemap needs %lu bytes\n", freemap_size);
-
-  // find suitable memory descriptor to allocate the buddy freemap (bm)
-  Mem_desc *bmmd = nullptr;
-  unsigned long bmmd_size = 0;
-  for (auto &md: Kip::k()->mem_descs_a())
-    if (md.type() == Mem_desc::Kernel_tmp)
-      {
-        bmmd_size = md.size();
-        if (bmmd_size >= freemap_size)
-          {
-            bmmd = &md;
-            break;
-          }
-      }
-
-  if (!bmmd)
-    panic("Could not allocate buddy freemap");
-
   unsigned long min_addr_kern = Mem_layout::phys_to_pmem(min_addr);
-  unsigned long bm_kern = Mem_layout::phys_to_pmem(bmmd->start());
 
-  // Strictly speaking this is not necessary but it also doesn't make sense to
-  // initialize the lower boundary of the kernel memory at the buddy freemap.
-  if (bm_kern == min_addr_kern)
-    min_addr_kern += freemap_size;
-
-  if (0)
-    printf("Kmem_alloc: allocator base = %014lx\n",
-           Kmem_alloc::Alloc::calc_base_addr(min_addr_kern));
-
-  a->init(min_addr_kern);
-  a->setup_free_map(reinterpret_cast<unsigned long *>(bm_kern), freemap_size);
-
-  if (bmmd_size > freemap_size)
-    {
-      unsigned long add_sz = bmmd_size - freemap_size;
-      if (0)
-        printf("  Kmem_alloc: block %014lx(%014lx) size=%lx\n",
-               bm_kern + freemap_size, min_addr_kern, add_sz);
-      // remaining of bmmd (after buddy freemap) for kernel memory
-      a->add_mem((void*)(bm_kern + freemap_size), add_sz);
-      _orig_free += add_sz;
-    }
-
-  bmmd->type(Mem_desc::Reserved);
-
-  for (auto &md: Kip::k()->mem_descs_a())
-    if (md.type() == Mem_desc::Kernel_tmp)
-      {
-        unsigned long md_start = md.start(), md_size = md.size();
-        unsigned long md_kern = Mem_layout::phys_to_pmem(md_start);
-
-        if (0)
-          printf("  Kmem_alloc: block %014lx(%014lx) size=%lx\n",
-                 md_kern, md_start, md_size);
-        a->add_mem((void *)md_kern, md_size);
-        md.type(Mem_desc::Reserved);
-        _orig_free += md_size;
-      }
+  setup_kmem_from_kip_md_tmp(freemap_size, min_addr_kern);
 
   if (0)
     printf("Kmem_alloc: construction done\n");
