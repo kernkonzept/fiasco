@@ -48,55 +48,53 @@ Kmem_alloc::map_pmem(unsigned long phys, unsigned long size,
   return true;
 }
 
-static unsigned long _freemap[
-  Kmem_alloc::Alloc::free_map_bytes(Mem_layout::Pmem_start,
-                                    Mem_layout::Pmem_start + Config::KMEM_SIZE - 1)
-  / sizeof(unsigned long)];
-
-static_assert(Config::KMEM_SIZE <= Mem_layout::Pmem_end - Mem_layout::Pmem_start,
-              "Kernel memory does not fit into Pmem range.");
-
 IMPLEMENT
 Kmem_alloc::Kmem_alloc()
 {
-  // The -Wframe-larger-than= warning for this function is known and
-  // no problem, because the function runs only on our boot stack.
-  Mword alloc_size = Config::KMEM_SIZE;
-  static_assert(Super_pg::aligned(Config::KMEM_SIZE),
-                "KMEM_SIZE must be superpage-aligned");
+  Mword alloc_size = Super_pg::round((unsigned long)Config::KMEM_SIZE);
+
   Mem_region_map<64> map;
-  unsigned long available_size = create_free_map(Kip::k(), &map,
-                                                 Config::SUPERPAGE_SIZE);
+  unsigned long available_size
+    = create_free_map(Kip::k(), &map, Config::SUPERPAGE_SIZE);
 
   // sanity check whether the KIP has been filled out, number is arbitrary
   if (available_size < (1 << 18))
     panic("Kmem_alloc: No kernel memory available (%ld)", available_size);
 
-  a->init(Mem_layout::Pmem_start);
-  a->setup_free_map(_freemap, sizeof(_freemap));
-
+  // Walk through all KIP memory regions of conventional memory minus the
+  // reserved memory and find one or more regions suitable for the kernel
+  // memory.
+  //
+  // The kernel memory regions are added to the KIP as `Kernel_tmp`. Later, in
+  // setup_kmem_from_kip_md_tmp(), these regions are added as kernel memory
+  // (a()->add_mem()) and marked as "Reserved".
+  unsigned long min_virt = ~0UL, max_virt = 0UL;
   for (int i = map.length() - 1; i >= 0 && alloc_size > 0; --i)
     {
       Mem_region f = map[i];
       if (f.size() > alloc_size)
-        f.start += (f.size() - alloc_size);
+        f.start += f.size() - alloc_size;
 
-      Kip::k()->add_mem_region(Mem_desc(f.start, f.end, Mem_desc::Reserved));
-      if (0)
-        printf("Kmem_alloc: [%08lx; %08lx] sz=%ld\n", f.start, f.end, f.size());
+      Kip::k()->add_mem_region(Mem_desc(f.start, f.end, Mem_desc::Kernel_tmp));
 
       unsigned long map_addr;
       if (!map_pmem(f.start, f.size(), &map_addr))
         panic("Kmem_alloc: cannot map heap memory [%08lx; %08lx]",
               f.start, f.end);
 
-      a->add_mem((void *)Mem_layout::phys_to_pmem(f.start), f.size());
+      min_virt = min(min_virt, map_addr);
+      max_virt = max(max_virt, map_addr + f.size());
       alloc_size -= f.size();
     }
 
   if (alloc_size)
     panic("Kmem_alloc: cannot allocate sufficient kernel memory (missing %ld)",
           alloc_size);
+
+  unsigned long freemap_size = Alloc::free_map_bytes(min_virt, max_virt);
+  unsigned long min_addr_kern = min_virt;
+
+  setup_kmem_from_kip_md_tmp(freemap_size, min_addr_kern);
 }
 
 /**
