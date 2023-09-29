@@ -18,7 +18,7 @@ class Kmem_alloc
 {
   friend class Kmem_alloc_tester;
 
-  Kmem_alloc();
+  Kmem_alloc() FIASCO_INIT;
 
 public:
   typedef Buddy_alloc Alloc;
