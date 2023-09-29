@@ -165,6 +165,10 @@ Address Mem_desc::end() const
 { return _h | 0x3ffUL; }
 
 PUBLIC inline ALWAYS_INLINE
+Address Mem_desc::size() const
+{ return end() - start() + 1; }
+
+PUBLIC inline ALWAYS_INLINE
 void
 Mem_desc::type(Mem_type t)
 { _l = (_l & ~0x0f) | (t & 0x0f); }
