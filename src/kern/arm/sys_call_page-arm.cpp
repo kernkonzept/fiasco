@@ -98,7 +98,7 @@ Sys_call_page::init()
 {
   Unsigned32 *sys_calls = (Unsigned32*)Kmem_alloc::allocator()->alloc(Config::page_size());
   if (!sys_calls)
-    panic("FIASCO: can't allocate system-call page.\n");
+    panic("Can't allocate system-call page.");
 
   for (unsigned i = 0; i < Config::PAGE_SIZE / sizeof(Unsigned32); ++i)
     sys_calls[i] = Proc::Is_hyp

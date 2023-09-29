@@ -1242,7 +1242,7 @@ Cpu::identify()
   _inst_tlb_4k_4m_entries =
   _data_tlb_4k_4m_entries = 0;
 
-  // Check for Alignment Check Support
+  // Check for Alignment Check Support -- works only on 486 and later
   set_flags(eflags ^ EFLAGS_AC);
   // FIXME: must not panic at cpu hotplug
   if (((get_flags() ^ eflags) & EFLAGS_AC) == 0)
@@ -2258,18 +2258,18 @@ Cpu::init_indirect_branch_mitigation()
   if (_vendor == Vendor_intel)
     {
       if (cpuid_eax(0) < 7)
-        panic("intel CPU does not support IBRS, IBPB, STIBP (cpuid max < 7)\n");
+        panic("Intel CPU does not support IBRS, IBPB, STIBP (cpuid max < 7)");
 
       Unsigned32 d = cpuid_edx(7);
       if (!(d & FEATX_IBRS_IBPB))
-        panic("IBRS / IBPB not supported by CPU: %x\n", d);
+        panic("IBRS / IBPB not supported by CPU: %x", d);
 
       if (!(d & FEATX_STIBP))
-        panic("STIBP not supported by CPU: %x\n", d);
+        panic("STIBP not supported by CPU: %x", d);
 
       // enable STIBP
       wrmsr(2, 0x48);
     }
   else
-    panic("Kernel compiled with IBRS / IBPB, but not supported on non-Intel CPUs\n");
+    panic("Kernel compiled with IBRS / IBPB, but not supported on non-Intel CPUs");
 }

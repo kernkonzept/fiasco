@@ -85,9 +85,8 @@ bootstrap()
 
   printf("Boot: Kmem_alloc::base_init();\n");
   if (!Kmem_alloc::base_init())
-    {
-      panic("FATAL: Could not reserve kernel memory, halted\n");
-    }
+    panic("Could not reserve kernel memory.");
+
   printf("Boot: kernel memory reserved\n");
 
   // make sure that we did not forgot to discard an unused header section

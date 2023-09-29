@@ -47,7 +47,7 @@ Sys_call_page::init()
 
   if (!Vmem_alloc::page_alloc((void*)Mem_layout::Syscalls, 
 	Vmem_alloc::ZERO_FILL, Vmem_alloc::User))
-    panic("FIASCO: can't allocate system-call page.\n");
+    panic("Can't allocate system-call page.");
 
   printf ("Absolute KIP Syscalls using: %s\n",
           Cpu::have_sysenter() ? "Sysenter" : "int 0x30");
