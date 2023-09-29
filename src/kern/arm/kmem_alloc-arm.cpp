@@ -16,17 +16,17 @@ IMPLEMENTATION [arm]:
 
 PRIVATE //inline
 bool
-Kmem_alloc::map_pmem(unsigned long phy, unsigned long size)
+Kmem_alloc::map_pmem(unsigned long phys, unsigned long size)
 {
   static unsigned long next_map = Mem_layout::Pmem_start;
 
-  assert(Super_pg::aligned(phy));
+  assert(Super_pg::aligned(phys));
   assert(Super_pg::aligned(size));
 
   if (next_map + size > Mem_layout::Pmem_end)
     return false;
 
-  if (!Mem_layout::add_pmem(phy, next_map, size))
+  if (!Mem_layout::add_pmem(phys, next_map, size))
     return false;
 
   for (unsigned long i = 0; i <size; i += Config::SUPERPAGE_SIZE)
@@ -34,7 +34,7 @@ Kmem_alloc::map_pmem(unsigned long phy, unsigned long size)
       auto pte = Kmem::kdir->walk(Virt_addr(next_map + i), Kpdir::Super_level);
       assert (!pte.is_valid());
       assert (pte.page_order() == Config::SUPERPAGE_SHIFT);
-      pte.set_page(Phys_mem_addr(phy + i),
+      pte.set_page(Phys_mem_addr(phys + i),
                    Page::Attr::kern_global(Page::Rights::RW()));
       pte.write_back_if(true);
       Mem_unit::tlb_flush_kernel(next_map + i);
