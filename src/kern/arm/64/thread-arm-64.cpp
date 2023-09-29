@@ -131,20 +131,6 @@ Thread::handle_svc(Trap_state *ts)
   do_syscall();
 }
 
-PRIVATE static inline
-bool
-Thread::is_syscall_pc(Address)
-{
-  return false; //Address(-0x0c) <= pc && pc <= Address(-0x08);
-}
-
-PRIVATE static inline
-Mword
-Thread::get_lr_for_mode(Return_frame const *rf)
-{
-  return rf->r[30];
-}
-
 PRIVATE static inline NEEDS[Thread::set_tpidruro, Thread::set_tpidrurw,
                             "trap_state.h"]
 bool FIASCO_WARN_RESULT
@@ -198,6 +184,11 @@ Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
   }
   return true;
 }
+
+PRIVATE inline
+bool
+Thread::check_and_handle_undef_syscall(Return_frame *)
+{ return false; }
 
 PUBLIC static inline bool Thread::is_fsr_exception(Arm_esr) { return false; }
 PUBLIC static inline bool Thread::is_debug_exception(Arm_esr) { return false; }

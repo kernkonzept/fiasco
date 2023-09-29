@@ -354,6 +354,39 @@ Thread::handle_fpu_trap(Unsigned32 opcode, Trap_state *ts)
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && 32bit && arm_esr_traps]:
 
+PRIVATE static inline
+bool
+Thread::is_syscall_pc(Address pc)
+{
+  return Address(-0x0c) <= pc && pc <= Address(-0x08);
+}
+
+PRIVATE static inline
+Mword
+Thread::get_lr_for_mode(Return_frame const *rf)
+{
+  Mword ret;
+  switch (rf->psr & 0x1f)
+    {
+    case Proc::PSR_m_usr:
+    case Proc::PSR_m_sys:
+      return rf->ulr;
+    case Proc::PSR_m_irq:
+      asm ("mrs %0, lr_irq" : "=r" (ret)); return ret;
+    case Proc::PSR_m_fiq:
+      asm ("mrs %0, lr_fiq" : "=r" (ret)); return ret;
+    case Proc::PSR_m_abt:
+      asm ("mrs %0, lr_abt" : "=r" (ret)); return ret;
+    case Proc::PSR_m_svc:
+      asm ("mrs %0, lr_svc" : "=r" (ret)); return ret;
+    case Proc::PSR_m_und:
+      asm ("mrs %0, lr_und" : "=r" (ret)); return ret;
+    default:
+      assert(false); // wrong processor mode
+      return ~0UL;
+    }
+}
+
 PRIVATE inline
 void
 Thread::handle_svc(Trap_state *ts)
@@ -382,6 +415,22 @@ Thread::handle_svc(Trap_state *ts)
   typedef void Syscall(void);
   extern Syscall *sys_call_table[];
   sys_call_table[(-pc) / 4]();
+}
+
+PRIVATE inline
+bool
+Thread::check_and_handle_undef_syscall(Return_frame *rf)
+{
+  Mword pc = rf->pc;
+  if (!is_syscall_pc(pc + 4))
+    return false;
+
+  rf->pc = get_lr_for_mode(rf);
+  state_del(Thread_cancel);
+  typedef void Syscall(void);
+  extern Syscall *sys_call_table[];
+  sys_call_table[-(pc + 4) / 4]();
+  return true;
 }
 
 //-----------------------------------------------------------------------------

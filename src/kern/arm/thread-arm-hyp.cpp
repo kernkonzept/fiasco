@@ -79,32 +79,6 @@ Thread::peek_user(T const *adr, Context *c)
   return T(~0);
 }
 
-PRIVATE static inline
-Mword
-Thread::get_lr_for_mode(Return_frame const *rf)
-{
-  Mword ret;
-  switch (rf->psr & 0x1f)
-    {
-    case Proc::PSR_m_usr:
-    case Proc::PSR_m_sys:
-      return rf->ulr;
-    case Proc::PSR_m_irq:
-      asm ("mrs %0, lr_irq" : "=r" (ret)); return ret;
-    case Proc::PSR_m_fiq:
-      asm ("mrs %0, lr_fiq" : "=r" (ret)); return ret;
-    case Proc::PSR_m_abt:
-      asm ("mrs %0, lr_abt" : "=r" (ret)); return ret;
-    case Proc::PSR_m_svc:
-      asm ("mrs %0, lr_svc" : "=r" (ret)); return ret;
-    case Proc::PSR_m_und:
-      asm ("mrs %0, lr_und" : "=r" (ret)); return ret;
-    default:
-      assert(false); // wrong processor mode
-      return ~0UL;
-    }
-}
-
 extern "C" void hyp_mode_fault(Mword abort_type, Trap_state *ts)
 {
   Mword v;
@@ -320,13 +294,6 @@ Arm_vtimer_ppi::mask()
   asm volatile("mrc p15, 0, %0, c14, c3, 1\n"
                "orr %0, #0x2              \n"
                "mcr p15, 0, %0, c14, c3, 1\n" : "=r" (v));
-}
-
-PRIVATE static inline
-bool
-Thread::is_syscall_pc(Address pc)
-{
-  return Address(-0x0c) <= pc && pc <= Address(-0x08);
 }
 
 PRIVATE static inline NEEDS[Thread::invalid_pfa]

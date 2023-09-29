@@ -726,7 +726,6 @@ Thread::arm_esr_entry(Return_frame *rf)
         {
           ct->state_del(Thread_cancel);
           Mword state = ct->state();
-          Unsigned32 pc = rf->pc;
 
           if (state & (Thread_vcpu_user | Thread_alien))
             {
@@ -734,18 +733,12 @@ Thread::arm_esr_entry(Return_frame *rf)
               ct->send_exception(ts);
               return;
             }
-          else if (EXPECT_FALSE(!is_syscall_pc(pc + 4)))
-            {
-              ts->pc += ts->psr & Proc::Status_thumb ? 2 : 4;
-              slowtrap_entry(ts);
-              return;
-            }
 
-          rf->pc = get_lr_for_mode(rf);
-          ct->state_del(Thread_cancel);
-          typedef void Syscall(void);
-          extern Syscall *sys_call_table[];
-          sys_call_table[-(pc + 4) / 4]();
+          if (EXPECT_TRUE(ct->check_and_handle_undef_syscall(rf)))
+            return;
+
+          ts->pc += ts->psr & Proc::Status_thumb ? 2 : 4;
+          slowtrap_entry(ts);
           return;
         }
       break;
