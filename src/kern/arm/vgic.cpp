@@ -1,5 +1,6 @@
 INTERFACE [arm && cpu_virt && vgic]:
 
+#include "panic.h"
 #include "types.h"
 
 #include <cxx/bitfield>
@@ -152,10 +153,19 @@ public:
   {
     s->hcr = Hcr(0);
     s->vtr = self()->vtr();
+
+    // We assume that the GIC implements at least Arm_vgic::N_lregs line
+    // registers. Ensure that is really the case, because acessing a
+    // non-implemeneted list register would result in an Undefined
+    // Instruction Exception.
+    if (s->vtr.list_regs() + 1 < Arm_vgic::N_lregs)
+      panic("GIC implements less virtual line registers than required.");
+
     // Clamp number of supported LRs to the actually saved/loaded LRs. The
     // others are not usable to user space.
     if (s->vtr.list_regs() >= Arm_vgic::N_lregs)
       s->vtr.list_regs() = Arm_vgic::N_lregs - 1;
+
     for (auto &a: s->aprs)
       a = 0;
     for (auto &l: s->lr.lr64)
