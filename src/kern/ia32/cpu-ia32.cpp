@@ -1613,7 +1613,10 @@ Cpu::pm_resume()
   init_indirect_branch_mitigation();
 
   init_sysenter();
-  wrmsr(_suspend_tsc, MSR_TSC);
+
+  if ((features() & FEAT_TSC) && can_wrmsr())
+    if (_ext_07_ebx & FEATX_IA32_TSC_ADJUST)
+      wrmsr(0, 0, MSR_IA32_TSC_ADJUST);
 
   try_enable_hw_performance_states(true);
 }
@@ -1982,13 +1985,8 @@ Cpu::init()
     }
 
   if ((features() & FEAT_TSC) && can_wrmsr())
-    {
-      if (_ext_07_ebx & FEATX_IA32_TSC_ADJUST)
-        wrmsr(0, 0, MSR_IA32_TSC_ADJUST);
-      else
-        // at least reset time stamp counter (better for debugging)
-        wrmsr(0, 0, MSR_TSC);
-    }
+    if (_ext_07_ebx & FEATX_IA32_TSC_ADJUST)
+      wrmsr(0, 0, MSR_IA32_TSC_ADJUST);
 
   // See Attribs_enum on how PA0, PA2 and PA3 are used.
   // PA0 (used):   Write back (WB).
