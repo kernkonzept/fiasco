@@ -152,13 +152,11 @@ Kmem_alloc::Kmem_alloc()
   unsigned long max_addr = 0;
 
   for (auto &md: Kip::k()->mem_descs_a())
-    {
-      if (!md.valid() || md.is_virtual() || md.type() != Mem_desc::Kernel_tmp)
-        continue;
-
-      min_addr = min(min_addr, md.start());
-      max_addr = max(max_addr, md.end());
-    }
+    if (md.type() == Mem_desc::Kernel_tmp)
+      {
+        min_addr = min(min_addr, md.start());
+        max_addr = max(max_addr, md.end());
+      }
 
   if (min_addr >= max_addr)
     panic("Cannot allocate kernel memory, invalid reserved areas\n");
@@ -172,17 +170,15 @@ Kmem_alloc::Kmem_alloc()
   Mem_desc *bmmd = nullptr;
   unsigned long bmmd_size = 0;
   for (auto &md: Kip::k()->mem_descs_a())
-    {
-      if (!md.valid() || md.is_virtual() || md.type() != Mem_desc::Kernel_tmp)
-        continue;
-
-      bmmd_size = md.size();
-      if (bmmd_size >= freemap_size)
-        {
-          bmmd = &md;
-          break;
-        }
-    }
+    if (md.type() == Mem_desc::Kernel_tmp)
+      {
+        bmmd_size = md.size();
+        if (bmmd_size >= freemap_size)
+          {
+            bmmd = &md;
+            break;
+          }
+      }
 
   if (!bmmd)
     panic("Could not allocate buddy freemap\n");
@@ -216,20 +212,19 @@ Kmem_alloc::Kmem_alloc()
   bmmd->type(Mem_desc::Reserved);
 
   for (auto &md: Kip::k()->mem_descs_a())
-    {
-      if (!md.valid() || md.is_virtual() || md.type() != Mem_desc::Kernel_tmp)
-        continue;
+    if (md.type() == Mem_desc::Kernel_tmp)
+      {
+        unsigned long md_start = md.start(), md_size = md.size();
+        unsigned long md_kern = Mem_layout::phys_to_pmem(md_start);
 
-      unsigned long md_start = md.start(), md_size = md.size();
-      unsigned long md_kern = Mem_layout::phys_to_pmem(md_start);
+        if (0)
+          printf("  Kmem_alloc: block %014lx(%014lx) size=%lx\n",
+                 md_kern, md_start, md_size);
+        a->add_mem((void *)md_kern, md_size);
+        md.type(Mem_desc::Reserved);
+        _orig_free += md_size;
+      }
 
-      if (0)
-        printf("  Kmem_alloc: block %014lx(%014lx) size=%lx\n",
-               md_kern, md_start, md_size);
-      a->add_mem((void *)md_kern, md_size);
-      md.type(Mem_desc::Reserved);
-      _orig_free += md_size;
-    }
   if (0)
     printf("Kmem_alloc: construction done\n");
 }
