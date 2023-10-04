@@ -16,7 +16,7 @@ IMPLEMENTATION [mips]:
 #include <cstdio>
 
 
-enum { Freemap_size = Kmem_alloc::Alloc::free_map_bytes(0, 0x20000000 - 1) };
+enum { Freemap_size = Kmem_alloc::Alloc::free_map_bytes(0, (512UL << 20) - 1) };
 static unsigned long _freemap[Freemap_size / sizeof (unsigned long)];
 
 IMPLEMENT
@@ -42,10 +42,9 @@ Kmem_alloc::Kmem_alloc()
 
   alloc_size = Pg::round(alloc_size);
 
-  // limit to KSEG0 size of 512MB
-  unsigned long max = 0x20000000;
-  if (max > Config::kernel_mem_max)
-    max = Config::kernel_mem_max;
+  // limit to the lower 512MB region to make sure it is mapped in KSEG0
+  unsigned long max_addr = 512UL << 20;
+
   a->init(Mem_layout::phys_to_pmem(0)); //Mem_layout::phys_to_pmem(f.start));
   a->setup_free_map(_freemap, Freemap_size);
 
@@ -53,13 +52,13 @@ Kmem_alloc::Kmem_alloc()
   for (unsigned i = 0; alloc_size && (i < map.length()); ++i) {
     f = map[i];
 
-    if (f.start >= max)
+    if (f.start >= max_addr)
       continue;
 
     unsigned long sz = f.size() > alloc_size ? alloc_size : f.size();
 
-    if ((f.start + sz) >= max)
-      sz = max - f.start;
+    if ((f.start + sz) >= max_addr)
+      sz = max_addr - f.start;
 
     if (sz < Config::PAGE_SIZE)
       continue;
