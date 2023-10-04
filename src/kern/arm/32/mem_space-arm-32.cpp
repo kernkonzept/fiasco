@@ -16,22 +16,6 @@ IMPLEMENTATION [arm && 32bit && cpu_virt]:
 
 static Address __mem_space_syscall_page;
 
-IMPLEMENT_OVERRIDE inline
-template< typename T >
-T
-Mem_space::peek_user(T const *addr)
-{
-  Address pa = virt_to_phys((Address)addr);
-  if (pa == ~0UL)
-    return ~0;
-
-  Address ka = Mem_layout::phys_to_pmem(pa);
-  if (ka == ~0UL)
-    return ~0;
-
-  return *reinterpret_cast<T const *>(ka);
-}
-
 PROTECTED static
 void
 Mem_space::set_syscall_page(void *p)

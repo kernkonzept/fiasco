@@ -34,7 +34,7 @@ public:
 };
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION:
+IMPLEMENTATION[ia32 || amd64]:
 
 #include <cassert>
 #include "mem.h"
@@ -46,9 +46,6 @@ Mem_space::peek(T const *addr, bool user_space)
 {
   return user_space ? peek_user(addr) : *addr;
 }
-
-//----------------------------------------------------------------------------
-IMPLEMENTATION[arm || ia32 || amd64]:
 
 IMPLEMENT_DEFAULT inline
 template< typename T >
