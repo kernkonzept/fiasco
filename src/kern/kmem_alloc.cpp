@@ -451,3 +451,18 @@ Kmem_alloc_reaper::morecore(bool desperate = false)
 
   return freed;
 }
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [debug]:
+
+PUBLIC
+void
+Kmem_alloc::debug_dump()
+{
+  a->dump();
+
+  unsigned long free = a->avail();
+  printf("Used %llu%%, %luKiB out of %luKiB of Kmem\n",
+         100ULL * (_orig_free - free) / _orig_free,
+         (_orig_free - free + 1023) / 1024, (_orig_free + 1023) / 1024);
+}

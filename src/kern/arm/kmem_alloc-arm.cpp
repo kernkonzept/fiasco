@@ -135,19 +135,3 @@ static void add_initial_pmem()
 }
 
 STATIC_INITIALIZER_P(add_initial_pmem, BOOTSTRAP_INIT_PRIO);
-
-//----------------------------------------------------------------------------
-IMPLEMENTATION [arm && debug]:
-
-#include <cstdio>
-
-PUBLIC
-void Kmem_alloc::debug_dump()
-{
-  a->dump();
-
-  unsigned long free = a->avail();
-  printf("Used %lu KiB out of %lu KiB of Kmem\n",
-         (Config::KMEM_SIZE - free + 1023) / 1024,
-         (Config::KMEM_SIZE        + 1023) / 1024);
-}

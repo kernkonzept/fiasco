@@ -172,27 +172,3 @@ Kmem_alloc::Kmem_alloc()
   if (0)
     printf("Kmem_alloc: construction done\n");
 }
-
-//-----------------------------------------------------------------------------
-IMPLEMENTATION [{ia32,ux,amd64}-debug]:
-
-#include "div32.h"
-
-PUBLIC
-void
-Kmem_alloc::debug_dump()
-{
-  a->dump();
-
-  unsigned long free = a->avail();
-  printf("Used %lu%%, %luKB out of %luKB of Kmem\n",
-         (unsigned long)div32(100ULL * (orig_free() - free), orig_free()),
-         (orig_free() - free + 1023) / 1024, (orig_free() + 1023) / 1024);
-}
-
-PRIVATE inline
-unsigned long
-Kmem_alloc::orig_free()
-{
-  return _orig_free;
-}
