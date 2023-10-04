@@ -40,23 +40,23 @@ Kmem_alloc::base_init()
 
   Mem_region_map<64> map;
   unsigned long available_size = create_free_map(Kip::k(), &map);
-  unsigned long requested_size = Koptions::o()->kmemsize << 10;
-  if (!requested_size)
+  unsigned long alloc_size = Koptions::o()->kmemsize << 10;
+  if (!alloc_size)
     {
-      requested_size = available_size / 100 * Config::kernel_mem_per_cent;
-      if (requested_size > Config::kernel_mem_max)
-        requested_size = Config::kernel_mem_max;
+      alloc_size = available_size / 100 * Config::kernel_mem_per_cent;
+      if (alloc_size > Config::kernel_mem_max)
+        alloc_size = Config::kernel_mem_max;
     }
 
-  if (requested_size > Mem_layout::Physmem_max_size)
-    requested_size = Mem_layout::Physmem_max_size; // maximum mappable memory
+  if (alloc_size > Mem_layout::Physmem_max_size)
+    alloc_size = Mem_layout::Physmem_max_size; // maximum mappable memory
 
-  requested_size = Pg::round(requested_size);
+  alloc_size = Pg::round(alloc_size);
 
   if (0)
     {
-      printf("Kmem_alloc: available_memory=%lu KB requested_size=%lu KB\n",
-             available_size / 1024, requested_size / 1024);
+      printf("Kmem_alloc: available size %lu KB, alloc size %lu KB\n",
+             available_size / 1024, alloc_size / 1024);
 
       printf("Kmem_alloc: available blocks:\n");
       for (unsigned i = 0; i < map.length(); ++i)
@@ -66,16 +66,15 @@ Kmem_alloc::base_init()
   unsigned long base = 0;
   unsigned long sp_base = 0;
   unsigned long end = map[map.length() - 1].end;
-  unsigned last = map.length();
-  unsigned i;
-  unsigned long size = requested_size;
+  int last = map.length() - 1;
+  int i = last;
 
-  for (i = last; i > 0 && size > 0; --i)
+  while (i >= 0)
     {
-      if (map[i - 1].size() >= size)
+      if (map[i].size() >= alloc_size)
         {
           // next block is sufficient
-          base = map[i - 1].end - size + 1;
+          base = map[i].end - alloc_size + 1;
           sp_base = Super_pg::trunc(base);
           if (end - sp_base + 1 > Mem_layout::Physmem_max_size)
             {
@@ -85,36 +84,42 @@ Kmem_alloc::base_init()
               if (last == i)
                 {
                   // already a single block: try to align
-                  if (sp_base >= map[i - 1].start)
+                  if (sp_base >= map[i].start)
                     {
                       base = sp_base;
-                      end  = sp_base + size - 1;
-                      size = 0;
+                      end  = sp_base + alloc_size - 1;
+                      alloc_size = 0;
                     }
                 }
-              else if (last > 1)
+              else if (last > 0)
                 {
-                  // otherwise: try other blocks + free last block
-                  size += map[last - 1].size();
-                  end = map[last - 2].end;
+                  // otherwise: free last block ...
+                  alloc_size += map[last].size();
+                  // ... + try next block
                   --last;
+                  end = map[last].end;
                   ++i; // try same block again
                 }
             }
           else
-            size = 0; // done
+            alloc_size = 0; // done
         }
       else
-        size -= map[i - 1].size(); // not done yet
+        alloc_size -= map[i].size(); // not done yet
+
+      if (!alloc_size)
+        break;
+
+      --i;
     }
 
-  if (size)
+  if (alloc_size)
     return false;
 
   if (0)
     {
       printf("Kmem_alloc: kernel memory from %014lx to %014lx\n", base, end + 1);
-      printf("Kmem_alloc: blocks %u-%u\n", i, last - 1);
+      printf("Kmem_alloc: blocks %u-%u\n", i, last);
     }
 
   Kip::k()->add_mem_region(Mem_desc(base, min(end, map[i].end),
