@@ -1,3 +1,22 @@
+INTERFACE [arm]:
+
+EXTENSION class Context
+{
+public:
+  void set_ignore_mem_op_in_progress(bool);
+  bool is_ignore_mem_op_in_progress() const { return _kernel_mem_op.do_ignore; }
+  bool is_kernel_mem_op_hit_and_clear();
+  void set_kernel_mem_op_hit() { _kernel_mem_op.hit = 1; }
+
+private:
+  struct Kernel_mem_op
+  {
+    Unsigned8 do_ignore;
+    Unsigned8 hit;
+  };
+  Kernel_mem_op _kernel_mem_op;
+};
+
 IMPLEMENTATION [arm]:
 
 PUBLIC inline
@@ -41,6 +60,24 @@ Context::arm_switch_gp_regs(Context *t)
      : // r11/fp is saved / restored using stmdb/ldmia
        "r4", "r5", "r6", "r7", "r8", "r9",
        "r10", "r12", "r14", "memory");
+}
+
+IMPLEMENT inline
+void
+Context::set_ignore_mem_op_in_progress(bool val)
+{
+  _kernel_mem_op.do_ignore = val;
+  Mem::barrier();
+}
+
+IMPLEMENT inline
+bool
+Context::is_kernel_mem_op_hit_and_clear()
+{
+  bool h = _kernel_mem_op.hit;
+  if (h)
+    _kernel_mem_op.hit = 0;
+  return h;
 }
 
 //---------------------------------------------------------------------------

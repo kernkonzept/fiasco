@@ -212,6 +212,23 @@ Thread::check_and_handle_linux_cache_api(Trap_state *ts)
     return false;
 }
 
+IMPLEMENT_OVERRIDE inline
+bool
+Thread::check_and_handle_mem_op_fault(Mword error_code, Return_frame *ret_frame)
+{
+  // cache operations we carry out for user space might cause PFs, we just
+  // ignore those
+  if (EXPECT_FALSE(!PF::is_usermode_error(error_code))
+      && EXPECT_FALSE(is_ignore_mem_op_in_progress()))
+    {
+      set_kernel_mem_op_hit();
+      ret_frame->pc += 4;
+      return true;
+    }
+  else
+    return false;
+}
+
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && 32bit && !arm_lpae]:
 
@@ -452,4 +469,17 @@ Thread::pagein_tcb_request(Return_frame *regs)
       return true;
     }
   return false;
+}
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [arm && 32bit && !cpu_virt]:
+
+PUBLIC static inline template<typename T>
+T Thread::peek_user(T const *adr, Context *c)
+{
+  T v;
+  c->set_ignore_mem_op_in_progress(true);
+  v = *adr;
+  c->set_ignore_mem_op_in_progress(false);
+  return v;
 }

@@ -7,6 +7,7 @@ EXTENSION class Thread
 public:
   static void init_per_cpu(Cpu_number cpu, bool resume);
   static bool check_and_handle_linux_cache_api(Trap_state *);
+  bool check_and_handle_mem_op_fault(Mword error_code, Return_frame *ret_frame);
   bool check_and_handle_coproc_faults(Trap_state *);
 
 private:
@@ -164,15 +165,8 @@ extern "C" {
 
     Thread *t = current_thread();
 
-    // cache operations we carry out for user space might cause PFs, we just
-    // ignore those
-    if (EXPECT_FALSE(!PF::is_usermode_error(error_code))
-        && EXPECT_FALSE(t->is_ignore_mem_op_in_progress()))
-      {
-        t->set_kernel_mem_op_hit();
-        ret_frame->pc += 4;
-        return 1;
-      }
+    if (EXPECT_FALSE(t->check_and_handle_mem_op_fault(error_code, ret_frame)))
+      return 1;
 
     // Pagefault in user mode
     if (PF::is_usermode_error(error_code))
@@ -645,6 +639,13 @@ Thread::check_and_handle_linux_cache_api(Trap_state *)
 
 IMPLEMENT_DEFAULT inline
 bool
+Thread::check_and_handle_mem_op_fault(Mword, Return_frame *)
+{
+  return false;
+}
+
+IMPLEMENT_DEFAULT inline
+bool
 Thread::check_and_handle_coproc_faults(Trap_state *)
 {
   return false;
@@ -655,19 +656,6 @@ bool
 Thread::handle_sve_trap(Trap_state *)
 {
   return false;
-}
-
-//-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && !cpu_virt]:
-
-PUBLIC static inline template<typename T>
-T Thread::peek_user(T const *adr, Context *c)
-{
-  T v;
-  c->set_ignore_mem_op_in_progress(true);
-  v = *adr;
-  c->set_ignore_mem_op_in_progress(false);
-  return v;
 }
 
 //-----------------------------------------------------------------------------

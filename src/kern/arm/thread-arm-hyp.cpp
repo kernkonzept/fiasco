@@ -63,22 +63,6 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
   asm ("mrc p15, 0, %0, c0, c0, 0" : "=r" (v->vpidr));
 }
 
-PUBLIC static inline template<typename T>
-T
-Thread::peek_user(T const *adr, Context *c)
-{
-  Address pa;
-  asm ("mcr p15, 0, %1, c7, c8, 6 \n"
-       "mrc p15, 0, %0, c7, c4, 0 \n"
-       : "=r" (pa) : "r"(adr) );
-  if (EXPECT_TRUE(!(pa & 1)))
-    return *reinterpret_cast<T const *>(cxx::mask_lsb(pa, 12)
-                                        | cxx::get_lsb((Address)adr, 12));
-
-  c->set_kernel_mem_op_hit();
-  return T(~0);
-}
-
 extern "C" void hyp_mode_fault(Mword abort_type, Trap_state *ts)
 {
   Mword v;
@@ -351,6 +335,23 @@ Thread::get_esr()
   Arm_esr hsr;
   asm ("mrc p15, 4, %0, c5, c2, 0" : "=r" (hsr));
   return hsr;
+}
+
+
+PUBLIC static inline template<typename T>
+T
+Thread::peek_user(T const *adr, Context *c)
+{
+  Address pa;
+  asm ("mcr p15, 0, %1, c7, c8, 6 \n"
+       "mrc p15, 0, %0, c7, c4, 0 \n"
+       : "=r" (pa) : "r"(adr) );
+  if (EXPECT_TRUE(!(pa & 1)))
+    return *reinterpret_cast<T const *>(cxx::mask_lsb(pa, 12)
+                                        | cxx::get_lsb((Address)adr, 12));
+
+  c->set_kernel_mem_op_hit();
+  return T(~0);
 }
 
 //-----------------------------------------------------------------------------
