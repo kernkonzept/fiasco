@@ -17,9 +17,6 @@ IMPLEMENTATION [mips]:
 #include <cstdio>
 
 
-enum { Freemap_size = Kmem_alloc::Alloc::free_map_bytes(0, (512UL << 20) - 1) };
-static unsigned long _freemap[Freemap_size / sizeof (unsigned long)];
-
 IMPLEMENT
 Kmem_alloc::Kmem_alloc()
 {
@@ -44,9 +41,6 @@ Kmem_alloc::Kmem_alloc()
   // limit to the lower 512MB region to make sure it is mapped in KSEG0
   unsigned long max_addr = 512UL << 20;
 
-  a->init(Mem_layout::phys_to_pmem(0)); //Mem_layout::phys_to_pmem(f.start));
-  a->setup_free_map(_freemap, Freemap_size);
-
   for (unsigned i = 0; alloc_size && i < map.length(); ++i)
     {
       Mem_region f = map[i];
@@ -63,16 +57,21 @@ Kmem_alloc::Kmem_alloc()
       if (f.size() < Config::PAGE_SIZE)
         continue;
 
-      _orig_free += f.size();
-      Kip::k()->add_mem_region(Mem_desc(f.start, f.end, Mem_desc::Reserved));
+      Kip::k()->add_mem_region(Mem_desc(f.start, f.end, Mem_desc::Kernel_tmp));
       printf("Add KMEM memory @ %#lx, size %#lx\n",
              Mem_layout::phys_to_pmem(f.start), f.size());
-      a->add_mem((void *)Mem_layout::phys_to_pmem(f.start), f.size());
+
       alloc_size -= f.size();
     }
 
   if (alloc_size)
     panic("Kmem_alloc: cannot allocate sufficient kernel memory");
+
+  // We waste a few bytes for the freemap (not exact start/end).
+  unsigned long freemap_size = Alloc::free_map_bytes(0UL, max_addr - 1);
+  unsigned long min_addr_kern = Mem_layout::phys_to_pmem(0UL);
+
+  setup_kmem_from_kip_md_tmp(freemap_size, min_addr_kern);
 }
 
 //----------------------------------------------------------------------------
