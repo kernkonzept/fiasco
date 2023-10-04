@@ -44,15 +44,15 @@ $(foreach tname,$(UTEST_TESTS),\
 define gen_utest_suppl_rule
 $(1): $(2) globalconfig.out
 	$$(COMP_MESSAGE)
-	$$(VERBOSE)$$(CP) $$< $$@
+	$$(VERBOSE)ln -snf $$< $$@
 endef
 
-# Generate copy rule for each 'expected_' file.
-# By default, for 'test_foo.cpp', 'expected_foo' is used
-# unless expected_foo-XARCH (e.g. 'expected_foo-ia32') exists
-# unless expected_foo-XARCH-BITS (e.g. 'expected_foo-mips-64') exists
-# unless expected_foo-bar (e.g. 'expected_foo-arm-nolpae') exists where
-# 'bar' is evaluated from $(expected_foo-config).
+# Generate symlink rule for each supplemental file.
+# For every supplemental file, the filename f is used
+# unless $(f)-XARCH (e.g. 'fname-ia32') exists
+# unless $(f)-XARCH-BITS (e.g. 'fname-mips-64') exists
+# unless $(f)-bar (e.g. 'f-arm-nolpae') exists where
+# 'bar' is evaluated from $(f-config).
 $(foreach tname,$(UTEST_SUPPL),\
 	$(eval $(call gen_utest_suppl_rule,\
 		utest/$(tname),\
