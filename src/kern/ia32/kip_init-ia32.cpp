@@ -9,13 +9,6 @@ class Cpu;
 
 class Kip_init
 {
-public:
-  /**
-   * Insert memory descriptor for the Kmem region and finish the memory
-   * info field.
-   * @post no more memory descriptors may be added
-   */
-  static void setup_kmem_region (Address kmem_base, Address kmem_size);
 };
 
 //----------------------------------------------------------------------------
