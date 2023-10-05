@@ -214,6 +214,25 @@ config MP_MAX_CPUS
 	help
 	  The maximum number of CPUs the kernel supports.
 
+config KMEM_SIZE_AUTO
+	bool "Automatically determine kernel memory size"
+	default y
+	help
+	  If set to 'y' (default), the kernel automatically determines the
+	  amount of kernel memory using Config::kmem_per_cent(). The size of
+          the kernel memory can be overriden by the kernel command line
+          parameter "-kmemsize" passed to the boot loader.
+
+config KMEM_SIZE_KB
+	int "Kernel memory size in KiB"
+	depends on !KMEM_SIZE_AUTO
+	range 2048 4194304
+	default 32768
+	help
+	  The amount of kernel memory in KiB. The size of the kernel memory can
+	  be overridden by the kernel command line parameter "-kmemsize" passed
+	  to the boot loader.
+
 config CONTEXT_8K
 	bool #"TCB size of 8k"
 	help

@@ -7,7 +7,6 @@ IMPLEMENTATION [ia32,ux,amd64]:
 #include <cstdio>
 
 #include "kip.h"
-#include "koptions.h"
 #include "mem_region.h"
 #include "minmax.h"
 #include "panic.h"
@@ -40,22 +39,18 @@ Kmem_alloc::base_init()
 
   Mem_region_map<64> map;
   unsigned long available_size = create_free_map(Kip::k(), &map);
-  unsigned long alloc_size = Koptions::o()->kmemsize << 10;
-  if (!alloc_size)
-    {
-      alloc_size = available_size / 100 * Config::kernel_mem_per_cent;
-      if (alloc_size > Config::kernel_mem_max)
-        alloc_size = Config::kernel_mem_max;
-    }
+
+  unsigned long alloc_size = determine_kmem_alloc_size(available_size);
 
   if (alloc_size > Mem_layout::Physmem_max_size)
     alloc_size = Mem_layout::Physmem_max_size; // maximum mappable memory
 
-  alloc_size = Pg::round(alloc_size);
+  static_assert(Mem_layout::Physmem_max_size % Config::PAGE_SIZE == 0,
+                "Physmem_max_size must be page-aligned");
 
   if (0)
     {
-      printf("Kmem_alloc: available size %lu KB, alloc size %lu KB\n",
+      printf("Kmem_alloc: available_memory=%lu KB alloc_size=%lu KB\n",
              available_size / 1024, alloc_size / 1024);
 
       printf("Kmem_alloc: available blocks:\n");
@@ -131,7 +126,6 @@ Kmem_alloc::base_init()
 
   Mem_layout::kphys_base(sp_base);
   Mem_layout::pmem_size = Super_pg::round(end + 1 - sp_base);
-  assert(Mem_layout::pmem_size <= Config::kernel_mem_max);
 
   return true;
 }

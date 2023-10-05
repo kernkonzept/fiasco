@@ -10,7 +10,6 @@ IMPLEMENTATION [mips]:
 #include "ram_quota.h"
 #include "mem_region.h"
 #include "kmem.h"
-#include "koptions.h"
 #include "paging_bits.h"
 #include "panic.h"
 
@@ -22,21 +21,9 @@ Kmem_alloc::Kmem_alloc()
 {
   Mem_region_map<64> map;
   unsigned long available_size = create_free_map(Kip::k(), &map);
-
   printf("Available physical memory: %#lx\n", available_size);
 
-  // sanity check whether the KIP has been filled out, number is arbitrary
-  if (available_size < (1 << 18))
-    panic("Kmem_alloc: No kernel memory available (%ld)\n", available_size);
-
-  unsigned long alloc_size = Koptions::o()->kmemsize << 10;
-  if (!alloc_size)
-    alloc_size = available_size / 100 * Config::Kmem_per_cent;
-
-  if (alloc_size > (Config::Kmem_max_mb << 20))
-    alloc_size = Config::Kmem_max_mb << 20;
-
-  alloc_size = Pg::round(alloc_size);
+  unsigned long alloc_size = determine_kmem_alloc_size(available_size);
 
   // limit to the lower 512MB region to make sure it is mapped in KSEG0
   unsigned long max_addr = 512UL << 20;

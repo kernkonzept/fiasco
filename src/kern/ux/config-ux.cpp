@@ -46,6 +46,12 @@ KIP_KERNEL_FEATURE("io_prot");
 
 const char *const Config::kernel_warn_config_string = 0;
 
+IMPLEMENT_OVERRIDE inline ALWAYS_INLINE
+constexpr unsigned Config::kmem_per_cent() { return 8; }
+
+IMPLEMENT_OVERRIDE inline ALWAYS_INLINE
+constexpr unsigned long Config::kmem_max() { return 64UL << 20; }
+
 IMPLEMENT FIASCO_INIT
 void
 Config::init_arch()

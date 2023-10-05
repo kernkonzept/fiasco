@@ -84,6 +84,7 @@ IMPLEMENTATION:
 
 #include "atomic.h"
 #include "kip.h"
+#include "koptions.h"
 #include "mem_layout.h"
 #include "mem_region.h"
 #include "buddy_alloc.h"
@@ -273,6 +274,25 @@ Kmem_alloc::create_free_map(Kip const *kip, Mem_region_map_base *map,
     }
 
   return available_size;
+}
+
+PRIVATE static FIASCO_INIT
+unsigned long
+Kmem_alloc::determine_kmem_alloc_size(unsigned long available_size,
+                                      unsigned long alignment = Config::PAGE_SIZE)
+{
+  // sanity check whether the KIP has been filled out, number is arbitrary
+  if (available_size < 1 << 18)
+    panic("Kmem_alloc: No kernel memory available (%ld)\n", available_size);
+
+  unsigned long alloc_size = Koptions::o()->kmemsize << 10;
+  if (!alloc_size)
+    alloc_size = Config::kmem_size(available_size);
+
+  alloc_size = (alloc_size + alignment - 1) & ~(alignment - 1);
+
+  printf("Reserved %lu MiB as kernel memory.\n", alloc_size >> 20);
+  return alloc_size;
 }
 
 /**

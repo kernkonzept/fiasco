@@ -181,9 +181,9 @@ Boot_info::kmem_start(Address mem_max)
   size = Koptions::o()->kmemsize << 10;
   if (!size)
     {
-      size = end_addr / 100 * Config::kernel_mem_per_cent;
-      if (size > Config::kernel_mem_max)
-	size = Config::kernel_mem_max;
+      size = end_addr / 100U * Config::kmem_per_cent();
+      if (size > Config::kmem_max())
+	size = Config::kmem_max();
     }
 
   base = Pg::trunc(end_addr - size);

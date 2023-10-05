@@ -38,11 +38,6 @@ public:
 #endif
   };
 
-  enum : unsigned long
-  {
-    KMEM_SIZE = 16 << 20,
-  };
-
   // the default uart to use for serial console
   static unsigned const default_console_uart	= 3;
   static unsigned const default_console_uart_baudrate = 115200;

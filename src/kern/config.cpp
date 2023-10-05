@@ -6,6 +6,7 @@ INTERFACE:
 
 #include <globalconfig.h>
 #include "config_tcbsize.h"
+#include "initcalls.h"
 #include "l4_types.h"
 
 // special magic to allow old compilers to inline constants
@@ -117,6 +118,9 @@ public:
 
   static constexpr Bytes page_size()
   { return Bytes(PAGE_SIZE); }
+
+  static constexpr unsigned kmem_per_cent();
+  static constexpr unsigned long kmem_max();
 };
 
 #define GREETING_COLOR_ANSI_TITLE  "\033[1;32m"
@@ -140,48 +144,6 @@ INTERFACE:
                            TARGET_NAME_PHRASE "    [" CONFIG_LABEL "]\\n"    \
                            "Build: #" BUILD_NR " " BUILD_DATE "\\n"            \
   GREETING_COLOR_ANSI_OFF
-
-//---------------------------------------------------------------------------
-INTERFACE [ux]:
-
-EXTENSION class Config
-{
-public:
-  // 8 percent of total RAM, >=800MB RAM => 64MB kmem
-  static const unsigned kernel_mem_per_cent = 8;
-  enum
-  {
-    kernel_mem_max      = 64 << 20
-  };
-};
-
-//---------------------------------------------------------------------------
-INTERFACE [!ux && !64bit]:
-
-EXTENSION class Config
-{
-public:
-  // 8 percent of total RAM, >=750MB RAM => 60MB kmem
-  static const unsigned kernel_mem_per_cent = 8;
-  enum
-  {
-    kernel_mem_max      = 60 << 20
-  };
-};
-
-//---------------------------------------------------------------------------
-INTERFACE [!ux && 64bit]:
-
-EXTENSION class Config
-{
-public:
-  // 6 percent of total RAM, >=55466MB RAM => 3328MB kmem
-  static const unsigned kernel_mem_per_cent = 6;
-  enum
-  {
-    kernel_mem_max      = 3328UL << 20
-  };
-};
 
 //---------------------------------------------------------------------------
 INTERFACE [serial]:
@@ -229,7 +191,6 @@ IMPLEMENTATION:
 #include <cstring>
 #include <cstdlib>
 #include "feature.h"
-#include "initcalls.h"
 #include "koptions.h"
 #include "panic.h"
 #include "std_macros.h"
@@ -274,3 +235,37 @@ void Config::init()
     }
 #endif
 }
+
+PUBLIC static FIASCO_INIT
+unsigned long
+Config::kmem_size(unsigned long available_size)
+{
+#ifdef CONFIG_KMEM_SIZE_AUTO
+  static_assert(kmem_per_cent() < 100, "Sanitize kmem_per_cent");
+  unsigned long alloc_size = available_size / 100U * kmem_per_cent();
+  if (alloc_size > kmem_max())
+    alloc_size = kmem_max();
+  return alloc_size;
+#else
+  (void)available_size;
+  return (unsigned long)CONFIG_KMEM_SIZE_KB << 10;
+#endif
+}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [!64bit]:
+
+IMPLEMENT_DEFAULT inline ALWAYS_INLINE
+constexpr unsigned Config::kmem_per_cent() { return 8; }
+
+IMPLEMENT_DEFAULT inline ALWAYS_INLINE
+constexpr unsigned long Config::kmem_max() { return 60UL << 20; }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [64bit]:
+
+IMPLEMENT_DEFAULT inline ALWAYS_INLINE
+constexpr unsigned Config::kmem_per_cent() { return 6; }
+
+IMPLEMENT_DEFAULT inline ALWAYS_INLINE
+constexpr unsigned long Config::kmem_max() { return 3328UL << 20; }

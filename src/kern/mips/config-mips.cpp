@@ -23,12 +23,6 @@ public:
 
   enum
   {
-    Kmem_per_cent = 6,
-    Kmem_max_mb   = 32,
-  };
-
-  enum
-  {
     Scheduler_one_shot		= 0,
     Scheduler_granularity	= 1000UL,
     Default_time_slice	        = 10 * Scheduler_granularity,
@@ -48,6 +42,9 @@ IMPLEMENTATION [mips]:
 
 const char *const Config::kernel_warn_config_string = 0;
 
+IMPLEMENT_OVERRIDE inline ALWAYS_INLINE
+constexpr unsigned long Config::kmem_max() { return 32UL << 20; }
+
 IMPLEMENT FIASCO_INIT
 void
 Config::init_arch()
@@ -55,4 +52,3 @@ Config::init_arch()
   // set a smaller default for JDB trace buffers
   Config::tbuf_entries = 1024;
 }
-
