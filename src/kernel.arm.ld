@@ -41,6 +41,12 @@ OUTPUT_ARCH(aarch64)
 # define NEED_EXCPT
 #endif
 
+#if defined CONFIG_MMU
+# define PAGE_ALIGN 4K
+#else
+# define PAGE_ALIGN 64  // MPU region boundary
+#endif
+
 ENTRY(_start)
 
 PHDRS {
@@ -258,7 +264,7 @@ SECTIONS {
     PROVIDE (_alt_insns_begin = .);
     KEEP(*(SORT(.alt_insns)))
     PROVIDE (_alt_insns_end = .);
-    . = ALIGN(4K);
+    . = ALIGN(PAGE_ALIGN);
   } :initcall_data
   _initcall_end = .;
 
