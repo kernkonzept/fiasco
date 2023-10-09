@@ -116,9 +116,6 @@ atomic_exchange(T *mem, V value)
         : [val]"r" (val)
         : "memory");
       return res;
-
-    default:
-      return T();
     }
 }
 
@@ -148,9 +145,6 @@ atomic_add_fetch(T *mem, V value)
         : [val]"r" (val)
         : "memory");
       return res;
-
-    default:
-      return T();
     }
 }
 
