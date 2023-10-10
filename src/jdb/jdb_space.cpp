@@ -26,33 +26,18 @@ private:
 //-----------------------------------------------------------------------
 IMPLEMENTATION:
 
-#include <climits>
-#include <cstring>
-#include <cstdio>
-
-#include "jdb.h"
-#include "jdb_core.h"
-#include "jdb_module.h"
-#include "jdb_screen.h"
-#include "jdb_kobject.h"
-#include "kernel_console.h"
-#include "kernel_task.h"
-#include "keycodes.h"
-#include "ram_quota.h"
-#include "simpleio.h"
 #include "task.h"
-#include "thread_object.h"
 #include "static_init.h"
 #include "kmem_slab.h"
 
-static Kmem_slab_t<Jdb_space_image_info> _sii_allocator("Jdb_space_image_info");
+static DECLARE_PER_NODE Per_node_data<Kmem_slab_t<Jdb_space_image_info>> _sii_allocator("Jdb_space_image_info");
 char const *const Jdb_space_image_info::static_type = "Jdb_space_image_info";
 
 IMPLEMENT
 void
 Jdb_space_image_info::operator delete (void *p)
 {
-  _sii_allocator.del(reinterpret_cast<Jdb_space_image_info*>(p));
+  _sii_allocator->del(reinterpret_cast<Jdb_space_image_info*>(p));
 }
 
 IMPLEMENT
@@ -85,23 +70,73 @@ Jdb_space_image_info::name() const
 { return _name; }
 
 
-
-class Jdb_space : public Jdb_module, public Jdb_kobject_handler
+class Jdb_space : public Jdb_kobject_handler
 {
 public:
   Jdb_space() FIASCO_INIT;
+};
+
+IMPLEMENT
+Jdb_space::Jdb_space()
+  : Jdb_kobject_handler((Task*)0)
+{
+  Jdb_kobject::module()->register_handler(this);
+}
+
+PUBLIC
+bool
+Jdb_space::invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb) override
+{
+  switch (utcb->values[0])
+    {
+    case Op_add_image_info:
+        {
+          if (f->tag().words() < 2)
+            {
+              f->tag(Kobject_iface::commit_result(-L4_err::EInval));
+              return true;
+            }
+
+          Jdb_space_image_info *ne =
+            _sii_allocator->new_obj((Mword)utcb->values[1],
+                                    reinterpret_cast<char const *>(&utcb->values[2]),
+                                    (f->tag().words() - 2) * sizeof(Mword));
+          if (!ne)
+            {
+              f->tag(Kobject_iface::commit_result(-L4_err::ENomem));
+              return true;
+            }
+
+          o->dbg_info()->_jdb_data.add(ne);
+          f->tag(Kobject_iface::commit_result(0));
+          return true;
+        }
+    }
+  return false;
+}
+
+static DECLARE_PER_NODE_PRIO(JDB_MODULE_INIT_PRIO) Per_node_data<Jdb_space> hdl;
+
+//-----------------------------------------------------------------------
+IMPLEMENTATION [jdb]:
+
+#include "kernel_task.h"
+#include "keycodes.h"
+
+class Jdb_space_mod : public Jdb_module
+{
+public:
+  Jdb_space_mod() FIASCO_INIT;
 private:
   static Task *task;
 };
 
-Task *Jdb_space::task;
+Task *Jdb_space_mod::task;
 
 IMPLEMENT
-Jdb_space::Jdb_space()
-  : Jdb_module("INFO"), Jdb_kobject_handler((Task*)0)
-{
-  Jdb_kobject::module()->register_handler(this);
-}
+Jdb_space_mod::Jdb_space_mod()
+  : Jdb_module("INFO")
+{}
 
 PUBLIC
 bool
@@ -127,45 +162,6 @@ Jdb_space::show_kobject_short(String_buffer *buf, Kobject_common *o, bool) overr
     buf->printf(" {KERNEL}");
 
   buf->printf(" R=%ld", t->ref_cnt());
-}
-
-PUBLIC
-bool
-Jdb_space::invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb) override
-{
-  switch (utcb->values[0])
-    {
-    case Op_add_image_info:
-        {
-          if (f->tag().words() < 2)
-            {
-              f->tag(Kobject_iface::commit_result(-L4_err::EInval));
-              return true;
-            }
-
-          Jdb_space_image_info *ne =
-            _sii_allocator.new_obj((Mword)utcb->values[1],
-                                   reinterpret_cast<char const *>(&utcb->values[2]),
-                                   (f->tag().words() - 2) * sizeof(Mword));
-          if (!ne)
-            {
-              f->tag(Kobject_iface::commit_result(-L4_err::ENomem));
-              return true;
-            }
-
-          o->dbg_info()->_jdb_data.add(ne);
-          f->tag(Kobject_iface::commit_result(0));
-          return true;
-        }
-    }
-  return false;
-}
-
-PRIVATE static
-void
-Jdb_space::print_space(Space *s)
-{
-  printf("%p", s);
 }
 
 PRIVATE
@@ -207,7 +203,7 @@ static bool space_filter(Kobject_common const *o)
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_space::action(int cmd, void *&, char const *&, int &) override
+Jdb_space_mod::action(int cmd, void *&, char const *&, int &) override
 {
   if (cmd == 0)
     {
@@ -219,7 +215,7 @@ Jdb_space::action(int cmd, void *&, char const *&, int &) override
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_space::cmds() const override
+Jdb_space_mod::cmds() const override
 {
   static Cmd cs[] =
     {
@@ -230,7 +226,7 @@ Jdb_space::cmds() const override
   
 PUBLIC
 int
-Jdb_space::num_cmds() const override
+Jdb_space_mod::num_cmds() const override
 { return 1; }
 
 static
@@ -239,6 +235,6 @@ filter_task_thread(Kobject_common const *o)
 {
   return cxx::dyn_cast<Task const *>(o) || cxx::dyn_cast<Thread const *>(o);
 }
-static Jdb_space jdb_space INIT_PRIORITY(JDB_MODULE_INIT_PRIO);
+static Jdb_space_mod jdb_space INIT_PRIORITY(JDB_MODULE_INIT_PRIO);
 static Jdb_kobject_list::Mode INIT_PRIORITY(JDB_MODULE_INIT_PRIO) tnt("[Tasks + Threads]", filter_task_thread);
 

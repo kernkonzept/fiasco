@@ -61,7 +61,7 @@ INTERFACES_JDB += \
 	jdb_handler_queue jdb_attach_irq jdb_entry_frame                   \
 	jdb_exit_module jdb_bp jdb_factory jdb_input jdb_ipc_gate          \
 	jdb_prompt_module                    \
-	jdb_obj_space jdb_screen jdb_space jdb_table jdb_tcb               \
+	jdb_obj_space jdb_screen jdb_table jdb_tcb               \
 	jdb_thread jdb_thread_list kern_cnt jdb_counters push_console      \
 	jdb_regex jdb_disasm jdb_tbuf_output jdb_input_task jdb_tbuf_show  \
 	jdb_report jdb_dump jdb_mapdb jdb_timeout jdb_kern_info_kmem_alloc \
@@ -75,7 +75,7 @@ jdb_tcb_IMPL	+= jdb_tcb
 
 ifeq ($(CONFIG_DEBUG),y)
 INTERFACES_KERNEL += \
-	jdb_kobject jdb_kobject_names
+	jdb_kobject jdb_kobject_names jdb_space
 endif
 
 ifeq ("$(CONFIG_TRACE)","y")
