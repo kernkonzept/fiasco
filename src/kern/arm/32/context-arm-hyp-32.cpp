@@ -228,16 +228,6 @@ Context::arm_ext_vcpu_switch_to_guest(Vcpu_state *, Vm_state *v)
 
 PRIVATE inline
 void
-Context::arm_ext_vcpu_switch_to_guest_no_load(Vcpu_state *, Vm_state *v)
-{
-  v->fcseidr    = v->guest_regs.fcseidr;
-  v->sctlr      = v->guest_regs.sctlr;
-  _hyp.cntv_ctl = v->guest_regs.cntv_ctl;
-  _hyp.cntvoff  = v->cntvoff;
-}
-
-PRIVATE inline
-void
 Context::arm_ext_vcpu_load_guest_regs(Vcpu_state *vcpu, Vm_state *, Unsigned64 hcr)
 {
   asm volatile ("mrc p15, 0, %0, c13, c0, 3" : "=r"(vcpu->host.tpidruro));

@@ -87,21 +87,17 @@ Context::arch_load_vcpu_kern_state(Vcpu_state *vcpu, bool do_load)
 
 IMPLEMENT_OVERRIDE inline NEEDS[Context::vm_state,
                                 Context::arm_ext_vcpu_switch_to_guest,
-                                Context::arm_ext_vcpu_switch_to_guest_no_load,
                                 Context::arm_ext_vcpu_load_guest_regs]
 void
-Context::arch_load_vcpu_user_state(Vcpu_state *vcpu, bool do_load)
+Context::arch_load_vcpu_user_state(Vcpu_state *vcpu)
 {
 
   if (!(state() & Thread_ext_vcpu_enabled))
     {
       _hyp.hcr = Cpu::Hcr_non_vm_bits | Cpu::Hcr_tge;
       _tpidruro = vcpu->_regs.tpidruro;
-      if (do_load)
-        {
-          Cpu::hcr(_hyp.hcr);
-          load_tpidruro();
-        }
+      Cpu::hcr(_hyp.hcr);
+      load_tpidruro();
       return;
     }
 
@@ -111,25 +107,12 @@ Context::arch_load_vcpu_user_state(Vcpu_state *vcpu, bool do_load)
 
   if (all_priv_vm)
     {
-      if (do_load)
-        {
-          arm_ext_vcpu_switch_to_guest(vcpu, v);
-          Gic_h_global::gic->load_full(&v->gic, true);
-        }
-      else
-        arm_ext_vcpu_switch_to_guest_no_load(vcpu, v);
+      arm_ext_vcpu_switch_to_guest(vcpu, v);
+      Gic_h_global::gic->load_full(&v->gic, true);
     }
 
-  if (do_load)
-    {
-      arm_ext_vcpu_load_guest_regs(vcpu, v, _hyp.hcr);
-      _tpidruro          = vcpu->_regs.tpidruro;
-    }
-  else
-    {
-      vcpu->host.tpidruro = _tpidruro;
-      _tpidruro           = vcpu->_regs.tpidruro;
-    }
+  arm_ext_vcpu_load_guest_regs(vcpu, v, _hyp.hcr);
+  _tpidruro          = vcpu->_regs.tpidruro;
 }
 
 PUBLIC inline NEEDS[Context::arm_hyp_load_non_vm_state,

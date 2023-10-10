@@ -340,7 +340,7 @@ public:
   void arch_load_vcpu_kern_state(Vcpu_state *vcpu, bool do_load);
 
 protected:
-  void arch_load_vcpu_user_state(Vcpu_state *vcpu, bool do_load);
+  void arch_load_vcpu_user_state(Vcpu_state *vcpu);
   void arch_update_vcpu_state(Vcpu_state *vcpu);
   void arch_vcpu_ext_shutdown();
 
@@ -1517,7 +1517,7 @@ Context::arch_load_vcpu_kern_state(Vcpu_state *, bool)
 
 IMPLEMENT_DEFAULT inline
 void
-Context::arch_load_vcpu_user_state(Vcpu_state *, bool)
+Context::arch_load_vcpu_user_state(Vcpu_state *)
 {}
 
 IMPLEMENT_DEFAULT inline

@@ -292,7 +292,7 @@ Thread_object::sys_vcpu_resume(L4_msg_tag const &tag, Utcb const *utcb, Utcb *)
 
       target_space = static_cast<Task*>(vcpu_user_space());
 
-      arch_load_vcpu_user_state(vcpu, true);
+      arch_load_vcpu_user_state(vcpu);
     }
 
   LOG_TRACE("VCPU events", "vcpu", this, Vcpu_log,
