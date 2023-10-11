@@ -585,7 +585,8 @@ public:
   Order granularity() const
   {
     Mword g = (_w >> 24) & 0xff;
-    if (g > 24) g = 24; // limit granularity to 2**24
+    if (g > 24)
+      g = 24; // limit granularity to 2**24
     return Order(g);
   }
 
@@ -935,7 +936,12 @@ bool L4_msg_tag::do_switch() const
  */
 PUBLIC inline
 void L4_msg_tag::set_error(bool e = true)
-{ if (e) _tag |= Error; else _tag &= ~Mword(Error); }
+{
+  if (e)
+    _tag |= Error;
+  else
+    _tag &= ~Mword(Error);
+}
 
 /**
  * Is there an error flagged?

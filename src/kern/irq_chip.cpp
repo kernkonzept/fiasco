@@ -176,7 +176,12 @@ public:
   Irq_chip *chip() const { return _chip; }
   Spin_lock<> *irq_lock() { return &_irq_lock; }
 
-  void mask() { if (!__mask()) _chip->mask(_pin); }
+  void mask()
+  {
+    if (!__mask())
+      _chip->mask(_pin);
+  }
+
   void mask_and_ack()
   {
     if (!__mask())
@@ -185,7 +190,12 @@ public:
       _chip->ack(_pin);
   }
 
-  void unmask() { if (__unmask()) _chip->unmask(_pin); }
+  void unmask()
+  {
+    if (__unmask())
+      _chip->unmask(_pin);
+  }
+
   void ack() { _chip->ack(_pin); }
 
   void set_cpu(Cpu_number cpu) { _chip->set_cpu(_pin, cpu); }

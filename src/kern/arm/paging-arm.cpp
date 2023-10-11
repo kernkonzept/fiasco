@@ -332,9 +332,12 @@ public:
     typedef Page::Kern K;
 
     Unsigned64 lower = 0x300; // inner sharable
-    if (attr.type == T::Normal())   lower |= ATTRIBS::CACHEABLE;
-    if (attr.type == T::Buffered()) lower |= ATTRIBS::BUFFERED;
-    if (attr.type == T::Uncached()) lower |= ATTRIBS::NONCACHEABLE;
+    if (attr.type == T::Normal())
+      lower |= ATTRIBS::CACHEABLE;
+    if (attr.type == T::Buffered())
+      lower |= ATTRIBS::BUFFERED;
+    if (attr.type == T::Uncached())
+      lower |= ATTRIBS::NONCACHEABLE;
 
     if (!(attr.kern & K::Global()))
       lower |= 0x800;
@@ -434,9 +437,12 @@ public:
     typedef Page::Type T;
 
     Unsigned64 lower = 0x300; // inner sharable
-    if (attr.type == T::Normal())   lower |= ATTRIBS::CACHEABLE;
-    if (attr.type == T::Buffered()) lower |= ATTRIBS::BUFFERED;
-    if (attr.type == T::Uncached()) lower |= ATTRIBS::NONCACHEABLE;
+    if (attr.type == T::Normal())
+      lower |= ATTRIBS::CACHEABLE;
+    if (attr.type == T::Buffered())
+      lower |= ATTRIBS::BUFFERED;
+    if (attr.type == T::Uncached())
+      lower |= ATTRIBS::NONCACHEABLE;
 
     // On AArch32 execution is only allowed if read access is permitted as well
     // On AArch64 this is not necessary, pages can be mapped execute-only

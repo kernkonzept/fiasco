@@ -207,13 +207,16 @@ Mem_space::v_lookup(Vaddr virt, Phys_addr *phys,
                     Page_order *order, Attr *page_attribs)
 {
   auto i = _dir->walk(virt);
-  if (order) *order = Page_order(i.page_order());
+  if (order)
+    *order = Page_order(i.page_order());
 
   if (!i.is_valid())
     return false;
 
-  if (phys) *phys = Phys_addr(i.page_addr());
-  if (page_attribs) *page_attribs = i.attribs();
+  if (phys)
+    *phys = Phys_addr(i.page_addr());
+  if (page_attribs)
+    *page_attribs = i.attribs();
 
   return true;
 }

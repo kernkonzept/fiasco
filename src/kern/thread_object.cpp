@@ -44,7 +44,8 @@ Obj_cap::deref(L4_fpage::Rights *rights = 0, bool dbg = false)
   Thread *current = current_thread();
   if (op() & L4_obj_ref::Ipc_reply)
     {
-      if (rights) *rights = current->caller_rights();
+      if (rights)
+        *rights = current->caller_rights();
       Thread *ca = static_cast<Thread*>(current->caller());
       if (EXPECT_TRUE(!dbg && ca))
         current->reset_caller();
@@ -56,7 +57,8 @@ Obj_cap::deref(L4_fpage::Rights *rights = 0, bool dbg = false)
       if (!self())
         return 0;
 
-      if (rights) *rights = L4_fpage::Rights::CRWS();
+      if (rights)
+        *rights = L4_fpage::Rights::CRWS();
       return current;
     }
 
@@ -527,9 +529,12 @@ Thread_object::ex_regs(Address ip, Address sp,
   if (current() == this)
     spill_user_state();
 
-  if (o_sp) *o_sp = user_sp();
-  if (o_ip) *o_ip = user_ip();
-  if (o_flags) *o_flags = user_flags();
+  if (o_sp)
+    *o_sp = user_sp();
+  if (o_ip)
+    *o_ip = user_ip();
+  if (o_flags)
+    *o_flags = user_flags();
 
   // Changing the run state is only possible when the thread is not in
   // an exception.

@@ -149,15 +149,17 @@ Prio_list::dequeue(Prio_list_elem *e, Prio_list_elem **next = 0)
       assert (S_list::in_list(e));
       // yes we are the head of our priority
       if (S_list::has_sibling(e))
-	{
-	  P_list::replace(e, *++S_list::iter(e));
-	  if (next) *next = *++S_list::iter(e);
-	}
+        {
+          P_list::replace(e, *++S_list::iter(e));
+          if (next)
+            *next = *++S_list::iter(e);
+        }
       else
-	{
-	  if (next) *next = *++P_list::iter(e);
-	  P_list::remove(e);
-	}
+        {
+          if (next)
+            *next = *++P_list::iter(e);
+          P_list::remove(e);
+        }
     }
   else
     {

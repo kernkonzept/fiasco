@@ -211,7 +211,11 @@ public:
   enum Pos
   { Back, Front };
 
-  Sd_list() { if (!BSS) H::set_head(_f, 0); }
+  Sd_list()
+  {
+    if (!BSS)
+      H::set_head(_f, 0);
+  }
 
   bool empty() const { return !H::head(_f); }
   T *front() const { return H::head(_f); }

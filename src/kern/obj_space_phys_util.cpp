@@ -249,20 +249,24 @@ bool FIASCO_FLATTEN
 Obj_space_phys<SPACE>::v_lookup(V_pfn const &virt, Phys_addr *phys,
                                 Page_order *size, Attr *attribs)
 {
-  if (size) *size = Page_order(0);
+  if (size)
+    *size = Page_order(0);
   Entry *cap = get_cap(virt);
 
   if (EXPECT_FALSE(!cap))
     {
-      if (size) *size = Page_order(Obj::Caps_per_page_ld2);
+      if (size)
+        *size = Page_order(Obj::Caps_per_page_ld2);
       return false;
     }
 
   Capability c = *cap;
 
   Obj::set_entry(virt, cap);
-  if (phys) *phys = c.obj();
-  if (c.valid() && attribs) *attribs = cap->rights();
+  if (phys)
+    *phys = c.obj();
+  if (c.valid() && attribs)
+    *attribs = cap->rights();
   return c.valid();
 }
 

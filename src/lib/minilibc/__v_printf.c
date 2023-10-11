@@ -141,7 +141,8 @@ inn_printf:
       case '7':
       case '8':
       case '9':
-	if(flag_dot) return -1;
+        if (flag_dot)
+          return -1;
 	width=strtoul(format-1,&s,10);
 	format=s;
 	goto inn_printf;
@@ -173,7 +174,8 @@ inn_printf:
       /* print a string */
       case 's':
 	s=va_arg(arg_ptr,char *);
-	if (!s) s="(null)";
+        if (!s)
+          s="(null)";
 	sz = visible_strlen(s, preci, &wh_sz);
 	// FIXME: could not limit output when invisible characters are
 	// in the output
@@ -251,10 +253,13 @@ num_printf:
 	      flag_in_sign=2;
 	    }
 	}
-	if (flag_long<1) number&=0xffffffff;
-	if (flag_long<0) number&=0xffff;
-	if (flag_long<-1) number&=0xff;
-	if (flag_long>1)
+        if (flag_long<1)
+          number&=0xffffffff;
+        if (flag_long<0)
+          number&=0xffff;
+        if (flag_long<-1)
+          number&=0xff;
+        if (flag_long>1)
 	  sz += __lltostr(buf+1+sz,sizeof(buf)-5,
 			  (unsigned long long) llnumber,base,flag_upcase);
 	else
