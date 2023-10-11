@@ -13,6 +13,8 @@ IMPLEMENTATION [arm]:
 #include "minmax.h"
 #include "static_init.h"
 #include "paging_bits.h"
+#include "panic.h"
+
 
 PRIVATE //inline
 bool
@@ -66,8 +68,7 @@ Kmem_alloc::Kmem_alloc()
 
   // sanity check whether the KIP has been filled out, number is arbitrary
   if (available_size < (1 << 18))
-    panic("Kmem_alloc: No kernel memory available (%ld)\n",
-          available_size);
+    panic("Kmem_alloc: No kernel memory available (%ld)", available_size);
 
   a->init(Mem_layout::Pmem_start);
   a->setup_free_map(_freemap, sizeof(_freemap));
@@ -82,18 +83,16 @@ Kmem_alloc::Kmem_alloc()
       if (0)
         printf("Kmem_alloc: [%08lx; %08lx] sz=%ld\n", f.start, f.end, f.size());
       if (!map_pmem(f.start, f.size()))
-        {
-          WARN("Kmem_alloc: cannot map heap memory [%08lx; %08lx]\n",
-               f.start, f.end);
-          break;
-        }
+        panic("Kmem_alloc: cannot map heap memory [%08lx; %08lx]",
+              f.start, f.end);
 
       a->add_mem((void *)Mem_layout::phys_to_pmem(f.start), f.size());
       alloc_size -= f.size();
     }
 
   if (alloc_size)
-    WARNX(Warning, "Kmem_alloc: cannot allocate sufficient kernel memory\n");
+    panic("Kmem_alloc: cannot allocate sufficient kernel memory (missing %ld)",
+          alloc_size);
 }
 
 /**
@@ -139,8 +138,6 @@ STATIC_INITIALIZER_P(add_initial_pmem, BOOTSTRAP_INIT_PRIO);
 IMPLEMENTATION [arm && debug]:
 
 #include <cstdio>
-
-#include "panic.h"
 
 PUBLIC
 void Kmem_alloc::debug_dump()
