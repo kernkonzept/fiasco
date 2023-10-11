@@ -15,13 +15,7 @@ int __cxa_atexit(void (*func)(void*), void *arg, void *dso_handle);
 int
 atexit(void (*func)(void))
 {
-  if (atexit_counter >= NUM_ATEXIT)
-    return -1;
-
-  __atexitlist[atexit_counter].func = (void(*)(void*, int))func;
-  __atexitlist[atexit_counter].arg  = 0;
-  atexit_counter++;
-  return 0;
+  return __cxa_atexit((void (*)(void*))func, NULL, NULL);
 }
 
 int
