@@ -148,9 +148,7 @@ Kmem_alloc::Kmem_alloc()
   if (0)
     printf("Kmem_alloc::Kmem_alloc()\n");
 
-  unsigned long min_addr = ~0UL;
-  unsigned long max_addr = 0;
-
+  unsigned long min_addr = ~0UL, max_addr = 0UL;
   for (auto &md: Kip::k()->mem_descs_a())
     if (md.type() == Mem_desc::Kernel_tmp)
       {
@@ -159,7 +157,7 @@ Kmem_alloc::Kmem_alloc()
       }
 
   if (min_addr >= max_addr)
-    panic("Cannot allocate kernel memory, invalid reserved areas\n");
+    panic("Cannot allocate kernel memory: Invalid reserved areas");
 
   unsigned long freemap_size = Alloc::free_map_bytes(min_addr, max_addr);
 
@@ -181,7 +179,7 @@ Kmem_alloc::Kmem_alloc()
       }
 
   if (!bmmd)
-    panic("Could not allocate buddy freemap\n");
+    panic("Could not allocate buddy freemap");
 
   unsigned long min_addr_kern = Mem_layout::phys_to_pmem(min_addr);
   unsigned long bm_kern = Mem_layout::phys_to_pmem(bmmd->start());
