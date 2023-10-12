@@ -105,8 +105,8 @@ atomic_exchange(T *mem, V value)
     case 8:
       asm (
           "     prfm   pstl1strm, [%[mem]] \n"
-          "1:   ldxr   %[res], [%[mem]] \n"
-          "     stxr   %w[tmp], %[val], [%[mem]] \n"
+          "1:   ldxr   %x[res], [%[mem]] \n"
+          "     stxr   %w[tmp], %x[val], [%[mem]] \n"
           "     cmp    %w[tmp], #0 \n"
           "     b.ne   1b "
           : [res] "=&r" (res), [tmp] "=&r" (tmp), "+Qo" (*mem)
@@ -170,7 +170,7 @@ atomic_load(T const *p)
       return res;
 
     case 8:
-      asm volatile ("ldr %0, %1" : "=r" (res) : "m"(*p));
+      asm volatile ("ldr %x0, %1" : "=r" (res) : "m"(*p));
       return res;
     }
 }
@@ -189,7 +189,7 @@ atomic_store(T *p, V value)
       break;
 
     case 8:
-      asm volatile ("str %1, %0" : "=m" (*p) : "r" (val));
+      asm volatile ("str %x1, %0" : "=m" (*p) : "r" (val));
       break;
     }
 }
