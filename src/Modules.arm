@@ -147,8 +147,12 @@ PRIVATE_INCDIR 	+= kern/$(CONFIG_XARCH)/$(BITS) kern/$(CONFIG_XARCH) kern
 INTERFACES_KERNEL += 	__main kmem_space boot_uart_init     \
 			irq_chip_generic bootstrap                  \
 			outer_cache utcb_support                    \
-			smc_call psci mem_chunk alternatives
+			smc_call psci alternatives
 
+NEED_MEM_CHUNK = $(or $(and $(CONFIG_ARM_GIC_MSI),$(CONFIG_HAVE_ARM_GICV3)),\
+                      $(CONFIG_IOMMU))
+
+INTERFACES_KERNEL-$(NEED_MEM_CHUNK) += mem_chunk
 INTERFACES_KERNEL-$(CONFIG_ARM_ACPI) += acpi acpi_fadt
 INTERFACES_KERNEL-$(CONFIG_ARM_MPCORE) += scu
 INTERFACES_KERNEL-$(CONFIG_ARM_CORTEX_A9) += scu
