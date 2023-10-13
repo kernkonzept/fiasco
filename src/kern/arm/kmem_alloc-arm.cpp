@@ -9,6 +9,7 @@ IMPLEMENTATION [arm]:
 
 #include "mem_layout.h"
 #include "kmem_space.h"
+#include "minmax.h"
 #include "static_init.h"
 
 PRIVATE //inline
