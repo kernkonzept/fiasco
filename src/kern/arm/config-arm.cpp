@@ -116,3 +116,15 @@ IMPLEMENTATION [arm_v6plus]:
 #include "feature.h"
 
 KIP_KERNEL_FEATURE("armv6plus");
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && 64bit]:
+
+IMPLEMENT_OVERRIDE inline ALWAYS_INLINE
+constexpr unsigned long Config::kmem_max()
+{
+  // The Pmem area can only map 1 GiB. Otherwise we would have to allocate
+  // additional page tables, which is not implemented (yet). Also account
+  // for the kernel image that is mapped in Pmem too.
+  return (1024UL - 8UL) << 20;
+}
