@@ -282,7 +282,7 @@ Jdb_stack_view::dump(bool dump_only)
 
       if (p.valid())
         {
-          printf("    %03lx ", p.addr() & 0xfff);
+          printf("   %04lx ", p.addr() & 0xffff);
           for (unsigned x = 0; x < cols(); ++x, p+=1)
             print_value(p);
           putchar('\n');
@@ -317,7 +317,7 @@ Jdb_stack_view::highlight(bool highl)
   if (highl)
     printf("%08lx", current.addr() & 0xffffffff);
   else
-    printf("    %03lx ", first_col.addr() & 0xfff);
+    printf("   %04lx ", first_col.addr() & 0xffff);
   Jdb::cursor(posy(), posx());
   print_value(current, highl);
 
