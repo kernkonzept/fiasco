@@ -70,14 +70,11 @@ mem_map(Space *from, L4_fpage const &fp_from,
 /** Unmap the mappings in the region described by "fp" from the address
     space "space" and/or the address spaces the mappings have been
     mapped into.
-    @param space address space that should be flushed
-    @param fp    flexpage descriptor of address-space range that should
-                 be flushed
-    @param me_too If false, only flush recursive mappings.  If true,
-                 additionally flush the region in the given address space.
-    @param restriction Only flush specific task ID.
-    @param flush_mode determines which access privileges to remove.
-    @return combined (bit-ORed) access status of unmapped physical pages
+    \param space  address space that should be flushed
+    \param fp     flexpage descriptor of address-space range that should
+                  be flushed
+    \param mask   Flags for unmap operation
+    \return       combined (bit-ORed) access status of unmapped physical pages
 */
 L4_fpage::Rights __attribute__((nonnull(1)))
 mem_fpage_unmap(Space *space, L4_fpage fp, L4_map_mask mask)
