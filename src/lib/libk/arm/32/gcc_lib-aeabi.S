@@ -10,6 +10,7 @@
 
         .p2align 2
         .global __aeabi_uldivmod
+        .type __aeabi_uldivmod, #function
 __aeabi_uldivmod:
         push  {lr}
         sub   sp, sp, #12
@@ -32,6 +33,7 @@ __aeabi_uldivmod:
 // `udiv` instruction.
         .p2align 2
         .global __aeabi_uidivmod
+        .type __aeabi_uidivmod, #function
 __aeabi_uidivmod:
         push  {lr}
         sub   sp, sp, #12
@@ -52,6 +54,7 @@ __aeabi_uidivmod:
 // 32-bit unsigned division on 32-bit hosts lacking the `udiv` instruction.
         .p2align 2
         .global __aeabi_uidiv
+        .type __aeabi_uidiv, #function
 __aeabi_uidiv:
         push  {lr}
         sub   sp, sp, #12
