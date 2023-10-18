@@ -14,11 +14,9 @@ unsigned long int strtoul(const char *nptr, char **endptr, int base);
 int __ltostr(char *s, int size, unsigned long i, int base, int UpCase);
 int __dtostr(double d,char *buf,unsigned int maxlen,unsigned int prec);
 
-#ifndef __STRICT_ANSI__
 __extension__ long long int strtoll(const char *nptr, char **endptr, int base);
 __extension__ unsigned long long int strtoull(const char *nptr, char **endptr, int base);
 __extension__ int __lltostr(char *s, int size, unsigned long long i, int base, int UpCase);
-#endif
 
 int atoi(const char *nptr);
 long int atol(const char *nptr);
