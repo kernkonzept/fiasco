@@ -1,23 +1,25 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-#define ABS_LONG_MIN 2147483648UL
+#if __SIZEOF_LONG__ == 8
+#define ABS_LONG_MIN 0x8000000000000000UL
+#else
+#define ABS_LONG_MIN 0x80000000UL
+#endif
+#define LONG_MAX __LONG_MAX__
+#define LONG_MIN (-LONG_MAX - 1L)
 
 /**
- * A function to convert strings to 32-bit integers.
- *
- * This function mimics the functionality of POSIX strtol but is limited to
- * converting to 32-bit values. Contrary to POSIX strtol it does not clamp the
- * returned value to the target value range but returns 0 in cases where the
- * number represented by nptr exceeds the 32-bit signed value range.
+ * A function to convert strings to long integers clamped at the target type
+ * range.
  *
  * \param nptr    Pointer to the string to be converted.
  * \param endptr  Pointer to the location where to store the address of the
  *                character after the last valid parsed character. May be NULL.
  * \param base    The base of the number encoded by the string in nptr.
  *
- * \ret  The converted number or 0 if the number exceeded the allowed value
- *       range.
+ * \returns  The converted number or the largest/smallest representable number
+ *           if an over- or underflow occurs.
  */
 long int strtol(const char *nptr, char **endptr, int base) {
 
@@ -38,7 +40,7 @@ long int strtol(const char *nptr, char **endptr, int base) {
     if (v == ABS_LONG_MIN && neg) {
       return v;
     }
-    return 0; //(neg ? LONG_MIN : LONG_MAX);
+    return neg ? LONG_MIN : LONG_MAX;
   }
 
   return (neg ? -v : v);
