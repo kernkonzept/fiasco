@@ -248,13 +248,7 @@ public:
   {}
 
   ~Base_avl_set()
-  {
-    _tree.remove_all([this](_Node *n)
-                     {
-                       n->~_Node();
-                       _alloc.free(n);
-                     });
-  }
+  { clear(); }
 
   /**
    * Create a copy of an AVL-tree based set.
@@ -283,6 +277,18 @@ public:
    * the set.
    */
   cxx::Pair<Iterator, int> insert(Item_type const &item);
+
+  /**
+   * Remove all items from the set.
+   */
+  void clear() noexcept
+  {
+    _tree.remove_all([this](_Node *n)
+                     {
+                       n->~_Node();
+                       _alloc.free(n);
+                     });
+  }
 
   /**
    * Remove an item from the set.
