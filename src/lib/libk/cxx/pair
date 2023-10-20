@@ -54,6 +54,14 @@ struct Pair
   Pair(A1 &&first, A2 &&second)
   : first(first), second(second) {}
 
+  /**
+   * \brief Create a pair from one value, default-constructing the second value.
+   * \param first The first value.
+   */
+  template<typename A1>
+  Pair(A1 &&first)
+  : first(first), second() {}
+
   /// Default construction.
   Pair() = default;
 };
