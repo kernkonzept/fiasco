@@ -111,6 +111,24 @@ public:
   { return Base_type::insert(Pair<Key_type, Data_type>(key, data)); }
 
   /**
+   * Emplace a pair into the map.
+   *
+   * \param args  The cxx::Pair constructor arguments for key & value.
+   *
+   * \return A pair of iterator (`first`) and return value (`second`).
+   *         `second` will be 0 if the element was inserted into the set
+   *         and `-#E_exist` if the key was already in the set and the
+   *         set was therefore not updated.
+   *         In both cases, `first` contains an iterator that points to
+   *         the element.
+   *         `second` may also be `-#E_nomem` when memory for the new node
+   *         could not be allocated. `first` is then invalid.
+   */
+  template<typename... Args>
+  cxx::Pair<Iterator, int> emplace(Args &&...args)
+  { return Base_type::emplace(cxx::forward<Args>(args)...); }
+
+  /**
    * \brief Get the data for the given key.
    * \param key The key value to use for lookup.
    * \pre A <key, data> pair for the given key value must exist.
