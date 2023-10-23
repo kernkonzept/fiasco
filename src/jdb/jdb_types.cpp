@@ -24,7 +24,7 @@ public:
   static Jdb_address null() { return Jdb_address(nullptr, nullptr); }
 
   bool is_phys() const { return _space == (Space *)1; }
-  bool is_kmem() const { return _space == nullptr; }
+  bool is_kmem() const { return _space == nullptr || is_kernel_task(); }
   bool is_null() const { return _space == nullptr && _addr == 0; }
   Address phys() const { return _addr; }
   Address addr() const { return _addr; }
@@ -119,6 +119,8 @@ public:
 
 IMPLEMENTATION[debug]:
 
+#include "kernel_task.h"
+
 inline
 Jdb_address operator + (Jdb_address const &a, long diff)
 {
@@ -141,4 +143,11 @@ template<typename T> inline
 Jdb_addr<T> operator - (Jdb_addr<T> const &a, long diff)
 {
   return Jdb_addr<T>(a.virt() - diff, a.space());
+}
+
+PRIVATE
+bool
+Jdb_address::is_kernel_task() const
+{
+  return _space == Kernel_task::kernel_task();
 }
