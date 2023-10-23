@@ -327,9 +327,9 @@ config PHYS_OBJ_SPACE_AVL
 	  tree. Depending on the distribution of the capabilites this might
 	  waste some memory but is always O(1).
 
-          By enabling this option the object space is stored in an AVL tree.
-          This allocates less memory at the expense of an O(log n) lookup
-          time.
+	  By enabling this option the object space is stored in an AVL tree.
+	  This allocates less memory at the expense of an O(log n) lookup
+	  time.
 
 config DISABLE_MAPDB
 	bool "Disable mapdb"
