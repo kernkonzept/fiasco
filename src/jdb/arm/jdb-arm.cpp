@@ -290,27 +290,27 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
   if (!pte.is_valid()
       || pte.page_addr() != cxx::mask_lsb(phys, pte.page_order()))
     {
-          Page::Type mem_type = Page::Type::Uncached();
-          for (auto const &md: Kip::k()->mem_descs_a())
-            if (!md.is_virtual() && md.contains(phys)
-                && (md.type() == Mem_desc::Conventional))
-              {
-                mem_type = Page::Type::Normal();
-                break;
-              }
+      Page::Type mem_type = Page::Type::Uncached();
+      for (auto const &md: Kip::k()->mem_descs_a())
+        if (!md.is_virtual() && md.contains(phys)
+            && (md.type() == Mem_desc::Conventional))
+          {
+            mem_type = Page::Type::Normal();
+            break;
+          }
 
-          // Don't automatically tap into MMIO memory in Sigma0 as this usually
-          // results into some data abort exception -- aborting the current 'd'
-          // view.
-          if (mem_type == Page::Type::Uncached()
-              && addr.space()->is_sigma0())
-            return 0;
+      // Don't automatically tap into MMIO memory in Sigma0 as this usually
+      // results into some data abort exception -- aborting the current 'd'
+      // view.
+      if (mem_type == Page::Type::Uncached()
+          && !addr.is_phys() && addr.space()->is_sigma0())
+        return 0;
 
-          pte.set_page(Phys_mem_addr(cxx::mask_lsb(phys, pte.page_order())),
-                       Page::Attr(Page::Rights::RW(), mem_type,
-                                  Page::Kern::None()));
-          pte.write_back_if(true);
-          Mem_unit::tlb_flush_kernel(Mem_layout::Jdb_tmp_map_area);
+      pte.set_page(Phys_mem_addr(cxx::mask_lsb(phys, pte.page_order())),
+                   Page::Attr(Page::Rights::RW(), mem_type,
+                              Page::Kern::None()));
+      pte.write_back_if(true);
+      Mem_unit::tlb_flush_kernel(Mem_layout::Jdb_tmp_map_area);
     }
 
   return (unsigned char *)(Mem_layout::Jdb_tmp_map_area
