@@ -85,6 +85,7 @@ IMPLEMENTATION:
 #include "l4_types.h"
 #include <cassert>
 
+#include "cpu.h"
 #include "cpu_lock.h"
 #include "globals.h"
 #include "lock_guard.h"
@@ -207,7 +208,7 @@ Receiver::set_timeout(Timeout *t, Unsigned64 tval)
   t->set(tval, home_cpu());
 }
 
-PUBLIC inline
+PUBLIC inline NEEDS["cpu.h"]
 void
 Receiver::enqueue_timeout_again()
 {

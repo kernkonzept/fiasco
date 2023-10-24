@@ -8,6 +8,7 @@ extern Static_object<Mapdb> mapdb_mem;
 IMPLEMENTATION:
 
 #include "config.h"
+#include "cpu.h"
 #include "mapdb.h"
 #include "mem_space.h"
 #include <minmax.h>

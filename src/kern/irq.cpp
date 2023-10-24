@@ -69,6 +69,7 @@ IMPLEMENTATION:
 #include "assert_opt.h"
 #include "atomic.h"
 #include "config.h"
+#include "cpu.h"
 #include "cpu_lock.h"
 #include "entry_frame.h"
 #include "globals.h"
@@ -146,7 +147,7 @@ Irq::dispatch_irq_proto(Unsigned16 op, bool may_unmask)
  * \retval -EBUSY   if another detach operation is in progress or object already
  *                  destroyed.
  */
-PUBLIC inline NEEDS ["atomic.h", "cpu_lock.h", "lock_guard.h"]
+PUBLIC inline NEEDS ["atomic.h", "cpu.h", "cpu_lock.h", "lock_guard.h"]
 int
 Irq_sender::alloc(Thread *t, Kobject ***rl)
 {
