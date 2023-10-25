@@ -372,15 +372,11 @@ Context::arch_revoke_vcpu_irq(Vcpu_irq_list_item *irq, bool reap)
   _injected_irqs.remove(irq);
   if (irq->lr)
     {
-      if (current() != this)
-        {
-          irq->lr = 0;
-          return true;
-        }
-
       Vcpu_state *vcpu = vcpu_state().access();
       Vm_state *v = vm_state(vcpu);
-      bool active = (*Gic_h_global::gic)->revoke(&v->gic, irq->lr-1U, reap);
+      bool load = current() == this;
+      bool active = (*Gic_h_global::gic)->revoke(&v->gic, irq->lr-1U, load,
+                                                 reap);
       irq->lr = 0;
 
       // FIXME: we somehow have to wait for the vCPU to eoi the interrupt
@@ -393,7 +389,8 @@ Context::arch_revoke_vcpu_irq(Vcpu_irq_list_item *irq, bool reap)
       // FIXME: instead we re-insert it on the new vCPU :(
       (void)active;
 
-      recalculate_irq_priority(v);
+      if (load)
+        recalculate_irq_priority(v);
       return true;
     }
   else

@@ -123,7 +123,7 @@ public:
   virtual Unsigned8 load_full(Arm_vgic const *g, bool enabled) = 0;
   virtual unsigned inject(Arm_vgic *g, Vcpu_irq_cfg cfg, bool load,
                           Unsigned8 *irq_prio) = 0;
-  virtual bool revoke(Arm_vgic *g, unsigned lr, bool reap) = 0;
+  virtual bool revoke(Arm_vgic *g, unsigned lr, bool load, bool reap) = 0;
   virtual bool handle_maintenance(Arm_vgic *g, Unsigned32 *eois) = 0;
   virtual Unsigned8 calc_irq_priority(Arm_vgic *g) = 0;
 
@@ -216,11 +216,13 @@ public:
     return idx;
   }
 
-  bool revoke(Arm_vgic *g, unsigned idx, bool reap) override
+  bool revoke(Arm_vgic *g, unsigned idx, bool load, bool reap) override
   {
     bool ret = self()->teardown_lr(&g->lr, idx, reap);
     if (!ret)
       {
+        if (load)
+          self()->clear_lr(idx);
         g->injected &= ~(1UL << idx);
         g->elsr |= 1UL << idx;
       }
