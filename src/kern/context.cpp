@@ -1449,8 +1449,8 @@ Context::drq(Drq *drq, Drq::Request_func *func, void *arg,
       l->target_cpu = home_cpu();
       l->wait = wait;
   );
-  assert(!(wait == Drq::Wait && (cur->state() & Thread_drq_ready)) || cur->home_cpu() == home_cpu());
-  assert(!((wait == Drq::Wait || drq == &_drq) && cur->state() & Thread_drq_wait));
+  assert(wait != Drq::Wait || !(cur->state() & Thread_drq_ready) || cur->home_cpu() == home_cpu());
+  assert((wait != Drq::Wait && drq != &_drq) || !(cur->state() & Thread_drq_wait));
   assert(!drq->queued());
 
   drq->func = func;
