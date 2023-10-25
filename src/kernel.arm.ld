@@ -161,6 +161,7 @@ SECTIONS {
     PROVIDE(_edata  =  .);
   } :kernel
 
+  __llvm_prf_bits : { KEEP(*(__llvm_prf_bits)) } :kernel
   __llvm_prf_cnts : { KEEP(*(__llvm_prf_cnts)) } :kernel
 
   . = ALIGN(8);
