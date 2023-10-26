@@ -66,7 +66,7 @@ SECTIONS {
 
   . = ALIGN(0x10);
   .bss_boot : {
-      *(.bootstrap.bss .bootstrap.gnu.linkonce.b.*)
+      *(.bootstrap.bss .bootstrap.bss.* .bootstrap.gnu.linkonce.b.*)
   . = ALIGN(0x1000);
   PROVIDE(_boot_sys_end = .);
   } : bdata
