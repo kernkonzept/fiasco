@@ -756,22 +756,24 @@ unsigned
 Boot_info::get_checksum_rw(void)
 { return 0; }
 
+// On UX, Koptions::o() reside on a writable section.
 
 PUBLIC static
 void
 Boot_info::set_wait()
-{ Koptions::o()->flags |= Koptions::F_wait; }
+{ const_cast<Koptions::Options *>(Koptions::o())->flags |= Koptions::F_wait; }
 
 PUBLIC static
 void
 Boot_info::kmemsize(unsigned int k)
-{ Koptions::o()->kmemsize = k; }
+{ const_cast<Koptions::Options *>(Koptions::o())->kmemsize = k; }
 
 PUBLIC static
 void
 Boot_info::set_jdb_cmd(const char *j)
 {
-  strncpy(Koptions::o()->jdb_cmd, j, sizeof(Koptions::o()->jdb_cmd) - 1);
-  Koptions::o()->jdb_cmd[sizeof(Koptions::o()->jdb_cmd) - 1] = 0;
+  auto *o = const_cast<Koptions::Options *>(Koptions::o());
+  strncpy(o->jdb_cmd, j, sizeof(Koptions::o()->jdb_cmd) - 1);
+  o->jdb_cmd[sizeof(Koptions::o()->jdb_cmd) - 1] = 0;
 }
 
