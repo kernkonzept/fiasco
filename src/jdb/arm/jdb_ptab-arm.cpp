@@ -77,8 +77,6 @@ PRIVATE template< typename T >
 void
 Jdb_ptab_pdir<T>::print_entry(T_pte_ptr const &entry) const
 {
-  T_pte_ptr entry(pte, _pt_level);
-
   if (_dump_raw)
     printf("%08x", *entry.pte);
   else
