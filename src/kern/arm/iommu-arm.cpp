@@ -29,6 +29,11 @@ private:
 private:
   enum class Rs;
 
+  enum class Reg_access {
+    Atomic,
+    Non_atomic,
+  };
+
   template<typename T, Rs RS, Address OFFSET, typename REG = Unsigned32,
            unsigned STRIDE = sizeof(REG)>
   struct Smmu_reg_ro
@@ -45,8 +50,15 @@ private:
       return r;
     }
 
+    template<Reg_access ACCESS>
     static T read(Mmio_register_block const &base, unsigned index = 0)
-    { return from_raw(base.r<REG>(OFFSET + index * STRIDE)); }
+    {
+      auto reg = base.r<REG>(OFFSET + index * STRIDE);
+      if constexpr (ACCESS == Reg_access::Atomic)
+        return from_raw(reg.read());
+      else
+        return from_raw(reg.read_non_atomic());
+    }
 
     REG raw = 0;
   };
@@ -55,21 +67,32 @@ private:
            unsigned STRIDE = sizeof(REG)>
   struct Smmu_reg : public Smmu_reg_ro<T, RS, OFFSET, REG, STRIDE>
   {
+    template<Reg_access ACCESS>
     void write(Mmio_register_block &base, unsigned index = 0)
-    { base.r<REG>(OFFSET + index * STRIDE) = this->raw; }
+    {
+      auto reg = base.r<REG>(OFFSET + index * STRIDE);
+      if constexpr (ACCESS == Reg_access::Atomic)
+        return reg.write(this->raw);
+      else
+        return reg.write_non_atomic(this->raw);
+    }
   };
 
-  template<typename REG>
+  template<typename REG, Reg_access ACCESS = Reg_access::Atomic>
   REG read_reg(unsigned index = 0)
-  { return REG::read(mmio_for_reg_space(REG::reg_space()), index); }
+  {
+    return REG::template read<ACCESS>(mmio_for_reg_space(REG::reg_space()), index);
+  }
 
-  template<typename REG>
+  template<typename REG, Reg_access ACCESS = Reg_access::Atomic>
   void write_reg(REG reg, unsigned index = 0)
-  { return reg.write(mmio_for_reg_space(REG::reg_space()), index); }
+  {
+    return reg.template write<ACCESS>(mmio_for_reg_space(REG::reg_space()), index);
+  }
 
-  template<typename REG>
+  template<typename REG, Reg_access ACCESS = Reg_access::Atomic>
   void write_reg(typename REG::Val_type value)
-  { return write_reg(REG::from_raw(value)); }
+  { return write_reg<REG, ACCESS>(REG::from_raw(value)); }
 };
 
 // ------------------------------------------------------------------

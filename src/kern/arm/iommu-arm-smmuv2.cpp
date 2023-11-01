@@ -325,27 +325,27 @@ private:
     Unsigned8 _idx;
     Unsigned8 _irptndx = 0;
 
-    template<typename REG>
+    template<typename REG, Reg_access ACCESS = Reg_access::Atomic>
     REG read_reg()
     {
       if (REG::reg_space() == Rs::Cb)
-        return REG::read(_regs);
+        return REG::template read<ACCESS>(_regs);
       else
-        return _mmu->read_reg<REG>(_idx);
+        return _mmu->template read_reg<REG, ACCESS>(_idx);
     }
 
-    template<typename REG>
+    template<typename REG, Reg_access ACCESS = Reg_access::Atomic>
     void write_reg(REG reg)
     {
       if (REG::reg_space() == Rs::Cb)
-        reg.write(_regs);
+        reg.template write<ACCESS>(_regs);
       else
-        _mmu->write_reg(reg, _idx);
+        _mmu->template write_reg<REG, ACCESS>(reg, _idx);
     }
 
-    template<typename REG>
+    template<typename REG, Reg_access ACCESS = Reg_access::Atomic>
     void write_reg(typename REG::Val_type value)
-    { return write_reg(REG::from_raw(value)); }
+    { return write_reg<REG, ACCESS>(REG::from_raw(value)); }
 
   public:
     bool is_used() const
@@ -396,7 +396,7 @@ private:
         {
           // Clear context fault related registers
           write_reg<Cb_fsr>(~0U);
-          write_reg<Cb_far>(0ULL);
+          write_reg<Cb_far, Reg_access::Non_atomic>(0ULL);
           write_reg<Cb_fsynr0>(0);
           write_reg<Cb_fsynr1>(0);
           write_reg<Cbfrsynra>(0);
@@ -480,7 +480,7 @@ private:
         }
 
       write_reg(tcr);
-      write_reg<Cb_ttbr0>(pt_phys);
+      write_reg<Cb_ttbr0, Reg_access::Non_atomic>(pt_phys);
 
       // Enable context bank
       Cb_sctlr sctlr;
@@ -998,7 +998,7 @@ Iommu::handle_global_fault()
   if (!gfsr.raw)
     return;
 
-  Gfar gfar = read_reg<Gfar>();
+  Gfar gfar = read_reg<Gfar, Reg_access::Non_atomic>();
   Gfsynr0 gfsynr0 = read_reg<Gfsynr0>();
   Gfsynr1 gfsynr1 = read_reg<Gfsynr1>();
   Gfsynr2 gfsynr2 = read_reg<Gfsynr2>();
@@ -1024,7 +1024,7 @@ Iommu::Context_bank::handle_fault()
   if (!fsr.raw)
     return;
 
-  Cb_far far = read_reg<Cb_far>();
+  Cb_far far = read_reg<Cb_far, Reg_access::Non_atomic>();
   Cb_fsynr0 fsynr0 = read_reg<Cb_fsynr0>();
   Cb_fsynr1 fsynr1 = read_reg<Cb_fsynr1>();
   Cbfrsynra frsynra = read_reg<Cbfrsynra>();
