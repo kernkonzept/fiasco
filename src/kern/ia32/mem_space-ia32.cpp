@@ -2,6 +2,8 @@ INTERFACE [ia32 || ux || amd64]:
 
 EXTENSION class Mem_space
 {
+  friend class Mem_space_test;
+
 public:
   typedef Pdir Dir_type;
 

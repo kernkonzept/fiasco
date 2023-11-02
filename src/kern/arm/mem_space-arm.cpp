@@ -12,6 +12,7 @@ INTERFACE [arm]:
 EXTENSION class Mem_space
 {
   friend class Jdb;
+  friend class Mem_space_test;
 
 public:
   typedef Pdir Dir_type;
