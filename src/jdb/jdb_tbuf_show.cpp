@@ -853,10 +853,11 @@ restart:
               if (Jdb_input::get_mword(&count, 7, 10))
                 {
                   if (count == 0)
-                    count = lines;
+                    count = ~0UL;
                   Kconsole::console()->start_exclusive(Console::GZIP);
                   show_events(_absy, refy, count, mode, time_mode, 1);
                   Kconsole::console()->end_exclusive(Console::GZIP);
+                  Jdb::clear_screen();
                   redraw = true;
                   break;
                 }
