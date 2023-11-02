@@ -38,14 +38,13 @@ PUBLIC inline
 Obj_cap::Obj_cap(L4_obj_ref const &o) : L4_obj_ref(o) {}
 
 PUBLIC inline NEEDS["kobject.h"]
-Kobject_iface *
-Obj_cap::deref(L4_fpage::Rights *rights = 0, bool dbg = false)
+Kobject_iface * __attribute__((nonnull))
+Obj_cap::deref(L4_fpage::Rights *rights, bool dbg = false)
 {
   Thread *current = current_thread();
   if (op() & L4_obj_ref::Ipc_reply)
     {
-      if (rights)
-        *rights = current->caller_rights();
+      *rights = current->caller_rights();
       Thread *ca = static_cast<Thread*>(current->caller());
       if (EXPECT_TRUE(!dbg && ca))
         current->reset_caller();
@@ -57,8 +56,7 @@ Obj_cap::deref(L4_fpage::Rights *rights = 0, bool dbg = false)
       if (!self())
         return 0;
 
-      if (rights)
-        *rights = L4_fpage::Rights::CRWS();
+      *rights = L4_fpage::Rights::CRWS();
       return current;
     }
 
