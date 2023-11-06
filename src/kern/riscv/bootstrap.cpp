@@ -1,7 +1,6 @@
 INTERFACE [riscv]:
 
 #include "boot_infos.h"
-#include "kip.h"
 #include "mem_layout.h"
 #include "paging.h"
 
@@ -31,6 +30,17 @@ IMPLEMENTATION [riscv]:
 #include "sbi.h"
 #include "std_macros.h"
 #include "paging_bits.h"
+
+#ifndef NDEBUG
+void assert_fail(char const *expr, char const *file, unsigned int, void *)
+{
+  Bootstrap::puts("Assertion failed at ");
+  Bootstrap::puts(file);
+  Bootstrap::puts(": ");
+  Bootstrap::puts(expr);
+  Bootstrap::panic("Assertion failed.");
+}
+#endif
 
 Bootstrap_info FIASCO_BOOT_PAGING_INFO bs_info;
 
