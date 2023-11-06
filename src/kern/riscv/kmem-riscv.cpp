@@ -130,7 +130,7 @@ Kmem::boot_map_pmem(Address phys, Mword size)
 {
   assert(Config::KMEM_SIZE == size);
 
-  if (!Super_pg::aligned(phys))
+  if (!Super_pg::aligned(phys) || !Super_pg::aligned(size))
     panic("Pmem must be superpage aligned!");
 
   Mem_layout::pmem_phys_base(phys);
