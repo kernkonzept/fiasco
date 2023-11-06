@@ -101,26 +101,13 @@ Kmem::init_paging()
                  Kpdir::Super_level, false, alloc))
     panic("Failed to map kernel image.");
 
-  // Pmem is contiguous in physical memory.
-  if (!kdir->map(boot_virt_to_phys(Virt_addr(Mem_layout::Pmem_start)),
-                 Virt_addr(Mem_layout::Pmem_start),
-                 Virt_size(Config::KMEM_SIZE),
-                 Pte_ptr::make_attribs(Page::Attr::kern_global(Page::Rights::RW())),
-                 Kpdir::Super_level, false, alloc))
-    panic("Failed to map pmem.");
+  // Sync Pmem.
+  sync_from_boot_kdir(kdir, alloc,
+                      Mem_layout::Pmem_start, Mem_layout::Pmem_end);
 
   // Sync MMIO page directory
-  for (Address mmio_addr = Mem_layout::Mmio_map_start;
-       mmio_addr < Mem_layout::Mmio_map_end;
-       mmio_addr += Config::SUPERPAGE_SIZE)
-    {
-      auto be = boot_kdir_walk(Virt_addr(mmio_addr), Kpdir::Super_level);
-      if (be.is_valid())
-        {
-          auto e = kdir->walk(Virt_addr(mmio_addr), Kpdir::Super_level, false, alloc);
-          e.set_page(be.entry());
-        }
-    }
+  sync_from_boot_kdir(kdir, alloc,
+                      Mem_layout::Mmio_map_start, Mem_layout::Mmio_map_end);
 
   // Switch to new page table
   Cpu::set_satp(Mem_unit::Asid_boot, Cpu::phys_to_ppn(pmem_to_phys(kdir)));
@@ -197,6 +184,25 @@ Kmem::boot_kdir_map(Address phys, Virt_addr virt, Virt_size size,
   auto alloc = bs_pgin_dta->alloc_virt(&Kmem::boot_virt_to_phys);
   auto mem_map = bs_pgin_dta->mem_map();
   return boot_kdir()->map(phys, virt, size, attr, level, false, alloc, mem_map);
+}
+
+/**
+ * Syncs a range of superpages from the boot kdir to kdir.
+ */
+PRIVATE template<typename ALLOC> static
+void
+Kmem::sync_from_boot_kdir(Kpdir *kdir, ALLOC const &alloc,
+                          Address start, Address end)
+{
+  for (Address addr = start; addr < end; addr += Config::SUPERPAGE_SIZE)
+    {
+      auto be = boot_kdir_walk(Virt_addr(addr), Kpdir::Super_level);
+      if (be.is_valid())
+        {
+          auto e = kdir->walk(Virt_addr(addr), Kpdir::Super_level, false, alloc);
+          e.set_page(be.entry());
+        }
+    }
 }
 
 PRIVATE static
