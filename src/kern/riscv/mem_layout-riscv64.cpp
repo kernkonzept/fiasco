@@ -19,10 +19,7 @@ public:
 
     Map_base              = 0xfffffff000000000,
     Pmem_start            = 0xfffffff040000000,
-    Pmem_end              = 0xfffffff050000000,
-
-    Caps_start            = 0xfffffff050000000,
-    Caps_end              = 0xfffffff060000000,
+    Pmem_end              = 0xfffffff140000000,
 
     Max_kernel_image_size = Map_base - Pmem_start,
   };

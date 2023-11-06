@@ -13,10 +13,20 @@ IMPLEMENTATION [riscv && 32bit]:
 enum { Num_boot_pages = 1 };
 
 IMPLEMENTATION [riscv && riscv_sv39]:
-enum { Num_boot_pages = 5 };
+// 1 x Root page table
+// + 1 x L1 for identity mapping of kernel
+// + 1 x L1 for virtual mapping of kernel
+// + 1 x L1 for MMIO page directory
+// + 4 x L1 for pmem (up to 4GB)
+enum { Num_boot_pages = 8 };
 
 IMPLEMENTATION [riscv && riscv_sv48]:
-enum { Num_boot_pages = 9 };
+// 1 x Root page table
+// + 1 x L1 + 1 x L2 for identity mapping of kernel
+// + 1 x L1 + 1 x L2 for virtual mapping of kernel
+// + 1 x L1 + 1 x L2 for MMIO page directory
+// + 1 x L1 + 4 x L2 for pmem (up to 4GB)
+enum { Num_boot_pages = 12 };
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION [riscv]:

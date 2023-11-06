@@ -26,9 +26,6 @@ public:
     Pmem_start            = 0xf0400000,
     Pmem_end              = 0xf5000000,
 
-    Caps_start            = 0xf5000000,
-    Caps_end              = 0xfd000000,
-
     Max_kernel_image_size = Map_base - Pmem_start,
   };
 };
