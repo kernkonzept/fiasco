@@ -2,11 +2,11 @@ IMPLEMENTATION [riscv]:
 
 #include "paging.h"
 
-IMPLEMENT
+PRIVATE template< typename T >
 void
-Jdb_ptab::print_entry(Pdir::Pte_ptr const &entry)
+Jdb_ptab_pdir<T>::print_entry(T_pte_ptr const &entry) const
 {
-  if (dump_raw)
+  if (_dump_raw)
     {
       printf(L4_PTR_FMT, *entry.pte);
       return;
@@ -39,12 +39,12 @@ Jdb_ptab::print_entry(Pdir::Pte_ptr const &entry)
 //----------------------------------------------------------------------------
 IMPLEMENTATION [riscv && 32bit]:
 
-PRIVATE
+PRIVATE template< typename T >
 void
-Jdb_ptab::print_entry_addr(Pdir::Pte_ptr const &entry)
+Jdb_ptab_pdir<T>::print_entry_addr(T_pte_ptr const &entry) const
 {
   Address phys = entry_phys(entry);
-  if (entry.level != Pdir::Depth && entry.is_leaf())
+  if (entry.level != T::Depth && entry.is_leaf())
     // 4 MB page entry
     printf("%03lx/4", phys >> entry.page_order());
   else
@@ -55,12 +55,12 @@ Jdb_ptab::print_entry_addr(Pdir::Pte_ptr const &entry)
 //----------------------------------------------------------------------------
 IMPLEMENTATION [riscv && 64bit]:
 
-PRIVATE
+PRIVATE template< typename T >
 void
-Jdb_ptab::print_entry_addr(Pdir::Pte_ptr const &entry)
+Jdb_ptab_pdir<T>::print_entry_addr(T_pte_ptr const &entry) const
 {
   Address phys = entry_phys(entry);
-  auto level = Pdir::Depth - entry.level;
+  auto level = T::Depth - entry.level;
   if (!entry.is_leaf())
     {
       printf("%13lx", phys >> Config::PAGE_SHIFT);
