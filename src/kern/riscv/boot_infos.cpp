@@ -97,8 +97,8 @@ public:
 private:
   Address page_memory(unsigned page_num) const
   {
-      return Pg::round(reinterpret_cast<Address>(_page_memory))
-             + page_num * Config::PAGE_SIZE;
+      return   Pg::round(reinterpret_cast<Address>(_page_memory))
+             + Pg::size(page_num);
   }
 
   void *_page_memory = nullptr;

@@ -53,7 +53,7 @@ IMPLEMENTATION [riscv]:
 // relaxation against the global pointer.
 // Instead, we allocate memory for one more page than we actually need and do
 // the alignment ourselves in Boot_paging_info.
-static Unsigned8 boot_page_memory[Config::PAGE_SIZE * (Num_boot_pages + 1)]
+static Unsigned8 boot_page_memory[Pg::size(Num_boot_pages + 1)]
   __attribute__((section(".bss.boot_page_memory")));
 
 // Provide memory for the paging bootstrap mechanism. The kernel linker script
