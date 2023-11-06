@@ -87,9 +87,7 @@ Kmem::init_paging()
   if (!kdir->map(boot_virt_to_phys(Virt_addr(Mem_layout::Map_base)),
                  Virt_addr(Mem_layout::Map_base),
                  Virt_size(bs_pgin_dta->kernel_image_size()),
-                 Pte_ptr::make_attribs(Page::Attr(Page::Rights::RWX(),
-                                       Page::Type::Normal(),
-                                       Page::Kern::Global())),
+                 Pte_ptr::make_attribs(Page::Attr::kern_global(Page::Rights::RWX())),
                  Kpdir::Super_level, false, alloc))
     panic("Failed to map kernel image.");
 
@@ -97,9 +95,7 @@ Kmem::init_paging()
   if (!kdir->map(boot_virt_to_phys(Virt_addr(Mem_layout::Pmem_start)),
                  Virt_addr(Mem_layout::Pmem_start),
                  Virt_size(Config::KMEM_SIZE),
-                 Pte_ptr::make_attribs(Page::Attr(Page::Rights::RW(),
-                                       Page::Type::Normal(),
-                                       Page::Kern::Global())),
+                 Pte_ptr::make_attribs(Page::Attr::kern_global(Page::Rights::RW())),
                  Kpdir::Super_level, false, alloc))
     panic("Failed to map pmem.");
 
@@ -143,7 +139,8 @@ Kmem::boot_map_pmem(Address phys, Mword size)
   Mem_layout::pmem_phys_base(phys);
 
   if (!boot_kdir_map(phys, Virt_addr(Mem_layout::Pmem_start), Virt_size(size),
-                     Pte_ptr::make_attribs(Page::Attr(Page::Rights::RW())),
+                     Pte_ptr::make_attribs(
+                       Page::Attr::space_local(Page::Rights::RW())),
                      Kpdir::Super_level))
     return false;
 

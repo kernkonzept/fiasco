@@ -252,6 +252,13 @@ Pte_ptr::set_page(Entry p)
 }
 
 PUBLIC inline
+void
+Pte_ptr::set_page(Phys_mem_addr addr, Page::Attr attr)
+{
+  set_page(make_page(addr, attr));
+}
+
+PUBLIC inline
 Page::Attr
 Pte_ptr::attribs() const
 {

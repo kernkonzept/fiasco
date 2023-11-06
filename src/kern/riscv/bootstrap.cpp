@@ -88,7 +88,7 @@ Bootstrap::map_kernel(Address start_addr, Address end_addr, Kpdir *kdir)
   if (end_addr - start_addr > Mem_layout::Max_kernel_image_size)
     panic("Kernel image is larger than maximum kernel image size!");
 
-  auto attr = Pte_ptr::make_attribs(Page::Attr(Page::Rights::RWX()));
+  auto attr = Pte_ptr::make_attribs(Page::Attr::space_local(Page::Rights::RWX()));
   auto size = Super_pg::round(end_addr - start_addr);
 
   auto alloc = bs_info.pi.alloc_phys(&kern_to_boot);

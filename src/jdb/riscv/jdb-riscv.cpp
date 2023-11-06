@@ -139,9 +139,8 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
   if (!pte.is_valid()
       || pte.page_addr() != cxx::mask_lsb(phys, pte.page_order()))
     {
-      pte.set_page(
-        pte.make_page(Phys_mem_addr(cxx::mask_lsb(phys, pte.page_order())),
-                      Page::Attr(Page::Rights::RW(), Page::Type::Normal())));
+      pte.set_page(Phys_mem_addr(cxx::mask_lsb(phys, pte.page_order())),
+                   Page::Attr::space_local(Page::Rights::RW()));
 
       Mem_unit::tlb_flush();
     }
