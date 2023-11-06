@@ -263,7 +263,7 @@ extern "C" void leave_by_vcpu_upcall(Trap_state *ts)
   vcpu->_regs.s._pc = ts->_pc;
   vcpu->_regs.s.status = ts->status;
 
-  c->vcpu_return_to_kernel(vcpu->_entry_ip, vcpu->_entry_sp,
+  c->vcpu_return_to_kernel(vcpu->_entry_ip, vcpu->_sp,
                            c->vcpu_state().usr().get());
 }
 
