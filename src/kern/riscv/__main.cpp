@@ -21,7 +21,6 @@ void __main(Mword hart_id)
   hart_context._phys_id = Cpu_phys_id(hart_id);
   Proc::hart_context(&hart_context);
 
-  atexit(&static_destruction);
   static_construction();
   kernel_main();
   terminate(0);
