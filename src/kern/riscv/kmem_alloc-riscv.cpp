@@ -64,18 +64,3 @@ Kmem_alloc::Kmem_alloc()
   if (alloc_size)
     panic("Kmem_alloc: cannot allocate sufficient kernel memory");
 }
-
-//----------------------------------------------------------------------------
-IMPLEMENTATION [riscv && debug]:
-
-PUBLIC
-void
-Kmem_alloc::debug_dump() const
-{
-  a->dump();
-
-  unsigned long free = a->avail();
-  printf("Used %lu KiB out of %lu KiB of Kmem\n",
-         (Config::KMEM_SIZE - free + 1023) / 1024,
-         (Config::KMEM_SIZE        + 1023) / 1024);
-}
