@@ -225,7 +225,9 @@ long long __ashrdi3(long long val, int bits)
 int __ffssi2(int val);
 int __ffsdi2(long long val);
 int __ctzsi2(unsigned val);
+int __ctzdi2(unsigned long val);
 int __clzsi2(unsigned val);
+int __clzdi2(unsigned long val);
 
 /**
  * Return the index of the least significant 1-bit in `val`, or zero if `val`
@@ -306,6 +308,24 @@ int __ctzsi2(unsigned val)
   return c;
 }
 
+
+/**
+ * Return the number of trailing 0-bits in `val`. This is actually the index of
+ * the least significant 1-bit starting at 0. This is __ffsdi2() minus 1.
+ * Required by gcc for __builtin_ctzl().
+ *
+ * \param[in] val  Value
+ *
+ * \return Number of trailing 0 bits in `val`.
+ */
+int __ctzdi2(unsigned long val)
+{
+  int c = __ctzsi2(val & 0xffffffffU);
+  if (c == 32)
+    c += __ctzsi2(((unsigned long long)val) >> 32);
+  return c;
+}
+
 /**
  * Return the number of leading 0-bits in `val`.
  * Required by gcc for __builtin_clz().
@@ -343,5 +363,21 @@ int __clzsi2(unsigned val)
   if ((val & 0x80000000) == 0)
     ++c;
 
+  return c;
+}
+
+/**
+ * Return the number of leading 0-bits in `val`.
+ * Required by gcc for __builtin_clzl().
+ *
+ * \param[in] val  Value
+ *
+ * \return Number of trailing 0 bits in `val`.
+ */
+int __clzdi2(unsigned long val)
+{
+  int c = __clzsi2(((unsigned long long)val) >> 32);
+  if (c == 32)
+    c += __clzsi2(val & 0xffffffffU);
   return c;
 }
