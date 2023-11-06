@@ -41,11 +41,6 @@ public:
     Irq_shortcut = 1,
   };
 
-  enum : unsigned long
-  {
-    KMEM_SIZE = 16 << 20,
-  };
-
   static unsigned const default_console_uart = 0;
   static unsigned const default_console_uart_baudrate = 115200;
 };

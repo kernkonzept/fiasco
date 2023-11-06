@@ -128,8 +128,6 @@ PUBLIC static
 bool
 Kmem::boot_map_pmem(Address phys, Mword size)
 {
-  assert(Config::KMEM_SIZE == size);
-
   if (!Super_pg::aligned(phys) || !Super_pg::aligned(size))
     panic("Pmem must be superpage aligned!");
 

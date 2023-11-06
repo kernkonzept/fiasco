@@ -13,6 +13,10 @@ IMPLEMENTATION [riscv]:
 
 #include <cassert>
 
+static_assert(
+  (Mem_layout::Pmem_end - Mem_layout::Pmem_start) >= Config::kmem_max(),
+  "Maximum kernel memory larger than pmem area.");
+
 Address Mem_layout::pmem_phys_offset;
 
 PUBLIC static inline

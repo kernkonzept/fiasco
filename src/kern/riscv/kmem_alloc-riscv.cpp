@@ -10,15 +10,12 @@ IMPLEMENTATION [riscv]:
 IMPLEMENT
 Kmem_alloc::Kmem_alloc()
 {
-  Mword alloc_size = Super_pg::round(Config::KMEM_SIZE);
   Mem_region_map<64> map;
   unsigned long available_size = create_free_map(Kip::k(), &map,
                                                  Config::SUPERPAGE_SIZE);
 
-  // sanity check whether the KIP has been filled out, number is arbitrary
-  if (available_size < (1 << 18))
-    panic("Kmem_alloc: No kernel memory available (%ld)",
-          available_size);
+  unsigned long alloc_size = determine_kmem_alloc_size(available_size,
+                                                       Config::SUPERPAGE_SIZE);
 
   // Walk through all KIP memory regions of conventional memory minus the
   // reserved memory and find one suitable for the kernel memory.
