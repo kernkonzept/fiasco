@@ -37,7 +37,8 @@ $(foreach tname,$(UTEST_TESTS),\
 	$(eval $(call gen_kernel_rules,\
 		utest/$(tname),\
 		$(tname).debug,\
-		$$(UTEST_FRAMEWORK) $$(filter $(tname)%,$$(OBJ_UTEST))\
+		$$(UTEST_FRAMEWORK) $$(filter $(tname).o,$$(OBJ_UTEST))\
+		$$(filter $(tname)-%.o,$$(OBJ_UTEST))\
 		$$(foreach m,$$(UTEST_REQUIRES-$(tname)),\
 			$$(addsuffix .o,$$(call eval_impl,$$(m)))))))
 
