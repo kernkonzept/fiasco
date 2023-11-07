@@ -65,7 +65,8 @@ void
 Timer::init(Cpu_number)
 {
   // select 32768 Hz input to GPTimer1 (timer1 only!)
-  Mmio_register_block(Kmem::mmio_remap(CM_CLKSEL_WKUP, 0x10)).modify(0, 1, 0);
+  Mmio_register_block wkup(Kmem::mmio_remap(CM_CLKSEL_WKUP, 0x10));
+  wkup.modify<Mword>(0, 1, 0);
   _timer.construct(true);
 }
 
