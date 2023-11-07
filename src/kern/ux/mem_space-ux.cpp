@@ -37,7 +37,7 @@ IMPLEMENTATION[ux]:
 #include "regdefs.h"
 #include "trampoline.h"
 #include <cstring>
-#include "config.h"
+#include "paging_bits.h"
 #include "emulation.h"
 #include "logdefs.h"
 
@@ -172,7 +172,7 @@ Mem_space::user_to_kernel(T const *addr, bool write)
     }
 }
 
-IMPLEMENT inline NEEDS ["config.h", "cpu_lock.h", "lock_guard.h"]
+IMPLEMENT inline NEEDS ["paging_bits.h", "cpu_lock.h", "lock_guard.h"]
 template< typename T >
 T
 Mem_space::peek_user(T const *addr)
@@ -192,7 +192,7 @@ Mem_space::peek_user(T const *addr)
   return value;
 }
 
-IMPLEMENT inline NEEDS ["config.h", "cpu_lock.h", "lock_guard.h"]
+IMPLEMENT inline NEEDS ["paging_bits.h", "cpu_lock.h", "lock_guard.h"]
 template< typename T >
 void
 Mem_space::poke_user(T *addr, T value)
@@ -231,7 +231,7 @@ Mem_space::copy_from_user(T *kdst, T const *usrc, size_t n)
     }
 }
 
-PRIVATE inline NEEDS ["config.h", "cpu_lock.h", "lock_guard.h"]
+PRIVATE inline NEEDS ["paging_bits.h", "cpu_lock.h", "lock_guard.h"]
 template< typename T >
 void
 Mem_space::copy_to_user(T *udst, T const *ksrc, size_t n)
@@ -253,4 +253,3 @@ Mem_space::copy_to_user(T *udst, T const *ksrc, size_t n)
       ptr++;
     }
 }
-
