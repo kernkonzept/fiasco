@@ -44,6 +44,7 @@ public:
 protected:
   friend class Slab;
   friend class Slab_cache_tester;
+  friend class Factory_test;
 
   // Low-level allocator functions:
 
