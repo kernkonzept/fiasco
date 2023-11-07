@@ -20,7 +20,27 @@ public:
    * \return Nearest higher page of \ref value.
    */
   template<typename TYPE>
-  static constexpr TYPE round(TYPE const &value)
+  static constexpr
+  cxx::enable_if_t<cxx::is_integral_v<TYPE>, TYPE>
+  round(TYPE const &value)
+  {
+    return cxx::ceil_lsb(value, PAGE_SHIFT);
+  }
+
+  /**
+   * Round to the nearest higher page.
+   *
+   * This variant accepts enum constants and returns the address in the
+   * underlying type.
+   *
+   * \param value  Value to round.
+   *
+   * \return Nearest higher page of \ref value.
+   */
+  template<typename TYPE>
+  static constexpr
+  cxx::enable_if_t<cxx::is_enum_v<TYPE>, cxx::underlying_type_t<TYPE>>
+  round(TYPE const &value)
   {
     return cxx::ceil_lsb(value, PAGE_SHIFT);
   }
@@ -33,7 +53,27 @@ public:
    * \return Nearest lower page of \ref value.
    */
   template<typename TYPE>
-  static constexpr TYPE trunc(TYPE const &value)
+  static constexpr
+  cxx::enable_if_t<cxx::is_integral_v<TYPE>, TYPE>
+  trunc(TYPE const &value)
+  {
+    return cxx::mask_lsb(value, PAGE_SHIFT);
+  }
+
+  /**
+   * Truncate to the nearest lower page.
+   *
+   * This variant accepts enum constants and returns the address in the
+   * underlying type.
+   *
+   * \param value  Value to truncate.
+   *
+   * \return Nearest lower page of \ref value.
+   */
+  template<typename TYPE>
+  static constexpr
+  cxx::enable_if_t<cxx::is_enum_v<TYPE>, cxx::underlying_type_t<TYPE>>
+  trunc(TYPE const &value)
   {
     return cxx::mask_lsb(value, PAGE_SHIFT);
   }
