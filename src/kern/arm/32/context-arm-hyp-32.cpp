@@ -205,7 +205,7 @@ void
 Context::arm_ext_vcpu_load_host_regs(Vcpu_state *vcpu, Vm_state *, Unsigned64 hcr)
 {
   asm volatile ("mcr p15, 0, %0, c13, c0, 3" : : "r"(vcpu->host.tpidruro));
-  asm volatile ("mcr p15, 4, %0, c1,  c1, 0" : : "r"(hcr));
+  Cpu::hcr(hcr);
 }
 
 PRIVATE inline
