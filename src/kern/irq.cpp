@@ -23,9 +23,8 @@ class Irq : public Irq_base, public cxx::Dyn_castable<Irq, Kobject>
 public:
   enum Op
   {
-    Op_eoi_1      = 0, // Irq_sender + Irq_semaphore
     Op_trigger    = 2, // Irq_sender + Irq_semaphore
-    Op_eoi_2      = 4, // Icu + Irq_sender + Irq_semaphore
+    Op_eoi        = 4, // Icu + Irq_sender + Irq_semaphore
   };
 
 protected:
@@ -117,8 +116,7 @@ Irq::dispatch_irq_proto(Unsigned16 op, bool may_unmask)
 {
   switch (op)
     {
-    case Op_eoi_1:
-    case Op_eoi_2:
+    case Op_eoi:
       if (may_unmask)
         unmask();
       return L4_msg_tag(L4_msg_tag::Schedule); // no reply

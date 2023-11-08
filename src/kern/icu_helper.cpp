@@ -105,7 +105,7 @@ public:
     Op_unbind     = 1,
     Op_info       = 2,
     Op_msi_info   = 3,
-    Op_eoi        = Irq::Op_eoi_2, // 4
+    Op_eoi        = Irq::Op_eoi, // 4
     Op_unmask     = Op_eoi,
     Op_mask       = 5,
     Op_set_mode   = 6,
