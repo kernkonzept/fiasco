@@ -90,9 +90,6 @@ void Factory::operator delete (void *_f)
   Factory *f = (Factory*)_f;
   LOG_TRACE("Factory delete", "fa del", ::current(), Tb_entry_empty, {});
 
-  if (!f->parent())
-    return;
-
   Ram_quota *p = f->parent();
   auto limit = f->limit();
   asm ("" : "=m"(*f));
