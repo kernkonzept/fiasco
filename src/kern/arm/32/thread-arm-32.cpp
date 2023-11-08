@@ -246,6 +246,14 @@ Thread::check_and_handle_mem_op_fault(Mword error_code, Return_frame *ret_frame)
     return false;
 }
 
+extern "C"
+Vcpu_state *
+current_prepare_vcpu_return_to_kernel(Thread *c, Vcpu_state *vcpu)
+{
+  c->prepare_vcpu_return_to_kernel(vcpu->_entry_ip, vcpu->_sp);
+  return c->vcpu_state().usr().get();
+}
+
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && 32bit && !arm_lpae]:
 

@@ -37,20 +37,11 @@ GEN_SYSCALL_TABLE
 	cpsid	iaf
 .endm
 
-.macro LOAD_USR_SP vcpu_ptr
-	ldr r0, [\vcpu_ptr, #OFS__VCPU_STATE__ENTRY_SP]
-	str r0, [sp, #RF(USR_SP, 0)]
-.endm
-
-.macro LOAD_USR_VCPU reg, kvcpu, thread
-	ldr \reg, [\thread, #(OFS__THREAD__USER_VCPU)]
-.endm
-
 .align  4
 .LCslowtrap_entry:	.word	slowtrap_entry
 
 GEN_EXCEPTION_RETURN
-GEN_VCPU_UPCALL OFS__THREAD__KERN_VCPU, LOAD_USR_SP, LOAD_USR_VCPU, USER_MODE=0x1f
+GEN_VCPU_UPCALL OFS__THREAD__KERN_VCPU
 GEN_LEAVE_BY_TRIGGER_EXCEPTION
 GEN_LEAVE_AND_KILL_MYSELF
 GEN_DEBUGGER_ENTRIES

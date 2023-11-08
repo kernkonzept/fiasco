@@ -50,7 +50,7 @@ sys_call_table:
 	.word sys_arm_mem_op
 .endm
 
-.macro GEN_VCPU_UPCALL THREAD_VCPU, LOAD_USR_SP, LOAD_USR_VCPU, USER_MODE=0x10
+.macro GEN_VCPU_UPCALL THREAD_VCPU
 .align 4
 .global leave_by_vcpu_upcall;
 
@@ -62,52 +62,44 @@ leave_by_vcpu_upcall:
 	stmia 	sp, {r0 - r2}
 
 	/* restore original IP */
-	CONTEXT_OF r1, sp
-	ldr	r2, [r1, #(\THREAD_VCPU)]
-	add	r2, r2, #(OFS__VCPU_STATE__RF)
+	CONTEXT_OF r0, sp
+	ldr	r1, [r0, #(\THREAD_VCPU)]
+	add	r1, r1, #(OFS__VCPU_STATE__RF)
 
-	/* r1 = current() */
-	/* r2 = &vcpu_state->ts.r[13] */
+	/* r0 = current() */
+	/* r1 = &vcpu_state->ts.r[13] */
 
-	ldr 	r0, [r1, #(OFS__THREAD__EXCEPTION_IP)]
-	str	r0, [r2, #RF(PC, 0)]
-	ldr	r0, [r1, #(OFS__THREAD__EXCEPTION_PSR)]
-	str	r0, [r2, #RF(PSR, 0)]
-	bic	r0, #0x2f // force ARM mode
-	orr	r0, #(\USER_MODE)
-	str	r0, [sp, #RF(PSR, 3*4)]
+	ldr	r2, [r0, #(OFS__THREAD__EXCEPTION_IP)]
+	str	r2, [r1, #RF(PC, 0)]
+	ldr	r2, [r0, #(OFS__THREAD__EXCEPTION_PSR)]
+	str	r2, [r1, #RF(PSR, 0)]
 
-        ldr	r0, [sp, #RF(USR_LR, 3*4)]
-        str	r0, [r2, #RF(USR_LR, 0)]
+	ldr	r2, [sp, #RF(USR_LR, 3*4)]
+	str	r2, [r1, #RF(USR_LR, 0)]
 
-        ldr	r0, [sp, #RF(USR_SP, 3*4)]
-        str	r0, [r2, #RF(USR_SP, 0)]
+	ldr	r2, [sp, #RF(USR_SP, 3*4)]
+	str	r2, [r1, #RF(USR_SP, 0)]
 
-	mov     r0, #~0
-	str	r0, [r1, #(OFS__THREAD__EXCEPTION_IP)]
+	/* Reset continuation */
+	mov	r2, #~0
+	str	r2, [r0, #(OFS__THREAD__EXCEPTION_IP)]
 
+	/* Save all, except scratch registers to vCPU state */
+	stmdb	r1!, {r3-r12}
 
-	stmdb   r2, {r3-r12}
+	/* r1 = &vcpu_state->ts.r[3] */
 
-	/* Restore scratch registers saved previously */
-	ldr	r0, [sp, #8]
-	str	r0, [r2, #-44]
+	/* Store scratch registers saved previously to vCPU state */
+	ldm	sp, {r3, r12, lr}     @ r3 = r0, r12 = r1, lr = r2
+	stmdb	r1, {r3, r12, lr}
 
-	ldr	r0, [sp, #4]
-	str	r0, [r2, #-48]
+	add	sp, sp, #(3*4)			      @ now sp points at return frame
+	sub	r1, r1, #(OFS__VCPU_STATE__RF - 10*4) @ now r1 points to the VCPU STATE again
 
-	ldr	r0, [sp]
-	str	r0, [r2, #-52]
-        sub     r2, r2, #(OFS__VCPU_STATE__RF)     @ now r2 points to the VCPU STATE again
+	bl	current_prepare_vcpu_return_to_kernel
 
-	add	sp, sp, #(3*4)
+	/* r0 = vCPU user pointer */
 
-        \LOAD_USR_SP r2
-
-	ldr	r0, [r2, #(OFS__VCPU_STATE__ENTRY_IP)]
-
-	str	r0, [sp, #RF(PC, 0)]
-        \LOAD_USR_VCPU r0, r2, r1
 	b	__iret
 
 .endm

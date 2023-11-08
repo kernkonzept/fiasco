@@ -62,7 +62,25 @@ PUBLIC inline NEEDS[Thread::arm_fast_exit]
 void FIASCO_NORETURN
 Thread::vcpu_return_to_kernel(Mword ip, Mword sp, Vcpu_state *arg)
 {
+  Return_frame *r = prepare_vcpu_return_to_kernel(ip, sp);
+
   extern char __iret[];
+  arm_fast_exit(r, __iret, arg);
+
+  // never returns here
+}
+
+/**
+ * Prepare return frame for vCPU kernel mode entry.
+ *
+ * As a special optimization this is called from AArch32 assembly to optimize
+ * the switch on this architecture. AArch64 always utilizes
+ * Thread::vcpu_return_to_kernel().
+ */
+PUBLIC inline
+Return_frame *
+Thread::prepare_vcpu_return_to_kernel(Mword ip, Mword sp)
+{
   Entry_frame *r = regs();
 
   r->ip(ip);
@@ -77,11 +95,9 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, Vcpu_state *arg)
 
   // make sure the VMM executes in the correct mode
   sanitize_vmm_state(r);
-
   assert(r->check_valid_user_psr());
-  arm_fast_exit(nonull_static_cast<Return_frame*>(r), __iret, arg);
 
-  // never returns here
+  return nonull_static_cast<Return_frame*>(r);
 }
 
 IMPLEMENT_DEFAULT inline

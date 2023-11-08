@@ -694,16 +694,7 @@ alien_syscall: @ Do it for an alien ---------------------------------------
 	enter_slowtrap_w_stack GET_HSR(0x3d), 0x40
 
 	
-.macro LOAD_USR_SP vcpu_ptr
-        add  r0, \vcpu_ptr, #(OFS__VCPU_STATE__ENTRY_SP)
-        ldm  r0, {sp}^
-.endm
-
-.macro LOAD_USR_VCPU reg, kvcpu, thread
-        mov  \reg, \kvcpu
-.endm
-
-GEN_VCPU_UPCALL OFS__THREAD__USER_VCPU, LOAD_USR_SP, LOAD_USR_VCPU
+GEN_VCPU_UPCALL OFS__THREAD__USER_VCPU
 
 missed_excpt_ret_label:      .string "ERROR in exception return"
 fiq_label:	             .string "FIQ entry"
