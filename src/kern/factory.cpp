@@ -7,7 +7,7 @@ INTERFACE:
 
 class Factory : public Ram_quota, public Kobject_h<Factory>
 {
-  friend class Factory_test;
+  friend struct Factory_test;
   typedef Slab_cache Self_alloc;
 };
 
