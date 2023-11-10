@@ -14,7 +14,6 @@ unsigned Timer::irq()
     case Generic_timer::Virtual:  return 27;
     case Generic_timer::Hyp:      return 26;
     };
-  __builtin_unreachable();
 }
 
 IMPLEMENT
