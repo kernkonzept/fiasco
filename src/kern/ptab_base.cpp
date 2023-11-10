@@ -751,6 +751,7 @@ namespace Ptab
       Address va = _Addr::val(virt);
       unsigned long sz = _Addr::val(size);
       unsigned long mask = (1UL << Levels::shift(level)) - 1;
+      (void)mask;
 
       assert(!(va & mask));
       assert(!(sz & mask));
