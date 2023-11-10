@@ -56,7 +56,7 @@ Kmem_alloc::Kmem_alloc()
 
   // We waste a few bytes for the freemap (not exact start/end).
   unsigned long freemap_size = Alloc::free_map_bytes(0UL, max_addr - 1);
-  unsigned long min_addr_kern = Mem_layout::phys_to_pmem(0UL);
+  Address min_addr_kern = Mem_layout::phys_to_pmem(0UL);
 
   setup_kmem_from_kip_md_tmp(freemap_size, min_addr_kern);
 }

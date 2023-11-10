@@ -15,7 +15,6 @@ IMPLEMENTATION [arm]:
 #include "paging_bits.h"
 #include "panic.h"
 
-
 PRIVATE
 bool
 Kmem_alloc::map_pmem(unsigned long phys, unsigned long size,
@@ -89,7 +88,7 @@ Kmem_alloc::Kmem_alloc()
           alloc_size);
 
   unsigned long freemap_size = Alloc::free_map_bytes(min_virt, max_virt);
-  unsigned long min_addr_kern = min_virt;
+  Address min_addr_kern = min_virt;
 
   setup_kmem_from_kip_md_tmp(freemap_size, min_addr_kern);
 }

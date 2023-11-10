@@ -147,7 +147,9 @@ Kmem_alloc::Kmem_alloc()
   if (0)
     printf("Kmem_alloc::Kmem_alloc()\n");
 
-  unsigned long min_addr = ~0UL, max_addr = 0UL;
+  unsigned long min_addr = ~0UL;
+  unsigned long max_addr = 0UL;
+
   for (auto &md: Kip::k()->mem_descs_a())
     if (md.type() == Mem_desc::Kernel_tmp)
       {
@@ -159,7 +161,7 @@ Kmem_alloc::Kmem_alloc()
     panic("Cannot allocate kernel memory: Invalid reserved areas");
 
   unsigned long freemap_size = Alloc::free_map_bytes(min_addr, max_addr);
-  unsigned long min_addr_kern = Mem_layout::phys_to_pmem(min_addr);
+  Address min_addr_kern = Mem_layout::phys_to_pmem(min_addr);
 
   setup_kmem_from_kip_md_tmp(freemap_size, min_addr_kern);
 
