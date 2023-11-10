@@ -65,7 +65,6 @@ private:
 //-----------------------------------------------------------------------------
 IMPLEMENTATION:
 
-#include "assert_opt.h"
 #include "atomic.h"
 #include "config.h"
 #include "cpu.h"

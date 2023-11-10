@@ -74,7 +74,6 @@ IMPLEMENTATION:
 
 #include <cstddef>
 
-#include "assert_opt.h"
 #include "entry_frame.h"
 #include "ipc_timeout.h"
 #include "kmem_slab.h"
@@ -210,7 +209,7 @@ void Ipc_gate_obj::operator delete (void *_f)
     p->free(sizeof(Ipc_gate_obj));
 }
 
-PRIVATE inline NOEXPORT NEEDS["assert_opt.h"]
+PRIVATE inline NOEXPORT
 L4_msg_tag
 Ipc_gate_ctl::bind_thread(L4_obj_ref, L4_fpage::Rights rights,
                           Syscall_frame *f, Utcb const *in, Utcb *)
