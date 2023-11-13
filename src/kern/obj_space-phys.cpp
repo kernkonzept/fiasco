@@ -1,6 +1,6 @@
 INTERFACE:
 
-#include "assert_opt.h"
+#include "assert.h"
 #include "obj_space_phys_util.h"
 
 EXTENSION class Generic_obj_space : Obj_space_phys<Generic_obj_space< SPACE > >
@@ -11,9 +11,9 @@ private:
 public:
   using Base::initialize;
 
-  static Ram_quota *ram_quota(Base const *base)
+  static Ram_quota * __attribute__((nonnull(1))) ram_quota(Base const *base)
   {
-    assert_opt (base);
+    assert(base);
     return static_cast<SPACE const *>(base)->ram_quota();
   }
 };

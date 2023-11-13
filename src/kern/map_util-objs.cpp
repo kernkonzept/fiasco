@@ -6,18 +6,17 @@ INTERFACE:
 IMPLEMENTATION:
 
 #include "assert.h"
-#include "assert_opt.h"
 
 #include "obj_space.h"
 #include "l4_types.h"
 
-L4_error
+L4_error __attribute__((nonnull(1, 3)))
 obj_map(Space *from, L4_fpage const &fp_from,
         Space *to, L4_fpage const &fp_to, L4_msg_item control,
         Kobject ***reap_list)
 {
-  assert_opt (from);
-  assert_opt (to);
+  assert(from);
+  assert(to);
 
   Cap_index rcv_addr = fp_to.obj_index();
   Cap_index snd_addr = fp_from.obj_index();
@@ -49,7 +48,8 @@ L4_fpage::Rights __attribute__((nonnull(1)))
 obj_fpage_unmap(Space * space, L4_fpage fp, L4_map_mask mask,
                 Kobject ***reap_list)
 {
-  assert_opt (space);
+  assert(space);
+
   Order size = Mu::get_order_from_fp<Cap_diff>(fp);
   Cap_index addr = fp.obj_index();
   addr = cxx::mask_lsb(addr, size);
@@ -63,14 +63,14 @@ obj_fpage_unmap(Space * space, L4_fpage fp, L4_map_mask mask,
 }
 
 
-L4_error
+L4_error __attribute__((nonnull(1, 4)))
 obj_map(Space *from, Cap_index snd_addr, unsigned long snd_size,
         Space *to, Cap_index rcv_addr,
         Kobject ***reap_list, bool grant = false,
         Obj_space::Attr attribs = Obj_space::Attr::Full())
 {
-  assert_opt (from);
-  assert_opt (to);
+  assert(from);
+  assert(to);
 
   Mu::Auto_tlb_flush<Obj_space> tlb;
   return map<Obj_space>((Kobject_mapdb*)0,
@@ -86,13 +86,13 @@ obj_map(Space *from, Cap_index snd_addr, unsigned long snd_size,
  *
  * \pre `o` must not be mapped anywhere yet.
  */
-bool
+bool __attribute__((nonnull(1, 2, 3)))
 map_obj_initially(Kobject_iface *o, Obj_space* to, Space *to_id,
                   Cap_index rcv_addr, Kobject ***reap_list)
 {
-  assert_opt (o);
-  assert_opt (to);
-  assert_opt (to_id);
+  assert(o);
+  assert(to);
+  assert(to_id);
 
   typedef Obj_space SPACE;
   typedef Obj_space::V_pfn Addr;

@@ -33,8 +33,8 @@ L4_error __attribute__((nonnull(1, 3)))
 mem_map(Space *from, L4_fpage const &fp_from,
         Space *to, L4_fpage const &fp_to, L4_msg_item control)
 {
-  assert_opt (from);
-  assert_opt (to);
+  assert(from);
+  assert(to);
 
   typedef Mem_space::V_pfn Pfn;
   typedef Mem_space::V_pfc Pfc;
