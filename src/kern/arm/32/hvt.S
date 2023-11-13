@@ -41,6 +41,7 @@ GEN_SYSCALL_TABLE
 .LCslowtrap_entry:	.word	slowtrap_entry
 
 GEN_EXCEPTION_RETURN
+GEN_IRET
 GEN_VCPU_UPCALL OFS__THREAD__KERN_VCPU
 GEN_LEAVE_BY_TRIGGER_EXCEPTION
 GEN_LEAVE_AND_KILL_MYSELF
@@ -123,7 +124,7 @@ fast_ret_from_irq:
 	ldmia	sp, {r0 - r12}		@ Restore user state
 	disable_irqs
 	add	sp, sp, #13*4
-GEN_IRET
+	return_from_exception
 1:	.word arm_esr_entry
 
 .global	vcpu_resume

@@ -54,8 +54,15 @@ sys_call_table:
 
 #define OFS__VCPU_STATE__RF (VAL__SIZEOF_TRAP_STATE - RF_SIZE + OFS__VCPU_STATE__TREX)
 
+/**
+ * Return to user space in vCPU kernel mode.
+ *
+ * This is called as continuation (triggered by
+ * Context::vcpu_save_state_and_upcall()) after the user space registers have
+ * been restored. We just have to make sure that no registers are clobbered.
+ */
 leave_by_vcpu_upcall:
-	sub 	sp, sp, #(RF_SIZE + 3*4)   @ restore old return frame
+	sub 	sp, sp, #(RF_SIZE + 3*4)   @ restore old return frame + 3 regs
         /* save r0, r1, r2 for scratch registers */
 	stmia 	sp, {r0 - r2}
 
@@ -98,7 +105,18 @@ leave_by_vcpu_upcall:
 
 	/* r0 = vCPU user pointer */
 
-	b	__iret
+	/*
+         * We only need to clear our scratch registers (r1-r3 and r12). All
+         * other registers are callee saved and have been preserved across the
+         * current_prepare_vcpu_return_to_kernel call. There is no need to
+         * clear lr because it is either restored by __iret (cpu_virt) or is a
+         * banked register (!cpu_virt).
+	 */
+	mov	r1, #0
+	mov	r2, #0
+	mov	r3, #0
+	mov	r12, #0
+	b	__iret_safe
 
 .endm
 
@@ -203,6 +221,24 @@ __return_from_user_invoke:
 .macro GEN_IRET
 	.global __iret
 __iret:
+	/*
+	 * Clear all registers before returning to vCPU entry handler. Spare r0
+	 * because it's supposed to hold the vCPU user pointer. Also lr does
+	 * not need to be cleared because it's covered by the exception return.
+	 */
+	mov	r1, #0
+	mov	r2, #0
+	mov	r3, #0
+	mov	r4, #0
+	mov	r5, #0
+	mov	r6, #0
+	mov	r7, #0
+	mov	r8, #0
+	mov	r9, #0
+	mov	r10, #0
+	mov	r11, #0
+	mov	r12, #0
+__iret_safe:
 	return_from_exception
 .endm
 
