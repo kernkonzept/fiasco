@@ -18,6 +18,8 @@ INTERFACE [serial]:
 #include "std_macros.h"
 #include "pm.h"
 
+class Filter_console;
+
 /**
  * Glue between kernel and UART driver.
  */
@@ -62,6 +64,10 @@ Uart *
 Kernel_uart::uart()
 { return _kernel_uart; }
 
+PUBLIC static FIASCO_CONST
+Filter_console *
+Kernel_uart::fcon()
+{ return _fcon; }
 
 IMPLEMENT_DEFAULT inline
 bool

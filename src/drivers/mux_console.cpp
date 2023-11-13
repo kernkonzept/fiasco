@@ -11,6 +11,8 @@ INTERFACE:
  */
 class Mux_console : public Console
 {
+  friend class Console_test;
+
 public:
 
   enum

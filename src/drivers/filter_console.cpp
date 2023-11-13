@@ -5,6 +5,8 @@ INTERFACE:
 
 class Filter_console : public Console
 {
+  friend class Console_test;
+
 public:
   ~Filter_console() {}
 
