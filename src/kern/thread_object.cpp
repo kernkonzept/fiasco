@@ -309,8 +309,14 @@ PRIVATE inline NOEXPORT NEEDS["processor.h"]
 L4_msg_tag
 Thread_object::sys_modify_senders(L4_msg_tag tag, Utcb const *in, Utcb * /*out*/)
 {
-  if (sender_list()->cursor())
-    return Kobject_iface::commit_result(-L4_err::EBusy);
+  // Prevent vanishing of this thread during the whole operation.
+  Ref_ptr<Thread> self(this);
+
+  // Only threads running on our CPU are allowed to iterate our sender list.
+  if (current_cpu() != home_cpu())
+    return commit_result(-L4_err::EInval);
+
+  assert(!sender_list()->cursor());
 
   if (0)
     printf("MODIFY ID (%08lx:%08lx->%08lx:%08lx\n",
@@ -343,6 +349,15 @@ Thread_object::sys_modify_senders(L4_msg_tag tag, Utcb const *in, Utcb * /*out*/
 
       sender_list()->cursor(c);
       Proc::preemption_point();
+
+      // After resuming from preemption we have to enforce again that only
+      // threads running on our CPU are allowed to iterate our sender list.
+      if (current_cpu() != home_cpu())
+        {
+          sender_list()->cursor(0);
+          return commit_result(-L4_err::EInval);
+        }
+
       c = sender_list()->cursor();
     }
 
