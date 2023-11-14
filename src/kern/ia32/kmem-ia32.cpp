@@ -417,7 +417,7 @@ Kmem::setup_cpu_structures(Cpu &cpu, Lockless_alloc *cpu_alloc,
                            Lockless_alloc *tss_alloc)
 {
   // now initialize the global descriptor table
-  void *gdt = cpu_alloc->alloc_bytes<void>(Gdt::gdt_max, 0x10);
+  void *gdt = cpu_alloc->alloc_bytes<void>(Gdt::gdt_max, Order(4));
   cpu.init_gdt((Address)gdt, user_max());
 
   // Allocate the task segment as the last thing from cpu_page_vm
@@ -427,7 +427,7 @@ Kmem::setup_cpu_structures(Cpu &cpu, Lockless_alloc *cpu_alloc,
   // Allocate additional 256 bytes for emergency stack right beneath
   // the tss. It is needed if we get an NMI or debug exception at
   // entry_sys_fast_ipc/entry_sys_fast_ipc_c/entry_sys_fast_ipc_log.
-  void *tss = tss_alloc->alloc_bytes<void>(sizeof(Tss) + 256, 0x10);
+  void *tss = tss_alloc->alloc_bytes<void>(sizeof(Tss) + 256, Order(4));
   Address tss_mem = (Address)tss;
   assert(tss_mem + sizeof(Tss) + 256 < Mem_layout::Io_bitmap);
   tss_mem += 256;
@@ -551,7 +551,8 @@ Kmem::get_realmode_startup_pdbr()
 {
   // For amd64, we need to make sure that our boot-up page directory is below
   // 4 GiB in physical memory.
-  static char _boot_pdir[Config::PAGE_SIZE] __attribute__((aligned(4096)));
+  static char _boot_pdir[Config::PAGE_SIZE]
+    __attribute__((aligned(Config::PAGE_SIZE)));
 
   memcpy(_boot_pdir, kdir, sizeof(_boot_pdir));
   return Kmem::virt_to_phys(_boot_pdir);
@@ -767,7 +768,7 @@ Kmem::setup_cpu_structures_isolation(Cpu &cpu, Kpdir *cpu_dir, Lockless_alloc *c
   prepare_kernel_entry_points(cpu_m, cpu_dir);
 
   unsigned const estack_sz = 512;
-  Unsigned8 *estack = cpu_m->alloc_bytes<Unsigned8>(estack_sz, 16);
+  Unsigned8 *estack = cpu_m->alloc_bytes<Unsigned8>(estack_sz, Order(4));
 
   setup_cpu_structures(cpu, cpu_m, cpu_m);
   cpu.get_tss()->_rsp0 = (Address)(estack + estack_sz);
@@ -818,7 +819,7 @@ Kmem::prepare_kernel_entry_points(Lockless_alloc *cpu_m, Kpdir *)
   extern char const syscall_entry_code_end[];
 
   void *sccode = cpu_m->alloc_bytes<void>(syscall_entry_code_end
-                                          - syscall_entry_code, 16);
+                                          - syscall_entry_code, Order(4));
   assert((Address)sccode == Kentry_cpu_syscall_entry);
 
   memcpy(sccode, syscall_entry_code, syscall_entry_code_end
@@ -1023,7 +1024,7 @@ Kmem::init_cpu(Cpu &cpu)
   write_now(&p[3], cpu_dir_pa | flush_tlb_bit |  0x1000);
   setup_cpu_structures_isolation(cpu, cpu_dir, &cpu_m);
 
-  auto *pte_map = cpu_m.alloc<Bitmap<260> >(1, 0x20);
+  auto *pte_map = cpu_m.alloc<Bitmap<260> >(1, Order(5));
 
   pte_map->clear_all();
   // Sync pte_map bits for context switch optimization.

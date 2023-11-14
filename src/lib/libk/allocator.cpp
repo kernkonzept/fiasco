@@ -2,6 +2,7 @@ INTERFACE:
 
 #include <spin_lock.h>
 #include <lock_guard.h>
+#include <template_math.h>
 
 /**
  * Allocator locking policy that implements no locking.
@@ -95,21 +96,20 @@ public:
    * \tparam T  Type of the object to allocate.
    *
    * \param size       Size of the object to allocate.
-   * \param alignment  Alignment of the object to allocate.
+   * \param alignment  Alignment order of the object to allocate (log2).
    *
    * \return Allocated object or nullptr on failure.
    */
   template<typename T>
-  T *alloc_bytes(size_t size, size_t alignment = 1)
+  T *alloc_bytes(size_t size, Order alignment = Order(0))
   {
     [[maybe_unused]] auto guard = LOCKING_POLICY::lock_guard(_lock);
 
     if (size > _size)
       return nullptr;
 
-    alignment -= 1;
-
-    uintptr_t ptr_aligned = (_ptr + alignment) & ~alignment;
+    uintptr_t ptr_aligned
+      = cxx::ceil_lsb(_ptr, cxx::int_value<Order>(alignment));
     uintptr_t gap = ptr_aligned - _ptr;
 
     if (gap >= _size)
@@ -132,12 +132,13 @@ public:
    * \tparam T  Type of the objects to allocate.
    *
    * \param count      Number of the objects to allocate.
-   * \param alignment  Alignment of the first object to allocate.
+   * \param alignment  Alignment order of the first object to allocate (log2).
    *
    * \return Allocated objects or nullptr on failure.
    */
   template<typename T>
-  T *alloc(size_t count = 1, size_t alignment = alignof(T))
+  T *alloc(size_t count = 1,
+           Order alignment = Order(Tl_math::Ld<alignof(T)>::Res))
   {
     return alloc_bytes<T>(sizeof(T) * count, alignment);
   }
