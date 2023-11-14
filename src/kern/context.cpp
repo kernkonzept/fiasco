@@ -1384,6 +1384,10 @@ Context::set_home_cpu(Cpu_number cpu)
  * \brief Queue a DRQ for changing the contexts state.
  * \param mask bit mask for the state (state &= mask).
  * \param add bits to add to the state (state |= add).
+ * \returns True if a reschedule is necessary (a de-blocked scheduling context
+ *          can preempt the currently running scheduling context) -- this can
+ *          only happen if `add` has any bit of `Thread_ready_mask` set.
+ *
  * \note This function is a preemption point.
  *
  * This function must be used to change the state of contexts that are

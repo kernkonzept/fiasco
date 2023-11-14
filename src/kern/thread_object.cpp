@@ -448,8 +448,10 @@ Thread_object::sys_control(L4_fpage::Rights rights, L4_msg_tag tag,
   out->values[2] = _old_exc_handler;
 
   if (del_state || add_state)
-    if (xcpu_state_change(~del_state, add_state, true))
-      current()->switch_to_locked(this);
+    {
+      assert(!(add_state & Thread_ready_mask));
+      xcpu_state_change(~del_state, add_state, true);
+    }
 
   return commit_result(0, 3);
 }
@@ -505,8 +507,8 @@ Thread_object::sys_vcpu_control(L4_fpage::Rights, L4_msg_tag const &tag,
     }
   */
 
-  if (xcpu_state_change(~del_state, add_state, true))
-    current()->switch_to_locked(this);
+  assert(!(add_state & Thread_ready_mask));
+  xcpu_state_change(~del_state, add_state, true);
 
   return commit_result(0);
 }
