@@ -153,6 +153,7 @@ SHARED_FLAGS-gcc        += $(if $(CONFIG_FULL_PATH_NAMES_IN_BINARIES),,$(call CH
 # gcc #57845
 SHARED_FLAGS-gcc        += $(if $(filter sparc,$(CONFIG_XARCH)),,-freg-struct-return)
 SHARED_FLAGS-gcc	+= $(call CHECKCXX,-Wmisleading-indentation,) -Wlogical-op -Wfloat-equal
+SHARED_FLAGS-gcc	+= $(if $(filter 7 8 9 10,$(CCVER_MAJOR)),-Wno-nonnull)
 SHARED_FLAGS  		+= -g -Wall -Wextra $(call CHECKCC,-Wdouble-promotion) $(call CHECKCC,-Wfloat-conversion) -Wmissing-declarations
 SHARED_FLAGS-clang	+= -Wno-unused-private-field
 SHARED_FLAGS-clang	+= -Wno-string-plus-int -Wno-overloaded-virtual
