@@ -15,8 +15,6 @@ IMPLEMENTATION [arm && mp && pf_s32g && !arm_psci]:
 #include "koptions.h"
 #include "mem_unit.h"
 
-#include <cstdio>
-
 PUBLIC static
 void
 Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
@@ -24,8 +22,9 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
   if (Koptions::o()->core_spin_addr == -1ULL)
     return;
 
-  Mmio_register_block s(Kmem::mmio_remap(Koptions::o()->core_spin_addr, 8));
-  s.r<64>(0) = phys_tramp_mp_addr;
+  Mmio_register_block s(Kmem::mmio_remap(Koptions::o()->core_spin_addr,
+                                         sizeof(Address)));
+  s.r<Address>(0) = phys_tramp_mp_addr;
   Mem::dsb();
   Mem_unit::clean_dcache();
 
