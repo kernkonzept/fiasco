@@ -337,12 +337,14 @@ Thread_object::sys_modify_senders(L4_msg_tag tag, Utcb const *in, Utcb * /*out*/
         }
 
       if (!c)
-        return Kobject_iface::commit_result(0);
+        break;
 
       sender_list()->cursor(c);
       Proc::preemption_point();
       c = sender_list()->cursor();
     }
+
+  sender_list()->cursor(0);
   return Kobject_iface::commit_result(0);
 }
 
