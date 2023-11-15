@@ -677,6 +677,22 @@ map(MAPDB* mapdb,
                            SPACE::to_pfn(addr + size));
               Map_traits<SPACE>::free_object(r_phys, reap_list);
 
+              // Dst is equal to or an ancestor of src.
+              if (r == 2)
+                {
+                  // If dst (rcv_frame) is equal to src (sender_frame), we have
+                  // to unlock the rcv_frame here (and thereby also the
+                  // sender_frame, as they are the same and therefore use the
+                  // same lock). For the case that dst is an anchestor of src,
+                  // the sender_frame is not locked by lookup_src_dst().
+                  assert(   rcv_frame.same_lock(sender_frame)
+                         || sender_frame.frame == nullptr /* i.e. not locked */);
+                  rcv_frame.clear();
+
+                  // src is gone too
+                  continue;
+                }
+
               // unlock destination if it is not a grant is the same tree
               if (!rcv_frame.same_lock(sender_frame))
                 rcv_frame.clear();
@@ -692,11 +708,6 @@ map(MAPDB* mapdb,
               // store the still locked rcv mapping for later unlock
               sender_frame = rcv_frame;
             }
-
-          if (r == 2)
-            // src is gone too
-            continue;
-
         }
       else if (! mapdb->lookup(from_id,
                                SPACE::to_pfn(SPACE::page_address(snd_addr, s_order)),
