@@ -48,11 +48,11 @@ virtual void
 Ipc_sender<Derived>::ipc_send_msg(Receiver *recv, bool) override
 {
   derived()->transfer_msg(recv);
-  if (derived()->dequeue_sender())
-    {
-      sender_dequeue(recv->sender_list());
-      recv->vcpu_update_state();
-    }
+
+  check(derived()->dequeue_sender());
+
+  sender_dequeue(recv->sender_list());
+  recv->vcpu_update_state();
 }
 
 PROTECTED inline NEEDS["config.h", "globals.h", "thread_state.h"]
@@ -137,11 +137,13 @@ Ipc_sender<Derived>::send_msg(Receiver *receiver, bool is_xcpu)
     {
       Syscall_frame *dst_regs = derived()->transfer_msg(receiver);
 
-      if (derived()->requeue_sender())
-	{
-	  sender_enqueue(receiver->sender_list(), 255);
-	  receiver->vcpu_set_irq_pending();
-	}
+      check(!derived()->requeue_sender());
+
+      // if (derived()->requeue_sender())
+      //  {
+      //   sender_enqueue(receiver->sender_list(), 255);
+      //   receiver->vcpu_set_irq_pending();
+      //  }
 
       // ipc completed
       receiver->state_change_dirty(~Thread_ipc_mask, 0);
