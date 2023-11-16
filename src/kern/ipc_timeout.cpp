@@ -8,6 +8,7 @@ class Receiver;
 class IPC_timeout : public Timeout
 {
   friend class Jdb_list_timeouts;
+  friend class Timeouts_test;
 };
 
 IMPLEMENTATION:
