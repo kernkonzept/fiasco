@@ -822,7 +822,7 @@ Treemap::lookup_src_dst(Space const *src, Pcnt src_key, Pfn src_va,
       // smaller mapping in submap found...
       if (r_depth == c_depth)
         {
-          // src is in subtree of dst -> unmap dst and noting to map then
+          // src is in subtree of dst -> unmap dst and nothing to map then
           src_frame->clear();
           return 2; // unmap + no map
         }
