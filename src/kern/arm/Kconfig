@@ -319,6 +319,7 @@ config ARM_ALIGNMENT_CHECK
 config ARM_SYNC_CLOCK
 	bool "Use ARM generic timer for system clock and scheduling accounting"
 	depends on HAS_CPU_VIRT # Dependency on the generic timer
+	default y
 	select SYNC_CLOCK
 	help
 	  Synchronize the internal kernel clock with the timer.
