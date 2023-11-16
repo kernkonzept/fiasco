@@ -763,11 +763,6 @@ map(MAPDB* mapdb,
             if (SPACE::Need_insert_tlb_flush)
               tlb.add_page(to, rcv_addr, i_order);
 
-            V_pfc super_offset = SPACE::subpage_offset(snd_addr, i_order);
-            if (super_offset != V_pfc(0))
-              // Just use OR here because i_phys may already contain
-              // the offset. (As is on ARM)
-              i_phys = SPACE::subpage_address(i_phys, super_offset);
             break;
           }
 
