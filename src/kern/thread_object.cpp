@@ -207,31 +207,33 @@ Thread_object::sys_vcpu_resume(L4_msg_tag const &tag, Utcb const *utcb, Utcb *)
   L4_snd_item_iter snd_items(utcb, tag.words());
   int items = tag.items();
   if (vcpu_user_space())
-    for (; items && snd_items.next(); --items)
-      {
-        // in this case we already have a counted reference managed by vcpu_user_space()
-        Lock_guard<Lock> guard;
-        if (!guard.check_and_lock(&static_cast<Task *>(vcpu_user_space())->existence_lock))
-          return commit_result(-L4_err::ENoent);
+    {
+      for (; items && snd_items.next(); --items)
+        {
+          // in this case we already have a counted reference managed by vcpu_user_space()
+          Lock_guard<Lock> guard;
+          if (!guard.check_and_lock(&static_cast<Task *>(vcpu_user_space())->existence_lock))
+            return commit_result(-L4_err::ENoent);
 
-        cpu_lock.clear();
+          cpu_lock.clear();
 
-        L4_snd_item_iter::Item const *const item = snd_items.get();
-        L4_fpage sfp(item->d);
+          L4_snd_item_iter::Item const *const item = snd_items.get();
+          L4_fpage sfp(item->d);
 
-        L4_error err;
+          L4_error err;
 
-          {
-            Reap_list rl;
-            err = fpage_map(space(), sfp, vcpu_user_space(),
-                            L4_fpage::all_spaces(), item->b, &rl);
-          }
+            {
+              Reap_list rl;
+              err = fpage_map(space(), sfp, vcpu_user_space(),
+                              L4_fpage::all_spaces(), item->b, &rl);
+            }
 
-        cpu_lock.lock();
+          cpu_lock.lock();
 
-        if (EXPECT_FALSE(!err.ok()))
-          return commit_error(utcb, err);
-      }
+          if (EXPECT_FALSE(!err.ok()))
+            return commit_error(utcb, err);
+        }
+    }
 
   if ((vcpu->_saved_state & Vcpu_state::F_irqs)
       && (vcpu->sticky_flags & Vcpu_state::Sf_irq_pending))
