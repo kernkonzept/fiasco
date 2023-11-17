@@ -223,9 +223,8 @@ Mux_console::register_console(Console *c, int pos = 0)
   if (pos > _items)
     pos = _items;
 
-  if (pos < _items)
-    for (int i = _items - 1; i >= pos; --i)
-      _cons[i + 1] = _cons[i];
+  for (int i = _items - 1; i >= pos; --i)
+    _cons[i + 1] = _cons[i];
 
   _items++;
   _cons[pos] = c;
