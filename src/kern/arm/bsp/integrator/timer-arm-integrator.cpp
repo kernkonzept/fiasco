@@ -40,16 +40,16 @@ PUBLIC
 Timer::Timer(Address base) : Mmio_register_block(base)
 {
   /* Switch all timers off */
-  write(0, TIMER0_BASE + TIMER_CTRL);
-  write(0, TIMER1_BASE + TIMER_CTRL);
-  write(0, TIMER2_BASE + TIMER_CTRL);
+  write<Unsigned32>(0U, TIMER0_BASE + TIMER_CTRL);
+  write<Unsigned32>(0U, TIMER1_BASE + TIMER_CTRL);
+  write<Unsigned32>(0U, TIMER2_BASE + TIMER_CTRL);
 
   unsigned timer_ctrl = TIMER_CTRL_ENABLE | TIMER_CTRL_PERIODIC;
   unsigned timer_reload = 1000000 / Config::Scheduler_granularity;
 
-  write(timer_reload, TIMER1_BASE + TIMER_LOAD);
-  write(timer_reload, TIMER1_BASE + TIMER_VALUE);
-  write(timer_ctrl | TIMER_CTRL_IE, TIMER1_BASE + TIMER_CTRL);
+  write<Unsigned32>(timer_reload, TIMER1_BASE + TIMER_LOAD);
+  write<Unsigned32>(timer_reload, TIMER1_BASE + TIMER_VALUE);
+  write<Unsigned32>(timer_ctrl | TIMER_CTRL_IE, TIMER1_BASE + TIMER_CTRL);
 }
 
 IMPLEMENT
@@ -60,5 +60,5 @@ PUBLIC static inline
 void
 Timer::acknowledge()
 {
-  _timer->write(1, TIMER1_BASE + TIMER_INTCLR);
+  _timer->write<Unsigned32>(1U, TIMER1_BASE + TIMER_INTCLR);
 }

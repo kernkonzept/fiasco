@@ -28,10 +28,10 @@ private:
   };
 
 public:
-  int set_mode(Mword, Mode) { return 0; }
-  bool is_edge_triggered(Mword) const { return false; }
-  void set_cpu(Mword, Cpu_number) {}
-  void ack(Mword) { /* ack is empty */ }
+  int set_mode(Mword, Mode) override { return 0; }
+  bool is_edge_triggered(Mword) const override { return false; }
+  void set_cpu(Mword, Cpu_number) override  {}
+  void ack(Mword) override { /* ack is empty */ }
 };
 
 PUBLIC
