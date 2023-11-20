@@ -92,3 +92,11 @@ Context::load_tpidruro() const
 {
   asm volatile ("msr TPIDRRO_EL0, %0" : : "r" (_tpidruro));
 }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && !cpu_virt]:
+
+PROTECTED inline
+void
+Context::sanitize_vmm_state(Return_frame *) const
+{}

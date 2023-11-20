@@ -104,6 +104,15 @@ Context::spill_user_state()
       : "=m"(ef->usp), "=m"(ef->ulr) : [rf] "r" (&ef->usp));
 }
 
+PROTECTED inline
+void
+Context::sanitize_vmm_state(Return_frame *r) const
+{
+  // The continuation PSR is wrong (see Continuation::activate()) -> fix it.
+  r->psr &= ~Proc::Status_mode_mask;
+  r->psr |= Proc::Status_mode_user;
+}
+
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_v6plus]:
 

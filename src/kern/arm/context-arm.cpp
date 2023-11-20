@@ -77,11 +77,6 @@ Context::sanitize_user_state(Return_frame *dst) const
   dst->psr |= Proc::Status_mode_user | Proc::Status_always_mask;
 }
 
-PROTECTED inline
-void
-Context::sanitize_vmm_state(Return_frame *) const
-{}
-
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm_v6plus]:
 
