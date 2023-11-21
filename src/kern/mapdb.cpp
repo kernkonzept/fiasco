@@ -130,6 +130,7 @@ public:
 private:
   friend class Jdb_mapdb;
   friend class Treemap_ops;
+  friend class Mem_mapdb_test;
 
   // DATA
   Page _key_end;		///< Number of Physframe entries
