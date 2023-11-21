@@ -519,8 +519,8 @@ public:
     p |= n_attr;
     p &= ~Unsigned64(a_attr);
 
-    if (p != old) {
-      write_now(_this()->pte, p); }
+    if (p != old)
+      write_now(_this()->pte, p);
   }
 };
 
