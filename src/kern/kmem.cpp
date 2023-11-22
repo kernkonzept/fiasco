@@ -26,7 +26,7 @@ IMPLEMENTATION [arm || ia32 || amd64]:
 
 PRIVATE static
 bool
-Kmem::cont_mapped(Address phys_beg, Address phys_end, Address virt)
+Kmem::cont_mapped(Address phys_beg, Address phys_end, Address virt, bool cache)
 {
   for (Address p = phys_beg, v = virt;
        p < phys_end && v < Mem_layout::Registers_map_end;
@@ -35,6 +35,8 @@ Kmem::cont_mapped(Address phys_beg, Address phys_end, Address virt)
       auto e = kdir->walk(Virt_addr(v), kdir->Super_level);
       if (!e.is_valid() || p != e.page_addr())
         return false;
+      assert(   (!cache && e.attribs().type == Page::Type::Uncached())
+             || (cache && e.attribs().type == Page::Type::Normal()));
     }
 
   return true;
@@ -53,7 +55,7 @@ Kmem::mmio_remap(Address phys, Address size, bool cache = false, bool exec = fal
   for (Address a = Mem_layout::Registers_map_start;
        a < Mem_layout::Registers_map_end; a += Config::SUPERPAGE_SIZE)
     {
-      if (cont_mapped(phys_page, phys_end, a))
+      if (cont_mapped(phys_page, phys_end, a, cache))
         return Super_pg::trunc(a) | Super_pg::offset(phys);
     }
 
