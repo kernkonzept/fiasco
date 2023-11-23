@@ -29,11 +29,8 @@ struct Smc_user : Kobject_h<Smc_user, Kobject>
     if ((r0 & 0x3F000000) < 0x30000000)
       return commit_result(-L4_err::ENosys);
 
-    if (test_cb)
-      {
-        if (!test_cb(in, out))
-          return commit_result(0, 4);
-      }
+    if (!invoke_test_callback(in, out))
+      return commit_result(0, 4);
 
     register Mword r1 FIASCO_ARM_ASM_REG(1) = in->values[1];
     register Mword r2 FIASCO_ARM_ASM_REG(2) = in->values[2];
@@ -68,15 +65,9 @@ Smc_user::init()
 STATIC_INITIALIZE(Smc_user);
 
 //---------------------------------------------------------------------------
-INTERFACE [arm_smc_user && !test_support_code]:
-
-EXTENSION struct Smc_user
-{
-  enum { test_cb = 0 };
-};
-
-//---------------------------------------------------------------------------
 INTERFACE [arm_smc_user && test_support_code]:
+
+#include <cxx/function>
 
 EXTENSION struct Smc_user
 {
@@ -89,3 +80,23 @@ public:
 IMPLEMENTATION [arm_smc_user && test_support_code]:
 
 Smc_user::Test_callback Smc_user::test_cb;
+
+PUBLIC static inline
+bool
+Smc_user::invoke_test_callback(Utcb const *in, Utcb *out)
+{
+  if (test_cb)
+    return test_cb(in, out);
+
+  return true;
+}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm_smc_user && !test_support_code]:
+
+PUBLIC static inline
+bool
+Smc_user::invoke_test_callback(Utcb const *, Utcb *)
+{
+  return true;
+}
