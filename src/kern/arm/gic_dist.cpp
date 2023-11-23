@@ -462,8 +462,10 @@ Gic_dist::init(VERSION, unsigned cpu_prio, int nr_irqs_override = -1)
     num = nr_irqs_override;
 
   if (!Config_mxc_tzic)
-    for (unsigned i = 32; i < num; i += 16)
-      _dist.write<Unsigned32>(0, GICD_ICFGR + i * 4 / 16);
+    {
+      for (unsigned i = 32; i < num; i += 16)
+        _dist.write<Unsigned32>(0, GICD_ICFGR + i * 4 / 16);
+    }
 
   init_prio(32, num);
   init_regs(32, num);
