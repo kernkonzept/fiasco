@@ -509,7 +509,7 @@ Utest_fw::tap_msg(bool success,
            msg ? msg : "");
 
   if (_test_uuid)
-    printf("KUT # Test-uuid: %s\n", _test_uuid);
+    printf("\nKUT # Test-uuid: %s\n", _test_uuid);
 }
 
 /**
