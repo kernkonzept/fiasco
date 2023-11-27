@@ -138,12 +138,15 @@ Receiver::reset_caller(Receiver const *old_caller)
   cas(&_caller, ov, 0UL);
 }
 
+/**
+ * Unconditionally reset the caller.
+ */
 PUBLIC inline
 void
 Receiver::reset_caller()
 {
-  if (_caller)
-    _caller = 0;
+  assert(_caller);
+  _caller = 0;
 }
 
 PROTECTED inline
