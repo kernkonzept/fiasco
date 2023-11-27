@@ -153,6 +153,20 @@ Thread::ipc_receiver_aborted() override
 }
 
 /**
+ * Receiver has to spill its FPU state before cross-core IPC that transfers FPU
+ * state.
+ *
+ * \pre Must be called in the context of the receiver.
+ */
+PRIVATE inline
+void
+Thread::prepare_xcpu_ipc_transfer_fpu()
+{
+  if (_utcb_handler || utcb().access()->inherit_fpu())
+    spill_fpu_if_owner();
+}
+
+/**
  * Receiver-ready callback. Receivers call this function in the context of a
  * waiting sender when they get ready to receive a message from that sender
  * (in this case a thread).
@@ -162,6 +176,10 @@ void
 Thread::ipc_send_msg(Receiver *recv, bool open_wait) override
 {
   Syscall_frame *regs = _snd_regs;
+
+  if (EXPECT_FALSE(home_cpu() != recv->home_cpu() && regs->tag().transfer_fpu()))
+    nonull_static_cast<Thread*>(recv)->prepare_xcpu_ipc_transfer_fpu();
+
   bool success = transfer_msg(regs->tag(), nonull_static_cast<Thread*>(recv),
                               _ipc_send_rights, open_wait);
   sender_dequeue(recv->sender_list());
@@ -1205,10 +1223,8 @@ Thread::remote_ipc_send(Ipc_remote_request *rq)
       break;
     }
 
-  if (rq->tag.transfer_fpu()
-      && (rq->partner->_utcb_handler
-          || rq->partner->utcb().access()->inherit_fpu()))
-    rq->partner->spill_fpu_if_owner();
+  if (rq->tag.transfer_fpu())
+    rq->partner->prepare_xcpu_ipc_transfer_fpu();
 
   // We may need to grab locks but this is forbidden in a DRQ handler. So
   // transfer the IPC in usual thread code at the sender side. However, this
