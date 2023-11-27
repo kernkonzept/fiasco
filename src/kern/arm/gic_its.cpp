@@ -715,7 +715,7 @@ Gic_its::cpu_init(Cpu_number cpu, Gic_redist const &redist)
 
   Collection tmp;
   if (_redist_pta)
-    tmp.redist_base.phys_base_addr() = Gic_mem::to_phys(redist.get_base());
+    tmp.redist_base.phys_base_addr() = Kmem::kdir->virt_to_phys(redist.get_base());
   else
     tmp.redist_base.processor_nr() = redist.get_processor_nr();
   tmp.icid = cpu_index;
@@ -918,7 +918,7 @@ Gic_its::bind_lpi_to_device(Lpi &lpi, Unsigned32 src, Irq_mgr::Msi_info *inf)
 
   inf->data = lpi.event_id();
   // TODO: Must be mapped in the DMA space of the device if IOMMU is enabled.
-  inf->addr = Gic_mem::to_phys(_its.get_mmio_base()) + GITS_TRANSLATER;
+  inf->addr = Kmem::kdir->virt_to_phys(_its.get_mmio_base()) + GITS_TRANSLATER;
   return 0;
 }
 

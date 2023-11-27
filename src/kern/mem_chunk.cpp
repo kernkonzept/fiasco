@@ -25,7 +25,7 @@ public:
   { return static_cast<T *>(_va); }
 
   inline Address phys_addr() const
-  { return to_phys(virt_addr()); }
+  { return Mem_layout::pmem_to_phys(virt_addr()); }
 
   unsigned size() const
   { return _size; }
@@ -104,11 +104,4 @@ void
 Mem_chunk::free_mem(void *mem, unsigned size)
 {
   Kmem_alloc::allocator()->free(Bytes(size), mem);
-}
-
-PUBLIC static
-Address
-Mem_chunk::to_phys(Address virt)
-{
-  return Mem_layout::pmem_to_phys(virt);
 }
