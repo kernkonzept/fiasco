@@ -85,7 +85,7 @@ check_basics(L4_msg_tag *tag, long label)
  * Helper function to dereference a capability send message
  * item and check the correct object type.
  */
-template<typename OBJ>
+template<typename OBJ> __attribute__((nonnull(5)))
 OBJ *deref_next(L4_msg_tag *tag, Utcb const *utcb,
                 L4_snd_item_iter &snd_items, Space *space,
                 Rights *rights)
@@ -117,7 +117,7 @@ OBJ *deref_next(L4_msg_tag *tag, Utcb const *utcb,
  * Helper to dereference exactly the first send message item as capability
  * of type `OBJ`.
  */
-template<typename OBJ>
+template<typename OBJ> __attribute__((nonnull(3)))
 OBJ *deref(L4_msg_tag *tag, Utcb const *utcb, Rights *rights)
 {
   L4_snd_item_iter snd_items(utcb, tag->words());

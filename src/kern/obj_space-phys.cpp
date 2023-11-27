@@ -41,8 +41,8 @@ Generic_obj_space<SPACE>::lookup(Cap_index virt)
 
 IMPLEMENT template< typename SPACE >
 inline
-Kobject_iface * FIASCO_FLATTEN
-Generic_obj_space<SPACE>::lookup_local(Cap_index virt, L4_fpage::Rights *rights = 0)
+Kobject_iface * FIASCO_FLATTEN __attribute__((nonnull))
+Generic_obj_space<SPACE>::lookup_local(Cap_index virt, L4_fpage::Rights *rights)
 { return Base::lookup_local(virt, rights); }
 
 IMPLEMENT template< typename SPACE >

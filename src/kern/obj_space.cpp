@@ -92,7 +92,8 @@ public:
   FIASCO_SPACE_VIRTUAL
   void caps_free();
 
-  Kobject_iface *lookup_local(Cap_index virt, L4_fpage::Rights *rights = 0);
+  Kobject_iface *lookup_local(Cap_index virt, L4_fpage::Rights *rights)
+    __attribute__((nonnull));
 
   inline V_pfn map_max_address() const
   { return obj_map_max_address(); }

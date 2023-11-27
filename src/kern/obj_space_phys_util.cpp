@@ -418,18 +418,15 @@ Obj_space_phys<SPACE>::lookup(Cap_index virt)
 
 PUBLIC template< typename SPACE >
 inline
-Kobject_iface *
+Kobject_iface * __attribute__((nonnull))
 Obj_space_phys<SPACE>::lookup_local(Cap_index virt, L4_fpage::Rights *rights)
 {
   Entry *c = get_cap(virt, false);
-
   if (EXPECT_FALSE(!c))
     return 0;
 
   Capability cap = *c;
-
-  if (rights)
-    *rights = L4_fpage::Rights(cap.rights());
+  *rights = L4_fpage::Rights(cap.rights());
 
   return cap.obj();
 }

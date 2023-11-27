@@ -423,7 +423,8 @@ ipc_gate_factory(Ram_quota *q, Space *space,
         return 0;
 
       L4_fpage::Rights thread_rights = L4_fpage::Rights(0);
-      thread = cxx::dyn_cast<Thread*>(space->lookup_local(bind_thread.obj_index(), &thread_rights));
+      thread = cxx::dyn_cast<Thread*>(space->lookup_local(bind_thread.obj_index(),
+                                                          &thread_rights));
 
       if (EXPECT_FALSE(!thread))
         {

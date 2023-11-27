@@ -224,13 +224,13 @@ Obj_space_virt<SPACE>::lookup(Cap_index virt)
 
 PUBLIC template< typename SPACE >
 inline NEEDS [Obj_space_virt::cap_virt]
-Kobject_iface *
+Kobject_iface * __attribute__((nonnull))
 Obj_space_virt<SPACE>::lookup_local(Cap_index virt, L4_fpage::Rights *rights)
 {
   virt &= Cap_index(~(~0UL << Whole_space));
   Capability *c = reinterpret_cast<Capability*>(cap_virt(virt));
   Capability cap = Mem_layout::read_special_safe(c);
-  if (rights) *rights = L4_fpage::Rights(cap.rights());
+  *rights = L4_fpage::Rights(cap.rights());
   return cap.obj();
 }
 
