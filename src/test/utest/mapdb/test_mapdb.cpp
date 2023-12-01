@@ -16,6 +16,7 @@ IMPLEMENTATION:
 #include "mapdb.h"
 #include "ram_quota.h"
 #include "space.h"
+#include "factory.h"
 #include "common_test_mapdb.h"
 
 void
@@ -256,15 +257,21 @@ private:
   }
 
 private:
-  Test_fake_factory rq;
-  Test_s0_ptr sigma0 = Utest::kmem_create<Test_sigma0_space_w_tlb>(&rq);
-  Space_ptr other    = Utest::kmem_create<Test_space_w_tlb>(&rq, "other");
-  Space_ptr client   = Utest::kmem_create<Test_space_w_tlb>(&rq, "client");
+  template <typename T, typename ...Args>
+  Ptr<T>
+  static constexpr create_space(Args && ...args)
+  {
+    return Utest::kmem_create<T>(Factory::root(), cxx::forward<Args>(args)...);
+  }
+
+  Test_s0_ptr sigma0 = create_space<Test_sigma0_space_w_tlb>();
+  Space_ptr other    = create_space<Test_space_w_tlb>("other");
+  Space_ptr client   = create_space<Test_space_w_tlb>("client");
   Test_s0_ptr &grandfather = sigma0;
-  Space_ptr father   = Utest::kmem_create<Test_space_w_tlb>(&rq, "father");
-  Space_ptr son      = Utest::kmem_create<Test_space_w_tlb>(&rq, "son");
-  Space_ptr daughter = Utest::kmem_create<Test_space_w_tlb>(&rq, "daughter");
-  Space_ptr aunt     = Utest::kmem_create<Test_space_w_tlb>(&rq, "aunt");
+  Space_ptr father   = create_space<Test_space_w_tlb>("father");
+  Space_ptr son      = create_space<Test_space_w_tlb>("son");
+  Space_ptr daughter = create_space<Test_space_w_tlb>("daughter");
+  Space_ptr aunt     = create_space<Test_space_w_tlb>("aunt");
   Mapdb_ptr mapdb;
 };
 

@@ -35,6 +35,7 @@ IMPLEMENTATION:
 #include "map_util.h"
 #include "ram_quota.h"
 #include "space.h"
+#include "factory.h"
 #include "common_test_mapdb.h"
 
 void
@@ -55,7 +56,7 @@ class Mapdb_util_test : public Mapdb_test_base
 {
 public:
   Mapdb_util_test()
-  : sigma0(&rq)
+  : sigma0(Factory::root())
   {
     // mapdb_mem only exported from map_util-mem for debug builds
     extern Static_object<Mapdb> mapdb_mem;
@@ -65,7 +66,6 @@ public:
 
 private:
   Mapdb *mapdb;
-  Test_fake_factory rq;
   Test_s0_space sigma0;
 };
 
@@ -174,8 +174,8 @@ Mapdb_util_test::test_map_util()
   pr_tag("have_superpages = %s\n", have_superpages() ? "yes" : "no");
   pr_tag("\n");
 
-  auto server = Utest::kmem_create<Test_space>(&rq, "server");
-  auto client = Utest::kmem_create<Test_space>(&rq, "client");
+  auto server = Utest::kmem_create<Test_space>(Factory::root(), "server");
+  auto client = Utest::kmem_create<Test_space>(Factory::root(), "client");
 
   typedef Mem_space::Page_order Page_order;
   typedef Mem_space::Phys_addr Phys_addr;

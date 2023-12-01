@@ -86,13 +86,6 @@ public:
   bool is_sigma0() const override { return true; }
 };
 
-/**
- * Ram_quota is abstract.
- */
-class Test_fake_factory : public Ram_quota
-{
-};
-
 //---------------------------------------------------------------------------
 IMPLEMENTATION:
 
