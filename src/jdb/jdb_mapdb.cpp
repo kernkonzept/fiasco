@@ -519,7 +519,7 @@ Jdb_mapdb::dump_all_obj_mappings(char const *arg)
 
   c->start_exclusive(Console::UART);
   int len = arg ? __builtin_strlen(arg) : 0;
-  printf("\n@@ IntrospectionTesting @< BLOCK DUMP\n"
+  printf("\n@@ KernelObjects @< BLOCK\n"
          "dump format version number: 0\n"
          "user space tag:%s%.*s%s",
          len ? " " : "", len, len ? arg : "", gzip ? "" : "\n");
@@ -543,7 +543,7 @@ Jdb_mapdb::dump_all_obj_mappings(char const *arg)
 
   if (gzip)
     c->start_exclusive(Console::UART);
-  printf("@@ IntrospectionTesting BLOCK >@\n");
+  printf("@@ KernelObjects BLOCK >@\n");
 
   c->restore_state(&state);
 }
