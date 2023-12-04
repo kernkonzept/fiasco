@@ -330,18 +330,25 @@ Ipc_gate::block(Thread *ct, L4_timeout const &to, Utcb *u)
 
   ct->schedule();
 
-  ct->state_change(~Thread_ipc_mask, Thread_ready);
+  Mword state = ct->state_change(~Thread_full_ipc_mask, Thread_ready);
   ct->reset_timeout();
 
-  if (EXPECT_FALSE(ct->in_sender_list() && timeout.has_hit()))
+  if (EXPECT_FALSE(ct->in_sender_list()))
     {
       auto g = lock_guard(_wait_q.lock());
-      if (!ct->in_sender_list())
-        return L4_error::None;
+      // Recheck under lock whether thread is still in waiting queue.
+      if (ct->in_sender_list())
+        {
+          ct->sender_dequeue(&_wait_q);
 
-      ct->sender_dequeue(&_wait_q);
-      return L4_error::Timeout;
+          if (state & Thread_timeout)
+            return L4_error::Timeout;
+
+          if (state & Thread_cancel)
+            return L4_error::Canceled;
+        }
     }
+
   return L4_error::None;
 }
 
