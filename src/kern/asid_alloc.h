@@ -368,11 +368,14 @@ public:
    * current CPU.
    *
    * \param asid         The ASID to reuse or allocate.
-   * \param active_asid  The active ASID of the current CPU.
+   * \param active_asid  The active ASID of the CPU `cpu`.
+   * \param cpu          The CPU to allocate the ASID for, usually the current
+   *                     CPU. This information is used to track required TLB
+   *                     flushes per-CPU.
    *
    * \return True if TLB invalidation is required.
    */
-  bool alloc_asid(Asid *asid, Asid *active_asid)
+  bool alloc_asid(Asid *asid, Asid *active_asid, Cpu_number cpu)
   {
     auto guard = lock_guard(_lock);
 
@@ -394,7 +397,7 @@ public:
     atomic_store(active_asid, a);
 
     // Is a TLB flush pending?
-    return _tlb_flush_pending.atomic_get_and_clear(current_cpu());
+    return _tlb_flush_pending.atomic_get_and_clear(cpu);
   }
 
   /**
@@ -405,27 +408,30 @@ public:
    * valid. If there was a roll-over in the meantime triggered by another CPU,
    * we may still need to allocate a new ASID.
    *
-   * \param asid The ASID to use or allocate.
+   * \param asid  The ASID to use or allocate.
+   * \param cpu   The CPU to allocate the ASID for, usually the current CPU.
+   *              This information is used to track required TLB flushes per-CPU
+   *              and to select the active ASID for the respective CPU.
    *
    * \return True if TLB invalidation is required. This happens if a new ASID
    *         was allocated (given ASID was invalid or the active ASID was
    *         invalided in the meantime) and there was a roll-over (either on
    *         this CPU or on another CPU).
    */
-  bool get_or_alloc_asid(Asid *asid)
+  bool get_or_alloc_asid(Asid *asid, Cpu_number cpu = current_cpu())
   {
-    Asid *active_asid = get_active_asid();
+    Asid *active_asid = get_active_asid(cpu);
     Asid a = atomic_load(asid);
     if (can_use_asid(a) && set_active_asid(a, active_asid))
       return false;
 
-    return alloc_asid(asid, active_asid);
+    return alloc_asid(asid, active_asid, cpu);
   }
 
   /**
    * \return The active ASID on the current CPU.
    */
-  Asid *get_active_asid() { return &_asids.current().active; }
+  Asid *get_active_asid(Cpu_number cpu) { return &_asids.cpu(cpu).active; }
 
 private:
   /// current ASID generation, protected by _lock
