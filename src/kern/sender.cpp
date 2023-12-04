@@ -103,6 +103,7 @@ Sender::cast(Prio_list_elem *e)
 PUBLIC
 void Sender::sender_enqueue(Prio_list *head, unsigned short prio)
 {
+  assert(!in_sender_list());
   assert(prio < 256);
 
   auto guard = lock_guard(cpu_lock);
