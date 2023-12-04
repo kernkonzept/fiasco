@@ -7,6 +7,8 @@ INTERFACE:
 
 class Semaphore : public Kobject_h<Semaphore, Irq>
 {
+  Semaphore() = delete;
+
 public:
   friend class Jdb_kobject_irq;
   enum Op {
@@ -26,10 +28,11 @@ IMPLEMENTATION:
 
 JDB_DEFINE_TYPENAME(Semaphore,  "\033[37mIRQ sem\033[m");
 
-PUBLIC explicit
-Semaphore::Semaphore(Ram_quota *q = 0)
+PUBLIC explicit __attribute__((nonnull))
+Semaphore::Semaphore(Ram_quota *q)
 : Kobject_h<Semaphore, Irq>(q), _queued(0)
 {
+  assert(q);
   hit_func = &hit_edge_irq;
   __unmask();
 }

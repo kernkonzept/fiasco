@@ -19,6 +19,7 @@ class Irq : public Irq_base, public cxx::Dyn_castable<Irq, Kobject>
 {
   MEMBER_OFFSET();
   typedef Slab_cache Allocator;
+  Irq() = delete;
 
 public:
   enum Op
@@ -596,10 +597,8 @@ void
 Irq::operator delete (void *_l)
 {
   Irq *l = reinterpret_cast<Irq*>(_l);
-  if (l->_q)
-    allocator()->q_free(l->_q, l);
-  else
-    allocator()->free(l);
+  assert(l->_q);
+  allocator()->q_free(l->_q, l);
 }
 
 PUBLIC template<typename T> inline NEEDS[Irq::allocator, Irq::operator new]
@@ -615,8 +614,11 @@ Irq::allocate(Ram_quota *q)
 }
 
 
-PUBLIC explicit inline
-Irq::Irq(Ram_quota *q = 0) : _q(q) {}
+PUBLIC explicit inline __attribute__((nonnull))
+Irq::Irq(Ram_quota *q) : _q(q)
+{
+  assert(q);
+}
 
 PUBLIC
 void
