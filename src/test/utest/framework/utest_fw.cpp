@@ -794,6 +794,28 @@ Utest::next_online_cpu(Cpu_number *cpu)
 }
 
 /**
+ * Return the nth online CPU starting at the first CPU.
+ *
+ * \param n  Number of the online CPU (0 = first, 1 = second, ...)
+ * \return The CPU number of the nth online CPU or Cpu_number::nil if the nth
+ *         online CPU was not found.
+ */
+PUBLIC static inline
+Cpu_number
+Utest::nth_online_cpu(unsigned n)
+{
+  Cpu_number cpu = Cpu_number::first();
+  for (;;)
+    {
+      if (!next_online_cpu(&cpu))
+        return Cpu_number::nil();
+      if (!n--)
+        return cpu;
+      ++cpu;
+    }
+}
+
+/**
  * Wait until all app CPUs are done booting.
  */
 PUBLIC static
