@@ -339,16 +339,28 @@ public:
    * Check validity of given ASID.
    *
    * \param asid         The ASID to check.
+   *
+   * \return True if the given ASID is valid, that is, it is not invalid and
+   *         it has the same generation as the global ASID generation.
+   */
+  bool can_use_asid(Asid asid) const
+  {
+    // is_same_generation implicitly checks for asid != Asid_invalid
+    return EXPECT_TRUE(asid.is_same_generation(atomic_load(&_gen)));
+  }
+
+  /**
+   * Replace the active ASID with the given ASID and test if the previous active
+   * ASID was valid.
+   *
+   * \param asid         The ASID to check.
    * \param active_asid  The active ASID of the current CPU.
    *
-   * \return True if the given ASID is valid.
+   * \return True if the previous active ASID was valid.
    */
-  bool can_use_asid(Asid *asid, Asid *active_asid)
+  static bool set_active_asid(Asid asid, Asid *active_asid)
   {
-    Asid a = atomic_load(asid);
-    // is_same_generation implicitly checks for asid != Asid_invalid
-    return EXPECT_TRUE(a.is_same_generation(atomic_load(&_gen)))
-           && EXPECT_TRUE(atomic_exchange(active_asid, a).is_valid());
+    return EXPECT_TRUE(atomic_exchange(active_asid, asid).is_valid());
   }
 
   /**
@@ -388,17 +400,23 @@ public:
   /**
    * Get a valid ASID.
    *
-   * Check validity of the given ASID (without grabbing the lock).
-   * If it is not valid, allocate a new one.
+   * Check validity of the given ASID (without grabbing the lock). If valid,
+   * (try to) make it the active ASID but check if the previous active ASID is
+   * valid. If there was a roll-over in the meantime triggered by another CPU,
+   * we may still need to allocate a new ASID.
    *
    * \param asid The ASID to use or allocate.
    *
-   * \return True if TLB invalidation is required.
+   * \return True if TLB invalidation is required. This happens if a new ASID
+   *         was allocated (given ASID was invalid or the active ASID was
+   *         invalided in the meantime) and there was a roll-over (either on
+   *         this CPU or on another CPU).
    */
   bool get_or_alloc_asid(Asid *asid)
   {
     Asid *active_asid = get_active_asid();
-    if (can_use_asid(asid, active_asid))
+    Asid a = atomic_load(asid);
+    if (can_use_asid(a) && set_active_asid(a, active_asid))
       return false;
 
     return alloc_asid(asid, active_asid);
