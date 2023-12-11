@@ -49,6 +49,14 @@ public:
     return res;
   }
 
+  /**
+   * Test if this Cpu_call has finished execution.
+   *
+   * \param async  On `false`, synchronous execution was requested. On `true`,
+   *               asynchronous execution was requested.
+   * \retval false Execution did not finish yet, Cpu_call may *not* be re-used.
+   * \retval true  Execution finished, this Cpu_call may be re-used.
+   */
   bool is_done(bool async) const
   {
     if (!async)
@@ -194,6 +202,22 @@ EXTENSION class Cpu_call
 
 DEFINE_PER_CPU Per_cpu<Cpu_call_queue> Cpu_call::_glbl_q;
 
+/**
+ * Execute this Cpu_call on another CPU.
+ *
+ * \param cpu    CPU where to execute this Cpu_call.
+ * \param async  On false, synchronous handling is requested. On true,
+ *               asynchronous handling is requested.
+ * \retval false Cpu_call handled, no need to wait.
+ * \retval true  Cpu_call not yet executed, need to call Cpu_call::is_done()
+ *               to detect when this call was finally executed.
+ *
+ * \note If this function returns false then this Cpu_call object can be re-used
+ *       for another operation.
+ * \note A request to execute the function on the current CPU will be executed
+ *       directly synchronous and the Cpu_call can be re-used when the function
+ *       returns.
+ */
 IMPLEMENT inline NEEDS["cpu.h", "ipi.h"]
 bool
 Cpu_call::remote_call(Cpu_number cpu, bool async)
@@ -230,11 +254,25 @@ Cpu_call::remote_call(Cpu_number cpu, bool async)
       return true;
     }
 
-  // use the same Cpu_call object if async or already done,
-  // else need to wait
+  // async: may re-use the object as we are already done.
+  // !async: it depends on `_wait` if we are already done or not.
   return !is_done(async);
 }
 
+/**
+ * Execute code on a number of CPUs.
+ *
+ * \param cpus   The set of CPUs to execute `func` on.
+ * \param func   The code to execute on the selected CPUs.
+ * \param async  On `false`, `func` is executed synchronous one-by-one on the
+ *               set of selected CPUs. On `true`, `func` might be executed on
+ *               several CPUs of the CPU set in parallel.
+ *
+ * \note This function waits until `func` finished execution on all selected
+ *       CPUs independent of the `async` parameter.
+ * \note If the CPU set is empty, this function returns immediately.
+ * \pre CPU lock must not be held on `async=false`.
+ */
 PUBLIC static inline NEEDS["processor.h"]
 bool
 Cpu_call::cpu_call_many(Cpu_mask const &cpus,
