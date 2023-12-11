@@ -19,17 +19,15 @@ public:
 
 
 private:
-  Cpu_number _cpu_id;
-  Counter _last_value;
+  Counter _last_value = read_counter();
 
   Counter read_counter() const;
 };
 
 IMPLEMENTATION:
 
-IMPLEMENT inline
-Clock::Clock(Cpu_number cpu)
-  : _cpu_id(cpu), _last_value(read_counter())
+IMPLEMENT_DEFAULT inline
+Clock::Clock(Cpu_number)
 {}
 
 

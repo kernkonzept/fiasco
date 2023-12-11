@@ -8,10 +8,21 @@ protected:
   typedef Unsigned64 Counter;
 };
 
+EXTENSION class Clock
+{
+private:
+  Cpu_number _cpu_id;
+};
+
 // ------------------------------------------------------------------------
 IMPLEMENTATION [ia32 || amd64 || ux]:
 
 #include "cpu.h"
+
+IMPLEMENT_OVERRIDE inline
+Clock::Clock(Cpu_number cpu)
+  : _cpu_id(cpu)
+{}
 
 IMPLEMENT inline NEEDS["cpu.h"]
 Clock::Counter
