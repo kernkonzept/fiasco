@@ -47,12 +47,12 @@ PUBLIC template< typename Derived >
 virtual void
 Ipc_sender<Derived>::ipc_send_msg(Receiver *recv, bool) override
 {
-  derived()->transfer_msg(recv);
-
   check(derived()->dequeue_sender());
 
   sender_dequeue(recv->sender_list());
   recv->vcpu_update_state();
+
+  derived()->transfer_msg(recv);
 }
 
 PROTECTED inline NEEDS["config.h", "globals.h", "thread_state.h"]
