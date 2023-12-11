@@ -51,11 +51,8 @@ public:
   };
 
 protected:
-  static Thread *detach_in_progress()
-  { return reinterpret_cast<Thread *>(1); }
-
   static bool is_valid_thread(Thread const *t)
-  { return t > detach_in_progress(); }
+  { return t != nullptr; }
 
   Smword _queued;
   Thread *_irq_thread;
@@ -134,61 +131,37 @@ Irq::dispatch_irq_proto(Unsigned16 op, bool may_unmask)
 }
 
 /**
- * Bind a receiver to this device interrupt.
- * \param t           the receiver that wants to receive IPC messages for this
- *                    IRQ
- * \param utcb        The input UTCB
- * \param utcb_out    The output UTCB
- * \param rl[in,out]  the list of objects that have to be destroyed. The
+ * Replace old target thread with a new one.
+ *
+ * \pre               The existence_lock must be locked to guard against
+ *                    concurrent reconfiguration.
+ *
+ * \param target      The receiver that wants to receive IPC messages for this
+ *                    IRQ. Might be nullptr to unbind.
+ * \param irq_id      The label for the IPC send operation.
+ * \param rl[in,out]  The list of objects that have to be destroyed. The
  *                    operation might append objects to this list if it is in
  *                    charge of deleting the old receiver that used to be
  *                    attached to this IRQ.
  *
- * \retval 0        on success, `t` is the new IRQ handler thread
- * \retval -EINVAL  if `t` is not a valid thread.
- * \retval -EBUSY   if another detach operation is in progress or object already
- *                  destroyed.
- *
- * \retval L4_error::Not_existent  Irq_sender object was deleted
+ * \retval 0          On success, `target` is the new IRQ handler thread. IPC
+ *                    was not pending.
+ * \retval 1          On success, `target` is the new IRQ handler thread. IPC
+ *                    was pending on old target thread.
  */
-PUBLIC inline NEEDS ["atomic.h", "cpu.h", "cpu_lock.h", "lock_guard.h"]
-L4_msg_tag
-Irq_sender::alloc(Thread *t, Utcb const *utcb, Utcb *utcb_out, Kobject ***rl)
+PRIVATE
+int
+Irq_sender::replace_irq_thread(Thread *target, Mword irq_id, Kobject ***rl)
 {
-  if (t == nullptr)
-    return commit_result(-L4_err::EInval);
-
-  Lock_guard<Lock> guard;
-  if (!guard.check_and_lock(&existence_lock))
-    return commit_error(utcb_out, L4_error::Not_existent);
-
-  Thread *old;
-  for (;;)
-    {
-      old = access_once(&_irq_thread);
-
-      if (old == t)
-        break;
-
-      if (EXPECT_FALSE(old == detach_in_progress()))
-        return commit_result(-L4_err::EBusy);
-
-      if (cas(&_irq_thread, old, t))
-        break;
-    }
+  Thread *old = _irq_thread;
+  int result = 0;
 
   // note: this is a possible race on user-land where the label of an IRQ might
   // become inconsistent with the attached thread. The user is responsible to
   // synchronize Irq::attach calls to prevent this.
-  _irq_id = access_once(&utcb->values[1]);
-
-  if (old == t)
-    return commit_result(0);
-
-  Mem::mp_acquire();
-
-  auto g = lock_guard(cpu_lock);
-  bool reinject = false;
+  _irq_id = irq_id;
+  Mem::mp_wmb();  // pairs with read barrier in send()/handle_remote_hit()
+  _irq_thread = target;
 
   if (is_valid_thread(old))
     {
@@ -198,7 +171,7 @@ Irq_sender::alloc(Thread *t, Utcb const *utcb, Utcb *utcb_out, Kobject ***rl)
           break; // was not queued
 
         case Receiver::Abt_ipc_cancel:
-          reinject = true;
+          result = 1; // was queued
           break;
 
         default:
@@ -211,17 +184,55 @@ Irq_sender::alloc(Thread *t, Utcb const *utcb, Utcb *utcb_out, Kobject ***rl)
       old->put_n_reap(rl);
     }
 
+  return result;
+}
+
+/**
+ * Bind a receiver to this device interrupt.
+ *
+ * \param t           the receiver that wants to receive IPC messages for this
+ *                    IRQ
+ * \param utcb        The input UTCB
+ * \param utcb_out    The output UTCB
+ * \param rl[in,out]  the list of objects that have to be destroyed. The
+ *                    operation might append objects to this list if it is in
+ *                    charge of deleting the old receiver that used to be
+ *                    attached to this IRQ.
+ *
+ * \retval 0        on success, `t` is the new IRQ handler thread
+ *
+ * \retval L4_error::Not_existent  Irq_sender object was deleted
+ */
+PUBLIC inline
+L4_msg_tag
+Irq_sender::alloc(Thread *t, Utcb const *utcb, Utcb *utcb_out, Kobject ***rl)
+{
+  // The object must not disappear while binding the Irq_sender to the Thread.
+  // Grab the existence lock to prevent concurrent destroy() from squashing it.
+  // Guards against concurrent bind/unbinds too.
+  Lock_guard<Lock> guard;
+  if (!guard.check_and_lock(&existence_lock))
+    return commit_error(utcb_out, L4_error::Not_existent);
+
+  auto g = lock_guard(cpu_lock);
+
+  Mword irq_id = access_once(&utcb->values[1]);
+
+  if (_irq_thread == t)
+    {
+      _irq_id = irq_id;
+      return commit_result(0);
+    }
+
+  int ret = replace_irq_thread(t, irq_id, rl);
+
   t->inc_ref();
   if (Cpu::online(t->home_cpu()))
     _chip->set_cpu(pin(), t->home_cpu());
 
-  if (reinject)
-    {
-      // might have changed between the CAS and taking the lock
-      t = access_once(&_irq_thread);
-      if (EXPECT_TRUE(is_valid_thread(t)))
-        send(t);
-    }
+  // re-inject if it was queued before
+  if (ret > 0)
+    send(t);
 
   return commit_result(0);
 }
@@ -232,47 +243,31 @@ Irq_sender::owner() const { return _irq_thread; }
 
 /**
  * Release an interrupt.
+ *
+ * \pre               The existence_lock must be locked to guard against
+ *                    concurrent reconfiguration and that the object does not
+ *                    disappear.
+ *
  * \param rl[in,out]  The list of objects that have to be destroyed.
  *                    The operation might append objects to this list if it is
  *                    in charge of deleting the receiver that used to be
  *                    attached to this IRQ.
  *
- * \retval 0        on success.
- * \retval -ENOENT  if there was no receiver attached.
- * \retval -EBUSY   when there is another detach operation in progress.
+ * \retval 0        on success, interrupt was inactive.
+ * \retval 1        on success, interrupt was pending.
  */
 PRIVATE
 int
 Irq_sender::free(Kobject ***rl)
 {
-  Mem::mp_release();
-  Thread *t;
-  for (;;)
-    {
-      t = access_once(&_irq_thread);
+  auto g = lock_guard(cpu_lock);
 
-      if (t == detach_in_progress())
-        return -L4_err::EBusy;
+  if (_irq_thread == nullptr)
+    return -L4_err::ENoent;
 
-      if (t == nullptr)
-        return -L4_err::ENoent;
-
-      if (EXPECT_TRUE(cas(&_irq_thread, t, detach_in_progress())))
-        break;
-    }
-
-  auto guard = lock_guard(cpu_lock);
   mask();
 
-  t->Receiver::abort_send(this);
-
-  Mem::mp_release();
-  write_now(&_irq_thread, nullptr);
-  // release cpu-lock early, actually before delete
-  guard.reset();
-
-  t->put_n_reap(rl);
-  return 0;
+  return replace_irq_thread(0, ~0UL, rl);
 }
 
 PUBLIC explicit
@@ -391,6 +386,11 @@ Irq_sender::handle_remote_hit(Context::Drq *, Context *target, void *arg)
   Irq_sender *irq = (Irq_sender*)arg;
   irq->set_cpu(current_cpu());
   auto t = access_once(&irq->_irq_thread);
+
+  // Pairs with write barrier in replace_irq_thread(). Prevents to read the
+  // _irq_id before _irq_thread.
+  Mem::mp_rmb();
+
   if (EXPECT_TRUE(t == target))
     {
       if (EXPECT_TRUE(irq->send_msg(t, true)))
@@ -421,7 +421,12 @@ Irq_sender::send(Thread *t)
   if (EXPECT_FALSE(t->home_cpu() != current_cpu()))
     t->drq(&_drq, handle_remote_hit, this, Context::Drq::No_wait);
   else
-    send_msg(t, false);
+    {
+      // Pairs with write barrier in replace_irq_thread(). Prevents to read the
+      // _irq_id before _irq_thread.
+      Mem::mp_rmb();
+      send_msg(t, false);
+    }
 }
 
 
@@ -523,16 +528,18 @@ Irq_sender::sys_bind(L4_msg_tag tag, L4_fpage::Rights rights, Utcb const *utcb,
 
 PRIVATE
 L4_msg_tag
-Irq_sender::sys_detach(L4_fpage::Rights rights)
+Irq_sender::sys_detach(L4_fpage::Rights rights, Utcb *utcb)
 {
   if (EXPECT_FALSE(!(rights & L4_fpage::Rights::CS())))
     return commit_result(-L4_err::EPerm);
 
-  Reap_list rl;
-  auto res = free(rl.list());
-  _irq_id = ~0UL;
+  // Grab the existence lock to guard against concurrent bind/unbinds.
+  Lock_guard<Lock> guard;
+  if (!guard.check_and_lock(&existence_lock))
+    return commit_error(utcb, L4_error::Not_existent);
 
-  return commit_result(res);
+  Reap_list rl;
+  return commit_result(free(rl.list()));
 }
 
 
@@ -565,7 +572,7 @@ Irq_sender::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
       switch (op)
         {
         case Op_detach:
-          return sys_detach(rights);
+          return sys_detach(rights, utcb_out);
 
         default:
           return commit_result(-L4_err::ENosys);
