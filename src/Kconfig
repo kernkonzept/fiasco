@@ -34,6 +34,9 @@ config HAS_COV_OPTION
 config HAS_CPU_VIRT
 	bool
 
+config HAS_IRQ_DIRECT_INJECT_OPTION
+	bool
+
 menu "Target configuration"
 
 choice
@@ -360,6 +363,16 @@ config IOMMU
 	  the default is to block all DMA from remappable devices.
 	  The user-level must use kernel DMA spaces in combination with
 	  the IO-MMU kernel object to allow DMA.
+
+config IRQ_DIRECT_INJECT
+	bool "Support direct interrupt forwarding to guests"
+	depends on CPU_VIRT && HAS_IRQ_DIRECT_INJECT_OPTION
+	default y
+	help
+	  Adds support in the kernel to allow the VMM to let Fiasco directly
+	  forward hardware interrupts to a guest. This enables just the
+	  infrastructure. The virtual machine monitor needs to support this
+	  feature as well and manage the hardware interrupts accordingly.
 
 config DISABLE_VIRT_OBJ_SPACE
 	bool "No virtually mapped array for cap tables" if HAS_VIRT_OBJ_SPACE_OPTION
