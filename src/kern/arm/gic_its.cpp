@@ -300,10 +300,7 @@ public:
   class Cmd
   {
   private:
-    Unsigned64 raw0 = 0;
-    Unsigned64 raw1 = 0;
-    Unsigned64 raw2 = 0;
-    Unsigned64 raw3 = 0;
+    Unsigned64 raw[4] = { 0 };
 
   public:
     enum : unsigned { Size = GITS_cmd_queue_entry_size };
@@ -323,17 +320,17 @@ public:
     Cmd() = default;
     explicit Cmd(Op cmd_op) { op() = cmd_op; };
 
-    CXX_BITFIELD_MEMBER          ( 0,  7, op, raw0);
-    CXX_BITFIELD_MEMBER          (32, 63, dev_id, raw0);
+    CXX_BITFIELD_MEMBER          ( 0,  7, op, raw[0]);
+    CXX_BITFIELD_MEMBER          (32, 63, dev_id, raw[0]);
 
-    CXX_BITFIELD_MEMBER          ( 0, 31, event_id, raw1);
-    CXX_BITFIELD_MEMBER          (32, 63, intid, raw1);
-    CXX_BITFIELD_MEMBER          ( 0,  4, itt_size, raw1);
+    CXX_BITFIELD_MEMBER          ( 0, 31, event_id, raw[1]);
+    CXX_BITFIELD_MEMBER          (32, 63, intid, raw[1]);
+    CXX_BITFIELD_MEMBER          ( 0,  4, itt_size, raw[1]);
 
-    CXX_BITFIELD_MEMBER          ( 0, 15, icid, raw2);
-    CXX_BITFIELD_MEMBER_UNSHIFTED(16, 50, rd_base, raw2);
-    CXX_BITFIELD_MEMBER_UNSHIFTED( 8, 51, itt_addr, raw2);
-    CXX_BITFIELD_MEMBER          (63, 63, valid, raw2);
+    CXX_BITFIELD_MEMBER          ( 0, 15, icid, raw[2]);
+    CXX_BITFIELD_MEMBER_UNSHIFTED(16, 50, rd_base, raw[2]);
+    CXX_BITFIELD_MEMBER_UNSHIFTED( 8, 51, itt_addr, raw[2]);
+    CXX_BITFIELD_MEMBER          (63, 63, valid, raw[2]);
 
     /**
      * This command retargets an already mapped event to a different
