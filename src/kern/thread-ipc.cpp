@@ -1051,8 +1051,8 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
               L4_error err;
 
                 {
-                  // We take the existence_lock for synchronizing maps...
-                  // This is kind of coarse grained
+                  // Take the existence_lock for synchronizing maps -- kind of
+                  // coarse-grained.
                   auto sp_lock = lock_guard_dont_lock(rcv_t->existence_lock);
                   if (!sp_lock.check_and_lock(&rcv_t->existence_lock))
                     {
