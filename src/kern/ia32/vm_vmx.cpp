@@ -65,7 +65,7 @@ Vm_vmx::Vm_vmx(Ram_quota *q) : Vm_vmx_t<Vm_vmx>(q)
 
 PUBLIC inline
 void *
-Vm_vmx::operator new (size_t size, void *p) throw()
+Vm_vmx::operator new (size_t size, void *p) noexcept
 {
   (void)size;
   assert (size == sizeof (Vm_vmx));

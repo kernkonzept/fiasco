@@ -39,7 +39,7 @@ Ram_quota::check_max(Mword max)
 
 PUBLIC inline NEEDS[<cstddef>]
 void *
-Ram_quota::operator new (size_t, void *b) throw()
+Ram_quota::operator new (size_t, void *b) noexcept
 { return b; }
 
 PUBLIC

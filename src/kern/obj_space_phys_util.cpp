@@ -73,15 +73,15 @@ class Obj_space_phys_allocator
 public:
   enum { can_free = true };
 
-  Obj_space_phys_allocator(Ram_quota *q) throw() : _q(q) {}
-  Obj_space_phys_allocator(Obj_space_phys_allocator const &other) throw()
+  Obj_space_phys_allocator(Ram_quota *q) noexcept : _q(q) {}
+  Obj_space_phys_allocator(Obj_space_phys_allocator const &other) noexcept
   : _q(other._q)
   {}
 
-  _Type *alloc() throw()
+  _Type *alloc() noexcept
   { return static_cast<_Type*>(_cap_allocator.q_alloc(_q)); }
 
-  void free(_Type *t) throw()
+  void free(_Type *t) noexcept
   { _cap_allocator.q_free(_q, t); }
 };
 

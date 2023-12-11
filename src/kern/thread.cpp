@@ -213,7 +213,7 @@ DEFINE_PER_CPU Per_cpu<unsigned long> Thread::nested_trap_recover;
 
 PUBLIC inline
 void *
-Thread::operator new(size_t, Ram_quota *q) throw ()
+Thread::operator new(size_t, Ram_quota *q) noexcept
 {
   void *t = Kmem_alloc::allocator()->q_alloc(q, Bytes(Thread::Size));
   if (t)

@@ -115,7 +115,7 @@ Vm::map_max_address() const
 
 PUBLIC inline
 void *
-Vm::operator new(size_t size, void *p) throw()
+Vm::operator new(size_t size, void *p) noexcept
 {
   (void)size;
   assert (size == sizeof(Vm));

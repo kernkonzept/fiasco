@@ -153,7 +153,7 @@ Slab::in_use() const
 
 PUBLIC
 inline void *
-Slab::operator new(size_t, void *block) throw()
+Slab::operator new(size_t, void *block) noexcept
 {
   // slabs must be size-aligned so that we can compute their addresses
   // from element addresses

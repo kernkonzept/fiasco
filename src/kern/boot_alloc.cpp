@@ -104,11 +104,11 @@ Boot_alloced::allocate(size_t count = 1)
 }
 
 PUBLIC inline void *
-Boot_alloced::operator new (size_t size) throw()
+Boot_alloced::operator new (size_t size) noexcept
 { return alloc(size); }
 
 PUBLIC inline void *
-Boot_alloced::operator new [] (size_t size) throw()
+Boot_alloced::operator new [] (size_t size) noexcept
 { return alloc(size); }
 
 PUBLIC void

@@ -162,7 +162,7 @@ Vm_svm::Vm_svm(Ram_quota *q)
 
 PUBLIC inline
 void *
-Vm_svm::operator new (size_t size, void *p) throw()
+Vm_svm::operator new (size_t size, void *p) noexcept
 {
   (void)size;
   assert (size == sizeof (Vm_svm));

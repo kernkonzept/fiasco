@@ -170,7 +170,7 @@ Ipc_gate_obj::~Ipc_gate_obj()
 
 PUBLIC inline NEEDS[<cstddef>]
 void *
-Ipc_gate_obj::operator new (size_t, void *b) throw()
+Ipc_gate_obj::operator new (size_t, void *b) noexcept
 { return b; }
 
 static Kmem_slab_t<Ipc_gate_obj> _ipc_gate_allocator("Ipc_gate");

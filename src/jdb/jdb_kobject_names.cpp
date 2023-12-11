@@ -15,7 +15,7 @@ public:
 
   ~Jdb_kobject_name() {}
 
-  void *operator new (size_t) throw();
+  void *operator new (size_t) noexcept;
   void operator delete (void *);
 
 private:
@@ -65,7 +65,7 @@ static Spin_lock<> allocator_lock;
 
 IMPLEMENT
 void *
-Jdb_kobject_name::operator new (size_t) throw()
+Jdb_kobject_name::operator new (size_t) noexcept
 {
   Jdb_kobject_name *n = _names;
   while (1)

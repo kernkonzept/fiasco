@@ -73,10 +73,10 @@ public:
 
     static Slab_cache *a;
 
-    void *operator new (size_t, Ram_quota *q) throw()
+    void *operator new (size_t, Ram_quota *q) noexcept
     { return a->q_alloc(q); }
 
-    void free(Ram_quota *q) throw()
+    void free(Ram_quota *q) noexcept
     { a->q_free(q, this); }
 
     template<typename T>

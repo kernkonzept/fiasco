@@ -23,7 +23,7 @@ private:
   typedef Slab_cache Allocator;
 
 public:
-  void *operator new (size_t) throw() { return alloc()->alloc(); }
+  void *operator new (size_t) noexcept { return alloc()->alloc(); }
   void operator delete (void *p, size_t) { alloc()->free(p); }
 
   enum { Buffer_size = sizeof(Buf) };

@@ -26,7 +26,7 @@ extern "C" void __pure_virtual()
         L4_PTR_ARG(__builtin_return_address(0)));
 }
 
-void operator delete(void *) throw()
+void operator delete(void *) noexcept
 {
   // This must not happen: We never delete an object of the abstract class
   // slab_cache_anon.  If the compiler was clever, it wouldn't generate a call

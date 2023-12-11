@@ -351,7 +351,7 @@ Vm_vmx_ept::v_set_access_flags(Mem_space::Vaddr, L4_fpage::Rights) override
 
 PUBLIC inline
 void *
-Vm_vmx_ept::operator new (size_t size, void *p) throw()
+Vm_vmx_ept::operator new (size_t size, void *p) noexcept
 {
   (void)size;
   assert (size == sizeof (Vm_vmx_ept));
