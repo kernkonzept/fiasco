@@ -91,7 +91,7 @@ public:
 class Tb_entry_union : public Tb_entry
 {
 private:
-  [[maybe_unused]] char _padding[Tb_entry_size - sizeof(Tb_entry)];
+  char _padding[Tb_entry_size - sizeof(Tb_entry)];
 };
 
 static_assert(sizeof(Tb_entry_union) == Tb_entry::Tb_entry_size,
