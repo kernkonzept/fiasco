@@ -64,7 +64,7 @@ void Cpu::early_init()
 
   check_for_swp_enable();
 
-  // switch to supervisor mode and intialize the memory system
+  // switch to supervisor mode and initialize the memory system
   asm volatile ( " mov  r2, r13             \n"
                  " mov  r3, r14             \n"
                  " msr  cpsr_c, %1          \n"
