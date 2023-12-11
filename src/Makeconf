@@ -158,6 +158,9 @@ SHARED_FLAGS  		+= -g -Wall -Wextra $(call CHECKCC,-Wdouble-promotion) $(call CH
 # WARNING EXCEPTION: not all members of a struct used to reflect hardware state
 #                    are necessarily used.
 SHARED_FLAGS-clang	+= -Wno-unused-private-field
+# WARNING EXCEPTION: warnings about hiding overloaded functions do not expose
+#                    problems in this code
+SHARED_FLAGS-clang	+= -Wno-overloaded-virtual
 # WARNING EXCEPTION: checking a parameter marked with the nonnull attribute for
 #                    NULL is defensive programming.
 SHARED_FLAGS-gcc	+= $(if $(call CHECKCC,-Wnonnull-compare),-Wno-nonnull-compare)
