@@ -43,7 +43,7 @@ IMPLEMENTATION:
 
 enum
 {
-  Name_buffer_size = 8192,
+  Name_buffer_size = 64 << 10,
   Name_entries = Name_buffer_size / sizeof(Jdb_kobject_name),
 };
 
