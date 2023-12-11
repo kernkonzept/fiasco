@@ -82,7 +82,7 @@ Filter_console::getchar_timeout(unsigned timeout)
 
 PUBLIC
 int
-Filter_console::getchar(bool b = true) override
+Filter_console::getchar(bool blocking = true) override
 {
   if (!(_o->state() & INENABLED))
     return -1;
@@ -90,137 +90,128 @@ Filter_console::getchar(bool b = true) override
   unsigned loop_count = 100;
   int ch;
 
-get_char:
-  if (state == UNKNOWN_ESC && pos)
+  do
     {
-      ch = ibuf[0];
-      memmove(ibuf, ibuf + 1, --pos);
-    }
-  else
-    ch = _o->getchar(b);
-
-  if (!pos)
-    state = NORMAL;
-
-  if (ch == -1)
-    {
-      if (state == NORMAL)
-        return -1;
-      else if (!b && loop_count--)
-        goto get_char;
-      else
-        return -1;
-    }
-
-  switch (state)
-    {
-    case UNKNOWN_ESC:
-      return ch;
-
-    case NORMAL:
-      if (ch == 27)
+      if (state == UNKNOWN_ESC && pos)
         {
-          ibuf[pos++] = 27;
-          int nc;
-          if (!(_o->get_attributes() & (Console::UART | Console::UX))
-              || ((nc = getchar_timeout(csi_timeout)) == -1))
-            {
-              pos = 0;
-              return KEY_SINGLE_ESC;
-            }
+          ch = ibuf[0];
+          memmove(ibuf, ibuf + 1, --pos);
+        }
+      else
+        ch = _o->getchar(blocking);
+
+      if (!pos)
+        state = NORMAL;
+
+      if (ch == -1)
+        {
+          if (state == NORMAL || blocking)
+            return -1;
           else
+            continue;
+        }
+
+      switch (state)
+        {
+        case UNKNOWN_ESC:
+          return ch;
+
+        case NORMAL:
+          if (ch == 27)
             {
-              /* Detect ANSI escape sequences from UART console. */
-              if (pos < sizeof(ibuf))
-                ibuf[pos++] = nc;
-              if (nc == '[' || nc == 'O')
+              ibuf[pos++] = 27;
+              int nc;
+              if (!(_o->get_attributes() & (Console::UART | Console::UX))
+                  || ((nc = getchar_timeout(csi_timeout)) == -1))
                 {
-                  arg = 0;
-                  memset(args, 0, sizeof(args));
-                  state = GOT_CSI;
-                  break;
+                  pos = 0;
+                  return KEY_SINGLE_ESC;
                 }
               else
                 {
-                  state = UNKNOWN_ESC;
-                  goto get_char;
-                }
-            }
-        }
-      return ch;
-
-    case GOT_CSI:
-      if (isdigit(ch))
-        {
-          if (pos < sizeof(ibuf))
-            ibuf[pos++] = ch;
-
-          if (arg < (sizeof(args) / sizeof(int)))
-            args[arg] = args[arg] * 10 + (ch - '0');
-        }
-      else if (ch == ';')
-        {
-          if (pos < sizeof(ibuf))
-            ibuf[pos++] = ch;
-
-          arg++;
-        }
-      else
-        {
-          state = NORMAL;
-          if (pos < sizeof(ibuf))
-            ibuf[pos++] = ch;
-
-          switch(ch)
-            {
-            case 'A': pos = 0; return KEY_CURSOR_UP;
-            case 'B': pos = 0; return KEY_CURSOR_DOWN;
-            case 'C': pos = 0; return KEY_CURSOR_RIGHT;
-            case 'D': pos = 0; return KEY_CURSOR_LEFT;
-            case 'H': pos = 0; return KEY_CURSOR_HOME;
-            case 'F': pos = 0; return KEY_CURSOR_END;
-            case '~':
-              pos = 0;
-              switch (args[0])
-                {
-                case  7:
-                case  1: return KEY_CURSOR_HOME;
-                case  2: return KEY_INSERT;
-                case  3: return KEY_DELETE;
-                case  8:
-                case  4: return KEY_CURSOR_END;
-                case  5: return KEY_PAGE_UP;
-                case  6: return KEY_PAGE_DOWN;
-                case 11: return KEY_F1;
-
-                default:
-                  arg = 0;
-                  if (b)
-                    goto get_char;
-                  else if (loop_count)
+                  /* Detect ANSI escape sequences from UART console. */
+                  if (pos < sizeof(ibuf))
+                    ibuf[pos++] = nc;
+                  if (nc == '[' || nc == 'O')
                     {
-                      --loop_count;
-                      goto get_char;
+                      arg = 0;
+                      memset(args, 0, sizeof(args));
+                      state = GOT_CSI;
+                      break;
                     }
                   else
-                    return -1;
+                    {
+                      state = UNKNOWN_ESC;
+                      loop_count++;
+                      continue;
+                    }
                 }
-            case 'P': return KEY_F1;
-            default:
-              state = UNKNOWN_ESC;
-              break;
             }
-        }
-      break;
-    }
+          return ch;
 
-  if (b)
-    goto get_char;
-  else if (loop_count)
-    {
-      loop_count--;
-      goto get_char;
+        case GOT_CSI:
+          if (isdigit(ch))
+            {
+              if (pos < sizeof(ibuf))
+                ibuf[pos++] = ch;
+
+              if (arg < (sizeof(args) / sizeof(int)))
+                args[arg] = args[arg] * 10 + (ch - '0');
+            }
+          else if (ch == ';')
+            {
+              if (pos < sizeof(ibuf))
+                ibuf[pos++] = ch;
+
+              arg++;
+            }
+          else
+            {
+              state = NORMAL;
+              if (pos < sizeof(ibuf))
+                ibuf[pos++] = ch;
+
+              switch(ch)
+                {
+                case 'A': pos = 0; return KEY_CURSOR_UP;
+                case 'B': pos = 0; return KEY_CURSOR_DOWN;
+                case 'C': pos = 0; return KEY_CURSOR_RIGHT;
+                case 'D': pos = 0; return KEY_CURSOR_LEFT;
+                case 'H': pos = 0; return KEY_CURSOR_HOME;
+                case 'F': pos = 0; return KEY_CURSOR_END;
+                case '~':
+                  pos = 0;
+                  switch (args[0])
+                    {
+                    case  7:
+                    case  1: return KEY_CURSOR_HOME;
+                    case  2: return KEY_INSERT;
+                    case  3: return KEY_DELETE;
+                    case  8:
+                    case  4: return KEY_CURSOR_END;
+                    case  5: return KEY_PAGE_UP;
+                    case  6: return KEY_PAGE_DOWN;
+                    case 11: return KEY_F1;
+
+                    default:
+                      arg = 0;
+                      if (blocking)
+                        loop_count++;
+                      continue;
+                    }
+                case 'P': return KEY_F1;
+                default:
+                  state = UNKNOWN_ESC;
+                  break;
+                }
+            }
+          break;
+        }
+
+      if (blocking)
+        loop_count++;
     }
+  while (loop_count--);
 
   return -1;
 }
