@@ -10,7 +10,7 @@ INTERFACE:
 
 /**
  * A wrapper for Switch_lock that works even when the threading system
- * has not been intialized yet.
+ * has not been initialized yet.
  *
  * This wrapper is necessary because most lock-protected objects are
  * initialized before the threading system has been fired up.
