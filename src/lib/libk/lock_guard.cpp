@@ -87,26 +87,43 @@ Lock_guard<LOCK, POLICY>::operator = (Lock_guard &&l)
 }
 
 
+/**
+ * Attach to a lock, acquire it and release it on destruction.
+ */
 inline
 template<template<typename L> class POLICY = Lock_guard_regular_policy, typename LOCK>
 Lock_guard<LOCK, POLICY> lock_guard(LOCK &lock)
 { return Lock_guard<LOCK, POLICY>(&lock); }
 
+/**
+ * Attach to a lock, acquire it and release it on destruction.
+ */
 inline
 template<template<typename L> class POLICY = Lock_guard_regular_policy, typename LOCK>
 Lock_guard<LOCK, POLICY> lock_guard(LOCK *lock)
 { return Lock_guard<LOCK, POLICY>(lock); }
 
+/**
+ * Create a lock guard without attaching to the actual lock. This is normally
+ * used together with check_and_lock().
+ */
 inline
 template<template<typename L> class POLICY = Lock_guard_regular_policy, typename LOCK>
 Lock_guard<LOCK, POLICY> lock_guard_dont_lock(LOCK &)
 { return Lock_guard<LOCK, POLICY>(); }
 
+/**
+ * Create a lock guard without attaching to the actual lock. This is normally
+ * used together with check_and_lock().
+ */
 inline
 template<template<typename L> class POLICY = Lock_guard_regular_policy, typename LOCK>
 Lock_guard<LOCK, POLICY> lock_guard_dont_lock(LOCK *)
 { return Lock_guard<LOCK, POLICY>(); }
 
+/**
+ * Acquire the lock and release it on destruction.
+ */
 PUBLIC template<typename LOCK, template< typename L > class POLICY>
 inline
 void
@@ -116,6 +133,11 @@ Lock_guard<LOCK, POLICY>::lock(Lock *l)
   _state = Policy::test_and_set(l);
 }
 
+/**
+ * Acquire the lock, release it on destruction and return `false` if the lock is
+ * invalid. The function will fail if the lock is invalid, otherwise it will
+ * (eventually) acquire the lock and return `true`.
+ */
 PUBLIC template<typename LOCK, template< typename L > class POLICY>
 inline
 bool
@@ -126,24 +148,9 @@ Lock_guard<LOCK, POLICY>::check_and_lock(Lock *l)
   return _state != Lock::Invalid;
 }
 
-PUBLIC template<typename LOCK, template< typename L > class POLICY>
-inline
-bool
-Lock_guard<LOCK, POLICY>::try_lock(Lock *l)
-{
-  _state = Policy::test_and_set(l);
-  switch (_state)
-    {
-    case Lock::Locked:
-      return true;
-    case Lock::Not_locked:
-      _lock = l;			// Was not locked -- unlock.
-      return true;
-    default:
-      return false; // Error case -- lock not existent
-    }
-}
-
+/**
+ * Detach from the lock.
+ */
 PUBLIC template<typename LOCK, template< typename L > class POLICY>
 inline
 void
@@ -152,6 +159,10 @@ Lock_guard<LOCK, POLICY>::release()
   _lock = 0;
 }
 
+/**
+ * Restore the lock state to the state before the lock was taken and detach from
+ * the lock.
+ */
 PUBLIC template<typename LOCK, template< typename L > class POLICY>
 inline
 void
@@ -164,6 +175,9 @@ Lock_guard<LOCK, POLICY>::reset()
     }
 }
 
+/**
+ * Restore the lock state to the state before the lock was taken.
+ */
 PUBLIC template<typename LOCK, template< typename L > class POLICY>
 inline
 Lock_guard<LOCK, POLICY>::~Lock_guard()
