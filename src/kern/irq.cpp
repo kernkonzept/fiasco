@@ -137,6 +137,8 @@ Irq::dispatch_irq_proto(Unsigned16 op, bool may_unmask)
  * Bind a receiver to this device interrupt.
  * \param t           the receiver that wants to receive IPC messages for this
  *                    IRQ
+ * \param utcb        The input UTCB
+ * \param utcb_out    The output UTCB
  * \param rl[in,out]  the list of objects that have to be destroyed. The
  *                    operation might append objects to this list if it is in
  *                    charge of deleting the old receiver that used to be
@@ -146,17 +148,19 @@ Irq::dispatch_irq_proto(Unsigned16 op, bool may_unmask)
  * \retval -EINVAL  if `t` is not a valid thread.
  * \retval -EBUSY   if another detach operation is in progress or object already
  *                  destroyed.
+ *
+ * \retval L4_error::Not_existent  Irq_sender object was deleted
  */
 PUBLIC inline NEEDS ["atomic.h", "cpu.h", "cpu_lock.h", "lock_guard.h"]
-int
-Irq_sender::alloc(Thread *t, Kobject ***rl)
+L4_msg_tag
+Irq_sender::alloc(Thread *t, Utcb const *utcb, Utcb *utcb_out, Kobject ***rl)
 {
   if (t == nullptr)
-    return -L4_err::EInval;
+    return commit_result(-L4_err::EInval);
 
   Lock_guard<Lock> guard;
   if (!guard.check_and_lock(&existence_lock))
-    return -L4_err::EBusy;
+    return commit_error(utcb_out, L4_error::Not_existent);
 
   Thread *old;
   for (;;)
@@ -164,14 +168,22 @@ Irq_sender::alloc(Thread *t, Kobject ***rl)
       old = access_once(&_irq_thread);
 
       if (old == t)
-        return 0;
+        break;
 
       if (EXPECT_FALSE(old == detach_in_progress()))
-        return -L4_err::EBusy;
+        return commit_result(-L4_err::EBusy);
 
       if (cas(&_irq_thread, old, t))
         break;
     }
+
+  // note: this is a possible race on user-land where the label of an IRQ might
+  // become inconsistent with the attached thread. The user is responsible to
+  // synchronize Irq::attach calls to prevent this.
+  _irq_id = access_once(&utcb->values[1]);
+
+  if (old == t)
+    return commit_result(0);
 
   Mem::mp_acquire();
 
@@ -211,7 +223,7 @@ Irq_sender::alloc(Thread *t, Kobject ***rl)
         send(t);
     }
 
-  return 0;
+  return commit_result(0);
 }
 
 PUBLIC
@@ -490,7 +502,7 @@ Irq_sender::hit_edge_irq(Irq_base *i, Upstream_irq const *ui)
 PRIVATE
 L4_msg_tag
 Irq_sender::sys_bind(L4_msg_tag tag, L4_fpage::Rights rights, Utcb const *utcb,
-                     Syscall_frame *)
+                     Utcb *utcb_out)
 {
   if (EXPECT_FALSE(!(rights & L4_fpage::Rights::CS())))
     return commit_result(-L4_err::EPerm);
@@ -506,15 +518,7 @@ Irq_sender::sys_bind(L4_msg_tag tag, L4_fpage::Rights rights, Utcb const *utcb,
     return commit_result(-L4_err::EPerm);
 
   Reap_list rl;
-  int res = alloc(thread, rl.list());
-
-  // note: this is a possible race on user-land where the label of an IRQ might
-  // become inconsistent with the attached thread. The user is responsible to
-  // synchronize Irq::attach calls to prevent this.
-  if (res == 0)
-    _irq_id = access_once(&utcb->values[1]);
-
-  return commit_result(res);
+  return alloc(thread, utcb, utcb_out, rl.list());
 }
 
 PRIVATE
@@ -535,7 +539,7 @@ Irq_sender::sys_detach(L4_fpage::Rights rights)
 PUBLIC
 L4_msg_tag
 Irq_sender::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
-                    Utcb const *utcb, Utcb *)
+                    Utcb const *utcb, Utcb *utcb_out)
 {
   L4_msg_tag tag = f->tag();
   int op = get_irq_opcode(tag, utcb);
@@ -549,7 +553,7 @@ Irq_sender::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
       switch (op)
         {
         case Op_bind: // the Rcv_endpoint opcode (equal to Ipc_gate::bind_thread)
-          return sys_bind(tag, rights, utcb, f);
+          return sys_bind(tag, rights, utcb, utcb_out);
         default:
           return commit_result(-L4_err::ENosys);
         }
