@@ -41,6 +41,8 @@ class Irq_sender
 : public Kobject_h<Irq_sender, Irq>,
   public Ipc_sender<Irq_sender>
 {
+  friend struct Irq_sender_test;
+
 public:
   enum Op {
     Op_attach = 0,
