@@ -155,7 +155,11 @@ SHARED_FLAGS-gcc        += $(if $(filter sparc,$(CONFIG_XARCH)),,-freg-struct-re
 SHARED_FLAGS-gcc	+= $(call CHECKCXX,-Wmisleading-indentation,) -Wlogical-op -Wfloat-equal
 SHARED_FLAGS-gcc	+= $(if $(filter 7 8 9 10,$(CCVER_MAJOR)),-Wno-nonnull)
 SHARED_FLAGS  		+= -g -Wall -Wextra $(call CHECKCC,-Wdouble-promotion) $(call CHECKCC,-Wfloat-conversion) -Wmissing-declarations
-# WARNING EXCEPTION: checking a parameter marked with the nonnull attribute for NULL is defensive programming.
+# WARNING EXCEPTION: not all members of a struct used to reflect hardware state
+#                    are necessarily used.
+SHARED_FLAGS-clang	+= -Wno-unused-private-field
+# WARNING EXCEPTION: checking a parameter marked with the nonnull attribute for
+#                    NULL is defensive programming.
 SHARED_FLAGS-gcc	+= $(if $(call CHECKCC,-Wnonnull-compare),-Wno-nonnull-compare)
 # WARNING EXCEPTION: checked during code review
 SHARED_FLAGS-gcc	+= $(if $(call CHECKCC,-Waddress-of-packed-member),-Wno-address-of-packed-member)
