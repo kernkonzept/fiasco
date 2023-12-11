@@ -113,7 +113,8 @@ CSRC_LIBCOV-gcc   := gcov.c plain.c gcov-plain.c
 CSRC_LIBCOV        = output.c base64.c
 CSRC_LIBCOV       += $(CSRC_LIBCOV-$(CC_TYPE))
 
-# suppress compiler warnings for clang compiler-rt code
+# WARNING EXCEPTION: suppress compiler warnings for clang compiler-rt code,
+# only coverage tooling
 $(foreach f, $(patsubst %.c, %, $(CSRC_LIBCOV-clang_contrib)), \
         $(eval CFLAGS_$(f) += -Wno-strict-prototypes -Wno-unused-parameter \
                               -Wno-missing-prototypes -Wno-undef))
