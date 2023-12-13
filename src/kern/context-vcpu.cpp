@@ -5,8 +5,64 @@ INTERFACE:
 EXTENSION class Context
 {
 public:
+  enum class Revoke_vcpu_state
+  {
+    /// The vIRQ was neither pending nor active on the vCPU.
+    Ok_was_clear,
+    /// The vIRQ was queued on the vCPU but not taken over yet. In particular,
+    /// vcpu_soi() was not called yet.
+    Ok_was_queued,
+    /// The vIRQ was taken over (vcpu_soi() had been called) and was visible to
+    /// the guest. It was not active on the vCPU, though, that is the guest had
+    /// not yet acknowledged the interrupt.
+    Ok_was_pending,
+    /// The vIRQ was active on the vCPU and has been abandoned.
+    Ok_was_active,
+    /// The vIRQ was active on the vCPU, has been abandoned and was already
+    /// queued again.
+    Ok_was_active_and_queued,
+    /// The vIRQ is currently active on the vCPU and has *not* been revoked!
+    Fail_is_active,
+  };
+
   void vcpu_pv_switch_to_kernel(Vcpu_state *, bool);
   void vcpu_pv_switch_to_user(Vcpu_state *, bool);
+
+  /**
+   * Inject vIRQ into the vCPU.
+   *
+   * If possible, it will be inserted directly. If the thread is not in vCPU
+   * user mode, the doorbell irq will be triggered to tell the VMM that an irq
+   * was queued.
+   *
+   * \pre Called only on home CPU of the context.
+   *
+   * \attention If the context is not currently in vcpu user mode, the function
+   *            may take the Irq_shortcut. This implies that
+   *            arch_inject_vcpu_irq() might return only after rescheduling!
+   *
+   * \param irq_id  The arch specific guest interrupt specification
+   * \param irq     The Irq object that is possibly pending.
+   */
+  void arch_inject_vcpu_irq(Mword irq_id, Vcpu_irq_list_item *irq);
+
+  /**
+   * Revoke a possibly injected vIRQ from the vCPU.
+   *
+   * If `abandon` is true, the interrupt is removed unconditionally, regardless
+   * of its current state. In case it was active (i.e. guest has acknowledged
+   * but not yet EOIed), it will stay active and the VMM has to cope with the
+   * eventual EOI of the guest. Otherwise, if the vIRQ is currently active, the
+   * function will fail.
+   *
+   * \pre Called only on home CPU of the context.
+   *
+   * \param irq      The Irq object that is possibly pending.
+   * \param abandon  Abandon Irq if it's active on the vCPU.
+   *
+   * \return  The state after revoking the vIRQ.
+   */
+  Revoke_vcpu_state arch_revoke_vcpu_irq(Vcpu_irq_list_item *irq, bool abandon);
 
 protected:
   Ku_mem_ptr<Vcpu_state> _vcpu_state;
@@ -186,6 +242,19 @@ PUBLIC inline
 Space *
 Context::vcpu_user_space() const
 { return _space.vcpu_user(); }
+
+
+// --------------------------------------------------------------------------
+IMPLEMENTATION [!irq_direct_inject]:
+
+IMPLEMENT inline
+void Context::arch_inject_vcpu_irq(Mword, Vcpu_irq_list_item *)
+{}
+
+IMPLEMENT inline
+Context::Revoke_vcpu_state
+Context::arch_revoke_vcpu_irq(Vcpu_irq_list_item *, bool)
+{ return Context::Revoke_vcpu_state::Ok_was_clear; }
 
 
 // --------------------------------------------------------------------------

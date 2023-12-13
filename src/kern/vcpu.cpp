@@ -45,3 +45,36 @@ public:
   Mword _sp;
   Vcpu_host_regs host;
 };
+
+// ---------------------------------------------------------------------
+INTERFACE [irq_direct_inject]:
+
+#include <cxx/dlist>
+
+class Vcpu_irq_list_item : public cxx::D_list_item
+{
+public:
+  /**
+   * Start of interrupt.
+   *
+   * Consume pending interrupt by vCPU.
+   */
+  virtual void vcpu_soi() = 0;
+
+  /**
+   * End of interrupt by the guest.
+   */
+  virtual void vcpu_eoi() = 0;
+
+  /**
+   * Get architecture specific guest interrupt configuration.
+   */
+  virtual Mword vcpu_irq_id() const = 0;
+};
+
+typedef cxx::D_list<Vcpu_irq_list_item> Vcpu_irq_list;
+
+// ---------------------------------------------------------------------
+INTERFACE [!irq_direct_inject]:
+
+struct Vcpu_irq_list_item {};

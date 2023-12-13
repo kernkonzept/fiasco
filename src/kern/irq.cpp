@@ -57,7 +57,8 @@ protected:
 class Irq_sender
 : public Kobject_h<Irq_sender, Irq>,
   public Ipc_sender<Irq_sender>,
-  public Ref_cnt_obj
+  public Ref_cnt_obj,
+  public Vcpu_irq_list_item
 {
   friend struct Irq_sender_test;
 
@@ -66,13 +67,113 @@ public:
   {
     Attach = 0,
     Detach = 1,
+    Bind_vcpu = 2,
     Bind   = 0x10,
   };
 
-protected:
-  static bool is_valid_thread(Thread const *t)
-  { return t != nullptr; }
+  enum Detach_result : int
+  {
+    Detach_inactive = 0,
+    Detach_pending = 1,
+    Detach_abandoned = 2,
+  };
 
+private:
+  Mword _irq_id;
+  // Must only be used for sending async DRQs (no answer), because for regular
+  // DRQs the DRQ reply is sent to Drq::context(), which assumes that the Drq
+  // object is member of a Context.
+  Context::Drq _drq;
+};
+
+//-----------------------------------------------------------------------------
+INTERFACE [!irq_direct_inject]:
+
+EXTENSION class Irq_sender
+{
+public:
+  class Irq_thread
+  {
+    Thread *_target;
+
+  public:
+    constexpr Irq_thread() : _target(nullptr) {}
+    explicit constexpr Irq_thread(Thread *t, bool = false) : _target(t) {}
+
+    constexpr bool operator==(Irq_thread const &other) const
+    { return _target == other._target; }
+
+    constexpr operator Thread*() const { return _target; }
+    constexpr explicit operator bool() const { return is_bound(); }
+    constexpr Thread* operator->() const { return _target; }
+
+    constexpr bool is_bound() const { return _target != nullptr; }
+    constexpr bool is_ipc_sender() const { return true; }
+    constexpr bool is_vcpu_irq() const { return false; }
+
+    static constexpr Irq_thread invalid() { return Irq_thread{}; };
+  };
+
+private:
+  Irq_thread _irq_thread;
+};
+
+//-----------------------------------------------------------------------------
+INTERFACE [irq_direct_inject]:
+
+EXTENSION class Irq_sender
+{
+public:
+  /**
+   * Composite pointer that stores an additional boolean inline.
+   */
+  class Irq_thread
+  {
+    Mword _target;
+
+    Thread* as_thread() const
+    { return reinterpret_cast<Thread *>(_target & ~static_cast<Mword>(3)); }
+
+  public:
+    constexpr Irq_thread() : _target(0) {}
+    explicit Irq_thread(Thread *t, bool vcpu = false)
+    : _target(reinterpret_cast<Mword>(t) | (vcpu ? 2U : 0U))
+    {}
+
+    constexpr bool operator==(Irq_thread const &other) const
+    { return _target == other._target; }
+
+    operator Thread*() const { return as_thread(); }
+    constexpr explicit operator bool() const { return is_bound(); }
+    Thread* operator->() const { return as_thread(); }
+
+    constexpr bool is_bound() const { return (_target & ~Mword{3}) != 0; }
+    constexpr bool is_ipc_sender() const { return (_target & 2U) == 0; }
+    constexpr bool is_vcpu_irq() const { return (_target & 2U) != 0; }
+
+    static constexpr Irq_thread invalid() { return Irq_thread{}; };
+  };
+
+private:
+  Irq_thread _irq_thread;
+
+  struct Revoke_vcpu_irq_request
+  {
+    Irq_sender *self;
+    Irq_thread old;
+    Irq_thread target;
+    Mword irq_id;
+    Context::Revoke_vcpu_state result;
+    bool abandon;
+  };
+};
+
+//-----------------------------------------------------------------------------
+INTERFACE:
+
+EXTENSION class Irq_sender
+{
+public:
   /**
    * Tracks the IPC send state of an Irq_sender.
    *
@@ -90,8 +191,9 @@ protected:
    *    progress, the Destroyed state flag is set (via attempt_destroy()).
    *
    * States:
-   *   - Not Queued:   IPC send is not queued.
-   *   - Queued:       IPC send is queued.
+   *   - Not Queued:   IPC send is not queued. A vIRQ might be pending, though.
+   *   - Queued:       IPC send is queued. / vIRQ waits for available HW
+   *                   resources.
    *   - Masked:       Edge-triggered IRQ was masked because a new IRQ arrived
    *                   while IPC send was still queued.
    *   - Invalidated:  Irq_sender was invalidated, no new IRQs can be queued,
@@ -175,14 +277,6 @@ protected:
 
 private:
   Irq_send_state _send_state;
-  Thread *_irq_thread;
-
-private:
-  Mword _irq_id;
-  // Must only be used for sending async DRQs (no answer), because for regular
-  // DRQs the DRQ reply is sent to Drq::context(), which assumes that the Drq
-  // object is member of a Context.
-  Context::Drq _drq;
 };
 
 
@@ -271,7 +365,7 @@ Irq_sender::put() override
  */
 PRIVATE inline
 void
-Irq_sender::set_irq_thread(Thread *target, Mword irq_id)
+Irq_sender::set_irq_thread(Irq_thread target, Mword irq_id)
 {
   assert(_irq_lock.is_locked());
 
@@ -308,13 +402,15 @@ Irq_sender::set_irq_thread(Thread *target, Mword irq_id)
  *         thread (without releasing the CPU lock in between).
  */
 PRIVATE inline
-Thread *
-Irq_sender::start_replace_irq_thread(Thread *target, Mword irq_id)
+Irq_sender::Irq_thread
+Irq_sender::start_replace_irq_thread(Irq_thread target, Mword irq_id)
 {
   assert(_irq_lock.is_locked());
 
-  Thread *old = _irq_thread;
-  set_irq_thread(target, irq_id);
+  Irq_thread old = _irq_thread;
+  if (!old || old.is_ipc_sender())
+    set_irq_thread(target, irq_id);
+
   return old;
 }
 
@@ -332,19 +428,32 @@ Irq_sender::start_replace_irq_thread(Thread *target, Mword irq_id)
  *
  * \param old         Old target thread if any.
  *
+ * \param target      The receiver that wants to receive IPC messages for this
+ *                    IRQ. Might be nullptr to unbind.
+ * \param irq_id      The label for the IPC send operation.
+ * \param abandon     If true, abandon an active IRQ on the old vCPU. Otherwise
+ *                    fail the call and keep the previous vCPU if IRQ is
+ *                    currently active.
+ *
  * \retval 0          On success, `target` is the new IRQ handler thread.
- *                    IPC was not pending.
+ *                    IPC/vCPU-IRQ was not pending.
  * \retval 1          On success, `target` is the new IRQ handler thread.
- *                    IPC was pending on old target thread.
+ *                    IPC/vCPU-IRQ was pending on old target thread.
+ * \retval 2          vCPU-IRQ is active on old target vCPU and has been
+ *                    abandoned.
+ * \retval -EBusy     Failed. The vCPU-IRQ is active on old target vCPU.
  *
  * \post              As this function executes a DRQ, it must be assumed to be a
  *                    potential preemption point.
  */
 PRIVATE
 int
-Irq_sender::finish_replace_irq_thread(Thread *old)
+Irq_sender::finish_replace_irq_thread(Irq_thread old, Irq_thread target,
+                                      Mword irq_id, bool abandon)
 {
   int result;
+  bool finish_send_on_unbind = true;
+  bool was_pending = false;
 
   if (!old)
     {
@@ -352,59 +461,104 @@ Irq_sender::finish_replace_irq_thread(Thread *old)
       if (_send_state.is_pending())
         {
           _send_state.clear(Irq_send_state::Pending);
-          result = 1;
+          result = Detach_pending;
+          finish_send_on_unbind = false;
         }
       else
-        result = 0;
+        result = Detach_inactive;
     }
-  else switch (old->Receiver::abort_send(this))
+  else if (old.is_vcpu_irq())
     {
-    case Receiver::Abt_ipc_done:
-      result = 0;
-      break; // was not queued
+      // Old thread is only changed later in the DRQ handler, once we know
+      // whether the revocation is successful. Therefore someone else can
+      // concurrently replace it, dropping our reference to it. But that is
+      // fine, because we can rely on the DRQ to be executed before the thread
+      // is deleted.
+      // For new target thread however we need a reference to ensure it stays
+      // alive until DRQ handler is executed.
+      Ref_ptr<Thread> target_ref(target);
 
-    case Receiver::Abt_ipc_cancel:
-      result = 1; // was queued
-      break;
+      switch (revoke_vcpu_irq(old, target, irq_id, abandon))
+        {
+        case Context::Revoke_vcpu_state::Ok_was_clear:
+          result = Detach_inactive;
+          break;
+        case Context::Revoke_vcpu_state::Ok_was_queued:
+          result = Detach_pending;
+          break;
+        case Context::Revoke_vcpu_state::Ok_was_pending:
+          result = Detach_pending;
+          finish_send_on_unbind = false;
+          break;
+        case Context::Revoke_vcpu_state::Ok_was_active:
+          // We have abandoned an active vIRQ. The VMM has to cope with the
+          // eventual EOI of the guest because the vIRQ is left active...
+          result = Detach_abandoned;
+          break;
+        case Context::Revoke_vcpu_state::Ok_was_active_and_queued:
+          // Like above but the next vIRQ was already queued!
+          result = Detach_abandoned;
+          was_pending = true;
+          break;
+        case Context::Revoke_vcpu_state::Fail_is_active:
+          // We do not abandon active vIRQs except when detaching. If the Irq
+          // is currently active on the old vCPU, it is the responsibility of
+          // the VMM to cope with this pity...
+          return -L4_err::EBusy;
+        }
+    }
+  else // old.is_ipc_sender()
+    {
+      switch (old->Receiver::abort_send(this))
+        {
+        case Receiver::Abt_ipc_done:
+          result = Detach_inactive;
+          break; // was not queued
 
-    default:
-      // this must not happen as this is only the case for IPC including
-      // message items and an IRQ never sends message items.
-      panic("IRQ IPC flagged as in progress");
+        case Receiver::Abt_ipc_cancel:
+          result = Detach_pending; // was queued
+          break;
+
+        default:
+          // This must not happen as this is only the case for IPC including
+          // message items and an IRQ never sends message items.
+          panic("IRQ IPC flagged as in progress");
+        }
     }
 
   if (old && old->dec_ref() == 0)
     delete old;
 
-  // re-inject if IRQ was queued before
-  if (result > 0)
+  was_pending = was_pending || result == Detach_pending;
+  if (result != Detach_inactive)
     {
       // We might have been preempted during DRQ execution, i.e. the someone
       // might have re-bound to a different thread and might even have deleted
-      // the old thread. We therefore have to re-read the currently bound thread
-      // under the _irq_lock.
-      Thread *target;
-        {
-          auto g = lock_guard<No_cpu_lock_policy>(_irq_lock);
+      // the old thread. We therefore have to re-read the currently bound
+      // thread under the _irq_lock.
+      auto g = lock_guard<No_cpu_lock_policy>(_irq_lock);
 
-          // Do not forward if the Irq_sender was destroyed in the meantime.
-          if (_send_state.is_in_destruction())
-            target = nullptr;
-          else
-            target = _irq_thread;
-
-          // If the edge-triggered IRQ was queued before and the Irq_sender is
-          // now unbound, remember that it was pending originally.
-          // Level-triggered IRQs must not be remembered because the Irq_sender
-          // should only be triggered if the interrupt is still asserted when
-          // being bound again.
-          if (!is_valid_thread(target) && is_edge_triggered())
-            _send_state.set(Irq_send_state::Pending);
-        }
-
-      if (is_valid_thread(target))
-        send(target);
+      // Do not forward if the Irq_sender was destroyed in the meantime.
+      if (_send_state.is_in_destruction())
+        target = Irq_thread::invalid();
       else
+        target = _irq_thread;
+
+      // If the edge-triggered IRQ was queued before and the Irq_sender is
+      // now unbound, remember that it was pending originally.
+      // Level-triggered IRQs must not be remembered because the Irq_sender
+      // should only be triggered if the interrupt is still asserted when
+      // being bound again.
+      if (!target.is_bound() && is_edge_triggered() && was_pending)
+        _send_state.set(Irq_send_state::Pending);
+    }
+
+  // re-inject if IRQ was queued before
+  if (was_pending)
+    {
+      if (target.is_bound())
+        send(target);
+      else if (finish_send_on_unbind)
         finish_send();
     }
 
@@ -421,8 +575,8 @@ Irq_sender::finish_replace_irq_thread(Thread *old)
  * \param utcb_out    The output UTCB.
  *
  * \retval 0          On success, `target` is the new IRQ handler thread.
- *
- * \retval L4_error::Not_existent  Irq_sender object was deleted
+ * \retval -EBusy     On error. The vCPU-IRQ is active on the old target vCPU.
+ * \retval L4_error::Not_existent  Irq_sender object was deleted.
  *
  * \post This function must be assumed to be a potential preemption point (see
  *       finish_replace_irq_thread()). In particular that means the Irq_sender
@@ -431,13 +585,13 @@ Irq_sender::finish_replace_irq_thread(Thread *old)
  */
 PUBLIC
 L4_msg_tag
-Irq_sender::bind_irq_thread(Thread *target, Utcb const *utcb, Utcb *utcb_out)
+Irq_sender::bind_irq_thread(Irq_thread target, Utcb const *utcb, Utcb *utcb_out)
 {
   assert(cpu_lock.test());
 
   Mword irq_id = access_once(&utcb->values[1]);
 
-  Thread *old;
+  Irq_thread old;
     {
       // Grab the _irq_lock to guard against concurrent bind/unbinds.
       auto g = lock_guard<No_cpu_lock_policy>(_irq_lock);
@@ -457,13 +611,13 @@ Irq_sender::bind_irq_thread(Thread *target, Utcb const *utcb, Utcb *utcb_out)
   // The following operations are a preemption point, so we have to hold a
   // reference to Irq_sender to ensure it is not deleted in the meantime.
   Ref_ptr self(this);
-  finish_replace_irq_thread(old);
-  return commit_result(0);
+  int result = finish_replace_irq_thread(old, target, irq_id, false);
+  return commit_result(result < 0 ? result : 0);
 }
 
 PUBLIC
 Receiver *
-Irq_sender::owner() const { return _irq_thread; }
+Irq_sender::owner() const { return static_cast<Thread*>(_irq_thread); }
 
 /**
  * Release an interrupt.
@@ -477,12 +631,13 @@ Irq_sender::owner() const { return _irq_thread; }
  *
  * \retval 0  On success, interrupt was inactive.
  * \retval 1  On success, interrupt was pending.
+ * \retval 2  On success, interrupt was active on vCPU and was abandoned.
  */
 PRIVATE
 int
 Irq_sender::detach_irq_thread()
 {
-  Thread *old;
+  Irq_thread old;
     {
       auto g = lock_guard<No_cpu_lock_policy>(_irq_lock);
 
@@ -497,15 +652,15 @@ Irq_sender::detach_irq_thread()
       if (is_edge_triggered())
         _send_state.set(Irq_send_state::Masked);
 
-      old = start_replace_irq_thread(nullptr, ~0UL);
+      old = start_replace_irq_thread(Irq_thread::invalid(), ~0UL);
     }
 
-  return finish_replace_irq_thread(old);
+  return finish_replace_irq_thread(old, Irq_thread::invalid(), ~0UL, true);
 }
 
 PUBLIC explicit
 Irq_sender::Irq_sender(Ram_quota *q)
-: Kobject_h<Irq_sender, Irq>(q), _irq_thread(nullptr), _irq_id(~0UL)
+: Kobject_h<Irq_sender, Irq>(q), _irq_id(~0UL)
 {
   // Capability reference (released when last capability to Irq_sender object is
   // dropped).
@@ -654,13 +809,19 @@ Irq_sender::modify_label(Mword const *todo, int cnt) override
  *       function on it, as it might have been deleted (see finish_send()).
  */
 PRIVATE bool
-Irq_sender::send_local(Thread *t, bool is_xcpu)
+Irq_sender::send_local(Irq_thread t, bool is_xcpu)
 {
   // Pairs with write barrier in set_irq_thread(). Prevents to read the _irq_id
   // before _irq_thread.
   Mem::mp_rmb();
 
-  return send_msg(t, is_xcpu);
+  if (t.is_vcpu_irq())
+    {
+      inject_vcpu_irq(t);
+      return false;
+    }
+  else
+    return send_msg(t, is_xcpu);
 }
 
 PRIVATE static
@@ -676,7 +837,7 @@ Irq_sender::handle_remote_hit(Context::Drq *, Context *target, void *arg)
       if (EXPECT_TRUE(irq->send_local(t, true)))
         return Context::Drq::no_answer_resched();
     }
-  else if (EXPECT_TRUE(is_valid_thread(t)))
+  else if (EXPECT_TRUE(t.is_bound()))
     t->drq(&irq->_drq, handle_remote_hit, irq, Context::Drq::No_wait);
   else
     irq->finish_send();
@@ -712,7 +873,7 @@ Irq_sender::queue()
  */
 PRIVATE inline
 void
-Irq_sender::send(Thread *t)
+Irq_sender::send(Irq_thread t)
 {
   if (EXPECT_FALSE(t->home_cpu() != current_cpu()))
     t->drq(&_drq, handle_remote_hit, this, Context::Drq::No_wait);
@@ -737,7 +898,7 @@ Irq_sender::_hit_level_irq(Upstream_irq const *ui)
   // For level triggered IRQs we move to the Queued state only if a thread is
   // bound. When the thread is later bound and the IRQ is still asserted, we
   // will natually end up here again.
-  bool can_send = is_valid_thread(t) && queue();
+  bool can_send = t.is_bound() && queue();
   if (can_send)
     {
       // Have to release lock before send (preemptible operation).
@@ -762,7 +923,7 @@ Irq_sender::_hit_edge_irq(Upstream_irq const *ui)
   auto g = lock_guard<No_cpu_lock_policy>(_irq_lock);
 
   auto t = _irq_thread; // access under lock
-  if (!is_valid_thread(t))
+  if (!t.is_bound())
     {
       // If we get an interrupt without a thread bound, we mask the IRQ. After
       // user-space binds a thread, it must unmask the IRQ. The pending state
@@ -803,7 +964,7 @@ Irq_sender::hit_edge_irq(Irq_base *i, Upstream_irq const *ui)
 PRIVATE
 L4_msg_tag
 Irq_sender::sys_bind(L4_msg_tag tag, L4_fpage::Rights rights, Utcb const *utcb,
-                     Utcb *utcb_out)
+                     Utcb *utcb_out, bool to_vcpu)
 {
   if (EXPECT_FALSE(!(rights & L4_fpage::Rights::CS())))
     return commit_result(-L4_err::EPerm);
@@ -818,7 +979,8 @@ Irq_sender::sys_bind(L4_msg_tag tag, L4_fpage::Rights rights, Utcb const *utcb,
   if (EXPECT_FALSE(!(t_rights & L4_fpage::Rights::CS())))
     return commit_result(-L4_err::EPerm);
 
-  return bind_irq_thread(thread, utcb, utcb_out);
+  Irq_thread t = Irq_thread(thread, to_vcpu);
+  return bind_irq_thread(t, utcb, utcb_out);
 }
 
 PRIVATE
@@ -852,7 +1014,7 @@ Irq_sender::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
       switch (Op{op})
         {
         case Op::Bind: // the Rcv_endpoint opcode (equal to Ipc_gate::bind_thread)
-          return sys_bind(tag, rights, utcb, utcb_out);
+          return sys_bind(tag, rights, utcb, utcb_out, false);
         default:
           return commit_result(-L4_err::ENosys);
         }
@@ -875,6 +1037,8 @@ Irq_sender::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
         {
         case Op::Detach:
           return sys_detach(rights, utcb_out);
+        case Op::Bind_vcpu:
+          return sys_bind_vcpu(tag, rights, utcb, utcb_out);
 
         default:
           return commit_result(-L4_err::ENosys);
@@ -985,4 +1149,118 @@ Irq_sender::queued()
   // while holding the lock.
   // auto g = lock_guard(_irq_lock);
   return _send_state.is_queued();
+}
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [irq_direct_inject]:
+PRIVATE inline
+void
+Irq_sender::inject_vcpu_irq(Thread *t)
+{
+  t->arch_inject_vcpu_irq(_irq_id, this);
+}
+
+PRIVATE static inline
+Context::Drq::Result
+Irq_sender::handle_revoke_vcpu_irq(Context::Drq *, Context *, void *_rq)
+{
+  Revoke_vcpu_irq_request *rq = static_cast<Revoke_vcpu_irq_request*>(_rq);
+  Irq_sender *self = rq->self;
+
+  // Grab the Irq lock to guard against concurrent bind/unbinds.
+  auto g = lock_guard(self->_irq_lock);
+
+  // Some other, concurrent thread could have been faster than our DRQ.
+  if (self->_irq_thread != rq->old)
+    {
+      rq->result = Context::Revoke_vcpu_state::Ok_was_clear;
+      return Context::Drq::done();
+    }
+
+  rq->result = self->_irq_thread->arch_revoke_vcpu_irq(self, rq->abandon);
+
+  // We do not abandon active vIRQs except when detaching. If the Irq is
+  // currently active on the old vCPU, it is the responsibility of the VMM to
+  // cope with this pity...
+  if (rq->result == Context::Revoke_vcpu_state::Fail_is_active)
+    return Context::Drq::done();
+
+  // Update the target only after the vCPU vIRQ was revoked because that might
+  // fail. This is safe because the code runs on the CPU where the old
+  // interrupt is supposed to hit so it cannot be triggered concurrently.
+  self->set_irq_thread(rq->target, rq->irq_id);
+
+  return Context::Drq::done();
+}
+
+PRIVATE inline
+Context::Revoke_vcpu_state
+Irq_sender::revoke_vcpu_irq(Irq_thread old, Irq_thread target, Mword irq_id,
+                            bool abandon)
+{
+  Revoke_vcpu_irq_request rq;
+  rq.self = this;
+  rq.old = old;
+  rq.target = target;
+  rq.irq_id = irq_id;
+  rq.abandon = abandon;
+
+  // Execute the replacement in the context of the current receiver thread to
+  // prevent races with actual irq triggers. This is also a precondition of
+  // Context::arch_revoke_vcpu_irq().
+  if (old && current_cpu() != old->home_cpu())
+    old->drq(handle_revoke_vcpu_irq, &rq);
+  else
+    handle_revoke_vcpu_irq(nullptr, nullptr, &rq);
+
+  return rq.result;
+}
+
+PUBLIC
+void
+Irq_sender::vcpu_soi() override
+{
+  finish_send();
+}
+
+PUBLIC
+void
+Irq_sender::vcpu_eoi() override
+{
+  if (!is_edge_triggered())
+    unmask();
+}
+
+PUBLIC
+Mword
+Irq_sender::vcpu_irq_id() const override
+{ return _irq_id; }
+
+PRIVATE inline
+L4_msg_tag
+Irq_sender::sys_bind_vcpu(L4_msg_tag tag, L4_fpage::Rights rights,
+                          Utcb const *utcb, Utcb *utcb_out)
+{
+  return sys_bind(tag, rights, utcb, utcb_out, true);
+}
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [!irq_direct_inject]:
+
+PRIVATE inline
+void
+Irq_sender::inject_vcpu_irq(Thread *)
+{}
+
+PRIVATE inline
+Context::Revoke_vcpu_state
+Irq_sender::revoke_vcpu_irq(Thread *, Irq_thread, Mword, bool)
+{ return Context::Revoke_vcpu_state::Ok_was_clear; }
+
+PRIVATE inline
+L4_msg_tag
+Irq_sender::sys_bind_vcpu(L4_msg_tag, L4_fpage::Rights, Utcb const *,
+                          Utcb *)
+{
+  return commit_result(-L4_err::ENosys);
 }
