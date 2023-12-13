@@ -158,6 +158,9 @@ Task::alloc_ku_mem_chunk(User_ptr<void> u_addr, unsigned size, void **k_addr)
         }
     }
 
+  if (Mem_space::Need_insert_tlb_flush)
+    static_cast<Mem_space*>(this)->tlb_flush_all_cpus();
+
   *k_addr = p;
   return 0;
 }
@@ -235,6 +238,9 @@ Task::free_ku_mem_chunk(void *k_addr, User_ptr<void> u_addr, unsigned size,
       static_cast<Mem_space*>(this)->v_delete(user_va, page_order,
                                               L4_fpage::Rights::FULL());
     }
+
+  if (mapped_size > 0)
+    static_cast<Mem_space*>(this)->tlb_flush_all_cpus();
 
   alloc->q_free(ram_quota(), Bytes(size), k_addr);
 }
