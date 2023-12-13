@@ -169,6 +169,9 @@ Thread_object::invoke(L4_obj_ref self, L4_fpage::Rights rights,
     case Op::Vcpu_control:
       tag = sys_vcpu_control(rights, f->tag(), utcb, out);
       break;
+    case Op::Register_doorbell_irq:
+      tag = sys_register_doorbell_irq(f->tag(), utcb);
+      break;
     default:
       tag = invoke_arch(f->tag(), utcb, out);
       break;
@@ -748,4 +751,48 @@ register_factory()
   Kobject_iface::set_factory(L4_msg_tag::Label_thread, thread_factory);
 }
 
+}
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [!irq_direct_inject]:
+
+PRIVATE inline
+L4_msg_tag
+Thread_object::sys_register_doorbell_irq(L4_msg_tag, Utcb const *)
+{
+  return commit_result(-L4_err::ENosys);
+}
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [irq_direct_inject]:
+
+PRIVATE
+L4_msg_tag
+Thread_object::sys_register_doorbell_irq(L4_msg_tag tag, Utcb const *in)
+{
+  L4_snd_item_iter snd_items(in, tag.words());
+
+  if (!tag.items() || !snd_items.next())
+    return Kobject_iface::commit_result(-L4_err::EInval);
+
+  L4_fpage bind_irq(snd_items.get()->d);
+  if (EXPECT_FALSE(!bind_irq.is_objpage()))
+    return Kobject_iface::commit_error(in, L4_error::Overflow);
+
+  Context *const c_thread = ::current();
+  Space *const c_space = c_thread->space();
+  L4_fpage::Rights irq_rights = L4_fpage::Rights(0);
+  Irq_base *irq
+    = Irq_base::dcast(c_space->lookup_local(bind_irq.obj_index(), &irq_rights));
+
+  if (!irq)
+    return Kobject_iface::commit_result(-L4_err::EInval);
+
+  if (EXPECT_FALSE(!(irq_rights & L4_fpage::Rights::CW())))
+    return Kobject_iface::commit_result(-L4_err::EPerm);
+
+  if (register_doorbell_irq(irq))
+    return Kobject_iface::commit_result(0);
+  else
+    return Kobject_iface::commit_result(-L4_err::EBusy);
 }

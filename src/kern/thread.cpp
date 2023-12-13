@@ -55,6 +55,7 @@ public:
     Register_del_irq = 5,
     Modify_senders = 6,
     Vcpu_control = 7,
+    Register_doorbell_irq = 8,
     Gdt_x86 = 0x10,
     Set_tpidruro_arm = 0x10,
     Set_segment_base_amd64 = 0x12,
@@ -338,9 +339,10 @@ Thread::Thread(Ram_quota *q, Context_mode_kernel)
 PUBLIC virtual
 Thread::~Thread()		// To be called in locked state.
 {
-  // Thread::do_kill() already unregistered deletion IRQ, but in the meantime a
-  // deletion IRQ might have been bound again.
+  // Thread::do_kill() already unregistered deletion and doorbell IRQs, but in
+  // the meantime a new IRQ might have been bound again.
   unregister_delete_irq();
+  unregister_doorbell_irq();
 
   unsigned long *init_sp = reinterpret_cast<unsigned long*>
     (reinterpret_cast<unsigned long>(this) + Size - sizeof(Entry_frame));
@@ -598,6 +600,7 @@ Thread::do_kill()
   Sched_context::rq.current().ready_dequeue(sched());
 
   unregister_delete_irq();
+  unregister_doorbell_irq();
 
   rcu_wait();
 
@@ -1557,6 +1560,84 @@ Thread::halt_current()
       kdb_ke("Thread not halted");
     }
 }
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [irq_direct_inject]:
+
+/**
+ * Fake IRQ Chip class for doorbell interrupt notifications.
+ * This chip uses the IRQ number as thread pointer and implements
+ * the bind and unbind functionality.
+ */
+class Doorbell_irq_chip : public Irq_chip_soft
+{
+public:
+  static Global_data<Doorbell_irq_chip> chip;
+};
+
+DEFINE_GLOBAL Global_data<Doorbell_irq_chip> Doorbell_irq_chip::chip;
+
+PUBLIC static inline
+Thread *Doorbell_irq_chip::thread(Mword pin)
+{ return reinterpret_cast<Thread*>(pin); }
+
+PUBLIC static inline
+Mword Doorbell_irq_chip::pin(Thread *t)
+{ return reinterpret_cast<Mword>(t); }
+
+PUBLIC inline
+void
+Doorbell_irq_chip::unbind(Irq_base *irq) override
+{
+  thread(irq->pin())->remove_doorbell_irq(irq);
+  Irq_chip_soft::unbind(irq);
+}
+
+
+PUBLIC
+bool
+Thread::register_doorbell_irq(Irq_base *irq)
+{
+  if (_doorbell_irq)
+    return false;
+
+  auto g = lock_guard(irq->irq_lock());
+  irq->unbind();
+  Doorbell_irq_chip::chip->bind(irq, reinterpret_cast<Mword>(this));
+  if (cas<Irq_base *>(&_doorbell_irq, nullptr, irq))
+    return true;
+
+  irq->unbind();
+  return false;
+}
+
+PUBLIC
+void
+Thread::remove_doorbell_irq(Irq_base *irq)
+{
+  cas<Irq_base *>(&_doorbell_irq, irq, nullptr);
+}
+
+
+PRIVATE inline
+void
+Thread::unregister_doorbell_irq()
+{
+  auto cpu_guard = lock_guard(cpu_lock);
+  if (Irq_base *doorbell_irq = access_once(&_doorbell_irq))
+    {
+      auto irq_guard = lock_guard(doorbell_irq->irq_lock());
+      doorbell_irq->unbind();
+    }
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [!irq_direct_inject]:
+
+PRIVATE inline
+void
+Thread::unregister_doorbell_irq()
+{}
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION [!debug]:

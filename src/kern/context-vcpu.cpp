@@ -13,6 +13,17 @@ protected:
 };
 
 // ---------------------------------------------------------------------
+INTERFACE [irq_direct_inject]:
+
+class Irq_base;
+
+EXTENSION class Context
+{
+protected:
+  Irq_base *_doorbell_irq;
+};
+
+// ---------------------------------------------------------------------
 IMPLEMENTATION [!fpu]:
 
 PROTECTED inline
