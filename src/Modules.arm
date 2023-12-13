@@ -232,6 +232,7 @@ vmem_alloc_IMPL	  	:= vmem_alloc vmem_alloc-arch
 tb_entry_IMPL		:= tb_entry tb_entry-arm
 mpu_IMPL                := mpu mpu-arm-$(BITS)
 global_data_IMPL        := global_data global_data-arm-$(BITS)
+vcpu_IMPL		:= vcpu vcpu-arm
 
 
 ifeq ("$(CONFIG_JDB)","y")

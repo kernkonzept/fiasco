@@ -75,6 +75,17 @@ public:
     CXX_BITFIELD_MEMBER(  7,  7, grp1_d, raw);
   };
 
+  struct Vcpu_irq_cfg
+  {
+    Mword raw;
+    Vcpu_irq_cfg() = default;
+    explicit Vcpu_irq_cfg(Mword v) : raw(v) {}
+
+    CXX_BITFIELD_MEMBER(  0, 19,  vid, raw);
+    CXX_BITFIELD_MEMBER( 23, 23, grp1, raw);
+    CXX_BITFIELD_MEMBER( 24, 31, prio, raw);
+  };
+
   template< unsigned LREGS >
   struct Arm_vgic_t
   {
@@ -93,6 +104,7 @@ public:
     Unsigned32 elsr;
     Lrs lr;
     Unsigned32 aprs[8];
+    Unsigned32 injected;
   };
 
   using Arm_vgic = Arm_vgic_t<4>;
@@ -147,6 +159,43 @@ public:
    * current context has to access to the vGIC interface.
    */
   virtual void disable() = 0;
+
+  /**
+   * Inject a vIRQ into the extended vCPU user mode.
+   *
+   * \param g     vGIC context of the thread.
+   * \param cfg   vIRQ specification
+   * \param load  Shall the hardware be updated immediately?
+   *
+   * \return  Used list register index plus one or zero in case no LR was free.
+   */
+  virtual unsigned inject(Arm_vgic *g, Vcpu_irq_cfg cfg, bool load) = 0;
+
+  /**
+   * Revoke pending vIRQ from extended vCPU user mode.
+   *
+   * \param g       vGIC context of the thread.
+   * \param lr      List register index that shall be cleared.
+   * \param load    Shall the hardware be updated immediately?
+   * \param abandon Abandon vIRQ if it was active.
+   *
+   * \return  True if vIRQ was active, false if it was still pending.
+   */
+  virtual bool revoke(Arm_vgic *g, unsigned lr, bool load, bool abandon) = 0;
+
+  /**
+   * Handle vGIC maintenance interrupt.
+   *
+   * Handle the state for vIRQs that were previously injected by inject().
+   * Will free list registers where the guest EOIed the interrupt.
+   *
+   * \param g         vGIC context of the thread.
+   * \param eois[out] Bitmap of list registers that were EOIed
+   *
+   * \return  True if maintenance interrupt was completely handled, false
+   *          if a switch to vCPU kernel mode is (still) necessary.
+   */
+  virtual bool handle_maintenance(Arm_vgic *g, Unsigned32 *eois) = 0;
 
   /**
    * Return the vGIC version.
@@ -204,6 +253,13 @@ public:
     g->eisr = self()->eisr();
     // Only report saved/loaded LR registers as free
     g->elsr = self()->elsr() & ((1U << Arm_vgic::N_lregs) - 1U);
+    // Hide any pending maintenance of injected interrupts from user space!
+    if (EXPECT_FALSE(g->injected))
+      {
+        g->eisr &= ~g->injected;
+        if (g->eisr == 0)
+          g->misr.eoi() = 0;
+      }
     self()->save_lrs(&g->lr);
     self()->save_aprs(g->aprs);
     return From_vgic_mode::Enabled;
@@ -213,6 +269,65 @@ public:
   {
     self()->disable_load_defaults();
     IMPL::vgic_barrier();
+  }
+
+  unsigned inject(Arm_vgic *g, Vcpu_irq_cfg cfg, bool load) override
+  {
+    unsigned idx = __builtin_ffs((load ? self()->elsr() : g->elsr) &
+                                 ((1UL << Arm_vgic::N_lregs) - 1U));
+    if (!idx)
+      return 0;
+
+    self()->build_lr(&g->lr, idx - 1, cfg, load);
+    g->injected |= 1UL << (idx - 1);
+    if (!load)
+      g->elsr &= ~(1UL << (idx - 1));
+
+    return idx;
+  }
+
+  bool revoke(Arm_vgic *g, unsigned idx, bool load, bool abandon) override
+  {
+    bool active = self()->teardown_lr(&g->lr, idx);
+    if (!active)
+      {
+        // Was pending but not active. Completely remove it.
+        if (load)
+          self()->clear_lr(idx);
+        g->injected &= ~(1UL << idx);
+        g->elsr |= 1UL << idx;
+      }
+    else if (abandon)
+      {
+        // Has been active and we should abandon it. From here on, it is the
+        // responsibility of the VMM to handle the eventual EOI of the guest
+        // and to finally clear the LR.
+        g->injected &= ~(1UL << idx);
+      }
+
+    return active;
+  }
+
+  bool handle_maintenance(Arm_vgic *g, Unsigned32 *eois) override
+  {
+    if (!g->injected)
+      {
+        *eois = 0;
+        return false;
+      }
+
+    Unsigned32 eisr = self()->eisr() & g->injected;
+    *eois = eisr;
+    g->injected &= ~eisr;
+
+    while (eisr)
+      {
+        unsigned idx = __builtin_ffs(eisr) - 1U;
+        eisr &= ~(1UL << idx);
+        self()->clear_lr(idx);
+      }
+
+    return self()->misr().raw == 0;
   }
 
   void setup_state(Arm_vgic *s) const override
@@ -236,6 +351,7 @@ public:
       a = 0;
     for (auto &l: s->lr.lr64)
       l = 0;
+    s->injected = 0;
   }
 
   unsigned version() const override

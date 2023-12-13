@@ -43,6 +43,14 @@ public:
 
   struct Lr
   {
+    enum State
+    {
+      Empty              = 0,
+      Pending            = 1,
+      Active             = 2,
+      Active_and_pending = 3
+    };
+
     Unsigned32 raw;
     Lr() = default;
     explicit Lr(Unsigned32 v) : raw(v) {}
@@ -52,6 +60,8 @@ public:
     CXX_BITFIELD_MEMBER( 19, 19, eoi, raw);
     CXX_BITFIELD_MEMBER( 23, 27, prio, raw);
     CXX_BITFIELD_MEMBER( 28, 29, state, raw);
+    CXX_BITFIELD_MEMBER( 28, 28, pending, raw);
+    CXX_BITFIELD_MEMBER( 29, 29, active, raw);
     CXX_BITFIELD_MEMBER( 30, 30, grp1, raw);
     CXX_BITFIELD_MEMBER( 31, 31, hw, raw);
   };
@@ -101,6 +111,41 @@ Gic_h_v2::load_lrs(Gic_h::Arm_vgic::Lrs const *l)
 {
   for (unsigned i = 0; i < Gic_h::Arm_vgic::N_lregs; ++i)
     write(l->lr32[i], LRn + (i << 2));
+}
+
+PUBLIC inline void
+Gic_h_v2::build_lr(Gic_h::Arm_vgic::Lrs *lr, unsigned idx,
+                   Gic_h::Vcpu_irq_cfg cfg, bool load)
+{
+  Lr new_lr(0);
+  new_lr.state() = Lr::Pending;
+  new_lr.eoi()   = 1; // need an EOI IRQ
+  new_lr.vid()   = cfg.vid();
+  new_lr.prio()  = cfg.prio();
+  new_lr.grp1()  = cfg.grp1();
+
+  lr->lr32[idx] = new_lr.raw;
+  if (load)
+    write(new_lr.raw, LRn + (idx << 2));
+}
+
+PUBLIC inline void
+Gic_h_v2::clear_lr(unsigned idx)
+{
+  write(0U, LRn + (idx << 2));
+}
+
+PUBLIC inline bool
+Gic_h_v2::teardown_lr(Gic_h::Arm_vgic::Lrs *lr, unsigned idx)
+{
+  Lr reg(lr->lr32[idx]);
+  if (!reg.active())
+    {
+      lr->lr32[idx] = 0;
+      return false;
+    }
+  else
+    return true;
 }
 
 PUBLIC

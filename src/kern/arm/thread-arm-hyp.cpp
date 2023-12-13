@@ -356,6 +356,14 @@ Thread::vcpu_vgic_upcall(unsigned virq)
   vcpu_save_state_and_upcall();
 }
 
+PUBLIC inline
+void
+Thread::vcpu_vgic_maintenance(unsigned virq)
+{
+  if (Context::vcpu_vgic_maintenance())
+    vcpu_vgic_upcall(virq);
+}
+
 
 class Arm_ppi_virt : public Irq_base
 {
@@ -384,7 +392,7 @@ PUBLIC inline FIASCO_FLATTEN
 void
 Arm_ppi_virt::handle(Upstream_irq const *ui)
 {
-  current_thread()->vcpu_vgic_upcall(_virq);
+  current_thread()->vcpu_vgic_maintenance(_virq);
   chip()->ack(pin());
   Upstream_irq::ack(ui);
 }
