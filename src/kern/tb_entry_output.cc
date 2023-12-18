@@ -305,11 +305,16 @@ formatter_pf(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidlen)
   Tb_entry_pf *e = static_cast<Tb_entry_pf*>(tb);
   Mword mw = PF::addr_to_msgword0(e->pfa(), e->error());
   char cause = (mw & 4) ? 'X' : (mw & 2) ? 'W' : 'R';
-  buf->printf("pf:  %-*s pfa=" L4_PTR_FMT " ip=" L4_PTR_FMT " (%c%c) spc=%p (DID=%lx) err=%lx",
+  buf->printf("pf:  %-*s pfa=" L4_PTR_FMT " ip=" L4_PTR_FMT " (%c%c) spc=%p (DID=",
       tidlen, tidstr, e->pfa(), e->ip(),
       PF::is_usermode_error(e->error()) ? tolower(cause) : cause,
-      PF::is_translation_error(e->error()) ? '-' : 'p', (void *)e->space(),
-      static_cast<Task*>(e->space())->dbg_info()->dbg_id(), e->error());
+      PF::is_translation_error(e->error()) ? '-' : 'p', (void *)e->space());
+  Task *task = static_cast<Task*>(e->space());
+  if (Kobject_dbg::is_kobj(task))
+    buf->printf("%lx", task->dbg_info()->dbg_id());
+  else
+    buf->printf("???");
+  buf->printf(") err=%lx", e->error());
 }
 
 // kernel event (enter_kdebug("*..."))
