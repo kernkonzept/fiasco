@@ -13,10 +13,10 @@ public:
 class Tb_entry_trap : public Tb_entry
 {
 private:
-  Unsigned8	_trapno;
-  Unsigned16	_error;
-  Mword	_ebp, _cr2, _eax, _eflags, _esp;
-  Unsigned16	_cs,  _ds;
+  Unsigned8     _trapno;
+  Unsigned16    _error;
+  Mword         _ebp, _cr2, _eax, _eflags, _esp;
+  Unsigned16    _cs,  _ds;
 public:
   void print(String_buffer *buf) const;
 } __attribute__((packed));

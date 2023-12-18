@@ -20,15 +20,15 @@ static
 void
 format_timeout(String_buffer *buf, Mword us)
 {
-  if (us >= 1000000000)		// =>100s
+  if (us >= 1000000000)         // =>100s
     buf->printf(">99s");
-  else if (us >= 10000000)	// >=10s
+  else if (us >= 10000000)      // >=10s
     buf->printf("%lus", us/1000000);
-  else if (us >= 1000000)	// >=1s
+  else if (us >= 1000000)       // >=1s
     buf->printf("%lu.%lus", us/1000000, (us%1000000)/100000);
-  else if (us >= 10000)		// 10ms
+  else if (us >= 10000)         // 10ms
     buf->printf("%lum", us/1000);
-  else if (us >= 1000)		// 1ms
+  else if (us >= 1000)          // 1ms
     buf->printf("%lu.%lum", us/1000, (us%1000)/100);
   else
     buf->printf("%luu", us);
@@ -200,8 +200,8 @@ formatter_ipc(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidlen)
   if (type & L4_obj_ref::Ipc_send)
     {
       if (to.snd.is_absolute())
-	{
-	  // absolute send timeout
+        {
+          // absolute send timeout
           if (0)
             {
               Unsigned64 end = 0; // FIXME: to.snd.microsecs_abs (e->kclock());
@@ -209,17 +209,17 @@ formatter_ipc(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidlen)
             }
           else
             buf->printf("abs-N/A");
-	}
+        }
       else
-	{
-	  // relative send timeout
-	  if (to.snd.is_never())
-	    buf->printf("INF");
-	  else if (to.snd.is_zero())
-	    buf->printf("0");
-	  else
+        {
+          // relative send timeout
+          if (to.snd.is_never())
+            buf->printf("INF");
+          else if (to.snd.is_zero())
+            buf->printf("0");
+          else
             format_timeout(buf, (Mword)to.snd.microsecs_rel(0));
-	}
+        }
     }
   if (type & L4_obj_ref::Ipc_send
       && type & L4_obj_ref::Ipc_recv)
@@ -227,8 +227,8 @@ formatter_ipc(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidlen)
   if (type & L4_obj_ref::Ipc_recv)
     {
       if (to.rcv.is_absolute())
-	{
-	  // absolute receive timeout
+        {
+          // absolute receive timeout
           if (0)
             {
               Unsigned64 end = 0; // FIXME: to.rcv.microsecs_abs (e->kclock());
@@ -236,17 +236,17 @@ formatter_ipc(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidlen)
             }
           else
             buf->printf("abs-N/A");
-	}
+        }
       else
-	{
-	  // relative receive timeout
-	  if (to.rcv.is_never())
-	    buf->printf("INF");
-	  else if (to.rcv.is_zero())
-	    buf->printf("0");
-	  else
+        {
+          // relative receive timeout
+          if (to.rcv.is_never())
+            buf->printf("INF");
+          else if (to.rcv.is_zero())
+            buf->printf("0");
+          else
             format_timeout(buf, (Mword)to.rcv.microsecs_rel(0));
-	}
+        }
     }
 }
 
@@ -322,17 +322,17 @@ formatter_bp(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidlen)
     case 1:
     case 3:
       switch (e->len())
-	{
-     	case 1:
-	  buf->printf("[" L4_PTR_FMT "]=%02lx", e->addr(), e->value());
-	  break;
-	case 2:
-	  buf->printf("[" L4_PTR_FMT "]=%04lx", e->addr(), e->value());
-	  break;
-	case 4:
-	  buf->printf("[" L4_PTR_FMT "]=" L4_PTR_FMT, e->addr(), e->value());
-	  break;
-	}
+        {
+        case 1:
+          buf->printf("[" L4_PTR_FMT "]=%02lx", e->addr(), e->value());
+          break;
+        case 2:
+          buf->printf("[" L4_PTR_FMT "]=%04lx", e->addr(), e->value());
+          break;
+        case 4:
+          buf->printf("[" L4_PTR_FMT "]=" L4_PTR_FMT, e->addr(), e->value());
+          break;
+        }
       break;
     case 2:
       buf->printf("[" L4_PTR_FMT "]", e->addr());
@@ -350,13 +350,13 @@ Tb_entry_trap::print(String_buffer *buf) const
                 (unsigned)trapno(), (unsigned)error(), ip());
   else
     buf->printf(trapno() == 14
-		  ? "#%02x: err=%04x @ " L4_PTR_FMT
-		    " cs=%04x sp=" L4_PTR_FMT " cr2=" L4_PTR_FMT
-		  : "#%02x: err=%04x @ " L4_PTR_FMT
-		    " cs=%04x sp=" L4_PTR_FMT " eax=" L4_PTR_FMT,
-	        (unsigned)trapno(),
-		(unsigned)error(), ip(), (unsigned)cs(), sp(),
-		trapno() == 14 ? cr2() : eax());
+                  ? "#%02x: err=%04x @ " L4_PTR_FMT
+                    " cs=%04x sp=" L4_PTR_FMT " cr2=" L4_PTR_FMT
+                  : "#%02x: err=%04x @ " L4_PTR_FMT
+                    " cs=%04x sp=" L4_PTR_FMT " eax=" L4_PTR_FMT,
+                (unsigned)trapno(),
+                (unsigned)error(), ip(), (unsigned)cs(), sp(),
+                trapno() == 14 ? cr2() : eax());
 }
 
 // kernel event log binary data
