@@ -311,12 +311,6 @@ Thread::vcpu_resume_user_arch()
 {}
 
 
-PRIVATE static inline
-void
-Thread::save_fpu_state_to_utcb(Trap_state *, Utcb *)
-{
-}
-
 PROTECTED inline
 int
 Thread::do_trigger_exception(Entry_frame * /*r*/, void * /*ret_handler*/)

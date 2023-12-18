@@ -407,11 +407,6 @@ Thread::handle_sigma0_page_fault(Address pfa)
     != Mem_space::Insert_err_nomem;
 }
 
-PRIVATE static inline
-void
-Thread::save_fpu_state_to_utcb(Trap_state *, Utcb *)
-{}
-
 //----------------------------------------------------------------------------
 IMPLEMENTATION [!(vmx || svm) && (ia32 || amd64)]:
 

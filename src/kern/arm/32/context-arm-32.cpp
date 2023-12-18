@@ -137,3 +137,14 @@ Context::load_tpidruro() const
   asm volatile ("mcr p15, 0, %0, c13, c0, 3" : : "r" (_tpidruro));
 }
 
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && fpu]:
+
+IMPLEMENT_OVERRIDE inline
+void
+Context::save_fpu_state_to_utcb(Trap_state *ts, Utcb *u)
+{
+  auto *esu = reinterpret_cast<Fpu::Exception_state_user *>(&u->values[21]);
+  Fpu::save_user_exception_state(state() & Thread_fpu_owner, fpu_state().get(),
+                                 ts, esu);
+}

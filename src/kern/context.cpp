@@ -124,6 +124,7 @@ protected:
   virtual void finish_migration() = 0;
   virtual bool initiate_migration() = 0;
 
+  void save_fpu_state_to_utcb(Trap_state *, Utcb *);
 
 public:
   /**
@@ -1540,6 +1541,11 @@ Context::copy_and_sanitize_trap_state(Trap_state *dst,
 
 PUBLIC inline
 bool Context::migration_pending() const { return _migration; }
+
+IMPLEMENT_DEFAULT inline
+void
+Context::save_fpu_state_to_utcb(Trap_state *, Utcb *)
+{}
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION [recover_jmpbuf]:

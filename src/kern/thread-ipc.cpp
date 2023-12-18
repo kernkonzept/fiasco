@@ -857,8 +857,7 @@ Thread::exception(Kobject_iface *handler, Trap_state *ts, L4_fpage::Rights right
  * return 0 if not for send_exception and halt thread
  */
 PUBLIC inline NEEDS["task.h", "trap_state.h",
-                    Thread::vcpu_return_to_kernel,
-                    Thread::save_fpu_state_to_utcb]
+                    Thread::vcpu_return_to_kernel]
 int
 Thread::send_exception(Trap_state *ts)
 {

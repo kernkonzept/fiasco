@@ -151,17 +151,6 @@ public:
 };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && !fpu]:
-
-#include "trap_state.h"
-
-PUBLIC static inline NEEDS["trap_state.h"]
-void
-Fpu::save_user_exception_state(bool, Fpu_state *, Trap_state *,
-                               Exception_state_user *)
-{}
-
-// ------------------------------------------------------------------------
 IMPLEMENTATION [arm && fpu]:
 
 #include <cassert>
@@ -287,12 +276,6 @@ IMPLEMENT inline
 unsigned
 Fpu::state_align()
 { return 16; }
-
-PUBLIC static inline NEEDS["trap_state.h", <cassert>]
-void
-Fpu::save_user_exception_state(bool, Fpu_state *, Trap_state *, Exception_state_user *)
-{
-}
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && fpu && lazy_fpu]:

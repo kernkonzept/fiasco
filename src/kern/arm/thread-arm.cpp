@@ -298,15 +298,6 @@ void
 Thread::user_sp(Mword sp)
 { return regs()->sp(sp); }
 
-PRIVATE inline
-void
-Thread::save_fpu_state_to_utcb(Trap_state *ts, Utcb *u)
-{
-  auto *esu = reinterpret_cast<Fpu::Exception_state_user *>(&u->values[21]);
-  Fpu::save_user_exception_state(state() & Thread_fpu_owner, fpu_state().get(),
-                                 ts, esu);
-}
-
 PROTECTED inline
 int
 Thread::do_trigger_exception(Entry_frame *r, void *ret_handler)

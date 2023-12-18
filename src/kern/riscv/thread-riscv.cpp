@@ -191,11 +191,6 @@ Thread::invoke_arch(L4_msg_tag, Utcb *, Utcb *)
 }
 
 PRIVATE static inline
-void
-Thread::save_fpu_state_to_utcb(Trap_state *, Utcb *)
-{}
-
-PRIVATE static inline
 bool FIASCO_WARN_RESULT
 Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
                         L4_fpage::Rights rights)
