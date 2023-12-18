@@ -182,7 +182,8 @@ private:
   Mword         _dword[2];      ///< first two dwords
   L4_error      _result;        ///< result
   Mword         _from;          ///< receive descriptor
-  Mword          _pair_event;   ///< referred event
+  L4_obj_ref    _dst;           ///< destination id
+  Mword         _pair_event;    ///< referred event
   Unsigned8     _have_snd;      ///< IPC had send part
   Unsigned8     _is_np;         ///< next period bit set
 public:
@@ -486,6 +487,7 @@ Tb_entry_ipc_res::set(Context const *ctx, Mword ip, Syscall_frame *ipc_regs,
   _pair_event = pair_event;
   _result     = L4_error::from_raw(result);
   _from       = ipc_regs->from_spec();
+  _dst        = ipc_regs->ref();
   _have_snd   = have_snd;
   _is_np      = is_np;
 }
@@ -524,6 +526,11 @@ PUBLIC inline
 Mword
 Tb_entry_ipc_res::pair_event() const
 { return _pair_event; }
+
+PUBLIC inline
+bool
+Tb_entry_ipc_res::ipc_has_recv_phase() const
+{ return !!(_dst.op() & L4_obj_ref::Ipc_recv); }
 
 
 PUBLIC inline

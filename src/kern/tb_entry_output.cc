@@ -192,7 +192,18 @@ formatter_ipc(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidlen)
 
       print_msgtag(buf, e->tag());
 
-      buf->printf("] (" L4_PTR_FMT "," L4_PTR_FMT ")", e->dword(0), e->dword(1));
+      buf->printf("] (");
+      if (e->tag().words() > 0)
+        {
+          buf->printf("%lx", e->dword(0));
+          if (e->tag().words() > 1)
+            {
+              buf->printf(",%lx", e->dword(1));
+              if (e->tag().words() > 2)
+                buf->printf(",...");
+            }
+        }
+      buf->printf(")");
     }
 
   buf->printf(" TO=");
@@ -263,11 +274,26 @@ formatter_ipc_res(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidl
     error = L4_error::None;
   const char *m = "answ"; //get_ipc_type(e);
 
-  buf->printf("     %s%-*s %s [%08lx] L=%lx err=%lx (%s%s) (%lx,%lx) ",
-      e->is_np() ? "[np] " : "", tidlen, tidstr, m, e->tag().raw(), e->from(),
-      error.raw(), error.str_error(),
-      error.ok() ? "" : error.snd_phase() ? "/snd" : "/rcv",
-      e->dword(0), e->dword(1));
+  buf->printf("     %s%-*s %s [",
+      e->is_np() ? "[np] " : "", tidlen, tidstr, m);
+  if (e->tag().has_error())
+    buf->printf("E");
+  else
+    print_msgtag(buf, e->tag());
+  buf->printf("] L=%lx err=%lx (%s%s) (",
+      e->from(), error.raw(), error.str_error(),
+      error.ok() ? "" : error.snd_phase() ? "/snd" : "/rcv");
+  if (e->ipc_has_recv_phase() && !e->tag().has_error() && e->tag().words() > 0)
+    {
+      buf->printf("%lx", e->dword(0));
+      if (e->tag().words() > 1)
+        {
+          buf->printf(",%lx", e->dword(1));
+          if (e->tag().words() > 2)
+            buf->printf(",...");
+        }
+    }
+  buf->printf(")");
 }
 
 
