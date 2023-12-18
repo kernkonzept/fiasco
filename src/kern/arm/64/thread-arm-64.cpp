@@ -404,16 +404,6 @@ Thread::get_fault_pfa(Arm_esr hsr, bool /*insn_abt*/, bool ext_vcpu)
   return (res & 0x00fffffffffff000) | (a & 0xfff);
 }
 
-PRIVATE inline
-void
-Arm_vtimer_ppi::mask()
-{
-  Mword v;
-  asm volatile("mrs %0, cntv_ctl_el0\n"
-               "orr %0, %0, #0x2              \n"
-               "msr cntv_ctl_el0, %0\n" : "=r" (v));
-}
-
 //--------------------------------------------------------------------------
 IMPLEMENTATION [arm && 64bit && virt_obj_space]:
 

@@ -229,6 +229,16 @@ Context::arm_ext_vcpu_load_guest_regs(Vcpu_state *vcpu, Vm_state *, Unsigned64 h
   asm volatile ("mcr p15, 0, %0, c13, c0, 3" : : "r"(vcpu->_regs.tpidruro));
 }
 
+PRIVATE inline
+void
+Arm_vtimer_ppi::mask()
+{
+  Mword v;
+  asm volatile("mrc p15, 0, %0, c14, c3, 1\n"
+               "orr %0, #0x2              \n"
+               "mcr p15, 0, %0, c14, c3, 1\n" : "=r" (v));
+}
+
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && cpu_virt && mmu]:
 
