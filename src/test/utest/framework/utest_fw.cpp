@@ -1101,8 +1101,18 @@ Utest::Tick_disabler::Tick_disabler()
 IMPLEMENT
 Utest::Tick_disabler::~Tick_disabler()
 {
-  auto guard = lock_guard(cpu_lock);
-  Timer_tick::enable(current_cpu());
+    {
+      auto guard = lock_guard(cpu_lock);
+      Timer_tick::enable(current_cpu());
+    }
+
+  if (!cpu_lock.test())
+    {
+      // Wait for system clock to be updated once after re-enabling timer tick,
+      // otherwise an immediately following `Utest::wait()` might wait much
+      // shorter than expected.
+      Utest::wait(1);
+    }
 }
 
 /**
