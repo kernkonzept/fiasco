@@ -100,18 +100,15 @@ Mem_space::regular_tlb_type()
 
 IMPLEMENT inline NEEDS["mem_unit.h"]
 void
-Mem_space::tlb_flush(bool force = false)
+Mem_space::tlb_flush_current_cpu()
 {
   if (!Have_asids)
     Mem_unit::tlb_flush();
-  else if (force && c_asid() != Mem_unit::Asid_invalid)
+  else if (c_asid() != Mem_unit::Asid_invalid)
     {
       Mem_unit::tlb_flush(c_asid());
       tlb_mark_unused_if_non_current();
     }
-
-  // else do nothing, we manage ASID local flushes in v_* already
-  // Mem_unit::tlb_flush();
 }
 
 

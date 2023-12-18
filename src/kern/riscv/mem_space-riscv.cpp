@@ -157,9 +157,9 @@ Mem_space::regular_tlb_type()
 
 IMPLEMENT inline NEEDS["mem_unit.h"]
 void
-Mem_space::tlb_flush(bool force = false)
+Mem_space::tlb_flush_current_cpu()
 {
-  if (!Mem_unit::Have_asids || (force && c_asid() != Mem_unit::Asid_invalid))
+  if (!Mem_unit::Have_asids || c_asid() != Mem_unit::Asid_invalid)
     {
       // Even with ASIDs disabled its still preferable to pass an ASID
       // to tlb_flush(), in this case Mem_unit::Asid_disabled,

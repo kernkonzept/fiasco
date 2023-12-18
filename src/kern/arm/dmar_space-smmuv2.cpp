@@ -75,7 +75,7 @@ Dmar_space::init_page_sizes()
 
 IMPLEMENT
 void
-Dmar_space::tlb_flush(bool)
+Dmar_space::tlb_flush_current_cpu()
 {
   Iommu::tlb_invalidate_space(_space_id);
 }

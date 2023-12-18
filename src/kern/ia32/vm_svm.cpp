@@ -179,7 +179,7 @@ Vm_svm::operator delete (void *ptr)
 
 PUBLIC
 void
-Vm_svm::tlb_flush(bool) override
+Vm_svm::tlb_flush_current_cpu() override
 {
   // Nothing to do here, we flush on each entry!
 }

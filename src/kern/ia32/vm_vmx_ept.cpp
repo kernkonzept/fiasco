@@ -245,7 +245,7 @@ Vm_vmx_ept::add_page_size(Mem_space::Page_order o)
 
 PUBLIC
 void
-Vm_vmx_ept::tlb_flush(bool) override
+Vm_vmx_ept::tlb_flush_current_cpu() override
 {
   Vm_vmx_ept_tlb::flush_single(_eptp);
   tlb_mark_unused();

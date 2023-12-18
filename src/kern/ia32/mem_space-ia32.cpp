@@ -598,7 +598,7 @@ Mem_space::regular_tlb_type()
 
 IMPLEMENT inline NEEDS["mem_unit.h"]
 void
-Mem_space::tlb_flush(bool = false)
+Mem_space::tlb_flush_current_cpu()
 {
   if (_current.current() == this)
     Mem_unit::tlb_flush();
@@ -657,7 +657,7 @@ Mem_space::regular_tlb_type()
 
 IMPLEMENT inline NEEDS["mem_unit.h"]
 void
-Mem_space::tlb_flush(bool = false)
+Mem_space::tlb_flush_current_cpu()
 {
   auto asid = c_asid();
   if (asid != Mem_unit::Asid_invalid)

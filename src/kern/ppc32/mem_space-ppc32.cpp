@@ -133,7 +133,7 @@ Mem_space::regular_tlb_type()
 //we flush tlb in htab implementation
 IMPLEMENT static inline NEEDS["mem_unit.h"]
 void
-Mem_space::tlb_flush(bool = false)
+Mem_space::tlb_flush_current_cpu()
 {
   //Mem_unit::tlb_flush();
 }

@@ -102,7 +102,7 @@ private:
       for (unsigned i = 0; i < N_spaces && spaces[i]; ++i)
         {
           if (!Mem_space::Need_xcpu_tlb_flush || spaces[i]->tlb_active_on_cpu().get(cpu))
-            spaces[i]->tlb_flush(true);
+            spaces[i]->tlb_flush_current_cpu();
         }
     }
 
@@ -129,7 +129,7 @@ private:
     void flush_stored()
     {
       for (unsigned i = 0; i < N_spaces && spaces[i]; ++i)
-        spaces[i]->tlb_flush(true);
+        spaces[i]->tlb_flush_current_cpu();
     }
   };
 

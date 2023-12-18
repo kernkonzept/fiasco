@@ -67,8 +67,16 @@ public:
   Tlb_type tlb_type() const
   { return _tlb_type; }
 
+  /**
+   * Local TLB flush, i.e. only on the current CPU.
+   *
+   * Flushes all entries of this memory space from the TLB.
+   *
+   * @note Might also affect the TLB on other CPUs, if the platform provides a
+   *       mechanism for global TLB invalidation.
+   */
   FIASCO_SPACE_VIRTUAL
-  void tlb_flush(bool);
+  void tlb_flush_current_cpu();
 
   /** Insert a page-table entry, or upgrade an existing entry with new
    *  attributes.

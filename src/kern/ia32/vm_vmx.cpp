@@ -82,7 +82,7 @@ Vm_vmx::operator delete (void *ptr)
 
 PUBLIC
 void
-Vm_vmx::tlb_flush(bool) override
+Vm_vmx::tlb_flush_current_cpu() override
 {
   // Nothing to do here, we flush on each entry!
 }

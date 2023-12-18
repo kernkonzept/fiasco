@@ -133,7 +133,7 @@ public:
   static void create_identity_map();
   static Dmar_pt *identity_map;
 
-  void tlb_flush(bool) override;
+  void tlb_flush_current_cpu() override;
 
 private:
   Dmar_pt *_dmarpt;
@@ -351,7 +351,7 @@ Dmar_space::Dmar_ptr::page_addr() const
 
 IMPLEMENT
 void
-Dmar_space::tlb_flush(bool)
+Dmar_space::tlb_flush_current_cpu()
 {
   if (_did)
     Intel::Io_mmu::queue_and_wait_on_all_iommus(
