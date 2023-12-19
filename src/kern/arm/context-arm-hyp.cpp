@@ -25,6 +25,80 @@ EXTENSION class Context
 {
 protected:
   /**
+   * The generic timer virtual timer vIRQ for the cVPU.
+   */
+  class Vtimer_vcpu_irq final : public Vcpu_irq_list_item
+  {
+    Gic_h::Vcpu_ppi_cfg _vtmr = Gic_h::Vcpu_ppi_cfg(0);
+
+  public:
+    void vcpu_soi() override
+    {}
+
+    void vcpu_eoi() override
+    {
+      _vtmr.pending() = 0;
+      _vtmr.active() = 0;
+    }
+
+    Mword vcpu_irq_id() const override
+    { return _vtmr.as_vcpu_irq_cfg().raw; }
+
+    /// Load vCPU state into guest state
+    void load(Gic_h::Vcpu_ppi_cfg vtmr)
+    { _vtmr = vtmr; }
+
+    /// Save current guest state to vCPU state
+    void save(Gic_h::Vcpu_ppi_cfg *vtmr) const
+    { *vtmr = _vtmr; }
+
+    /**
+     * Make vtimer vIRQ pending.
+     *
+     * \return True if Fiasco should inject vIRQ, otherwise false.
+     */
+    bool set_pending()
+    {
+      if (_vtmr.pending())
+        return false;
+
+      _vtmr.pending() = 1;
+      return _vtmr.direct() && _vtmr.enabled() && !_vtmr.active();
+    }
+
+    /// Should the VMM handle the vtimer?
+    bool upcall() const { return !_vtmr.direct(); }
+
+    /**
+     * Should Fiasco keep the vIRQ injected into the guest?
+     *
+     * The usual case is that the interrupt is enabled and pending. But if the
+     * guest disabled the interrupt while it was active, we have to keep it
+     * injected until the EOI comes from the guest.
+     */
+    bool is_injected() const
+    {
+      return _vtmr.direct()
+             && ((_vtmr.enabled() && _vtmr.pending()) || _vtmr.active());
+    }
+
+    /// Required state of the vtimer PPI when this Context is running.
+    bool ppi_enabled() const
+    {
+      return !_vtmr.direct()
+             || (_vtmr.enabled() && !_vtmr.pending() && !_vtmr.active());
+    }
+
+    /**
+     * Remember that the vIRQ is active.
+     *
+     * We'll keep the Vtimer_vcpu_irq injected and let LR allocated.
+     */
+    void set_active()
+    { _vtmr.active() = 1; }
+  };
+
+  /**
    * List of injected IRQs.
    *
    * Holds all Irq objects that are injected to the vCPU and have an LR
@@ -39,6 +113,11 @@ protected:
    * number of Irqs.
    */
   Vcpu_irq_list _pending_irqs;
+
+  /**
+   * Internal state of the generic timer virtual timer interrupt.
+   */
+  Vtimer_vcpu_irq _vcpu_vtimer_irq;
 };
 
 //---------------------------------------------------------------------------
@@ -78,7 +157,8 @@ Context::arch_vcpu_ext_shutdown()
 IMPLEMENT_OVERRIDE inline NEEDS[Context::vm_state,
                                 Context::arm_ext_vcpu_switch_to_host,
                                 Context::arm_ext_vcpu_load_host_regs,
-                                Context::arm_ext_vcpu_switch_to_host_no_load]
+                                Context::arm_ext_vcpu_switch_to_host_no_load,
+                                Context::vcpu_vgic_switch_to_kernel]
 void
 Context::arch_load_vcpu_kern_state(Vcpu_state *vcpu, bool do_load)
 {
@@ -103,6 +183,8 @@ Context::arch_load_vcpu_kern_state(Vcpu_state *vcpu, bool do_load)
         }
       else
         arm_ext_vcpu_switch_to_host_no_load(vcpu, v);
+
+      vcpu_vgic_switch_to_kernel(vcpu, do_load);
     }
 
   _tpidruro = vcpu->host.tpidruro;
@@ -197,6 +279,8 @@ Context::switch_vm_state(Context *t)
                                           ? Gic_h::To_user_mode::Enabled
                                           : Gic_h::To_user_mode::Disabled,
                                         from_mode);
+      if (_to_state & Thread_vcpu_user)
+        t->vcpu_prepare_vtimer();
     }
   else
     {
@@ -284,19 +368,69 @@ public:
     check (Irq_mgr::mgr->alloc(this, _irq, false));
     chip()->set_mode_percpu(cpu, pin(), Irq_chip::Mode::F_level_high);
     chip()->unmask_percpu(cpu, pin());
+    _enabled.cpu(cpu) = true;
+  }
+
+  void mask_ppi()
+  {
+    if (_enabled.current())
+      {
+        chip()->mask_percpu(current_cpu(), pin());
+        _enabled.current() = false;
+      }
+  }
+
+  void unmask_ppi()
+  {
+    if (!_enabled.current())
+      {
+        chip()->unmask_percpu(current_cpu(), pin());
+        _enabled.current() = true;
+      }
+  }
+
+  void set_ppi_enable(bool enable)
+  {
+    if (enable)
+      unmask_ppi();
+    else
+      mask_ppi();
   }
 
 private:
   void switch_mode(bool) override {}
   unsigned _irq;
+  static Per_cpu<bool> _enabled;
 };
 
+DEFINE_PER_CPU Per_cpu<bool> Arm_vtimer_ppi::_enabled;
+
+/**
+ * Handle VTIMER guest interrupt.
+ *
+ * The VTIMER can be handled in two ways:
+ *   - the legacy model where an upcall to the VMM is made and the VTIMER is
+ *     masked in the guests CNTV_CTL register, or
+ *   - the direct injection model where Fiasco handles all the details and
+ *     keeps the PPI masked until the guest EOIed.
+ */
 PUBLIC inline NEEDS[Arm_vtimer_ppi::mask] FIASCO_FLATTEN
 void
 Arm_vtimer_ppi::handle(Upstream_irq const *ui)
 {
-  mask();
-  current()->vcpu_vgic_upcall(1);
+  auto *c = current();
+  bool upcall = c->vcpu_vtimer_hit();
+  if (upcall)
+    {
+      // Order is important here. The vcpu_vgic_upcall() will save the vtimer
+      // state. The vtimer must be masked before, otherwise it will be unmasked
+      // immediately when returning to the guest.
+      mask();
+      c->vcpu_vgic_upcall(1);
+    }
+  else
+    mask_ppi();
+
   chip()->ack(pin());
   Upstream_irq::ack(ui);
 }
@@ -457,6 +591,33 @@ Context::vcpu_handle_pending_injects(Vm_state *v)
 }
 
 /**
+ * Prepare generic timer virtual timer interrupt.
+ *
+ * Depending on the guest state, enable or disable the vtimer PPI.
+ */
+PRIVATE
+void
+Context::vcpu_prepare_vtimer()
+{
+  __vtimer_irq->set_ppi_enable(_vcpu_vtimer_irq.ppi_enabled());
+}
+
+PUBLIC inline NEEDS[Context::vcpu_vgic_upcall, Context::arch_inject_vcpu_irq]
+bool
+Context::vcpu_vtimer_hit()
+{
+  if (_vcpu_vtimer_irq.upcall())
+    return true;
+
+  if (_vcpu_vtimer_irq.set_pending())
+    // This is guaranteed to *not* take the Irq_shortcut because the thread is
+    // in vcpu user mode.
+    arch_inject_vcpu_irq(_vcpu_vtimer_irq.vcpu_irq_id(), &_vcpu_vtimer_irq);
+
+  return false;
+}
+
+/**
  * Handle vGIC maintenance of kernel injected interrupts.
  *
  * All EOIs of interrupts that belong to the kernel need to be handled
@@ -496,20 +657,66 @@ Context::vcpu_vgic_maintenance(unsigned virq)
   if (upcall)
     vcpu_vgic_upcall(virq);
   else
-    vcpu_handle_pending_injects(v);
+    {
+      vcpu_handle_pending_injects(v);
+      vcpu_prepare_vtimer();
+    }
 }
 
 PRIVATE inline
 void
 Context::vcpu_vgic_switch_to_user(Vcpu_state *vcpu)
 {
-  vcpu_handle_pending_injects(vm_state(vcpu));
+  Vm_state *v = vm_state(vcpu);
+  bool old_injected = _vcpu_vtimer_irq.is_injected();
+  _vcpu_vtimer_irq.load(access_once(&v->vtmr));
+
+  /*
+   * Synchronize the vCPU virtual timer interrupt injection state with the vCPU
+   * state on the vCPU kernel->user transition. The virtual timer is special
+   * because the VMM does not have an Irq cap to control the state but only the
+   * vCPU state.
+   */
+  if (!old_injected && _vcpu_vtimer_irq.is_injected())
+    {
+      // This is guaranteed to *not* take the Irq_shortcut because the thread
+      // is in vcpu user mode.
+      arch_inject_vcpu_irq(_vcpu_vtimer_irq.vcpu_irq_id(), &_vcpu_vtimer_irq);
+    }
+  else if (old_injected && !_vcpu_vtimer_irq.is_injected())
+    {
+      // Revocation will fail for active interrupts. Instead, keep it injected
+      // and wait for the EOI.
+      if (arch_revoke_vcpu_irq(&_vcpu_vtimer_irq, false)
+          == Revoke_vcpu_state::Fail_is_active)
+        _vcpu_vtimer_irq.set_active();
+    }
+
+  vcpu_handle_pending_injects(v);
+  vcpu_prepare_vtimer();
+}
+
+PRIVATE inline
+void
+Context::vcpu_vgic_switch_to_kernel(Vcpu_state *vcpu, bool)
+{
+  _vcpu_vtimer_irq.save(&vm_state(vcpu)->vtmr);
 }
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && cpu_virt && !irq_direct_inject]:
 
-PROTECTED inline
+PRIVATE inline
+void
+Context::vcpu_prepare_vtimer()
+{}
+
+PUBLIC inline
+bool
+Context::vcpu_vtimer_hit() const
+{ return true; }
+
+PUBLIC inline
 void
 Context::vcpu_vgic_maintenance(unsigned virq)
 { vcpu_vgic_upcall(virq); }
@@ -517,6 +724,11 @@ Context::vcpu_vgic_maintenance(unsigned virq)
 PRIVATE inline
 void
 Context::vcpu_vgic_switch_to_user(Vcpu_state *)
+{}
+
+PRIVATE inline
+void
+Context::vcpu_vgic_switch_to_kernel(Vcpu_state *, bool)
 {}
 
 //---------------------------------------------------------------------------

@@ -33,7 +33,8 @@ public:
   Unsigned32 vmpidr;
   Unsigned32 vpidr;
 
-  Unsigned32 _res0[2];
+  Gic_h::Vcpu_ppi_cfg vtmr;
+  Unsigned32 _res0[1];
 
   // size depdens on gic version, numer of LRs and APRs
   Gic  gic;

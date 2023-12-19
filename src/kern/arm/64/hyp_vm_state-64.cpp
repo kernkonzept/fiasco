@@ -29,7 +29,7 @@ public:
   Unsigned64 vmpidr;
   Unsigned32 vpidr;
 
-  Unsigned32 _rsvd[1];
+  Gic_h::Vcpu_ppi_cfg vtmr;
   Unsigned64 vtcr;
 
   // size depdens on gic version, numer of LRs and APRs

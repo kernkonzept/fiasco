@@ -75,6 +75,7 @@ public:
     CXX_BITFIELD_MEMBER(  7,  7, grp1_d, raw);
   };
 
+  // SPI/LPI interrupt specification
   struct Vcpu_irq_cfg
   {
     Mword raw;
@@ -84,6 +85,32 @@ public:
     CXX_BITFIELD_MEMBER(  0, 19,  vid, raw);
     CXX_BITFIELD_MEMBER( 23, 23, grp1, raw);
     CXX_BITFIELD_MEMBER( 24, 31, prio, raw);
+  };
+
+  // PPI interrupt specification.
+  // Attention: keep shared bitfields compatible to Vcpu_irq_cfg!
+  struct Vcpu_ppi_cfg
+  {
+    Unsigned32 raw;
+    Vcpu_ppi_cfg() = default;
+    explicit Vcpu_ppi_cfg(Unsigned32 v) : raw(v) {}
+
+    Vcpu_irq_cfg as_vcpu_irq_cfg() const
+    {
+      Vcpu_irq_cfg cfg(0);
+      cfg.vid() = vid();
+      cfg.grp1() = grp1();
+      cfg.prio() = vgic_prio();
+      return cfg;
+    }
+
+    CXX_BITFIELD_MEMBER(  0,  4, vid, raw);       ///< PPI irq id in LR
+    CXX_BITFIELD_MEMBER( 16, 16, direct, raw);    ///< directly inject into vcpu
+    CXX_BITFIELD_MEMBER( 17, 17, enabled, raw);   ///< vtimer ppi enabled
+    CXX_BITFIELD_MEMBER( 18, 18, pending, raw);   ///< vtimer ppi pending
+    CXX_BITFIELD_MEMBER( 19, 19, active, raw);    ///< vtimer ppi active
+    CXX_BITFIELD_MEMBER( 23, 23, grp1, raw);      ///< set if group1 irq
+    CXX_BITFIELD_MEMBER( 24, 31, vgic_prio, raw); ///< Prio value in vgic LR
   };
 
   template< unsigned LREGS >
