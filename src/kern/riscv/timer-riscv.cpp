@@ -183,7 +183,7 @@ Timer::handle_interrupt()
 
 PUBLIC static
 void
-Timer::enable(Cpu_number cpu, bool enable)
+Timer::toggle(Cpu_number cpu, bool enable)
 {
   if (cpu != current_cpu())
     {
