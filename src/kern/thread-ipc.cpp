@@ -1169,9 +1169,10 @@ Thread::do_send_wait(Thread *partner, L4_timeout snd_t)
 
   if (EXPECT_FALSE(snd_t.is_finite()))
     {
-      Unsigned64 tval = snd_t.microsecs(Timer::system_clock(), utcb().access(true));
+      Unsigned64 system_clock = Timer::system_clock();
+      Unsigned64 tval = snd_t.microsecs(system_clock, utcb().access(true));
       // Zero timeout or timeout expired already -- give up
-      if (tval == 0)
+      if (tval == 0 || tval <= system_clock)
         return !abort_send(L4_error::Timeout, partner);
 
       set_timeout(&timeout, tval);
