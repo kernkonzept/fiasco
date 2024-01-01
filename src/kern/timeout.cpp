@@ -255,7 +255,7 @@ Timeout::reset()
   assert (cpu_lock.test());
   To_list::remove(this);
 
-  // Normaly we should reprogramm the timer in one shot mode
+  // Normally we should reprogram the timer in one shot mode
   // But we let the timer interrupt handler to do this "lazily", to save cycles
 }
 
