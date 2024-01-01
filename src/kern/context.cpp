@@ -451,7 +451,7 @@ DEFINE_PER_CPU Per_cpu<Clock> Context::_clock(Per_cpu_data::Cpu_num);
 DEFINE_PER_CPU Per_cpu<Context *> Context::_kernel_ctxt;
 DEFINE_PER_CPU Per_cpu<Context::Kernel_drq> Context::_kernel_drq;
 
-IMPLEMENT inline NEEDS["assert.h"]
+IMPLEMENT inline NEEDS[<cassert>]
 Kobject_iface * __attribute__((nonnull(2, 3)))
 Context_ptr::ptr(Space *s, L4_fpage::Rights *rights) const
 {
@@ -981,7 +981,7 @@ Context::consumed_time()
  * @param t Destination thread whose scheduling context and execution context
  *          should be activated.
  */
-PROTECTED inline NEEDS ["assert.h", Context::switch_handle_drq]
+PROTECTED inline NEEDS [<cassert>, Context::switch_handle_drq]
 Context::Switch FIASCO_WARN_RESULT
 Context::schedule_switch_to_locked(Context *t)
 {
@@ -1153,7 +1153,7 @@ Context *
 Context::Context_member::context() const
 { return context_of(this); }
 
-IMPLEMENT inline NEEDS["lock_guard.h", "assert.h"]
+IMPLEMENT inline NEEDS["lock_guard.h", <cassert>]
 void
 Context::Drq_q::enq(Drq *rq)
 {
@@ -1575,7 +1575,6 @@ PROTECTED inline void Context::clear_recover_jmpbuf() {}
 //----------------------------------------------------------------------------
 IMPLEMENTATION [!mp]:
 
-#include "assert.h"
 #include "warn.h"
 
 PRIVATE inline
@@ -1811,7 +1810,6 @@ protected:
 //----------------------------------------------------------------------------
 IMPLEMENTATION [mp]:
 
-#include "assert.h"
 #include "cpu_call.h"
 #include "globals.h"
 #include "ipi.h"

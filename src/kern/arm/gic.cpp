@@ -1,11 +1,11 @@
 INTERFACE [arm && pic_gic]:
 
-#include "assert.h"
 #include "cpu.h"
 #include "kmem.h"
 #include "irq_chip_generic.h"
 #include "gic_dist.h"
 
+#include <cassert>
 #include <cstdio>
 
 class Gic : public Irq_chip_gen
@@ -182,7 +182,6 @@ IMPL *Gic_mixin<IMPL, CPU>::primary;
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pic_gic]:
 
-#include <cassert>
 #include <cstring>
 #include <cstdio>
 

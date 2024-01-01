@@ -12,7 +12,6 @@ extern Static_object<Mapdb> mapdb_io;
 IMPLEMENTATION[(ia32|amd64) & io]:
 
 #include "l4_types.h"
-#include "assert.h"
 #include "space.h"
 #include "io_space.h"
 
