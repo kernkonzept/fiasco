@@ -132,7 +132,7 @@ public:
 };
 
 /**
- * Abstract IRQ controller chip that is visble as part of the
+ * Abstract IRQ controller chip that is visible as part of the
  * Icu to the user.
  */
 class Irq_chip_icu : public Irq_chip
@@ -336,16 +336,26 @@ IMPLEMENT inline Irq_chip_icu::~Irq_chip_icu() {}
 IMPLEMENT inline Irq_base::~Irq_base() {}
 
 /**
- * \pre `irq->irq_lock()` must be held
+ * Bind the passed IRQ object to this IRQ controller chip.
+ *
+ * \param irq        The IRQ object to bind.
+ * \param pin        The pin of this IRQ controller chip.
+ * \param ctor_only  On `false` (default), set the IRQ mode (edge/level) as
+ *                   implemented by the IRQ controller chip and mask/unmask the
+ *                   IRQ at the chip according to the current state of the IRQ
+ *                   object.
+ *                   On `true`, skip these efforts.
+ *
+ * \pre `irq->irq_lock()` must be held.
  */
 PUBLIC inline
 void
-Irq_chip::bind(Irq_base *irq, Mword pin, bool ctor = false)
+Irq_chip::bind(Irq_base *irq, Mword pin, bool ctor_only = false)
 {
   irq->_pin = pin;
   irq->_chip = this;
 
-  if (ctor)
+  if (ctor_only)
     return;
 
   irq->switch_mode(is_edge_triggered(pin));
@@ -357,7 +367,14 @@ Irq_chip::bind(Irq_base *irq, Mword pin, bool ctor = false)
 }
 
 /**
- * \pre `irq->irq_lock()` must be held
+ * Unbind the passed IRQ object from this IRQ controller chip by binding the IRQ
+ * object to the `sw_chip` chip.
+ *
+ * \param irq  The IRQ object to unbind.
+ *
+ * \see Irq_base::Irq_base()
+ *
+ * \pre `irq->irq_lock()` must be held.
  */
 IMPLEMENT inline
 void
