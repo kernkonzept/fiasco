@@ -159,7 +159,14 @@ IMPLEMENT inline NEEDS["mem_unit.h"]
 void
 Mem_space::tlb_flush_current_cpu()
 {
-  if (!Mem_unit::Have_asids || c_asid() != Mem_unit::Asid_invalid)
+  return tlb_flush_space(true);
+}
+
+PUBLIC inline NEEDS["mem_unit.h"]
+void
+Mem_space::tlb_flush_space(bool with_asid)
+{
+  if (!Mem_unit::Have_asids || (with_asid && c_asid() != Mem_unit::Asid_invalid))
     {
       // Even with ASIDs disabled its still preferable to pass an ASID
       // to tlb_flush(), in this case Mem_unit::Asid_disabled,
@@ -297,7 +304,7 @@ Mem_space::make_current()
   Cpu::set_satp(asid_with_fence(),
                 Cpu::phys_to_ppn(cxx::int_value<Phys_mem_addr>(_dir_phys)));
   // If ASIDs are not supported, flush the TLB after switching the page table.
-  tlb_flush(false);
+  tlb_flush_space(false);
   _current.current() = this;
 }
 
