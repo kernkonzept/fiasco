@@ -209,7 +209,7 @@ config MP
 config MP_MAX_CPUS
 	int "Maximal supported number of CPUs"
 	depends on MP
-	range 1 128
+	range 1 8192
 	default 16
 	help
 	  The maximum number of CPUs the kernel supports.
