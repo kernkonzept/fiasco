@@ -454,7 +454,7 @@ Boot_info::init()
   _max_mappable_address = memsize;
   mbi->mods_count = modcount - skip;
   mbi->mods_addr  = mbi_phys() + sizeof (*mbi);
-  mbm = reinterpret_cast<L4mod_mod *>((char *) mbi + sizeof (*mbi));
+  mbm = offset_cast<L4mod_mod *>(mbi, sizeof (*mbi));
   str = reinterpret_cast<char *>(mbm + modcount - skip);
 
   // Copying of modules starts at the top, right below the kmem reserved area

@@ -81,8 +81,7 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
   if (!ext || (state() & Thread_ext_vcpu_enabled))
     return;
 
-  Vm_state::Vm_info *info
-    = reinterpret_cast<Vm_state::Vm_info *>((char *)vcpu_state + 0x200);
+  Vm_state::Vm_info *info = offset_cast<Vm_state::Vm_info *>(vcpu_state, 0x200);
 
   info->setup();
 
@@ -487,8 +486,7 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
   if (!ext || (state() & Thread_ext_vcpu_enabled))
     return;
 
-  Vm_state::Vm_info *info
-    = reinterpret_cast<Vm_state::Vm_info *>((char *)vcpu_state + 0x200);
+  Vm_state::Vm_info *info = offset_cast<Vm_state::Vm_info *>(vcpu_state, 0x200);
 
   info->setup();
 

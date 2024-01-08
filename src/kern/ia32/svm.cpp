@@ -150,7 +150,7 @@ Svm::Svm(Cpu_number cpu)
   // FIXME: MUST NOT PANIC ON CPU HOTPLUG
   check(_iopm = Kmem_alloc::allocator()->alloc(Bytes(Io_pm_size + Vmcb_size)));
   _iopm_base_pa = Kmem::virt_to_phys(_iopm);
-  _kernel_vmcb = (Vmcb*)((char*)_iopm + Io_pm_size);
+  _kernel_vmcb = offset_cast<Vmcb *>(_iopm, Io_pm_size);
   _kernel_vmcb_pa = Kmem::virt_to_phys(_kernel_vmcb);
   _svm_enabled = true;
 

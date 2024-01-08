@@ -89,7 +89,7 @@ public:
   int num_timers() const { return ((cap_and_id >> 8) & 0xf) + 1; }
 
   Hpet_timer *timer(int idx) const
-  { return reinterpret_cast<Hpet_timer *>((char *)this + 0x100 + idx * 0x20); }
+  { return offset_cast<Hpet_timer *>(this, 0x100 + idx * 0x20); }
 
   void enable()  { config |= ENABLE_CNF; Mem::mb(); }
   void disable() { config &= ~ENABLE_CNF; Mem::mb(); }

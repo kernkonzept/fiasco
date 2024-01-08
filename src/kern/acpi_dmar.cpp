@@ -7,7 +7,7 @@ namespace ACPI {
 struct Dmar_head
 {
   Dmar_head const *next() const
-  { return reinterpret_cast<Dmar_head const *>((char const *)this + length); }
+  { return offset_cast<Dmar_head const *>(this, length); }
 
   template<typename T>
   T const *cast() const
@@ -43,9 +43,7 @@ private:
 struct Dmar_dev_scope
 {
   Dmar_dev_scope const *next() const
-  {
-    return reinterpret_cast<Dmar_dev_scope const *>((char const *)this + length);
-  }
+  { return offset_cast<Dmar_dev_scope const *>(this, length); }
 
   struct Path_entry
   {
@@ -55,7 +53,7 @@ struct Dmar_dev_scope
 
   Path_entry const *begin() const { return path; }
   Path_entry const *end() const
-  { return reinterpret_cast<Path_entry const *>((char const *)this + length); }
+  { return offset_cast<Path_entry const *>(this, length); }
 
   Unsigned8 type;
   Unsigned8 length;
@@ -88,7 +86,7 @@ struct Dmar_dev_scope_mixin
   {
     TYPE const *t = static_cast<TYPE const*>(this);
     return Dev_scope_vect(reinterpret_cast<Dmar_dev_scope const *>(t + 1),
-                          reinterpret_cast<Dmar_dev_scope const *>((char const *)t + t->length));
+                          offset_cast<Dmar_dev_scope const *>(t, t->length));
   }
 };
 
@@ -148,7 +146,7 @@ struct Acpi_dmar : Acpi_table_head
   { return reinterpret_cast<ACPI::Dmar_head const *>(this + 1); }
 
   Iterator end() const
-  { return reinterpret_cast<ACPI::Dmar_head const *>((char const *)this + len); }
+  { return offset_cast<ACPI::Dmar_head const *>(this, len); }
 
   struct Flags
   {

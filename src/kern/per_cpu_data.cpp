@@ -277,11 +277,11 @@ Per_cpu_data::valid(Cpu_number cpu)
 
 IMPLEMENT inline template< typename T >
 T const &Per_cpu<T>::cpu(Cpu_number cpu) const
-{ return *reinterpret_cast<T const *>((char  const *)&_d + _offsets[cpu]); }
+{ return *offset_cast<T const *>(&_d, _offsets[cpu]); }
 
 IMPLEMENT inline template< typename T >
 T &Per_cpu<T>::cpu(Cpu_number cpu)
-{ return *reinterpret_cast<T*>((char *)&_d + _offsets[cpu]); }
+{ return *offset_cast<T *>(&_d, _offsets[cpu]); }
 
 IMPLEMENT
 template< typename T >

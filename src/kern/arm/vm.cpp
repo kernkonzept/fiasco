@@ -151,7 +151,7 @@ Vm::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode)
       return -L4_err::EInval;
     }
 
-  Vm_state *state = reinterpret_cast<Vm_state *>(reinterpret_cast<char *>(vcpu) + 0x400);
+  Vm_state *state = offset_cast<Vm_state *>(vcpu, 0x400);
 
   state_for_dbg = state;
 

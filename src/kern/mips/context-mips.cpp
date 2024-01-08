@@ -156,7 +156,7 @@ Context::switchin_guest_context(Space *spc)
 PUBLIC static inline NEEDS["vz.h"]
 Vz::State *
 Context::vm_state(Vcpu_state *vs)
-{ return reinterpret_cast<Vz::State *>(reinterpret_cast<char *>(vs) + 0x400); }
+{ return offset_cast<Vz::State *>(vs, 0x400); }
 
 IMPLEMENT_OVERRIDE inline
 void

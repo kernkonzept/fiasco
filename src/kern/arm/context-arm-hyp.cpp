@@ -17,7 +17,7 @@ IMPLEMENTATION [arm && cpu_virt]:
 PROTECTED static inline
 Context::Vm_state *
 Context::vm_state(Vcpu_state *vs)
-{ return reinterpret_cast<Vm_state *>(reinterpret_cast<char *>(vs) + 0x400); }
+{ return offset_cast<Vm_state *>(vs, 0x400); }
 
 PROTECTED inline
 void
