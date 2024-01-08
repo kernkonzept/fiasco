@@ -120,9 +120,12 @@ Thread::handle_svc(Trap_state *ts)
         {
           state_del_dirty(Thread_dis_alien);
           do_syscall();
-
           ts->error_code |= 1 << 16; // ts->esr().alien_after_syscall() = 1;
         }
+      else
+        // Before syscall was executed. Adjust PC to be on SVC/HVC insn so that
+        // the instruction can be restarted.
+        ts->pc -= Arm_esr(ts->error_code).il() ? 4 : 2;
 
       slowtrap_entry(ts);
       return;
@@ -187,7 +190,7 @@ Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
 
 PRIVATE inline
 bool
-Thread::check_and_handle_undef_syscall(Return_frame *)
+Thread::check_and_handle_undef_syscall(Trap_state *)
 { return false; }
 
 PUBLIC static inline bool Thread::is_fsr_exception(Arm_esr) { return false; }

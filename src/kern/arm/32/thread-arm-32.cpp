@@ -289,27 +289,6 @@ Thread::is_debug_exception_fsr(Mword error_code)
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && 32bit && fpu]:
 
-PUBLIC static inline
-bool
-Thread::check_for_kernel_mem_access_pf(Trap_state *ts, Thread *t)
-{
-  if (EXPECT_FALSE(t->is_kernel_mem_op_hit_and_clear()))
-    {
-      Mword pc = t->exception_triggered() ? t->_exc_cont.ip() : ts->pc;
-
-      pc -= (ts->psr & Proc::Status_thumb) ? 2 : 4;
-
-      if (t->exception_triggered())
-        t->_exc_cont.ip(pc);
-      else
-        ts->pc = pc;
-
-      return true;
-    }
-
-  return false;
-}
-
 IMPLEMENT_OVERRIDE inline
 bool
 Thread::check_and_handle_coproc_faults(Trap_state *ts)
@@ -321,20 +300,20 @@ Thread::check_and_handle_coproc_faults(Trap_state *ts)
 
   if (ts->psr & Proc::Status_thumb)
     {
-      Unsigned16 v = Thread::peek_user((Unsigned16 *)(ts->pc - 2), this);
+      Unsigned16 v = Thread::peek_user((Unsigned16 *)ts->pc, this);
 
-      if (EXPECT_FALSE(Thread::check_for_kernel_mem_access_pf(ts, this)))
+      if (EXPECT_FALSE(is_kernel_mem_op_hit_and_clear()))
         return true;
 
       if ((v >> 11) <= 0x1c)
         return false;
 
-      opcode = (v << 16) | Thread::peek_user((Unsigned16 *)ts->pc, this);
+      opcode = (v << 16) | Thread::peek_user((Unsigned16 *)(ts->pc + 2), this);
     }
   else
-    opcode = Thread::peek_user((Unsigned32 *)(ts->pc - 4), this);
+    opcode = Thread::peek_user((Unsigned32 *)ts->pc, this);
 
-  if (EXPECT_FALSE(Thread::check_for_kernel_mem_access_pf(ts, this)))
+  if (EXPECT_FALSE(is_kernel_mem_op_hit_and_clear()))
     return true;
 
   if (ts->psr & Proc::Status_thumb)
@@ -363,8 +342,7 @@ Thread::handle_fpu_trap(Unsigned32 opcode, Trap_state *ts)
   if (!condition_valid(opcode >> 28, ts->psr))
     {
       // FPU insns are 32bit, even for thumb
-      if (ts->psr & Proc::Status_thumb)
-        ts->pc += 2;
+      ts->pc += 4;
       return true;
     }
 
@@ -379,7 +357,6 @@ Thread::handle_fpu_trap(Unsigned32 opcode, Trap_state *ts)
     {
       if (Fpu::is_emu_insn(opcode))
         return Fpu::emulate_insns(opcode, ts);
-      ts->pc -= (ts->psr & Proc::Status_thumb) ? 2 : 4;
       return true;
     }
   else
@@ -431,47 +408,60 @@ Thread::get_lr_for_mode(Return_frame const *rf)
 
 PRIVATE inline
 void
-Thread::handle_svc(Trap_state *ts)
+Thread::do_syscall(Unsigned32 pc)
 {
-  extern void slowtrap_entry(Trap_state *ts) asm ("slowtrap_entry");
-  Unsigned32 pc = ts->pc;
-  if (!is_syscall_pc(pc))
-    {
-      slowtrap_entry(ts);
-      return;
-    }
-  ts->pc = get_lr_for_mode(ts);
-  Mword state = this->state();
-  state_del(Thread_cancel);
-  if (state & (Thread_vcpu_user | Thread_alien))
-    {
-      if (state & Thread_dis_alien)
-        state_del_dirty(Thread_dis_alien);
-      else
-        {
-          slowtrap_entry(ts);
-          return;
-        }
-    }
-
   typedef void Syscall(void);
   extern Syscall *sys_call_table[];
   sys_call_table[(-pc) / 4]();
 }
 
 PRIVATE inline
-bool
-Thread::check_and_handle_undef_syscall(Return_frame *rf)
+void
+Thread::handle_svc(Trap_state *ts, Unsigned32 adjust = 0)
 {
-  Mword pc = rf->pc;
+  Unsigned32 pc = ts->pc + adjust;
+  if (!is_syscall_pc(pc))
+    {
+      // Adjust PC to point to trapped bogus syscall instruction.
+      ts->pc -= (Arm_esr(ts->error_code).il() ? 4 : 2) - adjust;
+      slowtrap_entry(ts);
+      return;
+    }
+
+  Mword state = this->state();
+  state_del(Thread_cancel);
+  if (state & (Thread_vcpu_user | Thread_alien))
+    {
+      if (state & Thread_dis_alien)
+        {
+          state_del_dirty(Thread_dis_alien);
+          ts->pc = get_lr_for_mode(ts);
+          do_syscall(pc);
+          ts->error_code |= 0x40; // see ivt.S alien_syscall
+        }
+      else
+        // Adjust PC to be on SVC/HVC insn so that the instruction can either
+        // be restarted (alien thread before syscall) or can be examined in
+        // vCPU entry handler.
+        ts->pc -= 4 - adjust;
+
+      slowtrap_entry(ts);
+      return;
+    }
+
+  ts->pc = get_lr_for_mode(ts);
+  do_syscall(pc);
+}
+
+PRIVATE inline
+bool
+Thread::check_and_handle_undef_syscall(Trap_state *ts)
+{
+  Mword pc = ts->pc;
   if (!is_syscall_pc(pc + 4))
     return false;
 
-  rf->pc = get_lr_for_mode(rf);
-  state_del(Thread_cancel);
-  typedef void Syscall(void);
-  extern Syscall *sys_call_table[];
-  sys_call_table[-(pc + 4) / 4]();
+  handle_svc(ts, 4);
   return true;
 }
 

@@ -243,8 +243,8 @@ Fpu::emulate_insns(Mword opcode, Trap_state *ts)
       return false;
     }
 
-  if (ts->psr & Proc::Status_thumb)
-    ts->pc += 2;
+  // FPU insns are 32bit, even for thumb
+  ts->pc += 4;
 
   return true;
 }

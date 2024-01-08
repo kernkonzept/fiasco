@@ -227,9 +227,6 @@ Thread::handle_fpu_trap(Trap_state *ts)
   if (current_thread()->switchin_fpu())
     return true;
 
-  // emulate the ARM exception entry PC
-  ts->pc += ts->psr & Proc::Status_thumb ? 2 : 4;
-
   return false;
 }
 

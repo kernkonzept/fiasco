@@ -758,17 +758,15 @@ Thread::arm_esr_entry(Return_frame *rf)
           ct->state_del(Thread_cancel);
           Mword state = ct->state();
 
+          if (EXPECT_TRUE(ct->check_and_handle_undef_syscall(ts)))
+            return;
+
           if (state & (Thread_vcpu_user | Thread_alien))
             {
-              ts->pc += ts->psr & Proc::Status_thumb ? 2 : 4;
               ct->send_exception(ts);
               return;
             }
 
-          if (EXPECT_TRUE(ct->check_and_handle_undef_syscall(rf)))
-            return;
-
-          ts->pc += ts->psr & Proc::Status_thumb ? 2 : 4;
           slowtrap_entry(ts);
           return;
         }
