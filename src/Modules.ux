@@ -141,7 +141,7 @@ INTERFACES_KERNEL	:= string_buffer mem_region simpleio kernel_console panic warn
 
 boot_info_IMPL		:= boot_info boot_info-ia32 boot_info-ux
 clock_IMPL              := clock clock-ia32
-config_IMPL		:= config config-ia32-32 config-ux
+config_IMPL		:= config config-ia32-32 config-ia32 config-ux
 context_IMPL		:= context context-ia32 context-ia32-32 context-ux \
 			   context-vcpu
 continuation_IMPL	:= continuation-ia32-32-ux

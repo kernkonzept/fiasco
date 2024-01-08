@@ -70,12 +70,6 @@ int Thread::handle_page_fault(Address pfa, Mword error_code, Mword pc,
   else if (EXPECT_FALSE(PF::is_usermode_error(error_code)))
     return 0;             // disallow access after mem_user_max
 
-  // Check for page fault in IO bit map or in delimiter byte behind IO bitmap
-  // assume it is caused by an input/output instruction and fall through to
-  // handle_slow_trap
-  else if (EXPECT_FALSE(Kmem::is_io_bitmap_page_fault(pfa)))
-    return 0;
-
   // We're in kernel code faulting on a kernel memory region
 
   // A page is not present but a mapping exists in the global page dir.

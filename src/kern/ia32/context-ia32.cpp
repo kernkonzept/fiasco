@@ -42,11 +42,17 @@ Context::switchin_context(Context *from)
   assert (state() & Thread_ready_mask);
 
   from->handle_lock_holder_preemption();
+
+  Cpu &cpu = Cpu::cpus.current();
+
+  // Make sure we use a pristine CPU IO bitmap.
+  cpu.reset_io_bitmap();
+
   // Set kernel-esp in case we want to return to the user.
   // kmem::kernel_sp() returns a pointer to the kernel SP (in the
   // TSS) the CPU uses when next switching from user to kernel mode.
   // regs() + 1 returns a pointer to the end of our kernel stack.
-  Cpu::cpus.current().kernel_sp() = reinterpret_cast<Address>(regs() + 1);
+  cpu.kernel_sp() = reinterpret_cast<Address>(regs() + 1);
 
   // switch to our page directory if necessary
   vcpu_aware_space()->switchin_context(from->vcpu_aware_space());

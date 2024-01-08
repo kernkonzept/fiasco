@@ -193,7 +193,7 @@ Jdb_kern_info_misc::show() override
                      + (Cpu::boot_cpu()->get_tr() >> 3);
       printf(": " L4_PTR_FMT "-" L4_PTR_FMT ", iobitmap at " L4_PTR_FMT,
              e->base(), e->base() + e->size(),
-             e->base() + (reinterpret_cast<Tss *>(e->base())->_io_bit_map_offset));
+             e->base() + (reinterpret_cast<Tss *>(e->base())->_hw.ctx.iopb));
     }
 
   printf("\n"

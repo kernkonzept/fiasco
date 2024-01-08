@@ -106,6 +106,20 @@ public:
   };
 };
 
+INTERFACE[ia32,amd64,ux]:
+
+EXTENSION class Config
+{
+public:
+  enum : unsigned int
+  {
+    Io_port_count = (1UL << 16),
+    Io_bitmap_size = Io_port_count / 8,
+  };
+
+  using Io_bitmap = Unsigned8[Io_bitmap_size];
+};
+
 IMPLEMENTATION[ia32,amd64]:
 
 #include <cstring>

@@ -324,8 +324,8 @@ private:
   char bts_active;
 
   Gdt *gdt;
-  Tss *tss;
-  Tss *tss_dbf;
+  Tss *_tss;
+  Tss *_tss_dbf;
 
 public:
   Lbr lbr_type() const { return _lbr; }
@@ -334,8 +334,9 @@ public:
   bool bts_status() const { return bts_active; }
   bool btf_status() const { return btf_active; }
 
-  Gdt* get_gdt() const { return gdt; }
-  Tss* get_tss() const { return tss; }
+  Gdt *get_gdt() const { return gdt; }
+  Tss *get_tss() const { return _tss; }
+
   void set_gdt() const
   {
     Pseudo_descriptor desc((Address)gdt, Gdt::gdt_max-1);
@@ -570,6 +571,25 @@ struct Ia32_intel_microcode
     return true;
   }
 };
+
+/**
+ * Reset the IO bitmap.
+ *
+ * Instead of physically resetting the IO bitmap by setting its bits, the
+ * IO bitmap offset in the TSS is set beyond the TSS segment limit.
+ *
+ * On an IO port access, this effectively causes a #GP exception even without
+ * the CPU accessing the IO bitmap.
+ *
+ * \note This method needs to be called with the CPU lock held.
+ */
+PUBLIC inline NEEDS["tss.h"]
+void
+Cpu::reset_io_bitmap()
+{
+  _tss->_hw.ctx.iopb = Tss::Segment_limit + 1;
+  _tss->_io_bitmap_revision = 0;
+}
 
 //-----------------------------------------------------------------------------
 IMPLEMENTATION[ux]:

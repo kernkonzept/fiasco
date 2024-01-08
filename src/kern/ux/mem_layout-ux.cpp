@@ -42,8 +42,10 @@ public:
     Registers_map_end  = 0x5f600000,
     Tbuf_buffer_area   = 0x5f600000,  ///< % 2MB   tracebuffer
     Tbuf_buffer_size   = 0x00200000,
-    Io_bitmap          = 0x5f800000,  ///< % 4MB   dummy
-    _Free_1            = 0x5fc00000,  ///< % 4MB   dummy
+
+    Tss_start          = 0x5f800000,  ///< % 4MB   TSS
+    Tss_end            = 0x60000000,
+
     Vmem_end           = 0x60000000,
     Physmem            = Vmem_end,    ///< % 4MB   physical memory
     Physmem_end        = 0xa0000000 - Host_as_offset,
@@ -70,9 +72,13 @@ public:
     Registers_map_end  = 0x2f600000,
     Tbuf_buffer_area   = 0x2f600000,  ///< % 2MB   tracebuffer
     Tbuf_buffer_size   = 0x00200000,
-    Io_bitmap          = 0x2f800000,  ///< % 4MB   dummy
+
+    Tss_start          = 0x2f800000,  ///< % 4MB   TSS
+    Tss_end            = 0x40000000,
+
     Glibc_mmap_start   = 0x40000000,  ///<         fixed, Linux kernel spec.
     Glibc_mmap_end     = 0x50000000,  ///<         hoping that is enough
+
     Vmem_end           = 0x90000000,
     Physmem            = Vmem_end,    ///< % 4MB   physical memory
     Physmem_end        = 0xb0000000 - Host_as_offset,

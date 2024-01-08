@@ -139,9 +139,9 @@ Kmem_alloc::nr_fixups()
  * Allocate physical memory before the buddy allocator initialization.
  *
  * This method is used to permanently allocate the physical memory for the buddy
- * allocator freemap and potentially other permanent kernel structures. Since
- * these structures are never freed, they do not have to influence the run-time
- * allocation.
+ * allocator freemap, for the TSSs on x86 and potentially other permanent kernel
+ * structures. Since these structures are never freed, they do not have to
+ * influence the run-time allocation.
  *
  * The memory is allocated directly from the memory descriptors which are fixed
  * up appropriately. If the allocation fails, the method panics.

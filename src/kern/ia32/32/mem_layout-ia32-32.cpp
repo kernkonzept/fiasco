@@ -42,8 +42,11 @@ public:
     // 0xeb800000-0xec000000 (8MB) free
     Registers_map_start = 0xec000000,
     Registers_map_end   = 0xef800000,
-    Io_bitmap         = 0xefc00000,    ///< % 4MB
-    Vmem_end          = 0xf0000000,
+
+    Tss_start           = 0xef800000,    ///< % 4MB
+    Tss_end             = 0xf0000000,
+
+    Vmem_end            = 0xf0000000,
 
     Kernel_image        = FIASCO_IMAGE_VIRT_START, // usually 0xf0000000
     Kernel_image_size   = FIASCO_IMAGE_VIRT_SIZE,

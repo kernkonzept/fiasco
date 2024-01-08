@@ -85,45 +85,56 @@ Kmem::init_mmu(Cpu const &boot_cpu)
   // now switch to our new page table
   Emulation::set_pdir_addr (Mem_layout::pmem_to_phys (kdir));
 
-  // map the cpu_page we allocated earlier just before io_bitmap
-  assert(Super_pg::aligned(Mem_layout::Io_bitmap));
+  static_assert(Super_pg::aligned(Mem_layout::Tss_start));
 
-  if (boot_cpu.superpages()
-      && Config::SUPERPAGE_SIZE - (Super_pg::offset(tss_mem_pm)) < 0x10000)
+  if (boot_cpu.superpages())
     {
-      // can map as 4MB page because the cpu_page will land within a
-      // 16-bit range from io_bitmap
-      kdir->walk(Virt_addr(Mem_layout::Io_bitmap - Config::SUPERPAGE_SIZE),
-                 Pdir::Super_level, false, pdir_alloc(alloc)).
-        set_page(Super_pg::trunc(tss_mem_pm), Pt_entry::Pse_bit
-                 | Pt_entry::Writable | Pt_entry::Referenced
-                 | Pt_entry::Dirty | Pt_entry::global());
+      Address tss_mem_pm_base = Super_pg::trunc(Kmem_alloc::tss_mem_pm);
+      size_t tss_mem_pm_extra = Kmem_alloc::tss_mem_pm - tss_mem_pm_base;
+      size_t superpages
+        = Super_pg::count(Super_pg::round(Mem_layout::Tss_mem_size
+                                          + tss_mem_pm_extra));
 
-      tss_mem_vm.construct(Super_pg::offset(tss_mem_pm)
-                           + (Mem_layout::Io_bitmap - Config::SUPERPAGE_SIZE),
-                           Config::PAGE_SIZE);
+      for (size_t i = 0; i < superpages; ++i)
+        {
+          auto e = kdir->walk(Virt_addr(Mem_layout::Tss_start
+                                        + Super_pg::size(i)),
+                              Pdir::Super_level, false, pdir_alloc(alloc));
+
+          e.set_page(tss_mem_pm_base + Super_pg::size(i),
+                     Pt_entry::Pse_bit | Pt_entry::Writable
+                     | Pt_entry::Referenced | Pt_entry::Dirty
+                     | Pt_entry::global());
+        }
+
+      tss_mem_vm.construct(Mem_layout::Tss_start + tss_mem_pm_extra,
+                           Mem_layout::Tss_mem_size);
     }
   else
     {
-      auto pt = kdir->walk(Virt_addr(Mem_layout::Io_bitmap - Config::PAGE_SIZE),
-                           Pdir::Depth, false, pdir_alloc(alloc));
+      size_t pages = Pg::count(Pg::round(Mem_layout::Tss_mem_size));
 
-      pt.set_page(tss_mem_pm,
-                  Pt_entry::Writable
-                  | Pt_entry::Referenced | Pt_entry::Dirty
-                  | Pt_entry::global());
+      for (size_t i = 0; i < pages; ++i)
+        {
+          auto e = kdir->walk(Virt_addr(Mem_layout::Tss_start + Pg::size(i)),
+                              Pdir::Depth, false, pdir_alloc(alloc));
 
-      tss_mem_vm.construct(Mem_layout::Io_bitmap - Config::PAGE_SIZE,
-                           Config::PAGE_SIZE);
+          e.set_page(Kmem_alloc::tss_mem_pm + Pg::size(i),
+                     Pt_entry::Writable | Pt_entry::Referenced | Pt_entry::Dirty
+                     | Pt_entry::global());
+        }
+
+      tss_mem_vm.construct(Mem_layout::Tss_start, Mem_layout::Tss_mem_size);
     }
 
   if (mmap(tss_mem_vm->ptr(), Config::PAGE_SIZE, PROT_READ
-           | PROT_WRITE, MAP_SHARED | MAP_FIXED, Boot_info::fd(), tss_mem_pm)
+           | PROT_WRITE, MAP_SHARED | MAP_FIXED, Boot_info::fd(),
+           Kmem_alloc::tss_mem_pm)
       == MAP_FAILED)
-    printf ("CPU page mapping failed: %s\n", strerror (errno));
+    printf("CPU page mapping failed: %s\n", strerror(errno));
 
   kdir->walk(Virt_addr(Mem_layout::Service_page), Pdir::Depth,
              false, pdir_alloc(alloc));
 
-  Cpu::init_tss((Address)tss_mem_vm->alloc<Tss>(1, Order(4)));
+  Cpu::init_tss(tss_mem_vm->alloc<Tss>(1, Order(4)));
 }

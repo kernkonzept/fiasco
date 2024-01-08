@@ -126,7 +126,7 @@ Cpu::set_flags(Unsigned32 efl)
 IMPLEMENT inline NEEDS["tss.h"]
 Address volatile &
 Cpu::kernel_sp() const
-{ return *reinterpret_cast<Address volatile *>(&get_tss()->_esp0); }
+{ return *reinterpret_cast<Address volatile *>(&get_tss()->_hw.ctx.esp0); }
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION[ia32]:
@@ -144,41 +144,46 @@ extern "C" Address dbf_stack_top;
 
 PUBLIC FIASCO_INIT_CPU
 void
-Cpu::init_tss_dbf(Address tss_dbf_mem, Address kdir)
+Cpu::init_tss_dbf(Tss *tss_dbf, Address kdir)
 {
-  tss_dbf = reinterpret_cast<Tss*>(tss_dbf_mem);
+  _tss_dbf = tss_dbf;
 
-  gdt->set_entry_tss(Gdt::gdt_tss_dbf / 8, tss_dbf_mem, sizeof(Tss) - 1);
+  gdt->set_entry_tss(Gdt::gdt_tss_dbf / 8, reinterpret_cast<Address>(_tss_dbf),
+                     Tss::Segment_limit_sans_io);
 
-  tss_dbf->_cs     = Gdt::gdt_code_kernel;
-  tss_dbf->_ss     = Gdt::gdt_data_kernel;
-  tss_dbf->_ds     = Gdt::gdt_data_kernel;
-  tss_dbf->_es     = Gdt::gdt_data_kernel;
-  tss_dbf->_fs     = Gdt::gdt_data_kernel;
-  tss_dbf->_gs     = Gdt::gdt_data_kernel;
-  tss_dbf->_eip    = (Address)entry_vec08_dbf;
-  tss_dbf->_esp    = (Address)&dbf_stack_top;
-  tss_dbf->_ldt    = 0;
-  tss_dbf->_eflags = 0x00000082;
-  tss_dbf->_cr3    = kdir;
-  tss_dbf->_io_bit_map_offset = 0x8000;
+  _tss_dbf->_hw.ctx.cs     = Gdt::gdt_code_kernel;
+  _tss_dbf->_hw.ctx.ss     = Gdt::gdt_data_kernel;
+  _tss_dbf->_hw.ctx.ds     = Gdt::gdt_data_kernel;
+  _tss_dbf->_hw.ctx.es     = Gdt::gdt_data_kernel;
+  _tss_dbf->_hw.ctx.fs     = Gdt::gdt_data_kernel;
+  _tss_dbf->_hw.ctx.gs     = Gdt::gdt_data_kernel;
+  _tss_dbf->_hw.ctx.eip    = (Address)entry_vec08_dbf;
+  _tss_dbf->_hw.ctx.esp    = (Address)&dbf_stack_top;
+  _tss_dbf->_hw.ctx.ldt    = 0;
+  _tss_dbf->_hw.ctx.eflags = 0x00000082;
+  _tss_dbf->_hw.ctx.cr3    = kdir;
+
+  /*
+   * Setting the IO bitmap offset beyond the TSS segment limit effectively
+   * disables the IO bitmap.
+   */
+  _tss_dbf->_hw.ctx.iopb   = Tss::Segment_limit_sans_io + 1;
 }
-
 
 PUBLIC FIASCO_INIT_CPU
 void
-Cpu::init_tss(Address tss_mem, size_t tss_size)
+Cpu::init_tss(Tss *tss)
 {
-  tss = reinterpret_cast<Tss*>(tss_mem);
+  _tss = tss;
 
-  gdt->set_entry_tss(Gdt::gdt_tss / 8, tss_mem, tss_size);
+  gdt->set_entry_tss(Gdt::gdt_tss / 8, reinterpret_cast<Address>(_tss),
+                     Tss::Segment_limit);
 
-  tss->set_ss0(Gdt::gdt_data_kernel);
-  assert(Mem_layout::Io_bitmap - tss_mem
-         < (1 << (sizeof(tss->_io_bit_map_offset) * 8)));
-  tss->_io_bit_map_offset = Mem_layout::Io_bitmap - tss_mem;
+  _tss->set_ss0(Gdt::gdt_data_kernel);
+  _tss->_hw.io.bitmap_delimiter = 0xffU;
+
+  reset_io_bitmap();
 }
-
 
 PUBLIC FIASCO_INIT_CPU
 void
@@ -246,4 +251,3 @@ Cpu::init_sysenter()
       setup_sysenter();
     }
 }
-

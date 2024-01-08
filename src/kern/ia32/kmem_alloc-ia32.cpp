@@ -1,3 +1,13 @@
+INTERFACE [ia32,ux,amd64]:
+
+#include "types.h"
+
+EXTENSION class Kmem_alloc
+{
+public:
+  static Address tss_mem_pm;
+};
+
 IMPLEMENTATION [ia32,ux,amd64]:
 
 // base_init() puts those Mem_region_map's on the stack which is slightly
@@ -12,6 +22,24 @@ IMPLEMENTATION [ia32,ux,amd64]:
 #include "panic.h"
 #include "types.h"
 #include "paging_bits.h"
+
+Address Kmem_alloc::tss_mem_pm;
+
+/**
+ * Number of memory descriptor fixups.
+ *
+ * Since we allocate the freemap and the TSSs, we might potentially need
+ * two fixups.
+ *
+ * \return Upper bound of the number of memory descriptor fixups that are
+ *         needed for a successful boot.
+ */
+IMPLEMENT_OVERRIDE static inline ALWAYS_INLINE constexpr
+size_t
+Kmem_alloc::nr_fixups()
+{
+  return 2;
+}
 
 /**
  * Walk through all KIP memory regions of conventional memory minus the
@@ -131,15 +159,16 @@ Kmem_alloc::base_init()
 }
 
 /**
- * Allocate memory for the buddy allocator freemap and for the kernel memory
- * allocator from KIP memory regions marked as `Kernel_tmp`.
+ * Allocate memory for the buddy allocator freemap, TSSs and for the kernel
+ * memory allocator from KIP memory regions marked as `Kernel_tmp`.
  *
  * Walk through all `Kernel_tmp` KIP memory regions and look for a suitable
- * region for the buddy free bitmap. Add the remaining part of this region and
- * all other `Kernel_tmp` regions as kernel memory. Finally change the type of
- * the regions to `Reserved`.
+ * region for the buddy free bitmap and TSSs. Add the remaining parts of the
+ * affected regions and all other `Kernel_tmp` regions as kernel memory.
+ * Finally, change the type of the regions to `Reserved`.
  *
- * The amount of kernel memory is decreased by the size of the free bitmap.
+ * The amount of kernel memory is decreased by the size of the free bitmap and
+ * the TSSs.
  */
 IMPLEMENT
 Kmem_alloc::Kmem_alloc()
@@ -159,6 +188,12 @@ Kmem_alloc::Kmem_alloc()
 
   if (min_addr >= max_addr)
     panic("Cannot allocate kernel memory: Invalid reserved areas");
+
+  if (0)
+    printf("Kmem_alloc: TSS area needs %zu bytes\n", Mem_layout::Tss_mem_size);
+
+  tss_mem_pm = permanent_alloc(Mem_layout::Tss_mem_size,
+                               Order(Config::PAGE_SHIFT));
 
   unsigned long freemap_size = Alloc::free_map_bytes(min_addr, max_addr);
   Address min_addr_kern = Mem_layout::phys_to_pmem(min_addr);

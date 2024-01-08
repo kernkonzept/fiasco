@@ -1,10 +1,16 @@
 INTERFACE [ia32 || amd64 || ux]:
 
+#include "tss.h"
+
 EXTENSION class Mem_layout
 {
 public:
-  enum { Io_port_max = (1UL << 16) };
+  enum : size_t
+  {
+    Tss_mem_size = Config::Max_num_cpus * sizeof(Tss)
+  };
 
+private:
   static Address _io_map_ptr;
 };
 
@@ -12,6 +18,10 @@ public:
 IMPLEMENTATION [ia32 || amd64 || ux]:
 
 #include "paging_bits.h"
+
+static_assert(Mem_layout::Tss_start + Mem_layout::Tss_mem_size
+              < Mem_layout::Tss_end,
+              "Too many CPUs configured, not enough space to map TSSs.");
 
 Address Mem_layout::_io_map_ptr = Mem_layout::Registers_map_end;
 

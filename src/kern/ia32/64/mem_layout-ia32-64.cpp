@@ -24,8 +24,8 @@ public:
   {
     Kentry_start      = 0xffff810000000000UL, ///< 512GB slot 258
     Kentry_cpu_page   = 0xffff817fffffc000UL, ///< last 16KB in slot 258
-    Io_bitmap         = 0xffff818000000000UL, ///< 512GB slot 259 first page
-    Caps_start        = 0xffff818000800000UL,    ///< % 4MB
+
+    Caps_start        = 0xffff818000800000UL,  ///< 512GB slot 259
     Caps_end          = 0xffff81800c400000UL,    ///< % 4MB
 
     Utcb_addr         = 0x0000007fff000000UL,    ///< % 4kB UTCB map address
@@ -33,6 +33,7 @@ public:
 
     Kglobal_area      = 0xffffffff00000000UL,    ///< % 1GB to share 1GB tables (start)
     Kglobal_area_end  = 0xffffffff80000000UL,    ///< % 1GB to share 1GB tables (end)
+
     Service_page      = Kglobal_area,            ///< % 4MB global mappings
     Kmem_tmp_page_1   = Service_page + 0x2000,   ///< % 4KB size 8KB
     Kmem_tmp_page_2   = Service_page + 0x4000,   ///< % 4KB size 8KB
@@ -42,9 +43,13 @@ public:
     Tbuf_buffer_area  = Service_page + 0x200000, ///< % 2MB
     Tbuf_buffer_size  = 0x200000,
     Tbuf_ubuffer_area = Tbuf_buffer_area,
-    // 0xffffffffeb800000-0xfffffffffec000000 (8MB) free
+
+    Tss_start         = Service_page + 0x400000, ///< % 4MB
+    Tss_end           = Service_page + 0xc000000,
+
     Registers_map_start = Kglobal_area + 0xc000000UL,
     Registers_map_end   = Kglobal_area_end,
+
     Vmem_end          = 0xfffffffff0000000UL,
 
     Kernel_image        = FIASCO_IMAGE_VIRT_START,
@@ -143,7 +148,6 @@ IMPLEMENTATION [amd64]:
 
 Address Mem_layout::physmem_offs;
 Address Mem_layout::pmem_size;
-
 
 PUBLIC static inline
 void

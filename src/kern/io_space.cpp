@@ -1,21 +1,39 @@
 INTERFACE [io]:
 
 #include "types.h"
+#include "config.h"
 #include "mem_space.h"
 
 class Mem_space;
 class Space;
 
-/** Wrapper class for io_{map,unmap}.  This class serves as an adapter
-    for map<Generic_io_space> to Mem_space.
+/**
+ * IO bitmap storage.
+ *
+ * This wraps the IO bitmap using a Bitmap_storage<> class for conveniently
+ * acessing the IO bitmap bits.
  */
-template< typename SPACE >
+class Generic_io_bitmap :
+  public Bitmap_storage<Config::Io_bitmap>
+{
+  Generic_io_bitmap() = delete;
+
+private:
+  Ram_quota *_quota;
+};
+
+/**
+ * Wrapper class for io_{map,unmap}.
+ *
+ * This class serves as an adapter for map<Generic_io_space> to Mem_space.
+ */
+template<typename SPACE>
 class Generic_io_space
 {
   friend class Jdb_iomap;
 
 public:
-  static char const * const name;
+  static char const *const name;
 
   typedef void Reap_list;
 
@@ -38,9 +56,16 @@ public:
     Identity_map = 1,
   };
 
+  static_assert(static_cast<unsigned int>(Map_superpage_size)
+                == Config::Io_port_count);
+  static_assert(static_cast<unsigned int>(Map_max_address)
+                == Config::Io_port_count);
+  static_assert((1U << Map_superpage_shift) == Config::Io_port_count);
+  static_assert((1U << Whole_space) == Config::Io_port_count);
+
   struct Fit_size
   {
-    Page_order operator () (Page_order o) const
+    Page_order operator ()(Page_order o) const
     {
       return o >= Page_order(Map_superpage_shift)
              ? Page_order(Map_superpage_shift)
@@ -53,11 +78,11 @@ public:
   // Generic_io_space::Insert_ok and so on.
   enum Status
   {
-    Insert_ok = 0,		///< Mapping was added successfully.
-    Insert_warn_exists,		///< Mapping already existed
-    Insert_warn_attrib_upgrade,	///< Mapping already existed, attribs upgrade
-    Insert_err_nomem,		///< Couldn't alloc new page table
-    Insert_err_exists		///< A mapping already exists at the target addr
+    Insert_ok = 0,              ///< Mapping was added successfully.
+    Insert_warn_exists,         ///< Mapping already existed
+    Insert_warn_attrib_upgrade, ///< Mapping already existed, attribs upgrade
+    Insert_err_nomem,           ///< Couldn't alloc new page table
+    Insert_err_exists           ///< A mapping already exists at the target addr
   };
 
   static V_pfn map_max_address()
@@ -102,8 +127,36 @@ public:
                             L4_fpage::Rights page_attribs);
 
 private:
-  // DATA
-  Mword _io_counter;
+  /**
+   * IO bitmap.
+   *
+   * The IO bitmap is dynamically allocated on demand. If this member is
+   * nullptr, then the hypothetical IO bitmap is considered to contain
+   * all bits set (i.e. all IO ports disabled).
+   */
+  Generic_io_bitmap *_bitmap;
+
+  /**
+   * IO bitmap revision.
+   *
+   * The revision is increased with every IO bitmap update. On overflow, the
+   * value 0 is avoided to make sure that the comparison with the revision
+   * number of the CPU IO bitmap is never a false positive.
+   *
+   * This means that only an unallocated IO bitmap has the revision of 0.
+   */
+  Mword _revision;
+
+  /**
+   * Number of enabled IO ports.
+   */
+  unsigned int _counter;
+
+  /**
+   * Indicate whether the IO space is represented as a single superpage
+   * (i.e. all IO ports enabled).
+   */
+  bool _superpage;
 
   Mem_space const *mem_space() const
   { return static_cast<SPACE const *>(this); }
@@ -112,9 +165,8 @@ private:
   { return static_cast<SPACE *>(this); }
 };
 
-template< typename SPACE>
-char const * const Generic_io_space<SPACE>::name = "Io_space";
-
+template<typename SPACE>
+char const *const Generic_io_space<SPACE>::name = "Io_space";
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION [io]:
@@ -128,16 +180,91 @@ IMPLEMENTATION [io]:
 #include "kmem_alloc.h"
 #include "panic.h"
 #include "paging.h"
-#include "paging_bits.h"
+#include "cpu_mask.h"
+#include "cpu_call.h"
 
-PUBLIC template< typename SPACE > inline
+/**
+ * IO bitmap storage constructor.
+ *
+ * All bits in the bitmap are set (i.e. all IO ports disabled).
+ *
+ * \param quota  Quota from which the bitmap is allocated.
+ */
+PUBLIC inline
+Generic_io_bitmap::Generic_io_bitmap(Ram_quota *quota)
+  : _quota(quota)
+{
+  set_all();
+}
+
+/**
+ * IO bitmap storage new operator.
+ *
+ * Allocates the IO bitmap storage using the quota.
+ *
+ * \param size   Size of the bitmap. Equals to sizeof(Generic_io_bitmap).
+ * \param quota  Quota from which the bitmap is allocated.
+ *
+ * \return Address of the allocated IO bitmap storage.
+ */
+PUBLIC inline
+void *
+Generic_io_bitmap::operator new(size_t size, Ram_quota *quota) throw ()
+{
+  assert(size == sizeof(Generic_io_bitmap));
+
+  return Kmem_alloc::allocator()->q_alloc(quota, Bytes(size));
+}
+
+/**
+ * IO bitmap storage delete operator.
+ *
+ * \param addr  Address of the IO bitmap storage to delete.
+ */
+PUBLIC inline
+void
+Generic_io_bitmap::operator delete(void *addr)
+{
+  Generic_io_bitmap *const object
+    = nonull_static_cast<Generic_io_bitmap *>(addr);
+
+  object->~Generic_io_bitmap();
+  Kmem_alloc::allocator()->q_free(object->_quota,
+                                  Bytes(sizeof(Generic_io_bitmap)), addr);
+}
+
+/**
+ * Set all bits (i.e. all IO ports disabled)
+ */
+PUBLIC inline
+void
+Generic_io_bitmap::set_all()
+{
+  memset(_bits, 0xffU, size_in_bytes(Config::Io_port_count));
+}
+
+/**
+ * Copy the IO bitmap storage to a different bitmap.
+ *
+ * \param[out] dest  Destination bitmap.
+ */
+PUBLIC inline
+void
+Generic_io_bitmap::copy_to(Config::Io_bitmap *dest)
+{
+  static_assert(sizeof(*dest) == sizeof(_bits));
+  memcpy(*dest, _bits, sizeof(*dest));
+}
+
+PUBLIC template<typename SPACE>
+inline
 typename Generic_io_space<SPACE>::Fit_size
 Generic_io_space<SPACE>::fitting_sizes() const
 {
   return Fit_size();
 }
 
-PUBLIC template< typename SPACE >
+PUBLIC template<typename SPACE>
 static inline
 bool
 Generic_io_space<SPACE>::is_full_flush(L4_fpage::Rights rights)
@@ -145,67 +272,32 @@ Generic_io_space<SPACE>::is_full_flush(L4_fpage::Rights rights)
   return (bool)rights;
 }
 
-PUBLIC template< typename SPACE >
+PUBLIC template<typename SPACE>
 inline
 Generic_io_space<SPACE>::Generic_io_space()
-  : _io_counter(0)
+  : _bitmap(nullptr), _revision(0), _counter(0), _superpage(false)
 {}
 
-
-PUBLIC template< typename SPACE >
+PUBLIC template<typename SPACE>
 Generic_io_space<SPACE>::~Generic_io_space()
 {
-  if (!mem_space()->dir())
-    return;
-
-  auto iopte = mem_space()->dir()->walk(Virt_addr(Mem_layout::Io_bitmap));
-
-  // do we have an IO bitmap?
-  if (iopte.is_valid())
-    {
-      // sanity check
-      assert (iopte.level != Pdir::Super_level);
-
-      Kmem_alloc::allocator()->q_free_phys(ram_quota(), Config::page_order(),
-                                           iopte.page_addr());
-
-      // switch to next page-table entry
-      ++iopte;
-
-      if (iopte.is_valid())
-        Kmem_alloc::allocator()->q_free_phys(ram_quota(), Config::page_order(),
-                                             iopte.page_addr());
-
-      auto iopde = mem_space()->dir()->walk(Virt_addr(Mem_layout::Io_bitmap),
-                                            Pdir::Super_level);
-
-      // free the page table
-      Kmem_alloc::allocator()->q_free_phys(ram_quota(), Config::page_order(),
-                                           iopde.next_level());
-
-      // free reference
-      *iopde.pte = 0;
-    }
+  if (_bitmap != nullptr)
+    delete _bitmap;
 }
 
-PUBLIC template< typename SPACE >
+PUBLIC template<typename SPACE>
 inline
 Ram_quota *
 Generic_io_space<SPACE>::ram_quota() const
-{ return static_cast<SPACE const *>(this)->ram_quota(); }
-
-PRIVATE template< typename SPACE >
-inline
-bool
-Generic_io_space<SPACE>::is_superpage()
-{ return _io_counter & 0x10000000; }
-
+{
+  return static_cast<SPACE const *>(this)->ram_quota();
+}
 
 //
 // Utilities for map<Generic_io_space> and unmap<Generic_io_space>
 //
 
-IMPLEMENT template< typename SPACE >
+IMPLEMENT template<typename SPACE>
 bool
 Generic_io_space<SPACE>::v_fabricate(V_pfn address, Phys_addr *phys,
                                      Page_order *order, Attr *attribs)
@@ -213,30 +305,40 @@ Generic_io_space<SPACE>::v_fabricate(V_pfn address, Phys_addr *phys,
   return this->v_lookup(address, phys, order, attribs);
 }
 
-IMPLEMENT template< typename SPACE >
-inline NEEDS[Generic_io_space::is_superpage]
+IMPLEMENT template<typename SPACE>
+inline
 bool FIASCO_FLATTEN
 Generic_io_space<SPACE>::v_lookup(V_pfn virt, Phys_addr *phys,
                                   Page_order *order, Attr *attribs)
 {
-  if (is_superpage())
+  if (_superpage)
     {
+      /*
+       * If the space is allocated as superpage, then all IO ports are enabled.
+       */
+
       if (order) *order = Page_order(Map_superpage_shift);
       if (phys) *phys = Phys_addr(0);
       if (attribs) *attribs = Attr::URW();
+
       return true;
     }
 
   if (order) *order = Page_order(0);
 
-  if (io_lookup(cxx::int_value<V_pfn>(virt)))
+  if (io_enabled(cxx::int_value<V_pfn>(virt)))
     {
+      /*
+       * IO port is explicitly enabled.
+       */
+
       if (phys) *phys = virt;
       if (attribs) *attribs = Attr::URW();
+
       return true;
     }
 
-  if (get_io_counter() == 0)
+  if (_counter == 0)
     {
       if (order) *order = Page_order(Map_superpage_shift);
       if (phys) *phys = Phys_addr(0);
@@ -245,8 +347,8 @@ Generic_io_space<SPACE>::v_lookup(V_pfn virt, Phys_addr *phys,
   return false;
 }
 
-IMPLEMENT template< typename SPACE >
-inline NEEDS [Generic_io_space::is_superpage]
+IMPLEMENT template<typename SPACE>
+inline
 L4_fpage::Rights FIASCO_FLATTEN
 Generic_io_space<SPACE>::v_delete(V_pfn virt, Page_order size,
                                   L4_fpage::Rights page_attribs)
@@ -254,25 +356,46 @@ Generic_io_space<SPACE>::v_delete(V_pfn virt, Page_order size,
   if (!(page_attribs & L4_fpage::Rights::FULL()))
     return L4_fpage::Rights(0);
 
-  if (is_superpage())
+  if (_superpage)
     {
-      assert (size == Page_order(Map_superpage_shift));
+      /*
+       * If the space is allocated as superpage, then all IO ports are enabled.
+       * We need to explicitly disable all IO ports.
+       */
 
-      for (unsigned p = 0; p < Map_max_address; ++p)
-	io_delete(p);
+      assert(size == Page_order(Map_superpage_shift));
 
-      _io_counter = 0;
+      for (Address p = 0; p < Map_max_address; ++p)
+        io_disable(p);
+
+      assert(_counter == 0);
+
+      _superpage = false;
+
+      /*
+       * Flush the CPU IO bitmaps to make sure that no IO access is possible
+       * via a stale entry.
+       */
+      io_bitmap_shootdown();
+
       return L4_fpage::Rights(0);
     }
 
   (void)size;
-  assert (size == Page_order(0));
+  assert(size == Page_order(0));
 
-  io_delete(cxx::int_value<V_pfn>(virt));
+  io_disable(cxx::int_value<V_pfn>(virt));
+
+  /*
+   * Flush the CPU IO bitmaps to make sure that no IO access is possible
+   * via a stale entry.
+   */
+  io_bitmap_shootdown();
+
   return L4_fpage::Rights(0);
 }
 
-IMPLEMENT template< typename SPACE >
+IMPLEMENT template<typename SPACE>
 inline
 typename Generic_io_space<SPACE>::Status FIASCO_FLATTEN
 Generic_io_space<SPACE>::v_insert(Phys_addr phys, V_pfn virt, Page_order size,
@@ -281,202 +404,241 @@ Generic_io_space<SPACE>::v_insert(Phys_addr phys, V_pfn virt, Page_order size,
   (void)phys;
   (void)page_attribs;
 
-  assert (phys == virt);
-  if (is_superpage() && size == Page_order(Map_superpage_shift))
+  assert(phys == virt);
+
+  /*
+   * If the space is allocated as superpage, then all IO ports are
+   * already enabled.
+   */
+  if (_superpage && size == Page_order(Map_superpage_shift))
     return Insert_warn_exists;
 
-  if (get_io_counter() == 0 && size == Page_order(Map_superpage_shift))
+  if (_counter == 0 && size == Page_order(Map_superpage_shift))
     {
-      for (unsigned p = 0; p < Map_max_address; ++p)
-	io_insert(p);
-      _io_counter |= 0x10000000;
+      /*
+       * Enable all IO ports.
+       */
+      for (Address p = 0; p < Map_max_address; ++p)
+        io_enable(p);
 
+      _superpage = true;
       return Insert_ok;
     }
 
-  assert (size == Page_order(0));
+  assert(size == Page_order(0));
 
-  return typename Generic_io_space::Status(io_insert(cxx::int_value<V_pfn>(virt)));
+  return typename Generic_io_space::Status(io_enable(cxx::int_value<V_pfn>(virt)));
 }
 
-
-PUBLIC template< typename SPACE >
+PUBLIC template<typename SPACE>
 inline static
 void
 Generic_io_space<SPACE>::tlb_flush()
 {}
 
 //
-// IO lookup / insert / delete / counting
+// I/O port lookup / insert / delete / counting
 //
 
-/** return the IO counter.
- *  @return number of IO ports mapped / 0 if not mapped
+/** Get I/O port status in the I/O space.
+ *
+ * \param port  Port number to examine.
+ *
+ * \retval True if port is enabled.
+ * \retval False if port is disabled.
  */
-PUBLIC template< typename SPACE >
-inline NEEDS["paging.h"]
-Mword
-Generic_io_space<SPACE>::get_io_counter() const
-{
-  return _io_counter & ~0x10000000;
-}
-
-
-/** Add something the the IO counter.
-    @param incr number to add
-    @pre 2nd level page table for IO bitmap is present
-*/
-template< typename SPACE >
-inline NEEDS["paging.h"]
-void
-Generic_io_space<SPACE>::addto_io_counter(int incr)
-{
-  local_atomic_add(&_io_counter, incr);
-}
-
-
-/** Lookup one IO port in the IO space.
-    @param port_number port address to lookup;
-    @return true if mapped
-     false if not
- */
-PROTECTED template< typename SPACE > inline
+PROTECTED template<typename SPACE>
+inline
 bool
-Generic_io_space<SPACE>::io_lookup(Address port_number)
+Generic_io_space<SPACE>::io_enabled(Address port) const
 {
-  assert(port_number < Mem_layout::Io_port_max);
+  assert(port < Config::Io_port_count);
 
-  // be careful, do not cause page faults here
-  // there might be nothing mapped in the IO bitmap
+  /* No bitmap means no port mapped. */
+  if (_bitmap == nullptr)
+    return false;
 
-  Address port_addr = get_phys_port_addr(port_number);
+  bool bit = (*_bitmap)[port];
 
-  if(port_addr == ~0UL)
-    return false;		// no bitmap -> no ports
+  /*
+   * The bitmap logic is unintuitively reversed to mimick the hardware usage.
+   *
+   * bit == 1 indicates a disabled port
+   * bit == 0 indicates an enabled port
+   */
 
-  // so there is memory mapped in the IO bitmap
-  char *port = static_cast<char *>(Kmem::phys_to_virt(port_addr));
-
-  // bit == 1 disables the port
-  // bit == 0 enables the port
-  return !(*port & get_port_bit(port_number));
+  return !bit;
 }
 
-
-/** Enable one IO port in the IO space.
-    This function is called in the context of the IPC sender!
-    @param port_number address of the port
-    @return Insert_warn_exists if some ports were mapped in that IO page
-       Insert_err_nomem if memory allocation failed
-       Insert_ok if otherwise insertion succeeded
+/** Enable I/O port in the I/O space.
+ *
+ * This also increments the IO bitmap revision to make sure it is synchronized
+ * with the respective CPU IO bitmap.
+ *
+ * This function is called in the context of the IPC sender.
+ *
+ * \param port  Port number to enable.
+ *
+ * \retval Insert_ok on success
+ * \retval Insert_warn_exists if the port is already enabled.
+ * \retval Insert_err_nomem if memory allocation failed.
  */
-PROTECTED template< typename SPACE > inline
+PROTECTED template<typename SPACE>
+inline
 typename Generic_io_space<SPACE>::Status
-Generic_io_space<SPACE>::io_insert(Address port_number)
+Generic_io_space<SPACE>::io_enable(Address port)
 {
-  assert(port_number < Mem_layout::Io_port_max);
+  assert(port < Config::Io_port_count);
 
-  Address port_virt = Mem_layout::Io_bitmap + (port_number >> 3);
-  Address port_phys = mem_space()->virt_to_phys(port_virt);
-
-  if (port_phys == ~0UL)
+  if (_bitmap == nullptr)
     {
-      // nothing mapped! Get a page and map it in the IO bitmap
-      void *page;
-      if (!(page = Kmem_alloc::allocator()->q_alloc(ram_quota(),
-                                                    Config::page_order())))
-	return Insert_err_nomem;
-
-      // clear all IO ports
-      // bit == 1 disables the port
-      // bit == 0 enables the port
-      memset(page, 0xff, Config::PAGE_SIZE);
-
-      Mem_space::Status status =
-	mem_space()->v_insert(
-	    Mem_space::Phys_addr(Mem_layout::pmem_to_phys(page)),
-	    Virt_addr(Pg::trunc(port_virt)),
-	    Mem_space::Page_order(Config::PAGE_SHIFT),
-            Mem_space::Attr::space_local(L4_fpage::Rights::RW()));
-
-      if (status == Mem_space::Insert_err_nomem)
-	{
-	  Kmem_alloc::allocator()->free(Config::page_order(), page);
-	  ram_quota()->free(Config::PAGE_SIZE);
-	  return Insert_err_nomem;
-	}
-
-      // we've been careful, so insertion should have succeeded
-      assert(status == Mem_space::Insert_ok);
-
-      port_phys = mem_space()->virt_to_phys(port_virt);
-      assert(port_phys != ~0UL);
+      _bitmap = new (ram_quota()) Generic_io_bitmap(ram_quota());
+      if (_bitmap == nullptr)
+        return Insert_err_nomem;
     }
 
-  // so there is memory mapped in the IO bitmap -- write the bits now
-  Unsigned8 *port = static_cast<Unsigned8 *> (Kmem::phys_to_virt(port_phys));
+  bool bit = (*_bitmap)[port];
 
-  if (*port & get_port_bit(port_number)) // port disabled?
+  /*
+   * The bitmap logic is unintuitively reversed to mimick the hardware usage.
+   *
+   * bit == 1 indicates a disabled port
+   * bit == 0 indicates an enabled port
+   */
+
+  if (bit)
     {
-      *port &= ~get_port_bit(port_number);
-      addto_io_counter(1);
+      _bitmap->clear_bit(port);
+      ++_counter;
+
+      /*
+       * This forces the IO bitmap to be copied to the respective CPU
+       * IO bitmap in case of an IO port access exception.
+       */
+      ++_revision;
+
+      /*
+       * To avoid a potential (unlikely, but possible) false positive
+       * comparison with the CPU IO bitmap revision, the value 0 is skipped
+       * in case revision overflow.
+       */
+      if (_revision == 0)
+        ++_revision;
+
       return Insert_ok;
     }
 
-  // already enabled
+  /* Port is already enabled. */
   return Insert_warn_exists;
 }
 
-
-/** Disable one IO port in the IO space.
-    @param port_number port to disable
+/** Disable I/O port in the I/O space.
+ *
+ * \note The IO bitmap revision is unchanged. Therefore it is expected
+ *       that the caller flushes the CPU IO bitmaps to make sure they are
+ *       resynchronized with the new state of the IO bitmap.
+ *
+ * \param port  Port number to disable.
  */
-PROTECTED template< typename SPACE > inline
+PROTECTED template<typename SPACE>
+inline
 void
-Generic_io_space<SPACE>::io_delete(Address port_number)
+Generic_io_space<SPACE>::io_disable(Address port)
 {
-  assert(port_number < Mem_layout::Io_port_max);
+  assert(port < Config::Io_port_count);
 
-  // be careful, do not cause page faults here
-  // there might be nothing mapped in the IO bitmap
-
-  Address port_addr = get_phys_port_addr(port_number);
-
-  if (port_addr == ~0UL)
-    // nothing mapped -> nothing to delete
+  /* If there is no bitmap, then all ports are implicitly disabled. */
+  if (_bitmap == nullptr)
     return;
 
-  // so there is memory mapped in the IO bitmap -> disable the ports
-  char *port = static_cast<char *>(Kmem::phys_to_virt(port_addr));
+  bool bit = (*_bitmap)[port];
 
-  // bit == 1 disables the port
-  // bit == 0 enables the port
-  if(!(*port & get_port_bit(port_number)))    // port enabled ??
+  /*
+   * The bitmap logic is unintuitively reversed to mimick the hardware usage.
+   *
+   * bit == 1 indicates a disabled port
+   * bit == 0 indicates an enabled port
+   */
+
+  if (!bit)
     {
-      *port |= get_port_bit(port_number);
-      addto_io_counter(-1);
+      assert(_counter > 0);
+
+      _bitmap->set_bit(port);
+      --_counter;
     }
 }
 
-template< typename SPACE >
-INLINE NEEDS["config.h"]
-Address
-Generic_io_space<SPACE>::get_phys_port_addr(Address const port_number) const
-{
-  return mem_space()->virt_to_phys(Mem_layout::Io_bitmap + (port_number >> 3));
-}
-
-template< typename SPACE >
-INLINE
-Unsigned8
-Generic_io_space<SPACE>::get_port_bit(Address const port_number) const
-{
-  return 1 << (port_number & 7);
-}
-
-
-PUBLIC template< typename SPACE >
+PUBLIC template<typename SPACE>
 inline static
 typename Generic_io_space<SPACE>::V_pfn
 Generic_io_space<SPACE>::canonize(V_pfn v)
 { return v; }
+
+/**
+ * Update the current CPU IO bitmap.
+ *
+ * In case of the IO bitmap revision not being equal to the CPU IO bitmap
+ * revision, the contents of the IO bitmap is copied to the CPU IO bitmap
+ * and the CPU IO bitmap revision is updated.
+ *
+ * \note It is assumed that the arguments of this method point to the CPU IO
+ *       bitmap of the current CPU and that the CPU lock is held while calling
+ *       this method.
+ *
+ * \param[io,out] dest_revision  Current CPU IO bitmap revision.
+ * \param[out]    dest_bitmap    Current CPU IO bitmap.
+ *
+ * \retval false  The CPU IO bitmap was not updated.
+ * \retval true   The CPU IO bitmap was updated.
+ */
+PUBLIC template<typename SPACE>
+inline
+bool
+Generic_io_space<SPACE>::update_io_bitmap(Mword *dest_revision,
+                                          Config::Io_bitmap *dest_bitmap)
+{
+  if (*dest_revision != _revision)
+    {
+      assert(_revision != 0);
+      assert(_bitmap != nullptr);
+
+      _bitmap->copy_to(dest_bitmap);
+      *dest_revision = _revision;
+      return true;
+    }
+
+  return false;
+}
+
+/**
+ * Reset the IO bitmaps of all CPUs.
+ *
+ * This method needs to be called whenever a port is disabled in an IO space.
+ *
+ * To avoid complicated tracking of "active" IO spaces, we flush the IO bitmaps
+ * of all on-line CPUs. This forces the IO bitmaps to be resynchronized with any
+ * given IO space on the next IO port access.
+ *
+ * To avoid locking the IO bitmaps, we use IPI to reset the IO bitmaps locally
+ * on every on-line CPU, similarily to a TLB shootdown. This is relatively
+ * costly, but we assume that disabling a port is not a frequent operation.
+ */
+PRIVATE template<typename SPACE>
+inline
+void
+Generic_io_space<SPACE>::io_bitmap_shootdown()
+{
+  Cpu_mask cpus;
+
+  for (auto cpu = Cpu_number::first(); cpu < Config::max_num_cpus(); ++cpu)
+    if (Cpu::online(cpu))
+      cpus.set(cpu);
+
+  Cpu_call::cpu_call_many(cpus, [](Cpu_number)
+    {
+      Cpu &cpu = Cpu::cpus.current();
+      cpu.reset_io_bitmap();
+      return false;
+    }, false);
+}

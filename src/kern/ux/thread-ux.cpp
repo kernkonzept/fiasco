@@ -49,11 +49,6 @@ PRIVATE inline bool Thread::check_trap13_kernel(Trap_state *)
 PRIVATE inline void Thread::check_f00f_bug(Trap_state *)
 {}
 
-PRIVATE inline 
-unsigned
-Thread::check_io_bitmap_delimiter_fault(Trap_state *)
-{ return 1; }
-
 PRIVATE inline bool Thread::handle_sysenter_trap(Trap_state *, Address, bool)
 { return true; }
 

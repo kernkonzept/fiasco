@@ -19,7 +19,7 @@ Per_cpu_array<Syscall_entry_data> Cpu::_syscall_entry_data;
 IMPLEMENT inline NEEDS["tss.h"]
 Address volatile &
 Cpu::kernel_sp() const
-{ return *reinterpret_cast<Address volatile *>(&get_tss()->_rsp0); }
+{ return *reinterpret_cast<Address volatile *>(&get_tss()->_hw.ctx.rsp0); }
 
 PUBLIC inline
 void
@@ -234,20 +234,20 @@ extern "C" Address dbf_stack_top;
 
 PUBLIC FIASCO_INIT_CPU
 void
-Cpu::init_tss(Address tss_mem, size_t tss_size)
+Cpu::init_tss(Tss *tss)
 {
-  tss = reinterpret_cast<Tss*>(tss_mem);
+  _tss = tss;
 
-  gdt->set_entry_tss(Gdt::gdt_tss / 8, tss_mem, tss_size);
+  gdt->set_entry_tss(Gdt::gdt_tss / 8, reinterpret_cast<Address>(_tss),
+                     Tss::Segment_limit);
 
   // XXX setup pointer for clean double fault stack
-  tss->_ist1 = (Address)&dbf_stack_top;
-  assert(Mem_layout::Io_bitmap - tss_mem
-         < (1 << (sizeof(tss->_io_bit_map_offset) * 8)));
-  tss->_io_bit_map_offset = Mem_layout::Io_bitmap - tss_mem;
+  _tss->_hw.ctx.ist1 = (Address)&dbf_stack_top;
+  _tss->_hw.io.bitmap_delimiter = 0xffU;
+
+  reset_io_bitmap();
   init_sysenter();
 }
-
 
 PUBLIC FIASCO_INIT_CPU
 void
@@ -280,7 +280,6 @@ Cpu::init_gdt(Address gdt_mem, Address user_max)
                     Gdt_entry::User, Gdt_entry::Code_compat,
                     Gdt_entry::Size_32);
 }
-
 
 PUBLIC static inline
 Mword

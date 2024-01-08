@@ -12,6 +12,16 @@ EXTENSION class Thread
 {
 private:
   /**
+   * Return value for \ref handle_io_fault.
+   */
+  enum Io_return
+  {
+    Ignored = 0,
+    Retry = 1,
+    Fail = 2
+  };
+
+  /**
    * Return code segment used for exception reflection to user mode
    */
   static Mword exception_cs();
@@ -152,7 +162,7 @@ int
 Thread::handle_slow_trap(Trap_state *ts)
 {
   int from_user = ts->cs() & 3;
-  int res_iopf;
+  Io_return res_iopf;
 
   if (EXPECT_FALSE(ts->_trapno == 0xee)) //debug IPI
     {
@@ -165,14 +175,8 @@ Thread::handle_slow_trap(Trap_state *ts)
 
   if (from_user && _space.user_mode())
     {
-      if (ts->_trapno == 14 && Kmem::is_io_bitmap_page_fault(ts->_cr2))
-        {
-	  ts->_trapno = 13;
-	  ts->_err    = 0;
-        }
-
       if (send_exception(ts))
-	goto success;
+        goto success;
     }
 
   // XXX We might be forced to raise an exception. In this case, our return
@@ -223,14 +227,17 @@ Thread::handle_slow_trap(Trap_state *ts)
     }
 
   set_recover_jmpbuf(&pf_recovery);
-  res_iopf = handle_io_page_fault(ts);
+  res_iopf = handle_io_fault(ts);
   clear_recover_jmpbuf();
 
   switch (res_iopf)
     {
-    case 1: goto success;
-    case 2: goto fail;
-    default: break;
+    case Ignored:
+      break;
+    case Retry:
+      goto success;
+    case Fail:
+      goto fail;
     }
 
 check_exception:
@@ -285,8 +292,6 @@ Thread::update_local_map(Address pfa, Mword /*error_code*/)
   static_assert(255 == (Mem_layout::User_max >> 39),
                 "Mem_layout::User_max must lie in 512G slot 255.");
   // 512G slot 259 is used for context-specific kernel data.
-  static_assert(259 == ((Mem_layout::Io_bitmap >> 39) & 0x1ff),
-                "Mem_layout::Io_bitmap must lie in 512G slot 259.");
   static_assert(259 == ((Mem_layout::Caps_start >> 39) & 0x1ff),
                 "Mem_layout::Caps_start must lie in 512G slot 259.");
   static_assert(259 == (((Mem_layout::Caps_end - 1) >> 39) & 0x1ff),
@@ -336,7 +341,6 @@ int
 thread_page_fault(Address pfa, Mword error_code, Address ip, Mword flags,
 		  Return_frame *regs)
 {
-
   // XXX: need to do in a different way, if on debug stack e.g.
 #if 0
   // If we're in the GDB stub -- let generic handler handle it
@@ -549,16 +553,11 @@ Thread::user_ip(Mword ip)
 IMPLEMENTATION [(ia32,amd64,ux) && !io]:
 
 PRIVATE inline
-int
-Thread::handle_io_page_fault(Trap_state *)
-{ return 0; }
-
-PRIVATE inline
-bool
-Thread::get_ioport(Address /*eip*/, Trap_state * /*ts*/,
-                   unsigned * /*port*/, unsigned * /*size*/)
-{ return false; }
-
+Thread::Io_return
+Thread::handle_io_fault(Trap_state *)
+{
+  return Ignored;
+}
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION[ia32 || amd64]:
@@ -625,45 +624,6 @@ Thread::check_f00f_bug(Trap_state *ts)
       && ts->_cr2 >= Idt::idt()
       && ts->_cr2 <  Idt::idt() + Idt::_idt_max * 8)
     ts->_trapno = (ts->_cr2 - Idt::idt()) / 8;
-}
-
-
-PRIVATE inline
-unsigned
-Thread::check_io_bitmap_delimiter_fault(Trap_state *ts)
-{
-  // check for page fault at the byte following the IO bitmap
-  if (ts->_trapno == 14           // page fault?
-      && (ts->_err & 4) == 0         // in supervisor mode?
-      && ts->ip() <= Mem_layout::User_max   // delimiter byte accessed?
-      && (ts->_cr2 == Mem_layout::Io_bitmap + Mem_layout::Io_port_max / 8))
-    {
-      // page fault in the first byte following the IO bitmap
-      // map in the cpu_page read_only at the place
-      Mem_space::Status result =
-	mem_space()->v_insert(
-	    Mem_space::Phys_addr(mem_space()->virt_to_phys_s0((void*)Kmem::io_bitmap_delimiter_page())),
-	    Virt_addr(Mem_layout::Io_bitmap + Mem_layout::Io_port_max / 8),
-	    Mem_space::Page_order(Config::PAGE_SHIFT),
-	    Page::Attr::kern_global(Page::Rights::R()));
-
-      switch (result)
-	{
-	case Mem_space::Insert_ok:
-	  return 1; // success
-	case Mem_space::Insert_err_nomem:
-	  // kernel failure, translate this into a general protection
-	  // violation and hope that somebody handles it
-	  ts->_trapno = 13;
-	  ts->_err    =  0;
-	  return 0; // fail
-	default:
-	  // no other error code possible
-	  assert (false);
-	}
-    }
-
-  return 1;
 }
 
 PRIVATE inline NEEDS["keycodes.h"]

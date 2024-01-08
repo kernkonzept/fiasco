@@ -35,10 +35,6 @@ private:
   Kmem (const Kmem&);
 
 public:
-  static Address kcode_start();
-  static Address kcode_end();
-  static Address virt_to_phys(const void *addr);
-
   /**
    * Allocator type for CPU structures (GDT, TSS, etc.).
    *
@@ -50,6 +46,12 @@ public:
    * done sequentially).
    */
   using Lockless_alloc = Simple_alloc<Lockless_policy>;
+
+  static Address kcode_start();
+  static Address kcode_end();
+  static Address virt_to_phys(const void *addr);
+
+  static Static_object<Lockless_alloc> tss_mem_vm;
 };
 
 typedef Kmem Kmem_space;
@@ -57,6 +59,8 @@ typedef Kmem Kmem_space;
 
 //----------------------------------------------------------------------------
 INTERFACE [ia32, amd64]:
+
+#include "kmem_alloc.h"
 
 EXTENSION
 class Kmem
@@ -67,7 +71,6 @@ public:
   static Address     user_max();
 
 private:
-  static Unsigned8   *io_bitmap_delimiter;
   static Address kphys_start, kphys_end;
 };
 
@@ -89,17 +92,7 @@ IMPLEMENTATION [ia32, amd64]:
 
 enum { Print_info = 0 };
 
-Unsigned8    *Kmem::io_bitmap_delimiter;
 Address Kmem::kphys_start, Kmem::kphys_end;
-
-
-PUBLIC static inline
-Address
-Kmem::io_bitmap_delimiter_page()
-{
-  return reinterpret_cast<Address>(io_bitmap_delimiter);
-}
-
 
 /**
  * Compute physical address from a kernel-virtual address.
@@ -165,14 +158,6 @@ IMPLEMENT inline Address Kmem::kcode_start()
 IMPLEMENT inline Address Kmem::kcode_end()
 {
   return Pg::round(virt_to_phys(&Mem_layout::end));
-}
-
-IMPLEMENT_OVERRIDE inline NEEDS["mem_layout.h"]
-bool
-Kmem::is_io_bitmap_page_fault(Address addr)
-{
-  return addr >= Mem_layout::Io_bitmap &&
-	 addr <= Mem_layout::Io_bitmap + Mem_layout::Io_port_max / 8;
 }
 
 IMPLEMENT inline NEEDS["mem_layout.h"]
@@ -343,6 +328,86 @@ IMPLEMENTATION [ia32, amd64]:
 
 #include "paging_bits.h"
 
+/**
+ * Map TSS area using regular pages.
+ *
+ * \param dir    Page directory to map the TSS area into.
+ * \param alloc  Allocator for page tables.
+ */
+PRIVATE static inline
+void
+Kmem::map_tss(Kpdir *dir, Kmem_alloc *alloc)
+{
+  size_t pages = Pg::count(Pg::round(Mem_layout::Tss_mem_size));
+
+  for (size_t i = 0; i < pages; ++i)
+    {
+      auto e = dir->walk(Virt_addr(Mem_layout::Tss_start + Pg::size(i)),
+                         Pdir::Depth, false, pdir_alloc(alloc));
+
+      e.set_page(Kmem_alloc::tss_mem_pm + Pg::size(i),
+                 Pt_entry::XD | Pt_entry::Writable | Pt_entry::Referenced
+                 | Pt_entry::Dirty | Pt_entry::global());
+    }
+}
+
+/**
+ * Map TSS area using superpages.
+ *
+ * \param dir    Page directory to map the TSS area into.
+ * \param alloc  Allocator for page tables.
+ *
+ * \retval The offset of the start of the mapped physical memory due to the
+ *         superpage alignment.
+ */
+PRIVATE static inline
+size_t
+Kmem::map_tss_superpages(Kpdir *dir, Kmem_alloc *alloc)
+{
+  Address tss_mem_pm_base = Super_pg::trunc(Kmem_alloc::tss_mem_pm);
+  size_t tss_mem_extra = Kmem_alloc::tss_mem_pm - tss_mem_pm_base;
+  size_t superpages
+    = Super_pg::count(Super_pg::round(Mem_layout::Tss_mem_size
+                                      + tss_mem_extra));
+
+  for (size_t i = 0; i < superpages; ++i)
+    {
+      auto e = dir->walk(Virt_addr(Mem_layout::Tss_start + Super_pg::size(i)),
+                         Pdir::Super_level, false, pdir_alloc(alloc));
+
+      e.set_page(tss_mem_pm_base + Super_pg::size(i),
+                 Pt_entry::XD | Pt_entry::Writable | Pt_entry::Referenced
+                 | Pt_entry::Dirty | Pt_entry::global());
+    }
+
+  return tss_mem_extra;
+}
+
+PRIVATE static inline
+void
+Kmem::setup_global_cpu_structures(bool superpages)
+{
+  static_assert(Super_pg::aligned(Mem_layout::Tss_start));
+  static_assert(Pg::aligned(sizeof(Tss)));
+
+  printf("Kmem: TSS mem at %lx (%zu bytes)\n", Kmem_alloc::tss_mem_pm,
+         Mem_layout::Tss_mem_size);
+
+  auto *alloc = Kmem_alloc::allocator();
+
+  if (superpages)
+    {
+      size_t tss_mem_extra = map_tss_superpages(kdir, alloc);
+      tss_mem_vm.construct(Mem_layout::Tss_start + tss_mem_extra,
+                           Mem_layout::Tss_mem_size);
+    }
+  else
+    {
+      map_tss(kdir, alloc);
+      tss_mem_vm.construct(Mem_layout::Tss_start, Mem_layout::Tss_mem_size);
+    }
+}
+
 PUBLIC static FIASCO_INIT
 void
 Kmem::init_mmu()
@@ -404,11 +469,6 @@ Kmem::init_mmu()
   Cpu::set_pdbr(Mem_layout::pmem_to_phys(kdir));
 
   setup_global_cpu_structures(superpages);
-
-
-  // did we really get the first byte ??
-  assert(Pg::aligned(reinterpret_cast<Address>(io_bitmap_delimiter)));
-  *io_bitmap_delimiter = 0xff;
 }
 
 PRIVATE static
@@ -416,30 +476,16 @@ void
 Kmem::setup_cpu_structures(Cpu &cpu, Lockless_alloc *cpu_alloc,
                            Lockless_alloc *tss_alloc)
 {
-  // now initialize the global descriptor table
+  // Initialize the Global Descriptor Table and the Task State Segment.
   void *gdt = cpu_alloc->alloc_bytes<void>(Gdt::gdt_max, Order(4));
+  Tss *tss = tss_alloc->alloc<Tss>(1);
+
+  assert(gdt != nullptr);
+  assert(tss != nullptr);
+  assert(Pg::aligned(reinterpret_cast<Address>(tss)));
+
   cpu.init_gdt((Address)gdt, user_max());
-
-  // Allocate the task segment as the last thing from cpu_page_vm
-  // because with IO protection enabled the task segment includes the
-  // rest of the page and the following IO bitmap (2 pages).
-  //
-  // Allocate additional 256 bytes for emergency stack right beneath
-  // the tss. It is needed if we get an NMI or debug exception at
-  // entry_sys_fast_ipc/entry_sys_fast_ipc_c/entry_sys_fast_ipc_log.
-  void *tss = tss_alloc->alloc_bytes<void>(sizeof(Tss) + 256, Order(4));
-  Address tss_mem = (Address)tss;
-  assert(tss_mem + sizeof(Tss) + 256 < Mem_layout::Io_bitmap);
-  tss_mem += 256;
-  assert(tss_mem >= Mem_layout::Io_bitmap - 0x100000);
-
-  // this is actually tss_size + 1, including the io_bitmap_delimiter byte
-  size_t tss_size;
-  tss_size = Mem_layout::Io_bitmap + (Mem_layout::Io_port_max / 8) - tss_mem;
-
-  assert(tss_size < 0x100000); // must fit into 20 Bits
-
-  cpu.init_tss(tss_mem, tss_size);
+  cpu.init_tss(tss);
 
   // force GDT... to memory before loading the registers
   asm volatile ( "" : : : "memory" );
@@ -486,6 +532,7 @@ IMPLEMENTATION [ia32,ux,amd64]:
 
 // static class variables
 Kpdir *Kmem::kdir;
+Static_object<Kmem::Lockless_alloc> Kmem::tss_mem_vm;
 
 /**
  * Compute a kernel-virtual address for a physical address.
@@ -510,24 +557,6 @@ Kmem::phys_to_virt(Address addr)
  * @return kernel's global page directory
  */
 PUBLIC static inline const Pdir* Kmem::dir() { return kdir; }
-
-
-//--------------------------------------------------------------------------
-INTERFACE [(ia32 || ux || amd64) && !cpu_local_map]:
-
-#include "types.h"
-
-EXTENSION class Kmem
-{
-  static unsigned long tss_mem_pm;
-  static Static_object<Lockless_alloc> tss_mem_vm;
-};
-
-//--------------------------------------------------------------------------
-IMPLEMENTATION [(ia32 || ux || amd64) && !cpu_local_map]:
-
-unsigned long Kmem::tss_mem_pm;
-Static_object<Kmem::Lockless_alloc> Kmem::tss_mem_vm;
 
 //--------------------------------------------------------------------------
 IMPLEMENTATION [realmode && amd64]:
@@ -615,70 +644,6 @@ IMPLEMENTATION [(amd64 || ia32) && !cpu_local_map]:
 
 #include "warn.h"
 
-PRIVATE static inline
-void
-Kmem::setup_global_cpu_structures(bool superpages)
-{
-  auto *alloc = Kmem_alloc::allocator();
-  assert(Super_pg::aligned(Mem_layout::Io_bitmap));
-
-  enum { Tss_mem_size = 0x10 + Config::Max_num_cpus * cxx::ceil_lsb(sizeof(Tss) + 256, 4) };
-
-  /* Per-CPU TSS required to use IO-bitmap for more CPUs */
-  static_assert(Tss_mem_size < 0x10000, "Too many CPUs configured.");
-
-  unsigned tss_mem_size = Tss_mem_size;
-
-  if (tss_mem_size < Config::PAGE_SIZE)
-    tss_mem_size = Config::PAGE_SIZE;
-
-  tss_mem_pm = Mem_layout::pmem_to_phys(alloc->alloc(Bytes(tss_mem_size)));
-
-  printf("Kmem:: TSS mem at %lx (%uBytes)\n", tss_mem_pm, tss_mem_size);
-
-  if (superpages
-      && Config::SUPERPAGE_SIZE - (Super_pg::offset(tss_mem_pm)) < 0x10000)
-    {
-      // can map as 4MB page because the cpu_page will land within a
-      // 16-bit range from io_bitmap
-      auto e = kdir->walk(Virt_addr(Mem_layout::Io_bitmap - Config::SUPERPAGE_SIZE),
-                          Pdir::Super_level, false, pdir_alloc(alloc));
-
-      e.set_page(Super_pg::trunc(tss_mem_pm),
-                 Pt_entry::XD | Pt_entry::Writable | Pt_entry::Referenced
-                 | Pt_entry::Dirty | Pt_entry::global());
-
-      tss_mem_vm.construct(Super_pg::offset(tss_mem_pm)
-                           + (Mem_layout::Io_bitmap - Config::SUPERPAGE_SIZE),
-                           tss_mem_size);
-    }
-  else
-    {
-      unsigned i;
-      for (i = 0; Pg::size(i) < tss_mem_size; ++i)
-        {
-          auto e = kdir->walk(Virt_addr(Mem_layout::Io_bitmap
-                                        - Pg::size(i + 1)),
-                              Pdir::Depth, false, pdir_alloc(alloc));
-
-          e.set_page(tss_mem_pm + Pg::size(i),
-                     Pt_entry::XD | Pt_entry::Writable | Pt_entry::Referenced
-                     | Pt_entry::Dirty | Pt_entry::global());
-        }
-
-      tss_mem_vm.construct(Mem_layout::Io_bitmap - Pg::size(i), tss_mem_size);
-    }
-
-  // the IO bitmap must be followed by one byte containing 0xff
-  // if this byte is not present, then one gets page faults
-  // (or general protection) when accessing the last port
-  // at least on a Pentium 133.
-  //
-  // Therefore we write 0xff in the first byte of the cpu_page
-  // and map this page behind every IO bitmap
-  io_bitmap_delimiter = tss_mem_vm->alloc<Unsigned8>();
-}
-
 PUBLIC static FIASCO_INIT_CPU
 void
 Kmem::init_cpu(Cpu &cpu)
@@ -718,9 +683,11 @@ Kmem::current_cpu_udir()
 
 PRIVATE static inline
 void
-Kmem::setup_cpu_structures_isolation(Cpu &cpu, Kpdir *, Lockless_alloc *cpu_m)
+Kmem::setup_cpu_structures_isolation(Cpu &cpu, Kpdir *,
+                                     Lockless_alloc *cpu_alloc,
+                                     Lockless_alloc *tss_alloc)
 {
-  setup_cpu_structures(cpu, cpu_m, cpu_m);
+  setup_cpu_structures(cpu, cpu_alloc, tss_alloc);
 }
 
 //--------------------------------------------------------------------------
@@ -740,9 +707,10 @@ Kmem::current_cpu_udir()
 
 PRIVATE static
 void
-Kmem::setup_cpu_structures_isolation(Cpu &cpu, Kpdir *cpu_dir, Lockless_alloc *cpu_m)
+Kmem::setup_cpu_structures_isolation(Cpu &cpu, Kpdir *cpu_dir,
+                                     Lockless_alloc *cpu_alloc,
+                                     Lockless_alloc *tss_alloc)
 {
-
   auto src = cpu_dir->walk(Virt_addr(Kentry_cpu_page), 0);
   auto dst = cpu_dir[1].walk(Virt_addr(Kentry_cpu_page), 0);
   write_now(dst.pte, *src.pte);
@@ -750,6 +718,9 @@ Kmem::setup_cpu_structures_isolation(Cpu &cpu, Kpdir *cpu_dir, Lockless_alloc *c
   // map kernel code to user space dir
   extern char _kernel_text_start[];
   extern char _kernel_text_entry_end[];
+
+  auto *alloc = Kmem_alloc::allocator();
+
   Address ki_page = Pg::trunc((Address)_kernel_text_start);
   Address kie_page = Pg::round((Address)_kernel_text_entry_end);
 
@@ -762,16 +733,19 @@ Kmem::setup_cpu_structures_isolation(Cpu &cpu, Kpdir *cpu_dir, Lockless_alloc *c
                       Virt_size(kie_page - ki_page),
                       Pt_entry::Referenced | Pt_entry::global(),
                       Pdir::Depth,
-                      false, pdir_alloc(Kmem_alloc::allocator())))
+                      false, pdir_alloc(alloc)))
     panic("Cannot map initial memory");
 
-  prepare_kernel_entry_points(cpu_m, cpu_dir);
+  map_tss_superpages(&cpu_dir[1], alloc);
+  prepare_kernel_entry_points(cpu_alloc, cpu_dir);
 
   unsigned const estack_sz = 512;
-  Unsigned8 *estack = cpu_m->alloc_bytes<Unsigned8>(estack_sz, Order(4));
+  Unsigned8 *estack = cpu_alloc->alloc_bytes<Unsigned8>(estack_sz, Order(4));
 
-  setup_cpu_structures(cpu, cpu_m, cpu_m);
-  cpu.get_tss()->_rsp0 = (Address)(estack + estack_sz);
+  assert(estack != nullptr);
+
+  setup_cpu_structures(cpu, cpu_alloc, tss_alloc);
+  cpu.get_tss()->_hw.ctx.rsp0 = (Address)(estack + estack_sz);
 }
 
 //--------------------------------------------------------------------------
@@ -783,6 +757,7 @@ Kmem::prepare_kernel_entry_points(Lockless_alloc *, Kpdir *cpu_dir)
 {
   extern char _kernel_data_entry_start[];
   extern char _kernel_data_entry_end[];
+
   Address kd_page = Pg::trunc((Address)_kernel_data_entry_start);
   Address kde_page = Pg::round((Address)_kernel_data_entry_end);
 
@@ -861,15 +836,6 @@ Kpdir *
 Kmem::current_cpu_kdir()
 {
   return reinterpret_cast<Kpdir *>(Kentry_cpu_pdir);
-}
-
-PRIVATE static inline
-void
-Kmem::setup_global_cpu_structures(bool superpages)
-{
-  (void)superpages;
-  io_bitmap_delimiter = (Unsigned8 *)Kmem_alloc::allocator()
-                                        ->alloc(Config::page_order());
 }
 
 PUBLIC static FIASCO_INIT_CPU
@@ -1007,7 +973,8 @@ Kmem::init_cpu(Cpu &cpu)
   _per_cpu_dir.cpu(cpu.id()) = cpu_dir;
   Cpu::set_pdbr(cpu_dir_pa);
 
-  Lockless_alloc cpu_m(Kentry_cpu_page, Config::PAGE_SIZE);
+  Lockless_alloc cpu_alloc(Kentry_cpu_page, Config::PAGE_SIZE);
+
   // [0] = CPU dir pa (PCID: + bit63 + ASID 0)
   // [1] = KSP
   // [2] = EXIT flags
@@ -1015,18 +982,25 @@ Kmem::init_cpu(Cpu &cpu)
   // [4] = entry scratch register
   // [5] = unused
   // [6] = here starts the syscall entry code (NX: unused)
-  Mword *p = cpu_m.alloc<Mword>(6);
+
+  Mword *page = cpu_alloc.alloc<Mword>(6);
+  assert(page != nullptr);
+
   // With PCID enabled set bit 63 to prevent flushing of any TLB entries or
   // paging-structure caches during the page table switch. In that case TLB
   // flushes are exclusively done by Mem_unit::tlb_flush() calls.
-  Mword const flush_tlb_bit = Config::Pcid_enabled ? 1UL << 63 : 0;
-  write_now(&p[0], cpu_dir_pa | flush_tlb_bit);
-  write_now(&p[3], cpu_dir_pa | flush_tlb_bit |  0x1000);
-  setup_cpu_structures_isolation(cpu, cpu_dir, &cpu_m);
 
-  auto *pte_map = cpu_m.alloc<Bitmap<260> >(1, Order(5));
+  Mword const flush_tlb_bit = Config::Pcid_enabled ? 1UL << 63 : 0;
+  write_now(&page[0], cpu_dir_pa | flush_tlb_bit);
+  write_now(&page[3], cpu_dir_pa | flush_tlb_bit | 0x1000);
+
+  setup_cpu_structures_isolation(cpu, cpu_dir, &cpu_alloc, tss_mem_vm);
+
+  auto *pte_map = cpu_alloc.alloc<Bitmap<260>>(1, Order(5));
+  assert(pte_map != nullptr);
 
   pte_map->clear_all();
+
   // Sync pte_map bits for context switch optimization.
   // Slots > 255 are CPU local / kernel area.
   for (unsigned long i = 0; i < 256; ++i)

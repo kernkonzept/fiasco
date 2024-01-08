@@ -62,8 +62,7 @@ IMPLEMENTATION [amd64]:
 /**
  * Setup a TSS entry.
  *
- * The entry is set up as TSS Available, usable by the kernel and with
- * the 4K-granularity limit in the GDT.
+ * The entry is set up as TSS Available and usable by the kernel in the GDT.
  *
  * \note The TSS actually occupies two consecutive GDT entries.
  *
@@ -75,8 +74,8 @@ PUBLIC inline
 void
 Gdt::set_entry_tss(unsigned nr, Address base, Unsigned32 limit)
 {
-  _entries[nr] = Gdt_entry(base, limit >> 12, Gdt_entry::Tss_available,
-                           Gdt_entry::Kernel, Gdt_entry::Granularity_4k);
+  _entries[nr] = Gdt_entry(base, limit, Gdt_entry::Tss_available,
+                           Gdt_entry::Kernel, Gdt_entry::Granularity_bytes);
   _entries[nr + 1] = Gdt_entry(base);
 }
 

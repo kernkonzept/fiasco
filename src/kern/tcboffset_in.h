@@ -34,7 +34,6 @@
   DUMP_CONSTANT (MEM_LAYOUT__PHYSMEM,          Mem_layout::Physmem)
 #endif
 #ifdef CONFIG_PF_PC
-  DUMP_CONSTANT (MEM_LAYOUT__IO_BITMAP,        Mem_layout::Io_bitmap)
 # ifdef CONFIG_IA32
   DUMP_CONSTANT (MEM_LAYOUT__SYSCALLS,         Mem_layout::Syscalls)
 # endif
@@ -46,7 +45,7 @@
   DUMP_CONSTANT (MEM_LAYOUT__TRAMPOLINE_PAGE,  Mem_layout::Trampoline_page)
 #endif
 #if defined(CONFIG_IA32) || defined(CONFIG_AMD64)
-  DUMP_MEMBER1 (CPU, Cpu, tss, TSS)
+  DUMP_MEMBER1 (CPU, Cpu, _tss, TSS)
 #endif
 
 #ifdef CONFIG_PPC32
