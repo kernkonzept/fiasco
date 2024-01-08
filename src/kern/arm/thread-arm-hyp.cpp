@@ -70,6 +70,7 @@ Thread::ex_regs_arch(Mword ops)
 IMPLEMENTATION [arm && 32bit && cpu_virt]:
 
 #include "slowtrap_entry.h"
+#include "infinite_loop.h"
 
 IMPLEMENT_OVERRIDE
 void
@@ -159,6 +160,9 @@ extern "C" void hyp_mode_fault(Mword abort_type, Trap_state *ts)
   ts->dump();
 
   kdb_ke("In-kernel fault");
+
+  printf("Return from debugger -- halting!\n");
+  L4::infinite_loop();
 }
 
 //-----------------------------------------------------------------------------
