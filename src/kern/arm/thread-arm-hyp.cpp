@@ -119,10 +119,12 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
   asm ("mrc p15, 0, %0, c0, c0, 0" : "=r" (v->vpidr));
 }
 
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [arm && 32bit && !debug]:
+
 extern "C" void hyp_mode_fault(Mword abort_type, Trap_state *ts)
 {
   Mword v;
-
   Mword hsr;
   asm volatile("mrc p15, 4, %0, c5, c2, 0" : "=r" (hsr));
 
@@ -152,8 +154,46 @@ extern "C" void hyp_mode_fault(Mword abort_type, Trap_state *ts)
       break;
     default:
       printf("KERNEL%d: Unknown hyp fault at %lx hsr=%lx\n",
-             cxx::int_value<Cpu_number>(current_cpu()),
-             ts->ip(), hsr);
+             cxx::int_value<Cpu_number>(current_cpu()), ts->ip(), hsr);
+      break;
+    };
+
+  ts->dump();
+
+  printf("In-kernel fault -- halting!\n");
+  L4::infinite_loop();
+}
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [arm && 32bit && debug]:
+
+#include "infinite_loop.h"
+
+PUBLIC static inline NEEDS[Thread::call_nested_trap_handler]
+void
+Thread::handle_hyp_mode_fault(Trap_state *ts)
+{
+  call_nested_trap_handler(ts);
+}
+
+extern "C" void hyp_mode_fault(Mword abort_type, Trap_state *ts)
+{
+  Mword hsr;
+  asm volatile("mrc p15, 4, %0, c5, c2, 0" : "=r" (hsr));
+
+  switch (abort_type)
+    {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+      Thread::handle_hyp_mode_fault(ts);
+      return;
+
+    default:
+      // Cannot happen -- see Assembler stub.
+      printf("KERNEL%d: Unknown hyp fault at %lx hsr=%lx\n",
+             cxx::int_value<Cpu_number>(current_cpu()), ts->ip(), hsr);
       break;
     };
 
