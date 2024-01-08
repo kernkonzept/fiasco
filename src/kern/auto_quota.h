@@ -7,10 +7,6 @@ class Ram_quota;
 template<typename T = Ram_quota>
 class Auto_quota
 {
-private:
-  struct _unspec;
-  typedef _unspec* _unspec_bool_type;
-
 public:
   Auto_quota(Auto_quota const &) = delete;
   Auto_quota operator = (Auto_quota const &) = delete;
@@ -63,8 +59,8 @@ public:
     return q;
   }
 
-  operator _unspec_bool_type () const
-  { return reinterpret_cast<_unspec_bool_type>(_quota); }
+  explicit operator bool () const
+  { return _quota != nullptr; }
 
 private:
   void reset(T *quota, Bytes size)

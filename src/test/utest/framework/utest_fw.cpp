@@ -647,6 +647,38 @@ Utest_fw::print_eval(char const *eval, A &&val, char const *str) const
 }
 
 /**
+ * Print an error message and abort the test if `obj` is null.
+ *
+ * This function shall be used to verify conditions in unit test setup /
+ * cleanup code which are not relevant for the actual test.
+ *
+ * \param obj     Pointer which must be non-null.
+ * \param msg     Message to be printed in case of failure.
+ */
+PUBLIC template <typename T, typename D> static inline
+void
+Utest_fw::chk(cxx::unique_ptr<T, D> const &obj, char const *msg)
+{
+  return chk(obj != nullptr, msg);
+}
+
+/**
+ * Print an error message and abort the test if `obj` is null.
+ *
+ * This function shall be used to verify conditions in unit test setup /
+ * cleanup code which are not relevant for the actual test.
+ *
+ * \param obj     Pointer which must be non-null.
+ * \param msg     Message to be printed in case of failure.
+ */
+PUBLIC template <typename T, typename D> static inline
+void
+Utest_fw::chk(cxx::unique_ptr<T, D> const &obj, Utest_fmt const &msg)
+{
+  return chk(obj != nullptr, msg);
+}
+
+/**
  * Print an error message and abort the test if `result` is false.
  *
  * This function shall be used to verify conditions in unit test setup /

@@ -335,8 +335,6 @@ template<typename T, template<typename P> class Policy = Simple_ptr_policy,
          typename Discriminator = int>
 class Smart_ptr
 {
-private:
-  struct Null_check_type;
 public:
   typedef typename Policy<T>::Deref_type Deref_type;
   typedef typename Policy<T>::Ptr_type Ptr_type;
@@ -385,8 +383,8 @@ public:
   constexpr Ptr_type get() const
   { return Policy<T>::ptr(_p); }
 
-  constexpr operator Null_check_type const * () const
-  { return reinterpret_cast<Null_check_type const *>(Policy<T>::ptr(_p)); }
+  explicit constexpr operator bool () const
+  { return Policy<T>::ptr(_p) != nullptr; }
 };
 
 enum User_ptr_discr {};
@@ -491,4 +489,3 @@ size(const T(&)[N]) noexcept
 enum Address_type { ADDR_KERNEL = 0, ADDR_USER = 1, ADDR_UNKNOWN = 2 };
 
 #endif // TYPES_H__
-

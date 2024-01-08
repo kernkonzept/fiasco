@@ -29,10 +29,6 @@ struct default_delete<T[]>
 template< typename T, typename T_Del = default_delete<T> >
 class unique_ptr
 {
-private:
-  struct _unspec;
-  typedef _unspec* _unspec_ptr_type;
-
 public:
   typedef T *pointer;
   typedef T element_type;
@@ -52,7 +48,7 @@ public:
     return *this;
   }
 
-  unique_ptr &operator = (_unspec_ptr_type)
+  unique_ptr &operator = (decltype(nullptr))
   {
     reset();
     return *this;
@@ -61,10 +57,20 @@ public:
   element_type &operator * () const { return *get(); }
   pointer operator -> () const { return get(); }
 
+  bool operator == (decltype(nullptr)) const
+  {
+    return _ptr == nullptr;
+  }
+
+  bool operator != (decltype(nullptr)) const
+  {
+    return !((*this) == nullptr);
+  }
+
   pointer get() const { return _ptr; }
 
-  operator _unspec_ptr_type () const
-  { return reinterpret_cast<_unspec_ptr_type>(get()); }
+  explicit operator bool () const
+  { return _ptr != nullptr; }
 
   pointer release()
   {
