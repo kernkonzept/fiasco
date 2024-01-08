@@ -414,7 +414,7 @@ Generic_io_space<SPACE>::v_delete(V_pfn virt, Page_order size,
        * Flush the CPU IO bitmaps to make sure that no IO access is possible
        * via a stale entry.
        */
-      io_bitmap_flush();
+      io_bitmap_flush_all_cpus();
 
       return L4_fpage::Rights(0);
     }
@@ -428,7 +428,7 @@ Generic_io_space<SPACE>::v_delete(V_pfn virt, Page_order size,
    * Flush the CPU IO bitmaps to make sure that no IO access is possible
    * via a stale entry.
    */
-  io_bitmap_flush();
+  io_bitmap_flush_all_cpus();
 
   return L4_fpage::Rights(0);
 }
@@ -668,7 +668,7 @@ Generic_io_space<SPACE>::update_io_bitmap(Mword *dest_revision,
 PRIVATE template<typename SPACE>
 inline
 void
-Generic_io_space<SPACE>::io_bitmap_flush()
+Generic_io_space<SPACE>::io_bitmap_flush_all_cpus()
 {
   Cpu_call::cpu_call_many(_iopb_active_on_cpu, [this](Cpu_number)
     {
