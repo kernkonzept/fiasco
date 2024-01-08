@@ -5,6 +5,7 @@ EXTENSION class Jdb
 public:
   static int (*bp_test_log_only)(Cpu_number);
   static int (*bp_test_break)(Cpu_number, String_buffer *);
+  static volatile Address sysreg_fail_pc;
 };
 
 IMPLEMENTATION [arm]:
@@ -27,6 +28,7 @@ DEFINE_PER_CPU static Per_cpu<Proc::Status> jdb_irq_state;
 
 int (*Jdb::bp_test_log_only)(Cpu_number);
 int (*Jdb::bp_test_break)(Cpu_number, String_buffer *buf);
+volatile Address Jdb::sysreg_fail_pc;
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && !pic_gic]:
@@ -181,6 +183,21 @@ Jdb::handle_nested_trap(Jdb_entry_frame *e)
 {
   printf("Trap in JDB: IP:%08lx PSR=%08lx ERR=%08lx\n",
          e->ip(), e->psr, e->error_code);
+}
+
+IMPLEMENT_OVERRIDE
+bool
+Jdb::handle_early_debug_traps(Jdb_entry_frame *e)
+{
+  // Special handler for Jdb_kern_info_cpu.
+  if (e->ip() != 0 && e->ip() == sysreg_fail_pc)
+    {
+      sysreg_fail_pc = 0;
+      e->pc += 4;
+      return true;
+    }
+
+  return false;
 }
 
 IMPLEMENT
