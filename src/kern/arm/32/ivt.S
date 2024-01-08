@@ -194,14 +194,8 @@
  * lr: must contain fault addr (from switch_to_kernel)
  */
 .macro  enter_sys_call no_sys_call
-	ldr	lr, [sp, #RF(PC,  0)]
-	cmn	lr, #0x0d		@ Range Check !!! UNSIGNED !!!
-	bls	\no_sys_call		@ no syscall
-	cmn	lr, #0x08
+	cmp	r5, #1
 	bhi	\no_sys_call
-
-	add	lr, sp, #RF(PC, 0)
-	stmia	lr, {lr}^
 
 	stmdb	sp!, {r0 - r12}
 	/* stack frame: RF + r12-r0, sp points to r0 */
@@ -209,11 +203,9 @@
 	RESET_THREAD_CANCEL_AT r1       @ sets r0 to state 
 	tst	r0, #VAL__Thread_alien_or_vcpu_user
 	bne	alien_syscall
-	ldr	r0, [sp, #RF(SVC_LR, 13*4)]     @ read exception PC from stack (km_lr)
-	adr	r1, sys_call_table
-	sub	r0, r1, r0
+	adr	r0, sys_call_table
 	adr	lr, 2f
-1:	ldr	pc, [r0]
+1:	ldr	pc, [r0, +r5, LSL #2]
 .global fast_ret_from_irq
 fast_ret_from_irq:
 2:      ldmia	sp, {r0 - r12}
@@ -684,22 +676,20 @@ alien_syscall: @ Do it for an alien ---------------------------------------
 	bicne	r0, r0, #VAL__Thread_dis_alien
 	bne	1f
 	@ Trap alien before system call -----------------------------------
-	@ The trap is an insn abort on the syscall address in the kernel.
-	ldr	lr, [sp, #RF(PC,     13*4)]
-	str	lr, [sp, #RF(USR_LR, 13*4)]
-	ldr	lr, [sp, #RF(SVC_LR, 13*4)] @ read orig exception PC
-	sub	lr, lr, #4                  @ adjust pc to be on insn
+	ldr     r0, [sp, #RF(PSR,    13*4)] @ read orig PSR
+	tst     r0, #0x20                   @ Thumb mode?
+	ldr	lr, [sp, #RF(PC,     13*4)] @ read orig exception PC
+	subeq	lr, lr, #4                  @ A32: adjust pc to be on SVC insn
+	subne	lr, lr, #2                  @ T32: adjust pc to be on SVC insn
 	str	lr, [sp, #RF(PC,     13*4)] @ store to entry_stack_PC
 	enter_slowtrap_w_stack GET_HSR(0x3d)
 	@ Never reach this -- end up in user land after exception reply
 
 1:	@ Resume the alien system call ------------------------------------
 	str	r0, [r1, #(OFS__THREAD__STATE)]
-	ldr	r0, [sp, #RF(SVC_LR, 13*4)] @ read orig excpetion PC
-	adr	r1, sys_call_table
-	sub	r0, r1, r0
+	adr	r0, sys_call_table
 	adr	lr, 2f
-	ldr	pc, [r0]
+	ldr	pc, [r0, +r5, LSL #2]
 2:	nop @ The return point after the resumed alien system call --------
 	disable_irqs
 	@ Trap after the resumed alien system call ------------------------

@@ -373,57 +373,24 @@ Thread::handle_fpu_trap(Unsigned32 opcode, Trap_state *ts)
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && 32bit && arm_esr_traps]:
 
-PRIVATE static inline
-bool
-Thread::is_syscall_pc(Address pc)
-{
-  return Address(-0x0c) <= pc && pc <= Address(-0x08);
-}
-
-PRIVATE static inline
-Mword
-Thread::get_lr_for_mode(Return_frame const *rf)
-{
-  Mword ret;
-  switch (rf->psr & 0x1f)
-    {
-    case Proc::PSR_m_usr:
-    case Proc::PSR_m_sys:
-      return rf->ulr;
-    case Proc::PSR_m_irq:
-      asm ("mrs %0, lr_irq" : "=r" (ret)); return ret;
-    case Proc::PSR_m_fiq:
-      asm ("mrs %0, lr_fiq" : "=r" (ret)); return ret;
-    case Proc::PSR_m_abt:
-      asm ("mrs %0, lr_abt" : "=r" (ret)); return ret;
-    case Proc::PSR_m_svc:
-      asm ("mrs %0, lr_svc" : "=r" (ret)); return ret;
-    case Proc::PSR_m_und:
-      asm ("mrs %0, lr_und" : "=r" (ret)); return ret;
-    default:
-      assert(false); // wrong processor mode
-      return ~0UL;
-    }
-}
-
 PRIVATE inline
 void
-Thread::do_syscall(Unsigned32 pc)
+Thread::do_syscall(Unsigned32 r5)
 {
   typedef void Syscall(void);
   extern Syscall *sys_call_table[];
-  sys_call_table[(-pc) / 4]();
+  sys_call_table[r5]();
 }
 
 PRIVATE inline
 void
-Thread::handle_svc(Trap_state *ts, Unsigned32 adjust = 0)
+Thread::handle_svc(Trap_state *ts)
 {
-  Unsigned32 pc = ts->pc + adjust;
-  if (!is_syscall_pc(pc))
+  Unsigned32 r5 = ts->r[5];
+  if (EXPECT_FALSE(r5 > 1))
     {
       // Adjust PC to point to trapped bogus syscall instruction.
-      ts->pc -= (Arm_esr(ts->error_code).il() ? 4 : 2) - adjust;
+      ts->pc -= Arm_esr(ts->error_code).il() ? 4 : 2;
       slowtrap_entry(ts);
       return;
     }
@@ -435,34 +402,20 @@ Thread::handle_svc(Trap_state *ts, Unsigned32 adjust = 0)
       if (state & Thread_dis_alien)
         {
           state_del_dirty(Thread_dis_alien);
-          ts->pc = get_lr_for_mode(ts);
-          do_syscall(pc);
+          do_syscall(r5);
           ts->error_code |= 0x40; // see ivt.S alien_syscall
         }
       else
         // Adjust PC to be on SVC/HVC insn so that the instruction can either
         // be restarted (alien thread before syscall) or can be examined in
         // vCPU entry handler.
-        ts->pc -= 4 - adjust;
+        ts->pc -= Arm_esr(ts->error_code).il() ? 4 : 2;
 
       slowtrap_entry(ts);
       return;
     }
 
-  ts->pc = get_lr_for_mode(ts);
-  do_syscall(pc);
-}
-
-PRIVATE inline
-bool
-Thread::check_and_handle_undef_syscall(Trap_state *ts)
-{
-  Mword pc = ts->pc;
-  if (!is_syscall_pc(pc + 4))
-    return false;
-
-  handle_svc(ts, 4);
-  return true;
+  do_syscall(r5);
 }
 
 //-----------------------------------------------------------------------------

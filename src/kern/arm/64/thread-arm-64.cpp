@@ -188,11 +188,6 @@ Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
   return true;
 }
 
-PRIVATE inline
-bool
-Thread::check_and_handle_undef_syscall(Trap_state *)
-{ return false; }
-
 PUBLIC static inline bool Thread::is_fsr_exception(Arm_esr) { return false; }
 PUBLIC static inline bool Thread::is_debug_exception(Arm_esr) { return false; }
 PUBLIC static inline void Thread::handle_debug_exception(Trap_state *) {}

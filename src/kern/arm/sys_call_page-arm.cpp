@@ -100,10 +100,10 @@ Sys_call_page::init()
   if (!sys_calls)
     panic("Can't allocate system-call page.");
 
+  // We don't use the Sys_call_page as trampoline anymore. Instead, raise an
+  // exception IPC if some old code still jumps here.
   for (unsigned i = 0; i < Config::PAGE_SIZE / sizeof(Unsigned32); ++i)
-    sys_calls[i] = Proc::Is_hyp
-                   ? 0xe1400070  // hvc
-                   : 0xef000000; // svc
+    sys_calls[i] = 0xe1200070; // bkpt #0
 
   set_utcb_get_code(sys_calls + (0xf00 / sizeof(Unsigned32)));
 
