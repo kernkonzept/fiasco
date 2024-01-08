@@ -1,6 +1,8 @@
 INTERFACE [!io]:
 
-class Io_space;
+class Io_space
+{
+};
 
 //--------------------------------------------------------------------------
 INTERFACE [io]:
@@ -167,3 +169,18 @@ Space::is_user_memory(Address address, Mword len)
          && Mem_layout::User_max - address >= len - 1;
 }
 
+//--------------------------------------------------------------------------
+IMPLEMENTATION [!io]:
+
+/**
+ * Empty IO space context switchin implementation.
+ *
+ * This empty method is here to streamline code that might or might not support
+ * IO spaces depending on the compile-time configuration.
+ */
+PUBLIC
+inline
+void
+Io_space::switchin_context(Space *)
+{
+}

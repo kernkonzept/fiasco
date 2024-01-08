@@ -45,9 +45,6 @@ Context::switchin_context(Context *from)
 
   Cpu &cpu = Cpu::cpus.current();
 
-  // Make sure we use a pristine CPU IO bitmap.
-  cpu.reset_io_bitmap();
-
   // Set kernel-esp in case we want to return to the user.
   // kmem::kernel_sp() returns a pointer to the kernel SP (in the
   // TSS) the CPU uses when next switching from user to kernel mode.

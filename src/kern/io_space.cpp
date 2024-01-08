@@ -158,11 +158,49 @@ private:
    */
   bool _superpage;
 
+  /**
+   * IO bitmap activity tracking.
+   *
+   * Track on which CPUs this IO space is currently "active", i.e. on which
+   * CPUs it could be potentially synchronized with the CPU IO bitmap.
+   *
+   * \note Each CPU bit must only be set from the corresponding CPU!
+   */
+  Cpu_mask _iopb_active_on_cpu;
+
   Mem_space const *mem_space() const
   { return static_cast<SPACE const *>(this); }
 
   Mem_space *mem_space()
   { return static_cast<SPACE *>(this); }
+
+  /**
+   * Mark this IO space as potentially "active" on the current CPU.
+   */
+  inline void iopb_mark_used()
+  {
+    _iopb_active_on_cpu.atomic_set_if_unset(current_cpu());
+  }
+
+  /**
+   * Mark this IO space as not "active" on the current CPU.
+   */
+  inline void iopb_mark_unused()
+  {
+    _iopb_active_on_cpu.atomic_clear_if_set(current_cpu());
+  }
+
+  /**
+   * Get the activity of this IO space on the current CPU.
+   *
+   * \note We assume that accessing the CPU mask is atomic.
+   *
+   * \return Activity state.
+   */
+  inline bool iopb_used()
+  {
+    return _iopb_active_on_cpu.get(current_cpu());
+  }
 };
 
 template<typename SPACE>
@@ -376,7 +414,7 @@ Generic_io_space<SPACE>::v_delete(V_pfn virt, Page_order size,
        * Flush the CPU IO bitmaps to make sure that no IO access is possible
        * via a stale entry.
        */
-      io_bitmap_shootdown();
+      io_bitmap_flush();
 
       return L4_fpage::Rights(0);
     }
@@ -390,7 +428,7 @@ Generic_io_space<SPACE>::v_delete(V_pfn virt, Page_order size,
    * Flush the CPU IO bitmaps to make sure that no IO access is possible
    * via a stale entry.
    */
-  io_bitmap_shootdown();
+  io_bitmap_flush();
 
   return L4_fpage::Rights(0);
 }
@@ -605,6 +643,8 @@ Generic_io_space<SPACE>::update_io_bitmap(Mword *dest_revision,
 
       _bitmap->copy_to(dest_bitmap);
       *dest_revision = _revision;
+      iopb_mark_used();
+
       return true;
     }
 
@@ -612,33 +652,54 @@ Generic_io_space<SPACE>::update_io_bitmap(Mword *dest_revision,
 }
 
 /**
- * Reset the IO bitmaps of all CPUs.
+ * Flush the IO bitmaps of all CPUs where this IO space is "active".
  *
  * This method needs to be called whenever a port is disabled in an IO space.
  *
- * To avoid complicated tracking of "active" IO spaces, we flush the IO bitmaps
- * of all on-line CPUs. This forces the IO bitmaps to be resynchronized with any
- * given IO space on the next IO port access.
+ * To achieve the flush, we reset the CPU IO bitmaps of the affected CPUs.
+ * This forces the CPU IO bitmaps to be resynchronized with any given IO space
+ * on the next IO port access.
  *
  * To avoid locking the IO bitmaps, we use IPI to reset the IO bitmaps locally
- * on every on-line CPU, similarily to a TLB shootdown. This is relatively
- * costly, but we assume that disabling a port is not a frequent operation.
+ * on every affected CPU, similarily to a TLB flush. We assume that disabling
+ * an IO port is not a frequent operation. The overhead only affects the CPUs
+ * where the IO space is "active".
  */
 PRIVATE template<typename SPACE>
 inline
 void
-Generic_io_space<SPACE>::io_bitmap_shootdown()
+Generic_io_space<SPACE>::io_bitmap_flush()
 {
-  Cpu_mask cpus;
-
-  for (auto cpu = Cpu_number::first(); cpu < Config::max_num_cpus(); ++cpu)
-    if (Cpu::online(cpu))
-      cpus.set(cpu);
-
-  Cpu_call::cpu_call_many(cpus, [](Cpu_number)
+  Cpu_call::cpu_call_many(_iopb_active_on_cpu, [this](Cpu_number)
     {
       Cpu &cpu = Cpu::cpus.current();
       cpu.reset_io_bitmap();
+      iopb_mark_unused();
       return false;
     }, false);
+}
+
+/**
+ * Activation of the current IO space.
+ *
+ * If the current IO space differs from the previous IO space and the previous
+ * IO space is marked as "active" on the current CPU, the CPU IO bitmap is
+ * reset (to force a resynchronization on the next IO instruction) and the
+ * previous IO space is marked as not "active" on the current CPU.
+ *
+ * \param from  Previous IO space.
+ */
+PUBLIC template<typename SPACE>
+inline
+void
+Generic_io_space<SPACE>::switchin_context(Generic_io_space<SPACE> *from)
+{
+  if (from != this && from->iopb_used())
+    {
+      /* Make sure the CPU IO bitmap is pristine. */
+      Cpu &cpu = Cpu::cpus.current();
+      cpu.reset_io_bitmap();
+
+      from->iopb_mark_unused();
+    }
 }
