@@ -26,59 +26,43 @@ void
 Jdb_kern_info_mtrr::get_var_mtrr(int reg, Address *ret_base,
                                  Address *ret_size, int *ret_type)
 {
-  Unsigned64 mask = Cpu::rdmsr(0x201 + 2*reg);
-  Unsigned64 base;
-
-  if ((mask & 0x800) == 0)
+  Unsigned64 mask, base;
+  if (   Jdb::rdmsr(0x201 + 2*reg, &mask) && (mask & 0x800)
+      && Jdb::rdmsr(0x200 + 2*reg, &base))
     {
-      /* MTRR not active */
-      *ret_size = 0;
-      return;
+      *ret_size = (-(size_or_mask | mask >> Config::PAGE_SHIFT))
+        << Config::PAGE_SHIFT;
+      *ret_base = Pg::trunc(base);
+      *ret_type = base & 0x0f;
     }
-
-  Jdb::msr_fail = 0;
-  Jdb::msr_test = Jdb::Msr_test_fail_ignore;
-  base = Cpu::rdmsr(0x200 + 2*reg);
-  Jdb::msr_test = Jdb::Msr_test_default;
-  if (Jdb::msr_fail)
-    {
-      /* invalid MSR */
-      *ret_size = 0;
-      return;
-    }
-
-  *ret_size = (-(size_or_mask | mask >> Config::PAGE_SHIFT))
-               << Config::PAGE_SHIFT;
-  *ret_base = Pg::trunc(base);
-  *ret_type = base & 0x0f;
+  else
+    *ret_size = 0;
 }
 
 PUBLIC
 void
 Jdb_kern_info_mtrr::show() override
 {
-  int num_mtrr;
-  static const char * const typestr[] = 
-    {
-      "uncacheable (UC)", "write combining (WC)", "??", "??",
-      "write-through (WT)", "write-protected (WP)", "write back (WB)", "??"
-    };
-  Jdb::msr_fail = 0;
-  Jdb::msr_test = Jdb::Msr_test_fail_ignore;
-  num_mtrr = Cpu::rdmsr(0xfe) & 0xff;
-  Jdb::msr_test = Jdb::Msr_test_default;
-  if (Jdb::msr_fail)
+  static const char * const typestr[] =
+  {
+    "uncacheable (UC)", "write combining (WC)", "??", "??",
+    "write-through (WT)", "write-protected (WP)", "write back (WB)", "??"
+  };
+  Unsigned64 num_mtrr;
+  if (Jdb::rdmsr(0xfe, &num_mtrr))
+    num_mtrr &= 0xff;
+  else
     num_mtrr = 8;
-  for (int i=0; i<num_mtrr; i++)
+  for (unsigned i = 0; i < num_mtrr; ++i)
     {
       Address base, size;
       int type = 0;
       get_var_mtrr(i, &base, &size, &type);
       if (size)
-	printf(" %2d: " L4_PTR_FMT "-" L4_PTR_FMT " (%lu%cB) %s\n",
-	    i, base, base+size,
-	    size >= 8 << 20 ? (size+(1<<19)-1) >> 20 : (size+(1<<9)-1) >> 10,
-	    size >= 8 << 20 ? 'M' : 'K',
-	    typestr[type]);
+        printf(" %2d: " L4_PTR_FMT "-" L4_PTR_FMT " (%lu%cB) %s\n",
+               i, base, base+size,
+               size >= 8 << 20 ? (size+(1<<19)-1) >> 20 : (size+(1<<9)-1) >> 10,
+               size >= 8 << 20 ? 'M' : 'K',
+               typestr[type]);
     }
 }

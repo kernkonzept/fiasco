@@ -16,19 +16,11 @@ class Push_console;
 EXTENSION class Jdb
 {
 public:
-  enum
-  {
-    Msr_test_default     = 0,
-    Msr_test_fail_warn   = 1,
-    Msr_test_fail_ignore = 2,
-  };
-
   static void init();
 
   static Per_cpu<unsigned> apic_tpr;
   static Unsigned16 pic_status;
-  static volatile char msr_test;
-  static volatile char msr_fail;
+  static volatile bool msr_test;
 
   typedef enum
     {
@@ -140,8 +132,7 @@ IMPLEMENTATION[ia32,amd64]:
 char Jdb::_connected;			// Jdb::init() was done
 // explicit single_step command
 DEFINE_PER_CPU Per_cpu<char> Jdb::permanent_single_step;
-volatile char Jdb::msr_test;		// = 1: trying to access an msr
-volatile char Jdb::msr_fail;		// = 1: MSR access failed
+volatile bool Jdb::msr_test;
 DEFINE_PER_CPU Per_cpu<char> Jdb::code_ret; // current instruction is ret/iret
 DEFINE_PER_CPU Per_cpu<char> Jdb::code_call;// current instruction is call
 DEFINE_PER_CPU Per_cpu<char> Jdb::code_bra; // current instruction is jmp/jxx
@@ -768,6 +759,20 @@ bool
 Jdb::handle_conditional_breakpoint(Cpu_number cpu, Jdb_entry_frame *e)
 { return e->_trapno == 1 && bp_test_log_only && bp_test_log_only(cpu, e); }
 
+IMPLEMENT_OVERRIDE
+bool
+Jdb::handle_early_debug_traps(Jdb_entry_frame *e)
+{
+  if (e->_trapno == 13 && msr_test)
+    {
+      e->_ip += 2;
+      msr_test = false;
+      return true;
+    }
+
+  return false;
+}
+
 IMPLEMENT
 void
 Jdb::handle_nested_trap(Jdb_entry_frame *e)
@@ -786,26 +791,6 @@ Jdb::handle_nested_trap(Jdb_entry_frame *e)
       cursor(Jdb_screen::height(), 1);
       printf("\nSoftware breakpoint inside jdb at " L4_PTR_FMT "\n",
              e->ip()-1);
-      break;
-    case 13:
-      switch (msr_test)
-	{
-	case Msr_test_fail_warn:
-	  printf(" MSR does not exist or invalid value\n");
-	  msr_test = Msr_test_default;
-	  msr_fail = 1;
-	  break;
-	case Msr_test_fail_ignore:
-	  msr_test = Msr_test_default;
-	  msr_fail = 1;
-	  break;
-	default:
-	  cursor(Jdb_screen::height(), 1);
-	  printf("\nGeneral Protection (eip=" L4_PTR_FMT ","
-	      " err=" L4_PTR_FMT ", pfa=" L4_PTR_FMT ") -- jdb bug?\n",
-	      e->ip(), e->_err, e->_cr2);
-	  break;
-	}
       break;
     default:
       cursor(Jdb_screen::height(), 1);
@@ -860,6 +845,28 @@ PUBLIC static inline
 void
 Jdb::leave_getchar()
 {}
+
+PUBLIC static
+bool
+Jdb::rdmsr(Unsigned32 reg, Unsigned64 *v)
+{
+  msr_test = true;
+  *v = Cpu::rdmsr(reg);
+  bool success = msr_test == true;
+  msr_test = false;
+  return success;
+}
+
+PUBLIC static
+bool
+Jdb::wrmsr(Unsigned64 v, Unsigned32 reg)
+{
+  msr_test = true;
+  Cpu::wrmsr(v, reg);
+  bool success = msr_test == true;
+  msr_test = false;
+  return success;
+}
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION [(ia32 || amd64) && mp]:

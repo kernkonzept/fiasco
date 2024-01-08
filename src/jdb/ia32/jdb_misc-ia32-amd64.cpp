@@ -132,62 +132,71 @@ Jdb_misc_debug::action(int cmd, void *&args, char const *&fmt, int &) override
 	}
       else
 	{
-	  Jdb::msr_test = Jdb::Msr_test_fail_warn;
 	  if (Cpu::boot_cpu()->lbr_type() == Cpu::Lbr_pentium_4 || 
 	      Cpu::boot_cpu()->lbr_type() == Cpu::Lbr_pentium_4_ext)
 	    {
-	      Unsigned64 msr;
-	      Unsigned32 branch_tos;
+              Unsigned64 msr_from, msr_to;
+              if (   Jdb::rdmsr(MSR_LER_FROM_LIP, &msr_from)
+                  && Jdb::rdmsr(MSR_LER_TO_LIP, &msr_to))
+                {
+                  show_lbr_entry("\nbefore exc:", (Address)msr_from);
+                  show_lbr_entry(" =>", (Address)msr_to);
+                }
 
-	      msr = Cpu::rdmsr(MSR_LER_FROM_LIP);
-	      show_lbr_entry("\nbefore exc:", (Address)msr);
-	      msr = Cpu::rdmsr(MSR_LER_TO_LIP);
-	      show_lbr_entry(" =>", (Address)msr);
-
-	      msr = Cpu::rdmsr(MSR_LASTBRANCH_TOS);
-	      branch_tos = (Unsigned32)msr;
-
-	      if (Cpu::boot_cpu()->lbr_type() == Cpu::Lbr_pentium_4)
-		{
-		  // older P4 models provide a stack of 4 MSRs
-		  for (int i=0, j=branch_tos & 3; i<4; i++)
-		    {
-		      j = (j+1) & 3;
-		      msr = Cpu::rdmsr(MSR_LASTBRANCH_0+j);
-		      show_lbr_entry("\nbranch/exc:", (Address)(msr >> 32));
-		      show_lbr_entry(" =>", (Address)msr);
-		    }
-		}
-	      else
-		{
-		  // newer P4 models provide a stack of 16 MSR pairs
-		  for (int i=0, j=branch_tos & 15; i<16; i++)
-		    {
-		      j = (j+1) & 15;
-		      msr = Cpu::rdmsr(0x680+j);
-		      show_lbr_entry("\nbranch/exc:", (Address)msr);
-		      msr = Cpu::rdmsr(0x6c0+j);
-		      show_lbr_entry(" =>", (Address)msr);
-		    }
-		}
+              Unsigned64 branch_tos;
+              if (Jdb::rdmsr(MSR_LASTBRANCH_TOS, &branch_tos))
+                {
+                  branch_tos &= 0xffffffffU;
+                  if (Cpu::boot_cpu()->lbr_type() == Cpu::Lbr_pentium_4)
+                    {
+                      // older P4 models provide a stack of 4 MSRs
+                      for (int i=0, j=branch_tos & 3; i<4; i++)
+                        {
+                          j = (j+1) & 3;
+                          Unsigned64 msr;
+                          if (Jdb::rdmsr(MSR_LASTBRANCH_0+j, &msr))
+                            {
+                              show_lbr_entry("\nbranch/exc:", msr >> 32);
+                              show_lbr_entry(" =>", msr);
+                            }
+                        }
+                    }
+                  else
+                    {
+                      // newer P4 models provide a stack of 16 MSR pairs
+                      for (int i=0, j=branch_tos & 15; i<16; i++)
+                        {
+                          j = (j+1) & 15;
+                          Unsigned64 msr_from, msr_to;
+                          if (Jdb::rdmsr(0x680+j, &msr_from)
+                              && Jdb::rdmsr(0x6c0+j, &msr_to))
+                            {
+                              show_lbr_entry("\nbranch/exc:", msr_from);
+                              show_lbr_entry(" =>", msr_to);
+                            }
+                        }
+                    }
+                }
 	    }
 	  else if (Cpu::boot_cpu()->lbr_type() == Cpu::Lbr_pentium_6)
 	    {
-	      Unsigned64 msr;
+	      Unsigned64 msr_from_ip, msr_to_ip;
+              Unsigned64 msr_from_int, msr_to_int;
 
-	      msr = Cpu::rdmsr(MSR_LASTBRANCHFROMIP);
-	      show_lbr_entry("\nbranch:", (Address)msr);
-	      msr = Cpu::rdmsr(MSR_LASTBRANCHTOIP);
-	      show_lbr_entry(" =>", (Address)msr);
-	      msr = Cpu::rdmsr(MSR_LASTINTFROMIP);
-	      show_lbr_entry("\n   int:", (Address)msr);
-	      msr = Cpu::rdmsr(MSR_LASTINTTOIP);
-	      show_lbr_entry(" =>", (Address)msr);
+              if (   Jdb::rdmsr(MSR_LASTBRANCHFROMIP, &msr_from_ip)
+                  && Jdb::rdmsr(MSR_LASTBRANCHTOIP, &msr_to_ip)
+                  && Jdb::rdmsr(MSR_LASTINTFROMIP, &msr_from_int)
+                  && Jdb::rdmsr(MSR_LASTINTTOIP, &msr_to_int))
+                {
+                  show_lbr_entry("\nbranch:", msr_from_ip);
+                  show_lbr_entry(" =>", msr_to_ip);
+                  show_lbr_entry("\n   int:", msr_from_int);
+                  show_lbr_entry(" =>", msr_to_int);
+                }
 	    }
 	  else
 	    printf("Last branch recording feature not available");
 
-	  Jdb::msr_test = Jdb::Msr_test_default;
 	  putchar('\n');
 	  break;
 	}
@@ -353,26 +362,33 @@ Jdb_misc_info::action(int cmd, void *&args, char const *&fmt, int &) override
 	      return EXTRA_INPUT;
 	    }
 	}
-      else if (args == &addr || args == &value64)
+      if (args == &value64)
+        {
+          if (!Jdb::wrmsr(value64, addr))
+            puts(" => not implemented");
+          else
+            putchar('\n');
+        }
+      else if (args == &addr)
 	{
-	  Jdb::msr_test = Jdb::Msr_test_fail_warn;
-	  if (args == &value64)
-	    Cpu::wrmsr(value64, addr);
-	  if (first_char == 'w' && (args == &addr))
-	    putstr(" (");
-	  else
-	    putstr(" => ");
-	  value64 = Cpu::rdmsr(addr);
-	  printf(L4_X64_FMT, value64);
-	  if (first_char == 'w' && (args == &addr))
-	    {
-	      putstr(") new value=");
-	      fmt  = L4_X64_FMT;
-	      args = &value64;
-	      return EXTRA_INPUT;
-	    }
-	  putchar('\n');
-	  Jdb::msr_test = Jdb::Msr_test_default;
+          if (!Jdb::rdmsr(addr, &value64))
+            putstr(" => not implemented");
+          else
+            {
+              if (first_char == 'r')
+                putstr(" => ");
+              else
+                putstr(" (");
+              printf(L4_X64_FMT, value64);
+              if (first_char == 'w')
+                {
+                  putstr(") new value=");
+                  fmt  = L4_X64_FMT;
+                  args = &value64;
+                  return EXTRA_INPUT;
+                }
+            }
+          putchar('\n');
 	}
       break;
     }
