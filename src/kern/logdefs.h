@@ -21,16 +21,16 @@
 
 #if !defined(CONFIG_JDB)
 
-#define LOG_TRACE_COND(name, sc, ctx, fmt, cond, ...) ((void) 0)
-#define LOG_TRACE(name, sc, ctx, fmt, ...)     ((void) 0)
-#define LOG_CONTEXT_SWITCH                     ((void) 0)
-#define LOG_TRAP                               ((void) 0)
-#define LOG_TRAP_N(n)                          ((void) 0)
-#define LOG_TRAP_CN(c, n)                      ((void) 0)
-#define LOG_SCHED_SAVE(n)                      ((void) 0)
-#define LOG_SCHED_LOAD(n)                      ((void) 0)
-#define LOG_MSG(ctx, txt)                      ((void) 0)
-#define LOG_MSG_3VAL(ctx, txt, v1, v2, v3)     ((void) 0)
+#define LOG_TRACE_COND(name, sc, ctx, fmt, cond, ...) static_cast<void>(0)
+#define LOG_TRACE(name, sc, ctx, fmt, ...)     static_cast<void>(0)
+#define LOG_CONTEXT_SWITCH                     static_cast<void>(0)
+#define LOG_TRAP                               static_cast<void>(0)
+#define LOG_TRAP_N(n)                          static_cast<void>(0)
+#define LOG_TRAP_CN(c, n)                      static_cast<void>(0)
+#define LOG_SCHED_SAVE(n)                      static_cast<void>(0)
+#define LOG_SCHED_LOAD(n)                      static_cast<void>(0)
+#define LOG_MSG(ctx, txt)                      static_cast<void>(0)
+#define LOG_MSG_3VAL(ctx, txt, v1, v2, v3)     static_cast<void>(0)
 
 #else
 
@@ -137,18 +137,18 @@
 
 #else
 
-#define CNT_CONTEXT_SWITCH	((void) 0)
-#define CNT_ADDR_SPACE_SWITCH	((void) 0)
-#define CNT_IRQ			((void) 0)
-#define CNT_PAGE_FAULT		((void) 0)
-#define CNT_IO_FAULT		((void) 0)
-#define CNT_SCHEDULE		((void) 0)
-#define CNT_EXC_IPC             ((void) 0)
+#define CNT_CONTEXT_SWITCH	static_cast<void>(0)
+#define CNT_ADDR_SPACE_SWITCH	static_cast<void>(0)
+#define CNT_IRQ			static_cast<void>(0)
+#define CNT_PAGE_FAULT		static_cast<void>(0)
+#define CNT_IO_FAULT		static_cast<void>(0)
+#define CNT_SCHEDULE		static_cast<void>(0)
+#define CNT_EXC_IPC             static_cast<void>(0)
 
 // FIXME: currently unused entries below
-#define CNT_IPC_LONG		((void) 0)
-#define CNT_TASK_CREATE		((void) 0)
-#define CNT_IOBMAP_TLB_FLUSH	((void) 0)
+#define CNT_IPC_LONG		static_cast<void>(0)
+#define CNT_TASK_CREATE		static_cast<void>(0)
+#define CNT_IOBMAP_TLB_FLUSH	static_cast<void>(0)
 
 #endif // CONFIG_JDB && CONFIG_JDB_ACCOUNTING
 

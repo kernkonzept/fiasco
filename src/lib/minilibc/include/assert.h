@@ -4,8 +4,13 @@
 #include <cdefs.h>
 
 #ifdef NDEBUG
-# define assert(expr) ((void) 0)
-# define check(expr)  (void)(expr)
+#ifdef __cplusplus
+# define assert(expr) static_cast<void>(0)
+# define check(expr) static_cast<void>(expr)
+#else
+# define assert(expr) (void) 0
+# define check(expr) (void) expr
+#endif
 #else
 # include <stdio.h>
 
