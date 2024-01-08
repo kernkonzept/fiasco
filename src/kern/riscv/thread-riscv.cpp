@@ -104,8 +104,6 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, void *arg)
   // are required for a minimal execution environment.
   vcpu_restore_host_regs(r);
 
-  // XXX Is it a problem that the contents of kernel registers are leaked?
-
   assert(cpu_lock.test());
   extern char fast_sret[];
   riscv_fast_exit(nonull_static_cast<Return_frame*>(r), fast_sret, arg);
