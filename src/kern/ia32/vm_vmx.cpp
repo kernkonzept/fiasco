@@ -22,10 +22,10 @@ protected:
 
 private:
   static void const *field_ptr(void const *vmcs, unsigned field)
-  { return Vmx_user_info::Fo_table::field(vmcs, field); }
+  { return offset_cast<void const *>(vmcs, Vmx_vm_state::offset(field) + 64); }
 
   static void *field_ptr(void *vmcs, unsigned field)
-  { return Vmx_user_info::Fo_table::field(vmcs, field); }
+  { return offset_cast<void *>(vmcs, Vmx_vm_state::offset(field) + 64); }
 };
 
 template<typename X>

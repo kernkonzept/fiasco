@@ -27,6 +27,22 @@ a nonull_static_cast( b p )
 }
 
 /**
+ * Cast an object to a different type with an offset.
+ *
+ * \tparam T1      Target object type.
+ * \tparam T2      Source object type.
+ * \param  offset  Byte offset within the source object.
+ *
+ * \return Target object.
+ */
+template<typename T1, typename T2> inline
+T1 offset_cast(T2 ptr, uintptr_t offset)
+{
+  uintptr_t addr = reinterpret_cast<uintptr_t>(ptr) + offset;
+  return reinterpret_cast<T1>(addr);
+}
+
+/**
  * Read the value at an address at most once.
  *
  * The read might be omitted if the result is not used by any code unless

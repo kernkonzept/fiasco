@@ -7,7 +7,6 @@ INTERFACE [vmx]:
 #include <cstdio>
 #include <cstring>
 
-
 class Vmx_info
 {
 public:
@@ -172,9 +171,11 @@ public:
   Bit_defs_32<Exceptions> exception_bitmap;
 
   Unsigned64 ept_vpid_cap;
+
   bool has_invept() const { return ept_vpid_cap & (1 << 20); }
   bool has_invept_single() const { return ept_vpid_cap & (1 << 25); }
   bool has_invept_global() const { return ept_vpid_cap & (1 << 26); }
+
   Unsigned64 max_index;
   Unsigned32 pinbased_ctls_default1;
   Unsigned32 procbased_ctls_default1;
@@ -182,48 +183,8 @@ public:
   Unsigned32 entry_ctls_default1;
 };
 
-
 struct Vmx_user_info
 {
-  struct Fo_table
-  {
-    unsigned char offsets[32];
-    static unsigned char const master_offsets[32];
-
-    enum
-    {
-      Foi_size = 4
-    };
-
-    template<typename T>
-    static T *field(T *b, unsigned vm_field)
-    {
-      return (void*)((Address)b + master_offsets[vm_field >> 10] * 64
-             + ((vm_field & 0x3ff) << master_offsets[Foi_size + (vm_field >> 13)]));
-    }
-
-    void init()
-    { memcpy(offsets, master_offsets, sizeof(offsets)); }
-
-    static void check_offsets(unsigned max_idx)
-    {
-      for (unsigned t1 = 0; t1 < 3; ++t1)
-        for (unsigned w1 = 0; w1 < 4; ++w1)
-          for (unsigned t2 = 0; t2 < 3; ++t2)
-            for (unsigned w2 = 0; w2 < 4; ++w2)
-              if (t1 != t2 || w1 != w2)
-                {
-                  unsigned s1 = ((t1 << 10) | (w1 << 13));
-                  unsigned s2 = ((t2 << 10) | (w2 << 13));
-                  unsigned e1 = s1 | max_idx;
-                  unsigned e2 = s2 | max_idx;
-                  assert (field((void*)0, s1) > field((void*)0, e2)
-                          || field((void*)0, s2) > field((void*)0, e1));
-                  (void) s1; (void) s2; (void) e1; (void) e2;
-                }
-    }
-  };
-
   Unsigned64 basic;
   Vmx_info::Bit_defs_32<Vmx_info::Pin_based_ctls> pinbased;
   Vmx_info::Bit_defs_32<Vmx_info::Primary_proc_based_ctls> procbased;
@@ -455,30 +416,401 @@ private:
   Unsigned64 _kernel_vmcs_pa;
 };
 
-class Vmx_info_msr
+/**
+ * Destriptor of offsets/limits for VMCS field groups.
+ *
+ * Contains the offsets/limits for the control, read-only and guest VMCS fields
+ * (for the given field size). The final offset is reserved.
+ */
+struct Vmx_field_group_values
 {
+  Unsigned8 ctl;
+  Unsigned8 ro;
+  Unsigned8 guest;
+  Unsigned8 reserved;
+};
+
+/**
+ * Destriptor of index shifts for VMCS field sizes.
+ *
+ * Contains the index shifts for the 16-bit, 64-bit, 32-bit and natural-width
+ * VMCS fields.
+ */
+struct Vmx_field_size_values
+{
+  Unsigned8 size_16;
+  Unsigned8 size_64;
+  Unsigned8 size_32;
+  Unsigned8 size_nat;
+};
+
+/**
+ * Software VMCS field offset table. The memory layout is as follows:
+ *
+ * 0x00 - 0x02: 3 offsets for 16-bit fields.
+ *        0x03: Reserved.
+ * 0x04 - 0x07: 4 index shifts.
+ * 0x08 - 0x0a: 3 offsets for 64-bit fields.
+ * 0x0b - 0x0f: Reserved.
+ * 0x10 - 0x12: 3 offsets for 32-bit fields.
+ * 0x13 - 0x17: Reserved.
+ * 0x18 - 0x1a: 3 offsets for natural-width fields.
+ *        0x1b: Reserved.
+ *        0x1c: Offset of the first software VMCS field.
+ *        0x1d: Size of the software VMCS fields.
+ * 0x1e - 0x1f: Reserved.
+ *
+ * The offsets/limits in each size category are in the following order:
+ *  - Control fields.
+ *  - Read-only fields.
+ *  - Guest fields.
+ *
+ * The index shifts are in the following order:
+ *  - 16-bit.
+ *  - 64-bit.
+ *  - 32-bit.
+ *  - Natural-width.
+ *
+ * All offsets/limits/sizes are represented in a 64-byte granule.
+ */
+struct Vmx_offset_table
+{
+  Vmx_field_group_values offsets_16;
+  Vmx_field_size_values index_shifts;
+
+  Vmx_field_group_values offsets_64;
+  Unsigned8 reserved0[4];
+
+  Vmx_field_group_values offsets_32;
+  Unsigned8 reserved1[4];
+
+  Vmx_field_group_values offsets_nat;
+
+  Unsigned8 base_offset;
+  Unsigned8 size;
+  Unsigned8 reserved[2];
+};
+
+static_assert(sizeof(Vmx_offset_table) == 32,
+              "VMX field offset table size is 32 bytes.");
+
+/**
+ * VMX extended vCPU state.
+ *
+ * For completeness, this is the overall memory layout of the vCPU:
+ *
+ * 0x000 - 0x1ff: Standard vCPU state \ref Vcpu_state (with padding).
+ * 0x200 - 0x3ff: VMX capabilities \ref Vmx_user_info (with padding).
+ * 0x400 - 0xfff: VMX extended vCPU state.
+ *
+ * The memory layout of the VMX extended vCPU state is as follows:
+ *
+ * 0x000 - 0x007: Reserved.
+ * 0x008 - 0x00f: User space data (ignored by the kernel).
+ * 0x010 - 0x013: VMCS field index of the software-defined CR2 field in the
+ *                software VMCS.
+ * 0x014 - 0x01f: Reserved.
+ * 0x020 - 0x03f: Software VMCS field offset table \ref Vmx_offset_table.
+ * 0x040 - 0xbbf: Software VMCS fields (with padding).
+ */
+class Vmx_vm_state
+{
+public:
+  enum
+  {
+    /**
+     * Size of the software VMCS (in bytes).
+     */
+    Sw_vmcs_size = 3008
+  };
+
+  /**
+   * Compute VMCS field index base index (within its size and group category).
+   *
+   * \param field  VMCS field index.
+   *
+   * \return VMCS field index base index.
+   */
+  static constexpr unsigned int base_index(Unsigned16 field)
+  {
+    return field & 0x3feU;
+  }
+
+  /**
+   * Compute VMCS field index size.
+   *
+   * \param field  VMCS field index.
+   *
+   * \retval 0  16-bit field.
+   * \retval 1  64-bit field.
+   * \retval 2  32-bit field.
+   * \retval 3  Natural-width field.
+   */
+  static constexpr unsigned int size(Unsigned16 field)
+  {
+    return (field >> 13) & 0x03U;
+  }
+
+  /**
+   * Compute VMCS field index group.
+   *
+   * \param field  VMCS field index.
+   *
+   * \retval 0  Control field.
+   * \retval 1  Read-only field.
+   * \retval 2  Guest field.
+   * \retval 3  Host field.
+   */
+  static constexpr unsigned int group(Unsigned16 field)
+  {
+    return (field >> 10) & 0x03U;
+  }
+
+  /**
+   * Get software VMCS index shift for the given size category.
+   *
+   * The index shift is used to compute the relative byte offset of the given
+   * VMCS field in the software VMCS.
+   *
+   * \note Canonical VMCS field indexes are always even numbers. Thus the index
+   *       shift already accounts for this.
+   *
+   * \note Natural-width VMCS fields are always stored as 64-bit entries in the
+   *       software VMCS.
+   *
+   * \param size  VMCS field size.
+   *
+   * \return Index shift.
+   */
+  static constexpr unsigned int shift(unsigned int size)
+  {
+    switch (size)
+      {
+      case 0: /* 16-bits -> shift by 0 */
+        return 0;
+      case 1: /* 64-bits -> shift by 2 */
+        return 2;
+      case 2: /* 32-bits -> shift by 1 */
+        return 1;
+      case 3: /* Natural-width (assuming 64-bits) -> shift by 2 */
+        return 2;
+      }
+
+    return 0;
+  }
+
+  /**
+   * Get software VMCS index shift for the given VMCS field index.
+   *
+   * See \ref shift() for the detailed explanation.
+   *
+   * \param field  VMCS field index.
+   *
+   * \return Index shift.
+   */
+  static constexpr unsigned int field_shift(Unsigned16 field)
+  {
+    return shift(size(field));
+  }
+
+  /**
+   * Get the range of the 16-bit VMCS fields supported in the given group.
+   *
+   * \param group  VMCS field group.
+   *
+   * \return VMCS fields range for the given group.
+   */
+  static constexpr unsigned int group_size_16(unsigned int group)
+  {
+    /*
+     * Note: The maximal enum value is the last field plus 1. Therefore we
+     * add an extra 1 to it to get the range.
+     */
+    switch (group)
+      {
+        case 2:
+          return base_index(Vmx::F_max_16bit_guest) + 1;
+      }
+
+    return 0;
+  }
+
+  /**
+   * Get the range of the 64-bit VMCS fields supported in the given group.
+   *
+   * \param group  VMCS field group.
+   *
+   * \return VMCS fields range for the given group.
+   */
+  static constexpr unsigned int group_size_64(unsigned int group)
+  {
+    /*
+     * Note: The maximal enum value is the last field plus 1. Therefore we
+     * add an extra 1 to it to get the range.
+     */
+    switch (group)
+      {
+        case 0:
+          return base_index(Vmx::F_max_64bit_ctl) + 1;
+        case 1:
+          return base_index(Vmx::F_max_64bit_ro) + 1;
+        case 2:
+          return base_index(Vmx::F_max_64bit_guest) + 1;
+      }
+
+    return 0;
+  }
+
+  /**
+   * Get the range of the 32-bit VMCS fields supported in the given group.
+   *
+   * \param group  VMCS field group.
+   *
+   * \return VMCS fields range for the given group.
+   */
+  static constexpr unsigned int group_size_32(unsigned int group)
+  {
+    /*
+     * Note: The maximal enum value is the last field plus 1. Therefore we
+     * add an extra 1 to it to get the range.
+     */
+    switch (group)
+      {
+        case 0:
+          return base_index(Vmx::F_max_32bit_ctl) + 1;
+        case 1:
+          return base_index(Vmx::F_max_32bit_ro) + 1;
+        case 2:
+          return base_index(Vmx::F_max_32bit_guest) + 1;
+      }
+
+    return 0;
+  }
+
+  /**
+   * Get the range of the natural-width VMCS fields supported in the given
+   * group.
+   *
+   * \param group  VMCS field group.
+   *
+   * \return VMCS fields range for the given group.
+   */
+  static constexpr unsigned int group_size_nat(unsigned int group)
+  {
+    /*
+     * Note: The maximal enum value is the last field plus 1. Therefore we
+     * add an extra 1 to it to get the range.
+     */
+    switch (group)
+      {
+        case 0:
+          return base_index(Vmx::F_max_nat_ctl) + 1;
+        case 1:
+          return base_index(Vmx::F_max_nat_ro) + 1;
+        case 2:
+          return base_index(Vmx::F_max_nat_guest) + 1;
+      }
+
+    return 0;
+  }
+
+  /**
+   * Compute the size of the software VMCS block for the given size and group
+   * category.
+   *
+   * \note Since the offset table represents offsets/limits/sizes in 64-byte
+   *       granules, we align the size up to the nearest 64 bytes.
+   *
+   * \param size   VMCS field size.
+   * \param group  VMCS field group.
+   *
+   * \return Size of the software VMCS block (in bytes).
+   */
+  static constexpr unsigned int block_size(unsigned int size,
+                                           unsigned int group)
+  {
+    unsigned int size_size = 0;
+
+    switch (size)
+      {
+      case 0:
+        size_size = group_size_16(group);
+        break;
+      case 1:
+        size_size = group_size_64(group);
+        break;
+      case 2:
+        size_size = group_size_32(group);
+        break;
+      case 3:
+        size_size = group_size_nat(group);
+        break;
+      }
+
+    return ((size_size << shift(size)) + 63U) & (~63U);
+  }
+
+  /**
+   * Compute the offset of a VMCS field index in the software VMCS.
+   *
+   * \param field  VMCS field index.
+   *
+   * \return Offset in the software VMCS (i.e. byte offset in \ref _values).
+   */
+  static constexpr unsigned int offset(Unsigned16 field)
+  {
+    unsigned int idx = base_index(field);
+    unsigned int sz = size(field);
+    unsigned int grp = group(field);
+
+    unsigned int offset = 0;
+
+    /*
+     * The offset base is calculated by summing up the block sizes of the
+     * categories that precede the category of the VMCS field index at hand.
+     */
+
+    for (unsigned int g = 0; g <= 2; ++g)
+      {
+        for (unsigned int s = 0; s <= 3; ++s)
+          {
+            if (g == grp && s == sz)
+              return offset + (idx << shift(sz));
+
+            offset += block_size(s, g);
+          }
+      }
+
+    return offset;
+  }
+
+  /**
+   * Compute the range the category of the VMCS field index.
+   *
+   * \param field  VMCS field index.
+   *
+   * \return Range of category of the VMCS field index.
+   */
+  static constexpr unsigned int limit(Unsigned16 field)
+  {
+    unsigned int sz = size(field);
+    unsigned int grp = group(field);
+
+    return block_size(sz, grp);
+  }
+
 private:
-  Unsigned64 _data;
+  Unsigned64 _reserved0;
+  Unsigned64 _user_data;
+  Unsigned32 _cr2_field;
+  Unsigned8 _reserved1[12];
+
+  Vmx_offset_table _offset_table;
+  Unsigned8 _values[Sw_vmcs_size];
 };
 
-//-----------------------------------------------------------------------------
-INTERFACE [vmx && ia32]:
-
-EXTENSION class Vmx
-{
-public:
-  enum { Gpregs_words = 11 };
-};
-
-//-----------------------------------------------------------------------------
-INTERFACE [vmx && amd64]:
-
-EXTENSION class Vmx
-{
-public:
-  enum { Gpregs_words = 19 };
-};
-
+static_assert(sizeof(Vmx_vm_state) + 0x400 == 4096,
+              "VMX extended VM state fits exactly into 4096 bytes.");
 
 // -----------------------------------------------------------------------
 IMPLEMENTATION[vmx]:
@@ -608,9 +940,8 @@ Vmx_info::init()
   if (procbased_ctls.allowed(Vmx_info::PRB1_enable_proc_based_ctls_2))
     procbased_ctls2 = Cpu::rdmsr(0x48b);
 
-  assert ((Vmx::F_sw_guest_cr2 & 0x3ff) > max_index);
+  assert((Vmx::F_sw_guest_cr2 & 0x3ff) > max_index);
   max_index = Vmx::F_sw_guest_cr2 & 0x3ff;
-  Vmx_user_info::Fo_table::check_offsets(max_index);
 
   if (basic & (1ULL << 55))
     {
@@ -628,7 +959,6 @@ Vmx_info::init()
 
   pinbased_ctls.enforce(Vmx_info::PIB_ext_int_exit);
   pinbased_ctls.enforce(Vmx_info::PIB_nmi_exit);
-
 
   // currently we IO-passthrough is missing, disable I/O bitmaps and enforce
   // unconditional io exiting
@@ -651,7 +981,7 @@ Vmx_info::init()
       procbased_ctls.enforce(Vmx_info::PRB1_enable_proc_based_ctls_2, true);
 
       if (procbased_ctls2.allowed(Vmx_info::PRB2_enable_ept))
-	ept_vpid_cap = Cpu::rdmsr(0x48c);
+        ept_vpid_cap = Cpu::rdmsr(0x48c);
 
       if (has_invept() && !has_invept_global())
       {
@@ -744,6 +1074,80 @@ Vmx_info::dump(const char *tag) const
   procbased_ctls2.print("procbased_ctls2");
   printf("ept_vpid_cap         = %16llx\n", ept_vpid_cap);
   exception_bitmap.print("exception_bitmap");
+}
+
+/**
+ * Initialize the VMX extended vCPU state.
+ */
+PUBLIC
+void
+Vmx_vm_state::init()
+{
+  static_assert(offset(0x6800) + limit(0x6800) < Sw_vmcs_size,
+                "Field offsets fit within the software VMCS.");
+
+  _cr2_field = Vmx::F_sw_guest_cr2;
+
+  _offset_table =
+    {
+      {
+        /* 16-bit offsets */
+        offset(0x0000) / 64 + 1,
+        offset(0x0400) / 64 + 1,
+        offset(0x0800) / 64 + 1,
+        0
+      },
+      {
+        /* Index shifts */
+        shift(0),
+        shift(1),
+        shift(2),
+        shift(3)
+      },
+      {
+        /* 64-bit offsets */
+        offset(0x2000) / 64 + 1,
+        offset(0x2400) / 64 + 1,
+        offset(0x2800) / 64 + 1,
+        0
+      },
+      {
+        /* Reserved */
+        0,
+        0,
+        0,
+        0
+      },
+      {
+        /* 32-bit offsets */
+        offset(0x4000) / 64 + 1,
+        offset(0x4400) / 64 + 1,
+        offset(0x4800) / 64 + 1,
+        0
+      },
+      {
+        /* Reserved */
+        0,
+        0,
+        0,
+        0
+      },
+      {
+        /* Natural-width offsets */
+        offset(0x6000) / 64 + 1,
+        offset(0x6400) / 64 + 1,
+        offset(0x6800) / 64 + 1,
+        0
+      },
+
+      /* Offset of the first field */
+      offset(0x0000) / 64 + 1,
+
+      /* Size of the software VMCS */
+      (offset(0x6800) + limit(0x6800) - offset(0x0000)) / 64,
+
+      {0, 0}
+    };
 }
 
 PRIVATE static inline
@@ -956,123 +1360,11 @@ Vmx::Vmx(Cpu_number cpu)
   Pm_object::register_pm(cpu);
 }
 
-/// Some compile-time VMCS field calculations
-namespace Vmcs_field {
-
-/**
- * Calculate the shift needed to calculate the memory offset from a
- * field offset for a field of size FIELD_SIZE (bits 13..14 of a VMCS field index).
- */
-template<unsigned FIELD_SIZE> struct Shift;
-template<> struct Shift<0> { enum { value = 0 }; }; ///< 16bit -> 1 byte per index
-template<> struct Shift<1> { enum { value = 2 }; }; ///< 64bit -> 4 byte per index
-template<> struct Shift<2> { enum { value = 1 }; }; ///< 32bit -> 2 byte per index
-template<> struct Shift<3> { enum { value = 2 }; }; ///< nat   -> 4 byte per index
-
-/**
- * Calculate the maximum field index of all given fields
- * Uses bits 0..9 of the given index values.
- */
-template<unsigned ...N> struct Max;
-template<unsigned A1> struct Max<A1> { enum { value = A1 & 0x3ff }; };
-template<unsigned A1, unsigned A2, unsigned ...N>
-struct Max<A1, A2, N...>
-{
-  enum
-  {
-    value = ((A1 & 0x3ff) > (A2 & 0x3ff))
-            ? (unsigned)Max<A1 & 0x3ff, N...>::value
-            : (unsigned)Max<A2 & 0x3ff, N...>::value
-  };
-};
-
-enum
-{
-  /**
-   * Max of all of our defined field indices.
-   *
-   * We calculate this without host fields, as host fields are never
-   * exposed to in our API.
-   */
-  Max_field_index = Max<Vmx::F_max_16bit_ctl,
-                        Vmx::F_max_16bit_guest,
-                        Vmx::F_max_64bit_ctl,
-                        Vmx::F_max_64bit_ro,
-                        Vmx::F_max_64bit_guest,
-                        Vmx::F_max_32bit_ctl,
-                        Vmx::F_max_32bit_ro,
-                        Vmx::F_max_32bit_guest,
-                        Vmx::F_max_nat_ctl,
-                        Vmx::F_max_nat_ro,
-                        Vmx::F_max_nat_guest>::value
-};
-
-/**
- * Calculate the size (in multiples of 64 bytes) of a field block given
- * the maximum field index in a group.
- */
-template<unsigned FIELD_MAX>
-struct Block_size
-{
-  enum
-  { value = ((((FIELD_MAX & 0x3ff) + 1) << Shift<(FIELD_MAX >> 13)>::value) + 63) / 64 };
-};
-
-enum
-{
-  Offset_0000 = 64 / 64,
-  Offset_2000 = Offset_0000 + Block_size<0x0000 | Max_field_index>::value,
-  Offset_4000 = Offset_2000 + Block_size<0x2000 | Max_field_index>::value,
-  Offset_6000 = Offset_4000 + Block_size<0x4000 | Max_field_index>::value,
-
-  Offset_0400 = Offset_6000 + Block_size<0x6000 | Max_field_index>::value,
-  Offset_2400 = Offset_0400 + Block_size<0x0400 | Max_field_index>::value,
-  Offset_4400 = Offset_2400 + Block_size<0x2400 | Max_field_index>::value,
-  Offset_6400 = Offset_4400 + Block_size<0x4400 | Max_field_index>::value,
-
-  Offset_0800 = Offset_6400 + Block_size<0x6400 | Max_field_index>::value,
-  Offset_2800 = Offset_0800 + Block_size<0x0800 | Max_field_index>::value,
-  Offset_4800 = Offset_2800 + Block_size<0x2800 | Max_field_index>::value,
-  Offset_6800 = Offset_4800 + Block_size<0x4800 | Max_field_index>::value,
-
-  Total_size  = Offset_6800 + Block_size<0x6800 | Max_field_index>::value
-};
-
-static_assert(Total_size * 64 + 1024 < 4096, "VMCS fields exceed extended vCPU state");
-}
-
-/*
- * VMCS field offset table:
- *  0h -  2h: 3 offsets for 16bit fields:
- *            0: Control fields, 1: read-only fields, 2: guest state
- *            all offsets in 64byte granules relative to the start of the VMCS
- *        3h: Reserved
- *  4h -  7h: Index shift values for 16bit, 64bit, 32bit, and natural width fields
- *  8h -  Ah: 3 offsets for 64bit fields
- *  Bh -  Fh: Reserved
- * 10h - 12h: 3 offsets for 32bit fields
- * 13h - 17h: Reserved
- * 18h - 1Ah: 3 offsets for natural width fields
- *       1Bh: Reserved
- *       1Ch: Offset of first VMCS field
- *       1Dh: Full size of VMCS fields
- * 1Eh - 1Fh: Reserved
- *
- */
-unsigned char const Vmx_user_info::Fo_table::master_offsets[32] =
-{
-   Vmcs_field::Offset_0000, Vmcs_field::Offset_0400, Vmcs_field::Offset_0800, 0,   0, 2, 1, 2,
-   Vmcs_field::Offset_2000, Vmcs_field::Offset_2400, Vmcs_field::Offset_2800, 0,   0, 0, 0, 0,
-   Vmcs_field::Offset_4000, Vmcs_field::Offset_4400, Vmcs_field::Offset_4800, 0,   0, 0, 0, 0,
-   Vmcs_field::Offset_6000, Vmcs_field::Offset_6400, Vmcs_field::Offset_6800, 0,
-   Vmcs_field::Offset_0000, Vmcs_field::Total_size, 0, 0,
-};
-
 PUBLIC inline
 void
 Vmx::init_vmcs_infos(void *vcpu_state) const
 {
-  Vmx_user_info *i = reinterpret_cast<Vmx_user_info*>((char*)vcpu_state + 0x200);
+  Vmx_user_info *i = offset_cast<Vmx_user_info *>(vcpu_state, 0x200);
   i->basic = info.basic;
   i->pinbased = info.pinbased_ctls;
   i->procbased = info.procbased_ctls;
@@ -1094,12 +1386,9 @@ Vmx::init_vmcs_infos(void *vcpu_state) const
   i->exit_dfl1 = info.exit_ctls_default1;
   i->entry_dfl1 = info.entry_ctls_default1;
 
-  Vmx_user_info::Fo_table *infos = reinterpret_cast<Vmx_user_info::Fo_table *>((char*)vcpu_state + 0x420);
-  Unsigned32 *inf = reinterpret_cast<Unsigned32 *>((char*)vcpu_state + 0x410);
-  inf[0] = F_sw_guest_cr2;
-  infos->init();
+  Vmx_vm_state *s = offset_cast<Vmx_vm_state *>(vcpu_state, 0x400);
+  s->init();
 }
-
 
 PUBLIC
 void *
