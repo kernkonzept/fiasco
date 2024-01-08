@@ -115,6 +115,7 @@ private:
   static void enter_trap_handler(Cpu_number cpu);
   static void leave_trap_handler(Cpu_number cpu);
   static bool handle_conditional_breakpoint(Cpu_number cpu, Jdb_entry_frame *e);
+  static bool handle_early_debug_traps(Jdb_entry_frame *e);
   static void handle_nested_trap(Jdb_entry_frame *e);
   static bool handle_user_request(Cpu_number cpu);
   static bool handle_debug_traps(Cpu_number cpu);
@@ -197,6 +198,13 @@ T
 Jdb::monitor_address(Cpu_number, T const volatile *addr)
 { return *addr; }
 
+
+IMPLEMENT_DEFAULT static
+bool
+Jdb::handle_early_debug_traps(Jdb_entry_frame *)
+{
+  return false;
+}
 
 PUBLIC static
 bool
@@ -1148,9 +1156,6 @@ char Jdb::esc_line[]     = "\033[37m";
 char Jdb::esc_symbol[]   = "\033[33;1m";
 
 
-
-
-
 IMPLEMENT int
 Jdb::enter_jdb(Jdb_entry_frame *e, Cpu_number cpu)
 {
@@ -1161,6 +1166,9 @@ Jdb::enter_jdb(Jdb_entry_frame *e, Cpu_number cpu)
       if (!in_service)
 	return 0;
     }
+
+  if (handle_early_debug_traps(e))
+    return 0;
 
   enter_trap_handler(cpu);
 
