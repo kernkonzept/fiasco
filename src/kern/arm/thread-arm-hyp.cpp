@@ -121,6 +121,8 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && 32bit && !debug]:
 
+#include "infinite_loop.h"
+
 extern "C" void hyp_mode_fault(Mword abort_type, Trap_state *ts)
 {
   Mword v;
