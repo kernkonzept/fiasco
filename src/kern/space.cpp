@@ -138,13 +138,13 @@ Space::find_ku_mem(User<void>::Ptr p, unsigned size)
     return 0;
 
   // overflow check
-  if (EXPECT_FALSE(pa + size < pa))
+  if (EXPECT_FALSE(pa + size - 1 < pa))
     return 0;
 
   for (Ku_mem_list::Const_iterator f = _ku_mem.begin(); f != _ku_mem.end(); ++f)
     {
       Address const a = (Address)f->u_addr.get();
-      if (a <= pa && (a + f->size) >= (pa + size))
+      if (a <= pa && (a + f->size - 1) >= (pa + size - 1))
 	return *f;
     }
 
