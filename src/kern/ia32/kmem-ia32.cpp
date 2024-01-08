@@ -471,7 +471,7 @@ Kmem::init_mmu()
   setup_global_cpu_structures(superpages);
 }
 
-PRIVATE static
+PRIVATE static FIASCO_INIT_CPU
 void
 Kmem::setup_cpu_structures(Cpu &cpu, Lockless_alloc *cpu_alloc,
                            Lockless_alloc *tss_alloc)
@@ -681,7 +681,7 @@ Kmem::current_cpu_udir()
   return reinterpret_cast<Kpdir *>(Kentry_cpu_pdir);
 }
 
-PRIVATE static inline
+PRIVATE static inline FIASCO_INIT_CPU
 void
 Kmem::setup_cpu_structures_isolation(Cpu &cpu, Kpdir *,
                                      Lockless_alloc *cpu_alloc,
@@ -705,7 +705,7 @@ Kmem::current_cpu_udir()
   return reinterpret_cast<Kpdir *>(Kentry_cpu_pdir + 4096);
 }
 
-PRIVATE static
+PRIVATE static FIASCO_INIT_CPU
 void
 Kmem::setup_cpu_structures_isolation(Cpu &cpu, Kpdir *cpu_dir,
                                      Lockless_alloc *cpu_alloc,
