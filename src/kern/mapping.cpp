@@ -37,7 +37,7 @@ class Mapping : public cxx::S_list_item
     T *ptr() const
     { return _v ? reinterpret_cast<T*>(PREFIX | _v) : 0; }
 
-    operator T * () const { return ptr(); }
+    explicit operator T * () const { return ptr(); }
     T &operator * () const { return *ptr(); }
     T *operator -> () const { return *ptr(); }
 
@@ -66,7 +66,7 @@ public:
   struct Page_t;
   typedef cxx::int_type_order<Address, Page_t, Order> Page;
 
-  Space *space() const { return _space; }
+  Space *space() const { return _space.ptr(); }
   unsigned long depth() const { return _virt & 0xff; }
   bool has_max_depth() const { return depth() == 0xff; }
 };
@@ -133,7 +133,7 @@ PUBLIC inline
 Treemap *
 Mapping::submap() const
 {
-  return _space ? 0 : _submap;
+  return _space.ptr() ? 0 : _submap;
 }
 
 PUBLIC inline

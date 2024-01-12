@@ -76,12 +76,12 @@ public:
     explicit constexpr Rights(unsigned char v)
     : cxx::int_type_base<unsigned char, Rights>(v) {}
 
-    /// Allow implicit conversion from the safe Value_enum type
-    constexpr Rights(Value_enum v)
+    /// Explicit conversion from the Value_enum type
+    explicit constexpr Rights(Value_enum v)
     : cxx::int_type_base<unsigned char, Rights>(v) {}
 
-    /// Allow implicit conversion to the safe Value_enum type
-    constexpr operator Value_enum () const
+    /// Explicit conversion to the Value_enum type
+    explicit constexpr operator Value_enum () const
     { return static_cast<Value_enum>(_v); }
 
     constexpr bool empty() const { return _v == 0; }
