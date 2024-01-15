@@ -27,7 +27,7 @@ namespace cxx {
 class H_list_item
 {
 public:
-  H_list_item() : _pn(0) {}
+  H_list_item() : _n(0), _pn(0) {}
   ~H_list_item() { l_remove(); }
 
 private:

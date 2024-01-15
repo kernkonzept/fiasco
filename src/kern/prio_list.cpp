@@ -66,9 +66,10 @@ private:
   typedef cxx::D_list_cyclic<Prio_list_elem> S_list;
 
   /**
-   * Priority, the higher the better.
+   * Priority, the higher the better. The priority is only used if this element
+     is actually part of a Prio_list.
    */
-  unsigned short _prio;
+  unsigned short _prio = 0;
 };
 
 
