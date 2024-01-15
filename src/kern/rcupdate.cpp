@@ -15,8 +15,6 @@ class Rcu_batch
 {
   friend class Jdb_rcupdate;
 public:
-  /// create uninitialized batch.
-  Rcu_batch() = default;
   /// create a batch initialized with \a b.
   Rcu_batch(long b) : _b(b) {}
 
@@ -53,7 +51,7 @@ class Rcu_item : public cxx::S_list_item
   friend class Jdb_rcupdate;
 
 private:
-  bool (*_call_back)(Rcu_item *);
+  bool (*_call_back)(Rcu_item *) = nullptr;
 };
 
 
@@ -90,17 +88,17 @@ class Rcu_data
   friend class Jdb_rcupdate;
 public:
 
-  Rcu_batch _q_batch;   ///< batch no. for grace period
-  bool _q_passed;       ///< quiescent state for batch `_q_batch` passed?
-  bool _pending;        ///< waiting for quiescent state for batch `_q_batch`?
-  bool _idle;           ///< `false` iff CPU `_cpu` is participating in RCU
+  Rcu_batch _q_batch;     ///< batch no. for grace period
+  bool _q_passed = false; ///< quiescent state for batch `_q_batch` passed?
+  bool _pending  = false; ///< waiting for quiescent state for batch `_q_batch`?
+  bool _idle     = true;  ///< `false` iff CPU `_cpu` is participating in RCU
 
-  Rcu_batch _batch;     ///< batch no. assigned to the items in `_c`
-  Rcu_list _n;          ///< new items: waiting for being assigned to a batch
-  long _len;            ///< number of items in `_n + _c + _d` (for debugging)
-  Rcu_list _c;          ///< current items: assigned to batch `_batch`
-  Rcu_list _d;          ///< done items: waited a full grace period
-  Cpu_number _cpu;      ///< the CPU this `Rcu_data` instance is assigned to
+  Rcu_batch _batch;       ///< batch no. assigned to the items in `_c`
+  Rcu_list _n;            ///< new items: waiting for being assigned to a batch
+  long _len = 0;          ///< number of items in `_n + _c + _d` (for debugging)
+  Rcu_list _c;            ///< current items: assigned to batch `_batch`
+  Rcu_list _d;            ///< done items: waited a full grace period
+  Cpu_number _cpu;        ///< the CPU this `Rcu_data` instance is assigned to
 };
 
 
@@ -114,13 +112,13 @@ class Rcu_glbl
   friend class Jdb_rcupdate;
 
 private:
-  Rcu_batch _current;      ///< current batch
-  Rcu_batch _completed;    ///< last completed batch
-  bool _next_pending;      ///< Are there items in batch `_current + 1`?
+  Rcu_batch _current;         ///< current batch
+  Rcu_batch _completed;       ///< last completed batch
+  bool _next_pending = false; ///< Are there items in batch `_current + 1`?
   Spin_lock<> _lock;
-  Cpu_mask _cpus;          ///< CPUs waiting for a quiescent state
+  Cpu_mask _cpus;             ///< CPUs waiting for a quiescent state
 
-  Cpu_mask _active_cpus;   ///< CPUs participating in RCU
+  Cpu_mask _active_cpus;      ///< CPUs participating in RCU
 
 };
 
@@ -225,8 +223,7 @@ Rcu_glbl::Rcu_glbl()
 
 PUBLIC
 Rcu_data::Rcu_data(Cpu_number cpu)
-: _idle(true),
-  _cpu(cpu)
+: _q_batch(0), _batch(0), _cpu(cpu)
 {}
 
 
