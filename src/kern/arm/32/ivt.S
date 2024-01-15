@@ -283,11 +283,10 @@ undef_entry:
 	switch_to_kernel 0 0 1
 	ldr     lr, [sp, #RF(PSR,    0)]  @ read orig PSR
 	tst     lr, #0x20                 @ Thumb mode?
-	ldr	lr, [sp, #RF(SVC_LR, 0)]  @ read orig exception PC
+	ldr	lr, [sp, #RF(PC, 0)]      @ read orig exception PC
 	subeq	lr, lr, #4                @ adjust pc A32 mode
 	subne	lr, lr, #2                @ adjust pc T32 mode
-	str	lr, [sp, #RF(PC,     0)]  @ store to return address
-	str	lr, [sp, #RF(SVC_LR, 0)]  @ store to old kernel lr
+	str	lr, [sp, #RF(PC, 0)]      @ store to return address
 	enter_slowtrap GET_HSR(0x00)
 
 /**************************************************************************
