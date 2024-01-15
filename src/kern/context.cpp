@@ -107,6 +107,7 @@ class Context :
   friend class Jdb_thread_list;
   friend class Context_ptr;
   friend class Jdb_utcb;
+  friend class Context_tester;
 
   struct State_request
   {
