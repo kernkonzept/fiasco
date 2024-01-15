@@ -131,6 +131,8 @@ Cpu::kernel_sp() const
 //----------------------------------------------------------------------------
 IMPLEMENTATION[ia32]:
 
+#include "entry-ia32.h"
+
 PUBLIC static inline
 void
 Cpu:: set_cs()
@@ -229,8 +231,6 @@ Cpu::set_fast_entry(void (*func)(void))
   if (sysenter())
     set_sysenter(func);
 }
-
-extern "C" void entry_sys_fast_ipc_c (void);
 
 PUBLIC inline
 void

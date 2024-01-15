@@ -50,12 +50,12 @@ IMPLEMENTATION:
 #include "syscalls.h"
 #include "jdb.h"
 #include "pm.h"
+#include "entry-ia32.h"
 
 extern "C" void sys_ipc_wrapper (void);
 extern "C" void sys_ipc_log_wrapper (void);
 
 extern "C" void entry_sys_fast_ipc_log (void);
-extern "C" void entry_sys_fast_ipc_c (void);
 
 static
 void

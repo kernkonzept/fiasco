@@ -56,8 +56,6 @@ Cpu::kernel_sp() const
 
 IMPLEMENTATION[amd64]:
 
-extern "C" void entry_sys_fast_ipc_c();
-
 PUBLIC FIASCO_INIT_AND_PM
 void
 Cpu::init_sysenter()

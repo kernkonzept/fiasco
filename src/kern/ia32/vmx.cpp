@@ -823,13 +823,15 @@ IMPLEMENTATION[vmx]:
 #include "idt.h"
 #include "panic.h"
 #include "warn.h"
+#include "vm_vmx_asm.h"
+#include "entry-ia32.h"
 
 class Vmx_init_host_state
 {
   static Per_cpu<Vmx_init_host_state> cpus;
 };
 
-PUBLIC inline
+PUBLIC inline NEEDS["idt.h", "vm_vmx_asm.h", "entry-ia32.h"]
 Vmx_init_host_state::Vmx_init_host_state(Cpu_number cpu)
 {
   Vmx &v = Vmx::cpus.cpu(cpu);
@@ -837,9 +839,6 @@ Vmx_init_host_state::Vmx_init_host_state(Cpu_number cpu)
 
   if (cpu == Cpu::invalid() || !c.vmx() || !v.vmx_enabled())
     return;
-
-  extern char entry_sys_fast_ipc_c[];
-  extern char vm_vmx_exit_vec[];
 
   v.vmwrite(Vmx::F_host_es_selector, GDT_DATA_KERNEL);
   v.vmwrite(Vmx::F_host_cs_selector, GDT_CODE_KERNEL);
