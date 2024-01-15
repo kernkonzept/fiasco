@@ -9,7 +9,7 @@ class Queue_item : public cxx::D_list_item
   friend class Queue;
 
 private:
-  Queue *_q;
+  Queue *_q = nullptr;
 };
 
 
