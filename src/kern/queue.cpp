@@ -41,10 +41,6 @@ IMPLEMENTATION:
 #include "std_macros.h"
 
 PUBLIC inline
-Queue::Queue()
-{ _m.head().init(); }
-
-PUBLIC inline
 Queue::Inner_lock *
 Queue::q_lock()
 { return &_m.head(); }

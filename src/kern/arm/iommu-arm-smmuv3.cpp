@@ -967,8 +967,7 @@ private:
 
 public:
   Iommu() :
-    _idx(this - iommus().begin()),
-    _lock(Spin_lock<>::Unlocked)
+    _idx(this - iommus().begin())
   {}
 };
 
@@ -1373,8 +1372,6 @@ Iommu::setup(Address base_addr, unsigned eventq_irq, unsigned gerror_irq)
 
   unsigned cmdq_bits = min<unsigned>(Cmd_queue_max_bits, idr1.cmdqs().get());
   _cmd_queue.init(this, cmdq_bits);
-  _cmd_queue_lock.init();
-
 
   // Does the SMMU support broadcast TLB maintenance?
   if (idr0.btm())

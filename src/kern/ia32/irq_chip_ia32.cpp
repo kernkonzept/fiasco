@@ -171,8 +171,7 @@ Int_vector_allocator::alloc()
 PUBLIC explicit inline
 Irq_chip_ia32::Irq_chip_ia32(unsigned irqs)
 : _irqs(irqs),
-  _vec(irqs ? (unsigned char *)Boot_alloced::alloc(irqs) : 0),
-  _entry_lock(Spin_lock<>::Unlocked)
+  _vec(irqs ? (unsigned char *)Boot_alloced::alloc(irqs) : 0)
 {
   for (unsigned i = 0; i < irqs; ++i)
     _vec[i] = 0;

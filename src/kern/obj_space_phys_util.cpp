@@ -335,9 +335,7 @@ PUBLIC template< typename SPACE >
 inline
 Obj_space_phys<SPACE>::Obj_space_phys()
 : _map(Entries::Node_allocator(ram_quota()))
-{
-  _lock.init();
-}
+{}
 
 PRIVATE template< typename SPACE >
 typename Obj_space_phys<SPACE>::Entry *

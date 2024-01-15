@@ -164,7 +164,7 @@ public:
     F_enabled = 1, // This flags needs to be set atomically.
   };
 
-  Irq_base() : _flags(0), _irq_lock(Spin_lock<>::Unlocked), _next(0)
+  Irq_base() : _flags(0), _next(0)
   {
     Irq_chip_soft::sw_chip.bind(this, 0, true);
     mask();

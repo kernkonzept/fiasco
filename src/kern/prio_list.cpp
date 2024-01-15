@@ -170,7 +170,7 @@ Prio_list::dequeue(Prio_list_elem *e, Prio_list_elem **next = 0)
 }
 
 PUBLIC inline
-Iterable_prio_list::Iterable_prio_list() : _cursor(0), _lock(Spin_lock<>::Unlocked) {}
+Iterable_prio_list::Iterable_prio_list() : _cursor(0) {}
 
 /**
  * Dequeue a given element from the list.

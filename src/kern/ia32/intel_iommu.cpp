@@ -344,9 +344,7 @@ public:
   Irte volatile *_irq_remapping_table = 0;
   unsigned _irq_remap_table_size = 0;
 
-  Io_mmu()
-  : _lock(Spin_lock<>::Unlocked), _inv_q_lock(Spin_lock<>::Unlocked)
-  {}
+  Io_mmu() = default;
 
   unsigned idx() const
   { return this - iommus.begin(); }

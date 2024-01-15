@@ -172,8 +172,6 @@ Slab_cache::Slab_cache(unsigned elem_size,
   : _entry_size(entry_size(elem_size, alignment)), _num_empty(0),
     _name (name)
 {
-  lock.init();
-
   for (
       _slab_size = min_size;
       (_slab_size - sizeof(Slab)) / _entry_size < 8
@@ -194,7 +192,6 @@ Slab_cache::Slab_cache(unsigned long slab_size,
   : _slab_size(slab_size), _entry_size(entry_size(elem_size, alignment)),
     _num_empty(0), _name (name)
 {
-  lock.init();
   _elem_num = (_slab_size - sizeof(Slab)) / _entry_size;
 }
 

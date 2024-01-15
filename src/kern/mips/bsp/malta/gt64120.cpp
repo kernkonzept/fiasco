@@ -73,7 +73,6 @@ void
 Gt64120::irq_init()
 {
   Irq_chip_gen::init(29);
-  _irq_lock = Spin_lock<>::Unlocked;
   _gt_regs[R::Cpu_int_mask] = 0;
   _gt_regs[R::Int_cause] = 0;
 }

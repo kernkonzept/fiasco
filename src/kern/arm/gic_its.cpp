@@ -230,7 +230,7 @@ public:
   class Lpi
   {
   public:
-    Lpi() : lock(Spin_lock<>::Unlocked) { reset(); }
+    Lpi() { reset(); }
 
     // Index of this LPI, assigned by the MSI interrupt controller.
     unsigned index;
@@ -634,8 +634,6 @@ Gic_its::init(Gic_cpu_v3 *gic_cpu, Address base, unsigned num_lpis)
   disable(base);
 
   _gic_cpu = gic_cpu;
-  _cmd_queue_lock.init();
-  _device_alloc_lock.init();
 
   Typer typer(_its.read_non_atomic<Unsigned64>(GITS_TYPER));
   _redist_pta = typer.pta();

@@ -83,8 +83,6 @@ PUBLIC inline
 Irq_chip_migv::Irq_chip_migv(Address mmio)
   : Irq_chip_gen(Num_irqs), _regs(mmio)
 {
-  _lock.init();
-
   R_config0 config0(_regs[Config0]);
   R_config1 config1(_regs[Config1]);
 

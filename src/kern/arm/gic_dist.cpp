@@ -453,8 +453,6 @@ template<typename VERSION>
 unsigned
 Gic_dist::init(VERSION, unsigned cpu_prio, int nr_irqs_override = -1)
 {
-  _lock.init();
-
   disable(VERSION());
 
   unsigned num = hw_nr_irqs();

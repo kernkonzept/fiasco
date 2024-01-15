@@ -106,7 +106,6 @@ Irq_chip_sifive::Irq_chip_sifive(Address mmio)
     _mmio(mmio),
     _priority(mmio + Priority_base)
 {
-  _lock.init();
   init_cpu(Cpu_number::boot_cpu());
 
   // Set default priority for all interrupt sources.

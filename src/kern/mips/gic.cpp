@@ -102,7 +102,7 @@ IMPLEMENTATION:
 #include <string.h>
 
 PUBLIC
-Gic::Gic(Address mmio, unsigned cpu_int) : _r(mmio), _mode_lock(Spin_lock<>::Unlocked)
+Gic::Gic(Address mmio, unsigned cpu_int) : _r(mmio)
 {
   Reg_type cfg = _r[Sh_config];
   unsigned vpes = (cfg & 0x3f) + 1;

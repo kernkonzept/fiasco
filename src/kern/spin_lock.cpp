@@ -30,6 +30,8 @@ public:
 template<typename Lock_t = Small_atomic_int>
 class Spin_lock : public Spin_lock_base
 {
+   Spin_lock(Spin_lock const &) = delete;
+   Spin_lock operator = (Spin_lock const &) = delete;
 };
 
 //--------------------------------------------------------------------------
@@ -57,6 +59,10 @@ public:
 template< typename T >
 class Spin_lock_coloc : public Spin_lock<Mword>
 {
+public:
+  Spin_lock_coloc() : Spin_lock_coloc(Unlocked) {}
+  explicit Spin_lock_coloc(Lock_init i) : _lock((i == Unlocked) ? 0 : Arch_lock) {}
+
 private:
   enum { Arch_lock = 1 };
   Mword _lock;
@@ -70,7 +76,9 @@ EXTENSION class Spin_lock
 {
 public:
   typedef Mword Status;
-  Spin_lock() {}
+  /// Initialize spin lock in unlocked state.
+  Spin_lock() : Spin_lock(Unlocked) {}
+  /// Initialize spin lock with the given lock state.
   explicit Spin_lock(Lock_init i) : _lock((i == Unlocked) ? 0 : Arch_lock) {}
 
 protected:
@@ -83,18 +91,11 @@ protected:
 template< typename T >
 class Spin_lock_coloc : public Spin_lock<Mword>
 {
+  using Spin_lock<Mword>::Spin_lock;
 };
 
 //--------------------------------------------------------------------------
 IMPLEMENTATION:
-
-PUBLIC inline
-template< typename T >
-Spin_lock_coloc<T>::Spin_lock_coloc() {}
-
-PUBLIC inline
-template< typename T >
-Spin_lock_coloc<T>::Spin_lock_coloc(Lock_init i) : Spin_lock<Mword>(i) {}
 
 PUBLIC inline
 template< typename T >
@@ -114,13 +115,6 @@ IMPLEMENTATION [mp]:
 
 #include <cassert>
 #include "mem.h"
-
-PUBLIC template<typename Lock_t> inline
-void
-Spin_lock<Lock_t>::init()
-{
-  _lock = 0;
-}
 
 PUBLIC template<typename Lock_t> inline
 typename Spin_lock<Lock_t>::Status

@@ -701,8 +701,7 @@ private:
 
 public:
   Iommu() :
-    _idx(this - iommus().begin()),
-    _lock(Spin_lock<>::Unlocked)
+    _idx(this - iommus().begin())
   {}
 };
 

@@ -547,7 +547,7 @@ struct Ia32_intel_microcode
     if (!update)
       return false;
 
-    static Spin_lock<> load_lock(Spin_lock<>::Unlocked);
+    static Spin_lock<> load_lock;
 
       {
         auto g = lock_guard(load_lock);
