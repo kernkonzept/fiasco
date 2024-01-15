@@ -209,205 +209,541 @@ INTERFACE:
 class Vmx : public Pm_object
 {
 public:
-  enum Vmcs_16bit_ctl_fields
+  enum
   {
-    F_vpid               = 0x0,
-    F_posted_irq_vector  = 0x2,
-    F_eptp_index         = 0x4,
-
-    // must be the last
-    F_max_16bit_ctl
+    /**
+     * Nominal VMCS size (actual size may be smaller).
+     */
+    Vmcs_size = 0x1000
   };
 
-  enum Vmcs_16bit_guest_fields
+  /**
+   * 16-bit guest VMCS fields supported by the implementation.
+   */
+  enum Vmcs_16bit_guest_fields : Unsigned16
   {
-    F_guest_es               = 0x800,
-    F_guest_cs               = 0x802,
-    F_guest_ss               = 0x804,
-    F_guest_ds               = 0x806,
-    F_guest_fs               = 0x808,
-    F_guest_gs               = 0x80a,
-    F_guest_ldtr             = 0x80c,
-    F_guest_tr               = 0x80e,
-    F_guest_guest_irq_status = 0x810,
+    Vmcs_guest_es_selector      = 0x0800,
+    Vmcs_guest_cs_selector      = 0x0802,
+    Vmcs_guest_ss_selector      = 0x0804,
+    Vmcs_guest_ds_selector      = 0x0806,
+    Vmcs_guest_fs_selector      = 0x0808,
+    Vmcs_guest_gs_selector      = 0x080a,
+    Vmcs_guest_ldtr_selector    = 0x080c,
+    Vmcs_guest_tr_selector      = 0x080e,
+    Vmcs_guest_interrupt_status = 0x0810,
 
-    // must be the last
-    F_max_16bit_guest
+    // Must be the last
+    Max_16bit_guest
   };
 
-  enum Vmcs_16bit_host_fields
+  /**
+   * 16-bit host VMCS fields managed by the implementation (not exposed to user
+   * space).
+   */
+  enum Vmcs_16bit_host_fields : Unsigned16
   {
-    F_host_es_selector   = 0x0c00,
-    F_host_cs_selector   = 0x0c02,
-    F_host_ss_selector   = 0x0c04,
-    F_host_ds_selector   = 0x0c06,
-    F_host_fs_selector   = 0x0c08,
-    F_host_gs_selector   = 0x0c0a,
-    F_host_tr_selector   = 0x0c0c,
+    Vmcs_host_es_selector  = 0x0c00,
+    Vmcs_host_cs_selector  = 0x0c02,
+    Vmcs_host_ss_selector  = 0x0c04,
+    Vmcs_host_ds_selector  = 0x0c06,
+    Vmcs_host_fs_selector  = 0x0c08,
+    Vmcs_host_gs_selector  = 0x0c0a,
+    Vmcs_host_tr_selector  = 0x0c0c,
   };
 
-  enum Vmcs_64bit_ctl_fields
+  /**
+   * 64-bit control VMCS fields supported by the implementation.
+   */
+  enum Vmcs_64bit_ctl_fields : Unsigned16
   {
-    F_tsc_offset         = 0x2010,
-    F_apic_access_addr   = 0x2014,
-    F_ept_ptr            = 0x201a,
+    Vmcs_tsc_offset          = 0x2010,
+    Vmcs_apic_access_address = 0x2014,
+    Vmcs_ept_pointer         = 0x201a,
 
-    // .. skip ...
-
-    F_xss_exiting        = 0x202c,
-
-    // must be the last
-    F_max_64bit_ctl
+    // Must be the last
+    Max_64bit_ctl
   };
 
-  enum Vmcs_64bit_ro_fields
+  /**
+   * 64-bit read-only VMCS fields supported by the implementation.
+   */
+  enum Vmcs_64bit_ro_fields : Unsigned16
   {
-    F_guest_phys         = 0x2400,
+    Vmcs_guest_physical_address = 0x2400,
 
-    // must be the last
-    F_max_64bit_ro
+    // Must be the last
+    Max_64bit_ro
   };
 
-  enum Vmcs_64bit_guest_fields
+  /**
+   * 64-bit guest VMCS fields supported by the implementation.
+   */
+  enum Vmcs_64bit_guest_fields : Unsigned16
   {
-    F_guest_pat             = 0x2804,
-    F_guest_efer            = 0x2806,
-    F_guest_perf_global_ctl = 0x2808,
+    Vmcs_link_pointer                = 0x2800,
+    Vmcs_guest_ia32_debugctl         = 0x2802,
+    Vmcs_guest_ia32_pat              = 0x2804,
+    Vmcs_guest_ia32_efer             = 0x2806,
+    Vmcs_guest_ia32_perf_global_ctrl = 0x2808,
 
-    // ... skip ...
-
-    F_guest_pdpte3          = 0x2810,
-
-    F_sw_guest_xcr0         = 0x2840,
-    F_sw_msr_syscall_mask   = 0x2842,
-    F_sw_msr_lstar          = 0x2844,
-    F_sw_msr_cstar          = 0x2846,
-    F_sw_msr_tsc_aux        = 0x2848,
-    F_sw_msr_star           = 0x284a,
-    F_sw_msr_kernel_gs_base = 0x284c,
-
-    // must be the last
-    F_max_64bit_guest
+    // Must be the last
+    Max_64bit_guest
   };
 
-  enum Vmcs_64bit_host_fields
+  /**
+   * Software-defined 64-bit guest VMCS fields supported by the implementation.
+   *
+   * These fields are not present in the hardware VMCS, but represent
+   * additional guest state exposed to user space.
+   */
+  enum Sw_64bit_guest_fields : Unsigned16
   {
-    F_host_ia32_pat              = 0x2c00,
-    F_host_ia32_efer             = 0x2c02,
-    F_host_ia32_perf_global_ctrl = 0x2c04,
+    Sw_guest_xcr0         = 0x2840,
+    Sw_msr_syscall_mask   = 0x2842,
+    Sw_msr_lstar          = 0x2844,
+    Sw_msr_cstar          = 0x2846,
+    Sw_msr_tsc_aux        = 0x2848,
+    Sw_msr_star           = 0x284a,
+    Sw_msr_kernel_gs_base = 0x284c,
+
+    // Must be the last
+    Max_64bit_sw
   };
 
-  enum Vmcs_32bit_ctl_fields
+  /**
+   * 64-bit host VMCS fields managed by the implementation (not exposed to user
+   * space).
+   */
+  enum Vmcs_64bit_host_fields : Unsigned16
   {
-    F_pin_based_ctls       = 0x4000,
-    F_proc_based_ctls      = 0x4002,
-    F_exception_bitmap     = 0x4004,
-
-    F_cr3_target_cnt       = 0x400a,
-    F_exit_ctls            = 0x400c,
-    F_exit_msr_store_cnt   = 0x400e,
-    F_exit_msr_load_cnt    = 0x4010,
-    F_entry_ctls           = 0x4012,
-    F_entry_msr_load_cnt   = 0x4014,
-    F_entry_int_info       = 0x4016,
-
-    F_entry_exc_error_code = 0x4018,
-    F_entry_insn_len       = 0x401a,
-    F_proc_based_ctls_2    = 0x401e,
-    F_ple_gap              = 0x4020,
-    F_ple_window           = 0x4022,
-
-    // must be the last
-    F_max_32bit_ctl
+    Vmcs_host_ia32_pat              = 0x2c00,
+    Vmcs_host_ia32_efer             = 0x2c02,
+    Vmcs_host_ia32_perf_global_ctrl = 0x2c04,
   };
 
-  enum Vmcs_32bit_ro_fields
+  /**
+   * 32-bit control VMCS fields supported by the implementation.
+   */
+  enum Vmcs_32bit_ctl_fields : Unsigned16
   {
-    F_vm_instruction_error = 0x4400,
-    F_exit_reason          = 0x4402,
-    F_vectoring_info       = 0x4408,
-    F_vectoring_error_code = 0x440a,
-    F_exit_insn_len        = 0x440c,
-    F_exit_insn_info       = 0x440e,
+    Vmcs_pin_based_vm_exec_ctls      = 0x4000,
+    Vmcs_pri_proc_based_vm_exec_ctls = 0x4002,
+    Vmcs_exception_bitmap            = 0x4004,
+    Vmcs_page_fault_error_mask       = 0x4006,
+    Vmcs_page_fault_error_match      = 0x4008,
+    Vmcs_cr3_target_cnt              = 0x400a,
+    Vmcs_vm_exit_ctls                = 0x400c,
+    Vmcs_exit_msr_store_cnt          = 0x400e,
+    Vmcs_exit_msr_load_cnt           = 0x4010,
+    Vmcs_vm_entry_ctls               = 0x4012,
+    Vmcs_entry_msr_load_cnt          = 0x4014,
+    Vmcs_vm_entry_interrupt_info     = 0x4016,
+    Vmcs_vm_entry_exception_error    = 0x4018,
+    Vmcs_vm_entry_insn_len           = 0x401a,
+    Vmcs_sec_proc_based_vm_exec_ctls = 0x401e,
 
-    // must be the last
-    F_max_32bit_ro
+    // Must be the last
+    Max_32bit_ctl
   };
 
-  enum Vmcs_32bit_guest_fields
+  /**
+   * 32-bit read-only VMCS fields supported by the implementation.
+   */
+  enum Vmcs_32bit_ro_fields : Unsigned16
   {
-    // ... skip ...
-    F_sysenter_cs        = 0x482a,
-    F_preempt_timer      = 0x482e,
+    Vmcs_vm_insn_error           = 0x4400,
+    Vmcs_exit_reason             = 0x4402,
+    Vmcs_vm_exit_interrupt_info  = 0x4404,
+    Vmcs_vm_exit_interrupt_error = 0x4406,
+    Vmcs_idt_vectoring_info      = 0x4408,
+    Vmcs_idt_vectoring_error     = 0x440a,
+    Vmcs_vm_exit_insn_length     = 0x440c,
+    Vmcs_vm_exit_insn_info       = 0x440e,
 
-    // must be the last
-    F_max_32bit_guest
+    // Must be the last
+    Max_32bit_ro
   };
 
-  enum Vmcs_32bit_host_fields
+  /**
+   * 32-bit guest VMCS fields supported by the implementation.
+   */
+  enum Vmcs_32bit_guest_fields : Unsigned16
   {
-    F_host_sysenter_cs   = 0x4c00,
+    Vmcs_guest_es_limit               = 0x4800,
+    Vmcs_guest_cs_limit               = 0x4802,
+    Vmcs_guest_ss_limit               = 0x4804,
+    Vmcs_guest_ds_limit               = 0x4806,
+    Vmcs_guest_fs_limit               = 0x4808,
+    Vmcs_guest_gs_limit               = 0x480a,
+    Vmcs_guest_ldtr_limit             = 0x480c,
+    Vmcs_guest_tr_limit               = 0x480e,
+    Vmcs_guest_gdtr_limit             = 0x4810,
+    Vmcs_guest_idtr_limit             = 0x4812,
+    Vmcs_guest_es_access_rights       = 0x4814,
+    Vmcs_guest_cs_access_rights       = 0x4816,
+    Vmcs_guest_ss_access_rights       = 0x4818,
+    Vmcs_guest_ds_access_rights       = 0x481a,
+    Vmcs_guest_fs_access_rights       = 0x481c,
+    Vmcs_guest_gs_access_rights       = 0x481e,
+    Vmcs_guest_ldtr_access_rights     = 0x4820,
+    Vmcs_guest_tr_access_rights       = 0x4822,
+    Vmcs_guest_interruptibility_state = 0x4824,
+    Vmcs_guest_activity_state         = 0x4826,
+    Vmcs_guest_ia32_sysenter_cs       = 0x482a,
+    Vmcs_preemption_timer_value       = 0x482e,
+
+    // Must be the last
+    Max_32bit_guest
   };
 
-  enum Vmcs_nat_ctl_fields
+  /**
+   * 32-bit host VMCS fields managed by the implementation (not exposed to user
+   * space).
+   */
+  enum Vmcs_32bit_host_fields : Unsigned16
   {
-    // ... skip ....
-    F_cr3_target_3 = 0x600e,
-
-    // must be the last
-    F_max_nat_ctl
+    Vmcs_host_ia32_sysenter_cs = 0x4c00,
   };
 
-  enum Vmcs_nat_ro_fields
+  /**
+   * Natural-width control VMCS fields supported by the implementation.
+   */
+  enum Vmcs_nat_ctl_fields : Unsigned16
   {
-    // ... skip ...
-    F_guest_linear       = 0x640a,
+    Vmcs_cr0_guest_host_mask = 0x6000,
+    Vmcs_cr4_guest_host_mask = 0x6002,
+    Vmcs_cr0_read_shadow     = 0x6004,
+    Vmcs_cr4_read_shadow     = 0x6006,
 
-    // must be the last
-    F_max_nat_ro
+    // Must be the last
+    Max_nat_ctl
   };
 
-  enum Vmcs_nat_guest_fields
+  /**
+   * Natural-width read-only VMCS fields supported by the implementation.
+   */
+  enum Vmcs_nat_ro_fields : Unsigned16
   {
-    F_guest_cr3               = 0x6802,
-    // ... skip ...
-    F_guest_ia32_sysenter_eip = 0x6826,
+    Vmcs_exit_qualification   = 0x6400,
+    Vmcs_io_rcx               = 0x6402,
+    Vmcs_io_rsi               = 0x6404,
+    Vmcs_io_rdi               = 0x6406,
+    Vmcs_io_rip               = 0x6408,
+    Vmcs_guest_linear_address = 0x640a,
 
-    F_sw_guest_cr2            = 0x683e,
-
-    // must be the last
-    F_max_nat_guest
+    // Must be the last
+    Max_nat_ro
   };
 
-  enum Vmcs_nat_host_fields
+  /**
+   * Natural-width guest VMCS fields supported by the implementation.
+   */
+  enum Vmcs_nat_guest_fields : Unsigned16
   {
-    F_host_cr0           = 0x6c00,
-    F_host_cr3           = 0x6c02,
-    F_host_cr4           = 0x6c04,
-    F_host_fs_base       = 0x6c06,
-    F_host_gs_base       = 0x6c08,
-    F_host_tr_base       = 0x6c0a,
-    F_host_gdtr_base     = 0x6c0c,
-    F_host_idtr_base     = 0x6c0e,
-    F_host_sysenter_esp  = 0x6c10,
-    F_host_sysenter_eip  = 0x6c12,
-    F_host_rip           = 0x6c16,
+    Vmcs_guest_cr0                    = 0x6800,
+    Vmcs_guest_cr3                    = 0x6802,
+    Vmcs_guest_cr4                    = 0x6804,
+    Vmcs_guest_es_base                = 0x6806,
+    Vmcs_guest_cs_base                = 0x6808,
+    Vmcs_guest_ss_base                = 0x680a,
+    Vmcs_guest_ds_base                = 0x680c,
+    Vmcs_guest_fs_base                = 0x680e,
+    Vmcs_guest_gs_base                = 0x6810,
+    Vmcs_guest_ldtr_base              = 0x6812,
+    Vmcs_guest_tr_base                = 0x6814,
+    Vmcs_guest_gdtr_base              = 0x6816,
+    Vmcs_guest_idtr_base              = 0x6818,
+    Vmcs_guest_dr7                    = 0x681a,
+    Vmcs_guest_rsp                    = 0x681c,
+    Vmcs_guest_rip                    = 0x681e,
+    Vmcs_guest_rflags                 = 0x6820,
+    Vmcs_guest_pending_dbg_exceptions = 0x6822,
+    Vmcs_guest_ia32_sysenter_esp      = 0x6824,
+    Vmcs_guest_ia32_sysenter_eip      = 0x6826,
+
+    // Must be the last
+    Max_nat_guest
+  };
+
+  /**
+   * Software-defined natural-width guest VMCS fields supported by the
+   * implementation.
+   *
+   * These fields are not present in the hardware VMCS, but represent
+   * additional guest state exposed to user space.
+   */
+  enum Sw_nat_guest_fields : Unsigned16
+  {
+    Sw_guest_cr2 = 0x683e,
+
+    // Must be the last
+    Max_nat_sw
+  };
+
+  /**
+   * Natural-width host VMCS fields managed by the implementation (not exposed
+   * to user space).
+   */
+  enum Vmcs_nat_host_fields : Unsigned16
+  {
+    Vmcs_host_cr0               = 0x6c00,
+    Vmcs_host_cr3               = 0x6c02,
+    Vmcs_host_cr4               = 0x6c04,
+    Vmcs_host_fs_base           = 0x6c06,
+    Vmcs_host_gs_base           = 0x6c08,
+    Vmcs_host_tr_base           = 0x6c0a,
+    Vmcs_host_gdtr_base         = 0x6c0c,
+    Vmcs_host_idtr_base         = 0x6c0e,
+    Vmcs_host_ia32_sysenter_esp = 0x6c10,
+    Vmcs_host_ia32_sysenter_eip = 0x6c12,
+    Vmcs_host_rsp               = 0x6c14,
+    Vmcs_host_rip               = 0x6c16,
   };
 };
 
 INTERFACE [vmx]:
 
+#include <minmax.h>
 #include "virt.h"
 #include "cpu_lock.h"
+#include "warn.h"
+#include "cxx/bitfield"
 
 class Vmx_info;
 
 EXTENSION class Vmx
 {
 public:
+  template<auto field, typename... Fields>
+  using if_field_type =
+    cxx::enable_if_t<(cxx::is_same_v<decltype(field), Fields> || ...), bool>;
+
+  /*
+   * Type-safe VMCS read methods.
+   *
+   * Note that no methods for reading host-state VMCS fields are implemented.
+   * If you plan to introduce such a method, please carefully consider the
+   * security implications.
+   */
+
+  /**
+   * Read a 16-bit guest field from hardware VMCS.
+   *
+   * \tparam field  Field index.
+   *
+   * \return Field value.
+   */
+  template<Vmcs_16bit_guest_fields field>
+  static ALWAYS_INLINE Unsigned16 vmcs_read()
+  {
+    return vmread<Unsigned16>(field);
+  }
+
+  /**
+   * Read a 64-bit read-only/guest field from hardware VMCS.
+   *
+   * \tparam field  Field index.
+   *
+   * \return Field value.
+   */
+  template<auto field, if_field_type<field, Vmcs_64bit_ro_fields,
+                                            Vmcs_64bit_guest_fields> = true>
+  static ALWAYS_INLINE Unsigned64 vmcs_read()
+  {
+    return vmread<Unsigned64>(field);
+  }
+
+  /**
+   * Read a 32-bit read-only/guest field from hardware VMCS.
+   *
+   * \tparam field  Field index.
+   *
+   * \return Field value.
+   */
+  template<auto field, if_field_type<field, Vmcs_32bit_ro_fields,
+                                            Vmcs_32bit_guest_fields> = true>
+  static ALWAYS_INLINE Unsigned32 vmcs_read()
+  {
+    return vmread<Unsigned32>(field);
+  }
+
+  /**
+   * Read a natural-width read-only/guest field from hardware VMCS.
+   *
+   * \tparam field  Field index.
+   *
+   * \return Field value.
+   */
+  template<auto field, if_field_type<field, Vmcs_nat_ro_fields,
+                                            Vmcs_nat_guest_fields> = true>
+  static ALWAYS_INLINE Mword vmcs_read()
+  {
+    return vmread<Mword>(field);
+  }
+
+  /*
+   * Type-safe VMCS write methods.
+   */
+
+  /**
+   * Write a 16-bit guest/host field to the hardware VMCS.
+   *
+   * \tparam field  Field index.
+   * \param  value  Value to write to the field.
+   */
+  template<auto field, if_field_type<field, Vmcs_16bit_guest_fields,
+                                            Vmcs_16bit_host_fields> = true>
+  static ALWAYS_INLINE void vmcs_write(Unsigned16 value)
+  {
+    vmwrite<Unsigned16>(field, value);
+  }
+
+  /**
+   * Write a 64-bit control/guest/host field to the hardware VMCS.
+   *
+   * \tparam field  Field index.
+   * \param  value  Value to write to the field.
+   */
+  template<auto field, if_field_type<field, Vmcs_64bit_ctl_fields,
+                                            Vmcs_64bit_guest_fields,
+                                            Vmcs_64bit_host_fields> = true>
+  static ALWAYS_INLINE void vmcs_write(Unsigned64 value)
+  {
+    vmwrite<Unsigned64>(field, value);
+  }
+
+  /**
+   * Write a 32-bit control/guest/host field to the hardware VMCS.
+   *
+   * \tparam field  Field index.
+   * \param  value  Value to write to the field.
+   */
+  template<auto field, if_field_type<field, Vmcs_32bit_ctl_fields,
+                                            Vmcs_32bit_guest_fields,
+                                            Vmcs_32bit_host_fields> = true>
+  static ALWAYS_INLINE void vmcs_write(Unsigned32 value)
+  {
+    vmwrite<Unsigned32>(field, value);
+  }
+
+  /**
+   * Write a natural-width control/guest/host field to the hardware VMCS.
+   *
+   * \tparam field  Field index.
+   * \param  value  Value to write to the field.
+   */
+  template<auto field, if_field_type<field, Vmcs_nat_ctl_fields,
+                                            Vmcs_nat_guest_fields,
+                                            Vmcs_nat_host_fields> = true>
+  static ALWAYS_INLINE void vmcs_write(Mword value)
+  {
+    vmwrite<Mword>(field, value);
+  }
+
   static Per_cpu<Vmx> cpus;
   Vmx_info info;
+
 private:
+  /**
+   * Physically read a field from the hardware VMCS.
+   *
+   * This method is for value types smaller or equal to the machine word.
+   *
+   * \tparam T      Field value type.
+   * \param  field  Field index.
+   *
+   * \return Field value.
+   */
+  template<typename T,
+           cxx::enable_if_t<sizeof(T) <= sizeof(Mword)>* = nullptr>
+  static ALWAYS_INLINE T vmread(Mword field)
+  {
+    Mword value;
+
+    asm volatile (
+      "vmread %[field], %[value]\n\t"
+      : [value] "=r" (value)
+      : [field] "r" (field)
+      : "cc"
+    );
+
+    return value;
+  }
+
+  /**
+   * Physically read a field from the hardware VMCS.
+   *
+   * This method is for value types larger than the machine word and the read
+   * is implemented as two machine word reads.
+   *
+   * \tparam T      Field value type.
+   * \param  field  Field index.
+   *
+   * \return Field value.
+   */
+  template<typename T,
+           cxx::enable_if_t<(sizeof(T) == 2 * sizeof(Mword))>* = nullptr>
+  static ALWAYS_INLINE T vmread(Mword field)
+  {
+    Mword value_lo = vmread<Mword>(field);
+    Mword value_hi = vmread<Mword>(field + 1);
+
+    return value_lo
+      | (static_cast<T>(value_hi) << (sizeof(Mword) * 8));
+  }
+
+  /**
+   * Physically write a field to the hardware VMCS.
+   *
+   * This method is for value types smaller or equal to the machine word.
+   *
+   * \tparam T      Field value type.
+   * \param  field  Field index.
+   * \param  value  Field value to write.
+   */
+  template<typename T,
+           cxx::enable_if_t<sizeof(T) <= sizeof(Mword)>* = nullptr>
+  static ALWAYS_INLINE void vmwrite(Mword field, T value)
+  {
+    Mword err;
+
+    asm volatile (
+      "vmwrite %[value], %[field]\n\t"
+      "pushf\n\t"
+      "pop %[err]\n\t"
+      : [err] "=r" (err)
+      : [value] "r" ((Mword)value),
+        [field] "r" (field)
+      : "cc"
+    );
+
+    if (EXPECT_FALSE(err & 0x1))
+      WARNX(Info, "VMX: VMfailInvalid vmwrite(0x%04lx, %llx) => %lx\n",
+            field, static_cast<Unsigned64>(value), err);
+    else if (EXPECT_FALSE(err & 0x40))
+      WARNX(Info, "VMX: VMfailValid vmwrite(0x%04lx, %llx) => %lx, "
+                  "insn error: 0x%x\n", field, static_cast<Unsigned64>(value),
+                  err, vmread<Unsigned32>(Vmcs_vm_insn_error));
+  }
+
+  /**
+   * Physically write a field to the hardware VMCS.
+   *
+   * This method is for value types larger than the machine word and the write
+   * is implemented as two machine word writes.
+   *
+   * \tparam T      Field value type.
+   * \param  field  Field index.
+   * \param  value  Field value to write.
+   */
+  template<typename T,
+           cxx::enable_if_t<(sizeof(T) == 2 * sizeof(Mword))>* = nullptr>
+  static ALWAYS_INLINE void vmwrite(Mword field, T value)
+  {
+    vmwrite<Mword>(field, value);
+    vmwrite<Mword>(field + 1, value >> (sizeof(Mword) * 8));
+  }
+
   void *_vmxon;
   bool _vmx_enabled;
   bool _has_vpid;
@@ -515,7 +851,7 @@ static_assert(sizeof(Vmx_offset_table) == 32,
  */
 class Vmx_vm_state
 {
-public:
+private:
   enum
   {
     /**
@@ -629,7 +965,7 @@ public:
     switch (group)
       {
         case 2:
-          return base_index(Vmx::F_max_16bit_guest) + 1;
+          return base_index(Vmx::Max_16bit_guest) + 1;
       }
 
     return 0;
@@ -651,11 +987,12 @@ public:
     switch (group)
       {
         case 0:
-          return base_index(Vmx::F_max_64bit_ctl) + 1;
+          return base_index(Vmx::Max_64bit_ctl) + 1;
         case 1:
-          return base_index(Vmx::F_max_64bit_ro) + 1;
+          return base_index(Vmx::Max_64bit_ro) + 1;
         case 2:
-          return base_index(Vmx::F_max_64bit_guest) + 1;
+          return max(base_index(Vmx::Max_64bit_guest),
+                     base_index(Vmx::Max_64bit_sw)) + 1;
       }
 
     return 0;
@@ -677,11 +1014,11 @@ public:
     switch (group)
       {
         case 0:
-          return base_index(Vmx::F_max_32bit_ctl) + 1;
+          return base_index(Vmx::Max_32bit_ctl) + 1;
         case 1:
-          return base_index(Vmx::F_max_32bit_ro) + 1;
+          return base_index(Vmx::Max_32bit_ro) + 1;
         case 2:
-          return base_index(Vmx::F_max_32bit_guest) + 1;
+          return base_index(Vmx::Max_32bit_guest) + 1;
       }
 
     return 0;
@@ -704,11 +1041,12 @@ public:
     switch (group)
       {
         case 0:
-          return base_index(Vmx::F_max_nat_ctl) + 1;
+          return base_index(Vmx::Max_nat_ctl) + 1;
         case 1:
-          return base_index(Vmx::F_max_nat_ro) + 1;
+          return base_index(Vmx::Max_nat_ro) + 1;
         case 2:
-          return base_index(Vmx::F_max_nat_guest) + 1;
+          return max(base_index(Vmx::Max_nat_guest),
+                     base_index(Vmx::Max_nat_sw)) + 1;
       }
 
     return 0;
@@ -799,7 +1137,6 @@ public:
     return block_size(sz, grp);
   }
 
-private:
   Unsigned64 _reserved0;
   Unsigned64 _user_data;
   Unsigned32 _cr2_field;
@@ -811,6 +1148,29 @@ private:
 
 static_assert(sizeof(Vmx_vm_state) + 0x400 == 4096,
               "VMX extended VM state fits exactly into 4096 bytes.");
+
+/**
+ * Representation of the bitfields of the VM-entry interruption information
+ * VMCS field.
+ */
+struct Vmx_vm_entry_interrupt_info
+{
+  Unsigned32 value;
+
+  CXX_BITFIELD_MEMBER(0, 7, vector, value);
+  CXX_BITFIELD_MEMBER(8, 10, type, value);
+
+  CXX_BITFIELD_MEMBER(10, 10, deliver_insn_length, value);
+  CXX_BITFIELD_MEMBER(11, 11, deliver_error_code, value);
+
+  /**
+   * This is a Fiasco-specific flag within the reserved bitfield
+   * that must be never written to the hardware VMCS field.
+   */
+  CXX_BITFIELD_MEMBER(30, 30, immediate_exit, value);
+
+  CXX_BITFIELD_MEMBER(31, 31, valid, value);
+};
 
 // -----------------------------------------------------------------------
 IMPLEMENTATION[vmx]:
@@ -840,28 +1200,30 @@ Vmx_init_host_state::Vmx_init_host_state(Cpu_number cpu)
   if (cpu == Cpu::invalid() || !c.vmx() || !v.vmx_enabled())
     return;
 
-  v.vmwrite(Vmx::F_host_es_selector, GDT_DATA_KERNEL);
-  v.vmwrite(Vmx::F_host_cs_selector, GDT_CODE_KERNEL);
-  v.vmwrite(Vmx::F_host_ss_selector, GDT_DATA_KERNEL);
-  v.vmwrite(Vmx::F_host_ds_selector, GDT_DATA_KERNEL);
+  Vmx::vmcs_write<Vmx::Vmcs_host_es_selector>(GDT_DATA_KERNEL);
+  Vmx::vmcs_write<Vmx::Vmcs_host_cs_selector>(GDT_CODE_KERNEL);
+  Vmx::vmcs_write<Vmx::Vmcs_host_ss_selector>(GDT_DATA_KERNEL);
+  Vmx::vmcs_write<Vmx::Vmcs_host_ds_selector>(GDT_DATA_KERNEL);
 
   /* set FS and GS to unusable in the host state */
-  v.vmwrite(Vmx::F_host_fs_selector, 0);
-  v.vmwrite(Vmx::F_host_gs_selector, 0);
+  Vmx::vmcs_write<Vmx::Vmcs_host_fs_selector>(0);
+  Vmx::vmcs_write<Vmx::Vmcs_host_gs_selector>(0);
 
   Unsigned16 tr = c.get_tr();
-  v.vmwrite(Vmx::F_host_tr_selector, tr);
+  Vmx::vmcs_write<Vmx::Vmcs_host_tr_selector>(tr);
 
-  v.vmwrite(Vmx::F_host_tr_base, ((*c.get_gdt())[tr / 8]).base());
-  v.vmwrite(Vmx::F_host_rip, vm_vmx_exit_vec);
-  v.vmwrite<Mword>(Vmx::F_host_sysenter_cs, Gdt::gdt_code_kernel);
-  v.vmwrite(Vmx::F_host_sysenter_esp, &c.kernel_sp());
-  v.vmwrite(Vmx::F_host_sysenter_eip, entry_sys_fast_ipc_c);
+  Vmx::vmcs_write<Vmx::Vmcs_host_tr_base>(((*c.get_gdt())[tr / 8]).base());
+  Vmx::vmcs_write<Vmx::Vmcs_host_rip>(reinterpret_cast<Mword>(vm_vmx_exit_vec));
+  Vmx::vmcs_write<Vmx::Vmcs_host_ia32_sysenter_cs>(Gdt::gdt_code_kernel);
+  Vmx::vmcs_write<Vmx::Vmcs_host_ia32_sysenter_esp>
+                 (reinterpret_cast<Mword>(&c.kernel_sp()));
+  Vmx::vmcs_write<Vmx::Vmcs_host_ia32_sysenter_eip>
+                 (reinterpret_cast<Mword>(entry_sys_fast_ipc_c));
 
   if (c.features() & FEAT_PAT
       && v.info.exit_ctls.allowed(Vmx_info::Ex_load_ia32_pat))
     {
-      v.vmwrite(Vmx::F_host_ia32_pat, Cpu::rdmsr(MSR_PAT));
+      Vmx::vmcs_write<Vmx::Vmcs_host_ia32_pat>(Cpu::rdmsr(MSR_PAT));
       v.info.exit_ctls.enforce(Vmx_info::Ex_load_ia32_pat, true);
     }
   else
@@ -874,7 +1236,7 @@ Vmx_init_host_state::Vmx_init_host_state(Cpu_number cpu)
 
   if (v.info.exit_ctls.allowed(Vmx_info::Ex_load_ia32_efer))
     {
-      v.vmwrite(Vmx::F_host_ia32_efer, Cpu::rdmsr(MSR_EFER));
+      Vmx::vmcs_write<Vmx::Vmcs_host_ia32_efer>(Cpu::rdmsr(MSR_EFER));
       v.info.exit_ctls.enforce(Vmx_info::Ex_load_ia32_efer, true);
     }
   else
@@ -886,30 +1248,30 @@ Vmx_init_host_state::Vmx_init_host_state(Cpu_number cpu)
     }
 
   if (v.info.exit_ctls.allowed(Vmx_info::Ex_load_perf_global_ctl))
-    v.vmwrite(Vmx::F_host_ia32_perf_global_ctrl, Cpu::rdmsr(0x199));
+    Vmx::vmcs_write<Vmx::Vmcs_host_ia32_perf_global_ctrl>(Cpu::rdmsr(0x199));
   else
     // do not allow Load IA32_PERF_GLOBAL_CTRL on entry
     v.info.entry_ctls.enforce(Vmx_info::En_load_perf_global_ctl, false);
 
-  v.vmwrite(Vmx::F_host_cr0, Cpu::get_cr0());
-  v.vmwrite(Vmx::F_host_cr4, Cpu::get_cr4());
+  Vmx::vmcs_write<Vmx::Vmcs_host_cr0>(Cpu::get_cr0());
+  Vmx::vmcs_write<Vmx::Vmcs_host_cr4>(Cpu::get_cr4());
 
   Pseudo_descriptor pseudo;
   c.get_gdt()->get(&pseudo);
 
-  v.vmwrite(Vmx::F_host_gdtr_base, pseudo.base());
+  Vmx::vmcs_write<Vmx::Vmcs_host_gdtr_base>(pseudo.base());
 
   Idt::get(&pseudo);
-  v.vmwrite(Vmx::F_host_idtr_base, pseudo.base());
+  Vmx::vmcs_write<Vmx::Vmcs_host_idtr_base>(pseudo.base());
 
   // init static guest area stuff
-  v.vmwrite(0x2800, ~0ULL); // link pointer
-  v.vmwrite(Vmx::F_cr3_target_cnt, 0);
+  Vmx::vmcs_write<Vmx::Vmcs_link_pointer>(~0ULL);
+  Vmx::vmcs_write<Vmx::Vmcs_cr3_target_cnt>(0);
 
   // MSR load / store disabled
-  v.vmwrite(Vmx::F_exit_msr_load_cnt, 0);
-  v.vmwrite(Vmx::F_exit_msr_store_cnt, 0);
-  v.vmwrite(Vmx::F_entry_msr_load_cnt, 0);
+  Vmx::vmcs_write<Vmx::Vmcs_exit_msr_load_cnt>(0);
+  Vmx::vmcs_write<Vmx::Vmcs_exit_msr_store_cnt>(0);
+  Vmx::vmcs_write<Vmx::Vmcs_entry_msr_load_cnt>(0);
 }
 
 DEFINE_PER_CPU Per_cpu<Vmx> Vmx::cpus(Per_cpu_data::Cpu_num);
@@ -939,8 +1301,8 @@ Vmx_info::init()
   if (procbased_ctls.allowed(Vmx_info::PRB1_enable_proc_based_ctls_2))
     procbased_ctls2 = Cpu::rdmsr(0x48b);
 
-  assert((Vmx::F_sw_guest_cr2 & 0x3ff) > max_index);
-  max_index = Vmx::F_sw_guest_cr2 & 0x3ff;
+  assert((Vmx::Sw_guest_xcr0 & 0x3ff) > max_index);
+  assert((Vmx::Sw_guest_cr2 & 0x3ff) > max_index);
 
   if (basic & (1ULL << 55))
     {
@@ -1085,7 +1447,7 @@ Vmx_vm_state::init()
   static_assert(offset(0x6800) + limit(0x6800) < Sw_vmcs_size,
                 "Field offsets fit within the software VMCS.");
 
-  _cr2_field = Vmx::F_sw_guest_cr2;
+  _cr2_field = Vmx::Sw_guest_cr2;
 
   _offset_table =
     {
@@ -1149,52 +1511,736 @@ Vmx_vm_state::init()
     };
 }
 
-PRIVATE static inline
+/*
+ * Type-safe methods for reading the software VMCS.
+ *
+ * The goal is to make the methods inlineable, with the offset calculation done
+ * at compile time. There are additional paranoid compile-time assertions that
+ * make sure the constants are defined correctly.
+ */
+
+/**
+ * Read a 16-bit guest field from the software VMCS.
+ *
+ * \tparam field  VMCS field index.
+ *
+ * \return Field value.
+ */
+PRIVATE inline
+template<Vmx::Vmcs_16bit_guest_fields field>
+Unsigned16
+Vmx_vm_state::read() const
+{
+  static_assert(size(field) == 0);
+  static_assert(group(field) == 2);
+
+  constexpr unsigned int off = offset(field);
+  Unsigned16 *ptr = offset_cast<Unsigned16 *>(_values, off);
+  return *ptr;
+}
+
+/**
+ * Read a 64-bit control field from the software VMCS.
+ *
+ * \tparam field  VMCS field index.
+ *
+ * \return Field value.
+ */
+PRIVATE inline
+template<Vmx::Vmcs_64bit_ctl_fields field>
+Unsigned64
+Vmx_vm_state::read() const
+{
+  static_assert(size(field) == 1);
+  static_assert(group(field) == 0);
+
+  constexpr unsigned int off = offset(field);
+  Unsigned64 *ptr = offset_cast<Unsigned64 *>(_values, off);
+  return *ptr;
+}
+
+/**
+ * Read a 64-bit guest (including software-defined) field from the software
+ * VMCS.
+ *
+ * \tparam field  VMCS field index.
+ *
+ * \return Field value.
+ */
+PUBLIC inline
+template<auto field, Vmx::if_field_type<field, Vmx::Vmcs_64bit_guest_fields,
+                                               Vmx::Sw_64bit_guest_fields> = true>
+Unsigned64
+Vmx_vm_state::read() const
+{
+  static_assert(size(field) == 1);
+  static_assert(group(field) == 2);
+
+  constexpr unsigned int off = offset(field);
+  Unsigned64 *ptr = offset_cast<Unsigned64 *>(_values, off);
+  return *ptr;
+}
+
+/**
+ * Read a 32-bit control field from the software VMCS.
+ *
+ * \tparam field  VMCS field index.
+ *
+ * \return Field value.
+ */
+PUBLIC inline
+template<Vmx::Vmcs_32bit_ctl_fields field>
+Unsigned32
+Vmx_vm_state::read() const
+{
+  static_assert(size(field) == 2);
+  static_assert(group(field) == 0);
+
+  constexpr unsigned int off = offset(field);
+  Unsigned32 *ptr = offset_cast<Unsigned32 *>(_values, off);
+  return *ptr;
+}
+
+/**
+ * Read a 32-bit read-only field from the software VMCS.
+ *
+ * \tparam field  VMCS field index.
+ *
+ * \return Field value.
+ */
+PRIVATE inline
+template<Vmx::Vmcs_32bit_ro_fields field>
+Unsigned32
+Vmx_vm_state::read() const
+{
+  static_assert(size(field) == 2);
+  static_assert(group(field) == 1);
+
+  constexpr unsigned int off = offset(field);
+  Unsigned32 *ptr = offset_cast<Unsigned32 *>(_values, off);
+  return *ptr;
+}
+
+/**
+ * Read a 32-bit guest field from the software VMCS.
+ *
+ * \tparam field  VMCS field index.
+ *
+ * \return Field value.
+ */
+PRIVATE inline
+template<Vmx::Vmcs_32bit_guest_fields field>
+Unsigned32
+Vmx_vm_state::read() const
+{
+  static_assert(size(field) == 2);
+  static_assert(group(field) == 2);
+
+  constexpr unsigned int off = offset(field);
+  Unsigned32 *ptr = offset_cast<Unsigned32 *>(_values, off);
+  return *ptr;
+}
+
+/**
+ * Read a natural-width control field from the software VMCS.
+ *
+ * \tparam field  VMCS field index.
+ *
+ * \return Field value.
+ */
+PRIVATE inline
+template<Vmx::Vmcs_nat_ctl_fields field>
 Mword
-Vmx::vmread_insn(Mword field)
+Vmx_vm_state::read() const
 {
-  Mword val;
-  asm volatile("vmread %1, %0" : "=r" (val) : "r" (field) : "cc");
-  return val;
+  static_assert(size(field) == 3);
+  static_assert(group(field) == 0);
+
+  constexpr unsigned int off = offset(field);
+  Mword *ptr = offset_cast<Mword *>(_values, off);
+  return *ptr;
 }
 
-PUBLIC static inline
+/**
+ * Read a natural-width guest (including software-defined) field from the
+ * software VMCS.
+ *
+ * \tparam field  VMCS field index.
+ *
+ * \return Field value.
+ */
+PUBLIC inline
+template<auto field, Vmx::if_field_type<field, Vmx::Vmcs_nat_guest_fields,
+                                               Vmx::Sw_nat_guest_fields> = true>
 Mword
-Vmx::vmwrite_insn(Mword field, Mword value)
+Vmx_vm_state::read() const
 {
-  Mword err;
-  asm volatile("vmwrite %1, %2  \n\t"
-               "pushf           \n\t"
-               "pop %0          \n\t"
-               : "=r" (err) : "r" ((Mword)value), "r" (field) : "cc");
-  return err;
+  static_assert(size(field) == 3);
+  static_assert(group(field) == 2);
+
+  constexpr unsigned int off = offset(field);
+  Mword *ptr = offset_cast<Mword *>(_values, off);
+  return *ptr;
 }
 
-PUBLIC static inline NEEDS[Vmx::vmread_insn]
-template< typename T >
-T
-Vmx::vmread(Mword field)
-{
-  if (sizeof(T) <= sizeof(Mword))
-    return vmread_insn(field);
+/*
+ * Type-safe methods for writing the software VMCS.
+ *
+ * The goal is to make the methods inlineable, with the offset calculation done
+ * at compile time. There are additional paranoid compile-time assertions that
+ * make sure the constants are defined correctly.
+ */
 
-  return vmread_insn(field) | ((Unsigned64)vmread_insn(field + 1) << 32);
-}
-
-PUBLIC static inline NEEDS["warn.h"]
-template< typename T >
+/**
+ * Write a 16-bit guest field to the software VMCS.
+ *
+ * \tparam field  VMCS field index.
+ * \param  value  Field value to write.
+ */
+PRIVATE inline
+template<Vmx::Vmcs_16bit_guest_fields field>
 void
-Vmx::vmwrite(Mword field, T value)
+Vmx_vm_state::write(Unsigned16 value)
 {
-  Mword err = vmwrite_insn(field, (Mword)value);
-  if (EXPECT_FALSE(err & 0x1))
-    WARNX(Info, "VMX: VMfailInvalid vmwrite(0x%04lx, %llx) => %lx\n",
-          field, (Unsigned64)value, err);
-  else if (EXPECT_FALSE(err & 0x40))
-    WARNX(Info, "VMX: VMfailValid vmwrite(0x%04lx, %llx) => %lx, insn error: 0x%x\n",
-          field, (Unsigned64)value, err, vmread<Unsigned32>(F_vm_instruction_error));
-  if (sizeof(T) > sizeof(Mword))
-    vmwrite_insn(field + 1, ((Unsigned64)value >> 32));
+  static_assert(size(field) == 0);
+  static_assert(group(field) == 2);
+
+  constexpr unsigned int off = offset(field);
+  Unsigned16 *ptr = offset_cast<Unsigned16 *>(_values, off);
+  *ptr = value;
+}
+
+/**
+ * Write a 64-bit read-only field to the software VMCS.
+ *
+ * \tparam field  VMCS field index.
+ * \param  value  Field value to write.
+ */
+PRIVATE inline
+template<Vmx::Vmcs_64bit_ro_fields field>
+void
+Vmx_vm_state::write(Unsigned64 value)
+{
+  static_assert(size(field) == 1);
+  static_assert(group(field) == 1);
+
+  constexpr unsigned int off = offset(field);
+  Unsigned64 *ptr = offset_cast<Unsigned64 *>(_values, off);
+  *ptr = value;
+}
+
+/**
+ * Write a 64-bit guest (including software-defined) field to the software VMCS.
+ *
+ * \tparam field  VMCS field index.
+ * \param  value  Field value to write.
+ */
+PUBLIC inline
+template<auto field, Vmx::if_field_type<field, Vmx::Vmcs_64bit_guest_fields,
+                                               Vmx::Sw_64bit_guest_fields> = true>
+void
+Vmx_vm_state::write(Unsigned64 value)
+{
+  static_assert(size(field) == 1);
+  static_assert(group(field) == 2);
+
+  constexpr unsigned int off = offset(field);
+  Unsigned64 *ptr = offset_cast<Unsigned64 *>(_values, off);
+  *ptr = value;
+}
+
+/**
+ * Write a 32-bit control field to the software VMCS.
+ *
+ * \tparam field  VMCS field index.
+ * \param  value  Field value to write.
+ */
+PUBLIC inline
+template<Vmx::Vmcs_32bit_ctl_fields field>
+void
+Vmx_vm_state::write(Unsigned32 value)
+{
+  static_assert(size(field) == 2);
+  static_assert(group(field) == 0);
+
+  constexpr unsigned int off = offset(field);
+  Unsigned32 *ptr = offset_cast<Unsigned32 *>(_values, off);
+  *ptr = value;
+}
+
+/**
+ * Write a 32-bit read-only field to the software VMCS.
+ *
+ * \tparam field  VMCS field index.
+ * \param  value  Field value to write.
+ */
+PUBLIC inline
+template<Vmx::Vmcs_32bit_ro_fields field>
+void
+Vmx_vm_state::write(Unsigned32 value)
+{
+  static_assert(size(field) == 2);
+  static_assert(group(field) == 1);
+
+  constexpr unsigned int off = offset(field);
+  Unsigned32 *ptr = offset_cast<Unsigned32 *>(_values, off);
+  *ptr = value;
+}
+
+/**
+ * Write a 32-bit guest field to the software VMCS.
+ *
+ * \tparam field  VMCS field index.
+ * \param  value  Field value to write.
+ */
+PRIVATE inline
+template<Vmx::Vmcs_32bit_guest_fields field>
+void
+Vmx_vm_state::write(Unsigned32 value)
+{
+  static_assert(size(field) == 2);
+  static_assert(group(field) == 2);
+
+  constexpr unsigned int off = offset(field);
+  Unsigned32 *ptr = offset_cast<Unsigned32 *>(_values, off);
+  *ptr = value;
+}
+
+/**
+ * Write a natural-width read-only field to the software VMCS.
+ *
+ * \tparam field  VMCS field index.
+ * \param  value  Field value to write.
+ */
+PRIVATE inline
+template<Vmx::Vmcs_nat_ro_fields field>
+void
+Vmx_vm_state::write(Mword value)
+{
+  static_assert(size(field) == 3);
+  static_assert(group(field) == 1);
+
+  constexpr unsigned int off = offset(field);
+  Mword *ptr = offset_cast<Mword *>(_values, off);
+  *ptr = value;
+}
+
+/**
+ * Write a natural-width guest (including software-defined) field to the
+ * software VMCS.
+ *
+ * \tparam field  VMCS field index.
+ * \param  value  Field value to write.
+ */
+PUBLIC inline
+template<auto field, Vmx::if_field_type<field, Vmx::Vmcs_nat_guest_fields,
+                                               Vmx::Sw_nat_guest_fields> = true>
+void
+Vmx_vm_state::write(Mword value)
+{
+  static_assert(size(field) == 3);
+  static_assert(group(field) == 2);
+
+  constexpr unsigned int off = offset(field);
+  Mword *ptr = offset_cast<Mword *>(_values, off);
+  *ptr = value;
+}
+
+/*
+ * Type-safe methods for copying fields from software VMCS to hardware VMCS.
+ */
+
+/**
+ * Copy a field from software VMCS to hardware VMCS.
+ *
+ * The following field types are supported: 16-bit guest, 64-bit control/guest,
+ * 32-bit control/guest, natural-width control/guest.
+ *
+ * \tparam field  Field to copy.
+ */
+PRIVATE inline
+template<auto field, Vmx::if_field_type<field, Vmx::Vmcs_16bit_guest_fields,
+                                               Vmx::Vmcs_64bit_ctl_fields,
+                                               Vmx::Vmcs_64bit_guest_fields,
+                                               Vmx::Vmcs_32bit_ctl_fields,
+                                               Vmx::Vmcs_32bit_guest_fields,
+                                               Vmx::Vmcs_nat_ctl_fields,
+                                               Vmx::Vmcs_nat_guest_fields> = true>
+void
+Vmx_vm_state::to_vmcs()
+{
+  Vmx::vmcs_write<field>(read<field>());
+}
+
+/**
+ * Copy a 32-bit control field from software VMCS to hardware VMCS with
+ * masking.
+ *
+ * \tparam field  Field to copy.
+ * \param  mask   Mask to be applied on the value before writing to the
+ *                hardware VMCS.
+ *
+ */
+PRIVATE inline
+template<Vmx::Vmcs_32bit_ctl_fields field>
+Vmx_info::Flags<Unsigned32>
+Vmx_vm_state::to_vmcs(Vmx_info::Bit_defs<Unsigned32> const &mask)
+{
+  Unsigned32 res = mask.apply(read<field>());
+  Vmx::vmcs_write<field>(res);
+  return Vmx_info::Flags<Unsigned32>(res);
+}
+
+/**
+ * Copy a natural-width guest field from software VMCS to hardware VMCS with
+ * masking.
+ *
+ * \tparam field  Field to copy.
+ * \param  mask   Mask to be applied on the value before writing to the
+ *                hardware VMCS.
+ *
+ */
+PRIVATE inline
+template<Vmx::Vmcs_nat_guest_fields field>
+Vmx_info::Flags<Mword>
+Vmx_vm_state::to_vmcs(Vmx_info::Bit_defs<Mword> const &mask)
+{
+  Mword res = mask.apply(read<field>());
+  Vmx::vmcs_write<field>(res);
+  return Vmx_info::Flags<Mword>(res);
+}
+
+/*
+ * Type-safe methods for copying fields from hardware VMCS to software VMCS.
+ */
+
+/**
+ * Copy a field from hardware VMCS to software VMCS.
+ *
+ * The following field types are supported: 16-bit guest,
+ * 32-bit read-only/guest, 64-bit read-only/guest,
+ * natural-width read-only/guest.
+ *
+ * \tparam field  Field to copy.
+ */
+PRIVATE inline
+template<auto field, Vmx::if_field_type<field, Vmx::Vmcs_16bit_guest_fields,
+                                               Vmx::Vmcs_32bit_ro_fields,
+                                               Vmx::Vmcs_32bit_guest_fields,
+                                               Vmx::Vmcs_64bit_ro_fields,
+                                               Vmx::Vmcs_64bit_guest_fields,
+                                               Vmx::Vmcs_nat_ro_fields,
+                                               Vmx::Vmcs_nat_guest_fields> = true>
+void
+Vmx_vm_state::from_vmcs()
+{
+  write<field>(Vmx::vmcs_read<field>());
+}
+
+/**
+ * Move the guest state from software VMCS to hardware VMCS.
+ */
+PUBLIC inline
+void
+Vmx_vm_state::load_guest_state()
+{
+  Cpu_number const cpu = current_cpu();
+  Vmx &vmx = Vmx::cpus.cpu(cpu);
+
+  // read VM-entry controls, apply filter and keep for later
+  Vmx_info::Flags<Unsigned32> entry_ctls
+    = to_vmcs<Vmx::Vmcs_vm_entry_ctls>(vmx.info.entry_ctls);
+
+  Vmx_info::Flags<Unsigned32> pinbased_ctls
+    = to_vmcs<Vmx::Vmcs_pin_based_vm_exec_ctls>(vmx.info.pinbased_ctls);
+
+  Vmx_info::Flags<Unsigned32> procbased_ctls
+    = to_vmcs<Vmx::Vmcs_pri_proc_based_vm_exec_ctls>(vmx.info.procbased_ctls);
+
+  Vmx_info::Flags<Unsigned32> procbased_ctls_2;
+  if (procbased_ctls.test(Vmx_info::PRB1_enable_proc_based_ctls_2))
+    procbased_ctls_2
+      = to_vmcs<Vmx::Vmcs_sec_proc_based_vm_exec_ctls>(vmx.info.procbased_ctls2);
+  else
+    procbased_ctls_2 = Vmx_info::Flags<Unsigned32>(0);
+
+  to_vmcs<Vmx::Vmcs_vm_exit_ctls>(vmx.info.exit_ctls);
+
+  // write 16-bit fields
+  to_vmcs<Vmx::Vmcs_guest_es_selector>();
+  to_vmcs<Vmx::Vmcs_guest_cs_selector>();
+  to_vmcs<Vmx::Vmcs_guest_ss_selector>();
+  to_vmcs<Vmx::Vmcs_guest_ds_selector>();
+  to_vmcs<Vmx::Vmcs_guest_fs_selector>();
+  to_vmcs<Vmx::Vmcs_guest_gs_selector>();
+  to_vmcs<Vmx::Vmcs_guest_ldtr_selector>();
+  to_vmcs<Vmx::Vmcs_guest_tr_selector>();
+  to_vmcs<Vmx::Vmcs_guest_interrupt_status>();
+
+  // write 64-bit fields
+  to_vmcs<Vmx::Vmcs_guest_ia32_debugctl>();
+
+  // check if the following bits are allowed to be set in entry_ctls
+  if (entry_ctls.test(14)) // PAT load requested
+    to_vmcs<Vmx::Vmcs_guest_ia32_pat>();
+
+  if (entry_ctls.test(15)) // EFER load requested
+    to_vmcs<Vmx::Vmcs_guest_ia32_efer>();
+
+  if (entry_ctls.test(13)) // IA32_PERF_GLOBAL_CTRL load requested
+    to_vmcs<Vmx::Vmcs_guest_ia32_perf_global_ctrl>();
+
+  // write 32-bit fields
+  to_vmcs<Vmx::Vmcs_guest_es_limit>();
+  to_vmcs<Vmx::Vmcs_guest_cs_limit>();
+  to_vmcs<Vmx::Vmcs_guest_ss_limit>();
+  to_vmcs<Vmx::Vmcs_guest_ds_limit>();
+  to_vmcs<Vmx::Vmcs_guest_fs_limit>();
+  to_vmcs<Vmx::Vmcs_guest_gs_limit>();
+  to_vmcs<Vmx::Vmcs_guest_ldtr_limit>();
+  to_vmcs<Vmx::Vmcs_guest_tr_limit>();
+  to_vmcs<Vmx::Vmcs_guest_gdtr_limit>();
+  to_vmcs<Vmx::Vmcs_guest_idtr_limit>();
+  to_vmcs<Vmx::Vmcs_guest_es_access_rights>();
+  to_vmcs<Vmx::Vmcs_guest_cs_access_rights>();
+  to_vmcs<Vmx::Vmcs_guest_ss_access_rights>();
+  to_vmcs<Vmx::Vmcs_guest_ds_access_rights>();
+  to_vmcs<Vmx::Vmcs_guest_fs_access_rights>();
+  to_vmcs<Vmx::Vmcs_guest_gs_access_rights>();
+  to_vmcs<Vmx::Vmcs_guest_ldtr_access_rights>();
+  to_vmcs<Vmx::Vmcs_guest_tr_access_rights>();
+  to_vmcs<Vmx::Vmcs_guest_interruptibility_state>();
+  to_vmcs<Vmx::Vmcs_guest_activity_state>();
+  to_vmcs<Vmx::Vmcs_guest_ia32_sysenter_cs>();
+
+  if (pinbased_ctls.test(6)) // activate vmx-preemption timer
+    to_vmcs<Vmx::Vmcs_preemption_timer_value>();
+
+  // write natural-width fields
+  to_vmcs<Vmx::Vmcs_guest_cr0>(vmx.info.cr0_defs);
+  to_vmcs<Vmx::Vmcs_guest_cr4>(vmx.info.cr4_defs);
+  to_vmcs<Vmx::Vmcs_guest_es_base>();
+  to_vmcs<Vmx::Vmcs_guest_cs_base>();
+  to_vmcs<Vmx::Vmcs_guest_ss_base>();
+  to_vmcs<Vmx::Vmcs_guest_ds_base>();
+  to_vmcs<Vmx::Vmcs_guest_fs_base>();
+  to_vmcs<Vmx::Vmcs_guest_gs_base>();
+  to_vmcs<Vmx::Vmcs_guest_ldtr_base>();
+  to_vmcs<Vmx::Vmcs_guest_tr_base>();
+  to_vmcs<Vmx::Vmcs_guest_gdtr_base>();
+  to_vmcs<Vmx::Vmcs_guest_idtr_base>();
+  to_vmcs<Vmx::Vmcs_guest_dr7>();
+  to_vmcs<Vmx::Vmcs_guest_rsp>();
+  to_vmcs<Vmx::Vmcs_guest_rip>();
+  to_vmcs<Vmx::Vmcs_guest_rflags>();
+  to_vmcs<Vmx::Vmcs_guest_pending_dbg_exceptions>();
+  to_vmcs<Vmx::Vmcs_guest_ia32_sysenter_esp>();
+  to_vmcs<Vmx::Vmcs_guest_ia32_sysenter_eip>();
+
+  // TODO: The following features are ignored as they need to be handled in
+  // a virtualized fashion by Fiasco:
+  //
+  //   * VPIDs
+  //   * I/O bitmaps
+  //   * MSR bitmaps
+  //   * SMM virtualization
+  //   * Virtual APIC
+  //   * PAE handling without EPT
+
+  to_vmcs<Vmx::Vmcs_tsc_offset>();
+
+  if (procbased_ctls_2.test(Vmx_info::PRB2_virtualize_apic))
+    to_vmcs<Vmx::Vmcs_apic_access_address>();
+
+  // exception bit map and pf error-code stuff
+  to_vmcs<Vmx::Vmcs_exception_bitmap>(vmx.info.exception_bitmap);
+  to_vmcs<Vmx::Vmcs_page_fault_error_mask>();
+  to_vmcs<Vmx::Vmcs_page_fault_error_match>();
+
+  // VM entry control stuff
+  Vmx_vm_entry_interrupt_info int_info;
+  int_info.value = read<Vmx::Vmcs_vm_entry_interrupt_info>();
+
+  if (int_info.valid())
+    {
+      // Do event injection
+
+      // Load error code, if required
+      if (int_info.deliver_error_code())
+        to_vmcs<Vmx::Vmcs_vm_entry_exception_error>();
+
+      // Interrupt types 4 (software interrupt),
+      // 5 (privileged software exception) and 6 (software exception)
+      // require the instruction length field.
+      //
+      // All these interrupt types have the bit 10 set.
+      if (int_info.deliver_insn_length())
+        to_vmcs<Vmx::Vmcs_vm_entry_insn_len>();
+
+      Vmx::vmcs_write<Vmx::Vmcs_vm_entry_interrupt_info>(int_info.value);
+    }
+
+  // hm, we have to check for sanitizing the cr0 and cr4 shadow stuff
+  to_vmcs<Vmx::Vmcs_cr0_guest_host_mask>();
+  to_vmcs<Vmx::Vmcs_cr4_guest_host_mask>();
+  to_vmcs<Vmx::Vmcs_cr0_read_shadow>();
+  to_vmcs<Vmx::Vmcs_cr4_read_shadow>();
+
+  // no cr3 target values supported
+}
+
+/**
+ * Move the guest CR3 from software VMCS to hardware VMCS.
+ */
+PUBLIC inline
+void
+Vmx_vm_state::load_cr3()
+{
+  to_vmcs<Vmx::Vmcs_guest_cr3>();
+}
+
+/**
+ * Move the guest state from hardware VMCS to software VMCS.
+ */
+PUBLIC inline
+void
+Vmx_vm_state::store_guest_state()
+{
+  Cpu_number const cpu = current_cpu();
+  Vmx &vmx = Vmx::cpus.cpu(cpu);
+
+  // read 16-bit fields
+  from_vmcs<Vmx::Vmcs_guest_es_selector>();
+  from_vmcs<Vmx::Vmcs_guest_cs_selector>();
+  from_vmcs<Vmx::Vmcs_guest_ss_selector>();
+  from_vmcs<Vmx::Vmcs_guest_ds_selector>();
+  from_vmcs<Vmx::Vmcs_guest_fs_selector>();
+  from_vmcs<Vmx::Vmcs_guest_gs_selector>();
+  from_vmcs<Vmx::Vmcs_guest_ldtr_selector>();
+  from_vmcs<Vmx::Vmcs_guest_tr_selector>();
+  from_vmcs<Vmx::Vmcs_guest_interrupt_status>();
+
+  // read 64-bit fields
+  from_vmcs<Vmx::Vmcs_guest_ia32_debugctl>();
+
+  Vmx_info::Flags<Unsigned32> exit_ctls
+    = Vmx_info::Flags<Unsigned32>(
+        vmx.info.exit_ctls.apply(read<Vmx::Vmcs_vm_exit_ctls>()));
+
+  if (exit_ctls.test(18))
+    from_vmcs<Vmx::Vmcs_guest_ia32_pat>();
+  if (exit_ctls.test(20))
+    from_vmcs<Vmx::Vmcs_guest_ia32_efer>();
+  if (exit_ctls.test(22))
+    from_vmcs<Vmx::Vmcs_preemption_timer_value>();
+
+  // read 32-bit fields
+  from_vmcs<Vmx::Vmcs_guest_es_limit>();
+  from_vmcs<Vmx::Vmcs_guest_cs_limit>();
+  from_vmcs<Vmx::Vmcs_guest_ss_limit>();
+  from_vmcs<Vmx::Vmcs_guest_ds_limit>();
+  from_vmcs<Vmx::Vmcs_guest_fs_limit>();
+  from_vmcs<Vmx::Vmcs_guest_gs_limit>();
+  from_vmcs<Vmx::Vmcs_guest_ldtr_limit>();
+  from_vmcs<Vmx::Vmcs_guest_tr_limit>();
+  from_vmcs<Vmx::Vmcs_guest_gdtr_limit>();
+  from_vmcs<Vmx::Vmcs_guest_idtr_limit>();
+  from_vmcs<Vmx::Vmcs_guest_es_access_rights>();
+  from_vmcs<Vmx::Vmcs_guest_cs_access_rights>();
+  from_vmcs<Vmx::Vmcs_guest_ss_access_rights>();
+  from_vmcs<Vmx::Vmcs_guest_ds_access_rights>();
+  from_vmcs<Vmx::Vmcs_guest_fs_access_rights>();
+  from_vmcs<Vmx::Vmcs_guest_gs_access_rights>();
+  from_vmcs<Vmx::Vmcs_guest_ldtr_access_rights>();
+  from_vmcs<Vmx::Vmcs_guest_tr_access_rights>();
+  from_vmcs<Vmx::Vmcs_guest_interruptibility_state>();
+  from_vmcs<Vmx::Vmcs_guest_activity_state>();
+
+  // sysenter msr is not saved here, because we trap all msr accesses right now
+  if (0)
+    {
+      from_vmcs<Vmx::Vmcs_guest_ia32_sysenter_cs>();
+      from_vmcs<Vmx::Vmcs_guest_ia32_sysenter_esp>();
+      from_vmcs<Vmx::Vmcs_guest_ia32_sysenter_eip>();
+    }
+
+  // read natural-width fields
+  from_vmcs<Vmx::Vmcs_guest_cr0>();
+  from_vmcs<Vmx::Vmcs_guest_cr4>();
+  from_vmcs<Vmx::Vmcs_guest_es_base>();
+  from_vmcs<Vmx::Vmcs_guest_cs_base>();
+  from_vmcs<Vmx::Vmcs_guest_ss_base>();
+  from_vmcs<Vmx::Vmcs_guest_ds_base>();
+  from_vmcs<Vmx::Vmcs_guest_fs_base>();
+  from_vmcs<Vmx::Vmcs_guest_gs_base>();
+  from_vmcs<Vmx::Vmcs_guest_ldtr_base>();
+  from_vmcs<Vmx::Vmcs_guest_tr_base>();
+  from_vmcs<Vmx::Vmcs_guest_gdtr_base>();
+  from_vmcs<Vmx::Vmcs_guest_idtr_base>();
+  from_vmcs<Vmx::Vmcs_guest_dr7>();
+  from_vmcs<Vmx::Vmcs_guest_rsp>();
+  from_vmcs<Vmx::Vmcs_guest_rip>();
+  from_vmcs<Vmx::Vmcs_guest_rflags>();
+  from_vmcs<Vmx::Vmcs_guest_pending_dbg_exceptions>();
+}
+
+/**
+ * Store exit information to software VMCS.
+ *
+ * \param error   Instruction error.
+ * \param reason  Exit reason.
+ */
+PUBLIC inline
+void
+Vmx_vm_state::store_exit_info(Unsigned32 error, Unsigned32 reason)
+{
+  // Clear the valid bit in VM-entry interruption information
+  Vmx_vm_entry_interrupt_info int_info;
+  int_info.value = read<Vmx::Vmcs_vm_entry_interrupt_info>();
+
+  if (int_info.valid())
+    {
+      int_info.valid() = 0;
+      write<Vmx::Vmcs_vm_entry_interrupt_info>(int_info.value);
+    }
+
+  // read 32-bit fields
+  write<Vmx::Vmcs_vm_insn_error>(error);
+  write<Vmx::Vmcs_exit_reason>(reason);
+  from_vmcs<Vmx::Vmcs_vm_exit_interrupt_info>();
+  from_vmcs<Vmx::Vmcs_vm_exit_interrupt_error>();
+  from_vmcs<Vmx::Vmcs_idt_vectoring_info>();
+  from_vmcs<Vmx::Vmcs_idt_vectoring_error>();
+  from_vmcs<Vmx::Vmcs_vm_exit_insn_length>();
+  from_vmcs<Vmx::Vmcs_vm_exit_insn_info>();
+
+  // read natural-width fields
+  from_vmcs<Vmx::Vmcs_exit_qualification>();
+  from_vmcs<Vmx::Vmcs_io_rcx>();
+  from_vmcs<Vmx::Vmcs_io_rsi>();
+  from_vmcs<Vmx::Vmcs_io_rdi>();
+  from_vmcs<Vmx::Vmcs_io_rip>();
+  from_vmcs<Vmx::Vmcs_guest_linear_address>();
+}
+
+/**
+ * Move the guest CR3 from hardware VMCS to software VMCS.
+ */
+PUBLIC inline
+void
+Vmx_vm_state::store_cr3()
+{
+  from_vmcs<Vmx::Vmcs_guest_cr3>();
+}
+
+/**
+ * Move the guest physical address from hardware VMCS to software VMCS.
+ */
+PUBLIC inline
+void
+Vmx_vm_state::store_guest_physical_address()
+{
+  from_vmcs<Vmx::Vmcs_guest_physical_address>();
 }
 
 PRIVATE

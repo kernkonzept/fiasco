@@ -403,19 +403,19 @@ Vm_vmx_ept::initialize()
 
 PUBLIC inline
 void
-Vm_vmx_ept::load_vm_memory(void *src)
+Vm_vmx_ept::load_vm_memory(Vmx_vm_state *vm_state)
 {
-  load(Vmx::F_guest_cr3, src);
-  Vmx::vmwrite(Vmx::F_ept_ptr, _eptp);
+  vm_state->load_cr3();
+  Vmx::vmcs_write<Vmx::Vmcs_ept_pointer>(_eptp);
 
   tlb_mark_used();
 }
 
 PUBLIC inline
 void
-Vm_vmx_ept::store_vm_memory(void *dest)
+Vm_vmx_ept::store_vm_memory(Vmx_vm_state *vm_state)
 {
-  store(Vmx::F_guest_cr3, dest);
+  vm_state->store_cr3();
 }
 
 PUBLIC static
