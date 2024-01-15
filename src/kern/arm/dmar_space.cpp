@@ -256,10 +256,13 @@ Dmar_space::pt_phys_addr() const
 }
 
 namespace {
-static inline void __attribute__((constructor)) FIASCO_INIT
+
+static inline
+void __attribute__((constructor)) FIASCO_INIT_SFX(dmar_space_register_factory)
 register_factory()
 {
   Kobject_iface::set_factory(L4_msg_tag::Label_dma_space,
                              &Task::generic_factory<Dmar_space>);
 }
+
 }

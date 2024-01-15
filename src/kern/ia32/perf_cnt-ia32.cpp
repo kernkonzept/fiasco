@@ -1009,7 +1009,7 @@ Perf_cnt::init()
 
 }
 
-PUBLIC static inline void FIASCO_INIT_CPU
+PUBLIC static inline void FIASCO_INIT_CPU_SFX(init_ap)
 Perf_cnt::init_ap()
 {
   if (Perf_cnt::pcnt)

@@ -184,6 +184,7 @@ Factory::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,
 }
 
 namespace {
+
 static Kobject_iface * FIASCO_FLATTEN
 factory_factory(Ram_quota *q, Space *,
                 L4_msg_tag, Utcb const *u,
@@ -193,11 +194,13 @@ factory_factory(Ram_quota *q, Space *,
   return static_cast<Factory*>(q)->create_factory(u->values[2]);
 }
 
-static inline void __attribute__((constructor)) FIASCO_INIT
+static inline
+void __attribute__((constructor)) FIASCO_INIT_SFX(factory_register_factory)
 register_factory()
 {
   Kobject_iface::set_factory(L4_msg_tag::Label_factory, factory_factory);
 }
+
 }
 
 // ------------------------------------------------------------------------

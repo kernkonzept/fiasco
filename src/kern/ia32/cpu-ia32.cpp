@@ -993,7 +993,7 @@ Cpu::exception_string(Mword trapno)
   return exception_strings[trapno];
 }
 
-PUBLIC static inline FIASCO_INIT_CPU
+PUBLIC static inline FIASCO_INIT_CPU_SFX(cpuid)
 void
 Cpu::cpuid(Unsigned32 mode, Unsigned32 ecx_val,
            Unsigned32 *eax, Unsigned32 *ebx, Unsigned32 *ecx, Unsigned32 *edx)
@@ -1208,7 +1208,7 @@ Cpu::set_model_str()
   snprintf(_model_str, sizeof (_model_str), "Unknown CPU");
 }
 
-PUBLIC inline FIASCO_INIT_CPU
+PUBLIC inline FIASCO_INIT_CPU_SFX(arch_perfmon_info)
 void
 Cpu::arch_perfmon_info(Unsigned32 *eax, Unsigned32 *ebx, Unsigned32 *ecx) const
 {

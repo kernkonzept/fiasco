@@ -3,7 +3,7 @@ IMPLEMENTATION [ia32]:
 #include "assert.h"
 #include "paging_bits.h"
 
-PRIVATE static FIASCO_INIT_CPU
+PRIVATE static inline FIASCO_INIT_CPU_SFX(init_cpu_arch)
 void
 Kmem::init_cpu_arch(Cpu &cpu, Lockless_alloc *cpu_mem)
 {

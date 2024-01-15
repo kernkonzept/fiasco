@@ -80,7 +80,7 @@ IMPLEMENTATION [arm && perf_cnt && !(arm_mpcore || arm_v7 || arm_v8)]:
 
 char const *Perf_cnt::perf_type_str = "none";
 
-PUBLIC static inline FIASCO_INIT_CPU
+PUBLIC static inline FIASCO_INIT_CPU_SFX(init_cpu)
 void
 Perf_cnt::init_cpu()
 {}
@@ -310,7 +310,7 @@ Perf_cnt::init()
   // Tb_entry::set_cycle_read_func(read_cycle_cnt);
 }
 
-PUBLIC static inline NEEDS[Perf_cnt::init_cpu] FIASCO_INIT_CPU
+PUBLIC static inline NEEDS[Perf_cnt::init_cpu] FIASCO_INIT_CPU_SFX(init_ap)
 void
 Perf_cnt::init_ap()
 {

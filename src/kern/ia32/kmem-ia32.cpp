@@ -681,7 +681,7 @@ Kmem::current_cpu_udir()
   return reinterpret_cast<Kpdir *>(Kentry_cpu_pdir);
 }
 
-PRIVATE static inline FIASCO_INIT_CPU
+PRIVATE static inline FIASCO_INIT_CPU_SFX(setup_cpu_structures_isolation)
 void
 Kmem::setup_cpu_structures_isolation(Cpu &cpu, Kpdir *,
                                      Lockless_alloc *cpu_alloc,

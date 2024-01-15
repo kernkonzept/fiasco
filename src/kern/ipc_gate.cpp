@@ -408,6 +408,7 @@ Ipc_gate::invoke(L4_obj_ref /*self*/, L4_fpage::Rights rights,
 }
 
 namespace {
+
 static Kobject_iface * FIASCO_FLATTEN
 ipc_gate_factory(Ram_quota *q, Space *space,
                  L4_msg_tag tag, Utcb const *utcb,
@@ -453,12 +454,14 @@ ipc_gate_factory(Ram_quota *q, Space *space,
   return static_cast<Ipc_gate_ctl*>(Ipc_gate::create(q, thread, id));
 }
 
-static inline void __attribute__((constructor)) FIASCO_INIT
+static inline
+void __attribute__((constructor)) FIASCO_INIT_SFX(ipc_gate_register_factory)
 register_factory()
 {
   Kobject_iface::set_factory(0, ipc_gate_factory);
   Kobject_iface::set_factory(L4_msg_tag::Label_kobject, ipc_gate_factory);
 }
+
 }
 
 //---------------------------------------------------------------------------

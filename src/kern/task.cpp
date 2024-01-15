@@ -572,12 +572,15 @@ Task::invoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f, Utcb *utcb) 
 }
 
 namespace {
-static inline void __attribute__((constructor)) FIASCO_INIT
+
+static inline
+void __attribute__((constructor)) FIASCO_INIT_SFX(task_register_factory)
 register_factory()
 {
   Kobject_iface::set_factory(L4_msg_tag::Label_task,
                              &Task::generic_factory<Task, true, 2>);
 }
+
 }
 
 //---------------------------------------------------------------------------
