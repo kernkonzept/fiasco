@@ -5,13 +5,13 @@ IMPLEMENTATION [arm && !arm_v6plus]:
 
 IMPLEMENT inline NEEDS["mem_layout.h"]
 void
-Utcb_support::current(User<Utcb>::Ptr const &utcb)
-{ *reinterpret_cast<User<Utcb>::Ptr*>(Mem_layout::Utcb_ptr_page) = utcb; }
+Utcb_support::current(User_ptr<Utcb> const &utcb)
+{ *reinterpret_cast<User_ptr<Utcb>*>(Mem_layout::Utcb_ptr_page) = utcb; }
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_v6plus]:
 
 IMPLEMENT inline
 void
-Utcb_support::current(User<Utcb>::Ptr const &)
+Utcb_support::current(User_ptr<Utcb> const &)
 {}

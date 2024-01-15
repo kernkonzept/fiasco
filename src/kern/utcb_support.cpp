@@ -5,5 +5,5 @@ INTERFACE:
 class Utcb_support
 {
 public:
-  static void current(User<Utcb>::Ptr const &utcb);
+  static void current(User_ptr<Utcb> const &utcb);
 };

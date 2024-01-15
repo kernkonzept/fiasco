@@ -101,7 +101,7 @@ Task::put() override
 
 PRIVATE
 int
-Task::alloc_ku_mem_chunk(User<void>::Ptr u_addr, unsigned size, void **k_addr)
+Task::alloc_ku_mem_chunk(User_ptr<void> u_addr, unsigned size, void **k_addr)
 {
   assert((size & (size - 1)) == 0);
   assert(size < Config::SUPERPAGE_SIZE);
@@ -174,7 +174,7 @@ Task::alloc_ku_mem(L4_fpage ku_area)
   if (!m)
     return -L4_err::ENomem;
 
-  User<void>::Ptr u_addr((void *)ku_area.mem_address());
+  User_ptr<void> u_addr((void *)ku_area.mem_address());
 
   void *p = 0;
   if (int e = alloc_ku_mem_chunk(u_addr, sz, &p))
@@ -202,7 +202,7 @@ Task::free_ku_mem(Ku_mem *m)
 
 PRIVATE
 void
-Task::free_ku_mem_chunk(void *k_addr, User<void>::Ptr u_addr, unsigned size,
+Task::free_ku_mem_chunk(void *k_addr, User_ptr<void> u_addr, unsigned size,
                         unsigned mapped_size)
 {
   Kmem_alloc * const alloc = Kmem_alloc::allocator();

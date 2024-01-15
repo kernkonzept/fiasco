@@ -69,7 +69,7 @@ public:
 
   struct Ku_mem : public cxx::S_list_item
   {
-    User<void>::Ptr u_addr;
+    User_ptr<void> u_addr;
     void *k_addr;
     unsigned size;
 
@@ -82,7 +82,7 @@ public:
     { a->q_free(q, this); }
 
     template<typename T>
-    T *kern_addr(Smart_ptr<T, Simple_ptr_policy, User_ptr_discr> ua) const
+    T *kern_addr(User_ptr<T> ua) const
     {
       typedef Address A;
       return (T*)((A)ua.get() - (A)u_addr.get() + (A)k_addr);
@@ -131,7 +131,7 @@ IMPLEMENT inline Space::~Space() {}
 
 PUBLIC
 Space::Ku_mem const *
-Space::find_ku_mem(User<void>::Ptr p, unsigned size)
+Space::find_ku_mem(User_ptr<void> p, unsigned size)
 {
   Address const pa = (Address)p.get();
 

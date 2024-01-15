@@ -78,7 +78,7 @@ Kernel_thread::init_workload()
   check (map_obj_initially(sigma0_thread, sigma0, sigma0, C_thread, 0));
 
   check (sigma0_thread->control(Thread_ptr(Thread_ptr::Null), Thread_ptr(Thread_ptr::Null)) == 0);
-  check (sigma0_thread->bind(sigma0, User<Utcb>::Ptr((Utcb*)utcb_addr())));
+  check (sigma0_thread->bind(sigma0, User_ptr<Utcb>((Utcb*)utcb_addr())));
   check (sigma0_thread->ex_regs(Kip::k()->sigma0_ip, 0));
 
   //
@@ -105,7 +105,7 @@ Kernel_thread::init_workload()
   check (map_obj_initially(boot_thread, boot_task, boot_task, C_thread, 0));
 
   check (boot_thread->control(Thread_ptr(C_pager), Thread_ptr(Thread_ptr::Null)) == 0);
-  check (boot_thread->bind(boot_task, User<Utcb>::Ptr((Utcb*)utcb_addr())));
+  check (boot_thread->bind(boot_task, User_ptr<Utcb>((Utcb*)utcb_addr())));
   check (boot_thread->ex_regs(Kip::k()->root_ip, 0));
 
   Ipc_gate *s0_b_gate = Ipc_gate::create(Ram_quota::root, sigma0_thread, 4 << 4);

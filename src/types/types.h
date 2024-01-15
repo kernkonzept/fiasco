@@ -390,10 +390,7 @@ public:
 enum User_ptr_discr {};
 
 template<typename T>
-struct User
-{
-  typedef Smart_ptr<T, Simple_ptr_policy, User_ptr_discr> Ptr;
-};
+using User_ptr = Smart_ptr<T, Simple_ptr_policy, User_ptr_discr>;
 
 struct Cpu_number : cxx::int_type_order_base<unsigned, Cpu_number, Order>
 {

@@ -215,14 +215,14 @@ public:
     MEMBER_OFFSET();
 
   private:
-    typename User<T>::Ptr _u;
+    User_ptr<T> _u;
     T *_k;
 
   public:
     Ku_mem_ptr() : _u(0), _k(0) {}
-    Ku_mem_ptr(typename User<T>::Ptr const &u, T *k) : _u(u), _k(k) {}
+    Ku_mem_ptr(User_ptr<T> const &u, T *k) : _u(u), _k(k) {}
 
-    void set(typename User<T>::Ptr const &u, T *k)
+    void set(User_ptr<T> const &u, T *k)
     { _u = u; _k = k; }
 
     T *access(bool is_current = false) const
@@ -240,7 +240,7 @@ public:
       return _k;
     }
 
-    typename User<T>::Ptr usr() const { return _u; }
+    User_ptr<T> usr() const { return _u; }
     T* kern() const { return _k; }
   };
 

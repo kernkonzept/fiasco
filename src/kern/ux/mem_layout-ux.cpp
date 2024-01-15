@@ -145,12 +145,12 @@ Address const Mem_layout::kernel_trampoline_page =
 
 
 PUBLIC static inline
-User<Utcb>::Ptr &
+User_ptr<Utcb> &
 Mem_layout::user_utcb_ptr(Cpu_number cpu)
 {
   // Allocate each CPUs utcb ptr in a different cacheline to avoid
   // false sharing.
-  return reinterpret_cast<User<Utcb>::Ptr*>(Utcb_ptr_page + (cxx::int_value<Cpu_number>(cpu) << utcb_ptr_align))[0];
+  return reinterpret_cast<User_ptr<Utcb>*>(Utcb_ptr_page + (cxx::int_value<Cpu_number>(cpu) << utcb_ptr_align))[0];
 }
 
 
