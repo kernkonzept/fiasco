@@ -181,8 +181,8 @@ public:
     enum Wait_mode { No_wait = 0, Wait = 1 };
     // enum State { Idle = 0, Handled = 1, Reply_handled = 2 };
 
-    Request_func *func;
-    void *arg;
+    Request_func *func = nullptr;
+    void *arg          = nullptr;
     // State state;
   };
 
@@ -207,7 +207,7 @@ public:
     L4_sched_param const *sp;
     bool in_progress;
 
-    Migration() : in_progress(false) {}
+    Migration() : sp(nullptr), in_progress(false) {}
   };
 
   template<typename T>
@@ -352,7 +352,7 @@ protected:
   // timeout (Irq::_irq_thread is of type Receiver).
   Timeout *_timeout;
 
-  struct Kernel_drq : Drq { Context *src; };
+  struct Kernel_drq : Drq { Context *src = nullptr; };
 
 private:
   static Per_cpu<Clock> _clock;
