@@ -6,6 +6,7 @@ INTERFACE[mapdb]:
 #include "mapping.h"
 #include "mapping_tree.h"
 #include "auto_quota.h"
+#include "unique_ptr.h"
 
 class Space;
 
@@ -209,11 +210,8 @@ public:
   using Order =   Treemap::Order;
   using Frame =   Treemap::Frame;
 
-  ~Mapdb()
-  { delete _treemap; }
-
   Treemap *dbg_treemap() const
-  { return _treemap; }
+  { return _treemap.get(); }
 
   bool valid_address(Pfn phys) const
   {
@@ -224,7 +222,7 @@ public:
 
 private:
   // DATA
-  Treemap *const _treemap;
+  cxx::unique_ptr<Treemap> const _treemap;
 };
 
 //--------------------------------------------------------------------
@@ -1029,7 +1027,7 @@ Mapdb::Mapdb(Space *owner, Order parent_page_shift, size_t const *page_shifts,
                            Pfn(0), page_shifts, page_shifts_num))
 {
   // assert (boot_time);
-  assert (_treemap);
+  assert (_treemap.get());
 } // Mapdb()
 
 /** Insert a new mapping entry with the given values as child of
