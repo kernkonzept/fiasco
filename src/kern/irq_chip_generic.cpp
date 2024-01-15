@@ -10,8 +10,8 @@ public:
   explicit Irq_chip_gen(unsigned nirqs) { init(nirqs); }
 
 private:
-  unsigned _nirqs;
-  Irq_base **_irqs;
+  unsigned _nirqs  = 0;
+  Irq_base **_irqs = nullptr;
 };
 
 
