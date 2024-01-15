@@ -140,20 +140,11 @@ Timeout_q::enqueue(Timeout *to)
 PUBLIC inline
 Timeout::Timeout()
 {
+  _wakeup    = ULONG_LONG_MAX;
   _flags.hit = 0;
   _flags.res = 0;
 }
 
-
-/**
- * Initializes an timeout object.
- */
-PUBLIC inline  NEEDS[<climits>]
-void
-Timeout::init()
-{
-  _wakeup = ULONG_LONG_MAX;
-}
 
 /* Yeah, i know, an derived and specialized timeout class for
    the root node would be nicer. I already had done this, but
