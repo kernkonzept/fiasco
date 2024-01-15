@@ -148,7 +148,7 @@ entry_apic_error_interrupt:
 /* Intel Architecture Software Developer's Manual Volume 3,
  * Advanced Programmable Interrupt Controller (APIC):
  * Spurious Interrupt: "If at the time the INTA cycle is issued, the
- * interupt that was to be dispensed has become masked (programmed by
+ * interrupt that was to be dispensed has become masked (programmed by
  * software), the local APIC will deliver a spurious-interrupt vector." */
 	.p2align 4
 	.globl	entry_apic_spurious_interrupt
