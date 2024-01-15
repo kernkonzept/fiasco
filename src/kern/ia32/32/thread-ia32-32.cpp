@@ -11,13 +11,21 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
   regs()->ip(ip);
   regs()->sp(sp);
   regs()->flags(EFLAGS_IF);
+
   asm volatile
-    ("mov %0, %%esp \t\n"
-     "iret         \t\n"
+    ("  mov %[sp], %%esp  \n"
+     "  xor %%ebx, %%ebx  \n"
+     "  xor %%ecx, %%ecx  \n"
+     "  xor %%edx, %%edx  \n"
+     "  xor %%ebp, %%ebp  \n"
+     "  xor %%esi, %%esi  \n"
+     "  xor %%edi, %%edi  \n"
+     "  iret              \n"
      :
-     : "r" (static_cast<Return_frame*>(regs())), "a" (arg)
+     : [sp]"r"(static_cast<Return_frame*>(regs())), "a"(arg)
     );
-  __builtin_trap();
+
+  __builtin_unreachable();
 }
 
 IMPLEMENT inline
@@ -226,13 +234,13 @@ void FIASCO_NORETURN
 Thread::user_invoke()
 {
   user_invoke_generic();
-  Mword cx = 0;
+  Mword ecx = 0;
 
   if (current()->space()->is_sigma0())
-    cx = Kmem::virt_to_phys(Kip::k());
+    ecx = Kmem::virt_to_phys(Kip::k());
 
   asm volatile
-    ("  movl %%eax,%%esp \n"    // set stack pointer to regs structure
+    ("  movl %[sp],%%esp \n"
      "  movl %%edx,%%es  \n"
      "  movl %%edx,%%ds  \n"
      "  xorl %%eax,%%eax \n"    // clean out user regs
@@ -242,14 +250,13 @@ Thread::user_invoke()
      "  xorl %%ebx,%%ebx \n"
      "  xorl %%ebp,%%ebp \n"
      "  iret             \n"
-     :                          // no output
-     : "a" (nonull_static_cast<Return_frame*>(current()->regs())),
-       "d" (Gdt::gdt_data_user | Gdt::Selector_user),
-       "c" (cx)
+     :
+     : [sp]"r"(nonull_static_cast<Return_frame*>(current()->regs())),
+       "d"(Gdt::gdt_data_user | Gdt::Selector_user),
+       "c"(ecx)
      );
 
   __builtin_unreachable();
-  // never returns here
 }
 
 //---------------------------------------------------------------------------

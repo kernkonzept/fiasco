@@ -10,14 +10,29 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
   assert(cpu_lock.test());
   assert(current() == this);
 
+  // The 'xor' instructions clearing the lower 32 bits clear the entire register
+  // but are 1 byte shorter (at least when using the 'eXX' registers).
   asm volatile
-    ("mov %[sp], %%rsp \t\n"
-     "mov %[flags], %%r11 \t\n"
-     "sysretq \t\n"
+    ("  mov %[sp], %%rsp    \n"
+     "  mov %[flags], %%r11 \n"
+     "  xor %%eax, %%eax    \n"
+     "  xor %%ebx, %%ebx    \n"
+     "  xor %%edx, %%edx    \n"
+     "  xor %%ebp, %%ebp    \n"
+     "  xor %%esi, %%esi    \n"
+     "  xor %%r8d, %%r8d    \n"
+     "  xor %%r9d, %%r9d    \n"
+     "  xor %%r10d, %%r10d  \n"
+     "  xor %%r12d, %%r12d  \n"
+     "  xor %%r13d, %%r13d  \n"
+     "  xor %%r14d, %%r14d  \n"
+     "  xor %%r15d, %%r15d  \n"
+     "  sysretq             \n"
      :
-     : [flags] "i" (EFLAGS_IF), "c" (ip), [sp] "r" (sp), "D"(arg)
+     : [flags]"i"(EFLAGS_IF), "c"(ip), [sp]"r"(sp), "D"(arg)
     );
-  __builtin_trap();
+
+  __builtin_unreachable();
 }
 
 //----------------------------------------------------------------------------
@@ -77,24 +92,25 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
   assert(cpu_lock.test());
   assert(current() == this);
 
+  // p[0] = CPU dir pa (if PCID: + bit63 + ASID 0)
+  // p[1] = KSP
+  // p[2] = EXIT flags
+  // p[3] = CR3: CPU dir pa + 0x1000 (if PCID: + bit63 + ASID)
+  // p[4] = kernel entry scratch register
+
   Address *p = (Address *)Mem_layout::Kentry_cpu_page;
   handle_ia32_branch_barriers(&p[2]);
   handle_mds_mitigations(&p[2]);
 
   asm volatile
-    ("mov %[sp], %%rsp \t\n"
-     "mov %[flags], %%r11 \t\n"
-     "jmp safe_sysret \t\n"
+    ("  mov %[sp], %%rsp    \n"
+     "  mov %[flags], %%r11 \n"
+     "  jmp safe_sysret     \n"
      :
-     // p[0] = CPU dir pa (if PCID: + bit63 + ASID 0)
-     // p[1] = KSP
-     // p[2] = EXIT flags
-     // p[3] = CPU dir pa + 0x1000 (if PCID: + bit63 + ASID)
-     // p[4] = kernel entry scratch register
-     : [cr3] "a" (p[3]),
-       [flags] "i" (EFLAGS_IF), "c" (ip), [sp] "r" (sp), "D"(arg)
-    );
-  __builtin_trap();
+     : "a"(p[3]), [flags]"i"(EFLAGS_IF), "c"(ip), [sp]"r"(sp), "D"(arg)
+     );
+
+  __builtin_unreachable();
 }
 
 //----------------------------------------------------------------------------
@@ -285,35 +301,35 @@ void FIASCO_NORETURN
 Thread::user_invoke()
 {
   user_invoke_generic();
-
-  Mword di = 0;
-
+  Mword rdi = 0;
   if (current()->space()->is_sigma0())
-    di = Kmem::virt_to_phys(Kip::k());
+    rdi = Kmem::virt_to_phys(Kip::k());
 
+  // The 'xor' instructions clearing the lower 32 bits clear the entire register
+  // but are 1 byte shorter (at least when using the 'eXX' registers).
   asm volatile
-    ("  mov %%rax,%%rsp \n"    // set stack pointer to regs structure
-     "  mov %%ecx,%%es   \n"
-     "  mov %%ecx,%%ds   \n"
-     "  xor %%rax,%%rax \n"
-     "  xor %%rcx,%%rcx \n"     // clean out user regs
-     "  xor %%rdx,%%rdx \n"
-     "  xor %%rsi,%%rsi \n"
-     "  xor %%rbx,%%rbx \n"
-     "  xor %%rbp,%%rbp \n"
-     "  xor %%r8,%%r8   \n"
-     "  xor %%r9,%%r9   \n"
-     "  xor %%r10,%%r10 \n"
-     "  xor %%r11,%%r11 \n"
-     "  xor %%r12,%%r12 \n"
-     "  xor %%r13,%%r13 \n"
-     "  xor %%r14,%%r14 \n"
-     "  xor %%r15,%%r15 \n"
+    ("  mov %[sp],%%rsp   \n"   // set stack pointer to regs structure
+     "  mov %%ecx,%%es    \n"
+     "  mov %%ecx,%%ds    \n"
+     "  xor %%eax,%%eax   \n"
+     "  xor %%ecx,%%ecx   \n"   // clean out user regs
+     "  xor %%edx,%%edx   \n"
+     "  xor %%esi,%%esi   \n"
+     "  xor %%ebx,%%ebx   \n"
+     "  xor %%ebp,%%ebp   \n"
+     "  xor %%r8d,%%r8d   \n"
+     "  xor %%r9d,%%r9d   \n"
+     "  xor %%r10d,%%r10d \n"
+     "  xor %%r11d,%%r11d \n"
+     "  xor %%r12d,%%r12d \n"
+     "  xor %%r13d,%%r13d \n"
+     "  xor %%r14d,%%r14d \n"
+     "  xor %%r15d,%%r15d \n"
      FIASCO_ASM_IRET
-     :                          // no output
-     : "a" (nonull_static_cast<Return_frame*>(current()->regs())),
-       "c" (Gdt::gdt_data_user | Gdt::Selector_user),
-       "D" (di)
+     :
+     : [sp]"r"(nonull_static_cast<Return_frame*>(current()->regs())),
+       "c"(Gdt::gdt_data_user | Gdt::Selector_user),
+       "D"(rdi)
      );
 
   __builtin_unreachable();

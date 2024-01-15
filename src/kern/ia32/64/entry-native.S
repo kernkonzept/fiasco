@@ -248,7 +248,22 @@ syscall_entry_code_end:
 	.section ".entry.text.safe_sysret"
 	.global safe_sysret
 safe_sysret:
+	// The 'xor' instructions clearing the lower 32 bits clear the entire
+	// register but are 1 byte shorter (at least when using the 'eXX'
+	// registers).
 	mov	%rax, %cr3
+	xor	%eax, %eax
+	xor	%ebx, %ebx
+	xor	%edx, %edx
+	xor	%ebp, %ebp
+	xor	%esi, %esi
+	xor	%r8d, %r8d
+	xor	%r9d, %r9d
+	xor	%r10d, %r10d
+	xor	%r12d, %r12d
+	xor	%r13d, %r13d
+	xor	%r14d, %r14d
+	xor	%r15d, %r15d
 	sysretq
 
 	.section ".entry.text.safe_iret"
