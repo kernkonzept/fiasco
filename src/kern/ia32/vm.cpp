@@ -61,15 +61,24 @@ Vm::load_guest_xcr0(Unsigned64 host_xcr0, Unsigned64 guest_xcr0)
   Cpu::xsetbv(guest_xcr0, 0);
 }
 
-/*
- * Load host xcr0.
+/**
+ * Setup host XCR0.
+ *
+ * Since the guest XCR0 is sanitized by \ref load_guest_xcr0 and altering the
+ * XCR0 by the guest causes a VM exit, we only update the XCR0 if the desired
+ * host XCR0 value differs from the guest XCR0 value before VM entry.
+ *
+ * \param host_xcr0   Desired host XCR0 value.
+ * \param guest_xcr0  Guest XCR0 value before VM entry.
+ &
  */
 PROTECTED static inline NEEDS["cpu.h"]
 void
-Vm::load_host_xcr0(Unsigned64 host_xcr0, Unsigned64 guest_xcr0)
+Vm::restore_host_xcr0(Unsigned64 host_xcr0, Unsigned64 guest_xcr0)
 {
   if (!Cpu::have_xsave() || !(guest_xcr0 ^ host_xcr0))
     return;
+
   Cpu::xsetbv(host_xcr0, 0);
 }
 

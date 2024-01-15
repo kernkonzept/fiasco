@@ -616,7 +616,7 @@ Vm_svm::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, Vmcb *vmcb_s)
 
   resume_vm_svm(kernel_vmcb_pa, &vcpu->_regs);
 
-  load_host_xcr0(host_xcr0, kernel_vmcb_s->state_save_area.xcr0);
+  restore_host_xcr0(host_xcr0, kernel_vmcb_s->state_save_area.xcr0);
 
 #if 0
   if (cr4 & CR4_PGE)

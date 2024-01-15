@@ -519,7 +519,7 @@ Vm_vmx_t<X>::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, void *vmcs_s)
       write(vmcs_s, Vmx::F_sw_guest_cr2, cpu_cr2);
     }
 
-  load_host_xcr0(host_xcr0, guest_xcr0);
+  restore_host_xcr0(host_xcr0, guest_xcr0);
 
   Cpu::set_ldt(ldt);
 
