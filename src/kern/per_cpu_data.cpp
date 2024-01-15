@@ -117,7 +117,7 @@ public:
   T &current() { return cpu(current_cpu()); }
 
 private:
-  T *_p;
+  T *_p = nullptr;
 };
 
 
