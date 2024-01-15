@@ -304,7 +304,7 @@ struct Simple_ptr_policy
   typedef T *Member_type;
   typedef T *Storage_type;
 
-  static void init(Storage_type const &) {}
+  static void init(Storage_type &d) { d = nullptr; }
   static void init(Storage_type &d, Storage_type const &s) { d = s; }
   static void copy(Storage_type &d, Storage_type const &s) { d = s; }
   static void destroy(Storage_type const &) {}
@@ -321,7 +321,7 @@ struct Simple_ptr_policy<void>
   typedef void Member_type;
   typedef void *Storage_type;
 
-  static void init(Storage_type const &) {}
+  static void init(Storage_type &d) { d = nullptr; }
   static void init(Storage_type &d, Storage_type const &s) { d = s; }
   static void copy(Storage_type &d, Storage_type const &s) { d = s; }
   static void destroy(Storage_type const &) {}
