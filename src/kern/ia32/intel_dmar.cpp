@@ -160,7 +160,7 @@ Dmar::parse_src_id(Unsigned64 src_id, Unsigned8 *bus, unsigned *dfs,
 
 PRIVATE
 L4_msg_tag
-Dmar::op_bind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space)
+Dmar::op_bind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space_cap)
 {
   Unsigned8 bus;
   unsigned dfs, dfe;
@@ -168,19 +168,17 @@ Dmar::op_bind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space)
   if (Mword err = parse_src_id(src_id, &bus, &dfs, &dfe, &mmu))
     return Kobject_iface::commit_result(err);
 
-  unsigned long did = space.obj->get_did();
+  // Prevent the Dmar_space from being deleted while using it without holding
+  // the CPU lock.
+  Ref_ptr<Dmar_space> space(space_cap.obj);
+
+  unsigned long did = space->get_did();
   // no free domain id left
   if (EXPECT_FALSE(did == ~0UL))
     return Kobject_iface::commit_result(-L4_err::ENomem);
 
   auto aw = mmu->aw();
-  auto slptptr = space.obj->get_root(aw);
-
-  // Prevent the Dmar_space from being deleted while using it without holding
-  // the CPU lock.
-  Lock_guard<Lock> guard;
-  if (!guard.check_and_lock(&space.obj->existence_lock))
-    return commit_result(-L4_err::EInval);
+  auto slptptr = space->get_root(aw);
 
   // Release CPU lock because when binding a Dmar_space, it may be necessary
   // to execute one or more invalidation descriptors via the IOMMU invalidation
@@ -215,7 +213,7 @@ Dmar::op_bind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space)
 
 PRIVATE
 L4_msg_tag
-Dmar::op_unbind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space)
+Dmar::op_unbind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space_cap)
 {
   Unsigned8 bus;
   unsigned dfs, dfe;
@@ -223,13 +221,11 @@ Dmar::op_unbind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space)
   if (Mword err = parse_src_id(src_id, &bus, &dfs, &dfe, &mmu))
     return Kobject_iface::commit_result(err);
 
-  auto slptptr = space.obj->get_root(mmu->aw());
-
   // Prevent the Dmar_space from being deleted while using it without holding
   // the CPU lock.
-  Lock_guard<Lock> guard;
-  if (!guard.check_and_lock(&space.obj->existence_lock))
-    return commit_result(-L4_err::EInval);
+  Ref_ptr<Dmar_space> space(space_cap.obj);
+
+  auto slptptr = space->get_root(mmu->aw());
 
   // Release CPU lock because when unbinding a Dmar_space, it may be necessary
   // to execute one or more invalidation descriptors via the IOMMU invalidation

@@ -187,6 +187,22 @@ Dmar_space::get_root(Dmar_pt *pt, unsigned aw_level)
   return i.next_level();
 }
 
+/**
+ * Get the root page table for the given address width.
+ *
+ * The root page table is either the entire _dmarpt page table (4-level page
+ * table) or the page table under its first entry (3-level page table).
+ *
+ * \param aw_level  1 if the IOMMU uses 3-level page table.
+ *                  2 if the IOMMU uses 4-level page table.
+ *
+ * \return  The root page table of this Dmar_space.
+ *
+ * \note `Dmar_space::initialize()` pre-allocates the _dmarpt page table and the
+ *       page table under its first entry. Therefore, it is safe to invoke
+ *       `Dmar_space::get_root()` even while someone else is modifying the
+ *       Dmar_space's page table.
+ */
 PUBLIC inline
 Mword
 Dmar_space::get_root(int aw_level) const
