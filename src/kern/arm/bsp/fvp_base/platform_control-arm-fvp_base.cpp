@@ -1,36 +1,44 @@
+IMPLEMENTATION [arm && mp && pf_fvp_base]:
+
+EXTENSION class Platform_control
+{
+  enum { Num_cores = 16 };
+};
+
 IMPLEMENTATION [arm && mp && pf_fvp_base && !arm_psci]:
 
 #include "cpu.h"
-#include "mmio_register_block.h"
 #include "kmem.h"
-
-#include <cstdio>
+#include "koptions.h"
+#include "mmio_register_block.h"
+#include "warn.h"
+#include "poll_timeout_counter.h"
 
 PUBLIC static
 void
-Platform_control::boot_ap_cpus(Address)
+Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
 {
-  enum { PPONR = 4 };
-  Mmio_register_block pwr(Kmem::mmio_remap(0x1c100000, 0x1000));
+  if (Koptions::o()->core_spin_addr == -1ULL)
+    return;
 
-  unsigned coreid[7] = {          0x00100, 0x00200, 0x00300,
-                         0x10000, 0x10100, 0x10200, 0x10300 };
+  Mmio_register_block s(Kmem::mmio_remap(Koptions::o()->core_spin_addr,
+                                         sizeof(Address)));
+  s.r<Address>(0) = phys_tramp_mp_addr;
+  Mem::dsb();
+  Mem_unit::clean_dcache();
 
-  int seq = 1;
-  for (int i = 0; i < 1; ++i)
+  for (int i = 1; i < min<int>(Num_cores, Config::Max_num_cpus); ++i)
     {
-      pwr.r<32>(PPONR) = coreid[i];
-
-      printf("Waiting for CPU%d[0x%x] to come up\n", seq, coreid[i]);
-      while (!Cpu::online(Cpu_number(seq)))
+      asm volatile("sev" : : : "memory");
+      L4::Poll_timeout_counter guard(5000000);
+      while (guard.test(!Cpu::online(Cpu_number(i))))
         {
           Mem::barrier();
           Proc::pause();
         }
 
-      seq++;
-      if (seq == Config::Max_num_cpus)
-        break;
+      if (guard.timed_out())
+        WARNX(Error, "CPU%d did not show up!\n", i);
     }
 }
 
@@ -51,7 +59,7 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
   int seq = 1;
   for (int i = 0; i < min<int>(2, Config::Max_num_cpus); ++i)
     {
-      unsigned coreid[16] = {
+      unsigned coreid[Num_cores] = {
             0x000,   0x100,   0x200,   0x300,
             0x400,   0x500,   0x600,   0x700,
           0x10000, 0x10100, 0x10200, 0x10300,
