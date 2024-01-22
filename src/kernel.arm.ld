@@ -219,6 +219,7 @@ SECTIONS {
   /DISCARD/ :{
     *(.stab .stabstr .stab.excl .stab.exclstr)
     *(.stab.index .stab.indexstr .comment)
+    *(.eh_frame)
   }
 
 }
