@@ -144,6 +144,19 @@ Cpu::init_supervisor_mode(bool is_boot_cpu)
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && !cpu_virt && mpu]:
 
+PUBLIC static
+void
+Cpu::init_sctlr()
+{
+  unsigned control = Config::Cache_enabled
+                     ? Cp15_c1_cache_enabled : Cp15_c1_cache_disabled;
+
+  Mem::dsb();
+  asm volatile("mcr p15, 0, %[control], c1, c0, 0" // SCTLR
+      : : [control] "r" (control));
+  Mem::isb();
+}
+
 IMPLEMENT_OVERRIDE
 void
 Cpu::init_supervisor_mode(bool)
@@ -158,6 +171,19 @@ Cpu::init_supervisor_mode(bool)
   asm volatile("mrc p15, 0, %0, c1, c0, 0" : "=r" (r) : : "memory");  // SCTLR
   r &= ~(1UL << 30);
   asm volatile("mcr p15, 0, %0, c1, c0, 0" : : "r" (r) : "memory");   // SCTLR
+}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && cpu_virt && mpu]:
+
+PUBLIC static
+void
+Cpu::init_sctlr()
+{
+  Mem::dsb();
+  asm volatile("mcr p15, 4, %[control], c1, c0, 0" // HSCTLR
+      : : [control] "r" (Hsctlr));
+  Mem::isb();
 }
 
 //---------------------------------------------------------------------------

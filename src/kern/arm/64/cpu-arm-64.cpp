@@ -265,6 +265,18 @@ Cpu::init_hyp_mode()
 }
 
 //--------------------------------------------------------------------------
+IMPLEMENTATION [arm && mpu && !cpu_virt]:
+
+PUBLIC static
+void
+Cpu::init_sctlr()
+{
+  Mem::dsb();
+  asm volatile("msr SCTLR_EL1, %[control]" : : [control] "r" (Sctlr_generic));
+  Mem::isb();
+}
+
+//--------------------------------------------------------------------------
 IMPLEMENTATION [arm && mpu && cpu_virt]:
 
 PUBLIC static inline
@@ -280,6 +292,15 @@ Cpu::init_hyp_mode()
 {
   asm volatile ("msr S3_4_C2_C6_2, %0" : : "r"(1UL << 31)); // VSTCR_EL2
   init_hyp_mode_common();
+}
+
+PUBLIC static
+void
+Cpu::init_sctlr()
+{
+  Mem::dsb();
+  asm volatile("msr SCTLR_EL2, %[control]" : : [control] "r" (Sctlr_generic));
+  Mem::isb();
 }
 
 //--------------------------------------------------------------------------

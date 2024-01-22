@@ -200,6 +200,49 @@ public:
   };
 };
 
+// ------------------------------------------------------------------------
+INTERFACE [arm && (arm_v7 || arm_v8) && mpu]:
+
+EXTENSION class Cpu
+{
+public:
+  enum {
+    Cp15_c1_nmfi            = 1 << 27,
+    Cp15_c1_rao_sbop        = (0xf << 3) | (1 << 16) | (1 << 18) | (1 << 22) | (1 << 23),
+
+    Cp15_c1_cache_bits      = Cp15_c1_cache
+                              | Cp15_c1_insn_cache,
+
+    Cp15_c1_generic         = Cp15_c1_mmu
+                              | (Config::Cp15_c1_use_alignment_check ?  Cp15_c1_alignment_check : 0)
+                              | Cp15_c1_branch_predict
+                              | Cp15_c1_rao_sbop,
+  };
+};
+
+// ------------------------------------------------------------------------
+INTERFACE [arm && (arm_v7 || arm_v8) && mpu && cpu_virt]:
+
+EXTENSION class Cpu
+{
+public:
+  enum {
+    Hsctlr_res1 = (3 << 28) | (3 << 22) | (1 << 18) | (1 << 16) | (1 << 11)
+                | (3 << 3),
+
+    Hsctlr_cache_bits = (1 << 12) | (1 << 2),
+    Hsctlr_alignment_check = 1 << 1,
+    Hsctlr_cp15ben = 1 << 5,
+    Hsctlr_mpu = 1 << 0,
+
+    Hsctlr = (Config::Cp15_c1_use_alignment_check ?  Hsctlr_alignment_check : 0)
+           | (Config::Cache_enabled ? Hsctlr_cache_bits : 0)
+           | Hsctlr_cp15ben
+           | Hsctlr_mpu
+           | Hsctlr_res1,
+  };
+};
+
 // -------------------------------------------------------------------------------
 INTERFACE [arm]:
 
