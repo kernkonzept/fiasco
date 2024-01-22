@@ -23,3 +23,12 @@ struct Boot_paging_info
   void *scratch;
   Mword free_map;
 };
+
+// ------------------------------------------------------------------------
+INTERFACE [arm && 64bit && !mmu]:
+
+struct Boot_paging_info
+{
+  // Build fails if structure is empty...
+  void *dummy;
+};

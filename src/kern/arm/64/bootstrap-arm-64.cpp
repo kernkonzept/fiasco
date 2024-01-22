@@ -214,6 +214,27 @@ enum : Unsigned64
   Hcr_default_bits = Cpu::Hcr_hcd | Cpu::Hcr_rw,
 };
 
+static inline void
+switch_from_el2_to_el1()
+{
+  Mword tmp;
+
+  // flush all E1 TLBs
+  asm volatile ("tlbi alle1");
+  // set HCR (RW and HCD)
+  asm volatile ("msr HCR_EL2, %0" : : "r"(Hcr_default_bits));
+  Bootstrap::config_feature_traps(Bootstrap::read_pfr0(), false, true);
+  asm volatile ("   mov %[tmp], sp          \n"
+                "   msr spsr_el2, %[psr]    \n"
+                "   adr x4, 1f              \n"
+                "   msr elr_el2, x4         \n"
+                "   eret                    \n"
+                "1: mov sp, %[tmp]          \n"
+                : [tmp]"=&r"(tmp)
+                : [psr]"r"((0xfUL << 6) | 5UL)
+                : "cc", "x4");
+}
+
 IMPLEMENTATION [arm && mmu && !cpu_virt]:
 
 PUBLIC static inline NEEDS["cpu.h"]
@@ -292,7 +313,6 @@ Bootstrap::leave_hyp_mode()
   asm volatile ("mrs %0, CurrentEL" : "=r"(cel));
   cel >>= 2;
   cel &= 3;
-  Mword tmp;
 
   switch (cel)
     {
@@ -301,20 +321,7 @@ Bootstrap::leave_hyp_mode()
       break;
 
     case 2:
-      // flush all E1 TLBs
-      asm volatile ("tlbi alle1");
-      // set HCR (RW and HCD)
-      asm volatile ("msr HCR_EL2, %0" : : "r"(Hcr_default_bits));
-      Bootstrap::config_feature_traps(read_pfr0(), false, true);
-      asm volatile ("   mov %[tmp], sp       \n"
-                    "   msr spsr_el2, %[psr] \n"
-                    "   adr x4, 1f           \n"
-                    "   msr elr_el2, x4      \n"
-                    "   eret                 \n"
-                    "1: mov sp, %[tmp]       \n"
-                    : [tmp]"=&r"(tmp)
-                    : [psr]"r"((0xfUL << 6) | 5UL)
-                    : "cc", "x4");
+      switch_from_el2_to_el1();
       break;
     case 1:
     default:
@@ -510,3 +517,35 @@ Bootstrap::init_paging()
 
   return Phys_addr(0);
 }
+
+// -----------------------------------------------------------------
+IMPLEMENTATION [arm && !mmu && !cpu_virt]:
+
+PUBLIC static void
+Bootstrap::leave_hyp_mode()
+{
+  Mword cel;
+  asm volatile ("mrs %0, CurrentEL" : "=r"(cel));
+  cel >>= 2;
+  cel &= 3;
+
+  switch (cel)
+    {
+    case 2:
+      asm volatile ("msr VTCR_EL2, %0" : : "r"(0)); // Ensure PMSAv8-64@EL1
+      asm volatile ("msr S3_4_C2_C6_2, %0" : : "r"(1UL << 31)); // VSTCR_EL2
+      switch_from_el2_to_el1();
+      break;
+    case 3: // ARMv8-R AArch64 has no EL3
+    case 1:
+    default:
+      break;
+    }
+}
+
+// -----------------------------------------------------------------
+IMPLEMENTATION [arm && !mmu && cpu_virt]:
+
+PUBLIC static inline void
+Bootstrap::leave_hyp_mode()
+{}

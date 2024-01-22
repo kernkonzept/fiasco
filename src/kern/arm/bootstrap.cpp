@@ -89,6 +89,13 @@ struct Elf
 };
 
 //---------------------------------------------------------------------------
+INTERFACE [arm && !mmu]:
+
+class Bootstrap
+{
+};
+
+//---------------------------------------------------------------------------
 INTERFACE [arm && mmu && !(arm_sa || arm_pxa)]:
 
 EXTENSION class Bootstrap
@@ -243,3 +250,18 @@ extern "C" void bootstrap_main(unsigned long load_addr)
   L4::infinite_loop();
 }
 
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && !mmu]:
+
+#include "globalconfig.h"
+#include "infinite_loop.h"
+
+extern "C" void bootstrap_main()
+{
+  Bootstrap::leave_hyp_mode();
+
+  // force to construct an absolute relocation because GCC may not do it.
+  bs_info.entry();
+
+  L4::infinite_loop();
+}

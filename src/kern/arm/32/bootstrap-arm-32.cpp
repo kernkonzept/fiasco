@@ -279,6 +279,15 @@ Bootstrap::create_initial_mappings()
 }
 
 //---------------------------------------------------------------------------
+IMPLEMENTATION [arm && !mmu]:
+
+PUBLIC static inline void
+Bootstrap::leave_hyp_mode()
+{
+  // Nothing to do. Already done by bootstrap on AArch32.
+}
+
+//---------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
 static inline void
