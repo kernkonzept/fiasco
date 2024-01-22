@@ -113,22 +113,12 @@ DEFINE_PER_CPU Per_cpu<Static_object<Apic> >  Apic::apic;
 PUBLIC inline
 Apic::Apic(Cpu_number cpu) : _id(get_id()) { register_pm(cpu); }
 
-
-// FIXME: workaround for missing lambdas in gcc < 4.5
-namespace {
-struct By_id
-{
-  Unsigned32 p;
-  By_id(Unsigned32 p) : p(p) {}
-  bool operator () (Apic const *a) const { return a && a->apic_id() == p; }
-};
-}
-
 PUBLIC static
 Cpu_number
 Apic::find_cpu(Unsigned32 phys_id)
 {
-  return apic.find_cpu(By_id(phys_id));
+  return apic.find_cpu([phys_id](Apic const *a)
+                       { return a && a->apic_id() == phys_id; });
 }
 
 PUBLIC void
