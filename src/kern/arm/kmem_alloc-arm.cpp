@@ -134,3 +134,63 @@ static void add_initial_pmem()
 }
 
 STATIC_INITIALIZER_P(add_initial_pmem, BOOTSTRAP_INIT_PRIO);
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [arm && mpu]:
+
+#include "kmem.h"
+#include "paging.h"
+
+/**
+ * Map desired region as kernel heap and initalize buddy allocator.
+ */
+PRIVATE void
+Kmem_alloc::map_heap(unsigned long start, unsigned long end)
+{
+  auto touched =
+    Kmem::kdir->add(start, end,
+                    Mpu_region_attr::make_attr(L4_fpage::Rights::RW()),
+                    false, Kpdir::Kernel_heap);
+  if (!touched)
+    panic("Error creating kernel heap region!\n");
+  Mpu::sync(*Kmem::kdir, touched.value());
+  Mem::isb();
+
+  unsigned long freemap_size = Alloc::free_map_bytes(start, end);
+  Address min_addr_kern = start;
+  setup_kmem_from_kip_md_tmp(freemap_size, min_addr_kern);
+}
+
+IMPLEMENT
+Kmem_alloc::Kmem_alloc()
+{
+  Mem_region_map<64> map;
+  unsigned long available_size = create_free_map(Kip::k(), &map);
+  unsigned long alloc_size = determine_kmem_alloc_size(available_size);
+
+  if (available_size < alloc_size)
+    panic("Kmem_alloc: Not enough kernel memory available (%ld)\n",
+          available_size);
+
+  unsigned long start = ~0UL;
+  unsigned long end;
+
+  for (int i = map.length() - 1; i >= 0 && alloc_size > 0; --i)
+    {
+      Mem_region &f = map[i];
+      if (f.size() < alloc_size)
+        continue;
+      if (f.size() > alloc_size)
+        f.start += (f.size() - alloc_size);
+
+      Kip::k()->add_mem_region(Mem_desc(f.start, f.end, Mem_desc::Kernel_tmp));
+      start = f.start;
+      end = f.end;
+      break;
+    }
+
+  if (start == ~0UL)
+    panic("Kmem_alloc: regions too small");
+
+  map_heap(start, end);
+}
