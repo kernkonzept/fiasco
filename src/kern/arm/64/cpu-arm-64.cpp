@@ -65,6 +65,12 @@ public:
     Cpacr_el1_fpen_full = 3UL << 20,
   };
 
+  enum : Mword
+  {
+    Vtcr_nsa = 1UL << 30,
+    Vtcr_msa = 1UL << 31,
+  };
+
   struct has_aarch32_el1 : public Alternative_static_functor<has_aarch32_el1>
   {
     static bool probe()
@@ -257,6 +263,15 @@ Cpu::init_hyp_mode_common()
 //--------------------------------------------------------------------------
 IMPLEMENTATION [arm && cpu_virt && mmu]:
 
+EXTENSION class Cpu
+{
+public:
+  enum : Mword
+  {
+    Vtcr_usr_mask = 0,
+  };
+};
+
 PUBLIC static inline
 unsigned long
 Cpu::vtcr_bits()
@@ -291,6 +306,15 @@ Cpu::init_sctlr()
 
 //--------------------------------------------------------------------------
 IMPLEMENTATION [arm && mpu && cpu_virt]:
+
+EXTENSION class Cpu
+{
+public:
+  enum : Mword
+  {
+    Vtcr_usr_mask = Vtcr_msa | Vtcr_nsa,
+  };
+};
 
 PUBLIC static inline
 unsigned long

@@ -251,3 +251,125 @@ Context::load_ext_vcpu_state_mxu(Vm_state const *v)
   asm volatile ("mcr p15, 0, %0, c2, c0, 2" : : "r"(v->mmu.ttbcr));
   asm volatile ("mcr p15, 0, %0, c3, c0, 0" : : "r"(v->mmu.dacr));
 }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && cpu_virt && mpu]:
+
+#include "mpu.h"
+
+IMPLEMENT inline NEEDS["mpu.h"]
+void
+Context::save_ext_vcpu_state_mxu(Vm_state * v)
+{
+  v->mpu.prselr = Mpu_arm_el1::prselr();
+
+#define SAVE_REGIONS(i1, i2, i3, i4) \
+  do \
+    { \
+      register Mword r0 asm("r0") = Mpu_arm_el1::prbar##i1(); \
+      register Mword r1 asm("r1") = Mpu_arm_el1::prlar##i1(); \
+      register Mword r2 asm("r2") = Mpu_arm_el1::prbar##i2(); \
+      register Mword r3 asm("r3") = Mpu_arm_el1::prlar##i2(); \
+      register Mword r4 asm("r4") = Mpu_arm_el1::prbar##i3(); \
+      register Mword r5 asm("r5") = Mpu_arm_el1::prlar##i3(); \
+      register Mword r6 asm("r6") = Mpu_arm_el1::prbar##i4(); \
+      register Mword r7 asm("r7") = Mpu_arm_el1::prlar##i4(); \
+      asm volatile ("stm %0!, {r0, r1, r2, r3, r4, r5, r6, r7}" \
+        : "=&r"(ctx) \
+        : "0"(ctx), \
+          "r"(r0), \
+          "r"(r1), \
+          "r"(r2), \
+          "r"(r3), \
+          "r"(r4), \
+          "r"(r5), \
+          "r"(r6), \
+          "r"(r7) \
+        : "memory"); \
+    } \
+  while (false)
+
+  // Directly skip non-existing regions. Assume multiple of 4 to make use of
+  // stm instruction. They really make a difference on the write-through
+  // caches of the R52.
+  int idx = Mpu_arm_el1::regions();
+  assert(idx <= 32);
+  assert((idx & 0x3) == 0);
+
+  Unsigned32 *ctx = &v->mpu.r[32 - idx].prbar;
+  switch (idx >> 2)
+    {
+      case  8: SAVE_REGIONS(31, 30, 29, 28);  // fall through
+      case  7: SAVE_REGIONS(27, 26, 25, 24);  // fall through
+      case  6: SAVE_REGIONS(23, 22, 21, 20);  // fall through
+      case  5: SAVE_REGIONS(19, 18, 17, 16);  // fall through
+      case  4: SAVE_REGIONS(15, 14, 13, 12);  // fall through
+      case  3: SAVE_REGIONS(11, 10,  9,  8);  // fall through
+      case  2: SAVE_REGIONS( 7,  6,  5,  4);  // fall through
+      case  1: SAVE_REGIONS( 3,  2,  1,  0);  // fall through
+      default:
+        break;
+    }
+
+#undef SAVE_REGIONS
+}
+
+IMPLEMENT inline NEEDS["mpu.h"]
+void
+Context::load_ext_vcpu_state_mxu(Vm_state const * v)
+{
+#define LOAD_REGIONS(i1, i2, i3, i4) \
+  do \
+    { \
+      register Mword r0 asm("r0"); \
+      register Mword r1 asm("r1"); \
+      register Mword r2 asm("r2"); \
+      register Mword r3 asm("r3"); \
+      register Mword r4 asm("r4"); \
+      register Mword r5 asm("r5"); \
+      register Mword r6 asm("r6"); \
+      register Mword r7 asm("r7"); \
+      asm volatile ("ldm %0!, {r0, r1, r2, r3, r4, r5, r6, r7}" \
+        : "=&r"(ctx), \
+          "=r"(r0), \
+          "=r"(r1), \
+          "=r"(r2), \
+          "=r"(r3), \
+          "=r"(r4), \
+          "=r"(r5), \
+          "=r"(r6), \
+          "=r"(r7) \
+        : "0"(ctx) \
+        : "memory"); \
+      Mpu_arm_el1::prxar##i1(r0, r1); \
+      Mpu_arm_el1::prxar##i2(r2, r3); \
+      Mpu_arm_el1::prxar##i3(r4, r5); \
+      Mpu_arm_el1::prxar##i4(r6, r7); \
+    } \
+  while (false)
+
+  // Directly skip non-existing regions. Assume multiple of 4 to make use of
+  // ldm instruction.
+  int idx = Mpu_arm_el1::regions();
+  assert(idx <= 32);
+  assert((idx & 0x3) == 0);
+
+  Unsigned32 const *ctx = &v->mpu.r[32 - idx].prbar;
+  switch (idx >> 2)
+    {
+      case  8: LOAD_REGIONS(31, 30, 29, 28);  // fall through
+      case  7: LOAD_REGIONS(27, 26, 25, 24);  // fall through
+      case  6: LOAD_REGIONS(23, 22, 21, 20);  // fall through
+      case  5: LOAD_REGIONS(19, 18, 17, 16);  // fall through
+      case  4: LOAD_REGIONS(15, 14, 13, 12);  // fall through
+      case  3: LOAD_REGIONS(11, 10,  9,  8);  // fall through
+      case  2: LOAD_REGIONS( 7,  6,  5,  4);  // fall through
+      case  1: LOAD_REGIONS( 3,  2,  1,  0);  // fall through
+      default:
+        break;
+    }
+
+#undef LOAD_REGIONS
+
+  Mpu_arm_el1::prselr(v->mpu.prselr);
+}
