@@ -2,6 +2,7 @@ IMPLEMENTATION [arm]:
 
 #include "config.h"
 #include "cpu.h"
+#include "kip_init.h"
 #include "mem_space.h"
 
 IMPLEMENT_OVERRIDE inline NEEDS["mem_space.h"]
@@ -20,6 +21,7 @@ IMPLEMENT FIASCO_INIT
 void
 Kernel_thread::bootstrap_arch()
 {
+  Kip_init::map_kip(Kip::k());
   Proc::sti();
   Cpu::print_boot_infos();
   boot_app_cpus();

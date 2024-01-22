@@ -131,3 +131,43 @@ PRIVATE static inline
 void
 Kip_init::init_syscalls(Kip *)
 {}
+
+//--------------------------------------------------------------
+IMPLEMENTATION[mpu]:
+
+#include "kmem.h"
+
+/**
+ * Map KIP in separate region to make it accessible to user space.
+ *
+ * There is a dedicated KIP region in the MPU so that user space can get
+ * access to it. So far the kernel region covered it. Remove it from there
+ * and establish the dedicated region.
+ */
+PUBLIC static
+void
+Kip_init::map_kip(Kip *k)
+{
+  extern char _kernel_image_start;
+  extern char _kernel_kip_end;
+
+  auto diff = Kmem::kdir->del(reinterpret_cast<Mword>(&_kernel_image_start),
+                              reinterpret_cast<Mword>(&_kernel_kip_end) - 1U);
+  diff |= Kmem::kdir->add(reinterpret_cast<Mword>(k),
+                          reinterpret_cast<Mword>(k) + 0xfffU,
+                          Mpu_region_attr::make_attr(L4_fpage::Rights::RWX()),
+                          false, Kpdir::Kip);
+
+  if (!diff)
+    panic("Cannot map KIP\n");
+
+  Mpu::sync(*Kmem::kdir, diff.value(), true);
+}
+
+//--------------------------------------------------------------
+IMPLEMENTATION[!mpu]:
+
+PUBLIC static inline
+void
+Kip_init::map_kip(Kip *)
+{}

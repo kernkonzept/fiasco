@@ -107,6 +107,9 @@ SECTIONS {
   } :kip :l4_kip
 
   .koptions : AT (ADDR(.koptions) - phys_offset) {
+    // No-MMU kernels map the KIP with a separate region! So the kernel image
+    // region actually starts from here in this case.
+    _kernel_kip_end = .;
     *(.koptions)
   } :koptions :l4_koptions
 
