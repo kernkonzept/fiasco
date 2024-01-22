@@ -203,7 +203,7 @@ Mem_space::dir_shutdown()
 IMPLEMENT inline
 Mem_space::Status
 Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order size,
-		    Attr page_attribs)
+		    Attr page_attribs, bool)
 {
   //assert(size == Size(Config::PAGE_SIZE)
   //       || size == Size(Config::SUPERPAGE_SIZE));

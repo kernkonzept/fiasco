@@ -97,6 +97,7 @@ public:
    * @param virt  Virtual address for which an entry should be created.
    * @param size  log2 of the page frame size.
    * @param page_attribs  Attributes for the mapping (see Page::Attr).
+   * @param ku_mem        Is it a kernel-user memory mapping?
    * @return Insert_ok if a new mapping was created;
    *         Insert_warn_exists if the mapping already exists;
    *         Insert_warn_attrib_upgrade if the mapping already existed but
@@ -112,7 +113,7 @@ public:
    */
   FIASCO_SPACE_VIRTUAL
   Status v_insert(Phys_addr phys, Vaddr virt, Page_order size,
-                  Attr page_attribs);
+                  Attr page_attribs, bool ku_mem = false);
 
   /** Look up a page-table entry.
    *

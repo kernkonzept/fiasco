@@ -129,7 +129,7 @@ Task::alloc_ku_mem_chunk(User_ptr<void> u_addr, unsigned size, void **k_addr)
 
       Mem_space::Status res =
         static_cast<Mem_space*>(this)->v_insert(pa, user_va, page_order,
-            Mem_space::Attr::space_local(L4_fpage::Rights::URW()));
+            Mem_space::Attr::space_local(L4_fpage::Rights::URW()), true);
 
       switch (res)
         {

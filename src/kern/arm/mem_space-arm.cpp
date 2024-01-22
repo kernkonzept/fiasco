@@ -130,7 +130,7 @@ void Mem_space::kernel_space(Mem_space *_k_space)
 IMPLEMENT
 Mem_space::Status
 Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order size,
-                    Attr page_attribs)
+                    Attr page_attribs, bool)
 {
   bool const flush = _current.current() == this;
   assert (cxx::is_zero(cxx::get_lsb(Phys_addr(phys), size)));

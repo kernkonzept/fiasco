@@ -273,7 +273,7 @@ PUBLIC
 Mem_space::Status
 Vm_vmx_ept::v_insert(Mem_space::Phys_addr phys, Mem_space::Vaddr virt,
                      Mem_space::Page_order size,
-                     Mem_space::Attr page_attribs) override
+                     Mem_space::Attr page_attribs, bool) override
 {
   // insert page into page table
 
