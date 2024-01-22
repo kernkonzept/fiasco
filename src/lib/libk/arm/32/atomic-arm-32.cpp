@@ -149,7 +149,7 @@ atomic_add_fetch(T *mem, V value)
 }
 
 // --------------------------------------------------------------------
-IMPLEMENTATION[arm && arm_v6plus && arm_lpae]:
+IMPLEMENTATION[arm && arm_v6plus && (arm_lpae || arm_v8plus)]:
 
 #include <cxx/type_traits>
 
@@ -216,7 +216,7 @@ atomic_add_fetch(T *mem, V value)
 }
 
 // --------------------------------------------------------------------
-IMPLEMENTATION[arm && arm_v6plus && mp && !arm_lpae]:
+IMPLEMENTATION[arm && arm_v6plus && mp && !(arm_lpae || arm_v8plus)]:
 
 #include <cxx/type_traits>
 
@@ -292,7 +292,7 @@ atomic_add_fetch(T *mem, V value)
 }
 
 // --------------------------------------------------------------------
-IMPLEMENTATION[arm && arm_v6plus && !mp && !arm_lpae]:
+IMPLEMENTATION[arm && arm_v6plus && !mp && !(arm_lpae || arm_v8plus)]:
 
 #include <cxx/type_traits>
 
