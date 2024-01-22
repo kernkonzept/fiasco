@@ -208,11 +208,11 @@ Vm_vmx_ept::Epte_ptr::set(Unsigned64 v)
     Unsigned32 u[2];
   };
 
-  T *t = (T*)e;
+  T *t = reinterpret_cast<T*>(e);
 
-  write_now(&t->u[0], Unsigned32(0));
-  write_now(&t->u[1], Unsigned32(v >> 32));
-  write_now(&t->u[0], Unsigned32(v));
+  write_now(&t->u[0], 0U);
+  write_now(&t->u[1], static_cast<Unsigned32>(v >> 32));
+  write_now(&t->u[0], static_cast<Unsigned32>(v));
 }
 
 // -------------------------------------------------------------------------

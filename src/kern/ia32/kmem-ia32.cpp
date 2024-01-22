@@ -300,9 +300,9 @@ Kmem::map_kernel_virt(Kpdir *dir)
   extern char _initcall_end[];
 
   Address virt = Mem_layout::Kernel_image;
-  Address text = (Address)&_kernel_text_start;
-  Address data = Super_pg::trunc((Address)&_kernel_data_start);
-  Address kend = Super_pg::round((Address)&_initcall_end);
+  Address text = reinterpret_cast<Address>(&_kernel_text_start);
+  Address data = Super_pg::trunc(reinterpret_cast<Address>(&_kernel_data_start));
+  Address kend = Super_pg::round(reinterpret_cast<Address>(&_initcall_end));
 
   Kmem_alloc *const alloc = Kmem_alloc::allocator();
   bool ok = true;
@@ -721,8 +721,8 @@ Kmem::setup_cpu_structures_isolation(Cpu &cpu, Kpdir *cpu_dir,
 
   auto *alloc = Kmem_alloc::allocator();
 
-  Address ki_page = Pg::trunc((Address)_kernel_text_start);
-  Address kie_page = Pg::round((Address)_kernel_text_entry_end);
+  Address ki_page = Pg::trunc(reinterpret_cast<Address>(_kernel_text_start));
+  Address kie_page = Pg::round(reinterpret_cast<Address>(_kernel_text_entry_end));
 
   if (Print_info)
     printf("kernel code: %p(%lx)-%p(%lx)\n", _kernel_text_start,
@@ -745,7 +745,7 @@ Kmem::setup_cpu_structures_isolation(Cpu &cpu, Kpdir *cpu_dir,
   assert(estack != nullptr);
 
   setup_cpu_structures(cpu, cpu_alloc, tss_alloc);
-  cpu.get_tss()->_hw.ctx.rsp0 = (Address)(estack + estack_sz);
+  cpu.get_tss()->_hw.ctx.rsp0 = reinterpret_cast<Address>(estack + estack_sz);
 }
 
 //--------------------------------------------------------------------------
@@ -758,8 +758,10 @@ Kmem::prepare_kernel_entry_points(Lockless_alloc *, Kpdir *cpu_dir)
   extern char _kernel_data_entry_start[];
   extern char _kernel_data_entry_end[];
 
-  Address kd_page = Pg::trunc((Address)_kernel_data_entry_start);
-  Address kde_page = Pg::round((Address)_kernel_data_entry_end);
+  Address kd_page =
+    Pg::trunc(reinterpret_cast<Address>(_kernel_data_entry_start));
+  Address kde_page =
+    Pg::round(reinterpret_cast<Address>(_kernel_data_entry_end));
 
   if (Print_info)
     printf("kernel entry data: %p(%lx)-%p(%lx)\n", _kernel_data_entry_start,
@@ -846,7 +848,7 @@ Kmem::init_cpu(Cpu &cpu)
 
   unsigned const cpu_dir_sz = sizeof(Kpdir) * Num_cpu_dirs;
 
-  Kpdir *cpu_dir = (Kpdir*)alloc->alloc(Bytes(cpu_dir_sz));
+  Kpdir *cpu_dir = static_cast<Kpdir*>(alloc->alloc(Bytes(cpu_dir_sz)));
   memset (cpu_dir, 0, cpu_dir_sz);
 
   auto src = kdir->walk(Virt_addr(0), 0);
@@ -858,9 +860,11 @@ Kmem::init_cpu(Cpu &cpu)
 
   for (unsigned i = 0; i < ((Kglobal_area_end - Kglobal_area) >> 30); ++i)
     {
-      auto src = kdir->walk(Virt_addr(Kglobal_area + (((Address)i) << 30)), 1);
-      auto dst = cpu_dir->walk(Virt_addr(Kglobal_area + (((Address)i) << 30)), 1,
-                               false, pdir_alloc(alloc));
+      auto src =
+        kdir->walk(Virt_addr(Kglobal_area + (Address{i} << 30)), 1);
+      auto dst =
+        cpu_dir->walk(Virt_addr(Kglobal_area + (Address{i} << 30)), 1,
+                                false, pdir_alloc(alloc));
 
       if (dst.level != 1)
         panic("could not setup per-cpu page table: %d\n", __LINE__);

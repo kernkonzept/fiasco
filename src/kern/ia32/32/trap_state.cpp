@@ -228,7 +228,7 @@ Trap_state::value3(Mword value)
 PUBLIC inline NEEDS["atomic.h"] 
 void
 Trap_state::consume_instruction(unsigned count)
-{ local_cas((Address*)(&_ip), _ip, _ip + count); }
+{ local_cas(&_ip, _ip, _ip + count); }
 
 PUBLIC
 void
@@ -242,7 +242,7 @@ Trap_state::dump()
          "CS %04lx SS %04lx DS %04lx ES %04lx FS %04lx GS %04lx\n"
          "trap %lu (%s), error %08lx, from %s mode\n",
 	 _ax, _bx, _cx, _dx,
-	 _si, _di, _bp, from_user ? _sp : (Unsigned32)&_sp,
+	 _si, _di, _bp, from_user ? _sp : reinterpret_cast<Unsigned32>(&_sp),
 	 _ip, _flags,
 	 _cs & 0xffff, from_user ? _ss & 0xffff : Cpu::get_ss() & 0xffff,
 	 _ds & 0xffff, _es & 0xffff, _fs & 0xffff, _gs & 0xffff,

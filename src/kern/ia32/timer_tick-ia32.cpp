@@ -36,7 +36,8 @@ Timer_tick::set_vectors_stop()
   Timer_tick::_glbl_timer->ack();
 
   // set timer interrupt to dummy doing nothing
-  Idt::set_entry(Config::scheduler_irq_vector, (Address)entry_int_timer_stop, false);
+  Idt::set_entry(Config::scheduler_irq_vector,
+                 reinterpret_cast<Address>(entry_int_timer_stop), false);
 #if 0
   // From ``8259A PROGRAMMABLE INTERRUPT CONTROLLER (8259A 8259A-2)'': If no
   // interrupt request is present at step 4 of either sequence (i. e. the

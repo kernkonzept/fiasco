@@ -87,7 +87,7 @@ Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
   if (EXPECT_FALSE((tag.words() * sizeof(Mword)) < sizeof(Trex)))
     return true;
 
-  Trap_state *ts = (Trap_state*)rcv->_utcb_handler;
+  Trap_state *ts = static_cast<Trap_state*>(rcv->_utcb_handler);
   Unsigned32  cs = ts->cs();
   Utcb *snd_utcb = snd->utcb().access();
   Trex const *src = reinterpret_cast<Trex const *>(snd_utcb->values);
@@ -99,8 +99,7 @@ Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
       // triggered exception pending, skip ip, cs, flags, and sp
       Mem::memcpy_mwords(ts, &src->s, Ts::Reg_words);
       Continuation::User_return_frame const *urfp
-        = reinterpret_cast<Continuation::User_return_frame const *>(
-            (char*)&src->s._ip);
+        = reinterpret_cast<Continuation::User_return_frame const *>(&src->s._ip);
 
       Continuation::User_return_frame urf = access_once(urfp);
 
@@ -137,7 +136,7 @@ bool FIASCO_WARN_RESULT
 Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
                         L4_fpage::Rights rights)
 {
-  Trap_state *ts = (Trap_state*)snd->_utcb_handler;
+  Trap_state *ts = static_cast<Trap_state*>(snd->_utcb_handler);
   Utcb *rcv_utcb = rcv->utcb().access();
   Trex *dst = reinterpret_cast<Trex *>(rcv_utcb->values);
     {
@@ -146,8 +145,7 @@ Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
         {
           Mem::memcpy_mwords(&dst->s, ts, Ts::Reg_words + Ts::Code_words);
           Continuation::User_return_frame *d
-            = reinterpret_cast<Continuation::User_return_frame *>(
-                (char*)&dst->s._ip);
+            = reinterpret_cast<Continuation::User_return_frame *>(&dst->s._ip);
 
           snd->_exc_cont.get(d, trap_state_to_rf(ts));
         }
@@ -186,43 +184,43 @@ Thread::check_trap13_kernel(Trap_state *ts)
       // killed.
       // XXX Should we emulate this too? Michael Hohmuth: Yes, we should.
       if (EXPECT_FALSE(!(ts->_ds & 0xffff)))
-	{
-	  Cpu::set_ds(Gdt::data_segment());
-	  return 0;
-	}
+        {
+          Cpu::set_ds(Gdt::data_segment());
+          return 0;
+        }
       if (EXPECT_FALSE(!(ts->_es & 0xffff)))
-	{
-	  Cpu::set_es(Gdt::data_segment());
-	  return 0;
-	}
+        {
+          Cpu::set_es(Gdt::data_segment());
+          return 0;
+        }
       if (EXPECT_FALSE(ts->_ds & 0xfff8) == Gdt::gdt_code_user)
-	{
-	  WARN("%p eip=%08lx: code selector ds=%04lx",
-               (void *)this, ts->ip(), ts->_ds & 0xffff);
-	  Cpu::set_ds(Gdt::data_segment());
-	  return 0;
-	}
+        {
+          WARN("%p eip=%08lx: code selector ds=%04lx",
+               static_cast<void *>(this), ts->ip(), ts->_ds & 0xffff);
+          Cpu::set_ds(Gdt::data_segment());
+          return 0;
+        }
       if (EXPECT_FALSE(ts->_es & 0xfff8) == Gdt::gdt_code_user)
-	{
-	  WARN("%p eip=%08lx: code selector es=%04lx",
-               (void *)this, ts->ip(), ts->_es & 0xffff);
-	  Cpu::set_es(Gdt::data_segment());
-	  return 0;
-	}
+        {
+          WARN("%p eip=%08lx: code selector es=%04lx",
+               static_cast<void *>(this), ts->ip(), ts->_es & 0xffff);
+          Cpu::set_es(Gdt::data_segment());
+          return 0;
+        }
       if (EXPECT_FALSE(ts->_fs & 0xfff8) == Gdt::gdt_code_user)
-	{
-	  WARN("%p eip=%08lx: code selector fs=%04lx",
-               (void *)this, ts->ip(), ts->_fs & 0xffff);
-	  ts->_fs = 0;
-	  return 0;
-	}
+        {
+          WARN("%p eip=%08lx: code selector fs=%04lx",
+               static_cast<void *>(this), ts->ip(), ts->_fs & 0xffff);
+          ts->_fs = 0;
+          return 0;
+        }
       if (EXPECT_FALSE(ts->_gs & 0xfff8) == Gdt::gdt_code_user)
-	{
-	  WARN("%p eip=%08lx: code selector gs=%04lx",
-               (void *)this, ts->ip(), ts->_gs & 0xffff);
-	  ts->_gs = 0;
-	  return 0;
-	}
+        {
+          WARN("%p eip=%08lx: code selector gs=%04lx",
+               static_cast<void *>(this), ts->ip(), ts->_gs & 0xffff);
+          ts->_gs = 0;
+          return 0;
+        }
     }
 
   return 1;
@@ -309,7 +307,8 @@ Thread::call_nested_trap_handler(Trap_state *ts)
   else
     p.stack = 0;
 
-  p.pdir = Kernel_task::kernel_task()->virt_to_phys((Address)Kmem::dir());
+  p.pdir = Kernel_task::kernel_task()
+             ->virt_to_phys(reinterpret_cast<Address>(Kmem::dir()));
   p.handler = nested_trap_handler;
 
   // don't set %esp if gdb fault recovery to ensure that exceptions inside

@@ -32,9 +32,9 @@ enum
 extern char sys_call_##sysc, sys_call_##sysc##_end
 
 #define COPY_SYSCALL(sysc) do { \
-memcpy( (char*)Mem_layout::Syscalls + Offs_##sysc, &sys_call_##sysc, \
+memcpy( reinterpret_cast<char*>(Mem_layout::Syscalls) + Offs_##sysc, &sys_call_##sysc, \
         &sys_call_##sysc##_end- &sys_call_##sysc ); \
-memcpy( (char*)Kip::k() + Offs_kip_##sysc, &sys_call_##sysc, \
+memcpy( reinterpret_cast<char*>(Kip::k()) + Offs_kip_##sysc, &sys_call_##sysc, \
         &sys_call_##sysc##_end- &sys_call_##sysc ); } while (0)
 
 
@@ -45,8 +45,8 @@ Sys_call_page::init()
   SYSCALL_SYMS(invoke);
   SYSCALL_SYMS(se_invoke);
 
-  if (!Vmem_alloc::page_alloc((void*)Mem_layout::Syscalls, 
-	Vmem_alloc::ZERO_FILL, Vmem_alloc::User))
+  if (!Vmem_alloc::page_alloc(reinterpret_cast<void*>(Mem_layout::Syscalls),
+                              Vmem_alloc::ZERO_FILL, Vmem_alloc::User))
     panic("Can't allocate system-call page.");
 
   printf ("Absolute KIP Syscalls using: %s\n",

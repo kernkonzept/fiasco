@@ -23,7 +23,8 @@ set_fast_entry(Cpu_number, void (*func)())
   auto ofs = syscall_entry_reloc - syscall_entry_code + 3;
   auto reloc = reinterpret_cast<Signed32 *>(
     Mem_layout::Mem_layout::Kentry_cpu_syscall_entry + ofs);
-  check(Jdb::poke(Jdb_addr<Signed32>::kmem_addr(reloc), (Signed32)(Signed64)func));
+  check(Jdb::poke(Jdb_addr<Signed32>::kmem_addr(reloc),
+                  static_cast<Signed32>(reinterpret_cast<Signed64>(func))));
 }
 
 //--------------------------------------------------------------------------
@@ -149,7 +150,7 @@ Jdb_set_trace::set_ipc_vector_int()
   else
     int30_entry = entry_sys_ipc_c;
 
-  Idt::set_entry(0x30, (Address) int30_entry, true);
+  Idt::set_entry(0x30, reinterpret_cast<Address>(int30_entry), true);
 }
 
 IMPLEMENTATION [amd64]:

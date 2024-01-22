@@ -103,7 +103,10 @@ private:
     }
 
     static void reset_id(Mem_space *o, Cpu_number cpu)
-    { write_now(&o->_asid[cpu], (unsigned long)Mem_unit::Asid_invalid); }
+    {
+      write_now(&o->_asid[cpu],
+                static_cast<unsigned long>(Mem_unit::Asid_invalid));
+    }
   };
 
   struct Asid_alloc : Id_alloc<Unsigned16, Mem_space, Asid_ops>

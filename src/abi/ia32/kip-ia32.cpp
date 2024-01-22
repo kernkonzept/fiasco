@@ -31,5 +31,5 @@ PUBLIC
 Vhw_descriptor *
 Kip::vhw() const
 {
-  return reinterpret_cast<Vhw_descriptor*>(((unsigned long)this) + vhw_offset);
+  return offset_cast<Vhw_descriptor*>(this, vhw_offset);
 }

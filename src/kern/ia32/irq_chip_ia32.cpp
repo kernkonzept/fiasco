@@ -302,7 +302,8 @@ Irq_chip_ia32::_vsetup(Irq_base *irq, Mword pin, unsigned vector)
   // force code to memory before setting IDT entry
   Mem::barrier();
 
-  Idt::set_entry(vector, (Address)&idt_irq_vector_stubs_text[vector - 0x20],
+  Idt::set_entry(vector, reinterpret_cast<Address>(
+                           &idt_irq_vector_stubs_text[vector - 0x20]),
                  false);
   return vector;
 }

@@ -159,8 +159,8 @@ Cpu::init_tss_dbf(Tss *tss_dbf, Address kdir)
   _tss_dbf->_hw.ctx.es     = Gdt::gdt_data_kernel;
   _tss_dbf->_hw.ctx.fs     = Gdt::gdt_data_kernel;
   _tss_dbf->_hw.ctx.gs     = Gdt::gdt_data_kernel;
-  _tss_dbf->_hw.ctx.eip    = (Address)entry_vec08_dbf;
-  _tss_dbf->_hw.ctx.esp    = (Address)&dbf_stack_top;
+  _tss_dbf->_hw.ctx.eip    = reinterpret_cast<Address>(entry_vec08_dbf);
+  _tss_dbf->_hw.ctx.esp    = reinterpret_cast<Address>(&dbf_stack_top);
   _tss_dbf->_hw.ctx.ldt    = 0;
   _tss_dbf->_hw.ctx.eflags = 0x00000082;
   _tss_dbf->_hw.ctx.cr3    = kdir;
@@ -191,7 +191,7 @@ PUBLIC FIASCO_INIT_CPU
 void
 Cpu::init_gdt(Address gdt_mem, Address user_max)
 {
-  gdt = new ((void *)gdt_mem) Gdt();
+  gdt = new (reinterpret_cast<void *>(gdt_mem)) Gdt();
 
   // make sure kernel cs/ds and user cs/ds are placed in the same
   // cache line, respectively; pre-set all "accessed" flags so that
@@ -219,8 +219,8 @@ PRIVATE inline
 void
 Cpu::set_sysenter(void (*func)(void))
 {
-  _sysenter_eip = (Mword) func;
-  wrmsr((Mword) func, 0, MSR_SYSENTER_EIP);
+  _sysenter_eip = reinterpret_cast<Mword>(func);
+  wrmsr(reinterpret_cast<Mword>(func), 0, MSR_SYSENTER_EIP);
 }
 
 
@@ -237,7 +237,7 @@ void
 Cpu::setup_sysenter() const
 {
   wrmsr(Gdt::gdt_code_kernel, 0, MSR_SYSENTER_CS);
-  wrmsr((unsigned long)&kernel_sp(), 0, MSR_SYSENTER_ESP);
+  wrmsr(reinterpret_cast<unsigned long>(&kernel_sp()), 0, MSR_SYSENTER_ESP);
   wrmsr(_sysenter_eip, 0, MSR_SYSENTER_EIP);
 }
 
@@ -247,7 +247,7 @@ Cpu::init_sysenter()
 {
   if (sysenter())
     {
-      _sysenter_eip = (Mword)entry_sys_fast_ipc_c;
+      _sysenter_eip = reinterpret_cast<Mword>(entry_sys_fast_ipc_c);
       setup_sysenter();
     }
 }

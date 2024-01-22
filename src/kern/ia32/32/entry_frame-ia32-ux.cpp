@@ -50,8 +50,8 @@ Return_frame::ip_syscall_user() const
 {
   Address eip = ip();
   if ((eip & Mem_layout::Syscalls) == Mem_layout::Syscalls
-      && (int)Config::Access_user_mem == Config::Access_user_mem_direct)
-     eip = *(Mword *)sp();
+      && int{Config::Access_user_mem} == Config::Access_user_mem_direct)
+     eip = *reinterpret_cast<Mword *>(sp());
   return eip;
 }
 

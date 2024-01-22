@@ -30,7 +30,8 @@ public:
 class Pte_ptr
 {
 public:
-  Pte_ptr(void *pte, unsigned char level) : pte((Mword*)pte), level(level) {}
+  Pte_ptr(void *pte, unsigned char level)
+  : pte(static_cast<Mword*>(pte)), level(level) {}
   Pte_ptr() = default;
 
   typedef Mword Entry;

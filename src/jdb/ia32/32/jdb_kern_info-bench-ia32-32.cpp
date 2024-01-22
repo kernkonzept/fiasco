@@ -27,7 +27,7 @@ Jdb_kern_info_bench::get_time_now()
 
 #define inst_invlpg							\
   asm volatile ("invlpg %0" 						\
-		: : "m" (*(char*)Mem_layout::Kmem_tmp_page_1))
+		: : "m" (*reinterpret_cast<char*>(Mem_layout::Kmem_tmp_page_1)))
 
 #define inst_read_cr3							\
   asm volatile ("mov %%cr3,%0"						\
@@ -96,7 +96,8 @@ Jdb_kern_info_bench::show_arch()
 
   // we need a cached, non-global mapping for measuring the time to load
   // TLB entries
-  Address phys = Kmem::virt_to_phys((void*)Mem_layout::Tbuf_status_page);
+  Address phys =
+    Kmem::virt_to_phys(reinterpret_cast<void*>(Mem_layout::Tbuf_status_page));
   Kmem::map_phys_page(phys, Mem_layout::Jdb_bench_page, true, false);
 
     {
@@ -152,7 +153,8 @@ Jdb_kern_info_bench::show_arch()
     {
       // write a GDT entry, set ES segment descriptor to this gdt entry
       // and access memory through the ES segment
-      Unsigned32 *gdt_e = (Unsigned32*)&(*gdt)[Gdt::gdt_data_kernel/8];
+      Unsigned32 *gdt_e =
+        reinterpret_cast<Unsigned32*>(&(*gdt)[Gdt::gdt_data_kernel/8]);
       time = Cpu::rdtsc();
       asm volatile ("mov  $200000,%%ebx		\n\t"
 		    ".align 16			\n\t"
@@ -179,7 +181,8 @@ Jdb_kern_info_bench::show_arch()
       // segment is loaded with limit = 0xffffffff if small spaces are active
       Idt::set_writable(true);
       Gdt_entry orig = (*gdt)[Gdt::gdt_code_user/8];
-      Unsigned32 *gdt_e = (Unsigned32*)&(*gdt)[Gdt::gdt_code_user/8];
+      Unsigned32 *gdt_e =
+        reinterpret_cast<Unsigned32*>(&(*gdt)[Gdt::gdt_code_user/8]);
       gdt_e[0] = 0x0000FFFF;
       gdt_e[1] = 0x00CFFB00;
       asm volatile ("pushf			\n\t"
@@ -243,7 +246,7 @@ Jdb_kern_info_bench::show_arch()
 		      "i"(0x1f),
 		      "i"(Gdt::gdt_data_user | Gdt::Selector_user),
 		      "i"(Gdt::gdt_code_user | Gdt::Selector_user),
-		      "c"((Address)Cpu::boot_cpu()->kernel_sp())
+		      "c"(reinterpret_cast<Address>(Cpu::boot_cpu()->kernel_sp()))
 		    : "ebx", "esi", "edi", "memory");
       Idt::set_writable(false);
       (*gdt)[Gdt::gdt_code_user/8] = orig;
@@ -466,9 +469,12 @@ Jdb_kern_info_bench::show_arch()
     }
     {
       // asm ("1: mov %%cr3,%%edx; mov %%edx, %%cr3; dec %%eax; jnz 1b; ret")
-      *(Unsigned32*)(Mem_layout::Jdb_bench_page + 0xff0) = 0x0fda200f;
-      *(Unsigned32*)(Mem_layout::Jdb_bench_page + 0xff4) = 0x7548da22;
-      *(Unsigned32*)(Mem_layout::Jdb_bench_page + 0xff8) = 0xc3f7;
+      *reinterpret_cast<Unsigned32*>(
+        Mem_layout::Jdb_bench_page + 0xff0) = 0x0fda200f;
+      *reinterpret_cast<Unsigned32*>(
+        Mem_layout::Jdb_bench_page + 0xff4) = 0x7548da22;
+      *reinterpret_cast<Unsigned32*>(
+        Mem_layout::Jdb_bench_page + 0xff8) = 0xc3f7;
 
       Mem::barrier();
       time = Cpu::rdtsc();

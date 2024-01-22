@@ -39,8 +39,8 @@ Tb_entry_trap::set(Mword eip, Trap_state *ts)
   _error  = ts->_err;
   _cr2    = ts->_cr2;
   _eax    = ts->_ax;
-  _cs     = (Unsigned16)ts->cs();
-  _ds     = (Unsigned16)ts->_ds;
+  _cs     = ts->cs();
+  _ds     = ts->_ds;
   _esp    = ts->sp();
   _eflags = ts->flags();
 }

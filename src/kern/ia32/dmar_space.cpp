@@ -91,7 +91,7 @@ private:
       if (r & L4_fpage::Rights::W())
         {
           auto p = access_once(&e->v);
-          auto o = p & ~(Unsigned64)2;
+          auto o = p & ~2ULL;
           if (o != p)
             {
               write_now(&e->v, p);
@@ -110,7 +110,7 @@ private:
       typedef L4_fpage::Rights R;
 
       assert(level <= Dmar_pt::Depth);
-      Unsigned64 r = (level == Dmar_pt::Depth) ? 0 : (Unsigned64)(1<<7);
+      Unsigned64 r = (level == Dmar_pt::Depth) ? 0ULL : (1ULL << 7);
       r |= 1; // Read
       if (attr.rights & R::W()) r |= 2;
 
@@ -129,7 +129,7 @@ private:
 
 public:
   enum { Max_nr_did = 0x10000 };
-  virtual void *debug_dir() const { return (void *)_dmarpt; }
+  virtual void *debug_dir() const { return _dmarpt; }
   static void create_identity_map();
   static Dmar_pt *identity_map;
 
@@ -285,7 +285,7 @@ Dmar_space::get_did()
       if (EXPECT_FALSE(ndid == ~0U))
         return ~0UL;
 
-      if (!cas(&_did, (unsigned long)0, (unsigned long)ndid))
+      if (!cas<unsigned long>(&_did, 0UL, ndid))
         free_did(ndid);
     }
   return _did;

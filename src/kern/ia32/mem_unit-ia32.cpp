@@ -107,7 +107,7 @@ Mem_unit::_invalidate_pcid(unsigned pcid, Address  address, unsigned type)
     unsigned long pcid, address;
   } descriptor = { pcid, address };
   __asm__ __volatile__ ("invpcid %0, %1\n" : : "m" (descriptor),
-                                               "r" ((unsigned long)type)
+                                               "r" (Mword{type})
                                              : "memory");
 }
 

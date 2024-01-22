@@ -566,15 +566,15 @@ IMPLEMENTATION[ia32]:
 static void
 Jdb::analyze_code(Cpu_number cpu)
 {
-  Jdb_entry_frame *entry_frame = Jdb::entry_frame.cpu(cpu);
+  Jdb_entry_frame *ef = Jdb::entry_frame.cpu(cpu);
   Space *task = get_task(cpu);
   // do nothing if page not mapped into this address space
-  if (entry_frame->ip()+1 > Kmem::user_max())
+  if (ef->ip()+1 > Kmem::user_max())
     return;
 
   Unsigned8 op1, op2;
 
-  Jdb_addr<Unsigned8> insn_ptr((Unsigned8*)entry_frame->ip(), task);
+  Jdb_addr<Unsigned8> insn_ptr(reinterpret_cast<Unsigned8*>(ef->ip()), task);
 
   if (   !peek(insn_ptr, op1)
       || !peek(insn_ptr + 1, op2))

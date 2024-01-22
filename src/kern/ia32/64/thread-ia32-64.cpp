@@ -98,7 +98,7 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
   // p[3] = CR3: CPU dir pa + 0x1000 (if PCID: + bit63 + ASID)
   // p[4] = kernel entry scratch register
 
-  Address *p = (Address *)Mem_layout::Kentry_cpu_page;
+  Address *p = reinterpret_cast<Address *>(Mem_layout::Kentry_cpu_page);
   handle_ia32_branch_barriers(&p[2]);
   handle_mds_mitigations(&p[2]);
 
