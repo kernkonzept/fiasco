@@ -1091,3 +1091,50 @@ Mword PF::addr_to_msgword0(Address pfa, Mword error)
     a |= 4;
   return a;
 }
+
+//---------------------------------------------------------------------------
+INTERFACE [arm && mpu]:
+
+#include "mpu.h"
+
+class Pdir : public Mpu_regions
+{
+public:
+  Pdir() : Mpu_regions(Mpu_regions_mask{}) {}
+  Pdir(Mpu_regions_mask const &reserved) : Mpu_regions(reserved) {}
+
+  // retained from Pdir_t
+  typedef Addr::Addr<Config::PAGE_SHIFT> Va; // same as physical address
+  typedef Addr::Addr<Config::PAGE_SHIFT>::Diff_type Vs;
+};
+
+class Kpdir : public Pdir
+{
+public:
+  /**
+   * Index of fixed-function regions in Fiasco. They are referenced by the
+   * entry assembly code too.
+   */
+  enum Well_known_regions {
+    Kernel_text = 0,
+    Kip = 1,
+    Kernel_heap = 2,
+  };
+
+private:
+  static Mpu_regions_mask well_known_regions()
+  {
+    Mpu_regions_mask m;
+    m.set_bit(Kernel_text);
+    m.set_bit(Kip);
+    m.set_bit(Kernel_heap);
+    return m;
+  }
+
+public:
+  // All well known regions are reserved and need to be added explicitly.
+  Kpdir() : Pdir(well_known_regions()) {}
+
+  Address virt_to_phys(Address virt)
+  { return virt; }
+};
