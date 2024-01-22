@@ -681,7 +681,7 @@ alien_syscall: @ Do it for an alien ---------------------------------------
 	subeq	lr, lr, #4                  @ A32: adjust pc to be on SVC insn
 	subne	lr, lr, #2                  @ T32: adjust pc to be on SVC insn
 	str	lr, [sp, #RF(PC,     13*4)] @ store to entry_stack_PC
-	enter_slowtrap_w_stack GET_HSR(0x3d)
+	enter_slowtrap_w_stack GET_HSR(0x11)
 	@ Never reach this -- end up in user land after exception reply
 
 1:	@ Resume the alien system call ------------------------------------
@@ -695,7 +695,7 @@ alien_syscall: @ Do it for an alien ---------------------------------------
 	@ The trap occurs at the insn where the system call returns to.
 	@ Set the bit 0x00000040 to indicate a trap after the resumed 
 	@ system call.
-	enter_slowtrap_w_stack GET_HSR(0x3d), 0x40
+	enter_slowtrap_w_stack GET_HSR(0x11), 0x40
 
 	
 GEN_VCPU_UPCALL OFS__THREAD__USER_VCPU
