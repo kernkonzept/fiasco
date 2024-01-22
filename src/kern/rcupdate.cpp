@@ -193,27 +193,11 @@ IMPLEMENTATION:
 #include "lock_guard.h"
 #include "mem.h"
 #include "static_init.h"
-#include "timeout.h"
 #include "logdefs.h"
-
-
-class Rcu_timeout : public Timeout
-{
-};
-
-/**
- * Timeout expiration callback function
- * @return true if reschedule is necessary, false otherwise
- */
-PRIVATE
-bool
-Rcu_timeout::expired() override
-{ return Rcu::process_callbacks(); }
 
 
 Rcu_glbl Rcu::_rcu INIT_PRIORITY(EARLY_INIT_PRIO);
 DEFINE_PER_CPU Per_cpu<Rcu_data> Rcu::_rcu_data(Per_cpu_data::Cpu_num);
-DEFINE_PER_CPU static Per_cpu<Rcu_timeout> _rcu_timeout;
 
 PUBLIC
 Rcu_glbl::Rcu_glbl()
@@ -512,11 +496,6 @@ Rcu_data::pending(Rcu_glbl *rgp) const
 
 PUBLIC static inline NEEDS["globals.h"]
 bool FIASCO_WARN_RESULT
-Rcu::process_callbacks()
-{ return _rcu_data.current().process_callbacks(&_rcu); }
-
-PUBLIC static inline NEEDS["globals.h"]
-bool FIASCO_WARN_RESULT
 Rcu::process_callbacks(Cpu_number cpu)
 { return _rcu_data.cpu(cpu).process_callbacks(&_rcu); }
 
@@ -539,15 +518,6 @@ PUBLIC static inline
 void
 Rcu::inc_q_cnt(Cpu_number cpu)
 { _rcu_data.cpu(cpu)._q_passed = true; }
-
-PUBLIC static
-void
-Rcu::schedule_callbacks(Cpu_number cpu, Unsigned64 clock)
-{
-  Timeout *t = &_rcu_timeout.cpu(cpu);
-  if (!t->is_set())
-    t->set(clock, cpu);
-}
 
 PUBLIC static inline NEEDS["cpu_lock.h"]
 Rcu::Lock *
