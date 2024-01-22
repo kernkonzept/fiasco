@@ -49,6 +49,7 @@ class Rcu_item : public cxx::S_list_item
   friend class Rcu_data;
   friend class Rcu;
   friend class Jdb_rcupdate;
+  friend class Rcu_tester;
 
 private:
   bool (*_call_back)(Rcu_item *) = nullptr;
