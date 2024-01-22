@@ -905,8 +905,7 @@ Thread::send_exception(Trap_state *ts)
       if (EXPECT_FALSE(space()->is_sigma0()))
         {
           ts->dump();
-          WARNX(Error, "Sigma0 raised an exception --> HALT\n");
-          panic("...");
+          panic("Sigma0 raised an exception");
         }
 
       handler = this; // block on ourselves
