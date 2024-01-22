@@ -236,18 +236,18 @@ IMPLEMENT inline
 void
 Context::save_ext_vcpu_state_mxu(Vm_state *v)
 {
-  asm volatile ("mrrc p15, 0, %Q0, %R0, c2" : "=r"(v->ttbr0));
-  asm volatile ("mrrc p15, 1, %Q0, %R0, c2" : "=r"(v->ttbr1));
-  asm volatile ("mrc p15, 0, %0, c2, c0, 2" : "=r"(v->ttbcr));
-  asm volatile ("mrc p15, 0, %0, c3, c0, 0" : "=r"(v->dacr));
+  asm volatile ("mrrc p15, 0, %Q0, %R0, c2" : "=r"(v->mmu.ttbr0));
+  asm volatile ("mrrc p15, 1, %Q0, %R0, c2" : "=r"(v->mmu.ttbr1));
+  asm volatile ("mrc p15, 0, %0, c2, c0, 2" : "=r"(v->mmu.ttbcr));
+  asm volatile ("mrc p15, 0, %0, c3, c0, 0" : "=r"(v->mmu.dacr));
 }
 
 IMPLEMENT inline
 void
 Context::load_ext_vcpu_state_mxu(Vm_state const *v)
 {
-  asm volatile ("mcrr p15, 0, %Q0, %R0, c2" : : "r"(v->ttbr0));
-  asm volatile ("mcrr p15, 1, %Q0, %R0, c2" : : "r"(v->ttbr1));
-  asm volatile ("mcr p15, 0, %0, c2, c0, 2" : : "r"(v->ttbcr));
-  asm volatile ("mcr p15, 0, %0, c3, c0, 0" : : "r"(v->dacr));
+  asm volatile ("mcrr p15, 0, %Q0, %R0, c2" : : "r"(v->mmu.ttbr0));
+  asm volatile ("mcrr p15, 1, %Q0, %R0, c2" : : "r"(v->mmu.ttbr1));
+  asm volatile ("mcr p15, 0, %0, c2, c0, 2" : : "r"(v->mmu.ttbcr));
+  asm volatile ("mcr p15, 0, %0, c3, c0, 0" : : "r"(v->mmu.dacr));
 }
