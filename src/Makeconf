@@ -250,6 +250,7 @@ GCCINCDIR   := $(shell $(CXX) $(SHARED_FLAGS) -print-file-name=include)
 # - set V=0 to prevent printing them (default)
 # - set V=1 to see the command line of all tools except the preprocessor
 # - set V=2 to see the command line of all tools including the preprocessor
+#           and verbose output from `move-if-change`
 VERBOSE         ?= @
 VERBOSE_PREP    ?= @
 ifeq ($(V),1)
@@ -277,7 +278,7 @@ COMP_MESSAGE_NOOPT ?= $(COMP_MESSAGE)
 
 ADD_CONFIGFILE   = $(VERBOSE)$(OBJCOPY) --add-section .debug.fiasco_config=globalconfig.out $(1)
 
-ifneq ($(VERBOSE),)
+ifneq ($(V),2)
 MOVE_IF_CHANGE += -q
 endif
 
