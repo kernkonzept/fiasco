@@ -154,6 +154,7 @@ INTERFACES_KERNEL += 	__main kmem_space boot_uart_init     \
 NEED_MEM_CHUNK = $(or $(and $(CONFIG_ARM_GIC_MSI),$(CONFIG_HAVE_ARM_GICV3)),\
                       $(CONFIG_IOMMU))
 
+INTERFACES_KERNEL-$(CONFIG_MPU) += mpu
 INTERFACES_KERNEL-$(NEED_MEM_CHUNK) += mem_chunk
 INTERFACES_KERNEL-$(CONFIG_ARM_ACPI) += acpi acpi_fadt
 INTERFACES_KERNEL-$(CONFIG_ARM_MPCORE) += scu
@@ -241,6 +242,7 @@ vgic_IMPL		:= vgic
 vgic_v3_IMPL		:= vgic_v3 vgic_v3-$(BITS)
 vmem_alloc_IMPL	  	:= vmem_alloc vmem_alloc-arch
 tb_entry_IMPL		:= tb_entry tb_entry-arm
+mpu_IMPL                := mpu mpu-arm-$(BITS)
 
 
 ifeq ("$(CONFIG_JDB)","y")
