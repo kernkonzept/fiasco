@@ -254,6 +254,9 @@ safe_sysret:
 	mov	%rax, %cr3
 	xor	%eax, %eax
 	xor	%ebx, %ebx
+	/* make RIP canonical, workaround for Intel IA32e flaw */
+	shl     $16, %rcx
+	sar     $16, %rcx
 	xor	%edx, %edx
 	xor	%ebp, %ebp
 	xor	%esi, %esi

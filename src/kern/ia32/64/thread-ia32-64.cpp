@@ -17,6 +17,9 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
      "  mov %[flags], %%r11 \n"
      "  xor %%eax, %%eax    \n"
      "  xor %%ebx, %%ebx    \n"
+     /* make RIP canonical, workaround for Intel IA32e flaw */
+     "  shl     $16, %%rcx  \n"
+     "  sar     $16, %%rcx  \n"
      "  xor %%edx, %%edx    \n"
      "  xor %%ebp, %%ebp    \n"
      "  xor %%esi, %%esi    \n"

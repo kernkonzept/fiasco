@@ -68,7 +68,7 @@
 #endif
 
 .macro SAFE_SYSRET
-	/* make RIP canonical, workaround for intel IA32e flaw */
+	/* make RIP canonical, workaround for Intel IA32e flaw */
 	shl     $16, %rcx
 	sar     $16, %rcx
 #ifdef CONFIG_KERNEL_ISOLATION
