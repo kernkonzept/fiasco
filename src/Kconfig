@@ -37,6 +37,9 @@ config HAS_CPU_VIRT
 config HAS_IRQ_DIRECT_INJECT_OPTION
 	bool
 
+config HAS_CPU_MPU
+	bool
+
 menu "Target configuration"
 
 choice
@@ -101,6 +104,12 @@ config ABI_VF
 	def_bool y
 
 # PF_SECTION: CPU
+
+config MMU
+	def_bool y if !HAS_CPU_MPU
+
+config MPU
+	def_bool y if HAS_CPU_MPU
 
 config CPU_VIRT
 	bool "Virtualization"
@@ -230,8 +239,9 @@ config KMEM_SIZE_AUTO
 config KMEM_SIZE_KB
 	int "Kernel memory size in KiB"
 	depends on !KMEM_SIZE_AUTO
-	range 2048 4194304
-	default 32768
+	range 16 4194304
+	default 32768 if MMU
+	default 256 if !MMU
 	help
 	  The amount of kernel memory in KiB. The size of the kernel memory can
 	  be overridden by the kernel command line parameter "-kmemsize" passed
@@ -377,13 +387,14 @@ config IRQ_DIRECT_INJECT
 
 config DISABLE_VIRT_OBJ_SPACE
 	bool "No virtually mapped array for cap tables" if HAS_VIRT_OBJ_SPACE_OPTION
-	depends on HAS_VIRT_OBJ_SPACE_OPTION &&  EXPERIMENTAL
+	depends on HAS_VIRT_OBJ_SPACE_OPTION && EXPERIMENTAL && MMU
 
 config VIRT_OBJ_SPACE
 	def_bool y
 	depends on HAS_VIRT_OBJ_SPACE_OPTION
 	depends on !DISABLE_VIRT_OBJ_SPACE
 	depends on !KERNEL_ISOLATION
+	depends on MMU
 
 config PHYS_OBJ_SPACE_AVL
 	bool "Use AVL tree for object space"

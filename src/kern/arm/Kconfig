@@ -5,7 +5,7 @@
 # ARCHSELECT:     HAS_FPU_OPTION
 # ARCHSELECT:     HAS_COV_OPTION if BIT64
 # ARCHSELECT:     FPU if CPU_VIRT
-# ARCHSELECT:     ARM_LPAE if CPU_VIRT || BIT64
+# ARCHSELECT:     ARM_LPAE if MMU && (CPU_VIRT || BIT64)
 # ARCHSELECT:     HAS_SERIAL_OPTION
 # ARCHSELECT:     HAS_JDB_DISASM_OPTION
 # ARCHSELECT:     HAS_JDB_GZIP_OPTION
@@ -369,12 +369,13 @@ config ARM_ENABLE_SWP
 config ARM_LPAE
 	bool "Use LPAE page table format"
 	depends on ARM_CORTEX_A15 || ARM_CORTEX_A7 || ARM_V8
+	depends on MMU
 	help
 	  Use the extended page table format (LPAE).
 
 config ARM_PT48
 	bool "Support user-level address space of 48bits (256TB)"
-	depends on CPU_VIRT && BIT64
+	depends on CPU_VIRT && BIT64 && MMU
 	help
 	  Build Fiasco with 4-level page-tables for user-level tasks. Requires
 	  a CPU model that supports at least 44bit physical addresses.
