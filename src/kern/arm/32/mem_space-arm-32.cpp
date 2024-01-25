@@ -1,3 +1,13 @@
+IMPLEMENTATION [arm && !mmu]:
+
+PROTECTED inline
+int
+Mem_space::sync_kernel()
+{
+  return 0;
+}
+
+//----------------------------------------------------------------------------
 IMPLEMENTATION [arm && mmu && !cpu_virt]:
 
 PROTECTED inline NEEDS["kmem_alloc.h"]

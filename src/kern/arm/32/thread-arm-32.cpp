@@ -18,6 +18,15 @@ Thread::mangle_kernel_lib_page_fault(Mword pc, Mword error_code)
 }
 
 //---------------------------------------------------------------------------
+IMPLEMENTATION [arm && 32bit && !mmu]:
+
+// No kernel lib page on no-MMU systems.
+PUBLIC static inline
+Mword
+Thread::mangle_kernel_lib_page_fault(Mword, Mword error_code)
+{ return error_code; }
+
+//---------------------------------------------------------------------------
 IMPLEMENTATION [arm && 32bit]:
 
 #include "mem_op.h"
