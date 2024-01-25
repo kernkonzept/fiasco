@@ -920,6 +920,12 @@ public:
   }
 
   /**
+   * Get the number of bits the bitmap can store.
+   */
+  static constexpr size_t size()
+  { return BITS; }
+
+  /**
    * Assignment operator.
    *
    * This variant accepts the source bitmap of the same type.
