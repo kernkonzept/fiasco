@@ -1,4 +1,12 @@
 // ------------------------------------------------------------------------
+INTERFACE [arm && pf_fvp_base_r]:
+
+EXTENSION class Platform_control
+{
+  enum { Max_cores = 4 };
+};
+
+// ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pf_fvp_base_r && mp]:
 
 #include "cpu.h"
@@ -16,8 +24,6 @@ PUBLIC static
 void
 Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
 {
-  enum { Max_cores = 4 };
-
   {
     // Other CPUs expect that it's safe to read Kmem::kdir. We will modify it
     // when removing the core_spin_addr mapping, though. Protect ourself from
@@ -51,3 +57,18 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
         WARNX(Error, "CPU%d did not show up!\n", i);
     }
 }
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && pf_fvp_base_r && amp]:
+
+#include "static_init.h"
+
+PUBLIC static void
+Platform_control::amp_boot_init()
+{ amp_boot_ap_cpus(Max_cores); }
+
+static void
+setup_amp()
+{ Platform_control::amp_prepare_ap_cpus(); }
+
+STATIC_INITIALIZER_P(setup_amp, EARLY_INIT_PRIO);

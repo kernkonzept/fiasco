@@ -6,7 +6,9 @@ INTERFACE [arm && pic_gic && pf_fvp_base_r]:
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pic_gic && pf_fvp_base_r]:
 
+#include "amp_node.h"
 #include "boot_alloc.h"
+#include "cpu.h"
 #include "gic_v3.h"
 #include "irq_mgr.h"
 #include "kmem.h"
@@ -20,7 +22,8 @@ Pic::init()
   auto regs = Kmem::mmio_remap(Mem_layout::Gic_phys_base,
                                Mem_layout::Gic_phys_size);
 
-  M *m = new Boot_object<M>(regs, regs + Mem_layout::Gic_redist_offset);
+  M *m = new Boot_object<M>(regs, regs + Mem_layout::Gic_redist_offset,
+                            Amp_node::phys_id() == Amp_node::First_node);
 
   gic = &m->c;
   Irq_mgr::mgr = m;

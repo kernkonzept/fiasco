@@ -7,6 +7,7 @@ PREPROCESS_PARTS      += generic_tickless_idle \
 INTERFACES_KERNEL     += generic_timer
 RAM_PHYS_BASE         := 0x0f000000
 
+amp_node_IMPL         := amp_node amp_node-arm-fvp_base_r
 config_IMPL           += config-arm-fvp_base_r
 mem_layout_IMPL       += mem_layout-arm-fvp_base_r
 pic_IMPL              += pic-gic pic-arm-fvp_base_r
