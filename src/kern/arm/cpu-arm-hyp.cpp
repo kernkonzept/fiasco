@@ -49,7 +49,7 @@ public:
 };
 
 //--------------------------------------------------------------------
-IMPLEMENTATION [arm && cpu_virt && 32bit]:
+IMPLEMENTATION [arm && cpu_virt && 32bit && mmu]:
 
 EXTENSION class Cpu
 {

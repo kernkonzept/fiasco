@@ -1,4 +1,4 @@
-INTERFACE [arm && arm_lpae]:
+INTERFACE [arm && mmu && arm_lpae]:
 
 EXTENSION class K_pte_ptr
 {
@@ -20,7 +20,7 @@ typedef Ptab::Page_addr_wrap<Page_number, Virt_addr::Shift> Ptab_va_vpn;
 class Kpdir : public Pdir_t<K_pte_ptr, K_ptab_traits_vpn, Ptab_va_vpn> {};
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && cpu_virt && !arm_pt_48]:
+INTERFACE [arm && mmu && cpu_virt && !arm_pt_48]:
 
 /* 3-levels for stage 2 paging with a maximum IPA size of 40bits */
 typedef Ptab::Tupel< Ptab::Traits< Unsigned64, 30, 10, true>,
@@ -55,7 +55,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && cpu_virt && arm_pt_48]:
+INTERFACE [arm && mmu && cpu_virt && arm_pt_48]:
 
 /* 4-levels for stage 2 paging with a maximum IPA size of 48bits */
 typedef Ptab::Tupel< Ptab::Traits< Unsigned64, 39, 9, false>,
@@ -91,7 +91,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && cpu_virt]:
+INTERFACE [arm && mmu && cpu_virt]:
 
 EXTENSION class Page
 {
@@ -129,7 +129,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && !cpu_virt]:
+INTERFACE [arm && mmu && !cpu_virt]:
 
 typedef K_pte_ptr Pte_ptr;
 typedef Pdir_t<Pte_ptr, K_ptab_traits_vpn, Ptab_va_vpn> Pdir;
@@ -152,7 +152,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && cpu_virt]:
+IMPLEMENTATION [arm && mmu && cpu_virt]:
 
 PUBLIC inline
 unsigned char

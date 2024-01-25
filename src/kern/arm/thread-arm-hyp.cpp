@@ -377,6 +377,18 @@ Arm_vtimer_ppi::mask()
                "mcr p15, 0, %0, c14, c3, 1\n" : "=r" (v));
 }
 
+PRIVATE static inline
+Arm_esr
+Thread::get_esr()
+{
+  Arm_esr hsr;
+  asm ("mrc p15, 4, %0, c5, c2, 0" : "=r" (hsr));
+  return hsr;
+}
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [arm && 32bit && cpu_virt && mmu]:
+
 PRIVATE static inline NEEDS[Thread::invalid_pfa]
 Address
 Thread::get_fault_pfa(Arm_esr hsr, bool insn_abt, bool ext_vcpu)
@@ -424,16 +436,6 @@ Thread::get_fault_pfa(Arm_esr hsr, bool insn_abt, bool ext_vcpu)
     return ~0UL;
   return (par & 0xfffff000UL) | (far & 0xfff);
 }
-
-PRIVATE static inline
-Arm_esr
-Thread::get_esr()
-{
-  Arm_esr hsr;
-  asm ("mrc p15, 4, %0, c5, c2, 0" : "=r" (hsr));
-  return hsr;
-}
-
 
 PUBLIC static inline template<typename T>
 T

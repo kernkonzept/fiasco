@@ -1,4 +1,4 @@
-INTERFACE [arm]:
+INTERFACE [arm && mmu]:
 
 #include "mem_layout.h"
 #include "mmio_register_block.h"
@@ -45,9 +45,14 @@ EXTENSION class Bootstrap
   };
 };
 
-IMPLEMENTATION [arm]:
+IMPLEMENTATION [arm && mmu]:
 
 #include "paging_bits.h"
+
+static inline
+Bootstrap::Order
+Bootstrap::map_page_order()
+{ return Order(21); }
 
 /**
  * Map RAM range with super pages.
@@ -105,6 +110,9 @@ Bootstrap::relocate(unsigned long load_addr)
   Elf<Elf64_dyn, Elf64_rela>::relocate(load_addr);
 }
 
+// -----------------------------------------------------------------
+IMPLEMENTATION [arm]:
+
 PUBLIC static inline Mword
 Bootstrap::read_pfr0()
 {
@@ -116,7 +124,10 @@ Bootstrap::read_pfr0()
 // -----------------------------------------------------------------
 IMPLEMENTATION [arm && !arm_sve]:
 
-PUBLIC static inline void
+#include "cpu.h"
+
+PUBLIC static inline NEEDS["cpu.h"]
+void
 Bootstrap::config_feature_traps(Mword, bool leave_el3, bool leave_el2)
 {
   if (leave_el3)
@@ -131,7 +142,10 @@ Bootstrap::config_feature_traps(Mword, bool leave_el3, bool leave_el2)
 // -----------------------------------------------------------------
 IMPLEMENTATION [arm && arm_sve]:
 
-PUBLIC static inline void
+#include "cpu.h"
+
+PUBLIC static inline NEEDS["cpu.h"]
+void
 Bootstrap::config_feature_traps(Mword pfr0, bool leave_el3, bool leave_el2)
 {
   bool has_sve = ((pfr0 >> 32) & 0xf) == 1;
@@ -169,7 +183,7 @@ Bootstrap::config_feature_traps(Mword pfr0, bool leave_el3, bool leave_el2)
     }
 }
 
-IMPLEMENTATION [arm && pic_gic && !have_arm_gicv3]:
+IMPLEMENTATION [arm && mmu && pic_gic && !have_arm_gicv3]:
 
 PUBLIC static void
 Bootstrap::config_gic_ns()
@@ -186,7 +200,7 @@ Bootstrap::config_gic_ns()
   Mmu<Bootstrap::Cache_flush_area, true>::flush_cache();
 }
 
-IMPLEMENTATION [arm && (!pic_gic || have_arm_gicv3)]:
+IMPLEMENTATION [arm && mmu && (!pic_gic || have_arm_gicv3)]:
 
 PUBLIC static inline void
 Bootstrap::config_gic_ns() {}
@@ -199,6 +213,8 @@ enum : Unsigned64
 {
   Hcr_default_bits = Cpu::Hcr_hcd | Cpu::Hcr_rw,
 };
+
+IMPLEMENTATION [arm && mmu && !cpu_virt]:
 
 PUBLIC static inline NEEDS["cpu.h"]
 void
@@ -349,11 +365,6 @@ Bootstrap::init_paging()
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
-static inline
-Bootstrap::Order
-Bootstrap::map_page_order()
-{ return Order(21); }
-
 asm
 (
 ".section .text.init,\"ax\"            \n"
@@ -380,7 +391,7 @@ asm
 );
 
 // -----------------------------------------------------------------
-IMPLEMENTATION [arm && cpu_virt]:
+IMPLEMENTATION [arm && mmu && cpu_virt]:
 
 #include "infinite_loop.h"
 #include "cpu.h"

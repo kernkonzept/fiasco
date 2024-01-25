@@ -1,4 +1,4 @@
-INTERFACE [arm && !kern_start_0xd && !cpu_virt]:
+INTERFACE [arm && mmu && !kern_start_0xd && !cpu_virt]:
 
 EXTENSION class Mem_layout
 {
@@ -10,7 +10,7 @@ public:
 
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && kern_start_0xd]:
+INTERFACE [arm && mmu & kern_start_0xd]:
 
 EXTENSION class Mem_layout
 {
@@ -33,7 +33,7 @@ public:
 
 
 //---------------------------------------------------------------------------
-INTERFACE [arm]:
+INTERFACE [arm && mmu]:
 
 #include "config.h"
 
@@ -62,7 +62,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && !cpu_virt]:
+INTERFACE [arm && mmu && !cpu_virt]:
 
 #include "template_math.h"
 
@@ -83,7 +83,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && cpu_virt]:
+INTERFACE [arm && mmu && cpu_virt]:
 
 EXTENSION class Mem_layout
 {

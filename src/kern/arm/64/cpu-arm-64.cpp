@@ -214,6 +214,9 @@ unsigned
 Cpu::vmid_bits() const
 { return (_cpu_id._mmfr[1] & 0xf0U) == 0x20 ? 16 : 8; }
 
+//--------------------------------------------------------------------------
+IMPLEMENTATION [arm && cpu_virt && mmu]:
+
 IMPLEMENT_OVERRIDE
 void
 Cpu::init_hyp_mode()

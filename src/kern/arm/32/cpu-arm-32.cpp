@@ -114,7 +114,7 @@ Cpu::disable_dcache()
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !cpu_virt]:
+IMPLEMENTATION [arm && !cpu_virt && mmu]:
 
 #include "kmem.h"
 #include "kmem_space.h"

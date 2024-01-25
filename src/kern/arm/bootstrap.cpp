@@ -16,6 +16,9 @@ struct Bootstrap_info
 
 extern Bootstrap_info bs_info;
 
+//---------------------------------------------------------------------------
+INTERFACE [arm && mmu]:
+
 class Bootstrap
 {
 public:
@@ -86,7 +89,7 @@ struct Elf
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && !(arm_sa || arm_pxa)]:
+INTERFACE [arm && mmu && !(arm_sa || arm_pxa)]:
 
 EXTENSION class Bootstrap
 {
@@ -95,7 +98,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && arm_lpae]:
+INTERFACE [arm && mmu && arm_lpae]:
 
 #include <cxx/cxx_int>
 
@@ -107,7 +110,12 @@ public:
 };
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_lpae]:
+IMPLEMENTATION [arm]:
+
+Bootstrap_info FIASCO_BOOT_PAGING_INFO bs_info;
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && mmu && arm_lpae]:
 
 static inline NEEDS[Bootstrap::map_page_order]
 Bootstrap::Phys_addr
@@ -125,7 +133,7 @@ Bootstrap::pt_entry(Phys_addr pa, bool local)
 }
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && !arm_lpae]:
+INTERFACE [arm && mmu && !arm_lpae]:
 
 #include <cxx/cxx_int>
 
@@ -137,7 +145,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !arm_lpae]:
+IMPLEMENTATION [arm && mmu && !arm_lpae]:
 
 #include "paging.h"
 
@@ -155,14 +163,13 @@ Bootstrap::pt_entry(Phys_addr pa, bool local)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm]:
+IMPLEMENTATION [arm && mmu]:
 
 #include <cstddef>
 #include "types.h"
 #include "cpu.h"
 #include "paging.h"
 
-Bootstrap_info FIASCO_BOOT_PAGING_INFO bs_info;
 unsigned long Bootstrap::load_addr;
 
 static inline NEEDS[Bootstrap::map_page_order]
@@ -185,7 +192,7 @@ Bootstrap::map_memory(void *pd, Virt_addr va, Phys_addr pa,
 
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_v5]:
+IMPLEMENTATION [arm && mmu && arm_v5]:
 
 static inline void Bootstrap::set_asid() {}
 static inline void Bootstrap::set_ttbcr() {}
@@ -198,7 +205,7 @@ void
 Bootstrap::do_arm_1176_cache_alias_workaround() {}
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm]:
+IMPLEMENTATION [arm && mmu]:
 
 #include "infinite_loop.h"
 #include "kmem_space.h"

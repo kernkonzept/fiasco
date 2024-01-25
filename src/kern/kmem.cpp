@@ -11,7 +11,7 @@ public:
   static Kpdir *kdir;
 };
 
-IMPLEMENTATION [arm || ia32 || amd64]:
+IMPLEMENTATION [mmu && (arm || ia32 || amd64)]:
 
 #include "config.h"
 #include "paging_bits.h"

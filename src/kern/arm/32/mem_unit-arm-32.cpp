@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_v5]:
+IMPLEMENTATION [arm && mmu && arm_v5]:
 
 IMPLEMENT inline
 void Mem_unit::tlb_flush()
@@ -38,7 +38,7 @@ void Mem_unit::tlb_flush_kernel(Address va)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && (arm_v6 || (arm_v7 && !mp)) && !cpu_virt]:
+IMPLEMENTATION [arm && mmu && (arm_v6 || (arm_v7 && !mp)) && !cpu_virt]:
 
 IMPLEMENT inline
 void Mem_unit::tlb_flush()
@@ -86,7 +86,7 @@ void Mem_unit::tlb_flush_kernel(Address)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && ((arm_v7 && mp) || arm_v8) && !cpu_virt]:
+IMPLEMENTATION [arm && mmu && ((arm_v7 && mp) || arm_v8) && !cpu_virt]:
 
 IMPLEMENT inline
 void Mem_unit::tlb_flush()
@@ -134,7 +134,7 @@ void Mem_unit::tlb_flush_kernel(Address va)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_v7plus && cpu_virt]:
+IMPLEMENTATION [arm && mmu && arm_v7plus && cpu_virt]:
 
 IMPLEMENT inline
 void Mem_unit::tlb_flush()

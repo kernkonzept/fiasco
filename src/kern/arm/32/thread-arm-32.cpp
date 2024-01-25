@@ -1,6 +1,4 @@
-IMPLEMENTATION [arm && 32bit]:
-
-#include "mem_op.h"
+IMPLEMENTATION [arm && 32bit && mmu]:
 
 /**
  * Mangle the error code in case of a kernel lib page fault.
@@ -18,6 +16,11 @@ Thread::mangle_kernel_lib_page_fault(Mword pc, Mword error_code)
 
   return error_code;
 }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && 32bit]:
+
+#include "mem_op.h"
 
 IMPLEMENT inline NEEDS[Thread::exception_triggered]
 Mword

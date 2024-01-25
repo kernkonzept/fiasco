@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && mp && pic_gic && have_arm_gicv2]:
+IMPLEMENTATION [arm && mp && mmu && pic_gic && have_arm_gicv2]:
 
 PRIVATE static inline NOEXPORT
 void
@@ -8,7 +8,7 @@ Kernel_thread::boot_app_cpu_gic(Mp_boot_info volatile *inf)
   inf->gic_cpu_base = Mem_layout::Gic_cpu_phys_base;
 }
 
-IMPLEMENTATION [arm && mp && (!pic_gic || !have_arm_gicv2)]:
+IMPLEMENTATION [arm && mp && mmu && (!pic_gic || !have_arm_gicv2)]:
 
 PRIVATE static inline NOEXPORT
 void
@@ -17,7 +17,7 @@ Kernel_thread::boot_app_cpu_gic(Mp_boot_info volatile *inf)
   inf->gic_dist_base = 0;
 }
 
-IMPLEMENTATION [arm && mp]:
+IMPLEMENTATION [arm && mp && mmu]:
 
 #include "io.h"
 #include "platform_control.h"

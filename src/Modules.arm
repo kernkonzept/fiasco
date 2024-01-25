@@ -20,7 +20,8 @@ ifeq ($(CONFIG_BIT64),y)
 PREPROCESS_PARTS += 64bit arm_esr_traps
 BITS := 64
 else
-PREPROCESS_PARTS += 32bit abs_syscalls recover_jmpbuf
+PREPROCESS_PARTS += 32bit recover_jmpbuf
+PREPROCESS_PARTS-$(CONFIG_MMU) += abs_syscalls
 BITS := 32
 endif
 
@@ -157,7 +158,8 @@ INTERFACES_KERNEL-$(NEED_MEM_CHUNK) += mem_chunk
 INTERFACES_KERNEL-$(CONFIG_ARM_ACPI) += acpi acpi_fadt
 INTERFACES_KERNEL-$(CONFIG_ARM_MPCORE) += scu
 INTERFACES_KERNEL-$(CONFIG_ARM_CORTEX_A9) += scu
-INTERFACES_KERNEL-$(CONFIG_BIT32) += kern_lib_page mem_op
+INTERFACES_KERNEL-$(CONFIG_BIT32)-$(CONFIG_MMU) += kern_lib_page
+INTERFACES_KERNEL-$(CONFIG_BIT32) += mem_op
 INTERFACES_KERNEL-$(CONFIG_SERIAL) += uart_console
 INTERFACES_KERNEL-$(CONFIG_ARM_EM_TZ) += vm
 INTERFACES_KERNEL-$(CONFIG_CPU_VIRT) += hyp_vm_state vgic vgic_global
@@ -224,7 +226,8 @@ sched_context_IMPL	:= sched_context-wfq sched_context-fixed_prio \
 scu_IMPL                := scu
 spin_lock_IMPL		:= spin_lock spin_lock-arm spin_lock-arm-$(BITS)
 startup_IMPL		:= startup startup-arm
-sys_call_page_IMPL	:= sys_call_page $(if $(CONFIG_BIT32), sys_call_page-arm)
+sys_call_page_IMPL	:= sys_call_page \
+			   $(if $(and $(CONFIG_BIT32),$(CONFIG_MMU)), sys_call_page-arm)
 task_IMPL		:= task task-arm
 thread_IMPL	  	:= thread thread-arm thread-arm-hyp \
 			   thread-jdb thread-jdb-$(BITS) thread-ipc \
@@ -243,8 +246,10 @@ tb_entry_IMPL		:= tb_entry tb_entry-arm
 ifeq ("$(CONFIG_JDB)","y")
 JDB			:= jdb_compound.o
 SUBSYSTEMS		+= JDB
-INTERFACES_JDB		+= jdb_ptab jdb_trace_set jdb_log jdb_perf \
-			   jdb_console_buffer jdb_idle_stats
+INTERFACES_JDB		+= jdb_trace_set jdb_log jdb_perf jdb_console_buffer \
+			   jdb_idle_stats
+
+INTERFACES_JDB-$(CONFIG_MMU)	+= jdb_ptab
 
 CXXSRC_JDB := tb_entry_output.cc
 

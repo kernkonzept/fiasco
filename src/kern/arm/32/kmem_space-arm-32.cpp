@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm]:
+IMPLEMENTATION [arm && mmu]:
 
 #include "kmem.h"
 
@@ -18,7 +18,7 @@ void Kmem_space::init()
 }
 
 //----------------------------------------------------------------------------------
-IMPLEMENTATION[arm && arm_lpae]:
+IMPLEMENTATION[arm && mmu && arm_lpae]:
 
 #include "boot_infos.h"
 
@@ -34,7 +34,7 @@ static Boot_paging_info FIASCO_BOOT_PAGING_INFO _bs_pgin_dta =
 };
 
 //----------------------------------------------------------------------------------
-IMPLEMENTATION[arm && !arm_lpae]:
+IMPLEMENTATION[arm && mmu && !arm_lpae]:
 
 #include "boot_infos.h"
 

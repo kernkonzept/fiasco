@@ -9,7 +9,7 @@ Mem_space::sync_kernel()
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [arm_v8 && arm_lpae && !cpu_virt]:
+IMPLEMENTATION [arm_v8 && mmu && arm_lpae && !cpu_virt]:
 
 IMPLEMENT inline NEEDS[Mem_space::asid]
 void
@@ -24,7 +24,7 @@ Mem_space::make_current(Switchin_flags)
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [arm_v8 && arm_lpae && cpu_virt]:
+IMPLEMENTATION [arm_v8 && mmu && arm_lpae && cpu_virt]:
 
 #include "cpu.h"
 #include "paging.h"

@@ -305,6 +305,66 @@ Jdb::init()
   Kconsole::console()->register_console(push_cons());
 }
 
+PUBLIC static
+int
+Jdb::is_adapter_memory(Jdb_address)
+{
+  return 0;
+}
+
+PRIVATE static
+void
+Jdb::at_jdb_enter()
+{
+  Mem_unit::clean_vdcache();
+}
+
+PRIVATE static
+void
+Jdb::at_jdb_leave()
+{
+  Mem_unit::flush_vcache();
+}
+
+PUBLIC static inline
+void
+Jdb::enter_getchar()
+{}
+
+PUBLIC static inline
+void
+Jdb::leave_getchar()
+{}
+
+IMPLEMENT_OVERRIDE
+void
+Jdb::write_tsc_s(String_buffer *buf, Signed64 tsc, bool sign)
+{
+  Unsigned64 uns = Timer::ts_to_ns(tsc < 0 ? -tsc : tsc);
+
+  if (tsc < 0)
+    uns = -uns;
+
+  if (sign)
+    buf->printf("%c", (tsc < 0) ? '-' : (tsc == 0) ? ' ' : '+');
+
+  Mword _s  = uns / 1000000000;
+  Mword _us = (uns / 1000) - 1000000 * _s;
+  buf->printf("%3lu.%06lu s ", _s, _us);
+}
+
+IMPLEMENT_OVERRIDE
+void
+Jdb::write_tsc(String_buffer *buf, Signed64 tsc, bool sign)
+{
+  Unsigned64 ns = Timer::ts_to_ns(tsc < 0 ? -tsc : tsc);
+  if (tsc < 0)
+    ns = -ns;
+  write_ll_ns(buf, ns, sign);
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && mmu]:
 
 PRIVATE static
 unsigned char *
@@ -375,65 +435,6 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
   return reinterpret_cast<unsigned char *>(Mem_layout::Jdb_tmp_map_area
                                            + Super_pg::offset(phys));
 }
-
-PUBLIC static
-int
-Jdb::is_adapter_memory(Jdb_address)
-{
-  return 0;
-}
-
-PRIVATE static
-void
-Jdb::at_jdb_enter()
-{
-  Mem_unit::clean_vdcache();
-}
-
-PRIVATE static
-void
-Jdb::at_jdb_leave()
-{
-  Mem_unit::flush_vcache();
-}
-
-PUBLIC static inline
-void
-Jdb::enter_getchar()
-{}
-
-PUBLIC static inline
-void
-Jdb::leave_getchar()
-{}
-
-IMPLEMENT_OVERRIDE
-void
-Jdb::write_tsc_s(String_buffer *buf, Signed64 tsc, bool sign)
-{
-  Unsigned64 uns = Timer::ts_to_ns(tsc < 0 ? -tsc : tsc);
-
-  if (tsc < 0)
-    uns = -uns;
-
-  if (sign)
-    buf->printf("%c", (tsc < 0) ? '-' : (tsc == 0) ? ' ' : '+');
-
-  Mword _s  = uns / 1000000000;
-  Mword _us = (uns / 1000) - 1000000 * _s;
-  buf->printf("%3lu.%06lu s ", _s, _us);
-}
-
-IMPLEMENT_OVERRIDE
-void
-Jdb::write_tsc(String_buffer *buf, Signed64 tsc, bool sign)
-{
-  Unsigned64 ns = Timer::ts_to_ns(tsc < 0 ? -tsc : tsc);
-  if (tsc < 0)
-    ns = -ns;
-  write_ll_ns(buf, ns, sign);
-}
-
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION [arm && mp]:

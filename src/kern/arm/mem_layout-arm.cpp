@@ -1,4 +1,4 @@
-INTERFACE [arm]:
+INTERFACE [arm && mmu]:
 
 #include "config.h"
 
@@ -27,7 +27,7 @@ private:
 };
 
 // -------------------------------------------------------------------------
-IMPLEMENTATION [arm]:
+IMPLEMENTATION [arm && mmu]:
 
 Mem_layout::Pmem_region Mem_layout::_pm_regions[Mem_layout::Max_pmem_regions];
 unsigned Mem_layout::_num_pm_regions;

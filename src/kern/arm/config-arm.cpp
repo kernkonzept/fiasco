@@ -80,7 +80,7 @@ public:
 #endif
 
 // -----------------------------------------------------------------------
-INTERFACE [arm && arm_lpae]:
+INTERFACE [arm && mmu && arm_lpae]:
 
 EXTENSION class Config
 {
@@ -94,7 +94,7 @@ public:
 };
 
 // -----------------------------------------------------------------------
-INTERFACE [arm && !arm_lpae]:
+INTERFACE [arm && mmu && !arm_lpae]:
 
 EXTENSION class Config
 {

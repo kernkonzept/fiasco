@@ -4,7 +4,7 @@ INTERFACE [arm && 64bit]:
   __attribute__((section(".bootstrap.info"), used))
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && 64bit && !cpu_virt]:
+INTERFACE [arm && 64bit && mmu && !cpu_virt]:
 
 struct Boot_paging_info
 {
@@ -15,7 +15,7 @@ struct Boot_paging_info
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && 64bit && cpu_virt]:
+INTERFACE [arm && 64bit && mmu && cpu_virt]:
 
 struct Boot_paging_info
 {

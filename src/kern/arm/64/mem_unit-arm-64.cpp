@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && !cpu_virt]:
+IMPLEMENTATION [arm && mmu && !cpu_virt]:
 
 IMPLEMENT inline
 void Mem_unit::tlb_flush()
@@ -45,7 +45,7 @@ void Mem_unit::tlb_flush_kernel(Address va)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && cpu_virt]:
+IMPLEMENTATION [arm && mmu && cpu_virt]:
 
 IMPLEMENT inline
 void Mem_unit::tlb_flush()

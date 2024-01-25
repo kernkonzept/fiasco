@@ -1,4 +1,4 @@
-IMPLEMENTATION[arm]:
+IMPLEMENTATION[arm && mmu]:
 
 #include "globals.h"
 #include "kmem_space.h"

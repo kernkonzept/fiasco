@@ -1,4 +1,4 @@
-INTERFACE [arm && cpu_virt && !arm_pt_48]: // -----------------------------
+INTERFACE [arm && mmu && cpu_virt && !arm_pt_48]: // ----------------------
 
 EXTENSION class Mem_layout
 {
@@ -8,7 +8,7 @@ public:
   };
 };
 
-INTERFACE [arm && cpu_virt && arm_pt_48]: // ------------------------------
+INTERFACE [arm && mmu && cpu_virt && arm_pt_48]: // -----------------------
 
 EXTENSION class Mem_layout
 {
@@ -18,7 +18,7 @@ public:
   };
 };
 
-INTERFACE [arm && cpu_virt]: // -------------------------------------------
+INTERFACE [arm && mmu && cpu_virt]: // ------------------------------------
 
 EXTENSION class Mem_layout
 {
@@ -46,7 +46,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && !cpu_virt]:
+INTERFACE [arm && mmu && !cpu_virt]:
 
 #include "template_math.h"
 

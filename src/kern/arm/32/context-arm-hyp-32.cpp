@@ -2,6 +2,13 @@ IMPLEMENTATION [arm && cpu_virt]:
 
 #include "mem.h"
 
+EXTENSION class Context
+{
+private:
+  inline void save_ext_vcpu_state_mxu(Vm_state *v);
+  inline void load_ext_vcpu_state_mxu(Vm_state const *v);
+};
+
 IMPLEMENT inline
 void
 Context::fill_user_state()
@@ -85,12 +92,6 @@ Context::save_ext_vcpu_state(Mword /*_state*/, Vm_state *v)
   // asm ("mrc p15, 0, %0, c1, c0, 1" : "=r"(v->actlr));
   asm volatile ("mrc p15, 0, %0, c1, c0, 2" : "=r"(v->cpacr));
 
-  asm volatile ("mrrc p15, 0, %Q0, %R0, c2" : "=r"(v->ttbr0));
-  asm volatile ("mrrc p15, 1, %Q0, %R0, c2" : "=r"(v->ttbr1));
-  asm volatile ("mrc p15, 0, %0, c2, c0, 2" : "=r"(v->ttbcr));
-
-  asm volatile ("mrc p15, 0, %0, c3, c0, 0" : "=r"(v->dacr));
-
   asm volatile ("mrc p15, 0, %0, c5, c0, 0" : "=r"(v->dfsr));
   asm volatile ("mrc p15, 0, %0, c5, c0, 1" : "=r"(v->ifsr));
   asm volatile ("mrc p15, 0, %0, c5, c1, 0" : "=r"(v->adfsr));
@@ -108,6 +109,8 @@ Context::save_ext_vcpu_state(Mword /*_state*/, Vm_state *v)
   asm volatile ("mrc p15, 0, %0, c12, c0, 0" : "=r"(v->vbar));
 
   asm volatile ("mrc p15, 0, %0, c13, c0, 0" : "=r"(v->fcseidr));
+
+  save_ext_vcpu_state_mxu(v);
 }
 
 PRIVATE inline
@@ -125,12 +128,6 @@ Context::load_ext_vcpu_state(Mword /*_to_state*/, Vm_state const *v)
   // we unconditionally trap actlr accesses
   // asm ("mcr p15, 0, %0, c1, c0, 1" : : "r"(v->actlr));
   asm volatile ("mcr p15, 0, %0, c1, c0, 2" : : "r"(v->cpacr));
-
-  asm volatile ("mcrr p15, 0, %Q0, %R0, c2" : : "r"(v->ttbr0));
-  asm volatile ("mcrr p15, 1, %Q0, %R0, c2" : : "r"(v->ttbr1));
-  asm volatile ("mcr p15, 0, %0, c2, c0, 2" : : "r"(v->ttbcr));
-
-  asm volatile ("mcr p15, 0, %0, c3, c0, 0" : : "r"(v->dacr));
 
   asm volatile ("mcr p15, 0, %0, c5, c0, 0" : : "r"(v->dfsr));
   asm volatile ("mcr p15, 0, %0, c5, c0, 1" : : "r"(v->ifsr));
@@ -152,6 +149,8 @@ Context::load_ext_vcpu_state(Mword /*_to_state*/, Vm_state const *v)
 
   asm volatile ("mcr  p15, 4, %0, c0, c0, 5" : : "r" (v->vmpidr));
   asm volatile ("mcr  p15, 4, %0, c0, c0, 0" : : "r" (v->vpidr));
+
+  load_ext_vcpu_state_mxu(v);
 }
 
 PRIVATE static inline
@@ -228,4 +227,27 @@ Context::arm_ext_vcpu_load_guest_regs(Vcpu_state *vcpu, Vm_state *, Unsigned64 h
   asm volatile ("mrc p15, 0, %0, c13, c0, 3" : "=r"(vcpu->host.tpidruro));
   Cpu::hcr(hcr);
   asm volatile ("mcr p15, 0, %0, c13, c0, 3" : : "r"(vcpu->_regs.tpidruro));
+}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && cpu_virt && mmu]:
+
+IMPLEMENT inline
+void
+Context::save_ext_vcpu_state_mxu(Vm_state *v)
+{
+  asm volatile ("mrrc p15, 0, %Q0, %R0, c2" : "=r"(v->ttbr0));
+  asm volatile ("mrrc p15, 1, %Q0, %R0, c2" : "=r"(v->ttbr1));
+  asm volatile ("mrc p15, 0, %0, c2, c0, 2" : "=r"(v->ttbcr));
+  asm volatile ("mrc p15, 0, %0, c3, c0, 0" : "=r"(v->dacr));
+}
+
+IMPLEMENT inline
+void
+Context::load_ext_vcpu_state_mxu(Vm_state const *v)
+{
+  asm volatile ("mcrr p15, 0, %Q0, %R0, c2" : : "r"(v->ttbr0));
+  asm volatile ("mcrr p15, 1, %Q0, %R0, c2" : : "r"(v->ttbr1));
+  asm volatile ("mcr p15, 0, %0, c2, c0, 2" : : "r"(v->ttbcr));
+  asm volatile ("mcr p15, 0, %0, c3, c0, 0" : : "r"(v->dacr));
 }

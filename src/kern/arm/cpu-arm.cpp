@@ -175,7 +175,7 @@ public:
 
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && (arm_v7 || arm_v8)]:
+INTERFACE [arm && (arm_v7 || arm_v8) && mmu]:
 
 EXTENSION class Cpu
 {

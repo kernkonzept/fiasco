@@ -13,7 +13,7 @@ public:
 };
 
 
-IMPLEMENTATION:
+IMPLEMENTATION [mmu]:
 
 #include <cassert>
 #include <cstdlib>

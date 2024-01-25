@@ -1,4 +1,4 @@
-INTERFACE [arm]:
+INTERFACE [arm && mmu]:
 
 #include "mem_unit.h"
 
@@ -692,7 +692,7 @@ Page::is_attribs_upgrade_safe(Page::Attr old_attr, Page::Attr new_attr)
 }
 
 //-------------------------------------------------------------------------------------
-INTERFACE [arm && !arm_lpae]:
+INTERFACE [arm && mmu && !arm_lpae]:
 
 class K_pte_ptr :
   public Pte_short_desc<K_pte_ptr>,
@@ -727,14 +727,14 @@ public:
 };
 
 //-----------------------------------------------------------------------------
-INTERFACE [arm && arm_lpae && !cpu_virt]:
+INTERFACE [arm && mmu && arm_lpae && !cpu_virt]:
 
 // Kernel and user space are using stage-1 PTs and use the same page table
 // attributes.
 typedef Page Kernel_page_attr;
 
 //-----------------------------------------------------------------------------
-INTERFACE [arm && arm_lpae && cpu_virt]:
+INTERFACE [arm && mmu && arm_lpae && cpu_virt]:
 
 // Fiasco is running with stage-1 PTs and the page attributes are an index into
 // MAIR. OTOH user space is running on a stage-2 PT which stores the memory
@@ -751,7 +751,7 @@ struct Kernel_page_attr
 };
 
 //-----------------------------------------------------------------------------
-INTERFACE [arm && arm_lpae]:
+INTERFACE [arm && mmu && arm_lpae]:
 
 class K_pte_ptr :
   public Pte_long_desc<K_pte_ptr>,
@@ -786,7 +786,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_lpae]:
+IMPLEMENTATION [arm && mmu && arm_lpae]:
 
 PUBLIC inline ALWAYS_INLINE
 unsigned char
@@ -795,7 +795,7 @@ K_pte_ptr::page_order() const
 
 
 //-----------------------------------------------------------------------------
-INTERFACE [arm && arm_v5]:
+INTERFACE [arm && mmu && arm_v5]:
 
 #include "types.h"
 
@@ -828,7 +828,7 @@ EXTENSION class K_pte_ptr :
 {};
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && ((arm_v6plus && mp) || arm_v8)]:
+INTERFACE [arm && mmu && ((arm_v6plus && mp) || arm_v8)]:
 
 EXTENSION class Page
 {
@@ -841,7 +841,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && (arm_v6 || arm_v7) && !mp]:
+INTERFACE [arm && mmu && (arm_v6 || arm_v7) && !mp]:
 
 EXTENSION class Page
 {
@@ -854,32 +854,32 @@ public:
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && (arm_v5 || (arm_v6 && !arm_mpcore))]:
+INTERFACE [arm && mmu && (arm_v5 || (arm_v6 && !arm_mpcore))]:
 
 EXTENSION class Page
 { public: enum { Ttbr_bits = 0 }; };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && arm_mpcore]:
+INTERFACE [arm && mmu && arm_mpcore]:
 
 EXTENSION class Page
 { public: enum { Ttbr_bits = 0xa }; };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && ((mp && arm_v7) || arm_v8) && !arm_lpae]:
+INTERFACE [arm && mmu && ((mp && arm_v7) || arm_v8) && !arm_lpae]:
 
 // S Sharable | RGN = Outer WB-WA | IRGN = Inner WB-WA | NOS
 EXTENSION class Page
 { public: enum { Ttbr_bits = 0x6a }; };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && arm_lpae]:
+INTERFACE [arm && mmu && arm_lpae]:
 
 EXTENSION class Page
 { public: enum { Ttbr_bits = 0 }; };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && !mp && arm_v7 && !arm_lpae]:
+INTERFACE [arm && mmu && !mp && arm_v7 && !arm_lpae]:
 // armv7 w/o multiprocessing ext.
 
 // RGN = Outer WB-WA | IRGN = Inner WB-WA
@@ -887,7 +887,7 @@ EXTENSION class Page
 { public: enum { Ttbr_bits = 0x09 }; };
 
 //----------------------------------------------------------------------------
-INTERFACE [arm && arm_v6 && !arm_mpcore]:
+INTERFACE [arm && mmu && arm_v6 && !arm_mpcore]:
 
 EXTENSION class Page
 {
@@ -906,7 +906,7 @@ public:
 };
 
 //----------------------------------------------------------------------------
-INTERFACE [arm && ((arm_v6 && arm_mpcore) || ((arm_v7 || arm_v8) && !arm_lpae))]:
+INTERFACE [arm && mmu && ((arm_v6 && arm_mpcore) || ((arm_v7 || arm_v8) && !arm_lpae))]:
 
 EXTENSION class Page
 {
@@ -925,7 +925,7 @@ public:
 };
 
 //----------------------------------------------------------------------------
-INTERFACE [arm && arm_v6plus && !arm_lpae]:
+INTERFACE [arm && mmu && arm_v6plus && !arm_lpae]:
 
 #include "types.h"
 
@@ -948,7 +948,7 @@ public:
 };
 
 //-----------------------------------------------------------------------------
-INTERFACE [arm && !arm_lpae]:
+INTERFACE [arm && mmu && !arm_lpae]:
 
 #include "ptab_base.h"
 
@@ -959,7 +959,7 @@ typedef Ptab::Shift<Ptab_traits, Virt_addr::Shift>::List Ptab_traits_vpn;
 typedef Ptab::Page_addr_wrap<Page_number, Virt_addr::Shift> Ptab_va_vpn;
 
 //-----------------------------------------------------------------------------
-INTERFACE [arm && arm_lpae && !cpu_virt]:
+INTERFACE [arm && mmu && arm_lpae && !cpu_virt]:
 
 #include "ptab_base.h"
 #include "types.h"
@@ -977,7 +977,7 @@ public:
 };
 
 //-----------------------------------------------------------------------------
-INTERFACE [arm && arm_lpae && cpu_virt]:
+INTERFACE [arm && mmu && arm_lpae && cpu_virt]:
 
 #include "types.h"
 
@@ -994,31 +994,31 @@ public:
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && (arm_v6 || (arm_v7 && !mp))]:
+INTERFACE [arm && mmu && (arm_v6 || (arm_v7 && !mp))]:
 
 EXTENSION class K_pte_ptr : public Pte_cache_asid<K_pte_ptr> {};
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && ((arm_v7 && mp) || arm_v8)]:
+INTERFACE [arm && mmu && ((arm_v7 && mp) || arm_v8)]:
 
 EXTENSION class K_pte_ptr : public Pte_no_cache_asid<K_pte_ptr> {};
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_v5]:
+IMPLEMENTATION [arm && mmu && arm_v5]:
 
 PUBLIC static inline
 Mword PF::is_alignment_error(Mword error)
 { return ((error >> 26) & 0x04) && ((error & 0x0d) == 0x001); }
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && !arm_lpae && arm_v6plus]:
+INTERFACE [arm && mmu && !arm_lpae && arm_v6plus]:
 
 EXTENSION class K_pte_ptr :
   public Pte_v6plus_attribs<K_pte_ptr, Page>
 {};
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && arm_lpae && (arm_v7 || arm_v8) && cpu_virt]:
+INTERFACE [arm && mmu && arm_lpae && (arm_v7 || arm_v8) && cpu_virt]:
 
 template<typename CLASS>
 class Pte_ptr_t :

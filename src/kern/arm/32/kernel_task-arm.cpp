@@ -1,4 +1,4 @@
-IMPLEMENTATION[arm && !cpu_virt]:
+IMPLEMENTATION[arm && mmu && !cpu_virt]:
 
 #include "config.h"
 #include "globals.h"
@@ -28,7 +28,7 @@ Kernel_task::map_syscall_page(void *p)
   Mem_unit::tlb_flush_kernel(Kmem_space::Syscalls);
 }
 
-IMPLEMENTATION[arm && cpu_virt]:
+IMPLEMENTATION[arm && mmu && cpu_virt]:
 
 #include "config.h"
 #include "globals.h"

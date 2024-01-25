@@ -15,6 +15,9 @@ IMPLEMENTATION [arm]:
 #include "paging_bits.h"
 #include "panic.h"
 
+//----------------------------------------------------------------------------
+IMPLEMENTATION [arm && mmu]:
+
 PRIVATE
 bool
 Kmem_alloc::map_pmem(unsigned long phys, unsigned long size,

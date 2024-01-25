@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && arm_v6plus]:
+IMPLEMENTATION [arm && mmu && arm_v6plus]:
 
 #include "kmem_space.h"
 
@@ -17,7 +17,7 @@ Bootstrap::set_ttbcr()
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_lpae && !cpu_virt]:
+IMPLEMENTATION [arm && mmu && arm_lpae && !cpu_virt]:
 
 #include "cpu.h"
 
@@ -46,7 +46,7 @@ Bootstrap::enable_paging(Mword pdir)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_lpae && cpu_virt]:
+IMPLEMENTATION [arm && mmu && arm_lpae && cpu_virt]:
 
 PUBLIC static inline void
 Bootstrap::enable_paging(Mword pdir)
@@ -68,7 +68,7 @@ Bootstrap::enable_paging(Mword pdir)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_lpae]:
+IMPLEMENTATION [arm && mmu && arm_lpae]:
 
 static inline
 Bootstrap::Order
@@ -91,7 +91,7 @@ Bootstrap::init_paging()
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !arm_lpae && !(arm_v7 || arm_v8 || arm_mpcore)]:
+IMPLEMENTATION [arm && mmu && !arm_lpae && !(arm_v7 || arm_v8 || arm_mpcore)]:
 
 PUBLIC static inline
 Bootstrap::Phys_addr
@@ -102,7 +102,7 @@ Bootstrap::init_paging()
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !arm_lpae]:
+IMPLEMENTATION [arm && mmu && !arm_lpae]:
 
 #include "config.h"
 #include "cpu.h"
@@ -149,7 +149,7 @@ Bootstrap::do_arm_1176_cache_alias_workaround()
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !arm_lpae && (arm_v7 || arm_v8 || arm_mpcore)]:
+IMPLEMENTATION [arm && mmu && !arm_lpae && (arm_v7 || arm_v8 || arm_mpcore)]:
 
 #include "paging.h"
 
@@ -165,7 +165,7 @@ Bootstrap::init_paging()
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !cpu_virt]:
+IMPLEMENTATION [arm && mmu && !cpu_virt]:
 
 #include "mem_layout.h"
 #include "paging_bits.h"
@@ -227,7 +227,7 @@ Bootstrap::create_initial_mappings()
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && cpu_virt]:
+IMPLEMENTATION [arm && mmu && cpu_virt]:
 
 #include "kip.h"
 #include "paging_bits.h"
@@ -315,6 +315,8 @@ asm
 ".previous                             \n"
 );
 
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && mmu]:
 
 struct Elf32_dyn
 {

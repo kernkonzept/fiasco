@@ -1,4 +1,4 @@
-INTERFACE [arm]:
+INTERFACE [arm && mmu]:
 
 #include "auto_quota.h"
 #include "kmem.h"		// for "_unused_*" virtual memory regions
@@ -63,24 +63,8 @@ private:
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
-#include <cassert>
-#include <cstring>
-#include <new>
-
-#include "atomic.h"
-#include "config.h"
-#include "globals.h"
-#include "l4_types.h"
-#include "logdefs.h"
-#include "panic.h"
-#include "paging.h"
-#include "kmem.h"
-#include "kmem_alloc.h"
 #include "mem_layout.h"
 #include "mem_unit.h"
-
-Kmem_slab_t<Mem_space::Dir_type,
-            sizeof(Mem_space::Dir_type)> Mem_space::_dir_alloc;
 
 PUBLIC static inline
 bool
@@ -95,6 +79,32 @@ Mem_space::regular_tlb_type()
 {
   return  Have_asids ? Tlb_per_cpu_asid : Tlb_per_cpu_global;
 }
+
+IMPLEMENT_DEFAULT inline NEEDS["mem_layout.h"]
+Address
+Mem_space::user_max()
+{ return Mem_layout::User_max; }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && mmu]:
+
+#include <cassert>
+#include <cstring>
+#include <new>
+
+#include "atomic.h"
+#include "config.h"
+#include "globals.h"
+#include "l4_types.h"
+#include "logdefs.h"
+#include "panic.h"
+#include "paging.h"
+#include "kmem.h"
+#include "kmem_alloc.h"
+#include "mem_unit.h"
+
+Kmem_slab_t<Mem_space::Dir_type,
+            sizeof(Mem_space::Dir_type)> Mem_space::_dir_alloc;
 
 // Mapping utilities
 
@@ -111,17 +121,11 @@ Mem_space::tlb_flush_current_cpu()
     }
 }
 
-
 IMPLEMENT inline
 void Mem_space::kernel_space(Mem_space *_k_space)
 {
   _kernel_space = _k_space;
 }
-
-IMPLEMENT_DEFAULT inline NEEDS["mem_layout.h"]
-Address
-Mem_space::user_max()
-{ return Mem_layout::User_max; }
 
 IMPLEMENT
 Mem_space::Status
@@ -308,7 +312,8 @@ Page_number
 Mem_space::canonize(Page_number v)
 { return v; }
 
-IMPLEMENTATION [arm && !arm_lpae]:
+//----------------------------------------------------------------------------
+IMPLEMENTATION [arm && mmu && !arm_lpae]:
 
 PUBLIC static
 void
@@ -451,7 +456,7 @@ DEFINE_PER_CPU Per_cpu<Mem_space::Asids> Mem_space::_asids;
 Mem_space::Asid_alloc  Mem_space::_asid_alloc(&_asids);
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_lpae && !arm_pt_48]:
+IMPLEMENTATION [arm && mmu && arm_lpae && !arm_pt_48]:
 
 PUBLIC static
 void
@@ -463,7 +468,7 @@ Mem_space::init_page_sizes()
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_lpae && arm_pt_48]:
+IMPLEMENTATION [arm && mmu && arm_lpae && arm_pt_48]:
 
 PUBLIC static
 void
