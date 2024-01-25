@@ -225,3 +225,37 @@ Mem_unit::make_coherent_to_pou(void const *start, size_t size)
 
   Mem::dsb(); // ensure completion of instruction cache invalidation
 }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && !mmu]:
+
+IMPLEMENT inline
+void Mem_unit::tlb_flush()
+{
+  btc_flush();
+  Mem::dsb();
+}
+
+IMPLEMENT inline
+void Mem_unit::tlb_flush(unsigned long /*asid*/)
+{
+  btc_flush();
+  Mem::dsb();
+}
+
+IMPLEMENT inline
+void Mem_unit::tlb_flush(void * /*va*/, unsigned long asid)
+{
+  if (asid == Asid_invalid)
+    return;
+  btc_flush();
+  Mem::dsb();
+}
+
+IMPLEMENT inline
+void Mem_unit::tlb_flush_kernel()
+{}
+
+IMPLEMENT inline
+void Mem_unit::tlb_flush_kernel(Address /*va*/)
+{}

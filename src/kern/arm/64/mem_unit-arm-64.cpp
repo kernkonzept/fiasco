@@ -124,6 +124,135 @@ void Mem_unit::tlb_flush_kernel(Address va)
 }
 
 //---------------------------------------------------------------------------
+IMPLEMENTATION [arm && !mmu && !cpu_virt]:
+
+IMPLEMENT inline
+void Mem_unit::tlb_flush()
+{}
+
+IMPLEMENT inline
+void Mem_unit::tlb_flush(unsigned long)
+{}
+
+IMPLEMENT inline
+void Mem_unit::tlb_flush(void *, unsigned long)
+{}
+
+IMPLEMENT inline
+void Mem_unit::tlb_flush_kernel()
+{}
+
+IMPLEMENT inline
+void Mem_unit::tlb_flush_kernel(Address)
+{}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && !mmu && cpu_virt]:
+
+/*
+ * ARM DDI 0600A.c D1.6.2:
+ * Stage 1 VMSAv8-64 is permitted to cache stage 2 PMSAv8-64 MPU configuration
+ * as a part of the translation process. Visibility of stage 2 MPU updates for
+ * stage 1 VMSAv8-64 contexts requires associated TLB invalidation for stage 2.
+ *
+ * => We still need to do TLB maintenance.
+ */
+
+IMPLEMENT inline
+void Mem_unit::tlb_flush()
+{
+  Mem::dsbst();
+  asm volatile("tlbi alle1is" : : : "memory");
+  Mem::dsb();
+}
+
+IMPLEMENT inline
+void Mem_unit::tlb_flush(unsigned long asid)
+{
+  Mword vsctlr;
+  asm volatile(
+      "   mrs %[vsctlr], S3_4_c2_c0_0 \n" // VSCTLR_EL2
+      "   cmp %[vsctlr], %[asid]      \n"
+      "   dsb ishst                   \n"
+      "   b.eq 1f                     \n"
+
+      // Flush TLB for differnet task -> briefly switch VMID.
+      "   msr S3_4_c2_c0_0, %[asid]   \n" // VSCTLR_EL2
+      "   isb                         \n"
+      "   tlbi vmalls12e1is           \n"
+      "   dsb ish                     \n"
+      "   msr S3_4_c2_c0_0, %[vsctlr] \n" // VSCTLR_EL2
+      "   b 2f                        \n"
+
+      // Current task -> no need to switch VMID. But it might have been
+      // switched by a previous tlb_flush(). Make sure potential VSCTLR_EL2
+      // writes have retired.
+      "1: isb                         \n"
+      "   tlbi vmalls12e1is           \n"
+      "   dsb ish                     \n"
+
+      // done
+      "2:                             \n"
+      :
+      [vsctlr] "=&r" (vsctlr)
+      :
+      [asid] "r" (asid << 48)
+      :
+      "memory");
+}
+
+IMPLEMENT inline
+void Mem_unit::tlb_flush(void *va, unsigned long asid)
+{
+  if (asid == Asid_invalid)
+    return;
+
+  Mword vsctlr;
+  asm volatile(
+      "   mrs %[vsctlr], S3_4_c2_c0_0 \n" // VSCTLR_EL2
+      "   cmp %[vsctlr], %[asid]      \n"
+      "   dsb ishst                   \n"
+      "   b.eq 1f                     \n"
+
+      // Flush TLB for differnet task -> briefly switch VMID.
+      "   msr S3_4_c2_c0_0, %[asid]   \n" // VSCTLR_EL2
+      "   isb                         \n"
+      "   tlbi ipas2e1is, %[ipa]      \n"
+      "   dsb ish                     \n"
+      "   tlbi vmalle1is              \n"
+      "   dsb ish                     \n"
+      "   msr S3_4_c2_c0_0, %[vsctlr] \n" // VSCTLR_EL2
+      "   b 2f                        \n"
+
+      // Current task -> no need to switch VMID. But it might have been
+      // switched by a previous tlb_flush(). Make sure potential VSCTLR_EL2
+      // writes have retired.
+      "1: isb                         \n"
+      "   tlbi ipas2e1is, %[ipa]      \n"
+      "   dsb ish                     \n"
+      "   tlbi vmalle1is              \n"
+      "   dsb ish                     \n"
+
+      // done
+      "2:                             \n"
+      :
+      [vsctlr] "=&r" (vsctlr)
+      :
+      [ipa] "r" (reinterpret_cast<unsigned long>(va) >> 12),
+      [asid] "r" (asid << 48)
+      :
+      "memory");
+}
+
+IMPLEMENT inline
+void Mem_unit::tlb_flush_kernel()
+{}
+
+IMPLEMENT inline
+void Mem_unit::tlb_flush_kernel(Address /*va*/)
+{}
+
+//---------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_v8plus]:
 
 PUBLIC static inline
