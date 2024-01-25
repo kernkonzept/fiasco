@@ -339,7 +339,7 @@ Thread::arch_ext_vcpu_enabled()
 { return true; }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && !arm_lpae]:
+IMPLEMENTATION [arm && !(arm_lpae || mpu)]:
 
 /**
  * Map from Short-descriptor FSR format (FS[10, 3:0]) to Long-descriptor FSR
@@ -417,7 +417,7 @@ Thread::map_fsr_user(Mword fsr)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_lpae]:
+IMPLEMENTATION [arm && (arm_lpae || mpu)]:
 
 PUBLIC static  inline
 Mword

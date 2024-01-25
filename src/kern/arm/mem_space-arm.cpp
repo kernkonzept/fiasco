@@ -361,7 +361,7 @@ public:
 };
 
 //----------------------------------------------------------------------------
-INTERFACE [arm_v6 || arm_lpae]:
+INTERFACE [arm_v6 || arm_lpae || mpu]:
 
 EXTENSION class Mem_space
 {
@@ -372,7 +372,7 @@ EXTENSION class Mem_space
 };
 
 //----------------------------------------------------------------------------
-INTERFACE [(arm_v7 || arm_v8) && !arm_lpae]:
+INTERFACE [(arm_v7 || arm_v8) && !(arm_lpae || mpu)]:
 
 EXTENSION class Mem_space
 {

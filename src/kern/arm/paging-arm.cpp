@@ -1033,21 +1033,21 @@ public:
 };
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && (arm_v6 || arm_v7 || arm_v8) && !arm_lpae]:
+IMPLEMENTATION [arm && (arm_v6 || arm_v7 || arm_v8) && !(arm_lpae || mpu)]:
 
 PUBLIC static inline
 Mword PF::is_alignment_error(Mword error)
 { return ((error >> 26) == 0x24) && ((error & 0x40f) == 0x001); }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_lpae]:
+IMPLEMENTATION [arm && (arm_lpae || mpu)]:
 
 PUBLIC static inline
 Mword PF::is_alignment_error(Mword error)
 { return ((error >> 26) == 0x24) && ((error & 0x3f) == 0x21); }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !arm_lpae]:
+IMPLEMENTATION [arm && !(arm_lpae || mpu)]:
 
 IMPLEMENT inline
 Mword PF::is_translation_error(Mword error)
@@ -1056,7 +1056,7 @@ Mword PF::is_translation_error(Mword error)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_lpae]:
+IMPLEMENTATION [arm && (arm_lpae || mpu)]:
 
 IMPLEMENT inline
 Mword PF::is_translation_error(Mword error)

@@ -301,7 +301,7 @@ current_prepare_vcpu_return_to_kernel(Thread *c, Vcpu_state *vcpu)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && 32bit && !arm_lpae]:
+IMPLEMENTATION [arm && 32bit && !(arm_lpae || mpu)]:
 
 PUBLIC static inline
 bool
@@ -317,7 +317,7 @@ Thread::is_debug_exception_fsr(Mword error_code)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && 32bit && arm_lpae]:
+IMPLEMENTATION [arm && 32bit && (arm_lpae || mpu)]:
 
 PUBLIC static inline
 bool
