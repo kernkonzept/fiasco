@@ -21,7 +21,7 @@ public:
 
 };
 //---------------------------------------------------------------------------
-INTERFACE [arm && cpu_virt]:
+INTERFACE [arm && (!mmu || cpu_virt)]:
 
 EXTENSION class Mem_layout
 {
@@ -58,6 +58,19 @@ public:
     Pmem_end             = 0xf8000000,
 
     Ivt_base             = 0xffff0000,
+  };
+};
+
+//---------------------------------------------------------------------------
+INTERFACE [arm && !mmu]:
+
+#include "config.h"
+
+EXTENSION class Mem_layout
+{
+public:
+  enum Virt_layout : Address {
+    Cache_flush_area     = 0x00000000, // dummy
   };
 };
 

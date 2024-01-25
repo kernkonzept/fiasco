@@ -222,11 +222,11 @@ Cpu::hcr(Unsigned64 hcr)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && !arm_lpae]:
+IMPLEMENTATION [arm && !(mmu && arm_lpae)]:
 
 PUBLIC static inline unsigned Cpu::phys_bits() { return 32; }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_lpae]:
+IMPLEMENTATION [arm && mmu && arm_lpae]:
 
 PUBLIC static inline unsigned Cpu::phys_bits() { return 40; }

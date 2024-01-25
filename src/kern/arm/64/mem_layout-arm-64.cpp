@@ -77,6 +77,24 @@ public:
 };
 
 //--------------------------------------------------------------------------
+INTERFACE [arm && !mmu]:
+
+#include "config.h"
+
+EXTENSION class Mem_layout
+{
+public:
+  enum Virt_layout : Address {
+    Cache_flush_area     = 0x00000000, // dummy
+    Map_base             = RAM_PHYS_BASE, // 1:1
+
+    // Strictly speaking we would have to consult ID_AA64MMFR0_EL1.PARange but
+    // what's the point when having no virtual memory?
+    User_max             = 0xffffffffffffffff,
+  };
+};
+
+//--------------------------------------------------------------------------
 IMPLEMENTATION [arm && virt_obj_space]:
 
 //---------------------------------

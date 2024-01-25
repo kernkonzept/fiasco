@@ -94,6 +94,23 @@ Mem_layout::add_pmem(Address phys, Address virt, unsigned long size)
 }
 
 // -------------------------------------------------------------------------
+IMPLEMENTATION [arm && !mmu]:
+
+IMPLEMENT static
+Address
+Mem_layout::phys_to_pmem(Address phys)
+{
+  return phys;
+}
+
+IMPLEMENT static
+Address
+Mem_layout::pmem_to_phys(Address virt)
+{
+  return virt;
+}
+
+// -------------------------------------------------------------------------
 IMPLEMENTATION [arm && virt_obj_space]:
 
 PUBLIC static inline
