@@ -348,6 +348,15 @@ public:
   }
 
   /**
+   * Invert all bits.
+   */
+  void invert()
+  {
+    for (size_t i = 0; i < Nr_elems; ++i)
+      this->_bits[i] = ~this->_bits[i];
+  }
+
+  /**
    * Clear all bits in the bitmap.
    *
    * \note The clearing is performed using the memset operation. Therefore the
@@ -708,6 +717,14 @@ public:
     unsigned long mask = 1UL << bit;
 
     ::atomic_or(&_bits, mask);
+  }
+
+  /**
+   * Invert all bits.
+   */
+  void invert()
+  {
+    _bits = ~_bits;
   }
 
   /**
