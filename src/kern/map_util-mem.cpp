@@ -57,6 +57,14 @@ mem_map(Space *from, L4_fpage const &fp_from,
   rcv_addr = cxx::mask_lsb(rcv_addr, ro);
   Mu::free_constraint(snd_addr, so, rcv_addr, ro, offs);
 
+  // No remapping possible without an MMU
+  if (EXPECT_FALSE(!Config::Have_mmu && snd_addr != rcv_addr))
+    {
+      WARN("No MMU: can't map from " L4_PTR_FMT " to " L4_PTR_FMT "\n",
+           cxx::int_value<Pfn>(snd_addr), cxx::int_value<Pfn>(rcv_addr));
+      return L4_error::Map_failed;
+    }
+
   Mem_space::Attr attribs(fp_from.rights() | L4_fpage::Rights::U(),
                           control.mem_type(), Page::Kern::None());
 
