@@ -40,12 +40,13 @@ resume_vm_vmx:
 	jnz	1f
 
 	// check VM-Instruction Error field (0x4400) for
-	// non-launchend VMCS error (5)
+	// non-launched VMCS error (5)
 	mov	$0x4400, %rbx
 	vmread	%rbx, %rbx
 	cmpl	$5, %ebx
 	jne	1f
 
+	mov	 96(%rsp), %rbx
 	vmlaunch
 1:	// error path
 	mov	$0x6c14, %rbx
