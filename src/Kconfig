@@ -239,7 +239,6 @@ config KMEM_SIZE_KB
 choice
 	prompt "Thread control block size"
 	default CONTEXT_SIZE_AUTO
-        depends on EXPERIMENTAL
 	help
 	  Choose the stack size of each thread in the kernel.
 
