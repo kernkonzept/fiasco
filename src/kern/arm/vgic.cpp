@@ -155,11 +155,11 @@ public:
     s->vtr = self()->vtr();
 
     // We assume that the GIC implements at least Arm_vgic::N_lregs line
-    // registers. Ensure that is really the case, because acessing a
-    // non-implemeneted list register would result in an Undefined
+    // registers. Ensure that is really the case, because accessing a
+    // non-implemented list register would result in an Undefined
     // Instruction Exception.
     if (s->vtr.list_regs() + 1 < Arm_vgic::N_lregs)
-      panic("GIC implements less virtual line registers than required.");
+      panic("GIC implements fewer virtual line registers than required.");
 
     // Clamp number of supported LRs to the actually saved/loaded LRs. The
     // others are not usable to user space.
