@@ -12,7 +12,7 @@
 #elif defined CONFIG_CONTEXT_4K
 #define THREAD_BLOCK_SHIFT (12)
 #else
-#define THREAD_BLOCK_SHIFT (10)
+#define THREAD_BLOCK_SHIFT (11)
 #endif
 
 #define COP0_SYNC   ehb
