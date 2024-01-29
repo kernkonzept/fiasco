@@ -350,7 +350,7 @@ NEEDS[PF::is_translation_error, PF::is_read_error, PF::is_instruction_error]
 Mword
 PF::addr_to_msgword0(Address pfa, Mword error)
 {
-  Mword a = pfa & ~7u;
+  Mword a = pfa & ~7;
   if (is_translation_error(error))
     a |= 1;
 
