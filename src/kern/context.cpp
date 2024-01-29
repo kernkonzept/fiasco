@@ -539,21 +539,9 @@ Context::kernel_context(Cpu_number cpu, Context *ctxt)
 //@{
 //-
 
-
 /**
- * Does the context exist? .
- * @return true if this context has been initialized.
- */
-PUBLIC inline NEEDS [Context::is_invalid]
-Mword
-Context::exists() const
-{
-  return !is_invalid();
-}
-
-/**
- * Is the context about to be deleted.
- * @return true if this context is in deletion.
+ * Check if the context is inactive, i.e. has not yet been started or was killed.
+ * @return true if this context is inactive.
  */
 PUBLIC inline NEEDS ["thread_state.h"]
 bool
