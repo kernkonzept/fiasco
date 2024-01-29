@@ -502,8 +502,7 @@ Thread::do_kill()
     auto guard = lock_guard(cpu_lock);
 
     // if IPC timeout active, reset it
-    if (_timeout)
-      _timeout->reset();
+    reset_timeout();
 
     Sched_context::Ready_queue &rq = Sched_context::rq.current();
 
