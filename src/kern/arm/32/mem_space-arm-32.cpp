@@ -20,7 +20,8 @@ PROTECTED static
 void
 Mem_space::set_syscall_page(void *p)
 {
-  __mem_space_syscall_page = Mem_layout::pmem_to_phys((Address)p);
+  __mem_space_syscall_page =
+    Mem_layout::pmem_to_phys(reinterpret_cast<Address>(p));
 }
 
 PROTECTED
@@ -34,7 +35,8 @@ Mem_space::sync_kernel()
 
   extern char kern_lib_start[];
 
-  Phys_mem_addr pa(Kmem::kdir->virt_to_phys((Address)kern_lib_start));
+  Phys_mem_addr pa(Kmem::kdir->virt_to_phys(
+                     reinterpret_cast<Address>(kern_lib_start)));
   pte.set_page(pa, Page::Attr::space_local(Page::Rights::URX()));
 
   pte.write_back_if(true, c_asid());

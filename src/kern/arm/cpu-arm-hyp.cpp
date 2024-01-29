@@ -70,7 +70,7 @@ Cpu::init_hyp_mode()
 {
   extern char hyp_vector_base[];
 
-  assert (!((Mword)hyp_vector_base & 31));
+  assert (!(reinterpret_cast<Mword>(hyp_vector_base) & 31));
   asm volatile ("mcr p15, 4, %0, c12, c0, 0 \n" : : "r"(hyp_vector_base));
 
   asm volatile (

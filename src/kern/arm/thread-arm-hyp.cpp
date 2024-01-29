@@ -445,8 +445,9 @@ Thread::peek_user(T const *adr, Context *c)
        "mrc p15, 0, %0, c7, c4, 0 \n"
        : "=r" (pa) : "r"(adr) );
   if (EXPECT_TRUE(!(pa & 1)))
-    return *reinterpret_cast<T const *>(cxx::mask_lsb(pa, 12)
-                                        | cxx::get_lsb((Address)adr, 12));
+    return *reinterpret_cast<T const *>(
+              cxx::mask_lsb(pa, 12)
+              | cxx::get_lsb(reinterpret_cast<Address>(adr), 12));
 
   c->set_kernel_mem_op_hit();
   return T(~0);

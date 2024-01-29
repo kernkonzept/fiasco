@@ -96,7 +96,9 @@ IMPLEMENT static
 void
 Sys_call_page::init()
 {
-  Unsigned32 *sys_calls = (Unsigned32*)Kmem_alloc::allocator()->alloc(Config::page_size());
+  Unsigned32 *sys_calls =
+    static_cast<Unsigned32*>(
+      Kmem_alloc::allocator()->alloc(Config::page_size()));
   if (!sys_calls)
     panic("Can't allocate system-call page.");
 

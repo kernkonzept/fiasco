@@ -209,7 +209,7 @@ Timer::timer_value_to_time(Unsigned64 v, Mword scaler, Mword shift)
          "=&r"(dummy1), "=&r"(dummy2), "=&r"(dummy3), "=&r"(dummy4)
        : [scaler]"r"(scaler), [shift]"r"(shift)
        : "cc");
-  return ((Unsigned64)hi << 32) | lo;
+  return (Unsigned64{hi} << 32) | lo;
 }
 
 // ------------------------------------------------------------------------

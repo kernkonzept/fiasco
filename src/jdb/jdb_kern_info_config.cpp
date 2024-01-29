@@ -25,7 +25,7 @@ void
 Jdb_kern_info_config::show() override
 {
   printf("%*.*s",
-      (int)(&_binary_gblcfg_o_txt_end - &_binary_gblcfg_o_txt_start),
-      (int)(&_binary_gblcfg_o_txt_end - &_binary_gblcfg_o_txt_start),
+      static_cast<int>(&_binary_gblcfg_o_txt_end - &_binary_gblcfg_o_txt_start),
+      static_cast<int>(&_binary_gblcfg_o_txt_end - &_binary_gblcfg_o_txt_start),
       &_binary_gblcfg_o_txt_start);
 }

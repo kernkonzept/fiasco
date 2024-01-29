@@ -238,7 +238,7 @@ Jdb_thread_list::sc_wfq_iter_next(Sched_context *t)
   if (!rl || rl == RQP::idle(rq))
     return RQP::cnt(rq) ? RQP::heap(rq)[0] : *RQP::idle(rq);
 
-  if ((unsigned)(rl - RQP::heap(rq)) >= RQP::cnt(rq))
+  if (static_cast<unsigned>(rl - RQP::heap(rq)) >= RQP::cnt(rq))
     return *RQP::idle(rq);
 
   return *(rl + 1);

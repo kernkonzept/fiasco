@@ -24,23 +24,23 @@ Mem::memset_mwords (void *dst, const unsigned long value, unsigned long nr_of_mw
   typedef unsigned long __attribute__((may_alias)) U32;
   typedef unsigned long long __attribute__((may_alias)) U64;
 
-  U32 *d32 = (U32 *)dst;
-  if ((unsigned long)d32 & 0x4U)
+  U32 *d32 = static_cast<U32 *>(dst);
+  if (reinterpret_cast<unsigned long>(d32) & 0x4U)
     {
       *d32++ = value;
       nr_of_mwords--;
     }
 
-  U64 v64 = ((U64)value << 32) | value;
+  U64 v64 = (static_cast<U64>(value) << 32) | value;
   for (; nr_of_mwords >= 4; d32 += 4, nr_of_mwords -= 4)
     {
-      ((U64 *)d32)[0] = v64;
-      ((U64 *)d32)[1] = v64;
+      reinterpret_cast<U64 *>(d32)[0] = v64;
+      reinterpret_cast<U64 *>(d32)[1] = v64;
     }
 
   if (nr_of_mwords & 0x2U)
     {
-      *((U64 *)d32) = v64;
+      *reinterpret_cast<U64 *>(d32) = v64;
       d32 += 2;
     }
 
@@ -52,8 +52,10 @@ IMPLEMENT static inline
 void
 Mem::memcpy_mwords (void *dst, void const *src, unsigned long nr_of_mwords)
 {
-  unsigned long __attribute__((may_alias)) *s = (unsigned long *)src;
-  unsigned long __attribute__((may_alias)) *d = (unsigned long *)dst;
+  unsigned long __attribute__((may_alias)) *s =
+    const_cast<unsigned long *>(static_cast<unsigned const long *>(src));
+  unsigned long __attribute__((may_alias)) *d =
+    const_cast<unsigned long *>(static_cast<unsigned long *>(dst));
   unsigned long tmp;
 
   if (__builtin_constant_p(nr_of_mwords))

@@ -110,7 +110,7 @@ Gic_h_v3::save_lrs(Gic_h::Arm_vgic::Lrs *lr, unsigned n)
 #define TRANSFER_LR(ul,uh,v,x) \
   asm ("mrc p15, 4, %0, c12, " #ul", " #v : "=r"(l)); \
   asm ("mrc p15, 4, %0, c12, " #uh", " #v : "=r"(h)); \
-  lr->lr64[x] = (((Unsigned64)h) << 32) | l; \
+  lr->lr64[x] = (Unsigned64{h} << 32) | l; \
   if ((x + 1 >= Gic_h::Arm_vgic::N_lregs) || (n <= x + 1)) return
 
   TRANSFER_LR(c12, c14, 0, 0);
@@ -136,8 +136,10 @@ PUBLIC static inline ALWAYS_INLINE void
 Gic_h_v3::load_lrs(Gic_h::Arm_vgic::Lrs const *lr, unsigned n)
 {
 #define TRANSFER_LR(ul,uh,v,x) \
-  asm ("mcr p15, 4, %0, c12, " #ul", " #v : : "r"((Unsigned32)lr->lr64[x])); \
-  asm ("mcr p15, 4, %0, c12, " #uh", " #v : : "r"((Unsigned32)(lr->lr64[x] >> 32))); \
+  asm ("mcr p15, 4, %0, c12, " #ul", " #v \
+       : : "r"(static_cast<Unsigned32>(lr->lr64[x]))); \
+  asm ("mcr p15, 4, %0, c12, " #uh", " #v \
+       : : "r"(static_cast<Unsigned32>(lr->lr64[x] >> 32))); \
   if ((x + 1 >= Gic_h::Arm_vgic::N_lregs) || (n <= x + 1)) return
 
   TRANSFER_LR(c12, c14, 0, 0);

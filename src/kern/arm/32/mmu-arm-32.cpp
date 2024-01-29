@@ -26,8 +26,8 @@ template< unsigned long Flush_area, bool Ram >
 void Mmu<Flush_area, Ram>::flush_cache(void const *start,
 				       void const *end)
 {
-  unsigned long s = (unsigned long)start;
-  unsigned long e = (unsigned long)end;
+  unsigned long s = reinterpret_cast<unsigned long>(start);
+  unsigned long e = reinterpret_cast<unsigned long>(end);
   unsigned long is = icache_line_size(), ds = dcache_line_size();
 
   for (unsigned long i = s & ~(ds - 1U); i < e; i += ds)
@@ -52,7 +52,7 @@ void Mmu<Flush_area, Ram>::clean_dcache(void const *va)
   __asm__ __volatile__ (
       "mcr p15, 0, %0, c7, c10, 1       \n" // DCCMVAC
       :
-      : "r" ((unsigned long)va & ~(dcache_line_size() - 1))
+      : "r" (reinterpret_cast<unsigned long>(va) & ~(dcache_line_size() - 1))
       : "memory");
 }
 
@@ -68,7 +68,8 @@ void Mmu<Flush_area, Ram>::clean_dcache(void const *start, void const *end)
       "    cmp %[i], %[end]               \n"
       "    blo 1b                         \n"
       : [i]     "=&r" (start)
-      :         "0"   ((unsigned long)start & ~(dcache_line_size() - 1)),
+      :         "0"   (reinterpret_cast<unsigned long>(start)
+                       & ~(dcache_line_size() - 1)),
         [end]   "r"   (end),
 	[clsz]  "ir"  (dcache_line_size())
       : "memory");
@@ -87,7 +88,8 @@ void Mmu<Flush_area, Ram>::flush_dcache(void const *start, void const *end)
       "    cmp %[i], %[end]             \n"
       "    blo 1b                       \n"
       : [i]    "=&r" (start)
-      :        "0"   ((unsigned long)start & ~(dcache_line_size() - 1)),
+      :        "0"   (reinterpret_cast<unsigned long>(start)
+                      & ~(dcache_line_size() - 1)),
         [end]  "r"   (end),
 	[clsz] "ir"  (dcache_line_size())
       : "memory");
@@ -106,7 +108,8 @@ void Mmu<Flush_area, Ram>::inv_dcache(void const *start, void const *end)
       "    cmp %[i], %[end]             \n"
       "    blo 1b                       \n"
       : [i]    "=&r" (start)
-      :        "0"   ((unsigned long)start & ~(dcache_line_size() - 1)),
+      :        "0"   (reinterpret_cast<unsigned long>(start)
+                      & ~(dcache_line_size() - 1)),
         [end]  "r"   (end),
 	[clsz] "ir"  (dcache_line_size())
       : "memory");

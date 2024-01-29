@@ -5,7 +5,7 @@ Thread::arm_enter_debugger(Trap_state *ts, Cpu_number log_cpu,
                            unsigned long *ntr, void *stack)
 {
   Mword dummy1, tmp;
-  register Mword _ts asm("r0") = (Mword)ts;
+  register Mword _ts asm("r0") = reinterpret_cast<Mword>(ts);
   register Cpu_number _lcpu asm("r1") = log_cpu;
 
   asm volatile(

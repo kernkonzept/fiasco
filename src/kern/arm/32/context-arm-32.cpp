@@ -29,10 +29,10 @@ Context::prepare_switch_to(void (*fptr)())
 PRIVATE inline void
 Context::arm_switch_gp_regs(Context *t)
 {
-  register Mword _old_this asm("r1") = (Mword)this;
-  register Mword _new_this asm("r0") = (Mword)t;
-  register Mword _old_sp asm("r2") = (Mword)&_kernel_sp;
-  register Mword _new_sp asm("r3") = (Mword)t->_kernel_sp;
+  register Mword _old_this asm("r1") = reinterpret_cast<Mword>(this);
+  register Mword _new_this asm("r0") = reinterpret_cast<Mword>(t);
+  register Mword _old_sp asm("r2") = reinterpret_cast<Mword>(&_kernel_sp);
+  register Mword _new_sp asm("r3") = reinterpret_cast<Mword>(t->_kernel_sp);
 
   asm volatile
     (// save context of old thread

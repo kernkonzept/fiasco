@@ -108,8 +108,8 @@ Mem_op::__arm_mem_cache_maint(int op, void const *start, void const *end)
       return;
     }
 
-  Virt_addr v = Virt_addr((Address)start);
-  Virt_addr e = Virt_addr((Address)end);
+  Virt_addr v = Virt_addr(reinterpret_cast<Address>(start));
+  Virt_addr e = Virt_addr(reinterpret_cast<Address>(end));
 
   Context *c = current();
 
@@ -131,7 +131,8 @@ Mem_op::__arm_mem_cache_maint(int op, void const *start, void const *end)
         {
           Virt_addr vstart = Virt_addr(phys_addr) | offs;
           Virt_addr vend = vstart + sz;
-          __arm_kmem_cache_maint(op, (void *)vstart, (void *)vend);
+          __arm_kmem_cache_maint(op, static_cast<void *>(vstart),
+                                 static_cast<void *>(vend));
         }
       v += sz;
     }

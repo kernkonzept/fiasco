@@ -112,5 +112,5 @@ template< typename T >
 T
 Mem_layout::read_special_safe(T const *a)
 {
-  return T(_read_special_safe((Mword const *)a));
+  return T(_read_special_safe(reinterpret_cast<Mword const *>(a)));
 }

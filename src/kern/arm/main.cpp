@@ -88,7 +88,7 @@ kernel_main()
   static Kernel_thread *kernel = new (Ram_quota::root) Kernel_thread(Ram_quota::root);
   Task *const ktask = Kernel_task::kernel_task();
   kernel->kbind(ktask);
-  assert(((Mword)kernel->init_stack() & 7) == 0);
+  assert((reinterpret_cast<Mword>(kernel->init_stack()) & 7) == 0);
 
   Mem_unit::tlb_flush();
 

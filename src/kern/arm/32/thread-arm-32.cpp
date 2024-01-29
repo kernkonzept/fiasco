@@ -77,7 +77,7 @@ Thread::copy_utcb_to_ts(L4_msg_tag tag, Thread *snd, Thread *rcv,
   if (EXPECT_FALSE(tag.words() < (sizeof(Trex) / sizeof(Mword))))
     return true;
 
-  Trap_state *ts = (Trap_state*)rcv->_utcb_handler;
+  Trap_state *ts = static_cast<Trap_state*>(rcv->_utcb_handler);
   Utcb *snd_utcb = snd->utcb().access();
   Trex const *sregs = reinterpret_cast<Trex const *>(snd_utcb->values);
 
@@ -114,7 +114,7 @@ bool FIASCO_WARN_RESULT
 Thread::copy_ts_to_utcb(L4_msg_tag, Thread *snd, Thread *rcv,
                         L4_fpage::Rights rights)
 {
-  Trap_state *ts = (Trap_state*)snd->_utcb_handler;
+  Trap_state *ts = static_cast<Trap_state*>(snd->_utcb_handler);
 
   {
     auto guard = lock_guard(cpu_lock);
@@ -126,7 +126,8 @@ Thread::copy_ts_to_utcb(L4_msg_tag, Thread *snd, Thread *rcv,
     // copy pf_address, esr, r0..r12
     Mem::memcpy_mwords(rcv_utcb->values, ts, 15);
     Continuation::User_return_frame *d
-      = reinterpret_cast<Continuation::User_return_frame *>((char*)&rcv_utcb->values[15]);
+      = reinterpret_cast<Continuation::User_return_frame *>(
+          &rcv_utcb->values[15]);
 
     snd->_exc_cont.get(d, ts);
 
@@ -266,7 +267,8 @@ Thread::check_and_handle_linux_cache_api(Trap_state *ts)
     {
       if (ts->r[2] == 0)
         Mem_op::arm_mem_cache_maint(Mem_op::Op_cache_coherent,
-                                    (void *)ts->r[0], (void *)ts->r[1]);
+                                    reinterpret_cast<void *>(ts->r[0]),
+                                    reinterpret_cast<void *>(ts->r[1]));
       ts->r[0] = 0;
       return true;
     }
@@ -345,7 +347,8 @@ Thread::check_and_handle_coproc_faults(Trap_state *ts)
 
   if (ts->psr & Proc::Status_thumb)
     {
-      Unsigned16 v = Thread::peek_user((Unsigned16 *)ts->pc, this);
+      Unsigned16 v =
+        Thread::peek_user(reinterpret_cast<Unsigned16 *>(ts->pc), this);
 
       if (EXPECT_FALSE(is_kernel_mem_op_hit_and_clear()))
         return true;
@@ -353,7 +356,9 @@ Thread::check_and_handle_coproc_faults(Trap_state *ts)
       if ((v >> 11) <= 0x1c)
         return false;
 
-      opcode = (v << 16) | Thread::peek_user((Unsigned16 *)(ts->pc + 2), this);
+      opcode =
+        (v << 16)
+        | Thread::peek_user(reinterpret_cast<Unsigned16 *>(ts->pc + 2), this);
     }
   else
     opcode = Thread::peek_user((Unsigned32 *)ts->pc, this);

@@ -23,7 +23,7 @@ IMPLEMENTATION[arm && arm_lpae]:
 #include "boot_infos.h"
 
 Unsigned64 kernel_lpae_dir[4] __attribute__((aligned(4 * sizeof(Unsigned64))));
-Kpdir *Kmem::kdir = (Kpdir *)&kernel_lpae_dir;
+Kpdir *Kmem::kdir = reinterpret_cast<Kpdir *>(&kernel_lpae_dir);
 
 static Boot_paging_info FIASCO_BOOT_PAGING_INFO _bs_pgin_dta =
 {

@@ -179,7 +179,8 @@ void Mem_unit::tlb_flush(void *va, unsigned long asid)
       "dsb ish \n"
       "mcrr p15, 6, %[tmp1], %[tmp2], c2 \n" // restore VTTBR
       : [tmp1] "=&r" (t1), [tmp2] "=&r" (t2)
-      : [mva] "r" (((unsigned long)va & 0xfffff000)), [asid] "r" (asid << 16)
+      : [mva] "r" ((reinterpret_cast<unsigned long>(va) & 0xfffff000)),
+        [asid] "r" (asid << 16)
       : "memory");
 }
 
@@ -207,15 +208,16 @@ PUBLIC static inline
 void
 Mem_unit::make_coherent_to_pou(void const *start, size_t size)
 {
-  unsigned long end = (unsigned long)start + size;
+  unsigned long start_addr = reinterpret_cast<unsigned long>(start);
+  unsigned long end_addr = start_addr + size;
   unsigned long is = icache_line_size(), ds = dcache_line_size();
 
-  for (auto i = (unsigned long)start & ~(ds - 1U); i < end; i += ds)
+  for (auto i = start_addr & ~(ds - 1U); i < end_addr; i += ds)
     __asm__ __volatile__ ("mcr p15, 0, %0, c7, c11, 1" : : "r"(i));  // DCCMVAU
 
   Mem::dsb(); // make sure data cache changes are visible to instruction cache
 
-  for (auto i = (unsigned long)start & ~(is - 1U); i < end; i += is)
+  for (auto i = start_addr & ~(is - 1U); i < end_addr; i += is)
     __asm__ __volatile__ (
         "mcr p15, 0, %0, c7, c5, 1   \n"  // ICIMVAU
         "mcr p15, 0, %0, c7, c5, 7   \n"  // BPIMVA

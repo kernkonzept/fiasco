@@ -82,12 +82,12 @@ Bootstrap::init_paging()
   Phys_addr *const lpae = reinterpret_cast<Phys_addr*>(kern_to_boot(bs_info.pi.kernel_lpae_dir));
 
   for (unsigned i = 0; i < 4; ++i)
-    lpae[i] = Phys_addr(((Address)page_dir + 0x1000 * i) | 3);;
+    lpae[i] = Phys_addr((reinterpret_cast<Address>(page_dir) + 0x1000 * i) | 3);
 
   set_mair0(Page::Mair0_prrr_bits);
   create_initial_mappings();
 
-  return Phys_addr((Mword)lpae);
+  return Phys_addr(reinterpret_cast<Mword>(lpae));
 }
 
 //---------------------------------------------------------------------------
@@ -328,7 +328,7 @@ struct Elf32_rel
 
   inline void apply(unsigned long load_addr)
   {
-    auto *addr = (unsigned long *)(load_addr + offset);
+    auto *addr = reinterpret_cast<unsigned long *>(load_addr + offset);
     *addr += load_addr;
   }
 };

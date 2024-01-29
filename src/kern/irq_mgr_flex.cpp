@@ -53,7 +53,7 @@ public:
     if (pos < 0)
       pos = _max_irq;
 
-    if (pos >= (int)_max_irq)
+    if (pos >= static_cast<int>(_max_irq))
       {
         // add as last
         auto &e = _chips[_used++];

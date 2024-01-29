@@ -15,7 +15,7 @@ public:
 
   Id_alloc(unsigned nr_ids) : _nr_ids(nr_ids)
   {
-    _active = (Owner_type **)Boot_alloced::alloc(sizeof(Owner_type *) * _nr_ids);
+    _active = Boot_alloced::allocate<Owner_type *>(_nr_ids);
     for (unsigned i = 0; i < _nr_ids; ++i)
       _active[i] = 0;
   }

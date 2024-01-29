@@ -33,7 +33,7 @@ read_non_atomic(Unsigned64 const *mem)
   asm volatile ("ldr %[val], %[mem]" : [val] "=r" (lo) : [mem] "m" (mem32[0]));
   asm volatile ("ldr %[val], %[mem]" : [val] "=r" (hi) : [mem] "m" (mem32[1]));
 
-  return ((Unsigned64)hi << 32) | lo;
+  return (Unsigned64{hi} << 32) | lo;
 }
 
 WRITE(Unsigned8,  "strb");

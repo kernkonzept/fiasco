@@ -235,7 +235,7 @@ bool
 Gic_msi::reserve(Mword pin) override
 {
   bool success = false;
-  with_lpi(pin, &Lpi::alloc, (Irq_base*)1, success);
+  with_lpi(pin, &Lpi::alloc, reinterpret_cast<Irq_base*>(1), success);
   return success;
 }
 
