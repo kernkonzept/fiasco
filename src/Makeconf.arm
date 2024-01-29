@@ -5,7 +5,6 @@
 CROSS_COMPILE_DFL-$(CONFIG_BIT32) := arm-linux-gnueabihf-
 CROSS_COMPILE_DFL-$(CONFIG_BIT64) := aarch64-linux-gnu-
 CROSS_COMPILE                     ?= $(CROSS_COMPILE_DFL-y)
-
 SHARED_FLAGS-$(CONFIG_ARM_PXA)    += -mcpu=xscale
 SHARED_FLAGS-$(CONFIG_ARM_SA)     += -mcpu=strongarm1100
 SHARED_FLAGS-$(CONFIG_ARM_920T)   += -mcpu=arm920t
@@ -25,24 +24,19 @@ SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A72) += $(call CHECKCC,-mcpu=cortex-a72,-march=
 SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A73) += $(call CHECKCC,-mcpu=cortex-a73,-march=armv8-a)
 SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A76) += $(call CHECKCC,-mcpu=cortex-a76,-march=armv8-a)
 SHARED_FLAGS-$(CONFIG_ARM_NEOVERSE_N1) += $(call CHECKCC,-mcpu=neoverse-n1,-march=armv8.2-a)
-SHARED_FLAGS-$(CONFIG_ARM_KRAIT)  += $(call CHECKCC,-mcpu=krait,-mcpu=cortex-a15)
-
+SHARED_FLAGS-$(CONFIG_ARM_KRAIT) += $(call CHECKCC,-mcpu=krait,-mcpu=cortex-a15)
 SHARED_FLAGS-$(CONFIG_BIT32)      += -Wno-psabi
 SHARED_FLAGS-$(CONFIG_BIT32)      += -mfloat-abi=soft
 SHARED_FLAGS-$(CONFIG_BIT32)      += $(call CHECKCC,-mno-thumb-interwork)
 SHARED_FLAGS-$(CONFIG_BIT32)      += -marm -mabi=aapcs
 SHARED_FLAGS-$(CONFIG_BIT64)      += -mgeneral-regs-only
 SHARED_FLAGS-$(CONFIG_BIT64)      += $(call CHECKCC,-mno-outline-atomics)
-SHARED_FLAGS-clang                += $(if $(CONFIG_FPU),$(call CHECKCC,\
-                                       -Xclang -target-feature -Xclang +fp-armv8,))
 SHARED_FLAGS-clang                += $(if $(CONFIG_BIT32),-no-integrated-as,)
-
 LDFLAGS-$(CONFIG_BIT32)           += --no-warn-mismatch
 LDFLAGS                           += $(LDFLAGS-y)
 LD_EMULATION_CHOICE-$(CONFIG_BIT32) := armelf armelf_linux_eabi armelf_fbsd
 LD_EMULATION_CHOICE-$(CONFIG_BIT64) := aarch64linux aarch64elf
 LD_EMULATION_CHOICE := $(LD_EMULATION_CHOICE-y)
-
 OBJCOPY_BFDNAME-$(CONFIG_BIT32)   := elf32-littlearm
 OBJCOPY_BFDNAME-$(CONFIG_BIT64)   := elf64-littleaarch64
 OBJCOPY_BFDNAME                   := $(OBJCOPY_BFDNAME-y)
