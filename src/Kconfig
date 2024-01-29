@@ -240,7 +240,7 @@ choice
 	prompt "Thread control block size"
 	default CONTEXT_SIZE_AUTO
 	help
-	  Chose the stack size of each thread in the kernel.
+	  Choose the stack size of each thread in the kernel.
 
 config CONTEXT_SIZE_AUTO
 	bool "Automatic"
