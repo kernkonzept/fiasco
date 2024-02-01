@@ -40,7 +40,7 @@ Kernel_thread::bootstrap_arch()
   // initialize the profiling timer
   bool user_irq0 = Koptions::o()->opt(Koptions::F_irq0);
 
-  if ((int)Config::Scheduler_mode == Config::SCHED_PIT && user_irq0)
+  if (int{Config::Scheduler_mode} == Config::SCHED_PIT && user_irq0)
     panic("option -irq0 not possible since irq 0 is used for scheduling");
 
   boot_app_cpus();
@@ -161,7 +161,7 @@ Kernel_thread::boot_app_cpus()
           if (last_cpu == Cpu_number::boot_cpu())
             ++last_cpu;
 
-          Unsigned32 aid = ((Unsigned32)lapic->apic_id) << 24;
+          Unsigned32 aid = lapic->apic_id << 24;
 
           // the boot CPU already has a CPU number assigned
           if (aid == boot_apic_id)
@@ -185,7 +185,7 @@ Kernel_thread::boot_app_cpus()
           if (last_cpu == Cpu_number::boot_cpu())
             ++last_cpu;
 
-          _cpu_num_to_apic_id[last_cpu++] = ((Unsigned32)lapic->apic_id) << 24;
+          _cpu_num_to_apic_id[last_cpu++] = lapic->apic_id << 24;
         }
     }
 
@@ -193,7 +193,7 @@ Kernel_thread::boot_app_cpus()
   printf("MP: detecting APs...\n");
 
   // broadcast an AP startup via the APIC (let run the self-registration code)
-  tramp_page = (Address)&(_tramp_mp_entry[0]);
+  tramp_page = reinterpret_cast<Address>(&_tramp_mp_entry[0]);
 
   // Send IPI-Sequency to startup the APs
   Apic::mp_startup(Cpu::boot_cpu(), Apic::APIC_IPI_OTHERS, tramp_page);

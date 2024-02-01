@@ -39,7 +39,7 @@ Jdb_entry_frame::from_user() const
 PUBLIC inline
 Address
 Jdb_entry_frame::ksp() const
-{ return (Address)&_sp; }
+{ return reinterpret_cast<Address>(&_sp); }
 
 PUBLIC inline
 Address

@@ -414,7 +414,7 @@ Kmem::init_mmu()
 {
   Kmem_alloc *const alloc = Kmem_alloc::allocator();
 
-  kdir = (Kpdir*)alloc->alloc(Config::page_order());
+  kdir = static_cast<Kpdir*>(alloc->alloc(Config::page_order()));
   memset (kdir, 0, Config::PAGE_SIZE);
 
   unsigned long cpu_features = Cpu::get_features();
@@ -484,7 +484,7 @@ Kmem::setup_cpu_structures(Cpu &cpu, Lockless_alloc *cpu_alloc,
   assert(tss != nullptr);
   assert(Pg::aligned(reinterpret_cast<Address>(tss)));
 
-  cpu.init_gdt((Address)gdt, user_max());
+  cpu.init_gdt(reinterpret_cast<Address>(gdt), user_max());
   cpu.init_tss(tss);
 
   // force GDT... to memory before loading the registers

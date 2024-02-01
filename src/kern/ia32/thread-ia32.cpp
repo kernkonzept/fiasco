@@ -67,8 +67,8 @@ Thread::Thread(Ram_quota *q)
   _space.space(Kernel_task::kernel_task());
 
   if (Config::Stack_depth)
-    std::memset((char*)this + sizeof(Thread), '5',
-		Thread::Size-sizeof(Thread)-64);
+    std::memset(reinterpret_cast<char *>(this) + sizeof(Thread), '5',
+                Thread::Size - sizeof(Thread) - 64);
 
   _magic = magic;
   _timeout = 0;
@@ -120,30 +120,31 @@ Thread::handle_kernel_exc(Trap_state *ts)
 {
   for (auto const &e: Exc_entry::table())
     {
-      if (e.ip == ts->ip())
-        {
-          if (e.handler)
-            {
-              if (0)
-                printf("fixup exception(h): %ld: ip=%lx -> handler %p fixup %lx ts @ %p -> %lx\n",
-                       ts->trapno(), ts->ip(), (void *)e.handler, e.fixup,
-                       (void *)ts, reinterpret_cast<Mword const *>(ts)[-1]);
-              if (0)
-                ts->dump();
+      if (e.ip != ts->ip()) continue;
 
-              return e.handler(&e, ts);
-            }
-          else if (e.fixup)
-            {
-              if (0)
-                printf("fixup exception: %ld: ip=%lx -> fixup %lx\n",
-                       ts->trapno(), ts->ip(), e.fixup);
-              ts->ip(e.fixup);
-              return true;
-            }
-          else
-            return false;
+      if (e.handler)
+        {
+          if (0)
+            printf("fixup exception(h): %ld: "
+                   "ip=%lx -> handler %p fixup %lx ts @ %p -> %lx\n",
+                   ts->trapno(), ts->ip(), reinterpret_cast<void *>(e.handler),
+                   e.fixup, static_cast<void *>(ts),
+                   reinterpret_cast<Mword const *>(ts)[-1]);
+          if (0)
+            ts->dump();
+
+          return e.handler(&e, ts);
         }
+      else if (e.fixup)
+        {
+          if (0)
+            printf("fixup exception: %ld: ip=%lx -> fixup %lx\n",
+                   ts->trapno(), ts->ip(), e.fixup);
+          ts->ip(e.fixup);
+          return true;
+        }
+      else
+        return false;
     }
   return false;
 }
@@ -222,7 +223,8 @@ Thread::handle_slow_trap(Trap_state *ts)
   if (EXPECT_FALSE ((error = setjmp(pf_recovery)) != 0) )
     {
       WARN("%p killed:\n"
-           "\033[1mUnhandled page fault, code=%08x\033[m\n", (void *)this, error);
+           "\033[1mUnhandled page fault, code=%08x\033[m\n",
+           static_cast<void *>(this), error);
       goto fail_nomsg;
     }
 
@@ -258,7 +260,7 @@ check_exception:
 fail:
   // can't handle trap -- kill the thread
   WARN("%p killed:\n"
-       "\033[1mUnhandled trap \033[m\n", (void *)this);
+       "\033[1mUnhandled trap \033[m\n", static_cast<void *>(this));
 
 fail_nomsg:
   if (Warn::is_enabled(Warning))
@@ -426,7 +428,7 @@ Thread::_hw_virt_arch_init_vcpu_state(Vcpu_state *vcpu_state)
     Vmx::cpus.current().init_vmcs_infos(vcpu_state);
 
   if (Cpu::boot_cpu()->vendor() == Cpu::Vendor_intel)
-    vcpu_state->user_data[6] = (Mword)Cpu::ucode_revision();
+    vcpu_state->user_data[6] = Cpu::ucode_revision();
 
   // currently we do nothing for SVM here
 }
@@ -502,7 +504,8 @@ Thread::sys_gdt_x86(L4_msg_tag tag, Utcb const *utcb, Utcb *out)
       && Utcb::val_idx(Utcb::val64_idx(2) + idx) < tag.words();
       ++idx, ++entry_number)
     {
-      Gdt_entry d = access_once((Gdt_entry *)&utcb->val64[Utcb::val64_idx(2) + idx]);
+      Gdt_entry d = access_once(reinterpret_cast<Gdt_entry const *>(
+                                  &utcb->val64[Utcb::val64_idx(2) + idx]));
       if (d.unsafe())
         return Kobject_iface::commit_result(-L4_err::EInval);
 
@@ -627,7 +630,7 @@ Thread::handle_not_nested_trap(Trap_state *ts)
 {
   // no kernel debugger present
   printf(" %p IP=" L4_PTR_FMT " Trap=%02lx [Ret/Esc]\n",
-	 (void *)this, ts->ip(), ts->_trapno);
+         static_cast<void *>(this), ts->ip(), ts->_trapno);
 
   int r;
   // cannot use normal getchar because it may block with hlt and irq's
@@ -693,10 +696,10 @@ Thread::pagein_tcb_request(Return_frame *regs)
 {
   // Counterpart: Mem_layout::read_special_safe()
   unsigned long new_ip = regs->ip();
-  if (*(Unsigned8*)new_ip == 0x48) // REX.W
+  if (*reinterpret_cast<Unsigned8*>(new_ip) == 0x48) // REX.W
     new_ip += 1;
 
-  Unsigned16 op = *(Unsigned16*)new_ip;
+  Unsigned16 op = *reinterpret_cast<Unsigned16*>(new_ip);
   if ((op & 0xc0ff) == 0x8b)
     {
       regs->ip(new_ip + 2);
@@ -707,7 +710,8 @@ Thread::pagein_tcb_request(Return_frame *regs)
       //         ecx/rcx
       //         edx/rdx
       //         ...
-      Mword *reg = ((Mword*)regs) - 2 - Return_frame::Pf_ax_offset;
+      Mword *reg = reinterpret_cast<Mword*>(regs) - 2
+                   - Return_frame::Pf_ax_offset;
       assert((op >> 11) <= 2);
       reg[-(op>>11)] = 0; // op==0 => eax, op==1 => ecx, op==2 => edx
 

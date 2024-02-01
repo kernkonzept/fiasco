@@ -38,18 +38,18 @@ Mem_unit::clean_dcache()
 PUBLIC static inline ALWAYS_INLINE
 void
 Mem_unit::clean_dcache(void const *addr)
-{ asm volatile ("clflush %0" : : "m" (*(char const *)addr)); }
+{ asm volatile ("clflush %0" : : "m" (*static_cast<char const *>(addr))); }
 
 PUBLIC static inline ALWAYS_INLINE
 void
 Mem_unit::clean_dcache(void const *start, void const *end)
 {
   enum { Cl_size = 64 };
-  if (((Address)end) - ((Address)start) >= 8192)
+  if (reinterpret_cast<Address>(end) - reinterpret_cast<Address>(start) >= 8192)
     clean_dcache();
   else
-    for (char const *s = (char const *)start; s < (char const *)end;
-         s += Cl_size)
+    for (char const *s = static_cast<char const *>(start);
+         s < static_cast<char const *>(end); s += Cl_size)
       clean_dcache(s);
 }
 
@@ -81,7 +81,7 @@ PUBLIC static inline ALWAYS_INLINE
 void
 Mem_unit::tlb_flush(Address addr)
 {
-  __asm__ __volatile__ ("invlpg %0" : : "m" (*(char*)addr) : "memory");
+  __asm__ __volatile__ ("invlpg %0" : : "m" (*reinterpret_cast<char*>(addr)) : "memory");
 }
 
 PUBLIC static inline ALWAYS_INLINE

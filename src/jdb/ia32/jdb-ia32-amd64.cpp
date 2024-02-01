@@ -173,7 +173,7 @@ void Jdb::init()
 
   init_serial_console();
 
-  Trap_state::base_handler = (Trap_state::Handler)enter_jdb;
+  Trap_state::base_handler = reinterpret_cast<Trap_state::Handler>(enter_jdb);
 
   // if esc_hack, serial_esc or watchdog enabled, set slow timer handler
   Idt::set_vectors_run();
@@ -305,7 +305,7 @@ Thread*
 Jdb::get_thread(Cpu_number cpu)
 {
   Jdb_entry_frame *entry_frame = Jdb::entry_frame.cpu(cpu);
-  Address sp = (Address) entry_frame;
+  Address sp = reinterpret_cast<Address>(entry_frame);
 
   // special case since we come from the double fault handler stack
   if (entry_frame->_trapno == 8 && !(entry_frame->cs() & 3))
@@ -317,7 +317,7 @@ Jdb::get_thread(Cpu_number cpu)
   if (!Helping_lock::threading_system_active)
     return 0;
 
-  return static_cast<Thread*>(context_of((const void*)sp));
+  return static_cast<Thread*>(context_of(reinterpret_cast<const void*>(sp)));
 }
 
 PUBLIC static inline
@@ -350,7 +350,7 @@ Jdb::peek_phys(Address phys, void *value, int width)
 
   Address virt = Kmem::map_phys_page_tmp(phys, 0);
 
-  memcpy(value, (void*)virt, width);
+  memcpy(value, reinterpret_cast<void*>(virt), width);
 }
 
 PUBLIC static
@@ -362,7 +362,7 @@ Jdb::poke_phys(Address phys, void const *value, int width)
 
   Address virt = Kmem::map_phys_page_tmp(phys, 0);
 
-  memcpy((void*)virt, value, width);
+  memcpy(reinterpret_cast<void*>(virt), value, width);
 }
 
 PRIVATE static
@@ -377,13 +377,13 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
   if (addr.is_kmem())
     {
       Address pdbr = Cpu::get_pdbr();
-      Pdir *kdir = (Pdir *)Mem_layout::phys_to_pmem(pdbr);
+      Pdir *kdir = reinterpret_cast<Pdir *>(Mem_layout::phys_to_pmem(pdbr));
       auto i = kdir->walk(Virt_addr(addr.addr()));
       if (!i.is_valid())
         return nullptr;
 
       if (!write || (i.attribs().rights & Page::Rights::W()))
-        return (unsigned char *)addr.virt();
+        return reinterpret_cast<unsigned char *>(addr.virt());
 
       phys = i.page_addr() | cxx::get_lsb(addr.addr(), i.page_order());
     }
@@ -412,7 +412,7 @@ Address
 Jdb::get_phys_address(Jdb_address addr)
 {
   if (addr.is_null())
-    return (Address)~0UL;
+    return Invalid_address;
 
   if (addr.is_phys())
     return addr.phys();
@@ -460,37 +460,39 @@ Jdb::Guessed_thread_state
 Jdb::guess_thread_state(Thread *t)
 {
   Guessed_thread_state state = s_unknown;
-  Mword *ktop = (Mword*)((Mword)context_of(t->get_kernel_sp()) +
-			  Context::Size);
+  Mword *ktop =
+    offset_cast<Mword*>(context_of(t->get_kernel_sp()), Context::Size);
+
+  auto to_mword = [](void *addr) { return reinterpret_cast<Mword>(addr); };
 
   for (int i=-1; i>-26; i--)
     {
       if (ktop[i] != 0)
-	{
-	  if (ktop[i] == (Mword)&in_page_fault)
-	    state = s_pagefault;
-	  if ((ktop[i] == (Mword)&in_slow_ipc4) ||  // entry.S, int 0x30 log
-	      (ktop[i] == (Mword)&in_slow_ipc5) ||  // entry.S, sysenter log
+        {
+          if (ktop[i] == to_mword(&in_page_fault))
+            state = s_pagefault;
+          if (ktop[i] == to_mword(&in_slow_ipc4) ||  // entry.S, int 0x30 log
+              ktop[i] == to_mword(&in_slow_ipc5) ||  // entry.S, sysenter log
 #if defined (CONFIG_JDB_LOGGING)
-	      (ktop[i] == (Mword)&in_sc_ipc1)   ||  // entry.S, int 0x30
-	      (ktop[i] == (Mword)&in_sc_ipc2)   ||  // entry.S, sysenter
+              ktop[i] == to_mword(&in_sc_ipc1)   ||  // entry.S, int 0x30
+              ktop[i] == to_mword(&in_sc_ipc2)   ||  // entry.S, sysenter
 #endif
-	     0)
-	    state = s_ipc;
-	  else if (ktop[i] == (Mword)&Thread::user_invoke)
-	    state = s_user_invoke;
-	  else if (ktop[i] == (Mword)&in_handle_fputrap)
-	    state = s_fputrap;
-	  else if (ktop[i] == (Mword)&in_interrupt)
-	    state = s_interrupt;
-	  else if ((ktop[i] == (Mword)&in_timer_interrupt) ||
-		   (ktop[i] == (Mword)&in_timer_interrupt_slow))
-	    state = s_timer_interrupt;
-	  else if (ktop[i] == (Mword)&in_slowtrap)
-	    state = s_slowtrap;
-	  if (state != s_unknown)
-	    break;
-	}
+              0)
+            state = s_ipc;
+          else if (ktop[i] == reinterpret_cast<Mword>(&Thread::user_invoke))
+            state = s_user_invoke;
+          else if (ktop[i] == to_mword(&in_handle_fputrap))
+            state = s_fputrap;
+          else if (ktop[i] == to_mword(&in_interrupt))
+            state = s_interrupt;
+          else if (ktop[i] == to_mword(&in_timer_interrupt) ||
+                   ktop[i] == to_mword(&in_timer_interrupt_slow))
+            state = s_timer_interrupt;
+          else if (ktop[i] == to_mword(&in_slowtrap))
+            state = s_slowtrap;
+          if (state != s_unknown)
+            break;
+        }
     }
 
   if (state == s_unknown && (t->state(false) & Thread_ipc_mask))

@@ -29,9 +29,9 @@ disasm_bytes(unsigned printlen, bool clreol, Jdb_address addr,
         };
       ret = cs_option(0, CS_OPT_MEM, reinterpret_cast<size_t>(&mem));
 #if defined(CONFIG_IA32)
-      ret = cs_open(CS_ARCH_X86, (cs_mode)(CS_MODE_32), &handle);
+      ret = cs_open(CS_ARCH_X86, CS_MODE_32, &handle);
 #elif defined(CONFIG_AMD64)
-      ret = cs_open(CS_ARCH_X86, (cs_mode)(CS_MODE_64), &handle);
+      ret = cs_open(CS_ARCH_X86, CS_MODE_64, &handle);
 #elif defined(CONFIG_ARM) && defined(CONFIG_BIT32)
       auto syntax = static_cast<cs_mode>(CS_MODE_ARM|CS_MODE_LITTLE_ENDIAN);
       ret = cs_open(CS_ARCH_ARM, syntax, &handle);
@@ -40,7 +40,7 @@ disasm_bytes(unsigned printlen, bool clreol, Jdb_address addr,
       ret = cs_open(show_arm_thumb ? CS_ARCH_ARM : CS_ARCH_ARM64, syntax, &handle);
 #elif defined(CONFIG_MIPS)
       ret = cs_open(CS_ARCH_MIPS,
-                    (cs_mode)(
+                    (
 # if defined(CONFIG_BIT32)
                               CS_MODE_MIPS32
 # else

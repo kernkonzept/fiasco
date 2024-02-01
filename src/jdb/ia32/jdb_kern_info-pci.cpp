@@ -58,9 +58,8 @@ Jdb_kern_info_pci::show() override
                 buses++;
 
               printf("%02lx:%02lx.%1lx Class %02x%02x: %04x:%04x ",
-                     bus, dev, subdev, (unsigned)classcode,
-                     (unsigned)subclass, (unsigned)device, (unsigned)vendor);
-              if (classcode < sizeof(classes)/sizeof(classes[0]))
+                     bus, dev, subdev, classcode, subclass, device, vendor);
+              if (classcode < cxx::size(classes))
                 printf("%s", classes[classcode]);
               putchar('\n');
             }

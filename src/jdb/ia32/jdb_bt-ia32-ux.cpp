@@ -47,9 +47,10 @@ Jdb_bt::get_user_eip_ebp(Address &eip, Address &ebp)
       return;
     }
 
-  Thread *t        = tid;
-  Address tcb_next = (Address)context_of(t->get_kernel_sp()) + Context::Size;
-  Mword *ktop      = (Mword *)(Cpu::stack_align(tcb_next));
+  Thread *t = tid;
+  Address tcb_next =
+    reinterpret_cast<Address>(context_of(t->get_kernel_sp())) + Context::Size;
+  Mword *ktop = reinterpret_cast<Mword *>(Cpu::stack_align(tcb_next));
   Jdb::Guessed_thread_state state = Jdb::guess_thread_state(t);
 
   eip = ktop[-5];
@@ -63,28 +64,31 @@ Jdb_bt::get_user_eip_ebp(Address &eip, Address &ebp)
       Mword entry_ss  = ktop[-1];
 
       if (entry_ss & 3)
-	{
-	  // kernel entered from user level
-	  if (syscall_from_user(eip))
-	    {
-	      if ((entry_esp & (sizeof(Mword)-1))
-		  || !Jdb::peek(Jdb_addr<Address>((Address *)entry_esp, task), eip))
-		{
-		  printf("\n esp page invalid");
-		  ebp = eip = 0;
-		  return;
-		}
-	      entry_esp += sizeof(Mword);
-	    }
+        {
+          // kernel entered from user level
+          if (syscall_from_user(eip))
+            {
+              if ((entry_esp & (sizeof(Mword)-1))
+                  || !Jdb::peek(Jdb_addr<Address>(
+                                  reinterpret_cast<Address *>(entry_esp),
+                                  task), eip))
+                {
+                  printf("\n esp page invalid");
+                  ebp = eip = 0;
+                  return;
+                }
+              entry_esp += sizeof(Mword);
+            }
 
-	  if ((entry_esp & (sizeof(Mword)-1))
-	      ||!Jdb::peek(Jdb_addr<Mword>((Mword *)entry_esp, task), ebp))
-	    {
-	      printf("\n esp page invalid");
-	      ebp = eip = 0;
-	      return;
-	    }
-	}
+          if ((entry_esp & (sizeof(Mword)-1))
+              || !Jdb::peek(Jdb_addr<Mword>(
+                              reinterpret_cast<Mword *>(entry_esp), task), ebp))
+            {
+              printf("\n esp page invalid");
+              ebp = eip = 0;
+              return;
+            }
+        }
     }
   else if (state == Jdb::s_pagefault)
     {
@@ -121,23 +125,25 @@ Jdb_bt::get_user_ebp_following_kernel_stack()
     {
       Mword m1, m2;
 
-      if (  (ebp == 0) || (ebp & (sizeof(Mword)-1))
-	  || !Jdb::peek(Jdb_addr<Address>::kmem_addr((Address *)ebp), m1)
-	  || !Jdb::peek(Jdb_addr<Address>::kmem_addr((Address *)ebp + 1), m2))
-	// invalid ebp -- leaving
-	return 0;
+      if ((ebp == 0) || (ebp & (sizeof(Mword)-1))
+          || !Jdb::peek(Jdb_addr<Address>::kmem_addr(
+                          reinterpret_cast<Address *>(ebp)), m1)
+          || !Jdb::peek(Jdb_addr<Address>::kmem_addr(
+                          reinterpret_cast<Address *>(ebp + 1)), m2))
+        // invalid ebp -- leaving
+        return 0;
 
       ebp = m1;
 
       if (!Mem_layout::in_kernel_code(m2))
-	{
-	  if (m2 <= Mem_layout::User_max)
-	    // valid user ebp found
-	    return m1;
-	  else
-	    // invalid ebp
-	    return 0;
-	}
+        {
+          if (m2 <= Mem_layout::User_max)
+            // valid user ebp found
+            return m1;
+          else
+            // invalid ebp
+            return 0;
+        }
     }
 
   return 0;
@@ -177,27 +183,28 @@ Jdb_bt::get_kernel_eip_ebp(Mword &eip1, Mword &eip2, Mword &ebp)
       Mword tcb;
 
       if (is_current.c)
-	{
-	  ksp = (Mword*)Jdb::entry_frame.cpu(is_current.cpu)->sp();
-	  tcb = (Mword)is_current.c;
-	  printf("\n current on cpu %u\n",
+        {
+          ksp = reinterpret_cast<Mword*>(
+                  Jdb::entry_frame.cpu(is_current.cpu)->sp());
+          tcb = reinterpret_cast<Mword>(is_current.c);
+          printf("\n current on cpu %u\n",
                  cxx::int_value<Cpu_number>(is_current.cpu));
-	}
+        }
       else
-	{
-	  ksp = (Mword*) tid->get_kernel_sp();
-	  tcb  = Mword(tid); //Mem_layout::Tcbs + tid.gthread()*Context::size;
-	}
+        {
+          ksp = tid->get_kernel_sp();
+          tcb  = Mword(tid); //Mem_layout::Tcbs + tid.gthread()*Context::size;
+        }
 
       Mword tcb_next = tcb + Context::Size;
 
       // search for valid ebp/eip
-      for (int i=0; (Address)(ksp+i+1)<tcb_next-20; i++)
+      for (int i=0; reinterpret_cast<Address>(ksp+i+1) < tcb_next-20; i++)
 	{
 	  if (Mem_layout::in_kernel_code(ksp[i+1]) &&
 	      ksp[i] >= tcb+0x180 && 
 	      ksp[i] <  tcb_next-20 &&
-	      ksp[i] >  (Address)(ksp+i))
+	      ksp[i] >  reinterpret_cast<Address>(ksp+i))
 	    {
 	      // valid frame pointer found
 	      ebp  = ksp[i  ];
@@ -220,14 +227,14 @@ Jdb_bt::show_item(int nr, Address ksp, Address addr, Address_type)
 static void
 Jdb_bt::show_without_ebp()
 {
-  Mword *ksp      = (Mword*) tid->get_kernel_sp();
+  Mword *ksp      = tid->get_kernel_sp();
   Mword tcb_next  = Mword(tid) + Context::Size;
 
   // search for valid eip
-  for (int i=0, j=1; (Address)(ksp+i)<tcb_next-20; i++)
+  for (int i=0, j=1; reinterpret_cast<Address>(ksp+i) < tcb_next-20; i++)
     {
-      if (Mem_layout::in_kernel_code(ksp[i])) 
-	show_item(j++, (Address)(ksp+i), ksp[i], ADDR_KERNEL);
+      if (Mem_layout::in_kernel_code(ksp[i]))
+        show_item(j++, reinterpret_cast<Address>(ksp+i), ksp[i], ADDR_KERNEL);
     }
 }
 
@@ -241,8 +248,8 @@ Jdb_bt::show(Mword ebp, Mword eip1, Mword eip2, Address_type user)
       if (i > 1)
 	{
 	  if (  (ebp == 0) || (ebp & (sizeof(Mword)-1))
-	      || !Jdb::peek(Jdb_addr<Address>((Address*)ebp, task), m1)
-	      || !Jdb::peek(Jdb_addr<Address>((Address*)ebp + 1, task), m2))
+	      || !Jdb::peek(Jdb_addr<Address>(reinterpret_cast<Address*>(ebp), task), m1)
+	      || !Jdb::peek(Jdb_addr<Address>(reinterpret_cast<Address*>(ebp) + 1, task), m2))
 	    // invalid ebp -- leaving
 	    return;
 

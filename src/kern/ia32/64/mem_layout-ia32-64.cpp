@@ -153,7 +153,7 @@ PUBLIC static inline
 void
 Mem_layout::kphys_base (Address base)
 {
-  physmem_offs = (Address)Physmem - base;
+  physmem_offs = Physmem - base;
 }
 
 IMPLEMENT static inline NEEDS[<cassert>]

@@ -268,7 +268,7 @@ int Keyb::getchar(bool wait)
 
       /* Translate the character through the keymap. */
       ch = keymap[scan_code][shift_state];
-      if (ch == (unsigned)SHIFT)
+      if (ch == static_cast<unsigned>(SHIFT))
 	{
 	  shift_state = 1;
 	  continue;

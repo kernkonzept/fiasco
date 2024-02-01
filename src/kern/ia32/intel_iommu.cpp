@@ -169,10 +169,12 @@ public:
   {
     Address va;
     volatile Unsigned64 &operator [] (Reg_64 index)
-    { return *(Unsigned64 volatile *)(va + (unsigned)index); }
+    { return *reinterpret_cast<Unsigned64 volatile *>(
+               va + static_cast<unsigned>(index)); }
 
     volatile Unsigned32 &operator [] (Reg_32 index)
-    { return *(Unsigned32 volatile *)(va + (unsigned)index); }
+    { return *reinterpret_cast<Unsigned32 volatile *>(
+               va + static_cast<unsigned>(index)); }
   };
 
   enum
@@ -951,7 +953,7 @@ Intel::Io_mmu::get_context_entry(Unsigned8 bus, Unsigned8 df, bool may_alloc)
   cxx::Protected<Rte, true> rte = &_root_table[bus];
 
   if (rte->present())
-    return ((Cte *)Mem_layout::phys_to_pmem(rte->ctp())) + df;
+    return reinterpret_cast<Cte *>(Mem_layout::phys_to_pmem(rte->ctp())) + df;
 
   if (EXPECT_FALSE(!may_alloc))
     return 0;
@@ -977,7 +979,8 @@ Intel::Io_mmu::get_context_entry(Unsigned8 bus, Unsigned8 df, bool may_alloc)
           g.reset();
           // we assume context tables are never freed
           Kmem_alloc::allocator()->free(Ct_bytes, ctx);
-          return ((Cte *)Mem_layout::phys_to_pmem(rte->ctp())) + df;
+          return reinterpret_cast<Cte *>(Mem_layout::phys_to_pmem(rte->ctp()))
+                 + df;
         }
 
       write_consistent(rte.unsafe_ptr(), n);
@@ -985,5 +988,5 @@ Intel::Io_mmu::get_context_entry(Unsigned8 bus, Unsigned8 df, bool may_alloc)
 
   clean_dcache(rte.unsafe_ptr());
 
-  return ((Cte *)ctx) + df;
+  return reinterpret_cast<Cte *>(ctx) + df;
 }

@@ -61,7 +61,7 @@ PUBLIC static inline NEEDS["apic.h"]
 void
 Ipi::send(Message m, Cpu_number from_cpu, Cpu_number to_cpu)
 {
-  Apic::mp_send_ipi(_ipi.cpu(to_cpu)._apic_id, (Unsigned8)m);
+  Apic::mp_send_ipi(_ipi.cpu(to_cpu)._apic_id, static_cast<Unsigned8>(m));
   stat_sent(from_cpu);
 }
 
@@ -70,7 +70,7 @@ void
 Ipi::bcast(Message m, Cpu_number from_cpu)
 {
   (void)from_cpu;
-  Apic::mp_send_ipi(Apic::APIC_IPI_OTHERS, (Unsigned8)m);
+  Apic::mp_send_ipi(Apic::APIC_IPI_OTHERS, static_cast<Unsigned8>(m));
 }
 
 #if defined(CONFIG_IRQ_SPINNER)
@@ -96,7 +96,8 @@ void Ipi::ipi_call_spin()
   if (!ipi)
     return;
 
-  *(unsigned char*)(Mem_layout::Adap_vram_cga_beg + 22*160 + cxx::int_value<Cpu_number>(cpu)*2)
+  *reinterpret_cast<unsigned char*>(Mem_layout::Adap_vram_cga_beg + 22*160
+                                    + cxx::int_value<Cpu_number>(cpu) * 2)
     = '0' + (ipi->_count++ % 10);
 }
 #endif

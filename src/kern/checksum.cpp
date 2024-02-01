@@ -13,10 +13,11 @@ IMPLEMENTATION:
 PUBLIC static
 unsigned Checksum::get_checksum_ro()
 {
-  unsigned *p, sum = 0;
+  unsigned const *p;
+  unsigned sum = 0;
 
-  for (p = (unsigned*)&Mem_layout::start;
-       p < (unsigned*)&Mem_layout::etext; sum += *p++)
+  for (p = reinterpret_cast<unsigned const*>(&Mem_layout::start);
+       p < reinterpret_cast<unsigned const*>(&Mem_layout::etext); sum += *p++)
     ;
 
   return sum;
@@ -31,10 +32,11 @@ Checksum::check_ro()
 PUBLIC static
 unsigned Checksum::get_checksum_rw()
 {
-  unsigned *p, sum = 0;
+  unsigned const *p;
+  unsigned sum = 0;
 
-  for (p = (unsigned*)&Mem_layout::data_start;
-       p < (unsigned*)&Mem_layout::edata; sum += *p++)
+  for (p = reinterpret_cast<unsigned const*>(&Mem_layout::data_start);
+       p < reinterpret_cast<unsigned const*>(&Mem_layout::edata); sum += *p++)
     ;
 
   return sum;

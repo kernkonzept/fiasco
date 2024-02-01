@@ -39,7 +39,7 @@ Timer::init(Cpu_number)
 
   if (Warn::is_enabled(Info))
     printf ("Using the Local APIC timer on vector %x (%s Mode) for scheduling\n",
-            (unsigned)Config::Apic_timer_vector,
+            static_cast<unsigned>(Config::Apic_timer_vector),
             Config::Scheduler_one_shot ? "One-Shot" : "Periodic");
 
 }

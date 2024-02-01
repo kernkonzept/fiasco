@@ -155,16 +155,16 @@ static struct idt_desc  base_idt[IDTSZ];
 static char dbf_stack[2048];
 
 static inline Unsigned64* find_pml4e(Address pml4_pa, Address la)
-{ return (&((Unsigned64*)pml4_pa)[(la >> PML4ESHIFT) & PML4EMASK]); }
+{ return &reinterpret_cast<Unsigned64*>(pml4_pa)[(la >> PML4ESHIFT) & PML4EMASK]; }
 
 static inline Unsigned64* find_pdpe(Address pdp_pa, Address la)
-{ return (&((Unsigned64*)pdp_pa)[(la >> PDPESHIFT) & PDPEMASK]); }
+{ return &reinterpret_cast<Unsigned64*>(pdp_pa)[(la >> PDPESHIFT) & PDPEMASK]; }
 
 static inline Unsigned64* find_pde(Address pdir_pa, Address la)
-{ return (&((Unsigned64*)pdir_pa)[(la >> PDESHIFT) & PDEMASK]); }
+{ return &reinterpret_cast<Unsigned64*>(pdir_pa)[(la >> PDESHIFT) & PDEMASK]; }
 
 static inline Unsigned64* find_pte(Address ptab_pa, Address la)
-{ return (&((Unsigned64*)ptab_pa)[(la >> PTESHIFT) & PTEMASK]); }
+{ return &reinterpret_cast<Unsigned64*>(ptab_pa)[(la >> PTESHIFT) & PTEMASK]; }
 
 extern inline Unsigned32 get_eflags()
 { Mword efl; asm volatile("pushf \n\t pop %0" : "=r" (efl)); return efl; }
@@ -321,10 +321,10 @@ base_idt_init(void)
 static void
 base_gdt_init(void)
 {
-  printf("base_tss @%p\n", (void *)&base_tss);
+  printf("base_tss @%p\n", static_cast<void *>(&base_tss));
   /* Initialize the base TSS descriptor.  */
   fill_descriptor(&base_gdt[BASE_TSS / 8],
-                  (Address)&base_tss, sizeof(base_tss) - 1,
+                  reinterpret_cast<Address>(&base_tss), sizeof(base_tss) - 1,
                   ACC_PL_K | ACC_TSS, 0);
 
   memset(&base_gdt[(BASE_TSS / 8) + 1], 0, 8);
@@ -343,7 +343,7 @@ static void
 base_tss_init(void)
 {
   base_tss.rsp0 = get_esp(); /* only temporary */
-  base_tss.ist1 = (Unsigned64)(dbf_stack + sizeof(dbf_stack));
+  base_tss.ist1 = reinterpret_cast<Unsigned64>(dbf_stack + sizeof(dbf_stack));
   base_tss.io_bit_map_offset = sizeof(base_tss);
 }
 
@@ -354,7 +354,7 @@ base_gdt_load(void)
 
   /* Create a pseudo-descriptor describing the GDT.  */
   pdesc.limit = sizeof(base_gdt) - 1;
-  pdesc.linear_base = (Address)&base_gdt;
+  pdesc.linear_base = reinterpret_cast<Address>(&base_gdt);
 
   /* Load it into the CPU.  */
   set_gdt(&pdesc);
@@ -384,7 +384,7 @@ base_idt_load(void)
 
   /* Create a pseudo-descriptor describing the GDT.  */
   pdesc.limit = sizeof(base_idt) - 1;
-  pdesc.linear_base = (Address)&base_idt;
+  pdesc.linear_base = reinterpret_cast<Address>(&base_idt);
   set_idt(&pdesc);
 }
 
@@ -422,10 +422,10 @@ ptab_alloc(Address *out_ptab_pa)
     {
       initialized = 1;
       memset(pool, 0, sizeof(pool));
-      pdirs = round_page((Address)pool);
+      pdirs = round_page(reinterpret_cast<Address>(pool));
     }
 
-  if (pdirs > (Address)pool + sizeof(pool))
+  if (pdirs > reinterpret_cast<Address>(pool) + sizeof(pool))
     panic("Cannot allocate page table -- increase ptab_alloc::pool");
 
   *out_ptab_pa = pdirs;
@@ -591,7 +591,7 @@ trap_dump_panic(const struct trap_state *st)
   printf("RCX %016llx  RDX %016llx\n", st->rcx, st->rdx);
   printf("RSI %016llx  RDI %016llx\n", st->rsi, st->rdi);
   printf("RBP %016llx  RSP %016llx\n",
-      st->rbp, from_user ? st->rsp : (Address)&st->rsp);
+      st->rbp, from_user ? st->rsp : reinterpret_cast<Address>(&st->rsp));
   printf("R8  %016llx  R9  %016llx\n", st->r8, st->r9);
   printf("R10 %016llx  R11 %016llx\n", st->r10, st->r11);
   printf("R12 %016llx  R13 %016llx\n", st->r12, st->r13);

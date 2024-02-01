@@ -30,7 +30,7 @@ Jdb_iomap::show()
 {
   Jdb::clear_screen();
 
-  printf("\nIO bitmap for space %p ", (void *)space);
+  printf("\nIO bitmap for space %p ", static_cast<void *>(space));
 
   if (space->_bitmap == nullptr)
     {
@@ -39,7 +39,7 @@ Jdb_iomap::show()
       return;
     }
 
-  printf("at %p\n\nPorts enabled:\n", (void *)space->_bitmap);
+  printf("at %p\n\nPorts enabled:\n", static_cast<void *>(space->_bitmap));
 
   bool enabled = false;
   bool any_enabled = false;
@@ -67,7 +67,7 @@ Jdb_iomap::show()
     }
 
   if (enabled)
-    printf("%04x ", (unsigned)Config::Io_port_count - 1);
+    printf("%04x ", static_cast<unsigned>(Config::Io_port_count - 1));
 
   if (!any_enabled)
     putstr("<none>");

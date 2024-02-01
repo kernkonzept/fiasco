@@ -139,8 +139,8 @@ Jdb_misc_debug::action(int cmd, void *&args, char const *&fmt, int &) override
               if (   Jdb::rdmsr(MSR_LER_FROM_LIP, &msr_from)
                   && Jdb::rdmsr(MSR_LER_TO_LIP, &msr_to))
                 {
-                  show_lbr_entry("\nbefore exc:", (Address)msr_from);
-                  show_lbr_entry(" =>", (Address)msr_to);
+                  show_lbr_entry("\nbefore exc:", msr_from);
+                  show_lbr_entry(" =>", msr_to);
                 }
 
               Unsigned64 branch_tos;

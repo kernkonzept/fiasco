@@ -56,7 +56,7 @@ Apic::reg_show(unsigned reg)
          reg_lvt_bit_str(reg, tmp_val, Remote_irr),
          reg_lvt_bit_str(reg, tmp_val, Delivery_state),
          reg_lvt_bit_str(reg, tmp_val, Delivery_mode),
-         (unsigned)reg_lvt_vector(tmp_val));
+         reg_lvt_vector(tmp_val));
 }
 
 PUBLIC static

@@ -146,9 +146,10 @@ inline
 void
 Buddy_t_base<A,B>::free(void *block, unsigned long size)
 {
-  assert ((unsigned long)block >= _base);
+  assert (reinterpret_cast<unsigned long>(block) >= _base);
   //assert ((unsigned long)block - _base < Max_mem);
-  assert (!_free_map[((unsigned long)block - _base) / Min_size]);
+  assert (!_free_map[(reinterpret_cast<unsigned long>(block) - _base)
+                     / Min_size]);
   //bool _b = 0;
   //if (_debug) printf("Buddy::free(%p, %ld)\n", block, size);
   unsigned size_index = 0;

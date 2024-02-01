@@ -77,7 +77,8 @@ Obj_space_virt<SPACE>::get_cap(Cap_index index)
 {
   Mem_space *ms = SPACE::mem_space(this);
 
-  Address phys = Address(ms->virt_to_phys((Address)cap_virt(index)));
+  Address phys = Address(ms->virt_to_phys(
+                           reinterpret_cast<Address>(cap_virt(index))));
   if (EXPECT_FALSE(phys == ~0UL))
     return 0;
 
@@ -90,7 +91,7 @@ PRIVATE  template< typename SPACE >
 typename Obj_space_virt<SPACE>::Entry *
 Obj_space_virt<SPACE>::caps_alloc(Cap_index virt)
 {
-  Address cv = (Address)cap_virt(virt);
+  Address cv = reinterpret_cast<Address>(cap_virt(virt));
   void *mem = Kmem_alloc::allocator()->q_alloc(SPACE::ram_quota(this),
                                                Config::page_size());
 
@@ -107,7 +108,8 @@ Obj_space_virt<SPACE>::caps_alloc(Cap_index virt)
 
   Mem_space::Status s;
   s = SPACE::mem_space(this)->v_insert(
-      Mem_space::Phys_addr(Kmem::kdir->virt_to_phys((Address)mem)),
+      Mem_space::Phys_addr(Kmem::kdir->virt_to_phys(
+                             reinterpret_cast<Address>(mem))),
       cxx::mask_lsb(Virt_addr(cv), Mem_space::Page_order(Config::PAGE_SHIFT)),
       Mem_space::Page_order(Config::PAGE_SHIFT),
       Mem_space::Attr::space_local(L4_fpage::Rights::RW()));
@@ -128,7 +130,7 @@ Obj_space_virt<SPACE>::caps_alloc(Cap_index virt)
       return 0;
     };
 
-  unsigned long cap = (unsigned long)mem | Pg::offset(cv);
+  unsigned long cap = reinterpret_cast<unsigned long>(mem) | Pg::offset(cv);
 
   return reinterpret_cast<Entry*>(cap);
 }
@@ -251,11 +253,11 @@ Obj_space_virt<SPACE>::v_delete(V_pfn virt, Page_order size,
     {
       c = cap_virt(virt);
       if (!c)
-	return L4_fpage::Rights(0);
+        return L4_fpage::Rights(0);
 
       Capability cap = Mem_layout::read_special_safe(&c->capability());
       if (!cap.valid())
-	return L4_fpage::Rights(0);
+        return L4_fpage::Rights(0);
     }
   else
     c = get_cap(virt);

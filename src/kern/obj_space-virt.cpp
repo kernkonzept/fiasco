@@ -64,7 +64,7 @@ inline
 typename Generic_obj_space<SPACE>::Status FIASCO_FLATTEN
 Generic_obj_space<SPACE>::v_insert(Phys_addr phys, V_pfn const &virt, Order size,
                                    Attr page_attribs)
-{ return (Status)Base::v_insert(phys, virt, size, page_attribs); }
+{ return Base::v_insert(phys, virt, size, page_attribs); }
 
 
 IMPLEMENT template< typename SPACE >

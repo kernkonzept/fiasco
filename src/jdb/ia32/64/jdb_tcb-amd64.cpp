@@ -68,7 +68,7 @@ void
 Jdb_tcb::info_thread_state(Thread *t)
 {
   Jdb::Guessed_thread_state state = Jdb::guess_thread_state(t);
-  Jdb_tcb_ptr p((Address)t->get_kernel_sp());
+  Jdb_tcb_ptr p(reinterpret_cast<Address>(t->get_kernel_sp()));
   int sub = 0;
 
   switch (state)

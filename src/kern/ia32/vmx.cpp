@@ -46,10 +46,10 @@ public:
     void print(char const *name) const
     {
       if (sizeof(T) <= 4)
-        printf("%20s = %8x %8x\n", name, (unsigned)_and, (unsigned)_or);
+        printf("%20s = %8x %8x\n", name, static_cast<Unsigned32>(_and),
+               static_cast<Unsigned32>(_or));
       else if (sizeof(T) <= 8)
-        printf("%20s = %16llx %16llx\n", name, (unsigned long long)_and,
-               (unsigned long long)_or);
+        printf("%20s = %16llx %16llx\n", name, Unsigned64{_and}, Unsigned64{_or});
     }
   };
 
@@ -64,15 +64,18 @@ public:
 
     void relax(BITS_TYPE bit)
     {
-      this->_or &= ~(WORD_TYPE(1) << WORD_TYPE(bit));
-      this->_and |= WORD_TYPE(1) << WORD_TYPE(bit);
+      this->_or &= ~(WORD_TYPE{1} << static_cast<WORD_TYPE>(bit));
+      this->_and |= WORD_TYPE{1} << static_cast<WORD_TYPE>(bit);
     }
 
     void enforce(BITS_TYPE bit, bool value = true)
-    { this->enforce_bits((WORD_TYPE)1 << (WORD_TYPE)bit, value); }
+    { this->enforce_bits(WORD_TYPE{1} << static_cast<WORD_TYPE>(bit), value); }
 
     bool allowed(BITS_TYPE bit, bool value = true) const
-    { return this->allowed_bits((WORD_TYPE)1 << (WORD_TYPE)bit, value); }
+    {
+      return this->allowed_bits(WORD_TYPE{1} << static_cast<WORD_TYPE>(bit),
+                                value);
+    }
   };
 
   template<typename BITS_TYPE>
@@ -94,7 +97,8 @@ public:
     Flags() {}
     explicit Flags(T v) : _f(v) {}
 
-    T test(unsigned char bit) const { return _f & ((T)1 << (T)bit); }
+    T test(unsigned char bit) const
+    { return _f & (T{1} << T{bit}); }
   private:
     T _f;
   };
@@ -712,7 +716,7 @@ private:
       "pushf\n\t"
       "pop %[err]\n\t"
       : [err] "=r" (err)
-      : [value] "r" ((Mword)value),
+      : [value] "r" (Mword{value}),
         [field] "r" (field)
       : "cc"
     );
@@ -2364,7 +2368,7 @@ Vmx::Vmx(Cpu_number cpu)
   // clean vmcs
   memset(_kernel_vmcs, 0, vmcs_size);
   // init vmcs with revision identifier
-  *(int *)_kernel_vmcs = (info.basic & 0xFFFFFFFF);
+  *static_cast<int *>(_kernel_vmcs) = info.basic & 0xFFFFFFFF;
 
   // allocate a 4kb aligned region for VMXON
   // FIXME: MUST NOT PANIC ON CPU HOTPLUG
@@ -2374,7 +2378,7 @@ Vmx::Vmx(Cpu_number cpu)
 
   // init vmxon region with vmcs revision identifier
   // which is stored in the lower 32 bits of MSR 0x480
-  *(unsigned *)_vmxon = (info.basic & 0xFFFFFFFF);
+  *static_cast<unsigned *>(_vmxon) = info.basic & 0xFFFFFFFF;
 
   // enable vmx operation
   asm volatile("vmxon %0" : : "m"(_vmxon_base_pa) : "cc");

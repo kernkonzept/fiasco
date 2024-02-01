@@ -109,9 +109,8 @@ Jdb_kobject_irq::Jdb_kobject_irq()
 
 PUBLIC
 bool
-Jdb_kobject_irq::handle_key(Kobject_common *o, int key) override
+Jdb_kobject_irq::handle_key(Kobject_common*, int /* key */) override
 {
-  (void)o; (void)key;
   return false;
 }
 

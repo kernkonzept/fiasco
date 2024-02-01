@@ -26,10 +26,10 @@ public:
     explicit Cfg_addr(Unsigned32 pci_express_adr) : _addr(pci_express_adr) {}
 
     Cfg_addr(unsigned bus, unsigned dev, unsigned function = 0, unsigned reg = 0)
-    : _addr(  ((Unsigned32)bus << 20)
-            | ((Unsigned32)dev << 15)
-            | ((Unsigned32)function << 12)
-            | ((Unsigned32)reg))
+    : _addr(  (Unsigned32{bus} << 20)
+            | (Unsigned32{dev} << 15)
+            | (Unsigned32{function} << 12)
+            | (Unsigned32{reg}))
     {}
 
 
@@ -46,17 +46,24 @@ public:
     { return _addr; }
 
     unsigned reg_offs(Cfg_width w = Cfg_width::Byte) const
-    { return (_addr & 0x3) & (~0U << (unsigned)w); }
+    { return (_addr & 0x3) & (~0U << static_cast<unsigned>(w)); }
 
     unsigned bus() const { return (_addr >> 20) & 0xff; }
     unsigned dev() const { return (_addr >> 15) & 0x1f; }
     unsigned func() const { return (_addr >> 12) & 0x7; }
     unsigned reg() const { return _addr & 0xfff; }
 
-    void bus(unsigned bus) { _addr = (_addr & ~0xff00000) | ((Unsigned32)bus << 20); }
-    void dev(unsigned dev) { _addr = (_addr & ~(0x1fUL << 15)) | ((Unsigned32)dev << 15); }
-    void func(unsigned func) { _addr = (_addr & ~(0x7UL << 12)) | ((Unsigned32)func << 12); }
-    void reg(unsigned reg) { _addr = (_addr & ~0xfff) | (Unsigned32)reg; }
+    void bus(unsigned bus)
+    { _addr = (_addr & ~0xff00000) | (Unsigned32{bus} << 20); }
+
+    void dev(unsigned dev)
+    { _addr = (_addr & ~(0x1fUL << 15)) | (Unsigned32{dev} << 15); }
+
+    void func(unsigned func)
+    { _addr = (_addr & ~(0x7UL << 12)) | (Unsigned32{func << 12}); }
+
+    void reg(unsigned reg)
+    { _addr = (_addr & ~0xfff) | Unsigned32{reg}; }
 
   private:
     Unsigned32 _addr;

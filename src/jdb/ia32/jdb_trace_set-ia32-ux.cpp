@@ -38,10 +38,11 @@ set_fast_entry(Cpu_number cpu, void (*func)())
 {
   extern Per_cpu_array<Syscall_entry_text> syscall_entry_text;
 
-  Address entry = (Address)&syscall_entry_text[cpu];
+  Address entry = reinterpret_cast<Address>(&syscall_entry_text[cpu]);
   Address reloc = entry + 0x1b;
-  Signed32 ofs = (Address)func - (reloc + sizeof(Signed32));
-  check(Jdb::poke(Jdb_addr<Signed32>::kmem_addr((Signed32 *) reloc), ofs));
+  Signed32 ofs = reinterpret_cast<Address>(func) - (reloc + sizeof(Signed32));
+  check(Jdb::poke(Jdb_addr<Signed32>::kmem_addr(
+                    reinterpret_cast<Signed32 *>(reloc)), ofs));
 }
 
 //--------------------------------------------------------------------------

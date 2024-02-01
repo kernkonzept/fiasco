@@ -70,7 +70,7 @@ Pte_ptr::is_leaf() const
 PUBLIC inline
 Mword
 Pte_ptr::next_level() const
-{ return cxx::mask_lsb(*pte, (unsigned)Config::PAGE_SHIFT); }
+{ return cxx::mask_lsb(*pte, static_cast<unsigned>(Config::PAGE_SHIFT)); }
 
 /**
  * \pre cxx::get_lsb(phys_addr, Config::PAGE_SHIFT) == 0
@@ -126,7 +126,7 @@ PUBLIC inline
 Mword
 Pte_ptr::make_page(Phys_mem_addr addr, Page::Attr attr)
 {
-  Mword r = (level < Pdir::Depth) ? (Mword)Pse_bit : 0;
+  Mword r = (level < Pdir::Depth) ? Mword{Pse_bit} : 0;
   typedef L4_fpage::Rights R;
   typedef Page::Type T;
   typedef Page::Kern K;

@@ -476,7 +476,7 @@ Context_ptr::ptr(Space *s, L4_fpage::Rights *rights) const
  */
 PUBLIC inline NEEDS ["atomic.h", "entry_frame.h", <cstdio>]
 Context::Context()
-: _kernel_sp(reinterpret_cast<Mword*>(regs())),
+: _kernel_sp(reinterpret_cast<Mword *>(regs())),
   // TCBs are zero initialized. Thus, members not explictly initialized can be
   // assumed to be zero-initialized, unless their default constructor does
   // something different.
@@ -491,7 +491,7 @@ PUBLIC inline
 void
 Context::reset_kernel_sp()
 {
-  _kernel_sp = reinterpret_cast<Mword*>(regs());
+  _kernel_sp = reinterpret_cast<Mword *>(regs());
 }
 
 
@@ -1158,7 +1158,7 @@ Context::Drq_q::execute_request(Drq *r, bool local)
            cxx::int_value<Cpu_number>(current_cpu()),
            static_cast<void *>(current()), static_cast<void *>(context()),
            static_cast<void *>(r->context()), reinterpret_cast<void *>(r->func),
-           r->arg);
+           static_cast<void *>(r->arg));
   if (r->context() == self)
     {
       LOG_TRACE("DRQ handling", "drq", current(), Drq_log,
@@ -1246,8 +1246,8 @@ Context::Drq_q::handle_requests()
         printf("CPU[%2u:%p]: context=%p: handle request for %p (func=%p, arg=%p)\n",
                cxx::int_value<Cpu_number>(current_cpu()),
                static_cast<void *>(current()), static_cast<void *>(context()),
-               static_cast<void *>(r->context()),
-               reinterpret_cast<void *>(r->func), r->arg);
+               static_cast<void *>(r->context()), reinterpret_cast<void *>(r->func),
+               static_cast<void *>(r->arg));
       need_resched |= execute_request(r, false);
     }
 }
@@ -1446,7 +1446,7 @@ Context::drq(Drq *drq, Drq::Request_func *func, void *arg,
     printf("CPU[%2u:%p]: > Context::drq(this=%p, func=%p, arg=%p)\n",
            cxx::int_value<Cpu_number>(current_cpu()),
            static_cast<void *>(current()), static_cast<void *>(this),
-           reinterpret_cast<void *>(func), arg);
+           reinterpret_cast<void *>(func), static_cast<void *>(arg));
   Context *cur = current();
   LOG_TRACE("DRQ handling", "drq", cur, Drq_log,
       l->type = Drq_log::Type::Send;

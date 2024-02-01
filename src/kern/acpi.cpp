@@ -211,7 +211,7 @@ print_acpi_id(char const (&id)[LEN])
 PUBLIC void
 Acpi_rsdp::print_info() const
 {
-  printf("ACPI: RSDP[%p]\tr%02x OEM:", (void *)this, (unsigned)rev);
+  printf("ACPI: RSDP[%p]\tr%02x OEM:", static_cast<void const *>(this), rev);
   print_acpi_id(oem);
   printf("\n");
 }
@@ -221,7 +221,7 @@ Acpi_table_head::print_info() const
 {
   printf("ACPI: ");
   print_acpi_id(signature);
-  printf("[%p]\tr%02x OEM:", (void *)this, (unsigned)rev);
+  printf("[%p]\tr%02x OEM:", static_cast<void const *>(this), rev);
   print_acpi_id(oem_id);
   printf(" OEMTID:");
   print_acpi_id(oem_tid);
@@ -247,7 +247,7 @@ void
 Acpi_sdt::init(SDT *sdt)
 {
   unsigned entries = sdt->entries();
-  _tables = (Acpi_table_head const **)Boot_alloced::alloc(sizeof(*_tables) * entries);
+  _tables = Boot_alloced::allocate<Acpi_table_head const *>(entries);
   if (_tables)
     {
       _num_tables = entries;
@@ -267,19 +267,20 @@ Acpi::_map_table_head(Unsigned64 phys)
   if (Acpi_helper_get_msb<(sizeof(phys) > sizeof(Address))>::msb(phys))
     {
       printf("ACPI: cannot map phys address %llx, out of range (%ubit)\n",
-             (unsigned long long)phys, (unsigned)sizeof(Address) * 8);
+             static_cast<unsigned long long>(phys),
+             static_cast<unsigned>(sizeof(Address)) * 8);
       return 0;
     }
 
-  void *t = (void *)Kmem::mmio_remap(phys, Config::PAGE_SIZE, true);
-  if (t == (void *)~0UL)
+  Address t = Kmem::mmio_remap(phys, Config::PAGE_SIZE, true);
+  if (t == Invalid_address)
     {
       printf("ACPI: cannot map phys address %llx, map failed\n",
-             (unsigned long long)phys);
+             static_cast<unsigned long long>(phys));
       return 0;
     }
 
-  return t;
+  return reinterpret_cast<void *>(t);
 }
 
 PUBLIC static
@@ -309,7 +310,7 @@ Acpi_sdt::map_entry(unsigned idx, T phys)
       return 0;
     }
 
-  return Acpi::map_table_head<Acpi_table_head>((Unsigned64)phys);
+  return Acpi::map_table_head<Acpi_table_head>(static_cast<Unsigned64>(phys));
 }
 
 
@@ -338,39 +339,46 @@ Acpi::init_virt()
 
   if (rsdp->rev && rsdp->xsdt_phys)
     {
-      Acpi_xsdt_p const *x = (Acpi_xsdt_p const *)Kmem::mmio_remap(rsdp->xsdt_phys, sizeof(*x), true);
-      if (x == (Acpi_xsdt_p const *)~0UL)
+      Address p = Kmem::mmio_remap(rsdp->xsdt_phys, sizeof(Acpi_xsdt_p), true);
+      if (p == ~0UL)
         WARN("ACPI: Could not map XSDT\n");
-      else if (!x->checksum_ok())
-        WARN("ACPI: Checksum mismatch in XSDT\n");
       else
         {
-          _sdt.init(x);
-          if (Print_info)
+          Acpi_xsdt_p const *x = reinterpret_cast<Acpi_xsdt_p *>(p);
+          if (!x->checksum_ok())
+            WARN("ACPI: Checksum mismatch in XSDT\n");
+          else
             {
-              x->print_info();
-              _sdt.print_summary();
+              _sdt.init(x);
+              if (Print_info)
+                {
+                  x->print_info();
+                  _sdt.print_summary();
+                }
+              return;
             }
-          return;
         }
     }
 
   if (rsdp->rsdt_phys)
     {
-      Acpi_rsdt_p const *r = (Acpi_rsdt_p const *)Kmem::mmio_remap(rsdp->rsdt_phys, sizeof(*r), true);
-      if (r == (Acpi_rsdt_p const *)~0UL)
+      Address p = Kmem::mmio_remap(rsdp->rsdt_phys, sizeof(Acpi_rsdt_p), true);
+      if (p == ~0UL)
         WARN("ACPI: Could not map RSDT\n");
-      else if (!r->checksum_ok())
-        WARN("ACPI: Checksum mismatch in RSDT\n");
       else
         {
-          _sdt.init(r);
-          if (Print_info)
+          Acpi_rsdt_p const *r = reinterpret_cast<Acpi_rsdt_p *>(p);
+          if (!r->checksum_ok())
+            WARN("ACPI: Checksum mismatch in RSDT\n");
+          else
             {
-              r->print_info();
-              _sdt.print_summary();
+              _sdt.init(r);
+              if (Print_info)
+                {
+                  r->print_info();
+                  _sdt.print_summary();
+                }
             }
-          return;
         }
     }
 }
@@ -391,7 +399,7 @@ Acpi_rsdp::checksum_ok() const
   // ACPI 1.0 checksum
   Unsigned8 sum = 0;
   for (unsigned i = 0; i < 20; i++)
-    sum += *((Unsigned8 *)this + i);
+    sum += *(reinterpret_cast<Unsigned8 const *>(this) + i);
 
   if (sum)
     return false;
@@ -401,7 +409,7 @@ Acpi_rsdp::checksum_ok() const
 
   // Extended Checksum
   for (unsigned i = 0; i < len; ++i)
-    sum += *((Unsigned8 *)this + i);
+    sum += *(reinterpret_cast<Unsigned8 const *>(this) + i);
 
   return !sum;
 }
@@ -412,7 +420,7 @@ Acpi_table_head::checksum_ok() const
 {
   Unsigned8 sum = 0;
   for (unsigned i = 0; i < len; ++i)
-    sum += *((Unsigned8 *)this + i);
+    sum += *(reinterpret_cast<Unsigned8 const *>(this) + i);
 
   return !sum;
 }
@@ -441,7 +449,7 @@ Acpi_madt::find(Unsigned8 type, int idx) const
 {
   for (unsigned i = 0; i < len-sizeof(Acpi_madt);)
     {
-      Apic_head const *a = (Apic_head const *)(data + i);
+      Apic_head const *a = reinterpret_cast<Apic_head const *>(data + i);
       //printf("a=%p, a->type=%u, a->len=%u\n", a, a->type, a->len);
       if (a->type == type)
 	{
@@ -500,7 +508,7 @@ Acpi_rsdp::locate_in_region(Address start, Address end)
 {
   for (Address p = start; p < end; p += 16)
     {
-      Acpi_rsdp const* r = (Acpi_rsdp const *)p;
+      Acpi_rsdp const* r = reinterpret_cast<Acpi_rsdp const *>(p);
       if (Acpi::check_signature(r->signature, "RSD PTR ")
           && r->checksum_ok())
         return r;
@@ -530,7 +538,7 @@ Acpi_rsdp::locate()
                                             ACPI20_PC99_RSDP_END))
     return r;
 
-  Address ebda = *(Unsigned16 const *)ebda_segment << 4;
+  Address ebda = *reinterpret_cast<Unsigned16 const *>(ebda_segment) << 4;
   if (Acpi_rsdp const *r = locate_in_region(ebda, ebda + 1024))
     return r;
 

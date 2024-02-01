@@ -37,7 +37,8 @@ public:
 
   bool valid() const { return _p != 0; }
   operator Null_ptr const * () const
-  { return valid() ? (Null_ptr const *)1 : (Null_ptr const *)0; }
+  { return valid() ? reinterpret_cast<Null_ptr const *>(1)
+                   : reinterpret_cast<Null_ptr const *>(0); }
 
   T *unsafe_ptr() const { return _p; }
 };

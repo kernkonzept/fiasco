@@ -215,7 +215,7 @@ Trap_state::value3(Mword value)
 PUBLIC inline NEEDS["atomic.h"] 
 void
 Trap_state::consume_instruction(unsigned count)
-{ local_cas((Address*)(&_ip), _ip, _ip + count); }
+{ local_cas(reinterpret_cast<Address*>(&_ip), _ip, _ip + count); }
 
 PUBLIC
 void
@@ -226,7 +226,8 @@ Trap_state::dump()
   printf("RAX %016lx    RBX %016lx\n", _ax, _bx);
   printf("RCX %016lx    RDX %016lx\n", _cx, _dx);
   printf("RSI %016lx    RDI %016lx\n", _si, _di);
-  printf("RBP %016lx    RSP %016lx\n", _bp, from_user ? _sp : (Address)&_sp);
+  printf("RBP %016lx    RSP %016lx\n",
+         _bp, from_user ? _sp : reinterpret_cast<Address>(&_sp));
   printf("R8  %016lx    R9  %016lx\n", _r8,  _r9);
   printf("R10 %016lx    R11 %016lx\n", _r10, _r11);
   printf("R12 %016lx    R13 %016lx\n", _r12, _r13);

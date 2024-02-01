@@ -61,7 +61,7 @@ Jdb::get_register(char *reg)
   reg_name.c[3] = '\0';
 
   for (i = 0; i < Jdb_screen::num_regs(); i++)
-    if (reg_name.v == *((Unsigned32 *)(Jdb_screen::Reg_names[i])))
+    if (reg_name.v == *(reinterpret_cast<Unsigned32 const *>(Jdb_screen::Reg_names[i])))
       break;
 
   if (i == Jdb_screen::num_regs())

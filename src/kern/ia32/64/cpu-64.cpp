@@ -28,10 +28,10 @@ Cpu::setup_sysenter()
   extern Per_cpu_array<Syscall_entry_text> syscall_entry_text;
 
   wrmsr(0, GDT_CODE_KERNEL | ((GDT_CODE_USER32 | 3) << 16), MSR_STAR);
-  wrmsr((Unsigned64)&syscall_entry_text[id()], MSR_LSTAR);
-  wrmsr((Unsigned64)&syscall_entry_text[id()], MSR_CSTAR);
+  wrmsr(reinterpret_cast<Unsigned64>(&syscall_entry_text[id()]), MSR_LSTAR);
+  wrmsr(reinterpret_cast<Unsigned64>(&syscall_entry_text[id()]), MSR_CSTAR);
   wrmsr(~0U, MSR_SFMASK);
-  _syscall_entry_data[id()].set_rsp((Address)&kernel_sp());
+  _syscall_entry_data[id()].set_rsp(reinterpret_cast<Address>(&kernel_sp()));
 }
 
 IMPLEMENTATION[amd64 && kernel_isolation]:
@@ -75,7 +75,7 @@ Cpu::ns_to_tsc(Unsigned64 ns) const
        "mulq   %3                      \n\t"
        "shrd  $27, %%rdx, %%rax       \n\t"
        :"=a" (tsc), "=d" (dummy)
-       :"a" (ns), "r" ((Unsigned64)scaler_ns_to_tsc)
+       :"a" (ns), "r" (Unsigned64{scaler_ns_to_tsc})
       );
   return tsc;
 }
@@ -90,7 +90,7 @@ Cpu::tsc_to_ns(Unsigned64 tsc) const
        "mulq   %3                      \n\t"
        "shrd  $27, %%rdx, %%rax       \n\t"
        :"=a" (ns), "=d"(dummy)
-       :"a" (tsc), "r" ((Unsigned64)scaler_tsc_to_ns)
+       :"a" (tsc), "r" (Unsigned64{scaler_tsc_to_ns})
       );
   return ns;
 }
@@ -105,7 +105,7 @@ Cpu::tsc_to_us(Unsigned64 tsc) const
        "mulq   %3                      \n\t"
        "shrd  $32, %%rdx, %%rax       \n\t"
        :"=a" (ns), "=d" (dummy)
-       :"a" (tsc), "r" ((Unsigned64)scaler_tsc_to_us)
+       :"a" (tsc), "r" (Unsigned64{scaler_tsc_to_us})
       );
   return ns;
 }
@@ -122,7 +122,7 @@ Cpu::tsc_to_s_and_ns(Unsigned64 tsc, Unsigned32 *s, Unsigned32 *ns) const
        "xorq  %%rdx, %%rdx              \n\t"
        "divq  %4                        \n\t"
        :"=a" (*s), "=&d" (*ns)
-       : "a" (tsc), "r" ((Unsigned64)scaler_tsc_to_ns),
+       : "a" (tsc), "r" (Unsigned64{scaler_tsc_to_ns}),
          "rm"(1000000000ULL)
       );
 }
@@ -240,7 +240,7 @@ Cpu::init_tss(Tss *tss)
                      Tss::Segment_limit);
 
   // XXX setup pointer for clean double fault stack
-  _tss->_hw.ctx.ist1 = (Address)&dbf_stack_top;
+  _tss->_hw.ctx.ist1 = reinterpret_cast<Address>(&dbf_stack_top);
   _tss->_hw.io.bitmap_delimiter = 0xffU;
 
   reset_io_bitmap();
@@ -251,7 +251,7 @@ PUBLIC FIASCO_INIT_CPU
 void
 Cpu::init_gdt(Address gdt_mem, Address user_max)
 {
-  gdt = new ((void *)gdt_mem) Gdt();
+  gdt = new (reinterpret_cast<void *>(gdt_mem)) Gdt();
 
   // make sure kernel cs/ds and user cs/ds are placed in the same
   // cache line, respectively; pre-set all "accessed" flags so that

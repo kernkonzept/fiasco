@@ -41,11 +41,12 @@ Vmem_alloc::page_alloc(void *address, Zero_fill zf, unsigned mode)
   if (zf == ZERO_FILL)
     memset(vpage, 0, Config::PAGE_SIZE);
 
-  page = Mem_layout::pmem_to_phys((Address)vpage);
+  page = Mem_layout::pmem_to_phys(reinterpret_cast<Address>(vpage));
 
   e.set_page(page, Pt_entry::Writable | Pt_entry::Dirty
                    | Pt_entry::Referenced
-                   | Pt_entry::global() | (mode & User ? (unsigned)Pt_entry::User : 0));
+                   | Pt_entry::global()
+                   | (mode & User ? static_cast<unsigned>(Pt_entry::User) : 0));
   page_map (address, 0, zf, page);
   return address;
 

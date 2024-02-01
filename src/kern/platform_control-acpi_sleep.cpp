@@ -34,7 +34,8 @@ Platform_control::init(Cpu_number cpu)
     }
 
   facs = Acpi::map_table_head<Acpi_facs>(fadt->facs_addr);
-  printf("ACPI: FACS phys=%x virt=%p\n", fadt->facs_addr, (void *)facs);
+  printf("ACPI: FACS phys=%x virt=%p\n", fadt->facs_addr,
+         static_cast<void *>(facs));
 
   if (!facs)
     {
@@ -51,7 +52,7 @@ Platform_control::init(Cpu_number cpu)
   printf("ACPI: HW sig=%x\n", facs->hw_signature);
 
   extern char _tramp_acpi_wakeup[];
-  phys_wake_vector = (Address)_tramp_acpi_wakeup;
+  phys_wake_vector = reinterpret_cast<Address>(_tramp_acpi_wakeup);
   if (phys_wake_vector >= 1UL << 20)
     {
       printf("ACPI: invalid wake vector (1MB): %lx\n", phys_wake_vector);
@@ -163,7 +164,7 @@ do_system_suspend(Context::Drq *, Context *, void *data)
   if (facs->len > 32 && facs->version >= 1)
     facs->x_fw_wake_vector = 0;
 
-  Mword sleep_type = *(Mword *)data;
+  Mword sleep_type = *static_cast<Mword *>(data);
   *reinterpret_cast<Mword*>(data) = 0;
 
   Pm_object::run_on_suspend_hooks(current_cpu());

@@ -207,10 +207,10 @@ Svm::set_msr_perm(Unsigned32 msr, Msr_perms perms)
   msr &= 0x1fff;
   offs += msr / 4;
 
-  unsigned char *pm = (unsigned char *)_msrpm;
+  unsigned char *pm = static_cast<unsigned char *>(_msrpm);
 
   unsigned shift = (msr & 3) * 2;
-  pm[offs] = (pm[offs] & ~(3 << shift)) | ((unsigned char)perms << shift);
+  pm[offs] = (pm[offs] & ~(3 << shift)) | (perms << shift);
 }
 
 PUBLIC

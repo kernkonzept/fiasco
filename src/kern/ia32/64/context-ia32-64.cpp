@@ -74,8 +74,8 @@ PROTECTED inline
 void
 Context::arch_setup_utcb_ptr()
 {
-  _utcb.access()->utcb_addr = (Mword)_utcb.usr().get();
-  _gs_base = (Address)&_utcb.usr()->utcb_addr;
+  _utcb.access()->utcb_addr = reinterpret_cast<Mword>(_utcb.usr().get());
+  _gs_base = reinterpret_cast<Address>(&_utcb.usr()->utcb_addr);
 }
 
 PROTECTED inline

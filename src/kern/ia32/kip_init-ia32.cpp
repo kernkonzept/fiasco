@@ -100,18 +100,18 @@ void Kip_init::init()
   for (auto &md: kinfo->mem_descs_a())
     {
       if (md.type() != Mem_desc::Reserved || md.is_virtual())
-	continue;
+        continue;
 
-      if (md.start() == (Address)_boot_sys_start
-	  && md.end() == (Address)_boot_sys_end - 1)
-	md.type(Mem_desc::Undefined);
+      if (md.start() == reinterpret_cast<Address>(_boot_sys_start)
+          && md.end() == reinterpret_cast<Address>(_boot_sys_end) - 1)
+        md.type(Mem_desc::Undefined);
 
       if (md.contains(Kmem::kernel_image_start())
-	  && md.contains(Kmem::kcode_end()-1))
-	{
-	  md = Mem_desc(Kmem::kernel_image_start(), Kmem::kcode_end() -1,
-	                Mem_desc::Reserved);
-	}
+          && md.contains(Kmem::kcode_end() - 1))
+        {
+          md = Mem_desc(Kmem::kernel_image_start(), Kmem::kcode_end() - 1,
+                        Mem_desc::Reserved);
+        }
     }
 }
 
@@ -132,8 +132,8 @@ Kip_init::init_kip_clock()
   K *k = reinterpret_cast<K *>(Kip::k());
 
   Cpu cpu = Cpu::cpus.cpu(Cpu_number::boot_cpu());
-  *(Mword*)(k->b + 0x9f0) = cpu.get_scaler_tsc_to_us();
-  *(Mword*)(k->b + 0x9f8) = cpu.get_scaler_tsc_to_ns();
+  *reinterpret_cast<Mword*>(k->b + 0x9f0) = cpu.get_scaler_tsc_to_us();
+  *reinterpret_cast<Mword*>(k->b + 0x9f8) = cpu.get_scaler_tsc_to_ns();
 
   memcpy(k->b + 0x900, kip_time_fn_read_us,
          kip_time_fn_read_us_end - kip_time_fn_read_us);

@@ -39,7 +39,7 @@ Tb_entry_trap::set(Mword rip, Trap_state *ts)
   _error  = ts->_err;
   _cr2    = ts->_cr2;
   _rax    = ts->_ax;
-  _cs     = (Unsigned16)ts->cs();
+  _cs     = ts->cs() & 0xffff;
   _rsp    = ts->sp();
   _rflags = ts->flags();
 }

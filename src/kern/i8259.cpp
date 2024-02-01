@@ -175,7 +175,7 @@ public:
     if (_irqs[pin])
       return false;
 
-    if (!cas(&_irqs[pin], (Irq_base *)0, irq))
+    if (!cas<Irq_base *>(&_irqs[pin], nullptr, irq))
       return false;
 
     this->bind(irq, pin, !init);
@@ -190,7 +190,7 @@ public:
     if (_irqs[pin])
       return false;
 
-    _irqs[pin] = (Irq_base*)1;
+    _irqs[pin] = reinterpret_cast<Irq_base *>(1UL);
 
     return true;
   }
@@ -223,8 +223,8 @@ PUBLIC template<typename IO> inline
 Unsigned16
 Irq_chip_i8259<IO>::disable_all_save()
 {
-  Unsigned16 s =   (Unsigned16)read_ocw(_master)
-                 | (Unsigned16)read_ocw(_slave) << 8;
+  Unsigned16 s =   Unsigned16{read_ocw(_master)}
+                 | Unsigned16{read_ocw(_slave)} << 8;
   write_ocw(0xff, _master);
   write_ocw(0xff, _slave);
   return s;

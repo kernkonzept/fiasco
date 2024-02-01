@@ -50,6 +50,8 @@ protected:
     Mword evnt;		// event selector
   };
 
+  enum { Counter_not_allocated = static_cast<Mword>(-1) };
+
   static Mword    pmc_watchdog;                   // # perfcounter of watchdog
   static Mword    pmc_loadcnt;                    // # perfcounter of loadcnt
   static Signed64 hold_watchdog;
@@ -83,8 +85,8 @@ Perf_cnt::Perf_event_type Perf_cnt::perf_event_type;
 Perf_cnt_arch *Perf_cnt::pcnt;
 char const *Perf_cnt::perf_type_str = "n/a";
 
-Mword Perf_cnt_arch::pmc_watchdog = (Mword)-1;
-Mword Perf_cnt_arch::pmc_loadcnt  = (Mword)-1;
+Mword Perf_cnt_arch::pmc_watchdog = Counter_not_allocated;
+Mword Perf_cnt_arch::pmc_loadcnt = Counter_not_allocated;
 Signed64 Perf_cnt_arch::hold_watchdog;
 Perf_cnt_arch::Event Perf_cnt_arch::pmc_event[Perf_cnt::Max_slot];
 char  Perf_cnt_arch::pmc_alloc[Perf_cnt::Max_pmc];
@@ -574,7 +576,7 @@ void
 Perf_cnt_p4::init_watchdog() override
 {
   Unsigned64 msr;
-  
+
   msr = escr_event_select(0x13) // global power events
       | escr_event_mask(1)      // the processor is active (non-halted)
       | P4_escr_kern            // Monitor kernel-level events
@@ -591,7 +593,7 @@ void
 Perf_cnt_p4::init_loadcnt() override
 {
   Unsigned64 msr;
-  
+
   msr = escr_event_select(0x13) // global power events
       | escr_event_mask(1)      // the processor is active (non-halted)
       | P4_escr_kern            // Monitor kernel-level events
@@ -648,7 +650,7 @@ Perf_cnt_arch::Perf_cnt_arch(Mword sel_reg0, Mword ctr_reg0,
 
   for (Mword slot=0; slot<Perf_cnt::Max_slot; slot++)
     {
-      pmc_event[slot].pmc  = (Mword)-1;
+      pmc_event[slot].pmc  = Counter_not_allocated;
       pmc_event[slot].edge = 0;
     }
 }
@@ -656,12 +658,12 @@ Perf_cnt_arch::Perf_cnt_arch(Mword sel_reg0, Mword ctr_reg0,
 PUBLIC inline
 Mword
 Perf_cnt_arch::watchdog_allocated()
-{ return (pmc_watchdog != (Mword)-1); }
+{ return (pmc_watchdog != Counter_not_allocated); }
 
 PUBLIC inline
 Mword
 Perf_cnt_arch::loadcnt_allocated()
-{ return (pmc_loadcnt != (Mword)-1); }
+{ return (pmc_loadcnt != Counter_not_allocated); }
 
 void
 Perf_cnt_arch::alloc_watchdog()
@@ -689,7 +691,7 @@ Perf_cnt_arch::alloc_loadcnt()
       pmc_alloc[0] = Alloc_perf;
       pmc_loadcnt  = 0;
       // move the watchdog to another counter
-      pmc_watchdog = (Mword)-1;
+      pmc_watchdog = Counter_not_allocated;
       alloc_watchdog();
       return;
     }
@@ -712,9 +714,9 @@ Perf_cnt_arch::alloc_pmc(Mword slot, Mword bitmask)
 {
   // free previous allocated counter
   Mword pmc = pmc_event[slot].pmc;
-  if (pmc != (Mword)-1 && pmc_alloc[pmc] == Alloc_perf)
+  if (pmc != Counter_not_allocated && pmc_alloc[pmc] == Alloc_perf)
     {
-      pmc_event[slot].pmc = (Mword)-1;
+      pmc_event[slot].pmc = Counter_not_allocated;
       pmc_alloc[pmc]      = Alloc_none;
     }
 
@@ -722,10 +724,10 @@ Perf_cnt_arch::alloc_pmc(Mword slot, Mword bitmask)
   for (pmc=0; pmc<_nr_regs; pmc++)
     if ((pmc_alloc[pmc] == Alloc_none) && (bitmask & (1<<pmc)))
       {
-	pmc_event[slot].pmc = pmc;
-	pmc_alloc[pmc]      = Alloc_perf;
-	Perf_cnt::set_pmc_fn(slot, pmc);
-	return 1;
+        pmc_event[slot].pmc = pmc;
+        pmc_alloc[pmc]      = Alloc_perf;
+        Perf_cnt::set_pmc_fn(slot, pmc);
+        return 1;
       }
 
   // did not found an appropriate free counter (restricted by bitmask) so try
@@ -738,7 +740,7 @@ Perf_cnt_arch::alloc_pmc(Mword slot, Mword bitmask)
       pmc_alloc[pmc_watchdog] = Alloc_perf;
       Perf_cnt::set_pmc_fn(slot, pmc_watchdog);
       // move the watchdog to another counter
-      pmc_watchdog            = (Mword)-1;
+      pmc_watchdog            = Counter_not_allocated;
       alloc_watchdog();
       return 1;
     }
@@ -753,16 +755,16 @@ Perf_cnt_arch::clear_pmc(Mword reg_nr)
 
 PUBLIC
 void
-Perf_cnt_arch::mode(Mword slot, const char **mode, 
-		    Mword *event, Mword *user, Mword *kern, Mword *edge)
+Perf_cnt_arch::mode(Mword slot, const char **mode,
+                    Mword *event, Mword *user, Mword *kern, Mword *edge)
 {
   static const char * const mode_str[2][2][2] =
     { { { "off", "off" }, { "d.K",   "e.K"   } },
       { { "d.U", "e.U" }, { "d.K+U", "e.K+U" } } };
 
-  *mode    = mode_str[(int)pmc_event[slot].user]
-		     [(int)pmc_event[slot].kern]
-		     [(int)pmc_event[slot].edge];
+  *mode    = mode_str[int{pmc_event[slot].user}]
+                     [int{pmc_event[slot].kern}]
+                     [int{pmc_event[slot].edge}];
   *event   = pmc_event[slot].evnt;
   *user    = pmc_event[slot].user;
   *kern    = pmc_event[slot].kern;
@@ -807,13 +809,15 @@ Perf_cnt_arch::setup_watchdog(Mword timeout)
   alloc_watchdog();
   if (watchdog_allocated())
     {
-      hold_watchdog = ((Signed64)((Cpu::boot_cpu()->frequency() >> 16) * timeout)) << 16;
+      hold_watchdog =
+        static_cast<Signed64>((Cpu::boot_cpu()->frequency() >> 16) * timeout)
+        << 16;
       // The maximum value a performance counter register can be written to
       // is 0x7ffffffff. The 31st bit is extracted to the bits 32-39 (see 
       // "IA-32 Intel Architecture Software Developer's Manual. Volume 3: 
       // Programming Guide" section 14.10.2: PerfCtr0 and PerfCtr1 MSRs.
       if (hold_watchdog > 0x7fffffff)
-	hold_watchdog = 0x7fffffff;
+        hold_watchdog = 0x7fffffff;
       hold_watchdog = -hold_watchdog;
       init_watchdog();
       touch_watchdog();
@@ -1105,7 +1109,7 @@ Perf_cnt::setup_pmc(Mword slot, Mword event, Mword user, Mword kern, Mword edge)
 PUBLIC static
 int
 Perf_cnt::mode(Mword slot, const char **mode, const char **name, 
-	       Mword *event, Mword *user, Mword *kern, Mword *edge)
+               Mword *event, Mword *user, Mword *kern, Mword *edge)
 {
   if (!perf_type() || !pcnt)
     {
@@ -1131,8 +1135,8 @@ Perf_cnt::get_max_perf_event()
 { return (perfctr_get_max_event != 0) ? perfctr_get_max_event() : 0; }
 
 PUBLIC static void
-Perf_cnt::get_perf_event(Mword nr, unsigned *evntsel, 
-			 const char **name, const char **desc)
+Perf_cnt::get_perf_event(Mword nr, unsigned *evntsel,
+                         const char **name, const char **desc)
 {
   const struct perfctr_event *pe = 0;
 
@@ -1151,15 +1155,15 @@ Perf_cnt::lookup_event(unsigned evntsel)
 
   if (perfctr_lookup_event != 0 && perfctr_lookup_event(evntsel, &nr) != 0)
     return nr;
-  return (Mword)-1;
+  return static_cast<Mword>(-1);
 }
 
 PUBLIC static void
 Perf_cnt::get_unit_mask(Mword nr, Unit_mask_type *type,
-			Mword *default_value, Mword *nvalues)
+                        Mword *default_value, Mword *nvalues)
 {
   const struct perfctr_event *event = 0;
-  
+
   if (perfctr_index_event != 0) 
     event = perfctr_index_event(nr);
 
@@ -1168,11 +1172,11 @@ Perf_cnt::get_unit_mask(Mword nr, Unit_mask_type *type,
     {
       *default_value = event->unit_mask->default_value;
       switch (event->unit_mask->type)
-	{
-	case perfctr_um_type_fixed:	*type = Fixed; break;
-	case perfctr_um_type_exclusive:	*type = Exclusive; break;
-	case perfctr_um_type_bitmask:	*type = Bitmask; break;
-	}
+        {
+        case perfctr_um_type_fixed: *type = Fixed; break;
+        case perfctr_um_type_exclusive: *type = Exclusive; break;
+        case perfctr_um_type_bitmask: *type = Bitmask; break;
+        }
       *nvalues = event->unit_mask->nvalues;
     }
 }

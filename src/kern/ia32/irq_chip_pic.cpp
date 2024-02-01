@@ -103,7 +103,7 @@ Irq_chip_ia32_pic::Irq_chip_ia32_pic()
   bool sfn = !Koptions::o()->opt(Koptions::F_nosfn);
   init(Base_vector, sfn,
        Config::Pic_prio_modify
-       && (int)Config::Scheduler_mode == Config::SCHED_RTC);
+       && int{Config::Scheduler_mode} == Config::SCHED_RTC);
 
   reserve(2); // reserve cascade irq
   reserve(7); // reserve spurious vect

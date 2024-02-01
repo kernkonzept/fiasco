@@ -87,14 +87,14 @@ Vm_vmx::load_vm_memory(Vmx_vm_state *vm_state)
   if (sizeof(long) > sizeof(int))
     {
       if (vm_state->read<Vmx::Vmcs_guest_ia32_efer>() & EFER_LME)
-        Vmx::vmcs_write<Vmx::Vmcs_guest_cr3>((Mword)phys_dir());
+        Vmx::vmcs_write<Vmx::Vmcs_guest_cr3>(phys_dir());
       else
         WARN("VMX: No, not possible\n");
     }
   else
     {
       // for 32bit we can just load the Vm pdbr
-      Vmx::vmcs_write<Vmx::Vmcs_guest_cr3>((Mword)phys_dir());
+      Vmx::vmcs_write<Vmx::Vmcs_guest_cr3>(phys_dir());
     }
 
   tlb_mark_used();

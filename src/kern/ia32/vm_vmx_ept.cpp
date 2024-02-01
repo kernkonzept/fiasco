@@ -24,7 +24,7 @@ public:
       "invept %[op], %[type]\n"
       :
       : [op] "m" (op),
-        [type] "r" ((Mword) type)
+        [type] "r" (static_cast<Mword>(type))
       : "cc"
     );
   }
@@ -155,7 +155,7 @@ private:
       typedef L4_fpage::Rights R;
       typedef Page::Type T;
 
-      Unsigned64 r = (level < 3) ? (Unsigned64)(1 << 7) : 0;
+      Unsigned64 r = (level < 3) ? 1ULL << 7 : 0ULL;
       r |= 1; // R
       if (attr.rights & R::W()) r |= 2;
       if (attr.rights & R::X()) r |= 4;

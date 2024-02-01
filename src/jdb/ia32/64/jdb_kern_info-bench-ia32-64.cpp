@@ -28,7 +28,7 @@ Jdb_kern_info_bench::get_time_now()
 
 #define inst_invlpg							\
   asm volatile ("invlpg %0" 						\
-		: : "m" (*(char*)Mem_layout::Kmem_tmp_page_1))
+		: : "m" (*reinterpret_cast<char*>(Mem_layout::Kmem_tmp_page_1)))
 
 #define inst_read_cr3							\
   asm volatile ("mov %%cr3,%0"						\
@@ -117,7 +117,8 @@ Jdb_kern_info_bench::show_arch()
 
   // we need a cached, non-global mapping for measuring the time to load
   // TLB entries
-  Address phys = Kmem::virt_to_phys((void*)Mem_layout::Tbuf_status_page);
+  Address phys =
+    Kmem::virt_to_phys(reinterpret_cast<void*>(Mem_layout::Tbuf_status_page));
   Kmem::map_phys_page(phys, Mem_layout::Jdb_bench_page, true, false);
 
     {
@@ -176,7 +177,8 @@ Jdb_kern_info_bench::show_arch()
     {
       // write a GDT entry, set ES segment descriptor to this gdt entry
       // and access memory through the ES segment
-      Unsigned32 *gdt_e = (Unsigned32*)&(*gdt)[Gdt::gdt_data_kernel/8];
+      Unsigned32 *gdt_e =
+        reinterpret_cast<Unsigned32*>(&(*gdt)[Gdt::gdt_data_kernel/8]);
       time = Cpu::rdtsc();
       asm volatile ("mov  $200000,%%rbx		\n\t"
 		    ".align 16			\n\t"
@@ -239,16 +241,19 @@ Jdb_kern_info_bench::show_arch()
 	asm volatile ("invlpg %1	\n\t"
 		      "mov %1, %0	\n\t"
 		      : "=r" (dummy)
-		      : "m" (*(char*)Mem_layout::Jdb_bench_page));
+		      : "m" (*reinterpret_cast<char*>(Mem_layout::Jdb_bench_page)));
       time = Cpu::rdtsc() - time - time_invlpg;
       show_time (time, 200000, "load data TLB (4k)");
     }
 
     {
       // asm ("1: mov %%cr3,%%rdx; mov %%rdx, %%cr3; dec %%rax; jnz 1b; ret")
-      *(Unsigned32*)(Mem_layout::Jdb_bench_page + 0xff0) = 0x0fda200f;
-      *(Unsigned32*)(Mem_layout::Jdb_bench_page + 0xff4) = 0xff48da22;
-      *(Unsigned32*)(Mem_layout::Jdb_bench_page + 0xff8) = 0xc3f575c8;
+      *reinterpret_cast<Unsigned32*>(
+        Mem_layout::Jdb_bench_page + 0xff0) = 0x0fda200f;
+      *reinterpret_cast<Unsigned32*>(
+        Mem_layout::Jdb_bench_page + 0xff4) = 0xff48da22;
+      *reinterpret_cast<Unsigned32*>(
+        Mem_layout::Jdb_bench_page + 0xff8) = 0xc3f575c8;
 
       Mem::barrier();
       time = Cpu::rdtsc();

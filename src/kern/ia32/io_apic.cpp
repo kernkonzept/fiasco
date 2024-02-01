@@ -191,18 +191,18 @@ Io_apic::Io_apic(Unsigned64 phys, unsigned gsi_base)
 : Irq_chip_ia32(0), _offset(gsi_base), _next(0)
 {
   if (Print_info)
-    printf("IO-APIC: addr=%lx\n", (Mword)phys);
+    printf("IO-APIC: addr=%llx\n", phys);
 
   Address va = Kmem::mmio_remap(phys, Config::PAGE_SIZE);
 
   Kip::k()->add_mem_region(Mem_desc(phys, phys + Config::PAGE_SIZE -1, Mem_desc::Reserved));
 
-  Io_apic::Apic *a = (Io_apic::Apic *)va;
+  Io_apic::Apic *a = reinterpret_cast<Io_apic::Apic *>(va);
   a->write(0, 0);
 
   _apic = a;
   _irqs = a->num_entries() + 1;
-  _vec = (unsigned char *)Boot_alloced::alloc(_irqs);
+  _vec = Boot_alloced::allocate<unsigned char>(_irqs);
 
   if ((_offset + nr_irqs()) > _nr_irqs)
     _nr_irqs = _offset + nr_irqs();
@@ -234,7 +234,7 @@ Io_apic::read_entry(unsigned i) const
   auto g = lock_guard(_l);
   Io_apic_entry e;
   //assert(i <= num_entries());
-  e._e = (Unsigned64)_apic->read(0x10+2*i) | (((Unsigned64)_apic->read(0x11+2*i)) << 32);
+  e._e = _apic->read(0x10+2*i) | (Unsigned64{_apic->read(0x11+2*i)} << 32);
   return e;
 }
 
@@ -262,12 +262,12 @@ Io_apic::read_overrides()
 
       if (Print_info)
         printf("IO-APIC: ovr[%2u] %02x -> %x %x\n",
-               tmp, (unsigned)irq->src, irq->irq, (unsigned)irq->flags);
+               tmp, irq->src, irq->irq, irq->flags);
 
       if (irq->irq >= _nr_irqs)
         {
-          WARN("IO-APIC: warning override %02x -> %x (flags=%x) points to invalid GSI\n",
-               (unsigned)irq->src, irq->irq, (unsigned)irq->flags);
+          WARN("IO-APIC: warning override %02x -> %x (flags=%x) "
+               "points to invalid GSI\n", irq->src, irq->irq, irq->flags);
           continue;
         }
 
@@ -432,11 +432,9 @@ Io_apic::dump()
     {
       Io_apic_entry e = read_entry(i);
       printf("  PIN[%2u%c]: vector=%2x, del=%u, dm=%s, dest=%u (%s, %s)\n",
-	     i, e.mask() ? 'm' : '.',
-	     (unsigned)e.vector(), (unsigned)e.delivery(), e.dest_mode() ? "logical" : "physical",
-	     (unsigned)e.dest(),
-	     e.polarity() ? "low" : "high",
-	     e.trigger() ? "level" : "edge");
+             i, e.mask() ? 'm' : '.', e.vector().get(), e.delivery().get(),
+             e.dest_mode() ? "logical" : "physical", e.dest().get(),
+             e.polarity() ? "low" : "high", e.trigger() ? "level" : "edge");
     }
 
 }

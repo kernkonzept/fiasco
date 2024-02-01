@@ -280,14 +280,14 @@ PUBLIC static inline
 Unsigned32
 Apic::reg_read(unsigned reg)
 {
-  return *((volatile Unsigned32*)(io_base + reg));
+  return *reinterpret_cast<volatile Unsigned32*>(io_base + reg);
 }
 
 PUBLIC static inline
 void
 Apic::reg_write(unsigned reg, Unsigned32 val)
 {
-  *((volatile Unsigned32*)(io_base + reg)) = val;
+  *reinterpret_cast<volatile Unsigned32*>(io_base + reg) = val;
 }
 
 PUBLIC static inline

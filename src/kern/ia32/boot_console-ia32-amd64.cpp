@@ -37,9 +37,9 @@ void Boot_console::init()
     return;
 
 #if defined(CONFIG_IRQ_SPINNER)
-  vga.construct((unsigned long)Mem_layout::Adap_vram_cga_beg,80,20,true,true);
+  vga.construct(Address{Mem_layout::Adap_vram_cga_beg}, 80, 20, true, true);
 #else
-  vga.construct((unsigned long)Mem_layout::Adap_vram_cga_beg,80,25,true,true);
+  vga.construct(Address{Mem_layout::Adap_vram_cga_beg}, 80, 25, true, true);
 #endif
 
   if (vga->is_working())

@@ -7,7 +7,7 @@ void
 direct_cons_putchar(unsigned char c)
 {
   static int ofs = -1;
-  unsigned char *vidbase = (unsigned char *)0xb8000;
+  unsigned char *vidbase = reinterpret_cast<unsigned char *>(0xb8000);
 
   if (ofs < 0)
     {

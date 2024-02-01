@@ -118,12 +118,13 @@ IMPLEMENTATION:
 IMPLEMENT
 Vga_console::Vga_console(Address vbase, unsigned width, unsigned height,
                          bool light_white, bool use_color)
-  : Console(ENABLED), _video_base((VChar *)vbase), _width(width), _height(height),
-    _x(0), _y(height - 1), _attribute(light_white ? 0x0f : 0x07),
+  : Console(ENABLED), _video_base(reinterpret_cast<VChar *>(vbase)),
+    _width(width), _height(height), _x(0), _y(height - 1),
+    _attribute(light_white ? 0x0f : 0x07),
     wr(&Vga_console::normal_write), _light_white(light_white),
     _use_color(use_color), _is_working(false)
 {
-  unsigned volatile *vm = (unsigned volatile *)_video_base;
+  unsigned volatile *vm = reinterpret_cast<unsigned volatile *>(_video_base);
   unsigned x = *vm;
   *vm = 12;
   if (*vm != 12)
@@ -457,7 +458,7 @@ void Vga_console::normal_write(char const *str, size_t len, unsigned &i)
           break;
 
         default:
-          if ((unsigned)str[i] >= 32)
+          if (str[i] < 0 || str[i] >= 32)
             {
               if (_x >= _width)
                 {

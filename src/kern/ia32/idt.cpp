@@ -97,16 +97,17 @@ Idt::init()
 {
   assert (_idt_max * sizeof(Idt_entry) <= Config::PAGE_SIZE && "IDT too large");
   auto alloc = Kmem_alloc::allocator();
-  Idt_entry *idt = (Idt_entry *)alloc->alloc(Config::page_size());
+  Idt_entry *idt = static_cast<Idt_entry *>(alloc->alloc(Config::page_size()));
   if (!idt)
     panic("IDT allocation failure: %d", __LINE__);
 
   _idt_pa = Mem_layout::pmem_to_phys(idt);
-  memset((void*)idt, 0, Config::PAGE_SIZE);
+  memset(static_cast<void*>(idt), 0, Config::PAGE_SIZE);
 
-  Vmem_alloc::page_map((void *)_idt, 0, Vmem_alloc::NO_ZERO_FILL, _idt_pa);
+  Vmem_alloc::page_map(reinterpret_cast<void *>(_idt), 0,
+                       Vmem_alloc::NO_ZERO_FILL, _idt_pa);
 
-  init_table((Idt_init_entry*)&idt_init_table, idt);
+  init_table(reinterpret_cast<Idt_init_entry*>(&idt_init_table), idt);
 
   init_current_cpu();
 }
@@ -147,7 +148,7 @@ Idt::set_entry(unsigned vector, Idt_entry entry)
 
   set_writable(true);
 
-  Idt_entry *entries = (Idt_entry*)_idt;
+  Idt_entry *entries = reinterpret_cast<Idt_entry*>(_idt);
   entries[vector] = entry;
   set_writable(false);
 }
@@ -158,7 +159,7 @@ Idt::get(unsigned vector)
 {
   assert (vector < _idt_max);
 
-  return ((Idt_entry*)_idt)[vector];
+  return reinterpret_cast<Idt_entry*>(_idt)[vector];
 }
 
 /**
@@ -179,7 +180,7 @@ Idt::set_entry(unsigned vector, Address addr, bool user)
 
   set_writable(true);
 
-  Idt_entry *entries = (Idt_entry *)_idt;
+  Idt_entry *entries = reinterpret_cast<Idt_entry *>(_idt);
 
   if (addr)
     entries[vector] = Idt_entry(addr, Gdt::gdt_code_kernel,
@@ -196,7 +197,7 @@ Address
 Idt::get_entry(unsigned vector)
 {
   assert (vector < _idt_max);
-  Idt_entry *entries = (Idt_entry*)_idt;
+  Idt_entry *entries = reinterpret_cast<Idt_entry*>(_idt);
   return entries[vector].offset();
 }
 
@@ -245,10 +246,11 @@ PUBLIC static
 void
 Idt::set_vectors_run()
 {
-  Address func = (Config::esc_hack || Config::watchdog ||
-		  Config::serial_esc==Config::SERIAL_ESC_NOIRQ)
-		    ? (Address)entry_int_timer_slow // slower for debugging
-		    : (Address)entry_int_timer;     // non-debugging
+  Address func =
+    (Config::esc_hack || Config::watchdog ||
+     Config::serial_esc==Config::SERIAL_ESC_NOIRQ)
+    ? reinterpret_cast<Address>(entry_int_timer_slow) // slower for debugging
+    : reinterpret_cast<Address>(entry_int_timer);     // non-debugging
 
   set_entry(Config::scheduler_irq_vector, func, false);
 #if 0

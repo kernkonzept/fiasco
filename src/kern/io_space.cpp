@@ -307,7 +307,7 @@ static inline
 bool
 Generic_io_space<SPACE>::is_full_flush(L4_fpage::Rights rights)
 {
-  return (bool)rights;
+  return static_cast<bool>(rights);
 }
 
 PUBLIC template<typename SPACE>

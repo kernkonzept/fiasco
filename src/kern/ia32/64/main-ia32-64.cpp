@@ -35,9 +35,7 @@ kernel_main(void)
   cpu.print_infos();
 
   printf("\nFreeing init code/data: %lu bytes (%lu pages)\n\n",
-         (Address)(Mem_layout::initcall_end - Mem_layout::initcall_start),
-         Pg::count((Address)(Mem_layout::initcall_end
-                   - Mem_layout::initcall_start)));
+         Mem_layout::initcall_size(), Pg::count(Mem_layout::initcall_size()));
 
   // Perform architecture specific initialization
   main_arch();
