@@ -224,7 +224,7 @@ outer_cache_IMPL	:= outer_cache outer_cache-l2cxx0
 paging_IMPL	  	:= paging paging-arm paging-arm-$(BITS)
 perf_cnt_IMPL		:= perf_cnt perf_cnt-arm perf_cnt-arm-$(BITS)
 pic_IMPL		:= pic
-platform_control_IMPL   += platform_control-arm-psci
+platform_control_IMPL   += platform_control-arm platform_control-arm-psci
 psci_IMPL		:= psci-arm
 sched_context_IMPL	:= sched_context-wfq sched_context-fixed_prio \
 			   sched_context-fp_wfq sched_context
