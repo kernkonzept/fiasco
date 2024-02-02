@@ -26,22 +26,6 @@ IMPLEMENTATION [ia32,ux,amd64]:
 Address Kmem_alloc::tss_mem_pm;
 
 /**
- * Number of memory descriptor fixups.
- *
- * Since we allocate the freemap and the TSSs, we might potentially need
- * two fixups.
- *
- * \return Upper bound of the number of memory descriptor fixups that are
- *         needed for a successful boot.
- */
-IMPLEMENT_OVERRIDE static constexpr
-size_t
-Kmem_alloc::nr_fixups()
-{
-  return 2;
-}
-
-/**
  * Walk through all KIP memory regions of conventional memory minus the
  * reserved memory and find one or more regions suitable for the kernel memory.
  *

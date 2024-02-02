@@ -46,13 +46,20 @@ private:
     unsigned long start; /**< Fixup start address. */
   };
 
-  static Fixup _fixups[];
+  /**
+   * Number of memory descriptor fixups.
+   *
+   * Most architectures need just one fixup. On x86, since we allocate the
+   * freemap and the TSSs, we might potentially need two fixups.
+   */
+  enum : size_t { Nr_fixups = 2 };
+
+  static Fixup _fixups[Nr_fixups];
   static Lock lock;
   static Alloc *a;
   static unsigned long _orig_free;
   static Kmem_alloc *_alloc;
 
-  static constexpr size_t nr_fixups();
 };
 
 class Kmem_alloc_reaper : public cxx::S_list_item
@@ -114,26 +121,11 @@ IMPLEMENTATION:
 
 static Kmem_alloc::Alloc _a;
 
-Kmem_alloc::Fixup Kmem_alloc::_fixups[Kmem_alloc::nr_fixups()];
+Kmem_alloc::Fixup Kmem_alloc::_fixups[Kmem_alloc::Nr_fixups];
 Kmem_alloc::Alloc *Kmem_alloc::a = &_a;
 unsigned long Kmem_alloc::_orig_free;
 Kmem_alloc::Lock Kmem_alloc::lock;
 Kmem_alloc *Kmem_alloc::_alloc;
-
-/**
- * Number of memory descriptor fixups.
- *
- * By default, we only require a single fixup for the freemap.
- *
- * \return Upper bound of the number of memory descriptor fixups that are
- *         needed for a successful boot.
- */
-IMPLEMENT_DEFAULT static constexpr
-size_t
-Kmem_alloc::nr_fixups()
-{
-  return 1;
-}
 
 /**
  * Allocate physical memory before the buddy allocator initialization.
@@ -204,7 +196,7 @@ Kmem_alloc::fixup_start(Mem_desc const &md)
   assert(md.type() == Mem_desc::Kernel_tmp);
 
   /* Look for an existing fixup. */
-  for (unsigned int i = 0; i < nr_fixups(); ++i)
+  for (unsigned int i = 0; i < Nr_fixups; ++i)
     if (_fixups[i].md == &md)
       return _fixups[i].start;
 
@@ -228,7 +220,7 @@ Kmem_alloc::set_fixup_start(Mem_desc const &md, unsigned long start)
   assert(md.type() == Mem_desc::Kernel_tmp);
 
   /* Look for an existing fixup to update. */
-  for (unsigned int i = 0; i < nr_fixups(); ++i)
+  for (unsigned int i = 0; i < Nr_fixups; ++i)
     {
       if (_fixups[i].md == &md)
         {
@@ -266,7 +258,7 @@ Kmem_alloc::fixup_size(Mem_desc const &md)
   assert(md.type() == Mem_desc::Kernel_tmp);
 
   /* Look for an existing fixup. */
-  for (unsigned int i = 0; i < nr_fixups(); ++i)
+  for (unsigned int i = 0; i < Nr_fixups; ++i)
     if (_fixups[i].md == &md)
       return md.end() - _fixups[i].start + 1;
 
