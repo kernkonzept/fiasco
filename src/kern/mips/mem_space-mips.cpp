@@ -129,7 +129,8 @@ Mem_space::initialize()
   if (EXPECT_FALSE(!q))
     return false;
 
-  _dir = (Dir_type*)Kmem_alloc::allocator()->alloc(Bytes(sizeof(Dir_type)));
+  _dir = static_cast<Dir_type*>(Kmem_alloc::allocator()
+                                  ->alloc(Bytes(sizeof(Dir_type))));
   if (!_dir)
     return false;
 
@@ -152,7 +153,7 @@ PUBLIC static inline
 bool
 Mem_space::is_full_flush(L4_fpage::Rights rights)
 {
-  return (bool)(rights & L4_fpage::Rights::R());
+  return static_cast<bool>(rights & L4_fpage::Rights::R());
 }
 
 IMPLEMENT inline
@@ -500,13 +501,13 @@ private:
 
     static void set_id(Mem_space *o, Cpu_number cpu, int id)
     {
-      write_now(&o->_guest_id[cpu], (unsigned char)id);
+      write_now(&o->_guest_id[cpu], static_cast<unsigned char>(id));
       Mem_unit::tlb_flush(-1, id);
       Mem_unit::vz_guest_tlb_flush(id);
     }
 
     static void reset_id(Mem_space *o, Cpu_number cpu)
-    { write_now(&o->_guest_id[cpu], (unsigned char)0); }
+    { write_now(&o->_guest_id[cpu], 0U); }
   };
 
   struct Guest_id_alloc : Id_alloc<unsigned char, Mem_space, Guest_id_ops>

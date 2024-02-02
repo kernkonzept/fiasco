@@ -99,15 +99,17 @@ Fb::setup_mbi()
 
   L4mod_info *mbi = Boot_info::mbi_virt();
 
-  struct Multiboot_vbe_controller *vbe = reinterpret_cast
-	<Multiboot_vbe_controller *>(Boot_info::mbi_vbe());
-  struct Multiboot_vbe_mode *vbi = reinterpret_cast
-	<Multiboot_vbe_mode *>((char *) vbe + sizeof (*vbe));
+  struct Multiboot_vbe_controller *vbe =
+    reinterpret_cast<Multiboot_vbe_controller *>(Boot_info::mbi_vbe());
+  struct Multiboot_vbe_mode *vbi =
+    offset_cast<Multiboot_vbe_mode *>(vbe, sizeof(*vbe));
 
   mbi->vbe_control_info   = Boot_info::mbi_phys()
-                             + ((char *) vbe - (char *) mbi);
+                            + (reinterpret_cast<char *>(vbe)
+                               - reinterpret_cast<char *>(mbi));
   mbi->vbe_mode_info      = Boot_info::mbi_phys()
-                             + ((char *) vbi - (char *) mbi);
+                            + (reinterpret_cast<char *>(vbi)
+                               - reinterpret_cast<char *>(mbi));
   vbe->total_memory       = Boot_info::fb_size() >> 16;	/* 2^16 == 1024 * 64 */
   vbi->phys_base          = Boot_info::fb_virt();
   vbi->y_resolution       = Boot_info::fb_height();

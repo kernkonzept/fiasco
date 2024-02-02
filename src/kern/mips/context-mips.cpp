@@ -36,8 +36,9 @@ PROTECTED inline void Context::arch_setup_utcb_ptr()
   // the thread pointer points + 0x7000 after the end of the TCB
   // (2x void*: dtv ptr and private ptr) before that we shall store
   // the UTCB pointer in user-land TLS and we simulate this...
-  _ulr = (Address)&_utcb.usr()->utcb_addr + 0x7000 + (3 * sizeof(void*));
-  _utcb.kern()->utcb_addr = (Mword)_utcb.usr().get();
+  _ulr = reinterpret_cast<Address>(&_utcb.usr()->utcb_addr)
+         + 0x7000 + (3 * sizeof(void*));
+  _utcb.kern()->utcb_addr = reinterpret_cast<Mword>(_utcb.usr().get());
 }
 
 IMPLEMENT inline NEEDS["processor.h", "asm_mips.h"]
@@ -48,10 +49,14 @@ Context::switch_cpu(Context *t)
   Proc::set_ulr(t->_ulr);
 
     {
-      Mword register _old_this asm("$5") = (Mword)this;        // a1
-      Mword register _new_this asm("$4") = (Mword)t;           // a0
-      Mword register _old_sp asm("$6") = (Mword)&_kernel_sp;   // a2
-      Mword register _new_sp asm("$7") = (Mword)t->_kernel_sp; // a3
+      Mword register _old_this asm("$5") =
+        reinterpret_cast<Mword>(this);          // a1
+      Mword register _new_this asm("$4") =
+        reinterpret_cast<Mword>(t);             // a0
+      Mword register _old_sp asm("$6") =
+        reinterpret_cast<Mword>(&_kernel_sp);   // a2
+      Mword register _new_sp asm("$7") =
+        reinterpret_cast<Mword>(t->_kernel_sp); // a3
 
       __asm__ __volatile__ (
           ".set push                                  \n"
@@ -106,7 +111,7 @@ void Context::switchin_context(Context *from)
 
   // load new kernel-entry SP into ErrorEPC as we use this
   // in exception entries from user mode
-  Mips::mtc0((Address)(regs() + 1), Mips::Cp0_err_epc);
+  Mips::mtc0(reinterpret_cast<Address>(regs() + 1), Mips::Cp0_err_epc);
 }
 
 // -------------------------------------------------
@@ -139,12 +144,11 @@ Context::switchin_guest_context(Space *spc)
         }
       else
         {
-          unsigned guest_id = spc->switchin_guest_context();
-          (void)guest_id;
+          [[maybe_unused]] unsigned guest_id = spc->switchin_guest_context();
 #ifndef NDEBUG
           auto &owner = Vz::owner.cpu(get_current_cpu());
           assert (owner.ctxt == this);
-          assert ((unsigned)owner.guest_id == guest_id);
+          assert (static_cast<unsigned>(owner.guest_id) == guest_id);
 #endif
         }
       return true;

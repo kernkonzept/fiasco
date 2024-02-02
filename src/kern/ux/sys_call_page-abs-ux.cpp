@@ -26,7 +26,7 @@ enum
 extern char sys_call_##sysc, sys_call_##sysc##_end
 
 #define COPY_SYSCALL(sysc) do { \
-memcpy( (char*)Kip::k() + Offs_kip_##sysc, &sys_call_##sysc, \
+memcpy( offset_cast<char*>(Kip::k(), Offs_kip_##sysc), &sys_call_##sysc, \
         &sys_call_##sysc##_end- &sys_call_##sysc ); } while (0)
 
 IMPLEMENT 

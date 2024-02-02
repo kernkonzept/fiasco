@@ -421,10 +421,14 @@ Cm_x<REG_WIDTH>::Cm_x(unsigned rev, Phys_mem_addr gcr_phys, Address gcr_base)
 
   if (0)
     {
-      printf("MIPS: CM: gcr_base: %x\n", (unsigned)_gcr_base[R_gcr_base]);
-      printf("MIPS: CM: control:  %x\n", (unsigned)_gcr_base[R_gcr_control]);
-      printf("MIPS: CM: control2: %x\n", (unsigned)_gcr_base[R_gcr_control2]);
-      printf("MIPS: CM: access:   %x\n", (unsigned)_gcr_base[R_gcr_access]);
+      printf("MIPS: CM: gcr_base: %x\n",
+             static_cast<unsigned>(_gcr_base[R_gcr_base]));
+      printf("MIPS: CM: control:  %x\n",
+             static_cast<unsigned>(_gcr_base[R_gcr_control]));
+      printf("MIPS: CM: control2: %x\n",
+             static_cast<unsigned>(_gcr_base[R_gcr_control2]));
+      printf("MIPS: CM: access:   %x\n",
+             static_cast<unsigned>(_gcr_base[R_gcr_access]));
     }
 }
 

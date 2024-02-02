@@ -109,9 +109,9 @@ Gic::Gic(Address mmio, unsigned cpu_int) : _r(mmio)
   unsigned nrirqs = (((cfg >> 16) & 0xff) + 1) * 8;
   Reg_type rev = _r[Sh_revision_id];
 
-  printf("MIPS GIC[%08lx]: %u IRQs %u VPEs%s, V%d.%d\n",
+  printf("MIPS GIC[%08lx]: %u IRQs %u VPEs%s, V%ld.%ld\n",
          mmio, nrirqs, vpes, (cfg & (1 << 31)) ? "VZP" : "",
-         (unsigned) rev >> 8, (unsigned) rev & 0xff);
+         rev >> 8, rev & 0xff);
 
   assert (vpes <= 32); // this limit is due to set_cpu limitations
   assert (nrirqs <= 256);

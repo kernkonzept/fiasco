@@ -170,8 +170,10 @@ Loader::load_module (const char * const path,
       }
 
     // Load Section with non-zero filesize
-    if (ph.p_filesz && (fseek (fp, ph.p_offset, SEEK_SET) == -1 ||
-        fread ((void *)(phys_base + ph.p_paddr), ph.p_filesz, 1, fp) != 1))
+    if (ph.p_filesz
+        && (fseek (fp, ph.p_offset, SEEK_SET) == -1
+            || fread (reinterpret_cast<void *>(phys_base + ph.p_paddr),
+                      ph.p_filesz, 1, fp) != 1))
       {
         fclose (fp);
         return errors[6];
@@ -179,8 +181,8 @@ Loader::load_module (const char * const path,
 
     // Zero-pad uninitialized data if filesize < memsize
     if (ph.p_filesz < ph.p_memsz)
-      memset ((void *)(phys_base + ph.p_paddr + ph.p_filesz), 0,
-               ph.p_memsz - ph.p_filesz);
+      memset (reinterpret_cast<void *>(phys_base + ph.p_paddr + ph.p_filesz), 0,
+              ph.p_memsz - ph.p_filesz);
 
     if (ph.p_paddr < *start)
       *start = ph.p_paddr;
@@ -190,7 +192,7 @@ Loader::load_module (const char * const path,
 
   if (! quiet)
     printf ("Loading Module 0x" L4_PTR_FMT "-0x" L4_PTR_FMT " [%s]\n",
-	    (Address)*start, (Address)*end, path);
+	    reinterpret_cast<Address>(*start), reinterpret_cast<Address>(*end), path);
 
   fclose (fp);
   return 0;
@@ -218,7 +220,8 @@ Loader::copy_module (const char * const path,
   *load_addr -= s.st_size;
   *load_addr = Pg::trunc(*load_addr);  // this may not be necessary
 
-  if (fread ((void *)(phys_base + *load_addr), s.st_size, 1, fp) != 1)
+  if (fread(reinterpret_cast<void *>(phys_base + *load_addr),
+            s.st_size, 1, fp) != 1)
     {
       fclose (fp);
       return errors[7];
@@ -229,7 +232,8 @@ Loader::copy_module (const char * const path,
 
   if (! quiet)
     printf ("Copying Module 0x" L4_PTR_FMT "-0x" L4_PTR_FMT " [%s]\n",
-	    (Address)mod->mod_start, (Address)mod->mod_end, path);
+            static_cast<Address>(mod->mod_start),
+            static_cast<Address>(mod->mod_end), path);
 
   fclose (fp);
   return 0;

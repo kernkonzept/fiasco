@@ -59,7 +59,7 @@ Trampoline::syscall (pid_t pid, Mword eax = 0, Mword ebx = 0,
   tramp_regs.edx = edx;
   tramp_regs.eip = Mem_layout::Trampoline_page;
 
-  *(Mword *) Mem_layout::kernel_trampoline_page = 0x80cd;
+  *reinterpret_cast<Mword *>(Mem_layout::kernel_trampoline_page) = 0x80cd;
 
   ptrace (PTRACE_SETREGS, pid, NULL, &tramp_regs);	// Setup trampoline
 

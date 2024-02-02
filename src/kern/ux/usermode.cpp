@@ -57,7 +57,7 @@ Usermode::peek_at_addr (pid_t pid, Address addr, unsigned n)
     val = ptrace (PTRACE_PEEKTEXT, pid, addr & ~(sizeof (Mword) - 1), NULL) >>
           CHAR_BIT * (addr & (sizeof (Mword) - 1));
 
-  return val & (Mword) -1 >> CHAR_BIT * (sizeof (Mword) - n);
+  return val & ~0UL >> CHAR_BIT * (sizeof (Mword) - n);
 }
 
 /**
@@ -129,7 +129,7 @@ Usermode::read_debug_register (pid_t pid, Mword reg, Mword &value)
     return 0;
 
   int ret = ptrace (PTRACE_PEEKUSER, pid,
-                   ((struct user *) 0)->u_debugreg + reg, NULL);
+                   static_cast<struct user *>(0)->u_debugreg + reg, NULL);
 
   if (ret == -1 && errno == -1)
     return 0;
@@ -154,7 +154,7 @@ Usermode::write_debug_register (pid_t pid, Mword reg, Mword value)
     return 0;
 
   if (ptrace (PTRACE_POKEUSER, pid,
-             ((struct user *) 0)->u_debugreg + reg, value) == -1)
+             static_cast<struct user *>(0)->u_debugreg + reg, value) == -1)
     return 0;
 
   return 1;
@@ -193,11 +193,12 @@ Usermode::kernel_entry(Cpu_number _cpu,
                        Mword err,
                        Mword cr2)
 {
-  Mword *kesp = (xcs & 3) == 3
-              ? (Mword *) Cpu::cpus.cpu(_cpu).kernel_sp() - 5
-              : (Mword *) context->uc_mcontext.gregs[REG_ESP] - 3;
+  Mword *kesp =
+    (xcs & 3) == 3
+    ? reinterpret_cast<Mword *>(Cpu::cpus.cpu(_cpu).kernel_sp() - 5)
+    : reinterpret_cast<Mword *>(context->uc_mcontext.gregs[REG_ESP] - 3);
 
-  if (!Thread::is_tcb_address((Address)kesp))
+  if (!Thread::is_tcb_address(reinterpret_cast<Address>(kesp)))
     {
       printf("KERNEL BUG at EIP:%08x ESP:%08x -- PFA:%08lx kesp=%p trap=%lx xcs=%lx @ %p %lx\n",
              context->uc_mcontext.gregs[REG_EIP],
@@ -207,10 +208,10 @@ Usermode::kernel_entry(Cpu_number _cpu,
     }
 
   // Make sure the kernel stack is sane
-  assert (Thread::is_tcb_address((Address)kesp));
+  assert (Thread::is_tcb_address(reinterpret_cast<Address>(kesp)));
 
   // Make sure the kernel stack has enough space
-  if ((Mword) kesp % THREAD_BLOCK_SIZE <= 512)
+  if (reinterpret_cast<Mword>(kesp) % THREAD_BLOCK_SIZE <= 512)
     {
       printf("KERNEL BUG: Kernel stack of thread ");
       printf("DBGID=%lx\n", static_cast<Thread*>(context_of(kesp))->dbg_info()->dbg_id());
@@ -250,7 +251,7 @@ Usermode::kernel_entry(Cpu_number _cpu,
         *--kesp = err;
     }
 
-  context->uc_mcontext.gregs[REG_ESP] = (Mword) kesp;
+  context->uc_mcontext.gregs[REG_ESP] = reinterpret_cast<Mword>(kesp);
   context->uc_mcontext.gregs[REG_EIP] = Emulation::idt_vector (trap, false);
   context->uc_mcontext.gregs[REG_EFL] = efl & ~(EFLAGS_TF | EFLAGS_NT | EFLAGS_RF | EFLAGS_VM);
   sync_interrupt_state (&context->uc_sigmask, efl);
@@ -292,7 +293,8 @@ Usermode::user_exception(Cpu_number _cpu, pid_t pid, ucontext_t *context,
 
   if (EXPECT_FALSE ((trap = kip_syscall (regs->eip))))
     {
-      Context *t = context_of(((Mword *)Cpu::cpus.cpu(_cpu).kernel_sp()) - 1);
+      Context *t = context_of(reinterpret_cast<Mword *>(
+                                Cpu::cpus.cpu(_cpu).kernel_sp()) - 1);
 
       /* The alien syscall code in entry-*.S substracts 2 bytes from the
        * EIP to put the EIP back on the instruction to reexecute it.
@@ -323,8 +325,8 @@ Usermode::user_exception(Cpu_number _cpu, pid_t pid, ucontext_t *context,
     {
       ucontext_t *exception_context;
 
-      memcpy ((void *) Mem_layout::kernel_trampoline_page,
-              (void *) &Mem_layout::task_sighandler_start,
+      memcpy (reinterpret_cast<void *>(Mem_layout::kernel_trampoline_page),
+              reinterpret_cast<void const *>(&Mem_layout::task_sighandler_start),
               &Mem_layout::task_sighandler_end -
               &Mem_layout::task_sighandler_start);
 
@@ -399,7 +401,7 @@ Usermode::user_emulation(Cpu_number _cpu, int stop, pid_t pid,
 
       case SIGIO:
         trap = Irq_chip_ux::pending_vector();
-        if ((int)trap == -1)
+        if (static_cast<int>(trap) == -1)
           return false;
         break;
 
@@ -582,7 +584,7 @@ PRIVATE static inline NOEXPORT
 void
 Usermode::iret(Cpu_number _cpu, ucontext_t *context)
 {
-  Mword *kesp = (Mword *) context->uc_mcontext.gregs[REG_ESP];
+  Mword *kesp = reinterpret_cast<Mword *>(context->uc_mcontext.gregs[REG_ESP]);
 
   sync_interrupt_state (&context->uc_sigmask, *(kesp + 2));
 
@@ -729,8 +731,9 @@ Usermode::init(Cpu_number cpu)
 
   /* We want signals, aka interrupts to be delivered on an alternate stack */
   if (cpu == Cpu_number::boot_cpu())
-    stack.ss_sp  = (void *) Mem_layout::phys_to_pmem
-                                (Mem_layout::Sigstack_cpu0_start_frame);
+    stack.ss_sp =
+      reinterpret_cast<void *>(
+        Mem_layout::phys_to_pmem(Mem_layout::Sigstack_cpu0_start_frame));
   else
     stack.ss_sp = Kmem_alloc::allocator()->alloc(Order(Mem_layout::Sigstack_log2_size));
   stack.ss_size  =  Mem_layout::Sigstack_size;

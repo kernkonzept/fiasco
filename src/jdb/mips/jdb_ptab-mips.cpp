@@ -4,7 +4,7 @@ IMPLEMENT_OVERRIDE template< typename T >
 void *
 Jdb_ptab_pdir<T>::entry_virt(T_pte_ptr const &entry) const
 {
-  return (void *)entry.next_level();
+  return reinterpret_cast<void *>(entry.next_level());
 }
 
 IMPLEMENTATION [cpu_mips32]:

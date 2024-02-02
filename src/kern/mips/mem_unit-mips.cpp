@@ -71,8 +71,8 @@ public:
   static void make_coherent_to_pou(void const *start, size_t size)
   {
     // Unfortunately 'synci_step' is not available on certain processors
-    for (Unsigned8 const *m = (Unsigned8 const*)start;
-         m < (Unsigned8 const *)start + size; m += sizeof(Mword))
+    for (Unsigned8 const *m = static_cast<Unsigned8 const*>(start);
+         m < static_cast<Unsigned8 const *>(start) + size; m += sizeof(Mword))
       Mips::synci(m);
   }
 
@@ -318,7 +318,8 @@ Mem_unit::_plain_tlb_flush(long asid, unsigned guest_id)
     {
       Mword e = tlb_read(idx);
 
-      if (is_unique_hi(e) || (e & Asid_mask) != (unsigned long)asid)
+      if (is_unique_hi(e)
+          || (e & Asid_mask) != static_cast<unsigned long>(asid))
         continue;
 
       auto lo = entry_lo0() | entry_lo1();
@@ -411,7 +412,8 @@ Mem_unit::_vz_tlb_flush(long asid, unsigned guest_id)
       Mword ctl1 = vz_guest_ctl1();
       auto egid = (ctl1 >> 16) & 0xff;
       if (   (egid && egid == guest_id)
-          || (egid == 0 && asid >= 0 && (e & Asid_mask) == (unsigned long)asid))
+          || (egid == 0 && asid >= 0 && (e & Asid_mask)
+              == static_cast<unsigned long>(asid)))
         {
           entry_hi(Entry_hi_EHINV);
           Mips::ehb();

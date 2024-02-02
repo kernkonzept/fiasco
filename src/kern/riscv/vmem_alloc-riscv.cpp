@@ -19,7 +19,7 @@ Vmem_alloc::page_alloc(void *address, Zero_fill zf, unsigned mode)
   if (EXPECT_FALSE(!vpage))
     return 0;
 
-  Address page = Kmem::kdir->virt_to_phys((Address)vpage);
+  Address page = Kmem::kdir->virt_to_phys(reinterpret_cast<Address>(vpage));
 
   // insert page into master page table
   auto pte = Kmem::kdir->walk(Virt_addr(address),

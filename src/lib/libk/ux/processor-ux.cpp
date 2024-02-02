@@ -109,7 +109,7 @@ Proc::rdmsr(Unsigned32 msr)
 {
   Unsigned32 h, l;
   asm volatile ("rdmsr" : "=a" (l), "=d" (h) : "c" (msr));
-  return (((Unsigned64)h) << 32) | l;
+  return (Unsigned64{h} << 32) | l;
 }
 
 PUBLIC static inline
@@ -117,8 +117,8 @@ void
 Proc::wrmsr(Unsigned64 value, Unsigned32 msr)
 {
   asm volatile ("wrmsr": :
-                "a" ((Unsigned32)value),
-                "d" ((Unsigned32)(value >> 32)),
+                "a" (static_cast<Unsigned32>(value)),
+                "d" (static_cast<Unsigned32>(value >> 32)),
                 "c" (msr));
 }
 

@@ -59,7 +59,7 @@ Kmem::init_mmu(Cpu const &boot_cpu)
 {
   Kmem_alloc *const alloc = Kmem_alloc::allocator();
 
-  kdir = (Kpdir*)alloc->alloc(Config::page_order());
+  kdir = static_cast<Kpdir*>(alloc->alloc(Config::page_order()));
   memset (kdir, 0, Config::PAGE_SIZE);
 
   Pt_entry::have_superpages(boot_cpu.superpages());

@@ -54,7 +54,7 @@ static void ux_termination_handler()
       ::Kobject_dbg::Iterator n = c;
       ++n;
       Kobject *o = Kobject::from_dbg(c);
-      if ((void*)o > (void*)_boot_sys_end)
+      if (static_cast<void*>(o) > static_cast<void*>(_boot_sys_end))
 	{
 	  // printf("Zapp: %p (%s)\n", o, o->kobj_type());
 	  delete o;

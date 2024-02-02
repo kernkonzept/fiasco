@@ -132,7 +132,7 @@ void
 Jdb::init()
 {
   // Install JDB handler
-  Trap_state::base_handler = (Trap_state::Handler)enter_jdb;
+  Trap_state::base_handler = reinterpret_cast<Trap_state::Handler>(enter_jdb);
 
   // be sure that Push_console comes very first
   Kconsole::console()->register_console(push_cons()),
@@ -234,17 +234,20 @@ Jdb::access_mem_task(Jdb_address addr, bool)
 
   if (addr.is_kmem())
     {
+      Address end_addr = Kernel_thread::init_done()
+                         ? reinterpret_cast<Address>(&Mem_layout::end)
+                         : reinterpret_cast<Address>(Mem_layout::initcall_end);
+
       // Kernel address.
       // We can directly access it via virtual addresses if it's kernel code
       // (which is always mapped, but doesn't appear in the kernel pagetable)
       //  or if we find a mapping for it in the kernel's master pagetable.
-      return ((addr.addr() >= (Address)&Mem_layout::load
-               && addr.addr() < (Kernel_thread::init_done()
-                                   ? (Address)&Mem_layout::end
-                                   : (Address)Mem_layout::initcall_end))
-              || Kernel_task::kernel_task()->virt_to_phys(addr.addr()) != ~0UL)
-               ? (unsigned char *)addr.virt()
-               : nullptr;
+      return ((addr.addr() >= reinterpret_cast<Address>(&Mem_layout::load)
+               && addr.addr() < end_addr)
+              || Kernel_task::kernel_task()->virt_to_phys(addr.addr())
+                 != Invalid_address)
+             ? static_cast<unsigned char *>(addr.virt())
+             : nullptr;
     }
   else if (addr.is_phys())
     {
@@ -259,9 +262,9 @@ Jdb::access_mem_task(Jdb_address addr, bool)
       Virt_addr va(addr.addr());
       return (static_cast<Mem_space *>(addr.space())
                 ->v_lookup(va, &phys, &size, 0))
-               ? (unsigned char *)Kmem::phys_to_virt(
+               ? static_cast<unsigned char *>(Kmem::phys_to_virt(
                  cxx::int_value<Mem_space::Phys_addr>(phys)
-                 + cxx::int_value<Virt_size>(cxx::get_lsb(va, size)))
+                 + cxx::int_value<Virt_size>(cxx::get_lsb(va, size))))
                : nullptr;
     }
 }
@@ -296,35 +299,35 @@ PUBLIC
 static Jdb::Guessed_thread_state
 Jdb::guess_thread_state(Thread *t)
 {
+  auto to_mword = [](void *addr) { return reinterpret_cast<Mword>(addr); };
+
   Guessed_thread_state state = s_unknown;
-  Mword *ktop = (Mword*)((Mword)context_of(t->get_kernel_sp()) +
-			 Context::Size);
+  Mword *ktop =
+    offset_cast<Mword*>(context_of(t->get_kernel_sp()), Context::Size);
 
   for (int i=-1; i>-26; i--)
     {
       if (ktop[i] != 0)
 	{
-	  if (ktop[i] == (Mword)&in_page_fault)
+	  if (ktop[i] == to_mword(&in_page_fault))
 	    state = s_pagefault;
-	  if ((ktop[i] == (Mword)&i30_ret_switch) ||// shortcut.S, int 0x30
-	      (ktop[i] == (Mword)&in_slow_ipc1) ||  // shortcut.S, int 0x30
-	      (ktop[i] == (Mword)&in_slow_ipc4) ||  // entry.S, int 0x30
-#if !defined(CONFIG_ASSEMBLER_IPC_SHORTCUT)
-	      (ktop[i] == (Mword)&in_sc_ipc1)   ||  // entry.S, int 0x30
-	      (ktop[i] == (Mword)&in_sc_ipc2)   ||  // entry.S, sysenter
-#endif
+	  if ((ktop[i] == to_mword(&i30_ret_switch)) ||// shortcut.S, int 0x30
+	      (ktop[i] == to_mword(&in_slow_ipc1)) ||  // shortcut.S, int 0x30
+	      (ktop[i] == to_mword(&in_slow_ipc4)) ||  // entry.S, int 0x30
+	      (ktop[i] == to_mword(&in_sc_ipc1))   ||  // entry.S, int 0x30
+	      (ktop[i] == to_mword(&in_sc_ipc2))   ||  // entry.S, sysenter
 	     0)
 	    state = s_ipc;
-	  else if (ktop[i] == (Mword)&Thread::user_invoke)
+	  else if (ktop[i] == reinterpret_cast<Mword>(&Thread::user_invoke))
 	    state = s_user_invoke;
-	  else if (ktop[i] == (Mword)&in_handle_fputrap)
+	  else if (ktop[i] == to_mword(&in_handle_fputrap))
 	    state = s_fputrap;
-	  else if (ktop[i] == (Mword)&in_interrupt)
+	  else if (ktop[i] == to_mword(&in_interrupt))
 	    state = s_interrupt;
-	  else if ((ktop[i] == (Mword)&in_timer_interrupt) ||
-		   (ktop[i] == (Mword)&in_timer_interrupt_slow))
+	  else if ((ktop[i] == to_mword(&in_timer_interrupt)) ||
+		   (ktop[i] == to_mword(&in_timer_interrupt_slow)))
 	    state = s_timer_interrupt;
-	  else if (ktop[i] == (Mword)&in_slowtrap)
+	  else if (ktop[i] == to_mword(&in_slowtrap))
 	    state = s_slowtrap;
 	  if (state != s_unknown)
 	    break;

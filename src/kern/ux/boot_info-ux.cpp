@@ -339,8 +339,8 @@ Boot_info::init()
   }
 
   if (_sp < Super_pg::trunc(Mem_layout::Host_as_base - 1)
-      && munmap((void *)(Pg::trunc(Mem_layout::Host_as_base - 1)),
-	        Config::PAGE_SIZE) == -1 && errno == EINVAL)
+      && munmap(reinterpret_cast<void *>(Pg::trunc(Mem_layout::Host_as_base - 1)),
+                Config::PAGE_SIZE) == -1 && errno == EINVAL)
     {
       printf(" Fiasco-UX does only run with %dGB user address space size.\n"
              " Please make sure your host Linux kernel is configured for %dGB\n"
@@ -510,7 +510,7 @@ Boot_info::init()
       if (cmd)
         *cmd = ' ';
 
-      mbm->cmdline = str - (char *) mbi + mbi_phys();
+      mbm->cmdline = str - reinterpret_cast<char *>(mbi) + mbi_phys();
 
       // Copy module name with path and command line
       str = stpcpy (str, *m) + 1;
@@ -615,9 +615,9 @@ PUBLIC static inline
 unsigned long
 Boot_info::mbi_size()
 {
-  return (unsigned long)mbi_vbe()
+  return reinterpret_cast<unsigned long>(mbi_vbe())
     + sizeof (Multiboot_vbe_controller) + sizeof (Multiboot_vbe_mode)
-    - (unsigned long)mbi_virt();
+    - reinterpret_cast<unsigned long>(mbi_virt());
 }
 
 PUBLIC static inline

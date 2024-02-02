@@ -38,7 +38,8 @@ PRIVATE static inline NOEXPORT
 Unsigned32 *
 Platform_control::copy_code(Unsigned32 *dst, void const *s, void const *e)
 {
-  unsigned long sz = (char const *)e - (char const *)s;
+  unsigned long sz =
+    static_cast<char const *>(e) - static_cast<char const *>(s);
   memcpy(dst, s, sz);
   return dst + (sz / 4);
 }
@@ -59,7 +60,7 @@ Platform_control::alloc_secondary_boot_code()
 
   // allocate 4KB as we need a 4KB alignemnt for the boot vector
   _bev = Kmem_alloc::allocator()->alloc(Bytes(4096));
-  Unsigned32 *p = (Unsigned32 *)_bev;
+  Unsigned32 *p = static_cast<Unsigned32 *>(_bev);
 
   unsigned cca = Mips::Cfg<0>::read().k0();
 
@@ -85,7 +86,7 @@ Platform_control::alloc_secondary_boot_code()
     {
       // this snippet enables coherency
       // GCR base -> $v1
-      *(p++) = 0x3c030000 | ((Unsigned32) Cm::cm->mmio_base() >> 16);    // LUI $3, ...
+      *(p++) = 0x3c030000 | static_cast<Unsigned32>(Cm::cm->mmio_base() >> 16); // LUI $3, ...
       *(p++) = 0x34630000 | (Cm::cm->mmio_base() & 0xffff); // ORI $3, $3, ...
       *(p++) = 0x8c642008; // lw $a0, 0x2008($v1) -> read coh_en in CM to $a0,
                            // used for chache init und cm init below
@@ -106,7 +107,8 @@ Platform_control::alloc_secondary_boot_code()
 
   p = COPY_MP_INIT(p, _tramp_mp_jmp_entry);
 
-  Mem_unit::dcache_flush((Address)_bev, (Address)p);
+  Mem_unit::dcache_flush(reinterpret_cast<Address>(_bev),
+                         reinterpret_cast<Address>(p));
 
 #undef COPY_MP_INIT
   return _bev;

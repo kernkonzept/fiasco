@@ -19,13 +19,14 @@ IMPLEMENT_OVERRIDE FIASCO_INIT
 unsigned
 Jdb_tbuf_init::allocate(unsigned size)
 {
-  _status = (Tracebuffer_status *)Kmem_alloc::allocator()
-    ->alloc(Bytes(sizeof(Tracebuffer_status)));
+  _status =
+    static_cast<Tracebuffer_status *>(
+      Kmem_alloc::allocator()->alloc(Bytes(sizeof(Tracebuffer_status))));
   if (!_status)
     return 0;
 
-  _buffer = (Tb_entry_union *)Kmem_alloc::allocator()
-    ->alloc(Bytes(size));
+  _buffer =
+    static_cast<Tb_entry_union *>(Kmem_alloc::allocator()->alloc(Bytes(size)));
 
   if (!_buffer)
     return 0;

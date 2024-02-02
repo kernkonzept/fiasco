@@ -193,7 +193,8 @@ public:
     Mword *e;
     unsigned char level;
     Pte_ptr() = default;
-    Pte_ptr(void *p, unsigned char lvl) : e((Mword *)p), level(lvl) {}
+    Pte_ptr(void *p, unsigned char lvl)
+    : e(static_cast<Mword *>(p)), level(lvl) {}
     bool is_leaf() const  { return *e & Leaf; }
     bool is_valid() const { return !(*e & Leaf) || (*e & Valid); }
     Address next_level() const { return *e; }
@@ -353,14 +354,14 @@ Pdir::walk(Va _virt, unsigned isize = 0,
 
       if (do_alloc)
         {
-          p = (Mword*)alloc.alloc(Bytes(sizeof(Mword) << size));
+          p = static_cast<Mword*>(alloc.alloc(Bytes(sizeof(Mword) << size)));
           if (!p)
             return r; // OOM
 
           for (unsigned i = 0; i < (1UL << size); ++i)
             p[i] = Leaf;
 
-          *r.e = (Mword)p;
+          *r.e = reinterpret_cast<Mword>(p);
         }
 
       r.size = l_field(lvl);
@@ -378,7 +379,7 @@ Pdir::walk(Va _virt, unsigned isize = 0,
           do_alloc = true;
           continue;
         }
-      p = (Mword*)*r.e;
+      p = reinterpret_cast<Mword*>(*r.e);
     }
 
   return r;
@@ -427,11 +428,12 @@ Pdir::destroy(Va _start, Va _end, ALLOC const &alloc)
           if (n < Used_levels - 2)
             {
               ++n;
-              p[n] = (Mword *)v;
+              p[n] = reinterpret_cast<Mword *>(v);
               continue;
             }
 
-          alloc.free((void *)v, Bytes(sizeof(Mword) << l_bits[n + 1]));
+          alloc.free(reinterpret_cast<void *>(v),
+                     Bytes(sizeof(Mword) << l_bits[n + 1]));
         }
 
       if (start >= end)
@@ -440,14 +442,16 @@ Pdir::destroy(Va _start, Va _end, ALLOC const &alloc)
       start += (1UL << l_shift[n]);
       while (n && ((start >> l_shift[n]) & l_mask[n]) == 0)
         {
-          alloc.free((void *)(p[n]), Bytes(sizeof(Mword) << l_bits[n]));
+          alloc.free(reinterpret_cast<void *>(p[n]),
+                     Bytes(sizeof(Mword) << l_bits[n]));
           --n;
         }
     }
 
   while (n)
     {
-      alloc.free((void *)(p[n]), Bytes(sizeof(Mword) << l_bits[n]));
+      alloc.free(reinterpret_cast<void *>(p[n]),
+                 Bytes(sizeof(Mword) << l_bits[n]));
       --n;
     }
 }

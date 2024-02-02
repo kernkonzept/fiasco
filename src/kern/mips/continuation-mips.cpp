@@ -18,7 +18,7 @@ public:
   void activate(Return_frame *regs, void *cont_func)
   {
     // we use $0 (the zero register for flagging eret work)
-    regs->eret_work((Mword)cont_func);
+    regs->eret_work(reinterpret_cast<Mword>(cont_func));
   }
 
   void clear(Return_frame *regs) { regs->r[0] = 0; }

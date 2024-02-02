@@ -41,7 +41,8 @@ PROTECTED inline
 void
 Context::load_gdt_user_entries(Context *old = 0)
 {
-  Mword *trampoline_page = (Mword *) Kmem::phys_to_virt(Mem_layout::Trampoline_frame);
+  Mword *trampoline_page =
+    reinterpret_cast<Mword *>(Kmem::phys_to_virt(Mem_layout::Trampoline_frame));
   Space *tos = vcpu_aware_space();
 
   if (EXPECT_FALSE(!tos))

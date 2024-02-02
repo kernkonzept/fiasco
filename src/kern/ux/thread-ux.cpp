@@ -195,15 +195,17 @@ Thread::invoke_arch(L4_msg_tag tag, Utcb const *utcb, Utcb *out)
         {
           unsigned entry_number = utcb->values[1];
           unsigned idx = 2;
-          Mword  *trampoline_page = (Mword *) Kmem::phys_to_virt
-                                              (Mem_layout::Trampoline_frame);
+          Mword  *trampoline_page =
+            reinterpret_cast<Mword *>(Kmem::phys_to_virt(
+                                        Mem_layout::Trampoline_frame));
 
 
           for (; entry_number < Gdt_user_entries
                  && idx < tag.words()
                ; idx += 2, ++entry_number)
             {
-              Gdt_entry *d = (Gdt_entry *)&utcb->values[idx];
+              Gdt_entry const *d =
+                reinterpret_cast<Gdt_entry const *>(&utcb->values[idx]);
               if (!d->limit())
                 continue;
 

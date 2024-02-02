@@ -74,7 +74,7 @@ Cpu::init()
       while (fgets (buffer, sizeof (buffer), fp))
 	if (sscanf (buffer, "cpu MHz%*[^:]: %f", &val) == 1)
 	  {
-	    _frequency    = (Unsigned64)(val * 1000) * 1000;
+	    _frequency = static_cast<Unsigned64>(val * 1000) * 1000;
 	    scaler_tsc_to_ns = muldiv (1 << 27, 1000000000,    _frequency);
 	    scaler_tsc_to_us = muldiv (1 << 27, 32 * 1000000,  _frequency);
 	    scaler_ns_to_tsc = muldiv (1 << 27, _frequency, 1000000000);
@@ -173,7 +173,7 @@ PUBLIC static inline
 void
 Cpu::wrmsr (Unsigned32 low, Unsigned32 high, Unsigned32 reg)
 {
-  Unsigned64 msr = ((Unsigned64)high << 32) | low;
+  Unsigned64 msr = (Unsigned64{high} << 32) | low;
   wrmsr(msr, reg);
 }
 

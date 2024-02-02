@@ -104,7 +104,8 @@ Mem_space::initialize()
     return false;
 
   _dir->clear(true);
-  _dir_phys = Phys_mem_addr(Kmem::kdir->virt_to_phys((Address)_dir));
+  _dir_phys =
+    Phys_mem_addr(Kmem::kdir->virt_to_phys(reinterpret_cast<Address>(_dir)));
 
   return true;
 }
@@ -113,7 +114,7 @@ PUBLIC static inline
 bool
 Mem_space::is_full_flush(L4_fpage::Rights rights)
 {
-  return (bool)(rights & L4_fpage::Rights::R());
+  return static_cast<bool>(rights & L4_fpage::Rights::R());
 }
 
 PUBLIC static

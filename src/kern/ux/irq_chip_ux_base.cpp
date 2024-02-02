@@ -150,7 +150,7 @@ Irq_chip_ux_base::setup_irq_prov(unsigned irq, const char *const path,
 
   switch (pids[irq] = fork())
     {
-      case (unsigned int)-1:
+      case static_cast<unsigned>(-1):
         return false;
 
       case 0:

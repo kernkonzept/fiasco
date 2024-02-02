@@ -257,10 +257,12 @@ Vz::init()
   mfg_cfg_init(5);
 
 #define ALLOW_IF_PRESENT(reg, f) \
-  guest_cfg_write.r<reg>().f() = (Unsigned32)guest_cfg.r<reg>().f()
+  guest_cfg_write.r<reg>().f() = \
+    static_cast<Unsigned32>(guest_cfg.r<reg>().f())
 
 #define ALLOW_WRITE(reg, f) \
-  guest_cfg_write.r<reg>().f() = (Mips::Cfg<reg>::f ## _bfm_t::Bits_type)~0UL
+  guest_cfg_write.r<reg>().f() = \
+    static_cast<Mips::Cfg<reg>::f ## _bfm_t::Bits_type>(~0UL)
 
 #define FORCE(reg, f, val)  guest_cfg.r<reg>().f() = val
 
@@ -355,8 +357,8 @@ Vz::State::init()
 
   // everything is up-to-date and marked as modified so it will
   // be loaded upon VMM -> VM switch
-  current_cp0_map = (Unsigned32)~0;
-  modified_cp0_map = (Unsigned32)~0;
+  current_cp0_map  = static_cast<Unsigned32>(~0);
+  modified_cp0_map = static_cast<Unsigned32>(~0);
 }
 
 IMPLEMENT inline NEEDS[<cstdio>]
@@ -371,7 +373,7 @@ Vz::State::save_guest_tlb_entry(int guest_id, unsigned i)
   ehb();
   auto ctl1 = Mips::mfc0_32(Mips::Cp0_guest_ctl_1);
 
-  if ((unsigned)guest_id == ((ctl1 >> 16) & 0xff))
+  if (static_cast<unsigned>(guest_id) == ((ctl1 >> 16) & 0xff))
     {
       // no BPA supported in the guest, so far
       mfgc0_32(&tlb.mask, Cp0_page_mask);
@@ -384,7 +386,7 @@ Vz::State::save_guest_tlb_entry(int guest_id, unsigned i)
 
   if (0)
     printf("VZ[%p|%d]: saved TLB[%u] (%s) mask=%lx hi=%lx lo=%lx|%lx\n",
-           (void *)this, guest_id, i, (tlb.entry_hi & (1UL << 10)) ? "inv" : "ok",
+           static_cast<void *>(this), guest_id, i, (tlb.entry_hi & (1UL << 10)) ? "inv" : "ok",
            tlb.mask, tlb.entry_hi, tlb.entry_lo[0],
            tlb.entry_lo[1]);
 }
@@ -435,7 +437,8 @@ Vz::State::save_full(int guest_id)
         w = Max_guest_wired;
 
       if (0 && w)
-        printf("VZ[%p]: guest=%d save wired: %lu\n", (void *)this, guest_id, w);
+        printf("VZ[%p]: guest=%d save wired: %lu\n",
+               static_cast<void *>(this), guest_id, w);
 
       for (unsigned i = 0; i < w; ++i)
         save_guest_tlb_entry(guest_id, i);
@@ -518,9 +521,10 @@ Vz::State::update_cause_ti()
     return;
 
   Unsigned64 ct = Timer::get_current_counter();
-  Unsigned64 gc = ct + (Signed32) ctl_gtoffset;
-  Unsigned64 last_gc = _saved_cause_timestamp + (Signed32) ctl_gtoffset;
-  Unsigned64 gcomp = ((Unsigned32) g_compare) | (last_gc & 0xffffffff00000000);
+  Unsigned64 gc = ct + static_cast<Signed32>(ctl_gtoffset);
+  Unsigned64 last_gc = _saved_cause_timestamp
+                       + static_cast<Signed32>(ctl_gtoffset);
+  Unsigned64 gcomp = static_cast<Unsigned32>(g_compare) | (last_gc & 0xffffffff00000000);
 
   if (gcomp < last_gc)
     gcomp += 0x100000000;
@@ -545,8 +549,8 @@ Vz::State::load_cause()
   // read it below.
   ehb();
   Unsigned64 ct = Timer::get_current_counter();
-  Unsigned64 gc = ct + (Signed32) ctl_gtoffset;
-  Unsigned64 last_gc = _saved_cause_timestamp + (Signed32) ctl_gtoffset;
+  Unsigned64 gc = ct + static_cast<Signed32>(ctl_gtoffset);
+  Unsigned64 last_gc = _saved_cause_timestamp + static_cast<Signed32>(ctl_gtoffset);
 
   Unsigned32 gcmp = mfgc0_32(Cp0_compare);
   Unsigned64 gcomp = gcmp | (last_gc & 0xffffffff00000000);
@@ -569,7 +573,8 @@ Vz::State::load_guest_tlb_entry(int guest_id, unsigned i)
   auto const &tlb = g_tlb_wired[i];
   if (0)
     printf("VZ[%p|%d]: load TLB[%u] (%s) mask=%lx hi=%lx lo=%lx|%lx\n",
-           (void *)this, guest_id, i, (tlb.entry_hi & (1UL << 10)) ? "inv" : "ok",
+           static_cast<void *>(this), guest_id, i,
+           (tlb.entry_hi & (1UL << 10)) ? "inv" : "ok",
            tlb.mask, tlb.entry_hi, tlb.entry_lo[0],
            tlb.entry_lo[1]);
 
@@ -620,7 +625,8 @@ Vz::State::load_full(int guest_id)
     w = Max_guest_wired;
 
   if (0 && w)
-    printf("VZ[%p]: guest=%d load wired: %u\n", (void *)this, guest_id, w);
+    printf("VZ[%p]: guest=%d load wired: %u\n",
+           static_cast<void *>(this), guest_id, w);
 
   for (unsigned i = 0; i < w; ++i)
     load_guest_tlb_entry(guest_id, i);
@@ -749,7 +755,8 @@ Vz::State::load_selective(int guest_id)
         w = Max_guest_wired;
 
       if (0 && w)
-        printf("VZ[%p]: guest=%d load wired: %u (sel)\n", (void *)this, guest_id, w);
+        printf("VZ[%p]: guest=%d load wired: %u (sel)\n",
+               static_cast<void *>(this), guest_id, w);
 
       for (unsigned i = 0; i < w; ++i)
         load_guest_tlb_entry(guest_id, i);

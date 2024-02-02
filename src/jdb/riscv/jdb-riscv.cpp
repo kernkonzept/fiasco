@@ -93,7 +93,8 @@ PUBLIC static FIASCO_INIT FIASCO_NOINLINE
 void
 Jdb::init()
 {
-  Thread::nested_trap_handler = (Trap_state::Handler)enter_jdb;
+  Thread::nested_trap_handler =
+    reinterpret_cast<Trap_state::Handler>(enter_jdb);
   Kconsole::console()->register_console(push_cons());
 }
 

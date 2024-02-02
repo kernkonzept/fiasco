@@ -174,18 +174,11 @@ Fpu::show(Cpu_number cpu)
 {
   const Fir f = fpu.cpu(cpu).fir();
 
-  printf("FPU[%d]: fir:%08x ID:%x Rev:%x fp-type%s%s%s%s%s F64:%x "
-         "UFRP:%x FREP:%x\n",
-         cxx::int_value<Cpu_number>(cpu),
-         (int)f.v,
-         (int)f.processor_id(),
-         (int)f.revision(),
-         f.s() ? ":S" : "",
-         f.d() ? ":D" : "",
-         f.ps() ? ":PS" : "",
-         f.w() ? ":W" : "",
-         f.l() ? ":L" : "",
-         (int)f.f64(), (int)f.ufrp(), (int)f.frep());
+  printf("FPU[%d]: fir:%08lx ID:%x Rev:%x fp-type%s%s%s%s%s F64:%x "
+         "UFRP:%x FREP:%x\n", cxx::int_value<Cpu_number>(cpu), f.v,
+         f.processor_id().get(), f.revision().get(), f.s() ? ":S" : "",
+         f.d() ? ":D" : "", f.ps() ? ":PS" : "", f.w() ? ":W" : "",
+         f.l() ? ":L" : "", f.f64().get(), f.ufrp().get(), f.frep().get());
 }
 
 IMPLEMENT

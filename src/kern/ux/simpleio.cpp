@@ -14,7 +14,7 @@ putnstr(const char *const s, int len)
   // printf below (doesn't cut the string after len but prints all of the
   // string), so do it in another way
 #if 1
-  char *a = (char *)s;
+  char const *a = s;
   int l = 0;
   while (*a && len)
     {

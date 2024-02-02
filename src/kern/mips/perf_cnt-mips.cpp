@@ -143,8 +143,8 @@ Perf_cnt::get_perf_event(Mword nr, unsigned *evntsel,
   _name[sizeof(_name) - 1] = 0;
   _desc[sizeof(_desc) - 1] = 0;
 
-  *name = (const char *)&_name;
-  *desc = (const char *)&_desc;
+  *name = reinterpret_cast<const char *>(&_name);
+  *desc = reinterpret_cast<const char *>(&_desc);
   *evntsel = nr;
 }
 
@@ -333,7 +333,7 @@ Perf_cnt::mode(Mword slot, const char **mode, const char **name,
             break;
     default:
             snprintf(namebuf[slot], sizeof(namebuf[slot]),
-                     "Event-%d-%s", (int)v.event(),
+                     "Event-%d-%s", v.event().get(),
                      _using_odd.current()[slot] ? "Odd" : "Even");
             namebuf[slot][sizeof(namebuf[slot]) - 1] = 0;
             *name = namebuf[slot];

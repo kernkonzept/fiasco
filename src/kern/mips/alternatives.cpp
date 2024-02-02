@@ -76,7 +76,7 @@ Alternative_insn::replace() const
   Unsigned32 const *alt_insn = this->alt_insn();
   memcpy(orig_insn, alt_insn, r_len);
   if (r_len < total_len)
-    memset((char *)orig_insn + r_len, 0, total_len - r_len);
+    memset(reinterpret_cast<char *>(orig_insn) + r_len, 0, total_len - r_len);
 
   // sync insn cache, this code does not use synci_step but uses 4byte steps
   for (unsigned i = 0; i <= total_len / 4; ++i)
@@ -102,7 +102,7 @@ Alternative_insn::handle_alternatives(unsigned features)
         {
           if (0)
             printf("  replace insn at %p %08x -> %08x\n",
-                   (void *)i->orig_code(), *i->orig_code(), *i->alt_insn());
+                   static_cast<void *>(i->orig_code()), *i->orig_code(), *i->alt_insn());
           i->replace();
         }
     }

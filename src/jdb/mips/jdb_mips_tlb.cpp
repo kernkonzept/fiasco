@@ -74,7 +74,7 @@ struct Jdb_mips_tlb : Jdb_module
     {
       Mword pm = (1UL << s) - 1;
       printf("[%3u]: gid=%3x asid=%3lx va=%08lx pa=%08lx:%08lx ps=%lx attr=%02lx:%02lx\n",
-             index, (unsigned)gid, hi & 0x3ff, hi & ~pm,
+             index, unsigned{gid}, hi & 0x3ff, hi & ~pm,
              (lo[0] << 6) & ~(pm >> 1),
              (lo[1] << 6) & ~(pm >> 1),
              (pm >> 1) + 1,
@@ -173,7 +173,7 @@ struct Jdb_mips_tlb : Jdb_module
     static Cpu_number cpu;
     if (argbuf != &cpu)
       {
-        char const *c = (char const *)argbuf;
+        char const *c = static_cast<char const *>(argbuf);
         if (*c == 'a')
           Jdb::on_each_cpu(dump_tlb);
         else if (*c >='0' && *c <= '9')

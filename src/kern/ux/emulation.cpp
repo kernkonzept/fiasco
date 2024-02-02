@@ -101,7 +101,7 @@ PUBLIC static inline NEEDS["x86desc.h"]
 void
 Emulation::sidt (Pseudo_descriptor *desc)
 {
-  *desc = Pseudo_descriptor((Address)_idt_base, _idt_limit);
+  *desc = Pseudo_descriptor(reinterpret_cast<Address>(_idt_base), _idt_limit);
 }
 
 PUBLIC static inline NEEDS["x86desc.h"]

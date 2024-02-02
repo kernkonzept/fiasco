@@ -95,25 +95,23 @@ PUBLIC static
 FIASCO_INIT FIASCO_NOINLINE void
 Jdb::init()
 {
-  Thread::nested_trap_handler = (Trap_state::Handler)enter_jdb;
+  Thread::nested_trap_handler =
+    reinterpret_cast<Trap_state::Handler>(enter_jdb);
   Kconsole::console()->register_console(push_cons());
 }
 
 
 PRIVATE static
 unsigned char *
-Jdb::access_mem_task(Jdb_address addr, bool write)
+Jdb::access_mem_task(Jdb_address addr, bool /* write */)
 {
-  // no special need for MIPS here all returned mappings are writable
-  (void) write;
-
   Address phys;
   if (addr.is_phys())
     phys = addr.phys();
   else if (addr.is_kmem())
     {
       if (addr.addr() >= Mem_layout::KSEG0 && addr.addr() <= Mem_layout::KSEG0e)
-        return (unsigned char *)addr.virt();
+        return static_cast<unsigned char *>(addr.virt());
 
       phys = addr.addr();
     }
@@ -121,13 +119,13 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
     {
       phys = addr.space()->virt_to_phys_s0(addr.virt());
 
-      if (phys == (Address)-1)
+      if (phys == Invalid_address)
         return 0;
     }
 
   // physical memory accessible via unmapped KSEG0
   if (phys <= Mem_layout::KSEG0e - Mem_layout::KSEG0)
-    return (unsigned char *)(phys + Mem_layout::KSEG0);
+    return reinterpret_cast<unsigned char *>(phys + Mem_layout::KSEG0);
 
   // FIXME: temp mapping for the physical memory needed
   return 0;

@@ -15,7 +15,7 @@ IMPLEMENT static inline
 void
 Mem::memset_mwords(void *dst, const unsigned long value, unsigned long nr_of_mwords)
 {
-  unsigned long *d = (unsigned long *)dst;
+  unsigned long *d = static_cast<unsigned long *>(dst);
   for (; nr_of_mwords--; d++)
     *d = value;
 }

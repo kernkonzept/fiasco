@@ -53,7 +53,7 @@ Hostproc::setup()
   check (!sigprocmask (SIG_UNBLOCK, &mask, NULL));
 
   stack_t stack;
-  stack.ss_sp    = (void *) Mem_layout::Trampoline_page;
+  stack.ss_sp    = reinterpret_cast<void *>(Mem_layout::Trampoline_page);
   stack.ss_size  = Config::PAGE_SIZE;
   stack.ss_flags = 0;
   check (!sigaltstack (&stack, NULL));
@@ -61,16 +61,16 @@ Hostproc::setup()
   struct sigaction action;
   sigfillset (&action.sa_mask);
   action.sa_flags     = SA_ONSTACK | SA_SIGINFO;
-  action.sa_restorer  = (void (*)()) 0xDEADC0DE;
-  action.sa_sigaction = (void (*)(int,siginfo_t*,void*)) 
-			    Mem_layout::Trampoline_page;
+  action.sa_restorer  = reinterpret_cast<void (*)()>(0xDEADC0DE);
+  action.sa_sigaction = reinterpret_cast<void (*)(int,siginfo_t*,void*)>(
+                          Mem_layout::Trampoline_page);
   check (!sigaction (SIGSEGV, &action, NULL));
 
   // Map trampoline page
-  check (mmap ((void *) Mem_layout::Trampoline_page,
+  check (mmap (reinterpret_cast<void *>(Mem_layout::Trampoline_page),
          Config::PAGE_SIZE,
-	     PROT_READ | PROT_WRITE | PROT_EXEC,
-	     MAP_SHARED | MAP_FIXED,
+         PROT_READ | PROT_WRITE | PROT_EXEC,
+         MAP_SHARED | MAP_FIXED,
          Boot_info::fd(),
          Mem_layout::Trampoline_frame) != MAP_FAILED);
 

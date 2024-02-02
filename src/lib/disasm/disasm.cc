@@ -40,7 +40,7 @@ disasm_bytes(unsigned printlen, bool clreol, Jdb_address addr,
       ret = cs_open(show_arm_thumb ? CS_ARCH_ARM : CS_ARCH_ARM64, syntax, &handle);
 #elif defined(CONFIG_MIPS)
       ret = cs_open(CS_ARCH_MIPS,
-                    (
+                    static_cast<cs_mode>(
 # if defined(CONFIG_BIT32)
                               CS_MODE_MIPS32
 # else

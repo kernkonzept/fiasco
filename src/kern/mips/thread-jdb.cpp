@@ -102,9 +102,9 @@ Thread::call_nested_trap_handler(Trap_state *ts)
 
   Mword dummy1, tmp, ret;
   {
-    register Mword _ts asm("$4") = (Mword)ts;      // $4 == a0
-    register Mword res asm("$2");                  // $2 == v0
-    register Cpu_number _lcpu asm("$5") = log_cpu; // $5 == a1
+    register Mword _ts asm("$4") = reinterpret_cast<Mword>(ts); // $4 == a0
+    register Mword res asm("$2");                               // $2 == v0
+    register Cpu_number _lcpu asm("$5") = log_cpu;              // $5 == a1
 
     asm volatile(
         ".set push                        \n"

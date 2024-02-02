@@ -515,7 +515,7 @@ IMPLEMENT static inline NEEDS["cp0_status.h"]
 Proc::Status
 Proc::interrupts()
 {
-  return (Status)Cp0_status::read() & Cp0_status::ST_IE;
+  return static_cast<Status>(Cp0_status::read()) & Cp0_status::ST_IE;
 }
 
 /// Are interrupts enabled in saved status state?
