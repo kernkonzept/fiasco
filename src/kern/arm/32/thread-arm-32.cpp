@@ -507,7 +507,7 @@ Thread::pagein_tcb_request(Return_frame *regs)
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && 32bit && !cpu_virt]:
+IMPLEMENTATION [arm && 32bit && (!cpu_virt || mpu)]:
 
 PUBLIC static inline template<typename T>
 T Thread::peek_user(T const *adr, Context *c)
