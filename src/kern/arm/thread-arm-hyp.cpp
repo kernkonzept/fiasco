@@ -165,10 +165,14 @@ extern "C" void hyp_mode_fault(Mword abort_type, Trap_state *ts)
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && 32bit && debug]:
 
-PUBLIC static inline NEEDS[Thread::call_nested_trap_handler]
+PUBLIC static inline NEEDS[Thread::call_nested_trap_handler,
+                           Thread::is_transient_mpu_fault]
 bool
 Thread::handle_hyp_mode_fault(Mword abort_type, Trap_state *ts, Mword hsr)
 {
+  if (is_transient_mpu_fault(abort_type, hsr))
+    return true;
+
   call_nested_trap_handler(ts);
   return false;
 }
@@ -176,11 +180,14 @@ Thread::handle_hyp_mode_fault(Mword abort_type, Trap_state *ts, Mword hsr)
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && 32bit && !debug]:
 
-PUBLIC static inline
+PUBLIC static inline NEEDS[Thread::is_transient_mpu_fault]
 bool
 Thread::handle_hyp_mode_fault(Mword abort_type, Trap_state *ts, Mword hsr)
 {
   Mword v;
+
+  if (is_transient_mpu_fault(abort_type, hsr))
+    return true;
 
   switch (abort_type)
     {
@@ -210,6 +217,69 @@ Thread::handle_hyp_mode_fault(Mword abort_type, Trap_state *ts, Mword hsr)
 
   return false;
 }
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [arm && 32bit && mpu]:
+
+#include "kmem.h"
+
+/**
+ * Check for transient MPU fault caused by optimized entry code.
+ *
+ * The entry code manipulates the kernel heap-, kip- and ku_mem-MPU-regions.
+ * Legally, an ISB instruction would be required but this is practically not
+ * needed and would impose an undue performance penalty. Instead, handle such
+ * data aborts gracefully in case they ever happen.
+ */
+PRIVATE static inline NEEDS["kmem.h"]
+bool
+Thread::is_transient_mpu_fault(Mword abort_type, Mword raw_hsr)
+{
+  Arm_esr hsr(raw_hsr);
+
+  if (abort_type != 3)  // in-kernel data abort?
+    return false;
+  if (hsr.ec() != 0x25) // data-abort from same exception-level?
+    return false;
+
+  Mword pfa;
+  asm volatile("mrc p15, 4, %0, c6, c0, 0" : "=r"(pfa));  // HDFAR
+
+  switch (hsr.pf_fsc())
+    {
+    case 0b000100:  // level 0 translation fault
+      // Only kernel heap region start/end is adapted on entry
+      if (!(*Kmem::kdir)[Kpdir::Kernel_heap].contains(pfa))
+        return false;
+      break;
+    case 0b001100:  // level 0 permission fault
+      // Only the KIP permissions are manipulated.
+      if (!(*Kmem::kdir)[Kpdir::Kip].contains(pfa))
+        return false;
+      break;
+    default:
+      return false;
+    }
+
+  Mem::isb();
+
+  static bool has_warned = false;
+  if (!has_warned)
+    {
+      has_warned = true;
+      WARN("Unexpected in-kernel data abort. Add an ISB to entry path?\n");
+    }
+
+  return true;
+}
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [arm && 32bit && !mpu]:
+
+PRIVATE static inline
+bool
+Thread::is_transient_mpu_fault(Mword, Mword)
+{ return false; }
 
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && cpu_virt && fpu && 32bit]:

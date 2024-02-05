@@ -51,6 +51,38 @@
 	msr	cpsr_c, #0xd3
 .endm
 
+.macro mpu_kernel_enter offset
+#ifdef CONFIG_MPU
+	ldr	r0, [sp, #RF(PSR, \offset)]	@ get spsr from stack
+	tst	r0, #0x0f			@ Mask all but relevant mode bits
+	bne	111f				@ Kernel re-entry
+	bl	__mpu_kernel_enter
+111:
+#endif
+.endm
+
+/**
+ * Reconfigure MPU for user space.
+ *
+ * Clobbers registers r1-r3, r12. Spares r0 because it's relevant for the vCPU
+ * kernel mode exit path.
+ *
+ * \param check   Test for target mode. Can be 0 if known to return to user
+ *                space. Otherwise 1 if the eret may return to kernel mode.
+ * \param offset  Kernel stack offset from entry frame.
+ */
+.macro mpu_kernel_leave check, offset
+#ifdef CONFIG_MPU
+.if \check != 0
+	ldr	r1, [sp, #RF(PSR, \offset)]	@ get spsr from stack
+	tst	r1, #0x0f			@ Mask all but relevant mode bits
+	bne	112f				@ Kernel re-entry
+.endif
+	bl	__mpu_kernel_leave
+112:
+#endif
+.endm
+
 /**
  * switch to kernel mode and
  *
@@ -144,6 +176,7 @@
  */
 .macro 	enter_slowtrap errorcode
 	stmdb 	sp!, {r0 - r12}
+	mpu_kernel_enter (13*4)
 	enter_slowtrap_w_stack \errorcode
 .endm
 
@@ -198,6 +231,7 @@
 	bhi	\no_sys_call
 
 	stmdb	sp!, {r0 - r12}
+	mpu_kernel_enter (13*4)
 	/* stack frame: RF + r12-r0, sp points to r0 */
 	CONTEXT_OF	r1, sp
 	RESET_THREAD_CANCEL_AT r1       @ sets r0 to state 
@@ -209,9 +243,10 @@
 .global fast_ret_from_irq
 .type fast_ret_from_irq, #function
 fast_ret_from_irq:
-2:      ldmia	sp, {r0 - r12}
-	disable_irqs
-	add	sp, sp, #(13*4 + RF_SIZE)
+2:	disable_irqs
+	mpu_kernel_leave 1, (13*4)
+	ldmia	sp!, {r0 - r12}
+	add	sp, sp, #(RF_SIZE)
 
         // XXX: use rfe here
 	/* Return */
@@ -340,6 +375,7 @@ inst_abort_entry:
 /**************************************************************************/
 /*prefetch_abort: @ A real prefetch abort occurred --- handled as a page fault */
 	stmdb	sp!, {r0 - r3, r12} 	@ Stack rest of user state
+	mpu_kernel_enter (5*4)
 	ldr	lr, [sp, #RF(PSR, 5*4)]	@ get spsr from stack
 	ands	lr, lr, #0x0f		@ Mask all but relevant mode bits
 	bne	kernel_prefetch_abort	@ Kernel abort?
@@ -431,6 +467,7 @@ GEN_LEAVE_AND_KILL_MYSELF
 data_abort_entry:
 	switch_to_kernel 8 0 1
 	stmdb   sp!, {r0 - r3, r12}          @ Stack rest of user state
+	mpu_kernel_enter (5*4)
 
 	/* user data abort */
 #ifdef CONFIG_ARM_V6PLUS
@@ -537,8 +574,9 @@ pagefault_return:
 	ldmia	sp!, {r12, lr}
 	beq	slowtrap_from_pagefault
 	
-	msrne	cpsr_c, #0xd3 // disable IRQs
-	ldmneia	sp!, {r0 - r3, r12}		@ Restore user state
+	msr	cpsr_c, #0xd3 // disable IRQs
+	mpu_kernel_leave 1, (5*4)
+	ldmia	sp!, {r0 - r3, r12}		@ Restore user state
 	return_from_exception
 
 slowtrap_from_pagefault:
@@ -563,20 +601,20 @@ irq_entry:
 	switch_to_kernel 4 1 1
 
 	stmdb   sp!, {r0 - r3, r12}   	@ Stack rest of user state
+	mpu_kernel_enter (5*4)
 	align_and_save_sp r12
 	@ add r0, sp, #(5*4) @ debug
         mov     lr, pc
         ldr     pc, 1f
 	ldr	sp, [sp]
-	ldmia	sp, {r0 - r3, r12}		@ Restore user state
 	disable_irqs
-	add	sp, sp, #20
+	mpu_kernel_leave 1, (5*4)
+	ldmia	sp!, {r0 - r3, r12}		@ Restore user state
 	return_from_exception
 
 	.global __irq_handler_irq
 __irq_handler_irq:
 1:	.word	irq_handler
-
 
 /******************************************************************************
  * Exception fiq ()
@@ -660,13 +698,14 @@ fiq_entry:
 	switch_to_kernel 4 1 1
 7:
 	stmdb	sp!, {r0 - r3, r12}   	@ Stack rest of user state
+	mpu_kernel_enter (5*4)
 	align_and_save_sp r12
 	mov	lr, pc
 	ldr	pc, 1f
 	ldr	sp, [sp]
-	ldmia	sp, {r0 - r3, r12}		@ Restore user state
 	disable_irqs
-	add	sp, sp, #20
+	mpu_kernel_leave 1, (5*4)
+	ldmia	sp!, {r0 - r3, r12}		@ Restore user state
 	return_from_exception
 
 	.global __irq_handler_fiq
@@ -712,6 +751,86 @@ GEN_VCPU_UPCALL OFS__THREAD__USER_VCPU
 
 missed_excpt_ret_label:      .string "ERROR in exception return"
 fiq_label:	             .string "FIQ entry"
+
+/**************************************************************************
+ * MPU kernel entry and exit handling.
+ */
+
+#ifdef CONFIG_MPU
+__mpu_kernel_enter:
+	CONTEXT_OF r0, sp
+
+	// restore regular heap region
+	ldr	r1, [r0, #(OFS__THREAD__MPU_PRBAR2)]
+	ldr	r2, [r0, #(OFS__THREAD__MPU_PRLAR2)]
+	mcr	p15, 0, r1, c6, c9, 0	// write PRBAR2
+	mcr	p15, 0, r2, c6, c9, 1	// write PRLAR2
+
+	// Disable all user regions. The missing PRENR register makes this
+	// really a pain...
+	ldr	r1, [r0, #(OFS__THREAD__KU_MEM_REGIONS)]
+
+	mov	r3, #1
+1:	clz	r2, r1			// find highest bit set
+	rsbs	r2, r2, #31
+	bmi	2f			// exit loop if all zero
+
+	mcr	p15, 0, r2, c6, c2, 1	// PRSELR
+	isb
+	bics	r1, r1, r3, LSL r2	// clear bit in mask
+	mrc	p15, 0, r2, c6, c3, 1	// read PRLAR
+	bic	r2, r2, #1		// clear EN
+	mcr	p15, 0, r2, c6, c3, 1	// write back PRLAR
+
+	bne	1b			// next iteration if still sth set
+2:
+	// make KIP writable
+	mrc	p15, 0, r2, c6, c8, 4	// read PRBAR1
+	bfc	r2, #1, #2		// AP[2:1] = b00 -> RW@EL1
+	mcr	p15, 0, r2, c6, c8, 4	// write back PRBAR1
+
+	isb				// Make sure MPU updates have settled
+	bx	lr
+
+__mpu_kernel_leave:
+	CONTEXT_OF r1, sp
+
+	// enable all user regions
+	ldr	r2, [r1, #(OFS__THREAD__KU_MEM_REGIONS)]
+
+	mov	r12, #1
+1:	clz	r3, r2			// find highest bit set
+	rsbs	r3, r3, #31
+	bmi	2f			// exit loop if all zero
+
+	mcr	p15, 0, r3, c6, c2, 1	// PRSELR
+	isb
+	bics	r2, r2, r12, LSL r3	// clear bit in mask
+	mrc	p15, 0, r3, c6, c3, 1	// read PRLAR
+	orr	r3, r3, #1		// set EN
+	mcr	p15, 0, r3, c6, c3, 1	// write back PRLAR
+
+	bne	1b			// next iteration if still sth set
+2:
+	// make KIP read only
+	mrc	p15, 0, r2, c6, c8, 4	// read PRBAR1
+	orr	r2, r2, #(3 << 1)	// AP[2:1] = b11 -> RO@EL1/0
+	mcr	p15, 0, r2, c6, c8, 4	// write back PRBAR1
+
+	// constrain heap region to stack
+	mrc	p15, 0, r2, c6, c9, 0	// read PRBAR2
+	mrc	p15, 0, r3, c6, c9, 1	// read PRLAR2
+
+	add	r12, r1, #((THREAD_BLOCK_SIZE-1) & ~0x3f)
+	and	r2, r2, #0x3f
+	and	r3, r3, #0x3f
+	orr	r2, r2, r1
+	orr	r3, r3, r12
+
+	mcr	p15, 0, r2, c6, c9, 0	// write PRBAR2
+	mcr	p15, 0, r3, c6, c9, 1	// write PRLAR2
+	bx	lr
+#endif
 
 /**********************************************************************
 	kdebug entry
@@ -1026,7 +1145,15 @@ go_nonsecure:
 	.global	vcpu_resume
 	.type vcpu_resume, #function
 vcpu_resume:
+#ifdef CONFIG_MPU
+	// We cannot update sp before calling mpu_kernel_leave because
+	// CONTEXT_OF does not work with a fully emtpy stack!
+	mov	r4, r1
+	mpu_kernel_leave 0, 0
+	add	sp, r4, #RF_SIZE
+#else
 	add	sp, r1, #RF_SIZE
+#endif
 	add	lr, r0, #8			@ pfa, err
 #if !defined(CONFIG_ARM_V6PLUS)
 	ldr	r1, [lr, #RF(PSR, 13*4)]	@ Unstack SPSR

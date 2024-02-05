@@ -104,14 +104,16 @@ leave_by_vcpu_upcall:
 
 	bl	current_prepare_vcpu_return_to_kernel
 
+	mpu_kernel_leave 0, 0
+
 	/* r0 = vCPU user pointer */
 
 	/*
          * We only need to clear our scratch registers (r1-r3 and r12). All
          * other registers are callee saved and have been preserved across the
-         * current_prepare_vcpu_return_to_kernel call. There is no need to
-         * clear lr because it is either restored by __iret (cpu_virt) or is a
-         * banked register (!cpu_virt).
+	 * current_prepare_vcpu_return_to_kernel and mpu_kernel_leave calls.
+	 * There is no need to clear lr because it is either restored by __iret
+	 * (cpu_virt) or is a banked register (!cpu_virt).
 	 */
 	mov	r1, #0
 	mov	r2, #0
@@ -220,6 +222,7 @@ exception_return:
 	ldr	sp, [sp]
 __return_from_user_invoke:
 	add	sp, sp, #8 // pfa, err
+	mpu_kernel_leave 1, (13*4)
 	ldmia	sp!, {r0 - r12}
 	return_from_exception
 .endm
@@ -233,6 +236,7 @@ __iret:
 	 * because it's supposed to hold the vCPU user pointer. Also lr does
 	 * not need to be cleared because it's covered by the exception return.
 	 */
+	mpu_kernel_leave 1, 0
 	mov	r1, #0
 	mov	r2, #0
 	mov	r3, #0

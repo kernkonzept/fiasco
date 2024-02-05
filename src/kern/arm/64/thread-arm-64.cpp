@@ -96,6 +96,9 @@ Thread::arm_kernel_sync_entry(Trap_state *ts)
       if (EXPECT_FALSE(!handle_cap_area_fault(ts)))
         {
           ts->pf_address = get_fault_pfa(esr, false, false);
+          if (is_transient_mpu_fault(ts, esr))
+            return;
+
           if (!PF::is_read_error(esr.raw()) && is_permission_fault(esr.raw()))
             {
               ts->dump();
@@ -433,3 +436,56 @@ Thread::pagein_tcb_request(Return_frame *regs)
 
   return true;
 }
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION [arm && 64bit && mpu]:
+
+#include "kmem.h"
+
+/**
+ * Check for transient MPU fault caused by optimized entry code.
+ *
+ * The entry code manipulates the kernel heap-, kip- and ku_mem-MPU-regions.
+ * Legally, an ISB instruction would be required but this is practically not
+ * needed and would impose an undue performance penalty. Instead, handle such
+ * data aborts gracefully in case they ever happen.
+ */
+PRIVATE static inline NEEDS["kmem.h"]
+bool
+Thread::is_transient_mpu_fault(Trap_state *ts, Arm_esr esr)
+{
+  switch (esr.pf_fsc())
+    {
+    case 0b000100:  // level 0 translation fault
+      // Only kernel heap region start/end is adapted on entry
+      if (!(*Kmem::kdir)[Kpdir::Kernel_heap].contains(ts->pf_address))
+        return false;
+      break;
+    case 0b001100:  // level 0 permission fault
+      // Only the KIP permissions are manipulated.
+      if (!(*Kmem::kdir)[Kpdir::Kip].contains(ts->pf_address))
+        return false;
+      break;
+    default:
+      return false;
+    }
+
+  Mem::isb();
+
+  static bool has_warned = false;
+  if (!has_warned)
+    {
+      has_warned = true;
+      WARN("Unexpected in-kernel data abort. Add an ISB to entry path?\n");
+    }
+
+  return true;
+}
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION [arm && 64bit && !mpu]:
+
+PRIVATE static inline
+bool
+Thread::is_transient_mpu_fault(Trap_state *, Arm_esr)
+{ return false; }
