@@ -135,6 +135,10 @@ _tramp_mp_entry:
 	cmp	x17, #2
 #ifndef CONFIG_CPU_VIRT
 	b.ne  2f
+	mrs	x6, MIDR_EL1
+	msr	VPIDR_EL2, x6
+	mrs	x6, MPIDR_EL1
+	msr	VMPIDR_EL2, x6
 	mov	x6, #HCR_EL2_DEFAULT_BITS
 	msr	HCR_EL2, x6
 	movz	x17, #((0xf << 6) | 5) // DAIF + EL1 / SPSEL

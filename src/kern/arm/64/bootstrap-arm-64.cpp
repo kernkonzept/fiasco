@@ -224,7 +224,11 @@ switch_from_el2_to_el1()
   // set HCR (RW and HCD)
   asm volatile ("msr HCR_EL2, %0" : : "r"(Hcr_default_bits));
   Bootstrap::config_feature_traps(Bootstrap::read_pfr0(), false, true);
-  asm volatile ("   mov %[tmp], sp          \n"
+  asm volatile ("   mrs %[tmp], MIDR_EL1    \n"
+                "   msr VPIDR_EL2, %[tmp]   \n"
+                "   mrs %[tmp], MPIDR_EL1   \n"
+                "   msr VMPIDR_EL2, %[tmp]  \n"
+                "   mov %[tmp], sp          \n"
                 "   msr spsr_el2, %[psr]    \n"
                 "   adr x4, 1f              \n"
                 "   msr elr_el2, x4         \n"
