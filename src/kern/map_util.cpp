@@ -148,6 +148,7 @@ private:
       {
         // flush all CPU-local TLBs, e.g. MMU, ept, npt
         Tlb::flush_all_cpu(cpu);
+        Mem_space::reload_current();
       }
     else
       _cpu_tlb.flush_stored(cpu);

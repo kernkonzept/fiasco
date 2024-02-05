@@ -153,3 +153,49 @@ Mem_space::make_current(Switchin_flags)
 
   _current.current() = this;
 }
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [arm_v8 && mpu && !cpu_virt]:
+
+#include "mpu.h"
+
+IMPLEMENT
+void
+Mem_space::make_current(Switchin_flags)
+{
+  asm volatile (
+      "mcr p15, 0, %0, c13, c0, 1"  // CONTEXTIDR - set new ASID value
+      :
+      : "r"(asid()));
+  _current.current() = this;
+
+  auto guard = lock_guard(_lock);
+
+  // No need for an isb here. This is done implicitly on exception return and
+  // the kernel does not access these regions.
+  Mpu::update(*_dir);
+  mpu_state_mark_in_sync();
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [arm_v8 && mpu && cpu_virt]:
+
+#include "mpu.h"
+
+IMPLEMENT
+void
+Mem_space::make_current(Switchin_flags)
+{
+  asm volatile (
+      "mcr p15, 4, %0, c2, c0, 0" // VSCTLR - set new VMID value
+      :
+      : "r"(asid() << 16));
+  _current.current() = this;
+
+  auto guard = lock_guard(_lock);
+
+  // No need for an isb here. This is done implicitly on exception return and
+  // the kernel does not access these regions.
+  Mpu::update(*_dir);
+  mpu_state_mark_in_sync();
+}

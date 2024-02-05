@@ -177,6 +177,14 @@ public:
   /** Set this memory space as the current on this CPU. */
   void make_current(Switchin_flags flags = None);
 
+  /**
+   * Reload current Mem_space state on this CPU.
+   *
+   * This is only needed on MPU systems. On MMU systems the hardware does
+   * the page walk independently (after TLB was evicted).
+   */
+  static void reload_current();
+
   static Mem_space *kernel_space()
   { return _kernel_space; }
 
@@ -569,6 +577,11 @@ Mem_space::tlb_flush_all_cpus()
       return false;
     }, true);
 }
+
+IMPLEMENT_DEFAULT static inline
+void
+Mem_space::reload_current()
+{}
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION [!need_xcpu_tlb_flush]:

@@ -233,6 +233,7 @@ Kernel_thread::idle_op()
       arch_tickless_idle(cpu);
 
       Mem_space::enable_tlb(cpu);
+      Mem_space::reload_current();
       Rcu::leave_idle(cpu);
       Timer_tick::enable(cpu);
     }

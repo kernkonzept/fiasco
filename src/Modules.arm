@@ -25,8 +25,11 @@ PREPROCESS_PARTS-$(CONFIG_MMU) += abs_syscalls
 BITS := 32
 endif
 
-# On ARMv7 and above Fiasco instead uses broadcast TLB invalidation instructions.
-PREPROCESS_PARTS-$(CONFIG_MP)                 += $(if $(CONFIG_ARM_V7PLUS),,need_xcpu_tlb_flush)
+# On ARMv7 and above Fiasco uses broadcast TLB invalidation instructions. On
+# MPU systems, IPIs are always required because each CPU has its own MPU
+# instance.
+NEED_TLB_IPI := $(if $(CONFIG_MMU),$(if $(CONFIG_ARM_V7PLUS),,y),y)
+PREPROCESS_PARTS-$(CONFIG_MP)                 += $(if $(NEED_TLB_IPI),need_xcpu_tlb_flush)
 PREPROCESS_PARTS-$(CONFIG_JDB)                += debug log
 PREPROCESS_PARTS-$(CONFIG_ARM_CACHE_L2CXX0)   += outer_cache outer_cache_l2cxx0
 
@@ -226,6 +229,7 @@ psci_IMPL		:= psci-arm
 sched_context_IMPL	:= sched_context-wfq sched_context-fixed_prio \
 			   sched_context-fp_wfq sched_context
 scu_IMPL                := scu
+space_IMPL		:= space space-arm
 spin_lock_IMPL		:= spin_lock spin_lock-arm spin_lock-arm-$(BITS)
 startup_IMPL		:= startup startup-arm
 sys_call_page_IMPL	:= sys_call_page \
