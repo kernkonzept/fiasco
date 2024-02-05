@@ -35,7 +35,7 @@ OUTPUT_ARCH(aarch64)
 # error Either CONFIG_BIT32 or CONFIG_BIT64 must be set
 #endif
 
-#if defined CONFIG_BIT32 && !defined CONFIG_CPU_VIRT
+#if defined CONFIG_BIT32 && !defined CONFIG_CPU_VIRT && defined CONFIG_MMU
 # define NEED_EXCPT
 #endif
 

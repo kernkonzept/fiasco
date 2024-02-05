@@ -142,6 +142,25 @@ Cpu::init_supervisor_mode(bool is_boot_cpu)
 }
 
 //---------------------------------------------------------------------------
+IMPLEMENTATION [arm && !cpu_virt && mpu]:
+
+IMPLEMENT_OVERRIDE
+void
+Cpu::init_supervisor_mode(bool)
+{
+  // set VBAR system register to exception vector address
+  extern char exception_vector;
+  asm volatile("mcr p15, 0, %0, c12, c0, 0 \n\t"  // VBAR
+               :  : "r" (&exception_vector));
+
+  // make sure vectors are executed in A32 state
+  unsigned long r;
+  asm volatile("mrc p15, 0, %0, c1, c0, 0" : "=r" (r) : : "memory");  // SCTLR
+  r &= ~(1UL << 30);
+  asm volatile("mcr p15, 0, %0, c1, c0, 0" : : "r" (r) : "memory");   // SCTLR
+}
+
+//---------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_v6plus]:
 
 PRIVATE static inline

@@ -224,7 +224,14 @@ fast_ret_from_irq:
 /**************************************************************************
  * The Exception vector table.
  */
+#ifdef CONFIG_MMU
+// MMU kernels map the exception vectors in a separate page to the high vectors.
 .section	.vect,"a"
+#else
+// MPU kernel can embed sufficently aligned exception vectors in the image.
+.p2align 5
+.section	.text.ivt,"xa"
+#endif
 .globl	exception_vector
 exception_vector:
 #ifndef CONFIG_ARM_EM_TZ
@@ -261,7 +268,9 @@ fiq_b_vector:
 
 /* locations to pass lr and spsr from one mode to the other
    these are globally shared !!! */
+#ifdef CONFIG_MMU
 .section	.excp.text,"xa"
+#endif
 #if !defined(CONFIG_ARM_V6PLUS)
 s_lr:	.word	0
 s_spsr:	.word	0

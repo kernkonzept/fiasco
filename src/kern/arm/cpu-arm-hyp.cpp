@@ -59,7 +59,48 @@ public:
     Hcr_must_set_bits = Hcr_vm | Hcr_swio | Hcr_ptw
                       | Hcr_amo | Hcr_imo | Hcr_fmo
                       | Hcr_tidcp | Hcr_tsc | Hcr_tactlr,
+  };
+};
 
+IMPLEMENT_OVERRIDE
+void
+Cpu::init_hyp_mode()
+{
+  asm volatile (
+        "mcr p15, 4, %0, c2, c1, 2" // VTCR
+        : : "r" ((1UL << 31) | (Page::Tcr_attribs << 8) | (1 << 6)));
+  init_hyp_mode_common();
+}
+
+//--------------------------------------------------------------------
+IMPLEMENTATION [arm && cpu_virt && 32bit && !mmu]:
+
+EXTENSION class Cpu
+{
+public:
+  enum : Unsigned32
+  {
+    Hcr_must_set_bits = Hcr_vm | Hcr_swio
+                      | Hcr_amo| Hcr_imo | Hcr_fmo
+                      | Hcr_tidcp | Hcr_tsc | Hcr_tactlr,
+  };
+};
+
+IMPLEMENT_OVERRIDE
+void
+Cpu::init_hyp_mode()
+{
+  init_hyp_mode_common();
+}
+
+//--------------------------------------------------------------------
+IMPLEMENTATION [arm && cpu_virt && 32bit]:
+
+EXTENSION class Cpu
+{
+public:
+  enum : Unsigned32
+  {
     /**
      * HCR value to be used for the VMM.
      *
@@ -87,9 +128,9 @@ public:
   };
 };
 
-IMPLEMENT_OVERRIDE
+PRIVATE inline
 void
-Cpu::init_hyp_mode()
+Cpu::init_hyp_mode_common()
 {
   extern char hyp_vector_base[];
 
@@ -99,16 +140,13 @@ Cpu::init_hyp_mode()
   asm volatile (
         "mcr p15, 4, %0, c1, c1, 1 \n"
 
-        "mcr p15, 4, %1, c2, c1, 2 \n"
-
         "mrc p15, 0, r0, c1, c0, 0 \n"
         "bic r0, #1 \n"
         "mcr p15, 0, r0, c1, c0, 0 \n"
 
-        "mcr p15, 4, %2, c1, c1, 0 \n"
+        "mcr p15, 4, %1, c1, c1, 0 \n"
         : :
         "r" (Mword{Hdcr_bits} | (has_hpmn0() ? 0 : 1)),
-        "r" ((1UL << 31) | (Page::Tcr_attribs << 8) | (1 << 6)),
         "r" (Hcr_non_vm_bits_el0)
         : "r0" );
 

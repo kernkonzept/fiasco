@@ -214,28 +214,18 @@ unsigned
 Cpu::vmid_bits() const
 { return (_cpu_id._mmfr[1] & 0xf0U) == 0x20 ? 16 : 8; }
 
-//--------------------------------------------------------------------------
-IMPLEMENTATION [arm && cpu_virt && mmu]:
-
-IMPLEMENT_OVERRIDE
+PRIVATE inline
 void
-Cpu::init_hyp_mode()
+Cpu::init_hyp_mode_common()
 {
   extern char exception_vector[];
-
-  // Prevent a compiler warning on Page::Min_pa_range==0.
-  if (static_cast<int>(pa_range()) < Page::Min_pa_range)
-    panic("Not enough physical address bits! Disable CONFIG_ARM_PT48.\n");
 
   if (vmid_bits() < Mem_unit::Asid_bits)
     panic("VMID size too small: HW provides %d bits, configured %d bits!",
           vmid_bits(), Mem_unit::Asid_bits);
 
   asm volatile ("msr VBAR_EL2, %x0" : : "r"(&exception_vector));
-  asm volatile ("msr VTCR_EL2, %x0" : :
-                "r"(  (1UL << 31) // RES1
-                    | (Page::Tcr_attribs << 8)
-                    | Page::vtcr_bits(pa_range())));
+  asm volatile ("msr VTCR_EL2, %x0" : : "r"(vtcr_bits()));
 
   Mword mdcr = Mword{Mdcr_bits} | (has_hpmn0() ? 0 : 1);
   asm volatile ("msr MDCR_EL2, %x0" : : "r"(mdcr));
@@ -250,6 +240,48 @@ Cpu::init_hyp_mode()
   // HCPTR
   asm volatile("msr CPTR_EL2, %x0" : : "r" (Cptr_el2_generic | Cptr_el2_tta));
 }
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION [arm && cpu_virt && mmu]:
+
+PUBLIC static inline
+unsigned long
+Cpu::vtcr_bits()
+{
+  return (1UL << 31) // RES1
+         | (Page::Tcr_attribs << 8)
+         | Page::vtcr_bits(pa_range());
+}
+
+IMPLEMENT_OVERRIDE
+void
+Cpu::init_hyp_mode()
+{
+  // Prevent a compiler warning on Page::Min_pa_range==0.
+  if (static_cast<int>(pa_range()) < Page::Min_pa_range)
+    panic("Not enough physical address bits! Disable CONFIG_ARM_PT48.\n");
+
+  init_hyp_mode_common();
+}
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION [arm && mpu && cpu_virt]:
+
+PUBLIC static inline
+unsigned long
+Cpu::vtcr_bits()
+{
+  return 0; // PMSA@EL1 by default
+}
+
+IMPLEMENT_OVERRIDE
+void
+Cpu::init_hyp_mode()
+{
+  asm volatile ("msr S3_4_C2_C6_2, %0" : : "r"(1UL << 31)); // VSTCR_EL2
+  init_hyp_mode_common();
+}
+
 //--------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
