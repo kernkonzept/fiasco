@@ -464,6 +464,22 @@ Thread::peek_user(T const *adr, Context *c)
 }
 
 //-----------------------------------------------------------------------------
+IMPLEMENTATION [arm && 32bit && cpu_virt && !mmu]:
+
+PRIVATE static inline
+Address
+Thread::get_fault_pfa(Arm_esr /*hsr*/, bool insn_abt, bool /*ext_vcpu*/)
+{
+  Unsigned32 far;
+  if (insn_abt)
+    asm ("mrc p15, 4, %0, c6, c0, 2" : "=r" (far)); // HIFAR
+  else
+    asm ("mrc p15, 4, %0, c6, c0, 0" : "=r" (far)); // HDFAR
+
+  return far;
+}
+
+//-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && 32bit && cpu_virt && arm_v8plus]:
 
 PRIVATE static inline
