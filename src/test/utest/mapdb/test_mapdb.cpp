@@ -532,6 +532,10 @@ Mapdb_ext_test::unmap(Mapdb &m, Test_tlb<Base> *space, Mapdb::Pfn va_start,
   return true;
 }
 
+/**
+ * Perform basic operations on the mapping database (create sigma0 mappings and
+ * create sub-mappings from sigma0 to other spaces).
+ */
 PUBLIC
 template <typename M>
 void
@@ -776,6 +780,10 @@ Mapdb_ext_test::test_mapdb_flushtest()
               "Lookup @son");
 }
 
+/**
+ * Create more complicated mappings with several involved mapping clients and
+ * with different page sizes.
+ */
 PUBLIC
 template <typename M>
 void
