@@ -198,20 +198,21 @@ public:
 } __attribute__((packed));
 
 
+template<unsigned LEN>
 static void
-print_acpi_id(char const *id, int len)
+print_acpi_id(char const (&id)[LEN])
 {
-  char ID[len];
-  for (int i = 0; i < len; ++i)
-    ID[i] = isalnum(id[i]) ? id[i] : '.';
-  printf("%.*s", len, ID);
+  char id_str[LEN];
+  for (unsigned i = 0; i < LEN; ++i)
+    id_str[i] = isalnum(id[i]) ? id[i] : '.';
+  printf("%.*s", LEN, id_str);
 }
 
 PUBLIC void
 Acpi_rsdp::print_info() const
 {
   printf("ACPI: RSDP[%p]\tr%02x OEM:", (void *)this, (unsigned)rev);
-  print_acpi_id(oem, 6);
+  print_acpi_id(oem);
   printf("\n");
 }
 
@@ -219,11 +220,11 @@ PUBLIC void
 Acpi_table_head::print_info() const
 {
   printf("ACPI: ");
-  print_acpi_id(signature, 4);
+  print_acpi_id(signature);
   printf("[%p]\tr%02x OEM:", (void *)this, (unsigned)rev);
-  print_acpi_id(oem_id, 6);
+  print_acpi_id(oem_id);
   printf(" OEMTID:");
-  print_acpi_id(oem_tid, 8);
+  print_acpi_id(oem_tid);
   printf("\n");
 }
 
