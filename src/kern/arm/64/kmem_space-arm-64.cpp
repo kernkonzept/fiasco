@@ -55,3 +55,10 @@ static Boot_paging_info FIASCO_BOOT_PAGING_INFO _bs_pgin_dta =
   pdir_scratch,
   (1 << Num_scratch_pages) - 1
 };
+
+// -----------------------------------------------------------------
+IMPLEMENTATION [arm && !mmu]:
+
+IMPLEMENT inline
+void Kmem_space::init()
+{}

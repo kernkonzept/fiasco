@@ -46,3 +46,10 @@ static Boot_paging_info FIASCO_BOOT_PAGING_INFO _bs_pgin_dta =
 {
   kernel_page_directory
 };
+
+//----------------------------------------------------------------------------------
+IMPLEMENTATION[arm && !mmu]:
+
+IMPLEMENT inline
+void Kmem_space::init()
+{}
