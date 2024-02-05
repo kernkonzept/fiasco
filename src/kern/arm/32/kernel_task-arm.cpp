@@ -46,4 +46,14 @@ Kernel_task::map_syscall_page(void *p)
   Mem_space::set_syscall_page(p);
 }
 
+//---------------------------------------------------------------------------
+IMPLEMENTATION[arm && mpu]:
 
+#include "config.h"
+#include "globals.h"
+#include "kmem.h"
+
+PRIVATE inline NEEDS["globals.h", "kmem.h"]
+Kernel_task::Kernel_task()
+: Task(Ram_quota::root, static_cast<Pdir*>(Kmem::kdir), Caps::none())
+{}
