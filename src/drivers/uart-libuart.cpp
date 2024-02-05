@@ -35,13 +35,15 @@ Uart::bsp_init()
 {}
 
 PROTECTED bool
-Uart::startup(L4::Io_register_block const *reg, int irq, Unsigned32 base_baud)
+Uart::startup(L4::Io_register_block const *reg, int irq, Unsigned32 base_baud,
+              bool resume)
 {
   _irq = irq;
 
   bsp_init();
 
-  init_uart_instance(base_baud);
+  if (!resume)
+    init_uart_instance(base_baud);
 
   if (!_uart->startup(reg))
     return false;
