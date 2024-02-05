@@ -53,7 +53,7 @@ public:
       return -L4_err::EInval;
 
     bind(irq, pin);
-    if (cas(&_irqs[pin], (Irq_base *)nullptr, irq))
+    if (cas<Irq_base *>(&_irqs[pin], nullptr, irq))
       return 0;
 
     irq->unbind();
@@ -83,7 +83,7 @@ public:
     if (_irqs[pin] != irq)
       return;
 
-    if (cas(&_irqs[pin], irq, (Irq_base *)nullptr))
+    if (cas<Irq_base *>(&_irqs[pin], irq, nullptr))
       Irq_chip_soft::unbind(irq);
   }
 

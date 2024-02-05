@@ -65,16 +65,10 @@ Tb_entry_trap::eax() const
 
 PUBLIC inline NEEDS ["trap_state.h"]
 void
-Tb_entry_trap::set(Context const *ctx, Mword pc, Trap_state *)
-{
-  (void)pc;
-  (void)ctx;
-}
+Tb_entry_trap::set(Context const*, Mword /* pc */, Trap_state *)
+{}
 
 PUBLIC inline NEEDS ["trap_state.h"]
 void
-Tb_entry_trap::set(Context const *ctx, Mword pc, Mword)
-{
-  (void)pc;
-  (void)ctx;
-}
+Tb_entry_trap::set(Context const*, Mword /* pc */, Mword)
+{}

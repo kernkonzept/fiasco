@@ -84,13 +84,13 @@ PUBLIC inline
 template< typename T >
 T
 Spin_lock_coloc<T>::get_unused() const
-{ return (T)(_lock & ~Arch_lock); }
+{ return reinterpret_cast<T>(_lock & ~Arch_lock); }
 
 PUBLIC inline
 template< typename T >
 void
 Spin_lock_coloc<T>::set_unused(T val)
-{ _lock = (_lock & Arch_lock) | (Mword)val; }
+{ _lock = (_lock & Arch_lock) | reinterpret_cast<Mword>(val); }
 
 
 //--------------------------------------------------------------------------

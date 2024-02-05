@@ -67,7 +67,7 @@ public:
   enum Masks : Base_type
   {
     /** Mask value to get #Bits bits. */
-    Low_mask = ((Base_type)~0ULL) >> (sizeof(Base_type)*8 - Bits),
+    Low_mask = static_cast<Base_type>(~0ULL) >> (sizeof(Base_type)*8 - Bits),
     /** Mask value to the bits out of a \a T. */
     Mask     = Low_mask << Lsb,
   };

@@ -119,12 +119,12 @@ IMPLEMENTATION [!ppc32]:
 IMPLEMENT inline
 template< typename T >
 T Io::read(Address address)
-{ return *(volatile T *)address; }
+{ return *reinterpret_cast<volatile T *>(address); }
 
 IMPLEMENT inline
 template< typename T>
 void Io::write(T value, Address address)
-{ *(volatile T *)address = value; }
+{ *reinterpret_cast<volatile T *>(address) = value; }
 
 // ----------------------------------------------------------------------
 IMPLEMENTATION:

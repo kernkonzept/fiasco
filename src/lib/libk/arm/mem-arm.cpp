@@ -125,7 +125,7 @@ Mem::memset_mwords (void *dst, const unsigned long value, unsigned long nr_of_mw
   if (!nr_of_mwords)
     return;
 
-  unsigned long __attribute__((may_alias)) *d = (unsigned long *)dst;
+  unsigned long __attribute__((may_alias)) *d = static_cast<unsigned long *>(dst);
   for (; nr_of_mwords >= 4; d += 4, nr_of_mwords -= 4U)
     {
       d[0] = value;

@@ -29,12 +29,12 @@ Task::map_gicc_page(L4_msg_tag tag, Utcb *utcb)
       || gicc_page.order() < Config::PAGE_SHIFT)
     return commit_result(-L4_err::EInval);
 
-  User_ptr<void> u_addr((void *)gicc_page.mem_address());
+  User_ptr<void> u_addr(static_cast<void *>(gicc_page.mem_address()));
 
   Mem_space *ms = static_cast<Mem_space *>(this);
   Mem_space::Status res =
     ms->v_insert(Mem_space::Phys_addr(addr),
-                 Virt_addr((Address)u_addr.get()),
+                 Virt_addr(u_addr.get()),
                  Mem_space::Page_order(Config::PAGE_SHIFT),
                  Mem_space::Attr::space_local(L4_fpage::Rights::URW()));
 

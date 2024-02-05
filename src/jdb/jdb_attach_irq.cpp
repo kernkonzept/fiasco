@@ -46,7 +46,7 @@ Jdb_attach_irq::action( int cmd, void *&args, char const *&, int & ) override
   if (cmd)
     return NOTHING;
 
-  if ((char*)args == &subcmd)
+  if (static_cast<char*>(args) == &subcmd)
     {
       switch (subcmd)
         {
@@ -101,7 +101,7 @@ class Jdb_kobject_irq : public Jdb_kobject_handler
 
 PUBLIC inline
 Jdb_kobject_irq::Jdb_kobject_irq()
-  : Jdb_kobject_handler((Irq*)0)
+  : Jdb_kobject_handler(static_cast<Irq *>(nullptr))
 {
   Jdb_kobject::module()->register_handler(this);
 }
@@ -139,9 +139,7 @@ Jdb_kobject_irq::show_kobject_short(String_buffer *buf,
   Irq *i = cxx::dyn_cast<Irq*>(o);
   Kobject_common *w = follow_link(o);
 
-  buf->printf(" I=%3lx %s F=%x",
-              i->pin(), i->chip()->chip_type(),
-              (unsigned)i->flags());
+  buf->printf(" I=%3lx %s F=%lx", i->pin(), i->chip()->chip_type(), i->flags());
 
   if (Irq_sender *t = cxx::dyn_cast<Irq_sender*>(i))
     buf->printf(" L=%lx T=%lx Q=%d",

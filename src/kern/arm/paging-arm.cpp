@@ -545,7 +545,7 @@ public:
 
   Pte_short_desc() = default;
   Pte_short_desc(void *p, unsigned char level)
-  : pte((Entry *)p), level(level)
+  : pte(static_cast<Entry *>(p)), level(level)
   {}
 
   bool is_valid() const { return access_once(pte) & 3; }
@@ -607,7 +607,7 @@ public:
 
   Pte_long_desc() = default;
   Pte_long_desc(void *p, unsigned char level)
-  : pte((Unsigned64*)p), level(level)
+  : pte(static_cast<Unsigned64*>(p)), level(level)
   {}
 
   bool is_valid() const { return *pte & 1; }

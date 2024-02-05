@@ -21,7 +21,7 @@ static K_ptab_array kernel_l0_vdir;
 enum { Num_scratch_pages = 8 };
 static K_ptab_array pdir_scratch[Num_scratch_pages];
 
-Kpdir *Kmem::kdir = (Kpdir *)&kernel_l0_vdir;
+Kpdir *Kmem::kdir = reinterpret_cast<Kpdir *>(&kernel_l0_vdir);
 
 // provide the initial infos for bootstrap.cpp
 static Boot_paging_info FIASCO_BOOT_PAGING_INFO _bs_pgin_dta =
@@ -44,7 +44,7 @@ K_ptab_array kernel_l0_dir;
 enum { Num_scratch_pages = 8 };
 static K_ptab_array pdir_scratch[Num_scratch_pages];
 
-Kpdir *Kmem::kdir = (Kpdir *)&kernel_l0_dir;
+Kpdir *Kmem::kdir = reinterpret_cast<Kpdir *>(&kernel_l0_dir);
 
 // provide the initial infos for bootstrap.cpp
 static Boot_paging_info FIASCO_BOOT_PAGING_INFO _bs_pgin_dta =

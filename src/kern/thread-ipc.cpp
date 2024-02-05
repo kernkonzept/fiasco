@@ -42,13 +42,13 @@ protected:
       Failed = 5,
     };
 
-    static_assert((unsigned)Rcv_state::Open_wait_flag == (unsigned)Open_wait_flag,
+    static_assert(unsigned{Rcv_state::Open_wait_flag} == unsigned{Open_wait_flag},
                   "Rcv_state and Check_sender flags must be compatible");
 
     R s;
 
     constexpr Check_sender(Receiver::Rcv_state s)
-    : s((R)(s.s & Open_wait_flag))
+    : s(static_cast<R>(s.s & Open_wait_flag))
     {}
 
     constexpr Check_sender(R s) noexcept : s(s) {}
@@ -1256,7 +1256,7 @@ PRIVATE static
 Context::Drq::Result
 Thread::handle_remote_ipc_send(Drq *src, Context *, void *_rq)
 {
-  Ipc_remote_request *rq = (Ipc_remote_request*)_rq;
+  Ipc_remote_request *rq = static_cast<Ipc_remote_request*>(_rq);
   bool r = nonull_static_cast<Thread*>(src->context())->remote_ipc_send(rq);
   return r ? Drq::need_resched() : Drq::done();
 }

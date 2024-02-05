@@ -59,7 +59,7 @@ PUBLIC static
 Jdb_address
 Jdb_input_task_addr::address()
 {
-  if (_task == 0 && _addr == (Address)-1)
+  if (_task == 0 && _addr == Invalid_address)
     return Jdb_address::null();
 
   if (_task == 0 && _space == 0)
@@ -82,7 +82,7 @@ Jdb_input_task_addr::action(void *&args, char const *&fmt, int &next_char)
       // so _task is only valid if it is explicitly set
       _task         = 0;
       _space        = Jdb::get_space(Jdb::current_cpu);
-      _addr         = (Address)-1;
+      _addr         = Invalid_address;
     }
 
   if (args == &first_char_have_task)

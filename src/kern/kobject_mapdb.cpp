@@ -131,10 +131,8 @@ Kobject_mapdb::valid_address(Phys_addr obj)
 PUBLIC inline static
 Kobject_mapdb::Mapping *
 Kobject_mapdb::insert(Frame const &, Space *,
-                      Vaddr va, Obj_space::Phys_addr o, Obj_space::V_pfc size)
+                      Vaddr va, Obj_space::Phys_addr o, [[maybe_unused]] Obj_space::V_pfc size)
 {
-  (void)size;
-  (void)o;
   assert (size == Obj_space::V_pfc(1));
 
   Mapping *m = va._c;

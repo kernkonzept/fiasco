@@ -13,8 +13,10 @@ protected:
 public:
   Jdb_address() = default;
   Jdb_address(Address virt, Space *space) : _space(space), _addr(virt) {}
-  Jdb_address(void const *virt, Space *space) : _space(space), _addr((Address)virt) {}
-  explicit Jdb_address(Address phys) : _space((Space *)1), _addr(phys) {}
+  Jdb_address(void const *virt, Space *space)
+    : _space(space), _addr(reinterpret_cast<Address>(virt)) {}
+  explicit Jdb_address(Address phys)
+    : _space(reinterpret_cast<Space *>(1)), _addr(phys) {}
   static Jdb_address kmem_addr(Address kaddr)
   { return Jdb_address(kaddr, nullptr); }
 
@@ -23,12 +25,12 @@ public:
 
   static Jdb_address null() { return Jdb_address(nullptr, nullptr); }
 
-  bool is_phys() const { return _space == (Space *)1; }
+  bool is_phys() const { return _space == reinterpret_cast<Space *>(1); }
   bool is_kmem() const { return _space == nullptr || is_kernel_task(); }
   bool is_null() const { return _space == nullptr && _addr == 0; }
   Address phys() const { return _addr; }
   Address addr() const { return _addr; }
-  void *virt() const { return (void *)_addr; }
+  void *virt() const { return reinterpret_cast<void *>(_addr); }
 
   Space *space() const { return _space; }
 
@@ -88,7 +90,7 @@ public:
   { return Jdb_addr<T>(nullptr, nullptr); }
 
 
-  T *virt() const { return (T *)Jdb_address::virt(); }
+  T *virt() const { return static_cast<T *>(Jdb_address::virt()); }
 
   Jdb_addr operator -= (long diff)
   {

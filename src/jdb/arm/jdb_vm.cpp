@@ -16,7 +16,7 @@ public:
 
 IMPLEMENT
 Jdb_vm::Jdb_vm()
-  : Jdb_kobject_handler((Vm *)0)
+  : Jdb_kobject_handler(static_cast<VM *>(nullptr))
 {
   Jdb_kobject::module()->register_handler(this);
 }

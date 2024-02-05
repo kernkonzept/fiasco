@@ -84,8 +84,9 @@ public:
     template<typename T>
     T *kern_addr(User_ptr<T> ua) const
     {
-      typedef Address A;
-      return (T*)((A)ua.get() - (A)u_addr.get() + (A)k_addr);
+      return reinterpret_cast<T*>(reinterpret_cast<Address>(ua.get())
+                                  - reinterpret_cast<Address>(u_addr.get())
+                                  + reinterpret_cast<Address>(k_addr));
     }
   };
 
@@ -132,7 +133,7 @@ PUBLIC
 Space::Ku_mem const *
 Space::find_ku_mem(User_ptr<void> p, unsigned size)
 {
-  Address const pa = (Address)p.get();
+  Address const pa = reinterpret_cast<Address>(p.get());
 
   // alignment check
   if (EXPECT_FALSE(pa & (sizeof(double) - 1)))
@@ -144,7 +145,7 @@ Space::find_ku_mem(User_ptr<void> p, unsigned size)
 
   for (Ku_mem_list::Const_iterator f = _ku_mem.begin(); f != _ku_mem.end(); ++f)
     {
-      Address const a = (Address)f->u_addr.get();
+      Address const a = reinterpret_cast<Address>(f->u_addr.get());
       if (a <= pa && (a + f->size - 1) >= (pa + size - 1))
 	return *f;
     }

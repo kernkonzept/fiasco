@@ -60,7 +60,7 @@ Icu::icu_get_info(Mword *features, Mword *num_irqs, Mword *num_msis)
 {
   *num_irqs = Irq_mgr::mgr->nr_irqs();
   *num_msis = Irq_mgr::mgr->nr_msis();
-  *features = *num_msis ? (unsigned)Msi_bit : 0;
+  *features = *num_msis ? Mword{Msi_bit} : 0;
   return 0;
 }
 

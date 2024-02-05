@@ -310,7 +310,7 @@ Mapping_tree::flush(Iterator m, int p_depth, bool me_too,
 
   while (*m)
     {
-      if (!m->submap() && ((int)m->depth() <= p_depth))
+      if (!m->submap() && static_cast<int>(m->depth()) <= p_depth)
         return;
 
       Space *space;

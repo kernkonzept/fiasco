@@ -157,7 +157,7 @@ Psci::init(Cpu_number cpu)
     {
       r = psci_call(Psci_features, psci_fn(Psci_cpu_suspend));
       if (r.res[0] & (1UL << 31))
-        printf("PSCI: CPU_Suspend not supported (%d)\n", (int)r.res[0]);
+        printf("PSCI: CPU_Suspend not supported (%ld)\n", r.res[0]);
       else
         printf("PSCI: CPU_SUSPEND format %s, %s OS-initiated mode\n",
                r.res[0] & 2 ? "extended" : "original v0.2",

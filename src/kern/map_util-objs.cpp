@@ -22,7 +22,7 @@ obj_map(Space *from, L4_fpage const &fp_from,
   Cap_index snd_addr = fp_from.obj_index();
   Order so = Mu::get_order_from_fp<Cap_diff>(fp_from);
   Order ro = Mu::get_order_from_fp<Cap_diff>(fp_to);
-  Cap_index offs = Cap_index((Mword)control.index());
+  Cap_index offs = Cap_index(control.index());
 
   snd_addr = cxx::mask_lsb(snd_addr, so);
   rcv_addr = cxx::mask_lsb(rcv_addr, ro);
@@ -36,7 +36,7 @@ obj_map(Space *from, L4_fpage const &fp_from,
   Obj_space::Attr attribs(fp_from.rights(), L4_msg_item::C_weak_ref ^ control.attr());
 
   Mu::Auto_tlb_flush<Obj_space> tlb;
-  return map<Obj_space>((Kobject_mapdb*)0,
+  return map<Obj_space>(static_cast<Kobject_mapdb*>(nullptr),
                         from, from, Obj_space::V_pfn(snd_addr),
                         snd_size,
                         to, to, Obj_space::V_pfn(rcv_addr),
@@ -57,7 +57,7 @@ obj_fpage_unmap(Space * space, L4_fpage fp, L4_map_mask mask,
   // XXX prevent unmaps when a task has no caps enabled
 
   Mu::Auto_tlb_flush<Obj_space> tlb;
-  return unmap<Obj_space>((Kobject_mapdb*)0, space, space,
+  return unmap<Obj_space>(static_cast<Kobject_mapdb*>(nullptr), space, space,
                Obj_space::V_pfn(addr), Obj_space::V_pfc(1) << size,
                fp.rights(), mask, tlb, reap_list);
 }
@@ -73,7 +73,7 @@ obj_map(Space *from, Cap_index snd_addr, unsigned long snd_size,
   assert(to);
 
   Mu::Auto_tlb_flush<Obj_space> tlb;
-  return map<Obj_space>((Kobject_mapdb*)0,
+  return map<Obj_space>(static_cast<Kobject_mapdb*>(nullptr),
 	     from, from, Obj_space::V_pfn(snd_addr),
 	     Cap_diff(snd_size),
 	     to, to, Obj_space::V_pfn(rcv_addr),
@@ -109,8 +109,9 @@ map_obj_initially(Kobject_iface *o, Obj_space* to, Space *to_id,
   Addr ra(rcv_addr);
   Mu::Auto_tlb_flush<Obj_space> tlb;
   if (to->v_lookup(ra, &r_phys, &r_size, &r_attribs))
-    unmap((Kobject_mapdb*)0, to, to_id, ra, Obj_space::V_pfc(1) << r_size,
-          L4_fpage::Rights::FULL(), L4_map_mask::full(), tlb, reap_list);
+    unmap(static_cast<Kobject_mapdb*>(nullptr), to, to_id, ra,
+          Obj_space::V_pfc(1) << r_size, L4_fpage::Rights::FULL(),
+          L4_map_mask::full(), tlb, reap_list);
 
   // Do the actual insertion.
   Obj_space::Status status = to->v_insert(o, ra, Size(0), Obj_space::Attr::Full());

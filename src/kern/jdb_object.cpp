@@ -80,12 +80,11 @@ extern "C" void sys_invoke_debug(Kobject_iface *o, Syscall_frame *f) __attribute
 
 PRIVATE inline NOEXPORT
 L4_msg_tag
-Jdb_object::sys_kobject_debug(L4_msg_tag tag, unsigned op,
+Jdb_object::sys_kobject_debug(L4_msg_tag tag, unsigned /* op */,
                               L4_fpage::Rights rights,
                               Syscall_frame *f,
                               Utcb const *r_msg, Utcb *)
 {
-  (void)op;
   if (sys_invoke_debug)
     {
       Kobject_iface *i = Ko::deref<Kobject_iface>(&tag, r_msg, &rights);

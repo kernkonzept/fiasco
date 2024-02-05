@@ -17,7 +17,7 @@ EXTENSION class Bootstrap
   struct Bs_alloc
   {
     Bs_alloc(void *base, Mword &free_map)
-    : _p((Address)base), _free_map(free_map)
+    : _p(reinterpret_cast<Address>(base)), _free_map(free_map)
     {}
 
     static Address to_phys(void *v)
@@ -25,9 +25,8 @@ EXTENSION class Bootstrap
 
     static bool valid() { return true; }
 
-    void *alloc(Bytes size)
+    void *alloc(Bytes /* size */)
     {
-      (void) size;
       // assert (size == Config::PAGE_SIZE);
       // test that size is a power of two
       // assert (((size - 1) ^ size) == (size - 1));
@@ -95,7 +94,7 @@ struct Elf64_rela
 
   inline void apply(unsigned long load_addr)
   {
-    auto *addr = (unsigned long *)(load_addr + offset);
+    auto *addr = reinterpret_cast<unsigned long *>(load_addr + offset);
     *addr = load_addr + addend;
   }
 };
@@ -496,7 +495,7 @@ Bootstrap::init_paging()
       "msr ttbr0_el2, %0 \n"
       "isb               \n"
       : :
-      "r"(d), "r"((Mword)Page::Ttbcr_bits));
+      "r"(d), "r"(Mword{Page::Ttbcr_bits}));
 
   return Phys_addr(0);
 }

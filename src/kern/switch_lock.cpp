@@ -116,7 +116,7 @@ Context * NO_INSTRUMENT
 Switch_lock::lock_owner() const
 {
   auto guard = lock_guard(cpu_lock);
-  return (Context*)(_lock_owner & ~1UL);
+  return reinterpret_cast<Context*>(_lock_owner & ~1UL);
 }
 
 /**
@@ -200,7 +200,7 @@ Switch_lock::lock_dirty()
           if (!o)
             break;
 
-          help(c, (Context *)o, o);
+          help(c, reinterpret_cast<Context *>(o), o);
         }
     }
   while (!set_lock_owner(c));
@@ -375,7 +375,8 @@ Switch_lock::switch_dirty(Lock_context const &c)
 
   if (h != curr)
     if (   EXPECT_FALSE(h->home_cpu() != current_cpu())
-        || EXPECT_FALSE((long)curr->switch_exec_locked(h, Context::Ignore_Helping)))
+        || EXPECT_FALSE(curr->switch_exec_locked(h, Context::Ignore_Helping)
+                        != Context::Switch::Ok))
       need_sched = true;
 
   if (!need_sched)
@@ -449,7 +450,7 @@ Switch_lock::wait_free()
 
   assert (!valid());
 
-  if ((_lock_owner & ~1UL) == (Address)c)
+  if ((_lock_owner & ~1UL) == reinterpret_cast<Address>(c))
     {
       clear_lock_owner();
       c->dec_lock_cnt();
@@ -461,7 +462,7 @@ Switch_lock::wait_free()
       assert(cpu_lock.test());
 
       Address _owner = access_once(&_lock_owner);
-      Context *owner = (Context *)(_owner & ~1UL);
+      Context *owner = reinterpret_cast<Context *>(_owner & ~1UL);
       if (!owner)
         break;
 

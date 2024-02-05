@@ -44,8 +44,8 @@ Unsigned8 Kern_cnt::valid_ctrs[Kern_cnt::Valid_ctrs] =
   Kern_cnt_exc_ipc,
 };
 
-static Mword Kern_cnt::read_kcnt1() { return (Mword)*kcnt[0]; }
-static Mword Kern_cnt::read_kcnt2() { return (Mword)*kcnt[1]; }
+static Mword Kern_cnt::read_kcnt1() { return *kcnt[0]; }
+static Mword Kern_cnt::read_kcnt2() { return *kcnt[1]; }
 
 PUBLIC static
 int

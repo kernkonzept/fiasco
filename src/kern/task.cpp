@@ -114,14 +114,14 @@ Task::alloc_ku_mem_chunk(User_ptr<void> u_addr, unsigned size, void **k_addr)
 
   memset(p, 0, size);
 
-  Virt_addr base((Address)p);
+  Virt_addr base(p);
   Mem_space::Page_order page_order(Config::PAGE_SHIFT);
 
   for (Virt_size i = Virt_size(0); i < Virt_size(size);
        i += Virt_size(1) << page_order)
     {
       Virt_addr kern_va = base + i;
-      Virt_addr user_va = Virt_addr((Address)u_addr.get()) + i;
+      Virt_addr user_va = Virt_addr(u_addr.get()) + i;
       Mem_space::Phys_addr pa(pmem_to_phys(cxx::int_value<Virt_addr>(kern_va)));
 
       // must be valid physical address
@@ -144,7 +144,7 @@ Task::alloc_ku_mem_chunk(User_ptr<void> u_addr, unsigned size, void **k_addr)
 
         default:
           printf("UTCB mapping failed: va=%p, ph=%p, res=%d\n",
-                 (void *)user_va, (void *)kern_va, res);
+                 static_cast<void *>(user_va), static_cast<void *>(kern_va), res);
           kdb_ke("BUG in utcb allocation");
           free_ku_mem_chunk(p, u_addr, size, cxx::int_value<Virt_size>(i));
           return 0;
@@ -174,7 +174,7 @@ Task::alloc_ku_mem(L4_fpage ku_area)
   if (!m)
     return -L4_err::ENomem;
 
-  User_ptr<void> u_addr((void *)ku_area.mem_address());
+  User_ptr<void> u_addr(static_cast<void *>(ku_area.mem_address()));
 
   void *p = 0;
   if (int e = alloc_ku_mem_chunk(u_addr, sz, &p))
@@ -211,7 +211,7 @@ Task::free_ku_mem_chunk(void *k_addr, User_ptr<void> u_addr, unsigned size,
   for (Virt_size i = Virt_size(0); i < Virt_size(mapped_size);
        i += Virt_size(1) << page_order)
     {
-      Virt_addr user_va = Virt_addr((Address)u_addr.get()) + i;
+      Virt_addr user_va = Virt_addr(u_addr.get()) + i;
       static_cast<Mem_space*>(this)->v_delete(user_va, page_order,
                                               L4_fpage::Rights::FULL());
     }
@@ -625,7 +625,7 @@ Task::Log_map_unmap::print(String_buffer *buf) const
   L4_fpage fp(fpage);
   buf->printf("task=[%c:%lx] %s=%lx fpage=[%u/",
               map ? 'M' : 'U', id,
-              map ? "snd_base" : "mask", mask, (unsigned)fp.order());
+              map ? "snd_base" : "mask", mask, fp.order().get());
   switch (fp.type())
     {
     case L4_fpage::Special:

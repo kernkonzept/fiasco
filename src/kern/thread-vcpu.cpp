@@ -78,7 +78,7 @@ PUBLIC inline NEEDS["logdefs.h", "vcpu.h"]
 bool
 Thread::vcpu_pagefault(Address pfa, Mword err, Mword ip)
 {
-  (void)ip;
+  static_cast<void>(ip);
   Vcpu_state *vcpu = vcpu_state().access();
   if (vcpu_pagefaults_enabled(vcpu))
     {

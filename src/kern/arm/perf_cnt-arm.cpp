@@ -271,8 +271,8 @@ Perf_cnt::get_perf_event(Mword nr, unsigned *evntsel,
   snprintf(_desc, sizeof(_desc), "Check manual for description of event %lx", nr);
   _desc[sizeof(_desc) - 1] = 0;
 
-  *name = (const char *)&_name;
-  *desc = (const char *)&_desc;
+  *name = static_cast<const char *>(_name);
+  *desc = static_cast<const char *>(_desc);
   *evntsel = nr;
 }
 
@@ -283,7 +283,7 @@ Perf_cnt::split_event(Mword event, unsigned *evntsel, Mword *)
 }
 
 PUBLIC static Mword
-Perf_cnt::lookup_event(Mword) { return is_avail() ? 0 : (Mword)-1; }
+Perf_cnt::lookup_event(Mword) { return is_avail() ? 0 : ~0UL; }
 
 PUBLIC static void
 Perf_cnt::combine_event(Mword evntsel, Mword, Mword *event)

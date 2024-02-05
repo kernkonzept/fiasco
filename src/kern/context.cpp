@@ -57,14 +57,14 @@ public:
   Context_ptr_base(Context_ptr_base<T> const &o) : Context_ptr(o) {}
   template< typename X >
   Context_ptr_base(Context_ptr_base<X> const &o) : Context_ptr(o)
-  { X*x = 0; T*t = x; (void)t; }
+  { X*x = 0; T*t = x; static_cast<void>(t); }
 
   Context_ptr_base<T> const &operator = (Context_ptr_base<T> const &o)
   { Context_ptr::operator = (o); return *this; }
 
   template< typename X >
   Context_ptr_base<T> const &operator = (Context_ptr_base<X> const &o)
-  { X*x=0; T*t=x; (void)t; Context_ptr::operator = (o); return *this; }
+  { X*x=0; T*t=x; static_cast<void>(t); Context_ptr::operator = (o); return *this; }
 };
 
 class Context_space_ref
@@ -84,13 +84,13 @@ public:
   Space *vcpu_aware() const { return user_mode() ? vcpu_user() : space(); }
 
   void space(Space *s) { _s.set_unused(s); }
-  void vcpu_user(Space *s) { _v = (Address)s; }
+  void vcpu_user(Space *s) { _v = reinterpret_cast<Address>(s); }
   void user_mode(bool enable)
   {
     if (enable)
-      _v |= (Address)1;
+      _v |= static_cast<Address>(1);
     else
-      _v &= (Address)(~1);
+      _v &= static_cast<Address>(~1);
   }
 };
 
@@ -230,11 +230,11 @@ public:
     {
       // assert (!is_current || current() == context());
       if (is_current
-          && (int)Config::Access_user_mem == Config::Access_user_mem_direct)
+          && int{Config::Access_user_mem} == Config::Access_user_mem_direct)
         return _u.get();
 
       Cpu_number const cpu = current_cpu();
-      if ((int)Config::Access_user_mem == Config::Must_access_user_mem_direct
+      if (int{Config::Access_user_mem} == Config::Must_access_user_mem_direct
           && cpu == context()->home_cpu()
           && Mem_space::current_mem_space(cpu) == context()->space())
         return _u.get();
@@ -510,16 +510,16 @@ Context::check_for_current_cpu() const
     printf("FAIL: cpu=%u (current=%u) %p current=%p\n",
            cxx::int_value<Cpu_number>(hc),
            cxx::int_value<Cpu_number>(current_cpu()),
-           (void *)this, (void *)current());
+           static_cast<void const *>(this),
+           static_cast<void *>(current()));
   return r;
 }
 
 
 PUBLIC inline
 Mword
-Context::state(bool check = false) const
+Context::state([[maybe_unused]] bool check = false) const
 {
-  (void)check;
   assert(!check || check_for_current_cpu());
   return _state;
 }
@@ -572,9 +572,8 @@ Context::state_add(Mword bits)
  */
 PUBLIC inline
 void
-Context::state_add_dirty(Mword bits, bool check = true)
+Context::state_add_dirty(Mword bits, [[maybe_unused]] bool check = true)
 {
-  (void)check;
   assert(!check || check_for_current_cpu());
   _state |= bits;
 }
@@ -600,9 +599,8 @@ Context::state_del(Mword bits)
  */
 PUBLIC inline
 void
-Context::state_del_dirty(Mword bits, bool check = true)
+Context::state_del_dirty(Mword bits, [[maybe_unused]] bool check = true)
 {
-  (void)check;
   assert(!check || check_for_current_cpu());
   _state &= ~bits;
 }
@@ -656,9 +654,9 @@ Context::state_change(Mword mask, Mword bits)
  */
 PUBLIC inline
 void
-Context::state_change_dirty(Mword mask, Mword bits, bool check = true)
+Context::state_change_dirty(Mword mask, Mword bits,
+                            [[maybe_unused]] bool check = true)
 {
-  (void)check;
   assert(!check || check_for_current_cpu());
   _state &= mask;
   _state |= bits;
@@ -1047,8 +1045,7 @@ Context::switch_exec_locked(Context *t, enum Helping_mode mode)
   assert (current() == this);
 
   // only for logging
-  Context *t_orig = t;
-  (void)t_orig;
+  [[maybe_unused]] Context *t_orig = t;
 
   // Time-slice lending: if t is locked, switch to its locker
   // instead, this is transitive
@@ -1100,8 +1097,7 @@ Context::switch_exec_helping(Context *t, Mword const *lock, Mword val)
   assert (current() == this);
 
   // only for logging
-  Context *t_orig = t;
-  (void)t_orig;
+  [[maybe_unused]] Context *t_orig = t;
 
   // we actually hold locks
   if (!t->need_help(lock, val))
@@ -1158,14 +1154,16 @@ Context::Drq_q::execute_request(Drq *r, bool local)
   Context *const self = context();
   if (0)
     printf("CPU[%2u:%p]: context=%p: handle request for %p (func=%p, arg=%p)\n",
-           cxx::int_value<Cpu_number>(current_cpu()), (void *)current(),
-           (void *)context(), (void *)r->context(), (void *)r->func, (void *)r->arg);
+           cxx::int_value<Cpu_number>(current_cpu()),
+           static_cast<void *>(current()), static_cast<void *>(context()),
+           static_cast<void *>(r->context()), reinterpret_cast<void *>(r->func),
+           r->arg);
   if (r->context() == self)
     {
       LOG_TRACE("DRQ handling", "drq", current(), Drq_log,
           l->type = Drq_log::Type::Do_reply;
           l->rq = r;
-          l->func = (void*)r->func;
+          l->func = reinterpret_cast<void *>(r->func);
           l->thread = r->context();
           l->target_cpu = current_cpu();
           l->wait = 0;
@@ -1180,7 +1178,7 @@ Context::Drq_q::execute_request(Drq *r, bool local)
       LOG_TRACE("DRQ handling", "drq", current(), Drq_log,
           l->type = Drq_log::Type::Do_request;
           l->rq = r;
-          l->func = (void*)r->func;
+          l->func = reinterpret_cast<void *>(r->func);
           l->thread = r->context();
           l->target_cpu = current_cpu();
           l->wait = 0;
@@ -1227,7 +1225,8 @@ Context::Drq_q::handle_requests()
 {
   if (0)
     printf("CPU[%2u:%p]: > Context::Drq_q::handle_requests() context=%p\n",
-           cxx::int_value<Cpu_number>(current_cpu()), (void *)current(), (void *)context());
+           cxx::int_value<Cpu_number>(current_cpu()),
+           static_cast<void *>(current()), static_cast<void *>(context()));
   bool need_resched = false;
   while (1)
     {
@@ -1244,8 +1243,10 @@ Context::Drq_q::handle_requests()
       Drq *r = static_cast<Drq*>(qi);
       if (0)
         printf("CPU[%2u:%p]: context=%p: handle request for %p (func=%p, arg=%p)\n",
-               cxx::int_value<Cpu_number>(current_cpu()), (void *)current(),
-               (void *)context(), (void *)r->context(), (void *)r->func, (void *)r->arg);
+               cxx::int_value<Cpu_number>(current_cpu()),
+               static_cast<void *>(current()), static_cast<void *>(context()),
+               static_cast<void *>(r->context()),
+               reinterpret_cast<void *>(r->func), r->arg);
       need_resched |= execute_request(r, false);
     }
 }
@@ -1439,12 +1440,13 @@ Context::drq(Drq *drq, Drq::Request_func *func, void *arg,
   if (0)
     printf("CPU[%2u:%p]: > Context::drq(this=%p, func=%p, arg=%p)\n",
            cxx::int_value<Cpu_number>(current_cpu()),
-           (void *)current(), (void *)this, (void *)func, (void *)arg);
+           static_cast<void *>(current()), static_cast<void *>(this),
+           reinterpret_cast<void *>(func), arg);
   Context *cur = current();
   LOG_TRACE("DRQ handling", "drq", cur, Drq_log,
       l->type = Drq_log::Type::Send;
       l->rq = drq;
-      l->func = (void*)func;
+      l->func = reinterpret_cast<void *>(func);
       l->thread = this;
       l->target_cpu = home_cpu();
       l->wait = wait;
@@ -1469,7 +1471,7 @@ Context::drq(Drq *drq, Drq::Request_func *func, void *arg,
   LOG_TRACE("DRQ handling", "drq", cur, Drq_log,
       l->type = Drq_log::Type::Done;
       l->rq = drq;
-      l->func = (void*)func;
+      l->func = reinterpret_cast<void *>(func);
       l->thread = this;
       l->target_cpu = home_cpu();
       l->wait = wait;
@@ -1618,7 +1620,7 @@ Context::enqueue_drq(Drq *rq)
       l->type = rq->context() == this
                                  ? Drq_log::Type::Send_reply
                                  : Drq_log::Type::Do_send;
-      l->func = (void*)rq->func;
+      l->func = reinterpret_cast<void*>(rq->func);
       l->thread = this;
       l->target_cpu = home_cpu();
       l->wait = 0;
@@ -1886,7 +1888,8 @@ Context::Pending_rqq::handle_requests(Context **mq)
   //LOG_MSG_3VAL(current(), "phq", current_cpu(), 0, 0);
   if (0)
     printf("CPU[%2u:%p]: Context::Pending_rqq::handle_requests() this=%p\n",
-           cxx::int_value<Cpu_number>(current_cpu()), (void *)current(), (void *)this);
+           cxx::int_value<Cpu_number>(current_cpu()),
+           static_cast<void *>(current()), static_cast<void *>(this));
   bool resched = false;
   Context *curr = current();
   while (1)
@@ -2088,7 +2091,7 @@ Context::enqueue_drq(Drq *rq)
       l->type = rq->context() == this
                                  ? Drq_log::Type::Send_reply
                                  : Drq_log::Type::Do_send;
-      l->func = (void*)rq->func;
+      l->func = reinterpret_cast<void*>(rq->func);
       l->thread = this;
       l->target_cpu = cpu;
       l->wait = 0;
@@ -2216,9 +2219,8 @@ Context::spill_fpu_if_owner()
 
 PUBLIC static
 void
-Context::spill_current_fpu(Cpu_number cpu)
+Context::spill_current_fpu([[maybe_unused]] Cpu_number cpu)
 {
-  (void)cpu;
   assert (cpu == current_cpu());
 
   Fpu &f = Fpu::fpu.current();
@@ -2288,9 +2290,8 @@ Context::spill_fpu_if_owner()
 
 PUBLIC static
 void
-Context::spill_current_fpu(Cpu_number cpu)
+Context::spill_current_fpu([[maybe_unused]] Cpu_number cpu)
 {
-  (void)cpu;
   assert (cpu == current_cpu());
 
   current()->spill_fpu();
@@ -2374,12 +2375,13 @@ Context::Drq_log::print(String_buffer *buf) const
     { "send", "do send", "do request", "send reply", "do reply", "done" };
 
   char const *t = "unk";
-  if ((unsigned)type < sizeof(_types)/sizeof(_types[0]))
-    t = _types[(unsigned)type];
+  if (static_cast<unsigned>(type) < cxx::size(_types))
+    t = _types[static_cast<unsigned>(type)];
 
   buf->printf("%s(%s) rq=%p to ctxt=%lx/%p (func=%p) cpu=%u",
-      t, wait ? "wait" : "no-wait", (void *)rq, Kobject_dbg::pointer_to_id(thread),
-      (void *)thread, (void *)func, cxx::int_value<Cpu_number>(target_cpu));
+      t, wait ? "wait" : "no-wait", static_cast<void const *>(rq),
+      Kobject_dbg::pointer_to_id(thread), static_cast<void *>(thread), func,
+      cxx::int_value<Cpu_number>(target_cpu));
 }
 
 // context switch

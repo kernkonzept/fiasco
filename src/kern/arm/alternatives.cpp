@@ -136,14 +136,14 @@ PUBLIC inline
 Unsigned32 *
 Alternative_insn::disabled_insn() const
 {
-  return reinterpret_cast<Unsigned32*>(reinterpret_cast<Address>(this) + disabled);
+  return offset_cast<Unsigned32 *>(this, disabled);
 }
 
 PUBLIC inline
 Unsigned32 const *
 Alternative_insn::enabled_insn() const
 {
-  return reinterpret_cast<Unsigned32*>(reinterpret_cast<Address>(this) + enabled);
+  return offset_cast<Unsigned32 *>(this, enabled);
 }
 
 
@@ -175,7 +175,8 @@ Alternative_insn::init()
       if (i->probe())
         {
           if (0)
-            printf("  replace insn at %p/%d\n", (void *)i->disabled_insn(), i->len);
+            printf("  replace insn at %p/%d\n",
+                   static_cast<void *>(i->disabled_insn()), i->len);
           i->enable();
         }
     }

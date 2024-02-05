@@ -8,16 +8,18 @@ bool dumpzero;
 #define NAME_LEN 58
 
 #if 1
-#define DUMP_CAST_OFFSET(type, subtype) 		\
-  ((unsigned long)((subtype *)((type *)(10))) - (unsigned long)10),
+#define DUMP_CAST_OFFSET(type, subtype) \
+  reinterpret_cast<unsigned long>( \
+    static_cast<subtype *>(reinterpret_cast<type *>(10UL))) \
+  - 10UL,
 #endif
 
 #define DUMP_OFFSET(prefix,name,offset) (offset), 
 
 #define DUMP_BITSHIFT(prefix, value) (value),
 
-#define GET_MEMBER_PTR(type,member) 					\
-  ((unsigned long)(&(((type *) 1)->member)) - 1)
+#define GET_MEMBER_PTR(type,member) \
+  reinterpret_cast<unsigned long>(&(reinterpret_cast<type *>(1)->member)) - 1UL
 
 #define DUMP_MEMBER1(prefix,						\
                      type1,member1,					\

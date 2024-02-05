@@ -256,7 +256,8 @@ Thread::vcpu_vgic_upcall(unsigned virq)
   Vcpu_state *vcpu = vcpu_state().access();
   assert (vcpu_exceptions_enabled(vcpu));
 
-  Trap_state *ts = static_cast<Trap_state *>((Return_frame *)regs());
+  Trap_state *ts =
+    static_cast<Trap_state *>(static_cast<Return_frame *>(regs()));
 
   // Before entering kernel mode to have original fpu state before
   // enabling FPU

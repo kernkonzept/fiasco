@@ -18,7 +18,7 @@ IMPLEMENTATION [arm || ia32 || amd64]:
 
 PRIVATE static
 bool
-Kmem::cont_mapped(Address phys_beg, Address phys_end, Address virt, bool cache)
+Kmem::cont_mapped(Address phys_beg, Address phys_end, Address virt, [[maybe_unused]] bool cache)
 {
   for (Address p = phys_beg, v = virt;
        p < phys_end && v < Mem_layout::Registers_map_end;
@@ -27,7 +27,6 @@ Kmem::cont_mapped(Address phys_beg, Address phys_end, Address virt, bool cache)
       auto e = kdir->walk(Virt_addr(v), kdir->Super_level);
       if (!e.is_valid() || p != e.page_addr())
         return false;
-      (void)cache;
       assert(   (!cache && e.attribs().type == Page::Type::Uncached())
              || (cache && e.attribs().type == Page::Type::Normal()));
     }

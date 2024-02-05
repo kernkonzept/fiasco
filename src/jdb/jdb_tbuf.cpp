@@ -246,17 +246,17 @@ Jdb_tbuf::idx(Tb_entry const *e)
 
   Tb_entry_union const *ef_next = buffer() + (_number & (_max_entries - 1));
   Tb_entry_union const *ef = static_cast<Tb_entry_union const*>(e);
-  Mword idx = (Mword) - 1;
+  Mword idx = static_cast<Mword>(-1);
 
   for (;;)
     {
       if (!ef->hidden())
-	idx++;
+        idx++;
       ef++;
       if (ef >= buffer() + _max_entries)
-	ef -= _max_entries;
+        ef -= _max_entries;
       if (ef == ef_next)
-	break;
+        break;
     }
 
   return idx;
@@ -285,8 +285,8 @@ PUBLIC static
 Mword
 Jdb_tbuf::search_to_idx(Mword nr)
 {
-  if (nr == (Mword) - 1)
-    return (Mword) - 1;
+  if (nr == static_cast<Mword>(-1))
+    return static_cast<Mword>(-1);
 
   Tb_entry *e;
 
@@ -294,20 +294,20 @@ Jdb_tbuf::search_to_idx(Mword nr)
     {
       e = search(nr);
       if (!e)
-	return (Mword) - 1;
+        return static_cast<Mword>(-1);
       return unfiltered_idx(e);
     }
 
   for (Mword idx_u = 0, idx_f = 0; (e = unfiltered_lookup(idx_u)); idx_u++)
     {
       if (e->number() == nr)
-	return e->hidden() ? (Mword) - 2 : idx_f;
+        return e->hidden() ? static_cast<Mword>(-2) : idx_f;
 
       if (!e->hidden())
-	idx_f++;
+        idx_f++;
     }
 
-  return (Mword)-1;
+  return static_cast<Mword>(-1);
 }
 
 /** Return some information about log event.

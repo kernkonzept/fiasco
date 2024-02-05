@@ -46,7 +46,7 @@ Fpu_alloc::alloc_state(Ram_quota *q, Fpu_state_ptr &s,
 
   *offset_cast<Ram_quota **>(b, quota_offset(state_size)) = q;
 
-  s.set((Fpu_state *)b);
+  s.set(static_cast<Fpu_state *>(b));
 
   return true;
 }

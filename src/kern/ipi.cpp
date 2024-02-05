@@ -32,23 +32,23 @@ IMPLEMENTATION[!mp]:
 
 IMPLEMENT inline
 void
-Ipi::init(Cpu_number cpu)
-{ (void)cpu; }
+Ipi::init(Cpu_number /* cpu */)
+{}
 
 PUBLIC static inline
 void
-Ipi::send(Message, Cpu_number from_cpu, Cpu_number to_cpu)
-{ (void)from_cpu; (void)to_cpu; }
+Ipi::send(Message, Cpu_number /* from_cpu */, Cpu_number /* to_cpu */)
+{}
 
 PUBLIC static inline
 void
-Ipi::eoi(Message, Cpu_number on_cpu)
-{ (void)on_cpu; }
+Ipi::eoi(Message, Cpu_number /* on_cpu */)
+{}
 
 PUBLIC static inline
 void
-Ipi::bcast(Message, Cpu_number from_cpu)
-{ (void)from_cpu; }
+Ipi::bcast(Message, Cpu_number /* from_cpu */)
+{}
 
 
 // ------------------------------------------------------------------------
@@ -61,13 +61,13 @@ IMPLEMENTATION[!(mp && debug)]:
 
 PUBLIC static inline
 void
-Ipi::stat_sent(Cpu_number from_cpu)
-{ (void)from_cpu; }
+Ipi::stat_sent(Cpu_number /* from_cpu */)
+{}
 
 PUBLIC static inline
 void
-Ipi::stat_received(Cpu_number on_cpu)
-{ (void)on_cpu; }
+Ipi::stat_received(Cpu_number /* on_cpu */)
+{}
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION[mp && debug]:

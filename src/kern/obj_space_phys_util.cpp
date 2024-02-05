@@ -231,8 +231,8 @@ bool
 Obj_space_phys<SPACE>::alloc_dir()
 {
   static_assert(sizeof(Cap_dir) == Config::PAGE_SIZE, "cap_dir size mismatch");
-  auto *dir = (Cap_dir*)Kmem_alloc::allocator()->q_alloc(ram_quota(),
-                                                         Config::page_size());
+  auto *dir = static_cast<Cap_dir*>(Kmem_alloc::allocator()->q_alloc(ram_quota(),
+                                                         Config::page_size()));
   if (dir)
     Mem::memset_mwords(dir, 0, Config::PAGE_SIZE / sizeof(Mword));
 
@@ -299,7 +299,7 @@ Obj_space_phys<SPACE>::caps_alloc(Cap_index virt)
   // visible! The lookup in get_cap() happens without a lock.
   Mem::mp_wmb();
 
-  Cap_table *tab = _dir->d[d_idx] = (Cap_table*)mem;
+  Cap_table *tab = _dir->d[d_idx] = static_cast<Cap_table*>(mem);
   return &tab->e[ cxx::get_lsb(cxx::int_value<Cap_index>(virt), Obj::Caps_per_page_ld2)];
 }
 
@@ -433,10 +433,10 @@ Obj_space_phys<SPACE>::lookup_local(Cap_index virt, L4_fpage::Rights *rights)
 IMPLEMENT template< typename SPACE >
 inline NEEDS[<cassert>, Obj_space_phys::get_cap]
 L4_fpage::Rights FIASCO_FLATTEN
-Obj_space_phys<SPACE>::v_delete(V_pfn virt, Page_order size,
-                                   L4_fpage::Rights page_attribs = L4_fpage::Rights::FULL())
+Obj_space_phys<SPACE>::v_delete(
+  V_pfn virt, [[maybe_unused]] Page_order size,
+  L4_fpage::Rights page_attribs = L4_fpage::Rights::FULL())
 {
-  (void)size;
   assert (size == Page_order(0));
   Entry *c = get_cap(virt, false);
 
@@ -454,10 +454,10 @@ Obj_space_phys<SPACE>::v_delete(V_pfn virt, Page_order size,
 IMPLEMENT template< typename SPACE >
 inline
 typename Obj::Insert_result FIASCO_FLATTEN
-Obj_space_phys<SPACE>::v_insert(Phys_addr phys, V_pfn const &virt, Page_order size,
-                                Attr page_attribs)
+Obj_space_phys<SPACE>::v_insert(
+  Phys_addr phys, V_pfn const &virt, [[maybe_unused]] Page_order size,
+  Attr page_attribs)
 {
-  (void)size;
   assert (size == Page_order(0));
 
   Entry *c = get_cap(virt, true);

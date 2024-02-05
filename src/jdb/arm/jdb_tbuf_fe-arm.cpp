@@ -19,7 +19,7 @@ Jdb_tbuf_fe::set_entry_status(Tb_log_table_entry const *e, unsigned char value)
 {
   Unsigned32 insn;
   check(!Jdb::peek_task(Jdb_address::kmem_addr(e->patch), &insn, sizeof(insn)));
-  insn = (insn & ~(0xffffU << 5)) | (((Unsigned32)value) << 5);
+  insn = (insn & ~(0xffffU << 5)) | (Unsigned32{value} << 5);
   check(!Jdb::poke_task(Jdb_address::kmem_addr(e->patch), &insn, sizeof(insn)));
 }
 

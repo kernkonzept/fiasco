@@ -537,7 +537,7 @@ struct L4_timeout_pair
 
   explicit L4_timeout_pair(unsigned long v) : rcv(v), snd(v >> 16) {}
 
-  Mword raw() const { return (Mword)rcv.raw() | (Mword)snd.raw() << 16; }
+  Mword raw() const { return Mword{rcv.raw()} | Mword{snd.raw()} << 16; }
 };
 
 /**
@@ -968,7 +968,7 @@ L4_timeout::microsecs_rel(Unsigned64 clock) const
   if (man() == 0)
     return 0;
   else
-   return clock + ((Unsigned64)man() << exp());
+    return clock + (Unsigned64{man()} << exp());
 }
 
 IMPLEMENT inline NEEDS[<minmax.h>]

@@ -216,7 +216,8 @@ formatter_ipc(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidlen)
           if (0)
             {
               Unsigned64 end = 0; // FIXME: to.snd.microsecs_abs (e->kclock());
-              format_timeout(buf, (Mword)(end > e->kclock() ? end-e->kclock() : 0));
+              format_timeout(buf, static_cast<Mword>(
+                                    end > e->kclock() ? end-e->kclock() : 0));
             }
           else
             buf->printf("abs-N/A");
@@ -229,7 +230,7 @@ formatter_ipc(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidlen)
           else if (to.snd.is_zero())
             buf->printf("0");
           else
-            format_timeout(buf, (Mword)to.snd.microsecs_rel(0));
+            format_timeout(buf, static_cast<Mword>(to.snd.microsecs_rel(0)));
         }
     }
   if (type & L4_obj_ref::Ipc_send
@@ -245,11 +246,13 @@ formatter_ipc(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidlen)
               buf->printf("abs=%llu,rel=", e->timeout_abs_rcv());
 
               if (e->timeout_abs_rcv() >= e->kclock())
-                format_timeout(buf, (Mword)(e->timeout_abs_rcv() - e->kclock()));
+                format_timeout(buf, static_cast<Mword>(
+                                      e->timeout_abs_rcv() - e->kclock()));
               else
                 {
                   buf->printf("-");
-                  format_timeout(buf, (Mword)(e->kclock() - e->timeout_abs_rcv()));
+                  format_timeout(buf, static_cast<Mword>(
+                                        e->kclock() - e->timeout_abs_rcv()));
                 }
             }
           else
@@ -263,7 +266,7 @@ formatter_ipc(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidlen)
           else if (to.rcv.is_zero())
             buf->printf("0");
           else
-            format_timeout(buf, (Mword)to.rcv.microsecs_rel(0));
+            format_timeout(buf, static_cast<Mword>(to.rcv.microsecs_rel(0)));
         }
     }
 }
@@ -315,7 +318,8 @@ formatter_pf(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidlen)
   buf->printf("pf:  %-*s pfa=" L4_PTR_FMT " ip=" L4_PTR_FMT " (%c%c) spc=%p (DID=",
       tidlen, tidstr, e->pfa(), e->ip(),
       PF::is_usermode_error(e->error()) ? tolower(cause) : cause,
-      PF::is_translation_error(e->error()) ? '-' : 'p', (void *)e->space());
+      PF::is_translation_error(
+        e->error()) ? '-' : 'p', static_cast<void *>(e->space()));
   Task *task = static_cast<Task*>(e->space());
   if (Kobject_dbg::is_kobj(task))
     buf->printf("%lx", task->dbg_info()->dbg_id());
@@ -384,16 +388,14 @@ void
 Tb_entry_trap::print(String_buffer *buf) const
 {
   if (!cs())
-    buf->printf("#%02x: err=%08x @ " L4_PTR_FMT,
-                (unsigned)trapno(), (unsigned)error(), ip());
+    buf->printf("#%02x: err=%08x @ " L4_PTR_FMT, trapno(), error(), ip());
   else
     buf->printf(trapno() == 14
                   ? "#%02x: err=%04x @ " L4_PTR_FMT
                     " cs=%04x sp=" L4_PTR_FMT " cr2=" L4_PTR_FMT
                   : "#%02x: err=%04x @ " L4_PTR_FMT
                     " cs=%04x sp=" L4_PTR_FMT " eax=" L4_PTR_FMT,
-                (unsigned)trapno(),
-                (unsigned)error(), ip(), (unsigned)cs(), sp(),
+                trapno(), error(), ip(), cs(), sp(),
                 trapno() == 14 ? cr2() : eax());
 }
 

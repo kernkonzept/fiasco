@@ -21,7 +21,7 @@ PUBLIC
 void
 Jdb_kern_info_memory::show() override
 {
-  ((Kmem_alloc*)Kmem_alloc::allocator())->debug_dump();
+  Kmem_alloc::allocator()->debug_dump();
 
   // Slab allocators
   for (auto const &&alloc: Kmem_slab::reap_list)

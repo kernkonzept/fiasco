@@ -288,10 +288,9 @@ Mem_space::pmem_to_phys(Address virt) const
  */
 IMPLEMENT
 bool
-Mem_space::v_lookup(Vaddr virt, Phys_addr *phys, Page_order *order,
-		    Attr *page_attribs)
+Mem_space::v_lookup(Vaddr /* virt */, Phys_addr* /* phys */,
+                    Page_order* /* order */, Attr* /* page_attribs */)
 {
-  (void)virt; (void)phys; (void)order; (void)page_attribs;
   printf("Mem_space::v_lookup: ...\n");
   return false;
 }
@@ -307,10 +306,9 @@ Mem_space::v_lookup(Vaddr virt, Phys_addr *phys, Page_order *order,
  */
 IMPLEMENT
 L4_fpage::Rights
-Mem_space::v_delete(Vaddr virt, Page_order size,
-		    L4_fpage::Rights page_attribs)
+Mem_space::v_delete(Vaddr /* virt */, Page_order /* size */,
+                    L4_fpage::Rights /* page_attribs */)
 {
-  (void)virt; (void)size; (void)page_attribs;
   printf("Mem_space::v_delete: ...\n");
   return page_attribs;
 }

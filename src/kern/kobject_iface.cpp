@@ -67,8 +67,8 @@ Kobject_iface::commit_error(Utcb const *utcb, L4_error const &e,
 
 PUBLIC virtual
 Kobject_iface *
-Kobject_iface::downgrade(unsigned long del_attribs)
-{ (void)del_attribs; return this; }
+Kobject_iface::downgrade(unsigned long /* del_attribs */)
+{ return this; }
 
 PUBLIC static
 void
@@ -80,7 +80,7 @@ Kobject_iface::set_factory(long label, Factory_func *f)
 
   if (factory[-label])
     panic("error: factory for protocol/label %ld already registered: %p\n",
-          label, (void *)factory[-label]);
+          label, reinterpret_cast<void *>(factory[-label]));
 
   factory[-label] = f;
 }

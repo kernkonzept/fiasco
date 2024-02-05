@@ -58,7 +58,8 @@ Jdb_log_list_hdl::invoke(Kobject_common *, Syscall_frame *f, Utcb *utcb) overrid
               }
 
             char nbuf[32];
-            strncpy(nbuf, (char const *)&utcb->values[2], sizeof(nbuf));
+            strncpy(nbuf, reinterpret_cast<char const *>(&utcb->values[2]),
+                    sizeof(nbuf));
             nbuf[sizeof(nbuf) - 1] = 0;
 
             Tb_log_table_entry *r;
@@ -78,7 +79,7 @@ Jdb_log_list_hdl::invoke(Kobject_common *, Syscall_frame *f, Utcb *utcb) overrid
               }
 
             Tb_log_table_entry *e = _jdb_log_table + idx;
-	    char *dst = (char *)&utcb->values[0];
+            char *dst = reinterpret_cast<char *>(&utcb->values[0]);
             unsigned sz = strlen(e->name) + 1;
             sz += strlen(e->name + sz) + 1;
             if (sz > sizeof(utcb->values))
@@ -100,7 +101,8 @@ Jdb_log_list_hdl::invoke(Kobject_common *, Syscall_frame *f, Utcb *utcb) overrid
 
             bool on = utcb->values[1];
             char nbuf[32];
-            strncpy(nbuf, (char const *)&utcb->values[2], sizeof(nbuf));
+            strncpy(nbuf, reinterpret_cast<char const *>(&utcb->values[2]),
+                    sizeof(nbuf));
             nbuf[sizeof(nbuf) - 1] = 0;
 
             Tb_log_table_entry *r = _jdb_log_table;

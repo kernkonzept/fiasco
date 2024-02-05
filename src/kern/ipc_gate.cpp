@@ -200,7 +200,7 @@ Ipc_gate::create(Ram_quota *q, Thread *t, Mword id)
 PUBLIC
 void Ipc_gate_obj::operator delete (void *_f)
 {
-  Ipc_gate_obj *f = (Ipc_gate_obj*)_f;
+  Ipc_gate_obj *f = static_cast<Ipc_gate_obj*>(_f);
   Ram_quota *p = f->_quota;
   asm ("" : "=m"(*f));
 

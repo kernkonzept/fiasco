@@ -50,15 +50,15 @@ Jdb_tcb::print_entry_frame_regs(Thread *t)
   printf("psr=%016lx tpidr: urw=%016lx uro=%016lx\n"
          " pc=%s%016lx\033[m %csp=%016lx x30=%016lx\n",
          ef->psr, t->tpidrurw(), t->tpidruro(), Jdb::esc_iret,
-         ef->ip(), user ? 'u' : 'k', user ? ef->sp() : (Mword)(ef + 1),
-         ef->r[30]);
+         ef->ip(), user ? 'u' : 'k',
+         user ? ef->sp() : reinterpret_cast<Mword>(ef + 1), ef->r[30]);
 }
 
 IMPLEMENT
 void
 Jdb_tcb::info_thread_state(Thread *t)
 {
-  Jdb_tcb_ptr current((Address)t->get_kernel_sp());
+  Jdb_tcb_ptr current(reinterpret_cast<Address>(t->get_kernel_sp()));
 
   printf("PC=%s%016lx\033[m USP=%016lx\n",
          Jdb::esc_emph, current.top_value(-2),  current.top_value(-3));

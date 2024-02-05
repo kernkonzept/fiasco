@@ -81,5 +81,5 @@ PUBLIC static inline ALWAYS_INLINE
 Mword
 Mem_layout::in_kernel_code (Address a)
 {
-  return a >= (Address)&start && a < (Address)&ecode;
+  return a >= reinterpret_cast<Address>(&start) && a < reinterpret_cast<Address>(&ecode);
 }

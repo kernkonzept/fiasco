@@ -293,7 +293,7 @@ Irq_sender::destroy(Kobject ***rl) override
   // Must be done _after_ returning from Irq::destroy() to make sure that the
   // existence lock was finally released by the last owner (the existence lock
   // was already invalidated before) -- see also Irq_sender::alloc().
-  (void)free(rl);
+  static_cast<void>(free(rl));
 }
 
 
@@ -383,7 +383,7 @@ PRIVATE static
 Context::Drq::Result
 Irq_sender::handle_remote_hit(Context::Drq *, Context *target, void *arg)
 {
-  Irq_sender *irq = (Irq_sender*)arg;
+  Irq_sender *irq = static_cast<Irq_sender*>(arg);
   irq->set_cpu(current_cpu());
   auto t = access_once(&irq->_irq_thread);
 

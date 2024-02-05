@@ -44,7 +44,7 @@ int
 close(int fd)
 {
   assert(fd == 6);
-  (void)fd;
+  static_cast<void>(fd);
 
   Kconsole::console()->end_exclusive(Console::GZIP);
 

@@ -86,7 +86,7 @@ PUBLIC static inline
 bool
 Mem_space::is_full_flush(L4_fpage::Rights rights)
 {
-  return (bool)(rights & L4_fpage::Rights::R());
+  return static_cast<bool>(rights & L4_fpage::Rights::R());
 }
 
 IMPLEMENT inline
@@ -230,10 +230,9 @@ Mem_space::v_lookup(Vaddr virt, Phys_addr *phys,
 
 IMPLEMENT
 L4_fpage::Rights
-Mem_space::v_delete(Vaddr virt, Page_order size,
+Mem_space::v_delete(Vaddr virt, [[maybe_unused]] Page_order size,
                     L4_fpage::Rights page_attribs)
 {
-  (void) size;
   assert (cxx::is_zero(cxx::get_lsb(Virt_addr(virt), size)));
   auto i = _dir->walk(virt);
 
@@ -289,7 +288,8 @@ Mem_space::initialize()
     return false;
 
   _dir->clear(Pte_ptr::need_cache_write_back(false));
-  _dir_phys = Phys_mem_addr(Kmem::kdir->virt_to_phys((Address)_dir));
+  _dir_phys =
+    Phys_mem_addr(Kmem::kdir->virt_to_phys(reinterpret_cast<Address>(_dir)));
 
   return true;
 }
@@ -299,7 +299,8 @@ Mem_space::Mem_space(Ram_quota *q, Dir_type* pdir)
   : _quota(q), _dir (pdir)
 {
   _current.cpu(Cpu_number::boot_cpu()) = this;
-  _dir_phys = Phys_mem_addr(Kmem::kdir->virt_to_phys((Address)_dir));
+  _dir_phys =
+    Phys_mem_addr(Kmem::kdir->virt_to_phys(reinterpret_cast<Address>(_dir)));
 }
 
 PUBLIC static inline

@@ -49,7 +49,7 @@ Kip::debug_print_memory() const
     {
       if (m.type() != Mem_desc::Undefined)
         {
-          printf(" %2d:", ((int)mem_descs_a().index(m)) + 1);
+          printf(" %2u:", mem_descs_a().index(m) + 1);
           m.dump();
           puts("");
         }
@@ -74,8 +74,9 @@ IMPLEMENT
 void Kip::print() const
 {
   Cpu_time c = clock();
-  printf("KIP @ %p\n", (void *)this);
-  printf("magic: %.4s  version: 0x%lx\n", (char*)&magic, version);
+  printf("KIP @ %p\n", static_cast<void const *>(this));
+  printf("magic: %.4s  version: 0x%lx\n",
+         reinterpret_cast<char const *>(&magic), version);
   printf("clock: " L4_X64_FMT " (%llu)\n", c, c);
   printf("uptime: %llu day(s), %llu hour(s), %llu min(s), %llu sec(s)\n",
           c / (1000000ULL * 60 * 60 * 24),
@@ -94,8 +95,8 @@ void Kip::print() const
   debug_print_memory();
   debug_print_syscalls();
 
-  printf("user_ptr: %p   vhw_offset: " L4_MWORD_FMT "\n",
-         (void*)user_ptr, vhw_offset);
+  printf("user_ptr: " L4_PTR_FMT "   vhw_offset: " L4_MWORD_FMT "\n",
+         user_ptr, vhw_offset);
 
   debug_print_features();
 }

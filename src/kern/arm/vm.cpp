@@ -115,9 +115,8 @@ Vm::map_max_address() const
 
 PUBLIC inline
 void *
-Vm::operator new(size_t size, void *p) noexcept
+Vm::operator new([[maybe_unused]] size_t size, void *p) noexcept
 {
-  (void)size;
   assert (size == sizeof(Vm));
   return p;
 }
@@ -138,9 +137,8 @@ IMPLEMENTATION [arm && arm_em_tz]:
 
 PUBLIC
 int
-Vm::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode)
+Vm::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, [[maybe_unused]] bool user_mode)
 {
-  (void)user_mode;
   assert(user_mode);
 
   assert(cpu_lock.test());

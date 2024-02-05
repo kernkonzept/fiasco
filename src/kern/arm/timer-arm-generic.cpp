@@ -64,8 +64,9 @@ void Timer::init(Cpu_number cpu)
   if (cpu == Cpu_number::boot_cpu())
     {
       _freq0 = frequency();
-      _interval = (Unsigned64)_freq0 * Config::Scheduler_granularity / 1000000;
-      printf("ARM generic timer: freq=%ld interval=%ld cnt=%lld\n", _freq0, _interval, Gtimer::counter());
+      _interval = Unsigned64{_freq0} * Config::Scheduler_granularity / 1000000;
+      printf("ARM generic timer: freq=%ld interval=%ld cnt=%lld\n",
+             _freq0, _interval, Gtimer::counter());
       assert(_freq0);
 
       freq_to_scaler_shift(1000000000, _freq0,
@@ -125,7 +126,7 @@ IMPLEMENT_OVERRIDE
 void
 Timer::switch_freq_jdb()
 {
-  if (cas(&_using_interval_jdb, (Mword)false, (Mword)true))
+  if (cas(&_using_interval_jdb, Mword{false}, Mword{true}))
     _interval *= 10;
 }
 
@@ -133,6 +134,6 @@ IMPLEMENT_OVERRIDE
 void
 Timer::switch_freq_system()
 {
-  if (cas(&_using_interval_jdb, (Mword)true, (Mword)false))
+  if (cas(&_using_interval_jdb, Mword{true}, Mword{false}))
     _interval /= 10;
 }

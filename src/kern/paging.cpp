@@ -128,7 +128,7 @@ inline Pdir_alloc_simple<ALLOC> pdir_alloc(ALLOC *a)
 IMPLEMENT inline NEEDS[PF::is_usermode_error]
 Mword PF::pc_to_msgword1(Address pc, Mword error)
 {
-  return is_usermode_error(error) ? pc : (Mword)-1;
+  return is_usermode_error(error) ? pc : Invalid_address;
 }
 
 //---------------------------------------------------------------------------

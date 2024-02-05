@@ -23,8 +23,8 @@ Push_console::getchar(bool /*blocking*/) override
   if (_out != _in)
     {
       int c = _buffer[_out++];
-      if (_out >= (int)sizeof(_buffer))
-	_out = 0;
+      if (_out >= int{sizeof(_buffer)})
+        _out = 0;
 
       return c == '_' ? KEY_RETURN : c;
     }
@@ -51,7 +51,7 @@ void
 Push_console::push(char c)
 {
   int _ni = _in + 1;
-  if (_ni >= (int)sizeof(_buffer))
+  if (_ni >= int{sizeof(_buffer)})
     _ni = 0;
 
   if (_ni == _out) // buffer full

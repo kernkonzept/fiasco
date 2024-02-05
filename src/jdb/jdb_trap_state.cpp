@@ -43,7 +43,7 @@ PUBLIC
 Jdb_module::Action_code
 Jdb_trap_state_module::action (int cmd, void *&argbuf, char const *&fmt, int &next) override
 {
-  char const *c = (char const *)argbuf;
+  char const *c = static_cast<char const *>(argbuf);
   static Cpu_number cpu;
 
   if (cmd != 0)

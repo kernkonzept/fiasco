@@ -88,7 +88,7 @@ Factory::create_factory(Mword max)
 PUBLIC
 void Factory::operator delete (void *_f)
 {
-  Factory *f = (Factory*)_f;
+  Factory *f = static_cast<Factory*>(_f);
   LOG_TRACE("Factory delete", "fa del", ::current(), Tb_entry_empty, {});
 
   Ram_quota *p = f->parent();
@@ -164,8 +164,9 @@ Factory::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,
 
   auto cpu_lock_guard = lock_guard<Lock_guard_inverse_policy>(cpu_lock);
 
-  new_o = Kobject_iface::manufacture((long)access_once(utcb->values + 0),
-                                     this, c_space, f->tag(), utcb, &err);
+  new_o =
+    Kobject_iface::manufacture(static_cast<long>(access_once(utcb->values + 0)),
+                               this, c_space, f->tag(), utcb, &err);
 
   LOG_TRACE("Kobject create", "new", ::current(), Log_entry,
     l->op = utcb->values[0];
@@ -235,8 +236,7 @@ Factory::Log_entry::print(String_buffer *buf) const
   { /*   0 */ "gate", "irq", 0, 0, 0, 0, 0, 0,
     /*  -8 */ 0, 0, 0, "task", "thread", 0, 0, "factory",
     /* -16 */ "vm", "dmaspace", "irqsender", 0, "sem" };
-  char const *_op = -op < (int)(sizeof(ops) / sizeof(ops[0]))
-    ? ops[-op] : "invalid op";
+  char const *_op = -op < int{cxx::size(ops)} ? ops[-op] : "invalid op";
   if (!_op)
     _op = "(nan)";
 

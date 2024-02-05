@@ -32,9 +32,8 @@ IMPLEMENTATION [arm && exynos_mct && !exynos_extgic]: // ------------------
 
 PRIVATE static
 bool
-Timer_tick::alloc_irq_4412_timer_tick(Cpu_number cpu, unsigned irq)
+Timer_tick::alloc_irq_4412_timer_tick(Cpu_number /* cpu */, unsigned irq)
 {
-  (void)cpu;
   return allocate_irq(_timer_ticks.cpu(Cpu_number::boot_cpu()), irq);
 }
 

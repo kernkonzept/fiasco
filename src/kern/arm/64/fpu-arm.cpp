@@ -263,8 +263,8 @@ Fpu_state_simd::restore() const
                "ldp     q30, q31, [%[s], #16 * 30]        \n"
                "msr     fpcr, %[fpcr]                     \n"
                "msr     fpsr, %[fpsr]                     \n"
-               : : [fpcr] "r" ((Mword)_fpcr),
-                   [fpsr] "r" ((Mword)_fpsr),
+               : : [fpcr] "r" (Mword{_fpcr}),
+                   [fpsr] "r" (Mword{_fpsr}),
                    [s] "r" (_state),
                    "m" (_state));
 }

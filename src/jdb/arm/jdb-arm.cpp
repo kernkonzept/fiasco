@@ -258,7 +258,8 @@ Jdb::init()
   Jdb::jdb_enter.add(&enter);
   Jdb::jdb_leave.add(&leave);
 
-  Thread::nested_trap_handler = (Trap_state::Handler)enter_jdb;
+  Thread::nested_trap_handler =
+    reinterpret_cast<Trap_state::Handler>(enter_jdb);
 
   Kconsole::console()->register_console(push_cons());
 }
@@ -285,19 +286,19 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
     {
       phys = Address(addr.space()->virt_to_phys_s0(addr.virt()));
 
-      if (phys == (Address)-1)
+      if (phys == Invalid_address)
         return 0;
     }
   else
     phys = addr.phys();
 
   unsigned long kaddr = Mem_layout::phys_to_pmem(phys);
-  if (kaddr != (Address)-1)
+  if (kaddr != Invalid_address)
     {
       auto pte = Kmem::kdir->walk(Virt_addr(kaddr));
       if (pte.is_valid()
           && (!write || pte.attribs().rights & Page::Rights::W()))
-        return (unsigned char *)kaddr;
+        return reinterpret_cast<unsigned char *>(kaddr);
     }
 
   Mem_unit::flush_vdcache();
@@ -330,8 +331,8 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
       Mem_unit::tlb_flush_kernel(Mem_layout::Jdb_tmp_map_area);
     }
 
-  return (unsigned char *)(Mem_layout::Jdb_tmp_map_area
-                           + Super_pg::offset(phys));
+  return reinterpret_cast<unsigned char *>(Mem_layout::Jdb_tmp_map_area
+                                           + Super_pg::offset(phys));
 }
 
 PUBLIC static

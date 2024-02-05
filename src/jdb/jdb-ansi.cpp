@@ -33,7 +33,7 @@ PUBLIC static inline
 void
 Jdb::cursor( Direction d, unsigned n = 1)
 {
-  printf("\033[%u%c", n, (char)d);
+  printf("\033[%u%c", n, static_cast<char>(d));
 }
 
 

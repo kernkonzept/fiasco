@@ -67,9 +67,8 @@ Mem_unit::tlb_flush()
  */
 PUBLIC static inline
 void
-Mem_unit::tlb_flush(Address addr)
+Mem_unit::tlb_flush(Address /* addr */)
 {
-  (void)addr;
 }
 
 PUBLIC static inline

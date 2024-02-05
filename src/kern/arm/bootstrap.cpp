@@ -55,21 +55,25 @@ struct Elf
   elf_dynamic_section()
   {
     extern char _DYNAMIC[] __attribute__ ((visibility ("hidden")));
-    return (unsigned long)&_DYNAMIC[0];
+    return reinterpret_cast<unsigned long>(&_DYNAMIC[0]);
   }
 
   static inline void
   relocate(unsigned long load_addr)
   {
-    DYN *dyn = (DYN *)elf_dynamic_section();
+    DYN *dyn = reinterpret_cast<DYN *>(elf_dynamic_section());
     unsigned long relcnt = 0;
     RELOC *rel = 0;
 
     for (int i = 0; dyn[i].tag != 0; i++)
       switch (dyn[i].tag)
         {
-        case DYN::Reloc:       rel = (RELOC*)(dyn[i].ptr + load_addr); break;
-        case DYN::Reloc_count: relcnt = dyn[i].val; break;
+        case DYN::Reloc:
+          rel = reinterpret_cast<RELOC*>(dyn[i].ptr + load_addr);
+          break;
+        case DYN::Reloc_count:
+          relcnt = dyn[i].val;
+          break;
         }
 
     if (rel && relcnt)
@@ -171,10 +175,10 @@ Bootstrap::map_page_size()
 { return Virt_addr(1) << map_page_order(); }
 
 static inline void
-Bootstrap::map_memory(void volatile *pd, Virt_addr va, Phys_addr pa,
+Bootstrap::map_memory(void *pd, Virt_addr va, Phys_addr pa,
                       bool local)
 {
-  Phys_addr *const p = (Phys_addr*)pd;
+  Phys_addr *const p = static_cast<Phys_addr *>(pd);
   p[cxx::int_value<Virt_addr>(va >> map_page_order())] = pt_entry(pa, local);
 }
 
@@ -204,7 +208,7 @@ PUBLIC static inline ALWAYS_INLINE
 void *
 Bootstrap::kern_to_boot(void *a)
 {
-  return (void *)((Mword)a + Bootstrap::Virt_ofs + load_addr);
+  return offset_cast<void *>(a, Bootstrap::Virt_ofs + load_addr);
 }
 
 extern "C" void bootstrap_main(unsigned long load_addr)

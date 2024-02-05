@@ -63,8 +63,8 @@ PUBLIC
 Jdb_ptab_base::Jdb_ptab_base(void *pt_base = 0, Space *task = 0,
                              unsigned char pt_level = 0,
                              Address virt_base = 0, int level = 0)
-: _base((Address)pt_base), _virt_base(virt_base), _level(level),
-  _task(task), _pt_level(pt_level), _dump_raw(0)
+: _base(reinterpret_cast<Address>(pt_base)), _virt_base(virt_base),
+  _level(level), _task(task), _pt_level(pt_level), _dump_raw(0)
 {
 }
 
@@ -191,14 +191,15 @@ PROTECTED inline
 void *
 Jdb_ptab_base::pte(int index) const
 {
-  return (void *)(_base + index * pdir_levels_entry_size(_pt_level));
+  return reinterpret_cast<void *>(
+           _base + index * pdir_levels_entry_size(_pt_level));
 }
 
 PRIVATE
 void
 Jdb_ptab_base::print_head(void *entry) const
 {
-  printf(L4_PTR_FMT, (Address)entry);
+  printf(L4_PTR_FMT, reinterpret_cast<Address>(entry));
 }
 
 PUBLIC
@@ -269,7 +270,7 @@ void *
 Jdb_ptab_pdir<T>::entry_virt(T_pte_ptr const &entry) const
 {
   Address phys = entry_phys(entry);
-  return (void*)Mem_layout::phys_to_pmem(phys);
+  return reinterpret_cast<void*>(Mem_layout::phys_to_pmem(phys));
 }
 
 PRIVATE template< typename T >
@@ -318,7 +319,7 @@ PRIVATE template< typename T >
 Address
 Jdb_ptab_pdir<T>::disp_virt(int idx) const override
 {
-  typename T::Va e((Mword)idx << T::lsb_for_level(_pt_level));
+  typename T::Va e(static_cast<Mword>(idx) << T::lsb_for_level(_pt_level));
   return cxx::int_value<Virt_addr>(e) + _virt_base;
 }
 

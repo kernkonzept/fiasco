@@ -175,7 +175,7 @@ Mem_desc::type(Mem_type t)
 
 PUBLIC inline ALWAYS_INLINE
 Mem_desc::Mem_type Mem_desc::type() const
-{ return (Mem_type)(_l & 0x0f); }
+{ return static_cast<Mem_type>(_l & 0x0f); }
 
 PUBLIC inline
 unsigned Mem_desc::ext_type() const
@@ -197,11 +197,11 @@ bool Mem_desc::valid() const
 
 PRIVATE inline ALWAYS_INLINE
 Mem_desc *Kip::mem_descs()
-{ return (Mem_desc*)(((Address)this) + (_mem_info >> (MWORD_BITS/2))); }
+{ return offset_cast<Mem_desc*>(this, _mem_info >> (MWORD_BITS/2)); }
 
 PRIVATE inline
 Mem_desc const *Kip::mem_descs() const
-{ return (Mem_desc const *)(((Address)this) + (_mem_info >> (MWORD_BITS/2))); }
+{ return offset_cast<Mem_desc const *>(this, _mem_info >> (MWORD_BITS/2)); }
 
 PUBLIC inline ALWAYS_INLINE
 unsigned Kip::num_mem_descs() const

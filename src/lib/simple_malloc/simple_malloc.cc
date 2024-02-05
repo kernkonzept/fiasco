@@ -19,11 +19,11 @@
 #include "static_init.h"
 
 #ifndef MAP_FAILED
-#define MAP_FAILED ((void*)-1)
+#define MAP_FAILED (reinterpret_cast<void*>(-1))
 #endif
 
 #ifndef NULL
-#define NULL ((void*)0)
+#define NULL (static_cast<void*>(0))
 #endif
 
 typedef struct __alloc_t {
@@ -31,8 +31,8 @@ typedef struct __alloc_t {
   size_t size;
 } __alloc_t;
 
-#define BLOCK_START(b)	(((__alloc_t*)(b))-1)
-#define BLOCK_RET(b)	(((char*)(b))+sizeof(__alloc_t))
+#define BLOCK_START(b)	(static_cast<__alloc_t*>(b)-1)
+#define BLOCK_RET(b)	((static_cast<char*>(b))+sizeof(__alloc_t))
 
 #define MEM_BLOCK_SIZE	PAGE_SIZE
 #define PAGE_SIZE	4096U
@@ -82,7 +82,7 @@ simple_munmap(void *ptr, size_t size)
   Address i, j;
 
   size = PAGE_ALIGN(size);
-  i = ((Address)ptr - (Address)linear_mem) / PAGE_SIZE;
+  i = (reinterpret_cast<Address>(ptr) - reinterpret_cast<Address>(linear_mem)) / PAGE_SIZE;
   j = (1<<(size/PAGE_SIZE))-1;
   linear_mem_free |= j<<i;
 }
@@ -95,7 +95,8 @@ simple_mremap(void *ptr, size_t old_size, size_t new_size)
 
   old_size = PAGE_ALIGN(old_size);
   new_size = PAGE_ALIGN(new_size);
-  i = ((Address)ptr - (Address)linear_mem) / PAGE_SIZE;
+  i = (reinterpret_cast<Address>(ptr) - reinterpret_cast<Address>(linear_mem))
+      / PAGE_SIZE;
   j = (1<<(old_size/PAGE_SIZE))-1;
   k = (1<<(new_size/PAGE_SIZE))-1;
 
@@ -131,7 +132,7 @@ static void
 simple_malloc_init(void)
 {
   const size_t size = 16*4*1024; // must be less than 32 pages!
-  char *heap = (char*)Kmem_alloc::allocator()->alloc(Bytes(size));
+  char *heap = static_cast<char*>(Kmem_alloc::allocator()->alloc(Bytes(size)));
   if (!heap)
     panic("No memory for simple_malloc heap");
   linear_mem_pages = size / PAGE_SIZE;
@@ -187,7 +188,7 @@ __small_malloc(size_t _size)
   if (ptr==0)
     {
       int i,nr;
-      ptr=(__alloc_t*)simple_mmap(MEM_BLOCK_SIZE);
+      ptr=static_cast<__alloc_t*>(simple_mmap(MEM_BLOCK_SIZE));
       if (ptr==MAP_FAILED)
 	return MAP_FAILED;
 
@@ -195,10 +196,10 @@ __small_malloc(size_t _size)
 
       nr=__SMALL_NR(size)-1;
       for (i=0;i<nr;i++)
-	{
-	  ptr->next=(__alloc_t*)(((char*)ptr)+size);
-	  ptr=ptr->next;
-	}
+        {
+          ptr->next = offset_cast<__alloc_t*>(ptr, size);
+          ptr=ptr->next;
+        }
       ptr->next=0;
 
       ptr=__small_mem[idx];
@@ -253,7 +254,7 @@ simple_malloc(size_t size)
     }
   if (ptr==MAP_FAILED)
     return 0;
-  ((__alloc_t*)ptr)->size=need;
+  (static_cast<__alloc_t*>(ptr))->size=need;
 
   // play safe: this is required by cs_mem_malloc()!
   memset(BLOCK_RET(ptr), 0, size - sizeof(__alloc_t));
@@ -305,7 +306,7 @@ simple_realloc(void* ptr, size_t _size)
 		    return 0;
 		  else
 		    {
-		      ((__alloc_t*)foo)->size=size;
+		      (static_cast<__alloc_t*>(foo))->size=size;
 		      return BLOCK_RET(foo);
 		    }
 		}

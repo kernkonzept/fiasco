@@ -152,11 +152,11 @@ Jdb_ptab_pdir<T>::is_cached(T_pte_ptr const &entry) const
   enum
   {
     Cache_mask = cxx::is_same_v<T, Kpdir>
-                   ? (Mword)Kernel_page_attr::Cache_mask
-                   : (Mword)Page::Cache_mask,
+                   ? Mword{Kernel_page_attr::Cache_mask}
+                   : Mword{Page::Cache_mask},
     CACHEABLE  = cxx::is_same_v<T, Kpdir>
-                   ? (Mword)Kernel_page_attr::CACHEABLE
-                   : (Mword)Page::CACHEABLE
+                   ? Mword{Kernel_page_attr::CACHEABLE}
+                   : Mword{Page::CACHEABLE}
   };
   if (!entry.is_leaf())
     return true;

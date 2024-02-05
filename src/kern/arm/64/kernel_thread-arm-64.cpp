@@ -51,7 +51,7 @@ Kernel_thread::boot_app_cpus()
 
   _tmp->sctlr = Proc::sctlr();
   _tmp->mair  = Page::Mair0_prrr_bits;
-  _tmp->ttbr_kern = Kmem::kdir->virt_to_phys((Address)Kmem::kdir);
+  _tmp->ttbr_kern = Kmem::kdir->virt_to_phys(reinterpret_cast<Address>(Kmem::kdir));
   if (!Proc::Is_hyp)
     _tmp->ttbr_usr = cxx::int_value<Phys_mem_addr>(Kernel_task::kernel_task()->dir_phys());
 
@@ -61,5 +61,6 @@ Kernel_thread::boot_app_cpus()
   asm volatile ("dsb sy" : : : "memory");
   Mem_unit::clean_dcache();
 
-  Platform_control::boot_ap_cpus(Kmem::kdir->virt_to_phys((Address)_tramp_mp_entry));
+  Platform_control::boot_ap_cpus(
+    Kmem::kdir->virt_to_phys(reinterpret_cast<Address>(_tramp_mp_entry)));
 }

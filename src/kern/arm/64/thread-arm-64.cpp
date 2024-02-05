@@ -144,7 +144,7 @@ Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
   if (EXPECT_FALSE(tag.words() < (sizeof(Trex) / sizeof(Mword))))
     return true;
 
-  Trap_state *ts = (Trap_state*)rcv->_utcb_handler;
+  Trap_state *ts = static_cast<Trap_state*>(rcv->_utcb_handler);
   Utcb *snd_utcb = snd->utcb().access();
 
   Trex const *r = reinterpret_cast<Trex const *>(snd_utcb->values);
@@ -170,7 +170,7 @@ bool FIASCO_WARN_RESULT
 Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
                         L4_fpage::Rights rights)
 {
-  Trap_state *ts = (Trap_state*)snd->_utcb_handler;
+  Trap_state *ts = static_cast<Trap_state*>(snd->_utcb_handler);
 
   {
     auto guard = lock_guard(cpu_lock);
@@ -405,7 +405,7 @@ Thread::pagein_tcb_request(Return_frame *regs)
   assert (regs->esr.il());        // must be a 32bit wide insn
   // we assume the instruction is a ldr with the target register
   // in the lower 5 bits
-  unsigned rt = *(Mword*)regs->pc & 0x1f;
+  unsigned rt = *reinterpret_cast<Mword*>(regs->pc) & 0x1f;
 
   // skip faulting instruction
   regs->pc += 4;

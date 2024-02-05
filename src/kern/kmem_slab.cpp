@@ -236,7 +236,6 @@ Kmem_slab::block_alloc(unsigned long size, unsigned long) override
   assert (size >= Buddy_alloc::Min_size);
   assert (size <= Buddy_alloc::Max_size);
   assert (!(size & (size - 1)));
-  (void)size;
   return Kmem_alloc::allocator()->alloc(Bytes(size));
 }
 

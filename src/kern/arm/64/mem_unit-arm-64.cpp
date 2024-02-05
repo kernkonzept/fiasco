@@ -25,7 +25,7 @@ void Mem_unit::tlb_flush(void *va, unsigned long asid)
 
   Mem::dsbst();
   asm volatile("tlbi vae1is, %0"
-               : : "r" (((unsigned long)va >> 12)
+               : : "r" ((reinterpret_cast<unsigned long>(va) >> 12)
                         | (asid << 48)) : "memory");
   Mem::dsb();
 }
@@ -99,7 +99,7 @@ void Mem_unit::tlb_flush(void *va, unsigned long asid)
       :
       [vttbr] "=&r" (vttbr)
       :
-      [ipa] "r" ((unsigned long)va >> 12),
+      [ipa] "r" (reinterpret_cast<unsigned long>(va) >> 12),
       [asid] "r" (asid << 48)
       :
       "memory");
@@ -130,15 +130,16 @@ PUBLIC static inline
 void
 Mem_unit::make_coherent_to_pou(void const *start, size_t size)
 {
-  unsigned long end = (unsigned long)start + size;
+  unsigned long start_addr = reinterpret_cast<unsigned long>(start);
+  unsigned long end_addr = start_addr + size;
   unsigned long is = icache_line_size(), ds = dcache_line_size();
 
-  for (auto i = (unsigned long)start & ~(ds - 1U); i < end; i += ds)
+  for (auto i = start_addr & ~(ds - 1U); i < end_addr; i += ds)
     __asm__ __volatile__ ("dc cvau, %0" : : "r"(i));
 
   Mem::dsb(); // make sure data cache changes are visible to instruction cache
 
-  for (auto i = (unsigned long)start & ~(is - 1U); i < end; i += is)
+  for (auto i = start_addr & ~(is - 1U); i < end_addr; i += is)
     __asm__ __volatile__ ("ic ivau, %0" : : "r"(i));
 
   Mem::dsb(); // ensure completion of instruction cache invalidation

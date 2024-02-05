@@ -201,7 +201,7 @@ Jdb_disasm::show(Jdb_address virt, int level)
 #if defined(CONFIG_IA32) || defined(CONFIG_AMD64)
 			   syntax_mode[(int)show_intel_syntax]
 #elif defined(CONFIG_ARM)
-                           arm_thumb[(int)show_arm_thumb]
+                           arm_thumb[int{show_arm_thumb}]
 #else
                            ""
 #endif

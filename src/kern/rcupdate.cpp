@@ -181,7 +181,7 @@ Rcu::Log_rcu::print(String_buffer *buf) const
 {
   char const *events[] = { "call", "process"};
   buf->printf("rcu-%s (cpu=%u) item=%p", events[event],
-              cxx::int_value<Cpu_number>(cpu), (void *)item);
+              cxx::int_value<Cpu_number>(cpu), static_cast<void *>(item));
 }
 
 
@@ -389,7 +389,7 @@ Rcu::call(Rcu_item *i, bool (*cb)(Rcu_item *))
       l->cpu   = current_cpu();
       l->event = Rcu_call;
       l->item = i;
-      l->cb = (void*)cb);
+      l->cb = reinterpret_cast<void*>(cb));
 
   auto guard = lock_guard(cpu_lock);
 

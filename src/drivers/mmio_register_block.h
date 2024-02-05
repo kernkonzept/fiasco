@@ -248,12 +248,12 @@ struct Register_block : Mmio_register_block
   /** Access register with default width at `offset`. */
   Mmio_register_block::Reg<Default_width>
   operator [] (offset_type offset) const
-  { return this->template r<Default_width>((Address)offset); }
+  { return this->template r<Default_width>(static_cast<Address>(offset)); }
 
   template<typename REG>
   Mmio_register_block::Reg<Register_block_access_size<REG>::value>
   operator [] (REG reg_offset) const
-  { return this->template r<Register_block_access_size<REG>::value>((Address)reg_offset); }
+  { return this->template r<Register_block_access_size<REG>::value>(Address{reg_offset}); }
 };
 
 /**
@@ -271,5 +271,5 @@ struct Register_block<REG_WIDTH, void> : Mmio_register_block
   template<typename REG>
   Mmio_register_block::Reg<Register_block_access_size<REG>::value>
   operator [] (REG reg_offset) const
-  { return this->template r<Register_block_access_size<REG>::value>((Address)reg_offset); }
+  { return this->template r<Register_block_access_size<REG>::value>(Address{reg_offset}); }
 };

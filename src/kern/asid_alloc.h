@@ -37,9 +37,9 @@ public:
 
   enum
   {
-    Generation_inc = ((ASID_TYPE)1) << ASID_BITS,
+    Generation_inc = ASID_TYPE{1} << ASID_BITS,
     Mask           = Generation_inc - 1,
-    Invalid        = (ASID_TYPE)(~0ULL),
+    Invalid        = static_cast<ASID_TYPE>(-1),
   };
 
   Value_type a;
@@ -49,10 +49,7 @@ public:
 
   bool is_valid() const
   {
-    if (sizeof(a) == sizeof(Mword))
-      return a != Invalid;
-    else
-      return ((Unsigned32)(a >> 32) & (Unsigned32)a) != Unsigned32(~0);
+    return a != Invalid;
   }
 
   bool is_invalid_generation() const

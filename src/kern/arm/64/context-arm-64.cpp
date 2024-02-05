@@ -11,8 +11,8 @@ Context::prepare_switch_to(void (*fptr)())
 PRIVATE inline void
 Context::arm_switch_gp_regs(Context *t)
 {
-  register Mword _old_this asm("x1") = (Mword)this;
-  register Mword _new_this asm("x0") = (Mword)t;
+  register Mword _old_this asm("x1") = reinterpret_cast<Mword>(this);
+  register Mword _new_this asm("x0") = reinterpret_cast<Mword>(t);
   register unsigned long dummy1 asm ("x9");
   register unsigned long dummy2 asm ("x10");
 

@@ -230,7 +230,7 @@ Cpu::init_hyp_mode()
   extern char exception_vector[];
 
   // Prevent a compiler warning on Page::Min_pa_range==0.
-  if ((int)pa_range() < Page::Min_pa_range)
+  if (static_cast<int>(pa_range()) < Page::Min_pa_range)
     panic("Not enough physical address bits! Disable CONFIG_ARM_PT48.\n");
 
   if (vmid_bits() < Mem_unit::Asid_bits)
@@ -243,9 +243,9 @@ Cpu::init_hyp_mode()
                     | (Page::Tcr_attribs << 8)
                     | Page::vtcr_bits(pa_range())));
 
-  asm volatile ("msr MDCR_EL2, %x0" : : "r"((Mword)Mdcr_bits));
+  asm volatile ("msr MDCR_EL2, %x0" : : "r"(Mword{Mdcr_bits}));
 
-  asm volatile ("msr SCTLR_EL1, %x0" : : "r"((Mword)Sctlr_el1_generic));
+  asm volatile ("msr SCTLR_EL1, %x0" : : "r"(Mword{Sctlr_el1_generic}));
   asm volatile ("msr HCR_EL2, %x0" : : "r" (Hcr_non_vm_bits_el0));
   asm volatile ("msr HSTR_EL2, %x0" : : "r" (Hstr_non_vm));
 
@@ -314,7 +314,7 @@ Cpu::enable_dcache()
   asm volatile("mrs     %0, SCTLR_EL1 \n"
                "orr     %0, %0, %1    \n"
                "msr     SCTLR_EL1, %0 \n"
-               : "=&r" (r) : "r" ((Mword)(Sctlr_c | Sctlr_i)));
+               : "=&r" (r) : "r" (Mword{Sctlr_c | Sctlr_i}));
 }
 
 PUBLIC static inline
@@ -325,7 +325,7 @@ Cpu::disable_dcache()
   asm volatile("mrs     %0, SCTLR_EL1 \n"
                "bic     %0, %0, %1    \n"
                "msr     SCTLR_EL1, %0 \n"
-               : "=&r" (r) : "r" ((Mword)(Sctlr_c | Sctlr_i)));
+               : "=&r" (r) : "r" (Mword{Sctlr_c | Sctlr_i}));
 }
 
 PUBLIC static inline

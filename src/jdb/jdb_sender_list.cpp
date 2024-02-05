@@ -62,7 +62,7 @@ Jdb_sender_list::show_sender_list(Prio_list *t,
           printf("%s (%lx): ", tag, dbgid);
           first = false;
         }
-      printf("%02x: ", (unsigned)p->prio());
+      printf("%02x: ", p->prio());
       Prio_list::S_list::Iterator s = Prio_list::S_list::iter(*p);
       do
         {

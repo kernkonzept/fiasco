@@ -158,10 +158,10 @@ Dmar_space::v_insert(Mem_space::Phys_addr phys, Mem_space::Vaddr virt,
 
 PUBLIC
 L4_fpage::Rights
-Dmar_space::v_delete(Mem_space::Vaddr virt, Mem_space::Page_order order,
+Dmar_space::v_delete(Mem_space::Vaddr virt,
+                     [[maybe_unused]] Mem_space::Page_order order,
                      L4_fpage::Rights page_attribs) override
 {
-  (void) order;
   assert(cxx::is_zero(cxx::get_lsb(Virt_addr(virt), order)));
 
   auto i = _dmarpt->walk(virt);
@@ -203,9 +203,8 @@ Dmar_space::add_page_size(Mem_space::Page_order o)
 
 PUBLIC
 void *
-Dmar_space::operator new (size_t size, void *p) noexcept
+Dmar_space::operator new ([[maybe_unused]] size_t size, void *p) noexcept
 {
-  (void)size;
   assert (size == sizeof (Dmar_space));
   return p;
 }

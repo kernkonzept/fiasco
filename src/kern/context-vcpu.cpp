@@ -206,11 +206,12 @@ Context::Vcpu_log::print(String_buffer *buf) const
       break;
     case 1:
       buf->printf("ipc from D:%lx task=D:%lx sp=%lx",
-                  Kobject_dbg::pointer_to_id((Kobject*)ip), state, sp);
+                  Kobject_dbg::pointer_to_id(reinterpret_cast<Kobject*>(ip)),
+                  state, sp);
       break;
     case 2:
       buf->printf("exc #%x err=%lx pc=%lx sp=%lx state=%lx task=D:%lx",
-                  (unsigned)trap, err, ip, sp, state, space);
+                  trap, err, ip, sp, state, space);
       break;
     case 3:
       buf->printf("pf  pc=%lx pfa=%lx err=%lx state=%lx task=D:%lx",

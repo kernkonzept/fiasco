@@ -70,7 +70,7 @@ Jdb_screen::cols()
 PUBLIC static inline
 unsigned long
 Jdb_screen::rows()
-{ return ((unsigned long)-1) / ((cols() - 1) * 4) + 1; }
+{ return ~0UL / ((cols() - 1) * 4) + 1; }
 
 PUBLIC static inline
 void

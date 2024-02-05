@@ -552,9 +552,9 @@ Kmem_alloc::q_alloc(Q *quota, Bytes size)
 PUBLIC inline NEEDS["mem_layout.h"]
 void Kmem_alloc::free_phys(Order o, Address p)
 {
-  void *va = (void*)Mem_layout::phys_to_pmem(p);
-  if ((unsigned long)va != ~0UL)
-    free(o, va);
+  Address va = Mem_layout::phys_to_pmem(p);
+  if (va != ~0UL)
+    free(o, reinterpret_cast<void *>(va));
 }
 
 PUBLIC template< typename Q >

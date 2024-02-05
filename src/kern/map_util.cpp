@@ -235,7 +235,7 @@ template< typename SPACE, typename M, typename O >
 inline
 L4_fpage::Rights
 v_delete(M *m, O order, L4_fpage::Rights flush_rights,
-         bool full_flush, Auto_tlb_flush<SPACE> &tlb)
+         [[maybe_unused]] bool full_flush, Auto_tlb_flush<SPACE> &tlb)
 {
   SPACE* child_space = m->space();
   assert_opt (child_space);
@@ -243,7 +243,6 @@ v_delete(M *m, O order, L4_fpage::Rights flush_rights,
                                                SPACE::to_order(order),
                                                flush_rights);
   tlb.add_page(child_space, SPACE::to_virt(m->pfn(order)), SPACE::to_order(order));
-  (void) full_flush;
   assert (full_flush != child_space->v_lookup(SPACE::to_virt(m->pfn(order))));
   return res;
 }
@@ -630,10 +629,10 @@ map(MAPDB* mapdb,
             {
               WARN("XXX Can't GRANT page from superpage (%p: " L4_PTR_FMT
                   " -> %p: " L4_PTR_FMT "), demoting to MAP\n",
-                  (void *)from_id,
-                  (unsigned long)cxx::int_value<V_pfn>(snd_addr),
-                  (void *)to_id,
-                  (unsigned long)cxx::int_value<V_pfn>(rcv_addr));
+                  static_cast<void *>(from_id),
+                  static_cast<unsigned long>(cxx::int_value<V_pfn>(snd_addr)),
+                  static_cast<void *>(to_id),
+                  static_cast<unsigned long>(cxx::int_value<V_pfn>(rcv_addr)));
               grant = 0;
             }
         }
@@ -785,11 +784,11 @@ map(MAPDB* mapdb,
         case SPACE::Insert_err_exists:
           WARN("map (%s) skipping area (%p): " L4_PTR_FMT
                " -> %p: " L4_PTR_FMT "(%lx)", SPACE::name,
-               (void *)from_id,
-               (unsigned long)cxx::int_value<V_pfn>(snd_addr),
-               (void *)to_id,
-               (unsigned long)cxx::int_value<V_pfn>(rcv_addr),
-               (unsigned long)cxx::int_value<V_pfc>(size));
+               static_cast<void *>(from_id),
+               static_cast<unsigned long>(cxx::int_value<V_pfn>(snd_addr)),
+               static_cast<void *>(to_id),
+               static_cast<unsigned long>(cxx::int_value<V_pfn>(rcv_addr)),
+               static_cast<unsigned long>(cxx::int_value<V_pfc>(size)));
           // Do not flag an error here -- because according to L4
           // semantics, it isn't.
           break;
@@ -805,10 +804,10 @@ map(MAPDB* mapdb,
   if (EXPECT_FALSE(no_page_mapped))
     WARN("nothing mapped: (%s) from [%p]: " L4_PTR_FMT
          " size: " L4_PTR_FMT " to [%p]\n", SPACE::name,
-         (void *)from_id,
-         (unsigned long)cxx::int_value<V_pfn>(snd_addr),
-         (unsigned long)cxx::int_value<V_pfc>(rcv_size),
-         (void *)to_id);
+         static_cast<void *>(from_id),
+         static_cast<unsigned long>(cxx::int_value<V_pfn>(snd_addr)),
+         static_cast<unsigned long>(cxx::int_value<V_pfc>(rcv_size)),
+         static_cast<void *>(to_id));
 
   if (condition.ok() && no_page_mapped)
     condition.set_empty_map();
@@ -818,16 +817,15 @@ map(MAPDB* mapdb,
 // save access rights for Mem_space
 inline template<typename MAPDB>
 void
-save_access_flags(Mem_space *space, typename Mem_space::V_pfn page_address, bool me_too,
-                  typename MAPDB::Frame const &mapdb_frame,
+save_access_flags(Mem_space *space, typename Mem_space::V_pfn page_address,
+                  bool /* me_too */,
+                  typename MAPDB::Frame const& /* mapdb_frame */,
                   L4_fpage::Rights page_rights)
 {
   if (L4_fpage::Rights accessed = page_rights & (L4_fpage::Rights::RW()))
     {
       space->v_set_access_flags(page_address, accessed);
 
-      (void) me_too;
-      (void) mapdb_frame;
       // we have no back reference to our parent, so
       // we cannot store the access rights there in
       // the me_too case...

@@ -42,8 +42,9 @@ public:
   {
     L4_msg_tag res(no_reply());
     if (EXPECT_TRUE(self.op() & L4_obj_ref::Ipc_send))
-      res = static_cast<T*>(this)->T::kinvoke(self, rights, f, (Utcb const *)u,
-                                              self.have_recv() ? u : Kobject_helper_base::utcb_dummy());
+      res = static_cast<T*>(this)->T::kinvoke(
+              self, rights, f, u,
+              self.have_recv() ? u : Kobject_helper_base::utcb_dummy());
 
     if (EXPECT_FALSE(res.has_error()))
       {

@@ -43,7 +43,7 @@ private:
 
   int skip_empty(To_iter *c, int i)
   {
-    while (*c == _q->first(i).end() && i < (int)_q->queues())
+    while (*c == _q->first(i).end() && i < static_cast<int>(_q->queues()))
       {
         ++i;
         *c = _q->first(i).begin();
@@ -132,7 +132,7 @@ public:
 
       int p = 0;
 
-      if (_p > (unsigned)offs)
+      if (_p > static_cast<unsigned>(offs))
         p = _p - offs;
 
       FWD_ITER i = _c->_b;
@@ -244,12 +244,14 @@ Jdb_list_timeouts::list_timeouts_show_timeout(Timeout *t)
       type  = "timeslice";
       owner = get_owner(t);
       if (owner)
-        snprintf(ownerstr, sizeof(ownerstr), "  %p", (void *)owner);
+        snprintf(ownerstr, sizeof(ownerstr), "  %p",
+                 static_cast<void *>(owner));
       else
        strcpy(ownerstr, "destruct");
       break;
     default:
-      snprintf(ownerstr, sizeof(ownerstr), "  0x%lx", (Address)t);
+      snprintf(ownerstr, sizeof(ownerstr), "  0x%lx",
+               reinterpret_cast<Address>(t));
       type  = "unkn";
       owner = 0;
       break;

@@ -62,7 +62,7 @@
     l->lock_cnt = t_orig->lock_cnt();                                   \
     l->from_sched = cs;                                                 \
     l->from_prio = cs ? cs->prio() : 0;                                 \
-    l->kernel_ip = (Mword)__builtin_return_address(0) )
+    l->kernel_ip = reinterpret_cast<Mword>(__builtin_return_address(0)) )
 
 #define LOG_TRAP                                                        \
   LOG_TRACE_COND("Exceptions", "exc", current(), Tb_entry_trap,         \

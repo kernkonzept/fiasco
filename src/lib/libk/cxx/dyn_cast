@@ -201,8 +201,14 @@ public:
 template<typename SELF, typename BASE, typename ...BASES>
 _dyn::Base_info const Dyn_castable<SELF, BASE, BASES...>::_cxx_dyn_type_bases[] =
 {
-  { &BASE::_cxx_dyn_static_type,  reinterpret_cast<uintptr_t>(static_cast<BASE*>((SELF*)10)) - 10 },
-  { &BASES::_cxx_dyn_static_type, reinterpret_cast<uintptr_t>(static_cast<BASES*>((SELF*)10)) - 10 }...
+  { &BASE::_cxx_dyn_static_type,
+    reinterpret_cast<uintptr_t>(static_cast<BASE*>(
+                                  reinterpret_cast<SELF*>(10))) - 10
+  },
+  { &BASES::_cxx_dyn_static_type,
+    reinterpret_cast<uintptr_t>(static_cast<BASES*>(
+                                  reinterpret_cast<SELF*>(10))) - 10
+  }...
 };
 
 template<typename SELF, typename BASE, typename ...BASES>
@@ -235,12 +241,13 @@ TO dyn_cast(FROM *p)
   if (Typeid<TO>::get() == r.type)
     return reinterpret_cast<TO>(const_cast<void *>(r.base));
 
-  uintptr_t ptr_offset = (uintptr_t)p - (uintptr_t)r.base;
+  uintptr_t ptr_offset =
+    reinterpret_cast<uintptr_t>(p) - reinterpret_cast<uintptr_t>(r.base);
   uintptr_t delta = 0;
   if (r.type->do_cast(Typeid<TO>::get(), Typeid<FROM>::get(), ptr_offset,
                       &delta))
     {
-      TO res = reinterpret_cast<TO>((uintptr_t)p - delta);
+      TO res = reinterpret_cast<TO>(reinterpret_cast<uintptr_t>(p) - delta);
       if (res)
         return res;
       else

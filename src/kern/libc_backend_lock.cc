@@ -32,7 +32,7 @@ unsigned long __libc_backend_printf_lock()
       if (x != ~0UL)
         continue;
 
-      if (cas(&__libc_backend_printf_spinlock, (Mword)~0UL, pid))
+      if (cas(&__libc_backend_printf_spinlock, ~0UL, pid))
         return r;
     }
 }

@@ -79,8 +79,8 @@ Console_buffer::alloc(size_t size)
     {
       out_buf_size = Pg::round(size);
       if (out_buf_size)
-	out_buf = (char *)Kmem_alloc::allocator()->
-                            alloc(Bytes(out_buf_size));
+        out_buf = static_cast<char *>(
+                    Kmem_alloc::allocator()->alloc(Bytes(out_buf_size)));
 
       out_buf_w = out_buf;
 

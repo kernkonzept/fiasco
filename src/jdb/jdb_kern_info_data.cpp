@@ -47,5 +47,5 @@ Jdb_kern_info_data::show_percpu_offsets()
          "Percpu offsets:\n");
   for (Cpu_number i = Cpu_number::first(); i < Config::max_num_cpus(); ++i)
     printf("  %2u: " L4_PTR_FMT "\n", cxx::int_value<Cpu_number>(i),
-                                      (Mword)Per_cpu_data::offset(i));
+                                      Per_cpu_data::offset(i));
 }

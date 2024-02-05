@@ -381,7 +381,7 @@ Physframe::alloc(size_t size)
   void *mem = Kmem_alloc::allocator()->alloc(mem_bytes(size));
   if (mem)
     memset(mem, 0, size * sizeof(Physframe));
-  return (Physframe *)mem;
+  return static_cast<Physframe *>(mem);
 #else
   Physframe* block
     = (Physframe *)Kmem_alloc::allocator()->alloc(mem_bytes(size));
@@ -812,7 +812,7 @@ Treemap::lookup_src_dst(Space const *src, Pcnt src_key, Pfn src_va,
       if (!m->submap())
         {
           // same mapping size
-          if (r_depth < (int)f->min_depth() - 1)
+          if (r_depth < static_cast<int>(f->min_depth()) - 1)
             return 1; // in another subtree -> unmap + map
 
           return 2; // in the same subtree -> unmap + no map

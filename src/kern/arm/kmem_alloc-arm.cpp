@@ -118,8 +118,8 @@ static void add_initial_pmem()
   };
 
   // Find out our virt->phys mapping simply by walking the page table.
-  Address virt = Super_pg::trunc((Address)_kernel_image_start);
-  Address size = Super_pg::round((Address)_initcall_end) - virt;
+  Address virt = Super_pg::trunc(reinterpret_cast<Address>(_kernel_image_start));
+  Address size = Super_pg::round(reinterpret_cast<Address>(_initcall_end)) - virt;
   auto pte = Kmem::kdir->walk(Virt_addr(virt), Kpdir::Super_level, false,
                               Ptab::Null_alloc(), Identity_map());
   assert(pte.is_valid());

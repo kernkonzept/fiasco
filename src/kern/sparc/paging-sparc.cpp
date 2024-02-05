@@ -257,22 +257,21 @@ Mword PF::addr_to_msgword0(Address pfa, Mword error)
 
 PUBLIC static inline
 bool
-Pte_ptr::need_cache_write_back(bool current_pt)
-{ return true; /*current_pt;*/ (void)current_pt; }
+Pte_ptr::need_cache_write_back(bool /* current_pt */)
+{ return true; }
 
 PUBLIC inline NEEDS["mem_unit.h"]
 void
-Pte_ptr::write_back_if(bool current_pt, Mword /*asid*/ = 0)
+Pte_ptr::write_back_if(bool /* current_pt */, Mword /*asid*/ = 0)
 {
-  (void)current_pt;
   //if (current_pt)
   //  Mem_unit::clean_dcache(pte);
 }
 
 PUBLIC static inline NEEDS["mem_unit.h"]
 void
-Pte_ptr::write_back(void *start, void *end)
-{ (void)start; (void)end; }
+Pte_ptr::write_back(void* /*start */, void* /* end */)
+{}
 
 
 //---------------------------------------------------------------------------

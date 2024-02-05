@@ -8,7 +8,7 @@ public:
   explicit Sigma0_task(Ram_quota *q) : Task(q) {}
   bool is_sigma0() const override { return true; }
   Address virt_to_phys_s0(void *virt) const override
-  { return (Address)virt; }
+  { return reinterpret_cast<Address>(virt); }
 };
 
 

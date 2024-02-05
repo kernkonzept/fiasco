@@ -127,7 +127,7 @@ Thread::user_invoke()
   Mem::memset_mwords(&ts->r[0], 0, sizeof(ts->r) / sizeof(ts->r[0]));
 
   if (ct->space()->is_sigma0())
-    ts->r[0] = Kmem::kdir->virt_to_phys((Address)Kip::k());
+    ts->r[0] = Kmem::kdir->virt_to_phys(reinterpret_cast<Address>(Kip::k()));
 
   // load KIP syscall code into r1/x1 to allow user processes to
   // do syscalls even without access to the KIP.
@@ -264,7 +264,7 @@ Thread::Thread(Ram_quota *q)
   _space.space(Kernel_task::kernel_task());
 
   if (Config::Stack_depth)
-    std::memset((char *)this + sizeof(Thread), '5',
+    std::memset(reinterpret_cast<char *>(this) + sizeof(Thread), '5',
                 Thread::Size - sizeof(Thread) - 64);
 
   // set a magic value -- we use it later to verify the stack hasn't
@@ -302,9 +302,9 @@ PRIVATE inline
 void
 Thread::save_fpu_state_to_utcb(Trap_state *ts, Utcb *u)
 {
-  char *esu = (char *)&u->values[21];
+  auto *esu = reinterpret_cast<Fpu::Exception_state_user *>(&u->values[21]);
   Fpu::save_user_exception_state(state() & Thread_fpu_owner, fpu_state().get(),
-                                 ts, (Fpu::Exception_state_user *)esu);
+                                 ts, esu);
 }
 
 PROTECTED inline

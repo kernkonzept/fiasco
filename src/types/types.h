@@ -452,10 +452,10 @@ write_consistent(cxx::enable_if_t<(sizeof(T) > sizeof(Mword)), T> *t,
     d[0] = s[0];
   __asm__ __volatile__ ( "" : : "m"(d[0]));
 
-  __asm__ __volatile__ ( "" : "=m"((Words_array&)(*d)));
+  __asm__ __volatile__ ( "" : "=m"(reinterpret_cast<Words_array&>(*d)));
   for (unsigned i = 1; i < Words; ++i)
     d[i] = s[i];
-  __asm__ __volatile__ ( "" : : "m"((Words_array&)(*d)));
+  __asm__ __volatile__ ( "" : : "m"(reinterpret_cast<Words_array&>(*d)));
 
   if (v.present())
     {

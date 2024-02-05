@@ -105,12 +105,12 @@ disasm_bytes(char *buffer, unsigned len, Jdb_address addr,
     return len-1;
 #endif
 
-  (void)show_intel_syntax;
-  (void)show_arm_thumb;
+  static_cast<void>(show_intel_syntax);
+  static_cast<void>(show_arm_thumb);
 
   int ret;
   static csh handle;
-  if (handle == (csh)0)
+  if (handle == 0)
     {
       static cs_opt_mem mem =
         {
@@ -120,7 +120,7 @@ disasm_bytes(char *buffer, unsigned len, Jdb_address addr,
           simple_free,
           vsnprintf
         };
-      ret = cs_option((csh)NULL, CS_OPT_MEM, (size_t)&mem);
+      ret = cs_option(0, CS_OPT_MEM, reinterpret_cast<size_t>(&mem));
 #if defined(CONFIG_IA32)
       ret = cs_open(CS_ARCH_X86, (cs_mode)(CS_MODE_32), &handle);
 #elif defined(CONFIG_AMD64)
@@ -129,7 +129,7 @@ disasm_bytes(char *buffer, unsigned len, Jdb_address addr,
       auto syntax = (cs_mode)(CS_MODE_ARM|CS_MODE_LITTLE_ENDIAN);
       ret = cs_open(CS_ARCH_ARM, syntax, &handle);
 #elif defined(CONFIG_ARM) && defined(CONFIG_BIT64)
-      auto syntax = (cs_mode)(CS_MODE_ARM|CS_MODE_LITTLE_ENDIAN);
+      auto syntax = static_cast<cs_mode>(CS_MODE_ARM|CS_MODE_LITTLE_ENDIAN);
       ret = cs_open(show_arm_thumb ? CS_ARCH_ARM : CS_ARCH_ARM64, syntax, &handle);
 #elif defined(CONFIG_MIPS)
       ret = cs_open(CS_ARCH_MIPS,
@@ -147,12 +147,14 @@ disasm_bytes(char *buffer, unsigned len, Jdb_address addr,
 # endif
                              ), &handle);
 #elif defined(CONFIG_RISCV) && defined(CONFIG_BIT32)
-      ret = cs_open(CS_ARCH_RISCV, (cs_mode)(CS_MODE_RISCV32|CS_MODE_LITTLE_ENDIAN), &handle);
+      auto syntax = static_cast<cs_mode>(CS_MODE_RISCV32|CS_MODE_LITTLE_ENDIAN);
+      ret = cs_open(CS_ARCH_RISCV, syntax, &handle);
 #elif defined(CONFIG_RISCV) && defined(CONFIG_BIT64)
-      ret = cs_open(CS_ARCH_RISCV, (cs_mode)(CS_MODE_RISCV64|CS_MODE_LITTLE_ENDIAN), &handle);
+      auto syntax = static_cast<cs_mode>(CS_MODE_RISCV64|CS_MODE_LITTLE_ENDIAN);
+      ret = cs_open(CS_ARCH_RISCV, syntax, &handle);
 #endif
       if (ret != CS_ERR_OK)
-        handle = (csh)0;
+        handle = 0;
     }
   if (buffer)
     *buffer = '\0';
@@ -160,11 +162,12 @@ disasm_bytes(char *buffer, unsigned len, Jdb_address addr,
   if (handle)
     {
 #if defined(CONFIG_IA32) || defined(CONFIG_AMD64)
-      (void)cs_option(handle, CS_OPT_SYNTAX,
-                      show_intel_syntax ? CS_OPT_SYNTAX_INTEL : CS_OPT_SYNTAX_ATT);
+      static_cast<void>(
+        cs_option(handle, CS_OPT_SYNTAX,
+                  show_intel_syntax ? CS_OPT_SYNTAX_INTEL : CS_OPT_SYNTAX_ATT));
 #elif defined(CONFIG_ARM) && defined(CONFIG_BIT32)
       size_t mode = (size_t)(show_arm_thumb ? CS_MODE_THUMB : (cs_mode)0);
-      (void)cs_option(handle, CS_OPT_MODE, mode);
+      static_cast<void>(cs_option(handle, CS_OPT_MODE, mode));
 #endif
       cs_insn *insn = NULL;
 

@@ -57,14 +57,14 @@ PUBLIC inline
 Unsigned32 *
 Alternative_insn::orig_code() const
 {
-  return reinterpret_cast<Unsigned32*>(reinterpret_cast<Address>(this) + orig);
+  return offset_cast<Unsigned32 *>(this, orig);
 }
 
 PUBLIC inline
 Unsigned32 const *
 Alternative_insn::alt_insn() const
 {
-  return reinterpret_cast<Unsigned32*>(reinterpret_cast<Address>(this) + alt);
+  return offset_cast<Unsigned32 *>(this, alt);
 }
 
 

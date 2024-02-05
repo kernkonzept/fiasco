@@ -420,7 +420,8 @@ Thread_object::sys_control(L4_fpage::Rights rights, L4_msg_tag tag,
       if (EXPECT_FALSE(!(task->caps() & Task::Caps::threads())))
         return commit_result(-L4_err::EInval);
 
-      User_ptr<Utcb> utcb_addr = User_ptr<Utcb>((Utcb*)utcb->values[5]);
+      User_ptr<Utcb> utcb_addr =
+        User_ptr<Utcb>(reinterpret_cast<Utcb*>(utcb->values[5]));
 
       if (EXPECT_FALSE(!bind(task, utcb_addr)))
         return commit_result(-L4_err::EInval); // unbind first !!
@@ -469,7 +470,7 @@ Thread_object::sys_vcpu_control(L4_fpage::Rights, L4_msg_tag const &tag,
   User_ptr<Vcpu_state> vcpu(0);
 
   if (tag.words() >= 2)
-    vcpu = User_ptr<Vcpu_state>((Vcpu_state*)utcb->values[1]);
+    vcpu = User_ptr<Vcpu_state>(reinterpret_cast<Vcpu_state*>(utcb->values[1]));
 
   Mword del_state = 0;
   Mword add_state = 0;
@@ -678,7 +679,7 @@ Thread_object::sys_thread_stats_remote(void *data)
   // the context of another thread, don't consume CPU time in that case.
   if (this == current())
     update_consumed_time();
-  *(Clock::Time *)data = consumed_time();
+  *static_cast<Clock::Time *>(data) = consumed_time();
   return Drq::done();
 }
 

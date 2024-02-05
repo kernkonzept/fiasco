@@ -178,8 +178,7 @@ Tb_entry_sched::print(String_buffer *buf) const
               mode == 0 ? "save" :
               mode == 1 ? "load" :
               mode == 2 ? "invl" : "????",
-              t,
-              (unsigned)id, (unsigned)prio, left, quantum);
+              t, id, prio, left, quantum);
 }
 
 

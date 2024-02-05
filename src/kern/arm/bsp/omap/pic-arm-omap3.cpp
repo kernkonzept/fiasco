@@ -107,9 +107,8 @@ Irq_chip_arm_omap3::mask_and_ack(Mword irq) override
 
 PUBLIC
 void
-Irq_chip_arm_omap3::ack(Mword irq) override
+Irq_chip_arm_omap3::ack(Mword /* irq */) override
 {
-  (void)irq;
   write<Mword>(1, INTCPS_CONTROL);
 }
 

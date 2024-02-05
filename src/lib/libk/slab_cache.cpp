@@ -243,7 +243,7 @@ Slab_cache::alloc()	// request initialized member from cache
 	{
 	  guard.reset();
 
-	  char *m = (char*)block_alloc(_slab_size, _slab_size);
+	  char *m = static_cast<char*>(block_alloc(_slab_size, _slab_size));
 	  Slab *new_slab = 0;
 	  if (m)
 	    new_slab = new (m + _slab_size - sizeof(Slab)) Slab(_elem_num, _entry_size, m);

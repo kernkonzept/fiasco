@@ -128,10 +128,9 @@ IMPLEMENTATION [!mp]:
 
 IMPLEMENT inline
 bool
-Per_cpu_data::valid(Cpu_number cpu)
+Per_cpu_data::valid([[maybe_unused]] Cpu_number cpu)
 {
 #if defined NDEBUG
-  (void)cpu;
   return 1;
 #else
   return cpu == Cpu_number::boot_cpu();
@@ -318,7 +317,7 @@ void Per_cpu<T>::ctor_w_arg(void *obj, Cpu_number cpu)
 IMPLEMENT inline
 template< typename T >
 T &Per_cpu_ptr<T>::cpu(Cpu_number cpu)
-{ return *reinterpret_cast<T *>(reinterpret_cast<Address>(_p) + _offsets[cpu]); }
+{ return *offset_cast<T *>(_p, _offsets[cpu]); }
 
 IMPLEMENT
 void

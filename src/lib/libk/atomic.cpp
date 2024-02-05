@@ -22,8 +22,14 @@ local_cas(Type *ptr, Type oldval, Type newval)
 {
   static_assert(sizeof(Type) == sizeof(Mword), "CAS requires Mword-sized type.");
 
-  return local_cas_unsafe(reinterpret_cast<Mword *>(ptr),
-                         (Mword)oldval, (Mword)newval);
+  if constexpr (cxx::is_pointer_v<Type>)
+    return local_cas_unsafe(reinterpret_cast<Mword *>(ptr),
+                            reinterpret_cast<Mword>(oldval),
+                            reinterpret_cast<Mword>(newval));
+  else
+    return local_cas_unsafe(reinterpret_cast<Mword *>(ptr),
+                            static_cast<Mword>(oldval),
+                            static_cast<Mword>(newval));
 }
 
 /**
@@ -133,5 +139,12 @@ cas(T *ptr, T oldval, T newval)
 {
   static_assert(sizeof(T) == sizeof(Mword), "CAS requires Mword-sized type.");
 
-  return cas_arch(reinterpret_cast<Mword*>(ptr), Mword(oldval), Mword(newval));
+  if constexpr (cxx::is_pointer_v<T>)
+    return cas_arch(reinterpret_cast<Mword*>(ptr),
+                    reinterpret_cast<Mword>(oldval),
+                    reinterpret_cast<Mword>(newval));
+  else
+    return cas_arch(reinterpret_cast<Mword*>(ptr),
+                    static_cast<Mword>(oldval),
+                    static_cast<Mword>(newval));
 }

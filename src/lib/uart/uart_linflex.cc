@@ -108,9 +108,8 @@ namespace L4
   {
   }
 
-  bool Uart_linflex::change_mode(Transfer_mode, Baud_rate r)
+  bool Uart_linflex::change_mode(Transfer_mode, Baud_rate)
   {
-    (void)r;
     return true;
   }
 

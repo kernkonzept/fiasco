@@ -49,7 +49,7 @@ Context *context_of(const void *ptr)
 
 inline NEEDS [context_of, "processor.h"]
 Context *current()
-{ return context_of((void *)Proc::stack_pointer()); }
+{ return context_of(reinterpret_cast<void *>(Proc::stack_pointer())); }
 
 
 //---------------------------------------------------------------------------

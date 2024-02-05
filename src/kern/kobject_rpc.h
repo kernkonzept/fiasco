@@ -410,7 +410,8 @@ struct Msg : Detail::R_msg<Detail::Msg_start_state, ARGS...>
           return false;
       }
 
-    Base::read_data((char const *)(in->values), (char *)out->values);
+    Base::read_data(reinterpret_cast<char const *>(in->values),
+                    reinterpret_cast<char *>(out->values));
     __asm__ __volatile__ (
         ""
         : "=m" (*const_cast<Mword (*)[Utcb::Max_words]>(&in->values))

@@ -49,17 +49,17 @@ Jdb_utcb::print(Thread *t, bool overlayprint)
 
   if (t->utcb().kern())
     {
-      printf("\nUtcb-addr: %p%s", (void *)t->utcb().kern(), clreol_lf);
+      printf("\nUtcb-addr: %p%s", static_cast<void *>(t->utcb().kern()), clreol_lf);
       t->utcb().kern()->print(clreol_lf);
     }
 
   if (t->state(false) & Thread_vcpu_enabled)
     {
       Vcpu_state *v = t->vcpu_state().kern();
-      printf("%sVcpu-state-addr: %p%s", clreol_lf, (void *)v, clreol_lf);
+      printf("%sVcpu-state-addr: %p%s",
+             clreol_lf, static_cast<void *>(v), clreol_lf);
       printf("state: %x    saved-state:  %x  sticky: %x%s",
-             (unsigned)v->state, (unsigned)v->_saved_state,
-             (unsigned)v->sticky_flags, clreol_lf);
+             v->state, v->_saved_state, v->sticky_flags, clreol_lf);
       printf("entry_sp = %lx    entry_ip = %lx  sp = %lx%s",
              v->_entry_sp, v->_entry_ip, v->_sp, clreol_lf);
       v->_regs.dump();

@@ -252,7 +252,7 @@ public:
    * \pre type() must return #Io to return a valid value.
    * \return The I/O-port index of this flex page.
    */
-  constexpr Port_number io_address() const { return (Port_number)(unsigned)adr(); }
+  constexpr Port_number io_address() const { return Port_number{adr()}; }
 
   /**
    * Get the capability index of an object flex page.
@@ -262,7 +262,7 @@ public:
    *         This value is shifted #Addr_shift to be a real index
    *         (opposed to obj_address()).
    */
-  constexpr Cap_index obj_index() const { return Cap_index((Mword)adr()); }
+  constexpr Cap_index obj_index() const { return Cap_index{adr()}; }
 
   /**
    * Test for memory flex page (if type() is #Memory).
