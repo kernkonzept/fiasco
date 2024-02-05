@@ -439,6 +439,24 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
                                            + Super_pg::offset(phys));
 }
 
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && !mmu]:
+
+PRIVATE static
+unsigned char *
+Jdb::access_mem_task(Jdb_address addr, bool write)
+{
+  if (auto *r = Kmem::kdir->find(addr.addr()))
+    {
+      if (write && !(r->attr().rights() & L4_fpage::Rights::W()))
+        return nullptr;
+
+      return reinterpret_cast<unsigned char *>(addr.virt());
+    }
+
+  return nullptr;
+}
+
 //----------------------------------------------------------------------------
 IMPLEMENTATION [arm && mp]:
 
