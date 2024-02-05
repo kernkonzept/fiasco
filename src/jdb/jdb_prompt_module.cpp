@@ -93,7 +93,7 @@ Jdb_pcm::detect_screensize()
   if (!get_coords(uart, x, y))
     return;
   // set scroll region to the max + set cursor to the max
-  uart->write("\033[1;199r\033[199;199H", 18);
+  uart->write("\033[1;500r\033[500;500H", 18);
   if (!get_coords(uart, max_x, max_y))
     return;
   Jdb_screen::set_width(max_x);
