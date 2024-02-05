@@ -88,6 +88,7 @@ kernel_main()
   static Kernel_thread *kernel = new (Ram_quota::root) Kernel_thread(Ram_quota::root);
   Task *const ktask = Kernel_task::kernel_task();
   kernel->kbind(ktask);
+  kernel->init_mpu_state();
   assert((reinterpret_cast<Mword>(kernel->init_stack()) & 7) == 0);
 
   Mem_unit::tlb_flush();
@@ -158,6 +159,7 @@ void boot_ap_cpu()
 
   // create kernel thread
   Kernel_thread *kernel = App_cpu_thread::may_be_create(_cpu, cpu_is_new);
+  kernel->init_mpu_state();
 
   void *sp = kernel->init_stack();
     {

@@ -161,3 +161,24 @@ Context::tpidruro() const
   return 0;
 }
 
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && mpu]:
+
+#include "kmem.h"
+
+PUBLIC
+void
+Context::init_mpu_state()
+{
+  auto const &kd = *Kmem::kdir;
+  _mpu_prbar2 = kd[Kpdir::Kernel_heap].prbar;
+  _mpu_prlar2 = kd[Kpdir::Kernel_heap].prlar;
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && !mpu]:
+
+PUBLIC inline
+void
+Context::init_mpu_state()
+{}

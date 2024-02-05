@@ -310,6 +310,7 @@ Thread::Thread(Ram_quota *q)
   r->psr = Proc::Status_mode_user;
 
   alloc_eager_fpu_state();
+  init_mpu_state();
 
   state_add_dirty(Thread_dead, false);
 
