@@ -515,3 +515,14 @@ Mem_space::sync_read_tlb_active_on_cpu()
   // the store" (see ARM DDI 0487 H.a D5-4927)
   Mem::dsb();
 }
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [arm && !mmu]:
+
+PUBLIC static
+void
+Mem_space::init_page_sizes()
+{
+  add_page_size(Page_order(Config::PAGE_SHIFT));
+  add_page_size(Page_order(21)); // 2MB
+}

@@ -107,6 +107,20 @@ public:
   };
 };
 
+// -----------------------------------------------------------------------
+INTERFACE [arm && !mmu]:
+
+EXTENSION class Config
+{
+public:
+
+  enum
+  {
+    SUPERPAGE_SHIFT = 21,
+    SUPERPAGE_SIZE  = 1 << SUPERPAGE_SHIFT,
+  };
+};
+
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
