@@ -6,7 +6,9 @@
 /* This file defines the construction of the kernel's virtual address
    space. Has to be kept in sync with
    src/kern/arm/{32,64}/mem_layout_-arm-*.cpp! */
-#if defined CONFIG_BIT32
+#if !defined(CONFIG_MMU)
+virt_address       = kernel_load_addr;
+#elif defined CONFIG_BIT32
 virt_address       = 0xf0000000;
 #elif defined CONFIG_CPU_VIRT
 virt_address       = 0x0000ffff40000000;
@@ -53,7 +55,9 @@ PHDRS {
   excpt PT_LOAD;
 #endif
   initcall_data PT_LOAD;
+#if defined(CONFIG_MMU)
   dyn PT_DYNAMIC;
+#endif
   l4_kip 0x10;
   l4_koptions 0x11;
 }
@@ -83,12 +87,16 @@ SECTIONS {
     KEEP(*(.bootstrap.text))
   } :bstrap
 
+#if defined(CONFIG_MMU)
   /* Dummy dynamic section to appear as PIE to bootstrap. The real one is in
-   * .bootstrap.text. */
+   * .bootstrap.text. In fact, only the bootstrap stage of Fiasco is position
+   * independent. The rest is always linked position dependent. This makes
+   * a no-MMU kernel position dependent! */
   .dynamic : {
     QUAD(0)
     QUAD(0)
   } :bstrap :dyn
+#endif
 
   . = ALIGN(4K);
   end_of_loader = .;
