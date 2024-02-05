@@ -225,7 +225,7 @@ SECTIONS {
   .ARM.exidx : { *(.ARM.exidx.*) }
   .ARM.extab : { *(.ARM.extab.*) }
 
-  . = ALIGN(4K);
+  . = ALIGN(8);
   .bss : AT (ADDR(.bss) - phys_offset) {
     PROVIDE(__bss_start = .);
     . = ALIGN(4);
@@ -236,23 +236,22 @@ SECTIONS {
     *(.bss .bss.* COMMON .gnu.linkonce.b.*)
     *(.bss.jdb)
     PROVIDE(__bss_end = .);
-    . = ALIGN(4K);
   } :kdata
   __end_of_the_kernel = .;
 
 #if defined NEED_EXCPT
-  ivt_start = ADDR(.bss) + SIZEOF(.bss) - phys_offset;
+  ivt_start = ALIGN(. - phys_offset, 4K);
   .excp 0xffff0000 : AT (ivt_start) {
     KEEP (*(.vect)) *(.excp.text)
     *(.vect.extra)
+    . = ALIGN(4K);
   } :excpt
 
-  . = __end_of_the_kernel + SIZEOF(.excp);
+  . = ivt_start + phys_offset + SIZEOF(.excp);
 #endif
 
   PROVIDE( _end = . );
 
-  . = ALIGN(4K);
   _initcall_start = .;
   .initcall_data : AT (ADDR(.initcall_data) - phys_offset) {
     *(.initcall.data*)
