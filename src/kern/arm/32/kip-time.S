@@ -12,17 +12,17 @@
 
 .macro  read_timer_counter
 #if defined(CONFIG_ARM_EM_TZ)
-        /* Generic_timer::T<Physical>: R1=hyp, R2=virtual:
+        /* Generic_timer::T<Physical>:
          * CNTKCTL: PL0VCTEN=1, PL0PCTEN=1.
          * Kernel uses physical counter.
          * Access to physical counter from PL0 allowed. */
         mrrc    p15, 0, r0, r1, c14
 #else
-        /* Generic_timer::T<Virtual>: R1=physical, R2=hyp:
+        /* Generic_timer::T<Virtual>:
          *   CNTKCTL: PL0VCTEN=1, PL0PCTEN=0.
          *   Kernel uses virtual counter.
          *   Access to virtual counter from PL0 allowed.
-         * Generic_timer::T<Hyp>: R1=physical, R2=virtual:
+         * Generic_timer::T<Hyp>:
          *   CNTKCTL: PL0VCTEN=1, PL0PCTEN=1.
          *   CNTHCTL: PL1PCEN=0, PL1PCTEN=0.
          *   CNTVOFF: 0
