@@ -283,7 +283,7 @@ Perf_cnt::split_event(Mword event, unsigned *evntsel, Mword *)
 }
 
 PUBLIC static Mword
-Perf_cnt::lookup_event(Mword) { return is_avail() ? 0 : ~0UL; }
+Perf_cnt::lookup_event(Mword) { return is_avail() ? 0 : static_cast<Mword>(-1); }
 
 PUBLIC static void
 Perf_cnt::combine_event(Mword evntsel, Mword, Mword *event)
