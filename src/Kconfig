@@ -651,10 +651,6 @@ config JDB_ACCOUNTING
 
 	  Should be disabled for kernels which are used for measurements.
 
-config JDB_MISC
-	bool "Miscellaneous JDB modules"
-	depends on PF_UX || PF_PC
-
 endif # JDB
 
 

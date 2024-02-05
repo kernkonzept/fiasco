@@ -126,7 +126,7 @@ INTERFACES_KERNEL	:= string_buffer mem_region simpleio kernel_console panic warn
 			   jdb_timeout gdt factory	                  \
 			   idt tss jdb_prompt_ext		  \
 			   jdb_handler_queue jdb_exit_module		  \
-			   jdb_halt_thread  jdb_tetris                    \
+			   jdb_halt_thread                                \
 			   jdb_kern_info_kip                              \
 			   jdb_kern_info_kmem_alloc jdb_kern_info_config  \
 			   jdb_space jdb_trap_state                       \
