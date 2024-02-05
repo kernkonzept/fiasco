@@ -361,7 +361,7 @@ Thread::check_and_handle_coproc_faults(Trap_state *ts)
         | Thread::peek_user(reinterpret_cast<Unsigned16 *>(ts->pc + 2), this);
     }
   else
-    opcode = Thread::peek_user((Unsigned32 *)ts->pc, this);
+    opcode = Thread::peek_user(reinterpret_cast<Unsigned32 *>(ts->pc), this);
 
   if (EXPECT_FALSE(is_kernel_mem_op_hit_and_clear()))
     return true;

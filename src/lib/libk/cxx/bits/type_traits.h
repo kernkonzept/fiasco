@@ -218,8 +218,10 @@ public:
   typedef typename TT::Const_traits<T>::Const_type Const_type;
 
   static unsigned long align(unsigned long a)
-  { return (a + (unsigned long)alignment - 1UL) 
-    & ~((unsigned long)alignment - 1UL); }
+  {
+    return (a + static_cast<unsigned long>(alignment) - 1UL)
+            & ~(static_cast<unsigned long>(alignment) - 1UL);
+  }
 };
 
 

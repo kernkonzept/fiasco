@@ -126,7 +126,7 @@ disasm_bytes(char *buffer, unsigned len, Jdb_address addr,
 #elif defined(CONFIG_AMD64)
       ret = cs_open(CS_ARCH_X86, (cs_mode)(CS_MODE_64), &handle);
 #elif defined(CONFIG_ARM) && defined(CONFIG_BIT32)
-      auto syntax = (cs_mode)(CS_MODE_ARM|CS_MODE_LITTLE_ENDIAN);
+      auto syntax = static_cast<cs_mode>(CS_MODE_ARM|CS_MODE_LITTLE_ENDIAN);
       ret = cs_open(CS_ARCH_ARM, syntax, &handle);
 #elif defined(CONFIG_ARM) && defined(CONFIG_BIT64)
       auto syntax = static_cast<cs_mode>(CS_MODE_ARM|CS_MODE_LITTLE_ENDIAN);
@@ -166,7 +166,9 @@ disasm_bytes(char *buffer, unsigned len, Jdb_address addr,
         cs_option(handle, CS_OPT_SYNTAX,
                   show_intel_syntax ? CS_OPT_SYNTAX_INTEL : CS_OPT_SYNTAX_ATT));
 #elif defined(CONFIG_ARM) && defined(CONFIG_BIT32)
-      size_t mode = (size_t)(show_arm_thumb ? CS_MODE_THUMB : (cs_mode)0);
+      size_t mode = static_cast<size_t>(show_arm_thumb
+                                        ? CS_MODE_THUMB
+                                        : static_cast<cs_mode>(0));
       static_cast<void>(cs_option(handle, CS_OPT_MODE, mode));
 #endif
       cs_insn *insn = NULL;

@@ -872,7 +872,7 @@ L4_msg_tag::L4_msg_tag(Mword raw)
 PUBLIC inline
 long
 L4_msg_tag::proto() const
-{ return long(_tag) >> 16; }
+{ return static_cast<long>(_tag) >> 16; }
 
 /**
  * Get the binary representation.
