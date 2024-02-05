@@ -1259,6 +1259,8 @@ Cpu::try_enable_hw_performance_states(bool resume)
   {
     HWP_SUPPORT = 1 << 7,
     HIGHEST_PERFORMANCE_SHIFT = 0,
+    GUARANTEED_PERFORMANCE_SHIFT = 8,
+    EFFICIENT_PERFORMANCE_SHIFT = 16,
     LOWEST_PERFORMANCE_SHIFT = 24
   };
 
@@ -1268,7 +1270,11 @@ Cpu::try_enable_hw_performance_states(bool resume)
   // enable
   wrmsr(0x1ULL, Msr::Hwp_pm_enable);
 
-  // let the hardware decide on everything (autonomous operation mode)
+  // [ 7: 0] = Highest performance value, non-guaranteed
+  // [ 8:15] = Current guaranteed performance, value can change due to internal
+  //           and external constraints
+  // [16:23] = Current most efficient performance, value can change dynamically
+  // [24:31] = Lowest performance
   Unsigned64 hwp_caps = rdmsr(Msr::Hwp_capabilities);
   // Package_Control (bit 42) = 0
   // Activity_Window (bits 41:32) = 0 (auto)
