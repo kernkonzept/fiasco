@@ -447,10 +447,10 @@ Jdb_mapdb::print_obj_mapping(Obj::Mapping *m)
       cap_idx += pi->info<Obj::Cap_page_dbg_info>()->offset;
     }
 
-  printf(L4_PTR_FMT "[C:%lx]: space=D:%lx%.*s rights=%x flags=%x obj=%p",
+  printf(L4_PTR_FMT "[C:%lx]: space=D:%lx%.*s rights=%x flags=%lx obj=%p",
          reinterpret_cast<Address>(m), cap_idx, space_id, task_descr.length(),
          task_descr.begin(), cxx::int_value<Obj::Attr>(e->rights()),
-         e->_flags, static_cast<void *>(e->obj()));
+         static_cast<unsigned long>(e->_flags), static_cast<void *>(e->obj()));
 }
 
 static
