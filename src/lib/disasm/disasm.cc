@@ -9,105 +9,12 @@
 #include <capstone/capstone.h>
 #include "disasm.h"
 
-#if 0
-/* check for special L4 int3-opcodes */
-static int
-special_l4_ops(bfd_vma memaddr)
-{
-  int len, bytes, i;
-  const char *op;
-  bfd_vma str, s;
-
-  switch (my_get_data(memaddr))
-    {
-    case 0xeb:
-      op  = "enter_kdebug";
-      len = my_get_data(memaddr+1);
-      str = memaddr+2;
-      bytes = 3+len;
-      goto printstr;
-    case 0x90:
-      if (my_get_data(memaddr+1) != 0xeb)
-	break;
-      op  = "kd_display";
-      len = my_get_data(memaddr+2);
-      str = memaddr+3;
-      bytes = 4+len;
-    printstr:
-      /* do a quick test if it is really an int3-str function by
-       * analyzing the bytes we shall display. */
-      for (i=len, s=str; i--; )
-	if (my_get_data(s++) > 126)
-	  return 0;
-      /* test well done */
-      my_printf(0, "<%s (\"", op);
-      if ((out_len > 2) && (len > 0))
-	{
-	  out_len -= 3;
-     	  if (out_len > len)
-	    out_len = len;
-	  /* do not use my_printf here because the string
-	   * can contain special characters (e.g. tabs) which
-	   * we do not want to display */
-	  while (out_len)
-	    {
-	      unsigned char c = my_get_data(str++);
-	      my_putchar((c<' ') ? ' ' : c);
-	    }
-	  out_len += 3;
-	}
-      my_printf(0, "\")>");
-      return bytes;
-    case 0x3c:
-      op = NULL;
-      switch (my_get_data(memaddr+1))
-	{
-	case 0: op = "outchar (%al)";  break;
-	case 2: op = "outstring (*%eax)"; break;
-	case 5: op = "outhex32 (%eax)"; break;
-	case 6: op = "outhex20 (%eax)"; break;
-	case 7: op = "outhex16 (%eax)"; break;
-	case 8: op = "outhex12 (%eax)"; break;
-	case 9: op = "outhex8 (%al)"; break;
-	case 11: op = "outdec (%eax)"; break;
-	case 13: op = "%al = inchar ()"; break;
-	case 24: op = "fiasco_start_profile()"; break;
-	case 25: op = "fiasco_stop_and_dump()"; break;
-	case 26: op = "fiasco_stop_profile()"; break;
-	case 29: op = "fiasco_tbuf (%eax)"; break;
-	case 30: op = "fiasco_register (%eax, %ecx)"; break;
-	}
-      if (op)
-	my_printf(0, "<%s>", op);
-      else if (my_get_data(memaddr+1) >= ' ')
-	my_printf(0, "<ko ('%c')>", my_get_data(memaddr+1));
-      else break;
-      return 3;
-    }
-
-  return 0;
-}
-#endif
-
 int
-disasm_bytes(char *buffer, unsigned len, Jdb_address addr,
-             int show_intel_syntax, int show_arm_thumb,
+disasm_bytes(unsigned printlen, bool clreol, Jdb_address addr,
+             [[maybe_unused]] bool show_intel_syntax,
+             [[maybe_unused]] bool show_arm_thumb,
              Peek_task peek_task, Is_adp_mem is_adp_mem)
 {
-  // symbols / lines not supported ATM anyway
-#if 0
-  /* test for special L4 opcodes */
-  if (my_get_data(addr) == 0xcc && (len = special_l4_ops(addr+1)))
-    return len;
-
-  /* one step back for special L4 opcodes */
-  if (my_get_data(addr-1) == 0xcc && (len = special_l4_ops(addr)))
-    return len-1;
-#endif
-
-  static_cast<void>(show_intel_syntax);
-  static_cast<void>(show_arm_thumb);
-
   int ret;
   static csh handle;
   if (handle == 0)
@@ -156,8 +63,6 @@ disasm_bytes(char *buffer, unsigned len, Jdb_address addr,
       if (ret != CS_ERR_OK)
         handle = 0;
     }
-  if (buffer)
-    *buffer = '\0';
   int size = 0;
   if (handle)
     {
@@ -190,13 +95,16 @@ disasm_bytes(char *buffer, unsigned len, Jdb_address addr,
           int cnt = cs_disasm(handle, code, sizeof(code), addr.addr(), 1, &insn);
           if (cnt)
             {
-              if (buffer)
-                snprintf(buffer, len, "%-7s %s", insn[0].mnemonic, insn[0].op_str);
+              if (printlen > 9)
+                printf("%-7s %.*s%s\n",
+                       insn[0].mnemonic, printlen - 9, insn[0].op_str,
+                       clreol ? "\033[K" : "");
               size = insn->size;
               cs_free(insn, cnt);
             }
-          else if (buffer)
-            snprintf(buffer, len, "........ (%d)", cs_errno(handle));
+          else if (printlen > 9)
+            printf("........ (%d)%s\n",
+                   cs_errno(handle), clreol ? "\033[K" : "");
         }
     }
 
