@@ -19,6 +19,13 @@ public:
   static const char initcall_end[]   asm ("_initcall_end");
 
   /**
+   * Return the number of bytes between initcall_start (inclusive) and
+   * initcall_end(exclusive).
+   */
+  static size_t initcall_size()
+  { return static_cast<size_t>(initcall_end - initcall_start); }
+
+  /**
    * Translate physical address located in pmem to virtual address.
    *
    * @param addr  Physical address located in pmem.
