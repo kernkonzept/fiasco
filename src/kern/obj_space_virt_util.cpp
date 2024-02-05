@@ -187,7 +187,7 @@ Obj_space_virt<SPACE>::v_lookup(V_pfn const &virt, Phys_addr *phys,
 
   if (Optimize_local)
     {
-      Capability c = Mem_layout::read_special_safe((Capability*)cap);
+      Capability c = Mem_layout::read_special_safe(&cap->capability());
 
       if (phys) *phys = c.obj();
       if (c.valid() && attribs)
@@ -209,7 +209,7 @@ inline NEEDS [Obj_space_virt::cap_virt, Obj_space_virt::get_cap]
 typename Obj_space_virt<SPACE>::Capability FIASCO_FLATTEN
 Obj_space_virt<SPACE>::lookup(Cap_index virt)
 {
-  Capability *c;
+  Entry *c;
   virt &= Cap_index(~(~0UL << Whole_space));
 
   if (SPACE::mem_space(this) == Mem_space::current_mem_space(current_cpu()))
@@ -220,7 +220,7 @@ Obj_space_virt<SPACE>::lookup(Cap_index virt)
   if (EXPECT_FALSE(!c))
     return Capability(0); // void
 
-  return Mem_layout::read_special_safe(c);
+  return Mem_layout::read_special_safe(&c->capability());
 }
 
 PUBLIC template< typename SPACE >
@@ -229,8 +229,8 @@ Kobject_iface * __attribute__((nonnull))
 Obj_space_virt<SPACE>::lookup_local(Cap_index virt, L4_fpage::Rights *rights)
 {
   virt &= Cap_index(~(~0UL << Whole_space));
-  Capability *c = cap_virt(virt);
-  Capability cap = Mem_layout::read_special_safe(c);
+  Entry *c = cap_virt(virt);
+  Capability cap = Mem_layout::read_special_safe(&c->capability());
   *rights = L4_fpage::Rights(cap.rights());
   return cap.obj();
 }
@@ -253,7 +253,7 @@ Obj_space_virt<SPACE>::v_delete(V_pfn virt, Page_order size,
       if (!c)
 	return L4_fpage::Rights(0);
 
-      Capability cap = Mem_layout::read_special_safe((Capability*)c);
+      Capability cap = Mem_layout::read_special_safe(&c->capability());
       if (!cap.valid())
 	return L4_fpage::Rights(0);
     }
@@ -291,7 +291,7 @@ Obj_space_virt<SPACE>::v_insert(Phys_addr phys, V_pfn const &virt,
 	return Obj::Insert_err_nomem;
 
       Capability cap;
-      if (!Mem_layout::read_special_safe((Capability*)c, cap)
+      if (!Mem_layout::read_special_safe(&c->capability(), cap)
 	  && !caps_alloc(virt))
 	return Obj::Insert_err_nomem;
     }

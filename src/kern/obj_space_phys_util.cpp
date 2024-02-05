@@ -391,7 +391,7 @@ Obj_space_phys<SPACE>::v_lookup(V_pfn const &virt, Phys_addr *phys,
       return false;
     }
 
-  Capability c = *cap;
+  Capability c = cap->capability();
 
   Obj::set_entry(virt, cap);
   if (phys)
@@ -406,12 +406,12 @@ inline NEEDS [Obj_space_phys::get_cap]
 typename Obj_space_phys<SPACE>::Capability FIASCO_FLATTEN
 Obj_space_phys<SPACE>::lookup(Cap_index virt)
 {
-  Capability *c = get_cap(virt, false);
+  Entry *c = get_cap(virt, false);
 
   if (EXPECT_FALSE(!c))
     return Capability(0); // void
 
-  return *c;
+  return c->capability();
 }
 
 PUBLIC template< typename SPACE >
@@ -423,7 +423,7 @@ Obj_space_phys<SPACE>::lookup_local(Cap_index virt, L4_fpage::Rights *rights)
   if (EXPECT_FALSE(!c))
     return 0;
 
-  Capability cap = *c;
+  Capability cap = c->capability();
   *rights = L4_fpage::Rights(cap.rights());
 
   return cap.obj();

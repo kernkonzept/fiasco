@@ -99,7 +99,7 @@ namespace Obj {
   };
 
 
-  class Entry : public Capability, public Mapping
+  class Entry : private Capability, public Mapping
   {
   public:
     Entry() : Capability(), Mapping() {}
@@ -124,6 +124,22 @@ namespace Obj {
       Capability::del_rights(r);
       _flags &= ~(cxx::int_value<L4_fpage::Rights>(r) & 0xf8);
     }
+
+    /**
+     * Explicit access to #Capability base class.
+     *
+     * #Entry and #Capability have some methods with identical names. Therefore
+     * #Entry inherits privately from #Capability in order to prevent an
+     * (implicit) upcast followed by an accidental usage of a wrong method.
+     *
+     * This function gives explicit access to the private #Capability base.
+     */
+    Capability const & capability() const
+    { return *this; }
+
+    using Capability::invalidate;
+    using Capability::obj;
+    using Capability::valid;
   };
 
   struct Cap_addr

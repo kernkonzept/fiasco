@@ -1084,7 +1084,7 @@ Jdb_tcb::print_kobject(Thread *t, Cap_index capidx)
       return;
     }
 
-  Obj_space::Capability *c = space->jdb_lookup_cap(capidx);
+  Obj_space::Entry *c = space->jdb_lookup_cap(capidx);
   if (!c || !c->valid())
     {
       print_kobject(capidx);
