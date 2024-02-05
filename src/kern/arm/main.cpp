@@ -101,6 +101,25 @@ kernel_main()
 }
 
 //------------------------------------------------------------------------
+IMPLEMENTATION[arm && mp && !mpu]:
+
+static void init_ap_cpu_mpu()
+{}
+
+//------------------------------------------------------------------------
+IMPLEMENTATION[arm && mp && mpu]:
+
+#include "kmem.h"
+#include "mpu.h"
+
+static void init_ap_cpu_mpu()
+{
+  Mpu::init();
+  Mpu::sync(*Kmem::kdir, Kmem::kdir->used(), true);
+  Cpu::init_sctlr();
+}
+
+//------------------------------------------------------------------------
 IMPLEMENTATION[arm && mp]:
 
 #include <cstdio>
@@ -121,6 +140,8 @@ void FIASCO_NORETURN boot_ap_cpu() __asm__("BOOT_AP_CPU");
 
 void boot_ap_cpu()
 {
+  init_ap_cpu_mpu();
+
   static Cpu_number last_cpu; // keep track of the last cpu ever appeared
 
   Cpu_number _cpu = Cpu::cpus.find_cpu(Cpu::By_phys_id(Proc::cpu_id()));

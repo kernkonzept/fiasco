@@ -64,3 +64,41 @@ Kernel_thread::boot_app_cpus()
   Platform_control::boot_ap_cpus(
     Kmem::kdir->virt_to_phys(reinterpret_cast<Address>(_tramp_mp_entry)));
 }
+
+//------------------------------------------------------------------------
+IMPLEMENTATION [arm && mp && mpu]:
+
+#include "kmem.h"
+#include "mem_unit.h"
+#include "platform_control.h"
+
+EXTENSION class Kernel_thread
+{
+  struct Mp_boot_info
+  {
+    Mword sctlr;
+    Mword mair;
+    Mword prbar0;
+    Mword prlar0;
+  };
+};
+
+PUBLIC
+static void
+Kernel_thread::boot_app_cpus()
+{
+  extern char _tramp_mp_boot_info[];
+  Mp_boot_info volatile *_tmp;
+  _tmp = reinterpret_cast<Mp_boot_info*>(_tramp_mp_boot_info);
+
+  _tmp->sctlr = Proc::sctlr();
+  _tmp->mair  = Mpu::Mair_bits;
+  _tmp->prbar0 = (*Kmem::kdir)[Kpdir::Kernel_text].prbar;
+  _tmp->prlar0 = (*Kmem::kdir)[Kpdir::Kernel_text].prlar;
+
+  asm volatile ("dsb sy" : : : "memory");
+  Mem_unit::clean_dcache();
+
+  extern char _tramp_mp_entry[];
+  Platform_control::boot_ap_cpus(reinterpret_cast<Address>(_tramp_mp_entry));
+}
