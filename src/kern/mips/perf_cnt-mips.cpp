@@ -131,10 +131,13 @@ Perf_cnt::get_perf_event(Mword nr, unsigned *evntsel,
       strncpy(_desc,  "Instructions graduated", sizeof(_desc));
       break;
     default:
+      // The cast to Unsigned16 restricts the maximum string size.
+      // This restriction is reasonable, see Perf_cnt::get_max_perf_event().
       snprintf(_name, sizeof(_name),
-               "Event-%ld-%s", nr >> 1, (nr & 1) ? "Odd" : "Even");
+               "Event-%u-%s", static_cast<Unsigned16>(nr >> 1),
+               (nr & 1) ? "Odd" : "Even");
       snprintf(_desc, sizeof(_desc),
-               "%s variant of event %ld", (nr & 1) ? "Odd" : "Even", nr >> 1);
+               "%s variant of event %lu", (nr & 1) ? "Odd" : "Even", nr >> 1);
     }
 
   _name[sizeof(_name) - 1] = 0;
