@@ -163,6 +163,13 @@ Sched_context::sched_classes()
        | 1UL << (-L4_sched_param_wfq::Class);
 }
 
+PUBLIC static inline ALWAYS_INLINE constexpr
+unsigned
+Sched_context::max_param_size()
+{
+  return sizeof(Sp);
+}
+
 PUBLIC static inline
 int
 Sched_context::check_param(L4_sched_param const *_p)

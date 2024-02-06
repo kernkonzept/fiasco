@@ -70,10 +70,10 @@ Scheduler::sys_run(L4_fpage::Rights, Syscall_frame *f, Utcb const *utcb)
   if (!thread)
     return tag;
 
-  Mword _store[sz / sizeof(Mword)];
-  memcpy(_store, &utcb->values[1], sz);
+  Mword _store[(Sched_context::max_param_size() + sizeof(Mword) - 1) / sizeof(Mword)];
+  memcpy(_store, &utcb->values[1], min<unsigned>(sz, sizeof(_store)));
 
-  L4_sched_param const *sched_param = reinterpret_cast<L4_sched_param const *>(_store);
+  auto *sched_param = reinterpret_cast<L4_sched_param const *>(_store);
 
   if (!sched_param->is_legacy())
     if (EXPECT_FALSE(sched_param->length > sz))
