@@ -288,17 +288,15 @@ Jdb::printf_statline(const char *prompt, const char *help,
       w -= Jdb::prompt_len();
     }
   prompt_end();
-  // work around for ealier gccs complaining about "empty format strings"
+  // avoid -Wformat-zero-length warning
   if (format && (format[0] != '_' || format[1] != '\0'))
     {
-      char s[w];
       va_list list;
       va_start(list, format);
-      vsnprintf(s, sizeof(s), format, list);
+      int len = vprintf(format, list);
       va_end(list);
-      s[sizeof(s) - 1] = 0;
-      putstr(s);
-      w -= print_len(s);
+      // consider escape sequences in 'format' but not in the parameter list
+      w -= len - strlen(format) + print_len(format);
     }
   if (help)
     {
