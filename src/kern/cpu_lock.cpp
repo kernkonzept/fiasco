@@ -1,5 +1,6 @@
 INTERFACE:
 
+#include <cxx/type_traits>
 #include "types.h"
 
 /** 
@@ -61,14 +62,18 @@ private:
 /**
  * The global CPU lock, contains the locking data necessary for some
  * special implementations.
+ *
+ * The object must never be dereferenced. In case this is still done, the
+ * address is carefully chosen to be neither nullptr nor ~0UL, another pointer
+ * value for non-existing objects.
  */
-extern Cpu_lock cpu_lock;
+#define cpu_lock (*reinterpret_cast<Cpu_lock*>(~0UL - 255UL))
+
+static_assert(cxx::is_empty_v<Cpu_lock>, "Cpu_lock must not have any members");
 
 IMPLEMENTATION:
 
 #include "static_init.h"
-
-Cpu_lock cpu_lock INIT_PRIORITY(EARLY_INIT_PRIO);
 
 IMPLEMENT inline //NEEDS [Cpu_lock::lock, Cpu_lock::test]
 Cpu_lock::Status Cpu_lock::test_and_set()
