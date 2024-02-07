@@ -1,8 +1,18 @@
+INTERFACE:
+
+#include "static_init.h"
+
 // --------------------------------------------------------------------------
 INTERFACE[!amp]:
 
 #define DEFINE_GLOBAL_PRIO(prio) __attribute__((init_priority(prio)))
 #define DEFINE_GLOBAL
+
+#ifdef __cpp_constinit
+#define DEFINE_GLOBAL_CONSTINIT constinit
+#else
+#define DEFINE_GLOBAL_CONSTINIT
+#endif
 
 template< typename T >
 class Global_data_ptr_storage
@@ -47,6 +57,8 @@ INTERFACE[amp]:
 
 #define DEFINE_GLOBAL \
   __attribute__((section(".global_data")))
+
+#define DEFINE_GLOBAL_CONSTINIT DEFINE_GLOBAL_PRIO(CONSTINIT_INIT_PRIO)
 
 /**
  * Architecture specific base class for global data.

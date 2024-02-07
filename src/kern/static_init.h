@@ -14,7 +14,10 @@
 #define	DEPENDS_ON(SUBSYS)	((SUBSYS) + 2)
 
 #define LINKER_INTERNAL		 100		// linker internal use
-#define BOOTSTRAP_INIT_PRIO      DEPENDS_ON(LINKER_INTERNAL)
+/// Only for variables with a type that satisfies `constinit`, which need to be
+/// wrapped in Global_data<T>.
+#define CONSTINIT_INIT_PRIO      DEPENDS_ON(LINKER_INTERNAL)
+#define BOOTSTRAP_INIT_PRIO      DEPENDS_ON(CONSTINIT_INIT_PRIO)
 #define UX_STARTUP1_INIT_PRIO    DEPENDS_ON(BOOTSTRAP_INIT_PRIO)
 #define EARLY_INIT_PRIO		 DEPENDS_ON(UX_STARTUP1_INIT_PRIO)
 #define STARTUP1_INIT_PRIO       DEPENDS_ON(EARLY_INIT_PRIO)
