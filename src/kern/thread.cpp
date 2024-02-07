@@ -550,10 +550,12 @@ Thread::do_kill()
       rq.set_current_sched(current()->sched());
   }
 
-  // if other threads want to send me IPC messages, abort these
-  // operations
+  // If other threads want to send me IPC messages, abort these operations.
+  // After the following code block, the cpu lock must not be released until the
+  // Thread_dead flag is set, otherwise new senders can be enqueued in the
+  // sender list of the dying thread.
+  auto guard = lock_guard(cpu_lock);
   {
-    auto guard = lock_guard(cpu_lock);
     while (Sender *s = Sender::cast(sender_list()->first()))
       {
         s->sender_dequeue(sender_list());
@@ -593,8 +595,6 @@ Thread::do_kill()
 
   unbind();
   vcpu_set_user_space(nullptr);
-
-  cpu_lock.lock();
 
   arch_vcpu_ext_shutdown();
 
