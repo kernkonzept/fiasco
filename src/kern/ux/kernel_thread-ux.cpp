@@ -48,8 +48,8 @@ static void ux_termination_handler()
   signal (SIGIO, SIG_IGN);		// Ignore hardware interrupts
   // This is a great hack to delete the processes on fiasco UX
   extern char _boot_sys_end[];
-  ::Kobject_dbg::Iterator c = ::Kobject_dbg::_kobjects.begin();
-  while (c != ::Kobject_dbg::_kobjects.end())
+  ::Kobject_dbg::Iterator c = ::Kobject_dbg::_kobjects->begin();
+  while (c != ::Kobject_dbg::_kobjects->end())
     {
       ::Kobject_dbg::Iterator n = c;
       ++n;

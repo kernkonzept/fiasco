@@ -6,6 +6,7 @@ INTERFACE[rt_dbg]:
 #include <cxx/dlist>
 #include <cxx/hlist>
 #include <cxx/dyn_cast>
+#include "global_data.h"
 
 struct Kobject_typeinfo_name
 {
@@ -49,14 +50,14 @@ public:
   typedef Kobject_list::Iterator Iterator;
   typedef Kobject_list::Const_iterator Const_iterator;
 
-  static Spin_lock<> _kobjects_lock;
-  static Kobject_list _kobjects;
+  static Global_data<Spin_lock<>> _kobjects_lock;
+  static Global_data<Kobject_list> _kobjects;
 
-  static Iterator begin() { return _kobjects.begin(); }
-  static Iterator end() { return _kobjects.end(); }
+  static Iterator begin() { return _kobjects->begin(); }
+  static Iterator end() { return _kobjects->end(); }
 
 private:
-  static unsigned long _next_dbg_id;
+  static Global_data<unsigned long> _next_dbg_id;
 };
 
 //----------------------------------------------------------------------------
@@ -75,9 +76,9 @@ IMPLEMENTATION[rt_dbg]:
 
 #include "static_init.h"
 
-Spin_lock<> Kobject_dbg::_kobjects_lock;
-Kobject_dbg::Kobject_list Kobject_dbg::_kobjects INIT_PRIORITY(BOOTSTRAP_INIT_PRIO);
-unsigned long Kobject_dbg::_next_dbg_id;
+DEFINE_GLOBAL_PRIO(BOOTSTRAP_INIT_PRIO) Global_data<Spin_lock<>> Kobject_dbg::_kobjects_lock;
+DEFINE_GLOBAL_PRIO(BOOTSTRAP_INIT_PRIO) Global_data<Kobject_dbg::Kobject_list> Kobject_dbg::_kobjects;
+DEFINE_GLOBAL Global_data<unsigned long> Kobject_dbg::_next_dbg_id;
 
 IMPLEMENT inline Kobject_dbg::Dbg_extension::~Dbg_extension() {}
 
@@ -86,14 +87,14 @@ Kobject_dbg::Iterator
 Kobject_dbg::pointer_to_obj(void const *p)
 {
   Mword obj_addr = reinterpret_cast<Mword>(p);
-  for (Iterator l = _kobjects.begin(); l != _kobjects.end(); ++l)
+  for (Iterator l = _kobjects->begin(); l != _kobjects->end(); ++l)
     {
       auto ti = l->_cxx_dyn_type();
       Mword a = reinterpret_cast<Mword>(ti.base);
       if (a <= obj_addr && obj_addr < (a + ti.type->size))
         return l;
     }
-  return _kobjects.end();
+  return _kobjects->end();
 }
 
 PUBLIC static
@@ -101,7 +102,7 @@ unsigned long
 Kobject_dbg::pointer_to_id(void const *p)
 {
   Iterator o = pointer_to_obj(p);
-  if (o != _kobjects.end())
+  if (o != _kobjects->end())
     return o->dbg_id();
   return ~0UL;
 }
@@ -110,14 +111,14 @@ PUBLIC static
 bool
 Kobject_dbg::is_kobj(void const *o)
 {
-  return pointer_to_obj(o) != _kobjects.end();
+  return pointer_to_obj(o) != _kobjects->end();
 }
 
 PUBLIC static
 Kobject_dbg::Iterator
 Kobject_dbg::id_to_obj(unsigned long id)
 {
-  for (Iterator l = _kobjects.begin(); l != _kobjects.end(); ++l)
+  for (Iterator l = _kobjects->begin(); l != _kobjects->end(); ++l)
     {
       if (l->dbg_id() == id)
 	return l;
@@ -136,18 +137,18 @@ Kobject_dbg::obj_to_id(void const *o)
 PROTECTED
 Kobject_dbg::Kobject_dbg()
 {
-  auto guard = lock_guard(_kobjects_lock);
+  auto guard = lock_guard(&_kobjects_lock);
 
   _dbg_id = _next_dbg_id++;
-  _kobjects.push_back(this);
+  _kobjects->push_back(this);
 }
 
 IMPLEMENT inline
 Kobject_dbg::~Kobject_dbg()
 {
     {
-      auto guard = lock_guard(_kobjects_lock);
-      _kobjects.remove(this);
+      auto guard = lock_guard(&_kobjects_lock);
+      _kobjects->remove(this);
     }
 
   while (Dbg_extension *ex = _jdb_data.front())

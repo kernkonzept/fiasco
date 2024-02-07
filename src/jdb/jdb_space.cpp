@@ -30,14 +30,15 @@ IMPLEMENTATION:
 #include "static_init.h"
 #include "kmem_slab.h"
 
-static Kmem_slab_t<Jdb_space_image_info> _sii_allocator("Jdb_space_image_info");
+static DEFINE_GLOBAL Global_data<Kmem_slab_t<Jdb_space_image_info>>
+  _sii_allocator("Jdb_space_image_info");
 char const *const Jdb_space_image_info::static_type = "Jdb_space_image_info";
 
 IMPLEMENT
 void
 Jdb_space_image_info::operator delete (void *p)
 {
-  _sii_allocator.free(p);
+  _sii_allocator->free(p);
 }
 
 IMPLEMENT
@@ -98,8 +99,8 @@ Jdb_space::invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb) override
           }
 
         Jdb_space_image_info *ne =
-          _sii_allocator.new_obj(access_once(&utcb->values[1]),
-                                 reinterpret_cast<char const *>(&utcb->values[2]),
+          _sii_allocator->new_obj(access_once(&utcb->values[1]),
+                                  reinterpret_cast<char const *>(&utcb->values[2]),
                                   (f->tag().words() - 2) * sizeof(Mword));
         if (!ne)
           {
@@ -115,7 +116,7 @@ Jdb_space::invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb) override
   return false;
 }
 
-static Jdb_space hdl INIT_PRIORITY(JDB_MODULE_INIT_PRIO);
+static DEFINE_GLOBAL_PRIO(JDB_MODULE_INIT_PRIO) Global_data<Jdb_space> hdl;
 
 //-----------------------------------------------------------------------
 IMPLEMENTATION [jdb]:

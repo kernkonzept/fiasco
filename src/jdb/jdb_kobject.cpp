@@ -231,11 +231,12 @@ Jdb_kobject::find_handler(Kobject_common *o)
   return 0;
 }
 
+static DEFINE_GLOBAL_PRIO(BOOTSTRAP_INIT_PRIO) Global_data<Jdb_kobject> jdb_kobj_module;
+
 PUBLIC static
 Jdb_kobject *
 Jdb_kobject::module()
 {
-  static Jdb_kobject jdb_kobj_module;
   return &jdb_kobj_module;
 }
 

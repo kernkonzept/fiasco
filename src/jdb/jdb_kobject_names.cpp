@@ -5,6 +5,7 @@ INTERFACE:
 #include "jdb_kobject.h"
 #include "l4_types.h"
 #include "initcalls.h"
+#include "global_data.h"
 
 
 class Jdb_kobject_name : public Jdb_kobject_extension
@@ -22,7 +23,7 @@ private:
 
   char _name[16];
 
-  static Jdb_kobject_name *_names;
+  static Global_data<Jdb_kobject_name *> _names;
 };
 
 //-----------------------------------------------------------------------
@@ -49,7 +50,7 @@ enum
 
 
 char const *const Jdb_kobject_name::static_type = "Jdb_kobject_names";
-Jdb_kobject_name *Jdb_kobject_name::_names;
+DEFINE_GLOBAL Global_data<Jdb_kobject_name *> Jdb_kobject_name::_names;
 
 
 PUBLIC
@@ -61,7 +62,7 @@ PUBLIC
 Jdb_kobject_name::Jdb_kobject_name()
 { _name[0] = 0; }
 
-static Spin_lock<> allocator_lock;
+DEFINE_GLOBAL static Global_data<Spin_lock<>> allocator_lock;
 
 IMPLEMENT
 void *
@@ -73,7 +74,7 @@ Jdb_kobject_name::operator new (size_t) noexcept
       void **o = reinterpret_cast<void**>(n);
       if (!*o)
 	{
-	  auto g = lock_guard(allocator_lock);
+	  auto g = lock_guard(&allocator_lock);
 	  if (!*o)
 	    {
 	      *o = reinterpret_cast<void*>(10);
@@ -92,7 +93,7 @@ IMPLEMENT
 void
 Jdb_kobject_name::operator delete (void *p)
 {
-  auto g = lock_guard(allocator_lock);
+  auto g = lock_guard(&allocator_lock);
   void **o = reinterpret_cast<void**>(p);
   *o = 0;
 }
@@ -208,6 +209,8 @@ Jdb_name_hdl::show_kobject_short(String_buffer *buf, Kobject_common *o,
 //--------------------------------------------------------------------------
 IMPLEMENTATION:
 
+DEFINE_GLOBAL static Global_data<Jdb_name_hdl> hdl;
+
 PUBLIC static FIASCO_INIT
 void
 Jdb_kobject_name::init()
@@ -218,9 +221,8 @@ Jdb_kobject_name::init()
     panic("No memory for thread names");
 
   for (int i=0; i<Name_entries; i++)
-    *reinterpret_cast<unsigned long*>(_names + i) = 0;
+    *reinterpret_cast<unsigned long*>(&_names[i]) = 0;
 
-  static Jdb_name_hdl hdl;
   Jdb_kobject::module()->register_handler(&hdl);
 }
 

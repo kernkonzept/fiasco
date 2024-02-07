@@ -47,6 +47,7 @@ IMPLEMENTATION [rt_dbg]:
 #include "kdb_ke.h"
 #include "kobject_rpc.h"
 #include "minmax.h"
+#include "global_data.h"
 
 EXTENSION class Jdb_object
 {
@@ -74,7 +75,7 @@ public:
 
 JDB_DEFINE_TYPENAME(Jdb_object, "Jdb");
 
-static Jdb_object __jdb_kobject;
+static DEFINE_GLOBAL Global_data<Jdb_object> __jdb_kobject;
 
 extern "C" void sys_invoke_debug(Kobject_iface *o, Syscall_frame *f) __attribute__((weak));
 
