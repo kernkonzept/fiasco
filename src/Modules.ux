@@ -79,6 +79,7 @@ KERNEL_EXTRA            += $(KERNEL_EXTRA-y)
 
 INTERFACES_KERNEL	:= string_buffer mem_region simpleio kernel_console panic warn \
 			   bitmap buddy_alloc koptions context_base \
+			   global_data \
 			   mem_layout per_cpu_data pm tlbs globals loader vhw   \
 			   kip_init ipi queue_item queue cpu_mask rcupdate \
 			   boot_info config jdb_util	          \
