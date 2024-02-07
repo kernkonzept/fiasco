@@ -195,6 +195,10 @@ SECTIONS {
     *(.anno)
     *(.data.jdb)
 
+#if defined(CONFIG_AMP)
+    ASSERT(. == _etext, "No DATA allowed");
+#endif
+
     *(.init.data)
 
     . = ALIGN(8);
@@ -232,6 +236,9 @@ SECTIONS {
     _per_cpu_ctor_data_end = .;
     *(.bss .bss.* COMMON .gnu.linkonce.b.*)
     *(.bss.jdb)
+#if defined(CONFIG_AMP)
+    ASSERT(. == __bss_start, "No BSS allowed");
+#endif
     *(.init.bss)
     PROVIDE(__bss_end = .);
   } :kdata
