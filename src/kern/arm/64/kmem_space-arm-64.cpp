@@ -25,7 +25,7 @@ static K_ptab_array kernel_l0_vdir;
 enum { Num_scratch_pages = 8 };
 static K_ptab_array pdir_scratch[Num_scratch_pages];
 
-Kpdir *Kmem::kdir = &kernel_l0_vdir.kpdir;
+DEFINE_GLOBAL_CONSTINIT Global_data<Kpdir *> Kmem::kdir(&kernel_l0_vdir.kpdir);
 
 // Provide the initial information for bootstrap.cpp. The kernel linker script
 // overlays the Boot_paging_info member variable in Bootstrap_info with this.
@@ -49,7 +49,7 @@ K_ptab_array kernel_l0_dir;
 enum { Num_scratch_pages = 8 };
 static K_ptab_array pdir_scratch[Num_scratch_pages];
 
-Kpdir *Kmem::kdir = &kernel_l0_dir.kpdir;
+DEFINE_GLOBAL_CONSTINIT Global_data<Kpdir *> Kmem::kdir(&kernel_l0_dir.kpdir);
 
 // Provide the initial information for bootstrap.cpp. The kernel linker script
 // overlays the Boot_paging_info member variable in Bootstrap_info with this.

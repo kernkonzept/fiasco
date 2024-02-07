@@ -25,7 +25,10 @@ union {
   Kpdir kpdir;
   char storage[sizeof(Pdir)];
 } kernel_page_directory;
-Kpdir *Kmem::kdir = &kernel_page_directory.kpdir;
+
+DEFINE_GLOBAL_CONSTINIT
+Global_data<Kpdir *> Kmem::kdir(&kernel_page_directory.kpdir);
+
 Mword *Kmem::_sp = 0;
 
 IMPLEMENT inline

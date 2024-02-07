@@ -51,7 +51,8 @@ Kernel_thread::boot_app_cpus()
 
   _tmp->sctlr = Proc::sctlr();
   _tmp->mair  = Page::Mair0_prrr_bits;
-  _tmp->ttbr_kern = Kmem::kdir->virt_to_phys(reinterpret_cast<Address>(Kmem::kdir));
+  _tmp->ttbr_kern
+    = Kmem::kdir->virt_to_phys(reinterpret_cast<Address>(Kmem::kdir.unwrap()));
   if (!Proc::Is_hyp)
     _tmp->ttbr_usr = cxx::int_value<Phys_mem_addr>(Kernel_task::kernel_task()->dir_phys());
 

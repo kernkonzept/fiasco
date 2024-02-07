@@ -17,7 +17,7 @@ IMPLEMENTATION [mips]:
 #include <cassert>
 
 // currently a dummy, the kernel runs unpaged
-Kpdir *Kmem::kdir = nullptr;
+DEFINE_GLOBAL_CONSTINIT Global_data<Kpdir *> Kmem::kdir;
 
 PUBLIC static
 Address

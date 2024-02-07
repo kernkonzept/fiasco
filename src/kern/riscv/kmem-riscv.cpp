@@ -65,7 +65,7 @@ static Boot_paging_info FIASCO_BOOT_PAGING_INFO
 // _bs_pgin_dta would fail with a "relocation truncated to fit" error.
 static Boot_paging_info *bs_pgin_dta __attribute__((used)) = &_bs_pgin_dta;
 
-Kpdir *Kmem::kdir = nullptr;
+DEFINE_GLOBAL_CONSTINIT Global_data<Kpdir *> Kmem::kdir;
 
 
 IMPLEMENT inline

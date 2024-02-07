@@ -22,7 +22,7 @@ Kernel_thread::boot_app_cpus()
 
   _tramp_mp_startup_cp15_c1 = Cpu::sctlr;
   _tramp_mp_startup_pdbr
-    = Kmem::kdir->virt_to_phys(reinterpret_cast<Address>(Kmem::kdir))
+    = Kmem::kdir->virt_to_phys(reinterpret_cast<Address>(Kmem::kdir.unwrap()))
       | Page::Ttbr_bits;
   _tramp_mp_startup_ttbcr   = Page::Ttbcr_bits;
   _tramp_mp_startup_mair0   = Page::Mair0_prrr_bits;

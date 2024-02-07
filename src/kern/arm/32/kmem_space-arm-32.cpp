@@ -31,7 +31,8 @@ union
   Kpdir kpdir;
   Unsigned64 storage[4];
 } kernel_lpae_dir __attribute__((aligned(4 * sizeof(Unsigned64))));
-Kpdir *Kmem::kdir = &kernel_lpae_dir.kpdir;
+
+DEFINE_GLOBAL_CONSTINIT Global_data<Kpdir *> Kmem::kdir(&kernel_lpae_dir.kpdir);
 
 // Provide the initial information for bootstrap.cpp. The kernel linker script
 // overlays the Boot_paging_info member variable in Bootstrap_info with this.
@@ -46,7 +47,8 @@ IMPLEMENTATION[arm && mmu && !arm_lpae]:
 
 #include "boot_infos.h"
 
-Kpdir *Kmem::kdir = &kernel_page_directory.kpdir;
+DEFINE_GLOBAL_CONSTINIT
+Global_data<Kpdir *> Kmem::kdir(&kernel_page_directory.kpdir);
 
 // Provide the initial information for bootstrap.cpp. The kernel linker script
 // overlays the Boot_paging_info member variable in Bootstrap_info with this.

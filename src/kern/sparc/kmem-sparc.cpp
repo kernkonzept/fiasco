@@ -26,7 +26,10 @@ extern union {
   Kpdir kpdir;
   Mword storage[256];
 } kernel_srmmu_l1;
-Kpdir *Kmem::kdir = &kernel_srmmu_l1.kpdir;
+
+DEFINE_GLOBAL_CONSTINIT
+Global_data<Kpdir *> Kmem::kdir(&kernel_srmmu_l1.kpdir);
+
 Mword *Kmem::_sp = 0;
 
 PUBLIC static

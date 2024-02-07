@@ -36,7 +36,7 @@ IMPLEMENTATION[arm && mmu && cpu_virt]:
 
 PRIVATE inline NEEDS["globals.h", "kmem.h"]
 Kernel_task::Kernel_task()
-: Task(Ram_quota::root, reinterpret_cast<Pdir*>(Kmem::kdir), Caps::none())
+: Task(Ram_quota::root, reinterpret_cast<Pdir*>(Kmem::kdir.unwrap()), Caps::none())
 {}
 
 PUBLIC static inline

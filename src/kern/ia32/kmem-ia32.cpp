@@ -531,7 +531,7 @@ IMPLEMENTATION [ia32,ux,amd64]:
 #include "tss.h"
 
 // static class variables
-Kpdir *Kmem::kdir;
+DEFINE_GLOBAL_CONSTINIT Global_data<Kpdir *> Kmem::kdir;
 Static_object<Kmem::Lockless_alloc> Kmem::tss_mem_vm;
 
 /**

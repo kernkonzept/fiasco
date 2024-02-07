@@ -11,8 +11,8 @@ extern char _kernel_image_start[];
 extern char _initcall_end[];
 
 // Located here to be sure kmpu is constructed before setup_mpu() is called!
-static Kpdir kmpu INIT_PRIORITY(BOOTSTRAP_INIT_PRIO);
-Kpdir *Kmem::kdir = &kmpu;
+static DEFINE_GLOBAL_PRIO(BOOTSTRAP_INIT_PRIO) Global_data<Kpdir> kmpu;
+DEFINE_GLOBAL_CONSTINIT Global_data<Kpdir*> Kmem::kdir(&kmpu);
 
 /**
  * Setup MPU in the kernel.
@@ -24,10 +24,10 @@ Kpdir *Kmem::kdir = &kmpu;
 static void
 setup_mpu()
 {
-  auto diff = kmpu.add(reinterpret_cast<Mword>(_kernel_image_start),
-                       reinterpret_cast<Mword>(_initcall_end) - 1U,
-                       Mpu_region_attr::make_attr(L4_fpage::Rights::RWX()),
-                       false, Kpdir::Kernel_text);
+  auto diff = kmpu->add(reinterpret_cast<Mword>(_kernel_image_start),
+                        reinterpret_cast<Mword>(_initcall_end) - 1U,
+                        Mpu_region_attr::make_attr(L4_fpage::Rights::RWX()),
+                        false, Kpdir::Kernel_text);
 
   // Will probably be never seen because UART is not setup yet. :(
   if (!diff)
