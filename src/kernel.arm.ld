@@ -235,6 +235,19 @@ SECTIONS {
     *(.init.bss)
     PROVIDE(__bss_end = .);
   } :kdata
+
+#if defined(CONFIG_AMP)
+  . = ALIGN(PAGE_ALIGN);
+  .global_data : AT (ADDR(.global_data) - phys_offset) {
+    PROVIDE(__global_data_start = .);
+    *(.global_data)
+    . = ALIGN(64);
+    PROVIDE(__global_data_end = .);
+
+    . = . + (__global_data_end - __global_data_start) * (CONFIG_MP_MAX_CPUS - 1);
+  } :kdata
+#endif
+
   __end_of_the_kernel = .;
 
 #if defined NEED_EXCPT
