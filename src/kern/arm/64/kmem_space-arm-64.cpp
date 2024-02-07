@@ -2,7 +2,11 @@ IMPLEMENTATION [arm && mmu]:
 
 #include "kmem.h"
 
-typedef Unsigned64 K_ptab_array[512] __attribute__((aligned(0x1000)));
+union K_ptab_array
+{
+  Kpdir kpdir;
+  Unsigned64 storage[512];
+} __attribute__((aligned(0x1000)));
 
 // initialize the kernel space (page table)
 IMPLEMENT inline void Kmem_space::init() {}
@@ -21,14 +25,14 @@ static K_ptab_array kernel_l0_vdir;
 enum { Num_scratch_pages = 8 };
 static K_ptab_array pdir_scratch[Num_scratch_pages];
 
-Kpdir *Kmem::kdir = reinterpret_cast<Kpdir *>(&kernel_l0_vdir);
+Kpdir *Kmem::kdir = &kernel_l0_vdir.kpdir;
 
 // Provide the initial information for bootstrap.cpp. The kernel linker script
 // overlays the Boot_paging_info member variable in Bootstrap_info with this.
 static Boot_paging_info FIASCO_BOOT_PAGING_INFO _bs_pgin_dta =
 {
-  kernel_l0_dir,
-  kernel_l0_vdir,
+  kernel_l0_dir.storage,
+  kernel_l0_vdir.storage,
   pdir_scratch,
   (1 << Num_scratch_pages) - 1
 };
@@ -45,13 +49,13 @@ K_ptab_array kernel_l0_dir;
 enum { Num_scratch_pages = 8 };
 static K_ptab_array pdir_scratch[Num_scratch_pages];
 
-Kpdir *Kmem::kdir = reinterpret_cast<Kpdir *>(&kernel_l0_dir);
+Kpdir *Kmem::kdir = &kernel_l0_dir.kpdir;
 
 // Provide the initial information for bootstrap.cpp. The kernel linker script
 // overlays the Boot_paging_info member variable in Bootstrap_info with this.
 static Boot_paging_info FIASCO_BOOT_PAGING_INFO _bs_pgin_dta =
 {
-  kernel_l0_dir,
+  kernel_l0_dir.storage,
   pdir_scratch,
   (1 << Num_scratch_pages) - 1
 };

@@ -21,8 +21,11 @@ IMPLEMENTATION [ppc32]:
 #include "paging.h"
 #include "panic.h"
 
-char kernel_page_directory[sizeof(Pdir)];
-Kpdir *Kmem::kdir = (Kpdir *)&kernel_page_directory;
+union {
+  Kpdir kpdir;
+  char storage[sizeof(Pdir)];
+} kernel_page_directory;
+Kpdir *Kmem::kdir = &kernel_page_directory.kpdir;
 Mword *Kmem::_sp = 0;
 
 IMPLEMENT inline

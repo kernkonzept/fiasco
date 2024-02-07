@@ -22,8 +22,11 @@ IMPLEMENTATION [sparc]:
 #include "paging_bits.h"
 #include "panic.h"
 
-extern Mword kernel_srmmu_l1[256];
-Kpdir *Kmem::kdir = (Kpdir *)kernel_srmmu_l1;
+extern union {
+  Kpdir kpdir;
+  Mword storage[256];
+} kernel_srmmu_l1;
+Kpdir *Kmem::kdir = &kernel_srmmu_l1.kpdir;
 Mword *Kmem::_sp = 0;
 
 PUBLIC static
