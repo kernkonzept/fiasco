@@ -2,6 +2,7 @@
 INTERFACE [arm && arm_generic_timer]:
 
 #include "generic_timer.h"
+#include "global_data.h"
 
 EXTENSION class Timer
 {
@@ -19,8 +20,8 @@ private:
   static void bsp_init(Cpu_number);
   static Unsigned32 frequency();
 
-  static Mword _interval;
-  static Mword _freq0;
+  static Global_data<Mword> _interval;
+  static Global_data<Mword> _freq0;
 };
 
 // --------------------------------------------------------------
@@ -31,8 +32,8 @@ IMPLEMENTATION [arm && arm_generic_timer]:
 #include "cpu.h"
 #include "io.h"
 
-Mword Timer::_interval;
-Mword Timer::_freq0;
+DEFINE_GLOBAL Global_data<Mword> Timer::_interval;
+DEFINE_GLOBAL Global_data<Mword> Timer::_freq0;
 
 IMPLEMENT_OVERRIDE
 Irq_chip::Mode Timer::irq_mode()
@@ -66,7 +67,7 @@ void Timer::init(Cpu_number cpu)
       _freq0 = frequency();
       _interval = Unsigned64{_freq0} * Config::Scheduler_granularity / 1000000;
       printf("ARM generic timer: freq=%ld interval=%ld cnt=%lld\n",
-             _freq0, _interval, Gtimer::counter());
+             _freq0.unwrap(), _interval.unwrap(), Gtimer::counter());
       assert(_freq0);
 
       freq_to_scaler_shift(1000000000, _freq0,

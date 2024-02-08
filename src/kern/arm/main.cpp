@@ -24,8 +24,9 @@ IMPLEMENTATION [arm]:
 #include "terminate.h"
 
 #include "processor.h"
+#include "global_data.h"
 
-static int exit_question_active = 0;
+static DEFINE_GLOBAL Global_data<int> exit_question_active;
 
 extern "C" void __attribute__ ((noreturn))
 _exit(int)
@@ -85,7 +86,7 @@ kernel_main()
   //  pic_disable_all();
 
   // create kernel thread
-  static Kernel_thread *kernel = new (Ram_quota::root) Kernel_thread(Ram_quota::root);
+  Kernel_thread *kernel = new (Ram_quota::root) Kernel_thread(Ram_quota::root);
   Task *const ktask = Kernel_task::kernel_task();
   kernel->kbind(ktask);
   kernel->init_mpu_state();

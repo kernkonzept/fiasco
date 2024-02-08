@@ -9,6 +9,7 @@ INTERFACE:
 
 #include "slab_cache.h"		// Slab_cache
 #include "minmax.h"
+#include "global_data.h"
 
 #include <cxx/slist>
 #include <cxx/type_traits>
@@ -25,7 +26,7 @@ class Kmem_slab : public Slab_cache, public cxx::S_list_item
   typedef cxx::S_list_bss<Kmem_slab> Reap_list;
 
   // STATIC DATA
-  static Reap_list reap_list;
+  static Global_data<Reap_list> reap_list;
 };
 
 
@@ -199,7 +200,7 @@ public:
 //---------------------------------------------------------------------------
 IMPLEMENTATION:
 
-Kmem_slab::Reap_list Kmem_slab::reap_list;
+DEFINE_GLOBAL Global_data<Kmem_slab::Reap_list> Kmem_slab::reap_list;
 
 // Kmem_slab -- A type-independent slab cache allocator for Fiasco,
 // derived from a generic slab cache allocator (Slab_cache in
@@ -224,7 +225,7 @@ Kmem_slab::Kmem_slab(unsigned long slab_size,
 				   char const *name)
   : Slab_cache(slab_size, elem_size, alignment, name)
 {
-  reap_list.add(this, cas<cxx::S_list_item*>);
+  reap_list->add(this, cas<cxx::S_list_item*>);
 }
 
 // Specializations providing their own block_alloc()/block_free() can
@@ -237,7 +238,7 @@ Kmem_slab::Kmem_slab(unsigned elem_size,
                      unsigned long max_size = Buddy_alloc::Max_size)
   : Slab_cache(elem_size, alignment, name, min_size, max_size)
 {
-  reap_list.add(this, cas<cxx::S_list_item*>);
+  reap_list->add(this, cas<cxx::S_list_item*>);
 }
 
 PUBLIC
@@ -249,7 +250,7 @@ Kmem_slab::~Kmem_slab()
     {
       if (*it == this)
         {
-          reap_list.erase(it);
+          reap_list->erase(it);
           break;
         }
     }
@@ -298,4 +299,5 @@ Kmem_slab::reap_all (bool desperate)
   return freed;
 }
 
-static Kmem_alloc_reaper kmem_slab_reaper(Kmem_slab::reap_all);
+static DEFINE_GLOBAL
+Global_data<Kmem_alloc_reaper> kmem_slab_reaper(Kmem_slab::reap_all);

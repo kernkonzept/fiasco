@@ -4,6 +4,7 @@ INTERFACE:
 #include "per_cpu_data.h"
 #include "spin_lock.h"
 #include <cxx/slist>
+#include "global_data.h"
 
 class Rcu_glbl;
 class Rcu_data;
@@ -140,7 +141,7 @@ public:
   typedef Cpu_lock Lock;
   static Rcu_glbl *rcu() { return &_rcu; }
 private:
-  static Rcu_glbl _rcu;
+  static Global_data<Rcu_glbl> _rcu;
   static Per_cpu<Rcu_data> _rcu_data;
 };
 
@@ -200,7 +201,7 @@ IMPLEMENTATION:
 #include "logdefs.h"
 
 
-Rcu_glbl Rcu::_rcu INIT_PRIORITY(EARLY_INIT_PRIO);
+DEFINE_GLOBAL_PRIO(EARLY_INIT_PRIO) Global_data<Rcu_glbl> Rcu::_rcu;
 DEFINE_PER_CPU Per_cpu<Rcu_data> Rcu::_rcu_data(Per_cpu_data::Cpu_num);
 
 PUBLIC

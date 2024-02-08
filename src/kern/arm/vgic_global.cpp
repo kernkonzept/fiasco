@@ -1,13 +1,14 @@
 INTERFACE:
 
 #include "vgic.h"
+#include "global_data.h"
 
 struct Gic_h_global
 {
   using Arm_vgic = Gic_h::Arm_vgic;
-  static Gic_h *gic;
+  static Global_data<Gic_h *> gic;
 };
 
 IMPLEMENTATION:
 
-Gic_h *Gic_h_global::gic;
+DEFINE_GLOBAL Global_data<Gic_h *> Gic_h_global::gic;

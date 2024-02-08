@@ -84,6 +84,7 @@ IMPLEMENTATION:
 #include "thread_state.h"
 #include "l4_buf_iter.h"
 #include "vkey.h"
+#include "global_data.h"
 
 JDB_DEFINE_TYPENAME(Irq_sender, "\033[37mIRQ ipc\033[m");
 
@@ -591,17 +592,17 @@ Irq_sender::id() const
 
  // Irq implementation
 
-static Kmem_slab_t<Irq_sender> _irq_allocator("Irq");
+static DEFINE_GLOBAL Global_data<Kmem_slab_t<Irq_sender>> _irq_allocator("Irq");
 
 PRIVATE static
 void *
 Irq::q_alloc(Ram_quota *q)
-{ return _irq_allocator.q_alloc(q); }
+{ return _irq_allocator->q_alloc(q); }
 
 PRIVATE static
 void
 Irq::q_free(Ram_quota *q, void *f)
-{ _irq_allocator.q_free(q, f); }
+{ _irq_allocator->q_free(q, f); }
 
 PUBLIC inline
 void *

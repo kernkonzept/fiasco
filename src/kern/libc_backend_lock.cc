@@ -4,8 +4,10 @@
 #include <cpu_lock.h>
 #include "mem.h"
 #include "processor.h"
+#include "global_data.h"
 
-static Mword __libc_backend_printf_spinlock = ~0UL;
+static DEFINE_GLOBAL_CONSTINIT
+Global_data<Mword> __libc_backend_printf_spinlock(~0UL);
 
 void __libc_backend_printf_local_force_unlock()
 {

@@ -1,6 +1,7 @@
 INTERFACE [arm]:
 
 #include "irq_chip.h"
+#include "global_data.h"
 
 EXTENSION class Timer
 {
@@ -16,10 +17,10 @@ public:
 private:
   static inline void update_one_shot(Unsigned64 wakeup);
   static Unsigned64 time_stamp();
-  static Unsigned32 _scaler_ts_to_ns;
-  static Unsigned32 _scaler_ts_to_us;
-  static Unsigned32 _shift_ts_to_ns;
-  static Unsigned32 _shift_ts_to_us;
+  static Global_data<Unsigned32> _scaler_ts_to_ns;
+  static Global_data<Unsigned32> _scaler_ts_to_us;
+  static Global_data<Unsigned32> _shift_ts_to_ns;
+  static Global_data<Unsigned32> _shift_ts_to_us;
 };
 
 // ------------------------------------------------------------------------
@@ -52,10 +53,10 @@ IMPLEMENTATION [arm]:
 #include "watchdog.h"
 #include "warn.h"
 
-Unsigned32 Timer::_scaler_ts_to_ns;
-Unsigned32 Timer::_scaler_ts_to_us;
-Unsigned32 Timer::_shift_ts_to_ns;
-Unsigned32 Timer::_shift_ts_to_us;
+DEFINE_GLOBAL Global_data<Unsigned32> Timer::_scaler_ts_to_ns;
+DEFINE_GLOBAL Global_data<Unsigned32> Timer::_scaler_ts_to_us;
+DEFINE_GLOBAL Global_data<Unsigned32> Timer::_shift_ts_to_ns;
+DEFINE_GLOBAL Global_data<Unsigned32> Timer::_shift_ts_to_us;
 
 IMPLEMENT_DEFAULT
 Unsigned64

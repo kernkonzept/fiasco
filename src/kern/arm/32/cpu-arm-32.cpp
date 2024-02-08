@@ -1,5 +1,7 @@
 INTERFACE [arm]:
 
+#include "global_data.h"
+
 EXTENSION class Cpu
 {
 public:
@@ -8,14 +10,14 @@ public:
     Cp15_c1_cache_disabled = Cp15_c1_generic,
   };
 
-  static Unsigned32 sctlr;
+  static Global_data<Unsigned32> sctlr;
   bool has_generic_timer() const { return (_cpu_id._pfr[1] & 0xf0000) == 0x10000; }
 };
 
 //-------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
-Unsigned32 Cpu::sctlr;
+DEFINE_GLOBAL Global_data<Unsigned32> Cpu::sctlr;
 
 PUBLIC static inline
 Mword
@@ -88,7 +90,7 @@ void Cpu::early_init()
 
                  " mcr  p15, 0, %0, c1, c0  \n"
                  :
-                 : "r" (sctlr),
+                 : "r" (sctlr.unwrap()),
                    "r" (Proc::Status_mode_supervisor
                         | Proc::Status_interrupts_disabled)
                  : "r2", "r3");
@@ -136,7 +138,7 @@ Cpu::init_supervisor_mode(bool is_boot_cpu)
   // map the interrupt vector table to 0xffff0000
   auto pte = Kmem::kdir->walk(Virt_addr(Kmem_space::Ivt_base),
                               Kpdir::Depth, true,
-                              Kmem_alloc::q_allocator(Ram_quota::root));
+                              Kmem_alloc::q_allocator(Ram_quota::root.unwrap()));
 
   Address va = reinterpret_cast<Address>(&ivt_start)
                  - Mem_layout::Sdram_phys_base + Mem_layout::Map_base;

@@ -224,6 +224,13 @@ IMPLEMENTATION [arm && 32bit && mpu]:
 
 #include "kmem.h"
 
+EXTENSION class Thread
+{
+  static Global_data<bool> transient_fault_warned;
+};
+
+DEFINE_GLOBAL Global_data<bool> Thread::transient_fault_warned;
+
 /**
  * Check for transient MPU fault caused by optimized entry code.
  *
@@ -264,10 +271,9 @@ Thread::is_transient_mpu_fault(Mword abort_type, Mword raw_hsr)
 
   Mem::isb();
 
-  static bool has_warned = false;
-  if (!has_warned)
+  if (!transient_fault_warned)
     {
-      has_warned = true;
+      transient_fault_warned = true;
       WARN("Unexpected in-kernel data abort. Add an ISB to entry path?\n");
     }
 
@@ -420,8 +426,11 @@ IMPLEMENT_DEFAULT inline
 unsigned Hyp_irqs::vtimer()
 { return 27; }
 
-static Arm_ppi_virt __vgic_irq(Hyp_irqs::vgic(), 0);  // virtual GIC
-static Arm_vtimer_ppi __vtimer_irq(Hyp_irqs::vtimer()); // virtual timer
+static DEFINE_GLOBAL
+Global_data<Arm_ppi_virt> __vgic_irq(Hyp_irqs::vgic(), 0);  // virtual GIC
+
+static DEFINE_GLOBAL
+Global_data<Arm_vtimer_ppi> __vtimer_irq(Hyp_irqs::vtimer()); // virtual timer
 
 namespace {
 struct Local_irq_init
@@ -431,8 +440,8 @@ struct Local_irq_init
     if (cpu >= Cpu::invalid())
       return;
 
-    __vgic_irq.alloc(cpu);
-    __vtimer_irq.alloc(cpu);
+    __vgic_irq->alloc(cpu);
+    __vtimer_irq->alloc(cpu);
   }
 };
 

@@ -100,7 +100,7 @@ App_cpu_thread::bootstrap(Mword resume)
   if (!resume)
     Per_cpu_data::run_late_ctors(ccpu);
 
-  Scheduler::scheduler.trigger_hotplug_event();
+  Scheduler::scheduler->trigger_hotplug_event();
   Timer_tick::enable(ccpu);
   cpu_lock.clear();
 

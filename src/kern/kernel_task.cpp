@@ -2,6 +2,7 @@ INTERFACE:
 
 #include "task.h"
 #include "types.h"
+#include "global_data.h"
 
 class Kernel_thread;
 
@@ -10,7 +11,7 @@ class Kernel_task : public Task
   friend class Kernel_thread;
   friend class Static_object<Kernel_task>;
 private:
-  static Static_object<Kernel_task> _t;
+  static Global_data<Static_object<Kernel_task>> _t;
 };
 
 IMPLEMENTATION[!(arm || ppc32 || sparc)]:
@@ -27,7 +28,7 @@ Kernel_task::Kernel_task()
 
 IMPLEMENTATION:
 
-Static_object<Kernel_task> Kernel_task::_t;
+DEFINE_GLOBAL Global_data<Static_object<Kernel_task>> Kernel_task::_t;
 
 PUBLIC static Task*
 Kernel_task::kernel_task()

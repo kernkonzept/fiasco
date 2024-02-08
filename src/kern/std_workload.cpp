@@ -42,7 +42,7 @@ create_sigma0_task()
 
   for (Cap_index c = Initial_kobjects::first(); c < Initial_kobjects::end(); ++c)
     {
-      Kobject_iface *o = initial_kobjects.obj(c);
+      Kobject_iface *o = initial_kobjects->obj(c);
       if (o)
         check(map_obj_initially(o, sigma0, sigma0, c, 0));
     }
@@ -71,7 +71,7 @@ create_boot_task(Task *sigma0, Thread *sigma0_thread)
 
   for (Cap_index c = Initial_kobjects::first(); c < Initial_kobjects::end(); ++c)
     {
-      Kobject_iface *o = initial_kobjects.obj(c);
+      Kobject_iface *o = initial_kobjects->obj(c);
       if (o)
         check(obj_map(sigma0, c, 1, boot_task, c, 0).error() == 0);
     }

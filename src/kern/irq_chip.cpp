@@ -5,6 +5,7 @@ INTERFACE:
 #include "atomic.h"
 #include "types.h"
 #include "spin_lock.h"
+#include "global_data.h"
 
 class Irq_base;
 class Irq_chip;
@@ -128,7 +129,7 @@ public:
   int set_mode(Mword, Mode) override { return 0; }
   bool is_edge_triggered(Mword) const override { return true; }
 
-  static Irq_chip_soft sw_chip;
+  static Global_data<Irq_chip_soft> sw_chip;
 };
 
 /**
@@ -183,7 +184,7 @@ public:
 
   Irq_base() : _flags(0), _next(0)
   {
-    Irq_chip_soft::sw_chip.bind(this, 0, true);
+    Irq_chip_soft::sw_chip->bind(this, 0, true);
     mask();
   }
 
@@ -280,7 +281,7 @@ protected:
 public:
   Irq_base *_next;
 
-  static Irq_base *(*dcast)(Kobject_iface *);
+  static Global_data<Irq_base *(*)(Kobject_iface *)> dcast;
 };
 
 
@@ -328,8 +329,10 @@ IMPLEMENTATION:
 #include "lock_guard.h"
 #include "static_init.h"
 
-Irq_chip_soft Irq_chip_soft::sw_chip INIT_PRIORITY(EARLY_INIT_PRIO);
-Irq_base *(*Irq_base::dcast)(Kobject_iface *);
+DEFINE_GLOBAL_PRIO(EARLY_INIT_PRIO)
+Global_data<Irq_chip_soft> Irq_chip_soft::sw_chip;
+
+DEFINE_GLOBAL Global_data<Irq_base *(*)(Kobject_iface *)> Irq_base::dcast;
 
 IMPLEMENT inline Irq_chip::~Irq_chip() {}
 IMPLEMENT inline Irq_chip_icu::~Irq_chip_icu() {}
@@ -380,7 +383,7 @@ IMPLEMENT inline
 void
 Irq_chip::unbind(Irq_base *irq)
 {
-  Irq_chip_soft::sw_chip.bind(irq, 0, true);
+  Irq_chip_soft::sw_chip->bind(irq, 0, true);
 }
 
 

@@ -323,10 +323,10 @@ private:
   Ram_quota *_quota;
 
   static Per_cpu<Mem_space *> _current;
-  static Mem_space *_kernel_space;
-  static Page_order _glbl_page_sizes[Max_num_global_page_sizes];
-  static unsigned _num_glbl_page_sizes;
-  static bool _glbl_page_sizes_finished;
+  static Global_data<Mem_space *> _kernel_space;
+  static Global_data<Page_order[Max_num_global_page_sizes]> _glbl_page_sizes;
+  static Global_data<unsigned> _num_glbl_page_sizes;
+  static Global_data<bool> _glbl_page_sizes_finished;
 };
 
 //---------------------------------------------------------------------------
@@ -447,17 +447,22 @@ IMPLEMENTATION:
 #include "mem_unit.h"
 #include "paging.h"
 #include "panic.h"
+#include "global_data.h"
 
 DEFINE_PER_CPU Per_cpu<Mem_space *> Mem_space::_current;
 
 
 char const * const Mem_space::name = "Mem_space";
-Mem_space *Mem_space::_kernel_space;
+DEFINE_GLOBAL Global_data<Mem_space *> Mem_space::_kernel_space;
 
-static Mem_space::Fit_size __mfs;
-Mem_space::Page_order Mem_space::_glbl_page_sizes[Max_num_global_page_sizes];
-unsigned Mem_space::_num_glbl_page_sizes;
-bool Mem_space::_glbl_page_sizes_finished;
+static DEFINE_GLOBAL Global_data<Mem_space::Fit_size> __mfs;
+
+DEFINE_GLOBAL
+Global_data<Mem_space::Page_order[Mem_space::Max_num_global_page_sizes]>
+Mem_space::_glbl_page_sizes;
+
+DEFINE_GLOBAL Global_data<unsigned> Mem_space::_num_glbl_page_sizes;
+DEFINE_GLOBAL Global_data<bool> Mem_space::_glbl_page_sizes_finished;
 
 PROTECTED static
 void
@@ -490,7 +495,7 @@ void
 Mem_space::add_page_size(Page_order o)
 {
   add_global_page_size(o);
-  __mfs.add_page_size(o);
+  __mfs->add_page_size(o);
 }
 
 IMPLEMENT

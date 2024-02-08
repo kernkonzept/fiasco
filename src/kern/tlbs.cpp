@@ -2,6 +2,7 @@ INTERFACE:
 
 #include <cxx/hlist>
 #include "per_cpu_data.h"
+#include "global_data.h"
 #include "mem_unit.h"
 
 /**
@@ -35,7 +36,7 @@ public:
   // register IOMMU TLB
   void register_iommu_tlb()
   {
-    _iommu_tlbs.push_front(this);
+    _iommu_tlbs->push_front(this);
   }
 
   // flush all CPU-dependent TLBs
@@ -57,10 +58,10 @@ public:
 
 private:
   static Per_cpu<Tlb_list> _cpu_tlbs;
-  static Tlb_list _iommu_tlbs;
+  static Global_data<Tlb_list> _iommu_tlbs;
 };
 
 IMPLEMENTATION:
 
 DEFINE_PER_CPU Per_cpu<Tlb::Tlb_list> Tlb::_cpu_tlbs;
-Tlb::Tlb_list Tlb::_iommu_tlbs;
+DEFINE_GLOBAL Global_data<Tlb::Tlb_list> Tlb::_iommu_tlbs;

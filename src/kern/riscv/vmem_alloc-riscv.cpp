@@ -14,7 +14,7 @@ void *
 Vmem_alloc::page_alloc(void *address, Zero_fill zf, unsigned mode)
 {
   void *vpage = Kmem_alloc::q_allocator(
-    Ram_quota::root).alloc(Config::page_size());
+    Ram_quota::root.unwrap()).alloc(Config::page_size());
 
   if (EXPECT_FALSE(!vpage))
     return 0;
@@ -24,7 +24,7 @@ Vmem_alloc::page_alloc(void *address, Zero_fill zf, unsigned mode)
   // insert page into master page table
   auto pte = Kmem::kdir->walk(Virt_addr(address),
                               Kpdir::Depth, false,
-                              Kmem_alloc::q_allocator(Ram_quota::root));
+                              Kmem_alloc::q_allocator(Ram_quota::root.unwrap()));
 
   Page::Rights r = Page::Rights::RWX();
   if (mode & User)

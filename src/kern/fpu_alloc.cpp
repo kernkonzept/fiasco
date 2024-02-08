@@ -15,8 +15,9 @@ IMPLEMENTATION:
 
 #include "kmem_slab.h"
 #include "ram_quota.h"
+#include "global_data.h"
 
-static Kmem_slab _fpu_state_allocator(
+static DEFINE_GLOBAL Global_data<Kmem_slab> _fpu_state_allocator(
   Fpu_alloc::quota_offset(Fpu::state_size()) + sizeof(Ram_quota *),
   Fpu::state_align(), "Fpu state");
 

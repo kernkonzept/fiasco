@@ -2,6 +2,7 @@ IMPLEMENTATION [libuart]:
 
 #include "kmem.h"
 #include "io_regblock.h"
+#include "global_data.h"
 
 //------------------------------------------------------------------------
 IMPLEMENTATION [libuart && serial && io]:
@@ -59,6 +60,8 @@ Kernel_uart::setup_uart_io_port(void *, Address, int, bool)
 //------------------------------------------------------------------------
 IMPLEMENTATION [libuart && serial]:
 
+static DEFINE_GLOBAL_CONSTINIT Global_data<Regs> regs;
+
 IMPLEMENT_OVERRIDE
 bool
 Kernel_uart::init_for_mode(Init_mode init_mode)
@@ -72,8 +75,6 @@ Kernel_uart::init_for_mode(Init_mode init_mode)
 IMPLEMENT
 bool Kernel_uart::startup(unsigned, int irq, bool resume)
 {
-  static Regs regs;
-
   if (Koptions::o()->opt(Koptions::F_uart_base))
     {
       Address base = Koptions::o()->uart.base_address;
@@ -92,31 +93,31 @@ bool Kernel_uart::startup(unsigned, int irq, bool resume)
                 {
                 case 0: // no shift use natural access width
                   if (resume)
-                    r = regs.mem;
+                    r = regs->mem;
                   else
-                    r = regs.mem.construct(Kmem::mmio_remap(base, size),
-                                           Koptions::o()->uart.reg_shift);
+                    r = regs->mem.construct(Kmem::mmio_remap(base, size),
+                                            Koptions::o()->uart.reg_shift);
                   break;
                 case 1: // 1 bit shift, assume fixed 16bit access width
                   if (resume)
-                    r = regs.mem16;
+                    r = regs->mem16;
                   else
-                    r = regs.mem16.construct(Kmem::mmio_remap(base, size),
-                                             Koptions::o()->uart.reg_shift);
+                    r = regs->mem16.construct(Kmem::mmio_remap(base, size),
+                                              Koptions::o()->uart.reg_shift);
                   break;
                 case 2: // 2 bit shift, assume fixed 32bit access width
                   if (resume)
-                    r = regs.mem32;
+                    r = regs->mem32;
                   else
-                    r = regs.mem32.construct(Kmem::mmio_remap(base, size),
-                                             Koptions::o()->uart.reg_shift);
+                    r = regs->mem32.construct(Kmem::mmio_remap(base, size),
+                                              Koptions::o()->uart.reg_shift);
                   break;
                 case 3: // 3 bit shift, assume fixed 64bit access width
                   if (resume)
-                    r = regs.mem64;
+                    r = regs->mem64;
                   else
-                    r = regs.mem64.construct(Kmem::mmio_remap(base, size),
-                                             Koptions::o()->uart.reg_shift);
+                    r = regs->mem64.construct(Kmem::mmio_remap(base, size),
+                                              Koptions::o()->uart.reg_shift);
                   break;
                 default:
                   panic("UART: illegal reg shift value: %d",

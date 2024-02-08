@@ -118,8 +118,10 @@ IMPLEMENTATION:
 #include "globalconfig.h"
 #include "l4_types.h"
 #include "kmem_slab.h"
+#include "global_data.h"
 
-static Kmem_slab_t<Space::Ku_mem> _k_u_mem_list_alloc("Ku_mem");
+static DEFINE_GLOBAL
+Global_data<Kmem_slab_t<Space::Ku_mem>> _k_u_mem_list_alloc("Ku_mem");
 
 //
 // class Space
@@ -173,12 +175,12 @@ Space::is_user_memory(Address address, Mword len)
 PRIVATE static
 void *
 Space::alloc_ku_mem(Ram_quota *q) throw()
-{ return _k_u_mem_list_alloc.q_alloc(q); }
+{ return _k_u_mem_list_alloc->q_alloc(q); }
 
 PRIVATE static
 void
 Space::free_ku_mem(Ram_quota *q, void *k) throw()
-{ _k_u_mem_list_alloc.q_free(q, k); }
+{ _k_u_mem_list_alloc->q_free(q, k); }
 
 //--------------------------------------------------------------------------
 IMPLEMENTATION [!io]:

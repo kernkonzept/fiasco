@@ -43,6 +43,7 @@ IMPLEMENTATION:
 #include "kip.h"
 #include "processor.h"
 #include "string.h"
+#include "global_data.h"
 
 PUBLIC
 Mux_console::Mux_console()
@@ -74,6 +75,8 @@ Mux_console::set_ignore_input(Unsigned64 delta)
   _ignore_input_until = Kip::k()->clock() + delta;
 }
 
+static DEFINE_GLOBAL Global_data<unsigned> releasepos;
+
 PRIVATE
 int
 Mux_console::check_input_ignore()
@@ -84,7 +87,6 @@ Mux_console::check_input_ignore()
         _ignore_input_until = 0;
       else
         {
-          static unsigned releasepos;
           const char *releasestring = "input";
 
           // when we ignore input we read everything which comes in even if

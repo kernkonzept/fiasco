@@ -52,6 +52,7 @@ IMPLEMENTATION:
 #include "vkey.h"
 #include "irq.h"
 #include "irq_controller.h"
+#include "global_data.h"
 
 JDB_DEFINE_TYPENAME(Vlog, "Vlog");
 
@@ -61,7 +62,7 @@ Vlog::Vlog()
 {
   Vkey::irq(icu_irq_ptr(0));
   Vkey::set_echo(Vkey::Echo_crnl);
-  initial_kobjects.register_obj(this, Initial_kobjects::Log);
+  initial_kobjects->register_obj(this, Initial_kobjects::Log);
 }
 
 PUBLIC void
@@ -201,5 +202,5 @@ Vlog::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,
 }
 
 
-static Vlog __vlog;
+static DEFINE_GLOBAL Global_data<Vlog> __vlog;
 

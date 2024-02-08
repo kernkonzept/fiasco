@@ -83,6 +83,7 @@ IMPLEMENTATION:
 #include "thread.h"
 #include "thread_state.h"
 #include "timer.h"
+#include "global_data.h"
 
 JDB_DEFINE_TYPENAME(Ipc_gate_obj, "\033[35mGate\033[m");
 
@@ -173,17 +174,18 @@ void *
 Ipc_gate_obj::operator new (size_t, void *b) noexcept
 { return b; }
 
-static Kmem_slab_t<Ipc_gate_obj> _ipc_gate_allocator("Ipc_gate");
+static DEFINE_GLOBAL
+Global_data<Kmem_slab_t<Ipc_gate_obj>> _ipc_gate_allocator("Ipc_gate");
 
 PRIVATE static
 void *
 Ipc_gate_obj::alloc()
-{ return _ipc_gate_allocator.alloc(); }
+{ return _ipc_gate_allocator->alloc(); }
 
 PRIVATE static
 void
 Ipc_gate_obj::free(void *f)
-{ _ipc_gate_allocator.free(f); }
+{ _ipc_gate_allocator->free(f); }
 
 PUBLIC static
 Ipc_gate_obj *

@@ -2,6 +2,7 @@ INTERFACE:
 
 #include "cpu_mask.h"
 #include "member_offs.h"
+#include "global_data.h"
 
 class Cpu
 {
@@ -45,8 +46,8 @@ public:
 
 private:
 
-  static Online_cpu_mask _online_mask;
-  static Online_cpu_mask _present_mask;
+  static Global_data<Online_cpu_mask> _online_mask;
+  static Global_data<Online_cpu_mask> _present_mask;
 };
 
 
@@ -74,8 +75,11 @@ private:
 // --------------------------------------------------------------------------
 IMPLEMENTATION:
 
-Cpu::Online_cpu_mask Cpu::_online_mask(Online_cpu_mask::Init::Bss);
-Cpu::Online_cpu_mask Cpu::_present_mask(Online_cpu_mask::Init::Bss);
+DEFINE_GLOBAL
+Global_data<Cpu::Online_cpu_mask> Cpu::_online_mask(Online_cpu_mask::Init::Bss);
+
+DEFINE_GLOBAL
+Global_data<Cpu::Online_cpu_mask> Cpu::_present_mask(Online_cpu_mask::Init::Bss);
 
 IMPLEMENT inline
 Cpu::Online_cpu_mask const &
@@ -92,9 +96,9 @@ void
 Cpu::set_online(bool o)
 {
   if (o)
-    _online_mask.atomic_set(id());
+    _online_mask->atomic_set(id());
   else
-    _online_mask.atomic_clear(id());
+    _online_mask->atomic_clear(id());
 }
 
 IMPLEMENT inline
@@ -102,9 +106,9 @@ void
 Cpu::set_present(bool o)
 {
   if (o)
-    _present_mask.atomic_set(id());
+    _present_mask->atomic_set(id());
   else
-    _present_mask.atomic_clear(id());
+    _present_mask->atomic_clear(id());
 }
 
 IMPLEMENT_DEFAULT inline
@@ -123,12 +127,12 @@ Cpu::id() const
 IMPLEMENT inline
 bool
 Cpu::online() const
-{ return _online_mask.get(_id); }
+{ return _online_mask->get(_id); }
 
 IMPLEMENT static inline
 bool
 Cpu::online(Cpu_number _cpu)
-{ return _online_mask.get(_cpu); }
+{ return _online_mask->get(_cpu); }
 
 // --------------------------------------------------------------------------
 IMPLEMENTATION [!mp]:

@@ -59,7 +59,7 @@ public:
   : sigma0(Factory::root())
   {
     // mapdb_mem only exported from map_util-mem for debug builds
-    extern Static_object<Mapdb> mapdb_mem;
+    extern Global_data<Static_object<Mapdb>> mapdb_mem;
     init_mapdb_mem(&sigma0);
     mapdb = mapdb_mem.get();
   }

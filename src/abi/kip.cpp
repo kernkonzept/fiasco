@@ -38,6 +38,7 @@ class Vhw_descriptor {};
 INTERFACE:
 
 #include "types.h"
+#include "global_data.h"
 
 class Kip
 {
@@ -136,7 +137,7 @@ public:
    * KIP clock. */
 
 private:
-  static Kip *global_kip asm ("GLOBAL_KIP");
+  static Global_data<Kip *> global_kip;
 };
 
 #define L4_KERNEL_INFO_MAGIC (0x4BE6344CL) /* "L4µK" */
@@ -247,7 +248,7 @@ Mem_desc *Kip::add_mem_region(Mem_desc const &md)
   return 0;
 }
 
-Kip *Kip::global_kip;
+DEFINE_GLOBAL Global_data<Kip *> Kip::global_kip;
 
 PUBLIC static inline ALWAYS_INLINE NEEDS["config.h"]
 void

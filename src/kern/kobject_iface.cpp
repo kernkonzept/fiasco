@@ -2,6 +2,7 @@ INTERFACE:
 
 #include "l4_types.h"
 #include <cxx/dyn_cast>
+#include "global_data.h"
 
 class Kobject;
 class Kobject_dbg;
@@ -38,7 +39,7 @@ public:
                                       Utcb const *utcb, Utcb *out,
                                       int *err, unsigned *words);
   enum { Max_factory_index = -L4_msg_tag::Max_factory_label };
-  static Factory_func *factory[Max_factory_index + 1];
+  static Global_data<Factory_func *[Max_factory_index + 1]> factory;
 };
 
 IMPLEMENTATION:
@@ -47,7 +48,9 @@ IMPLEMENTATION:
 
 IMPLEMENT inline Kobject_common::~Kobject_common() {}
 
-Kobject_iface::Factory_func *Kobject_iface::factory[Max_factory_index + 1];
+DEFINE_GLOBAL
+Global_data<Kobject_iface::Factory_func *[Kobject_iface::Max_factory_index + 1]>
+Kobject_iface::factory;
 
 PUBLIC static inline
 L4_msg_tag

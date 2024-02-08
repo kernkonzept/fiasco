@@ -25,10 +25,12 @@ IMPLEMENTATION:
 #include "logdefs.h"
 #include "entry_frame.h"
 #include "task.h"
+#include "global_data.h"
 
 JDB_DEFINE_TYPENAME(Factory, "\033[33;1mFactory\033[m");
 
-static Factory _root_factory INIT_PRIORITY(ROOT_FACTORY_INIT_PRIO);
+static DEFINE_GLOBAL_PRIO(ROOT_FACTORY_INIT_PRIO)
+Global_data<Factory> _root_factory;
 
 PUBLIC inline
 Factory::Factory()
@@ -41,22 +43,23 @@ Factory::Factory(Ram_quota *q, Mword max)
 {}
 
 
-static Kmem_slab_t<Factory> _factory_allocator("Factory");
+static DEFINE_GLOBAL
+Global_data<Kmem_slab_t<Factory>> _factory_allocator("Factory");
 
 PRIVATE static
 void *
 Factory::alloc()
-{ return _factory_allocator.alloc(); }
+{ return _factory_allocator->alloc(); }
 
 PRIVATE static
 void
 Factory::free(void *f)
-{ _factory_allocator.free(f); }
+{ _factory_allocator->free(f); }
 
 PUBLIC static inline
 Factory * FIASCO_PURE
 Factory::root()
-{ return nonull_static_cast<Factory*>(Ram_quota::root); }
+{ return nonull_static_cast<Factory*>(Ram_quota::root.unwrap()); }
 
 PUBLIC
 void
@@ -260,4 +263,4 @@ IMPLEMENTATION [test_support_code]:
 PRIVATE static
 Slab_cache *
 Factory::allocator()
-{ return _factory_allocator.slab(); }
+{ return _factory_allocator->slab(); }

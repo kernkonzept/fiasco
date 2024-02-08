@@ -2,6 +2,7 @@ INTERFACE:
 
 #include "mux_console.h"
 #include "std_macros.h"
+#include "global_data.h"
 
 class Kconsole : public Mux_console
 {
@@ -35,7 +36,7 @@ public:
   }
 
 private:
-  static Static_object<Kconsole> _c;
+  static Global_data<Static_object<Kconsole>> _c;
 };
 
 IMPLEMENTATION:
@@ -45,7 +46,7 @@ IMPLEMENTATION:
 #include "mux_console.h"
 #include "processor.h"
 
-Static_object<Kconsole> Kconsole::_c;
+DEFINE_GLOBAL Global_data<Static_object<Kconsole>> Kconsole::_c;
 
 
 IMPLEMENT

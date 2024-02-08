@@ -231,6 +231,7 @@ IMPLEMENTATION:
 #include "task.h"
 #include "thread_state.h"
 #include "timeout.h"
+#include "global_data.h"
 
 JDB_DEFINE_TYPENAME(Thread,  "\033[32mThread\033[m");
 DEFINE_PER_CPU Per_cpu<unsigned long> Thread::nested_trap_recover;
@@ -360,10 +361,10 @@ Thread::~Thread()		// To be called in locked state.
 class Del_irq_chip : public Irq_chip_soft
 {
 public:
-  static Del_irq_chip chip;
+  static Global_data<Del_irq_chip> chip;
 };
 
-Del_irq_chip Del_irq_chip::chip;
+DEFINE_GLOBAL Global_data<Del_irq_chip> Del_irq_chip::chip;
 
 PUBLIC static inline
 Thread *Del_irq_chip::thread(Mword pin)
@@ -400,7 +401,7 @@ Thread::register_delete_irq(Irq_base *irq)
 
   auto g = lock_guard(irq->irq_lock());
   irq->unbind();
-  Del_irq_chip::chip.bind(irq, reinterpret_cast<Mword>(this));
+  Del_irq_chip::chip->bind(irq, reinterpret_cast<Mword>(this));
   if (cas<Irq_base *>(&_del_observer, nullptr, irq))
     return true;
 

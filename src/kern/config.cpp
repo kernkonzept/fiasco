@@ -8,6 +8,7 @@ INTERFACE:
 #include "config_tcbsize.h"
 #include "initcalls.h"
 #include "l4_types.h"
+#include "global_data.h"
 
 // special magic to allow old compilers to inline constants
 
@@ -116,9 +117,9 @@ public:
 
   static Cpu_number max_num_cpus() { return Cpu_number(Max_num_cpus); }
 
-  static bool getchar_does_hlt_works_ok;
-  static bool esc_hack;
-  static unsigned tbuf_entries;
+  static Global_data<bool> getchar_does_hlt_works_ok;
+  static Global_data<bool> esc_hack;
+  static Global_data<unsigned> tbuf_entries;
 
   static constexpr Order page_order()
   { return Order(PAGE_SHIFT); }
@@ -163,7 +164,7 @@ INTERFACE [serial]:
 EXTENSION class Config
 {
 public:
-  static int  serial_esc;
+  static Global_data<int>  serial_esc;
 };
 
 //---------------------------------------------------------------------------
@@ -223,13 +224,16 @@ IMPLEMENTATION:
 KIP_KERNEL_ABI_VERSION(FIASCO_STRINGIFY(FIASCO_KERNEL_SUBVERSION));
 
 // class variables
-bool Config::esc_hack = false;
+DEFINE_GLOBAL Global_data<bool> Config::esc_hack;
 #ifdef CONFIG_SERIAL
-int  Config::serial_esc = Config::SERIAL_NO_ESC;
+DEFINE_GLOBAL_CONSTINIT
+Global_data<int>  Config::serial_esc(Config::SERIAL_NO_ESC);
 #endif
 
-unsigned Config::tbuf_entries = 0x20000 / sizeof(Mword); //1024;
-bool Config::getchar_does_hlt_works_ok = false;
+DEFINE_GLOBAL_CONSTINIT
+Global_data<unsigned> Config::tbuf_entries(0x20000 / sizeof(Mword)); //1024;
+
+DEFINE_GLOBAL Global_data<bool> Config::getchar_does_hlt_works_ok;
 
 #ifdef CONFIG_FINE_GRAINED_CPUTIME
 KIP_KERNEL_FEATURE("fi_gr_cputime");

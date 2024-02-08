@@ -2,11 +2,12 @@ INTERFACE:
 
 #include "std_macros.h"
 #include "initcalls.h"
+#include "global_data.h"
 
 class Delay
 {
 private:
-  static unsigned count;
+  static Global_data<unsigned> count;
 
 public:
   static void init() FIASCO_INIT;
@@ -19,7 +20,7 @@ IMPLEMENTATION:
 #include "processor.h"
 #include "timer.h"
 
-unsigned Delay::count;
+DEFINE_GLOBAL Global_data<unsigned> Delay::count;
 
 PRIVATE static
 unsigned

@@ -58,8 +58,8 @@ IMPLEMENTATION [serial]:
 #include "panic.h"
 #include "vkey.h"
 
-static Static_object<Filter_console> _fcon;
-static Static_object<Kernel_uart> _kernel_uart;
+static DEFINE_GLOBAL Global_data<Static_object<Filter_console>> _fcon;
+static DEFINE_GLOBAL Global_data<Static_object<Kernel_uart>> _kernel_uart;
 
 PUBLIC static FIASCO_CONST
 Uart *
@@ -163,16 +163,16 @@ public:
   }
 };
 
+static DEFINE_GLOBAL_PRIO(BOOTSTRAP_INIT_PRIO) Global_data<Kuart_irq> uart_irq;
 
 IMPLEMENT
 void
 Kernel_uart::enable_rcv_irq()
 {
-  static Kuart_irq uart_irq;
-  auto mgr = Irq_mgr::mgr;
+  Irq_mgr *mgr = Irq_mgr::mgr;
   if (mgr->alloc(&uart_irq, mgr->legacy_override(uart()->irq())))
     {
-      uart_irq.unmask();
+      uart_irq->unmask();
       uart()->enable_rcv_irq();
       Vkey::enable_receive();
     }

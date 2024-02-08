@@ -3,6 +3,7 @@ INTERFACE:
 #include <cstddef>
 #include <cxx/slist>
 #include <cxx/type_traits>
+#include "global_data.h"
 
 class Boot_alloced
 {
@@ -13,7 +14,7 @@ private:
 
   typedef cxx::S_list_bss<Block> Block_list;
 
-  static Block_list _free;
+  static Global_data<Block_list> _free;
 };
 
 template< typename Base >
@@ -35,7 +36,7 @@ IMPLEMENTATION:
 #include "kmem_alloc.h"
 #include "warn.h"
 
-Boot_alloced::Block_list Boot_alloced::_free;
+DEFINE_GLOBAL Global_data<Boot_alloced::Block_list> Boot_alloced::_free;
 
 PUBLIC static
 void *
@@ -46,15 +47,15 @@ Boot_alloced::alloc(size_t size)
 
   // this is best fit list-based allocation
 
-  Block_list::Iterator best = _free.end();
-  for (Block_list::Iterator curr = _free.begin(); curr != _free.end(); ++curr)
+  Block_list::Iterator best = _free->end();
+  for (Block_list::Iterator curr = _free->begin(); curr != _free->end(); ++curr)
     {
-      if (((best == _free.end()) || curr->size < best->size)
+      if (((best == _free->end()) || curr->size < best->size)
 	  && curr->size >= size)
 	best = curr;
     }
 
-  if (best == _free.end())
+  if (best == _free->end())
     {
       // start from 1k
       unsigned long alloc_size = 1024;
@@ -73,8 +74,8 @@ Boot_alloced::alloc(size_t size)
 	return 0;
 
       b->size = alloc_size;
-      _free.add(b);
-      best = _free.begin();
+      _free->add(b);
+      best = _free->begin();
     }
 
 
@@ -88,13 +89,13 @@ Boot_alloced::alloc(size_t size)
     {
       Block *rem = reinterpret_cast<Block *>(rem_addr);
       rem->size = rem_sz;
-      _free.replace(best, rem);
+      _free->replace(best, rem);
       if (Debug_boot_alloc)
         printf("Boot_alloc: remaining free block @ %p (size=%lx)\n",
                static_cast<void *>(rem), rem_sz);
     }
   else
-    _free.erase(best);
+    _free->erase(best);
 
   memset(b, 0, size);
   return b;

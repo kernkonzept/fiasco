@@ -62,11 +62,17 @@ INTERFACE [obj_space_phys_avl]:
 #include "cxx/avl_map"
 #include "kmem_slab.h"
 #include "spin_lock.h"
+#include "global_data.h"
 
 template< typename _Type >
 class Obj_space_phys_allocator
 {
-  static Kmem_slab_t<_Type> _cap_allocator;
+public:
+  typedef _Type Type;
+  typedef Kmem_slab_t<Type> Allocator;
+
+private:
+  static Global_data<Allocator> _cap_allocator;
 
   Ram_quota *_q;
 
@@ -79,14 +85,14 @@ public:
   {}
 
   _Type *alloc() noexcept
-  { return static_cast<_Type*>(_cap_allocator.q_alloc(_q)); }
+  { return static_cast<_Type*>(_cap_allocator->q_alloc(_q)); }
 
   void free(_Type *t) noexcept
-  { _cap_allocator.q_free(_q, t); }
+  { _cap_allocator->q_free(_q, t); }
 };
 
-template< typename _Type >
-Kmem_slab_t<_Type> Obj_space_phys_allocator<_Type>::_cap_allocator("Cap");
+typedef cxx::Avl_map<Cap_index, Obj::Entry, cxx::Lt_functor,
+                     Obj_space_phys_allocator> Obj_space_phys_entries;
 
 // AVL tree based mapping table
 template< typename SPACE >
@@ -121,8 +127,7 @@ private:
     Map_max_address = 1UL << 20, /* 20bit obj index */
   };
 
-  typedef cxx::Avl_map<Cap_index, Entry, cxx::Lt_functor,
-                       Obj_space_phys_allocator> Entries;
+  using Entries = Obj_space_phys_entries;
   Entries _map;
   Spin_lock<> _lock;
 
@@ -132,6 +137,14 @@ private:
     return SPACE::ram_quota(this);
   }
 };
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [obj_space_phys_avl]:
+
+template<>
+DEFINE_GLOBAL
+Global_data<Obj_space_phys_entries::Node_allocator::Allocator>
+Obj_space_phys_allocator<Obj_space_phys_entries::Node_allocator::Type>::_cap_allocator("Cap");
 
 // ------------------------------------------------------------------------
 INTERFACE [obj_space_virt]:

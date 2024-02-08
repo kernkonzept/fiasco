@@ -9,6 +9,8 @@ IMPLEMENTATION:
 #include "helping_lock.h"
 #include "kernel_console.h"
 #include "reset.h"
+#include "global_data.h"
+#include "static_init.h"
 
 /**
  * The exit handler as long as exit_question() is not installed.
@@ -28,7 +30,8 @@ raw_exit()
 }
 
 
-static void (*exit_question)(void) = &raw_exit;
+static DEFINE_GLOBAL_PRIO(CONSTINIT_INIT_PRIO)
+Global_data<void (*)(void)> exit_question(&raw_exit);
 
 void set_exit_question(void (*eq)(void))
 {

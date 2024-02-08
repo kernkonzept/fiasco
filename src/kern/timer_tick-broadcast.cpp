@@ -1,11 +1,12 @@
 INTERFACE:
 
 #include "types.h"
+#include "global_data.h"
 
 EXTENSION class Timer_tick
 {
 public:
-  static Static_object<Timer_tick> _glbl_timer;
+  static Global_data<Static_object<Timer_tick>> _glbl_timer;
 };
 
 IMPLEMENTATION:
@@ -13,7 +14,7 @@ IMPLEMENTATION:
 #include "ipi.h"
 #include "timer.h"
 
-Static_object<Timer_tick> Timer_tick::_glbl_timer;
+DEFINE_GLOBAL Global_data<Static_object<Timer_tick>> Timer_tick::_glbl_timer;
 
 IMPLEMENT void
 Timer_tick::setup(Cpu_number cpu)

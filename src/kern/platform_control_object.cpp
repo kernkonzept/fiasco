@@ -4,6 +4,7 @@ IMPLEMENTATION:
 #include "platform_control.h"
 #include "irq_controller.h"
 #include "reset.h"
+#include "global_data.h"
 
 namespace {
 
@@ -61,7 +62,7 @@ class Pfc : public Kobject_h<Pfc, Icu>
     return commit_result(-L4_err::ENosys);
   }
 
-  static Pfc pfc;
+  static Global_data<Pfc> pfc;
 
 public:
   L4_msg_tag kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,
@@ -88,6 +89,6 @@ public:
 
 JDB_DEFINE_TYPENAME(Pfc, "Icu/Pfc");
 
-Pfc Pfc::pfc;
+DEFINE_GLOBAL Global_data<Pfc> Pfc::pfc;
 
 }

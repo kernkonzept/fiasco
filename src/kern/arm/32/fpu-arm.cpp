@@ -44,7 +44,7 @@ public:
 
 private:
   Fpsid _fpsid;
-  static bool save_32r;
+  static Global_data<bool> save_32r;
 };
 
 class Fpu_state : public Fpu::Fpu_regs {};
@@ -109,8 +109,9 @@ IMPLEMENTATION [arm && fpu]:
 #include "mem.h"
 #include "processor.h"
 #include "trap_state.h"
+#include "global_data.h"
 
-bool Fpu::save_32r;
+DEFINE_GLOBAL Global_data<bool> Fpu::save_32r;
 
 PUBLIC static inline
 Mword
@@ -270,7 +271,7 @@ Fpu::save_fpu_regs(Fpu_regs *r)
                "beq 1f                 \n"
                "vstm   %0!, {d16-d31}  \n"
                "1:                     \n"
-               : "=r" (tmp) : "0" (r->state), "r" (save_32r));
+               : "=r" (tmp) : "0" (r->state), "r" (save_32r.unwrap()));
 }
 
 PRIVATE static inline
@@ -284,7 +285,7 @@ Fpu::restore_fpu_regs(Fpu_regs const *r)
                "beq 1f                 \n"
                "vldm   %0!, {d16-d31} \n"
                "1:                     \n"
-               : "=r" (tmp) : "0" (r->state), "r" (save_32r));
+               : "=r" (tmp) : "0" (r->state), "r" (save_32r.unwrap()));
 }
 
 IMPLEMENT

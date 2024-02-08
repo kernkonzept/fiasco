@@ -7,6 +7,7 @@ INTERFACE:
 #include "spin_lock.h"
 #include "lock_guard.h"
 #include "initcalls.h"
+#include "global_data.h"
 
 class Buddy_alloc;
 class Mem_region_map_base;
@@ -19,9 +20,8 @@ class Kmem_alloc
 {
   friend class Kmem_alloc_tester;
 
-  Kmem_alloc() FIASCO_INIT;
-
 public:
+  Kmem_alloc() FIASCO_INIT;
   typedef Buddy_alloc Alloc;
 
   Address to_phys(void *v) const;
@@ -63,12 +63,11 @@ private:
    */
   enum : size_t { Nr_fixups = 2 };
 
-  static Fixup _fixups[Nr_fixups];
-  static Lock lock;
-  static Alloc *a;
-  static unsigned long _orig_free;
-  static Kmem_alloc *_alloc;
-
+  static Global_data<Fixup[Nr_fixups]> _fixups;
+  static Global_data<Lock> lock;
+  static Global_data<Alloc *> a;
+  static Global_data<unsigned long> _orig_free;
+  static Global_data<Kmem_alloc *> _alloc;
 };
 
 class Kmem_alloc_reaper : public cxx::S_list_item
@@ -77,7 +76,7 @@ class Kmem_alloc_reaper : public cxx::S_list_item
 
 private:
   typedef cxx::S_list_bss<Kmem_alloc_reaper> Reaper_list;
-  static Reaper_list mem_reapers;
+  static Global_data<Reaper_list> mem_reapers;
 };
 
 template<typename Q>
@@ -126,15 +125,29 @@ IMPLEMENTATION:
 #include "mem_region.h"
 #include "buddy_alloc.h"
 #include "panic.h"
+#include "static_init.h"
 #include "warn.h"
 
-static Kmem_alloc::Alloc _a;
+static DEFINE_GLOBAL_PRIO(BOOTSTRAP_INIT_PRIO)
+Global_data<Static_object<Kmem_alloc>> al;
 
-Kmem_alloc::Fixup Kmem_alloc::_fixups[Kmem_alloc::Nr_fixups];
-Kmem_alloc::Alloc *Kmem_alloc::a = &_a;
-unsigned long Kmem_alloc::_orig_free;
-Kmem_alloc::Lock Kmem_alloc::lock;
-Kmem_alloc *Kmem_alloc::_alloc;
+static DEFINE_GLOBAL_PRIO(BOOTSTRAP_INIT_PRIO)
+Global_data<Kmem_alloc::Alloc> _a;
+
+DEFINE_GLOBAL_PRIO(BOOTSTRAP_INIT_PRIO)
+Global_data<Kmem_alloc::Fixup[Kmem_alloc::Nr_fixups]> Kmem_alloc::_fixups;
+
+DEFINE_GLOBAL_PRIO(BOOTSTRAP_INIT_PRIO)
+Global_data<Kmem_alloc::Alloc *> Kmem_alloc::a(&_a);
+
+DEFINE_GLOBAL_PRIO(BOOTSTRAP_INIT_PRIO)
+Global_data<unsigned long> Kmem_alloc::_orig_free;
+
+DEFINE_GLOBAL_PRIO(BOOTSTRAP_INIT_PRIO)
+Global_data<Kmem_alloc::Lock> Kmem_alloc::lock;
+
+DEFINE_GLOBAL_PRIO(BOOTSTRAP_INIT_PRIO)
+Global_data<Kmem_alloc *> Kmem_alloc::_alloc;
 
 /**
  * Allocate physical memory before the buddy allocator initialization.
@@ -302,8 +315,8 @@ PUBLIC static FIASCO_INIT
 void
 Kmem_alloc::init()
 {
-  static Kmem_alloc al;
-  Kmem_alloc::allocator(&al);
+  al.construct();
+  Kmem_alloc::allocator(al);
 }
 
 PUBLIC
@@ -350,7 +363,7 @@ Kmem_alloc::alloc(Bytes size)
   void* ret;
 
   {
-    auto guard = lock_guard(lock);
+    auto guard = lock_guard(&lock);
     ret = a->alloc(sz);
   }
 
@@ -358,7 +371,7 @@ Kmem_alloc::alloc(Bytes size)
     {
       Kmem_alloc_reaper::morecore (/* desperate= */ true);
 
-      auto guard = lock_guard(lock);
+      auto guard = lock_guard(&lock);
       ret = a->alloc(sz);
     }
 
@@ -375,7 +388,7 @@ Kmem_alloc::free(Bytes size, void *page)
 {
   const size_t sz = cxx::int_value<Bytes>(size);
   assert(sz >= 8 /* NEW INTERFACE PARANOIA */);
-  auto guard = lock_guard(lock);
+  auto guard = lock_guard(&lock);
   a->free(page, sz);
 }
 
@@ -600,13 +613,14 @@ Kmem_alloc::orig_free()
 }
 
 
-Kmem_alloc_reaper::Reaper_list Kmem_alloc_reaper::mem_reapers;
+DEFINE_GLOBAL
+Global_data<Kmem_alloc_reaper::Reaper_list> Kmem_alloc_reaper::mem_reapers;
 
 PUBLIC inline NEEDS["atomic.h"]
 Kmem_alloc_reaper::Kmem_alloc_reaper(size_t (*reap)(bool desperate))
 : _reap(reap)
 {
-  mem_reapers.add(this, cas<cxx::S_list_item *>);
+  mem_reapers->add(this, cas<cxx::S_list_item *>);
 }
 
 PUBLIC static
@@ -615,8 +629,8 @@ Kmem_alloc_reaper::morecore(bool desperate = false)
 {
   size_t freed = 0;
 
-  for (Reaper_list::Const_iterator reaper = mem_reapers.begin();
-       reaper != mem_reapers.end(); ++reaper)
+  for (Reaper_list::Const_iterator reaper = mem_reapers->begin();
+       reaper != mem_reapers->end(); ++reaper)
     freed += reaper->_reap(desperate);
 
   return freed;

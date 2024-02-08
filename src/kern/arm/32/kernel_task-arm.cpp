@@ -16,7 +16,7 @@ Kernel_task::map_syscall_page(void *p)
 {
   auto pte = Kmem::kdir->walk(Virt_addr(Kmem_space::Syscalls),
                               Pdir::Depth, true,
-                              Kmem_alloc::q_allocator(Ram_quota::root));
+                              Kmem_alloc::q_allocator(Ram_quota::root.unwrap()));
 
   if (pte.level == 0) // allocation of second level failed
     panic("Error mapping syscall page to %p",

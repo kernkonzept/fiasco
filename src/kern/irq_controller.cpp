@@ -75,6 +75,6 @@ Icu::icu_msi_info(Mword msi, Unsigned64 source, Irq_mgr::Msi_info *out)
 PUBLIC inline
 Icu::Icu()
 {
-  initial_kobjects.register_obj(this, Initial_kobjects::Icu);
+  initial_kobjects->register_obj(this, Initial_kobjects::Icu);
 }
 

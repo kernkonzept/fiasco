@@ -73,6 +73,7 @@ IMPLEMENTATION:
 #include "ram_quota.h"
 #include "thread_state.h"
 #include "paging.h"
+#include "global_data.h"
 
 JDB_DEFINE_TYPENAME(Task, "\033[31mTask\033[m");
 
@@ -363,18 +364,18 @@ Task::Task(Ram_quota *q, Mem_space::Dir_type* pdir, Caps c)
   inc_ref(true);
 }
 
-static Kmem_slab_t<Task> _task_allocator("Task");
+static DEFINE_GLOBAL Global_data<Kmem_slab_t<Task>> _task_allocator("Task");
 
 PRIVATE static
 Task *Task::alloc(Ram_quota *q)
 {
-  return _task_allocator.q_new(q, q);
+  return _task_allocator->q_new(q, q);
 }
 
 PUBLIC static
 Task *Task::alloc(Ram_quota *q, Caps c)
 {
-  return _task_allocator.q_new(q, q, c);
+  return _task_allocator->q_new(q, q, c);
 }
 
 PUBLIC //inline
@@ -388,7 +389,7 @@ Task::operator delete (void *ptr)
             l->type = cxx::Typeid<Task>::get();
             l->ram = t->ram_quota()->current());
 
-  _task_allocator.q_free(t->ram_quota(), ptr);
+  _task_allocator->q_free(t->ram_quota(), ptr);
 }
 
 PUBLIC template<typename TASK_TYPE, bool MUST_SYNC_KERNEL = true,

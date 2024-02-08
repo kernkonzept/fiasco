@@ -2,13 +2,14 @@ INTERFACE:
 
 #include "gic.h"
 #include "gic_cpu_v2.h"
+#include "global_data.h"
 
 class Gic_v2 : public Gic_mixin<Gic_v2, Gic_cpu_v2>
 {
   using Gic = Gic_mixin<Gic_v2, Gic_cpu_v2>;
   Per_cpu_array<Unsigned32> _sgi_template;
 
-  static Gic_v2 *primary;
+  static Global_data<Gic_v2 *> primary;
 
   static void _glbl_irq_handler()
   { primary->hit(nullptr); }
@@ -39,7 +40,7 @@ public:
 //-------------------------------------------------------------------
 IMPLEMENTATION:
 
-Gic_v2 *Gic_v2::primary;
+DEFINE_GLOBAL Global_data<Gic_v2 *> Gic_v2::primary;
 
 PUBLIC inline
 void

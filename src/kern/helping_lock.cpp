@@ -2,6 +2,7 @@ INTERFACE:
 
 #include "lock_guard.h"
 #include "switch_lock.h"
+#include "global_data.h"
 
 #ifdef NO_INSTRUMENT
 #undef NO_INSTRUMENT
@@ -28,7 +29,7 @@ public:
   using Switch_lock::valid;
   using Switch_lock::wait_free;
 
-  static bool threading_system_active;
+  static Global_data<bool> threading_system_active;
 };
 
 #undef NO_INSTRUMENT
@@ -42,7 +43,7 @@ IMPLEMENTATION:
 
 
 /** Threading system activated. */
-bool Helping_lock::threading_system_active = false;
+DEFINE_GLOBAL Global_data<bool> Helping_lock::threading_system_active;
 
 /** Constructor. */
 PUBLIC inline

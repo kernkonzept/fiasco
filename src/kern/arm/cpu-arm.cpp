@@ -78,7 +78,7 @@ private:
   void init_hyp_mode();
   static void early_init_platform();
 
-  static Cpu *_boot_cpu;
+  static Global_data<Cpu *> _boot_cpu;
 
   // 32 bits: 24..31: Aff3 (0 for ARM32); 16..23: Aff2; 8..15: Aff1; 0..7: Aff0
   Cpu_phys_id _phys_id;
@@ -423,7 +423,7 @@ IMPLEMENTATION [arm]:
 #include "ram_quota.h"
 
 DEFINE_PER_CPU_P(0) Per_cpu<Cpu> Cpu::cpus(Per_cpu_data::Cpu_num);
-Cpu *Cpu::_boot_cpu;
+DEFINE_GLOBAL Global_data<Cpu *> Cpu::_boot_cpu;
 
 IMPLEMENT_DEFAULT inline void Cpu::early_init_platform() {}
 

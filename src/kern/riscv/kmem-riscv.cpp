@@ -89,9 +89,9 @@ Kmem::init_paging()
   // So far the kernel page tables have been allocated from boot_page_memory.
   // Reallocate them now in pmem, as pmem_to_phys() would return incorrect
   // results for page tables located in boot_page_memory.
-  auto alloc = Kmem_alloc::q_allocator(Ram_quota::root);
+  auto alloc = Kmem_alloc::q_allocator(Ram_quota::root.unwrap());
   Kmem_slab_t<Kpdir, sizeof(Kpdir)> kdir_alloc;
-  kdir = kdir_alloc.q_new(Ram_quota::root);
+  kdir = kdir_alloc.q_new(Ram_quota::root.unwrap());
 
   // Map kernel image.
   if (!kdir->map(boot_virt_to_phys(Virt_addr(Mem_layout::Map_base)),
@@ -249,7 +249,7 @@ Kmem::mmio_remap(Address phys, Mword size)
     {
       if (!kdir->map(phys_page, Virt_addr(virt_page), Virt_size(map_size),
                      Pte_ptr::make_attribs(attr), Kpdir::Super_level, false,
-                     Kmem_alloc::q_allocator(Ram_quota::root)))
+                     Kmem_alloc::q_allocator(Ram_quota::root.unwrap())))
         return ~0UL;
     }
   else

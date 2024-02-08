@@ -2,6 +2,7 @@ INTERFACE:
 
 #include <cstddef>
 #include "l4_types.h"
+#include "global_data.h"
 
 /**
  * The abstract interface for a text I/O console.
@@ -87,11 +88,11 @@ public:
 
 public:
   /// stdout for libc glue.
-  static Console *stdout;
+  static Global_data<Console *> stdout;
   /// stderr for libc glue.
-  static Console *stderr;
+  static Global_data<Console *> stderr;
   /// stdin for libc glue.
-  static Console *stdin;
+  static Global_data<Console *> stdin;
 
 protected:
   Mword  _state;
@@ -104,9 +105,9 @@ IMPLEMENTATION:
 #include <cstring>
 #include <cctype>
 
-Console *Console::stdout;
-Console *Console::stderr;
-Console *Console::stdin;
+DEFINE_GLOBAL Global_data<Console *> Console::stdout;
+DEFINE_GLOBAL Global_data<Console *> Console::stderr;
+DEFINE_GLOBAL Global_data<Console *> Console::stdin;
 
 IMPLEMENT Console::~Console()
 {}

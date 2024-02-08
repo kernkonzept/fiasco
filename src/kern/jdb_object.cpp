@@ -24,7 +24,7 @@ private:
 public:
   Jdb_object()
   {
-    initial_kobjects.register_obj(this, Initial_kobjects::Jdb);
+    initial_kobjects->register_obj(this, Initial_kobjects::Jdb);
   }
 
   L4_msg_tag

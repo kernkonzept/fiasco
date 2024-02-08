@@ -2,8 +2,9 @@ INTERFACE [debug]:
 
 #include "mapdb.h"
 #include "types.h"
+#include "global_data.h"
 
-extern Static_object<Mapdb> mapdb_mem;
+extern Global_data<Static_object<Mapdb>> mapdb_mem;
 
 IMPLEMENTATION:
 
@@ -12,8 +13,9 @@ IMPLEMENTATION:
 #include "mapdb.h"
 #include "mem_space.h"
 #include <minmax.h>
+#include "global_data.h"
 
-Static_object<Mapdb> mapdb_mem;
+DEFINE_GLOBAL Global_data<Static_object<Mapdb>> mapdb_mem;
 
 /** Map the region described by "fp_from" of address space "from" into
     region "fp_to" at offset "offs" of address space "to", updating the
@@ -103,8 +105,8 @@ mem_fpage_unmap(Space *space, L4_fpage fp, L4_map_mask mask)
                static_cast<Mem_space::Reap_list**>(nullptr));
 }
 
-
-
+enum { Max_num_page_sizes = 7 };
+static DEFINE_GLOBAL Global_data<size_t[Max_num_page_sizes]> page_sizes;
 
 /** The mapping database.
     This is the system's instance of the mapping database.
@@ -112,9 +114,7 @@ mem_fpage_unmap(Space *space, L4_fpage fp, L4_map_mask mask)
 void
 init_mapdb_mem(Space *sigma0)
 {
-  enum { Max_num_page_sizes = 7 };
-  static size_t page_sizes[Max_num_page_sizes]
-    = { Config::SUPERPAGE_SHIFT - Config::PAGE_SHIFT, 0 };
+  page_sizes[0] = Config::SUPERPAGE_SHIFT - Config::PAGE_SHIFT;
 
   typedef Mem_space::Page_order Page_order;
   Page_order const *ps = Mem_space::get_global_page_sizes();

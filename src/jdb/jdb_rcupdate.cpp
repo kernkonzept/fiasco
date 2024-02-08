@@ -42,15 +42,15 @@ Jdb_rcupdate::action(int cmd, void *&, char const *&, int &) override
   if (cmd == 0)
     {
       printf("RCU:\n  current batch=");
-      print_batch(Rcu::_rcu._current); puts("");
+      print_batch(Rcu::_rcu->_current); puts("");
       printf("  completed=");
-      print_batch(Rcu::_rcu._completed); puts("");
+      print_batch(Rcu::_rcu->_completed); puts("");
       printf("  next_pending=%s\n"
-             "  cpus=", Rcu::_rcu._next_pending?"yes":"no");
-      Jdb::cpu_mask_print(Rcu::_rcu._cpus);
+             "  cpus=", Rcu::_rcu->_next_pending?"yes":"no");
+      Jdb::cpu_mask_print(Rcu::_rcu->_cpus);
       puts("");
       printf("  active cpus=");
-      Jdb::cpu_mask_print(Rcu::_rcu._active_cpus);
+      Jdb::cpu_mask_print(Rcu::_rcu->_active_cpus);
       puts("");
 
       for (Cpu_number i = Cpu_number::first(); i < Config::max_num_cpus(); ++i)

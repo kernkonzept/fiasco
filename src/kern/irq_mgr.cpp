@@ -4,6 +4,7 @@ INTERFACE:
 #include "irq_chip.h"
 #include "l4_types.h"
 #include <cxx/type_traits>
+#include "global_data.h"
 
 /**
  * Interface used to manage hardware IRQs on a platform.
@@ -68,7 +69,7 @@ public:
   virtual void set_cpu(Mword irqnum, Cpu_number cpu) const;
 
   /// The pointer to the single global instance of the actual IRQ manager.
-  static Irq_mgr *mgr;
+  static Global_data<Irq_mgr *> mgr;
 
   /// Prevent generation of a real virtual delete function
   virtual ~Irq_mgr() = 0;
@@ -94,7 +95,7 @@ IMPLEMENTATION:
 
 #include "warn.h"
 
-Irq_mgr *Irq_mgr::mgr;
+DEFINE_GLOBAL Global_data<Irq_mgr *> Irq_mgr::mgr;
 
 IMPLEMENT inline Irq_mgr::~Irq_mgr() {}
 

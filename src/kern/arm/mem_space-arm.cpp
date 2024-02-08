@@ -818,6 +818,7 @@ INTERFACE [(arm_v6 || arm_v7 || arm_v8) && !explicit_asid]:
 #include "types.h"
 #include "spin_lock.h"
 #include <asid_alloc.h>
+#include "global_data.h"
 
 /*
   The ARM reference manual suggests to use the same address space id
@@ -835,7 +836,7 @@ public:
 private:
   /// active/reserved ASID (per CPU)
   static Per_cpu<Asids> _asids;
-  static Asid_alloc _asid_alloc;
+  static Global_data<Asid_alloc> _asid_alloc;
 
   /// current ASID of mem_space, provided by _asid_alloc
   Asid _asid = Asid::Invalid;
@@ -863,7 +864,7 @@ PUBLIC inline NEEDS[<asid_alloc.h>]
 unsigned long
 Mem_space::asid()
 {
-  if (_asid_alloc.get_or_alloc_asid(&_asid))
+  if (_asid_alloc->get_or_alloc_asid(&_asid))
     {
       Mem_unit::tlb_flush();
       Mem::dsb();
@@ -873,7 +874,9 @@ Mem_space::asid()
 };
 
 DEFINE_PER_CPU Per_cpu<Mem_space::Asids> Mem_space::_asids;
-Mem_space::Asid_alloc  Mem_space::_asid_alloc(&_asids);
+
+DEFINE_GLOBAL_CONSTINIT
+Global_data<Mem_space::Asid_alloc> Mem_space::_asid_alloc(&_asids);
 
 //----------------------------------------------------------------------------
 INTERFACE [(arm_v6 || arm_v7 || arm_v8) && explicit_asid]:
