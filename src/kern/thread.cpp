@@ -528,6 +528,10 @@ PRIVATE
 bool
 Thread::do_kill()
 {
+  // Since this function is executed as a continuation, interrupts should
+  // already be disabled, but it does not hurt to make sure.
+  auto guard = lock_guard(cpu_lock);
+
   //
   // Kill this thread
   //
@@ -535,8 +539,6 @@ Thread::do_kill()
   // But first prevent it from being woken up by asynchronous events
 
   {
-    auto guard = lock_guard(cpu_lock);
-
     // if IPC timeout active, reset it
     reset_timeout();
 
@@ -551,10 +553,9 @@ Thread::do_kill()
   }
 
   // If other threads want to send me IPC messages, abort these operations.
-  // After the following code block, the cpu lock must not be released until the
-  // Thread_dead flag is set, otherwise new senders can be enqueued in the
-  // sender list of the dying thread.
-  auto guard = lock_guard(cpu_lock);
+  // IMPORTANT: After the following code block, the cpu lock must not be
+  //            released until the Thread_dead flag is set, otherwise new
+  //            senders can be enqueued in the sender list of the dying thread.
   {
     while (Sender *s = Sender::cast(sender_list()->first()))
       {
