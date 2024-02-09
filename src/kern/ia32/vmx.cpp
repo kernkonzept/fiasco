@@ -1150,7 +1150,7 @@ private:
   Unsigned8 _values[Sw_vmcs_size];
 };
 
-static_assert(sizeof(Vmx_vm_state) + 0x400 == 4096,
+static_assert(sizeof(Vmx_vm_state) + Config::Ext_vcpu_state_offset == 4096,
               "VMX extended VM state fits exactly into 4096 bytes.");
 
 /**
@@ -2413,7 +2413,8 @@ PUBLIC inline
 void
 Vmx::init_vmcs_infos(void *vcpu_state) const
 {
-  Vmx_user_info *i = offset_cast<Vmx_user_info *>(vcpu_state, 0x200);
+  Vmx_user_info *i
+    = offset_cast<Vmx_user_info *>(vcpu_state, Config::Ext_vcpu_infos_offset);
   i->basic = info.basic;
   i->pinbased = info.pinbased_ctls;
   i->procbased = info.procbased_ctls;
@@ -2435,7 +2436,8 @@ Vmx::init_vmcs_infos(void *vcpu_state) const
   i->exit_dfl1 = info.exit_ctls_default1;
   i->entry_dfl1 = info.entry_ctls_default1;
 
-  Vmx_vm_state *s = offset_cast<Vmx_vm_state *>(vcpu_state, 0x400);
+  Vmx_vm_state *s
+    = offset_cast<Vmx_vm_state *>(vcpu_state, Config::Ext_vcpu_state_offset);
   s->init();
 }
 

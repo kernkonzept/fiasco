@@ -266,7 +266,8 @@ Vm_vmx_t<X>::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode) overri
       return -L4_err::EInval;
     }
 
-  Vmx_vm_state *vm_state = offset_cast<Vmx_vm_state *>(vcpu, 0x400);
+  Vmx_vm_state *vm_state
+    = offset_cast<Vmx_vm_state *>(vcpu, Config::Ext_vcpu_state_offset);
 
   for (;;)
     {

@@ -128,6 +128,16 @@ public:
 
   static constexpr unsigned kmem_per_cent();
   static constexpr unsigned long kmem_max();
+
+  // Attention: this enum is used by the Lauterbach Trace32 OS awareness.
+  enum Ext_vcpu_info
+  {
+    Ext_vcpu_infos_offset = 0x200,
+    Ext_vcpu_state_offset = 0x400,
+  };
+
+  static constexpr Mword ext_vcpu_size()
+  { return PAGE_SIZE; }
 };
 
 #define GREETING_COLOR_ANSI_TITLE  "\033[1;32m"
