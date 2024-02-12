@@ -47,9 +47,9 @@ void Mmu<Flush_area, Ram>::clean_dcache(void const *va)
 {
   Mem::dsb();
   __asm__ __volatile__ (
-      "dc cvac, %0       \n" // DCCMVAC
+      "dc cvac, %0"
       :
-      : "r" (reinterpret_cast<unsigned long>(va) & ~(dcache_line_size() - 1))
+      : "r" (va)
       : "memory");
 }
 
