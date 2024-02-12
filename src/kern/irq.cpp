@@ -271,7 +271,7 @@ Irq_sender::free(Kobject ***rl)
 }
 
 PUBLIC explicit
-Irq_sender::Irq_sender(Ram_quota *q = 0)
+Irq_sender::Irq_sender(Ram_quota *q)
 : Kobject_h<Irq_sender, Irq>(q), _queued(0), _irq_thread(0), _irq_id(~0UL)
 {
   hit_func = &hit_level_irq;
