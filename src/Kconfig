@@ -763,6 +763,12 @@ config MAINTAINER_MODE
 	  This enables the circular dependency and initcall checks.
 	  Say 'Yes' here if you do kernel hacking.
 
+config NO_VERSION
+	bool "Do not provide build version info"
+	help
+	  Do not provide build version info to avoid the need to relink all kernel
+	  unit tests on each build.
+
 config LABEL
 	string "Configuration label"
 	help

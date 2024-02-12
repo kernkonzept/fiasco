@@ -5,6 +5,7 @@
 $(filter kip%.o,$(OBJ_ABI)): $(VERSION)
 
 $(VERSION): FORCE
+ifeq ($(CONFIG_NO_VERSION),)
 		$(GENVER_MESSAGE)
 		$(VERBOSE)v=`cd $(srcdir) && git rev-parse             \
 		                   --verify --short HEAD 2>/dev/null`; \
@@ -25,14 +26,20 @@ $(VERSION): FORCE
 		     fi                                                \
 		   fi                                                  \
 		fi;                                                    \
-		echo "#define CODE_VERSION \"$$v\"" > $@
-		$(VERBOSE)echo "#define BUILD_DATE \"$$(LC_ALL=C date)\"" >> $@
+		echo "#define CODE_VERSION \"$$v\"" > $@.new
+		$(VERBOSE)echo "#define BUILD_DATE \"$$(LC_ALL=C date)\"" >> $@.new
 		$(VERBOSE)if [ -e .build_nr ]; then                    \
 		  nr=$$(($$(cat .build_nr) + 1));                      \
 		else                                                   \
 		  nr=1;                                                \
 		fi;                                                    \
 		echo $$nr > .build_nr;                                 \
-		echo "#define BUILD_NR \"$$nr\"" >> $@
+		echo "#define BUILD_NR \"$$nr\"" >> $@.new
+else
+		$(VERBOSE)echo "#define CODE_VERSION \"Unknown version\"" > $@.new; \
+		echo "#define BUILD_DATE \"No date\"" >> $@.new; \
+		echo "#define BUILD_NR \"1\"" >> $@.new
+endif
+		$(VERBOSE)$(MOVE_IF_CHANGE) $@.new $@ || true
 
 clean-VERSION:
