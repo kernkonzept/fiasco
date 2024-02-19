@@ -45,7 +45,8 @@ PHDRS {
   bstrap PT_LOAD;
   kip PT_LOAD;
   koptions PT_LOAD;
-  tramp PT_LOAD;
+  tramp_data PT_LOAD;
+  tramp_text PT_LOAD;
   kernel PT_LOAD;
 #if defined NEED_EXCPT
   excpt PT_LOAD;
@@ -113,9 +114,12 @@ SECTIONS {
     *(.koptions)
   } :koptions :l4_koptions
 
-  .mp_tramp : AT (ADDR(.mp_tramp) - phys_offset) {
-    KEEP(*(.mp_tramp))
-  } :tramp
+  .mp_tramp_data : AT (ADDR(.mp_tramp_data) - phys_offset) {
+    KEEP(*(.mp_tramp_data))
+  } :tramp_data
+  .mp_tramp_text : AT (ADDR(.mp_tramp_text) - phys_offset) {
+    KEEP(*(.mp_tramp_text))
+  } :tramp_text
 
   .text_kernel : AT (ADDR(.text_kernel) - phys_offset) {
     crt0.o(.text)

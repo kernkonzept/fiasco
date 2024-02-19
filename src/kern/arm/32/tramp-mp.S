@@ -13,13 +13,17 @@
 	.global \name
 	.type   \name,%object
 	.p2align 2
-.LC\name:
 \name:	.long 0
 	.size \name, . - \name
 .endm
 
-	.section .mp_tramp, "awx"
-	.p2align 12
+.macro refvar name
+.LC\name:
+	.long \name - .LCanchor
+.endm
+
+	.section .mp_tramp_text, "ax"
+	.p2align 2
 
 #if defined(CONFIG_ARM_V7) && !defined(CONFIG_ARM_PSCI)
 /* Similar to B2.2.7 but only consider L1 and use DCISW instead of DCCSW.
@@ -147,6 +151,8 @@ _tramp_mp_entry:
 	mcr   p15, 0, r1, c1, c0, 1
 
 2:
+.LCanchor:
+	adr r12, .LCanchor
 
 #ifdef CONFIG_CPU_VIRT
         // TLB flush
@@ -154,16 +160,16 @@ _tramp_mp_entry:
         mcr p15, 4, r0, c8, c7, 4 /* TLBIALLNSNH */
 
         // init TTBCR
-        adr r0, .LC_tramp_mp_startup_ttbcr
-        ldr r1, [r0]
+        ldr r0, .LC_tramp_mp_startup_ttbcr
+        ldr r1, [r0, r12]
         mcr p15, 4, r1, c2, c0, 2
 
-        adr r0, .LC_tramp_mp_startup_mair0
-        ldr r0, [r0]
+        ldr r0, .LC_tramp_mp_startup_mair0
+        ldr r0, [r0, r12]
         mcr p15, 4, r0, c10, c2, 0  // MAIR0
 
-        adr r0, .LC_tramp_mp_startup_pdbr
-        ldr r0, [r0]
+        ldr r0, .LC_tramp_mp_startup_pdbr
+        ldr r0, [r0, r12]
         mov r1, #0
         mcrr p15, 4, r0, r1, c2     // HTBR
         movw r0, #(1 | 4 | 32 | 0x1000)
@@ -173,8 +179,8 @@ _tramp_mp_entry:
 	// TLB flush
 	mcr p15, 0, r0, c8, c7, 0
 
-	adr r0, .LC_tramp_mp_startup_dcr
-	ldr r0, [r0]
+	ldr r0, .LC_tramp_mp_startup_dcr
+	ldr r0, [r0, r12]
 	mcr p15, 0, r0, c3, c0
 
 	// reset ASID and PROCID
@@ -182,22 +188,22 @@ _tramp_mp_entry:
 	mcr p15, 0, r0, c13, c0, 1
 
 	// init TTBCR
-	adr r0, .LC_tramp_mp_startup_ttbcr
-	ldr r1, [r0]
+	ldr r0, .LC_tramp_mp_startup_ttbcr
+	ldr r1, [r0, r12]
 	mcr p15, 0, r1, c2, c0, 2
 
-	adr r0, .LC_tramp_mp_startup_mair0
-	ldr r0, [r0]
+	ldr r0, .LC_tramp_mp_startup_mair0
+	ldr r0, [r0, r12]
 	mcr p15, 0, r0, c10, c2, 0  // MAIR0 / PRRR
-	adr r0, .LC_tramp_mp_startup_mair1
-	ldr r0, [r0]
+	ldr r0, .LC_tramp_mp_startup_mair1
+	ldr r0, [r0, r12]
 	mcr p15, 0, r0, c10, c2, 1  // MAIR1 / NMRR
 
 	mov r0, #0
 	mcr p15, 0, r0, c8, c7, 0
 
-	adr r0, .LC_tramp_mp_startup_pdbr
-	ldr r0, [r0]
+	ldr r0, .LC_tramp_mp_startup_pdbr
+	ldr r0, [r0, r12]
 	tst r1, #(1 << 31)
 	beq 1f
 	mov r1, #0
@@ -208,8 +214,8 @@ _tramp_mp_entry:
 2:
 #endif
 
-	adr r0, .LC_tramp_mp_startup_cp15_c1
-	ldr r0, [r0]
+	ldr r0, .LC_tramp_mp_startup_cp15_c1
+	ldr r0, [r0, r12]
 	mcr p15, 0, r0, c1, c0
 
 	// barrier
@@ -229,17 +235,17 @@ _tramp_mp_entry:
 	.long 0xff0fff00
 	.long 0x410fc000
 
-defvar _tramp_mp_startup_cp15_c1
-defvar _tramp_mp_startup_pdbr
-defvar _tramp_mp_startup_dcr
-defvar _tramp_mp_startup_ttbcr
-defvar _tramp_mp_startup_mair0
-defvar _tramp_mp_startup_mair1
+refvar _tramp_mp_startup_cp15_c1
+refvar _tramp_mp_startup_pdbr
+refvar _tramp_mp_startup_dcr
+refvar _tramp_mp_startup_ttbcr
+refvar _tramp_mp_startup_mair0
+refvar _tramp_mp_startup_mair1
 
 	// we run paged now
 .LC_tramp_mp_virt:
 	// spinlock on cpu-init
-	adr	r0, .LC_tramp_mp_spinlock
+	ldr	r0, =_tramp_mp_spinlock
 1:	ldr	r1, [r0]
 	teq	r1, #0
 	wfene
@@ -256,15 +262,25 @@ defvar _tramp_mp_startup_mair1
 	// TLB flush
 	mcr p15, 0, r0, c8, c7, 0
 
-	adr	sp, .LC_tramp_mp_init_stack
+	ldr	sp, =.LC_tramp_mp_init_stack
 	add	sp, #(.LC_tramp_mp_init_stack_top-.LC_tramp_mp_init_stack)
 	nop
 	ldr	pc, [pc, #-4]
 
 	.long BOOT_AP_CPU
 
+	.section .mp_tramp_data, "aw"
+	.p2align 12
+
 .long 0
 defvar _tramp_mp_spinlock
+
+defvar _tramp_mp_startup_cp15_c1
+defvar _tramp_mp_startup_pdbr
+defvar _tramp_mp_startup_dcr
+defvar _tramp_mp_startup_ttbcr
+defvar _tramp_mp_startup_mair0
+defvar _tramp_mp_startup_mair1
 
 	.p2align 3
 .LC_tramp_mp_init_stack:
