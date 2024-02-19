@@ -137,7 +137,7 @@ Mapdb_util_test::print_node(Space *space, Mapdb::Pfn pfn,
                          [](Mapping *node, Mapdb::Order order)
     {
       pr_tag("%*sspace=%s vaddr=0x%lx size=0x%lx\n",
-             (int)node->depth() + 1, "", node_name(node->space()),
+             static_cast<int>(node->depth() + 1), "", node_name(node->space()),
              to_virt(node->pfn(order)), to_virt(Mapdb::Pfn(1) << order));
     });
   pr_tag("\n");
@@ -165,7 +165,7 @@ Mapdb_util_test::test_map_util()
   static_assert(S_super >= _1M, "Adapt test for smaller superpage size");
 
   pr_tag("Page = %ldKB, Superpage = %ldMB\n",
-         (Address)S_page >> 10, (Address)S_super >> 20);
+         S_page >> 10, S_super >> 20);
 
   // Support for pages > superpage is optional.
   printf(" largest_page_size = %d\n",
