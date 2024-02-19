@@ -11,6 +11,13 @@ ifeq ($(CONFIG_UNIT_TEST),y)
 	SUBSYSTEMS += UTEST
 endif
 
+ifeq ("$(CONFIG_COV)","y")
+	SUBSYSTEMS += LIBCOV
+	KERNEL_EXTRA_LIBS += $(LIBCOV)
+	PRIVATE_INCDIR += lib/gcov/include
+	INTERFACES_KERNEL-$(CONFIG_JDB) += jdb_cov_module
+endif
+
 PREPROCESS_PARTS 	+= arch $(CONFIG_ABI) 64bit iofp recover_jmpbuf \
 			   $(CONFIG_XARCH) i8259 pc i8254 fpu \
 			   auto_map_kip io realmode libuart

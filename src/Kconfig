@@ -58,6 +58,7 @@ config AMD64
 	select HAS_VIRT_OBJ_SPACE_OPTION
 	select HAS_JDB_DISASM_OPTION
 	select HAS_JDB_GZIP_OPTION
+	select HAS_COV_OPTION
 	select BIT64
 	select FPU
 	select HAS_FPU_OPTION
