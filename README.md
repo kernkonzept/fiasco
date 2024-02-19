@@ -31,7 +31,7 @@ disclose them privately via **security@kernkonzept.com** to us.
 
 # Building
 
-Fiasco.OC can be built using a recent version of gcc (>=4.7) or clang (>=3.7),
+Fiasco.OC can be built using a recent version of gcc (>=7) or clang (>=9),
 GNU binutils, GNU make and Perl (>=5.6).
 
 Change to the top-level directory of this project and create a build directory
