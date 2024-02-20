@@ -14,17 +14,13 @@ INTERFACE:
  *
  * A generic message item has the following binary layout.
  * \verbatim
- * +----------------------------+ 3 + 2 .. 1 + 0 +
- * |                            | t |        | c |
- * +----------------------------+---+--------+---+ \endverbatim
+ * +----------------------------+ 3 + 2 .. 0 +
+ * |                            | t |        |
+ * +----------------------------+---+--------+ \endverbatim
  *
  * Bit 3 (\a t) is the type bit, if t is set the item is a map
  * item. \note Fiasco.OC currently has no support for other types
  * than map items.
- *
- * Bit 0 (\a c) is the compound bit and is available
- * for scatter-gather behavior. For map items the \a c bit is useful
- * for send items only, and described afterwards.
  *
  * A map item has a more specific layout:
  * \verbatim
@@ -35,7 +31,13 @@ INTERFACE:
  * Bit 0 (\a c), the compound bit: if this bit is set on a send map item
  * the next message item of the same type shall be mapped using the same
  * receive buffer as this send item. The caller should properly use the
- * \a hot_spot to avoid overlapping mappings.
+ * \a hot_spot to avoid overlapping mappings. Useful to implement
+ * scatter-gather behaviour.
+ *
+ * If the compound bit is set on a receive buffer, the destination task is
+ * selected explicitly. In this case, the capability slot of the task is passed
+ * explicitly as a third (or second, in case of a small object buffer) word. If
+ * unset, the task of the receiving thread is implicitly the destination task.
  *
  * Bit 1 (\a g/s): On a send map item a set \a g bit flags a grant operation.
  * This means, the sender delegates access to the receiver and

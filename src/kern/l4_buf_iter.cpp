@@ -12,10 +12,11 @@ public:
   {
     L4_msg_item b;
     Mword d;
+    Mword task;
 
     Item() : b(0)
 #ifndef NDEBUG
-	     , d(0)
+	     , d(0), task(0)
 #endif
     {}
   };
@@ -90,6 +91,19 @@ L4_buf_iter::next()
 
       c.d = _buf[0];
     }
+
+  // In case of a compound item, the last word specifies the destination task.
+  if (EXPECT_FALSE(c.b.compound()))
+    {
+      ++_buf;
+      if (EXPECT_FALSE(_buf >= _max))
+        {
+          c.b = L4_msg_item(0);
+          return false;
+        }
+      c.task = _buf[0];
+    }
+
   ++_buf;
   return true;
 }
