@@ -46,7 +46,7 @@ Context::load_cnthctl(Unsigned64 cnthctl)
 
 PRIVATE inline
 void
-Context::arm_hyp_load_non_vm_state(bool vgic)
+Context::arm_hyp_load_non_vm_state()
 {
   asm volatile ("msr HSTR_EL2, %x0"  : : "r"(Cpu::Hstr_non_vm));
   // load normal SCTLR ...
@@ -59,8 +59,6 @@ Context::arm_hyp_load_non_vm_state(bool vgic)
   // CNTKCTL: allow access to virtual and physical counter from PL0
   // see: generic_timer.cpp: setup_timer_access (Hyp)
   asm volatile("msr CNTKCTL_EL1, %x0"   : : "r"(0x3UL));
-  if (vgic)
-    Gic_h_global::gic->disable();
 }
 
 PRIVATE inline

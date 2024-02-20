@@ -21,6 +21,14 @@ public:
     CXX_BITFIELD_MEMBER(  5,  5, vgrp0_die, raw);
     CXX_BITFIELD_MEMBER(  6,  6, vgrp1_eie, raw);
     CXX_BITFIELD_MEMBER(  7,  7, vgrp1_die, raw);
+    //  <<< GICv3+ only
+    CXX_BITFIELD_MEMBER( 10, 10, tc, raw);
+    CXX_BITFIELD_MEMBER( 11, 11, tall0, raw);
+    CXX_BITFIELD_MEMBER( 12, 12, tall1, raw);
+    CXX_BITFIELD_MEMBER( 13, 13, tsei, raw);
+    CXX_BITFIELD_MEMBER( 14, 14, tdir, raw);
+    CXX_BITFIELD_MEMBER( 15, 15, dvim, raw);
+    // >>> GICv3+ only
     CXX_BITFIELD_MEMBER( 27, 31, eoi_cnt, raw);
   };
 
@@ -89,13 +97,68 @@ public:
 
   using Arm_vgic = Arm_vgic_t<4>;
 
-  virtual bool save_full(Arm_vgic *g) = 0;
-  virtual void save_and_disable(Arm_vgic *g) = 0;
-  virtual void load_full(Arm_vgic const *g, bool enabled) = 0;
+  enum class From_vgic_mode { Disabled, Enabled };
+  enum class To_user_mode { Disabled, Enabled };
 
+  /**
+   * Switch away from thread in extended vCPU mode and save the vGIC context if
+   * that context has the vGIC enabled (HCR.En() == 1).
+   *
+   * \retval From_vgic_mode::Disabled vGIC interface is disabled for this thread.
+   * \retval From_vgic_mode::Enabled vGIC interface is enabled for this thread.
+   */
+  virtual From_vgic_mode switch_from_vcpu(Arm_vgic *g) = 0;
+
+  /**
+   * Switch between two threads *not* in extended vCPU mode.
+   *
+   * \param from_mode  From_vgic_mode::Enabled when switching from a thread in
+   *                   extended vCPU user mode which has the vGIC interface
+   *                   enabled. From_vgic_mode::Disabled when switching from a
+   *                   thread either not in extended vCPU user mode or having
+   *                   the vGIC interface disabled.
+   */
+  virtual void switch_to_non_vcpu(From_vgic_mode from_mode) = 0;
+
+  /**
+   * Switch to a thread in extended vCPU mode.
+   *
+   * \param g          vGIC context of the thread.
+   * \param to_mode    To_user_mode::Enabled when switching to a thread in
+   *                   extended vCPU user mode. To_user_mode::Disabled when
+   *                   switching to a thread not in extended vCPU user mode.
+   * \param from_mode  From_vgic_mode::Enabled when switching from a thread in
+   *                   extended vCPU user mode which has the vGIC interface
+   *                   enabled. From_vgic_mode::Disabled when switching from a thread
+   *                   either not in extended vCPU user mode or having the vGIC
+   *                   interface disabled.
+   */
+  virtual void switch_to_vcpu(Arm_vgic const *g, To_user_mode to_mode,
+                              From_vgic_mode from_mode) = 0;
+
+  /**
+   * Called while switching from extended vCPU user mode and entering extended
+   * vCPU kernel mode -- save the vGIC state and disable the vGIC interface.
+   */
+  virtual void save_and_disable(Arm_vgic *g) = 0;
+
+  /**
+   * Disable the vGIC interface -- either during kernel initialization or if the
+   * current context has to access to the vGIC interface.
+   */
   virtual void disable() = 0;
+
+  /**
+   * Return the vGIC version.
+   */
   virtual unsigned version() const = 0;
+
+  /**
+   * Return the virtual address of the MMIO interface.
+   * Returns the map address for GICv2 and 0 for GICv3.
+   */
   virtual Address gic_v_address() const = 0;
+
   virtual void setup_state(Arm_vgic *s) const = 0;
 };
 
@@ -106,12 +169,33 @@ private:
   IMPL const *self() const { return static_cast<IMPL const *>(this); }
   IMPL *self() { return static_cast<IMPL *>(this); }
 
+protected:
+  /**
+   * Switch to a thread in extended CPU mode.
+   *
+   * \retval false vGIC disabled for this thread, vGIC state unchanged.
+   * \retval true vGIC enabled for this thread, vGIC state restored.
+   */
+  bool switch_to_vcpu_user(Arm_vgic const *g)
+  {
+    auto hcr = access_once(&g->hcr);
+    if (!hcr.en())
+      return false;
+
+    self()->vmcr(g->vmcr);
+    self()->load_aprs(g->aprs);
+    self()->load_lrs(&g->lr);
+    self()->hcr(hcr);
+    IMPL::vgic_barrier();
+    return true;
+  }
+
 public:
-  bool save_full(Arm_vgic *g) override
+  From_vgic_mode switch_from_vcpu(Arm_vgic *g) override final
   {
     auto hcr = self()->hcr();
     if (!hcr.en())
-      return false;
+      return From_vgic_mode::Disabled;
 
     // the EIOcount might have changed
     g->hcr  = hcr;
@@ -122,31 +206,13 @@ public:
     g->elsr = self()->elsr() & ((1U << Arm_vgic::N_lregs) - 1U);
     self()->save_lrs(&g->lr);
     self()->save_aprs(g->aprs);
-    return true;
+    return From_vgic_mode::Enabled;
   }
 
-  void save_and_disable(Arm_vgic *g) override
+  void disable() override final
   {
-    if (Gic_h_mixin::save_full(g))
-      disable();
-  }
-
-  void load_full(Arm_vgic const *to, bool enabled) override
-  {
-    auto hcr = access_once(&to->hcr);
-    if (hcr.en())
-      {
-        self()->vmcr(to->vmcr);
-        self()->load_aprs(to->aprs);
-        self()->load_lrs(&to->lr);
-        self()->hcr(hcr);
-        IMPL::vgic_barrier();
-      }
-    else if (enabled)
-      {
-        self()->hcr(hcr);
-        IMPL::vgic_barrier();
-      }
+    self()->disable_load_defaults();
+    IMPL::vgic_barrier();
   }
 
   void setup_state(Arm_vgic *s) const override
@@ -170,12 +236,6 @@ public:
       a = 0;
     for (auto &l: s->lr.lr64)
       l = 0;
-  }
-
-  void disable() override final
-  {
-    self()->hcr(Hcr(0));
-    IMPL::vgic_barrier(); // Ensure vgic is disabled before going to user-level
   }
 
   unsigned version() const override

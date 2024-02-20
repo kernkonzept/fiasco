@@ -39,7 +39,8 @@ Context::arch_vcpu_ext_shutdown()
   regs()->psr = Proc::Status_mode_user_el0;
   _hyp.hcr = Cpu::Hcr_non_vm_bits_el0;
   Cpu::hcr(_hyp.hcr);
-  arm_hyp_load_non_vm_state(true);
+  arm_hyp_load_non_vm_state();
+  Gic_h_global::gic->switch_to_non_vcpu(Gic_h::From_vgic_mode::Enabled);
 }
 
 IMPLEMENT_OVERRIDE inline NEEDS[Context::vm_state,
@@ -99,7 +100,9 @@ Context::arch_load_vcpu_user_state(Vcpu_state *vcpu)
   if (all_priv_vm)
     {
       arm_ext_vcpu_switch_to_guest(vcpu, v);
-      Gic_h_global::gic->load_full(&v->gic, true);
+      Gic_h_global::gic->switch_to_vcpu(&v->gic,
+                                        Gic_h::To_user_mode::Enabled,
+                                        Gic_h::From_vgic_mode::Enabled);
     }
 
   arm_ext_vcpu_load_guest_regs(vcpu, v, _hyp.hcr);
@@ -122,19 +125,22 @@ Context::switch_vm_state(Context *t)
   Mword _state = state();
   Mword _to_state = t->state();
   if (!((_state | _to_state) & Thread_ext_vcpu_enabled))
-    return;
+    {
+      Gic_h_global::gic->switch_to_non_vcpu(Gic_h::From_vgic_mode::Disabled);
+      return;
+    }
 
   // either current or next has extended vCPU enabled
 
-  bool vgic = false;
+  Gic_h::From_vgic_mode from_mode = Gic_h::From_vgic_mode::Disabled;
 
   if (_state & Thread_ext_vcpu_enabled)
     {
       Vm_state *v = vm_state(vcpu_state().access());
       save_ext_vcpu_state(_state, v);
 
-      if ((_state & Thread_vcpu_user))
-        vgic = Gic_h_global::gic->save_full(&v->gic);
+      if (_state & Thread_vcpu_user)
+        from_mode = Gic_h_global::gic->switch_from_vcpu(&v->gic);
     }
 
   if (_to_state & Thread_ext_vcpu_enabled)
@@ -142,18 +148,18 @@ Context::switch_vm_state(Context *t)
       Vm_state const *v = vm_state(t->vcpu_state().access());
       t->load_ext_vcpu_state(_to_state, v);
 
-      if (_to_state & Thread_vcpu_user)
-        {
-          Gic_h_global::gic->load_full(&v->gic, vgic);
-        }
-      else
-        {
-          if (vgic)
-            Gic_h_global::gic->disable();
-        }
+      Gic_h_global::gic->switch_to_vcpu(&v->gic,
+                                        (_to_state & Thread_vcpu_user)
+                                          ? Gic_h::To_user_mode::Enabled
+                                          : Gic_h::To_user_mode::Disabled,
+                                        from_mode);
     }
   else
-    arm_hyp_load_non_vm_state(vgic);
+    {
+      arm_hyp_load_non_vm_state();
+      Gic_h_global::gic->switch_to_non_vcpu(from_mode);
+    }
+
 }
 
 IMPLEMENTATION [arm && !cpu_virt]:

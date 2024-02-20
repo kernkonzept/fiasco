@@ -63,7 +63,7 @@ Context::load_cnthctl(Unsigned32 cnthctl)
 
 PRIVATE inline
 void
-Context::arm_hyp_load_non_vm_state(bool vgic)
+Context::arm_hyp_load_non_vm_state()
 {
   asm volatile ("mcr p15, 4, %0, c1, c1, 3" : : "r"(Cpu::Hstr_non_vm)); // HSTR
   // load normal SCTLR ...
@@ -71,9 +71,6 @@ Context::arm_hyp_load_non_vm_state(bool vgic)
                 : : "r" ((Cpu::sctlr | Cpu::Cp15_c1_cache_bits) & ~Cpu::Cp15_c1_mmu));
   asm volatile ("mcr p15, 0, %0,  c1, c0, 2" : : "r" (0xf00000));
   asm volatile ("mcr p15, 0, %0, c13, c0, 0" : : "r" (0));
-
-  if (vgic)
-    Gic_h_global::gic->disable();
 }
 
 PRIVATE inline

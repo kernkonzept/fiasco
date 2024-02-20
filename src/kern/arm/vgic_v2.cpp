@@ -13,6 +13,12 @@ class Gic_h_v2 :
 {
 public:
   enum { Version = 2 };
+
+  // With GICv2, the kernel has to sanitize the vGIC state on *every* context
+  // switch. When switching to a thread in extended vCPU mode, the saved vGIC
+  // state is loaded. Otherwise, disable_load_defaults() loads default values
+  // into the vGIC state.
+
   enum Register
   {
     HCR   = 0x000,
@@ -107,6 +113,44 @@ void
 Gic_h_v2::vgic_barrier()
 { Mem::dsb(); /* Ensure vgic completion before running user-land */ }
 
+PUBLIC
+void
+Gic_h_v2::switch_to_non_vcpu(From_vgic_mode) override
+{
+  disable_load_defaults();
+  vgic_barrier();
+}
+
+PUBLIC
+void
+Gic_h_v2::switch_to_vcpu(Arm_vgic const *g, To_user_mode to_mode,
+                         From_vgic_mode) override
+{
+  if (to_mode == To_user_mode::Disabled || !switch_to_vcpu_user(g))
+    {
+      disable_load_defaults();
+      vgic_barrier();
+    }
+}
+
+PUBLIC
+void
+Gic_h_v2::save_and_disable(Arm_vgic *g) override
+{
+  switch_from_vcpu(g);
+  disable_load_defaults();
+  vgic_barrier();
+}
+
+PUBLIC inline
+void
+Gic_h_v2::disable_load_defaults()
+{
+  write(0U, HCR);
+  write(0U, VMCR);
+  write(0U, APR);
+}
+
 #include "boot_alloc.h"
 #include "vgic_global.h"
 #include "pic.h"
@@ -123,6 +167,8 @@ struct Gic_h_v2_init
     Gic_h_global::gic
       = new Boot_object<Gic_h_v2>(Kmem::mmio_remap(Mem_layout::Gic_h_phys_base,
                                                    Config::PAGE_SIZE));
+
+    Gic_h_global::gic->disable();
   }
 };
 
