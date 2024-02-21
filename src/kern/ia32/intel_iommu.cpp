@@ -19,6 +19,9 @@ class Io_mmu :
   public Pm_object
 {
 public:
+  /// Maximum number of IOMMUs.
+  enum { Max_iommus = 16 };
+
   /// Command and status register bits
   enum Cmd_bits
   {
@@ -540,7 +543,7 @@ public:
   template<typename... Inv_descs>
   static void queue_and_wait_on_iommus(bool const *need_inv, Inv_descs... descs)
   {
-    Unsigned32 volatile wait_flags[iommus.size()];
+    Unsigned32 volatile wait_flags[Max_iommus];
     for (unsigned i = 0; i < iommus.size(); i++)
       {
         // Skip if this IOMMU does not need invalidation.
@@ -841,6 +844,9 @@ Intel::Io_mmu::init(Cpu_number cpu)
   for (ACPI::Dmar_head const &de: *d)
     if (de.cast<ACPI::Dmar_drhd>())
       ++units;
+
+  if (units > Max_iommus)
+    panic("Cannot handle more than %d IOMMUs", Max_iommus);
 
   // need to take a copy of the DMAR into the kernel AS as the ACPI
   // are mapped only into IDLE AS!

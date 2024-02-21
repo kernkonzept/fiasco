@@ -501,7 +501,7 @@ Dmar_space::remove_from_all_iommus()
   if (!cas(&_did, did, 0ul))
     return;
 
-  bool need_wait[Intel::Io_mmu::iommus.size()];
+  bool need_wait[Intel::Io_mmu::Max_iommus];
   for (auto &mmu: Intel::Io_mmu::iommus)
     {
       need_wait[mmu.idx()] = false;
