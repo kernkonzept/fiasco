@@ -1,0 +1,19 @@
+name: RiscV
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Install cross compiler toolchains
+      run: sudo apt-get install gcc-riscv64-linux-gnu g++-riscv64-linux-gnu gcc-12-riscv64-linux-gnu g++-12-riscv64-linux-gnu
+    - uses: actions/checkout@v4.1.1
+    - name: make
+      run: make 'TEMPLATE_FILTER=riscv32-virt riscv64-virt' -j $(nproc) l4check

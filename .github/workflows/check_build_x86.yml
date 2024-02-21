@@ -1,0 +1,17 @@
+name: x86
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4.1.1
+    - name: make
+      run: make 'TEMPLATE_FILTER=amd64-1 ia32-1' -j $(nproc) l4check
