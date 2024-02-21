@@ -1274,11 +1274,15 @@ Context::try_finish_migration()
 
 
 /**
- * \brief Handle all pending DRQs.
- * \pre cpu_lock.test() (The CPU lock must be held).
- * \pre current() == this (only the currently running context is allowed to
- *      call this function).
- * \return true if re-scheduling is needed (ready queue has changed),
+ * Handle all pending DRQs for this context.
+ *
+ * \pre The CPU lock must be held: `cpu_lock.test()`
+ * \pre The context must be either on the current CPU or on an offline CPU:
+ *      `current_cpu() == home_cpu() || !Cpu::online(home_cpu())`
+ * \pre If `!Cpu::online(home_cpu())`, the lock of the home CPU's _pending_rqq
+ *      must be held: `_pending_rqq.cpu(home_cpu()).q_lock()->test()`
+ *
+ * \return True if re-scheduling is needed (ready queue has changed),
  *         false if not.
  */
 PUBLIC //inline
@@ -2049,13 +2053,32 @@ Context::pending_rqq_enqueue()
     Ipi::send(Ipi::Request, current_cpu(), cpu);
 }
 
+/**
+ * Execute given DRQ for this context, must be on current or offline CPU.
+ *
+ * \param rq           DRQ to execute.
+ * \param offline_cpu  Whether home CPU of context is an offline CPU.
+ *
+ * \pre The context must be either on the current CPU or on an offline CPU:
+ *      `home_cpu() == current_cpu() || offline_cpu`
+ * \pre If offline_cpu is true, the lock of the home CPU's _pending_rqq must be
+ *      held: `_pending_rqq.cpu(home_cpu()).q_lock()->test()`
+ *
+ * \return True if re-scheduling is needed (ready queue has changed),
+ *         false if not.
+ *
+ * \post The DRQ function might be preemptible for local DRQ execution, i.e.
+ *       `home_cpu() == current_cpu()`, in that case the home CPU can change.
+ */
 PRIVATE inline
 bool
 Context::_execute_drq(Drq *rq, bool offline_cpu = false)
 {
   bool do_sched = _drq_q.execute_request(rq, true);
-  // the DRQ function executed above might be preemptible in the case
-  // of local execution
+
+  // The DRQ function executed above might be preemptible in the case
+  // of local execution. For example the IRQ shortcut in
+  // Irq_sender::handle_remote_hit().
   if (EXPECT_FALSE(!offline_cpu && home_cpu() != current_cpu()))
     return false;
 
@@ -2071,6 +2094,22 @@ Context::_execute_drq(Drq *rq, bool offline_cpu = false)
   return do_sched;
 }
 
+/**
+ * Dequeue given DRQ from DRQ queue of this context, must be on current or
+ * offline CPU, update the context's DRQ ready state and execute the DRQ.
+ *
+ * \param rq           DRQ to execute.
+ * \param offline_cpu  Whether home CPU of context is an offline CPU.
+ * \pre The context must be either on the current CPU or on an offline CPU:
+ *      `home_cpu() == current_cpu() || offline_cpu`
+ * \pre if (offline_cpu) _pending_rqq.cpu(home_cpu()).q_lock() must be held.
+ *
+ * \return True if re-scheduling is needed (ready queue has changed),
+ *         false if not.
+ *
+ * \post The DRQ function might be preemptible for local DRQ execution, i.e.
+ *       `home_cpu() == current_cpu()`, in that case the home CPU can change.
+ */
 PRIVATE inline
 bool
 Context::_deq_exec_drq(Drq *rq, bool offline_cpu = false)
