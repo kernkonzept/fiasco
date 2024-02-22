@@ -750,7 +750,10 @@ template <typename T> inline
 void
 utest_format_print_value(T const &val)
 {
-  utest_format_print_value((unsigned long)cxx::int_value<T>(val));
+  if constexpr (cxx::is_pointer_v<T> || cxx::is_null_pointer_v<T>)
+    utest_format_print_value(reinterpret_cast<unsigned long>(val));
+  else
+    utest_format_print_value(static_cast<unsigned long>(cxx::int_value<T>(val)));
 }
 
 inline
@@ -792,6 +795,10 @@ utest_format_print_value(unsigned char val) { printf("%u", val); }
 inline
 void
 utest_format_print_value(short val) { printf("%d", val); }
+
+inline
+void
+utest_format_print_value(unsigned short val) { printf("%u", val); }
 
 inline
 void
