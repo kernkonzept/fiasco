@@ -642,8 +642,15 @@ Thread::do_ipc(L4_msg_tag const &tag, Mword from_spec, Thread *partner,
     // Holds the next sender if the IPC has a receive phase.
     Sender *next = 0;
 
-    // If the send phase failed, it did not set the Thread_receive_wait flag and
-    // the receive phase is skipped.
+    // A: If the send phase failed, it did not set the Thread_receive_wait flag
+    // and the receive phase is skipped.
+    // B: If we completed the send phase of a cross-core IPC directly on the
+    // remote CPU (Check_sender::Done), we set the Thread_receive_wait flag with
+    // xcpu_state_change. Between the execution of that state change and our
+    // return from remote_handshake_receiver, a potential sender can now start
+    // an IPC transfer to us, i.e. it makes us enter the receive phase
+    // (Thread_ipc_transfer) or even directly completes the receive phase,
+    // whereby in both cases also the Thread_receive_wait flag is cleared again.
     have_receive = state() & Thread_receive_wait;
 
     if (have_receive)
