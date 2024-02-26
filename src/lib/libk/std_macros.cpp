@@ -34,11 +34,13 @@ INTERFACE:
 
 #define FIASCO_NO_UNROLL_LOOPS
 #define FIASCO_LONGCALL
+#define FIASCO_CLANG
 
 #else
 
 #define FIASCO_NO_UNROLL_LOOPS __attribute__((optimize("no-unroll-loops")))
 #define FIASCO_LONGCALL        __attribute__((long_call))
+#define FIASCO_GCC
 
 #endif
 
