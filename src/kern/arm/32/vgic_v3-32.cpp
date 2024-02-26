@@ -60,104 +60,111 @@ Gic_h_v3::elsr()
   return v;
 }
 
+PUBLIC static inline ALWAYS_INLINE void
+Gic_h_v3::read_apr(unsigned opc2, Unsigned32 *a)
+{
+  asm volatile ("mrc p15, 4, %0, c12, c8, %c1" : "=r"(a[0]) : "i"(opc2));
+  asm volatile ("mrc p15, 4, %0, c12, c9, %c1" : "=r"(a[1]) : "i"(opc2));
+}
+
+PUBLIC static inline ALWAYS_INLINE void
+Gic_h_v3::write_apr(unsigned opc2, Unsigned32 r0, Unsigned32 r1)
+{
+  asm ("mcr p15, 4, %0, c12, c8, %c1" : : "r"(r0), "i"(opc2));
+  asm ("mcr p15, 4, %0, c12, c9, %c1" : : "r"(r1), "i"(opc2));
+}
+
 PUBLIC inline void
 Gic_h_v3::save_aprs(Unsigned32 *a)
 {
-  // NOTE: we should use ASM patching to do this and just
-  // replace instructions with NOPs
-  asm ("mrc p15, 4, %0, c12, c8, 0" : "=r"(a[0]));
-  asm ("mrc p15, 4, %0, c12, c9, 0" : "=r"(a[1]));
+  // NOTE: ASM patching and replace instructions with NOPs
+  read_apr(0, a + 0);
   if (n_aprs > 1)
-    {
-      asm ("mrc p15, 4, %0, c12, c8, 1" : "=r"(a[2]));
-      asm ("mrc p15, 4, %0, c12, c9, 1" : "=r"(a[3]));
-    }
+    read_apr(1, a + 2);
   if (n_aprs > 2)
     {
-      asm ("mrc p15, 4, %0, c12, c8, 2" : "=r"(a[4]));
-      asm ("mrc p15, 4, %0, c12, c9, 2" : "=r"(a[5]));
-      asm ("mrc p15, 4, %0, c12, c8, 3" : "=r"(a[6]));
-      asm ("mrc p15, 4, %0, c12, c9, 3" : "=r"(a[7]));
+      read_apr(2, a + 4);
+      read_apr(3, a + 6);
     }
 }
 
 PUBLIC inline void
 Gic_h_v3::load_aprs(Unsigned32 const *a)
 {
-  // NOTE: we should use ASM patching to do this and just
-  // replace instructions with NOPs
-  asm ("mcr p15, 4, %0, c12, c8, 0" : : "r"(a[0]));
-  asm ("mcr p15, 4, %0, c12, c9, 0" : : "r"(a[1]));
+  // NOTE: ASM patching and replace instructions with NOPs
+  write_apr(0, a[0], a[1]);
   if (n_aprs > 1)
-    {
-      asm ("mcr p15, 4, %0, c12, c8, 1" : : "r"(a[2]));
-      asm ("mcr p15, 4, %0, c12, c9, 1" : : "r"(a[3]));
-    }
+    write_apr(1, a[2], a[3]);
   if (n_aprs > 2)
     {
-      asm ("mcr p15, 4, %0, c12, c8, 2" : : "r"(a[4]));
-      asm ("mcr p15, 4, %0, c12, c9, 2" : : "r"(a[5]));
-      asm ("mcr p15, 4, %0, c12, c8, 3" : : "r"(a[6]));
-      asm ("mcr p15, 4, %0, c12, c9, 3" : : "r"(a[7]));
+      write_apr(2, a[4], a[5]);
+      write_apr(3, a[6], a[7]);
     }
 }
 
 PUBLIC static inline ALWAYS_INLINE void
-Gic_h_v3::save_lrs(Gic_h::Arm_vgic::Lrs *lr, unsigned n)
+Gic_h_v3::read_lr(Unsigned64 *a, unsigned crm, unsigned opc2)
 {
   Unsigned32 l, h;
+  asm volatile ("mrc p15, 4, %0, c12, c%c1, %c2" : "=r"(l) : "i"(crm), "i"(opc2));
+  asm volatile ("mrc p15, 4, %0, c12, c%c1, %c2" : "=r"(h) : "i"(crm + 2), "i"(opc2));
+  *a = (Unsigned64{h} << 32) | l;
+}
 
-#define TRANSFER_LR(ul,uh,v,x) \
-  asm ("mrc p15, 4, %0, c12, " #ul", " #v : "=r"(l)); \
-  asm ("mrc p15, 4, %0, c12, " #uh", " #v : "=r"(h)); \
-  lr->lr64[x] = (Unsigned64{h} << 32) | l; \
-  if ((x + 1 >= Gic_h::Arm_vgic::N_lregs) || (n <= x + 1)) return
+PUBLIC static inline ALWAYS_INLINE void
+Gic_h_v3::write_lr(Unsigned64 a, unsigned crm, unsigned opc2)
+{
+  asm volatile ("mcr p15, 4, %0, c12, c%c1, %c2" :: "r"(a), "i"(crm), "i"(opc2));
+  asm volatile ("mcr p15, 4, %0, c12, c%c1, %c2" :: "r"(a >> 32), "i"(crm + 2), "i"(opc2));
+}
 
-  TRANSFER_LR(c12, c14, 0, 0);
-  TRANSFER_LR(c12, c14, 1, 1);
-  TRANSFER_LR(c12, c14, 2, 2);
-  TRANSFER_LR(c12, c14, 3, 3);
-  TRANSFER_LR(c12, c14, 4, 4);
-  TRANSFER_LR(c12, c14, 5, 5);
-  TRANSFER_LR(c12, c14, 6, 6);
-  TRANSFER_LR(c12, c14, 7, 7);
-  TRANSFER_LR(c13, c15, 0, 8);
-  TRANSFER_LR(c13, c15, 1, 9);
-  TRANSFER_LR(c13, c15, 2, 10);
-  TRANSFER_LR(c13, c15, 3, 11);
-  TRANSFER_LR(c13, c15, 4, 12);
-  TRANSFER_LR(c13, c15, 5, 13);
-  TRANSFER_LR(c13, c15, 6, 14);
-  TRANSFER_LR(c13, c15, 7, 15);
+PUBLIC static inline ALWAYS_INLINE void
+Gic_h_v3::save_lrs(Gic_h::Arm_vgic::Lrs *lr)
+{
+#define TRANSFER_LR(i) \
+  read_lr(lr->lr64 + i, 12 + i/8, i % 8); \
+  if (Gic_h::Arm_vgic::N_lregs <= i + 1) return
+  TRANSFER_LR(0);
+  TRANSFER_LR(1);
+  TRANSFER_LR(2);
+  TRANSFER_LR(3);
+  TRANSFER_LR(4);
+  TRANSFER_LR(5);
+  TRANSFER_LR(6);
+  TRANSFER_LR(7);
+  TRANSFER_LR(8);
+  TRANSFER_LR(9);
+  TRANSFER_LR(10);
+  TRANSFER_LR(11);
+  TRANSFER_LR(12);
+  TRANSFER_LR(13);
+  TRANSFER_LR(14);
+  TRANSFER_LR(15);
 #undef TRANSFER_LR
 }
 
 PUBLIC static inline ALWAYS_INLINE void
-Gic_h_v3::load_lrs(Gic_h::Arm_vgic::Lrs const *lr, unsigned n)
+Gic_h_v3::load_lrs(Gic_h::Arm_vgic::Lrs const *lr)
 {
-#define TRANSFER_LR(ul,uh,v,x) \
-  asm ("mcr p15, 4, %0, c12, " #ul", " #v \
-       : : "r"(static_cast<Unsigned32>(lr->lr64[x]))); \
-  asm ("mcr p15, 4, %0, c12, " #uh", " #v \
-       : : "r"(static_cast<Unsigned32>(lr->lr64[x] >> 32))); \
-  if ((x + 1 >= Gic_h::Arm_vgic::N_lregs) || (n <= x + 1)) return
-
-  TRANSFER_LR(c12, c14, 0, 0);
-  TRANSFER_LR(c12, c14, 1, 1);
-  TRANSFER_LR(c12, c14, 2, 2);
-  TRANSFER_LR(c12, c14, 3, 3);
-  TRANSFER_LR(c12, c14, 4, 4);
-  TRANSFER_LR(c12, c14, 5, 5);
-  TRANSFER_LR(c12, c14, 6, 6);
-  TRANSFER_LR(c12, c14, 7, 7);
-  TRANSFER_LR(c13, c15, 0, 8);
-  TRANSFER_LR(c13, c15, 1, 9);
-  TRANSFER_LR(c13, c15, 2, 10);
-  TRANSFER_LR(c13, c15, 3, 11);
-  TRANSFER_LR(c13, c15, 4, 12);
-  TRANSFER_LR(c13, c15, 5, 13);
-  TRANSFER_LR(c13, c15, 6, 14);
-  TRANSFER_LR(c13, c15, 7, 15);
+#define TRANSFER_LR(i) \
+  write_lr(lr->lr64[i], 12 + i/8, i % 8); \
+  if (Gic_h::Arm_vgic::N_lregs <= i + 1) return
+  TRANSFER_LR(0);
+  TRANSFER_LR(1);
+  TRANSFER_LR(2);
+  TRANSFER_LR(3);
+  TRANSFER_LR(4);
+  TRANSFER_LR(5);
+  TRANSFER_LR(6);
+  TRANSFER_LR(7);
+  TRANSFER_LR(8);
+  TRANSFER_LR(9);
+  TRANSFER_LR(10);
+  TRANSFER_LR(11);
+  TRANSFER_LR(12);
+  TRANSFER_LR(13);
+  TRANSFER_LR(14);
+  TRANSFER_LR(15);
 #undef TRANSFER_LR
 }
 

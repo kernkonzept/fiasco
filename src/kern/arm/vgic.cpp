@@ -120,7 +120,7 @@ public:
     g->eisr = self()->eisr();
     // Only report saved/loaded LR registers as free
     g->elsr = self()->elsr() & ((1U << Arm_vgic::N_lregs) - 1U);
-    self()->save_lrs(&g->lr, Arm_vgic::N_lregs);
+    self()->save_lrs(&g->lr);
     self()->save_aprs(g->aprs);
     return true;
   }
@@ -138,7 +138,7 @@ public:
       {
         self()->vmcr(to->vmcr);
         self()->load_aprs(to->aprs);
-        self()->load_lrs(&to->lr, Arm_vgic::N_lregs);
+        self()->load_lrs(&to->lr);
         self()->hcr(hcr);
         IMPL::vgic_barrier();
       }

@@ -80,16 +80,16 @@ Gic_h_v2::load_aprs(Unsigned32 const *a)
 { write(a[0], APR); }
 
 PUBLIC inline void
-Gic_h_v2::save_lrs(Gic_h::Arm_vgic::Lrs *l, unsigned n) const
+Gic_h_v2::save_lrs(Gic_h::Arm_vgic::Lrs *l) const
 {
-  for (unsigned i = 0; i < n; ++i)
+  for (unsigned i = 0; i < Gic_h::Arm_vgic::N_lregs; ++i)
     l->lr32[i] = read<Unsigned32>(LRn + (i << 2));
 }
 
 PUBLIC inline void
-Gic_h_v2::load_lrs(Gic_h::Arm_vgic::Lrs const *l, unsigned n)
+Gic_h_v2::load_lrs(Gic_h::Arm_vgic::Lrs const *l)
 {
-  for (unsigned i = 0; i < n; ++i)
+  for (unsigned i = 0; i < Gic_h::Arm_vgic::N_lregs; ++i)
     write(l->lr32[i], LRn + (i << 2));
 }
 
