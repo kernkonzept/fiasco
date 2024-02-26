@@ -484,7 +484,7 @@ void
 Mem_space::prepare_pt_switch()
 {
   Mword *pd = reinterpret_cast<Mword *>(Kmem::current_cpu_udir());
-  Mword *d = (Mword *)_dir;
+  Mword *d = reinterpret_cast<Mword *>(_dir);
   auto *m = Kmem::pte_map();
   unsigned bit = 0;
   for (;;)

@@ -398,7 +398,7 @@ Vz::State::save_full(int guest_id)
 {
   using namespace Mips;
   auto c_map = current_cp0_map;
-  write_now(&current_cp0_map, (Unsigned32)~0);
+  write_now(&current_cp0_map, static_cast<Unsigned32>(~0));
 
   if (EXPECT_TRUE(!(c_map & M_ctl_0)))
     save_ctl();

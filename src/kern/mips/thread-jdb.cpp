@@ -62,7 +62,7 @@ extern "C" void sys_kdb_ke()
       return;
 
     case Thread::Op_kdebug_text:
-      strncpy(str, (char *)(arg), sizeof(str));
+      strncpy(str, reinterpret_cast<char *>(arg), sizeof(str));
       str[sizeof(str)-1] = 0;
       break;
 
