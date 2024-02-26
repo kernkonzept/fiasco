@@ -4,6 +4,7 @@ INTERFACE [arm]:
 #include "paging.h"
 #include "boot_infos.h"
 
+// Written by the linker. See the :bstrap section in kernel.arm.ld.
 struct Bootstrap_info
 {
   void (*entry)();

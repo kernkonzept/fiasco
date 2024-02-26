@@ -4,6 +4,7 @@ INTERFACE [riscv]:
 #include "mem_layout.h"
 #include "paging.h"
 
+// Written by the linker. See the :bstrap section in kernel.riscv.ld.
 struct Bootstrap_info
 {
   void (*entry)();

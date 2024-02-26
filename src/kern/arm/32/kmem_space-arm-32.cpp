@@ -25,6 +25,8 @@ IMPLEMENTATION[arm && arm_lpae]:
 Unsigned64 kernel_lpae_dir[4] __attribute__((aligned(4 * sizeof(Unsigned64))));
 Kpdir *Kmem::kdir = reinterpret_cast<Kpdir *>(&kernel_lpae_dir);
 
+// Provide the initial information for bootstrap.cpp. The kernel linker script
+// overlays the Boot_paging_info member variable in Bootstrap_info with this.
 static Boot_paging_info FIASCO_BOOT_PAGING_INFO _bs_pgin_dta =
 {
   kernel_page_directory,
@@ -38,6 +40,8 @@ IMPLEMENTATION[arm && !arm_lpae]:
 
 Kpdir *Kmem::kdir = (Kpdir *)&kernel_page_directory;
 
+// Provide the initial information for bootstrap.cpp. The kernel linker script
+// overlays the Boot_paging_info member variable in Bootstrap_info with this.
 static Boot_paging_info FIASCO_BOOT_PAGING_INFO _bs_pgin_dta =
 {
   kernel_page_directory

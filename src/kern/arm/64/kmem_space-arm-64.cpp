@@ -23,7 +23,8 @@ static K_ptab_array pdir_scratch[Num_scratch_pages];
 
 Kpdir *Kmem::kdir = reinterpret_cast<Kpdir *>(&kernel_l0_vdir);
 
-// provide the initial infos for bootstrap.cpp
+// Provide the initial information for bootstrap.cpp. The kernel linker script
+// overlays the Boot_paging_info member variable in Bootstrap_info with this.
 static Boot_paging_info FIASCO_BOOT_PAGING_INFO _bs_pgin_dta =
 {
   kernel_l0_dir,
@@ -46,7 +47,8 @@ static K_ptab_array pdir_scratch[Num_scratch_pages];
 
 Kpdir *Kmem::kdir = reinterpret_cast<Kpdir *>(&kernel_l0_dir);
 
-// provide the initial infos for bootstrap.cpp
+// Provide the initial information for bootstrap.cpp. The kernel linker script
+// overlays the Boot_paging_info member variable in Bootstrap_info with this.
 static Boot_paging_info FIASCO_BOOT_PAGING_INFO _bs_pgin_dta =
 {
   kernel_l0_dir,
