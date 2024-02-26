@@ -43,7 +43,7 @@ public:
   /**
    * The result type of lock operations.
    */
-  enum Status 
+  enum Status
   {
     Not_locked, ///< The lock was formerly not acquired and -- we got it
     Locked,     ///< The lock was already acquired by ourselves
@@ -61,9 +61,9 @@ public:
 };
 
 #undef NO_INSTRUMENT
-#define NO_INSTRUMENT 
+#define NO_INSTRUMENT
 
-
+// ----------------------------------------------------------------------
 IMPLEMENTATION:
 
 #include <cassert>
@@ -138,24 +138,6 @@ Switch_lock::test() const
   return o ? Locked : Not_locked;
 }
 
-/**
- * Acquire the lock with priority inheritance.
- *
- * If the lock is occupied, lend the CPU to current lock owner until we are the
- * lock owner.
- *
- * \retval #Locked      The lock was already locked by the current context.
- * \retval #Not_locked  The current context got the lock (the usual case).
- * \retval #Invalid     The lock does not exist (see valid()).
- */
-PUBLIC
-Switch_lock::Status NO_INSTRUMENT
-Switch_lock::lock()
-{
-  auto guard = lock_guard(cpu_lock);
-  return lock_dirty();
-}
-
 PRIVATE
 void NO_INSTRUMENT
 Switch_lock::help(Context *curr, Context *owner, Address owner_id)
@@ -170,16 +152,21 @@ Switch_lock::help(Context *curr, Context *owner, Address owner_id)
 }
 
 /**
- * \copydoc Switch_lock::lock()
+ * Acquire the lock with priority inheritance.
  *
- * \pre caller holds cpu lock
+ * If the lock is occupied, lend the CPU to current lock owner until we are the
+ * lock owner.
+ *
+ * \retval #Locked      The lock was already locked by the current context.
+ * \retval #Not_locked  The current context got the lock (the usual case).
+ * \retval #Invalid     The lock does not exist (see valid()).
  */
 PUBLIC
 inline NEEDS["context.h", "processor.h", Switch_lock::set_lock_owner]
 Switch_lock::Status NO_INSTRUMENT
-Switch_lock::lock_dirty()
+Switch_lock::lock()
 {
-  assert(cpu_lock.test());
+  auto guard = lock_guard(cpu_lock);
 
   Mword o = access_once(&_lock_owner);
   if (EXPECT_FALSE(o & 1))
@@ -221,17 +208,7 @@ Switch_lock::test_and_set()
   return lock();
 }
 
-/**
- * \copydoc Switch_lock::lock_dirty()
- */
-PUBLIC
-inline NEEDS["globals.h"]
-Switch_lock::Status NO_INSTRUMENT
-Switch_lock::test_and_set_dirty()
-{
-  return lock_dirty();
-}
-
+// ----------------------------------------------------------------------
 IMPLEMENTATION [!mp]:
 
 PRIVATE inline
@@ -259,7 +236,7 @@ void
 Switch_lock::schedule(Context *curr)
 { curr->schedule(); }
 
-
+// ----------------------------------------------------------------------
 IMPLEMENTATION [mp]:
 
 PRIVATE inline
@@ -318,7 +295,7 @@ Switch_lock::schedule(Context *curr)
     curr->_running_under_lock.preempt();
 }
 
-
+// ----------------------------------------------------------------------
 IMPLEMENTATION:
 
 /**
@@ -410,27 +387,6 @@ Switch_lock::set(Status s)
 {
   if (s == Not_locked)
     clear();
-}
-
-/**
- * Free the lock.
- *
- * Return the CPU to helper if there is one, since it had to have a
- * higher priority to be able to help (priority may be its own, it
- * may run on a donated timeslice or round robin scheduling may have
- * selected a thread on the same priority level as me).
- * If _lock_owner is 0, then this is a no op
- *
- * \pre caller holds cpu lock
- */
-PUBLIC
-inline
-void NO_INSTRUMENT
-Switch_lock::clear_dirty()
-{
-  assert(cpu_lock.test());
-
-  switch_dirty(clear_no_switch_dirty());
 }
 
 PUBLIC inline
