@@ -475,7 +475,7 @@ bool
 Thread::pagein_tcb_request(Return_frame *regs)
 {
   // Counterpart: Mem_layout::read_special_safe()
-  if (*(Mword*)regs->pc == 0xe59ee000) // ldr lr,[lr]
+  if (*reinterpret_cast<Mword*>(regs->pc) == 0xe59ee000) // ldr lr,[lr]
     {
       // skip faulting instruction
       regs->pc += 4;

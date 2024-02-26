@@ -144,7 +144,8 @@ Mem_op::__arm_mem_cache_maint(int op, void const *start, void const *end)
 extern "C" void sys_arm_mem_op()
 {
   Entry_frame *e = current()->regs();
-  Mem_op::arm_mem_cache_maint(e->r[0], (void *)e->r[1], (void *)e->r[2]);
+  Mem_op::arm_mem_cache_maint(e->r[0], reinterpret_cast<void *>(e->r[1]),
+                              reinterpret_cast<void *>(e->r[2]));
 }
 
 
@@ -191,34 +192,20 @@ Mem_op::arm_mem_access(Mword *r)
 	case Op_mem_read_data:
 	  switch (w)
 	    {
-	    case 0:
-	      r[3] = *(unsigned char *)a;
-	      break;
-	    case 1:
-	      r[3] = *(unsigned short *)a;
-	      break;
-	    case 2:
-	      r[3] = *(unsigned int *)a;
-	      break;
-	    default:
-	      break;
+	    case 0: r[3] = *reinterpret_cast<unsigned char *>(a); break;
+	    case 1: r[3] = *reinterpret_cast<unsigned short *>(a); break;
+	    case 2: r[3] = *reinterpret_cast<unsigned int *>(a); break;
+	    default: break;
 	    };
 	  break;
 
 	case Op_mem_write_data:
 	  switch (w)
 	    {
-	    case 0:
-	      *(unsigned char *)a = r[3];
-	      break;
-	    case 1:
-	      *(unsigned short *)a = r[3];
-	      break;
-	    case 2:
-	      *(unsigned int *)a = r[3];
-	      break;
-	    default:
-	      break;
+	    case 0: *reinterpret_cast<unsigned char *>(a) = r[3]; break;
+	    case 1: *reinterpret_cast<unsigned short *>(a) = r[3]; break;
+	    case 2: *reinterpret_cast<unsigned int *>(a) = r[3]; break;
+	    default: break;
 	    };
 	  break;
 

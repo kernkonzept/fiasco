@@ -21,7 +21,7 @@ void Mem_unit::tlb_flush(void *va, unsigned long)
 {
   Mem::dsb();
   asm volatile("mcr p15, 0, %0, c8, c7, 1" // TLBIMVA
-               : : "r" ((unsigned long)va & 0xfffff000) : "memory");
+               : : "r" (reinterpret_cast<Address>(va) & 0xfffff000) : "memory");
   Mem::dsb();
 }
 
@@ -34,7 +34,7 @@ void Mem_unit::tlb_flush_kernel(Address va)
 {
   // No ASIDs on ARMv5, so just use the regular tlb_flush() implementation
   // passing a dummy ASID value that is ignored anyway.
-  tlb_flush((void *)va, 0);
+  tlb_flush(reinterpret_cast<void *>(va), 0);
 }
 
 //---------------------------------------------------------------------------
@@ -68,7 +68,7 @@ void Mem_unit::tlb_flush(void *va, unsigned long asid)
   btc_flush();
   Mem::dsbst();
   asm volatile("mcr p15, 0, %0, c8, c7, 1" // TLBIMVA
-               : : "r" (((unsigned long)va & 0xfffff000) | asid) : "memory");
+               : : "r" ((reinterpret_cast<Address>(va) & 0xfffff000) | asid) : "memory");
   Mem::dsb();
 }
 
@@ -116,7 +116,7 @@ void Mem_unit::tlb_flush(void *va, unsigned long asid)
   btc_flush();
   Mem::dsbst();
   asm volatile("mcr p15, 0, %0, c8, c3, 1" // TLBIMVAIS
-               : : "r" (((unsigned long)va & 0xfffff000) | asid) : "memory");
+               : : "r" ((reinterpret_cast<Address>(va) & 0xfffff000) | asid) : "memory");
   Mem::dsb();
 }
 

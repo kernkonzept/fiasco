@@ -38,7 +38,7 @@ IMPLEMENTATION[arm && !arm_lpae]:
 
 #include "boot_infos.h"
 
-Kpdir *Kmem::kdir = (Kpdir *)&kernel_page_directory;
+Kpdir *Kmem::kdir = reinterpret_cast<Kpdir *>(&kernel_page_directory);
 
 // Provide the initial information for bootstrap.cpp. The kernel linker script
 // overlays the Boot_paging_info member variable in Bootstrap_info with this.

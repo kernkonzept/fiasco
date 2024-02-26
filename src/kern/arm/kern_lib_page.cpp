@@ -24,9 +24,10 @@ void Kern_lib_page::init()
                               Kmem_alloc::q_allocator(Ram_quota::root));
 
   if (pte.level == 0) // allocation of second level faild
-    panic("Error mapping kernel-lib page to %p", (void *)Kmem_space::Kern_lib_base);
+    panic("Error mapping kernel-lib page to %p",
+          reinterpret_cast<void *>(Kmem_space::Kern_lib_base));
 
-  pte.set_page(Phys_mem_addr(Kmem::kdir->virt_to_phys((Address)&kern_lib_start)),
+  pte.set_page(Phys_mem_addr(Kmem::kdir->virt_to_phys(reinterpret_cast<Address>(&kern_lib_start))),
                Page::Attr::kern_global(Page::Rights::URX()));
   pte.write_back_if(true);
   Mem_unit::tlb_flush_kernel(Kmem_space::Kern_lib_base);

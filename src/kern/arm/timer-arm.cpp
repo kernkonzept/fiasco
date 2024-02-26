@@ -31,7 +31,7 @@ PRIVATE static inline NEEDS["mem_unit.h"]
 void
 Timer::kipclock_cache()
 {
-  Mem_unit::clean_dcache((void *)&Kip::k()->_clock);
+  Mem_unit::clean_dcache(static_cast<void *>(const_cast<Cpu_time *>(&Kip::k()->_clock)));
 }
 
 // ------------------------------------------------------------------------

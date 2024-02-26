@@ -98,7 +98,7 @@ Bootstrap::Phys_addr
 Bootstrap::init_paging()
 {
   create_initial_mappings();
-  return Phys_addr((Mword)kern_to_boot(bs_info.pi.kernel_page_directory));
+  return Phys_addr(reinterpret_cast<Mword>(kern_to_boot(bs_info.pi.kernel_page_directory)));
 }
 
 //---------------------------------------------------------------------------
@@ -161,7 +161,7 @@ Bootstrap::init_paging()
   asm volatile ("mcr p15, 0, %0, c10, c2, 1" : : "r"(Page::Mair1_nmrr_bits));
   create_initial_mappings();
 
-  return Phys_addr((Mword)kern_to_boot(bs_info.pi.kernel_page_directory));
+  return Phys_addr(reinterpret_cast<Mword>(kern_to_boot(bs_info.pi.kernel_page_directory)));
 }
 
 //---------------------------------------------------------------------------

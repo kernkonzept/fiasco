@@ -18,10 +18,11 @@ Kernel_task::map_syscall_page(void *p)
                               Pdir::Depth, true,
                               Kmem_alloc::q_allocator(Ram_quota::root));
 
-  if (pte.level == 0) // allocation of second level faild
-    panic("Error mapping syscall page to %p", (void *)Kmem_space::Syscalls);
+  if (pte.level == 0) // allocation of second level failed
+    panic("Error mapping syscall page to %p",
+          reinterpret_cast<void *>(Kmem_space::Syscalls));
 
-  pte.set_page(Phys_mem_addr(Kmem::kdir->virt_to_phys((Address)p)),
+  pte.set_page(Phys_mem_addr(Kmem::kdir->virt_to_phys(reinterpret_cast<Address>(p))),
                Page::Attr::kern_global(Page::Rights::URX()));
   pte.write_back_if(true);
   Mem_unit::tlb_flush_kernel(Kmem_space::Syscalls);

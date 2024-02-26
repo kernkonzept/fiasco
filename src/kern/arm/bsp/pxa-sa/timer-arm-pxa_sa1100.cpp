@@ -56,7 +56,7 @@ void Timer::init(Cpu_number)
 static inline
 Unsigned64
 Timer::timer_to_us(Unsigned32 cr)
-{ return (((Unsigned64)cr) << 14) / 60398; }
+{ return (Unsigned64{cr} << 14) / 60398; }
 
 static inline
 Unsigned64

@@ -123,8 +123,8 @@ Cpu::init_supervisor_mode(bool is_boot_cpu)
                               Kpdir::Depth, true,
                               Kmem_alloc::q_allocator(Ram_quota::root));
 
-  Address va = (Address)&ivt_start - Mem_layout::Sdram_phys_base
-                                   + Mem_layout::Map_base;
+  Address va = reinterpret_cast<Address>(&ivt_start)
+                 - Mem_layout::Sdram_phys_base + Mem_layout::Map_base;
   pte.set_page(Phys_mem_addr(Kmem::kdir->virt_to_phys(va)),
                Page::Attr::kern_global(Page::Rights::RWX()));
   pte.write_back_if(true);

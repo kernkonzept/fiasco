@@ -132,7 +132,8 @@ Platform_control::write_phys_mem_coherent(Mword addr_p, Mword value)
 {
   Mword addr_v = Kmem::mmio_remap(addr_p, sizeof(Mword));
   Io::write<Mword>(value, addr_v);
-  Mem_unit::flush_dcache((void *)addr_v, (void *)(addr_v + sizeof(value)));
+  Mem_unit::flush_dcache(reinterpret_cast<void *>(addr_v),
+                         reinterpret_cast<void *>((addr_v + sizeof(value))));
   Outer_cache::flush(addr_p);
 }
 
@@ -286,7 +287,7 @@ Platform_control::resume_cpu(Cpu_number cpu)
 
   set_suspend_state(cpu, false);
   extern char _tramp_mp_entry[];
-  cpuboot(Kmem::kdir->virt_to_phys((Address)_tramp_mp_entry), pcpu);
+  cpuboot(Kmem::kdir->virt_to_phys(reinterpret_cast<Address>(_tramp_mp_entry)), pcpu);
   Ipi::send(Ipi::Global_request, current_cpu(), cpu);
 
   return 0;

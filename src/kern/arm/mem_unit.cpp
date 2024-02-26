@@ -77,5 +77,5 @@ Mem_unit::make_coherent_to_pou(void const *start, size_t size)
   // This does more than necessary: It writes back + invalidates the data cache
   // instead of cleaning. But this function shall not be used in performance
   // critical code anyway.
-  Mmu::flush_cache(start, (Unsigned8 const *)start + size);
+  Mmu::flush_cache(start, static_cast<Unsigned8 const *>(start) + size);
 }

@@ -136,7 +136,7 @@ IMPLEMENT
 template< unsigned long Flush_area , bool Ram >
 FIASCO_NOINLINE void Mmu<Flush_area, Ram>::clean_dcache(void const *start, void const *end)
 {
-  if (((Address)end) - ((Address)start) >= 8192)
+  if (reinterpret_cast<Address>(end) - reinterpret_cast<Address>(start) >= 8192)
     clean_dcache();
   else
     {
@@ -164,7 +164,7 @@ IMPLEMENT
 template< unsigned long Flush_area, bool Ram >
 FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_dcache(void const *start, void const *end)
 {
-  if (((Address)end) - ((Address)start) >= 8192)
+  if (reinterpret_cast<Address>(end) - reinterpret_cast<Address>(start) >= 8192)
     flush_dcache();
   else
     {
