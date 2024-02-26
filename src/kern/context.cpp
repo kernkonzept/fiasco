@@ -1713,7 +1713,7 @@ private:
      */
     bool try_to_help()
     {
-      if (_s)
+      if (_s != Not_running)
         return false; // either running or already trying
 
       bool ret = cas(&_s, Not_running, Trying);
@@ -1736,7 +1736,7 @@ private:
      */
     bool try_dispatch()
     {
-      if (access_once(&_s))
+      if (access_once(&_s) != Not_running)
         return false;
 
       bool ret = cas(&_s, Not_running, Running);
@@ -1781,7 +1781,7 @@ private:
     }
 
     /// Check the current running under lock state.
-    operator bool () const { return _s; }
+    explicit operator bool () const { return _s != Not_running; }
   };
 
   /**
