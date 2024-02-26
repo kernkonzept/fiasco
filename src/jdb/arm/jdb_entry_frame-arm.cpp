@@ -41,7 +41,7 @@ Jdb_entry_frame::from_user() const
 
 PUBLIC inline
 Address Jdb_entry_frame::ksp() const
-{ return Address(this); }
+{ return reinterpret_cast<Address>(this); }
 
 IMPLEMENT inline
 Address Jdb_entry_frame::ip() const

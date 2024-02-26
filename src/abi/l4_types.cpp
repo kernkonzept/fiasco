@@ -853,7 +853,7 @@ L4_msg_tag::L4_msg_tag()
  */
 PUBLIC inline
 L4_msg_tag::L4_msg_tag(L4_msg_tag const &o, Mword flags)
-  : _tag((o.raw() & ~Mword(Rcv_flags)) | flags)
+  : _tag((o.raw() & ~static_cast<Mword>(Rcv_flags)) | flags)
 {}
 
 /**
@@ -940,7 +940,7 @@ void L4_msg_tag::set_error(bool e = true)
   if (e)
     _tag |= Error;
   else
-    _tag &= ~Mword(Error);
+    _tag &= ~Mword{Error};
 }
 
 /**

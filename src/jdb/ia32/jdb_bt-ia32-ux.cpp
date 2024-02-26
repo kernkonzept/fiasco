@@ -193,7 +193,7 @@ Jdb_bt::get_kernel_eip_ebp(Mword &eip1, Mword &eip2, Mword &ebp)
       else
         {
           ksp = tid->get_kernel_sp();
-          tcb  = Mword(tid); //Mem_layout::Tcbs + tid.gthread()*Context::size;
+          tcb  = reinterpret_cast<Mword>(tid); //Mem_layout::Tcbs + tid.gthread()*Context::size;
         }
 
       Mword tcb_next = tcb + Context::Size;
@@ -228,7 +228,7 @@ static void
 Jdb_bt::show_without_ebp()
 {
   Mword *ksp      = tid->get_kernel_sp();
-  Mword tcb_next  = Mword(tid) + Context::Size;
+  Mword tcb_next  = reinterpret_cast<Mword>(tid) + Context::Size;
 
   // search for valid eip
   for (int i=0, j=1; reinterpret_cast<Address>(ksp+i) < tcb_next-20; i++)

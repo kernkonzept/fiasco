@@ -292,8 +292,8 @@ struct On_dbg_stack
   bool operator () (Cpu_number cpu) const
   {
     Thread::Dbg_stack const &st = Thread::dbg_stack.cpu(cpu);
-    return sp <= Mword(st.stack_top) 
-       && sp >= Mword(st.stack_top) - Thread::Dbg_stack::Stack_size;
+    Mword stack_top = reinterpret_cast<Mword>(st.stack_top);
+    return sp <= stack_top && sp >= stack_top - Thread::Dbg_stack::Stack_size;
   }
 };
 
@@ -392,7 +392,7 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
   else
     {
       // user address, use temporary mapping
-      phys = Address(addr.space()->virt_to_phys(addr.addr()));
+      phys = addr.space()->virt_to_phys(addr.addr());
 
 #ifndef CONFIG_CPU_LOCAL_MAP
       if (phys == ~0UL)

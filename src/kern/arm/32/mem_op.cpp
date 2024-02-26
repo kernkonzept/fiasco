@@ -39,12 +39,14 @@ IMPLEMENTATION [arm]:
 PRIVATE static inline void
 Mem_op::__arm_kmem_cache_maint(int op, void const *kstart, void const *kend)
 {
+  Address kstart_addr = reinterpret_cast<Address>(kstart);
+  Address kend_addr = reinterpret_cast<Address>(kstart);
   switch (op)
     {
     case Op_cache_clean_data:
       Mem_unit::clean_dcache(kstart, kend);
       Mem::barrier();
-      outer_cache_op(Address(kstart), Address(kend),
+      outer_cache_op(kstart_addr, kend_addr,
                      [](Address s, Address e, bool sync)
                      { Outer_cache::clean(s, e, sync); });
       break;
@@ -53,7 +55,7 @@ Mem_op::__arm_kmem_cache_maint(int op, void const *kstart, void const *kend)
     case Op_cache_inv_data:
       Mem_unit::flush_dcache(kstart, kend);
       Mem::barrier();
-      outer_cache_op(Address(kstart), Address(kend),
+      outer_cache_op(kstart_addr, kend_addr,
                      [](Address s, Address e, bool sync)
                      { Outer_cache::flush(s, e, sync); });
       break;
@@ -64,14 +66,14 @@ Mem_op::__arm_kmem_cache_maint(int op, void const *kstart, void const *kend)
       // need to clean it in order to achieve cache coherency
       Mem::dsb();
       Mem_unit::btc_inv();
-      inv_icache(Address(kstart), Address(kend));
+      inv_icache(kstart_addr, kend_addr);
       Mem::dsb();
       break;
 
     case Op_cache_dma_coherent:
       Mem_unit::flush_dcache(kstart, kend);
       Mem::barrier();
-      outer_cache_op(Address(kstart), Address(kend),
+      outer_cache_op(kstart_addr, kend_addr,
                      [](Address s, Address e, bool sync)
                      { Outer_cache::flush(s, e, sync); });
       break;
@@ -291,7 +293,7 @@ IMPLEMENTATION [arm && 32bit]:
 PRIVATE static void
 Mem_op::inv_icache(Address start, Address end)
 {
-  if (Address(end) - Address(start) > 0x2000)
+  if (end - start > 0x2000)
     asm volatile("mcr p15, 0, %0, c7, c5, 0" : : "r" (0));
   else
     {

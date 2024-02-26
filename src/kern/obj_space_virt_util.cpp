@@ -77,8 +77,7 @@ Obj_space_virt<SPACE>::get_cap(Cap_index index)
 {
   Mem_space *ms = SPACE::mem_space(this);
 
-  Address phys = Address(ms->virt_to_phys(
-                           reinterpret_cast<Address>(cap_virt(index))));
+  Address phys = ms->virt_to_phys(reinterpret_cast<Address>(cap_virt(index)));
   if (EXPECT_FALSE(phys == ~0UL))
     return 0;
 

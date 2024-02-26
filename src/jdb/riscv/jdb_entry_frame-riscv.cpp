@@ -27,7 +27,7 @@ Jdb_entry_frame::ip() const
 PUBLIC inline
 Address
 Jdb_entry_frame::ksp() const
-{ return Address(this); }
+{ return reinterpret_cast<Address>(this); }
 
 PUBLIC inline
 Mword

@@ -169,7 +169,7 @@ public:
     auto p = access_once(_this()->pte);
     if ((p & 0xc00) == 0xc00)
       {
-        p &= (_this()->level == 0) ? ~Mword(0xc00) : ~Mword(0xff0);
+        p &= (_this()->level == 0) ? ~Mword{0xc00} : ~Mword{0xff0};
         write_now(_this()->pte, p);
       }
   }
@@ -190,9 +190,9 @@ public:
   Unsigned32 _attribs_mask() const
   {
     if (_this()->level == 0)
-      return ~Unsigned32(0x0000881c);
+      return ~Unsigned32{0x0000881c};
     else
-      return ~Unsigned32(0x0000022d);
+      return ~Unsigned32{0x0000022d};
   }
 
   Unsigned32 _attribs(Page::Attr attr) const
@@ -323,7 +323,7 @@ private:
 
 public:
   Unsigned64 _attribs_mask() const
-  { return ~Unsigned64(0x00400000000008dc); }
+  { return ~Unsigned64{0x00400000000008dc}; }
 
   Unsigned64 _attribs(Page::Attr attr) const
   {
@@ -429,7 +429,7 @@ private:
 
 public:
   Unsigned64 _attribs_mask() const
-  { return ~Unsigned64(0x00400000000000fc); }
+  { return ~Unsigned64{0x00400000000000fc}; }
 
   Unsigned64 _attribs(Page::Attr attr) const
   {
@@ -517,7 +517,7 @@ public:
     auto p = access_once(_this()->pte);
     auto old = p;
     p |= n_attr;
-    p &= ~Unsigned64(a_attr);
+    p &= ~Unsigned64{a_attr};
 
     if (p != old)
       write_now(_this()->pte, p);

@@ -85,11 +85,12 @@ PUBLIC static
 Kobject_dbg::Iterator
 Kobject_dbg::pointer_to_obj(void const *p)
 {
+  Mword obj_addr = reinterpret_cast<Mword>(p);
   for (Iterator l = _kobjects.begin(); l != _kobjects.end(); ++l)
     {
       auto ti = l->_cxx_dyn_type();
       Mword a = reinterpret_cast<Mword>(ti.base);
-      if (a <= Mword(p) && Mword(p) < (a + ti.type->size))
+      if (a <= obj_addr && obj_addr < (a + ti.type->size))
         return l;
     }
   return _kobjects.end();

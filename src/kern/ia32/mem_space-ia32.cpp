@@ -219,7 +219,7 @@ Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order size,
         return Insert_warn_exists;
 
       i.set_page(entry);
-      page_protect(cxx::int_value<Virt_addr>(virt), Address(1) << cxx::int_value<Page_order>(size),
+      page_protect(cxx::int_value<Virt_addr>(virt), Address{1} << cxx::int_value<Page_order>(size),
                    *i.pte & Page_all_attribs);
 
       return Insert_warn_attrib_upgrade;
@@ -228,7 +228,7 @@ Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order size,
     {
       i.set_page(entry);
       page_map(cxx::int_value<Virt_addr>(phys), cxx::int_value<Virt_addr>(virt),
-               Address(1) << cxx::int_value<Page_order>(size), page_attribs);
+               Address{1} << cxx::int_value<Page_order>(size), page_attribs);
 
       return Insert_ok;
     }
@@ -303,14 +303,14 @@ Mem_space::v_delete(Vaddr virt, Page_order size, L4_fpage::Rights page_attribs)
     {
       // downgrade PDE (superpage) rights
       i.del_rights(page_attribs);
-      page_protect(cxx::int_value<Virt_addr>(virt), Address(1) << cxx::int_value<Page_order>(size),
+      page_protect(cxx::int_value<Virt_addr>(virt), Address{1} << cxx::int_value<Page_order>(size),
                    *i.pte & Page_all_attribs);
     }
   else
     {
       // delete PDE (superpage)
       i.clear();
-      page_unmap(cxx::int_value<Virt_addr>(virt), Address(1) << cxx::int_value<Page_order>(size));
+      page_unmap(cxx::int_value<Virt_addr>(virt), Address{1} << cxx::int_value<Page_order>(size));
     }
 
   return ret;

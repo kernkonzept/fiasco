@@ -129,7 +129,7 @@ Jdb_obj_space::print_entry(Cap_index entry)
           break;
         case Raw:
         default:
-          printf("%16lx", Mword(o) | rights);
+          printf("%16lx", reinterpret_cast<Mword>(o) | rights);
           break;
         }
     }

@@ -41,7 +41,7 @@ public:
   void activate(Return_frame *regs, void *cont_func)
   {
     save(regs);
-    regs->ip(Mword(cont_func));
+    regs->ip(reinterpret_cast<Mword>(cont_func));
     regs->flags(regs->flags() & ~EFLAGS_TF); // do not singlestep inkernel code
     regs->cs(Gdt::gdt_code_kernel | Gdt::Selector_kernel);
   }

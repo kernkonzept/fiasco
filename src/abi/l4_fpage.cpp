@@ -340,6 +340,6 @@ public:
    * \param r Rights mask. All rights missing in the mask are removed.
    *          The semantics depend on the type (type()) of the flex page.
    */
-  void mask_rights(Rights r) { _raw &= (Mword(cxx::int_value<Rights>(r)) | ~_rights_bfm_t::Mask); }
+  void mask_rights(Rights r) { _raw &= (Mword{cxx::int_value<Rights>(r)} | ~_rights_bfm_t::Mask); }
 };
 

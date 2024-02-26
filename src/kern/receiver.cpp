@@ -119,7 +119,8 @@ PUBLIC inline
 void
 Receiver::set_caller(Receiver *caller, L4_fpage::Rights rights)
 {
-  Mword nv = Mword(caller) | (cxx::int_value<L4_fpage::Rights>(rights) & 0x3);
+  Mword nv = reinterpret_cast<Mword>(caller)
+             | (cxx::int_value<L4_fpage::Rights>(rights) & 0x3);
   reinterpret_cast<Mword volatile &>(_caller) = nv;
 }
 
@@ -130,7 +131,7 @@ PUBLIC inline NEEDS["atomic.h"]
 void
 Receiver::reset_caller(Receiver const *old_caller)
 {
-  Mword ov = Mword(old_caller) | (_caller & 0x3);
+  Mword ov = reinterpret_cast<Mword>(old_caller) | (_caller & 0x3);
   // avoid exclusive access (do test, test-and-set)
   if (_caller != ov)
     return;
@@ -315,7 +316,7 @@ Receiver::vcpu_async_ipc(Sender const *sender) const
   LOG_TRACE("VCPU events", "vcpu", this, Vcpu_log,
       l->type = 1;
       l->state = vcpu->_saved_state;
-      l->ip = Mword(sender);
+      l->ip = reinterpret_cast<Mword>(sender);
       l->sp = regs()->sp();
       l->space = ~0; //vcpu_user_space() ? static_cast<Task*>(vcpu_user_space())->dbg_id() : ~0;
       );

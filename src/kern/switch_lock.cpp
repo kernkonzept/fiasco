@@ -173,7 +173,7 @@ Switch_lock::lock()
     return Invalid;
 
   Context *c = current();
-  if (o == Address(c))
+  if (o == reinterpret_cast<Address>(c))
     return Locked;
 
   do
@@ -227,7 +227,7 @@ PRIVATE inline
 bool NO_INSTRUMENT
 Switch_lock::set_lock_owner(Context *o)
 {
-  _lock_owner = Address(o) | (_lock_owner & 1);
+  _lock_owner = reinterpret_cast<Address>(o) | (_lock_owner & 1);
   return true;
 }
 
@@ -263,7 +263,7 @@ Switch_lock::set_lock_owner(Context *o)
 
   Mem::mp_wmb();
 
-  if (EXPECT_FALSE(!cas(&_lock_owner, Mword(0), Address(o))))
+  if (EXPECT_FALSE(!cas(&_lock_owner, Address{0}, reinterpret_cast<Address>(o))))
     {
       if (have_no_locks)
         {

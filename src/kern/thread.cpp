@@ -998,7 +998,7 @@ Thread::migrate_away(Migration *inf, bool remote)
   bool resched = false;
 
   Cpu_number cpu = inf->cpu;
-  //  LOG_MSG_3VAL(this, "MGi ", Mword(current()), (current_cpu() << 16) | cpu(), Context::current_sched());
+  //  LOG_MSG_3VAL(this, "MGi ", reinterpret_cast<Mword>(current()), (current_cpu() << 16) | cpu(), Context::current_sched());
   if (_timeout)
     _timeout->reset();
 

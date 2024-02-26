@@ -213,7 +213,7 @@ public:
 
   explicit constexpr Addr_val(Address a) : B(a) {}
 
-  //explicit Addr_val(::Order o) : B(Address(1) << (Order::val(o) - ARCH_PAGE_SHIFT + SHIFT)) {}
+  //explicit Addr_val(::Order o) : B(Address{1} << (Order::val(o) - ARCH_PAGE_SHIFT + SHIFT)) {}
 
   constexpr Addr_val(Addr_val const volatile &o) : B(o._v) {}
   Addr_val(Addr_val const &)  = default;

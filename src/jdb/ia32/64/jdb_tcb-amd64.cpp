@@ -248,7 +248,7 @@ bool
 Jdb_stack_view::edit_registers()
 {
   Mword value;
-  char reg = char(-1);
+  char reg = char{-1};
   Mword *reg_ptr = 0;
   unsigned x=0, y=0;
 
