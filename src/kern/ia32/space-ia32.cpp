@@ -9,7 +9,7 @@ protected:
   {
   public:
     Ldt() : _addr(0), _size(0) {}
-    Address addr() const { return (Address)_addr; }
+    Address addr() const { return reinterpret_cast<Address>(_addr); }
     Mword   size() const { return _size; }
 
     void size(Mword);
