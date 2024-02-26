@@ -279,7 +279,7 @@ Jdb_misc_debug::show_ldt()
     {
       if (desc->present())
         {
-          printf(" %5lx: ", (Mword)desc - addr);
+          printf(" %5lx: ", reinterpret_cast<Mword>(desc) - addr);
           desc->show();
         }
     }
