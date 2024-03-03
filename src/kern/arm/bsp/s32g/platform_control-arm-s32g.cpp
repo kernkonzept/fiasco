@@ -1,10 +1,3 @@
-IMPLEMENTATION [arm && mp && pf_s32g]:
-
-EXTENSION class Platform_control
-{
-  enum { Num_cores = 4 };
-};
-
 IMPLEMENTATION [arm && mp && pf_s32g && !arm_psci]:
 
 #include "cpu.h"
@@ -14,6 +7,11 @@ IMPLEMENTATION [arm && mp && pf_s32g && !arm_psci]:
 #include "kmem.h"
 #include "koptions.h"
 #include "mem_unit.h"
+
+EXTENSION class Platform_control
+{
+  enum { Num_cores = 4 }; // S32G3 still spinning?
+};
 
 PUBLIC static
 void
@@ -40,34 +38,23 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && mp && pf_s32g && arm_psci]:
-
-#include "cpu.h"
-#include "mem.h"
-#include "minmax.h"
-#include "psci.h"
-
-#include <cstdio>
+IMPLEMENTATION [arm && mp && pf_s32g2 && arm_psci]:
 
 PUBLIC static
 void
 Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
 {
-  for (int i = 0; i < min<int>(Num_cores, Config::Max_num_cpus); ++i)
-    {
-      unsigned coreid[4] = { 0x0, 0x1, 0x100, 0x101 };
-      int r = Psci::cpu_on(coreid[i], phys_tramp_mp_addr);
-      if (r)
-        {
-          if (r != Psci::Psci_already_on)
-            printf("CPU%d boot-up error: %d\n", i, r);
-          continue;
-        }
+  boot_ap_cpus_psci(phys_tramp_mp_addr,
+                    { 0x0, 0x1, 0x100, 0x101 });
+}
 
-      while (!Cpu::online(Cpu_number(i)))
-        {
-          Mem::barrier();
-          Proc::pause();
-        }
-    }
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && mp && pf_s32g3 && arm_psci]:
+
+PUBLIC static
+void
+Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
+{
+  boot_ap_cpus_psci(phys_tramp_mp_addr,
+                    { 0x0, 0x1, 0x2, 0x3, 0x100, 0x101, 0x102, 0x103 });
 }

@@ -2,3 +2,18 @@
 # PFDESCR: NXP S32G
 # PFSELECT: CAN_ARM_CPU_CORTEX_A53 ARM_GIC HAVE_ARM_GICV3 HAS_ARM_PSCI
 # PFDEPENDS: ARM
+
+
+choice
+	prompt "S32G Variant"
+	default PF_S32G2
+	depends on PF_S32G
+
+config PF_S32G2
+	bool "S32G2"
+
+config PF_S32G3
+	bool "S32G3"
+	select ARM_PSCI
+
+endchoice
