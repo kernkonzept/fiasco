@@ -69,7 +69,7 @@ private:
   { Mword val; asm volatile ("mrs %0, PMINTENSET_EL1" : "=r" (val)); return val;}
 
   static void intenc(Mword val)
-  { asm volatile ("msr PMINTENCLR_E1, %0" : : "r" (val)); }
+  { asm volatile ("msr PMINTENCLR_EL1, %0" : : "r" (val)); }
 
   enum
   {
