@@ -71,22 +71,26 @@ PUBLIC inline Gic_h_v2::Misr Gic_h_v2::misr() const { return Misr(read<Unsigned3
 PUBLIC inline Unsigned32  Gic_h_v2::eisr() const { return read<Unsigned32>(EISRn); }
 PUBLIC inline Unsigned32  Gic_h_v2::elsr() const { return read<Unsigned32>(ELSRn); }
 
-PUBLIC inline void
+PUBLIC inline
+void
 Gic_h_v2::save_aprs(Unsigned32 *a) const
 { a[0] = read<Unsigned32>(APR); }
 
-PUBLIC inline void
+PUBLIC inline
+void
 Gic_h_v2::load_aprs(Unsigned32 const *a)
 { write(a[0], APR); }
 
-PUBLIC inline void
+PUBLIC inline
+void
 Gic_h_v2::save_lrs(Gic_h::Arm_vgic::Lrs *l) const
 {
   for (unsigned i = 0; i < Gic_h::Arm_vgic::N_lregs; ++i)
     l->lr32[i] = read<Unsigned32>(LRn + (i << 2));
 }
 
-PUBLIC inline void
+PUBLIC inline
+void
 Gic_h_v2::load_lrs(Gic_h::Arm_vgic::Lrs const *l)
 {
   for (unsigned i = 0; i < Gic_h::Arm_vgic::N_lregs; ++i)
