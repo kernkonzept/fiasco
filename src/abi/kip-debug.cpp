@@ -36,8 +36,8 @@ PUBLIC
 void
 Mem_desc::dump() const
 {
-  printf("%s [%016lx-%016lx] %s", is_virtual() ? "virt" : "phys",
-         start(), end() + 1, memory_desc_types[type()]);
+  printf("%s [%016llx-%016llx] %s", is_virtual() ? "virt" : "phys",
+         Unsigned64{start()}, Unsigned64{end()} + 1, memory_desc_types[type()]);
 }
 
 PRIVATE
