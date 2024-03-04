@@ -22,7 +22,7 @@ void Gic_cpu_v3::_enable_sre_set()
 //-------------------------------------------------------------------
 IMPLEMENTATION:
 
-#include "mem_unit.h"
+#include "mem.h"
 
 PUBLIC inline
 void
@@ -31,7 +31,7 @@ Gic_cpu_v3::pmr(unsigned prio)
   asm volatile("msr S3_0_C4_C6_0, %x0" : : "r" (prio)); // ICC_PMR_EL1
 }
 
-PUBLIC inline NEEDS[Gic_cpu_v3::_enable_sre_set, "mem_unit.h"]
+PUBLIC inline NEEDS[Gic_cpu_v3::_enable_sre_set, "mem.h"]
 void
 Gic_cpu_v3::enable()
 {
@@ -43,7 +43,7 @@ Gic_cpu_v3::enable()
   pmr(Cpu_prio_val);
 }
 
-PUBLIC inline NEEDS["mem_unit.h"]
+PUBLIC inline NEEDS["mem.h"]
 void
 Gic_cpu_v3::ack(Unsigned32 irq)
 {
@@ -51,7 +51,7 @@ Gic_cpu_v3::ack(Unsigned32 irq)
   Mem::isb();
 }
 
-PUBLIC inline NEEDS["mem_unit.h"]
+PUBLIC inline NEEDS["mem.h"]
 Unsigned32
 Gic_cpu_v3::iar()
 {
