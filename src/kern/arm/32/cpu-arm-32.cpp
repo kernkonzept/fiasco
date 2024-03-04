@@ -200,7 +200,7 @@ Cpu::hcr()
   Unsigned32 l, h;
   asm volatile ("mrc p15, 4, %0, c1, c1, 0" : "=r"(l));
   asm volatile ("mrc p15, 4, %0, c1, c1, 4" : "=r"(h));
-  return ((Unsigned64)h << 32) | l;
+  return Unsigned64{h} << 32 | l;
 }
 
 PUBLIC static inline
