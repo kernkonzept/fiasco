@@ -795,7 +795,7 @@ Kmem::prepare_kernel_entry_points(Lockless_alloc *cpu_m, Kpdir *)
 
   void *sccode = cpu_m->alloc_bytes<void>(syscall_entry_code_end
                                           - syscall_entry_code, Order(4));
-  assert((Address)sccode == Kentry_cpu_syscall_entry);
+  assert(reinterpret_cast<Address>(sccode) == Kentry_cpu_syscall_entry);
 
   memcpy(sccode, syscall_entry_code, syscall_entry_code_end
                                      - syscall_entry_code);
