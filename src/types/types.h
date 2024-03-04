@@ -187,7 +187,7 @@ struct Order : cxx::int_base<unsigned, Order<SHIFT> >, cxx::int_diff_ops<Order<S
 {
   typedef cxx::int_base<unsigned, Order<SHIFT> > Base_class;
   Order() = default;
-  explicit constexpr Order<SHIFT>(typename Base_class::Value v) : Base_class(v) {}
+  explicit constexpr Order(typename Base_class::Value v) : Base_class(v) {}
 };
 
 
