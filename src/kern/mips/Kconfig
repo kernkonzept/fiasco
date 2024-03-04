@@ -60,15 +60,15 @@ config CPU_MIPS64_R6
 endchoice
 
 choice
-        prompt "Endianess"
-        default MIPS_LITTLE_ENDIAN
+	prompt "Endianess"
+	default MIPS_LITTLE_ENDIAN
 
 config MIPS_LITTLE_ENDIAN
-        bool "Little Endian"
+	bool "Little Endian"
 
 config MIPS_BIG_ENDIAN
-        bool "Big Endian"
-        select BIG_ENDIAN
+	bool "Big Endian"
+	select BIG_ENDIAN
 
 endchoice
 
@@ -137,13 +137,13 @@ config MIPS_CPU_FREQUENCY
 	  for proper time keeping.
 
 choice
-        prompt "Minimum page size"
-        default MIPS_PAGE_SIZE_16K
+	prompt "Minimum page size"
+	default MIPS_PAGE_SIZE_16K
 
 config MIPS_PAGE_SIZE_4K
-        bool "4KB minimum page size"
+	bool "4KB minimum page size"
 
 config MIPS_PAGE_SIZE_16K
-        bool "16KB minimum page size"
+	bool "16KB minimum page size"
 
 endchoice

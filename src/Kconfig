@@ -223,8 +223,8 @@ config KMEM_SIZE_AUTO
 	help
 	  If set to 'y' (default), the kernel automatically determines the
 	  amount of kernel memory using Config::kmem_per_cent(). The size of
-          the kernel memory can be overriden by the kernel command line
-          parameter "-kmemsize" passed to the boot loader.
+	  the kernel memory can be overriden by the kernel command line
+	  parameter "-kmemsize" passed to the boot loader.
 
 config KMEM_SIZE_KB
 	int "Kernel memory size in KiB"
@@ -442,12 +442,12 @@ config INTEL_IA32_BRANCH_BARRIERS
 	        application attacks.
 
 config INTEL_MDS_MITIGATION
-        bool "Enable MDS mitigation" if AMD64 && KERNEL_ISOLATION
-        default y if AMD64 && KERNEL_ISOLATION
-        help
-          Use CPU buffer clearing to prevent forwarding of speculative data to
-          a disclosure gadget which allows to infer the value via a cache side
-          channel attack.
+	bool "Enable MDS mitigation" if AMD64 && KERNEL_ISOLATION
+	default y if AMD64 && KERNEL_ISOLATION
+	help
+	  Use CPU buffer clearing to prevent forwarding of speculative data to
+	  a disclosure gadget which allows to infer the value via a cache side
+	  channel attack.
 
 config KERNEL_NX
 	bool "Enable support for kernel RO and non-executable mappings" if AMD64

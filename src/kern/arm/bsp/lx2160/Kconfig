@@ -6,10 +6,10 @@
 # PFDEPENDS: ARM
 
 config ARM_IOMMU_NUM
-  int
-  default 1 if IOMMU
+	int
+	default 1 if IOMMU
 
 config IOMMU_ARM_SMMU_500
-  bool
-  select ARM_IOMMU_COHERENT
-  default y if IOMMU
+	bool
+	select ARM_IOMMU_COHERENT
+	default y if IOMMU

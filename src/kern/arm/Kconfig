@@ -80,10 +80,10 @@ config CAN_ARM_CPU_NEOVERSE_N1
 	bool
 
 config DEFAULT_ARM_EM_TZ
-        bool
+	bool
 
 config DEFAULT_ARM_EM_NS
-        bool
+	bool
 
 config ARM_V6
 	def_bool y if ARM_1136 || ARM_1176 || ARM_MPCORE
@@ -111,23 +111,23 @@ config ARM_GIC
 	bool
 
 config HAVE_ARM_GICV2
-        bool
+	bool
 
 config HAVE_ARM_GICV3
-        bool
+	bool
 
 config HAVE_ARM_GIC_MSI
 	bool
 
 config ARM_GIC_NOT_COHERENT
-  bool
+	bool
 
 config ARM_IOMMU_COHERENT
-        bool
+	bool
 
 config ARM_ASID16
-        depends on ARM_V8 && BIT64
-        bool
+	depends on ARM_V8 && BIT64
+	bool
 
 config HAS_ARM_SVE
 	bool
@@ -294,9 +294,9 @@ config ARM_SYNC_CLOCK
 choice
 	prompt "Execution Model"
 	depends on ARM
-        default ARM_EM_NS  if DEFAULT_ARM_EM_NS
-        default ARM_EM_TZ  if DEFAULT_ARM_EM_TZ
-        default ARM_EM_STD if !DEFAULT_ARM_EM_NS && !DEFAULT_ARM_EM_TZ
+	default ARM_EM_NS  if DEFAULT_ARM_EM_NS
+	default ARM_EM_TZ  if DEFAULT_ARM_EM_TZ
+	default ARM_EM_STD if !DEFAULT_ARM_EM_NS && !DEFAULT_ARM_EM_TZ
 
 config ARM_EM_STD
 	bool "Standard mode"
@@ -325,11 +325,11 @@ choice
 	depends on ARM_EM_NS
 
 config ARM_SECMONIF_NONE
-        bool "None"
+	bool "None"
 	depends on HAVE_ARM_SECMONIF_NONE
-        help
-          Running on a minimal secure monitor that does not require
-          any interaction (e.g., u-boot for KVM).
+	help
+	  Running on a minimal secure monitor that does not require
+	  any interaction (e.g., u-boot for KVM).
 
 config ARM_SECMONIF_MC
 	bool "Mobicore"
@@ -367,66 +367,66 @@ config ARM_ENABLE_SWP
 	  Avoid to enable it.
 
 config ARM_LPAE
-        bool "Use LPAE page table format"
-        depends on ARM_CORTEX_A15 || ARM_CORTEX_A7 || ARM_V8
-        help
-          Use the extended page table format (LPAE).
+	bool "Use LPAE page table format"
+	depends on ARM_CORTEX_A15 || ARM_CORTEX_A7 || ARM_V8
+	help
+	  Use the extended page table format (LPAE).
 
 config ARM_PT48
 	bool "Support user-level address space of 48bits (256TB)"
 	depends on CPU_VIRT && BIT64
 	help
-          Build Fiasco with 4-level page-tables for user-level tasks. Requires
-          a CPU model that supports at least 44bit physical addresses.
+	  Build Fiasco with 4-level page-tables for user-level tasks. Requires
+	  a CPU model that supports at least 44bit physical addresses.
 
 config HAS_ARM_PSCI
-        bool
+	bool
 
 config HAS_ARM_PSCI_DYNAMIC
-        bool
+	bool
 
 config FORCE_ARM_PSCI_SMC
-        bool
+	bool
 
 config FORCE_ARM_PSCI_HVC
-        bool
+	bool
 
 config ARM_PSCI
-        bool "Use PSCI"
-        depends on HAS_ARM_PSCI
-        help
-          Use the "Power State Coordination Interface" (PSCI) for system
-          functions such as booting CPUs and system reset.
+	bool "Use PSCI"
+	depends on HAS_ARM_PSCI
+	help
+	  Use the "Power State Coordination Interface" (PSCI) for system
+	  functions such as booting CPUs and system reset.
 
 choice
-        prompt "PSCI call method"
-        depends on ARM_PSCI
-        default ARM_PSCI_SMC if !HAS_ARM_PSCI_DYNAMIC && (!FORCE_ARM_PSCI_HVC || CPU_VIRT)
-        default ARM_PSCI_HVC if !HAS_ARM_PSCI_DYNAMIC && FORCE_ARM_PSCI_HVC && !CPU_VIRT
-        default ARM_PSCI_DYN if HAS_ARM_PSCI_DYNAMIC
+	prompt "PSCI call method"
+	depends on ARM_PSCI
+	default ARM_PSCI_SMC if !HAS_ARM_PSCI_DYNAMIC && (!FORCE_ARM_PSCI_HVC || CPU_VIRT)
+	default ARM_PSCI_HVC if !HAS_ARM_PSCI_DYNAMIC && FORCE_ARM_PSCI_HVC && !CPU_VIRT
+	default ARM_PSCI_DYN if HAS_ARM_PSCI_DYNAMIC
 
 config ARM_PSCI_SMC
-        bool "SMC"
-        depends on !HAS_ARM_PSCI_DYNAMIC
-        depends on !FORCE_ARM_PSCI_HVC || CPU_VIRT
-        help
-          Choose this if the platform uses SMC as a conduit to
-          access PSCI functions.
+	bool "SMC"
+	depends on !HAS_ARM_PSCI_DYNAMIC
+	depends on !FORCE_ARM_PSCI_HVC || CPU_VIRT
+	help
+	  Choose this if the platform uses SMC as a conduit to
+	  access PSCI functions.
 
 config ARM_PSCI_HVC
-        bool "HVC"
-        depends on !HAS_ARM_PSCI_DYNAMIC
-        depends on HAS_CPU_VIRT && !CPU_VIRT && !FORCE_ARM_PSCI_SMC
-        help
-          Choose this if the platform uses HVC as a conduit to
-          access PSCI functions.
+	bool "HVC"
+	depends on !HAS_ARM_PSCI_DYNAMIC
+	depends on HAS_CPU_VIRT && !CPU_VIRT && !FORCE_ARM_PSCI_SMC
+	help
+	  Choose this if the platform uses HVC as a conduit to
+	  access PSCI functions.
 
 config ARM_PSCI_DYN
-        bool "dynamic"
-        depends on HAS_ARM_PSCI_DYNAMIC
-        help
-          Choose this if the platform supports dynamic configuration
-          at runtime.
+	bool "dynamic"
+	depends on HAS_ARM_PSCI_DYNAMIC
+	help
+	  Choose this if the platform supports dynamic configuration
+	  at runtime.
 
 endchoice
 
@@ -439,5 +439,5 @@ config ARM_1176_CACHE_ALIAS_FIX
 	  enables the workaround of reducing the cache size to 16kB.
 
 config ARM_CPU_ERRATA
-        bool "Enable CPU errata workarounds"
-        depends on ARM
+	bool "Enable CPU errata workarounds"
+	depends on ARM

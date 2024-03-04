@@ -20,8 +20,7 @@ config PF_MALTA_MP
 	depends on PF_MALTA
 	select HAS_MP_OPTION
 	select CAN_MIPS_VZ_ASE
-        help
-          Use CONFIG_MP_MAX_CPUS to set the maximum supported number of CPUs
+	help
+	  Use CONFIG_MP_MAX_CPUS to set the maximum supported number of CPUs
 
 endchoice
-

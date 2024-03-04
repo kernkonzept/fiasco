@@ -24,8 +24,8 @@ config PF_IMX_35
 	bool "i.MX35"
 	depends on PF_IMX
 	select CAN_ARM_CPU_1136
-        help
-          Choose for i.MX35 platform.
+	help
+	  Choose for i.MX35 platform.
 
 config PF_IMX_51
 	bool "i.MX51"
@@ -45,43 +45,43 @@ config PF_IMX_51
 #	  Choose for i.MX53.
 
 config PF_IMX_6
-        bool "i.MX6"
-        depends on PF_IMX
-        select CAN_ARM_CPU_CORTEX_A9
+	bool "i.MX6"
+	depends on PF_IMX
+	select CAN_ARM_CPU_CORTEX_A9
 	select CAN_ARM_CACHE_L2CXX0
 	select ARM_GIC
 	select HAVE_ARM_GICV2
-        help
-          Choose for i.MX6 platform.
+	help
+	  Choose for i.MX6 platform.
 
 config PF_IMX_6UL
-        bool "i.MX6UL"
-        depends on PF_IMX
-        select CAN_ARM_CPU_CORTEX_A7
+	bool "i.MX6UL"
+	depends on PF_IMX
+	select CAN_ARM_CPU_CORTEX_A7
 	select ARM_GIC
 	select HAVE_ARM_GICV2
-        help
-          Choose for i.MX6UL platform.
+	help
+	  Choose for i.MX6UL platform.
 
 config PF_IMX_7
-        bool "i.MX7"
-        depends on PF_IMX
-        select CAN_ARM_CPU_CORTEX_A7
-        select HAS_ARM_PSCI
+	bool "i.MX7"
+	depends on PF_IMX
+	select CAN_ARM_CPU_CORTEX_A7
+	select HAS_ARM_PSCI
 	select ARM_GIC
 	select HAVE_ARM_GICV2
-        help
-          Choose for i.MX7 platform.
+	help
+	  Choose for i.MX7 platform.
 
 config PF_IMX_8M
 	bool "i.MX8M"
 	depends on PF_IMX
 	select CAN_ARM_CPU_CORTEX_A53
 	select HAS_CPU_VIRT
-        select HAS_ARM_PSCI
-        select ARM_PSCI
-        select ARM_GIC
-        select HAVE_ARM_GICV3
+	select HAS_ARM_PSCI
+	select ARM_PSCI
+	select ARM_GIC
+	select HAVE_ARM_GICV3
 	help
 	  Choose for i.MX8M platforms.
 
@@ -90,10 +90,10 @@ config PF_IMX_8MP
 	depends on PF_IMX
 	select CAN_ARM_CPU_CORTEX_A53
 	select HAS_CPU_VIRT
-        select HAS_ARM_PSCI
-        select ARM_PSCI
-        select ARM_GIC
-        select HAVE_ARM_GICV3
+	select HAS_ARM_PSCI
+	select ARM_PSCI
+	select ARM_GIC
+	select HAVE_ARM_GICV3
 	help
 	  Choose for i.MX8MP platforms.
 
@@ -104,11 +104,11 @@ config PF_IMX_8XQ
 	select CAN_ARM_CPU_CORTEX_A53
 	select CAN_ARM_CPU_CORTEX_A72
 	select HAS_CPU_VIRT
-        select HAS_ARM_PSCI
-        select ARM_PSCI
-        select ARM_GIC
-        select HAVE_ARM_GICV3
-        select HAS_IOMMU_OPTION
+	select HAS_ARM_PSCI
+	select ARM_PSCI
+	select ARM_GIC
+	select HAVE_ARM_GICV3
+	select HAS_IOMMU_OPTION
 	help
 	  Choose for i.MX8X and i.MX8Q platforms.
 
@@ -122,7 +122,7 @@ config PF_IMX_RAM_PHYS_BASE
 	default 0x80200000 if PF_IMX_8XQ
 	default 0x80000000 if PF_IMX_35 || PF_IMX_6UL || PF_IMX_7
 	default 0x90000000 if PF_IMX_51
-        default 0x10000000 if PF_IMX_6
+	default 0x10000000 if PF_IMX_6
 
 choice
 	prompt "Choose timer for i.MX6"
@@ -130,17 +130,17 @@ choice
 	default PF_IMX_6_TIMER_MPTIMER
 
 config PF_IMX_6_TIMER_MPTIMER
-        bool "Use CPU-local MP-timer"
+	bool "Use CPU-local MP-timer"
 
 config PF_IMX_6_TIMER_EPIT
-        bool "Use EPIT timer"
+	bool "Use EPIT timer"
 
 endchoice
 
 config ARM_IOMMU_NUM
-  int
-  default 1 if IOMMU
+	int
+	default 1 if IOMMU
 
 config IOMMU_ARM_SMMU_500
-  bool
-  default y if IOMMU
+	bool
+	default y if IOMMU

@@ -9,19 +9,19 @@
 # SMMUv3 implementation in Fiasco currently only supports the AArch64 page table
 # format, which is not defined on Aarch32, so limit the IOMMU option to 64-bit.
 config PF_FVP_BASE_HAS_IOMMU_OPTION_64
-  bool
-  select HAS_IOMMU_OPTION
-  default y if BIT64
+	bool
+	select HAS_IOMMU_OPTION
+	default y if BIT64
 
 config ARM_IOMMU_NUM
-  int
-  default 1 if IOMMU
+	int
+	default 1 if IOMMU
 
 config IOMMU_ARM_SMMU_V3
-  bool
-  select ARM_IOMMU_COHERENT
-  default y if IOMMU
+	bool
+	select ARM_IOMMU_COHERENT
+	default y if IOMMU
 
 config ARM_IOMMU_STAGE2
-  bool
-  default y if IOMMU && CPU_VIRT
+	bool
+	default y if IOMMU && CPU_VIRT

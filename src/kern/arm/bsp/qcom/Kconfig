@@ -5,93 +5,93 @@
 # PFSELECT: ARM_GIC
 
 choice
-  prompt "Qualcomm Platform"
-  depends on PF_QCOM
-  default PF_QCOM_MSM8916
+	prompt "Qualcomm Platform"
+	depends on PF_QCOM
+	default PF_QCOM_MSM8916
 
 config PF_QCOM_MSM8226
-  bool "MSM8226"
-  select CAN_ARM_CPU_CORTEX_A7
-  select HAVE_ARM_GICV2
-  select PF_QCOM_UART_DM
-  help
-    Choose for Qualcomm Snapdragon 400 (MSM8226) platform.
+	bool "MSM8226"
+	select CAN_ARM_CPU_CORTEX_A7
+	select HAVE_ARM_GICV2
+	select PF_QCOM_UART_DM
+	help
+	  Choose for Qualcomm Snapdragon 400 (MSM8226) platform.
 
 config PF_QCOM_MSM8909
-  bool "MSM8909"
-  select CAN_ARM_CPU_CORTEX_A7
-  select HAVE_ARM_GICV2
-  select HAS_ARM_PSCI
-  select HAS_IOMMU_OPTION
-  # SMMU incorrectly reports that coherent page table walks are supported
-  #select ARM_IOMMU_COHERENT
-  select PF_QCOM_UART_DM
-  help
-    Choose for Qualcomm Snapdragon 210 (MSM8909) platform.
+	bool "MSM8909"
+	select CAN_ARM_CPU_CORTEX_A7
+	select HAVE_ARM_GICV2
+	select HAS_ARM_PSCI
+	select HAS_IOMMU_OPTION
+	# SMMU incorrectly reports that coherent page table walks are supported
+	#select ARM_IOMMU_COHERENT
+	select PF_QCOM_UART_DM
+	help
+	  Choose for Qualcomm Snapdragon 210 (MSM8909) platform.
 
 config PF_QCOM_MSM8916
-  bool "MSM8916"
-  select CAN_ARM_CPU_CORTEX_A53
-  select HAVE_ARM_GICV2
-  select HAS_ARM_PSCI
-  select HAS_IOMMU_OPTION
-  select ARM_IOMMU_COHERENT
-  select PF_QCOM_UART_DM
-  help
-    Choose for Qualcomm Snapdragon 410 (MSM8916) platform.
+	bool "MSM8916"
+	select CAN_ARM_CPU_CORTEX_A53
+	select HAVE_ARM_GICV2
+	select HAS_ARM_PSCI
+	select HAS_IOMMU_OPTION
+	select ARM_IOMMU_COHERENT
+	select PF_QCOM_UART_DM
+	help
+	  Choose for Qualcomm Snapdragon 410 (MSM8916) platform.
 
 config PF_QCOM_MSM8939
-  bool "MSM8939"
-  select CAN_ARM_CPU_CORTEX_A53
-  select HAVE_ARM_GICV2
-  select HAS_ARM_PSCI
-  select HAS_IOMMU_OPTION
-  select ARM_IOMMU_COHERENT
-  select PF_QCOM_UART_DM
-  help
-    Choose for Qualcomm Snapdragon 615 (MSM8939) platform.
+	bool "MSM8939"
+	select CAN_ARM_CPU_CORTEX_A53
+	select HAVE_ARM_GICV2
+	select HAS_ARM_PSCI
+	select HAS_IOMMU_OPTION
+	select ARM_IOMMU_COHERENT
+	select PF_QCOM_UART_DM
+	help
+	  Choose for Qualcomm Snapdragon 615 (MSM8939) platform.
 
 config PF_QCOM_MSM8974
-  bool "MSM8974"
-  select CAN_ARM_CPU_KRAIT
-  select HAVE_ARM_GICV2
-  select PF_QCOM_UART_DM
-  help
-    Choose for Qualcomm Snapdragon 800 (MSM8974) platform.
+	bool "MSM8974"
+	select CAN_ARM_CPU_KRAIT
+	select HAVE_ARM_GICV2
+	select PF_QCOM_UART_DM
+	help
+	  Choose for Qualcomm Snapdragon 800 (MSM8974) platform.
 
 config PF_QCOM_SM8150
-  bool "SM8150"
-  select CAN_ARM_CPU_CORTEX_A76
-  select HAVE_ARM_GICV3
-  select HAVE_ARM_GIC_MSI
-  select ARM_GIC_NOT_COHERENT
-  select HAS_ARM_PSCI
-  select ARM_PSCI
-  select HAS_IOMMU_OPTION
-  select ARM_IOMMU_COHERENT
-  select PF_QCOM_UART_GENI
-  help
-    Choose for Qualcomm Snapdragon 855 (SM8150) platform.
+	bool "SM8150"
+	select CAN_ARM_CPU_CORTEX_A76
+	select HAVE_ARM_GICV3
+	select HAVE_ARM_GIC_MSI
+	select ARM_GIC_NOT_COHERENT
+	select HAS_ARM_PSCI
+	select ARM_PSCI
+	select HAS_IOMMU_OPTION
+	select ARM_IOMMU_COHERENT
+	select PF_QCOM_UART_GENI
+	help
+	  Choose for Qualcomm Snapdragon 855 (SM8150) platform.
 
 endchoice
 
 config PF_QCOM_UART_DM
-  bool
+	bool
 
 config PF_QCOM_UART_GENI
-  bool
+	bool
 
 config ARM_IOMMU_NUM
-  int
-  default 1 if IOMMU && PF_QCOM_SM8150
-  default 2 if IOMMU && !PF_QCOM_SM8150
+	int
+	default 1 if IOMMU && PF_QCOM_SM8150
+	default 2 if IOMMU && !PF_QCOM_SM8150
 
 config IOMMU_ARM_SMMU_500
-  bool
-  default y if IOMMU
+	bool
+	default y if IOMMU
 
 config PF_QCOM_RAM_PHYS_BASE
-  hex
-  default 0x00000000 if PF_QCOM_MSM8226 || PF_QCOM_MSM8974
-  default 0x80000000 if PF_QCOM_MSM8909 || PF_QCOM_MSM8916 || \
-                        PF_QCOM_MSM8939 || PF_QCOM_SM8150
+	hex
+	default 0x00000000 if PF_QCOM_MSM8226 || PF_QCOM_MSM8974
+	default 0x80000000 if PF_QCOM_MSM8909 || PF_QCOM_MSM8916 || \
+	                      PF_QCOM_MSM8939 || PF_QCOM_SM8150

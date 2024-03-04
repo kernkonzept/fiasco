@@ -36,12 +36,12 @@ config PF_OMAP4_PANDABOARD
 	  Choose for Pandaboard.
 
 config PF_OMAP5_5432EVM
-        bool "OMAP5432EVM"
+	bool "OMAP5432EVM"
 	select CAN_ARM_CPU_CORTEX_A15
 	select DEFAULT_ARM_EM_NS if CPU_VIRT
 	select ARM_GIC
 	select HAVE_ARM_GICV2
-        help
-          Choose for OMAP5432EVM.
+	help
+	  Choose for OMAP5432EVM.
 
 endchoice

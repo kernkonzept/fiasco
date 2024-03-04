@@ -10,83 +10,83 @@
 # SECTION: CPU
 
 config CAN_RISCV_CPU_32IMA
-  bool
+	bool
 
 config CAN_RISCV_CPU_64IMA
-  bool
+	bool
 
 choice
-  prompt "CPU"
-  default RISCV_CPU_64IMA
+	prompt "CPU"
+	default RISCV_CPU_64IMA
 
 config RISCV_CPU_32IMA
-  bool "RV32IMA"
-  depends on CAN_RISCV_CPU_32IMA
-  select BIT32
+	bool "RV32IMA"
+	depends on CAN_RISCV_CPU_32IMA
+	select BIT32
 
 config RISCV_CPU_64IMA
-  bool "RV64IMA"
-  depends on CAN_RISCV_CPU_64IMA
-  select BIT64
+	bool "RV64IMA"
+	depends on CAN_RISCV_CPU_64IMA
+	select BIT64
 
 endchoice
 
 config CAN_RISCV_SV39
-  bool
+	bool
 
 config CAN_RISCV_SV48
-  bool
+	bool
 
 choice
-  prompt "Virtual address space size"
-  depends on BIT64
-  default RISCV_SV48
+	prompt "Virtual address space size"
+	depends on BIT64
+	default RISCV_SV48
 
 config RISCV_SV39
-  bool "Sv39"
-  depends on CAN_RISCV_SV39
+	bool "Sv39"
+	depends on CAN_RISCV_SV39
 
 config RISCV_SV48
-  bool "Sv48"
-  depends on CAN_RISCV_SV48
+	bool "Sv48"
+	depends on CAN_RISCV_SV48
 
 endchoice
 
 choice
-  prompt "Precision"
-  depends on FPU
-  default RISCV_FPU_DOUBLE
+	prompt "Precision"
+	depends on FPU
+	default RISCV_FPU_DOUBLE
 
 config RISCV_FPU_SINGLE
-  bool "Single precision"
+	bool "Single precision"
 
 config RISCV_FPU_DOUBLE
-  bool "Double precision"
+	bool "Double precision"
 
 endchoice
 
 config RISCV_ISA_C
-  bool "Emit compressed instructions"
-  default y
+	bool "Emit compressed instructions"
+	default y
 
 config RISCV_ASID
-  bool
+	bool
 
 config EMULATE_PERIODIC_TIMER
-  bool "Emulate periodic timer"
-  default y
-  help
-    The generic SBI timer interface only exposes a one-shot timer.
+	bool "Emulate periodic timer"
+	default y
+	help
+	  The generic SBI timer interface only exposes a one-shot timer.
 
-    Although Fiasco can in principle run with a one-shot timer, the current
-    implementation has several limitations. For example, running Fiasco in
-    one-shot timer mode can negatively influence the resolution of the KIP clock
-    and slow down the destruction of kernel objects (RCU mechanism).
+	  Although Fiasco can in principle run with a one-shot timer, the current
+	  implementation has several limitations. For example, running Fiasco in
+	  one-shot timer mode can negatively influence the resolution of the KIP clock
+	  and slow down the destruction of kernel objects (RCU mechanism).
 
-    As a workaround, this option turns the SBI one-shot timer into a "periodic"
-    timer. On each timer interrupt, Fiasco then reprograms the one-shot timer to
-    the current time plus the periodic timer interval, thereby emulating a
-    periodic timer.
+	  As a workaround, this option turns the SBI one-shot timer into a "periodic"
+	  timer. On each timer interrupt, Fiasco then reprograms the one-shot timer to
+	  the current time plus the periodic timer interval, thereby emulating a
+	  periodic timer.
 
 config RISCV_SBI_V1
-  bool
+	bool

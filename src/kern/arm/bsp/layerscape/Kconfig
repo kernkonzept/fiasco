@@ -19,10 +19,10 @@ config PF_LS1012A
 endchoice
 
 config ARM_IOMMU_NUM
-  int
-  default 4 if IOMMU
+	int
+	default 4 if IOMMU
 
 config IOMMU_ARM_SMMU_400
-  bool
-  select ARM_IOMMU_COHERENT
-  default y if IOMMU
+	bool
+	select ARM_IOMMU_COHERENT
+	default y if IOMMU
