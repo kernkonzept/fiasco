@@ -50,13 +50,19 @@ comp_inst_flgs = $(if $(filter $(1),$(INSTRUMENT)),$(INST_FLAGS))
 # NOBUILTIN
 comp_nobuiltin = $(if $(filter $(1),$(NOBUILTIN)),-fno-builtin)
 
+# NOCOV
+NOCOVFLAGS-gcc   := -fno-profile-arcs -fno-test-coverage
+NOCOVFLAGS-clang := -fno-profile-instr-generate -fno-coverage-mapping
+NOCOVFLAGS = $(if $(CONFIG_COV),$(NOCOVFLAGS-$(CC_TYPE)))
+comp_nocov = $(if $(filter $(1),$(NOCOV)),$(NOCOVFLAGS))
+
 # Put it all together.
 c_flgs = $(CPPFLAGS) $(call comp_c_flgs,$(1)) $(call comp_c_opt_flgs,$(1)) \
          $(call comp_prof_flgs,$(1)) $(call comp_inst_flgs,$(1)) \
-         $(call comp_nobuiltin,$(1))
+         $(call comp_nobuiltin,$(1)) $(call comp_nocov,$(1))
 cc_flgs = $(CPPFLAGS) $(call comp_cc_flgs,$(1)) $(call comp_cc_opt_flgs,$(1)) \
           $(call comp_prof_flgs,$(1)) $(call comp_inst_flgs,$(1)) \
-          $(call comp_nobuiltin,$(1))
+          $(call comp_nobuiltin,$(1)) $(call comp_nocov,$(1))
 
 as_flgs = $(CPPFLAGS) $(ASFLAGS)
 

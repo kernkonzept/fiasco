@@ -87,6 +87,7 @@ CXXFLAGS_uart-libuart   := $(call LIBUART_UART, 16550)
 CXXFLAGS_uart-libuart   += -DUART_16550_INIT_MCR=0x08
 CXXSRC_DRIVERS		:= glue_libc.cc
 NOOPT			+= $(patsubst %.o, %, $(OBJ_DRIVERS))
+NOCOV			+= $(patsubst %.o, %, $(OBJ_DRIVERS)) # Because the BOOT subsystem requires DRIVERS.
 
 keyb_IMPL		:= keyb keyb-pc 
 io_IMPL			:= io io-amd64
@@ -269,6 +270,8 @@ CXXSRC_BOOT		:= boot_libc_glue.cc bootstrap.cc boot_cpu.cc \
 			   direct_cons_putchar.cc
 ASSRC_BOOT		:= boot.S boot_idt.S
 NOOPT			+= $(patsubst %.o, %, $(OBJ_BOOT))
+# Also applied for $(DRIVERS) and $(MINILIBC) which are used by BOOT.
+NOCOV			+= $(patsubst %.o, %, $(OBJ_BOOT))
 
 #
 # TCBOFFSET subsystem
@@ -405,6 +408,7 @@ CSRC_MINILIBC	:= atexit.c memccpy.c memcmp.c memmove.c memset.c memcpy.c \
 		   isgraph.c islower.c isprint.c ispunct.c isspace.c \
 		   isupper.c isxdigit.c tolower.c strcspn.c strspn.c panic.c
 NOBUILTIN	+= $(patsubst %.o, %, $(OBJ_MINILIBC))
+NOCOV		+= $(patsubst %.o, %, $(OBJ_MINILIBC))  # Because the BOOT subsystem requires MINILIBC.
 ASSRC_MINILIBC	:= setjmp.S
 
 
