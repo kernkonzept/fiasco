@@ -4,6 +4,23 @@ IMPLEMENTATION [arm && cpu_virt]:
 
 KIP_KERNEL_FEATURE("arm:hyp");
 
+EXTENSION class Cpu
+{
+public:
+  enum
+  {
+    // HDCR[31:0] (arm32) is architecturally mapped to MDCR_EL2[31:0] (arm64).
+    Mdcr_hpmn_mask = 0xf,
+    Mdcr_tpmcr     = 1UL << 5,
+    Mdcr_tpm       = 1UL << 6,
+    Mdcr_hpme      = 1UL << 7,
+    Mdcr_tde       = 1UL << 8,
+    Mdcr_tda       = 1UL << 9,
+    Mdcr_tdosa     = 1UL << 10,
+    Mdcr_tdra      = 1UL << 11,
+  };
+};
+
 //--------------------------------------------------------
 INTERFACE [arm && cpu_virt && arm_v7]:
 
@@ -62,6 +79,12 @@ public:
     Hcr_non_vm_bits_el1    = Hcr_non_vm_bits_common,
     Hcr_non_vm_bits_el0    = Hcr_non_vm_bits_common | Hcr_tge,
   };
+
+  enum
+  {
+    Hdcr_bits = Mdcr_tpmcr | Mdcr_tpm   | Mdcr_tde
+                | Mdcr_tda | Mdcr_tdosa | Mdcr_tdra,
+  };
 };
 
 IMPLEMENT_OVERRIDE
@@ -74,19 +97,17 @@ Cpu::init_hyp_mode()
   asm volatile ("mcr p15, 4, %0, c12, c0, 0 \n" : : "r"(hyp_vector_base));
 
   asm volatile (
-        "mrc p15, 4, r0, c1, c1, 1 \n"
-        "orr r0, #(0xf << 8) \n" // enable TDE, TDA, TDOSA, TDRA
-        "orr r0, #(0x3 << 5) \n" // enable TPMCR, TPM
-        "mcr p15, 4, r0, c1, c1, 1 \n"
+        "mcr p15, 4, %0, c1, c1, 1 \n"
 
-        "mcr p15, 4, %0, c2, c1, 2 \n"
+        "mcr p15, 4, %1, c2, c1, 2 \n"
 
         "mrc p15, 0, r0, c1, c0, 0 \n"
         "bic r0, #1 \n"
         "mcr p15, 0, r0, c1, c0, 0 \n"
 
-        "mcr p15, 4, %1, c1, c1, 0 \n"
+        "mcr p15, 4, %2, c1, c1, 0 \n"
         : :
+        "r" (Mword{Hdcr_bits} | (has_hpmn0() ? 0 : 1)),
         "r" ((1UL << 31) | (Page::Tcr_attribs << 8) | (1 << 6)),
         "r" (Hcr_non_vm_bits_el0)
         : "r0" );
