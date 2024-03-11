@@ -2,6 +2,7 @@ INTERFACE [io]:
 
 #include "types.h"
 #include "config.h"
+#include "kmem_slab.h"
 #include "mem_space.h"
 
 class Mem_space;
@@ -15,12 +16,7 @@ class Space;
  */
 class Generic_io_bitmap :
   public Bitmap_storage<Config::Io_bitmap>
-{
-  Generic_io_bitmap() = delete;
-
-private:
-  Ram_quota *_quota;
-};
+{};
 
 /**
  * Wrapper class for io_{map,unmap}.
@@ -127,6 +123,8 @@ public:
                             L4_fpage::Rights page_attribs);
 
 private:
+  using Io_bitmap_allocator = Kmem_slab_t<Generic_io_bitmap>;
+
   /**
    * IO bitmap.
    *
@@ -215,7 +213,6 @@ IMPLEMENTATION [io]:
 #include "atomic.h"
 #include "config.h"
 #include "l4_types.h"
-#include "kmem_alloc.h"
 #include "panic.h"
 #include "paging.h"
 #include "cpu_mask.h"
@@ -225,49 +222,11 @@ IMPLEMENTATION [io]:
  * IO bitmap storage constructor.
  *
  * All bits in the bitmap are set (i.e. all IO ports disabled).
- *
- * \param quota  Quota from which the bitmap is allocated.
  */
 PUBLIC inline
-Generic_io_bitmap::Generic_io_bitmap(Ram_quota *quota)
-  : _quota(quota)
+Generic_io_bitmap::Generic_io_bitmap()
 {
   set_all();
-}
-
-/**
- * IO bitmap storage new operator.
- *
- * Allocates the IO bitmap storage using the quota.
- *
- * \param size   Size of the bitmap. Equals to sizeof(Generic_io_bitmap).
- * \param quota  Quota from which the bitmap is allocated.
- *
- * \return Address of the allocated IO bitmap storage.
- */
-PUBLIC inline
-void *
-Generic_io_bitmap::operator new(size_t size, Ram_quota *quota) throw ()
-{
-  assert(size == sizeof(Generic_io_bitmap));
-
-  return Kmem_alloc::allocator()->q_alloc(quota, Bytes(size));
-}
-
-/**
- * IO bitmap storage delete operator.
- *
- * \param addr  Address of the IO bitmap storage to delete.
- */
-PUBLIC inline
-void
-Generic_io_bitmap::operator delete(void *addr)
-{
-  Generic_io_bitmap *const object
-    = nonull_static_cast<Generic_io_bitmap *>(addr);
-
-  Kmem_alloc::allocator()->q_free(object->_quota,
-                                  Bytes(sizeof(Generic_io_bitmap)), addr);
 }
 
 /**
@@ -319,7 +278,7 @@ PUBLIC template<typename SPACE>
 Generic_io_space<SPACE>::~Generic_io_space()
 {
   if (_bitmap != nullptr)
-    delete _bitmap;
+    Io_bitmap_allocator::q_del(ram_quota(), _bitmap);
 }
 
 PUBLIC template<typename SPACE>
@@ -529,7 +488,7 @@ Generic_io_space<SPACE>::io_enable(Address port)
 
   if (_bitmap == nullptr)
     {
-      _bitmap = new (ram_quota()) Generic_io_bitmap(ram_quota());
+      _bitmap = Io_bitmap_allocator::q_new(ram_quota());
       if (_bitmap == nullptr)
         return Insert_err_nomem;
     }
