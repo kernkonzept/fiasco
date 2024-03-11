@@ -266,7 +266,6 @@ Generic_io_bitmap::operator delete(void *addr)
   Generic_io_bitmap *const object
     = nonull_static_cast<Generic_io_bitmap *>(addr);
 
-  object->~Generic_io_bitmap();
   Kmem_alloc::allocator()->q_free(object->_quota,
                                   Bytes(sizeof(Generic_io_bitmap)), addr);
 }
