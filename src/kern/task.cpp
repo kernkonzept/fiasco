@@ -277,9 +277,6 @@ Task::Task(Ram_quota *q, Mem_space::Dir_type* pdir, Caps c)
   inc_ref(true);
 }
 
-// The allocator for tasks
-static Kmem_slab_t<Task> _task_allocator("Task");
-
 PUBLIC //inline
 void
 Task::operator delete (void *ptr)
