@@ -1421,7 +1421,9 @@ Context::xcpu_state_change(Mword mask, Mword add, bool lazy_q = false)
 
 /**
  * \brief Initiate a DRQ for the context.
- * \param drq   The DRQ context.
+ *
+ * \param drq   The DRQ request to enqueue (typically the `Context::_drq` member
+ *              of the sending context).
  * \param func  The DRQ handler.
  * \param arg   The argument for the DRQ handler.
  * \param wait  On `Drq::Wait`, this function waits for the result of DRQ
@@ -1436,6 +1438,10 @@ Context::xcpu_state_change(Mword mask, Mword add, bool lazy_q = false)
  * after switching to a context in Context::switch_exec_locked().
  *
  * This function enqueues a DRQ and blocks the current context for a reply DRQ.
+ *
+ * \post        If `wait == Drq::Wait`, this function might wait for a remote
+ *              DRQ reply and must therefore be considered a potential
+ *              preemption point.
  */
 PUBLIC inline NEEDS[Context::enqueue_drq, "logdefs.h", "thread_state.h"]
 void
@@ -1503,6 +1509,11 @@ Context::kernel_context_drq(Drq::Request_func *func, void *arg)
   return schedule_switch_to_locked(kc) != Switch::Ok;
 }
 
+/**
+ * Initiate a DRQ for this context with the DRQ item of the current context.
+ *
+ * \see `Context::drq`
+ */
 PUBLIC inline NEEDS[Context::drq]
 void
 Context::drq(Drq::Request_func *func, void *arg,
