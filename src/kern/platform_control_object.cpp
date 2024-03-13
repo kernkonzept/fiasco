@@ -66,13 +66,13 @@ public:
   L4_msg_tag kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,
                      Utcb const *r_msg, Utcb *s_msg)
   {
-    L4_msg_tag t = f->tag();
+    L4_msg_tag tag = f->tag();
 
-    if (t.proto() == L4_msg_tag::Label_irq)
+    if (tag.proto() == L4_msg_tag::Label_irq)
       return Icu::icu_invoke(ref, rights, f, r_msg, s_msg);
 
-    if (!Ko::check_basics(&t, 0))
-      return t;
+    if (!Ko::check_basics(&tag, 0))
+      return tag;
 
     switch (static_cast<Op>(r_msg->values[0]))
       {
