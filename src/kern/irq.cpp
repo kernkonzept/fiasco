@@ -139,10 +139,6 @@ Irq::dispatch_irq_proto(Unsigned16 op, bool may_unmask)
  * \param target      The receiver that wants to receive IPC messages for this
  *                    IRQ. Might be nullptr to unbind.
  * \param irq_id      The label for the IPC send operation.
- * \param rl[in,out]  The list of objects that have to be destroyed. The
- *                    operation might append objects to this list if it is in
- *                    charge of deleting the old receiver that used to be
- *                    attached to this IRQ.
  *
  * \retval 0          On success, `target` is the new IRQ handler thread. IPC
  *                    was not pending.
@@ -151,7 +147,7 @@ Irq::dispatch_irq_proto(Unsigned16 op, bool may_unmask)
  */
 PRIVATE
 int
-Irq_sender::replace_irq_thread(Thread *target, Mword irq_id, Kobject ***rl)
+Irq_sender::replace_irq_thread(Thread *target, Mword irq_id)
 {
   Thread *old = _irq_thread;
   int result = 0;
@@ -181,7 +177,8 @@ Irq_sender::replace_irq_thread(Thread *target, Mword irq_id, Kobject ***rl)
           panic("IRQ IPC flagged as in progress");
         }
 
-      old->put_n_reap(rl);
+      if (old->dec_ref() == 0)
+        delete old;
     }
 
   return result;
@@ -194,10 +191,6 @@ Irq_sender::replace_irq_thread(Thread *target, Mword irq_id, Kobject ***rl)
  *                    IRQ
  * \param utcb        The input UTCB
  * \param utcb_out    The output UTCB
- * \param rl[in,out]  the list of objects that have to be destroyed. The
- *                    operation might append objects to this list if it is in
- *                    charge of deleting the old receiver that used to be
- *                    attached to this IRQ.
  *
  * \retval 0        on success, `t` is the new IRQ handler thread
  *
@@ -205,7 +198,7 @@ Irq_sender::replace_irq_thread(Thread *target, Mword irq_id, Kobject ***rl)
  */
 PUBLIC inline
 L4_msg_tag
-Irq_sender::alloc(Thread *t, Utcb const *utcb, Utcb *utcb_out, Kobject ***rl)
+Irq_sender::alloc(Thread *t, Utcb const *utcb, Utcb *utcb_out)
 {
   // The object must not disappear while binding the Irq_sender to the Thread.
   // Grab the existence lock to prevent concurrent destroy() from squashing it.
@@ -224,7 +217,7 @@ Irq_sender::alloc(Thread *t, Utcb const *utcb, Utcb *utcb_out, Kobject ***rl)
       return commit_result(0);
     }
 
-  int ret = replace_irq_thread(t, irq_id, rl);
+  int ret = replace_irq_thread(t, irq_id);
 
   t->inc_ref();
   if (Cpu::online(t->home_cpu()))
@@ -248,17 +241,12 @@ Irq_sender::owner() const { return _irq_thread; }
  *                    concurrent reconfiguration and that the object does not
  *                    disappear.
  *
- * \param rl[in,out]  The list of objects that have to be destroyed.
- *                    The operation might append objects to this list if it is
- *                    in charge of deleting the receiver that used to be
- *                    attached to this IRQ.
- *
  * \retval 0        on success, interrupt was inactive.
  * \retval 1        on success, interrupt was pending.
  */
 PRIVATE
 int
-Irq_sender::free(Kobject ***rl)
+Irq_sender::free()
 {
   auto g = lock_guard(cpu_lock);
 
@@ -267,7 +255,7 @@ Irq_sender::free(Kobject ***rl)
 
   mask();
 
-  return replace_irq_thread(0, ~0UL, rl);
+  return replace_irq_thread(0, ~0UL);
 }
 
 PUBLIC explicit
@@ -293,7 +281,7 @@ Irq_sender::destroy(Kobject ***rl) override
   // Must be done _after_ returning from Irq::destroy() to make sure that the
   // existence lock was finally released by the last owner (the existence lock
   // was already invalidated before) -- see also Irq_sender::alloc().
-  static_cast<void>(free(rl));
+  static_cast<void>(free());
 }
 
 
@@ -522,8 +510,7 @@ Irq_sender::sys_bind(L4_msg_tag tag, L4_fpage::Rights rights, Utcb const *utcb,
   if (EXPECT_FALSE(!(t_rights & L4_fpage::Rights::CS())))
     return commit_result(-L4_err::EPerm);
 
-  Reap_list rl;
-  return alloc(thread, utcb, utcb_out, rl.list());
+  return alloc(thread, utcb, utcb_out);
 }
 
 PRIVATE
@@ -538,8 +525,7 @@ Irq_sender::sys_detach(L4_fpage::Rights rights, Utcb *utcb)
   if (!guard.check_and_lock(&existence_lock))
     return commit_error(utcb, L4_error::Not_existent);
 
-  Reap_list rl;
-  return commit_result(free(rl.list()));
+  return commit_result(free());
 }
 
 

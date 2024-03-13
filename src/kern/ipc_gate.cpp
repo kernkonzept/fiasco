@@ -158,7 +158,8 @@ Ipc_gate_obj::destroy(Kobject ***r) override
     {
       _thread = 0;
       unblock_all();
-      tmp->put_n_reap(r);
+      if (tmp->dec_ref() == 0)
+        delete tmp;
     }
 }
 
@@ -243,25 +244,12 @@ Ipc_gate_ctl::bind_thread(L4_obj_ref, L4_fpage::Rights rights,
     }
   while (!cas(&g->_thread, old, t));
 
-  Kobject::Reap_list rl;
-  if (old)
-    old->put_n_reap(rl.list());
-
-  if (EXPECT_FALSE(!rl.empty()))
-    {
-      auto l = lock_guard<Lock_guard_inverse_policy>(cpu_lock);
-      rl.del_1();
-    }
-
   g->unblock_all();
   current()->rcu_wait();
   g->unblock_all();
 
-  if (EXPECT_FALSE(!rl.empty()))
-    {
-      auto l = lock_guard<Lock_guard_inverse_policy>(cpu_lock);
-      rl.del_2();
-    }
+  if (old && old->dec_ref() == 0)
+    delete old;
 
   return commit_result(0);
 }
