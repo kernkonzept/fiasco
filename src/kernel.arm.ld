@@ -111,6 +111,7 @@ SECTIONS {
     /* See KIP layout in abi/kip.cpp. The feature strings are terminated by '\0'! */
     ASSERT (_initkip_end < my_kernel_info_page + 0x800, "Kernel version strings too long");
     . = ALIGN(4K);
+    KEEP(*(.kernel_info_page.amp))
   } :kip :l4_kip
 
   .koptions : AT (ADDR(.koptions) - phys_offset) {
