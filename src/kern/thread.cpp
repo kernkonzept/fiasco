@@ -376,7 +376,10 @@ Mword Del_irq_chip::pin(Thread *t)
 PUBLIC inline
 void
 Del_irq_chip::unbind(Irq_base *irq) override
-{ thread(irq->pin())->remove_delete_irq(irq); }
+{
+  thread(irq->pin())->remove_delete_irq(irq);
+  Irq_chip_soft::unbind(irq);
+}
 
 
 PUBLIC inline NEEDS["irq_chip.h"]
