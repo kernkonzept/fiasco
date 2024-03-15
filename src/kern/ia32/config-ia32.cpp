@@ -3,6 +3,8 @@ INTERFACE[ia32,amd64]:
 
 #include "idt_init.h"
 
+#define TARGET_NAME "x86"
+
 EXTENSION class Config
 {
 public:

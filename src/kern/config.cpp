@@ -126,20 +126,23 @@ public:
 #define GREETING_COLOR_ANSI_TITLE  "\033[1;32m"
 #define GREETING_COLOR_ANSI_INFO   "\033[0;32m"
 
-INTERFACE[ia32]:
-#define TARGET_NAME "x86-32"
+INTERFACE[ia32 || amd64]:
+#define DISPLAY_ARCH "x86"
 
-INTERFACE[ux]:
-#define TARGET_NAME "ux-x86-32"
+INTERFACE[!(ia32 || amd64)]:
+#define DISPLAY_ARCH CONFIG_XARCH
 
-INTERFACE[amd64]:
-#define TARGET_NAME "x86-64"
+INTERFACE[bit64]:
+#define TARGET_WORD_LEN "64"
+
+INTERFACE[!bit64]:
+#define TARGET_WORD_LEN "32"
 
 INTERFACE:
 
 #define CONFIG_KERNEL_VERSION_STRING \
   GREETING_COLOR_ANSI_TITLE "Welcome to the L4Re Microkernel!\\n"         \
-  GREETING_COLOR_ANSI_INFO "L4Re Microkernel on " CONFIG_XARCH "\\n"      \
+  GREETING_COLOR_ANSI_INFO "L4Re Microkernel on " DISPLAY_ARCH "-" TARGET_WORD_LEN "\\n"      \
                            "Rev: " CODE_VERSION " compiled with " COMPILER \
                            TARGET_NAME_PHRASE "    [" CONFIG_LABEL "]\\n"    \
                            "Build: #" BUILD_NR " " BUILD_DATE "\\n"            \

@@ -7,6 +7,8 @@ INTERFACE:
 
 #include "idt_init.h"
 
+#define TARGET_NAME "ux-x86"
+
 EXTENSION class Config
 {
 public:
