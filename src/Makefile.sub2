@@ -149,6 +149,9 @@ DEPS.dot: $(KERNEL_MODULES_CPP)
 	dot -Tps -Gmclimit=200.0 -Gnslimit=500.0 \
 	  -Gsize=11,10 -Grotate=90 -o $@ $<
 
+%.pdf:	%.dot
+	dot -Tpdf -Gmclimit=200.0 -Gnslimit=500.0 -Gsize=11,10 -o $@ $<
+
 %.a4.ps: %.dot
 	dot -Tps -Gmclimit=200.0 -Gnslimit=500.0 \
 	  -Gsize="11,8" -Granksep=0.7 -Grotate=90 -o $@ $<
