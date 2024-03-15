@@ -138,8 +138,8 @@ INTERFACE[amd64]:
 INTERFACE:
 
 #define CONFIG_KERNEL_VERSION_STRING \
-  GREETING_COLOR_ANSI_TITLE "Welcome to L4/Fiasco.OC!\\n"                      \
-  GREETING_COLOR_ANSI_INFO "L4/Fiasco.OC microkernel on " CONFIG_XARCH "\\n"      \
+  GREETING_COLOR_ANSI_TITLE "Welcome to the L4Re Microkernel!\\n"         \
+  GREETING_COLOR_ANSI_INFO "L4Re Microkernel on " CONFIG_XARCH "\\n"      \
                            "Rev: " CODE_VERSION " compiled with " COMPILER \
                            TARGET_NAME_PHRASE "    [" CONFIG_LABEL "]\\n"    \
                            "Build: #" BUILD_NR " " BUILD_DATE "\\n"            \
