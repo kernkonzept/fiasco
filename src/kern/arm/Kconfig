@@ -287,7 +287,7 @@ config ARM_ALIGNMENT_CHECK
 config ARM_SYNC_CLOCK
 	bool "Sync KIP clock"
 	depends on ARM
-	depends on ARM_V7PLUS
+	depends on HAS_CPU_VIRT # Dependency on the generic timer
 	help
 	  Synchronize the internal kernel clock with the timer.
 
