@@ -35,6 +35,12 @@ IMPLEMENTATION [arm && mptimer]:
 
 #include "globals.h"
 
+IMPLEMENT_OVERRIDE
+Irq_chip::Mode Timer::irq_mode()
+{
+  return Irq_chip::Mode::F_level_high;
+}
+
 PRIVATE static
 Mword
 Timer::start_as_counter()
