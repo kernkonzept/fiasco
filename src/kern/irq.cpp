@@ -37,7 +37,8 @@ protected:
  */
 class Irq_sender
 : public Kobject_h<Irq_sender, Irq>,
-  public Ipc_sender<Irq_sender>
+  public Ipc_sender<Irq_sender>,
+  public Ref_cnt_obj
 {
   friend struct Irq_sender_test;
 
@@ -132,6 +133,11 @@ Irq::dispatch_irq_proto(Unsigned16 op, bool may_unmask)
     }
 }
 
+PUBLIC virtual
+bool
+Irq_sender::put() override
+{ return dec_ref() == 0; }
+
 /**
  * Replace old target thread with a new one.
  *
@@ -205,6 +211,7 @@ Irq_sender::bind_irq_thread(Thread *t, Utcb const *utcb, Utcb *utcb_out)
   // The object must not disappear while binding the Irq_sender to the Thread.
   // Grab the existence lock to prevent concurrent destroy() from squashing it.
   // Guards against concurrent bind/unbinds too.
+  Ref_ptr self(this);
   Lock_guard<Lock> guard;
   if (!guard.check_and_lock(&existence_lock))
     return commit_error(utcb_out, L4_error::Not_existent);
@@ -264,6 +271,9 @@ PUBLIC explicit
 Irq_sender::Irq_sender(Ram_quota *q)
 : Kobject_h<Irq_sender, Irq>(q), _queued(0), _irq_thread(0), _irq_id(~0UL)
 {
+  // Capability reference (released when last capability to Irq_sender object is
+  // dropped).
+  inc_ref();
   hit_func = &hit_level_irq;
 }
 
@@ -523,6 +533,7 @@ Irq_sender::sys_detach(L4_fpage::Rights rights, Utcb *utcb)
     return commit_result(-L4_err::EPerm);
 
   // Grab the existence lock to guard against concurrent bind/unbinds.
+  Ref_ptr self(this);
   Lock_guard<Lock> guard;
   if (!guard.check_and_lock(&existence_lock))
     return commit_error(utcb, L4_error::Not_existent);
