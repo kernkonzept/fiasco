@@ -112,7 +112,7 @@ as_flgs = $(CPPFLAGS) $(ASFLAGS)
 
 %.lds:	%.ld
 	$(COMP_MESSAGE)
-	$(VERBOSE)$(CPP) -MD -MP -MF .$@.d -MT $@ -undef -P -DASSEMBLER -o $@ $(CPPFLAGS) $<
+	$(VERBOSE)$(CPP) -x c -MD -MP -MF .$@.d -MT $@ -undef -P -DASSEMBLER -o $@ $(CPPFLAGS) $<
 
 (%): %
 	$(AR_MESSAGE)
