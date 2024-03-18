@@ -241,7 +241,7 @@ void Config::init()
 
 PUBLIC static FIASCO_INIT
 unsigned long
-Config::kmem_size(unsigned long available_size)
+Config::kmem_size([[maybe_unused]] unsigned long available_size)
 {
 #ifdef CONFIG_KMEM_SIZE_AUTO
   static_assert(kmem_per_cent() < 100, "Sanitize kmem_per_cent");
@@ -250,7 +250,6 @@ Config::kmem_size(unsigned long available_size)
     alloc_size = kmem_max();
   return alloc_size;
 #else
-  (void)available_size;
   return (unsigned long)CONFIG_KMEM_SIZE_KB << 10;
 #endif
 }

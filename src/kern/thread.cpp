@@ -961,12 +961,11 @@ IMPLEMENTATION [fpu && !ux && !lazy_fpu]:
  */
 PUBLIC inline
 int
-Thread::switchin_fpu(bool alloc_new_fpu = true)
+Thread::switchin_fpu(bool /* alloc_new_fpu */ = true)
 {
   if (state() & Thread_vcpu_fpu_disabled)
     return 0;
 
-  (void)alloc_new_fpu;
   panic("must not see any FPU trap with eager FPU\n");
 }
 
@@ -997,9 +996,8 @@ IMPLEMENTATION [!fpu]:
 
 PUBLIC inline
 int
-Thread::switchin_fpu(bool alloc_new_fpu = true)
+Thread::switchin_fpu(bool /* alloc_new_fpu */ = true)
 {
-  (void)alloc_new_fpu;
   return 0;
 }
 

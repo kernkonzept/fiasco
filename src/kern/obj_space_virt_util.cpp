@@ -240,10 +240,9 @@ Obj_space_virt<SPACE>::lookup_local(Cap_index virt, L4_fpage::Rights *rights)
 IMPLEMENT template< typename SPACE >
 inline NEEDS[<cassert>, Obj_space_virt::cap_virt, Obj_space_virt::get_cap]
 L4_fpage::Rights FIASCO_FLATTEN
-Obj_space_virt<SPACE>::v_delete(V_pfn virt, Page_order size,
-                                   L4_fpage::Rights page_attribs)
+Obj_space_virt<SPACE>::v_delete(V_pfn virt, [[maybe_unused]] Page_order size,
+                                L4_fpage::Rights page_attribs)
 {
-  (void)size;
   assert (size == Page_order(0));
 
   Entry *c;
@@ -277,9 +276,8 @@ inline NEEDS[Obj_space_virt::cap_virt, Obj_space_virt::caps_alloc,
              Obj_space_virt::get_cap, <cassert>]
 typename Obj::Insert_result FIASCO_FLATTEN
 Obj_space_virt<SPACE>::v_insert(Phys_addr phys, V_pfn const &virt,
-                                Page_order size, Attr page_attribs)
+                                [[maybe_unused]] Page_order size, Attr page_attribs)
 {
-  (void)size;
   assert (size == Page_order(0));
 
   Entry *c;

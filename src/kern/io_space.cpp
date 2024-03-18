@@ -346,7 +346,7 @@ Generic_io_space<SPACE>::v_lookup(V_pfn virt, Phys_addr *phys,
 IMPLEMENT template<typename SPACE>
 inline
 L4_fpage::Rights FIASCO_FLATTEN
-Generic_io_space<SPACE>::v_delete(V_pfn virt, Page_order size,
+Generic_io_space<SPACE>::v_delete(V_pfn virt, [[maybe_unused]] Page_order size,
                                   L4_fpage::Rights page_attribs)
 {
   if (!(page_attribs & L4_fpage::Rights::FULL()))
@@ -377,7 +377,6 @@ Generic_io_space<SPACE>::v_delete(V_pfn virt, Page_order size,
       return L4_fpage::Rights(0);
     }
 
-  (void)size;
   assert(size == Page_order(0));
 
   io_disable(cxx::int_value<V_pfn>(virt));
@@ -394,12 +393,10 @@ Generic_io_space<SPACE>::v_delete(V_pfn virt, Page_order size,
 IMPLEMENT template<typename SPACE>
 inline
 typename Generic_io_space<SPACE>::Status FIASCO_FLATTEN
-Generic_io_space<SPACE>::v_insert(Phys_addr phys, V_pfn virt, Page_order size,
-                                  Attr page_attribs)
+Generic_io_space<SPACE>::v_insert([[maybe_unused]] Phys_addr phys,
+                                  V_pfn virt, Page_order size,
+                                  Attr /* page_attribs */)
 {
-  (void)phys;
-  (void)page_attribs;
-
   assert(phys == virt);
 
   /*
