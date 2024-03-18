@@ -242,6 +242,10 @@ OPT_CXXFLAGS    += $(OPT_CXXFLAGS-$(CC_TYPE))
 NOOPT_CFLAGS    += $(NOOPT_CFLAGS-$(CC_TYPE))
 NOOPT_CXXFLAGS  += $(NOOPT_CXXFLAGS-$(CC_TYPE))
 
+HOST_CPPFLAGS   +=
+HOST_CFLAGS     += -O2 -Wall -Wextra
+HOST_CXXFLAGS   += -O2 -Wall -Wextra
+
 # for stddef.h, ...
 GCCINCDIR   := $(shell $(CXX) $(SHARED_FLAGS) -print-file-name=include)
 
