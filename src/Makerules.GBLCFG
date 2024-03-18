@@ -8,9 +8,10 @@ filedate = $(shell if date --version 2>&1 | grep -q "Free Software F"; then  \
 		    fi)
 
 $(GBLCFG): globalconfig.out
+	$(COMP_MESSAGE)
 	$(VERBOSE)$(GREP) "CONFIG_.*=[^n].*$$" globalconfig.out | cut -f2- -d'_' > $@.txt
 	$(VERBOSE)echo "$(call filedate,globalconfig.out)" >> $@.txt
-	$(VERBOSE)$(CXX) $(CXXFLAGS) -Wl,-z,noexecstack -r -Wl,-b,binary -o $@ $@.txt
+	$(VERBOSE)$(OBJCOPY) -I binary -O $(OBJCOPY_BFDNAME) -B $(OBJCOPY_BFDARCH) $@.txt $@
 	$(VERBOSE)$(RM) $@.txt
 
 clean-GBLCFG:

@@ -24,4 +24,6 @@ SHARED_FLAGS                    += $(call CHECKCC,-mno-sse3,)
 SHARED_FLAGS                    += $(call CHECKCC,-mno-3dnow,)
 
 ASFLAGS				+= -m32
+OBJCOPY_BFDNAME			:= elf32-i386
+OBJCOPY_BFDARCH			:= i386
 LD_EMULATION_CHOICE             := elf_i386 elf_i386_fbsd

@@ -26,4 +26,6 @@ SHARED_FLAGS                       += $(call CHECKCC,-mno-3dnow,)
 SHARED_FLAGS-clang                 += $(call CHECKCC,-Wno-address-of-packed-member)
 
 ASFLAGS				+= -m64 -mcmodel=kernel
+OBJCOPY_BFDNAME			:= elf64-x86-64
+OBJCOPY_BFDARCH			:= i386
 LD_EMULATION_CHOICE             := elf_x86_64 elf_x86_64_fbsd
