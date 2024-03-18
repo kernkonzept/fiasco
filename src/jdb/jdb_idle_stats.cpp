@@ -21,7 +21,7 @@ Jdb_idle_stats::Jdb_idle_stats() : Jdb_module("INFO") {}
 
 PUBLIC
 Jdb_module::Action_code
-Jdb_idle_stats::action(int, void *&, char const *&, int &)
+Jdb_idle_stats::action(int, void *&, char const *&, int &) override
 {
   printf("\nIDLE STATISTICS --------------------------\n");
   for (Cpu_number i = Cpu_number::first(); i < Config::max_num_cpus(); ++i)
@@ -39,7 +39,7 @@ Jdb_idle_stats::action(int, void *&, char const *&, int &)
 
 PUBLIC
 Jdb_module::Cmd const *
-Jdb_idle_stats::cmds() const
+Jdb_idle_stats::cmds() const override
 {
   static Cmd cs[] =
     {
@@ -50,7 +50,7 @@ Jdb_idle_stats::cmds() const
 
 PUBLIC
 int
-Jdb_idle_stats::num_cmds() const
+Jdb_idle_stats::num_cmds() const override
 { return 1; }
 
 static Jdb_idle_stats jdb_idle_stats INIT_PRIORITY(JDB_MODULE_INIT_PRIO);
