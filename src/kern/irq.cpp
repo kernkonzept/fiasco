@@ -33,7 +33,24 @@ protected:
 
 
 /**
- * IRQ Kobject to send IPC messages to a receiving thread.
+ * IRQ kernel object to send IPC messages to a receiving thread.
+ *
+ * When an IRQ hits, the Irq_sender queues itself to the thread it is bound to
+ * (target thread). When no thread is bound to the Irq_sender, the IRQ is
+ * dropped.
+ *
+ * To enqueue the Irq_sender at the thread, the Irq_sender sends a DRQ to the
+ * target thread (asynchronously). We ensure that the Irq_sender queues its
+ * DRQ request to at most one thread at a time by calling send() only if
+ * queued() was previously zero. The _queued counter is only reset by Ipc_sender
+ * via Irq_sender::re/deqeue_sender().
+ *
+ * When the Irq_sender is rebound to a different thread, it dequeues itself from
+ * the old target thread (via Remote::abort_send()) and then re-injects the IRQ
+ * to the new thread if it was pending.
+ * If the target thread changes between an IPC send operation and the processing
+ * of that send operation in the target thread, the old target thread forwards
+ * the IPC send operation to the new target thread.
  */
 class Irq_sender
 : public Kobject_h<Irq_sender, Irq>,
@@ -139,55 +156,138 @@ bool
 Irq_sender::put() override
 { return dec_ref() == 0; }
 
+PRIVATE inline
+bool
+Irq_sender::is_destroyed()
+{ return !existence_lock.valid(); }
+
 /**
- * Replace old target thread with a new one.
+ * Set new target thread and label.
  *
- * \pre               The existence_lock must be locked to guard against
+ * \pre               The _irq_lock must be locked to guard against
+ *                    concurrent reconfiguration.
+ *
+ * \param target      The receiver that wants to receive IPC messages for this
+ *                    IRQ. Might be nullptr to detach.
+ * \param irq_id      The label for the IPC send operation.
+ */
+PRIVATE inline
+void
+Irq_sender::set_irq_thread(Thread *target, Mword irq_id)
+{
+  assert(_irq_lock.is_locked());
+
+  // note: this is a possible race on user-land where the label of an IRQ might
+  // become inconsistent with the attached thread. The user is responsible to
+  // synchronize Irq::attach calls to prevent this.
+  _irq_id = irq_id;
+  Mem::mp_wmb();  // pairs with read barrier in send_local()
+  _irq_thread = target;
+
+  if (!target)
+    return;
+
+  target->inc_ref();
+  if (Cpu::online(target->home_cpu()))
+    _chip->set_cpu(pin(), target->home_cpu());
+}
+
+/**
+ * Replace old target thread with a new one (first phase, under lock).
+ *
+ * Takes care of exchanging the old target thread with the new target
+ * thread and the given label.
+ *
+ * \pre               The _irq_lock must be locked to guard against
  *                    concurrent reconfiguration.
  *
  * \param target      The receiver that wants to receive IPC messages for this
  *                    IRQ. Might be nullptr to unbind.
  * \param irq_id      The label for the IPC send operation.
  *
- * \retval 0          On success, `target` is the new IRQ handler thread. IPC
- *                    was not pending.
- * \retval 1          On success, `target` is the new IRQ handler thread. IPC
- *                    was pending on old target thread.
+ * \return Old target thread if any, it is the responsibility of the caller to
+ *         invoke Irq_sender::finish_replace_irq_thread() on the old target
+ *         thread (without releasing the CPU lock in between).
+ */
+PRIVATE inline
+Thread *
+Irq_sender::start_replace_irq_thread(Thread *target, Mword irq_id)
+{
+  assert(_irq_lock.is_locked());
+
+  Thread *old = _irq_thread;
+  set_irq_thread(target, irq_id);
+  return old;
+}
+
+/**
+ * Replace old target thread with a new one (second phase, not under lock).
+ *
+ * Takes care of revoking the IRQ from the old target thread and then
+ * re-injecting the IRQ to the new thread if it was pending.
+ *
+ * \pre               The cpu_lock must be held, but no other locks, as this
+ *                    function executes a DRQ, i.e. the operation might block.
+ * \pre               Must be assumed to be a potential preemption point, the
+ *                    caller has to ensure that Irq_sender object cannot be
+ *                    deleted, for example by holding counted reference to it.
+ *
+ * \param old         Old target thread if any.
+ *
+ * \retval 0          On success, `target` is the new IRQ handler thread.
+ *                    IPC was not pending.
+ * \retval 1          On success, `target` is the new IRQ handler thread.
+ *                    IPC was pending on old target thread.
+ *
+ * \post              As this function executes a DRQ, it must be assumed to be a
+ *                    potential preemption point.
  */
 PRIVATE
 int
-Irq_sender::replace_irq_thread(Thread *target, Mword irq_id)
+Irq_sender::finish_replace_irq_thread(Thread *old)
 {
-  Thread *old = _irq_thread;
-  int result = 0;
+  if (!old)
+    return 0;
 
-  // note: this is a possible race on user-land where the label of an IRQ might
-  // become inconsistent with the attached thread. The user is responsible to
-  // synchronize Irq::attach calls to prevent this.
-  _irq_id = irq_id;
-  Mem::mp_wmb();  // pairs with read barrier in send()/handle_remote_hit()
-  _irq_thread = target;
-
-  if (is_valid_thread(old))
+  int result;
+  switch (old->Receiver::abort_send(this))
     {
-      switch (old->Receiver::abort_send(this))
+    case Receiver::Abt_ipc_done:
+      result = 0;
+      break; // was not queued
+
+    case Receiver::Abt_ipc_cancel:
+      result = 1; // was queued
+      break;
+
+    default:
+      // this must not happen as this is only the case for IPC including
+      // message items and an IRQ never sends message items.
+      panic("IRQ IPC flagged as in progress");
+    }
+
+  if (old->dec_ref() == 0)
+    delete old;
+
+  // re-inject if IRQ was queued before
+  if (result > 0)
+    {
+      // We might have been preempted during DRQ execution, i.e. the someone
+      // might have re-bound to a different thread and might even have deleted
+      // the old thread. We therefore have to re-read the currently bound thread
+      // under the _irq_lock.
+      Thread *target;
         {
-        case Receiver::Abt_ipc_done:
-          break; // was not queued
+          auto g = lock_guard<No_cpu_lock_policy>(_irq_lock);
 
-        case Receiver::Abt_ipc_cancel:
-          result = 1; // was queued
-          break;
+          // Do not forward if the Irq_sender was destroyed in the meantime.
+          if (is_destroyed())
+            return 0;
 
-        default:
-          // this must not happen as this is only the case
-          // for IPC including message items and an IRQ never
-          // sends message items.
-          panic("IRQ IPC flagged as in progress");
+          target = _irq_thread;
         }
 
-      if (old->dec_ref() == 0)
-        delete old;
+      send(target);
     }
 
   return result;
@@ -196,47 +296,50 @@ Irq_sender::replace_irq_thread(Thread *target, Mword irq_id)
 /**
  * Bind a receiver to this device interrupt.
  *
- * \param t           the receiver that wants to receive IPC messages for this
- *                    IRQ
- * \param utcb        The input UTCB
- * \param utcb_out    The output UTCB
+ * \pre `cpu_lock` must be held (ephemeral reference to Irq_sender might get lost otherwise)
  *
- * \retval 0        on success, `t` is the new IRQ handler thread
+ * \param target      Thread that wants to receive IPC messages for this IRQ.
+ * \param utcb        The input UTCB.
+ * \param utcb_out    The output UTCB.
+ *
+ * \retval 0          On success, `target` is the new IRQ handler thread.
  *
  * \retval L4_error::Not_existent  Irq_sender object was deleted
+ *
+ * \post This function must be assumed to be a potential preemption point (see
+ *       finish_replace_irq_thread()). In particular that means the Irq_sender
+ *       object might have been deleted, unless the caller holds a counted
+ *       reference to it.
  */
-PUBLIC inline
+PUBLIC
 L4_msg_tag
-Irq_sender::bind_irq_thread(Thread *t, Utcb const *utcb, Utcb *utcb_out)
+Irq_sender::bind_irq_thread(Thread *target, Utcb const *utcb, Utcb *utcb_out)
 {
-  // The object must not disappear while binding the Irq_sender to the Thread.
-  // Grab the existence lock to prevent concurrent destroy() from squashing it.
-  // Guards against concurrent bind/unbinds too.
-  Ref_ptr self(this);
-  Lock_guard<Lock> guard;
-  if (!guard.check_and_lock(&existence_lock))
-    return commit_error(utcb_out, L4_error::Not_existent);
-
-  auto g = lock_guard(cpu_lock);
+  assert(cpu_lock.test());
 
   Mword irq_id = access_once(&utcb->values[1]);
 
-  if (_irq_thread == t)
+  Thread *old;
     {
-      _irq_id = irq_id;
-      return commit_result(0);
+      // Grab the _irq_lock to guard against concurrent bind/unbinds.
+      auto g = lock_guard<No_cpu_lock_policy>(_irq_lock);
+      // Prevent binding thread if the Irq is invalid.
+      if (is_destroyed())
+        return commit_error(utcb_out, L4_error::Not_existent);
+
+      if (_irq_thread == target)
+        {
+          _irq_id = irq_id;
+          return commit_result(0);
+        }
+
+      old = start_replace_irq_thread(target, irq_id);
     }
 
-  int ret = replace_irq_thread(t, irq_id);
-
-  t->inc_ref();
-  if (Cpu::online(t->home_cpu()))
-    _chip->set_cpu(pin(), t->home_cpu());
-
-  // re-inject if it was queued before
-  if (ret > 0)
-    send(t);
-
+  // The following operations are a preemption point, so we have to hold a
+  // reference to Irq_sender to ensure it is not deleted in the meantime.
+  Ref_ptr self(this);
+  finish_replace_irq_thread(old);
   return commit_result(0);
 }
 
@@ -247,35 +350,49 @@ Irq_sender::owner() const { return _irq_thread; }
 /**
  * Release an interrupt.
  *
- * \pre               The existence_lock must be locked to guard against
- *                    concurrent reconfiguration and that the object does not
- *                    disappear.
+ * \pre The cpu_lock must be held, but no other locks, as this
+ *      function executes a DRQ, i.e. the operation might block.
  *
- * \retval 0        on success, interrupt was inactive.
- * \retval 1        on success, interrupt was pending.
+ * \pre Must be assumed to be a potential preemption point, the caller has to
+ *      ensure that Irq_sender object cannot be deleted, for example by holding
+ *      counted reference to it.
+ *
+ * \retval 0  On success, interrupt was inactive.
+ * \retval 1  On success, interrupt was pending.
  */
 PRIVATE
 int
 Irq_sender::detach_irq_thread()
 {
-  auto g = lock_guard(cpu_lock);
+  Thread *old;
+    {
+      auto g = lock_guard<No_cpu_lock_policy>(_irq_lock);
 
-  if (_irq_thread == nullptr)
-    return -L4_err::ENoent;
+      if (!_irq_thread)
+        return -L4_err::ENoent;
 
-  mask();
+      mask();
 
-  return replace_irq_thread(0, ~0UL);
+      old = start_replace_irq_thread(nullptr, ~0UL);
+    }
+
+  return finish_replace_irq_thread(old);
 }
 
 PUBLIC explicit
 Irq_sender::Irq_sender(Ram_quota *q)
-: Kobject_h<Irq_sender, Irq>(q), _queued(0), _irq_thread(0), _irq_id(~0UL)
+: Kobject_h<Irq_sender, Irq>(q), _queued(0), _irq_thread(nullptr), _irq_id(~0UL)
 {
   // Capability reference (released when last capability to Irq_sender object is
   // dropped).
   inc_ref();
   hit_func = &hit_level_irq;
+}
+
+PUBLIC
+Irq_sender::~Irq_sender()
+{
+  assert(!_irq_thread);
 }
 
 PUBLIC
@@ -395,8 +512,8 @@ Irq_sender::handle_remote_hit(Context::Drq *, Context *target, void *arg)
 {
   Irq_sender *irq = static_cast<Irq_sender*>(arg);
   irq->set_cpu(current_cpu());
-  auto t = access_once(&irq->_irq_thread);
 
+  auto t = access_once(&irq->_irq_thread);
   if (EXPECT_TRUE(t == target))
     {
       if (EXPECT_TRUE(irq->send_local(t, true)))
@@ -419,7 +536,14 @@ Irq_sender::queue()
   return old;
 }
 
-
+/**
+ * Enqueue Irq_sender as sender at the thread.
+ *
+ * \param t  Targeted thread.
+ *
+ * \post     As this function might directly switch to the receiving thread (IRQ
+ *           shortcut), it must be assumed to be a potential preemption point.
+ */
 PRIVATE inline
 void
 Irq_sender::send(Thread *t)
@@ -528,17 +652,14 @@ Irq_sender::sys_bind(L4_msg_tag tag, L4_fpage::Rights rights, Utcb const *utcb,
 
 PRIVATE
 L4_msg_tag
-Irq_sender::sys_detach(L4_fpage::Rights rights, Utcb *utcb)
+Irq_sender::sys_detach(L4_fpage::Rights rights, Utcb * /*utcb_out*/)
 {
   if (EXPECT_FALSE(!(rights & L4_fpage::Rights::CS())))
     return commit_result(-L4_err::EPerm);
 
-  // Grab the existence lock to guard against concurrent bind/unbinds.
+  // The following operation is a preemption point, so we have to hold a
+  // reference to Irq_sender to ensure it is not deleted.
   Ref_ptr self(this);
-  Lock_guard<Lock> guard;
-  if (!guard.check_and_lock(&existence_lock))
-    return commit_error(utcb, L4_error::Not_existent);
-
   return commit_result(detach_irq_thread());
 }
 
