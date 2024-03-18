@@ -23,10 +23,10 @@ static char const * const match = "FIASCOCHECKSUM=";
 
 int main(int argc, char *argv[])
 {
-
   void *base;
   uint32_t volatile *chksum;
   unsigned long left;
+  struct timespec ts[2];
 
   if (argc!=4)
     {
@@ -60,10 +60,9 @@ int main(int argc, char *argv[])
   while ((base = memchr(base, match[0], left)))
     {
       if (memcmp(match, base, strlen(match) + 1) == 0)
-	break;
-      else
-	base = (char*)base + 1;
+        break;
 
+      base = (char*)base + 1;
       left = stats.st_size - (base - image);
     }
 
@@ -85,11 +84,20 @@ int main(int argc, char *argv[])
       exit(1);
     }
 
+  // restore original access and modification time
+  ts[0].tv_sec  = stats.st_atim.tv_sec;
+  ts[0].tv_nsec = stats.st_atim.tv_nsec;
+  ts[1].tv_sec  = stats.st_mtim.tv_sec;
+  ts[1].tv_nsec = stats.st_mtim.tv_nsec;
+  if (futimens(fd, ts) < 0)
+    perror("error: resetting modification time");
+
   if (close(fd) < 0)
     {
       fprintf(stderr, "error closing kernel image: '%s': ", argv[1]);
       perror("");
       exit(2);
     }
+
   return 0;
 }
