@@ -80,9 +80,8 @@ Ipi::eoi(Message, Cpu_number on_cpu)
 
 PUBLIC static
 void
-Ipi::bcast(Message m, Cpu_number from_cpu)
+Ipi::bcast(Message m, Cpu_number /* from_cpu */)
 {
-  (void)from_cpu;
   Cpu_mask ipis;
   Cpu_number max = Cpu_number::first();
   for (Cpu_number n = Cpu_number::first(); n < Config::max_num_cpus(); ++n)

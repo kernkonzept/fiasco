@@ -21,9 +21,8 @@ Kpdir *Kmem::kdir = nullptr;
 
 PUBLIC static
 Address
-Kmem::mmio_remap(Address phys, Address size)
+Kmem::mmio_remap(Address phys, [[maybe_unused]] Address size)
 {
-  (void)size;
   assert ((phys + size < 0x20000000) && "MMIO outside KSEG1");
   return phys + KSEG1;
 }

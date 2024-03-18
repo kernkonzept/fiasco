@@ -307,9 +307,8 @@ Mem_unit::tlb_read(Unsigned32 index)
  */
 PRIVATE static
 void
-Mem_unit::_plain_tlb_flush(long asid, unsigned guest_id)
+Mem_unit::_plain_tlb_flush(long asid, unsigned /* guest_id */)
 {
-  (void)guest_id;
   if (EXPECT_FALSE(asid < 0))
     return;
 
@@ -675,9 +674,8 @@ Mem_unit::_vz_tlbinv_ftlb_flush_loop_full()
  */
 PRIVATE static
 void
-Mem_unit::_tlbinv_ftlb_flush_loop(long asid, unsigned guest_id)
+Mem_unit::_tlbinv_ftlb_flush_loop(long asid, unsigned /* guest_id */)
 {
-  (void) guest_id;
   if (asid < 0)
     return;
 
@@ -734,9 +732,8 @@ Mem_unit::_tlbinv_ftlb_flush_loop_full()
  */
 PRIVATE static
 void
-Mem_unit::_tlbinv_tlb_flush(long asid, unsigned guest_id)
+Mem_unit::_tlbinv_tlb_flush(long asid, unsigned /* guest_id */)
 {
-  (void) guest_id;
   if (EXPECT_FALSE(asid < 0))
     return;
 
