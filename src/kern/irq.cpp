@@ -41,9 +41,9 @@ protected:
  *
  * To enqueue the Irq_sender at the thread, the Irq_sender sends a DRQ to the
  * target thread (asynchronously). We ensure that the Irq_sender queues its
- * DRQ request to at most one thread at a time by calling send() only if
- * queued() was previously zero. The _queued counter is only reset by Ipc_sender
- * via Irq_sender::re/deqeue_sender().
+ * DRQ request to at most one thread at a time (see Irq_send_state::can_send()).
+ * The _send_state counter is only reset by Ipc_sender via
+ * Irq_sender::re/deqeue_sender().
  *
  * When the Irq_sender is rebound to a different thread, it dequeues itself from
  * the old target thread (via Remote::abort_send()) and then re-injects the IRQ
@@ -70,7 +70,102 @@ protected:
   static bool is_valid_thread(Thread const *t)
   { return t != nullptr; }
 
-  Smword _queued;
+  /**
+   * Tracks the IPC send state of an Irq_sender.
+   *
+   * When an IRQ hits, the Irq_sender transitions from "Not Queued" to "Queued"
+   * and sends an IPC to its target thread. Once the IPC send finishes, it
+   * transitions back to "Not Queued", ready to send the next IPC.
+   *
+   * The destruction of an Irq_sender may run in parallel to an ongoing IPC send
+   * the Irq_sender involved in. Therefore it is split into two phases:
+   * 1. The Invalidated state flag is set, from now on no new IPC send operation
+   *    can be started.
+   * 2. Once the ongoing IPC send finishes, or immediately if none is in
+   *    progress, the Destroyed state flag is set (via attempt_destroy()).
+   *
+   * States:
+   *   - Not Queued:   IPC send is not queued.
+   *   - Queued:       IPC send is queued.
+   *   - Masked:       Edge-triggered IRQ was masked because new IRQ arrived while
+   *                   IPC send was still queued.
+   *   - Invalidated:  Irq_sender was invalidated, no new IRQs can be queued, but
+   *                   it might still be involved in an ongoing IPC send operation.
+   *   - Destroyed:    Irq_sender was invalidated and is not involved in an IRQ
+   *                   send operation anymore.
+   *
+   * Valid state transitions:
+   *   - Not Queued  -> Queued | Invalidated
+   *   - Queued      -> Not Queued | Masked | Invalidated
+   *   - Masked      -> Not Queued | Invalidated
+   *   - Invalidated -> Destroyed
+   *
+   * Drivers:
+   *   - Irq_sender::queue()
+   *   - Irq_sender::finish_send()
+   *   - Irq_sender::destroy()
+   *
+   * \note Accessing the send state of an Irq_sender requires holding its
+   *       _irq_lock.
+   */
+  class Irq_send_state
+  {
+    Mword _state;
+
+  public:
+    constexpr Irq_send_state() : Irq_send_state(0) {}
+    explicit constexpr Irq_send_state(Mword state) : _state(state) {}
+
+    enum
+    {
+      Queued = 1,
+      Masked = 2,
+      Invalidated = 4,
+      Destroyed = 8,
+    };
+
+    constexpr void set(Mword flags) { _state |= flags; }
+    constexpr void clear(Mword flags) { _state &= ~flags; }
+
+    constexpr bool is_queued() const { return _state & Queued; }
+    constexpr bool is_masked() const { return _state & Masked; }
+    constexpr bool is_invalidated() const { return _state & Invalidated; }
+    constexpr bool is_destroyed() const { return _state & Destroyed; }
+
+    constexpr bool can_send() const
+    { return !is_queued() && !is_invalidated() && !is_destroyed(); }
+
+    constexpr bool is_in_destruction()
+    { return is_invalidated() || is_destroyed(); }
+
+    /**
+     * Attempts to transition the Irq_sender from Invalidated to Destroyed
+     * state.
+     *
+     * \pre Irq_send_state must be in Invalidated state.
+     * \pre Must hold _irq_lock of Irq_Sender.
+     *
+     * \retval true if the Irq_sender transitioned into Destroyed state.
+     * \retval false if the Irq_sender is still queued in an IPC send or is
+     *               already in Destroyed state.
+     */
+    bool attempt_destroy()
+    {
+      assert(is_invalidated());
+
+      if (is_queued())
+        return false;
+
+      if (is_destroyed())
+        return false;
+
+      set(Irq_send_state::Destroyed);
+      return true;
+    }
+  };
+
+private:
+  Irq_send_state _send_state;
   Thread *_irq_thread;
 
 private:
@@ -85,7 +180,6 @@ private:
 //-----------------------------------------------------------------------------
 IMPLEMENTATION:
 
-#include "atomic.h"
 #include "config.h"
 #include "cpu.h"
 #include "cpu_lock.h"
@@ -155,11 +249,6 @@ PUBLIC virtual
 bool
 Irq_sender::put() override
 { return dec_ref() == 0; }
-
-PRIVATE inline
-bool
-Irq_sender::is_destroyed()
-{ return !existence_lock.valid(); }
 
 /**
  * Set new target thread and label.
@@ -281,13 +370,16 @@ Irq_sender::finish_replace_irq_thread(Thread *old)
           auto g = lock_guard<No_cpu_lock_policy>(_irq_lock);
 
           // Do not forward if the Irq_sender was destroyed in the meantime.
-          if (is_destroyed())
-            return 0;
-
-          target = _irq_thread;
+          if (_send_state.is_in_destruction())
+            target = nullptr;
+          else
+            target = _irq_thread;
         }
 
-      send(target);
+      if (is_valid_thread(target))
+        send(target);
+      else
+        finish_send();
     }
 
   return result;
@@ -324,7 +416,7 @@ Irq_sender::bind_irq_thread(Thread *target, Utcb const *utcb, Utcb *utcb_out)
       // Grab the _irq_lock to guard against concurrent bind/unbinds.
       auto g = lock_guard<No_cpu_lock_policy>(_irq_lock);
       // Prevent binding thread if the Irq is invalid.
-      if (is_destroyed())
+      if (_send_state.is_in_destruction())
         return commit_error(utcb_out, L4_error::Not_existent);
 
       if (_irq_thread == target)
@@ -381,7 +473,7 @@ Irq_sender::detach_irq_thread()
 
 PUBLIC explicit
 Irq_sender::Irq_sender(Ram_quota *q)
-: Kobject_h<Irq_sender, Irq>(q), _queued(0), _irq_thread(nullptr), _irq_id(~0UL)
+: Kobject_h<Irq_sender, Irq>(q), _irq_thread(nullptr), _irq_id(~0UL)
 {
   // Capability reference (released when last capability to Irq_sender object is
   // dropped).
@@ -393,6 +485,8 @@ PUBLIC
 Irq_sender::~Irq_sender()
 {
   assert(!_irq_thread);
+  assert(_send_state.is_destroyed());
+  assert(!_drq.queued());
 }
 
 PUBLIC
@@ -406,62 +500,80 @@ PUBLIC
 void
 Irq_sender::destroy(Kobject ***rl) override
 {
+  assert(!_send_state.is_invalidated());
+
   auto g = lock_guard(cpu_lock);
   Irq::destroy(rl);
-  // Must be done _after_ returning from Irq::destroy() to make sure that the
-  // existence lock was finally released by the last owner (the existence lock
-  // was already invalidated before) -- see also Irq_sender::bind_irq_thread().
-  static_cast<void>(detach_irq_thread());
-}
 
-
-/** Consume all interrupts.
-    @return number of IRQs that are still pending -- this is always 0.
- */
-PRIVATE inline NEEDS ["atomic.h"]
-Smword
-Irq_sender::consume()
-{
-  Smword old;
-
-  do
     {
-      old = _queued;
+      auto g = lock_guard<No_cpu_lock_policy>(_irq_lock);
+
+      // "IPC send" reference, which keeps the Irq_sender alive while it is
+      // involved in an IPC send.
+      // Eventually released by Irq_send_state::attempt_destroy().
+      inc_ref();
+
+      _send_state.set(Irq_send_state::Invalidated);
     }
-  while (!cas(&_queued, old, 0L));
-  Mem::mp_acquire();
 
-  if (old >= 2 && hit_func == &hit_edge_irq)
-    unmask();
+  // At this point no new thread can be bound to the Irq_sender.
+  // Note: We implicitly hold a counted reference to Irq_sender, namely the
+  //       capability reference (see constructor).
+  detach_irq_thread();
 
-  return 0L;
+    {
+      auto g = lock_guard<No_cpu_lock_policy>(_irq_lock);
+
+      // Try to finish destruction of Irq_sender. If we are not successful,
+      // there is still an IPC send pending, and `Irq_sender::finish_send()`
+      // will later take care of releasing the "IPC send" reference.
+      if (_send_state.attempt_destroy())
+        // Cannot not drop to zero, we still hold the capability reference.
+        check(dec_ref() > 0);
+    }
 }
 
+/**
+ * Called when an IPC send is finished (done or aborted by the receiver) to
+ * update the send state of this Irq_sender.
+ *
+ * \pre The cpu_lock must be held.
+ * \pre Must not hold _irq_lock.
+ *
+ * \post If Irq_sender is in Invalidated state, this function will transition it
+ *       into Destroyed state and release the "IPC send" reference (see
+ *       Irq_sender::destroy()). In case that was the last reference, it will
+ *       also delete the Irq_sender, i.e. the caller must not use the Irq_sender
+ *       object after calling this function.
+ */
 PUBLIC inline
-int
-Irq_sender::queued()
+void
+Irq_sender::finish_send()
 {
-  return _queued;
+  auto g = lock_guard<No_cpu_lock_policy>(_irq_lock);
+
+  _send_state.clear(Irq_send_state::Queued);
+
+  if (_send_state.is_invalidated())
+    {
+      if (_send_state.attempt_destroy())
+        {
+          // Have to release the lock before deleting the IRQ sender object, as
+          // lock is part of the object.
+          g.reset();
+
+          if (dec_ref() == 0)
+            delete this;
+
+          return;
+        }
+    }
+  else if (EXPECT_FALSE(_send_state.is_masked()))
+    {
+      _send_state.clear(Irq_send_state::Masked);
+      unmask();
+    }
 }
-
-
-/**
- * Predicate used to figure out if the sender shall be enqueued
- * for sending a second message after sending the first.
- */
-PUBLIC inline NEEDS[Irq_sender::consume]
-bool
-Irq_sender::requeue_sender()
-{ return consume() > 0; }
-
-/**
- * Predicate used to figure out if the sender shall be dequeued after
- * sending the request.
- */
-PUBLIC inline NEEDS[Irq_sender::consume]
-bool
-Irq_sender::dequeue_sender()
-{ return consume() < 1; }
 
 PUBLIC inline
 Syscall_frame *
@@ -496,6 +608,13 @@ Irq_sender::modify_label(Mword const *todo, int cnt) override
     }
 }
 
+/**
+ * Send IPC message to given target thread, whose home CPU is the current CPU or
+ * an offline CPU.
+ *
+ * \post The caller must not use the Irq_sender object after calling this
+ *       function on it, as it might have been deleted (see finish_send()).
+ */
 PRIVATE bool
 Irq_sender::send_local(Thread *t, bool is_xcpu)
 {
@@ -521,19 +640,28 @@ Irq_sender::handle_remote_hit(Context::Drq *, Context *target, void *arg)
     }
   else if (EXPECT_TRUE(is_valid_thread(t)))
     t->drq(&irq->_drq, handle_remote_hit, irq, Context::Drq::No_wait);
+  else
+    irq->finish_send();
 
   return Context::Drq::no_answer();
 }
 
+/**
+ * Attempt IPC send state transition.
+ *
+ * \pre The _irq_lock must be held.
+ *
+ * \return Whether can send, i.e. state was transititioned to queued.
+ */
 PRIVATE inline
-Smword
+bool
 Irq_sender::queue()
 {
-  Smword old;
-  do
-    old = _queued;
-  while (!cas(&_queued, old, old + 1));
-  return old;
+  if (!_send_state.can_send())
+    return false;
+
+  _send_state = Irq_send_state(Irq_send_state::Queued);
+  return true;
 }
 
 /**
@@ -554,30 +682,26 @@ Irq_sender::send(Thread *t)
     send_local(t, false);
 }
 
-
 PUBLIC inline NEEDS[Irq_sender::send, Irq_sender::queue]
 void
 Irq_sender::_hit_level_irq(Upstream_irq const *ui)
 {
-  // We're entered holding the kernel lock, which also means irqs are
-  // disabled on this CPU (XXX always correct?).  We never enable irqs
-  // in this stack frame (except maybe in a nonnested invocation of
-  // switch_exec() -> switchin_context()) -- they will be re-enabled
-  // once we return from it (iret in entry.S:all_irqs) or we switch to
-  // a different thread.
-
-  // LOG_MSG_3VAL(current(), "IRQ", dbg_id(), 0, _queued);
-
+  // LOG_MSG_3VAL(current(), "IRQ", dbg_id(), 0, _send_state);
   assert (cpu_lock.test());
+
+  auto g = lock_guard<No_cpu_lock_policy>(_irq_lock);
+
   mask_and_ack();
   Upstream_irq::ack(ui);
 
-  auto t = access_once(&_irq_thread);
-  if (EXPECT_FALSE(!is_valid_thread(t)))
-    return;
-
-  if (queue() == 0)
-    send(t);
+  auto t = _irq_thread; // access under lock
+  bool can_send = is_valid_thread(t) && queue();
+  if (can_send)
+    {
+      // Have to release lock before send (preemptible operation).
+      g.reset();
+      send(t);
+    }
 }
 
 PRIVATE static
@@ -589,38 +713,40 @@ PUBLIC inline NEEDS[Irq_sender::send, Irq_sender::queue]
 void
 Irq_sender::_hit_edge_irq(Upstream_irq const *ui)
 {
-  // We're entered holding the kernel lock, which also means irqs are
-  // disabled on this CPU (XXX always correct?).  We never enable irqs
-  // in this stack frame (except maybe in a nonnested invocation of
-  // switch_exec() -> switchin_context()) -- they will be re-enabled
-  // once we return from it (iret in entry.S:all_irqs) or we switch to
-  // a different thread.
-
-  // LOG_MSG_3VAL(current(), "IRQ", dbg_id(), 0, _queued);
+  // LOG_MSG_3VAL(current(), "IRQ", dbg_id(), 0, _send_state);
 
   assert (cpu_lock.test());
 
-  auto t = access_once(&_irq_thread);
-  if (EXPECT_FALSE(!is_valid_thread(t)))
+  auto g = lock_guard<No_cpu_lock_policy>(_irq_lock);
+
+  auto t = _irq_thread; // access under lock
+  if (!is_valid_thread(t))
     {
+      // If we get an interrupt without a thread bound we mask the IRQ. After
+      // user-space binds a thread it must unmask the IRQ.
       mask_and_ack();
       Upstream_irq::ack(ui);
       return;
     }
 
-  Smword q = queue();
-
-  // if we get a second edge triggered IRQ before the first is
-  // handled we can mask the IRQ.  The consume function will
-  // unmask the IRQ when the last IRQ is dequeued.
-  if (!q)
-    ack();
+  bool can_send = queue();
+  if (can_send)
+    {
+      ack();
+      Upstream_irq::ack(ui);
+      // Have to release lock before send (preemptible operation).
+      g.reset();
+      send(t);
+    }
   else
-    mask_and_ack();
-
-  Upstream_irq::ack(ui);
-  if (q == 0)
-    send(t);
+    {
+      // If we get a second edge triggered IRQ before the first is handled we
+      // can mask the IRQ. The finish_send() function will unmask the IRQ when
+      // the last IRQ is dequeued.
+      _send_state.set(Irq_send_state::Masked);
+      mask_and_ack();
+      Upstream_irq::ack(ui);
+    }
 }
 
 PRIVATE static
@@ -687,7 +813,17 @@ Irq_sender::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
         }
 
     case L4_msg_tag::Label_irq:
-      return dispatch_irq_proto(op, _queued < 1);
+      // Handling Op_eoi here is workaround as we cannot access _irq_lock in
+      // dispatch_irq_proto().
+      if (op == Op_eoi)
+        {
+          auto g = lock_guard<No_cpu_lock_policy>(_irq_lock);
+          if (_send_state.can_send())
+            unmask();
+          return L4_msg_tag(L4_msg_tag::Schedule); // no reply
+        }
+      else
+        return dispatch_irq_proto(op, false);
 
     case L4_msg_tag::Label_irq_sender:
       switch (op)
@@ -790,4 +926,18 @@ register_factory()
   Kobject_iface::set_factory(L4_msg_tag::Label_irq_sender, irq_sender_factory);
 }
 
+}
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION[debug]:
+
+PUBLIC inline
+bool
+Irq_sender::queued()
+{
+  // As this is called (only) from JDB, we probably should not take the lock
+  // here, NMI sent by JDB might have interrupted a CPU (with interrupts off)
+  // while holding the lock.
+  // auto g = lock_guard(_irq_lock);
+  return _send_state.is_queued();
 }

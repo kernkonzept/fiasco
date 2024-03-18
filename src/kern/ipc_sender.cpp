@@ -14,8 +14,12 @@ class Ipc_sender : public Ipc_sender_base
 {
 private:
   Derived *derived() { return static_cast<Derived*>(this); }
-  static bool dequeue_sender() { return true; }
-  static bool requeue_sender() { return false; }
+
+  // Derived has to implement a finish_send() function, which Ipc_sender calls
+  // when it transferred the IPC message or the IPC send was aborted by the
+  // receiver. Ipc_sender must assume that finish_send() deletes this kernel
+  // object, i.e. must not use this or derived() afterwards.
+  /* void finish_send(); */
 };
 
 extern "C" void fast_ret_from_irq(void);
@@ -36,8 +40,8 @@ Ipc_sender<Derived>::ipc_receiver_aborted() override
 {
   assert (wait_queue());
 
-  check(derived()->dequeue_sender());
   set_wait_queue(0);
+  derived()->finish_send(); // WARN: Do not use this/derived() from here upon!
 }
 
 /**
@@ -49,12 +53,13 @@ PUBLIC template< typename Derived >
 virtual void
 Ipc_sender<Derived>::ipc_send_msg(Receiver *recv, bool) override
 {
-  check(derived()->dequeue_sender());
-
   sender_dequeue(recv->sender_list());
   recv->vcpu_update_state();
 
   derived()->transfer_msg(recv);
+
+  derived()->finish_send(); // WARN: Do not use this/derived() from here upon!
+
 }
 
 PROTECTED inline NEEDS["config.h", "globals.h", "thread_state.h"]
@@ -139,13 +144,7 @@ Ipc_sender<Derived>::send_msg(Receiver *receiver, bool is_xcpu)
     {
       Syscall_frame *dst_regs = derived()->transfer_msg(receiver);
 
-      check(!derived()->requeue_sender());
-
-      // if (derived()->requeue_sender())
-      //  {
-      //   sender_enqueue(receiver->sender_list(), 255);
-      //   receiver->vcpu_set_irq_pending();
-      //  }
+      derived()->finish_send(); // WARN: Do not use this/derived() from here upon!
 
       // ipc completed
       receiver->state_change_dirty(~Thread_ipc_mask, 0);
