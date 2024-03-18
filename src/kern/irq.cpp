@@ -198,7 +198,7 @@ Irq_sender::replace_irq_thread(Thread *target, Mword irq_id)
  */
 PUBLIC inline
 L4_msg_tag
-Irq_sender::alloc(Thread *t, Utcb const *utcb, Utcb *utcb_out)
+Irq_sender::bind_irq_thread(Thread *t, Utcb const *utcb, Utcb *utcb_out)
 {
   // The object must not disappear while binding the Irq_sender to the Thread.
   // Grab the existence lock to prevent concurrent destroy() from squashing it.
@@ -246,7 +246,7 @@ Irq_sender::owner() const { return _irq_thread; }
  */
 PRIVATE
 int
-Irq_sender::free()
+Irq_sender::detach_irq_thread()
 {
   auto g = lock_guard(cpu_lock);
 
@@ -280,8 +280,8 @@ Irq_sender::destroy(Kobject ***rl) override
   Irq::destroy(rl);
   // Must be done _after_ returning from Irq::destroy() to make sure that the
   // existence lock was finally released by the last owner (the existence lock
-  // was already invalidated before) -- see also Irq_sender::alloc().
-  static_cast<void>(free());
+  // was already invalidated before) -- see also Irq_sender::bind_irq_thread().
+  static_cast<void>(detach_irq_thread());
 }
 
 
@@ -510,7 +510,7 @@ Irq_sender::sys_bind(L4_msg_tag tag, L4_fpage::Rights rights, Utcb const *utcb,
   if (EXPECT_FALSE(!(t_rights & L4_fpage::Rights::CS())))
     return commit_result(-L4_err::EPerm);
 
-  return alloc(thread, utcb, utcb_out);
+  return bind_irq_thread(thread, utcb, utcb_out);
 }
 
 PRIVATE
@@ -525,7 +525,7 @@ Irq_sender::sys_detach(L4_fpage::Rights rights, Utcb *utcb)
   if (!guard.check_and_lock(&existence_lock))
     return commit_error(utcb, L4_error::Not_existent);
 
-  return commit_result(free());
+  return commit_result(detach_irq_thread());
 }
 
 
