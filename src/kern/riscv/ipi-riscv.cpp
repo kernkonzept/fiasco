@@ -69,10 +69,8 @@ Ipi::send(Message m, Cpu_number from_cpu, Cpu_number to_cpu)
 
 PUBLIC static inline NEEDS["cpu.h", Ipi::send_ipi]
 void
-Ipi::bcast(Message m, Cpu_number from_cpu)
+Ipi::bcast(Message m, Cpu_number /* from_cpu */)
 {
-  (void)from_cpu;
-
   Hart_mask hart_mask;
   for (Cpu_number n = Cpu_number::first(); n < Config::max_num_cpus(); ++n)
     {

@@ -95,9 +95,8 @@ IMPLEMENTATION [riscv && !mp]:
 
 PUBLIC static inline
 void
-Mem_unit::make_coherent_to_pou(void const *v, size_t)
+Mem_unit::make_coherent_to_pou(void const *, size_t)
 {
-  (void)v;
   local_flush_icache();
 }
 
@@ -109,9 +108,8 @@ IMPLEMENTATION [riscv && mp]:
 
 PUBLIC static inline NEEDS["cpu.h", "sbi.h"]
 void
-Mem_unit::make_coherent_to_pou(void const *v, size_t)
+Mem_unit::make_coherent_to_pou(void const *, size_t)
 {
-  (void)v;
   local_flush_icache();
 
   Cpu_mask cpus;
