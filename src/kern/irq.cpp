@@ -58,6 +58,9 @@ protected:
 
 private:
   Mword _irq_id;
+  // Must only be used for sending async DRQs (no answer), because for regular
+  // DRQs the DRQ reply is sent to Drq::context(), which assumes that the Drq
+  // object is member of a Context.
   Context::Drq _drq;
 };
 
