@@ -466,9 +466,8 @@ Dmar_space::add_page_size(Mem_space::Page_order o)
 
 PUBLIC
 void *
-Dmar_space::operator new (size_t size, void *p) noexcept
+Dmar_space::operator new ([[maybe_unused]] size_t size, void *p) noexcept
 {
-  (void)size;
   assert (size == sizeof (Dmar_space));
   return p;
 }

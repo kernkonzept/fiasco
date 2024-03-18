@@ -67,9 +67,8 @@ Ipi::send(Message m, Cpu_number from_cpu, Cpu_number to_cpu)
 
 PUBLIC static inline NEEDS["apic.h"]
 void
-Ipi::bcast(Message m, Cpu_number from_cpu)
+Ipi::bcast(Message m, Cpu_number /* from_cpu */)
 {
-  (void)from_cpu;
   Apic::mp_send_ipi(Apic::APIC_IPI_OTHERS, static_cast<Unsigned8>(m));
 }
 

@@ -449,9 +449,8 @@ Io_apic_remapped::init_apics()
       srcid |= (Unsigned16{dev_scope->path[0].dev} << 3) & 0xf8;
       srcid |= dev_scope->path[0].func & 0x7;
 
-      Io_apic_remapped *apic;
-      apic = new Boot_object<Io_apic_remapped>(ioapic->adr, ioapic->irq_base, mmu, srcid);
-      (void)apic;
+      Io_apic_remapped *apic =
+        new Boot_object<Io_apic_remapped>(ioapic->adr, ioapic->irq_base, mmu, srcid);
 
       if (Print_infos)
         apic->dump();

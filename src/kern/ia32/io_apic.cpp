@@ -131,17 +131,15 @@ Io_apic_mgr::legacy_override(Mword i) override
 { return Io_apic::legacy_override(i); }
 
 PUBLIC void
-Io_apic_mgr::pm_on_suspend(Cpu_number cpu) override
+Io_apic_mgr::pm_on_suspend([[maybe_unused]] Cpu_number cpu) override
 {
-  (void)cpu;
   assert (cpu == Cpu_number::boot_cpu());
   Io_apic::save_state();
 }
 
 PUBLIC void
-Io_apic_mgr::pm_on_resume(Cpu_number cpu) override
+Io_apic_mgr::pm_on_resume([[maybe_unused]] Cpu_number cpu) override
 {
-  (void)cpu;
   assert (cpu == Cpu_number::boot_cpu());
   Pic::disable_all_save();
   Io_apic::restore_state(true);
@@ -333,7 +331,6 @@ Io_apic::init_scan_apics()
        ++n_apics)
     {
       Io_apic *apic = new Boot_object<Io_apic>(ioapic->adr, ioapic->irq_base);
-      (void)apic;
 
       if (Print_info)
         {
@@ -474,7 +471,7 @@ PUBLIC inline
 void
 Io_apic::sync()
 {
-  (void)_apic->data;
+  _apic->data; // read volatile data
 }
 
 PUBLIC inline NEEDS["assert.h", "lock_guard.h"]
