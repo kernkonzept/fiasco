@@ -792,7 +792,7 @@ Thread::do_migration_not_current(Migration *m)
   Cpu_number target_cpu = access_once(&m->cpu);
   bool resched = migrate_away(m, false);
   resched |= migrate_to(target_cpu);
-  return resched; // we already are chosen by the scheduler...
+  return resched;
 }
 
 /**
