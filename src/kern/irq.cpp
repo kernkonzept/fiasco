@@ -30,7 +30,6 @@ public:
 
 protected:
   Ram_quota *_q;
-  Context::Drq _drq;
 };
 
 
@@ -59,6 +58,7 @@ protected:
 
 private:
   Mword _irq_id;
+  Context::Drq _drq;
 };
 
 
