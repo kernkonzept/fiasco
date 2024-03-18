@@ -1,30 +1,29 @@
 # -*- makefile -*-
 
-# generate targets for checksumming and accumulate them as $(CHECKSUM):
+# $(1) = fiasco
+# $(2) = fiasco.debug
+# $(3) = symbol of section begin
+# $(4) = symbol of section end
+define get_checksum
+$(OBJDUMP) \
+  --start-address=0x`$(NM) $(2) | $(GREP) -w $(3) | cut -f1 -d' '` \
+  --stop-address=0x`$(NM) $(2) | $(GREP) -w $(4) | cut -f1 -d' '` \
+  -s $(1) | cut -f3,4,5,6 -d' ' | ./genchecksum
+endef
+
+# Generate targets for checksumming and accumulate them as $(CHECKSUM):
 # prerequisites.
-# $(1) = fiasco - variable
-# $(2) = fiasco.debug - variable
-# $(3) = target suffix, e.g. unit test name
+#  $(1) = fiasco - variable
+#  $(2) = fiasco.debug - variable
+#  $(3) = target suffix, e.g. unit test name
 define all_checksum_rules =
-checksum.ro$(3): genchecksum $(2) $(1)
-	$$(CHKSUM_MESSAGE)"$(1) text section"
-	$$(VERBOSE)$$(OBJDUMP) \
-	  --start-address=0x`$$(NM) $(2) | $$(GREP) -w _start | cut -f1 -d' '` \
-	  --stop-address=0x`$$(NM) $(2) | $$(GREP) -w _etext | cut -f1 -d' '` \
-	  -s $(1) | cut -f3,4,5,6 -d' ' | ./genchecksum > $$@
 
-checksum.rw$(3): genchecksum $(2) $(1)
-	$$(CHKSUM_MESSAGE)"$(1) data section"
-	$$(VERBOSE)$$(OBJDUMP) \
-	  --start-address=0x`$$(NM) $(2) | $$(GREP) -w _kernel_data_start | cut -f1 -d' '` \
-	  --stop-address=0x`$$(NM) $(2) | $$(GREP) -w _edata | cut -f1 -d' '` \
-	  -s $(1) | cut -f3,4,5,6 -d' ' | ./genchecksum > $$@
-
-do_chksum$(3): checksum.ro$(3) checksum.rw$(3) setchecksum $(1)
+do_chksum$(3): setchecksum genchecksum $(1)
 	$$(PATCH_MESSAGE)"$(1)"
-	$$(VERBOSE)./setchecksum $(1) \
-	  "0x$$(shell cat checksum.ro$(3))" \
-	  "0x$$(shell cat checksum.rw$(3))" && echo done >$$@
+	$$(VERBOSE)\
+	  cscode=$$$$($$(call get_checksum,$(1),$(2),_start,_etext)); \
+	  csdata=$$$$($$(call get_checksum,$(1),$(2),_kernel_data_start,_edata)); \
+	  ./setchecksum $(1) 0x$$$$cscode 0x$$$$csdata && echo done > $$@
 	$$(call INSTALLFILE_RULE,fiasco,fiasco)
 
 $$(CHECKSUM): do_chksum$(3)
@@ -37,16 +36,11 @@ $(eval $(call all_checksum_rules,$(BOOT),$(KERNEL)))
 
 setchecksum: setchecksum.c
 	$(COMP_MESSAGE)
-	$(VERBOSE)$(HOST_CC) -O2 -Wall $(HOST_CPPFLAGS) $(HOST_CFLAGS) -o $@ $^
+	$(VERBOSE)$(HOST_CC) $(HOST_CPPFLAGS) $(HOST_CFLAGS) -o $@ $^
 
-genchecksum: $(OBJ_CHECKSUM)
-	$(LINK_MESSAGE)
-	$(VERBOSE)$(HOST_CXX) -fno-rtti -fno-exceptions $(HOST_CPPFLAGS) $(HOST_CXXFLAGS) -o $@ $^ 
-
-$(OBJ_CHECKSUM): %.o: %.cc
+genchecksum: genchecksum.cc
 	$(COMP_MESSAGE)
-	$(VERBOSE)$(HOST_CXX) -fno-rtti -fno-exceptions -c -MD -MP -MF .$*.cc.d.new -O2 $(HOST_CPPFLAGS) $(HOST_CXXFLAGS) $< -o $@
-	@mv .$*.cc.d.new .$*.cc.d
+	$(VERBOSE)$(HOST_CXX) -fno-rtti -fno-exceptions $(HOST_CPPFLAGS) $(HOST_CXXFLAGS) -o $@ $^
 
 clean-CHECKSUM:
 	$(RM) genchecksum setchecksum do_chksum* checksum.ro* checksum.rw*

@@ -277,7 +277,6 @@ SYMBOLS			:= Symbols
 # CHECKSUM subsystem
 #
 CHECKSUM		:= checksum_subsys
-CXXSRC_CHECKSUM		:= genchecksum.cc
 
 #
 # VERSION subsystem

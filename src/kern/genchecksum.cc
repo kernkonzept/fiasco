@@ -146,11 +146,8 @@ read_dword(int fd, unsigned *dword)
 }
 
 int
-main(int argc, char **argv)
+main(int, char **)
 {
-  static char buf[20];
-  int ret;
-  int fd;
   unsigned dword;
   unsigned checksum;
 
