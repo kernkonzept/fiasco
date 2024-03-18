@@ -366,6 +366,15 @@ Irq_sender::modify_label(Mword const *todo, int cnt) override
     }
 }
 
+PRIVATE bool
+Irq_sender::send_local(Thread *t, bool is_xcpu)
+{
+  // Pairs with write barrier in set_irq_thread(). Prevents to read the _irq_id
+  // before _irq_thread.
+  Mem::mp_rmb();
+
+  return send_msg(t, is_xcpu);
+}
 
 PRIVATE static
 Context::Drq::Result
@@ -375,13 +384,9 @@ Irq_sender::handle_remote_hit(Context::Drq *, Context *target, void *arg)
   irq->set_cpu(current_cpu());
   auto t = access_once(&irq->_irq_thread);
 
-  // Pairs with write barrier in replace_irq_thread(). Prevents to read the
-  // _irq_id before _irq_thread.
-  Mem::mp_rmb();
-
   if (EXPECT_TRUE(t == target))
     {
-      if (EXPECT_TRUE(irq->send_msg(t, true)))
+      if (EXPECT_TRUE(irq->send_local(t, true)))
         return Context::Drq::no_answer_resched();
     }
   else if (EXPECT_TRUE(is_valid_thread(t)))
@@ -409,12 +414,7 @@ Irq_sender::send(Thread *t)
   if (EXPECT_FALSE(t->home_cpu() != current_cpu()))
     t->drq(&_drq, handle_remote_hit, this, Context::Drq::No_wait);
   else
-    {
-      // Pairs with write barrier in replace_irq_thread(). Prevents to read the
-      // _irq_id before _irq_thread.
-      Mem::mp_rmb();
-      send_msg(t, false);
-    }
+    send_local(t, false);
 }
 
 
