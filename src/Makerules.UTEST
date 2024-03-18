@@ -68,7 +68,7 @@ $(foreach tname,$(UTEST_SUPPL),\
 # Generate checksum rules for each unit test binary.
 ifneq ($(filter CHECKSUM,$(SUBSYSTEMS)),)
 $(foreach tname,$(UTEST_TESTS),\
-	$(eval $(call all_checksum_rules,\
+	$(eval $(call all_checksum_rules,$\
 		utest/$(tname),$(tname).debug,-$(tname))))
 endif
 
