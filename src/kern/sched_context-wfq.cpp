@@ -87,7 +87,7 @@ Sched_context::sched_classes()
   return 1UL << (-L4_sched_param_wfq::Class);
 }
 
-PUBLIC static inline ALWAYS_INLINE constexpr
+PUBLIC static constexpr
 unsigned
 Sched_context::max_param_size()
 {

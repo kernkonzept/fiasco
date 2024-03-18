@@ -52,7 +52,7 @@ private:
   static unsigned long _orig_free;
   static Kmem_alloc *_alloc;
 
-  static inline constexpr size_t nr_fixups();
+  static constexpr size_t nr_fixups();
 };
 
 class Kmem_alloc_reaper : public cxx::S_list_item
@@ -128,7 +128,7 @@ Kmem_alloc *Kmem_alloc::_alloc;
  * \return Upper bound of the number of memory descriptor fixups that are
  *         needed for a successful boot.
  */
-IMPLEMENT_DEFAULT static inline ALWAYS_INLINE constexpr
+IMPLEMENT_DEFAULT static constexpr
 size_t
 Kmem_alloc::nr_fixups()
 {

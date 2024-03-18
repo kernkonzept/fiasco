@@ -34,7 +34,7 @@ Address Kmem_alloc::tss_mem_pm;
  * \return Upper bound of the number of memory descriptor fixups that are
  *         needed for a successful boot.
  */
-IMPLEMENT_OVERRIDE static inline ALWAYS_INLINE constexpr
+IMPLEMENT_OVERRIDE static constexpr
 size_t
 Kmem_alloc::nr_fixups()
 {

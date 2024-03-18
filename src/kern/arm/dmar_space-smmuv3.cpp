@@ -45,7 +45,7 @@ INTERFACE [iommu && arm_iommu_stage2 && cpu_virt]:
 EXTENSION class Dmar_space
 {
 public:
-  static inline constexpr unsigned start_level()
+  static constexpr unsigned start_level()
   {
     // For non-ARM_PT48 the first page table is concatenated (10-bits), we skip
     // level zero.
