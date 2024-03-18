@@ -726,6 +726,10 @@ Thread::check_sys_ipc(unsigned flags, Thread **partner, Thread **sender,
   return *have_recv || ((flags & L4_obj_ref::Ipc_send) && *partner);
 }
 
+/**
+ * DRQ helper for migrating the current thread with the help of the kernel idle
+ * thread.
+ */
 PUBLIC static
 Context::Drq::Result
 Thread::handle_migration_helper(Drq *rq, Context *, void *p)
@@ -736,6 +740,15 @@ Thread::handle_migration_helper(Drq *rq, Context *, void *p)
   return Drq::no_answer_resched();
 }
 
+/**
+ * Determine if changing the home CPU is required: If not, directly set the new
+ * scheduling parameters, otherwise return the migration information to the
+ * caller.
+ *
+ * \retval done_need_resched  No change of home CPU, need to reschedule.
+ * \retval done_no_resched  No change of home CPU, no need to reschedule.
+ * \retval migrate  Scheduling parameters with change of home CPU.
+ */
 PRIVATE inline
 Thread::Migration_state
 Thread::start_migration()
@@ -750,13 +763,17 @@ Thread::start_migration()
     {
       set_sched_params(m->sp);
       Mem::mp_mb();
-      write_now(&m->in_progress, true);
+      write_now(&m->caller_may_return, true);
       return Migration_state::done_need_resched();
     }
 
   return Migration_state::migrate(m); // need to do real migration
 }
 
+/**
+ * Migrate this thread, the current executing thread.
+ * We need help of the kernel idle thread.
+ */
 PRIVATE inline
 bool
 Thread::do_migration_current(Migration *m)
@@ -765,16 +782,26 @@ Thread::do_migration_current(Migration *m)
   return kernel_context_drq(handle_migration_helper, m);
 }
 
+/**
+ * Migrate this thread which is currently not executing.
+ */
 PRIVATE inline
 bool
 Thread::do_migration_not_current(Migration *m)
 {
   Cpu_number target_cpu = access_once(&m->cpu);
   bool resched = migrate_away(m, false);
-  resched |= migrate_to(target_cpu, false);
+  resched |= migrate_to(target_cpu);
   return resched; // we already are chosen by the scheduler...
 }
 
+/**
+ * Set the scheduling parameters and optionally change the home CPU for this
+ * thread running on the same CPU as current_cpu().
+ *
+ * \retval false No rescheduling required.
+ * \retval true Rescheduling required.
+ */
 PRIVATE
 bool
 Thread::do_migration()
@@ -791,6 +818,17 @@ Thread::do_migration()
     return do_migration_not_current(inf.migration());
 }
 
+/**
+ * Migrate this thread.
+ *
+ * Called from Context::Pending_rqq::handle_requests() if this thread is not
+ * the current executing thread on the remote CPU.
+ *
+ * \pre this != current()
+ *
+ * \retval false  No rescheduling required.
+ * \retval true  Rescheduling required.
+ */
 PUBLIC
 bool
 Thread::initiate_migration() override
@@ -806,6 +844,10 @@ Thread::initiate_migration() override
   return do_migration_not_current(inf.migration());
 }
 
+/**
+ * Re-engage a possibly pending IPC receive timeout after the migration has
+ * finished.
+ */
 PUBLIC
 void
 Thread::finish_migration() override
@@ -1012,7 +1054,7 @@ Thread::migrate_away(Migration *inf, bool remote)
   bool resched = false;
 
   Cpu_number cpu = inf->cpu;
-  //  LOG_MSG_3VAL(this, "MGi ", reinterpret_cast<Mword>(current()), (current_cpu() << 16) | cpu(), Context::current_sched());
+
   if (_timeout)
     _timeout->reset();
 
@@ -1044,13 +1086,13 @@ Thread::migrate_away(Migration *inf, bool remote)
 
   state_add_dirty(Thread_finish_migration);
   set_home_cpu(cpu);
-  write_now(&inf->in_progress, true);
+  write_now(&inf->caller_may_return, true);
   return resched;
 }
 
 PRIVATE inline
 bool
-Thread::migrate_to(Cpu_number target_cpu, bool)
+Thread::migrate_to(Cpu_number target_cpu)
 {
   if (!Cpu::online(target_cpu))
     {
@@ -1120,6 +1162,15 @@ IMPLEMENTATION [mp]:
 
 #include "ipi.h"
 
+/**
+ * Thread object interface for setting thread scheduler parameters, optionally
+ * with changing the home CPU.
+ *
+ * \pre CPU lock taken.
+ *
+ * \param info  Migration information containing the new scheduler parameters
+ *              and the target CPU.
+ */
 PUBLIC
 void
 Thread::migrate(Migration *info)
@@ -1139,7 +1190,7 @@ Thread::migrate(Migration *info)
       while (!cas(&_migration, old, info));
       // flag old migration to be done / stale
       if (old)
-        write_now(&old->in_progress, true);
+        write_now(&old->caller_may_return, true);
     }
 
   Cpu_number cpu = home_cpu();
@@ -1151,7 +1202,7 @@ Thread::migrate(Migration *info)
 
   cpu_lock.clear();
   // FIXME: use monitor & mwait or wfe & sev if available
-  while (!access_once(&info->in_progress))
+  while (!access_once(&info->caller_may_return))
     Proc::pause();
   cpu_lock.lock();
 }
@@ -1219,6 +1270,23 @@ Thread::handle_global_remote_requests_irq()
   Cpu_call::handle_global_requests();
 }
 
+/**
+ * First step of changing the home CPU and setting the scheduling parameters
+ * for this thread.
+ *
+ * Dequeue this context from the old CPU's ready queue, possibly dequeue the
+ * pending RQ of this context from the old CPU's RQQ, set the scheduling
+ * parameters, and set the home CPU.
+ *
+ * \pre This thread must not be the currently executing thread.
+ * \pre CPU lock taken.
+ *
+ * \param remote  False if target CPU is the current CPU.
+ *                True if target CPU is the *invalid* CPU or an offline CPU.
+ *
+ * \retval false  No rescheduling required.
+ * \retval true  Rescheduling required.
+ */
 PRIVATE inline
 bool
 Thread::migrate_away(Migration *inf, bool remote)
@@ -1233,7 +1301,6 @@ Thread::migrate_away(Migration *inf, bool remote)
       _timeout->reset();
     }
 
-  //printf("[%u] %lx: m %lx %u -> %u\n", current_cpu(), current_thread()->dbg_id(), this->dbg_id(), cpu(), inf->cpu);
     {
       Sched_context::Ready_queue &rq = EXPECT_TRUE(!remote)
                                      ? Sched_context::rq.current()
@@ -1284,15 +1351,25 @@ Thread::migrate_away(Migration *inf, bool remote)
       state_add_dirty(Thread_finish_migration);
       set_home_cpu(target_cpu);
       Mem::mp_mb();
-      write_now(&inf->in_progress, true);
+      write_now(&inf->caller_may_return, true);
     }
 
   return resched;
 }
 
+/**
+ * Second step of changing the home CPU of this thread.
+ *
+ * If not already done, enqueue the RQ of this context to the RQQ of the target
+ * CPU and, if necessary, signal the remote CPU about new entries in its RQQ.
+ * Handled on the remote CPU in Thread::Pending_rqq::handle_requests().
+ *
+ * \retval false  No rescheduling required.
+ * \retval true  Rescheduling required.
+ */
 PRIVATE inline
 bool
-Thread::migrate_to(Cpu_number target_cpu, bool /*remote*/)
+Thread::migrate_to(Cpu_number target_cpu)
 {
   bool ipi = false;
     {
@@ -1337,6 +1414,18 @@ Thread::migrate_to(Cpu_number target_cpu, bool /*remote*/)
   return false;
 }
 
+/**
+ * Set the scheduling parameters and optionally change the home CPU of this
+ * thread currently running on a different CPU than current_cpu().
+ *
+ * If not migrating to an offline CPU, enqueue an RQ for the CPU this thread is
+ * currently running on. The handler Context::Pending_rqq::handle_requests()
+ * will initiate the migration on this thread's current home CPU.
+ *
+ * \param cpu  Old (current) home CPU of this thread.
+ * \retval false  No rescheduling required.
+ * \retval true  Rescheduling required.
+ */
 PRIVATE inline
 bool
 Thread::migrate_xcpu(Cpu_number cpu)
@@ -1361,11 +1450,10 @@ Thread::migrate_xcpu(Cpu_number cpu)
 
           Migration *m = inf.migration();
           Cpu_number target_cpu = access_once(&m->cpu);
+          // Dequeue from ready queue with spin lock held!
           migrate_away(m, true);
           g.reset();
-          return migrate_to(target_cpu, true);
-          // FIXME: Wie lange dauert es ready dequeue mit WFQ zu machen?
-          // wird unter spinlock gemacht !!!!
+          return migrate_to(target_cpu);
         }
 
       if (!_pending_rq.queued())

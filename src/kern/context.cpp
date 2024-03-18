@@ -202,13 +202,21 @@ public:
     bool execute_request(Drq *r, bool local);
   };
 
+  /**
+   * Information for setting scheduler parameters including the thread's home
+   * CPU.
+   */
   struct Migration
   {
     Cpu_number cpu;
     L4_sched_param const *sp;
-    bool in_progress;
+    /**
+     * The caller does not return until this variable is set to `true`
+     * preventing this data structure from going out of scope.
+     */
+    bool caller_may_return;
 
-    Migration() : sp(nullptr), in_progress(false) {}
+    Migration() : sp(nullptr), caller_may_return(false) {}
   };
 
   template<typename T>
@@ -1805,6 +1813,12 @@ private:
 
 protected:
 
+  /**
+   * Request queue for per-CPU pending requests.
+   *
+   * Used for cross-CPU migration, cross-CPU state change (xcpu_state_change()),
+   * and cross-CPU DRQ execution (Context::enqueue_drq()).
+   */
   class Pending_rqq : public Queue
   {
   public:
@@ -1814,7 +1828,6 @@ protected:
   class Pending_rq : public Queue_item, public Context_member
   {} _pending_rq;
 
-protected:
   static Per_cpu<Pending_rqq> _pending_rqq;
 };
 
