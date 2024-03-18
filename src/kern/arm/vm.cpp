@@ -315,7 +315,9 @@ PUBLIC
 void
 Vm::show_short(String_buffer *buf)
 {
-  buf->printf(" utcb:%lx pc:%lx ", (Mword)state_for_dbg, (Mword)jdb_get(&state_for_dbg->pc));
+  buf->printf(" utcb:%lx pc:%lx ",
+              reinterpret_cast<Mword>(state_for_dbg),
+              reinterpret_cast<Mword>(jdb_get(&state_for_dbg->pc)));
 }
 
 IMPLEMENT

@@ -82,34 +82,33 @@ void Mmu<Flush_area, Ram>::flush_cache(void const * /*start*/,
 
 IMPLEMENT
 template< unsigned long Flush_area , bool Ram >
-FIASCO_NOINLINE void Mmu<Flush_area, Ram>::clean_dcache(void const *start, void const *end)
+FIASCO_NOINLINE void Mmu<Flush_area, Ram>::clean_dcache(void const * /*start*/,
+                                                        void const * /*end*/)
 {
-  (void)start; (void)end;
   clean_dcache();
 }
 
 IMPLEMENT
 template< unsigned long Flush_area , bool Ram >
-void Mmu<Flush_area, Ram>::clean_dcache(void const *va)
+void Mmu<Flush_area, Ram>::clean_dcache(void const * /*va*/)
 {
-  (void)va;
   clean_dcache();
 }
 
 IMPLEMENT
 template< unsigned long Flush_area, bool Ram >
-FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_dcache(void const *start, void const *end)
+FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_dcache(void const * /*start*/,
+                                                        void const * /*end*/)
 {
-  (void)start; (void)end;
   flush_dcache();
 }
 
 
 IMPLEMENT
 template< unsigned long Flush_area, bool Ram >
-FIASCO_NOINLINE void Mmu<Flush_area, Ram>::inv_dcache(void const *start, void const *end)
+FIASCO_NOINLINE void Mmu<Flush_area, Ram>::inv_dcache(void const * /*start*/,
+                                                      void const * /*end*/)
 {
-  (void)start; (void)end;
   // clean && invalidate dcache  ||| XXX: all
 #if 1
   for (unsigned long index = 0; index < (1 << (32 - 26)); ++index)

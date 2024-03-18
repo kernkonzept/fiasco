@@ -570,7 +570,7 @@ Cpu::init_tz()
     panic("Non-maskable FIQs (NMFI) detected, cannot use TZ mode");
 
   // set monitor vector base address
-  assert(!((Mword)&monitor_vector_base & 31));
+  assert(!(reinterpret_cast<Mword>(&monitor_vector_base) & 31));
   asm volatile ("mcr p15, 0, %0, c12, c0, 1" : : "r" (&monitor_vector_base));
 
   Mword dummy;
@@ -622,8 +622,8 @@ Cpu::tz_switch_to_ns(Mword *nonsecure_state)
 {
   extern char go_nonsecure[];
 
-  register Mword r0 asm("r0") = (Mword)nonsecure_state;
-  register Mword r1 asm("r1") = (Mword)go_nonsecure;
+  register Mword r0 asm("r0") = reinterpret_cast<Mword>(nonsecure_state);
+  register Mword r1 asm("r1") = reinterpret_cast<Mword>(go_nonsecure);
 
   asm volatile("push   {r11}      \n"
                "stmdb sp!, {r0}   \n"
