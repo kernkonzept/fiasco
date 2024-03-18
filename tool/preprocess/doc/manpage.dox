@@ -401,6 +401,12 @@ int
 foo ()
 { }
 </code></pre></blockquote>
+
+  <dt><code>constexpr</code>
+  <dd>specifies constexpr functions. Annotating a function with constexpr
+       implies <code>inline</code>, i.e. it is treated by preprocess as an
+       inline function. With the only difference that a constexpr function is
+       always inlined even if the <code>-i</code> option is not used.
 </dl>
 
 \subsection ADVANCED Language directives for advanced use

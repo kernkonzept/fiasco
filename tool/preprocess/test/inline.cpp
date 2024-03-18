@@ -8,6 +8,12 @@ class Bar
 {
 };
 
+class Cexpr
+{
+  constexpr test1();
+};
+
+
 IMPLEMENTATION:
 
 // Test dependency-chain resolver
@@ -31,6 +37,12 @@ Foo::private_func()
 inline 
 bool 
 Bar::private_func()
+{
+}
+
+constexpr
+bool
+Frob::private_cexpr()
 {
 }
 
@@ -62,10 +74,36 @@ Foo::baz()
 {
 }
 
+PUBLIC constexpr NEEDS[Foo::private_func]
+void
+Foo::cexpr1()
+{
+
+}
+
+PUBLIC constexpr NOEXPORT
+void
+Foo::cexpr2()
+{
+}
+
+IMPLEMENT constexpr
+void
+Cexpr::test1()
+{
+}
+
+IMPLEMENT inline constexpr
+void
+Cexpr::test2()
+{
+}
+
 extern "C" 
 void function (Foo* f)
 {
   f->bar();
+  f->cexpr2();
 }
 
 template <typename T> inline void* xcast(T* t)

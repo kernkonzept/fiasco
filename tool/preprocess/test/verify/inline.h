@@ -13,21 +13,29 @@ class Foo
 {
 
 public:  
-#line 49 "inline.cpp"
+#line 61 "inline.cpp"
   // This inline funtion is public only because it is needed by an
   // extern-"C" function.  So we do not want to export it.
   
   inline void 
   bar();
   
-#line 58 "inline.cpp"
+#line 70 "inline.cpp"
   // Try both NOEXPORT and NEEDED.
   
   inline void 
   baz();
+  
+#line 78 "inline.cpp"
+  constexpr void
+  cexpr1();
+  
+#line 85 "inline.cpp"
+  constexpr void
+  cexpr2();
 
 private:  
-#line 26 "inline.cpp"
+#line 32 "inline.cpp"
   inline bool 
   private_func();
 };
@@ -37,32 +45,38 @@ class Bar
 {
 
 public:  
-#line 44 "inline.cpp"
+#line 56 "inline.cpp"
   inline void
   public_func();
 
 private:  
-#line 32 "inline.cpp"
+#line 38 "inline.cpp"
   inline bool 
   private_func();
   
-#line 38 "inline.cpp"
+#line 50 "inline.cpp"
   inline void 
   another_private_func();
 };
+#line 10 "inline.cpp"
 
-#line 65 "inline.cpp"
+class Cexpr
+{
+  constexpr test1();
+};
+
+#line 102 "inline.cpp"
 extern "C" 
 void function (Foo* f);
 
-#line 71 "inline.cpp"
+#line 109 "inline.cpp"
 template <typename T> inline void* xcast(T* t);
 
 //
 // IMPLEMENTATION of inline functions (and needed classes)
 //
 
-#line 12 "inline.cpp"
+#line 18 "inline.cpp"
 
 // Test dependency-chain resolver
 
@@ -70,12 +84,16 @@ class Frob
 {
 
 private:  
-#line 20 "inline.cpp"
+#line 26 "inline.cpp"
   inline bool
   private_func();
+  
+#line 44 "inline.cpp"
+  constexpr bool
+  private_cexpr();
 };
 
-#line 24 "inline.cpp"
+#line 30 "inline.cpp"
 
 
 inline bool 
@@ -83,7 +101,16 @@ Foo::private_func()
 {
 }
 
-#line 30 "inline.cpp"
+#line 76 "inline.cpp"
+
+
+constexpr void
+Foo::cexpr1()
+{
+
+}
+
+#line 36 "inline.cpp"
 
 
 inline bool 
@@ -91,7 +118,7 @@ Bar::private_func()
 {
 }
 
-#line 36 "inline.cpp"
+#line 48 "inline.cpp"
 
 
 inline void 
@@ -99,7 +126,7 @@ Bar::another_private_func()
 {
 }
 
-#line 18 "inline.cpp"
+#line 24 "inline.cpp"
 
 
 inline bool
@@ -107,7 +134,7 @@ Frob::private_func()
 {
 }
 
-#line 42 "inline.cpp"
+#line 54 "inline.cpp"
 
 
 inline void
@@ -115,7 +142,23 @@ Bar::public_func()
 {
 }
 
-#line 70 "inline.cpp"
+#line 89 "inline.cpp"
+
+
+constexpr void
+Cexpr::test1()
+{
+}
+
+#line 95 "inline.cpp"
+
+
+constexpr void
+Cexpr::test2()
+{
+}
+
+#line 108 "inline.cpp"
 
  template <typename T> inline void* xcast(T* t)
 {

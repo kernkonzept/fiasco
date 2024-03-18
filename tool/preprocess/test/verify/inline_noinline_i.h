@@ -2,7 +2,7 @@
 
 #ifndef inline_noinline_i_h
 #define inline_noinline_i_h
-#line 12 "inline.cpp"
+#line 18 "inline.cpp"
 
 // Test dependency-chain resolver
 
@@ -10,9 +10,26 @@ class Frob
 {
 
 private:  
-#line 20 "inline.cpp"
+#line 26 "inline.cpp"
   bool
   private_func();
+  
+#line 44 "inline.cpp"
+  constexpr bool
+  private_cexpr();
 };
+
+//
+// IMPLEMENTATION of inline functions follows
+//
+
+
+#line 42 "inline.cpp"
+
+
+constexpr bool
+Frob::private_cexpr()
+{
+}
 
 #endif // inline_noinline_i_h

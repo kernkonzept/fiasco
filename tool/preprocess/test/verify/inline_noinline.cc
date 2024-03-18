@@ -4,7 +4,15 @@
 #include "inline_noinline_i.h"
 
 
-#line 18 "inline.cpp"
+#line 83 "inline.cpp"
+
+
+constexpr void
+Foo::cexpr2()
+{
+}
+
+#line 24 "inline.cpp"
 
 
 bool
@@ -12,7 +20,7 @@ Frob::private_func()
 {
 }
 
-#line 24 "inline.cpp"
+#line 30 "inline.cpp"
 
 
 bool 
@@ -20,7 +28,7 @@ Foo::private_func()
 {
 }
 
-#line 30 "inline.cpp"
+#line 36 "inline.cpp"
 
 
 bool 
@@ -28,7 +36,7 @@ Bar::private_func()
 {
 }
 
-#line 36 "inline.cpp"
+#line 48 "inline.cpp"
 
 
 void 
@@ -36,7 +44,7 @@ Bar::another_private_func()
 {
 }
 
-#line 42 "inline.cpp"
+#line 54 "inline.cpp"
 
 
 void
@@ -44,7 +52,7 @@ Bar::public_func()
 {
 }
 
-#line 48 "inline.cpp"
+#line 60 "inline.cpp"
 
 // This inline funtion is public only because it is needed by an
 // extern-"C" function.  So we do not want to export it.
@@ -55,7 +63,7 @@ Foo::bar()
 
 }
 
-#line 57 "inline.cpp"
+#line 69 "inline.cpp"
 
 // Try both NOEXPORT and NEEDED.
 
@@ -64,10 +72,11 @@ Foo::baz()
 {
 }
 
-#line 64 "inline.cpp"
+#line 101 "inline.cpp"
 
 extern "C" 
 void function (Foo* f)
 {
   f->bar();
+  f->cexpr2();
 }

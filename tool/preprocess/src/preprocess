@@ -1333,12 +1333,15 @@ sub handle_function
 	  next;
         }
 
-      if (s/^($s)inline([\s\n])/$1$2/si) # "inline" is case-insensitive.
+      if (s/^($s)(inline|constexpr)([\s\n])/$1$3/si) # "inline" is case-insensitive.
         {
+          # constexpr implies inline and must always be inlined.
+          $func->{constexpr} |= $2 eq "constexpr";
 	  $func->{inline} = 1 if $doing_inlines
+                                 || $func->{constexpr}
 	                         || $func->{fully_specialized_template} ne '';
-	  $func->{pretext} =~ s|inline[ \t]*||si;
-	  @{$func->{needs}} = ();
+
+	  $func->{pretext} =~ s|$2[ \t]*||si;
 	  while (1)
 	    {
 	      if (s/^($s)NEEDS\s*\[([^\]]+)\]([\s\n])/$1$3/s)
@@ -1368,6 +1371,14 @@ sub handle_function
 		  $func->{pretext} =~ s|ALWAYS_INLINE[ \t]*||s;
 		  next;
 		}
+              if (s/^($s)(inline|constexpr)([\s\n])/$1$3/si)
+                {
+                  # constexpr implies inline and must always be inlined.
+                  $func->{constexpr} |= $2 eq "constexpr";
+                  $func->{inline} |= $2 eq "constexpr";
+                  $func->{pretext} =~ s|$2[ \t]*||s;
+                  next;
+                }
 	      last;
 	    }
 
@@ -1379,7 +1390,6 @@ sub handle_function
 	    }
           next;
         }
-     
 
       if (s/^($s)static([\s\n])/$1$2/s)
         {
@@ -1656,7 +1666,11 @@ sub func_prototype($)		# Return a function declaration from
   my $func = $_[0];
   my $pretext = $func->{pretext};
 
-  if ($func->{inline}) 
+  if ($func->{constexpr})
+    {
+      $pretext =~ s/^($s)/${1}constexpr /s;
+    }
+  elsif ($func->{inline}) 
     {
       $pretext =~ s/^($s)/${1}inline /s;
     }
@@ -1801,7 +1815,15 @@ sub print_funcdef($)
         {
 	  $pretext =~ s/^($s)/${1}ALWAYS_INLINE /s;
 	}
-      $pretext =~ s/^($s)/${1}inline /s;
+
+      if ($function->{constexpr})
+        {
+          $pretext =~ s/^($s)/${1}constexpr /s;
+        }
+       else
+        {
+          $pretext =~ s/^($s)/${1}inline /s;
+        }
     }
 
   if ($function->{static} && ! $function->is_member)

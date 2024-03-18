@@ -13,21 +13,29 @@ class Foo
 {
 
 public:  
-#line 49 "inline.cpp"
+#line 61 "inline.cpp"
   // This inline funtion is public only because it is needed by an
   // extern-"C" function.  So we do not want to export it.
   
   void 
   bar();
   
-#line 58 "inline.cpp"
+#line 70 "inline.cpp"
   // Try both NOEXPORT and NEEDED.
   
   void 
   baz();
+  
+#line 78 "inline.cpp"
+  constexpr void
+  cexpr1();
+  
+#line 85 "inline.cpp"
+  constexpr void
+  cexpr2();
 
 private:  
-#line 26 "inline.cpp"
+#line 32 "inline.cpp"
   bool 
   private_func();
 };
@@ -37,33 +45,69 @@ class Bar
 {
 
 public:  
-#line 44 "inline.cpp"
+#line 56 "inline.cpp"
   void
   public_func();
 
 private:  
-#line 32 "inline.cpp"
+#line 38 "inline.cpp"
   bool 
   private_func();
   
-#line 38 "inline.cpp"
+#line 50 "inline.cpp"
   void 
   another_private_func();
 };
+#line 10 "inline.cpp"
 
-#line 65 "inline.cpp"
+class Cexpr
+{
+  constexpr test1();
+};
+
+#line 102 "inline.cpp"
 extern "C" 
 void function (Foo* f);
 
-#line 71 "inline.cpp"
+#line 109 "inline.cpp"
 template <typename T> void* xcast(T* t);
+
+//
+// IMPLEMENTATION of inline functions (and needed classes)
+//
+
+
+#line 76 "inline.cpp"
+
+
+constexpr void
+Foo::cexpr1()
+{
+
+}
+
+#line 89 "inline.cpp"
+
+
+constexpr void
+Cexpr::test1()
+{
+}
+
+#line 95 "inline.cpp"
+
+
+constexpr void
+Cexpr::test2()
+{
+}
 
 //
 // IMPLEMENTATION of function templates
 //
 
 
-#line 70 "inline.cpp"
+#line 108 "inline.cpp"
 
  template <typename T> void* xcast(T* t)
 {
