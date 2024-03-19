@@ -628,7 +628,7 @@ Thread::set_sched_params(L4_sched_param const *p)
   if (sc == rq.current_sched())
     rq.set_current_sched(sc);
 
-  if (state() & Thread_ready_mask) // maybe we could ommit enqueueing current
+  if (state() & Thread_ready_mask) // maybe we could omit enqueueing current
     rq.ready_enqueue(sched());
 }
 
