@@ -25,6 +25,9 @@ class Context;
  * The validity checker is used while acquiring the lock to test if the lock
  * itself exists. We assume that a lock may disappear while we are blocked on
  * it.
+ *
+ * \warning Acquiring a Switch_lock is a potential preemption point!
+ *          (see Switch_lock::lock() for details)
  */
 class Switch_lock
 {
@@ -156,6 +159,10 @@ Switch_lock::help(Context *curr, Context *owner, Address owner_id)
  *
  * If the lock is occupied, lend the CPU to current lock owner until we are the
  * lock owner.
+ *
+ * \pre Must be assumed to be a potential preemption point, the caller has to
+ *      ensure that Switch_lock cannot be deleted, for example by holding a
+ *      counted reference to it (or rather the kernel object it belongs to).
  *
  * \retval #Locked      The lock was already locked by the current context.
  * \retval #Not_locked  The current context got the lock (the usual case).

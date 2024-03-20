@@ -149,6 +149,12 @@ public:
 
   using Kobject_dbg::dbg_id;
 
+  /**
+   * \warning Acquiring the existence lock of a kernel object is a potential
+   *          preemption point! You must ensure that the kernel object cannot be
+   *          deleted before the existence lock can be taken, for example by
+   *          holding a counted reference to it.
+   */
   Lock existence_lock;
 
 private:
