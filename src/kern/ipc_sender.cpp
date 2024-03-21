@@ -30,11 +30,13 @@ IMPLEMENTATION:
 
 IMPLEMENT inline Ipc_sender_base::~Ipc_sender_base() {}
 
-PUBLIC
+PUBLIC template< typename Derived >
 virtual void
-Ipc_sender_base::ipc_receiver_aborted() override
+Ipc_sender<Derived>::ipc_receiver_aborted() override
 {
   assert (wait_queue());
+
+  check(derived()->dequeue_sender());
   set_wait_queue(0);
 }
 
