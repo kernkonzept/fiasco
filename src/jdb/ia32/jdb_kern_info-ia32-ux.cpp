@@ -130,11 +130,27 @@ Jdb_kern_info_cpu::show_features()
   };
 
   unsigned position = 5, colon = 0;
-  putstr("CPU features:\n     ");
+  putstr("\nCPU features:\n     ");
   show_f_bits (Cpu::boot_cpu()->features(), simple, 5, position, colon);
   show_f_bits (Cpu::boot_cpu()->ext_features(), extended, 5, position, colon);
   show_f_bits (Cpu::boot_cpu()->ext_8000_0001_ecx(), ext_81_ecx, 5, position, colon);
   show_f_bits (Cpu::boot_cpu()->ext_8000_0001_edx(), ext_81_edx, 5, position, colon);
+
+  puts("\n\nRaw CPUID features:");
+  // below we use arbitrary upper limits for basic/extended leaf
+  Unsigned32 max = min(0x2fU, Cpu::cpuid_eax(0));
+  for (Unsigned32 i = 0; i <= max; ++i)
+    {
+      Unsigned32 eax, ebx, ecx, edx;
+      Cpu::cpuid(i, 0, &eax, &ebx, &ecx, &edx);
+      printf("     %08x: %08x %08x %08x %08x\n", i, eax, ebx, ecx, edx);
+      if (i == max && max < 0x80000000U)
+        {
+          i = 0x80000000 - 1;
+          max = min(0x8000001fU, Cpu::cpuid_eax(i + 1));
+          putchar('\n');
+        }
+    }
 }
 
 PRIVATE inline NEEDS["jdb_screen.h"]
