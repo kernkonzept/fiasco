@@ -240,6 +240,7 @@ Jdb_kern_info_cpu::show() override
           Config::found_vmware ? "vmware" : "native");
   Cpu::boot_cpu()->show_cache_tlb_info("     ");
   show_features();
+  show_feature_ia32_tsc_adjust();
 
   if (Cpu::boot_cpu()->tsc())
     {
@@ -272,6 +273,35 @@ Jdb_kern_info_cpu::show() override
 	    : "no",
 	 time
 	 );
+}
+
+PRIVATE
+void
+Jdb_kern_info_cpu::show_feature_ia32_tsc_adjust()
+{
+  if (Cpu::cpuid_eax(0) >= 7 && (Cpu::cpuid_ebx(7) & 2))
+    {
+      printf("\nIA32_TSC_ADJUST values:\n");
+      for (Cpu_number u = Cpu_number::first(); u < Config::max_num_cpus(); ++u)
+        if (Cpu::online(u))
+          {
+            printf("     CPU[%2u]: ", cxx::int_value<Cpu_number>(u));
+
+            auto get_tsc_adj = [](Cpu_number)
+              {
+                Unsigned64 v = ~0ULL;
+                Jdb::rdmsr(0x3b, &v);
+                printf("%lld\n", v);
+              };
+
+            if (u == Cpu_number::boot_cpu())
+              get_tsc_adj(u);
+            else
+              Jdb::remote_work(u, get_tsc_adj, true);
+
+            Mem::barrier();
+          }
+    }
 }
 
 class Jdb_kern_info_gdt : public Jdb_kern_info_module
