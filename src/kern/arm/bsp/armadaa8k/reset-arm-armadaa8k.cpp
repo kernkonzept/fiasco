@@ -1,5 +1,6 @@
 IMPLEMENTATION [arm && pf_armadaa8k]:
 
+#include "infinite_loop.h"
 #include "platform_control.h"
 
 void __attribute__ ((noreturn))
