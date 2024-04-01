@@ -8,7 +8,7 @@ char *strrchr(register const char *t, int c)
   ch = c;
   if (!*t1)
     return NULL;
-  while (*(t+1) != '\0')
+  while (*(t1+1) != '\0')
     ++t1;
   for (;;)
     {
