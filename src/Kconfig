@@ -765,9 +765,10 @@ config MAINTAINER_MODE
 
 config NO_VERSION
 	bool "Do not provide build version info"
+	depends on EXPERIMENTAL
 	help
-	  Do not provide build version info to avoid the need to relink all kernel
-	  unit tests on each build.
+	  Do not provide build version info to avoid the need to relink all
+	  kernel unit tests on each build.
 
 config LABEL
 	string "Configuration label"
