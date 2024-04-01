@@ -274,7 +274,7 @@ Cpu_call::remote_call(Cpu_number cpu, bool async)
  * \pre CPU lock must not be held on `async=false`.
  */
 PUBLIC static inline NEEDS["processor.h"]
-bool
+void
 Cpu_call::cpu_call_many(Cpu_mask const &cpus,
                         cxx::functor<bool (Cpu_number)> &&func,
                         bool async = false)
@@ -282,7 +282,7 @@ Cpu_call::cpu_call_many(Cpu_mask const &cpus,
   assert (async || !cpu_lock.test());
 
   if (cpus.empty())
-    return true;
+    return;
 
   Cpu_calls<8> cs;
   Cpu_number n;
@@ -309,7 +309,7 @@ Cpu_call::cpu_call_many(Cpu_mask const &cpus,
     }
 
   cs.wait_all(async);
-  return true;
+  return;
 }
 
 PUBLIC
