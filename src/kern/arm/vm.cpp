@@ -138,6 +138,7 @@ IMPLEMENTATION [arm && arm_em_tz]:
 PUBLIC
 int
 Vm::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, [[maybe_unused]] bool user_mode)
+  override
 {
   assert(user_mode);
 
@@ -184,7 +185,7 @@ Vm::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, [[maybe_unused]] bool user_mode
           return -L4_err::EInval;
         }
 
-      Cpu::cpus.current().tz_switch_to_ns((Mword *)state);
+      Cpu::cpus.current().tz_switch_to_ns(reinterpret_cast<Mword *>(state));
 
       assert(cpu_lock.test());
 
@@ -322,9 +323,9 @@ Vm::show_short(String_buffer *buf)
 
 PUBLIC
 bool
-Vm::info_kobject(Address *utcb, Address *pc) override
+Vm::info_kobject(Address *utcb, Address *pc)
 {
-  *utcb = (Address)state_for_dbg;
+  *utcb = reinterpret_cast<Address>(state_for_dbg);
   *pc = jdb_get(&state_for_dbg->pc);
   return true;
 }
