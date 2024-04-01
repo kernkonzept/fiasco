@@ -316,7 +316,8 @@ Thread_object::sys_modify_senders(L4_msg_tag tag, Utcb const *in, Utcb * /*out*/
   if (current_cpu() != home_cpu())
     return commit_result(-L4_err::EInval);
 
-  assert(!sender_list()->cursor());
+  if (sender_list()->cursor())
+    return commit_result(-L4_err::EBusy);
 
   if (0)
     printf("MODIFY ID (%08lx:%08lx->%08lx:%08lx\n",
