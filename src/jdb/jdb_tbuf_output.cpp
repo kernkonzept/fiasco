@@ -192,7 +192,7 @@ Jdb_tbuf_output::print_entry(String_buffer *buf, Tb_entry *tb)
     }
 
   if (Config::Max_num_cpus > 1)
-    buf->printf(Config::Max_num_cpus > 16 ? "%02d " : "%d ", tb->cpu());
+    buf->printf(Config::Max_num_cpus > 9 ? "%2d " : "%d ", tb->cpu());
 
   if (tb->type() >= Tbuf_dynentries)
     formatter_default(buf, tb, tidstr, show_names ? 21 : 4);
