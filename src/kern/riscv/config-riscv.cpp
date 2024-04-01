@@ -27,7 +27,7 @@ INTERFACE [riscv]:
 EXTENSION class Config
 {
 public:
-  enum : Mword
+  enum
   {
     // cannot access user memory directly
     Access_user_mem = No_access_user_mem,
