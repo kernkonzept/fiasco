@@ -250,7 +250,7 @@ Config::kmem_size([[maybe_unused]] unsigned long available_size)
     alloc_size = kmem_max();
   return alloc_size;
 #else
-  return (unsigned long)CONFIG_KMEM_SIZE_KB << 10;
+  return static_cast<unsigned long>(CONFIG_KMEM_SIZE_KB) << 10;
 #endif
 }
 
