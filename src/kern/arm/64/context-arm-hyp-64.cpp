@@ -108,6 +108,15 @@ Context::load_ext_vcpu_state(Mword /*_to_state*/, Vm_state const *v)
   if (_hyp.hcr & (Cpu::Hcr_tge | Cpu::Hcr_dc))
     sctlr &= ~Cpu::Cp15_c1_mmu;
 
+  // Workaround for errata #852523 (Cortex-A57) and #853709 (Cortex-A72):
+  // Do this before writing to SCTLR_EL1.
+  if (EXPECT_TRUE(Cpu::has_aarch32_el1()))
+    {
+      asm volatile ("msr DACR32_EL2, %x0"  : : "r"(v->dacr32));
+      //asm volatile ("msr FPEXC32_EL2, %x0" : : "r"(v->fpexc32));
+      asm volatile ("msr IFSR32_EL2, %x0"  : : "r"(v->ifsr32));
+    }
+
   asm volatile ("msr SCTLR_EL1, %x0" : : "r"(sctlr));
   asm volatile ("msr ESR_EL1, %x0"   : : "r"(v->esr));
 
@@ -118,13 +127,6 @@ Context::load_ext_vcpu_state(Mword /*_to_state*/, Vm_state const *v)
 
   asm volatile ("msr AFSR0_EL1, %x0" : : "r"(v->afsr[0]));
   asm volatile ("msr AFSR1_EL1, %x0" : : "r"(v->afsr[1]));
-
-  if (EXPECT_TRUE(Cpu::has_aarch32_el1()))
-    {
-      asm volatile ("msr DACR32_EL2, %x0"  : : "r"(v->dacr32));
-      //asm volatile ("msr FPEXC32_EL2, %x0" : : "r"(v->fpexc32));
-      asm volatile ("msr IFSR32_EL2, %x0"  : : "r"(v->ifsr32));
-    }
 
   asm volatile ("msr VMPIDR_EL2, %x0" : : "r" (v->vmpidr));
   asm volatile ("msr VPIDR_EL2, %x0"  : : "r" (v->vpidr));
