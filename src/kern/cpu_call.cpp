@@ -172,14 +172,62 @@ Cpu_call_queue::handle_requests()
     }
 }
 
+/**
+ * Execute code on a number of CPUs synchronously.
+ *
+ * \pre CPU lock must not be held (to prevent deadlocks).
+ *
+ * The `func` is executed synchronously on the set of target CPUs, i.e.
+ * cpu_call_many waits until `func` has finished execution on all CPUs.
+ *
+ * \param cpus  The set of CPUs to execute `func` on.
+ * \param func  The code to execute on the target CPUs. The return value
+ *              indicates whether a reschedule is necessary on the target CPU.
+ *
+ * \note The `func` might be executed on several CPUs of the target CPU in
+ *       parallel.
+ *
+ * \note If the CPU set is empty, this function returns immediately.
+ */
+PUBLIC static inline inline NEEDS[Cpu_call::_cpu_call_many]
+void
+Cpu_call::cpu_call_many(Cpu_mask const &cpus,
+                        cxx::functor<bool (Cpu_number)> &&func)
+{ _cpu_call_many(cpus, cxx::move(func), false); }
+
+/**
+ * Execute code on a number of CPUs asynchronously.
+ *
+ * \pre CPU lock must not be held (to prevent deadlocks).
+ *
+ * The `func` is executed asynchronously on the set of target CPUs, i.e.
+ * cpu_call_many_async does not wait until `func` has finished execution on all
+ * CPUs.
+ *
+ * This means it is allowed to pass a `func` that does not return or returns
+ * late. But the `func` must not be a capturing lambda with state associated, it
+ * has to be a regular function or non-capturing lambda.
+ *
+ * \param cpus  The set of CPUs to execute `func` on.
+ * \param func  The code to execute on the target CPUs. The return value
+ *              indicates whether a reschedule is necessary on the target CPU.
+ *
+ * \note If the CPU set is empty, this function returns immediately.
+ */
+PUBLIC static inline NEEDS[Cpu_call::_cpu_call_many]
+void
+Cpu_call::cpu_call_many_async(Cpu_mask const &cpus,
+                              bool (*func)(Cpu_number))
+{ _cpu_call_many(cpus, func, true); }
+
 // ----------------------------------------------------------------------
 IMPLEMENTATION [!mp]:
 
 PUBLIC static inline
 bool
-Cpu_call::cpu_call_many(Cpu_mask const &m,
-                        cxx::functor<bool (Cpu_number)> &&func,
-                        bool = false)
+Cpu_call::_cpu_call_many(Cpu_mask const &m,
+                         cxx::functor<bool (Cpu_number)> &&func,
+                         bool)
 {
   auto guard = lock_guard(cpu_lock);
   if (m.get(current_cpu()))
@@ -260,26 +308,11 @@ Cpu_call::remote_call(Cpu_number cpu, bool async)
   return !is_done(async);
 }
 
-/**
- * Execute code on a number of CPUs.
- *
- * \pre CPU lock must not be held (to prevent deadlocks).
- *
- * \param cpus   The set of CPUs to execute `func` on.
- * \param func   The code to execute on the selected CPUs.
- * \param async  On `false`, `func` is executed synchronous one-by-one on the
- *               set of selected CPUs. On `true`, `func` might be executed on
- *               several CPUs of the CPU set in parallel.
- *
- * \note This function waits until `func` finished execution on all selected
- *       CPUs independent of the `async` parameter.
- * \note If the CPU set is empty, this function returns immediately.
- */
-PUBLIC static inline NEEDS["processor.h"]
+PRIVATE static inline NEEDS["processor.h"]
 void
-Cpu_call::cpu_call_many(Cpu_mask const &cpus,
-                        cxx::functor<bool (Cpu_number)> &&func,
-                        bool async = false)
+Cpu_call::_cpu_call_many(Cpu_mask const &cpus,
+                         cxx::functor<bool (Cpu_number)> &&func,
+                         bool async)
 {
   assert (!cpu_lock.test());
 

@@ -134,7 +134,7 @@ suspend_ap_cpus()
     {
       // If the thread is migrated here, the suspend will not finish.
       auto guard = lock_guard<Lock_guard_inverse_policy>(cpu_lock);
-      Cpu_call::cpu_call_many(_cpus_to_suspend, suspend_ap_cpu, true);
+      Cpu_call::cpu_call_many_async(_cpus_to_suspend, suspend_ap_cpu);
     }
 
   // Wind up pending Rcu and Drq changes together with all _cpus_to_suspend

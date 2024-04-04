@@ -647,7 +647,7 @@ Generic_io_space<SPACE>::io_bitmap_flush_all_cpus()
       cpu.reset_io_bitmap();
       iopb_mark_unused();
       return false;
-    }, false);
+    });
 }
 
 /**
