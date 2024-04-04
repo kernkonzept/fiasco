@@ -17,20 +17,17 @@ class Cpu_call : private Queue_item
 
 private:
   cxx::functor<bool (Cpu_number cpu)> _func;
-  Mword _wait;
+  bool _async;
+  bool _wait;
 
 public:
-  template< typename Functor >
-  Cpu_call(Functor &&f)
-  : _func(f), _wait(false) {}
-
-  Cpu_call(cxx::functor<bool (Cpu_number)> &&f)
-  : _func(f), _wait(false) {}
-
   Cpu_call() : _func(), _wait(false) {}
 
-  void set(cxx::functor<bool (Cpu_number)> &f)
-  { _func = f; }
+  void set(cxx::functor<bool (Cpu_number)> const &f, bool async)
+  {
+    _func = f;
+    _async = async;
+  }
 
   void set_queued()
   { _wait = true; }
@@ -41,32 +38,49 @@ public:
     write_now(&_wait, Mword{false});
   }
 
-  bool run(Cpu_number cpu, bool done = true)
+  bool run_local(Cpu_number cpu)
+  { return _func(cpu); }
+
+  /**
+   * \post Must not access this Cpu_call object afterwards as it might no longer
+   *       exist, e.g. if it was allocated on the stack of the caller.
+   */
+  bool run_remote(Cpu_number cpu)
   {
-    bool res = _func(cpu);
-    if (done)
-      this->done();
-    return res;
+    if (_async)
+      {
+        // Make copy of func, so that we can mark this Cpu_call as done before
+        // executing the function.
+        auto func = _func;  // Relies on the Mem::mp_mb() barrier in done().
+        this->done();  // Must not access `this` afterwards.
+        return func(cpu);
+      }
+    else
+      {
+        bool res = _func(cpu);
+        this->done();
+        return res;
+      }
   }
 
   /**
-   * Test if this Cpu_call has finished execution.
+   * Test if this Cpu_call has finished (sync) or started (async) execution.
    *
-   * \param async  On `false`, synchronous execution was requested. On `true`,
-   *               asynchronous execution was requested.
-   * \retval false Execution did not finish yet, Cpu_call may *not* be re-used.
-   * \retval true  Execution finished, this Cpu_call may be re-used.
+   * \retval false Execution did not start/finish yet, Cpu_call may *not* be re-used.
+   * \retval true  Execution started/finished, this Cpu_call may be re-used.
    */
-  bool is_done(bool async) const
+  bool is_done() const
   {
-    if (!async)
-      return !access_once(&_wait);
+    if (!access_once(&_wait))
+      {
+        Mem::mp_mb();
+        return true;
+      }
 
-    Mem::mp_mb();
-    return !queued();
+    return false;
   }
 
-  bool remote_call(Cpu_number cpu, bool async);
+  bool remote_call(Cpu_number cpu);
 };
 
 template<unsigned MAX>
@@ -86,19 +100,19 @@ public:
     return 0;
   }
 
-  Cpu_call *find_done(bool async)
+  Cpu_call *find_done()
   {
     for (unsigned i = 0; i < _used; ++i)
-      if (_cs[i].is_done(async))
+      if (_cs[i].is_done())
         return &_cs[i];
 
     return 0;
   }
 
-  void wait_all(bool async)
+  void wait_all()
   {
     for (unsigned i = 0; i < _used; ++i)
-      while (!_cs[i].is_done(async))
+      while (!_cs[i].is_done())
         Proc::pause();
   }
 
@@ -137,7 +151,7 @@ IMPLEMENT inline
 bool
 Cpu_call_queue::execute_request(Cpu_call *r)
 {
-  return r->run(current_cpu(), true);
+  return r->run_remote(current_cpu());
 }
 
 IMPLEMENT inline NEEDS["lock_guard.h"]
@@ -255,8 +269,7 @@ DEFINE_PER_CPU Per_cpu<Cpu_call_queue> Cpu_call::_glbl_q;
  * Execute this Cpu_call on another CPU.
  *
  * \param cpu    CPU where to execute this Cpu_call.
- * \param async  On false, synchronous handling is requested. On true,
- *               asynchronous handling is requested.
+ *
  * \retval false Cpu_call handled, no need to wait.
  * \retval true  Cpu_call not yet executed, need to call Cpu_call::is_done()
  *               to detect when this call was finally executed.
@@ -269,20 +282,19 @@ DEFINE_PER_CPU Per_cpu<Cpu_call_queue> Cpu_call::_glbl_q;
  */
 IMPLEMENT inline NEEDS["cpu.h", "ipi.h"]
 bool
-Cpu_call::remote_call(Cpu_number cpu, bool async)
+Cpu_call::remote_call(Cpu_number cpu)
 {
   auto guard = lock_guard(cpu_lock);
   if (current_cpu() == cpu)
     {
-      assert (is_done(async));
-      run(cpu, false);
+      assert (is_done());
+      run_local(cpu);
       return false;
     }
 
   Cpu_call_queue &q = _glbl_q.cpu(cpu);
 
-  if (!async)
-    set_queued();
+  set_queued();
 
   Mem::mp_mb();
   q.enq(this);
@@ -291,9 +303,9 @@ Cpu_call::remote_call(Cpu_number cpu, bool async)
   if (EXPECT_FALSE(!Cpu::online(cpu)))
     {
       Mem::mp_mb();
-      if (q.dequeue(this) && !async)
+      if (q.dequeue(this))
         done();
-      assert (is_done(async));
+      assert (is_done());
       return false;
     }
 
@@ -303,9 +315,7 @@ Cpu_call::remote_call(Cpu_number cpu, bool async)
       return true;
     }
 
-  // async: may re-use the object as we are already done.
-  // !async: it depends on `_wait` if we are already done or not.
-  return !is_done(async);
+  return !is_done();
 }
 
 PRIVATE static inline NEEDS["processor.h"]
@@ -327,8 +337,8 @@ Cpu_call::_cpu_call_many(Cpu_mask const &cpus,
       if (!cpus.get(n))
         continue;
 
-      c->set(func);
-      if (c->remote_call(n, async))
+      c->set(func, async);
+      if (c->remote_call(n))
         c = cs.next();
     }
 
@@ -337,13 +347,13 @@ Cpu_call::_cpu_call_many(Cpu_mask const &cpus,
       if (!cpus.get(n))
         continue;
 
-      while (!(c = cs.find_done(async)))
+      while (!(c = cs.find_done()))
         Proc::pause();
 
-      c->remote_call(n, async);
+      c->remote_call(n);
     }
 
-  cs.wait_all(async);
+  cs.wait_all();
   return;
 }
 

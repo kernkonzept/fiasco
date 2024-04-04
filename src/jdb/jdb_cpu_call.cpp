@@ -26,8 +26,8 @@ Jdb_cpu_call_module::print_info(Cpu_number cpu)
   if (qi)
     {
       Cpu_call *r = static_cast<Cpu_call*>(qi);
-      printf("CPU%02u wait: %ld, queued: %d\n",
-             cxx::int_value<Cpu_number>(cpu), r->_wait, r->queued());
+      printf("CPU%02u wait: %d, async: %d, queued: %d\n",
+             cxx::int_value<Cpu_number>(cpu), r->_wait, r->_async, r->queued());
     }
 }
 
