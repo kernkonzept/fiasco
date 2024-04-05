@@ -83,6 +83,8 @@ public:
    *
    * Flushes all entries of this memory space from the TLB.
    *
+   * @pre The cpu lock must not be held (because of cross-CPU call).
+   *
    * @note Depenending on the TLB type and usage of this memory space, and if
    *       the platform provides no mechanisms for global TLB invalidation, a
    *       cross-CPU TLB flush can be a very costly operation (might need an
@@ -582,7 +584,7 @@ Mem_space::tlb_flush_all_cpus()
     {
       tlb_flush_current_cpu();
       return false;
-    }, true);
+    });
 }
 
 IMPLEMENT_DEFAULT static inline

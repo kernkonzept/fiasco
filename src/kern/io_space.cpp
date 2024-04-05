@@ -633,6 +633,8 @@ Generic_io_space<SPACE>::update_io_bitmap(Mword *dest_revision,
  * on every affected CPU, similarily to a TLB flush. We assume that disabling
  * an IO port is not a frequent operation. The overhead only affects the CPUs
  * where the IO space is "active".
+ *
+ * \pre The cpu lock must not be held (because of cross-CPU call).
  */
 PRIVATE template<typename SPACE>
 inline
