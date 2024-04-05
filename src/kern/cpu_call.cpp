@@ -262,6 +262,8 @@ Cpu_call::remote_call(Cpu_number cpu, bool async)
 /**
  * Execute code on a number of CPUs.
  *
+ * \pre CPU lock must not be held (to prevent deadlocks).
+ *
  * \param cpus   The set of CPUs to execute `func` on.
  * \param func   The code to execute on the selected CPUs.
  * \param async  On `false`, `func` is executed synchronous one-by-one on the
@@ -271,7 +273,6 @@ Cpu_call::remote_call(Cpu_number cpu, bool async)
  * \note This function waits until `func` finished execution on all selected
  *       CPUs independent of the `async` parameter.
  * \note If the CPU set is empty, this function returns immediately.
- * \pre CPU lock must not be held on `async=false`.
  */
 PUBLIC static inline NEEDS["processor.h"]
 void
@@ -279,7 +280,7 @@ Cpu_call::cpu_call_many(Cpu_mask const &cpus,
                         cxx::functor<bool (Cpu_number)> &&func,
                         bool async = false)
 {
-  assert (async || !cpu_lock.test());
+  assert (!cpu_lock.test());
 
   if (cpus.empty())
     return;
