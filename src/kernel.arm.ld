@@ -51,7 +51,7 @@ PHDRS {
 #if defined NEED_EXCPT
   excpt PT_LOAD;
 #endif
-  initcall PT_LOAD;
+  initcall_data PT_LOAD;
   dyn PT_DYNAMIC;
   l4_kip 0x10;
   l4_koptions 0x11;
@@ -128,6 +128,14 @@ SECTIONS {
     *(.glue_7t) *(.glue_7)
     *(.got .got.*)
     *(.fini)
+
+    /*
+     * As we are using 2M-PTEs, there is no point in using one for normal
+     * kernel text and another one for initcalls. In our case, there is enough
+     * room to put the initcalls under one PTE together with kernel text.
+     */
+    *(.initcall.text*)
+    *(.alt_insn_replacement)
 
     *(.text.jdb)
 
@@ -212,16 +220,15 @@ SECTIONS {
   PROVIDE( _end = . );
 
   . = ALIGN(4K);
-  .initcall : AT (ADDR(.initcall) - phys_offset) {
-    _initcall_start = .;
-    *(.initcall.*)
+  _initcall_start = .;
+  .initcall_data : AT (ADDR(.initcall_data) - phys_offset) {
+    *(.initcall.data*)
     PROVIDE (_alt_insns_begin = .);
     KEEP(*(SORT(.alt_insns)))
     PROVIDE (_alt_insns_end = .);
-    *(.alt_insn_replacement)
     . = ALIGN(4K);
-    _initcall_end = .;
-  } :initcall
+  } :initcall_data
+  _initcall_end = .;
 
   /DISCARD/ :{
     *(.stab .stabstr .stab.excl .stab.exclstr)
