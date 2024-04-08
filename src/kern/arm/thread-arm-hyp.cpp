@@ -61,7 +61,10 @@ Thread::ex_regs_arch(Mword ops)
     }
 
   if (current() == this)
-    Cpu::hcr(_hyp.hcr);
+    {
+      assert(!(state() & Thread_ext_vcpu_enabled)); // see the test above
+      _hyp.load(/*from_privileged*/ false, /*to_privileged*/ !tge);
+    }
 
   return true;
 }
@@ -108,6 +111,12 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
     {
       asm volatile ("mcr p15, 0, %0, c1, c0, 0" : : "r"(v->sctlr));
       asm volatile ("mcr p15, 4, %0, c1, c1, 3" : : "r"(Cpu::Hstr_vm)); // HSTR
+      if (_hyp.hcr & Cpu::Hcr_tge)
+        {
+          // _hyp.hcr actually loaded in Context::arm_ext_vcpu_load_guest_regs()
+          // but load it here as well to keep the code simple.
+          _hyp.load(/*from_privileged*/ false, /*to_privileged*/ true);
+        }
     }
 
   // use the real MPIDR as initial value, we might change this later
@@ -511,7 +520,14 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
 
   if (current() == this)
     {
-      asm volatile ("msr SCTLR_EL1, %x0"   : : "r"(v->sctlr));
-      asm volatile ("msr HSTR_EL2, %x0" : : "r"(Cpu::Hstr_vm)); // HSTR
+      asm volatile ("msr SCTLR_EL1, %x0" : : "r"(v->sctlr));
+      if (_hyp.hcr & Cpu::Hcr_tge)
+        {
+          // Strictly speaking, the following registers would not need to be
+          // loaded but do this here anyway to keep the code simple:
+          // - _hyp.hcr is loaded in Context::arm_ext_vcpu_load_guest_regs()
+          // - _hyp.cpacr is loaded in Context::arm_ext_vcpu_switch_to_guest()
+          _hyp.load(/*from_privileged*/ false, /*to_privileged*/ true);
+        }
     }
 }

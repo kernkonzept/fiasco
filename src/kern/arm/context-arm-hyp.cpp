@@ -38,7 +38,7 @@ Context::arch_vcpu_ext_shutdown()
   state_del_dirty(Thread_ext_vcpu_enabled);
   regs()->psr = Proc::Status_mode_user_el0;
   _hyp.hcr = Cpu::Hcr_non_vm_bits_el0;
-  Cpu::hcr(_hyp.hcr);
+  _hyp.load(/*from_privileged*/ true, /*to_privileged*/ false);
   arm_hyp_load_non_vm_state();
   Gic_h_global::gic->switch_to_non_vcpu(Gic_h::From_vgic_mode::Enabled);
 }
@@ -118,13 +118,21 @@ PUBLIC inline NEEDS[Context::arm_hyp_load_non_vm_state,
 void
 Context::switch_vm_state(Context *t)
 {
-  _hyp.save();
-  store_tpidruro();
-  t->_hyp.load();
-
   Mword _state = state();
   Mword _to_state = t->state();
-  if (!((_state | _to_state) & Thread_ext_vcpu_enabled))
+
+  bool const from_ext_vcpu_enabled = _state & Thread_ext_vcpu_enabled;
+  bool const from_all_priv = !(_hyp.hcr & Cpu::Hcr_tge);
+  bool const to_ext_vcpu_enabled = _to_state & Thread_ext_vcpu_enabled;
+  bool const to_all_priv = !(t->_hyp.hcr & Cpu::Hcr_tge);
+
+  _hyp.save(from_all_priv || from_ext_vcpu_enabled);
+  store_tpidruro();
+
+  t->_hyp.load(from_all_priv || from_ext_vcpu_enabled,
+               to_all_priv || to_ext_vcpu_enabled);
+
+  if (!from_ext_vcpu_enabled && !to_ext_vcpu_enabled)
     {
       Gic_h_global::gic->switch_to_non_vcpu(Gic_h::From_vgic_mode::Disabled);
       return;
@@ -134,7 +142,7 @@ Context::switch_vm_state(Context *t)
 
   Gic_h::From_vgic_mode from_mode = Gic_h::From_vgic_mode::Disabled;
 
-  if (_state & Thread_ext_vcpu_enabled)
+  if (from_ext_vcpu_enabled)
     {
       Vm_state *v = vm_state(vcpu_state().access());
       save_ext_vcpu_state(_state, v);
@@ -143,7 +151,7 @@ Context::switch_vm_state(Context *t)
         from_mode = Gic_h_global::gic->switch_from_vcpu(&v->gic);
     }
 
-  if (_to_state & Thread_ext_vcpu_enabled)
+  if (to_ext_vcpu_enabled)
     {
       Vm_state const *v = vm_state(t->vcpu_state().access());
       t->load_ext_vcpu_state(_to_state, v);

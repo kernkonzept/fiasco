@@ -103,10 +103,14 @@ IMPLEMENTATION:
 
 PUBLIC inline NEEDS["cpu.h"]
 void
-Context_hyp::save()
+Context_hyp::save(bool from_privileged)
 {
-  asm volatile ("mrrc p15, 0, %Q0, %R0, c7" : "=r"(par));
   hcr = Cpu::hcr();
+
+  if (!from_privileged)
+    return;
+
+  asm volatile ("mrrc p15, 0, %Q0, %R0, c7" : "=r"(par));
   // we do not save the CNTVOFF_EL2 because this kept in sync by the
   // VMM->VM switch code
   asm volatile ("mrrc p15, 3, %Q0, %R0, c14" : "=r" (cntv_cval));
@@ -134,10 +138,22 @@ Context_hyp::save()
 
 PUBLIC inline NEEDS["cpu.h"]
 void
-Context_hyp::load()
+Context_hyp::load(bool from_privileged, bool to_privileged)
 {
-  asm volatile ("mcrr p15, 0, %Q0, %R0, c7" : : "r"(par));
   Cpu::hcr(hcr);
+
+  if (!to_privileged)
+    {
+      if (from_privileged)
+        {
+          asm volatile ("mcrr p15, 4, %Q0, %R0, c14" : : "r" (0ULL)); // CNTV_OFF
+          asm volatile ("mcr p15, 0, %0, c14, c1, 0" : : "r" (0x3));  // CNTKCTL
+          asm volatile ("mcr p15, 0, %0, c14, c3, 1" : : "r" (0));    // CNTV_CTL
+        }
+      return;
+    }
+
+  asm volatile ("mcrr p15, 0, %Q0, %R0, c7" : : "r"(par));
   asm volatile ("mcrr p15, 4, %Q0, %R0, c14" : : "r" (cntvoff));
   asm volatile ("mcrr p15, 3, %Q0, %R0, c14" : : "r" (cntv_cval));
   asm volatile ("mcr p15, 0, %0, c14, c1, 0" : : "r" (cntkctl));

@@ -83,10 +83,15 @@ IMPLEMENTATION:
 
 PUBLIC inline
 void
-Context_hyp::save()
+Context_hyp::save(bool from_privileged)
 {
+  asm volatile ("mrs %x0, HCR_EL2"   : "=r"(hcr));
+  asm volatile ("mrs %x0, CPACR_EL1" : "=r"(cpacr));
+
+  if (!from_privileged)
+    return;
+
   asm volatile ("mrs %x0, PAR_EL1" : "=r"(par));
-  asm volatile ("mrs %x0, HCR_EL2" : "=r"(hcr));
 
   // we do not save the CNTVOFF_EL2 because this kept in sync by the
   // VMM->VM switch code
@@ -96,11 +101,9 @@ Context_hyp::save()
   asm volatile ("mrs %x0, TPIDR_EL1"      : "=r"(tpidrprw));
   asm volatile ("mrs %x0, CONTEXTIDR_EL1" : "=r"(contextidr));
 
-
   asm volatile ("mrs %x0, SP_EL1"    : "=r"(sp_el1));
   asm volatile ("mrs %x0, ELR_EL1"   : "=r"(elr_el1));
   asm volatile ("mrs %x0, VBAR_EL1"  : "=r"(vbar));
-  asm volatile ("mrs %x0, CPACR_EL1" : "=r"(cpacr));
 
   asm volatile ("mrs %x0, SPSR_EL1"  : "=r"(spsr_svc));
   asm volatile ("mrs %x0, CSSELR_EL1": "=r"(csselr));
@@ -116,10 +119,24 @@ Context_hyp::save()
 
 PUBLIC inline
 void
-Context_hyp::load()
+Context_hyp::load(bool from_privileged, bool to_privileged)
 {
+  asm volatile ("msr HCR_EL2, %x0" : : "r"(hcr));
+  asm volatile ("msr CPACR_EL1, %x0" : : "r"(cpacr));
+
+  if (!to_privileged)
+    {
+      if (from_privileged)
+        {
+          asm volatile ("msr CNTVOFF_EL2, %x0"    : : "r"(0));
+          asm volatile ("msr CNTKCTL_EL1, %x0"    : : "r"(0x3));
+          asm volatile ("msr CNTV_CTL_EL0, %x0"   : : "r"(0));
+        }
+
+      return;
+    }
+
   asm volatile ("msr PAR_EL1, %x0"        : : "r"(par));
-  asm volatile ("msr HCR_EL2, %x0"        : : "r"(hcr));
 
   asm volatile ("msr CNTVOFF_EL2, %x0"    : : "r"(cntvoff));
   asm volatile ("msr CNTV_CVAL_EL0, %x0"  : : "r"(cntv_cval));
@@ -131,7 +148,6 @@ Context_hyp::load()
   asm volatile ("msr SP_EL1, %x0"         : : "r"(sp_el1));
   asm volatile ("msr ELR_EL1, %x0"        : : "r"(elr_el1));
   asm volatile ("msr VBAR_EL1, %x0"       : : "r"(vbar));
-  asm volatile ("msr CPACR_EL1, %x0"      : : "r"(cpacr));
 
   asm volatile ("msr SPSR_EL1, %x0"       : : "r"(spsr_svc));
   asm volatile ("msr CSSELR_EL1, %x0"     : : "r"(csselr));
