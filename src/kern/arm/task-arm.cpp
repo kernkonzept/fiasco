@@ -29,6 +29,16 @@ Task::map_gicc_page(L4_msg_tag tag, Utcb *utcb)
       || gicc_page.order() < Config::PAGE_SHIFT)
     return commit_result(-L4_err::EInval);
 
+  // Acquire reference to ensure the task is not deleted while we try to acquire
+  // its existence lock.
+  Ref_ptr self(this);
+
+  // Acquire existence lock to prevent concurrent modification of the task's
+  // page table.
+  Lock_guard<Lock> guard_task;
+  if (!guard_task.check_and_lock(&existence_lock))
+    return commit_error(utcb, L4_error::Not_existent);
+
   User_ptr<void> u_addr(static_cast<void *>(gicc_page.mem_address()));
 
   Mem_space *ms = static_cast<Mem_space *>(this);
