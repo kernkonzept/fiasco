@@ -231,6 +231,10 @@ extern "C" void bootstrap_main(unsigned long load_addr)
   if (load_addr)
     {
       Bootstrap::relocate(load_addr);
+
+      // prevent compiler from reordering loads before applying the relocations
+      Mem::barrier();
+
       Bootstrap::load_addr = load_addr;
       bs_info.kernel_start_phys += load_addr;
       bs_info.kernel_end_phys += load_addr;
