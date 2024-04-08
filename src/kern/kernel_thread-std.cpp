@@ -51,8 +51,9 @@ Kernel_thread::init_workload()
   Task *sigma0 = Task::create<Sigma0_task>(Ram_quota::root, L4_msg_tag(), 0, &err);
 
   assert_opt (sigma0);
-  check(sigma0->alloc_ku_mem(L4_fpage::mem(utcb_addr(), Config::PAGE_SHIFT))
-        >= 0);
+  // Task just newly created, no need for locking or remote TLB flush.
+  check(sigma0->alloc_ku_mem(L4_fpage::mem(utcb_addr(), Config::PAGE_SHIFT),
+                             false) >= 0);
   // prevent deletion of this thing
   sigma0->inc_ref();
 
@@ -90,8 +91,9 @@ Kernel_thread::init_workload()
   Task *boot_task = Task::create<Task>(Ram_quota::root, L4_msg_tag(), 0, &err);
 
   assert_opt (boot_task);
-  check(boot_task->alloc_ku_mem(L4_fpage::mem(utcb_addr(), Config::PAGE_SHIFT))
-        >= 0);
+  // Task just newly created, no need for locking or remote TLB flush.
+  check(boot_task->alloc_ku_mem(L4_fpage::mem(utcb_addr(), Config::PAGE_SHIFT),
+                                false) >= 0);
 
   // prevent deletion of this thing
   boot_task->inc_ref();

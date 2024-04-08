@@ -89,7 +89,7 @@ Task::invoke_arch(L4_msg_tag &tag, Utcb *utcb)
 PUBLIC
 Task::~Task()
 {
-  free_ku_mem();
+  free_ku_mem(false, false);
 
   auto guard = lock_guard(cpu_lock);
 
