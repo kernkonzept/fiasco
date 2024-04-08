@@ -103,6 +103,9 @@ bool
 Task::put() override
 { return dec_ref() == 0; }
 
+/**
+ * \see Task::alloc_ku_mem(L4_fpage)
+ */
 PRIVATE
 int
 Task::alloc_ku_mem_chunk(User_ptr<void> u_addr, unsigned size, void **k_addr)
@@ -159,7 +162,14 @@ Task::alloc_ku_mem_chunk(User_ptr<void> u_addr, unsigned size, void **k_addr)
   return 0;
 }
 
-
+/**
+ * Allocate kernel user memory for this task.
+ *
+ * \pre Not thread-safe, the caller must ensure that no one else modifies the
+ *      page table of the Task at the same time, for example by acquiring the
+ *      existence lock or knowing that no one else has a reference to the Task
+ *      object.
+ */
 PUBLIC
 int
 Task::alloc_ku_mem(L4_fpage ku_area)
@@ -196,6 +206,9 @@ Task::alloc_ku_mem(L4_fpage ku_area)
   return 0;
 }
 
+/**
+ * \see Task::free_ku_mem()
+ */
 PRIVATE inline NOEXPORT
 void
 Task::free_ku_mem(Ku_mem *m)
@@ -204,6 +217,9 @@ Task::free_ku_mem(Ku_mem *m)
   m->free(ram_quota());
 }
 
+/**
+ * \see Task::free_ku_mem()
+ */
 PRIVATE
 void
 Task::free_ku_mem_chunk(void *k_addr, User_ptr<void> u_addr, unsigned size,
@@ -223,6 +239,14 @@ Task::free_ku_mem_chunk(void *k_addr, User_ptr<void> u_addr, unsigned size,
   alloc->q_free(ram_quota(), Bytes(size), k_addr);
 }
 
+/**
+ * Free all kernel user memory of this Task.
+ *
+ * \pre Not thread-safe, the caller must ensure that no one else modifies the
+ *      page table of the Task at the same time, for example by acquiring the
+ *      existence lock or knowing that no one else has a reference to the Task
+ *      object.
+ */
 PRIVATE
 void
 Task::free_ku_mem()
@@ -520,6 +544,16 @@ Task::sys_add_ku_mem(Syscall_frame *f, Utcb *utcb)
 {
   if (EXPECT_FALSE(!(caps() & Task::Caps::kumem())))
     return commit_result(-L4_err::ENosys);
+
+  // Acquire reference to ensure the task is not deleted while we try to acquire
+  // its existence lock.
+  Ref_ptr self(this);
+
+  // Acquire existence lock to prevent concurrent modification of the Task's
+  // page table.
+  Lock_guard<Lock> guard_task;
+  if (!guard_task.check_and_lock(&existence_lock))
+    return commit_error(utcb, L4_error::Not_existent);
 
   unsigned const w = f->tag().words();
   for (unsigned i = 1; i < w; ++i)

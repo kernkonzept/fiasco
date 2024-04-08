@@ -107,6 +107,8 @@ public:
    *         Insert_err_exists if the mapping could not be inserted because
    *                           another mapping occupies the virtual-address
    *                           range
+   * @pre Not thread-safe, the caller must ensure that no one else modifies the
+   *      page table at the same time.
    * @pre phys and virt need to be aligned according to the size argument.
    * @pre size must match one of the frame sizes used in the page table.
    *      See fitting_sizes().
@@ -151,6 +153,8 @@ public:
    *         before it was modified. Support for this information is
    *         platform-dependent.
    *
+   * @pre Not thread-safe, the caller must ensure that no one else modifies the
+   *      page table at the same time.
    * @pre `virt` needs to be aligned according to the size argument.
    * @pre `size` must match one of the frame sizes used in the page table.
    *      See fitting_sizes().
@@ -167,6 +171,9 @@ public:
    * @param virt  Virtual address of the affected memory region.
    * @param access_flags  #L4_fpage::Rights::R(): page was referenced.
    *                      #L4_fpage::Rights::W(): page is dirty.
+   *
+   * @pre Not thread-safe, the caller must ensure that no one else modifies the
+   *      page table at the same time.
    *
    * @note Support for setting the page access flags is platform-dependent.
    *       If this feature is not supported, this function does nothing.
