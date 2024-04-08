@@ -17,7 +17,6 @@ private:
   void bootstrap() asm ("call_bootstrap") FIASCO_FASTCALL FIASCO_NORETURN;
   void bootstrap_arch();
   void run() FIASCO_NORETURN;
-  void do_idle() __attribute__((noreturn));
   void check_debug_koptions();
 
 protected:
