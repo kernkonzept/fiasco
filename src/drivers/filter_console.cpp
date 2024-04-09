@@ -80,6 +80,13 @@ Filter_console::getchar_timeout(unsigned timeout)
   return c;
 }
 
+/**
+ * Read from _o console and detect escape sequences.
+ *
+ * For certain escape sequences like key up/down etc, return dedicated values.
+ * Other escape sequences like "\033[y;xR" are buffered and are then returned
+ * one-by-one during future calls of this function.
+ */
 PUBLIC
 int
 Filter_console::getchar(bool blocking = true) override
@@ -96,7 +103,11 @@ Filter_console::getchar(bool blocking = true) override
         {
           ch = ibuf[0];
           memmove(ibuf, ibuf + 1, --pos);
+          // on pos == 0 we return 'ch' using the NORMAL case below
         }
+      else if (state == GOT_CSI)
+        // Be more patient while in the middle of a CSI escape sequence.
+        ch = getchar_timeout(csi_timeout);
       else
         ch = _o->getchar(blocking);
 
