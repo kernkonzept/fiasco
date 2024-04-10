@@ -2,6 +2,7 @@ IMPLEMENTATION [arm]:
 
 #include "config.h"
 #include "cpu.h"
+#include "fb_console.h"
 #include "fpu.h"
 #include "fpu_alloc.h"
 #include "ipi.h"
@@ -49,6 +50,8 @@ Startup::stage2()
   Kip_init::init();
   Kmem_alloc::init();
   Alternative_insn::init();
+
+  Fb_console::init(); // needs Kip_init and Kmem_alloc
 
   // Initialize cpu-local data management and run constructors for CPU 0
   Per_cpu_data::init_ctors();

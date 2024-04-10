@@ -60,6 +60,7 @@ PRIVATE_INCDIR		+= drivers/$(CONFIG_XARCH)/$(BITS) drivers/$(CONFIG_XARCH) drive
 INTERFACES_DRIVERS 	:= sa1100 mux_console console uart filter_console \
 			   h3xxx io mem mmu reset processor delayloop
 INTERFACES_DRIVERS	+= $(if $(CONFIG_UART_CHECKSUM),stream_crc32)
+INTERFACES_DRIVERS      += fb_console
 io_IMPL			:= io io-arm
 mmu_IMPL		:= mmu mmu-arm mmu-arm-$(BITS)
 mem_IMPL		:= mem mem-arm
@@ -122,6 +123,17 @@ endif
 JABI			:= libjabi.a
 VPATH			+= jabi/$(CONFIG_XARCH)/$(BITS) jabi/$(CONFIG_XARCH) jabi
 INTERFACES_JABI		:= jdb_ktrace jdb_obj_info
+
+#
+# FONTS subsystem
+#
+SUBSYSTEMS              += FONTS
+FONTS                   := libfonts.a
+FONT_FILES              := vgafont.psf
+VPATH                   += ../data/fonts
+OBJ_FONTS               := $(addsuffix .bin.o,$(FONT_FILES))
+NOOPT                   += $(patsubst %.o, %, $(OBJ_FONTS))
+KERNEL_EXTRA_LIBS       += $(FONTS)
 
 #
 # KERNEL subsystem
