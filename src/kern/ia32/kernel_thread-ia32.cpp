@@ -9,6 +9,7 @@ IMPLEMENTATION[ia32,amd64]:
 #include "koptions.h"
 #include "mem_layout.h"
 #include "pic.h"
+#include "platform_control.h"
 #include "trap_state.h"
 #include "watchdog.h"
 
@@ -26,6 +27,19 @@ Kernel_thread::free_initcall_section()
     }
 }
 
+PRIVATE static
+void
+Kernel_thread::system_resume_handler()
+{
+  assert(current_cpu() == Cpu_number::boot_cpu());
+
+  Fpu::init(current_cpu(), true);
+
+  Timer::init(current_cpu());
+  Timer_tick::enable(current_cpu());
+  boot_app_cpus();
+}
+
 
 IMPLEMENT FIASCO_INIT
 void
@@ -36,6 +50,9 @@ Kernel_thread::bootstrap_arch()
   //
   nested_trap_handler      = Trap_state::base_handler;
   Trap_state::base_handler = thread_handle_trap;
+
+  Platform_control::set_system_resume_handler(
+    &Kernel_thread::system_resume_handler);
 
   // initialize the profiling timer
   bool user_irq0 = Koptions::o()->opt(Koptions::F_irq0);

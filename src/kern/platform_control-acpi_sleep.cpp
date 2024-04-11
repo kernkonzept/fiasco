@@ -5,14 +5,13 @@ IMPLEMENTATION:
 #include "acpi.h"
 #include "acpi_fadt.h"
 #include "context.h"
-#include "kernel_thread.h"
 #include "kmem.h"
 #include "pm.h"
-#include "timer.h"
-#include "timer_tick.h"
 #include "reset.h"
 
-static bool _system_suspend_enabled;
+static bool _system_suspend_enabled = false;
+static void (*_system_resume_handler)() = nullptr;
+
 // Values cached from ACPI FADT, initialized in Platform_control::init
 static Unsigned32 _pm1a, _pm1b, _pm1a_sts, _pm1b_sts;
 static Unsigned32 _fadt_reset_value, _fadt_reset_regs_addr;
@@ -147,7 +146,13 @@ IMPLEMENTATION:
 
 #include "cpu_call.h"
 #include "io.h"
-#include "fpu.h"
+
+PUBLIC static
+void
+Platform_control::set_system_resume_handler(void (*system_resume_handler)())
+{
+  _system_resume_handler = system_resume_handler;
+}
 
 /**
  * \brief Initiate a full system suspend to RAM.
@@ -184,11 +189,8 @@ do_system_suspend(Context::Drq *, Context *, void *data)
 
   Pm_object::run_on_resume_hooks(current_cpu());
 
-  Fpu::init(current_cpu(), true);
-
-  Timer::init(current_cpu());
-  Timer_tick::enable(current_cpu());
-  Kernel_thread::boot_app_cpus();
+  if (_system_resume_handler)
+    _system_resume_handler();
 
   return Context::Drq::no_answer_resched();
 }
