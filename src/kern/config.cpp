@@ -105,6 +105,11 @@ public:
 #else
     Big_endian = false,
 #endif
+#ifdef CONFIG_MMU
+    Have_mmu = 1,
+#else
+    Have_mmu = 0,
+#endif
   };
 
   static Cpu_number max_num_cpus() { return Cpu_number(Max_num_cpus); }
