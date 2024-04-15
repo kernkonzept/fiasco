@@ -111,25 +111,50 @@ Context::spill_user_state()
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && !cpu_virt && thumb2]:
 
+/*
+ * Unfortunately, the access to the banked user mode stack pointer and link
+ * register must be done in arm mode. Put the assembly into dedicated functions
+ * that are forced to be arm code and that *cannot* be inlined.
+ *
+ * There are thumb mode equivalents available but only starting with armv7ve.
+ */
+
+EXTENSION class Context
+{
+  static void __attribute__((target("arm"),noinline))
+  fill_user_state_arm(Entry_frame const *ef);
+
+  static void __attribute__((target("arm"),noinline))
+  spill_user_state_arm(Entry_frame *ef);
+};
+
+IMPLEMENT
+void
+Context::fill_user_state_arm(Entry_frame const *ef)
+{
+  asm volatile ("ldmia %[rf], {sp, lr}^"
+                : : "m"(ef->usp), "m"(ef->ulr), [rf] "r" (&ef->usp));
+}
+
 IMPLEMENT inline
 void
 Context::fill_user_state()
+{ fill_user_state_arm(regs()); }
+
+IMPLEMENT
+void
+Context::spill_user_state_arm(Entry_frame *ef)
 {
-  Entry_frame const *ef = regs();
-  asm volatile ("msr SP_usr, %0 \n"
-                "msr LR_usr, %1 \n"
-      : : "r"(ef->usp), "r"(ef->ulr));
+  asm volatile ("stmia %[rf], {sp, lr}^"
+                : "=m"(ef->usp), "=m"(ef->ulr) : [rf] "r" (&ef->usp));
 }
 
 IMPLEMENT inline
 void
 Context::spill_user_state()
 {
-  Entry_frame *ef = regs();
   assert (current() == this);
-  asm volatile ("mrs %0 ,SP_usr \n"
-                "mrs %1 ,LR_usr \n"
-      : "=r"(ef->usp), "=r"(ef->ulr));
+  spill_user_state_arm(regs());
 }
 
 //---------------------------------------------------------------------------
