@@ -47,7 +47,8 @@ PHDRS {
   koptions PT_LOAD;
   tramp_data PT_LOAD;
   tramp_text PT_LOAD;
-  kernel PT_LOAD;
+  ktext PT_LOAD;
+  kdata PT_LOAD;
 #if defined NEED_EXCPT
   excpt PT_LOAD;
 #endif
@@ -117,6 +118,15 @@ SECTIONS {
   .mp_tramp_data : AT (ADDR(.mp_tramp_data) - phys_offset) {
     KEEP(*(.mp_tramp_data))
   } :tramp_data
+
+  /*
+   * With the 2M alignment begins the executable part of the kernel address
+   * space.
+   */
+#if defined CONFIG_KERNEL_NX && defined CONFIG_BIT64
+  . = ALIGN(2M);
+#endif
+  _rx_start = .;
   .mp_tramp_text : AT (ADDR(.mp_tramp_text) - phys_offset) {
     KEEP(*(.mp_tramp_text))
   } :tramp_text
@@ -145,19 +155,31 @@ SECTIONS {
     KEEP(*(.rodata.log.*))
 
     . = ALIGN(WORD_SIZE);
-    JDB_TABLE(log);
-    . = ALIGN(WORD_SIZE);
     JDB_TABLE(typeinfo);
 
     . = ALIGN(0x40);
 
     PROVIDE (_etext = .);
-  } :kernel
+  } :ktext
 
-  __llvm_covmap : { KEEP(*(__llvm_covmap)) } :kernel
-  __llvm_covfun : { KEEP(*(__llvm_covfun)) } :kernel
-  __llvm_prf_data : { KEEP(*(__llvm_prf_data)) } :kernel
-  __llvm_prf_names : { KEEP(*(__llvm_prf_names)) } :kernel
+  __llvm_covmap : { KEEP(*(__llvm_covmap)) } :ktext
+  __llvm_covfun : { KEEP(*(__llvm_covfun)) } :ktext
+  __llvm_prf_data : { KEEP(*(__llvm_prf_data)) } :ktext
+  __llvm_prf_names : { KEEP(*(__llvm_prf_names)) } :ktext
+
+  /*
+   * This section serves the purpose of taking up the remainder of the last 2M
+   * up to a new 2M boundary without taking up any space in the file (the linker
+   * script can apparently do this only for writable sections). This way we tell
+   * the kernel this memory (i.e. the executable part of the kernel address
+   * space) is reserved and should not be used for anything.
+   */
+  .fill_kernel : AT (ADDR(.fill_kernel) - phys_offset) {
+#if defined CONFIG_KERNEL_NX && defined CONFIG_BIT64
+    . = ALIGN(2M);
+#endif
+  }
+  _rx_end = .;
 
   .data_kernel : AT (ADDR(.data_kernel) - phys_offset) {
     *(.data .data.* .gnu.linkonce.d.*)
@@ -173,11 +195,14 @@ SECTIONS {
     . = ALIGN(8);
     DEFINE_INIT_ARRAYS
 
-    PROVIDE(_edata  =  .);
-  } :kernel
+    . = ALIGN(WORD_SIZE);
+    JDB_TABLE(log);
 
-  __llvm_prf_bits : { KEEP(*(__llvm_prf_bits)) } :kernel
-  __llvm_prf_cnts : { KEEP(*(__llvm_prf_cnts)) } :kernel
+    PROVIDE(_edata  =  .);
+  } :kdata
+
+  __llvm_prf_bits : { KEEP(*(__llvm_prf_bits)) } :kdata
+  __llvm_prf_cnts : { KEEP(*(__llvm_prf_cnts)) } :kdata
 
   . = ALIGN(8);
   .per_cpu_data : AT (ADDR(.per_cpu_data) - phys_offset) {
@@ -185,7 +210,7 @@ SECTIONS {
     *(.per_cpu.data)
     . = ALIGN(8);
     PROVIDE (_per_cpu_data_end = .);
-  } :kernel
+  } :kdata
 
   /* ARM AEABI */
   . = ALIGN(8);
@@ -204,7 +229,7 @@ SECTIONS {
     *(.bss.jdb)
     PROVIDE(__bss_end = .);
     . = ALIGN(4K);
-  } :kernel
+  } :kdata
   __end_of_the_kernel = .;
 
 #if defined NEED_EXCPT
