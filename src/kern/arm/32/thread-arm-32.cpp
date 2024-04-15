@@ -497,12 +497,8 @@ T Thread::peek_user(T const *adr, Context *c)
   T v;
   c->set_ignore_mem_op_in_progress(true);
   // Must always be a 4 byte instruction because check_and_handle_mem_op_fault()
-  // relies on this. Unfortunaltely the ".w" suffix is not valid in ARM mode.
-  asm volatile("ldr"
-#ifdef __thumb__
-                   ".w"
-#endif
-                      " %0, [%1]" : "=r"(v) : "r"(adr)); // v = *adr;
+  // relies on this.
+  asm volatile(INST32("ldr") " %0, [%1]" : "=r"(v) : "r"(adr)); // v = *adr;
   c->set_ignore_mem_op_in_progress(false);
   return v;
 }
