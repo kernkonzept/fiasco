@@ -106,7 +106,8 @@ Mem_layout::_read_special_safe(Mword const *a)
 {
   // Counterpart: Thread::pagein_tcb_request()
   register Mword const *res __asm__ ("r14") = a;
-  __asm__ __volatile__ ("ldr %0, [%0]\n" : "=r" (res) : "r" (res) : "cc" );
+  __asm__ __volatile__ (INST32("ldr") " %0, [%0]\n"
+                        : "=r" (res) : "r" (res) : "cc" );
   return reinterpret_cast<Mword>(res);
 }
 
@@ -121,10 +122,10 @@ Mem_layout::_read_special_safe(Mword const *address, Mword &v)
   // Counterpart: Thread::pagein_tcb_request()
   register Mword a asm("r14") = reinterpret_cast<Mword>(address);
   Mword ret;
-  asm volatile ("msr cpsr_f, %[zero]  \n" // clear flags
-                "ldr %[a], [%[a]]  \n"
-		"movne %[ret], #1      \n"
-		"moveq %[ret], #0      \n"
+  asm volatile ("msr cpsr_f, %[zero]          \n" // clear flags
+                INST32("ldr") " %[a], [%[a]]  \n"
+                "movne %[ret], #1             \n"
+                "moveq %[ret], #0             \n"
                 : [a] "=r" (a), [ret] "=r" (ret)
                 : "0" (a), [zero] "r" (0)
                 : "cc");

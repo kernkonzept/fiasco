@@ -474,8 +474,14 @@ IMPLEMENT_OVERRIDE inline
 bool
 Thread::pagein_tcb_request(Return_frame *regs)
 {
+#ifdef __thumb__
+  enum : Mword { Ldr_lr_lr_inst = 0xe000f8de }; // ldr.w lr,[lr]
+#else
+  enum : Mword { Ldr_lr_lr_inst = 0xe59ee000 }; // ldr lr,[lr]
+#endif
+
   // Counterpart: Mem_layout::read_special_safe()
-  if (*reinterpret_cast<Mword*>(regs->pc) == 0xe59ee000) // ldr lr,[lr]
+  if (*reinterpret_cast<Mword*>(regs->pc) == Ldr_lr_lr_inst)
     {
       // skip faulting instruction
       regs->pc += 4;
