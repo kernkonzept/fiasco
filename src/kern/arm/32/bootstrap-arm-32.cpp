@@ -182,8 +182,13 @@ Bootstrap::leave_hyp_mode()
                     "   mov %[tmp2], lr  \n"
                     "   msr spsr, %[psr] \n"
                     "   adr r4, 1f       \n"
+#ifdef __thumb__
+                    "   .inst.w 0xf3848e30    @ msr elr_hyp, r4 \n"
+                    "   .inst.w 0xf3de8f00    @ eret \n"
+#else
                     "   .inst 0xe12ef300 | 4   @ msr elr_hyp, r4 \n"
                     "   .inst 0xe160006e       @ eret \n"
+#endif
                     "1: mov sp, %[tmp]   \n"
                     "   mov lr, %[tmp2]  \n"
                     : [tmp]"=&r"(tmp), [tmp2]"=&r"(tmp2)
