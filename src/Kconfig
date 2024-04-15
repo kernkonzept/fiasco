@@ -475,8 +475,9 @@ config INTEL_MDS_MITIGATION
 	  channel attack.
 
 config KERNEL_NX
-	bool "Enable support for kernel RO and non-executable mappings" if AMD64
-	depends on AMD64
+	bool "Enable support for kernel RO and non-executable mappings" \
+		if AMD64 || (ARM && BIT64 && MMU)
+	depends on AMD64 || (ARM && BIT64 && MMU)
 	help
 	  Make kernel mappings either writable or executable, but not
 	  writable and executable at the same time. This makes certain
