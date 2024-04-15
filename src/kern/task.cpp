@@ -445,7 +445,6 @@ Task::sys_map(L4_fpage::Rights rights, Syscall_frame *f, Utcb *utcb)
       // always take lock from task with the lower memory address first
       Lock_guard_2<Lock> guard;
 
-      // FIXME: avoid locking the current task, it is not needed
       if (!guard.check_and_lock(&existence_lock, &from->existence_lock))
         return commit_result(-L4_err::EInval);
 
@@ -481,7 +480,6 @@ Task::sys_unmap(Syscall_frame *f, Utcb *utcb)
       Ref_ptr<Task> self(this);
       Lock_guard<Lock> guard;
 
-      // FIXME: avoid locking the current task, it is not needed
       if (!guard.check_and_lock(&existence_lock))
         return commit_error(utcb, L4_error::Not_existent);
 
