@@ -43,6 +43,7 @@ IMPLEMENTATION:
 #include "timer.h"
 #include "timer_tick.h"
 #include "watchdog.h"
+#include "kmem.h"
 
 
 /**
@@ -93,6 +94,7 @@ Kernel_thread::bootstrap()
 
   Per_cpu_data::run_late_ctors(Cpu_number::boot_cpu());
   Per_cpu_data::run_late_ctors(Cpu::invalid());
+  Kmem::kernel_remap();
   bootstrap_arch();
 
   // Needs to be done before the timer is enabled. Otherwise after returning

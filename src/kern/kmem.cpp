@@ -7,9 +7,17 @@ class Kmem : public Mem_layout
 {
 public:
   static bool is_kmem_page_fault(Mword pfa, Mword error);
+  static void kernel_remap();
 
   static Kpdir *kdir;
 };
+
+IMPLEMENTATION:
+
+IMPLEMENT_DEFAULT
+void
+Kmem::kernel_remap()
+{}
 
 IMPLEMENTATION [mmu && (arm || ia32 || amd64)]:
 
