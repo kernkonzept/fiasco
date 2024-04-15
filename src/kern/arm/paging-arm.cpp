@@ -323,7 +323,7 @@ private:
 
 public:
   Unsigned64 _attribs_mask() const
-  { return ~Unsigned64{0x00400000000008dc}; }
+  { return ~Unsigned64{Page::UXN | Page::PXN | 0x8dc}; }
 
   Unsigned64 _attribs(Page::Attr attr) const
   {
@@ -348,8 +348,17 @@ public:
     if (attr.rights & R::U())
       lower |= 0x040;
 
+    if (Page::Priv_levels == 1)
+      lower |= 0x040; // the bit is RES1
+
+    if (Page::Priv_levels == 2 && !(attr.rights & R::U()))
+      {
+        // Make kernel mappings never executable by userspace
+        lower |= Page::UXN;
+      }
+
     if (!(attr.rights & R::X()))
-      lower |= 0x0040000000000000;
+      lower |= Page::UXN | Page::PXN;
 
     return lower;
   }
@@ -365,10 +374,13 @@ public:
     R rights = R::R();
     if (!(c & 0x80))
       rights |= R::W();
-    if (c & 0x40)
-      rights |= R::U();
+    if (Page::Priv_levels == 2)
+      {
+        if (c & 0x40)
+          rights |= R::U();
+      }
 
-    if (!(c & 0x0040000000000000))
+    if (!(c & Page::PXN))
       rights |= R::X();
 
     T type;
@@ -402,7 +414,7 @@ public:
       n_attr = 0x80;
 
     if (r & L4_fpage::Rights::X())
-      n_attr |= 0x0040000000000000;
+      n_attr |= Page::UXN | Page::PXN;
 
     if (!n_attr)
       return;
@@ -974,6 +986,13 @@ public:
     CACHEABLE     = 0x008, ///< Cache is enabled
     BUFFERED      = 0x004, ///< Write buffer enabled -- Normal, non-cached
   };
+
+  enum
+  {
+    Priv_levels = 2,
+    PXN = 1ULL << 53, ///< Privileged Execute Never
+    UXN = 1ULL << 54, ///< Unprivileged Execute Never
+  };
 };
 
 //-----------------------------------------------------------------------------
@@ -990,6 +1009,13 @@ public:
     NONCACHEABLE  = 0x000, ///< Caching is off
     CACHEABLE     = 0x03c, ///< Cache is enabled
     BUFFERED      = 0x014, ///< Write buffer enabled -- Normal, non-cached
+  };
+
+  enum
+  {
+    Priv_levels = 1,
+    PXN = 1ULL << 54, ///< Execute Never, alias for XN
+    UXN = 1ULL << 54, ///< Execute Never, alias for XN
   };
 };
 
