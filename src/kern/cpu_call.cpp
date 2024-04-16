@@ -181,6 +181,7 @@ Cpu_call::cpu_call_many(Cpu_mask const &m,
                         cxx::functor<bool (Cpu_number)> &&func,
                         bool = false)
 {
+  auto guard = lock_guard(cpu_lock);
   if (m.get(current_cpu()))
     func(current_cpu());
   return true;
