@@ -49,5 +49,12 @@ INTERFACE:
 #define FIASCO_STRINGIFY_(x) #x
 #define FIASCO_STRINGIFY(x)  FIASCO_STRINGIFY_(x)
 
+#if defined(CONFIG_THUMB2) && !defined(CONFIG_NO_FRAME_PTR)
+#define FIASCO_ARM_THUMB2_NO_FRAME_PTR \
+          __attribute__ ((optimize("omit-frame-pointer")))
+#else
+#define FIASCO_ARM_THUMB2_NO_FRAME_PTR
+#endif
+
 IMPLEMENTATION:
 //-
