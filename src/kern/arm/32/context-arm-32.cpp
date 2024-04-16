@@ -36,10 +36,11 @@ Context::arm_switch_gp_regs(Context *t)
 
   asm volatile
     (// save context of old thread
-     "   stmdb sp!, {fp}          \n"
 #ifdef __thumb__
+     "   stmdb sp!, {r7}          \n" // r7 frame pointer in thumb mode
      "   adr   lr, (1f + 1)       \n" // make sure to return to thumb mode
 #else
+     "   stmdb sp!, {fp}          \n" // r11 frame pointer in ARM mode
      "   adr   lr, 1f             \n"
 #endif
      "   str   lr, [sp, #-4]!     \n"
@@ -53,7 +54,12 @@ Context::arm_switch_gp_regs(Context *t)
 
      // return to new context
      "   ldr   pc, [sp], #4       \n"
-     "1: ldmia sp!, {fp}          \n"
+     "1:                          \n"
+#ifdef __thumb__
+     "   ldmia sp!, {r7}          \n"
+#else
+     "   ldmia sp!, {fp}          \n"
+#endif
 
      :
               "+r" (_old_this),
@@ -61,9 +67,15 @@ Context::arm_switch_gp_regs(Context *t)
      [old_sp] "+r" (_old_sp),
      [new_sp] "+r" (_new_sp)
      :
-     : // r11/fp is saved / restored using stmdb/ldmia
-       "r4", "r5", "r6", "r7", "r8", "r9",
-       "r10", "r12", "r14", "memory");
+     : // THUMB2: r7 frame pointer and saved/restored using stmdb/ldmia
+       // ARM: r11 frame pointer and saved/restored using stmdb/ldmia
+       "r4", "r5", "r6", "r8", "r9", "r10", "r11", "r12", "r14",
+#ifdef CONFIG_THUMB2
+       "r11",
+#else
+       "r7",
+#endif
+       "memory");
 }
 
 IMPLEMENT inline
