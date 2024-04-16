@@ -1,6 +1,7 @@
 INTERFACE [arm]:
 
 #include <types.h>
+#include "std_macros.h"
 
 class Psci
 {
@@ -115,7 +116,7 @@ Psci::psci_fn(unsigned fn)
 }
 
 PUBLIC static inline NEEDS ["alternatives.h", "smc_call.h"]
-Psci::Result
+Psci::Result FIASCO_ARM_THUMB2_NO_FRAME_PTR
 Psci::psci_call(Mword fn_id,
                 Mword a0 = 0, Mword a1 = 0,
                 Mword a2 = 0, Mword a3 = 0,
