@@ -69,7 +69,7 @@ Context::arm_switch_gp_regs(Context *t)
      :
      : // THUMB2: r7 frame pointer and saved/restored using stmdb/ldmia
        // ARM: r11 frame pointer and saved/restored using stmdb/ldmia
-       "r4", "r5", "r6", "r8", "r9", "r10", "r11", "r12", "r14",
+       "r4", "r5", "r6", "r8", "r9", "r10", "r12", "r14",
 #ifdef CONFIG_THUMB2
        "r11",
 #else
