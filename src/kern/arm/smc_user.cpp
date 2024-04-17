@@ -10,6 +10,7 @@ struct Smc_user : Kobject_h<Smc_user, Kobject>
 {
   L4_msg_tag kinvoke(L4_obj_ref, L4_fpage::Rights,
                      Syscall_frame *f, Utcb const *in, Utcb *out)
+                     FIASCO_ARM_THUMB2_NO_FRAME_PTR
   {
     L4_msg_tag tag = f->tag();
 
