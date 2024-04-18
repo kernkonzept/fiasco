@@ -1,0 +1,18 @@
+# vim:set ft=make:
+
+OBJECTS_LIBUART       += uart_apb.o
+CXXFLAGS_uart-libuart += $(call LIBUART_UART, apb)
+PREPROCESS_PARTS      += generic_tickless_idle \
+                         arm_generic_timer pic_gic
+INTERFACES_KERNEL     += generic_timer
+RAM_PHYS_BASE         := 0x2f000000
+
+amp_node_IMPL         := amp_node amp_node-arm-mps3_an536
+config_IMPL           += config-arm-mps3_an536
+mem_layout_IMPL       += mem_layout-arm-mps3_an536
+pic_IMPL              += pic-gic pic-arm-mps3_an536
+timer_IMPL            += timer-arm-generic timer-arm-generic-mps3_an536
+timer_tick_IMPL       += timer_tick-single-vector
+reset_IMPL            += reset-arm-mps3_an536
+clock_IMPL            += clock-generic
+platform_control_IMPL += platform_control-arm-mps3_an536
