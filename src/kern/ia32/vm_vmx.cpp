@@ -119,6 +119,103 @@ Vm_vmx::store_vm_memory(Vmx_vm_state *)
   tlb_mark_unused();
 }
 
+PROTECTED inline
+template<typename VARIANT>
+template<Host_state HOST_STATE>
+unsigned long
+Vm_vmx_t<VARIANT>::vm_entry(Trex *regs,
+                            Vmx_vm_state_t<HOST_STATE> *vm_state,
+                            bool guest_long_mode, Unsigned32 *reason)
+{
+  Cpu_number const cpu = current_cpu();
+
+  vm_state->load_guest_state();
+  static_cast<VARIANT *>(this)->load_vm_memory(vm_state);
+
+  // Set volatile host state
+  Vmx::vmcs_write<Vmx::Vmcs_host_cr0>(Cpu::get_cr0());
+  Vmx::vmcs_write<Vmx::Vmcs_host_cr3>(Cpu::get_pdbr()); // host_area.cr3
+
+  safe_host_segments();
+
+  if (EXPECT_FALSE(Vmx::vmx_failure()))
+    return 1;
+
+  Unsigned16 ldt = Cpu::get_ldt();
+
+  // Set guest CR2
+    {
+      Mword vm_guest_cr2 = vm_state->template read<Vmx::Sw_guest_cr2>();
+
+      asm volatile (
+        "mov %[vm_guest_cr2], %%cr2"
+        :
+        : [vm_guest_cr2] "r" (vm_guest_cr2)
+      );
+    }
+
+  load_guest_msrs(vm_state, guest_long_mode);
+
+  Unsigned64 guest_xcr0 = vm_state->template read<Vmx::Sw_guest_xcr0>();
+  Unsigned64 host_xcr0 = Fpu::fpu.current().get_xcr0();
+
+  load_guest_xcr0(host_xcr0, guest_xcr0);
+
+  if (Cpu::cpus.cpu(cpu).has_l1d_flush()
+      && !Cpu::cpus.cpu(cpu).skip_l1dfl_vmentry())
+    Cpu::wrmsr(1UL, MSR_IA32_FLUSH_CMD);
+
+  unsigned long ret = resume_vm_vmx(regs);
+
+  restore_host_xcr0(host_xcr0, guest_xcr0);
+
+  Unsigned32 error = 0;
+  if (EXPECT_FALSE(ret))
+    {
+      // We read the VM instruction error here to make sure that the original
+      // value has not been accidentally overwritten by any following VMX
+      // instruction (e.g. VMREAD).
+      //
+      // However, we defer the actual handling of the resume failure until the
+      // host state has been properly restored.
+      error = Vmx::vmcs_read<Vmx::Vmcs_vm_insn_error>();
+    }
+
+  store_guest_restore_host_msrs(vm_state, guest_long_mode);
+
+  // Save guest CR2
+    {
+      Mword vm_guest_cr2;
+
+      asm volatile(
+        "mov %%cr2, %[vm_guest_cr2]"
+        : [vm_guest_cr2] "=r" (vm_guest_cr2)
+      );
+
+      vm_state->template write<Vmx::Sw_guest_cr2>(vm_guest_cr2);
+    }
+
+  Cpu::set_ldt(ldt);
+
+  // reload TSS, we use I/O bitmaps
+  // ... do this lazy ...
+    {
+      // clear busy flag
+      Gdt_entry *e = &(*Cpu::cpus.cpu(cpu).get_gdt())[Gdt::gdt_tss / 8];
+      e->tss_make_available();
+      asm volatile("" : : "m" (*e));
+      Cpu::set_tr(Gdt::gdt_tss);
+    }
+
+  *reason = Vmx::vmcs_read<Vmx::Vmcs_exit_reason>();
+
+  vm_state->store_guest_state();
+  static_cast<VARIANT *>(this)->store_vm_memory(vm_state);
+  vm_state->store_exit_info(error, *reason);
+
+  return ret;
+}
+
 PROTECTED inline template<typename VARIANT>
 int
 Vm_vmx_t<VARIANT>::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu,
@@ -169,98 +266,13 @@ Vm_vmx_t<VARIANT>::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu,
   if (!is_64bit() && guest_long_mode)
     return -L4_err::EInval;
 
-  vm_state->load_guest_state();
-  static_cast<VARIANT *>(this)->load_vm_memory(vm_state);
-
-  // Set volatile host state
-  Vmx::vmcs_write<Vmx::Vmcs_host_cr0>(Cpu::get_cr0());
-  Vmx::vmcs_write<Vmx::Vmcs_host_cr3>(Cpu::get_pdbr()); // host_area.cr3
-
-  safe_host_segments();
-
-  if (EXPECT_FALSE(Vmx::vmx_failure()))
+  Unsigned32 reason = 0;
+  unsigned long ret = vm_entry(&vcpu->_regs, vm_state, guest_long_mode,
+                               &reason);
+  if (EXPECT_FALSE(ret))
     return -L4_err::EInval;
 
-  Unsigned16 ldt = Cpu::get_ldt();
-
-  // Set guest CR2
-    {
-      Mword vm_guest_cr2 = vm_state->read<Vmx::Sw_guest_cr2>();
-
-      asm volatile (
-        "mov %[vm_guest_cr2], %%cr2"
-        :
-        : [vm_guest_cr2] "r" (vm_guest_cr2)
-      );
-    }
-
-  load_guest_msrs(vm_state, guest_long_mode);
-
-  Unsigned64 guest_xcr0 = vm_state->read<Vmx::Sw_guest_xcr0>();
-  Unsigned64 host_xcr0 = Fpu::fpu.current().get_xcr0();
-
-  load_guest_xcr0(host_xcr0, guest_xcr0);
-
-  if (Cpu::cpus.cpu(cpu).has_l1d_flush()
-      && !Cpu::cpus.cpu(cpu).skip_l1dfl_vmentry())
-    Cpu::wrmsr(1UL, MSR_IA32_FLUSH_CMD);
-
-  unsigned long ret = resume_vm_vmx(&vcpu->_regs);
-  Unsigned32 error = 0;
-
-  if (EXPECT_FALSE(ret))
-    {
-      // We read the VM instruction error here to make sure that the original
-      // value has not been accidentally overwritten by any following VMX
-      // instruction (e.g. VMREAD).
-      //
-      // However, we defer the actual handling of the resume failure until the
-      // host state has been properly restored.
-      error = Vmx::vmcs_read<Vmx::Vmcs_vm_insn_error>();;
-    }
-
-  Unsigned32 reason = Vmx::vmcs_read<Vmx::Vmcs_exit_reason>();
-  Unsigned32 basic_reason = reason & 0xffff;
-
-  restore_host_xcr0(host_xcr0, guest_xcr0);
-  store_guest_restore_host_msrs(vm_state, guest_long_mode);
-
-  // Save guest CR2
-    {
-      Mword vm_guest_cr2;
-
-      asm volatile(
-        "mov %%cr2, %[vm_guest_cr2]"
-        : [vm_guest_cr2] "=r" (vm_guest_cr2)
-      );
-
-      vm_state->write<Vmx::Sw_guest_cr2>(vm_guest_cr2);
-    }
-
-  Cpu::set_ldt(ldt);
-
-  // reload TSS, we use I/O bitmaps
-  // ... do this lazy ...
-    {
-      // clear busy flag
-      Gdt_entry *e = &(*Cpu::cpus.cpu(cpu).get_gdt())[Gdt::gdt_tss / 8];
-      e->tss_make_available();
-      asm volatile("" : : "m" (*e));
-      Cpu::set_tr(Gdt::gdt_tss);
-    }
-
-  if (EXPECT_FALSE(ret))
-    {
-      // Handle the resume failure. Since the guest state has not been altered,
-      // we do not have to bother with storing the complete guest state.
-      vm_state->write<Vmx::Vmcs_vm_insn_error>(error);
-      return -L4_err::EInval;
-    }
-
-  vm_state->store_guest_state();
-  static_cast<VARIANT *>(this)->store_vm_memory(vm_state);
-  vm_state->store_exit_info(error, reason);
-
+  Unsigned32 basic_reason = reason & 0xffffU;
   switch (basic_reason)
     {
     case 1: // IRQ
