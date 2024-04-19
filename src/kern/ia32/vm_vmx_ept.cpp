@@ -73,15 +73,10 @@ private:
 /**
  * VMX implementation variant with EPT support.
  */
-class Vm_vmx_ept : public Vm_vmx_t<Vm_vmx_ept>
+class Vm_vmx_ept :
+  public cxx::Dyn_castable<Vm_vmx_ept, Vm_vmx_t<Vm_vmx_ept>>
 {
 private:
-  //typedef Mem_space::Attr Attr;
-  //typedef Mem_space::Vaddr Vaddr;
-  //typedef Mem_space::Vsize Vsize;
-  //using Mem_space::Phys_addr;
-  //using Mem_space::Page_order;
-
   class Epte_ptr
   {
     Unsigned64 *e;
@@ -92,6 +87,7 @@ private:
     typedef Mem_space::Attr Attr;
 
     unsigned char level;
+
     Epte_ptr() = default;
     Epte_ptr(Unsigned64 *e, unsigned char level) : e(e), level(level) {}
 
@@ -104,6 +100,7 @@ private:
 
     unsigned char page_order() const;
     Unsigned64 page_addr() const;
+
     Attr attribs() const
     {
       typedef L4_fpage::Rights R;
@@ -143,6 +140,7 @@ private:
     void del_rights(L4_fpage::Rights r)
     {
       Unsigned64 dr = 0;
+
       if (r & L4_fpage::Rights::W())
         dr = 2;
 
@@ -174,13 +172,12 @@ private:
     {
       set(p);
     }
-
   };
 
-  typedef Ptab::Tupel< Ptab::Traits<Unsigned64, 39, 9, false>,
-                       Ptab::Traits<Unsigned64, 30, 9, true>,
-                       Ptab::Traits<Unsigned64, 21, 9, true>,
-                       Ptab::Traits<Unsigned64, 12, 9, true> >::List Ept_traits;
+  typedef Ptab::Tupel<Ptab::Traits<Unsigned64, 39, 9, false>,
+                      Ptab::Traits<Unsigned64, 30, 9, true>,
+                      Ptab::Traits<Unsigned64, 21, 9, true>,
+                      Ptab::Traits<Unsigned64, 12, 9, true>>::List Ept_traits;
 
   typedef Ptab::Shift<Ept_traits, 12>::List Ept_traits_vpn;
   typedef Ptab::Page_addr_wrap<Page_number, 12> Ept_va_vpn;
@@ -274,6 +271,7 @@ Vm_vmx_ept::v_lookup(Mem_space::Vaddr virt, Mem_space::Phys_addr *phys,
 
   return true;
 }
+
 PUBLIC
 Mem_space::Status
 Vm_vmx_ept::v_insert(Mem_space::Phys_addr phys, Mem_space::Vaddr virt,
@@ -284,8 +282,8 @@ Vm_vmx_ept::v_insert(Mem_space::Phys_addr phys, Mem_space::Vaddr virt,
 
   // XXX should modify page table using compare-and-swap
 
-  assert (cxx::is_zero(cxx::get_lsb(Mem_space::Phys_addr(phys), size)));
-  assert (cxx::is_zero(cxx::get_lsb(Virt_addr(virt), size)));
+  assert(cxx::is_zero(cxx::get_lsb(Mem_space::Phys_addr(phys), size)));
+  assert(cxx::is_zero(cxx::get_lsb(Virt_addr(virt), size)));
 
   int level;
   for (level = 0; level <= Ept::Depth; ++level)
@@ -317,7 +315,6 @@ Vm_vmx_ept::v_insert(Mem_space::Phys_addr phys, Mem_space::Vaddr virt,
       i.set_page(entry);
       return Mem_space::Insert_ok;
     }
-
 }
 
 PUBLIC
@@ -326,7 +323,7 @@ Vm_vmx_ept::v_delete(Mem_space::Vaddr virt, Mem_space::Page_order size,
                      L4_fpage::Rights page_attribs) override
 {
   (void)size;
-  assert (cxx::is_zero(cxx::get_lsb(Virt_addr(virt), size)));
+  assert(cxx::is_zero(cxx::get_lsb(Virt_addr(virt), size)));
 
   auto i = _ept->walk(virt);
 
@@ -335,7 +332,7 @@ Vm_vmx_ept::v_delete(Mem_space::Vaddr virt, Mem_space::Page_order size,
 
   L4_fpage::Rights ret = i.access_flags();
 
-  if (! (page_attribs & L4_fpage::Rights::R()))
+  if (!(page_attribs & L4_fpage::Rights::R()))
     {
       // downgrade PDE (superpage) rights
       i.del_rights(page_attribs);
@@ -365,7 +362,7 @@ void *
 Vm_vmx_ept::operator new (size_t size, void *p) noexcept
 {
   (void)size;
-  assert (size == sizeof (Vm_vmx_ept));
+  assert(size == sizeof(Vm_vmx_ept));
   return p;
 }
 
@@ -378,7 +375,7 @@ Vm_vmx_ept::operator delete (void *ptr)
 }
 
 PUBLIC inline
-Vm_vmx_ept::Vm_vmx_ept(Ram_quota *q) : Vm_vmx_t<Vm_vmx_ept>(q)
+Vm_vmx_ept::Vm_vmx_ept(Ram_quota *q) : Dyn_castable_class(q)
 {
   _tlb_type = Tlb_per_cpu_asid;
 }
@@ -394,6 +391,14 @@ Vm_vmx_ept::~Vm_vmx_ept()
       _ept = 0;
       _eptp = 0;
     }
+}
+
+PUBLIC inline
+void
+Vm_vmx_ept::to_vmcs()
+{
+  Vmx::vmcs_write<Vmx::Vmcs_ept_pointer>(_eptp);
+  tlb_mark_used();
 }
 
 PUBLIC inline
@@ -417,9 +422,7 @@ void
 Vm_vmx_ept::load_vm_memory(Vmx_vm_state *vm_state)
 {
   vm_state->load_cr3();
-  Vmx::vmcs_write<Vmx::Vmcs_ept_pointer>(_eptp);
-
-  tlb_mark_used();
+  to_vmcs();
 }
 
 PUBLIC inline
