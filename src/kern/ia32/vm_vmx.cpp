@@ -19,6 +19,12 @@ protected:
     EFER_LME = 1 << 8,
     EFER_LMA = 1 << 10,
   };
+
+  enum
+  {
+    Exit_irq           = 1U,
+    Exit_ept_violation = 48U,
+  };
 };
 
 template<typename VARIANT>
@@ -275,9 +281,9 @@ Vm_vmx_t<VARIANT>::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu,
   Unsigned32 basic_reason = reason & 0xffffU;
   switch (basic_reason)
     {
-    case 1: // IRQ
+    case Exit_irq:
       return 1;
-    case 48: // EPT violation
+    case Exit_ept_violation:
       vm_state->store_guest_physical_address();
       break;
     }
@@ -352,7 +358,7 @@ Vm_vmx_t<VARIANT>::resume_vcpu(Context *ctxt, Vcpu_state *vcpu,
             }
 
           // XXX: check if this is correct, we set external irq exit as reason
-          vm_state->write<Vmx::Vmcs_exit_reason>(1);
+          vm_state->write<Vmx::Vmcs_exit_reason>(Exit_irq);
           ctxt->arch_load_vcpu_kern_state(vcpu, true);
           return 1; // return 1 to indicate pending IRQs (IPCs)
         }
