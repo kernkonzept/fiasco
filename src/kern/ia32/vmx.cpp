@@ -128,6 +128,7 @@ public:
     PRB2_unrestricted    = 7,
     PRB2_enable_pml      = 17,
     PRB2_enable_xsaves   = 20,
+    PRB2_tsc_scaling     = 25,
   };
 
   enum Entry_ctls
@@ -255,6 +256,7 @@ public:
     Vmcs_tsc_offset          = 0x2010,
     Vmcs_apic_access_address = 0x2014,
     Vmcs_ept_pointer         = 0x201a,
+    Vmcs_tsc_multiplier      = 0x2032,
 
     // Must be the last
     Max_64bit_ctl
@@ -2197,6 +2199,9 @@ Vmx_vm_state::load_guest_state()
   //   * PAE handling without EPT
 
   to_vmcs<Vmx::Vmcs_tsc_offset>();
+
+  if (procbased_ctls_2.test(Vmx_info::PRB2_tsc_scaling))
+    to_vmcs<Vmx::Vmcs_tsc_multiplier>();
 
   if (procbased_ctls_2.test(Vmx_info::PRB2_virtualize_apic))
     to_vmcs<Vmx::Vmcs_apic_access_address>();
