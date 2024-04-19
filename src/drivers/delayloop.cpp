@@ -84,3 +84,28 @@ Delay::delay(unsigned ms)
       Mem::barrier();
     }
 }
+
+/**
+ * Wait for a certain amount of time.
+ *
+ * \param us  The number of microseconds to wait for.
+ *
+ * Can be used in the kernel debugger while no timer tick is available. Don't
+ * expect 100% accurate delays here.
+ */
+PUBLIC static void
+Delay::udelay(unsigned us)
+{
+  Kip *k = Kip::k();
+  // Same restriction as in Delay::delay().
+  unsigned c = static_cast<unsigned long long>(count) * us / 1000;
+
+  Mem::barrier();
+  do
+    {
+      static_cast<void>(k->clock());
+      Proc::pause();
+    }
+  while (c--);
+  Mem::barrier();
+}
