@@ -71,7 +71,7 @@
 
 #define LOG_TRAP_CN(curr, n)                                            \
   LOG_TRACE("Exceptions", "exc", curr, Tb_entry_trap,                   \
-    Mword ip = (Mword)(__builtin_return_address(0));                    \
+    Mword ip = reinterpret_cast<Mword>(__builtin_return_address(0));    \
     l->set(ip, n))
 
 #define LOG_TRAP_N(n)                                                   \
