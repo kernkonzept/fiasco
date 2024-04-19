@@ -70,6 +70,9 @@ private:
   static Per_cpu<Vm_vmx_ept_tlb> cpu_tlbs;
 };
 
+/**
+ * VMX implementation variant with EPT support.
+ */
 class Vm_vmx_ept : public Vm_vmx_t<Vm_vmx_ept>
 {
 private:
