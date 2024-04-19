@@ -105,8 +105,9 @@ public:
 
   enum Pin_based_ctls
   {
-    PIB_ext_int_exit = 0,
-    PIB_nmi_exit     = 3,
+    PIB_ext_int_exit     = 0,
+    PIB_nmi_exit         = 3,
+    PIB_preemption_timer = 6,
   };
 
   enum Primary_proc_based_ctls
@@ -2132,14 +2133,14 @@ Vmx_vm_state::load_guest_state()
   to_vmcs<Vmx::Vmcs_guest_ia32_debugctl>();
 
   // check if the following bits are allowed to be set in entry_ctls
-  if (entry_ctls.test(14)) // PAT load requested
+  if (entry_ctls.test(Vmx_info::En_load_perf_global_ctl))
+    to_vmcs<Vmx::Vmcs_guest_ia32_perf_global_ctrl>();
+
+  if (entry_ctls.test(Vmx_info::En_load_ia32_pat))
     to_vmcs<Vmx::Vmcs_guest_ia32_pat>();
 
-  if (entry_ctls.test(15)) // EFER load requested
+  if (entry_ctls.test(Vmx_info::En_load_ia32_efer))
     to_vmcs<Vmx::Vmcs_guest_ia32_efer>();
-
-  if (entry_ctls.test(13)) // IA32_PERF_GLOBAL_CTRL load requested
-    to_vmcs<Vmx::Vmcs_guest_ia32_perf_global_ctrl>();
 
   // write 32-bit fields
   to_vmcs<Vmx::Vmcs_guest_es_limit>();
@@ -2164,7 +2165,7 @@ Vmx_vm_state::load_guest_state()
   to_vmcs<Vmx::Vmcs_guest_activity_state>();
   to_vmcs<Vmx::Vmcs_guest_ia32_sysenter_cs>();
 
-  if (pinbased_ctls.test(6)) // activate vmx-preemption timer
+  if (pinbased_ctls.test(Vmx_info::PIB_preemption_timer))
     to_vmcs<Vmx::Vmcs_preemption_timer_value>();
 
   // write natural-width fields
@@ -2281,11 +2282,11 @@ Vmx_vm_state::store_guest_state()
     = Vmx_info::Flags<Unsigned32>(
         vmx.info.exit_ctls.apply(read<Vmx::Vmcs_vm_exit_ctls>()));
 
-  if (exit_ctls.test(18))
+  if (exit_ctls.test(Vmx_info::Ex_save_ia32_pat))
     from_vmcs<Vmx::Vmcs_guest_ia32_pat>();
-  if (exit_ctls.test(20))
+  if (exit_ctls.test(Vmx_info::Ex_save_ia32_efer))
     from_vmcs<Vmx::Vmcs_guest_ia32_efer>();
-  if (exit_ctls.test(22))
+  if (exit_ctls.test(Vmx_info::Ex_save_preemption_timer))
     from_vmcs<Vmx::Vmcs_preemption_timer_value>();
 
   // read 32-bit fields
