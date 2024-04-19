@@ -51,12 +51,41 @@ void
 Jdb::kernel_uart_irq_ack()
 { Kernel_uart::uart()->irq_ack(); }
 
+PRIVATE static inline
+void
+Jdb::kernel_uart_irq_disable()
+{
+  if (Config::serial_esc != Config::SERIAL_ESC_NOIRQ)
+    Kernel_uart::uart()->disable_rcv_irq();
+}
+
+PRIVATE static inline
+void
+Jdb::kernel_uart_irq_enable()
+{
+  if (Config::serial_esc != Config::SERIAL_ESC_NOIRQ)
+    {
+      Kernel_uart::uart()->enable_rcv_irq();
+      Kernel_uart::uart()->irq_ack();
+    }
+}
+
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pic_gic && !serial]:
 
 PRIVATE static inline
 void
 Jdb::kernel_uart_irq_ack()
+{}
+
+PRIVATE static inline
+void
+Jdb::kernel_uart_irq_disable()
+{}
+
+PRIVATE static inline
+void
+Jdb::kernel_uart_irq_enable()
 {}
 
 // ------------------------------------------------------------------------
@@ -77,6 +106,8 @@ Jdb::wfi_enter()
 {
   Jdb_core::wait_for_input = _wait_for_input;
 
+  kernel_uart_irq_disable();
+
   Timer_tick *tt = Timer_tick::boot_cpu_timer_tick();
   Gic *g = static_cast<Gic*>(tt->chip());
 
@@ -96,6 +127,8 @@ Jdb::wfi_leave()
   Gic *g = static_cast<Gic*>(tt->chip());
   g->irq_prio_bootcpu(tt->pin(), wfi_gic.orig_tt_prio);
   g->set_pmr(wfi_gic.orig_pmr);
+
+  kernel_uart_irq_enable();
 }
 
 PRIVATE static
@@ -223,7 +256,7 @@ Jdb::handle_debug_traps(Cpu_number cpu)
   return true;
 }
 
-IMPLEMENT inline
+IMPLEMENT inline NEEDS [Jdb::kernel_uart_irq_disable, Jdb::kernel_uart_irq_enable]
 bool
 Jdb::handle_user_request(Cpu_number cpu)
 {
@@ -233,7 +266,15 @@ Jdb::handle_user_request(Cpu_number cpu)
     return cpu != Cpu_number::boot_cpu();
 
   if (ef->debug_entry_kernel_sequence())
-    return execute_command_ni(ef->text(), ef->textlen());
+    {
+      // Disable + re-enable the UART RX IRQ so that detecting escape sequences
+      // also works while executing non-interactive commands, in particular for
+      // "JS".
+      kernel_uart_irq_disable();
+      bool ret = execute_command_ni(ef->text(), ef->textlen());
+      kernel_uart_irq_enable();
+      return ret;
+    }
 
   return false;
 }
