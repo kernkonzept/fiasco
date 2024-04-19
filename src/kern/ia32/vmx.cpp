@@ -204,6 +204,8 @@ struct Vmx_user_info
   Unsigned64 vmcs_field_info;
   Vmx_info::Bit_defs_32<Vmx_info::Secondary_proc_based_ctls> procbased2;
   Unsigned64 ept_vpid_cap;
+  Unsigned64 nested_revision;
+
   Unsigned32 pinbased_dfl1;
   Unsigned32 procbased_dfl1;
   Unsigned32 exit_dfl1;
@@ -247,6 +249,9 @@ public:
     Vmcs_host_fs_selector  = 0x0c08,
     Vmcs_host_gs_selector  = 0x0c0a,
     Vmcs_host_tr_selector  = 0x0c0c,
+
+    // Must be the last
+    Max_16bit_host
   };
 
   /**
@@ -318,6 +323,9 @@ public:
     Vmcs_host_ia32_pat              = 0x2c00,
     Vmcs_host_ia32_efer             = 0x2c02,
     Vmcs_host_ia32_perf_global_ctrl = 0x2c04,
+
+    // Must be the last
+    Max_64bit_host
   };
 
   /**
@@ -402,6 +410,9 @@ public:
   enum Vmcs_32bit_host_fields : Unsigned16
   {
     Vmcs_host_ia32_sysenter_cs = 0x4c00,
+
+    // Must be the last
+    Max_32bit_host
   };
 
   /**
@@ -474,6 +485,10 @@ public:
   enum Sw_nat_guest_fields : Unsigned16
   {
     Sw_guest_cr2 = 0x683e,
+    Sw_nat_arg0  = 0x6840,
+    Sw_nat_arg1  = 0x6842,
+    Sw_nat_arg2  = 0x6844,
+    Sw_nat_arg3  = 0x6846,
 
     // Must be the last
     Max_nat_sw
@@ -497,6 +512,9 @@ public:
     Vmcs_host_ia32_sysenter_eip = 0x6c12,
     Vmcs_host_rsp               = 0x6c14,
     Vmcs_host_rip               = 0x6c16,
+
+    // Must be the last
+    Max_nat_host
   };
 };
 
@@ -780,14 +798,16 @@ private:
  * Descriptor of offsets/limits for VMCS field groups.
  *
  * Contains the offsets/limits for the control, read-only and guest VMCS fields
- * (for the given field size). The final offset is reserved.
+ * (for the given field size). The host fields are only stored for kernel
+ * purposes (e.g. vCPU states of nested VMs), but they are not exposed to user
+ * space.
  */
 struct Vmx_field_group_values
 {
   Unsigned8 ctl;
   Unsigned8 ro;
   Unsigned8 guest;
-  Unsigned8 reserved;
+  Unsigned8 host;
 };
 
 /**
@@ -807,22 +827,14 @@ struct Vmx_field_size_values
 /**
  * Software VMCS field offset table. The memory layout is as follows:
  *
- * 0x00 - 0x02: 3 offsets for 16-bit fields.
- *        0x03: Reserved.
- * 0x04 - 0x06: 3 offsets for 64-bit fields.
- *        0x07: Reserved.
- * 0x08 - 0x0a: 3 offsets for 32-bit fields.
- *        0x0b: Reserved.
- * 0x0c - 0x0e: 3 offsets for natural-width fields.
- *        0x0f: Reserved.
- * 0x10 - 0x12: 3 limits for 16-bit fields.
- *        0x13: Reserved.
- * 0x14 - 0x16: 3 limits for 64-bit fields.
- *        0x17: Reserved.
- * 0x18 - 0x1a: 3 limits for 32-bit fields.
- *        0x1b: Reserved.
- * 0x1c - 0x1e: 3 limits for natural-width fields.
- *        0x1f: Reserved.
+ * 0x00 - 0x03: 4 offsets for 16-bit fields.
+ * 0x04 - 0x07: 4 offsets for 64-bit fields.
+ * 0x08 - 0x0b: 4 offsets for 32-bit fields.
+ * 0x0c - 0x0f: 4 offsets for natural-width fields.
+ * 0x10 - 0x13: 4 limits for 16-bit fields.
+ * 0x14 - 0x17: 4 limits for 64-bit fields.
+ * 0x18 - 0x1b: 4 limits for 32-bit fields.
+ * 0x1c - 0x1f: 4 limits for natural-width fields.
  * 0x20 - 0x23: 4 index shifts.
  *        0x24: Offset of the first software VMCS field.
  *        0x25: Size of the software VMCS fields.
@@ -832,6 +844,7 @@ struct Vmx_field_size_values
  *  - Control fields.
  *  - Read-only fields.
  *  - Guest fields.
+ *  - Host fields (never exposed to user space).
  *
  * The index shifts are in the following order:
  *  - 16-bit.
@@ -1036,6 +1049,11 @@ private:
       {
         case 2:
           return base_index(Vmx::Max_16bit_guest) + 1;
+        case 3:
+          if (HOST_STATE)
+            return base_index(Vmx::Max_16bit_host) + 1;
+          else
+            return 0;
       }
 
     return 0;
@@ -1063,6 +1081,11 @@ private:
         case 2:
           return max(base_index(Vmx::Max_64bit_guest),
                      base_index(Vmx::Max_64bit_sw)) + 1;
+        case 3:
+          if (HOST_STATE)
+            return base_index(Vmx::Max_64bit_host) + 1;
+          else
+            return 0;
       }
 
     return 0;
@@ -1089,6 +1112,11 @@ private:
           return base_index(Vmx::Max_32bit_ro) + 1;
         case 2:
           return base_index(Vmx::Max_32bit_guest) + 1;
+        case 3:
+          if (HOST_STATE)
+            return base_index(Vmx::Max_32bit_host) + 1;
+          else
+            return 0;
       }
 
     return 0;
@@ -1117,6 +1145,11 @@ private:
         case 2:
           return max(base_index(Vmx::Max_nat_guest),
                      base_index(Vmx::Max_nat_sw)) + 1;
+        case 3:
+          if (HOST_STATE)
+            return base_index(Vmx::Max_nat_host) + 1;
+          else
+            return 0;
       }
 
     return 0;
@@ -1179,7 +1212,7 @@ private:
      * categories that precede the category of the VMCS field index at hand.
      */
 
-    for (unsigned int g = 0; g <= 2; ++g)
+    for (unsigned int g = 0; g <= 3; ++g)
       {
         for (unsigned int s = 0; s <= 3; ++s)
           {
@@ -1557,7 +1590,7 @@ template<Host_state HOST_STATE>
 void
 Vmx_vm_state_t<HOST_STATE>::init()
 {
-  static_assert(offset(0x6800) + limit(0x6800) < Sw_vmcs_size,
+  static_assert(offset(0x6c00) + limit(0x6c00) < Sw_vmcs_size,
                 "Field offsets fit within the software VMCS.");
 
   _cr2_field = Vmx::Sw_guest_cr2;
@@ -1568,56 +1601,56 @@ Vmx_vm_state_t<HOST_STATE>::init()
         offset(0x0000) / 64,
         offset(0x0400) / 64,
         offset(0x0800) / 64,
-        0
+        offset(0x0c00) / 64,
       },
       {
         /* 64-bit offsets */
         offset(0x2000) / 64,
         offset(0x2400) / 64,
         offset(0x2800) / 64,
-        0
+        offset(0x2c00) / 64,
       },
       {
         /* 32-bit offsets */
         offset(0x4000) / 64,
         offset(0x4400) / 64,
         offset(0x4800) / 64,
-        0
+        offset(0x4c00) / 64,
       },
       {
         /* Natural-width offsets */
         offset(0x6000) / 64,
         offset(0x6400) / 64,
         offset(0x6800) / 64,
-        0
+        offset(0x6c00) / 64,
       },
       {
         /* 16-bit limits */
         limit(0x0000) / 64,
         limit(0x0400) / 64,
         limit(0x0800) / 64,
-        0,
+        limit(0x0c00) / 64,
       },
       {
         /* 64-bit limits */
         limit(0x2000) / 64,
         limit(0x2400) / 64,
         limit(0x2800) / 64,
-        0
+        limit(0x2c00) / 64,
       },
       {
         /* 32-bit limits */
         limit(0x4000) / 64,
         limit(0x4400) / 64,
         limit(0x4800) / 64,
-        0
+        limit(0x4c00) / 64,
       },
       {
         /* Natural-width limits */
         limit(0x6000) / 64,
         limit(0x6400) / 64,
         limit(0x6800) / 64,
-        0
+        limit(0x6c00) / 64,
       },
       {
         /* Index shifts */
@@ -1631,7 +1664,7 @@ Vmx_vm_state_t<HOST_STATE>::init()
       offset(0x0000) / 64,
 
       /* Size of the software VMCS */
-      (offset(0x6800) + limit(0x6800) - offset(0x0000)) / 64,
+      (offset(0x6c00) + limit(0x6c00) - offset(0x0000)) / 64,
 
       {0, 0}
     };
@@ -2814,6 +2847,10 @@ Vmx::init_vcpu_state(void *vcpu_state)
   i->vmcs_field_info = info.max_index;
   i->procbased2 = info.procbased_ctls2;
   i->ept_vpid_cap = info.ept_vpid_cap;
+
+  // Nested virtualization not implemented.
+  i->nested_revision = 0;
+
   i->pinbased_dfl1 = info.pinbased_ctls_default1;
   i->procbased_dfl1 = info.procbased_ctls_default1;
   i->exit_dfl1 = info.exit_ctls_default1;
