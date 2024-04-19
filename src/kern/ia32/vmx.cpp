@@ -842,8 +842,8 @@ struct Vmx_field_size_values
  * All offsets/limits/sizes are represented in a 64-byte granule.
  *
  * The offsets (after being multiplied by 64) are indexes in the `_values`
- * array in \ref Vmx_vm_state and bit indexes in the `_dirty_bitmap` array in
- * \ref Vmx_vm_state.
+ * array in \ref Vmx_vm_state_t and bit indexes in the `_dirty_bitmap` array
+ * in \ref Vmx_vm_state_t.
  *
  * The limits (after being multiplied by 64) represent the range of the
  * available indexes.
@@ -871,6 +871,22 @@ static_assert(sizeof(Vmx_offset_table) == 40,
               "VMX field offset table size is 40 bytes.");
 
 /**
+ * Host fields presence discriminator.
+ *
+ * This enum discriminates whether the VMX extended vCPU state contains host
+ * fields or not. Note that the variant of the extended vCPU state that is
+ * exposed to user space never exposes host fields.
+ *
+ * The host fields are only available for kernel purposes (e.g. managing vCPU
+ * states of nested VMs).
+ */
+enum Host_state : bool
+{
+  Absent = 0,
+  Present = 1
+};
+
+/**
  * VMX extended vCPU state.
  *
  * For completeness, this is the overall memory layout of the vCPU:
@@ -891,8 +907,11 @@ static_assert(sizeof(Vmx_offset_table) == 40,
  * 0x048 - 0x0bf: Reserved.
  * 0x0c0 - 0xabf: Software VMCS fields (with padding).
  * 0xac0 - 0xbff: Software VMCS fields dirty bitmap (with padding).
+ *
+ * \tparam HOST_STATE  Host fields presence discriminator.
  */
-class Vmx_vm_state
+template<Host_state HOST_STATE = Absent>
+class Vmx_vm_state_t
 {
 private:
   enum
@@ -1207,6 +1226,8 @@ private:
   Unsigned8 _values[Sw_vmcs_size];
   Unsigned8 _dirty_bitmap[Dirty_bitmap_size];
 };
+
+using Vmx_vm_state = Vmx_vm_state_t<Absent>;
 
 static_assert(sizeof(Vmx_vm_state) + Config::Ext_vcpu_state_offset == 4096,
               "VMX extended VM state fits exactly into 4096 bytes.");
@@ -1532,8 +1553,9 @@ Vmx_info::dump(const char *tag) const
  * Initialize the VMX extended vCPU state.
  */
 PUBLIC
+template<Host_state HOST_STATE>
 void
-Vmx_vm_state::init()
+Vmx_vm_state_t<HOST_STATE>::init()
 {
   static_assert(offset(0x6800) + limit(0x6800) < Sw_vmcs_size,
                 "Field offsets fit within the software VMCS.");
@@ -1635,9 +1657,10 @@ Vmx_vm_state::init()
  * \return Field value.
  */
 PRIVATE inline
+template<Host_state HOST_STATE>
 template<Vmx::Vmcs_16bit_guest_fields field>
 Unsigned16
-Vmx_vm_state::read() const
+Vmx_vm_state_t<HOST_STATE>::read() const
 {
   static_assert(size(field) == 0);
   static_assert(group(field) == 2);
@@ -1654,10 +1677,11 @@ Vmx_vm_state::read() const
  *
  * \return Field value.
  */
-PRIVATE inline
+PUBLIC inline
+template<Host_state HOST_STATE>
 template<Vmx::Vmcs_64bit_ctl_fields field>
 Unsigned64
-Vmx_vm_state::read() const
+Vmx_vm_state_t<HOST_STATE>::read() const
 {
   static_assert(size(field) == 1);
   static_assert(group(field) == 0);
@@ -1676,10 +1700,11 @@ Vmx_vm_state::read() const
  * \return Field value.
  */
 PUBLIC inline
+template<Host_state HOST_STATE>
 template<auto field, Vmx::if_field_type<field, Vmx::Vmcs_64bit_guest_fields,
                                                Vmx::Sw_64bit_guest_fields> = true>
 Unsigned64
-Vmx_vm_state::read() const
+Vmx_vm_state_t<HOST_STATE>::read() const
 {
   static_assert(size(field) == 1);
   static_assert(group(field) == 2);
@@ -1697,9 +1722,10 @@ Vmx_vm_state::read() const
  * \return Field value.
  */
 PUBLIC inline
+template<Host_state HOST_STATE>
 template<Vmx::Vmcs_32bit_ctl_fields field>
 Unsigned32
-Vmx_vm_state::read() const
+Vmx_vm_state_t<HOST_STATE>::read() const
 {
   static_assert(size(field) == 2);
   static_assert(group(field) == 0);
@@ -1717,9 +1743,10 @@ Vmx_vm_state::read() const
  * \return Field value.
  */
 PRIVATE inline
+template<Host_state HOST_STATE>
 template<Vmx::Vmcs_32bit_ro_fields field>
 Unsigned32
-Vmx_vm_state::read() const
+Vmx_vm_state_t<HOST_STATE>::read() const
 {
   static_assert(size(field) == 2);
   static_assert(group(field) == 1);
@@ -1737,9 +1764,10 @@ Vmx_vm_state::read() const
  * \return Field value.
  */
 PRIVATE inline
+template<Host_state HOST_STATE>
 template<Vmx::Vmcs_32bit_guest_fields field>
 Unsigned32
-Vmx_vm_state::read() const
+Vmx_vm_state_t<HOST_STATE>::read() const
 {
   static_assert(size(field) == 2);
   static_assert(group(field) == 2);
@@ -1757,9 +1785,10 @@ Vmx_vm_state::read() const
  * \return Field value.
  */
 PRIVATE inline
+template<Host_state HOST_STATE>
 template<Vmx::Vmcs_nat_ctl_fields field>
 Mword
-Vmx_vm_state::read() const
+Vmx_vm_state_t<HOST_STATE>::read() const
 {
   static_assert(size(field) == 3);
   static_assert(group(field) == 0);
@@ -1778,10 +1807,11 @@ Vmx_vm_state::read() const
  * \return Field value.
  */
 PUBLIC inline
+template<Host_state HOST_STATE>
 template<auto field, Vmx::if_field_type<field, Vmx::Vmcs_nat_guest_fields,
                                                Vmx::Sw_nat_guest_fields> = true>
 Mword
-Vmx_vm_state::read() const
+Vmx_vm_state_t<HOST_STATE>::read() const
 {
   static_assert(size(field) == 3);
   static_assert(group(field) == 2);
@@ -1806,9 +1836,10 @@ Vmx_vm_state::read() const
  * \param  value  Field value to write.
  */
 PRIVATE inline
+template<Host_state HOST_STATE>
 template<Vmx::Vmcs_16bit_guest_fields field>
 void
-Vmx_vm_state::write(Unsigned16 value)
+Vmx_vm_state_t<HOST_STATE>::write(Unsigned16 value)
 {
   static_assert(size(field) == 0);
   static_assert(group(field) == 2);
@@ -1825,9 +1856,10 @@ Vmx_vm_state::write(Unsigned16 value)
  * \param  value  Field value to write.
  */
 PRIVATE inline
+template<Host_state HOST_STATE>
 template<Vmx::Vmcs_64bit_ro_fields field>
 void
-Vmx_vm_state::write(Unsigned64 value)
+Vmx_vm_state_t<HOST_STATE>::write(Unsigned64 value)
 {
   static_assert(size(field) == 1);
   static_assert(group(field) == 1);
@@ -1844,10 +1876,11 @@ Vmx_vm_state::write(Unsigned64 value)
  * \param  value  Field value to write.
  */
 PUBLIC inline
+template<Host_state HOST_STATE>
 template<auto field, Vmx::if_field_type<field, Vmx::Vmcs_64bit_guest_fields,
                                                Vmx::Sw_64bit_guest_fields> = true>
 void
-Vmx_vm_state::write(Unsigned64 value)
+Vmx_vm_state_t<HOST_STATE>::write(Unsigned64 value)
 {
   static_assert(size(field) == 1);
   static_assert(group(field) == 2);
@@ -1864,9 +1897,10 @@ Vmx_vm_state::write(Unsigned64 value)
  * \param  value  Field value to write.
  */
 PUBLIC inline
+template<Host_state HOST_STATE>
 template<Vmx::Vmcs_32bit_ctl_fields field>
 void
-Vmx_vm_state::write(Unsigned32 value)
+Vmx_vm_state_t<HOST_STATE>::write(Unsigned32 value)
 {
   static_assert(size(field) == 2);
   static_assert(group(field) == 0);
@@ -1883,9 +1917,10 @@ Vmx_vm_state::write(Unsigned32 value)
  * \param  value  Field value to write.
  */
 PUBLIC inline
+template<Host_state HOST_STATE>
 template<Vmx::Vmcs_32bit_ro_fields field>
 void
-Vmx_vm_state::write(Unsigned32 value)
+Vmx_vm_state_t<HOST_STATE>::write(Unsigned32 value)
 {
   static_assert(size(field) == 2);
   static_assert(group(field) == 1);
@@ -1902,9 +1937,10 @@ Vmx_vm_state::write(Unsigned32 value)
  * \param  value  Field value to write.
  */
 PRIVATE inline
+template<Host_state HOST_STATE>
 template<Vmx::Vmcs_32bit_guest_fields field>
 void
-Vmx_vm_state::write(Unsigned32 value)
+Vmx_vm_state_t<HOST_STATE>::write(Unsigned32 value)
 {
   static_assert(size(field) == 2);
   static_assert(group(field) == 2);
@@ -1921,9 +1957,10 @@ Vmx_vm_state::write(Unsigned32 value)
  * \param  value  Field value to write.
  */
 PRIVATE inline
+template<Host_state HOST_STATE>
 template<Vmx::Vmcs_nat_ro_fields field>
 void
-Vmx_vm_state::write(Mword value)
+Vmx_vm_state_t<HOST_STATE>::write(Mword value)
 {
   static_assert(size(field) == 3);
   static_assert(group(field) == 1);
@@ -1941,10 +1978,11 @@ Vmx_vm_state::write(Mword value)
  * \param  value  Field value to write.
  */
 PUBLIC inline
+template<Host_state HOST_STATE>
 template<auto field, Vmx::if_field_type<field, Vmx::Vmcs_nat_guest_fields,
                                                Vmx::Sw_nat_guest_fields> = true>
 void
-Vmx_vm_state::write(Mword value)
+Vmx_vm_state_t<HOST_STATE>::write(Mword value)
 {
   static_assert(size(field) == 3);
   static_assert(group(field) == 2);
@@ -1966,6 +2004,7 @@ Vmx_vm_state::write(Mword value)
  * \return Value of the dirty bit before clearing.
  */
 PRIVATE inline
+template<Host_state HOST_STATE>
 template<auto field, Vmx::if_field_type<field, Vmx::Vmcs_16bit_guest_fields,
                                                Vmx::Vmcs_64bit_ctl_fields,
                                                Vmx::Vmcs_64bit_guest_fields,
@@ -1974,7 +2013,7 @@ template<auto field, Vmx::if_field_type<field, Vmx::Vmcs_16bit_guest_fields,
                                                Vmx::Vmcs_nat_ctl_fields,
                                                Vmx::Vmcs_nat_guest_fields> = true>
 bool
-Vmx_vm_state::clear()
+Vmx_vm_state_t<HOST_STATE>::clear()
 {
   constexpr unsigned int off = offset(field);
   unsigned int index = off / 8;
@@ -2002,6 +2041,7 @@ Vmx_vm_state::clear()
  * \tparam field  Field to copy.
  */
 PRIVATE inline
+template<Host_state HOST_STATE>
 template<auto field, Vmx::if_field_type<field, Vmx::Vmcs_16bit_guest_fields,
                                                Vmx::Vmcs_64bit_ctl_fields,
                                                Vmx::Vmcs_64bit_guest_fields,
@@ -2010,7 +2050,7 @@ template<auto field, Vmx::if_field_type<field, Vmx::Vmcs_16bit_guest_fields,
                                                Vmx::Vmcs_nat_ctl_fields,
                                                Vmx::Vmcs_nat_guest_fields> = true>
 void
-Vmx_vm_state::to_vmcs()
+Vmx_vm_state_t<HOST_STATE>::to_vmcs()
 {
   if (!clear<field>())
     return;
@@ -2030,9 +2070,10 @@ Vmx_vm_state::to_vmcs()
  *
  */
 PRIVATE inline
+template<Host_state HOST_STATE>
 template<Vmx::Vmcs_32bit_ctl_fields field>
 Vmx_info::Flags<Unsigned32>
-Vmx_vm_state::to_vmcs(Vmx_info::Bit_defs<Unsigned32> const &mask)
+Vmx_vm_state_t<HOST_STATE>::to_vmcs(Vmx_info::Bit_defs<Unsigned32> const &mask)
 {
   clear<field>();
   Unsigned32 res = mask.apply(read<field>());
@@ -2052,9 +2093,10 @@ Vmx_vm_state::to_vmcs(Vmx_info::Bit_defs<Unsigned32> const &mask)
  *
  */
 PRIVATE inline
+template<Host_state HOST_STATE>
 template<Vmx::Vmcs_nat_guest_fields field>
 Vmx_info::Flags<Mword>
-Vmx_vm_state::to_vmcs(Vmx_info::Bit_defs<Mword> const &mask)
+Vmx_vm_state_t<HOST_STATE>::to_vmcs(Vmx_info::Bit_defs<Mword> const &mask)
 {
   clear<field>();
   Mword res = mask.apply(read<field>());
@@ -2076,6 +2118,7 @@ Vmx_vm_state::to_vmcs(Vmx_info::Bit_defs<Mword> const &mask)
  * \tparam field  Field to copy.
  */
 PRIVATE inline
+template<Host_state HOST_STATE>
 template<auto field, Vmx::if_field_type<field, Vmx::Vmcs_16bit_guest_fields,
                                                Vmx::Vmcs_32bit_ro_fields,
                                                Vmx::Vmcs_32bit_guest_fields,
@@ -2084,7 +2127,7 @@ template<auto field, Vmx::if_field_type<field, Vmx::Vmcs_16bit_guest_fields,
                                                Vmx::Vmcs_nat_ro_fields,
                                                Vmx::Vmcs_nat_guest_fields> = true>
 void
-Vmx_vm_state::from_vmcs()
+Vmx_vm_state_t<HOST_STATE>::from_vmcs()
 {
   write<field>(Vmx::vmcs_read<field>());
 }
@@ -2093,8 +2136,9 @@ Vmx_vm_state::from_vmcs()
  * Move the guest state from software VMCS to hardware VMCS.
  */
 PUBLIC inline
+template<Host_state HOST_STATE>
 void
-Vmx_vm_state::load_guest_state()
+Vmx_vm_state_t<HOST_STATE>::load_guest_state()
 {
   Cpu_number const cpu = current_cpu();
   Vmx &vmx = Vmx::cpus.cpu(cpu);
@@ -2248,8 +2292,9 @@ Vmx_vm_state::load_guest_state()
  * Move the guest CR3 from software VMCS to hardware VMCS.
  */
 PUBLIC inline
+template<Host_state HOST_STATE>
 void
-Vmx_vm_state::load_cr3()
+Vmx_vm_state_t<HOST_STATE>::load_cr3()
 {
   to_vmcs<Vmx::Vmcs_guest_cr3>();
 }
@@ -2258,8 +2303,9 @@ Vmx_vm_state::load_cr3()
  * Move the guest state from hardware VMCS to software VMCS.
  */
 PUBLIC inline
+template<Host_state HOST_STATE>
 void
-Vmx_vm_state::store_guest_state()
+Vmx_vm_state_t<HOST_STATE>::store_guest_state()
 {
   Cpu_number const cpu = current_cpu();
   Vmx &vmx = Vmx::cpus.cpu(cpu);
@@ -2346,8 +2392,10 @@ Vmx_vm_state::store_guest_state()
  * \param reason  Exit reason.
  */
 PUBLIC inline
+template<Host_state HOST_STATE>
 void
-Vmx_vm_state::store_exit_info(Unsigned32 error, Unsigned32 reason)
+Vmx_vm_state_t<HOST_STATE>::store_exit_info(Unsigned32 error,
+                                            Unsigned32 reason)
 {
   // Clear the valid bit in VM-entry interruption information
   Vmx_vm_entry_interrupt_info int_info;
@@ -2382,8 +2430,9 @@ Vmx_vm_state::store_exit_info(Unsigned32 error, Unsigned32 reason)
  * Move the guest CR3 from hardware VMCS to software VMCS.
  */
 PUBLIC inline
+template<Host_state HOST_STATE>
 void
-Vmx_vm_state::store_cr3()
+Vmx_vm_state_t<HOST_STATE>::store_cr3()
 {
   from_vmcs<Vmx::Vmcs_guest_cr3>();
 }
@@ -2392,8 +2441,9 @@ Vmx_vm_state::store_cr3()
  * Move the guest physical address from hardware VMCS to software VMCS.
  */
 PUBLIC inline
+template<Host_state HOST_STATE>
 void
-Vmx_vm_state::store_guest_physical_address()
+Vmx_vm_state_t<HOST_STATE>::store_guest_physical_address()
 {
   from_vmcs<Vmx::Vmcs_guest_physical_address>();
 }
@@ -2418,9 +2468,10 @@ Vmx_vm_state::store_guest_physical_address()
  * \retval 0               VMCS setup successfully.
  * \retval -L4_err::EPerm  Capability with invalid rights.
  */
-PUBLIC inline NEEDS[Vmx_vm_state::clear_vmcs, Vmx_vm_state::replace_vmcs]
+PUBLIC inline NEEDS[Vmx_vm_state_t::clear_vmcs, Vmx_vm_state_t::replace_vmcs]
+template<Host_state HOST_STATE>
 int
-Vmx_vm_state::setup_vmcs(Context *ctxt)
+Vmx_vm_state_t<HOST_STATE>::setup_vmcs(Context *ctxt)
 {
   if (_vmcs.valid() && _vmcs.op() == 0)
     {
@@ -2453,9 +2504,10 @@ Vmx_vm_state::setup_vmcs(Context *ctxt)
  *
  * \param ctxt  Context for which to set the hardware VMCS to none.
  */
-PUBLIC inline NEEDS[Vmx_vm_state::replace_vmcs]
+PUBLIC inline NEEDS[Vmx_vm_state_t::replace_vmcs]
+template<Host_state HOST_STATE>
 void
-Vmx_vm_state::clear_vmcs(Context *ctxt)
+Vmx_vm_state_t<HOST_STATE>::clear_vmcs(Context *ctxt)
 {
   Vmx_vmcs *prev = ctxt->vmcs();
   replace_vmcs(ctxt, prev, nullptr);
@@ -2479,8 +2531,10 @@ Vmx_vm_state::clear_vmcs(Context *ctxt)
  * \retval false  The replacement failed.
  */
 PRIVATE inline
+template<Host_state HOST_STATE>
 bool
-Vmx_vm_state::replace_vmcs(Context *ctxt, Vmx_vmcs *prev, Vmx_vmcs *next)
+Vmx_vm_state_t<HOST_STATE>::replace_vmcs(Context *ctxt, Vmx_vmcs *prev,
+                                         Vmx_vmcs *next)
 {
   // Bind the next VMCS.
   if (next)
