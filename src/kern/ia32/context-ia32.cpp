@@ -10,6 +10,15 @@ protected:
   Unsigned16 _es, _fs, _gs;
 };
 
+INTERFACE [vmx]:
+
+class Vmx_vmcs;
+
+EXTENSION class Context
+{
+protected:
+  Vmx_vmcs *_vmcs = nullptr;
+};
 
 IMPLEMENTATION [ia32,amd64,ux]:
 
@@ -96,4 +105,29 @@ Context::load_gdt_user_entries(Context * /*old*/ = 0)
   gdt[Gdt::gdt_utcb/8] = _gdt_user_entries[Gdt_user_entries];
 }
 
+//--------------------------------------------------------------------
+IMPLEMENTATION[vmx]:
 
+/**
+ * Get the VMCS object associated with the context.
+ *
+ * \return VMCS object assiciated with the context.
+ */
+PUBLIC inline
+Vmx_vmcs *
+Context::vmcs()
+{
+  return _vmcs;
+}
+
+/**
+ * Set the VMCS object associated with the context.
+ *
+ * \param vmcs  VMCS object to associate with the context.
+ */
+PUBLIC inline
+void
+Context::set_vmcs(Vmx_vmcs *vmcs)
+{
+  _vmcs = vmcs;
+}

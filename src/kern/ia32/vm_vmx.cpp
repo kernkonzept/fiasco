@@ -138,6 +138,14 @@ Vm_vmx_t<X>::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu,
       return -L4_err::ENodev;
     }
 
+  int rv = vm_state->setup_vmcs(ctxt);
+  if (rv != 0)
+    return rv;
+
+  rv = vmx.load_vmx_vmcs(ctxt->vmcs());
+  if (rv != 0)
+    return rv;
+
 #ifdef CONFIG_LAZY_FPU
   // XXX:
   // This generates a circular dep between thread<->task, this cries for a
@@ -166,6 +174,9 @@ Vm_vmx_t<X>::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu,
   Vmx::vmcs_write<Vmx::Vmcs_host_cr3>(Cpu::get_pdbr()); // host_area.cr3
 
   safe_host_segments();
+
+  if (EXPECT_FALSE(Vmx::vmx_failure()))
+    return -L4_err::EInval;
 
   Unsigned16 ldt = Cpu::get_ldt();
 
@@ -358,6 +369,18 @@ Vm_vmx_t<X>::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode) overri
                                    t->vcpu_state().usr().get());
         }
     }
+}
+
+PUBLIC inline template<typename X>
+void
+Vm_vmx_t<X>::cleanup_vcpu(Context *ctxt, Vcpu_state *vcpu) override
+{
+  if (EXPECT_FALSE(!(ctxt->state(true) & Thread_ext_vcpu_enabled)))
+    return;
+
+  Vmx_vm_state *vm_state
+    = offset_cast<Vmx_vm_state *>(vcpu, Config::Ext_vcpu_state_offset);
+  vm_state->clear_vmcs(ctxt);
 }
 
 //------------------------------------------------------------------

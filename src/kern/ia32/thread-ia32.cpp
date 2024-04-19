@@ -439,7 +439,7 @@ void
 Thread::_hw_virt_arch_init_vcpu_state(Vcpu_state *vcpu_state)
 {
   if (Vmx::cpus.current().vmx_enabled())
-    Vmx::cpus.current().init_vmcs_infos(vcpu_state);
+    Vmx::cpus.current().init_vcpu_state(vcpu_state);
 
   if (Cpu::boot_cpu()->vendor() == Cpu::Vendor_intel)
     vcpu_state->user_data[6] = Cpu::ucode_revision();

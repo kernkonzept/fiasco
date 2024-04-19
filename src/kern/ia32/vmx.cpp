@@ -213,14 +213,6 @@ INTERFACE:
 class Vmx : public Pm_object
 {
 public:
-  enum
-  {
-    /**
-     * Nominal VMCS size (actual size may be smaller).
-     */
-    Vmcs_size = 0x1000
-  };
-
   /**
    * 16-bit guest VMCS fields supported by the implementation.
    */
@@ -508,10 +500,12 @@ public:
 INTERFACE [vmx]:
 
 #include <minmax.h>
+#include <cxx/dyn_cast>
 #include "virt.h"
 #include "cpu_lock.h"
 #include "warn.h"
 #include "cxx/bitfield"
+#include "kobject.h"
 
 class Vmx_info;
 
@@ -653,6 +647,8 @@ private:
    *
    * This method is for value types smaller or equal to the machine word.
    *
+   * Instruction errors are silently ignored.
+   *
    * \tparam T      Field value type.
    * \param  field  Field index.
    *
@@ -680,6 +676,8 @@ private:
    * This method is for value types larger than the machine word and the read
    * is implemented as two machine word reads.
    *
+   * Instruction errors are silently ignored.
+   *
    * \tparam T      Field value type.
    * \param  field  Field index.
    *
@@ -701,6 +699,8 @@ private:
    *
    * This method is for value types smaller or equal to the machine word.
    *
+   * If the instruction fails, then \ref vmwrite_failure is set to true.
+   *
    * \tparam T      Field value type.
    * \param  field  Field index.
    * \param  value  Field value to write.
@@ -709,25 +709,31 @@ private:
            cxx::enable_if_t<sizeof(T) <= sizeof(Mword)>* = nullptr>
   static ALWAYS_INLINE void vmwrite(Mword field, T value)
   {
-    Mword err;
+    Mword flags;
 
     asm volatile (
       "vmwrite %[value], %[field]\n\t"
       "pushf\n\t"
-      "pop %[err]\n\t"
-      : [err] "=r" (err)
+      "pop %[flags]\n\t"
+      : [flags] "=r" (flags)
       : [value] "r" (Mword{value}),
         [field] "r" (field)
       : "cc"
     );
 
-    if (EXPECT_FALSE(err & 0x1))
-      WARNX(Info, "VMX: VMfailInvalid vmwrite(0x%04lx, %llx) => %lx\n",
-            field, static_cast<Unsigned64>(value), err);
-    else if (EXPECT_FALSE(err & 0x40))
-      WARNX(Info, "VMX: VMfailValid vmwrite(0x%04lx, %llx) => %lx, "
-                  "insn error: 0x%x\n", field, static_cast<Unsigned64>(value),
-                  err, vmread<Unsigned32>(Vmcs_vm_insn_error));
+    if (EXPECT_FALSE(flags & 0x01))
+      {
+        WARNX(Info, "VMX: VMfailInvalid vmwrite(0x%04lx, %llx) => %lx\n",
+              field, static_cast<Unsigned64>(value), flags);
+        vmwrite_failure.current() = true;
+      }
+    else if (EXPECT_FALSE(flags & 0x40))
+      {
+        WARNX(Info, "VMX: VMfailValid vmwrite(0x%04lx, %llx) => %lx, "
+                    "insn error: 0x%x\n", field, static_cast<Unsigned64>(value),
+                    flags, vmread<Unsigned32>(Vmcs_vm_insn_error));
+        vmwrite_failure.current() = true;
+      }
   }
 
   /**
@@ -735,6 +741,8 @@ private:
    *
    * This method is for value types larger than the machine word and the write
    * is implemented as two machine word writes.
+   *
+   * If the instruction fails, then \ref vmwrite_failure is set to true.
    *
    * \tparam T      Field value type.
    * \param  field  Field index.
@@ -749,15 +757,24 @@ private:
   }
 
   void *_vmxon;
+  Address _vmxon_pa;
+
   bool _vmx_enabled;
   bool _has_vpid;
-  Unsigned64 _vmxon_base_pa;
-  void *_kernel_vmcs;
-  Unsigned64 _kernel_vmcs_pa;
+
+  Vmx_vmcs *_current_vmcs;
+
+  /**
+   * Flag to indicate whether a VMWRITE instruction has failed.
+   *
+   * Failing VMWRITE intructions are considered fatal since they might affect
+   * the consistency of the host state.
+   */
+  static Per_cpu<bool> vmwrite_failure;
 };
 
 /**
- * Destriptor of offsets/limits for VMCS field groups.
+ * Descriptor of offsets/limits for VMCS field groups.
  *
  * Contains the offsets/limits for the control, read-only and guest VMCS fields
  * (for the given field size). The final offset is reserved.
@@ -771,7 +788,7 @@ struct Vmx_field_group_values
 };
 
 /**
- * Destriptor of index shifts for VMCS field sizes.
+ * Descriptor of index shifts for VMCS field sizes.
  *
  * Contains the index shifts for the 16-bit, 64-bit, 32-bit and natural-width
  * VMCS fields.
@@ -789,16 +806,24 @@ struct Vmx_field_size_values
  *
  * 0x00 - 0x02: 3 offsets for 16-bit fields.
  *        0x03: Reserved.
- * 0x04 - 0x07: 4 index shifts.
- * 0x08 - 0x0a: 3 offsets for 64-bit fields.
- * 0x0b - 0x0f: Reserved.
- * 0x10 - 0x12: 3 offsets for 32-bit fields.
- * 0x13 - 0x17: Reserved.
- * 0x18 - 0x1a: 3 offsets for natural-width fields.
+ * 0x04 - 0x06: 3 offsets for 64-bit fields.
+ *        0x07: Reserved.
+ * 0x08 - 0x0a: 3 offsets for 32-bit fields.
+ *        0x0b: Reserved.
+ * 0x0c - 0x0e: 3 offsets for natural-width fields.
+ *        0x0f: Reserved.
+ * 0x10 - 0x12: 3 limits for 16-bit fields.
+ *        0x13: Reserved.
+ * 0x14 - 0x16: 3 limits for 64-bit fields.
+ *        0x17: Reserved.
+ * 0x18 - 0x1a: 3 limits for 32-bit fields.
  *        0x1b: Reserved.
- *        0x1c: Offset of the first software VMCS field.
- *        0x1d: Size of the software VMCS fields.
- * 0x1e - 0x1f: Reserved.
+ * 0x1c - 0x1e: 3 limits for natural-width fields.
+ *        0x1f: Reserved.
+ * 0x20 - 0x23: 4 index shifts.
+ *        0x24: Offset of the first software VMCS field.
+ *        0x25: Size of the software VMCS fields.
+ * 0x26 - 0x27: Reserved.
  *
  * The offsets/limits in each size category are in the following order:
  *  - Control fields.
@@ -812,27 +837,35 @@ struct Vmx_field_size_values
  *  - Natural-width.
  *
  * All offsets/limits/sizes are represented in a 64-byte granule.
+ *
+ * The offsets (after being multiplied by 64) are indexes in the `_values`
+ * array in \ref Vmx_vm_state and bit indexes in the `_dirty_bitmap` array in
+ * \ref Vmx_vm_state.
+ *
+ * The limits (after being multiplied by 64) represent the range of the
+ * available indexes.
  */
 struct Vmx_offset_table
 {
   Vmx_field_group_values offsets_16;
-  Vmx_field_size_values index_shifts;
-
   Vmx_field_group_values offsets_64;
-  Unsigned8 reserved0[4];
-
   Vmx_field_group_values offsets_32;
-  Unsigned8 reserved1[4];
-
   Vmx_field_group_values offsets_nat;
+
+  Vmx_field_group_values limits_16;
+  Vmx_field_group_values limits_64;
+  Vmx_field_group_values limits_32;
+  Vmx_field_group_values limits_nat;
+
+  Vmx_field_size_values index_shifts;
 
   Unsigned8 base_offset;
   Unsigned8 size;
   Unsigned8 reserved[2];
 };
 
-static_assert(sizeof(Vmx_offset_table) == 32,
-              "VMX field offset table size is 32 bytes.");
+static_assert(sizeof(Vmx_offset_table) == 40,
+              "VMX field offset table size is 40 bytes.");
 
 /**
  * VMX extended vCPU state.
@@ -849,9 +882,12 @@ static_assert(sizeof(Vmx_offset_table) == 32,
  * 0x008 - 0x00f: User space data (ignored by the kernel).
  * 0x010 - 0x013: VMCS field index of the software-defined CR2 field in the
  *                software VMCS.
- * 0x014 - 0x01f: Reserved.
- * 0x020 - 0x03f: Software VMCS field offset table \ref Vmx_offset_table.
- * 0x040 - 0xbbf: Software VMCS fields (with padding).
+ * 0x014 - 0x017: Reserved.
+ * 0x018 - 0x01f: Capability of the hardware VMCS object (with padding).
+ * 0x020 - 0x047: Software VMCS field offset table \ref Vmx_offset_table.
+ * 0x048 - 0x0bf: Reserved.
+ * 0x0c0 - 0xabf: Software VMCS fields (with padding).
+ * 0xac0 - 0xbff: Software VMCS fields dirty bitmap (with padding).
  */
 class Vmx_vm_state
 {
@@ -861,8 +897,16 @@ private:
     /**
      * Size of the software VMCS (in bytes).
      */
-    Sw_vmcs_size = 3008
+    Sw_vmcs_size = 2560,
+
+    /**
+     * Size of the dirty bitmap (in bytes).
+     */
+    Dirty_bitmap_size = Sw_vmcs_size / 8
   };
+
+  static_assert((Sw_vmcs_size % 8) == 0,
+                "Software VMCS properly sized with respect to dirty bitmap.");
 
   /**
    * Compute VMCS field index base index (within its size and group category).
@@ -1097,7 +1141,8 @@ private:
    *
    * \param field  VMCS field index.
    *
-   * \return Offset in the software VMCS (i.e. byte offset in \ref _values).
+   * \return Offset in the software VMCS (i.e. byte offset in \ref _values
+   *         and bit offset in \ref _dirty_bitmap).
    */
   static constexpr unsigned int offset(Unsigned16 field)
   {
@@ -1144,10 +1189,20 @@ private:
   Unsigned64 _reserved0;
   Unsigned64 _user_data;
   Unsigned32 _cr2_field;
-  Unsigned8 _reserved1[12];
+  Unsigned8 _reserved1[4];
+  L4_obj_ref _vmcs;
 
-  Vmx_offset_table _offset_table;
+  /*
+   * Since the capability type size depends on the platform, align the offset
+   * table on the nearest 64-bit boundary to add proper padding.
+   */
+
+  alignas(8) Vmx_offset_table _offset_table;
+
+  Unsigned8 _reserved2[120];
+
   Unsigned8 _values[Sw_vmcs_size];
+  Unsigned8 _dirty_bitmap[Dirty_bitmap_size];
 };
 
 static_assert(sizeof(Vmx_vm_state) + Config::Ext_vcpu_state_offset == 4096,
@@ -1176,110 +1231,139 @@ struct Vmx_vm_entry_interrupt_info
   CXX_BITFIELD_MEMBER(31, 31, valid, value);
 };
 
+/**
+ * Kernel object for the VMX interface which represents the hardware Virtual
+ * Machine Control Structure. This kernel object is exposed to user space via
+ * the vCPU context label.
+ *
+ * The VMX extended vCPU needs to be assigned a VMCS object (via the _vmcs
+ * member in \ref Vmx_vm_state) before it can be resumed. The relationship
+ * policy between vCPUs and VMCSs is managed by user space.
+ */
+class Vmx_vmcs :
+  public cxx::Dyn_castable<Vmx_vmcs, Kobject>,
+  public Ref_cnt_obj
+{
+public:
+  enum
+  {
+    /**
+     * Nominal VMCS size (actual size may be smaller).
+     */
+    Vmcs_size = 0x1000,
+
+    /**
+     * VMCS order.
+     */
+    Vmcs_order = 12
+  };
+
+private:
+  /**
+   * VMCS region.
+   */
+  void *_ptr;
+
+  /**
+   * Allocation quota.
+   */
+  Ram_quota *_quota;
+
+  /**
+   * Extended vCPU state to which the VMCS object is bound to.
+   */
+  Vmx_vm_state *_owner;
+
+  /**
+   * CPU where the VMCS region is active.
+   */
+  Cpu_number _active;
+};
+
 // -----------------------------------------------------------------------
 IMPLEMENTATION[vmx]:
 
 #include "cpu.h"
 #include "kmem.h"
 #include "kmem_alloc.h"
+#include "kmem_slab.h"
+#include "kobject_dbg.h"
 #include "l4_types.h"
 #include <cstring>
 #include "idt.h"
-#include "panic.h"
-#include "warn.h"
 #include "vm_vmx_asm.h"
 #include "entry-ia32.h"
+#include "cpu_mask.h"
+#include "cpu_call.h"
+#include "atomic.h"
 
-class Vmx_init_host_state
+JDB_DEFINE_TYPENAME(Vmx_vmcs, "VMX VMCS");
+
+/**
+ * Initialize the current hardware VMCS.
+ *
+ * This initializes the host and immutable guest fields of the current hardware
+ * VMCS to well-defined values.
+ */
+PRIVATE inline NEEDS["idt.h", "entry-ia32.h"]
+void
+Vmx::initialize_current_vmcs()
 {
-  static Per_cpu<Vmx_init_host_state> cpus;
-};
+  Cpu &cpu = Cpu::cpus.cpu(current_cpu());
 
-PUBLIC inline NEEDS["idt.h", "vm_vmx_asm.h", "entry-ia32.h"]
-Vmx_init_host_state::Vmx_init_host_state(Cpu_number cpu)
-{
-  Vmx &v = Vmx::cpus.cpu(cpu);
-  Cpu &c = Cpu::cpus.cpu(cpu);
-
-  if (cpu == Cpu::invalid() || !c.vmx() || !v.vmx_enabled())
-    return;
-
-  Vmx::vmcs_write<Vmx::Vmcs_host_es_selector>(GDT_DATA_KERNEL);
-  Vmx::vmcs_write<Vmx::Vmcs_host_cs_selector>(GDT_CODE_KERNEL);
-  Vmx::vmcs_write<Vmx::Vmcs_host_ss_selector>(GDT_DATA_KERNEL);
-  Vmx::vmcs_write<Vmx::Vmcs_host_ds_selector>(GDT_DATA_KERNEL);
+  vmcs_write<Vmcs_host_es_selector>(GDT_DATA_KERNEL);
+  vmcs_write<Vmcs_host_cs_selector>(GDT_CODE_KERNEL);
+  vmcs_write<Vmcs_host_ss_selector>(GDT_DATA_KERNEL);
+  vmcs_write<Vmcs_host_ds_selector>(GDT_DATA_KERNEL);
 
   /* set FS and GS to unusable in the host state */
-  Vmx::vmcs_write<Vmx::Vmcs_host_fs_selector>(0);
-  Vmx::vmcs_write<Vmx::Vmcs_host_gs_selector>(0);
+  vmcs_write<Vmcs_host_fs_selector>(0);
+  vmcs_write<Vmcs_host_gs_selector>(0);
 
-  Unsigned16 tr = c.get_tr();
-  Vmx::vmcs_write<Vmx::Vmcs_host_tr_selector>(tr);
+  Unsigned16 tr = cpu.get_tr();
+  vmcs_write<Vmcs_host_tr_selector>(tr);
 
-  Vmx::vmcs_write<Vmx::Vmcs_host_tr_base>(((*c.get_gdt())[tr / 8]).base());
-  Vmx::vmcs_write<Vmx::Vmcs_host_rip>(reinterpret_cast<Mword>(vm_vmx_exit_vec));
-  Vmx::vmcs_write<Vmx::Vmcs_host_ia32_sysenter_cs>(Gdt::gdt_code_kernel);
-  Vmx::vmcs_write<Vmx::Vmcs_host_ia32_sysenter_esp>
-                 (reinterpret_cast<Mword>(&c.kernel_sp()));
-  Vmx::vmcs_write<Vmx::Vmcs_host_ia32_sysenter_eip>
-                 (reinterpret_cast<Mword>(entry_sys_fast_ipc_c));
+  vmcs_write<Vmcs_host_tr_base>(((*cpu.get_gdt())[tr / 8]).base());
+  vmcs_write<Vmcs_host_rip>(reinterpret_cast<Mword>(vm_vmx_exit_vec));
+  vmcs_write<Vmcs_host_ia32_sysenter_cs>(Gdt::gdt_code_kernel);
+  vmcs_write<Vmcs_host_ia32_sysenter_esp>
+            (reinterpret_cast<Mword>(&cpu.kernel_sp()));
+  vmcs_write<Vmcs_host_ia32_sysenter_eip>
+            (reinterpret_cast<Mword>(entry_sys_fast_ipc_c));
 
-  if (c.features() & FEAT_PAT
-      && v.info.exit_ctls.allowed(Vmx_info::Ex_load_ia32_pat))
-    {
-      Vmx::vmcs_write<Vmx::Vmcs_host_ia32_pat>(Cpu::rdmsr(MSR_PAT));
-      v.info.exit_ctls.enforce(Vmx_info::Ex_load_ia32_pat, true);
-    }
-  else
-    {
-      // We have no proper PAT support, so disallow PAT load store for
-      // guest too
-      v.info.exit_ctls.enforce(Vmx_info::Ex_save_ia32_pat, false);
-      v.info.entry_ctls.enforce(Vmx_info::En_load_ia32_pat, false);
-    }
+  if (cpu.features() & FEAT_PAT
+      && info.exit_ctls.allowed(Vmx_info::Ex_load_ia32_pat))
+    vmcs_write<Vmcs_host_ia32_pat>(Cpu::rdmsr(MSR_PAT));
 
-  if (v.info.exit_ctls.allowed(Vmx_info::Ex_load_ia32_efer))
-    {
-      Vmx::vmcs_write<Vmx::Vmcs_host_ia32_efer>(Cpu::rdmsr(MSR_EFER));
-      v.info.exit_ctls.enforce(Vmx_info::Ex_load_ia32_efer, true);
-    }
-  else
-    {
-      // We have no EFER load for host, so disallow EFER load store for
-      // guest too
-      v.info.exit_ctls.enforce(Vmx_info::Ex_save_ia32_efer, false);
-      v.info.entry_ctls.enforce(Vmx_info::En_load_ia32_efer, false);
-    }
+  if (info.exit_ctls.allowed(Vmx_info::Ex_load_ia32_efer))
+    vmcs_write<Vmcs_host_ia32_efer>(Cpu::rdmsr(MSR_EFER));
 
-  if (v.info.exit_ctls.allowed(Vmx_info::Ex_load_perf_global_ctl))
-    Vmx::vmcs_write<Vmx::Vmcs_host_ia32_perf_global_ctrl>(Cpu::rdmsr(0x199));
-  else
-    // do not allow Load IA32_PERF_GLOBAL_CTRL on entry
-    v.info.entry_ctls.enforce(Vmx_info::En_load_perf_global_ctl, false);
+  if (info.exit_ctls.allowed(Vmx_info::Ex_load_perf_global_ctl))
+    vmcs_write<Vmcs_host_ia32_perf_global_ctrl>(Cpu::rdmsr(0x199));
 
-  Vmx::vmcs_write<Vmx::Vmcs_host_cr0>(Cpu::get_cr0());
-  Vmx::vmcs_write<Vmx::Vmcs_host_cr4>(Cpu::get_cr4());
+  vmcs_write<Vmcs_host_cr0>(Cpu::get_cr0());
+  vmcs_write<Vmcs_host_cr4>(Cpu::get_cr4());
 
   Pseudo_descriptor pseudo;
-  c.get_gdt()->get(&pseudo);
+  cpu.get_gdt()->get(&pseudo);
 
-  Vmx::vmcs_write<Vmx::Vmcs_host_gdtr_base>(pseudo.base());
+  vmcs_write<Vmcs_host_gdtr_base>(pseudo.base());
 
   Idt::get(&pseudo);
-  Vmx::vmcs_write<Vmx::Vmcs_host_idtr_base>(pseudo.base());
+  vmcs_write<Vmcs_host_idtr_base>(pseudo.base());
 
   // init static guest area stuff
-  Vmx::vmcs_write<Vmx::Vmcs_link_pointer>(~0ULL);
-  Vmx::vmcs_write<Vmx::Vmcs_cr3_target_cnt>(0);
+  vmcs_write<Vmcs_link_pointer>(~0ULL);
+  vmcs_write<Vmcs_cr3_target_cnt>(0);
 
   // MSR load / store disabled
-  Vmx::vmcs_write<Vmx::Vmcs_exit_msr_load_cnt>(0);
-  Vmx::vmcs_write<Vmx::Vmcs_exit_msr_store_cnt>(0);
-  Vmx::vmcs_write<Vmx::Vmcs_entry_msr_load_cnt>(0);
+  vmcs_write<Vmcs_exit_msr_load_cnt>(0);
+  vmcs_write<Vmcs_exit_msr_store_cnt>(0);
+  vmcs_write<Vmcs_entry_msr_load_cnt>(0);
 }
 
 DEFINE_PER_CPU Per_cpu<Vmx> Vmx::cpus(Per_cpu_data::Cpu_num);
-DEFINE_PER_CPU_LATE Per_cpu<Vmx_init_host_state> Vmx_init_host_state::cpus(Per_cpu_data::Cpu_num);
+DEFINE_PER_CPU Per_cpu<bool> Vmx::vmwrite_failure;
 
 PUBLIC
 void
@@ -1452,14 +1536,62 @@ Vmx_vm_state::init()
                 "Field offsets fit within the software VMCS.");
 
   _cr2_field = Vmx::Sw_guest_cr2;
-
   _offset_table =
     {
       {
         /* 16-bit offsets */
-        offset(0x0000) / 64 + 1,
-        offset(0x0400) / 64 + 1,
-        offset(0x0800) / 64 + 1,
+        offset(0x0000) / 64,
+        offset(0x0400) / 64,
+        offset(0x0800) / 64,
+        0
+      },
+      {
+        /* 64-bit offsets */
+        offset(0x2000) / 64,
+        offset(0x2400) / 64,
+        offset(0x2800) / 64,
+        0
+      },
+      {
+        /* 32-bit offsets */
+        offset(0x4000) / 64,
+        offset(0x4400) / 64,
+        offset(0x4800) / 64,
+        0
+      },
+      {
+        /* Natural-width offsets */
+        offset(0x6000) / 64,
+        offset(0x6400) / 64,
+        offset(0x6800) / 64,
+        0
+      },
+      {
+        /* 16-bit limits */
+        limit(0x0000) / 64,
+        limit(0x0400) / 64,
+        limit(0x0800) / 64,
+        0,
+      },
+      {
+        /* 64-bit limits */
+        limit(0x2000) / 64,
+        limit(0x2400) / 64,
+        limit(0x2800) / 64,
+        0
+      },
+      {
+        /* 32-bit limits */
+        limit(0x4000) / 64,
+        limit(0x4400) / 64,
+        limit(0x4800) / 64,
+        0
+      },
+      {
+        /* Natural-width limits */
+        limit(0x6000) / 64,
+        limit(0x6400) / 64,
+        limit(0x6800) / 64,
         0
       },
       {
@@ -1469,50 +1601,19 @@ Vmx_vm_state::init()
         shift(2),
         shift(3)
       },
-      {
-        /* 64-bit offsets */
-        offset(0x2000) / 64 + 1,
-        offset(0x2400) / 64 + 1,
-        offset(0x2800) / 64 + 1,
-        0
-      },
-      {
-        /* Reserved */
-        0,
-        0,
-        0,
-        0
-      },
-      {
-        /* 32-bit offsets */
-        offset(0x4000) / 64 + 1,
-        offset(0x4400) / 64 + 1,
-        offset(0x4800) / 64 + 1,
-        0
-      },
-      {
-        /* Reserved */
-        0,
-        0,
-        0,
-        0
-      },
-      {
-        /* Natural-width offsets */
-        offset(0x6000) / 64 + 1,
-        offset(0x6400) / 64 + 1,
-        offset(0x6800) / 64 + 1,
-        0
-      },
 
       /* Offset of the first field */
-      offset(0x0000) / 64 + 1,
+      offset(0x0000) / 64,
 
       /* Size of the software VMCS */
       (offset(0x6800) + limit(0x6800) - offset(0x0000)) / 64,
 
       {0, 0}
     };
+
+  _vmcs = L4_obj_ref::Invalid;
+  memset(_dirty_bitmap, 0, sizeof(_dirty_bitmap));
+  memset(_values, 0, sizeof(_values));
 }
 
 /*
@@ -1851,11 +1952,46 @@ Vmx_vm_state::write(Mword value)
 }
 
 /*
+ * Type-safe methods for examining the dirty bitmap.
+ */
+
+/**
+ * Get and clear the dirty bit of a field.
+ *
+ * \tparam field  VMCS field index to examine.
+ *
+ * \return Value of the dirty bit before clearing.
+ */
+PRIVATE inline
+template<auto field, Vmx::if_field_type<field, Vmx::Vmcs_16bit_guest_fields,
+                                               Vmx::Vmcs_64bit_ctl_fields,
+                                               Vmx::Vmcs_64bit_guest_fields,
+                                               Vmx::Vmcs_32bit_ctl_fields,
+                                               Vmx::Vmcs_32bit_guest_fields,
+                                               Vmx::Vmcs_nat_ctl_fields,
+                                               Vmx::Vmcs_nat_guest_fields> = true>
+bool
+Vmx_vm_state::clear()
+{
+  constexpr unsigned int off = offset(field);
+  unsigned int index = off / 8;
+  Unsigned8 mask = 1U << (off % 8);
+
+  bool dirty = _dirty_bitmap[index] & mask;
+  if (dirty)
+    _dirty_bitmap[index] &= ~mask;
+
+  return dirty;
+}
+
+/*
  * Type-safe methods for copying fields from software VMCS to hardware VMCS.
  */
 
 /**
  * Copy a field from software VMCS to hardware VMCS.
+ *
+ * If the field is not dirty, then it is not copied.
  *
  * The following field types are supported: 16-bit guest, 64-bit control/guest,
  * 32-bit control/guest, natural-width control/guest.
@@ -1873,12 +2009,17 @@ template<auto field, Vmx::if_field_type<field, Vmx::Vmcs_16bit_guest_fields,
 void
 Vmx_vm_state::to_vmcs()
 {
+  if (!clear<field>())
+    return;
+
   Vmx::vmcs_write<field>(read<field>());
 }
 
 /**
  * Copy a 32-bit control field from software VMCS to hardware VMCS with
  * masking.
+ *
+ * Due to the masking, the value is copied regardless of the dirty status.
  *
  * \tparam field  Field to copy.
  * \param  mask   Mask to be applied on the value before writing to the
@@ -1890,6 +2031,7 @@ template<Vmx::Vmcs_32bit_ctl_fields field>
 Vmx_info::Flags<Unsigned32>
 Vmx_vm_state::to_vmcs(Vmx_info::Bit_defs<Unsigned32> const &mask)
 {
+  clear<field>();
   Unsigned32 res = mask.apply(read<field>());
   Vmx::vmcs_write<field>(res);
   return Vmx_info::Flags<Unsigned32>(res);
@@ -1898,6 +2040,8 @@ Vmx_vm_state::to_vmcs(Vmx_info::Bit_defs<Unsigned32> const &mask)
 /**
  * Copy a natural-width guest field from software VMCS to hardware VMCS with
  * masking.
+ *
+ * Due to the masking, the value is copied regardless of the dirty status.
  *
  * \tparam field  Field to copy.
  * \param  mask   Mask to be applied on the value before writing to the
@@ -1909,6 +2053,7 @@ template<Vmx::Vmcs_nat_guest_fields field>
 Vmx_info::Flags<Mword>
 Vmx_vm_state::to_vmcs(Vmx_info::Bit_defs<Mword> const &mask)
 {
+  clear<field>();
   Mword res = mask.apply(read<field>());
   Vmx::vmcs_write<field>(res);
   return Vmx_info::Flags<Mword>(res);
@@ -2247,6 +2392,114 @@ Vmx_vm_state::store_guest_physical_address()
   from_vmcs<Vmx::Vmcs_guest_physical_address>();
 }
 
+/**
+ * Setup the hardware VMCS of a context.
+ *
+ * This method follows a similar logic as implemented in \ref
+ * Thread_object::sys_vcpu_resume() for the user_task member.
+ *
+ * To avoid the constly capability lookup, the capability in the \ref _vmcs
+ * member is examined only if it contains no operation. If the capability
+ * refers to a valid VMCS object, it is then set as the VMCS of the given
+ * context. The capability in \ref _vmcs is then marked with the
+ * \ref L4_obj_ref::Ipc_send operation.
+ *
+ * If the \ref _vmcs member contains the \ref L4_obj_ref::Ipc_reply operation,
+ * the VMCS of the given context is set to none.
+ *
+ * \param ctxt  Context for which to set the hardware VMCS.
+ *
+ * \retval 0               VMCS setup successfully.
+ * \retval -L4_err::EPerm  Capability with invalid rights.
+ */
+PUBLIC inline NEEDS[Vmx_vm_state::clear_vmcs, Vmx_vm_state::replace_vmcs]
+int
+Vmx_vm_state::setup_vmcs(Context *ctxt)
+{
+  if (_vmcs.valid() && _vmcs.op() == 0)
+    {
+      Space *space = ctxt->space();
+
+      L4_fpage::Rights rights = L4_fpage::Rights(0);
+      Vmx_vmcs *vmx_vmcs
+        = cxx::dyn_cast<Vmx_vmcs *>(space->lookup_local(_vmcs.cap(), &rights));
+
+      if (EXPECT_FALSE(vmx_vmcs && !(rights & L4_fpage::Rights::CS())))
+        return -L4_err::EPerm;
+
+      Vmx_vmcs *prev = ctxt->vmcs();
+      if (vmx_vmcs != prev)
+        {
+          if (!replace_vmcs(ctxt, prev, vmx_vmcs))
+            return -L4_err::EBusy;
+        }
+
+      reinterpret_cast<Mword &>(_vmcs) |= L4_obj_ref::Ipc_send;
+    }
+  else if (_vmcs.op() == L4_obj_ref::Ipc_reply)
+    clear_vmcs(ctxt);
+
+  return 0;
+}
+
+/**
+ * Set the hardware VMCS of a context to none.
+ *
+ * \param ctxt  Context for which to set the hardware VMCS to none.
+ */
+PUBLIC inline NEEDS[Vmx_vm_state::replace_vmcs]
+void
+Vmx_vm_state::clear_vmcs(Context *ctxt)
+{
+  Vmx_vmcs *prev = ctxt->vmcs();
+  replace_vmcs(ctxt, prev, nullptr);
+}
+
+/**
+ * Replace the VMCS of the given context.
+ *
+ * Manage the reference counting of the previous and the next VMCS object.
+ *
+ * \note It is essential that the reference count equals exactly to the number
+ *       of persistent references of the VMCS object. The correctness of the
+ *       VMCS region clearing and VMCS object deletion is determined by the
+ *       reference count dropping to zero.
+ *
+ * \param ctxt  Context for which to replace the hardware VMCS.
+ * \param prev  Previous hardware VMCS (can be nullptr).
+ * \param next  Next hardware VMCS to set (can be nullptr).
+ *
+ * \retval true   The replacement was successful.
+ * \retval false  The replacement failed.
+ */
+PRIVATE inline
+bool
+Vmx_vm_state::replace_vmcs(Context *ctxt, Vmx_vmcs *prev, Vmx_vmcs *next)
+{
+  // Bind the next VMCS.
+  if (next)
+    {
+      // Make sure the hardware VMCS is not already bound.
+      if (!next->set_owner(this))
+        return false;
+
+      next->inc_ref();
+    }
+
+  ctxt->set_vmcs(next);
+
+  // Unbind the previous VMCS.
+  if (prev)
+    {
+      prev->clear_owner();
+
+      if (!prev->dec_ref())
+        delete prev;
+    }
+
+  return true;
+}
+
 PRIVATE
 bool
 Vmx::handle_bios_lock()
@@ -2270,44 +2523,103 @@ Vmx::handle_bios_lock()
   return true;
 }
 
+/**
+ * Execute the VMXON instruction.
+ *
+ * \param vmxon_pa  VMXON physical address argument.
+ *
+ * \retval true   Instruction executed successfully.
+ * \retval false  Instruction failed.
+ */
+PRIVATE static inline
+bool
+Vmx::vmxon(Unsigned64 vmxon_pa)
+{
+  Mword flags;
+
+  asm volatile (
+    "vmxon %[vmxon_pa]\n\t"
+    "pushf\n\t"
+    "pop %[flags]\n\t"
+    : [flags] "=r" (flags)
+    : [vmxon_pa] "m" (vmxon_pa)
+    : "cc"
+  );
+
+  return (flags & 0x41) == 0;
+}
+
+/**
+ * Execute the VMCLEAR instruction.
+ *
+ * \param vmcs_pa  VMCS physical address argument.
+ *
+ * \retval true   Instruction executed successfully.
+ * \retval false  Instruction failed.
+ */
+PRIVATE static inline
+bool
+Vmx::vmclear(Unsigned64 vmcs_pa)
+{
+  Mword flags;
+
+  asm volatile (
+    "vmclear %[vmcs_pa]\n\t"
+    "pushf\n\t"
+    "pop %[flags]\n\t"
+    : [flags] "=r" (flags)
+    : [vmcs_pa] "m" (vmcs_pa)
+    : "cc"
+  );
+
+  return (flags & 0x41) == 0;
+}
+
+/**
+ * Execute the VMPTRLD instruction.
+ *
+ * \param vmcs_pa  VMCS physical address argument.
+ *
+ * \retval true   Instruction executed successfully.
+ * \retval false  Instruction failed.
+ */
+PRIVATE static inline
+bool
+Vmx::vmptrld(Unsigned64 vmcs_pa)
+{
+  Mword flags;
+
+  asm volatile (
+    "vmptrld %[vmcs_pa]\n\t"
+    "pushf\n\t"
+    "pop %[flags]\n\t"
+    : [flags] "=r" (flags)
+    : [vmcs_pa] "m" (vmcs_pa)
+    : "cc"
+  );
+
+  return (flags & 0x41) == 0;
+}
+
 PUBLIC
 void
 Vmx::pm_on_resume(Cpu_number) override
 {
-  check (handle_bios_lock());
-
-  // enable vmx operation
-  asm volatile("vmxon %0" : : "m"(_vmxon_base_pa) : "cc");
-
-  Mword eflags;
-  // make kernel vmcs current
-  asm volatile("vmptrld %1 \n\t"
-	       "pushf      \n\t"
-	       "pop %0     \n\t"
-               : "=r"(eflags) : "m"(_kernel_vmcs_pa) : "cc");
-
-  // FIXME: MUST NOT PANIC ON CPU HOTPLUG
-  if (eflags & 0x41)
-    panic("VMX: vmptrld: VMFailInvalid, vmcs pointer not valid\n");
-
+  check(handle_bios_lock());
+  if (!vmxon(_vmxon_pa))
+    _vmx_enabled = false;
 }
 
 PUBLIC
 void
 Vmx::pm_on_suspend(Cpu_number) override
 {
-  Mword eflags;
-  asm volatile("vmclear %1 \n\t"
-	       "pushf      \n\t"
-	       "pop %0     \n\t"
-               : "=r"(eflags) : "m"(_kernel_vmcs_pa) : "cc");
-  if (eflags & 0x41)
-    WARN("VMX: vmclear: vmcs pointer not valid\n");
+  clear_vmx_vmcs(_current_vmcs);
 }
 
 PUBLIC
 Vmx::Vmx(Cpu_number cpu)
-  : _vmx_enabled(false), _has_vpid(false)
+  : _vmx_enabled(false), _has_vpid(false), _current_vmcs(nullptr)
 {
   Cpu &c = Cpu::cpus.cpu(cpu);
   if (cpu == Cpu::invalid() || !c.vmx())
@@ -2348,71 +2660,82 @@ Vmx::Vmx(Cpu_number cpu)
   // if NE bit is not set vmxon will fail
   c.set_cr0(c.get_cr0() | (1 << 5));
 
-  enum
-  {
-    Vmcs_size = 0x1000, // actual size may be different
-  };
-
   Unsigned32 vmcs_size = ((info.basic & (0x1fffULL << 32)) >> 32);
-
-  if (vmcs_size > Vmcs_size)
+  if (vmcs_size > Vmx_vmcs::Vmcs_size)
     {
       WARN("VMX: VMCS size of %u bytes not supported\n", vmcs_size);
       return;
     }
 
-  // allocate a 4kb region for kernel vmcs
-  // FIXME: MUST NOT PANIC ON CPU HOTPLUG
-  check(_kernel_vmcs = Kmem_alloc::allocator()->alloc(Order(12)));
-  _kernel_vmcs_pa = Kmem::virt_to_phys(_kernel_vmcs);
-  // clean vmcs
-  memset(_kernel_vmcs, 0, vmcs_size);
-  // init vmcs with revision identifier
-  *static_cast<int *>(_kernel_vmcs) = info.basic & 0xFFFFFFFF;
-
   // allocate a 4kb aligned region for VMXON
   // FIXME: MUST NOT PANIC ON CPU HOTPLUG
   check(_vmxon = Kmem_alloc::allocator()->alloc(Order(12)));
 
-  _vmxon_base_pa = Kmem::virt_to_phys(_vmxon);
+  _vmxon_pa = Kmem::virt_to_phys(_vmxon);
 
   // init vmxon region with vmcs revision identifier
   // which is stored in the lower 32 bits of MSR 0x480
-  *static_cast<unsigned *>(_vmxon) = info.basic & 0xFFFFFFFF;
+  *static_cast<Unsigned32 *>(_vmxon) = info.basic & 0x7fffffffU;
 
-  // enable vmx operation
-  asm volatile("vmxon %0" : : "m"(_vmxon_base_pa) : "cc");
-  _vmx_enabled = true;
+  // Enable VMX operation
+  if (vmxon(_vmxon_pa))
+    {
+      _vmx_enabled = true;
 
-  if (cpu == Cpu_number::boot_cpu())
-    printf("VMX: initialized\n");
+      if (cpu == Cpu_number::boot_cpu())
+        printf("VMX: initialized\n");
 
-  Mword eflags;
-  asm volatile("vmclear %1 \n\t"
-	       "pushf      \n\t"
-	       "pop %0     \n\t"
-               : "=r"(eflags) : "m"(_kernel_vmcs_pa) : "cc");
-  // FIXME: MUST NOT PANIC ON CPU HOTPLUG
-  if (eflags & 0x41)
-    panic("VMX: vmclear: VMFailInvalid, vmcs pointer not valid\n");
-
-  // make kernel vmcs current
-  asm volatile("vmptrld %1 \n\t"
-	       "pushf      \n\t"
-	       "pop %0     \n\t"
-               : "=r"(eflags) : "m"(_kernel_vmcs_pa) : "cc");
-
-  // FIXME: MUST NOT PANIC ON CPU HOTPLUG
-  if (eflags & 0x41)
-    panic("VMX: vmptrld: VMFailInvalid, vmcs pointer not valid\n");
-
-  Pm_object::register_pm(cpu);
+      Pm_object::register_pm(cpu);
+    }
+  else
+    {
+      if (cpu == Cpu_number::boot_cpu())
+        printf("VMX: initialization failed\n");
+    }
 }
 
+/**
+ * Initialize the extended vCPU state.
+ *
+ * Initialize the Vmx_user_info part of the extended vCPU state.
+ *
+ * \param vcpu_state  vCPU state to initialize.
+ */
 PUBLIC inline
 void
-Vmx::init_vmcs_infos(void *vcpu_state) const
+Vmx::init_vcpu_state(void *vcpu_state)
 {
+  Cpu &cpu = Cpu::cpus.cpu(current_cpu());
+
+  if (cpu.features() & FEAT_PAT
+      && info.exit_ctls.allowed(Vmx_info::Ex_load_ia32_pat))
+    {
+      info.exit_ctls.enforce(Vmx_info::Ex_load_ia32_pat, true);
+    }
+  else
+    {
+      // We have no proper PAT support, so disallow PAT load store for
+      // guest too
+      info.exit_ctls.enforce(Vmx_info::Ex_save_ia32_pat, false);
+      info.entry_ctls.enforce(Vmx_info::En_load_ia32_pat, false);
+    }
+
+  if (info.exit_ctls.allowed(Vmx_info::Ex_load_ia32_efer))
+    {
+      info.exit_ctls.enforce(Vmx_info::Ex_load_ia32_efer, true);
+    }
+  else
+    {
+      // We have no EFER load for host, so disallow EFER load store for
+      // guest too
+      info.exit_ctls.enforce(Vmx_info::Ex_save_ia32_efer, false);
+      info.entry_ctls.enforce(Vmx_info::En_load_ia32_efer, false);
+    }
+
+  if (!info.exit_ctls.allowed(Vmx_info::Ex_load_perf_global_ctl))
+    // do not allow Load IA32_PERF_GLOBAL_CTRL on entry
+    info.entry_ctls.enforce(Vmx_info::En_load_perf_global_ctl, false);
+
   Vmx_user_info *i
     = offset_cast<Vmx_user_info *>(vcpu_state, Config::Ext_vcpu_infos_offset);
   i->basic = info.basic;
@@ -2441,22 +2764,440 @@ Vmx::init_vmcs_infos(void *vcpu_state) const
   s->init();
 }
 
-PUBLIC
-void *
-Vmx::kernel_vmcs() const
-{ return _kernel_vmcs; }
+/**
+ * Load the VMCS object as the current hardware VMCS.
+ *
+ * If the VMCS object is already the current hardware VMCS, then no operation
+ * is performed. If the VMCS memory region has been reset, it is cleared before
+ * loading and then initialized.
+ *
+ * If the VMCS object is nullptr, its existence lock is invalid or if it has
+ * been loaded to a different CPU already, the operation fails.
+ *
+ * \param vmx_vmcs  VMCS object to load.
+ *
+ * \retval 0                VMCS object loaded successfully.
+ * \retval -L4_err::EInval  Invalid VMCS object.
+ * \retval -L4_err::EBusy   VMCS object already loaded to a different CPU.
+ * \retval -L4_err::ENodev  VMPTRLD instruction failed.
+ */
+PUBLIC inline NEEDS[Vmx::initialize_current_vmcs, Vmx::vmclear, Vmx::vmptrld]
+int
+Vmx::load_vmx_vmcs(Vmx_vmcs *vmx_vmcs)
+{
+  if (EXPECT_FALSE(!vmx_vmcs))
+    return -L4_err::EInval;
 
-PUBLIC
-Address
-Vmx::kernel_vmcs_pa() const
-{ return _kernel_vmcs_pa; }
+  // When the existence lock of an VMCS object is invalid, the VMCS region is
+  // about to be cleared and eventually removed. Therefore we cannot make
+  // the VMCS region active again, as that would break the correctness of the
+  // VMCS object deletion.
+  if (EXPECT_FALSE(!vmx_vmcs->existence_lock.valid()))
+    return -L4_err::EInval;
 
-PUBLIC
+  Cpu_number active = vmx_vmcs->active();
+  Cpu_number cpu = current_cpu();
+
+  if (EXPECT_FALSE(active != Cpu_number::nil() && active != cpu))
+    return -L4_err::EBusy;
+
+  if (_current_vmcs != vmx_vmcs)
+    {
+      void *vmcs = vmx_vmcs->ptr();
+      Address vmcs_pa = Kmem::virt_to_phys(vmcs);
+
+      Unsigned32 *revision = reinterpret_cast<Unsigned32 *>(vmcs);
+      bool initialized = *revision != 0;
+
+      // Clear the VMCS before loading for the first time.
+      if (EXPECT_FALSE(!initialized))
+        {
+          *revision = info.basic & 0x7fffffffU;
+          vmclear(vmcs_pa);
+        }
+
+      if (EXPECT_FALSE(!vmptrld(vmcs_pa)))
+        return -L4_err::ENodev;
+
+      vmx_vmcs->set_active(cpu);
+      _current_vmcs = vmx_vmcs;
+
+      // Initialize the VMCS which has been loaded for the first time.
+      if (EXPECT_FALSE(!initialized))
+        {
+          initialize_current_vmcs();
+          if (EXPECT_FALSE(vmwrite_failure.current()))
+            return -L4_err::ENodev;
+        }
+    }
+
+  return 0;
+}
+
+/**
+ * Clear the VMCS object.
+ *
+ * If the cleared VMCS object is the current hardware VMCS, then the current
+ * hardware VMCS is set to none.
+ *
+ * If the VMCS object is nullptr or if it has been loaded to a different CPU,
+ * the operation fails.
+ *
+ * \param vmx_vmcs  VMCS object to clear. In case it is nullptr, then no
+ *                  operation is performed.
+ *
+ * \retval 0                VMCS object cleared successfully.
+ * \retval -L4_err::EInval  Invalid VMCS object.
+ * \retval -L4_err::EBusy   VMCS object loaded to a different CPU.
+ */
+PUBLIC inline NEEDS[Vmx::vmclear]
+int
+Vmx::clear_vmx_vmcs(Vmx_vmcs *vmx_vmcs)
+{
+  if (!vmx_vmcs)
+    return -L4_err::EInval;
+
+  Cpu_number active = vmx_vmcs->active();
+  Cpu_number cpu = current_cpu();
+
+  if (active != Cpu_number::nil() && active != cpu)
+    return -L4_err::EBusy;
+
+  void *vmcs = vmx_vmcs->ptr();
+  Address vmcs_pa = Kmem::virt_to_phys(vmcs);
+
+  vmx_vmcs->clear_active();
+  vmclear(vmcs_pa);
+
+  if (vmx_vmcs == _current_vmcs)
+    _current_vmcs = nullptr;
+
+  return 0;
+}
+
+PUBLIC inline
 bool
 Vmx::vmx_enabled() const
 { return _vmx_enabled; }
 
-PUBLIC
+PUBLIC inline
 bool
 Vmx::has_vpid() const
 { return _has_vpid; }
+
+/**
+ * Get VMWRITE failure flag on the current CPU.
+ *
+ * \retval false  No VMWRITE instruction failed on the current CPU.
+ * \reval  true   A VMWRITE instruction failed on the current CPU.
+ */
+PUBLIC static inline
+bool
+Vmx::vmx_failure()
+{ return vmwrite_failure.current(); }
+
+/**
+ * Slab allocator for the VMCS objects.
+ */
+static Kmem_slab_t<Vmx_vmcs> _vmx_vmcs_allocator("VMX VMCS");
+
+/**
+ * VMCS object constructor.
+ *
+ * Initialize the reference counting and reset the contents of the VMCS memory
+ * region.
+ *
+ * \param quota  RAM quota of this object.
+ * \param addr   Pre-allocated, page-aligned VMCS memory region.
+ */
+PUBLIC
+Vmx_vmcs::Vmx_vmcs(Ram_quota *quota, void *addr)
+  : _ptr(addr),
+    _quota(quota),
+    _owner(nullptr),
+    _active(Cpu_number::nil())
+{
+  assert(_ptr);
+
+  memset(_ptr, 0, Vmcs_size);
+  inc_ref(true);
+}
+
+/**
+ * Clear the VMCS object as the final phase of VMCS object deletion.
+ *
+ * The VMCS object needs to be cleared prior to deletion to make sure that
+ * the CPU stops accessing the VMCS region before the physical memory is
+ * recycled.
+ *
+ * The VMCS region can be safely cleared if there is no possibility that the
+ * VMCS region is or will become active on any CPU.
+ *
+ * When this method is called from \ref Kobject::Reap_list::del_2(), there is
+ * no longer any capability reference to this VMCS object and therefore this
+ * object will no longer be bound to a vCPU in \ref Vmx_vm_state::setup_vmcs().
+ *
+ * Furthermore, when this method is called, the existence lock of this VMCS
+ * object is already invalid, thus the VMCS region can no longer become active
+ * in \ref Vmx::load_vmx_vmcs() even if the VMCS object is still bound to a
+ * vCPU.
+ *
+ * Finally, since this method is called after an RCU grace period, there are
+ * no longer any ephemeral references to this VMCS object. In other words,
+ * any vCPU that might have been running with this VMCS region as active has
+ * already exited.
+ *
+ * \retval true   The object is not referenced anymore and it is ready to be
+ *                deleted.
+ * \retval false  The object is still referenced.
+ */
+PUBLIC virtual
+bool
+Vmx_vmcs::put() override
+{
+  shootdown();
+  return dec_ref() == 0;
+}
+
+/**
+ * Clear the VMCS object on the CPU where it is active.
+ *
+ * The VMCS object needs to be cleared prior to deletion to make sure that
+ * the CPU stops accessing the VMCS region before the physical memory is
+ * recycled.
+ *
+ * \note This method might be called from a different CPU than the CPU where
+ *       the VMCS region is active. Therefore we have to use a remote CPU call
+ *       to clear the VMCS on the proper CPU. If the active CPU is the current
+ *       CPU, then the remote call is automatically optimized to a local call.
+ */
+PRIVATE inline
+void
+Vmx_vmcs::shootdown()
+{
+  if (_active == Cpu_number::nil())
+    return;
+
+  Cpu_mask active_cpu;
+  active_cpu.set(_active);
+
+  Cpu_call::cpu_call_many(active_cpu, [this](Cpu_number)
+    {
+      Vmx &vmx = Vmx::cpus.current();
+      vmx.clear_vmx_vmcs(this);
+      return false;
+    });
+}
+
+/**
+ * VMCS object destructor.
+ *
+ * The VMCS region is deallocated.
+ */
+PUBLIC
+Vmx_vmcs::~Vmx_vmcs()
+{
+  assert(_ptr);
+  Kmem_alloc::allocator()->q_free(_quota, Order(Vmcs_order), _ptr);
+}
+
+/**
+ * Allocate a new VMCS object.
+ *
+ * The \ref _vmx_vmcs_allocator slab allocator is used.
+ *
+ * \param size   Size of the object.
+ * \param quota  RAM quota of the object.
+ *
+ * \return Pointer to the allocated object.
+ */
+PUBLIC static
+void *
+Vmx_vmcs::operator new([[maybe_unused]] size_t size, Ram_quota *quota) noexcept
+{
+  assert(size == sizeof(Vmx_vmcs));
+  return _vmx_vmcs_allocator.q_alloc(quota);
+}
+
+/**
+ * Delete a VMCS object.
+ *
+ * The \ref _vmx_vmcs_allocator slab allocator is used.
+ *
+ * The VMCS object can be safely deleted if the following conditions are met:
+ *
+ * (1) There are no persistent references to the VMCS object.
+ * (2) There are no ephemeral references to the VMCS object (besides the
+ *     ephemeral reference that is calling the delete operator).
+ * (3) The VMCS region has been cleared.
+ *
+ * The delete operator is only ever called after the reference count of the
+ * VMCS object has dropped to zero. This guarantees that the condition (1) is
+ * met.
+ *
+ * If the delete operator is called from \ref Kobject::Reap_list::del_2(),
+ * an RCU grace period has passed which furthermore guarantees that there are
+ * no longer any ephemeral references to this VMCS object and that the VMCS
+ * region has been cleared in the prior call of \ref Vmx_vmcs::put().
+ *
+ * If the delete operator is called from \ref Vmx_vm_state::replace_vmcs(),
+ * there is no longer any capability reference that would spawn any persistent
+ * reference and the \ref Vmx_vmcs::put() method has been already called after
+ * an RCU grace period in the process of the capability reference removal.
+ *
+ * In both cases, it is guaranteed that the conditions (2) and (3) are met.
+ *
+ * \param ptr  VMCS object to be deleted.
+ */
+PUBLIC static
+void
+Vmx_vmcs::operator delete(void *ptr)
+{
+  Vmx_vmcs *vmcs = reinterpret_cast<Vmx_vmcs *>(ptr);
+  _vmx_vmcs_allocator.q_free(vmcs->ram_quota(), ptr);
+}
+
+/**
+ * Get the VMCS memory region of the VMCS object.
+ *
+ * \return VMCS memory region.
+ */
+PUBLIC inline
+void *
+Vmx_vmcs::ptr() const
+{
+  return _ptr;
+}
+
+/**
+ * Get the RAM quota of the VMCS object.
+ *
+ * \return RAM quota.
+ */
+PUBLIC inline
+Ram_quota *
+Vmx_vmcs::ram_quota() const
+{
+  return _quota;
+}
+
+/**
+ * Get the CPU where the VMCS object is active.
+ *
+ * \return CPU where the VMCS object is active.
+ */
+PUBLIC inline
+Cpu_number
+Vmx_vmcs::active() const
+{
+  return _active;
+}
+
+/**
+ * Atomically set the extended vCPU state to which the VMCS object is bound to.
+ *
+ * \param owner  Extended vCPU state to which the VMCS object is bound to.
+ *
+ * \retval true   The VMCS object has been bound to the extended vCPU state.
+ * \retval false  The VMCS object is already bound to a different vCPU state.
+ *
+ */
+PUBLIC inline
+bool
+Vmx_vmcs::set_owner(Vmx_vm_state *owner)
+{
+  assert(owner);
+  return cas<Vmx_vm_state *>(&_owner, nullptr, owner);
+}
+
+/**
+ * Set the CPU where the VMCS object is active.
+ *
+ * \param active  CPU where the VMCS object is active.
+ */
+PUBLIC inline
+void
+Vmx_vmcs::set_active(Cpu_number active)
+{
+  _active = active;
+}
+
+/**
+ * Mark the VMCS object as unbound to any extended vCPU state.
+ */
+PUBLIC inline
+void
+Vmx_vmcs::clear_owner()
+{
+  _owner = nullptr;
+}
+
+/**
+ * Mark the VMCS object inactive on any CPU.
+ */
+PUBLIC inline
+void
+Vmx_vmcs::clear_active()
+{
+  _active = Cpu_number::nil();
+}
+
+/**
+ * Invoke an operation on the VMCS object.
+ *
+ * Currently, the VMCS object defines no operations.
+ *
+ * \param Syscall frame of the invocation.
+ */
+PUBLIC
+void
+Vmx_vmcs::invoke(L4_obj_ref, L4_fpage::Rights, Syscall_frame *frame,
+                 Utcb *) override
+{
+  if (EXPECT_FALSE(frame->tag().proto() != L4_msg_tag::Label_vcpu_context))
+    {
+      frame->tag(commit_result(-L4_err::EBadproto));
+      return;
+    }
+
+  frame->tag(commit_result(-L4_err::ENosys));
+}
+
+namespace {
+
+/**
+ * Factory for creating VMCS objects.
+ *
+ * Before the VMCS object is allocated, the VMCS memory region associated with
+ * it is allocated.
+ *
+ * \param      quota  RAM quota.
+ * \param[out] err    Error code in case of allocation failure.
+ *
+ * \return VMCS object or nullptr if memory allocation failed.
+ */
+static Kobject_iface * FIASCO_FLATTEN
+vmx_vmcs_factory(Ram_quota *quota, Space *, L4_msg_tag, Utcb const *, Utcb *,
+                 int *err, unsigned *)
+{
+  *err = L4_err::ENomem;
+
+  void *vmcs
+    = Kmem_alloc::allocator()->q_alloc(quota, Order(Vmx_vmcs::Vmcs_order));
+  if (!vmcs)
+    return nullptr;
+
+  return new (quota) Vmx_vmcs(quota, vmcs);
+}
+
+/**
+ * VMCS object factory registration.
+ */
+static inline
+void __attribute__((constructor)) FIASCO_INIT_SFX(vmx_vmcs_register_factory)
+register_factory()
+{
+  Kobject_iface::set_factory(L4_msg_tag::Label_vcpu_context, vmx_vmcs_factory);
+}
+
+} // namespace

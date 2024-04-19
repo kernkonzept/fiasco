@@ -36,6 +36,7 @@ public:
   };
 
   virtual int resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode);
+  virtual void cleanup_vcpu(Context *ctxt, Vcpu_state *vcpu);
 
 private:
   /// map the global utcb pointer page into this task
@@ -91,6 +92,11 @@ Task::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode)
   switchin_context(ctxt->space());
   vcpu_resume(ts, ctxt->regs());
 }
+
+IMPLEMENT_DEFAULT
+void
+Task::cleanup_vcpu(Context *, Vcpu_state *)
+{}
 
 PUBLIC virtual
 bool

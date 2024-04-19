@@ -576,8 +576,13 @@ Thread::do_kill()
 
   release_fpu_if_owner();
 
-  vcpu_enter_kernel_mode(vcpu_state().access());
+  Vcpu_state *vcpu = vcpu_state().access();
+  vcpu_enter_kernel_mode(vcpu);
   vcpu_update_state();
+
+  Task *user_space = static_cast<Task *>(vcpu_user_space());
+  if (user_space)
+    user_space->cleanup_vcpu(this, vcpu);
 
   unbind();
   vcpu_set_user_space(0);
