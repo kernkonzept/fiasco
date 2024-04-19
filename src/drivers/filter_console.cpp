@@ -12,7 +12,17 @@ public:
 
 private:
   Console *const _o;
-  int csi_timeout;
+  /**
+   * The number of loops for waiting to decide if a received escape character is
+   * the beginning of a CSI sequence or just a single escape key. The waiting
+   * time is defined by `csi_timeout_loops` times `csi_timeout_us`.
+   */
+  unsigned csi_timeout_loops;
+  /**
+   * The amount of time to wait during each CSI timeout loop.
+   */
+  static constexpr unsigned csi_timeout_us = 25;
+
   enum State
   {
     NORMAL,
@@ -49,8 +59,8 @@ int Filter_console::char_avail() const override
 }
 
 PUBLIC inline explicit
-Filter_console::Filter_console(Console *o, int to = 10)
-: Console(ENABLED), _o(o), csi_timeout(to), state(NORMAL), pos(0), arg(0)
+Filter_console::Filter_console(Console *o, unsigned loops = 400)
+: Console(ENABLED), _o(o), csi_timeout_loops(loops), state(NORMAL), pos(0), arg(0)
 {
   if (o->failed())
     fail();
@@ -76,7 +86,7 @@ Filter_console::getchar_timeout(unsigned timeout)
 
   int c;
   while ((c = _o->getchar(false)) == -1 && timeout--)
-    Delay::delay(1);
+    Delay::udelay(csi_timeout_us);
   return c;
 }
 
@@ -107,7 +117,7 @@ Filter_console::getchar(bool blocking = true) override
         }
       else if (state == GOT_CSI)
         // Be more patient while in the middle of a CSI escape sequence.
-        ch = getchar_timeout(csi_timeout);
+        ch = getchar_timeout(csi_timeout_loops);
       else
         ch = _o->getchar(blocking);
 
@@ -133,7 +143,7 @@ Filter_console::getchar(bool blocking = true) override
               ibuf[pos++] = 27;
               int nc;
               if (!(_o->get_attributes() & (Console::UART | Console::UX))
-                  || ((nc = getchar_timeout(csi_timeout)) == -1))
+                  || ((nc = getchar_timeout(csi_timeout_loops)) == -1))
                 {
                   pos = 0;
                   return KEY_SINGLE_ESC;
