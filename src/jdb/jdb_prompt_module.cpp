@@ -32,7 +32,7 @@ private:
   static int  screen_width;
   static unsigned input_time_block_sec;
 
-  int wait_for_escape(Console *cons);
+  bool wait_for_escape(Console *cons);
 };
 
 char Jdb_pcm::subcmd;
@@ -48,6 +48,8 @@ PRIVATE
 int
 Jdb_pcm::get_coords(Console *cons, unsigned &x, unsigned &y)
 {
+  // A tool like minicom is attached at the other end of the serial line and
+  // responds to this "request cursor position" escape sequence.
   cons->write("\033[6n", 4);
 
   if (!wait_for_escape(cons))
@@ -246,19 +248,20 @@ IMPLEMENTATION:
 #include "processor.h"
 
 // A tool like minicom is attached at the other end of the serial line and
-// responds to the magical escape sequence.
+// responds to the magical escape sequence. It may take some time before the
+// response arrives if the tool at the other end is attached via network.
 IMPLEMENT
-int
+bool
 Jdb_pcm::wait_for_escape(Console *cons)
 {
-  // 100ms timeout should be more than reasonable.
-  for (unsigned cnt = 100;; --cnt)
+  // 200ms timeout should be also reasonable for network connections.
+  for (unsigned cnt = 4000;; --cnt)
     {
       int c = cons->getchar(false);
       if (c == KEY_ESC || c == KEY_SINGLE_ESC)
-        return 1;
+        return true;
       if (c != -1 || !cnt)
-        return 0;
-      Delay::delay(1);
+        return false;
+      Delay::udelay(50);
     }
 }
