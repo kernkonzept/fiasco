@@ -44,6 +44,7 @@ Jdb_object::kinvoke(L4_obj_ref, L4_fpage::Rights, Syscall_frame *,
 //----------------------------------------------------------------------------
 IMPLEMENTATION [rt_dbg]:
 
+#include "kdb_ke.h"
 #include "kobject_rpc.h"
 #include "minmax.h"
 
