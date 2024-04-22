@@ -24,7 +24,7 @@ namespace cxx {
 class D_list_item
 {
 public:
-  D_list_item() : _dli_next(0), _dli_prev(0) {}
+  constexpr D_list_item() : _dli_next(0), _dli_prev(0) {}
 private:
   friend struct D_list_item_policy;
 
