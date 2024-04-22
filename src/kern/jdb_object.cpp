@@ -270,6 +270,17 @@ Jdb_object::sys_jdb(L4_msg_tag tag, unsigned op,
     }
 }
 
+PRIVATE inline NOEXPORT
+L4_msg_tag
+Jdb_object::sys_debugger(L4_msg_tag,
+                         L4_fpage::Rights,
+                         Syscall_frame *,
+                         Utcb const *, Utcb *)
+{
+  kdb_ke("user");
+  return commit_result(0);
+}
+
 //----------------------------------------------------------------------------
 IMPLEMENTATION [rt_dbg && !debug]:
 
@@ -293,6 +304,16 @@ Jdb_object::sys_jdb(L4_msg_tag, unsigned,
   return commit_result(-L4_err::ENosys);
 }
 
+PRIVATE inline NOEXPORT
+L4_msg_tag
+Jdb_object::sys_debugger(L4_msg_tag,
+                         L4_fpage::Rights,
+                         Syscall_frame *,
+                         Utcb const *, Utcb *)
+{
+  return commit_result(-L4_err::ENosys);
+}
+
 //----------------------------------------------------------------------------
 IMPLEMENTATION [rt_dbg]:
 
@@ -304,10 +325,7 @@ Jdb_object::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
   L4_msg_tag tag = f->tag();
   if ((tag.words() == 0) && (tag.items() == 0)
       && (tag.proto() == L4_msg_tag::Label_debugger))
-    {
-      kdb_ke("user");
-      return commit_result(0);
-    }
+    return sys_debugger(tag, rights, f, r_msg, s_msg);
 
   if (!Ko::check_basics(&tag, L4_msg_tag::Label_debugger))
     return tag;
