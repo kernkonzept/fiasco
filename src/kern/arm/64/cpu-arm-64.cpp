@@ -353,7 +353,7 @@ bool
 Cpu::has_sve() const
 { return ((_cpu_id._pfr[0] >> 32) & 0xf) == 1; }
 
-PUBLIC inline
+IMPLEMENT_OVERRIDE inline
 bool
 Cpu::has_hpmn0() const
 { return ((_cpu_id._dfr0 >> 60) & 0xf) == 1; }

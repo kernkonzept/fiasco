@@ -19,16 +19,6 @@ Unsigned32 Cpu::sctlr;
 
 PUBLIC static inline
 Mword
-Cpu::dfr1()
-{ Mword v; asm volatile ("mrc p15, 0, %0, c0, c3, 5": "=r" (v)); return v; }
-
-PUBLIC static inline
-bool
-Cpu::has_hpmn0()
-{ return ((dfr1() >> 4) & 0xf) == 1; }
-
-PUBLIC static inline
-Mword
 Cpu::midr()
 {
   Mword m;
@@ -44,6 +34,21 @@ Cpu::mpidr()
   asm volatile ("mrc p15, 0, %0, c0, c0, 5" : "=r"(mpid));
   return mpid;
 }
+
+IMPLEMENTATION [arm && arm_v8plus]: //-------------------------------------
+
+PUBLIC static inline
+Mword
+Cpu::dfr1()
+{ Mword r; asm volatile ("mrc p15, 0, %0, c0, c3, 5": "=r" (r)); return r; }
+
+IMPLEMENT_OVERRIDE inline
+bool
+Cpu::has_hpmn0() const
+{ return ((dfr1() >> 4) & 0xf) == 1; }
+
+//-------------------------------------------------------------------------
+IMPLEMENTATION [arm]:
 
 PRIVATE static inline
 void
