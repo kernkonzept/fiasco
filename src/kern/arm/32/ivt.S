@@ -713,7 +713,7 @@ GEN_DEBUGGER_ENTRIES
 #ifdef CONFIG_ARM_EM_TZ
 
 .macro ISB_OP reg
-#ifdef CONFIG_ARM_V7
+#ifdef CONFIG_ARM_V7PLUS
 	isb
 #else
 	mov \reg, #0
