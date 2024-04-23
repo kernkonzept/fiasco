@@ -224,10 +224,10 @@ namespace {
 
 static Kobject_iface * FIASCO_FLATTEN
 vm_factory(Ram_quota *q, Space *,
-           L4_msg_tag t, Utcb const *u,
-           int *err)
+           L4_msg_tag t, Utcb const *u, Utcb *out,
+           int *err, unsigned *words)
 {
-  return Task::create<Vm>(q, t, u, err);
+  return Task::create<Vm>(q, t, u, out, err, words);
 }
 
 static inline
