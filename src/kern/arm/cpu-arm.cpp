@@ -625,7 +625,12 @@ Cpu::tz_switch_to_ns(Mword *nonsecure_state)
   register Mword r0 asm("r0") = reinterpret_cast<Mword>(nonsecure_state);
   register Mword r1 asm("r1") = reinterpret_cast<Mword>(go_nonsecure);
 
-  asm volatile("push   {r11}      \n"
+  asm volatile(
+#ifdef __thumb__
+               "push   {r7}       \n"
+#else
+               "push   {r11}      \n"
+#endif
                "stmdb sp!, {r0}   \n"
                "mov    r2, sp     \n" // copy sp_svc to sp_mon
                "cps    #0x16      \n" // switch to monitor mode
@@ -642,10 +647,19 @@ Cpu::tz_switch_to_ns(Mword *nonsecure_state)
                "cps    #0x13      \n" // switch to svc mode
                "mov    sp, r0     \n"
                "ldmia  sp!, {r0}  \n"
+#ifdef __thumb__
+               "pop    {r7}       \n"
+#else
                "pop    {r11}      \n"
+#endif
                : : "r" (r0), "r" (r1)
-               : "r2", "r3", "r4", "r5", "r6", "r7",
-                 "r8", "r9", "r10", "r12", "r14", "memory");
+               : "r2", "r3", "r4", "r5", "r6", "r8", "r9", "r10", "r12", "r14",
+#ifdef __thumb__
+                 "r11",
+#else
+                 "r7",
+#endif
+                 "memory");
 }
 
 PUBLIC static inline
