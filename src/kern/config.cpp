@@ -244,7 +244,7 @@ void Config::init()
 #endif
 }
 
-PUBLIC static FIASCO_INIT
+PUBLIC static
 unsigned long
 Config::kmem_size([[maybe_unused]] unsigned long available_size)
 {
