@@ -39,6 +39,7 @@ public:
   Mword vscause;
   Mword vstval;
   Mword vsatp;
+  Unsigned64 vstimecmp; // ignored if Sstc extension is not available
 
   // Indicates that a hypervisor load/store instruction failed. VMM is
   // responsible for resetting this value before executing a hypervisor/load
@@ -80,6 +81,9 @@ Hyp_ext_state::load()
   csr_write(vscause, vscause);
   csr_write(vstval, vstval);
   csr_write(vsatp, vsatp);
+
+  if (Cpu::has_isa_ext(Cpu::Isa_ext_sstc))
+    csr_write64(vstimecmp, vstimecmp);
 }
 
 PUBLIC
@@ -106,6 +110,9 @@ Hyp_ext_state::save()
   vscause = csr_read(vscause);
   vstval = csr_read(vstval);
   vsatp = csr_read(vsatp);
+
+  if (Cpu::has_isa_ext(Cpu::Isa_ext_sstc))
+    vstimecmp = csr_read64(vstimecmp);
 }
 
 PUBLIC

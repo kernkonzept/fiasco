@@ -81,6 +81,7 @@ public:
   enum : Unsigned64
   {
     Henvcfg_fiom = 1ull << 0,  // Fence of I/O implies Memory
+    Henvcfg_stce = 1ull << 63, // vstimecmp enable
   };
 
   enum : Mword
@@ -141,6 +142,8 @@ Cpu::init_hypervisor_ext()
   csr_write(hcounteren, Cpu::Hcounteren_cy | Cpu::Hcounteren_tm);
 
   Unsigned64 envcfg = Henvcfg_fiom;
+  if (Cpu::has_isa_ext(Cpu::Isa_ext_sstc))
+    envcfg |= Henvcfg_stce;
   csr_write64(henvcfg, envcfg);
 }
 

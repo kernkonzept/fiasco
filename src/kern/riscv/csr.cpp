@@ -34,6 +34,12 @@ INTERFACE [riscv]:
 #define CSR_hgatp DEF_CSR(0x680)
 #define CSR_hgeip DEF_CSR(0xE12)
 
+// CSRs defined by the Sstc extension
+#define CSR_stimecmp DEF_CSR(0x14D)
+#define CSR_stimecmph DEF_CSR(0x15D)
+#define CSR_vstimecmp DEF_CSR(0x24D)
+#define CSR_vstimecmph DEF_CSR(0x25D)
+
 #define csr_write(csr, val) \
 do { \
   Mword _val = static_cast<Mword>(val); \

@@ -126,19 +126,29 @@ Timer::update_system_clock(Cpu_number cpu, Unsigned64 time)
     Kip::k()->set_clock(ticks_to_us(time));
 }
 
-IMPLEMENT inline NEEDS["sbi.h"]
+PRIVATE static inline NEEDS["sbi.h"]
+void
+Timer::set_timer(Unsigned64 time_value)
+{
+  if (Cpu::has_isa_ext(Cpu::Isa_ext_sstc))
+    csr_write64(stimecmp, time_value);
+  else
+    Sbi::set_timer(time_value);
+}
+
+IMPLEMENT inline NEEDS[Timer::set_timer]
 void
 Timer::update_timer(Unsigned64 wakeup_us)
 {
   if (Config::Scheduler_one_shot)
     {
-      Sbi::set_timer(us_to_ticks(wakeup_us));
+      set_timer(us_to_ticks(wakeup_us));
       if (_enabled.current())
         Cpu::enable_timer_interrupt(true);
     }
 }
 
-PRIVATE static inline NEEDS["sbi.h"]
+PRIVATE static inline NEEDS[Timer::set_timer]
 void
 Timer::reprogram_periodic_timer(Cpu_number cpu)
 {
@@ -146,7 +156,7 @@ Timer::reprogram_periodic_timer(Cpu_number cpu)
   Unsigned64 next_trigger = _timer_next_trigger.cpu(cpu) + _timer_period;
 
   _timer_next_trigger.cpu(cpu) = next_trigger;
-  Sbi::set_timer(next_trigger);
+  set_timer(next_trigger);
 }
 
 PUBLIC static

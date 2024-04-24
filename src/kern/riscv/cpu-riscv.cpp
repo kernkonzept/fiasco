@@ -32,6 +32,8 @@ public:
     // extensions are added.
     Isa_ext_base = 26,
 
+    Isa_ext_sstc = 27, // stimecmp / vstimecmp
+
     // Maximum number of extensions that can be represented, corresponds to the
     // size of the `Platform_info.arch.isa_ext` bitmap.
     Isa_ext_max  = 224,

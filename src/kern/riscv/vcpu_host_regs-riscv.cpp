@@ -6,7 +6,7 @@ INTERFACE [riscv]:
 // in the vCPU state structure. This version has to be
 // changed / increased whenever any of the data structures
 // within the vCPU state changes its layout or its semantics.
-enum { Vcpu_arch_version = 0x00 };
+enum { Vcpu_arch_version = 0x01 };
 
 /**
  * On RISC-V, in addition to ip and sp, also the gp and tp registers are
