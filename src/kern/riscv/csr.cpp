@@ -53,3 +53,23 @@ do { \
                         : "=r" (ret) : "rK" (_bits) : "memory"); \
   ret; \
 })
+
+// ----------------------------------------------------------------------
+INTERFACE [riscv && 32bit]:
+
+// Non-atomically read 64-bit sized CSR pair (<csr> and <csr>h).
+#define csr_read64(csr) (csr_read(csr) | Unsigned64{csr_read(csr ## h)} << 32)
+
+// Non-atomically write 64-bit sized CSR pair (<csr> and <csr>h).
+#define csr_write64(csr, val) \
+  do { \
+    csr_write(csr, val); \
+    csr_write(csr ## h, val >> 32); \
+  } while (0)
+
+
+// ----------------------------------------------------------------------
+INTERFACE [riscv && 64bit]:
+
+#define csr_read64(csr) csr_read(csr)
+#define csr_write64(csr, val) csr_write(csr, val)
