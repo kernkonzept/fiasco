@@ -17,7 +17,7 @@ public:
     struct
     {
       // Supported RISC-V ISA extensions
-      Unsigned32 isa_ext;
+      Unsigned32 isa_ext[7];
       // Base frequency of the system timer / real-time counter (TIME csr)
       Unsigned32 timebase_frequency;
       // Number of populated entries in the following Hart ID list

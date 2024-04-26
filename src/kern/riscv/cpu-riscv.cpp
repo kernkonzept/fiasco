@@ -12,32 +12,29 @@ class Cpu
 {
 public:
   enum Isa_ext : Unsigned32 {
-    Isa_ext_a = 1 << 0,  // Atomic extension
-    Isa_ext_b = 1 << 1,  // Bit-Manipulation extension
-    Isa_ext_c = 1 << 2,  // Compressed extension
-    Isa_ext_d = 1 << 3,  // Double-precision floating-point extension
-    Isa_ext_e = 1 << 4,  // RV32E base ISA
-    Isa_ext_f = 1 << 5,  // Single-precision floating-point extension
-    Isa_ext_g = 1 << 6,
-    Isa_ext_h = 1 << 7,  // Hypervisor extension
-    Isa_ext_i = 1 << 8,  // RV32I/64I/128I base ISA
-    Isa_ext_j = 1 << 9,  // Dynamically Translated Languages extension
-    Isa_ext_k = 1 << 10,
-    Isa_ext_l = 1 << 11, // Decimal Floating-Point extension
-    Isa_ext_m = 1 << 12, // Integer Multiply/Divide extension
-    Isa_ext_n = 1 << 13, // User-level interrupts supported
-    Isa_ext_o = 1 << 14,
-    Isa_ext_p = 1 << 15, // Packed-SIMD extension
-    Isa_ext_q = 1 << 16, // Quad-precision floating-point extension
-    Isa_ext_r = 1 << 17,
-    Isa_ext_s = 1 << 18, // Supervisor mode implemented
-    Isa_ext_t = 1 << 19, // Transactional Memory extension
-    Isa_ext_u = 1 << 20, // User mode implemented
-    Isa_ext_v = 1 << 21, // Vector extension
-    Isa_ext_w = 1 << 22,
-    Isa_ext_x = 1 << 23, // Non-standard extensions present
-    Isa_ext_y = 1 << 24,
-    Isa_ext_z = 1 << 25,
+    // IDs 0-25 are reserved for single-letter RISC-V ISA extensions.
+    Isa_ext_a = ('a' - 'a'), // Atomics
+    Isa_ext_b = ('b' - 'a'), // Bit Manipulation
+    Isa_ext_c = ('c' - 'a'), // Quad-Precision Floating-Point
+    Isa_ext_d = ('d' - 'a'), // Double-Precision Floating-Point
+    Isa_ext_e = ('e' - 'a'), // Reduced Integer
+    Isa_ext_f = ('f' - 'a'), // Single-Precision Floating-Point
+    Isa_ext_g = ('g' - 'a'), // General
+    Isa_ext_h = ('h' - 'a'), // Hypervisor
+    Isa_ext_i = ('i' - 'a'), // Integer
+    Isa_ext_m = ('m' - 'a'), // Integer Multiplication and Division
+    Isa_ext_p = ('p' - 'a'), // Packed-SIMD Extensions
+    Isa_ext_q = ('q' - 'a'), // Quad-Precision Floating-Point
+    Isa_ext_v = ('v' - 'a'), // Vector
+
+    // IDs starting from 26 represent multi-letter extensions. The assignment does
+    // not follow a defined order, IDs are simply assigned incrementally when new
+    // extensions are added.
+    Isa_ext_base = 26,
+
+    // Maximum number of extensions that can be represented, corresponds to the
+    // size of the `Platform_info.arch.isa_ext` bitmap.
+    Isa_ext_max  = 224,
   };
 
   enum : Mword {
@@ -297,9 +294,12 @@ Cpu::have_superpages()
 
 PUBLIC static inline NEEDS ["kip.h"]
 bool
-Cpu::has_isa_ext(Isa_ext isa_ext)
+Cpu::has_isa_ext(Isa_ext ext)
 {
-  return Kip::k()->platform_info.arch.isa_ext & isa_ext;
+  if (ext < 0 || ext >= Isa_ext_max)
+    return 0;
+
+  return Kip::k()->platform_info.arch.isa_ext[ext / 32] & (1 << (ext % 32));
 }
 
 PUBLIC
@@ -316,7 +316,7 @@ Cpu::print_infos() const
   if (if_show_infos())
     printf("CPU[%u]: Extensions: %x\n",
            cxx::int_value<Cpu_number>(id()),
-           Kip::k()->platform_info.arch.isa_ext);
+           Kip::k()->platform_info.arch.isa_ext[0]);
 }
 
 extern "C" void handle_trap(void);
