@@ -11,10 +11,10 @@ private:
 
 public:
   void from(Mword id)
-  { r[4] = id; }
+  { r[1] = id; }
 
   Mword from_spec() const
-  { return r[4]; }
+  { return r[1]; }
 
    L4_obj_ref ref() const
   { return L4_obj_ref::from_raw(r[2]); }
@@ -29,7 +29,7 @@ public:
   { r[3] = to.raw(); }
 
   Utcb *utcb() const
-  { return reinterpret_cast<Utcb*>(r[1]); }
+  { return reinterpret_cast<Utcb*>(r[4]); }
 
   L4_msg_tag tag() const
   { return L4_msg_tag(r[0]); }
