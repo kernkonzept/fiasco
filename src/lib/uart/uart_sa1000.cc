@@ -30,8 +30,6 @@ namespace L4
     PAR_NONE = 0x00,
     PAR_EVEN = 0x03,
     PAR_ODD  = 0x01,
-    DAT_5    = (unsigned)-1,
-    DAT_6    = (unsigned)-1,
     DAT_7    = 0x00,
     DAT_8    = 0x08,
     STOP_1   = 0x00,
@@ -103,16 +101,16 @@ namespace L4
     _regs->write<unsigned int>(UTCR3, 0);
   }
 
-  bool Uart_sa1000::change_mode(Transfer_mode m, Baud_rate baud)
+  bool Uart_sa1000::change_mode(Transfer_mode m, Baud_rate r)
   {
     unsigned old_utcr3, quot;
     //proc_status st;
 
-    if (baud == (Baud_rate)-1)
+    if (r == static_cast<Baud_rate>(-1))
       return false;
-    if (baud != BAUD_NC && (baud>115200 || baud<96))
+    if (r != BAUD_NC && (r > 115200 || r < 96))
       return false;
-    if (m == (Transfer_mode)-1)
+    if (m == static_cast<Transfer_mode>(-1))
       return false;
 
     //st = proc_cli_save();
@@ -126,18 +124,18 @@ namespace L4
     _regs->write<unsigned int>(UTCR3, 0);
 
     /* set parity, data size, and stop bits */
-    if(m != MODE_NC)
+    if (m != MODE_NC)
       _regs->write<unsigned int>(UTCR0, m & 0x0ff);
 
     /* set baud rate */
-    if(baud!=BAUD_NC)
+    if (r!=BAUD_NC)
       {
-	quot = (UARTCLK / (16*baud)) -1;
+	quot = (UARTCLK / (16 * r)) -1;
 	_regs->write<unsigned int>(UTCR1, (quot & 0xf00) >> 8);
 	_regs->write<unsigned int>(UTCR2, quot & 0x0ff);
       }
 
-    _regs->write<unsigned int>(UTSR0, (unsigned)-1);
+    _regs->write<unsigned int>(UTSR0, ~0U);
     _regs->write<unsigned int>(UTCR3, old_utcr3);
     return true;
 
