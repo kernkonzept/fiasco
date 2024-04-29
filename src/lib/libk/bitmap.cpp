@@ -40,13 +40,10 @@ public:
   using Bitmap_elem_type
     = cxx::remove_pointer_t<cxx::remove_all_extents_t<STORAGE_TYPE>>;
 
-  enum : size_t
-  {
-    /**
-     * Number of bits per bitmap element.
-     */
-    Bpl = sizeof(Bitmap_elem_type) * 8
-  };
+  /**
+   * Number of bits per bitmap element.
+   */
+  static constexpr size_t Bpl = sizeof(Bitmap_elem_type) * 8;
 
   /**
    * Get the number of bitmap elements that hold the given number of bits.
@@ -179,23 +176,21 @@ public:
    */
   using Bitmap_elem_type = typename Bitmap_storage_size<BITS>::Bitmap_elem_type;
 
-  enum : size_t
-  {
-    /**
-     * Number of bits per bitmap element.
-     */
-    Bpl = Bitmap_storage_size<BITS>::Bpl,
+  /**
+   * Number of bits per bitmap element.
+   */
+  static constexpr size_t Bpl = Bitmap_storage_size<BITS>::Bpl;
 
-    /**
-     * Number of bitmap elements.
-     */
-    Nr_elems = Bitmap_storage_size<BITS>::nr_elems(BITS),
+  /**
+   * Number of bitmap elements.
+   */
+  static constexpr size_t Nr_elems = Bitmap_storage_size<BITS>::nr_elems(BITS);
 
-    /**
-     * Size of the bitmap in bytes.
-     */
-    Size_in_bytes = Bitmap_storage_size<BITS>::size_in_bytes(BITS),
-  };
+  /**
+   * Size of the bitmap in bytes.
+   */
+  static constexpr size_t Size_in_bytes
+    = Bitmap_storage_size<BITS>::size_in_bytes(BITS);
 
   /**
    * Atomically access and clear a bit in the bitmap.
@@ -515,6 +510,16 @@ class Bitmap_base<false, BITS>
 {
 public:
   /**
+   * Number of bits per bitmap element.
+   */
+  static constexpr size_t Bpl = sizeof(unsigned long) * 8;
+
+  /**
+   * Number bitmap elements (1).
+   */
+  static constexpr size_t Nr_elems = 1;
+
+  /**
    * Assign a bit in the bitmap.
    *
    * This is an optimized version for the single scalar unsigned long storage
@@ -813,19 +818,6 @@ public:
 
 protected:
   template<bool LARGE, size_t BTS> friend class Bitmap_base;
-
-  enum : size_t
-  {
-    /**
-     * Number of bits per bitmap element.
-     */
-    Bpl = sizeof(unsigned long) * 8,
-
-    /**
-     * Number bitmap elements (1).
-     */
-    Nr_elems = 1,
-  };
 
   /**
    * Actual bitmap data.
