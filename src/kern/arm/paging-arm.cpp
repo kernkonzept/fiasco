@@ -310,6 +310,9 @@ public:
 };
 
 
+//-----------------------------------------------------------------------------
+INTERFACE [arm && mmu && arm_lpae]:
+
 /**
  * Mixin for PTE pointers for ARMv6+ LPAE page-table attributes
  * (long descriptors).
@@ -427,6 +430,9 @@ public:
       }
   }
 };
+
+//-----------------------------------------------------------------------------
+INTERFACE [arm && mmu]:
 
 
 /**
