@@ -78,6 +78,9 @@ void
 Jdb::kernel_uart_irq_ack()
 {}
 
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && (!pic_gic || !serial)]:
+
 PRIVATE static inline
 void
 Jdb::kernel_uart_irq_disable()
