@@ -83,7 +83,7 @@ Cpu_phys_id Proc::cpu_id()
 IMPLEMENTATION [arm && 64bit && cpu_virt]:
 
 PUBLIC static inline
-Unsigned32
+Mword
 Proc::sctlr_el1()
 {
   Mword v;
@@ -92,7 +92,7 @@ Proc::sctlr_el1()
 }
 
 PUBLIC static inline
-Unsigned32
+Mword
 Proc::sctlr()
 {
   Mword v;
@@ -104,7 +104,7 @@ Proc::sctlr()
 IMPLEMENTATION [arm && 64bit && !cpu_virt]:
 
 PUBLIC static inline
-Unsigned32
+Mword
 Proc::sctlr()
 {
   Mword v;
