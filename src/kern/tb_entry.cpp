@@ -129,7 +129,7 @@ template< typename T >
 class Tb_entry_formatter_t : public Tb_entry_formatter
 {
 public:
-  Tb_entry_formatter_t() {}
+  constexpr Tb_entry_formatter_t() {}
 
   typedef T const *Const_ptr;
   typedef T *Ptr;
