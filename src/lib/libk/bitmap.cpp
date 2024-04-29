@@ -322,7 +322,7 @@ public:
    *
    * \param bit  Bit index to clear.
    */
-  void atomic_clear_bit(unsigned long bit)
+  void atomic_clear_bit(size_t bit)
   {
     size_t idx = bit / Bpl;
     size_t pos = bit % Bpl;
