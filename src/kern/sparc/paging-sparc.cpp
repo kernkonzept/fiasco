@@ -262,7 +262,7 @@ Pte_ptr::need_cache_write_back(bool /* current_pt */)
 
 PUBLIC inline NEEDS["mem_unit.h"]
 void
-Pte_ptr::write_back_if(bool /* current_pt */, Mword /*asid*/ = 0)
+Pte_ptr::write_back_if(bool /* current_pt */)
 {
   //if (current_pt)
   //  Mem_unit::clean_dcache(pte);

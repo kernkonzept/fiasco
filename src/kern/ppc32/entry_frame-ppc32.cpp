@@ -143,3 +143,7 @@ IMPLEMENT inline
 void Syscall_frame::tag(L4_msg_tag const &tag)
 { r[2] = tag.raw(); /*r3*/ }
 
+IMPLEMENT inline
+Mword
+Return_frame::ip_syscall_user() const
+{ return ip(); }

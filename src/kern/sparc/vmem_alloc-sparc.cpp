@@ -37,7 +37,7 @@ void *Vmem_alloc::page_alloc(void *address, Zero_fill zf, unsigned mode)
     r |= Page::Rights::U();
 
   pte.create_page(Phys_mem_addr(page), Page::Attr::kern_global(r));
-  pte.write_back_if(true, 0 /*Mem_unit::Asid_kernel*/);
+  pte.write_back_if(true);
   //Mem_unit::dtlb_flush(address);
 
   if (zf == ZERO_FILL)

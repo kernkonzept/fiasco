@@ -49,12 +49,3 @@ Kmem_alloc::to_phys(void *v) const
   //return Kmem_space::kdir()->virt_to_phys((Address)v);
   return ~0UL;
 }
-
-//----------------------------------------------------------------------------
-IMPLEMENTATION [ppc32 && debug]:
-
-PUBLIC
-void Kmem_alloc::debug_dump()
-{
-  a->dump();
-}

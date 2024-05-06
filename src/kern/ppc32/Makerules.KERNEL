@@ -17,11 +17,13 @@ phys_mem.o: $(TCBOFFSET)
 
 -include .kernel.ppc32.lds.d
 
+LIBGCC = $(shell $(CXX) $(SHARED_FLAGS) -print-libgcc-file-name)
+
 # $(1) = fiasco - variable
 # $(2) = fiasco.debug - variable
 # $(3) = Additional $(OBJ_X), e.g. OBJ_<unittest>
 define gen_kernel_rules =
-$(2): kernel.ppc32.lds $$(CRT0) $$(OBJ_KERNEL) $(3) $$(LIBK) $$(LIBDISASM) libdrivers.a $$(ABI) $$(LIBUART) $$(CXXLIB) $$(MINILIBC) libgluedriverslibc.a
+$(2): kernel.ppc32.lds $$(CRT0) $$(OBJ_KERNEL) $(3) $$(LIBK) $$(LIBDISASM) libdrivers.a $$(ABI) $$(LIBUART) $$(CXXLIB) $$(MINILIBC) $(LIBGCC) libgluedriverslibc.a
 	$$(LINK_MESSAGE)
 	$$(VERBOSE)$$(LD) $$(LDFLAGS) $$(LD_EMULATION_FLAG) -N -T $$< -o $$@ $$(filter-out $$<,$$+)
 	$$(call ADD_CONFIGFILE,$$@)

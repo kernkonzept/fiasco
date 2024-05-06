@@ -47,12 +47,3 @@ Kmem_alloc::to_phys(void *v) const
   printf("Kmem_alloc::to_phys: v=%p p=%lx psr=%lx\n", v, p, Psr::read());
   return p;
 }
-
-//----------------------------------------------------------------------------
-IMPLEMENTATION [sparc && debug]:
-
-PUBLIC
-void Kmem_alloc::debug_dump()
-{
-  a->dump();
-}

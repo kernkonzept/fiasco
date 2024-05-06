@@ -307,7 +307,7 @@ Mem_space::v_lookup(Vaddr /* virt */, Phys_addr* /* phys */,
 IMPLEMENT
 L4_fpage::Rights
 Mem_space::v_delete(Vaddr /* virt */, Page_order /* size */,
-                    L4_fpage::Rights /* page_attribs */)
+                    L4_fpage::Rights page_attribs)
 {
   printf("Mem_space::v_delete: ...\n");
   return page_attribs;
