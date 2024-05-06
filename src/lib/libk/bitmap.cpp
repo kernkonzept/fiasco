@@ -791,7 +791,7 @@ public:
    * \return 1 plus the index of the least significant set bit in the bitmap
    *         (starting at the given bit index).
    */
-  unsigned ffs(size_t bit) const
+  size_t ffs(size_t bit) const
   {
     unsigned long elem = _bits;
     elem >>= bit;
