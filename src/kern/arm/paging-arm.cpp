@@ -326,7 +326,7 @@ private:
 
 public:
   Unsigned64 _attribs_mask() const
-  { return ~Unsigned64{Page::UXN | Page::PXN | 0x8dc}; }
+  { return ~Unsigned64{ATTRIBS::UXN | ATTRIBS::PXN | 0x8dc}; }
 
   Unsigned64 _attribs(Page::Attr attr) const
   {
@@ -351,17 +351,17 @@ public:
     if (attr.rights & R::U())
       lower |= 0x040;
 
-    if (Page::Priv_levels == 1)
+    if (ATTRIBS::Priv_levels == 1)
       lower |= 0x040; // the bit is RES1
 
-    if (Page::Priv_levels == 2 && !(attr.rights & R::U()))
+    if (ATTRIBS::Priv_levels == 2 && !(attr.rights & R::U()))
       {
         // Make kernel mappings never executable by userspace
-        lower |= Page::UXN;
+        lower |= ATTRIBS::UXN;
       }
 
     if (!(attr.rights & R::X()))
-      lower |= Page::UXN | Page::PXN;
+      lower |= ATTRIBS::UXN | ATTRIBS::PXN;
 
     return lower;
   }
@@ -377,13 +377,13 @@ public:
     R rights = R::R();
     if (!(c & 0x80))
       rights |= R::W();
-    if (Page::Priv_levels == 2)
+    if (ATTRIBS::Priv_levels == 2)
       {
         if (c & 0x40)
           rights |= R::U();
       }
 
-    if (!(c & Page::PXN))
+    if (!(c & ATTRIBS::PXN))
       rights |= R::X();
 
     T type;
@@ -417,7 +417,7 @@ public:
       n_attr = 0x80;
 
     if (r & L4_fpage::Rights::X())
-      n_attr |= Page::UXN | Page::PXN;
+      n_attr |= ATTRIBS::UXN | ATTRIBS::PXN;
 
     if (!n_attr)
       return;
@@ -766,6 +766,16 @@ struct Kernel_page_attr
     CACHEABLE     = 0x008, ///< Cache is enabled
     BUFFERED      = 0x004, ///< Write buffer enabled -- Normal, non-cached
   };
+
+  enum
+  {
+    /// The EL2 translation regime supports one privilege level.
+    Priv_levels = 1,
+    // With only a single privilege level, there is no distinction between
+    // privileged and unprivileged execute never.
+    PXN = 1ULL << 54, ///< Execute Never, alias for XN
+    UXN = 1ULL << 54, ///< Execute Never, alias for XN
+  };
 };
 
 //-----------------------------------------------------------------------------
@@ -995,6 +1005,7 @@ public:
 
   enum
   {
+    /// The EL1&0 translation regime supports two privilege levels.
     Priv_levels = 2,
     PXN = 1ULL << 53, ///< Privileged Execute Never
     UXN = 1ULL << 54, ///< Unprivileged Execute Never
@@ -1015,13 +1026,6 @@ public:
     NONCACHEABLE  = 0x000, ///< Caching is off
     CACHEABLE     = 0x03c, ///< Cache is enabled
     BUFFERED      = 0x014, ///< Write buffer enabled -- Normal, non-cached
-  };
-
-  enum
-  {
-    Priv_levels = 1,
-    PXN = 1ULL << 54, ///< Execute Never, alias for XN
-    UXN = 1ULL << 54, ///< Execute Never, alias for XN
   };
 };
 
