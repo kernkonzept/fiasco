@@ -107,8 +107,10 @@ public:
 #endif
 #ifdef CONFIG_MMU
     Have_mmu = 1,
+    Have_mpu = 0,
 #else
     Have_mmu = 0,
+    Have_mpu = 1,
 #endif
   };
 
