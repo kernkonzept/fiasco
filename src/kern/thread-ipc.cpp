@@ -200,7 +200,8 @@ Thread::ipc_send_msg(Receiver *recv, bool open_wait) override
   else
     {
       regs->tag(L4_msg_tag(regs->tag(), L4_msg_tag::Error));
-      state_del = 0;
+      state_del = Thread_ipc_transfer; // handle Abt_ipc_in_progress in
+                                       // Thread::abort_send()
       state_add = Thread_transfer_failed | Thread_ready;
     }
   if (xcpu_state_change(~state_del, state_add, true))

@@ -22,7 +22,9 @@ enum Thread_state
   Thread_ipc_mask            = Thread_send_wait | Thread_receive_wait
                              | Thread_receive_in_progress,
 
-  /// Passively receiving a message until this flag is cleared.
+  /// Passively waiting until this flag is cleared by the partner. Either we are
+  /// receiving a message from the partner or the partner is sending a message
+  /// in our context (see Thread::abort_send(), Abt_ipc_in_progress).
   Thread_ipc_transfer        = 0x20,
 
   /// The IPC operation is canceled by the receiver.
