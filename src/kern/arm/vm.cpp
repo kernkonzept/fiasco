@@ -90,7 +90,8 @@ public:
     Mword r0;
     Mword r1;
     void print(String_buffer *buf) const;
- };
+  };
+  static_assert(sizeof(Vm_log) <= Tb_entry::Tb_entry_size);
 };
 
 //-----------------------------------------------------------------------------

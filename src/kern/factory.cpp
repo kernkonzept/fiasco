@@ -223,6 +223,7 @@ private:
     Mword newo;
     void print(String_buffer *buf) const;
   };
+  static_assert(sizeof(Log_entry) <= Tb_entry::Tb_entry_size);
 };
 
 // ------------------------------------------------------------------------

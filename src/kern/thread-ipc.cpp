@@ -12,12 +12,14 @@ protected:
     Mword err;
     void print(String_buffer *buf) const;
   };
+  static_assert(sizeof(Log_pf_invalid) <= Tb_entry::Tb_entry_size);
 
   struct Log_exc_invalid : public Tb_entry
   {
     Cap_index cap_idx;
     void print(String_buffer *buf) const;
   };
+  static_assert(sizeof(Log_exc_invalid) <= Tb_entry::Tb_entry_size);
 };
 
 INTERFACE:

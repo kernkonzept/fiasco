@@ -10,6 +10,7 @@ protected:
     Mword       id, ip, sp, op;
     void print(String_buffer *) const;
   };
+  static_assert(sizeof(Log_thread_exregs) <= Tb_entry::Tb_entry_size);
 };
 
 //--------------------------------------------------------------------------

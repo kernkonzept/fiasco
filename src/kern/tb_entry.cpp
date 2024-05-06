@@ -93,9 +93,7 @@ class Tb_entry_union : public Tb_entry
 private:
   char _padding[Tb_entry_size - sizeof(Tb_entry)];
 };
-
-static_assert(sizeof(Tb_entry_union) == Tb_entry::Tb_entry_size,
-              "Tb_entry_union has the wrong size");
+static_assert(sizeof(Tb_entry_union) == Tb_entry::Tb_entry_size);
 
 struct Tb_entry_empty : public Tb_entry
 {
@@ -173,23 +171,24 @@ public:
   Tb_entry_ipc() : _timeout(0) {}
   void print(String_buffer *buf) const;
 };
+static_assert(sizeof(Tb_entry_ipc) <= Tb_entry::Tb_entry_size);
 
 /** logged ipc result. */
 class Tb_entry_ipc_res : public Tb_entry
 {
 private:
+  Unsigned8     _have_snd;      ///< IPC had send part
+  Unsigned8     _is_np;         ///< next period bit set
   L4_msg_tag    _tag;           ///< message tag
   Mword         _dword[2];      ///< first two dwords
   L4_error      _result;        ///< result
   Mword         _from;          ///< receive descriptor
   L4_obj_ref    _dst;           ///< destination id
   Mword         _pair_event;    ///< referred event
-  Unsigned8     _have_snd;      ///< IPC had send part
-  Unsigned8     _is_np;         ///< next period bit set
 public:
   void print(String_buffer *buf) const;
 };
-
+static_assert(sizeof(Tb_entry_ipc_res) <= Tb_entry::Tb_entry_size);
 
 /** logged pagefault. */
 class Tb_entry_pf : public Tb_entry
@@ -202,6 +201,7 @@ public:
   // Unused because PF logging type < Tbuf_dynentries, see formatter_default()
   void print(String_buffer *) const {}
 };
+static_assert(sizeof(Tb_entry_pf) <= Tb_entry::Tb_entry_size);
 
 /** logged kernel event. */
 template<unsigned BASE_SIZE>
@@ -245,6 +245,7 @@ public:
   void set(Context const *ctx, Address ip)
   { set_global(Tbuf_ke, ctx, ip); }
 };
+static_assert(sizeof(Tb_entry_ke) <= Tb_entry::Tb_entry_size);
 
 class Tb_entry_ke_reg : public Tb_entry
 {
@@ -254,6 +255,7 @@ public:
   void set(Context const *ctx, Address ip)
   { set_global(Tbuf_ke_reg, ctx, ip); }
 };
+static_assert(sizeof(Tb_entry_ke_reg) <= Tb_entry::Tb_entry_size);
 
 /** logged breakpoint. */
 class Tb_entry_bp : public Tb_entry
@@ -266,6 +268,7 @@ private:
 public:
   void print(String_buffer *buf) const;
 };
+static_assert(sizeof(Tb_entry_bp) <= Tb_entry::Tb_entry_size);
 
 /** logged binary kernel event. */
 class Tb_entry_ke_bin : public Tb_entry
@@ -274,6 +277,7 @@ public:
   char _msg[Tb_entry_size - sizeof(Tb_entry)];
   enum { SIZE = 30 };
 };
+static_assert(sizeof(Tb_entry_ke_bin) <= Tb_entry::Tb_entry_size);
 
 //---------------------------------------------------------------------------
 INTERFACE[64bit]:

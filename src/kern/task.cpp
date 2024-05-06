@@ -607,7 +607,7 @@ private:
     bool  map;
     void print(String_buffer *buf) const;
   };
-
+  static_assert(sizeof(Log_map_unmap) <= Tb_entry::Tb_entry_size);
 };
 
 // ---------------------------------------------------------------------------

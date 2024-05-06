@@ -66,7 +66,7 @@ protected:
     Mword label;
     void print(String_buffer *buf) const;
   };
-
+  static_assert(sizeof(Log_ipc_gate_invoke) <= Tb_entry::Tb_entry_size);
 };
 
 //---------------------------------------------------------------------------

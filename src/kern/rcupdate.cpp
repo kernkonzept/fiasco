@@ -160,6 +160,7 @@ public:
     unsigned char event;
     void print(String_buffer *buf) const;
   };
+  static_assert(sizeof(Log_rcu) <= Tb_entry::Tb_entry_size);
 
   enum Rcu_events
   {

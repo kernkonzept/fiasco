@@ -445,6 +445,7 @@ public:
     Mword pin;
     void print(String_buffer *buf) const;
   };
+  static_assert(sizeof(Irq_log) <= Tb_entry::Tb_entry_size);
 };
 
 

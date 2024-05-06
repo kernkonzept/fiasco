@@ -420,7 +420,7 @@ public:
       return o->has_partner();
     }
   };
-
+  static_assert(sizeof(Drq_log) <= Tb_entry::Tb_entry_size);
 
   struct Vcpu_log : public Tb_entry
   {
@@ -433,6 +433,7 @@ public:
     unsigned char trap;
     void print(String_buffer *buf) const;
   };
+  static_assert(sizeof(Vcpu_log) <= Tb_entry::Tb_entry_size);
 };
 
 // --------------------------------------------------------------------------
@@ -2420,7 +2421,7 @@ public:
   Mword from_prio;
   void print(String_buffer *buf) const;
 };
-
+static_assert(sizeof(Tb_entry_ctx_sw) <= Tb_entry::Tb_entry_size);
 
 
 // --------------------------------------------------------------------------

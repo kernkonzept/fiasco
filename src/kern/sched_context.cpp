@@ -160,7 +160,8 @@ public:
   unsigned long quantum;
 
   void print(String_buffer *buf) const;
-} __attribute__((packed));
+};
+static_assert(sizeof(Tb_entry_sched) <= Tb_entry::Tb_entry_size);
 
 
 IMPLEMENTATION [debug]:

@@ -19,6 +19,7 @@ private:
 public:
   void print(String_buffer *buf) const;
 };
+static_assert(sizeof(Tb_entry_trap) <= Tb_entry::Tb_entry_size);
 
 // --------------------------------------------------------------------
 IMPLEMENTATION [ppc32]:

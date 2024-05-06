@@ -38,7 +38,7 @@ protected:
     Mword exitcode, exitinfo1, exitinfo2, rip;
     void print(String_buffer *buf) const;
   };
-
+  static_assert(sizeof(Log_vm_svm_exit) <= Tb_entry::Tb_entry_size);
 };
 
 // ------------------------------------------------------------------------
