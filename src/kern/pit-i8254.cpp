@@ -6,7 +6,7 @@ class Pit
 {
   enum
   {
-    Clock_tick_rate = 1193180,
+    Clock_tick_rate = 1193182,
   };
 };
 
