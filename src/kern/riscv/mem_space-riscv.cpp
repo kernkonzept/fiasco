@@ -391,7 +391,7 @@ IMPLEMENTATION [riscv && riscv_asid]:
 #include "atomic.h"
 
 PUBLIC inline NEEDS["atomic.h"]
-unsigned long
+unsigned long FIASCO_PURE
 Mem_space::c_asid() const
 {
   Asid asid = atomic_load(&_asid);
@@ -419,7 +419,7 @@ Mem_space::Asid_alloc  Mem_space::_asid_alloc(&_asids);
 IMPLEMENTATION [riscv && !riscv_asid]:
 
 PUBLIC inline
-Mword
+Mword FIASCO_PURE
 Mem_space::c_asid() const
 { return Mem_unit::Asid_disabled; }
 

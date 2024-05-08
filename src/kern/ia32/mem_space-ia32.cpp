@@ -631,7 +631,7 @@ Mem_space::asid(unsigned long a)
 }
 
 PUBLIC inline
-unsigned long
+unsigned long FIASCO_PURE
 Mem_space::c_asid() const
 { return _asid[current_cpu()]; }
 

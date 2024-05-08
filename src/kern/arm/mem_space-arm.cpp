@@ -755,7 +755,7 @@ Mem_space::v_set_access_flags(Vaddr, L4_fpage::Rights)
 IMPLEMENTATION [arm_v5]:
 
 PUBLIC inline
-unsigned long
+unsigned long FIASCO_PURE
 Mem_space::c_asid() const
 { return 0; }
 
@@ -848,7 +848,7 @@ IMPLEMENTATION [arm_v6 || arm_v7 || arm_v8]:
 
 
 PUBLIC inline NEEDS["atomic.h"]
-unsigned long
+unsigned long FIASCO_PURE
 Mem_space::c_asid() const
 {
   Asid asid = atomic_load(&_asid);
