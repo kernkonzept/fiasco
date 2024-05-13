@@ -128,15 +128,59 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && 32bit && !debug]:
+IMPLEMENTATION [arm && 32bit]:
 
 #include "infinite_loop.h"
 
 extern "C" void hyp_mode_fault(Mword abort_type, Trap_state *ts)
 {
-  Mword v;
   Mword hsr;
   asm volatile("mrc p15, 4, %0, c5, c2, 0" : "=r" (hsr));
+
+  switch (abort_type)
+    {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+      if (Thread::handle_hyp_mode_fault(abort_type, ts, hsr))
+        return;
+      break;
+
+    default:
+      // Cannot happen -- see Assembler stub.
+      printf("KERNEL%d: Unknown hyp fault at %lx hsr=%lx\n",
+             cxx::int_value<Cpu_number>(current_cpu()), ts->ip(), hsr);
+      break;
+    };
+
+  ts->dump();
+
+  kdb_ke("In-kernel fault");
+
+  printf("Unhandled in-kernel fault -- halting!\n");
+  L4::infinite_loop();
+}
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [arm && 32bit && debug]:
+
+PUBLIC static inline NEEDS[Thread::call_nested_trap_handler]
+bool
+Thread::handle_hyp_mode_fault(Mword abort_type, Trap_state *ts, Mword hsr)
+{
+  call_nested_trap_handler(ts);
+  return false;
+}
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [arm && 32bit && !debug]:
+
+PUBLIC static inline
+bool
+Thread::handle_hyp_mode_fault(Mword abort_type, Trap_state *ts, Mword hsr)
+{
+  Mword v;
 
   switch (abort_type)
     {
@@ -162,57 +206,9 @@ extern "C" void hyp_mode_fault(Mword abort_type, Trap_state *ts)
              cxx::int_value<Cpu_number>(current_cpu()),
              ts->ip(), v, hsr);
       break;
-    default:
-      printf("KERNEL%d: Unknown hyp fault at %lx hsr=%lx\n",
-             cxx::int_value<Cpu_number>(current_cpu()), ts->ip(), hsr);
-      break;
     };
 
-  ts->dump();
-
-  printf("In-kernel fault -- halting!\n");
-  L4::infinite_loop();
-}
-
-//-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && 32bit && debug]:
-
-#include "infinite_loop.h"
-
-PUBLIC static inline NEEDS[Thread::call_nested_trap_handler]
-void
-Thread::handle_hyp_mode_fault(Trap_state *ts)
-{
-  call_nested_trap_handler(ts);
-}
-
-extern "C" void hyp_mode_fault(Mword abort_type, Trap_state *ts)
-{
-  Mword hsr;
-  asm volatile("mrc p15, 4, %0, c5, c2, 0" : "=r" (hsr));
-
-  switch (abort_type)
-    {
-    case 0:
-    case 1:
-    case 2:
-    case 3:
-      Thread::handle_hyp_mode_fault(ts);
-      return;
-
-    default:
-      // Cannot happen -- see Assembler stub.
-      printf("KERNEL%d: Unknown hyp fault at %lx hsr=%lx\n",
-             cxx::int_value<Cpu_number>(current_cpu()), ts->ip(), hsr);
-      break;
-    };
-
-  ts->dump();
-
-  kdb_ke("In-kernel fault");
-
-  printf("Return from debugger -- halting!\n");
-  L4::infinite_loop();
+  return false;
 }
 
 //-----------------------------------------------------------------------------
