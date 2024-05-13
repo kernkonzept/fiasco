@@ -222,6 +222,9 @@ struct Mpu_region : public cxx::D_list_item
 
   bool operator < (Mpu_region const &o) const
   { return end() < o.start(); }
+
+  constexpr bool contains(Mword addr) const
+  { return start() <= addr && addr <= end(); }
 };
 
 /**
