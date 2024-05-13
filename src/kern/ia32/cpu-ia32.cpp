@@ -1610,20 +1610,19 @@ PUBLIC FIASCO_INIT_AND_PM
 void
 Cpu::pm_resume()
 {
-  if (id() != Cpu_number::boot_cpu())
-    {
-      // the boot CPU restores some state in asm already
-      set_gdt();
-      set_ldt(0);
-      set_ds(Gdt::data_segment());
-      set_es(Gdt::data_segment());
-      set_ss(Gdt::gdt_data_kernel | Gdt::Selector_kernel);
-      set_fs(Gdt::gdt_data_user   | Gdt::Selector_user);
-      set_gs(Gdt::gdt_data_user   | Gdt::Selector_user);
-      set_cs();
+  set_gdt();
+  set_ldt(0);
 
-      set_tss();
-    }
+  set_ds(Gdt::data_segment());
+  set_es(Gdt::data_segment());
+  set_ss(Gdt::gdt_data_kernel | Gdt::Selector_kernel);
+  set_fs(Gdt::gdt_data_user   | Gdt::Selector_user);
+  set_gs(Gdt::gdt_data_user   | Gdt::Selector_user);
+  set_cs();
+
+  // the boot CPU restores TSS in asm already
+  if (id() != Cpu_number::boot_cpu())
+    set_tss();
 
   if (_vendor == Vendor_intel)
     Ia32_intel_microcode::load();

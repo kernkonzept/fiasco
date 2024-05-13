@@ -75,13 +75,6 @@ _tramp_acpi_wakeup:
   lidt _idt
   lldt _ldt
 
-#if 0
-  movw _fs, %ax
-  movw %ax, %fs
-  movw _gs, %ax
-  movw %ax, %gs
-#endif
-
   /* restore general purpose registers */
 #ifdef CONFIG_AMD64
   mov _sp, %rsp
@@ -136,10 +129,6 @@ _idt:   .quad 0
         .quad 0
 _ldt:   .quad 0
         .quad 0
-#if 0
-_fs:    .word 0
-_gs:    .word 0
-#endif
 
 _tr:    .quad 0 /* task register */
         .quad 0
@@ -191,13 +180,6 @@ acpi_save_cpu_and_suspend:
   mov %BX, _cr3
   mov %cr4, %BX
   mov %BX, _cr4
-
-#if 0
-  movw %fs, %bx
-  movw %bx, _fs
-  movw %gs, %bx
-  movw %bx, _gs
-#endif
 
   str _tr
   /* save descriptor table (registers) */
