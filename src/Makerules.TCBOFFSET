@@ -14,7 +14,9 @@ tcboffset.o: tcboffset_in.h
 
 tcboffset.bin: tcboffset.o
 	$(LINK_MESSAGE)
-	$(VERBOSE)$(OBJCOPY) -j .e_length -j .offsets --adjust-section-vma .offsets=32 -Obinary $< $@
+	$(VERBOSE)$(OBJCOPY) -j .e_length -Obinary $< elength.bin
+	$(VERBOSE)$(OBJCOPY) -j .offsets -Obinary $< offsets.bin
+	$(VERBOSE)cat elength.bin offsets.bin > $@
 
 
 clean-TCBOFFSET:
