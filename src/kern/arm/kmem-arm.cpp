@@ -60,6 +60,7 @@ Kmem::mmio_unmap(Address virt, Address size)
   if (diff)
     Mpu::sync(*kdir, diff.value());
   Mem::isb();
+}
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION[arm && 64bit && kernel_nx && mmu]:
