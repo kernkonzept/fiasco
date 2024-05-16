@@ -2,36 +2,9 @@ IMPLEMENTATION [riscv]:
 
 #include "asm_riscv.h"
 
-// ``unsafe'' stands for no safety according to the size of the given type.
-// There are type safe versions of the cas operations in the architecture
-// independent part of atomic that use the unsafe versions and make a type
-// check.
-
-inline NEEDS["asm_riscv.h"]
-bool
-local_cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
-{
-  Mword prev;
-  // Holds return value of SC instruction: 0 if successful, !0 otherwise
-  Mword ret = 1;
-
-  __asm__ __volatile__ (
-    "0:                               \n"
-    REG_LR " %[prev], %[ptr]          \n"
-    "bne     %[prev], %[old], 1f      \n"
-    REG_SC " %[ret],  %[newv], %[ptr] \n"
-    "bnez    %[ret],  0b              \n"
-    "1:                               \n"
-    : [prev]"=&r" (prev), [ret]"+&r" (ret), [ptr]"+A"(*ptr)
-    : [newv]"r" (newval), [old]"r" (oldval)
-    : "memory");
-
-  return ret == 0;
-}
-
 inline NEEDS["asm_riscv.h"]
 Mword
-local_atomic_and(Mword *l, Mword mask)
+atomic_and(Mword *l, Mword mask)
 {
   Mword prev;
 
@@ -46,7 +19,7 @@ local_atomic_and(Mword *l, Mword mask)
 
 inline NEEDS["asm_riscv.h"]
 Mword
-local_atomic_or(Mword *l, Mword bits)
+atomic_or(Mword *l, Mword bits)
 {
   Mword prev;
 
@@ -61,7 +34,7 @@ local_atomic_or(Mword *l, Mword bits)
 
 inline NEEDS["asm_riscv.h"]
 Mword
-local_atomic_add(Mword *l, Mword value)
+atomic_add(Mword *l, Mword value)
 {
   Mword prev;
 
@@ -77,7 +50,7 @@ local_atomic_add(Mword *l, Mword value)
 
 inline NEEDS["asm_riscv.h"]
 Mword
-local_atomic_xchg(Mword *l, Mword value)
+atomic_xchg(Mword *l, Mword value)
 {
   Mword prev;
 
@@ -188,30 +161,57 @@ atomic_store(T *mem, V value)
 
 inline
 Mword
-atomic_and(Mword *l, Mword mask)
+local_atomic_and(Mword *l, Mword mask)
 {
-  return local_atomic_and(l, mask);
+  return atomic_and(l, mask);
 }
 
 inline
 Mword
-atomic_or(Mword *l, Mword bits)
+local_atomic_or(Mword *l, Mword bits)
 {
-  return local_atomic_or(l, bits);
+  return atomic_or(l, bits);
 }
 
 inline
 Mword
-atomic_add(Mword *l, Mword value)
+local_atomic_add(Mword *l, Mword value)
 {
-  return local_atomic_add(l, value);
+  return atomic_add(l, value);
 }
 
 inline
 Mword
-atomic_xchg(Mword *l, Mword value)
+local_atomic_xchg(Mword *l, Mword value)
 {
-  return local_atomic_xchg(l, value);
+  return atomic_xchg(l, value);
+}
+
+// ``unsafe'' stands for no safety according to the size of the given type.
+// There are type safe versions of the cas operations in the architecture
+// independent part of atomic that use the unsafe versions and make a type
+// check.
+
+inline NEEDS["asm_riscv.h"]
+bool
+local_cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
+{
+  Mword prev;
+  // Holds return value of SC instruction: 0 if successful, !0 otherwise
+  Mword ret = 1;
+
+  __asm__ __volatile__ (
+    "0:                               \n"
+    REG_LR " %[prev], %[ptr]          \n"
+    "bne     %[prev], %[old], 1f      \n"
+    REG_SC " %[ret],  %[newv], %[ptr] \n"
+    "bnez    %[ret],  0b              \n"
+    "1:                               \n"
+    : [prev]"=&r" (prev), [ret]"+&r" (ret), [ptr]"+A"(*ptr)
+    : [newv]"r" (newval), [old]"r" (oldval)
+    : "memory");
+
+  return ret == 0;
 }
 
 //---------------------------------------------------------------------------
