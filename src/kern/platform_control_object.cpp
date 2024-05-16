@@ -19,6 +19,10 @@ public:
 
 private:
   static Global_data<Platform_control_object> pfc;
+
+protected:
+  L4_msg_tag invoke_arch(L4_fpage::Rights rights, Syscall_frame *f,
+                         Utcb const *r_msg, Utcb *s_msg);
 };
 
 //-----------------------------------------------------------------------------
@@ -98,6 +102,12 @@ Platform_control_object::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights,
     case Op::Suspend_system:     return sys_system_suspend(rights, f, r_msg);
     case Op::Shutdown_system:    return sys_system_shutdown(rights, f, r_msg);
     case Op::Allow_cpu_shutdown: return sys_cpu_allow_shutdown(rights, f, r_msg);
-    default:                     return commit_result(-L4_err::ENosys);
+    default:                     return invoke_arch(rights, f, r_msg, s_msg);
     }
 }
+
+IMPLEMENT_DEFAULT inline
+L4_msg_tag
+Platform_control_object::invoke_arch(L4_fpage::Rights, Syscall_frame *,
+                                     Utcb const *, Utcb *)
+{ return commit_result(-L4_err::ENosys); }
