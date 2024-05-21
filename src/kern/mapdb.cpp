@@ -242,6 +242,7 @@ public:
   class Frame
   {
   public:
+    static constexpr void *frame = nullptr;
     bool same_lock(Frame const &) const { return false; }
     void clear() {}
     void might_clear() {}
@@ -1135,7 +1136,7 @@ PUBLIC inline
 Mapping *
 Mapdb::insert(Frame const &, Space *, Pfn, Pfn, Pcnt)
 {
-  return (Mapping *)1;
+  return reinterpret_cast<Mapping *>(1);
 }
 
 PUBLIC inline
