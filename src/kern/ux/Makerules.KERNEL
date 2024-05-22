@@ -31,7 +31,7 @@ tramp-mp.o:          $(TCBOFFSET)
 
 -include .kernel.ux.lds.d
 
-$(KERNEL):	kernel.ux.lds $(OBJ_KERNEL) $(MINILIBC) $(LIBK) $(KERNEL_EXTRA_LIBS) $(ABI) $(JABI) $(DRIVERS) $(CXXLIB)
+$(KERNEL):	kernel.ux.lds $(OBJ_KERNEL) $(MINILIBC) $(LIBK) $(KERNEL_EXTRA_LIBS) $(ABI) $(JABI) $(DRIVERS) $(CXXLIB) $(OBJ_STDWORKLOAD)
 		$(LINK_MESSAGE)
 		$(VERBOSE)$(CXX) -m32 -Wl,-T$< -static -o $@ -Wl,--whole-archive $(MINILIBC) -Wl,--no-whole-archive $(KERNEL_UNRES_SYMS) $(filter-out $<,$+) -lutil $(WRAP_SYMBOLS)
 		$(VERBOSE)chmod 755 $@

@@ -3,11 +3,9 @@ IMPLEMENTATION:
 #include "assert_opt.h"
 #include "config.h"
 #include "factory.h"
-#include "initcalls.h"
 #include "ipc_gate.h"
-#include "irq.h"
+#include "kernel_thread.h"
 #include "kip.h"
-#include "koptions.h"
 #include "map_util.h"
 #include "mem_layout.h"
 #include "sigma0_task.h"
@@ -16,15 +14,16 @@ IMPLEMENTATION:
 #include "types.h"
 #include "ram_quota.h"
 #include "warn.h"
+#include "workload.h"
 
 static constexpr Cap_index C_task    = Cap_index(Initial_kobjects::Task);
 static constexpr Cap_index C_thread  = Cap_index(Initial_kobjects::Thread);
 static constexpr Cap_index C_factory = Cap_index(Initial_kobjects::Factory);
 static constexpr Cap_index C_pager   = Cap_index(Initial_kobjects::Pager);
 
-PRIVATE
+static
 Task *
-Kernel_thread::create_sigma0_task()
+create_sigma0_task()
 {
   int err;
   Task *sigma0 = Task::create<Sigma0_task>(Ram_quota::root, L4_msg_tag(), 0, 0,
@@ -50,9 +49,9 @@ Kernel_thread::create_sigma0_task()
   return sigma0;
 }
 
-PRIVATE
+static
 Task *
-Kernel_thread::create_boot_task(Task *sigma0, Thread *sigma0_thread)
+create_boot_task(Task *sigma0, Thread *sigma0_thread)
 {
   int err;
   Task *boot_task = Task::create<Task>(Ram_quota::root, L4_msg_tag(), 0, 0,
@@ -79,9 +78,9 @@ Kernel_thread::create_boot_task(Task *sigma0, Thread *sigma0_thread)
   return boot_task;
 }
 
-PRIVATE
+static
 Thread_object *
-Kernel_thread::create_user_thread(Task *task, Thread_ptr const &pager, Address ip)
+create_user_thread(Task *task, Thread_ptr const &pager, Address ip)
 {
   Thread_object *thread = new (Ram_quota::root) Thread_object(Ram_quota::root);
   assert_opt(thread);
@@ -91,7 +90,7 @@ Kernel_thread::create_user_thread(Task *task, Thread_ptr const &pager, Address i
   check (map_obj_initially(thread, task, task, C_thread, 0));
 
   // Task just newly created, no need for locking or remote TLB flush.
-  L4_fpage utcb_fp = L4_fpage::mem(utcb_addr(), Config::PAGE_SHIFT);
+  L4_fpage utcb_fp = L4_fpage::mem(Kernel_thread::utcb_addr(), Config::PAGE_SHIFT);
   check(task->alloc_ku_mem(&utcb_fp, false) >= 0);
 
   check (thread->control(pager, Thread_ptr(Thread_ptr::Null)) == 0);
@@ -104,9 +103,8 @@ Kernel_thread::create_user_thread(Task *task, Thread_ptr const &pager, Address i
   return thread;
 }
 
-IMPLEMENT
-void
-Kernel_thread::init_workload()
+extern "C" void
+init_std_workload()
 {
   if (!Kip::k()->sigma0_ip)
     {
@@ -131,3 +129,5 @@ Kernel_thread::init_workload()
     create_user_thread(boot_task, Thread_ptr(C_pager), Kip::k()->root_ip);
   boot_thread->activate();
 }
+
+INIT_WORKLOAD(INIT_WORKLOAD_PRIO_STD, init_std_workload);

@@ -100,6 +100,8 @@ SECTIONS {
     *(.sdata2 .sdata2.* .gnu.linkonce.s2.*)
     *(.sbss2 .sbss2.* .gnu.linkonce.sb2.*)
 
+    DEFINE_WORKLOAD_SECTIONS
+
     . = ALIGN(WORD_SIZE);
     JDB_TABLE(log);
     . = ALIGN(WORD_SIZE);

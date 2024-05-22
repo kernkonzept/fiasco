@@ -21,10 +21,12 @@ INTERFACE:
 #include "timer.h"
 #include "thread_object.h"
 #include "unique_ptr.h"
+#include "workload.h"
 
 
 extern "C" void cov_print(void) __attribute__((weak));
 
+INIT_WORKLOAD(INIT_WORKLOAD_PRIO_UNIT_TEST, init_unittest);
 
 template <typename T, unsigned ALIGN = __alignof(T)>
 struct Kmem_slab_t_singleton

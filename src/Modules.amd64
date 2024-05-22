@@ -3,8 +3,8 @@
 
 include $(srcdir)/Modules.generic
 
-SUBSYSTEMS = JABI ABI DRIVERS KERNEL CRT0 BOOT LIBK \
-	     CHECKSUM CXXLIB MINILIBC TCBOFFSET SYMBOLS VERSION GBLCFG
+SUBSYSTEMS = JABI ABI DRIVERS KERNEL CRT0 BOOT LIBK CHECKSUM CXXLIB MINILIBC \
+             TCBOFFSET SYMBOLS VERSION GBLCFG STDWORKLOAD
 
 ifeq ($(CONFIG_UNIT_TEST),y)
 	# UTEST depends on KERNEL and CHECKSUM, must be listed after them
@@ -122,7 +122,7 @@ entry_frame_IMPL	:= entry_frame entry_frame-amd64
 fpu_IMPL		:= fpu fpu-ia32-ux fpu-ia32
 ipi_IMPL		:= ipi ipi-ia32
 kdb_ke_IMPL		+= kdb_ke-ia32
-kernel_thread_IMPL	:= kernel_thread kernel_thread-std kernel_thread-ia32
+kernel_thread_IMPL	:= kernel_thread kernel_thread-ia32
 kernel_uart_IMPL	:= kernel_uart kernel_uart-libuart
 kip_init_IMPL		:= kip_init-ia32
 kmem_IMPL		:= kmem kmem-ia32 kmem-ia32-64

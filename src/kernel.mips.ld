@@ -81,6 +81,8 @@ SECTIONS {
 
     KEEP(*(.rodata.log.*))
 
+    DEFINE_WORKLOAD_SECTIONS
+
     . = ALIGN(WORD_ALIGN);
     JDB_TABLE(log);
     . = ALIGN(WORD_ALIGN);

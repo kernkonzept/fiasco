@@ -57,6 +57,6 @@ $(1): $(2)
 endef
 
 # generate fiasco and fiasco.debug rules
-$(eval $(call gen_kernel_rules,$(BOOT),$(KERNEL),))
+$(eval $(call gen_kernel_rules,$(BOOT),$(KERNEL),$(OBJ_STDWORKLOAD)))
 
 BOOT_CLEAN := boot_img.x1 boot_img.x2 boot_img.ren_syms boot_img.ren_syms kernel.amd64.lds

@@ -160,6 +160,8 @@ SECTIONS {
     *(.rodata .rodata.* .gnu.linkonce.r.* .rodata1)
     KEEP(*(.rodata.log.*))
 
+    DEFINE_WORKLOAD_SECTIONS
+
     . = ALIGN(WORD_SIZE);
     JDB_TABLE(typeinfo);
 

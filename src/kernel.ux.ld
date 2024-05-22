@@ -150,6 +150,8 @@ SECTIONS {
     KEEP (*(.ctors.00011))
     __PER_CPU_LATE_CTORS_LIST__ = .;
 
+    DEFINE_WORKLOAD_SECTIONS
+
     . = ALIGN(4);
     JDB_TABLE(log);
 

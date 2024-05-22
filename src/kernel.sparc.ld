@@ -65,6 +65,8 @@ SECTIONS {
     *(.rodata .rodata.* .gnu.linkonce.r.*)
     KEEP(*(.rodata.log.*))
 
+    DEFINE_WORKLOAD_SECTIONS
+
     . = ALIGN(4);
     JDB_TABLE(log);
     . = ALIGN(4);

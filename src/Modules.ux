@@ -2,7 +2,8 @@
 # vi:se ft=make:
 
 SUBSYSTEMS = JABI ABI DRIVERS KERNEL LIBK CXXLIB JDB \
-	     TCBOFFSET SYMBOLS VERSION GBLCFG MINILIBC
+	     TCBOFFSET SYMBOLS VERSION GBLCFG MINILIBC STDWORKLOAD
+
 # remove the ia32 tag until we marked all ia32 non-ux section with some extra tag
 PREPROCESS_PARTS	:= $(filter-out ia32,$(PREPROCESS_PARTS))
 PREPROCESS_PARTS	+= arch $(CONFIG_ABI) 32bit $(CONFIG_XARCH)    \
@@ -168,7 +169,7 @@ jdb_ptab_IMPL		:= jdb_ptab jdb_ptab-ia32-ux
 jdb_screen_IMPL		:= jdb_screen jdb_screen-ia32
 jdb_trace_set_IMPL	:= jdb_trace_set jdb_trace_set-ia32-ux
 kdb_ke_IMPL		+= kdb_ke-ia32
-kernel_thread_IMPL	:= kernel_thread kernel_thread-std kernel_thread-ux
+kernel_thread_IMPL	:= kernel_thread kernel_thread-ux
 kip_init_IMPL		:= kip_init-ia32 kip_init-ux
 kmem_IMPL		:= kmem kmem-ia32 kmem-ux
 kmem_alloc_IMPL		:= kmem_alloc kmem_alloc-ia32
@@ -214,6 +215,11 @@ NOOPT			+= $(filter jdb%,\
 			       $(if $($(in)_IMPL),$($(in)_IMPL),$(in))))
 NOOPT			+= tb_entry tb_entry_output
 NOOPT			+= $(patsubst %.o, %, $(OBJ_JDB))
+
+#
+# STDWORKLOAD susbsystem
+#
+INTERFACES_STDWORKLOAD	:= std_workload
 
 #
 # TCBOFFSET subsystem

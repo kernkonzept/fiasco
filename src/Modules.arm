@@ -6,7 +6,7 @@
 include $(srcdir)/Modules.generic
 
 SUBSYSTEMS := 	ABI KERNEL LIBK DRIVERS MINILIBC LIBUART \
-		CXXLIB VERSION JABI TCBOFFSET CRT0
+		CXXLIB VERSION JABI TCBOFFSET CRT0 STDWORKLOAD
 
 ifeq ($(CONFIG_UNIT_TEST),y)
 	# UTEST depends on KERNEL and CHECKSUM, must be listed after them
@@ -192,7 +192,7 @@ iommu_IMPL		:= iommu-arm
 ipi_IMPL		:= ipi ipi-arm
 kdb_ke_IMPL		+= kdb_ke-arm
 kernel_task_IMPL	:= kernel_task kernel_task-arm
-kernel_thread_IMPL	:= kernel_thread kernel_thread-std kernel_thread-arm \
+kernel_thread_IMPL	:= kernel_thread kernel_thread-arm \
 			   kernel_thread-arm-$(BITS)
 kernel_uart_IMPL  	:= kernel_uart kernel_uart-libuart
 map_util_IMPL		:= map_util map_util-mem map_util-objs

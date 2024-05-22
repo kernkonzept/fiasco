@@ -106,6 +106,8 @@ SECTIONS {
     KEEP(*(__exc_table __exc_table.*))
     PROVIDE(__exc_table_end = .);
 
+    DEFINE_WORKLOAD_SECTIONS
+
     KEEP(*(.rodata.log.*))
 
     . = ALIGN(4);

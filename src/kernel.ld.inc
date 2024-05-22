@@ -91,6 +91,19 @@
     KEEP (*(.ctors))                            \
     __CTOR_END__ = .;
 
+/*
+ * Use SORT_BY_INIT_PRIORITY to perform sorting by the numbers following the
+ * dot.
+ */
+#define DEFINE_WORKLOAD_SECTIONS                              \
+    . = ALIGN(WORD_SIZE);                                     \
+    PROVIDE(_init_workload_table = .);                        \
+    KEEP (*(SORT_BY_INIT_PRIORITY(.init_workload.*)))         \
+    MWORD(0)                                                  \
+    PROVIDE(_init_workload_app_cpu_table = .);                \
+    KEEP (*(SORT_BY_INIT_PRIORITY(.init_workload_app_cpu.*))) \
+    MWORD(0)
+
 #if defined(CONFIG_COV)
 EXTERN(cov_print)
 ASSERT(DEFINED(cov_print), "cov_print not available")

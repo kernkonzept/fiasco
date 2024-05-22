@@ -105,6 +105,8 @@ SECTIONS {
     KEEP(*(.intel_microcode))
     PROVIDE (ia32_intel_microcode_end = .);
 
+    DEFINE_WORKLOAD_SECTIONS
+
     . = ALIGN(8);
     JDB_TABLE(typeinfo);
 

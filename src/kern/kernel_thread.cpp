@@ -24,9 +24,6 @@ private:
   void bootstrap_arch();
   void run() FIASCO_NORETURN;
   void check_debug_koptions();
-
-protected:
-  void init_workload();
 };
 
 
@@ -52,12 +49,6 @@ IMPLEMENTATION:
 #include "timer_tick.h"
 #include "watchdog.h"
 
-
-/**
- * unit test interface
- */
-void
-init_unittest() __attribute__((weak));
 
 PUBLIC explicit
 Kernel_thread::Kernel_thread(Ram_quota *q)
@@ -141,12 +132,7 @@ Kernel_thread::run()
 
   check_debug_koptions();
 
-  // init_workload cannot be an initcall, because it fires up the userland
-  // applications which then have access to initcall frames as per kinfo page.
-  if (init_unittest)
-    init_unittest();
-  else
-    init_workload();
+  init_workload();
 
   for (;;)
     idle_op();
@@ -157,9 +143,19 @@ void
 Kernel_thread::check_debug_koptions()
 {}
 
+PRIVATE
+void
+Kernel_thread::init_workload()
+{
+  extern void (*_init_workload_table[])();
+  for (unsigned i = 0; _init_workload_table[i]; ++i)
+    _init_workload_table[i]();
+}
+
 // ------------------------------------------------------------------------
 IMPLEMENTATION [debug]:
 
+#include "koptions.h"
 #include "string_buffer.h"
 
 IMPLEMENT_OVERRIDE

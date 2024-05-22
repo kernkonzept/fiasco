@@ -61,7 +61,7 @@ $(1): $(2)
 endef
 
 # generate $(KERNEL) rule
-$(eval $(call gen_kernel_rules,$(KERNEL),$(KERNEL).debug,))
+$(eval $(call gen_kernel_rules,$(KERNEL),$(KERNEL).debug,$(OBJ_STDWORKLOAD)))
 
 Symbols: $(KERNEL).debug
 	$(COMP_MESSAGE)

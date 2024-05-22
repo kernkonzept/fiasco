@@ -38,7 +38,7 @@ IMPLEMENTATION:
 #include "factory.h"
 #include "common_test_mapdb.h"
 
-void
+extern "C" void
 init_unittest()
 {
   // As we do output matching, wait until all app CPUs are done booting to
