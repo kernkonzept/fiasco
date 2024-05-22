@@ -4,6 +4,16 @@
 
 #pragma once
 
+#include "globalconfig.h"
+
+#if defined CONFIG_BIT64
+# define WORD_SIZE 8
+# define MWORD QUAD
+#else
+# define WORD_SIZE 4
+# define MWORD LONG
+#endif
+
 #define JDB_TABLE(name) \
   . = ALIGN(32);                               \
   PROVIDE(_jdb_ ## name ## _table = .);        \
