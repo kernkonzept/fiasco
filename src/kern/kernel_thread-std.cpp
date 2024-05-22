@@ -1,14 +1,3 @@
-INTERFACE:
-
-EXTENSION class Kernel_thread
-{
-public:
-  /**
-   * Desired UTCB address for sigma0 and boot tasks.
-   */
-  static Address utcb_addr();
-};
-
 IMPLEMENTATION:
 
 #include "assert_opt.h"
@@ -27,11 +16,6 @@ IMPLEMENTATION:
 #include "types.h"
 #include "ram_quota.h"
 #include "warn.h"
-
-IMPLEMENT_DEFAULT inline NEEDS["mem_layout.h"]
-Address
-Kernel_thread::utcb_addr()
-{ return Mem_layout::Utcb_addr; }
 
 static constexpr Cap_index C_task    = Cap_index(Initial_kobjects::Task);
 static constexpr Cap_index C_thread  = Cap_index(Initial_kobjects::Thread);

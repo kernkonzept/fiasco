@@ -4,6 +4,12 @@ INTERFACE:
 
 class Kernel_thread : public Thread_object
 {
+public:
+  /**
+   * Desired UTCB address for sigma0 and boot tasks.
+   */
+  static Address utcb_addr();
+
 private:
   /**
    * Frees the memory of the initcall sections.
@@ -35,6 +41,8 @@ IMPLEMENTATION:
 #include "globals.h"
 #include "helping_lock.h"
 #include "kernel_task.h"
+#include "kmem.h"
+#include "mem_layout.h"
 #include "per_cpu_data_alloc.h"
 #include "processor.h"
 #include "task.h"
@@ -43,7 +51,6 @@ IMPLEMENTATION:
 #include "timer.h"
 #include "timer_tick.h"
 #include "watchdog.h"
-#include "kmem.h"
 
 
 /**
@@ -61,6 +68,11 @@ PUBLIC inline
 Mword *
 Kernel_thread::init_stack()
 { return _kernel_sp; }
+
+IMPLEMENT_DEFAULT inline NEEDS["mem_layout.h"]
+Address
+Kernel_thread::utcb_addr()
+{ return Mem_layout::Utcb_addr; }
 
 // the kernel bootstrap routine
 IMPLEMENT FIASCO_INIT
