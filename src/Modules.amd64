@@ -234,26 +234,6 @@ NOOPT			+= $(foreach in,$(INTERFACES_JDB), \
 			       $(if $($(in)_IMPL),$($(in)_IMPL),$(in)))
 
 
-### When testing with test threads, uncomment the following:
-#
-# VPATH			+= kern-test
-# PRIVATE_INCDIR	+= kern-test
-#
-# INTERFACES_KERNEL	+= generic_test_thread test_thread node cpu \
-#			   back_trace cpu_guard types
-#
-# node_IMPL		:= node node-up
-# cpu_IMPL		:= cpu cpu-perf cpu-perfp4
-# config_IMPL		:= config config-test
-#
-# kernel_thread_IMPL	:= $(filter-out kernel_thread-std,$(kernel_thread_IMPL)) \
-#			   kernel_thread-test
-#
-# Replace this definition with your own test thread.
-# test_thread_IMPL	:= test_thread-test26
-#
-### End of test-thread section
-
 #
 # CRT0 subsystem
 #
