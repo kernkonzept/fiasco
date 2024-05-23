@@ -263,6 +263,7 @@ Context::save_ext_vcpu_state_mxu(Vm_state * v)
 {
   v->mpu.prselr = Mpu_arm_el1::prselr();
 
+  // Don't use r7 as in THUMB2 mode, r7 is reserved as frame pointer register.
 #define SAVE_REGIONS(i1, i2, i3, i4) \
   do \
     { \
@@ -273,8 +274,8 @@ Context::save_ext_vcpu_state_mxu(Vm_state * v)
       register Mword r4 asm("r4") = Mpu_arm_el1::prbar##i3(); \
       register Mword r5 asm("r5") = Mpu_arm_el1::prlar##i3(); \
       register Mword r6 asm("r6") = Mpu_arm_el1::prbar##i4(); \
-      register Mword r7 asm("r7") = Mpu_arm_el1::prlar##i4(); \
-      asm volatile ("stm %0!, {r0, r1, r2, r3, r4, r5, r6, r7}" \
+      register Mword r8 asm("r8") = Mpu_arm_el1::prlar##i4(); \
+      asm volatile ("stm %0!, {r0, r1, r2, r3, r4, r5, r6, r8}" \
         : "=&r"(ctx) \
         : "0"(ctx), \
           "r"(r0), \
@@ -284,7 +285,7 @@ Context::save_ext_vcpu_state_mxu(Vm_state * v)
           "r"(r4), \
           "r"(r5), \
           "r"(r6), \
-          "r"(r7) \
+          "r"(r8) \
         : "memory"); \
     } \
   while (false)
@@ -318,6 +319,7 @@ IMPLEMENT inline NEEDS["mpu.h"]
 void
 Context::load_ext_vcpu_state_mxu(Vm_state const * v)
 {
+  // Don't use r7 as in THUMB2 mode, r7 is reserved as frame pointer register.
 #define LOAD_REGIONS(i1, i2, i3, i4) \
   do \
     { \
@@ -328,8 +330,8 @@ Context::load_ext_vcpu_state_mxu(Vm_state const * v)
       register Mword r4 asm("r4"); \
       register Mword r5 asm("r5"); \
       register Mword r6 asm("r6"); \
-      register Mword r7 asm("r7"); \
-      asm volatile ("ldm %0!, {r0, r1, r2, r3, r4, r5, r6, r7}" \
+      register Mword r8 asm("r8"); \
+      asm volatile ("ldm %0!, {r0, r1, r2, r3, r4, r5, r6, r8}" \
         : "=&r"(ctx), \
           "=r"(r0), \
           "=r"(r1), \
@@ -338,13 +340,13 @@ Context::load_ext_vcpu_state_mxu(Vm_state const * v)
           "=r"(r4), \
           "=r"(r5), \
           "=r"(r6), \
-          "=r"(r7) \
+          "=r"(r8) \
         : "0"(ctx) \
         : "memory"); \
       Mpu_arm_el1::prxar##i1(r0, r1); \
       Mpu_arm_el1::prxar##i2(r2, r3); \
       Mpu_arm_el1::prxar##i3(r4, r5); \
-      Mpu_arm_el1::prxar##i4(r6, r7); \
+      Mpu_arm_el1::prxar##i4(r6, r8); \
     } \
   while (false)
 
