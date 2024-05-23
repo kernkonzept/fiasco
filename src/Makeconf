@@ -207,7 +207,8 @@ SHARED_FLAGS += $(if $(CONFIG_NO_FRAME_PTR),-fomit-frame-pointer,-fno-omit-frame
 # To enable all warnings, including those with false positives.
 ENABLE_ALL_WARNINGS ?= n
 ifeq ($(ENABLE_ALL_WARNINGS),y)
-  SHARED_FLAGS		+= $(call CHECKCC,-Wframe-larger-than=512)
+  SHARED_FLAGS += $(call CHECKCC,-Wframe-larger-than=512)
+  SHARED_FLAGS += -Wconversion -Wsign-conversion
 else
   # WARNING EXCEPTION: the variables are initialized when the warned about code
   # is reached. The false positives are only produced by GCC on -Os
