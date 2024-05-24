@@ -645,6 +645,7 @@ menuconfig JDB
 	bool "JDB kernel debugger"
 	default y
 	select RT_DBG
+	depends on !AMP
 	help
 	  The powerful Fiasco kernel debugger.
 
