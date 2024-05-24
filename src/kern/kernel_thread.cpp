@@ -174,7 +174,7 @@ Kernel_thread::check_debug_koptions()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [!arch_idle && !tickless_idle]:
+IMPLEMENTATION [!tickless_idle]:
 
 PUBLIC inline NEEDS["processor.h"]
 void
