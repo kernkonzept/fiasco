@@ -524,11 +524,9 @@ Thread::handle_ipi()
   Cpu::clear_software_interrupt();
 
   auto ipis = Ipi::pending_ipis_reset(current_cpu());
-  if (ipis & Ipi::Request)
-    Thread::handle_remote_requests_irq();
 
   if (ipis & Ipi::Global_request)
-    Thread::handle_global_remote_requests_irq();
+    Thread::handle_global_remote_requests_irq(); // must not call schedule()!
 
   if (ipis & Ipi::Debug)
     {
@@ -538,6 +536,9 @@ Thread::handle_ipi()
       ts.cause = Trap_state::Ec_l4_debug_ipi;
       Thread::call_nested_trap_handler(&ts);
     }
+
+  if (ipis & Ipi::Request)
+    Thread::handle_remote_requests_irq(); // might call schedule()
 
   return 1;
 }

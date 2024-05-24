@@ -682,11 +682,8 @@ public:
     auto ipi = Ipi::ipis(c);
     Ipi::hw->ack_ipi(c);
 
-    if (ipi->atomic_reset(Ipi::Request))
-      Thread::handle_remote_requests_irq();
-
     if (ipi->atomic_reset(Ipi::Global_request))
-      Thread::handle_global_remote_requests_irq();
+      Thread::handle_global_remote_requests_irq(); // must not call schedule()!
 
     if (ipi->atomic_reset(Ipi::Debug))
       {
@@ -697,6 +694,9 @@ public:
         cause->exc_code() = 9;
         Thread::call_nested_trap_handler(&ts);
       }
+
+    if (ipi->atomic_reset(Ipi::Request))
+      Thread::handle_remote_requests_irq(); // might call schedule
   }
 
   Thread_remote_irq()

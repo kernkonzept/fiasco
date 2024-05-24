@@ -1272,6 +1272,13 @@ Thread::handle_remote_requests_irq()
     c->schedule();
 }
 
+/**
+ * Handler for Ipi::Global requests.
+ *
+ * \note RISC-V and MIPS rely on the fact that this function does not call
+ *       Context::schedule()! If that ever changes, Context::schedule() would
+ *       have to be performed at the end of the IPI handler.
+ */
 IMPLEMENT
 void
 Thread::handle_global_remote_requests_irq()
