@@ -684,7 +684,7 @@ map(MAPDB* mapdb,
                   // If dst (rcv_frame) is equal to src (sender_frame), we have
                   // to unlock the rcv_frame here (and thereby also the
                   // sender_frame, as they are the same and therefore use the
-                  // same lock). For the case that dst is an anchestor of src,
+                  // same lock). For the case that dst is an ancestor of src,
                   // the sender_frame is not locked by lookup_src_dst().
                   assert(   rcv_frame.same_lock(sender_frame)
                          || sender_frame.frame == nullptr /* i.e. not locked */);
