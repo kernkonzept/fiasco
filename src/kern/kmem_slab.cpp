@@ -223,6 +223,16 @@ Kmem_slab::Kmem_slab(unsigned elem_size,
 PUBLIC
 Kmem_slab::~Kmem_slab()
 {
+  // Only for here to be able to destroy Kmem_slab objects during unit tests.
+  // Other than that, Kmem_slab objects must never be destroyed!
+  for (auto it = reap_list.begin(); it != reap_list.end(); ++it)
+    {
+      if (*it == this)
+        {
+          reap_list.erase(it);
+          break;
+        }
+    }
   destroy();
 }
 
