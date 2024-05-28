@@ -470,8 +470,8 @@ Gic_dist::init(VERSION, unsigned cpu_prio, int nr_irqs_override = -1)
   disable(VERSION());
 
   unsigned num = hw_nr_irqs();
-  if (nr_irqs_override != -1)
-    num = nr_irqs_override;
+  if (nr_irqs_override >= 0)
+    num = static_cast<unsigned>(nr_irqs_override);
 
   if (!Config_mxc_tzic)
     {

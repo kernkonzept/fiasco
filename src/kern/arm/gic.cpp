@@ -95,7 +95,8 @@ public:
       num = _dist.init(typename IMPL::Version(), Cpu::Cpu_prio_val,
                        nr_irqs_override);
     else
-      num = nr_irqs_override != -1 ? nr_irqs_override : _dist.hw_nr_irqs();
+      num = nr_irqs_override >= 0 ? static_cast<unsigned>(nr_irqs_override)
+                                  : _dist.hw_nr_irqs();
 
     self()->init_global_irq_handler();
 
