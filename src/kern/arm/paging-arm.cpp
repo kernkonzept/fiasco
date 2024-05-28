@@ -326,7 +326,7 @@ private:
 
 public:
   Unsigned64 _attribs_mask() const
-  { return ~Unsigned64{ATTRIBS::UXN | ATTRIBS::PXN | 0x8dc}; }
+  { return ~Unsigned64{ATTRIBS::UXN | ATTRIBS::PXN | ATTRIBS::XN | 0x8dc}; }
 
   Unsigned64 _attribs(Page::Attr attr) const
   {
@@ -361,7 +361,7 @@ public:
       }
 
     if (!(attr.rights & R::X()))
-      lower |= ATTRIBS::UXN | ATTRIBS::PXN;
+      lower |= ATTRIBS::UXN | ATTRIBS::PXN | ATTRIBS::XN;
 
     return lower;
   }
@@ -383,7 +383,8 @@ public:
           rights |= R::U();
       }
 
-    if (!(c & ATTRIBS::PXN))
+    // Note that Page::UXN (if available) is dependent on R::U()!
+    if (!(c & (ATTRIBS::PXN | ATTRIBS::XN)))
       rights |= R::X();
 
     T type;
@@ -417,7 +418,7 @@ public:
       n_attr = 0x80;
 
     if (r & L4_fpage::Rights::X())
-      n_attr |= ATTRIBS::UXN | ATTRIBS::PXN;
+      n_attr |= ATTRIBS::UXN | ATTRIBS::PXN | ATTRIBS::XN;
 
     if (!n_attr)
       return;
@@ -773,8 +774,9 @@ struct Kernel_page_attr
     Priv_levels = 1,
     // With only a single privilege level, there is no distinction between
     // privileged and unprivileged execute never.
-    PXN = 1ULL << 54, ///< Execute Never, alias for XN
-    UXN = 1ULL << 54, ///< Execute Never, alias for XN
+    PXN = 0,          ///< Privileged Execute Never feature not available
+    UXN = 0,          ///< Unprivileged Execute Never feature not available
+    XN  = 1ULL << 54, ///< Execute Never
   };
 };
 
@@ -1003,12 +1005,35 @@ public:
     BUFFERED      = 0x004, ///< Write buffer enabled -- Normal, non-cached
   };
 
+  /// The EL1&0 translation regime supports two privilege levels.
+  enum { Priv_levels = 2 };
+};
+
+//-----------------------------------------------------------------------------
+INTERFACE [arm && mmu && arm_lpae && !cpu_virt && 32bit]:
+
+EXTENSION class Page
+{
+public:
   enum
   {
-    /// The EL1&0 translation regime supports two privilege levels.
-    Priv_levels = 2,
+    PXN = 1ULL << 53, ///< Privileged Execute Never
+    UXN = 0,          ///< Unprivileged Execute Never feature not available
+    XN  = 1ULL << 54, ///< Execute Never (all exception levels)
+  };
+};
+
+//-----------------------------------------------------------------------------
+INTERFACE [arm && mmu && arm_lpae && !cpu_virt && 64bit]:
+
+EXTENSION class Page
+{
+public:
+  enum
+  {
     PXN = 1ULL << 53, ///< Privileged Execute Never
     UXN = 1ULL << 54, ///< Unprivileged Execute Never
+    XN  = 0,          ///< Execute Never feature not available
   };
 };
 
