@@ -50,6 +50,7 @@ _tramp_mp_entry:
 
 #ifndef CONFIG_PF_UX
 
+	.align 8
 .global _tramp_mp_startup_cr0
 .global _tramp_mp_startup_cr4
 .global _tramp_mp_startup_gdt_pdesc
