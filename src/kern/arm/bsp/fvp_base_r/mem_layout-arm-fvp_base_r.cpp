@@ -3,7 +3,7 @@ INTERFACE [arm && pf_fvp_base_r]: //------------------------------------------
 EXTENSION class Mem_layout
 {
 public:
-  enum Phys_layout_s32: Address {
+  enum Phys_layout_fvp_base_r : Address {
     // Map whole GIC
     Gic_phys_base     = 0xaf000000,
     Gic_phys_size     =   0x200000,
