@@ -47,7 +47,7 @@ SECTIONS {
   .realmode_tramp : {
       *(.realmode_tramp*)
       . = ALIGN(0x1000);
-  } : tramp
+  } : tramp = 0x00
 
   . = _boot_sys_start;
   .text_boot : ALIGN(0x1000) {
