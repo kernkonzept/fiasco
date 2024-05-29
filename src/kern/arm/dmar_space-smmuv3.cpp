@@ -1,5 +1,5 @@
 // -----------------------------------------------------------
-INTERFACE [iommu && !arm_iommu_stage2]:
+INTERFACE [iommu && !arm_iommu_stage2 && 64bit]:
 
 /**
  * When the SMMU is configured to use stage 1 translation, we use the same
@@ -23,6 +23,7 @@ EXTENSION class Dmar_space
       Priv_levels = 2,
       PXN = 1ULL << 53, ///< Privileged Execute Never
       UXN = 1ULL << 54, ///< Unprivileged Execute Never
+      XN = 0,           ///< Execute Never feature not available
     };
   };
 
@@ -52,7 +53,7 @@ EXTENSION class Dmar_space
 };
 
 // -----------------------------------------------------------
-INTERFACE [iommu && arm_iommu_stage2 && cpu_virt]:
+INTERFACE [iommu && arm_iommu_stage2 && cpu_virt && 64bit]:
 
 /**
  * When the SMMU is configured to use stage 2 translation, we use the regular
