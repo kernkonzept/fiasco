@@ -174,6 +174,8 @@ do_system_suspend(Context::Drq *, Context *, void *data)
 
   Pm_object::run_on_suspend_hooks(current_cpu());
 
+  current()->spill_user_state();
+
   Cpu::cpus.current().pm_suspend();
 
   if (acpi_save_cpu_and_suspend(sleep_type,
@@ -185,10 +187,15 @@ do_system_suspend(Context::Drq *, Context *, void *data)
 
   Cpu::cpus.current().pm_resume();
 
+  // mainly for setting FS base and GS base on AMD64
+  // must be done after calling Cpu::pm_resume()
+  current()->fill_user_state();
+
   take_boot_cpu_online();
 
   Pm_object::run_on_resume_hooks(current_cpu());
 
+  // includes booting the application CPUs
   if (_system_resume_handler)
     _system_resume_handler();
 
