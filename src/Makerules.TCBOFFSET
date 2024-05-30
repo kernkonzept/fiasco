@@ -17,6 +17,7 @@ tcboffset.bin: tcboffset.o
 	$(VERBOSE)$(OBJCOPY) -j .e_length -Obinary $< elength.bin
 	$(VERBOSE)$(OBJCOPY) -j .offsets -Obinary $< offsets.bin
 	$(VERBOSE)cat elength.bin offsets.bin > $@
+	$(VERBOSE)$(RM) elength.bin offsets.bin
 
 
 clean-TCBOFFSET:
