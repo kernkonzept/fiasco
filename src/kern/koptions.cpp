@@ -1,11 +1,12 @@
 INTERFACE:
 
 #include "koptions-def.h"
+#include "std_macros.h"
 
 namespace Koptions {
   using namespace L4_kernel_options;
 
-  Options const *o();
+  Options const *o() FIASCO_CONST;
 };
 
 //---------------------------------------------------------------------------
