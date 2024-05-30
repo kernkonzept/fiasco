@@ -9,7 +9,8 @@
 # All binaries are created in the utest/ directory.
 
 # select all test_* files to generate a build target for each.
-UTEST_TESTS-$(CONFIG_SCHED_FIXED_PRIO) = $(filter test_%,$(INTERFACES_UTEST))
+UTEST_TESTS-$(CONFIG_SCHED_FIXED_PRIO) = $(sort \
+	                                   $(filter test_%,$(INTERFACES_UTEST)))
 UTEST_TESTS += $(UTEST_TESTS-y)
 
 # the final binaries go into the utest/ folder.
