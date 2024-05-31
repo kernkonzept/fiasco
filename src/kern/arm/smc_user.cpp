@@ -60,7 +60,7 @@ void
 Smc_user::init()
 {
   _glbl_smc_user.construct();
-  initial_kobjects.register_obj(_glbl_smc_user, Initial_kobjects::Smc);
+  initial_kobjects->register_obj(_glbl_smc_user, Initial_kobjects::Smc);
 }
 
 STATIC_INITIALIZE(Smc_user);

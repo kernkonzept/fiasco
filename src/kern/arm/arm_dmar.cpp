@@ -96,7 +96,7 @@ Dmar::init()
   Dmar_space::init();
 
   _glbl_iommu.construct();
-  initial_kobjects.register_obj(_glbl_iommu, Initial_kobjects::Iommu);
+  initial_kobjects->register_obj(_glbl_iommu, Initial_kobjects::Iommu);
 }
 
 STATIC_INITIALIZE_P(Dmar, DMAR_INIT_PRIO);
