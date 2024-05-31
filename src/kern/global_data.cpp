@@ -178,6 +178,10 @@ public:
   constexpr T *&unwrap() { return _get(); }
   constexpr T * const &unwrap() const { return _get(); }
 
+  // Workaround for buggy gcc 9. The 'operator T*()' should be enough but
+  // gcc 9 mysteriously fails its lookup in some boolean contexts.
+  explicit constexpr operator bool () const { return _get() != nullptr; }
+
 private:
   using Global_data_ptr_storage<T>::_get;
 };
