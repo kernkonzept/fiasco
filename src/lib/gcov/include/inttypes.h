@@ -1,3 +1,3 @@
 #pragma once
 
-typedef unsigned long uintptr_t;
+#include <stdint.h>

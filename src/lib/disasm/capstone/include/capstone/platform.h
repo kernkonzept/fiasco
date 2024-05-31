@@ -49,6 +49,9 @@ typedef signed long long   int64_t;
 typedef unsigned long long uint64_t;
 #endif  // defined(_MSC_VER) && (_MSC_VER <= 1600 || defined(_KERNEL_MODE))
 
+// Fiasco
+#include <stdint.h>
+
 #if defined(_MSC_VER) && (_MSC_VER < 1600 || defined(_KERNEL_MODE)) || 1 // Fiasco
 #define INT8_MIN         (-127 - 1)
 #define INT16_MIN        (-32767 - 1)

@@ -1,0 +1,20 @@
+/* -*- c++ -*- */
+
+#ifndef CSTDINT_INCLUDE
+#define CSTDINT_INCLUDE
+
+#include <stdint.h>
+
+namespace std {
+
+#if(__GNUC__>=3)
+
+  using ::intptr_t;
+  using ::uintptr_t;
+
+#endif
+
+};
+
+
+#endif // CSTDDEF_INCLUDE
