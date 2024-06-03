@@ -27,6 +27,15 @@ public:
   Address to_phys(void *v) const;
 
 private:
+  /**
+   * Validate free memory region.
+   *
+   * The default implementation will always return true. A platform can
+   * override the method to constrain the allowed heap region.
+   */
+  static bool validate_free_region(Kip const *kip, unsigned long *start,
+                                   unsigned long *end);
+
   typedef Spin_lock<> Lock;
 
   /**
@@ -377,6 +386,11 @@ Kmem_alloc::to_phys(void *v) const
   return Mem_layout::pmem_to_phys(v);
 }
 
+IMPLEMENT_DEFAULT static inline
+bool
+Kmem_alloc::validate_free_region(Kip const *, unsigned long *, unsigned long *)
+{ return true; }
+
 /**
  * Create map entries for all regions which could be used for kernel memory.
  *
@@ -420,6 +434,8 @@ Kmem_alloc::create_free_map(Kip const *kip, Mem_region_map_base *map,
           s = (s + alignment - 1) & ~(alignment - 1);
           e = ((e + 1) & ~(alignment - 1)) - 1;
           if (e <= s)
+            break;
+          if (!validate_free_region(kip, &s, &e))
             break;
           available_size += e - s + 1;
           if (!map->add(Mem_region(s, e)))
