@@ -132,17 +132,9 @@ PUBLIC static inline
 Unsigned64
 Cpu::rdtsc()
 {
-  Unsigned64 tsc;
-  asm volatile (
-         "rdtsc				\n\t"
-	 "and   %1,%%rax		\n\t"
-	 "shl   $32,%%rdx		\n\t"
-	 "or	%%rdx,%%rax		\n\t"
-	: "=&a" (tsc)
-	: "r" (0xffffffffUL)
-	:"rdx"
-	);
-  return tsc;
+  Unsigned64 h, l;
+  asm volatile ("rdtsc" : "=a" (l), "=d" (h));
+  return (h << 32) | l;
 }
 
 

@@ -98,9 +98,9 @@ PUBLIC static inline
 Unsigned64
 Proc::rdmsr(Unsigned32 msr)
 {
-  Unsigned32 h, l;
-  asm volatile ("rdmsr" : "=a" (l), "=d" (h) : "c" (msr));
-  return (Unsigned64{h} << 32) | l;
+  Unsigned64 v;
+  asm volatile ("rdmsr" : "=A" (v) : "c" (msr));
+  return v;
 }
 
 PUBLIC static inline
