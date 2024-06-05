@@ -434,7 +434,7 @@ class Mgr_int : public Mgr_exynos
 {
 public:
 
-  Irq chip(Mword irqnum) const
+  Irq chip(Mword irqnum) const override
   {
     Mword origirq = irqnum;
 
@@ -535,7 +535,7 @@ Mgr_int::Mgr_int()
 
 PUBLIC
 void
-Mgr_int::set_cpu(Mword irqnum, Cpu_number cpu) const
+Mgr_int::set_cpu(Mword irqnum, Cpu_number cpu) const override
 {
   // this handles only the MCT_L[01] timers
   if (   irqnum == 379  // MCT_L1: Combiner 35:3
@@ -581,7 +581,7 @@ Per_cpu_ptr<Static_object<Gic_v2> > Pic::gic;
 class Mgr_ext : public Mgr_exynos
 {
 public:
-  Irq chip(Mword irqnum) const
+  Irq chip(Mword irqnum) const override
   {
     Mword origirq = irqnum;
 
@@ -717,7 +717,7 @@ Mgr_ext::Mgr_ext()
  */
 PUBLIC
 void
-Mgr_ext::set_cpu(Mword irqnum, Cpu_number cpu) const
+Mgr_ext::set_cpu(Mword irqnum, Cpu_number cpu) const override
 {
   if (!Platform::is_4412() && irqnum == 80)  // MCT_L1
     _gic.cpu(cpu)->set_cpu(80, cpu);
