@@ -205,8 +205,8 @@ Jdb_space::show(Task *t)
   for (int i = 0;
        auto *info = Jdb_kobject_extension::find_extension<Jdb_space_image_info>(t, i);
        i++)
-    printf("  image: %s@0x%lx%s\n", info->name(), info->base(),
-           Jdb::clear_to_eol_str());
+    printf("  image: %.*s@0x%lx%s\n",
+           info->max_len(), info->name(), info->base(), Jdb::clear_to_eol_str());
 
   Jdb::line();
 }
