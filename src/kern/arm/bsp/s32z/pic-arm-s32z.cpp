@@ -332,7 +332,7 @@ Mru::create_mru(Gic *)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && pf_s32z && trace]:
+IMPLEMENTATION [arm && pic_gic && pf_s32z && debug]:
 
 PUBLIC
 char const *
