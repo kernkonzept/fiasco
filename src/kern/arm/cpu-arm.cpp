@@ -589,6 +589,18 @@ Cpu::init_errata_workarounds()
           if (rev < 0x30)
             set_c15_c0_1(1 << 11);
         }
+
+      if (part == 0xd13)  // Cortex R52
+        {
+          if (Config::Fast_interrupts)
+            {
+              // Erratum 2918152 (LDM data corruption if HSCTLR.FI set)
+              Unsigned64 v;
+              asm("mrrc p15, 0, %Q0, %R0, c15" : "=r"(v)); // CPUACTLR
+              v |= Unsigned64{1} << 45; // OOODIVDIS
+              asm("mcrr p15, 0, %Q0, %R0, c15" : : "r"(v)); // CPUACTLR
+            }
+        }
     }
 }
 
