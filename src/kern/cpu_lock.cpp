@@ -18,7 +18,7 @@ public:
   /// The return type of test methods
   typedef Mword Status;
 
-  enum { Locked = 1, Not_locked = 0 };
+  enum : Status { Not_locked = 0 };
 
   /// ctor.
   inline Cpu_lock();
