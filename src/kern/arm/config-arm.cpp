@@ -70,6 +70,14 @@ public:
 #endif
   };
 
+  enum
+  {
+#ifdef CONFIG_ARM_FAST_INTERRUPTS
+    Fast_interrupts = 1,
+#else
+    Fast_interrupts = 0,
+#endif
+  };
 };
 
 // Macro to force 32-bit instructions, even on Thumb builds.

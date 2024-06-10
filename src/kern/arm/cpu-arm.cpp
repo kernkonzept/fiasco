@@ -236,9 +236,11 @@ public:
     Hsctlr_alignment_check = 1 << 1,
     Hsctlr_cp15ben = 1 << 5,
     Hsctlr_mpu = 1 << 0,
+    Hsctlr_fi = 1 << 21,
 
     Hsctlr = (Config::Cp15_c1_use_alignment_check ?  Hsctlr_alignment_check : 0)
            | (Config::Cache_enabled ? Hsctlr_cache_bits : 0)
+           | (Config::Fast_interrupts ? Hsctlr_fi : 0)
            | Hsctlr_cp15ben
            | Hsctlr_mpu
            | Hsctlr_res1,

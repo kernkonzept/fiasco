@@ -487,6 +487,20 @@ config EXPLICIT_ASID
 	  system to explicitly set the VMID to grant access for applications or
 	  virtual machines.
 
+config ARM_FAST_INTERRUPTS
+	bool "Enable low latency interrupt optimization"
+	depends on ARM_V8 && ARM_PROFILE_R && CPU_VIRT
+	help
+	  Armv8-R AArch32 defines a "Fast Interrupts" feature in HSCTLR.FI. It
+	  disables some performance features to lower the interrupt latency.
+	  Specifically, asynchronous errors and interrupts can interrupt
+	  LDM/STM instructions that access Normal memory. Even though the
+	  instruction will be restarted after the interrupt was processed,
+	  memory and registers referenced by the instruction will have an
+	  unknown state.
+
+	  If unsure, say N.
+
 # SECTION: COMPILING
 
 config THUMB2
