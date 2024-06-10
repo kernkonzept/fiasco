@@ -139,7 +139,7 @@ INTERFACES_KERNEL	:= string_buffer mem_region simpleio kernel_console panic warn
                            platform_control_object    \
 			   jdb_sender_list            \
 			   jdb_disasm jdb_regex jdb_report                \
-                           jdb_object
+                           jdb_object amp_node
 
 boot_info_IMPL		:= boot_info boot_info-ia32 boot_info-ux
 clock_IMPL              := clock clock-ia32
