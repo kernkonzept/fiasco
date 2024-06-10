@@ -3,13 +3,13 @@ INTERFACE:
 #include <cxx/type_traits>
 #include "types.h"
 
-/** 
- * Global CPU lock. When held, irqs are disabled on the current CPU 
- * (preventing nested irq handling, and preventing the current 
+/**
+ * Global CPU lock. When held, IRQs are disabled on the current CPU
+ * (preventing nested IRQ handling, and preventing the current
  * thread from being preempted).  It must only be held for very short
  * amounts of time.
  *
- * A generic (cli, sti) implementation of the lock can be found in 
+ * A generic (cli, sti) implementation of the lock can be found in
  * cpu_lock-generic.cpp.
  */
 class Cpu_lock
@@ -31,7 +31,7 @@ public:
 
   /**
    * Acquire the CPU lock.
-   * The CPU lock disables IRQ's it should be held only for a very
+   * The CPU lock disables IRQs. It should be held only for a very
    * short amount of time.
    */
   void lock();
