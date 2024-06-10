@@ -16,41 +16,23 @@ public:
 
   ~Jdb_kobject_name() {}
 
-  void *operator new (size_t) noexcept;
   void operator delete (void *);
 
 private:
-
   char _name[16];
-
-  static Global_data<Jdb_kobject_name *> _names;
 };
 
 //-----------------------------------------------------------------------
 IMPLEMENTATION:
 
-#include <cstdio>
-
-#include <feature.h>
-#include "context.h"
-#include "kmem_alloc.h"
+#include "kmem_slab.h"
 #include "minmax.h"
-#include "panic.h"
-#include "space.h"
-#include "thread.h"
 #include "static_init.h"
+#include "panic.h"
 
-
-
-enum
-{
-  Name_buffer_size = 64 << 10,
-  Name_entries = Name_buffer_size / sizeof(Jdb_kobject_name),
-};
-
-
+static DEFINE_GLOBAL Global_data<Kmem_slab_t<Jdb_kobject_name>>
+  _name_allocator("Jdb_kobject_names");
 char const *const Jdb_kobject_name::static_type = "Jdb_kobject_names";
-DEFINE_GLOBAL Global_data<Jdb_kobject_name *> Jdb_kobject_name::_names;
 
 
 PUBLIC
@@ -62,40 +44,11 @@ PUBLIC
 Jdb_kobject_name::Jdb_kobject_name()
 { _name[0] = 0; }
 
-DEFINE_GLOBAL static Global_data<Spin_lock<>> allocator_lock;
-
-IMPLEMENT
-void *
-Jdb_kobject_name::operator new (size_t) noexcept
-{
-  Jdb_kobject_name *n = _names;
-  while (1)
-    {
-      void **o = reinterpret_cast<void**>(n);
-      if (!*o)
-	{
-	  auto g = lock_guard(&allocator_lock);
-	  if (!*o)
-	    {
-	      *o = reinterpret_cast<void*>(10);
-	      return n;
-	    }
-	}
-
-      ++n;
-
-      if ((n - _names) >= Name_entries)
-	return 0;
-    }
-}
-
 IMPLEMENT
 void
 Jdb_kobject_name::operator delete (void *p)
 {
-  auto g = lock_guard(&allocator_lock);
-  void **o = reinterpret_cast<void**>(p);
-  *o = 0;
+  _name_allocator->free(p);
 }
 
 PUBLIC
@@ -141,7 +94,7 @@ Jdb_name_hdl::invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb) override
           ne = Jdb_kobject_extension::find_extension<Jdb_kobject_name>(o);
           if (!ne)
             {
-              ne = new Jdb_kobject_name();
+              ne = _name_allocator->new_obj();
               if (!ne)
                 {
                   f->tag(Kobject_iface::commit_result(-L4_err::ENomem));
@@ -215,14 +168,6 @@ PUBLIC static FIASCO_INIT
 void
 Jdb_kobject_name::init()
 {
-  _names = static_cast<Jdb_kobject_name*>(
-             Kmem_alloc::allocator()->alloc(Bytes(Name_buffer_size)));
-  if (!_names)
-    panic("No memory for thread names");
-
-  for (int i=0; i<Name_entries; i++)
-    *reinterpret_cast<unsigned long*>(&_names[i]) = 0;
-
   Jdb_kobject::module()->register_handler(&hdl);
 }
 
