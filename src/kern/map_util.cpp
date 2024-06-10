@@ -309,7 +309,7 @@ class Map_traits
 {
 public:
   static bool match(L4_fpage const &from, L4_fpage const &to);
-  static bool free_object(typename SPACE::Phys_addr o,
+  static void free_object(typename SPACE::Phys_addr o,
                           typename SPACE::Reap_list **reap_list);
 };
 
@@ -335,10 +335,10 @@ Map_traits<SPACE>::match(L4_fpage const &, L4_fpage const &)
 
 IMPLEMENT template<typename SPACE>
 inline
-bool
+void
 Map_traits<SPACE>::free_object(typename SPACE::Phys_addr,
                                typename SPACE::Reap_list **)
-{ return false; }
+{}
 
 
 PUBLIC template< typename SPACE >
@@ -380,17 +380,12 @@ Map_traits<Obj_space>::match(L4_fpage const &from, L4_fpage const &to)
 
 IMPLEMENT template<>
 inline
-bool
+void
 Map_traits<Obj_space>::free_object(Obj_space::Phys_addr o,
                                    Obj_space::Reap_list **reap_list)
 {
   if (o->map_root()->no_mappings())
-    {
-      o->initiate_deletion(reap_list);
-      return true;
-    }
-
-  return false;
+    o->initiate_deletion(reap_list);
 }
 
 IMPLEMENT template<>
