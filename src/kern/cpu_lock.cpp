@@ -49,6 +49,13 @@ public:
   Status test_and_set();
 
   /**
+   * Clear the CPU lock and return the old status.
+   * @return something else than 0 if the lock was held before and
+   *   0 if it was not held.
+   */
+  Status test_and_clear();
+
+  /**
    * Set the CPU lock according to the given status.
    * @param state the state to set (0 clear, else lock).
    */
@@ -80,6 +87,14 @@ Cpu_lock::Status Cpu_lock::test_and_set()
 {
   Status ret = test();
   lock();
+  return ret;
+}
+
+IMPLEMENT inline //NEEDS [Cpu_lock::clear, Cpu_lock::test]
+Cpu_lock::Status Cpu_lock::test_and_clear()
+{
+  Status ret = test();
+  clear();
   return ret;
 }
 
