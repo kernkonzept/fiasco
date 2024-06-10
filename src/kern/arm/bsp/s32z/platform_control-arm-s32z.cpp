@@ -94,7 +94,7 @@ Platform_control::amp_boot_init()
 {
   // Need to always start on first core of the expected cluster. Otherwise the
   // GIC initialization or node memory assigment will fail.
-  assert(Amp_node::phys_id() == Amp_node::First_node);
+  assert(Amp_node::phys_id() == Amp_node::first_node());
 
   // Reserve memory for all AP CPUs up-front so that everybody sees the same
   // reserved regions.
@@ -122,7 +122,7 @@ Platform_control::amp_boot_init()
   Address entry = reinterpret_cast<Address>(&Kernel_thread::__amp_main);
   for (unsigned i = 1; i < nodes; i++)
     {
-      unsigned n = cxx::int_value<Amp_phys_id>(Amp_node::First_node) + i;
+      unsigned n = cxx::int_value<Amp_phys_id>(Amp_node::first_node()) + i;
       Cpu_boot_info &info = boot_info[i - 1];
 
       if (!start_core(mc_me, mc_rgm, n, entry))
@@ -150,7 +150,7 @@ Platform_control::amp_boot_init()
 {
   // Need to always start on first core of the expected cluster. Otherwise the
   // GIC initialization or node memory assigment will fail.
-  assert(Amp_node::phys_id() == Amp_node::First_node);
+  assert(Amp_node::phys_id() == Amp_node::first_node());
 
   amp_boot_ap_cpus(Amp_node::Max_cores);
 }

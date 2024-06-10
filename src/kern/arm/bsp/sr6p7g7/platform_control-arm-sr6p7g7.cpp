@@ -65,7 +65,7 @@ PUBLIC static void
 Platform_control::amp_boot_init()
 {
   // We assume that the first node boots the rest of the system
-  assert(Amp_node::phys_id() == Amp_node::First_node);
+  assert(Amp_node::phys_id() == Amp_node::first_node());
 
   // Reserve memory for all AP CPUs up-front so that everybody sees the same
   // reserved regions.

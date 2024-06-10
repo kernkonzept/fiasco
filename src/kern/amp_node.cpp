@@ -9,7 +9,7 @@ INTERFACE:
  * The physical ID is an opaque number. They still have a defined difference
  * between each other, so that the range
  *
- *   [Amp_node::First_node, Amp_node::First_node + Amp_node::Max_num_nodes - 1]
+ *   [Amp_node::first_node(), Amp_node::first_node() + Amp_node::Max_num_nodes - 1]
  *
  * is properly defined.
  */
@@ -25,6 +25,14 @@ struct Amp_phys_id
 class Amp_node
 {
 public:
+  /**
+   * The physical node-id of the first CPU.
+   *
+   * Ususally the numbering starts at 0. A platform might override the
+   * implementation if numbering is different.
+   */
+  static constexpr Amp_phys_id first_node();
+
   /**
    * Get physical node-id of current CPU.
    *
@@ -55,18 +63,22 @@ INTERFACE[amp]:
 EXTENSION class Amp_node
 {
 public:
-  // The platform is supposed to define `First_node`.
   static constexpr unsigned Max_num_nodes = CONFIG_MP_MAX_CPUS;
 };
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION:
 
+IMPLEMENT_DEFAULT static constexpr
+Amp_phys_id
+Amp_node::first_node()
+{ return Amp_phys_id(0); }
+
 IMPLEMENT inline ALWAYS_INLINE
 unsigned
 Amp_node::id()
 {
-  return phys_id() - First_node;
+  return phys_id() - first_node();
 }
 
 /**
@@ -75,7 +87,7 @@ Amp_node::id()
 PUBLIC static constexpr
 Amp_phys_id
 Amp_node::phys_id(unsigned node)
-{ return First_node + node; }
+{ return first_node() + node; }
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION[!amp]:
@@ -83,11 +95,10 @@ IMPLEMENTATION[!amp]:
 EXTENSION class Amp_node
 {
 public:
-  static constexpr Amp_phys_id First_node = Amp_phys_id(0);
   static constexpr unsigned Max_num_nodes = 1;
 };
 
 IMPLEMENT inline ALWAYS_INLINE
 Amp_phys_id
 Amp_node::phys_id()
-{ return First_node; }
+{ return first_node(); }

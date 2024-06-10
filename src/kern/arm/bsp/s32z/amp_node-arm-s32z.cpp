@@ -1,22 +1,19 @@
 // ------------------------------------------------------------------------
-INTERFACE [arm && amp && pf_s32z && pf_s32z_rtu_0]:
+INTERFACE [arm && amp && pf_s32z]:
 
 EXTENSION class Amp_node
 {
 public:
-  static constexpr Amp_phys_id First_node = Amp_phys_id(0);
   static constexpr unsigned Max_cores = 4;
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && amp && pf_s32z && pf_s32z_rtu_1]:
+IMPLEMENTATION [arm && amp && pf_s32z && pf_s32z_rtu_1]:
 
-EXTENSION class Amp_node
-{
-public:
-  static constexpr Amp_phys_id First_node = Amp_phys_id(4);
-  static constexpr unsigned Max_cores = 4;
-};
+IMPLEMENT_OVERRIDE static constexpr
+Amp_phys_id
+Amp_node::first_node()
+{ return Amp_phys_id(4); }
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && amp && pf_s32z]:

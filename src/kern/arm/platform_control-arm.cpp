@@ -78,7 +78,7 @@ PROTECTED static void
 Platform_control::amp_boot_ap_cpus(int num)
 {
   // Only the boot CPU might release the others from their spin loop
-  assert(Amp_node::phys_id() == Amp_node::First_node);
+  assert(Amp_node::phys_id() == Amp_node::first_node());
 
   num = min<int>(num, Amp_node::Max_num_nodes);
 
@@ -132,7 +132,7 @@ Platform_control::amp_prepare_ap_cpus()
     return;
 
   // Only the boot CPU must issue the redirection
-  if (Amp_node::phys_id() != Amp_node::First_node)
+  if (Amp_node::phys_id() != Amp_node::first_node())
     return;
 
   // Redirect the other cores to our __amp_entry trampoline

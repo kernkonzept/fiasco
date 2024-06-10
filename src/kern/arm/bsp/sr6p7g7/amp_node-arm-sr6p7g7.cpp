@@ -4,7 +4,6 @@ INTERFACE [arm && amp && pf_sr6p7g7]:
 EXTENSION class Amp_node
 {
 public:
-  static constexpr Amp_phys_id First_node = Amp_phys_id(0);
   static constexpr unsigned Max_cores = 6;
 };
 // ------------------------------------------------------------------------
