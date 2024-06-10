@@ -20,7 +20,7 @@ template<typename LOCK>
 struct Lock_guard_inverse_policy : private LOCK
 {
   typedef typename LOCK::Status Status;
-  static Status test_and_set(LOCK *l) { l->clear(); return LOCK::Locked; }
+  static Status test_and_set(LOCK *l) { return l->test_and_clear(); }
   static void set(LOCK *l, Status s) { l->set(s); }
 };
 
