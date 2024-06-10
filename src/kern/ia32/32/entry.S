@@ -116,6 +116,8 @@ EXCEPTION	0x10, vec10_fpu_err
 EXCEP_ERR	0x11, vec11_align
 EXCEPTION	0x12, vec12_mcheck
 EXCEPTION	0x13, vec13_simd_err
+EXCEPTION	0x14, vec14_virt_exc
+EXCEP_ERR	0x15, vec15_ctrl_prot_exc
 
 
 	.p2align 4
