@@ -31,7 +31,10 @@ public:
   // Mapping utilities
   enum				// Definitions for map_util
   {
+    // TLB never holds any translation table entry that generates a Translation
+    // fault or an Access Flag fault.
     Need_insert_tlb_flush = 0,
+    // TLB entry needs to be explicitly invalidated before it can be used.
     Need_upgrade_tlb_flush = 1,
     Map_page_size = Config::PAGE_SIZE,
     Page_shift = Config::PAGE_SHIFT,

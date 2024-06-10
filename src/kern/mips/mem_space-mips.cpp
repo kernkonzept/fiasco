@@ -39,7 +39,9 @@ public:
 
   enum                          // Definitions for map_util
   {
+    // Software-controlled TLB refilled on a TLB refill exception.
     Need_insert_tlb_flush = 0,
+    // Software-controlled TLB updated on a TLB modified exception.
     Need_upgrade_tlb_flush = 0,
     Map_page_size = Config::PAGE_SIZE,
     Page_shift = Config::PAGE_SHIFT,

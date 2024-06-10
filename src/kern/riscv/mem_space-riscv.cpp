@@ -26,7 +26,9 @@ public:
   // Mapping utilities
   enum        // Definitions for map_util
   {
+    // RISC-V permits the caching of PTEs whose V (Valid) bit is clear.
     Need_insert_tlb_flush = 1,
+    // TLB entry needs to be explicitly invalidated before it can be used.
     Need_upgrade_tlb_flush = 1,
     Map_page_size = Config::PAGE_SIZE,
     Page_shift = Config::PAGE_SHIFT,
