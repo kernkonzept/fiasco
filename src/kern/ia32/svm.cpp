@@ -118,21 +118,18 @@ Svm::Svm(Cpu_number cpu)
   if (!cpu_svm_available(cpu))
     return;
 
-  printf("SVM: enabled\n");
-
   Unsigned64 efer;
   efer = c.rdmsr(MSR_EFER);
   efer |= 1 << 12;
   c.wrmsr(efer, MSR_EFER);
 
   Unsigned32 eax, ebx, ecx, edx;
-  c.cpuid (0x8000000a, &eax, &ebx, &ecx, &edx);
+  c.cpuid(0x8000000a, &eax, &ebx, &ecx, &edx);
   if (edx & 1)
-    {
-      printf("SVM: nested paging supported\n");
       _has_npt = true;
-    }
-  printf("SVM: NASID: %u.\n", ebx);
+
+  printf("CPU%u: SVM enabled, nested paging %ssupported, NASID: %u.\n",
+         cxx::int_value<Cpu_number>(cpu), _has_npt ? "" : "not ", ebx);
   _max_asid = ebx - 1;
 
   // FIXME: MUST NOT PANIC ON CPU HOTPLUG
