@@ -114,9 +114,9 @@ Kmem::kernel_remap()
   Address rx_end_phys = kdir->virt_to_phys(rx_end);
   Address kernel_end_phys = kdir->virt_to_phys(kernel_end);
 
-  drop_rights(kdir, kernel_start, rx_start, Page::Rights::X());
-  drop_rights(kdir, rx_start, rx_end, Page::Rights::W());
-  drop_rights(kdir, rx_end, kernel_end, Page::Rights::X());
+  drop_rights(kdir.unwrap(), kernel_start, rx_start, Page::Rights::X());
+  drop_rights(kdir.unwrap(), rx_start, rx_end, Page::Rights::W());
+  drop_rights(kdir.unwrap(), rx_end, kernel_end, Page::Rights::X());
 
   drop_rights(udir, kernel_start_phys, rx_start_phys, Page::Rights::X());
   drop_rights(udir, rx_start_phys, rx_end_phys, Page::Rights::W());
@@ -151,15 +151,15 @@ Kmem::kernel_remap()
   Address rx_end_phys = kdir->virt_to_phys(rx_end);
   Address kernel_end_phys = kdir->virt_to_phys(kernel_end);
 
-  drop_rights(kdir, kernel_start, rx_start, Page::Rights::X());
-  drop_rights(kdir, rx_start, rx_end, Page::Rights::W());
-  drop_rights(kdir, rx_end, kernel_end, Page::Rights::X());
+  drop_rights(kdir.unwrap(), kernel_start, rx_start, Page::Rights::X());
+  drop_rights(kdir.unwrap(), rx_start, rx_end, Page::Rights::W());
+  drop_rights(kdir.unwrap(), rx_end, kernel_end, Page::Rights::X());
 
   if (kernel_start != kernel_start_phys)
     {
-      drop_rights(kdir, kernel_start_phys, rx_start_phys, Page::Rights::X());
-      drop_rights(kdir, rx_start_phys, rx_end_phys, Page::Rights::W());
-      drop_rights(kdir, rx_end_phys, kernel_end_phys, Page::Rights::X());
+      drop_rights(kdir.unwrap(), kernel_start_phys, rx_start_phys, Page::Rights::X());
+      drop_rights(kdir.unwrap(), rx_start_phys, rx_end_phys, Page::Rights::W());
+      drop_rights(kdir.unwrap(), rx_end_phys, kernel_end_phys, Page::Rights::X());
     }
 
   Mem_unit::tlb_flush_kernel();
