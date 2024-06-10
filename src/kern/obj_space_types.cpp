@@ -93,7 +93,7 @@ namespace Obj {
     // fake this really badly
     Mapping *parent() { return this; }
     Mword delete_rights() const { return _flags & Delete; }
-    Mword ref_cnt() const { return _flags & Ref_cnt; }
+    Mword is_ref_counted() const { return _flags & Ref_cnt; }
 
     void put_as_root() { _flags = Initial_flags; }
   };

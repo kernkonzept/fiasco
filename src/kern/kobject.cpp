@@ -38,7 +38,7 @@ private:
     for (auto const &&i: _root)
       {
         Obj::Entry *e = static_cast<Obj::Entry*>(i);
-        if (e->ref_cnt()) // counted
+        if (e->is_ref_counted())
           --_cnt;
         e->invalidate();
       }
