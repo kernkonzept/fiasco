@@ -486,6 +486,11 @@ Jdb::input_short_mode(Jdb::Cmd *cmd, char const **args, int &cmd_key)
 	  cmd_key = c;
 	  return false;
 	}
+      else
+        {
+          printf(" -- unknown command\n");
+          return false;
+        }
     }
 }
 
