@@ -370,15 +370,26 @@ config ARM_SECMONIF_MC
 
 endchoice
 
-config ARM_SMC_USER
+menuconfig ARM_SMC_USER
 	bool "Enable SMC user interface"
 	depends on !ARM_EM_TZ && ARM_V6PLUS && !ARM_1136
 	depends on !ARM_PROFILE_R
 	help
-	  When enabled then Fiasco offers an interface that allows user
-	  threads to talk to Trusted Applications and a Trusted OS on the
-	  secure-side. Fiasco only allows service calls in the range
-	  0x30000000 to 0x3f000000. All other SMC calls will be blocked.
+	  When enabled then Fiasco offers an interface that allows user threads
+	  to talk to SMC services. The allowed services call ranges can be
+	  configured. All other SMC calls will be blocked.
+
+if ARM_SMC_USER
+
+config ARM_SMC_USER_MIN
+	hex "Minimum SMC service call range (inclusive)"
+	default 0x30000000
+
+config ARM_SMC_USER_MAX
+	hex "Maximum SMC service call range (inclusive)"
+	default 0x3F000000
+
+endif # ARM_SMC_USER
 
 config BIT64_CHOICE
 	bool "Run Fiasco in 64bit processor mode"
