@@ -32,6 +32,7 @@ public:
   enum				// Definitions for map_util
   {
     Need_insert_tlb_flush = 1,
+    Need_upgrade_tlb_flush = 1,
     Map_page_size = Config::PAGE_SIZE,
     Page_shift = Config::PAGE_SHIFT,
     Whole_space = 32,
@@ -104,6 +105,7 @@ public:
   enum
   {
     Need_insert_tlb_flush = 1,          ///< Need to reload MPU on remote CPUs
+    Need_upgrade_tlb_flush = 1,         ///< Need to reload MPU on remote CPUs
     Map_page_size = Config::PAGE_SIZE,
     Page_shift = Config::PAGE_SHIFT,
     Whole_space = 32,

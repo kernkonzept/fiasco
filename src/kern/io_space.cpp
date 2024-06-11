@@ -42,6 +42,7 @@ public:
   enum
   {
     Need_insert_tlb_flush = 0,
+    Need_upgrade_tlb_flush = 0,
     Need_xcpu_tlb_flush = 0,
     Map_page_size = 1,
     Page_shift = 0,

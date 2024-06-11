@@ -784,8 +784,10 @@ map(MAPDB* mapdb,
                       }
                   }
 
-                if (status != SPACE::Insert_warn_exists
-                    && SPACE::Need_insert_tlb_flush)
+                if (   (status == SPACE::Insert_ok
+                        && SPACE::Need_insert_tlb_flush)
+                    || (status == SPACE::Insert_warn_attrib_upgrade
+                        && SPACE::Need_upgrade_tlb_flush))
                   tlb.add_page(to, rcv_addr, i_order);
 
                 break;
