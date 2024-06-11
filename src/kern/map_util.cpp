@@ -311,6 +311,7 @@ public:
   static bool match(L4_fpage const &from, L4_fpage const &to);
   static void free_object(typename SPACE::Phys_addr o,
                           typename SPACE::Reap_list **reap_list);
+  static bool is_mappable(typename SPACE::Phys_addr o);
 };
 
 
@@ -340,6 +341,11 @@ Map_traits<SPACE>::free_object(typename SPACE::Phys_addr,
                                typename SPACE::Reap_list **)
 {}
 
+IMPLEMENT template<typename SPACE>
+inline
+bool
+Map_traits<SPACE>::is_mappable(typename SPACE::Phys_addr)
+{ return true; }
 
 PUBLIC template< typename SPACE >
 static inline
@@ -386,6 +392,14 @@ Map_traits<Obj_space>::free_object(Obj_space::Phys_addr o,
 {
   if (o->map_root()->no_mappings())
     o->initiate_deletion(reap_list);
+}
+
+IMPLEMENT template<>
+inline
+bool
+Map_traits<Obj_space>::is_mappable(Obj_space::Phys_addr o)
+{
+  return !o->map_root()->no_mappings();
 }
 
 IMPLEMENT template<>
@@ -721,73 +735,77 @@ map(MAPDB* mapdb,
       // (r_phys), the sender_mapping, and whether a receiver mapping
       // already exists (doing_upgrade).
 
-      // Do the actual insertion.
-      typename SPACE::Status status
-        = to->v_insert(i_phys, rcv_addr, i_order, i_attribs);
-
-      switch (status)
+      // Do the actual insertion. For objects we check if the object was not
+      // removed as result of unmapping the existent mapping!
+      if (Map_traits<SPACE>::is_mappable(i_phys))
         {
-        case SPACE::Insert_warn_exists:
-        case SPACE::Insert_warn_attrib_upgrade:
-        case SPACE::Insert_ok:
-          {
-            if (grant)
-              {
-                if (EXPECT_FALSE(!mapdb->grant(sender_frame, to_id,
-                                               SPACE::to_pfn(rcv_addr))))
-                  {
-                    // Error -- remove mapping again.
-                    to->v_delete(rcv_addr, i_order, L4_fpage::Rights::FULL());
-                    tlb.add_page(to, rcv_addr, i_order);
+          typename SPACE::Status status
+            = to->v_insert(i_phys, rcv_addr, i_order, i_attribs);
 
-                    // may fail due to quota limits
-                    condition = L4_error::Map_failed;
-                    break;
+          switch (status)
+            {
+            case SPACE::Insert_warn_exists:
+            case SPACE::Insert_warn_attrib_upgrade:
+            case SPACE::Insert_ok:
+              {
+                if (grant)
+                  {
+                    if (EXPECT_FALSE(!mapdb->grant(sender_frame, to_id,
+                                                   SPACE::to_pfn(rcv_addr))))
+                      {
+                        // Error -- remove mapping again.
+                        to->v_delete(rcv_addr, i_order, L4_fpage::Rights::FULL());
+                        tlb.add_page(to, rcv_addr, i_order);
+
+                        // may fail due to quota limits
+                        condition = L4_error::Map_failed;
+                        break;
+                      }
+
+                    from->v_delete(SPACE::page_address(snd_addr, s_order), s_order,
+                                   L4_fpage::Rights::FULL());
+                    tlb.add_page(from, SPACE::page_address(snd_addr, s_order), s_order);
+                    Map_traits<SPACE>::free_object(s_phys, reap_list);
+                  }
+                else if (status == SPACE::Insert_ok)
+                  {
+                    if (!mapdb->insert(sender_frame,
+                                       to_id, SPACE::to_pfn(rcv_addr),
+                                       SPACE::to_pfn(i_phys), SPACE::to_pcnt(i_order)))
+                      {
+                        // Error -- remove mapping again.
+                        to->v_delete(rcv_addr, i_order, L4_fpage::Rights::FULL());
+                        tlb.add_page(to, rcv_addr, i_order);
+
+                        // XXX This is not race-free as the mapping could have
+                        // been used in the mean-time, but we do not care.
+                        condition = L4_error::Map_failed;
+                        break;
+                      }
                   }
 
-                from->v_delete(SPACE::page_address(snd_addr, s_order), s_order,
-                               L4_fpage::Rights::FULL());
-                tlb.add_page(from, SPACE::page_address(snd_addr, s_order), s_order);
-                Map_traits<SPACE>::free_object(s_phys, reap_list);
-              }
-            else if (status == SPACE::Insert_ok)
-              {
-                if (!mapdb->insert(sender_frame,
-                                   to_id, SPACE::to_pfn(rcv_addr),
-                                   SPACE::to_pfn(i_phys), SPACE::to_pcnt(i_order)))
-                  {
-                    // Error -- remove mapping again.
-                    to->v_delete(rcv_addr, i_order, L4_fpage::Rights::FULL());
-                    tlb.add_page(to, rcv_addr, i_order);
+                if (SPACE::Need_insert_tlb_flush)
+                  tlb.add_page(to, rcv_addr, i_order);
 
-                    // XXX This is not race-free as the mapping could have
-                    // been used in the mean-time, but we do not care.
-                    condition = L4_error::Map_failed;
-                    break;
-                  }
+                break;
               }
 
-            if (SPACE::Need_insert_tlb_flush)
-              tlb.add_page(to, rcv_addr, i_order);
+            case SPACE::Insert_err_nomem:
+              condition = L4_error::Map_failed;
+              break;
 
-            break;
-          }
-
-        case SPACE::Insert_err_nomem:
-          condition = L4_error::Map_failed;
-          break;
-
-        case SPACE::Insert_err_exists:
-          WARN("map (%s) skipping area (%p): " L4_PTR_FMT
-               " -> %p: " L4_PTR_FMT "(%lx)", SPACE::name,
-               static_cast<void *>(from_id),
-               static_cast<unsigned long>(cxx::int_value<V_pfn>(snd_addr)),
-               static_cast<void *>(to_id),
-               static_cast<unsigned long>(cxx::int_value<V_pfn>(rcv_addr)),
-               static_cast<unsigned long>(cxx::int_value<V_pfc>(size)));
-          // Do not flag an error here -- because according to L4
-          // semantics, it isn't.
-          break;
+            case SPACE::Insert_err_exists:
+              WARN("map (%s) skipping area (%p): " L4_PTR_FMT
+                   " -> %p: " L4_PTR_FMT "(%lx)", SPACE::name,
+                   static_cast<void *>(from_id),
+                   static_cast<unsigned long>(cxx::int_value<V_pfn>(snd_addr)),
+                   static_cast<void *>(to_id),
+                   static_cast<unsigned long>(cxx::int_value<V_pfn>(rcv_addr)),
+                   static_cast<unsigned long>(cxx::int_value<V_pfc>(size)));
+              // Do not flag an error here -- because according to L4
+              // semantics, it isn't.
+              break;
+            }
         }
 
       sender_frame.might_clear();
