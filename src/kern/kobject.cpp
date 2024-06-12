@@ -116,6 +116,13 @@ public:
    *
    * \note The destructor temporarily releases the CPU lock while objects are
    *       destroyed like described in Kobject.
+   *
+   * \note Be careful about the following case: An object O is part of the reap
+   *       list RL. If the current thread is the holder of the existence lock of
+   *       O, the destructor of RL must **not** be called before the existence
+   *       lock of O is released. This is usually ensured by declaring RL before
+   *       acquiring the existence lock -- so that RL is destroyed after the
+   *       existence lock of O is released.
    */
   class Reap_list
   {

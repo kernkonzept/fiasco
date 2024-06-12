@@ -1045,6 +1045,7 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
   int items = tag.items();
   Mword *rcv_word = rcv_utcb->values + tag.words();
 
+  // Must be destroyed _after_ releasing the existence lock below!
   Reap_list rl;
 
   while (items > 0 && snd_item.next())

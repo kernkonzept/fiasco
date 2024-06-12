@@ -121,6 +121,7 @@ Factory::map_obj(Kobject_iface *o, Cap_index cap, Task *_c_space,
 {
   // must be before the lock guard
   Ref_ptr<Task> c_space(_c_space);
+  // Must be destroyed _after_ releasing the existence lock below!
   Reap_list rl;
 
   auto space_lock_guard = lock_guard_dont_lock(c_space->existence_lock);

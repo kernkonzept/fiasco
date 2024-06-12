@@ -537,6 +537,7 @@ PRIVATE inline NOEXPORT
 L4_msg_tag
 Task::sys_unmap(Syscall_frame *f, Utcb *utcb)
 {
+  // Must be destroyed _after_ releasing the existence lock below!
   Kobject::Reap_list rl;
   unsigned words = f->tag().words();
 
