@@ -413,12 +413,8 @@ Switch_lock::wait_free()
 
   assert (!valid());
 
-  if ((_lock_owner & ~1UL) == reinterpret_cast<Address>(c))
-    {
-      clear_lock_owner();
-      c->dec_lock_cnt();
-      return;
-    }
+  if (EXPECT_FALSE(reinterpret_cast<Context*>(_lock_owner & ~1UL) == c))
+    panic("Current thread owns Switch_lock and attempts to destroy it");
 
   for(;;)
     {
