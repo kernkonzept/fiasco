@@ -216,6 +216,9 @@ Thread_object::sys_vcpu_resume(L4_msg_tag const &tag, Utcb const *utcb, Utcb *)
     {
       for (; items && snd_items.next(); --items)
         {
+          // Must be destroyed _after_ releasing the existence lock below!
+          Reap_list rl;
+
           // in this case we already have a counted reference managed by vcpu_user_space()
           Lock_guard<Lock> guard;
           if (!guard.check_and_lock(&static_cast<Task *>(vcpu_user_space())->existence_lock))
@@ -225,14 +228,8 @@ Thread_object::sys_vcpu_resume(L4_msg_tag const &tag, Utcb const *utcb, Utcb *)
 
           L4_snd_item_iter::Item const *const item = snd_items.get();
           L4_fpage sfp(item->d);
-
-          L4_error err;
-
-            {
-              Reap_list rl;
-              err = fpage_map(space(), sfp, vcpu_user_space(),
-                              L4_fpage::all_spaces(), item->b, &rl);
-            }
+          L4_error err = fpage_map(space(), sfp, vcpu_user_space(),
+                                   L4_fpage::all_spaces(), item->b, &rl);
 
           cpu_lock.lock();
 
