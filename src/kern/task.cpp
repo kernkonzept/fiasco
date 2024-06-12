@@ -507,6 +507,9 @@ Task::sys_map(L4_fpage::Rights rights, Syscall_frame *f, Utcb *utcb)
   L4_error ret;
 
     {
+      // Must be destroyed _after_ destruction of the lock guard below!
+      Kobject::Reap_list rl;
+
       Ref_ptr<Task> from(_from);
       Ref_ptr<Task> self(this);
       // enforce lock order to prevent deadlocks.
@@ -516,7 +519,6 @@ Task::sys_map(L4_fpage::Rights rights, Syscall_frame *f, Utcb *utcb)
       if (!guard.check_and_lock(&existence_lock, &from->existence_lock))
         return commit_result(-L4_err::EInval);
 
-      Kobject::Reap_list rl;
       cpu_lock.clear();
       ret = fpage_map(from.get(), sfp, this,
                       L4_fpage::all_spaces(), L4_msg_item(utcb->values[1]), &rl);
