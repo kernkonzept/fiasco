@@ -7,11 +7,6 @@
 _boot_sys_start = 0x300000;
 _kernel_image	= FIASCO_IMAGE_VIRT_START;	/* kernel link address */
 _load		= FIASCO_IMAGE_PHYS_START & 0x1fffff;
-/*
-_load		= 0x1000;	/* skip page 0 to preserve BIOS data and
-				 * page 1 to reserve space for the KIP */
-
-/*_fiasco_image_offset = 0xf0000000;*/
 _fiasco_image_offset = FIASCO_IMAGE_PHYS_OFFSET;
 
 OUTPUT_FORMAT("elf64-x86-64")
