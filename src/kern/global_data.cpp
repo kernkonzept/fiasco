@@ -69,7 +69,7 @@ protected:
   /**
    * Apply offset of current node to pointer.
    *
-   * An architecure that supports AMP must implement this method.
+   * An architecture that supports AMP must implement this method.
    *
    * \param  node0_obj Pointer to primary node object
    * \return Pointer to current node object
