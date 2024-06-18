@@ -84,6 +84,11 @@ public:
 #else
     Kip_clock_uses_rdtsc = false,
 #endif
+#ifdef CONFIG_TSC_UNIFIED
+    Tsc_unified = true,
+#else
+    Tsc_unified = false,
+#endif
   };
 
   static bool apic;

@@ -213,6 +213,21 @@ config LAZY_FPU
 
 	  It is safe to enable this option on AMD CPUs.
 
+config TSC_UNIFIED
+	bool "Depend on unified TSC across CPU cores"
+	depends on (IA32 || AMD64) && MP && PF_PC
+	help
+	  Require unified TSCs across CPU cores. If this CPU feature is present,
+	  the TSC is synchronized accross all CPU cores of the same chip and
+	  does not stop in any ACPI state. In that case the time stamp counter
+	  can be used as consistent clock source in an MP system.
+
+	  Scheduling in one-shot mode depends on this option. If this option is
+	  enabled but the CPU feature is not present, the kernel warns.
+
+	  Unfortunately we cannot panic in that case because QEMU does not
+	  support this CPU feature in TCG.
+
 config SYNC_TSC
 	bool "Use time-stamp counter for system clock and scheduling accounting"
 	depends on PF_PC && (IA32 || AMD64)

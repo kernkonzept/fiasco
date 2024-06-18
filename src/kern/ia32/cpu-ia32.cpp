@@ -75,7 +75,7 @@ public:
   int can_wrmsr() const;
 
 private:
-  void init();
+  void init(Cpu_number cpu);
   Unsigned64 _frequency;
   Unsigned32 _version;                  // CPUID(1).EAX
   Unsigned32 _brand;                    // CPUID(1).EBX
@@ -976,7 +976,7 @@ Cpu::Cpu(Cpu_number cpu)
       set_online(1);
     }
 
-  init();
+  init(cpu);
 }
 
 
@@ -1598,6 +1598,7 @@ IMPLEMENTATION[ia32, amd64]:
 #include "processor.h"
 #include "regdefs.h"
 #include "tss.h"
+#include "warn.h"
 
 EXTENSION class Cpu
 {
@@ -1980,7 +1981,7 @@ Cpu::try_enable_hw_performance_states(bool resume)
 
 IMPLEMENT FIASCO_INIT_CPU
 void
-Cpu::init()
+Cpu::init(Cpu_number cpu)
 {
   identify();
 
@@ -2010,6 +2011,14 @@ Cpu::init()
      if (!has_invpcid())
        panic("CONFIG_IA32_PCID enabled but CPU lacks 'invpcid' instruction");
     }
+
+  if (Config::Tsc_unified)
+    if (!(_local_features & Lf_tsc_invariant))
+      {
+        // Cannot panic because QEMU does not support this CPU feature in TCG.
+        if (cpu == Cpu_number::boot_cpu())
+          WARN("CONFIG_TSC_UNIFIED set but CPU lacks this feature!\n");
+      }
 
   if ((features() & FEAT_TSC) && can_wrmsr())
     if (_ext_07_ebx & FEATX_IA32_TSC_ADJUST)
