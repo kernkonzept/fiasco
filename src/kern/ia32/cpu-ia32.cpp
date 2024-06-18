@@ -67,6 +67,8 @@ public:
   {
     Lf_rdpmc            = 1U << 0,  // supports RDPMC instruction
     Lf_rdpmc32          = 1U << 1,  // supports RDPMC32 instruction
+    Lf_tsc_invariant    = 1U << 2,  // TSC runs at constant rate and does not
+                                    // stop in any ACPI state
   };
 
   Unsigned64 time_us() const;
@@ -1373,6 +1375,10 @@ Cpu::identify()
 	      addr_size_info();
 	    // FALLTHRU
 	  case 0x80000007:
+            if (_vendor == Vendor_amd || _vendor == Vendor_intel)
+              if (cpuid_edx(0x80000007) & (1U << 8))
+                _local_features |= Lf_tsc_invariant;
+            // FALLTHRU
 	  case 0x80000006:
 	    if (_vendor == Vendor_amd || _vendor == Vendor_via)
 	      cache_tlb_l2_l3();
