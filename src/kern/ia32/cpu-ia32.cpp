@@ -65,8 +65,8 @@ public:
 
   enum Local_features
   {
-    Lf_rdpmc		= 0x00000001,
-    Lf_rdpmc32		= 0x00000002,
+    Lf_rdpmc            = 1U << 0,  // supports RDPMC instruction
+    Lf_rdpmc32          = 1U << 1,  // supports RDPMC32 instruction
   };
 
   Unsigned64 time_us() const;
