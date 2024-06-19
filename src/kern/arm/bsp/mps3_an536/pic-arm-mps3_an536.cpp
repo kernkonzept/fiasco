@@ -22,7 +22,7 @@ Pic::init()
                                Mem_layout::Gic_phys_size);
 
   M *m = new Boot_object<M>(regs, regs + Mem_layout::Gic_redist_offset,
-                            Amp_node::phys_id() == Amp_node::First_node);
+                            Amp_node::phys_id() == Amp_node::first_node());
 
   gic = &m->c;
   Irq_mgr::mgr = m;

@@ -1,13 +1,4 @@
 // ------------------------------------------------------------------------
-INTERFACE [arm && pf_mps3_an536 && amp]:
-
-EXTENSION class Amp_node
-{
-public:
-  static constexpr Amp_phys_id First_node = Amp_phys_id(0);
-};
-
-// ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pf_mps3_an536 && amp]:
 
 #include "processor.h"
