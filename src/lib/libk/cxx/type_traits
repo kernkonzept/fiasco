@@ -96,6 +96,11 @@ struct remove_cv { typedef remove_const_t<remove_volatile_t<T>> type; };
 template< typename T >
 using remove_cv_t = typename remove_cv<T>::type;
 
+template<class T>
+struct remove_cvref { using type = remove_cv_t<remove_reference_t<T>>; };
+
+template< typename T >
+using remove_cvref_t = typename remove_cvref<T>::type;
 
 template< typename T, typename >
 struct __remove_pointer_h { typedef T type; };
