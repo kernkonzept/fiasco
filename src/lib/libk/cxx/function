@@ -12,6 +12,10 @@ namespace Bits {
     template< typename Functor >
     static Res invoke(void *functor, Args && ...args)
     { return (*reinterpret_cast<cxx::remove_reference_t<Functor> *>(functor))(cxx::forward<Args>(args)...); }
+
+    template< typename Func >
+    static Res invoke_func_ptr(void *func, Args && ...args)
+    { return reinterpret_cast<Func>(func)(cxx::forward<Args>(args)...); }
   };
 }
 
@@ -22,6 +26,9 @@ template< typename Signature > class functor;
  * passed to its constructor, i.e. it does not copy the object itself. This
  * means the caller must be careful not to pass a Functor object that is
  * out-lived by the functor instance.
+ *
+ * An exception are function pointers, they are copied, and thus are not
+ * affected by the above restriction.
  */
 template< typename Res, typename ...Args >
 class functor<Res(Args...)>
@@ -36,8 +43,26 @@ public:
             typename = cxx::enable_if_t<
               !cxx::is_same_v<cxx::remove_cvref_t<Functor>, functor>> >
   functor(Functor &&f)
-  : _d(reinterpret_cast<void*>(&f)),
-    _f(Bits::_Callable<Res, Args...>::template invoke<Functor>) {}
+  {
+    // Functor is just a function pointer?
+    if constexpr (cxx::is_function_v<
+                    cxx::remove_pointer_t<cxx::remove_reference_t<Functor>>>)
+      {
+        static_assert(!cxx::is_function_v<cxx::remove_reference_t<Functor>>,
+                      "Expecting function pointer not reference (prefix with &).");
+        static_assert(sizeof(void *) == sizeof(f));
+
+        // Store as copy
+        _d = reinterpret_cast<void *>(f);
+        _f = Bits::_Callable<Res, Args...>::template invoke_func_ptr<Functor>;
+      }
+    else
+      {
+        // Store as reference
+        _d = reinterpret_cast<void *>(&f);
+        _f = Bits::_Callable<Res, Args...>::template invoke<Functor>;
+      }
+  }
 
   functor() : _d(0), _f(0) {}
 
