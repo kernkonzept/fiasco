@@ -32,7 +32,9 @@ protected:
   Func _f;
 
 public:
-  template< typename Functor >
+  template< typename Functor,
+            typename = cxx::enable_if_t<
+              !cxx::is_same_v<cxx::remove_cvref_t<Functor>, functor>> >
   functor(Functor &&f)
   : _d(reinterpret_cast<void*>(&f)),
     _f(Bits::_Callable<Res, Args...>::template invoke<Functor>) {}
