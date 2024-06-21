@@ -143,18 +143,25 @@ extern "C" void hyp_mode_fault(Mword abort_type, Trap_state *ts)
     {
     case 0:
     case 1:
+      break;
     case 2:
+      asm volatile("mrc p15, 4, %0, c6, c0, 2" : "=r"(ts->pf_address)); // HIFAR
+      break;
     case 3:
-      if (Thread::handle_hyp_mode_fault(abort_type, ts, hsr))
-        return;
+      asm volatile("mrc p15, 4, %0, c6, c0, 0" : "=r"(ts->pf_address)); // HDFAR
       break;
 
     default:
       // Cannot happen -- see Assembler stub.
-      printf("KERNEL%d: Unknown hyp fault at %lx hsr=%lx\n",
-             cxx::int_value<Cpu_number>(current_cpu()), ts->ip(), hsr);
+      printf("KERNEL%d: Unknown hyp fault %lu at %lx hsr=%lx\n",
+             cxx::int_value<Cpu_number>(current_cpu()), abort_type, ts->ip(),
+             hsr);
       break;
     };
+
+  ts->error_code = hsr;
+  if (Thread::handle_hyp_mode_fault(abort_type, ts, hsr))
+    return;
 
   ts->dump();
 
@@ -186,8 +193,6 @@ PUBLIC static inline NEEDS[Thread::is_transient_mpu_fault]
 bool
 Thread::handle_hyp_mode_fault(Mword abort_type, Trap_state *ts, Mword hsr)
 {
-  Mword v;
-
   if (is_transient_mpu_fault(abort_type, hsr))
     return true;
 
@@ -195,25 +200,17 @@ Thread::handle_hyp_mode_fault(Mword abort_type, Trap_state *ts, Mword hsr)
     {
     case 0:
     case 1:
-      ts->esr.ec() = abort_type ? 0x11 : 0;
       printf("KERNEL%d: %s fault at lr=%lx pc=%lx hsr=%lx\n",
              cxx::int_value<Cpu_number>(current_cpu()),
              abort_type ? "SWI" : "Undefined instruction",
              ts->km_lr, ts->pc, hsr);
       break;
     case 2:
-      ts->esr.ec() = 0x21;
-      asm volatile("mrc p15, 4, %0, c6, c0, 2" : "=r"(v));
-      printf("KERNEL%d: Instruction abort at %lx hsr=%lx\n",
-             cxx::int_value<Cpu_number>(current_cpu()),
-             v, hsr);
-      break;
     case 3:
-      ts->esr.ec() = 0x25;
-      asm volatile("mrc p15, 4, %0, c6, c0, 0" : "=r"(v));
-      printf("KERNEL%d: Data abort: pc=%lx pfa=%lx hsr=%lx\n",
+      printf("KERNEL%d: %s abort: pc=%lx pfa=%lx hsr=%lx\n",
              cxx::int_value<Cpu_number>(current_cpu()),
-             ts->ip(), v, hsr);
+             abort_type == 2 ? "Instruction" : "Data",
+             ts->ip(), ts->pf_address, hsr);
       break;
     };
 
