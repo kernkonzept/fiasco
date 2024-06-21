@@ -99,7 +99,7 @@ Jdb_io_apic_module::action(int cmd, void *&, char const *&, int &) override
 	          ? "not supported (Local APIC disabled)"
 		  : "not supported (no Local APIC)"
       );
-  Jdb::on_each_cpu(print_lapic);
+  Jdb::on_each_cpu(&print_lapic);
 
   return NOTHING;
 }

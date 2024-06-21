@@ -637,7 +637,7 @@ Jdb_bp::action(int cmd, void *&args, char const *&fmt, int &next_char) override
 
   if (!inited)
     {
-      Jdb::on_each_cpu_pl(init_cpu);
+      Jdb::on_each_cpu_pl(&init_cpu);
       inited = true;
     }
 
@@ -680,7 +680,7 @@ Jdb_bp::action(int cmd, void *&args, char const *&fmt, int &next_char) override
           return NOTHING;
         case 'I':
           putchar('\n');
-          Jdb::on_each_cpu(show_hwinfo_cpu, true);
+          Jdb::on_each_cpu(&show_hwinfo_cpu, true);
           return NOTHING;
         default:
           return ERROR;

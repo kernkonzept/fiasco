@@ -175,7 +175,7 @@ struct Jdb_mips_tlb : Jdb_module
       {
         char const *c = static_cast<char const *>(argbuf);
         if (*c == 'a')
-          Jdb::on_each_cpu(dump_tlb);
+          Jdb::on_each_cpu(&dump_tlb);
         else if (*c >='0' && *c <= '9')
           {
             next = *c;
@@ -187,7 +187,7 @@ struct Jdb_mips_tlb : Jdb_module
     else if (!Cpu::online(cpu))
       printf("Error: CPU %d not online.\n", cxx::int_value<Cpu_number>(cpu));
     else
-      Jdb::remote_work(cpu, dump_tlb);
+      Jdb::remote_work(cpu, &dump_tlb);
 
     return NOTHING;
   }
