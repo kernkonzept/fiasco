@@ -182,7 +182,9 @@ Thread::handle_hyp_mode_fault(Mword abort_type, Trap_state *ts, Mword hsr)
   if (is_transient_mpu_fault(abort_type, hsr))
     return true;
 
-  call_nested_trap_handler(ts);
+  if (call_nested_trap_handler(ts) == 0)
+    return true; // Trap handled, try to continue.
+
   return false;
 }
 
