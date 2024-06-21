@@ -12,6 +12,7 @@ INTERFACE:
 #include "per_cpu_data.h"
 #include "processor.h"
 #include "string_buffer.h"
+#include "trap_state.h"
 
 class Context;
 class Space;
@@ -76,7 +77,7 @@ public:
   static void write_tsc_s(String_buffer *buf, Signed64 tsc, bool sign);
   static void write_tsc(String_buffer *buf, Signed64 tsc, bool sign);
 
-  static int FIASCO_FASTCALL enter_jdb(Jdb_entry_frame *e, Cpu_number cpu);
+  static int FIASCO_FASTCALL enter_jdb(Trap_state *ts, Cpu_number cpu);
   static void cursor_end_of_screen();
   static void cursor_home();
   static void printf_statline(const char *prompt, const char *help,
@@ -1155,8 +1156,11 @@ char Jdb::esc_symbol[]   = "\033[33;1m";
 
 
 IMPLEMENT int
-Jdb::enter_jdb(Jdb_entry_frame *e, Cpu_number cpu)
+Jdb::enter_jdb(Trap_state *ts, Cpu_number cpu)
 {
+  static_assert(sizeof(Jdb_entry_frame) == sizeof(Trap_state));
+  auto *e = static_cast<Jdb_entry_frame *>(ts);
+
   if (e->debug_ipi())
     {
       if (!remote_work_ipi_process(cpu))

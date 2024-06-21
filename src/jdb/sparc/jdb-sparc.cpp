@@ -96,7 +96,7 @@ Jdb::init()
   Jdb::jdb_enter.add(&enter);
   Jdb::jdb_leave.add(&leave);
 
-  Thread::nested_trap_handler = (Trap_state::Handler)enter_jdb;
+  Thread::nested_trap_handler = &enter_jdb;
   Kconsole::console()->register_console(push_cons());
 }
 

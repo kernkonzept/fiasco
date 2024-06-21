@@ -132,7 +132,7 @@ void
 Jdb::init()
 {
   // Install JDB handler
-  Trap_state::base_handler = reinterpret_cast<Trap_state::Handler>(enter_jdb);
+  Trap_state::base_handler = &enter_jdb;
 
   // be sure that Push_console comes very first
   Kconsole::console()->register_console(push_cons()),

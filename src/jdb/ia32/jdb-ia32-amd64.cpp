@@ -173,7 +173,7 @@ void Jdb::init()
 
   init_serial_console();
 
-  Trap_state::base_handler = reinterpret_cast<Trap_state::Handler>(enter_jdb);
+  Trap_state::base_handler = &enter_jdb;
 
   // if esc_hack, serial_esc or watchdog enabled, set slow timer handler
   Idt::set_vectors_run();
