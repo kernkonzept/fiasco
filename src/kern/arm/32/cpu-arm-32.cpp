@@ -35,7 +35,7 @@ Cpu::mpidr()
   return mpid;
 }
 
-IMPLEMENTATION [arm && arm_v8plus]: //-------------------------------------
+IMPLEMENTATION [arm && arm_v8plus && mmu]: //------------------------------
 
 PUBLIC static inline
 Mword
