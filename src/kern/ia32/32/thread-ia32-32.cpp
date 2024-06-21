@@ -277,8 +277,14 @@ IMPLEMENTATION [ia32 & (debug | kdb)]:
 
 #include "kernel_task.h"
 
-/** Call the nested trap handler (either Jdb::enter_kdebugger() or the
- * gdb stub. Setup our own stack frame */
+/**
+ * Call a trap handler supposed to enter a debugger.
+ * Use a separate stack (per-CPU dbg_stack).
+ *
+ * \param ts  Trap state.
+ * \retval 0 trap has been consumed by the handler.
+ * \retval -1 trap could not be handled.
+ */
 PRIVATE static
 int
 Thread::call_nested_trap_handler(Trap_state *ts)

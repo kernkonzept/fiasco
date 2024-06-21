@@ -14,6 +14,15 @@ EXTENSION class Thread
 public:
   typedef void (*Dbg_extension_entry)(Thread *t, Trap_state *ts);
   static Dbg_extension_entry dbg_extension[64];
+
+  /**
+   * Call a trap handler supposed to enter a debugger.
+   * Use a separate stack (per-CPU dbg_stack).
+   *
+   * \param ts  Trap state.
+   * \retval 0 trap has been consumed by the handler.
+   * \retval -1 trap could not be handled.
+   */
   static int call_nested_trap_handler(Trap_state *ts);
 
   enum Kernel_entry_op

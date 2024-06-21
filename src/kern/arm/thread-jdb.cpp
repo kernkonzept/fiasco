@@ -3,6 +3,14 @@ INTERFACE [arm]:
 EXTENSION class Thread
 {
 protected:
+  /**
+   * Call a trap handler supposed to enter a debugger.
+   * Use a separate stack (per-CPU dbg_stack).
+   *
+   * \param ts  Trap state.
+   * \retval 0 trap has been consumed by the handler.
+   * \retval -1 trap could not be handled.
+   */
   static int call_nested_trap_handler(Trap_state *ts) asm ("call_nested_trap_handler");
   static int arm_serror_handler(Trap_state *ts) asm ("arm_serror_handler");
 };
