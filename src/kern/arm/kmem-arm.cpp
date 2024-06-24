@@ -22,7 +22,6 @@ Kmem::is_kmem_page_fault(Mword, Mword ec)
 // -----------------------------------------------------------------
 IMPLEMENTATION [arm && mpu]:
 
-#include "kmem_space.h"
 #include "mem.h"
 
 PUBLIC static
@@ -88,7 +87,6 @@ Kmem::drop_rights(PDIR *kd, Address vstart, Address vend, Page::Rights del)
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && 64bit && kernel_nx && !cpu_virt && mmu]:
 
-#include "kmem_space.h"
 #include "mem_layout.h"
 
 IMPLEMENT_OVERRIDE
@@ -128,7 +126,6 @@ Kmem::kernel_remap()
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && 64bit && kernel_nx && cpu_virt && mmu]:
 
-#include "kmem_space.h"
 #include "mem_layout.h"
 
 IMPLEMENT_OVERRIDE
