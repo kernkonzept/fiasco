@@ -729,7 +729,7 @@ Mgr_ext::set_cpu(Mword irqnum, Cpu_number cpu) const override
 PUBLIC static
 void
 Mgr_ext::exynos_irq_handler()
-{ nonull_static_cast<Mgr_ext *>(Irq_mgr::mgr)->_gic.current()->hit(0); }
+{ nonull_static_cast<Mgr_ext *>(Irq_mgr::mgr.unwrap())->_gic.current()->hit(0); }
 
 PUBLIC static FIASCO_INIT
 void Pic::init()
