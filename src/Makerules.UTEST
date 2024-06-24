@@ -27,10 +27,10 @@ utest_subsys: $(UTEST_BINARIES)
 utest_suppl: $(addprefix utest/,$(UTEST_SUPPL))
 
 # Ensure the utest folder exists before the target is build
-$(UTEST_BINARIES): | utest
+$(UTEST_BINARIES): | utest/
 
 # create utest folder
-utest:
+utest/:
 	@mkdir -p utest
 
 # Generate link rules for each unit test binary.
@@ -44,7 +44,7 @@ $(foreach tname,$(UTEST_TESTS),\
 			$$(addsuffix .o,$$(call eval_impl,$$(m)))))))
 
 define gen_utest_suppl_rule
-$(1): $(2) globalconfig.out
+$(1): $(2) globalconfig.out | $(dir $(1))
 	$$(COMP_MESSAGE)
 	$$(VERBOSE)ln -snf $$< $$@
 endef
