@@ -22,9 +22,9 @@ T expect(T v, T expected)
 template< typename a, typename b > inline
 a nonull_static_cast( b p )
 {
-  Address d = reinterpret_cast<Address>
-                 (static_cast<a>(reinterpret_cast<b>(10))) - 10;
-  return reinterpret_cast<a>( reinterpret_cast<Address>(p) + d);
+  if (!p)
+    __builtin_unreachable();
+  return static_cast<a>(p);
 }
 
 /**
