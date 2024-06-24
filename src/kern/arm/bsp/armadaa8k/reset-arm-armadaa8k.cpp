@@ -1,12 +1,12 @@
 IMPLEMENTATION [arm && pf_armadaa8k]:
 
 #include "infinite_loop.h"
-#include "platform_control.h"
+#include "psci.h"
 
 void __attribute__ ((noreturn))
 platform_reset(void)
 {
-  Platform_control::system_reset();
+  Psci::system_reset();
 
   L4::infinite_loop();
 }
