@@ -59,7 +59,8 @@ void
 thread_timer_interrupt(Address ip)
 {
   (void)ip;
-  Timer_tick::handler_all(0, 0); //Timer_tick::_glbl_timer);
+  Timer_tick::ack();
+  Timer_tick::handler_all_noack();
 }
 
 /** Extra version of timer interrupt handler which is used when the jdb is

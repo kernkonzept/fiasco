@@ -47,7 +47,10 @@ void irq_handler()
         handle_ipis();
 
       if (pending & (1 << Timer::irq()))
-        Timer_tick::handler_all(0, 0);
+        {
+          Timer_tick::ack();
+          Timer_tick::handler_all_noack();
+        }
 
       if (pending & 0x100)
         Pic::handle_irq();
