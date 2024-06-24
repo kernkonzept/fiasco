@@ -118,10 +118,10 @@ public:
     Per_cpu<cxx::remove_cv_t<T>> > Per_cpu_type;
 
   Per_cpu_ptr() {}
-  Per_cpu_ptr(Per_cpu_type *o) : _p(&o->_d) {}
+  Per_cpu_ptr(Per_cpu_type *o) : _p(&o->_d.unwrap()) {}
   Per_cpu_ptr &operator = (Per_cpu_type *o)
   {
-    _p = &o->_d;
+    _p = &o->_d.unwrap();
     return *this;
   }
 
