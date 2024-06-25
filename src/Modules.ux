@@ -364,7 +364,7 @@ CSRC_MINILIBC	:= printf.c __v_printf.c \
 		   putchar.c puts.c sprintf.c \
 		   snprintf.c vsnprintf.c vsprintf.c fprintf.c \
 		   memccpy.c  memchr.c   memcpy.c   memmove.c  memset.c \
-		   strcpy.c   strlen.c   strstr.c   \
+		   memmove_chk.c strcpy.c   strlen.c   strstr.c   \
 		   strcmp.c   strcspn.c  strncmp.c  strspn.c
 
 # do not profile all of MINILIBC, because it is used in the BOOT subsystem
