@@ -118,8 +118,6 @@ IMPLEMENT_DEFAULT inline NEEDS["config.h", "context_base.h", "kip.h"]
 Unsigned64
 Timer::system_clock()
 {
-  if (Config::Scheduler_one_shot)
-    return 0;
   if (current_cpu() == Cpu_number::boot_cpu()
       && Config::Kip_clock_uses_timer)
     {
