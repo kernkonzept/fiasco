@@ -317,9 +317,9 @@ Ipc_gate::block(Thread *ct, L4_timeout const &to, Utcb *u)
   Unsigned64 tval = 0;
   if (!to.is_never())
     {
-      Unsigned64 system_clock = Timer::system_clock();
-      tval = to.microsecs(system_clock, u);
-      if (tval == 0 || tval <= system_clock)
+      Unsigned64 clock = Timer::system_clock();
+      tval = to.microsecs(clock, u);
+      if (tval == 0 || tval <= clock)
         return L4_error::Timeout;
     }
 

@@ -124,7 +124,6 @@ Timer::system_clock()
   if (Config::Scheduler_one_shot)
     return Kip::k()->clock() + timer_to_us(_timer->read<Unsigned32>(OSCR));
 
-  // (Config::Kip_clock_uses_timer is no valid configuration in this BSP
-  //  -- see generic implementation of Timer::system_clock().)
+  static_assert(Config::Kip_clock_uses_timer == false);
   return Kip::k()->clock();
 }
