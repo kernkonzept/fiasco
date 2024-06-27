@@ -19,7 +19,7 @@ ifeq ("$(CONFIG_COV)","y")
 endif
 
 PREPROCESS_PARTS 	+= arch $(CONFIG_ABI) 64bit iofp recover_jmpbuf \
-			   $(CONFIG_XARCH) i8259 pc i8254 fpu \
+			   $(CONFIG_XARCH) apic i8259 pc i8254 fpu \
 			   auto_map_kip io realmode libuart
 
 PREPROCESS_PARTS-$(CONFIG_MP)                += mp need_xcpu_tlb_flush
