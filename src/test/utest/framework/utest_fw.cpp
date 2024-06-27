@@ -1207,6 +1207,10 @@ Utest::Tick_disabler::~Tick_disabler()
       // shorter than expected.
       Utest::wait(1);
     }
+
+  // In one-shot mode we need to re-program the timer. Trigger it immediately.
+  // This might be too early but the timeout handler will take care.
+  Timer::update_timer(Timer::system_clock() + 1);
 }
 
 /**
