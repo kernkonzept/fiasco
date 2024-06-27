@@ -61,20 +61,20 @@ Apic::reg_show(unsigned reg)
 
 PUBLIC static
 void
-Apic::regs_show(void)
+Apic::regs_show(int indent = 0)
 {
-  putstr("\nVectors:   LINT0: "); reg_show(APIC_lvt0);
-  putstr("\n           LINT1: "); reg_show(APIC_lvt1);
-  putstr("\n           Timer: "); reg_show(APIC_lvtt);
-  putstr("\n           Error: "); reg_show(APIC_lvterr);
+  printf("%*sVectors:   LINT0: ", indent, ""); reg_show(APIC_lvt0);
+  printf("\n%*sLINT1: ", indent + 11, ""); reg_show(APIC_lvt1);
+  printf("\n%*sTimer: ", indent + 11, ""); reg_show(APIC_lvtt);
+  printf("\n%*sError: ", indent + 11, ""); reg_show(APIC_lvterr);
   if (have_pcint())
     {
-      putstr("\n         PerfCnt: ");
+      printf("\n%*sPerfCnt: ", indent + 9, "");
       reg_show(APIC_lvtpc);
     }
   if (have_tsint())
     {
-      putstr("\n         Thermal: ");
+      printf("\n%*sThermal: ", indent + 9, "");
       reg_show(APIC_lvtthmr);
     }
   putchar('\n');
@@ -82,9 +82,10 @@ Apic::regs_show(void)
 
 PUBLIC static
 void
-Apic::timer_show(void)
+Apic::timer_show(int indent = 0)
 {
-  printf("Timer mode: %s  counter: %08x/%08x\n",
+  printf("%*sTimer mode: %s  counter: %08x/%08x\n",
+         indent, "",
 	 reg_read(APIC_lvtt) & APIC_lvt_timer_periodic
 	   ? "periodic" : "one-shot",
 	 timer_reg_read_initial(), timer_reg_read());
@@ -92,24 +93,25 @@ Apic::timer_show(void)
 
 PUBLIC static
 void
-Apic::id_show(void)
+Apic::id_show(int indent = 0)
 {
-  printf("APIC id: %02x version: %02x\n", get_id() >> 24, get_version());
+  printf("%*sAPIC id: %02x version: %02x\n",
+         indent, "", get_id() >> 24, get_version());
 }
 
 static
 void
-Apic::bitfield_show(unsigned reg, const char *name, char flag)
+Apic::bitfield_show(unsigned reg, const char *name, char flag, int indent)
 {
   unsigned i, j;
   Unsigned32 tmp_val;
 
-  printf("%-11s    0123456789abcdef0123456789abcdef"
-                  "0123456789abcdef0123456789abcdef\n", name);
+  printf("%*s%-11s    0123456789abcdef0123456789abcdef"
+                     "0123456789abcdef0123456789abcdef\n", indent, "", name);
   for (i=0; i<8; i++)
     {
       if (!(i & 1))
-	printf("            %02x ", i*0x20);
+	printf("%*s%02x ", indent + 12, "", i*0x20);
       tmp_val = reg_read(reg + i*0x10);
       for (j=0; j<32; j++)
 	putchar(tmp_val & (1<<j) ? flag : '.');
@@ -120,15 +122,15 @@ Apic::bitfield_show(unsigned reg, const char *name, char flag)
 
 PUBLIC static
 void
-Apic::irr_show()
+Apic::irr_show(int indent = 0)
 {
-  Apic::bitfield_show(APIC_irr, "Ints Reqst:", 'R');
+  Apic::bitfield_show(APIC_irr, "Ints Reqst:", 'R', indent);
 }
 
 PUBLIC static
 void
-Apic::isr_show()
+Apic::isr_show(int indent = 0)
 {
-  Apic::bitfield_show(APIC_isr, "Ints InSrv:", 'S');
+  Apic::bitfield_show(APIC_isr, "Ints InSrv:", 'S', indent);
 }
 

@@ -29,11 +29,23 @@ Jdb_kern_info_apic::show() override
       return;
     }
 
-  Apic::id_show();
-  Apic::timer_show();
-  Apic::regs_show();
-  putchar('\n');
-  Apic::irr_show();
-  Apic::isr_show();
-}
+  for (Cpu_number u = Cpu_number::first(); u < Config::max_num_cpus(); ++u)
+    if (Cpu::online(u))
+      {
+        printf("CPU%u: ", cxx::int_value<Cpu_number>(u));
+        auto show_info = [](Cpu_number)
+          {
+            Apic::id_show(0);
+            Apic::timer_show(4);
+            Apic::regs_show(4);
+            Apic::irr_show(4);
+            Apic::isr_show(4);
+            putchar('\n');
+          };
 
+        if (u == Cpu_number::boot_cpu())
+          show_info(u);
+        else
+          Jdb::remote_work(u, show_info, true);
+      }
+}
