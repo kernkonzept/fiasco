@@ -499,7 +499,25 @@ struct int_type_order_base : int_base<VALUE_T, TYPE_T>, int_diff_ops<TYPE_T, DIF
  * \return Truncated value.
  */
 template< typename TYPE, typename ORDER > inline
-constexpr TYPE
+constexpr cxx::enable_if_t<!cxx::is_enum_v<TYPE>, TYPE>
+mask_lsb(TYPE const &v, ORDER const &o)
+{
+  return v & (TYPE(~0) << o);
+}
+
+/**
+ * Truncate value down to the previous alignment with 2^\a o.
+ *
+ * This variant operates on enum contants and returns the bits in the
+ * underlying type.
+ *
+ * \param v  The value to truncate down to the previous order-alignment.
+ * \param o  The order of the alignment (log2).
+ *
+ * \return Truncated value.
+ */
+template< typename TYPE, typename ORDER > inline
+constexpr cxx::enable_if_t<cxx::is_enum_v<TYPE>, cxx::underlying_type_t<TYPE>>
 mask_lsb(TYPE const &v, ORDER const &o)
 {
   return v & (TYPE(~0) << o);
@@ -514,7 +532,7 @@ mask_lsb(TYPE const &v, ORDER const &o)
  * \return Rounded value.
  */
 template< typename TYPE, typename ORDER > inline
-constexpr cxx::enable_if_t<cxx::is_integral_v<TYPE>, TYPE>
+constexpr cxx::enable_if_t<!cxx::is_enum_v<TYPE>, TYPE>
 ceil_lsb(TYPE const &v, ORDER const &o)
 {
   return mask_lsb(v + ((TYPE(1) << o) - TYPE(1)), o);
