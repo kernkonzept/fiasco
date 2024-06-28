@@ -122,7 +122,9 @@ Idt::init_current_cpu()
           d.level, *d.pte);
 
   if (!d.is_valid())
-    d.set_page(_idt_pa, Pt_entry::Referenced | Pt_entry::global());
+    d.set_page(Phys_mem_addr(_idt_pa),
+               Page::Attr(Page::Rights::R(), Page::Type::Normal(),
+                          Page::Kern::Global(), Page::Flags::Referenced()));
 
   if (d.page_addr() != _idt_pa)
     panic("IDT allocation failure: %d: some other page mapped here %lx",

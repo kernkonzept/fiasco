@@ -94,7 +94,7 @@ public:
     Pte_leaf_mask    = Pte_r | Pte_w | Pte_x,
   };
 
-  enum Attribs_enum
+  enum Attribs_enum : Mword
   {
     CACHEABLE     = 0, // Not supported
     BUFFERED      = 0, // Not supported
@@ -185,13 +185,6 @@ void
 Pte_ptr::set_next_level(Mword phys_addr)
 {
   write_now(pte, phys_to_pte_ppn(phys_addr) | Pte_default_non_leaf);
-}
-
-PUBLIC inline ALWAYS_INLINE NEEDS[Pte_ptr::phys_to_pte_ppn]
-void
-Pte_ptr::set_page(Mword phys, Mword attr)
-{
-  write_now(pte, phys_to_pte_ppn(phys) | attr | Pte_default_leaf);
 }
 
 PUBLIC inline

@@ -23,7 +23,7 @@ private:
 
 namespace Segment
 {
-  enum Attribs_enum
+  enum Attribs_enum : Mword
   {
     Ks = 1UL << 30,
     Kp = 1UL << 29,

@@ -100,6 +100,7 @@ mem_layout_IMPL		:= mem_layout mem_layout-sparc
 mem_unit_IMPL		:= mem_unit-sparc
 mem_space_IMPL		:= mem_space mem_space-sparc
 obj_space_IMPL		:= obj_space obj_space-phys
+page_IMPL		:= page page-sparc
 paging_IMPL		:= paging paging-sparc
 pic_IMPL		:= pic
 sched_context_IMPL	:= sched_context-wfq sched_context-fixed_prio \

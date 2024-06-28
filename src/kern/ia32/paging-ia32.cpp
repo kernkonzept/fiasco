@@ -2,20 +2,7 @@ INTERFACE [ia32 || amd64 || ux]:
 
 #include "types.h"
 #include "config.h"
-
-
-EXTENSION class Page
-{
-public:
-  enum Attribs_enum
-  {
-    MAX_ATTRIBS   = 0x00000006,
-    Cache_mask    = 0x00000018, ///< Cache attribute mask
-    CACHEABLE     = 0x00000000, ///< PAT=0, PCD=0, PWT=0: PAT0 (WB)
-    BUFFERED      = 0x00000010, ///< PAT=0, PCD=1, PWT=0: PAT2 (WC)
-    NONCACHEABLE  = 0x00000018, ///< PAT=0, PCD=1, PWT=1: PAT3 (UC)
-  };
-};
+#include "page.h"
 
 EXTENSION class Pt_entry
 {
@@ -31,14 +18,13 @@ public:
   using Pt_entry::Super_level;
 };
 
-
 //---------------------------------------------------------------------------
 IMPLEMENTATION [ia32 || amd64 || ux]:
 
 #include "atomic.h"
 
 bool Pt_entry::_have_superpages;
-unsigned  Pt_entry::_super_level;
+unsigned Pt_entry::_super_level;
 
 PUBLIC static inline
 void
@@ -52,7 +38,6 @@ PUBLIC static inline
 unsigned
 Pt_entry::super_level()
 { return _super_level; }
-
 
 PUBLIC inline
 bool
@@ -79,16 +64,6 @@ PUBLIC inline
 void
 Pte_ptr::set_next_level(Mword phys_addr)
 { *pte = phys_addr | Valid | User | Writable; }
-
-PUBLIC inline
-void
-Pte_ptr::set_page(Mword phys, Mword attr)
-{
-  Mword v = phys | Valid | attr;
-  if (level < Pdir::Depth)
-    v |= Pse_bit;
-  *pte = v;
-}
 
 PUBLIC inline
 Pte_ptr const &
@@ -149,6 +124,16 @@ Pte_ptr::make_page(Phys_mem_addr addr, Page::Attr attr)
   r |= make_attribs(attr);
 
   return cxx::int_value<Phys_mem_addr>(addr) | r | Valid;
+}
+
+PUBLIC inline
+void
+Pte_ptr::set_page(Phys_mem_addr phys, Page::Attr attr)
+{
+  Mword r = (level < Pdir::Depth) ? Mword{Pse_bit} : 0;
+  r |= make_attribs(attr);
+
+  *pte = cxx::int_value<Phys_mem_addr>(phys) | r | Valid;
 }
 
 PUBLIC inline
@@ -297,9 +282,9 @@ Unsigned32
 Pt_entry::global()
 { return _cpu_global; }
 
-
 //--------------------------------------------------------------------------
 IMPLEMENTATION [ia32 || amd64 || ux]:
+
 #include "cpu.h"
 #include "mem_layout.h"
 #include "regdefs.h"
@@ -330,4 +315,3 @@ Mword PF::addr_to_msgword0(Address pfa, Mword error)
     v |= 0x4;
   return v;
 }
-

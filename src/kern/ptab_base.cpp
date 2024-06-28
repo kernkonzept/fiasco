@@ -1,9 +1,8 @@
 INTERFACE:
 
-//#include <cstdio>
 #include <cxx/type_traits>
-
 #include "assert.h"
+#include "page.h"
 
 namespace Ptab
 {
@@ -173,6 +172,7 @@ namespace Ptab
   private:
     typedef Walk<_Last, PTE_PTR, DEPTH> This;
     typedef Entry_vec<Traits> Vec;
+
     Vec _e;
 
   public:
@@ -204,7 +204,7 @@ namespace Ptab
 
     template< typename _Alloc, typename MEM >
     bool map(Address &phys, Address &virt, unsigned long &size,
-             unsigned long attr, unsigned, bool force_write_back,
+             Page::Attr attr, unsigned, bool force_write_back,
              _Alloc &&, MEM &&)
     {
       unsigned idx = Vec::idx(virt);
@@ -214,7 +214,7 @@ namespace Ptab
       unsigned const e = idx + cnt;
 
       for (unsigned i = idx; i != e; ++i, phys += (1ULL << (Traits::Shift + Traits::Base_shift)))
-        PTE_PTR(&_e[i], Depth).set_page(phys, attr);
+        PTE_PTR(&_e[i], Depth).set_page(Phys_mem_addr(phys), attr);
 
       if (force_write_back)
         PTE_PTR::write_back(&_e[idx], &_e[e]);
@@ -259,7 +259,7 @@ namespace Ptab
 
       for (unsigned n = count; n > 0; --n)
 	{
-	  if (PTE_PTR(&le[n-1], Depth).is_valid())
+	  if (PTE_PTR(&le[n - 1], Depth).is_valid())
 	    need_flush = true;
 #if 0
 	  // This loop seems unnecessary, but remote_update is also used for
@@ -315,6 +315,7 @@ namespace Ptab
     typedef Walk<_Head, PTE_PTR, DEPTH> This;
     typedef Walk< List< _Head, _Tail >, PTE_PTR, DEPTH> This2;
     typedef Entry_vec<_Head> Vec;
+
     Vec _e;
 
     template< typename _Alloc >
@@ -406,7 +407,7 @@ namespace Ptab
     template< typename _Alloc, typename MEM >
     FIASCO_WARN_RESULT
     bool map(Address &phys, Address &virt, unsigned long &size,
-             unsigned long attr, unsigned level, bool force_write_back,
+             Page::Attr attr, unsigned level, bool force_write_back,
              _Alloc &&alloc, MEM &&mem)
     {
       if (!level)
@@ -771,7 +772,7 @@ namespace Ptab
 
     template< typename _Alloc, typename MEM = MEM_DFLT >
     FIASCO_WARN_RESULT
-    bool map(Address phys, Va virt, Vs size, unsigned long attr,
+    bool map(Address phys, Va virt, Vs size, Page::Attr attr,
              unsigned level, bool force_write_back,
              _Alloc &&alloc = _Alloc(), MEM &&mem = MEM())
     {
@@ -812,16 +813,6 @@ namespace Ptab
                     start_level, end_level, cxx::forward<_Alloc>(alloc),
                     cxx::forward<MEM>(mem));
     }
-
-#if 0
-    template< typename _New_alloc >
-    Base<_Base_entry, _Traits, _New_alloc, _Addr> *alloc_cast()
-    { return reinterpret_cast<Base<_Base_entry, _Traits, _New_alloc, _Addr> *>(this); }
-
-    template< typename _New_alloc >
-    Base<_Base_entry, _Traits, _New_alloc, _Addr> const *alloc_cast() const
-    { return reinterpret_cast<Base<_Base_entry, _Traits, _New_alloc, _Addr> const *>(this); }
-#endif
 
   private:
     Walk _base;

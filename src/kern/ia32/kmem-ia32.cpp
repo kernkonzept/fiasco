@@ -12,6 +12,7 @@ INTERFACE [ia32,amd64,ux]:
 #include "mem_layout.h"
 #include "paging.h"
 #include "allocator.h"
+#include "x86desc.h"
 
 class Cpu;
 class Tss;
@@ -181,17 +182,20 @@ Kmem::map_phys_page(Address phys, Address virt,
 {
   auto i = kdir->walk(Virt_addr(virt), Pdir::Depth, false,
                       pdir_alloc(Kmem_alloc::allocator()));
-  Mword pte = Pg::trunc(phys);
+  Address phys_page = Pg::trunc(phys);
 
   assert(i.level == Pdir::Depth);
 
-  i.set_page(pte, Pt_entry::Writable | Pt_entry::Referenced | Pt_entry::Dirty
-                  | (cached ? 0 : (Pt_entry::Write_through | Pt_entry::Noncacheable))
-                  | (global ? Pt_entry::global() : 0));
+  Page::Attr attribs(Page::Rights::RW(),
+                     cached ? Page::Type::Normal() : Page::Type::Uncached(),
+                     global ? Page::Kern::Global() : Page::Kern::None(),
+                     Page::Flags::Touched());
+
+  i.set_page(Phys_mem_addr(phys_page), attribs);
   Mem_unit::tlb_flush_kernel(virt);
 
   if (offs)
-    *offs = phys - pte;
+    *offs = phys - phys_page;
 }
 
 PRIVATE static FIASCO_INIT
@@ -219,14 +223,15 @@ Kmem::map_initial_ram()
   // Real mode trampoline code is RWX
   ok &= kdir->map(FIASCO_MP_TRAMP_PAGE, Virt_addr(FIASCO_MP_TRAMP_PAGE),
                   Virt_size(Config::PAGE_SIZE),
-                  Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced,
+                  Page::Attr(Page::Rights::RWX(), Page::Type::Normal(),
+                             Page::Kern::None(), Page::Flags::Touched()),
                   Pdir::Depth, false, pdir_alloc(alloc));
 
   // BIOS data segment at 0x40E is RW (map the whole page).
   ok &= kdir->map(0x0, Virt_addr(FIASCO_BDA_PAGE),
                   Virt_size(Config::PAGE_SIZE),
-                  conf_xd() | Pt_entry::Dirty | Pt_entry::Writable
-                  | Pt_entry::Referenced,
+                  Page::Attr(kernel_nx(), Page::Type::Normal(),
+                             Page::Kern::None(), Page::Flags::Touched()),
                   Pdir::Depth, false, pdir_alloc(alloc));
 
   // The rest of the first 4M is RW (2x2M on amd64, 1x4M on x86)
@@ -234,14 +239,14 @@ Kmem::map_initial_ram()
                   Virt_addr(FIASCO_BDA_PAGE + Config::PAGE_SIZE),
                   Virt_size(Config::SUPERPAGE_SIZE - FIASCO_BDA_PAGE
                             - Config::PAGE_SIZE),
-                  conf_xd() | Pt_entry::Dirty | Pt_entry::Writable
-                  | Pt_entry::Referenced,
+                  Page::Attr(kernel_nx(), Page::Type::Normal(),
+                             Page::Kern::None(), Page::Flags::Touched()),
                   Pdir::Depth, false, pdir_alloc(alloc));
   if (sizeof(long) == 8)
     ok &= kdir->map(Config::SUPERPAGE_SIZE, Virt_addr(Config::SUPERPAGE_SIZE),
                     Virt_size(Config::SUPERPAGE_SIZE),
-                    conf_xd() | Pt_entry::Dirty | Pt_entry::Writable
-                    | Pt_entry::Referenced,
+                    Page::Attr(kernel_nx(), Page::Type::Normal(),
+                               Page::Kern::None(), Page::Flags::Touched()),
                     Pt_entry::super_level(), false, pdir_alloc(alloc));
 
   if (!ok)
@@ -257,8 +262,8 @@ Kmem::map_kernel_virt(Kpdir *dir)
 {
   if (!dir->map(Mem_layout::Kernel_image_phys, Virt_addr(Kernel_image),
                 Virt_size(Mem_layout::Kernel_image_size),
-                Pt_entry::Dirty | Pt_entry::Writable | Pt_entry::Referenced
-                | Pt_entry::global(),
+                Page::Attr(Page::Rights::RWX(), Page::Type::Normal(),
+                           Page::Kern::Global(), Page::Flags::Touched()),
                 Pt_entry::super_level(), false, pdir_alloc(Kmem_alloc::allocator())))
     panic("Cannot map initial memory");
 }
@@ -284,14 +289,15 @@ Kmem::map_kernel_virt(Kpdir *dir)
   // Kernel text is RX
   ok &= dir->map(Mem_layout::Kernel_image_phys + (text - virt), Virt_addr(text),
                  Virt_size(data - text),
-                 Pt_entry::Referenced | Pt_entry::global(), Pt_entry::super_level(),
-                 false, pdir_alloc(alloc));
+                 Page::Attr(Page::Rights::RX(), Page::Type::Normal(),
+                            Page::Kern::Global(), Page::Flags::Touched()),
+                 Pt_entry::super_level(), false, pdir_alloc(alloc));
 
   // Kernel data is RW + XD
   ok &= dir->map(Mem_layout::Kernel_image_phys + (data - virt), Virt_addr(data),
                  Virt_size(kend - data),
-                 Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
-                 | Pt_entry::Referenced | Pt_entry::global(),
+                 Page::Attr(Page::Rights::RW(), Page::Type::Normal(),
+                            Page::Kern::Global(), Page::Flags::Touched()),
                  Pt_entry::super_level(), false, pdir_alloc(alloc));
 
   if (!ok)
@@ -314,17 +320,12 @@ PRIVATE static inline
 void
 Kmem::map_tss(Kpdir *dir, Kmem_alloc *alloc)
 {
-  size_t pages = Pg::count(Pg::round(Mem_layout::Tss_mem_size));
-
-  for (size_t i = 0; i < pages; ++i)
-    {
-      auto e = dir->walk(Virt_addr(Mem_layout::Tss_start + Pg::size(i)),
-                         Pdir::Depth, false, pdir_alloc(alloc));
-
-      e.set_page(Kmem_alloc::tss_mem_pm + Pg::size(i),
-                 Pt_entry::XD | Pt_entry::Writable | Pt_entry::Referenced
-                 | Pt_entry::Dirty | Pt_entry::global());
-    }
+  if (!dir->map(Kmem_alloc::tss_mem_pm, Virt_addr(Mem_layout::Tss_start),
+                Virt_size(Pg::round(Mem_layout::Tss_mem_size)),
+                Page::Attr(Page::Rights::RW(), Page::Type::Normal(),
+                           Page::Kern::Global(), Page::Flags::Touched()),
+                Pdir::Depth, false, pdir_alloc(alloc)))
+    panic("Cannot map TSS");
 }
 
 /**
@@ -351,9 +352,9 @@ Kmem::map_tss_superpages(Kpdir *dir, Kmem_alloc *alloc)
       auto e = dir->walk(Virt_addr(Mem_layout::Tss_start + Super_pg::size(i)),
                          Pdir::Super_level, false, pdir_alloc(alloc));
 
-      e.set_page(tss_mem_pm_base + Super_pg::size(i),
-                 Pt_entry::XD | Pt_entry::Writable | Pt_entry::Referenced
-                 | Pt_entry::Dirty | Pt_entry::global());
+      e.set_page(Phys_mem_addr(tss_mem_pm_base + Super_pg::size(i)),
+                 Page::Attr(Page::Rights::RW(), Page::Type::Normal(),
+                            Page::Kern::Global(), Page::Flags::Touched()));
     }
 
   return tss_mem_extra;
@@ -416,15 +417,15 @@ Kmem::init_mmu()
   if (!Mem_layout::Adap_in_kernel_image)
     ok &= kdir->map(Mem_layout::Adap_image_phys, Virt_addr(Mem_layout::Adap_image),
                     Virt_size(Config::SUPERPAGE_SIZE),
-                    Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
-                    | Pt_entry::Referenced | Pt_entry::global(),
+                    Page::Attr(Page::Rights::RW(), Page::Type::Normal(),
+                               Page::Kern::Global(), Page::Flags::Touched()),
                     Pt_entry::super_level(), false, pdir_alloc(alloc));
 
   // map the last 64MB of physical memory as kernel memory
   ok &= kdir->map(Mem_layout::pmem_to_phys(Mem_layout::Physmem),
                   Virt_addr(Mem_layout::Physmem), Virt_size(Mem_layout::pmem_size),
-                  Pt_entry::XD | Pt_entry::Writable | Pt_entry::Referenced
-                  | Pt_entry::global(),
+                  Page::Attr(Page::Rights::RW(), Page::Type::Normal(),
+                             Page::Kern::Global(), Page::Flags::Touched()),
                   Pt_entry::super_level(), false, pdir_alloc(alloc));
 
   if (!ok)
@@ -706,9 +707,9 @@ Kmem::setup_cpu_structures_isolation(Cpu &cpu, Kpdir *cpu_dir,
   // FIXME: Make sure we can and do share level 1 to 3 among all CPUs
   if (!cpu_dir[1].map(ki_page - Kernel_image_offset, Virt_addr(ki_page),
                       Virt_size(kie_page - ki_page),
-                      Pt_entry::Referenced | Pt_entry::global(),
-                      Pdir::Depth,
-                      false, pdir_alloc(alloc)))
+                      Page::Attr(Page::Rights::RX(), Page::Type::Normal(),
+                            Page::Kern::Global(), Page::Flags::Touched()),
+                      Pdir::Depth, false, pdir_alloc(alloc)))
     panic("Cannot map initial memory");
 
   map_tss_superpages(&cpu_dir[1], alloc);
@@ -746,15 +747,16 @@ Kmem::prepare_kernel_entry_points(Lockless_alloc *, Kpdir *cpu_dir)
 
   ok &= cpu_dir[1].map(kd_page - Kernel_image_offset, Virt_addr(kd_page),
                        Virt_size(kde_page - kd_page),
-                       Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Referenced
-                       | Pt_entry::global(),
+                       Page::Attr(Page::Rights::R(), Page::Type::Normal(),
+                                  Page::Kern::Global(), Page::Flags::Touched()),
                        Pdir::Depth, false, pdir_alloc(Kmem_alloc::allocator()));
 
   extern char const syscall_entry_code[];
   ok &= cpu_dir[1].map(virt_to_phys(syscall_entry_code),
                        Virt_addr(Kentry_cpu_page_text), Virt_size(Config::PAGE_SIZE),
-                       Pt_entry::Referenced | Pt_entry::global(), Pdir::Depth, false,
-                       pdir_alloc(Kmem_alloc::allocator()));
+                       Page::Attr(Page::Rights::RX(), Page::Type::Normal(),
+                                  Page::Kern::Global(), Page::Flags::Touched()),
+                       Pdir::Depth, false, pdir_alloc(Kmem_alloc::allocator()));
 
   if (!ok)
     panic("Cannot map initial memory");
@@ -781,18 +783,18 @@ Kmem::prepare_kernel_entry_points(Lockless_alloc *cpu_m, Kpdir *)
 //--------------------------------------------------------------------------
 IMPLEMENTATION [(amd64 || ia32) && kernel_nx]:
 
-PRIVATE static inline NEEDS["paging.h"]
-Pte_ptr::Entry
-Kmem::conf_xd()
-{ return Pt_entry::XD; }
+PRIVATE static constexpr
+Page::Rights
+Kmem::kernel_nx()
+{ return Page::Rights::RW(); }
 
 //--------------------------------------------------------------------------
 IMPLEMENTATION [(amd64 || ia32) && !kernel_nx]:
 
-PRIVATE static inline NEEDS["paging.h"]
-Pte_ptr::Entry
-Kmem::conf_xd()
-{ return 0; }
+PRIVATE static constexpr
+Page::Rights
+Kmem::kernel_nx()
+{ return Page::Rights::RWX(); }
 
 //--------------------------------------------------------------------------
 IMPLEMENTATION [(amd64 || ia32) && cpu_local_map]:
@@ -927,14 +929,14 @@ Kmem::init_cpu(Cpu &cpu)
   if (!Adap_in_kernel_image)
     ok &= cpu_dir->map(Adap_image_phys, Virt_addr(Adap_image),
                        Virt_size(Config::SUPERPAGE_SIZE),
-                       Pt_entry::XD | Pt_entry::Dirty | Pt_entry::Writable
-                       | Pt_entry::Referenced | Pt_entry::global(),
+                       Page::Attr(Page::Rights::RW(), Page::Type::Normal(),
+                                  Page::Kern::Global(), Page::Flags::Touched()),
                        Pt_entry::super_level(), false, pdir_alloc(alloc));
 
   Address cpu_dir_pa = Mem_layout::pmem_to_phys(cpu_dir);
   ok &= cpu_dir->map(cpu_dir_pa, Virt_addr(Kentry_cpu_pdir), Virt_size(cpu_dir_sz),
-                     Pt_entry::XD | Pt_entry::Writable | Pt_entry::Referenced
-                     | Pt_entry::Dirty | Pt_entry::global(),
+                     Page::Attr(Page::Rights::RW(), Page::Type::Normal(),
+                                Page::Kern::Global(), Page::Flags::Touched()),
                      Pdir::Depth, false, pdir_alloc(alloc));
 
   unsigned const cpu_mx_sz = Config::PAGE_SIZE;
@@ -942,8 +944,8 @@ Kmem::init_cpu(Cpu &cpu)
   auto cpu_mx_pa = Mem_layout::pmem_to_phys(cpu_mx);
 
   ok &= cpu_dir->map(cpu_mx_pa, Virt_addr(Kentry_cpu_page), Virt_size(cpu_mx_sz),
-                     conf_xd() | Pt_entry::Writable
-                     | Pt_entry::Referenced | Pt_entry::Dirty | Pt_entry::global(),
+                     Page::Attr(kernel_nx(), Page::Type::Normal(),
+                                Page::Kern::Global(), Page::Flags::Touched()),
                      Pdir::Depth, false, pdir_alloc(alloc));
 
   if (!ok)

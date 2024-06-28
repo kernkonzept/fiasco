@@ -96,18 +96,6 @@ public:
   unsigned char level;
 };
 
-EXTENSION class Page
-{
-public:
-  enum Attribs_enum
-  {
-    //Cache_mask   = 0x00000078,
-    CACHEABLE    = 0x00000080,
-    NONCACHEABLE = 0x00000000,
-    BUFFERED     = 0x00000000, // Hmm...
-  };
-};
-
 typedef Pdir_t<Pte_ptr, Ptab_traits_vpn, Ptab_va_vpn> Pdir;
 class Kpdir : public Pdir {};
 

@@ -202,6 +202,7 @@ kmem_IMPL		:= kmem kmem-arm
 kmem_alloc_IMPL		:= kmem_alloc kmem_alloc-arm
 kmem_space_IMPL		:= kmem_space kmem_space-arm-$(BITS)
 outer_cache_IMPL	:= outer_cache outer_cache-l2cxx0
+page_IMPL		:= page page-arm page-arm-$(BITS)
 paging_IMPL	  	:= paging paging-arm paging-arm-$(BITS)
 perf_cnt_IMPL		:= perf_cnt perf_cnt-arm perf_cnt-arm-$(BITS)
 pic_IMPL		:= pic

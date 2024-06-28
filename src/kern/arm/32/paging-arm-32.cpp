@@ -10,16 +10,6 @@ public:
   };
 };
 
-EXTENSION class Page
-{
-public:
-  enum
-  {
-    Ttbcr_bits =   (1 << 31) // EAE
-                 | (Tcr_attribs << 8),
-  };
-};
-
 typedef Ptab::Tupel< Ptab::Traits< Unsigned64, 30, 2, true>,
                      Ptab::Traits< Unsigned64, 21, 9, true>,
                      Ptab::Traits< Unsigned64, 12, 9, true> >::List Ptab_traits;

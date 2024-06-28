@@ -78,7 +78,8 @@ Kmem::init_mmu(Cpu const &boot_cpu)
   // kernel's page directory sometimes comes in handy
   if (!kdir->map(0, Virt_addr(Mem_layout::Physmem),
                  Virt_size(Mem_layout::pmem_size),
-                 Pt_entry::Writable | Pt_entry::Referenced | Pt_entry::global(),
+                 Page::Attr(Page::Rights::RWX(), Page::Type::Normal(),
+                            Page::Kern::Global(), Page::Flags::Touched()),
                  Pt_entry::super_level(), false, pdir_alloc(alloc)))
     panic("Cannot map initial memory");
 
@@ -101,10 +102,9 @@ Kmem::init_mmu(Cpu const &boot_cpu)
                                         + Super_pg::size(i)),
                               Pdir::Super_level, false, pdir_alloc(alloc));
 
-          e.set_page(tss_mem_pm_base + Super_pg::size(i),
-                     Pt_entry::Pse_bit | Pt_entry::Writable
-                     | Pt_entry::Referenced | Pt_entry::Dirty
-                     | Pt_entry::global());
+          e.set_page(Phys_mem_addr(tss_mem_pm_base + Super_pg::size(i)),
+                     Page::Attr(Page::Rights::RWX(), Page::Type::Normal(),
+                                Page::Kern::Global(), Page::Flags::Touched()));
         }
 
       tss_mem_vm.construct(Mem_layout::Tss_start + tss_mem_pm_extra,
@@ -119,9 +119,9 @@ Kmem::init_mmu(Cpu const &boot_cpu)
           auto e = kdir->walk(Virt_addr(Mem_layout::Tss_start + Pg::size(i)),
                               Pdir::Depth, false, pdir_alloc(alloc));
 
-          e.set_page(Kmem_alloc::tss_mem_pm + Pg::size(i),
-                     Pt_entry::Writable | Pt_entry::Referenced | Pt_entry::Dirty
-                     | Pt_entry::global());
+          e.set_page(Phys_mem_addr(Kmem_alloc::tss_mem_pm + Pg::size(i)),
+                     Page::Attr(Page::Rights::RWX(), Page::Type::Normal(),
+                                Page::Kern::Global(), Page::Flags::Touched()));
         }
 
       tss_mem_vm.construct(Mem_layout::Tss_start, Mem_layout::Tss_mem_size);

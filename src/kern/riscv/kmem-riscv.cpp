@@ -99,7 +99,7 @@ Kmem::init_paging()
   if (!kdir->map(boot_virt_to_phys(Virt_addr(Mem_layout::Map_base)),
                  Virt_addr(Mem_layout::Map_base),
                  Virt_size(bs_pgin_dta->kernel_image_size()),
-                 Pte_ptr::make_attribs(Page::Attr::kern_global(Page::Rights::RWX())),
+                 Page::Attr::kern_global(Page::Rights::RWX()),
                  Kpdir::Super_level, false, alloc))
     panic("Failed to map kernel image.");
 
@@ -136,8 +136,7 @@ Kmem::boot_map_pmem(Address phys, Mword size)
   Mem_layout::pmem_phys_base(phys);
 
   if (!boot_kdir_map(phys, Virt_addr(Mem_layout::Pmem_start), Virt_size(size),
-                     Pte_ptr::make_attribs(
-                       Page::Attr::space_local(Page::Rights::RW())),
+                     Page::Attr::space_local(Page::Rights::RW()),
                      Kpdir::Super_level))
     return false;
 
@@ -179,7 +178,7 @@ Kmem::boot_kdir_walk(Virt_addr virt, unsigned level = Kpdir::Depth)
 PRIVATE static
 bool FIASCO_WARN_RESULT
 Kmem::boot_kdir_map(Address phys, Virt_addr virt, Virt_size size,
-                    unsigned long attr, unsigned level)
+                    Page::Attr attr, unsigned level)
 {
   auto alloc = bs_pgin_dta->alloc_virt(&Kmem::boot_virt_to_phys);
   auto mem_map = bs_pgin_dta->mem_map();
@@ -250,14 +249,14 @@ Kmem::mmio_remap(Address phys, Mword size)
   if (kdir)
     {
       if (!kdir->map(phys_page, Virt_addr(virt_page), Virt_size(map_size),
-                     Pte_ptr::make_attribs(attr), Kpdir::Super_level, false,
+                     attr, Kpdir::Super_level, false,
                      Kmem_alloc::q_allocator(Ram_quota::root.unwrap())))
         return ~0UL;
     }
   else
     {
       if (!boot_kdir_map(phys_page, Virt_addr(virt_page), Virt_size(map_size),
-                         Pte_ptr::make_attribs(attr), Kpdir::Super_level))
+                         attr, Kpdir::Super_level))
         return ~0UL;
     }
 

@@ -109,6 +109,7 @@ mem_unit_IMPL		:= mem_unit-ppc32
 mem_space_IMPL		:= mem_space mem_space-ppc32 \
 			   mem_space-htab mem_space-cache
 obj_space_IMPL		:= obj_space obj_space-phys
+page_IMPL		:= page page-ppc32
 paging_IMPL		:= paging paging-ppc32
 pic_IMPL		:= pic
 sched_context_IMPL	:= sched_context-wfq sched_context-fixed_prio \

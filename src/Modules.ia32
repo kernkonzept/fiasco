@@ -131,6 +131,7 @@ map_util_IMPL		:= map_util map_util-mem map_util-io map_util-objs
 mem_layout_IMPL		:= mem_layout mem_layout-ia32 mem_layout-ia32-32
 mem_space_IMPL		:= mem_space mem_space-user mem_space-ia32
 mem_unit_IMPL		:= mem_unit-ia32
+page_IMPL		:= page page-ia32
 paging_IMPL		:= paging paging-ia32-32 paging-ia32
 perf_cnt_IMPL		:= perf_cnt perf_cnt-ia32
 pic_IMPL		:= pic pic-i8259

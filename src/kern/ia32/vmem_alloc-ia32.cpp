@@ -43,11 +43,11 @@ Vmem_alloc::page_alloc(void *address, Zero_fill zf, unsigned mode)
 
   page = Mem_layout::pmem_to_phys(reinterpret_cast<Address>(vpage));
 
-  e.set_page(page, Pt_entry::Writable | Pt_entry::Dirty
-                   | Pt_entry::Referenced
-                   | Pt_entry::global()
-                   | (mode & User ? static_cast<unsigned>(Pt_entry::User) : 0));
-  page_map (address, 0, zf, page);
+  e.set_page(Phys_mem_addr(page),
+             Page::Attr(mode & User ? Page::Rights::URW() : Page::Rights::RW(),
+             Page::Type::Normal(), Page::Kern::Global(),
+             Page::Flags::Touched()));
+  page_map(address, 0, zf, page);
   return address;
 
 error:

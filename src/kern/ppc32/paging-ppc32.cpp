@@ -124,19 +124,6 @@ public:
   { return this->raw.raw1; }
 };
 
-EXTENSION class Page
-{
-public:
-  enum Attribs_enum
-  {
-    Cache_mask   = 0x00000078,
-    CACHEABLE    = 0x00000000,
-    NONCACHEABLE = 0x00000040,
-    BUFFERED     = 0x00000080, //XXX not sure
-  };
-};
-
-
 typedef Ptab::List< Ptab::Traits<Unsigned32, 22, 10, true>,
                     Ptab::Traits<Unsigned32, 12, 10, true> > Ptab_traits;
 
@@ -406,4 +393,3 @@ PUBLIC static //inline NEEDS["mem_unit.h"]
 void
 Pte_ptr::write_back(void *start, void *end)
 { (void)start; (void)end; }
-
