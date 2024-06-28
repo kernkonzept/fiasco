@@ -1028,7 +1028,7 @@ private:
    * \param eventq_irq  Event queue interrupt.
    * \param gerror_irq  Global error interrupt.
    */
-  void setup(Address base_addr, unsigned eventq_irq, unsigned gerror_irq);
+  void setup(void *base_addr, unsigned eventq_irq, unsigned gerror_irq);
 
 public:
   Iommu() :
@@ -1777,7 +1777,7 @@ Iommu::setup_strtab_2level()
 
 IMPLEMENT
 void
-Iommu::setup(Address base_addr, unsigned eventq_irq, unsigned gerror_irq)
+Iommu::setup(void *base_addr, unsigned eventq_irq, unsigned gerror_irq)
 {
   _rp0 = Mmio_register_block(base_addr);
   _rp1 = Mmio_register_block(offset_cast<void *>(base_addr, 0x10000));

@@ -12,7 +12,7 @@ class Gic_v3 : public Gic_mixin<Gic_v3, Gic_cpu_v3>
   static Per_cpu<Gic_redist> _redist;
   Per_cpu_array<Unsigned64> _sgi_template;
 
-  Address _redist_base;
+  void *_redist_base;
 
   static Global_data<Gic_v3 *> primary;
 
@@ -22,7 +22,7 @@ class Gic_v3 : public Gic_mixin<Gic_v3, Gic_cpu_v3>
 public:
   using Version = Gic_dist::V3;
 
-  explicit Gic_v3(Address dist_base, Address redist_base, bool dist_init = true)
+  explicit Gic_v3(void *dist_base, void *redist_base, bool dist_init = true)
   : Gic(dist_base, -1, dist_init), _redist_base(redist_base)
   {
     init_lpi();
@@ -101,7 +101,7 @@ IMPLEMENTATION [have_arm_gic_msi && !arm_gic_msi]:
 
 PUBLIC
 bool
-Gic_v3::add_its(Address its_base)
+Gic_v3::add_its(void *its_base)
 {
   if (_dist.hw_nr_lpis() > 0)
     Gic_its::disable(its_base);
@@ -278,7 +278,7 @@ Gic_v3::migrate_lpis(Cpu_number from, Cpu_number to)
 
 PUBLIC
 bool
-Gic_v3::add_its(Address its_base)
+Gic_v3::add_its(void *its_base)
 {
   if (!_has_lpis)
     return false;

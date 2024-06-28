@@ -37,7 +37,7 @@ public:
 PUBLIC
 Irq_chip_arm_integr::Irq_chip_arm_integr()
 : Irq_chip_gen(32),
-  Mmio_register_block(Kmem_mmio::remap(Mem_layout::Pic_phys_base, 0x100))
+  Mmio_register_block(Kmem_mmio::map(Mem_layout::Pic_phys_base, 0x100))
 {
   write<Mword>(0xffffffff, IRQ_ENABLE_CLEAR);
   write<Mword>(0xffffffff, FIQ_ENABLE_CLEAR);

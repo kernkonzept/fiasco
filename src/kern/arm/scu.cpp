@@ -72,7 +72,7 @@ EXTENSION class Scu
 IMPLEMENTATION [arm && (arm_mpcore || (arm_cortex_a9 && !arm_em_tz))]:
 
 PUBLIC explicit
-Scu::Scu(Address base)
+Scu::Scu(void *base)
 : Mmio_register_block(base)
 {}
 
@@ -80,7 +80,7 @@ Scu::Scu(Address base)
 IMPLEMENTATION [arm && arm_cortex_a9 && arm_em_tz]:
 
 PUBLIC explicit
-Scu::Scu(Address base)
+Scu::Scu(void *base)
 : Mmio_register_block(base)
 {
   write<Mword>(SNSAC_value, SNSAC);

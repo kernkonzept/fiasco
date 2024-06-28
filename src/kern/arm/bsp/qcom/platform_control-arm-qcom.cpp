@@ -54,7 +54,7 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
   if (Koptions::o()->core_spin_addr == -1ULL)
     return;
 
-  Address base = Kmem_mmio::remap(Koptions::o()->core_spin_addr, sizeof(Address));
+  void *base = Kmem_mmio::map(Koptions::o()->core_spin_addr, sizeof(Address));
   Io::write<Address>(phys_tramp_mp_addr, base);
   Mem::dsb();
   asm volatile("sev" : : : "memory");

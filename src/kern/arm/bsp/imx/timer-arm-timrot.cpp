@@ -51,7 +51,7 @@ IMPLEMENTATION [arm && pf_imx_28]:
 
 IMPLEMENT
 Timer::Timer_imx_timrot::Timer_imx_timrot()
-: _reg(Kmem_mmio::remap(Mem_layout::Timer_phys_base, 0x100))
+: _reg(Kmem_mmio::map(Mem_layout::Timer_phys_base, 0x100))
 {
   _reg[HW_TIMROT_TIMCTRL0] = 0;
   _reg[HW_TIMROT_TIMCTRL0_SET]

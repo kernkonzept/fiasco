@@ -102,14 +102,14 @@ IMPLEMENTATION:
 #include <string.h>
 
 PUBLIC
-Gic::Gic(Address mmio, unsigned cpu_int) : _r(mmio)
+Gic::Gic(void *mmio, unsigned cpu_int) : _r(mmio)
 {
   Reg_type cfg = _r[Sh_config];
   unsigned vpes = (cfg & 0x3f) + 1;
   unsigned nrirqs = (((cfg >> 16) & 0xff) + 1) * 8;
   Reg_type rev = _r[Sh_revision_id];
 
-  printf("MIPS GIC[%08lx]: %u IRQs %u VPEs%s, V%ld.%ld\n",
+  printf("MIPS GIC[%p]: %u IRQs %u VPEs%s, V%ld.%ld\n",
          mmio, nrirqs, vpes, (cfg & (1 << 31)) ? "VZP" : "",
          rev >> 8, rev & 0xff);
 

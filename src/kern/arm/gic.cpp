@@ -16,7 +16,7 @@ protected:
   Gic_dist _dist;
 
 public:
-  explicit Gic(Address dist_base) : _dist(dist_base) {}
+  explicit Gic(void *dist_base) : _dist(dist_base) {}
 
   virtual void softint_cpu(Cpu_number target, unsigned m) = 0;
 
@@ -53,7 +53,7 @@ protected:
 
 public:
   template<typename ...CPU_ARGS>
-  Gic_mixin(Address dist_base, int nr_irqs_override, bool dist_init, CPU_ARGS &&...args)
+  Gic_mixin(void *dist_base, int nr_irqs_override, bool dist_init, CPU_ARGS &&...args)
   : Gic(dist_base), _cpu(cxx::forward<CPU_ARGS>(args)...)
   {
     unsigned num = init(dist_init, nr_irqs_override);
@@ -66,7 +66,7 @@ public:
    *        master GIC.
    */
   template<typename ...CPU_ARGS>
-  Gic_mixin(Address dist_base, Gic *master_mapping, CPU_ARGS &&...args)
+  Gic_mixin(void *dist_base, Gic *master_mapping, CPU_ARGS &&...args)
   : Gic(dist_base), _cpu(cxx::forward<CPU_ARGS>(args)...)
   {
     Irq_chip_gen::init(master_mapping->nr_irqs());

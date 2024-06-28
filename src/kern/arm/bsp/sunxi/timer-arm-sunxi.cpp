@@ -28,7 +28,7 @@ private:
       Timer_nr = 0,
     };
 
-    Tmr(Address a) : Mmio_register_block(a) {}
+    Tmr(void *a) : Mmio_register_block(a) {}
 
     static Address addr(unsigned reg)
     { return TMRx_base + Timer_nr * TMRx_offset + reg; }
@@ -46,7 +46,7 @@ Static_object<Timer::Tmr> Timer::tmr;
 IMPLEMENT
 void Timer::init(Cpu_number)
 {
-  tmr.construct(Kmem_mmio::remap(Mem_layout::Timer_phys_base, 0x100));
+  tmr.construct(Kmem_mmio::map(Mem_layout::Timer_phys_base, 0x100));
 
   tmr->write<Mword>(Interval, Tmr::addr(Tmr::TMRx_INTV_VALUE_REG));
   tmr->write<Mword>(1 | (1 << 1) | (1 << 2), Tmr::addr(Tmr::TMRx_CTRL_REG));

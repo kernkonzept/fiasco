@@ -1,11 +1,7 @@
 #pragma once
 
-#ifndef __GXX_EXPERIMENTAL_CXX0X__
-#ifndef static_assert
-#define static_assert(x, y) \
-  do { (void)sizeof(char[-(!(x))]); } while (0)
-#endif
-#endif
+#include <cstdint>
+#include <panic.h>
 
 namespace L4
 {
@@ -167,11 +163,14 @@ namespace L4
     { *reinterpret_cast<volatile R *>(_base + (reg << _shift)) = val; }
 
   public:
-    Io_register_block_mmio(unsigned long base, unsigned char shift = 0)
-    : _base(base), _shift(shift)
-    {}
+    Io_register_block_mmio(void *base, unsigned char shift = 0)
+    : _base(reinterpret_cast<uintptr_t>(base)), _shift(shift)
+    {
+       if (!base)
+         panic("Invalid register block");
+    }
 
-    unsigned long addr(unsigned long reg) const
+    uintptr_t addr(size_t reg) const
     { return _base + (reg << _shift); }
 
     unsigned char  read8(unsigned long reg) const override
@@ -192,7 +191,7 @@ namespace L4
     {}
 
   private:
-    unsigned long _base;
+    uintptr_t _base;
     unsigned char _shift;
   };
 
@@ -209,11 +208,14 @@ namespace L4
     { *reinterpret_cast<volatile ACCESS_TYPE *>(_base + (reg << _shift)) = val; }
 
   public:
-    Io_register_block_mmio_fixed_width(unsigned long base, unsigned char shift = 0)
-    : _base(base), _shift(shift)
-    {}
+    Io_register_block_mmio_fixed_width(void *base, unsigned char shift = 0)
+    : _base(reinterpret_cast<uintptr_t>(base)), _shift(shift)
+    {
+      if (!base)
+        panic("Invalid register block");
+    }
 
-    unsigned long addr(unsigned long reg) const
+    uintptr_t addr(size_t reg) const
     { return _base + (reg << _shift); }
 
     unsigned char  read8(unsigned long reg) const override
@@ -234,7 +236,7 @@ namespace L4
     {}
 
   private:
-    unsigned long _base;
+    uintptr_t _base;
     unsigned char _shift;
   };
 }

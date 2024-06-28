@@ -66,7 +66,7 @@ public:
     CXX_BITFIELD_MEMBER( 31, 31, hw, raw);
   };
 
-  explicit Gic_h_v2(Address va) : Mmio_register_block(va) {}
+  explicit Gic_h_v2(void *va) : Mmio_register_block(va) {}
 
   static Static_object<Gic_h_v2> gic;
 };
@@ -210,8 +210,8 @@ struct Gic_h_v2_init
       return;
 
     Gic_h_global::gic
-      = new Boot_object<Gic_h_v2>(Kmem_mmio::remap(Mem_layout::Gic_h_phys_base,
-                                                   Config::PAGE_SIZE));
+      = new Boot_object<Gic_h_v2>(Kmem_mmio::map(Mem_layout::Gic_h_phys_base,
+                                                 Config::PAGE_SIZE));
 
     Gic_h_global::gic->disable();
   }
@@ -219,4 +219,3 @@ struct Gic_h_v2_init
 
 Gic_h_v2_init __gic_h;
 }
-

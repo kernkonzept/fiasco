@@ -53,7 +53,7 @@ private:
 
     Spin_lock<> _lock;
 
-    explicit L2cxx0(Address virt) : Mmio_register_block(virt) {}
+    explicit L2cxx0(void *virt) : Mmio_register_block(virt) {}
 
     void write_op(Address reg, Mword val)
     {
@@ -166,8 +166,8 @@ PUBLIC static
 void
 Outer_cache::initialize(bool v)
 {
-  l2cxx0.construct(Kmem_mmio::remap(Mem_layout::L2cxx0_phys_base,
-                                    Config::PAGE_SIZE));
+  l2cxx0.construct(Kmem_mmio::map(Mem_layout::L2cxx0_phys_base,
+                                  Config::PAGE_SIZE));
   Mword cache_id   = l2cxx0->read<Mword>(L2cxx0::CACHE_ID);
   Mword aux        = l2cxx0->read<Mword>(L2cxx0::AUX_CONTROL);
   unsigned ways    = 8;

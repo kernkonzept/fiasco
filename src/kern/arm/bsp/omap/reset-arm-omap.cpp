@@ -12,7 +12,7 @@ platform_reset(void)
     PRM_RSTCTRL = Mem_layout::Prm_global_reg_phys_base + 0x50,
   };
 
-  Io::write<Mword>(2, Kmem_mmio::remap(PRM_RSTCTRL, sizeof(Mword)));
+  Io::write<Mword>(2, Kmem_mmio::map(PRM_RSTCTRL, sizeof(Mword)));
 
   L4::infinite_loop();
 }
@@ -28,7 +28,7 @@ platform_reset(void)
 {
   enum { PRM_RSTCTRL = 0x44e00F00, };
 
-  Io::write<Mword>(1, Kmem_mmio::remap(PRM_RSTCTRL, sizeof(Mword)));
+  Io::write<Mword>(1, Kmem_mmio::map(PRM_RSTCTRL, sizeof(Mword)));
 
   L4::infinite_loop();
 }
@@ -47,7 +47,8 @@ platform_reset(void)
     DEVICE_PRM  = Mem_layout::Prm_phys_base + 0x1b00,
     PRM_RSTCTRL = DEVICE_PRM + 0,
   };
-  Address p = Kmem_mmio::remap(PRM_RSTCTRL, sizeof(Mword));
+
+  void *p = Kmem_mmio::map(PRM_RSTCTRL, sizeof(Mword));
 
   Io::set<Mword>(1, p);
   Io::read<Mword>(p);
@@ -70,7 +71,8 @@ platform_reset(void)
     PRM_RSTCTRL        = DEVICE_PRM + 0,
     RST_GLOBAL_COLD_SW = 1 << 1,
   };
-  Address p = Kmem_mmio::remap(PRM_RSTCTRL, sizeof(Mword));
+
+  void *p = Kmem_mmio::map(PRM_RSTCTRL, sizeof(Mword));
 
   Io::set<Mword>(RST_GLOBAL_COLD_SW, p);
   Io::read<Mword>(p);

@@ -12,7 +12,7 @@ public:
   class Pmu : public Mmio_register_block
   {
   public:
-    explicit Pmu(Address virt) : Mmio_register_block(virt) {}
+    explicit Pmu(void *virt) : Mmio_register_block(virt) {}
     enum Reg
     {
       Config      = 0,
@@ -130,10 +130,9 @@ PRIVATE static
 void
 Platform_control::write_phys_mem_coherent(Mword addr_p, Mword value)
 {
-  Mword addr_v = Kmem_mmio::remap(addr_p, sizeof(Mword));
+  void *addr_v = Kmem_mmio::map(addr_p, sizeof(Mword));
   Io::write<Mword>(value, addr_v);
-  Mem_unit::flush_dcache(reinterpret_cast<void *>(addr_v),
-                         reinterpret_cast<void *>((addr_v + sizeof(value))));
+  Mem_unit::flush_dcache(addr_v, offset_cast<void *>(addr_v, sizeof(value)));
   Outer_cache::flush(addr_p);
 }
 
@@ -358,7 +357,7 @@ Platform_control::init(Cpu_number cpu)
 {
   if (cpu == Cpu_number::boot_cpu())
     {
-      pmu.construct(Kmem_mmio::remap(Mem_layout::Pmu_phys_base, 0x100));
+      pmu.construct(Kmem_mmio::map(Mem_layout::Pmu_phys_base, 0x100));
 
       for (Cpu_phys_id i = Cpu_phys_id(0);
            i < Cpu_phys_id(2);

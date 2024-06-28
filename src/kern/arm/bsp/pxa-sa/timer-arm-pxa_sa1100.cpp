@@ -38,7 +38,7 @@ Static_object<Timer> Timer::_timer;
 
 PUBLIC
 Timer::Timer()
-: Mmio_register_block(Kmem_mmio::remap(Mem_layout::Timer_phys_base, 0x20))
+: Mmio_register_block(Kmem_mmio::map(Mem_layout::Timer_phys_base, 0x20))
 {
   write<Unsigned32>(1,          OIER); // enable OSMR0
   write<Unsigned32>(0,          OWER); // disable Watchdog

@@ -196,8 +196,11 @@ IMPLEMENTATION [arm && mmu && pic_gic && !have_arm_gicv3]:
 PUBLIC static void
 Bootstrap::config_gic_ns()
 {
-  Mmio_register_block dist(Mem_layout::Gic_dist_phys_base);
-  Mmio_register_block cpu(Mem_layout::Gic_cpu_phys_base);
+  auto dist_mmio = reinterpret_cast<void *>(Mem_layout::Gic_dist_phys_base);
+  auto cpu_mmio = reinterpret_cast<void *>(Mem_layout::Gic_cpu_phys_base);
+
+  Mmio_register_block dist(dist_mmio);
+  Mmio_register_block cpu(cpu_mmio);
   unsigned n = ((dist.read<Unsigned32>(4 /*GICD_TYPER*/) & 0x1f) + 1) * 32;
   dist.write<Unsigned32>(0, 0 /*Gic::GICD_CTRL*/);
 

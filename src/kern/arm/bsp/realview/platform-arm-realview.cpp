@@ -22,7 +22,7 @@ public:
       Pld_ctrl1 = 0x74,
       Pld_ctrl2 = 0x78,
     };
-    explicit Sys(Address virt) : Mmio_register_block(virt) {}
+    explicit Sys(void *virt) : Mmio_register_block(virt) {}
   };
 
   class System_control : public Mmio_register_block
@@ -35,7 +35,7 @@ public:
       Timer2_enable = 1UL << 19,
       Timer3_enable = 1UL << 21,
     };
-    explicit System_control(Address virt) : Mmio_register_block(virt) {}
+    explicit System_control(void *virt) : Mmio_register_block(virt) {}
   };
 
   static Static_object<Sys> sys;
@@ -57,10 +57,10 @@ static void platform_init()
   if (Platform::sys->get_mmio_base())
     return;
 
-  Platform::sys.construct(Kmem_mmio::remap(Mem_layout::System_regs_phys_base,
-                                           0x1000));
-  Platform::system_control.construct(Kmem_mmio::remap(Mem_layout::System_ctrl_phys_base,
-                                                      0x1000));
+  Platform::sys.construct(Kmem_mmio::map(Mem_layout::System_regs_phys_base,
+                                         0x1000));
+  Platform::system_control.construct(Kmem_mmio::map(Mem_layout::System_ctrl_phys_base,
+                                                    0x1000));
 }
 
 STATIC_INITIALIZER_P(platform_init, ROOT_FACTORY_INIT_PRIO);

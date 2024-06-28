@@ -343,15 +343,15 @@ Acpi::_map_table_head(Unsigned64 phys)
       return nullptr;
     }
 
-  Address t = Kmem_mmio::remap(phys, Config::PAGE_SIZE, true);
-  if (t == Invalid_address)
+  void *table = Kmem_mmio::map(phys, Config::PAGE_SIZE, true);
+  if (!table)
     {
       printf("ACPI: cannot map phys address %llx, map failed\n",
              static_cast<unsigned long long>(phys));
-      return 0;
+      return nullptr;
     }
 
-  return reinterpret_cast<void *>(t);
+  return table;
 }
 
 PUBLIC static
@@ -410,12 +410,12 @@ Acpi::init_virt()
 
   if (rsdp->rev && rsdp->xsdt_phys)
     {
-      Address p = Kmem_mmio::remap(rsdp->xsdt_phys, sizeof(Acpi_xsdt_p), true);
-      if (p == ~0UL)
+      auto x = static_cast<Acpi_xsdt_p const *>(
+        Kmem_mmio::map(rsdp->xsdt_phys, sizeof(Acpi_xsdt_p), true));
+      if (!x)
         WARN("ACPI: Could not map XSDT\n");
       else
         {
-          Acpi_xsdt_p const *x = reinterpret_cast<Acpi_xsdt_p *>(p);
           if (!x->checksum_ok())
             WARN("ACPI: Checksum mismatch in XSDT\n");
           else
@@ -437,12 +437,12 @@ Acpi::init_virt()
 
   if (rsdp->rsdt_phys)
     {
-      Address p = Kmem_mmio::remap(rsdp->rsdt_phys, sizeof(Acpi_rsdt_p), true);
-      if (p == ~0UL)
+      auto r = static_cast<Acpi_rsdt_p const *>(
+        Kmem_mmio::map(rsdp->rsdt_phys, sizeof(Acpi_rsdt_p), true));
+      if (!r)
         WARN("ACPI: Could not map RSDT\n");
       else
         {
-          Acpi_rsdt_p const *r = reinterpret_cast<Acpi_rsdt_p *>(p);
           if (!r->checksum_ok())
             WARN("ACPI: Checksum mismatch in RSDT\n");
           else

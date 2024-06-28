@@ -69,7 +69,7 @@ Gic_cpu_v2::disable()
 }
 
 PUBLIC explicit inline
-Gic_cpu_v2::Gic_cpu_v2(Address cpu_base)
+Gic_cpu_v2::Gic_cpu_v2(void *cpu_base)
   : _cpu(cpu_base)
 {}
 

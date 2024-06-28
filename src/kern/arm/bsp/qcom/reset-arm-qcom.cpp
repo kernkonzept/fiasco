@@ -26,7 +26,7 @@ IMPLEMENTATION [arm && pf_qcom && !arm_psci]:
 void __attribute__ ((noreturn))
 platform_reset(void)
 {
-  Address base = Kmem_mmio::remap(Mem_layout::Mpm_ps_hold, sizeof(Unsigned32));
+  void *base = Kmem_mmio::map(Mem_layout::Mpm_ps_hold, sizeof(Unsigned32));
   Io::write<Unsigned32>(0, base);
   L4::infinite_loop();
 }

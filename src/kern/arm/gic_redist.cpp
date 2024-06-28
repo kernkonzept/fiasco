@@ -126,14 +126,14 @@ Gic_redist::cmp_affinity(Unsigned32 x, Unsigned32 y)
 
 PUBLIC
 void
-Gic_redist::find(Address base, Unsigned64 mpidr, Cpu_number cpu)
+Gic_redist::find(void *base, Unsigned64 mpidr, Cpu_number cpu)
 {
   unsigned o = 0;
   Typer gicr_typer;
   Unsigned64 typer_aff = (mpidr & 0x0000ffffff) | ((mpidr & 0xff00000000) >> 8);
   do
     {
-      Mmio_register_block r(base + o);
+      Mmio_register_block r(offset_cast<void *>(base, o));
 
       unsigned arch_rev = (r.read<Unsigned32>(GICR_PIDR2) >> 4) & 0xf;
       if (arch_rev != 0x3 && arch_rev != 0x4)
@@ -143,7 +143,7 @@ Gic_redist::find(Address base, Unsigned64 mpidr, Cpu_number cpu)
       gicr_typer.raw = r.read_non_atomic<Unsigned64>(GICR_TYPER);
       if (cmp_affinity(gicr_typer.affinity(), typer_aff))
         {
-          printf("CPU%d: GIC Redistributor at %lx for 0x%llx\n",
+          printf("CPU%d: GIC Redistributor at %p for 0x%llx\n",
                  cxx::int_value<Cpu_number>(cpu),
                  r.get_mmio_base(), mpidr & ~0xc0000000ull);
           _redist = r;
@@ -345,7 +345,7 @@ Gic_redist::enable_lpi(Mword lpi, bool enabled)
 }
 
 PUBLIC inline
-Address
+void *
 Gic_redist::get_base() const
 {
   return _redist.get_mmio_base();

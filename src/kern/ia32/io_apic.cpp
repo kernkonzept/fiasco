@@ -96,6 +96,7 @@ IMPLEMENTATION:
 #include "lock_guard.h"
 #include "boot_alloc.h"
 #include "warn.h"
+#include "panic.h"
 
 enum { Print_info = 0 };
 
@@ -192,11 +193,12 @@ Io_apic::Io_apic(Unsigned64 phys, unsigned gsi_base)
   if (Print_info)
     printf("IO-APIC: addr=%llx\n", phys);
 
-  Address va = Kmem_mmio::remap(phys, Config::PAGE_SIZE);
+  auto a = static_cast<Io_apic::Apic *>(Kmem_mmio::map(phys, Config::PAGE_SIZE));
+  if (!a)
+    panic("Unable to map IO-APIC");
 
   Kip::k()->add_mem_region(Mem_desc(phys, phys + Config::PAGE_SIZE -1, Mem_desc::Reserved));
 
-  Io_apic::Apic *a = reinterpret_cast<Io_apic::Apic *>(va);
   a->write(0, 0);
 
   _apic = a;

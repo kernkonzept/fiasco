@@ -136,12 +136,13 @@ Platform_control::amp_prepare_ap_cpus()
     return;
 
   // Redirect the other cores to our __amp_entry trampoline
-  Mmio_register_block s(Kmem_mmio::remap(spin_addr, sizeof(Address)));
+  void *mmio = Kmem_mmio::map(spin_addr, sizeof(Address));
+  Mmio_register_block s(mmio);
   s.r<Address>(0) = reinterpret_cast<Address>(&Platform_control::__amp_entry);
   Mem::dsb();
-  Mem_unit::clean_dcache(reinterpret_cast<void *>(s.get_mmio_base()));
+  Mem_unit::clean_dcache(s.get_mmio_base());
   asm volatile ("sev");
-  Kmem_mmio::unmap_compat(spin_addr, sizeof(Address));
+  Kmem_mmio::unmap(mmio, sizeof(Address));
 }
 
 // ------------------------------------------------------------------------

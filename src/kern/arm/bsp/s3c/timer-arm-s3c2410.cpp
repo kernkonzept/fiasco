@@ -67,8 +67,8 @@ Timer::configure(Cpu_number)
 {}
 
 PUBLIC
-Timer::Timer() : Mmio_register_block(Kmem_mmio::remap(Mem_layout::Pwm_phys_base,
-                                                      0x100))
+Timer::Timer() : Mmio_register_block(Kmem_mmio::map(Mem_layout::Pwm_phys_base,
+                                                    0x100))
 {
   write<Mword>(0, TCFG0); // prescaler config
   write<Mword>(0, TCFG1); // mux select

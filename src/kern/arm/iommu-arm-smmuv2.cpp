@@ -690,7 +690,7 @@ private:
    * The mask allows to remove common unrelated parts when comparing the stream
    * id's. This can be for example the encoded TBU's (Translation Buffer Units).
    */
-  void setup(Version version, Address base_addr, unsigned mask = ~0U);
+  void setup(Version version, void *base_addr, unsigned mask = ~0U);
 
   /**
    * Allocates and configures fault reporting interrupts for the IOMMU.
@@ -777,7 +777,7 @@ Iommu::remove(Address pt_phys)
 
 IMPLEMENT
 void
-Iommu::setup(Version version, Address base_addr, unsigned mask)
+Iommu::setup(Version version, void *base_addr, unsigned mask)
 {
   _version = version;
   _gr0 = Mmio_register_block(base_addr);

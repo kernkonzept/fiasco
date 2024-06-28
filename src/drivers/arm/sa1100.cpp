@@ -30,6 +30,6 @@ public:
     RSRR_SWR = 1,
   };
 
-  Sa1100(Address base) : Mmio_register_block(base) {}
+  Sa1100(void *base) : Mmio_register_block(base) {}
 };
 

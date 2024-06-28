@@ -14,7 +14,7 @@ platform_reset(void)
     OWER  = 0x18,
   };
 
-  Mmio_register_block timer(Kmem_mmio::remap(Mem_layout::Timer_phys_base, 0x20));
+  Mmio_register_block timer(Kmem_mmio::map(Mem_layout::Timer_phys_base, 0x20));
 
   timer.write<Mword>(1, OWER);
   timer.write<Mword>(0xffffff00, OSCR);

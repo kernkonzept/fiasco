@@ -3,9 +3,9 @@ IMPLEMENTATION [arm && mpu]:
 #include "mem.h"
 #include "kmem.h"
 
-PUBLIC static
-Address
-Kmem_mmio::remap(Address phys, Address size, bool cache = false)
+IMPLEMENT_DEFAULT
+void *
+Kmem_mmio::map(Address phys, size_t size, bool cache = false, bool, bool)
 {
   // Arm MPU regions must be aligned to 64 bytes
   Address start = phys & ~63UL;
@@ -22,18 +22,18 @@ Kmem_mmio::remap(Address phys, Address size, bool cache = false)
   Mpu::sync(*Kmem::kdir, diff.value());
   Mem::isb();
 
-  return phys;
+  return reinterpret_cast<void *>(phys);
 }
 
-PUBLIC static
+IMPLEMENT_DEFAULT
 void
-Kmem_mmio::unmap_compat(Address virt, Address size)
+Kmem_mmio::unmap(void *ptr, size_t size)
 {
   Mem::dsb();
 
   // Arm MPU regions must be aligned to 64 bytes
-  Address start = virt & ~63UL;
-  Address end = (virt + size - 1U) | 63U;
+  Address start = reinterpret_cast<Address>(ptr) & ~63UL;
+  Address end = (reinterpret_cast<Address>(ptr) + size - 1U) | 63U;
 
   auto diff = Kmem::kdir->del(start, end, nullptr);
   if (diff)

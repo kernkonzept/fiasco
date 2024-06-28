@@ -19,7 +19,7 @@ Iommu::init_platform()
   // 110  78  SMMUv3 secure GERROR. Unused because there is no secure side.
   // 111  79  SMMUv3 non-secure GERROR.
 
-  Address v = Kmem_mmio::remap(base_addr, 0x100000);
+  void *v = Kmem_mmio::map(base_addr, 0x100000);
   iommus()[0].setup(v, 106, 111);
 
   return true;

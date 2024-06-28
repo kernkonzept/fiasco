@@ -17,10 +17,10 @@ Pic::init()
 {
   typedef Irq_mgr_single_chip<Gic_v2> M;
 
-  M *m = new Boot_object<M>(Kmem_mmio::remap(Mem_layout::Gic_cpu_phys_base,
-                                             Gic_cpu_v2::Size),
-                            Kmem_mmio::remap(Mem_layout::Gic_dist_phys_base,
-                                             Gic_dist::Size));
+  M *m = new Boot_object<M>(Kmem_mmio::map(Mem_layout::Gic_cpu_phys_base,
+                                           Gic_cpu_v2::Size),
+                            Kmem_mmio::map(Mem_layout::Gic_dist_phys_base,
+                                           Gic_dist::Size));
   gic = &m->c;
   Irq_mgr::mgr = m;
 }
@@ -39,10 +39,10 @@ Pic::init()
 {
   typedef Irq_mgr_single_chip<Gic_v3> M;
 
-  M *m = new Boot_object<M>(Kmem_mmio::remap(Mem_layout::Gic_dist_phys_base,
-                                             Gic_dist::Size),
-                            Kmem_mmio::remap(Mem_layout::Gic_redist_phys_base,
-                                             Mem_layout::Gic_redist_size));
+  M *m = new Boot_object<M>(Kmem_mmio::map(Mem_layout::Gic_dist_phys_base,
+                                           Gic_dist::Size),
+                            Kmem_mmio::map(Mem_layout::Gic_redist_phys_base,
+                                           Mem_layout::Gic_redist_size));
   gic = &m->c;
   Irq_mgr::mgr = m;
 }

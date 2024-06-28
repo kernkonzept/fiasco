@@ -56,27 +56,6 @@ DEFINE_GLOBAL Global_data<uintptr_t>
   Kmem_mmio::current(Mem_layout::Mmio_map_start);
 
 /**
- * MMIO remap compatibility wrapper.
- *
- * This is a temporary compatibility wrapper that adapts the calls to the
- * original MMIO remapper to the new MMIO mapper.
- *
- * \param phys   Physical address of the MMIO region to remap.
- * \param size   Size of the MMIO region to remap.
- * \param cache  Remap the MMIO region as cached.
- * \param exec   Remap the MMIO region as executable.
- *
- * \return Virtual address of the remapped MMIO region.
- */
-PUBLIC static
-Address
-Kmem_mmio::remap(Address phys, Address size, bool cache = false,
-                 bool exec = false)
-{
-  return reinterpret_cast<Address>(map(phys, size, cache, exec));
-}
-
-/**
  * Walk boot kernel paging directory.
  *
  * This is a default implementation that does nothing. If a target platform

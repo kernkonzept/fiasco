@@ -178,14 +178,15 @@ public:
 
   struct Registers
   {
-    Address va;
+    void *va;
+
     volatile Unsigned64 &operator [] (Reg_64 index)
-    { return *reinterpret_cast<Unsigned64 volatile *>(
-               va + static_cast<unsigned>(index)); }
+    { return *offset_cast<Unsigned64 volatile *>(
+               va, static_cast<unsigned>(index)); }
 
     volatile Unsigned32 &operator [] (Reg_32 index)
-    { return *reinterpret_cast<Unsigned32 volatile *>(
-               va + static_cast<unsigned>(index)); }
+    { return *offset_cast<Unsigned32 volatile *>(
+               va, static_cast<unsigned>(index)); }
   };
 
   enum
@@ -794,18 +795,22 @@ Intel::Io_mmu::probe(ACPI::Dmar_drhd const *drhd)
   segment   = drhd->segment;
   flags     = drhd->flags;
 
-  Address va = Kmem_mmio::remap(base_addr, Config::PAGE_SIZE);
+  regs.va = Kmem_mmio::map(base_addr, Config::PAGE_SIZE);
+  if (!regs.va)
+    {
+      WARN("IOMMU: unable to map, will not use IOMMU\n");
+      return false;
+    }
 
-  Kip::k()->add_mem_region(Mem_desc(base_addr, base_addr + Config::PAGE_SIZE -1,
+  Kip::k()->add_mem_region(Mem_desc(base_addr, base_addr + Config::PAGE_SIZE - 1,
                                     Mem_desc::Reserved));
-  regs.va = va;
 
   caps.raw = regs[Reg_64::Capabilities];
   ecaps = regs[Reg_64::Ext_capabilities];
 
   if (Print_infos)
-    printf("IOMMU: %llx va=%lx version=%x caps=%llx:%llx\n",
-           base_addr, va, regs[Reg_32::Version], caps.raw, ecaps);
+    printf("IOMMU: %llx va=%p version=%x caps=%llx:%llx\n",
+           base_addr, regs.va, regs[Reg_32::Version], caps.raw, ecaps);
 
   if (caps.rwbf())
     {

@@ -33,7 +33,7 @@ private:
     Context_per_hart  = 0x1000,
   };
 
-  Address _mmio;
+  void *_mmio;
   Register_block<32> _priority;
 
   // XXX Use Io_spin_lock in the case that Mem::mp_acquire/release()
@@ -44,11 +44,12 @@ private:
   class Plic_target
   {
   public:
-    void init(Address mmio, Mword context_nr, unsigned nr_irqs)
+    void init(void *mmio, Mword context_nr, unsigned nr_irqs)
     {
-      _enable.set_mmio_base(mmio + Enable_base + context_nr * Enable_per_hart);
+      _enable.set_mmio_base(
+        offset_cast<void *>(mmio, Enable_base + context_nr * Enable_per_hart));
       _context.set_mmio_base(
-        mmio + Context_base + context_nr * Context_per_hart);
+        offset_cast<void *>(mmio, Context_base + context_nr * Context_per_hart));
 
       // Set priority threshold to minimum value.
       threshold(0);
@@ -101,10 +102,10 @@ IMPLEMENTATION:
 DEFINE_PER_CPU Per_cpu<Irq_chip_sifive::Plic_target> Irq_chip_sifive::targets;
 
 PUBLIC inline
-Irq_chip_sifive::Irq_chip_sifive(Address mmio)
+Irq_chip_sifive::Irq_chip_sifive(void *mmio)
   : Irq_chip_gen(Kip::k()->platform_info.arch.plic_nr_irqs),
     _mmio(mmio),
-    _priority(mmio + Priority_base)
+    _priority(offset_cast<void *>(mmio, Priority_base))
 {
   init_cpu(Cpu_number::boot_cpu());
 

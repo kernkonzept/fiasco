@@ -39,7 +39,7 @@ public:
 PUBLIC
 Irq_chip_sparc::Irq_chip_sparc()
 : Irq_chip_gen(16),
-  Mmio_register_block(Kmem_mmio::remap(0x80000200, 0x100))
+  Mmio_register_block(Kmem_mmio::map(0x80000200, 0x100))
 {
   Unsigned32 mpstat = r<32>(MPSTAT);
 

@@ -31,15 +31,15 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
     extern Spin_lock<Mword> _tramp_mp_spinlock;
     auto g = lock_guard(_tramp_mp_spinlock);
 
-    Mmio_register_block s(Kmem_mmio::remap(Koptions::o()->core_spin_addr,
-                                           sizeof(Address)));
+    void *mmio = Kmem_mmio::map(Koptions::o()->core_spin_addr, sizeof(Address));
+    Mmio_register_block s(mmio);
 
     s.r<Address>(0) = phys_tramp_mp_addr;
     Mem::dsb();
-    Mem_unit::clean_dcache(reinterpret_cast<void *>(s.get_mmio_base()));
+    Mem_unit::clean_dcache(s.get_mmio_base());
 
     // Remove mappings to release precious MPU regions
-    Kmem_mmio::unmap_compat(Koptions::o()->core_spin_addr, sizeof(Address));
+    Kmem_mmio::unmap(mmio, sizeof(Address));
   }
 
   for (int i = 1; i < min<int>(Max_cores, Config::Max_num_cpus); ++i)

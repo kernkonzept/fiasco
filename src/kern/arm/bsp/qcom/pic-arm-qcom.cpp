@@ -22,10 +22,10 @@ void
 Pic::init()
 {
   typedef Irq_mgr_single_chip<Gic_v2> Mgr;
-  Mgr *m = new Boot_object<Mgr>(Kmem_mmio::remap(Mem_layout::Gic_cpu_phys_base,
-                                                 Gic_cpu_v2::Size),
-                                Kmem_mmio::remap(Mem_layout::Gic_dist_phys_base,
-                                                 Gic_dist::Size));
+  Mgr *m = new Boot_object<Mgr>(Kmem_mmio::map(Mem_layout::Gic_cpu_phys_base,
+                                               Gic_cpu_v2::Size),
+                                Kmem_mmio::map(Mem_layout::Gic_dist_phys_base,
+                                               Gic_dist::Size));
   gic = &m->c;
   Irq_mgr::mgr = m;
 }
@@ -43,12 +43,12 @@ void
 Pic::init()
 {
   auto *g =
-    new Boot_object<Gic_v3>(Kmem_mmio::remap(Mem_layout::Gic_dist_phys_base,
-                                             Gic_dist::Size),
-                            Kmem_mmio::remap(Mem_layout::Gic_redist_phys_base,
-                                             Mem_layout::Gic_redist_size));
-  g->add_its(Kmem_mmio::remap(Mem_layout::Gic_its_phys_base,
-                              Mem_layout::Gic_its_size));
+    new Boot_object<Gic_v3>(Kmem_mmio::map(Mem_layout::Gic_dist_phys_base,
+                                           Gic_dist::Size),
+                            Kmem_mmio::map(Mem_layout::Gic_redist_phys_base,
+                                           Mem_layout::Gic_redist_size));
+  g->add_its(Kmem_mmio::map(Mem_layout::Gic_its_phys_base,
+                            Mem_layout::Gic_its_size));
   gic = g;
 
   typedef Irq_mgr_msi<Gic_v3, Gic_msi> Mgr;

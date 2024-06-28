@@ -17,7 +17,7 @@ class Gic_v2 : public Gic_mixin<Gic_v2, Gic_cpu_v2>
 public:
   using Version = Gic_dist::V2;
 
-  Gic_v2(Address cpu_base, Address dist_base, int num_override = -1)
+  Gic_v2(void *cpu_base, void *dist_base, int num_override = -1)
   : Gic(dist_base, num_override, true, cpu_base)
   {
     if (!Gic_dist::Config_mxc_tzic)
@@ -26,7 +26,7 @@ public:
     _cpu.enable();
   }
 
-  Gic_v2(Address cpu_base, Address dist_base, Gic *master_mapping)
+  Gic_v2(void *cpu_base, void *dist_base, Gic *master_mapping)
   : Gic(dist_base, master_mapping, cpu_base)
   {}
 

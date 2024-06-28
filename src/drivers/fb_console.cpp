@@ -20,7 +20,7 @@ public:
   void scroll(unsigned n);
   Address video_base() const;
   void video_base(Address base);
-  Fb_console(Address base, unsigned width, unsigned height, unsigned scanline,
+  Fb_console(void *base, unsigned width, unsigned height, unsigned scanline,
              bool light_white = false, bool use_color = false);
 
   ~Fb_console();
@@ -334,31 +334,32 @@ IMPLEMENT static
 void Fb_console::init()
 {
   // MBI and VBx areas could be mapped cached also
-  Address _mbi = Kmem_mmio::remap(Kip::k()->user_ptr, Config::PAGE_SIZE, true);
-  assert(_mbi != ~0UL);
-  l4util_l4mod_info *mbi = reinterpret_cast<l4util_l4mod_info *>(_mbi);
+  auto *mbi
+    = static_cast<l4util_l4mod_info *>(Kmem_mmio::map(Kip::k()->user_ptr,
+                                                      Config::PAGE_SIZE, true));
+  assert(mbi);
 
   if (mbi->flags & L4UTIL_MB_VIDEO_INFO)
     {
-      Address _vbe = Kmem_mmio::remap(mbi->vbe_ctrl_info, Config::PAGE_SIZE, true);
-      assert(_vbe != ~0UL);
-      Address _vbi = Kmem_mmio::remap(mbi->vbe_mode_info, Config::PAGE_SIZE, true);
-      assert(_vbi != ~0UL);
-
-      l4util_mb_vbe_ctrl_t *vbe = reinterpret_cast<l4util_mb_vbe_ctrl_t *>(_vbe);
-      l4util_mb_vbe_mode_t *vbi = reinterpret_cast<l4util_mb_vbe_mode_t *>(_vbi);
-
+      auto *vbe
+        = static_cast<l4util_mb_vbe_ctrl_t *>(Kmem_mmio::map(mbi->vbe_ctrl_info,
+                                              Config::PAGE_SIZE, true));
+      assert(vbe);
+      auto *vbi
+        = static_cast<l4util_mb_vbe_mode_t *>(Kmem_mmio::map(mbi->vbe_mode_info,
+                                              Config::PAGE_SIZE, true));
+      assert(vbi);
 
       // vbi->phys_base + vbi->reserved1 form the 64 bit phys address
       // FB could be mapped more cached aware
       Address fbphys = vbi->phys_base + (static_cast<Unsigned64>(vbi->reserved1) << 32);
-      Address fbmem = Kmem_mmio::remap(fbphys, vbe->total_memory * (64 << 10));
-      assert(fbmem != ~0UL);
+      void *fbmem = Kmem_mmio::map(fbphys, vbe->total_memory * (64 << 10));
+      assert(fbmem);
 
       unsigned w = vbi->x_resolution;
       unsigned h = vbi->y_resolution;
       unsigned s = vbi->bytes_per_scanline;
-      printf("fbmem virt/phys=%lx/%lx  XxY: %ux%u (%u)\n",
+      printf("fbmem virt/phys=%p/%lx  XxY: %ux%u (%u)\n",
              fbmem, static_cast<unsigned long>(fbphys), w, h, s);
 
       // TODO: At assert on the pixel-format
@@ -370,10 +371,10 @@ void Fb_console::init()
 }
 
 IMPLEMENT
-Fb_console::Fb_console(Address vbase, unsigned pixel_width, unsigned pixel_height,
+Fb_console::Fb_console(void *vbase, unsigned pixel_width, unsigned pixel_height,
                        unsigned scanline, bool light_white, bool use_color)
-: Console(ENABLED), _video_base(reinterpret_cast<void *>(vbase)),
-  _x(0), _y(0), _attribute(light_white ? 0x0f : 0x07),
+: Console(ENABLED), _video_base(vbase), _x(0), _y(0),
+  _attribute(light_white ? 0x0f : 0x07),
   wr(&Fb_console::normal_write), _light_white(light_white),
   _use_color(use_color),
   _pixel_width(pixel_width), _pixel_height(pixel_height),

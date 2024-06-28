@@ -28,7 +28,7 @@ PRIVATE static Mword Timer::interval()
     Gpt_ticks = (Timer_freq * Ticks) / Config::Scheduler_granularity,
   };
 
-  Mmio_register_block t(Kmem_mmio::remap(Mem_layout::Gpt_phys_base, 0x100));
+  Mmio_register_block t(Kmem_mmio::map(Mem_layout::Gpt_phys_base, 0x100));
 
   t.write<Mword>(0, GPT_CR);
   t.write<Mword>(GPT_CR_RESET, GPT_CR);

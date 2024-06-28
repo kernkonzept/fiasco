@@ -13,7 +13,7 @@ Iommu::init_platform()
     64,
   };
 
-  Address v = Kmem_mmio::remap(0x51400000, 0x40000);
+  void *v = Kmem_mmio::map(0x51400000, 0x40000);
   iommus()[0].setup(Version::Smmu_v2, v, 0x7f80);
   iommus()[0].setup_irqs(nonsec_irqs, 1, 1);
 

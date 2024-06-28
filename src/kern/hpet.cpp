@@ -171,16 +171,15 @@ Hpet::init()
 
   dump_acpi_infos();
 
-  Address offs;
-  Address a = _acpi_hpet->base_address.addr;
-  Address va = Mem_layout::alloc_io_vmem(Config::PAGE_SIZE);
-  assert (va);
+  Address phys = _acpi_hpet->base_address.addr;
+  _hpet = static_cast<Hpet_device *>(Kmem_mmio::map(phys, Config::PAGE_SIZE));
+  if (!_hpet)
+    {
+      printf("Could not map HPET\n");
+      return false;
+    }
 
-  Kmem::map_phys_page(a, va, false, true, &offs);
-
-  Kip::k()->add_mem_region(Mem_desc(a, a + 1023, Mem_desc::Reserved));
-
-  _hpet = (Hpet_device *)(va + offs);
+  Kip::k()->add_mem_region(Mem_desc(phys, phys + 1023, Mem_desc::Reserved));
 
   _hpet->dump();
 

@@ -621,7 +621,7 @@ Gic_its::Table::ensure_id_present(unsigned id)
 
 PUBLIC
 void
-Gic_its::init(Gic_cpu_v3 *gic_cpu, Address base, unsigned num_lpis)
+Gic_its::init(Gic_cpu_v3 *gic_cpu, void *base, unsigned num_lpis)
 {
   _its = Mmio_register_block(base);
   unsigned arch_rev = (_its.read<Unsigned32>(GITS_PIDR2) >> 4) & 0xf;
@@ -661,7 +661,7 @@ Gic_its::init(Gic_cpu_v3 *gic_cpu, Address base, unsigned num_lpis)
   ctlr.enabled() = true;
   _its.write<Unsigned32>(ctlr.raw, GITS_CTLR);
 
-  printf("ITS: %lx rev=%x num_lpis=%u num_cols=%u num_devs=%u dev_bits=%u\n",
+  printf("ITS: %p rev=%x num_lpis=%u num_cols=%u num_devs=%u dev_bits=%u\n",
          base, arch_rev, _num_lpis, Num_cols, Max_num_devs,
          cxx::log2u(_max_device_id + 1));
 }
@@ -707,12 +707,14 @@ void
 Gic_its::cpu_init(Cpu_number cpu, Gic_redist const &redist)
 {
   unsigned cpu_index = cxx::int_value<Cpu_number>(cpu);
-
   Collection tmp;
+
   if (_redist_pta)
-    tmp.redist_base.phys_base_addr() = Kmem::kdir->virt_to_phys(redist.get_base());
+    tmp.redist_base.phys_base_addr()
+      = cxx::int_value<Phys_mem_addr>(Kmem::kdir->virt_to_phys(redist.get_base()));
   else
     tmp.redist_base.processor_nr() = redist.get_processor_nr();
+
   tmp.icid = cpu_index;
   send_cmd(Cmd::mapc(tmp.icid, tmp.redist_base, true), &tmp);
   send_cmd(Cmd::invall(tmp.icid), &tmp);
@@ -913,7 +915,9 @@ Gic_its::bind_lpi_to_device(Lpi &lpi, Unsigned32 src, Irq_mgr::Msi_info *inf)
 
   inf->data = lpi.event_id();
   // TODO: Must be mapped in the DMA space of the device if IOMMU is enabled.
-  inf->addr = Kmem::kdir->virt_to_phys(_its.get_mmio_base()) + GITS_TRANSLATER;
+  inf->addr
+    = cxx::int_value<Phys_mem_addr>(Kmem::kdir->virt_to_phys(_its.get_mmio_base()))
+      + GITS_TRANSLATER;
   return 0;
 }
 
@@ -1120,7 +1124,7 @@ IMPLEMENTATION [have_arm_gic_msi]:
  */
 PUBLIC static
 void
-Gic_its::disable(Address base)
+Gic_its::disable(void *base)
 {
   auto its = Mmio_register_block(base);
 

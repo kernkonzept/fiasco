@@ -23,7 +23,7 @@ public:
     Ctrl_enable    = 1 << 7,
   };
 
-  Timer_sp804(Address virt) : Mmio_register_block(virt) {}
+  Timer_sp804(void *virt) : Mmio_register_block(virt) {}
   void disable() const { write<Mword>(0, Ctrl); }
   void enable(Mword flags) const
   { write<Mword>(Ctrl_enable | flags, Ctrl); }

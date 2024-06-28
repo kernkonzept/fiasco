@@ -147,7 +147,7 @@ Iommu::init_platform()
   if (cxx::size(apps_smmu_irqs) == 2) // Global + single context interrupt?
     version = Version::Smmu_v1;
 
-  Address base = Kmem_mmio::remap(apps_smmu.base, apps_smmu.size);
+  void *base = Kmem_mmio::map(apps_smmu.base, apps_smmu.size);
   iommus()[0].setup(version, base, apps_smmu.mask);
   iommus()[0].setup_irqs(apps_smmu_irqs, cxx::size(apps_smmu_irqs), 1);
 
@@ -158,7 +158,7 @@ Iommu::init_platform()
    */
   if (Num_iommus > 1)
     {
-      base = Kmem_mmio::remap(gpu_smmu.base, gpu_smmu.size);
+      base = Kmem_mmio::map(gpu_smmu.base, gpu_smmu.size);
       iommus()[1].setup(Version::Smmu_v2, base, gpu_smmu.mask);
       iommus()[1].setup_irqs(gpu_smmu_irqs, cxx::size(gpu_smmu_irqs), 1);
     }

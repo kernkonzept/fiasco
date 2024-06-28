@@ -7,8 +7,8 @@ IMPLEMENTATION [arm && pf_exynos]:
 void __attribute__ ((noreturn))
 platform_reset(void)
 {
-  Io::write<Mword>(1, Kmem_mmio::remap(Mem_layout::Pmu_phys_base + 0x400,
-                                       sizeof(Mword)));
+  Io::write<Mword>(1, Kmem_mmio::map(Mem_layout::Pmu_phys_base + 0x400,
+                                     sizeof(Mword)));
 
   // we should reboot now
   L4::infinite_loop();

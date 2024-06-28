@@ -58,7 +58,7 @@ IMPLEMENTATION:
 IMPLEMENT_DEFAULT inline void Gt64120::irq_init() {}
 
 PUBLIC
-Gt64120::Gt64120(Address virt_gt_regs, Address virt_pci_io)
+Gt64120::Gt64120(void *virt_gt_regs, void *virt_pci_io)
 : _gt_regs(virt_gt_regs),
   _pci_io(virt_pci_io)
 {

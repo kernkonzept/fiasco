@@ -20,7 +20,7 @@ IMPLEMENTATION:
 
 struct Mmio_io_adapter
 {
-  typedef Address Port_addr;
+  typedef uintptr_t Port_addr;
   static void out8(Unsigned8 v, Address a)
   { *reinterpret_cast<Unsigned8 volatile *>(a) = v; }
 
@@ -62,14 +62,15 @@ Mips_bsp_irqs::init(Cpu_number cpu)
   if (cpu != Cpu_number::boot_cpu())
     return;
 
-  syscon = new Boot_object<Gt64120>(Kmem_mmio::remap(0x1be00000, 0x1000),
-                                    Kmem_mmio::remap(0x18000000, 0x1000));
+  syscon = new Boot_object<Gt64120>(Kmem_mmio::map(0x1be00000, 0x1000),
+                                    Kmem_mmio::map(0x18000000, 0x1000));
   assert (syscon);
 
-  typedef Irq_chip_i8259_gen<Mmio_io_adapter> I8259;
-  auto *i8259 = new Boot_object<I8259>(
-      syscon->pci_io()->get_mmio_base() + 0x20,
-      syscon->pci_io()->get_mmio_base() + 0xa0);
+  auto base = syscon->pci_io()->get_mmio_base();
+  auto master = offset_cast<I8259::Io_address>(base, 0x20);
+  auto slave = offset_cast<I8259::Io_address>(base, 0xa0);
+
+  auto *i8259 = new Boot_object<I8259>(master, slave);
 
   i8259->init(0);
   printf("GT64120: %p  i8259: %p\n",
@@ -84,7 +85,7 @@ Mips_bsp_irqs::init(Cpu_number cpu)
     {
       Address my_gic_base = 0x1BDC0000;
       Cm::cm->set_gic_base_and_enable(my_gic_base);
-      Gic *gic = new Boot_object<Gic>(Kmem_mmio::remap(my_gic_base, Gic::Size), 4);
+      Gic *gic = new Boot_object<Gic>(Kmem_mmio::map(my_gic_base, Gic::Size), 4);
       auto *c = new Boot_object<Cascade_irq>(gic, gic_hit);
       Mips_cpu_irqs::chip->alloc(c, 4);
       c->unmask();

@@ -18,7 +18,7 @@ platform_reset()
     GORESET          = 0x42,
   };
 
-  Register_block<32> r(Kmem_mmio::remap(SOFTRES_REGISTER, sizeof(Unsigned32)));
+  Register_block<32> r(Kmem_mmio::map(SOFTRES_REGISTER, sizeof(Unsigned32)));
   r[0] = GORESET;
 
   L4::infinite_loop();

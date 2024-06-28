@@ -11,13 +11,15 @@ platform_reset(void)
 {
   enum { Rstc = 0x1c, Wdog = 0x24 };
 
-  Address base = Kmem_mmio::remap(Mem_layout::Watchdog_phys_base, 0x100);
+  void *base = Kmem_mmio::map(Mem_layout::Watchdog_phys_base, 0x100);
 
+  void *wdog_ptr = offset_cast<void *>(base, Wdog);
   Mword pw = 0x5a << 24;
-  Io::write<Unsigned32>(pw | 8, base + Wdog);
-  Io::write<Unsigned32>((Io::read<Unsigned32>(base + Rstc) & ~0x30)
-                        | pw | 0x20,
-                        base + Rstc);
+  Io::write<Unsigned32>(pw | 8, wdog_ptr);
+
+  void *rstc_ptr = offset_cast<void *>(base, Rstc);
+  Unsigned32 rstc = Io::read<Unsigned32>(rstc_ptr);
+  Io::write<Unsigned32>((rstc & ~0x30) | pw | 0x20, rstc_ptr);
 
   L4::infinite_loop();
 }

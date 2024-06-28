@@ -324,7 +324,7 @@ IMPLEMENTATION:
 #include "lock_guard.h"
 
 PUBLIC explicit inline
-Gic_dist::Gic_dist(Address dist_base)
+Gic_dist::Gic_dist(void *dist_base)
   : _dist(dist_base)
 {}
 

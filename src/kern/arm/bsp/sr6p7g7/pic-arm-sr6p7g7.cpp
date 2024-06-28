@@ -19,12 +19,13 @@ Pic::init()
 {
   typedef Irq_mgr_single_chip<Gic_v3> M;
 
-  auto regs = Kmem_mmio::remap(Mem_layout::Gic_phys_base,
-                               Mem_layout::Gic_phys_size);
-
+  void *dist_mmio = Kmem_mmio::map(Mem_layout::Gic_phys_base,
+                                   Mem_layout::Gic_phys_size);
+  void *redist_mmio = offset_cast<void *>(dist_mmio,
+                                          Mem_layout::Gic_redist_offset);
   Mword aff0 = Cpu::mpidr() & 0xffU;
-  M *m = new Boot_object<M>(regs, regs + Mem_layout::Gic_redist_offset,
-                            aff0 == 0);
+
+  M *m = new Boot_object<M>(dist_mmio, redist_mmio, aff0 == 0);
 
   gic = &m->c;
   Irq_mgr::mgr = m;

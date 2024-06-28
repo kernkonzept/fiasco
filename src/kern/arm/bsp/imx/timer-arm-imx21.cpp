@@ -49,7 +49,7 @@ IMPLEMENTATION [arm && pf_imx_21]:
 
 IMPLEMENT
 Timer::Timer_imx21::Timer_imx21()
-: Mmio_register_block(Kmem_mmio::remap(Mem_layout::Timer_phys_base, 0x100))
+: Mmio_register_block(Kmem_mmio::map(Mem_layout::Timer_phys_base, 0x100))
 {
   write<Mword>(0, TCTL); // Disable
   write<Mword>(TCTL_SW_RESET, TCTL); // reset timer

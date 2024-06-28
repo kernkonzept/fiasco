@@ -39,7 +39,7 @@ Static_object<Timer_sp804> Timer::sp804;
 IMPLEMENT
 void Timer::init(Cpu_number)
 {
-  sp804.construct(Kmem_mmio::remap(Mem_layout::Timer0_phys_base, 0x10));
+  sp804.construct(Kmem_mmio::map(Mem_layout::Timer0_phys_base, 0x10));
   Platform::system_control->modify<Mword>(Platform::System_control::Timer0_enable, 0, 0);
 
   // all timers off

@@ -445,8 +445,8 @@ PRIVATE static
 void
 Cpu::init_scu()
 {
-  scu.construct(Kmem_mmio::remap(Mem_layout::Mp_scu_phys_base,
-                                 Config::PAGE_SIZE));
+  scu.construct(Kmem_mmio::map(Mem_layout::Mp_scu_phys_base,
+                               Config::PAGE_SIZE));
 
   scu->reset();
   scu->enable(Scu::Bsp_enable_bits);

@@ -75,14 +75,14 @@ Timer::set_next()
 }
 
 PUBLIC
-Timer::Timer(Address base) : Mmio_register_block(base)
+Timer::Timer(void *base) : Mmio_register_block(base)
 {
   set_next();
 }
 
 IMPLEMENT
 void Timer::init(Cpu_number)
-{ _timer.construct(Kmem_mmio::remap(Mem_layout::Timer_phys_base, 0x100)); }
+{ _timer.construct(Kmem_mmio::map(Mem_layout::Timer_phys_base, 0x100)); }
 
 PUBLIC static inline NEEDS[Timer::set_next]
 void

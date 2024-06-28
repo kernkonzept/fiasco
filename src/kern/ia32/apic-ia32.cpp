@@ -32,16 +32,16 @@ private:
   Apic_id _id;
   Unsigned32 _saved_apic_timer;
 
-  static void			error_interrupt(Return_frame *regs)
-				asm ("apic_error_interrupt") FIASCO_FASTCALL;
+  static void error_interrupt(Return_frame *regs)
+    asm ("apic_error_interrupt") FIASCO_FASTCALL;
 
-  static unsigned		present;
-  static int			good_cpu;
-  static Address                io_base asm ("apic_io_base");
-  static Address		phys_base;
-  static unsigned		timer_divisor;
-  static unsigned		frequency_khz;
-  static Unsigned64		scaler_us_to_apic;
+  static unsigned present;
+  static int good_cpu;
+  static void *io_base asm ("apic_io_base");
+  static Address phys_base;
+  static unsigned timer_divisor;
+  static unsigned frequency_khz;
+  static Unsigned64 scaler_us_to_apic;
 
   enum
   {
@@ -225,12 +225,12 @@ unsigned apic_spurious_interrupt_bug_cnt;
 unsigned apic_spurious_interrupt_cnt;
 unsigned apic_error_cnt;
 
-unsigned   Apic::present;
-int        Apic::good_cpu;
-Address    Apic::io_base;
-Address    Apic::phys_base;
-unsigned   Apic::timer_divisor = 1;
-unsigned   Apic::frequency_khz;
+unsigned Apic::present;
+int Apic::good_cpu;
+void *Apic::io_base;
+Address Apic::phys_base;
+unsigned Apic::timer_divisor = 1;
+unsigned Apic::frequency_khz;
 Unsigned64 Apic::scaler_us_to_apic;
 
 int ignore_invalid_apic_reg_access;
@@ -293,14 +293,14 @@ PUBLIC static inline
 Unsigned32
 Apic::reg_read(unsigned reg)
 {
-  return *reinterpret_cast<volatile Unsigned32*>(io_base + reg);
+  return *offset_cast<volatile Unsigned32 *>(io_base, reg);
 }
 
 PUBLIC static inline
 void
 Apic::reg_write(unsigned reg, Unsigned32 val)
 {
-  *reinterpret_cast<volatile Unsigned32*>(io_base + reg) = val;
+  *offset_cast<volatile Unsigned32 *>(io_base, reg) = val;
 }
 
 PUBLIC static inline
@@ -355,7 +355,9 @@ Apic::map_apic_page()
   // possible since some versions of VMware would complain about a
   // non-implemented feature
   assert(!io_base); // Ensure only called once
-  io_base = Kmem_mmio::remap(base, Config::PAGE_SIZE);
+  io_base = Kmem_mmio::map(base, Config::PAGE_SIZE);
+  if (!io_base)
+    panic("Unable to map local APIC");
 
   Kip::k()->add_mem_region(Mem_desc(base, base + Config::PAGE_SIZE - 1, Mem_desc::Reserved));
 }

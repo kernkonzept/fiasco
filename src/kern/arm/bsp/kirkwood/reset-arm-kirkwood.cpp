@@ -19,7 +19,7 @@ public:
 void __attribute__ ((noreturn))
 platform_reset(void)
 {
-  Mmio_register_block r(Kmem_mmio::remap(Mem_layout::Reset_phys_base, 0x200));
+  Mmio_register_block r(Kmem_mmio::map(Mem_layout::Reset_phys_base, 0x200));
   // enable software reset
   r.write<Unsigned32>(1 << 2, Kirkwood_reset::Mask_reg);
 

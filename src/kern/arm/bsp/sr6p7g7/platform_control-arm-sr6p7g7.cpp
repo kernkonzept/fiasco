@@ -29,7 +29,8 @@ start_core(unsigned core, Address start_addr)
   };
 
   unsigned long base = mc_me_base[core >> 1];
-  Mmio_register_block mc_me(Kmem_mmio::remap(base, 0x200));
+  void *mmio = Kmem_mmio::map(base, 0x200);
+  Mmio_register_block mc_me(mmio);
 
   mc_me.write<Unsigned32>(start_addr | 1U, (core & 1U) ? Me_caddr1 : Me_caddr0);
   mc_me.write<Unsigned16>(0xfe, (core & 1U) ? Me_cctl1 : Me_cctl0);
@@ -42,7 +43,7 @@ start_core(unsigned core, Address start_addr)
   while (timeout.test(mc_me.read<Unsigned32>(Me_gs) & Me_gs_s_mtrans));
 
   // Remove mappings to release precious MPU regions
-  Kmem_mmio::unmap_compat(base, 0x200);
+  Kmem_mmio::unmap(mmio, 0x200);
 
   return !timeout.timed_out();
 }

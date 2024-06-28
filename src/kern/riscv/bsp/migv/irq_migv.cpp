@@ -80,7 +80,7 @@ IMPLEMENTATION:
 #include <cassert>
 
 PUBLIC inline
-Irq_chip_migv::Irq_chip_migv(Address mmio)
+Irq_chip_migv::Irq_chip_migv(void *mmio)
   : Irq_chip_gen(Num_irqs), _regs(mmio)
 {
   R_config0 config0(_regs[Config0]);

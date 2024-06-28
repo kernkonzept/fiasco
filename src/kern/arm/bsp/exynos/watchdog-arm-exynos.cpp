@@ -23,7 +23,7 @@ private:
   static Static_object<Watchdog> wdog;
 
 public:
-  Watchdog(Address virt) : Mmio_register_block(virt) {}
+  Watchdog(void *virt) : Mmio_register_block(virt) {}
 };
 
 IMPLEMENTATION [watchdog]:
@@ -71,7 +71,7 @@ PUBLIC static FIASCO_INIT
 void
 Watchdog::init()
 {
-  wdog.construct(Kmem_mmio::remap(Mem_layout::Watchdog_phys_base, 0x10));
+  wdog.construct(Kmem_mmio::map(Mem_layout::Watchdog_phys_base, 0x10));
   if (1)
     {
       wdog->setup(Reset_timeout_val);

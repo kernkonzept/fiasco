@@ -10,7 +10,7 @@ PRIVATE static
 Mword
 Timer::interval()
 {
-  Mct_timer mct(Kmem_mmio::remap(Mem_layout::Mct_phys_base, 0x100));
+  Mct_timer mct(Kmem_mmio::map(Mem_layout::Mct_phys_base, 0x100));
   // probably need to select proper clock source for MCT
   Mword timer_start = 0UL;
   unsigned factor = 5;
@@ -72,13 +72,13 @@ Timer::init(Cpu_number cpu)
 {
   if (cpu == Cpu_number::boot_cpu())
     {
-      mct.construct(Kmem_mmio::remap(Mem_layout::Mct_phys_base, 0x100));
+      mct.construct(Kmem_mmio::map(Mem_layout::Mct_phys_base, 0x100));
       mct->write<Mword>(0, Mct_timer::Reg::Cfg);
     }
 
   Address timer_addr = Mem_layout::Mct_phys_base + 0x300
                      + cxx::int_value<Cpu_phys_id>(Cpu::cpus.cpu(cpu).phys_id()) * 0x100;
-  timers.cpu(cpu).construct(Kmem_mmio::remap(timer_addr, 0x100));
+  timers.cpu(cpu).construct(Kmem_mmio::map(timer_addr, 0x100));
   timers.cpu(cpu)->Mct_core_timer::configure();
 }
 

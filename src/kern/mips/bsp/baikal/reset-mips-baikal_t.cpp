@@ -7,7 +7,7 @@ IMPLEMENTATION [mips && baikal_t]:
 void __attribute__ ((noreturn))
 platform_reset(void)
 {
-  Register_block<32> r(Kmem_mmio::remap(0x1f04c000, 0x10));
+  Register_block<32> r(Kmem_mmio::map(0x1f04c000, 0x10));
   r[0x0] = r[0] & ~3;
   r[0x4] = 0;
   r[0x0] = r[0] | 1;

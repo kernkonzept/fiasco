@@ -17,7 +17,7 @@ void
 Pic::init()
 {
   Address plic_addr = Kip::k()->platform_info.arch.plic_addr;
-  Irq_mgr::mgr = mgr.construct(Kmem_mmio::remap(plic_addr, 0x1000));
+  Irq_mgr::mgr = mgr.construct(Kmem_mmio::map(plic_addr, 0x1000));
 }
 
 PUBLIC static

@@ -5,12 +5,18 @@
 #include "types.h"
 #include "asm_access.h"
 #include <cxx/type_traits>
+#include <panic.h>
 
 class Mmio_register_block
 {
 public:
   Mmio_register_block() = default;
-  explicit Mmio_register_block(Address base) : _base(base) {}
+  explicit Mmio_register_block(void *base)
+    : _base(reinterpret_cast<uintptr_t>(base))
+  {
+    if (!_base)
+      panic("Invalid register block.");
+  }
 
   /** Read-only register mixin */
   template<typename REG, typename VALUE>
@@ -207,11 +213,18 @@ public:
   void set(T set_bits, Address reg) const
   { r<T>(reg).set(set_bits); }
 
-  Address get_mmio_base() const { return _base; }
-  void set_mmio_base(Address base) { _base = base; }
+  void *get_mmio_base() const { return reinterpret_cast<void *>(_base); }
+
+  void set_mmio_base(void *base)
+  {
+    if (!base)
+      panic("Invalid register block.");
+
+    _base = reinterpret_cast<uintptr_t>(base);
+  }
 
 private:
-  Address _base;
+  uintptr_t _base;
 };
 
 /**
@@ -243,7 +256,7 @@ struct Register_block : Mmio_register_block
   enum { Default_width = REG_WIDTH };
 
   Register_block() = default;
-  explicit Register_block(Address base) : Mmio_register_block(base) {}
+  explicit Register_block(void *base) : Mmio_register_block(base) {}
 
   /** Access register with default width at `offset`. */
   Mmio_register_block::Reg<Default_width>
@@ -266,7 +279,7 @@ struct Register_block<REG_WIDTH, void> : Mmio_register_block
   enum { Default_width = REG_WIDTH };
 
   Register_block() = default;
-  explicit Register_block(Address base) : Mmio_register_block(base) {}
+  explicit Register_block(void *base) : Mmio_register_block(base) {}
 
   template<typename REG>
   Mmio_register_block::Reg<Register_block_access_size<REG>::value>

@@ -174,7 +174,7 @@ Kmem::is_kmem_page_fault(Address addr, Mword /*error*/)
 //
 
 // Establish a 4k-mapping
-// TODO: Implement this via ioremap
+// TODO: Implement this via Kmem_mmio::map
 PUBLIC static
 void
 Kmem::map_phys_page(Address phys, Address virt,

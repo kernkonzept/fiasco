@@ -33,7 +33,7 @@ private:
 public:
   Irq_chip_kirkwood()
   : Irq_chip_gen(64),
-    Mmio_register_block(Kmem_mmio::remap(Mem_layout::Pic_phys_base, 0x400))
+    Mmio_register_block(Kmem_mmio::map(Mem_layout::Pic_phys_base, 0x400))
   {
     // Disable all interrupts
     write<Unsigned32>(0U, Main_Irq_mask_low_reg);

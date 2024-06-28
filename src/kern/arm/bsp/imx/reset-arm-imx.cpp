@@ -17,11 +17,11 @@ platform_reset(void)
   };
 
   // WDT CLock Enable
-  Io::set<Unsigned32>(PLL_PCCR1_WDT_EN, Kmem_mmio::remap(PLL_PCCR1,
-                                                         sizeof(Unsigned32)));
+  Io::set<Unsigned32>(PLL_PCCR1_WDT_EN, Kmem_mmio::map(PLL_PCCR1,
+                                                       sizeof(Unsigned32)));
 
   // Assert Software reset signal by making the bit zero
-  Io::mask<Unsigned16>(~WCR_SRS, Kmem_mmio::remap(WCR, sizeof(Unsigned16)));
+  Io::mask<Unsigned16>(~WCR_SRS, Kmem_mmio::map(WCR, sizeof(Unsigned16)));
 
   L4::infinite_loop();
 }
@@ -36,7 +36,7 @@ IMPLEMENTATION [arm && pf_imx_28]:
 void __attribute__ ((noreturn))
 platform_reset(void)
 {
-  Register_block<32> r(Kmem_mmio::remap(0x80056000, 0x100));
+  Register_block<32> r(Kmem_mmio::map(0x80056000, 0x100));
   r[0x50] = 1; // Watchdog counter
   r[0x04] = 1 << 4; // Watchdog enable
 
@@ -55,8 +55,8 @@ IMPLEMENTATION [arm && pf_imx_6]:
 void platform_imx_cpus_off()
 {
   // switch off core1-3
-  Io::clear<Mword>(7 << 22, Kmem_mmio::remap(Mem_layout::Src_phys_base,
-                                             sizeof(Mword)) + 0);
+  void *ptr = Kmem_mmio::map(Mem_layout::Src_phys_base, sizeof(Mword));
+  Io::clear<Mword>(7 << 22, ptr);
 }
 
 // ------------------------------------------------------------------------
@@ -65,8 +65,8 @@ IMPLEMENTATION [arm && pf_imx_7]:
 void platform_imx_cpus_off()
 {
   // switch off core1
-  Io::clear<Mword>(1 << 1, Kmem_mmio::remap(Mem_layout::Src_phys_base,
-                                            sizeof(Mword)) + 8);
+  void *ptr = Kmem_mmio::map(Mem_layout::Src_phys_base, sizeof(Mword));
+  Io::clear<Mword>(1 << 1, offset_cast<void *>(ptr, 8));
 }
 
 // ------------------------------------------------------------------------
@@ -88,8 +88,8 @@ platform_reset(void)
   platform_imx_cpus_off();
 
   // Enable watchdog with smallest timeout possible (0.5s)
-  Io::modify<Unsigned16>(WCR_WDE, 0xff10, Kmem_mmio::remap(WCR,
-                                                           sizeof(Unsigned16)));
+  Io::modify<Unsigned16>(WCR_WDE, 0xff10, Kmem_mmio::map(WCR,
+                                                         sizeof(Unsigned16)));
 
   L4::infinite_loop();
 }

@@ -7,7 +7,7 @@ INTERFACE [arm && pf_exynos]: // ------------------
 class Mct_timer : public Mmio_register_block
 {
 public:
-  explicit Mct_timer(Address virt) : Mmio_register_block(virt) {}
+  explicit Mct_timer(void *virt) : Mmio_register_block(virt) {}
 
   struct Reg { enum
   {
@@ -21,7 +21,7 @@ public:
 class Mct_core_timer : public Mmio_register_block
 {
 public:
-  explicit Mct_core_timer(Address virt) : Mmio_register_block(virt) {}
+  explicit Mct_core_timer(void *virt) : Mmio_register_block(virt) {}
   struct Reg { enum
   {
     L0          = 0x300,

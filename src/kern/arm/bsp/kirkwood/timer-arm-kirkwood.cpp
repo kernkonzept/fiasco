@@ -41,7 +41,7 @@ Static_object<Timer> Timer::_timer;
 
 PUBLIC
 Timer::Timer()
-: Mmio_register_block(Kmem_mmio::remap(Mem_layout::Timer_phys_base, 0x400))
+: Mmio_register_block(Kmem_mmio::map(Mem_layout::Timer_phys_base, 0x400))
 {
   // Disable timer
   write<Unsigned32>(0, Control_Reg);

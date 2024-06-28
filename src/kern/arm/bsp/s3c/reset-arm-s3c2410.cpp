@@ -7,8 +7,7 @@ IMPLEMENTATION [arm && pf_s3c2410]:
 void __attribute__ ((noreturn))
 platform_reset(void)
 {
-  Mmio_register_block wdg(Kmem_mmio::remap(Mem_layout::Watchdog_phys_base,
-                                           0x10));
+  Mmio_register_block wdg(Kmem_mmio::map(Mem_layout::Watchdog_phys_base, 0x10));
   enum {
     WTCON = 0x0,
     WTDAT = 0x4,

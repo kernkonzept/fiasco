@@ -9,7 +9,7 @@ void __attribute__ ((noreturn))
 platform_reset(void)
 {
   // Configuration and Control
-  Mmio_register_block r(Kmem_mmio::remap(0xf1018200, 0x100));
+  Mmio_register_block r(Kmem_mmio::map(0xf1018200, 0x100));
   r.r<32>(0x60) = 1;
   r.r<32>(0x64) = 1;
 

@@ -88,7 +88,7 @@ public:
 
   virtual void start_all_vps(Address e) = 0;
   virtual void set_gic_base_and_enable(Address a) = 0;
-  virtual Address mmio_base() const = 0;
+  virtual void *mmio_base() const = 0;
   virtual unsigned l2_cache_line() const = 0;
 
   unsigned revision() const
@@ -133,7 +133,7 @@ class Cm_x : public Cm
 {
 public:
 
-  Address mmio_base() const override
+  void *mmio_base() const override
   { return _gcr_base.get_mmio_base(); }
 
   void set_gic_base_and_enable(Address a) override
@@ -199,7 +199,7 @@ protected:
 class Cm2 : public Cm_x<32>
 {
 public:
-  Cm2(unsigned revision, Phys_mem_addr phys, Address base)
+  Cm2(unsigned revision, Phys_mem_addr phys, void *base)
   : Cm_x<32>(revision, phys, base)
   {}
 
@@ -247,7 +247,7 @@ public:
     O_cpc_ram_sleep  = 0x50,
   };
 
-  Cm3(unsigned revision, Phys_mem_addr phys, Address base)
+  Cm3(unsigned revision, Phys_mem_addr phys, void *base)
   : Cm_x<MWORD_BITS>(revision, phys, base)
   {}
 
@@ -412,7 +412,7 @@ Cm_x<REG_WIDTH>::setup_cpc() override
 }
 
 PUBLIC template<unsigned REG_WIDTH>
-Cm_x<REG_WIDTH>::Cm_x(unsigned rev, Phys_mem_addr gcr_phys, Address gcr_base)
+Cm_x<REG_WIDTH>::Cm_x(unsigned rev, Phys_mem_addr gcr_phys, void *gcr_base)
 : Cm(rev, gcr_phys), _gcr_base(gcr_base)
 {
   unsigned config = _gcr_base[R_gcr_config];
@@ -454,9 +454,9 @@ Cm::init()
 
   auto gcr_phys = Phys_mem_addr(v);
 
-  Register_block<32> _gcrs(Kmem_mmio::remap(v << 4, 0x8000));
+  Register_block<32> _gcrs(Kmem_mmio::map(v << 4, 0x8000));
 
-  printf("MIPS: Coherency Manager (CM) found: phys=%08lx(<<4) virt=%08lx\n",
+  printf("MIPS: Coherency Manager (CM) found: phys=%08lx(<<4) virt=%p\n",
          v, _gcrs.get_mmio_base());
 
   unsigned raw_rev = _gcrs[Cm::R_gcr_rev];

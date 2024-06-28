@@ -35,7 +35,7 @@ PUBLIC static
 void
 Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
 {
-  Mmio_register_block a(Kmem_mmio::remap(0xd8, 0x28));
+  Mmio_register_block a(Kmem_mmio::map(0xd8, 0x28));
   Cpu_phys_id myid = Proc::cpu_id();
   int seq = 1;
   for (unsigned i = 0; i < min<unsigned>(4, Config::Max_num_cpus); ++i)

@@ -16,37 +16,37 @@ public:
    * Read the value of type T at address.
    */
   template< typename T >
-  static T read(Address address);
+  static T read(void *address);
 
   /**
    * Write the value of type T at address.
    */
   template< typename T >
-  static void write(T value, Address address);
+  static void write(T value, void *address);
 
   /**
    * Write (read<T>(address) & maskbits) of type T at address.
    */
   template< typename T >
-  static void mask(T mask, Address address);
+  static void mask(T mask, void *address);
 
   /**
    * Write (read<T>(address) & ~clearbits) of type T at address.
    */
   template< typename T >
-  static void clear(T clearbits, Address address);
+  static void clear(T clearbits, void *address);
 
   /**
    * Write (read<T>(address) | setbits) of type T at address.
    */
   template< typename T >
-  static void set(T setbits, Address address);
+  static void set(T setbits, void *address);
 
   /**
    * Write ((read<T>(address) & ~disable) | enable) of type T at address.
    */
   template< typename T >
-  static void modify(T enable, T disable, Address address);
+  static void modify(T enable, T disable, void *address);
 
   /**
    * Read byte port.
@@ -118,35 +118,35 @@ IMPLEMENTATION [!ppc32]:
 
 IMPLEMENT inline
 template< typename T >
-T Io::read(Address address)
-{ return *reinterpret_cast<volatile T *>(address); }
+T Io::read(void *address)
+{ return *static_cast<volatile T *>(address); }
 
 IMPLEMENT inline
 template< typename T>
-void Io::write(T value, Address address)
-{ *reinterpret_cast<volatile T *>(address) = value; }
+void Io::write(T value, void *address)
+{ *static_cast<volatile T *>(address) = value; }
 
 // ----------------------------------------------------------------------
 IMPLEMENTATION:
 
 IMPLEMENT inline
 template< typename T>
-void Io::mask(T mask, Address address)
+void Io::mask(T mask, void *address)
 { write<T>(read<T>(address) & mask, address); }
 
 IMPLEMENT inline
 template< typename T>
-void Io::clear(T clearbits, Address address)
+void Io::clear(T clearbits, void *address)
 { write<T>(read<T>(address) & ~clearbits, address); }
 
 IMPLEMENT inline
 template< typename T>
-void Io::set(T setbits, Address address)
+void Io::set(T setbits, void *address)
 { write<T>(read<T>(address) | setbits, address); }
 
 IMPLEMENT inline
 template< typename T>
-void Io::modify(T enable, T disable, Address address)
+void Io::modify(T enable, T disable, void *address)
 {
   write<T>((read<T>(address) & ~disable) | enable, address);
 }

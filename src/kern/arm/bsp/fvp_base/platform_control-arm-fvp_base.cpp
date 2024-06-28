@@ -21,8 +21,8 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
   if (Koptions::o()->core_spin_addr == -1ULL)
     return;
 
-  Mmio_register_block s(Kmem_mmio::remap(Koptions::o()->core_spin_addr,
-                                         sizeof(Address)));
+  Mmio_register_block s(Kmem_mmio::map(Koptions::o()->core_spin_addr,
+                                       sizeof(Address)));
   s.r<Address>(0) = phys_tramp_mp_addr;
   Mem::dsb();
   Mem_unit::clean_dcache();

@@ -94,8 +94,8 @@ PRIVATE static
 void
 Platform::process_pkg_ids()
 {
-  Mword pkg_id = Io::read<Mword>(Kmem_mmio::remap(Mem_layout::Chip_id_phys_base + 4,
-                                                  sizeof(Mword)));
+  Mword pkg_id = Io::read<Mword>(Kmem_mmio::map(Mem_layout::Chip_id_phys_base + 4,
+                                                sizeof(Mword)));
   for  (unsigned i = 0; i < sizeof(__pkg_ids) / sizeof(__pkg_ids[0]); ++i)
     if ((pkg_id & __pkg_ids[i].mask) == __pkg_ids[i].val)
       {
@@ -127,8 +127,8 @@ Platform::type()
 {
   if (_soc == 0)
     {
-      Mword pro_id = Io::read<Mword>(Kmem_mmio::remap(Mem_layout::Chip_id_phys_base,
-                                                      sizeof(Mword)));
+      Mword pro_id = Io::read<Mword>(Kmem_mmio::map(Mem_layout::Chip_id_phys_base,
+                                                    sizeof(Mword)));
 
       _subrev = pro_id & 0xff;
 

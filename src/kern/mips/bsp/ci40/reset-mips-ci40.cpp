@@ -7,7 +7,7 @@ IMPLEMENTATION [mips && ci40]:
 void __attribute__ ((noreturn))
 platform_reset(void)
 {
-  Register_block<32> wdg(Kmem_mmio::remap(0x18102100, sizeof(Unsigned32)));
+  Register_block<32> wdg(Kmem_mmio::map(0x18102100, sizeof(Unsigned32)));
   wdg[0] = 1;
 
   L4::infinite_loop();

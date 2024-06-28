@@ -34,12 +34,12 @@ Pic::init()
     panic("SBSA: no redistributor defined in MADT\n");
 
   auto *g =
-    new Boot_object<Gic_v3>(Kmem_mmio::remap(dist->base, Gic_dist::Size),
-                            Kmem_mmio::remap(redist->base, redist->length));
+    new Boot_object<Gic_v3>(Kmem_mmio::map(dist->base, Gic_dist::Size),
+                            Kmem_mmio::map(redist->base, redist->length));
 
   int i = 0;
   while (auto *its = madt->find<Acpi_madt::Gic_its_if>(i++))
-    g->add_its(Kmem_mmio::remap(its->base, Mem_layout::Gic_its_size));
+    g->add_its(Kmem_mmio::map(its->base, Mem_layout::Gic_its_size));
 
   gic = g;
   Irq_mgr::mgr = new Boot_object<M>(g, g->msi_chip());
