@@ -7,7 +7,7 @@ IMPLEMENTATION [arm && pf_arm_virt]:
 #include "gic_v2.h"
 #include "gic_v3.h"
 #include "panic.h"
-
+#include "kmem_mmio.h"
 
 PUBLIC static
 void Pic::init_ap(Cpu_number cpu, bool resume)
@@ -19,14 +19,14 @@ PUBLIC static FIASCO_INIT
 void Pic::init()
 {
 
-  Mmio_register_block dist(Kmem::mmio_remap(Mem_layout::Gic_dist_phys_base,
+  Mmio_register_block dist(Kmem_mmio::remap(Mem_layout::Gic_dist_phys_base,
                                             Gic_dist::Size));
   if ((dist.read<Unsigned32>(0xfe8) & 0x0f0) == 0x20)
     {
       // assume GICv2
       printf("GICv2\n");
       typedef Irq_mgr_single_chip<Gic_v2> Mgr;
-      Mgr *m = new Boot_object<Mgr>(Kmem::mmio_remap(Mem_layout::Gic_cpu_phys_base,
+      Mgr *m = new Boot_object<Mgr>(Kmem_mmio::remap(Mem_layout::Gic_cpu_phys_base,
                                                      Gic_cpu_v2::Size),
                                     dist.get_mmio_base());
       gic = &m->c;
@@ -36,11 +36,11 @@ void Pic::init()
     {
       // assume GICv3
       printf("GICv3\n");
-      auto redist = Kmem::mmio_remap(Mem_layout::Gic_redist_phys_base,
+      auto redist = Kmem_mmio::remap(Mem_layout::Gic_redist_phys_base,
                                      Mem_layout::Gic_redist_size);
       auto gic_v3 = new Boot_object<Gic_v3>(dist.get_mmio_base(), redist);
 
-      gic_v3->add_its(Kmem::mmio_remap(Mem_layout::Gic_its_phys_base,
+      gic_v3->add_its(Kmem_mmio::remap(Mem_layout::Gic_its_phys_base,
                                        Mem_layout::Gic_its_size));
 
       gic = gic_v3;

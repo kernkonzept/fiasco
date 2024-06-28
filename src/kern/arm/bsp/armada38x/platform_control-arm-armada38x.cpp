@@ -4,7 +4,7 @@ INTERFACE [arm && pf_armada38x]:
 
 IMPLEMENTATION [arm && pf_armada38x]:
 
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "mmio_register_block.h"
 
 IMPLEMENT_OVERRIDE
@@ -23,7 +23,7 @@ Platform_control::init(Cpu_number cpu)
     Remap_low_off = 8,
     Remap_hi_off  = 12,
   };
-  Mmio_register_block cpu_subsys(Kmem::mmio_remap(0xf1020000, 0x100));
+  Mmio_register_block cpu_subsys(Kmem_mmio::remap(0xf1020000, 0x100));
 
   // Disable Window 0-7
   for (unsigned i = 0; i < 8; ++i)
@@ -56,7 +56,7 @@ IMPLEMENTATION [arm && mp && pf_armada38x]: // -------------------------------
 #include "pic.h"
 #include "mem.h"
 #include "mmio_register_block.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 
 PUBLIC static
 void
@@ -64,7 +64,7 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
 {
   unsigned hwcpu = 1;
   // CPU1 Power Management
-  Mmio_register_block pmu_c1(Kmem::mmio_remap(0xf1022100 + hwcpu * 0x100,
+  Mmio_register_block pmu_c1(Kmem_mmio::remap(0xf1022100 + hwcpu * 0x100,
                                               0x100));
 
   pmu_c1.r<32>(0x24) = phys_tramp_mp_addr;
@@ -72,6 +72,6 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
   Pic::gic->softint_phys(Ipi::Global_request, 1ul << (16 + hwcpu));
 
   // CPU0..n Software Reset Control Register
-  Mmio_register_block cpu_reset(Kmem::mmio_remap(0xf1020800, 8));
+  Mmio_register_block cpu_reset(Kmem_mmio::remap(0xf1020800, 8));
   cpu_reset.r<32>(hwcpu * 0x8).clear(1);
 }

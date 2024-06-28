@@ -12,7 +12,7 @@ IMPLEMENTATION:
 #include "cascade_irq.h"
 #include "mips_cpu_irqs.h"
 #include "gic.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 
 static Gic *gic;
 
@@ -39,11 +39,11 @@ Mips_bsp_irqs::init(Cpu_number cpu)
 
   m->add_chip(Mips_cpu_irqs::chip, 0);
 
-  Register_block<32> sead3_cfg_r(Kmem::mmio_remap(0x1b100110, sizeof(Unsigned32)));
+  Register_block<32> sead3_cfg_r(Kmem_mmio::remap(0x1b100110, sizeof(Unsigned32)));
   enum { GIC_PRESENT = 1 << 1 };
   if (sead3_cfg_r[0] & GIC_PRESENT)
     {
-      gic = new Boot_object<Gic>(Kmem::mmio_remap(0x1b1c0000, Gic::Size), 2);
+      gic = new Boot_object<Gic>(Kmem_mmio::remap(0x1b1c0000, Gic::Size), 2);
       auto *c = new Boot_object<Cascade_irq>(gic, gic_hit);
       Mips_cpu_irqs::chip->alloc(c, 2);
       c->unmask();

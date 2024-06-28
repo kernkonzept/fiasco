@@ -33,7 +33,7 @@ IMPLEMENTATION [sparc]:
 #include "config.h"
 #include "globals.h"
 #include "kip.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "warn.h"
 
 #include <cstdio>
@@ -41,7 +41,7 @@ IMPLEMENTATION [sparc]:
 Static_object<Timer> Timer::_timer;
 
 PUBLIC
-Timer::Timer() : Mmio_register_block(Kmem::mmio_remap(0x80000300, 0x10))
+Timer::Timer() : Mmio_register_block(Kmem_mmio::remap(0x80000300, 0x10))
 {
   r<32>(Scaler) = 0;
   r<32>(Scaler_reload) = 0;

@@ -102,6 +102,13 @@ Mem_unit::tlb_flush_page(Address addr, Mword asid)
   __asm__ __volatile__ ("sfence.vma %0, %1" : : "r"(addr), "r"(asid) : "memory");
 }
 
+PUBLIC static inline ALWAYS_INLINE
+void
+Mem_unit::tlb_flush_kernel(Address addr)
+{
+  return tlb_flush_page(addr);
+}
+
 PUBLIC static inline
 void
 Mem_unit::local_flush_icache()

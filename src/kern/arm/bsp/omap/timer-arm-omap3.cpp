@@ -58,14 +58,14 @@ Static_object<Timer_omap_1mstimer> Timer::_timer;
 // -----------------------------------------------------------------------
 IMPLEMENTATION [arm && pf_omap3_35x]:
 
-#include "kmem.h"
+#include "kmem_mmio.h"
 
 IMPLEMENT
 void
 Timer::init(Cpu_number)
 {
   // select 32768 Hz input to GPTimer1 (timer1 only!)
-  Mmio_register_block wkup(Kmem::mmio_remap(CM_CLKSEL_WKUP, 0x10));
+  Mmio_register_block wkup(Kmem_mmio::remap(CM_CLKSEL_WKUP, 0x10));
   wkup.modify<Mword>(0, 1, 0);
   _timer.construct(true);
 }
@@ -80,7 +80,7 @@ Timer::acknowledge()
 // -----------------------------------------------------------------------
 IMPLEMENTATION [arm && pf_omap3_am33xx]:
 
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "mem_layout.h"
 
 Static_object<Timer_omap_gentimer> Timer::_gentimer;
@@ -89,9 +89,9 @@ IMPLEMENT
 void
 Timer::init(Cpu_number)
 {
-  Mmio_register_block wkup(Kmem::mmio_remap(Mem_layout::Cm_wkup_phys_base,
+  Mmio_register_block wkup(Kmem_mmio::remap(Mem_layout::Cm_wkup_phys_base,
                                             0x100));
-  Mmio_register_block clksel(Kmem::mmio_remap(Mem_layout::Cm_dpll_phys_base,
+  Mmio_register_block clksel(Kmem_mmio::remap(Mem_layout::Cm_dpll_phys_base,
                                               0x100));
   switch (type())
     {

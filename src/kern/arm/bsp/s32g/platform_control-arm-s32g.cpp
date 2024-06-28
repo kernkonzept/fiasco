@@ -4,7 +4,7 @@ IMPLEMENTATION [arm && mp && pf_s32g && !arm_psci]:
 #include "mem.h"
 #include "minmax.h"
 #include "mmio_register_block.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "koptions.h"
 #include "mem_unit.h"
 
@@ -20,7 +20,7 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
   if (Koptions::o()->core_spin_addr == -1ULL)
     return;
 
-  Mmio_register_block s(Kmem::mmio_remap(Koptions::o()->core_spin_addr,
+  Mmio_register_block s(Kmem_mmio::remap(Koptions::o()->core_spin_addr,
                                          sizeof(Address)));
   s.r<Address>(0) = phys_tramp_mp_addr;
   Mem::dsb();

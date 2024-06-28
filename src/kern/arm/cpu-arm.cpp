@@ -437,7 +437,7 @@ public:
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && (arm_mpcore || arm_cortex_a9)]:
 
-#include "kmem.h"
+#include "kmem_mmio.h"
 
 Static_object<Scu> Cpu::scu;
 
@@ -445,7 +445,7 @@ PRIVATE static
 void
 Cpu::init_scu()
 {
-  scu.construct(Kmem::mmio_remap(Mem_layout::Mp_scu_phys_base,
+  scu.construct(Kmem_mmio::remap(Mem_layout::Mp_scu_phys_base,
                                  Config::PAGE_SIZE));
 
   scu->reset();

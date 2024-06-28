@@ -43,7 +43,7 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
 IMPLEMENTATION [arm && mp && pf_qcom && !arm_psci]:
 
 #include "io.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "koptions.h"
 #include "mem.h"
 
@@ -54,7 +54,7 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
   if (Koptions::o()->core_spin_addr == -1ULL)
     return;
 
-  Address base = Kmem::mmio_remap(Koptions::o()->core_spin_addr, sizeof(Address));
+  Address base = Kmem_mmio::remap(Koptions::o()->core_spin_addr, sizeof(Address));
   Io::write<Address>(phys_tramp_mp_addr, base);
   Mem::dsb();
   asm volatile("sev" : : : "memory");

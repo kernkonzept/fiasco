@@ -51,13 +51,3 @@ bool Kmem::is_kmem_page_fault(Mword pfa, Mword /*error*/)
 {
   return in_kernel(pfa);
 }
-
-PUBLIC static
-Address
-Kmem::mmio_remap(Address phys, Address size)
-{
-  (void)phys;
-  (void)size;
-  // implement me
-  return ~0UL;
-}

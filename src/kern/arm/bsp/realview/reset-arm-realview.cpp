@@ -1,7 +1,6 @@
 IMPLEMENTATION [arm && pf_realview]:
 
 #include "io.h"
-#include "kmem.h"
 #include "platform.h"
 
 // ------------------------------------------------------------------------

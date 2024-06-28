@@ -11,7 +11,7 @@ IMPLEMENTATION[sparc]:
 #include "irq_chip_generic.h"
 #include "irq_mgr.h"
 #include "mmio_register_block.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 
 class Irq_chip_sparc : public Irq_chip_gen, Mmio_register_block
 {
@@ -39,7 +39,7 @@ public:
 PUBLIC
 Irq_chip_sparc::Irq_chip_sparc()
 : Irq_chip_gen(16),
-  Mmio_register_block(Kmem::mmio_remap(0x80000200, 0x100))
+  Mmio_register_block(Kmem_mmio::remap(0x80000200, 0x100))
 {
   Unsigned32 mpstat = r<32>(MPSTAT);
 

@@ -73,6 +73,12 @@ Mem_unit::tlb_flush(Address /* addr */)
 
 PUBLIC static inline
 void
+Mem_unit::tlb_flush_kernel(Address /* addr */)
+{
+}
+
+PUBLIC static inline
+void
 Mem_unit::sync()
 {
 }

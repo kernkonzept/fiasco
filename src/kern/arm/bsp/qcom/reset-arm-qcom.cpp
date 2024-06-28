@@ -21,12 +21,12 @@ IMPLEMENTATION [arm && pf_qcom && !arm_psci]:
 
 #include "infinite_loop.h"
 #include "io.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 
 void __attribute__ ((noreturn))
 platform_reset(void)
 {
-  Address base = Kmem::mmio_remap(Mem_layout::Mpm_ps_hold, sizeof(Unsigned32));
+  Address base = Kmem_mmio::remap(Mem_layout::Mpm_ps_hold, sizeof(Unsigned32));
   Io::write<Unsigned32>(0, base);
   L4::infinite_loop();
 }

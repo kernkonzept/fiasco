@@ -359,7 +359,7 @@ Bootstrap::init_paging()
   Bs_alloc alloc(kern_to_boot(bs_info.pi.scratch), bs_info.pi.free_map);
 
   // force allocation of MMIO+Pmem page directory
-  kd->walk(::Virt_addr(Mem_layout::Registers_map_start), kd->Super_level, false,
+  kd->walk(::Virt_addr(Mem_layout::Mmio_map_start), kd->Super_level, false,
                        alloc, Bs_mem_map());
   kd->walk(::Virt_addr(Mem_layout::Pmem_start), kd->Super_level, false,
                        alloc, Bs_mem_map());
@@ -513,7 +513,7 @@ Bootstrap::init_paging()
   Bs_alloc alloc(kern_to_boot(bs_info.pi.scratch), bs_info.pi.free_map);
 
   // force allocation of MMIO+Pmem page directory
-  d->walk(::Virt_addr(Mem_layout::Registers_map_start), d->Super_level, false,
+  d->walk(::Virt_addr(Mem_layout::Mmio_map_start), d->Super_level, false,
                       alloc, Bs_mem_map());
   d->walk(::Virt_addr(Mem_layout::Pmem_start), d->Super_level, false,
                       alloc, Bs_mem_map());

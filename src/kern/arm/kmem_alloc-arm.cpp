@@ -9,7 +9,6 @@ IMPLEMENTATION [arm]:
 
 #include "mem_layout.h"
 #include "kmem.h"
-#include "kmem_space.h"
 #include "minmax.h"
 #include "static_init.h"
 #include "paging_bits.h"

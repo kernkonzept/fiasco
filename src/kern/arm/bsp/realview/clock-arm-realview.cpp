@@ -1,6 +1,5 @@
 INTERFACE [arm && pf_realview]:
 
-#include "kmem.h"
 #include "l4_types.h"
 #include "platform.h"
 

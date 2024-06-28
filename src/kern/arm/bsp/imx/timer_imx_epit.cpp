@@ -1,7 +1,7 @@
 // --------------------------------------------------------------------------
 INTERFACE [arm && imx_epit]:
 
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "mem_layout.h"
 #include "mmio_register_block.h"
 
@@ -40,7 +40,7 @@ IMPLEMENTATION [arm && imx_epit]:
 
 PUBLIC
 Timer_imx_epit::Timer_imx_epit(Address phys_base)
-: Mmio_register_block(Kmem::mmio_remap(phys_base, 0x100))
+: Mmio_register_block(Kmem_mmio::remap(phys_base, 0x100))
 {
   write<Mword>(0, EPITCR); // Disable
   write<Mword>(EPITCR_SWR, EPITCR);

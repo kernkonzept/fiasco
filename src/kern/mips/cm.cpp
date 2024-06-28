@@ -360,7 +360,7 @@ IMPLEMENTATION:
 #include <cstdio>
 #include "boot_alloc.h"
 #include "panic.h"
-#include "mem_layout.h"
+#include "kmem_mmio.h"
 
 Cm *Cm::cm;
 
@@ -454,7 +454,7 @@ Cm::init()
 
   auto gcr_phys = Phys_mem_addr(v);
 
-  Register_block<32> _gcrs(Mem_layout::ioremap_nocache(v << 4, 0x8000));
+  Register_block<32> _gcrs(Kmem_mmio::remap(v << 4, 0x8000));
 
   printf("MIPS: Coherency Manager (CM) found: phys=%08lx(<<4) virt=%08lx\n",
          v, _gcrs.get_mmio_base());

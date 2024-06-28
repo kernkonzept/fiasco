@@ -6,7 +6,7 @@
 IMPLEMENTATION [mips && malta]:
 
 #include "infinite_loop.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "mmio_register_block.h"
 
 void __attribute__ ((noreturn))
@@ -18,7 +18,7 @@ platform_reset()
     GORESET          = 0x42,
   };
 
-  Register_block<32> r(Kmem::mmio_remap(SOFTRES_REGISTER, sizeof(Unsigned32)));
+  Register_block<32> r(Kmem_mmio::remap(SOFTRES_REGISTER, sizeof(Unsigned32)));
   r[0] = GORESET;
 
   L4::infinite_loop();

@@ -9,7 +9,6 @@ IMPLEMENTATION [mips]:
 #include "mem_unit.h"
 #include "ram_quota.h"
 #include "mem_region.h"
-#include "kmem.h"
 #include "paging_bits.h"
 #include "panic.h"
 

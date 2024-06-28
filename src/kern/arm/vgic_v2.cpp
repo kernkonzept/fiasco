@@ -1,7 +1,7 @@
 INTERFACE [cpu_virt && vgic]:
 
 #include "types.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "mmio_register_block.h"
 #include "vgic.h"
 
@@ -210,7 +210,7 @@ struct Gic_h_v2_init
       return;
 
     Gic_h_global::gic
-      = new Boot_object<Gic_h_v2>(Kmem::mmio_remap(Mem_layout::Gic_h_phys_base,
+      = new Boot_object<Gic_h_v2>(Kmem_mmio::remap(Mem_layout::Gic_h_phys_base,
                                                    Config::PAGE_SIZE));
 
     Gic_h_global::gic->disable();

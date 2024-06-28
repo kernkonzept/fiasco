@@ -7,7 +7,7 @@ IMPLEMENTATION [arm && mp && pf_sunxi]:
 #include "ipi.h"
 #include "mem.h"
 #include "mmio_register_block.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 
 PUBLIC static
 void
@@ -20,7 +20,7 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
     GENER_CTRL_REG = 0x184,
     PRIVATE_REG    = 0x1a4,
   };
-  Mmio_register_block c(Kmem::mmio_remap(0x01c25c00, 0x400));
+  Mmio_register_block c(Kmem_mmio::remap(0x01c25c00, 0x400));
   c.write<Mword>(phys_tramp_mp_addr, 0x1a4);
 
   unsigned cpu = 1;

@@ -1,6 +1,6 @@
 IMPLEMENTATION [arm && iommu && pf_layerscape]:
 
-#include "kmem.h"
+#include "kmem_mmio.h"
 
 IMPLEMENT
 bool
@@ -20,7 +20,7 @@ Iommu::init_platform()
 
   for (unsigned i = 0; i < Num_iommus; ++i)
     {
-      Address v = Kmem::mmio_remap(base_addrs[i], 0x10000);
+      Address v = Kmem_mmio::remap(base_addrs[i], 0x10000);
       iommus()[i].setup(Version::Smmu_v1, v);
       iommus()[i].setup_irqs(&nonsec_irqs[i], 1, 1);
     }

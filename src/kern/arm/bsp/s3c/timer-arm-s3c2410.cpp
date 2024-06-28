@@ -1,6 +1,6 @@
 INTERFACE [arm && (pf_s3c2410 || pf_exynos)]:
 
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "mmio_register_block.h"
 
 EXTENSION class Timer : private Mmio_register_block
@@ -67,7 +67,7 @@ Timer::configure(Cpu_number)
 {}
 
 PUBLIC
-Timer::Timer() : Mmio_register_block(Kmem::mmio_remap(Mem_layout::Pwm_phys_base,
+Timer::Timer() : Mmio_register_block(Kmem_mmio::remap(Mem_layout::Pwm_phys_base,
                                                       0x100))
 {
   write<Mword>(0, TCFG0); // prescaler config

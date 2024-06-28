@@ -2,7 +2,7 @@
 INTERFACE [arm && pf_imx_28]:
 
 #include "initcalls.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 
 class Irq_base;
 
@@ -69,7 +69,7 @@ Irq_chip_imx_icoll::unmask(Mword irq) override
 
 PUBLIC inline
 Irq_chip_imx_icoll::Irq_chip_imx_icoll()
-: Irq_chip_gen(128), _reg(Kmem::mmio_remap(Mem_layout::Pic_phys_base, 0x1000))
+: Irq_chip_gen(128), _reg(Kmem_mmio::remap(Mem_layout::Pic_phys_base, 0x1000))
 {
   _reg[HW_ICOLL_CTRL] = 0;
 

@@ -34,6 +34,7 @@ IMPLEMENTATION [arm && pic_gic
 #include "gic_v2.h"
 #include "irq_mgr_multi_chip.h"
 #include "cascade_irq.h"
+#include "kmem_mmio.h"
 
 PUBLIC static
 void Pic::init_ap(Cpu_number cpu, bool resume)
@@ -49,9 +50,9 @@ void Pic::init()
   configure_core();
   typedef Irq_mgr_multi_chip<8> Mgr;
 
-  Gic *g = new Boot_object<Gic_v2>(Kmem::mmio_remap(Mem_layout::Gic_cpu_phys_base,
+  Gic *g = new Boot_object<Gic_v2>(Kmem_mmio::remap(Mem_layout::Gic_cpu_phys_base,
                                                     Gic_cpu_v2::Size),
-                                   Kmem::mmio_remap(Mem_layout::Gic_dist_phys_base,
+                                   Kmem_mmio::remap(Mem_layout::Gic_dist_phys_base,
                                                     Gic_dist::Size));
   gic = g;
 
@@ -60,9 +61,9 @@ void Pic::init()
 
   m->add_chip(0, g, g->nr_irqs());
 
-  g = new Boot_object<Gic_v2>(Kmem::mmio_remap(Mem_layout::Gic1_cpu_phys_base,
+  g = new Boot_object<Gic_v2>(Kmem_mmio::remap(Mem_layout::Gic1_cpu_phys_base,
                                                Gic_cpu_v2::Size),
-                              Kmem::mmio_remap(Mem_layout::Gic1_dist_phys_base,
+                              Kmem_mmio::remap(Mem_layout::Gic1_dist_phys_base,
                                                Gic_dist::Size));
   m->add_chip(256, g, g->nr_irqs());
 
@@ -81,7 +82,7 @@ IMPLEMENTATION [arm && pic_gic
 #include "boot_alloc.h"
 #include "gic_v2.h"
 #include "irq_mgr.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 
 PUBLIC static FIASCO_INIT
 void Pic::init()
@@ -89,9 +90,9 @@ void Pic::init()
   configure_core();
 
   typedef Irq_mgr_single_chip<Gic_v2> Mgr;
-  Mgr *m = new Boot_object<Mgr>(Kmem::mmio_remap(Mem_layout::Gic_cpu_phys_base,
+  Mgr *m = new Boot_object<Mgr>(Kmem_mmio::remap(Mem_layout::Gic_cpu_phys_base,
                                                  Gic_cpu_v2::Size),
-                                Kmem::mmio_remap(Mem_layout::Gic_dist_phys_base,
+                                Kmem_mmio::remap(Mem_layout::Gic_dist_phys_base,
                                                  Gic_dist::Size));
   gic = &m->c;
   Irq_mgr::mgr = m;

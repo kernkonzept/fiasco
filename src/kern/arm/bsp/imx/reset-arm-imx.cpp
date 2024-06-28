@@ -3,6 +3,7 @@ IMPLEMENTATION [arm && pf_imx_21]:
 #include "infinite_loop.h"
 #include "io.h"
 #include "kmem.h"
+#include "kmem_mmio.h"
 
 void __attribute__ ((noreturn))
 platform_reset(void)
@@ -16,11 +17,11 @@ platform_reset(void)
   };
 
   // WDT CLock Enable
-  Io::set<Unsigned32>(PLL_PCCR1_WDT_EN, Kmem::mmio_remap(PLL_PCCR1,
+  Io::set<Unsigned32>(PLL_PCCR1_WDT_EN, Kmem_mmio::remap(PLL_PCCR1,
                                                          sizeof(Unsigned32)));
 
   // Assert Software reset signal by making the bit zero
-  Io::mask<Unsigned16>(~WCR_SRS, Kmem::mmio_remap(WCR, sizeof(Unsigned16)));
+  Io::mask<Unsigned16>(~WCR_SRS, Kmem_mmio::remap(WCR, sizeof(Unsigned16)));
 
   L4::infinite_loop();
 }
@@ -29,13 +30,13 @@ platform_reset(void)
 IMPLEMENTATION [arm && pf_imx_28]:
 
 #include "infinite_loop.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "mmio_register_block.h"
 
 void __attribute__ ((noreturn))
 platform_reset(void)
 {
-  Register_block<32> r(Kmem::mmio_remap(0x80056000, 0x100));
+  Register_block<32> r(Kmem_mmio::remap(0x80056000, 0x100));
   r[0x50] = 1; // Watchdog counter
   r[0x04] = 1 << 4; // Watchdog enable
 
@@ -54,7 +55,7 @@ IMPLEMENTATION [arm && pf_imx_6]:
 void platform_imx_cpus_off()
 {
   // switch off core1-3
-  Io::clear<Mword>(7 << 22, Kmem::mmio_remap(Mem_layout::Src_phys_base,
+  Io::clear<Mword>(7 << 22, Kmem_mmio::remap(Mem_layout::Src_phys_base,
                                              sizeof(Mword)) + 0);
 }
 
@@ -64,7 +65,7 @@ IMPLEMENTATION [arm && pf_imx_7]:
 void platform_imx_cpus_off()
 {
   // switch off core1
-  Io::clear<Mword>(1 << 1, Kmem::mmio_remap(Mem_layout::Src_phys_base,
+  Io::clear<Mword>(1 << 1, Kmem_mmio::remap(Mem_layout::Src_phys_base,
                                             sizeof(Mword)) + 8);
 }
 
@@ -74,7 +75,7 @@ IMPLEMENTATION [arm && (pf_imx_35 || pf_imx_51 || pf_imx_53 || pf_imx_6
 
 #include "infinite_loop.h"
 #include "io.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 
 void __attribute__ ((noreturn))
 platform_reset(void)
@@ -87,7 +88,7 @@ platform_reset(void)
   platform_imx_cpus_off();
 
   // Enable watchdog with smallest timeout possible (0.5s)
-  Io::modify<Unsigned16>(WCR_WDE, 0xff10, Kmem::mmio_remap(WCR,
+  Io::modify<Unsigned16>(WCR_WDE, 0xff10, Kmem_mmio::remap(WCR,
                                                            sizeof(Unsigned16)));
 
   L4::infinite_loop();

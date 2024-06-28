@@ -2,7 +2,7 @@ INTERFACE [watchdog]:
 
 #include "initcalls.h"
 #include "mmio_register_block.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "l4_types.h"
 
 class Watchdog : private Mmio_register_block
@@ -71,7 +71,7 @@ PUBLIC static FIASCO_INIT
 void
 Watchdog::init()
 {
-  wdog.construct(Kmem::mmio_remap(Mem_layout::Watchdog_phys_base, 0x10));
+  wdog.construct(Kmem_mmio::remap(Mem_layout::Watchdog_phys_base, 0x10));
   if (1)
     {
       wdog->setup(Reset_timeout_val);

@@ -10,7 +10,7 @@ EXTENSION class Platform_control
 IMPLEMENTATION [arm && pf_fvp_base_r && mp]:
 
 #include "cpu.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "koptions.h"
 #include "mem_unit.h"
 #include "minmax.h"
@@ -31,7 +31,7 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
     extern Spin_lock<Mword> _tramp_mp_spinlock;
     auto g = lock_guard(_tramp_mp_spinlock);
 
-    Mmio_register_block s(Kmem::mmio_remap(Koptions::o()->core_spin_addr,
+    Mmio_register_block s(Kmem_mmio::remap(Koptions::o()->core_spin_addr,
                                            sizeof(Address)));
 
     s.r<Address>(0) = phys_tramp_mp_addr;
@@ -39,7 +39,7 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
     Mem_unit::clean_dcache(reinterpret_cast<void *>(s.get_mmio_base()));
 
     // Remove mappings to release precious MPU regions
-    Kmem::mmio_unmap(Koptions::o()->core_spin_addr, sizeof(Address));
+    Kmem_mmio::unmap_compat(Koptions::o()->core_spin_addr, sizeof(Address));
   }
 
   for (int i = 1; i < min<int>(Max_cores, Config::Max_num_cpus); ++i)

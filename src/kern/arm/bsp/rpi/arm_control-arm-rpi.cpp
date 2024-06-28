@@ -2,7 +2,7 @@ INTERFACE [pf_rpi_rpi2 || pf_rpi_rpi3 || pf_rpi_rpi4]: // -----------------
 
 #include "arithmetic.h"
 #include "assert.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "mem_layout.h"
 #include "mmio_register_block.h"
 
@@ -28,7 +28,7 @@ public:
   };
 
   Arm_control()
-  : r(Kmem::mmio_remap(Mem_layout::Local_intc, 0x100))
+  : r(Kmem_mmio::remap(Mem_layout::Local_intc, 0x100))
   {
     r.r<32>(Control) = 0;
     r.r<32>(Prescaler) =  1 << 31;

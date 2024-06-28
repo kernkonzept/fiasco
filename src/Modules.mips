@@ -111,6 +111,7 @@ kernel_thread_IMPL	:= kernel_thread kernel_thread-mips
 kernel_uart_IMPL  	:= kernel_uart kernel_uart-libuart
 kmem_IMPL		:= kmem kmem-mips
 kmem_alloc_IMPL		:= kmem_alloc kmem_alloc-mips
+kmem_mmio_IMPL		:= kmem_mmio kmem_mmio-mips
 map_util_IMPL		:= map_util map_util-mem map_util-objs
 mem_layout_IMPL		:= mem_layout mem_layout-mips$(BITS)
 mem_unit_IMPL		:= mem_unit-mips

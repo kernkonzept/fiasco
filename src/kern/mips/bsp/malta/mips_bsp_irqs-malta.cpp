@@ -9,7 +9,7 @@ IMPLEMENTATION:
 #include "cm.h"
 #include "i8259.h"
 #include "gic.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "irq_mgr_flex.h"
 #include "gt64120.h"
 #include "boot_alloc.h"
@@ -62,8 +62,8 @@ Mips_bsp_irqs::init(Cpu_number cpu)
   if (cpu != Cpu_number::boot_cpu())
     return;
 
-  syscon = new Boot_object<Gt64120>(Mem_layout::ioremap_nocache(0x1be00000, 0x1000),
-                                    Mem_layout::ioremap_nocache(0x18000000, 0x1000));
+  syscon = new Boot_object<Gt64120>(Kmem_mmio::remap(0x1be00000, 0x1000),
+                                    Kmem_mmio::remap(0x18000000, 0x1000));
   assert (syscon);
 
   typedef Irq_chip_i8259_gen<Mmio_io_adapter> I8259;
@@ -84,7 +84,7 @@ Mips_bsp_irqs::init(Cpu_number cpu)
     {
       Address my_gic_base = 0x1BDC0000;
       Cm::cm->set_gic_base_and_enable(my_gic_base);
-      Gic *gic = new Boot_object<Gic>(Kmem::mmio_remap(my_gic_base, Gic::Size), 4);
+      Gic *gic = new Boot_object<Gic>(Kmem_mmio::remap(my_gic_base, Gic::Size), 4);
       auto *c = new Boot_object<Cascade_irq>(gic, gic_hit);
       Mips_cpu_irqs::chip->alloc(c, 4);
       c->unmask();

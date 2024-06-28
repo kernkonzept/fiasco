@@ -1,7 +1,7 @@
 // ------------------------------------------------------------------------
 INTERFACE [arm && (pf_sa1100 || pf_xscale)]:
 
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "mmio_register_block.h"
 
 EXTENSION class Timer : private Mmio_register_block
@@ -38,7 +38,7 @@ Static_object<Timer> Timer::_timer;
 
 PUBLIC
 Timer::Timer()
-: Mmio_register_block(Kmem::mmio_remap(Mem_layout::Timer_phys_base, 0x20))
+: Mmio_register_block(Kmem_mmio::remap(Mem_layout::Timer_phys_base, 0x20))
 {
   write<Unsigned32>(1,          OIER); // enable OSMR0
   write<Unsigned32>(0,          OWER); // disable Watchdog

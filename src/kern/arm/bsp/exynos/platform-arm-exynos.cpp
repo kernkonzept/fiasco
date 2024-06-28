@@ -69,7 +69,7 @@ KIP_KERNEL_FEATURE("exy:extgic");
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pf_exynos]:
 
-#include "kmem.h"
+#include "kmem_mmio.h"
 
 Platform::Soc_type Platform::_soc;
 unsigned Platform::_subrev;
@@ -94,7 +94,7 @@ PRIVATE static
 void
 Platform::process_pkg_ids()
 {
-  Mword pkg_id = Io::read<Mword>(Kmem::mmio_remap(Mem_layout::Chip_id_phys_base + 4,
+  Mword pkg_id = Io::read<Mword>(Kmem_mmio::remap(Mem_layout::Chip_id_phys_base + 4,
                                                   sizeof(Mword)));
   for  (unsigned i = 0; i < sizeof(__pkg_ids) / sizeof(__pkg_ids[0]); ++i)
     if ((pkg_id & __pkg_ids[i].mask) == __pkg_ids[i].val)
@@ -127,7 +127,7 @@ Platform::type()
 {
   if (_soc == 0)
     {
-      Mword pro_id = Io::read<Mword>(Kmem::mmio_remap(Mem_layout::Chip_id_phys_base,
+      Mword pro_id = Io::read<Mword>(Kmem_mmio::remap(Mem_layout::Chip_id_phys_base,
                                                       sizeof(Mword)));
 
       _subrev = pro_id & 0xff;

@@ -200,6 +200,7 @@ mem_space_IMPL		:= mem_space mem_space-arm mem_space-arm-$(BITS)
 mem_unit_IMPL		:= mem_unit mem_unit-arm-$(BITS)
 kmem_IMPL		:= kmem kmem-arm
 kmem_alloc_IMPL		:= kmem_alloc kmem_alloc-arm
+kmem_mmio_IMPL		:= kmem_mmio kmem_mmio-arm
 kmem_space_IMPL		:= kmem_space kmem_space-arm-$(BITS)
 outer_cache_IMPL	:= outer_cache outer_cache-l2cxx0
 page_IMPL		:= page page-arm page-arm-$(BITS)

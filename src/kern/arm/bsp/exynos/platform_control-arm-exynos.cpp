@@ -122,7 +122,7 @@ Platform_control::power_up_core(Cpu_phys_id)
 //--------------------------------------------------------------------------
 IMPLEMENTATION [arm && pf_exynos]:
 
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "mem_unit.h"
 #include "outer_cache.h"
 
@@ -130,7 +130,7 @@ PRIVATE static
 void
 Platform_control::write_phys_mem_coherent(Mword addr_p, Mword value)
 {
-  Mword addr_v = Kmem::mmio_remap(addr_p, sizeof(Mword));
+  Mword addr_v = Kmem_mmio::remap(addr_p, sizeof(Mword));
   Io::write<Mword>(value, addr_v);
   Mem_unit::flush_dcache(reinterpret_cast<void *>(addr_v),
                          reinterpret_cast<void *>((addr_v + sizeof(value))));
@@ -205,7 +205,7 @@ IMPLEMENTATION [arm && pf_exynos && mp]:
 
 #include "pic.h"
 #include "ipi.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "mem_unit.h"
 #include "outer_cache.h"
 #include "platform.h"
@@ -346,7 +346,7 @@ IMPLEMENTATION [arm && pf_exynos && (exynos_extgic || pf_exynos5) && cpu_suspend
 #include <cstdio>
 #include "cpu.h"
 #include "io.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "pic.h"
 #include "processor.h"
 
@@ -358,7 +358,7 @@ Platform_control::init(Cpu_number cpu)
 {
   if (cpu == Cpu_number::boot_cpu())
     {
-      pmu.construct(Kmem::mmio_remap(Mem_layout::Pmu_phys_base, 0x100));
+      pmu.construct(Kmem_mmio::remap(Mem_layout::Pmu_phys_base, 0x100));
 
       for (Cpu_phys_id i = Cpu_phys_id(0);
            i < Cpu_phys_id(2);

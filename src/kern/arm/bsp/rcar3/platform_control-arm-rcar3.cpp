@@ -2,7 +2,6 @@ IMPLEMENTATION [arm && mp && pf_rcar3]:
 
 #include "mem.h"
 #include "mmio_register_block.h"
-#include "kmem.h"
 #include "psci.h"
 
 #include <cstdio>

@@ -152,7 +152,7 @@ PRIVATE static
 Address
 Kmem::boot_virt_to_phys(Virt_addr virt)
 {
-  auto i = boot_kdir_walk(virt);
+  auto i = boot_kdir_walk(virt, Kpdir::Super_level);
   if (!i.is_valid())
     return ~0;
 
@@ -168,14 +168,14 @@ Kmem::boot_kdir()
     static_cast<void *>(bs_pgin_dta->kernel_page_directory()));
 }
 
-PRIVATE static
+PUBLIC static
 Pte_ptr
-Kmem::boot_kdir_walk(Virt_addr virt, unsigned level = Kpdir::Depth)
+Kmem::boot_kdir_walk(Virt_addr virt, unsigned level)
 {
   return boot_kdir()->walk(virt, level, bs_pgin_dta->mem_map());
 }
 
-PRIVATE static
+PUBLIC static
 bool FIASCO_WARN_RESULT
 Kmem::boot_kdir_map(Address phys, Virt_addr virt, Virt_size size,
                     Page::Attr attr, unsigned level)
@@ -202,66 +202,4 @@ Kmem::sync_from_boot_kdir(Kpdir *kdir, ALLOC const &alloc,
           e.set_page(be.entry());
         }
     }
-}
-
-PRIVATE static
-bool
-Kmem::is_mmio_mapped_at(Address phys_beg, Address phys_end, Address virt)
-{
-  for (Address p = phys_beg, v = virt;
-       p < phys_end && v < Mem_layout::Mmio_map_end;
-       p += Config::SUPERPAGE_SIZE, v += Config::SUPERPAGE_SIZE)
-    {
-      auto e = kdir ? kdir->walk(Virt_addr(v), Kpdir::Super_level)
-                    : boot_kdir_walk(Virt_addr(v), Kpdir::Super_level);
-      if (!e.is_valid() || p != e.page_addr())
-        return false;
-    }
-
-  return true;
-}
-
-PUBLIC static
-Address
-Kmem::mmio_remap(Address phys, Mword size)
-{
-  static Address next_mmio_page = Mem_layout::Mmio_map_start;
-
-  Address phys_page = Super_pg::trunc(phys);
-  Address map_size = Super_pg::round(size + Super_pg::offset(phys));
-
-  // Check if the physical memory is already mapped.
-  for (Address virt = Mem_layout::Mmio_map_start;
-       virt < next_mmio_page;
-       virt += Config::SUPERPAGE_SIZE)
-    {
-      if (is_mmio_mapped_at(phys_page, phys_page + map_size, virt))
-        return virt | Super_pg::offset(phys);
-    }
-
-  Address virt_page = next_mmio_page;
-
-  assert(virt_page + map_size < Mem_layout::Mmio_map_end);
-  next_mmio_page += map_size;
-
-  auto attr = Page::Attr(Page::Rights::RW(), Page::Type::Uncached(),
-                         Page::Kern::Global(), Page::Flags::None());
-  if (kdir)
-    {
-      if (!kdir->map(phys_page, Virt_addr(virt_page), Virt_size(map_size),
-                     attr, Kpdir::Super_level, false,
-                     Kmem_alloc::q_allocator(Ram_quota::root.unwrap())))
-        return ~0UL;
-    }
-  else
-    {
-      if (!boot_kdir_map(phys_page, Virt_addr(virt_page), Virt_size(map_size),
-                         attr, Kpdir::Super_level))
-        return ~0UL;
-    }
-
-  // Full tlb flush as global mappings have been changed.
-  Mem_unit::tlb_flush();
-
-  return virt_page | Super_pg::offset(phys);
 }

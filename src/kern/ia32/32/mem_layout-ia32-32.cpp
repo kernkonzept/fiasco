@@ -34,8 +34,8 @@ public:
     Tbuf_buffer_area  = Service_page + 0x200000, ///< % 2MB
     Tbuf_buffer_size  = 0x200000,
     // 0xeb800000-0xec000000 (8MB) free
-    Registers_map_start = 0xec000000,
-    Registers_map_end   = 0xef800000,
+    Mmio_map_start      = 0xec000000,
+    Mmio_map_end        = 0xef800000,
 
     Tss_start           = 0xef800000,    ///< % 4MB
     Tss_end             = 0xf0000000,

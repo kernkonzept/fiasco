@@ -324,7 +324,7 @@ IMPLEMENTATION [fb_console]:
 #include "global_data.h"
 #include "mem_layout.h"
 #include "kip.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "kmem_alloc.h"
 #include "kernel_console.h"
 
@@ -334,15 +334,15 @@ IMPLEMENT static
 void Fb_console::init()
 {
   // MBI and VBx areas could be mapped cached also
-  Address _mbi = Kmem::mmio_remap(Kip::k()->user_ptr, Config::PAGE_SIZE, true);
+  Address _mbi = Kmem_mmio::remap(Kip::k()->user_ptr, Config::PAGE_SIZE, true);
   assert(_mbi != ~0UL);
   l4util_l4mod_info *mbi = reinterpret_cast<l4util_l4mod_info *>(_mbi);
 
   if (mbi->flags & L4UTIL_MB_VIDEO_INFO)
     {
-      Address _vbe = Kmem::mmio_remap(mbi->vbe_ctrl_info, Config::PAGE_SIZE, true);
+      Address _vbe = Kmem_mmio::remap(mbi->vbe_ctrl_info, Config::PAGE_SIZE, true);
       assert(_vbe != ~0UL);
-      Address _vbi = Kmem::mmio_remap(mbi->vbe_mode_info, Config::PAGE_SIZE, true);
+      Address _vbi = Kmem_mmio::remap(mbi->vbe_mode_info, Config::PAGE_SIZE, true);
       assert(_vbi != ~0UL);
 
       l4util_mb_vbe_ctrl_t *vbe = reinterpret_cast<l4util_mb_vbe_ctrl_t *>(_vbe);
@@ -352,7 +352,7 @@ void Fb_console::init()
       // vbi->phys_base + vbi->reserved1 form the 64 bit phys address
       // FB could be mapped more cached aware
       Address fbphys = vbi->phys_base + (static_cast<Unsigned64>(vbi->reserved1) << 32);
-      Address fbmem = Kmem::mmio_remap(fbphys, vbe->total_memory * (64 << 10));
+      Address fbmem = Kmem_mmio::remap(fbphys, vbe->total_memory * (64 << 10));
       assert(fbmem != ~0UL);
 
       unsigned w = vbi->x_resolution;

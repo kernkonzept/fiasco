@@ -211,7 +211,7 @@ IMPLEMENTATION[ia32 || amd64]:
 #include "entry_frame.h"
 #include "globals.h"
 #include "io.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "kip.h"
 #include "lock_guard.h"
 #include "panic.h"
@@ -355,7 +355,7 @@ Apic::map_apic_page()
   // possible since some versions of VMware would complain about a
   // non-implemented feature
   assert(!io_base); // Ensure only called once
-  io_base = Kmem::mmio_remap(base, Config::PAGE_SIZE);
+  io_base = Kmem_mmio::remap(base, Config::PAGE_SIZE);
 
   Kip::k()->add_mem_region(Mem_desc(base, base + Config::PAGE_SIZE - 1, Mem_desc::Reserved));
 }

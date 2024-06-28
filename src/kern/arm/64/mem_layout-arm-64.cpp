@@ -27,8 +27,8 @@ public:
     // The following are kernel virtual addresses. Mind that kernel and user
     // space live in different address spaces! Move to the top to minimize the
     // risk of colliding with physical memory which is still mapped 1:1.
-    Registers_map_start  = 0x0000ffff00000000,
-    Registers_map_end    = 0x0000ffff40000000,
+    Mmio_map_start       = 0x0000ffff00000000,
+    Mmio_map_end         = 0x0000ffff40000000,
 
     Map_base             = 0x0000ffff40000000,
 
@@ -60,8 +60,8 @@ public:
     Tbuf_buffer_area	 = Service_page + 0x200000,
     Tbuf_buffer_size     = 0x200000,
     Jdb_tmp_map_area     = Service_page + 0x400000,
-    Registers_map_start  = 0xffff000000000000,
-    Registers_map_end    = 0xffff000040000000,
+    Mmio_map_start       = 0xffff000000000000,
+    Mmio_map_end         = 0xffff000040000000,
     Cache_flush_area     = 0x0,
     Pmem_start           = 0xffff000040000000,
     Pmem_end             = 0xffff000080000000,

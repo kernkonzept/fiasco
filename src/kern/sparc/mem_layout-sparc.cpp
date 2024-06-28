@@ -21,8 +21,8 @@ public:
     Tbuf_buffer_area     = 0xec000000,
     Tbuf_ubuffer_area    = Tbuf_buffer_area,
     Tbuf_end             = 0xec200000,
-    Registers_map_start  = 0xed000000,
-    Registers_map_end    = 0xef000000,
+    Mmio_map_start       = 0xed000000,
+    Mmio_map_end         = 0xef000000,
     Map_base             = 0xf0000000, ///< % 80MB kernel memory
     Map_end              = 0xf5000000,
     Caps_start           = 0xf5000000,

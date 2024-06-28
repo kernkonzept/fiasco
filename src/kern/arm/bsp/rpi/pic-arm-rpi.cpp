@@ -10,7 +10,7 @@ IMPLEMENTATION [arm && pf_rpi && !pic_gic]:
 #include "assert.h"
 #include "irq_mgr.h"
 #include "mmio_register_block.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 
 class Irq_chip_bcm : public Irq_chip_gen, Mmio_register_block
 {
@@ -38,7 +38,7 @@ public:
 PUBLIC
 Irq_chip_bcm::Irq_chip_bcm()
 : Irq_chip_gen(96),
-  Mmio_register_block(Kmem::mmio_remap(Mem_layout::Pic_phys_base, 0x100))
+  Mmio_register_block(Kmem_mmio::remap(Mem_layout::Pic_phys_base, 0x100))
 {
   write<Unsigned32>(~0U, Disable_Basic_IRQs);
   write<Unsigned32>(~0U, Disable_IRQs_1);
@@ -179,7 +179,7 @@ IMPLEMENTATION [arm && pic_gic]:
 #include "boot_alloc.h"
 #include "gic_v2.h"
 #include "irq_mgr.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 
 PUBLIC static FIASCO_INIT
 void
@@ -187,9 +187,9 @@ Pic::init()
 {
   typedef Irq_mgr_single_chip<Gic_v2> M;
 
-  M *m = new Boot_object<M>(Kmem::mmio_remap(Mem_layout::Gic_cpu_phys_base,
+  M *m = new Boot_object<M>(Kmem_mmio::remap(Mem_layout::Gic_cpu_phys_base,
                                              Gic_cpu_v2::Size),
-                            Kmem::mmio_remap(Mem_layout::Gic_dist_phys_base,
+                            Kmem_mmio::remap(Mem_layout::Gic_dist_phys_base,
                                              Gic_dist::Size));
   gic = &m->c;
   Irq_mgr::mgr = m;

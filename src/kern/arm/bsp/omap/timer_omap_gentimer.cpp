@@ -21,12 +21,12 @@ public:
 
 IMPLEMENTATION [arm]: // ----------------------------------
 
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "mem_layout.h"
 
 PUBLIC
 Timer_omap_gentimer::Timer_omap_gentimer()
-: Mmio_register_block(Kmem::mmio_remap(Mem_layout::Timergen_phys_base, 0x100))
+: Mmio_register_block(Kmem_mmio::remap(Mem_layout::Timergen_phys_base, 0x100))
 {
   // Mword idr = Io::read<Mword>(TIDR);
   // older timer: idr >> 16 == 0

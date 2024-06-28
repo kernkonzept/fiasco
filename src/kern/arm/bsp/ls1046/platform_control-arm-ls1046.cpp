@@ -3,8 +3,6 @@ IMPLEMENTATION [arm && mp && pf_ls1046 && arm_psci]:
 
 #include "cpu.h"
 #include "mem.h"
-#include "mmio_register_block.h"
-#include "kmem.h"
 #include "psci.h"
 #include "minmax.h"
 

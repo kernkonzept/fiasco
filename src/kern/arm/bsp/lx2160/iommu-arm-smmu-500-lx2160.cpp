@@ -1,6 +1,6 @@
 IMPLEMENTATION [arm && iommu && pf_lx2160]:
 
-#include "kmem.h"
+#include "kmem_mmio.h"
 
 IMPLEMENT
 bool
@@ -23,7 +23,7 @@ Iommu::init_platform()
   };
 
 
-  Address v = Kmem::mmio_remap(0x5000000, 0x800000);
+  Address v = Kmem_mmio::remap(0x5000000, 0x800000);
   iommus()[0].setup(Version::Smmu_v2, v);
   iommus()[0].setup_irqs(nonsec_irqs, cxx::size(nonsec_irqs), 1);
 

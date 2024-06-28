@@ -6,7 +6,7 @@ INTERFACE [arm && mp && (pf_omap4 || pf_omap5)]:
 IMPLEMENTATION [arm && mp && (pf_omap4 || pf_omap5)]: // ------------------------
 
 #include "io.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 
 PRIVATE static
 void
@@ -71,7 +71,7 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
         AUX_CORE_BOOT_1 = 4,
       };
 
-      Mmio_register_block aux(Kmem::mmio_remap(0x48281800, 0x800));
+      Mmio_register_block aux(Kmem_mmio::remap(0x48281800, 0x800));
       aux.write<Mword>(phys_tramp_mp_addr, AUX_CORE_BOOT_1);
       setup_ap_boot(&aux, AUX_CORE_BOOT_0);
       asm volatile("dsb; sev" : : : "memory");

@@ -89,7 +89,7 @@ IMPLEMENTATION:
 
 #include "acpi.h"
 #include "assert.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "kip.h"
 #include "mem.h"
 #include "pic.h"
@@ -192,7 +192,7 @@ Io_apic::Io_apic(Unsigned64 phys, unsigned gsi_base)
   if (Print_info)
     printf("IO-APIC: addr=%llx\n", phys);
 
-  Address va = Kmem::mmio_remap(phys, Config::PAGE_SIZE);
+  Address va = Kmem_mmio::remap(phys, Config::PAGE_SIZE);
 
   Kip::k()->add_mem_region(Mem_desc(phys, phys + Config::PAGE_SIZE -1, Mem_desc::Reserved));
 

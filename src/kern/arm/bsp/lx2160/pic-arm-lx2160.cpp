@@ -9,19 +9,19 @@ IMPLEMENTATION [arm && pic_gic && pf_lx2160]:
 #include "boot_alloc.h"
 #include "gic_v3.h"
 #include "irq_mgr_msi.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 
 PUBLIC static FIASCO_INIT
 void
 Pic::init()
 {
   auto *g =
-    new Boot_object<Gic_v3>(Kmem::mmio_remap(Mem_layout::Gic_dist_phys_base,
+    new Boot_object<Gic_v3>(Kmem_mmio::remap(Mem_layout::Gic_dist_phys_base,
                                              Gic_dist::Size),
-                            Kmem::mmio_remap(Mem_layout::Gic_redist_phys_base,
+                            Kmem_mmio::remap(Mem_layout::Gic_redist_phys_base,
                                              Mem_layout::Gic_redist_size));
 
-  g->add_its(Kmem::mmio_remap(Mem_layout::Gic_its_phys_base,
+  g->add_its(Kmem_mmio::remap(Mem_layout::Gic_its_phys_base,
                               Mem_layout::Gic_its_size));
 
   gic = g;

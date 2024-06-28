@@ -2,12 +2,12 @@ IMPLEMENTATION [arm && pf_s3c2410]:
 
 #include "infinite_loop.h"
 #include "mmio_register_block.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 
 void __attribute__ ((noreturn))
 platform_reset(void)
 {
-  Mmio_register_block wdg(Kmem::mmio_remap(Mem_layout::Watchdog_phys_base,
+  Mmio_register_block wdg(Kmem_mmio::remap(Mem_layout::Watchdog_phys_base,
                                            0x10));
   enum {
     WTCON = 0x0,

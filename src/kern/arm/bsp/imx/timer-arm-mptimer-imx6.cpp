@@ -2,7 +2,7 @@
 IMPLEMENTATION[arm && pf_imx_6 && mptimer]:
 
 #include "config.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "mem_layout.h"
 #include "mmio_register_block.h"
 
@@ -28,7 +28,7 @@ PRIVATE static Mword Timer::interval()
     Gpt_ticks = (Timer_freq * Ticks) / Config::Scheduler_granularity,
   };
 
-  Mmio_register_block t(Kmem::mmio_remap(Mem_layout::Gpt_phys_base, 0x100));
+  Mmio_register_block t(Kmem_mmio::remap(Mem_layout::Gpt_phys_base, 0x100));
 
   t.write<Mword>(0, GPT_CR);
   t.write<Mword>(GPT_CR_RESET, GPT_CR);

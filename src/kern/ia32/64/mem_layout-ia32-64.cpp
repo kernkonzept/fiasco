@@ -41,8 +41,8 @@ public:
     Tss_start         = Service_page + 0x400000, ///< % 4MB
     Tss_end           = Service_page + 0xc000000,
 
-    Registers_map_start = Kglobal_area + 0xc000000UL,
-    Registers_map_end   = Kglobal_area_end,
+    Mmio_map_start    = Kglobal_area + 0xc000000UL,
+    Mmio_map_end      = Kglobal_area_end,
 
     Vmem_end          = 0xfffffffff0000000UL,
 

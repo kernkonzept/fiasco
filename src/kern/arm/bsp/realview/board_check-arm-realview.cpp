@@ -53,7 +53,6 @@ Board_check::id_pair Board_check::ids[] FIASCO_INITDATA = {
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pf_realview]:
 
-#include "kmem.h"
 #include "io.h"
 #include "static_init.h"
 #include "processor.h"

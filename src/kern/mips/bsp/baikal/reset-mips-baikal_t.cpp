@@ -1,13 +1,13 @@
 IMPLEMENTATION [mips && baikal_t]:
 
 #include "infinite_loop.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "mmio_register_block.h"
 
 void __attribute__ ((noreturn))
 platform_reset(void)
 {
-  Register_block<32> r(Kmem::mmio_remap(0x1f04c000, 0x10));
+  Register_block<32> r(Kmem_mmio::remap(0x1f04c000, 0x10));
   r[0x0] = r[0] & ~3;
   r[0x4] = 0;
   r[0x0] = r[0] | 1;

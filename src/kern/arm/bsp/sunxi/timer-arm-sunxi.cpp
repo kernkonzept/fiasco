@@ -1,7 +1,7 @@
 INTERFACE [arm && pf_sunxi]:
 
 #include "config.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "mmio_register_block.h"
 
 EXTENSION class Timer
@@ -46,7 +46,7 @@ Static_object<Timer::Tmr> Timer::tmr;
 IMPLEMENT
 void Timer::init(Cpu_number)
 {
-  tmr.construct(Kmem::mmio_remap(Mem_layout::Timer_phys_base, 0x100));
+  tmr.construct(Kmem_mmio::remap(Mem_layout::Timer_phys_base, 0x100));
 
   tmr->write<Mword>(Interval, Tmr::addr(Tmr::TMRx_INTV_VALUE_REG));
   tmr->write<Mword>(1 | (1 << 1) | (1 << 2), Tmr::addr(Tmr::TMRx_CTRL_REG));

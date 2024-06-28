@@ -24,13 +24,13 @@ IMPLEMENTATION [arm && mp && pf_imx_6]:
 #include "ipi.h"
 #include "mem_layout.h"
 #include "mmio_register_block.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 
 PUBLIC static
 void
 Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
 {
-  Register_block<32> src(Kmem::mmio_remap(Mem_layout::Src_phys_base, 0x100));
+  Register_block<32> src(Kmem_mmio::remap(Mem_layout::Src_phys_base, 0x100));
   enum
   {
     SRC_SCR  = 0,
@@ -63,7 +63,7 @@ IMPLEMENTATION [arm && mp && pf_imx_7 && !arm_psci]:
 #include "ipi.h"
 #include "mem_layout.h"
 #include "mmio_register_block.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 
 PUBLIC static
 void
@@ -83,8 +83,8 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
     SRC_A7RCR_A7_CORE1_ENABLE          = 1 << 1,
   };
 
-  Register_block<32> gpc(Kmem::mmio_remap(Mem_layout::Gpc_phys_base, 0x1000));
-  Register_block<32> src(Kmem::mmio_remap(Mem_layout::Src_phys_base, 0x100));
+  Register_block<32> gpc(Kmem_mmio::remap(Mem_layout::Gpc_phys_base, 0x1000));
+  Register_block<32> src(Kmem_mmio::remap(Mem_layout::Src_phys_base, 0x100));
 
   src[SRC_GPR3] = phys_tramp_mp_addr;
 

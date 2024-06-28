@@ -25,8 +25,8 @@ INTERFACES_KERNEL	:= cpu_mask rcupdate kobject_mapdb context_base pm \
                            obj_space_types obj_space_phys_util \
 			   ready_queue_fp obj_space ptab_base ram_quota      \
 			   ref_obj mem_space space \
-			   vlog kmem kmem_alloc slab_cache mem_layout        \
-			   kmem_slab switch_lock kip_init   \
+			   vlog kmem kmem_alloc kmem_mmio slab_cache         \
+			   mem_layout kmem_slab switch_lock kip_init         \
 			   helping_lock cpu_lock timer timeout   \
 			   ipc_timeout timeslice_timeout per_cpu_data_alloc  \
 			   vcpu_host_regs                                    \

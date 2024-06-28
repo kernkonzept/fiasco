@@ -31,7 +31,7 @@ private:
 IMPLEMENTATION [arm && pf_integrator]:
 
 #include "config.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "mem_layout.h"
 
 Static_object<Timer> Timer::_timer;
@@ -54,7 +54,7 @@ Timer::Timer(void *base) : Mmio_register_block(base)
 
 IMPLEMENT
 void Timer::init(Cpu_number)
-{ _timer.construct(Kmem::mmio_remap(Mem_layout::Timer_phys_base, 0x300)); }
+{ _timer.construct(Kmem_mmio::remap(Mem_layout::Timer_phys_base, 0x300)); }
 
 PUBLIC static inline
 void

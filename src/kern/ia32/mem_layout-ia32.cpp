@@ -9,9 +9,6 @@ public:
   {
     Tss_mem_size = Config::Max_num_cpus * sizeof(Tss)
   };
-
-private:
-  static Address _io_map_ptr;
 };
 
 //---------------------------------------------------------------------------
@@ -22,20 +19,6 @@ IMPLEMENTATION [ia32 || amd64]:
 static_assert(Mem_layout::Tss_start + Mem_layout::Tss_mem_size
               < Mem_layout::Tss_end,
               "Too many CPUs configured, not enough space to map TSSs.");
-
-Address Mem_layout::_io_map_ptr = Mem_layout::Registers_map_end;
-
-PUBLIC static inline NEEDS["paging_bits.h"]
-Address
-Mem_layout::alloc_io_vmem(unsigned long bytes)
-{
-  bytes = Pg::round(bytes);
-  if (_io_map_ptr - bytes < Registers_map_start)
-    return 0;
-
-  _io_map_ptr -= bytes;
-  return _io_map_ptr;
-}
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [(ia32 || amd64) && virt_obj_space]:

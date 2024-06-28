@@ -14,15 +14,5 @@ Kmem::is_kmem_page_fault(Mword pfa, Mword /*cause*/)
 
 IMPLEMENTATION [mips]:
 
-#include <cassert>
-
 // currently a dummy, the kernel runs unpaged
 DEFINE_GLOBAL_CONSTINIT Global_data<Kpdir *> Kmem::kdir;
-
-PUBLIC static
-Address
-Kmem::mmio_remap(Address phys, [[maybe_unused]] Address size)
-{
-  assert ((phys + size < 0x20000000) && "MMIO outside KSEG1");
-  return phys + KSEG1;
-}

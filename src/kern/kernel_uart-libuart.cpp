@@ -1,6 +1,5 @@
 IMPLEMENTATION [libuart]:
 
-#include "kmem.h"
 #include "io_regblock.h"
 #include "global_data.h"
 
@@ -60,6 +59,8 @@ Kernel_uart::setup_uart_io_port(void *, Address, int, bool)
 //------------------------------------------------------------------------
 IMPLEMENTATION [libuart && serial]:
 
+#include "kmem_mmio.h"
+
 static DEFINE_GLOBAL_CONSTINIT Global_data<Regs> regs;
 
 IMPLEMENT_OVERRIDE
@@ -95,28 +96,28 @@ bool Kernel_uart::startup(unsigned, int irq, bool resume)
                   if (resume)
                     r = regs->mem;
                   else
-                    r = regs->mem.construct(Kmem::mmio_remap(base, size),
+                    r = regs->mem.construct(Kmem_mmio::remap(base, size),
                                             Koptions::o()->uart.reg_shift);
                   break;
                 case 1: // 1 bit shift, assume fixed 16bit access width
                   if (resume)
                     r = regs->mem16;
                   else
-                    r = regs->mem16.construct(Kmem::mmio_remap(base, size),
+                    r = regs->mem16.construct(Kmem_mmio::remap(base, size),
                                               Koptions::o()->uart.reg_shift);
                   break;
                 case 2: // 2 bit shift, assume fixed 32bit access width
                   if (resume)
                     r = regs->mem32;
                   else
-                    r = regs->mem32.construct(Kmem::mmio_remap(base, size),
+                    r = regs->mem32.construct(Kmem_mmio::remap(base, size),
                                               Koptions::o()->uart.reg_shift);
                   break;
                 case 3: // 3 bit shift, assume fixed 64bit access width
                   if (resume)
                     r = regs->mem64;
                   else
-                    r = regs->mem64.construct(Kmem::mmio_remap(base, size),
+                    r = regs->mem64.construct(Kmem_mmio::remap(base, size),
                                               Koptions::o()->uart.reg_shift);
                   break;
                 default:

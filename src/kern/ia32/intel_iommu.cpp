@@ -7,6 +7,7 @@ INTERFACE:
 #include "cxx/protected_ptr"
 #include "cxx/static_vector"
 #include "mem.h"
+#include "kmem.h"
 #include "pm.h"
 #include "tlbs.h"
 #include "mem_unit.h"
@@ -774,6 +775,7 @@ IMPLEMENTATION:
 
 #include "apic.h"
 #include "acpi_dmar.h"
+#include "kmem_mmio.h"
 #include <cstdio>
 #include "warn.h"
 
@@ -792,7 +794,7 @@ Intel::Io_mmu::probe(ACPI::Dmar_drhd const *drhd)
   segment   = drhd->segment;
   flags     = drhd->flags;
 
-  Address va = Kmem::mmio_remap(base_addr, Config::PAGE_SIZE);
+  Address va = Kmem_mmio::remap(base_addr, Config::PAGE_SIZE);
 
   Kip::k()->add_mem_region(Mem_desc(base_addr, base_addr + Config::PAGE_SIZE -1,
                                     Mem_desc::Reserved));

@@ -231,7 +231,7 @@ IMPLEMENTATION:
 
 #include "boot_alloc.h"
 #include "kip.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "panic.h"
 #include "warn.h"
 #include <cctype>
@@ -343,7 +343,7 @@ Acpi::_map_table_head(Unsigned64 phys)
       return nullptr;
     }
 
-  Address t = Kmem::mmio_remap(phys, Config::PAGE_SIZE, true);
+  Address t = Kmem_mmio::remap(phys, Config::PAGE_SIZE, true);
   if (t == Invalid_address)
     {
       printf("ACPI: cannot map phys address %llx, map failed\n",
@@ -410,7 +410,7 @@ Acpi::init_virt()
 
   if (rsdp->rev && rsdp->xsdt_phys)
     {
-      Address p = Kmem::mmio_remap(rsdp->xsdt_phys, sizeof(Acpi_xsdt_p), true);
+      Address p = Kmem_mmio::remap(rsdp->xsdt_phys, sizeof(Acpi_xsdt_p), true);
       if (p == ~0UL)
         WARN("ACPI: Could not map XSDT\n");
       else
@@ -437,7 +437,7 @@ Acpi::init_virt()
 
   if (rsdp->rsdt_phys)
     {
-      Address p = Kmem::mmio_remap(rsdp->rsdt_phys, sizeof(Acpi_rsdt_p), true);
+      Address p = Kmem_mmio::remap(rsdp->rsdt_phys, sizeof(Acpi_rsdt_p), true);
       if (p == ~0UL)
         WARN("ACPI: Could not map RSDT\n");
       else

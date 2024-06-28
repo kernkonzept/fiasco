@@ -151,7 +151,7 @@ IMPLEMENTATION [arm && pic_gic && pf_s32z]:
 #include "irq_mgr_multi_chip.h"
 #include "platform_control.h"
 #include "kip.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "cpu.h"
 
 PUBLIC static FIASCO_INIT
@@ -161,7 +161,7 @@ Pic::init()
   typedef Irq_mgr_multi_chip<10> M;
   Mword id = Cpu::mpidr() & 0xffU;
 
-  auto regs = Kmem::mmio_remap(Mem_layout::Gic_phys_base,
+  auto regs = Kmem_mmio::remap(Mem_layout::Gic_phys_base,
                                Mem_layout::Gic_phys_size);
 
   gic = new Boot_object<Gic_v3>(regs, regs + Mem_layout::Gic_redist_offset,
@@ -316,7 +316,7 @@ Mru::create_mru(Gic *gic)
   Kip::k()->add_mem_region(Mem_desc(mru_addr,
                                     mru_addr + Mem_layout::Mru_size - 1,
 	                            Mem_desc::Reserved));
-  auto mru_regs = Kmem::mmio_remap(mru_addr, Mem_layout::Mru_size);
+  auto mru_regs = Kmem_mmio::remap(mru_addr, Mem_layout::Mru_size);
 
   return new Boot_object<Mru>(mru_regs, gic);
 }

@@ -2,7 +2,7 @@
 IMPLEMENTATION [arm && amp && pf_s32z]:
 
 #include "cpu.h"
-#include "kmem.h"
+#include "kmem_mmio.h"
 #include "koptions.h"
 #include "mem_layout.h"
 #include "mmio_register_block.h"
@@ -103,20 +103,20 @@ Platform_control::amp_boot_init()
     Kmem_alloc::reserve_amp_heap(i);
 
   // Make sure CPUs start in ARM mode
-  Mmio_register_block rtu0_grp(Kmem::mmio_remap(Mem_layout::Rtu0_gpr_base,
+  Mmio_register_block rtu0_grp(Kmem_mmio::remap(Mem_layout::Rtu0_gpr_base,
                                                 0x100));
   rtu0_grp.write<Unsigned32>(rtu0_grp.read<Unsigned32>(Cfg_core) & ~4UL,
                              Cfg_core);
-  Kmem::mmio_unmap(Mem_layout::Rtu0_gpr_base, 0x100);
+  Kmem_mmio::unmap_compat(Mem_layout::Rtu0_gpr_base, 0x100);
 
-  Mmio_register_block rtu1_grp(Kmem::mmio_remap(Mem_layout::Rtu1_gpr_base,
+  Mmio_register_block rtu1_grp(Kmem_mmio::remap(Mem_layout::Rtu1_gpr_base,
                                                 0x100));
   rtu1_grp.write<Unsigned32>(rtu1_grp.read<Unsigned32>(Cfg_core) & ~4UL,
                              Cfg_core);
-  Kmem::mmio_unmap(Mem_layout::Rtu1_gpr_base, 0x100);
+  Kmem_mmio::unmap_compat(Mem_layout::Rtu1_gpr_base, 0x100);
 
-  Mmio_register_block mc_me(Kmem::mmio_remap(Mem_layout::Mc_me_base, 0x800));
-  Mmio_register_block mc_rgm(Kmem::mmio_remap(Mem_layout::Mc_rgm_base, 0x200));
+  Mmio_register_block mc_me(Kmem_mmio::remap(Mem_layout::Mc_me_base, 0x800));
+  Mmio_register_block mc_rgm(Kmem_mmio::remap(Mem_layout::Mc_rgm_base, 0x200));
 
   // Start cores serially because they all work on the same stack!
   Address entry = reinterpret_cast<Address>(&Kernel_thread::__amp_main);
@@ -138,8 +138,8 @@ Platform_control::amp_boot_init()
     }
 
   // Remove mappings to release precious MPU regions
-  Kmem::mmio_unmap(Mem_layout::Mc_rgm_base, 0x200);
-  Kmem::mmio_unmap(Mem_layout::Mc_me_base, 0x800);
+  Kmem_mmio::unmap_compat(Mem_layout::Mc_rgm_base, 0x200);
+  Kmem_mmio::unmap_compat(Mem_layout::Mc_me_base, 0x800);
 }
 
 // ------------------------------------------------------------------------
