@@ -188,6 +188,13 @@ Pte_ptr::set_next_level(Mword phys_addr)
 }
 
 PUBLIC inline
+unsigned
+Pte_ptr::page_level() const
+{
+  return level;
+}
+
+PUBLIC inline
 unsigned char
 Pte_ptr::page_order() const
 {
@@ -268,6 +275,21 @@ Pte_ptr::attribs() const
   if (_raw & Pte_global) k |= Page::Kern::Global();
 
   return Page::Attr(r, Page::Type::Normal(), k, Page::Flags::None());
+}
+
+PUBLIC inline
+bool
+Pte_ptr::attribs_compatible(Page::Attr attr) const
+{
+  Page::Attr cur = attribs();
+
+  if (cur.rights != attr.rights)
+    return false;
+
+  if (cur.kern != attr.kern)
+    return false;
+
+  return true;
 }
 
 PUBLIC inline

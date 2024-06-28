@@ -146,6 +146,19 @@ public:
       return Page::Attr(r, t, Page::Kern::None(), Page::Flags::None());
     }
 
+    bool attribs_compatible(Page::Attr attr) const
+    {
+      Page::Attr cur = attribs();
+
+      if (cur.rights != attr.rights)
+        return false;
+
+      if (cur.type != attr.type)
+        return false;
+
+      return true;
+    }
+
     Page::Flags access_flags() const
     {
       return Page::Flags::None();

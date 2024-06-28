@@ -174,6 +174,55 @@ Pte_ptr::attribs() const
 }
 
 PUBLIC inline
+bool
+Pte_ptr::attribs_compatible(Page::Attr attr) const
+{
+  Page::Attr cur = attribs();
+
+  if (XD == 0)
+    {
+      // If the eXecute Disable bit is not supported by the implementation
+      // (i.e. making all pages effectively executable), then enable the X
+      // right in order for the next comparison to not fail in case the
+      // attributes only differ in the X right (which has no effect).
+      //
+      // Note that this does not setup any X right anywhere, it is done just
+      // for the purpose of the comparison.
+      cur.rights |= Page::Rights::X();
+      attr.rights |= Page::Rights::X();
+    }
+
+  if (cur.rights != attr.rights)
+    return false;
+
+  if (cur.type != attr.type)
+    return false;
+
+  if (global() == 0)
+    {
+      // If the Global bit is not enabled by the implementation, then enable
+      // the global mapping in order for the next comparison to not fail in
+      // case the attributes only differ in the global mapping (which has no
+      // effect).
+      //
+      // Note that this does not setup any global mapping anywhere, it is done
+      // just for the purpose of the comparison.
+      cur.kern |= Page::Kern::Global();
+      attr.kern |= Page::Kern::Global();
+    }
+
+  if (cur.kern != attr.kern)
+    return false;
+
+  return true;
+}
+
+PUBLIC inline
+unsigned
+Pte_ptr::page_level() const
+{ return level; }
+
+PUBLIC inline
 unsigned char
 Pte_ptr::page_order() const
 { return Pdir::page_order_for_level(level); }

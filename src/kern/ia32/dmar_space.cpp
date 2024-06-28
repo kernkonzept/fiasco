@@ -42,6 +42,7 @@ private:
     void set(Unsigned64 v);
     void clear() { set(0); }
 
+    unsigned page_level() const;
     unsigned char page_order() const;
     Unsigned64 page_addr() const;
     Attr attribs() const
@@ -319,6 +320,10 @@ Dmar_space::resume_vcpu(Context *, Vcpu_state *, bool) override
   return -L4_err::EInval;
 }
 
+IMPLEMENT inline
+unsigned
+Dmar_space::Dmar_ptr::page_level() const
+{ return level; }
 
 IMPLEMENT inline
 unsigned char

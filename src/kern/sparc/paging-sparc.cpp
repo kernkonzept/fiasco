@@ -192,6 +192,12 @@ Pte_ptr::create_page(Phys_mem_addr addr, Page::Attr attr)
 }
 
 PUBLIC inline
+unsigned Pte_ptr::page_level() const
+{
+  return level;
+}
+
+PUBLIC inline
 unsigned char Pte_ptr::page_order() const
 {
   return Pdir::page_order_for_level(level);

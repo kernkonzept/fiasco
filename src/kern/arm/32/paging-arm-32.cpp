@@ -38,6 +38,9 @@ public:
   Pte_ptr() = default;
   Pte_ptr(void *p, unsigned char level) : Pte_ptr_t(p, level) {}
 
+  unsigned page_level() const
+  { return level; }
+
   unsigned char page_order() const
   { return Ptab::Level<Ptab_traits_vpn>::shift(level) + Ptab_traits_vpn::Head::Base_shift; }
 };

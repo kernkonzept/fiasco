@@ -98,6 +98,7 @@ private:
 
     void clear() { set(0); }
 
+    unsigned page_level() const;
     unsigned char page_order() const;
     Unsigned64 page_addr() const;
 
@@ -213,6 +214,11 @@ Vm_vmx_ept::Epte_ptr::set(Unsigned64 v)
 IMPLEMENTATION [vmx]:
 
 static Kmem_slab_t<Vm_vmx_ept> _ept_allocator("Vm_vmx_ept");
+
+IMPLEMENT inline
+unsigned
+Vm_vmx_ept::Epte_ptr::page_level() const
+{ return level; }
 
 IMPLEMENT inline
 unsigned char

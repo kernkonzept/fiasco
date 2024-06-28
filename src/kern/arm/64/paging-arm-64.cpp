@@ -78,6 +78,13 @@ typedef Pdir_t<Pte_ptr, K_ptab_traits_vpn, Ptab_va_vpn> Pdir;
 IMPLEMENTATION [arm && mmu && cpu_virt]:
 
 PUBLIC inline
+unsigned
+Pte_ptr::page_level() const
+{
+  return level;
+}
+
+PUBLIC inline
 unsigned char
 Pte_ptr::page_order() const
 {

@@ -155,6 +155,19 @@ public:
     return Page::Attr(rights, type, Page::Kern::None(), Page::Flags::None());
   }
 
+  bool attribs_compatible(Page::Attr attr) const
+  {
+    Page::Attr cur = attribs();
+
+    if (cur.rights != attr.rights)
+      return false;
+
+    if (cur.type != attr.type)
+      return false;
+
+    return true;
+  }
+
   Page::Flags access_flags() const
   { return Page::Flags::None(); }
 
@@ -259,6 +272,22 @@ public:
       k |= Page::Kern::Global();
 
     return Page::Attr(rights, type, k, Page::Flags::None());
+  }
+
+  bool attribs_compatible(Page::Attr attr) const
+  {
+    Page::Attr cur = attribs();
+
+    if (cur.rights != attr.rights)
+      return false;
+
+    if (cur.type != attr.type)
+      return false;
+
+    if (cur.kern != attr.kern)
+      return false;
+
+    return true;
   }
 
   Unsigned32 _page_bits() const { return 2; }
@@ -383,6 +412,22 @@ public:
     return Page::Attr(rights, type, k, Page::Flags::None());
   }
 
+  bool attribs_compatible(Page::Attr attr) const
+  {
+    Page::Attr cur = attribs();
+
+    if (cur.rights != attr.rights)
+      return false;
+
+    if (cur.type != attr.type)
+      return false;
+
+    if (cur.kern != attr.kern)
+      return false;
+
+    return true;
+  }
+
   Unsigned64 _page_bits() const
   {
     return 0x400 | ((_this()->level == CLASS::Max_level) ? 3 : 1);
@@ -481,6 +526,19 @@ public:
     return Page::Attr(rights, type, Page::Kern::None(), Page::Flags::None());
   }
 
+  bool attribs_compatible(Page::Attr attr) const
+  {
+    Page::Attr cur = attribs();
+
+    if (cur.rights != attr.rights)
+      return false;
+
+    if (cur.type != attr.type)
+      return false;
+
+    return true;
+  }
+
   Unsigned64 _page_bits() const
   {
     return 0x400 | ((_this()->level == CLASS::Max_level) ? 3 : 1);
@@ -561,6 +619,9 @@ public:
   {
     write_now(pte, phys | 1);
   }
+
+  unsigned page_level() const
+  { return level; }
 
   unsigned char page_order() const
   {
@@ -725,10 +786,14 @@ public:
 IMPLEMENTATION [arm && mmu && arm_lpae]:
 
 PUBLIC inline ALWAYS_INLINE
+unsigned
+K_pte_ptr::page_level() const
+{ return level; }
+
+PUBLIC inline ALWAYS_INLINE
 unsigned char
 K_pte_ptr::page_order() const
 { return Kpdir::page_order_for_level(level); }
-
 
 //-----------------------------------------------------------------------------
 INTERFACE [arm && mmu && arm_v5]:
