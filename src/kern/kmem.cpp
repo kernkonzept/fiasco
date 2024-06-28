@@ -79,7 +79,8 @@ Kmem::mmio_remap(Address phys, Address size, bool cache = false, bool exec = fal
                                              : Page::Rights::RW(),
                                         cache ? Page::Type::Normal()
                                               : Page::Type::Uncached(),
-                                        Page::Kern::Global())));
+                                        Page::Kern::Global(),
+                                        Page::Flags::None())));
 
       m.write_back_if(true);
       Mem_unit::tlb_flush_kernel(dm);

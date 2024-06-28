@@ -50,12 +50,12 @@ Idt::set_writable(bool writable)
   auto e = Kmem::current_cpu_kdir()->walk(Virt_addr(_idt));
 
   // Make sure page directory entry is valid and not a 4MB page
-  assert (e.is_valid() && e.level == Pdir::Depth);
+  assert(e.is_valid() && e.level == Pdir::Depth);
 
   if (writable)
-    e.add_attribs(Pt_entry::Writable); // Make read-write
+    e.add_attribs(Page::Attr::writable()); // Make read-write
   else
-    e.del_attribs(Pt_entry::Writable); // Make read-only
+    e.del_attribs(Page::Attr::writable()); // Make read-only
 
   Mem_unit::tlb_flush_kernel(_idt);
 }

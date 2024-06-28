@@ -110,16 +110,15 @@ public:
         0x3 << 10  // URWX:
     };
 
-    typedef Page::Type T;
     Mword r = 0;
-    if (attr.type == T::Normal())   r |= Page::CACHEABLE;
-    if (attr.type == T::Buffered()) r |= Page::BUFFERED;
-    if (attr.type == T::Uncached()) r |= Page::NONCACHEABLE;
+    if (attr.type == Page::Type::Normal())   r |= Page::CACHEABLE;
+    if (attr.type == Page::Type::Buffered()) r |= Page::BUFFERED;
+    if (attr.type == Page::Type::Uncached()) r |= Page::NONCACHEABLE;
     if (_this()->level == 0)
-      return r | perms[cxx::int_value<L4_fpage::Rights>(attr.rights)];
+      return r | perms[cxx::int_value<Page::Rights>(attr.rights)];
     else
       {
-        Mword p = perms[cxx::int_value<L4_fpage::Rights>(attr.rights)];
+        Mword p = perms[cxx::int_value<Page::Rights>(attr.rights)];
         p |= p >> 2;
         p |= p >> 4;
         return r | p;
@@ -135,35 +134,33 @@ public:
     auto c = r & 0xc;
     r &= 0xc00;
 
-    typedef L4_fpage::Rights R;
-    typedef Page::Type T;
-
-    R rights;
+    Page::Rights rights;
     switch (r)
       {
-      case 0x000: rights = R::URX(); break;
+      case 0x000: rights = Page::Rights::URX(); break;
       default:
-      case 0x400: rights = R::RWX(); break;
-      case 0xc00: rights = R::URWX(); break;
+      case 0x400: rights = Page::Rights::RWX(); break;
+      case 0xc00: rights = Page::Rights::URWX(); break;
       }
 
-    T type;
+    Page::Type type;
     switch (c)
       {
       default:
-      case Page::CACHEABLE: type = T::Normal(); break;
-      case Page::BUFFERED:  type = T::Buffered(); break;
-      case Page::NONCACHEABLE: type = T::Uncached(); break;
+      case Page::CACHEABLE:    type = Page::Type::Normal(); break;
+      case Page::BUFFERED:     type = Page::Type::Buffered(); break;
+      case Page::NONCACHEABLE: type = Page::Type::Uncached(); break;
       }
-    return Page::Attr(rights, type, Page::Kern::None());
+
+    return Page::Attr(rights, type, Page::Kern::None(), Page::Flags::None());
   }
 
-  Page::Rights access_flags() const
-  { return Page::Rights(0); }
+  Page::Flags access_flags() const
+  { return Page::Flags::None(); }
 
-  void del_rights(L4_fpage::Rights r)
+  void del_rights(Page::Rights r)
   {
-    if (!(r & L4_fpage::Rights::W()))
+    if (!(r & Page::Rights::W()))
       return;
 
     auto p = access_once(_this()->pte);
@@ -197,28 +194,24 @@ public:
 
   Unsigned32 _attribs(Page::Attr attr) const
   {
-    typedef L4_fpage::Rights R;
-    typedef Page::Type T;
-    typedef Page::Kern K;
-
     Mword lower = ATTRIBS::Mp_set_shared;
-    if (attr.type == T::Normal())   lower |= ATTRIBS::CACHEABLE;
-    if (attr.type == T::Buffered()) lower |= ATTRIBS::BUFFERED;
-    if (attr.type == T::Uncached()) lower |= ATTRIBS::NONCACHEABLE;
+    if (attr.type == Page::Type::Normal())   lower |= ATTRIBS::CACHEABLE;
+    if (attr.type == Page::Type::Buffered()) lower |= ATTRIBS::BUFFERED;
+    if (attr.type == Page::Type::Uncached()) lower |= ATTRIBS::NONCACHEABLE;
     Mword upper = lower & ~0x0f;
     upper |= 0x10;  // AP[0]
     lower &= 0x0f;
 
-    if (!(attr.kern & K::Global()))
+    if (!(attr.kern & Page::Kern::Global()))
       upper |= 0x800;
 
-    if (!(attr.rights & R::W()))
+    if (!(attr.rights & Page::Rights::W()))
       upper |= 0x200;
 
-    if (attr.rights & R::U())
+    if (attr.rights & Page::Rights::U())
       upper |= 0x20;
 
-    if (!(attr.rights & R::X()))
+    if (!(attr.rights & Page::Rights::X()))
       {
         if (_this()->level == 0)
           lower |= 0x10;
@@ -234,54 +227,49 @@ public:
 
   Page::Attr attribs() const
   {
-    typedef L4_fpage::Rights R;
-    typedef Page::Type T;
-    typedef Page::Kern K;
-
     auto c = access_once(_this()->pte);
 
-    R rights = R::R();
-
+    Page::Rights rights = Page::Rights::R();
     if (_this()->level == 0)
       {
         if (!(c & 0x10))
-          rights |= R::X();
+          rights |= Page::Rights::X();
 
         c = (c & 0x0f) | ((c >> 6) & 0xfff0);
       }
     else if (!(c & 0x01))
-      rights |= R::X();
+      rights |= Page::Rights::X();
 
     if (!(c & 0x200))
-      rights |= R::W();
+      rights |= Page::Rights::W();
     if (c & 0x20)
-      rights |= R::U();
+      rights |= Page::Rights::U();
 
-    T type;
+    Page::Type type;
     switch (c & ATTRIBS::Cache_mask)
       {
       default:
-      case ATTRIBS::CACHEABLE: type = T::Normal(); break;
-      case ATTRIBS::BUFFERED:  type = T::Buffered(); break;
-      case ATTRIBS::NONCACHEABLE: type = T::Uncached(); break;
+      case ATTRIBS::CACHEABLE:    type = Page::Type::Normal(); break;
+      case ATTRIBS::BUFFERED:     type = Page::Type::Buffered(); break;
+      case ATTRIBS::NONCACHEABLE: type = Page::Type::Uncached(); break;
       }
 
-    K k(0);
+    Page::Kern k(0);
     if (!(c & 0x800))
-      k |= K::Global();
+      k |= Page::Kern::Global();
 
-    return Page::Attr(rights, type, k);
+    return Page::Attr(rights, type, k, Page::Flags::None());
   }
 
   Unsigned32 _page_bits() const { return 2; }
 
-  Page::Rights access_flags() const
-  { return Page::Rights(0); }
+  Page::Flags access_flags() const
+  { return Page::Flags::None(); }
 
-  void del_rights(L4_fpage::Rights r)
+  void del_rights(Page::Rights r)
   {
     Mword n_attr = 0;
-    if (r & L4_fpage::Rights::W())
+    if (r & Page::Rights::W())
       {
         if (_this()->level == 0)
           n_attr = 0x200 << 6;
@@ -289,7 +277,7 @@ public:
           n_attr = 0x200;
       }
 
-    if (r & L4_fpage::Rights::X())
+    if (r & Page::Rights::X())
       {
         if (_this()->level == 0)
           n_attr |= 0x10;
@@ -330,37 +318,33 @@ public:
 
   Unsigned64 _attribs(Page::Attr attr) const
   {
-    typedef L4_fpage::Rights R;
-    typedef Page::Type T;
-    typedef Page::Kern K;
-
     Unsigned64 lower = 0x300; // inner sharable
-    if (attr.type == T::Normal())
+    if (attr.type == Page::Type::Normal())
       lower |= ATTRIBS::CACHEABLE;
-    if (attr.type == T::Buffered())
+    if (attr.type == Page::Type::Buffered())
       lower |= ATTRIBS::BUFFERED;
-    if (attr.type == T::Uncached())
+    if (attr.type == Page::Type::Uncached())
       lower |= ATTRIBS::NONCACHEABLE;
 
-    if (!(attr.kern & K::Global()))
+    if (!(attr.kern & Page::Kern::Global()))
       lower |= 0x800;
 
-    if (!(attr.rights & R::W()))
+    if (!(attr.rights & Page::Rights::W()))
       lower |= 0x080;
 
-    if (attr.rights & R::U())
+    if (attr.rights & Page::Rights::U())
       lower |= 0x040;
 
     if (ATTRIBS::Priv_levels == 1)
       lower |= 0x040; // the bit is RES1
 
-    if (ATTRIBS::Priv_levels == 2 && !(attr.rights & R::U()))
+    if (ATTRIBS::Priv_levels == 2 && !(attr.rights & Page::Rights::U()))
       {
         // Make kernel mappings never executable by userspace
         lower |= ATTRIBS::UXN;
       }
 
-    if (!(attr.rights & R::X()))
+    if (!(attr.rights & Page::Rights::X()))
       lower |= ATTRIBS::UXN | ATTRIBS::PXN | ATTRIBS::XN;
 
     return lower;
@@ -368,39 +352,35 @@ public:
 
   Page::Attr attribs() const
   {
-    typedef L4_fpage::Rights R;
-    typedef Page::Type T;
-    typedef Page::Kern K;
-
     auto c = access_once(_this()->pte);
 
-    R rights = R::R();
+    Page::Rights rights = Page::Rights::R();
     if (!(c & 0x80))
-      rights |= R::W();
+      rights |= Page::Rights::W();
     if (ATTRIBS::Priv_levels == 2)
       {
         if (c & 0x40)
-          rights |= R::U();
+          rights |= Page::Rights::U();
       }
 
-    // Note that Page::UXN (if available) is dependent on R::U()!
+    // Note that Page::UXN (if available) is dependent on Page::Rights::U()!
     if (!(c & (ATTRIBS::PXN | ATTRIBS::XN)))
-      rights |= R::X();
+      rights |= Page::Rights::X();
 
-    T type;
+    Page::Type type;
     switch (c & ATTRIBS::Cache_mask)
       {
       default:
-      case ATTRIBS::CACHEABLE: type = T::Normal(); break;
-      case ATTRIBS::BUFFERED:  type = T::Buffered(); break;
-      case ATTRIBS::NONCACHEABLE: type = T::Uncached(); break;
+      case ATTRIBS::CACHEABLE:    type = Page::Type::Normal(); break;
+      case ATTRIBS::BUFFERED:     type = Page::Type::Buffered(); break;
+      case ATTRIBS::NONCACHEABLE: type = Page::Type::Uncached(); break;
       }
 
-    K k(0);
+    Page::Kern k(0);
     if (!(c & 0x800))
-      k |= K::Global();
+      k |= Page::Kern::Global();
 
-    return Page::Attr(rights, type, k);
+    return Page::Attr(rights, type, k, Page::Flags::None());
   }
 
   Unsigned64 _page_bits() const
@@ -408,16 +388,16 @@ public:
     return 0x400 | ((_this()->level == CLASS::Max_level) ? 3 : 1);
   }
 
-  Page::Rights access_flags() const
-  { return Page::Rights(0); }
+  Page::Flags access_flags() const
+  { return Page::Flags::None(); }
 
-  void del_rights(L4_fpage::Rights r)
+  void del_rights(Page::Rights r)
   {
     Unsigned64 n_attr = 0;
-    if (r & L4_fpage::Rights::W())
+    if (r & Page::Rights::W())
       n_attr = 0x80;
 
-    if (r & L4_fpage::Rights::X())
+    if (r & Page::Rights::X())
       n_attr |= ATTRIBS::UXN | ATTRIBS::PXN | ATTRIBS::XN;
 
     if (!n_attr)
@@ -452,26 +432,24 @@ public:
 
   Unsigned64 _attribs(Page::Attr attr) const
   {
-    typedef L4_fpage::Rights R;
-    typedef Page::Type T;
-
     Unsigned64 lower = 0x300; // inner sharable
-    if (attr.type == T::Normal())
+    if (attr.type == Page::Type::Normal())
       lower |= ATTRIBS::CACHEABLE;
-    if (attr.type == T::Buffered())
+    if (attr.type == Page::Type::Buffered())
       lower |= ATTRIBS::BUFFERED;
-    if (attr.type == T::Uncached())
+    if (attr.type == Page::Type::Uncached())
       lower |= ATTRIBS::NONCACHEABLE;
 
     // On AArch32 execution is only allowed if read access is permitted as well
     // On AArch64 this is not necessary, pages can be mapped execute-only
-    if (attr.rights & R::R() || (Proc::Is_32bit && attr.rights & R::X()))
+    if (attr.rights & Page::Rights::R()
+        || (Proc::Is_32bit && attr.rights & Page::Rights::X()))
       lower |= (0x1 << 6);
 
-    if (attr.rights & R::W())
+    if (attr.rights & Page::Rights::W())
       lower |= (0x2 << 6);
 
-    if (!(attr.rights & R::X()))
+    if (!(attr.rights & Page::Rights::X()))
       lower |= 0x0040000000000000;
 
     return lower;
@@ -479,33 +457,28 @@ public:
 
   Page::Attr attribs() const
   {
-    typedef L4_fpage::Rights R;
-    typedef Page::Type T;
-    typedef Page::Kern K;
-
     auto c = access_once(_this()->pte);
 
-    R rights = R::U();
-
+    Page::Rights rights = Page::Rights::U();
     if (c & (0x1 << 6))
-      rights |= R::R();
+      rights |= Page::Rights::R();
 
     if (c & (0x2 << 6))
-      rights |= R::W();
+      rights |= Page::Rights::W();
 
     if (!(c & 0x0040000000000000))
-      rights |= R::X();
+      rights |= Page::Rights::X();
 
-    T type;
+    Page::Type type;
     switch (c & ATTRIBS::Cache_mask)
       {
       default:
-      case ATTRIBS::CACHEABLE:    type = T::Normal(); break;
-      case ATTRIBS::BUFFERED:     type = T::Buffered(); break;
-      case ATTRIBS::NONCACHEABLE: type = T::Uncached(); break;
+      case ATTRIBS::CACHEABLE:    type = Page::Type::Normal(); break;
+      case ATTRIBS::BUFFERED:     type = Page::Type::Buffered(); break;
+      case ATTRIBS::NONCACHEABLE: type = Page::Type::Uncached(); break;
       }
 
-    return Page::Attr(rights, type, K(0));
+    return Page::Attr(rights, type, Page::Kern::None(), Page::Flags::None());
   }
 
   Unsigned64 _page_bits() const
@@ -513,21 +486,21 @@ public:
     return 0x400 | ((_this()->level == CLASS::Max_level) ? 3 : 1);
   }
 
-  Page::Rights access_flags() const
-  { return Page::Rights(0); }
+  Page::Flags access_flags() const
+  { return Page::Flags::None(); }
 
-  void del_rights(L4_fpage::Rights r)
+  void del_rights(Page::Rights r)
   {
     Unsigned64 n_attr = 0;
     Mword a_attr = 0;
 
-    if (r & L4_fpage::Rights::R())
+    if (r & Page::Rights::R())
       a_attr |= 0x1 << 6;
 
-    if (r & L4_fpage::Rights::W())
+    if (r & Page::Rights::W())
       a_attr |= 0x2 << 6;
 
-    if (r & L4_fpage::Rights::X())
+    if (r & Page::Rights::X())
       n_attr |= 0x0040000000000000;
 
     if (!n_attr && !a_attr)

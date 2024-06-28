@@ -63,7 +63,8 @@ Kmem::mmio_remap(Address phys, Address size)
           assert (m.page_order() == 24);
           m.create_page(Phys_mem_addr(p),Page::Attr(Page::Rights::RWX(),
                                                     Page::Type::Uncached(),
-                                                    Page::Kern::Global()));
+                                                    Page::Kern::Global(),
+                                                    Page::Flags::None()));
 
           //m.write_back_if(true, Mem_unit::Asid_kernel);
           add_pmem(p, dm, Config::SUPERPAGE_SIZE);

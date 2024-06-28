@@ -14,9 +14,9 @@
  *   - MIPS: return the combined access rights of the physical page from the
  *     page table (how the page could be accessed before the unmap operation)
  *
- * v_set_access_flags():
- *   This function is supposed to set the access flags of mapped pages and the
- *   implementation depends on the architecture:
+ * v_add_access_flags():
+ *   This function is supposed to amend the access flags of mapped pages and
+ *   the implementation depends on the architecture:
  *    - x86/AMD64: the access flags of the mapped pages are modified
  *    - ARM/ARM64: the mapping is not modified
  *    - MIPS: the mapping is not modified
@@ -180,7 +180,8 @@ Mapdb_util_test::test_map_util()
   typedef Mem_space::Page_order Page_order;
   typedef Mem_space::Phys_addr Phys_addr;
   typedef Mem_space::Attr Attr;
-  typedef L4_fpage::Rights Rights;
+  typedef Page::Rights Rights;
+  typedef Page::Flags Flags;
 
   Phys_addr phys;
   Page_order order;
@@ -324,7 +325,7 @@ Mapdb_util_test::test_map_util()
 
   // 8: Touch client[8*page] (works only on x86/AMD64)
   //    Note that this operation might be a NOP depending on the architecture.
-  ms(&*client)->v_set_access_flags(to_vaddr(8 * S_page), Rights::RW());
+  ms(&*client)->v_add_access_flags(to_vaddr(8 * S_page), Flags::Touched());
   UTEST_TRUE(Utest::Assert,
              ms(&*client)->v_lookup(to_vaddr(8 * S_page), &phys, &order, &attr),
              "VA client:8*page MapDB lookup");

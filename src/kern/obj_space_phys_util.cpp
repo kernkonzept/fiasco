@@ -4,6 +4,7 @@ INTERFACE [!obj_space_phys_avl]:
 #include "assert_opt.h"
 #include "obj_space_types.h"
 #include "ram_quota.h"
+#include "paging.h"
 
 // Two level page-sized mapping table
 template< typename SPACE >
@@ -28,8 +29,7 @@ public:
   bool v_lookup(V_pfn const &virt, Phys_addr *phys,
                 Page_order *size, Attr *attribs);
 
-  L4_fpage::Rights v_delete(V_pfn virt, Page_order size,
-                            L4_fpage::Rights page_attribs);
+  Page::Flags v_delete(V_pfn virt, Page_order order, Page::Rights rights);
   Obj::Insert_result v_insert(Phys_addr phys, V_pfn const &virt,
                               Page_order size, Attr page_attribs);
 
@@ -115,8 +115,7 @@ public:
   bool v_lookup(V_pfn const &virt, Phys_addr *phys,
                 Page_order *size, Attr *attribs);
 
-  L4_fpage::Rights v_delete(V_pfn virt, Page_order size,
-                            L4_fpage::Rights page_attribs);
+  Page::Flags v_delete(V_pfn virt, Page_order order, Page::Rights rights);
   Obj::Insert_result v_insert(Phys_addr phys, V_pfn const &virt,
                               Page_order size, Attr page_attribs);
 
@@ -184,11 +183,11 @@ public:
            typename Obj_space::Attr *attribs) override
   { return Obj_space::v_lookup(virt, phys, size, attribs); }
 
-  L4_fpage::Rights FIASCO_FLATTEN
+  Page::Flags FIASCO_FLATTEN
   v_delete(typename Obj_space::V_pfn virt,
-           typename Obj_space::Page_order size,
-           L4_fpage::Rights page_attribs) override
-  { return Obj_space::v_delete(virt, size, page_attribs); }
+           typename Obj_space::Page_order order,
+           Page::Rights rights) override
+  { return Obj_space::v_delete(virt, order, rights); }
 
   Obj::Insert_result FIASCO_FLATTEN
   v_insert(typename Obj_space::Phys_addr phys,
@@ -446,23 +445,23 @@ Obj_space_phys<SPACE>::lookup_local(Cap_index virt, L4_fpage::Rights *rights)
 
 IMPLEMENT template< typename SPACE >
 inline NEEDS[<cassert>, Obj_space_phys::get_cap]
-L4_fpage::Rights FIASCO_FLATTEN
+Page::Flags FIASCO_FLATTEN
 Obj_space_phys<SPACE>::v_delete(
-  V_pfn virt, [[maybe_unused]] Page_order size,
-  L4_fpage::Rights page_attribs = L4_fpage::Rights::FULL())
+  V_pfn virt, [[maybe_unused]] Page_order order,
+  Page::Rights rights = Page::Rights::FULL())
 {
-  assert (size == Page_order(0));
+  assert(order == Page_order(0));
   Entry *c = get_cap(virt, false);
 
   if (c && c->valid())
     {
-      if (page_attribs & L4_fpage::Rights::CR())
+      if (rights & L4_fpage::Rights::CR())
         c->invalidate();
       else
-	c->del_rights(page_attribs);
+        c->del_rights(rights);
     }
 
-  return L4_fpage::Rights(0);
+  return Page::Flags::None();
 }
 
 IMPLEMENT template< typename SPACE >

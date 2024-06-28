@@ -212,18 +212,19 @@ PUBLIC static inline ALWAYS_INLINE
 Mword
 Pte_ptr::make_attribs(Page::Attr attr)
 {
-  typedef Page::Rights R;
-  // typedef Page::Type T;
-  typedef Page::Kern K;
   Mword r = Pte_default_leaf;
-  if (attr.rights & R::R()) r |= Pte_r;
-  if (attr.rights & R::W()) r |= Pte_r | Pte_w; // w without r not allowed
-  if (attr.rights & R::X()) r |= Pte_x;
-  if (attr.rights & R::U()) r |= Pte_user;
-  // if (attr.type == T::Normal()) r |= Page::CACHEABLE;
-  // if (attr.type == T::Buffered()) r |= Page::BUFFERED;
-  // if (attr.type == T::Uncached()) r |= Page::NONCACHEABLE;
-  if (attr.kern & K::Global()) r |= Pte_global;
+
+  if (attr.rights & Page::Rights::R()) r |= Pte_r;
+  if (attr.rights & Page::Rights::W()) r |= Pte_r | Pte_w; // w without r not allowed
+  if (attr.rights & Page::Rights::X()) r |= Pte_x;
+  if (attr.rights & Page::Rights::U()) r |= Pte_user;
+
+  // if (attr.type == Page::Type::Normal()) r |= Page::CACHEABLE;
+  // if (attr.type == Page::Type::Buffered()) r |= Page::BUFFERED;
+  // if (attr.type == Page::Type::Uncached()) r |= Page::NONCACHEABLE;
+
+  if (attr.kern & Page::Kern::Global()) r |= Pte_global;
+
   return r;
 }
 
@@ -262,40 +263,35 @@ PUBLIC inline
 Page::Attr
 Pte_ptr::attribs() const
 {
-  typedef Page::Rights R;
-  typedef Page::Type T;
-  typedef Page::Kern K;
-
   Mword _raw = access_once(pte);
-  R r(0);
-  if (_raw & Pte_r) r |= R::R();
-  if (_raw & Pte_w) r |= R::W();
-  if (_raw & Pte_x) r |= R::X();
-  if (_raw & Pte_user) r |= R::U();
 
-  T t = T::Normal();
+  Page::Rights r(0);
+  if (_raw & Pte_r) r |= Page::Rights::R();
+  if (_raw & Pte_w) r |= Page::Rights::W();
+  if (_raw & Pte_x) r |= Page::Rights::X();
+  if (_raw & Pte_user) r |= Page::Rights::U();
 
-  K k(0);
-  if (_raw & Pte_global) k |= K::Global();
+  Page::Kern k(0);
+  if (_raw & Pte_global) k |= Page::Kern::Global();
 
-  return Page::Attr(r, t, k);
+  return Page::Attr(r, Page::Type::Normal(), k, Page::Flags::None());
 }
 
 PUBLIC inline
-L4_fpage::Rights
+Page::Flags
 Pte_ptr::access_flags() const
 {
-  return Page::Rights(0);
+  return Page::Flags::None();
 }
 
 PUBLIC inline
 void
-Pte_ptr::del_rights(L4_fpage::Rights r)
+Pte_ptr::del_rights(Page::Rights r)
 {
-  if (r & L4_fpage::Rights::W())
+  if (r & Page::Rights::W())
     write_now(pte, access_once(pte) & ~Pte_w);
 
-  if (r & L4_fpage::Rights::X())
+  if (r & Page::Rights::X())
     write_now(pte, access_once(pte) & ~Pte_x);
 }
 

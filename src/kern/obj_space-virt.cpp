@@ -54,10 +54,10 @@ Generic_obj_space<SPACE>::lookup_local(Cap_index virt, L4_fpage::Rights *rights)
 
 IMPLEMENT template< typename SPACE >
 inline
-L4_fpage::Rights FIASCO_FLATTEN
-Generic_obj_space<SPACE>::v_delete(V_pfn virt, Order size,
-                                   L4_fpage::Rights page_attribs)
-{ return  Base::v_delete(virt, size, page_attribs); }
+Page::Flags FIASCO_FLATTEN
+Generic_obj_space<SPACE>::v_delete(V_pfn virt, Order order,
+                                   Page::Rights rights)
+{ return Base::v_delete(virt, order, rights); }
 
 IMPLEMENT  template< typename SPACE >
 inline

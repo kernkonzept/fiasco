@@ -275,7 +275,7 @@ Task::free_ku_mem_chunk(void *k_addr, User_ptr<void> u_addr, unsigned size,
     {
       Virt_addr user_va = Virt_addr(u_addr.get()) + i;
       static_cast<Mem_space*>(this)->v_delete(user_va, page_order,
-                                              L4_fpage::Rights::FULL());
+                                              Page::Rights::FULL());
     }
 
   if (need_tlb_flush && mapped_size > 0)
@@ -560,11 +560,11 @@ Task::sys_unmap(Syscall_frame *f, Utcb *utcb)
 
       for (unsigned i = 2; i < words; ++i)
         {
-          L4_fpage::Rights const flushed
+          Page::Flags const flushed
             = fpage_unmap(this, L4_fpage(utcb->values[i]), m, rl.list());
 
           utcb->values[i] = (utcb->values[i] & ~0xfUL)
-                          | cxx::int_value<L4_fpage::Rights>(flushed);
+                          | cxx::int_value<Page::Flags>(flushed);
         }
       cpu_lock.lock();
     }

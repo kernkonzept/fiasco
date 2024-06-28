@@ -37,7 +37,7 @@ public:
   typedef Port_number V_pfc;
   typedef Port_number Phys_addr;
   typedef Order Page_order;
-  typedef L4_fpage::Rights Attr;
+  typedef Page::Rights Attr;
 
   enum
   {
@@ -120,8 +120,7 @@ public:
   bool v_fabricate(V_pfn address, Phys_addr *phys, Page_order *order,
                    Attr *attribs = 0);
   FIASCO_SPACE_VIRTUAL
-  L4_fpage::Rights v_delete(V_pfn virt, Page_order size,
-                            L4_fpage::Rights page_attribs);
+  Page::Flags v_delete(V_pfn virt, Page_order order, Page::Rights rights);
 
 private:
   /**
@@ -360,12 +359,12 @@ Generic_io_space<SPACE>::v_lookup(V_pfn virt, Phys_addr *phys,
 
 IMPLEMENT template<typename SPACE>
 inline
-L4_fpage::Rights FIASCO_FLATTEN
-Generic_io_space<SPACE>::v_delete(V_pfn virt, [[maybe_unused]] Page_order size,
-                                  L4_fpage::Rights page_attribs)
+Page::Flags FIASCO_FLATTEN
+Generic_io_space<SPACE>::v_delete(V_pfn virt, [[maybe_unused]] Page_order order,
+                                  Page::Rights rights)
 {
-  if (!(page_attribs & L4_fpage::Rights::FULL()))
-    return L4_fpage::Rights(0);
+  if (!(rights & Page::Rights::FULL()))
+    return Page::Flags::None();
 
   if (_superpage)
     {
@@ -374,7 +373,7 @@ Generic_io_space<SPACE>::v_delete(V_pfn virt, [[maybe_unused]] Page_order size,
        * We need to explicitly disable all IO ports.
        */
 
-      assert(size == Page_order(Map_superpage_shift));
+      assert(order == Page_order(Map_superpage_shift));
 
       for (Address p = 0; p < Map_max_address; ++p)
         io_disable(p);
@@ -389,10 +388,10 @@ Generic_io_space<SPACE>::v_delete(V_pfn virt, [[maybe_unused]] Page_order size,
        */
       io_bitmap_flush_all_cpus();
 
-      return L4_fpage::Rights(0);
+      return Page::Flags::None();
     }
 
-  assert(size == Page_order(0));
+  assert(order == Page_order(0));
 
   io_disable(cxx::int_value<V_pfn>(virt));
 
@@ -402,7 +401,7 @@ Generic_io_space<SPACE>::v_delete(V_pfn virt, [[maybe_unused]] Page_order size,
    */
   io_bitmap_flush_all_cpus();
 
-  return L4_fpage::Rights(0);
+  return Page::Flags::None();
 }
 
 IMPLEMENT template<typename SPACE>

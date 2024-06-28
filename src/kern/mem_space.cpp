@@ -142,14 +142,15 @@ public:
 
   /** Invalidate page-table entries, or some of the entries' attributes.
    *
-   * @param virt  Virtual address of the memory region that should be changed.
-   * @param size  log2 size of the memory region that should be changed.
-   * @param page_attribs  Revoke only the given page rights (bit-ORed, see
-   *         L4_fpage::Rights). If #L4_fpage::Rights::R() is part of the
-   *         bitmask, the entry is invalidated.
+   * @param virt    Virtual address of the memory region that should be
+   *                changed.
+   * @param order   Order of the memory region that should be changed.
+   * @param rights  Revoke only the given page rights (bit-ORed, see
+   *                #Page::Rights). If #Page::Rights::R() is part of the
+   *                bitmask, the entry is invalidated.
    *
-   * @retval #L4_fpage::Rights::empty()  The entry was already invalid or the
-   *         page access flags were unset before the entry was touched (by this
+   * @retval #Page::Flags::None()  The entry is already invalid or the page
+   *         access flags were unset before the entry was touched (by this
    *         function), or page access flags are not supported.
    * @retval otherwise  Combined (bit-ORed) page access flags of the entry
    *         before it was modified. Support for this information is
@@ -158,21 +159,22 @@ public:
    * @pre Not thread-safe, the caller must ensure that no one else modifies the
    *      page table at the same time.
    * @pre `virt` needs to be aligned according to the size argument.
-   * @pre `size` must match one of the frame sizes used in the page table.
+   * @pre `order` must match one of the frame sizes used in the page table.
    *      See fitting_sizes().
    *
-   * @note No memory memory is freed.
+   * @note No memory is freed.
    */
   FIASCO_SPACE_VIRTUAL
-  L4_fpage::Rights v_delete(Vaddr virt, Page_order size,
-                            L4_fpage::Rights page_attribs);
+  Page::Flags v_delete(Vaddr virt, Page_order order, Page::Rights rights);
 
   /**
-   * Set the page access flags on platforms where this feature is supported.
+   * Amend the page access flags on platforms where this feature is supported.
    *
-   * @param virt  Virtual address of the affected memory region.
-   * @param access_flags  #L4_fpage::Rights::R(): page was referenced.
-   *                      #L4_fpage::Rights::W(): page is dirty.
+   * The method does not unset access flags which are already set.
+   *
+   * @param virt   Virtual address of the affected memory region.
+   * @param flags  #Page::Flags::Referenced(): page was referenced.
+   *               #Page::Flags::Dirty(): page is dirty.
    *
    * @pre Not thread-safe, the caller must ensure that no one else modifies the
    *      page table at the same time.
@@ -181,7 +183,7 @@ public:
    *       If this feature is not supported, this function does nothing.
    */
   FIASCO_SPACE_VIRTUAL
-  void v_set_access_flags(Vaddr virt, L4_fpage::Rights access_flags);
+  void v_add_access_flags(Vaddr virt, Page::Flags flags);
 
   /** Set this memory space as the current on this CPU. */
   void make_current(Switchin_flags flags = None);

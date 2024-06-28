@@ -46,21 +46,17 @@ private:
     Unsigned64 page_addr() const;
     Attr attribs() const
     {
-      typedef L4_fpage::Rights R;
-
       auto raw = access_once(&e->v);
 
-      R r = R::UR();
-      if (raw & 2) r |= R::W();
+      Page::Rights r = Page::Rights::UR();
+      if (raw & 2) r |= Page::Rights::W();
 
       return Attr::space_local(r);
     }
 
     bool add_attribs(Page::Attr attr)
     {
-      typedef L4_fpage::Rights R;
-
-      if (attr.rights & R::W())
+      if (attr.rights & Page::Rights::W())
         {
           auto p = access_once(&e->v);
           auto o = p;
@@ -81,14 +77,14 @@ private:
     void write_back_if(bool) const {}
     static void write_back(void *, void *) {}
 
-    L4_fpage::Rights access_flags() const
+    Page::Flags access_flags() const
     {
-      return L4_fpage::Rights(0);
+      return Page::Flags::None();
     }
 
-    void del_rights(L4_fpage::Rights r)
+    void del_rights(Page::Rights r)
     {
-      if (r & L4_fpage::Rights::W())
+      if (r & Page::Rights::W())
         {
           auto p = access_once(&e->v);
           auto o = p & ~2ULL;
@@ -107,12 +103,10 @@ private:
      */
     void create_page(Phys_mem_addr addr, Page::Attr attr)
     {
-      typedef L4_fpage::Rights R;
-
       assert(level <= Dmar_pt::Depth);
       Unsigned64 r = (level == Dmar_pt::Depth) ? 0ULL : (1ULL << 7);
       r |= 1; // Read
-      if (attr.rights & R::W()) r |= 2;
+      if (attr.rights & Page::Rights::W()) r |= 2;
 
       set(cxx::int_value<Phys_mem_addr>(addr) | r);
     }
@@ -411,33 +405,33 @@ Dmar_space::v_insert(Mem_space::Phys_addr phys, Mem_space::Vaddr virt,
 }
 
 PUBLIC
-L4_fpage::Rights
+Page::Flags
 Dmar_space::v_delete(Mem_space::Vaddr virt, Mem_space::Page_order order,
-                     L4_fpage::Rights page_attribs) override
+                     Page::Rights rights) override
 {
   assert(cxx::is_zero(cxx::get_lsb(Virt_addr(virt), order)));
 
-  auto i = _dmarpt->walk(virt);
+  auto pte = _dmarpt->walk(virt);
 
-  if (EXPECT_FALSE(!i.is_valid()))
-    return L4_fpage::Rights(0);
+  if (EXPECT_FALSE(!pte.is_valid()))
+    return Page::Flags::None();
 
-  if (EXPECT_FALSE(Mem_space::Page_order(i.page_order()) != order))
-    return L4_fpage::Rights(0);
+  if (EXPECT_FALSE(Mem_space::Page_order(pte.page_order()) != order))
+    return Page::Flags::None();
 
-  L4_fpage::Rights ret = i.access_flags();
+  Page::Flags flags = pte.access_flags();
 
-  if (!(page_attribs & L4_fpage::Rights::R()))
-    i.del_rights(page_attribs);
+  if (!(rights & Page::Rights::R()))
+    pte.del_rights(rights);
   else
-    i.clear();
+    pte.clear();
 
-  return ret;
+  return flags;
 }
 
 PUBLIC
 void
-Dmar_space::v_set_access_flags(Mem_space::Vaddr, L4_fpage::Rights) override
+Dmar_space::v_add_access_flags(Mem_space::Vaddr, Page::Flags) override
 {}
 
 static Mem_space::Fit_size __dmar_ps;

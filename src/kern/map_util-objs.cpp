@@ -44,7 +44,7 @@ obj_map(Space *from, L4_fpage const &fp_from,
                         reap_list);
 }
 
-L4_fpage::Rights __attribute__((nonnull(1)))
+Page::Flags __attribute__((nonnull(1)))
 obj_fpage_unmap(Space * space, L4_fpage fp, L4_map_mask mask,
                 Kobject ***reap_list)
 {
@@ -57,7 +57,8 @@ obj_fpage_unmap(Space * space, L4_fpage fp, L4_map_mask mask,
   // XXX prevent unmaps when a task has no caps enabled
 
   Mu::Auto_tlb_flush<Obj_space> tlb;
-  return unmap<Obj_space>(static_cast<Kobject_mapdb*>(nullptr), space, space,
+
+  return unmap<Obj_space>(static_cast<Kobject_mapdb *>(nullptr), space, space,
                Obj_space::V_pfn(addr), Obj_space::V_pfc(1) << size,
                fp.rights(), mask, tlb, reap_list);
 }

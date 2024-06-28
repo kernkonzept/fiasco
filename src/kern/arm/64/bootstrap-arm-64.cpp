@@ -79,7 +79,8 @@ Bootstrap::map_ram_range(PDIR *kd, Bs_alloc &alloc,
       auto pte = kd->walk(::Virt_addr(pstart - va_offset + i),
                           PDIR::Super_level, false, alloc, Bs_mem_map());
       pte.set_page(Phys_mem_addr(pstart + i),
-                   Page::Attr(Page::Rights::RWX(), Page::Type::Normal(), kern));
+                   Page::Attr(Page::Rights::RWX(), Page::Type::Normal(), kern,
+                              Page::Flags::None()));
     }
 }
 

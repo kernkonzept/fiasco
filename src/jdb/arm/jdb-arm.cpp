@@ -429,7 +429,7 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
 
       pte.set_page(Phys_mem_addr(cxx::mask_lsb(phys, pte.page_order())),
                    Page::Attr(Page::Rights::RW(), mem_type,
-                              Page::Kern::None()));
+                              Page::Kern::None(), Page::Flags::None()));
       pte.write_back_if(true);
       Mem_unit::tlb_flush_kernel(Mem_layout::Jdb_tmp_map_area);
     }
@@ -447,7 +447,7 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
 {
   if (auto *r = Kmem::kdir->find(addr.addr()))
     {
-      if (write && !(r->attr().rights() & L4_fpage::Rights::W()))
+      if (write && !(r->attr().rights() & Page::Rights::W()))
         return nullptr;
 
       return reinterpret_cast<unsigned char *>(addr.virt());

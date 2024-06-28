@@ -306,29 +306,30 @@ Mem_space::v_lookup(Vaddr virt, Phys_addr *phys,
 }
 
 IMPLEMENT
-L4_fpage::Rights
-Mem_space::v_delete(Vaddr virt, [[maybe_unused]] Page_order size,
-                    L4_fpage::Rights page_attribs)
+Page::Flags
+Mem_space::v_delete(Vaddr virt, [[maybe_unused]] Page_order order,
+                    Page::Rights rights)
 {
-  assert (cxx::is_zero(cxx::get_lsb(Virt_addr(virt), size)));
-  auto i = _dir->walk(virt);
+  assert(cxx::is_zero(cxx::get_lsb(Virt_addr(virt), order)));
 
-  if (EXPECT_FALSE (! i.is_valid()))
-    return L4_fpage::Rights(0);
+  auto pte = _dir->walk(virt);
 
-  L4_fpage::Rights ret = i.access_flags();
+  if (EXPECT_FALSE(!pte.is_valid()))
+    return Page::Flags::None();
 
-  if (! (page_attribs & L4_fpage::Rights::R()))
-    i.del_rights(page_attribs);
+  Page::Flags flags = pte.access_flags();
+
+  if (!(rights & Page::Rights::R()))
+    pte.del_rights(rights);
   else
-    i.clear();
+    pte.clear();
 
-  return ret;
+  return flags;
 }
 
 IMPLEMENT inline
 void
-Mem_space::v_set_access_flags(Vaddr, L4_fpage::Rights)
+Mem_space::v_add_access_flags(Vaddr, Page::Flags)
 {}
 
 PUBLIC

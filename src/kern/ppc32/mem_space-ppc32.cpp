@@ -363,19 +363,27 @@ Mem_space::v_lookup(Vaddr virt, Phys_addr *phys, Page_order *order,
 #endif
 }
 
-/** Delete page-table entries, or some of the entries' attributes.  This
-    function works for one or multiple mappings (in contrast to v_insert!).
-    @param virt Virtual address of the memory region that should be changed.
-    @param size Size of the memory region that should be changed.
-    @param page_attribs If nonzero, delete only the given page attributes.
-                        Otherwise, delete the whole entries.
-    @return Combined (bit-ORed) page attributes that were removed.  In
-            case of errors, ~Page_all_attribs is additionally bit-ORed in.
+/**
+ * Delete page-table entries, or some of the entries' rights.
+ *
+ * This function works for one or multiple mappings (in contrast to v_insert!).
+ *
+ * \param virt    Virtual address of the memory region that should be changed.
+ * \param order   Order of the memory region that should be changed.
+ * \param rights  Revoke only the given page rights (bit-ORed, see
+ *                #Page::Rights). If #Page::Rights::R() is part of the bitmask,
+ *                the entry is invalidated.
+ *
+ * \retval #Page::Flags::None()  The entry is already invalid or the page
+ *         access flags were unset before the entry was touched (by this
+ *         function).
+ * \retval otherwise  Combined (bit-ORed) page access flags of the entry
+ *         before it was modified.
  */
 IMPLEMENT
-L4_fpage::Rights
-Mem_space::v_delete(Vaddr virt, Page_order size,
-		    L4_fpage::Rights page_attribs)
+Page::Flags
+Mem_space::v_delete(Vaddr virt, Page_order order,
+                    Page::Rights rights)
 {
 #ifdef FIX_THIS
   unsigned ret = 0;
@@ -419,8 +427,8 @@ Mem_space::v_delete(Vaddr virt, Page_order size,
 
   return ret;
 #else
-  (void)virt; (void)size; (void)page_attribs;
-  return page_attribs;
+  (void)virt; (void)order; (void)rights;
+  return Page::Flags::None();
 #endif
 }
 
@@ -431,5 +439,5 @@ Mem_space::canonize(Page_number v)
 
 IMPLEMENT inline
 void
-Mem_space::v_set_access_flags(Vaddr, L4_fpage::Rights)
+Mem_space::v_add_access_flags(Vaddr, Page::Flags)
 {}

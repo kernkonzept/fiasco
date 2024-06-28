@@ -218,7 +218,7 @@ Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order size,
 
 IMPLEMENT
 void
-Mem_space::v_set_access_flags(Vaddr, L4_fpage::Rights)
+Mem_space::v_add_access_flags(Vaddr, Page::Flags)
 {
   // not supported currently
 }
@@ -256,32 +256,32 @@ Mem_space::v_lookup(Vaddr const virt, Phys_addr *phys,
 }
 
 IMPLEMENT
-L4_fpage::Rights
-Mem_space::v_delete(Vaddr virt, [[maybe_unused]] Page_order size,
-                    L4_fpage::Rights page_attribs)
+Page::Flags
+Mem_space::v_delete(Vaddr virt, [[maybe_unused]] Page_order order,
+                    Page::Rights rights)
 {
-  assert (cxx::is_zero(cxx::get_lsb(Virt_addr(virt), size)));
-  auto i = _dir->walk(virt);
+  assert(cxx::is_zero(cxx::get_lsb(Virt_addr(virt), order)));
+  auto pte = _dir->walk(virt);
 
-  if (EXPECT_FALSE (! i.is_pte()))
-    return L4_fpage::Rights(0);
+  if (EXPECT_FALSE (!pte.is_pte()))
+    return Page::Flags::None();
 
-  L4_fpage::Rights ret = i.rights();
+  Page::Flags flags = pte.access_flags();
 
-  if (! (page_attribs & L4_fpage::Rights::R()))
+  if (!(rights & Page::Rights::R()))
     {
-      Mword x = i.del_rights(*i.e, page_attribs);
-      if (x == *i.e)
-        return ret;
+      Mword raw = pte.del_rights(*pte.e, rights);
+      if (raw == *pte.e)
+        return flags;
 
-      *i.e = x;
+      *pte.e = raw;
     }
   else
-    i.clear();
+    pte.clear();
 
   //i.update_tlb(Virt_addr::val(virt), c_asid(), c_vzguestid());
 
-  return ret;
+  return flags;
 }
 
 PUBLIC inline NEEDS[Mem_space::set_guest_ctl1_rid, <cstdio>]

@@ -213,7 +213,7 @@ Mem_space::dir_shutdown()
 IMPLEMENT inline
 Mem_space::Status
 Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order size,
-		    Attr page_attribs)
+		    Attr page_attribs, bool)
 {
   bool const flush = _current.current() == this;
   assert (cxx::is_zero(cxx::get_lsb(Phys_addr(phys), size)));
@@ -296,22 +296,23 @@ Mem_space::v_lookup(Vaddr /* virt */, Phys_addr* /* phys */,
   return false;
 }
 
-/** Delete page-table entries, or some of the entries' attributes.  This
-    function works for one or multiple mappings (in contrast to v_insert!).
-    @param virt Virtual address of the memory region that should be changed.
-    @param size Size of the memory region that should be changed.
-    @param page_attribs If nonzero, delete only the given page attributes.
-                        Otherwise, delete the whole entries.
-    @return Combined (bit-ORed) page attributes that were removed.  In
-            case of errors, ~Page_all_attribs is additionally bit-ORed in.
+/**
+ * Delete page-table entries, or some of the entries' rights.
+ *
+ * This function works for one or multiple mappings (in contrast to v_insert!).
+ *
+ * \retval #Page::Flags::None()  The entry is already invalid or the page
+ *         access flags were unset before the entry was touched (by this
+ *         function).
+ * \retval otherwise  Combined (bit-ORed) page access flags of the entry
+ *         before it was modified.
  */
 IMPLEMENT
-L4_fpage::Rights
-Mem_space::v_delete(Vaddr /* virt */, Page_order /* size */,
-                    L4_fpage::Rights page_attribs)
+Page::Flags
+Mem_space::v_delete(Vaddr, Page_order, Page::Rights)
 {
   printf("Mem_space::v_delete: ...\n");
-  return page_attribs;
+  return Page::Flags::None();
 }
 
 PUBLIC static inline
@@ -321,5 +322,5 @@ Mem_space::canonize(Page_number v)
 
 IMPLEMENT inline
 void
-Mem_space::v_set_access_flags(Vaddr, L4_fpage::Rights)
+Mem_space::v_add_access_flags(Vaddr, Page::Flags)
 {}

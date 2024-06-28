@@ -246,7 +246,7 @@ Kmem::mmio_remap(Address phys, Mword size)
   next_mmio_page += map_size;
 
   auto attr = Page::Attr(Page::Rights::RW(), Page::Type::Uncached(),
-                         Page::Kern::Global());
+                         Page::Kern::Global(), Page::Flags::None());
   if (kdir)
     {
       if (!kdir->map(phys_page, Virt_addr(virt_page), Virt_size(map_size),

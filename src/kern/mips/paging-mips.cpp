@@ -79,26 +79,33 @@ public:
     unsigned size;
 
   private:
-    static Mword _rights(L4_fpage::Rights r)
+    static Mword _rights(Page::Rights r)
     {
-      typedef L4_fpage::Rights R;
       Mword v = 0;
-      if (r & R::W())    v |= Write;
-      if (!(r & R::X())) v |= XI;
-      if (!(r & R::R())) v |= RI;
+
+      if (r & Page::Rights::W())    v |= Write;
+      if (!(r & Page::Rights::X())) v |= XI;
+      if (!(r & Page::Rights::R())) v |= RI;
+
       return v;
     }
 
     static Mword _attr(Page::Attr attr)
     {
-      typedef Page::Type T;
-      typedef Page::Kern K;
       Mword v = 0;
-      if (attr.type == T::Normal())   v = Tlb_entry::cached   << PWField_ptei;
-      if (attr.type == T::Buffered()) v = Tlb_entry::C_UCA    << PWField_ptei;
-      if (attr.type == T::Uncached()) v = Tlb_entry::Uncached << PWField_ptei;
-      if (attr.kern & K::Global())    v |= Tlb_entry::Global  << PWField_ptei;
+
+      if (attr.type == Page::Type::Normal())
+        v = Tlb_entry::cached   << PWField_ptei;
+      if (attr.type == Page::Type::Buffered())
+        v = Tlb_entry::C_UCA    << PWField_ptei;
+      if (attr.type == Page::Type::Uncached())
+        v = Tlb_entry::Uncached << PWField_ptei;
+
+      if (attr.kern & Page::Kern::Global())
+        v |= Tlb_entry::Global  << PWField_ptei;
+
       v |= _rights(attr.rights);
+
       return v;
     }
 
@@ -110,35 +117,38 @@ public:
       return Phys_addr((*e << (6 - PWField_ptei)) & (~0UL << 12));
     }
 
-    L4_fpage::Rights rights() const
+    Page::Rights rights() const
     {
-      typedef L4_fpage::Rights R;
-      R r = R::U();
-      if (!(*e & RI)) r |= R::R();
-      if (*e & Write) r |= R::W();
-      if (!(*e & XI)) r |= R::X();
+      Page::Rights r = Page::Rights::U();
+
+      if (!(*e & RI)) r |= Page::Rights::R();
+      if (*e & Write) r |= Page::Rights::W();
+      if (!(*e & XI)) r |= Page::Rights::X();
+
       return r;
     }
 
     Page::Attr attribs() const
     {
-      typedef Page::Type T;
-      typedef Page::Kern K;
-
-      Page::Attr a;
-      a.type = T::Normal();
-      a.rights = rights();
-      a.kern = K();
       Mword v = *e;
       Mword ct = (v >> PWField_ptei) & Tlb_entry::Cache_mask;
-      if (ct == Tlb_entry::cached)
-        a.type = T::Normal();
-      else if (ct == Tlb_entry::Uncached)
-        a.type = T::Uncached();
-      else if (ct == Tlb_entry::C_UCA)
-        a.type = T::Buffered();
 
-      return a;
+      Page::Rights r = rights();
+
+      Page::Type t = Page::Type::Normal();
+      if (ct == Tlb_entry::cached)
+        t = Page::Type::Normal();
+      else if (ct == Tlb_entry::Uncached)
+        t = Page::Type::Uncached();
+      else if (ct == Tlb_entry::C_UCA)
+        t = Page::Type::Buffered();
+
+      return Page::Attr(r, t, Page::Kern::None(), Page::Flags::None());
+    }
+
+    Page::Flags access_flags() const
+    {
+      return Page::Flags::None();
     }
 
     static Mword make_page(Phys_addr pa, Page::Attr attr)
@@ -149,7 +159,7 @@ public:
       return v;
     }
 
-    static Mword del_rights(Mword orig, L4_fpage::Rights del)
+    static Mword del_rights(Mword orig, Page::Rights del)
     {
       Mword r = _rights(del) ^ Rights_neg_mask;
       orig ^= Rights_neg_mask;

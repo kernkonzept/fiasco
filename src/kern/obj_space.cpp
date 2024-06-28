@@ -77,8 +77,7 @@ public:
                 Page_order *size = 0, Attr *attribs = 0);
 
   FIASCO_SPACE_VIRTUAL
-  L4_fpage::Rights v_delete(V_pfn virt, Page_order size,
-                            L4_fpage::Rights page_attribs);
+  Page::Flags v_delete(V_pfn virt, Page_order order, Page::Rights rights);
 
   FIASCO_SPACE_VIRTUAL
   Status v_insert(Phys_addr phys, V_pfn const &virt, Page_order size,

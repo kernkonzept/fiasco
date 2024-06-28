@@ -135,10 +135,10 @@ Pte_ptr::_attribs(Page::Attr attr) const
     v |= Page::NONCACHEABLE;
 
   Mword acc = 0;
-  bool u(attr.rights & L4_fpage::Rights::U());
-  bool r(attr.rights & L4_fpage::Rights::R());
-  bool w(attr.rights & L4_fpage::Rights::W());
-  bool x(attr.rights & L4_fpage::Rights::X());
+  bool u(attr.rights & Page::Rights::U());
+  bool r(attr.rights & Page::Rights::R());
+  bool w(attr.rights & Page::Rights::W());
+  bool x(attr.rights & Page::Rights::X());
 
   if (u)
     {
@@ -166,7 +166,7 @@ Pte_ptr::add_attribs(Page::Attr attr)
   auto p = (origpte & Accperm_mask) >> Accperm_shift;
   auto old = p;
 
-  if (attr.rights & L4_fpage::Rights::W())
+  if (attr.rights & Page::Rights::W())
     {
       switch (p)
         {
@@ -176,7 +176,7 @@ Pte_ptr::add_attribs(Page::Attr attr)
         }
     }
 
-  if (attr.rights & L4_fpage::Rights::X())
+  if (attr.rights & Page::Rights::X())
     {
       switch (p)
         {

@@ -24,8 +24,7 @@ public:
   bool v_lookup(V_pfn const &virt, Phys_addr *phys,
                 Page_order *size, Attr *attribs);
 
-  L4_fpage::Rights v_delete(V_pfn virt, Page_order size,
-                            L4_fpage::Rights page_attribs);
+  Page::Flags v_delete(V_pfn virt, Page_order order, Page::Rights rights);
   Obj::Insert_result v_insert(Phys_addr phys, V_pfn const &virt,
                               Page_order size, Attr page_attribs);
 
@@ -239,11 +238,11 @@ Obj_space_virt<SPACE>::lookup_local(Cap_index virt, L4_fpage::Rights *rights)
 
 IMPLEMENT template< typename SPACE >
 inline NEEDS[<cassert>, Obj_space_virt::cap_virt, Obj_space_virt::get_cap]
-L4_fpage::Rights FIASCO_FLATTEN
-Obj_space_virt<SPACE>::v_delete(V_pfn virt, [[maybe_unused]] Page_order size,
-                                L4_fpage::Rights page_attribs)
+Page::Flags FIASCO_FLATTEN
+Obj_space_virt<SPACE>::v_delete(V_pfn virt, [[maybe_unused]] Page_order order,
+                                Page::Rights rights)
 {
-  assert (size == Page_order(0));
+  assert(order == Page_order(0));
 
   Entry *c;
   if (Optimize_local
@@ -251,24 +250,24 @@ Obj_space_virt<SPACE>::v_delete(V_pfn virt, [[maybe_unused]] Page_order size,
     {
       c = cap_virt(virt);
       if (!c)
-        return L4_fpage::Rights(0);
+        return Page::Flags::None();
 
       Capability cap = Mem_layout::read_special_safe(&c->capability());
       if (!cap.valid())
-        return L4_fpage::Rights(0);
+        return Page::Flags::None();
     }
   else
     c = get_cap(virt);
 
   if (c && c->valid())
     {
-      if (page_attribs & L4_fpage::Rights::R())
+      if (rights & L4_fpage::Rights::R())
         c->invalidate();
       else
-        c->del_rights(page_attribs & L4_fpage::Rights::CWSD());
+        c->del_rights(rights & L4_fpage::Rights::CWSD());
     }
 
-  return L4_fpage::Rights(0);
+  return Page::Flags::None();
 }
 
 IMPLEMENT  template< typename SPACE >

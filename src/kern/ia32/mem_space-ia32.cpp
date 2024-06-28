@@ -249,21 +249,13 @@ Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order size,
 
 IMPLEMENT
 void
-Mem_space::v_set_access_flags(Vaddr virt, L4_fpage::Rights access_flags)
+Mem_space::v_add_access_flags(Vaddr virt, Page::Flags flags)
 {
-  auto i = _dir->walk(virt);
-
-  if (EXPECT_FALSE(!i.is_valid()))
+  auto pte = _dir->walk(virt);
+  if (EXPECT_FALSE(!pte.is_valid()))
     return;
 
-  unsigned page_attribs = 0;
-
-  if (access_flags & L4_fpage::Rights::R())
-    page_attribs |= Page_referenced;
-  if (access_flags & L4_fpage::Rights::W())
-    page_attribs |= Page_dirty;
-
-  i.add_attribs(page_attribs);
+  pte.add_flags(flags);
 }
 
 /**
@@ -297,35 +289,37 @@ Mem_space::v_lookup(Vaddr virt, Phys_addr *phys,
 }
 
 IMPLEMENT
-L4_fpage::Rights
-Mem_space::v_delete(Vaddr virt, Page_order size, L4_fpage::Rights page_attribs)
+Page::Flags
+Mem_space::v_delete(Vaddr virt, Page_order order, Page::Rights rights)
 {
-  assert (cxx::is_zero(cxx::get_lsb(Virt_addr(virt), size)));
+  assert(cxx::is_zero(cxx::get_lsb(Virt_addr(virt), order)));
 
-  auto i = _dir->walk(virt);
+  auto pte = _dir->walk(virt);
 
-  if (EXPECT_FALSE (! i.is_valid()))
-    return L4_fpage::Rights(0);
+  if (EXPECT_FALSE(!pte.is_valid()))
+    return Page::Flags::None();
 
-  assert (! (*i.pte & Pt_entry::global())); // Cannot unmap shared pages
+  assert(!(*pte.pte & Pt_entry::global())); // Cannot unmap shared pages
 
-  L4_fpage::Rights ret = i.access_flags();
+  Page::Flags flags = pte.access_flags();
 
-  if (! (page_attribs & L4_fpage::Rights::R()))
+  if (!(rights & Page::Rights::R()))
     {
       // downgrade PDE (superpage) rights
-      i.del_rights(page_attribs);
-      page_protect(cxx::int_value<Virt_addr>(virt), Address{1} << cxx::int_value<Page_order>(size),
-                   *i.pte & Page_all_attribs);
+      pte.del_rights(rights);
+      page_protect(cxx::int_value<Virt_addr>(virt),
+                   Address{1} << cxx::int_value<Page_order>(order),
+                   *pte.pte & Page_all_attribs);
     }
   else
     {
       // delete PDE (superpage)
-      i.clear();
-      page_unmap(cxx::int_value<Virt_addr>(virt), Address{1} << cxx::int_value<Page_order>(size));
+      pte.clear();
+      page_unmap(cxx::int_value<Virt_addr>(virt),
+                 Address{1} << cxx::int_value<Page_order>(order));
     }
 
-  return ret;
+  return flags;
 }
 
 PRIVATE

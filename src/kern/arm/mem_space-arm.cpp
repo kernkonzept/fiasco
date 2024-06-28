@@ -342,26 +342,27 @@ Mem_space::v_lookup(Vaddr virt, Phys_addr *phys,
 }
 
 IMPLEMENT
-L4_fpage::Rights
-Mem_space::v_delete(Vaddr virt, [[maybe_unused]] Page_order size,
-                    L4_fpage::Rights page_attribs)
+Page::Flags
+Mem_space::v_delete(Vaddr virt, [[maybe_unused]] Page_order order,
+                    Page::Rights rights)
 {
-  assert (cxx::is_zero(cxx::get_lsb(Virt_addr(virt), size)));
-  auto i = _dir->walk(virt);
+  assert(cxx::is_zero(cxx::get_lsb(Virt_addr(virt), order)));
 
-  if (EXPECT_FALSE (! i.is_valid()))
-    return L4_fpage::Rights(0);
+  auto pte = _dir->walk(virt);
 
-  L4_fpage::Rights ret = i.access_flags();
+  if (EXPECT_FALSE(!pte.is_valid()))
+    return Page::Flags::None();
 
-  if (! (page_attribs & L4_fpage::Rights::R()))
-    i.del_rights(page_attribs);
+  Page::Flags flags = pte.access_flags();
+
+  if (!(rights & Page::Rights::R()))
+    pte.del_rights(rights);
   else
-    i.clear();
+    pte.clear();
 
-  i.write_back_if(_current.current() == this, c_asid());
+  pte.write_back_if(_current.current() == this, c_asid());
 
-  return ret;
+  return flags;
 }
 
 
@@ -598,19 +599,20 @@ Mem_space::v_lookup(Vaddr virt, Phys_addr *phys,
     *phys = virt;
   if (page_attribs)
     *page_attribs = Attr(r->attr().rights(), r->attr().type(),
-                         Page::Kern::None());
+                         Page::Kern::None(), Page::Flags::None());
 
   return true;
 }
 
 IMPLEMENT
-L4_fpage::Rights
-Mem_space::v_delete(Vaddr virt, Page_order size,
-                    L4_fpage::Rights rights)
+Page::Flags
+Mem_space::v_delete(Vaddr virt, Page_order order,
+                    Page::Rights rights)
 {
-  assert (cxx::is_zero(cxx::get_lsb(Virt_addr(virt), size)));
+  assert(cxx::is_zero(cxx::get_lsb(Virt_addr(virt), order)));
+
   Mword start = Vaddr::val(virt);
-  Mword end = Vaddr::val(virt) + (1UL << Page_order::val(size)) - 1U;
+  Mword end = Vaddr::val(virt) + (1UL << Page_order::val(order)) - 1U;
   Mpu_region_attr attr;
 
   auto guard = lock_guard(_lock);
@@ -623,13 +625,13 @@ Mem_space::v_delete(Vaddr virt, Page_order size,
   auto touched = _dir->del(start, end, &attr);
   assert(touched); // Deleting regions must never fail.
   if (EXPECT_FALSE(touched.value().is_empty()))
-    return L4_fpage::Rights(0);
+    return Page::Flags::None();
 
   mpu_state_mark_dirty();
 
   // Re-add if page stays readable. If the attributes are compatible the
   // regions will be joined again.
-  if (!(rights & L4_fpage::Rights::R()))
+  if (!(rights & Page::Rights::R()))
     {
       Mpu_region_attr new_attr = attr;
       new_attr.del_rights(rights);
@@ -651,11 +653,11 @@ Mem_space::v_delete(Vaddr virt, Page_order size,
   if (Debug_free)
     {
       printf("Mem_space::v_delete(%p, " L4_MWORD_FMT "/%u): ", this, start,
-        Page_order::val(size));
+             Page_order::val(order));
       _dir->dump();
     }
 
-  return attr.rights();
+  return Page::Flags::None();
 }
 
 PUBLIC inline
@@ -766,7 +768,7 @@ IMPLEMENTATION [arm_v5 || arm_v6 || arm_v7 || arm_v8]:
 
 IMPLEMENT inline
 void
-Mem_space::v_set_access_flags(Vaddr, L4_fpage::Rights)
+Mem_space::v_add_access_flags(Vaddr, Page::Flags)
 {}
 
 //----------------------------------------------------------------------------

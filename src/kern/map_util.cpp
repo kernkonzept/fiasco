@@ -234,36 +234,39 @@ typedef cxx::int_type<unsigned, Mapping_type_t> Mapping_type;
 
 template< typename SPACE, typename M, typename O >
 inline
-L4_fpage::Rights
-v_delete(M *m, O order, L4_fpage::Rights flush_rights,
+Page::Flags
+v_delete(M *m, O order, Page::Rights rights,
          [[maybe_unused]] bool full_flush, Auto_tlb_flush<SPACE> &tlb)
 {
-  SPACE* child_space = m->space();
-  assert_opt (child_space);
-  L4_fpage::Rights res = child_space->v_delete(SPACE::to_virt(m->pfn(order)),
-                                               SPACE::to_order(order),
-                                               flush_rights);
+  SPACE *child_space = m->space();
+  assert_opt(child_space);
+
+  Page::Flags flags = child_space->v_delete(SPACE::to_virt(m->pfn(order)),
+                                            SPACE::to_order(order), rights);
   tlb.add_page(child_space, SPACE::to_virt(m->pfn(order)), SPACE::to_order(order));
-  assert (full_flush != child_space->v_lookup(SPACE::to_virt(m->pfn(order))));
-  return res;
+
+  assert(full_flush != child_space->v_lookup(SPACE::to_virt(m->pfn(order))));
+
+  return flags;
 }
 
 template<>
 inline
-L4_fpage::Rights
-v_delete<Obj_space>(Kobject_mapdb::Mapping *m, int, L4_fpage::Rights flush_rights,
-                    bool /*full_flush*/, Auto_tlb_flush<Obj_space> &)
+Page::Flags
+v_delete<Obj_space>(Kobject_mapdb::Mapping *m, int, Page::Rights rights,
+                    bool, Auto_tlb_flush<Obj_space> &)
 {
-  Obj_space::Entry *c = static_cast<Obj_space::Entry*>(m);
+  Obj_space::Entry *c = static_cast<Obj_space::Entry *>(m);
 
   if (c->valid())
     {
-      if (flush_rights & L4_fpage::Rights::CR())
+      if (rights & Page::Rights::CR())
         c->invalidate();
       else
-        c->del_rights(flush_rights & L4_fpage::Rights::CWS());
+        c->del_rights(rights & Page::Rights::CWS());
     }
-  return L4_fpage::Rights(0);
+
+  return Page::Flags::None();
 }
 
 template< typename SIZE_TYPE >
@@ -465,26 +468,26 @@ fpage_map(Space *from, L4_fpage fp_from, Space *to,
     @param me_too If false, only flush recursive mappings.  If true,
                  additionally flush the region in the given address space.
     @param flush_mode determines which access privileges to remove.
-    @return combined (bit-ORed) access status of unmapped physical pages
+    @return combined (bit-ORed) access flags of unmapped physical pages
 */
 // Don't inline -- it eats too much stack.
 // inline NEEDS ["config.h", io_fpage_unmap]
-L4_fpage::Rights
+Page::Flags
 fpage_unmap(Space *space, L4_fpage fp, L4_map_mask mask, Kobject ***rl)
 {
-  L4_fpage::Rights ret(0);
+  Page::Flags flags = Page::Flags::None();
   Space::Caps caps = space->caps();
 
   if ((caps & Space::Caps::io()) && (fp.is_iopage() || fp.is_all_spaces()))
-    ret |= io_fpage_unmap(space, fp, mask);
+    flags |= io_fpage_unmap(space, fp, mask);
 
   if ((caps & Space::Caps::obj()) && (fp.is_objpage() || fp.is_all_spaces()))
-    ret |= obj_fpage_unmap(space, fp, mask, rl);
+    flags |= obj_fpage_unmap(space, fp, mask, rl);
 
   if ((caps & Space::Caps::mem()) && (fp.is_mempage() || fp.is_all_spaces()))
-    ret |= mem_fpage_unmap(space, fp, mask);
+    flags |= mem_fpage_unmap(space, fp, mask);
 
-  return ret;
+  return flags;
 }
 
 
@@ -673,14 +676,14 @@ map(MAPDB* mapdb,
               auto addr = SPACE::page_address(rcv_addr, r_order);
               auto size = SPACE::to_size(r_order);
               static_cast<SPACE *>(to_id)->v_delete(addr, r_order,
-                                                    L4_fpage::Rights::FULL());
+                                                    Page::Rights::FULL());
 
               tlb.add_page(to_id, addr, r_order);
 
               MAPDB::foreach_mapping(rcv_frame, SPACE::to_pfn(addr), SPACE::to_pfn(addr + size),
                   [&tlb](typename MAPDB::Mapping *m, typename MAPDB::Order size)
                   {
-                    v_delete<SPACE>(m, size, L4_fpage::Rights::FULL(), true, tlb);
+                    v_delete<SPACE>(m, size, Page::Rights::FULL(), true, tlb);
                   });
 
               mapdb->flush(rcv_frame, L4_map_mask::full(), SPACE::to_pfn(addr),
@@ -754,7 +757,7 @@ map(MAPDB* mapdb,
                                                    SPACE::to_pfn(rcv_addr))))
                       {
                         // Error -- remove mapping again.
-                        to->v_delete(rcv_addr, i_order, L4_fpage::Rights::FULL());
+                        to->v_delete(rcv_addr, i_order, Page::Rights::FULL());
                         tlb.add_page(to, rcv_addr, i_order);
 
                         // may fail due to quota limits
@@ -763,7 +766,7 @@ map(MAPDB* mapdb,
                       }
 
                     from->v_delete(SPACE::page_address(snd_addr, s_order), s_order,
-                                   L4_fpage::Rights::FULL());
+                                   Page::Rights::FULL());
                     tlb.add_page(from, SPACE::page_address(snd_addr, s_order), s_order);
                     Map_traits<SPACE>::free_object(s_phys, reap_list);
                   }
@@ -774,7 +777,7 @@ map(MAPDB* mapdb,
                                        SPACE::to_pfn(i_phys), SPACE::to_pcnt(i_order)))
                       {
                         // Error -- remove mapping again.
-                        to->v_delete(rcv_addr, i_order, L4_fpage::Rights::FULL());
+                        to->v_delete(rcv_addr, i_order, Page::Rights::FULL());
                         tlb.add_page(to, rcv_addr, i_order);
 
                         // XXX This is not race-free as the mapping could have
@@ -835,18 +838,13 @@ map(MAPDB* mapdb,
 inline template<typename MAPDB>
 void
 save_access_flags(Mem_space *space, typename Mem_space::V_pfn page_address,
-                  bool /* me_too */,
-                  typename MAPDB::Frame const& /* mapdb_frame */,
-                  L4_fpage::Rights page_rights)
+                  bool, typename MAPDB::Frame const &, Page::Flags flags)
 {
-  if (L4_fpage::Rights accessed = page_rights & (L4_fpage::Rights::RW()))
-    {
-      space->v_set_access_flags(page_address, accessed);
+  space->v_add_access_flags(page_address, flags);
 
-      // we have no back reference to our parent, so
-      // we cannot store the access rights there in
-      // the me_too case...
-    }
+  // we have no back reference to our parent, so
+  // we cannot store the access rights there in
+  // the me_too case...
 }
 
 // do nothing for IO and OBJs
@@ -855,16 +853,16 @@ template<typename MAPDB, typename SPACE,
 void
 save_access_flags(SPACE *, typename SPACE::V_pfn, bool,
                   typename MAPDB::Frame const &,
-                  L4_fpage::Rights)
+                  Page::Flags)
 {}
 
 
 template <typename SPACE, typename MAPDB> inline
-L4_fpage::Rights
+Page::Flags
 unmap(MAPDB* mapdb, SPACE* space, Space *space_id,
       typename SPACE::V_pfn start,
       typename SPACE::V_pfc size,
-      L4_fpage::Rights rights,
+      Page::Rights rights,
       L4_map_mask mask,
       Mu::Auto_tlb_flush<SPACE> &tlb,
       typename SPACE::Reap_list **reap_list)
@@ -878,7 +876,7 @@ unmap(MAPDB* mapdb, SPACE* space, Space *space_id,
 
   bool me_too = mask.self_unmap();
 
-  L4_fpage::Rights flushed_rights(0);
+  Page::Flags flushed_flags = Page::Flags::None();
   V_pfn end = start + size;
   V_pfn const map_max = space->map_max_address();
 
@@ -932,27 +930,25 @@ unmap(MAPDB* mapdb, SPACE* space, Space *space_id,
         // someone else unmapped faster
         continue;		// skip
 
-      L4_fpage::Rights page_rights(0);
+      Page::Flags flags = Page::Flags::None();
 
       // Delete from this address space
       if (me_too)
         {
-          page_rights |=
-            space->v_delete(address, phys_order, rights);
-
+          flags |= space->v_delete(address, phys_order, rights);
           tlb.add_page(space, address, phys_order);
         }
 
       MAPDB::foreach_mapping(mapdb_frame, SPACE::to_pfn(address), SPACE::to_pfn(end),
-          [&page_rights, rights, full_flush, &tlb](typename MAPDB::Mapping *m, typename MAPDB::Order size)
+          [&flags, rights, full_flush, &tlb](typename MAPDB::Mapping *m, typename MAPDB::Order size)
           {
-            page_rights |= v_delete<SPACE>(m, size, rights, full_flush, tlb);
+            flags |= v_delete<SPACE>(m, size, rights, full_flush, tlb);
           });
 
-      flushed_rights |= page_rights;
+      flushed_flags |= flags;
 
       // Store access attributes for later retrieval
-      save_access_flags<MAPDB>(space, page_address, me_too, mapdb_frame, page_rights);
+      save_access_flags<MAPDB>(space, page_address, me_too, mapdb_frame, flags);
 
       if (full_flush)
         {
@@ -964,7 +960,7 @@ unmap(MAPDB* mapdb, SPACE* space, Space *space_id,
       mapdb_frame.clear();
     }
 
-  return flushed_rights;
+  return flushed_flags;
 }
 
 //----------------------------------------------------------------------------
@@ -983,9 +979,8 @@ io_map(Space *, L4_fpage const &, Space *, L4_fpage const &, L4_msg_item)
 }
 
 inline
-L4_fpage::Rights
-io_fpage_unmap(Space * /*space*/, L4_fpage const &/*fp*/, L4_map_mask)
+Page::Flags
+io_fpage_unmap(Space *, L4_fpage const &, L4_map_mask)
 {
-  return L4_fpage::Rights(0);
+  return Page::Flags::None();
 }
-

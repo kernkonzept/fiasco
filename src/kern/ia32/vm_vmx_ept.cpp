@@ -103,25 +103,22 @@ private:
 
     Attr attribs() const
     {
-      typedef L4_fpage::Rights R;
-      typedef Page::Type T;
-
       auto raw = access_once(e);
 
-      R r = R::UR();
-      if (raw & 2) r |= R::W();
-      if (raw & 4) r |= R::X();
+      Page::Rights r = Page::Rights::UR();
+      if (raw & 2) r |= Page::Rights::W();
+      if (raw & 4) r |= Page::Rights::X();
 
-      T t;
+      Page::Type t;
       switch (raw & 0x38)
         {
-        case (0 << 3): t = T::Uncached(); break;
-        case (1 << 3): t = T::Buffered(); break;
+        case (0 << 3): t = Page::Type::Uncached(); break;
+        case (1 << 3): t = Page::Type::Buffered(); break;
         default:
-        case (6 << 3): t = T::Normal(); break;
+        case (6 << 3): t = Page::Type::Normal(); break;
         }
 
-      return Attr(r, t, Page::Kern::None());
+      return Attr(r, t, Page::Kern::None(), Page::Flags::None());
     }
 
     Unsigned64 entry() const { return *e; }
@@ -132,19 +129,19 @@ private:
     void write_back_if(bool) const {}
     static void write_back(void *, void*) {}
 
-    L4_fpage::Rights access_flags() const
+    Page::Flags access_flags() const
     {
-      return L4_fpage::Rights(0);
+      return Page::Flags::None();
     }
 
-    void del_rights(L4_fpage::Rights r)
+    void del_rights(Page::Rights r)
     {
       Unsigned64 dr = 0;
 
-      if (r & L4_fpage::Rights::W())
+      if (r & Page::Rights::W())
         dr = 2;
 
-      if (r & L4_fpage::Rights::X())
+      if (r & Page::Rights::X())
         dr |= 4;
 
       if (dr)
@@ -153,17 +150,14 @@ private:
 
     Unsigned64 make_page(Phys_mem_addr addr, Page::Attr attr)
     {
-      typedef L4_fpage::Rights R;
-      typedef Page::Type T;
-
       Unsigned64 r = (level < 3) ? 1ULL << 7 : 0ULL;
       r |= 1; // R
-      if (attr.rights & R::W()) r |= 2;
-      if (attr.rights & R::X()) r |= 4;
+      if (attr.rights & Page::Rights::W()) r |= 2;
+      if (attr.rights & Page::Rights::X()) r |= 4;
 
-      if (attr.type == T::Normal())   r |= 6 << 3;
-      if (attr.type == T::Buffered()) r |= 1 << 3;
-      if (attr.type == T::Uncached()) r |= 0;
+      if (attr.type == Page::Type::Normal())   r |= 6 << 3;
+      if (attr.type == Page::Type::Buffered()) r |= 1 << 3;
+      if (attr.type == Page::Type::Uncached()) r |= 0;
 
       return cxx::int_value<Phys_mem_addr>(addr) | r;
     }
@@ -318,37 +312,37 @@ Vm_vmx_ept::v_insert(Mem_space::Phys_addr phys, Mem_space::Vaddr virt,
 }
 
 PUBLIC
-L4_fpage::Rights
-Vm_vmx_ept::v_delete(Mem_space::Vaddr virt, Mem_space::Page_order size,
-                     L4_fpage::Rights page_attribs) override
+Page::Flags
+Vm_vmx_ept::v_delete(Mem_space::Vaddr virt,
+                     [[maybe_unused]] Mem_space::Page_order order,
+                     Page::Rights rights) override
 {
-  (void)size;
-  assert(cxx::is_zero(cxx::get_lsb(Virt_addr(virt), size)));
+  assert(cxx::is_zero(cxx::get_lsb(Virt_addr(virt), order)));
 
-  auto i = _ept->walk(virt);
+  auto pte = _ept->walk(virt);
 
-  if (EXPECT_FALSE (! i.is_valid()))
-    return L4_fpage::Rights(0);
+  if (EXPECT_FALSE(!pte.is_valid()))
+    return Page::Flags::None();
 
-  L4_fpage::Rights ret = i.access_flags();
+  Page::Flags flags = pte.access_flags();
 
-  if (!(page_attribs & L4_fpage::Rights::R()))
+  if (!(rights & Page::Rights::R()))
     {
       // downgrade PDE (superpage) rights
-      i.del_rights(page_attribs);
+      pte.del_rights(rights);
     }
   else
     {
       // delete PDE (superpage)
-      i.clear();
+      pte.clear();
     }
 
-  return ret;
+  return flags;
 }
 
 PUBLIC
 void
-Vm_vmx_ept::v_set_access_flags(Mem_space::Vaddr, L4_fpage::Rights) override
+Vm_vmx_ept::v_add_access_flags(Mem_space::Vaddr, Page::Flags) override
 {}
 
 PUBLIC static

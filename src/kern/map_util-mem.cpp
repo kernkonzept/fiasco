@@ -68,7 +68,8 @@ mem_map(Space *from, L4_fpage const &fp_from,
     }
 
   Mem_space::Attr attribs(fp_from.rights() | L4_fpage::Rights::U(),
-                          control.mem_type(), Page::Kern::None());
+                          control.mem_type(), Page::Kern::None(),
+                          Page::Flags::None());
 
   Mu::Auto_tlb_flush<Mem_space> tlb;
 
@@ -86,13 +87,13 @@ mem_map(Space *from, L4_fpage const &fp_from,
     \param fp     flexpage descriptor of address-space range that should
                   be flushed
     \param mask   Flags for unmap operation
-    \return       combined (bit-ORed) access status of unmapped physical pages
+    \return       combined (bit-ORed) access flags of unmapped physical pages
 */
-L4_fpage::Rights __attribute__((nonnull(1)))
+Page::Flags __attribute__((nonnull(1)))
 mem_fpage_unmap(Space *space, L4_fpage fp, L4_map_mask mask)
 {
   if (fp.order() < L4_fpage::Mem_addr::Shift)
-    return L4_fpage::Rights(0);
+    return Page::Flags::None();
 
   Mem_space::V_order o = Mu::get_order_from_fp<Mem_space::V_pfc>(fp, L4_fpage::Mem_addr::Shift);
   Mem_space::V_pfc size = Mem_space::V_pfc(1) << o;
@@ -100,9 +101,10 @@ mem_fpage_unmap(Space *space, L4_fpage fp, L4_map_mask mask)
 
   start = cxx::mask_lsb(start, o);
   Mu::Auto_tlb_flush<Mem_space> tlb;
+
   return unmap<Mem_space>(mapdb_mem.get(), space, space,
                start, size, fp.rights(), mask, tlb,
-               static_cast<Mem_space::Reap_list**>(nullptr));
+               static_cast<Mem_space::Reap_list **>(nullptr));
 }
 
 enum { Max_num_page_sizes = 7 };

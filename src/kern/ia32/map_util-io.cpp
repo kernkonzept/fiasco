@@ -91,15 +91,14 @@ io_map(Space *from, L4_fpage const &fp_from,
     Unmap the region described by "fp" from the IO
     space "space" and/or the IO spaces the mappings have been
     mapped into.
-    XXX not implemented yet
+
     @param space address space that should be flushed
     @param fp    IO flexpage descriptor of IO-space range that should
                  be flushed
-    @param me_too If false, only flush recursive mappings. If true,
-                 additionally flush the region in the given address space.
-    @return true if successful
+
+    @retval #Page::Flags::None()
 */
-L4_fpage::Rights __attribute__((nonnull(1)))
+Page::Flags __attribute__((nonnull(1)))
 io_fpage_unmap(Space *space, L4_fpage fp, L4_map_mask mask)
 {
   Order size = Mu::get_order_from_fp<Io_space::V_pfc>(fp);
@@ -118,4 +117,3 @@ io_fpage_unmap(Space *space, L4_fpage fp, L4_map_mask mask)
                          Io_space::V_pfc(1) << size, fp.rights(), mask, tlb,
                          nullptr);
 }
-

@@ -105,23 +105,31 @@ Pte_ptr::page_addr() const
 
 PUBLIC static inline ALWAYS_INLINE
 Mword
-Pte_ptr::make_attribs(Page::Attr attr)
+Pte_ptr::make_flags(Page::Flags flags)
 {
-  typedef L4_fpage::Rights R;
-  typedef Page::Type T;
-  typedef Page::Kern K;
-
   Mword r = 0;
 
-  if (attr.rights & R::W()) r |= Writable;
-  if (attr.rights & R::U()) r |= User;
-  if (!(attr.rights & R::X())) r |= XD;
+  if (flags & Page::Flags::Referenced()) r |= Referenced;
+  if (flags & Page::Flags::Dirty()) r |= Dirty;
 
-  if (attr.type == T::Normal()) r |= Page::CACHEABLE;
-  if (attr.type == T::Buffered()) r |= Page::BUFFERED;
-  if (attr.type == T::Uncached()) r |= Page::NONCACHEABLE;
+  return r;
+}
 
-  if (attr.kern & K::Global()) r |= global();
+PUBLIC static inline ALWAYS_INLINE
+Mword
+Pte_ptr::make_attribs(Page::Attr attr)
+{
+  Mword r = make_flags(attr.flags);
+
+  if (attr.rights & Page::Rights::W()) r |= Writable;
+  if (attr.rights & Page::Rights::U()) r |= User;
+  if (!(attr.rights & Page::Rights::X())) r |= XD;
+
+  if (attr.type == Page::Type::Normal()) r |= Page::CACHEABLE;
+  if (attr.type == Page::Type::Buffered()) r |= Page::BUFFERED;
+  if (attr.type == Page::Type::Uncached()) r |= Page::NONCACHEABLE;
+
+  if (attr.kern & Page::Kern::Global()) r |= global();
 
   return r;
 }
@@ -154,31 +162,31 @@ PUBLIC inline
 Page::Attr
 Pte_ptr::attribs() const
 {
-  typedef L4_fpage::Rights R;
-  typedef Page::Type T;
+  Mword raw = *pte;
 
-  Mword _raw = *pte;
-  R r = R::R();
-  if (_raw & Writable) r |= R::W();
-  if (_raw & User) r |= R::U();
-  if (!(_raw & XD)) r |= R::X();
+  Page::Rights r = Page::Rights::R();
+  if (raw & Writable) r |= Page::Rights::W();
+  if (raw & User) r |= Page::Rights::U();
+  if (!(raw & XD)) r |= Page::Rights::X();
 
-  T t;
-  switch (_raw & Page::Cache_mask)
+  Page::Type t;
+  switch (raw & Page::Cache_mask)
     {
     default:
-    case Page::CACHEABLE:    t = T::Normal(); break;
-    case Page::BUFFERED:     t = T::Buffered(); break;
-    case Page::NONCACHEABLE: t = T::Uncached(); break;
+    case Page::CACHEABLE:    t = Page::Type::Normal(); break;
+    case Page::BUFFERED:     t = Page::Type::Buffered(); break;
+    case Page::NONCACHEABLE: t = Page::Type::Uncached(); break;
     }
-  // do not care for kernel special flags, as this is used for user
-  // level mappings
-  return Page::Attr(r, t, Page::Kern::None());
+
+  Page::Kern k = Page::Kern::None();
+  if (raw & global()) k |= Page::Kern::Global();
+
+  Page::Flags f = Page::Flags::None();
+  if (raw & Referenced) f |= Page::Flags::Referenced();
+  if (raw & Dirty) f |= Page::Flags::Dirty();
+
+  return Page::Attr(r, t, k, f);
 }
-PUBLIC inline
-void
-Pte_ptr::add_attribs(Mword attr)
-{ *pte |= attr; }
 
 PUBLIC inline
 unsigned char
@@ -186,27 +194,25 @@ Pte_ptr::page_order() const
 { return Pdir::page_order_for_level(level); }
 
 PUBLIC inline NEEDS["atomic.h"]
-L4_fpage::Rights
-Pte_ptr::access_flags() const
+Page::Flags
+Pte_ptr::access_flags()
 {
-
   if (!is_valid())
-    return L4_fpage::Rights(0);
+    return Page::Flags::None();
 
-  L4_fpage::Rights r;
+  Page::Flags f = Page::Flags::None();
   for (;;)
     {
-      auto raw = *pte;
+      Mword raw = *pte;
 
-      if (raw & Dirty)
-        r = L4_fpage::Rights::RW();
-      else if (raw & Referenced)
-        r = L4_fpage::Rights::R();
-      else
-        return L4_fpage::Rights(0);
+      if (raw & Referenced) f |= Page::Flags::Referenced();
+      if (raw & Dirty) f |= Page::Flags::Dirty();
+
+      if (f == Page::Flags::None())
+        return f;
 
       if (cas(pte, raw, raw & ~(Dirty | Referenced)))
-        return r;
+        return f;
     }
 }
 
@@ -227,17 +233,27 @@ Pte_ptr::write_back_if(bool)
 
 PUBLIC inline
 void
-Pte_ptr::del_attribs(Mword attr)
-{ *pte &= ~attr; }
+Pte_ptr::add_attribs(Page::Attr attr)
+{ *pte |= make_attribs(attr); }
 
 PUBLIC inline
 void
-Pte_ptr::del_rights(L4_fpage::Rights r)
+Pte_ptr::del_attribs(Page::Attr attr)
+{ *pte &= ~make_attribs(attr); }
+
+PUBLIC inline
+void
+Pte_ptr::add_flags(Page::Flags flags)
+{ *pte |= make_flags(flags); }
+
+PUBLIC inline
+void
+Pte_ptr::del_rights(Page::Rights r)
 {
-  if (r & L4_fpage::Rights::W())
+  if (r & Page::Rights::W())
     *pte &= ~Writable;
 
-  if (r & L4_fpage::Rights::X())
+  if (r & Page::Rights::X())
     *pte |= XD;
 }
 

@@ -76,7 +76,7 @@ Task::map_gicc_page(L4_msg_tag tag, Utcb *utcb)
                  Virt_addr(u_addr.get()),
                  Mem_space::Page_order(Config::PAGE_SHIFT),
                  Mem_space::Attr(L4_fpage::Rights::URW(), Page::Type::Uncached(),
-                                 Page::Kern::None()));
+                                 Page::Kern::None(), Page::Flags::None()));
 
   switch (res)
     {
