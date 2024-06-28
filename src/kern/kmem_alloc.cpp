@@ -319,6 +319,13 @@ Kmem_alloc::init()
   Kmem_alloc::allocator(al);
 }
 
+PUBLIC static
+bool
+Kmem_alloc::ready()
+{
+  return _alloc != nullptr;
+}
+
 PUBLIC
 void
 Kmem_alloc::dump() const
