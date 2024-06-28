@@ -579,8 +579,7 @@ Jdb_tcb::show(Thread *t, int level, bool dump_only)
 #endif
 
   if (!t)
-    t = Jdb::get_thread(Jdb::current_cpu);
-
+    t = Jdb::get_thread(Jdb::triggered_on_cpu);
   if (!t)
     return NOTHING;
 
@@ -1133,7 +1132,7 @@ IMPLEMENT
 void
 Jdb_thread_name_ext::ext()
 {
-  Thread *thread = Jdb::get_thread(Jdb::current_cpu);
+  Thread *thread = Jdb::get_thread(Jdb::triggered_on_cpu);
   if (thread)
     {
       Jdb_kobject_name *nx = Jdb_kobject_extension::find_extension<Jdb_kobject_name>(thread);

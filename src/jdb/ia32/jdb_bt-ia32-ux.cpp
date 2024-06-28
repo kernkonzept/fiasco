@@ -167,7 +167,7 @@ struct Is_current
 static void
 Jdb_bt::get_kernel_eip_ebp(Mword &eip1, Mword &eip2, Mword &ebp)
 {
-  if (tid == Jdb::get_thread(Jdb::current_cpu))
+  if (tid == Jdb::get_thread(Jdb::triggered_on_cpu))
     ebp  = eip1 = eip2 = 0;
   else
     {
@@ -288,7 +288,7 @@ Jdb_bt::action(int cmd, void *&args, char const *&fmt, int &next_char) override
       if (args == &dummy)
 	{
 	  // default value for thread
-	  tid  = Jdb::get_thread(Jdb::current_cpu);
+	  tid  = Jdb::get_thread(Jdb::triggered_on_cpu);
 	  fmt  = "%C";
 	  args = &first_char;
 	  return EXTRA_INPUT;

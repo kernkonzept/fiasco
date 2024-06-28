@@ -526,20 +526,21 @@ Jdb::handle_special_cmds(int c)
 	{
 	case 'b': // go until next branch
 	case 'r': // go until current function returns
-	  ss_level.cpu(current_cpu) = 0;
-	  if (code_call.cpu(current_cpu))
+	  ss_level.cpu(triggered_on_cpu) = 0;
+	  if (code_call.cpu(triggered_on_cpu))
 	    {
 	      // increase call level because currently we
 	      // stay on a call instruction
-	      ss_level.cpu(current_cpu)++;
+	      ss_level.cpu(triggered_on_cpu)++;
 	    }
-	  ss_state.cpu(current_cpu) = (c == 'b') ? SS_BRANCH : SS_RETURN;
+	  ss_state.cpu(triggered_on_cpu) = (c == 'b') ? SS_BRANCH : SS_RETURN;
 	  // if we have lbr feature, the processor treats the single
 	  // step flag as step on branches instead of step on instruction
 	  Cpu::boot_cpu()->btf_enable(true);
 	  // fall through
 	case 's': // do one single step
-	  entry_frame.cpu(current_cpu)->flags(entry_frame.cpu(current_cpu)->flags() | EFLAGS_TF);
+	  entry_frame.cpu(triggered_on_cpu)->flags(
+                          entry_frame.cpu(triggered_on_cpu)->flags() | EFLAGS_TF);
 	  hide_statline = false;
 	  return 0;
 	default:

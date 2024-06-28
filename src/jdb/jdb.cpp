@@ -71,7 +71,7 @@ public:
   };
 
   static Per_cpu<Jdb_entry_frame*> entry_frame;
-  static Cpu_number current_cpu;
+  static Cpu_number triggered_on_cpu;
   static Per_cpu<Remote_func> remote_func;
 
   static void write_tsc_s(String_buffer *buf, Signed64 tsc, bool sign);
@@ -169,7 +169,7 @@ char Jdb::next_cmd;			// next global command to execute
 
 char Jdb::hide_statline;		// show status line on enter_kdebugger
 DEFINE_PER_CPU Per_cpu<Jdb_entry_frame*> Jdb::entry_frame;
-Cpu_number Jdb::current_cpu;              // current CPU JDB is running on
+Cpu_number Jdb::triggered_on_cpu = Cpu_number::nil(); // first CPU entered JDB
 bool Jdb::was_input_error;		// error in command sequence
 
 DEFINE_PER_CPU Per_cpu<Jdb::Remote_func> Jdb::remote_func;
@@ -714,7 +714,7 @@ Jdb::remote_work(Cpu_number cpu, cxx::functor<void (Cpu_number)> &&func,
   if (!Cpu::online(cpu))
     return;
 
-  if (cpu == current_cpu)
+  if (cpu == Cpu_number::boot_cpu())
     func(cpu);
   else
     {
@@ -1210,6 +1210,11 @@ Jdb::enter_jdb(Trap_state *ts, Cpu_number cpu)
   // all following exceptions are handled by jdb itself
   in_jdb.cpu(cpu) = true;
 
+  // If entered by Ipi::Debug, a thread on another CPU requested this CPU to
+  // enter. Otherwise, we entered by exception. Remember the first one.
+  if (!e->debug_ipi() && triggered_on_cpu == Cpu_number::nil())
+    triggered_on_cpu = cpu;
+
   if (!open_debug_console(cpu))
     { // not on the master CPU just wait
       close_debug_console(cpu);
@@ -1217,12 +1222,16 @@ Jdb::enter_jdb(Trap_state *ts, Cpu_number cpu)
       return 0;
     }
 
-  Jdb::current_cpu = cpu;
+  // As of here, we are certain that this is the boot CPU!
+  if (triggered_on_cpu == Cpu_number::nil())
+    triggered_on_cpu = Cpu_number::boot_cpu(); // should not happen
+
   // check for kdb_ke debugging interface; only used from kernel context
   if (foreach_cpu(&handle_user_request, true))
     {
       close_debug_console(cpu);
       leave_trap_handler(cpu);
+      triggered_on_cpu = Cpu_number::nil();
       return 0;
     }
 
@@ -1298,6 +1307,7 @@ Jdb::enter_jdb(Trap_state *ts, Cpu_number cpu)
     }
 
   // reenable interrupts
+  triggered_on_cpu = Cpu_number::nil();
   close_debug_console(cpu);
 
   rcv_uart_enable();

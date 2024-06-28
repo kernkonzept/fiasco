@@ -81,7 +81,7 @@ Jdb_input_task_addr::action(void *&args, char const *&fmt, int &next_char)
       // initialize
       // so _task is only valid if it is explicitly set
       _task         = 0;
-      _space        = Jdb::get_space(Jdb::current_cpu);
+      _space        = Jdb::get_space(Jdb::triggered_on_cpu);
       _addr         = Invalid_address;
     }
 

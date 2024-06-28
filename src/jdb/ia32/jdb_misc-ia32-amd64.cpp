@@ -103,7 +103,7 @@ Jdb_misc_debug::action(int cmd, void *&args, char const *&fmt, int &) override
       if (first_char == '+' || first_char == '-')
 	{
 	  putchar(first_char);
-	  Jdb::set_single_step(Jdb::current_cpu, first_char == '+');
+	  Jdb::set_single_step(Jdb::triggered_on_cpu, first_char == '+');
 	  putchar('\n');
 	}
       break;
