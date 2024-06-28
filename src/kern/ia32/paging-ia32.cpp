@@ -103,23 +103,34 @@ Mword
 Pte_ptr::page_addr() const
 { return cxx::mask_lsb(*pte, Pdir::page_order_for_level(level)) & ~Mword{XD}; }
 
+PUBLIC static inline ALWAYS_INLINE
+Mword
+Pte_ptr::make_attribs(Page::Attr attr)
+{
+  typedef L4_fpage::Rights R;
+  typedef Page::Type T;
+  typedef Page::Kern K;
+
+  Mword r = 0;
+
+  if (attr.rights & R::W()) r |= Writable;
+  if (attr.rights & R::U()) r |= User;
+  if (!(attr.rights & R::X())) r |= XD;
+
+  if (attr.type == T::Normal()) r |= Page::CACHEABLE;
+  if (attr.type == T::Buffered()) r |= Page::BUFFERED;
+  if (attr.type == T::Uncached()) r |= Page::NONCACHEABLE;
+
+  if (attr.kern & K::Global()) r |= global();
+
+  return r;
+}
 
 PUBLIC inline
 void
 Pte_ptr::set_attribs(Page::Attr attr)
 {
-  typedef L4_fpage::Rights R;
-  typedef Page::Type T;
-  typedef Page::Kern K;
-  Mword r = 0;
-  if (attr.rights & R::W()) r |= Writable;
-  if (attr.rights & R::U()) r |= User;
-  if (!(attr.rights & R::X())) r |= XD;
-  if (attr.type == T::Normal()) r |= Page::CACHEABLE;
-  if (attr.type == T::Buffered()) r |= Page::BUFFERED;
-  if (attr.type == T::Uncached()) r |= Page::NONCACHEABLE;
-  if (attr.kern & K::Global()) r |= global();
-  *pte = (*pte & ~(ATTRIBS_MASK | Page::Cache_mask)) | r;
+  *pte = (*pte & ~(ATTRIBS_MASK | Page::Cache_mask)) | make_attribs(attr);
 }
 
 PUBLIC inline
@@ -127,16 +138,8 @@ Mword
 Pte_ptr::make_page(Phys_mem_addr addr, Page::Attr attr)
 {
   Mword r = (level < Pdir::Depth) ? Mword{Pse_bit} : 0;
-  typedef L4_fpage::Rights R;
-  typedef Page::Type T;
-  typedef Page::Kern K;
-  if (attr.rights & R::W()) r |= Writable;
-  if (attr.rights & R::U()) r |= User;
-  if (!(attr.rights & R::X())) r |= XD;
-  if (attr.type == T::Normal()) r |= Page::CACHEABLE;
-  if (attr.type == T::Buffered()) r |= Page::BUFFERED;
-  if (attr.type == T::Uncached()) r |= Page::NONCACHEABLE;
-  if (attr.kern & K::Global()) r |= global();
+  r |= make_attribs(attr);
+
   return cxx::int_value<Phys_mem_addr>(addr) | r | Valid;
 }
 
