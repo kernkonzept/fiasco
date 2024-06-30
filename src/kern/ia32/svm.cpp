@@ -126,7 +126,7 @@ Svm::Svm(Cpu_number cpu)
   Unsigned32 eax, ebx, ecx, edx;
   c.cpuid(0x8000000a, &eax, &ebx, &ecx, &edx);
   if (edx & 1)
-      _has_npt = true;
+    _has_npt = true;
 
   printf("CPU%u: SVM enabled, nested paging %ssupported, NASID: %u.\n",
          cxx::int_value<Cpu_number>(cpu), _has_npt ? "" : "not ", ebx);
