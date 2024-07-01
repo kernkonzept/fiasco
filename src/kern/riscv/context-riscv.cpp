@@ -73,7 +73,11 @@ Context::switch_cpu(Context *t)
       // Save state of old context
       "addi sp, sp, -%[stack_align] \n"
       "la t2, 1f                    \n"
-      REG_S " t2, (sp)              \n"
+      REG_S " t2, 0(sp)             \n"
+#ifndef CONFIG_NO_FRAME_PTR
+      // Save frame pointer.
+      REG_S " s0, %[reg_size](sp)   \n"
+#endif
       REG_S " sp, (%[old_sp])       \n"
 
       // Switch to new stack
@@ -85,6 +89,10 @@ Context::switch_cpu(Context *t)
       // Return to saved context entry point
       // (either from a previous context switch or Context::prepare_switch_to)
       REG_L " t2, 0(sp)             \n"
+#ifndef CONFIG_NO_FRAME_PTR
+      // Restore frame pointer.
+      REG_L " s0, %[reg_size](sp)   \n"
+#endif
       "addi sp, sp, %[stack_align]  \n"
       "jr t2                        \n"
 
@@ -95,11 +103,16 @@ Context::switch_cpu(Context *t)
         [new_sp]   "+r" (new_sp),
         [new_this] "+r" (new_this),
         [old_this] "+r" (old_this)
-      : [stack_align] "n" (Cpu::STACK_ALIGNMENT)
+      : [stack_align] "n" (Cpu::STACK_ALIGNMENT),
+        [reg_size] "n" (SZREG)
       : // Inform the compiler that potentially all registers can change
         /* "a0", "a1", */ "a2", "a3", "a4", "a5", "a6", "a7",
         /* "t0", "t1", */ "t2", "t3", "t4", "t5", "t6",
-        "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10",
+#ifdef CONFIG_NO_FRAME_PTR
+        // When compiling without frame pointer just clobber the register.
+        "s0" /* = fp */,
+#endif
+        "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10",
         "s11",
         "ra", "gp", "tp", "memory"
     );
