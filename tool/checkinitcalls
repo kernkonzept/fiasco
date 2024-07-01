@@ -134,7 +134,11 @@ while($_ = shift @ARGV) {
       next;
     }
     if (/^([0-9a-fA-F]+)\s+<(.*)>:$/) {
-      $function = $2;
+      my $candidate = $2;
+      # Ignore compiler-generated labels.
+      if ($candidate !~ /^\.(LFB|LFE|LBB|LBE|LVL)/) {
+        $function = $candidate;
+      }
       next;
     }
     if (/^\s*([0-9a-fA-F]+):\s+R_\S+\s+(\S+\(.*\))\S*\s*$/) {
