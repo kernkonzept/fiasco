@@ -21,15 +21,6 @@ Platform_control::system_off()
   Sbi::shutdown();
 }
 
-IMPLEMENT_OVERRIDE
-void
-Platform_control::system_reboot()
-{
-  if (Sbi::Srst::probe())
-    Sbi::Srst::system_reset(Sbi::Srst::Type_cold_reboot,
-                            Sbi::Srst::Reason_no_reason);
-}
-
 PUBLIC static FIASCO_NORETURN
 void
 Platform_control::stop_cpu()
