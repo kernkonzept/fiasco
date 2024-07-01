@@ -31,8 +31,6 @@ static_assert(sizeof(Trex) / sizeof(Mword) == L4_exception_ipc::Msg_size,
 //----------------------------------------------------------------------------
 IMPLEMENTATION:
 
-#include "thread.h"
-
 PUBLIC inline
 unsigned long
 Trap_state::trapno() const
