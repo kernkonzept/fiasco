@@ -24,6 +24,7 @@ help:
 	@echo "  DEPS.tred.ps   - transitive reduction of DEPS.ps"
 	@echo "  DEPS.tred.svg  - transitive reduction of DEPS.svg"
 	@echo "  doc            - doxygen HTML documentation into docs/"
+	@echo "  report         - show host configuration information"
 	@echo "  TAGS tags      - create tags files"
 
 
@@ -284,3 +285,22 @@ endif # srcdir != NOT_SET
 
 endif # MAKECMDGOALS != help
 
+
+define _ver_fun
+	@echo "$(strip $1) $(or $2,-v):"
+	@$1 $(or $2,-v) $3 || true
+	@echo
+
+endef
+
+define _ver_fun_var
+	@echo -n "$1: "
+	$(call _ver_fun,$($1),$2,$3)
+endef
+
+_ver_fun_vars=$(foreach v,$1,$(call _ver_fun_var,$v,$2,$3))
+
+report:
+	$(call _ver_fun,make)
+	$(call _ver_fun_vars,CC CXX HOST_CC HOST_CXX,-v, 2>&1)
+	$(call _ver_fun_var,LD)
