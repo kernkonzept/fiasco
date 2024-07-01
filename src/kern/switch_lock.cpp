@@ -19,8 +19,8 @@ class Context;
  * it is locked (see clear_no_switch_dirty() and switch_dirty()), even if it is
  * under contention. When the lock no longer exists, valid() returns false.
  *
- * The operations lock(), lock_dirty(), test(), test_and_set(), and
- * test_and_set_dirty() may return #Invalid if the lock does no longer exist.
+ * The operations lock(), test(), test_and_set(), and test_and_set_dirty() may
+ * return #Invalid if the lock does no longer exist.
  *
  * The validity checker is used while acquiring the lock to test if the lock
  * itself exists. We assume that a lock may disappear while we are blocked on
