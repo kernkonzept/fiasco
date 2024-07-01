@@ -44,6 +44,7 @@ Startup::stage2()
 
   Kip_init::init();
   Kmem::init();
+  Kmem_alloc::base_init(&Kmem::boot_map_pmem);
   Kmem_alloc::init();
   Kmem::init_paging();
   Mem_space::init_page_sizes();

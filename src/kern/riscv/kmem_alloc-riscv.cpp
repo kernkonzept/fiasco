@@ -2,13 +2,13 @@ IMPLEMENTATION [riscv]:
 
 #include "boot_infos.h"
 #include "config.h"
-#include "kmem.h"
 #include "paging_bits.h"
 
 #include <cstdio>
 
-IMPLEMENT
-Kmem_alloc::Kmem_alloc()
+PUBLIC static
+void
+Kmem_alloc::base_init(bool (*map_pmem)(Address phys, Mword size))
 {
   Mem_region_map<64> map;
   unsigned long available_size = create_free_map(Kip::k(), &map,
@@ -43,7 +43,7 @@ Kmem_alloc::Kmem_alloc()
                                         Mem_desc::Kernel_tmp));
 
       // Map into virtual address space
-      if (!Kmem::boot_map_pmem(region_start, alloc_size))
+      if (!map_pmem(region_start, alloc_size))
         panic("Kmem_alloc: cannot map physical memory 0x%lx", region_start);
 
       min_virt = Mem_layout::Pmem_start;
@@ -60,3 +60,7 @@ Kmem_alloc::Kmem_alloc()
 
   setup_kmem_from_kip_md_tmp(freemap_size, min_addr_kern);
 }
+
+IMPLEMENT
+Kmem_alloc::Kmem_alloc()
+{}
