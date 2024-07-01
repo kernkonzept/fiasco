@@ -35,7 +35,7 @@ IMPLEMENTATION [riscv]:
 #include "config.h"
 #include "cpu.h"
 #include "kip.h"
-#include "kmem_slab.h"
+#include "kmem_alloc.h"
 #include "mem_unit.h"
 #include "panic.h"
 #include "ram_quota.h"
@@ -43,6 +43,7 @@ IMPLEMENTATION [riscv]:
 
 #include <cassert>
 #include <cstdio>
+#include <cstring>
 
 // The memory for page tables has to be page aligned, however we can not use the
 // aligned attribute to ensure proper alignment, because that would propagate to
@@ -90,8 +91,8 @@ Kmem::init_paging()
   // Reallocate them now in pmem, as pmem_to_phys() would return incorrect
   // results for page tables located in boot_page_memory.
   auto alloc = Kmem_alloc::q_allocator(Ram_quota::root.unwrap());
-  Kmem_slab_t<Kpdir, sizeof(Kpdir)> kdir_alloc;
-  kdir = kdir_alloc.q_new(Ram_quota::root.unwrap());
+  kdir = static_cast<Kpdir*>(alloc.alloc(Bytes(sizeof(Kpdir))));
+  memset(kdir, 0, sizeof(Kpdir));
 
   // Map kernel image.
   if (!kdir->map(boot_virt_to_phys(Virt_addr(Mem_layout::Map_base)),
