@@ -18,9 +18,13 @@ namespace L4
     UARTSFV_RXDATA_DATA  = 0xff,
 
     UARTSFV_TXCTRL_TXEN = 1,
+    UARTSFV_TXCTRL_TXCNT_SHIFT = 16,
+
     UARTSFV_RXCTRL_RXEN = 1,
 
     UARTSFV_IE_RXWM = 2,
+
+    UARTSFV_IP_TXWM = 1,
     UARTSFV_IP_RXWM = 2,
   };
   bool Uart_sifive::startup(Io_register_block const *regs)
@@ -30,8 +34,11 @@ namespace L4
     // Disable TX and RX interrupts
     _regs->write<unsigned>(UARTSFV_IE, 0);
 
-    // Enable RX and TX
-    _regs->write<unsigned>(UARTSFV_TXCTRL, UARTSFV_TXCTRL_TXEN);
+    // Enable TX and set transmit watermark level to 1, i.e. it triggers when
+    // the transmit FIFO is empty.
+    _regs->write<unsigned>(UARTSFV_TXCTRL, UARTSFV_TXCTRL_TXEN
+                                           | 1u << UARTSFV_TXCTRL_TXCNT_SHIFT);
+    // Enable RX
     _regs->write<unsigned>(UARTSFV_RXCTRL, UARTSFV_RXCTRL_RXEN);
 
     return true;
@@ -86,6 +93,13 @@ namespace L4
   int Uart_sifive::tx_avail() const
   {
     return !(_regs->read<unsigned>(UARTSFV_TXDATA) & UARTSFV_TXDATA_FULL);
+  }
+
+  void Uart_sifive::wait_tx_done() const
+  {
+    Poll_timeout_counter i(5000000);
+    while (i.test(!(_regs->read<unsigned>(UARTSFV_IP) & UARTSFV_IP_TXWM)))
+      ;
   }
 
   void Uart_sifive::out_char(char c) const
