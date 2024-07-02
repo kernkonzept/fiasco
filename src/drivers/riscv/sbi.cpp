@@ -555,4 +555,4 @@ Sbi::send_ipi(Mword hart_mask, Mword hart_mask_base = 0)
 IMPLEMENT inline
 void
 Sbi::remote_fence_i(Mword hart_mask)
-{ Legacy::remote_fence_i(hart_mask, 0); }
+{ Legacy::remote_fence_i(hart_mask); }
