@@ -83,21 +83,18 @@ namespace L4
     return _bufchar != -1;
   }
 
+  int Uart_sifive::tx_avail() const
+  {
+    return !(_regs->read<unsigned>(UARTSFV_TXDATA) & UARTSFV_TXDATA_FULL);
+  }
+
   void Uart_sifive::out_char(char c) const
   {
-    Poll_timeout_counter i(3000000);
-    while (i.test(_regs->read<unsigned>(UARTSFV_TXDATA)
-                  & UARTSFV_TXDATA_FULL))
-      ;
     _regs->write<unsigned>(UARTSFV_TXDATA, c);
   }
 
-  int Uart_sifive::write(char const *s, unsigned long count) const
+  int Uart_sifive::write(char const *s, unsigned long count, bool blocking) const
   {
-    unsigned long c = count;
-    while (c--)
-      out_char(*s++);
-
-    return count;
+    return generic_write<Uart_sifive>(s, count, blocking);
   }
 };
