@@ -19,19 +19,15 @@ Spin_lock<Lock_t>::lock_arch()
 
 #define LOCK_ARCH(z) \
   __asm__ __volatile__ ( \
-      "1: ldr" #z "     %[d], [%[lock]]           \n" \
-      "   tst     %[d], #2                  \n" /* Arch_lock == #2 */ \
-      "   wfene                             \n" \
-      "   bne     1b                        \n" \
-      "   ldrex"#z"   %[d], [%[lock]]           \n" \
-      "   tst     %[d], #2                  \n" \
-      "   orr     %[tmp], %[d], #2          \n" \
-      "   strex"#z"eq %[d], %[tmp], [%[lock]]   \n" \
-      "   teqeq   %[d], #0                  \n" \
-      "   bne     1b                        \n" \
-      : [d] "=&r" (dummy), [tmp] "=&r"(tmp), "+m" (_lock) \
-      : [lock] "r" (&_lock) \
-      : "cc" \
+      "1: ldrex"#z"   %[d], %[lock]          \n" \
+      "   tst     %[d], #2                   \n" /* Arch_lock == #2 */ \
+      "   wfene                              \n" \
+      "   orreq   %[tmp], %[d], #2           \n" \
+      "   strex"#z"eq %[d], %[tmp], %[lock]  \n" \
+      "   teqeq   %[d], #0                   \n" \
+      "   bne     1b                         \n" \
+      : [d] "=&r" (dummy), [tmp] "=&r"(tmp), [lock] "+Q" (_lock) \
+      : : "cc" \
       )
 
   switch(sizeof(Lock_t))

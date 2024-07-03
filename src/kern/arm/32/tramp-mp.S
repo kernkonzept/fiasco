@@ -248,18 +248,15 @@ refvar _tramp_mp_startup_mair1
 	ldr	r0, =_tramp_mp_spinlock
 	// Copy of Spin_lock::lock_arch(), we have no stack yet, so we cannot call it.
 	// {
-1:	ldr	r1, [r0]
-	teq	r1, #0
+1:	ldrex	r1, [r0]
+	tst	r1, #2
 	wfene
+	orreq	r2, r1, #2
+	strexeq	r1, r2, [r0]
+	teqeq	r1, #0
 	bne	1b
-
-2:	ldrex	r1, [r0]
-	teq	r1, #0
-	bne	1b
-	mov	r1, #2
-	strex	r2, r1, [r0]
-	teq	r2, #0
-	bne	1b
+	// acquire barrier
+	dmb
 	// }
 
 	// TLB flush
