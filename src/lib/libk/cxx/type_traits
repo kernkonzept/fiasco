@@ -152,7 +152,7 @@ forward(cxx::remove_reference_t<T> &&t)
 
 template< typename T >
 constexpr cxx::remove_reference_t<T> &&
-move(T &t) { return static_cast<cxx::remove_reference_t<T> &&>(t); }
+move(T &&t) { return static_cast<cxx::remove_reference_t<T> &&>(t); }
 
 template< bool, typename T = void >
 struct enable_if {};
