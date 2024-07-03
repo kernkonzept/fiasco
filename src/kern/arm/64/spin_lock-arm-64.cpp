@@ -11,7 +11,7 @@ IMPLEMENTATION [arm && mp]:
 
 #include "processor.h"
 
-PRIVATE template<typename Lock_t> inline NEEDS["processor.h"]
+IMPLEMENT template<typename Lock_t> inline NEEDS["processor.h"]
 void
 Spin_lock<Lock_t>::lock_arch()
 {
@@ -44,7 +44,7 @@ Spin_lock<Lock_t>::lock_arch()
 #undef LOCK_ARCH
 }
 
-PRIVATE template<typename Lock_t> inline
+IMPLEMENT template<typename Lock_t> inline
 void
 Spin_lock<Lock_t>::unlock_arch()
 {

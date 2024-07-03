@@ -66,6 +66,30 @@ public:
   /// Initialize spin lock in unlocked state.
   Spin_lock() : _lock(0) {}
 
+private:
+  /**
+   * Acquire the lock (architecture-specific).
+   *
+   * Attempts to atomically set the lock flag. If the lock flag is already set,
+   * i.e. the lock is held by someone else, spin until the lock is released and
+   * then can be acquired.
+   *
+   * \pre Must not be called by the current lock holder.
+   *
+   * \note When modifying the lock_arch implementation for an architecture,
+   *       also consider the assembler copy of the function in tramp-mp.S.
+   */
+  void lock_arch();
+
+  /**
+   * Release the lock (architecture-specific).
+   *
+   * Atomically clears the lock flag.
+   *
+   * \pre Must only be called by the current lock holder.
+   */
+  void unlock_arch();
+
 protected:
   Lock_t _lock;
 };

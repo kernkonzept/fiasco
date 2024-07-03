@@ -11,7 +11,7 @@ public:
 //--------------------------------------------------------------------------
 IMPLEMENTATION [mips && mp]:
 
-PRIVATE template<typename Lock_t> inline
+IMPLEMENT template<typename Lock_t> inline
 void
 Spin_lock<Lock_t>::lock_arch()
 {
@@ -36,7 +36,7 @@ Spin_lock<Lock_t>::lock_arch()
       : : "memory");
 }
 
-PRIVATE template<typename Lock_t> inline NEEDS["mem.h"]
+IMPLEMENT template<typename Lock_t> inline NEEDS["mem.h"]
 void
 Spin_lock<Lock_t>::unlock_arch()
 {
