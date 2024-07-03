@@ -19,18 +19,17 @@ Spin_lock<Lock_t>::lock_arch()
 
 #define LOCK_ARCH(z,u) \
   __asm__ __volatile__ ( \
-      "   sevl                                      \n" \
-      "   prfm pstl1keep, [%[lock]]                 \n" \
+      "   prfm pstl1strm, %[lock]                   \n" \
+      "   b 2f                                      \n" \
       "1: wfe                                       \n" \
-      "   ldaxr" #z "  %" #u "[d], [%[lock]]        \n" \
+      "2: ldaxr" #z "  %" #u "[d], %[lock]          \n" \
       "   tst     %x[d], #2                         \n" /* Arch_lock == #2 */ \
       "   bne 1b                                    \n" \
       "   orr   %x[tmp], %x[d], #2                  \n" \
-      "   stxr" #z " %w[d], %" #u "[tmp], [%[lock]] \n" \
+      "   stxr" #z " %w[d], %" #u "[tmp], %[lock]   \n" \
       "   cbnz  %w[d], 1b                           \n" \
-      : [d] "=&r" (dummy), [tmp] "=&r"(tmp), "+m" (_lock) \
-      : [lock] "r" (&_lock) \
-      : "cc", "memory" \
+      : [d] "=&r" (dummy), [tmp] "=&r"(tmp), [lock] "+Q" (_lock) \
+      : : "cc", "memory" \
       )
 
   switch (sizeof(Lock_t))
