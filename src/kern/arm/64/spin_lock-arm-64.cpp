@@ -30,7 +30,7 @@ Spin_lock<Lock_t>::lock_arch()
       "   cbnz  %w[d], 1b                           \n" \
       : [d] "=&r" (dummy), [tmp] "=&r"(tmp), "+m" (_lock) \
       : [lock] "r" (&_lock) \
-      : "cc" \
+      : "cc", "memory" \
       )
 
   switch (sizeof(Lock_t))
@@ -55,7 +55,7 @@ Spin_lock<Lock_t>::unlock_arch()
       "ldr"#z " %" #u "[tmp], %[lock]              \n" \
       "bic %x[tmp], %x[tmp], #2                    \n" /* Arch_lock == #2 */ \
       "stlr"#z " %" #u "[tmp], %[lock]             \n" \
-      : [lock] "+Q" (_lock), [tmp] "=&r" (tmp))
+      : [lock] "+Q" (_lock), [tmp] "=&r" (tmp) : : "memory")
 
   switch (sizeof(Lock_t))
     {

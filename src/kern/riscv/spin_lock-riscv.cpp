@@ -43,7 +43,7 @@ Spin_lock<Lock_t>::unlock_arch()
   Mword prev;
 #define UNLOCK_ARCH(width, type) \
   __asm__ __volatile__ ( \
-    "amoand." #width " %[prev], %[mask], %[lock]" \
+    "amoand." #width ".rl %[prev], %[mask], %[lock]" \
     : [prev] "=r" (prev), [lock] "+A"(_lock) \
     : [mask] "r" (~static_cast<type>(Arch_lock)) \
     : "memory");

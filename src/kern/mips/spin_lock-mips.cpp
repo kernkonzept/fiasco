@@ -34,12 +34,15 @@ Spin_lock<Lock_t>::lock_arch()
       "   .set    pop             \n"
       : [lock] "+m" (_lock), [tmp] "=&r" (tmp), [d] "=&r" (dummy)
       : : "memory");
+
+  Mem::mp_acquire();
 }
 
 IMPLEMENT template<typename Lock_t> inline NEEDS["mem.h"]
 void
 Spin_lock<Lock_t>::unlock_arch()
 {
-  Mem::mp_mb();
+  Mem::mp_release();
+
   _lock &= ~Arch_lock;
 }

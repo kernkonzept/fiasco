@@ -41,6 +41,8 @@ Spin_lock<Lock_t>::lock_arch()
     case 4: LOCK_ARCH(); break;
     }
 
+  Mem::mp_acquire();
+
 #undef LOCK_ARCH
 }
 
@@ -49,6 +51,8 @@ void
 Spin_lock<Lock_t>::unlock_arch()
 {
   Lock_t tmp;
+
+  Mem::mp_release();
 
 #define UNLOCK_ARCH(z) \
   __asm__ __volatile__( \
