@@ -247,6 +247,8 @@ refvar _tramp_mp_startup_mair1
 	// spinlock on cpu-init
 	ldr	r0, =_tramp_mp_spinlock
 	// Copy of Spin_lock::lock_arch(), we have no stack yet, so we cannot call it.
+	// Always use the non-optimized variant of lock_arch(), which is also
+	// compatible with versions of the ARM architecture prior to ARMv8.
 	// {
 1:	ldrex	r1, [r0]
 	tst	r1, #2
