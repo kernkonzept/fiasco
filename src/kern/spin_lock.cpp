@@ -55,6 +55,24 @@ private:
   Mword _lock = 0;
 };
 
+/**
+ * Optimized lock-guard policy for Spin_lock that does not disable IRQs to avoid
+ * the overhead for cases where it is certain that IRQs are already disabled.
+ */
+template< typename LOCK >
+struct No_cpu_lock_policy
+{
+  using Status = unsigned; // unused
+
+  static Status test_and_set(LOCK *)
+  {
+    assert(cpu_lock.test());
+    return 0;
+  }
+
+  static void set(LOCK *, Status)
+  {}
+};
 
 //--------------------------------------------------------------------------
 INTERFACE [mp]:
@@ -65,6 +83,9 @@ public:
   typedef Mword Status;
   /// Initialize spin lock in unlocked state.
   Spin_lock() : _lock(0) {}
+
+  template< typename LOCK >
+  friend struct No_cpu_lock_policy;
 
 private:
   /**
@@ -104,6 +125,26 @@ protected:
 template< typename T >
 class Spin_lock_coloc : public Spin_lock<Mword>
 {};
+
+/**
+ * Optimized lock-guard policy for Spin_lock that does not disable IRQs to avoid
+ * the overhead for cases where it is certain that IRQs are already disabled.
+ */
+template< typename LOCK >
+struct No_cpu_lock_policy
+{
+  using Status = unsigned; // unused
+
+  static Status test_and_set(LOCK *l)
+  {
+    assert(cpu_lock.test());
+    l->lock_arch();
+    return 0;
+  }
+
+  static void set(LOCK *l, Status)
+  { l->unlock_arch(); }
+};
 
 //--------------------------------------------------------------------------
 IMPLEMENTATION:
