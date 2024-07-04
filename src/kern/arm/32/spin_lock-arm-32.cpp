@@ -55,7 +55,7 @@ Spin_lock<Lock_t>::unlock_arch()
       "ldr"#z " %[tmp], %[lock]             \n" \
       "bic %[tmp], %[tmp], #2          \n" /* Arch_lock == #2 */ \
       "str"#z " %[tmp], %[lock]             \n" \
-      : [lock] "=m" (_lock), [tmp] "=&r" (tmp)); \
+      : [lock] "+m" (_lock), [tmp] "=&r" (tmp)); \
   Mem::dsb(); \
   __asm__ __volatile__("sev")
 
