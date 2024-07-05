@@ -256,6 +256,8 @@ _tramp_mp_virt:
 	// spinlock on cpu-init
 	adrp	x0, _tramp_mp_spinlock
 	add     x0, x0, :lo12:_tramp_mp_spinlock
+	// Copy of Spin_lock::lock_arch(), we have no stack yet, so we cannot call it.
+	// {
 	sevl
 	prfm	pstl1keep, [x0]
 1:	wfe
@@ -265,6 +267,7 @@ _tramp_mp_virt:
 	orr	x2, x1, #2
 	stxr	w1, x2, [x0]
 	cbnz	w1, 1b
+	// }
 
 	adrp	x8, _tramp_mp_init_stack_top
 	add     x8, x8, :lo12:_tramp_mp_init_stack_top

@@ -246,6 +246,8 @@ refvar _tramp_mp_startup_mair1
 .LC_tramp_mp_virt:
 	// spinlock on cpu-init
 	ldr	r0, =_tramp_mp_spinlock
+	// Copy of Spin_lock::lock_arch(), we have no stack yet, so we cannot call it.
+	// {
 1:	ldr	r1, [r0]
 	teq	r1, #0
 	wfene
@@ -258,6 +260,7 @@ refvar _tramp_mp_startup_mair1
 	strex	r2, r1, [r0]
 	teq	r2, #0
 	bne	1b
+	// }
 
 	// TLB flush
 	mcr p15, 0, r0, c8, c7, 0

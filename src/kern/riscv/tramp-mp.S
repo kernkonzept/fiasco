@@ -18,11 +18,14 @@ _tramp_mp_entry:
 
   /* Acquire spinlock */
   la t2, _tramp_mp_spinlock
+  // Copy of Spin_lock::lock_arch(), we have no stack yet, so we cannot call it.
+  // {
   li t1, 2 /* Spin_lock::Arch_lock */
   1:
   amoor.SZMOD.aq t0, t1, (t2)
   and t0, t0, t1
   bnez t0, 1b
+  // }
 
   /* We hold the lock, so we can use the init stack. */
   la sp, _tramp_mp_init_stack_top

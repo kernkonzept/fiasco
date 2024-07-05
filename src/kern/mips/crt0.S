@@ -196,6 +196,8 @@ MPEND _tramp_mp_jmp_entry
 .section .text.mp_tramp_entry, "ax"
 MPLEAF _tramp_mp_entry
 	ASM_LA	t1, _tramp_mp_spinlock
+	// Copy of Spin_lock::lock_arch(), we have no stack yet, so we cannot call it.
+	// {
 1:
 	li	t2, 2
 	sync
@@ -207,6 +209,8 @@ MPLEAF _tramp_mp_entry
 	  nop
 
 	sync
+	// }
+
 	ASM_LA	sp, __init_stack
 	subu	sp, 4 * 4 /* a0 .. a3 */
 	j     BOOT_AP_CPU
