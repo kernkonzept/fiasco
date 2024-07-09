@@ -29,6 +29,8 @@ protected:
 template< unsigned long MIN_LOG2_SIZE, int NUM_SIZES>
 class Buddy_t_base : public Buddy_base
 {
+  enum { Debug_size_mismatch = 0 };
+
   template <unsigned long, int>
   friend class Buddy_t_base_tester;
 
@@ -156,7 +158,8 @@ Buddy_t_base<A,B>::free(void *block, unsigned long size)
   while ((static_cast<unsigned long>(Min_size) << size_index) < size)
     ++size_index;
 
-  if (size != static_cast<unsigned long>(Min_size) << size_index)
+  if (Debug_size_mismatch
+      && size != static_cast<unsigned long>(Min_size) << size_index)
     WARNX(Info, "Buddy::free: Size mismatch: %lx v %lx\n",
           size, static_cast<unsigned long>(Min_size) << size_index);
 
@@ -245,7 +248,8 @@ Buddy_t_base<A,B>::alloc(unsigned long size)
   while ((static_cast<unsigned long>(Min_size) << size_index) < size)
     ++size_index;
 
-  if (size != static_cast<unsigned long>(Min_size) << size_index)
+  if (Debug_size_mismatch
+      && size != static_cast<unsigned long>(Min_size) << size_index)
     WARNX(Info, "Buddy::alloc: Size mismatch: %lx v %lx\n",
           size, static_cast<unsigned long>(Min_size) << size_index);
 
