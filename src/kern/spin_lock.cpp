@@ -42,6 +42,8 @@ public:
   using Cpu_lock::clear;
   using Cpu_lock::test_and_set;
   using Cpu_lock::set;
+
+  bool is_locked() const { return !!test(); }
 };
 
 /**
@@ -213,4 +215,16 @@ Spin_lock<Lock_t>::set(Status s)
     cpu_lock.clear();
 }
 
-
+/**
+ * Returns whether the lock is set.
+ *
+ * This function is intended for use in asserts. It is necessary because the
+ * Status returned by `test()` encodes not only the status of the Spin_lock, but
+ * also the status of the cpu lock.
+ */
+PUBLIC template<typename Lock_t> inline
+bool
+Spin_lock<Lock_t>::is_locked() const
+{
+  return _lock & Arch_lock;
+}
