@@ -5,9 +5,9 @@
 # created 1996/04/20 by hohmuth
 #
 
-CHECKCC         = $(if $(shell $(CC)  $(1) -c -o /dev/null -xc   /dev/null 2>&1),$(2),$(1))
+CHECKCC         = $(if $(shell $(CC)  $(1) $(CHECKCC_FLAGS)  -c -o /dev/null -xc   /dev/null >/dev/null 2>&1 || echo X),$(2),$(1))
 
-CHECKCXX        = $(if $(shell $(CXX) $(1) -c -o /dev/null -xc++ /dev/null 2>&1),$(2),$(1))
+CHECKCXX        = $(if $(shell $(CXX) $(1) $(CHECKCXX_FLAGS) -c -o /dev/null -xc++ /dev/null >/dev/null 2>&1 || echo X),$(2),$(1))
 
 CHECKLD         = $(shell if $(LD) -v "$1" > /dev/null 2>&1; then echo "$(1)"; else echo "$(2)"; fi)
 
@@ -105,13 +105,15 @@ LD_TYPE			:= $(if $(and $(LD),$(findstring LLD,$(shell $(LD) --version))),clang,
 CLANG_TARGET_FLAG = $(addprefix --target=, $(notdir $(CROSS_COMPILE:%-=%)))
 
 ifeq ($(CC_TYPE),clang)
-  CC			:= $(CCXX_WRAP) $(if $(USE_CCACHE),$(CCACHE)) $(CC)$(CCXX_SUFFIX) $(CLANG_TARGET_FLAG)
+  CC            := $(CCXX_WRAP) $(if $(USE_CCACHE),$(CCACHE)) $(CC)$(CCXX_SUFFIX) $(CLANG_TARGET_FLAG)
+  CHECKCC_FLAGS := -Werror=unknown-warning-option
 else
   CC			:= $(CCXX_WRAP) $(if $(USE_CCACHE),$(CCACHE)) $(CROSS_COMPILE)$(CC)$(CCXX_SUFFIX)
 endif
 
 ifeq ($(CXX_TYPE),clang)
-  CXX			:= $(CCXX_WRAP) $(if $(USE_CCACHE),$(CCACHE)) $(CXX)$(CCXX_SUFFIX) $(CLANG_TARGET_FLAG)
+  CXX            := $(CCXX_WRAP) $(if $(USE_CCACHE),$(CCACHE)) $(CXX)$(CCXX_SUFFIX) $(CLANG_TARGET_FLAG)
+  CHECKCXX_FLAGS := -Werror=unknown-warning-option
 else
   CXX			:= $(CCXX_WRAP) $(if $(USE_CCACHE),$(CCACHE)) $(CROSS_COMPILE)$(CXX)$(CCXX_SUFFIX)
 endif
