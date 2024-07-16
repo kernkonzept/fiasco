@@ -771,6 +771,8 @@ sub parse_file
 	    {
 	      next MORE;
 	    }
+
+          s/(TAG_ENABLED\((.+?)\))/(match_e_opt($2) ? "true" : "false")." \/* = $1 *\/"/sge;
 	  
           # top-level namespace declaration
           if (/^$s (?:inline $s)? namespace $s/sx)
