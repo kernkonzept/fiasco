@@ -358,8 +358,8 @@ public:
 
   enum
   {
-    Hdcr_bits = Mdcr_tpmcr | Mdcr_tpm   | Mdcr_tde
-                | Mdcr_tda | Mdcr_tdosa | Mdcr_tdra | Mdcr_ttrf,
+    Hdcr_bits = (TAG_ENABLED(perf_cnt_user) ? 0 : (Mdcr_tpmcr | Mdcr_tpm))
+                | Mdcr_tde | Mdcr_tda | Mdcr_tdosa | Mdcr_tdra | Mdcr_ttrf,
   };
 };
 

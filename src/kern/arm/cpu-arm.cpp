@@ -250,29 +250,33 @@ public:
   };
 };
 
-//--------------------------------------------------------
-INTERFACE [arm && cpu_virt && arm_v7]:
+// ------------------------------------------------------------------------
+INTERFACE [arm && (arm_v7 || arm_v8) && cpu_virt]:
 
 EXTENSION class Cpu
 {
 public:
   enum Hstr_values
   {
-    Hstr_non_vm = 0x39f6f, // ALL but crn=13,7 (TPIDxxR, DSB) CP15 traped
-    Hstr_vm = 0x0, // none
-  };
-
-};
-
-//--------------------------------------------------------
-INTERFACE [arm && cpu_virt && arm_v8]:
-
-EXTENSION class Cpu
-{
-public:
-  enum Hstr_values
-  {
-    Hstr_non_vm = 0x9f6f, // ALL but crn=13,7 (TPIDxxR, DSB) CP15 traped
+    Hstr_non_vm = (1 << 0)
+                | (1 << 1)
+                | (1 << 2)
+                | (1 << 3)
+                | (0 << 4) // res0
+                | (1 << 5)
+                | (1 << 6)
+                | (0 << 7) // enable data and instruction barrier operations
+                | (1 << 8)
+                | ((TAG_ENABLED(perf_cnt_user) ? 0 : 1) << 9) // PMCCNTR
+                | (1 << 10)
+                | (1 << 11)
+                | (1 << 12)
+                | (0 << 13) // enable access to TPIDRxxR
+                | (0 << 14) // res0
+                | (1 << 15)
+                | ((TAG_ENABLED(arm_v7) ? 1 : 0) << 16) // TTEE, only ARMv7
+                | ((TAG_ENABLED(arm_v7) ? 1 : 0) << 17) // TJDBX, only ARMv7
+                ,
     Hstr_vm = 0x0, // none
   };
 };

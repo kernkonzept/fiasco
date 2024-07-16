@@ -217,8 +217,7 @@ Perf_cnt::init_cpu()
 
   //set_event_type(0, 8);
 
-  // allow user to access events
-  useren(1);
+  useren(TAG_ENABLED(perf_cnt_user) ? 1 : 0);
 }
 
 // ------------------------------------------------------------------------

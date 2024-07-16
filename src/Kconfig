@@ -585,6 +585,15 @@ config PERFORMANCE
 	  assertions are included and additional run-time functionality
 	  is de-selected.
 
+config PERF_CNT_USER
+	bool "Allow user-level access to performance counters"
+	depends on PERF_CNT && EXPERT
+	depends on ARM || ARM64
+	help
+	  Allows user-level to access performance counters.
+
+	  Do ONLY enable this when debugging, experimenting or evaluating!
+
 config INLINE
 	bool "Generate inline code"
 	default y
