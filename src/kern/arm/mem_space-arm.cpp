@@ -427,6 +427,7 @@ IMPLEMENTATION [arm && mpu]:
 #include <cassert>
 #include <cstring>
 
+#include "arithmetic.h"
 #include "atomic.h"
 #include "config.h"
 #include "kmem.h"
@@ -556,15 +557,27 @@ bool
 Mem_space::v_lookup(Vaddr virt, Phys_addr *phys,
                     Page_order *order, Attr *page_attribs)
 {
-  // MUST be reported in any case! The mapdb relies on this information.
-  if (order)
-    *order = Page_order(Config::SUPERPAGE_SHIFT);
-
   auto guard = lock_guard(_lock);
 
-  auto r = _dir->find(Vaddr::val(virt));
+  Mword v(Vaddr::val(virt));
+  auto r = _dir->find(v);
   if (!r)
-    return false;
+    {
+      if (order)
+        {
+          // Calculate the largest possible order that covers the gap to make
+          // iterating over the vast address space during unmap() viable.
+          Mword gap_end(0);
+          auto n = _dir->find_next(v);
+          if (n)
+            gap_end = n->start();
+          Mword gap_size = gap_end - v;
+          unsigned gap_order = gap_size ? cxx::log2u(gap_size) : MWORD_BITS - 1;
+          unsigned max_order = v ? __builtin_ctzl(v) : MWORD_BITS - 1;
+          *order = Page_order(min(gap_order, max_order));
+        }
+      return false;
+    }
 
   // We always need to report the smallest order. The disabled code below that
   // tries to report the order more truthfully breaks mapdb.

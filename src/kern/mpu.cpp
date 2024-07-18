@@ -515,6 +515,19 @@ Mpu_regions::find(Mword addr) const
   return nullptr;
 }
 
+PUBLIC inline
+Mpu_region const *
+Mpu_regions::find_next(Mword addr) const
+{
+  for (auto const &i : _used_list)
+    {
+      if (addr < i->start())
+        return i;
+    }
+
+  return nullptr;
+}
+
 /**
  * Dump regions list.
  */
