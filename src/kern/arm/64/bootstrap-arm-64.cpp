@@ -225,6 +225,15 @@ switch_from_el2_to_el1()
   asm volatile ("tlbi alle1");
   asm volatile ("msr HCR_EL2, %0" : : "r"(Hcr_default_bits));
   Bootstrap::config_feature_traps(Bootstrap::read_pfr0(), false, true);
+
+  asm volatile ("dsb sy" : : : "memory");
+  // SCTLR.C might toggle, so flush cache
+  Mmu<Bootstrap::Cache_flush_area, true>::flush_cache();
+
+  // Ensure defined state of SCTLR_EL1
+  asm volatile ("msr SCTLR_EL1, %0       \n"
+                : : "r" (Cpu::Sctlr_generic & ~Cpu::Sctlr_m));
+
   asm volatile ("   mrs %[tmp], MIDR_EL1    \n"
                 "   msr VPIDR_EL2, %[tmp]   \n"
                 "   mrs %[tmp], MPIDR_EL1   \n"
