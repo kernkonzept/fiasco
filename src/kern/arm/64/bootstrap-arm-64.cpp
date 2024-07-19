@@ -219,9 +219,7 @@ switch_from_el2_to_el1()
 {
   Mword tmp, tmp2;
 
-  // flush all E1 TLBs
   asm volatile ("tlbi alle1");
-  // set HCR (RW and HCD)
   asm volatile ("msr HCR_EL2, %0" : : "r"(Hcr_default_bits));
   Bootstrap::config_feature_traps(Bootstrap::read_pfr0(), false, true);
   asm volatile ("   mrs %[tmp], MIDR_EL1    \n"
