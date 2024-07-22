@@ -253,6 +253,7 @@ Thread::bind(Task *t, User_ptr<Utcb> utcb)
 
   _space.space(t);
   t->inc_ref();
+  t->add_bound_thread();
 
   _utcb.set(utcb, u->kern_addr(utcb));
   arch_setup_utcb_ptr();
@@ -260,6 +261,12 @@ Thread::bind(Task *t, User_ptr<Utcb> utcb)
 }
 
 
+/**
+ * Unbind the thread from its task.
+ *
+ * \attention This is a potential preemtion point. The last bound thread of
+ *            a task clears the reply capability space.
+ */
 PUBLIC
 void
 Thread::unbind()
@@ -282,12 +289,17 @@ Thread::unbind()
       if (   current() == this
           && Mem_space::current_mem_space(current_cpu()) == old)
         Kernel_task::kernel_task()->switchin_context(old);
-
-      if (old->dec_ref())
-        old = nullptr;
     }
 
-  if (old)
+  // Attention: preemption point! We still hold a reference to `old`, so this
+  // is safe.
+  old->remove_bound_thread([](Reply_cap_slot *slot)
+    {
+      auto g = lock_guard(cpu_lock);
+      reset_reply_cap_slot(slot);
+    });
+
+  if (old->dec_ref() == 0)
     delete old;
 }
 
@@ -490,7 +502,7 @@ Thread::do_kill()
 
   // In case we're engaged in a call. So far, we just detach us. The caller is
   // left waiting forever...
-  reset_reply_cap();
+  reset_reply_cap(Implicit_reply_cap_index);
 
   // If other threads want to send me IPC messages, abort these operations.
   // IMPORTANT: After the following code block, the cpu lock must not be

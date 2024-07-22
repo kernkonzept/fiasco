@@ -45,11 +45,15 @@ Obj_cap::deref(L4_fpage::Rights *rights, bool dbg = false)
   Thread *current = current_thread();
   if (op() & L4_obj_ref::Ipc_reply)
     {
+      Reply_cap_index reply_cap_index = Receiver::Implicit_reply_cap_index;
+      if (explicit_reply())
+        reply_cap_index = reply_cap();
+
       Reply_cap reply_cap;
       if (!dbg) [[likely]]
-        reply_cap = current->reset_reply_cap();
+        reply_cap = current->reset_reply_cap(reply_cap_index);
       else
-        reply_cap = current->get_reply_cap();
+        reply_cap = current->get_reply_cap(reply_cap_index);
 
       *rights = reply_cap.caller_rights();
       return static_cast<Thread*>(reply_cap.caller());
@@ -57,7 +61,7 @@ Obj_cap::deref(L4_fpage::Rights *rights, bool dbg = false)
 
   if (EXPECT_FALSE(special()))
     {
-      // "self"
+      // "self" or "explicit reply capability".
       *rights = L4_fpage::Rights::CWS();
       return current;
     }

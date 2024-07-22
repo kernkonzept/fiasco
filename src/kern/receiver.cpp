@@ -75,7 +75,10 @@ public:
 
   virtual ~Receiver() = 0;
 
-private:
+  /// Constant used to address the implicit per-thread reply cap slot.
+  static constexpr auto Implicit_reply_cap_index = Reply_cap_index(~0U);
+
+protected:
   /**
    * Unconditionally reset a reply cap slot. If valid, also the
    * `_partner_reply_cap` of the pointed to caller is reset.
@@ -98,6 +101,7 @@ private:
     return old_reply_cap;
   }
 
+private:
   /**
    * IPC partner this Receiver is waiting for/involved with.
    *
@@ -126,6 +130,10 @@ private:
 
   /// Registers used for receive.
   Syscall_frame *_rcv_regs;
+
+  /// Chosen reply cap slot. Can either point to _implicit_reply_cap or an
+  /// explicit reply capability slot in the Reply_space of the receiver.
+  Reply_cap_slot *_reply_cap;
 
   /// Implicit, per-receiver reply cap slot. Used if no explicit slot is
   /// selected.
@@ -191,9 +199,11 @@ PUBLIC inline
 void
 Receiver::set_reply_cap(Receiver *caller, L4_fpage::Rights rights)
 {
-  // If reply cap slot is already used, reset it first.
-  if (_implicit_reply_cap.is_used()) [[unlikely]]
-    reset_reply_cap_slot(&_implicit_reply_cap);
+  // If reply cap slot is already used, reset it first. For the case that
+  // multiple threads in the same space operate concurrently on the same slot,
+  // see the cas below.
+  if (_reply_cap->is_used()) [[unlikely]]
+    reset_reply_cap_slot(_reply_cap);
 
   // It is crucial that at this point the caller is not referenced by any reply
   // cap slot (see prerequisite). Otherwise concurrent execution of
@@ -205,18 +215,25 @@ Receiver::set_reply_cap(Receiver *caller, L4_fpage::Rights rights)
   assert(caller->_partner_reply_cap == nullptr);
 
   // First record in the caller the reply cap slot used for the call.
-  atomic_store(&caller->_partner_reply_cap, &_implicit_reply_cap);
+  atomic_store(&caller->_partner_reply_cap, _reply_cap);
 
   // Because someone unrelated can, at any time, reset the reply cap slot, we
   // must ensure that this someone sees an up-to-date value of
-  // _partner_reply_cap, before they see our write to _implicit_reply_cap, so
-  // they can properly reset _partner_reply_cap. This is crucial to avoid a
-  // dangling pointer in _partner_reply_cap in case of concurrent reply cap
-  // slot usage.
+  // _partner_reply_cap, before they see our write to _reply_cap, so they
+  // can properly reset _partner_reply_cap. This is crucial to avoid a dangling
+  // pointer in _partner_reply_cap in case of concurrent reply cap slot usage.
   Mem::mp_wmb(); // Pairs with data dependency in reset_reply_cap_slot().
 
+  // If the cas fails, someone else was faster, we give up, that is to be
+  // considered a user-space error. They messed up their reply cap slot
+  // allocation.
   Reply_cap new_value = Reply_cap(caller, rights);
-  _implicit_reply_cap.write_atomic(new_value);
+  if (!_reply_cap->cas(Reply_cap::Empty(), new_value)) [[unlikely]]
+    // Both caller and callee are blocked, so the only thing that can happen
+    // is that the value in _reply_cap was changed concurrently by another
+    // receiver thread in the same task. In that case we cannot use the reply
+    // cap slot, so rollback our write to _partner_reply_cap from above.
+    atomic_store(&caller->_partner_reply_cap, nullptr);
 }
 
 /**
@@ -274,19 +291,25 @@ Receiver::reset_partner_reply_cap()
 }
 
 /**
- * Get implicit reply cap.
+ * Get reply cap at given reply cap slot.
  *
  * \note Only use for debugging purposes.
  */
 PUBLIC inline
 Reply_cap
-Receiver::get_reply_cap() const
+Receiver::get_reply_cap(Reply_cap_index reply_cap_index) const
 {
-  return _implicit_reply_cap.read_atomic();
+  Reply_cap_slot const *reply_cap;
+  if (reply_cap_index == Implicit_reply_cap_index)
+    reply_cap = &_implicit_reply_cap;
+  else
+    reply_cap = space()->get_reply_cap(reply_cap_index);
+
+  return reply_cap ? reply_cap->read_atomic() : Reply_cap::Empty();
 }
 
 /**
- * Unconditionally reset the implicit reply cap slot. If valid, also the
+ * Unconditionally reset the reply cap slot. If valid, also the
  * `_partner_reply_cap` of the pointed to caller is reset.
  *
  * \pre Must only be invoked by a callee on itself or in a context where the
@@ -297,11 +320,25 @@ Receiver::get_reply_cap() const
  */
 PUBLIC inline
 Reply_cap
-Receiver::reset_reply_cap()
+Receiver::reset_reply_cap(Reply_cap_index reply_cap_index)
 {
   assert(cpu_lock.test());
 
-  return reset_reply_cap_slot(&_implicit_reply_cap);
+  Reply_cap_slot *reply_cap_slot_ptr;
+  if (reply_cap_index == Implicit_reply_cap_index)
+    {
+      reply_cap_slot_ptr = &_implicit_reply_cap;
+    }
+  else
+    {
+      reply_cap_slot_ptr = space()->access_reply_cap(reply_cap_index, false);
+
+      // In case invalid index was provided.
+      if (reply_cap_slot_ptr == nullptr) [[unlikely]]
+        return Reply_cap::Empty();
+    }
+
+  return reset_reply_cap_slot(reply_cap_slot_ptr);
 }
 
 /**
@@ -396,8 +433,22 @@ Receiver::reset_timeout()
 }
 
 PROTECTED inline
-void Receiver::prepare_receive(Sender *partner, Syscall_frame *regs)
+bool Receiver::prepare_receive(Sender *partner, Syscall_frame *regs)
 {
+  bool open_wait = !partner && regs;
+  if (open_wait)
+    {
+      if (regs->ref().explicit_reply())
+        {
+          auto reply_cap_index = regs->ref().reply_cap();
+          _reply_cap = space()->access_reply_cap(reply_cap_index, true);
+          if (_reply_cap == nullptr) [[unlikely]]
+            return false;
+        }
+      else
+        _reply_cap = &_implicit_reply_cap;
+    }
+
   set_rcv_regs(regs);  // message should be poked in here
   set_partner(partner);
 
@@ -406,6 +457,7 @@ void Receiver::prepare_receive(Sender *partner, Syscall_frame *regs)
   // is safe.
   _partner_in_sender_list = partner != nullptr && partner->in_sender_list()
                             && partner->wait_queue() == sender_list();
+  return true;
 }
 
 /**
@@ -529,6 +581,7 @@ Receiver::vcpu_async_ipc(Sender const *sender) const
       );
 
   self->_rcv_regs = &vcpu->_ipc_regs;
+  self->_reply_cap = &self->_implicit_reply_cap;
   vcpu->_regs.set_ipc_upcall();
   self->set_partner(const_cast<Sender*>(sender));
   self->state_add_dirty(Thread_receive_wait);

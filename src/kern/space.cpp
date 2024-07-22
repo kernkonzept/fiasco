@@ -22,6 +22,7 @@ INTERFACE:
 #include "mem_space.h"
 #include "member_offs.h"
 #include "obj_space.h"
+#include "reply_space.h"
 #include "spin_lock.h"
 #include "ref_obj.h"
 #include "slab_cache.h"
@@ -38,7 +39,8 @@ typedef Generic_obj_space<Space> Obj_space;
 class Space
 : public Ref_cnt_obj,
   public Mem_space,
-  public Generic_obj_space<Space>
+  public Generic_obj_space<Space>,
+  public Reply_space<Space>
 {
   MEMBER_OFFSET();
   friend class Jdb_space;

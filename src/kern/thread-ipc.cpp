@@ -592,7 +592,13 @@ Thread::do_ipc(L4_msg_tag const &tag, Mword from_spec, Thread *partner,
 
   assert (!(state() & Thread_ipc_mask));
 
-  prepare_receive(sender, have_receive ? regs : nullptr);
+  if (!prepare_receive(sender, have_receive ? regs : nullptr)) [[unlikely]]
+    {
+      utcb().access()->error = L4_error::R_no_reply_cap;
+      regs->tag(L4_msg_tag(0, 0, L4_msg_tag::Error, 0));
+      return;
+    }
+
   bool activate_partner = false;
   Cpu_number current_cpu = ::current_cpu();
 
