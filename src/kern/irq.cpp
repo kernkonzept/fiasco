@@ -929,7 +929,7 @@ register_factory()
 }
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION[debug]:
+IMPLEMENTATION[debug || test_support_code]:
 
 PUBLIC inline
 bool
