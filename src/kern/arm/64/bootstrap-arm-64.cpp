@@ -33,7 +33,10 @@ EXTENSION class Bootstrap
 
       int x = __builtin_ffsl(_free_map);
       if (x == 0)
-        return nullptr; // OOM
+        {
+          __builtin_trap();
+          return nullptr; // OOM
+        }
 
       _free_map &= ~(1UL << (x - 1));
 
