@@ -709,7 +709,6 @@ config POWERSAVE_GETCHAR
 
 config MBT_COUNTER
 	bool "Enable model-based testing counter"
-	default n
 	depends on EXPERIMENTAL
 
 choice
@@ -729,7 +728,6 @@ endchoice # warn levels
 
 config UART_CHECKSUM
 	bool "UART checksumming"
-	default n
 	help
 	  Ensure serial output integrity by adding checksums to it. This
 	  ensures that the output transmitted over a serial line is not

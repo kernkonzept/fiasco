@@ -298,7 +298,6 @@ config ARM_GIC_MSI
 
 config ARM_SVE
 	bool "Scalable Vector Extension support"
-	default n
 	depends on ARM_V8 && FPU && BIT64
 	depends on HAS_ARM_SVE
 	help
