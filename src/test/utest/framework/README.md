@@ -229,7 +229,11 @@ This allows to create a TAP line for each finished test.
 For tooling purposes, either directly define the `group_name` in the call to
 `new_test()` or use a variable of `static char const *` type.
 
-You need to call `Utest_fw::tap_log.finish()` at the end of the test suite.
+You need to call `Utest_fw::tap_log.finish()` at the end of the test suite. If
+you don't run any tests between `Utest_fw::tap_log.start()` and
+`Utest_fw::tap_log.finish()`, e.g. when the test is not applicable, you should
+provide a reason as to why the test was skipped:
+`Utest_fw::tap_log.finish("Reason here")`
 
 All supported `UTEST_` macros are listed in `utest_fw.cpp`.
 

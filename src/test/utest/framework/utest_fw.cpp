@@ -440,7 +440,7 @@ Utest_fw::start(char const *group = nullptr, char const *test = nullptr)
  */
 PUBLIC inline
 void
-Utest_fw::finish()
+Utest_fw::finish(char const *skip_msg = nullptr)
 {
   // finish previous test if there is one.
   if (_num_tests > 0)
@@ -452,7 +452,11 @@ Utest_fw::finish()
   if (_sum_failed && ext_info.debug)
     kdb_ke("Test finish with failure & Debug flag set.");
 
-  printf("\nKUT 1..%i\n", _num_tests);
+  if (skip_msg)
+    printf("\nKUT 1..%i #SKIP %s\n", _num_tests, skip_msg);
+  else
+    printf("\nKUT 1..%i\n", _num_tests);
+
   printf("\nKUT TAP TEST FINISHED\n");
 
   // QEMU platforms terminate after the FINISH line. Only hardware tests
