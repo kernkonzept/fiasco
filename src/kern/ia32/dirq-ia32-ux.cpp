@@ -19,9 +19,9 @@ IMPLEMENTATION[ia32,amd64,ux]:
 static inline void irq_spinners(int irqnum)
 {
 #ifdef CONFIG_IRQ_SPINNER
-  Unsigned16 *p = (Unsigned16 *)Mem_layout::Adap_vram_cga_beg;
+  Unsigned16 *p = reinterpret_cast<Unsigned16 *>(Mem_layout::Adap_vram_cga_beg);
   p += (20 + cxx::int_value<Cpu_number>(current_cpu())) * 80 + irqnum;
-  if (p < (Unsigned16 *)Mem_layout::Adap_vram_cga_end)
+  if (p < reinterpret_cast<Unsigned16 *>(Mem_layout::Adap_vram_cga_end))
     (*p)++;
 #else
   (void)irqnum;
