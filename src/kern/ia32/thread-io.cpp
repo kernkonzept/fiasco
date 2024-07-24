@@ -36,7 +36,7 @@ IMPLEMENTATION [io && (ia32 || amd64 || ux) && !no_io_pagefault]:
 /**
  * Compute port number and size for an IO instruction.
  *
- * Disassamble IO statements to compute the port address and the number of
+ * Disassemble IO statements to compute the port address and the number of
  * ports accessed.
  *
  * \param[in]  eip    Address of the instruction.
@@ -54,7 +54,7 @@ Thread::decode_io(Address eip, Trap_state *ts, unsigned int *port, unsigned int 
   bool from_user = ts->cs() & 3;
 
   // handle 1-byte IO instruction
-  switch (mem_space()->peek((Unsigned8 *)eip, from_user))
+  switch (mem_space()->peek(reinterpret_cast<Unsigned8 *>(eip), from_user))
     {
     case 0xec:  // in dx, al
     case 0x6c:  // insb
@@ -86,16 +86,16 @@ Thread::decode_io(Address eip, Trap_state *ts, unsigned int *port, unsigned int 
   if (!(eip < Mem_layout::User_max))
     return false;
 
-  switch (mem_space()->peek((Unsigned8 *)eip, from_user))
+  switch (mem_space()->peek(reinterpret_cast<Unsigned8 *>(eip), from_user))
     {
     case 0xe4:  // in imm8, al
     case 0xe6:  // out al, imm8
-      *port = mem_space()->peek((Unsigned8 *)(eip + 1), from_user);
+      *port = mem_space()->peek(reinterpret_cast<Unsigned8 *>(eip + 1), from_user);
       *size = 0;
       return true;
     case 0xe5:  // in imm8, eax
     case 0xe7:  // out eax, imm8
-      *port = mem_space()->peek((Unsigned8 *)(eip + 1), from_user);
+      *port = mem_space()->peek(reinterpret_cast<Unsigned8 *>(eip + 1), from_user);
       *size = 2;
 
       if (*port + 4 <= Config::Io_port_count)
@@ -104,7 +104,7 @@ Thread::decode_io(Address eip, Trap_state *ts, unsigned int *port, unsigned int 
       // Access beyond L4_IOPORT_MAX
       return false;
     case 0x66:  // operand size override
-      switch (mem_space()->peek((Unsigned8 *)(eip + 1), from_user))
+      switch (mem_space()->peek(reinterpret_cast<Unsigned8 *>(eip + 1), from_user))
         {
         case 0xed:  // in dx, ax
         case 0xef:  // out ax, dx
@@ -120,7 +120,7 @@ Thread::decode_io(Address eip, Trap_state *ts, unsigned int *port, unsigned int 
           return false;
         case 0xe5:  // in imm8, ax
         case 0xe7:  // out ax,imm8
-          *port = mem_space()->peek((Unsigned8 *)(eip + 2), from_user);
+          *port = mem_space()->peek(reinterpret_cast<Unsigned8 *>(eip + 2), from_user);
           *size = 1;
 
           if (*port + 2 <= Config::Io_port_count)
@@ -131,7 +131,7 @@ Thread::decode_io(Address eip, Trap_state *ts, unsigned int *port, unsigned int 
         }
       [[fallthrough]];
     case 0xf3:  // REP
-      switch (mem_space()->peek((Unsigned8 *)(eip + 1), from_user))
+      switch (mem_space()->peek(reinterpret_cast<Unsigned8 *>(eip + 1), from_user))
         {
         case 0x6c:  // REP insb
         case 0x6e:  // REP outb
@@ -155,12 +155,12 @@ Thread::decode_io(Address eip, Trap_state *ts, unsigned int *port, unsigned int 
   if (!(eip < Mem_layout::User_max - 1))
     return false;
 
-  Unsigned16 word = mem_space()->peek((Unsigned16 *)eip, from_user);
+  Unsigned16 word = mem_space()->peek(reinterpret_cast<Unsigned16 *>(eip), from_user);
 
   // sizeoverride REP or REP sizeoverride
   if (word == 0x66f3 || word == 0xf366)
     {
-      switch (mem_space()->peek((Unsigned8 *)(eip + 2), from_user))
+      switch (mem_space()->peek(reinterpret_cast<Unsigned8 *>(eip + 2), from_user))
         {
         case 0x6d:  // REP insw
         case 0x6f:  // REP outw
@@ -198,7 +198,7 @@ Thread::handle_io_fault(Trap_state *ts)
   // was not within the bounds of the TSS segment or (b) the corresponding bit
   // in the IO bitmap is not set (i.e. the port is not enabled).
   //
-  // We have to dispatch the code at the faulting eip to deterine the IO port
+  // We have to dispatch the code at the faulting eip to determine the IO port
   // and send an IO flexpage to our pager.
 
   if (eip <= Mem_layout::User_max && ts->_trapno == 13
