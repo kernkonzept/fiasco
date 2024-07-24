@@ -792,6 +792,17 @@ Cpu::tz_scr(Mword val)
 }
 
 // ------------------------------------------------------------------------
+IMPLEMENTATION [bit64]:
+
+IMPLEMENT_OVERRIDE inline
+bool
+Cpu::is_canonical_address(Address addr)
+{
+  // cf. ARMv8-A Address Translation
+  return addr >= 0xffff000000000000UL || addr <= 0x0000ffffffffffffUL;
+}
+
+// ------------------------------------------------------------------------
 IMPLEMENTATION [arm && cpu_virt]:
 
 #include "feature.h"
@@ -842,15 +853,4 @@ void
 Cpu::print_boot_infos()
 {
   printf("Cache config: %s\n", Config::Cache_enabled ? "ON" : "OFF");
-}
-
-// ------------------------------------------------------------------------
-IMPLEMENTATION [bit64]:
-
-IMPLEMENT_OVERRIDE inline
-bool
-Cpu::is_canonical_address(Address addr)
-{
-  // cf. ARMv8-A Address Translation
-  return addr >= 0xffff000000000000UL || addr <= 0x0000ffffffffffffUL;
 }
