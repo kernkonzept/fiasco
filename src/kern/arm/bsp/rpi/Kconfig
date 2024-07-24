@@ -48,4 +48,14 @@ config PF_RPI_RPI4
 	select ARM_GIC
 	select HAVE_ARM_GICV2
 
+config PF_RPI_RPI5
+	bool "rpi5"
+	depends on PF_RPI
+	select PF_RPI_UART_PL011
+	select CAN_ARM_CPU_CORTEX_A76
+	select ARM_GIC
+	select HAVE_ARM_GICV2
+	select HAS_ARM_PSCI
+	select ARM_PSCI
+
 endchoice

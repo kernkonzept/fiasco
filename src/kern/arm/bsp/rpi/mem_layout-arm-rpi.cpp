@@ -47,3 +47,17 @@ public:
     Gic_v_phys_base    = 0xff846000,
   };
 };
+
+INTERFACE [arm && pf_rpi_rpi5]: //-----------------------------------------
+
+EXTENSION class Mem_layout
+{
+public:
+  enum Phys_layout_bcm2712 : Address {
+    Watchdog_phys_base = 0x7d200000,
+    Gic_cpu_phys_base  = 0x107fffa000,
+    Gic_dist_phys_base = 0x107fff9000,
+    Gic_h_phys_base    = 0x107fffc000,
+    Gic_v_phys_base    = 0x107fffe000,
+  };
+};

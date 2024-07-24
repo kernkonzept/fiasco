@@ -1,4 +1,4 @@
-IMPLEMENTATION [arm && pf_rpi]:
+IMPLEMENTATION [arm && pf_rpi && !arm_psci]:
 
 #include "infinite_loop.h"
 #include "io.h"
@@ -19,5 +19,18 @@ platform_reset(void)
                         | pw | 0x20,
                         base + Rstc);
 
+  L4::infinite_loop();
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && pf_rpi && arm_psci]:
+
+#include "infinite_loop.h"
+#include "psci.h"
+
+void __attribute__ ((noreturn))
+platform_reset(void)
+{
+  Psci::system_reset();
   L4::infinite_loop();
 }
