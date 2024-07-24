@@ -608,13 +608,6 @@ config BEFORE_IRET_SANITY
 	      * Any other state bit must not be set.
 	  Don't use Fiasco compiled with this option for performance analysis!
 
-config GSTABS
-	bool "Compile with gstabs+ debugging information"
-	help
-	  Enabling this option includes the debugging information using the
-	  older gstabs+ format into the kernel image. This is necessary to
-	  access line number information of the kernel from JDB.
-
 config IRQ_SPINNER
 	bool "Display IRQ activity on VGA screen"
 	depends on PF_PC
