@@ -19,7 +19,7 @@ $(dir $(LIBUART)):
 	@mkdir -p $@
 
 clean-LIBUART:
-	$(RM) uart/*.o
+	$(VERBOSE)$(RM) uart/*.o
 
 cleanall-LIBUART:
-	$(RM) uart/.*.d
+	$(VERBOSE)$(RM) uart/.*.d

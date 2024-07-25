@@ -260,20 +260,20 @@ endif
 	$(foreach subsys, $(SUBSYSTEMS), cleanall-$(subsys))
 
 clean: $(foreach subsys, $(SUBSYSTEMS), clean-$(subsys))
-	$(RM) $(ALL)
-	$(RM) *.o fiasco fiasco.map
-	$(RM) auto/*.cc auto/*.h auto/*.S auto/stamp-*.ready
-	$(RM) .Clean-auto .Compiler-config .$(KCONFIG_FILE).parts
+	$(VERBOSE)$(RM) $(strip $(ALL))
+	$(VERBOSE)$(RM) *.o fiasco fiasco.map
+	$(VERBOSE)$(RM) auto/*.cc auto/*.h auto/*.S auto/stamp-*.ready
+	$(VERBOSE)$(RM) .Clean-auto .Compiler-config .$(KCONFIG_FILE).parts
 
 cleanall: clean $(foreach subsys, $(SUBSYSTEMS), cleanall-$(subsys))
-	$(foreach subdir, $(SUBDIRS), $(RM) $(subdir)/*.d $(subdir)/.*.d)
-	$(RM) *.d .*.d .*.d.new *.d.new *~
-	$(RM) globalconfig.h globalconfig.tags globalconfig.h.old Circular
-	$(RM) .Modules.deps source
+	$(foreach subdir, $(SUBDIRS), $(VERBOSE)$(RM) $(subdir)/*.d $(subdir)/.*.d)
+	$(VERBOSE)$(RM) *.d .*.d .*.d.new *.d.new *~
+	$(VERBOSE)$(RM) globalconfig.h globalconfig.tags globalconfig.h.old Circular
+	$(VERBOSE)$(RM) .Modules.deps source
 
 mrproper: cleanall
-	$(RM_R) globalconfig.out Modules.* DEPS*
-	$(RM_R) auto docs config scripts
+	$(VERBOSE)$(RM_R) globalconfig.out Modules.* DEPS*
+	$(VERBOSE)$(RM_R) auto docs config scripts
 
 endif # clean, cleanall, mrproper
 

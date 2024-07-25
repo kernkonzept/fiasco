@@ -74,5 +74,5 @@ $(foreach tname,$(UTEST_TESTS),\
 endif
 
 clean-UTEST:
-	$(RM) $(OBJ_UTEST) $(addprefix utest/,$(UTEST_TESTS) $(UTEST_SUPPL)) \
-		$(patsubst %,%.debug,$(UTEST_TESTS))
+	$(VERBOSE)$(RM) $(addprefix utest/,\
+		$(UTEST_TESTS) $(UTEST_SUPPL)) $(patsubst %,%.debug,$(UTEST_TESTS))

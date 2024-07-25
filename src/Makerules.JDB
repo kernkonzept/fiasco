@@ -9,4 +9,4 @@ $(JDB): $(OBJ_JDB) .$(JDB).deps
 	$(VERBOSE)$(MOVE_IF_CHANGE) $@.new $@ || true
 
 cleanall-JDB:
-	$(RM) .$(JDB).deps
+	$(VERBOSE)$(RM) .$(JDB).deps

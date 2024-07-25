@@ -21,4 +21,4 @@ tcboffset.bin: tcboffset.o
 
 
 clean-TCBOFFSET:
-	$(RM) tcboffset.o tcboffset.bin $(TCBOFFSET) dump_tcboffsets
+	$(VERBOSE)$(RM) tcboffset.o tcboffset.bin $(TCBOFFSET) dump_tcboffsets

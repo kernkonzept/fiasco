@@ -43,5 +43,5 @@ genchecksum: genchecksum.cc
 	$(VERBOSE)$(HOST_CXX) -fno-rtti -fno-exceptions $(HOST_CPPFLAGS) $(HOST_CXXFLAGS) -o $@ $^
 
 clean-CHECKSUM:
-	$(RM) genchecksum setchecksum do_chksum* checksum.ro* checksum.rw*
+	$(VERBOSE)$(RM) genchecksum setchecksum do_chksum* checksum.ro* checksum.rw*
 
