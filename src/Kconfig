@@ -230,11 +230,14 @@ config TSC_UNIFIED
 
 config SYNC_TSC
 	bool "Use time-stamp counter for system clock and scheduling accounting"
-	depends on PF_PC && (IA32 || AMD64)
+	depends on PF_PC && (IA32 || AMD64) && (!MP || TSC_UNIFIED)
 	select SYNC_CLOCK
 	help
 	  Synchronize the internal kernel clock with the CPU time stamp
 	  counter.
+	  This option requires that the TSC is synchronized over the CPUs on an
+	  MP system.
+
 
 # PF_SECTION: TARGET
 
