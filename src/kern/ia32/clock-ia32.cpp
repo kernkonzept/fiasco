@@ -24,6 +24,12 @@ Clock::Clock(Cpu_number cpu)
   : _cpu_id(cpu)
 {}
 
+/**
+ * IA32-specific implementation using the time stamp counter.
+ *
+ * \note Here we assume that the TSC runs at a fixed frequency and does not stop
+ *       during any ACPI state.
+ */
 IMPLEMENT inline NEEDS["cpu.h"]
 Clock::Counter
 Clock::read_counter() const

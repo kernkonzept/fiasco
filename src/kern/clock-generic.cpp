@@ -13,6 +13,11 @@ IMPLEMENTATION:
 
 #include "kip.h"
 
+/**
+ * Simple clock implementation reading the KIP clock value.
+ *
+ * \note This implementation must not be used in one-shot mode.
+ */
 IMPLEMENT inline NEEDS["kip.h"]
 Clock::Counter
 Clock::read_counter() const
