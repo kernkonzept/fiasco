@@ -70,7 +70,8 @@ IMPLEMENTATION[ux]:
 #include "config.h"
 #include "emulation.h"
 #include "initcalls.h"
-#include "kernel_console.h"
+//#include "kernel_console.h" // Mux_console => Timer => Irq_chip => Boot_info
+                              // => Kernel_console => Mux_console
 #include "koptions.h"
 #include "loader.h"
 #include "mem_layout.h"
@@ -282,7 +283,7 @@ Boot_info::init()
 
       case 'q':
         quiet = true;
-        Kconsole::console()->change_state(0, 0, ~Console::OUTENABLED, 0);
+        // Kconsole::console()->change_state(0, 0, ~Console::OUTENABLED, 0);
         break;
 
       case 't':
