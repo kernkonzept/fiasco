@@ -146,7 +146,7 @@ INTERFACE [amd64]:
 EXTENSION class Idt_entry
 {
 private:
-  Unsigned64 _value_high;
+  Unsigned64 _value_high = 0;
 
   CXX_BITFIELD_MEMBER(0, 31, _offset_high, _value_high);
   CXX_BITFIELD_MEMBER(32, 63, _reserved, _value_high);
@@ -171,10 +171,11 @@ IMPLEMENTATION:
  * \param dpl          Descriptor privilege level.
  * \param granularity  Limit granularity.
  */
-PUBLIC inline
+PUBLIC constexpr
 Gdt_entry::Gdt_entry(Address base, Unsigned32 limit,
                      Gdt_entry::Type_system type_system,
                      Gdt_entry::Dpl dpl, Gdt_entry::Granularity granularity)
+  : _value(0)
 {
   _limit_low() = limit & 0x0000ffffU;
   _base_low() = base & 0x00ffffffU;
@@ -193,7 +194,7 @@ Gdt_entry::Gdt_entry(Address base, Unsigned32 limit,
 /**
  * Create a non-present segment descriptor.
  */
-PUBLIC inline
+PUBLIC constexpr
 Gdt_entry::Gdt_entry()
   : _value(0)
 {
@@ -213,12 +214,13 @@ Gdt_entry::Gdt_entry()
  *                      in case of 64-bit code segments).
  * \param granularity   Limit granularity.
  */
-PUBLIC inline NEEDS[<cassert>, "processor.h"]
+PUBLIC constexpr NEEDS[<cassert>, "processor.h"]
 Gdt_entry::Gdt_entry(Address base, Unsigned32 limit,
                      Gdt_entry::Access accessed, Gdt_entry::Type type,
                      Gdt_entry::Dpl dpl, Gdt_entry::Code code,
                      Gdt_entry::Default_size default_size,
                      Gdt_entry::Granularity granularity)
+  : _value(0)
 {
   assert(Proc::Is_64bit || code == Code_undef);
   assert(type == Code_read || code == Code_undef);
@@ -452,7 +454,7 @@ Gdt_entry::tss_make_available()
 /**
  * Create a non-present gate descriptor.
  */
-PUBLIC inline
+PUBLIC constexpr
 Idt_entry::Idt_entry()
   : _value(0)
 {
@@ -487,7 +489,7 @@ Idt_entry::present() const
 /**
  * Create an empty pseudo descriptor.
  */
-PUBLIC inline
+PUBLIC constexpr
 Pseudo_descriptor::Pseudo_descriptor()
   : _limit(0), _base(0)
 {
@@ -499,7 +501,7 @@ Pseudo_descriptor::Pseudo_descriptor()
  * \param base   Base address.
  * \param limit  Limit.
  */
-PUBLIC inline
+PUBLIC constexpr
 Pseudo_descriptor::Pseudo_descriptor(Address base, Unsigned16 limit)
   : _limit(limit), _base(base)
 {
@@ -553,10 +555,11 @@ Gdt_entry::base() const
  * \param type_system  Descriptor type (Intr_gate or Trap_gate).
  * \param dpl          Descriptor privilege level.
  */
-PUBLIC inline NEEDS[<cassert>]
+PUBLIC constexpr NEEDS[<cassert>]
 Idt_entry::Idt_entry(Address offset, Unsigned16 selector,
                      Idt_entry::Type_system type_system, Idt_entry::Dpl dpl,
                      Unsigned8 = 0)
+  : _value(0)
 {
   assert(type_system == Intr_gate || type_system == Trap_gate);
 
@@ -577,8 +580,9 @@ Idt_entry::Idt_entry(Address offset, Unsigned16 selector,
  * \param selector  Target selector.
  * \param dpl       Descriptor privilege level.
  */
-PUBLIC inline
+PUBLIC constexpr
 Idt_entry::Idt_entry(Unsigned16 selector, Idt_entry::Dpl dpl)
+  : _value(0)
 {
   _offset_low() = 0;
   _selector() = selector;
@@ -614,11 +618,10 @@ IMPLEMENTATION[amd64]:
  *
  * \param base  Segment base address.
  */
-PUBLIC inline
+PUBLIC constexpr
 Gdt_entry::Gdt_entry(Address base)
-{
-  _value = base >> 32;
-}
+  : _value(base >> 32)
+{}
 
 /**
  * Get segment base address.
@@ -653,10 +656,11 @@ Gdt_entry::base() const
  * \param dpl          Descriptor privilege level.
  * \param ist          Interrupt stack table.
  */
-PUBLIC inline NEEDS[<cassert>]
+PUBLIC constexpr NEEDS[<cassert>]
 Idt_entry::Idt_entry(Address offset, Unsigned16 selector,
                      Idt_entry::Type_system type_system, Idt_entry::Dpl dpl,
                      Unsigned8 ist = 0)
+  : _value(0)
 {
   assert(type_system == Intr_gate || type_system == Trap_gate);
 
