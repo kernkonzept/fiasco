@@ -203,8 +203,8 @@ public:
   public:
     constexpr Value(TT t) : Value_base<TT>(t) {}
     constexpr operator Bits_type () const { return this->get(); }
-    Value &operator = (Bits_type val) { this->set(val); return *this; }
-    Value &operator = (Value const &val)
+    constexpr Value &operator = (Bits_type val) { this->set(val); return *this; }
+    constexpr Value &operator = (Value const &val)
     { this->set(val.get()); return *this; }
     Value(Value const &) = default;
   };
@@ -216,8 +216,8 @@ public:
   public:
     constexpr Value_unshifted(TT t) : Value_base<TT>(t) {}
     constexpr operator Shift_type () const { return this->get_unshifted(); }
-    Value_unshifted &operator = (Shift_type val) { this->set_unshifted(val); return *this; }
-    Value_unshifted &operator = (Value_unshifted const &val)
+    constexpr Value_unshifted &operator = (Shift_type val) { this->set_unshifted(val); return *this; }
+    constexpr Value_unshifted &operator = (Value_unshifted const &val)
     { this->set_unshifted(val.get_unshifted()); return *this; }
     Value_unshifted(Value_unshifted const &) = default;
   };
@@ -241,7 +241,7 @@ public:
   constexpr typename name ## _bfm_t::Val name() const { return data_member; } \
   typename name ## _bfm_t::Val name() const volatile { return data_member; } \
   /** \brief Get a reference to the \a name bits (LSB to MSB) of \a data_member. */ \
-  typename name ## _bfm_t::Ref name() { return data_member; } \
+  constexpr typename name ## _bfm_t::Ref name() { return data_member; } \
   /** @} */
 
 #define CXX_BITFIELD_MEMBER_RO(LSB, MSB, name, data_member) \
@@ -261,7 +261,7 @@ public:
   constexpr typename name ## _bfm_t::Val_unshifted name() const { return data_member; } \
   typename name ## _bfm_t::Val_unshifted name() const volatile { return data_member; } \
   /** \brief Get a reference to the \a name bits (LSB to MSB) of \a data_member. */ \
-  typename name ## _bfm_t::Ref_unshifted name() { return data_member; } \
+  constexpr typename name ## _bfm_t::Ref_unshifted name() { return data_member; } \
   /** @} */
 
 #define CXX_BITFIELD_MEMBER_UNSHIFTED_RO(LSB, MSB, name, data_member) \
