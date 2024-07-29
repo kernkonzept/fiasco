@@ -26,6 +26,7 @@ Task::map_all_segs(Mem_desc::Mem_type mt)
     }
 }
 
+// ------------------------------------------------------------------------
 IMPLEMENTATION [arm && !cpu_virt]:
 
 PRIVATE inline
