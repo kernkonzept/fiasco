@@ -1,5 +1,18 @@
 IMPLEMENTATION [amd64]:
 
+template<typename T, typename V> inline
+T
+atomic_exchange(T *mem, V value)
+{
+  T val = value;
+
+  // processor locking even without explicit LOCK prefix
+  asm volatile ("xchg %[val], %[mem]\n"
+                : [val] "=r" (val), [mem] "+m" (*mem) : "0" (val));
+
+  return val;
+}
+
 inline
 void
 atomic_and(Mword *l, Mword value)
