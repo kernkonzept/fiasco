@@ -471,7 +471,7 @@ void Fb_console::set(unsigned i, char c, char attr)
     {
       for (unsigned i = 0; i < 8; ++i)
         {
-          unsigned color = (fontchar[j] & (1 << (8 - i))) ? fg : bg;
+          unsigned color = (fontchar[j] & (1 << (7 - i))) ? fg : bg;
           pos[i] = color;
         }
       pos += _scanline / 4;
