@@ -163,15 +163,14 @@ IMPLEMENT_OVERRIDE inline NEEDS["context_base.h", "kip.h"]
 Unsigned64
 Timer::system_clock()
 {
+  Cpu_time time = ts_to_us(time_stamp());
   if (current_cpu() == Cpu_number::boot_cpu())
     {
-      Cpu_time time = ts_to_us(time_stamp());
       Kip::k()->set_clock(time);
       kipclock_cache();
-      return time;
     }
 
-  return Kip::k()->clock();
+  return time;
 }
 
 IMPLEMENT inline

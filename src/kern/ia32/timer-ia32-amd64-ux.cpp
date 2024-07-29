@@ -45,14 +45,11 @@ IMPLEMENT_OVERRIDE inline NEEDS ["cpu.h", "kip.h"]
 Unsigned64
 Timer::system_clock()
 {
+  Cpu_time time = Cpu::cpus.cpu(_cpu).time_us();
   if (current_cpu() == Cpu_number::boot_cpu())
-    {
-      Cpu_time time = Cpu::cpus.cpu(_cpu).time_us();
-      Kip::k()->set_clock(time);
-      return time;
-    }
+    Kip::k()->set_clock(time);
 
-  return Kip::k()->clock();
+  return time;
 }
 
 IMPLEMENT inline NEEDS ["cpu.h"]
