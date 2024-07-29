@@ -338,14 +338,14 @@ void
 Tb_entry::clear()
 { _type = Tbuf_unused; }
 
-PUBLIC inline NEEDS["kip.h", "globals.h"]
+PUBLIC inline NEEDS["kip.h", "globals.h", Tb_entry::set_kclock]
 void
 Tb_entry::set_global(char type, Context const *ctx, Address ip)
 {
   _type   = type;
   _ctx    = ctx;
   _ip     = ip;
-  _kclock = static_cast<Unsigned32>(Kip::k()->clock());
+  set_kclock();
   _cpu    = cxx::int_value<Cpu_number>(current_cpu());
 }
 
@@ -649,3 +649,27 @@ PUBLIC inline
 Unsigned64
 Tb_entry_ipc::timeout_abs_rcv() const
 { return _to_abs_rcv; }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION[!sync_clock]:
+
+PRIVATE inline
+void
+Tb_entry::set_kclock()
+{
+  _kclock = static_cast<Unsigned32>(Kip::k()->clock());
+}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION[sync_clock]:
+
+PRIVATE inline
+void
+Tb_entry::set_kclock()
+{
+  // Find something more suitable. Timer::system_clock() might be already too
+  // heavy-weight for this.
+  // Keep in mind that we already record the TSC respective ARM generic timer
+  // in the '_tsc' field.
+  _kclock = 0;
+}

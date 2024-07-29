@@ -85,6 +85,9 @@ public:
   __attribute__((format(printf, 3, 4)));
   static void save_disable_irqs(Cpu_number cpu);
   static void restore_irqs(Cpu_number cpu);
+  static void store_system_clock_on_enter();
+  static void clear_system_clock_on_enter();
+  static Unsigned64 system_clock_on_enter();
 
 protected:
   template< typename T >
@@ -112,6 +115,7 @@ private:
   static unsigned long cpus_in_debugger;
   static bool never_break;
   static bool jdb_active;
+  static Unsigned64 _system_clock_on_enter;
 
   static void enter_trap_handler(Cpu_number cpu);
   static void leave_trap_handler(Cpu_number cpu);
@@ -187,7 +191,7 @@ bool Jdb::jdb_active;
 bool Jdb::in_service;
 bool Jdb::leave_barrier;
 unsigned long Jdb::cpus_in_debugger;
-
+Unsigned64 Jdb::_system_clock_on_enter;
 
 IMPLEMENT_DEFAULT inline template< typename T >
 void
@@ -199,6 +203,27 @@ T
 Jdb::monitor_address(Cpu_number, T const volatile *addr)
 { return *addr; }
 
+IMPLEMENT_DEFAULT inline
+void
+Jdb::store_system_clock_on_enter()
+{
+  if (!_system_clock_on_enter)
+    _system_clock_on_enter = Timer::system_clock();
+}
+
+IMPLEMENT_DEFAULT inline
+void
+Jdb::clear_system_clock_on_enter()
+{
+  _system_clock_on_enter = 0;
+}
+
+IMPLEMENT_DEFAULT inline
+Unsigned64
+Jdb::system_clock_on_enter()
+{
+  return _system_clock_on_enter;
+}
 
 IMPLEMENT_DEFAULT static
 bool
@@ -1241,6 +1266,9 @@ Jdb::enter_jdb(Trap_state *ts, Cpu_number cpu)
     }
 
   // As of here, we are certain that this is the boot CPU!
+
+  store_system_clock_on_enter();
+
   if (triggered_on_cpu == Cpu_number::nil())
     triggered_on_cpu = Cpu_number::boot_cpu(); // should not happen
 
@@ -1250,6 +1278,7 @@ Jdb::enter_jdb(Trap_state *ts, Cpu_number cpu)
       close_debug_console(cpu);
       leave_trap_handler(cpu);
       triggered_on_cpu = Cpu_number::nil();
+      clear_system_clock_on_enter();
       return 0;
     }
 
@@ -1325,12 +1354,13 @@ Jdb::enter_jdb(Trap_state *ts, Cpu_number cpu)
       Jdb::cursor(127, 1);
     }
 
-  // reenable interrupts
+  // re-enable interrupts
   triggered_on_cpu = Cpu_number::nil();
   close_debug_console(cpu);
 
   rcv_uart_enable();
 
+  clear_system_clock_on_enter();
   leave_trap_handler(cpu);
   return 0;
 }

@@ -16,9 +16,14 @@ Jdb_kern_info_bench::get_time_now()
 
 IMPLEMENTATION[arm && !pf_realview]:
 
-#include "kip.h"
+#include "timer.h"
 
-IMPLEMENT inline NEEDS["kip.h"]
+IMPLEMENT inline NEEDS["timer.h"]
 Unsigned64
 Jdb_kern_info_bench::get_time_now()
-{ return Kip::k()->clock(); }
+{
+  // With CONFIG_SYNC_CLOCK=n, the system clock just reads the KIP clock which
+  // is stopped while executing JDB.
+  // With CONFIG_SYNC_CLOCK=y, the system clock reads the ARM generic timer.
+  return Timer::system_clock();
+}

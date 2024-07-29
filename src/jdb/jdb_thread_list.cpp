@@ -680,7 +680,7 @@ Jdb_thread_list::list_threads_show_thread(Thread *t)
     {
       if (t->_timeout && t->_timeout->is_set())
 	{
-	  Signed64 diff = (t->_timeout->get_timeout(Kip::k()->clock()));
+	  Signed64 diff = t->_timeout->get_timeout(Jdb::system_clock_on_enter());
 	  if (diff < 0)
 	    to.printf("over");
           else if (diff > 100'000'000)

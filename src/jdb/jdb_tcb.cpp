@@ -641,11 +641,11 @@ whole_screen:
   putstr("\t\t\ttimeout  : ");
   if (t->_timeout && t->_timeout->is_set())
     {
-      Signed64 diff = (t->_timeout->get_timeout(Kip::k()->clock())) * 1000;
+      Signed64 diff = t->_timeout->get_timeout(Jdb::system_clock_on_enter());
       if (diff < 0)
         time_str.printf("over");
       else
-        Jdb::write_ll_ns(&time_str, diff, false);
+        Jdb::write_ll_ns(&time_str, diff * 1000, false);
 
       printf("%-13s", time_str.c_str());
     }

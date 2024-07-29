@@ -25,7 +25,7 @@ void
 Jdb_kern_info_misc::show() override
 {
   // FIXME: assume UP here (current_mem_space(0))
-  Cpu_time clock = Kip::k()->clock();
+  Cpu_time clock = Jdb::system_clock_on_enter();
   auto pdir = Mem_space::current_mem_space(Cpu_number::boot_cpu())->dir();
   printf("clck: %08llx.%08llx\npdir: %08lx\n",
          clock >> 32, clock & 0xffffffffU, reinterpret_cast<unsigned long>(pdir));
