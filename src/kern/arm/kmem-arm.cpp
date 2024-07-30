@@ -26,7 +26,7 @@ IMPLEMENTATION [arm && mpu]:
 
 PUBLIC static
 Address
-Kmem::mmio_remap(Address phys, Address size)
+Kmem::mmio_remap(Address phys, Address size, bool cache = false)
 {
   // Arm MPU regions must be aligned to 64 bytes
   Address start = phys & ~63UL;
@@ -37,7 +37,8 @@ Kmem::mmio_remap(Address phys, Address size)
   auto diff = kdir->add(
     start, end,
     Mpu_region_attr::make_attr(L4_fpage::Rights::RW(),
-                               L4_msg_item::Memory_type::Uncached()));
+                               cache ? L4_msg_item::Memory_type::Normal()
+                                     : L4_msg_item::Memory_type::Uncached()));
   assert(diff);
   Mpu::sync(*kdir, diff.value());
   Mem::isb();
