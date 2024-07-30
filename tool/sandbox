@@ -1,0 +1,149 @@
+#! /usr/bin/env perl
+
+use warnings;
+use strict;
+use File::Temp qw/tempdir/;
+use Getopt::Long;
+
+umask 022;
+
+if (not defined $ENV{L4RE_SANDBOX_REEXEC})
+  {
+    print "$0: Entering sandbox\n";
+    $ENV{L4RE_SANDBOX_REEXEC} = "y";
+    system("unshare", "-Urm", $0, @ARGV);
+    exit $? >> 8;
+  }
+
+sub usage
+{
+  print <<EOF;
+Usage: $0 args
+
+  --sys-dir    Path to system install (like generated with debootstrap, chroot)
+  --dir-ro     Additional path to mount read-only.
+  --dir-rw     Additional path to mount read-write.
+  --cmd        Command to execute, if not given, execute 'sh'
+  --help, -h   This help.
+
+  Two modes are provided:
+  --sys-dir is given as '/':
+     Only directories specified with --dir-ro will be made read-only. No
+     PATH will be reset and all environment variables will be kept.
+
+  Any other --sys-dir:
+    The --sys-dir path will be mounted read-only.
+    /proc will be mounted from the host.
+    /tmp will be a fresh tmpfs. PATH will be reset and environment variables
+    will be cleared.
+
+  Uses Linux's 'overlay' file-system and namespaces.
+
+  Example:
+EOF
+  print "  $0 --sys-dir /tmp/debian \\\n";
+  print ' ' x (length($0) + 3), "--dir-ro /path/to/l4re-source \\\n";
+  print ' ' x (length($0) + 3), "--dir-rw /path/to/l4re-build/amd64 \\\n";
+  print ' ' x (length($0) + 3), "--cmd \"make -C /path/to/l4re-build/amd64\"\n";
+}
+
+my @dirs_ro;
+my @dirs_rw;
+my $sys_dir;
+my $mode;
+my $cmd;
+GetOptions("dir-ro=s", \@dirs_ro,
+           "dir-rw=s", \@dirs_rw,
+           "sys-dir=s", \$sys_dir,
+           "cmd=s", \$cmd,
+           "help|h", sub { usage(); exit(0); });
+
+die "Need --sys-dir" unless defined($sys_dir) && -d $sys_dir;
+
+sub sh
+{
+  my @cmd = @_;
+  print "RUNNING: @cmd\n" if $ENV{V};
+  system(@cmd);
+  die "Failed to execute '@cmd'" if $? >> 8;
+}
+
+sub sh_ignore_exit
+{
+  my @cmd = @_;
+  print "RUNNING: @cmd\n" if $ENV{V};
+  system(@cmd);
+  return 0;
+}
+
+# Decouple all mounts from the outside world
+# See MS_PRIVATE in `man 2 mount`
+sh("mount --make-rprivate /");
+
+if ($sys_dir =~ m,^/+$,)
+  {
+    sh("mount --bind $_ $_ && mount -o bind,remount,ro $_") foreach (@dirs_ro);
+    # for doing everything read-only (not only @dirs_ro), we would need to
+    # - make all mounts points read-only (what's a good way of finding them out?)
+    # - mount at least /tmp read-write again
+
+    $cmd = 'sh' unless defined $cmd;
+    sh("$cmd");
+
+    sh("umount $_") foreach (@dirs_ro);
+  }
+else
+  {
+    my $sandbox_dir = tempdir('l4-sandbox-XXXXXXXX', CLEANUP => 0, TMPDIR => 1);
+
+    sh("mkdir -p $sandbox_dir/upper/dev $sandbox_dir/work $sandbox_dir/system");
+    sh("mount -t overlay l4re-build-overlay -o lowerdir=$sys_dir,upperdir=$sandbox_dir/upper,workdir=$sandbox_dir/work $sandbox_dir/system");
+    sh("mount -t tmpfs tmpfs $sandbox_dir/system/tmp");
+    sh("mount --rbind /dev $sandbox_dir/system/dev"); # On the overlay we get EPERM with reading dev files
+    sh("mount --rbind -orw /proc $sandbox_dir/system/proc");
+
+    foreach my $d (@dirs_ro)
+      {
+        sh("mkdir -p $sandbox_dir/upper/$d");
+        sh("mount --rbind $d $sandbox_dir/system/$d");
+        sh("mount -o bind,remount,ro $sandbox_dir/system/$d");
+      }
+
+    foreach my $d (@dirs_rw)
+      {
+        sh("mkdir -p $sandbox_dir/upper/$d");
+        sh("mount --rbind -orw $d $sandbox_dir/system/$d");
+      }
+
+    my $chroot;
+    # We need to add potential sbin paths since we only have the original user's
+    # PATH environment variable
+    for my $dir ((split /:/,$ENV{PATH}), "/sbin", "/usr/sbin")
+      {
+        my $bin = "$dir/chroot";
+        next unless -x $bin;
+        $chroot = $bin;
+        last;
+      }
+
+    die "Cannot find chroot executable" unless defined $chroot;
+
+    $cmd = 'sh' unless defined $cmd;
+    my $term = $ENV{TERM} || "xterm";
+    my $makeflags = $ENV{MAKEFLAGS} || "";
+
+    # jobserver fifo not reachable in sandbox
+    $makeflags =~ s/--jobserver-auth(\s+|=)[^ ]+//;
+
+    # Assumed path variable inside the sysdir
+    # In an ideal world sh would load /etc/profile in the chroot
+    my $path = "/usr/local/bin:/usr/local/sbin:/bin:/sbin:/usr/bin:/usr/sbin";
+
+    sh("/usr/bin/env -i 'PATH=$path' L4RE_SANDBOX_REEXEC=y BID_SANDBOX_IN_PROGRESS=1 TERM=$term MAKEFLAGS='$makeflags' $chroot $sandbox_dir/system $cmd");
+
+    sh_ignore_exit("umount $sandbox_dir/system/$_") foreach (@dirs_rw, @dirs_ro);
+    sh_ignore_exit("umount $sandbox_dir/system/dev");
+    sh_ignore_exit("umount $sandbox_dir/system/tmp");
+    sh_ignore_exit("umount -l $sandbox_dir/system/proc");
+    sh_ignore_exit("umount $sandbox_dir/system");
+  }

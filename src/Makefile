@@ -1,6 +1,25 @@
 srcdir		?= NOT_SET
 tooldir		:= $(srcdir)/../tool
 
+ifneq ($(if $(SANDBOX_IN_PROGRESS),,$(SANDBOX_ENABLE)),)
+
+.PHONY: $(MAKECMDGOALS) do-all-make-targets
+
+do-all-make-targets:
+	$(VERBOSE)SANDBOX_IN_PROGRESS=1 \
+	   $(tooldir)/sandbox \
+	              --sys-dir "$(or $(SANDBOX_SYSDIR),/)" \
+	              --dir-rw "$(objbase)" \
+	              --dir-ro "$(srcdir)/.." \
+	              --cmd "$(MAKE) -C $(objbase) $(MAKECMDGOALS)"
+
+$(MAKECMDGOALS): do-all-make-targets
+
+# For VERBOSE
+include $(srcdir)/Makeconf
+
+else
+
 .PHONY: all do-all test-all config textconfig menuconfig xconfig \
         oldconfig regenconfig mrproper doc help update nconfig \
         savedefconfig listnewconfig oldnoconfig oldaskconfig FORCE
@@ -304,3 +323,5 @@ report:
 	$(call _ver_fun,make)
 	$(call _ver_fun_vars,CC CXX HOST_CC HOST_CXX,-v, 2>&1)
 	$(call _ver_fun_var,LD)
+
+endif
