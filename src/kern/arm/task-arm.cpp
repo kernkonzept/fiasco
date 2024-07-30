@@ -90,6 +90,8 @@ Task::map_gicc_page(L4_msg_tag tag, Utcb *utcb)
            return commit_result(-L4_err::ENomem);
     };
 
+  _has_gicc_page_mapped = true;
+
   return commit_result(0);
 }
 

@@ -1,3 +1,15 @@
+INTERFACE [arm && cpu_virt]:
+
+EXTENSION class Space
+{
+public:
+  bool has_gicc_page_mapped() const { return _has_gicc_page_mapped; }
+
+protected:
+  bool _has_gicc_page_mapped = false;
+};
+
+// ------------------------------------------------------------------------
 IMPLEMENTATION [arm && mpu]:
 
 IMPLEMENT_OVERRIDE inline

@@ -134,7 +134,9 @@ Context::switch_vm_state(Context *t)
 
   if (!from_ext_vcpu_enabled && !to_ext_vcpu_enabled)
     {
-      Gic_h_global::gic->switch_to_non_vcpu(Gic_h::From_vgic_mode::Disabled);
+      if (space()->has_gicc_page_mapped())
+        // gicv3 will only act on Gic_h::From_vgic_mode::Enabled
+        Gic_h_global::gic->switch_to_non_vcpu(Gic_h::From_vgic_mode::Disabled);
       return;
     }
 
@@ -165,6 +167,10 @@ Context::switch_vm_state(Context *t)
   else
     {
       arm_hyp_load_non_vm_state();
+      // Need to do this always:
+      // - GICv2: handle switching to a thread which can access the vGIC page
+      //          but is not in extended vCPU mode
+      // - GICv3: needs to be always called
       Gic_h_global::gic->switch_to_non_vcpu(from_mode);
     }
 
