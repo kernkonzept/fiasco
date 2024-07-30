@@ -70,8 +70,15 @@ public:
   virtual ~Receiver() = 0;
 
 private:
-  // DATA
-  void const *_partner;     // IPC partner I'm waiting for/involved with
+  /**
+   * IPC partner this Receiver is waiting for/involved with.
+   *
+   * Not reset after a receive operation is finished, so it might contain an old
+   * value from the last receive operation (see also `Receiver::in_ipc()`).
+   *
+   * Must never be dereferenced, only compared.
+   */
+  void const *_partner;
   Syscall_frame *_rcv_regs; // registers used for receive
   Mword _caller;
   Iterable_prio_list _sender_list;
@@ -150,6 +157,17 @@ Receiver::reset_caller()
   _caller = 0;
 }
 
+/**
+ * Check if the given sender is stored as the IPC partner of this Receiver.
+ *
+ * The IPC partner field is not reset after a receive operation is finished, so
+ * it might contain an old value from the last receive operation (see also
+ * `Receiver::in_ipc()`).
+ *
+ * \pre Must only be invoked in a context where it is safe to access the
+ *      Receiver's state, e.g. on the Receiver's home CPU or in a DRQ targeted
+ *      at the Receiver.
+ */
 PROTECTED inline
 bool Receiver::is_partner(Sender *s) const
 {
@@ -236,8 +254,14 @@ PROTECTED inline
 bool Receiver::prepared() const
 { return _rcv_regs; }
 
-/** Set the IPC partner (sender).
-    @param partner IPC partner
+/**
+ * Set the IPC partner (sender).
+ *
+ * \pre Must only be invoked in a context where it is safe to access the
+ *      Receiver's state, e.g. on the Receiver's home CPU or in a DRQ targeted
+ *      at the Receiver.
+ *
+ * \param partner IPC partner
  */
 PUBLIC inline
 void
@@ -246,6 +270,13 @@ Receiver::set_partner(Sender* partner)
   _partner = partner;
 }
 
+/**
+ * Check if this Receiver is in an IPC receive operation with the given sender.
+ *
+ * \pre Must only be invoked in a context where it is safe to access the
+ *      Receiver's state, e.g. on the Receiver's home CPU or in a DRQ targeted
+ *      at the Receiver.
+ */
 PUBLIC inline
 bool
 Receiver::in_ipc(Sender *sender)
