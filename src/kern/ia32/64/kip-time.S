@@ -25,8 +25,7 @@
 kip_time_fn_read_us:
 1:
 #ifdef CONFIG_SYNC_TSC
-        rdtsc
-        and     $0xffffffff, %eax       // that's actually not necessary
+        rdtsc                   // high-order 32 bits of rax and rdx are 0
         shl     $32, %rdx
         or      %rdx, %rax
         mulq    KIP_VAL(KIP_SCALER_TIME_STAMP_TO_US)
@@ -50,8 +49,7 @@ kip_time_fn_read_us_end:
 kip_time_fn_read_ns:
 1:
 #ifdef CONFIG_SYNC_TSC
-        rdtsc
-        and     $0xffffffff, %eax       // that's actually not necessary
+        rdtsc                   // high-order 32 bits of rax and rdx are 0
         shl     $32, %rdx
         or      %rdx, %rax
         mulq    KIP_VAL(KIP_SCALER_TIME_STAMP_TO_NS)
