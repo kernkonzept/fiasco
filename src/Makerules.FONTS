@@ -17,3 +17,6 @@ libfonts.a: $(OBJ_FONTS)
 	$(AR_MESSAGE)
 	$(VERBOSE)$(RM) $@
 	$(VERBOSE)$(AR) $(ARFLAGS) $@ $^
+
+clean-FONTS:
+	$(VERBOSE)$(RM) $(FONT_FILES:%=%.bin.S)
