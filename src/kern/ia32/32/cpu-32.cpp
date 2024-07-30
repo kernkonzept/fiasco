@@ -14,13 +14,13 @@ Cpu::stack_align(Mword stack)
 { return stack & ~0x3; }
 
 
-PUBLIC inline
+PUBLIC inline FIASCO_CONST
 Unsigned64
 Cpu::ns_to_tsc(Unsigned64 ns) const
 {
   Unsigned32 dummy;
   Unsigned64 tsc;
-  asm volatile
+  asm inline
 	("movl  %%edx, %%ecx		\n\t"
 	 "mull	%3			\n\t"
 	 "movl	%%ecx, %%eax		\n\t"
@@ -36,13 +36,13 @@ Cpu::ns_to_tsc(Unsigned64 ns) const
   return tsc;
 }
 
-PUBLIC inline
+PUBLIC inline FIASCO_CONST
 Unsigned64
 Cpu::tsc_to_ns(Unsigned64 tsc) const
 {
   Unsigned32 dummy1, dummy2;
   Unsigned64 ns;
-  asm volatile
+  asm inline
 	("movl  %%edx, %%ecx		\n\t"
 	 "mull	%4			\n\t"
 	 "movl  %%eax, %2		\n\t"
@@ -59,13 +59,13 @@ Cpu::tsc_to_ns(Unsigned64 tsc) const
   return ns;
 }
 
-PUBLIC inline
+PUBLIC inline FIASCO_CONST
 Unsigned64
 Cpu::tsc_to_us(Unsigned64 tsc) const
 {
   Unsigned32 dummy;
   Unsigned64 us;
-  asm volatile
+  asm inline
 	("movl  %%edx, %%ecx		\n\t"
 	 "mull	%3			\n\t"
 	 "movl	%%ecx, %%eax		\n\t"
@@ -85,7 +85,7 @@ void
 Cpu::tsc_to_s_and_ns(Unsigned64 tsc, Unsigned32 *s, Unsigned32 *ns) const
 {
     Unsigned32 dummy;
-    __asm__
+    asm inline
 	("				\n\t"
 	 "movl  %%edx, %%ecx		\n\t"
 	 "mull	%4			\n\t"
@@ -109,7 +109,7 @@ Unsigned64
 Cpu::rdtsc()
 {
   Unsigned64 tsc;
-  asm volatile ("rdtsc" : "=A" (tsc));
+  asm inline volatile ("rdtsc" : "=A" (tsc));
   return tsc;
 }
 
@@ -121,19 +121,19 @@ Unsigned64
 Cpu::rdtscp()
 {
   Unsigned64 tsc;
-  asm volatile ("rdtscp" : "=A" (tsc) :: "ecx");
+  asm inline volatile ("rdtscp" : "=A" (tsc) :: "ecx");
   return tsc;
 }
 
 PUBLIC static inline
 Unsigned32
 Cpu::get_flags()
-{ Unsigned32 efl; asm volatile ("pushfl ; popl %0" : "=r"(efl)); return efl; }
+{ Unsigned32 efl; asm inline volatile ("pushfl ; popl %0" : "=r"(efl)); return efl; }
 
 PUBLIC static inline
 void
 Cpu::set_flags(Unsigned32 efl)
-{ asm volatile ("pushl %0 ; popfl" : : "rm" (efl) : "memory"); }
+{ asm inline volatile ("pushl %0 ; popfl" : : "rm" (efl) : "memory"); }
 
 IMPLEMENT inline NEEDS["tss.h"]
 Address volatile &

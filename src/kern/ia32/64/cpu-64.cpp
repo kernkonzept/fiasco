@@ -66,12 +66,12 @@ Cpu::init_sysenter()
 }
 
 
-PUBLIC inline
+PUBLIC inline FIASCO_CONST
 Unsigned64
 Cpu::ns_to_tsc(Unsigned64 ns) const
 {
   Unsigned64 tsc, dummy;
-  __asm__
+  asm inline
       ("                              \n\t"
        "mulq   %3                      \n\t"
        "shrd  $27, %%rdx, %%rax       \n\t"
@@ -81,12 +81,12 @@ Cpu::ns_to_tsc(Unsigned64 ns) const
   return tsc;
 }
 
-PUBLIC inline
+PUBLIC inline FIASCO_CONST
 Unsigned64
 Cpu::tsc_to_ns(Unsigned64 tsc) const
 {
   Unsigned64 ns, dummy;
-  __asm__
+  asm inline
       ("                               \n\t"
        "mulq   %3                      \n\t"
        "shrd  $27, %%rdx, %%rax       \n\t"
@@ -96,12 +96,12 @@ Cpu::tsc_to_ns(Unsigned64 tsc) const
   return ns;
 }
 
-PUBLIC inline
+PUBLIC inline FIASCO_CONST
 Unsigned64
 Cpu::tsc_to_us(Unsigned64 tsc) const
 {
   Unsigned64 ns, dummy;
-  __asm__
+  asm inline
       ("                               \n\t"
        "mulq   %3                      \n\t"
        "shrd  $32, %%rdx, %%rax       \n\t"
@@ -116,7 +116,7 @@ PUBLIC inline
 void
 Cpu::tsc_to_s_and_ns(Unsigned64 tsc, Unsigned32 *s, Unsigned32 *ns) const
 {
-  __asm__
+  asm inline
       ("                                \n\t"
        "mulq   %3                       \n\t"
        "shrd  $27, %%rdx, %%rax         \n\t"
@@ -133,7 +133,7 @@ Unsigned64
 Cpu::rdtsc()
 {
   Unsigned64 h, l;
-  asm volatile ("rdtsc" : "=a" (l), "=d" (h));
+  asm inline volatile ("rdtsc" : "=a" (l), "=d" (h));
   return (h << 32) | l;
 }
 
@@ -145,7 +145,7 @@ Unsigned64
 Cpu::rdtscp()
 {
   Unsigned64 h, l;
-  asm volatile ("rdtscp" : "=a" (l), "=d" (h) :: "rcx");
+  asm inline volatile ("rdtscp" : "=a" (l), "=d" (h) :: "rcx");
   return (h << 32) | l;
 }
 
@@ -154,7 +154,7 @@ Unsigned64
 Cpu::get_flags()
 {
   Unsigned64 efl;
-  asm volatile ("pushf ; popq %0" : "=r"(efl));
+  asm inline volatile ("pushf ; popq %0" : "=r"(efl));
   return efl;
 }
 
@@ -163,7 +163,7 @@ PUBLIC static inline
 void
 Cpu::set_flags(Unsigned64 efl)
 {
-  asm volatile ("pushq %0 ; popf" : : "rm" (efl) : "memory");
+  asm inline volatile ("pushq %0 ; popf" : : "rm" (efl) : "memory");
 }
 
 
