@@ -180,7 +180,7 @@ PUBLIC
 void
 Vm_svm::operator delete (void *ptr)
 {
-  Vm_svm *t = reinterpret_cast<Vm_svm*>(ptr);
+  Vm_svm *t = static_cast<Vm_svm*>(ptr);
   _svm_allocator.q_free(t->ram_quota(), ptr);
 }
 
