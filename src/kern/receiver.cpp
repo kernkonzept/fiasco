@@ -156,12 +156,6 @@ bool Receiver::is_partner(Sender *s) const
   return _partner == s;
 }
 
-PROTECTED inline
-bool Receiver::has_partner() const
-{
-  return _partner != nullptr;
-}
-
 // Interface for senders
 
 /** Return a reference to receiver's IPC registers.
@@ -382,3 +376,11 @@ Receiver::abort_send(Sender *sender)
   return rq.state;
 }
 
+//----------------------------------------------------------------------------
+IMPLEMENTATION [debug]:
+
+PROTECTED inline
+bool Receiver::has_partner() const
+{
+  return _partner != nullptr;
+}
