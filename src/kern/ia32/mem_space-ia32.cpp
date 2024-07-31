@@ -351,17 +351,15 @@ Mem_space::~Mem_space()
 IMPLEMENTATION [ia32 || amd64]:
 
 #include <cassert>
-#include "l4_types.h"
-#include "kmem.h"
-#include "mem_unit.h"
-#include "cpu_lock.h"
-#include "lock_guard.h"
-#include "logdefs.h"
-#include "paging.h"
-
 #include <cstring>
 #include "config.h"
+#include "cpu_lock.h"
+#include "l4_types.h"
+#include "lock_guard.h"
+#include "logdefs.h"
 #include "kmem.h"
+#include "mem_unit.h"
+#include "paging.h"
 
 PUBLIC inline NEEDS ["kmem.h"]
 Address
