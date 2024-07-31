@@ -2,11 +2,7 @@
 IMPLEMENTATION[ia32 || amd64]:
 
 #include "config.h"
-#include "globals.h"
-#include "kernel_console.h"
-#include "kdb_ke.h"
-#include "timer.h"
-#include "vkey.h"
+#include "context_base.h"
 #include "watchdog.h"
 
 
@@ -27,5 +23,3 @@ thread_timer_interrupt_slow(void)
 	}
     }
 }
-
-

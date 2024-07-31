@@ -2,7 +2,6 @@ IMPLEMENTATION[ia32,ux,amd64]:
 
 #include "cpu.h"
 #include "config.h"
-#include "globals.h"
 #include "kip.h"
 #include "warn.h"
 
@@ -34,7 +33,7 @@ Timer::init_system_clock_ap(Cpu_number cpu)
     }
 }
 
-IMPLEMENT inline NEEDS ["config.h", "cpu.h", "globals.h", "kip.h"]
+IMPLEMENT inline NEEDS ["config.h", "cpu.h", "kip.h"]
 Unsigned64
 Timer::system_clock()
 {
@@ -49,7 +48,7 @@ Timer::system_clock()
   return Kip::k()->clock();
 }
 
-IMPLEMENT inline NEEDS ["config.h", "cpu.h", "globals.h", "kip.h"]
+IMPLEMENT inline NEEDS ["config.h", "cpu.h", "kip.h"]
 void
 Timer::update_system_clock(Cpu_number cpu)
 {

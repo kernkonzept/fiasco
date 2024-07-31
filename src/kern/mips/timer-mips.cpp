@@ -26,7 +26,6 @@ IMPLEMENTATION [mips]:
 
 #include "cpu.h"
 #include "config.h"
-#include "globals.h"
 #include "kip.h"
 #include "warn.h"
 #include "irq_chip.h"

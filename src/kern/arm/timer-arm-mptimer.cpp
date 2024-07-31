@@ -31,10 +31,6 @@ private:
 // --------------------------------------------------------------
 IMPLEMENTATION [arm && mptimer]:
 
-#include <cstdio>
-
-#include "globals.h"
-
 IMPLEMENT_OVERRIDE
 Irq_chip::Mode Timer::irq_mode()
 {

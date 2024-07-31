@@ -48,7 +48,6 @@ IMPLEMENTATION [arm]:
 
 #include "config.h"
 #include "context_base.h"
-#include "globals.h"
 #include "kip.h"
 #include "watchdog.h"
 #include "warn.h"
@@ -95,7 +94,7 @@ Timer::init_system_clock_ap(Cpu_number cpu)
     }
 }
 
-IMPLEMENT inline NEEDS["config.h", "globals.h", "kip.h", "watchdog.h", Timer::kipclock_cache]
+IMPLEMENT inline NEEDS["config.h", "kip.h", "watchdog.h", Timer::kipclock_cache]
 void
 Timer::update_system_clock(Cpu_number cpu)
 {
