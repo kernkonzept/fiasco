@@ -464,9 +464,26 @@ PUBLIC inline NOEXPORT
 Perf_cnt_ap::Perf_cnt_ap()
   : Perf_cnt_p6(Msr_ap_evntsel0, Msr_ap_perfctr0, 2, 1)
 {
-  Unsigned32 eax, ebx, ecx;
-  Cpu::boot_cpu()->arch_perfmon_info(&eax, &ebx, &ecx);
+  Unsigned32 eax, ebx, ecx, edx;
+  Cpu::boot_cpu()->arch_perfmon_info(&eax, &ebx, &ecx, &edx);
   _nr_regs = (eax & 0x0000ff00) >> 8;
+
+  if ((eax & 0xff) > 1)
+    {
+      // fixed-function performance counters supported in principle
+      unsigned nr_fixed_function_perctr = edx & 0x1f;
+      Unsigned64 msr_fixed_ctr_ctrl = Cpu::rdmsr(0x38d); // IA32_FIXED_CTR_CTRL
+      Unsigned64 msr_perf_global_ctrl = Cpu::rdmsr(0x38f); // IA32_PERF_GLOBAL_CTRL
+      for (unsigned i = 0; i < nr_fixed_function_perctr; ++i)
+        if ((ecx & (1 << i)) || ((edx & 0x1f) > i))
+          {
+            msr_fixed_ctr_ctrl |= (3ULL << (4 * i)); // enable for CPL0..CPL3
+            msr_perf_global_ctrl |= (1ULL << (32 + i)); // EN_FIXED_CTR<i>=1
+          }
+
+      Cpu::wrmsr(msr_fixed_ctr_ctrl, 0x38d);
+      Cpu::wrmsr(msr_perf_global_ctrl, 0x38f);
+    }
 }
 
 void
@@ -874,7 +891,7 @@ Perf_cnt::init()
 {
   Cpu const &cpu = *Cpu::boot_cpu();
   Mword perfctr_type = Perfctr_x86_generic;
-  Unsigned32 eax, ebx, ecx;
+  Unsigned32 eax, ebx, ecx, edx;
 
   for (Mword i=0; i<Perf_cnt::Max_slot; i++)
     read_pmc_fn[i] = dummy_read_pmc;
@@ -883,7 +900,7 @@ Perf_cnt::init()
     {
       if (Cpu::cpuid_eax(0) >= 10)
         {
-          cpu.arch_perfmon_info(&eax, &ebx, &ecx);
+          cpu.arch_perfmon_info(&eax, &ebx, &ecx, &edx);
           if ((eax & 0xff) && ((eax >> 8) & 0xff) > 1)
             {
               perfctr_type  = Perfctr_x86_arch_perfmon;

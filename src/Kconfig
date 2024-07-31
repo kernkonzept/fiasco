@@ -695,6 +695,15 @@ config JDB_ACCOUNTING
 
 	  Should be disabled for kernels which are used for measurements.
 
+config PERF_CNT
+	bool "Support for performance counters"
+	depends on (IA32 || AMD64 || ARM || ARM64 || MIPS)
+	default y if JDB
+	help
+	  Enable support for performance counters. On IA32/AMD64, enable support
+	  for fixed-function counters if supported by the target allowing to
+	  read these counters from all privilege levels.
+
 endif # JDB
 
 
@@ -836,9 +845,6 @@ config EXPERIMENTAL
 	  disrupt the stability of your kernel.
 
 	  Use with caution!
-
-config PERF_CNT
-	def_bool y if JDB && (IA32 || AMD64 || ARM || ARM64 || MIPS)
 
 config BIT32
 	bool

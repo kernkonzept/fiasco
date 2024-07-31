@@ -127,6 +127,7 @@ private:
   Unsigned32 _arch_perfmon_info_eax;    // CPUID(10).EAX
   Unsigned32 _arch_perfmon_info_ebx;    // CPUID(10).EBX
   Unsigned32 _arch_perfmon_info_ecx;    // CPUID(10).ECX
+  Unsigned32 _arch_perfmon_info_edx;    // CPUID(10).EDX
 
   Unsigned32 _monitor_mwait_eax;        // CPUID(5).EAX
   Unsigned32 _monitor_mwait_ebx;        // CPUID(5).EBX
@@ -1210,11 +1211,13 @@ Cpu::set_model_str()
 
 PUBLIC inline FIASCO_INIT_CPU_SFX(arch_perfmon_info)
 void
-Cpu::arch_perfmon_info(Unsigned32 *eax, Unsigned32 *ebx, Unsigned32 *ecx) const
+Cpu::arch_perfmon_info(Unsigned32 *eax, Unsigned32 *ebx, Unsigned32 *ecx,
+                       Unsigned32 *edx) const
 {
   *eax = _arch_perfmon_info_eax;
   *ebx = _arch_perfmon_info_ebx;
   *ecx = _arch_perfmon_info_ecx;
+  *edx = _arch_perfmon_info_edx;
 }
 
 PUBLIC static
@@ -1297,7 +1300,8 @@ Cpu::identify()
       case 10:
         cpuid(10, &_arch_perfmon_info_eax,
                   &_arch_perfmon_info_ebx,
-                  &_arch_perfmon_info_ecx, &i);
+                  &_arch_perfmon_info_ecx,
+                  &_arch_perfmon_info_edx);
         // FALLTHRU
       case 2:
         if (_vendor == Vendor_intel)
