@@ -91,6 +91,7 @@ IMPLEMENTATION:
 #include "assert.h"
 #include "kmem.h"
 #include "kip.h"
+#include "mem.h"
 #include "pic.h"
 #include "lock_guard.h"
 #include "boot_alloc.h"
@@ -146,34 +147,34 @@ Io_apic_mgr::pm_on_resume([[maybe_unused]] Cpu_number cpu) override
 }
 
 
-IMPLEMENT inline
+IMPLEMENT inline NEEDS["mem.h"]
 Mword
 Io_apic::Apic::read(int reg)
 {
   adr = reg;
-  asm volatile ("": : :"memory");
+  Mem::barrier();
   return data;
 }
 
-IMPLEMENT inline
+IMPLEMENT inline NEEDS["mem.h"]
 void
 Io_apic::Apic::modify(int reg, Mword set_bits, Mword del_bits)
 {
   Mword tmp;
   adr = reg;
-  asm volatile ("": : :"memory");
+  Mem::barrier();
   tmp = data;
   tmp &= ~del_bits;
   tmp |= set_bits;
   data = tmp;
 }
 
-IMPLEMENT inline
+IMPLEMENT inline NEEDS["mem.h"]
 void
 Io_apic::Apic::write(int reg, Mword value)
 {
   adr = reg;
-  asm volatile ("": : :"memory");
+  Mem::barrier();
   data = value;
 }
 

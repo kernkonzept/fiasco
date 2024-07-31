@@ -475,12 +475,14 @@ Mem_space::switch_page_table(Switchin_flags)
 // --------------------------------------------------------------------
 IMPLEMENTATION [(amd64 || ia32) && cpu_local_map]:
 
+#include "mem.h"
+
 PRIVATE static inline
 Address *
 Mem_space::cpu_val()
 { return reinterpret_cast<Address *>(Mem_layout::Kentry_cpu_page); }
 
-PRIVATE inline NEEDS ["cpu.h", "kmem.h"]
+PRIVATE inline NEEDS ["cpu.h", "kmem.h", "mem.h"]
 void
 Mem_space::prepare_pt_switch()
 {
@@ -501,7 +503,8 @@ Mem_space::prepare_pt_switch()
       //printf("u: %u %lx\n", bit - 1, n);
       //LOG_MSG_3VAL(current(), "u", bit - 1, n, *reinterpret_cast<Mword *>(m));
     }
-  asm volatile ("" : : : "memory");
+
+  Mem::barrier();
 }
 
 

@@ -301,6 +301,7 @@ Kmem::map_kernel_virt(Kpdir *dir)
 //--------------------------------------------------------------------------
 IMPLEMENTATION [ia32, amd64]:
 
+#include "mem.h"
 #include "paging_bits.h"
 
 /**
@@ -463,7 +464,7 @@ Kmem::setup_cpu_structures(Cpu &cpu, Lockless_alloc *cpu_alloc,
   cpu.init_tss(tss);
 
   // force GDT... to memory before loading the registers
-  asm volatile ( "" : : : "memory" );
+  Mem::barrier();
 
   // set up the x86 CPU's memory model
   cpu.set_gdt();

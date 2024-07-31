@@ -76,6 +76,7 @@ Kernel_thread::boot_app_cpus()
 IMPLEMENTATION [mp]:
 
 #include "acpi.h"
+#include "mem.h"
 #include "per_cpu_data.h"
 
 EXTENSION class Kernel_thread
@@ -143,7 +144,7 @@ Kernel_thread::boot_app_cpus()
   _tramp_mp_startup_cr0 = Cpu::get_cr0();
   _tramp_mp_startup_gdt_pdesc = Kmem::get_realmode_startup_gdt_pdesc();
 
-  __asm__ __volatile__ ("" : : : "memory");
+  Mem::barrier();
 
   Acpi_madt const *madt = Io_apic::madt();
 
