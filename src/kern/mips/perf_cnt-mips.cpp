@@ -53,7 +53,7 @@ static Mword dummy_read_pmc() { return 0; }
 
 PUBLIC static FIASCO_INIT_CPU
 void
-Perf_cnt::init_ap()
+Perf_cnt::init_ap(Cpu const &)
 {
   if (current_cpu() != Cpu_number::boot_cpu())
     return;

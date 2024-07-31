@@ -170,14 +170,16 @@ void boot_ap_cpu()
   if (cpu_is_new)
     Per_cpu_data::run_ctors(_cpu);
 
-  Cpu::cpus.cpu(_cpu).init(!cpu_is_new, false);
+  Cpu &cpu = Cpu::cpus.cpu(_cpu);
+  cpu.init(!cpu_is_new, false);
+
   Pic::init_ap(_cpu, !cpu_is_new);
   Thread::init_per_cpu(_cpu, !cpu_is_new);
   Platform_control::init(_cpu);
   Ipi::init(_cpu);
   Timer::init(_cpu);
   Timer::init_system_clock_ap(_cpu);
-  Perf_cnt::init_ap();
+  Perf_cnt::init_ap(cpu);
 
   // create kernel thread
   Kernel_thread *kernel = App_cpu_thread::may_be_create(_cpu, cpu_is_new);

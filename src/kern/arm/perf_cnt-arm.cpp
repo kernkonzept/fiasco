@@ -1,5 +1,6 @@
 INTERFACE [arm && perf_cnt]:
 
+#include "cpu.h"
 #include "initcalls.h"
 
 EXTENSION class Perf_cnt
@@ -312,7 +313,7 @@ Perf_cnt::init()
 
 PUBLIC static inline NEEDS[Perf_cnt::init_cpu] FIASCO_INIT_CPU_SFX(init_ap)
 void
-Perf_cnt::init_ap()
+Perf_cnt::init_ap(Cpu const &)
 {
   init_cpu();
 }

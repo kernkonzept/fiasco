@@ -151,7 +151,7 @@ void boot_ap_cpu()
   Platform_control::init(_cpu);
   Ipi::init(_cpu);
   Timer::init(_cpu);
-  Perf_cnt::init_ap();
+  Perf_cnt::init_ap(cpu);
   Mips_bsp_irqs::init_ap(_cpu);
   Ipi::hw->init_ipis(_cpu, nullptr);
 

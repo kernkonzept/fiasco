@@ -156,7 +156,7 @@ void boot_ap_cpu(Mword hart_id)
   Platform_control::init(_cpu);
   Ipi::init(_cpu);
   Timer::init(_cpu);
-  Perf_cnt::init_ap();
+  Perf_cnt::init_ap(cpu);
 
   // create kernel thread
   Kernel_thread *kernel = App_cpu_thread::may_be_create(_cpu, cpu_is_new);

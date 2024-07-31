@@ -172,9 +172,7 @@ void FIASCO_FASTCALL FIASCO_NORETURN boot_ap_cpu()
   if (cpu_is_new)
     Platform_control::init(_cpu);
 
-  if (Koptions::o()->opt(Koptions::F_loadcnt))
-    Perf_cnt::init_ap();
-
+  Perf_cnt::init_ap(cpu);
 
   // create kernel thread
   Kernel_thread *kernel = App_cpu_thread::may_be_create(_cpu, cpu_is_new);

@@ -1,5 +1,6 @@
 INTERFACE:
 
+#include "cpu.h"
 #include "types.h"
 
 class Perf_cnt_arch;
@@ -72,9 +73,9 @@ Perf_cnt::setup_pmc(Mword, Mword, Mword, Mword, Mword)
   return 0;
 }
 
-PUBLIC static inline void Perf_cnt::start_watchdog()      {}
-PUBLIC static inline void Perf_cnt::stop_watchdog()       {}
-PUBLIC static inline void Perf_cnt::touch_watchdog()      {}
-PUBLIC static inline int  Perf_cnt::have_watchdog()       { return 0; }
+PUBLIC static inline void Perf_cnt::start_watchdog() {}
+PUBLIC static inline void Perf_cnt::stop_watchdog() {}
+PUBLIC static inline void Perf_cnt::touch_watchdog() {}
+PUBLIC static inline int  Perf_cnt::have_watchdog() { return 0; }
 PUBLIC static inline void Perf_cnt::setup_watchdog(Mword) {}
-PUBLIC static inline void Perf_cnt::init_ap()             {}
+PUBLIC static inline void Perf_cnt::init_ap(Cpu const &) {}
