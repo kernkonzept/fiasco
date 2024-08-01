@@ -1277,7 +1277,8 @@ Jdb::enter_jdb(Trap_state *ts, Cpu_number cpu)
                         if (!entry_frame.cpu(i)->debug_ipi())
                           printf("    CPU%2u [" L4_PTR_FMT "]: %s\n",
                                  cxx::int_value<Cpu_number>(i),
-                                 entry_frame.cpu(i)->ip(), error_buffer.cpu(i).begin());
+                                 entry_frame.cpu(i)->ip(),
+                                 error_buffer.cpu(i).c_str());
                       }
 		    else
 		      printf("    CPU%2u: is not in JDB (not responding)\n",

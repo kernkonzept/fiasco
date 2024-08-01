@@ -101,8 +101,8 @@ Jdb_obj_space::print_statline(unsigned long row, unsigned long col) override
   Jdb::cursor(Jdb_screen::height() - 1, 1);
   printf("%*s", Jdb_screen::width(), help.c_str());
   Jdb::printf_statline("objs", "<Space>=mode",
-                       "%lxr%x: %-*s",
-                       cxx::int_value<Cap_index>(index(row,col)),
+                       "%lxr%x: %.*s",
+                       cxx::int_value<Cap_index>(index(row, col)),
                        rights, buf.length(), buf.begin());
 }
 

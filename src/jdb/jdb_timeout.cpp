@@ -264,8 +264,7 @@ Jdb_list_timeouts::list_timeouts_show_timeout(Timeout *t)
     {
       String_buf<12> time_str;
       Jdb::write_ll_ns(&time_str, timeout * 1000, false);
-      time_str.terminate();
-      putstr(time_str.begin());
+      putstr(time_str.c_str());
     }
 
   Jdb_kobject_name *nx = 0;

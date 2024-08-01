@@ -409,14 +409,14 @@ Jdb_tbuf_show::show_events(Mword n, Mword ref, Mword count, Unsigned8 mode,
           String_buf<15> s_tsc_ds;
           String_buf<13> s_tsc_sc;
           String_buf<15> s_tsc_ss;
-          Jdb::write_ll_dec(&s_tsc_dc, dtsc, false); s_tsc_dc.terminate();
-          Jdb::write_tsc_s (&s_tsc_ds, dtsc, false); s_tsc_ds.terminate();
-          Jdb::write_ll_dec(&s_tsc_sc, utsc, false); s_tsc_sc.terminate();
-          Jdb::write_tsc_s (&s_tsc_ss, utsc, false); s_tsc_ss.terminate();
+          Jdb::write_ll_dec(&s_tsc_dc, dtsc, false);
+          Jdb::write_tsc_s (&s_tsc_ds, dtsc, false);
+          Jdb::write_ll_dec(&s_tsc_sc, utsc, false);
+          Jdb::write_tsc_s (&s_tsc_ss, utsc, false);
 
           printf("%-3s%10lu.  %120.120s %13.13s (%14.14s)  %13.13s (%14.14s) kclk=%u\n",
-                 s, number, _buffer_str.begin() + y_offset, s_tsc_dc.begin(), s_tsc_ds.begin(),
-                 s_tsc_sc.begin(), s_tsc_ss.begin(), kclock);
+                 s, number, _buffer_str.begin() + y_offset, s_tsc_dc.c_str(),
+                 s_tsc_ds.c_str(), s_tsc_sc.c_str(), s_tsc_ss.c_str(), kclock);
         }
       else
         {
@@ -501,7 +501,7 @@ Jdb_tbuf_show::show_events(Mword n, Mword ref, Mword count, Unsigned8 mode,
             }
           printf("%s%-*.*s %12s\033[m%s",
                  c, Jdb_screen::width() - 13, Jdb_screen::width() - 13,
-                _buffer_str.begin() + y_offset, s.begin(),
+                _buffer_str.begin() + y_offset, s.c_str(),
                 count != 1 ? "\n" : "");
         }
        n++;

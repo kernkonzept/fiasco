@@ -647,15 +647,13 @@ whole_screen:
       else
         Jdb::write_ll_ns(&time_str, diff, false);
 
-      time_str.terminate();
-      printf("%-13s", time_str.begin());
+      printf("%-13s", time_str.c_str());
     }
 
   time_str.reset();
   putstr("\ncpu time: ");
   Jdb::write_ll_ns(&time_str, t->consumed_time()*1000, false);
-  time_str.terminate();
-  printf("%-13s", time_str.begin());
+  printf("%-13s", time_str.c_str());
 
   printf("\t\ttimeslice: %llu us\n"
          "pager\t: ",
