@@ -154,6 +154,14 @@ struct Utest
     static Per_cpu<Unsigned32> count_prev;
     static Per_cpu<Unsigned64> count_epoch;
   };
+
+  /**
+   * Returns a value which is changed by the timer interrupt handler.
+   *
+   * If the returned values of two invocations are equal, no timer interrupt was
+   * triggered between the two function invocations.
+   */
+  static Unsigned64 timer_interrupt_indicator();
 };
 
 /**
@@ -1181,6 +1189,13 @@ static cxx::unique_ptr<T, Utest::Deleter<T>>
 Utest::kmem_create_clear(A&&... args)
 {
   return kmem_create_fill<T, 0x00, A...>(cxx::forward<A>(args)...);
+}
+
+IMPLEMENT_DEFAULT
+Unsigned64
+Utest::timer_interrupt_indicator()
+{
+  return Kip::k()->clock();
 }
 
 /**
