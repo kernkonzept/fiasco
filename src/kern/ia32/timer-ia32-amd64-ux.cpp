@@ -5,16 +5,14 @@ IMPLEMENTATION[ia32,ux,amd64]:
 #include "kip.h"
 #include "warn.h"
 
+//----------------------------------------------------------------------------
+IMPLEMENTATION[(ia32 || amd64) && !sync_clock]:
+
 IMPLEMENT inline NEEDS ["config.h", "cpu.h", "kip.h"]
 void
 Timer::update_system_clock(Cpu_number cpu)
 {
-  if (cpu != Cpu_number::boot_cpu())
-    return;
-
-  if (Config::Kip_clock_uses_rdtsc)
-    Kip::k()->set_clock(Cpu::cpus.cpu(Cpu_number::boot_cpu()).time_us());
-  else
+  if (cpu == Cpu_number::boot_cpu())
     Kip::k()->add_to_clock(Config::Scheduler_granularity);
 }
 
@@ -26,7 +24,6 @@ void
 Timer::init_system_clock()
 {
   Cpu_time time = Cpu::cpus.cpu(_cpu).time_us();
-  Kip::k()->set_clock(time);
   if (time >= Kip::Clock_1_year)
     WARN("System clock initialized to %llu on boot CPU\n", time);
 }
@@ -41,15 +38,11 @@ Timer::init_system_clock_ap(Cpu_number cpu)
          time, cxx::int_value<Cpu_number>(cpu));
 }
 
-IMPLEMENT_OVERRIDE inline NEEDS ["cpu.h", "kip.h"]
+IMPLEMENT_OVERRIDE inline NEEDS ["cpu.h"]
 Unsigned64
 Timer::system_clock()
 {
-  Cpu_time time = Cpu::cpus.cpu(_cpu).time_us();
-  if (current_cpu() == Cpu_number::boot_cpu())
-    Kip::k()->set_clock(time);
-
-  return time;
+  return Cpu::cpus.cpu(_cpu).time_us();
 }
 
 IMPLEMENT inline NEEDS ["cpu.h"]

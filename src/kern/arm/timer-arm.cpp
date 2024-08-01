@@ -66,21 +66,6 @@ IMPLEMENT_DEFAULT
 Irq_chip::Mode Timer::irq_mode()
 { return Irq_chip::Mode::F_raising_edge; }
 
-IMPLEMENT inline NEEDS["config.h", "kip.h", "watchdog.h", Timer::kipclock_cache]
-void
-Timer::update_system_clock(Cpu_number cpu)
-{
-  if (cpu == Cpu_number::boot_cpu())
-    {
-      if (Config::Kip_clock_uses_timer)
-        Kip::k()->set_clock(ts_to_us(time_stamp()));
-      else
-        Kip::k()->add_to_clock(Config::Scheduler_granularity);
-      kipclock_cache();
-      Watchdog::touch();
-    }
-}
-
 IMPLEMENT_DEFAULT inline
 void
 Timer::update_one_shot(Unsigned64 /*wakeup*/)
@@ -137,6 +122,21 @@ Timer::freq_to_scaler_shift(Unsigned64 period, Unsigned32 freq,
 }
 
 // ------------------------------------------------------------------------
+IMPLEMENTATION [arm && !sync_clock]:
+
+IMPLEMENT inline NEEDS["config.h", "kip.h", "watchdog.h", Timer::kipclock_cache]
+void
+Timer::update_system_clock(Cpu_number cpu)
+{
+  if (cpu == Cpu_number::boot_cpu())
+    {
+      Kip::k()->add_to_clock(Config::Scheduler_granularity);
+      kipclock_cache();
+      Watchdog::touch();
+    }
+}
+
+// ------------------------------------------------------------------------
 IMPLEMENTATION [arm && sync_clock]:
 
 IMPLEMENT_OVERRIDE inline NEEDS["kip.h", "warn.h"]
@@ -144,7 +144,6 @@ void
 Timer::init_system_clock()
 {
   Cpu_time time = ts_to_us(time_stamp());
-  Kip::k()->set_clock(time);
   if (time >= Kip::Clock_1_year)
     WARN("System clock initialized to %llu on boot CPU\n", time);
 }
@@ -159,18 +158,11 @@ Timer::init_system_clock_ap(Cpu_number cpu)
          time, cxx::int_value<Cpu_number>(cpu));
 }
 
-IMPLEMENT_OVERRIDE inline NEEDS["context_base.h", "kip.h"]
+IMPLEMENT_OVERRIDE inline
 Unsigned64
 Timer::system_clock()
 {
-  Cpu_time time = ts_to_us(time_stamp());
-  if (current_cpu() == Cpu_number::boot_cpu())
-    {
-      Kip::k()->set_clock(time);
-      kipclock_cache();
-    }
-
-  return time;
+  return ts_to_us(time_stamp());
 }
 
 IMPLEMENT inline

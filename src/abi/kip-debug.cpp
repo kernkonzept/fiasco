@@ -6,8 +6,8 @@ private:
   void debug_print_syscalls() const;
 };
 
+//----------------------------------------------------------------------------
 IMPLEMENTATION [debug]:
-
 
 #include <cstdio>
 #include <cstring>
@@ -71,18 +71,13 @@ Kip::debug_print_features() const
 }
 
 IMPLEMENT
-void Kip::print() const
+void
+Kip::print() const
 {
-  Cpu_time c = clock();
   printf("KIP @ %p\n", static_cast<void const *>(this));
   printf("magic: %.4s  version: 0x%lx\n",
          reinterpret_cast<char const *>(&magic), version);
-  printf("clock: " L4_X64_FMT " (%llu)\n", c, c);
-  printf("uptime: %llu day(s), %llu hour(s), %llu min(s), %llu sec(s)\n",
-          c / (1000000ULL * 60 * 60 * 24),
-         (c / (1000000ULL * 60 * 60))    % 24,
-         (c / (1000000ULL * 60))         % 60,
-         (c /  1000000ULL)               % 60);
+  print_clock();
   printf("freq_cpu: %lukHz\n", frequency_cpu);
   printf("freq_bus: %lukHz\n", frequency_bus);
 
@@ -100,3 +95,27 @@ void Kip::print() const
 
   debug_print_features();
 }
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION[!sync_clock && debug]:
+
+PRIVATE inline
+void
+Kip::print_clock() const
+{
+  Cpu_time c = clock();
+  printf("clock: " L4_X64_FMT " (%llu)\n", c, c);
+  printf("uptime: %llu day(s), %llu hour(s), %llu min(s), %llu sec(s)\n",
+          c / (1000000ULL * 60 * 60 * 24),
+         (c / (1000000ULL * 60 * 60))    % 24,
+         (c / (1000000ULL * 60))         % 60,
+         (c /  1000000ULL)               % 60);
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION[sync_clock && debug]:
+
+PRIVATE inline
+void
+Kip::print_clock() const
+{}

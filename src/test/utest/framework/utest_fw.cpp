@@ -1495,3 +1495,13 @@ Utest::Tick_disabler::timestamp()
   Unsigned32 frequency = Kip::k()->platform_info.arch.timebase_frequency;
   return (Cpu::rdtime() * 1000000ULL) / (frequency);
 }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION[sync_clock]:
+
+IMPLEMENT_OVERRIDE
+Unsigned64
+Utest::timer_interrupt_indicator()
+{
+  return Timer::system_clock_at_last_timer_tick();
+}

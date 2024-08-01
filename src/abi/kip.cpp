@@ -99,6 +99,7 @@ public:
 
   /* 0xA0   0x140 */
   volatile Cpu_time _clock; // don't access directly, use clock() instead!
+                            // not updated in certain configurations
   Unsigned64 _res6;  // might be later used for clock-related time stamp offset
 
   /* 0xB0   0x150 */
@@ -273,11 +274,6 @@ char const *Kip::version_string() const
   return reinterpret_cast <char const *> (this) + (offset_version_strings << 4);
 }
 
-IMPLEMENT inline
-void
-Kip::set_clock(Cpu_time c)
-{ _clock = c; }
-
 #ifdef TARGET_NAME
 #define TARGET_NAME_PHRASE " for " TARGET_NAME
 #else
@@ -293,14 +289,20 @@ asm(".section .initkip.features.end, \"a\", %progbits   \n"
     ".previous                                          \n");
 
 
-IMPLEMENT_DEFAULT inline NEEDS["mem.h"]
+//----------------------------------------------------------------------------
+IMPLEMENTATION[!sync_clock]:
+
+IMPLEMENT inline NEEDS["mem.h"]
 Cpu_time
 Kip::clock() const
-{
-  return Mem::read64_consistent(const_cast<Cpu_time const *>(&_clock));
-}
+{ return Mem::read64_consistent(const_cast<Cpu_time const *>(&_clock)); }
 
-IMPLEMENT_DEFAULT inline NEEDS["mem.h"]
+IMPLEMENT inline
+void
+Kip::set_clock(Cpu_time c)
+{ _clock = c; }
+
+IMPLEMENT inline NEEDS["mem.h"]
 void
 Kip::add_to_clock(Cpu_time plus)
 {

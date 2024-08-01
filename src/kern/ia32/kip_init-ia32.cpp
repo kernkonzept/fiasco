@@ -87,8 +87,6 @@ void Kip_init::init()
 
   Kip::init_global_kip(kinfo);
 
-  Kip::k()->set_clock(0);
-
   setup_user_virtual(kinfo);
 
   reserve_amd64_hole();

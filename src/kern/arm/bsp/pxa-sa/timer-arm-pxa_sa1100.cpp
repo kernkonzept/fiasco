@@ -89,13 +89,15 @@ Timer::acknowledge()
   _timer->ack();
 }
 
-IMPLEMENT_OVERRIDE inline NEEDS["kip.h", Timer::timer_to_us, Timer::us_to_timer]
+IMPLEMENT_OVERRIDE inline NEEDS["config.h", "kip.h", Timer::timer_to_us,
+                   Timer::us_to_timer]
 void
 Timer::update_one_shot(Unsigned64 wakeup)
 {
   Unsigned32 apic;
   Kip::k()->add_to_clock(timer_to_us(_timer->read<Unsigned32>(OSCR)));
   _timer->write<Unsigned32>(0, OSCR);
+  static_assert(Config::Kip_clock_uses_timer == false);
   Unsigned64 now = Kip::k()->clock();
 
   if (EXPECT_FALSE (wakeup <= now) )

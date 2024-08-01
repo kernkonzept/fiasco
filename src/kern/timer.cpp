@@ -32,14 +32,13 @@ public:
   static void update_system_clock(Cpu_number cpu);
 
   /**
-   * Get the current system clock and, with certain configurations, update the
-   * KIP clock, for example with CONFIG_SYNC_CLOCK=y.
+   * Get the current system clock.
    *
-   * With these configurations, the KIP clock must remain synchronized with the
-   * timer the kernel is using as internal clock so that userland and kernel
-   * have a consistent view on the system time. The KIP clock is only updated
-   * from the boot CPU. The update using update_system_clock() from the timer
-   * interrupt handler happens too rarely for the fine-grained timer value.
+   * Depending on the configuration, either
+   *  - read the system clock from the KIP clock value which is increased during
+   *    every timer interrupt on the boot CPU (CONFIG_SYNC_CLOCK=n), or
+   *  - determine the current system clock by reading a fine-grained hardware
+   *    counter (TSC, ARM generic timer, etc; CONFIG_SYNC_CLOCK=y).
    *
    * The system clock increases monotonically but it may stop temporarily, for
    * instance while executing the kernel debugger.
@@ -78,6 +77,14 @@ private:
   static Cpu_number _cpu;
 };
 
+//----------------------------------------------------------------------------
+INTERFACE[sync_clock && test_support_code]:
+
+EXTENSION class Timer
+{
+private:
+  static Unsigned64 _system_clock_at_last_timer_tick;
+};
 
 //----------------------------------------------------------------------------
 INTERFACE[jdb]:
@@ -140,3 +147,34 @@ IMPLEMENT_DEFAULT
 void
 Timer::switch_freq_system()
 {}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION[sync_clock && !test_support_code]:
+
+IMPLEMENT inline
+void
+Timer::update_system_clock(Cpu_number)
+{}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION[sync_clock && test_support_code]:
+
+Unsigned64 Timer::_system_clock_at_last_timer_tick;
+
+PUBLIC static inline
+Unsigned64
+Timer::system_clock_at_last_timer_tick()
+{ return _system_clock_at_last_timer_tick; }
+
+/**
+ * This is a compromise: In this configuration, the KIP clock is not updated
+ * anymore but certain unit tests need an indicator if the timer interrupt was
+ * triggered.
+ */
+IMPLEMENT inline
+void
+Timer::update_system_clock(Cpu_number cpu)
+{
+  if (cpu == Cpu_number::boot_cpu())
+    _system_clock_at_last_timer_tick = system_clock();
+}
