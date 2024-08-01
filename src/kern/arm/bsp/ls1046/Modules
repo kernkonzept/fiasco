@@ -13,5 +13,5 @@ pic_IMPL              += pic-gic pic-arm-ls1046
 timer_IMPL            += timer-arm-generic timer-arm-generic-bsp-std
 timer_tick_IMPL       += timer_tick-single-vector
 reset_IMPL            += reset-arm-ls1046
-clock_IMPL            += clock-generic
+clock_IMPL            += clock-arm-generic
 platform_control_IMPL += platform_control-arm-ls1046

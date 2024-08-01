@@ -24,6 +24,6 @@ timer_IMPL            += $(if $(CONFIG_PF_OMAP4_PANDABOARD),timer-arm-mptimer ti
 timer_IMPL            += $(if $(CONFIG_PF_OMAP5_5432EVM),timer-arm-generic timer-arm-generic-omap5)
 timer_tick_IMPL       += timer_tick-single-vector
 reset_IMPL            += reset-arm-omap
-clock_IMPL            += clock-generic
+clock_IMPL            += $(if $(CONFIG_PF_OMAP5_5432EVM),clock-arm-generic,clock-generic)
 platform_control_IMPL += platform_control-arm-omap4
 outer_cache_IMPL      += outer_cache-arm-omap

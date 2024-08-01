@@ -41,7 +41,7 @@ timer_tick_IMPL       += $(if $(CONFIG_PF_EXYNOS_TIMER_PWM),$(if $(CONFIG_MP),ti
 
 kernel_thread_IMPL    += kernel_thread-arm-exynos
 reset_IMPL            += reset-arm-exynos
-clock_IMPL            += clock-generic
+clock_IMPL            += $(if $(CONFIG_PF_EXYNOS_TIMER_GEN),clock-arm-generic,clock-generic)
 outer_cache_IMPL      += outer_cache-arm-exynos
 platform_IMPL         += platform-arm-exynos
 watchdog_IMPL         += watchdog-arm-exynos

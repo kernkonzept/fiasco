@@ -6,7 +6,7 @@ OBJECTS_LIBUART       += uart_16550.o uart_16550_dw.o
 CXXFLAGS_uart-libuart += $(call LIBUART_UART, 16550_dw)
 RAM_PHYS_BASE         := 0x10000000
 
-clock_IMPL            += clock-generic
+clock_IMPL            += clock-arm-generic
 config_IMPL           += config-arm-armadaa8k
 mem_layout_IMPL       += mem_layout-arm-armadaa8k
 pic_IMPL              += pic-gic pic-arm-armadaa8k
