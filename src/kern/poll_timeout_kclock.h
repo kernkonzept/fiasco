@@ -2,8 +2,8 @@
 
 #include "assert.h"
 #include "cpu_lock.h"
-#include "kip.h"
 #include "processor.h"
+#include "timer.h"
 
 class Poll_timeout_kclock
 {
@@ -15,7 +15,7 @@ public:
 
   void set(unsigned poll_time_us)
   {
-    _timeout = Kip::k()->clock() + poll_time_us;
+    _timeout = Timer::system_clock() + poll_time_us;
     _last_check = true;
   }
 
@@ -28,7 +28,7 @@ public:
       return false;
 
     Proc::irq_chance();
-    return _last_check = Kip::k()->clock() < _timeout;
+    return _last_check = Timer::system_clock() < _timeout;
   }
 
   bool timed_out() const { return !_last_check; }
