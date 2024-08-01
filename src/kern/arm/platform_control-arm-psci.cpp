@@ -2,11 +2,11 @@ IMPLEMENTATION [arm && arm_psci]:
 
 #include "config.h"
 #include "cpu.h"
-#include "kip.h"
 #include "mem.h"
 #include "minmax.h"
 #include "processor.h"
 #include "psci.h"
+#include "timer.h"
 
 #include <cstdio>
 
@@ -39,13 +39,13 @@ Platform_control::boot_ap_cpus_psci(Address phys_tramp_mp_addr,
           continue;
         }
 
-      Unsigned64 timeout = Kip::k()->clock() + 500 * 1000;
+      Unsigned64 timeout = Timer::system_clock() + 500 * 1000;
       while (1)
         {
           if (Cpu::online(Cpu_number(seq)))
             break;
 
-          if (Kip::k()->clock() > timeout)
+          if (Timer::system_clock() > timeout)
             {
               printf("CPU%d/%lx did not come online.\n", seq, physid);
               break;
