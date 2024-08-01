@@ -771,7 +771,7 @@ Jdb::write_ll_ns(String_buffer *buf, Signed64 ns, bool sign)
 {
   Unsigned64 uns = (ns < 0) ? -ns : ns;
 
-  if (uns >= 3600000000000000ULL)
+  if (uns >= 3'600'000'000'000'000ULL)
     {
       buf->printf(">999 h ");
       return;
@@ -780,38 +780,38 @@ Jdb::write_ll_ns(String_buffer *buf, Signed64 ns, bool sign)
   if (sign)
     buf->printf("%c", (ns < 0) ? '-' : (ns == 0) ? ' ' : '+');
 
-  if (uns >= 60000000000000ULL)
+  if (uns >= 60'000'000'000'000ULL)
     {
       // 1000min...999h
-      Mword _h  = uns / 3600000000000ULL;
-      Mword _m  = (uns % 3600000000000ULL) / 60000000000ULL;
+      Mword _h  = uns / 3'600'000'000'000ULL;
+      Mword _m  = (uns % 3'600'000'000'000ULL) / 60'000'000'000ULL;
       buf->printf("%3lu:%02lu h  ", _h, _m);
       return;
     }
 
-  if (uns >= 1000000000000ULL)
+  if (uns >= 1'000'000'000'000ULL)
     {
       // 1000s...999min
-      Mword _m  = uns / 60000000000ULL;
-      Mword _s  = (uns % 60000000000ULL) / 1000ULL;
+      Mword _m  = uns / 60'000'000'000ULL;
+      Mword _s  = (uns % 60'000'000'000ULL) / 1'000ULL;
       buf->printf("%3lu:%02lu M  ", _m, _s);
       return;
     }
 
-  if (uns >= 1000000000ULL)
+  if (uns >= 1'000'000'000ULL)
     {
       // 1...1000s
-      Mword _s  = uns / 1000000000ULL;
-      Mword _ms = (uns % 1000000000ULL) / 1000000ULL;
+      Mword _s  = uns / 1'000'000'000ULL;
+      Mword _ms = (uns % 1'000'000'000ULL) / 1'000'000ULL;
       buf->printf("%3lu.%03lu s ", _s, _ms);
       return;
     }
 
-  if (uns >= 1000000)
+  if (uns >= 1'000'000)
     {
       // 1...1000ms
-      Mword _ms = uns / 1000000UL;
-      Mword _us = (uns % 1000000UL) / 1000UL;
+      Mword _ms = uns / 1'000'000UL;
+      Mword _us = (uns % 1'000'000UL) / 1'000UL;
       buf->printf("%3lu.%03lu ms", _ms, _us);
       return;
     }
@@ -822,9 +822,27 @@ Jdb::write_ll_ns(String_buffer *buf, Signed64 ns, bool sign)
       return;
     }
 
-  Mword _us = uns / 1000UL;
-  Mword _ns = uns % 1000UL;
+  Mword _us = uns / 1'000UL;
+  Mword _ns = uns % 1'000UL;
   buf->printf("%3lu.%03lu u ", _us, _ns);
+}
+
+PUBLIC static
+void
+Jdb::write_us_shortfmt(String_buffer *buf, Unsigned32 us)
+{
+  if (us >= 100'000'000)
+    buf->printf(">99s");
+  else if (us >= 10'000'000)
+    buf->printf("%3us", us / 1'000'000);
+  else if (us >= 1'000'000)
+    buf->printf("%u.%us", us / 1'000'000, (us % 1'000'000) / 100'000);
+  else if (us >= 10'000)
+    buf->printf("%um", us / 1000);
+  else if (us >= 1'000)
+    buf->printf("%u.%um", us / 1000, (us % 1000) / 100);
+  else
+    buf->printf("%3uu", us);
 }
 
 PUBLIC static
