@@ -174,6 +174,13 @@ Timer::system_clock()
   return Kip::k()->clock();
 }
 
+IMPLEMENT inline
+Unsigned64
+Timer::aux_clock_unstopped()
+{
+  return ts_to_us(time_stamp());
+}
+
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && 32bit]:
 

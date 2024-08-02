@@ -6,19 +6,43 @@ INTERFACE:
 
 class Delay
 {
-private:
-  static Global_data<unsigned> count;
-
 public:
   static void init() FIASCO_INIT;
+
+  /**
+   * Wait for a certain amount of time.
+   *
+   * \param ms  The number of milliseconds to wait for.
+   *
+   * Can be used in the kernel debugger while no timer tick is available. Don't
+   * expect 100% accurate delays.
+   */
+  static void delay(unsigned ms);
+
+  /**
+   * Wait for a certain amount of time.
+   *
+   * \param us  The number of microseconds to wait for.
+   *
+   * Can be used in the kernel debugger while no timer tick is available. Don't
+   * expect 100% accurate delays.
+   */
+  static void udelay(unsigned us);
 };
 
-IMPLEMENTATION:
+// ------------------------------------------------------------------------
+IMPLEMENTATION[!sync_clock]:
 
 #include "kip.h"
 #include "mem.h"
 #include "processor.h"
 #include "timer.h"
+
+EXTENSION class Delay
+{
+private:
+  static Global_data<unsigned> count;
+};
 
 DEFINE_GLOBAL Global_data<unsigned> Delay::count;
 
@@ -48,7 +72,8 @@ Delay::measure()
   return count;
 }
 
-IMPLEMENT void
+IMPLEMENT
+void
 Delay::init()
 {
   count = measure();
@@ -57,15 +82,8 @@ Delay::init()
     count = c2;
 }
 
-/**
- * Wait for a certain amount of time.
- *
- * \param ms  The number of milliseconds to wait for.
- *
- * Can be used in the kernel debugger while no timer tick is available. Don't
- * expect 100% accurate delays here.
- */
-PUBLIC static void
+IMPLEMENT
+void
 Delay::delay(unsigned ms)
 {
   Kip *k = Kip::k();
@@ -86,15 +104,8 @@ Delay::delay(unsigned ms)
     }
 }
 
-/**
- * Wait for a certain amount of time.
- *
- * \param us  The number of microseconds to wait for.
- *
- * Can be used in the kernel debugger while no timer tick is available. Don't
- * expect 100% accurate delays here.
- */
-PUBLIC static void
+IMPLEMENT
+void
 Delay::udelay(unsigned us)
 {
   Kip *k = Kip::k();
@@ -109,4 +120,36 @@ Delay::udelay(unsigned us)
     }
   while (c--);
   Mem::barrier();
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION[sync_clock]:
+
+#include "processor.h"
+#include "timer.h"
+
+IMPLEMENT
+void
+Delay::init()
+{
+  // In this configuration we use Timer::aux_clock_unstopped(), which, unlike
+  // the KIP clock, updates independent of any timer tick interrupt.
+}
+
+IMPLEMENT
+void
+Delay::delay(unsigned ms)
+{
+  Cpu_time now = Timer::aux_clock_unstopped();
+  while (Timer::aux_clock_unstopped() - now < 1000ULL * ms)
+    Proc::pause();
+}
+
+IMPLEMENT
+void
+Delay::udelay(unsigned us)
+{
+  Cpu_time now = Timer::aux_clock_unstopped();
+  while (Timer::aux_clock_unstopped() - now < us)
+    Proc::pause();
 }

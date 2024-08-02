@@ -54,3 +54,10 @@ Timer::system_clock()
 
   return Kip::k()->clock();
 }
+
+IMPLEMENT inline NEEDS ["cpu.h"]
+Unsigned64
+Timer::aux_clock_unstopped()
+{
+  return Cpu::cpus.cpu(_cpu).time_us();
+}
