@@ -40,10 +40,10 @@ private:
 IMPLEMENTATION:
 
 #include <cstdio>
-#include "kip.h"
+#include "global_data.h"
 #include "processor.h"
 #include "string.h"
-#include "global_data.h"
+#include "timer.h"
 
 PUBLIC
 Mux_console::Mux_console()
@@ -72,7 +72,7 @@ PUBLIC
 void
 Mux_console::set_ignore_input(Unsigned64 delta)
 {
-  _ignore_input_until = Kip::k()->clock() + delta;
+  _ignore_input_until = Timer::system_clock() + delta;
 }
 
 static DEFINE_GLOBAL Global_data<unsigned> releasepos;
@@ -83,7 +83,7 @@ Mux_console::check_input_ignore()
 {
   if (_ignore_input_until)
     {
-      if (Kip::k()->clock() > _ignore_input_until)
+      if (Timer::system_clock() > _ignore_input_until)
         _ignore_input_until = 0;
       else
         {
