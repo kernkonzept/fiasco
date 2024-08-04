@@ -106,6 +106,7 @@ extern unsigned apic_error_cnt;
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION:
+
 #include "cpu.h"
 
 DEFINE_PER_CPU Per_cpu<Static_object<Apic> >  Apic::apic;
@@ -173,6 +174,7 @@ Apic::us_to_apic(Unsigned64 us)
   return apic;
 }
 
+//----------------------------------------------------------------------------
 IMPLEMENTATION[amd64]:
 
 PUBLIC static inline
@@ -188,6 +190,7 @@ Apic::us_to_apic(Unsigned64 us)
   return apic;
 }
 
+//----------------------------------------------------------------------------
 IMPLEMENTATION[ia32,amd64]:
 
 #include <cassert>
@@ -657,32 +660,6 @@ Apic::activate_by_msr()
   Cpu::wrmsr(msr, APIC_base_msr);
 
   // later we have to call update_feature_info() as the flags may have changed
-}
-
-// check if we still receive interrupts after we changed the IRQ routing
-PUBLIC static FIASCO_INIT_CPU
-int
-Apic::check_still_getting_interrupts()
-{
-  if (!Config::apic)
-    return 0;
-
-  Unsigned64 tsc_until;
-  Cpu_time clock_start = Kip::k()->clock();
-
-  tsc_until = Cpu::rdtsc();
-  tsc_until += 0x01000000; // > 10 Mio cycles should be sufficient until
-                           // we have processors with more than 10 GHz
-  do
-    {
-      // kernel clock by timer interrupt updated?
-      if (Kip::k()->clock() != clock_start)
-	// yes, successful
-	return 1;
-    } while (Cpu::rdtsc() < tsc_until);
-
-  // timeout
-  return 0;
 }
 
 PUBLIC static
