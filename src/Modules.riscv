@@ -22,8 +22,8 @@ BITS-$(CONFIG_BIT64) = 64
 BITS = $(BITS-y)
 
 PREPROCESS_PARTS-$(CONFIG_MP)     += need_xcpu_tlb_flush
-PREPROCESS_PARTS-$(CONFIG_SERIAL) += serial force_vkey
-PREPROCESS_PARTS-$(CONFIG_JDB)    += debug jdb log
+PREPROCESS_PARTS-$(CONFIG_SERIAL) += force_vkey
+PREPROCESS_PARTS-$(CONFIG_JDB)    += debug log
 PREPROCESS_PARTS += $(PREPROCESS_PARTS-y)
 
 #

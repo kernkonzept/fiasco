@@ -11,14 +11,8 @@ PREPROCESS_PARTS	+= arch $(CONFIG_ABI) 32bit $(CONFIG_XARCH)    \
                            obj_space_phys abs_syscalls auto_map_kip \
                            kernel_can_exit
 
-PREPROCESS_PARTS-$(CONFIG_MP)                += mp need_xcpu_tlb_flush
+PREPROCESS_PARTS-$(CONFIG_MP)                += need_xcpu_tlb_flush
 PREPROCESS_PARTS-$(CONFIG_JDB)               += debug log
-PREPROCESS_PARTS-$(CONFIG_PERF_CNT)          += perf_cnt
-PREPROCESS_PARTS-$(CONFIG_CONTEXT_4K)        += context_4k
-PREPROCESS_PARTS-$(CONFIG_SCHED_FIXED_PRIO)  += sched_fixed_prio
-PREPROCESS_PARTS-$(CONFIG_SCHED_WFQ)         += sched_wfq
-PREPROCESS_PARTS-$(CONFIG_SCHED_FP_WFQ)      += sched_fp_wfq
-PREPROCESS_PARTS-$(CONFIG_JDB_LOGGING)       += jdb_logging
 
 PREPROCESS_PARTS        += $(PREPROCESS_PARTS-y)
 

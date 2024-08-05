@@ -18,11 +18,7 @@ PREPROCESS_PARTS 	+= $(CONFIG_XARCH) $(CONFIG_ABI) 32bit \
 			   abs_syscalls big_endian jdb_thread_names \
 			   obj_space_phys
 
-PREPROCESS_PARTS-$(CONFIG_SERIAL)             += serial
-PREPROCESS_PARTS-$(CONFIG_JDB) += debug jdb log
-PREPROCESS_PARTS-$(CONFIG_SCHED_FIXED_PRIO)  += sched_fixed_prio
-PREPROCESS_PARTS-$(CONFIG_SCHED_WFQ)         += sched_wfq
-PREPROCESS_PARTS-$(CONFIG_SCHED_FP_WFQ)      += sched_fp_wfq
+PREPROCESS_PARTS-$(CONFIG_JDB) += debug log
 PREPROCESS_PARTS	+= $(PREPROCESS_PARTS-y)
 
 #

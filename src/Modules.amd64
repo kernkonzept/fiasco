@@ -22,20 +22,14 @@ PREPROCESS_PARTS 	+= arch $(CONFIG_ABI) 64bit iofp recover_jmpbuf \
 			   $(CONFIG_XARCH) apic i8259 pc i8254 fpu \
 			   auto_map_kip io realmode libuart
 
-PREPROCESS_PARTS-$(CONFIG_MP)                += mp need_xcpu_tlb_flush
+PREPROCESS_PARTS-$(CONFIG_MP)                += need_xcpu_tlb_flush
 PREPROCESS_PARTS-$(CONFIG_JDB)               += debug log
 PREPROCESS_PARTS-$(CONFIG_SCHED_PIT)         += pit_timer
 PREPROCESS_PARTS-$(CONFIG_SCHED_RTC)         += rtc_timer
 PREPROCESS_PARTS-$(CONFIG_SCHED_APIC)        += apic_timer
 PREPROCESS_PARTS-$(CONFIG_SCHED_HPET)        += hpet_timer
-PREPROCESS_PARTS-$(CONFIG_SERIAL)            += serial
-PREPROCESS_PARTS-$(CONFIG_WATCHDOG)          += watchdog
-PREPROCESS_PARTS-$(CONFIG_PERF_CNT)          += perf_cnt
 PREPROCESS_PARTS-$(CONFIG_CPU_VIRT)          += svm vmx virtual_space_iface
-PREPROCESS_PARTS-$(CONFIG_SCHED_FIXED_PRIO)  += sched_fixed_prio
-PREPROCESS_PARTS-$(CONFIG_SCHED_WFQ)         += sched_wfq
-PREPROCESS_PARTS-$(CONFIG_SCHED_FP_WFQ)      += sched_fp_wfq
-PREPROCESS_PARTS-$(CONFIG_IOMMU)             += iommu virtual_space_iface
+PREPROCESS_PARTS-$(CONFIG_IOMMU)             += virtual_space_iface
 
 PREPROCESS_PARTS        += $(PREPROCESS_PARTS-y)
 
