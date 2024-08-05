@@ -251,10 +251,11 @@ global_data_IMPL        := global_data global_data-arm-$(BITS)
 ifeq ("$(CONFIG_JDB)","y")
 JDB			:= jdb_compound.o
 SUBSYSTEMS		+= JDB
-INTERFACES_JDB		+= jdb_trace_set jdb_log jdb_perf jdb_console_buffer \
+INTERFACES_JDB		+= jdb_trace_set jdb_log jdb_console_buffer \
 			   jdb_idle_stats
 
-INTERFACES_JDB-$(CONFIG_MMU)	+= jdb_ptab
+INTERFACES_JDB-$(CONFIG_PERF_CNT) += jdb_perf
+INTERFACES_JDB-$(CONFIG_MMU) += jdb_ptab
 
 CXXSRC_JDB := tb_entry_output.cc
 
