@@ -117,7 +117,7 @@ atomic_exchange(T *mem, V value)
   Mword tmp;
 
   Mem::prefetch_w(mem);
-  asm (
+  asm volatile (
       "1:   ldrex %[res], [%[mem]] \n"
       "     strex %[tmp], %[val], [%[mem]] \n"
       "     cmp   %[tmp], #0 \n"
@@ -136,7 +136,7 @@ atomic_add_fetch(T *mem, V value)
   T res;
   Mword tmp;
   Mem::prefetch_w(mem);
-  asm (
+  asm volatile (
       "1:   ldrex %[res], [%[mem]] \n"
       "     add   %[res], %[res], %[val] \n"
       "     strex %[tmp], %[res], [%[mem]] \n"
@@ -183,7 +183,7 @@ atomic_exchange(T *mem, V value)
   T res;
   Mword tmp;
   Mem::prefetch_w(mem);
-  asm (
+  asm volatile (
       "1:   ldrexd %[res], %H[res], [%[mem]] \n"
       "     strexd %[tmp], %[val], %H[val], [%[mem]] \n"
       "     cmp    %[tmp], #0 \n"
@@ -202,7 +202,7 @@ atomic_add_fetch(T *mem, V value)
   T res;
   Mword tmp;
   Mem::prefetch_w(mem);
-  asm (
+  asm volatile (
       "1:   ldrexd %[res], %H[res], [%[mem]] \n"
       "     adds   %[res], %[res], %[val] \n"
       "     adc    %H[res], %H[res], %H[val] \n"
@@ -261,7 +261,7 @@ atomic_exchange(T *mem, V value)
   T val = value;
   T res;
   Mem::prefetch_w(mem);
-  asm (
+  asm volatile (
       "1:   ldrd %[res], %H[res], %[mem] \n"
       "     strd %[val], %H[val], %[mem]   "
       : [res] "=&r" (res), [mem] "+m" (*mem)
@@ -279,7 +279,7 @@ atomic_add_fetch(T *mem, V value)
   T val = value;
   T res;
   Mem::prefetch_w(mem);
-  asm (
+  asm volatile (
       "1:   ldrd   %[res], %H[res], %[mem] \n"
       "     adds   %[res], %[res], %[val] \n"
       "     adc    %H[res], %H[res], %H[val] \n"

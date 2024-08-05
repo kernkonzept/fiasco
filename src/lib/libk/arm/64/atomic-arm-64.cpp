@@ -91,7 +91,7 @@ atomic_exchange(T *mem, V value)
   switch (sizeof(T))
     {
     case 4:
-      asm (
+      asm volatile (
           "     prfm  pstl1strm, [%[mem]] \n"
           "1:   ldxr  %w[res], [%[mem]] \n"
           "     stxr  %w[tmp], %w[val], [%[mem]] \n"
@@ -103,7 +103,7 @@ atomic_exchange(T *mem, V value)
       return res;
 
     case 8:
-      asm (
+      asm volatile (
           "     prfm   pstl1strm, [%[mem]] \n"
           "1:   ldxr   %x[res], [%[mem]] \n"
           "     stxr   %w[tmp], %x[val], [%[mem]] \n"
@@ -129,7 +129,7 @@ atomic_add_fetch(T *mem, V value)
   switch (sizeof(T))
     {
     case 4:
-      asm (
+      asm volatile (
           "     prfm   pstl1strm, [%[mem]] \n"
           "1:   ldxr  %w[res], [%[mem]] \n"
           "     add   %w[res], %w[res], %w[val] \n"
@@ -142,7 +142,7 @@ atomic_add_fetch(T *mem, V value)
       return res;
 
     case 8:
-      asm (
+      asm volatile (
           "     prfm   pstl1strm, [%[mem]] \n"
           "1:   ldxr   %x[res], [%[mem]] \n"
           "     add    %x[res], %x[res], %x[val] \n"
