@@ -31,6 +31,7 @@ IMPLEMENTATION [arm && arm_generic_timer]:
 #include "config.h"
 #include "cpu.h"
 #include "io.h"
+#include "panic.h"
 
 DEFINE_GLOBAL Global_data<Mword> Timer::_interval;
 DEFINE_GLOBAL Global_data<Mword> Timer::_freq0;
@@ -50,7 +51,8 @@ Unsigned32 Timer::frequency()
 { return Gtimer::frequency(); }
 
 IMPLEMENT
-void Timer::init(Cpu_number cpu)
+void
+Timer::init(Cpu_number cpu)
 {
   if (!Cpu::cpus.cpu(cpu).has_generic_timer())
     panic("CPU does not support the ARM generic timer");
