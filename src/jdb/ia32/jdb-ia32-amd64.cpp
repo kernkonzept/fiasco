@@ -54,38 +54,6 @@ private:
   static Per_cpu<int> jdb_irqs_disabled;
 };
 
-IMPLEMENTATION [{amd64,ia32}-!serial]:
-
-static inline
-void Jdb::init_serial_console()
-{}
-
-IMPLEMENTATION [{amd64,ia32}-serial]:
-
-#include <cstdio>
-#include "kernel_uart.h"
-
-static
-void Jdb::init_serial_console()
-{
-  if (Config::serial_esc == Config::SERIAL_ESC_IRQ &&
-      !Kernel_uart::uart()->failed())
-    {
-      int irq;
-
-      if ((irq = Kernel_uart::uart()->irq()) == -1)
-	{
-	  Config::serial_esc = Config::SERIAL_ESC_NOIRQ;
-	  puts("SERIAL ESC: Using serial hack in slow timer handler.");
-	}
-      else
-	{
-	  Kernel_uart::enable_rcv_irq();
-	  printf("SERIAL ESC: allocated IRQ %d for serial uart\n", irq);
-	}
-    }
-}
-
 IMPLEMENTATION[ia32,amd64]:
 
 #include <cstring>
@@ -170,8 +138,6 @@ void Jdb::init()
 
   if (Koptions::o()->opt(Koptions::F_jdb_never_stop))
     never_break = 1;
-
-  init_serial_console();
 
   Trap_state::base_handler = &enter_jdb;
 
