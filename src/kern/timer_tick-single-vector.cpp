@@ -12,6 +12,7 @@ public:
 IMPLEMENTATION:
 
 #include "timer.h"
+#include "vkey.h"
 
 DEFINE_GLOBAL Global_data<Static_object<Timer_tick>> Timer_tick::_glbl_timer;
 
@@ -20,7 +21,10 @@ Timer_tick::setup(Cpu_number cpu)
 {
   // all CPUs use the same timer IRQ, so initialize just on CPU 0
   if (cpu == Cpu_number::boot_cpu())
-    _glbl_timer.construct(Any_cpu);
+    {
+      _glbl_timer.construct(Any_cpu);
+      enable_vkey(cpu);
+    }
 
   if (!allocate_irq(_glbl_timer, Timer::irq()))
     panic("Could not allocate scheduling IRQ %d\n", Timer::irq());

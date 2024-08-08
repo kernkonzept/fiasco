@@ -5,8 +5,10 @@ IMPLEMENTATION [ia32 || amd64]:
 
 IMPLEMENT
 void
-Timer_tick::setup(Cpu_number)
-{}
+Timer_tick::setup(Cpu_number cpu)
+{
+  enable_vkey(cpu);
+}
 
 IMPLEMENT
 void

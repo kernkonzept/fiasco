@@ -24,8 +24,9 @@ Timer_tick::setup(Cpu_number cpu)
       _glbl_timer.construct(Sys_cpu);
       if (!allocate_irq(_glbl_timer, Timer::irq()))
         panic("Could not allocate scheduling IRQ %d\n", Timer::irq());
-      else
-        printf("Timer is at IRQ %d\n", Timer::irq());
+
+      printf("Timer is at IRQ %d\n", Timer::irq());
+      enable_vkey(cpu);
 
       _glbl_timer->chip()->set_mode(_glbl_timer->pin(), Timer::irq_mode());
     }

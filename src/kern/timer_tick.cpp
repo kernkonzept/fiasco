@@ -64,9 +64,20 @@ Timer_tick::Timer_tick(Mode mode)
     case Sys_cpu: set_hit(&handler_sys_time); break;
     case App_cpu: set_hit(&handler_app); break;
     }
+}
 
-  if (Config::esc_hack || (Config::serial_esc == Config::SERIAL_ESC_NOIRQ))
-    Vkey::enable_receive();
+/**
+ * Tell Vkey that Timer_tick::handle_timer() calls Vkey::check() on input.
+ * See handle_timer(). Call this from Timer_tick::setup() when running on the
+ * boot CPU.
+ */
+PRIVATE static inline NEEDS["vkey.h"]
+void
+Timer_tick::enable_vkey(Cpu_number cpu)
+{
+  if (cpu == Cpu_number::boot_cpu())
+    if (Config::esc_hack || (Config::serial_esc == Config::SERIAL_ESC_NOIRQ))
+      Vkey::enable_receive();
 }
 
 PRIVATE static inline NEEDS["thread.h", "timer.h", "kdb_ke.h",

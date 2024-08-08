@@ -32,16 +32,20 @@ IMPLEMENTATION [arm && exynos_mct && !exynos_extgic]: // ------------------
 
 PRIVATE static
 bool
-Timer_tick::alloc_irq_4412_timer_tick(Cpu_number /* cpu */, unsigned irq)
+Timer_tick::alloc_irq_4412_timer_tick(Cpu_number, unsigned irq)
 {
   return allocate_irq(_timer_ticks.cpu(Cpu_number::boot_cpu()), irq);
 }
 
 IMPLEMENTATION [arm && arm_generic_timer]: // -----------------------------
 
-IMPLEMENT void Timer_tick::setup(Cpu_number cpu) {}
-IMPLEMENT void Timer_tick::enable(Cpu_number cpu) {}
-IMPLEMENT void Timer_tick::disable(Cpu_number cpu) {}
+IMPLEMENT void Timer_tick::setup(Cpu_number cpu)
+{
+  enable_vkey(cpu);
+}
+
+IMPLEMENT void Timer_tick::enable(Cpu_number) {}
+IMPLEMENT void Timer_tick::disable(Cpu_number) {}
 PUBLIC inline void Timer_tick::ack() {}
 
 
@@ -57,6 +61,8 @@ Timer_tick::setup(Cpu_number cpu)
 
   _timer_ticks.cpu(cpu).construct(cpu == Cpu_number::boot_cpu()
                                   ? Sys_cpu : App_cpu);
+
+  enable_vkey(cpu);
 
   if (Platform::is_5250() || Platform::is_5410())
     {

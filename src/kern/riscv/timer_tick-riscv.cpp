@@ -1,6 +1,6 @@
 IMPLEMENTATION [riscv]:
 
-IMPLEMENT void Timer_tick::setup(Cpu_number) {}
+IMPLEMENT void Timer_tick::setup(Cpu_number cpu) { enable_vkey(cpu); }
 
 IMPLEMENT void Timer_tick::enable(Cpu_number cpu) { Timer::toggle(cpu, true); }
 

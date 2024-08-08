@@ -5,8 +5,10 @@ IMPLEMENTATION [arm && (pf_rpi_rpi2 || pf_rpi_rpi3)]:
 
 IMPLEMENT
 void
-Timer_tick::setup(Cpu_number)
-{}
+Timer_tick::setup(Cpu_number cpu)
+{
+  enable_vkey(cpu);
+}
 
 IMPLEMENT
 void
