@@ -106,7 +106,7 @@ Context::save_ext_vcpu_state(Mword /*_state*/, Vm_state *v)
 
 PRIVATE inline
 void
-Context::load_ext_vcpu_state(Mword /*_to_state*/, Vm_state const *v)
+Context::load_ext_vcpu_state(Mword _to_state, Vm_state const *v)
 {
   Unsigned64 vtcr = 0;
 
@@ -144,6 +144,11 @@ Context::load_ext_vcpu_state(Mword /*_to_state*/, Vm_state const *v)
 
   asm volatile ("msr VMPIDR_EL2, %x0" : : "r" (v->vmpidr));
   asm volatile ("msr VPIDR_EL2, %x0"  : : "r" (v->vpidr));
+
+  if (_to_state & Thread_vcpu_user)
+    asm volatile("msr CNTHCTL_EL2, %x0"   : : "r"(Guest_cnthctl));
+  else
+    asm volatile("msr CNTHCTL_EL2, %x0"   : : "r"(Host_cnthctl));
 
   if (Cpu::Vtcr_usr_mask != 0 && !(vtcr & (1UL << 31)))
     load_ext_vcpu_state_mpu(v);

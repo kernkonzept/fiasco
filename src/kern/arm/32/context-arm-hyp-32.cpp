@@ -113,7 +113,7 @@ Context::save_ext_vcpu_state(Mword /*_state*/, Vm_state *v)
 
 PRIVATE inline
 void
-Context::load_ext_vcpu_state(Mword /*_to_state*/, Vm_state const *v)
+Context::load_ext_vcpu_state(Mword _to_state, Vm_state const *v)
 {
   asm volatile ("mcr p15, 4, %0, c1, c1, 3" : : "r"(Cpu::Hstr_vm)); // HSTR
   asm volatile ("mcr p15, 2, %0, c0, c0, 0" : : "r"(v->csselr));
@@ -147,6 +147,11 @@ Context::load_ext_vcpu_state(Mword /*_to_state*/, Vm_state const *v)
 
   asm volatile ("mcr  p15, 4, %0, c0, c0, 5" : : "r" (v->vmpidr));
   asm volatile ("mcr  p15, 4, %0, c0, c0, 0" : : "r" (v->vpidr));
+
+  if (_to_state & Thread_vcpu_user)
+    asm volatile ("mcr p15, 4, %0, c14, c1, 0" : : "r" (Guest_cnthctl));
+  else
+    asm volatile ("mcr p15, 4, %0, c14, c1, 0" : : "r"(Host_cnthctl));
 
   load_ext_vcpu_state_mxu(v);
 }
