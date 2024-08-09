@@ -96,7 +96,7 @@ class Bootstrap
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && mmu && !(arm_sa || arm_pxa)]:
+INTERFACE [arm && !(arm_sa || arm_pxa)]:
 
 EXTENSION class Bootstrap
 {
