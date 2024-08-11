@@ -1,4 +1,4 @@
-// vi: ft=cpp
+// vi:set ft=cpp: -*- Mode: C++ -*-
 /*
  * (c) 2012 Alexander Warg <warg@os.inf.tu-dresden.de>,
  *     economic rights: Technische Universität Dresden (Germany)
@@ -21,14 +21,15 @@
 
 #include "type_list"
 
-/** \brief Our C++ library. */
+/** Our C++ library. */
 namespace cxx {
 
-/** \brief Definition for a member (part) of a bit field.
+/**
+ * Definition for a member (part) of a bit field.
  *
- * \param T the underlying type of the bit field.
- * \param LSB the least significant bit of our bits.
- * \param MSB the mos significant bit if our bits.
+ * \param T    The underlying type of the bit field.
+ * \param LSB  The least significant bit of our bits.
+ * \param MSB  The most significant bit of our bits.
  */
 template<typename T, unsigned LSB, unsigned MSB>
 class Bitfield
@@ -40,8 +41,10 @@ private:
   static_assert(MSB < sizeof(Base_type) * 8, "MSB outside of bit-field type");
   static_assert(LSB < sizeof(Base_type) * 8, "LSB outside of bit-field type");
 
-  /** \brief Get the best unsigned type for \a bits.
-   * \param BITS number of bits to cover
+  /**
+   * Get the best unsigned type for `bits`.
+   *
+   * \param BITS  Number of bits to cover.
    */
   template<unsigned BITS> struct Best_type
   {
@@ -64,26 +67,28 @@ public:
     Msb = MSB,             ///< index of the MSB
   };
 
+  /// Masks for bitswise operation on internal parts of a bitfield
   enum Masks : Base_type
   {
     /** Mask value to get #Bits bits. */
     Low_mask = static_cast<Base_type>(~0ULL) >> (sizeof(Base_type)*8 - Bits),
-    /** Mask value to the bits out of a \a T. */
+    /** Mask value to the bits out of a `T`. */
     Mask     = Low_mask << Lsb,
   };
 
-  /** \brief Type to hold at least #Bits bits.
+  /**
+   * Type to hold at least #Bits bits.
    *
    * This type can handle all values that can be stored in this part of the bit
    * field.
    */
   typedef typename Best_type<Bits>::Type Bits_type;
 
-  /** \brief Type to hold at least #Bits + #Lsb bits.
+  /**
+   * Type to hold at least #Bits + #Lsb bits.
    *
    * This type can handle all values that can be stored in this part of the bit
-   * field when they are at the target location (#Lsb bits shifted to the
-   * left).
+   * field when they are at the target location (#Lsb bits shifted to the left).
    */
   typedef typename Best_type<Bits + Lsb>::Type Shift_type;
 
@@ -95,29 +100,40 @@ private:
   static_assert(sizeof(Bits_type) <= sizeof(Shift_type), "size mismacht for Shift_type and Bits_type");
 
 public:
-  /** \brief Get the bits out of \a val.
-   *  \param val the raw value of the whole bit field.
-   *  \return the bits form #Lsb to #Msb shifted to the right.
+  /**
+   * Get the bits out of `val`.
+   *
+   * \param val  The raw value of the whole bit field.
+   *
+   * \return The bits form #Lsb to #Msb shifted to the right.
    */
   static constexpr Bits_type get(Shift_type val)
   { return (val >> Lsb) & Low_mask; }
 
-  /** \brief Get the bits in place out of \val.
-   *  \param val the raw value of the whole bit field.
-   *  \return the bits from #Lsb to #Msb (unshifted).
+  /**
+   * Get the bits in place out of `val`.
+   *
+   * \param val  The raw value of the whole bit field.
+   *
+   * \return The bits from #Lsb to #Msb (unshifted).
    *
    * This means other bits are masked out, however the result is not shifted to
-   * the right,
+   * the right.
    */
   static constexpr Base_type get_unshifted(Shift_type val)
   { return val & Mask; }
 
-  /** \brief Set the bits corresponding to \a val.
-   *  \param dest the current value of the whole bit field.
-   *  \param val the value to set into the bits.
-   *  \return the new value of the whole bit field.
-   *  \pre \a val must contain not more than bits than #Bits.
-   *  \note This function does not mask \a val to the right number of bits.
+  /**
+   * Set the bits corresponding to `val`.
+   *
+   * \param dest  The current value of the whole bit field.
+   * \param val   The value to set into the bits.
+   *
+   * \return The new value of the whole bit field.
+   *
+   * \pre `val` must not contain more than #Bits bits.
+   *
+   * \note This function does not mask `val` to the right number of bits.
    */
   static constexpr Base_type set_dirty(Base_type dest, Shift_type val)
   {
@@ -125,14 +141,19 @@ public:
     return (dest & ~Mask) | (val << Lsb);
   }
 
-  /** \brief Set the bits corresponding to \a val.
-   *  \param dest the current value of the whole bit field.
-   *  \param val the value shifted #Lsb bits to the left that shall be set into
-   *             the bits.
-   *  \return the new value of the whole bit field.
-   *  \pre \a val must contain not more than bits than #Bits shifted #Lsb bits
-   *       to the left.
-   *  \note This function does not mask \a val to the right number of bits.
+  /**
+   * Set the bits corresponding to `val`.
+   *
+   * \param dest  The current value of the whole bit field.
+   * \param val   The value shifted #Lsb bits to the left that shall be set into
+   *              the bits.
+   *
+   * \return The new value of the whole bit field.
+   *
+   * \pre `val` must not contain more than #Bits bits shifted #Lsb bits to the
+   *      left.
+   *
+   * \note This function does not mask `val` to the right number of bits.
    */
   static constexpr Base_type set_unshifted_dirty(Base_type dest, Shift_type val)
   {
@@ -140,41 +161,58 @@ public:
     return (dest & ~Mask) | val;
   }
 
-  /** \brief Set the bits corresponding to \a val.
-   *  \param dest the current value of the whole bit field.
-   *  \param val the value to set into the bits.
-   *  \return the new value of the whole bit field.
+  /**
+   * Set the bits corresponding to `val`.
+   *
+   * \param dest  The current value of the whole bit field.
+   * \param val   The value to set into the bits.
+   *
+   * \return The new value of the whole bit field.
    */
   static Base_type set(Base_type dest, Bits_type val)
   { return set_dirty(dest, val & Low_mask); }
 
-  /** \brief Set the bits corresponding to \a val.
-   *  \param dest the current value of the whole bit field.
-   *  \param val the value shifted #Lsb bits to the left that shall be set into
-   *             the bits.
-   *  \return the new value of the whole bit field.
+  /**
+   * Set the bits corresponding to `val`.
+   *
+   * \param dest  The current value of the whole bit field.
+   * \param val   The value shifted #Lsb bits to the left that shall be set into
+   *              the bit field.
+   *
+   * \return the new value of the whole bit field.
    */
   static Base_type set_unshifted(Base_type dest, Shift_type val)
   { return set_unshifted_dirty(dest, val & Mask); }
 
-  /** \brief Get the shifted bits for \a val.
-   *  \param val the value to set into the bits.
-   *  \return the raw bit field value containing.
-   *  \pre \a val must contain not more than bits than #Bits.
-   *  \note This function does not mask \a val to the right number of bits.
+  /**
+   * Get the shifted bits for `val`.
+   *
+   * \param val  The value to set into the bits.
+   *
+   * \return The raw bit field value.
+   *
+   * \pre `val` must not contain more than #Bits bits.
+   *
+   * \note This function does not mask `val` to the right number of bits.
    */
   static constexpr Base_type val_dirty(Shift_type val) { return val << Lsb; }
 
-  /** \brief Get the shifted bits for \a val.
-   *  \param val the value to set into the bits.
-   *  \return the raw bit field value containing.
+  /**
+   * Get the shifted bits for `val`.
+   *
+   * \param val  The value to set into the bits.
+   *
+   * \return The raw bit field value.
    */
   static constexpr Base_type val(Bits_type val) { return val_dirty(val & Low_mask); }
 
-  /** \brief Get the shifted bits for \a val.
-   *  \param val the value shifted #Lsb bits to the left that shall be set into
+  /**
+   * Get the shifted bits for `val`.
+   *
+   * \param val  The value shifted #Lsb bits to the left that shall be set into
    *             the bits.
-   *  \return the raw bit field value containing.
+   *
+   * \return The raw bit field value.
    */
   static constexpr Base_type val_unshifted(Shift_type val) { return val & Mask; }
 
@@ -235,40 +273,40 @@ public:
 
 #define CXX_BITFIELD_MEMBER(LSB, MSB, name, data_member) \
   /** @{ */ \
-  /** \brief Type to access the \a name bits (LSB to MSB) of \a data_member. */ \
+  /** Type to access the `name` bits (LSB to MSB) of `data_member`. */ \
   typedef cxx::Bitfield<decltype(data_member), LSB, MSB> name ## _bfm_t; \
-  /** \brief Get the \a name bits (LSB to MSB) of \a data_member. */ \
+  /** Get the `name` bits (LSB to MSB) of `data_member`. */ \
   constexpr typename name ## _bfm_t::Val name() const { return data_member; } \
   typename name ## _bfm_t::Val name() const volatile { return data_member; } \
-  /** \brief Get a reference to the \a name bits (LSB to MSB) of \a data_member. */ \
+  /** Get a reference to the `name` bits (LSB to MSB) of `data_member`. */ \
   constexpr typename name ## _bfm_t::Ref name() { return data_member; } \
   /** @} */
 
 #define CXX_BITFIELD_MEMBER_RO(LSB, MSB, name, data_member) \
   /** @{ */ \
-  /** \brief Type to access the \a name bits (LSB to MSB) of \a data_member. */ \
+  /** Type to access the `name` bits (LSB to MSB) of `data_member`. */ \
   typedef cxx::Bitfield<decltype(data_member), LSB, MSB> name ## _bfm_t; \
-  /** \brief Get the \a name bits (LSB to MSB) of \a data_member. */ \
+  /** Get the `name` bits (LSB to MSB) of `data_member`. */ \
   constexpr typename name ## _bfm_t::Val name() const { return data_member; } \
   typename name ## _bfm_t::Val name() const volatile { return data_member; } \
   /** @} */
 
 #define CXX_BITFIELD_MEMBER_UNSHIFTED(LSB, MSB, name, data_member) \
   /** @{ */ \
-  /** \brief Type to access the \a name bits (LSB to MSB) of \a data_member. */ \
+  /** Type to access the `name` bits (LSB to MSB) of `data_member`. */ \
   typedef cxx::Bitfield<decltype(data_member), LSB, MSB> name ## _bfm_t; \
-  /** \brief Get the \a name bits (LSB to MSB) of \a data_member. */ \
+  /** Get the `name` bits (LSB to MSB) of `data_member`. */ \
   constexpr typename name ## _bfm_t::Val_unshifted name() const { return data_member; } \
   typename name ## _bfm_t::Val_unshifted name() const volatile { return data_member; } \
-  /** \brief Get a reference to the \a name bits (LSB to MSB) of \a data_member. */ \
+  /** Get a reference to the `name` bits (LSB to MSB) of `data_member`. */ \
   constexpr typename name ## _bfm_t::Ref_unshifted name() { return data_member; } \
   /** @} */
 
 #define CXX_BITFIELD_MEMBER_UNSHIFTED_RO(LSB, MSB, name, data_member) \
   /** @{ */ \
-  /** \brief Type to access the \a name bits (LSB to MSB) of \a data_member. */ \
+  /** Type to access the `name` bits (LSB to MSB) of `data_member`. */ \
   typedef cxx::Bitfield<decltype(data_member), LSB, MSB> name ## _bfm_t; \
-  /** \brief Get the \a name bits (LSB to MSB) of \a data_member. */ \
+  /** Get the `name` bits (LSB to MSB) of `data_member`. */ \
   constexpr typename name ## _bfm_t::Val_unshifted name() const { return data_member; } \
   typename name ## _bfm_t::Val_unshifted name() const volatile { return data_member; } \
   /** @} */
