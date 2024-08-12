@@ -36,14 +36,16 @@ protected:
  * IRQ kernel object to send IPC messages to a receiving thread.
  *
  * When an IRQ hits, the Irq_sender queues itself to the thread it is bound to
- * (target thread). When no thread is bound to the Irq_sender, the IRQ is
- * dropped.
+ * (target thread). When no thread is bound to the Irq_sender, the behaviour
+ * depends on the mode. For level triggered IRQs, the IRQ is dropped because
+ * its state persists in hardware. Edge triggered IRQs are marked as pending
+ * and will be delivered when bound to a new thread, though.
  *
  * To enqueue the Irq_sender at the thread, the Irq_sender sends a DRQ to the
  * target thread (asynchronously). We ensure that the Irq_sender queues its
  * DRQ request to at most one thread at a time (see Irq_send_state::can_send()).
- * The _send_state counter is only reset by Ipc_sender via
- * Irq_sender::re/deqeue_sender().
+ * The _send_state queued flag is only reset by Ipc_sender via
+ * Irq_sender::finish_send().
  *
  * When the Irq_sender is rebound to a different thread, it dequeues itself from
  * the old target thread (via Remote::abort_send()) and then re-injects the IRQ
@@ -76,7 +78,9 @@ protected:
    *
    * When an IRQ hits, the Irq_sender transitions from "Not Queued" to "Queued"
    * and sends an IPC to its target thread. Once the IPC send finishes, it
-   * transitions back to "Not Queued", ready to send the next IPC.
+   * transitions back to "Not Queued", ready to send the next IPC. If no thread
+   * is bound, edge-triggered Irq_sender's will set the "Pending" state so that
+   * the IRQ is queued when being bound.
    *
    * The destruction of an Irq_sender may run in parallel to an ongoing IPC send
    * the Irq_sender is involved in. Therefore it is split into two phases:
@@ -95,6 +99,7 @@ protected:
    *                   operation.
    *   - Destroyed:    Irq_sender was invalidated and is not involved in an IPC
    *                   send operation anymore.
+   *   - Pending:      IRQ received without target thread.
    *
    * Valid state transitions:
    *   - Not Queued  -> Queued | Invalidated
@@ -124,6 +129,7 @@ protected:
       Masked = 2,
       Invalidated = 4,
       Destroyed = 8,
+      Pending = 16,
     };
 
     constexpr void set(Mword flags) { _state |= flags; }
@@ -133,6 +139,7 @@ protected:
     constexpr bool is_masked() const { return _state & Masked; }
     constexpr bool is_invalidated() const { return _state & Invalidated; }
     constexpr bool is_destroyed() const { return _state & Destroyed; }
+    constexpr bool is_pending() const { return _state & Pending; }
 
     constexpr bool can_send() const
     { return !is_queued() && !is_invalidated() && !is_destroyed(); }
@@ -337,11 +344,20 @@ PRIVATE
 int
 Irq_sender::finish_replace_irq_thread(Thread *old)
 {
-  if (!old)
-    return 0;
-
   int result;
-  switch (old->Receiver::abort_send(this))
+
+  if (!old)
+    {
+      auto g = lock_guard<No_cpu_lock_policy>(_irq_lock);
+      if (_send_state.is_pending())
+        {
+          _send_state.clear(Irq_send_state::Pending);
+          result = 1;
+        }
+      else
+        result = 0;
+    }
+  else switch (old->Receiver::abort_send(this))
     {
     case Receiver::Abt_ipc_done:
       result = 0;
@@ -357,7 +373,7 @@ Irq_sender::finish_replace_irq_thread(Thread *old)
       panic("IRQ IPC flagged as in progress");
     }
 
-  if (old->dec_ref() == 0)
+  if (old && old->dec_ref() == 0)
     delete old;
 
   // re-inject if IRQ was queued before
@@ -376,6 +392,14 @@ Irq_sender::finish_replace_irq_thread(Thread *old)
             target = nullptr;
           else
             target = _irq_thread;
+
+          // If the edge-triggered IRQ was queued before and the Irq_sender is
+          // now unbound, remember that it was pending originally.
+          // Level-triggered IRQs must not be remembered because the Irq_sender
+          // should only be triggered if the interrupt is still asserted when
+          // being bound again.
+          if (!is_valid_thread(target) && is_edge_triggered())
+            _send_state.set(Irq_send_state::Pending);
         }
 
       if (is_valid_thread(target))
@@ -467,6 +491,12 @@ Irq_sender::detach_irq_thread()
 
       mask();
 
+      // Need to keep the _send_state.is_masked() state consistent with the
+      // hardware for edge triggered interrupts. Otherwise we might never
+      // unmask the interrupt if it's pending before being bound again.
+      if (is_edge_triggered())
+        _send_state.set(Irq_send_state::Masked);
+
       old = start_replace_irq_thread(nullptr, ~0UL);
     }
 
@@ -497,6 +527,11 @@ Irq_sender::switch_mode(bool is_edge_triggered) override
 {
   hit_func = is_edge_triggered ? &hit_edge_irq : &hit_level_irq;
 }
+
+PUBLIC inline
+bool
+Irq_sender::is_edge_triggered() const
+{ return hit_func == &hit_edge_irq; }
 
 PUBLIC
 void
@@ -698,6 +733,10 @@ Irq_sender::_hit_level_irq(Upstream_irq const *ui)
   Upstream_irq::ack(ui);
 
   auto t = _irq_thread; // access under lock
+
+  // For level triggered IRQs we move to the Queued state only if a thread is
+  // bound. When the thread is later bound and the IRQ is still asserted, we
+  // will natually end up here again.
   bool can_send = is_valid_thread(t) && queue();
   if (can_send)
     {
@@ -725,8 +764,11 @@ Irq_sender::_hit_edge_irq(Upstream_irq const *ui)
   auto t = _irq_thread; // access under lock
   if (!is_valid_thread(t))
     {
-      // If we get an interrupt without a thread bound we mask the IRQ. After
-      // user-space binds a thread it must unmask the IRQ.
+      // If we get an interrupt without a thread bound, we mask the IRQ. After
+      // user-space binds a thread, it must unmask the IRQ. The pending state
+      // is recorded so that the interrupt is not lost and delivered once the
+      // Irq_sender is bound again.
+      _send_state.set(Irq_send_state::Pending | Irq_send_state::Masked);
       mask_and_ack();
       Upstream_irq::ack(ui);
       return;
