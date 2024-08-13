@@ -134,7 +134,7 @@ PUBLIC
 void
 Vm::operator delete(void *ptr)
 {
-  Vm *t = reinterpret_cast<Vm*>(ptr);
+  Vm *t = static_cast<Vm *>(ptr);
   _vm_allocator.q_free(t->ram_quota(), ptr);
 }
 

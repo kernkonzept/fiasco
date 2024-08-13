@@ -370,7 +370,7 @@ PUBLIC
 void
 Vm_vmx_ept::operator delete (void *ptr)
 {
-  Vm_vmx_ept *t = reinterpret_cast<Vm_vmx_ept*>(ptr);
+  Vm_vmx_ept *t = static_cast<Vm_vmx_ept *>(ptr);
   _ept_allocator.q_free(t->ram_quota(), ptr);
 }
 

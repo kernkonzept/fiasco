@@ -3150,7 +3150,7 @@ PUBLIC static
 void
 Vmx_vmcs::operator delete(void *ptr)
 {
-  Vmx_vmcs *vmcs = reinterpret_cast<Vmx_vmcs *>(ptr);
+  Vmx_vmcs *vmcs = static_cast<Vmx_vmcs *>(ptr);
   _vmx_vmcs_allocator.q_free(vmcs->ram_quota(), ptr);
 }
 

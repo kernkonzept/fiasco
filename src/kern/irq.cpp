@@ -613,7 +613,7 @@ PUBLIC
 void
 Irq::operator delete (void *_l)
 {
-  Irq *l = reinterpret_cast<Irq*>(_l);
+  Irq *l = static_cast<Irq *>(_l);
   assert(l->_q);
   q_free(l->_q, l);
 }

@@ -221,7 +221,7 @@ PUBLIC
 void
 Dmar_space::operator delete (void *ptr)
 {
-  Dmar_space *t = reinterpret_cast<Dmar_space *>(ptr);
+  Dmar_space *t = static_cast<Dmar_space *>(ptr);
   _dmar_space_allocator.q_free(t->ram_quota(), ptr);
 }
 

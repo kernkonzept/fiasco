@@ -382,7 +382,7 @@ PUBLIC //inline
 void
 Task::operator delete (void *ptr)
 {
-  Task *t = reinterpret_cast<Task*>(ptr);
+  Task *t = static_cast<Task *>(ptr);
   LOG_TRACE("Kobject delete", "del", current(), Log_destroy,
             l->id = t->dbg_id();
             l->obj = t;
