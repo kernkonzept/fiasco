@@ -8,7 +8,7 @@ public:
 };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && amp && pf_s32z && pf_s32z_rtu_1]:
+IMPLEMENTATION [arm && pf_s32z && pf_s32z_rtu_1]:
 
 IMPLEMENT_OVERRIDE static constexpr
 Amp_phys_id
