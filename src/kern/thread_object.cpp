@@ -82,6 +82,9 @@ void
 Thread_object::operator delete(void *_t)
 {
   Thread_object * const t = nonull_static_cast<Thread_object*>(_t);
+  // Prevent the compiler from assuming that the object has become invalid after
+  // destruction. In particular the _quota member contains valid content.
+  asm ("" : "=m"(*t));
   Ram_quota * const q = t->_quota;
   Kmem_alloc::allocator()->q_free(q, Bytes(Thread::Size), t);
 

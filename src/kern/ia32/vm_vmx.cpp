@@ -87,6 +87,9 @@ void
 Vm_vmx::operator delete (void *ptr)
 {
   Vm_vmx *t = static_cast<Vm_vmx*>(ptr);
+  // Prevent the compiler from assuming that the object has become invalid after
+  // destruction. In particular the _quota member contains valid content.
+  asm ("" : "=m"(*t));
   _vmx_allocator.q_free(t->ram_quota(), ptr);
 }
 

@@ -181,6 +181,9 @@ void
 Vm_svm::operator delete (void *ptr)
 {
   Vm_svm *t = static_cast<Vm_svm*>(ptr);
+  // Prevent the compiler from assuming that the object has become invalid after
+  // destruction. In particular the _quota member contains valid content.
+  asm ("" : "=m"(*t));
   _svm_allocator.q_free(t->ram_quota(), ptr);
 }
 

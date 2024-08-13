@@ -3151,6 +3151,9 @@ void
 Vmx_vmcs::operator delete(void *ptr)
 {
   Vmx_vmcs *vmcs = static_cast<Vmx_vmcs *>(ptr);
+  // Prevent the compiler from assuming that the object has become invalid after
+  // destruction. In particular the _quota member contains valid content.
+  asm ("" : "=m"(*vmcs));
   _vmx_vmcs_allocator.q_free(vmcs->ram_quota(), ptr);
 }
 

@@ -208,7 +208,11 @@ PUBLIC
 void Ipc_gate_obj::operator delete (void *_f)
 {
   Ipc_gate_obj *f = static_cast<Ipc_gate_obj*>(_f);
+  // Prevent the compiler from assuming that the object has become invalid after
+  // destruction. In particular the _quota member contains valid content.
+  asm ("" : "=m"(*f));
   Ram_quota *p = f->_quota;
+  // Force reading f->_quota before freeing f.
   asm ("" : "=m"(*f));
 
   free(f);

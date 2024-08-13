@@ -371,6 +371,9 @@ void
 Vm_vmx_ept::operator delete (void *ptr)
 {
   Vm_vmx_ept *t = static_cast<Vm_vmx_ept *>(ptr);
+  // Prevent the compiler from assuming that the object has become invalid after
+  // destruction. In particular the _quota member contains valid content.
+  asm ("" : "=m"(*t));
   _ept_allocator.q_free(t->ram_quota(), ptr);
 }
 
