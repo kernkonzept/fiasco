@@ -288,11 +288,11 @@ cleanall: clean $(foreach subsys, $(SUBSYSTEMS), cleanall-$(subsys))
 	$(foreach subdir, $(SUBDIRS), $(VERBOSE)$(RM) $(subdir)/*.d $(subdir)/.*.d)
 	$(VERBOSE)$(RM) *.d .*.d .*.d.new *.d.new *~
 	$(VERBOSE)$(RM) globalconfig.h globalconfig.tags globalconfig.h.old Circular
-	$(VERBOSE)$(RM) .Modules.deps source
+	$(VERBOSE)$(RM) .Modules.deps source scripts
 
 mrproper: cleanall
 	$(VERBOSE)$(RM_R) globalconfig.out Modules.* DEPS*
-	$(VERBOSE)$(RM_R) auto docs config scripts
+	$(VERBOSE)$(RM_R) auto docs config
 
 endif # clean, cleanall, mrproper
 
