@@ -235,7 +235,7 @@ Pte_ptr::set_attribs(Page::Attr attr)
     cxx::mask_lsb(access_once(pte), Pte_attribs_size) | make_attribs(attr));
 }
 
-PUBLIC static inline
+PUBLIC static inline ALWAYS_INLINE
 NEEDS[Pte_ptr::phys_to_pte_ppn, Pte_ptr::make_attribs]
 Mword
 Pte_ptr::make_page(Phys_mem_addr addr, Page::Attr attr)
@@ -244,14 +244,14 @@ Pte_ptr::make_page(Phys_mem_addr addr, Page::Attr attr)
   return pte_ppn | make_attribs(attr);
 }
 
-PUBLIC inline
+PUBLIC inline ALWAYS_INLINE
 void
 Pte_ptr::set_page(Entry p)
 {
   write_now(pte, p);
 }
 
-PUBLIC inline
+PUBLIC inline ALWAYS_INLINE
 void
 Pte_ptr::set_page(Phys_mem_addr addr, Page::Attr attr)
 {
