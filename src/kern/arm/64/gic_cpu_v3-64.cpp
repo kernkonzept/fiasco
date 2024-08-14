@@ -4,8 +4,9 @@ PRIVATE inline
 void Gic_cpu_v3::_enable_sre_set()
 {
   asm volatile("msr S3_4_C12_C9_5, %x0" // ICC_SRE_EL2
-               : : "r" (  ICC_SRE_SRE | ICC_SRE_DFB | ICC_SRE_DIB
-                        | ICC_SRE_Enable_lower));
+               : : "r" (ICC_SRE_SRE | ICC_SRE_DFB | ICC_SRE_DIB));
+  asm volatile("msr S3_0_C12_C12_5, %x0" // ICC_SRE_EL1
+               : : "r" (ICC_SRE_SRE | ICC_SRE_DFB | ICC_SRE_DIB));
 }
 
 //-------------------------------------------------------------------
