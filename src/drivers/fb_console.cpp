@@ -358,7 +358,7 @@ void Fb_console::init()
       unsigned h = vbi->y_resolution;
       unsigned s = vbi->bytes_per_scanline;
       printf("fbmem virt/phys=%lx/%lx  XxY: %ux%u (%u)\n",
-             fbmem, static_cast<unsigned long>(vbi->phys_base), w, h, s);
+             fbmem, static_cast<unsigned long>(fbphys), w, h, s);
 
       // TODO: At assert on the pixel-format
       // Extended-TODO: Add support for other pixel formats
