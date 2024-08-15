@@ -78,7 +78,7 @@ protected:
    * transitions back to "Not Queued", ready to send the next IPC.
    *
    * The destruction of an Irq_sender may run in parallel to an ongoing IPC send
-   * the Irq_sender involved in. Therefore it is split into two phases:
+   * the Irq_sender is involved in. Therefore it is split into two phases:
    * 1. The Invalidated state flag is set, from now on no new IPC send operation
    *    can be started.
    * 2. Once the ongoing IPC send finishes, or immediately if none is in
@@ -87,11 +87,12 @@ protected:
    * States:
    *   - Not Queued:   IPC send is not queued.
    *   - Queued:       IPC send is queued.
-   *   - Masked:       Edge-triggered IRQ was masked because new IRQ arrived while
-   *                   IPC send was still queued.
-   *   - Invalidated:  Irq_sender was invalidated, no new IRQs can be queued, but
-   *                   it might still be involved in an ongoing IPC send operation.
-   *   - Destroyed:    Irq_sender was invalidated and is not involved in an IRQ
+   *   - Masked:       Edge-triggered IRQ was masked because a new IRQ arrived
+   *                   while IPC send was still queued.
+   *   - Invalidated:  Irq_sender was invalidated, no new IRQs can be queued,
+   *                   but it might still be involved in an ongoing IPC send
+   *                   operation.
+   *   - Destroyed:    Irq_sender was invalidated and is not involved in an IPC
    *                   send operation anymore.
    *
    * Valid state transitions:
@@ -510,7 +511,8 @@ Irq_sender::destroy(Kobject ***rl) override
 
       // "IPC send" reference, which keeps the Irq_sender alive while it is
       // involved in an IPC send.
-      // Eventually released by Irq_send_state::attempt_destroy().
+      // Released after detaching or by Irq_sender::finish_send() if IPC was
+      // still in progress.
       inc_ref();
 
       _send_state.set(Irq_send_state::Invalidated);
@@ -525,7 +527,7 @@ Irq_sender::destroy(Kobject ***rl) override
       auto g = lock_guard<No_cpu_lock_policy>(_irq_lock);
 
       // Try to finish destruction of Irq_sender. If we are not successful,
-      // there is still an IPC send pending, and `Irq_sender::finish_send()`
+      // there is still an IPC send pending, and Irq_sender::finish_send()
       // will later take care of releasing the "IPC send" reference.
       if (_send_state.attempt_destroy())
         // Cannot not drop to zero, we still hold the capability reference.

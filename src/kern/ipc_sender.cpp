@@ -41,7 +41,7 @@ Ipc_sender<Derived>::ipc_receiver_aborted() override
   assert (wait_queue());
 
   set_wait_queue(0);
-  derived()->finish_send(); // WARN: Do not use this/derived() from here upon!
+  derived()->finish_send(); // WARN: Do not use this/derived() from here on!
 }
 
 /**
@@ -58,7 +58,7 @@ Ipc_sender<Derived>::ipc_send_msg(Receiver *recv, bool) override
 
   derived()->transfer_msg(recv);
 
-  derived()->finish_send(); // WARN: Do not use this/derived() from here upon!
+  derived()->finish_send(); // WARN: Do not use this/derived() from here on!
 
 }
 
@@ -144,7 +144,7 @@ Ipc_sender<Derived>::send_msg(Receiver *receiver, bool is_xcpu)
     {
       Syscall_frame *dst_regs = derived()->transfer_msg(receiver);
 
-      derived()->finish_send(); // WARN: Do not use this/derived() from here upon!
+      derived()->finish_send(); // WARN: Do not use this/derived() from here on!
 
       // ipc completed
       receiver->state_change_dirty(~Thread_ipc_mask, 0);
