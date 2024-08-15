@@ -117,7 +117,7 @@ protected:
     constexpr Irq_send_state() : Irq_send_state(0) {}
     explicit constexpr Irq_send_state(Mword state) : _state(state) {}
 
-    enum
+    enum : Mword
     {
       Queued = 1,
       Masked = 2,
@@ -136,7 +136,7 @@ protected:
     constexpr bool can_send() const
     { return !is_queued() && !is_invalidated() && !is_destroyed(); }
 
-    constexpr bool is_in_destruction()
+    constexpr bool is_in_destruction() const
     { return is_invalidated() || is_destroyed(); }
 
     /**
