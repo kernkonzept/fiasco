@@ -471,25 +471,25 @@ END(kern_kdebug_ipi_entry)
 	ENTRY_ADDR(slowtrap)   # IBE
 	ENTRY_ADDR(slowtrap)   # DBE
 	ENTRY_ADDR(syscall)    # Sys
-	ENTRY_ADDR(slowtrap) # Break point
+	ENTRY_ADDR(slowtrap)   # Break point
 	ENTRY_ADDR(reserved_insn) # reserved instruction
-	ENTRY_ADDR(copu)  # CpU
-	ENTRY_ADDR(slowtrap) # Overflow
-	ENTRY_ADDR(slowtrap) # Trap (conditional break point)
-	ENTRY_INVALID # MSAFPE
-	ENTRY_INVALID # FPE
+	ENTRY_ADDR(copu)       # CpU
+	ENTRY_ADDR(slowtrap)   # Overflow
+	ENTRY_ADDR(slowtrap)   # Trap (conditional break point)
+	ENTRY_INVALID          # MSAFPE
+	ENTRY_ADDR(slowtrap)   # FPE
 	ENTRY_ADDR(unhandled)  # Res
 	ENTRY_ADDR(unhandled)  # Res
-	ENTRY_INVALID # C2E
+	ENTRY_INVALID          # C2E
 	ENTRY_ADDR(tlb_fault)  # TLBRI
 	ENTRY_ADDR(tlb_fault)  # TLBXI
-	ENTRY_INVALID # MSADis
-	ENTRY_INVALID # MDMX
-	ENTRY_INVALID # WATCH
-	ENTRY_ADDR(unhandled) # MCheck
-	ENTRY_INVALID # Thread
-	ENTRY_INVALID # DSPDis
-	ENTRY_ADDR(slowtrap) # GE
+	ENTRY_INVALID          # MSADis
+	ENTRY_INVALID          # MDMX
+	ENTRY_INVALID          # WATCH
+	ENTRY_ADDR(unhandled)  # MCheck
+	ENTRY_INVALID          # Thread
+	ENTRY_INVALID          # DSPDis
+	ENTRY_ADDR(slowtrap)   # GE
 	ENTRY_ADDR(unhandled)  # Res
 	ENTRY_ADDR(unhandled)  # Res
 	ENTRY_ADDR(unhandled)  # CacheErr

@@ -241,6 +241,21 @@ Thread::handle_slow_trap(Trap_state::Cause cause, Trap_state *ts,
   if (cause.exc_code() == 9)
     return Thread::call_nested_trap_handler(ts);
 
+  if (cause.exc_code() == 15)
+    {
+      // Floating point unit exceptions should normally not be triggered, so
+      // provide additional information if triggered anyway.
+      Mword fcsr, fir;
+      asm volatile (".set push          \n\t"
+                    ".set reorder       \n\t"
+                    ".set mips2         \n\t"
+                    "cfc1 %0, $31       \n\t"
+                    "cfc1 %1, $0        \n\t"
+                    ".set pop           \n\t"
+                    : "=r"(fcsr), "=r"(fir));
+      WARNX(Warning, "FPE: FIR=%08lx, FCSR=%08lx\n", fir, fcsr);
+    }
+
   if (send_exception(ts))
     return 0;
 
