@@ -364,8 +364,10 @@ Fpu::init_state(Fpu_state *fpu_regs)
   // precision represents signaling NANS.
   Mem::memset_mwords(fpu_regs, -1UL, sizeof (*fpu_regs) / sizeof(Mword));
 
-  // We initialize fcr31 to rounding to nearest, no exceptions.
-  fpu_regs->fcsr = 0;
+  // Initialize fcr31 to rounding to nearest, no exceptions.
+  // FS=1: Flush to Zero: Denormalized results are flushed to zero instead of
+  // causing an unimplemented operation exception.
+  fpu_regs->fcsr = 1U << 24;
 }
 
 PUBLIC static inline NEEDS ["cp0_status.h"]
