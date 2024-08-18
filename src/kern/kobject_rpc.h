@@ -470,7 +470,7 @@ template<typename ...ARGS> struct Sig_msg<L4_msg_tag (ARGS...)> : Msg<ARGS...> {
   struct Msg_##name :                                  \
     Ko::Sig_msg<L4_msg_tag __VA_ARGS__>                \
   {                                                    \
-    enum : Mword { Op = opcode };                      \
+    enum : Mword { Opcode = static_cast<Mword>(opcode) }; \
     template<typename OBJ> struct Fwd                  \
     {                                                  \
       OBJ *o;                                          \

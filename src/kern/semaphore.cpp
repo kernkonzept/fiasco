@@ -11,8 +11,9 @@ class Semaphore : public Kobject_h<Semaphore, Irq>
 
 public:
   friend class Jdb_kobject_irq;
-  enum Op {
-    Op_down = 0
+  enum class Op : Mword
+  {
+    Down = 0
   };
 
 protected:
@@ -252,20 +253,20 @@ Semaphore::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
                    Utcb const *utcb, Utcb *)
 {
   L4_msg_tag tag = f->tag();
-  int op = get_irq_opcode(tag, utcb);
+  Mword op = get_irq_opcode(tag, utcb);
 
-  if (EXPECT_FALSE(op < 0))
+  if (EXPECT_FALSE(op == ~0UL))
     return commit_result(-L4_err::EInval);
 
   switch (tag.proto())
     {
     case L4_msg_tag::Label_irq:
-      return dispatch_irq_proto(op, _queued < 1);
+      return dispatch_irq_proto(Irq::Op{op}, _queued < 1);
 
     case L4_msg_tag::Label_semaphore:
-      switch (op)
+      switch (Op{op})
         {
-        case Op_down:
+        case Op::Down:
           return sys_down(rights, f->timeout().rcv, utcb);
 
         default:

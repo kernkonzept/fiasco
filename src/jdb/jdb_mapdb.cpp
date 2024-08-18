@@ -660,7 +660,7 @@ PUBLIC
 bool
 Jdb_obj_info_hdl::invoke(Kobject_common *, Syscall_frame *f, Utcb *utcb) override
 {
-  if (utcb->values[0] != Op_obj_info)
+  if (Op{utcb->values[0]} != Op::Obj_info)
     return false;
 
   if (f->tag().words() < 4)

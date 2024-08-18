@@ -12,10 +12,10 @@ class Ipc_gate_obj;
 class Ipc_gate_ctl : public Kobject_h<Ipc_gate_ctl, Kobject_iface>
 {
 private:
-  enum Operation
+  enum class Op : Mword
   {
-    Op_bind     = 0x10,
-    Op_get_info = 0x11,
+    Bind     = 0x10,
+    Get_info = 0x11,
   };
 };
 
@@ -299,11 +299,11 @@ Ipc_gate_ctl::kinvoke(L4_obj_ref self, L4_fpage::Rights rights,
   if (EXPECT_FALSE(tag.words() < 1))
     return commit_result(-L4_err::EInval);
 
-  switch (in->values[0])
+  switch (Op{in->values[0]})
     {
-    case Op_bind:
+    case Op::Bind:
       return bind_thread(self, rights, f, in, out);
-    case Op_get_info:
+    case Op::Get_info:
       return get_infos(self, rights, f, in, out);
     default:
       return static_cast<Ipc_gate_obj*>(this)->kobject_invoke(self, rights, f, in, out);

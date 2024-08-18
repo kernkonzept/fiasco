@@ -44,21 +44,21 @@ class Thread :
 
 public:
   enum Context_mode_kernel { Kernel = 0 };
-  enum Operation
+  enum { Opcode_mask = 0xffff };
+  enum class Op : Mword
   {
-    Opcode_mask = 0xffff,
-    Op_control = 0,
-    Op_ex_regs = 1,
-    Op_switch  = 2,
-    Op_stats   = 3,
-    Op_vcpu_resume = 4,
-    Op_register_del_irq = 5,
-    Op_modify_senders = 6,
-    Op_vcpu_control = 7,
-    Op_gdt_x86 = 0x10,
-    Op_set_tpidruro_arm = 0x10,
-    Op_set_segment_base_amd64 = 0x12,
-    Op_segment_info_amd64 = 0x13,
+    Control = 0,
+    Ex_regs = 1,
+    Switch  = 2,
+    Stats   = 3,
+    Vcpu_resume = 4,
+    Register_del_irq = 5,
+    Modify_senders = 6,
+    Vcpu_control = 7,
+    Gdt_x86 = 0x10,
+    Set_tpidruro_arm = 0x10,
+    Set_segment_base_amd64 = 0x12,
+    Segment_info_amd64 = 0x13,
   };
 
   enum Control_flags

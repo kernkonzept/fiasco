@@ -85,9 +85,9 @@ PUBLIC
 bool
 Jdb_name_hdl::invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb) override
 {
-  switch (utcb->values[0])
+  switch (Op{utcb->values[0]})
     {
-    case Op_set_name:
+    case Op::Set_name:
         {
           bool enqueue = false;
           Jdb_kobject_name *ne;
@@ -111,7 +111,7 @@ Jdb_name_hdl::invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb) override
           f->tag(Kobject_iface::commit_result(0));
           return true;
         }
-    case Op_get_name:
+    case Op::Get_name:
         {
           Kobject_dbg::Iterator o = Kobject_dbg::id_to_obj(utcb->values[1]);
           if (o == Kobject_dbg::end())
@@ -134,6 +134,8 @@ Jdb_name_hdl::invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb) override
           f->tag(Kobject_iface::commit_result(0, (l + 1 + sizeof(Mword) - 1) / sizeof(Mword)));
           return true;
         }
+    default:
+      break;
     }
   return false;
 }

@@ -88,9 +88,9 @@ PUBLIC
 bool
 Jdb_space::invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb) override
 {
-  switch (utcb->values[0])
+  switch (Op{utcb->values[0]})
     {
-    case Op_add_image_info:
+    case Op::Add_image_info:
       {
         if (f->tag().words() < 2)
           {
@@ -112,6 +112,8 @@ Jdb_space::invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb) override
         f->tag(Kobject_iface::commit_result(0));
         return true;
       }
+    default:
+      break;
     }
   return false;
 }

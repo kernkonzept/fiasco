@@ -143,30 +143,30 @@ Thread_object::invoke(L4_obj_ref self, L4_fpage::Rights rights,
 
   Utcb *out = self.have_recv() ? utcb : utcb_dummy();
   L4_msg_tag tag;
-  switch (utcb->values[0] & Opcode_mask)
+  switch (Op{utcb->values[0] & Opcode_mask})
     {
-    case Op_control:
+    case Op::Control:
       tag = sys_control(rights, f->tag(), utcb, out);
       break;
-    case Op_ex_regs:
+    case Op::Ex_regs:
       tag = sys_ex_regs(f->tag(), utcb, out);
       break;
-    case Op_switch:
+    case Op::Switch:
       tag = sys_thread_switch(f->tag(), utcb, out);
       break;
-    case Op_stats:
+    case Op::Stats:
       tag = sys_thread_stats(f->tag(), utcb, out);
       break;
-    case Op_vcpu_resume:
+    case Op::Vcpu_resume:
       tag = sys_vcpu_resume(f->tag(), utcb, out);
       break;
-    case Op_register_del_irq:
+    case Op::Register_del_irq:
       tag = sys_register_delete_irq(f->tag(), utcb, out);
       break;
-    case Op_modify_senders:
+    case Op::Modify_senders:
       tag = sys_modify_senders(f->tag(), utcb, out);
       break;
-    case Op_vcpu_control:
+    case Op::Vcpu_control:
       tag = sys_vcpu_control(rights, f->tag(), utcb, out);
       break;
     default:

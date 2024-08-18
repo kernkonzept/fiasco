@@ -350,9 +350,9 @@ PROTECTED inline NEEDS[Thread::set_tpidruro]
 L4_msg_tag
 Thread::invoke_arch(L4_msg_tag tag, Utcb const *utcb, Utcb *)
 {
-  switch (utcb->values[0] & Opcode_mask)
+  switch (Op{utcb->values[0] & Opcode_mask})
     {
-    case Op_set_tpidruro_arm:
+    case Op::Set_tpidruro_arm:
       return set_tpidruro(tag, utcb);
     default:
       return commit_result(-L4_err::ENosys);

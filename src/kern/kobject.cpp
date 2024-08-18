@@ -161,8 +161,9 @@ private:
   Kobject *_next_to_reap;
 
 public:
-  enum Op {
-    O_dec_refcnt = 0,
+  enum class Op : Mword
+  {
+    Dec_refcnt = 0,
   };
 
 };
@@ -246,9 +247,9 @@ Kobject::kobject_invoke(L4_obj_ref, L4_fpage::Rights /*rights*/,
 
   // The only caller, Ipc_gate_ctl::kinvoke(), tests for tag.words() >= 1.
 
-  switch (in->values[0])
+  switch (Op{in->values[0]})
     {
-    case O_dec_refcnt:
+    case Op::Dec_refcnt:
       return sys_dec_refcnt(tag, in, out);
     default:
       return Kobject_iface::commit_result(-L4_err::ENosys);

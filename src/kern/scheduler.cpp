@@ -12,7 +12,7 @@ class Scheduler : public Icu_h<Scheduler>, public Irq_chip_virt<1>
   typedef Icu_h<Scheduler> Icu;
 
 public:
-  enum Operation
+  enum class Op : Mword
   {
     Info       = 0,
     Run_thread = 1,
@@ -22,9 +22,9 @@ public:
   static Global_data<Scheduler> scheduler;
 
 private:
-  L4_RPC(Info,      sched_info, (L4_cpu_set_descr set, Mword *rm,
-                                 Mword *max_cpus, Mword *sched_classes));
-  L4_RPC(Idle_time, sched_idle, (L4_cpu_set cpus, Cpu_time *time));
+  L4_RPC(Op::Info,      sched_info, (L4_cpu_set_descr set, Mword *rm,
+                                     Mword *max_cpus, Mword *sched_classes));
+  L4_RPC(Op::Idle_time, sched_idle, (L4_cpu_set cpus, Cpu_time *time));
 };
 
 // ----------------------------------------------------------------------------
@@ -172,11 +172,11 @@ Scheduler::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,
   if (!Ko::check_basics(&tag, L4_msg_tag::Label_scheduler))
     return tag;
 
-  switch (iutcb->values[0])
+  switch (Op{iutcb->values[0]})
     {
-    case Info:       return Msg_sched_info::call(this, tag, iutcb, outcb);
-    case Run_thread: return sys_run(rights, f, iutcb);
-    case Idle_time:  return Msg_sched_idle::call(this, tag, iutcb, outcb);
-    default:         return commit_result(-L4_err::ENosys);
+    case Op::Info:       return Msg_sched_info::call(this, tag, iutcb, outcb);
+    case Op::Run_thread: return sys_run(rights, f, iutcb);
+    case Op::Idle_time:  return Msg_sched_idle::call(this, tag, iutcb, outcb);
+    default:             return commit_result(-L4_err::ENosys);
     }
 }

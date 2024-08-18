@@ -6,20 +6,20 @@ INTERFACE [arm]:
 class Mem_op
 {
 public:
-  enum Op_cache
+  enum class Op_cache : Mword
   {
-    Op_cache_clean_data        = 0x00,
-    Op_cache_flush_data        = 0x01,
-    Op_cache_inv_data          = 0x02,
-    Op_cache_coherent          = 0x03,
-    Op_cache_dma_coherent      = 0x04,
-    Op_cache_dma_coherent_full = 0x05,
+    Clean_data        = 0x00,
+    Flush_data        = 0x01,
+    Inv_data          = 0x02,
+    Coherent          = 0x03,
+    Dma_coherent      = 0x04,
+    Dma_coherent_full = 0x05,
   };
 
-  enum Op_mem
+  enum class Op_mem : Mword
   {
-    Op_mem_read_data     = 0x10,
-    Op_mem_write_data    = 0x11,
+    Read_data     = 0x10,
+    Write_data    = 0x11,
   };
 };
 
@@ -37,13 +37,13 @@ IMPLEMENTATION [arm]:
 #include "warn.h"
 
 PRIVATE static inline void
-Mem_op::__arm_kmem_cache_maint(int op, void const *kstart, void const *kend)
+Mem_op::__arm_kmem_cache_maint(Op_cache op, void const *kstart, void const *kend)
 {
   Address kstart_addr = reinterpret_cast<Address>(kstart);
   Address kend_addr = reinterpret_cast<Address>(kstart);
   switch (op)
     {
-    case Op_cache_clean_data:
+    case Op_cache::Clean_data:
       Mem_unit::clean_dcache(kstart, kend);
       Mem::barrier();
       outer_cache_op(kstart_addr, kend_addr,
@@ -51,8 +51,8 @@ Mem_op::__arm_kmem_cache_maint(int op, void const *kstart, void const *kend)
                      { Outer_cache::clean(s, e, sync); });
       break;
 
-    case Op_cache_flush_data:
-    case Op_cache_inv_data:
+    case Op_cache::Flush_data:
+    case Op_cache::Inv_data:
       Mem_unit::flush_dcache(kstart, kend);
       Mem::barrier();
       outer_cache_op(kstart_addr, kend_addr,
@@ -60,7 +60,7 @@ Mem_op::__arm_kmem_cache_maint(int op, void const *kstart, void const *kend)
                      { Outer_cache::flush(s, e, sync); });
       break;
 
-    case Op_cache_coherent:
+    case Op_cache::Coherent:
       Mem_unit::clean_dcache(kstart, kend);
       // Our outer cache model assumes a unified outer cache, so there is no
       // need to clean it in order to achieve cache coherency
@@ -70,7 +70,7 @@ Mem_op::__arm_kmem_cache_maint(int op, void const *kstart, void const *kend)
       Mem::dsb();
       break;
 
-    case Op_cache_dma_coherent:
+    case Op_cache::Dma_coherent:
       Mem_unit::flush_dcache(kstart, kend);
       Mem::barrier();
       outer_cache_op(kstart_addr, kend_addr,
@@ -80,7 +80,7 @@ Mem_op::__arm_kmem_cache_maint(int op, void const *kstart, void const *kend)
 
     // We might not want to implement this one but single address outer
     // cache flushing can be really slow
-    case Op_cache_dma_coherent_full:
+    case Op_cache::Dma_coherent_full:
       Mem_unit::flush_dcache();
       Mem::barrier();
       Outer_cache::flush();
@@ -95,18 +95,18 @@ Mem_op::__arm_kmem_cache_maint(int op, void const *kstart, void const *kend)
 IMPLEMENTATION [arm && !cpu_virt]:
 
 PRIVATE static inline void
-Mem_op::__arm_mem_cache_maint(int op, void const *start, void const *end)
+Mem_op::__arm_mem_cache_maint(Op_cache op, void const *start, void const *end)
 { __arm_kmem_cache_maint(op, start, end); }
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && cpu_virt]:
 
 PRIVATE static inline void
-Mem_op::__arm_mem_cache_maint(int op, void const *start, void const *end)
+Mem_op::__arm_mem_cache_maint(Op_cache op, void const *start, void const *end)
 {
-  if (op == Op_cache_dma_coherent_full)
+  if (op == Op_cache::Dma_coherent_full)
     {
-      __arm_kmem_cache_maint(Op_cache_dma_coherent_full, 0, 0);
+      __arm_kmem_cache_maint(Op_cache::Dma_coherent_full, 0, 0);
       return;
     }
 
@@ -144,7 +144,8 @@ Mem_op::__arm_mem_cache_maint(int op, void const *start, void const *end)
 extern "C" void sys_arm_mem_op()
 {
   Entry_frame *e = current()->regs();
-  Mem_op::arm_mem_cache_maint(e->r[0], reinterpret_cast<void *>(e->r[1]),
+  Mem_op::arm_mem_cache_maint(Mem_op::Op_cache{e->r[0]},
+                              reinterpret_cast<void *>(e->r[1]),
                               reinterpret_cast<void *>(e->r[2]));
 }
 
@@ -153,7 +154,7 @@ extern "C" void sys_arm_mem_op()
 IMPLEMENTATION [arm]:
 
 PUBLIC static void
-Mem_op::arm_mem_cache_maint(int op, void const *start, void const *end)
+Mem_op::arm_mem_cache_maint(Op_cache op, void const *start, void const *end)
 {
   if (EXPECT_FALSE(start > end))
     return;
@@ -187,9 +188,9 @@ Mem_op::arm_mem_access(Mword *r)
     {
       current()->set_recover_jmpbuf(&pf_recovery);
 
-      switch (r[0])
+      switch (Op_mem{r[0]})
 	{
-	case Op_mem_read_data:
+	case Op_mem::Read_data:
 	  switch (w)
 	    {
 	    case 0: r[3] = *reinterpret_cast<unsigned char *>(a); break;
@@ -199,7 +200,7 @@ Mem_op::arm_mem_access(Mword *r)
 	    };
 	  break;
 
-	case Op_mem_write_data:
+	case Op_mem::Write_data:
 	  switch (w)
 	    {
 	    case 0: *reinterpret_cast<unsigned char *>(a) = r[3]; break;
@@ -225,7 +226,9 @@ extern "C" void sys_arm_mem_op()
   if (EXPECT_FALSE(e->r[0] & 0x10))
     Mem_op::arm_mem_access(e->r);
   else
-    Mem_op::arm_mem_cache_maint(e->r[0], (void *)e->r[1], (void *)e->r[2]);
+    Mem_op::arm_mem_cache_maint(Mem_op::Op_cache{e->r[0]},
+                                reinterpret_cast<void *>(e->r[1]),
+                                reinterpret_cast<void *>(e->r[2]));
 }
 
 // ------------------------------------------------------------------------

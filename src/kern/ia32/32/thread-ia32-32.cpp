@@ -264,9 +264,9 @@ PROTECTED inline NEEDS[Thread::sys_gdt_x86]
 L4_msg_tag
 Thread::invoke_arch(L4_msg_tag tag, Utcb const *utcb, Utcb *out)
 {
-  switch (utcb->values[0] & Opcode_mask)
+  switch (Op{utcb->values[0] & Opcode_mask})
     {
-    case Op_gdt_x86: return sys_gdt_x86(tag, utcb, out);
+    case Op::Gdt_x86: return sys_gdt_x86(tag, utcb, out);
     default:
       return commit_result(-L4_err::ENosys);
     };

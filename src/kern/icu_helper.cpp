@@ -99,16 +99,16 @@ private:
 class Icu_h_base
 {
 public:
-  enum Op
+  enum class Op : Mword
   {
-    Op_bind       = 0,
-    Op_unbind     = 1,
-    Op_info       = 2,
-    Op_msi_info   = 3,
-    Op_eoi        = Irq::Op_eoi, // 4
-    Op_unmask     = Op_eoi,
-    Op_mask       = 5,
-    Op_set_mode   = 6,
+    Bind       = 0,
+    Unbind     = 1,
+    Info       = 2,
+    Msi_info   = 3,
+    Eoi        = static_cast<Mword>(Irq::Op::Eoi), // 4
+    Unmask     = Eoi,
+    Mask       = 5,
+    Set_mode   = 6,
   };
 
   enum Feature
@@ -130,11 +130,11 @@ protected:
   REAL_ICU *this_icu()
   { return nonull_static_cast<REAL_ICU *>(this); }
 
-  L4_RPC(Op_bind,     icu_bind,     (Mword irqnum, Ko::Cap<Irq> irq));
-  L4_RPC(Op_unbind,   icu_unbind,   (Mword irqnum, Ko::Cap<Irq> irq));
-  L4_RPC(Op_set_mode, icu_set_mode, (Mword irqnum, Irq_chip::Mode mode));
-  L4_RPC(Op_info,     icu_get_info, (Mword *features, Mword *num_irqs, Mword *num_msis));
-  L4_RPC(Op_msi_info, icu_msi_info, (Mword msinum, Unsigned64 src_id, Msi_info *info));
+  L4_RPC(Op::Bind,     icu_bind,     (Mword irqnum, Ko::Cap<Irq> irq));
+  L4_RPC(Op::Unbind,   icu_unbind,   (Mword irqnum, Ko::Cap<Irq> irq));
+  L4_RPC(Op::Set_mode, icu_set_mode, (Mword irqnum, Irq_chip::Mode mode));
+  L4_RPC(Op::Info,     icu_get_info, (Mword *features, Mword *num_irqs, Mword *num_msis));
+  L4_RPC(Op::Msi_info, icu_msi_info, (Mword msinum, Unsigned64 src_id, Msi_info *info));
 };
 
 
@@ -240,29 +240,29 @@ Icu_h<REAL_ICU>::icu_invoke(L4_obj_ref, L4_fpage::Rights /*rights*/,
   if (EXPECT_FALSE(tag.words() < 1))
     return Kobject_iface::commit_result(-L4_err::EMsgtooshort);
 
-  switch (utcb->values[0])
+  switch (Icu_h_base::Op{utcb->values[0]})
     {
-    case Op_bind:
+    case Op::Bind:
       return Msg_icu_bind::call(this_icu(), tag, utcb, out);
 
-    case Op_unbind:
+    case Op::Unbind:
       return Msg_icu_unbind::call(this_icu(), tag, utcb, out);
 
-    case Op_info:
+    case Op::Info:
       return Msg_icu_get_info::call(this_icu(), tag, utcb, out);
 
-    case Op_msi_info:
+    case Op::Msi_info:
       return Msg_icu_msi_info::call(this_icu(), tag, utcb, out);
 
-    case Op_unmask:
-    case Op_mask:
+    case Op::Unmask:
+    case Op::Mask:
       if (tag.words() < 2)
         return Kobject_h<REAL_ICU>::no_reply();
 
-      this_icu()->icu_mask_irq(utcb->values[0] == Op_mask, utcb->values[1]);
+      this_icu()->icu_mask_irq(Op{utcb->values[0]} == Op::Mask, utcb->values[1]);
       return Kobject_h<REAL_ICU>::no_reply();
 
-    case Op_set_mode:
+    case Op::Set_mode:
       return Msg_icu_set_mode::call(this_icu(), tag, utcb, out);
 
     default:

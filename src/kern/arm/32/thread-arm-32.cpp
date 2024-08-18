@@ -277,7 +277,7 @@ Thread::check_and_handle_linux_cache_api(Trap_state *ts)
   if (ts->esr.ec() == 0x11 && ts->r[7] == 0xf0002)
     {
       if (ts->r[2] == 0)
-        Mem_op::arm_mem_cache_maint(Mem_op::Op_cache_coherent,
+        Mem_op::arm_mem_cache_maint(Mem_op::Op_cache::Coherent,
                                     reinterpret_cast<void *>(ts->r[0]),
                                     reinterpret_cast<void *>(ts->r[1]));
       ts->r[0] = 0;

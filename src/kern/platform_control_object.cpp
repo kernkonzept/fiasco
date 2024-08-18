@@ -9,7 +9,7 @@ INTERFACE:
 class Platform_control_object : public Kobject_h<Platform_control_object, Icu>
 {
 public:
-  enum class Op
+  enum class Op : Mword
   {
     Suspend_system     = 0x0,
     Shutdown_system    = 0x1,

@@ -25,7 +25,7 @@ private:
   void ux_init();
 
 public:
-  enum Operation
+  enum class Op : Mword
   {
     Map           = 0,
     Unmap         = 1,
@@ -671,18 +671,18 @@ Task::invoke(L4_obj_ref self, L4_fpage::Rights rights, Syscall_frame *f, Utcb *u
 
   Utcb *out = self.have_recv() ? utcb : nullptr;
   L4_msg_tag tag;
-  switch (utcb->values[0])
+  switch (Op{utcb->values[0]})
     {
-    case Map:
+    case Op::Map:
       tag = sys_map(rights, f, utcb);
       break;
-    case Unmap:
+    case Op::Unmap:
       tag = sys_unmap(f, utcb);
       break;
-    case Cap_info:
+    case Op::Cap_info:
       tag = sys_cap_info(f, utcb);
       break;
-    case Add_ku_mem:
+    case Op::Add_ku_mem:
       tag = sys_add_ku_mem(f, utcb, out);
       break;
     default:

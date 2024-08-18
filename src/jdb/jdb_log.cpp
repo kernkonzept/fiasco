@@ -46,9 +46,9 @@ PUBLIC
 bool
 Jdb_log_list_hdl::invoke(Kobject_common *, Syscall_frame *f, Utcb *utcb) override
 {
-  switch (utcb->values[0])
+  switch (Op{utcb->values[0]})
     {
-      case Op_query_log_typeid:
+      case Op::Query_log_typeid:
           {
             unsigned char const idx = utcb->values[1];
             if (f->tag().words() < 3 || _jdb_log_table + idx >= &_jdb_log_table_end)
@@ -69,7 +69,7 @@ Jdb_log_list_hdl::invoke(Kobject_common *, Syscall_frame *f, Utcb *utcb) overrid
             f->tag(Kobject_iface::commit_result(0, 1));
             return true;
           }
-      case Op_query_log_name:
+      case Op::Query_log_name:
           {
             unsigned char const idx = utcb->values[1];
             if (f->tag().words() != 2 || _jdb_log_table + idx >= &_jdb_log_table_end)
@@ -91,7 +91,7 @@ Jdb_log_list_hdl::invoke(Kobject_common *, Syscall_frame *f, Utcb *utcb) overrid
                                                    / sizeof(Mword)));
             return true;
           }
-      case Op_switch_log:
+      case Op::Switch_log:
           {
             if (f->tag().words() < 3)
               {
@@ -115,6 +115,8 @@ Jdb_log_list_hdl::invoke(Kobject_common *, Syscall_frame *f, Utcb *utcb) overrid
             f->tag(Kobject_iface::commit_result(0));
             return true;
           }
+      default:
+        break;
     }
 
   return false;

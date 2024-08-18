@@ -61,16 +61,17 @@ public:
   bool is_global() const { return !kobj_type; }
 
 protected:
-  enum {
-    Op_set_name         = 0,
-    Op_global_id        = 1,
-    Op_kobj_to_id       = 2,
-    Op_query_log_typeid = 3,
-    Op_switch_log       = 4,
-    Op_get_name         = 5,
-    Op_query_log_name   = 6,
-    Op_add_image_info   = 7,
-    Op_obj_info         = 16,
+  enum class Op : Mword
+  {
+    Set_name         = 0,
+    Global_id        = 1,
+    Kobj_to_id       = 2,
+    Query_log_typeid = 3,
+    Switch_log       = 4,
+    Get_name         = 5,
+    Query_log_name   = 6,
+    Add_image_info   = 7,
+    Obj_info         = 16,
   };
 
 private:
@@ -258,15 +259,13 @@ PUBLIC
 bool
 Jdb_kobject_id_hdl::invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb) override
 {
-  if (   utcb->values[0] != Op_global_id
-      && utcb->values[0] != Op_kobj_to_id)
-    return false;
-
-  if (utcb->values[0] == Op_global_id)
+  if (Op{utcb->values[0]} == Op::Global_id)
     utcb->values[0] = o->dbg_info()->dbg_id();
-  else
+  else if (Op{utcb->values[0]} == Op::Kobj_to_id)
     utcb->values[0] =
       Kobject_dbg::pointer_to_id(reinterpret_cast<void *>(utcb->values[1]));
+  else
+    return false;
   f->tag(Kobject_iface::commit_result(0, 1));
   return true;
 }

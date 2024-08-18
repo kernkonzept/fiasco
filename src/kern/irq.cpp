@@ -21,10 +21,10 @@ class Irq : public Irq_base, public cxx::Dyn_castable<Irq, Kobject>
   Irq() = delete;
 
 public:
-  enum Op
+  enum class Op : Mword
   {
-    Op_trigger    = 2, // Irq_sender + Irq_semaphore
-    Op_eoi        = 4, // Icu + Irq_sender + Irq_semaphore
+    Trigger    = 2, // Irq_sender + Irq_semaphore
+    Eoi        = 4, // Icu + Irq_sender + Irq_semaphore
   };
 
 protected:
@@ -60,10 +60,11 @@ class Irq_sender
   friend struct Irq_sender_test;
 
 public:
-  enum Op {
-    Op_attach = 0,
-    Op_detach = 1,
-    Op_bind     = 0x10,
+  enum class Op : Mword
+  {
+    Attach = 0,
+    Detach = 1,
+    Bind   = 0x10,
   };
 
 protected:
@@ -214,29 +215,29 @@ static Irq_base_cast register_irq_base_cast;
 }
 
 PROTECTED inline
-int
+Mword
 Irq::get_irq_opcode(L4_msg_tag tag, Utcb const *utcb)
 {
   if (tag.proto() == L4_msg_tag::Label_irq && tag.words() == 0)
-    return Op_trigger;
+    return static_cast<Mword>(Op::Trigger);
   if (EXPECT_FALSE(tag.words() < 1))
-    return -1;
+    return ~0UL;
 
   return access_once(utcb->values) & 0xffff;
 }
 
 PROTECTED inline
 L4_msg_tag
-Irq::dispatch_irq_proto(Unsigned16 op, bool may_unmask)
+Irq::dispatch_irq_proto(Irq::Op op, bool may_unmask)
 {
   switch (op)
     {
-    case Op_eoi:
+    case Op::Eoi:
       if (may_unmask)
         unmask();
       return L4_msg_tag(L4_msg_tag::Schedule); // no reply
 
-    case Op_trigger:
+    case Op::Trigger:
       log();
       hit(0);
       return L4_msg_tag(L4_msg_tag::Schedule); // no reply
@@ -798,26 +799,26 @@ Irq_sender::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
                     Utcb const *utcb, Utcb *utcb_out)
 {
   L4_msg_tag tag = f->tag();
-  int op = get_irq_opcode(tag, utcb);
+  Mword op = get_irq_opcode(tag, utcb);
 
-  if (EXPECT_FALSE(op < 0))
+  if (EXPECT_FALSE(op == ~0UL))
     return commit_result(-L4_err::EInval);
 
   switch (tag.proto())
     {
     case L4_msg_tag::Label_kobject:
-      switch (op)
+      switch (Op{op})
         {
-        case Op_bind: // the Rcv_endpoint opcode (equal to Ipc_gate::bind_thread)
+        case Op::Bind: // the Rcv_endpoint opcode (equal to Ipc_gate::bind_thread)
           return sys_bind(tag, rights, utcb, utcb_out);
         default:
           return commit_result(-L4_err::ENosys);
         }
 
     case L4_msg_tag::Label_irq:
-      // Handling Op_eoi here is workaround as we cannot access _irq_lock in
-      // dispatch_irq_proto().
-      if (op == Op_eoi)
+      // Handling Irq::Op::Eoi here is workaround as we cannot access _irq_lock
+      // in dispatch_irq_proto().
+      if (Irq::Op{op} == Irq::Op::Eoi)
         {
           auto g = lock_guard<No_cpu_lock_policy>(_irq_lock);
           if (_send_state.can_send())
@@ -825,12 +826,12 @@ Irq_sender::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
           return L4_msg_tag(L4_msg_tag::Schedule); // no reply
         }
       else
-        return dispatch_irq_proto(op, false);
+        return dispatch_irq_proto(Irq::Op{op}, false);
 
     case L4_msg_tag::Label_irq_sender:
-      switch (op)
+      switch (Irq_sender::Op{op})
         {
-        case Op_detach:
+        case Op::Detach:
           return sys_detach(rights, utcb_out);
 
         default:

@@ -112,7 +112,7 @@ PRIVATE inline
 bool
 Task::invoke_arch(L4_msg_tag &tag, Utcb *utcb)
 {
-  if (utcb->values[0] == Vgicc_map_arm)
+  if (Op{utcb->values[0]} == Op::Vgicc_map_arm)
     {
       tag = map_gicc_page(tag, utcb);
       return true;

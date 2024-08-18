@@ -25,11 +25,11 @@ public:
    */
   static int call_nested_trap_handler(Trap_state *ts);
 
-  enum Kernel_entry_op
+  enum class Kernel_entry_op : Mword
   {
-    Op_kdebug_none = 0,
-    Op_kdebug_text = 1,
-    Op_kdebug_call = 2,
+    Kdebug_none = 0,
+    Kdebug_text = 1,
+    Kdebug_call = 2,
   };
 
 private:
@@ -55,12 +55,11 @@ extern "C" void sys_kdb_ke()
   Thread *t = current_thread();
   Entry_frame *regs = t->regs();
   Trap_state *ts = static_cast<Trap_state*>(regs);
-  Thread::Kernel_entry_op kdb_ke_op = Thread::Kernel_entry_op(ts->r[Trap_state::R_s6]);
   Mword arg = ts->r[Trap_state::R_t0];
 
-  switch (kdb_ke_op)
+  switch (Thread::Kernel_entry_op{ts->r[Trap_state::R_s6]})
     {
-    case Thread::Op_kdebug_call:
+    case Thread::Kernel_entry_op::Kdebug_call:
       if (arg > sizeof(Thread::dbg_extension)/sizeof(Thread::dbg_extension[0]))
         break;
 
@@ -70,7 +69,7 @@ extern "C" void sys_kdb_ke()
       Thread::dbg_extension[arg](t, ts);
       return;
 
-    case Thread::Op_kdebug_text:
+    case Thread::Kernel_entry_op::Kdebug_text:
       strncpy(str, reinterpret_cast<char *>(arg), sizeof(str));
       str[sizeof(str)-1] = 0;
       break;

@@ -26,10 +26,10 @@ struct Dmar : Kobject_h<Dmar, Kobject>
 
     switch (access_once(&in->values[0]))
       {
-      case Msg_bind::Op:
+      case Msg_bind::Opcode:
         return Msg_bind::call(this, tag, in, out, rights);
 
-      case Msg_unbind::Op:
+      case Msg_unbind::Opcode:
         return Msg_unbind::call(this, tag, in , out, rights);
 
       default:

@@ -123,10 +123,10 @@ PROTECTED inline NEEDS[Thread::sys_gdt_x86]
 L4_msg_tag
 Thread::invoke_arch(L4_msg_tag tag, Utcb const *utcb, Utcb *out)
 {
-  switch (utcb->values[0] & Opcode_mask)
+  switch (Op{utcb->values[0] & Opcode_mask})
     {
-    case Op_gdt_x86: return sys_gdt_x86(tag, utcb, out);
-    case Op_set_segment_base_amd64:
+    case Op::Gdt_x86: return sys_gdt_x86(tag, utcb, out);
+    case Op::Set_segment_base_amd64:
       {
         if (tag.words() < 2)
           return commit_result(-L4_err::EMsgtooshort);
@@ -155,7 +155,7 @@ Thread::invoke_arch(L4_msg_tag tag, Utcb const *utcb, Utcb *out)
           }
         return Kobject_iface::commit_result(0);
       }
-    case Op_segment_info_amd64:
+    case Op::Segment_info_amd64:
       out->values[0] = Gdt::gdt_data_user   | Gdt::Selector_user; // user_ds32
       out->values[1] = Gdt::gdt_code_user   | Gdt::Selector_user; // user_cs64
       out->values[2] = Gdt::gdt_code_user32 | Gdt::Selector_user; // user_cs32

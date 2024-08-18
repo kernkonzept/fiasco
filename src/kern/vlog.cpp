@@ -28,12 +28,12 @@ public:
     F_ECHO = 000010,
   };
 
-  enum Operation
+  enum class Op : Mword
   {
-    Op_write    = 0,
-    Op_read     = 1,
-    Op_set_attr = 2,
-    Op_get_attr = 3,
+    Write    = 0,
+    Read     = 1,
+    Set_attr = 2,
+    Get_attr = 3,
   };
 
 private:
@@ -178,7 +178,8 @@ Vlog::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,
 
   if (tag.proto() == L4_msg_tag::Label_irq)
     {
-      if (r_msg->values[0] == Op_bind && !Vkey::receive_enabled())
+      if (Icu_h_base::Op{r_msg->values[0]} == Icu_h_base::Op::Bind
+          && !Vkey::receive_enabled())
         WARN("Without -esc / -serial_esc, Vlog will not generate input events!\n");
 
       return Icu_h<Vlog>::icu_invoke(ref, rights, f, r_msg, s_msg);
@@ -187,16 +188,16 @@ Vlog::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,
   if (!Ko::check_basics(&tag, L4_msg_tag::Label_log))
     return tag;
 
-  switch (r_msg->values[0])
+  switch (Op{r_msg->values[0]})
     {
-    case Op_write:
+    case Op::Write:
       log_string(r_msg);
       return no_reply();
-    case Op_set_attr:
+    case Op::Set_attr:
       return set_attr(rights, f, r_msg);
-    case Op_get_attr:
+    case Op::Get_attr:
       return get_attr(rights, f, s_msg);
-    default: // Op_read
+    default: // Op::Read
       return get_input(rights, f, s_msg);
     }
 }
