@@ -12,7 +12,10 @@
 #include "tb_entry.h"
 #include "task.h"
 #include "thread.h"
+#include "scheduler.h"
+#include "semaphore.h"
 #include "string_buffer.h"
+#include "vlog.h"
 
 
 // timeout => x.x{
@@ -125,6 +128,110 @@ print_msgtag(String_buffer *buf, L4_msg_tag const &tag)
               flag_buf, fb ? "," : "", tag.words(), tag.items());
 }
 
+static
+void
+print_words(String_buffer *buf, L4_msg_tag const &tag, Mword dw0, Mword dw1)
+{
+  if (tag.words() == 0)
+    {
+      if (tag.proto() == L4_msg_tag::Label_irq)
+        buf->printf(" (trigger)");
+    }
+  else
+    {
+#define TB_ENTRY(c, o) case c::Op::o: buf->printf(#o); break
+      buf->printf(" (");
+      bool print_dw0 = false;
+      if (tag.proto() == L4_msg_tag::Label_irq)
+        switch (Icu_h_base::Op{dw0})
+          {
+            TB_ENTRY(Icu_h_base, Bind);
+            TB_ENTRY(Icu_h_base, Unbind);
+            TB_ENTRY(Icu_h_base, Info);
+            TB_ENTRY(Icu_h_base, Msi_info);
+            TB_ENTRY(Icu_h_base, Unmask);
+            TB_ENTRY(Icu_h_base, Mask);
+            TB_ENTRY(Icu_h_base, Set_mode);
+            default: print_dw0 = true; break;
+          }
+      else if (tag.proto() == L4_msg_tag::Label_task)
+        switch (Task::Op{dw0})
+          {
+            TB_ENTRY(Task, Map);
+            TB_ENTRY(Task, Unmap);
+            TB_ENTRY(Task, Cap_info);
+            TB_ENTRY(Task, Add_ku_mem);
+            TB_ENTRY(Task, Ldt_set_x86);
+            TB_ENTRY(Task, Vgicc_map_arm);
+            default: print_dw0 = true; break;
+          }
+      else if (tag.proto() == L4_msg_tag::Label_thread)
+        switch (Thread::Op{dw0})
+          {
+            TB_ENTRY(Thread, Control);
+            TB_ENTRY(Thread, Ex_regs);
+            TB_ENTRY(Thread, Switch);
+            TB_ENTRY(Thread, Vcpu_resume);
+            TB_ENTRY(Thread, Register_del_irq);
+            TB_ENTRY(Thread, Modify_senders);
+            TB_ENTRY(Thread, Vcpu_control);
+#if defined(ARCH_x86) || defined(ARCH_AMD64)
+            TB_ENTRY(Thread, Gdt_x86);
+#elif defined (ARCH_ARM)
+            TB_ENTRY(Thread, Set_tpidruro_arm);
+#endif
+            TB_ENTRY(Thread, Set_segment_base_amd64);
+            TB_ENTRY(Thread, Segment_info_amd64);
+            default: print_dw0 = true; break;
+          }
+      else if (tag.proto() == L4_msg_tag::Label_log)
+        switch (Vlog::Op{dw0})
+          {
+          case Vlog::Op::Write:
+              buf->printf("Write,len=%ld,'...')", dw1);
+              return;
+            TB_ENTRY(Vlog, Read);
+            TB_ENTRY(Vlog, Set_attr);
+            TB_ENTRY(Vlog, Get_attr);
+            default: print_dw0 = true; break;
+          }
+      else if (tag.proto() == L4_msg_tag::Label_scheduler)
+        switch (Scheduler::Op{dw0})
+          {
+            TB_ENTRY(Scheduler, Info);
+            TB_ENTRY(Scheduler, Run_thread);
+            TB_ENTRY(Scheduler, Idle_time);
+            default: print_dw0 = true; break;
+          }
+      else if (tag.proto() == L4_msg_tag::Label_irq_sender)
+        switch (Irq_sender::Op{dw0})
+          {
+            TB_ENTRY(Irq_sender, Attach);
+            TB_ENTRY(Irq_sender, Detach);
+            TB_ENTRY(Irq_sender, Bind);
+            default: print_dw0 = true; break;
+          }
+      else if (tag.proto() == L4_msg_tag::Label_semaphore)
+        switch (Semaphore::Op{dw0})
+          {
+            TB_ENTRY(Semaphore, Down);
+            default: print_dw0 = true; break;
+          }
+      else
+        print_dw0 = true;
+      if (print_dw0)
+        buf->printf("%lx", dw0);
+      if (tag.words() > 1)
+        {
+          buf->printf(",%lx", dw1);
+          if (tag.words() > 2)
+            buf->printf(",...");
+        }
+      buf->printf(")");
+#undef TB_ENTRY
+    }
+}
+
 class Tb_entry_ipc_fmt : public Tb_entry_formatter
 {
 public:
@@ -192,18 +299,8 @@ formatter_ipc(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidlen)
 
       print_msgtag(buf, e->tag());
 
-      buf->printf("] (");
-      if (e->tag().words() > 0)
-        {
-          buf->printf("%lx", e->dword(0));
-          if (e->tag().words() > 1)
-            {
-              buf->printf(",%lx", e->dword(1));
-              if (e->tag().words() > 2)
-                buf->printf(",...");
-            }
-        }
-      buf->printf(")");
+      buf->printf("]");
+      print_words(buf, e->tag(), e->dword(0), e->dword(1));
     }
 
   buf->printf(" TO=");
