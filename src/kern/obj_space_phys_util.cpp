@@ -63,6 +63,7 @@ INTERFACE [obj_space_phys_avl]:
 #include "kmem_slab.h"
 #include "spin_lock.h"
 #include "global_data.h"
+#include "paging.h"
 
 template< typename _Type >
 class Obj_space_phys_allocator
