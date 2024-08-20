@@ -68,7 +68,7 @@ PRIVATE_INCDIR	+= lib/minilibc/mips/$(BITS)/include  lib/minilibc/mips/include \
 		   lib/minilibc/include
 CSRC_MINILIBC	:= atexit.c memccpy.c memcmp.c memmove.c memset.c memcpy.c \
 		   memchr.c panic.c strchr.c strcmp.c strcpy.c strlen.c \
-		   strncmp.c strncpy.c strstr.c printf.c \
+		   strncmp.c strncpy.c strnlen.c strstr.c printf.c \
 		   __v_printf.c vprintf.c strtol.c strtoul.c __lltostr.c \
 		   __ltostr.c putchar.c puts.c getchar.c \
 		   sprintf.c snprintf.c vsnprintf.c vsprintf.c \

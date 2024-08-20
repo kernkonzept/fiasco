@@ -381,7 +381,7 @@ VPATH		+= lib/minilibc/$(CONFIG_XARCH) lib/minilibc
 PRIVATE_INCDIR	+= lib/minilibc/$(CONFIG_XARCH)/include lib/minilibc/include
 CSRC_MINILIBC	:= atexit.c memccpy.c memcmp.c memmove.c memset.c memcpy.c \
 		   memchr.c strchr.c strcmp.c strcpy.c strlen.c strncmp.c \
-		   stpcpy.c strncpy.c strstr.c printf.c __v_printf.c \
+		   stpcpy.c strncpy.c strnlen.c strstr.c printf.c __v_printf.c \
 		   vprintf.c strtol.c strtoul.c lltostr.c __ltostr.c \
 		   putchar.c puts.c getchar.c sprintf.c \
 		   snprintf.c vsnprintf.c vsprintf.c longjmp.c isalnum.c \
