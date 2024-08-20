@@ -95,7 +95,7 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
   v->csselr = 0;
   v->sctlr = (Cpu::sctlr | Cpu::Cp15_c1_cache_bits) & ~(Cpu::Cp15_c1_mmu | (1 << 28));
   v->actlr = 0;
-  v->cpacr = 0x5755555;
+  v->cpacr = 0x5f55555;
   v->fcseidr = 0;
   v->vbar = 0;
   v->amair0 = 0;
@@ -112,6 +112,7 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
   if (current() == this)
     {
       asm volatile ("mcr p15, 0, %0, c1, c0, 0" : : "r"(v->sctlr));
+      asm volatile ("mcr p15, 0, %0, c1, c0, 2" : : "r"(v->cpacr));
       asm volatile ("mcr p15, 4, %0, c1, c1, 3" : : "r"(Cpu::Hstr_vm)); // HSTR
       if (_hyp.hcr & Cpu::Hcr_tge)
         {
