@@ -37,7 +37,7 @@ typedef unsigned char bool;
 #if defined(CAPSTONE_HAS_OSXKERNEL) || (defined(_MSC_VER) && (_MSC_VER <= 1700 || defined(_KERNEL_MODE))) || 1 // Fiasco
 // this system does not have inttypes.h
 
-#if defined(_MSC_VER) && (_MSC_VER <= 1600 || defined(_KERNEL_MODE)) || 1 // Fiasco
+#if defined(_MSC_VER) && (_MSC_VER <= 1600 || defined(_KERNEL_MODE))
 // this system does not have stdint.h
 typedef signed char  int8_t;
 typedef signed short int16_t;
@@ -52,7 +52,7 @@ typedef unsigned long long uint64_t;
 #include <stdint.h>          // Fiasco
 #include "globalconfig.h"    // Fiasco
 
-#if defined(_MSC_VER) && (_MSC_VER < 1600 || defined(_KERNEL_MODE)) || 1 // Fiasco
+#if defined(_MSC_VER) && (_MSC_VER < 1600 || defined(_KERNEL_MODE))
 #define INT8_MIN         (-127 - 1)
 #define INT16_MIN        (-32767 - 1)
 #define INT32_MIN        (-2147483647 - 1)
