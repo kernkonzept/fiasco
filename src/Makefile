@@ -282,13 +282,13 @@ clean: $(foreach subsys, $(SUBSYSTEMS), clean-$(subsys))
 	$(VERBOSE)$(RM) $(strip $(ALL))
 	$(VERBOSE)$(RM) *.o fiasco fiasco.map
 	$(VERBOSE)$(RM) auto/*.cc auto/*.h auto/*.S auto/stamp-*.ready
-	$(VERBOSE)$(RM) .Clean-auto .Compiler-config .$(KCONFIG_FILE).parts
+	$(VERBOSE)$(RM) .Clean-auto .$(KCONFIG_FILE).parts
 
 cleanall: clean $(foreach subsys, $(SUBSYSTEMS), cleanall-$(subsys))
 	$(foreach subdir, $(SUBDIRS), $(VERBOSE)$(RM) $(subdir)/*.d $(subdir)/.*.d)
 	$(VERBOSE)$(RM) *.d .*.d .*.d.new *.d.new *~
 	$(VERBOSE)$(RM) globalconfig.h globalconfig.tags globalconfig.h.old Circular
-	$(VERBOSE)$(RM) .Modules.deps source
+	$(VERBOSE)$(RM) .Modules.deps source .Compiler-config
 	$(VERBOSE)$(RM_R) scripts
 
 mrproper: cleanall
