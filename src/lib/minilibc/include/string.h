@@ -28,6 +28,8 @@ size_t strlen(const char *s) __attribute__((pure));
 size_t strlen(const char *s);
 #endif
 
+size_t strnlen(const char *s, size_t n);
+
 char *strstr(const char *haystack, const char *needle);
 
 char *strdup(const char *s);
