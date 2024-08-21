@@ -546,7 +546,7 @@ menu "Debugging"
 
 config COV
 	bool "Coverage support"
-	depends on HAS_COV_OPTION
+	depends on HAS_COV_OPTION && !AMP
 	help
 	  Adds coverage support using gcov or llvm depending on the compiler that
 	  is used. Do not enable this on production systems.
