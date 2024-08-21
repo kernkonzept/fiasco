@@ -104,9 +104,6 @@ Idt::init()
   _idt_pa = Mem_layout::pmem_to_phys(idt);
   memset(static_cast<void*>(idt), 0, Config::PAGE_SIZE);
 
-  Vmem_alloc::page_map(reinterpret_cast<void *>(_idt), 0,
-                       Vmem_alloc::NO_ZERO_FILL, _idt_pa);
-
   init_table(reinterpret_cast<Idt_init_entry*>(&idt_init_table), idt);
 
   init_current_cpu();
@@ -262,24 +259,4 @@ Idt::set_vectors_run()
   if (!Irq_chip::hw_chip->is_free(0xf))
     Irq_chip::hw_chip->reset(0x0f);
 #endif
-}
-
-
-//---------------------------------------------------------------------------
-IMPLEMENTATION[ux]:
-
-#include "emulation.h"
-
-PUBLIC static
-void
-Idt::set(Pseudo_descriptor *desc)
-{
-  Emulation::lidt(desc);
-}
-
-PUBLIC static
-void
-Idt::get(Pseudo_descriptor *desc)
-{
-  Emulation::sidt(desc);
 }

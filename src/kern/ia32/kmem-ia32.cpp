@@ -4,7 +4,7 @@
 // more specialized memory allocation/deallocation functions follow
 // below in the "Kmem" namespace
 
-INTERFACE [ia32,amd64,ux]:
+INTERFACE [ia32,amd64]:
 
 #include "globalconfig.h"
 #include "initcalls.h"
@@ -491,7 +491,7 @@ IMPLEMENT inline Address Kmem::user_max() { return ~0UL; }
 
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [ia32,ux,amd64]:
+IMPLEMENTATION [ia32,amd64]:
 
 #include <cstdlib>
 #include <cstddef>		// size_t
@@ -606,7 +606,7 @@ Kmem::get_realmode_startup_gdt_pdesc()
 }
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [(amd64 || ia32 || ux) && !cpu_local_map]:
+IMPLEMENTATION [(amd64 || ia32) && !cpu_local_map]:
 
 PUBLIC static inline
 Kpdir *

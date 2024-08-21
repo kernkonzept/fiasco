@@ -25,17 +25,16 @@ public:
   enum Console_attr
   {
     // universal attributes
-    INVALID     =     0,
-    OUT         =   0x1, ///< output to console is possible
-    IN          =   0x2, ///< input from console is possible
+    INVALID     =    0,
+    OUT         =  0x1, ///< output to console is possible
+    IN          =  0x2, ///< input from console is possible
     // attributes to identify a specific console
-    DIRECT      =   0x4, ///< output to screen or input from keyboard
-    UART        =   0x8, ///< output to/input from serial serial line
-    UX          =  0x10, ///< filtered input console for UX
-    PUSH        =  0x20, ///< input console
-    GZIP        =  0x40, ///< gzip+uuencode output and sent to uart console
-    BUFFER      =  0x80, ///< ring buffer
-    DEBUG       = 0x100, ///< kdb interface
+    DIRECT      =  0x4, ///< output to screen or input from keyboard
+    UART        =  0x8, ///< output to/input from serial serial line
+    PUSH        = 0x10, ///< input console
+    GZIP        = 0x20, ///< gzip+uuencode output and sent to uart console
+    BUFFER      = 0x40, ///< ring buffer
+    DEBUG       = 0x80, ///< kdb interface
   };
 
   /**
@@ -195,7 +194,7 @@ const char*
 Console::str_attr(Mword bit) const
 {
   static char const * const attr_str[] =
-    { "Direct", "Uart", "UX", "Push", "Gzip", "Buffer", "Kdb" };
+    { "Direct", "Uart", "Push", "Gzip", "Buffer", "Kdb" };
 
   return (bit < 2 || bit >= (sizeof(attr_str)/sizeof(attr_str[0]))+2)
     ? "???"

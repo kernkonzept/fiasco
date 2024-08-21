@@ -1,4 +1,4 @@
-IMPLEMENTATION[ia32 || ux]:
+IMPLEMENTATION[ia32]:
 
 PUBLIC template<typename T> inline
 void FIASCO_NORETURN
@@ -6,7 +6,7 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
 {
   assert(cpu_lock.test());
   assert(current() == this);
-  assert(Config::Is_ux || (regs()->cs() & 3) == 3);
+  assert((regs()->cs() & 3) == 3);
 
   regs()->ip(ip);
   regs()->sp(sp);
@@ -60,11 +60,7 @@ Thread::restore_exc_state()
   _exc_cont.restore(regs());
 #if 0
 
-#ifdef CONFIG_PF_UX
-  r->cs (exception_cs() & ~1);
-#else
   r->cs (exception_cs());
-#endif
   r->ip (_exc_ip);
   r->flags (_exc_flags);
   _exc_ip = ~0UL;
@@ -159,7 +155,7 @@ Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [ia32 && !ux]:
+IMPLEMENTATION [ia32]:
 
 IMPLEMENT inline NEEDS[Thread::exception_triggered]
 void

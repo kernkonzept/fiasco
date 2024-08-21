@@ -267,7 +267,7 @@ in_sc_ipc2:
  * second alien exception is not generated. Therefore ex-regs uses 
  * 'ret_from_fast_alien_ipc' to determine this case and patches the return
  * address with 'leave_alien_from_sysenter_by_iret' instead of
- * 'leave_from_sysenter_by_iret'. (see Thread::user_ip in thread-ia32-ux.cpp)
+ * 'leave_from_sysenter_by_iret'. (see Thread::user_ip in thread-ia32.cpp)
  */
 
 

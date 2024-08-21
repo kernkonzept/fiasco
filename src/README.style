@@ -103,7 +103,7 @@ directory layout is as follows:
 :kern/: Source files shared for all Fiasco-supported
   architectures
 
-:kern/ia32, kern/ux, and so on: Source files that are
+:kern/ia32, kern/arm, and so on: Source files that are
   specific for only one architecture.
 
 Currently, hardware architectures is the only configuration dimension
@@ -136,7 +136,7 @@ to add architecture-configuration strings to the file names, separated
 by dashes (-).  For example:
 
 * kern/thread.cpp
-* kern/shared/thread-ia32-ux.cpp
+* kern/shared/thread-ia32.cpp
 
 Occasionally, it is useful to separate configuration-specific code
 into a source file of its own (see Section 

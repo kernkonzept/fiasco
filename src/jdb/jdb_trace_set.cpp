@@ -27,7 +27,7 @@ private:
 char Jdb_set_trace::first_char;
 char Jdb_set_trace::second_char;
 
-IMPLEMENTATION[!{ia32,ux,amd64}]:
+IMPLEMENTATION[!{ia32,amd64}]:
 
 
 IMPLEMENTATION:

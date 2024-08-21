@@ -663,7 +663,7 @@ struct L4_sched_param_legacy
 
 
 //----------------------------------------------------------------------------
-INTERFACE [ia32 || ux]:
+INTERFACE [ia32]:
 
 EXTENSION class L4_exception_ipc
 {

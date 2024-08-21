@@ -19,11 +19,3 @@ void *Vmem_alloc::page_alloc(void * address, Zero_fill zf, unsigned /*mode*/)
     Mem::memset_mwords((unsigned long *)address, 0, Config::PAGE_SIZE >> 2);
   return address;
 }
-
-IMPLEMENT
-void *Vmem_alloc::page_unmap(void * /*page*/)
-{
-  NOT_IMPL_PANIC;
-  return NULL;
-}
-

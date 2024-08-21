@@ -116,9 +116,9 @@ config_IMPL		:= config config-ia32-32 config-ia32
 context_IMPL		:= context context-ia32 context-ia32-32 context-vcpu
 continuation_IMPL	:= continuation-ia32-32
 cpu_IMPL		:= cpu cpu-ia32 cpu-32
-dirq_IMPL		:= dirq-ia32-ux
-entry_frame_IMPL	:= entry_frame entry_frame-ia32-ux
-fpu_IMPL		:= fpu fpu-ia32-ux fpu-ia32
+dirq_IMPL		:= dirq-ia32
+entry_frame_IMPL	:= entry_frame entry_frame-ia32
+fpu_IMPL		:= fpu fpu-ia32
 ipi_IMPL		:= ipi ipi-ia32
 kdb_ke_IMPL		+= kdb_ke-ia32
 kernel_thread_IMPL	:= kernel_thread kernel_thread-ia32
@@ -147,7 +147,7 @@ startup_IMPL		:= startup startup-ia32
 sys_call_page_IMPL	:= sys_call_page sys_call_page-abs-ia32
 task_IMPL		:= task task-ia32-amd64
 tb_entry_IMPL		:= tb_entry tb_entry-ia32-32
-timer_IMPL		:= timer timer-ia32-amd64-ux
+timer_IMPL		:= timer timer-ia32-amd64
 thread_IMPL		:= thread thread-ia32 thread-ia32-32 \
 			   thread-ipc thread-pagefault thread-log \
 			   thread-debug thread-dbf thread-vcpu thread-io
@@ -189,20 +189,20 @@ INTERFACES_JDB		+= jdb_io_ports jdb_ptab jdb_trace_set \
 CXXSRC_JDB := tb_entry_output.cc
 
 apic_IMPL		+= apic-debug
-jdb_IMPL		+= jdb-ia32-amd64 jdb-ia32-ux
-jdb_bp_IMPL		:= jdb_bp-ia32-ux jdb_bp-ia32-amd64 jdb_bp-ia32
-jdb_bt_IMPL		:= jdb_bt-ia32-ux
+jdb_IMPL		+= jdb-ia32-amd64 jdb-ia32
+jdb_bp_IMPL		:= jdb_bp-ia32 jdb_bp-ia32-amd64 jdb_bp-ia32-32
+jdb_bt_IMPL		:= jdb_bt-ia32
 jdb_entry_frame_IMPL	:= jdb_entry_frame-ia32
 jdb_kern_info_IMPL	:= jdb_kern_info jdb_kern_info-ia32-amd64 \
-			   jdb_kern_info-ia32-ux jdb_kern_info-apic \
+			   jdb_kern_info-ia32 jdb_kern_info-apic \
 			   jdb_kern_info-pci jdb_kern_info-bench \
 			   jdb_kern_info-bench-ia32-32 \
 			   jdb_kern_info-dr jdb_kern_info-mtrr
 jdb_misc_IMPL		:= jdb_misc-ia32-amd64
-jdb_ptab_IMPL		:= jdb_ptab jdb_ptab-ia32-ux
+jdb_ptab_IMPL		:= jdb_ptab jdb_ptab-ia32
 jdb_screen_IMPL		:= jdb_screen jdb_screen-ia32
-jdb_tcb_IMPL		+= jdb_tcb-ia32-ux
-jdb_trace_set_IMPL	:= jdb_trace_set jdb_trace_set-ia32-ux
+jdb_tcb_IMPL		+= jdb_tcb-ia32
+jdb_trace_set_IMPL	:= jdb_trace_set jdb_trace_set-ia32
 jdb_tbuf_fe_IMPL	:= jdb_tbuf_fe jdb_tbuf_fe-ia32
 
 INTERFACES_JDB		+= $(INTERFACES_JDB-y)

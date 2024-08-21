@@ -13,15 +13,12 @@
 #endif
 
 REALMODE_SECTION
-#ifndef CONFIG_PF_UX
 	.code16
 	.align 16
-#endif
 	.global _tramp_mp_entry
 _tramp_mp_entry:
 
     /* Basic setup of the processor (stack not yet needed) */
-#ifndef CONFIG_PF_UX
 	cli
 	cld
 	RM_LOAD_SEGMENT_BASE
@@ -30,7 +27,6 @@ _tramp_mp_entry:
 	/* 32bit code follows */
 
 	ENABLE_PAGING cr0=_tramp_mp_startup_cr0 cr3=_realmode_startup_pdbr cr4=_tramp_mp_startup_cr4 gdt=_tramp_mp_startup_gdt_pdesc
-#endif /* ! UX */
 
     /* Acquire spinlock */
     // Copy of Spin_lock::lock_arch(), we have no stack yet, so we cannot call it.
@@ -51,8 +47,6 @@ _tramp_mp_entry:
 	jmp BOOT_AP_CPU
 
 
-#ifndef CONFIG_PF_UX
-
 	.align 8
 .global _tramp_mp_startup_cr0
 .global _tramp_mp_startup_cr4
@@ -61,19 +55,12 @@ _tramp_mp_startup_cr0:      	.quad 0x00000000
 _tramp_mp_startup_cr4:      	.quad 0x00000000
 _tramp_mp_startup_gdt_pdesc:	.quad 0
                             	.quad 0
-#endif /* ! UX */
-
 .global _tramp_mp_spinlock
 _tramp_mp_spinlock:
 	.quad 0
 
 	.align 16
 _tramp_mp_init_stack:
-#ifdef CONFIG_PF_UX
-	/* glibc *printf-functions */
-	.space 4096
-#else
 	.space 2048
-#endif
 _tramp_mp_init_stack_top:
 

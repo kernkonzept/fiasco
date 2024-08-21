@@ -2231,7 +2231,7 @@ Context::rcu_wait()
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [fpu && !ux && lazy_fpu]:
+IMPLEMENTATION [fpu && lazy_fpu]:
 
 #include "fpu.h"
 
@@ -2320,7 +2320,7 @@ Context::release_fpu_if_owner()
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [fpu && !ux && !lazy_fpu]:
+IMPLEMENTATION [fpu && !lazy_fpu]:
 
 #include "fpu.h"
 

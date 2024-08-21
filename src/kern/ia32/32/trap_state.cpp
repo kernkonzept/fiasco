@@ -75,8 +75,15 @@ namespace Ts
 //---------------------------------------------------------------------------
 IMPLEMENTATION [ia32]:
 
-#include "regdefs.h"
+#include <cstdio>
+#include <panic.h>
+#include "atomic.h"
+#include "cpu.h"
 #include "gdt.h"
+#include "mem.h"
+#include "regdefs.h"
+
+Trap_state::Handler Trap_state::base_handler FIASCO_FASTCALL;
 
 PUBLIC inline NEEDS["regdefs.h", "gdt.h"]
 void
@@ -86,32 +93,6 @@ Trap_state::sanitize_user_state()
   _ss = Gdt::gdt_data_user | Gdt::Selector_user;
   _flags = (_flags & ~(EFLAGS_IOPL | EFLAGS_NT)) | EFLAGS_IF;
 }
-
-//---------------------------------------------------------------------------
-IMPLEMENTATION [ux]:
-
-#include "emulation.h"
-#include "regdefs.h"
-
-PUBLIC inline NEEDS["emulation.h", "regdefs.h"]
-void
-Trap_state::sanitize_user_state()
-{
-  _cs = Emulation::kernel_cs() & ~1;
-  _ss = Emulation::kernel_ss();
-  _flags = (_flags & ~(EFLAGS_IOPL | EFLAGS_NT)) | EFLAGS_IF;
-}
-
-//---------------------------------------------------------------------------
-IMPLEMENTATION [ia32 || ux]:
-
-#include <cstdio>
-#include <panic.h>
-#include "cpu.h"
-#include "atomic.h"
-#include "mem.h"
-
-Trap_state::Handler Trap_state::base_handler FIASCO_FASTCALL;
 
 PUBLIC inline NEEDS[Trap_state::sanitize_user_state, "mem.h"]
 void

@@ -1,4 +1,4 @@
-IMPLEMENTATION[ia32,ux]:
+IMPLEMENTATION[ia32]:
 
 static
 void
@@ -132,7 +132,7 @@ DEFINE_PER_CPU static Per_cpu<Jdb_ipc_log_pm> _pm(Per_cpu_data::Cpu_num);
 }
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [ia32,ux]:
+IMPLEMENTATION [ia32]:
 
 #include "idt.h"
 

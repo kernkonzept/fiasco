@@ -14,7 +14,7 @@ Context::arch_setup_utcb_ptr()
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [ia32 || ux]:
+IMPLEMENTATION [ia32]:
 
 IMPLEMENT inline
 void

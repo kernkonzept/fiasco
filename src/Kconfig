@@ -95,11 +95,6 @@ config PF_PC
 	select HAS_MP_OPTION
 	select HAS_CPU_VIRT
 
-config PF_UX
-	bool "Linux Usermode Platform"
-	depends on IA32
-	select JDB
-
 # PF_CHOICE
 
 endchoice
@@ -129,12 +124,12 @@ config CPU_VIRT
 
 choice
 	prompt "Timer tick source"
-	depends on PF_PC || PF_UX
+	depends on PF_PC
 	default SCHED_APIC
 
 config SCHED_PIT
 	bool "Use PIT for scheduling"
-	depends on (PF_PC || PF_UX) && !MP
+	depends on PF_PC && !MP
 	help
 	  Normally, Fiasco uses the RTC at IRQ8 for scheduling. This can be
 	  disadvantageous in certain circumstances, e.g. VMWare doesn't seem
@@ -202,7 +197,7 @@ config FPU
 	  Enable this if your platform has hardware floating point support.
 
 config LAZY_FPU
-	bool "Enable lazy FPU switching" if HAS_LAZY_FPU && FPU && !PF_UX
+	bool "Enable lazy FPU switching" if HAS_LAZY_FPU && FPU
 	depends on FPU && HAS_LAZY_FPU
 	default y if !AMD64
 	help
@@ -359,22 +354,6 @@ config FINE_GRAINED_CPUTIME
 	  until switching to another thread. Induces an overhead during each
 	  thread switch, so only activate it for debugging.
 
-config UX_CON
-	bool "Graphical console (requires SDL library!)"
-	depends on PF_UX
-	help
-	  Fiasco-UX can supply a graphical console for the L4 program it is
-	  running.  Enabling this option will build the additional program
-	  but needs the SDL library including development header files
-	  installed.
-
-config UX_NET
-	bool "Network support"
-	depends on PF_UX
-	help
-	  Enabling this option makes Fiasco-UX provide network support for
-	  L4 programs.
-
 choice
 	prompt "Scheduler"
 	default SCHED_FIXED_PRIO
@@ -403,7 +382,7 @@ endchoice
 
 config SCHED_GRANULARITY
 	int "Scheduler granularity"
-	depends on !(PF_PC || PF_UX)
+	depends on !PF_PC
 	default 1000
 	range 10 1000000
 	help
@@ -411,7 +390,7 @@ config SCHED_GRANULARITY
 
 config SCHED_DEF_TIME_SLICE
 	int "Default thread time slice"
-	depends on !(PF_PC || PF_UX)
+	depends on !PF_PC
 	default 10
 	range 1 1000000
 	help
@@ -693,7 +672,7 @@ if JDB
 
 config JDB_LOGGING
 	bool "JDB extended logging"
-	default y if !PF_UX
+	default y
 	help
 	  There are two classes of logging events: Basic events don't
 	  consume any time if they are disabled (ipc, ipc result,
@@ -892,7 +871,6 @@ config WARN_LEVEL
 
 config XARCH
 	string
-	default "ux" if PF_UX
 	default "amd64" if AMD64 && PF_PC
 	default "ia32" if IA32 && PF_PC
 # ARCH_NAME

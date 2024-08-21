@@ -164,12 +164,12 @@ INTERFACE [virtual_space_iface]:
 #define FIASCO_SPACE_VIRTUAL virtual
 
 //---------------------------------------------------------------------------
-INTERFACE [!virt_obj_space || ux]:
+INTERFACE [!virt_obj_space]:
 
 #define FIASCO_VIRT_OBJ_SPACE_OVERRIDE
 
 //---------------------------------------------------------------------------
-INTERFACE [virt_obj_space && !ux]:
+INTERFACE [virt_obj_space]:
 
 #define FIASCO_VIRT_OBJ_SPACE_OVERRIDE override
 

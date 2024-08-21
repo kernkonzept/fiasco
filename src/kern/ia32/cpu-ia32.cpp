@@ -1,4 +1,4 @@
-INTERFACE[ia32,amd64,ux]:
+INTERFACE[ia32,amd64]:
 
 #include "asm.h"
 #include "types.h"
@@ -593,16 +593,7 @@ Cpu::reset_io_bitmap()
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION[ux]:
-
-struct Ia32_intel_microcode
-{
-  static bool load()
-  { return false; }
-};
-
-//-----------------------------------------------------------------------------
-IMPLEMENTATION[ia32,amd64,ux]:
+IMPLEMENTATION[ia32,amd64]:
 
 #include <cstdio>
 #include <cstring>
@@ -2280,7 +2271,7 @@ Cpu::set_gs(Unsigned16 val)
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION[(ia32 || amd64 || ux) && !intel_ia32_branch_barriers]:
+IMPLEMENTATION[(ia32 || amd64) && !intel_ia32_branch_barriers]:
 
 PRIVATE inline FIASCO_INIT_CPU_AND_PM
 void

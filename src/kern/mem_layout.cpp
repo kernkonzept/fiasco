@@ -48,7 +48,7 @@ public:
   static inline Address pmem_to_phys(const void *ptr)
   { return pmem_to_phys(reinterpret_cast<Address>(ptr)); }
 
-  static Mword in_kernel (Address a); // XXX: not right for UX
+  static Mword in_kernel (Address a);
 
 };
 

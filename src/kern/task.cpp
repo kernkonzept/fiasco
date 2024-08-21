@@ -20,10 +20,6 @@ class Task :
 {
   friend class Jdb_space;
 
-private:
-  /// \brief Do host (platform) specific initialization.
-  void ux_init();
-
 public:
   enum class Op : Mword
   {
@@ -48,10 +44,6 @@ public:
    * eagerly, and this function then maps them.
    */
   void map_all_segs(Mem_desc::Mem_type mt);
-
-private:
-  /// map the global utcb pointer page into this task
-  void map_utcb_ptr_page();
 };
 
 
@@ -90,8 +82,6 @@ Task::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode)
   Trap_state *ts = reinterpret_cast<Trap_state *>(ctxt->regs() + 1) - 1;
   ctxt->copy_and_sanitize_trap_state(ts, &vcpu->_regs.s);
 
-  // FIXME: UX is currently broken
-  /* UX:ctxt->vcpu_resume_user_arch(); */
   if (user_mode)
     {
       ctxt->state_add_dirty(Thread_vcpu_user);
@@ -325,9 +315,6 @@ Task::initialize()
   if (!Space::initialize())
     return false;
 
-  // For UX, map the UTCB pointer page. For ia32, do nothing
-  map_utcb_ptr_page();
-
   CNT_TASK_CREATE;
 
   return true;
@@ -340,8 +327,6 @@ Task::initialize()
 PUBLIC explicit
 Task::Task(Ram_quota *q, Caps c) : Space(q, c)
 {
-  ux_init();
-
   // increment reference counter from zero
   inc_ref(true);
 }
@@ -350,8 +335,6 @@ PUBLIC explicit
 Task::Task(Ram_quota *q)
 : Space(q, Caps::mem() | Caps::io() | Caps::obj() | Caps::threads())
 {
-  ux_init();
-
   // increment reference counter from zero
   inc_ref(true);
 }
@@ -716,12 +699,6 @@ register_factory()
 IMPLEMENT_DEFAULT inline void
 Task::map_all_segs(Mem_desc::Mem_type)
 {}
-
-//---------------------------------------------------------------------------
-IMPLEMENTATION [!ux]:
-
-IMPLEMENT inline void Task::map_utcb_ptr_page() {}
-IMPLEMENT inline void Task::ux_init() {}
 
 PUBLIC inline
 Task::~Task()

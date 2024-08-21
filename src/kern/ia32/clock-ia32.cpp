@@ -1,4 +1,4 @@
-INTERFACE [ia32 || amd64 || ux]:
+INTERFACE [ia32 || amd64]:
 
 #include "l4_types.h"
 
@@ -15,7 +15,7 @@ private:
 };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [ia32 || amd64 || ux]:
+IMPLEMENTATION [ia32 || amd64]:
 
 #include "cpu.h"
 

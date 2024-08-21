@@ -34,6 +34,7 @@ IMPLEMENTATION:
 #include "globalconfig.h"
 #include "globals.h"
 #include "irq_mgr.h"
+#include "koptions.h"
 #include "pic.h"
 
 PUBLIC
@@ -78,22 +79,6 @@ PUBLIC
 unsigned
 Irq_chip_ia32_pic::nr_msis() const override
 { return 0; }
-
-
-// ------------------------------------------------------------------------
-IMPLEMENTATION [ux]:
-
-PUBLIC static FIASCO_INIT
-void
-Irq_chip_ia32_pic::init()
-{
-  Irq_mgr::mgr = new Boot_object<Pic_irq_mgr>();
-}
-
-// ------------------------------------------------------------------------
-IMPLEMENTATION [!ux]:
-
-#include "koptions.h"
 
 PUBLIC
 Irq_chip_ia32_pic::Irq_chip_ia32_pic()

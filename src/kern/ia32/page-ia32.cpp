@@ -1,4 +1,4 @@
-INTERFACE [ia32 || amd64 || ux]:
+INTERFACE [ia32 || amd64]:
 
 EXTENSION class Page
 {

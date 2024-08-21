@@ -1,4 +1,4 @@
-INTERFACE [ia32 || amd64 || ux]:
+INTERFACE [ia32 || amd64]:
 
 #include "types.h"
 #include "config.h"
@@ -19,7 +19,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [ia32 || amd64 || ux]:
+IMPLEMENTATION [ia32 || amd64]:
 
 #include "atomic.h"
 
@@ -292,7 +292,7 @@ Pte_ptr::del_rights(Page::Rights r)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [(ia32 || amd64 || ux) && kernel_isolation]:
+IMPLEMENTATION [(ia32 || amd64) && kernel_isolation]:
 
 PUBLIC static inline
 void
@@ -311,7 +311,7 @@ Pt_entry::global()
 { return 0; }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [(ia32 || amd64 || ux) && !kernel_isolation]:
+IMPLEMENTATION [(ia32 || amd64) && !kernel_isolation]:
 
 Unsigned32 Pt_entry::_cpu_global = Pt_entry::L4_global;
 
@@ -332,7 +332,7 @@ Pt_entry::global()
 { return _cpu_global; }
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [ia32 || amd64 || ux]:
+IMPLEMENTATION [ia32 || amd64]:
 
 #include "cpu.h"
 #include "mem_layout.h"

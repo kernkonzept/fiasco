@@ -1,4 +1,4 @@
-INTERFACE[ia32,ux]:
+INTERFACE[ia32]:
 
 EXTENSION class Config
 {

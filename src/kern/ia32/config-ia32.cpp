@@ -77,13 +77,9 @@ public:
   static const unsigned default_console_uart_baudrate = 115200;
 
   static bool found_vmware;
-
-  enum {
-    Is_ux = 0,
-  };
 };
 
-INTERFACE[ia32,amd64,ux]:
+INTERFACE[ia32,amd64]:
 
 EXTENSION class Config
 {

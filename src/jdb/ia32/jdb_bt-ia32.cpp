@@ -1,4 +1,4 @@
-IMPLEMENTATION[ia32,amd64,ux]:
+IMPLEMENTATION[ia32,amd64]:
 
 #include <cstdio>
 #include <cctype>
@@ -413,7 +413,7 @@ Jdb_bt::Jdb_bt()
 static Jdb_bt jdb_bt INIT_PRIORITY(JDB_MODULE_INIT_PRIO);
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION[ia32,ux]:
+IMPLEMENTATION[ia32]:
 
 PRIVATE static inline bool Jdb_bt::syscall_from_user(Address eip)
 { return eip >= Mem_layout::Syscalls; }

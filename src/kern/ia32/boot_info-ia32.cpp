@@ -29,8 +29,7 @@ unsigned Boot_info::_checksum_rw   = 16;
  * The Boot_info object must be set up with these functions
  * before Boot_info::init() is called!
  * This can be done either in __main, if booted on hardware
- * or in an initializer with a higher priority than BOOT_INFO_INIT_PRIO
- * (e.g UX_STARTUP1_INIT_PRIO) if the kernel runs on software (FIASCO-UX)
+ * or in an initializer with a higher priority than BOOT_INFO_INIT_PRIO.
  */
 //@{
 

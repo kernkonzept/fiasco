@@ -1,8 +1,8 @@
-INTERFACE[ia32,amd64,ux]:
+INTERFACE[ia32,amd64]:
 #include "std_macros.h"
 #include "types.h"
 
-IMPLEMENTATION[ia32,amd64,ux]:
+IMPLEMENTATION[ia32,amd64]:
 
 #include <cassert>
 

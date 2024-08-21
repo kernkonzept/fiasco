@@ -44,10 +44,6 @@ $(OBJS): .Compiler-config
 ifeq ("$(CONFIG_MAINTAINER_MODE)","y")
 
 do-all: Checkinitcalls Circular-ok ToDoItems $(ALL)
-ifeq ($(CONFIG_XARCH),ux)
-# disabled until unittests fixed
-#do-all: unittest
-endif # UX
 
 else  # ! maintainer mode
 
@@ -130,10 +126,6 @@ KERNEL_MODULES_CPP = $(foreach mod, $(INTERFACES_KERNEL) $(INTERFACES_LIBK), \
 	                $(srcdir)/kern/$(CONFIG_XARCH), \
 	  $(wildcard $(idir)/*.h))
 
-ifeq ($(CONFIG_XARCH),ux)
-EXTRA_INCLUDES = -I/usr/include/c++/$(shell $(CXX) -dumpversion) -I/usr/include
-endif
-
 DEPS.dot: $(KERNEL_MODULES_CPP)
 	@echo -n > source_files.mkdeps
 	@for f in $^ ; do \
@@ -179,8 +171,8 @@ DEPS.dot: $(KERNEL_MODULES_CPP)
 # enforce that all $(DEPS) are made before this target, because the
 # Makefile contains "-include $(DEPS)" (which can result in Circular
 # being created/updated before all $(DEPS) are).  Therefore, depend on
-# the fiasco.debug and on main (not with Fiasco-UX). Once this is made,
-# we know all $(DEPS) have been updated.
+# the fiasco.debug and on main. Once this is made, we know all $(DEPS)
+# have been updated.
 Circular: $(KERNEL) $(BOOT) $(RUN_TESTS) $(UTEST_BINARIES) $(CHECKSUM)
 	@echo "Creating $@"
 	@( \

@@ -1,9 +1,8 @@
 /*
  * Fiasco Kernel-Entry Frame-Layout Code
- * Shared between UX and native IA32.
  */
 
-INTERFACE[ia32,ux]:
+INTERFACE[ia32]:
 
 #include "types.h"
 
@@ -32,7 +31,7 @@ public:
   enum { Pf_ax_offset = 0 };
 };
 
-IMPLEMENTATION[ia32,ux]:
+IMPLEMENTATION[ia32]:
 
 //---------------------------------------------------------------------------
 // basic Entry_frame methods for IA32
@@ -96,7 +95,7 @@ Return_frame::ss(Mword ss)
 { _ss = ss; }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [ia32,ux]:
+IMPLEMENTATION [ia32]:
 
 //---------------------------------------------------------------------------
 // IPC frame methods for IA32
@@ -155,7 +154,6 @@ Return_frame::ip(Mword ip)
   // eip is set to.
   if (cs() & 0x80)
     {
-      // this cannot happen in Fiasco UX
       /* symbols from the assembler entry code */
       extern Mword leave_from_sysenter_by_iret;
       extern Mword leave_alien_from_sysenter_by_iret;
@@ -168,16 +166,5 @@ Return_frame::ip(Mword ip)
 	*ret_from_disp_syscall = &leave_from_sysenter_by_iret;
     }
 
-  _eip = ip;
-}
-
-
-// ---------------------------------------------------------------------------
-IMPLEMENTATION [ux]:
-
-IMPLEMENT inline
-void
-Return_frame::ip(Mword ip)
-{
   _eip = ip;
 }

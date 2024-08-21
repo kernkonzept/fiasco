@@ -1,4 +1,4 @@
-IMPLEMENTATION [ia32 || ux]:
+IMPLEMENTATION [ia32]:
 
 IMPLEMENT static inline
 void
@@ -71,7 +71,7 @@ Mem::memcpy_mwords_fs (void *dst, void const *src, unsigned long n)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [(ia32 || ux) && mp]:
+IMPLEMENTATION [ia32 && mp]:
 
 IMPLEMENT inline static void Mem::mb()
 { __asm__ __volatile__ ("lock; addl $0,0(%%esp)" : : : "memory"); /* mfence */ }

@@ -43,13 +43,13 @@ IMPLEMENTATION [debug]:
 extern "C" void sys_invoke_debug(Kobject_iface *o, Syscall_frame *f) __attribute__((weak));
 
 //---------------------------------------------------------------------------
-INTERFACE [ia32 || ux || amd64]:
+INTERFACE [ia32 || amd64]:
 
 extern void (*syscall_table[])();
 
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [ia32 || ux || amd64]:
+IMPLEMENTATION [ia32 || amd64]:
 
 void (*syscall_table[])() =
 {

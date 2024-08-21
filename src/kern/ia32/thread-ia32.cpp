@@ -1,8 +1,7 @@
 /*
  * Fiasco Thread Code
- * Shared between UX and native IA32.
  */
-INTERFACE [ia32,amd64,ux]:
+INTERFACE [ia32,amd64]:
 
 #include "trap_state.h"
 
@@ -31,7 +30,7 @@ protected:
 };
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [ia32,amd64,ux]:
+IMPLEMENTATION [ia32,amd64]:
 
 #include "config.h"
 #include "cpu.h"
@@ -297,7 +296,7 @@ generic_debug:
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [(ia32 || amd64 || ux) && cpu_local_map]:
+IMPLEMENTATION [(ia32 || amd64) && cpu_local_map]:
 
 PUBLIC inline
 bool
@@ -333,7 +332,7 @@ Thread::update_local_map(Address pfa, Mword /*error_code*/)
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [(ia32 || amd64 || ux) && !cpu_local_map]:
+IMPLEMENTATION [(ia32 || amd64) && !cpu_local_map]:
 
 PUBLIC inline
 bool
@@ -341,7 +340,7 @@ Thread::update_local_map(Address, Mword)
 { return false; }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [ia32 || amd64 || ux]:
+IMPLEMENTATION [ia32 || amd64]:
 
 /**
  * The low-level page fault handler called from entry.S.  We're invoked with
@@ -406,15 +405,7 @@ bool
 Thread::handle_sigma0_page_fault(Address pfa)
 {
   Mem_space::Page_order size = mem_space()->largest_page_size(); // take a page size less than 16MB (1<<24)
-  auto const &f = mem_space()->fitting_sizes();
   Virt_addr va = Virt_addr(pfa);
-
-  // Check if mapping a superpage doesn't exceed the size of physical memory
-  // Some distributions do not allow to mmap below a certain threshold
-  // (like 64k on Ubuntu 8.04) so we cannot map a superpage at 0 if
-  // we're Fiasco-UX
-  while (Config::Is_ux && (va < (Virt_addr(1) << size)))
-    size = f(--size);
 
   va = cxx::mask_lsb(va, size);
 
@@ -495,11 +486,6 @@ IMPLEMENTATION [ia32 || amd64]:
 #include <feature.h>
 KIP_KERNEL_FEATURE("segments");
 
-PROTECTED inline
-void
-Thread::vcpu_resume_user_arch()
-{}
-
 PRIVATE inline
 L4_msg_tag
 Thread::sys_gdt_x86(L4_msg_tag tag, Utcb const *utcb, Utcb *out)
@@ -532,21 +518,8 @@ Thread::sys_gdt_x86(L4_msg_tag tag, Utcb const *utcb, Utcb *out)
   return Kobject_iface::commit_result((utcb->values[1] << 3) + Gdt::gdt_user_entry1 + 3);
 }
 
-
-
-
 //----------------------------------------------------------------------------
-IMPLEMENTATION [ux]:
-
-PROTECTED inline
-void
-Thread::vcpu_resume_user_arch()
-{
-  load_gdt_user_entries();
-}
-
-//----------------------------------------------------------------------------
-IMPLEMENTATION [ux || amd64]:
+IMPLEMENTATION [amd64]:
 
 IMPLEMENT inline NEEDS[Thread::exception_triggered]
 void
@@ -562,7 +535,7 @@ Thread::user_ip(Mword ip)
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [(ia32,amd64,ux) && !io]:
+IMPLEMENTATION [(ia32,amd64) && !io]:
 
 PRIVATE inline
 Thread::Io_return
@@ -702,7 +675,7 @@ Thread::call_nested_trap_handler(Trap_state *)
 { return -1; }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [(ia32,amd64,ux) && virt_obj_space]:
+IMPLEMENTATION [(ia32,amd64) && virt_obj_space]:
 
 IMPLEMENT_OVERRIDE inline
 bool

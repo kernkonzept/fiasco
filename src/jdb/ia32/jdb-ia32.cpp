@@ -1,4 +1,4 @@
-INTERFACE[ia32,amd64,ux]:
+INTERFACE[ia32,amd64]:
 
 #include "jdb_core.h"
 #include "jdb_handler_queue.h"
@@ -9,7 +9,7 @@ class Space;
 class Thread;
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION[ia32 || amd64 || ux]:
+IMPLEMENTATION[ia32 || amd64]:
 
 #include "config.h"
 #include "div32.h"

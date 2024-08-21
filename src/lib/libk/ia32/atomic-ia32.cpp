@@ -1,4 +1,4 @@
-IMPLEMENTATION [ia32,ux]:
+IMPLEMENTATION [ia32]:
 
 inline
 void

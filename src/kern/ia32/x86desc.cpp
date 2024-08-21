@@ -532,7 +532,7 @@ Pseudo_descriptor::limit() const
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [ia32 | ux]:
+IMPLEMENTATION [ia32]:
 
 /**
  * Get segment base address.

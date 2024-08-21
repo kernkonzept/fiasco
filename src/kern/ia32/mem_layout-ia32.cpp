@@ -1,4 +1,4 @@
-INTERFACE [ia32 || amd64 || ux]:
+INTERFACE [ia32 || amd64]:
 
 #include "tss.h"
 
@@ -15,7 +15,7 @@ private:
 };
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [ia32 || amd64 || ux]:
+IMPLEMENTATION [ia32 || amd64]:
 
 #include "paging_bits.h"
 
@@ -38,7 +38,7 @@ Mem_layout::alloc_io_vmem(unsigned long bytes)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [(ia32 || amd64 || ux) && virt_obj_space]:
+IMPLEMENTATION [(ia32 || amd64) && virt_obj_space]:
 
 PUBLIC static inline
 template< typename V >

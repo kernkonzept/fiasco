@@ -162,6 +162,10 @@ IMPLEMENTATION:
 #include "static_init.h"
 #include "keycodes.h"
 #include "libc_backend.h"
+#include "kernel_uart.h"
+#include "ipi.h"
+#include "logdefs.h"
+#include "task.h"
 
 KIP_KERNEL_FEATURE("jdb");
 
@@ -1168,17 +1172,6 @@ Jdb_base_cmds::Jdb_base_cmds()
   : Jdb_module("GENERAL")
 {}
 
-
-//---------------------------------------------------------------------------
-IMPLEMENTATION [ux]:
-
-PRIVATE inline static void Jdb::rcv_uart_enable() {}
-
-//---------------------------------------------------------------------------
-IMPLEMENTATION [!ux]:
-
-#include "kernel_uart.h"
-
 PRIVATE inline static
 void
 Jdb::rcv_uart_enable()
@@ -1186,13 +1179,6 @@ Jdb::rcv_uart_enable()
   if (Config::serial_esc == Config::SERIAL_ESC_IRQ)
     Kernel_uart::enable_rcv_irq();
 }
-
-//---------------------------------------------------------------------------
-IMPLEMENTATION:
-
-#include "ipi.h"
-#include "logdefs.h"
-#include "task.h"
 
 char Jdb::esc_iret[]     = "\033[36;1m";
 char Jdb::esc_bt[]       = "\033[31m";

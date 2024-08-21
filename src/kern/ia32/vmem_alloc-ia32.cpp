@@ -1,4 +1,4 @@
-IMPLEMENTATION[ia32,ux,amd64]:
+IMPLEMENTATION[ia32,amd64]:
 
 #include <cassert>
 #include <cstdio>
@@ -47,20 +47,9 @@ Vmem_alloc::page_alloc(void *address, Zero_fill zf, unsigned mode)
              Page::Attr(mode & User ? Page::Rights::URW() : Page::Rights::RW(),
              Page::Type::Normal(), Page::Kern::Global(),
              Page::Flags::Touched()));
-  page_map(address, 0, zf, page);
   return address;
 
 error:
   Kmem_alloc::allocator()->free(Config::page_order(), vpage); // 2^0 = 1 page
   return 0;
 }
-
-
-//----------------------------------------------------------------------------
-IMPLEMENTATION[ia32,amd64]:
-
-PUBLIC static inline
-void
-Vmem_alloc::page_map(void * /*address*/, int /*order*/, Zero_fill /*zf*/,
-		     Address /*phys*/)
-{}

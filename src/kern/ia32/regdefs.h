@@ -2,7 +2,7 @@
 #define REGDEFS_H
 
 //
-// Register and register bit definitions for ia32, amd64 and UX architectures.
+// Register and register bit definitions for ia32 and amd64 architectures.
 //
 
 #define CR0_PE          0x00000001      // Protection Enable
@@ -129,14 +129,11 @@
 #define FEATA_3DNOW     0x80000000      // 3DNow!
 
 // Page Fault Error Codes
-// PF_ERR_REMTADDR and PF_ERR_USERADDR are UX-emulation only
 #define PF_ERR_PRESENT  0x00000001      // PF: Page Is Present In PTE
 #define PF_ERR_WRITE    0x00000002      // PF: Page Is Write Protected
 #define PF_ERR_USERMODE 0x00000004      // PF: Caused By User Mode Code
 #define PF_ERR_RESERVED 0x00000008      // PF: Reserved Bit Set in PDIR
 #define PF_ERR_INSTFETCH 0x00000010     // PF: Instruction fetch
-#define PF_ERR_REMTADDR 0x40000000      // PF: In Remote Address Space
-#define PF_ERR_USERADDR 0x80000000      // PF: In User Address Space
 
 // Model Specific Registers
 #define MSR_TSC              0x010      // Time Stamp Counter

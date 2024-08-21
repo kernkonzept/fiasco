@@ -699,15 +699,6 @@ bool
 Thread::arch_ext_vcpu_enabled()
 { return false; }
 
-// used by UX only
-PUBLIC static inline
-bool
-Thread::is_tcb_address(Address a)
-{
-  a &= ~(Thread::Size - 1);
-  return reinterpret_cast<Thread *>(a)->_magic == magic;
-}
-
 PUBLIC static inline
 void
 Thread::assert_irq_entry()
@@ -883,7 +874,7 @@ Thread::pagein_tcb_request(Return_frame *)
 { return false; }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [fpu && !ux && lazy_fpu]:
+IMPLEMENTATION [fpu && lazy_fpu]:
 
 #include "fpu.h"
 #include "fpu_alloc.h"
@@ -973,7 +964,7 @@ Thread::transfer_fpu(Thread *to) //, Trap_state *trap_state, Utcb *to_utcb)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [fpu && !ux && !lazy_fpu]:
+IMPLEMENTATION [fpu && !lazy_fpu]:
 
 #include "fpu.h"
 #include "fpu_alloc.h"
@@ -1023,9 +1014,6 @@ Thread::switchin_fpu(bool /* alloc_new_fpu */ = true)
 {
   return 0;
 }
-
-//---------------------------------------------------------------------------
-IMPLEMENTATION [!fpu || ux]:
 
 PUBLIC inline
 bool

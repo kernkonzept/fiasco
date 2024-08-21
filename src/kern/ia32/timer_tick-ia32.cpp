@@ -1,4 +1,4 @@
-IMPLEMENTATION [ia32 || amd64 || ux]:
+IMPLEMENTATION [ia32 || amd64]:
 
 #include "config.h"
 #include "irq_mgr.h"

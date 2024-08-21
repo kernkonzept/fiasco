@@ -15,7 +15,7 @@ Jdb_util::is_mapped(void const * /*addr*/)
   return true;
 }
 
-IMPLEMENTATION[ia32 || ux || amd64]:
+IMPLEMENTATION[ia32 || amd64]:
 
 #include "kmem.h"
 

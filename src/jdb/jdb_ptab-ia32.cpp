@@ -1,8 +1,8 @@
-IMPLEMENTATION [ia32,ux]:
+IMPLEMENTATION [ia32]:
 
 #include "paging.h"
 
-IMPLEMENTATION [ia32,ux]:
+IMPLEMENTATION [ia32]:
 
 PRIVATE template< typename T >
 void

@@ -142,7 +142,7 @@ Filter_console::getchar(bool blocking = true) override
             {
               ibuf[pos++] = 27;
               int nc;
-              if (!(_o->get_attributes() & (Console::UART | Console::UX))
+              if (!(_o->get_attributes() & Console::UART)
                   || ((nc = getchar_timeout(csi_timeout_loops)) == -1))
                 {
                   pos = 0;

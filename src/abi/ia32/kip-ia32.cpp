@@ -2,11 +2,7 @@
  * IA-32 Kernel-Info Page
  */
 
-INTERFACE [ux]:
-
-#include "vhw.h"
-
-INTERFACE [ia32 || ux]:
+INTERFACE [ia32]:
 
 #include "types.h"
 
@@ -23,13 +19,3 @@ public:
   Platform_info platform_info;
   Unsigned32 __reserved[3];
 };
-
-//---------------------------------------------------------------------------
-IMPLEMENTATION [ux]:
-
-PUBLIC
-Vhw_descriptor *
-Kip::vhw() const
-{
-  return offset_cast<Vhw_descriptor*>(this, vhw_offset);
-}

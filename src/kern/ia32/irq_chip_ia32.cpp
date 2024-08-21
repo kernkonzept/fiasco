@@ -29,7 +29,7 @@ struct Irq_entry_stub
   char _res2[5];
 } __attribute__((packed));
 
-INTERFACE[ia32 || ux]:
+INTERFACE[ia32]:
 
 class Irq_base;
 

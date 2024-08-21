@@ -1,4 +1,4 @@
-IMPLEMENTATION [ia32 || ux]:
+IMPLEMENTATION [ia32]:
 
 const char* const Jdb_screen::Reg_names[]	= { "EAX", "EBX", "ECX", "EDX",
 						    "EBP", "ESI", "EDI", "EIP",

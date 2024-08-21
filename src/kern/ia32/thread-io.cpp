@@ -31,7 +31,7 @@ Thread::update_io_bitmap()
   return false;
 }
 
-IMPLEMENTATION [io && (ia32 || amd64 || ux) && !no_io_pagefault]:
+IMPLEMENTATION [io && (ia32 || amd64) && !no_io_pagefault]:
 
 /**
  * Compute port number and size for an IO instruction.

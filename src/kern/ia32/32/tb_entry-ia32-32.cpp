@@ -1,4 +1,4 @@
-INTERFACE [ia32,ux]:
+INTERFACE [ia32]:
 
 EXTENSION class Tb_entry
 {
@@ -22,7 +22,7 @@ public:
 };
 static_assert(sizeof(Tb_entry_trap) <= Tb_entry::Tb_entry_size);
 
-IMPLEMENTATION [ia32,ux]:
+IMPLEMENTATION [ia32]:
 
 #include "cpu.h"
 
