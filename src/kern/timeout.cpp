@@ -263,14 +263,18 @@ Timeout::expire()
 }
 
 /**
- * Handles the timeouts, i.e. call expired() for the expired timeouts
- * and programs the "oneshot timer" to the next timeout.
- * @return true if a reschedule is necessary, false otherwise.
+ * Handles the timeouts by calling expired() for the expired timeouts and
+ * programming the "oneshot timer" to the next timeout.
+ *
+ * \param now  The system clock used to decide if timeouts have expired.
+ *
+ * \retval true if a reschedule is necessary.
+ * \retval false otherwise.
  */
 PUBLIC inline NEEDS [<cassert>, <climits>, "timer.h", "config.h",
                      Timeout::expire]
 bool
-Timeout_q::do_timeouts()
+Timeout_q::do_timeouts(Unsigned64 now)
 {
   bool reschedule = false;
 
@@ -286,7 +290,6 @@ Timeout_q::do_timeouts()
 
   // Calculate which timeout queues needs to be checked.
   int start = (_old_clock >> Wakeup_queue_distance);
-  Unsigned64 now = Timer::system_clock();
   int diff  = (now >> Wakeup_queue_distance) - start;
   int end   = (start + diff + 1) & (Wakeup_queue_count - 1);
 
