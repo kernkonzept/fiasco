@@ -134,7 +134,6 @@ perf_cnt_IMPL		:= perf_cnt perf_cnt-ia32
 pic_IMPL		:= pic pic-i8259
 pit_IMPL		:= pit-i8254
 platform_control_IMPL	+= platform_control-acpi_sleep platform_control-ia32
-pmem_alloc_IMPL		:= pmem_alloc pmem_alloc-ia32-ux
 rtc_IMPL		:= rtc-ia32
 sched_context_IMPL	:= sched_context-wfq sched_context-fixed_prio \
 			   sched_context-fp_wfq sched_context

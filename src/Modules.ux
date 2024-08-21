@@ -176,7 +176,6 @@ mem_unit_IMPL		:= mem_unit-ux
 obj_space_IMPL          := obj_space obj_space-phys
 paging_IMPL		:= paging paging-ia32-32 paging-ia32
 perf_cnt_IMPL		:= perf_cnt perf_cnt-ia32
-pmem_alloc_IMPL		:= pmem_alloc pmem_alloc-ia32-ux
 reset_IMPL		:= reset-ux
 sched_context_IMPL	:= sched_context-wfq sched_context-fixed_prio \
 			   sched_context-fp_wfq sched_context
