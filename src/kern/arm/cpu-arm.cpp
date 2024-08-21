@@ -239,6 +239,8 @@ public:
     Mdcr_tda       = 1UL << 9,
     Mdcr_tdosa     = 1UL << 10,
     Mdcr_tdra      = 1UL << 11,
+    Mdcr_tpms      = 1UL << 14,
+    Mdcr_ttrf      = 1UL << 19,
   };
 };
 

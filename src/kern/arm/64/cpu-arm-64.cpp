@@ -224,7 +224,7 @@ public:
   enum
   {
     Mdcr_bits = Mdcr_tpmcr | Mdcr_tpm
-                | Mdcr_tda | Mdcr_tdosa | Mdcr_tdra,
+                | Mdcr_tda | Mdcr_tdosa | Mdcr_tdra | Mdcr_tpms | Mdcr_ttrf
   };
 };
 

@@ -359,7 +359,7 @@ public:
   enum
   {
     Hdcr_bits = Mdcr_tpmcr | Mdcr_tpm   | Mdcr_tde
-                | Mdcr_tda | Mdcr_tdosa | Mdcr_tdra,
+                | Mdcr_tda | Mdcr_tdosa | Mdcr_tdra | Mdcr_ttrf,
   };
 };
 
@@ -372,18 +372,18 @@ Cpu::init_hyp_mode_common()
   assert (!(reinterpret_cast<Mword>(hyp_vector_base) & 31));
   asm volatile ("mcr p15, 4, %0, c12, c0, 0 \n" : : "r"(hyp_vector_base));
 
+  Mword sctlr_ignore;
   asm volatile (
-        "mcr p15, 4, %0, c1, c1, 1 \n"
-
-        "mrc p15, 0, r0, c1, c0, 0 \n"
-        "bic r0, #1 \n"
-        "mcr p15, 0, r0, c1, c0, 0 \n"
-
-        "mcr p15, 4, %1, c1, c1, 0 \n"
-        : :
-        "r" (Mword{Hdcr_bits} | (has_hpmn0() ? 0 : 1)),
-        "r" (Hcr_non_vm_bits_el0)
-        : "r0" );
+        "mcr p15, 4, %[hdcr], c1, c1, 1 \n"     // HDCR
+        "mrc p15, 0, %[sctlr], c1, c0, 0 \n"    // SCTLR
+        "bic %[sctlr], #1 \n"                   // disable PL1&0 stage 1 MMU
+        "mcr p15, 0, %[sctlr], c1, c0, 0 \n"    // SCTLR
+        "mcr p15, 4, %[hcr], c1, c1, 0 \n"      // HCR
+        :
+        [sctlr]"=&r"(sctlr_ignore)
+        :
+        [hdcr]"r"(Mword{Hdcr_bits} | (has_hpmn0() ? 0 : 1)),
+        [hcr]"r"(Hcr_non_vm_bits_el0));
 
   asm ("mcr p15, 4, %0, c1, c1, 3" : : "r"(Hstr_non_vm)); // HSTR
 
