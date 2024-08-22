@@ -152,7 +152,7 @@ CSRC_MINILIBC	:= __lltostr.c __ltostr.c __v_printf.c atexit.c getchar.c \
                    memcpy.c memmove.c memset.c panic.c printf.c putchar.c \
                    puts.c raise.c snprintf.c sprintf.c stpcpy.c strchr.c \
                    strcmp.c strcpy.c strcspn.c strlen.c strncmp.c strncpy.c \
-                   strnlen.c strspn.c strstr.c strtol.c strtoul.c tolower.c \
-                   vprintf.c vsnprintf.c vsprintf.c
+                   strnlen.c strrchr.c strspn.c strstr.c strtol.c strtoul.c \
+                   tolower.c vprintf.c vsnprintf.c vsprintf.c
 ASSRC_MINILIBC  := setjmp.S
 NOBUILTIN       += $(patsubst %.o, %, $(OBJ_MINILIBC))
