@@ -2,14 +2,12 @@
  * Fiasco ia32
  * Main startup/shutdown code
  */
-
 INTERFACE[ia32]:
 
 #include "initcalls.h"
 #include "std_macros.h"
 
 class Kernel_thread;
-
 
 IMPLEMENTATION[ia32]:
 

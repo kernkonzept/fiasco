@@ -1,7 +1,6 @@
 /*
  * Fiasco Syscall-Page Code (absolute addressing)
  */
-
 IMPLEMENTATION [ia32 && abs_syscalls]:
 
 #include <cstdio>
@@ -38,7 +37,7 @@ memcpy( reinterpret_cast<char*>(Kip::k()) + Offs_kip_##sysc, &sys_call_##sysc, \
         &sys_call_##sysc##_end- &sys_call_##sysc ); } while (0)
 
 
-IMPLEMENT 
+IMPLEMENT
 void
 Sys_call_page::init()
 {

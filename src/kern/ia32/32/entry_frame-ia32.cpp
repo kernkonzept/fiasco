@@ -1,7 +1,6 @@
 /*
  * Fiasco Kernel-Entry Frame-Layout Code
  */
-
 INTERFACE[ia32]:
 
 #include "types.h"
@@ -35,7 +34,7 @@ IMPLEMENTATION[ia32]:
 
 //---------------------------------------------------------------------------
 // basic Entry_frame methods for IA32
-// 
+//
 #include "mem_layout.h"
 
 IMPLEMENT inline
@@ -99,7 +98,7 @@ IMPLEMENTATION [ia32]:
 
 //---------------------------------------------------------------------------
 // IPC frame methods for IA32
-// 
+//
 IMPLEMENT inline
 Mword Syscall_frame::from_spec() const
 { return _esi; }
@@ -120,7 +119,7 @@ IMPLEMENT inline
 L4_timeout_pair Syscall_frame::timeout() const
 { return L4_timeout_pair(_ecx); }
 
-IMPLEMENT inline 
+IMPLEMENT inline
 void Syscall_frame::timeout(L4_timeout_pair const &to)
 { _ecx = to.raw(); }
 

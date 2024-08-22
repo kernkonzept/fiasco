@@ -1,4 +1,3 @@
-
 INTERFACE:
 
 #include "l4_types.h"
@@ -206,7 +205,7 @@ void
 Trap_state::value3(Mword value)
 { _dx = value; }
 
-PUBLIC inline NEEDS["atomic.h"] 
+PUBLIC inline NEEDS["atomic.h"]
 void
 Trap_state::consume_instruction(unsigned count)
 { local_cas(&_ip, _ip, _ip + count); }

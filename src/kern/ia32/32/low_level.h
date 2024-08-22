@@ -29,7 +29,7 @@
 	popf
 	.endm
 
-/** Some shared macros and stuff shared by the two different 
+/** Some shared macros and stuff shared by the two different
  *  assembler kernel entry sources.
  */
 
