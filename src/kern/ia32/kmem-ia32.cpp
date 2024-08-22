@@ -307,8 +307,24 @@ Kmem::map_kernel_virt(Kpdir *dir)
 //--------------------------------------------------------------------------
 IMPLEMENTATION [ia32 || amd64]:
 
+#include <cstdlib>
+#include <cstddef>		// size_t
+#include <cstring>		// memset
+
+#include "config.h"
+#include "cpu.h"
+#include "gdt.h"
+#include "globals.h"
 #include "mem.h"
+#include "paging.h"
 #include "paging_bits.h"
+#include "regdefs.h"
+#include "std_macros.h"
+#include "tss.h"
+
+// static class variables
+DEFINE_GLOBAL_CONSTINIT Global_data<Kpdir *> Kmem::kdir;
+Static_object<Kmem::Lockless_alloc> Kmem::tss_mem_vm;
 
 /**
  * Map TSS area using regular pages.
@@ -483,32 +499,7 @@ Kmem::setup_cpu_structures(Cpu &cpu, Lockless_alloc *cpu_alloc,
   init_cpu_arch(cpu, cpu_alloc);
 }
 
-
-//---------------------------------------------------------------------------
-IMPLEMENTATION [ia32 || amd64]:
-
 IMPLEMENT inline Address Kmem::user_max() { return ~0UL; }
-
-
-//--------------------------------------------------------------------------
-IMPLEMENTATION [ia32 || amd64]:
-
-#include <cstdlib>
-#include <cstddef>		// size_t
-#include <cstring>		// memset
-
-#include "config.h"
-#include "cpu.h"
-#include "gdt.h"
-#include "globals.h"
-#include "paging.h"
-#include "regdefs.h"
-#include "std_macros.h"
-#include "tss.h"
-
-// static class variables
-DEFINE_GLOBAL_CONSTINIT Global_data<Kpdir *> Kmem::kdir;
-Static_object<Kmem::Lockless_alloc> Kmem::tss_mem_vm;
 
 /**
  * Compute a kernel-virtual address for a physical address.
