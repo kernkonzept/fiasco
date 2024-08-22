@@ -275,7 +275,8 @@ Mem_space::v_lookup(Vaddr virt, Phys_addr *phys,
 
 IMPLEMENT
 Page::Flags
-Mem_space::v_delete(Vaddr virt, Page_order order, Page::Rights rights)
+Mem_space::v_delete(Vaddr virt, [[maybe_unused]] Page_order order,
+                    Page::Rights rights)
 {
   assert(cxx::is_zero(cxx::get_lsb(Virt_addr(virt), order)));
 
