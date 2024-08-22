@@ -37,7 +37,7 @@ PRIVATE_INCDIR		+= types/$(CONFIG_XARCH) types
 INTERFACES_ABI		+= virt
 
 kip_IMPL		+= kip-ia32-debug
-virt_IMPL		:= virt-ia32-amd64
+virt_IMPL		:= virt-ia32
 
 #
 # JABI Subsystem
@@ -109,7 +109,7 @@ INTERFACES_KERNEL-$(CONFIG_CPU_VIRT) += svm vmx vm vm_svm vm_vmx vm_vmx_ept
 
 alternatives_IMPL	:= alternatives alternatives-ia32
 apic_IMPL		:= apic-ia32 apic-ia32-mp
-boot_console_IMPL	:= boot_console-ia32-amd64
+boot_console_IMPL	:= boot_console-ia32
 boot_info_IMPL		:= boot_info boot_info-ia32
 clock_IMPL              := clock clock-ia32
 config_IMPL		:= config config-ia32-32 config-ia32
@@ -145,9 +145,9 @@ space_IMPL		:= space space-ia32 space-io
 spin_lock_IMPL		:= spin_lock spin_lock-ia32
 startup_IMPL		:= startup startup-ia32
 sys_call_page_IMPL	:= sys_call_page sys_call_page-abs-ia32
-task_IMPL		:= task task-ia32-amd64
+task_IMPL		:= task task-ia32
 tb_entry_IMPL		:= tb_entry tb_entry-ia32-32
-timer_IMPL		:= timer timer-ia32-amd64
+timer_IMPL		:= timer timer-ia32
 thread_IMPL		:= thread thread-ia32 thread-ia32-32 \
 			   thread-ipc thread-pagefault thread-log \
 			   thread-debug thread-dbf thread-vcpu thread-io
@@ -189,16 +189,15 @@ INTERFACES_JDB		+= jdb_io_ports jdb_ptab jdb_trace_set \
 CXXSRC_JDB := tb_entry_output.cc
 
 apic_IMPL		+= apic-debug
-jdb_IMPL		+= jdb-ia32-amd64 jdb-ia32
-jdb_bp_IMPL		:= jdb_bp-ia32 jdb_bp-ia32-amd64 jdb_bp-ia32-32
+jdb_IMPL		+= jdb-ia32
+jdb_bp_IMPL		:= jdb_bp-ia32 jdb_bp-ia32-32
 jdb_bt_IMPL		:= jdb_bt-ia32
 jdb_entry_frame_IMPL	:= jdb_entry_frame-ia32
-jdb_kern_info_IMPL	:= jdb_kern_info jdb_kern_info-ia32-amd64 \
-			   jdb_kern_info-ia32 jdb_kern_info-apic \
+jdb_kern_info_IMPL	:= jdb_kern_info jdb_kern_info-ia32 jdb_kern_info-apic \
 			   jdb_kern_info-pci jdb_kern_info-bench \
 			   jdb_kern_info-bench-ia32-32 \
 			   jdb_kern_info-dr jdb_kern_info-mtrr
-jdb_misc_IMPL		:= jdb_misc-ia32-amd64
+jdb_misc_IMPL		:= jdb_misc-ia32
 jdb_ptab_IMPL		:= jdb_ptab jdb_ptab-ia32
 jdb_screen_IMPL		:= jdb_screen jdb_screen-ia32
 jdb_tcb_IMPL		+= jdb_tcb-ia32
