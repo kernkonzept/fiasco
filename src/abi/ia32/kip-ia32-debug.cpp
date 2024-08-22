@@ -1,4 +1,4 @@
-IMPLEMENTATION [ia32-debug]:
+IMPLEMENTATION [ia32 && debug]:
 
 #include <cstring>
 #include "types.h"

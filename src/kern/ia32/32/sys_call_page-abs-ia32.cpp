@@ -2,7 +2,7 @@
  * Fiasco Syscall-Page Code (absolute addressing)
  */
 
-IMPLEMENTATION [ia32-abs_syscalls]:
+IMPLEMENTATION [ia32 && abs_syscalls]:
 
 #include <cstdio>
 #include <cstring>

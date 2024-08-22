@@ -136,7 +136,7 @@ Gdt::operator [](unsigned idx) const
   return _entries[idx];
 }
 
-IMPLEMENTATION[ia32 | amd64]:
+IMPLEMENTATION[ia32 || amd64]:
 
 PUBLIC static inline
 void

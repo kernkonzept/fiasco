@@ -1,4 +1,4 @@
-IMPLEMENTATION [ia32,amd64]:
+IMPLEMENTATION [ia32 || amd64]:
 
 PUBLIC static inline void
 Platform_control::prepare_cpu_suspend(Cpu_number)

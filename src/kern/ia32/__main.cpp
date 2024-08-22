@@ -1,8 +1,8 @@
-INTERFACE[ia32,amd64]:
+INTERFACE[ia32 || amd64]:
 #include "types.h"
 #include "initcalls.h"
 
-IMPLEMENTATION[ia32,amd64]:
+IMPLEMENTATION[ia32 || amd64]:
 #include "boot_info.h"
 #include "initcalls.h"
 

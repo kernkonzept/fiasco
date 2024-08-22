@@ -1,5 +1,5 @@
 
-IMPLEMENTATION[ia32,amd64]:
+IMPLEMENTATION[ia32 || amd64]:
 
 #include "apic.h"
 #include "config.h"

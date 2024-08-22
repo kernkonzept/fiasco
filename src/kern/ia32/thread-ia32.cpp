@@ -1,7 +1,7 @@
 /*
  * Fiasco Thread Code
  */
-INTERFACE [ia32,amd64]:
+INTERFACE [ia32 || amd64]:
 
 #include "trap_state.h"
 
@@ -30,7 +30,7 @@ protected:
 };
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [ia32,amd64]:
+IMPLEMENTATION [ia32 || amd64]:
 
 #include "config.h"
 #include "cpu.h"
@@ -535,7 +535,7 @@ Thread::user_ip(Mword ip)
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [(ia32,amd64) && !io]:
+IMPLEMENTATION [(ia32 || amd64) && !io]:
 
 PRIVATE inline
 Thread::Io_return
@@ -639,12 +639,12 @@ Thread::sys_control_arch(Utcb const *, Utcb *)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [(ia32 | amd64) & (debug | kdb) & !mp]:
+IMPLEMENTATION [(ia32 || amd64) && (debug || kdb) && !mp]:
 
 PRIVATE static inline Cpu_number Thread::dbg_find_cpu() { return Cpu_number::boot_cpu(); }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [(ia32 | amd64) & (debug | kdb) & mp]:
+IMPLEMENTATION [(ia32 || amd64) && (debug || kdb) && mp]:
 
 #include "apic.h"
 
@@ -664,7 +664,7 @@ Thread::dbg_find_cpu()
 
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [(ia32 |amd64) & !(debug | kdb)]:
+IMPLEMENTATION [(ia32  || amd64) && !(debug || kdb)]:
 
 /** There is no nested trap handler if both jdb and kdb are disabled.
  * Important: We don't need the nested_handler_stack here.
@@ -675,7 +675,7 @@ Thread::call_nested_trap_handler(Trap_state *)
 { return -1; }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [(ia32,amd64) && virt_obj_space]:
+IMPLEMENTATION [(ia32 || amd64) && virt_obj_space]:
 
 IMPLEMENT_OVERRIDE inline
 bool

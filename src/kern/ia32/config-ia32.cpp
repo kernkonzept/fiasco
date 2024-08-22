@@ -1,5 +1,5 @@
 /* IA32/AMD64 specific */
-INTERFACE[ia32,amd64]:
+INTERFACE[ia32 || amd64]:
 
 #include "idt_init.h"
 
@@ -79,7 +79,7 @@ public:
   static bool found_vmware;
 };
 
-INTERFACE[ia32,amd64]:
+INTERFACE[ia32 || amd64]:
 
 EXTENSION class Config
 {
@@ -93,7 +93,7 @@ public:
   using Io_bitmap = Unsigned8[Io_bitmap_size];
 };
 
-IMPLEMENTATION[ia32,amd64]:
+IMPLEMENTATION[ia32 || amd64]:
 
 #include <cstring>
 

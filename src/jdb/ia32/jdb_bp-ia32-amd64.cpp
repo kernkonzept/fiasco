@@ -1,4 +1,4 @@
-INTERFACE[ia32,amd64]:
+INTERFACE[ia32 || amd64]:
 
 #include "string_buffer.h"
 #include "jdb_types.h"
@@ -31,7 +31,7 @@ Jdb_bp::read_debug_register(unsigned num)
   return val;
 }
 
-IMPLEMENTATION[ia32,amd64]:
+IMPLEMENTATION[ia32 || amd64]:
 
 #include "kmem.h"
 

@@ -1,8 +1,8 @@
-INTERFACE [{ia32,amd64}-rtc_timer]:
+INTERFACE [(ia32 || amd64) && rtc_timer]:
 
 #include "irq_chip.h"
 
-IMPLEMENTATION[{ia32,amd64}-rtc_timer]:
+IMPLEMENTATION[(ia32 || amd64) && rtc_timer]:
 
 #include "rtc.h"
 #include "pit.h"

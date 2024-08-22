@@ -1,4 +1,4 @@
-INTERFACE[ia32,amd64]:
+INTERFACE[ia32 || amd64]:
 
 #include "jdb_core.h"
 #include "jdb_handler_queue.h"

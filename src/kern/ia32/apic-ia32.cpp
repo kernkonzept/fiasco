@@ -198,7 +198,7 @@ Apic::us_to_apic(Unsigned64 us)
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION[ia32,amd64]:
+IMPLEMENTATION[ia32 || amd64]:
 
 #include <cassert>
 #include <cstdio>

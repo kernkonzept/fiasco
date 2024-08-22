@@ -3,7 +3,7 @@
  * Architecture specific main startup/shutdown code
  */
 
-IMPLEMENTATION[ia32,amd64]:
+IMPLEMENTATION[ia32 || amd64]:
 
 #include <cstdio>
 #include <cstring>
@@ -83,7 +83,7 @@ main_arch()
 
 
 //------------------------------------------------------------------------
-IMPLEMENTATION[(ia32,amd64) && mp]:
+IMPLEMENTATION[(ia32 || amd64) && mp]:
 
 #include <cstdio>
 #include "apic.h"

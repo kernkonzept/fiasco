@@ -1,4 +1,4 @@
-INTERFACE[ia32,amd64]:
+INTERFACE[ia32 || amd64]:
 
 class Rtc
 {
@@ -7,7 +7,7 @@ private:
   Rtc(const Rtc&);
 };
 
-IMPLEMENTATION[ia32,amd64]:
+IMPLEMENTATION[ia32 || amd64]:
 
 #include "io.h"
 #include "globalconfig.h"

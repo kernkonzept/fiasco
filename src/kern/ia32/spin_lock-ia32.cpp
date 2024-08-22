@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------
-INTERFACE [(ia32|amd64) && mp]:
+INTERFACE [(ia32 || amd64) && mp]:
 
 EXTENSION class Spin_lock
 {
@@ -8,7 +8,7 @@ public:
 };
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [(ia32|amd64) && mp]:
+IMPLEMENTATION [(ia32 || amd64) && mp]:
 
 IMPLEMENT template<typename Lock_t> inline
 void

@@ -1,4 +1,4 @@
-INTERFACE[ia32,amd64]:
+INTERFACE[ia32 || amd64]:
 
 class Console;
 
@@ -8,7 +8,7 @@ public:
   static void init();
 };
 
-IMPLEMENTATION[ia32,amd64]:
+IMPLEMENTATION[ia32 || amd64]:
 
 #include <cstring>
 #include <cstdio>

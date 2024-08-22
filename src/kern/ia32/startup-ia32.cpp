@@ -1,4 +1,4 @@
-IMPLEMENTATION[ia32,amd64]:
+IMPLEMENTATION[ia32 || amd64]:
 
 #include <cstdlib>
 #include <cstdio>

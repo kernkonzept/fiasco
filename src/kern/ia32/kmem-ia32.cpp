@@ -4,7 +4,7 @@
 // more specialized memory allocation/deallocation functions follow
 // below in the "Kmem" namespace
 
-INTERFACE [ia32,amd64]:
+INTERFACE [ia32 || amd64]:
 
 #include "globalconfig.h"
 #include "initcalls.h"
@@ -59,7 +59,7 @@ typedef Kmem Kmem_space;
 
 
 //----------------------------------------------------------------------------
-INTERFACE [ia32, amd64]:
+INTERFACE [ia32 || amd64]:
 
 #include "kmem_alloc.h"
 
@@ -77,7 +77,7 @@ private:
 
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [ia32, amd64]:
+IMPLEMENTATION [ia32 || amd64]:
 
 #include "cpu.h"
 #include "l4_types.h"
@@ -305,7 +305,7 @@ Kmem::map_kernel_virt(Kpdir *dir)
 }
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [ia32, amd64]:
+IMPLEMENTATION [ia32 || amd64]:
 
 #include "mem.h"
 #include "paging_bits.h"
@@ -491,7 +491,7 @@ IMPLEMENT inline Address Kmem::user_max() { return ~0UL; }
 
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [ia32,amd64]:
+IMPLEMENTATION [ia32 || amd64]:
 
 #include <cstdlib>
 #include <cstddef>		// size_t

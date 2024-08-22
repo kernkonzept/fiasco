@@ -209,7 +209,7 @@ Idt::idt()
 
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION[ia32 | amd64]:
+IMPLEMENTATION[ia32 || amd64]:
 
 #include "config.h"
 

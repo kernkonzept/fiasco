@@ -1,4 +1,4 @@
-IMPLEMENTATION[ia32,amd64]:
+IMPLEMENTATION[ia32 || amd64]:
 
 #include <cassert>
 #include <cstdio>

@@ -1,4 +1,4 @@
-INTERFACE[ia32,amd64]:
+INTERFACE[ia32 || amd64]:
 
 #include "asm.h"
 #include "types.h"
@@ -256,7 +256,7 @@ private:
  * Fiasco ia32-native
  * Architecture specific cpu init code
  */
-INTERFACE [ia32, amd64]:
+INTERFACE [ia32 || amd64]:
 
 #include "l4_types.h"
 #include "initcalls.h"
@@ -364,7 +364,7 @@ private:
 };
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION[ia32,amd64]:
+IMPLEMENTATION[ia32 || amd64]:
 
 #include <cstdio>
 #include <cstring>
@@ -593,7 +593,7 @@ Cpu::reset_io_bitmap()
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION[ia32,amd64]:
+IMPLEMENTATION[ia32 || amd64]:
 
 #include <cstdio>
 #include <cstring>
@@ -1576,7 +1576,7 @@ Cpu::set_es(Unsigned16 val)
 
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION[ia32, amd64]:
+IMPLEMENTATION[ia32 || amd64]:
 
 #include "asm.h"
 #include "config.h"

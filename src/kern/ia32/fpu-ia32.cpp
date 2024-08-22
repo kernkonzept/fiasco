@@ -1,4 +1,4 @@
-INTERFACE[ia32,amd64]:
+INTERFACE[ia32 || amd64]:
 
 EXTENSION class Fpu
 {
@@ -54,7 +54,7 @@ private:
 
 
 //----------------------------------------------------------------
-IMPLEMENTATION [{ia32,amd64}-fpu]:
+IMPLEMENTATION [(ia32 || amd64) && fpu]:
 
 EXTENSION class Fpu
 {
@@ -211,7 +211,7 @@ Fpu::enable()
 }
 
 //----------------------------------------------------------------
-IMPLEMENTATION[ia32,amd64]:
+IMPLEMENTATION[ia32 || amd64]:
 
 #include <cstring>
 #include "cpu.h"

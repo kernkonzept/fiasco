@@ -1,4 +1,4 @@
-INTERFACE [ia32,amd64]:
+INTERFACE [ia32 || amd64]:
 
 #include "types.h"
 
@@ -8,7 +8,7 @@ public:
   static Address tss_mem_pm;
 };
 
-IMPLEMENTATION [ia32,amd64]:
+IMPLEMENTATION [ia32 || amd64]:
 
 // base_init() puts those Mem_region_map's on the stack which is slightly
 // larger than our warning limit, it's init code only, so it's ok

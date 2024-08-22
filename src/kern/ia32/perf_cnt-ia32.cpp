@@ -1,4 +1,4 @@
-INTERFACE [{ia32,amd64}-perf_cnt]:
+INTERFACE [(ia32 || amd64) && perf_cnt]:
 
 #include "cpu.h"
 #include "types.h"
@@ -65,7 +65,7 @@ class Perf_cnt_k7 : public Perf_cnt_p6   {};
 class Perf_cnt_p4 : public Perf_cnt_arch {};
 class Perf_cnt_ap : public Perf_cnt_p6   {};
 
-IMPLEMENTATION [{ia32,amd64}-perf_cnt]:
+IMPLEMENTATION [(ia32 || amd64) && perf_cnt]:
 
 #include <cstring>
 #include <cstdio>

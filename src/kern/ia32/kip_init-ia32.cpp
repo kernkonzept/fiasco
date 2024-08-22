@@ -1,4 +1,4 @@
-INTERFACE [ia32,amd64]:
+INTERFACE [ia32 || amd64]:
 
 #include "initcalls.h"
 #include "types.h"
@@ -12,7 +12,7 @@ class Kip_init
 };
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [ia32,amd64]:
+IMPLEMENTATION [ia32 || amd64]:
 
 #include <cstring>
 #include "config.h"

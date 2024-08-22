@@ -1,4 +1,4 @@
-INTERFACE[ia32,amd64]:
+INTERFACE[ia32 || amd64]:
 
 #include "types.h"
 
@@ -10,7 +10,7 @@ private:
 };
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION[ia32,amd64]:
+IMPLEMENTATION[ia32 || amd64]:
 
 #include <cassert>
 #include <cstring>
