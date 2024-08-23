@@ -58,20 +58,6 @@ public:
   virtual Kobject *parent(Kobject_common *) { return 0; }
   char const *kobject_type(Kobject_common *o) const
   { return _kobject_type(o); }
-
-  static char const *_kobject_type(Kobject_common *o)
-  {
-    extern Kobject_typeinfo_name const _jdb_typeinfo_table[];
-    extern Kobject_typeinfo_name const _jdb_typeinfo_table_end[];
-
-    for (Kobject_typeinfo_name const *t = _jdb_typeinfo_table;
-        t != _jdb_typeinfo_table_end; ++t)
-      if (t->type == cxx::dyn_typeid(o))
-        return t->name;
-
-    return "no type name";
-  }
-
   bool is_global() const { return !kobj_type; }
 
 protected:
@@ -86,6 +72,9 @@ protected:
     Op_add_image_info   = 7,
     Op_obj_info         = 16,
   };
+
+private:
+  static char const *_kobject_type(Kobject_common *o);
 };
 
 class Jdb_kobject_extension : public Kobject_dbg::Dbg_extension
@@ -484,6 +473,20 @@ IMPLEMENT
 bool
 Jdb_kobject_handler::invoke(Kobject_common *, Syscall_frame *, Utcb *)
 { return false; }
+
+IMPLEMENT
+char const *
+Jdb_kobject_handler::_kobject_type(Kobject_common *o)
+{
+  extern Kobject_typeinfo_name const _jdb_typeinfo_table[];
+  extern Kobject_typeinfo_name const _jdb_typeinfo_table_end[];
+
+  for (auto const *t = _jdb_typeinfo_table; t != _jdb_typeinfo_table_end; ++t)
+    if (t->type == cxx::dyn_typeid(o))
+      return t->name;
+
+  return JDB_ANSI_COLOR(lightred) "NO TYPE" JDB_ANSI_COLOR(default);
+}
 
 void *Jdb_kobject::kobjp;
 
