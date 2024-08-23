@@ -223,6 +223,9 @@ SHARED_FLAGS       += $(SHARED_FLAGS-$(CC_TYPE))
 OPT_SHARED_FLAGS   += $(OPT_SHARED_FLAGS-$(CC_TYPE))
 NOOPT_SHARED_FLAGS += $(NOOPT_SHARED_FLAGS-$(CC_TYPE))
 
+# Eagerly compute LDFLAGS to avoid calling CHECKLD over and over again.
+LDFLAGS         := $(LDFLAGS)
+
 # Standard compile flags
 ASFLAGS		+= $(SHARED_FLAGS) -DASSEMBLER
 ASFLAGS-clang	+= -no-integrated-as
