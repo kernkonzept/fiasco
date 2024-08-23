@@ -6,8 +6,9 @@
 # $(4) = symbol of section end
 define get_checksum
 $(OBJDUMP) \
-  --start-address=0x`$(NM) $(2) | $(GREP) -w $(3) | cut -f1 -d' '` \
-  --stop-address=0x`$(NM) $(2) | $(GREP) -w $(4) | cut -f1 -d' '` \
+  `$(NM) $(2)|sed -n \
+    's/\([[:xdigit:]]\+\) *. *\<$(3)\>/--start-address=0x\1/p; \
+     s/\([[:xdigit:]]\+\) *. *\<$(4)\>/--stop-address=0x\1/p'` \
   -s $(1) | cut -f3,4,5,6 -d' ' | ./genchecksum
 endef
 
