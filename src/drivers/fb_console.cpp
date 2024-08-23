@@ -321,13 +321,14 @@ IMPLEMENTATION [fb_console]:
 #include <cctype>
 
 #include "io.h"
+#include "global_data.h"
 #include "mem_layout.h"
 #include "kip.h"
 #include "kmem.h"
 #include "kmem_alloc.h"
 #include "kernel_console.h"
 
-static Static_object<Fb_console> fbcon;
+static DEFINE_GLOBAL Global_data<Static_object<Fb_console>> fbcon;
 
 IMPLEMENT static
 void Fb_console::init()
@@ -428,7 +429,7 @@ void Fb_console::set(unsigned i, char c, char attr)
   if (!_font_data)
     return;
 
-  static Pixel colors[] =
+  static constexpr Pixel colors[] =
     {
       // normal
       { 0,      0,   0, 0xff }, // 0: black
@@ -553,7 +554,7 @@ int Fb_console::seq_5(char const *, size_t, unsigned &)
 PRIVATE inline
 void Fb_console::ansi_attrib(int a)
 {
-  char const colors[] = { 0, 4, 2, 6, 1, 5, 3, 7 };
+  constexpr char colors[] = { 0, 4, 2, 6, 1, 5, 3, 7 };
 
   if (!_use_color && a >= 30 && a <= 47)
     return;
