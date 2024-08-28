@@ -1260,7 +1260,7 @@ void
 Iommu::setup(Address base_addr, unsigned eventq_irq, unsigned gerror_irq)
 {
   _rp0 = Mmio_register_block(base_addr);
-  _rp1 = Mmio_register_block(base_addr + 0x10000);
+  _rp1 = Mmio_register_block(offset_cast<void *>(base_addr, 0x10000));
 
   // Obtain hardware configuration from identification registers.
   Idr0 idr0 = read_reg<Idr0>();

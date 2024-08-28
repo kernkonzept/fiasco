@@ -58,23 +58,27 @@ IMPLEMENTATION [arm && pic_gic && pf_exynos]:
 class Gpio_eint_chip : public Irq_chip_gen, private Mmio_register_block
 {
 private:
-  unsigned offs(Mword pin) const { return (pin >> 3) * 4; }
+  void *offs(Mword reg) const
+  { return offset_cast<void *>(_gpio_base, reg); }
+
+  void *offs(Mword reg, Mword pin) const
+  { return offset_cast<void *>(_gpio_base, reg + (pin >> 3) * 4); }
 
 public:
-  Gpio_eint_chip(Mword gpio_base, unsigned num_irqs)
+  Gpio_eint_chip(void* gpio_base, unsigned num_irqs)
     : Irq_chip_gen(num_irqs), _gpio_base(gpio_base)
   {}
 
   void mask(Mword pin) override
-  { Io::set<Mword>(1 << (pin & 7), _gpio_base + MASK + offs(pin)); }
+  { Io::set<Mword>(1 << (pin & 7), offs(MASK, pin)); }
 
   void ack(Mword pin) override
-  { Io::set<Mword>(1 << (pin & 7), _gpio_base + PEND + offs(pin)); }
+  { Io::set<Mword>(1 << (pin & 7), offs(PEND, pin)); }
 
   void mask_and_ack(Mword pin) override { mask(pin); ack(pin); }
 
   void unmask(Mword pin) override
-  { Io::clear<Mword>(1 << (pin & 7), _gpio_base + MASK + offs(pin)); }
+  { Io::clear<Mword>(1 << (pin & 7), offs(MASK, pin)); }
 
   void set_cpu(Mword, Cpu_number) override {}
   int set_mode(Mword pin, Mode m) override
@@ -97,7 +101,7 @@ public:
       case Irq_chip::Mode::Trigger_edge  | Irq_chip::Mode::Polarity_both: v = 4; break;
     };
 
-    Mword a = _gpio_base + INTCON + offs(pin);
+    void *a = offs(INTCON, pin);
     pin = pin % 8;
     v <<= pin * 4;
     Io::write<Mword>((Io::read<Mword>(a) & ~(7 << (pin * 4))) | v, a);
@@ -108,13 +112,13 @@ public:
   bool is_edge_triggered(Mword pin) const override
   {
     unsigned v;
-    Mword a = _gpio_base + INTCON + offs(pin);
+    void *a = offs(INTCON, pin);
     pin = pin % 8;
     v = (Io::read<Mword>(a) >> (pin * 4)) & 7;
     return v & 6;
   }
 
-  unsigned pending() { return Io::read<Mword>(_gpio_base + 0xb08); }
+  unsigned pending() { return Io::read<Mword>(offs(0xb08)); }
 
 private:
   enum {
@@ -122,7 +126,7 @@ private:
     MASK   = 0x900,
     PEND   = 0xa00,
   };
-  Mword _gpio_base;
+  void *_gpio_base;
 };
 
 class Gpio_wakeup_chip : public Irq_chip_gen, private Mmio_register_block

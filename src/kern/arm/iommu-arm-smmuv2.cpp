@@ -403,7 +403,7 @@ private:
         }
     }
 
-    void init(Iommu *mmu, Unsigned8 idx, Address reg_addr)
+    void init(Iommu *mmu, Unsigned8 idx, void *reg_addr)
     {
       _mmu = mmu;
       _idx = idx;
@@ -824,13 +824,14 @@ Iommu::setup(Version version, Address base_addr, unsigned mask)
   unsigned pageshift = idr1.pagesize() ? 16 : 12;
   unsigned pagesize = 1 << pageshift;
 
-  _gr1 = Mmio_register_block(base_addr + pagesize);
+  _gr1 = Mmio_register_block(offset_cast<void *>(base_addr, pagesize));
 
   _cb = Cb_vect(new Boot_object<Context_bank>[num_context_banks],
                 num_context_banks);
 
   for (unsigned i = 0; i < num_context_banks; ++i)
-    _cb[i].init(this, i, base_addr + (num_pages + i) * pagesize);
+    _cb[i].init(this, i,
+                offset_cast<void *>(base_addr, (num_pages + i) * pagesize));
 
   _sm = Sm_vect(new Boot_object<Stream_mapping>[num_stream_mapping_groups],
                 num_stream_mapping_groups);
