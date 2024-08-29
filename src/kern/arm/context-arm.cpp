@@ -17,6 +17,15 @@ protected:
 };
 
 // ------------------------------------------------------------------------
+INTERFACE [arm_v8plus && bit64]:
+
+EXTENSION class Context
+{
+protected:
+  Mword _tpidr2rw;
+};
+
+// ------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
 #include <cassert>

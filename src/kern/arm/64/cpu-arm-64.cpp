@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------
-INTERFACE [arm && arm_v8]:
+INTERFACE [arm && arm_v8plus]:
 
 #include "alternatives.h"
 
@@ -91,6 +91,16 @@ public:
       unsigned msa = (mmfr0 >> 48) & 0x0fU;
       unsigned msa_frac = (mmfr0 >> 52) & 0x0fU;
       return msa == 0 || (msa == 0xf && msa_frac == 2);
+    }
+  };
+
+  struct has_sme : public Alternative_static_functor<has_sme>
+  {
+    static bool probe()
+    {
+      Mword pfr1;
+      asm ("mrs %0, ID_AA64PFR1_EL1": "=r" (pfr1));
+      return ((pfr1 >> 24) & 0xf) > 0;
     }
   };
 };
