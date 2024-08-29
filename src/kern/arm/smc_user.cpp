@@ -43,7 +43,8 @@ struct Smc_user : Kobject_h<Smc_user, Kobject>
     register Mword r7 FIASCO_ARM_ASM_REG(7) = in->values[7];
 
     asm volatile(FIASCO_ARM_ARCH_EXTENSION_SEC
-                 "smc #0" FIASCO_ARM_SMC_CALL_ASM_OPERANDS);
+                 "smc #0" FIASCO_ARM_SMC_CALL_ASM_OPERANDS
+                 FIASCO_ARM_ARCH_EXTENSION_NOSEC);
 
     out->values[0] = r0;
     out->values[1] = r1;

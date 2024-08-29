@@ -13,6 +13,7 @@ INTERFACE [arm && 32bit]:
 #define FIASCO_ARM_ASM_REG(n) asm("r" # n)
 
 #define FIASCO_ARM_ARCH_EXTENSION_SEC ".arch_extension sec\n"
+#define FIASCO_ARM_ARCH_EXTENSION_NOSEC ".arch_extension nosec\n"
 
 INTERFACE [arm && 64bit]:
 
@@ -31,6 +32,7 @@ INTERFACE [arm && 64bit]:
 #define FIASCO_ARM_ASM_REG(n) asm("x" # n)
 
 #define FIASCO_ARM_ARCH_EXTENSION_SEC
+#define FIASCO_ARM_ARCH_EXTENSION_NOSEC
 
 INTERFACE [arm]:
 

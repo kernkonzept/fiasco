@@ -221,6 +221,7 @@ Fpu_state_simd::save()
                "stp     q30, q31, [%[s], #16 * 30]        \n"
                "mrs     %[fpcr], fpcr                     \n"
                "mrs     %[fpsr], fpsr                     \n"
+               ".arch_extension nofp                      \n"
                : [fpcr] "=r" (fpcr),
                  [fpsr] "=r" (fpsr),
                  "=m" (_state)
@@ -252,6 +253,7 @@ Fpu_state_simd::restore() const
                "ldp     q30, q31, [%[s], #16 * 30]        \n"
                "msr     fpcr, %[fpcr]                     \n"
                "msr     fpsr, %[fpsr]                     \n"
+               ".arch_extension nofp                      \n"
                : : [fpcr] "r" (Mword{_fpcr}),
                    [fpsr] "r" (Mword{_fpsr}),
                    [s] "r" (_state),
@@ -609,6 +611,7 @@ Fpu_state_sve::save_regs()
                "rdffr p0.b                      \n"
                "str p0,  [%[ffr], #0, mul vl]   \n"
                "ldr p0,  [%[p], #0, mul vl]     \n"
+               ".arch_extension nosve           \n"
 
                "mrs     %[fpcr], fpcr           \n"
                "mrs     %[fpsr], fpsr           \n"
@@ -682,6 +685,7 @@ Fpu_state_sve::restore_regs() const
                "ldr p13, [%[p], #13, mul vl]    \n"
                "ldr p14, [%[p], #14, mul vl]    \n"
                "ldr p15, [%[p], #15, mul vl]    \n"
+               ".arch_extension nosve           \n"
 
                "msr     fpcr, %[fpcr]           \n"
                "msr     fpsr, %[fpsr]           \n"
