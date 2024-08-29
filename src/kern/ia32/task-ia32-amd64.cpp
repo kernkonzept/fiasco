@@ -16,9 +16,9 @@ PRIVATE inline NEEDS["gdt.h"]
 bool
 Task::invoke_arch(L4_msg_tag &tag, Utcb *utcb)
 {
-  switch (utcb->values[0])
+  switch (Op{utcb->values[0]})
     {
-    case Ldt_set_x86:
+    case Op::Ldt_set_x86:
         {
           enum
           {
@@ -73,12 +73,10 @@ Task::invoke_arch(L4_msg_tag &tag, Utcb *utcb)
             Cpu::cpus.cpu(current_cpu()).enable_ldt(_ldt.addr(), _ldt.size());
 
           tag = commit_result(0);
+          return true;
         }
-      return true;
+
+    default:
+      return false;
     }
-
-
-
-
-  return false;
 }
