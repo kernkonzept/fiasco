@@ -374,17 +374,15 @@ Cpu::init_hyp_mode_common()
 
   Mword sctlr_ignore;
   asm volatile (
-        "mcr p15, 4, %[hdcr], c1, c1, 1 \n"     // HDCR
+        "mcr p15, 4, %[hdcr], c1, c1, 1 \n"     // write HDCR
         "mrc p15, 0, %[sctlr], c1, c0, 0 \n"    // SCTLR
         "bic %[sctlr], #1 \n"                   // disable PL1&0 stage 1 MMU
         "mcr p15, 0, %[sctlr], c1, c0, 0 \n"    // SCTLR
-        "mcr p15, 4, %[hcr], c1, c1, 0 \n"      // HCR
         :
         [sctlr]"=&r"(sctlr_ignore)
         :
-        [hdcr]"r"(Mword{Hdcr_bits} | (has_hpmn0() ? 0 : 1)),
-        [hcr]"r"(Hcr_non_vm_bits_el0));
-
+        [hdcr]"r"(Mword{Hdcr_bits} | (has_hpmn0() ? 0 : 1)));
+  hcr(Hcr_non_vm_bits_el0);
   asm ("mcr p15, 4, %0, c1, c1, 3" : : "r"(Hstr_non_vm)); // HSTR
 
   Mem::dsb();

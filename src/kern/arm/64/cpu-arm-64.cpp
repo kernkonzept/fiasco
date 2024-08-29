@@ -198,7 +198,8 @@ public:
   {
     Hcr_must_set_bits = Hcr_vm | Hcr_swio | Hcr_ptw
                       | Hcr_amo | Hcr_imo | Hcr_fmo
-                      | Hcr_tidcp | Hcr_tsc | Hcr_tactlr,
+                      | Hcr_tidcp | Hcr_tsc | Hcr_tactlr
+                      | Hcr_tlor,
 
     /**
      * HCR value to be used for the VMM.
@@ -260,7 +261,7 @@ Cpu::init_hyp_mode_common()
   asm volatile ("msr MDCR_EL2, %x0" : : "r"(mdcr));
 
   asm volatile ("msr SCTLR_EL1, %x0" : : "r"(Mword{Sctlr_el1_generic}));
-  asm volatile ("msr HCR_EL2, %x0" : : "r" (Hcr_non_vm_bits_el0));
+  hcr(Hcr_non_vm_bits_el0);
   asm volatile ("msr HSTR_EL2, %x0" : : "r" (Hstr_non_vm));
 
   Mem::dsb();
