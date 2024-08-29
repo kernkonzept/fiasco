@@ -65,8 +65,11 @@ Kmem::mmio_unmap(Address virt, Address size)
 //---------------------------------------------------------------------------
 IMPLEMENTATION[arm && 64bit && kernel_nx && mmu]:
 
+#include "paging_bits.h"
+
 template <typename PDIR>
-static inline void
+static inline NEEDS["paging_bits.h"]
+void
 Kmem::drop_rights(PDIR *kd, Address vstart, Address vend, Page::Rights del)
 {
   vstart = Super_pg::trunc(vstart);
