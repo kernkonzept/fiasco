@@ -15,8 +15,10 @@ do-all-make-targets:
 
 $(MAKECMDGOALS): do-all-make-targets
 
-# For VERBOSE
-include $(srcdir)/Makeconf
+VERBOSE ?= @
+ifeq ($(V),1)
+  VERBOSE :=
+endif
 
 else
 
