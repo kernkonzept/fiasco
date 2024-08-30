@@ -89,7 +89,7 @@ class Mru : public Irq_chip_gen, Mmio_register_block
 public:
   enum { Nr_irqs = 12 };
 
-  explicit Mru(Address base, Gic *parent)
+  explicit Mru(void *base, Gic *parent)
   : Irq_chip_gen(Nr_irqs), Mmio_register_block(base),
     _ppi0(this),
     _ppi1(this)
