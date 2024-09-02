@@ -430,9 +430,8 @@ Kmem::init_mmu()
   if (!ok)
     panic("Cannot map initial memory");
 
-  // The service page directory entry points to an universal usable
-  // page table which is currently used for the Local APIC and the
-  // jdb adapter page.
+  // The service page directory entry points to an universal usable page table
+  // which is currently used for JDB-related mappings.
   assert(Super_pg::aligned(Mem_layout::Service_page));
 
   kdir->walk(Virt_addr(Mem_layout::Service_page), Pdir::Depth,

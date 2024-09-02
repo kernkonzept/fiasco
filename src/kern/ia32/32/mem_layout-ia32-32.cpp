@@ -25,12 +25,12 @@ public:
     Utcb_addr         = 0xbff00000,    ///< % 4KB   UTCB map address
     Kip_auto_map      = 0xbfff2000,    ///< % 4KB
     User_max          = 0xbfffffff,
+
+    // Service area: 0xeac00000 ... eb000000 (4MiB)
     Service_page      = 0xeac00000,    ///< % 4MB   global mappings
-    Local_apic_page   = Service_page + 0x0000,   ///< % 4KB
     Kmem_tmp_page_1   = Service_page + 0x2000,   ///< % 4KB size 8KB
     Kmem_tmp_page_2   = Service_page + 0x4000,   ///< % 4KB size 8KB
     Tbuf_status_page  = Service_page + 0x6000,   ///< % 4KB
-    Tbuf_ustatus_page = Tbuf_status_page,
     Jdb_bench_page    = Service_page + 0x8000,   ///< % 4KB
     Jdb_bts_area      = Service_page + 0xf000,   ///< % 4KB size 0x81000
 
@@ -38,7 +38,6 @@ public:
     Syscalls          = Service_page + 0xff000,  ///< % 4KB syscall page
     Tbuf_buffer_area  = Service_page + 0x200000, ///< % 2MB
     Tbuf_buffer_size  = 0x200000,
-    Tbuf_ubuffer_area = Tbuf_buffer_area,
     // 0xeb800000-0xec000000 (8MB) free
     Registers_map_start = 0xec000000,
     Registers_map_end   = 0xef800000,
