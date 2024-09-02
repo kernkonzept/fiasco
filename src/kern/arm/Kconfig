@@ -317,9 +317,10 @@ config ARM_ALIGNMENT_CHECK
 	  Enable if you want to have alignment check enabled.
 
 config ARM_SYNC_CLOCK
-	bool "Sync KIP clock"
+	bool "Use ARM generic timer for system clock and scheduling accounting"
 	depends on ARM
 	depends on HAS_CPU_VIRT # Dependency on the generic timer
+	select SYNC_CLOCK
 	help
 	  Synchronize the internal kernel clock with the timer.
 

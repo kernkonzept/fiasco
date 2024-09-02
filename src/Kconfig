@@ -1,3 +1,4 @@
+
 mainmenu "Fiasco configuration"
 
 # generic options that might be selected by platforms etc.
@@ -41,6 +42,9 @@ config HAS_IRQ_DIRECT_INJECT_OPTION
 	bool
 
 config HAS_CPU_MPU
+	bool
+
+config SYNC_CLOCK
 	bool
 
 menu "Target configuration"
@@ -209,6 +213,14 @@ config LAZY_FPU
 
 	  It is safe to enable this option on AMD CPUs.
 
+config SYNC_TSC
+	bool "Use time-stamp counter for system clock and scheduling accounting"
+	depends on PF_PC && (IA32 || AMD64)
+	select SYNC_CLOCK
+	help
+	  Synchronize the internal kernel clock with the CPU time stamp
+	  counter.
+
 # PF_SECTION: TARGET
 
 endmenu # target
@@ -320,13 +332,6 @@ config ONE_SHOT
 	help
 	  More costly than periodic but more fine-granular scheduling
 	  possible.  EXPERIMENTAL!
-
-config SYNC_TSC
-	bool "Use time-stamp counter for KIP and scheduling accounting"
-	depends on PF_PC && (IA32 || AMD64)
-	help
-	  Synchronize the internal kernel clock with the CPU time stamp
-	  counter.
 
 config FINE_GRAINED_CPUTIME
 	bool "Fine-grained CPU time"
