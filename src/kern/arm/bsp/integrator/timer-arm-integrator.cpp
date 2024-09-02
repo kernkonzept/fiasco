@@ -37,7 +37,7 @@ IMPLEMENTATION [arm && pf_integrator]:
 Static_object<Timer> Timer::_timer;
 
 PUBLIC
-Timer::Timer(Address base) : Mmio_register_block(base)
+Timer::Timer(void *base) : Mmio_register_block(base)
 {
   /* Switch all timers off */
   write<Unsigned32>(0U, TIMER0_BASE + TIMER_CTRL);
