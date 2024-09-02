@@ -93,18 +93,11 @@ Timer::init(Cpu_number cpu)
     }
 }
 
-IMPLEMENT inline
+IMPLEMENT_OVERRIDE inline
 void
 Timer::init_system_clock()
 {
   update_system_clock(Cpu_number::boot_cpu());
-}
-
-IMPLEMENT inline NEEDS["kip.h"]
-Unsigned64
-Timer::system_clock()
-{
-  return Kip::k()->clock();
 }
 
 IMPLEMENT inline NEEDS[Timer::update_system_clock]

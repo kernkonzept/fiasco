@@ -57,7 +57,7 @@ Timer::acknowledge()
   _tcu->r[Tcu_jz4780::TFCR] = 1 << 15;
 }
 
-IMPLEMENT inline NEEDS ["kip.h"]
+IMPLEMENT_OVERRIDE inline NEEDS ["kip.h"]
 void
 Timer::init_system_clock()
 {
@@ -65,7 +65,7 @@ Timer::init_system_clock()
   Kip::k()->set_clock(0);
 }
 
-IMPLEMENT inline NEEDS ["kip.h"]
+IMPLEMENT_OVERRIDE inline NEEDS ["kip.h"]
 Unsigned64
 Timer::system_clock()
 {

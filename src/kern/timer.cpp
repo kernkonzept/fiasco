@@ -71,7 +71,16 @@ public:
 
 IMPLEMENTATION:
 
+#include "kip.h"
+
 Cpu_number Timer::_cpu;
+
+IMPLEMENT_DEFAULT
+void
+Timer::init_system_clock()
+{
+  Kip::k()->set_clock(0);
+}
 
 IMPLEMENT_DEFAULT
 void
@@ -83,6 +92,12 @@ void
 Timer::enable()
 {}
 
+IMPLEMENT_DEFAULT inline NEEDS["kip.h"]
+Unsigned64
+Timer::system_clock()
+{
+  return Kip::k()->clock();
+}
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION[jdb]:

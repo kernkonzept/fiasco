@@ -66,34 +66,6 @@ IMPLEMENT_DEFAULT
 Irq_chip::Mode Timer::irq_mode()
 { return Irq_chip::Mode::F_raising_edge; }
 
-IMPLEMENT inline NEEDS["kip.h", "warn.h"]
-void
-Timer::init_system_clock()
-{
-  if (Config::Kip_clock_uses_timer)
-    {
-      Cpu_time time = ts_to_us(time_stamp());
-      Kip::k()->set_clock(time);
-      if (time >= Kip::Clock_1_year)
-        WARN("KIP clock initialized to %llu on boot CPU\n", time);
-    }
-  else
-    Kip::k()->set_clock(0);
-}
-
-IMPLEMENT_OVERRIDE inline NEEDS["kip.h", "warn.h"]
-void
-Timer::init_system_clock_ap(Cpu_number cpu)
-{
-  if (Config::Kip_clock_uses_timer)
-    {
-      Cpu_time time = ts_to_us(time_stamp());
-      if (time >= Kip::Clock_1_year)
-        WARN("KIP clock initialized to %llu on CPU%u\n",
-             time, cxx::int_value<Cpu_number>(cpu));
-    }
-}
-
 IMPLEMENT inline NEEDS["config.h", "kip.h", "watchdog.h", Timer::kipclock_cache]
 void
 Timer::update_system_clock(Cpu_number cpu)
@@ -113,22 +85,6 @@ IMPLEMENT_DEFAULT inline
 void
 Timer::update_one_shot(Unsigned64 /*wakeup*/)
 {}
-
-IMPLEMENT_DEFAULT inline NEEDS["config.h", "context_base.h", "kip.h"]
-Unsigned64
-Timer::system_clock()
-{
-  if (current_cpu() == Cpu_number::boot_cpu()
-      && Config::Kip_clock_uses_timer)
-    {
-      Cpu_time time = ts_to_us(time_stamp());
-      Kip::k()->set_clock(time);
-      kipclock_cache();
-      return time;
-    }
-
-  return Kip::k()->clock();
-}
 
 IMPLEMENT inline NEEDS[Timer::update_one_shot, "config.h"]
 void
@@ -178,6 +134,44 @@ Timer::freq_to_scaler_shift(Unsigned64 period, Unsigned32 freq,
     ++s;
   *scaler = (((1ULL << 32) / (1ULL << s)) * period) / freq;
   *shift = s;
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && sync_clock]:
+
+IMPLEMENT_OVERRIDE inline NEEDS["kip.h", "warn.h"]
+void
+Timer::init_system_clock()
+{
+  Cpu_time time = ts_to_us(time_stamp());
+  Kip::k()->set_clock(time);
+  if (time >= Kip::Clock_1_year)
+    WARN("System clock initialized to %llu on boot CPU\n", time);
+}
+
+IMPLEMENT_OVERRIDE inline NEEDS["kip.h", "warn.h"]
+void
+Timer::init_system_clock_ap(Cpu_number cpu)
+{
+  Cpu_time time = ts_to_us(time_stamp());
+  if (time >= Kip::Clock_1_year)
+    WARN("System clock initialized to %llu on CPU%u\n",
+         time, cxx::int_value<Cpu_number>(cpu));
+}
+
+IMPLEMENT_OVERRIDE inline NEEDS["context_base.h", "kip.h"]
+Unsigned64
+Timer::system_clock()
+{
+  if (current_cpu() == Cpu_number::boot_cpu())
+    {
+      Cpu_time time = ts_to_us(time_stamp());
+      Kip::k()->set_clock(time);
+      kipclock_cache();
+      return time;
+    }
+
+  return Kip::k()->clock();
 }
 
 // ------------------------------------------------------------------------
