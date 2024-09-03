@@ -389,6 +389,9 @@ Task::operator delete (void *ptr)
             l->type = cxx::Typeid<Task>::get();
             l->ram = t->ram_quota()->current());
 
+  // Prevent the compiler from assuming that the object has become invalid after
+  // destruction. In particular the _quota member contains valid content.
+  asm ("" : "=m"(*t));
   _task_allocator->q_free(t->ram_quota(), ptr);
 }
 
