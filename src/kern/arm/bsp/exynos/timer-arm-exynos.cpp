@@ -45,7 +45,7 @@ INTERFACE [arm && exynos_mct]: // -----------------------------------------
 EXTENSION class Timer : public Mct_core_timer
 {
 public:
-  explicit Timer(Address virt) : Mct_core_timer(virt) {}
+  explicit Timer(void *virt) : Mct_core_timer(virt) {}
   static Static_object<Mct_timer> mct;
   static Per_cpu<Static_object<Timer> > timers;
 };
