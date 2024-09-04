@@ -130,7 +130,6 @@ config CAN_MIPS_VZ_ASE
 
 config MIPS_CPU_FREQUENCY
 	int "CPU frequency (MHz)"
-	depends on MIPS
 	default 200
 	help
 	  Set the CPU frequency to match the platform's cpu frequency

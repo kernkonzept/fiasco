@@ -313,13 +313,11 @@ config ARM_SVE
 
 config ARM_ALIGNMENT_CHECK
 	bool "Enable alignment check"
-	depends on ARM
 	help
 	  Enable if you want to have alignment check enabled.
 
 config ARM_SYNC_CLOCK
 	bool "Use ARM generic timer for system clock and scheduling accounting"
-	depends on ARM
 	depends on HAS_CPU_VIRT # Dependency on the generic timer
 	select SYNC_CLOCK
 	help
@@ -327,7 +325,6 @@ config ARM_SYNC_CLOCK
 
 choice
 	prompt "Execution Model"
-	depends on ARM
 	default ARM_EM_NS  if DEFAULT_ARM_EM_NS
 	default ARM_EM_TZ  if DEFAULT_ARM_EM_TZ
 	default ARM_EM_STD if !DEFAULT_ARM_EM_NS && !DEFAULT_ARM_EM_TZ
@@ -487,7 +484,6 @@ config ARM_1176_CACHE_ALIAS_FIX
 
 config ARM_CPU_ERRATA
 	bool "Enable CPU errata workarounds"
-	depends on ARM
 
 config EXPLICIT_ASID
 	bool "Explicit ASID/VMID allocation"
@@ -518,4 +514,4 @@ config ARM_FAST_INTERRUPTS
 
 config THUMB2
 	bool "Compile to Thumb-2 object code"
-	depends on ARM && ARM_V7PLUS && !BIT64
+	depends on ARM_V7PLUS && !BIT64
