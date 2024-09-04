@@ -1,0 +1,140 @@
+# ARCH:           IA32 ia32
+# ARCHDESCR:      Intel IA-32 processor family
+# ARCHSELECT:     BIT32
+# ARCHSELECT:     HAS_VIRT_OBJ_SPACE_OPTION
+# ARCHSELECT:     HAS_JDB_DISASM_OPTION
+# ARCHSELECT:     HAS_JDB_GZIP_OPTION
+# ARCHSELECT:     FPU
+# ARCHSELECT:     HAS_FPU_OPTION
+# ARCHSELECT:     HAS_LAZY_FPU
+# ARCHDEFAULTPF:  PF_PC
+#
+# ARCH:           AMD64 amd64
+# ARCHDESCR:      AMD64 processor family
+# ARCHSELECT:     HAS_VIRT_OBJ_SPACE_OPTION
+# ARCHSELECT:     HAS_JDB_DISASM_OPTION
+# ARCHSELECT:     HAS_JDB_GZIP_OPTION
+# ARCHSELECT:     HAS_COV_OPTION
+# ARCHSELECT:     BIT64
+# ARCHSELECT:     FPU
+# ARCHSELECT:     HAS_FPU_OPTION
+# ARCHSELECT:     HAS_LAZY_FPU
+# ARCHDEFAULTPF:  PF_PC
+
+# PF: PC
+# PFDESCR: PC platform
+# PFDEPENDS: IA32 || AMD64
+# PFSELECT: HAS_SERIAL_OPTION
+# PFSELECT: HAS_WATCHDOG_OPTION
+# PFSELECT: HAS_IOMMU_OPTION
+# PFSELECT: HAS_MP_OPTION
+# PFSELECT: HAS_CPU_VIRT
+
+# SECTION: TARGET
+
+choice
+	prompt "Timer tick source"
+	default SCHED_APIC
+
+config SCHED_PIT
+	bool "Use PIT for scheduling"
+	depends on !MP
+	help
+	  Normally, Fiasco uses the RTC at IRQ8 for scheduling. This can be
+	  disadvantageous in certain circumstances, e.g. VMWare doesn't seem
+	  to emulate the RTC good enough so that not enough timer interrupts
+	  are produced. The PIT mode (using IRQ0) seems to work better in
+	  this case.  It is generally safe to use this option, so if you are
+	  unsure, say 'Y'.
+
+	  Consider that the interrupt priorities change: Using RTC, IRQ8 has
+	  the highest priority. Using PIT, IRQ0 has the highest priority.
+	  The only case where PIT scheduling does not work is with
+	  profiling. If profiling is enabled the PIT is used for generating
+	  the profiling interrupts.
+
+config SCHED_RTC
+	bool "Use RTC for scheduling"
+	depends on !MP
+	help
+	  'Yes' is the standard for this option. If this option is set
+	  Fiasco uses the RTC on IRQ 8 for scheduling.  This can be
+	  disadvantageous in certain circumstances, e.g. VMWare doesn't seem
+	  to emulate the RTC good enough so that not enough timer interrupts
+	  are produced.  The PIT (8254) mode (say 'no' here), seems to work
+	  better in this case. It is generally safe to use the PIT, so if
+	  you are unsure, say 'no'.
+	  Consider that the interrupt priorities change: Using RTC, IRQ8 has
+	  the highest priority. Using PIT, IRQ0 has the highest priority.
+	  The only case where PIT scheduling does not work is with
+	  profiling. If profiling is enabled the PIT is used for generating
+	  the profiling interrupts and the RTC must be used for scheduling.
+	  In the case where profiling shall be used within VMWare the
+	  SLOW_RTC option must be set, so that the timer resolution of
+	  Fiasco is reduced to 100Hz.
+
+config SCHED_APIC
+	bool "Use APIC timer for scheduling"
+	help
+	  Use the Local APIC for scheduling.
+
+config SCHED_HPET
+	bool "Use HPET timer for scheduling (EXPERIMENTAL)"
+	depends on !MP && EXPERIMENTAL
+	help
+	  Use the HPET timer for scheduling.
+
+endchoice
+
+config SLOW_RTC
+	bool "Use RTC with 100 ticks per second"
+	depends on SCHED_RTC
+	help
+	  This option should be enabled if you use VMWare and no PIT
+	  scheduling. The timer resolution is lowered to 100 ticks per
+	  second.
+
+config WORKAROUND_AMD_FPU_LEAK
+	bool "Enables workaroud for AMD FPU security leak"
+	help
+	  If you use Fiasco for high assurance, high security and use AMD
+	  CPUs you should enable this option. In any other case it is no
+	  harm to disable it.
+
+config REGPARM3
+	def_bool y
+	depends on IA32 && !AMD64 && PF_PC
+
+config NO_LDT
+	bool "Disable support for the LDT" if (IA32 || AMD64) && !KERNEL_ISOLATION
+	default y
+	help
+	  This option disables support for the X86 local descriptor
+	  table (LDT).  This reduces some overhead. However, this
+	  also makes the use of the LDT in L4Linux impossible.
+
+config TSC_UNIFIED
+	bool "Depend on unified TSC across CPU cores"
+	depends on MP
+	help
+	  Require unified TSCs across CPU cores. If this CPU feature is present,
+	  the TSC is synchronized accross all CPU cores of the same chip and
+	  does not stop in any ACPI state. In that case the time stamp counter
+	  can be used as consistent clock source in an MP system.
+
+	  Scheduling in one-shot mode depends on this option. If this option is
+	  enabled but the CPU feature is not present, the kernel warns.
+
+	  Unfortunately we cannot panic in that case because QEMU does not
+	  support this CPU feature in TCG.
+
+config SYNC_TSC
+	bool "Use time-stamp counter for system clock and scheduling accounting"
+	depends on (!MP || TSC_UNIFIED)
+	select SYNC_CLOCK
+	help
+	  Synchronize the internal kernel clock with the CPU time stamp
+	  counter.
+	  This option requires that the TSC is synchronized over the CPUs on an
+	  MP system.
+

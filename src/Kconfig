@@ -47,32 +47,15 @@ config HAS_CPU_MPU
 config SYNC_CLOCK
 	bool
 
+
+################################################################################
 menu "Target configuration"
+# Platform-dependent options.
+################################################################################
 
 choice
 	prompt "Architecture"
 	default AMD64
-
-config IA32
-	bool "Intel IA-32 processor family"
-	select BIT32
-	select HAS_VIRT_OBJ_SPACE_OPTION
-	select HAS_JDB_DISASM_OPTION
-	select HAS_JDB_GZIP_OPTION
-	select FPU
-	select HAS_FPU_OPTION
-	select HAS_LAZY_FPU
-
-config AMD64
-	bool "AMD64 processor family"
-	select HAS_VIRT_OBJ_SPACE_OPTION
-	select HAS_JDB_DISASM_OPTION
-	select HAS_JDB_GZIP_OPTION
-	select HAS_COV_OPTION
-	select BIT64
-	select FPU
-	select HAS_FPU_OPTION
-	select HAS_LAZY_FPU
 
 #  ARCH_CHOICE
 endchoice
@@ -82,18 +65,7 @@ config BIG_ENDIAN
 
 choice
 	prompt "Platform"
-	default PF_PC         if IA32
-	default PF_PC         if AMD64
 # ARCH_DEFAULT_PF
-
-config PF_PC
-	bool "PC platform"
-	depends on IA32 || AMD64
-	select HAS_SERIAL_OPTION
-	select HAS_WATCHDOG_OPTION
-	select HAS_IOMMU_OPTION
-	select HAS_MP_OPTION
-	select HAS_CPU_VIRT
 
 # PF_CHOICE
 
@@ -122,74 +94,6 @@ config CPU_VIRT
 	  nested paging. This feature allows you to run a virtual machine
 	  monitor (VMM) on top of Fiasco.
 
-choice
-	prompt "Timer tick source"
-	depends on PF_PC
-	default SCHED_APIC
-
-config SCHED_PIT
-	bool "Use PIT for scheduling"
-	depends on PF_PC && !MP
-	help
-	  Normally, Fiasco uses the RTC at IRQ8 for scheduling. This can be
-	  disadvantageous in certain circumstances, e.g. VMWare doesn't seem
-	  to emulate the RTC good enough so that not enough timer interrupts
-	  are produced. The PIT mode (using IRQ0) seems to work better in
-	  this case.  It is generally safe to use this option, so if you are
-	  unsure, say 'Y'.
-
-	  Consider that the interrupt priorities change: Using RTC, IRQ8 has
-	  the highest priority. Using PIT, IRQ0 has the highest priority.
-	  The only case where PIT scheduling does not work is with
-	  profiling. If profiling is enabled the PIT is used for generating
-	  the profiling interrupts.
-
-config SCHED_RTC
-	bool "Use RTC for scheduling"
-	depends on PF_PC && !MP
-	help
-	  'Yes' is the standard for this option. If this option is set
-	  Fiasco uses the RTC on IRQ 8 for scheduling.  This can be
-	  disadvantageous in certain circumstances, e.g. VMWare doesn't seem
-	  to emulate the RTC good enough so that not enough timer interrupts
-	  are produced.  The PIT (8254) mode (say 'no' here), seems to work
-	  better in this case. It is generally safe to use the PIT, so if
-	  you are unsure, say 'no'.
-	  Consider that the interrupt priorities change: Using RTC, IRQ8 has
-	  the highest priority. Using PIT, IRQ0 has the highest priority.
-	  The only case where PIT scheduling does not work is with
-	  profiling. If profiling is enabled the PIT is used for generating
-	  the profiling interrupts and the RTC must be used for scheduling.
-	  In the case where profiling shall be used within VMWare the
-	  SLOW_RTC option must be set, so that the timer resolution of
-	  Fiasco is reduced to 100Hz.
-
-config SCHED_APIC
-	bool "Use APIC timer for scheduling"
-	depends on PF_PC
-	help
-	  Use the Local APIC for scheduling.
-
-config SCHED_HPET
-	bool "Use HPET timer for scheduling (EXPERIMENTAL)"
-	depends on PF_PC && !MP && EXPERIMENTAL
-	help
-	  Use the HPET timer for scheduling.
-
-endchoice
-
-config WORKAROUND_AMD_FPU_LEAK
-	bool "Enables workaroud for AMD FPU security leak"
-	depends on PF_PC
-	help
-	  If you use Fiasco for high assurance, high security and use AMD
-	  CPUs you should enable this option. In any other case it is no
-	  harm to disable it.
-
-config REGPARM3
-	def_bool y
-	depends on IA32 && PF_PC
-
 config FPU
 	bool "Enable FPU co-processor" if HAS_FPU_OPTION
 	default y if HAS_FPU_OPTION
@@ -208,37 +112,15 @@ config LAZY_FPU
 
 	  It is safe to enable this option on AMD CPUs.
 
-config TSC_UNIFIED
-	bool "Depend on unified TSC across CPU cores"
-	depends on (IA32 || AMD64) && MP && PF_PC
-	help
-	  Require unified TSCs across CPU cores. If this CPU feature is present,
-	  the TSC is synchronized accross all CPU cores of the same chip and
-	  does not stop in any ACPI state. In that case the time stamp counter
-	  can be used as consistent clock source in an MP system.
-
-	  Scheduling in one-shot mode depends on this option. If this option is
-	  enabled but the CPU feature is not present, the kernel warns.
-
-	  Unfortunately we cannot panic in that case because QEMU does not
-	  support this CPU feature in TCG.
-
-config SYNC_TSC
-	bool "Use time-stamp counter for system clock and scheduling accounting"
-	depends on PF_PC && (IA32 || AMD64) && (!MP || TSC_UNIFIED)
-	select SYNC_CLOCK
-	help
-	  Synchronize the internal kernel clock with the CPU time stamp
-	  counter.
-	  This option requires that the TSC is synchronized over the CPUs on an
-	  MP system.
-
-
 # PF_SECTION: TARGET
 
 endmenu # target
 
+
+################################################################################
 menu "Kernel options"
+# Platform-independent options (mostly).
+################################################################################
 
 config MP
 	bool "Enable symmetric multi-processor support"
@@ -330,14 +212,6 @@ config CONTEXT_4K
 config CONTEXT_2K
 	bool
 	default y if CONTEXT_SIZE_2K
-
-config SLOW_RTC
-	bool "Use RTC with 100 ticks per second"
-	depends on SCHED_RTC
-	help
-	  This option should be enabled if you use VMWare and no PIT
-	  scheduling. The timer resolution is lowered to 100 ticks per
-	  second.
 
 config ONE_SHOT
 	bool "Use scheduling timer in one-shot mode"
@@ -531,20 +405,16 @@ config NO_IO_PAGEFAULT
 	  enabled, the kernel does not generate page-fault IPC for failed
 	  IO-Port accesses. An exception IPC with a #GP is generated instead.
 
-config NO_LDT
-	bool "Disable support for the LDT" if (IA32 || AMD64) && !KERNEL_ISOLATION
-	depends on IA32 || AMD64
-	default y if IA32 || AMD64
-	help
-	  This option disables support for the X86 local descriptor
-	  table (LDT).  This reduces some overhead. However, this
-	  also makes the use of the LDT in L4Linux impossible.
-
 # PF_SECTION: KERNEL
 
 endmenu # kernel options
 
+
+################################################################################
 menu "Debugging"
+# Options relevant for improving the debugging experience.
+# Changing these options different from default could make the kernel slower!
+################################################################################
 
 config COV
 	bool "Coverage support"
@@ -788,7 +658,11 @@ config FB_CONSOLE
 
 endmenu # debugging
 
+
+################################################################################
 menu "Compiling"
+# Build-related options (tools, compiler optimizations).
+################################################################################
 
 config CC
 	string "C compiler"
@@ -848,6 +722,8 @@ config LABEL
 
 endmenu
 
+
+################################################################################
 config EXPERIMENTAL
 	bool "Prompt for experimental features"
 	help
@@ -856,6 +732,7 @@ config EXPERIMENTAL
 	  disrupt the stability of your kernel.
 
 	  Use with caution!
+################################################################################
 
 config BIT32
 	bool
