@@ -25,7 +25,7 @@ EXTENSION class Context
 {
 protected:
   /**
-   * The generic timer virtual timer vIRQ for the cVPU.
+   * The generic timer virtual timer vIRQ for the vCPU.
    */
   class Vtimer_vcpu_irq final : public Vcpu_irq_list_item
   {
