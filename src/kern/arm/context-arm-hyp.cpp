@@ -230,7 +230,8 @@ PUBLIC inline NEEDS[Context::arm_hyp_load_non_vm_state,
                     Context::store_tpidruro,
                     Context::load_cnthctl,
                     Context::save_ext_vcpu_state,
-                    Context::load_ext_vcpu_state]
+                    Context::load_ext_vcpu_state,
+                    Context::vcpu_prepare_vtimer]
 void
 Context::switch_vm_state(Context *t)
 {
