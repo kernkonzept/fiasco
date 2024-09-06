@@ -11,6 +11,7 @@ public:
 
     Chip_id_phys_base    = 0x10000000,
     Pmu_phys_base        = 0x10020000,
+    Pmu_phys_size        =     0x4000,
     Cmu_phys_base        = 0x10030000,
     Mct_phys_base        = 0x10050000,
     Watchdog_phys_base   = 0x10060000,
@@ -73,6 +74,7 @@ public:
     Chip_id_phys_base      = 0x10000000,
     Cmu_phys_base          = 0x10010000,
     Pmu_phys_base          = 0x10040000,
+    Pmu_phys_size          =     0x5000,
     Mct_phys_base          = 0x101c0000,
     Watchdog_phys_base     = 0x101d0000,
     Irq_combiner_phys_base = 0x10440000,

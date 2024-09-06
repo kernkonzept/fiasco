@@ -357,12 +357,12 @@ Platform_control::init(Cpu_number cpu)
 {
   if (cpu == Cpu_number::boot_cpu())
     {
-      pmu.construct(Kmem_mmio::map(Mem_layout::Pmu_phys_base, 0x100));
+      pmu.construct(Kmem_mmio::map(Mem_layout::Pmu_phys_base,
+                                   Mem_layout::Pmu_phys_size));
 
-      for (Cpu_phys_id i = Cpu_phys_id(0);
-           i < Cpu_phys_id(2);
-           ++i)
-        pmu->core_write((pmu->core_read(i, Pmu::Option) & ~(1 << 0)) | (1 << 1), i, Pmu::Option);
+      for (Cpu_phys_id i = Cpu_phys_id(0); i < Cpu_phys_id(2); ++i)
+        pmu->core_write((pmu->core_read(i, Pmu::Option) & ~(1 << 0)) | (1 << 1),
+                        i, Pmu::Option);
 
       pmu->write(2, Pmu::ARM_COMMON_OPTION);
     }
