@@ -166,6 +166,7 @@ IMPLEMENTATION:
 #include "ipi.h"
 #include "logdefs.h"
 #include "task.h"
+#include "timer.h"
 
 KIP_KERNEL_FEATURE("jdb");
 
@@ -207,7 +208,7 @@ T
 Jdb::monitor_address(Cpu_number, T const volatile *addr)
 { return *addr; }
 
-IMPLEMENT_DEFAULT inline
+IMPLEMENT_DEFAULT inline NEEDS["timer.h"]
 void
 Jdb::store_system_clock_on_enter()
 {
