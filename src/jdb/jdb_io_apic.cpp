@@ -5,39 +5,32 @@ IMPLEMENTATION:
 
 #include "apic.h"
 #include "io_apic.h"
-#include "jdb.h"
-#include "jdb_module.h"
-#include "jdb_screen.h"
+#include "jdb_kern_info.h"
 #include "static_init.h"
-#include "types.h"
 
-
-/**
- * Private 'exit' module.
- * 
- * This module handles the 'exit' or '^' command that
- * makes a call to exit() and virtually reboots the system.
- */
-class Jdb_io_apic_module : public Jdb_module
+class Jdb_kern_info_io_apic : public Jdb_kern_info_module
 {
-public:
-  Jdb_io_apic_module() FIASCO_INIT;
 };
 
-static Jdb_io_apic_module jdb_io_apic_module INIT_PRIORITY(JDB_MODULE_INIT_PRIO);
+static Jdb_kern_info_io_apic k_A INIT_PRIORITY(JDB_MODULE_INIT_PRIO+1);
+
+PUBLIC
+Jdb_kern_info_io_apic::Jdb_kern_info_io_apic()
+  : Jdb_kern_info_module('A', "I/O APIC state")
+{
+  Jdb_kern_info::register_subcmd(this);
+}
 
 PRIVATE static
 void
-Jdb_io_apic_module::print_lapic(Cpu_number cpu)
+Jdb_kern_info_io_apic::print_lapic(Cpu_number cpu)
 {
   printf("\nLocal APIC [%u, %08x]: tpr=%2x ppr=%2x\n",
          cxx::int_value<Cpu_number>(cpu),
          Apic::get_id(), Apic::tpr(), Apic::reg_read(0xa0));
   printf("  Running: tpr=%02x\n", Jdb::apic_tpr.cpu(cpu));
   printf("  Timer: icr=%08x ccr=%08x LVT=%08x\n",
-         Apic::reg_read(0x380),
-         Apic::reg_read(0x390),
-         Apic::reg_read(0x320));
+         Apic::reg_read(0x380), Apic::reg_read(0x390), Apic::reg_read(0x320));
 
   unsigned const regs[] = { 0x200, 0x100, 0x180 };
   char const *const regn[] = { "IRR", "ISR", "TMR" };
@@ -54,17 +47,15 @@ Jdb_io_apic_module::print_lapic(Cpu_number cpu)
 }
 
 PUBLIC
-Jdb_module::Action_code
-Jdb_io_apic_module::action(int cmd, void *&, char const *&, int &) override
+void
+Jdb_kern_info_io_apic::show() override
 {
-  if (cmd!=0)
-    return NOTHING;
-
   if (!Io_apic::active())
     {
       printf("\nIO APIC not present!\n");
-      return NOTHING;
+      return;
     }
+
   printf("\nState of IO APIC\n");
   for (Io_apic *a = Io_apic::_first; a; a = a->_next)
     a->dump();
@@ -100,28 +91,4 @@ Jdb_io_apic_module::action(int cmd, void *&, char const *&, int &) override
 		  : "not supported (no Local APIC)"
       );
   Jdb::on_each_cpu(&print_lapic);
-
-  return NOTHING;
 }
-
-PUBLIC
-int
-Jdb_io_apic_module::num_cmds() const override
-{ 
-  return 1;
-}
-
-PUBLIC
-Jdb_module::Cmd const *
-Jdb_io_apic_module::cmds() const override
-{
-  static Cmd cs[] =
-    { { 0, "A", "apic", "", "apic\tdump state of IOAPIC", nullptr } };
-
-  return cs;
-}
-
-IMPLEMENT
-Jdb_io_apic_module::Jdb_io_apic_module()
-  : Jdb_module("INFO")
-{}

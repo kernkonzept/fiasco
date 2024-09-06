@@ -46,7 +46,7 @@ public:
 
 class Io_apic : public Irq_chip_icu, protected Irq_chip_ia32
 {
-  friend class Jdb_io_apic_module;
+  friend class Jdb_kern_info_io_apic;
   friend class Irq_chip_ia32;
 public:
   unsigned nr_irqs() const override { return Irq_chip_ia32::nr_irqs(); }
