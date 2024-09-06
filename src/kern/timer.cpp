@@ -80,10 +80,12 @@ private:
 //----------------------------------------------------------------------------
 INTERFACE[sync_clock && test_support_code]:
 
+#include "global_data.h"
+
 EXTENSION class Timer
 {
 private:
-  static Unsigned64 _system_clock_at_last_timer_tick;
+  static Global_data<Unsigned64> _system_clock_at_last_timer_tick;
 };
 
 //----------------------------------------------------------------------------
@@ -159,7 +161,7 @@ Timer::update_system_clock(Cpu_number)
 //----------------------------------------------------------------------------
 IMPLEMENTATION[sync_clock && test_support_code]:
 
-Unsigned64 Timer::_system_clock_at_last_timer_tick;
+DEFINE_GLOBAL Global_data<Unsigned64> Timer::_system_clock_at_last_timer_tick;
 
 PUBLIC static inline
 Unsigned64
