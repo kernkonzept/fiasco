@@ -10,6 +10,7 @@ INTERFACE:
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <cstdarg>
 
 #include "kdb_ke.h"
 #include "kip.h"
