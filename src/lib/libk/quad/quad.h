@@ -52,6 +52,12 @@
  */
 
 
+#if 0 && defined(__ARM_EABI__) && !defined(lint)
+#define	ARM_EABI_ALIAS(alias,sym)	__strong_alias(alias,sym);
+#else
+#define	ARM_EABI_ALIAS(alias,sym)	/* nothing */
+#endif
+
 /*
  * Depending on the desired operation, we view a `long long' (aka quad_t) in
  * one or more of the following formats.
