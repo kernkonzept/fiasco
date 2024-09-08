@@ -5,7 +5,7 @@
 
 include $(srcdir)/Modules.generic
 
-SUBSYSTEMS  :=	ABI KERNEL LIBUART LIBK DRIVERS MINILIBC CXXLIB CRT0 \
+SUBSYSTEMS  :=	ABI KERNEL LIBUART LIBK DRIVERS LIBC CXXLIB CRT0 \
 		VERSION JABI TCBOFFSET STDWORKLOAD
 
 ifeq ($(CONFIG_UNIT_TEST),y)
@@ -53,16 +53,6 @@ reset_IMPL		:= reset-ppc32
 processor_IMPL		:= processor processor-ppc32
 CXXSRC_DRIVERS		:= glue_libc.cc
 NOOPT			+= $(patsubst %.o, %, $(OBJ_DRIVERS))
-
-#
-# MINILIBC Subsystem
-#
-MINILIBC	:= libc.a
-VPATH		+= lib/minilibc/$(CONFIG_XARCH) lib/minilibc
-PRIVATE_INCDIR	+= lib/minilibc/$(CONFIG_XARCH)/include lib/minilibc/include
-ASSRC_MINILIBC	:= setjmp.S
-NOBUILTIN	+= $(patsubst %.o, %, $(OBJ_MINILIBC))
-
 
 #
 # JABI Subsystem

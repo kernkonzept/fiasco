@@ -1,0 +1,7 @@
+# -*- makefile -*-
+
+$(LIBC): $(OBJ_LIBC)
+	$(AR_MESSAGE)
+	$(VERBOSE)$(RM) $@
+	$(VERBOSE)$(AR) $(ARFLAGS) $@ $^
+

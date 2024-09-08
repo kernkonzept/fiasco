@@ -24,6 +24,7 @@ class Bootstrap
 //----------------------------------------------------------------------------
 IMPLEMENTATION [riscv]:
 
+#include "assert.h"
 #include "config.h"
 #include "cpu.h"
 #include "mem.h"
@@ -33,7 +34,7 @@ IMPLEMENTATION [riscv]:
 #include "paging_bits.h"
 
 #ifndef NDEBUG
-void assert_fail(char const *expr, char const *file, unsigned int, void *)
+void assert_fail(char const *expr, char const *file, unsigned int, void const *)
 {
   Bootstrap::puts("Assertion failed at ");
   Bootstrap::puts(file);

@@ -10,7 +10,7 @@ IMPLEMENTATION:
 extern "C"
 void
 assert_fail(char const *expr_msg, char const *file, unsigned int line,
-            void *caller)
+            void const *caller)
 {
   // Make sure that GZIP mode is off.
   //

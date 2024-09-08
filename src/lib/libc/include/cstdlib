@@ -1,0 +1,35 @@
+#pragma once
+
+#include <stdlib.h>
+
+namespace std
+{
+  using ::atexit;
+  using ::abs;
+  using ::labs;
+  using ::div_t;
+  using ::ldiv_t;
+  using ::lldiv_t;
+  using ::div;
+  using ::ldiv;
+  using ::lldiv;
+  using ::exit;
+  using ::abort;
+  using ::atoi;
+  using ::atol;
+  using ::atof;
+  using ::strtoul;
+  using ::strtol;
+
+  inline long
+  abs(long i) { return __builtin_labs(i); }
+
+  inline long long
+  abs(long long i) { return __builtin_llabs(i); }
+
+  inline ldiv_t
+  div(long i, long j) { return ldiv(i, j); }
+
+  inline lldiv_t
+  div(long long i, long long j) { return lldiv(i, j); }
+};

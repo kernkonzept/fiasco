@@ -1,7 +1,0 @@
-# -*- makefile -*-
-
-$(MINILIBC): $(OBJ_MINILIBC)
-	$(AR_MESSAGE)
-	$(VERBOSE)$(RM) $@
-	$(VERBOSE)$(AR) $(ARFLAGS) $@ $^
-

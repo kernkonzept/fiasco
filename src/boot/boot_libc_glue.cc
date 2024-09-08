@@ -2,10 +2,10 @@
 
 #include "boot_direct_cons.h"
 
-unsigned long __libc_backend_printf_lock()
+unsigned int __libc_backend_printf_lock()
 { return 0; }
 
-void __libc_backend_printf_unlock(unsigned long)
+void __libc_backend_printf_unlock(unsigned int)
 {}
 
 int __libc_backend_outs(const char *s, size_t len)

@@ -8,7 +8,7 @@ phys_mem.o: $(TCBOFFSET)
 # You really should not have to add anything in the $(LD) line.
 
 #TODO: strip 
-#boot_img.o: bootstrap.o $(LIBUART) $(CXXLIB) $(MINILIBC) $(LIBK) boot_libc_glue.o 
+#boot_img.o: bootstrap.o $(LIBUART) $(CXXLIB) $(LIBC) $(LIBK) boot_libc_glue.o 
 #	$(LINK_MESSAGE)
 #	$(VERBOSE)$(LD) $(LD_EMULATION_FLAG) -o $@_x.o -q \
 #	  -T $(srcdir)/kern/ppc32/bootstrap.ld  $^
@@ -23,7 +23,7 @@ LIBGCC = $(shell $(CXX) $(SHARED_FLAGS) -print-libgcc-file-name)
 # $(2) = fiasco.debug - variable
 # $(3) = Additional $(OBJ_X), e.g. OBJ_<unittest>
 define gen_kernel_rules =
-$(2): kernel.ppc32.lds $$(CRT0) $$(OBJ_KERNEL) $(3) $$(LIBK) $$(LIBDISASM) libdrivers.a $$(ABI) $$(LIBUART) $$(CXXLIB) $$(MINILIBC) $(LIBGCC) libgluedriverslibc.a
+$(2): kernel.ppc32.lds $$(CRT0) $$(OBJ_KERNEL) $(3) $$(LIBK) $$(LIBDISASM) libdrivers.a $$(ABI) $$(LIBUART) $$(CXXLIB) $$(LIBC) $(LIBGCC) libgluedriverslibc.a
 	$$(LINK_MESSAGE)
 	$$(VERBOSE)$$(LD) $$(LDFLAGS) $$(LD_EMULATION_FLAG) -N -T $$< -o $$@ $$(filter-out $$<,$$+)
 	$$(call ADD_CONFIGFILE,$$@)

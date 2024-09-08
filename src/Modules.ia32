@@ -3,7 +3,7 @@
 
 include $(srcdir)/Modules.generic
 
-SUBSYSTEMS = JABI ABI DRIVERS KERNEL CRT0 BOOT LIBK CHECKSUM CXXLIB MINILIBC \
+SUBSYSTEMS = JABI ABI DRIVERS KERNEL CRT0 BOOT LIBK CHECKSUM CXXLIB LIBC \
              TCBOFFSET VERSION GBLCFG STDWORKLOAD
 
 ifeq ($(CONFIG_UNIT_TEST),y)
@@ -365,11 +365,6 @@ VPATH		+= lib/regex
 PRIVATE_INCDIR	+= lib/regex
 CSRC_LIBREGEX	:= rx.c
 NOOPT		+= $(patsubst %.o, %, $(OBJ_LIBREGEX))
-
-#
-# MINILIBC Subsystem addendum
-#
-CSRC_MINILIBC	+= lltostr.c
 
 ifeq ("$(CONFIG_JDB)","y")
 

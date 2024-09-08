@@ -1,0 +1,9 @@
+#pragma once
+
+#include <stdint.h>
+
+namespace std
+{
+  using ::intptr_t;
+  using ::uintptr_t;
+};

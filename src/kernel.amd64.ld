@@ -147,6 +147,7 @@ SECTIONS {
 
   .data : AT (ADDR(.data) - _fiasco_image_offset) {
     . = ALIGN(0x20);
+    *(.data.no_rw_checksum);
     PROVIDE (_kernel_data_start = .);
     *(.data .data.* .gnu.linkonce.d.*)
     *(.anno)

@@ -36,7 +36,7 @@ int __libc_backend_outs(const char *s, size_t len);
  */
 int __libc_backend_ins(char *s, size_t len);
 
-typedef unsigned long __libc_backend_printf_lock_t;
+typedef unsigned int __libc_backend_printf_lock_t;
 
 __libc_backend_printf_lock_t __libc_backend_printf_lock(void);
 

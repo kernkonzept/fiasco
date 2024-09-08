@@ -37,7 +37,7 @@ extern "C" char _end[];
 
 #ifndef NDEBUG
 void assert_fail(char const *expr, char const *file, unsigned int line,
-                 void *caller)
+                 void const *caller)
 {
   panic("Assertion failed at %s:%u:%p: %s\n", file, line, caller, expr);
 }

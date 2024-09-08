@@ -12,7 +12,7 @@ exception.o: $(TCBOFFSET)
 # $(2) = fiasco.debug - variable
 # $(3) = Additional $(OBJ_X), e.g. OBJ_<unittest>
 define gen_kernel_rules =
-$(2): kernel.mips.lds $$(CRT0) $$(OBJ_KERNEL) $(3) $$(JDB) $$(MINILIBC) $$(KERNEL_EXTRA_LIBS) $$(LIBDISASM) $$(ABI) $$(LIBK) libdrivers.a $$(LIBUART) $$(CXXLIB) $$(MINILIBC) libgluedriverslibc.a
+$(2): kernel.mips.lds $$(CRT0) $$(OBJ_KERNEL) $(3) $$(JDB) $$(LIBC) $$(KERNEL_EXTRA_LIBS) $$(LIBDISASM) $$(ABI) $$(LIBK) libdrivers.a $$(LIBUART) $$(CXXLIB) $$(LIBC) libgluedriverslibc.a
 	$$(LINK_MESSAGE)
 	$$(VERBOSE)$$(LD) $$(LDFLAGS) $$(LD_EMULATION_FLAG) -N -defsym kernel_load_addr=$$(CONFIG_KERNEL_LOAD_ADDR) \
 	  $$(KERNEL_LDFLAGS) \

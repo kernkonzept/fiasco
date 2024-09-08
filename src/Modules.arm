@@ -5,7 +5,7 @@
 
 include $(srcdir)/Modules.generic
 
-SUBSYSTEMS := 	ABI KERNEL LIBK DRIVERS MINILIBC LIBUART \
+SUBSYSTEMS := 	ABI KERNEL LIBK DRIVERS LIBC LIBUART \
 		CXXLIB VERSION JABI TCBOFFSET CRT0 STDWORKLOAD
 
 ifeq ($(CONFIG_UNIT_TEST),y)
@@ -81,9 +81,9 @@ CSRC_LIBREGEX	:= rx.c
 NOOPT		+= $(patsubst %.o, %, $(OBJ_LIBREGEX))
 
 #
-# MINILIBC Subsystem addendum
+# LIBC Subsystem addendum
 #
-CSRC_MINILIBC	+= aeabi.c atexit-aeabi.c
+CSRC_LIBC       += aeabi.c atexit-aeabi.c
 
 
 #

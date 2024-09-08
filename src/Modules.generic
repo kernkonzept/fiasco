@@ -95,10 +95,10 @@ INTERFACES_KERNEL += \
 	jdb_tbuf jdb_tbuf_init tb_entry jdb_trace string_buffer
 endif
 
-# - do not profile all of MINILIBC, because it is used in the BOOT subsystem
+# - do not profile all of LIBC, because it is used in the BOOT subsystem
 # - save some space for debugger, disassembler, ...
 NOOPT			+= $(patsubst %.o, %,\
-			   $(OBJ_MINILIBC) $(OBJ_JDB) $(OBJ_LIBDISASM))
+			   $(OBJ_LIBC) $(OBJ_JDB) $(OBJ_LIBDISASM))
 
 # Helper function to generate CXXFLAGS_uart-libuart
 LIBUART_UART = -include uart_$(strip $(1)).h \
@@ -138,21 +138,100 @@ $(foreach f, $(patsubst %.c, %, $(CSRC_LIBCOV-clang_contrib)), \
 NOOPT += $(patsubst %.o, %, $(OBJ_LIBCOV))
 
 #
-# MINILIBC Subsystem
+# LIBC Subsystem
 #
-MINILIBC        := libc.a
-VPATH           += lib/minilibc/$(CONFIG_XARCH)/$(BITS) \
-                   lib/minilibc/$(CONFIG_XARCH) lib/minilibc
-PRIVATE_INCDIR  += lib/minilibc/$(CONFIG_XARCH)/$(BITS)/include \
-                   lib/minilibc/$(CONFIG_XARCH)/include lib/minilibc/include
-CSRC_MINILIBC	:= __lltostr.c __ltostr.c __v_printf.c atexit.c getchar.c \
-                   isalnum.c isalpha.c isascii.c isblank.c iscntrl.c isdigit.c \
-                   isgraph.c islower.c isprint.c ispunct.c isspace.c isupper.c \
-                   isxdigit.c longjmp.c memccpy.c memchr.c memcmp.c \
-                   memcpy.c memmove.c memset.c panic.c printf.c putchar.c \
-                   puts.c raise.c snprintf.c sprintf.c stpcpy.c strchr.c \
-                   strcmp.c strcpy.c strcspn.c strlen.c strncmp.c strncpy.c \
-                   strnlen.c strrchr.c strspn.c strstr.c strtol.c strtoul.c \
-                   tolower.c vprintf.c vsnprintf.c vsprintf.c
-ASSRC_MINILIBC  := setjmp.S
-NOBUILTIN       += $(patsubst %.o, %, $(OBJ_MINILIBC))
+LIBC_ARCH-arm-    := arm
+LIBC_ARCH-arm-y   := aarch64
+LIBC_ARCH-ia32-   := i386
+LIBC_ARCH-amd64-y := x86_64
+LIBC_ARCH-mips-   := mips
+LIBC_ARCH-mips-y  := mips64
+LIBC_ARCH-riscv-  := riscv32
+LIBC_ARCH-riscv-y := riscv64
+LIBC_ARCH-ppc-    := powerpc
+LIBC_ARCH-sparc-  := sparc
+LIBC_ARCH         := $(LIBC_ARCH-$(CONFIG_XARCH)-$(CONFIG_BIT64))
+LIBC              := libc.a
+VPATH             += lib/libc/glue \
+                     lib/libc/src/string \
+                     lib/libc/src/ctype \
+                     lib/libc/src/errno \
+                     lib/libc/src/stdio \
+                     lib/libc/src/exit \
+                     lib/libc/src/stdlib \
+                     lib/libc/src/internal \
+                     lib/libc/src/setjmp/$(LIBC_ARCH)
+PRIVATE_INCDIR    += lib/libc/arch/$(LIBC_ARCH) \
+                     lib/libc/src/internal \
+                     lib/libc/src/include \
+                     lib/libc/include
+CPPFLAGS          += -DLIBCL4
+CSRC_LIBC         := libc_lock.c \
+                     putchar.c \
+                     putstr.c \
+                     stdout_write.c \
+                     \
+                     memchr.c \
+                     memmove.c \
+                     memset.c \
+                     memcmp.c \
+                     strlen.c \
+                     strnlen.c \
+                     strcpy.c \
+                     strncpy.c \
+                     strcmp.c \
+                     stpcpy.c \
+                     strchr.c \
+                     strstr.c \
+                     $(if $(filter ia32,$(CONFIG_XARCH)),,memcpy.c) \
+                     strcspn.c \
+                     strchrnul.c \
+                     stpncpy.c \
+                     strrchr.c \
+                     memrchr.c \
+                     strncmp.c \
+                     \
+                     strtol.c \
+                     \
+                     isalnum.c \
+                     isalpha.c \
+                     isdigit.c \
+                     isprint.c \
+                     isxdigit.c \
+                     isspace.c \
+                     tolower.c \
+                     \
+                     stdout.c \
+                     printf.c \
+                     snprintf.c \
+                     sprintf.c \
+                     vfprintf.c \
+                     vsnprintf.c \
+                     vsprintf.c \
+                     vprintf.c \
+                     __overflow.c \
+                     __toread.c \
+                     __towrite.c \
+                     __uflow.c \
+                     fputs.c \
+                     fwrite.c \
+                     puts.c \
+                     \
+                     __errno_location.c \
+                     \
+                     atexit.c \
+                     \
+                     intscan.c \
+                     shgetc.c
+
+# riscv32: needed by intscan.c
+VPATH             += lib/libk/quad
+CSRC_LIBC         += lshrdi3.c
+# There is room for improvement in musl
+$(foreach f, $(patsubst %.c, %, $(CSRC_LIBC)), \
+        $(eval CFLAGS_$(f) += -Wno-parentheses -Wno-sign-compare \
+                              -Wno-unused-parameter -Wno-unused-variable \
+                              -Wno-undef -Wno-implicit-fallthrough))
+ASSRC_LIBC        := setjmp.S longjmp.S \
+                     $(if $(filter ia32,$(CONFIG_XARCH)),memcpy-i386.S)
+NOBUILTIN         += $(patsubst %.o, %, $(OBJ_LIBC))

@@ -3,7 +3,7 @@
 
 include $(srcdir)/Modules.generic
 
-SUBSYSTEMS = JABI ABI DRIVERS KERNEL CRT0 BOOT LIBK CHECKSUM CXXLIB MINILIBC \
+SUBSYSTEMS = JABI ABI DRIVERS KERNEL CRT0 BOOT LIBK CHECKSUM CXXLIB LIBC \
              TCBOFFSET SYMBOLS VERSION GBLCFG STDWORKLOAD
 
 ifeq ($(CONFIG_UNIT_TEST),y)
@@ -252,7 +252,7 @@ CXXSRC_BOOT		:= boot_libc_glue.cc bootstrap.cc boot_cpu.cc \
 			   direct_cons_putchar.cc
 ASSRC_BOOT		:= boot.S boot_idt.S
 NOOPT			+= $(patsubst %.o, %, $(OBJ_BOOT))
-# Also applied for $(DRIVERS) and $(MINILIBC) which are used by BOOT.
+# Also applied for $(DRIVERS) and $(LIBC) which are used by BOOT.
 NOCOV			+= $(patsubst %.o, %, $(OBJ_BOOT))
 
 #
@@ -374,10 +374,9 @@ CSRC_LIBREGEX	:= rx.c
 NOOPT		+= $(patsubst %.o, %, $(OBJ_LIBREGEX))
 
 #
-# MINILIBC Subsystem addendum
+# LIBC Subsystem addendum
 #
-CSRC_MINILIBC	+= lltostr.c
-NOCOV		+= $(patsubst %.o, %, $(OBJ_MINILIBC))  # Because the BOOT subsystem requires MINILIBC.
+NOCOV		+= $(patsubst %.o, %, $(OBJ_LIBC))  # Because the BOOT subsystem requires LIBC.
 
 
 ifeq ("$(CONFIG_JDB)","y")
