@@ -376,7 +376,7 @@ Tb_entry::type() const
 
 PUBLIC inline
 int
-Tb_entry::hidden() const
+Tb_entry::is_hidden() const
 { return _type & Tbuf_hidden; }
 
 PUBLIC inline
