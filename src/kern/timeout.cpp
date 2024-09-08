@@ -140,7 +140,7 @@ Timeout_q::enqueue(Timeout *to)
 PUBLIC inline
 Timeout::Timeout()
 {
-  _wakeup    = ULONG_LONG_MAX;
+  _wakeup    = ULLONG_MAX;
   _flags.hit = 0;
   _flags.res = 0;
 }
@@ -354,7 +354,7 @@ Timeout_q::do_timeouts(Unsigned64 now)
 
 PUBLIC inline
 Timeout_q::Timeout_q()
-: _current(ULONG_LONG_MAX), _old_clock(0)
+: _current(ULLONG_MAX), _old_clock(0)
 {}
 
 PUBLIC inline
