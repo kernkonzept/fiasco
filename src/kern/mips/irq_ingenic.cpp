@@ -22,7 +22,7 @@ private:
 IMPLEMENTATION:
 
 PUBLIC inline
-Irq_chip_ingenic::Irq_chip_ingenic(Address mmio)
+Irq_chip_ingenic::Irq_chip_ingenic(void *mmio)
 : Irq_chip_gen(32), _r(mmio)
 {
   _r[R_mask] = 0xffffffff;

@@ -34,9 +34,11 @@ Mips_bsp_irqs::init(Cpu_number cpu)
   auto *m =  new Boot_object<Irq_mgr_flex<10> >();
   Irq_mgr::mgr = m;
 
-  _ic[0] = new Boot_object<Irq_chip_ingenic>(0xb0001000);
+  auto ic0_mmio = reinterpret_cast<void *>(0xb0001000UL);
+  _ic[0] = new Boot_object<Irq_chip_ingenic>(ic0_mmio);
   m->add_chip(_ic[0], 0);
-  _ic[1] = new Boot_object<Irq_chip_ingenic>(0xb0001020);
+  auto ic1_mmio = reinterpret_cast<void *>(0xb0001020UL);
+  _ic[1] = new Boot_object<Irq_chip_ingenic>(ic1_mmio);
   m->add_chip(_ic[1], 32);
 
   auto *c = new Boot_object<Cascade_irq>(nullptr, ingenic_cascade);

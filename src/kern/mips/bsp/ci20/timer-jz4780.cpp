@@ -24,7 +24,7 @@ Timer::init(Cpu_number ncpu)
     return;
 
   init_system_clock();
-  _tcu.construct(0xb0002000);
+  _tcu.construct(reinterpret_cast<void *>(0xb0002000UL));
   _tcu->r[T::TSCR]    = 1 << 15;
   _tcu->r[T::OSTCSR]  = 2 << 3;  // prescaler 16, periodic mode
   _tcu->r[T::OSTCNTH] = 0;

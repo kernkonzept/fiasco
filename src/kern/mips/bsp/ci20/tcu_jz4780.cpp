@@ -39,16 +39,16 @@ public:
   };
 
   static R16 tdfr(unsigned chan)
-  { return (R16)((Address)R16::TDFR0 + 0x10 * chan); }
+  { return R16{Address{R16::TDFR0 + 0x10 * chan}}; }
 
   static R16 tdhr(unsigned chan)
-  { return (R16)((Address)R16::TDHR0 + 0x10 * chan); }
+  { return R16{Address{R16::TDHR0 + 0x10 * chan}}; }
 
   static R16 tcnt(unsigned chan)
-  { return (R16)((Address)R16::TCNT0 + 0x10 * chan); }
+  { return R16{Address{R16::TCNT0 + 0x10 * chan}}; }
 
   static R16 tcsr(unsigned chan)
-  { return (R16)((Address)R16::TCSR0 + 0x10 * chan); }
+  { return R16{Address{R16::TCSR0 + 0x10 * chan}}; }
 
   Register_block<32, void> r;
 
@@ -63,7 +63,7 @@ struct Register_block_access_size<Tcu_jz4780::R16> { enum { value = 16 }; };
 IMPLEMENTATION:
 
 PUBLIC inline
-Tcu_jz4780::Tcu_jz4780(Address mmio) : r(mmio)
+Tcu_jz4780::Tcu_jz4780(void *mmio) : r(mmio)
 {
   r[TECR] = 0x80ff;
   r[TSSR] = 0x80ff;
