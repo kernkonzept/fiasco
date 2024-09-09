@@ -57,15 +57,14 @@ IMPLEMENTATION [arm && (arm_mpcore || arm_1136 || arm_1176 || arm_pxa
 
 PUBLIC static inline
 template< unsigned long Flush_area, bool Ram >
-Mword Mmu<Flush_area, Ram>::dcache_line_size()
+constexpr Mword Mmu<Flush_area, Ram>::dcache_line_size()
 {
   return 32;
 }
 
 PUBLIC static inline
 template< unsigned long Flush_area, bool Ram >
-Mword
-Mmu<Flush_area, Ram>::icache_line_size()
+constexpr Mword Mmu<Flush_area, Ram>::icache_line_size()
 {
   return 32;
 }
