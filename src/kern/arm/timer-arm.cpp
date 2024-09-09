@@ -92,8 +92,8 @@ Timer::ts_to_us(Unsigned64 ts)
  * Determine scaling factor and shift value for transforming a time stamp
  * (timer value) into a time value (microseconds or nanoseconds).
  *
- * \param period  Time period: 10^6: microseconds; 10^9: nanoseconds.
  * \param freq    Timer frequency.
+ * \param period  Time period: 10^6: microseconds; 10^9: nanoseconds.
  * \param scaler  Determined scaling factor (32-bit).
  * \param shift   Determined shift value (0-31).
  *
@@ -110,7 +110,7 @@ Timer::ts_to_us(Unsigned64 ts)
  */
 PRIVATE static
 void
-Timer::freq_to_scaler_shift(Unsigned64 period, Unsigned32 freq,
+Timer::freq_to_scaler_shift(Unsigned32 freq, Unsigned64 period,
                             Scaler_shift *scaler_shift)
 {
   Mword s = 0;
