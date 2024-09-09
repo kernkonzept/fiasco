@@ -22,6 +22,7 @@ private:
   static Unsigned64 time_stamp();
   static Global_data<Scaler_shift> _scaler_shift_ts_to_ns;
   static Global_data<Scaler_shift> _scaler_shift_ts_to_us;
+  static Global_data<Scaler_shift> _scaler_shift_us_to_ts;
 };
 
 // ------------------------------------------------------------------------
@@ -55,6 +56,7 @@ IMPLEMENTATION [arm]:
 
 DEFINE_GLOBAL Global_data<Timer::Scaler_shift> Timer::_scaler_shift_ts_to_ns;
 DEFINE_GLOBAL Global_data<Timer::Scaler_shift> Timer::_scaler_shift_ts_to_us;
+DEFINE_GLOBAL Global_data<Timer::Scaler_shift> Timer::_scaler_shift_us_to_ts;
 
 IMPLEMENT_DEFAULT
 Unsigned64
@@ -78,31 +80,42 @@ Timer::update_timer(Unsigned64 wakeup)
     update_one_shot(wakeup);
 }
 
-PUBLIC static inline NEEDS[Timer::timer_value_to_time]
+PUBLIC static inline NEEDS[Timer::apply_scaler_shift]
 Unsigned64
 Timer::ts_to_ns(Unsigned64 ts)
-{ return timer_value_to_time(ts, _scaler_shift_ts_to_ns); }
+{ return apply_scaler_shift(ts, _scaler_shift_ts_to_ns); }
 
-PUBLIC static inline NEEDS[Timer::timer_value_to_time]
+PUBLIC static inline NEEDS[Timer::apply_scaler_shift]
 Unsigned64
 Timer::ts_to_us(Unsigned64 ts)
-{ return timer_value_to_time(ts, _scaler_shift_ts_to_us); }
+{ return apply_scaler_shift(ts, _scaler_shift_ts_to_us); }
+
+PUBLIC static inline NEEDS[Timer::apply_scaler_shift]
+Unsigned64
+Timer::us_to_ts(Unsigned64 ts)
+{ return apply_scaler_shift(ts, _scaler_shift_us_to_ts); }
 
 /**
- * Determine scaling factor and shift value for transforming a time stamp
- * (timer value) into a time value (microseconds or nanoseconds).
+ * Determine scaling factor and shift value used for transforming a time stamp
+ * (timer value) into a time value (microseconds or nanoseconds) or a time value
+ * into a time stamp.
  *
- * \param freq    Timer frequency.
- * \param period  Time period: 10^6: microseconds; 10^9: nanoseconds.
- * \param scaler  Determined scaling factor (32-bit).
- * \param shift   Determined shift value (0-31).
+ * \param from_freq     Source frequency.
+ * \param to_freq       Target frequency.
+ * \param scaler_shift  Determined scaling factor and shift value.
  *
- * The following formula is used to translate a timer value into a time value:
+ * To determine scaler/shift for converting an arbitrary timer frequency into
+ * microseconds, use `to_freq=1'000'000` and `from_freq=<timer frequency>`. To
+ * determine scaler/shift for converting microseconds into timer ticks, use
+ * `to_freq=<timer frequency>` and `from_freq=1'000'000>`.
+ *
+ * The following formula is used to translate a time value `tv_from` into a time
+ * value `tv_to` using `scaler` and `shift`:
  *
  * \code
- *             timer value * scaler                 timer value * scaler
- *   time  =  ---------------------- * 2^shift  =  ---------------------
- *                     2^32                             2^(32-shift)
+ *              tv_from * scaler                 tv_from * scaler
+ *   tv_to  =  ------------------ * 2^shift  =  ------------------
+ *                    2^32                         2^(32-shift)
  * \endcode
  *
  * The shift value is important for low timer frequencies to keep a sane amount
@@ -110,13 +123,13 @@ Timer::ts_to_us(Unsigned64 ts)
  */
 PRIVATE static
 void
-Timer::freq_to_scaler_shift(Unsigned32 freq, Unsigned64 period,
-                            Scaler_shift *scaler_shift)
+Timer::calc_scaler_shift(Unsigned32 from_freq, Unsigned32 to_freq,
+                         Scaler_shift *scaler_shift)
 {
   Mword s = 0;
-  while ((period / (1 << s)) / freq > 0)
+  while ((to_freq / (1 << s)) / from_freq > 0)
     ++s;
-  scaler_shift->scaler = (((1ULL << 32) / (1ULL << s)) * period) / freq;
+  scaler_shift->scaler = (((1ULL << 32) / (1ULL << s)) * to_freq) / from_freq;
   scaler_shift->shift = s;
 }
 
@@ -176,7 +189,7 @@ IMPLEMENTATION [arm && 32bit]:
 
 PRIVATE static inline
 Unsigned64
-Timer::timer_value_to_time(Unsigned64 v, Scaler_shift scaler_shift)
+Timer::apply_scaler_shift(Unsigned64 v, Scaler_shift scaler_shift)
 {
   Mword lo = v & 0xffffffff;
   Mword hi = v >> 32;
@@ -215,7 +228,7 @@ IMPLEMENTATION [arm && 64bit]:
 
 PRIVATE static inline
 Unsigned64
-Timer::timer_value_to_time(Unsigned64 v, Scaler_shift scaler_shift)
+Timer::apply_scaler_shift(Unsigned64 v, Scaler_shift scaler_shift)
 {
   Mword dummy1, dummy2, dummy3;
   // This code is written in Assembler so that it doesn't require libgcc. It
