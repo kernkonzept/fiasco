@@ -1,53 +1,65 @@
 IMPLEMENTATION[arm]:
 
-inline
+template<typename T, typename V> inline
 void
-atomic_add(Mword *l, Mword value)
+atomic_add(T *mem, V value)
 {
+  static_assert (sizeof(T) == 4 || sizeof(T) == 8,
+                 "invalid size of operand (must be 4 or 8 byte)");
+
+  T val = value;
   Mword tmp, ret;
 
   asm volatile (
-      "1:                             \n"
-      "ldxr    %[v], %[l]             \n"
-      "add     %[v], %[v], %[addval]  \n"
-      "stxr    %w[ret], %[v], %[l]    \n"
-      "cbnz    %w[ret], 1b            \n"
-      : [v] "=&r" (tmp), [ret] "=&r" (ret), [l] "+Q" (*l)
-      : [addval] "r" (value)
+      "1:                                 \n"
+      "ldxr    %[tmp], %[mem]             \n"
+      "add     %[tmp], %[tmp], %[addval]  \n"
+      "stxr    %w[ret], %[tmp], %[mem]    \n"
+      "cbnz    %w[ret], 1b                \n"
+      : [tmp] "=&r" (tmp), [ret] "=&r" (ret), [mem] "+Q" (*mem)
+      : [addval] "r" (val)
       : "cc");
 }
 
-inline
+template<typename T, typename V> inline
 void
-atomic_and(Mword *l, Mword value)
+atomic_and(T *mem, V value)
 {
+  static_assert (sizeof(T) == 4 || sizeof(T) == 8,
+                 "invalid size of operand (must be 4 or 8 byte)");
+
+  T val = value;
   Mword tmp, ret;
 
   asm volatile (
-      "1:                             \n"
-      "ldxr    %[v], %[l]             \n"
-      "and     %[v], %[v], %[andval]  \n"
-      "stxr    %w[ret], %[v], %[l]    \n"
-      "cbnz    %w[ret], 1b            \n"
-      : [v] "=&r" (tmp), [ret] "=&r" (ret), [l] "+Q" (*l)
-      : [andval] "r" (value)
+      "1:                                 \n"
+      "ldxr    %[tmp], %[mem]             \n"
+      "and     %[tmp], %[tmp], %[andval]  \n"
+      "stxr    %w[ret], %[tmp], %[mem]    \n"
+      "cbnz    %w[ret], 1b                \n"
+      : [tmp] "=&r" (tmp), [ret] "=&r" (ret), [mem] "+Q" (*mem)
+      : [andval] "r" (val)
       : "cc");
 }
 
-inline
+template<typename T, typename V> inline
 void
-atomic_or(Mword *l, Mword value)
+atomic_or(T *mem, V value)
 {
+  static_assert (sizeof(T) == 4 || sizeof(T) == 8,
+                 "invalid size of operand (must be 4 or 8 byte)");
+
+  T val = value;
   Mword tmp, ret;
 
   asm volatile (
-      "1:                             \n"
-      "ldxr    %[v], %[l]             \n"
-      "orr     %[v], %[v], %[orval]   \n"
-      "stxr    %w[ret], %[v], %[l]    \n"
-      "cbnz    %w[ret], 1b            \n"
-      : [v] "=&r" (tmp), [ret] "=&r" (ret), [l] "+Q" (*l)
-      : [orval] "r" (value)
+      "1:                                \n"
+      "ldxr    %[tmp], %[mem]            \n"
+      "orr     %[tmp], %[tmp], %[orval]  \n"
+      "stxr    %w[ret], %[tmp], %[mem]   \n"
+      "cbnz    %w[ret], 1b               \n"
+      : [tmp] "=&r" (tmp), [ret] "=&r" (ret), [mem] "+Q" (*mem)
+      : [orval] "r" (val)
       : "cc");
 }
 
