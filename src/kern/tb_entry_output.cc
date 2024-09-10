@@ -18,23 +18,51 @@
 #include "vlog.h"
 
 
-// timeout => x.x{
 static
 void
-format_timeout(String_buffer *buf, Mword us)
+format_timeout(String_buffer *buf, Signed64 us, bool prefix)
 {
-  if (us >= 1000000000)         // =>100s
-    buf->printf(">99s");
-  else if (us >= 10000000)      // >=10s
-    buf->printf("%lus", us/1000000);
-  else if (us >= 1000000)       // >=1s
-    buf->printf("%lu.%lus", us/1000000, (us%1000000)/100000);
-  else if (us >= 10000)         // 10ms
-    buf->printf("%lum", us/1000);
-  else if (us >= 1000)          // 1ms
-    buf->printf("%lu.%lum", us/1000, (us%1000)/100);
+  if (us <= -100'000'000)
+    {
+      buf->printf("<");
+      us = -99'000'000;
+    }
+  else if (us >= 100'000'000)
+    {
+      buf->printf(">");
+      us = 99'000'000;
+    }
+  else if (prefix)
+    buf->printf("=");
+
+  if (us < 0)
+    {
+      us = -us;
+      buf->printf("-");
+    }
+  // avoid 64-bit arithmetic on 32-bit hosts
+  Unsigned32 us32 = static_cast<Unsigned32>(us);
+  if (us32 >= 10'000'000)
+    // 10...99s
+    buf->printf("%us", us32 / 1'000'000);
+  else if (us32 >= 1'000'000)
+    {
+      // 1.0...9.9s
+      Unsigned32 deci_s = us32 / 100'000;
+      buf->printf("%u.%us", deci_s / 10, deci_s % 10);
+    }
+  else if (us32 >= 10'000)
+    // 10...999ms
+    buf->printf("%um", us32 / 1'000);
+  else if (us32 >= 1'000)
+    {
+      // 1.0...9.9ms
+      Unsigned32 deci_ms = us32 / 100;
+      buf->printf("%u.%um", deci_ms / 10, deci_ms % 10);
+    }
   else
-    buf->printf("%luu", us);
+    // 0...999us
+    buf->printf("%uu", us32);
 }
 
 template< typename T >
@@ -310,11 +338,10 @@ formatter_ipc(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidlen)
       if (to.snd.is_absolute())
         {
           // absolute send timeout
-          if (0)
+          if (e->timeout_abs_snd_stored())
             {
-              Unsigned64 end = 0; // FIXME: to.snd.microsecs_abs (e->kclock());
-              format_timeout(buf, static_cast<Mword>(
-                                    end > e->kclock() ? end-e->kclock() : 0));
+              buf->printf("abs=%llu,rel", e->timeout_abs_snd());
+              format_timeout(buf, e->timeout_abs_snd() - e->kclock(), true);
             }
           else
             buf->printf("abs-N/A");
@@ -327,30 +354,20 @@ formatter_ipc(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidlen)
           else if (to.snd.is_zero())
             buf->printf("0");
           else
-            format_timeout(buf, static_cast<Mword>(to.snd.microsecs_rel(0)));
+            format_timeout(buf, to.snd.microsecs_rel(0), false);
         }
     }
-  if (type & L4_obj_ref::Ipc_send
-      && type & L4_obj_ref::Ipc_recv)
+  if (type & L4_obj_ref::Ipc_send && type & L4_obj_ref::Ipc_recv)
     buf->printf("/");
   if (type & L4_obj_ref::Ipc_recv)
     {
       if (to.rcv.is_absolute())
         {
-          if (sizeof(Mword) == 8)
+          if (e->timeout_abs_rcv_stored())
             {
               // absolute receive timeout
-              buf->printf("abs=%llu,rel=", e->timeout_abs_rcv());
-
-              if (e->timeout_abs_rcv() >= e->kclock())
-                format_timeout(buf, static_cast<Mword>(
-                                      e->timeout_abs_rcv() - e->kclock()));
-              else
-                {
-                  buf->printf("-");
-                  format_timeout(buf, static_cast<Mword>(
-                                        e->kclock() - e->timeout_abs_rcv()));
-                }
+              buf->printf("abs=%llu,rel", e->timeout_abs_rcv());
+              format_timeout(buf, e->timeout_abs_rcv() - e->kclock(), true);
             }
           else
             buf->printf("abs-N/A");
@@ -363,7 +380,7 @@ formatter_ipc(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidlen)
           else if (to.rcv.is_zero())
             buf->printf("0");
           else
-            format_timeout(buf, static_cast<Mword>(to.rcv.microsecs_rel(0)));
+            format_timeout(buf, to.rcv.microsecs_rel(0), false);
         }
     }
 }

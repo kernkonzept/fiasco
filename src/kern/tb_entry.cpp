@@ -438,13 +438,13 @@ Tb_entry_ipc::set(Context const *ctx, Mword ip, Syscall_frame *ipc_regs, Utcb *u
   _dbg_id = dbg_id;
 
   _timeout   = ipc_regs->timeout();
-  set_abs_timeout(utcb);
   _tag       = ipc_regs->tag();
   // hint for gcc
   Mword tmp0 = utcb->values[0];
   Mword tmp1 = utcb->values[1];
   _dword[0]  = tmp0;
   _dword[1]  = tmp1;
+  set_abs_timeout(utcb);
 }
 
 PUBLIC inline
@@ -624,15 +624,37 @@ Tb_entry_ke_bin::set_buf(unsigned i, char c)
 //---------------------------------------------------------------------------
 IMPLEMENTATION[32bit]:
 
-PUBLIC inline void Tb_entry_ipc::set_abs_timeout(Utcb *)
+PUBLIC inline void Tb_entry_ipc::set_abs_timeout(Utcb *utcb)
 {
-  // ignore absolute timeouts due to lack of space
+  // store absolute timeouts in _dword[0,1] iff send phase omitted
+  if (EXPECT_FALSE(_timeout.rcv.is_absolute()
+                   && !(ipc_type() & L4_obj_ref::Ipc_send)))
+    {
+      Unsigned64 to_abs_rcv = _timeout.rcv.microsecs_abs(utcb);
+      _dword[0] = to_abs_rcv;
+      _dword[1] = to_abs_rcv >> 32;
+    }
 }
+
+PUBLIC static constexpr
+bool
+Tb_entry_ipc::timeout_abs_snd_stored()
+{ return false; }
+
+PUBLIC inline
+bool
+Tb_entry_ipc::timeout_abs_rcv_stored()
+{ return !(ipc_type() & L4_obj_ref::Ipc_send); }
+
+PUBLIC static constexpr
+Unsigned64
+Tb_entry_ipc::timeout_abs_snd()
+{ return 0ULL; }
 
 PUBLIC inline
 Unsigned64
 Tb_entry_ipc::timeout_abs_rcv() const
-{ return 0ULL; }
+{ return (Unsigned64{_dword[1]} << 32) | _dword[0]; }
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION[64bit]:
@@ -644,6 +666,21 @@ Tb_entry_ipc::set_abs_timeout(Utcb *utcb)
   if (_timeout.rcv.is_absolute())
     _to_abs_rcv = _timeout.rcv.microsecs_abs(utcb);
 }
+
+PUBLIC static constexpr
+bool
+Tb_entry_ipc::timeout_abs_snd_stored()
+{ return false; }
+
+PUBLIC static inline
+bool
+Tb_entry_ipc::timeout_abs_rcv_stored()
+{ return true; }
+
+PUBLIC static constexpr
+Unsigned64
+Tb_entry_ipc::timeout_abs_snd()
+{ return 0ULL; }
 
 PUBLIC inline
 Unsigned64
