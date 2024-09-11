@@ -89,8 +89,6 @@ public:
     Caps_start           = 0xf5000000,
     Caps_end             = 0xfd000000,
     Utcb_ptr_page        = 0xffffd000,
-    // don't care about caches here, because arm uses a register on MP
-    utcb_ptr_align       = Tl_math::Ld<sizeof(void*)>::Res,
   };
 
 };

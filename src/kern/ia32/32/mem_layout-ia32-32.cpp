@@ -17,11 +17,6 @@ public:
 
   enum : Mword
   {
-    utcb_ptr_align    = Tl_math::Ld<64>::Res,    // 64byte cachelines
-  };
-
-  enum : Mword
-  {
     Utcb_addr         = 0xbff00000,    ///< % 4KB   UTCB map address
     Kip_auto_map      = 0xbfff2000,    ///< % 4KB
     User_max          = 0xbfffffff,

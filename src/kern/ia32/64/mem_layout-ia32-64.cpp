@@ -17,11 +17,6 @@ public:
 
   enum : Mword
   {
-    utcb_ptr_align    = Tl_math::Ld<64>::Res,    // 64byte cachelines
-  };
-
-  enum : Mword
-  {
     Kentry_start      = 0xffff810000000000UL, ///< 512GB slot 258
     Kentry_cpu_page   = 0xffff817fffffc000UL, ///< last 16KB in slot 258
 

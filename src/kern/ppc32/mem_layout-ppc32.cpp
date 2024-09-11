@@ -19,7 +19,6 @@ public:
     User_max             = 0xefffffff,
     Tcbs                 = 0xc0000000,
     Utcb_addr            = User_max + 1 - 0x2000,
-    utcb_ptr_align       = Tl_math::Ld<sizeof(void*)>::Res,
     Tcbs_end             = 0xe0000000,
     __free_1_start       = 0xec000000,
     __free_1_end         = 0xed000000,
