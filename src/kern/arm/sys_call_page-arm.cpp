@@ -10,6 +10,7 @@ void
 Sys_call_page::set_utcb_get_code(Unsigned32 *sys_calls)
 {
   unsigned offset = 0;
+  // r0 = [Mem_layout::Utcb_ptr_page]
   sys_calls[offset++] = 0xe3e00a02; // mvn r0, #8192
   sys_calls[offset++] = 0xe5100fff; // ldr r0, [r0, -#4095]
   sys_calls[offset++] = 0xe1a0f00e; // mov pc, lr

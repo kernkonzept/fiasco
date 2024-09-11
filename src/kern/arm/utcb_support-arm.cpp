@@ -3,6 +3,7 @@ IMPLEMENTATION [arm && !arm_v6plus]:
 
 #include "mem_layout.h"
 
+// See also Sys_call_page::set_utcb_get_code().
 IMPLEMENT inline NEEDS["mem_layout.h"]
 void
 Utcb_support::current(User_ptr<Utcb> const &utcb)
