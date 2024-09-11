@@ -90,10 +90,10 @@ Kip_init::init_kip_clock()
 
   K *k = reinterpret_cast<K *>(Kip::k());
 
-  *reinterpret_cast<Mword*>(k->b + 0x970) = Timer::get_scaler_ts_to_us();
-  *reinterpret_cast<Mword*>(k->b + 0x978) = Timer::get_shift_ts_to_us();
-  *reinterpret_cast<Mword*>(k->b + 0x9f0) = Timer::get_scaler_ts_to_ns();
-  *reinterpret_cast<Mword*>(k->b + 0x9f8) = Timer::get_shift_ts_to_ns();
+  *reinterpret_cast<Mword*>(k->b + 0x970) = Timer::get_scaler_shift_ts_to_us().scaler;
+  *reinterpret_cast<Mword*>(k->b + 0x978) = Timer::get_scaler_shift_ts_to_us().shift;
+  *reinterpret_cast<Mword*>(k->b + 0x9f0) = Timer::get_scaler_shift_ts_to_ns().scaler;
+  *reinterpret_cast<Mword*>(k->b + 0x9f8) = Timer::get_scaler_shift_ts_to_ns().shift;
 
   memcpy(k->b + 0x900, kip_time_fn_read_us,
          kip_time_fn_read_us_end - kip_time_fn_read_us);

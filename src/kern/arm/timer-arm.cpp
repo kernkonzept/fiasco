@@ -6,21 +6,22 @@ INTERFACE [arm]:
 EXTENSION class Timer
 {
   friend class Kip_test;
+  struct Scaler_shift
+  {
+    Unsigned32 scaler;
+    Unsigned32 shift;
+  };
 
 public:
   static Irq_chip::Mode irq_mode();
-  static Unsigned32 get_scaler_ts_to_ns() { return _scaler_ts_to_ns; }
-  static Unsigned32 get_shift_ts_to_ns() { return _shift_ts_to_ns; }
-  static Unsigned32 get_scaler_ts_to_us() { return _scaler_ts_to_us; }
-  static Unsigned32 get_shift_ts_to_us() { return _shift_ts_to_us; }
+  static Scaler_shift get_scaler_shift_ts_to_ns() { return _scaler_shift_ts_to_ns; }
+  static Scaler_shift get_scaler_shift_ts_to_us() { return _scaler_shift_ts_to_us; }
 
 private:
   static inline void update_one_shot(Unsigned64 wakeup);
   static Unsigned64 time_stamp();
-  static Global_data<Unsigned32> _scaler_ts_to_ns;
-  static Global_data<Unsigned32> _scaler_ts_to_us;
-  static Global_data<Unsigned32> _shift_ts_to_ns;
-  static Global_data<Unsigned32> _shift_ts_to_us;
+  static Global_data<Scaler_shift> _scaler_shift_ts_to_ns;
+  static Global_data<Scaler_shift> _scaler_shift_ts_to_us;
 };
 
 // ------------------------------------------------------------------------
@@ -52,10 +53,8 @@ IMPLEMENTATION [arm]:
 #include "watchdog.h"
 #include "warn.h"
 
-DEFINE_GLOBAL Global_data<Unsigned32> Timer::_scaler_ts_to_ns;
-DEFINE_GLOBAL Global_data<Unsigned32> Timer::_scaler_ts_to_us;
-DEFINE_GLOBAL Global_data<Unsigned32> Timer::_shift_ts_to_ns;
-DEFINE_GLOBAL Global_data<Unsigned32> Timer::_shift_ts_to_us;
+DEFINE_GLOBAL Global_data<Timer::Scaler_shift> Timer::_scaler_shift_ts_to_ns;
+DEFINE_GLOBAL Global_data<Timer::Scaler_shift> Timer::_scaler_shift_ts_to_us;
 
 IMPLEMENT_DEFAULT
 Unsigned64
@@ -82,12 +81,12 @@ Timer::update_timer(Unsigned64 wakeup)
 PUBLIC static inline NEEDS[Timer::timer_value_to_time]
 Unsigned64
 Timer::ts_to_ns(Unsigned64 ts)
-{ return timer_value_to_time(ts, _scaler_ts_to_ns, _shift_ts_to_ns); }
+{ return timer_value_to_time(ts, _scaler_shift_ts_to_ns); }
 
 PUBLIC static inline NEEDS[Timer::timer_value_to_time]
 Unsigned64
 Timer::ts_to_us(Unsigned64 ts)
-{ return timer_value_to_time(ts, _scaler_ts_to_us, _shift_ts_to_us); }
+{ return timer_value_to_time(ts, _scaler_shift_ts_to_us); }
 
 /**
  * Determine scaling factor and shift value for transforming a time stamp
@@ -112,13 +111,13 @@ Timer::ts_to_us(Unsigned64 ts)
 PRIVATE static
 void
 Timer::freq_to_scaler_shift(Unsigned64 period, Unsigned32 freq,
-                            Unsigned32 *scaler, Unsigned32 *shift)
+                            Scaler_shift *scaler_shift)
 {
   Mword s = 0;
   while ((period / (1 << s)) / freq > 0)
     ++s;
-  *scaler = (((1ULL << 32) / (1ULL << s)) * period) / freq;
-  *shift = s;
+  scaler_shift->scaler = (((1ULL << 32) / (1ULL << s)) * period) / freq;
+  scaler_shift->shift = s;
 }
 
 // ------------------------------------------------------------------------
@@ -177,7 +176,7 @@ IMPLEMENTATION [arm && 32bit]:
 
 PRIVATE static inline
 Unsigned64
-Timer::timer_value_to_time(Unsigned64 v, Mword scaler, Mword shift)
+Timer::timer_value_to_time(Unsigned64 v, Scaler_shift scaler_shift)
 {
   Mword lo = v & 0xffffffff;
   Mword hi = v >> 32;
@@ -206,7 +205,7 @@ Timer::timer_value_to_time(Unsigned64 v, Mword scaler, Mword shift)
 #endif
        : "+r"(lo), "+r"(hi),
          "=&r"(dummy1), "=&r"(dummy2), "=&r"(dummy3), "=&r"(dummy4)
-       : [scaler]"r"(scaler), [shift]"r"(shift)
+       : [scaler]"r"(scaler_shift.scaler), [shift]"r"(scaler_shift.shift)
        : "cc");
   return (Unsigned64{hi} << 32) | lo;
 }
@@ -216,7 +215,7 @@ IMPLEMENTATION [arm && 64bit]:
 
 PRIVATE static inline
 Unsigned64
-Timer::timer_value_to_time(Unsigned64 v, Mword scaler, Mword shift)
+Timer::timer_value_to_time(Unsigned64 v, Scaler_shift scaler_shift)
 {
   Mword dummy1, dummy2, dummy3;
   // This code is written in Assembler so that it doesn't require libgcc. It
@@ -231,7 +230,7 @@ Timer::timer_value_to_time(Unsigned64 v, Mword scaler, Mword shift)
        "lsl     %1, %1, %2              \n\t"
        "orr     %0, %0, %1              \n\t"
        : "+r"(v), "=&r"(dummy1), "=&r"(dummy2), "=&r"(dummy3)
-       : [scaler]"r"(scaler), [shift]"r"(shift)
+       : [scaler]"r"(scaler_shift.scaler), [shift]"r"(scaler_shift.shift)
        : "cc");
   return v;
 }

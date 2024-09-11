@@ -67,15 +67,13 @@ Timer::init(Cpu_number cpu)
   if (cpu == Cpu_number::boot_cpu())
     {
       _freq0 = frequency();
-      _interval = Unsigned64{_freq0} * Config::Scheduler_granularity / 1000000;
+      _interval = Unsigned64{_freq0} * Config::Scheduler_granularity / 1'000'000;
       printf("ARM generic timer: freq=%ld interval=%ld cnt=%lld\n",
              _freq0.unwrap(), _interval.unwrap(), Gtimer::counter());
       assert(_freq0);
 
-      freq_to_scaler_shift(1000000000, _freq0,
-                           &_scaler_ts_to_ns, &_shift_ts_to_ns);
-      freq_to_scaler_shift(1000000, _freq0,
-                           &_scaler_ts_to_us, &_shift_ts_to_us);
+      freq_to_scaler_shift(1'000'000'000, _freq0, &_scaler_shift_ts_to_ns);
+      freq_to_scaler_shift(1'000'000, _freq0, &_scaler_shift_ts_to_us);
     }
   else if (_freq0 != frequency())
     {
