@@ -1098,10 +1098,10 @@ Iommu::wait_cmd_queue(Cmd_queue::Index wait_index)
 /**
  * Lookup and optionally allocate stream table entry for stream ID.
  *
+ * \pre stream_id < num_of_stream_ids()
+ *
  * \param stream_id  The stream ID to lookup.
  * \param alloc      Allocate second-level stream table.
- *
- * \pre stream_id < num_of_stream_ids()
  */
 PRIVATE
 Iommu::Ste *
