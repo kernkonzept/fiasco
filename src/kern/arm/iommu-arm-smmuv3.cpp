@@ -973,27 +973,25 @@ private:
 
   /**
    * Check whether domain is bound on the given Iommu.
-   *
-   * \pre The lock of iommu must be held.
    */
   bool is_bound(Iommu const *iommu) const;
 
   /**
    * Adds a binding for the given Iommu.
-   *
-   * \pre The lock of iommu must be held.
    */
   bool add_binding(Iommu const *iommu);
 
   /**
    * Deletes a binding for the given Iommu.
-   *
-   * \pre The lock of iommu must be held.
    */
   Unsigned32 del_binding(Iommu const *iommu);
 
-  // Address space identifier of this domain. Allocated when the domain is
-  // bound for the first time, freed only on destruction.
+  /// Coordinates concurrent operations on this domain (context descriptor
+  /// initialization, tracking of bindings).
+  mutable Spin_lock<> _lock;
+
+  /// Address space identifier of this domain. Allocated when the domain is
+  /// bound for the first time, freed only on destruction.
   Iommu::Asid _asid = Iommu::Invalid_asid;
 
   /**
@@ -1696,6 +1694,7 @@ IMPLEMENT inline
 bool
 Iommu_domain::add_binding(Iommu const *iommu)
 {
+  auto g = lock_guard(_lock);
 
   if (EXPECT_FALSE(_bindings[iommu->_idx] >= Max_bindings_per_iommu))
     return false;
@@ -1708,6 +1707,8 @@ IMPLEMENT inline
 Unsigned32
 Iommu_domain::del_binding(Iommu const *iommu)
 {
+  auto g = lock_guard(_lock);
+
   if (EXPECT_TRUE(_bindings[iommu->_idx] > 0))
     {
       auto new_count = _bindings[iommu->_idx] - 1;
@@ -1716,6 +1717,7 @@ Iommu_domain::del_binding(Iommu const *iommu)
     }
   else
     {
+      g.reset(); // better not hold the lock while printing
       WARNX(Error, "IOMMU: Attempt to delete binding while no bindings exist.");
       return 0;
     }
@@ -1775,6 +1777,8 @@ IMPLEMENT
 Iommu::Cd const *
 Iommu_domain::get_or_init_cd(unsigned ias, unsigned virt_addr_size, Address pt_phys_addr)
 {
+  auto g = lock_guard(_lock);
+
   // Already initialized?
   if (_cd.v())
     return &_cd;
