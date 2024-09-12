@@ -820,6 +820,67 @@ private:
   };
 
   /**
+   * A stream table entry (STE) can be in one of three states: Invalid,
+   * Exclusive, or Valid. To bind or unbind a DMA domain to/from an STE,
+   * we transition the STE into Exclusive state. Then we have exclusive
+   * access to the STE and no one else can modify the STE until we are
+   * done with configuring (transition to Valid state) or deconfiguring
+   * (transition to Invalid state) the STE.
+   *
+   * Possible state transitions:
+   *
+   * `Invalid`      -- `acquire_ste()`          -> `Exclusive`
+   *
+   * `Valid`        -- `acquire_ste()`          -> `Exclusive`
+   * `Valid`        -- `acquire_ste_if_bound()` -> `Exclusive`
+   *
+   * `Exclusive`    -- `configure_ste()`        -> `Valid`
+   * `Exclusive`    -- `release_ste()`          -> `Invalid`
+   *
+   * \note If necessary, the STE state tracking can be extended to support STE
+   *       entries with abort semantics. For that represent the Exclusive state
+   *       with an intermediate value `config != 0` where the `Config_enable`
+   *       flag is not set. Then the condition for Invalid state becomes
+   *       `!(config == 0 || (config & Config_enable))` instead of `config == 0`.
+   *       Since `config` and `valid` are in the same machine word, when we
+   *       subsequently set `valid == 1` we can atomically also set `config` to
+   *       the actually desired value.
+   */
+  enum class Ste_state
+  {
+    /**
+     * The STE can be acquired by CASing config to a `value != 0`.
+     *
+     * Fields: `valid == 0 && config == 0`
+     */
+    Invalid,
+
+    /**
+     * The STE exclusively belongs to an owner, i.e. cannot be modified by
+     * anyone else until the owner transitions the entry into `Valid` or
+     * `Invalid` state.
+     *
+     * Fields: `valid == 0 && config != 0`
+     */
+    Exclusive,
+
+    /**
+     * The STE can be acquired by invalidating it, i.e. clearing its valid flag
+     * while holding `_ste_invalidate_lock`.
+     *
+     * Fields: `valid == 1`
+     */
+    Valid,
+  };
+
+  enum class Acquire_result
+  {
+    Acquired,
+    Invalidated,
+    Busy,
+  };
+
+  /**
    * Wrapper for a pointer to an Ste in an SMMU stream table.
    *
    * The wrapper ensures that all accesses to the Ste are done with volatile
@@ -848,6 +909,35 @@ private:
       for (unsigned i = 0; i < cxx::size(src.raw); i++)
         atomic_store(&_ste->raw[i], src.raw[i]);
     }
+
+    /// Transition from `Exclusive` -> `Valid`
+    inline void atomic_set_valid()
+    { atomic_or(&_ste->raw[0], Ste::v_bfm_t::Mask); }
+
+    /// Transition from `Valid` -> `Exclusive`
+    inline void atomic_set_invalid()
+    { atomic_and(&_ste->raw[0], ~Ste::v_bfm_t::Mask); }
+
+    /// Only the fields stored in `Ste::raw[0]` are valid in the return Ste.
+    inline Ste atomic_read_status()
+    {
+      Ste ste;
+      ste.raw[0] = atomic_load(&_ste->raw[0]);
+      return ste;
+    }
+
+    /// Acquire the STE (set config to enable, v must be false).
+    /// Transition from `Invalid` -> `Exclusive`
+    inline bool atomic_acquire_ste(Ste const &old)
+    {
+      return cas(&_ste->raw[0], old.raw[0],
+                 Ste::config_bfm_t::set(old.raw[0], Ste::Config_enable));
+    }
+
+    /// Release the STE (set config to disable, v must be false).
+    /// Transition from `Exclusive` -> `Invalid`
+    inline void atomic_release_ste()
+    { atomic_and(&_ste->raw[0], ~Ste::config_bfm_t::Mask); }
 
     constexpr Ste *unsafe_ptr()
     { return _ste; }
@@ -896,10 +986,6 @@ private:
   Unsigned8 _num_asid_bits;
   /// Number of implemented stream ID bits.
   Unsigned8 _num_stream_id_bits;
-
-  /// Coordinates concurrent operations on this SMMU (stream table management,
-  /// domain configuration and partly TLB invalidation).
-  Spin_lock<> _lock;
   /// SMMU supports generation of WFE wake-up events.
   bool _support_wfe;
 
@@ -918,6 +1004,13 @@ private:
   /// Coordinates concurrent allocation of second-level stream tables (protects
   /// _strtab and _strtab_l2_alloc_cnt).
   Spin_lock<> _strtab_l2_alloc_lock;
+
+  /// Protect deconfiguring of stream table entry, we have to atomically check
+  /// the entry refers to the expected domain and then if it matches clear the
+  /// valid bit. Since the valid bit and the TTB are not in the same machine
+  /// word, we cannot solely rely on CAS here (for stage 1 tables it would be
+  /// possible, because S1ContextPtr is in the same word as the valid bit).
+  Spin_lock<> _ste_invalidate_lock;
 
   /// Command queue.
   using Cmd_queue = Write_queue<Cmd, Cmdq_base, Cmdq_prod, Cmdq_cons>;
@@ -972,7 +1065,17 @@ private:
   };
 
   /**
+   * Use the domain lock as a synchronization primitive to ensure that we
+   * observe the most up-to-date version of the domain (important for example
+   * for bindings and concurrent TLB flushes) and other CPUs also see our
+   * previous changes.
+   */
+  void sync_with_domain_state() const;
+
+  /**
    * Check whether domain is bound on the given Iommu.
+   *
+   * \note This function does not enforce any memory ordering!
    */
   bool is_bound(Iommu const *iommu) const;
 
@@ -1226,13 +1329,171 @@ Iommu::iter_ste_tables(Unsigned32 *stream_id, Unsigned32 *table_size) const
   return Ste_ptr(nullptr);
 }
 
+/// Determine state that the combination of the STE fields `valid` and `config`
+/// corresponds to.
+PRIVATE static inline
+Iommu::Ste_state
+Iommu::ste_state(bool valid, Unsigned8 config)
+{
+  if (valid)
+    {
+      // See the note on "STE entries with abort semantics" at Ste_state.
+      assert(config != 0);
+      return Ste_state::Valid;
+    }
+  else
+    return config == 0 ? Ste_state::Invalid : Ste_state::Exclusive;
+}
+
+/// Determine state that STE is currently in.
+PRIVATE static inline
+Iommu::Ste_state
+Iommu::ste_state(Ste_ptr ste_ptr)
+{
+  Ste ste = ste_ptr.atomic_read_status();
+  return ste_state(ste.v(), ste.config());
+}
+
+/**
+ * Acquire exclusive access to a stream table entry.
+ *
+ * Only STEs in `Invalid` or `Valid` can be acquired.
+ *
+ * The acquire operation will fail if the entry is in `Exclusive` state, i.e.
+ * someone else currently has exclusive access to the entry. We must not wait
+ * for that current owner to release the entry, because that would have the
+ * potential to result in deadlock due to priority inversion: High-priority
+ * thread waiting for low-priority thread that has acquired an STE the
+ * high-priority thread wants.
+ *
+ * \param ste  Stream table entry to acquire.
+ *
+ * \retval `Acquire_result::Acquired` if the STE was acquired, transitioning it
+ *         from `Invalid` to `Exclusive` state. The caller must subsequently
+ *         either configure or release the STE.
+ * \retval `Acquire_result::Invalidated` if the STE was acquired, transitioning
+ *         it from `Valid` to `Exclusive` state. The caller must subsequently
+ *         invoke `flush_ste()` on the STE to make the invalidation visible to
+ *         the SMMU. Then it must either configure or release the STE.
+ * \retval `Acquire_result::Exclusive` if the STE could not be acquired since it
+ *         was a already in `Exclusive` state.
+ */
+PRIVATE
+Iommu::Acquire_result
+Iommu::acquire_ste(Ste_ptr ste)
+{
+  // The value we read here might be out-of-date if user-space does concurrent
+  // bind/unbinds on the same stream id. If such a stale STE state is Exclusive,
+  // or if the subsequent recheck (CAS for Invalid and _ste_invalidate_lock for
+  // Valid) fails, we return Busy.
+  Ste old = ste.atomic_read_status();
+
+  Ste_state state = ste_state(old.v(), old.config());
+  // Usually the STE we want to acquire is going to be Invalid.
+  if (EXPECT_TRUE(state == Ste_state::Invalid))
+    {
+      if (ste.atomic_acquire_ste(old))
+        // Acquired an invalid STE.
+        return Acquire_result::Acquired;
+      else
+        // Someone modified the STE in the meantime.
+        return Acquire_result::Busy;
+    }
+  // Acquire Valid STE by invalidating it.
+  else if (state == Ste_state::Valid)
+    {
+      auto g = lock_guard(_ste_invalidate_lock);
+
+      // Recheck under lock that the STE is still in Valid state.
+      if (ste_state(ste) != Ste_state::Valid)
+        // Someone modified the STE in the meantime.
+        return Acquire_result::Busy;
+
+      // Invalidate and thus acquire the STE.
+      ste.atomic_set_invalid();
+      return Acquire_result::Invalidated;
+    }
+  else
+    // Cannot acquire an STE in Exclusive state.
+    return Acquire_result::Busy;
+}
+
+/**
+ * Acquire exclusive access to STE if it is bound to the given domain.
+ *
+ * \retval false if the STE was not acquired.
+ * \retval true if STE was acquired. The caller must subsequently release the STE.
+ */
+PRIVATE
+bool
+Iommu::acquire_ste_if_bound(Ste_ptr ste, Iommu_domain const &domain,
+                            Address pt_phys_addr)
+{
+  if (ste_state(ste) != Ste_state::Valid)
+    // Not a valid STE!
+    return false;
+
+  // Once we observe that an STE is in Valid state, and we hold the
+  // _ste_invalidate_lock while observing that, we can be sure that no one else
+  // can change this STE (see also acquire_ste()).
+  auto g = lock_guard(_ste_invalidate_lock);
+
+  // Recheck under lock that the STE is still in Valid state.
+  if (EXPECT_FALSE(ste_state(ste) != Ste_state::Valid))
+    // Someone modified the STE in the meantime.
+    return false;
+
+  // Ensure that the above valid check is done before the following domain
+  // check, pairs with the Mem::mp_wmb() in release_ste().
+  Mem::mp_rmb();
+
+  // Only acquire if domain matches, the assumption is we are
+  // currently bound to it and want to tear down our binding.
+  if (!is_domain_bound_to_ste(ste, domain, pt_phys_addr))
+    // Owned by someone else, no need to acquire.
+    return false;
+
+  // Invalidate and thus acquire the STE.
+  ste.atomic_set_invalid();
+  return true;
+}
+
+/**
+ * Release exclusive ownership of STE, transitioning it from `Exclusive` to
+ * `Invalid` state.
+ *
+ * \pre STE is in `Exclusive` state, owned by the caller, and has been flushed if
+ *      the caller has acquired it from `Valid` state.
+ */
 PRIVATE
 void
-Iommu::invalidate_ste(Ste_ptr ste, Unsigned32 stream_id)
+Iommu::release_ste(Ste_ptr ste)
 {
-  // Mark stream table entry as invalid and ensure the write is observable by
-  // the SMMU.
-  ste->v() = 0;
+  // Must not be valid at this point, must only write invalid STEs (in addition,
+  // flush must have been completed), otherwise the SMMU might observe an
+  // STE in illegal/inconsistent state.
+  assert(!ste->v());
+
+  // Erase TTB or S1ContextPtr.
+  if (Iommu::Stage2)
+    ste->s2_ttb() = 0;
+  else
+    ste->s1_context_ptr() = 0;
+
+  // Ensure the visibility of the nulled TTB/ContextPtr is ordered to other CPUs
+  // before the following write that releases the STE.
+  Mem::mp_wmb();
+
+  // Finally release the STE.
+  ste.atomic_release_ste();
+}
+
+PRIVATE
+void
+Iommu::flush_ste(Ste_ptr ste, Unsigned32 stream_id)
+{
+  // Ensure that the write that marked the stream table entry as invalid is
+  // observable by the SMMU.
   make_observable_before_cmd(ste.unsafe_ptr());
   // Issue stream table entry invalidation command and wait for completion.
   send_cmd_sync(Cmd::cfgi_ste(stream_id, true));
@@ -1262,6 +1523,8 @@ Iommu::delete_binding_and_invalidate_tlb(Iommu_domain &domain)
 /**
  * Ensure that all changes are observable by the SMMU (must be followed by
  * another write operation which is observed by the SMMU).
+ *
+ * \note Ensure the same for other CPUs.
  */
 PRIVATE template<typename T> static inline
 void
@@ -1276,6 +1539,9 @@ Iommu::make_observable(T *start, T *end = nullptr)
 /**
  * Ensure the given memory area is observable by the SMMU before subsequently
  * issued commands.
+ *
+ * \note Ensures the same for other CPUs, after posting a command to the command
+ *       queue.
  */
 PRIVATE template<typename T> static inline
 void
@@ -1291,8 +1557,12 @@ Iommu::make_observable_before_cmd(T *start, T *end = nullptr)
 /**
  * Bind DMA domain to stream ID.
  *
+ * \pre CPU lock must not be held.
  * \pre The arguments `virt_addr_size`, `start_level` and `pt_phys_addr` must
  *      stay constant per domain.
+ * \pre The caller must ensure that the `Dmar_space` belonging to the
+ *      `Iommu_domain` object cannot be deleted, for example by holding
+ *      a counted reference to it.
  *
  * \param stream_id       Stream ID to bind the DMA domain to.
  * \param domain          DMA domain to bind.
@@ -1303,14 +1573,15 @@ Iommu::make_observable_before_cmd(T *start, T *end = nullptr)
  *
  * \retval  0, on success.
  * \retval <0, on failure.
+ *
+ * \note Concurrent operations on the same stream id are not supported. If
+ *       user-space does that, the kernel might respond with L4_err::EBusy.
  */
 PUBLIC
 int
 Iommu::bind(Unsigned32 stream_id, Iommu_domain &domain, Address pt_phys_addr,
             unsigned virt_addr_size, unsigned start_level)
 {
-  auto g = lock_guard(_lock);
-
   if (stream_id >= num_of_stream_ids())
     return -L4_err::ERange;
 
@@ -1318,15 +1589,26 @@ Iommu::bind(Unsigned32 stream_id, Iommu_domain &domain, Address pt_phys_addr,
   if (!ste)
     return -L4_err::ENomem;
 
+  // Ensure the domain has an ASID allocated, so that a TLB flush executed
+  // concurrently from a remote CPU works as expected!
+  domain.get_or_alloc_asid();
+
+  // Increase binding count before setting up the corresponding stream table
+  // entry at the SMMU, so that TLB flushes on other CPUs see that the Domain
+  // is bound on the SMMU.
   if (!domain.add_binding(this))
     return -L4_err::ENomem;
 
-  if (!configure_domain(ste, stream_id, domain, pt_phys_addr,
-                        virt_addr_size, start_level))
+  if (int err = configure_ste(ste, stream_id, domain, pt_phys_addr,
+                              virt_addr_size, start_level))
     {
       delete_binding_and_invalidate_tlb(domain);
-      return -L4_err::ENomem;
+      return err;
     }
+
+  // Additional domain sync to ensure that STE is visible for unlocked access in
+  // Iommu::remove().
+  domain.sync_with_domain_state();
 
   return 0;
 }
@@ -1334,24 +1616,30 @@ Iommu::bind(Unsigned32 stream_id, Iommu_domain &domain, Address pt_phys_addr,
 /**
  * Unbind DMA domain from stream ID.
  *
+ * \pre CPU lock must not be held.
+ * \pre The caller must ensure that the `Dmar_space` belonging to the
+ *      `Iommu_domain` object cannot be deleted, for example by holding
+ *      a counted reference to it.
+ *
  * \param stream_id       Stream ID to unbind the DMA domain from.
  * \param domain          DMA domain to unbind.
  * \param pt_phys_addr    Physical address of DMA domain's page table.
  *
  * \retval  0, on success.
  * \retval <0, on failure.
+ *
+ * \note Concurrent operations on the same stream id are not supported. If
+ *       user-space does that, the kernel might respond with L4_err::EBusy.
  */
 PUBLIC
 int
 Iommu::unbind(Unsigned32 stream_id, Iommu_domain &domain, Address pt_phys_addr)
 {
-  auto g = lock_guard(_lock);
-
   if (stream_id >= num_of_stream_ids())
     return -L4_err::ERange;
 
   Ste_ptr ste = lookup_stream_table_entry(stream_id, false);
-  if (ste && deconfigure_domain(ste, stream_id, domain, pt_phys_addr))
+  if (ste && deconfigure_ste(ste, stream_id, domain, pt_phys_addr) >= 0)
     delete_binding_and_invalidate_tlb(domain);
 
   // Regardless of whether the deconfiguration was successful, i.e. whether the
@@ -1361,6 +1649,11 @@ Iommu::unbind(Unsigned32 stream_id, Iommu_domain &domain, Address pt_phys_addr)
 
 /**
  * Remove all stream ID bindings of this DMA domain.
+ *
+ * \pre CPU lock must not be held.
+ * \pre The caller must ensure that the `Dmar_space` belonging to the
+ *      `Iommu_domain` object cannot be deleted, for example by holding
+ *      a counted reference to it.
  *
  * \param domain        DMA domain to remove.
  * \param pt_phys_addr  Physical address of DMA domain's page table.
@@ -1374,7 +1667,9 @@ PUBLIC
 void
 Iommu::remove(Iommu_domain &domain, Address pt_phys_addr)
 {
-  auto g = lock_guard(_lock);
+  // Ensure we see the up-to-date domain state and STEs, assuming that no new
+  // bindings are created for the domain concurrently.
+  domain.sync_with_domain_state();
 
   if (!domain.is_bound(this))
     return;
@@ -1385,7 +1680,18 @@ Iommu::remove(Iommu_domain &domain, Address pt_phys_addr)
       for (unsigned i = 0; i < table_size; i++)
         {
           Ste_ptr ste = ste_table.at(i);
-          if (!deconfigure_domain(ste, base_stream_id + i, domain, pt_phys_addr))
+          // Optimization: Check if domain is bound to stream table entry
+          //               without having acquired exclusive access. This is
+          //               safe to do, since we do not guarantee to remove
+          //               bindings that are created concurrently.
+          if (!is_domain_bound_to_ste(ste, domain, pt_phys_addr))
+            continue;
+
+          // If the pre-check indicated that the domain is bound, try to
+          // deconfigure the STE from the domain. Deconfigure acquires exclusive
+          // access and rechecks if the stream table entry is bound to the
+          // domain.
+          if (deconfigure_ste(ste, base_stream_id + i, domain, pt_phys_addr) < 0)
             continue;
 
           if (delete_binding_and_invalidate_tlb(domain))
@@ -1631,16 +1937,27 @@ IMPLEMENT
 void
 Iommu::tlb_invalidate_domain(Iommu_domain const &domain)
 {
+  // No additional memory barrier necessary to ensure that page tables are
+  // visible to the SMMU:
+  // - SMMU is coherent: send_cmd_sync() already issues a Mem::wmb().
+  // - SMMU is non-coherent: Pte_iommu::write_back() cleaned the cache.
+
+  // Ensure that we see all bindings that are affected by our page table changes
+  // and that all later created bindings, or rather the involved CPUs and
+  // SMMUs, see our page table changes, so that missing them is not an issue,
+  // because no flush is necessary as they already start non-stale. For that the
+  // same "sync operation" is done between incrementing the binding counter and
+  // setting up the STE for the binding.
+  domain.sync_with_domain_state();
+
   for (Iommu &iommu : Iommu::iommus())
     {
-      auto g = lock_guard(iommu._lock);
       // Only invalidate TLB for the SMMUs this domain is bound to.
       if (domain.is_bound(&iommu))
         {
           auto asid = domain.get_asid();
-          // Release IOMMU lock, as executing an invalidation command does not
-          // require holding the lock.
-          g.reset();
+
+          // OPTIMIZE: Wait for completion on all SMMUs in parallel?
           iommu.tlb_invalidate_asid(asid);
         }
     }
@@ -1680,7 +1997,19 @@ IMPLEMENT
 void
 Iommu::tlb_flush()
 {
+  // No additional memory barrier necessary to ensure that page tables are
+  // visible to the SMMU:
+  // - SMMU is coherent: send_cmd_sync() already issues a Mem::wmb().
+  // - SMMU is non-coherent: Pte_iommu::write_back() cleaned the cache.
+
   send_cmd_sync(Cmd::tlbi_nsnh_all());
+}
+
+IMPLEMENT inline
+void
+Iommu_domain::sync_with_domain_state() const
+{
+  auto g = lock_guard(_lock);
 }
 
 IMPLEMENT inline
@@ -1723,20 +2052,47 @@ Iommu_domain::del_binding(Iommu const *iommu)
     }
 }
 
+/**
+ * Configure stream table entry for the given domain.
+ *
+ * \retval 0        on success
+ * \retval -EBusy   if unable to acquire exclusive access STE
+ * \retval -ENomem  if unable to allocate ASID for domain
+ */
 PRIVATE
-bool
-Iommu::configure_domain(Ste_ptr ste, Unsigned32 stream_id, Iommu_domain &domain,
-                        Address pt_phys_addr, unsigned virt_addr_size,
-                        unsigned start_level)
+int
+Iommu::configure_ste(Ste_ptr ste, Unsigned32 stream_id, Iommu_domain &domain,
+                     Address pt_phys_addr, unsigned virt_addr_size,
+                     unsigned start_level)
 {
-  // Stream table entry is already valid, invalidate it first to ensure the SMMU
-  // does not see an illegal/inconsistent intermediate state.
-  if (ste->v())
-    invalidate_ste(ste, stream_id);
+  // Acquire exclusive access to STE.
+  switch (acquire_ste(ste))
+    {
+    case Acquire_result::Acquired:
+      // STE was invalid before, we can jump right to prepare.
+      break;
+
+    case Acquire_result::Invalidated:
+      // We bind over an existing STE. i.e. it was valid before, therefore we
+      // have to invalidate it first to ensure the SMMU does not see an
+      // illegal/inconsistent intermediate state.
+      flush_ste(ste, stream_id);
+      break;
+
+    case Acquire_result::Busy:
+      // Someone else has exclusive access to the STE.
+      return -L4_err::EBusy;
+    }
 
   // 1. Initialize STE, but do not set the valid flag for now.
+  // Note: The prepare_ste() function MUST NOT set `ste->config` to zero at any
+  //       time, because that is what ensures exclusive ownership of the entry!
   if (!prepare_ste(ste, domain, pt_phys_addr, virt_addr_size, start_level))
-    return false;
+    {
+      // We failed to set up the STE, so release our exclusive access we acquired to it.
+      release_ste(ste);
+      return -L4_err::ENomem;
+    }
 
   // 2. Ensure the STE is observable by the SMMU.
   make_observable_before_cmd(ste.unsafe_ptr());
@@ -1744,30 +2100,69 @@ Iommu::configure_domain(Ste_ptr ste, Unsigned32 stream_id, Iommu_domain &domain,
   send_cmd_sync(Cmd::cfgi_ste(stream_id, true));
 
   // 4. Mark STE as valid and ensure it's observable by the SMMU.
-  ste->v() = 1;
+  ste.atomic_set_valid();
   make_observable_before_cmd(ste.unsafe_ptr());
 
   // 5. Issue STE invalidation command and wait for completion.
   send_cmd_sync(Cmd::cfgi_ste(stream_id, true));
 
-  return true;
+  return 0;
 }
 
+/**
+ * Deconfigure stream table entry from the given domain.
+ *
+ * \retval 0        on success
+ * \retval -EInval  if the STE is in Invalid or Exclusive state, or bound to a
+ *                  different domain.
+ */
 PRIVATE
-bool
-Iommu::deconfigure_domain(Ste_ptr ste, Unsigned32 stream_id, Iommu_domain &domain,
-                          Address pt_phys_addr)
+int
+Iommu::deconfigure_ste(Ste_ptr ste, Unsigned32 stream_id, Iommu_domain &domain,
+                       Address pt_phys_addr)
 {
-  // Stream table entry is invalid.
-  if (!ste->v())
-    return false;
+  // Acquire exclusive access to STE if it is bound the domain.
+  if (acquire_ste_if_bound(ste, domain, pt_phys_addr))
+    {
+      // We have acquired exclusive access, flush and then release the STE.
+      flush_ste(ste, stream_id);
+      release_ste(ste);
+      return 0;
+    }
 
-  // Stream table entry is bound to a different domain.
-  if (!is_domain_bound_to_ste(ste, domain, pt_phys_addr))
-    return false;
+  // Failed to acquire the STE, which means it is either not in Valid state or
+  // bound to a different domain. However, we have to handle the edge case, that
+  // someone else started to invalidate the STE, i.e. already acquired
+  // 'Exclusive` access to it, but has not yet started/completed the flush
+  // (INV+SYNC) on the SMMU.
+  // Returning L4_err::EBusy here is not an option if we are called from
+  // Iommu::remove(). Because once we return from remove(), the domain must no
+  // longer be referenced by any Valid entry (as seen by the SMMU, so flush
+  // must have been completed).
+  if (ste_state(ste) == Ste_state::Invalid)
+    // STE is in Invalid state, so we know a flush has already been completed,
+    // since release_ste() resets Ste::2_ttb/s1_context_ptr only AFTER the flush
+    // (INV+SYNC) but BEFORE clearing Ste::config (transitioning the STE from
+    // Exclusive to Invalid).
+    return -L4_err::EInval;
 
-  invalidate_ste(ste, stream_id);
-  return true;
+  // Ensure that the above state check is done before the following domain
+  // check, pairs with the Mem::mp_wmb() in release_ste().
+  Mem::mp_rmb();
+
+  // Check if the STE refers to the given domain, if not it was either already
+  // released, implicating that the flush completed, or just refers to a
+  // different domain.
+  if (is_domain_bound_to_ste(ste, domain, pt_phys_addr))
+    // Have to invalidate the STE ourselves, as we cannot be sure that the
+    // acquirer is already done with the flush (INV+SYNC) or even started it,
+    // e.g. might have been preempted by us with higher priority.
+    flush_ste(ste, stream_id);
+
+  // We were unable to transition the STE to `Invalid` state, but the important
+  // part is that at least we ensured that the SMMU does no longer associate the
+  // STE with the give domain.
+  return -L4_err::EInval;
 }
 
 // -----------------------------------------------------------
@@ -1826,6 +2221,11 @@ Iommu_domain::get_or_init_cd(unsigned ias, unsigned virt_addr_size, Address pt_p
 }
 
 PRIVATE
+Iommu::Cd const *
+Iommu_domain::get_cd_addr() const
+{ return &_cd; }
+
+PRIVATE
 void
 Iommu::tlb_invalidate_asid(Asid asid)
 {
@@ -1872,12 +2272,13 @@ Iommu::prepare_ste(Ste_ptr ste_ptr, Iommu_domain &domain, Address pt_phys_addr,
 
 PRIVATE inline
 bool
-Iommu::is_domain_bound_to_ste(Ste_ptr ste, Iommu_domain const &,
-                              Address pt_phys_addr) const
+Iommu::is_domain_bound_to_ste(Ste_ptr ste, Iommu_domain const &domain,
+                              Address) const
 {
-  Cd *cd = reinterpret_cast<Cd *>(Mem_layout::phys_to_pmem(ste->s1_context_ptr()));
-  // Valid context descriptor pointer referring to the domain's page table.
-  return cd && cd->ttb0() == pt_phys_addr;
+  // If we do not own the STE, we cannot safely dereference the s1_context_ptr
+  // field, so instead check if points to the domain's CD.
+  // OPTIMIZE: Might be worth caching physical address of the CD?
+  return ste->s1_context_ptr() == Mem_layout::pmem_to_phys(domain.get_cd_addr());
 }
 
 // -----------------------------------------------------------
