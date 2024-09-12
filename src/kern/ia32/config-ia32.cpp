@@ -11,17 +11,9 @@ public:
 
   enum
   {
-#ifdef CONFIG_KERNEL_ISOLATION
-    Access_user_mem = No_access_user_mem,
-#else
-    // can access user memory directly
-    Access_user_mem = Access_user_mem_direct,
-#endif
-#ifdef CONFIG_IA32_PCID
-    Pcid_enabled = true,
-#else
-    Pcid_enabled = false,
-#endif
+    Access_user_mem = TAG_ENABLED(kernel_isolation) ? No_access_user_mem
+                                                    : Access_user_mem_direct,
+    Pcid_enabled = TAG_ENABLED(ia32_pcid),
 
     /// Timer vector used with APIC timer or IOAPIC
     Apic_timer_vector = APIC_IRQ_BASE + 0,
@@ -36,59 +28,37 @@ public:
     SCHED_APIC,
     SCHED_HPET,
 
-#ifdef CONFIG_SCHED_PIT
+#if defined(CONFIG_SCHED_PIT)
     Scheduler_mode        = SCHED_PIT,
     Scheduler_granularity = 1000U,
     Default_time_slice    = 10 * Scheduler_granularity,
-#endif
-
-#ifdef CONFIG_ONE_SHOT
-    Scheduler_one_shot = true,
-#else
-    Scheduler_one_shot = false,
-#endif
-
-#ifdef CONFIG_SCHED_RTC
+#elif defined(CONFIG_SCHED_RTC)
     Scheduler_mode = SCHED_RTC,
-#  ifdef CONFIG_SLOW_RTC
-    Scheduler_granularity = 15625U,
-#  else
-    Scheduler_granularity = 976U,
-#  endif
+    Scheduler_granularity = TAG_ENABLED(slow_rtc) ? 15625U : 976U,
     Default_time_slice = 10 * Scheduler_granularity,
-#endif
-
-#ifdef CONFIG_SCHED_APIC
+#elif defined(CONFIG_SCHED_APIC)
     Scheduler_mode = SCHED_APIC,
-#  ifdef CONFIG_ONE_SHOT
+# ifdef CONFIG_ONE_SHOT
     Scheduler_granularity = 1U,
     Default_time_slice = 10000 * Scheduler_granularity,
-#  else
+# else
     Scheduler_granularity = 1000U,
     Default_time_slice = 10 * Scheduler_granularity,
-#  endif
-#endif
-
-#ifdef CONFIG_SCHED_HPET
+# endif
+#elif defined(CONFIG_SCHED_HPET)
     Scheduler_mode = SCHED_HPET,
     Scheduler_granularity = 1000U,
     Default_time_slice = 10 * Scheduler_granularity,
 #endif
+
+    Scheduler_one_shot = TAG_ENABLED(one_shot),
   };
 
   enum
   {
     Pic_prio_modify = true,
-#ifdef CONFIG_SYNC_TSC
-    Kip_clock_uses_rdtsc = true,
-#else
-    Kip_clock_uses_rdtsc = false,
-#endif
-#ifdef CONFIG_TSC_UNIFIED
-    Tsc_unified = true,
-#else
-    Tsc_unified = false,
-#endif
+    Kip_clock_uses_rdtsc = TAG_ENABLED(sync_tsc),
+    Tsc_unified = TAG_ENABLED(tsc_unified),
   };
 
   static bool apic;
