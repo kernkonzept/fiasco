@@ -25,6 +25,8 @@ public:
 
   static Per_cpu<Static_object<Apic> > apic;
 
+  static constexpr Unsigned32 Timer_max = UINT32_MAX;
+
 private:
   Apic(const Apic&) = delete;
   Apic &operator = (Apic const &) = delete;
