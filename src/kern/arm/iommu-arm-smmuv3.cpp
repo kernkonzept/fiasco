@@ -871,6 +871,9 @@ private:
   /// Track of number of allocated second-level stream tables in order to limit
   /// it to Stream_table_l2_alloc_limit.
   unsigned _strtab_l2_alloc_cnt = 0;
+  /// Coordinates concurrent allocation of second-level stream tables (protects
+  /// _strtab and _strtab_l2_alloc_cnt).
+  Spin_lock<> _strtab_l2_alloc_lock;
 
   /// Command queue.
   using Cmd_queue = Write_queue<Cmd, Cmdq_base, Cmdq_prod, Cmdq_cons>;
@@ -1110,37 +1113,44 @@ Iommu::lookup_stream_table_entry(Unsigned32 stream_id, bool alloc)
   assert(stream_id < num_of_stream_ids());
 
   if (!_strtab_2level)
+    // Locate stream table entry in linear stream table.
     return &_strtab.virt_ptr<Ste>()[stream_id];
 
   L1std &l1 = _strtab.virt_ptr<L1std>()[stream_id >> Stream_table_split];
-  // No second-level table allocated!
-  if (!l1.is_valid())
-    {
-      if (!alloc || _strtab_l2_alloc_cnt >= Stream_table_l2_alloc_limit)
-        return nullptr;
 
-      Mem_chunk l2 = Mem_chunk::alloc_zmem(Stream_table_l2_size * sizeof(Ste));
-      if (!l2.is_valid())
-        return nullptr;
+  {
+    auto g = lock_guard(_strtab_l2_alloc_lock);
 
-      _strtab_l2_alloc_cnt++;
-      // Zero initialized second-level stream table must be observable by the
-      // SMMU before setting up the corresponding L1 stream table descriptor.
-      make_observable(l2.virt_ptr<Ste>(),
-                      l2.virt_ptr<Ste>() + Stream_table_l2_size);
+    // No second-level table allocated!
+    if (!l1.is_valid())
+      {
+        if (!alloc || _strtab_l2_alloc_cnt >= Stream_table_l2_alloc_limit)
+          return nullptr;
 
-      L1std new_l1;
-      new_l1.span() = Stream_table_split + 1;
-      new_l1.l2_ptr() = l2.phys_addr();
-      // Store has to be atomic to ensure that SMMU never sees the L1 stream
-      // table descriptor in an inconsistent state.
-      atomic_store(&l1, new_l1);
-      // Ensure L1 stream table descriptor is observable by the SMMU before
-      // configuring any L2 stream table entry (always requires invalidation
-      // commands, so make_observable_before_cmd is sufficient here).
-      make_observable_before_cmd(&l1, &l1 + 1);
-    }
+        Mem_chunk l2 = Mem_chunk::alloc_zmem(Stream_table_l2_size * sizeof(Ste));
+        if (!l2.is_valid())
+          return nullptr;
 
+        _strtab_l2_alloc_cnt++;
+        // Zero initialized second-level stream table must be observable by the
+        // SMMU before setting up the corresponding L1 stream table descriptor.
+        make_observable(l2.virt_ptr<Ste>(),
+                        l2.virt_ptr<Ste>() + Stream_table_l2_size);
+
+        L1std new_l1;
+        new_l1.span() = Stream_table_split + 1;
+        new_l1.l2_ptr() = l2.phys_addr();
+        // Store has to be atomic to ensure that the SMMU never sees the L1
+        // stream table descriptor in an inconsistent state.
+        atomic_store(&l1, new_l1);
+        // Ensure L1 stream table descriptor is observable by the SMMU before
+        // configuring any L2 stream table entry. As that always requires
+        // invalidation commands, make_observable_before_cmd is sufficient here.
+        make_observable_before_cmd(&l1, &l1 + 1);
+      }
+  }
+
+  // Locate stream table entry in second-level stream table.
   Ste *l2 = reinterpret_cast<Ste *>(Mem_layout::phys_to_pmem(l1.l2_ptr()));
   return &l2[stream_id & Stream_table_l2_mask];
 }
