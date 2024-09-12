@@ -19,10 +19,10 @@ class Iommu_domain;
  *
  * The mapping between a device and a page table works as follows: Each device
  * is identified by a `stream ID`. The SMMU uses the stream ID as an index into
- * the stream table thereby locating a corresponding stream table entry.
+ * the stream table, thereby locating a corresponding stream table entry.
  * The stream table entry, in case of stage 1 translation with a context
  * descriptor as further indirection, contains the configuration and address of
- * assigned the page table. Part of this configuration is an ASID, to allow for
+ * the assigned page table. Part of this configuration is an ASID to allow for
  * efficient TLB maintenance.
  *
  * When the ARM_IOMMU_STAGE2 Kconfig option is set, the SMMU is configured to
@@ -357,7 +357,7 @@ private:
   static_assert(sizeof(L1std) == 8,
                 "Level 1 Stream Table Descriptor has unexpected size!");
 
-  /// Stream Table Entry
+  /// Stream Table Entry (STE)
   struct Ste
   {
     Unsigned64 raw[8] = { 0 };
@@ -516,8 +516,8 @@ private:
     };
 
     /**
-     * Invalidate the Stream Table Entry, including its Context Descriptors,
-     * indicated by StreamID.
+     * Invalidate the Stream Table Entry with the given StreamID, including its
+     * Context Descriptors.
      */
     static Cmd cfgi_ste(Unsigned32 stream_id, bool leaf)
     {
@@ -1159,8 +1159,8 @@ Iommu::iter_ste_tables(Unsigned32 *stream_id, Unsigned32 *table_size) const
   while (*stream_id < num_of_stream_ids())
     {
       // Access must be atomic so that we never see the L1 stream table entry in
-      // an inconsistent state. This relies on the fact that L2 stream tables once
-      // allocated are never deallocated later on.
+      // an inconsistent state. This relies on the fact that L2 stream tables,
+      // once allocated, are never deallocated later on.
       L1std l1 = atomic_load(&_strtab.virt_ptr<L1std>()[*stream_id >> Stream_table_split]);
       if (l1.is_valid())
         {
@@ -1458,9 +1458,9 @@ Iommu::setup(Address base_addr, unsigned eventq_irq, unsigned gerror_irq)
     // might be lower than the maximum supported.
     _oas = Cpu::phys_bits();
 
-   // The maximum intermediate address size is equals to the maximum output
-   // address size (physical address size).
-   _ias = _oas;
+  // The maximum intermediate address size is equals to the maximum output
+  // address size (physical address size).
+  _ias = _oas;
 
   _support_wfe = idr0.sev();
 
@@ -1572,6 +1572,9 @@ Iommu::setup(Address base_addr, unsigned eventq_irq, unsigned gerror_irq)
   register_iommu_tlb();
 }
 
+/**
+ * Invalidate TLB for domain.
+ */
 IMPLEMENT
 void
 Iommu::tlb_invalidate_domain(Iommu_domain const &domain)
@@ -1579,7 +1582,7 @@ Iommu::tlb_invalidate_domain(Iommu_domain const &domain)
   for (Iommu &iommu : Iommu::iommus())
     {
       auto g = lock_guard(iommu._lock);
-      // Only invalidate TLB for the IOMMUs this domain is bound to.
+      // Only invalidate TLB for the SMMUs this domain is bound to.
       if (domain.is_bound(&iommu))
         {
           auto asid = domain.get_asid();
@@ -1675,20 +1678,20 @@ Iommu::configure_domain(Ste *ste, Unsigned32 stream_id, Iommu_domain &domain,
   if (ste->v())
     invalidate_ste(ste, stream_id);
 
-  // 1. Initialize stream table entry, but do not set the valid flag for now.
+  // 1. Initialize STE, but do not set the valid flag for now.
   if (!prepare_ste(ste, domain, pt_phys_addr, virt_addr_size, start_level))
     return false;
 
-  // 2. Ensure the stream table entry is observable by the SMMU.
+  // 2. Ensure the STE is observable by the SMMU.
   make_observable_before_cmd(ste);
-  // 3. Issue stream table entry invalidation command and wait for completion.
+  // 3. Issue STE invalidation command and wait for completion.
   send_cmd_sync(Cmd::cfgi_ste(stream_id, true));
 
-  // 4. Mark stream table entry as valid and ensure it's observable by the SMMU.
+  // 4. Mark STE as valid and ensure it's observable by the SMMU.
   ste->v() = 1;
   make_observable_before_cmd(ste);
 
-  // 5. Issue stream table entry invalidation command and wait for completion.
+  // 5. Issue STE invalidation command and wait for completion.
   send_cmd_sync(Cmd::cfgi_ste(stream_id, true));
 
   return true;
