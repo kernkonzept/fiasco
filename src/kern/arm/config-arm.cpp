@@ -28,13 +28,13 @@ public:
   enum
   {
 #ifdef CONFIG_ONE_SHOT
-    Scheduler_one_shot		= 1,
-    Scheduler_granularity	= 1UL,
-    Default_time_slice	        = 10000 * scheduler_granularity,
+    Scheduler_one_shot = 1,
+    Scheduler_granularity = 1UL,
+    Default_time_slice = 10000 * scheduler_granularity,
 #else
-    Scheduler_one_shot		= 0,
-    Scheduler_granularity	= CONFIG_SCHED_GRANULARITY,
-    Default_time_slice	        = CONFIG_SCHED_DEF_TIME_SLICE * Scheduler_granularity,
+    Scheduler_one_shot = 0,
+    Scheduler_granularity = CONFIG_SCHED_GRANULARITY,
+    Default_time_slice = CONFIG_SCHED_DEF_TIME_SLICE * Scheduler_granularity,
 #endif
   };
 
@@ -49,34 +49,10 @@ public:
 
   enum
   {
-#ifdef CONFIG_ARM_ENABLE_SWP
-    Cp15_c1_use_swp_enable = 1,
-#else
-    Cp15_c1_use_swp_enable = 0,
-#endif
-#ifdef CONFIG_ARM_ALIGNMENT_CHECK
-    Cp15_c1_use_alignment_check = 1,
-#else
-    Cp15_c1_use_alignment_check = 0,
-#endif
-  };
-
-  enum
-  {
-#ifdef CONFIG_ARM_SYNC_CLOCK
-    Kip_clock_uses_timer = 1,
-#else
-    Kip_clock_uses_timer = 0,
-#endif
-  };
-
-  enum
-  {
-#ifdef CONFIG_ARM_FAST_INTERRUPTS
-    Fast_interrupts = 1,
-#else
-    Fast_interrupts = 0,
-#endif
+    Cp15_c1_use_swp_enable = TAG_ENABLED(arm_enable_swp),
+    Cp15_c1_use_alignment_check = TAG_ENABLED(arm_alignment_check),
+    Kip_clock_uses_timer = TAG_ENABLED(arm_sync_clock),
+    Fast_interrupts = TAG_ENABLED(arm_fast_interrupts),
   };
 };
 
