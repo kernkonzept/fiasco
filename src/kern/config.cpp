@@ -54,65 +54,28 @@ public:
   enum
   {
     Kernel_version_id = 0x87004444 | (FIASCO_KERNEL_SUBVERSION << 16), // "DD....."
-    // kernel (idle) thread prio
     Kernel_prio = 0,
-    // default prio
     Default_prio = 1,
 
     Warn_level = CONFIG_WARN_LEVEL,
 
-    One_shot_min_interval_us =   200,
+    One_shot_min_interval_us = 200,
     One_shot_max_interval_us = 10000,
 
-
-#ifdef CONFIG_FINE_GRAINED_CPUTIME
-    Fine_grained_cputime = true,
-#else
-    Fine_grained_cputime = false,
-#endif
-
-#ifdef CONFIG_STACK_DEPTH
-    Stack_depth = true,
-#else
-    Stack_depth = false,
-#endif
-#ifdef CONFIG_NO_FRAME_PTR
-    Have_frame_ptr = 0,
-#else
-    Have_frame_ptr = 1,
-#endif
-#ifdef CONFIG_JDB
-    Jdb = 1,
-#else
-    Jdb = 0,
-#endif
-#ifdef CONFIG_JDB_LOGGING
-    Jdb_logging = 1,
-#else
-    Jdb_logging = 0,
-#endif
-#ifdef CONFIG_JDB_ACCOUNTING
-    Jdb_accounting = 1,
-#else
-    Jdb_accounting = 0,
-#endif
+    Fine_grained_cputime = TAG_ENABLED(fine_grained_cputime),
+    Stack_depth = TAG_ENABLED(stack_depth),
+    Have_frame_ptr = !TAG_ENABLED(no_frame_ptr),
+    Jdb = TAG_ENABLED(jdb),
+    Jdb_logging = TAG_ENABLED(jdb_logging),
+    Jdb_accounting = TAG_ENABLED(jdb_accounting),
 #if defined(CONFIG_MP) || defined(CONFIG_AMP)
     Max_num_cpus = CONFIG_MP_MAX_CPUS,
 #else
     Max_num_cpus = 1,
 #endif
-#ifdef CONFIG_BIG_ENDIAN
-    Big_endian = true,
-#else
-    Big_endian = false,
-#endif
-#ifdef CONFIG_MMU
-    Have_mmu = 1,
-    Have_mpu = 0,
-#else
-    Have_mmu = 0,
-    Have_mpu = 1,
-#endif
+    Big_endian = TAG_ENABLED(big_endian),
+    Have_mmu = TAG_ENABLED(mmu),
+    Have_mpu = !TAG_ENABLED(mmu),
   };
 
   static Cpu_number max_num_cpus() { return Cpu_number(Max_num_cpus); }
