@@ -679,11 +679,11 @@ PRIVATE static inline NEEDS["apic.h"]
 Cpu_number
 Thread::dbg_find_cpu()
 {
-  unsigned long phys_cpu = Apic::get_id();
+  Apic_id phys_cpu = Apic::get_id();
   Cpu_number log_cpu = Apic::find_cpu(phys_cpu);
   if (log_cpu == Cpu_number::nil())
     {
-      printf("Trap on unknown CPU phys_id=%lx\n", phys_cpu);
+      printf("Trap on unknown CPU phys_id=%x\n", cxx::int_value<Apic_id>(phys_cpu));
       log_cpu = Cpu_number::boot_cpu();
     }
   return log_cpu;

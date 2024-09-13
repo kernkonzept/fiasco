@@ -82,11 +82,11 @@ IMPLEMENTATION [mp]:
 EXTENSION class Kernel_thread
 {
 public:
-  static Cpu_number find_cpu_num_by_apic_id(Unsigned32 apic_id);
+  static Cpu_number find_cpu_num_by_apic_id(Apic_id apic_id);
   static bool boot_deterministic;
 
 private:
-  typedef Per_cpu_array<Unsigned32> Apic_id_array;
+  typedef Per_cpu_array<Apic_id> Apic_id_array;
 
   // store all APIC IDs found in the MADT
   // this is used by boot_ap_cpu() to determine its CPU number by looking up
@@ -109,7 +109,7 @@ bool Kernel_thread::boot_deterministic;
  */
 IMPLEMENT
 Cpu_number
-Kernel_thread::find_cpu_num_by_apic_id(Unsigned32 apic_id)
+Kernel_thread::find_cpu_num_by_apic_id(Apic_id apic_id)
 {
   for (Cpu_number n = Cpu_number::first(); n < Config::max_num_cpus(); ++n)
     if (_cpu_num_to_apic_id[n] == apic_id)
@@ -152,7 +152,7 @@ Kernel_thread::boot_app_cpus()
   if (madt)
     {
       boot_deterministic = true;
-      Unsigned32 boot_apic_id = Apic::get_id();
+      Apic_id boot_apic_id = Apic::get_id();
 
       // make sure the boot CPU gets the right CPU number
       _cpu_num_to_apic_id[Cpu_number::boot_cpu()] = boot_apic_id;
@@ -179,7 +179,7 @@ Kernel_thread::boot_app_cpus()
           if (last_cpu == Cpu_number::boot_cpu())
             ++last_cpu;
 
-          Unsigned32 aid = lapic->apic_id << 24;
+          Apic_id aid{Unsigned32{lapic->apic_id} << 24};
 
           // the boot CPU already has a CPU number assigned
           if (aid == boot_apic_id)
@@ -203,7 +203,8 @@ Kernel_thread::boot_app_cpus()
           if (last_cpu == Cpu_number::boot_cpu())
             ++last_cpu;
 
-          _cpu_num_to_apic_id[last_cpu++] = lapic->apic_id << 24;
+          Apic_id aid{Unsigned32{lapic->apic_id} << 24};
+          _cpu_num_to_apic_id[last_cpu++] = aid;
         }
     }
 

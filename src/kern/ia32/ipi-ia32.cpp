@@ -1,11 +1,12 @@
 INTERFACE [mp]:
 
+#include "apic.h"
 #include "per_cpu_data.h"
 
 EXTENSION class Ipi
 {
 private:
-  Unsigned32 _apic_id;
+  Apic_id _apic_id;
   unsigned _count;
 
 public:
@@ -22,7 +23,6 @@ public:
 IMPLEMENTATION[mp]:
 
 #include <cstdio>
-#include "apic.h"
 #include "kmem.h"
 
 PUBLIC inline

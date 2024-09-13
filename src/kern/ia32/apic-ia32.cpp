@@ -1,5 +1,6 @@
 INTERFACE:
 
+#include <cxx/cxx_int>
 #include "per_cpu_data.h"
 #include "types.h"
 #include "initcalls.h"
@@ -8,13 +9,19 @@ INTERFACE:
 class Return_frame;
 class Cpu;
 
+struct Apic_id : cxx::int_type<Unsigned32, Apic_id>
+{
+  Apic_id() = default;
+  Apic_id(Unsigned32 n) : cxx::int_type<Unsigned32, Apic_id>(n) {}
+};
+
 class Apic : public Pm_object
 {
 public:
   static void map_registers() FIASCO_INIT;
   static void init(bool resume = false) FIASCO_INIT_AND_PM;
-  Unsigned32 apic_id() const { return _id; }
-  Unsigned32 cpu_id() const { return _id >> 24; }
+  Apic_id apic_id() const { return _id; }
+  Unsigned32 cpu_id() const { return cxx::int_value<Apic_id>(_id) >> 24; }
 
   static Per_cpu<Static_object<Apic> > apic;
 
@@ -22,7 +29,7 @@ private:
   Apic(const Apic&) = delete;
   Apic &operator = (Apic const &) = delete;
 
-  Unsigned32 _id;
+  Apic_id _id;
   Unsigned32 _saved_apic_timer;
 
   static void			error_interrupt(Return_frame *regs)
@@ -116,7 +123,7 @@ Apic::Apic(Cpu_number cpu) : _id(get_id()) { register_pm(cpu); }
 
 PUBLIC static
 Cpu_number
-Apic::find_cpu(Unsigned32 phys_id)
+Apic::find_cpu(Apic_id phys_id)
 {
   return apic.find_cpu([phys_id](Apic const *a)
                        { return a && a->apic_id() == phys_id; });
@@ -228,11 +235,14 @@ Unsigned64 Apic::scaler_us_to_apic;
 
 int ignore_invalid_apic_reg_access;
 
+/**
+ * APIC identifier of the current CPU.
+ */
 PUBLIC static inline
-Unsigned32
+Apic_id
 Apic::get_id()
 {
-  return reg_read(APIC_id) & 0xff000000;
+  return Apic_id{reg_read(APIC_id) & 0xff000000};
 }
 
 PRIVATE static inline
@@ -839,7 +849,7 @@ Apic::dump_info()
 {
   if (Warn::is_enabled(Info))
     printf("Local APIC[%02x]: version=%02x max_lvt=%d\n",
-           get_id() >> 24, get_version(), get_max_lvt());
+           cxx::int_value<Apic_id>(get_id()) >> 24, get_version(), get_max_lvt());
 }
 
 /**

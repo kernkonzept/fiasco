@@ -3,6 +3,7 @@ INTERFACE:
 #include <types.h>
 #include "initcalls.h"
 #include <spin_lock.h>
+#include "apic.h"
 #include "irq_chip_ia32.h"
 #include <cxx/bitfield>
 #include "irq_mgr.h"
@@ -24,10 +25,10 @@ public:
 
   Io_apic_entry() {}
   Io_apic_entry(Unsigned8 vector, Delivery d, Dest_mode dm, Polarity p,
-                Trigger t, Unsigned32 dest)
+                Trigger t, Apic_id dest)
     : _e(  vector_bfm_t::val(vector) | delivery_bfm_t::val(d) | mask_bfm_t::val(1)
          | dest_mode_bfm_t::val(dm)  | polarity_bfm_t::val(p)
-         | trigger_bfm_t::val(t)     | dest_bfm_t::val(dest >> 24))
+         | trigger_bfm_t::val(t)     | dest_bfm_t::val(cxx::int_value<Apic_id>(dest) >> 24))
   {}
 
   CXX_BITFIELD_MEMBER( 0,  7, vector, _e);
@@ -87,7 +88,6 @@ public:
 IMPLEMENTATION:
 
 #include "acpi.h"
-#include "apic.h"
 #include "assert.h"
 #include "kmem.h"
 #include "kip.h"
@@ -213,7 +213,7 @@ Io_apic::Io_apic(Unsigned64 phys, unsigned gsi_base)
   _next = *c;
   *c = this;
 
-  Mword cpu_phys = ::Apic::apic.cpu(Cpu_number::boot_cpu())->apic_id();
+  Apic_id cpu_phys = ::Apic::apic.cpu(Cpu_number::boot_cpu())->apic_id();
 
   for (unsigned i = 0; i < _irqs; ++i)
     {
@@ -381,7 +381,7 @@ PUBLIC static
 void
 Io_apic::restore_state(bool set_boot_cpu = false)
 {
-  Mword cpu_phys = 0;
+  Apic_id cpu_phys{0};
   if (set_boot_cpu)
     cpu_phys = ::Apic::apic.cpu(Cpu_number::boot_cpu())->apic_id();
 
@@ -390,7 +390,7 @@ Io_apic::restore_state(bool set_boot_cpu = false)
       {
         Io_apic_entry e = _state_save_area[a->_offset + i];
         if (set_boot_cpu && e.format() == 0)
-          e.dest() = cpu_phys;
+          e.dest() = cxx::int_value<Apic_id>(cpu_phys);
         a->write_entry(i, e);
       }
 }
@@ -411,13 +411,13 @@ Io_apic::legacy_override(unsigned i)
   for (;;++tmp)
     {
       Acpi_madt::Irq_source const *irq
-	= static_cast<Acpi_madt::Irq_source const *>(_madt->find(Acpi_madt::Irq_src_ovr, tmp));
+        = static_cast<Acpi_madt::Irq_source const *>(_madt->find(Acpi_madt::Irq_src_ovr, tmp));
 
       if (!irq)
-	break;
+        break;
 
       if (irq->src == i)
-	return irq->irq;
+        return irq->irq;
     }
   return i;
 }
@@ -477,11 +477,12 @@ Io_apic::sync()
 
 PUBLIC inline NEEDS["assert.h", "lock_guard.h"]
 void
-Io_apic::set_dest(unsigned irq, Mword dst)
+Io_apic::set_dest(unsigned irq, Apic_id dst)
 {
   auto g = lock_guard(_l);
   //assert(irq <= _apic->num_entries());
-  _apic->modify(0x11 + irq * 2, dst & (~0UL << 24), ~0UL << 24);
+  _apic->modify(0x11 + irq * 2,
+                cxx::int_value<Apic_id>(dst) & (~0UL << 24), ~0UL << 24);
 }
 
 PUBLIC inline
@@ -495,7 +496,7 @@ Io_apic::find_apic(unsigned irqnum)
   for (Io_apic *a = _first; a; a = a->_next)
     {
       if (a->_offset <= irqnum && a->_offset + a->_irqs > irqnum)
-	return a;
+        return a;
     }
   return 0;
 };

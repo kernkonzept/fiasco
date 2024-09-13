@@ -25,11 +25,11 @@ PRIVATE static
 void
 Jdb_kern_info_io_apic::print_lapic(Cpu_number cpu)
 {
-  printf("\nLocal APIC [%u, %08x]: tpr=%2x ppr=%2x\n",
-         cxx::int_value<Cpu_number>(cpu),
-         Apic::get_id(), Apic::tpr(), Apic::reg_read(0xa0));
-  printf("  Running: tpr=%02x\n", Jdb::apic_tpr.cpu(cpu));
-  printf("  Timer: icr=%08x ccr=%08x LVT=%08x\n",
+  printf("\nLocal APIC [%u, %08x]: tpr=%2x ppr=%2x\n"
+         "  Running: tpr=%02x\n"
+         "  Timer: icr=%08x ccr=%08x LVT=%08x\n",
+         cxx::int_value<Cpu_number>(cpu), cxx::int_value<Apic_id>(Apic::get_id()),
+         Apic::tpr(), Apic::reg_read(0xa0), Jdb::apic_tpr.cpu(cpu),
          Apic::reg_read(0x380), Apic::reg_read(0x390), Apic::reg_read(0x320));
 
   unsigned const regs[] = { 0x200, 0x100, 0x180 };

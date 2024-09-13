@@ -71,33 +71,34 @@ Apic::delay(Cpu const *c, Unsigned32 wait)
 
 PUBLIC static inline NEEDS [<cassert>]
 void
-Apic::mp_send_ipi(Unsigned32 dest, Unsigned32 vect,
+Apic::mp_send_ipi(Apic_id dest, Unsigned32 vect,
                   Unsigned32 mode = APIC_IPI_FIXED)
 {
   Unsigned32 tmp_val;
+  Unsigned32 dest_val = cxx::int_value<Apic_id>(dest);
 
-  assert((dest & 0x00f3ffff) == 0);
+  assert((dest_val & 0x00f3ffff) == 0);
   assert(vect <= 0xff);
 
   while (!mp_ipi_idle())
     Proc::pause();
 
   // Set destination for no-shorthand destination type
-  if ((dest & APIC_IPI_DSTMSK) == APIC_IPI_NOSHRT)
+  if ((dest_val & APIC_IPI_DSTMSK) == APIC_IPI_NOSHRT)
     {
       tmp_val  = reg_read(APIC_ICR2);
       tmp_val &= 0x00ffffff;
-      tmp_val |= dest & 0xff000000;
+      tmp_val |= dest_val & 0xff000000;
       reg_write(APIC_ICR2, tmp_val);
     }
 
   // send the interrupt vector to the destination...
   tmp_val  = reg_read(APIC_ICR);
   tmp_val &= 0xfff32000;
-  tmp_val |= (dest & 0x000c0000) |
-             (       0x00004000) | // phys proc num, edge triggered, assert
-             (mode & 0x00000700) |
-             (vect & 0x000000ff);
+  tmp_val |= (dest_val & 0x000c0000);
+  tmp_val |= 0x00004000;        // phys proc num, edge triggered, assert
+  tmp_val |= mode & 0x00000700;
+  tmp_val |= vect & 0x000000ff;
   reg_write(APIC_ICR, tmp_val);
 }
 

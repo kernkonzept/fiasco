@@ -96,7 +96,7 @@ void
 Apic::id_show(int indent = 0)
 {
   printf("%*sAPIC id: %02x version: %02x\n",
-         indent, "", get_id() >> 24, get_version());
+         indent, "", cxx::int_value<Apic_id>(get_id()) >> 24, get_version());
 }
 
 static

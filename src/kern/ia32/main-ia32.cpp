@@ -105,10 +105,10 @@ IMPLEMENTATION[(ia32,amd64) && mp]:
 void FIASCO_FASTCALL FIASCO_NORETURN boot_ap_cpu() __asm__("BOOT_AP_CPU");
 
 static void FIASCO_NORETURN
-stop_booting_ap_cpu(char const *msg, Unsigned32 apic_id)
+stop_booting_ap_cpu(char const *msg, Apic_id apic_id)
 {
   extern Spin_lock<Mword> _tramp_mp_spinlock;
-  printf("%s, disabling CPU: %x\n", msg, apic_id);
+  printf("%s, disabling CPU: %x\n", msg, cxx::int_value<Apic_id>(apic_id));
   _tramp_mp_spinlock.clear();
 
   while (1)
@@ -119,7 +119,7 @@ void FIASCO_FASTCALL FIASCO_NORETURN boot_ap_cpu()
 {
   Apic::activate_by_msr();
 
-  Unsigned32 apic_id = Apic::get_id();
+  Apic_id apic_id = Apic::get_id();
   Cpu_number _cpu = Apic::find_cpu(apic_id);
   bool cpu_is_new = false;
 
