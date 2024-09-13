@@ -5,10 +5,11 @@
 # created 1996/04/20 by hohmuth
 #
 
-CHECKCC         = $(if $(shell $(CC)  $(1) $(CHECKCC_FLAGS)  -c -o /dev/null -xc   /dev/null >/dev/null 2>&1 || echo X),$(2),$(1))
-
-CHECKCXX        = $(if $(shell $(CXX) $(1) $(CHECKCXX_FLAGS) -c -o /dev/null -xc++ /dev/null >/dev/null 2>&1 || echo X),$(2),$(1))
-
+# ccache would make feature detection slower
+CHECKCC         = $(if $(shell $(filter-out $(CCACHE),$(CC)) $(1) $(CHECKCC_FLAGS) \
+		  -c -o /dev/null -xc /dev/null >/dev/null 2>&1 || echo X),$(2),$(1))
+CHECKCXX        = $(if $(shell $(filter-out $(CCACHE),$(CXX)) $(1) $(CHECKCXX_FLAGS) \
+		  -c -o /dev/null -xc++ /dev/null >/dev/null 2>&1 || echo X),$(2),$(1))
 CHECKLD         = $(shell if $(LD) -v "$1" > /dev/null 2>&1; then echo "$(1)"; else echo "$(2)"; fi)
 
 eval_impl	= $(if $($(1)_IMPL),$($(1)_IMPL),$(1))
@@ -88,7 +89,7 @@ include $(srcdir)/Makeconf.$(CONFIG_XARCH)
 -include $(srcdir)/Makeconf.local
 -include $(objbase)/Makeconf.local
 
-get_cc_version_part      = $(shell echo $(1) | $(CC) -E -x c - | tail -1)
+get_cc_version_part      = $(shell echo $(1) | $(filter-out $(CCACHE),$(CC)) -E -x c - | tail -1)
 
 ifneq ($(CCXX_VERSION),)
   CCXX_SUFFIX		:= -$(CCXX_VERSION)
@@ -252,7 +253,7 @@ HOST_CFLAGS     += -O2 -Wall -Wextra
 HOST_CXXFLAGS   += -O2 -Wall -Wextra
 
 # for stddef.h, ...
-GCCINCDIR   := $(shell $(CXX) $(SHARED_FLAGS) -print-file-name=include)
+GCCINCDIR   := $(shell $(filter-out $(CCACHE),$(CXX)) $(SHARED_FLAGS) -print-file-name=include)
 
 
 # Output formatting:
