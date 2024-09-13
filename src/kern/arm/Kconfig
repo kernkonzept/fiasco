@@ -497,7 +497,7 @@ config EXPLICIT_ASID
 
 config ARM_FAST_INTERRUPTS
 	bool "Enable low latency interrupt optimization"
-	depends on ARM_V8 && ARM_PROFILE_R && CPU_VIRT
+	depends on ARM_V8 && ARM_PROFILE_R && CPU_VIRT && BIT32
 	select ARM_CPU_ERRATA if ARM_CORTEX_R52	# Erratum 2918152
 	help
 	  Armv8-R AArch32 defines a "Fast Interrupts" feature in HSCTLR.FI. It
