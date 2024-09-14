@@ -134,13 +134,12 @@ Platform::type()
 
       // set defaults from config
       _uart = Config::Uart_nr;
-#if defined(CONFIG_PF_EXYNOS4_4210)
-      _soc = Soc_4210;
-#elif defined(CONFIG_PF_EXYNOS4_4412)
-      _soc = Soc_4412;
-#elif defined(CONFIG_PF_EXYNOS5_5250)
-      _soc = Soc_5250;
-#endif
+      if constexpr (TAG_ENABLED(pf_exynos4_4210))
+        _soc = Soc_4210;
+      else if constexpr (TAG_ENABLED(pf_exynos4_4412))
+        _soc = Soc_4412;
+      else if constexpr (TAG_ENABLED(pf_exynos5_5250))
+        _soc = Soc_5250;
 
       process_pkg_ids();
     }
