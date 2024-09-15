@@ -2,6 +2,7 @@ INTERFACE:
 
 #include "types.h"
 #include "acpi_dmar.h"
+#include "apic.h"
 #include "cxx/bitfield"
 #include "cxx/type_traits"
 #include "cxx/protected_ptr"
@@ -63,7 +64,7 @@ public:
     /// target IRQ vector
     CXX_BITFIELD_MEMBER(16, 23, vector, low);
     /// destination CPU
-    CXX_BITFIELD_MEMBER(32, 63, dst, low);
+    CXX_BITFIELD_MEMBER(32, 63, dst_x2apic, low);
     CXX_BITFIELD_MEMBER(40, 47, dst_xapic, low);
 
     /// source identifier
@@ -92,14 +93,20 @@ public:
       low = v.low;
     }
 
-    Cpu_phys_id get_dst_xapic() const
+    Cpu_phys_id get_dst() const
     {
-      return Cpu_phys_id{dst_xapic()};
+      if (Apic::use_x2apic())
+        return Cpu_phys_id{dst_x2apic()};
+      else
+        return Cpu_phys_id{dst_xapic()};
     }
 
-    void set_dst_xapic(Cpu_phys_id dst)
+    void set_dst(Cpu_phys_id dst)
     {
-      dst_xapic() = cxx::int_value<Cpu_phys_id>(dst);
+      if (Apic::use_x2apic())
+        dst_x2apic() = cxx::int_value<Cpu_phys_id>(dst);
+      else
+        dst_xapic() = cxx::int_value<Cpu_phys_id>(dst);
     }
   };
 
@@ -174,6 +181,11 @@ public:
     Inv_q_tail       = 0x88,
     Inv_q_addr       = 0x90,
     Irt_addr         = 0xb8
+  };
+
+  enum
+  {
+    Irta_eime = 1 << 11,
   };
 
   struct Registers
@@ -404,11 +416,23 @@ public:
   void setup(Cpu_number cpu);
 
   FIASCO_INIT
-  void set_irq_remapping_table(Irte *irt, Unsigned64 irt_pa, unsigned order)
+  void set_irq_remapping_table(Irte *irt, Unsigned64 irt_pa, unsigned order,
+                               bool use_x2apic)
   {
+    if (!supports_int_remapping())
+      panic("IOMMU: Interrupt remapping not supported");
+
     _irq_remapping_table = irt;
     _irq_remap_table_size = order;
-    regs[Reg_64::Irt_addr] = irt_pa | (order - 1);
+    Unsigned64 irta = irt_pa | (order - 1);
+    if (use_x2apic)
+      {
+        if (!supports_x2apic())
+          panic("IOMMU: x2APIC not supported");
+
+        irta |= Irta_eime;
+      }
+    regs[Reg_64::Irt_addr] = irta;
     modify_cmd(Cmd_sirtp);
     queue_and_wait<false>(Inv_desc::global_iec());
     modify_cmd(Cmd_ire, Cmd_cfi);
@@ -653,6 +677,12 @@ public:
 
   /// Is this IOMMU cache coherent?
   bool coherent() const { return ecaps & 1; }
+
+  /// EIM: x2APIC mode with 32-bit APIC-IDs supported?
+  bool supports_x2apic() const { return ecaps & (1 << 4); };
+
+  /// IR: Interrupt Remapping supported?
+  bool supports_int_remapping() const { return ecaps & (1 << 3); }
 
   /// Is this IOMMU the default PCI MMU?
   bool is_default_pci() const { return flags & 1; }
@@ -931,15 +961,19 @@ Intel::Io_mmu::pm_on_resume(Cpu_number cpu)
            ++irte)
         {
           Intel::Io_mmu::Irte e = *irte;
-          if (!e.present() || target == e.get_dst_xapic())
+          if (!e.present() || target == e.get_dst())
             continue;
 
-          e.set_dst_xapic(target);
+          e.set_dst(target);
+
           *irte = e;
         }
 
-      Address irt_pa = Kmem::virt_to_phys(const_cast<Irte*>(_irq_remapping_table));
-      regs[Reg_64::Irt_addr] = irt_pa | (_irq_remap_table_size - 1);
+      Address irta = Kmem::virt_to_phys(const_cast<Irte*>(_irq_remapping_table));
+      irta |= (_irq_remap_table_size - 1);
+      if (Apic::use_x2apic())
+        irta |= Irta_eime;
+      regs[Reg_64::Irt_addr] = irta;
       modify_cmd(Cmd_sirtp);
       queue_and_wait(Inv_desc::global_iec());
       modify_cmd(Cmd_ire, Cmd_cfi);

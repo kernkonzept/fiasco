@@ -127,7 +127,7 @@ Irq_chip_rmsi::msg(Mword pin, Unsigned64 src, Irq_mgr::Msi_info *inf)
   // To avoid having to wait for the invalidation of the interrupt remapping
   // table entry to complete whenever the target CPU of an IRQ is changed (in
   // set_cpu), directly assign a valid destination CPU ID here.
-  e.set_dst_xapic(Apic::apic.cpu(Cpu_number::boot_cpu())->cpu_id());
+  e.set_dst(::Apic::apic.cpu(Cpu_number::boot_cpu())->cpu_id());
 
   _irt[vect] = e;
   clean_dcache(&_irt[vect]);
@@ -158,12 +158,12 @@ Irq_chip_rmsi::set_cpu(Mword pin, Cpu_number cpu) override
 
   Intel::Io_mmu::Irte volatile &irte = _irt[vect];
   Intel::Io_mmu::Irte e = irte;
+
   Cpu_phys_id target = Apic::apic.cpu(cpu)->cpu_id();
-
-  if (target == e.get_dst_xapic())
+  if (target == e.get_dst())
     return;
+  e.set_dst(target);
 
-  e.set_dst_xapic(target);
   irte = e;
   clean_dcache(&irte);
 
@@ -300,7 +300,7 @@ Io_apic_remapped::alloc(Irq_base *irq, Mword pin, bool init = true) override
   // To avoid having to wait for the invalidation of the interrupt remapping
   // table entry to complete whenever the target CPU of an IRQ is changed (in
   // set_cpu), directly assign a valid destination CPU ID here.
-  i.set_dst_xapic(::Apic::apic.cpu(Cpu_number::boot_cpu())->cpu_id());
+  i.set_dst(::Apic::apic.cpu(Cpu_number::boot_cpu())->cpu_id());
   _iommu->set_irq_mapping(i, v, Intel::Io_mmu::Flush_op::No_flush);
 
   e.format() = 1;
@@ -354,10 +354,10 @@ Io_apic_remapped::set_cpu(Mword pin, Cpu_number cpu) override
   Intel::Io_mmu::Irte e = _iommu->get_irq_mapping(vect);
   Cpu_phys_id target = ::Apic::apic.cpu(cpu)->cpu_id();
 
-  if (e.get_dst_xapic() == target)
+  if (e.get_dst() == target)
     return;
+  e.set_dst(target);
 
-  e.set_dst_xapic(target);
   // There is no need to wait for the IRTE invalidation to complete. If an IRQ
   // occurs while the old CPU is still targeted by an IRT cache entry that has
   // not yet been invalidated, the old CPU will forward the IRQ to the new CPU.
@@ -396,11 +396,12 @@ Io_apic_remapped::init_apics()
   if (!irt)
     panic("IOMMU: could not allocate interrupt remapping table\n");
 
+  bool use_x2apic = ::Apic::use_x2apic();
   bool coherent = true;
   Address irt_pa = Kmem::virt_to_phys(irt);
   for (auto &i: Intel::Io_mmu::iommus)
     {
-      i.set_irq_remapping_table(irt, irt_pa, IRT_size);
+      i.set_irq_remapping_table(irt, irt_pa, IRT_size, use_x2apic);
       coherent &= i.coherent();
     }
 
