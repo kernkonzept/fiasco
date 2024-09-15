@@ -21,7 +21,7 @@ public:
   static void map_registers() FIASCO_INIT;
   static void init(bool resume = false) FIASCO_INIT_AND_PM;
   Apic_id apic_id() const { return _id; }
-  Unsigned32 cpu_id() const { return cxx::int_value<Apic_id>(_id) >> 24; }
+  Cpu_phys_id cpu_id() const { return Cpu_phys_id{cxx::int_value<Apic_id>(_id) >> 24}; }
 
   static Per_cpu<Static_object<Apic> > apic;
 
