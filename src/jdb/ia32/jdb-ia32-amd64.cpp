@@ -57,7 +57,6 @@ private:
 IMPLEMENTATION[ia32,amd64]:
 
 #include <cstring>
-#include <csetjmp>
 #include <cstdarg>
 #include <climits>
 #include <cstdlib>
