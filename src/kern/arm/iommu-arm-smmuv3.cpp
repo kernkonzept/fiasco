@@ -1809,9 +1809,9 @@ Iommu::prepare_ste(Ste *ste, Iommu_domain &domain, Address pt_phys_addr,
   return true;
 }
 
-PRIVATE
+PRIVATE inline
 bool
-Iommu::is_domain_bound_to_ste(Ste *ste, Iommu_domain &,
+Iommu::is_domain_bound_to_ste(Ste *ste, Iommu_domain const &,
                               Address pt_phys_addr) const
 {
   Cd *cd = reinterpret_cast<Cd *>(Mem_layout::phys_to_pmem(ste->s1_context_ptr()));
@@ -1867,9 +1867,9 @@ Iommu::prepare_ste(Ste *ste, Iommu_domain &domain, unsigned virt_addr_size,
   return true;
 }
 
-PRIVATE
+PRIVATE inline
 bool
-Iommu::is_domain_bound_to_ste(Ste *ste, Iommu_domain &,
+Iommu::is_domain_bound_to_ste(Ste *ste, Iommu_domain const &,
                               Address pt_phys_addr) const
 {
   // Stream table entry refers to the domain's page table.
