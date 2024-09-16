@@ -819,6 +819,50 @@ private:
     bool warned = false;
   };
 
+  /**
+   * Wrapper for a pointer to an Ste in an SMMU stream table.
+   *
+   * The wrapper ensures that all accesses to the Ste are done with volatile
+   * semantics. In addition it provides functions to make certain atomic changes
+   * on the Ste.
+   */
+  class Ste_ptr
+  {
+  public:
+    constexpr explicit Ste_ptr(Ste *ste) : _ste(ste) {}
+
+    /**
+     * Write `src` to the pointed-to STE using atomic store instructions.
+     *
+     * \pre Must only be used to write STEs whose `Valid` bit not set, i.e.
+     *      neither in `src` nor in the pointed-to STE, because not the entire
+     *      copy is atomic, only the writes of the individual words.
+     *
+     * \note Atomic store instructions are necessary to ensure that other CPUs
+     *       accessing the STE, e.g. via atomic_read_status() or
+     *       atomic_acquire_ste(), always see a consistent state of the
+     *       individual words.
+     */
+    inline void atomic_copy_from(Ste const &src)
+    {
+      for (unsigned i = 0; i < cxx::size(src.raw); i++)
+        atomic_store(&_ste->raw[i], src.raw[i]);
+    }
+
+    constexpr Ste *unsafe_ptr()
+    { return _ste; }
+
+    constexpr Ste volatile *operator -> () { return _ste; }
+
+    constexpr explicit operator bool() const { return _ste != nullptr; }
+
+    constexpr Ste_ptr at(unsigned index)
+    { return Ste_ptr(&_ste[index]); }
+
+  private:
+    Ste *_ste;
+  };
+
   static constexpr Unsigned8 address_size(Unsigned8 encoded)
   {
     constexpr Unsigned8 sizes[] = {32, 36, 40, 42, 44, 48};
@@ -1107,14 +1151,14 @@ Iommu::wait_cmd_queue(Cmd_queue::Index wait_index)
  * \param alloc      Allocate second-level stream table.
  */
 PRIVATE
-Iommu::Ste *
+Iommu::Ste_ptr
 Iommu::lookup_stream_table_entry(Unsigned32 stream_id, bool alloc)
 {
   assert(stream_id < num_of_stream_ids());
 
   if (!_strtab_2level)
     // Locate stream table entry in linear stream table.
-    return &_strtab.virt_ptr<Ste>()[stream_id];
+    return Ste_ptr(&_strtab.virt_ptr<Ste>()[stream_id]);
 
   L1std &l1 = _strtab.virt_ptr<L1std>()[stream_id >> Stream_table_split];
 
@@ -1125,11 +1169,11 @@ Iommu::lookup_stream_table_entry(Unsigned32 stream_id, bool alloc)
     if (!l1.is_valid())
       {
         if (!alloc || _strtab_l2_alloc_cnt >= Stream_table_l2_alloc_limit)
-          return nullptr;
+          return Ste_ptr(nullptr);
 
         Mem_chunk l2 = Mem_chunk::alloc_zmem(Stream_table_l2_size * sizeof(Ste));
         if (!l2.is_valid())
-          return nullptr;
+          return Ste_ptr(nullptr);
 
         _strtab_l2_alloc_cnt++;
         // Zero initialized second-level stream table must be observable by the
@@ -1152,17 +1196,17 @@ Iommu::lookup_stream_table_entry(Unsigned32 stream_id, bool alloc)
 
   // Locate stream table entry in second-level stream table.
   Ste *l2 = reinterpret_cast<Ste *>(Mem_layout::phys_to_pmem(l1.l2_ptr()));
-  return &l2[stream_id & Stream_table_l2_mask];
+  return Ste_ptr(&l2[stream_id & Stream_table_l2_mask]);
 }
 
 PRIVATE
-Iommu::Ste *
+Iommu::Ste_ptr
 Iommu::iter_ste_tables(Unsigned32 *stream_id, Unsigned32 *table_size) const
 {
   if (!_strtab_2level)
     {
       *table_size = num_of_stream_ids();
-      return *stream_id == 0 ? _strtab.virt_ptr<Ste>() : nullptr;
+      return Ste_ptr(*stream_id == 0 ? _strtab.virt_ptr<Ste>() : nullptr);
     }
 
   assert(*stream_id % Stream_table_l2_size == 0);
@@ -1175,23 +1219,23 @@ Iommu::iter_ste_tables(Unsigned32 *stream_id, Unsigned32 *table_size) const
       if (l1.is_valid())
         {
           *table_size = Stream_table_l2_size;
-          return reinterpret_cast<Ste *>(Mem_layout::phys_to_pmem(l1.l2_ptr()));
+          return Ste_ptr(reinterpret_cast<Ste *>(Mem_layout::phys_to_pmem(l1.l2_ptr())));
         }
 
       *stream_id += Stream_table_l2_size;
     }
 
-  return nullptr;
+  return Ste_ptr(nullptr);
 }
 
 PRIVATE
 void
-Iommu::invalidate_ste(Ste *ste, Unsigned32 stream_id)
+Iommu::invalidate_ste(Ste_ptr ste, Unsigned32 stream_id)
 {
   // Mark stream table entry as invalid and ensure the write is observable by
   // the SMMU.
   ste->v() = 0;
-  make_observable_before_cmd(ste);
+  make_observable_before_cmd(ste.unsafe_ptr());
   // Issue stream table entry invalidation command and wait for completion.
   send_cmd_sync(Cmd::cfgi_ste(stream_id, true));
 }
@@ -1272,7 +1316,7 @@ Iommu::bind(Unsigned32 stream_id, Iommu_domain &domain, Address pt_phys_addr,
   if (stream_id >= num_of_stream_ids())
     return -L4_err::ERange;
 
-  Ste *ste = lookup_stream_table_entry(stream_id, true);
+  Ste_ptr ste = lookup_stream_table_entry(stream_id, true);
   if (!ste)
     return -L4_err::ENomem;
 
@@ -1308,7 +1352,7 @@ Iommu::unbind(Unsigned32 stream_id, Iommu_domain &domain, Address pt_phys_addr)
   if (stream_id >= num_of_stream_ids())
     return -L4_err::ERange;
 
-  Ste *ste = lookup_stream_table_entry(stream_id, false);
+  Ste_ptr ste = lookup_stream_table_entry(stream_id, false);
   if (ste && deconfigure_domain(ste, stream_id, domain, pt_phys_addr))
     delete_binding_and_invalidate_tlb(domain);
 
@@ -1338,11 +1382,11 @@ Iommu::remove(Iommu_domain &domain, Address pt_phys_addr)
     return;
 
   Unsigned32 base_stream_id = 0, table_size = 0;
-  while (Ste *ste_table = iter_ste_tables(&base_stream_id, &table_size))
+  while (Ste_ptr ste_table = iter_ste_tables(&base_stream_id, &table_size))
     {
       for (unsigned i = 0; i < table_size; i++)
         {
-          Ste *ste = &ste_table[i];
+          Ste_ptr ste = ste_table.at(i);
           if (!deconfigure_domain(ste, base_stream_id + i, domain, pt_phys_addr))
             continue;
 
@@ -1679,7 +1723,7 @@ Iommu_domain::del_binding(Iommu const *iommu)
 
 PRIVATE
 bool
-Iommu::configure_domain(Ste *ste, Unsigned32 stream_id, Iommu_domain &domain,
+Iommu::configure_domain(Ste_ptr ste, Unsigned32 stream_id, Iommu_domain &domain,
                         Address pt_phys_addr, unsigned virt_addr_size,
                         unsigned start_level)
 {
@@ -1693,13 +1737,13 @@ Iommu::configure_domain(Ste *ste, Unsigned32 stream_id, Iommu_domain &domain,
     return false;
 
   // 2. Ensure the STE is observable by the SMMU.
-  make_observable_before_cmd(ste);
+  make_observable_before_cmd(ste.unsafe_ptr());
   // 3. Issue STE invalidation command and wait for completion.
   send_cmd_sync(Cmd::cfgi_ste(stream_id, true));
 
   // 4. Mark STE as valid and ensure it's observable by the SMMU.
   ste->v() = 1;
-  make_observable_before_cmd(ste);
+  make_observable_before_cmd(ste.unsafe_ptr());
 
   // 5. Issue STE invalidation command and wait for completion.
   send_cmd_sync(Cmd::cfgi_ste(stream_id, true));
@@ -1709,7 +1753,7 @@ Iommu::configure_domain(Ste *ste, Unsigned32 stream_id, Iommu_domain &domain,
 
 PRIVATE
 bool
-Iommu::deconfigure_domain(Ste *ste, Unsigned32 stream_id, Iommu_domain &domain,
+Iommu::deconfigure_domain(Ste_ptr ste, Unsigned32 stream_id, Iommu_domain &domain,
                           Address pt_phys_addr)
 {
   // Stream table entry is invalid.
@@ -1788,7 +1832,7 @@ Iommu::tlb_invalidate_asid(Asid asid)
 
 PRIVATE
 bool
-Iommu::prepare_ste(Ste *ste, Iommu_domain &domain, Address pt_phys_addr,
+Iommu::prepare_ste(Ste_ptr ste_ptr, Iommu_domain &domain, Address pt_phys_addr,
                    unsigned virt_addr_size, unsigned)
 {
   // Get or allocate context descriptor.
@@ -1797,31 +1841,34 @@ Iommu::prepare_ste(Ste *ste, Iommu_domain &domain, Address pt_phys_addr,
     return false;
 
   // Initialize stream table entry.
-  *ste = Ste();
-  ste->v() = 0;
-  ste->config() = Ste::Config_enable | Ste::Config_s1_translate;
+  Ste ste;
+  ste.v() = 0;
+  ste.config() = Ste::Config_enable | Ste::Config_s1_translate;
   // S1CDMax is set to zero (no substreams), thus S1Fmt is ignored and
   // S1ContextPtr points to single context descriptor.
-  ste->s1_context_ptr() = Mem_layout::pmem_to_phys(cd);
-  ste->s1_cir() = Cr1::Cache_wb;
-  ste->s1_cor() = Cr1::Cache_wb;
-  ste->s1_csh() = Cr1::Share_is;
+  ste.s1_context_ptr() = Mem_layout::pmem_to_phys(cd);
+  ste.s1_cir() = Cr1::Cache_wb;
+  ste.s1_cor() = Cr1::Cache_wb;
+  ste.s1_csh() = Cr1::Share_is;
 
   // StreamWorld = NS-EL1, tagged with both ASID+VMID
-  ste->strw() = 0;
+  ste.strw() = 0;
   // Use incoming Shareability attribute
-  ste->shcfg() = 1;
+  ste.shcfg() = 1;
 
   // VMID is also used when only stage 1 translation is configured, we use the
   // same VMID for all stream table entries.
-  ste->s2_vmid() = Default_vmid;
+  ste.s2_vmid() = Default_vmid;
+
+  // Use atomic write to update the entry in the stream table.
+  ste_ptr.atomic_copy_from(ste);
 
   return true;
 }
 
 PRIVATE inline
 bool
-Iommu::is_domain_bound_to_ste(Ste *ste, Iommu_domain const &,
+Iommu::is_domain_bound_to_ste(Ste_ptr ste, Iommu_domain const &,
                               Address pt_phys_addr) const
 {
   Cd *cd = reinterpret_cast<Cd *>(Mem_layout::phys_to_pmem(ste->s1_context_ptr()));
@@ -1843,7 +1890,7 @@ Iommu::tlb_invalidate_asid(Asid asid)
 
 PRIVATE
 bool
-Iommu::prepare_ste(Ste *ste, Iommu_domain &domain, unsigned virt_addr_size,
+Iommu::prepare_ste(Ste_ptr ste_ptr, Iommu_domain &domain, unsigned virt_addr_size,
                    unsigned start_level, Address pt_phys_addr)
 {
   unsigned long vmid = domain.get_or_alloc_asid();
@@ -1852,34 +1899,37 @@ Iommu::prepare_ste(Ste *ste, Iommu_domain &domain, unsigned virt_addr_size,
     return false;
 
   // Initialize stream table entry.
-  *ste = Ste();
-  ste->v() = 0;
-  ste->config() = Ste::Config_enable | Ste::Config_s2_translate;
+  Ste ste;
+  ste.v() = 0;
+  ste.config() = Ste::Config_enable | Ste::Config_s2_translate;
 
   // Use incoming Shareability attribute
-  ste->shcfg() = 1;
+  ste.shcfg() = 1;
 
-  ste->s2_vmid() = vmid;
+  ste.s2_vmid() = vmid;
   // Region size is 2^(64 - T0SZ) -> T0SZ = 64 - input_address_size
-  ste->s2_t0sz() = 64 - virt_addr_size;
-  ste->s2_sl0() = start_level;
-  ste->s2_ir0() = Cr1::Cache_wb;
-  ste->s2_or0() = Cr1::Cache_wb;
-  ste->s2_sh0() = Cr1::Share_is;
-  ste->s2_tg() = 0; // 4k
-  ste->s2_ps() = address_size_encode(_oas);
-  ste->s2_aa64() = 1; // Use Aarch64 format
-  ste->s2_affd() = 1; // An Access flag fault never occurs.
-  ste->s2_s() = 0; // Do not stall faulting transactions.
-  ste->s2_r() = Iommu::Log_faults; // Record faults in event queue.
-  ste->s2_ttb() = pt_phys_addr;
+  ste.s2_t0sz() = 64 - virt_addr_size;
+  ste.s2_sl0() = start_level;
+  ste.s2_ir0() = Cr1::Cache_wb;
+  ste.s2_or0() = Cr1::Cache_wb;
+  ste.s2_sh0() = Cr1::Share_is;
+  ste.s2_tg() = 0; // 4k
+  ste.s2_ps() = address_size_encode(_oas);
+  ste.s2_aa64() = 1; // Use Aarch64 format
+  ste.s2_affd() = 1; // An Access flag fault never occurs.
+  ste.s2_s() = 0; // Do not stall faulting transactions.
+  ste.s2_r() = Iommu::Log_faults; // Record faults in event queue.
+  ste.s2_ttb() = pt_phys_addr;
+
+  // Use atomic write to update the entry in the stream table.
+  ste_ptr.atomic_copy_from(ste);
 
   return true;
 }
 
 PRIVATE inline
 bool
-Iommu::is_domain_bound_to_ste(Ste *ste, Iommu_domain const &,
+Iommu::is_domain_bound_to_ste(Ste_ptr ste, Iommu_domain const &,
                               Address pt_phys_addr) const
 {
   // Stream table entry refers to the domain's page table.
