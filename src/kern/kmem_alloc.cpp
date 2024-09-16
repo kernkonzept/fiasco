@@ -644,7 +644,7 @@ Kmem_alloc_reaper::morecore(bool desperate = false)
 }
 
 //----------------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [debug || jdb_kmem_stats]:
 
 PUBLIC
 void

@@ -70,6 +70,9 @@ public:
     Tbuf_dump      = 3,
     Tbuf_log_3val  = 4,
     Tbuf_log_bin   = 5,
+
+    // 0x500 prefix for dump opcodes
+    Dump_kmem_stats = 0,
   };
 };
 
@@ -346,6 +349,9 @@ Jdb_object::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
     case 4:
       return sys_print_cov_data();
 
+    case 5:
+      return sys_print_kmem_stats(op & 0xff);
+
     default:
       return sys_jdb(tag, op & 0xff, rights, f, r_msg, s_msg);
     }
@@ -370,6 +376,36 @@ IMPLEMENTATION [rt_dbg && !cov]:
 IMPLEMENT
 L4_msg_tag
 Jdb_object::sys_print_cov_data()
+{
+  return commit_result(-L4_err::ENosys);
+}
+
+//------------------------------------------------------------------
+IMPLEMENTATION [rt_dbg && jdb_kmem_stats]:
+
+#include "kmem_alloc.h"
+
+PRIVATE static
+L4_msg_tag
+Jdb_object::sys_print_kmem_stats(unsigned op)
+{
+  switch (op)
+    {
+    case Dump_kmem_stats:
+      Kmem_alloc::allocator()->debug_dump();
+      return commit_result(0);
+
+    default:
+      return commit_result(-L4_err::ENosys);
+    }
+}
+
+//------------------------------------------------------------------
+IMPLEMENTATION [rt_dbg && !jdb_kmem_stats]:
+
+PRIVATE static
+L4_msg_tag
+Jdb_object::sys_print_kmem_stats(unsigned)
 {
   return commit_result(-L4_err::ENosys);
 }

@@ -531,6 +531,14 @@ config RT_DBG
 	  objects. This information may be used by a debugger to enable OS
 	  aware debugging.
 
+config JDB_KMEM_STATS
+	bool "Support kernel memory statistics dump"
+	default y
+	depends on RT_DBG
+	help
+	  Support dumping kernel memory statistics to the console. This must be
+	  triggered from user space and requires the JDB capability.
+
 menuconfig JDB
 	bool "JDB kernel debugger"
 	default y
