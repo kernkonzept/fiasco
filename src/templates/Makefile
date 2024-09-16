@@ -2,7 +2,7 @@
 
 SAMPLE_CONFIGS := $(subst globalconfig.out.,,$(wildcard globalconfig.out.*))
 
-srcdir = $(shell pwd)/../
+srcdir = $(CURDIR)/../
 
 all:
 
@@ -40,9 +40,8 @@ refresh:
 
 %:
 	$(MAKE) -f $(srcdir)/Makefile \
-	  srcdir=$(srcdir) objbase=$(shell pwd) "$@"
+	  srcdir=$(srcdir) objbase=$(CURDIR) "$@"
 
 
 .NOTPARALLEL:
 .PHONY: refresh testconfig
-
