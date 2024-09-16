@@ -129,10 +129,15 @@ public:
   /// First-fault register (same length and layout as a P register)
   using Ffr = Element<Unsigned16, 0, 2, P>;
 
-  static unsigned dyn_size()
+  static void init_dyn_size()
   {
     using End = Element<Unsigned8, 0, 0, Ffr>;
-    return End::off(Fpu::max_vl());
+    _dyn_size = End::off(Fpu::max_vl());
+  }
+
+  static unsigned dyn_size()
+  {
+    return _dyn_size;
   }
 
   alignas(16) Unsigned8 ext_state[0];
@@ -148,6 +153,9 @@ public:
   {
     return reinterpret_cast<typename E::Type const *>(ext_state + E::off(Fpu::max_vl()));
   }
+
+private:
+  static unsigned _dyn_size;
 };
 
 // ------------------------------------------------------------------------
@@ -426,6 +434,7 @@ IMPLEMENTATION [arm && fpu && arm_sve]:
 
 bool Fpu::_has_sve = false;
 unsigned Fpu::_max_vl = 0;
+unsigned Fpu_state_sve::_dyn_size = 0;
 
 PUBLIC static inline
 unsigned
@@ -476,6 +485,7 @@ Fpu::detect_sve(Cpu_number cpu)
 
       _has_sve = has_sve;
       _max_vl = max_vl;
+      Fpu_state_sve::init_dyn_size();
     }
   else
     {
@@ -545,7 +555,7 @@ PUBLIC
 void
 Fpu_state_sve::init() override
 {
-  memset(ext_state, 0, Fpu_state_sve::dyn_size());
+  memset(ext_state, 0, _dyn_size);
 
   // Default to maximum vector length
   *access<Zcr>() = Fpu::max_vl() - 1;
@@ -716,7 +726,7 @@ void
 Fpu_state_sve::copy(Fpu_state const *from) override
 {
   memcpy(ext_state, nonull_static_cast<Fpu_state_sve const *>(from)->ext_state,
-         Fpu_state_sve::dyn_size());
+         _dyn_size);
 }
 
 //-------------------------------------------------------------------------
