@@ -149,11 +149,12 @@ Jdb::_wait_for_input()
     }
   else
     {
-      static bool spurious_warned;
-      if (!spurious_warned)
+      static bool unexpected_warned;
+      // INTIDs 1020 - 1023 are spurious on GIC v2 and v3
+      if ((i & 0xfffffffc) != 0x3fc && !unexpected_warned)
         {
-          spurious_warned = true;
-          printf("JDB: Unexpected interrupt %d\n", i);
+          unexpected_warned = true;
+          printf("JDB: Unexpected interrupt %u\n", i);
         }
       Proc::pause();
     }
