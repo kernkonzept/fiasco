@@ -99,6 +99,10 @@ PUBLIC
 void Factory::operator delete (void *_f)
 {
   Factory *f = static_cast<Factory*>(_f);
+  // Prevent the compiler from assuming that the object has become invalid after
+  // destruction. In particular the _quota member contains valid content.
+  asm ("" : "=m"(*f));
+
   LOG_TRACE("Factory delete", "fa del", ::current(), Tb_entry_empty, {});
 
   Ram_quota *p = f->parent();
