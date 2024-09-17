@@ -1,6 +1,7 @@
 INTERFACE:
 
 #include <cxx/cxx_int>
+#include "alternatives.h"
 #include "per_cpu_data.h"
 #include "types.h"
 #include "initcalls.h"
@@ -25,6 +26,11 @@ public:
   static Per_cpu<Static_object<Apic> > apic;
 
   static constexpr Unsigned32 Timer_max = UINT32_MAX;
+
+  struct use_x2apic : public Alternative_static_functor<use_x2apic>
+  {
+    static bool probe() { return Apic::use_x2; }
+  };
 
 private:
   Apic(const Apic&) = delete;
@@ -239,13 +245,6 @@ bool       Apic::use_x2;
 
 int ignore_invalid_apic_reg_access;
 
-PUBLIC static inline
-bool
-Apic::use_x2apic()
-{
-  return use_x2;
-}
-
 /**
  * CPU identifier of this CPU as provided by the APIC.
  */
@@ -253,7 +252,7 @@ PUBLIC inline
 Cpu_phys_id
 Apic::cpu_id() const
 {
-  if (use_x2)
+  if (use_x2apic())
     return Cpu_phys_id{cxx::int_value<Apic_id>(_id)};
   else
     return Cpu_phys_id{cxx::int_value<Apic_id>(_id) >> 24};
@@ -266,7 +265,7 @@ PUBLIC static inline
 Apic_id
 Apic::get_id()
 {
-  if (use_x2)
+  if (use_x2apic())
     return Apic_id{reg_read(APIC_id)};
   else
     return Apic_id{reg_read(APIC_id) & 0xff000000};
@@ -279,7 +278,7 @@ PUBLIC static inline
 Apic_id
 Apic::acpi_lapic_to_apic_id(Unsigned32 acpi_id)
 {
-  if (use_x2)
+  if (use_x2apic())
     return Apic_id{acpi_id};
   else
     return Apic_id{Unsigned32{acpi_id} << 24};
@@ -333,7 +332,7 @@ PUBLIC static inline
 Unsigned32
 Apic::reg_read(unsigned reg)
 {
-  if (use_x2)
+  if (use_x2apic())
     return Cpu::rdmsr(APIC_msr_base + (reg >> 4));
   else
     return *offset_cast<volatile Unsigned32 *>(io_base, reg);
@@ -343,7 +342,7 @@ PUBLIC static inline
 void
 Apic::reg_write(unsigned reg, Unsigned32 val)
 {
-  if (use_x2)
+  if (use_x2apic())
     Cpu::wrmsr(val, 0, APIC_msr_base + (reg >> 4));
   else
     *offset_cast<volatile Unsigned32 *>(io_base, reg) = val;
@@ -353,7 +352,7 @@ PUBLIC static inline NEEDS[<cassert>]
 void
 Apic::reg_write64(unsigned reg, Unsigned64 val)
 {
-  assert(use_x2);
+  assert(use_x2apic());
   Cpu::wrmsr(val, APIC_msr_base + (reg >> 4));
 }
 
