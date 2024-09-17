@@ -8,21 +8,55 @@ INTERFACE:
  * Alternatives are patched at boot time dependent on the return value of the
  * probe function. The array of Alternative_insn structures is provided between
  * _alt_insns_begin and _alt_insns_end by the linker script.
+ *
+ * On certain platforms, `enabled=0` means to use NOPs corresponding to `len`
+ * instead of explicit "enabled" instructions.
  */
-struct Alternative_insn
+class Alternative_insn
 {
-  bool (*probe)(); ///< function called to determine which version is used
-  Signed32 disabled; ///< offset of the "disabled" instruction relative to `this`
-  Signed32 enabled; ///< offset of the "enabled" instruction relative to `this`
-  Unsigned8 len; ///< Number of bytes in the code
+public:
+  enum { Debug = 0 };
+
+  /**
+   * Initialize the alternative instructions.
+   *
+   * Go through all blocks and replace "disabled instructions" by "enabled
+   * instructions" if the corresponding probe() function returns `true`.
+   */
+  static void init();
+
+private:
+  inline void *disabled_insn() const
+  {
+    return offset_cast<void *>(this, disabled);
+  }
+
+  inline void const *enabled_insn() const
+  {
+    return offset_cast<void *>(this, enabled);
+  }
+
+  /** function called to determine which version is used. */
+  bool (*probe)();
+  /** offset of the "disabled" instruction relative to `this` */
+  Signed32 disabled;
+  /** offset of the "enabled" instruction relative to `this` */
+  Signed32 enabled;
+  /** Number of bytes in the code */
+  Unsigned8 len;
+
 } __attribute__((packed));
 
 #if defined(__aarch64__)
-#define ASM_ALTERNATIVE_ENTRY_PTR ".dword %c[alt_probe]"
+# define ASM_ALTERNATIVE_ENTRY_PTR ".dword %c[alt_probe]"
 #elif defined(__arm__)
-#define ASM_ALTERNATIVE_ENTRY_PTR ".word %c[alt_probe]"
+# define ASM_ALTERNATIVE_ENTRY_PTR ".word %c[alt_probe]"
+#elif defined(__x86_64__)
+# define ASM_ALTERNATIVE_ENTRY_PTR ".quad %c[alt_probe]"
+#elif defined(__i386__) || defined(__i686__)
+# define ASM_ALTERNATIVE_ENTRY_PTR ".long %c[alt_probe]"
 #else
-#error "Implementation requires an ARM compiler!"
+# error "Implementation requires a GNU compiler!"
 #endif
 
 /**
@@ -39,7 +73,7 @@ struct Alternative_insn
  *   return ...;
  * }
  *
- * asm volatile (ALTERNATIVE_INSN("mov %0, #0", "mov %0, #1")
+ * asm volatile (ALTERNATIVE_INSN("mov $0, %0", "mov $1, %0")
  *               : "=r"(variable)
  *               : [alt_probe] "i"(my_probe) );
  * \endcode
@@ -79,6 +113,45 @@ struct Alternative_insn
         ".byte 8991b - 8891b                            \n\t" \
         ".popsection                                    \n\t"
 
+//----------------------------------------------------------------------------
+INTERFACE [ia32 || amd64]:
+
+/**
+ * Define alternative inline assembly versions.
+ *
+ * This macro is similar to ALTERNATIVE_INSN but only expects the instructions
+ * which are disabled, that is, overridden by NOPs in case alt_probe() returns
+ * true:
+ *
+ * \code
+ * bool my_probe()
+ * {
+ *   return ...;
+ * }
+ *
+ * asm volatile (ALTERNATIVE_INSN("mov $0, %0", "mov $1, %0")
+ *               : "=r"(variable)
+ *               : [alt_probe] "i"(my_probe) );
+ * \endcode
+ *
+ * \param disabled_insn String of assembler instruction that are used if
+ *                      alt_probe() returns false.
+ */
+#define ALTERNATIVE_INSN_ENABLED_NOP(disabled_insn) \
+        "819:                                           \n\t" \
+        disabled_insn                                  "\n\t" \
+        "829:                                           \n\t" \
+        ".pushsection .alt_insns, \"a?\"                \n\t" \
+        "888:                                           \n\t" \
+        ASM_ALTERNATIVE_ENTRY_PTR                      "\n\t" \
+        ".4byte 819b - 888b                             \n\t" \
+        ".4byte 0                                       \n\t" \
+        ".byte 829b - 819b                              \n\t" \
+        ".popsection                                    \n\t"
+
+//----------------------------------------------------------------------------
+INTERFACE:
+
 /**
  * Mixin class to create a statically evaluated boolean functor.
  *
@@ -116,71 +189,4 @@ struct Alternative_insn
 template<typename BASE>
 struct Alternative_static_functor
 {
-  inline ALWAYS_INLINE operator bool()
-  {
-    asm goto (ALTERNATIVE_INSN("b %l[no]", "nop")
-              : : [alt_probe] "i"(BASE::probe) : : no);
-    return true;
-  no:
-    return false;
-  }
 };
-
-IMPLEMENTATION:
-
-#include <cstdio>
-#include <cstring>
-#include "mem_unit.h"
-
-PUBLIC inline
-Unsigned32 *
-Alternative_insn::disabled_insn() const
-{
-  return offset_cast<Unsigned32 *>(this, disabled);
-}
-
-PUBLIC inline
-Unsigned32 const *
-Alternative_insn::enabled_insn() const
-{
-  return offset_cast<Unsigned32 *>(this, enabled);
-}
-
-
-PRIVATE inline NOEXPORT
-void
-Alternative_insn::enable() const
-{
-  Unsigned32 *insn = disabled_insn();
-  Unsigned32 const *enabled_insn = this->enabled_insn();
-  memcpy(insn, enabled_insn, len);
-  Mem_unit::make_coherent_to_pou(insn, len);
-}
-
-PUBLIC static
-void
-Alternative_insn::init()
-{
-  extern Alternative_insn const _alt_insns_begin[];
-  extern Alternative_insn const _alt_insns_end[];
-
-  if (0)
-    printf("patching alternative instructions\n");
-
-  if (&_alt_insns_begin[0] == &_alt_insns_end[0])
-    return;
-
-  for (auto *i = _alt_insns_begin; i != _alt_insns_end; ++i)
-    {
-      if (i->probe())
-        {
-          if (0)
-            printf("  replace insn at %p/%d\n",
-                   static_cast<void *>(i->disabled_insn()), i->len);
-          i->enable();
-        }
-    }
-
-  // Mem::dsb() already included in Mem_unit::make_coherent_to_pou()
-  Mem::isb();
-}

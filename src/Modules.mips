@@ -93,7 +93,7 @@ INTERFACES_KERNEL-$(CONFIG_CPU_VIRT) += vz
 
 INTERFACES_KERNEL += $(INTERFACES_KERNEL-y)
 
-
+alternatives_IMPL	:= alternatives-mips
 bitmap_linux_IMPL	:= bitmap_linux
 clock_IMPL		:= clock
 config_IMPL		:= config config-mips

@@ -161,7 +161,7 @@ INTERFACES_KERNEL-$(CONFIG_ARM_GIC_MSI)-$(CONFIG_HAVE_ARM_GICV3) += gic_mem gic_
 INTERFACES_KERNEL-$(CONFIG_IOMMU) += iommu arm_dmar dmar_space
 INTERFACES_KERNEL += boot_infos
 
-
+alternatives_IMPL	:= alternatives alternatives-arm
 bootstrap_IMPL		:= bootstrap bootstrap-arm-$(BITS)
 clock_IMPL              := clock
 config_IMPL	  	:= config config-arm

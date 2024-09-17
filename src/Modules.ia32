@@ -101,11 +101,13 @@ INTERFACES_KERNEL	+= __main acpi acpi_fadt acpi_dmar i8259 \
 			   io_apic intel_iommu io_apic_remapped \
 			   boot_console \
 			   irq_msi io_space apic pit boot_info checksum \
-			   x86desc gdt idt tss timer_irq dirq allocator
+			   x86desc gdt idt tss timer_irq dirq allocator \
+			   alternatives
 
 INTERFACES_KERNEL-$(CONFIG_IOMMU)    += intel_dmar dmar_space
 INTERFACES_KERNEL-$(CONFIG_CPU_VIRT) += svm vmx vm vm_svm vm_vmx vm_vmx_ept
 
+alternatives_IMPL	:= alternatives alternatives-ia32
 apic_IMPL		:= apic-ia32 apic-ia32-mp
 boot_console_IMPL	:= boot_console-ia32-amd64
 boot_info_IMPL		:= boot_info boot_info-ia32

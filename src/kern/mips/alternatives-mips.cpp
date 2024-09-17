@@ -120,4 +120,3 @@ Alternative_insn::handle_alternatives(unsigned features)
       ".set pop"
       );
 }
-
