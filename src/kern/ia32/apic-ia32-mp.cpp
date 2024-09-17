@@ -115,18 +115,13 @@ void
 Apic::init_ap()
 {
   dump_info();
-  // set some interrupt vectors to appropriate values
+
   init_lvt();
-
-  // initialize APIC_spiv register
   init_spiv();
-
-  // initialize task-priority register
   init_tpr();
 
   disable_external_ints();
 
-  // get timer going on this CPU
   timer_set_divisor(1);
   enable_errors();
 }
