@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <cstring>
+#include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
 
@@ -18,10 +19,11 @@
 #include "kmem_alloc.h"
 #include "mem_layout.h"
 #include "mem_region.h"
+#include "mem_unit.h"
 #include "panic.h"
 #include "processor.h"
 #include "reset.h"
-#include "mem_unit.h"
+#include "simpleio.h"
 
 struct check_sum
 {
@@ -33,15 +35,6 @@ struct check_sum
 extern "C" char _start[];
 extern "C" char _end[];
 
-extern "C" void exit(int rc) __attribute__((noreturn));
-
-void
-exit(int)
-{
-  for (;;)
-    Proc::pause();
-}
-
 #ifndef NDEBUG
 void assert_fail(char const *expr, char const *file, unsigned int line,
                  void *caller)
@@ -49,6 +42,21 @@ void assert_fail(char const *expr, char const *file, unsigned int line,
   panic("Assertion failed at %s:%u:%p: %s\n", file, line, caller, expr);
 }
 #endif
+
+void
+panic(char const *format, ...)
+{
+  va_list args;
+
+  putstr("\033[1mPanic: ");
+  va_start(args, format);
+  vprintf(format, args);
+  va_end(args);
+  putstr("\033[m");
+
+  for (;;)
+    Proc::pause();
+}
 
 // test if [start1..end1-1] overlaps [start2..end2-1]
 static
