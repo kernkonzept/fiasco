@@ -27,5 +27,10 @@ SECTIONS {
     *(.bss .bss.* .gnu.linkonce.b.* COMMON)
   }
 
+  /* we need the symbols and ld.lld would not allow to strip .shstrtab */
+  .symtab : { *(.symtab) }
+  .shstrtab : { *(.shstrtab) }
+  .strtab : { *(.strtab) }
+
   /DISCARD/ : { *(*) }
 }
