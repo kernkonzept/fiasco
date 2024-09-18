@@ -41,7 +41,7 @@ SECTIONS {
    * is still supported and does the right thing. See also the ld.lld docu:
    * "COPY, INFO, OVERLAY: clear the SHF_ALLOC bit in sh_flags."
    */
-  .bda FIASCO_BDA_PAGE + 0x400 (INFO) : {
+  .bda (FIASCO_BDA_PAGE + 0x400) (INFO) : {
     . += 0xe;
     ebda_segment = .;
     . += 0x2;
