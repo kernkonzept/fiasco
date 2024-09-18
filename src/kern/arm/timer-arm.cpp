@@ -221,11 +221,11 @@ Timer::timer_value_to_time(Unsigned64 v, Scaler_shift scaler_shift)
   // This code is written in Assembler so that it doesn't require libgcc. It
   // should be also very similar to kip_time_fn_read_us()/kip_time_fn_read_us()
   // used by userland to get the same results as the kernel code.
-  asm ("umulh   %1, %0, %[scaler]       \n\t"
-       "mul     %0, %0, %[scaler]       \n\t"
+  asm ("umulh   %1, %0, %x[scaler]      \n\t"
+       "mul     %0, %0, %x[scaler]      \n\t"
        "mov     %2, #32                 \n\t"
-       "sub     %3, %2, %[shift]        \n\t"
-       "add     %2, %2, %[shift]        \n\t"
+       "sub     %3, %2, %x[shift]       \n\t"
+       "add     %2, %2, %x[shift]       \n\t"
        "lsr     %0, %0, %3              \n\t"
        "lsl     %1, %1, %2              \n\t"
        "orr     %0, %0, %1              \n\t"
