@@ -17,14 +17,22 @@ IMPLEMENTATION[amd64]:
 #include "types.h"
 #include "std_macros.h"
 
+/**
+ * Return CPU ID.
+ *
+ * Depending on the platform, this is either a 6-bit, an 8-bit, or a 32-bit
+ * value. Note that the 32-bit x2APIC CPU ID requires 2 invocations of CPUID.
+ */
 PUBLIC static inline
 Cpu_phys_id
 Proc::cpu_id()
 {
-  Mword eax, ebx,ecx, edx;
-  asm volatile ("cpuid" : "=a" (eax), "=b" (ebx), "=c" (ecx), "=d" (edx)
-                        : "a" (1));
-  return Cpu_phys_id((ebx >> 24) & 0xff);
+  Unsigned32 eax, ebx, ecx, edx;
+  cpuid(1, &eax, &ebx, &ecx, &edx);
+  if (eax >= 0xb)
+    return Cpu_phys_id(cpuid_edx(0xb));
+  else
+    return Cpu_phys_id(ebx >> 24);
 }
 
 IMPLEMENT static inline
