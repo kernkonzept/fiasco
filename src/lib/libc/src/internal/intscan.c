@@ -33,7 +33,9 @@ unsigned long long __intscan(FILE *f, unsigned base, int pok, unsigned long long
 	unsigned x;
 	unsigned long long y;
 	if (base > 36 || base == 1) {
+#ifndef LIBCL4
 		errno = EINVAL;
+#endif
 		return 0;
 	}
 	while (isspace((c=shgetc(f))));
@@ -60,7 +62,9 @@ unsigned long long __intscan(FILE *f, unsigned base, int pok, unsigned long long
 		if (val[c] >= base) {
 			shunget(f);
 			shlim(f, 0);
+#ifndef LIBCL4
 			errno = EINVAL;
+#endif
 			return 0;
 		}
 	}
@@ -84,7 +88,9 @@ unsigned long long __intscan(FILE *f, unsigned base, int pok, unsigned long long
 	}
 	if (val[c]<base) {
 		for (; val[c]<base; c=shgetc(f));
+#ifndef LIBCL4
 		errno = ERANGE;
+#endif
 		y = lim;
 		if (lim&1) neg = 0;
 	}
@@ -92,10 +98,14 @@ done:
 	shunget(f);
 	if (y>=lim) {
 		if (!(lim&1) && !neg) {
+#ifndef LIBCL4
 			errno = ERANGE;
+#endif
 			return lim-1;
 		} else if (y>lim) {
+#ifndef LIBCL4
 			errno = ERANGE;
+#endif
 			return lim;
 		}
 	}

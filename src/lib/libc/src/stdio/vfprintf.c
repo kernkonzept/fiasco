@@ -660,10 +660,14 @@ static int printf_core(FILE *f, const char *fmt, va_list *ap, union arg *nl_arg,
 	return 1;
 
 inval:
+#ifndef LIBCL4
 	errno = EINVAL;
+#endif
 	return -1;
 overflow:
+#ifndef LIBCL4
 	errno = EOVERFLOW;
+#endif
 	return -1;
 }
 
@@ -694,7 +698,12 @@ int vfprintf(FILE *restrict f, const char *restrict fmt, va_list ap)
 	}
 	if (!f->wend && __towrite(f)) ret = -1;
 	else ret = printf_core(f, fmt, &ap2, nl_arg, nl_type);
+#ifdef LIBCL4
+	/* allow to pass f with buf_size = 0 and buf = NULL */
+	if (f->buf == internal_buf) {
+#else
 	if (saved_buf) {
+#endif
 		f->write(f, 0, 0);
 		if (!f->wpos) ret = -1;
 		f->buf = saved_buf;

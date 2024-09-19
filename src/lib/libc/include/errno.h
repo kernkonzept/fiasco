@@ -9,6 +9,8 @@ extern "C" {
 
 #include <bits/errno.h>
 
+#ifndef LIBCL4
+
 #ifdef __GNUC__
 __attribute__((const))
 #endif
@@ -18,6 +20,8 @@ int *__errno_location(void);
 #ifdef _GNU_SOURCE
 extern char *program_invocation_short_name, *program_invocation_name;
 #endif
+
+#endif /* LIBCL4 */
 
 #ifdef __cplusplus
 }

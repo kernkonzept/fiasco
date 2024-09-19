@@ -201,7 +201,6 @@ CSRC_LIBC         := libc_lock.c \
                      isspace.c \
                      tolower.c \
                      \
-                     stdout.c \
                      printf.c \
                      snprintf.c \
                      sprintf.c \
@@ -216,8 +215,6 @@ CSRC_LIBC         := libc_lock.c \
                      fputs.c \
                      fwrite.c \
                      puts.c \
-                     \
-                     __errno_location.c \
                      \
                      atexit.c \
                      \

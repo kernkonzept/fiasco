@@ -26,33 +26,48 @@
 #define F_SVB 64
 #define F_APP 128
 
+/* LIBCL4: save some stack. Maybe remove even more. */
 struct _IO_FILE {
 	unsigned flags;
 	unsigned char *rpos, *rend;
+#ifndef LIBCL4
 	int (*close)(FILE *);
+#endif
 	unsigned char *wend, *wpos;
+#ifndef LIBCL4
 	unsigned char *mustbezero_1;
+#endif
 	unsigned char *wbase;
 	size_t (*read)(FILE *, unsigned char *, size_t);
 	size_t (*write)(FILE *, const unsigned char *, size_t);
+#ifndef LIBCL4
 	off_t (*seek)(FILE *, off_t, int);
+#endif
 	unsigned char *buf;
 	size_t buf_size;
+#ifndef LIBCL4
 	FILE *prev, *next;
+#endif
 	int fd;
+#ifndef LIBCL4
 	int pipe_pid;
 	long lockcount;
+#endif
 	int mode;
 	volatile int lock;
 	int lbf;
 	void *cookie;
+#ifndef LIBCL4
 	off_t off;
 	char *getln_buf;
 	void *mustbezero_2;
+#endif
 	unsigned char *shend;
 	off_t shlim, shcnt;
+#ifndef LIBCL4
 	FILE *prev_locked, *next_locked;
 	struct __locale_struct *locale;
+#endif
 };
 
 extern hidden FILE *volatile __stdin_used;
