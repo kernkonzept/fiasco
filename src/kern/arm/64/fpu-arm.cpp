@@ -101,7 +101,7 @@ public:
   {
     using Type = T;
 
-    static constexpr unsigned off(unsigned vl)
+    static constexpr unsigned off([[maybe_unused]] unsigned vl)
     {
       if constexpr (cxx::is_same_v<PREV, void>)
         return 0;
