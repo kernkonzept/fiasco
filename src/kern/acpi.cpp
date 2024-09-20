@@ -147,6 +147,77 @@ private:
   char data[0];
 } __attribute__((packed));
 
+class Acpi_srat : public Acpi_table_head
+{
+public:
+  struct Acpi_subtable_header
+  {
+    Unsigned8 type;
+    Unsigned8 len;
+  } __attribute__((packed));
+
+  class Type
+  {
+  public:
+    enum
+    {
+      Cpu_affinity        = 0,
+      Memory_affinity     = 1,
+      X2APIC_cpu_affinity = 2,
+      Gicc_affinity       = 3,
+    };
+  };
+
+  enum Cpu_affinity_flags
+  {
+    Cpu_use_affinity = 1,
+  };
+
+  struct Cpu_affinity : public Acpi_subtable_header
+  {
+    Unsigned8  proximity_domain_lo;
+    Unsigned8  apic_id;
+    Unsigned32 flags;
+    Unsigned8  local_sapic_eid;
+    Unsigned8  proximity_domain_hi[3];
+    Unsigned32 clock_domain;
+  } __attribute__((packed));
+
+  enum Mem_affinity_flags
+  {
+    Mem_enabled       = 1,
+    Mem_hot_pluggable = 1 << 1,
+    Mem_non_volatile  = 1 << 2,
+  };
+
+  struct Mem_affinity : public Acpi_subtable_header
+  {
+    Unsigned32 proximity_domain;
+    Unsigned16 reserved;           /* Reserved, must be zero */
+    Unsigned64 base_address;
+    Unsigned64 length;
+    Unsigned32 reserved1;
+    Unsigned32 flags;
+    Unsigned64 reserved2;          /* Reserved, must be zero */
+  } __attribute__((packed));
+
+  struct Proc_lapic2 : public Acpi_subtable_header
+  {
+    Unsigned8 reserved1[2];
+    Unsigned32 domain;
+    Unsigned32 x2apic_id;
+    Unsigned32 flags;
+    Unsigned32 clock_domain;
+    Unsigned8 reserved2[4];
+  };
+
+  Unsigned32 table_revision;
+  Unsigned64 reserved;
+
+private:
+  char data[0];
+};
+
 template< bool >
 struct Acpi_helper_get_msb
 { template<typename P> static Address msb(P) { return 0; } };
@@ -354,6 +425,10 @@ Acpi::init_virt()
                 {
                   x->print_info();
                   _sdt.print_summary();
+
+                  Acpi_srat const *srat = Acpi::find<Acpi_srat const *>("SRAT");
+                  if (srat)
+                    srat->show();
                 }
               return;
             }
@@ -377,6 +452,10 @@ Acpi::init_virt()
                 {
                   r->print_info();
                   _sdt.print_summary();
+
+                  Acpi_srat const *srat = Acpi::find<Acpi_srat const *>("SRAT");
+                  if (srat)
+                    srat->show();
                 }
             }
         }
@@ -495,6 +574,60 @@ Acpi_rsdp::locate_via_kip()
       }
 
   return 0;
+}
+
+PUBLIC template<typename T> inline
+T const *
+Acpi_srat::find() const
+{
+  return nullptr;
+}
+
+PUBLIC
+void
+Acpi_srat::show() const
+{
+  printf("SRAT Table Revision: 0x%x (len: %d)\n", table_revision, len);
+
+  for (unsigned i = 0; i < len - sizeof(Acpi_srat);)
+    {
+      auto *h = reinterpret_cast<Acpi_subtable_header const *>(data + i);
+      switch (h->type)
+        {
+        case Type::Cpu_affinity:
+          {
+            auto *c = reinterpret_cast<Cpu_affinity const *>(data + i);
+            if (c->flags & Cpu_use_affinity)
+              printf("  Cpu: prox_dom_lo,hi[3]=%x,%x,%x,%x apic_id=0x%x local_sapic_eid=0x%x clk_dom=0x%x\n",
+                     c->proximity_domain_lo, c->proximity_domain_hi[0],
+                     c->proximity_domain_hi[1], c->proximity_domain_hi[2],
+                     c->apic_id, c->local_sapic_eid, c->clock_domain);
+            break;
+          }
+        case Type::Memory_affinity:
+          {
+            auto *m = reinterpret_cast<Mem_affinity const *>(data + i);
+            if (m->flags & Mem_enabled)
+              printf("  Mem: Proxdomain=%d Baseaddr=%llx Len=%llx %s %s\n",
+                     m->proximity_domain, m->base_address, m->length,
+                     (m->flags & Mem_hot_pluggable) ? "HotPluggable" : "Noplug",
+                     (m->flags & Mem_non_volatile) ? "NonVolatile" : "Forgetting");
+            break;
+          }
+        case Type::X2APIC_cpu_affinity:
+          {
+            auto *p = reinterpret_cast<Proc_lapic2 const *>(data + i);
+            printf("  Cpu: domain=0x%x x2apic_id=0x%x flags=0x%x clk_dom=0x%x\n",
+                   p->domain, p->x2apic_id, p->flags, p->clock_domain);
+            break;
+          }
+        default:
+          printf("Unhandled SRAT type %d\n", h->type);
+          break;
+        }
+
+      i += h->len;
+    }
 }
 
 // ------------------------------------------------------------------------
