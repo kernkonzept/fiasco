@@ -1,4 +1,3 @@
-
 IMPLEMENTATION[ia32 || amd64]:
 
 #include "apic.h"
@@ -64,7 +63,7 @@ Kernel_thread::bootstrap_arch()
 }
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [!mp]:
+IMPLEMENTATION [(ia32 || amd64) && !mp]:
 
 PUBLIC
 static inline void
@@ -73,7 +72,7 @@ Kernel_thread::boot_app_cpus()
 
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [mp]:
+IMPLEMENTATION [(ia32 || amd64) && mp]:
 
 #include "acpi.h"
 #include "mem.h"
@@ -118,6 +117,76 @@ Kernel_thread::find_cpu_num_by_apic_id(Apic_id apic_id)
   return Cpu_number::nil();
 }
 
+/**
+ * Use the ACPI MADT to populate the _cpu_num_to_apic_id[] array to have a fixed
+ * enumeration of APIC IDs to identify CPUs.
+ */
+PRIVATE static
+bool
+Kernel_thread::populate_cpu_num_to_apic()
+{
+  Acpi_madt const *madt = Io_apic::madt();
+  if (!madt)
+    return false;
+
+  Apic_id boot_apic_id = Apic::get_id();
+
+  // make sure the boot CPU gets the right CPU number
+  _cpu_num_to_apic_id[Cpu_number::boot_cpu()] = boot_apic_id;
+
+  unsigned entry = 0;
+  Cpu_number last_cpu = Cpu_number::first();
+
+  // First we collect all enabled CPUs and assign them the leading CPU
+  // numbers. Disabled CPUs are collected in a second run and get the
+  // remaining CPU numbers assigned. This way we make sure that we can boot
+  // at least the maximum number of enabled CPUs. Disabled CPUs may come
+  // online later through e.g. hot plugging.
+  while (last_cpu < Config::max_num_cpus())
+    {
+      auto const *lapic = madt->find<Acpi_madt::Lapic>(entry++);
+      if (!lapic)
+        break;
+
+      // skip disabled CPUs
+      if (!(lapic->flags & 1))
+        continue;
+
+      // skip logical boot CPU number
+      if (last_cpu == Cpu_number::boot_cpu())
+        ++last_cpu;
+
+      Apic_id aid{Unsigned32{lapic->apic_id} << 24};
+
+      // the boot CPU already has a CPU number assigned
+      if (aid == boot_apic_id)
+        continue;
+
+      _cpu_num_to_apic_id[last_cpu++] = aid;
+    }
+
+  entry = 0;
+  while (last_cpu < Config::max_num_cpus())
+    {
+      auto const *lapic = madt->find<Acpi_madt::Lapic>(entry++);
+      if (!lapic)
+        break;
+
+      // skip enabled CPUs
+      if (lapic->flags & 1)
+        continue;
+
+      // skip logical boot CPU number
+      if (last_cpu == Cpu_number::boot_cpu())
+        ++last_cpu;
+
+      Apic_id aid{Unsigned32{lapic->apic_id} << 24};
+      _cpu_num_to_apic_id[last_cpu++] = aid;
+    }
+
+  return true;
+}
+
 PUBLIC
 static void
 Kernel_thread::boot_app_cpus()
@@ -146,69 +215,9 @@ Kernel_thread::boot_app_cpus()
 
   Mem::barrier();
 
-  Acpi_madt const *madt = Io_apic::madt();
+  if (populate_cpu_num_to_apic())
+    boot_deterministic = true;
 
-  // if we cannot find a MADT we cannot boot in deterministic order
-  if (madt)
-    {
-      boot_deterministic = true;
-      Apic_id boot_apic_id = Apic::get_id();
-
-      // make sure the boot CPU gets the right CPU number
-      _cpu_num_to_apic_id[Cpu_number::boot_cpu()] = boot_apic_id;
-
-      unsigned entry = 0;
-      Cpu_number last_cpu = Cpu_number::first();
-
-      // First we collect all enabled CPUs and assign them the leading CPU
-      // numbers. Disabled CPUs are collected in a second run and get the
-      // remaining CPU numbers assigned. This way we make sure that we can boot
-      // at least the maximum number of enabled CPUs. Disabled CPUs may come
-      // online later through e.g. hot plugging.
-      while (last_cpu < Config::max_num_cpus())
-        {
-          auto const *lapic = madt->find<Acpi_madt::Lapic>(entry++);
-          if (!lapic)
-            break;
-
-          // skip disabled CPUs
-          if (!(lapic->flags & 1))
-            continue;
-
-          // skip logical boot CPU number
-          if (last_cpu == Cpu_number::boot_cpu())
-            ++last_cpu;
-
-          Apic_id aid{Unsigned32{lapic->apic_id} << 24};
-
-          // the boot CPU already has a CPU number assigned
-          if (aid == boot_apic_id)
-            continue;
-
-          _cpu_num_to_apic_id[last_cpu++] = aid;
-        }
-
-      entry = 0;
-      while (last_cpu < Config::max_num_cpus())
-        {
-          auto const *lapic = madt->find<Acpi_madt::Lapic>(entry++);
-          if (!lapic)
-            break;
-
-          // skip enabled CPUs
-          if (lapic->flags & 1)
-            continue;
-
-          // skip logical boot CPU number
-          if (last_cpu == Cpu_number::boot_cpu())
-            ++last_cpu;
-
-          Apic_id aid{Unsigned32{lapic->apic_id} << 24};
-          _cpu_num_to_apic_id[last_cpu++] = aid;
-        }
-    }
-
-  // Say what we do
   printf("MP: detecting APs...\n");
 
   // broadcast an AP startup via the APIC (let run the self-registration code)
