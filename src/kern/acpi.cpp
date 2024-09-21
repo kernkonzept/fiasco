@@ -340,7 +340,7 @@ Acpi::_map_table_head(Unsigned64 phys)
       printf("ACPI: cannot map phys address %llx, out of range (%ubit)\n",
              static_cast<unsigned long long>(phys),
              static_cast<unsigned>(sizeof(Address)) * 8);
-      return 0;
+      return nullptr;
     }
 
   Address t = Kmem::mmio_remap(phys, Config::PAGE_SIZE, true);
@@ -378,7 +378,7 @@ Acpi_sdt::map_entry(unsigned idx, T phys)
   if (idx >= _num_tables)
     {
       printf("ACPI: table index out of range (%u >= %u)\n", idx, _num_tables);
-      return 0;
+      return nullptr;
     }
 
   return Acpi::map_table_head<Acpi_table_head>(static_cast<Unsigned64>(phys));
@@ -519,7 +519,7 @@ Acpi_sdt::find(char const *sig) const
 	return t;
     }
 
-  return 0;
+  return nullptr;
 }
 
 PUBLIC
@@ -539,7 +539,7 @@ Acpi_madt::find(Unsigned8 type, int idx) const
       i += a->len;
     }
 
-  return 0;
+  return nullptr;
 }
 
 PUBLIC template<typename T> inline
@@ -573,7 +573,7 @@ Acpi_rsdp::locate_via_kip()
         panic("RSDP memory descriptor from bootstrap invalid");
       }
 
-  return 0;
+  return nullptr;
 }
 
 PUBLIC template<typename T> inline
@@ -647,7 +647,7 @@ Acpi_rsdp::locate_in_region(Address start, Address end)
         return r;
     }
 
-  return 0;
+  return nullptr;
 }
 
 IMPLEMENT
@@ -676,7 +676,7 @@ Acpi_rsdp::locate()
     if (Acpi_rsdp const *r = locate_in_region(ebda, ebda + 1024))
       return r;
 
-  return 0;
+  return nullptr;
 }
 
 // ------------------------------------------------------------------------
