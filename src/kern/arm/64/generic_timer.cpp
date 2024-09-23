@@ -131,17 +131,17 @@ namespace Generic_timer {
     static Unsigned64 counter() // use the physical counter
     { Unsigned64 v; asm volatile("mrs %0, CNTPCT_EL0" : "=r" (v)); return v; }
 
-    static Unsigned64 compare() // use secure EL2 physical compare
-    { Unsigned64 v; asm volatile("mrs %0, CNTHPS_CVAL_EL2" : "=r" (v)); return v; }
+    static Unsigned64 compare() // CNTHPS_CVAL_EL2: secure EL2 physical compare
+    { Unsigned64 v; asm volatile("mrs %0, S3_4_C14_C5_2" : "=r" (v)); return v; }
 
-    static void compare(Unsigned64 v)
-    { asm volatile("msr CNTHPS_CVAL_EL2, %0" : : "r" (v)); }
+    static void compare(Unsigned64 v) // CNTHPS_CVAL_EL2
+    { asm volatile("msr S3_4_C14_C5_2, %0" : : "r" (v)); }
 
-    static Unsigned32 control()
-    { Mword v; asm volatile("mrs %0, CNTHPS_CTL_EL2" : "=r" (v)); return v; }
+    static Unsigned32 control() // CNTHPS_CTL_EL2
+    { Mword v; asm volatile("mrs %0, S3_4_C14_C5_1" : "=r" (v)); return v; }
 
-    static void control(Unsigned32 v)
-    { asm volatile("msr CNTHPS_CTL_EL2, %0" : : "r" (Mword{v})); }
+    static void control(Unsigned32 v) // CNTHPS_CTL_EL2
+    { asm volatile("msr S3_4_C14_C5_1, %0" : : "r" (Mword{v})); }
 
     static void setup_timer_access()
     {
