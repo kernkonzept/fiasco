@@ -766,7 +766,8 @@ void Fb_console::normal_write(char const *str, size_t len, unsigned &i)
         break;
 
       default:
-        if (static_cast<unsigned>(str[i]) >= 32)
+        if (static_cast<unsigned>(str[i]) >= 32
+            && static_cast<unsigned>(str[i]) <= 0x7e)
           {
             if (_x >= _screen.width)
               {
