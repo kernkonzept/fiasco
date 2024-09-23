@@ -72,6 +72,11 @@ public:
     Hcr_tlor   = 1ULL << 35, ///< Trap FEAT_LOR registers, not defined for HCR2
   };
 
+  enum : bool
+  {
+    Has_el3 = TAG_ENABLED(arm_profile_a), // Only the A-profile sports EL3
+  };
+
   unsigned copro_dbg_model() const { return _cpu_id._dfr0 & 0xf; }
 
 private:

@@ -133,7 +133,7 @@ PUBLIC static inline NEEDS["cpu.h"]
 void
 Bootstrap::config_feature_traps(Mword, bool leave_el3, bool leave_el2)
 {
-  if (leave_el3)
+  if (Cpu::Has_el3 && leave_el3)
     // Disable traps to EL3.
     asm volatile ("msr CPTR_EL3, %0" : : "r"(0UL));
 
@@ -154,7 +154,7 @@ Bootstrap::config_feature_traps(Mword pfr0, bool leave_el3, bool leave_el2)
   bool has_sve = ((pfr0 >> 32) & 0xf) == 1;
   if (has_sve)
     {
-      if (leave_el3)
+      if (Cpu::Has_el3 && leave_el3)
         {
           // Disable traps to EL3, including SVE traps.
           asm volatile ("msr CPTR_EL3, %0" : : "r"(Cpu::Cptr_el3_ez));
@@ -180,7 +180,7 @@ Bootstrap::config_feature_traps(Mword pfr0, bool leave_el3, bool leave_el2)
     }
   else
     {
-      if (leave_el3)
+      if (Cpu::Has_el3 && leave_el3)
         // Disable traps to EL3.
         asm volatile ("msr CPTR_EL3, %0" : : "r"(0UL));
 
