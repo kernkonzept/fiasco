@@ -405,13 +405,11 @@ Io_apic_remapped::init_apics()
       coherent &= i.coherent();
     }
 
-  int n_apics;
-  for (n_apics = 0;
-       auto ioapic = madt->find<Acpi_madt::Io_apic>(n_apics);
-       ++n_apics)
+  unsigned n_apics = 0;
+  for (auto *ioapic : madt->iterate<Acpi_madt::Io_apic>())
     {
       Intel::Io_mmu *mmu = 0;
-      ACPI::Dmar_dev_scope const *dev_scope = 0;
+      ACPI::Dmar_dev_scope const *dev_scope = nullptr;
 
       for (auto &iommu: Intel::Io_mmu::iommus)
         {
@@ -452,6 +450,7 @@ Io_apic_remapped::init_apics()
 
       Io_apic_remapped *apic =
         new Boot_object<Io_apic_remapped>(ioapic->adr, ioapic->irq_base, mmu, srcid);
+      ++n_apics;
 
       if (Print_infos)
         apic->dump();

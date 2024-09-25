@@ -254,16 +254,14 @@ PROTECTED static FIASCO_INIT
 void
 Io_apic::read_overrides()
 {
-  for (unsigned tmp = 0;; ++tmp)
+  int n = -1;
+  for (auto *irq : _madt->iterate<Acpi_madt::Irq_source>())
     {
-      auto irq = _madt->find<Acpi_madt::Irq_source>(tmp);
-
-      if (!irq)
-        break;
+      ++n;
 
       if (Print_info)
-        printf("IO-APIC: ovr[%2u] %02x -> %x %x\n",
-               tmp, irq->src, irq->irq, irq->flags);
+        printf("IO-APIC: ovr[%2d] %02x -> %x %x\n",
+               n, irq->src, irq->irq, irq->flags);
 
       if (irq->irq >= _nr_irqs)
         {
@@ -301,7 +299,6 @@ Io_apic::read_overrides()
     }
 }
 
-
 PUBLIC static FIASCO_INIT
 Acpi_madt const *
 Io_apic::lookup_madt()
@@ -321,17 +318,14 @@ bool
 Io_apic::init_scan_apics()
 {
   auto madt = lookup_madt();
-
-  if (madt == 0)
+  if (madt == nullptr)
     {
       WARN("Could not find APIC in RSDT nor XSDT, skipping init\n");
       return false;
     }
 
-  int n_apics;
-  for (n_apics = 0;
-       auto ioapic = madt->find<Acpi_madt::Io_apic>(n_apics);
-       ++n_apics)
+  unsigned n_apics = 0;
+  for (auto *ioapic : madt->iterate<Acpi_madt::Io_apic>())
     {
       Io_apic *apic = new Boot_object<Io_apic>(ioapic->adr, ioapic->irq_base);
 
@@ -340,11 +334,13 @@ Io_apic::init_scan_apics()
           printf("IO-APIC[%2d]: pins %u\n", n_apics, apic->nr_irqs());
           apic->dump();
         }
+
+      ++n_apics;
     }
 
   if (!n_apics)
     {
-      WARN("IO-APIC: Could not find IO-APIC in MADT, skip init\n");
+      WARN("IO-APIC: Could not find IO-APIC in MADT, skipping init\n");
       return false;
     }
 
@@ -409,18 +405,10 @@ Io_apic::legacy_override(unsigned i)
   if (!_madt)
     return i;
 
-  unsigned tmp = 0;
-  for (;;++tmp)
-    {
-      Acpi_madt::Irq_source const *irq
-        = static_cast<Acpi_madt::Irq_source const *>(_madt->find(Acpi_madt::Irq_src_ovr, tmp));
+  for (auto *irq : _madt->iterate<Acpi_madt::Irq_source>())
+    if (irq->src == i)
+      return irq->irq;
 
-      if (!irq)
-        break;
-
-      if (irq->src == i)
-        return irq->irq;
-    }
   return i;
 }
 
