@@ -1103,6 +1103,9 @@ Utest::start_thread(F const &fn, Cpu_number cpu,
 
   Thread_args<F> args(fn);
 
+  // Undo prepare_switch_to() from Thread::Thread() to get a proper stack
+  // alignment.
+  t->reset_kernel_sp();
   t->prepare_switch_to(thread_fn<F>);
 
   // Fixed-priority scheduler only so far!
