@@ -16,6 +16,7 @@ INTERFACE:
 #include "kip.h"
 #include "kmem_slab.h"
 #include "l4_error.h"
+#include "panic.h"
 #include "per_cpu_data.h"
 #include "processor.h"
 #include "reset.h"
@@ -26,8 +27,6 @@ INTERFACE:
 
 
 extern "C" void cov_print(void) __attribute__((weak));
-
-INIT_WORKLOAD(INIT_WORKLOAD_PRIO_UNIT_TEST, init_unittest);
 
 template <typename T, unsigned ALIGN = __alignof(T)>
 struct Kmem_slab_t_singleton
@@ -1379,6 +1378,39 @@ Utest::Tick_disabler::timestamp()
 {
   return 0;
 }
+
+extern "C" void init_unittest() __attribute__((weak));
+
+/**
+ * Entry point defined by tests that require to be executed in the idle thread
+ * of the boot CPU. Use with caution.
+ */
+extern "C" void init_unittest_exclusive() __attribute__((weak));
+
+extern "C" void
+init_unittest_threaded()
+{
+  if (init_unittest_exclusive)
+    init_unittest_exclusive();
+  else if (init_unittest)
+    {
+      Thread_object *t = new (Ram_quota::root) Thread_object(Ram_quota::root);
+      Utest_fw::chk(t, "Create thread for executing the kunit tests");
+
+      // Keep reference until thread has terminated.
+      Ref_ptr<Thread_object> thread_ref(t);
+
+      Utest_fw::chk(Utest::start_thread(&init_unittest, current_cpu(), 0, t),
+                    "Start kernel thread executing the kunit tests");
+
+      while (!(t->state() & Thread_dead))
+        Proc::pause();
+    }
+  else
+    panic("Neither init_unittest() nor init_unittest_exclusive() defined!");
+}
+
+INIT_WORKLOAD(INIT_WORKLOAD_PRIO_UNIT_TEST, init_unittest_threaded);
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION[ia32 || amd64]:
