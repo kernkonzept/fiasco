@@ -226,7 +226,7 @@ VPATH             += lib/libk/quad
 CSRC_LIBC         += lshrdi3.c
 # There is room for improvement in musl
 $(foreach f, $(patsubst %.c, %, $(CSRC_LIBC)), \
-        $(eval CFLAGS_$(f) += -Wno-parentheses -Wno-sign-compare \
+        $(eval CFLAGS_$(f) += -Wno-sign-compare \
                               -Wno-implicit-fallthrough))
 ASSRC_LIBC        := setjmp.S longjmp.S \
                      $(if $(filter ia32,$(CONFIG_XARCH)),memcpy-i386.S)

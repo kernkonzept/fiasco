@@ -20,7 +20,7 @@ int __shgetc(FILE *f)
 {
 	int c;
 	off_t cnt = shcnt(f);
-	if (f->shlim && cnt >= f->shlim || (c=__uflow(f)) < 0) {
+	if ((f->shlim && cnt >= f->shlim) || (c = __uflow(f)) < 0) {
 		f->shcnt = f->buf - f->rpos + cnt;
 		f->shend = f->rpos;
 		f->shlim = -1;

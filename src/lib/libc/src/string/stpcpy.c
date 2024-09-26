@@ -1,11 +1,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <limits.h>
-
-#define ALIGN (sizeof(size_t))
-#define ONES ((size_t)-1/UCHAR_MAX)
-#define HIGHS (ONES * (UCHAR_MAX/2+1))
-#define HASZERO(x) ((x)-ONES & ~(x) & HIGHS)
+#include <strutil.h>
 
 char *__stpcpy(char *restrict d, const char *restrict s)
 {
@@ -13,8 +9,8 @@ char *__stpcpy(char *restrict d, const char *restrict s)
 	typedef size_t __attribute__((__may_alias__)) word;
 	word *wd;
 	const word *ws;
-	if ((uintptr_t)s % ALIGN == (uintptr_t)d % ALIGN) {
-		for (; (uintptr_t)s % ALIGN; s++, d++)
+	if ((uintptr_t)s % SS == (uintptr_t)d % SS) {
+		for (; (uintptr_t)s % SS; s++, d++)
 			if (!(*d=*s)) return d;
 		wd=(void *)d; ws=(const void *)s;
 		for (; !HASZERO(*ws); *wd++ = *ws++);
