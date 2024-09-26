@@ -141,7 +141,7 @@ static void out(FILE *f, const char *s, size_t l)
 	if (!ferror(f)) __fwritex((void *)s, l, f);
 }
 
-static void pad(FILE *f, char c, int w, int l, int fl)
+static void pad(FILE *f, char c, size_t w, size_t l, int fl)
 {
 	char pad[256];
 	if (fl & (LEFT_ADJ | ZERO_PAD) || l >= w) return;
@@ -424,7 +424,7 @@ static int fmt_fp(FILE *f, long double y, int w, int p, int fl, int t)
 static int getint(char **s) {
 	int i;
 	for (i=0; isdigit(**s); (*s)++) {
-		if (i > INT_MAX/10U || **s-'0' > INT_MAX-10*i) i = -1;
+		if ((unsigned)i > INT_MAX/10U || **s-'0' > INT_MAX-10*i) i = -1;
 		else i = 10*i + (**s-'0');
 	}
 	return i;
@@ -563,7 +563,7 @@ static int printf_core(FILE *f, const char *fmt, va_list *ap, union arg *nl_arg,
 			}
 			continue;
 		case 'p':
-			p = MAX(p, 2*sizeof(void*));
+			p = MAX(p, (int)(2*sizeof(void*)));
 			t = 'x';
 			fl |= ALT_FORM;
 			// fallthrough

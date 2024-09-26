@@ -7,7 +7,7 @@ size_t __fwritex(const unsigned char *restrict s, size_t l, FILE *restrict f)
 
 	if (!f->wend && __towrite(f)) return 0;
 
-	if (l > f->wend - f->wpos) return f->write(f, s, l);
+	if (l > (size_t)(f->wend - f->wpos)) return f->write(f, s, l);
 
 	if (f->lbf >= 0) {
 		/* Match /^(.*\n|)/ */

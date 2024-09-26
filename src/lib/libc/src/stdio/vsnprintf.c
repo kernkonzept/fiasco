@@ -14,7 +14,7 @@ struct cookie {
 static size_t sn_write(FILE *f, const unsigned char *s, size_t l)
 {
 	struct cookie *c = f->cookie;
-	size_t k = MIN(c->n, f->wpos - f->wbase);
+	size_t k = MIN(c->n, (size_t)(f->wpos - f->wbase));
 	if (k) {
 		memcpy(c->s, f->wbase, k);
 		c->s += k;
