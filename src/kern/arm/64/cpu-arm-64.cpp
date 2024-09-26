@@ -257,7 +257,19 @@ Cpu::init_hyp_mode_common()
   asm volatile ("msr VBAR_EL2, %x0" : : "r"(&exception_vector));
   asm volatile ("msr VTCR_EL2, %x0" : : "r"(vtcr_bits()));
 
-  Mword mdcr = Mword{Mdcr_bits} | (has_hpmn0() ? 0 : 1);
+  Mword mdcr;
+  if (has_pmuv3())
+    {
+      Mword pmcr;
+      asm volatile ("mrs %0, PMCR_EL0" : "=r"(pmcr));
+      mdcr = (pmcr >> 11) & 0x1f;
+    }
+  else
+    {
+      asm volatile ("mrs %0, MDCR_EL2" : "=r"(mdcr));
+      mdcr &= 0x1f; // keep HPMN reset value
+    }
+  mdcr |= Mdcr_bits;
   asm volatile ("msr MDCR_EL2, %x0" : : "r"(mdcr));
 
   asm volatile ("msr SCTLR_EL1, %x0" : : "r"(Mword{Sctlr_el1_generic}));
@@ -368,6 +380,11 @@ IMPLEMENT_OVERRIDE inline
 bool
 Cpu::has_hpmn0() const
 { return ((_cpu_id._dfr0 >> 60) & 0xf) == 1; }
+
+IMPLEMENT_OVERRIDE inline
+bool
+Cpu::has_pmuv3() const
+{ return ((_cpu_id._dfr0 >> 8) & 0xf) >= 1; }
 
 PUBLIC static inline
 Mword

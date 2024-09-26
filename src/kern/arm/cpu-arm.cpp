@@ -91,6 +91,7 @@ private:
   Ids _cpu_id;
 
   bool has_hpmn0() const;
+  bool has_pmuv3() const;
 };
 
 // ------------------------------------------------------------------------
@@ -325,6 +326,13 @@ Cpu::bsp_init(bool) {}
 IMPLEMENT_DEFAULT inline
 bool
 Cpu::has_hpmn0() const
+{
+  return false;
+}
+
+IMPLEMENT_DEFAULT static inline
+bool
+Cpu::has_pmuv3() const
 {
   return false;
 }

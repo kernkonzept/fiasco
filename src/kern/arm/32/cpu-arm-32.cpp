@@ -37,7 +37,21 @@ Cpu::mpidr()
   return mpid;
 }
 
-IMPLEMENTATION [arm && arm_v8plus && mmu]: //------------------------------
+//-------------------------------------------------------------------------
+IMPLEMENTATION [arm && arm_v7plus]:
+
+PUBLIC static inline
+Mword
+Cpu::dfr0()
+{ Mword r; asm volatile ("mrc p15, 0, %0, c0, c1, 2": "=r" (r)); return r; }
+
+IMPLEMENT_OVERRIDE inline
+bool
+Cpu::has_pmuv3() const
+{ return ((dfr0() >> 24) & 0xf) >= 3; }
+
+//-------------------------------------------------------------------------
+IMPLEMENTATION [arm && arm_v8plus && mmu]:
 
 PUBLIC static inline
 Mword
@@ -359,7 +373,7 @@ public:
   enum
   {
     Hdcr_bits = (TAG_ENABLED(perf_cnt_user) ? 0 : (Mdcr_tpmcr | Mdcr_tpm))
-                | Mdcr_tde | Mdcr_tda | Mdcr_tdosa | Mdcr_tdra | Mdcr_ttrf,
+                | Mdcr_tde | Mdcr_tda | Mdcr_tdosa | Mdcr_tdra | Mdcr_ttrf
   };
 };
 
@@ -373,15 +387,26 @@ Cpu::init_hyp_mode_common()
   asm volatile ("mcr p15, 4, %0, c12, c0, 0 \n" : : "r"(hyp_vector_base));
 
   Mword sctlr_ignore;
+  Mword hdcr;
+  if (has_pmuv3())
+    {
+      Mword pmcr;
+      asm volatile ("mrc p15, 0, %0, c9, c12, 0" : "=r" (pmcr)); // read PMCR
+      hdcr = (pmcr >> 11) & 0x1f;
+    }
+  else
+    {
+      asm volatile ("mrc p15, 4, %0, c1, c1, 1" : "=r"(hdcr)); // read HDCR
+      hdcr &= 0x1f; // keep HPMN at reset value
+    }
+  hdcr |= Hdcr_bits;
   asm volatile (
         "mcr p15, 4, %[hdcr], c1, c1, 1 \n"     // write HDCR
-        "mrc p15, 0, %[sctlr], c1, c0, 0 \n"    // SCTLR
+        "mrc p15, 0, %[sctlr], c1, c0, 0 \n"    // read SCTLR
         "bic %[sctlr], #1 \n"                   // disable PL1&0 stage 1 MMU
-        "mcr p15, 0, %[sctlr], c1, c0, 0 \n"    // SCTLR
-        :
-        [sctlr]"=&r"(sctlr_ignore)
-        :
-        [hdcr]"r"(Mword{Hdcr_bits} | (has_hpmn0() ? 0 : 1)));
+        "mcr p15, 0, %[sctlr], c1, c0, 0 \n"    // write SCTLR
+        : [sctlr]"=&r"(sctlr_ignore)
+        : [hdcr]"r"(hdcr));
   hcr(Hcr_non_vm_bits_el0);
   asm ("mcr p15, 4, %0, c1, c1, 3" : : "r"(Hstr_non_vm)); // HSTR
 
