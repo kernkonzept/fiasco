@@ -415,7 +415,7 @@ public:
   bool probe(ACPI::Dmar_drhd const *drhd);
   void setup(Cpu_number cpu);
 
-  FIASCO_INIT
+  FIASCO_INIT_SFX(set_irq_remapping_table)
   void set_irq_remapping_table(Irte *irt, Unsigned64 irt_pa, unsigned order,
                                bool use_x2apic)
   {
@@ -429,9 +429,10 @@ public:
       {
         if (!supports_x2apic())
           panic("IOMMU: x2APIC not supported");
-
         irta |= Irta_eime;
       }
+    else if (requires_x2apic())
+      panic("IOMMU: x2APIC mode not used but required by IOMMU");
     regs[Reg_64::Irt_addr] = irta;
     modify_cmd(Cmd_sirtp);
     queue_and_wait<false>(Inv_desc::global_iec());
@@ -680,6 +681,9 @@ public:
 
   /// EIM: x2APIC mode with 32-bit APIC-IDs supported?
   bool supports_x2apic() const { return ecaps & (1 << 4); };
+
+  /// EIMER: Extended Interrupt Mode Enable Required?
+  bool requires_x2apic() const { return ecaps & (Unsigned64{1} << 61); }
 
   /// IR: Interrupt Remapping supported?
   bool supports_int_remapping() const { return ecaps & (1 << 3); }
