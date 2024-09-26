@@ -182,7 +182,6 @@ CSRC_LIBC         := libc_lock.c \
                      strcmp.c \
                      stpcpy.c \
                      strchr.c \
-                     strstr.c \
                      $(if $(filter ia32,$(CONFIG_XARCH)),,memcpy.c) \
                      strcspn.c \
                      strchrnul.c \
@@ -220,6 +219,8 @@ CSRC_LIBC         := libc_lock.c \
                      \
                      intscan.c \
                      shgetc.c
+
+CXXSRC_LIBC += strstr.cc
 
 # riscv32: needed by intscan.c
 VPATH             += lib/libk/quad
