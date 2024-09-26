@@ -707,7 +707,7 @@ config MAINTAINER_MODE
 
 config NO_VERSION
 	bool "Do not provide build version info"
-	depends on EXPERIMENTAL
+	depends on EXPERT
 	help
 	  Do not provide build version info to avoid the need to relink all
 	  kernel unit tests on each build.
@@ -732,6 +732,17 @@ config EXPERIMENTAL
 	  disrupt the stability of your kernel.
 
 	  Use with caution!
+
+config EXPERT
+	bool "Prompt for expert features"
+	help
+	  Expert features are available when enabling this option. Enabling
+	  these features may pose security risks and may disrupt the stability
+	  of your kernel.
+
+	  Enable ONLY when you know what you are doing!
+	  Do NOT enable for production builds!
+
 ################################################################################
 
 config BIT32
