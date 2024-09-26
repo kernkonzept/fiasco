@@ -20,6 +20,7 @@ class Apic : public Pm_object
 {
 public:
   static void map_registers() FIASCO_INIT;
+  static void detect_x2apic() FIASCO_INIT;
   static void init(bool resume = false) FIASCO_INIT_AND_PM;
   Apic_id apic_id() const { return _id; }
 
@@ -866,6 +867,14 @@ Apic::dump_info()
            cxx::int_value<Apic_id>(get_id()) >> 24, get_version(), get_max_lvt());
 }
 
+IMPLEMENT
+void
+Apic::detect_x2apic()
+{
+  if (Cpu::cpuid_ecx(1) & FEATX_X2APIC)
+    use_x2 = true;
+}
+
 /**
  * \brief Map the Local APIC device registers
  *
@@ -891,11 +900,9 @@ Apic::map_registers()
       present &= ~Present_before_msr;
     }
 
-  if (cpu->ext_features() & FEATX_X2APIC)
+  if (use_x2)
     {
       printf("Using x2APIC\n");
-      use_x2 = true;
-
       present |= Present;
       activate_by_msr();
     }

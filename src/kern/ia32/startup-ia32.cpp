@@ -60,6 +60,8 @@ Startup::stage2()
   Cpu::cpus.cpu(Cpu_number::boot_cpu()).identify();
   // initialize initial page tables (also used for other CPUs later)
   Mem_space::init_page_sizes();
+  Apic::detect_x2apic();
+  Alternative_insn::init();
   Kmem::init_mmu();
 
   // earliest point for the FB because of previous MMU setup
@@ -80,10 +82,6 @@ Startup::stage2()
 
   // also has a fallback to IO-APIC without remapping
   Apic::map_registers();
-
-  // Must come after Apic::map_registers() but before constructing Apic!
-  Alternative_insn::init();
-
   Apic::apic.cpu(Cpu_number::boot_cpu()).construct(Cpu_number::boot_cpu());
   bool use_io_apic = Io_apic_remapped::init_apics();
   if (use_io_apic)
