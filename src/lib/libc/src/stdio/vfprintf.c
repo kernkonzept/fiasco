@@ -566,6 +566,7 @@ static int printf_core(FILE *f, const char *fmt, va_list *ap, union arg *nl_arg,
 			p = MAX(p, 2*sizeof(void*));
 			t = 'x';
 			fl |= ALT_FORM;
+			// fallthrough
 		case 'x': case 'X':
 			a = fmt_x(arg.i, z, t&32);
 			if (arg.i && (fl & ALT_FORM)) prefix+=(t>>4), pl=2;
