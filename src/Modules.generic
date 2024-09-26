@@ -227,8 +227,7 @@ CSRC_LIBC         += lshrdi3.c
 # There is room for improvement in musl
 $(foreach f, $(patsubst %.c, %, $(CSRC_LIBC)), \
         $(eval CFLAGS_$(f) += -Wno-parentheses -Wno-sign-compare \
-                              -Wno-unused-parameter -Wno-unused-variable \
-                              -Wno-undef -Wno-implicit-fallthrough))
+                              -Wno-implicit-fallthrough))
 ASSRC_LIBC        := setjmp.S longjmp.S \
                      $(if $(filter ia32,$(CONFIG_XARCH)),memcpy-i386.S)
 NOBUILTIN         += $(patsubst %.o, %, $(OBJ_LIBC))

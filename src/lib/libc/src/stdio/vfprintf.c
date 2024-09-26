@@ -177,6 +177,8 @@ static char *fmt_u(uintmax_t x, char *s)
 	return s;
 }
 
+
+#ifndef LIBCL4
 /* Do not override this check. The floating point printing code below
  * depends on the float.h constants being right. If they are wrong, it
  * may overflow the stack. */
@@ -184,7 +186,6 @@ static char *fmt_u(uintmax_t x, char *s)
 typedef char compiler_defines_long_double_incorrectly[9-(int)sizeof(long double)];
 #endif
 
-#ifndef LIBCL4
 static int fmt_fp(FILE *f, long double y, int w, int p, int fl, int t)
 {
 	uint32_t big[(LDBL_MANT_DIG+28)/29 + 1          // mantissa expansion
@@ -442,8 +443,11 @@ static int printf_core(FILE *f, const char *fmt, va_list *ap, union arg *nl_arg,
 	char buf[sizeof(uintmax_t)*3];
 	const char *prefix;
 	int t, pl;
-	wchar_t wc[2], *ws;
+	wchar_t wc[2];
+#ifndef LIBCL4
+  wchar_t *ws;
 	char mb[4];
+#endif
 
 	for (;;) {
 		/* This error is only specified for snprintf, but since it's
