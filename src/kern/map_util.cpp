@@ -313,7 +313,7 @@ class Map_traits
 public:
   static bool match(L4_fpage const &from, L4_fpage const &to);
   static void free_object(typename SPACE::Phys_addr o,
-                          typename SPACE::Reap_list **reap_list);
+                          Kobjects_list &reap_list);
   static bool is_mappable(typename SPACE::Phys_addr o);
 };
 
@@ -341,7 +341,7 @@ IMPLEMENT template<typename SPACE>
 inline
 void
 Map_traits<SPACE>::free_object(typename SPACE::Phys_addr,
-                               typename SPACE::Reap_list **)
+                               Kobjects_list &)
 {}
 
 IMPLEMENT template<typename SPACE>
@@ -391,7 +391,7 @@ IMPLEMENT template<>
 inline
 void
 Map_traits<Obj_space>::free_object(Obj_space::Phys_addr o,
-                                   Obj_space::Reap_list **reap_list)
+                                   Kobjects_list &reap_list)
 {
   if (o->map_root()->no_mappings())
     o->initiate_deletion(reap_list);
@@ -423,38 +423,39 @@ Map_traits<Obj_space>::apply_attribs(Obj_space::Attr attribs,
 /**
  * Flexpage mapping.
  *
- * \param from     Source address space
- * \param fp_from  Flexpage descriptor for virtual-address space range in source
- *                 address space
- * \param to       Destination address space
- * \param fp_to    Flexpage descriptor for virtual-address space range in
- *                 destination address space
- * \param control  Message item describing the mapping operation.
- * \param r        List of Kobjects that may be deleted during that operation.
-
- * \return IPC error
- *
  * This function diverts to mem_map (for memory fpages), io_map (for IO fpages)
  * or obj_map (for capability fpages).
-*/
+ *
+ * \param from       Source address space
+ * \param fp_from    Flexpage descriptor for virtual-address space range in
+ *                   source address space
+ * \param to         Destination address space
+ * \param fp_to      Flexpage descriptor for virtual-address space range in
+ *                   destination address space
+ * \param control    Message item describing the mapping operation.
+ * \param reap_list  List of Kobjects that may be deleted during that
+ *                   operation.
+ *
+ * \return IPC error
+ */
 // Don't inline -- it eats too much stack.
 // inline NEEDS ["config.h", io_map]
 L4_error
 fpage_map(Space *from, L4_fpage fp_from, Space *to,
-          L4_fpage fp_to, L4_msg_item control, Kobject::Reap_list *r)
+          L4_fpage fp_to, L4_msg_item control, Kobjects_list &reap_list)
 {
   Space::Caps caps = from->caps() & to->caps();
 
   if (Map_traits<Mem_space>::match(fp_from, fp_to) && (caps & Space::Caps::mem()))
-    return mem_map(from, fp_from, to, fp_to, control);
+    return mem_map(from, fp_from, to, fp_to, control, reap_list);
 
 #ifdef CONFIG_PF_PC
   if (Map_traits<Io_space>::match(fp_from, fp_to) && (caps & Space::Caps::io()))
-    return io_map(from, fp_from, to, fp_to, control);
+    return io_map(from, fp_from, to, fp_to, control, reap_list);
 #endif
 
   if (Map_traits<Obj_space>::match(fp_from, fp_to) && (caps & Space::Caps::obj()))
-    return obj_map(from, fp_from, to, fp_to, control, r->list());
+    return obj_map(from, fp_from, to, fp_to, control, reap_list);
 
   return L4_error::None;
 }
@@ -473,19 +474,20 @@ fpage_map(Space *from, L4_fpage fp_from, Space *to,
 // Don't inline -- it eats too much stack.
 // inline NEEDS ["config.h", io_fpage_unmap]
 Page::Flags
-fpage_unmap(Space *space, L4_fpage fp, L4_map_mask mask, Kobject ***rl)
+fpage_unmap(Space *space, L4_fpage fp, L4_map_mask mask,
+            Kobjects_list &reap_list)
 {
   Page::Flags flags = Page::Flags::None();
   Space::Caps caps = space->caps();
 
   if ((caps & Space::Caps::io()) && (fp.is_iopage() || fp.is_all_spaces()))
-    flags |= io_fpage_unmap(space, fp, mask);
+    flags |= io_fpage_unmap(space, fp, mask, reap_list);
 
   if ((caps & Space::Caps::obj()) && (fp.is_objpage() || fp.is_all_spaces()))
-    flags |= obj_fpage_unmap(space, fp, mask, rl);
+    flags |= obj_fpage_unmap(space, fp, mask, reap_list);
 
   if ((caps & Space::Caps::mem()) && (fp.is_mempage() || fp.is_all_spaces()))
-    flags |= mem_fpage_unmap(space, fp, mask);
+    flags |= mem_fpage_unmap(space, fp, mask, reap_list);
 
   return flags;
 }
@@ -538,7 +540,7 @@ map(MAPDB* mapdb,
     typename SPACE::V_pfn rcv_addr,
     bool grant, typename SPACE::Attr attribs,
     Mu::Auto_tlb_flush<SPACE> &tlb,
-    typename SPACE::Reap_list **reap_list = 0)
+    Kobjects_list &reap_list)
 {
   using namespace Mu;
 
@@ -865,7 +867,7 @@ unmap(MAPDB* mapdb, SPACE* space, Space *space_id,
       Page::Rights rights,
       L4_map_mask mask,
       Mu::Auto_tlb_flush<SPACE> &tlb,
-      typename SPACE::Reap_list **reap_list)
+      Kobjects_list &reap_list)
 {
   using namespace Mu;
 
@@ -980,7 +982,7 @@ io_map(Space *, L4_fpage const &, Space *, L4_fpage const &, L4_msg_item)
 
 inline
 Page::Flags
-io_fpage_unmap(Space *, L4_fpage const &, L4_map_mask)
+io_fpage_unmap(Space *, L4_fpage const &, L4_map_mask, Kobjects_list &)
 {
   return Page::Flags::None();
 }

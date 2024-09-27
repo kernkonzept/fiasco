@@ -31,8 +31,6 @@ class Generic_io_space
 public:
   static char const *const name;
 
-  typedef void Reap_list;
-
   typedef Port_number V_pfn;
   typedef Port_number V_pfc;
   typedef Port_number Phys_addr;

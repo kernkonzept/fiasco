@@ -17,23 +17,28 @@ IMPLEMENTATION:
 
 DEFINE_GLOBAL Global_data<Static_object<Mapdb>> mapdb_mem;
 
-/** Map the region described by "fp_from" of address space "from" into
-    region "fp_to" at offset "offs" of address space "to", updating the
-    mapping database as we do so.
-    @param from source address space
-    @param fp_from_{page, size, write, grant} flexpage description for
-	virtual-address space range in source address space
-    @param to destination address space
-    @param fp_to_{page, size} flexpage description for virtual-address
-	space range in destination address space
-    @param control message send item containing the sender-specified offset
-        into the destination flexpage, the caching attributes and the grant
-        flag.
-    @return IPC error code that describes the status of the operation
+/**
+ * Map the region described by `fp_from` of address space `from` into the
+ * region `fp_to` at an offset defined by `control` of address space `to`,
+ * updating the mapping database as we do so.
+ *
+ * \param from       Source address space.
+ * \param fp_from    Flexpage description for virtual-address space range in
+ *                   source address space (page, size, write, grant).
+ * \param to         Destination address space.
+ * \param fp_to      flexpage description for virtual-address space range in
+ *                   destination address space (page, size).
+ * \param control    Message send item containing the sender-specified offset
+ *                   into the destination flexpage, the caching attributes and
+ *                   the grant flag.
+ * \param reap_list  List of objects that need to be reaped in case of failure.
+ *
+ * \return IPC error code that describes the status of the operation.
  */
 L4_error __attribute__((nonnull(1, 3)))
 mem_map(Space *from, L4_fpage const &fp_from,
-        Space *to, L4_fpage const &fp_to, L4_msg_item control)
+        Space *to, L4_fpage const &fp_to, L4_msg_item control,
+        Kobjects_list &reap_list)
 {
   assert(from);
   assert(to);
@@ -76,21 +81,24 @@ mem_map(Space *from, L4_fpage const &fp_from,
   return map<Mem_space>(mapdb_mem.get(),
                         from, from, snd_addr,
                         Pfc(1) << so, to, to,
-                        rcv_addr, control.is_grant(), attribs, tlb,
-                        static_cast<Mem_space::Reap_list**>(nullptr));
+                        rcv_addr, control.is_grant(), attribs, tlb, reap_list);
 }
 
-/** Unmap the mappings in the region described by "fp" from the address
-    space "space" and/or the address spaces the mappings have been
-    mapped into.
-    \param space  address space that should be flushed
-    \param fp     flexpage descriptor of address-space range that should
-                  be flushed
-    \param mask   Flags for unmap operation
-    \return       combined (bit-ORed) access flags of unmapped physical pages
-*/
+/**
+ * Unmap the mappings in the region described by `fp` from the address space
+ * `space` and/or the address spaces the mappings have been mapped into.
+ *
+ * \param space      Address space that should be flushed.
+ * \param fp         Flexpage descriptor of address-space range that should
+ *                   be flushed.
+ * \param mask       Flags for unmap operation.
+ * \param reap_list  List of objects that need to be reaped.
+ *
+ * \return Combined (bit-ORed) access flags of unmapped physical pages.
+ */
 Page::Flags __attribute__((nonnull(1)))
-mem_fpage_unmap(Space *space, L4_fpage fp, L4_map_mask mask)
+mem_fpage_unmap(Space *space, L4_fpage fp, L4_map_mask mask,
+                Kobjects_list &reap_list)
 {
   if (fp.order() < L4_fpage::Mem_addr::Shift)
     return Page::Flags::None();
@@ -103,8 +111,7 @@ mem_fpage_unmap(Space *space, L4_fpage fp, L4_map_mask mask)
   Mu::Auto_tlb_flush<Mem_space> tlb;
 
   return unmap<Mem_space>(mapdb_mem.get(), space, space,
-               start, size, fp.rights(), mask, tlb,
-               static_cast<Mem_space::Reap_list **>(nullptr));
+               start, size, fp.rights(), mask, tlb, reap_list);
 }
 
 enum { Max_num_page_sizes = 7 };

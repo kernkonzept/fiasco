@@ -690,12 +690,12 @@ Irq_sender::is_edge_triggered() const
 
 PUBLIC
 void
-Irq_sender::destroy(Kobject ***rl) override
+Irq_sender::destroy(Kobjects_list &reap_list) override
 {
   assert(!_send_state.is_invalidated());
 
   auto g = lock_guard(cpu_lock);
-  Irq::destroy(rl);
+  Irq::destroy(reap_list);
 
     {
       auto g = lock_guard<No_cpu_lock_policy>(_irq_lock);
@@ -1106,14 +1106,14 @@ Irq::Irq(Ram_quota *q) : _q(q)
 
 PUBLIC
 void
-Irq::destroy(Kobject ***rl) override
+Irq::destroy(Kobjects_list &reap_list) override
 {
   // Irq_base::destroy() does unbind(). Therefore call Kobject::destroy() which
   // waits until the existence lock was finally released by the last owner (the
   // existence lock was already invalidated before). Otherwise this IRQ object
   // could be immediately bound to another IRQ chip by the (current) owner of
   // the existence lock of this IRQ object.
-  Kobject::destroy(rl);
+  Kobject::destroy(reap_list);
   Irq_base::destroy();
 }
 

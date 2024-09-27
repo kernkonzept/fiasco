@@ -5,6 +5,7 @@ INTERFACE:
 #include "global_data.h"
 
 class Kobject;
+class Kobjects_list;
 class Kobject_dbg;
 class Kobject_mappable;
 
@@ -20,9 +21,9 @@ public:
   Kobject_common(Kobject_common const &) = delete;
   Kobject_common &operator = (Kobject_common const &) = delete;
 
-  virtual bool is_local(Space *) const  = 0;
-  virtual Mword obj_id() const  = 0;
-  virtual void initiate_deletion(Kobject ***) = 0;
+  virtual bool is_local(Space *) const = 0;
+  virtual Mword obj_id() const = 0;
+  virtual void initiate_deletion(Kobjects_list &) = 0;
 
   virtual Kobject_mappable *map_root() = 0;
   virtual ~Kobject_common() = 0;

@@ -1046,7 +1046,7 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
   Mword *rcv_word = rcv_utcb->values + tag.words();
 
   // Must be destroyed _after_ releasing the existence lock below!
-  Reap_list rl;
+  Reap_list reap_list;
 
   while (items > 0 && snd_item.next())
     {
@@ -1125,8 +1125,8 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
                   }
 
                 auto c_lock = lock_guard<Lock_guard_inverse_policy>(cpu_lock);
-                err = fpage_map(snd->space(), sfp,
-                                dst_tsk.get(), L4_fpage(buf->d), item->b, &rl);
+                err = fpage_map(snd->space(), sfp, dst_tsk.get(),
+                                L4_fpage(buf->d), item->b, reap_list.list());
                 if (err.empty_map())
                   rcv_word[-2] |= 2;
               }

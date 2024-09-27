@@ -8,7 +8,6 @@ INTERFACE:
 class Kobject;
 class Space;
 
-
 template< typename SPACE >
 class Generic_obj_space
 {
@@ -21,7 +20,6 @@ public:
   typedef Obj::Attr Attr;
   typedef Obj::Capability Capability;
   typedef Obj::Entry Entry;
-  typedef Kobject *Reap_list;
   typedef Kobject_iface *Phys_addr;
 
   typedef Obj::Cap_addr V_pfn;

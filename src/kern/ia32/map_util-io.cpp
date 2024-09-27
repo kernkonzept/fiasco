@@ -25,21 +25,26 @@ void init_mapdb_io(Space *sigma0)
   mapdb_io.construct(sigma0, Mapping::Order(16), io_page_sizes, 3);
 }
 
-/** Map the IO port region described by "fp_from" of address space "from"
-    into address space "to". IO ports can only be mapped idempotently,
-    therefore there is no offset for fp_from and only those ports are mapped
-    that lay in the intersection of fp_from and fp_to
-    @param from source address space
-    @param fp_from... IO flexpage descripton for IO space range
-	in source IO space
-    @param to destination address space
-    @param fp_to... IO flexpage description for IO space range
-	in destination IO space
-    @return IPC error code that describes the status of the operation
+/**
+ * Map the IO port region described by `fp_from` of address space `from` into
+ * the address space `to`. IO ports can only be mapped idempotently, therefore
+ * there is no offset for `fp_from` and only those ports are mapped that lay
+ * in the intersection of `fp_from` and `fp_to`.
+ *
+ * \param from       Source address space.
+ * \param fp_from    IO flexpage descripton for IO space range in source IO
+ *                   space.
+ * \param to         Destination address space.
+ * \param fp_to      IO flexpage description for IO space range in destination
+ *                   IO space.
+ * \param reap_list  List of objects that need to be reaped in case of failure.
+ *
+ * \return IPC error code that describes the status of the operation.
  */
 L4_error __attribute__((nonnull(1, 3)))
 io_map(Space *from, L4_fpage const &fp_from,
-       Space *to, L4_fpage const &fp_to, L4_msg_item control)
+       Space *to, L4_fpage const &fp_to, L4_msg_item control,
+       Kobjects_list &reap_list)
 {
 /*   printf("io_map %u -> %u "
  *	    "snd %08x base %x size %x rcv %08x base %x size %x\n",
@@ -84,22 +89,25 @@ io_map(Space *from, L4_fpage const &fp_from,
 
   return map<Io_space>(mapdb_io.get(), from, from, map_addr, map_size, to, to,
                        map_addr, control.is_grant(), fp_from.rights(), tlb,
-                       nullptr);
+                       reap_list);
 }
 
-/** Unmap IO mappings.
-    Unmap the region described by "fp" from the IO
-    space "space" and/or the IO spaces the mappings have been
-    mapped into.
-
-    @param space address space that should be flushed
-    @param fp    IO flexpage descriptor of IO-space range that should
-                 be flushed
-
-    @retval #Page::Flags::None()
-*/
+/**
+ * Unmap IO mappings.
+ *
+ * Unmap the region described by `fp` from the IO space `space` and/or the IO
+ * spaces the mappings have been mapped into.
+ *
+ * \param space      Address space that should be flushed.
+ * \param fp         IO flexpage descriptor of IO-space range that should be
+ *                   flushed.
+ * \param reap_list  List of objects that need to be reaped.
+ *
+ * \retval #Page::Flags::None()
+ */
 Page::Flags __attribute__((nonnull(1)))
-io_fpage_unmap(Space *space, L4_fpage fp, L4_map_mask mask)
+io_fpage_unmap(Space *space, L4_fpage fp, L4_map_mask mask,
+               Kobjects_list &reap_list)
 {
   Order size = Mu::get_order_from_fp<Io_space::V_pfc>(fp);
   Io_space::V_pfn port = fp.io_address();
@@ -115,5 +123,5 @@ io_fpage_unmap(Space *space, L4_fpage fp, L4_map_mask mask)
   Mu::Auto_tlb_flush<Io_space> tlb;
   return unmap<Io_space>(mapdb_io.get(), space, space, port,
                          Io_space::V_pfc(1) << size, fp.rights(), mask, tlb,
-                         nullptr);
+                         reap_list);
 }

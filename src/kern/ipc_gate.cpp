@@ -140,19 +140,20 @@ Ipc_gate_obj::unblock_all()
 
 PUBLIC virtual
 void
-Ipc_gate_obj::initiate_deletion(Kobject ***r) override
+Ipc_gate_obj::initiate_deletion(Kobjects_list &reap_list) override
 {
   if (_thread)
     _thread->ipc_gate_deleted(_id);
 
-  Kobject::initiate_deletion(r);
+  Kobject::initiate_deletion(reap_list);
 }
 
 PUBLIC virtual
 void
-Ipc_gate_obj::destroy(Kobject ***r) override
+Ipc_gate_obj::destroy(Kobjects_list &reap_list) override
 {
-  Kobject::destroy(r);
+  Kobject::destroy(reap_list);
+
   Thread *tmp = access_once(&_thread);
   if (tmp)
     {

@@ -63,9 +63,9 @@ Factory::root()
 
 PUBLIC
 void
-Factory::destroy(Kobject ***rl) override
+Factory::destroy(Kobjects_list &reap_list) override
 {
-  Kobject::destroy(rl);
+  Kobject::destroy(reap_list);
   take_and_invalidate();
 }
 
@@ -122,7 +122,7 @@ Factory::map_obj(Kobject_iface *o, Cap_index cap, Task *_c_space,
   // must be before the lock guard
   Ref_ptr<Task> c_space(_c_space);
   // Must be destroyed _after_ releasing the existence lock below!
-  Reap_list rl;
+  Reap_list reap_list;
 
   auto space_lock_guard = lock_guard_dont_lock(c_space->existence_lock);
 
@@ -133,7 +133,7 @@ Factory::map_obj(Kobject_iface *o, Cap_index cap, Task *_c_space,
       return commit_error(utcb, L4_error(L4_error::Overflow, L4_error::Rcv));
     }
 
-  if (!map_obj_initially(o, o_space, c_space.get(), cap, rl.list()))
+  if (!map_obj_initially(o, o_space, c_space.get(), cap, reap_list.list()))
     {
       delete o;
       return commit_result(-L4_err::ENomem);

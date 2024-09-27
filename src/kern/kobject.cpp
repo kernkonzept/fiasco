@@ -59,6 +59,74 @@ INTERFACE:
 #include "space.h"
 
 /**
+ * Helper class for maintaining a linked list of #Kobject objects.
+ *
+ * The list is a singly-linked list with a head. The head is a reference to
+ * the location where the pointer to the list item is stored.
+ */
+class Kobjects_list
+{
+public:
+  using Ptr = Kobject *;
+
+  Kobjects_list() = delete;
+
+  /**
+   * Construct the list.
+   *
+   * The list is constructed as empty, i.e. nullptr is stored to the head of
+   * the list.
+   *
+   * \param head  Head of the list, i.e. a reference to the location where
+   *              the pointer to the first item is stored.
+   */
+  Kobjects_list(Ptr &head) : _head(&head)
+  {
+    *_head = nullptr;
+  }
+
+  /**
+   * Reset the list into an empty state.
+   *
+   * The list is reset to an empty state, i.e. nullptr is stored to the head
+   * of the list.
+   *
+   * \param head  Head of the list, i.e. a reference to the location where
+   *              the pointer to the first item is stored.
+   */
+  void reset(Ptr &head)
+  {
+    _head = &head;
+    *_head = nullptr;
+  }
+
+  /**
+   * Push an item into the list.
+   *
+   * Store an item into the head and set a new head of the list. This
+   * effectively pushes the item into the linked list and creates the space
+   * for the next item.
+   *
+   * \param item      Item to be stored in the current head of the list.
+   * \param new_head  New head of the list, i.e. a reference to the location
+   *                  where the pointer to the next item is stored. This new
+   *                  head is initially set to nullptr.
+   */
+  void push(Ptr item, Ptr &new_head)
+  {
+    // Set the current item.
+    *_head = item;
+
+    // Prepare new head for the next item.
+    _head = &new_head;
+    *_head = nullptr;
+  }
+
+private:
+  Ptr *_head;
+};
+
+/**
  * Basic kernel object.
  *
  * This is the base class for all kernel objects that are exposed through
@@ -127,14 +195,17 @@ public:
   class Reap_list
   {
   private:
-    Kobject *_h;
-    Kobject **_t;
+    Kobjects_list::Ptr _first = nullptr;
+    Kobjects_list _reap_list;
 
   public:
-    Reap_list() : _h(0), _t(&_h) {}
+    Reap_list() : _reap_list(_first) {}
     ~Reap_list() { del(); }
-    Kobject ***list() { return &_t; }
-    bool empty() const { return _h == nullptr; }
+
+    Kobjects_list &list() { return _reap_list; }
+    void reset() { _reap_list.reset(_first); }
+    bool empty() const { return _first == nullptr; }
+
     void del_1();
     void del_2();
 
@@ -165,7 +236,7 @@ public:
   Lock existence_lock;
 
 private:
-  Kobject *_next_to_reap;
+  Kobjects_list::Ptr _next_to_reap = nullptr;
 
 public:
   enum class Op : Mword
@@ -199,18 +270,15 @@ Kobject_mappable::dec_cap_refcnt(Smword diff)
 
 PUBLIC
 void
-Kobject::initiate_deletion(Kobject ***reap_list) override
+Kobject::initiate_deletion(Kobjects_list &reap_list) override
 {
   existence_lock.invalidate();
-
-  _next_to_reap = 0;
-  **reap_list = this;
-  *reap_list = &_next_to_reap;
+  reap_list.push(this, _next_to_reap);
 }
 
 PUBLIC virtual
 void
-Kobject::destroy(Kobject ***)
+Kobject::destroy(Kobjects_list &)
 {
   LOG_TRACE("Kobject destroy", "des", current(), Log_destroy,
       l->id = dbg_id();
@@ -269,24 +337,24 @@ IMPLEMENT inline
 void
 Kobject::Reap_list::del_1()
 {
-  for (Kobject *reap = _h; reap; reap = reap->_next_to_reap)
-    reap->destroy(list());
+  for (Kobject *obj = _first; obj; obj = obj->_next_to_reap)
+    obj->destroy(list());
 }
 
 IMPLEMENT inline
 void
 Kobject::Reap_list::del_2()
 {
-  for (Kobject *reap = _h; reap;)
+  for (Kobject *obj = _first; obj;)
     {
-      Kobject *d = reap;
-      reap = reap->_next_to_reap;
-      if (d->put())
-        delete d;
+      Kobject *current = obj;
+      obj = obj->_next_to_reap;
+
+      if (current->put())
+        delete current;
     }
 
-  _h = 0;
-  _t = &_h;
+  reset();
 }
 
 

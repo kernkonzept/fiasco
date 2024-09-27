@@ -31,8 +31,6 @@ public:
   typedef Addr::Diff<Config::PAGE_SHIFT> Phys_diff;
   typedef Addr::Order<Config::PAGE_SHIFT> Page_order;
 
-  typedef void Reap_list;
-
   // for map_util
   typedef Page_number V_pfn;
   typedef Page_count V_pfc;

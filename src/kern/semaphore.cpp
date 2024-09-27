@@ -280,7 +280,7 @@ Semaphore::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
 
 PUBLIC
 void
-Semaphore::destroy(Kobject ***reap_list) override
+Semaphore::destroy(Kobjects_list &reap_list) override
 {
   Irq::destroy(reap_list);
 

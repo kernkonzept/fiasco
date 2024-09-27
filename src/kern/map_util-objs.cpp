@@ -13,7 +13,7 @@ IMPLEMENTATION:
 L4_error __attribute__((nonnull(1, 3)))
 obj_map(Space *from, L4_fpage const &fp_from,
         Space *to, L4_fpage const &fp_to, L4_msg_item control,
-        Kobject ***reap_list)
+        Kobjects_list &reap_list)
 {
   assert(from);
   assert(to);
@@ -46,7 +46,7 @@ obj_map(Space *from, L4_fpage const &fp_from,
 
 Page::Flags __attribute__((nonnull(1)))
 obj_fpage_unmap(Space * space, L4_fpage fp, L4_map_mask mask,
-                Kobject ***reap_list)
+                Kobjects_list &reap_list)
 {
   assert(space);
 
@@ -67,7 +67,7 @@ obj_fpage_unmap(Space * space, L4_fpage fp, L4_map_mask mask,
 L4_error __attribute__((nonnull(1, 4)))
 obj_map(Space *from, Cap_index snd_addr, unsigned long snd_size,
         Space *to, Cap_index rcv_addr,
-        Kobject ***reap_list, bool grant = false,
+        Kobjects_list &reap_list, bool grant = false,
         Obj_space::Attr attribs = Obj_space::Attr::Full())
 {
   assert(from);
@@ -89,7 +89,7 @@ obj_map(Space *from, Cap_index snd_addr, unsigned long snd_size,
  */
 bool __attribute__((nonnull(1, 2, 3)))
 map_obj_initially(Kobject_iface *o, Obj_space* to, Space *to_id,
-                  Cap_index rcv_addr, Kobject ***reap_list)
+                  Cap_index rcv_addr, Kobjects_list &reap_list)
 {
   assert(o);
   assert(to);

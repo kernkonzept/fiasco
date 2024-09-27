@@ -186,7 +186,7 @@ Mapdb_util_test::test_map_util()
   Phys_addr phys;
   Page_order order;
   Attr attr;
-  Kobject::Reap_list rl;
+  Kobject::Reap_list reap_list;
 
   // 1: MAP sigma0[64K/page] -> server[ALL:16K]
   pr_tag("MAP sigma0[64K/page] -> server[ALL:page]\n");
@@ -196,7 +196,8 @@ Mapdb_util_test::test_map_util()
               "VA server:16K nothing mapped");
   UTEST_NOERR(Utest::Assert,
               fpage_map(&sigma0, L4_fpage::mem(_64K, O_page, Rights::URWX()),
-                        &*server, L4_fpage::all_spaces(), map_base(_16K), &rl),
+                        &*server, L4_fpage::all_spaces(), map_base(_16K),
+                        reap_list.list()),
               "Map sigma0[64K/page] to server[16K]");
   UTEST_TRUE(Utest::Assert,
              ms(&*server)->v_lookup(to_vaddr(_16K), &phys, &order, &attr),
@@ -218,7 +219,8 @@ Mapdb_util_test::test_map_util()
               "VA server:0 nothing mapped");
   UTEST_NOERR(Utest::Assert,
               fpage_map(&sigma0, L4_fpage::mem(0, O_super, Rights::URX()),
-                        &*server, L4_fpage::all_spaces(), map_base(0), &rl),
+                        &*server, L4_fpage::all_spaces(), map_base(0),
+                        reap_list.list()),
               "Map sigma0[0/superpage] to server[0]");
   UTEST_TRUE(Utest::Assert,
              ms(&*server)->v_lookup(to_vaddr(0), &phys, &order, &attr),
@@ -258,7 +260,7 @@ Mapdb_util_test::test_map_util()
            "VA server:512K+16K mapped with expected attributes");
   fpage_unmap(&sigma0,
               L4_fpage::mem(_512K, O_super - 3, Rights::URWX()),
-              not_me(), rl.list());
+              not_me(), reap_list.list());
   print_node(&sigma0, to_pfn(0));
 
   // 5: MAP sigma0[superpage/superpage] -> server[2*superpage/superpage:0]
@@ -270,7 +272,7 @@ Mapdb_util_test::test_map_util()
   UTEST_NOERR(Utest::Assert,
               fpage_map(&sigma0, L4_fpage::mem(S_super, O_super, Rights::URWX()),
                         &*server, L4_fpage::mem(2 * S_super, O_super),
-                        map_base(0), &rl),
+                        map_base(0), reap_list.list()),
               "Map sigma0[superpage/superpage] to server[2*superpage]");
   UTEST_TRUE(Utest::Assert,
              ms(&*server)->v_lookup(to_vaddr(2 * S_super), &phys, &order, &attr),
@@ -293,7 +295,7 @@ Mapdb_util_test::test_map_util()
               fpage_map(&*server, L4_fpage::mem(2 * S_super + S_page, O_page,
                                                 Rights::URWX()),
                         &*client, L4_fpage::mem(0, L4_fpage::Whole_space),
-                        map_base(8 * S_page), &rl),
+                        map_base(8 * S_page), reap_list.list()),
               "Map server[2*superpage+page/page] to client[8*page]");
   UTEST_TRUE(Utest::Assert,
              ms(&*client)->v_lookup(to_vaddr(8 * S_page), &phys, &order, &attr),
@@ -311,7 +313,7 @@ Mapdb_util_test::test_map_util()
               fpage_map(&*server, L4_fpage::mem(2 * S_super + S_page, O_page,
                                                 Rights::URX()),
                         &*client, L4_fpage::mem(0, L4_fpage::Whole_space),
-                        map_base(8 * S_page), &rl),
+                        map_base(8 * S_page), reap_list.list()),
               "Map server[2*superpage+page/page] read-execute to client");
   UTEST_TRUE(Utest::Assert,
              ms(&*client)->v_lookup(to_vaddr(8 * S_page), &phys, &order, &attr),
@@ -338,7 +340,7 @@ Mapdb_util_test::test_map_util()
 
   // 9: Reset dirty from server (works only on x86/AMD64)
   fpage_unmap(&*server, L4_fpage::mem(2 * S_super + S_page, O_page),
-              not_me(), rl.list());
+              not_me(), reap_list.list());
   UTEST_TRUE(Utest::Assert,
              ms(&*client)->v_lookup(to_vaddr(8 * S_page), &phys, &order, &attr),
              "VA client 8*page MapDB lookup");
@@ -365,7 +367,7 @@ Mapdb_util_test::test_map_util()
 
   // 11: Flush dirty and accessed from server
   fpage_unmap(&*server,
-              L4_fpage::mem(2 * S_super, O_super), also_me(), rl.list());
+              L4_fpage::mem(2 * S_super, O_super), also_me(), reap_list.list());
   UTEST_TRUE(Utest::Assert,
              ms(&*client)->v_lookup(to_vaddr(8 * S_page), &phys, &order, &attr),
              "VA client 8*page MapDB lookup");

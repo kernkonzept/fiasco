@@ -448,11 +448,12 @@ Task::generic_factory(Ram_quota *q, Space *,
  */
 PUBLIC
 void
-Task::destroy(Kobject ***reap_list) override
+Task::destroy(Kobjects_list &reap_list) override
 {
   Kobject::destroy(reap_list);
 
-  fpage_unmap(this, L4_fpage::all_spaces(L4_fpage::Rights::FULL()), L4_map_mask::full(), reap_list);
+  fpage_unmap(this, L4_fpage::all_spaces(L4_fpage::Rights::FULL()),
+              L4_map_mask::full(), reap_list);
 }
 
 PRIVATE inline NOEXPORT
@@ -491,7 +492,7 @@ Task::sys_map(L4_fpage::Rights rights, Syscall_frame *f, Utcb *utcb)
 
     {
       // Must be destroyed _after_ destruction of the lock guard below!
-      Kobject::Reap_list rl;
+      Kobject::Reap_list reap_list;
 
       Ref_ptr<Task> from(_from);
       Ref_ptr<Task> self(this);
@@ -504,7 +505,8 @@ Task::sys_map(L4_fpage::Rights rights, Syscall_frame *f, Utcb *utcb)
 
       cpu_lock.clear();
       ret = fpage_map(from.get(), sfp, this,
-                      L4_fpage::all_spaces(), L4_msg_item(utcb->values[1]), &rl);
+                      L4_fpage::all_spaces(), L4_msg_item(utcb->values[1]),
+                      reap_list.list());
       cpu_lock.lock();
     }
 
@@ -521,7 +523,7 @@ L4_msg_tag
 Task::sys_unmap(Syscall_frame *f, Utcb *utcb)
 {
   // Must be destroyed _after_ releasing the existence lock below!
-  Kobject::Reap_list rl;
+  Kobject::Reap_list reap_list;
   unsigned words = f->tag().words();
 
   LOG_TRACE("Task unmap", "unm", ::current(), Log_map_unmap,
@@ -544,7 +546,7 @@ Task::sys_unmap(Syscall_frame *f, Utcb *utcb)
       for (unsigned i = 2; i < words; ++i)
         {
           Page::Flags const flushed
-            = fpage_unmap(this, L4_fpage(utcb->values[i]), m, rl.list());
+            = fpage_unmap(this, L4_fpage(utcb->values[i]), m, reap_list.list());
 
           utcb->values[i] = (utcb->values[i] & ~0xfUL)
                           | cxx::int_value<Page::Flags>(flushed);
