@@ -17,6 +17,10 @@ PUBLIC inline
 void
 Context::prepare_switch_to(void (*fptr)())
 {
+#ifndef __mips64
+  // keep the stack pointer 64-bit aligned
+  --_kernel_sp;
+#endif
   *reinterpret_cast<void(**)()> (--_kernel_sp) = fptr;
 }
 
@@ -62,26 +66,39 @@ Context::switch_cpu(Context *t)
           ".set push                                  \n"
           ".set noreorder                             \n"
           ".set noat                                  \n"
-          "  " ASM_ADDIU " $29, $29, -(%[rsz] * 6)    \n"
-          "  " ASM_S     " $29, (%[old_sp])           \n" // save old sp
-          "  " ASM_S     " $28, (%[rsz] * 4)($29)     \n"
-          "  " ASM_S     " $30, (%[rsz] * 5)($29)     \n"
+          // Stack (MIPS32: 7 words, MIPS64: 6 words):
+          //   - 4 words: Parameter space for Context::switch_context(). This
+          //     stack space is reserved by the caller to allow the callee to
+          //     store $a0..$a3.
+          //   - Only MIPS32: 1 word to keep the stack for the callee 64-bit
+          //                  aligned. See also Context::prepare_switch_to().
+          //   - 1 word: $28 / $gp.
+          //   - 1 word: $29 / $sp.
+          "  " ASM_ADDIU " $29, $29, -(%[rsz] * (%[algn]+6)) \n"
+          "  " ASM_S     " $29, (%[old_sp])           \n"
+          "  " ASM_S     " $28, (%[rsz] * (%[algn]+4))($29) \n"
+          "  " ASM_S     " $30, (%[rsz] * (%[algn]+5))($29) \n"
           "  " ASM_LA    " $31, 1f                    \n"
-          "  " ASM_S     " $31, 0($29)                \n"
+          "  " ASM_S     " $31, (%[rsz] * 0)($29)     \n"
           "  " ASM_LA    " $1, switchin_context_label \n"
           "  move $29, %[new_sp]                      \n"
           "  jr $1                                    \n"
-          "    " ASM_L   " $31, 0($29)                \n" // delay slot, load ra from new stack
+          "    " ASM_L   " $31, (%[rsz] * 0)($29)     \n" // delay slot, load ra from new stack
           "1:                                         \n"
-          "  " ASM_L " $28, (%[rsz] * 4)($29)         \n"
-          "  " ASM_L " $30, (%[rsz] * 5)($29)         \n"
-          "  " ASM_ADDIU " $29, $29, (%[rsz] * 6)     \n"
+          "  " ASM_L " $28, (%[rsz] * (%[algn]+4))($29)     \n"
+          "  " ASM_L " $30, (%[rsz] * (%[algn]+5))($29)     \n"
+          "  " ASM_ADDIU " $29, $29, (%[rsz] * (%[algn]+6)) \n"
           ".set pop                                   \n"
           : [old_sp]   "+r" (_old_sp),
             [new_sp]   "+r" (_new_sp),
             [old_this] "+r" (_old_this),
             [new_this] "+r" (_new_this)
-          : [rsz]"i"(ASM_WORD_BYTES)
+          : [rsz]"i"(ASM_WORD_BYTES),
+#ifdef __mips64
+            [algn]"i"(0)
+#else
+            [algn]"i"(1)
+#endif
           : "$2",  "$3",  "$8",  "$9",  "$10", "$11", "$12",
             "$13", "$14", "$15", "$16", "$17", "$18", "$19", "$20", "$21",
             "$22", "$23", "$24", "$25", "$31", "memory"

@@ -229,7 +229,12 @@ END(ret_from_user_invoke)
 
 .section ".text.fast_ret_from_irq", "ax"
 LEAF(fast_ret_from_irq)
+#ifdef __mips64
 	restore_saved_and_eret	29, ASM_WORD_BYTES, adjust_pc=4 /* sp offset 4 */
+#else
+        // see Context::prepare_switch_to()
+	restore_saved_and_eret	29, (2*ASM_WORD_BYTES), adjust_pc=4 /* sp offset 4 */
+#endif
 END(fast_ret_from_irq)
 
 .section ".text.vcpu_resume", "ax"
