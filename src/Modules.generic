@@ -208,17 +208,14 @@ CSRC_LIBC         := libc_lock.c \
                      vsprintf.c \
                      vprintf.c \
                      __overflow.c \
-                     __toread.c \
                      __towrite.c \
-                     __uflow.c \
                      fputs.c \
                      fwrite.c \
                      puts.c \
                      \
                      atexit.c \
                      \
-                     intscan.c \
-                     shgetc.c
+                     intscan.c
 
 CXXSRC_LIBC += strstr.cc
 

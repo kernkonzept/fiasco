@@ -29,7 +29,7 @@
 /* LIBCL4: save some stack. Maybe remove even more. */
 struct _IO_FILE {
 	unsigned flags;
-	unsigned char *rpos, *rend;
+	unsigned char *rpos;
 #ifndef LIBCL4
 	int (*close)(FILE *);
 #endif
@@ -61,10 +61,8 @@ struct _IO_FILE {
 	off_t off;
 	char *getln_buf;
 	void *mustbezero_2;
-#endif
 	unsigned char *shend;
 	off_t shlim, shcnt;
-#ifndef LIBCL4
 	FILE *prev_locked, *next_locked;
 	struct __locale_struct *locale;
 #endif
@@ -83,7 +81,6 @@ hidden size_t __stdout_write(FILE *, const unsigned char *, size_t);
 hidden off_t __stdio_seek(FILE *, off_t, int);
 hidden int __stdio_close(FILE *);
 
-hidden int __toread(FILE *);
 hidden int __towrite(FILE *);
 
 hidden void __stdio_exit(void);
@@ -92,7 +89,7 @@ hidden void __stdio_exit_needed(void);
 #if defined(__PIC__) && (100*__GNUC__+__GNUC_MINOR__ >= 303)
 __attribute__((visibility("protected")))
 #endif
-int __overflow(FILE *, int), __uflow(FILE *);
+int __overflow(FILE *, int);
 
 hidden int __fseeko(FILE *, off_t, int);
 hidden int __fseeko_unlocked(FILE *, off_t, int);
@@ -119,9 +116,6 @@ hidden void __getopt_msg(const char *, const char *, const char *, size_t);
 
 #define feof(f) ((f)->flags & F_EOF)
 #define ferror(f) ((f)->flags & F_ERR)
-
-#define getc_unlocked(f) \
-	( ((f)->rpos != (f)->rend) ? *(f)->rpos++ : __uflow((f)) )
 
 #define putc_unlocked(c, f) \
 	( (((unsigned char)(c)!=(f)->lbf && (f)->wpos!=(f)->wend)) \

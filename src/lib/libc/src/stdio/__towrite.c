@@ -8,7 +8,7 @@ int __towrite(FILE *f)
 		return EOF;
 	}
 	/* Clear read buffer (easier than summoning nasal demons) */
-	f->rpos = f->rend = 0;
+	f->rpos = 0;
 
 	/* Activate write through the buffer. */
 	f->wpos = f->wbase = f->buf;

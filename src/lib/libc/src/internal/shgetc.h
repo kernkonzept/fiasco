@@ -20,13 +20,9 @@
  * with string pseudo-FILEs, shunget has unlimited pushback, back to the
  * beginning of the string. */
 
-hidden void __shlim(FILE *, off_t);
-hidden int __shgetc(FILE *);
-
-#define shcnt(f) ((f)->shcnt + ((f)->rpos - (f)->buf))
-#define shlim(f, lim) __shlim((f), (lim))
-#define shgetc(f) (((f)->rpos != (f)->shend) ? *(f)->rpos++ : __shgetc(f))
-#define shunget(f) ((f)->shlim>=0 ? (void)(f)->rpos-- : (void)0)
+#define shcnt(f) ((f)->rpos - (f)->buf)
+#define shgetc(f) ( *(f)->rpos++)
+#define shunget(f) ((void)(f)->rpos--)
 
 #define sh_fromstring(f, s) \
-	((f)->buf = (f)->rpos = (void *)(s), (f)->rend = (void*)-1)
+	((f)->buf = (f)->rpos = (void *)(s))

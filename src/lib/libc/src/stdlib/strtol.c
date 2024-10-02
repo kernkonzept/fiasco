@@ -10,8 +10,7 @@ static unsigned long long strtox(const char *s, char **p, int base, unsigned lon
 {
 	FILE f;
 	sh_fromstring(&f, s);
-	shlim(&f, 0);
-	unsigned long long y = __intscan(&f, base, 1, lim);
+	unsigned long long y = __intscan(&f, base, lim);
 	if (p) {
 		size_t cnt = shcnt(&f);
 		*p = (char *)s + cnt;

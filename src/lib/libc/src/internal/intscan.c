@@ -26,7 +26,7 @@ static const unsigned char table[] = { -1,
 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
 };
 
-unsigned long long __intscan(FILE *f, unsigned base, int pok, unsigned long long lim)
+unsigned long long __intscan(FILE *f, unsigned base, unsigned long long lim)
 {
 	const unsigned char *val = table+1;
 	int c, neg=0;
@@ -49,8 +49,7 @@ unsigned long long __intscan(FILE *f, unsigned base, int pok, unsigned long long
 			c = shgetc(f);
 			if (val[c]>=16) {
 				shunget(f);
-				if (pok) shunget(f);
-				else shlim(f, 0);
+				shunget(f);
 				return 0;
 			}
 			base = 16;
@@ -61,7 +60,6 @@ unsigned long long __intscan(FILE *f, unsigned base, int pok, unsigned long long
 		if (base == 0) base = 10;
 		if (val[c] >= base) {
 			shunget(f);
-			shlim(f, 0);
 #ifndef LIBCL4
 			errno = EINVAL;
 #endif
