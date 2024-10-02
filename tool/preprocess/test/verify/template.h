@@ -123,6 +123,9 @@ template<typename FOO,
          typename BAR> void
 template_with_dfl_arg2();
 
+#line 251 "template.cpp"
+template<T = int> [[nodiscard]] T template_with_attribute();
+
 //
 // IMPLEMENTATION of inline functions (and needed classes)
 //
@@ -339,6 +342,12 @@ template<typename FOO,
          typename,
          typename BAR> void
 template_with_dfl_arg2()
+{}
+
+#line 249 "template.cpp"
+
+
+template<T> [[nodiscard]] T template_with_attribute()
 {}
 
 #endif // template_h

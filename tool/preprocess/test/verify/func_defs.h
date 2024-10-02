@@ -37,11 +37,19 @@ public:
   func5() noexcept ( this->func2() ) [[test(attr)]] [[test2]];
   
 #line 40 "func_defs.cpp"
+  [[cppattr]]  [[another_attr]] static int
+  func_attr_no_needs();
+  
+#line 45 "func_defs.cpp"
+  [[anattr]] int
+  func_attr_needs();
+  
+#line 50 "func_defs.cpp"
   int attribute((foo("murx("))) [[this->is->a->test]]
   func_with_stupid_attributes(Tmpl<Type> x) const && throw() = default;
 };
 
-#line 43 "func_defs.cpp"
+#line 53 "func_defs.cpp"
 /**
  * This is the comment for `free_function`.
  */

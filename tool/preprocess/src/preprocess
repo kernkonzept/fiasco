@@ -1287,6 +1287,7 @@ sub handle_function
     }
 
   # Interprete more type attributes.
+  $func->{attributes} = [];
   $func->{inline} = 0;
   $func->{always_inline} = 0;
   $func->{static} = 0;
@@ -1299,6 +1300,12 @@ sub handle_function
   $func->{fully_specialized_template} = '';
   while (1)
     {
+      if (s/^($s)($s $attribute_spec $s)/$1/sx)
+        {
+          push @{$func->{attributes}}, $2;
+          $func->{pretext} =~ s|\Q$2\E[ \t]*||s;
+          next;
+        }
       if (s/^($s)((?:$template)+)([\s\n])/$1$3/s)
         {
 	  my $match = $2;
@@ -1692,6 +1699,12 @@ sub func_prototype($)		# Return a function declaration from
       $pretext =~ s/^($s)/${1}virtual /s;
     }
 
+  if ($func->{attributes})
+    {
+      my $attr_text = join ' ', @{$func->{attributes}};
+      $pretext =~ s/^($s)/${1}$attr_text/s;
+    }
+
   if ($func->{funtemplate} ne '')
     {
       $pretext =~ s/^($s)/${1}$func->{funtemplate} /s;
@@ -1834,6 +1847,12 @@ sub print_funcdef($)
     }
 
   my $expr = qr { [^<>,]* (?:$template_arg)? [^<>,]* }x;
+
+  if ($function->{attributes})
+    {
+      my $attr_text = join ' ', @{$function->{attributes}};
+      $pretext =~ s/^($s)/${1}$attr_text/s;
+    }
 
   if ($function->{funtemplate} ne '')
     {

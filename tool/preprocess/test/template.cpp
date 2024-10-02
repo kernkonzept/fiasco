@@ -246,3 +246,7 @@ template<typename FOO,
 void
 template_with_dfl_arg2()
 {}
+
+template<T = int>
+[[nodiscard]] T template_with_attribute()
+{}

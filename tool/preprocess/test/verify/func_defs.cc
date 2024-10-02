@@ -46,7 +46,21 @@ void
 Test::func5() noexcept ( this->func2() ) [[test(attr)]] [[test2]]
 {}
 
-#line 42 "func_defs.cpp"
+#line 38 "func_defs.cpp"
+
+
+[[cppattr]]  [[another_attr]] int
+Test::func_attr_no_needs()
+{}
+
+#line 43 "func_defs.cpp"
+
+
+[[anattr]] int
+Test::func_attr_needs()
+{}
+
+#line 52 "func_defs.cpp"
 
 /**
  * This is the comment for `free_function`.
