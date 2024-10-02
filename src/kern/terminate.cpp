@@ -39,8 +39,6 @@ void set_exit_question(void (*eq)(void))
 }
 
 
-extern "C" void FIASCO_NORETURN _exit(int);
-
 FIASCO_NORETURN
 void
 terminate (int exit_value)
