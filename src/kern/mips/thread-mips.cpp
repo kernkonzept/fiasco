@@ -372,8 +372,8 @@ extern "C" void leave_by_vcpu_upcall()
   c->vcpu_return_to_kernel(vcpu->_entry_ip, vcpu->_sp, c->vcpu_state().usr().get());
 }
 
-PRIVATE static inline
-bool FIASCO_WARN_RESULT
+PRIVATE [[nodiscard]] static inline
+bool
 Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
                         L4_fpage::Rights rights)
 {
@@ -400,8 +400,8 @@ Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
   return ret;
 }
 
-PRIVATE static inline NEEDS["trap_state.h"]
-bool FIASCO_WARN_RESULT
+PRIVATE [[nodiscard]] static inline NEEDS["trap_state.h"]
+bool
 Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
                         L4_fpage::Rights rights)
 {

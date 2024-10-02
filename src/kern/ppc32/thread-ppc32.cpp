@@ -319,8 +319,8 @@ Thread::do_trigger_exception(Entry_frame * /*r*/, void * /*ret_handler*/)
   return 0;
 }
 
-PRIVATE static inline
-bool FIASCO_WARN_RESULT
+PRIVATE [[nodiscard]] static inline
+bool
 Thread::copy_utcb_to_ts(L4_msg_tag const &/*tag*/, Thread * /*snd*/,
                         Thread * /*rcv*/, L4_fpage::Rights /*rights*/)
 {
@@ -328,8 +328,8 @@ Thread::copy_utcb_to_ts(L4_msg_tag const &/*tag*/, Thread * /*snd*/,
   return true;
 }
 
-PRIVATE static inline
-bool FIASCO_WARN_RESULT
+PRIVATE [[nodiscard]] static inline
+bool
 Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread * /*snd*/, Thread * /*rcv*/,
                         L4_fpage::Rights /*rights*/)
 {

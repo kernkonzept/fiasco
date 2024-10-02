@@ -405,7 +405,7 @@ namespace Ptab
     }
 
     template< typename _Alloc, typename MEM >
-    FIASCO_WARN_RESULT
+    [[nodiscard]]
     bool map(Address &phys, Address &virt, unsigned long &size,
              Page::Attr attr, unsigned level, bool force_write_back,
              _Alloc &&alloc, MEM &&mem)
@@ -771,7 +771,7 @@ namespace Ptab
     }
 
     template< typename _Alloc, typename MEM = MEM_DFLT >
-    FIASCO_WARN_RESULT
+    [[nodiscard]]
     bool map(Address phys, Va virt, Vs size, Page::Attr attr,
              unsigned level, bool force_write_back,
              _Alloc &&alloc = _Alloc(), MEM &&mem = MEM())

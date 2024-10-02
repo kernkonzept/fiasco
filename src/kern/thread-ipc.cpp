@@ -959,8 +959,8 @@ Thread::try_transfer_local_id(L4_buf_iter::Item const *const buf,
   return false;
 }
 
-PRIVATE static inline
-bool FIASCO_WARN_RESULT
+PRIVATE [[nodiscard]] static inline
+bool
 Thread::copy_utcb_to_utcb(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
                           L4_fpage::Rights rights)
 {
@@ -987,9 +987,10 @@ Thread::copy_utcb_to_utcb(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
 }
 
 
-PUBLIC inline NEEDS[Thread::copy_utcb_to_ts, Thread::copy_utcb_to_utcb,
-                    Thread::copy_ts_to_utcb]
-bool FIASCO_WARN_RESULT
+PUBLIC [[nodiscard]] inline NEEDS[Thread::copy_utcb_to_ts,
+                                  Thread::copy_utcb_to_utcb,
+                                  Thread::copy_ts_to_utcb]
+bool
 Thread::copy_utcb_to(L4_msg_tag tag, Thread* receiver,
                      L4_fpage::Rights rights)
 {

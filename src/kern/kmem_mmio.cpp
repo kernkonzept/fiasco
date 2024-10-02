@@ -26,9 +26,9 @@ private:
   static Global_data<uintptr_t> current;
 
   static Kpdir::Pte_ptr boot_kdir_walk(Virt_addr virt, unsigned level);
-  static bool FIASCO_WARN_RESULT boot_kdir_map(Address phys, Virt_addr virt,
-                                               Virt_size size, Page::Attr attr,
-                                               unsigned level);
+  [[nodiscard]] static bool boot_kdir_map(Address phys, Virt_addr virt,
+                                          Virt_size size, Page::Attr attr,
+                                          unsigned level);
 
   static uintptr_t find_unmapped_extent(size_t size_adj, uintptr_t start,
                                         uintptr_t end, size_t step,

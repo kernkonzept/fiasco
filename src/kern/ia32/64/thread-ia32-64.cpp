@@ -208,8 +208,9 @@ Thread::trap_state_to_rf(Trap_state *ts)
   return reinterpret_cast<Return_frame*>(im)-1;
 }
 
-PRIVATE static inline NEEDS[Thread::trap_state_to_rf, Thread::sanitize_user_flags]
-bool FIASCO_WARN_RESULT
+PRIVATE [[nodiscard]] static inline NEEDS[Thread::trap_state_to_rf,
+                                          Thread::sanitize_user_flags]
+bool
 Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
                         L4_fpage::Rights rights)
 {
@@ -263,8 +264,8 @@ Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
   return ret;
 }
 
-PRIVATE static inline NEEDS[Thread::trap_state_to_rf]
-bool FIASCO_WARN_RESULT
+PRIVATE [[nodiscard]] static inline NEEDS[Thread::trap_state_to_rf]
+bool
 Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
                         L4_fpage::Rights rights)
 {

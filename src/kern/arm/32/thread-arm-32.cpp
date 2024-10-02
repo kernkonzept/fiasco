@@ -80,8 +80,8 @@ Thread::arm_fast_exit(void *sp, void *pc, void *arg)
   __builtin_unreachable();
 }
 
-PRIVATE static inline NEEDS[Thread::set_tpidruro]
-bool FIASCO_WARN_RESULT
+PRIVATE [[nodiscard]] static inline NEEDS[Thread::set_tpidruro]
+bool
 Thread::copy_utcb_to_ts(L4_msg_tag tag, Thread *snd, Thread *rcv,
                         L4_fpage::Rights rights)
 {
@@ -120,8 +120,8 @@ Thread::copy_utcb_to_ts(L4_msg_tag tag, Thread *snd, Thread *rcv,
 }
 
 
-PRIVATE static inline NEEDS[Thread::store_tpidruro]
-bool FIASCO_WARN_RESULT
+PRIVATE [[nodiscard]] static inline NEEDS[Thread::store_tpidruro]
+bool
 Thread::copy_ts_to_utcb(L4_msg_tag, Thread *snd, Thread *rcv,
                         L4_fpage::Rights rights)
 {

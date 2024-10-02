@@ -156,9 +156,10 @@ Thread::handle_svc(Trap_state *ts)
   do_syscall();
 }
 
-PRIVATE static inline NEEDS[Thread::set_tpidruro, Thread::set_tpidrurw,
-                            "trap_state.h"]
-bool FIASCO_WARN_RESULT
+PRIVATE [[nodiscard]] static inline NEEDS[Thread::set_tpidruro,
+                                          Thread::set_tpidrurw,
+                                          "trap_state.h"]
+bool
 Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
                         L4_fpage::Rights rights)
 {
@@ -184,10 +185,10 @@ Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
   return ret;
 }
 
-PRIVATE static inline NEEDS[Thread::store_tpidruro,
-                            Thread::store_tpidrurw,
-                            "trap_state.h"]
-bool FIASCO_WARN_RESULT
+PRIVATE [[nodiscard]] static inline NEEDS[Thread::store_tpidruro,
+                                          Thread::store_tpidrurw,
+                                          "trap_state.h"]
+bool
 Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
                         L4_fpage::Rights rights)
 {

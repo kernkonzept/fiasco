@@ -23,7 +23,6 @@ INTERFACE:
 #define MARK_AS_DEPRECATED __attribute__((__deprecated__))
 #define ALWAYS_INLINE      __attribute__((__always_inline__))
 #define FIASCO_NOINLINE    __attribute__((__noinline__))
-#define FIASCO_WARN_RESULT __attribute__((warn_unused_result))
 #define FIASCO_NORETURN    __attribute__((__noreturn__))
 
 #ifdef CONFIG_OPTIMIZE_FOR_SIZE

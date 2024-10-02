@@ -140,8 +140,8 @@ Ref_cnt_obj::inc_ref(bool from_zero = true)
  *
  * \return The reference counter value after decrementing.
  */
-PUBLIC inline NEEDS["atomic.h"]
-Smword FIASCO_WARN_RESULT
+PUBLIC [[nodiscard]] inline NEEDS["atomic.h"]
+Smword
 Ref_cnt_obj::dec_ref()
 {
   Smword old;

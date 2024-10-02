@@ -440,7 +440,7 @@ Rcu_data::~Rcu_data()
 }
 
 PUBLIC
-bool FIASCO_WARN_RESULT
+[[nodiscard]] bool
 Rcu_data::process_callbacks(Rcu_glbl *rgp)
 {
   // This function may not work properly if called without CPU lock.
@@ -508,8 +508,8 @@ Rcu_data::pending(Rcu_glbl *rgp) const
 
 }
 
-PUBLIC static inline NEEDS["globals.h"]
-bool FIASCO_WARN_RESULT
+PUBLIC [[nodiscard]] static inline NEEDS["globals.h"]
+bool
 Rcu::process_callbacks(Cpu_number cpu)
 { return _rcu_data.cpu(cpu).process_callbacks(&_rcu); }
 

@@ -175,8 +175,8 @@ Kmem::boot_kdir_walk(Virt_addr virt, unsigned level)
   return boot_kdir()->walk(virt, level, bs_pgin_dta->mem_map());
 }
 
-PUBLIC static
-bool FIASCO_WARN_RESULT
+PUBLIC [[nodiscard]] static
+bool
 Kmem::boot_kdir_map(Address phys, Virt_addr virt, Virt_size size,
                     Page::Attr attr, unsigned level)
 {

@@ -980,8 +980,8 @@ Context::consumed_time()
  * @param t Destination thread whose scheduling context and execution context
  *          should be activated.
  */
-PROTECTED inline NEEDS [<cassert>, Context::switch_handle_drq]
-Context::Switch FIASCO_WARN_RESULT
+PROTECTED [[nodiscard]] inline NEEDS [<cassert>, Context::switch_handle_drq]
+Context::Switch
 Context::schedule_switch_to_locked(Context *t)
 {
    // Must be called with CPU lock held
@@ -1048,7 +1048,7 @@ Context::deblock_and_schedule(Context *to)
  *             helping state unchanged
  */
 PUBLIC
-Context::Switch FIASCO_WARN_RESULT //L4_IPC_CODE
+[[nodiscard]] Context::Switch //L4_IPC_CODE
 Context::switch_exec_locked(Context *t, enum Helping_mode mode)
 {
   // Must be called with CPU lock held
