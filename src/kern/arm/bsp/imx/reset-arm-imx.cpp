@@ -5,7 +5,7 @@ IMPLEMENTATION [arm && pf_imx_21]:
 #include "kmem.h"
 #include "kmem_mmio.h"
 
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset(void)
 {
   enum {
@@ -33,7 +33,7 @@ IMPLEMENTATION [arm && pf_imx_28]:
 #include "kmem_mmio.h"
 #include "mmio_register_block.h"
 
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset(void)
 {
   Register_block<32> r(Kmem_mmio::map(0x80056000, 0x100));
@@ -77,7 +77,7 @@ IMPLEMENTATION [arm && (pf_imx_35 || pf_imx_51 || pf_imx_53 || pf_imx_6
 #include "io.h"
 #include "kmem_mmio.h"
 
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset(void)
 {
   enum {
@@ -100,7 +100,7 @@ IMPLEMENTATION [arm && arm_v8]:
 #include "infinite_loop.h"
 #include "psci.h"
 
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset(void)
 {
   Psci::system_reset();

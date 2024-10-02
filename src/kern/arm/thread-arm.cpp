@@ -88,7 +88,7 @@ Thread::print_page_fault_error(Mword e)
 }
 
 PUBLIC inline NEEDS[Thread::arm_fast_exit]
-void FIASCO_NORETURN
+[[noreturn]] void
 Thread::vcpu_return_to_kernel(Mword ip, Mword sp, Vcpu_state *arg)
 {
   Return_frame *r = prepare_vcpu_return_to_kernel(ip, sp);
@@ -140,7 +140,7 @@ Thread::init_per_cpu(Cpu_number, bool)
 //
 
 IMPLEMENT
-void FIASCO_NORETURN
+void
 Thread::user_invoke()
 {
   user_invoke_generic();

@@ -4,7 +4,7 @@ IMPLEMENTATION [arm && pf_sunxi]:
 #include "io.h"
 #include "kmem_mmio.h"
 
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset(void)
 {
   void *wdt = Kmem_mmio::map(0x01c20c90, 0x10);

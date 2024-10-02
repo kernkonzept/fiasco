@@ -4,7 +4,7 @@ IMPLEMENTATION [mips && ci40]:
 #include "kmem_mmio.h"
 #include "mmio_register_block.h"
 
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset(void)
 {
   Register_block<32> wdg(Kmem_mmio::map(0x18102100, sizeof(Unsigned32)));

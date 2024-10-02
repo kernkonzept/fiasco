@@ -69,8 +69,8 @@ IMPLEMENTATION:
 
 JDB_DEFINE_TYPENAME(Task, "\033[31mTask\033[m");
 
-extern "C" void vcpu_resume(Trap_state *, Return_frame *sp)
-   FIASCO_FASTCALL FIASCO_NORETURN;
+extern "C" [[noreturn]] void vcpu_resume(Trap_state *, Return_frame *sp)
+   FIASCO_FASTCALL;
 
 IMPLEMENT_DEFAULT
 int

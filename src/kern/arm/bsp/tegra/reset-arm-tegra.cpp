@@ -4,7 +4,7 @@ IMPLEMENTATION [arm && pf_tegra]:
 #include "kmem_mmio.h"
 #include "mmio_register_block.h"
 
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset(void)
 {
   Mmio_register_block b(Kmem_mmio::map(Mem_layout::Pmc_phys_base,

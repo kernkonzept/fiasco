@@ -5,8 +5,8 @@ INTERFACE [mp]:
 class App_cpu_thread : public Kernel_thread
 {
 private:
-  void bootstrap(Mword resume) asm ("call_ap_bootstrap")
-         FIASCO_FASTCALL FIASCO_NORETURN;
+  [[noreturn]] void bootstrap(Mword resume) asm ("call_ap_bootstrap")
+         FIASCO_FASTCALL;
 };
 
 IMPLEMENTATION [mp]:

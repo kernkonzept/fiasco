@@ -5,7 +5,7 @@ IMPLEMENTATION [arm && pf_armada38x]:
 #include "kmem_mmio.h"
 #include "mmio_register_block.h"
 
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset(void)
 {
   // Configuration and Control

@@ -81,8 +81,8 @@ Thread::dump_bats()
     printf("IBAT3 U:%08lx L:%08lx\n", batu, batl);
 }
 
-PUBLIC template<typename T> inline
-void FIASCO_NORETURN
+PUBLIC template<typename T> [[noreturn]] inline
+void
 Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
 {
   (void)ip; (void)sp; (void)arg;
@@ -92,7 +92,7 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
 }
 
 IMPLEMENT
-void FIASCO_NORETURN
+void
 Thread::user_invoke()
 {
   user_invoke_generic();

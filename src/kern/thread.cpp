@@ -138,7 +138,7 @@ private:
    * This function is the default routine run if a newly
    * initialized context is being switch_exec()'ed.
    */
-  static void user_invoke() FIASCO_NORETURN;
+  [[noreturn]] static void user_invoke();
 
   static void do_leave_and_kill_myself() asm("thread_do_leave_and_kill_myself");
 
@@ -622,7 +622,7 @@ PRIVATE inline
 void
 Thread::prepare_kill()
 {
-  extern void  FIASCO_NORETURN leave_and_kill_myself() asm ("leave_and_kill_myself");
+  [[noreturn]] extern void leave_and_kill_myself() asm ("leave_and_kill_myself");
 
   if (state() & (Thread_dying | Thread_dead))
     return;
@@ -1506,8 +1506,8 @@ Thread::Dbg_stack::Dbg_stack()
 
 DEFINE_PER_CPU Per_cpu<Thread::Dbg_stack> Thread::dbg_stack;
 
-PUBLIC static
-void FIASCO_NORETURN
+PUBLIC [[noreturn]] static
+void
 Thread::system_abort()
 {
   if (nested_trap_handler)
@@ -1633,8 +1633,8 @@ IMPLEMENTATION [!debug]:
 
 #include "terminate.h"
 
-PUBLIC static
-void FIASCO_NORETURN
+PUBLIC [[noreturn]] static
+void
 Thread::system_abort()
 { terminate(EXIT_FAILURE); }
 

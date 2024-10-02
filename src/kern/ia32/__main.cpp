@@ -10,7 +10,7 @@ IMPLEMENTATION[ia32 || amd64]:
 #include <cstdio>
 #include <construction.h>
 
-void kernel_main(void) FIASCO_NORETURN;
+[[noreturn]] void kernel_main(void);
 
 extern "C" FIASCO_FASTCALL FIASCO_INIT
 void

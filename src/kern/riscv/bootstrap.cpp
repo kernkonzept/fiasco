@@ -65,7 +65,7 @@ Bootstrap::puts(char const *msg)
   }
 }
 
-PUBLIC static FIASCO_NORETURN
+PUBLIC [[noreturn]] static
 void
 Bootstrap::panic(char const *msg)
 {

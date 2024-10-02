@@ -13,7 +13,7 @@ enum Reg_offsets
 /**
  * Program General purpose timer as watchdog, thus causing a system reset
  */
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset(void)
 {
 
@@ -31,7 +31,7 @@ platform_reset(void)
 
 IMPLEMENTATION [ppc32 && !mpc52xx]:
 
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset(void)
 {
   L4::infinite_loop();

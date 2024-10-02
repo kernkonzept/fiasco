@@ -4,7 +4,7 @@ IMPLEMENTATION [arm && pf_integrator]:
 #include "io.h"
 #include "kmem_mmio.h"
 
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset(void)
 {
   enum {

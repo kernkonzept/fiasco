@@ -4,7 +4,7 @@ IMPLEMENTATION [mips && baikal_t]:
 #include "kmem_mmio.h"
 #include "mmio_register_block.h"
 
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset(void)
 {
   Register_block<32> r(Kmem_mmio::map(0x1f04c000, 0x10));

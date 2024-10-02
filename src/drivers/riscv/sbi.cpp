@@ -37,7 +37,7 @@ public:
   static int console_getchar();
   static void send_ipi(Mword hart_mask, Mword hart_mask_base = 0);
   static void remote_fence_i(Mword hart_mask);
-  static FIASCO_NORETURN void shutdown();
+  [[noreturn]] static void shutdown();
 
 private:
   struct Ret
@@ -157,7 +157,7 @@ public:
   {
   public:
     static bool hart_start(Mword hartid, Mword start_addr, Mword priv);
-    static FIASCO_NORETURN void hart_stop();
+    [[noreturn]] static void hart_stop();
 
     enum Hart_status
     {
@@ -209,7 +209,7 @@ public:
     static int console_getchar();
     static void send_ipi(Mword hart_mask);
     static void remote_fence_i(Mword hart_mask);
-    static FIASCO_NORETURN void shutdown();
+    [[noreturn]] static void shutdown();
 
   private:
     enum

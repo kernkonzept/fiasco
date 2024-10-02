@@ -16,7 +16,7 @@ public:
 };
 
 
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset(void)
 {
   Mmio_register_block r(Kmem_mmio::map(Mem_layout::Reset_phys_base, 0x200));

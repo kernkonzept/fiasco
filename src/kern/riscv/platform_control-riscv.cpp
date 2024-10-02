@@ -21,7 +21,7 @@ Platform_control::system_off()
   Sbi::shutdown();
 }
 
-PUBLIC static FIASCO_NORETURN
+PUBLIC [[noreturn]] static
 void
 Platform_control::stop_cpu()
 {

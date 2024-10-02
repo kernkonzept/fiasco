@@ -9,7 +9,7 @@ IMPLEMENTATION [arm && pf_qcom && arm_psci]:
 #include "infinite_loop.h"
 #include "psci.h"
 
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset(void)
 {
   Psci::system_reset();
@@ -23,7 +23,7 @@ IMPLEMENTATION [arm && pf_qcom && !arm_psci]:
 #include "io.h"
 #include "kmem_mmio.h"
 
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset(void)
 {
   void *base = Kmem_mmio::map(Mem_layout::Mpm_ps_hold, sizeof(Unsigned32));

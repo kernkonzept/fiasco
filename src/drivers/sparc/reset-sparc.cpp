@@ -6,7 +6,7 @@ IMPLEMENTATION [sparc && leon3]:
 /**
  * Program General purpose timer as watchdog, thus causing a system reset
  */
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset(void)
 {
   //in  case we return
@@ -15,7 +15,7 @@ platform_reset(void)
 
 IMPLEMENTATION [sparc && !leon3]:
 
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset(void)
 {
   L4::infinite_loop();

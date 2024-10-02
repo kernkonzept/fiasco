@@ -4,7 +4,7 @@ IMPLEMENTATION [mips && boston]:
 #include "kmem_mmio.h"
 #include "mmio_register_block.h"
 
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset(void)
 {
   Register_block<32> syscon(Kmem_mmio::map(0x17ffd010, 0x20));

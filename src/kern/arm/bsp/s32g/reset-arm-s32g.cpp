@@ -4,7 +4,7 @@ IMPLEMENTATION [arm && pf_s32g && !arm_psci]:
 #include "mmio_register_block.h"
 #include "kmem_mmio.h"
 
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset(void)
 {
   Mmio_register_block rgm(Kmem_mmio::map(0x40078000, 0x20));
@@ -25,7 +25,7 @@ IMPLEMENTATION [arm && pf_s32g && arm_psci]:
 #include "infinite_loop.h"
 #include "psci.h"
 
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset(void)
 {
   Psci::system_reset();

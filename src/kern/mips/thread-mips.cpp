@@ -132,7 +132,7 @@ Thread::Thread(Ram_quota *q)
 
 // ERET to user mode
 IMPLEMENT
-void FIASCO_NORETURN
+void
 Thread::user_invoke()
 {
   user_invoke_generic();
@@ -334,8 +334,8 @@ thread_unhandled_trap(Mword, Trap_state *ts)
 //
 // Public services
 //
-PUBLIC inline NEEDS[<cassert>, "cp0_status.h"]
-void FIASCO_NORETURN
+PUBLIC [[noreturn]] inline NEEDS[<cassert>, "cp0_status.h"]
+void
 Thread::vcpu_return_to_kernel(Mword ip, Mword sp, void *arg)
 {
   assert (cpu_lock.test());

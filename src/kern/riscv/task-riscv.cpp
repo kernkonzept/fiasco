@@ -7,8 +7,8 @@ Task::invoke_arch(L4_msg_tag &, Utcb *)
   return false;
 }
 
-extern "C" void vcpu_resume(Trap_state *, Return_frame *sp)
-   FIASCO_FASTCALL FIASCO_NORETURN;
+extern "C" [[noreturn]] void vcpu_resume(Trap_state *, Return_frame *sp)
+   FIASCO_FASTCALL;
 
 IMPLEMENT_OVERRIDE
 int

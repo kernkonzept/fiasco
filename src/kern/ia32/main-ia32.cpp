@@ -25,7 +25,7 @@ IMPLEMENTATION[ia32 || amd64]:
 static int exit_question_active;
 
 
-extern "C" void __attribute__ ((noreturn))
+extern "C" [[noreturn]] void
 _exit(int)
 {
   if (exit_question_active)
@@ -102,9 +102,9 @@ IMPLEMENTATION[(ia32 || amd64) && mp]:
 #include "spin_lock.h"
 #include "utcb_init.h"
 
-void FIASCO_FASTCALL FIASCO_NORETURN boot_ap_cpu() __asm__("BOOT_AP_CPU");
+[[noreturn]] void FIASCO_FASTCALL boot_ap_cpu() __asm__("BOOT_AP_CPU");
 
-static void FIASCO_NORETURN
+[[noreturn]] static void
 stop_booting_ap_cpu(char const *msg, Apic_id apic_id)
 {
   extern Spin_lock<Mword> _tramp_mp_spinlock;
@@ -115,7 +115,7 @@ stop_booting_ap_cpu(char const *msg, Apic_id apic_id)
     Proc::halt();
 }
 
-void FIASCO_FASTCALL FIASCO_NORETURN boot_ap_cpu()
+[[noreturn]] void FIASCO_FASTCALL boot_ap_cpu()
 {
   Apic::activate_by_msr();
 

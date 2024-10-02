@@ -5,7 +5,7 @@ IMPLEMENTATION [mips && ci20]:
 #include "mmio_register_block.h"
 #include <cstdio>
 
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset()
 {
   printf("TODO: Implement reset\n");

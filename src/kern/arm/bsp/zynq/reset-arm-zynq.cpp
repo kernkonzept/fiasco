@@ -5,7 +5,7 @@ IMPLEMENTATION [arm && pf_zynq]:
 #include "kmem_mmio.h"
 #include "mmio_register_block.h"
 
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset(void)
 {
   Mmio_register_block slcr(Kmem_mmio::map(0xf8000000, 0x1000));

@@ -6,7 +6,7 @@ IMPLEMENTATION [arm && pf_rpi && !arm_psci]:
 
 #include <cstdio>
 
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset(void)
 {
   enum { Rstc = 0x1c, Wdog = 0x24 };
@@ -30,7 +30,7 @@ IMPLEMENTATION [arm && pf_rpi && arm_psci]:
 #include "infinite_loop.h"
 #include "psci.h"
 
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset(void)
 {
   Psci::system_reset();

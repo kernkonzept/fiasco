@@ -20,9 +20,9 @@ private:
    * unmapping it.
    */
   void free_initcall_section();
-  void bootstrap() asm ("call_bootstrap") FIASCO_FASTCALL FIASCO_NORETURN;
+  [[noreturn]] void bootstrap() asm ("call_bootstrap") FIASCO_FASTCALL;
   void bootstrap_arch();
-  void run() FIASCO_NORETURN;
+  [[noreturn]] void run();
   void check_debug_koptions();
 };
 

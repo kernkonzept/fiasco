@@ -22,7 +22,7 @@ IMPLEMENTATION[ia32]:
 #include "kernel_thread.h"
 #include "paging_bits.h"
 
-FIASCO_INIT FIASCO_NORETURN
+FIASCO_INIT [[noreturn]]
 void
 kernel_main(void)
 {
@@ -62,7 +62,7 @@ IMPLEMENTATION[ia32 && mp]:
 
 #include "kernel_thread.h"
 
-FIASCO_NORETURN
+[[noreturn]]
 void
 main_switch_ap_cpu_stack(Kernel_thread *kernel, bool resume)
 {

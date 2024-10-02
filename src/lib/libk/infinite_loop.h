@@ -7,7 +7,7 @@ namespace L4 {
 /**
  * Spin and never return.
  */
-inline void FIASCO_NORETURN infinite_loop()
+[[noreturn]] inline void infinite_loop()
 {
   while (1)
     asm volatile ("" ::: "memory");

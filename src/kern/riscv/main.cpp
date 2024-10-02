@@ -25,7 +25,7 @@ IMPLEMENTATION [riscv]:
 
 static int exit_question_active = 0;
 
-extern "C" void __attribute__ ((noreturn))
+extern "C" [[noreturn]] void
 _exit(int)
 {
   if (exit_question_active)
@@ -66,7 +66,7 @@ static void exit_question()
     }
 }
 
-FIASCO_NORETURN
+[[noreturn]]
 void
 kernel_main()
 {
@@ -105,9 +105,9 @@ IMPLEMENTATION [riscv && mp]:
 #include "spin_lock.h"
 #include "timer.h"
 
-void FIASCO_NORETURN boot_ap_cpu(Mword hart_id) __asm__("BOOT_AP_CPU");
+[[noreturn]] void boot_ap_cpu(Mword hart_id) __asm__("BOOT_AP_CPU");
 
-void boot_ap_cpu(Mword hart_id)
+[[noreturn]] void boot_ap_cpu(Mword hart_id)
 {
   extern Spin_lock<Mword> _tramp_mp_spinlock;
 

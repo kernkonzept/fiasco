@@ -3,8 +3,8 @@ IMPLEMENTATION [amd64 && !kernel_isolation]:
 
 #define FIASCO_ASM_IRET "iretq \n\t"
 
-PUBLIC template<typename T> inline
-void FIASCO_NORETURN
+PUBLIC template<typename T> [[noreturn]] inline
+void
 Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
 {
   assert(cpu_lock.test());
@@ -89,7 +89,7 @@ IMPLEMENTATION [amd64 && kernel_isolation]:
 
 PUBLIC template<typename T> inline NEEDS[Thread::handle_ia32_branch_barriers,
                                          Thread::handle_mds_mitigations]
-void FIASCO_NORETURN
+[[noreturn]] void
 Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
 {
   assert(cpu_lock.test());
@@ -301,7 +301,7 @@ Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
 
 
 IMPLEMENT
-void FIASCO_NORETURN
+void
 Thread::user_invoke()
 {
   user_invoke_generic();

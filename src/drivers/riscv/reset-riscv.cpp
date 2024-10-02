@@ -3,7 +3,7 @@ IMPLEMENTATION[riscv]:
 #include "processor.h"
 #include "sbi.h"
 
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset()
 {
   if (Sbi::Srst::probe())

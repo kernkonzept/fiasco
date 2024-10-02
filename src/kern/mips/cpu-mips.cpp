@@ -278,8 +278,8 @@ private:
 
   Cpu_phys_id _phys_id;
 
-  void panic(char const *fmt, ...) const
-    __attribute__((noreturn, format(printf,2,3)));
+  [[noreturn]] void panic(char const *fmt, ...) const
+    __attribute__((format(printf,2,3)));
   void require(bool cond, char const *fmt, ...) const
     __attribute__((format(printf,3,4)));
   void pr(char const *fmt, ...) const

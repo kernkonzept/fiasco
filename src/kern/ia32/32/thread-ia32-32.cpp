@@ -1,7 +1,7 @@
 IMPLEMENTATION[ia32]:
 
-PUBLIC template<typename T> inline
-void FIASCO_NORETURN
+PUBLIC template<typename T> [[noreturn]] inline
+void
 Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
 {
   assert(cpu_lock.test());
@@ -225,7 +225,7 @@ Thread::check_trap13_kernel(Trap_state *ts)
 
 
 IMPLEMENT
-void FIASCO_NORETURN
+void
 Thread::user_invoke()
 {
   user_invoke_generic();

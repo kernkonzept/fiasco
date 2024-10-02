@@ -12,7 +12,7 @@ IMPLEMENTATION [ppc32]:
 #include <cstdio>
 
 //XXX cbass: implement me
-extern "C" void __attribute__ ((noreturn))
+extern "C" [[noreturn]] void
 _exit(int)
 {
   printf("Exiting\n");

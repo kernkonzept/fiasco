@@ -28,7 +28,7 @@ IMPLEMENTATION [mips]:
 
 static int exit_question_active = 0;
 
-extern "C" void __attribute__ ((noreturn))
+extern "C" [[noreturn]] void
 _exit(int)
 {
   if (exit_question_active)
@@ -69,7 +69,7 @@ static void exit_question()
     }
 }
 
-extern "C" void FIASCO_NORETURN kernel_main()
+extern "C" [[noreturn]] void kernel_main()
 {
   static_construction();
   // caution: no stack variables in this function because we're going
@@ -115,9 +115,9 @@ IMPLEMENTATION[mips && mp]:
 #include "timer.h"
 #include "utcb_init.h"
 
-void FIASCO_NORETURN boot_ap_cpu() __asm__("BOOT_AP_CPU");
+[[noreturn]] void boot_ap_cpu() __asm__("BOOT_AP_CPU");
 
-void boot_ap_cpu()
+[[noreturn]] void boot_ap_cpu()
 {
   static Cpu_number last_cpu; // keep track of the last cpu ever appeared
 

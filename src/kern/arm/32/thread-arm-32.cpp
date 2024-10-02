@@ -66,7 +66,7 @@ Thread::user_ip(Mword ip)
     }
 }
 
-PUBLIC static inline void FIASCO_NORETURN
+PUBLIC [[noreturn]] static inline void
 Thread::arm_fast_exit(void *sp, void *pc, void *arg)
 {
   register void *r0 asm("r0") = arg;

@@ -22,8 +22,8 @@ IMPLEMENTATION[amd64]:
 #include "kernel_task.h"
 #include "paging_bits.h"
 
-FIASCO_INIT FIASCO_NORETURN
-void
+FIASCO_INIT
+[[noreturn]] void
 kernel_main(void)
 {
   unsigned dummy;
@@ -62,7 +62,7 @@ IMPLEMENTATION[amd64 && mp]:
 
 #include "kernel_thread.h"
 
-FIASCO_NORETURN
+[[noreturn]]
 void
 main_switch_ap_cpu_stack(Kernel_thread *kernel, bool resume)
 {

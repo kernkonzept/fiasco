@@ -14,8 +14,8 @@ IMPLEMENTATION [mips_vz]:
 #include "static_init.h"
 #include "l4_types.h"
 
-extern "C" void vcpu_resume(Trap_state *, Return_frame *sp)
-   FIASCO_FASTCALL FIASCO_NORETURN;
+extern "C" [[noreturn]] void vcpu_resume(Trap_state *, Return_frame *sp)
+   FIASCO_FASTCALL;
 
 IMPLEMENT_OVERRIDE
 int

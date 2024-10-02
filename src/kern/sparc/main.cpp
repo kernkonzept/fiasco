@@ -23,7 +23,7 @@ IMPLEMENTATION [sparc]:
 
 static int exit_question_active = 0;
 
-extern "C" void __attribute__ ((noreturn))
+extern "C" [[noreturn]] void
 _exit(int)
 {
   if (exit_question_active)

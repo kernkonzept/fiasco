@@ -39,7 +39,7 @@ void set_exit_question(void (*eq)(void))
 }
 
 
-FIASCO_NORETURN
+[[noreturn]]
 void
 terminate (int exit_value)
 {

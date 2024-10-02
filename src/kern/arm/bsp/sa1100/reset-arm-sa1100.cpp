@@ -4,7 +4,7 @@ IMPLEMENTATION [arm && pf_sa1100]:
 #include <sa1100.h>
 #include "kmem_mmio.h"
 
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset(void)
 {
   Sa1100 sa(Kmem_mmio::map(Mem_layout::Timer_phys_base + Sa1100::RSRR,

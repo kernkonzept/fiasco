@@ -90,7 +90,7 @@ Thread::Thread(Ram_quota *q)
   // ok, we're ready to go!
 }
 
-PUBLIC inline FIASCO_NORETURN
+PUBLIC [[noreturn]] inline
 void
 Thread::vcpu_return_to_kernel(Mword ip, Mword sp, void *arg)
 {
@@ -112,7 +112,7 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, void *arg)
   // never returns here
 }
 
-IMPLEMENT FIASCO_NORETURN
+IMPLEMENT
 void
 Thread::user_invoke()
 {
@@ -232,7 +232,7 @@ Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
   return true;
 }
 
-PUBLIC static inline FIASCO_NORETURN
+PUBLIC [[noreturn]] static inline
 void
 Thread::riscv_fast_exit(void *sp, void *pc, void *arg)
 {

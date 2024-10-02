@@ -5,7 +5,7 @@ IMPLEMENTATION [arm && pf_xscale]:
 #include "mmio_register_block.h"
 #include "kmem_mmio.h"
 
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset(void)
 {
   enum

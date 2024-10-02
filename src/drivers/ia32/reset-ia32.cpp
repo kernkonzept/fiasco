@@ -4,7 +4,7 @@ IMPLEMENTATION[ia32]:
 #include "processor.h"
 
 // reset PC
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset()
 {
   if (Io::in8(0x64) != 0xff)

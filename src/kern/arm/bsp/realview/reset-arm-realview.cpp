@@ -32,7 +32,7 @@ IMPLEMENTATION [arm && pf_realview]:
 
 #include "infinite_loop.h"
 
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset(void)
 {
   Platform::sys->write<Mword>(0xa05f, Platform::Sys::Lock);  // unlock for reset

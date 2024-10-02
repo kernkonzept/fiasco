@@ -46,8 +46,8 @@ Thread::dump_bats()
 {
 }
 
-PUBLIC template<typename T> inline
-void FIASCO_NORETURN
+PUBLIC template<typename T> [[noreturn]] inline
+void
 Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
 {
   (void)ip; (void)sp; (void)arg;

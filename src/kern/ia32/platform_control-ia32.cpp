@@ -6,7 +6,7 @@ Platform_control::prepare_cpu_suspend(Cpu_number)
   asm volatile ("wbinvd");
 }
 
-PUBLIC static inline void FIASCO_NORETURN
+PUBLIC [[noreturn]] static inline void
 Platform_control::cpu_suspend(Cpu_number)
 {
   for (;;)
