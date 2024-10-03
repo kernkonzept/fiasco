@@ -1,6 +1,8 @@
 INTERFACE[ia32 || amd64]:
 
 #include "asm.h"
+#include "gdt.h"
+#include "l4_types.h"
 #include "types.h"
 #include "initcalls.h"
 #include "regdefs.h"
@@ -18,6 +20,9 @@ INTERFACE[ia32 || amd64]:
     ".popsection                        \n\t" \
     ASM_KEX(1b, 2b)                           \
     : : "rm" (val))
+
+class Gdt;
+class Tss;
 
 EXTENSION
 class Cpu
@@ -248,27 +253,7 @@ private:
   static Vendor_table const * const vendor_table[];
 
   static char const * const exception_strings[];
-};
 
-
-//-----------------------------------------------------------------------------
-/*
- * Fiasco ia32-native
- * Architecture specific cpu init code
- */
-INTERFACE [ia32 || amd64]:
-
-#include "l4_types.h"
-#include "initcalls.h"
-#include "per_cpu_data.h"
-#include "gdt.h"
-
-class Gdt;
-class Tss;
-
-
-EXTENSION class Cpu
-{
 public:
   enum Lbr
   {
@@ -361,6 +346,7 @@ private:
   void init_lbr_type();
   void init_bts_type();
 
+  Unsigned64 _suspend_tsc;
 };
 
 //-----------------------------------------------------------------------------
@@ -368,11 +354,21 @@ IMPLEMENTATION[ia32 || amd64]:
 
 #include <cstdio>
 #include <cstring>
+#include "asm.h"
 #include "config.h"
-#include "panic.h"
-#include "processor.h"
+#include "div32.h"
+#include "gdt.h"
+#include "globals.h"
+#include "initcalls.h"
+#include "io.h"
 #include "lock_guard.h"
+#include "panic.h"
+#include "pit.h"
+#include "processor.h"
+#include "regdefs.h"
 #include "spin_lock.h"
+#include "tss.h"
+#include "warn.h"
 
 struct Ia32_intel_microcode
 {
@@ -591,14 +587,6 @@ Cpu::reset_io_bitmap()
   _tss->_hw.ctx.iopb = Tss::Segment_limit + 1;
   _tss->_io_bitmap_revision = 0;
 }
-
-//-----------------------------------------------------------------------------
-IMPLEMENTATION[ia32 || amd64]:
-
-#include <cstdio>
-#include <cstring>
-#include "config.h"
-#include "panic.h"
 
 DEFINE_PER_CPU_P(0) Per_cpu<Cpu> Cpu::cpus(Per_cpu_data::Cpu_num);
 Cpu *Cpu::_boot_cpu;
@@ -1573,29 +1561,6 @@ Cpu::set_es(Unsigned16 val)
   else
     FIASCO_IA32_LOAD_SEG(es, val);
 }
-
-
-//----------------------------------------------------------------------------
-IMPLEMENTATION[ia32 || amd64]:
-
-#include "asm.h"
-#include "config.h"
-#include "div32.h"
-#include "gdt.h"
-#include "globals.h"
-#include "initcalls.h"
-#include "io.h"
-#include "pit.h"
-#include "processor.h"
-#include "regdefs.h"
-#include "tss.h"
-#include "warn.h"
-
-EXTENSION class Cpu
-{
-private:
-  Unsigned64 _suspend_tsc;
-};
 
 PUBLIC FIASCO_INIT_AND_PM
 void

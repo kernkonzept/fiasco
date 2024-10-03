@@ -155,9 +155,6 @@ Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
   return true;
 }
 
-//----------------------------------------------------------------------------
-IMPLEMENTATION [ia32]:
-
 IMPLEMENT inline NEEDS[Thread::exception_triggered]
 void
 Thread::user_ip(Mword ip)
@@ -253,9 +250,6 @@ Thread::user_invoke()
 
   __builtin_unreachable();
 }
-
-//---------------------------------------------------------------------------
-IMPLEMENTATION [ia32]:
 
 PROTECTED inline NEEDS[Thread::sys_gdt_x86]
 L4_msg_tag

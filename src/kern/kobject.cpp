@@ -1,9 +1,14 @@
 INTERFACE:
 
+#include "context.h"
+#include "kobject_dbg.h"
+#include "kobject_iface.h"
+#include "l4_error.h"
 #include "lock.h"
 #include "obj_space.h"
+#include "rcupdate.h"
+#include "space.h"
 #include <cxx/hlist>
-
 
 class Kobject_mappable
 {
@@ -46,17 +51,6 @@ private:
     _root.clear();
   }
 };
-
-
-//----------------------------------------------------------------------------
-INTERFACE:
-
-#include "context.h"
-#include "kobject_dbg.h"
-#include "kobject_iface.h"
-#include "l4_error.h"
-#include "rcupdate.h"
-#include "space.h"
 
 /**
  * Helper class for maintaining a linked list of #Kobject objects.

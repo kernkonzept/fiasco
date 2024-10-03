@@ -18,9 +18,6 @@ Mword Mmu<Flush_area, Ram>::icache_line_size()
   return 16 << (v & 0x7);
 }
 
-//-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_v8]:
-
 IMPLEMENT inline
 template< unsigned long Flush_area, bool Ram >
 void Mmu<Flush_area, Ram>::flush_cache(void const *start,
@@ -109,9 +106,6 @@ void Mmu<Flush_area, Ram>::inv_dcache(void const *start, void const *end)
   btc_inv();
   Mem::dsb();
 }
-
-//-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_v8]:
 
 EXTENSION class Mmu
 {

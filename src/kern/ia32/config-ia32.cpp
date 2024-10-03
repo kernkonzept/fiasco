@@ -1,4 +1,3 @@
-/* IA32/AMD64 specific */
 INTERFACE[ia32 || amd64]:
 
 #include "idt_init.h"
@@ -77,13 +76,7 @@ public:
   static const unsigned default_console_uart_baudrate = 115200;
 
   static bool found_vmware;
-};
 
-INTERFACE[ia32 || amd64]:
-
-EXTENSION class Config
-{
-public:
   enum : unsigned int
   {
     Io_port_count = (1UL << 16),
@@ -93,6 +86,7 @@ public:
   using Io_bitmap = Unsigned8[Io_bitmap_size];
 };
 
+//----------------------------------------------------------------------------
 IMPLEMENTATION[ia32 || amd64]:
 
 #include <cstring>

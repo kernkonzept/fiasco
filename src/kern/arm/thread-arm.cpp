@@ -62,6 +62,7 @@ IMPLEMENTATION [arm]:
 #include "globals.h"
 #include "kmem.h"
 #include "thread_state.h"
+#include "trap_state.h"
 #include "types.h"
 #include "warn.h"
 
@@ -268,11 +269,6 @@ extern "C" {
     t->kill();
   }
 };
-
-//---------------------------------------------------------------------------
-IMPLEMENTATION [arm]:
-
-#include "trap_state.h"
 
 
 /** Constructor.

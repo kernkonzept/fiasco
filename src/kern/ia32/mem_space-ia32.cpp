@@ -120,11 +120,18 @@ private:
 //----------------------------------------------------------------------------
 IMPLEMENTATION [ia32 || amd64]:
 
+#include <cassert>
 #include <cstring>
 #include <cstdio>
+#include "config.h"
 #include "cpu.h"
+#include "cpu_lock.h"
+#include "kmem.h"
 #include "l4_types.h"
+#include "lock_guard.h"
+#include "logdefs.h"
 #include "mem_layout.h"
+#include "mem_unit.h"
 #include "paging.h"
 #include "std_macros.h"
 #include "kmem_alloc.h"
@@ -329,21 +336,6 @@ Mem_space::~Mem_space()
       Kmem_alloc::allocator()->q_free(_quota, Config::page_order(), _dir);
     }
 }
-
-
-// --------------------------------------------------------------------
-IMPLEMENTATION [ia32 || amd64]:
-
-#include <cassert>
-#include <cstring>
-#include "config.h"
-#include "cpu_lock.h"
-#include "l4_types.h"
-#include "lock_guard.h"
-#include "logdefs.h"
-#include "kmem.h"
-#include "mem_unit.h"
-#include "paging.h"
 
 PUBLIC inline NEEDS ["kmem.h"]
 Address

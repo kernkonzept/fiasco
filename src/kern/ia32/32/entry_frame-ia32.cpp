@@ -94,9 +94,6 @@ Return_frame::ss(Mword ss)
 { _ss = ss; }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [ia32]:
-
-//---------------------------------------------------------------------------
 // IPC frame methods for IA32
 //
 IMPLEMENT inline
@@ -132,10 +129,6 @@ IMPLEMENT inline L4_msg_tag Syscall_frame::tag() const
 IMPLEMENT inline
 void Syscall_frame::tag(L4_msg_tag const &tag)
 { _eax = tag.raw(); }
-
-
-// ---------------------------------------------------------------------------
-IMPLEMENTATION [ia32]:
 
 IMPLEMENT inline
 void

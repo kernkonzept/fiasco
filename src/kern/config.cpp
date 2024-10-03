@@ -179,6 +179,7 @@ IMPLEMENTATION:
 
 #include <cstring>
 #include <cstdlib>
+#include <cstdio>
 #include "feature.h"
 #include "koptions.h"
 #include "panic.h"
@@ -211,11 +212,6 @@ KIP_KERNEL_FEATURE("fi_gr_cputime");
 #ifdef CONFIG_MAPDB
 KIP_KERNEL_FEATURE("mapdb");
 #endif
-
-//-----------------------------------------------------------------------------
-IMPLEMENTATION:
-
-#include <stdio.h>
 
 IMPLEMENT FIASCO_INIT
 void Config::init()

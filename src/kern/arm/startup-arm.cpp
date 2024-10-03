@@ -26,9 +26,6 @@ IMPLEMENTATION [arm]:
 #include <cstdlib>
 #include <cstdio>
 
-//------------------------------------------------------------------
-IMPLEMENTATION [arm]:
-
 IMPLEMENT FIASCO_INIT FIASCO_NOINLINE
 void
 Startup::stage1()

@@ -2266,11 +2266,6 @@ Context::switch_fpu(Context *t)
     f.enable();
 }
 
-//----------------------------------------------------------------------------
-IMPLEMENTATION [fpu && lazy_fpu]:
-
-#include "fpu.h"
-
 PUBLIC inline NEEDS["fpu.h"]
 void
 Context::spill_fpu_if_owner()
