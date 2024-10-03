@@ -144,6 +144,7 @@ config ARM_PROFILE_A
         default y if !ARM_PROFILE_R
 
 config ARM_PROFILE_R
+        select ARM_SYNC_CLOCK
         bool
 
 # SECTION: CPU

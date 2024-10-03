@@ -224,31 +224,20 @@ __mpu_kernel_enter:
 	bic	r1, r2, r1
 	mcr	p15, 4, r1, c6, c1, 1	// write back HPRENR
 
-	// make KIP writable
-	mrc	p15, 4, r2, c6, c8, 4	// read HPRBAR1
-	bfc	r2, #1, #2		// AP[2:1] = b00 -> RW@EL1
-	mcr	p15, 4, r2, c6, c8, 4	// write back HPRBAR1
-
 	// Technically we should execute an ISB to make sure the MPU updates
 	// have settled. Practically, the relevant CPUs are in-order
 	// architectures and do not need this. In the worst case a level 0
 	// fault happens which is gracefully handled by
 	// Thread::handle_hyp_mode_fault().
-1:	bx	lr
+	bx	lr
 
 __mpu_kernel_leave:
 	CONTEXT_OF r1, sp
 
+	// enable all user regions
 	mrc	p15, 4, r3, c6, c1, 1		// read HPRENR
-	mrc	p15, 4, r12, c6, c8, 4		// read HPRBAR1
 	ldr	r2, [r1, #(OFS__THREAD__KU_MEM_REGIONS)]
-
-	// make KIP read only
-	orr	r12, r12, #(3 << 1)		// AP[2:1] = b11 -> RO@EL2/1/0
-
-	// enable all user regions, disable peripheral access
 	orr	r2, r2, r3		// enable user ku_mem regions
-	mcr	p15, 4, r12, c6, c8, 4	// write back HPRBAR1
 	mcr	p15, 4, r2, c6, c1, 1	// write user HPRENR
 
 	// constrain heap region to stack

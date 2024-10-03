@@ -7,13 +7,11 @@
 #ifdef CONFIG_CPU_VIRT
 #define EL(x) x##_el2
 #define PRENR   S3_4_c6_c1_1
-#define PRBAR1  S3_4_c6_c8_4
 #define PRBAR2  S3_4_c6_c9_0
 #define PRLAR2  S3_4_c6_c9_1
 #else
 #define EL(x) x##_el1
 #define PRENR   S3_0_c6_c1_1
-#define PRBAR1  S3_0_c6_c8_4
 #define PRBAR2  S3_0_c6_c9_0
 #define PRLAR2  S3_0_c6_c9_1
 #endif
@@ -192,12 +190,9 @@ __mpu_kernel_enter:
 	ldp	x10, x11, [x8, #OFS__THREAD__MPU_PRBAR2]
 	msr	PRBAR2, x10		// restore heap region
 	msr	PRLAR2, x11		// ...
-	mrs	x12, PRBAR1		// read KIP BAR
 	ldr	w9, [x8, #OFS__THREAD__KU_MEM_REGIONS]
 	mrs	x8, PRENR
-	and	x12, x12, #~(0x3 << 2)	// AP[2:1] = b00 -> RW@EL1
 	bic	x9, x8, x9		// disable active ku_mem regions
-	msr	PRBAR1, x12		// make KIP writable
 	msr	PRENR, x9		// disable all ku_mem user regions
 
 	// Technically we should execute an ISB to make sure the MPU updates
@@ -234,7 +229,6 @@ __mpu_kernel_leave_nocheck:
 	ldr	w9, [x8, #OFS__THREAD__KU_MEM_REGIONS]
 	mrs	x10, PRBAR2
 	mrs	x11, PRLAR2
-	mrs	x13, PRBAR1
 
 	// constrain heap region to stack
 	orr	x12, x8, #((THREAD_BLOCK_SIZE-1) & ~0x3f)
@@ -244,10 +238,6 @@ __mpu_kernel_leave_nocheck:
 	orr	x11, x11, x12
 	msr	PRBAR2, x10
 	msr	PRLAR2, x11
-
-	// make KIP read only
-	orr	x13, x13, #(3 << 2)	// AP[2:1] = b11 -> RO@EL2/1/0
-	msr	PRBAR1, x13
 
 	// enable ku_mem user regions
 	mrs	x10, PRENR

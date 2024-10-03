@@ -784,11 +784,6 @@ __mpu_kernel_enter:
 
 	bne	1b			// next iteration if still sth set
 2:
-	// make KIP writable
-	mrc	p15, 0, r2, c6, c8, 4	// read PRBAR1
-	bfc	r2, #1, #2		// AP[2:1] = b00 -> RW@EL1
-	mcr	p15, 0, r2, c6, c8, 4	// write back PRBAR1
-
 	isb				// Make sure MPU updates have settled
 	bx	lr
 
@@ -812,11 +807,6 @@ __mpu_kernel_leave:
 
 	bne	1b			// next iteration if still sth set
 2:
-	// make KIP read only
-	mrc	p15, 0, r2, c6, c8, 4	// read PRBAR1
-	orr	r2, r2, #(3 << 1)	// AP[2:1] = b11 -> RO@EL1/0
-	mcr	p15, 0, r2, c6, c8, 4	// write back PRBAR1
-
 	// constrain heap region to stack
 	mrc	p15, 0, r2, c6, c9, 0	// read PRBAR2
 	mrc	p15, 0, r3, c6, c9, 1	// read PRLAR2
