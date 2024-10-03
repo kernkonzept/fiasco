@@ -2,7 +2,9 @@
 
 int __towrite(FILE *f)
 {
+#ifndef LIBCL4
 	f->mode |= f->mode-1;
+#endif
 	if (f->flags & F_NOWR) {
 		f->flags |= F_ERR;
 		return EOF;

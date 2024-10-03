@@ -10,7 +10,6 @@ int vprintf(const char *restrict fmt, va_list ap)
       .write = __libc_stdout_write,
       .buf = NULL,
       .buf_size = 0, /* vfprintf() will use local internal_buf */
-      .fd = 1,
       .lock = -1,
       .lbf = -1,
     };

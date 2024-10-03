@@ -9,7 +9,6 @@ int puts(const char *s)
       .write = __libc_stdout_write,
       .buf = NULL,
       .buf_size = 0, /* vfprintf() will use local internal_buf */
-      .fd = 1,
       .lock = -1,
       .lbf = '\n',
     };

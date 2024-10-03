@@ -47,13 +47,11 @@ struct _IO_FILE {
 	size_t buf_size;
 #ifndef LIBCL4
 	FILE *prev, *next;
-#endif
 	int fd;
-#ifndef LIBCL4
 	int pipe_pid;
 	long lockcount;
-#endif
 	int mode;
+#endif
 	volatile int lock;
 	int lbf;
 	void *cookie;
