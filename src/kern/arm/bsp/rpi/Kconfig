@@ -1,5 +1,5 @@
 # PF: RPI
-# PFDESCR: Raspberry Pi (Broadcom 283X & 2711)
+# PFDESCR: Raspberry Pi (Broadcom 283X, 2711, 2712)
 # PFDEPENDS: ARM
 
 config PF_RPI_UART_16550
@@ -51,6 +51,7 @@ config PF_RPI_RPI4
 config PF_RPI_RPI5
 	bool "rpi5"
 	depends on PF_RPI
+	select BIT64_CHOICE
 	select PF_RPI_UART_PL011
 	select CAN_ARM_CPU_CORTEX_A76
 	select ARM_GIC
