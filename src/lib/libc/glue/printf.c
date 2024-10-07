@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include "stdio_impl.h"
-#include "fiasco_stdio.h"
+#include "libc_stdio.h"
 
 int printf(const char *restrict fmt, ...)
 {
@@ -10,7 +10,7 @@ int printf(const char *restrict fmt, ...)
   FILE f = (FILE)
     {
       .flags = F_PERM | F_NORD,
-      .write = __fiasco_stdout_write,
+      .write = __libc_stdout_write,
       .buf = NULL,
       .buf_size = 0, /* vfprintf() will use local internal_buf */
       .fd = 1,
