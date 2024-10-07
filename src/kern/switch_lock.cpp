@@ -55,6 +55,7 @@ public:
     Invalid     ///< The lock does not exist (is invalid)
   };
 
+private:
   /**
    * Stores the context of the lock for a later switch.
    * (see clear_no_switch_dirty(), switch_dirty())
@@ -343,7 +344,7 @@ Switch_lock::clear_no_switch_dirty()
  * \pre must be called atomically with clear_no_switch_dirty(),
  *      under the same cpu lock
  */
-PROTECTED
+PRIVATE
 static inline NEEDS[Switch_lock::schedule]
 void NO_INSTRUMENT
 Switch_lock::switch_dirty(Lock_context const &c)
