@@ -49,8 +49,10 @@ size_t strlen (const char *);
 
 char *strerror (int);
 
+#ifndef LIBCL4
 #if defined(_BSD_SOURCE) || defined(_GNU_SOURCE)
 #include <strings.h>
+#endif
 #endif
 
 #if defined(_POSIX_SOURCE) || defined(_POSIX_C_SOURCE) \
