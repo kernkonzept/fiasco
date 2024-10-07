@@ -5,12 +5,6 @@
 #include <stdio.h>
 #include <limits.h>
 
-struct __locale_map;
-
-struct __locale_struct {
-	const struct __locale_map *cat[6];
-};
-
 struct tls_module {
 	struct tls_module *next;
 	void *image;
@@ -27,7 +21,6 @@ struct __libc {
 	struct tls_module *tls_head;
 	size_t tls_size, tls_align, tls_cnt;
 	size_t page_size;
-	struct __locale_struct global_locale;
 };
 
 #ifndef PAGE_SIZE

@@ -357,12 +357,6 @@ typedef struct __mbstate_t { unsigned __opaque1, __opaque2; } mbstate_t;
 #endif
 
 
-#if defined(__NEED_locale_t) && !defined(__DEFINED_locale_t)
-typedef struct __locale_struct * locale_t;
-#define __DEFINED_locale_t
-#endif
-
-
 #if defined(__NEED_sigset_t) && !defined(__DEFINED_sigset_t)
 typedef struct __sigset_t { unsigned long __bits[128/sizeof(long)]; } sigset_t;
 #define __DEFINED_sigset_t

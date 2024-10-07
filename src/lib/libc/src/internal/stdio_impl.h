@@ -64,7 +64,6 @@ struct _IO_FILE {
 	unsigned char *shend;
 	off_t shlim, shcnt;
 	FILE *prev_locked, *next_locked;
-	struct __locale_struct *locale;
 #endif
 };
 
