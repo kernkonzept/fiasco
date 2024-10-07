@@ -18,6 +18,7 @@ INTERFACE:
  */
 class Helping_lock : private Switch_lock
 {
+  template <typename T> friend class Switch_auto_lock;
 
 public:
   using Switch_lock::Status;
@@ -109,20 +110,4 @@ Helping_lock::set(Status s)
 {
   if (!s)
     clear();
-}
-
-/**
- * \copydoc Switch_lock::lock_owner()
- *
- * A return value of `current()` may also indicate that the threading system is
- * not activated yet.
- */
-PUBLIC inline NEEDS["std_macros.h", "globals.h"]
-Context* NO_INSTRUMENT
-Helping_lock::lock_owner () const
-{
-  if (EXPECT_FALSE( ! threading_system_active) ) // still initializing?
-    return current();
-
-  return Switch_lock::lock_owner();
 }

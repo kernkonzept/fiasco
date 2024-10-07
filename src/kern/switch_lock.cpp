@@ -32,7 +32,9 @@ class Context;
 class Switch_lock
 {
   MEMBER_OFFSET();
+  // For tests
   friend class Locks_test;
+  template <typename T> friend class Switch_auto_lock;
 
 private:
   // Warning: This lock's member variables must not need a
@@ -113,7 +115,7 @@ Switch_lock::initialize()
  *
  * \return current owner of the lock. 0 if there is no owner.
  */
-PUBLIC
+PRIVATE
 inline NEEDS["lock_guard.h", "cpu_lock.h"]
 Context * NO_INSTRUMENT
 Switch_lock::lock_owner() const
@@ -318,8 +320,8 @@ IMPLEMENTATION:
  *
  * \post switch_dirty() must be called in the same atomical section
  */
-PROTECTED
-inline NEEDS[Switch_lock::clear_lock_owner, "context.h"]
+PRIVATE
+inline NEEDS[Switch_lock::clear_lock_owner, Switch_lock::lock_owner, "context.h"]
 Switch_lock::Lock_context NO_INSTRUMENT
 Switch_lock::clear_no_switch_dirty()
 {
