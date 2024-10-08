@@ -22,7 +22,7 @@ IMPLEMENTATION[ia32]:
 #include "kernel_thread.h"
 #include "paging_bits.h"
 
-FIASCO_INIT [[noreturn]]
+[[noreturn]] FIASCO_INIT
 void
 kernel_main(void)
 {

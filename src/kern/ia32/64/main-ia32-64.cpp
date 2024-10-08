@@ -22,8 +22,8 @@ IMPLEMENTATION[amd64]:
 #include "kernel_task.h"
 #include "paging_bits.h"
 
-FIASCO_INIT
-[[noreturn]] void
+[[noreturn]] FIASCO_INIT
+void
 kernel_main(void)
 {
   unsigned dummy;
