@@ -489,6 +489,9 @@ PRIVATE
 void
 Dmar_space::remove_from_all_iommus()
 {
+  if (!_initialized)
+    return;
+
   Did did = _did_alloc->reset_id_if_valid(&_did);
   if (did == Invalid_did)
     return;
