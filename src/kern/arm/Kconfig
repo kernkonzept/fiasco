@@ -92,6 +92,13 @@ config DEFAULT_ARM_EM_TZ
 config DEFAULT_ARM_EM_NS
 	bool
 
+config DONT_USE_GENERIC_TIMER
+	bool
+
+config USE_GENERIC_TIMER
+	def_bool y if HAS_CPU_VIRT
+	depends on !DONT_USE_GENERIC_TIMER
+
 config ARM_V6
 	def_bool y if ARM_1136 || ARM_1176 || ARM_MPCORE
 
@@ -319,7 +326,7 @@ config ARM_ALIGNMENT_CHECK
 
 config ARM_SYNC_CLOCK
 	bool "Use ARM generic timer for system clock and scheduling accounting"
-	depends on HAS_CPU_VIRT # Dependency on the generic timer
+	depends on USE_GENERIC_TIMER
 	default y
 	select SYNC_CLOCK
 	help
