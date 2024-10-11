@@ -92,33 +92,14 @@ public:
     /// Hstatus bits that are set for user mode context by default.
     Hstatus_user_default = 0,
   };
-};
 
-//----------------------------------------------------------------------------
-INTERFACE [riscv && cpu_virt && fpu && lazy_fpu]:
-
-EXTENSION
-class Cpu
-{
-public:
   enum : Mword
   {
-    // Cannot delegate illegal instruction exception as we need it for lazy FPU
-    // switching.
-    Hedeleg_mask = ~(1UL << Exc_illegal_inst),
-  };
-};
-
-//----------------------------------------------------------------------------
-INTERFACE [riscv && cpu_virt && fpu && !lazy_fpu]:
-
-EXTENSION
-class Cpu
-{
-public:
-  enum : Mword
-  {
-    Hedeleg_mask = ~0UL,
+    // With lazy FPU switching we cannot delegate illegal instruction exception,
+    // as we need it to detect usage of disabled FPU, i.e. the case that
+    // currently someone else is the FPU owner.
+    Hedeleg_mask = TAG_ENABLED(fpu && lazy_fpu)
+                   ? ~(1UL << Exc_illegal_inst) : ~0UL,
   };
 };
 
