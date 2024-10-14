@@ -535,9 +535,9 @@ Task::sys_unmap(Syscall_frame *f, Utcb *utcb)
 
     {
       Ref_ptr<Task> self(this);
-      Lock_guard<Helping_lock> guard;
 
-      if (!guard.check_and_lock(&existence_lock))
+      auto guard = switch_lock_guard(existence_lock);
+      if (!guard.is_valid())
         return commit_error(utcb, L4_error::Not_existent);
 
       cpu_lock.clear();
@@ -606,8 +606,8 @@ Task::sys_add_ku_mem(Syscall_frame *f, Utcb *utcb, Utcb *out)
 
   // Acquire existence lock to prevent concurrent modification of the Task's
   // page table.
-  Lock_guard<Helping_lock> guard_task;
-  if (!guard_task.check_and_lock(&existence_lock))
+  auto guard_task = switch_lock_guard(existence_lock);
+  if (!guard_task.is_valid())
     return commit_error(utcb, L4_error::Not_existent);
 
   // alloc_ku_mem() must run with interrupts enabled (for potentially required

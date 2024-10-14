@@ -1177,7 +1177,7 @@ Iommu::send_cmds(Cmd const (&cmds)[N])
         // the SMMU will not send a WFE event.
         Proc::pause();
 
-        g.lock(&_cmd_queue_lock);
+        g = lock_guard(_cmd_queue_lock);
       }
 
   // We are done modifying the command queue, thus release the lock.

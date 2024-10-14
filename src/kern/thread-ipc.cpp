@@ -1116,8 +1116,8 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
               {
                 // Take the existence_lock for synchronizing maps -- kind of
                 // coarse-grained.
-                auto sp_lock = lock_guard_dont_lock(dst_tsk->existence_lock);
-                if (!sp_lock.check_and_lock(&dst_tsk->existence_lock))
+                auto sp_lock = switch_lock_guard(dst_tsk->existence_lock);
+                if (!sp_lock.is_valid())
                   {
                     snd->set_ipc_error(L4_error::Overflow, rcv);
                     return false;

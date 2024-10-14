@@ -222,8 +222,8 @@ Thread_object::sys_vcpu_resume(L4_msg_tag const &tag, Utcb const *utcb, Utcb *)
           Reap_list reap_list;
 
           // in this case we already have a counted reference managed by vcpu_user_space()
-          Lock_guard<Helping_lock> guard;
-          if (!guard.check_and_lock(&static_cast<Task *>(vcpu_user_space())->existence_lock))
+          auto guard = switch_lock_guard(static_cast<Task *>(vcpu_user_space())->existence_lock);
+          if (!guard.is_valid())
             return commit_result(-L4_err::ENoent);
 
           cpu_lock.clear();

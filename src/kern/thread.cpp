@@ -1347,8 +1347,9 @@ Thread::migrate_away(Migration *inf, bool remote)
       // The queue lock of the current CPU protects the cpu number in
       // the thread
 
-      auto g = !remote ? lock_guard(q.q_lock())
-                       : lock_guard_dont_lock(q.q_lock());
+      Lock_guard<Queue::Inner_lock> g;
+      if (!remote)
+        g = lock_guard(q.q_lock());
 
       assert (q.q_lock()->test());
       // potentially dequeue from our local queue

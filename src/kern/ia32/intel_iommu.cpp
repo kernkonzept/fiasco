@@ -527,7 +527,7 @@ public:
         Proc::pause();
 
         // Reacquire lock.
-        g.lock(&_inv_q_lock);
+        g = lock_guard(_inv_q_lock);
       }
 
     // Put descriptors into queue.

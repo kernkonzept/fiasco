@@ -33,6 +33,7 @@ template<
   template< typename L > class POLICY = Lock_guard_regular_policy >
 class Lock_guard
 {
+protected:
   typedef cxx::remove_pointer_t<cxx::remove_reference_t<LOCK>> Lock;
   typedef POLICY<Lock> Policy;
 
@@ -41,6 +42,26 @@ class Lock_guard
 
   Lock_guard(Lock_guard &) = delete;
   Lock_guard &operator = (Lock_guard &) = delete;
+};
+
+/**
+ * A lock guard for locks that have an `Invalid` state.
+ *
+ * This guard does not have a default constructor. A lock must be passed on
+ * construction and is immediately attempted to lock. Hence, after construction,
+ * the validity of the lock is clear and can be checked via is_valid(). This
+ * should usually be done.
+ */
+template<
+  typename LOCK,
+  template< typename L > class POLICY = Lock_guard_regular_policy >
+class Switch_lock_guard : public Lock_guard<LOCK, POLICY>
+{
+  Switch_lock_guard() = delete;
+  Switch_lock_guard(Switch_lock_guard &) = delete;
+  Switch_lock_guard &operator = (Switch_lock_guard &) = delete;
+public:
+  Switch_lock_guard &operator = (Switch_lock_guard &&) = default;
 };
 
 template< typename LOCK>
@@ -77,13 +98,14 @@ Lock_guard<LOCK, POLICY>::Lock_guard(Lock_guard &&l)
 
 PUBLIC template<typename LOCK, template< typename L > class POLICY>
 inline
-Lock_guard<LOCK, POLICY>
+Lock_guard<LOCK, POLICY>&
 Lock_guard<LOCK, POLICY>::operator = (Lock_guard &&l)
 {
   reset();
   _lock = l._lock;
   _state = l._state;
   l.release();
+  return *this;
 }
 
 
@@ -102,51 +124,6 @@ inline
 template<template<typename L> class POLICY = Lock_guard_regular_policy, typename LOCK>
 Lock_guard<LOCK, POLICY> lock_guard(LOCK *lock)
 { return Lock_guard<LOCK, POLICY>(lock); }
-
-/**
- * Create a lock guard without attaching to the actual lock. This is normally
- * used together with check_and_lock().
- */
-inline
-template<template<typename L> class POLICY = Lock_guard_regular_policy, typename LOCK>
-Lock_guard<LOCK, POLICY> lock_guard_dont_lock(LOCK &)
-{ return Lock_guard<LOCK, POLICY>(); }
-
-/**
- * Create a lock guard without attaching to the actual lock. This is normally
- * used together with check_and_lock().
- */
-inline
-template<template<typename L> class POLICY = Lock_guard_regular_policy, typename LOCK>
-Lock_guard<LOCK, POLICY> lock_guard_dont_lock(LOCK *)
-{ return Lock_guard<LOCK, POLICY>(); }
-
-/**
- * Acquire the lock and release it on destruction.
- */
-PUBLIC template<typename LOCK, template< typename L > class POLICY>
-inline
-void
-Lock_guard<LOCK, POLICY>::lock(Lock *l)
-{
-  _lock = l;
-  _state = Policy::test_and_set(l);
-}
-
-/**
- * Acquire the lock, release it on destruction and return `false` if the lock is
- * invalid. The function will fail if the lock is invalid, otherwise it will
- * (eventually) acquire the lock and return `true`.
- */
-PUBLIC template<typename LOCK, template< typename L > class POLICY>
-inline
-bool
-Lock_guard<LOCK, POLICY>::check_and_lock(Lock *l)
-{
-  _lock = l;
-  _state = Policy::test_and_set(l);
-  return _state != Lock::Invalid;
-}
 
 /**
  * Detach from the lock.
@@ -185,6 +162,45 @@ Lock_guard<LOCK, POLICY>::~Lock_guard()
   if (_lock)
     Policy::set(_lock, _state);
 }
+
+
+/// \copydoc switch_lock_guard(LOCK &lock)
+PUBLIC template<typename LOCK, template< typename L > class POLICY>
+inline explicit
+Switch_lock_guard<LOCK, POLICY>::Switch_lock_guard(typename Lock_guard<LOCK, POLICY>::Lock *l)
+  : Lock_guard<LOCK, POLICY>(l)
+{}
+
+/**
+ * Attach to a lock, acquire it and release it on destruction.
+ *
+ * If the lock is invalid, the acquisition fails. This should usually be checked
+ * via #Switch_lock_guard::is_valid().
+ */
+inline
+template<template<typename L> class POLICY = Lock_guard_regular_policy, typename LOCK>
+Switch_lock_guard<LOCK, POLICY> switch_lock_guard(LOCK &lock)
+{ return Switch_lock_guard<LOCK, POLICY>(&lock); }
+
+/// \copydoc switch_lock_guard(LOCK &lock)
+inline
+template<template<typename L> class POLICY = Lock_guard_regular_policy, typename LOCK>
+Switch_lock_guard<LOCK, POLICY> switch_lock_guard(LOCK *lock)
+{ return Switch_lock_guard<LOCK, POLICY>(lock); }
+
+/**
+ * Check if the lock is valid.
+ *
+ * \pre The underlying lock type must provide an `Invalid` state.
+ */
+PUBLIC template<typename LOCK, template< typename L > class POLICY>
+inline
+bool
+Switch_lock_guard<LOCK, POLICY>::is_valid()
+{
+  return this->_state != Lock_guard<LOCK, POLICY>::Lock::Invalid;
+}
+
 
 PUBLIC template<typename LOCK>
 inline

@@ -248,7 +248,7 @@ Slab_cache::alloc()	// request initialized member from cache
 	  if (m)
 	    new_slab = new (m + _slab_size - sizeof(Slab)) Slab(_elem_num, _entry_size, m);
 
-	  guard.lock(&lock);
+	  guard = lock_guard(lock);
 
 	  // retry gettin a slab that might be allocated by a different
 	  // CPU meanwhile
