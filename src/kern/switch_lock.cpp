@@ -112,16 +112,17 @@ Switch_lock::initialize()
 }
 
 /**
- * Lock owner.
+ * For internal use only: Current lock owner.
  *
- * \return current owner of the lock. 0 if there is no owner.
+ * \pre The cpu_lock must be held.
+ *
+ * \return current owner of the lock. `nullptr` if there is no owner.
  */
 PRIVATE
-inline NEEDS["lock_guard.h", "cpu_lock.h"]
+inline
 Context * NO_INSTRUMENT
 Switch_lock::lock_owner() const
 {
-  auto guard = lock_guard(cpu_lock);
   return reinterpret_cast<Context*>(_lock_owner & ~1UL);
 }
 
@@ -416,7 +417,7 @@ Switch_lock::wait_free()
 
   assert (!valid());
 
-  if (EXPECT_FALSE(reinterpret_cast<Context*>(_lock_owner & ~1UL) == c))
+  if (EXPECT_FALSE(lock_owner() == c))
     panic("Current thread owns Switch_lock and attempts to destroy it");
 
   for(;;)
