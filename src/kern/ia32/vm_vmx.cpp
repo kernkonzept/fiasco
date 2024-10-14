@@ -136,7 +136,8 @@ Vm_vmx_t<VARIANT>::vm_entry(Trex *regs,
                             Vmx_vm_state_t<HOST_STATE> *vm_state,
                             bool guest_long_mode, Unsigned32 *reason)
 {
-  Cpu_number const cpu = current_cpu();
+  Cpu &cpu = Cpu::cpus.current();
+  Vmx &vmx = Vmx::cpus.current();
 
   vm_state->load_guest_state();
   static_cast<VARIANT *>(this)->load_vm_memory(vm_state);
@@ -144,6 +145,28 @@ Vm_vmx_t<VARIANT>::vm_entry(Trex *regs,
   // Set volatile host state
   Vmx::vmcs_write<Vmx::Vmcs_host_cr0>(Cpu::get_cr0());
   Vmx::vmcs_write<Vmx::Vmcs_host_cr3>(Cpu::get_pdbr()); // host_area.cr3
+  Vmx::vmcs_write<Vmx::Vmcs_host_cr4>(Cpu::get_cr4());
+
+  Gdt *gdt = cpu.get_gdt();
+  Unsigned16 tr = Cpu::get_tr();
+
+  Vmx::vmcs_write<Vmx::Vmcs_host_tr_base>(((*gdt)[tr / 8]).base());
+  Vmx::vmcs_write<Vmx::Vmcs_host_ia32_sysenter_esp>
+                 (reinterpret_cast<Mword>(&cpu.kernel_sp()));
+
+  Pseudo_descriptor pseudo;
+  gdt->get(&pseudo);
+  Vmx::vmcs_write<Vmx::Vmcs_host_gdtr_base>(pseudo.base());
+
+  if (cpu.features() & FEAT_PAT
+      && vmx.info.exit_ctls.allowed(Vmx_info::Ex_load_ia32_pat))
+    Vmx::vmcs_write<Vmx::Vmcs_host_ia32_pat>(Cpu::rdmsr(MSR_PAT));
+
+  if (vmx.info.exit_ctls.allowed(Vmx_info::Ex_load_ia32_efer))
+    Vmx::vmcs_write<Vmx::Vmcs_host_ia32_efer>(Cpu::rdmsr(MSR_EFER));
+
+  if (vmx.info.exit_ctls.allowed(Vmx_info::Ex_load_perf_global_ctl))
+    Vmx::vmcs_write<Vmx::Vmcs_host_ia32_perf_global_ctrl>(Cpu::rdmsr(0x199));
 
   safe_host_segments();
 
@@ -170,8 +193,7 @@ Vm_vmx_t<VARIANT>::vm_entry(Trex *regs,
 
   load_guest_xcr0(host_xcr0, guest_xcr0);
 
-  if (Cpu::cpus.cpu(cpu).has_l1d_flush()
-      && !Cpu::cpus.cpu(cpu).skip_l1dfl_vmentry())
+  if (cpu.has_l1d_flush() && !cpu.skip_l1dfl_vmentry())
     Cpu::wrmsr(1UL, MSR_IA32_FLUSH_CMD);
 
   unsigned long ret = resume_vm_vmx(regs);
@@ -210,7 +232,7 @@ Vm_vmx_t<VARIANT>::vm_entry(Trex *regs,
   // ... do this lazy ...
     {
       // clear busy flag
-      Gdt_entry *e = &(*Cpu::cpus.cpu(cpu).get_gdt())[Gdt::gdt_tss / 8];
+      Gdt_entry *e = &(*gdt)[Gdt::gdt_tss / 8];
       e->tss_make_available();
       asm volatile("" : : "m" (*e));
       Cpu::set_tr(Gdt::gdt_tss);

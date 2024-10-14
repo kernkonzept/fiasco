@@ -1366,8 +1366,6 @@ PRIVATE inline NEEDS["idt.h", "entry-ia32.h"]
 void
 Vmx::initialize_current_vmcs()
 {
-  Cpu &cpu = Cpu::cpus.cpu(current_cpu());
-
   vmcs_write<Vmcs_host_es_selector>(GDT_DATA_KERNEL);
   vmcs_write<Vmcs_host_cs_selector>(GDT_CODE_KERNEL);
   vmcs_write<Vmcs_host_ss_selector>(GDT_DATA_KERNEL);
@@ -1376,36 +1374,14 @@ Vmx::initialize_current_vmcs()
   /* set FS and GS to unusable in the host state */
   vmcs_write<Vmcs_host_fs_selector>(0);
   vmcs_write<Vmcs_host_gs_selector>(0);
+  vmcs_write<Vmcs_host_tr_selector>(Cpu::get_tr());
 
-  Unsigned16 tr = cpu.get_tr();
-  vmcs_write<Vmcs_host_tr_selector>(tr);
-
-  vmcs_write<Vmcs_host_tr_base>(((*cpu.get_gdt())[tr / 8]).base());
   vmcs_write<Vmcs_host_rip>(reinterpret_cast<Mword>(vm_vmx_exit_vec));
   vmcs_write<Vmcs_host_ia32_sysenter_cs>(Gdt::gdt_code_kernel);
-  vmcs_write<Vmcs_host_ia32_sysenter_esp>
-            (reinterpret_cast<Mword>(&cpu.kernel_sp()));
   vmcs_write<Vmcs_host_ia32_sysenter_eip>
             (reinterpret_cast<Mword>(entry_sys_fast_ipc_c));
 
-  if (cpu.features() & FEAT_PAT
-      && info.exit_ctls.allowed(Vmx_info::Ex_load_ia32_pat))
-    vmcs_write<Vmcs_host_ia32_pat>(Cpu::rdmsr(MSR_PAT));
-
-  if (info.exit_ctls.allowed(Vmx_info::Ex_load_ia32_efer))
-    vmcs_write<Vmcs_host_ia32_efer>(Cpu::rdmsr(MSR_EFER));
-
-  if (info.exit_ctls.allowed(Vmx_info::Ex_load_perf_global_ctl))
-    vmcs_write<Vmcs_host_ia32_perf_global_ctrl>(Cpu::rdmsr(0x199));
-
-  vmcs_write<Vmcs_host_cr0>(Cpu::get_cr0());
-  vmcs_write<Vmcs_host_cr4>(Cpu::get_cr4());
-
   Pseudo_descriptor pseudo;
-  cpu.get_gdt()->get(&pseudo);
-
-  vmcs_write<Vmcs_host_gdtr_base>(pseudo.base());
-
   Idt::get(&pseudo);
   vmcs_write<Vmcs_host_idtr_base>(pseudo.base());
 
