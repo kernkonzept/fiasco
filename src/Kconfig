@@ -586,6 +586,15 @@ config PERF_CNT
 	  for fixed-function counters if supported by the target allowing to
 	  read these counters from all privilege levels.
 
+config PERF_CNT_COUNT_CPL0
+	bool "Enable performance counter to count while CPL=0"
+	depends on (IA32 || AMD64)
+	depends on PERF_CNT
+	help
+	  Enable the fixed counters (if available) to count while CPL=0. Be
+	  careful enabling this option because it generates overhead which
+	  could worsen the timing of guest kernels in particular on QEMU.
+
 endif # JDB
 
 
