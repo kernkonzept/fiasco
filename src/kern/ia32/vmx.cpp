@@ -302,13 +302,13 @@ public:
    */
   enum Sw_64bit_guest_fields : Unsigned16
   {
-    Sw_guest_xcr0         = 0x2840,
-    Sw_msr_syscall_mask   = 0x2842,
-    Sw_msr_lstar          = 0x2844,
-    Sw_msr_cstar          = 0x2846,
-    Sw_msr_tsc_aux        = 0x2848,
-    Sw_msr_star           = 0x284a,
-    Sw_msr_kernel_gs_base = 0x284c,
+    Sw_guest_xcr0         = 0x2880,
+    Sw_msr_syscall_mask   = 0x2882,
+    Sw_msr_lstar          = 0x2884,
+    Sw_msr_cstar          = 0x2886,
+    Sw_msr_tsc_aux        = 0x2888,
+    Sw_msr_star           = 0x288a,
+    Sw_msr_kernel_gs_base = 0x288c,
 
     // Must be the last
     Max_64bit_sw
@@ -484,11 +484,11 @@ public:
    */
   enum Sw_nat_guest_fields : Unsigned16
   {
-    Sw_guest_cr2 = 0x683e,
-    Sw_nat_arg0  = 0x6840,
-    Sw_nat_arg1  = 0x6842,
-    Sw_nat_arg2  = 0x6844,
-    Sw_nat_arg3  = 0x6846,
+    Sw_guest_cr2 = 0x6880,
+    Sw_nat_arg0  = 0x6882,
+    Sw_nat_arg1  = 0x6884,
+    Sw_nat_arg2  = 0x6886,
+    Sw_nat_arg3  = 0x6888,
 
     // Must be the last
     Max_nat_sw

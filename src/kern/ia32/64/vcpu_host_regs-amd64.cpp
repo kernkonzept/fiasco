@@ -6,7 +6,7 @@ INTERFACE [amd64]:
 // in the vCPU state structure. This version has to be
 // changed / increased whenever any of the data structures
 // within the vCPU state changes its layout or its semantics.
-enum { Vcpu_arch_version = 0x25 };
+enum { Vcpu_arch_version = 0x26 };
 
 struct Vcpu_host_regs
 {
