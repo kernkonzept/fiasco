@@ -1277,10 +1277,11 @@ Cpu::identify()
       default:
 	// All cases fall through!
       case 10:
-        cpuid(10, &_arch_perfmon_info_eax,
-                  &_arch_perfmon_info_ebx,
-                  &_arch_perfmon_info_ecx,
-                  &_arch_perfmon_info_edx);
+        if (_vendor == Vendor_intel) // CPUID Leaf 10 is reserved on AMD
+          cpuid(10, &_arch_perfmon_info_eax,
+                    &_arch_perfmon_info_ebx,
+                    &_arch_perfmon_info_ecx,
+                    &_arch_perfmon_info_edx);
         // FALLTHRU
       case 2:
         if (_vendor == Vendor_intel)
