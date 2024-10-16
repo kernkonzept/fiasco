@@ -1,4 +1,4 @@
-IMPLEMENTATION[(ia32 || amd64) && perfcnt]:
+IMPLEMENTATION[(ia32 || amd64) && perf_cnt]:
 
 #include <cstring>
 #include "koptions.h"
