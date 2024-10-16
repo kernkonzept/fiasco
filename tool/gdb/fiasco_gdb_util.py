@@ -1,4 +1,4 @@
-# Some useful utilities to be used with Fiasco.OC
+# Some useful utilities to be used with the microkernel
 # by adam@l4re.org
 #
 
@@ -78,7 +78,7 @@ class Log_table(gdb.Command):
     log_table_end = gdb.execute("info address _log_table_end", False, True)
 
     # is there any more direct way of getting the addresses?
-    regexp = re.compile(' (is at|at address) (0x\w+)')
+    regexp = re.compile(r' (is at|at address) (0x\w+)')
     m_start = regexp.search(log_table)
     m_end   = regexp.search(log_table_end)
     if not m_start or not m_end:
@@ -395,7 +395,7 @@ class Fiasco_tbuf(gdb.Command):
     print("Querying Tb_entry types. This might take a while.")
     # Is there any faster way of doing this?
     output = gdb.execute("info types", False, True)
-    regexp = re.compile('^(?:\d+:\s+)?(\S+);$') # should fetch all we need
+    regexp = re.compile(r'^(?:\d+:\s+)?(\S+);$') # should fetch all we need
     types = []
     for line in output.split('\n'):
       m = regexp.match(line)
