@@ -498,7 +498,7 @@ Task::sys_map(L4_fpage::Rights rights, Syscall_frame *f, Utcb *utcb)
       Ref_ptr<Task> self(this);
       // enforce lock order to prevent deadlocks.
       // always take lock from task with the lower memory address first
-      Lock_guard_2<Lock> guard;
+      Lock_guard_2<Helping_lock> guard;
 
       if (!guard.check_and_lock(&existence_lock, &from->existence_lock))
         return commit_result(-L4_err::EInval);
@@ -534,7 +534,7 @@ Task::sys_unmap(Syscall_frame *f, Utcb *utcb)
 
     {
       Ref_ptr<Task> self(this);
-      Lock_guard<Lock> guard;
+      Lock_guard<Helping_lock> guard;
 
       if (!guard.check_and_lock(&existence_lock))
         return commit_error(utcb, L4_error::Not_existent);
@@ -605,7 +605,7 @@ Task::sys_add_ku_mem(Syscall_frame *f, Utcb *utcb, Utcb *out)
 
   // Acquire existence lock to prevent concurrent modification of the Task's
   // page table.
-  Lock_guard<Lock> guard_task;
+  Lock_guard<Helping_lock> guard_task;
   if (!guard_task.check_and_lock(&existence_lock))
     return commit_error(utcb, L4_error::Not_existent);
 

@@ -64,7 +64,7 @@ Task::map_gicc_page(L4_msg_tag tag, Utcb *utcb)
 
   // Acquire existence lock to prevent concurrent modification of the task's
   // page table.
-  Lock_guard<Lock> guard_task;
+  Lock_guard<Helping_lock> guard_task;
   if (!guard_task.check_and_lock(&existence_lock))
     return commit_error(utcb, L4_error::Not_existent);
 

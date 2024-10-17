@@ -32,7 +32,7 @@ INTERFACES_KERNEL	:= cpu_mask rcupdate kobject_mapdb context_base pm \
 			   vcpu_host_regs                                    \
 			   vcpu kobject_helper icu_helper thread_state       \
 			   context sender receiver mem_unit factory cpu_call \
-			   lock ipc_sender thread thread_object syscalls     \
+			   ipc_sender thread thread_object syscalls          \
 			   kernel_thread map_util irq banner warn            \
 			   app_cpu_thread globals watchdog kernel_uart       \
 			   main config vmem_alloc page paging paging_bits    \

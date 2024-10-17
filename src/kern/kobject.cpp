@@ -4,7 +4,7 @@ INTERFACE:
 #include "kobject_dbg.h"
 #include "kobject_iface.h"
 #include "l4_error.h"
-#include "lock.h"
+#include "helping_lock.h"
 #include "obj_space.h"
 #include "rcupdate.h"
 #include "space.h"
@@ -19,7 +19,7 @@ private:
 
   Obj::Mapping::List _root;
   Smword _cnt;
-  Lock _lock;
+  Helping_lock _lock;
 
 public:
   Kobject_mappable() : _cnt(0) {}
@@ -227,7 +227,7 @@ public:
    *          deleted before the existence lock can be taken, for example by
    *          holding a counted reference to it.
    */
-  Lock existence_lock;
+  Helping_lock existence_lock;
 
 private:
   Kobjects_list::Ptr _next_to_reap = nullptr;

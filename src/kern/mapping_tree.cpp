@@ -2,7 +2,7 @@ INTERFACE:
 
 #include "config.h"
 #include "l4_types.h"
-#include "lock.h"
+#include "helping_lock.h"
 #include "mapping.h"
 #include "space.h"
 #include "types.h"
@@ -140,10 +140,9 @@ public:
   using Page = Mapping_tree::Page;
   using Pfn  = Mapping::Pfn;
   using Pcnt = Mapping::Pcnt;
-  using Lock = ::Lock;
   using Iterator = Mapping_tree::Iterator;
 
-  Lock lock;
+  Helping_lock lock;
 
   Mapping_tree *tree() { return &_tree; }
   Mapping_tree const *tree() const { return &_tree; }
