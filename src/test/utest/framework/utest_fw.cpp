@@ -19,7 +19,7 @@ INTERFACE:
 #include "panic.h"
 #include "per_cpu_data.h"
 #include "processor.h"
-#include "reset.h"
+#include "platform_control.h"
 #include "timer.h"
 #include "thread_object.h"
 #include "unique_ptr.h"
@@ -217,9 +217,17 @@ public:
   /// Data structure to store the unit test information.
   struct External_info
   {
+    // Action to execute after test finished
+    enum Action : unsigned
+    {
+      None = 0,
+      Reboot = 1,
+      Shutdown = 2,
+    };
+
     // command line parameters
     bool verbose = false;
-    bool restart = false;
+    Action on_finished = Action::None;
     bool debug   = false;
 //     bool record  = false; // unused, but specified user-land interface
 
@@ -405,7 +413,8 @@ Utest_fw::parse_feature_string()
 
       // decode the string
       ext_info.verbose = feature[0] == '1';
-      ext_info.restart = feature[1] == '1';
+      ext_info.on_finished =
+        static_cast<External_info::Action>(feature[1] - '0');
       ext_info.debug   = feature[2] == '1';
       // unused, but specified user-land interface
 //      ext_info.record  = feature[3] == '1';
@@ -422,8 +431,8 @@ Utest_fw::parse_feature_string()
     }
 
   Utest_debug::printf("Utest_fw: external config\n"
-                      "verbose %d, restart %d, debug %d, cores %u\n",
-                      ext_info.verbose, ext_info.restart,
+                      "verbose %d, on_finished %d, debug %d, cores %u\n",
+                      ext_info.verbose, ext_info.on_finished,
                       ext_info.debug, ext_info.cores);
 }
 
@@ -468,9 +477,20 @@ Utest_fw::finish(char const *skip_msg = nullptr)
   printf("\nKUT TAP TEST FINISHED\n");
 
   // QEMU platforms terminate after the FINISH line. Only hardware tests
-  // progress to this point and might want to restart the HW platform.
-  if (ext_info.restart)
-    platform_reset();
+  // progress to this point and might want to shutdown or restart the HW
+  // platform.
+  switch (ext_info.on_finished)
+  {
+  case External_info::Action::Reboot:
+    Platform_control::system_reboot();
+    break;
+  case External_info::Action::Shutdown:
+    Platform_control::system_off();
+    break;
+  default:
+    // Nothing
+    break;
+  }
 
   // Exit kernel without calling destructors.
   _exit(_sum_failed);
