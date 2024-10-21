@@ -3,6 +3,7 @@ INTERFACE [iommu]:
 #include "cxx/cxx_int"
 #include "cxx/static_vector"
 #include "tlbs.h"
+#include "mmio_register_block.h"
 
 /**
  * Common interface for all the different SMMU variations.
@@ -109,6 +110,7 @@ EXTENSION class Iommu { public: enum { Coherent = 0 }; };
 IMPLEMENTATION [iommu]:
 
 #include "static_init.h"
+#include <cstdio>
 
 Static_object<Iommu::Iommu_array> Iommu::_iommus;
 
