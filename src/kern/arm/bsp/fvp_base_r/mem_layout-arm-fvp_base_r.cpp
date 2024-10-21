@@ -10,6 +10,10 @@ public:
     Gic_redist_offset =   0x100000,
     Gic_redist_size   =   0x100000,
 
+    // VE System register device, necessary for shutdown
+    Ve_sysregs_base   = 0x9c010000,
+    Ve_sysregs_size   = 0x10000,
+
     // Acutally 32 regions on EL1 and EL2 but we can only handle 31 efficiently
     // at the moment.
     Mpu_regions = 31,

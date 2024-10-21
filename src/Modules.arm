@@ -58,7 +58,7 @@ DRIVERS 		:= libdrivers.a libgluedriverslibc.a
 VPATH			+= drivers/$(CONFIG_XARCH)/$(BITS) drivers/$(CONFIG_XARCH) drivers
 PRIVATE_INCDIR		+= drivers/$(CONFIG_XARCH)/$(BITS) drivers/$(CONFIG_XARCH) drivers
 INTERFACES_DRIVERS 	:= sa1100 mux_console console uart filter_console \
-			   h3xxx io mem mmu reset processor delayloop
+			   h3xxx io mem mmu reset processor delayloop ve_sysregs
 INTERFACES_DRIVERS	+= $(if $(CONFIG_UART_CHECKSUM),stream_crc32)
 INTERFACES_DRIVERS      += fb_console
 io_IMPL			:= io io-arm

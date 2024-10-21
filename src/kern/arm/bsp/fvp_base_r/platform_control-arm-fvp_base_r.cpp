@@ -7,6 +7,18 @@ EXTENSION class Platform_control
 };
 
 // ------------------------------------------------------------------------
+IMPLEMENTATION [arm && pf_fvp_base_r]:
+
+#include "reset.h"
+
+IMPLEMENT_OVERRIDE
+void
+Platform_control::system_off()
+{
+  platform_shutdown();
+}
+
+// ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pf_fvp_base_r && mp]:
 
 #include "cpu.h"
