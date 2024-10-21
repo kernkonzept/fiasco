@@ -110,7 +110,7 @@ config PF_IMX_8XQ
 	select ARM_PSCI
 	select ARM_GIC
 	select HAVE_ARM_GICV3
-	select HAS_IOMMU_OPTION
+        select HAS_IOMMU_ARM_SMMU_500
 	help
 	  Choose for i.MX8X and i.MX8Q platforms.
 
@@ -142,7 +142,3 @@ endchoice
 config ARM_IOMMU_NUM
 	int
 	default 1 if IOMMU
-
-config IOMMU_ARM_SMMU_500
-	bool
-	default y if IOMMU

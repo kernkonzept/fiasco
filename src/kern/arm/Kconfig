@@ -142,6 +142,37 @@ config ARM_GIC_NOT_COHERENT
 config ARM_IOMMU_COHERENT
 	bool
 
+config HAS_IOMMU_ARM_SMMU_400
+	bool
+	select HAS_IOMMU_OPTION
+
+config HAS_IOMMU_ARM_SMMU_500
+	bool
+	select HAS_IOMMU_OPTION
+
+config HAS_IOMMU_ARM_SMMU_V3
+	bool
+	select HAS_IOMMU_ARM_SMMU_V3_ON_64BIT if BIT64
+
+# SMMUv3 implementation in Fiasco currently only supports the AArch64 page
+# table format, which is not defined on Aarch32, so limit the IOMMU option
+# to 64-bit.
+config HAS_IOMMU_ARM_SMMU_V3_ON_64BIT
+	bool
+	select HAS_IOMMU_OPTION
+
+config IOMMU_ARM_SMMU_400
+	def_bool y if IOMMU
+	depends on HAS_IOMMU_ARM_SMMU_400
+
+config IOMMU_ARM_SMMU_500
+	def_bool y if IOMMU
+	depends on HAS_IOMMU_ARM_SMMU_500
+
+config IOMMU_ARM_SMMU_V3
+	def_bool y if IOMMU
+	depends on HAS_IOMMU_ARM_SMMU_V3_ON_64BIT
+
 config ARM_ASID16
 	depends on ARM_V8 && BIT64
 	bool

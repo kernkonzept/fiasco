@@ -84,5 +84,5 @@ outer_cache_IMPL      += outer_cache-arm-imx6
 clock_IMPL            += $(if $(CONFIG_PF_IMX_6UL)$(CONFIG_PF_IMX_7)$(CONFIG_ARM_V8),\
 			   clock-arm-generic,clock-generic)
 platform_control_IMPL += platform_control-arm-imx
-dmar_space_IMPL       += dmar_space-smmuv2
-iommu_IMPL            += iommu-arm-smmuv2 iommu-arm-smmu-500-imx
+dmar_space_IMPL       += $(if $(CONFIG_IOMMU_ARM_SMMU_500),dmar_space-smmuv2)
+iommu_IMPL            += $(if $(CONFIG_IOMMU_ARM_SMMU_500),iommu-arm-smmuv2 iommu-arm-smmu-500-imx)
