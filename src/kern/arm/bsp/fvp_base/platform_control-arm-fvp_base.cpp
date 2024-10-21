@@ -5,6 +5,19 @@ EXTENSION class Platform_control
   enum { Num_cores = 16 };
 };
 
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && pf_fvp_base]:
+
+#include "reset.h"
+
+IMPLEMENT_OVERRIDE
+void
+Platform_control::system_off()
+{
+  platform_shutdown();
+}
+
+// ------------------------------------------------------------------------
 IMPLEMENTATION [arm && mp && pf_fvp_base && !arm_psci]:
 
 #include "cpu.h"
