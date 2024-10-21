@@ -271,14 +271,14 @@ config SCHED_DEF_TIME_SLICE
 	  Default thread time slice in scheduler ticks.
 
 config IOMMU
-	bool "Enable support for DMA remapping" if HAS_IOMMU_OPTION
+	bool "Enable IOMMU support" if HAS_IOMMU_OPTION
 	depends on HAS_IOMMU_OPTION
 	help
-	  This option enables support for DMA remapping (IO-MMUs).
-	  When this option is enabled and the platform has a supported IO-MMU
-	  the default is to block all DMA from remappable devices.
-	  The user-level must use kernel DMA spaces in combination with
-	  the IO-MMU kernel object to allow DMA.
+	  This option enables support for DMA remapping (IOMMUs).
+          When this option is enabled and the platform has a supported
+          IOMMU, by default all DMA will be blocked.
+	  User-level must use kernel DMA spaces in combination with
+	  the IOMMU kernel object to allow DMA.
 
 config IRQ_DIRECT_INJECT
 	bool "Support direct interrupt forwarding to guests"
