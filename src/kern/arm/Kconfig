@@ -68,6 +68,9 @@ config CAN_ARM_CPU_CORTEX_A35
 config CAN_ARM_CPU_CORTEX_A53
 	bool
 
+config CAN_ARM_CPU_CORTEX_A55
+	bool
+
 config CAN_ARM_CPU_CORTEX_A57
 	bool
 
@@ -225,6 +228,14 @@ config ARM_CORTEX_A35
 config ARM_CORTEX_A53
 	bool "ARM Cortex-A53 CPU"
 	depends on CAN_ARM_CPU_CORTEX_A53
+	select ARM_V8
+	select HAS_MP_OPTION
+	select HAS_CPU_VIRT if ARM_GIC
+	select HAS_64BIT
+
+config ARM_CORTEX_A55
+	bool "ARM Cortex-A55 CPU"
+	depends on CAN_ARM_CPU_CORTEX_A55
 	select ARM_V8
 	select HAS_MP_OPTION
 	select HAS_CPU_VIRT if ARM_GIC
