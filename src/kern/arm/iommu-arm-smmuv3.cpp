@@ -2344,6 +2344,8 @@ Iommu::is_domain_bound_to_ste(Ste_ptr ste, Iommu_domain const &,
 // ------------------------------------------------------------------
 IMPLEMENTATION [iommu]:
 
+#include "irq_mgr.h"
+
 namespace {
 
 template<typename T, typename F>
