@@ -1,9 +1,9 @@
 # PF: IMX
-# PFDESCR: NXP/Freescale i.MX
+# PFDESCR: NXP i.MX
 # PFDEPENDS: ARM
 
 choice
-	prompt "NXP/Freescale i.MX"
+	prompt "NXP i.MX"
 	default PF_IMX_51
 
 config PF_IMX_21
