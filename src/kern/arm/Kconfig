@@ -150,12 +150,12 @@ config HAS_ARM_SVE
 	bool
 
 config ARM_PROFILE_A
-        bool
-        default y if !ARM_PROFILE_R
+	bool
+	default y if !ARM_PROFILE_R
 
 config ARM_PROFILE_R
-        select ARM_SYNC_CLOCK
-        bool
+	select ARM_SYNC_CLOCK
+	bool
 
 # SECTION: CPU
 
