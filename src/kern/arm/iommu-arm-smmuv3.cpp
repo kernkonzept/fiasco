@@ -1140,7 +1140,7 @@ INTERFACE [iommu && iommu_arm_smmu_v3 && arm_iommu_stage2]:
 EXTENSION class Iommu { enum { Stage2 = 1 }; };
 
 // ------------------------------------------------------------------
-IMPLEMENTATION [iommu]:
+IMPLEMENTATION [iommu && iommu_arm_smmu_v3]:
 
 #include "cpu.h"
 #include "feature.h"
@@ -2342,7 +2342,7 @@ Iommu::is_domain_bound_to_ste(Ste_ptr ste, Iommu_domain const &,
 }
 
 // ------------------------------------------------------------------
-IMPLEMENTATION [iommu]:
+IMPLEMENTATION [iommu && iommu_arm_smmu_v3]:
 
 #include "irq_mgr.h"
 
@@ -2464,7 +2464,7 @@ Iommu::setup_gerror_handler(unsigned gerror_irq)
 }
 
 // ------------------------------------------------------------------
-IMPLEMENTATION [iommu && !debug]:
+IMPLEMENTATION [iommu && iommu_arm_smmu_v3 && !debug]:
 
 EXTENSION class Iommu
 {
@@ -2480,7 +2480,7 @@ private:
 };
 
 // ------------------------------------------------------------------
-IMPLEMENTATION [iommu && debug]:
+IMPLEMENTATION [iommu && iommu_arm_smmu_v3 && debug]:
 
 #include "config.h"
 #include "irq_mgr.h"
