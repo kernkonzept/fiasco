@@ -37,6 +37,18 @@ struct Dmar : Kobject_h<Dmar, Kobject>
       }
   }
 
+  struct Src_id
+  {
+    Unsigned64 raw = 0;
+    explicit Src_id(Unsigned64 id) : raw(id) {}
+
+    CXX_BITFIELD_MEMBER( 0,  7, devfn, raw);
+    CXX_BITFIELD_MEMBER( 0,  2, fn, raw);
+    CXX_BITFIELD_MEMBER( 3,  7, dev, raw);
+    CXX_BITFIELD_MEMBER( 8, 15, bus, raw);
+    CXX_BITFIELD_MEMBER(18, 19, type, raw);
+    CXX_BITFIELD_MEMBER(32, 47, iommu_idx, raw);
+  };
 };
 
 
@@ -101,60 +113,37 @@ Dmar::enable_dmar(Intel::Io_mmu *mmu, bool passthrough)
 
 PRIVATE
 Intel::Io_mmu *
-Dmar::find_mmu(Unsigned64 src_id, bool try_default = false)
+Dmar::find_mmu(Unsigned16 iommu_idx)
 {
-  Unsigned16 segment = src_id >> 16;
-  Unsigned8 bus = src_id >> 8;
-  Unsigned8 dev = (src_id >> 3) & 31;
-  Unsigned8 fun = src_id & 7;
+  if (iommu_idx >= Intel::Io_mmu::Max_iommus)
+    return nullptr;
 
-  for (auto &m: Intel::Io_mmu::iommus)
-    {
-      if (segment != m.segment)
-        continue;
-
-      if (try_default && m.is_default_pci())
-        return &m;
-
-      for (auto const &d: m.devs)
-        {
-          // PCI endpoint
-          if (d.type == 1 && d.start_bus_nr == bus
-              && d.path[0].dev == dev && d.path[0].func == fun)
-            return &m;
-
-          // PCI sub-hierarchy
-        }
-    }
-  return 0;
+  Intel::Io_mmu &iommu = Intel::Io_mmu::iommus[iommu_idx];
+  return &iommu;
 }
 
 PRIVATE
 Mword
-Dmar::parse_src_id(Unsigned64 src_id, Unsigned8 *bus, unsigned *dfs,
+Dmar::parse_src_id(Src_id src_id, Unsigned8 *bus, unsigned *dfs,
                    unsigned *dfe, Intel::Io_mmu **mmu)
 {
-  Unsigned8 type = (src_id >> 18) & 3;
-  *bus = src_id >> 8;
+  Unsigned8 type = src_id.type();
+  *bus = src_id.bus();
   switch (type)
     {
     case 1:
-      *dfs = src_id & 0xff;
+      *dfs = static_cast<unsigned>(src_id.devfn());
       *dfe = *dfs + 1;
-      src_id = (Unsigned64{*bus} << 8) | *dfs;
       break;
     case 2:
-      *dfs = 0;
-      *dfe = 0x100;
-      src_id = Unsigned64{*bus} << 8;
-      break;
+      WARNX(Warning,
+            "Bus matching not supported. Please match via requester Id\n");
+      [[fallthrough]];
     default:
       return -L4_err::EInval;
     }
 
-  *mmu = find_mmu(src_id & 0xffff);
-  if (!*mmu)
-    *mmu = find_mmu(src_id & 0xffff, true);
+  *mmu = find_mmu(src_id.iommu_idx());
   return *mmu ? 0 : -L4_err::EInval;
 }
 
@@ -165,7 +154,7 @@ Dmar::op_bind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space_cap)
   Unsigned8 bus;
   unsigned dfs, dfe;
   Intel::Io_mmu *mmu;
-  if (Mword err = parse_src_id(src_id, &bus, &dfs, &dfe, &mmu))
+  if (Mword err = parse_src_id(Src_id(src_id), &bus, &dfs, &dfe, &mmu))
     return Kobject_iface::commit_result(err);
 
   // Prevent the Dmar_space from being deleted while using it without holding
@@ -218,7 +207,7 @@ Dmar::op_unbind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space_cap)
   Unsigned8 bus;
   unsigned dfs, dfe;
   Intel::Io_mmu *mmu;
-  if (Mword err = parse_src_id(src_id, &bus, &dfs, &dfe, &mmu))
+  if (Mword err = parse_src_id(Src_id(src_id), &bus, &dfs, &dfe, &mmu))
     return Kobject_iface::commit_result(err);
 
   // Prevent the Dmar_space from being deleted while using it without holding

@@ -887,6 +887,12 @@ Intel::Io_mmu::setup(Cpu_number cpu)
   register_iommu_tlb();
 }
 
+/**
+ * Initialize `Io_mmu` class.
+ *
+ * \post IOMMU indexes are in the same order as in the DMAR table, if IOMMUs
+ *       are found/present.
+ */
 IMPLEMENT FIASCO_INIT
 bool
 Intel::Io_mmu::init(Cpu_number cpu)
