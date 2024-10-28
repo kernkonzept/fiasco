@@ -129,6 +129,9 @@ CSRC_LIBCOV-gcc   := gcov.c plain.c gcov-plain.c
 CSRC_LIBCOV        = output.c base64.c
 CSRC_LIBCOV       += $(CSRC_LIBCOV-$(CC_TYPE))
 
+CSRC_LIBCOV       += $(if $(CONFIG_COV_OUTPUT_SERIAL),output-serial.c)
+CXXSRC_LIBCOV     += $(if $(CONFIG_COV_OUTPUT_MEMBUF),output-membuf.cc)
+
 # WARNING EXCEPTION: suppress compiler warnings for clang compiler-rt code,
 # only coverage tooling
 $(foreach f, $(patsubst %.c, %, $(CSRC_LIBCOV-clang_contrib)), \

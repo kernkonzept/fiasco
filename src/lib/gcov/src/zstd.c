@@ -41,7 +41,7 @@ void
 flush_base64_buffers(void)
 {
   int nout = print_base64(buffer, output.pos, outbuf);
-  vconprintn(outbuf, nout);
+  cov_outputn(outbuf, nout);
 }
 
 void

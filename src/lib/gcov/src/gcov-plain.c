@@ -13,16 +13,16 @@
 void
 output_gcov_data(struct gcov_info *tmp)
 {
-  vconprint("@@ gcov @< BLOCK\n");
+  cov_output("@@ gcov @< BLOCK\n");
   while (tmp)
     {
-      vconprint("FILE '");
-      vconprint(tmp->filename);
-      vconprint("' ZDATA64 '");
+      cov_output("FILE '");
+      cov_output(tmp->filename);
+      cov_output("' ZDATA64 '");
       convert_to_gcda(tmp);
       flush_base64_buffers();
-      vconprint("'\n");
+      cov_output("'\n");
       tmp = tmp->next;
     }
-  vconprint("@@ gcov BLOCK >@\n");
+  cov_output("@@ gcov BLOCK >@\n");
 }

@@ -17,7 +17,7 @@ output_gcov_data(struct gcov_info *tmp)
   init_zstd();
   struct gcov_info *cur = tmp;
 
-  vconprint("@@ gcov: ZSTD '");
+  cov_output("@@ gcov: ZSTD '");
   while (cur)
     {
       convert_to_gcda(cur);
@@ -39,5 +39,5 @@ output_gcov_data(struct gcov_info *tmp)
   store_u32(headStart);
   store_string("", ZSTD_e_end); // Flush zstd buffers
   flush_base64_buffers();
-  vconprint("'\n");
+  cov_output("'\n");
 }

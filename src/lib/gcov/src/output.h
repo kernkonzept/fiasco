@@ -6,7 +6,24 @@
  */
 #pragma once
 /**
- * Output a zero terminated string
+ * Output coverage data according to the selected output.
+ *
+ * \param s The zero terminated string to print.
+ */
+void
+cov_output(char const *s);
+
+/**
+ * Output coverage data according to the selected output.
+ *
+ * \param s    Pointer to the character array from which to print.
+ * \param len  The number of characters to print from s.
+ */
+void
+cov_outputn(char const *s, int len);
+
+/**
+ * Output a zero terminated string to vcon, e.g. errors.
  *
  * \param s The zero terminated string to print.
  */
@@ -14,7 +31,7 @@ void
 vconprint(char const *s);
 
 /**
- * Output a defined number of characters
+ * Output a defined number of characters to vcon, e.g. errors.
  *
  * \param s    Pointer to the character array from which to print.
  * \param len  The number of characters to print from s.

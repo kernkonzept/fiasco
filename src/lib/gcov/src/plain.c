@@ -20,14 +20,14 @@ rle_flush(void)
       if (cb.count > 3)
         { // worth it to compress
           char const res[3] = {'@', cb.last, b64[cb.count]};
-          vconprintn(res, 3);
+          cov_outputn(res, 3);
         }
       else
         {
           char res[3];
           for (int c = 0; c < cb.count; c++)
             res[c] = cb.last;
-          vconprintn(res, cb.count);
+          cov_outputn(res, cb.count);
         }
     }
   cb.init = 0;

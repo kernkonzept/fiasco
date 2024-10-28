@@ -416,12 +416,50 @@ menu "Debugging"
 # Changing these options different from default could make the kernel slower!
 ################################################################################
 
-config COV
+menuconfig COV
 	bool "Coverage support"
 	depends on HAS_COV_OPTION && !AMP
 	help
 	  Adds coverage support using gcov or llvm depending on the compiler that
 	  is used. Do not enable this on production systems.
+
+if COV
+
+choice
+    prompt "Coverage output mode"
+    default COV_OUTPUT_SERIAL
+
+config COV_OUTPUT_SERIAL
+    bool "Output via serial"
+
+config COV_OUTPUT_MEMBUF
+    bool "Output via memory buffer"
+    help
+      With this mode coverage output is accumulated in a memory buffer.
+      This is useful for simulators which have the option to dump a section
+      of memory into a file.
+
+endchoice
+
+config COV_OUTPUT_MEMBUF_START
+    hex "Coverage output buffer start address"
+    depends on COV_OUTPUT_MEMBUF
+    default 0x94000000 if PF_FVP_BASE_R
+    default 0x0
+    help
+      Physical address of the beginning of the memory buffer, where Fiasco
+      shall dump its coverage data.
+
+config COV_OUTPUT_MEMBUF_SIZE
+    hex "Coverage output buffer size"
+    depends on COV_OUTPUT_MEMBUF
+    default 0x800000 if PF_FVP_BASE_R
+    default 0x1000000
+    help
+      Length of the memory buffer, where Fiasco shall dump its coverage
+      data.
+
+endif
 
 config PERFORMANCE
 	bool "Performance configuration"

@@ -19,12 +19,12 @@ void
 output_llvmcov_data(void)
 {
   init_zstd();
-  vconprint("@@ llvmcov: PATH '");
-  vconprint(__COV_PATH);
-  vconprint("' ZSTD '");
+  cov_output("@@ llvmcov: PATH '");
+  cov_output(__COV_PATH);
+  cov_output("' ZSTD '");
 
   dump_coverage();
   store_string("", ZSTD_e_end); // Flush zstd buffers
   flush_base64_buffers();
-  vconprint("'\n");
+  cov_output("'\n");
 }

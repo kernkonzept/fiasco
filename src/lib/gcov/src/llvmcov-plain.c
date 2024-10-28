@@ -22,10 +22,10 @@ store_b64(const void *data, unsigned elem_size, unsigned n_elem)
 void
 output_llvmcov_data(void)
 {
-  vconprint("@@ llvmcov: PATH '");
-  vconprint(__COV_PATH);
-  vconprint("' ZDATA '");
+  cov_output("@@ llvmcov: PATH '");
+  cov_output(__COV_PATH);
+  cov_output("' ZDATA '");
   dump_coverage();
   flush_base64_buffers();
-  vconprint("'\n");
+  cov_output("'\n");
 }
