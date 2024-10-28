@@ -7,62 +7,43 @@ INTERFACE:
 /**
  * The first word of a message item, either a send item or a receive buffer.
  *
- * L4_msg_item is the first word of a typed message item in system calls (incl.
- * IPC) The L4_msg_item is usually followed by a second word. The
- * interpretation of the second word depends on the contents of the
- * L4_msg_item.
+ * #L4_msg_item is the first word of a typed message item in system calls (incl.
+ * IPC). The #L4_msg_item may be followed by additional words that are part of
+ * the typed message item. The number of following words and their
+ * interpretation depend on the contents of the #L4_msg_item.
  *
- * A generic message item has the following binary layout.
- * \verbatim
- * +----------------------------+ 3 + 2 .. 0 +
- * |                            | t |        |
- * +----------------------------+---+--------+ \endverbatim
+ * If all bits of the first word of a typed message item are zero, then it is a
+ * void item (see is_void()).
  *
- * Bit 3 (\a t) is the type bit, if t is set the item is a map
- * item. \note Fiasco.OC currently has no support for other types
- * than map items.
+ * The first word of a generic non-void typed message item has the following
+ * binary layout:
  *
- * A map item has a more specific layout:
- * \verbatim
- * +-- x .. 12 --+- 11 .. 8 -+- 7 .. 4 -+ 3 + 2 +- 1 -+ 0 +
- * | hot_spot    |     SBZ   |   attr   | 1 | i | g/s | c |
- * +-------------+-----------+----------+---+---+-----+---+ \endverbatim
+ *      MSB                        4  3  2      0  bits
+ *     ┌────────────────────────────┬───┬────────┐
+ *     │                            │ t │        │
+ *     └────────────────────────────┴───┴────────┘
  *
- * Bit 0 (\a c), the compound bit: if this bit is set on a send map item
- * the next message item of the same type shall be mapped using the same
- * receive buffer as this send item. The caller should properly use the
- * \a hot_spot to avoid overlapping mappings. Useful to implement
- * scatter-gather behaviour.
+ * Bit 3 (`t`) is the type bit. If `t` is set, the item is a map item.
+ * \note Fiasco.OC currently has no support for other types than map items.
  *
- * If the compound bit is set on a receive buffer, the destination task is
- * selected explicitly. In this case, the capability slot of the task is passed
- * explicitly as a third (or second, in case of a small object buffer) word. If
- * unset, the task of the receiving thread is implicitly the destination task.
+ * There are three sub-types of typed message items with variations in the
+ * layout of the first word:
  *
- * Bit 1 (\a g/s): On a send map item a set \a g bit flags a grant operation.
- * This means, the sender delegates access to the receiver and
- * removes the own rights (basically a move operation). On a receive buffer
- * a set \a s bit flags a small object buffer. This means, the whole buffer
- * item is just a single buffer register in size and provides a receive buffer
- * for a single object mapping, the address of the buffer is stored in the
- * \a hot_spot.
+ * 1. Typed message items set by the sender in its message registers.
+ * 2. Typed message items set by the receiver in its buffer registers.
+ * 3. Typed message items set by the kernel in the receiver’s message registers.
  *
- * Bit 2 (\a i): This bit is defined for small receive buffers only, a set \a i
- * bit denotes that he receiver wants to avoid a full mapping.  Instead, if all
- * preconditions are met, the receiver will get either the label of an Ipc_gate
- * or a capability selector in its message registers.  A label of an Ipc_gate
- * is sent if and only if the receiving thread is in the same task as the
- * thread that is attached to the Ipc_gate.  A capability selector is received
- * if the sending and the receiving thread are in the same task.
+ * They are abbreviated by *send item*, *buffer item*, and *receive item*,
+ * respectively.
  *
- * Bits 7..4 (\a attr): This bits contain extra attributes that influence the
- * mapping itself. For memory mapping these bits contain cacheability
- * information. For object mappings these bits contain extra rights on the
- * object.
+ * The first word of the first two can be interpreted by the sub-classes
+ * #L4_snd_item and #L4_buf_item. The latter can be written by the independent
+ * class #L4_rcv_item_writer.
  *
- * Bits x..12 (\a hot_spot): These bits are the so called hot spot and are used
- * to disambiguate the cases where either the send flex page or the receive flex
- * page is larger that the other.
+ * A typed message item in the message registers (case 1 and case 3) always
+ * consists of two words (even if it is a void item). The size of a typed
+ * message item in the buffer registers (case 2) is determined by its first
+ * word. A void item in the buffer registers consists of a single word.
  */
 class L4_msg_item
 {
@@ -106,6 +87,45 @@ public:
 };
 
 
+/**
+ * This class represents the first word of a typed message item set by the
+ * sender in its message registers (send item).
+ *
+ * The second word of a non-void send item is a flexpage (not represented by
+ * this class). The type of the flexpage determines the interpretation of the
+ * `attr` bits (see below).
+ *
+ * The getters of this sub-class are defined only if this is a non-void item
+ * (see is_void()).
+ *
+ * If not void, the layout is defined as follows:
+ *
+ *      MSB     12 11  8 7    4  3    2      1        0       bits
+ *     ┌──────────┬─────┬──────┬───┬─────┬───────┬──────────┐
+ *     │ hot_spot │ SBZ │ attr │ 1 │ SBZ │ grant │ compound │
+ *     └──────────┴─────┴──────┴───┴─────┴───────┴──────────┘
+ *
+ * `SBZ` means “should be zero”.
+ *
+ * Bit 0 (`compound`): If this bit is set on a send item, the next send item
+ * with the same flexpage type shall be mapped using the same buffer item as
+ * this send item. The caller should properly use the `hot_spot` to avoid
+ * overlapping mappings. Useful to implement scatter-gather behaviour.
+ *
+ * Bit 1 (`grant`): On a send map item, a set `grant` bit flags a grant
+ * operation. This means, the sender delegates access to the receiver and
+ * removes the own rights (basically a move operation).
+ *
+ * Bits 7..4 (`attr`): These bits contain extra attributes that influence the
+ * mapping itself. The concrete meaning is determined by the type of the
+ * flexpage in the second word of the send item. For memory mappings, these bits
+ * contain cacheability information (see L4_snd_item::Memory_type). For object
+ * mappings these bits contain extra rights on the object (see #Obj_attribs).
+ *
+ * Bits MSB­..12 (`hot_spot`): These bits are called *hot spot* and are used to
+ * disambiguate the cases where the send flexpage and the receive flexpage have
+ * different sizes.
+ */
 class L4_snd_item : public L4_msg_item
 {
 private:
@@ -116,10 +136,13 @@ private:
   };
 
 public:
+  /**
+   * Create a from binary representation.
+   */
   explicit constexpr L4_snd_item(Mword raw) : L4_msg_item(raw) {}
 
   /**
-   * Additional rights for objects (capabilities) apply to the control word of L4_snd_item.
+   * Additional rights for object send items.
    */
   enum Obj_attribs
   {
@@ -157,17 +180,14 @@ public:
   Memory_type constexpr mem_type() const { return Memory_type(attr() & 0x70); }
 
   /**
-   * Use the same receive buffer for the next send item.
-   * \pre The item must be a send item.
+   * Use the same buffer item for the next send item.
    * \return true if the next send item shall be handled with the
-   *         same receive buffer as this one.
+   *         same buffer item as this one.
    */
   bool constexpr compound() const { return _raw & 1; }
 
   /**
    * Is the map item actually a grant item?
-   * \pre type() == #L4_msg_item::Map
-   * \pre The item is a send item.
    * \return true if the sender does a grant operation.
    */
   bool constexpr is_grant() const { return _raw & 2; }
@@ -178,64 +198,143 @@ public:
    */
   static constexpr L4_snd_item map(Mword base) { return L4_snd_item(base | Map); }
 
-  /** \name Attribute bits of the message item
-   *  \pre The item is a send item.
-   *  \pre type() == #L4_msg_item::Map.
+  /** \name Attribute bits of the send item
    *
    * The semantics of the extra attributes depends on
-   * the type of the second word, the L4_fpage, of the
+   * the type of the second word, the #L4_fpage, of the
    * complete send item.
-   * \see L4_snd_item::Memory_attribs, L4_snd_item::Obj_attribs
+   * \see L4_snd_item::Memory_type, #Obj_attribs
    */
   CXX_BITFIELD_MEMBER_UNSHIFTED( 4, 7, attr, _raw);
 
-  /** \name the hot-spot address encoded in the message item
-   *  \note Useful for memory message items. */
+  /** \name the hot-spot address encoded in the send item
+   *  \note Useful for memory send items. */
   CXX_BITFIELD_MEMBER_UNSHIFTED(Addr_shift, sizeof(_raw)*8-1, address, _raw);
 
-  /** \name the hot-spot index encoded in the message item
-   *  \note In particular useful for IO-port receive items. */
+  /** \name the hot-spot index encoded in the send item
+   *  \note In particular useful for IO-port send items. */
   CXX_BITFIELD_MEMBER          (Addr_shift, sizeof(_raw)*8-1, index, _raw);
 };
 
 
+/**
+ * This class represents the first word of a message item in the buffer
+ * registers of the UTCB (buffer item).
+ *
+ * The getters of this sub-class are defined only if this is a non-void item
+ * (see is_void()).
+ *
+ * If not void, the general layout is defined as follows:
+ *
+ *      MSB                      4  3      2       1      0    bits
+ *     ┌──────────────────────────┬───┬────────┬───────┬─────┐
+ *     │                          │ 1 │ rcv_id │ small │ fwd │
+ *     └──────────────────────────┴───┴────────┴───────┴─────┘
+ *
+ * The `small` and `fwd` bits determine the details of the layout of the whole
+ * message item.
+ *
+ * If `small` is unset, then also `rcv_id` must be unset, and the most
+ * significant bits should be zero:
+ *
+ *     ┌──────────────────────────┬───┬────────┬───────┬─────┐
+ *     │   SBZ (should be zero)   │ 1 │   0    │   0   │ fwd │
+ *     └──────────────────────────┴───┴────────┴───────┴─────┘
+ *
+ * If `small` is set, the most significant bits are layouted as follows:
+ *
+ *      MSB        12 11         4  3      2       1      0    bits
+ *     ┌─────────────┬────────────┬───┬────────┬───────┬─────┐
+ *     │ rcv cap idx │    SBZ     │ 1 │ rcv_id │   1   │ fwd │
+ *     └─────────────┴────────────┴───┴────────┴───────┴─────┘
+ *
+ * At most one of `rcv_id` and `fwd` may be set.
+ *
+ * This class only represents the first word of a buffer item. However, it
+ * determines the number and meaning of the words in the whole item. They are
+ * determined by the `small` and `fwd` bits:
+ *
+ *      rcv_id small  fwd
+ *     ─┬─────┬─────┬─────┐┌───────────────────┐
+ *      │  0  │  0  │  0  ││   rcv flexpage    │
+ *     ─┴─────┴─────┴─────┘└───────────────────┘            12 11  0
+ *     ─┬─────┬─────┬─────┐┌───────────────────┐┌─────────────┬─────┐
+ *      │  0  │  0  │  1  ││   rcv flexpage    ││ fwd cap idx │ SBZ │
+ *     ─┴─────┴─────┴─────┘└───────────────────┘└─────────────┴─────┘
+ *     ─┬─────┬─────┬─────┐
+ *      │ 0/1 │  1  │  0  │
+ *     ─┴─────┴─────┴─────┘            12 11  0
+ *     ─┬─────┬─────┬─────┐┌─────────────┬─────┐
+ *      │  0  │  1  │  1  ││ fwd cap idx │ SBZ │
+ *     ─┴─────┴─────┴─────┘└─────────────┴─────┘
+ *
+ * The meaning of the bits in detail:
+ *
+ * - Bit 0 (`fwd`): If `fwd` is unset, the task of the receiving thread is
+ *   implicitly the destination task for any received capabilites. If the `fwd`
+ *   bit is set, the received capabilities are forwarded to the destination task
+ *   explicitly selected via the capability index in the second or third word of
+ *   the buffer item (`fwd cap idx`).
+ *
+ * - Bit 1 (`small`): A buffer item needs to specify a *receive window*. The
+ *   receive window determines which kind of capabilities (object, memory, I/O
+ *   ports) may be received where in the respective space. If `small` is 0, the
+ *   receive window is specified in the second word of the item via a flexpage
+ *   (`rcv flexpage`). If `small` is 1, the receive window consists of a single
+ *   capability index in the object space and the capability index is specified
+ *   in the most significant bits of the first word starting at bit 12
+ *   (`rcv cap idx`).
+ *
+ * - Bit 2 (`rcv_id`): This bit may be set only if `small` is set and `fwd` is
+ *   unset. A set `rcv_id` bit denotes that the receiver wants to avoid a full
+ *   mapping. Instead, if all preconditions are met, the receiver will get
+ *   either the sent flexpage word or the label of an IPC gate (disjoined with
+ *   some of the sender’s permissions) in its message registers. If the `rcv_id`
+ *   bit is set:
+ *
+ *   - If the sending and the receiving thread are in the same task, then the
+ *     flexpage word specified by the sender is received and nothing is mapped.
+ *   - Otherwise, if the IPC was sent via an IPC gate and the receiving thread
+ *     is in the same task as the thread that is attached to the IPC gate, then
+ *     the label of the IPC gate disjoined with some permissions of the the sent
+ *     IPC gate capability is received.
+ *   - Otherwise the behavior is the same as if the `rcv_id` bit was not set.
+ */
 class L4_buf_item : public L4_msg_item
 {
 public:
   explicit constexpr L4_buf_item(Mword raw) : L4_msg_item(raw) {}
 
+  /**
+   * Is the destination task specified explicitly in a separate word?
+   */
   bool constexpr forward_mappings() const { return _raw & 1; }
 
   /**
    * Is the buffer item a small object buffer?
-   * \pre The item must be a receive buffer.
-   * \pre type() == #L4_msg_item::Map
    * \return true if the buffer is a single-word single-object
    *         receive buffer, false else.
    */
   bool constexpr is_small_obj() const { return _raw & 2; }
 
   /**
-   * Receiver tries to receive an object ID or a
-   * capability selector?
-   * \pre The item must be a receive buffer.
-   * \pre type() == #L4_msg_item::Map
-   * \pre is_small_obj() == true
-   * \return true if the receiver is willing to receive an object ID
-   *         or a capability selector, if possible.
+   * Receiver tries to receive an IPC gate label or the sent flexpage word?
+   * \pre is_small_obj() && !has_dst_task()
    */
   bool constexpr is_rcv_id() const { return _raw & 4; }
 
   /**
-   * Get the L4_fpage that represents the small buffer item.
+   * Get the #L4_fpage that represents the small buffer item.
    * The rights are undefined and shall not be used.
-   * \pre type() == #L4_msg_item::Map
    * \pre is_small_obj() == true
-   * \return the flex page (L4_fpage) representing the single
-   *         object slot with index index().
+   * \return the flexpage (#L4_fpage) representing the single
+   *         object slot with index `rcv cap idx`.
    */
   L4_fpage constexpr get_small_buf() const
-  { return L4_fpage::obj(_raw, 0, L4_fpage::Rights(0)); }
+  {
+    assert(is_small_obj());
+    return L4_fpage::obj(_raw, 0, L4_fpage::Rights(0));
+  }
 
   /**
    * Create a map item.
@@ -244,10 +343,83 @@ public:
 };
 
 
+/**
+ * Helper class for writing a typed message item in the message registers of the
+ * receiver (receive item).
+ *
+ * \note This class can only write non-void items.
+ *
+ * A receive item always consists of two words. The general layout is defined as
+ * follows:
+ *
+ *      MSB     12 11    6 5    4  3  2        1  0   bits
+ *     ┌──────────┬───────┬──────┬───┬──────────┬───┐┌─────────────────┐
+ *     │ hot_spot │ order │ type │ 1 │ rcv_type │ c ││     payload     │
+ *     └──────────┴───────┴──────┴───┴──────────┴───┘└─────────────────┘
+ *     └──────────┘              └───┘          └───┘ from send item‘s first word
+ *                └──────────────┘                    from send item‘s flexpage
+ *                                   └──────────┘     initially zero
+ *
+ * As indicated above, the `hot_spot`, `1` (see L4_msg_item::Map), and `c`
+ * (`compound`) are copied from the sender’s send item’s first word (see
+ * #L4_snd_item), and `order` and `type` are copied from the sender’s send
+ * item’s flexpage. The `rcv_type` and `payload` are determined by what is
+ * actually transferred, which is also affected by the `rcv_id` bit in the
+ * receiver‘s buffer item (see #L4_buf_item). The `rcv_type` determines the
+ * content and layout of the payload.
+ *
+ * There are four cases for `rcv_type`:
+ *
+ * #Rcv_map_something: Used if at least one mapping was actually transferred for
+ * the corresponding send item. The payload is left unset:
+ *
+ *     ┌──────────┬───────┬──────┬───┬──────────┬───┐┌─────────────────┐
+ *     │ hot_spot │ order │ type │ 1 │    00    │ c ││      unset      │
+ *     └──────────┴───────┴──────┴───┴──────────┴───┘└─────────────────┘
+ *
+ * #Rcv_map_nothing: Used if transfer of mappings was attempted, but actually
+ * nothing was transferred, because nothing was mapped on the sender’s side for
+ * the corresponding send item. The payload is left unset:
+ *
+ *     ┌──────────┬───────┬──────┬───┬──────────┬───┐┌─────────────────┐
+ *     │ hot_spot │ order │ type │ 1 │    01    │ c ││      unset      │
+ *     └──────────┴───────┴──────┴───┴──────────┴───┘└─────────────────┘
+ *
+ * #Rcv_id: Used if the buffer item’s `rcv_id` bit was set and the conditions
+ * for transferring an IPC gate label were fulfilled. In that case, the payload
+ * consists of the IPC gate label (`obj_id`; see Kobject_common::obj_id())
+ * disjoined with the write and special permissions (see
+ * Obj::Capability::rights()) of the sent capability (`rights`):
+ *
+ *                                                           2 1      0
+ *     ┌──────────┬───────┬──────┬───┬──────────┬───┐┌────────┬────────┐
+ *     │ hot_spot │ order │ type │ 1 │    10    │ c ││ obj_id │ rights │
+ *     └──────────┴───────┴──────┴───┴──────────┴───┘└────────┴────────┘
+ *
+ * #Rcv_flexpage: Used if the buffer item’s `rcv_id` bit was set and the
+ * conditions for transferring the sender’s flexpage word were fulfilled. In
+ * that case, the payload is a copy of the sender’s flexpage word:
+ *
+ *     ┌──────────┬───────┬──────┬───┬──────────┬───┐┌─────────────────┐
+ *     │ hot_spot │ order │ type │ 1 │    11    │ c ││  send flexpage  │
+ *     └──────────┴───────┴──────┴───┴──────────┴───┘└─────────────────┘
+ */
 class L4_rcv_item_writer
 {
+  /** Pointer to the first word of the written receive item. */
   Mword *_words;
 public:
+  /**
+   * Create a writer and immediately write the information from the
+   * corresponding send item.
+   *
+   * The `rcv_type` is initially set to #Rcv_map_something.
+   *
+   * \param regs  Pointer to the first of two words of the receive item to be
+   *              written.
+   * \param snd   First word of the corresponding send item.
+   * \param fp    Second word of the corresponding send item.
+   */
   explicit constexpr L4_rcv_item_writer(Mword words[], L4_snd_item snd, L4_fpage fp)
     : _words(words)
   { _words[0] = (snd.raw() & ~0x0ff6) | (fp.raw() & 0x0ff0); }
@@ -261,12 +433,28 @@ public:
     Rcv_type_mask     = 6
   };
 
+  /**
+   * Set the `rcv_type` to #Rcv_map_nothing.
+   *
+   * \pre No `set_…` member must have been called on this instance before.
+   */
   void constexpr set_rcv_type_map_nothing()
   {
     assert(!(_words[0] & Rcv_type_mask));
     _words[0] |= L4_rcv_item_writer::Rcv_map_nothing;
   }
 
+  /**
+   * Set the `rcv_type` to #Rcv_id and set the second word to the the
+   * disjunction of the provided object id and permissions.
+   *
+   * \param id      IPC gate label (see Kobject_common::obj_id()) of the sent
+   *                IPC gate.
+   * \param rights  Write and special permissions of the sent capability (see
+   *                Obj::Capability::rights()).
+   *
+   * \pre No `set_…` member must have been called on this instance before.
+   */
   void constexpr set_rcv_type_id(Mword id, Mword rights)
   {
     assert(!(_words[0] & Rcv_type_mask));
@@ -274,6 +462,14 @@ public:
     _words[1]  = id | rights;
   }
 
+  /**
+   * Set the `rcv_type` to #Rcv_flexpage and set the second word to the provided
+   * flexpage.
+   *
+   * \param sfp  Flexpage of the corresponding send item.
+   *
+   * \pre No `set_…` member must have been called on this instance before.
+   */
   void constexpr set_rcv_type_flexpage(L4_fpage sfp)
   {
     assert(!(_words[0] & Rcv_type_mask));
