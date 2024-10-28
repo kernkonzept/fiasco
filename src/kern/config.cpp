@@ -269,3 +269,8 @@ KIP_KERNEL_FEATURE("fi_gr_cputime");
 IMPLEMENTATION [mapdb]:
 
 KIP_KERNEL_FEATURE("mapdb");
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [perf_cnt_user]:
+
+KIP_KERNEL_FEATURE("perf_cnt_user");
