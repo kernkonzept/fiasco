@@ -566,43 +566,73 @@ Mpu::update(Mpu_regions const &regions)
   // prlar of the updated region is still enabled.
   Mpu_arm::prenr(Mpu_arm::prenr() & *reserved.raw());
 
-  // No isb required because there is already one in Mpu_arm::prselr() below.
-
   static_assert(reserved.size() <= 32,
                 "PRENR register only covers <= 32 regions!");
 
-#define UPDATE(i) \
+#define UPDATE(base, i) \
   do \
     { \
-      Mpu_arm::prxar##i(regions[idx].prbar, regions[idx].prlar); \
-      --idx; \
+      if (((base) + (i)) < Mem_layout::Mpu_regions) \
+        Mpu_arm::prxar##i(regions[(base) + (i)].prbar, \
+                          regions[(base) + (i)].prlar); \
     } \
   while (false)
 
+  // We don't support more than 32 regions. Between 17 and 32 regions we have
+  // to switch banks.
   int idx = regions.size() - 1;
-  while (idx >= 0)
+  if (EXPECT_TRUE(idx > 15 && Mem_layout::Mpu_regions > 16))
     {
-      Mpu_arm::prselr(idx & 0xf0);
+      // There is an ISB in Mpu_arm::prselr() below that synchronizes the above
+      // Mpu_arm::prenr() update too.
+      Mpu_arm::prselr(16);
       switch (idx & 0x0f)
         {
-          case 15: UPDATE(15); // fall through
-          case 14: UPDATE(14); // fall through
-          case 13: UPDATE(13); // fall through
-          case 12: UPDATE(12); // fall through
-          case 11: UPDATE(11); // fall through
-          case 10: UPDATE(10); // fall through
-          case  9: UPDATE(9);  // fall through
-          case  8: UPDATE(8);  // fall through
-          case  7: UPDATE(7);  // fall through
-          case  6: UPDATE(6);  // fall through
-          case  5: UPDATE(5);  // fall through
-          case  4: UPDATE(4);  // fall through
-          case  3: UPDATE(3);  // fall through
-          case  2: UPDATE(2);  // fall through
-          case  1: UPDATE(1);  // fall through
-          case  0: UPDATE(0);
+          case 15: UPDATE(16, 15); // fall through
+          case 14: UPDATE(16, 14); // fall through
+          case 13: UPDATE(16, 13); // fall through
+          case 12: UPDATE(16, 12); // fall through
+          case 11: UPDATE(16, 11); // fall through
+          case 10: UPDATE(16, 10); // fall through
+          case  9: UPDATE(16, 9);  // fall through
+          case  8: UPDATE(16, 8);  // fall through
+          case  7: UPDATE(16, 7);  // fall through
+          case  6: UPDATE(16, 6);  // fall through
+          case  5: UPDATE(16, 5);  // fall through
+          case  4: UPDATE(16, 4);  // fall through
+          case  3: UPDATE(16, 3);  // fall through
+          case  2: UPDATE(16, 2);  // fall through
+          case  1: UPDATE(16, 1);  // fall through
+          case  0: UPDATE(16, 0);
             break;
         }
+      Mpu_arm::prselr(0);
+      idx = 15;
+    }
+  else
+    // The write to Mpu_arm::prenr() must be committed before regions are
+    // updated.
+    Mem::isb();
+
+  switch (idx)
+    {
+      case 15: UPDATE(0, 15); // fall through
+      case 14: UPDATE(0, 14); // fall through
+      case 13: UPDATE(0, 13); // fall through
+      case 12: UPDATE(0, 12); // fall through
+      case 11: UPDATE(0, 11); // fall through
+      case 10: UPDATE(0, 10); // fall through
+      case  9: UPDATE(0, 9);  // fall through
+      case  8: UPDATE(0, 8);  // fall through
+      case  7: UPDATE(0, 7);  // fall through
+      case  6: UPDATE(0, 6);  // fall through
+      case  5: UPDATE(0, 5);  // fall through
+      case  4: UPDATE(0, 4);  // fall through
+      case  3: UPDATE(0, 3);  // fall through
+        // UPDATE(0, 2);  // Heap
+        // UPDATE(0, 1);  // Kip
+        // UPDATE(0, 0);  // Kernel
+        break;
     }
 
   // PRSELR must be 0 because it's assumed by kernel entry/exit code!
