@@ -43,7 +43,7 @@ void init_mapdb_io(Space *sigma0)
  */
 L4_error __attribute__((nonnull(1, 3)))
 io_map(Space *from, L4_fpage const &fp_from,
-       Space *to, L4_fpage const &fp_to, L4_msg_item control,
+       Space *to, L4_fpage const &fp_to, L4_snd_item control,
        Kobjects_list &reap_list)
 {
 /*   printf("io_map %u -> %u "

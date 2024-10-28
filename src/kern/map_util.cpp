@@ -442,7 +442,7 @@ Map_traits<Obj_space>::apply_attribs(Obj_space::Attr attribs,
 // inline NEEDS ["config.h", io_map]
 L4_error
 fpage_map(Space *from, L4_fpage fp_from, Space *to,
-          L4_fpage fp_to, L4_msg_item control, Kobjects_list &reap_list)
+          L4_fpage fp_to, L4_snd_item control, Kobjects_list &reap_list)
 {
   Space::Caps caps = from->caps() & to->caps();
 
@@ -975,7 +975,7 @@ void init_mapdb_io(Space *)
 
 inline
 L4_error
-io_map(Space *, L4_fpage const &, Space *, L4_fpage const &, L4_msg_item)
+io_map(Space *, L4_fpage const &, Space *, L4_fpage const &, L4_snd_item)
 {
   return L4_error::None;
 }

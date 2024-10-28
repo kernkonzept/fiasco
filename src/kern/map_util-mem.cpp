@@ -37,7 +37,7 @@ DEFINE_GLOBAL Global_data<Static_object<Mapdb>> mapdb_mem;
  */
 L4_error __attribute__((nonnull(1, 3)))
 mem_map(Space *from, L4_fpage const &fp_from,
-        Space *to, L4_fpage const &fp_to, L4_msg_item control,
+        Space *to, L4_fpage const &fp_to, L4_snd_item control,
         Kobjects_list &reap_list)
 {
   assert(from);

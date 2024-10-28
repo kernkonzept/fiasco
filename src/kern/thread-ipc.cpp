@@ -282,7 +282,7 @@ Thread::handle_page_fault_pager(Thread_ptr const &_pager,
 
 
   utcb->buf_desc = L4_buf_desc(0, 0, 0, L4_buf_desc::Inherit_fpu);
-  utcb->buffers[0] = L4_msg_item::map(0).raw();
+  utcb->buffers[0] = L4_buf_item::map(0).raw();
   utcb->buffers[1] = L4_fpage::all_spaces().raw();
 
   utcb->values[0] = PF::addr_to_msgword0(pfa, error_code);
@@ -831,7 +831,7 @@ Thread::exception(Kobject_iface *handler, Trap_state *ts, L4_fpage::Rights right
   Buf_utcb_saver saved_state(utcb);
 
   utcb->buf_desc = L4_buf_desc(0, 0, 0, L4_buf_desc::Inherit_fpu);
-  utcb->buffers[0] = L4_msg_item::map(0).raw();
+  utcb->buffers[0] = L4_buf_item::map(0).raw();
   utcb->buffers[1] = L4_fpage::all_spaces().raw();
 
   // clear regs
@@ -931,15 +931,14 @@ Thread::send_exception(Trap_state *ts)
 PRIVATE static
 bool
 Thread::try_transfer_local_id(L4_buf_iter::Item const *const buf,
-                              L4_fpage sfp, Mword *rcv_word, Thread* snd,
-                              Thread *rcv)
+                              L4_fpage sfp, L4_rcv_item_writer rcv_item,
+                              Thread *snd, Thread *rcv)
 {
   if (buf->b.is_rcv_id())
     {
       if (snd->space() == rcv->space())
         {
-          rcv_word[-2] |= 6;
-          rcv_word[-1] = sfp.raw();
+          rcv_item.set_rcv_type_flexpage(sfp);
           return true;
         }
       else
@@ -950,8 +949,7 @@ Thread::try_transfer_local_id(L4_buf_iter::Item const *const buf,
             {
               Mword rights = cap.rights()
                              & cxx::int_value<L4_fpage::Rights>(sfp.rights());
-              rcv_word[-2] |= 4;
-              rcv_word[-1] = o->obj_id() | rights;
+              rcv_item.set_rcv_type_id(o->obj_id(), rights);
               return true;
             }
         }
@@ -1013,7 +1011,7 @@ Thread::transfer_msg_lookup_dst_tsk(Thread *rcv,
 
   // Regular receive buffer? -> destination task is implicitly the task of the
   // receiving thread.
-  if (EXPECT_TRUE(!buf->b.compound()))
+  if (EXPECT_TRUE(!buf->b.forward_mappings()))
     return rcv_tsk;
 
   // Compond receive buffer -> receive task is selected explicitly.
@@ -1096,7 +1094,7 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
         {
           assert (item->b.type() == L4_msg_item::Map);
           L4_fpage sfp(item->d);
-          *rcv_word = (item->b.raw() & ~0x0ff6) | (sfp.raw() & 0x0ff0);
+          L4_rcv_item_writer rcv_item(rcv_word, item->b, sfp);
 
           rcv_word += 2;
 
@@ -1104,7 +1102,7 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
           if (sfp.type() == L4_fpage::Obj)
             sfp.mask_rights(rights | L4_fpage::Rights::CRW() | L4_fpage::Rights::CD());
 
-          if (!try_transfer_local_id(buf, sfp, rcv_word, snd, rcv))
+          if (!try_transfer_local_id(buf, sfp, rcv_item, snd, rcv))
             {
               // we need to do a real mapping
               L4_error err;
@@ -1129,7 +1127,7 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
                 err = fpage_map(snd->space(), sfp, dst_tsk.get(),
                                 L4_fpage(buf->d), item->b, reap_list.list());
                 if (err.empty_map())
-                  rcv_word[-2] |= 2;
+                  rcv_item.set_rcv_type_map_nothing();
               }
 
               if (EXPECT_FALSE(!err.ok()))

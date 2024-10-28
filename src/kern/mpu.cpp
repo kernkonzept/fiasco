@@ -16,11 +16,11 @@ class Mpu_regions;
 class Mpu_region_attr
 {
   L4_fpage::Rights _rights;
-  L4_msg_item::Memory_type _type;
+  L4_snd_item::Memory_type _type;
   bool _enabled;
 
   constexpr Mpu_region_attr(L4_fpage::Rights rights,
-                            L4_msg_item::Memory_type type,
+                            L4_snd_item::Memory_type type,
                             bool enabled)
   : _rights(rights), _type(type), _enabled(enabled)
   {}
@@ -42,14 +42,14 @@ public:
 
   static constexpr Mpu_region_attr
   make_attr(L4_fpage::Rights rights,
-            L4_msg_item::Memory_type type = L4_msg_item::Memory_type::Normal(),
+            L4_snd_item::Memory_type type = L4_snd_item::Memory_type::Normal(),
             bool enabled = true)
   {
     return Mpu_region_attr(rights, type, enabled);
   }
 
   constexpr L4_fpage::Rights rights() const { return _rights; }
-  constexpr L4_msg_item::Memory_type type() const { return _type; }
+  constexpr L4_snd_item::Memory_type type() const { return _type; }
   constexpr bool enabled() const { return _enabled; }
 
   inline void add_rights(L4_fpage::Rights rights)
@@ -543,9 +543,9 @@ Mpu_regions::dump() const
              _regions[i - 1].start(),
              _regions[i - 1].end(),
              attr.enabled() ? '+' : '-',
-             (attr.type() == L4_msg_item::Memory_type::Normal())
+             (attr.type() == L4_snd_item::Memory_type::Normal())
                 ? 'N'
-                : ((attr.type() == L4_msg_item::Memory_type::Uncached())
+                : ((attr.type() == L4_snd_item::Memory_type::Uncached())
                     ? 'U' : 'B'),
              (attr.rights() & L4_fpage::Rights::U()) ? 'U' : '-',
              (attr.rights() & L4_fpage::Rights::W()) ? 'W' : '-',

@@ -12,7 +12,7 @@ IMPLEMENTATION:
 
 L4_error __attribute__((nonnull(1, 3)))
 obj_map(Space *from, L4_fpage const &fp_from,
-        Space *to, L4_fpage const &fp_to, L4_msg_item control,
+        Space *to, L4_fpage const &fp_to, L4_snd_item control,
         Kobjects_list &reap_list)
 {
   assert(from);
@@ -33,7 +33,7 @@ obj_map(Space *from, L4_fpage const &fp_from,
   if (snd_size == Cap_diff(0))
     return L4_error::None;
 
-  Obj_space::Attr attribs(fp_from.rights(), L4_msg_item::C_weak_ref ^ control.attr());
+  Obj_space::Attr attribs(fp_from.rights(), L4_snd_item::C_weak_ref ^ control.attr());
 
   Mu::Auto_tlb_flush<Obj_space> tlb;
   return map<Obj_space>(static_cast<Kobject_mapdb*>(nullptr),

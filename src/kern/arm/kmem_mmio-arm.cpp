@@ -16,8 +16,8 @@ Kmem_mmio::map(Address phys, size_t size, bool cache = false, bool, bool)
   auto diff = Kmem::kdir->add(
     start, end,
     Mpu_region_attr::make_attr(L4_fpage::Rights::RW(),
-                               cache ? L4_msg_item::Memory_type::Normal()
-                                     : L4_msg_item::Memory_type::Uncached()));
+                               cache ? L4_snd_item::Memory_type::Normal()
+                                     : L4_snd_item::Memory_type::Uncached()));
   assert(diff);
   Mpu::sync(*Kmem::kdir, diff.value());
   Mem::isb();

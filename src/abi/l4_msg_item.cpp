@@ -66,6 +66,48 @@ INTERFACE:
  */
 class L4_msg_item
 {
+public:
+  enum Type
+  {
+    Map    = 8,
+  };
+
+  /**
+   * Create a message item from its binary representation.
+   * \param raw is the binary representation of the message item.
+   */
+  explicit constexpr L4_msg_item(Mword raw) : _raw(raw) {}
+
+  /**
+   * Is the item a \a void item?
+   * \return true if the item is \a void, false if it is valid.
+   */
+  bool constexpr is_void() const { return _raw == 0; }
+
+  /**
+   * Get the binary representation of the item.
+   * \return the binary representation of this item.
+   */
+  Mword constexpr raw() const { return _raw; }
+
+protected:
+  /**
+   * The binary representation.
+   */
+  Mword _raw;
+
+public:
+  /** \name Type of the message item
+   *
+   *  Currently the type must indicate a map item (#L4_msg_item::Map).
+   *  \see L4_msg_item::Type
+   */
+  CXX_BITFIELD_MEMBER_UNSHIFTED( 3, 3, type, _raw);
+};
+
+
+class L4_snd_item : public L4_msg_item
+{
 private:
   enum
   {
@@ -74,8 +116,10 @@ private:
   };
 
 public:
+  explicit constexpr L4_snd_item(Mword raw) : L4_msg_item(raw) {}
+
   /**
-   * Additional rights for objects (capabilities) apply to the control word of L4_msg_item.
+   * Additional rights for objects (capabilities) apply to the control word of L4_snd_item.
    */
   enum Obj_attribs
   {
@@ -112,17 +156,6 @@ public:
 
   Memory_type constexpr mem_type() const { return Memory_type(attr() & 0x70); }
 
-  enum Type
-  {
-    Map    = 8,
-  };
-
-  /**
-   * Create a message item from its binary representation.
-   * \param raw is the binary representation of the message item.
-   */
-  explicit constexpr L4_msg_item(Mword raw) : _raw(raw) {}
-
   /**
    * Use the same receive buffer for the next send item.
    * \pre The item must be a send item.
@@ -132,10 +165,46 @@ public:
   Mword constexpr compound() const { return _raw & 1; }
 
   /**
-   * Is the item a \a void item?
-   * \return true if the item is \a void, false if it is valid.
+   * Is the map item actually a grant item?
+   * \pre type() == #L4_msg_item::Map
+   * \pre The item is a send item.
+   * \return true if the sender does a grant operation.
    */
-  bool constexpr is_void() const { return _raw == 0; }
+  Mword constexpr is_grant() const { return _raw & 2; }
+
+  /**
+   * Create a map item.
+   * \param base the hot spot address of the map item.
+   */
+  static constexpr L4_snd_item map(Mword base) { return L4_snd_item(base | Map); }
+
+  /** \name Attribute bits of the message item
+   *  \pre The item is a send item.
+   *  \pre type() == #L4_msg_item::Map.
+   *
+   * The semantics of the extra attributes depends on
+   * the type of the second word, the L4_fpage, of the
+   * complete send item.
+   * \see L4_snd_item::Memory_attribs, L4_snd_item::Obj_attribs
+   */
+  CXX_BITFIELD_MEMBER_UNSHIFTED( 4, 7, attr, _raw);
+
+  /** \name the hot-spot address encoded in the message item
+   *  \note Useful for memory message items. */
+  CXX_BITFIELD_MEMBER_UNSHIFTED(Addr_shift, sizeof(_raw)*8-1, address, _raw);
+
+  /** \name the hot-spot index encoded in the message item
+   *  \note In particular useful for IO-port receive items. */
+  CXX_BITFIELD_MEMBER          (Addr_shift, sizeof(_raw)*8-1, index, _raw);
+};
+
+
+class L4_buf_item : public L4_msg_item
+{
+public:
+  explicit constexpr L4_buf_item(Mword raw) : L4_msg_item(raw) {}
+
+  bool constexpr forward_mappings() const { return _raw & 1; }
 
   /**
    * Is the buffer item a small object buffer?
@@ -158,20 +227,6 @@ public:
   Mword constexpr is_rcv_id() const { return _raw & 4; }
 
   /**
-   * Is the map item actually a grant item?
-   * \pre type() == #L4_msg_item::Map
-   * \pre The item is a send item.
-   * \return true if the sender does a grant operation.
-   */
-  Mword constexpr is_grant() const { return _raw & 2; }
-
-  /**
-   * Get the binary representation of the item.
-   * \return the binary representation of this item.
-   */
-  Mword constexpr raw() const { return _raw; }
-
-  /**
    * Get the L4_fpage that represents the small buffer item.
    * The rights are undefined and shall not be used.
    * \pre type() == #L4_msg_item::Map
@@ -186,38 +241,44 @@ public:
    * Create a map item.
    * \param base the hot spot address of the map item.
    */
-  static constexpr L4_msg_item map(Mword base) { return L4_msg_item(base | Map); }
+  static constexpr L4_buf_item map(Mword base) { return L4_buf_item(base | Map); }
+};
 
-private:
-  /**
-   * The binary representation.
-   */
-  Mword _raw;
 
+class L4_rcv_item_writer
+{
+  Mword *_words;
 public:
-  /** \name Type of the message item
-   *
-   *  Currently the type must indicate a map item (#L4_msg_item::Map).
-   *  \see L4_msg_item::Type
-   */
-  CXX_BITFIELD_MEMBER_UNSHIFTED( 3, 3, type, _raw);
+  explicit constexpr L4_rcv_item_writer(Mword words[], L4_snd_item snd, L4_fpage fp)
+    : _words(words)
+  { _words[0] = (snd.raw() & ~0x0ff6) | (fp.raw() & 0x0ff0); }
 
-  /** \name Attribute bits of the message item
-   *  \pre The item is a send item.
-   *  \pre type() == #L4_msg_item::Map.
-   *
-   * The semantics of the extra attributes depends on
-   * the type of the second word, the L4_fpage, of the
-   * complete send item.
-   * \see L4_msg_item::Memory_attribs, L4_msg_item::Obj_attribs
-   */
-  CXX_BITFIELD_MEMBER_UNSHIFTED( 4, 7, attr, _raw);
+  enum Rcv_type
+  {
+    Rcv_map_something = 0,  ///< Mapping done, something mapped.
+    Rcv_map_nothing   = 2,  ///< Mapping done, nothing mapped.
+    Rcv_id            = 4,  ///< IPC gate label and permissions are transferred.
+    Rcv_flexpage      = 6,  ///< A flexpage word is transferred.
+    Rcv_type_mask     = 6
+  };
 
-  /** \name the hot-spot address encoded in the message item
-   *  \note Useful for memory message items. */
-  CXX_BITFIELD_MEMBER_UNSHIFTED(Addr_shift, sizeof(_raw)*8-1, address, _raw);
+  void constexpr set_rcv_type_map_nothing()
+  {
+    assert(!(_words[0] & Rcv_type_mask));
+    _words[0] |= L4_rcv_item_writer::Rcv_map_nothing;
+  }
 
-  /** \name the hot-spot index encoded in the message item
-   *  \note In particular useful for IO-port receive items. */
-  CXX_BITFIELD_MEMBER          (Addr_shift, sizeof(_raw)*8-1, index, _raw);
+  void constexpr set_rcv_type_id(Mword id, Mword rights)
+  {
+    assert(!(_words[0] & Rcv_type_mask));
+    _words[0] |= L4_rcv_item_writer::Rcv_id;
+    _words[1]  = id | rights;
+  }
+
+  void constexpr set_rcv_type_flexpage(L4_fpage sfp)
+  {
+    assert(!(_words[0] & Rcv_type_mask));
+    _words[0] |= L4_rcv_item_writer::Rcv_flexpage;
+    _words[1]  = sfp.raw();
+  }
 };

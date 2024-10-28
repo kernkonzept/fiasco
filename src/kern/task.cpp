@@ -505,7 +505,7 @@ Task::sys_map(L4_fpage::Rights rights, Syscall_frame *f, Utcb *utcb)
 
       cpu_lock.clear();
       ret = fpage_map(from.get(), sfp, this,
-                      L4_fpage::all_spaces(), L4_msg_item(utcb->values[1]),
+                      L4_fpage::all_spaces(), L4_snd_item(utcb->values[1]),
                       reap_list.list());
       cpu_lock.lock();
     }

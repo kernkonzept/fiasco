@@ -7,7 +7,7 @@ class Page
 {
 public:
   typedef L4_fpage::Rights Rights;
-  typedef L4_msg_item::Memory_type Type;
+  typedef L4_snd_item::Memory_type Type;
 
   struct Kern
   : cxx::int_type_base<unsigned char, Kern>,

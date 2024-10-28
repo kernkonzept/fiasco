@@ -10,7 +10,7 @@ class L4_buf_iter
 public:
   struct Item
   {
-    L4_msg_item b;
+    L4_buf_item b;
     Mword d;
     Mword task;
 
@@ -38,7 +38,7 @@ class L4_snd_item_iter
 public:
   struct Item
   {
-    L4_msg_item b;
+    L4_snd_item b;
     Mword d;
 
     Item()
@@ -70,11 +70,11 @@ L4_buf_iter::next()
 {
   if (EXPECT_FALSE(_buf >= _max))
     {
-      c.b = L4_msg_item(0);
+      c.b = L4_buf_item(0);
       return false;
     }
 
-  c.b = L4_msg_item(_buf[0]);
+  c.b = L4_buf_item(_buf[0]);
   if (EXPECT_FALSE(c.b.is_void()))
     return false;
 
@@ -85,20 +85,20 @@ L4_buf_iter::next()
       ++_buf;
       if (EXPECT_FALSE(_buf >= _max))
         {
-          c.b = L4_msg_item(0);
+          c.b = L4_buf_item(0);
           return false;
         }
 
       c.d = _buf[0];
     }
 
-  // In case of a compound item, the last word specifies the destination task.
-  if (EXPECT_FALSE(c.b.compound()))
+  // The last word specifies the destination task.
+  if (EXPECT_FALSE(c.b.forward_mappings()))
     {
       ++_buf;
       if (EXPECT_FALSE(_buf >= _max))
         {
-          c.b = L4_msg_item(0);
+          c.b = L4_buf_item(0);
           return false;
         }
       c.task = _buf[0];
@@ -115,11 +115,11 @@ L4_snd_item_iter::next()
 {
   if (EXPECT_FALSE(_buf >= _max))
     {
-      c.b = L4_msg_item(0);
+      c.b = L4_snd_item(0);
       return false;
     }
 
-  c.b = L4_msg_item(_buf[0]);
+  c.b = L4_snd_item(_buf[0]);
   c.d = 0;
 
   ++_buf;

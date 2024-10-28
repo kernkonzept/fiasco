@@ -101,12 +101,12 @@ Mapdb_util_test::to_vaddr(Address a)
 { return Mem_space::Vaddr(Virt_addr(a)); }
 
 /**
- * Create an L4_msg_item from the map base.
+ * Create an L4_snd_item from the map base.
  */
 PRIVATE static
-L4_msg_item
+L4_snd_item
 Mapdb_util_test::map_base(Address base)
-{ return L4_msg_item::map(base); }
+{ return L4_snd_item::map(base); }
 
 /**
  * Print information about the node.

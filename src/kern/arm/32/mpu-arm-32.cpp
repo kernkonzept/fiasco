@@ -794,10 +794,10 @@ Mpu_region::attr() const
                 | ((prbar & Prot::NX) ? L4_fpage::Rights()
                                       : L4_fpage::Rights::X()),
             ((prlar & Attr::Mask) == Attr::Normal)
-             ? L4_msg_item::Memory_type::Normal()
+             ? L4_snd_item::Memory_type::Normal()
              : (((prlar & Attr::Mask) == Attr::Device)
-                ? L4_msg_item::Memory_type::Uncached()
-                : L4_msg_item::Memory_type::Buffered()),
+                ? L4_snd_item::Memory_type::Uncached()
+                : L4_snd_item::Memory_type::Buffered()),
             prlar & Enabled);
 }
 
@@ -824,9 +824,9 @@ Mpu_region::attr(Mpu_region_attr attr)
           | ((attr.rights() & L4_fpage::Rights::W()) ? Prot::None : Prot::RO)
           | ((attr.rights() & L4_fpage::Rights::X()) ? Prot::None : Prot::NX);
   prlar = (prlar & ~0x3fUL)
-          | ((attr.type() == L4_msg_item::Memory_type::Uncached())
+          | ((attr.type() == L4_snd_item::Memory_type::Uncached())
               ? Attr::Device
-              : ((attr.type() == L4_msg_item::Memory_type::Buffered())
+              : ((attr.type() == L4_snd_item::Memory_type::Buffered())
                   ? Attr::Buffered
                   : Attr::Normal))
           | (attr.enabled() ? Enabled : Disabled);
