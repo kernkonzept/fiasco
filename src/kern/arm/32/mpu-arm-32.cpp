@@ -933,4 +933,10 @@ Mpu::update(Mpu_regions const &regions)
     }
 
 #undef UPDATE
+
+  // Theoretically, because only user space regions are reconfigured, the ERET
+  // on the kernel exit should be sufficient. But there we read/modify/write
+  // PRENR. Hence, all region updates must be already committed to not read
+  // stale data through PRENR.
+  Mem::isb();
 }
