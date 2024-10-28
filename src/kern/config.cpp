@@ -206,13 +206,6 @@ Global_data<unsigned> Config::tbuf_entries((1U << 17) / (sizeof(Mword) * 16));
 
 DEFINE_GLOBAL Global_data<bool> Config::getchar_does_hlt_works_ok;
 
-#ifdef CONFIG_FINE_GRAINED_CPUTIME
-KIP_KERNEL_FEATURE("fi_gr_cputime");
-#endif
-#ifdef CONFIG_MAPDB
-KIP_KERNEL_FEATURE("mapdb");
-#endif
-
 IMPLEMENT FIASCO_INIT
 void Config::init()
 {
@@ -266,3 +259,13 @@ constexpr unsigned Config::kmem_per_cent() { return 6; }
 
 IMPLEMENT_DEFAULT inline ALWAYS_INLINE
 constexpr unsigned long Config::kmem_max() { return 3328UL << 20; }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [fine_grained_cputime]:
+
+KIP_KERNEL_FEATURE("fi_gr_cputime");
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [mapdb]:
+
+KIP_KERNEL_FEATURE("mapdb");
