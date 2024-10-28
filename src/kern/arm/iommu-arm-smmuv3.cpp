@@ -1806,14 +1806,13 @@ Iommu::setup(void *base_addr, unsigned eventq_irq, unsigned gerror_irq)
   // SMMU supports the same physical address size as the MMU does not hold (with
   // `cpu max` the physical address size is 48-bit, but SMMU still only supports
   // 44-bit).
-  if (_oas < Cpu::phys_bits())
-    // Unless too high physical addresses are mapped, the SMMU is going to work
-    // fine, so don't panic/disable the SMMU, only print a warning.
-    WARN("IOMMU: Supported physical address size smaller than required: %u\n",
-         _oas);
-  else
-    // Otherwise set the output address size to the one used by Fiasco, which
-    // might be lower than the maximum supported.
+  // Also assume that the SMMU supports as many bits as physical memory is
+  // available in the system, even if the SMMU supports less bits than the
+  // page-tables, i.e. physical memory addressable by the CPU.
+  if (_oas > Cpu::phys_bits())
+    // If CPU page-tables support less memory range, set the output address
+    // size to the one used by Fiasco, which might be lower than the maximum
+    // supported.
     _oas = Cpu::phys_bits();
 
   // The maximum intermediate address size is equals to the maximum output
