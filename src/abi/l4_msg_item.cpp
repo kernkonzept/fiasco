@@ -173,13 +173,14 @@ public:
 
   /**
    * Get the L4_fpage that represents the small buffer item.
+   * The rights are undefined and shall not be used.
    * \pre type() == #L4_msg_item::Map
    * \pre is_small_obj() == true
    * \return the flex page (L4_fpage) representing the single
    *         object slot with index index().
    */
   L4_fpage constexpr get_small_buf() const
-  { return L4_fpage::obj(_raw, 0, L4_fpage::Rights(attr() >> 4)); }
+  { return L4_fpage::obj(_raw, 0, L4_fpage::Rights(0)); }
 
   /**
    * Create a map item.
