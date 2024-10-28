@@ -227,6 +227,10 @@ Vm_vmx_t<VARIANT>::vm_entry(Trex *regs,
       vm_state->template write<Vmx::Sw_guest_cr2>(vm_guest_cr2);
     }
 
+  // GDT limit now at 0xffff+1: restore our limit
+  // IDT limit now at 0xffff+1: we don't care
+  // LDT value now at 0: restore our value
+  cpu.set_gdt();
   Cpu::set_ldt(ldt);
 
   // reload TSS, we use I/O bitmaps
