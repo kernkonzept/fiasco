@@ -18,5 +18,4 @@ reset_IMPL            += reset-arm-qcom
 clock_IMPL            += clock-arm-generic
 platform_control_IMPL += platform_control-arm-qcom
 context_IMPL          += context-arm-hyp-qcom
-dmar_space_IMPL       += dmar_space-smmuv2
-iommu_IMPL            += iommu-arm-smmuv2 iommu-arm-smmu-500-qcom
+iommu_IMPL            += iommu-arm-smmu-500-qcom

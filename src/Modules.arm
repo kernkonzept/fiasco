@@ -171,7 +171,10 @@ context_IMPL	  	:= context context-arm context-arm-$(BITS) \
 continuation_IMPL	:= continuation-arm
 cpu_IMPL	  	:= cpu cpu-arm cpu-arm-$(BITS)
 cpu_lock_IMPL  	  	:= cpu_lock cpu_lock-generic
-dmar_space_IMPL		:= dmar_space
+dmar_space_IMPL		:= dmar_space \
+                           $(if $(CONFIG_IOMMU_ARM_SMMU_400),dmar_space-smmuv2) \
+                           $(if $(CONFIG_IOMMU_ARM_SMMU_500),dmar_space-smmuv2) \
+                           $(if $(CONFIG_IOMMU_ARM_SMMU_V3),dmar_space-smmuv3)
 ifeq ($(CONFIG_BIT64),y)
   entry_frame_IMPL	:= entry_frame-arm
 else
@@ -186,7 +189,10 @@ gic_cpu_v3_IMPL		:= gic_cpu_v3 gic_cpu_v3-$(BITS)
 gic_dist_IMPL		:= gic_dist
 globals_IMPL		:= globals globals-arm
 hyp_vm_state_IMPL	:= hyp_vm_state hyp_vm_state-$(BITS)
-iommu_IMPL		:= iommu-arm
+iommu_IMPL		:= iommu-arm \
+                           $(if $(CONFIG_IOMMU_ARM_SMMU_400),iommu-arm-smmuv2) \
+                           $(if $(CONFIG_IOMMU_ARM_SMMU_500),iommu-arm-smmuv2) \
+                           $(if $(CONFIG_IOMMU_ARM_SMMU_V3),iommu-arm-smmuv3)
 ipi_IMPL		:= ipi ipi-arm
 kdb_ke_IMPL		+= kdb_ke-arm
 kernel_task_IMPL	:= kernel_task kernel_task-arm

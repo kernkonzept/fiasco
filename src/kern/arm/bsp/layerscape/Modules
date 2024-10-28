@@ -15,5 +15,4 @@ timer_tick_IMPL       += timer_tick-single-vector
 reset_IMPL            += reset-arm-layerscape
 clock_IMPL            += clock-arm-generic
 platform_control_IMPL += platform_control-arm-layerscape
-dmar_space_IMPL       += dmar_space-smmuv2
-iommu_IMPL            += iommu-arm-smmuv2 iommu-arm-smmu-400-layerscape
+iommu_IMPL            += iommu-arm-smmu-400-layerscape

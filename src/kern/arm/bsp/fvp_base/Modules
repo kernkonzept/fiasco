@@ -14,5 +14,4 @@ timer_tick_IMPL       += timer_tick-single-vector
 reset_IMPL            += reset-arm-fvp_base
 clock_IMPL            += clock-arm-generic
 platform_control_IMPL += platform_control-arm-fvp_base
-dmar_space_IMPL       += dmar_space-smmuv3
-iommu_IMPL            += iommu-arm-smmuv3 iommu-arm-smmu-v3-fvp_base
+iommu_IMPL            += iommu-arm-smmu-v3-fvp_base
