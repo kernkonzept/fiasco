@@ -574,8 +574,7 @@ Mpu::update(Mpu_regions const &regions)
 #define UPDATE(i) \
   do \
     { \
-      if (!reserved[idx]) \
-        Mpu_arm::prxar##i(regions[idx].prbar, regions[idx].prlar); \
+      Mpu_arm::prxar##i(regions[idx].prbar, regions[idx].prlar); \
       --idx; \
     } \
   while (false)

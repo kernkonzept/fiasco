@@ -887,7 +887,7 @@ Mpu::update(Mpu_regions const &regions)
 #define UPDATE(i) \
   do \
     { \
-      if (i < Mem_layout::Mpu_regions && !reserved[(i)]) \
+      if (i < Mem_layout::Mpu_regions) \
         Mpu_arm::prxar##i(regions[(i)].prbar, regions[(i)].prlar); \
     } \
   while (false)
