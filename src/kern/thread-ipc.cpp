@@ -282,7 +282,7 @@ Thread::handle_page_fault_pager(Thread_ptr const &_pager,
 
 
   utcb->buf_desc = L4_buf_desc(0, 0, 0, L4_buf_desc::Inherit_fpu);
-  utcb->buffers[0] = L4_buf_item::map(0).raw();
+  utcb->buffers[0] = L4_buf_item::map().raw();
   utcb->buffers[1] = L4_fpage::all_spaces().raw();
 
   utcb->values[0] = PF::addr_to_msgword0(pfa, error_code);
@@ -831,7 +831,7 @@ Thread::exception(Kobject_iface *handler, Trap_state *ts, L4_fpage::Rights right
   Buf_utcb_saver saved_state(utcb);
 
   utcb->buf_desc = L4_buf_desc(0, 0, 0, L4_buf_desc::Inherit_fpu);
-  utcb->buffers[0] = L4_buf_item::map(0).raw();
+  utcb->buffers[0] = L4_buf_item::map().raw();
   utcb->buffers[1] = L4_fpage::all_spaces().raw();
 
   // clear regs
