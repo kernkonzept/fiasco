@@ -924,7 +924,10 @@ class Pdir : public Mpu_regions
 {
 public:
   Pdir() : Mpu_regions(Mpu_regions_mask{}) {}
-  Pdir(Mpu_regions_mask const &reserved) : Mpu_regions(reserved) {}
+  explicit Pdir(Mpu_regions_mask const &reserved) : Mpu_regions(reserved) {}
+  explicit Pdir(Mpu_regions const &kpdir)
+  : Mpu_regions(kpdir, Init::Reserved_regions)
+  {}
 
   // retained from Pdir_t
   typedef Addr::Addr<Config::PAGE_SHIFT> Va; // same as physical address

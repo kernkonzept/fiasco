@@ -255,6 +255,29 @@ public:
       _size = Mem_layout::Mpu_regions;
   }
 
+  enum class Init { Reserved_regions };
+
+  /**
+   * Construct new MPU region list.
+   *
+   * This is *not* a copy constructor! The other Mpu_regions object that is
+   * passed will be used as a reserved-regions template. To enable fast
+   * context switches, the used regions of the other object are still copied.
+   */
+  explicit Mpu_regions(Mpu_regions const &other, Init)
+  : _size(other._size), _reserved(other._reserved)
+  {
+    _reserved |= other._used_mask;
+    for (Mpu_region *i : other._used_list)
+      {
+        unsigned idx = other.index(i);
+        Mpu_region *r = &_regions[idx];
+        r->start(i->start());
+        r->end(i->end());
+        r->attr(i->attr());
+      }
+  }
+
   Mpu_region const &operator[](unsigned i) const
   { return _regions[i]; }
 

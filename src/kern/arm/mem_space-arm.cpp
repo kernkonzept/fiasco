@@ -662,7 +662,8 @@ Mem_space::v_delete(Vaddr virt, Page_order order,
 
 PUBLIC inline
 Mem_space::Mem_space(Ram_quota *q)
-: _quota(q), _dir(&_regions), _regions(Kmem::kdir->used())
+: _quota(q), _dir(&_regions),
+  _regions(static_cast<Mpu_regions const &>(*Kmem::kdir))
 {}
 
 PROTECTED inline
