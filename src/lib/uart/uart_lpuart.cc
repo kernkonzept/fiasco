@@ -36,9 +36,6 @@ namespace L4
     FIFO_RXEMPT   = 1 << 22, // Receive buffer is empty?
     FIFO_TXEMPT   = 1 << 23, // Transmit FIFO empty?
 
-    BAUD_CLOCK    = 80064000,
-    BAUD_OSR_VAL  = 4,
-    BAUD_OSR      = BAUD_OSR_VAL << 24,
     BAUD_BOTHEDGE = 1 << 17,
   };
 
@@ -66,13 +63,24 @@ namespace L4
 
   bool Uart_lpuart::change_mode(Transfer_mode, Baud_rate r)
   {
-    _regs->clear<unsigned>(CTRL, CTRL_RE | CTRL_TE);
+    if (_freq)
+      {
+        // The following needs to use _freq to derive values from
+        enum
+        {
+          BAUD_CLOCK    = 80064000,
+          BAUD_OSR_VAL  = 4,
+          BAUD_OSR      = BAUD_OSR_VAL << 24,
+        };
 
-    _regs->write<unsigned>(BAUD,
-                             ((BAUD_CLOCK / r / (BAUD_OSR_VAL + 1)) & 0x1fff)
-                           | BAUD_OSR);
+        _regs->clear<unsigned>(CTRL, CTRL_RE | CTRL_TE);
 
-    _regs->set<unsigned>(CTRL, CTRL_RE | CTRL_TE);
+        _regs->write<unsigned>(BAUD,
+                                 ((BAUD_CLOCK / r / (BAUD_OSR_VAL + 1)) & 0x1fff)
+                               | BAUD_OSR);
+
+        _regs->set<unsigned>(CTRL, CTRL_RE | CTRL_TE);
+      }
     return true;
   }
 

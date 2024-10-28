@@ -18,8 +18,8 @@ namespace L4
   class Uart_lpuart : public Uart
   {
   public:
-    explicit Uart_lpuart() {}
-    explicit Uart_lpuart(unsigned /*base_rate*/) {}
+    /** freq == 0 means unknown and don't change baud rate */
+    Uart_lpuart(unsigned freq = 0) : _freq(freq) {}
     bool startup(Io_register_block const *) override;
     void shutdown() override;
     bool enable_rx_irq(bool enable = true) override;
@@ -31,5 +31,8 @@ namespace L4
     inline void out_char(char c) const;
     int write(char const *s, unsigned long count,
               bool blocking = true) const override;
+
+  private:
+    unsigned _freq;
   };
 };
