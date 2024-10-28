@@ -112,7 +112,7 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && mp && arm_v8 && arm_psci]:
+IMPLEMENTATION [arm && mp && arm_v8 && arm_psci && !pf_imx_95]:
 
 PUBLIC static
 void
@@ -120,5 +120,16 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
 {
   boot_ap_cpus_psci(phys_tramp_mp_addr,
                     { 0x000, 0x001, 0x002, 0x003, 0x100, 0x101 }, true);
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && mp && arm_v8 && arm_psci && pf_imx_95]:
+
+PUBLIC static
+void
+Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
+{
+  boot_ap_cpus_psci(phys_tramp_mp_addr,
+                    { 0x000, 0x100, 0x200, 0x300, 0x400, 0x500 }, true);
 }
 

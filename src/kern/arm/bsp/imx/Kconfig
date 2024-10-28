@@ -114,6 +114,19 @@ config PF_IMX_8XQ
 	help
 	  Choose for i.MX8X and i.MX8Q platforms.
 
+config PF_IMX_95
+	bool "i.MX95"
+	depends on PF_IMX
+	select CAN_ARM_CPU_CORTEX_A55
+	select HAS_CPU_VIRT
+	select HAS_ARM_PSCI
+	select ARM_PSCI
+	select ARM_GIC
+	select HAVE_ARM_GICV3
+	select HAS_IOMMU_ARM_SMMU_V3
+	help
+	  Choose for i.MX95 platform.
+
 endchoice
 
 config PF_IMX_RAM_PHYS_BASE
@@ -124,6 +137,7 @@ config PF_IMX_RAM_PHYS_BASE
 	default 0x80200000 if PF_IMX_8XQ
 	default 0x80000000 if PF_IMX_35 || PF_IMX_6UL || PF_IMX_7
 	default 0x90000000 if PF_IMX_51
+	default 0x90200000 if PF_IMX_95
 	default 0x10000000 if PF_IMX_6
 
 choice

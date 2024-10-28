@@ -2,6 +2,7 @@
 
 OBJECTS_LIBUART         += uart_imx.o uart_pl011.o
 OBJECTS_LIBUART         += $(if $(CONFIG_PF_IMX_8XQ),uart_lpuart.o)
+OBJECTS_LIBUART         += $(if $(CONFIG_PF_IMX_95),uart_lpuart.o)
 PREPROCESS_PARTS        += generic_tickless_idle
 PREPROCESS_PARTS	+= $(if $(CONFIG_PF_IMX_21),kern_start_0xd)
 PREPROCESS_PARTS        += $(if $(CONFIG_PF_IMX_35),imx_epit)
@@ -52,6 +53,8 @@ LIBUART_HDR-$(CONFIG_PF_IMX_8M)    += uart_imx.h
 LIBUART_TYP-$(CONFIG_PF_IMX_8M)    += L4::Uart_imx8
 LIBUART_HDR-$(CONFIG_PF_IMX_8MP)   += uart_imx.h
 LIBUART_TYP-$(CONFIG_PF_IMX_8MP)   += L4::Uart_imx8
+LIBUART_HDR-$(CONFIG_PF_IMX_95)    += uart_lpuart.h
+LIBUART_TYP-$(CONFIG_PF_IMX_95)    += L4::Uart_lpuart
 
 CXXFLAGS_uart-libuart += -include $(LIBUART_HDR-y) -DFIASCO_UART_TYPE=$(LIBUART_TYP-y)
 
@@ -85,3 +88,4 @@ clock_IMPL            += $(if $(CONFIG_PF_IMX_6UL)$(CONFIG_PF_IMX_7)$(CONFIG_ARM
 			   clock-arm-generic,clock-generic)
 platform_control_IMPL += platform_control-arm-imx
 iommu_IMPL            += $(if $(CONFIG_IOMMU_ARM_SMMU_500),iommu-arm-smmu-500-imx)
+iommu_IMPL            += $(if $(CONFIG_IOMMU_ARM_SMMU_V3),iommu-arm-smmu-v3-imx)

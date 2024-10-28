@@ -144,3 +144,15 @@ public:
     Gic_redist_size      = 0x00100000,
   };
 };
+
+INTERFACE [arm && pf_imx_95]: // ----------------------------------------
+
+EXTENSION class Mem_layout
+{
+public:
+  enum Phys_layout_imx95 : Address {
+    Gic_dist_phys_base   = 0x48000000,
+    Gic_redist_phys_base = 0x48060000,
+    Gic_redist_size      = 0x000c0000,
+  };
+};

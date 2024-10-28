@@ -41,3 +41,7 @@ INTERFACE [arm && pf_imx_8mp]:
 INTERFACE [arm && pf_imx_8xq]:
 
 #define TARGET_NAME "i.MX8XQ"
+
+INTERFACE [arm && pf_imx_95]:
+
+#define TARGET_NAME "i.MX95"
