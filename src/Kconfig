@@ -428,6 +428,7 @@ config PERFORMANCE
 	select INLINE
 	select NDEBUG
 	select NO_FRAME_PTR
+	select LAZY_FPU
 	help
 	  Setup the kernel such that performance is chosen over
 	  being friendly for debugging. With this option, no
