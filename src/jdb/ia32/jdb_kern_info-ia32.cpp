@@ -2,6 +2,7 @@ IMPLEMENTATION[ia32 || amd64]:
 
 #include <cstdio>
 #include <cstring>
+#include "minmax.h"
 #include "simpleio.h"
 
 #include "config.h"
@@ -37,17 +38,19 @@ Jdb_kern_info_idt::show() override
   Pseudo_descriptor idt_pseudo;
   unsigned line = 0;
 
-  Idt::get (&idt_pseudo);
+  Idt::get(&idt_pseudo);
+  unsigned idt_max_bytes = idt_pseudo.limit() + 1;
+  unsigned idt_max_entries = idt_max_bytes / sizeof(Idt_entry);
 
-  printf("idt base=" L4_PTR_FMT "  limit=%04x (%04x bytes)\n",
-         idt_pseudo.base(),
-         static_cast<unsigned>((idt_pseudo.limit() + 1) / sizeof(Idt_entry)),
-         static_cast<unsigned>(idt_pseudo.limit()) + 1);
+  printf("IDT base=" L4_PTR_FMT "  limit=%04x (%d entries)\n",
+         idt_pseudo.base(), idt_max_bytes, idt_max_entries);
   if (!Jdb_core::new_line(line))
     return;
 
   Idt_entry *ie = reinterpret_cast<Idt_entry*>(idt_pseudo.base());
-  for (unsigned i=0; i<(idt_pseudo.limit()+1)/sizeof(Idt_entry); i++)
+  // On VM exit, IDTR (and GDTR) limit are each set to 0xffff. We don't bother
+  // because IDT entries beyond 256 are ignored. Show only up to 256 entries.
+  for (unsigned i = 0; i < min(Idt::_idt_max, idt_max_entries); ++i)
     {
       printf("%3x: ",i);
       ie[i].show();
