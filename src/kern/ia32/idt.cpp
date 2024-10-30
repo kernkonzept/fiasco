@@ -18,10 +18,10 @@ class Idt
   friend class Jdb_kern_info_bench;
 
 public:
-  static const unsigned _idt_max = FIASCO_IDT_MAX;
+  static constexpr unsigned _idt_max = FIASCO_IDT_MAX;
 
 private:
-  static const Address _idt = Mem_layout::Idt;
+  static constexpr Address _idt = Mem_layout::Idt;
   static Address _idt_pa;
 };
 
