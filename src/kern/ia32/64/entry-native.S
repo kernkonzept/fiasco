@@ -215,7 +215,7 @@ dbf_stack_top:
 /*
  * This code shall be mapped to Kentry_cpu_page_text, exactly one page above
  * Kentry_cpu_page, which makes it possible to refer to the data without
- * cloberring a register.
+ * clobbering a register.
  */
 #define CPUE_OFFSET syscall_entry_code - 0x1000
 
