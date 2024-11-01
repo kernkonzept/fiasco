@@ -14,7 +14,7 @@ Relationship: SPDXRef-DOCUMENT DESCRIBES SPDXRef-fiasco-perfctr
 Relationship: SPDXRef-DOCUMENT DESCRIBES SPDXRef-fiasco-regex
 Relationship: SPDXRef-DOCUMENT DESCRIBES SPDXRef-fiasco-gcov
 Relationship: SPDXRef-DOCUMENT DESCRIBES SPDXRef-fiasco-cov-llvm
-Relationship: SPDXRef-DOCUMENT DESCRIBES SPDXRef-fiasco-minilibc
+Relationship: SPDXRef-DOCUMENT DESCRIBES SPDXRef-fiasco-libc
 
 ## Package Information
 PackageName: fiasco
@@ -96,16 +96,16 @@ FilesAnalyzed: false
 PackageCopyrightText: NOASSERTION
 PackageDownloadLocation: NOASSERTION
 
-PackageName: fiasco-minilibc
-SPDXID: SPDXRef-fiasco-minilibc
-PackageFileName: ./src/lib/minilibc
+PackageName: fiasco-libc
+SPDXID: SPDXRef-fiasco-libc
+PackageFileName: ./src/lib/libc
 PackageOriginator: Organization: Kernkonzept GmbH (info@kernkonzept.com)
-PackageLicenseDeclared: GPL-2.0-only
-PackageLicenseConcluded: GPL-2.0-only
+PackageLicenseDeclared: MIT
+PackageLicenseConcluded: MIT
 FilesAnalyzed: false
 PackageCopyrightText: NOASSERTION
 PackageDownloadLocation: NOASSERTION
-PackageComment: <text>This package is a subset of the dietlibc.</text>
+PackageComment: <text>This package is a subset of the libmusl.</text>
 
 Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-capstone
 Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-gzip
@@ -114,4 +114,4 @@ Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-perfctr
 Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-regex
 Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-gcov
 Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-cov-llvm
-Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-minilibc
+Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-libc
