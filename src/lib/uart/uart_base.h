@@ -25,10 +25,6 @@ protected:
   Io_register_block const *_regs;
 
 public:
-  void *operator new (size_t, void* a)
-  { return a; }
-
-public:
   typedef unsigned Transfer_mode;
   typedef unsigned Baud_rate;
 
