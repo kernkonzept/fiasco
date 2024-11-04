@@ -4,6 +4,7 @@ IMPLEMENTATION:
 #include "cpu.h"
 #include "div32.h"
 #include "gdt.h"
+#include "kmem_mmio.h"
 #include "simpleio.h"
 #include "static_init.h"
 #include "timer_tick.h"
@@ -94,11 +95,18 @@ Jdb_kern_info_bench::show_arch()
   if (!Cpu::boot_cpu()->tsc())
     return;
 
-  // we need a cached, non-global mapping for measuring the time to load
-  // TLB entries
+  // need cached, non-global mapping for measuring the time to load TLB entries
   Address phys =
     Kmem::virt_to_phys(reinterpret_cast<void*>(Mem_layout::Tbuf_status_page));
-  Kmem::map_phys_page(phys, Mem_layout::Jdb_bench_page, true, false);
+  void *bench_page = Kmem_mmio::map(phys, Config::PAGE_SIZE, true, true, false);
+  if (!bench_page)
+    {
+      printf("Couldn't map benchmark page!\n");
+      return;
+    }
+  // need user-accessible to test sysenter etc.
+  Kernel_task::kernel_task()->set_attributes(
+    Virt_addr(bench_page), Page::Attr::space_local(Page::Rights::URWX()));
 
     {
       time = Cpu::rdtsc();
@@ -177,8 +185,7 @@ Jdb_kern_info_bench::show_arch()
     {
       // Write "1: int 0x1f ; jmp 1b" to the last 4 bytes of the Tbuf status
       // page (which is accessible by user mode), set IDT entry #0x1f, set
-      // TSS.esp0 and do "iret ; int 0x1f". Take care that the user code
-      // segment is loaded with limit = 0xffffffff if small spaces are active
+      // TSS.esp0 and do "iret ; int 0x1f".
       Idt::set_writable(true);
       Gdt_entry orig = (*gdt)[Gdt::gdt_code_user/8];
       Unsigned32 *gdt_e =
@@ -189,12 +196,12 @@ Jdb_kern_info_bench::show_arch()
 		    "push %c3			\n\t" // save IDT entry low
 		    "push %c3+4			\n\t" // save IDT entry high
 		    "push %%ds			\n\t"
-		    "push %%es			\n\t" 
-		    "push %%fs			\n\t" 
-		    "push %%gs			\n\t" 
+		    "push %%es			\n\t"
+		    "push %%fs			\n\t"
+		    "push %%gs			\n\t"
 		    "mov  %%esp, %%edi		\n\t" // save esp
 		    "andl $0xffffffc0, %%esp	\n\t" // cache line align esp
-		    "movl $(%c4*256+0xfceb00cd), %c2 \n\t"
+		    "movl $(%c4*256+0xfceb00cd), (%%edx) \n\t"
 		    "mov  $1f, %%eax		\n\t" // '1: int 0x1f; jmp 1b'
 		    "and  $0x0000ffff, %%eax	\n\t"
 		    "or   $0x00080000, %%eax	\n\t"
@@ -208,13 +215,13 @@ Jdb_kern_info_bench::show_arch()
 		    "push $0			\n\t" // user esp
 		    "push $0x3082		\n\t" // user eflags (IOPL3)
 		    "push $%c6			\n\t" // user cs
-		    "push $%c2			\n\t" // user eip
+		    "push %%edx			\n\t" // user eip
 		    "mov  %%esp, (%%ecx)	\n\t" // change kernel esp
 		    "mov  $%c5, %%eax		\n\t"
 		    "mov  %%eax, %%ds		\n\t" // ensure dpl3 at ds
 		    "mov  %%eax, %%es		\n\t" // ensure dpl3 at es
 		    "mov  %%eax, %%fs		\n\t" // ensure dpl3 at fs
-		    "mov  %%eax, %%gs		\n\t" // enusre dpl3 at gs
+		    "mov  %%eax, %%gs		\n\t" // ensure dpl3 at gs
 
 		    "rdtsc			\n\t"
 		    "mov  %%eax, %%esi		\n\t"
@@ -240,8 +247,8 @@ Jdb_kern_info_bench::show_arch()
 		    "pop  %c3			\n\t" // restore IDT entry low
 		    "popf			\n\t"
 
-		    : "=A"(time),"=c"(dummy)
-		    : "i"(Mem_layout::Tbuf_status_page + Config::PAGE_SIZE-4),
+		    : "=A"(time), "=c"(dummy)
+		    : "d"(reinterpret_cast<Mword>(bench_page) + 0xffc),
 		      "i"(Mem_layout::Idt + (0x1f<<3)),
 		      "i"(0x1f),
 		      "i"(Gdt::gdt_data_user | Gdt::Selector_user),
@@ -266,11 +273,11 @@ Jdb_kern_info_bench::show_arch()
 		    "mov  $1f, %%eax		\n\t"
 		    "wrmsr			\n\t" // change sysenter eip
 		    "mov  %%esp, %%edi		\n\t" // save esp
-		    "movw $0x340f, %c1		\n\t"
+		    "movw $0x340f, (%%esi)	\n\t"
 		    "rdtsc			\n\t"
-		    "mov  %%eax, %%esi		\n\t"
+		    "xchg %%eax, %%esi		\n\t"
+		    "mov  %%eax, %%edx		\n\t"
 		    "movl $200001, %%eax	\n\t"
-		    "mov  $%c1, %%edx		\n\t"
 
 		    ".align 8			\n\t"
 		    "1:				\n\t"
@@ -290,9 +297,9 @@ Jdb_kern_info_bench::show_arch()
 		    "neg  %%eax			\n\t"
 		    "mov  %%edi, %%esp		\n\t" // restore esp
 		    "popf			\n\t"
-		    : "=A"(time)
-		    : "i"(Mem_layout::Tbuf_status_page + Config::PAGE_SIZE-2)
-		    : "ebx", "ecx", "esi", "edi", "memory");
+		    : "=A"(time), "=S"(dummy)
+		    : "S"(reinterpret_cast<Mword>(bench_page) + 0xffe)
+		    : "ebx", "ecx", "edi", "memory");
       show_time(time, 200000, "sysenter + sysexit");
     }
   if (Cpu::have_sysenter())
@@ -313,18 +320,18 @@ Jdb_kern_info_bench::show_arch()
 		    "wrmsr			\n\t" // change sysenter eip
 		    "mov  %%esp, %%edi		\n\t" // save esp
 		    "andl $0xffffffc0, %%esp	\n\t" // cache line align esp
-		    "movw $0x340f, %c1		\n\t" // 'sysenter'
-		    "push $%c3			\n\t" // user ss
+		    "movw $0x340f, (%%esi)	\n\t" // 'sysenter'
+		    "push $%c4			\n\t" // user ss
 		    "push $0			\n\t" // user esp
 		    "push $0x3082		\n\t" // user flags
-		    "push $%c2			\n\t" // user cs
-		    "push $%c1			\n\t" // user eip
+		    "push $%c3			\n\t" // user cs
+		    "push %%esi			\n\t" // user eip
 		    "mov  $0x175, %%ecx		\n\t"
 		    "rdmsr			\n\t"
 		    "mov  %%eax, %%ebp		\n\t" // save sysenter esp
 		    "mov  %%esp, %%eax		\n\t"
 		    "wrmsr			\n\t" // change sysenter esp
-		    "mov  $%c3, %%eax		\n\t"
+		    "mov  $%c4, %%eax		\n\t"
 		    "mov  %%eax, %%ds		\n\t" // ensure dpl3 at ds
 		    "mov  %%eax, %%es		\n\t" // ensure dpl3 at es
 		    "mov  %%eax, %%fs		\n\t" // ensure dpl3 at fs
@@ -360,11 +367,11 @@ Jdb_kern_info_bench::show_arch()
 		    "neg  %%eax			\n\t"
 		    "pop  %%ebp			\n\t"
 		    "popf			\n\t"
-		    : "=A"(time)
-		    : "i"(Mem_layout::Tbuf_status_page + Config::PAGE_SIZE-2),
+		    : "=A"(time), "=S"(dummy)
+		    : "S"(reinterpret_cast<Mword>(bench_page) + 0xffe),
 		      "i"(Gdt::gdt_code_user | Gdt::Selector_user),
 		      "i"(Gdt::gdt_data_user | Gdt::Selector_user)
-		    : "ebx", "ecx", "esi", "edi", "memory");
+		    : "ebx", "ecx", "edi", "memory");
       show_time(time, 200000, "sysenter + iret");
     }
   if (Cpu::have_syscall())
@@ -391,11 +398,11 @@ Jdb_kern_info_bench::show_arch()
 		    "mov  $0x00180008, %%edx	\n\t" // syscall cs+ss
 		    "wrmsr			\n\t"
 		    "mov  %%esp, %%edi		\n\t"
-		    "movw $0x050f, %c1		\n\t"
+		    "movw $0x050f, (%%esi)	\n\t"
+		    "leal  2(%%esi), %%ecx	\n\t"
 		    "rdtsc			\n\t"
 		    "mov  %%eax, %%esi		\n\t"
 		    "movl $200001, %%eax	\n\t"
-		    "mov  $(%c1+2), %%ecx	\n\t"
 
 		    ".align 8			\n\t"
 		    "1:				\n\t"
@@ -418,9 +425,9 @@ Jdb_kern_info_bench::show_arch()
 		    "pop  %%ebp			\n\t"
 		    "sub  %%edx, %%edx		\n\t"
 		    "popf			\n\t"
-		    : "=A"(time)
-		    : "i"(Mem_layout::Tbuf_status_page + Config::PAGE_SIZE-2)
-		    : "ebx", "ecx", "esi", "edi", "memory");
+		    : "=A"(time), "=S"(dummy)
+		    : "S"(reinterpret_cast<Mword>(bench_page) + 0xffe)
+		    : "ebx", "ecx", "edi", "memory");
       Proc::cli();
       Timer_tick::enable(Cpu_number::boot_cpu());
       show_time(time, 200000, "syscall + sysret");
@@ -460,32 +467,35 @@ Jdb_kern_info_bench::show_arch()
     {
       time = Cpu::rdtsc();
       for (i=200000; i; i--)
-	asm volatile ("invlpg %c1	\n\t"
-		      "mov %c1, %0	\n\t"
+	asm volatile ("invlpg %1	\n\t"
+		      "mov %1, %0	\n\t"
 		      : "=r" (dummy)
-		      : "i"(Mem_layout::Jdb_bench_page));
+		      : "m" (*static_cast<char*>(bench_page)));
       time = Cpu::rdtsc() - time - time_invlpg;
       show_time (time, 200000, "load data TLB (4k)");
     }
+
+  if (false) // KVM
     {
       // asm ("1: mov %%cr3,%%edx; mov %%edx, %%cr3; dec %%eax; jnz 1b; ret")
-      *reinterpret_cast<Unsigned32*>(
-        Mem_layout::Jdb_bench_page + 0xff0) = 0x0fda200f;
-      *reinterpret_cast<Unsigned32*>(
-        Mem_layout::Jdb_bench_page + 0xff4) = 0x7548da22;
-      *reinterpret_cast<Unsigned32*>(
-        Mem_layout::Jdb_bench_page + 0xff8) = 0xc3f7;
+      Unsigned32 *words = static_cast<Unsigned32 *>(bench_page);
+      words[0xff0/4] = 0x0fda200f;
+      words[0xff4/4] = 0x7548da22;
+      words[0xff8/4] = 0xc3f7;
 
       Mem::barrier();
       time = Cpu::rdtsc();
       asm volatile ("call  *%%ecx"
 		    : "=a"(dummy)
-		    : "c"(Mem_layout::Jdb_bench_page + 0xff0), "a"(200000)
+		    : "c"(reinterpret_cast<Mword>(bench_page) + 0xff0),
+                      "a"(200000)
 		    : "edx");
 
       time = Cpu::rdtsc() - time - time_reload_cr3;
       show_time (time, 200000, "load code TLB (4k)");
     }
+
+  Kmem_mmio::unmap(bench_page, Config::PAGE_SIZE);
 
   Proc::sti_restore(flags);
 }

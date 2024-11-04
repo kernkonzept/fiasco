@@ -5,6 +5,7 @@ IMPLEMENTATION:
 #include "config_gdt.h"
 #include "div32.h"
 #include "gdt.h"
+#include "kmem_mmio.h"
 #include "simpleio.h"
 #include "static_init.h"
 #include "timer.h"
@@ -75,12 +76,12 @@ asm (".p2align 1                                        \n\t"
      ".word " FIASCO_STRINGIFY(GDT_DATA_KERNEL) "       \n\t");
 
 #define inst_verr_reg                                                   \
-  asm volatile ("mov " FIASCO_STRINGIFY(GDT_DATA_KERNEL) ", %%r13 \n\t" \
+  asm volatile ("mov $" FIASCO_STRINGIFY(GDT_DATA_KERNEL) ", %%r13 \n\t" \
                 "verr %%r13w                                    \n\t"   \
                 : : : "r13");
 
 #define inst_verw_reg                                                   \
-  asm volatile ("mov " FIASCO_STRINGIFY(GDT_DATA_KERNEL) ", %%r13 \n\t" \
+  asm volatile ("mov $" FIASCO_STRINGIFY(GDT_DATA_KERNEL) ", %%r13 \n\t" \
                 "verw %%r13w                                    \n\t"   \
                 : : : "r13");
 
@@ -115,11 +116,15 @@ Jdb_kern_info_bench::show_arch()
   if (!Cpu::boot_cpu()->tsc())
     return;
 
-  // we need a cached, non-global mapping for measuring the time to load
-  // TLB entries
+  // need cached, non-global mapping for measuring the time to load TLB entries
   Address phys =
     Kmem::virt_to_phys(reinterpret_cast<void*>(Mem_layout::Tbuf_status_page));
-  Kmem::map_phys_page(phys, Mem_layout::Jdb_bench_page, true, false);
+  void *bench_page = Kmem_mmio::map(phys, Config::PAGE_SIZE, true, true, false);
+  if (!bench_page)
+    {
+      printf("Couldn't map benchmark page!\n");
+      return;
+    }
 
     {
       time = Cpu::rdtsc();
@@ -241,30 +246,31 @@ Jdb_kern_info_bench::show_arch()
 	asm volatile ("invlpg %1	\n\t"
 		      "mov %1, %0	\n\t"
 		      : "=r" (dummy)
-		      : "m" (*reinterpret_cast<char*>(Mem_layout::Jdb_bench_page)));
+		      : "m" (*static_cast<char*>(bench_page)));
       time = Cpu::rdtsc() - time - time_invlpg;
       show_time (time, 200000, "load data TLB (4k)");
     }
 
     {
       // asm ("1: mov %%cr3,%%rdx; mov %%rdx, %%cr3; dec %%rax; jnz 1b; ret")
-      *reinterpret_cast<Unsigned32*>(
-        Mem_layout::Jdb_bench_page + 0xff0) = 0x0fda200f;
-      *reinterpret_cast<Unsigned32*>(
-        Mem_layout::Jdb_bench_page + 0xff4) = 0xff48da22;
-      *reinterpret_cast<Unsigned32*>(
-        Mem_layout::Jdb_bench_page + 0xff8) = 0xc3f575c8;
+      Unsigned32 *words = static_cast<Unsigned32*>(bench_page);
+      words[0xff0/4] = 0x0fda200f;
+      words[0xff4/4] = 0xff48da22;
+      words[0xff8/4] = 0xc3f575c8;
 
       Mem::barrier();
       time = Cpu::rdtsc();
       asm volatile ("call  *%%rcx"
                     : "=a"(dummy)
-                    : "c"(Mem_layout::Jdb_bench_page + 0xff0), "a"(200000)
+                    : "c"(reinterpret_cast<Mword>(bench_page) + 0xff0),
+                      "a"(200000)
                     : "rdx");
 
       time = Cpu::rdtsc() - time - time_reload_cr3;
       show_time (time, 200000, "load code TLB (4k)");
     }
+
+  Kmem_mmio::unmap(bench_page, Config::PAGE_SIZE);
 
   Proc::sti_restore(flags);
 }
