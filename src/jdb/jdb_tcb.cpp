@@ -292,15 +292,17 @@ Jdb_stack_view::skip_zero_stack_range(Jdb_tcb_ptr *p, unsigned *y, unsigned ylen
 
 PUBLIC
 void
-Jdb_stack_view::dump(bool dump_only)
+Jdb_stack_view::dump(bool dump_only, Address ksp)
 {
   Jdb_tcb_ptr p;
   unsigned ylen;
+  unsigned yksp;
 
   if (dump_only)
     {
       p = Jdb_tcb_ptr(current.base());
-      ylen = Context::Size / bytes_per_line();
+      ylen = (Context::Size + bytes_per_line() - 1) / bytes_per_line();
+      yksp = (ksp % Context::Size) / bytes_per_line();
       puts("");
     }
   else
@@ -309,6 +311,7 @@ Jdb_stack_view::dump(bool dump_only)
       p.offs(absy * bytes_per_line());
       Jdb::cursor(start_y, 1);
       ylen = Jdb_screen::height() - _show_obj_help - start_y;
+      yksp = ylen;
     }
 
   for (unsigned y = 0; y < ylen; ++y)
@@ -323,6 +326,13 @@ Jdb_stack_view::dump(bool dump_only)
           for (unsigned x = 0; x < cols(); ++x, p += 1)
             print_value(p);
           putchar('\n');
+          if (dump_only && y >= (sizeof(Thread) / bytes_per_line()))
+            if (y + 5 < yksp)
+              {
+                puts("         --- skipped stack below kernel SP ---");
+                p += (yksp - 5 - y) * cols();
+                y = yksp - 5;
+              }
         }
       else
         Jdb::clear_to_eol();
@@ -717,7 +727,7 @@ whole_screen:
     putstr("---\nvCPU    : ---\n");
 
   if (dump_only)
-    printf("kernel SP=" ADDR_FMT " ", ksp);
+    printf("kernel SP=" ADDR_FMT "\n", ksp);
 
   if (is_current(t))
     {
@@ -739,7 +749,8 @@ whole_screen:
       info_thread_state(t);
       putchar('\n');
       print_return_frame_regs(_stack_view.current, ksp);
-
+      if (dump_only)
+        putstr("\n\n");
       _disasm_view.show(Jdb_address(_stack_view.current.user_ip(), t->space()), dump_only);
     }
   else
@@ -755,7 +766,7 @@ whole_screen:
 dump_stack:
 
   // dump the stack from ksp bottom right to tcb_top
-  _stack_view.dump(dump_only);
+  _stack_view.dump(dump_only, ksp);
 
   if (dump_only)
     return NOTHING;
