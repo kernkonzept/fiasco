@@ -4,7 +4,7 @@
 #include "globalconfig.h"
 #include "jdb_types.h"
 
-typedef int (*Peek_task)(Jdb_address addr, void *value, int width);
+typedef int (*Peek_task)(Jdb_address addr, void *value, size_t width);
 typedef int (*Is_adp_mem)(Jdb_address addr);
 
 /**

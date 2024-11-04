@@ -1082,40 +1082,62 @@ Jdb::get_task(Cpu_number cpu)
 // memory access wrappers
 //
 
-PUBLIC static
+/** Read or write memory without crossing a page boundary. */
+PRIVATE static
+template < typename T >
 int
-Jdb::peek_task(Jdb_address addr, void *value, int width)
+Jdb::peek_or_poke_task(Jdb_address addr, T *value, size_t bytes)
 {
-  unsigned char const *mem = access_mem_task(addr, false);
+  bool do_write = cxx::is_same_v<T, void const>;
+  unsigned char *mem = access_mem_task(addr, do_write);
   if (!mem)
     return -1;
+  size_t bytes_to_copy = bytes;
 
-  memcpy(value, mem, width);
+  if (Pg::trunc(addr.addr()) != Pg::trunc(addr.addr() + bytes))
+    bytes_to_copy = Pg::round(addr.addr()) - addr.addr();
+  if constexpr (cxx::is_same_v<T, void>)
+    memcpy(value, mem, bytes_to_copy);
+  else
+    {
+      memcpy(mem, value, bytes_to_copy);
+      Mem_unit::make_coherent_to_pou(mem, bytes_to_copy);
+    }
+
+  if (bytes_to_copy != bytes)
+    {
+      mem = access_mem_task(addr, do_write);
+      if (!mem)
+        return -1;
+      addr += bytes_to_copy;
+      bytes_to_copy = bytes - bytes_to_copy;
+      if constexpr (cxx::is_same_v<T, void>)
+        memcpy(value, mem, bytes_to_copy);
+      else
+        {
+          memcpy(mem, value, bytes_to_copy);
+          Mem_unit::make_coherent_to_pou(mem, bytes_to_copy);
+        }
+    }
   return 0;
 }
 
 PUBLIC static
 int
-Jdb::poke_task(Jdb_address addr, void const *value, int width)
-{
-  unsigned char *mem = access_mem_task(addr, true);
-  if (!mem)
-    return -1;
+Jdb::peek_task(Jdb_address addr, void *value, size_t width)
+{ return peek_or_poke_task(addr, value, width); }
 
-  memcpy(mem, value, width);
-  Mem_unit::make_coherent_to_pou(mem, width);
-  return 0;
-}
+PUBLIC static
+int
+Jdb::poke_task(Jdb_address addr, void const *value, size_t width)
+{ return peek_or_poke_task(addr, value, width); }
 
 PUBLIC static
 template< typename T >
 bool
 Jdb::peek(Jdb_addr<T> addr, cxx::remove_const_t<T> &value)
 {
-  // use an Mword here instead of T as some implementations of peek_task use
-  // an Mword in their operation which is potentially bigger than T
-  // XXX: should be fixed
-  Mword tmp;
+  T tmp;
   bool ret = peek_task(addr, &tmp, sizeof(T)) == 0;
   value = tmp;
   return ret;
