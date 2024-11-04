@@ -5,7 +5,7 @@ template< unsigned long Flush_area, bool Ram >
 Mword Mmu<Flush_area, Ram>::dcache_line_size()
 {
   Mword v;
-  __asm__ __volatile__("mrc p15, 0, %0, c0, c0, 1" : "=r" (v));
+  __asm__ __volatile__("mrc p15, 0, %0, c0, c0, 1" : "=r" (v)); // CTR
   return 4 << ((v >> 16) & 0xf);
 }
 
@@ -14,7 +14,7 @@ template< unsigned long Flush_area, bool Ram >
 Mword Mmu<Flush_area, Ram>::icache_line_size()
 {
   Mword v;
-  __asm__ __volatile__("mrc p15, 0, %0, c0, c0, 1" : "=r" (v));
+  __asm__ __volatile__("mrc p15, 0, %0, c0, c0, 1" : "=r" (v)); // CTR
   return 4 << (v & 0xf);
 }
 
@@ -161,7 +161,7 @@ EXTENSION class Mmu
   static Mword get_clidr()
   {
     Mword clidr;
-    asm volatile("mrc p15, 1, %0, c0, c0, 1" : "=r" (clidr));
+    asm volatile("mrc p15, 1, %0, c0, c0, 1" : "=r" (clidr)); // CLIDR
     return clidr;
   }
 
@@ -169,31 +169,31 @@ EXTENSION class Mmu
   {
     Mword ccsidr;
     Proc::Status s = Proc::cli_save();
-    asm volatile("mcr p15, 2, %0, c0, c0, 0" : : "r" (csselr));
+    asm volatile("mcr p15, 2, %0, c0, c0, 0" : : "r" (csselr)); // CSSELR
     Mem::isb();
-    asm volatile("mrc p15, 1, %0, c0, c0, 0" : "=r" (ccsidr));
+    asm volatile("mrc p15, 1, %0, c0, c0, 0" : "=r" (ccsidr)); // CCSIDR
     Proc::sti_restore(s);
     return ccsidr;
   }
 
   static void dc_cisw(Mword v)
   {
-    asm volatile("mcr p15, 0, %0, c7, c14, 2" : : "r" (v) : "memory");
+    asm volatile("mcr p15, 0, %0, c7, c14, 2" : : "r" (v) : "memory"); // DCCISW
   }
 
   static void dc_csw(Mword v)
   {
-    asm volatile("mcr p15, 0, %0, c7, c10, 2" : : "r" (v) : "memory");
+    asm volatile("mcr p15, 0, %0, c7, c10, 2" : : "r" (v) : "memory"); // DCCSW
   }
 
   static void dc_isw(Mword v)
   {
-    asm volatile("mcr p15, 0, %0, c7, c6, 2" : : "r" (v) : "memory");
+    asm volatile("mcr p15, 0, %0, c7, c6, 2" : : "r" (v) : "memory"); // DCISW
   }
 
   static void ic_iallu()
   {
-    asm volatile("mcr p15, 0, %0, c7, c5, 0" : : "r" (0) : "memory");
+    asm volatile("mcr p15, 0, %0, c7, c5, 0" : : "r" (0) : "memory"); // ICIALLU
   }
 
 };
