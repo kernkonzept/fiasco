@@ -162,7 +162,7 @@ public:
    * \return true if the next send item shall be handled with the
    *         same receive buffer as this one.
    */
-  Mword constexpr compound() const { return _raw & 1; }
+  bool constexpr compound() const { return _raw & 1; }
 
   /**
    * Is the map item actually a grant item?
@@ -170,7 +170,7 @@ public:
    * \pre The item is a send item.
    * \return true if the sender does a grant operation.
    */
-  Mword constexpr is_grant() const { return _raw & 2; }
+  bool constexpr is_grant() const { return _raw & 2; }
 
   /**
    * Create a map item.
@@ -213,7 +213,7 @@ public:
    * \return true if the buffer is a single-word single-object
    *         receive buffer, false else.
    */
-  Mword constexpr is_small_obj() const { return _raw & 2; }
+  bool constexpr is_small_obj() const { return _raw & 2; }
 
   /**
    * Receiver tries to receive an object ID or a
@@ -224,7 +224,7 @@ public:
    * \return true if the receiver is willing to receive an object ID
    *         or a capability selector, if possible.
    */
-  Mword constexpr is_rcv_id() const { return _raw & 4; }
+  bool constexpr is_rcv_id() const { return _raw & 4; }
 
   /**
    * Get the L4_fpage that represents the small buffer item.
