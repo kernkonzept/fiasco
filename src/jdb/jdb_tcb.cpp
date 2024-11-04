@@ -747,10 +747,9 @@ whole_screen:
       if (!dump_only)
         Jdb::cursor(11, 1);
       info_thread_state(t);
-      putchar('\n');
       print_return_frame_regs(_stack_view.current, ksp);
       if (dump_only)
-        putstr("\n\n");
+        putstr("\n");
       _disasm_view.show(Jdb_address(_stack_view.current.user_ip(), t->space()), dump_only);
     }
   else
