@@ -116,35 +116,6 @@ Kmem::virt_to_phys(const void *addr)
   return kdir->virt_to_phys(a);
 }
 
-
-// Only used for initialization and kernel debugger
-PUBLIC static
-Address
-Kmem::map_phys_page_tmp(Address phys, Mword idx)
-{
-  unsigned long pte = cxx::mask_lsb(phys, Pdir::page_order_for_level(Pdir::Depth));
-  Address virt;
-
-  switch (idx)
-    {
-    case 0:  virt = Mem_layout::Kmem_tmp_page_1; break;
-    case 1:  virt = Mem_layout::Kmem_tmp_page_2; break;
-    default: return ~0UL;
-    }
-
-  static unsigned long tmp_phys_pte[2] = { ~0UL, ~0UL };
-
-  if (pte != tmp_phys_pte[idx])
-    {
-      // map two consecutive pages as to be able to access
-      map_phys_page(phys,          virt,          false, true);
-      map_phys_page(phys + 0x1000, virt + 0x1000, false, true);
-      tmp_phys_pte[idx] = pte;
-    }
-
-  return virt + phys - pte;
-}
-
 PUBLIC static inline
 Address Kmem::kernel_image_start()
 {
@@ -172,31 +143,6 @@ Kmem::is_kmem_page_fault(Address addr, Mword /*error*/)
 //
 // helper functions
 //
-
-// Establish a 4k-mapping
-// TODO: Implement this via Kmem_mmio::map
-PUBLIC static
-void
-Kmem::map_phys_page(Address phys, Address virt,
-                    bool cached, bool global, Address *offs = 0)
-{
-  auto i = kdir->walk(Virt_addr(virt), Pdir::Depth, false,
-                      pdir_alloc(Kmem_alloc::allocator()));
-  Address phys_page = Pg::trunc(phys);
-
-  assert(i.level == Pdir::Depth);
-
-  Page::Attr attribs(Page::Rights::RW(),
-                     cached ? Page::Type::Normal() : Page::Type::Uncached(),
-                     global ? Page::Kern::Global() : Page::Kern::None(),
-                     Page::Flags::Touched());
-
-  i.set_page(Phys_mem_addr(phys_page), attribs);
-  Mem_unit::tlb_flush_kernel(virt);
-
-  if (offs)
-    *offs = phys - phys_page;
-}
 
 PRIVATE static FIASCO_INIT
 void

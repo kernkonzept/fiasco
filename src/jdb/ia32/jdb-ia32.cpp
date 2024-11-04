@@ -314,9 +314,8 @@ Jdb::peek_phys(Address phys, void *value, int width)
   assert(width > 0);
   assert(same_or_consecutive_pages(phys, phys + width - 1));
 
-  Address virt = Kmem::map_phys_page_tmp(phys, 0);
-
-  memcpy(value, reinterpret_cast<void*>(virt), width);
+  void *virt = map_phys_page(phys, false);
+  memcpy(value, virt, width);
 }
 
 PUBLIC static
@@ -326,9 +325,8 @@ Jdb::poke_phys(Address phys, void const *value, int width)
   assert(width > 0);
   assert(same_or_consecutive_pages(phys, phys + width - 1));
 
-  Address virt = Kmem::map_phys_page_tmp(phys, 0);
-
-  memcpy(reinterpret_cast<void*>(virt), value, width);
+  void *virt = map_phys_page(phys, false);
+  memcpy(virt, value, width);
 }
 
 PRIVATE static
@@ -339,7 +337,6 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
     return nullptr;
 
   Address phys;
-
   if (addr.is_kmem())
     {
       Address pdbr = Cpu::get_pdbr();
@@ -360,17 +357,49 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
       // user address, use temporary mapping
       phys = addr.space()->virt_to_phys(addr.addr());
 
-#ifndef CONFIG_CPU_LOCAL_MAP
-      if (phys == ~0UL)
+      if (phys == ~0UL && !TAG_ENABLED(cpu_local_map))
         phys = addr.space()->virt_to_phys_s0(addr.virt());
-#endif
     }
 
   if (phys == ~0UL)
     return nullptr;
 
-  Address virt = Kmem::map_phys_page_tmp(phys, 0);
-  return reinterpret_cast<unsigned char *>(virt);
+  bool is_sigma0 = !addr.is_phys() && addr.space()->is_sigma0();
+  return map_phys_page(phys, is_sigma0);
+}
+
+PRIVATE static
+unsigned char *
+Jdb::map_phys_page(Address phys, bool is_sigma0)
+{
+  auto pte = Kmem::kdir
+    ->walk(Virt_addr(Mem_layout::Jdb_tmp_map_page), Pdir::Depth);
+  if (!pte.is_valid()
+      || pte.page_addr() != cxx::mask_lsb(phys, pte.page_order()))
+    {
+      Page::Type mem_type = Page::Type::Uncached();
+      for (auto const &md: Kip::k()->mem_descs_a())
+        if (!md.is_virtual() && md.contains(phys)
+            && (md.type() == Mem_desc::Conventional))
+          {
+            mem_type = Page::Type::Normal();
+            break;
+          }
+      // Don't automatically tap into MMIO memory in Sigma0 as this usually
+      // results into some data abort exception -- aborting the current 'd'
+      // view.
+      if (mem_type == Page::Type::Uncached() && is_sigma0)
+        return nullptr;
+
+      pte.set_page(Phys_mem_addr(cxx::mask_lsb(phys, pte.page_order())),
+                   Page::Attr(Page::Rights::RW(), mem_type,
+                              Page::Kern::None(), Page::Flags::None()));
+      pte.write_back_if(true);
+      Mem_unit::tlb_flush_kernel(Mem_layout::Jdb_tmp_map_page);
+    }
+
+  return reinterpret_cast<unsigned char *>(Mem_layout::Jdb_tmp_map_page
+                                           + Pg::offset(phys));
 }
 
 PUBLIC static

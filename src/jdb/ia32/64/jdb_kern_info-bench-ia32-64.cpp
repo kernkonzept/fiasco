@@ -29,7 +29,7 @@ Jdb_kern_info_bench::get_time_now()
 
 #define inst_invlpg							\
   asm volatile ("invlpg %0" 						\
-		: : "m" (*reinterpret_cast<char*>(Mem_layout::Kmem_tmp_page_1)))
+		: : "m" (*reinterpret_cast<char*>(Mem_layout::Jdb_tmp_map_page)))
 
 #define inst_read_cr3							\
   asm volatile ("mov %%cr3,%0"						\

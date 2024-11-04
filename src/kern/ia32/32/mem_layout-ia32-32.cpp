@@ -23,8 +23,7 @@ public:
 
     // Service area: 0xeac00000 ... eb000000 (4MiB)
     Service_page      = 0xeac00000,    ///< % 4MB   global mappings
-    Kmem_tmp_page_1   = Service_page + 0x2000,   ///< % 4KB size 8KB
-    Kmem_tmp_page_2   = Service_page + 0x4000,   ///< % 4KB size 8KB
+    Jdb_tmp_map_page  = Service_page + 0x2000,   ///< % 4KB
     Tbuf_status_page  = Service_page + 0x6000,   ///< % 4KB
     Jdb_bts_area      = Service_page + 0xf000,   ///< % 4KB size 0x81000
 
