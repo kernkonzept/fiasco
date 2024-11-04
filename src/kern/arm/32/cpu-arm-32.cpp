@@ -40,15 +40,10 @@ Cpu::mpidr()
 //-------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_v7plus]:
 
-PUBLIC static inline
-Mword
-Cpu::dfr0()
-{ Mword r; asm volatile ("mrc p15, 0, %0, c0, c1, 2": "=r" (r)); return r; }
-
 IMPLEMENT_OVERRIDE inline
 bool
 Cpu::has_pmuv3() const
-{ return ((dfr0() >> 24) & 0xf) >= 3; }
+{ return ((_cpu_id._dfr0 >> 24) & 0xf) >= 3; }
 
 //-------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_v8plus && mmu]:
