@@ -408,8 +408,8 @@ public:
 
     Label_irq = -1L,           ///< IRQ object protocol.
     Label_page_fault = -2L,    ///< Page fault messages use this protocol.
-    Label_preemption = -3L,    ///< Preemption IPC protocol. \note unused.
-    Label_sys_exception = -4L, ///< Sys exception protocol. \note unused.
+    // -3L: unused
+    // -4L: unused
     Label_exception  = -5L,    ///< Exception IPC protocol.
     Label_sigma0 = -6L,        ///< Protocol for sigma0 objects.
     Label_io_page_fault = -8L, ///< Protocol for I/O-port page faults.
@@ -424,7 +424,7 @@ public:
                                ///  operations on a factory).
     Label_dma_space = -17L,    ///< Factory ID for an DMA address space
     Label_irq_sender = -18L,   ///< Protocol for IRQ sender objects.
-    Label_irq_mux = -19L,      ///< Protocol for IRQ multiplexer objects.
+    // -19L: unused
     Label_semaphore = -20L,    ///< Protocol ID for semaphore objects.
     Label_iommu = -22L,        ///< Protocol ID for IOMMUs
     Label_debugger = -23L,     ///< Protocol ID for the debugger
