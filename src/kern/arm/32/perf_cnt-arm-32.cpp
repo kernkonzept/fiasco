@@ -1,81 +1,148 @@
+
 INTERFACE [arm && perf_cnt && (arm_v7 || arm_v8)]:
 
 EXTENSION class Perf_cnt
 {
 private:
   static void pmcr(Mword val)
-  { asm volatile ("mcr p15, 0, %0, c9, c12, 0" : : "r" (val)); }
+  {
+    asm volatile ("mcr p15, 0, %0, c9, c12, 0" : : "r" (val)); // PMCR
+  }
 
   static Mword pmcr()
-  { Mword val; asm volatile ("mrc p15, 0, %0, c9, c12, 0" : "=r" (val)); return val;}
+  {
+    Mword val;
+    asm volatile ("mrc p15, 0, %0, c9, c12, 0" : "=r" (val)); // PMCR
+    return val;
+  }
 
 
   static void cntens(Mword val)
-  { asm volatile ("mcr p15, 0, %0, c9, c12, 1" : : "r" (val)); }
+  {
+    asm volatile ("mcr p15, 0, %0, c9, c12, 1" : : "r" (val)); // PMCNTENSET
+  }
 
   static Mword cntens()
-  { Mword val; asm volatile ("mrc p15, 0, %0, c9, c12, 1" : "=r" (val)); return val;}
+  {
+    Mword val;
+    asm volatile ("mrc p15, 0, %0, c9, c12, 1" : "=r" (val)); // PMCNTENSET
+    return val;
+  }
 
 
   static void cntenc(Mword val)
-  { asm volatile ("mcr p15, 0, %0, c9, c12, 2" : : "r" (val)); }
+  {
+    asm volatile ("mcr p15, 0, %0, c9, c12, 2" : : "r" (val)); // PMCNTENCLR
+  }
 
   static Mword cntenc()
-  { Mword val; asm volatile ("mrc p15, 0, %0, c9, c12, 2" : "=r" (val)); return val;}
+  {
+    Mword val;
+    asm volatile ("mrc p15, 0, %0, c9, c12, 2" : "=r" (val)); // PMCNTENCLR
+    return val;
+  }
 
 
   static void flag(Mword val)
-  { asm volatile ("mcr p15, 0, %0, c9, c12, 3" : : "r" (val)); }
+  {
+    asm volatile ("mcr p15, 0, %0, c9, c12, 3" : : "r" (val)); // PMOVSR
+  }
 
   static Mword flag()
-  { Mword val; asm volatile ("mrc p15, 0, %0, c9, c12, 3" : "=r" (val)); return val;}
+  {
+    Mword val;
+    asm volatile ("mrc p15, 0, %0, c9, c12, 3" : "=r" (val)); // PMOVSR
+    return val;
+  }
 
   static void pmnxsel(Mword val)
-  { asm volatile ("mcr p15, 0, %0, c9, c12, 5" : : "r" (val)); }
+  {
+    asm volatile ("mcr p15, 0, %0, c9, c12, 5" : : "r" (val)); // PMSELR
+  }
 
   static Mword pmnxsel()
-  { Mword val; asm volatile ("mrc p15, 0, %0, c9, c12, 5" : "=r" (val)); return val;}
+  {
+    Mword val;
+    asm volatile ("mrc p15, 0, %0, c9, c12, 5" : "=r" (val)); // PMSELR
+    return val;
+  }
 
 
   static void ccnt(Mword val)
-  { asm volatile ("mcr p15, 0, %0, c9, c13, 0" : : "r" (val)); }
+  {
+    asm volatile ("mcr p15, 0, %0, c9, c13, 0" : : "r" (val)); // PMCCNTR
+  }
 
   static Mword ccnt()
-  { Mword val; asm volatile ("mrc p15, 0, %0, c9, c13, 0" : "=r" (val)); return val;}
+  {
+    Mword val;
+    asm volatile ("mrc p15, 0, %0, c9, c13, 0" : "=r" (val)); // PMCCNTR
+    return val;
+  }
 
 
   static void evtsel(Mword val)
-  { asm volatile ("mcr p15, 0, %0, c9, c13, 1" : : "r" (val)); }
+  {
+    asm volatile ("mcr p15, 0, %0, c9, c13, 1" : : "r" (val)); // PMXEVTYPER
+  }
 
   static Mword evtsel()
-  { Mword val; asm volatile ("mrc p15, 0, %0, c9, c13, 1" : "=r" (val)); return val;}
+  {
+    Mword val;
+    asm volatile ("mrc p15, 0, %0, c9, c13, 1" : "=r" (val)); // PMXEVTYPER
+    return val;
+  }
 
 
   static void pmcnt(Mword val)
-  { asm volatile ("mcr p15, 0, %0, c9, c13, 2" : : "r" (val)); }
+  {
+    asm volatile ("mcr p15, 0, %0, c9, c13, 2" : : "r" (val)); // PMXEVCNTR
+  }
 
   static Mword pmcnt()
-  { Mword val; asm volatile ("mrc p15, 0, %0, c9, c13, 2" : "=r" (val)); return val;}
+  {
+    Mword val;
+    asm volatile ("mrc p15, 0, %0, c9, c13, 2" : "=r" (val)); // PMXEVCNTR
+    return val;
+  }
 
 
   static void useren(Mword val)
-  { asm volatile ("mcr p15, 0, %0, c9, c14, 0" : : "r" (val)); }
+  {
+    asm volatile ("mcr p15, 0, %0, c9, c14, 0" : : "r" (val)); // PMUSERENR
+  }
 
   static Mword useren()
-  { Mword val; asm volatile ("mrc p15, 0, %0, c9, c14, 0" : "=r" (val)); return val;}
+  {
+    Mword val;
+    asm volatile ("mrc p15, 0, %0, c9, c14, 0" : "=r" (val)); // PMUSERENR
+    return val;
+  }
 
 
   static void intens(Mword val)
-  { asm volatile ("mcr p15, 0, %0, c9, c14, 1" : : "r" (val)); }
+  {
+    asm volatile ("mcr p15, 0, %0, c9, c14, 1" : : "r" (val)); // PMINTENSET
+  }
 
   static Mword intens()
-  { Mword val; asm volatile ("mrc p15, 0, %0, c9, c14, 1" : "=r" (val)); return val;}
+  {
+    Mword val;
+    asm volatile ("mrc p15, 0, %0, c9, c14, 1" : "=r" (val)); // PMINTENSET
+    return val;
+  }
 
   static void intenc(Mword val)
-  { asm volatile ("mcr p15, 0, %0, c9, c14, 2" : : "r" (val)); }
+  {
+    asm volatile ("mcr p15, 0, %0, c9, c14, 2" : : "r" (val)); // PMINTENCLR
+  }
 
   static Mword intenc()
-  { Mword val; asm volatile ("mrc p15, 0, %0, c9, c14, 2" : "=r" (val)); return val;}
+  {
+    Mword val;
+    asm volatile ("mrc p15, 0, %0, c9, c14, 2" : "=r" (val)); // PMINTENCLR
+    return val;
+  }
 
   enum
   {
