@@ -210,7 +210,13 @@ public:
 
   static bool have_superpages() { return boot_cpu()->superpages(); }
   static bool have_sysenter() { return boot_cpu()->sysenter(); }
-  static bool have_syscall() { return boot_cpu()->syscall(); }
+  static bool have_syscall()
+  {
+    if constexpr (sizeof(long) == 4)
+      if (boot_cpu()->_vendor == Vendor_intel)
+        return false;
+    return boot_cpu()->syscall();
+  }
   static bool have_fxsr() { return boot_cpu()->features() & FEAT_FXSR; }
   static bool have_pge() { return boot_cpu()->features() & FEAT_PGE; }
   static bool have_xsave() { return boot_cpu()->ext_features() & FEATX_XSAVE; }
