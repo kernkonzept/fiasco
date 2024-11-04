@@ -866,9 +866,19 @@ void
 Intel::Io_mmu::setup(Cpu_number cpu)
 {
   inv_q_size = 256 - 1;
+
   inv_q = Kmem_alloc::allocator()->alloc_array<Inv_desc>(inv_q_size + 1);
   Address inv_q_pa = Kmem::virt_to_phys(inv_q);
 
+  inv_q_tail = 0;
+
+  // Before enabling the queued invalidation, we try to disable it first.
+  // If the queued invalidation has been already enabled (i.e. by the firmware
+  // or by the boot loader), this is the only way to reset the head pointer
+  // to 0 and thus avoiding undefined behavior.
+  modify_cmd(0, Cmd_qie);
+
+  // Enable invalidation queue.
   regs[Reg_64::Inv_q_tail] = inv_q_tail * sizeof(Inv_desc);
   regs[Reg_64::Inv_q_addr] = inv_q_pa;
   modify_cmd(Cmd_qie);
@@ -949,9 +959,15 @@ IMPLEMENT
 void
 Intel::Io_mmu::pm_on_resume(Cpu_number cpu)
 {
-  // first enable invalidation queue
   Address inv_q_pa = Kmem::virt_to_phys(inv_q);
   inv_q_tail = 0;
+
+  // Before enabling the queued invalidation, we try to disable it first.
+  // If the queued invalidation has stayed enabled, this is the only way to
+  // reset the head pointer to 0 and thus avoiding undefined behavior.
+  modify_cmd(0, Cmd_qie);
+
+  // Enable invalidation queue.
   regs[Reg_64::Inv_q_tail] = inv_q_tail * sizeof(Inv_desc);
   regs[Reg_64::Inv_q_addr] = inv_q_pa;
   modify_cmd(Cmd_qie);
