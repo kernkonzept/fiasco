@@ -146,13 +146,6 @@ private:
     return val;
   }
 
-  enum
-  {
-    PMNC_ENABLE     = 1 << 0,
-    PMNC_PERF_RESET = 1 << 1,
-    PMNC_CNT_RESET  = 1 << 2,
-  };
-
 
   static int _nr_counters;
 };

@@ -24,7 +24,8 @@ INTERFACE [arm && perf_cnt && arm_mpcore]:
 EXTENSION class Perf_cnt
 {
 private:
-  enum {
+  enum
+  {
     CPU_CONTROL = 0x00,
     CONFIG      = 0x04,
     CPU_STATUS  = 0x08,
@@ -69,6 +70,20 @@ private:
 
   static Address mon_counter(int nr)
   { return 0x1c + nr * 4; }
+};
+
+// ------------------------------------------------------------------------
+INTERFACE [arm && perf_cnt && (arm_v7 || arm_v8)]:
+
+EXTENSION class Perf_cnt
+{
+private:
+  enum
+  {
+    Pmnc_enable     = 1 << 0,
+    Pmnc_perf_reset = 1 << 1,
+    Pmnc_cnt_reset  = 1 << 2,
+  };
 };
 
 // ------------------------------------------------------------------------
@@ -137,25 +152,13 @@ IMPLEMENTATION [arm && perf_cnt && (arm_v7 || arm_v8)]:
 #include "cpu.h"
 
 char const *Perf_cnt::perf_type_str = "ACor";
-int Perf_cnt::_nr_counters = 1;
+int Perf_cnt::_nr_counters;
 
 PRIVATE static
 bool
 Perf_cnt::is_avail()
 {
-  if (!_nr_counters)
-    return false;
-
-  switch (Cpu::boot_cpu()->copro_dbg_model())
-    {
-      case Cpu::Copro_dbg_model_v7:
-      case Cpu::Copro_dbg_model_v7_1:
-      case Cpu::Copro_dbg_model_v8:
-      case Cpu::Copro_dbg_model_v8_plus_vhe:
-      case Cpu::Copro_dbg_model_v8_2:
-      case Cpu::Copro_dbg_model_v8_4: return true;
-      default: return false;
-    }
+  return _nr_counters > 0;
 }
 
 PRIVATE static
@@ -206,14 +209,14 @@ PUBLIC static FIASCO_INIT_CPU
 void
 Perf_cnt::init_cpu(Cpu const &cpu)
 {
-  if (!is_avail())
+  if (!cpu.has_pmuv1())
     return;
 
   ccnt_init(cpu);
 
   _nr_counters = (pmcr() >> 11) & 0x1f;
 
-  pmcr(PMNC_ENABLE | PMNC_PERF_RESET | PMNC_CNT_RESET);
+  pmcr(Pmnc_enable | Pmnc_perf_reset | Pmnc_cnt_reset);
 
   cntens((1ul << 31) | ((1ul << _nr_counters) - 1));
 

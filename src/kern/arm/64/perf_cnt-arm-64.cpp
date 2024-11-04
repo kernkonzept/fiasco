@@ -73,13 +73,6 @@ private:
   static void intenc(Mword val)
   { asm volatile ("msr PMINTENCLR_EL1, %0" : : "r" (val)); }
 
-  enum
-  {
-    PMNC_ENABLE     = 1 << 0,
-    PMNC_PERF_RESET = 1 << 1,
-    PMNC_CNT_RESET  = 1 << 2,
-  };
-
 
   static int _nr_counters;
 };
