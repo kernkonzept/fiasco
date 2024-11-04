@@ -22,7 +22,7 @@ Jdb_ptab_pdir<T>::print_entry(T_pte_ptr const &entry) const
 
   if (entry.level != T::Depth && entry.is_leaf())
     printf((phys >> 20) > 0xFF
-	   ? "       %03lx/2" : "        %02lx/2", phys >> 20);
+	   ? "%10lx/2" : "        %02lx/2", phys >> 20);
   else
     // truncates the upper 4bit of the physical address,
     // which are attributes anyways
@@ -40,6 +40,3 @@ Jdb_ptab_pdir<T>::print_entry(T_pte_ptr const &entry) const
 	    : (*entry.pte & Pt_entry::Writable) ? 'W' : 'R');
   putchar(*entry.pte & Pt_entry::XD ? '-' : 'x');
 }
-
-
-
