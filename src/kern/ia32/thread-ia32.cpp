@@ -189,11 +189,14 @@ Thread::handle_slow_trap(Trap_state *ts)
 
   LOG_TRAP;
 
-  if (!check_trap13_kernel (ts))
+  if (!check_trap13_kernel(ts))
     return 0;
 
   if (EXPECT_FALSE(!from_user))
     {
+      if (!check_unknown_irq(ts))
+        return 0;
+
       if (handle_kernel_exc(ts))
         goto success;
 
@@ -609,6 +612,47 @@ Thread::check_f00f_bug(Trap_state *ts)
       && ts->_cr2 >= Idt::idt()
       && ts->_cr2 <  Idt::idt() + Idt::_idt_max * 8)
     ts->_trapno = (ts->_cr2 - Idt::idt()) / 8;
+}
+
+/**
+ * Chech whether the current trap is #GP caused by an unknown IRQ.
+ *
+ * If the current trap is a #GP caused by a non-present entry in the IDT, we
+ * consider it an unknown interrupt which we acknowledge and ignore.
+ *
+ * Such unknown interrupts are usually caused by the firmware or the boot
+ * loader configuring an interrupt source (e.g. the local APIC timer) and
+ * failing to deactivate the source. The interrupt is then asserted while
+ * interrupts are masked and there is no fail-safe way to deassert it.
+ *
+ * \param ts  Trap state.
+ *
+ * \retval 0  Unknown interrupt detected, the trap should be ignored.
+ * \retval 1  The trap should be processed.
+ */
+PRIVATE inline
+int
+Thread::check_unknown_irq(Trap_state *ts)
+{
+  // Check for #GF and trap caused by invalid IDT entry (bit 1).
+  if (ts->_trapno == 13 && (ts->_err & 2) == 2)
+    {
+      // Interrupt vector derived from the IDT selector index.
+      Mword vector = (ts->_err & 0xffff) >> 3;
+
+      // Ignore non-IRQ interrupt vectors.
+      if (vector < 32 || vector >= Idt::_idt_max)
+        return 1;
+
+      if (!Idt::get(vector).present())
+        {
+          WARN("Unknown interrupt vector %lu, ignoring\n", vector);
+          Apic::irq_ack();
+          return 0;
+        }
+    }
+
+  return 1;
 }
 
 PRIVATE inline NEEDS["keycodes.h"]
