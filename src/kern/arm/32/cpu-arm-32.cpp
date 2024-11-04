@@ -43,7 +43,10 @@ IMPLEMENTATION [arm && arm_v7plus]:
 IMPLEMENT_OVERRIDE inline
 bool
 Cpu::has_pmuv3() const
-{ return ((_cpu_id._dfr0 >> 24) & 0xf) >= 3; }
+{
+  unsigned pmuv = (_cpu_id._dfr0 >> 24) & 0xf;
+  return pmuv >= 3 && pmuv != 0xf;
+}
 
 //-------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_v8plus && mmu]:
