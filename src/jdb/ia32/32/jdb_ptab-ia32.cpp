@@ -2,8 +2,6 @@ IMPLEMENTATION [ia32]:
 
 #include "paging.h"
 
-IMPLEMENTATION [ia32]:
-
 PRIVATE template< typename T >
 void
 Jdb_ptab_pdir<T>::print_entry(T_pte_ptr const &entry) const
