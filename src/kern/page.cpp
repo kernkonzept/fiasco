@@ -6,24 +6,6 @@ INTERFACE:
 class Page
 {
 public:
-
-  /* These things must be defined in arch part in
-     the most efficient way according to the architecture.
-
-  enum Attribs_enum : Mword {
-    USER_NO  = xxx, ///< User No access
-    USER_RO  = xxx, ///< User Read only
-    USER_RW  = xxx, ///< User Read/Write
-    USER_RX  = xxx, ///< User Read/Execute
-    USER_XO  = xxx, ///< User Execute only
-    USER_RWX = xxx, ///< User Read/Write/Execute
-
-    NONCACHEABLE = xxx, ///< Caching is off
-    CACHEABLE    = xxx, ///< Caching is enabled
-  };
-
-  */
-
   typedef L4_fpage::Rights Rights;
   typedef L4_msg_item::Memory_type Type;
 
