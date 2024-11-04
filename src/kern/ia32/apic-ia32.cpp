@@ -600,6 +600,15 @@ Apic::init_spiv()
   reg_write(APIC_spiv, tmp_val);
 }
 
+static FIASCO_INIT_CPU
+void
+Apic::done_spiv()
+{
+  Unsigned32 val = reg_read(APIC_spiv);
+  val &= ~(1 << 8);
+  reg_write(APIC_spiv, val);
+}
+
 PUBLIC static inline NEEDS[Apic::reg_write]
 void
 Apic::tpr(unsigned prio)
@@ -835,16 +844,12 @@ PUBLIC static
 void
 Apic::done()
 {
-  Unsigned64 val;
-
   if (!is_present())
     return;
 
-  val = reg_read(APIC_spiv);
-  val &= ~(1 << 8);
-  reg_write(APIC_spiv, val);
+  done_spiv();
 
-  val = Cpu::rdmsr(APIC_base_msr);
+  Unsigned64 val = Cpu::rdmsr(APIC_base_msr);
   val &= ~(1 << 11);
   Cpu::wrmsr(val, APIC_base_msr);
 }
@@ -957,6 +962,12 @@ Apic::init(bool resume)
 
   if (is_present())
     {
+      // The firmware or the boot loader might have enabled the APIC before.
+      // Deactivate it before initializing it properly to avoid conflicting
+      // configurations.
+      if (!resume)
+        done_spiv();
+
       init_lvt();
       init_spiv();
       init_tpr();
