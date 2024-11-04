@@ -31,7 +31,10 @@ public:
   Context_ptr() {}
   Context_ptr(Context_ptr const &o) : _t(o._t) {}
   Context_ptr const &operator = (Context_ptr const &o)
-  { _t = o._t; return *this; }
+  {
+    _t = o._t;
+    return *this;
+  }
 
   Kobject_iface *ptr(Space *, L4_fpage::Rights *) const;
 
@@ -57,14 +60,27 @@ public:
   Context_ptr_base(Context_ptr_base<T> const &o) : Context_ptr(o) {}
   template< typename X >
   Context_ptr_base(Context_ptr_base<X> const &o) : Context_ptr(o)
-  { X*x = 0; T*t = x; static_cast<void>(t); }
+  {
+    X *x = 0;
+    T *t = x;
+    static_cast<void>(t);
+  }
 
   Context_ptr_base<T> const &operator = (Context_ptr_base<T> const &o)
-  { Context_ptr::operator = (o); return *this; }
+  {
+    Context_ptr::operator = (o);
+    return *this;
+  }
 
   template< typename X >
   Context_ptr_base<T> const &operator = (Context_ptr_base<X> const &o)
-  { X*x=0; T*t=x; static_cast<void>(t); Context_ptr::operator = (o); return *this; }
+  {
+    X *x = 0;
+    T *t = x;
+    static_cast<void>(t);
+    Context_ptr::operator = (o);
+    return *this;
+  }
 };
 
 class Context_space_ref
