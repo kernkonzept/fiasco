@@ -169,7 +169,7 @@ Perf_cnt::read_counter(int counter_nr)
 
 PUBLIC static FIASCO_INIT_CPU
 void
-Perf_cnt::init_cpu()
+Perf_cnt::init_cpu(Cpu const &)
 {
   static_assert(Scu::Available, "No SCU available in this configuration");
 
