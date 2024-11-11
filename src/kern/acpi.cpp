@@ -417,10 +417,10 @@ Acpi_sdt::init(SDT *sdt)
 
 PRIVATE static
 void *
-Acpi::_map_table_head(Unsigned64 phys)
+Acpi::_map_table(Unsigned64 phys, unsigned size)
 {
   // is the acpi address bigger that our handled physical addresses
-  if (Acpi_helper_get_msb<(sizeof(phys) > sizeof(Address))>::msb(phys))
+  if (Acpi_helper_get_msb <(sizeof(phys) > sizeof(Address))>::msb(phys + size - 1))
     {
       printf("ACPI: cannot map phys address %llx, out of range (%ubit)\n",
              static_cast<unsigned long long>(phys),
@@ -428,7 +428,7 @@ Acpi::_map_table_head(Unsigned64 phys)
       return nullptr;
     }
 
-  void *table = Kmem_mmio::map(phys, Config::PAGE_SIZE, true);
+  void *table = Kmem_mmio::map(phys, size, true);
   if (!table)
     {
       printf("ACPI: cannot map phys address %llx, map failed\n",
@@ -453,7 +453,12 @@ Acpi::check_signature(char const *sig, char const *reference)
 PUBLIC static template<typename TAB>
 TAB *
 Acpi::map_table_head(Unsigned64 phys)
-{ return reinterpret_cast<TAB *>(_map_table_head(phys)); }
+{ return reinterpret_cast<TAB *>(_map_table(phys, sizeof(Acpi_table_head))); }
+
+PUBLIC static template<typename TAB>
+TAB *
+Acpi::map_table(Unsigned64 phys, unsigned size)
+{ return reinterpret_cast<TAB *>(_map_table(phys, size)); }
 
 
 PRIVATE template< typename T >
@@ -466,7 +471,8 @@ Acpi_sdt::map_entry(unsigned idx, T phys)
       return nullptr;
     }
 
-  return Acpi::map_table_head<Acpi_table_head>(static_cast<Unsigned64>(phys));
+  auto const *h = Acpi::map_table_head<Acpi_table_head>(Unsigned64{phys});
+  return Acpi::map_table<Acpi_table_head>(Unsigned64{phys}, h->len);
 }
 
 
@@ -655,7 +661,8 @@ Acpi_rsdp::locate_via_kip()
         // address was rounded down to page alignment by bootstrap...
         for (unsigned off = 0; off < Config::PAGE_SIZE; off += sizeof(void*))
           {
-            Acpi_rsdp const *r = Acpi::map_table_head<Acpi_rsdp>(md.start() + off);
+            Acpi_rsdp const *r = Acpi::map_table<Acpi_rsdp>(md.start() + off,
+                                                            sizeof(Acpi_rsdp));
             if (   Acpi::check_signature(r->signature, "RSD PTR ")
                 && r->checksum_ok())
               return r;

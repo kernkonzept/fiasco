@@ -36,7 +36,8 @@ Platform_control::init(Cpu_number cpu)
       return;
     }
 
-  facs = Acpi::map_table_head<Acpi_facs>(fadt->facs_addr);
+  facs = Acpi::map_table<Acpi_facs>(static_cast<Unsigned64>(fadt->facs_addr),
+                                    sizeof(Acpi_facs));
   printf("ACPI: FACS phys=%x virt=%p\n", fadt->facs_addr,
          static_cast<void *>(facs));
 
