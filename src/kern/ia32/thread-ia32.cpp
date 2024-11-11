@@ -550,6 +550,7 @@ Thread::handle_io_fault(Trap_state *)
 //---------------------------------------------------------------------------
 IMPLEMENTATION[ia32 || amd64]:
 
+#include "apic.h"
 #include "fpu.h"
 #include "fpu_alloc.h"
 #include "fpu_state_ptr.h"
