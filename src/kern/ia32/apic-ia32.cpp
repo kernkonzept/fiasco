@@ -839,21 +839,6 @@ Apic::error_interrupt(Return_frame *regs)
          cxx::int_value<Cpu_number>(current_cpu()), err1, err2);
 }
 
-// deactivate APIC by writing to appropriate MSR
-PUBLIC static
-void
-Apic::done()
-{
-  if (!is_present())
-    return;
-
-  done_spiv();
-
-  Unsigned64 val = Cpu::rdmsr(APIC_base_msr);
-  val &= ~(1 << 11);
-  Cpu::wrmsr(val, APIC_base_msr);
-}
-
 PRIVATE static FIASCO_INIT_CPU_AND_PM
 void
 Apic::init_timer(Cpu *cpu)
