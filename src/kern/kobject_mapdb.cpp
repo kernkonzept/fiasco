@@ -84,40 +84,55 @@ Kobject_mapdb::lookup(Space const *, Vaddr va, Phys_addr obj,
   return false;
 }
 
-PUBLIC inline static
+PRIVATE static inline
+bool
+Kobject_mapdb::lock_cap_pair(Phys_addr obj1, Vaddr va1, Frame *frame1,
+                             Phys_addr obj2, Vaddr va2, Frame *frame2)
+{
+  Kobject_mappable *rn1 = obj1->map_root();
+  rn1->_lock.lock();
+
+  if (va1._c->obj() != obj1)
+    {
+      rn1->_lock.clear();
+      return false;
+    }
+
+  Kobject_mappable *rn2 = obj2->map_root();
+  bool same_obj = rn2 == rn1;
+
+  if (!same_obj)
+    rn2->_lock.lock();
+
+  if (va2._c->obj() != obj2)
+    {
+      if (!same_obj)
+        rn2->_lock.clear();
+      rn1->_lock.clear();
+      return false;
+    }
+
+  frame1->m = va1._c;
+  frame1->frame = rn1;
+
+  frame2->m = va2._c;
+  frame2->frame = rn2;
+
+  return true;
+}
+
+PUBLIC static inline NEEDS[Kobject_mapdb::lock_cap_pair]
 int
 Kobject_mapdb::lookup_src_dst(Space const *sspc, Phys_addr sobj, Vaddr sva,
                               Space const *dspc, Phys_addr dobj, Vaddr dva,
                               Frame *sframe, Frame *dframe)
 {
-  Kobject_mappable *srn = sobj->map_root();
-  srn->_lock.lock();
-
-  if (sva._c->obj() != sobj)
-    {
-      srn->_lock.clear();
-      return -1;
-    }
-
-  Kobject_mappable *drn = dobj->map_root();
-  bool same_obj = drn == srn;
-
-  if (!same_obj)
-    drn->_lock.lock();
-
-  if (dva._c->obj() != dobj)
-    {
-      if (!same_obj)
-        drn->_lock.clear();
-      srn->_lock.clear();
-      return -1;
-    }
-
-  sframe->m = sva._c;
-  sframe->frame = srn;
-
-  dframe->m = dva._c;
-  dframe->frame = drn;
+  // Lock order is determined by object address to have a reliable lock
+  // ordering. A second thread could call concurrently with swapped
+  // sobj/dobj parameters.
+  if (!(sobj < dobj ? lock_cap_pair(sobj, sva, sframe, dobj, dva, dframe)
+                    : lock_cap_pair(dobj, dva, dframe, sobj, sva, sframe)))
+    return -1;
 
   return (sspc == dspc && sva == dva) ? 2 : 1;
 }
