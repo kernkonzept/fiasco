@@ -58,13 +58,6 @@ Platform_control::boot_ap_cpus_psci(Address phys_tramp_mp_addr,
     }
 }
 
-PUBLIC static
-void
-Platform_control::system_reset()
-{
-  Psci::system_reset();
-}
-
 IMPLEMENT_OVERRIDE
 void
 Platform_control::system_off()
