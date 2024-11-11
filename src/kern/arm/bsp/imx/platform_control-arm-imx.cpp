@@ -3,22 +3,6 @@ INTERFACE [arm && mp && pf_imx_6]:
 #include "types.h"
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && mp && arm_v8 && arm_psci && pf_imx_8mp]:
-
-EXTENSION class Platform_control
-{
-  enum { Num_cores = 4 };
-};
-
-// ------------------------------------------------------------------------
-INTERFACE [arm && mp && arm_v8 && arm_psci && !pf_imx_8mp]:
-
-EXTENSION class Platform_control
-{
-  enum { Num_cores = 6 };
-};
-
-// ------------------------------------------------------------------------
 IMPLEMENTATION [arm && mp && pf_imx_6]:
 
 #include "ipi.h"
@@ -112,24 +96,19 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && mp && arm_v8 && arm_psci && !pf_imx_95]:
+IMPLEMENTATION [arm && mp && arm_v8 && arm_psci]:
 
 PUBLIC static
 void
 Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
 {
-  boot_ap_cpus_psci(phys_tramp_mp_addr,
-                    { 0x000, 0x001, 0x002, 0x003, 0x100, 0x101 }, true);
+  if constexpr (TAG_ENABLED(pf_imx95))
+    boot_ap_cpus_psci(phys_tramp_mp_addr,
+                      { 0x000, 0x100, 0x200, 0x300, 0x400, 0x500 }, true);
+  else if constexpr (TAG_ENABLED(pf_imx8mp))
+    boot_ap_cpus_psci(phys_tramp_mp_addr,
+                      { 0x000, 0x001, 0x002, 0x003 }, true);
+  else
+    boot_ap_cpus_psci(phys_tramp_mp_addr,
+                      { 0x000, 0x001, 0x002, 0x003, 0x100, 0x101 }, true);
 }
-
-// ------------------------------------------------------------------------
-IMPLEMENTATION [arm && mp && arm_v8 && arm_psci && pf_imx_95]:
-
-PUBLIC static
-void
-Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
-{
-  boot_ap_cpus_psci(phys_tramp_mp_addr,
-                    { 0x000, 0x100, 0x200, 0x300, 0x400, 0x500 }, true);
-}
-
