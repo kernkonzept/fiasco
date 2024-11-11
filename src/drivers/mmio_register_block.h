@@ -5,7 +5,6 @@
 #include "types.h"
 #include "asm_access.h"
 #include <cxx/type_traits>
-#include <panic.h>
 
 class Mmio_register_block
 {
@@ -13,10 +12,9 @@ public:
   Mmio_register_block() = default;
   explicit Mmio_register_block(void *base)
     : _base(reinterpret_cast<uintptr_t>(base))
-  {
-    if (!_base)
-      panic("Invalid register block.");
-  }
+  {}
+
+  bool valid() const { return _base; }
 
   /** Read-only register mixin */
   template<typename REG, typename VALUE>
@@ -217,14 +215,11 @@ public:
 
   void set_mmio_base(void *base)
   {
-    if (!base)
-      panic("Invalid register block.");
-
     _base = reinterpret_cast<uintptr_t>(base);
   }
 
 private:
-  uintptr_t _base;
+  uintptr_t _base = 0;
 };
 
 /**
