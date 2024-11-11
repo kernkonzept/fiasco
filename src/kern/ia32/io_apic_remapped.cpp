@@ -449,7 +449,7 @@ Io_apic_remapped::init_apics()
       srcid |= dev_scope->path[0].func & 0x7;
 
       Io_apic_remapped *apic =
-        new Boot_object<Io_apic_remapped>(ioapic->adr, ioapic->irq_base, mmu, srcid);
+        new Boot_object<Io_apic_remapped>(ioapic->addr, ioapic->irq_base, mmu, srcid);
       ++n_apics;
 
       if (Print_infos)

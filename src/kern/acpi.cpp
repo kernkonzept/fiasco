@@ -78,8 +78,8 @@ public:
   {
     enum { ID = IOAPIC };
     Unsigned8 id;
-    Unsigned8 res;
-    Unsigned32 adr;
+    Unsigned8 reserved;
+    Unsigned32 addr;
     Unsigned32 irq_base;
   } __attribute__((packed));
 

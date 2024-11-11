@@ -327,7 +327,7 @@ Io_apic::init_scan_apics()
   unsigned n_apics = 0;
   for (auto *ioapic : madt->iterate<Acpi_madt::Io_apic>())
     {
-      Io_apic *apic = new Boot_object<Io_apic>(ioapic->adr, ioapic->irq_base);
+      Io_apic *apic = new Boot_object<Io_apic>(ioapic->addr, ioapic->irq_base);
 
       if (Print_info)
         {
