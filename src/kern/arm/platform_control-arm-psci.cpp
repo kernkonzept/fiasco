@@ -17,7 +17,7 @@ Platform_control::cpu_on(unsigned long target, Address phys_tramp_mp_addr)
   return Psci::cpu_on(target, phys_tramp_mp_addr);
 }
 
-PUBLIC template<size_t NUM>
+PRIVATE template<size_t NUM>
 static void
 Platform_control::boot_ap_cpus_psci(Address phys_tramp_mp_addr,
                                     const unsigned long (&physid_list)[NUM],
