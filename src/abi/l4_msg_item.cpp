@@ -440,7 +440,6 @@ public:
    */
   void constexpr set_rcv_type_map_nothing()
   {
-    assert(!(_words[0] & Rcv_type_mask));
     _words[0] |= L4_rcv_item_writer::Rcv_map_nothing;
   }
 
@@ -457,7 +456,6 @@ public:
    */
   void constexpr set_rcv_type_id(Mword id, Mword rights)
   {
-    assert(!(_words[0] & Rcv_type_mask));
     _words[0] |= L4_rcv_item_writer::Rcv_id;
     _words[1]  = id | rights;
   }
@@ -472,7 +470,6 @@ public:
    */
   void constexpr set_rcv_type_flexpage(L4_fpage sfp)
   {
-    assert(!(_words[0] & Rcv_type_mask));
     _words[0] |= L4_rcv_item_writer::Rcv_flexpage;
     _words[1]  = sfp.raw();
   }
