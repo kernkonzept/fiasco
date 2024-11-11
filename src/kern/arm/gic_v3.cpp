@@ -9,10 +9,24 @@ class Gic_v3 : public Gic_mixin<Gic_v3, Gic_cpu_v3>
 {
   using Gic = Gic_mixin<Gic_v3, Gic_cpu_v3>;
 
+  class Gic_redist_find_array : public Gic_redist_find
+  {
+  public:
+    Gic_redist_find_array() = default;
+    Gic_redist_find_array(void *redist_base) : _redist_base(redist_base) {}
+
+    Mmio_register_block get_redist_mmio(Unsigned64 mpid) override
+    { return scan_range(_redist_base, mpid); }
+
+  private:
+    void *_redist_base;
+  };
+
   static Per_cpu<Gic_redist> _redist;
   Per_cpu_array<Unsigned64> _sgi_template;
 
-  void *_redist_base;
+  Gic_redist_find_array _redist_array;
+  Gic_redist_find *_redist_get;
 
   static Global_data<Gic_v3 *> primary;
 
@@ -23,7 +37,18 @@ public:
   using Version = Gic_dist::V3;
 
   explicit Gic_v3(void *dist_base, void *redist_base, bool dist_init = true)
-  : Gic(dist_base, -1, dist_init), _redist_base(redist_base)
+  : Gic(dist_base, -1, dist_init), _redist_array(redist_base),
+    _redist_get(&_redist_array)
+  {
+    init_lpi();
+
+    cpu_local_init(Cpu_number::boot_cpu());
+    _cpu.enable();
+  }
+
+  explicit Gic_v3(void *dist_base, Gic_redist_find *redist_get,
+                  bool dist_init = true)
+  : Gic(dist_base, -1, dist_init), _redist_get(redist_get)
   {
     init_lpi();
 
@@ -144,7 +169,12 @@ Gic_v3::cpu_local_init(Cpu_number cpu)
   auto &rd = _redist.cpu(cpu);
   Unsigned64 mpidr = ::Cpu::mpidr();
 
-  rd.find(_redist_base, mpidr, cpu);
+  Mmio_register_block redist = _redist_get->get_redist_mmio(mpidr);
+  if (!redist.valid())
+    panic("GIC: Did not find a redistributor for CPU%d\n",
+          cxx::int_value<Cpu_number>(cpu));
+
+  rd.set_region(redist);
   rd.cpu_init();
 
   if (mpidr & 0xf0)

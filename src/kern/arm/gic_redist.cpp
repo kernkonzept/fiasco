@@ -9,8 +9,6 @@ INTERFACE:
 class Gic_redist
 {
 private:
-  bool cmp_affinity(Unsigned32 x, Unsigned32 y);
-
   Mmio_register_block _redist;
 
 public:
@@ -61,6 +59,41 @@ public:
     CXX_BITFIELD_MEMBER_RO( 8, 23, processor_nr, raw);
     CXX_BITFIELD_MEMBER_RO(32, 63, affinity, raw);
   };
+};
+
+class Gic_redist_find
+{
+public:
+  virtual Mmio_register_block get_redist_mmio(Unsigned64) = 0;
+
+  static bool cmp_affinity(Unsigned32 x, Unsigned32 y);
+
+  static Mmio_register_block scan_range(void *base, Unsigned64 mpidr)
+  {
+    unsigned o = 0;
+    Gic_redist::Typer gicr_typer;
+    Unsigned64 typer_aff = (mpidr & 0x0000ffffff) | ((mpidr & 0xff00000000) >> 8);
+    do
+      {
+        Mmio_register_block r(offset_cast<void *>(base, o));
+
+        unsigned arch_rev = (r.read<Unsigned32>(Gic_redist::GICR_PIDR2) >> 4) & 0xf;
+        if (arch_rev != 0x3 && arch_rev != 0x4)
+          // No GICv3 and no GICv4
+          break;
+
+        gicr_typer.raw = r.read_non_atomic<Unsigned64>(Gic_redist::GICR_TYPER);
+        if (cmp_affinity(gicr_typer.affinity(), typer_aff))
+          return r;
+
+        o += 2 * Gic_redist::GICR_frame_size;
+        if (gicr_typer.vlpis())
+          o += 2 * Gic_redist::GICR_frame_size;
+      }
+    while (!gicr_typer.last());
+
+    return Mmio_register_block();
+  }
 };
 
 // ------------------------------------------------------------------------
@@ -119,46 +152,10 @@ IMPLEMENTATION:
 #include <cstdio>
 #include <string.h>
 
-IMPLEMENT_DEFAULT inline
+IMPLEMENT_DEFAULT static inline
 bool
-Gic_redist::cmp_affinity(Unsigned32 x, Unsigned32 y)
+Gic_redist_find::cmp_affinity(Unsigned32 x, Unsigned32 y)
 { return x == y; }
-
-PUBLIC
-void
-Gic_redist::find(void *base, Unsigned64 mpidr, Cpu_number cpu)
-{
-  unsigned o = 0;
-  Typer gicr_typer;
-  Unsigned64 typer_aff = (mpidr & 0x0000ffffff) | ((mpidr & 0xff00000000) >> 8);
-  do
-    {
-      Mmio_register_block r(offset_cast<void *>(base, o));
-
-      unsigned arch_rev = (r.read<Unsigned32>(GICR_PIDR2) >> 4) & 0xf;
-      if (arch_rev != 0x3 && arch_rev != 0x4)
-        // No GICv3 and no GICv4
-        break;
-
-      gicr_typer.raw = r.read_non_atomic<Unsigned64>(GICR_TYPER);
-      if (cmp_affinity(gicr_typer.affinity(), typer_aff))
-        {
-          printf("CPU%d: GIC Redistributor at %p for 0x%llx\n",
-                 cxx::int_value<Cpu_number>(cpu),
-                 r.get_mmio_base(), mpidr & ~0xc0000000ull);
-          _redist = r;
-          return;
-        }
-
-      o += 2 * GICR_frame_size;
-      if (gicr_typer.vlpis())
-        o += 2 * GICR_frame_size;
-    }
-  while (!gicr_typer.last());
-
-  panic("GIC: Did not find a redistributor for CPU%d\n",
-        cxx::int_value<Cpu_number>(cpu));
-}
 
 PUBLIC
 void
@@ -273,6 +270,13 @@ Gic_redist::sync_rwp()
     WARNX(Error, "GICR: RWP timed out!\n");
 }
 
+PUBLIC inline
+void
+Gic_redist::set_region(Mmio_register_block b)
+{
+  _redist = b;
+}
+
 //-------------------------------------------------------------------
 IMPLEMENTATION[arm_gic_msi]:
 
@@ -361,9 +365,9 @@ Gic_redist::get_processor_nr() const
 //-------------------------------------------------------------------
 IMPLEMENTATION[arm_cortex_r52]:
 
-IMPLEMENT_OVERRIDE inline
+IMPLEMENT_OVERRIDE static inline
 bool
-Gic_redist::cmp_affinity(Unsigned32 x, Unsigned32 y)
+Gic_redist_find::cmp_affinity(Unsigned32 x, Unsigned32 y)
 {
   // Arm erraturm 2743885 workaround for broken Aff1/2 field on clusters.
   return (x & 0xffU) == (y & 0xffU);
