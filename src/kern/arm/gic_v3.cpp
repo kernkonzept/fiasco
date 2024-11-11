@@ -136,6 +136,8 @@ Gic_v3::add_its(void *its_base)
 //-------------------------------------------------------------------
 IMPLEMENTATION:
 
+#include "panic.h"
+
 DEFINE_GLOBAL Global_data<Gic_v3 *> Gic_v3::primary;
 DEFINE_PER_CPU Per_cpu<Gic_redist> Gic_v3::_redist;
 
@@ -162,7 +164,7 @@ void
 Gic_v3::redist_disable(Cpu_number cpu)
 { _redist.cpu(cpu).disable(); }
 
-PUBLIC inline
+PUBLIC inline NEEDS["panic.h"]
 void
 Gic_v3::cpu_local_init(Cpu_number cpu)
 {
