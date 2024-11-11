@@ -450,15 +450,15 @@ Acpi::check_signature(char const *sig, char const *reference)
   return true;
 }
 
-PUBLIC static template<typename TAB>
-TAB *
+PUBLIC static
+Acpi_table_head *
 Acpi::map_table_head(Unsigned64 phys)
-{ return reinterpret_cast<TAB *>(_map_table(phys, sizeof(Acpi_table_head))); }
+{ return static_cast<Acpi_table_head *>(_map_table(phys, sizeof(Acpi_table_head))); }
 
 PUBLIC static template<typename TAB>
 TAB *
 Acpi::map_table(Unsigned64 phys, unsigned size)
-{ return reinterpret_cast<TAB *>(_map_table(phys, size)); }
+{ return static_cast<TAB *>(_map_table(phys, size)); }
 
 
 PRIVATE template< typename T >
@@ -471,7 +471,7 @@ Acpi_sdt::map_entry(unsigned idx, T phys)
       return nullptr;
     }
 
-  auto const *h = Acpi::map_table_head<Acpi_table_head>(Unsigned64{phys});
+  auto const *h = Acpi::map_table_head(Unsigned64{phys});
   return Acpi::map_table<Acpi_table_head>(Unsigned64{phys}, h->len);
 }
 
