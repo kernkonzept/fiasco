@@ -548,6 +548,7 @@ Acpi::init_virt()
                   if (srat)
                     srat->show();
                 }
+              return;
             }
         }
     }
