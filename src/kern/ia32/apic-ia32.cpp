@@ -600,7 +600,7 @@ Apic::init_spiv()
   reg_write(APIC_spiv, tmp_val);
 }
 
-static FIASCO_INIT_CPU
+static FIASCO_INIT_AND_PM
 void
 Apic::done_spiv()
 {
