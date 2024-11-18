@@ -1,6 +1,7 @@
 IMPLEMENTATION:
 
 #include <cstdio>
+#include <cxx/defensive>
 #include "simpleio.h"
 
 #include "jdb.h"
@@ -43,8 +44,7 @@ Jdb_exit_module::action (int cmd, void *&, char const *&, int &) override
   Jdb::blink_cursor(Jdb_screen::height(), 1);
   Jdb::cursor(127, 1);
   vmx_off();
-  terminate(1);
-  return LEAVE;
+  cxx::check_noreturn<terminate>(1);
 }
 
 PUBLIC

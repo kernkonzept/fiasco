@@ -1,6 +1,7 @@
 IMPLEMENTATION:
 
 #include <cstdio>
+#include <cxx/defensive>
 
 #include "acpi.h"
 #include "acpi_fadt.h"
@@ -113,6 +114,7 @@ suspend_ap_cpus()
     {
       Context::spill_current_fpu(cpu);
       current()->kernel_context_drq([](Context::Drq *, Context *, void *)
+                                    -> Context::Drq::Result
         {
           Cpu_number cpun = current_cpu();
           Cpu &cpu = Cpu::cpus.current();
@@ -125,9 +127,7 @@ suspend_ap_cpus()
           Sched_context::rq.cpu(cpun).schedule_in_progress = 0;
           Platform_control::prepare_cpu_suspend(cpun);
           _cpus_to_suspend.atomic_clear(current_cpu());
-          Platform_control::cpu_suspend(cpun);
-          Mem_unit::tlb_flush();
-          return Context::Drq::no_answer_resched();
+          cxx::check_noreturn<Platform_control::cpu_suspend>(cpun);
         }, 0);
       return false;
     };

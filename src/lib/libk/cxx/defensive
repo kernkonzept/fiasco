@@ -1,0 +1,26 @@
+// vi:ft=cpp
+#pragma once
+
+#include <cxx/type_traits>
+
+namespace cxx {
+
+// This wrapper enables to check that a function called that is expected not
+// to return really has the noreturn attribute. If it ever returns (i.e. the
+// noreturn attribute is removed) then this primitive will warn at the location
+// of the call site.
+//
+// For the sake of brevity this should only be used when the code following
+// this assumes that the called function never returns.
+//
+// Do not use this for `panic()`, since that will cause a format-security
+// warning due to the compiler checks not working on forwarded literal strings.
+//
+// Usage: check_noreturn<FunctionName>(arg1, arg2, ...);
+template<auto F, typename... Args>
+[[noreturn]] auto check_noreturn(Args... args) -> decltype(F(args...))
+{
+  F(cxx::forward<Args>(args)...);
+}
+
+} // namespace cxx
