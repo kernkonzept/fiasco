@@ -50,6 +50,9 @@ config HAS_SYNC_CLOCK
 config HAS_ONE_SHOT
 	bool
 
+config HAS_TICKLESS_IDLE
+	bool
+
 ################################################################################
 menu "Target configuration"
 # Platform-dependent options.
@@ -234,6 +237,20 @@ config ONE_SHOT
 	help
 	  More costly than periodic but more fine-granular scheduling
 	  possible.  EXPERIMENTAL!
+
+config TICKLESS_IDLE
+	bool "Tickless idle"
+	depends on HAS_TICKLESS_IDLE
+	depends on !ONE_SHOT
+	help
+	  When a CPU core is idle, disable the timer tick on that core,
+	  detach the core from the RCU subsystem and halt the core until the
+	  next timeout or interrupt.
+
+	  Tickless idle is good for saving energy, but can incur a small
+	  overhead for waking up from idle.
+
+	  On x86, tickless idle adds a small overhead on each context switch.
 
 config FINE_GRAINED_CPUTIME
 	bool "Fine-grained CPU time"

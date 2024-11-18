@@ -239,8 +239,7 @@ vcpu_IMPL		:= vcpu vcpu-arm
 ifeq ("$(CONFIG_JDB)","y")
 JDB			:= jdb_compound.o
 SUBSYSTEMS		+= JDB
-INTERFACES_JDB		+= jdb_trace_set jdb_log jdb_console_buffer \
-			   jdb_idle_stats
+INTERFACES_JDB		+= jdb_trace_set jdb_log jdb_console_buffer
 
 INTERFACES_JDB-$(CONFIG_PERF_CNT) += jdb_perf
 INTERFACES_JDB-$(CONFIG_MMU) += jdb_ptab

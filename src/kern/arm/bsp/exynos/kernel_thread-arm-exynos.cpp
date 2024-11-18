@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------------
-IMPLEMENTATION [arm && tickless_idle && pf_exynos && mp]:
+IMPLEMENTATION [arm && pf_exynos_tickless_idle_core_offline && mp]:
 
 #include "cpu.h"
 #include "platform_control.h"
