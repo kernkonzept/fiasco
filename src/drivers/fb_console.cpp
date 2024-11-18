@@ -799,6 +799,7 @@ int Fb_console::write( char const *str, size_t len )
   while (pos < len)
     (this->*wr)(str, len, pos);
 
+  blink_cursor(_x, _y);
   return pos;
 }
 
