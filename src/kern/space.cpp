@@ -174,12 +174,12 @@ Space::is_user_memory(Address address, Mword len)
 
 PRIVATE static
 void *
-Space::alloc_ku_mem(Ram_quota *q) throw()
+Space::alloc_ku_mem(Ram_quota *q) noexcept
 { return _k_u_mem_list_alloc->q_alloc(q); }
 
 PRIVATE static
 void
-Space::free_ku_mem(Ram_quota *q, void *k) throw()
+Space::free_ku_mem(Ram_quota *q, void *k) noexcept
 { _k_u_mem_list_alloc->q_free(q, k); }
 
 //--------------------------------------------------------------------------

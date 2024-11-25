@@ -158,6 +158,7 @@ SHARED_FLAGS-gcc        += $(if $(filter sparc,$(CONFIG_XARCH)),,-freg-struct-re
 SHARED_FLAGS-gcc	+= $(call CHECKCXX,-Wmisleading-indentation,) -Wlogical-op -Wfloat-equal
 SHARED_FLAGS-gcc	+= $(if $(filter 7 8 9 10,$(CCVER_MAJOR)),-Wno-nonnull)
 SHARED_FLAGS  		+= -g -Wall -Wextra $(call CHECKCC,-Wdouble-promotion) $(call CHECKCC,-Wfloat-conversion) -Wmissing-declarations
+SHARED_FLAGS  		+= -Wdeprecated
 # WARNING EXCEPTION: not all members of a struct used to reflect hardware state
 # are necessarily used.
 SHARED_FLAGS-clang	+= -Wno-unused-private-field
