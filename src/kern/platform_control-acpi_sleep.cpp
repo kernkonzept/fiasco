@@ -225,6 +225,9 @@ do_system_suspend(Mword sleep_type)
   if (_system_resume_handler)
     _system_resume_handler();
 
+  // Restore spilled FPU state (necessary for eager FPU switching).
+  current()->restore_fpu_on_resume();
+
   return result;
 }
 

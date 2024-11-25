@@ -67,6 +67,8 @@ App_cpu_thread::bootstrap(Mword resume)
   auto ccpu = current_cpu();
 
   Fpu::init(ccpu, resume);
+  // Note: The FPU state of a kernel idle thread is irrelevant,
+  //       so no need to restore it on resume.
 
   // initialize the current_mem_space function to point to the kernel space
   Kernel_task::kernel_task()->make_current();

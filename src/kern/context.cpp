@@ -305,6 +305,9 @@ public:
   void copy_and_sanitize_trap_state(Trap_state *dst,
                                     Trap_state const *src) const;
 
+  /// restore FPU state on resume from system suspend
+  void restore_fpu_on_resume();
+
   Space * FIASCO_PURE space() const { return _space.space(); }
   Mem_space * FIASCO_PURE mem_space() const { return static_cast<Mem_space*>(space()); }
 
@@ -2330,6 +2333,11 @@ Context::release_fpu_if_owner()
     }
 }
 
+IMPLEMENT inline
+void
+Context::restore_fpu_on_resume()
+{}
+
 //----------------------------------------------------------------------------
 IMPLEMENTATION [fpu && !lazy_fpu]:
 
@@ -2386,6 +2394,14 @@ void
 Context::release_fpu_if_owner()
 {}
 
+IMPLEMENT
+void
+Context::restore_fpu_on_resume()
+{
+  Fpu &f = Fpu::fpu.current();
+  f.restore_state(current()->fpu_state().get());
+}
+
 //----------------------------------------------------------------------------
 IMPLEMENTATION [!fpu]:
 
@@ -2412,6 +2428,11 @@ Context::release_fpu_if_owner()
 IMPLEMENT inline
 void
 Context::switch_fpu(Context *)
+{}
+
+IMPLEMENT inline
+void
+Context::restore_fpu_on_resume()
 {}
 
 //----------------------------------------------------------------------------
