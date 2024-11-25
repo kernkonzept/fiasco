@@ -21,6 +21,7 @@ public:
   Address video_base() const;
   void video_base(Address base);
   Fb_console(void *base, unsigned width, unsigned height, unsigned scanline,
+             Unsigned8 bytes_per_pixel,
              bool light_white = false, bool use_color = false);
 
   ~Fb_console();
@@ -250,6 +251,7 @@ private:
   unsigned _pixel_width;
   unsigned _pixel_height;
   unsigned _scanline;
+  Unsigned8 _bytes_per_pixel;
 
   /**
    * Set blinking screen cursor
@@ -359,26 +361,30 @@ void Fb_console::init()
       unsigned w = vbi->x_resolution;
       unsigned h = vbi->y_resolution;
       unsigned s = vbi->bytes_per_scanline;
-      printf("fbmem virt/phys=%p/%lx  XxY: %ux%u (%u)\n",
-             fbmem, static_cast<unsigned long>(fbphys), w, h, s);
+      Unsigned8 bytes_per_pixel = (vbi->bits_per_pixel + 7) >> 3;
+      printf("fbmem virt/phys=%p/%lx %ux%u line:%u bpp:%u/%u\n",
+             fbmem, static_cast<unsigned long>(fbphys), w, h, s,
+             vbi->bits_per_pixel, bytes_per_pixel);
 
       // TODO: At assert on the pixel-format
       // Extended-TODO: Add support for other pixel formats
 
-      fbcon.construct(fbmem, w, h, s, true, true);
+      fbcon.construct(fbmem, w, h, s, bytes_per_pixel, true, true);
       Kconsole::console()->register_console(fbcon);
     }
 }
 
 IMPLEMENT
 Fb_console::Fb_console(void *vbase, unsigned pixel_width, unsigned pixel_height,
-                       unsigned scanline, bool light_white, bool use_color)
+                       unsigned scanline, Unsigned8 bytes_per_pixel,
+                       bool light_white, bool use_color)
 : Console(ENABLED), _video_base(vbase), _x(0), _y(0),
   _attribute(light_white ? 0x0f : 0x07),
   wr(&Fb_console::normal_write), _light_white(light_white),
   _use_color(use_color),
   _pixel_width(pixel_width), _pixel_height(pixel_height),
   _scanline(scanline),
+  _bytes_per_pixel(bytes_per_pixel),
   _scroll_delta(1) // tunable
 {
   font_init();
@@ -467,16 +473,39 @@ void Fb_console::set(unsigned i, char c, char attr)
 
   unsigned fg = colors[attr & 0xf].value();
   unsigned bg = colors[(attr >> 4) & 0xf].value();
-  unsigned *pos = reinterpret_cast<unsigned *>(_video_base) + _scanline / 4 * vy + vx;
 
-  for (unsigned j = 0; j < _font_height; ++j)
+  Address p = reinterpret_cast<Address>(_video_base);
+  p += vy * _scanline;
+  p += vx * _bytes_per_pixel;
+
+  if (_bytes_per_pixel == 3)
     {
-      for (unsigned i = 0; i < 8; ++i)
+      for (unsigned j = 0; j < _font_height; ++j)
         {
-          unsigned color = (fontchar[j] & (1 << (7 - i))) ? fg : bg;
-          pos[i] = color;
+          for (unsigned i = 0; i < 8; ++i)
+            {
+              unsigned color = (fontchar[j] & (1 << (7 - i))) ? fg : bg;
+              Unsigned8 *c = reinterpret_cast<Unsigned8 *>(p + i * _bytes_per_pixel);
+              c[0] = (color >>  0) & 0xff;
+              c[1] = (color >>  8) & 0xff;
+              c[2] = (color >> 16) & 0xff;
+            }
+          p += _scanline;
         }
-      pos += _scanline / 4;
+    }
+  else // if (_bytes_per_pixel == 4) // Draw anything even if the pixel
+       // format does not match such that we see something at least
+    {
+      for (unsigned j = 0; j < _font_height; ++j)
+        {
+          for (unsigned i = 0; i < 8; ++i)
+            {
+              unsigned color = (fontchar[j] & (1 << (7 - i))) ? fg : bg;
+              Unsigned32 *c = reinterpret_cast<Unsigned32 *>(p + i * _bytes_per_pixel);
+              *c = color;
+            }
+          p += _scanline;
+        }
     }
 }
 
