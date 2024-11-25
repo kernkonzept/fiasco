@@ -122,7 +122,6 @@ bool Kernel_uart::startup(unsigned, int irq, bool resume)
                 default:
                   panic("UART: illegal reg shift value: %d",
                         Koptions::o()->uart.reg_shift);
-                  break;
                 }
 
               return this->Uart::startup(r, irq, Koptions::o()->uart.base_baud,

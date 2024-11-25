@@ -620,7 +620,6 @@ Jdb::input_long_mode(Jdb::Cmd *cmd, char const **args)
 		}
 	      continue;
 	    }
-	  break;
 
 	case KEY_RETURN:
 	case KEY_RETURN_2:

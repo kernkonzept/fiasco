@@ -438,7 +438,6 @@ void Vga_console::normal_write(char const *str, size_t len, unsigned &i)
           wr = &Vga_console::esc_write;
           ++i;
           return;
-          break;
 
         case 6: /* cursor */
           seq_6(str, len, i);

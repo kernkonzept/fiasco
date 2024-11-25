@@ -231,8 +231,6 @@ Jdb_disasm::show(Jdb_address virt, int level)
 	  break;
 	}
     }
-  
-  return GO_BACK;
 }
 
 PUBLIC

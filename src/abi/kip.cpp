@@ -245,8 +245,6 @@ Mem_desc *Kip::add_mem_region(Mem_desc const &md)
 
   // Add mem region failed -- must be a Fiasco startup problem.  Bail out.
   panic("Too few memory descriptors in KIP");
-
-  return 0;
 }
 
 DEFINE_GLOBAL Global_data<Kip *> Kip::global_kip;
