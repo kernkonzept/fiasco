@@ -13,7 +13,7 @@ IMPLEMENTATION[ia32 || amd64]:
 [[noreturn]] void kernel_main(void);
 
 extern "C" FIASCO_FASTCALL FIASCO_INIT
-void
+[[noreturn]] void
 __main(unsigned checksum_ro)
 {
   /* set global to be used in the constructors */

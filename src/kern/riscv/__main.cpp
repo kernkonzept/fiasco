@@ -9,12 +9,11 @@ IMPLEMENTATION [riscv]:
 #include <cstdio>
 #include <construction.h>
 #include "processor.h"
-#include "terminate.h"
 
 [[noreturn]] void kernel_main(void);
 
 extern "C"
-void __main(Mword hart_id)
+[[noreturn]] void __main(Mword hart_id)
 {
   // Provide initial stack allocated hart context (will be replaced later on)
   Proc::Hart_context hart_context;
@@ -23,5 +22,4 @@ void __main(Mword hart_id)
 
   static_construction();
   kernel_main();
-  terminate(0);
 }
