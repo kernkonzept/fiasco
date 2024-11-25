@@ -2,6 +2,9 @@ IMPLEMENTATION:
 
 #include <cstdio>
 #include <cstring>
+#include <cxx/conditionals>
+
+using cxx::const_ite;
 
 #include "config.h"
 #include "cpu.h"
@@ -144,7 +147,7 @@ Jdb_tbuf_show::show_perf_event(Mword nr)
 {
   const char *name = nullptr, *desc = nullptr;
   unsigned evntsel = 0;
-  Mword add_kcnt = Config::Jdb_accounting ? Kern_cnt::Valid_ctrs : 0;
+  Mword add_kcnt = const_ite<Config::Jdb_accounting>(Kern_cnt::Valid_ctrs, 0);
 
   if (nr < add_kcnt)
     {
@@ -196,7 +199,8 @@ Jdb_tbuf_show::select_perf_event_unit_mask(Mword nr, Mword unit_mask)
 
   Jdb::cursor(Tbuf_start_line, 1);
   putstr("\033[32m");
-  show_perf_event(nr + (Config::Jdb_accounting ? Kern_cnt::Valid_ctrs : 0));
+  show_perf_event(nr
+                  + const_ite<Config::Jdb_accounting>(Kern_cnt::Valid_ctrs, 0));
   printf("\033[m\033[K\n"
          "\033[K\n"
          "  \033[1;32mSelect Event Mask (%s):\033[m\033[K\n"
@@ -263,7 +267,7 @@ Jdb_tbuf_show::select_perf_event(Mword event)
 {
   Mword absy     = 0;
   Mword addy     = 0;
-  Mword add_kcnt = Config::Jdb_accounting ? Kern_cnt::Valid_ctrs : 0;
+  Mword add_kcnt = const_ite<Config::Jdb_accounting>(Kern_cnt::Valid_ctrs, 0);
   Mword nevents  = Perf_cnt::get_max_perf_event() + add_kcnt;
   Mword lines    = (nevents < Jdb_screen::height() - 6)
                    ? nevents

@@ -1,6 +1,7 @@
 IMPLEMENTATION [apic_timer]:
 
 #include <cstdio>
+#include <cxx/conditionals>
 
 #include "apic.h"
 #include "config.h"
@@ -40,7 +41,7 @@ Timer::init(Cpu_number)
   if (Warn::is_enabled(Info))
     printf ("Using the Local APIC timer on vector %x (%s Mode) for scheduling\n",
             static_cast<unsigned>(Config::Apic_timer_vector),
-            Config::Scheduler_one_shot ? "One-Shot" : "Periodic");
+            cxx::const_ite<Config::Scheduler_one_shot>("One-Shot", "Periodic"));
 
 }
 

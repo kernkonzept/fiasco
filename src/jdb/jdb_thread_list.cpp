@@ -376,6 +376,7 @@ Jdb_thread_list::sc_iter_next(Sched_context *)
 // --------------------------------------------------------------------------
 IMPLEMENTATION:
 
+#include <cxx/conditionals>
 
 static inline NOEXPORT
 Thread*
@@ -723,7 +724,7 @@ Jdb_thread_list::show_header()
 {
   Jdb::cursor();
   printf("%s   id  cpu    name             pr     sp  wait    to%s state\033[m\033[K",
-         Jdb::esc_emph, Config::Stack_depth ? "  stack" : "");
+         Jdb::esc_emph, cxx::const_ite<Config::Stack_depth>("  stack", ""));
 }
 
 static void

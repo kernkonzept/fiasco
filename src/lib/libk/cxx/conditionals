@@ -1,0 +1,28 @@
+// vi:ft=cpp
+
+namespace cxx {
+
+/**
+ * Template for compile-time constant conditions in ternary operator style
+ *
+ * This template can be used as replacement for the ternary operator on
+ * compile-time constant conditions. This is needed since the ternary operator
+ * has no constexpr variant and thus will cause unreachable code warnings on
+ * branches that are compile time disabled. Will only work if both cases are
+ * the same type. In the interest of limiting verbosity the false case defaults
+ * to the default constructed value (usefull for example for enums).
+ */
+template<bool condition, typename T, typename U>
+constexpr auto const_ite(const T& true_case, const U& false_case)
+{
+  if constexpr (condition)
+    {
+      return true_case;
+    }
+  else
+    {
+      return false_case;
+    }
+}
+
+} // namespace cxx
