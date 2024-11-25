@@ -931,14 +931,14 @@ Thread::send_exception(Trap_state *ts)
 PRIVATE static
 bool
 Thread::try_transfer_local_id(L4_buf_iter::Item const *const buf,
-                              L4_fpage sfp, L4_rcv_item_writer rcv_item,
+                              L4_fpage sfp, L4_return_item_writer return_item,
                               Thread *snd, Thread *rcv)
 {
   if (buf->b.is_rcv_id())
     {
       if (snd->space() == rcv->space())
         {
-          rcv_item.set_rcv_type_flexpage(sfp);
+          return_item.set_rcv_type_flexpage(sfp);
           return true;
         }
       else
@@ -949,7 +949,7 @@ Thread::try_transfer_local_id(L4_buf_iter::Item const *const buf,
             {
               Mword rights = cap.rights()
                              & cxx::int_value<L4_fpage::Rights>(sfp.rights());
-              rcv_item.set_rcv_type_id(o->obj_id(), rights);
+              return_item.set_rcv_type_id(o->obj_id(), rights);
               return true;
             }
         }
@@ -1094,7 +1094,7 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
         {
           assert (item->b.type() == L4_msg_item::Map);
           L4_fpage sfp(item->d);
-          L4_rcv_item_writer rcv_item(rcv_word, item->b, sfp);
+          L4_return_item_writer return_item(rcv_word, item->b, sfp);
 
           rcv_word += 2;
 
@@ -1102,7 +1102,7 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
           if (sfp.type() == L4_fpage::Obj)
             sfp.mask_rights(rights | L4_fpage::Rights::CRW() | L4_fpage::Rights::CD());
 
-          if (!try_transfer_local_id(buf, sfp, rcv_item, snd, rcv))
+          if (!try_transfer_local_id(buf, sfp, return_item, snd, rcv))
             {
               // we need to do a real mapping
               L4_error err;
@@ -1127,7 +1127,7 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
                 err = fpage_map(snd->space(), sfp, dst_tsk.get(),
                                 L4_fpage(buf->d), item->b, reap_list.list());
                 if (err.empty_map())
-                  rcv_item.set_rcv_type_map_nothing();
+                  return_item.set_rcv_type_map_nothing();
               }
 
               if (EXPECT_FALSE(!err.ok()))

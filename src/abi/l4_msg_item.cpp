@@ -33,12 +33,12 @@ INTERFACE:
  * 2. Typed message items set by the receiver in its buffer registers.
  * 3. Typed message items set by the kernel in the receiver’s message registers.
  *
- * They are abbreviated by *send item*, *buffer item*, and *receive item*,
+ * They are abbreviated by *send item*, *buffer item*, and *return item*,
  * respectively.
  *
  * The first word of the first two can be interpreted by the sub-classes
  * #L4_snd_item and #L4_buf_item. The latter can be written by the independent
- * class #L4_rcv_item_writer.
+ * class #L4_return_item_writer.
  *
  * A typed message item in the message registers (case 1 and case 3) always
  * consists of two words (even if it is a void item). The size of a typed
@@ -345,11 +345,11 @@ public:
 
 /**
  * Helper class for writing a typed message item in the message registers of the
- * receiver (receive item).
+ * receiver (return item).
  *
  * \note This class can only write non-void items.
  *
- * A receive item always consists of two words. The general layout is defined as
+ * A return item always consists of two words. The general layout is defined as
  * follows:
  *
  *      MSB     12 11    6 5    4  3  2        1  0   bits
@@ -404,9 +404,9 @@ public:
  *     │ hot_spot │ order │ type │ 1 │    11    │ c ││  send flexpage  │
  *     └──────────┴───────┴──────┴───┴──────────┴───┘└─────────────────┘
  */
-class L4_rcv_item_writer
+class L4_return_item_writer
 {
-  /** Pointer to the first word of the written receive item. */
+  /** Pointer to the first word of the written return item. */
   Mword *_words;
 public:
   /**
@@ -415,12 +415,12 @@ public:
    *
    * The `rcv_type` is initially set to #Rcv_map_something.
    *
-   * \param regs  Pointer to the first of two words of the receive item to be
+   * \param regs  Pointer to the first of two words of the return item to be
    *              written.
    * \param snd   First word of the corresponding send item.
    * \param fp    Second word of the corresponding send item.
    */
-  explicit constexpr L4_rcv_item_writer(Mword words[], L4_snd_item snd, L4_fpage fp)
+  explicit constexpr L4_return_item_writer(Mword words[], L4_snd_item snd, L4_fpage fp)
     : _words(words)
   { _words[0] = (snd.raw() & ~0x0ff6) | (fp.raw() & 0x0ff0); }
 
@@ -440,7 +440,7 @@ public:
    */
   void constexpr set_rcv_type_map_nothing()
   {
-    _words[0] |= L4_rcv_item_writer::Rcv_map_nothing;
+    _words[0] |= L4_return_item_writer::Rcv_map_nothing;
   }
 
   /**
@@ -456,7 +456,7 @@ public:
    */
   void constexpr set_rcv_type_id(Mword id, Mword rights)
   {
-    _words[0] |= L4_rcv_item_writer::Rcv_id;
+    _words[0] |= L4_return_item_writer::Rcv_id;
     _words[1]  = id | rights;
   }
 
@@ -470,7 +470,7 @@ public:
    */
   void constexpr set_rcv_type_flexpage(L4_fpage sfp)
   {
-    _words[0] |= L4_rcv_item_writer::Rcv_flexpage;
+    _words[0] |= L4_return_item_writer::Rcv_flexpage;
     _words[1]  = sfp.raw();
   }
 };
