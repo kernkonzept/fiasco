@@ -58,9 +58,9 @@ public:
     H3800_asic1_lcd_on              = 1 <<  6,
     /// Connects to PDWN on LCD controller
     H3800_asic1_lcd_pci             = 1 <<  7,
-    /// Drives VGH on the LCD (+9??)
+    /// Drives VGH on the LCD (+9?)
     H3800_asic1_vgh_on              = 1 <<  8,
-    /// Drivers VGL on the LCD (-6??)
+    /// Drivers VGL on the LCD (-6?)
     H3800_asic1_vgl_on              = 1 <<  9,
     /// Frontlight power on
     H3800_asic1_fl_pwr_on           = 1 << 10,
