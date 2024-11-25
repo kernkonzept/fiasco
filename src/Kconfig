@@ -624,6 +624,19 @@ config TEST_SUPPORT_CODE
 	help
 	  Include test support code when compiling Fiasco.
 
+config CODE_RULES_TEST
+	bool "Build tests checking coding rules"
+	help
+	  Builds files that are expected to generate warnings to check that
+	  the coding rules are adhered to in a warning-free build. The
+	  warnings are stored and can be evaluated by scripts generated into
+	  the selftest directory inside the build directory. These scripts
+	  then generate TAP output usable by prove.
+
+	  The tests currently only work when using clang. When building with
+	  gcc the test sources are not built and a test script that always
+	  generates a SKIP is created.
+
 config RT_DBG
 	bool "Runtime debug information"
 	default y

@@ -1,0 +1,26 @@
+# -*- makefile -*-
+# vi:se ft=make:
+
+# There can be several subdirectories containing a Modules.utest file.
+# Every Modules.utest file in a direct subdirectory is included and evaluated.
+# These Modules.utest files are expected to ONLY extend the INTERFACES_UTEST
+# and UTEST_SUPPL variables.
+
+CODERULES = crtest_subsys
+
+# Collect all Modules.crtest files in subdirectories to test/crtest.
+CRTEST_SUBDIR_MODULES = $(wildcard $(srcdir)/test/coderules/*/Modules.crtest)
+# New dependencies to be tracked for .Modules.deps generation.
+MODULES_FILES += $(srcdir)/test/coderules/Modules.crtest $(CRTEST_SUBDIR_MODULES)
+
+# contains all unit test directories
+# add all relative subdirectory paths with Modules.utest files
+ALL_CRTEST_DIRS += $(patsubst $(srcdir)/%/,%,$(dir $(CRTEST_SUBDIR_MODULES)))
+
+VPATH += $(ALL_CRTEST_DIRS)
+PRIVATE_INCDIR += $(ALL_CRTEST_DIRS)
+
+# Add all test_ files to INTERFACES_CODERULES.
+# Include all existing Modules in subdirectories. They modify INTERFACES_CODERULES
+# and maybe UTEST_SUPPL.
+include $(CRTEST_SUBDIR_MODULES)

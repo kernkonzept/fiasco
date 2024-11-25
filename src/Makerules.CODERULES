@@ -1,0 +1,45 @@
+# -*- makefile -*-
+# vi:se ft=make:
+
+# Makerules for all coderules test targets.
+#
+# The coderule tests check that the coding rules are enforced by the compiler
+# by compiling example code which should generate a warning if everything is
+# configured as expected.
+
+CRTEST_DIR = selftest/coderules
+
+# select all test_* files to generate a build target for each.
+ifeq ($(CXX_TYPE),clang)
+  CRTEST_TESTS = $(INTERFACES_CODERULES)
+else
+crtest_subsys: $(CRTEST_DIR)/gcc-skip.t
+$(CRTEST_DIR)/gcc-skip.t:
+	$(VERBOSE)mkdir -p $(@D)
+	$(VERBOSE)echo "#!/usr/bin/env cat" >$@
+	$(VERBOSE)echo "1..0 # SKIP Compiler '$(CXX_TYPE)' not supported. Use clang." >>$@
+	$(VERBOSE)chmod +x $@
+endif
+
+CRTEST_T_FILES := $(addprefix $(CRTEST_DIR)/,$(addsuffix .t, $(CRTEST_TESTS)))
+
+WARNING_CHECKER := $(abspath $(srcdir)/../tool/check_diagnostics)
+
+# default target for the CODERULES subsystem, add all .t files
+crtest_subsys: $(CRTEST_T_FILES)
+
+# Currently SARIF is somewhat broken for clang wrt. location information. Use text parsing for now
+# $(CRTEST_TESTS:=.o): CXXFLAGS += -fdiagnostics-format=sarif -Wno-sarif-format-unstable
+$(CRTEST_TESTS:=.o): CXXFLAGS += $(call CHECKCC,-fno-diagnostics-fixit-info -fno-caret-diagnostics)
+$(CRTEST_TESTS:=.diag): %.diag: %.o
+$(foreach t,$(CRTEST_TESTS),$(eval $t.o: CXX := 2>$t.diag $(CXX)))
+
+$(CRTEST_T_FILES): $(CRTEST_DIR)/%.t: %.cpp %.diag
+	$(VERBOSE)mkdir -p $(@D)
+	$(VERBOSE)echo '#!/usr/bin/env sh' >$@
+	$(VERBOSE)echo '$(WARNING_CHECKER) $(abspath $^)' >>$@
+	$(VERBOSE)chmod +x $@
+
+clean-CODERULES:
+	$(VERBOSE)$(RM) -r selftest/coderules
+	$(VERBOSE)$(RM) *.diag

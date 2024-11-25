@@ -1,0 +1,131 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use File::stat;
+
+die "Usage: $0: <test source> <diag file>" if @ARGV != 2;
+my ($src_file, $diag_file) = @ARGV;
+
+my $plan = 0;
+my @tap;
+my ($uuid, $test_count, $test_name) = undef;
+sub add_tap
+{
+  $plan++;
+  my $ok = shift ? "ok" : "not ok";
+  print $ok . " CodeRules::$test_name/" . shift . "\n";
+  print "# Test-uuid: $uuid\n" if defined $uuid;
+}
+
+# Read diagnostics from compiler
+my @diags;
+my @unexpected_file_diag;
+my @unrecognized;
+
+open(my $diag, '<', $diag_file) or die "Can't open diagnostics: $diag_file: $!";
+while (<$diag>)
+  {
+    next if /^In file included from /;
+    if (/^(?<src>[^:]*):(?<ln>[0-9]*):(?<col>[0-9]*): warning: (?<diag>.*)\[(?<code>[^]]*)\]$/)
+      {
+        if ($+{src} eq $src_file)
+          {
+            push @diags, { %+, matched_expectation => 0, msg => $_ };
+          }
+        else
+          {
+            push @unexpected_file_diag, "# Diagnostic: $_";
+          }
+      }
+    else
+      {
+        next if /\Q$src_file\E:[0-9]*:[0-9]*: note: /;
+        push @unrecognized, "# Diagnostic: $_";
+      }
+  }
+
+my $line = 1; # 1 to get next line after 'Expect Diagnostic'
+my $expect_count = 0;
+
+# Read source file with the specification of expected diagnostics
+open(my $src, '<', $src_file) or die "Can't open source file $src_file: $!";
+while (<$src>)
+  {
+    $line++;
+    next unless s,^\s*//\s*\@CHECKER\s+,,;
+    if (/^Test-UUID: (.*)$/)
+      {
+        die "Duplicate UUID statement\n" if $uuid;
+        $uuid = $1;
+        next;
+      }
+    elsif (/^Test-Name: (.*)$/)
+      {
+        die "Duplicate Test-Name statement\n" if $test_name;
+        $test_name = $1;
+        next;
+      }
+    elsif (/^Test-Count: ([0-9]*)$/)
+      {
+        die "Duplicate Test-Count statement\n" if $test_count;
+        $test_count = $1;
+        next;
+      }
+    elsif (/^Warning: (?<code>\S*)( Name: (?<name>\S*))?( TODO: (?<todo>.*))?$/)
+      {
+        my $code = $+{code};
+        my $name = $+{name} // $code;
+        my $todo = "";
+        $todo = " # TODO $+{todo}" if $+{todo};
+        $expect_count++;
+        # Check if the diag has been found
+        my $found = 0;
+
+        foreach my $diag (@diags)
+          {
+            if ($diag->{ln} == $line && $diag->{code} eq $code)
+              {
+                $diag->{matched_expectation} = 1;
+                $found = 1;
+                last;
+              }
+          }
+
+        $code = "::$code" if $code ne "";
+        add_tap($found, "GotExpectedDiagnostic$name$todo");
+      }
+  }
+
+# Check for source modifications
+my $source_unmodified = stat($src_file)->mtime < stat($diag_file)->mtime;
+add_tap($source_unmodified, "SourceNotChangedSinceLastCompile");
+
+# Check that diagnostics only happen in expected files
+add_tap(!@unexpected_file_diag, "NoDiagnosticsInUnexpectedFiles");
+print "$_\n" foreach @unexpected_file_diag;
+
+# Check that all diagnostics are recognized
+add_tap(!@unrecognized, "NoUnrecognizedDiagnostics");
+print "$_\n" foreach @unrecognized;
+
+
+add_tap(defined $test_count && $test_count == $expect_count, "CorrectExpectDiagnosticCount");
+if (defined $test_count)
+  {
+    print "# Expected: $test_count Found: $expect_count\n" if  $test_count != $expect_count;
+  }
+else
+  {
+    print "# Expected test count not specified! Found: $expect_count\n";
+  }
+
+sub all(&@) { my $c = shift; ($c->($_) or return undef) foreach @_; 1 }
+add_tap(all(sub { $_->{matched_expectation} }, @diags), "NoUnexpectedDiagnostics");
+foreach my $diag (@diags)
+  {
+    print("# Unexpected diagnostic: $diag->{msg}\n")
+      unless $diag->{matched_expectation};
+  }
+
+print "1..$plan\n";

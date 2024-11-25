@@ -3,6 +3,8 @@
 
 # Include for unit tests, enable by including UTEST in SUBSYSTEMS.
 include $(srcdir)/test/utest/Modules.utest
+# Include for code rules tests, enable by including CODERULES in SUBSYSTEMS.
+include $(srcdir)/test/coderules/Modules.crtest
 
 SUBSYSTEMS += ABI JABI KERNEL DRIVERS CRT0 VERSION TCBOFFSET STDWORKLOAD
 SUBSYSTEMS += LIBK CXXLIB LIBC
@@ -10,6 +12,10 @@ SUBSYSTEMS += LIBK CXXLIB LIBC
 ifeq ($(CONFIG_UNIT_TEST),y)
   # UTEST depends on KERNEL and CHECKSUM, must be listed after them
   SUBSYSTEMS += UTEST
+endif
+
+ifeq ($(CONFIG_CODE_RULES_TEST),y)
+  SUBSYSTEMS += CODERULES
 endif
 
 #
