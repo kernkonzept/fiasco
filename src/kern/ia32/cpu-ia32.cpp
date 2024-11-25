@@ -1967,7 +1967,7 @@ Cpu::init(Cpu_number cpu)
 
   set_cr4 (cr4);
 
-  if (Config::Pcid_enabled)
+  if constexpr (Config::Pcid_enabled)
     {
      if (!has_pcid())
        panic("CONFIG_IA32_PCID enabled but CPU lacks this feature");
@@ -1975,7 +1975,7 @@ Cpu::init(Cpu_number cpu)
        panic("CONFIG_IA32_PCID enabled but CPU lacks 'invpcid' instruction");
     }
 
-  if (Config::Tsc_unified)
+  if constexpr (Config::Tsc_unified)
     if (!(_local_features & Lf_tsc_invariant))
       {
         // Cannot panic because QEMU does not support this CPU feature in TCG.
@@ -2089,7 +2089,7 @@ Cpu::calibrate_tsc()
   return;
 
 bad_ctc:
-  if (Config::Kip_clock_uses_rdtsc)
+  if constexpr (Config::Kip_clock_uses_rdtsc)
     panic("Can't calibrate tsc");
 }
 

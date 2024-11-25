@@ -140,7 +140,7 @@ Jdb_kern_info_bench::show_arch()
   BENCH("read CR3",		inst_read_cr3,     200000);
   BENCH("reload CR3",		inst_reload_cr3,   200000);
   time_reload_cr3 = time;
-  if (Config::Pcid_enabled)
+  if constexpr (Config::Pcid_enabled)
     BENCH("reload CR3/nf",	inst_reload_cr3_no_flush, 200000);
   cr0 = Cpu::get_cr0();
   BENCH("clts",			inst_clts,         200000);

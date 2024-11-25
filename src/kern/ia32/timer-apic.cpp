@@ -19,7 +19,7 @@ Timer::init(Cpu_number)
 {
   Apic::timer_assign_irq_vector(Config::Apic_timer_vector);
 
-  if (Config::Scheduler_one_shot)
+  if constexpr (Config::Scheduler_one_shot)
     {
       Apic::timer_set_one_shot();
       Apic::timer_reg_write(Apic::Timer_max);
@@ -33,7 +33,7 @@ Timer::init(Cpu_number)
   // make sure that PIT does pull its interrupt line
   Pit::done();
 
-  if (!Config::Scheduler_one_shot)
+  if constexpr (!Config::Scheduler_one_shot)
     // from now we can save energy in getchar()
     Config::getchar_does_hlt_works_ok = false && Config::hlt_works_ok;
 
@@ -80,6 +80,6 @@ IMPLEMENT inline
 void
 Timer::update_timer(Unsigned64 wakeup)
 {
-  if (Config::Scheduler_one_shot)
+  if constexpr (Config::Scheduler_one_shot)
     update_one_shot(wakeup);
 }

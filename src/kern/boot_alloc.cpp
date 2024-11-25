@@ -42,7 +42,7 @@ PUBLIC static
 void *
 Boot_alloced::alloc(size_t size)
 {
-  if (Debug_boot_alloc)
+  if constexpr (Debug_boot_alloc)
     printf("Boot_alloc: size=0x%zx\n", size);
 
   // this is best fit list-based allocation
@@ -66,7 +66,7 @@ Boot_alloced::alloc(size_t size)
 
       Block *b =
         static_cast<Block*>(Kmem_alloc::allocator()->alloc(Bytes(alloc_size)));
-      if (Debug_boot_alloc)
+      if constexpr (Debug_boot_alloc)
         printf("Boot_alloc: allocated extra memory block @%p (size=%lx)\n",
                static_cast<void *>(b), alloc_size);
 
@@ -83,14 +83,14 @@ Boot_alloced::alloc(size_t size)
   Address b_addr = reinterpret_cast<Address>(b);
   Address rem_addr = (b_addr + size + sizeof(Block) - 1) & ~(sizeof(Block) - 1);
   long rem_sz = b_addr + (*best)->size - rem_addr;
-  if (Debug_boot_alloc)
+  if constexpr (Debug_boot_alloc)
     printf("Boot_alloc: @ %p\n", b);
   if (rem_sz > static_cast<long>(sizeof(Block)))
     {
       Block *rem = reinterpret_cast<Block *>(rem_addr);
       rem->size = rem_sz;
       _free->replace(best, rem);
-      if (Debug_boot_alloc)
+      if constexpr (Debug_boot_alloc)
         printf("Boot_alloc: remaining free block @ %p (size=%lx)\n",
                static_cast<void *>(rem), rem_sz);
     }

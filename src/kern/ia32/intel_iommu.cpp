@@ -842,7 +842,7 @@ Intel::Io_mmu::probe(ACPI::Dmar_drhd const *drhd)
   caps.raw = regs[Reg_64::Capabilities];
   ecaps = regs[Reg_64::Ext_capabilities];
 
-  if (Print_infos)
+  if constexpr (Print_infos)
     printf("IOMMU: %llx va=%p version=%x caps=%llx:%llx\n",
            base_addr, regs.va, regs[Reg_32::Version], caps.raw, ecaps);
 

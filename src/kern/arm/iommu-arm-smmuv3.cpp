@@ -1475,7 +1475,7 @@ Iommu::release_ste(Ste_ptr ste)
   assert(!ste->v());
 
   // Erase TTB or S1ContextPtr.
-  if (Iommu::Stage2)
+  if constexpr (Iommu::Stage2)
     ste->s2_ttb() = 0;
   else
     ste->s1_context_ptr() = 0;
@@ -1821,7 +1821,7 @@ Iommu::setup(void *base_addr, unsigned eventq_irq, unsigned gerror_irq)
 
   _support_wfe = idr0.sev();
 
-  if (Iommu::Debug)
+  if constexpr (Iommu::Debug)
     {
       printf("IOMMU: IDR0 s2p=%d s1p=%d ttf=%d cohacc=%d btm=%d asid16=%d "
              "msi=%d sev=%d vmid16=%d stall_model=%d st_level=%d\n",
@@ -1838,7 +1838,7 @@ Iommu::setup(void *base_addr, unsigned eventq_irq, unsigned gerror_irq)
              idr5.oas().get(), idr5.gran4k().get(), idr5.vax().get());
     }
 
-  if (Iommu::Stage2)
+  if constexpr (Iommu::Stage2)
     {
       if (!idr0.s2p())
           panic("IOMMU: SMMU does not support stage 2 translation.");
@@ -1981,7 +1981,7 @@ Iommu::init_common()
               Iommu::iommus()[0]._ias, iommu._ias);
     }
 
-  if (Iommu::Debug)
+  if constexpr (Iommu::Debug)
     printf("IOMMU: %u ASIDs available.\n", max_asids);
   _asid_alloc.construct(max_asids);
 }

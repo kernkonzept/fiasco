@@ -36,7 +36,7 @@ Alternative_insn::init()
   extern Alternative_insn const _alt_insns_begin[];
   extern Alternative_insn const _alt_insns_end[];
 
-  if (Debug)
+  if constexpr (Debug)
     printf("patching alternative instructions\n");
 
   if (&_alt_insns_begin[0] == &_alt_insns_end[0])
@@ -46,7 +46,7 @@ Alternative_insn::init()
     {
       if (i->probe())
         {
-          if (Debug)
+          if constexpr (Debug)
             printf("  replace insn at %p/%d\n",
                    static_cast<void *>(i->disabled_insn()), i->len);
           i->enable();

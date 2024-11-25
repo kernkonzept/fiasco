@@ -477,7 +477,7 @@ Perf_cnt_ap::Perf_cnt_ap()
       for (unsigned i = 0; i < nr_fixed_function_perctr; ++i)
         if ((ecx & (1 << i)) || ((edx & 0x1f) > i))
           {
-            if (TAG_ENABLED(perf_cnt_count_cpl0))
+            if constexpr (TAG_ENABLED(perf_cnt_count_cpl0))
               msr_fixed_ctr_ctrl |= (3ULL << (4 * i)); // enable for CPL>=0
             else
               msr_fixed_ctr_ctrl |= (2ULL << (4 * i)); // enable for CPL>0

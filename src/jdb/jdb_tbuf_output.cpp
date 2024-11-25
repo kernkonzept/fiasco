@@ -191,7 +191,7 @@ Jdb_tbuf_output::print_entry(String_buffer *buf, Tb_entry *tb)
         snprintf(tidstr + len, sizeof(tidstr) - len, " {KERNEL}");
     }
 
-  if (Config::Max_num_cpus > 1)
+  if constexpr (Config::Max_num_cpus > 1)
     buf->printf(Config::Max_num_cpus > 9 ? "%2d " : "%d ", tb->cpu());
 
   if (tb->type() >= Tbuf_dynentries)

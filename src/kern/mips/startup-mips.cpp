@@ -48,7 +48,7 @@ Startup::stage2()
 {
   printf("Hello from Startup::stage2\n");
 
-  if (Config::Max_num_cpus > 1)
+  if constexpr (Config::Max_num_cpus > 1)
     {
       printf("Max_num_cpus %d\n", Config::Max_num_cpus);
     }

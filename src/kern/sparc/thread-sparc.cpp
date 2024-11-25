@@ -170,7 +170,7 @@ Thread::Thread(Ram_quota *q)
   inc_ref();
   _space.space(Kernel_task::kernel_task());
 
-  if (Config::Stack_depth)
+  if constexpr (Config::Stack_depth)
     std::memset((char *)this + sizeof(Thread), '5',
                 Thread::Size - sizeof(Thread)-64);
 

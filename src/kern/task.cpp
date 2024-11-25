@@ -128,7 +128,7 @@ Task::alloc_ku_mem_chunk(User_ptr<void> *u_addr, unsigned size, void **k_addr,
   Mem_space::Page_order page_order(Config::PAGE_SHIFT);
 
   // Need to use physical address on systems without MMU
-  if (!Config::Have_mmu)
+  if constexpr (!Config::Have_mmu)
     *u_addr = User_ptr<void>(p);
 
   for (Virt_size i = Virt_size(0); i < Virt_size(size);
@@ -168,7 +168,7 @@ Task::alloc_ku_mem_chunk(User_ptr<void> *u_addr, unsigned size, void **k_addr,
         }
     }
 
-  if (Mem_space::Need_insert_tlb_flush)
+  if constexpr (Mem_space::Need_insert_tlb_flush)
     {
       if (need_remote_tlb_flush)
         static_cast<Mem_space*>(this)->tlb_flush_all_cpus();

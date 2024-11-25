@@ -136,7 +136,7 @@ Jdb_tcb::info_thread_state(Thread *t)
 	     p.top_value(-9));
       break;
     case Jdb::s_timer_interrupt:
-      if (Config::Have_frame_ptr)
+      if constexpr (Config::Have_frame_ptr)
 	sub = -1;
       printf("RAX=%016lx  RSI=----------------\n"
 	     "RBX=----------------  RDI=----------------\n"

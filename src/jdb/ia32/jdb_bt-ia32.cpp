@@ -114,7 +114,7 @@ Jdb_bt::get_user_eip_ebp(Address &eip, Address &ebp)
 static Mword
 Jdb_bt::get_user_ebp_following_kernel_stack()
 {
-  if (!Config::Have_frame_ptr)
+  if constexpr (!Config::Have_frame_ptr)
     return 0;
 
   Mword ebp, dummy;
@@ -346,7 +346,7 @@ start_backtrace_known_ebp:
 	      tid->dbg_info()->dbg_id(), ebp, eip);
 	  if (task != 0)
 	    show(ebp, eip, 0, ADDR_USER);
-	  if (!Config::Have_frame_ptr)
+	  if constexpr (!Config::Have_frame_ptr)
 	    {
 	      puts("\n --kernel-bt-follows-- "
 		   "(don't trust w/o frame pointer!!)");

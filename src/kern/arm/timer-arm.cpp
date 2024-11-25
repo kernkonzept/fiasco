@@ -76,7 +76,7 @@ IMPLEMENT inline NEEDS[Timer::update_one_shot, "config.h"]
 void
 Timer::update_timer(Unsigned64 wakeup)
 {
-  if (Config::Scheduler_one_shot)
+  if constexpr (Config::Scheduler_one_shot)
     update_one_shot(wakeup);
 }
 

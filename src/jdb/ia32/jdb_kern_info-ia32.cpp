@@ -490,7 +490,7 @@ Jdb_kern_info_gdt::show_gdt(Cpu_number cpu)
   Gdt *gdt = Cpu::cpus.cpu(cpu).get_gdt();
   unsigned entries = Gdt::gdt_max / 8;
 
-  if (Config::Max_num_cpus > 1)
+  if constexpr (Config::Max_num_cpus > 1)
     printf("CPU%u: GDT base=" L4_PTR_FMT "  limit=%04x (%04x bytes)\n",
            cxx::int_value<Cpu_number>(cpu), reinterpret_cast<Mword>(gdt),
            entries, Gdt::gdt_max);

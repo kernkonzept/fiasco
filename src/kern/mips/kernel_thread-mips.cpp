@@ -42,8 +42,6 @@ PUBLIC
 static void
 Kernel_thread::boot_app_cpus()
 {
-  if (Config::Max_num_cpus <= 1)
-    return;
-
-  Platform_control::boot_all_secondary_cpus();
+  if constexpr (Config::Max_num_cpus > 1)
+    Platform_control::boot_all_secondary_cpus();
 }

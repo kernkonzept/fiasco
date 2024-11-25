@@ -88,7 +88,7 @@ Timer::init(Cpu_number cpu)
       if (secs_till_overflow < (1ULL << 32))
         panic("Failed to calibrate timer!");
 
-      if (!Config::Scheduler_one_shot)
+      if constexpr (!Config::Scheduler_one_shot)
         _timer_period = us_to_ticks(Config::Scheduler_granularity);
     }
 }
@@ -140,7 +140,7 @@ IMPLEMENT inline NEEDS[Timer::set_timer]
 void
 Timer::update_timer(Unsigned64 wakeup_us)
 {
-  if (Config::Scheduler_one_shot)
+  if constexpr (Config::Scheduler_one_shot)
     {
       set_timer(us_to_ticks(wakeup_us));
       if (_enabled.current())
@@ -169,7 +169,7 @@ void
 Timer::handle_interrupt()
 {
   auto cpu = current_cpu();
-  if (Config::Scheduler_one_shot)
+  if constexpr (Config::Scheduler_one_shot)
     {
       // Disable timer interrupts as the STIP flag is not cleared
       // until the next call to sbi_set_timer.
@@ -194,7 +194,7 @@ Timer::toggle(Cpu_number cpu, bool enable)
       return;
     }
 
-  if (Config::Scheduler_one_shot)
+  if constexpr (Config::Scheduler_one_shot)
     _enabled.current() = enable;
   else /* periodic timer */
     if (enable)

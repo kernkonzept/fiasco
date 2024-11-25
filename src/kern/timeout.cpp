@@ -326,7 +326,7 @@ Timeout_q::do_timeouts(Unsigned64 now)
 	break;
     }
 
-  if (Config::Scheduler_one_shot)
+  if constexpr (Config::Scheduler_one_shot)
     {
       // scan all queues for the next minimum
       //_current = (Unsigned64) ULONG_LONG_MAX;

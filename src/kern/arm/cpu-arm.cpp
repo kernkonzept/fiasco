@@ -676,7 +676,7 @@ Cpu::init_errata_workarounds()
 
       if (part == 0xd13)  // Cortex R52
         {
-          if (Config::Fast_interrupts)
+          if constexpr (Config::Fast_interrupts)
             {
               // Erratum 2918152 (LDM data corruption if HSCTLR.FI set)
               Unsigned64 v;

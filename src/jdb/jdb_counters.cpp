@@ -42,7 +42,7 @@ PUBLIC
 Jdb_module::Action_code
 Jdb_counters::action(int cmd, void *&, char const *&, int &) override
 {
-  if (!Config::Jdb_accounting)
+  if constexpr (!Config::Jdb_accounting)
     {
       puts(" accounting disabled");
       return ERROR;

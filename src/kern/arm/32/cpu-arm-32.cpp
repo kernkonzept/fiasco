@@ -87,7 +87,7 @@ PRIVATE static inline
 void
 Cpu::check_for_swp_enable()
 {
-  if (!Config::Cp15_c1_use_swp_enable)
+  if constexpr (!Config::Cp15_c1_use_swp_enable)
     return;
 
   if (((midr() >> 16) & 0xf) != 0xf)

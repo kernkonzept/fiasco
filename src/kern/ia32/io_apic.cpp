@@ -190,7 +190,7 @@ PUBLIC explicit
 Io_apic::Io_apic(Unsigned64 phys, unsigned gsi_base)
 : Irq_chip_ia32(0), _offset(gsi_base), _next(0)
 {
-  if (Print_info)
+  if constexpr (Print_info)
     printf("IO-APIC: addr=%llx\n", phys);
 
   auto a = static_cast<Io_apic::Apic *>(Kmem_mmio::map(phys, Config::PAGE_SIZE));
@@ -259,7 +259,7 @@ Io_apic::read_overrides()
     {
       ++n;
 
-      if (Print_info)
+      if constexpr (Print_info)
         printf("IO-APIC: ovr[%2d] %02x -> %x %x\n",
                n, irq->src, irq->irq, irq->flags);
 
@@ -329,7 +329,7 @@ Io_apic::init_scan_apics()
     {
       Io_apic *apic = new Boot_object<Io_apic>(ioapic->addr, ioapic->irq_base);
 
-      if (Print_info)
+      if constexpr (Print_info)
         {
           printf("IO-APIC[%2d]: pins %u\n", n_apics, apic->nr_irqs());
           apic->dump();
@@ -344,7 +344,7 @@ Io_apic::init_scan_apics()
       return false;
     }
 
-  if (Print_info)
+  if constexpr (Print_info)
     printf("IO-APIC: dual 8259: %s\n", madt->apic_flags & 1 ? "yes" : "no");
 
   return true;

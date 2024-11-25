@@ -387,7 +387,7 @@ Mem_space::init_page_sizes()
 {
   add_page_size(Page_order(Config::PAGE_SHIFT));
 
-  if (Config::have_superpages)
+  if constexpr (Config::have_superpages)
     add_page_size(Page_order(Config::SUPERPAGE_SHIFT));
 }
 

@@ -976,7 +976,7 @@ IMPLEMENT inline NEEDS ["cpu.h"]
 void
 Context::update_consumed_time()
 {
-  if (Config::Fine_grained_cputime)
+  if constexpr (Config::Fine_grained_cputime)
     consume_time(_clock.current().delta());
 }
 
@@ -984,7 +984,7 @@ IMPLEMENT inline NEEDS ["config.h", "cpu.h"]
 Cpu_time
 Context::consumed_time()
 {
-  if (Config::Fine_grained_cputime)
+  if constexpr (Config::Fine_grained_cputime)
     return _clock.cpu(home_cpu()).us(_consumed_time);
 
   return _consumed_time;

@@ -452,7 +452,7 @@ Io_apic_remapped::init_apics()
         new Boot_object<Io_apic_remapped>(ioapic->addr, ioapic->irq_base, mmu, srcid);
       ++n_apics;
 
-      if (Print_infos)
+      if constexpr (Print_infos)
         apic->dump();
     }
 
@@ -462,7 +462,7 @@ Io_apic_remapped::init_apics()
       return false;
     }
 
-  if (Print_infos)
+  if constexpr (Print_infos)
     printf("IO-APIC: dual 8259: %s\n", madt->apic_flags & 1 ? "yes" : "no");
 
   Irq_mgr_rmsi *m;

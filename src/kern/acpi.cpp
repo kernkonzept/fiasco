@@ -487,7 +487,7 @@ Acpi::init_virt()
     return;
   _init_done = 1;
 
-  if (Print_info)
+  if constexpr (Print_info)
     printf("ACPI-Init\n");
 
   Acpi_rsdp const *rsdp = Acpi_rsdp::locate();
@@ -512,7 +512,7 @@ Acpi::init_virt()
           else
             {
               _sdt.init(x);
-              if (Print_info)
+              if constexpr (Print_info)
                 {
                   x->print_info();
                   _sdt.print_summary();
@@ -539,7 +539,7 @@ Acpi::init_virt()
           else
             {
               _sdt.init(r);
-              if (Print_info)
+              if constexpr (Print_info)
                 {
                   r->print_info();
                   _sdt.print_summary();

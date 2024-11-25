@@ -323,7 +323,7 @@ Thread::Thread(Ram_quota *q, Context_mode_kernel)
   inc_ref();
   _space.space(Kernel_task::kernel_task());
 
-  if (Config::Stack_depth)
+  if constexpr (Config::Stack_depth)
     std::memset(reinterpret_cast<char*>(this) + sizeof(Thread), '5',
                 Thread::Size-sizeof(Thread) - 64);
 
@@ -465,7 +465,7 @@ Thread::handle_timer_interrupt()
 {
   Cpu_number _cpu = current_cpu();
   // XXX: This assumes periodic timers (i.e. bogus in one-shot mode)
-  if (!Config::Fine_grained_cputime)
+  if constexpr (!Config::Fine_grained_cputime)
     consume_time(Config::Scheduler_granularity);
 
   bool resched = Rcu::do_pending_work(_cpu);

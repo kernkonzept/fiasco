@@ -55,7 +55,7 @@ PRIVATE inline
 void
 Context::arm_hyp_load_non_vm_state()
 {
-  if (Config::Have_mpu)
+  if constexpr (Config::Have_mpu)
     asm volatile ("msr VTCR_EL2, %x0"    : : "r"(Cpu::vtcr_bits()));
   asm volatile ("msr HSTR_EL2, %x0"  : : "r"(Cpu::Hstr_non_vm));
   // load normal SCTLR ...
@@ -100,7 +100,7 @@ Context::save_ext_vcpu_state(Mword /*_state*/, Vm_state *v)
       asm volatile ("mrs %x0, IFSR32_EL2" : "=r"(v->ifsr32));
     }
 
-  if (Config::Have_mpu)
+  if constexpr (Config::Have_mpu)
     {
       // Look into the HWs VTCR_EL2 because the user space could tamper
       // v->vtcr!
@@ -118,7 +118,7 @@ Context::load_ext_vcpu_state(Mword /*_to_state*/, Vm_state const *v)
   Unsigned64 vtcr = 0;
 
   // always trapped: asm volatile ("msr ACTLR_EL1, %0" : : "r"(v->actlr));
-  if (Config::Have_mpu)
+  if constexpr (Config::Have_mpu)
     {
       vtcr = access_once(&v->vtcr);
       asm volatile ("msr VTCR_EL2, %x0"    : : "r"(vtcr & Cpu::Vtcr_usr_mask));

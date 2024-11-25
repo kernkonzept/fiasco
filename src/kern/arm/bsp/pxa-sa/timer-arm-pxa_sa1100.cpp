@@ -67,7 +67,7 @@ PUBLIC inline NEEDS["config.h", Timer::timer_to_us]
 void
 Timer::ack()
 {
-  if (Config::Scheduler_one_shot)
+  if constexpr (Config::Scheduler_one_shot)
     {
       Kip::k()->add_to_clock(timer_to_us(read<Unsigned32>(OSCR)));
       //puts("Reset timer");
@@ -123,9 +123,13 @@ IMPLEMENT_OVERRIDE inline NEEDS["config.h", "kip.h", Timer::timer_to_us]
 Unsigned64
 Timer::system_clock()
 {
-  if (Config::Scheduler_one_shot)
-    return Kip::k()->clock() + timer_to_us(_timer->read<Unsigned32>(OSCR));
-
-  static_assert(Config::Kip_clock_uses_timer == false);
-  return Kip::k()->clock();
+  if constexpr (Config::Scheduler_one_shot)
+    {
+      return Kip::k()->clock() + timer_to_us(_timer->read<Unsigned32>(OSCR));
+    }
+  else
+    {
+      static_assert(Config::Kip_clock_uses_timer == false);
+      return Kip::k()->clock();
+    }
 }

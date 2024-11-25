@@ -699,7 +699,7 @@ Jdb_thread_list::list_threads_show_thread(Thread *t)
     }
   else
     {
-      if (Config::Stack_depth)
+      if constexpr (Config::Stack_depth)
 	{
 	  Mword i, stack_depth;
 	  char *c  = reinterpret_cast<char*>(t) + sizeof (Thread);
