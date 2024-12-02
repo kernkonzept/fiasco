@@ -189,6 +189,7 @@ LDFLAGS			+= $(call CHECKLD,--no-warn-rwx-segments,) \
 			   $(call CHECKLD,--no-warn-execstack,)
 
 WNO_DEPRECATED_NON_PROTOTYPE := $(if $(call CHECKCC,-Wdeprecated-non-prototype),-Wno-deprecated-non-prototype)
+DIAGNOSTICS_COLOR := $(call CHECKCC,-fdiagnostics-color=always)
 
 ifneq ($(CONFIG_COV),)
   SHARED_FLAGS-gcc     += -fprofile-arcs -ftest-coverage

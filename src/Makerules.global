@@ -75,50 +75,65 @@ as_flgs = $(CPPFLAGS) $(ASFLAGS)
 
 .PHONY: FORCE
 
+# Diagnostics collection features
+ifneq ($(COLLECT_DIAGNOSTICS),)
+CFLAGS += $(DIAGNOSTICS_COLOR)
+CXXFLAGS += $(DIAGNOSTICS_COLOR)
+COLLECT_REDIR ?= 2>&1 | tee $@.diag && ( [ -s $@.diag ] || rm $@.diag )
+endif
+
 %.o:	%.cc
 	$(call comp_msg,$*)
 	$(VERBOSE)$(CXX) -c -MD -MP -MF .$*.cc.d.new -o $@ \
-	  $(call cc_flgs,$*) $(CXXFLAGS_$(basename $(notdir $@))) $<
+	  $(call cc_flgs,$*) $(CXXFLAGS_$(basename $(notdir $@))) $< \
+	  $(COLLECT_REDIR)
 	@mv .$*.cc.d.new .$*.cc.d
 
 %.S:	%.cc
 	$(call comp_msg,$*)
 	$(VERBOSE)$(CC) -S -o $@ -fverbose-asm \
-	  $(call cc_flgs,$*) $(CXXFLAGS_$(basename $(notdir $@))) $<
+	  $(call cc_flgs,$*) $(CXXFLAGS_$(basename $(notdir $@))) $< \
+	  $(COLLECT_REDIR)
 
 %.o:	%.c
 	$(call comp_msg,$*)
 	$(VERBOSE)$(CC) -c -MD -MP -MF .$*.c.d.new -o $@ \
-	  $(call c_flgs,$*) $(CFLAGS_$(basename $(notdir $@))) $<
+	  $(call c_flgs,$*) $(CFLAGS_$(basename $(notdir $@))) $< \
+	  $(COLLECT_REDIR)
 	@mv .$*.c.d.new .$*.c.d
 
 %.S:	%.c
 	$(call comp_msg,$*)
 	$(VERBOSE)$(CC) -S -o $@ -fverbose-asm \
-	  $(call c_flgs,$*) $(CFLAGS_$(basename $(notdir $@))) $<
+	  $(call c_flgs,$*) $(CFLAGS_$(basename $(notdir $@))) $< \
+	  $(COLLECT_REDIR)
 
 %.o:	%.S
 	$(COMP_MESSAGE)
-	$(VERBOSE)$(CC) -c -MD -MP -MF .$*.S.d.new -o $@ $(as_flgs) $<
+	$(VERBOSE)$(CC) -c -MD -MP -MF .$*.S.d.new -o $@ $(as_flgs) $< \
+	  $(COLLECT_REDIR)
 	@mv .$*.S.d.new .$*.S.d
 
 %.i:	%.c
 	$(call comp_msg,$*)
 	$(VERBOSE)$(CC) -E -dD -o $@ \
-	  $(call c_flgs,$*) $(CFLAGS_$(basename $(notdir $@))) $<
+	  $(call c_flgs,$*) $(CFLAGS_$(basename $(notdir $@))) $< \
+	  $(COLLECT_REDIR)
 
 %.i:	%.cc
 	$(call comp_msg,$*)
 	$(VERBOSE)$(CXX) -E -dD -o $@ \
-	  $(call cc_flgs,$*) $(CXXFLAGS_$(basename $(notdir $@))) $<
+	  $(call cc_flgs,$*) $(CXXFLAGS_$(basename $(notdir $@))) $< \
+	  $(COLLECT_REDIR)
 
 %.i:	%.S
 	$(COMP_MESSAGE)
-	$(VERBOSE)$(CC) -E -dD -o $@ $(as_flgs) $<
+	$(VERBOSE)$(CC) -E -dD -o $@ $(as_flgs) $< $(COLLECT_REDIR)
 
 %.lds:	%.ld
 	$(COMP_MESSAGE)
-	$(VERBOSE)$(CPP) -x c -MD -MP -MF .$@.d -MT $@ -undef -P -DASSEMBLER -o $@ $(CPPFLAGS) $<
+	$(VERBOSE)$(CPP) -x c -MD -MP -MF .$@.d -MT $@ -undef -P -DASSEMBLER \
+	  -o $@ $(CPPFLAGS) $< $(COLLECT_REDIR)
 
 (%): %
 	$(AR_MESSAGE)

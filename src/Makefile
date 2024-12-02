@@ -288,7 +288,7 @@ clean: $(foreach subsys, $(SUBSYSTEMS), clean-$(subsys))
 
 cleanall: clean $(foreach subsys, $(SUBSYSTEMS), cleanall-$(subsys))
 	$(foreach subdir, $(SUBDIRS), $(VERBOSE)$(RM) $(subdir)/*.d $(subdir)/.*.d)
-	$(VERBOSE)$(RM) *.d .*.d .*.d.new *.d.new *~
+	$(VERBOSE)$(RM) *.d .*.d .*.d.new *.d.new *~ *.diag
 	$(VERBOSE)$(RM) globalconfig.h globalconfig.tags globalconfig.h.old Circular
 	$(VERBOSE)$(RM) .Modules.deps source .Compiler-config
 	$(VERBOSE)$(RM_R) scripts
@@ -302,6 +302,10 @@ endif # clean, cleanall, mrproper
 update:
 	cd $(srcdir)/.. && svn update
 	cd $(dir $(PREPROCESS))/.. && svn update
+
+diag:
+	@echo "Collected diagnostics during build:"
+	@cat *.diag 2>/dev/null || echo "  None"
 
 endif # srcdir != NOT_SET
 
