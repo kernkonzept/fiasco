@@ -84,7 +84,6 @@ public:
 
   static Cpu_number max_num_cpus() { return Cpu_number(Max_num_cpus); }
 
-  static Global_data<bool> getchar_does_hlt_works_ok;
   static Global_data<bool> esc_hack;
   static Global_data<unsigned> tbuf_entries;
 
@@ -207,8 +206,6 @@ Global_data<unsigned> Config::tbuf_entries(0x20000 / sizeof(Mword)); //1024;
 DEFINE_GLOBAL_CONSTINIT
 Global_data<unsigned> Config::tbuf_entries((1U << 17) / (sizeof(Mword) * 16));
 #endif
-
-DEFINE_GLOBAL Global_data<bool> Config::getchar_does_hlt_works_ok;
 
 IMPLEMENT FIASCO_INIT
 void Config::init()

@@ -47,10 +47,6 @@ Timer::init(Cpu_number)
       // setup hpet for periodic here
     }
 
-  if constexpr (!Config::Scheduler_one_shot)
-    // from now we can save energy in getchar()
-    Config::getchar_does_hlt_works_ok = Config::hlt_works_ok;
-
   Hpet::enable();
   Hpet::dump();
 

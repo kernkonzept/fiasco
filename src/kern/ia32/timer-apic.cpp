@@ -34,10 +34,6 @@ Timer::init(Cpu_number)
   // make sure that PIT does pull its interrupt line
   Pit::done();
 
-  if constexpr (!Config::Scheduler_one_shot)
-    // from now we can save energy in getchar()
-    Config::getchar_does_hlt_works_ok = false && Config::hlt_works_ok;
-
   if (Warn::is_enabled(Info))
     printf ("Using the Local APIC timer on vector %x (%s Mode) for scheduling\n",
             static_cast<unsigned>(Config::Apic_timer_vector),
