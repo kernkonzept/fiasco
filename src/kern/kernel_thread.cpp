@@ -221,8 +221,6 @@ Kernel_thread::idle_op()
 IMPLEMENTATION [tickless_idle]:
 
 #include "processor.h"
-#include <rcupdate.h>
-#include <tlbs.h>
 
 EXTENSION class Kernel_thread
 {
@@ -287,7 +285,6 @@ Kernel_thread::arch_tickless_idle()
   arch_idle();
 }
 
-// template code for arch idle
 IMPLEMENT
 void
 Kernel_thread::idle_op()
@@ -301,48 +298,21 @@ Kernel_thread::idle_op()
 
   ++_idle_counter.cpu(cpu);
 
-  // 1. check for latency requirements that prevent low power modes
-  // 2. check for timeouts on this CPU ignore the idle thread's timeslice
-  // 3. check for RCU work on this CPU
-  if (!Rcu::has_pending_work(cpu) && can_tickless_idle(cpu))
+  if (can_tickless_idle(cpu) && enter_tickless_idle(cpu))
     {
       ++_deep_idle_counter.cpu(cpu);
-      Rcu::enter_idle(cpu);
 
-      Mem_space::disable_tlb(cpu);
-      Tlb::flush_all_cpu(cpu);
-
-      if constexpr (Config::Scheduler_one_shot)
-        // Reprogram the one-shot timer ignoring the idle thread's timeslice
-        // timeout and without the Rcu_grace_period limit.
-        Timeout_q::timeout_queue.cpu(cpu).update_timer(Timer::Infinite_timeout,
-                                                       timeslice_timeout.cpu(cpu));
-      else
+      if constexpr (!Config::Scheduler_one_shot)
         // Disable the timer tick while in tickless idle.
         Timer_tick::disable(cpu);
 
-      // do everything to do to a deep sleep state:
-      //  - flush caches
-      //  - ...
       arch_tickless_idle();
 
-      if constexpr (Config::Scheduler_one_shot)
-        {
-          // Reprogram the one-shot timer with the Rcu_grace_period limit.
-          Unsigned64 next_rcu;
-          if constexpr (Config::Need_rcu_tick)
-            next_rcu = Timer::system_clock() + Config::Rcu_grace_period;
-          else
-            next_rcu = Timer::Infinite_timeout;
-          Timeout_q::timeout_queue.cpu(cpu).update_timer(next_rcu);
-        }
-      else
+      if constexpr (!Config::Scheduler_one_shot)
         // Re-enable the timer tick when leaving tickless idle.
         Timer_tick::enable(cpu);
 
-      Mem_space::enable_tlb(cpu);
-      Mem_space::reload_current();
-      Rcu::leave_idle(cpu);
+      leave_tickless_idle(cpu);
     }
   else
     arch_idle();

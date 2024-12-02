@@ -354,6 +354,13 @@ Rcu::leave_idle(Cpu_number cpu)
     }
 }
 
+PUBLIC static inline
+bool
+Rcu::suspended_from_rcu(Cpu_number cpu)
+{
+  Rcu_data *rdp = &_rcu_data.cpu(cpu);
+  return rdp->_idle;
+}
 
 /**
  * Announce a quiescent state of a CPU.

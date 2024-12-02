@@ -2270,6 +2270,73 @@ Context::rcu_unblock(Rcu_item *i)
   return static_cast<Context*>(i)->xcpu_state_change(~Thread_rcu_wait, Thread_ready);
 }
 
+// ------------------------------------------------------------------------
+IMPLEMENTATION [tickless_idle]:
+
+#include "rcupdate.h"
+#include "mem_space.h"
+#include "timeslice_timeout.h"
+#include "tlbs.h"
+
+/**
+ * Prepare the local CPU to enter tickless idle mode.
+ *
+ * \note The function can be called repeatedly, regardless of whether the CPU is
+ *       already in tickless idle mode or not.
+
+ * \param cpu  The local CPU that prepares for tickless idle mode.
+ *
+ * \retval true if the local CPU is ready for tickless idle.
+ * \retval false if the local CPU is not ready for tickless idle.
+ */
+PROTECTED static
+bool
+Context::enter_tickless_idle(Cpu_number cpu = current_cpu())
+{
+  if (Rcu::has_pending_work(cpu))
+    return false;
+
+  Rcu::enter_idle(cpu);
+  Mem_space::disable_tlb(cpu);
+  Tlb::flush_all_cpu(cpu);
+
+  if constexpr (Config::Scheduler_one_shot)
+    {
+      // Reprogram the one-shot timer ignoring the idle thread's timeslice
+      // timeout and without the Rcu_grace_period limit.
+      Timeout_q::timeout_queue.cpu(cpu).update_timer(Timer::Infinite_timeout,
+                                                     timeslice_timeout.cpu(cpu));
+    }
+
+  return true;
+}
+
+/**
+ * Let the local CPU leave tickless idle mode.
+ *
+ * \note The CPU does not need to be in tickless idle mode to call this function.
+ *
+ * \param cpu  The local CPU that leaves tickless idle mode.
+ */
+PROTECTED static
+void
+Context::leave_tickless_idle(Cpu_number cpu = current_cpu())
+{
+  if (Rcu::suspended_from_rcu(cpu))
+    {
+      if constexpr (Config::Scheduler_one_shot)
+        {
+          // Reprogram the one-shot timer with the Rcu_grace_period limit.
+          Unsigned64 next_rcu = Timer::system_clock() + Config::Rcu_grace_period;
+          Timeout_q::timeout_queue.cpu(cpu).update_timer(next_rcu);
+        }
+
+      Mem_space::enable_tlb(cpu);
+      Mem_space::reload_current();
+      Rcu::leave_idle(cpu);
+    }
+}
+
 //----------------------------------------------------------------------------
 IMPLEMENTATION [fpu && lazy_fpu]:
 
