@@ -152,8 +152,12 @@ _tramp_mp_entry:
 	msr	ELR_EL2, x18
 	eret
 #else
-	beq   2f
+	beq   1f
 	switch_to_hyp
+1:
+	// HCR_EL2.{E2H,TGE} change behavior of paging so make sure they are disabled
+	mov x6, #HCR_RW
+	msr HCR_EL2, x6
 #endif
 2:
 	msr	DAIFSet, #0xf
