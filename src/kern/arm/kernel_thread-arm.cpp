@@ -30,16 +30,6 @@ Kernel_thread::bootstrap_arch()
   boot_app_cpus();
   Proc::cli();
 }
-//--------------------------------------------------------------------------
-INTERFACE [amp]:
-
-class Kip;
-
-EXTENSION class Kernel_thread
-{
-public:
-  static void __amp_main() asm("__amp_main");
-};
 
 //--------------------------------------------------------------------------
 IMPLEMENTATION [amp]:
@@ -51,7 +41,13 @@ IMPLEMENTATION [amp]:
 #include "global_data.h"
 #include "platform_control.h"
 
-static DEFINE_GLOBAL Global_data<bool> is_ap_node;
+EXTENSION class Kernel_thread
+{
+public:
+  static Global_data<bool> is_ap_node;
+};
+
+DEFINE_GLOBAL Global_data<bool> Kernel_thread::is_ap_node;
 
 IMPLEMENT FIASCO_INIT
 void
@@ -62,30 +58,6 @@ Kernel_thread::bootstrap_arch()
   else
     Platform_control::amp_boot_init();
   Kip_init::map_kip(Kip::k());
-}
-
-void kernel_main(void);
-
-/**
- * Common entry point of AP CPUs.
- *
- * Will run with caches and MPU disabled! The MPU setup code will enable the
- * MPU once it is configured.
- */
-IMPLEMENT
-static void
-Kernel_thread::__amp_main()
-{
-  extern char __global_data_start[];
-  extern char __global_data_end[];
-  size_t global_data_size = __global_data_end - __global_data_start;
-
-  Global_data_base::set_amp_offset(global_data_size * Amp_node::id());
-
-  is_ap_node = true;
-  Platform_control::amp_ap_early_init();
-  static_construction();
-  kernel_main();
 }
 
 //--------------------------------------------------------------------------

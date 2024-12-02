@@ -36,7 +36,6 @@ Platform_control::amp_ap_early_init()
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && amp && pf_s32z && pf_s32z_amp_release]:
 
-#include "kernel_thread.h"
 #include "poll_timeout_counter.h"
 #include "warn.h"
 
@@ -119,7 +118,8 @@ Platform_control::amp_boot_init()
                              Cfg_core);
 
   // Start cores serially because they all work on the same stack!
-  Address entry = reinterpret_cast<Address>(&Kernel_thread::__amp_main);
+  extern char __amp_main[];
+  Address entry = reinterpret_cast<Address>(&__amp_main[0]);
   for (unsigned i = 1; i < nodes; i++)
     {
       unsigned n = cxx::int_value<Amp_phys_id>(Amp_node::first_node()) + i;
