@@ -257,7 +257,7 @@ refvar _tramp_mp_startup_mair1
 	strexeq	r1, r2, [r0]
 	teqeq	r1, #0
 	bne	1b
-#ifdef ARM_V7PLUS
+#ifdef CONFIG_ARM_V7PLUS
 	// acquire barrier
 	dmb
 #else
