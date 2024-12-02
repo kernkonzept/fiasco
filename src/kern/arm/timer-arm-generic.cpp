@@ -57,7 +57,7 @@ Timer::init(Cpu_number cpu)
   if (!Cpu::cpus.cpu(cpu).has_generic_timer())
     panic("CPU does not support the ARM generic timer");
 
-  if (Proc::Is_hyp)
+  if constexpr (Proc::Is_hyp)
     Generic_timer::T<Generic_timer::Virtual>::control(0);
 
   Gtimer::control(0);

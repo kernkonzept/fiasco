@@ -354,8 +354,11 @@ Fpu::save_user_exception_state(bool owner, Fpu_state *fpu_regs,
 
   if (owner)
     {
-      if (Proc::Is_hyp && !is_enabled())
-        fpu.current().enable();
+      if constexpr (Proc::Is_hyp)
+        {
+          if (!is_enabled())
+            fpu.current().enable();
+        }
 
       Mword exc = Fpu::fpexc();
 
@@ -366,7 +369,7 @@ Fpu::save_user_exception_state(bool owner, Fpu_state *fpu_regs,
           if (exc & FPEXC_FP2V)
             esu->fpinst2 = Fpu::fpinst2();
 
-          if (!Proc::Is_hyp)
+          if constexpr (!Proc::Is_hyp)
             Fpu::fpexc(exc & ~FPEXC_EX);
         }
       return;
@@ -385,7 +388,7 @@ Fpu::save_user_exception_state(bool owner, Fpu_state *fpu_regs,
       if (fpu_regs->fpexc & FPEXC_FP2V)
         esu->fpinst2 = fpu_regs->fpinst2;
 
-      if (!Proc::Is_hyp)
+      if constexpr (!Proc::Is_hyp)
         fpu_regs->fpexc &= ~FPEXC_EX;
     }
 }

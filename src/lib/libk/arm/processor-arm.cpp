@@ -1,6 +1,7 @@
 INTERFACE[arm]:
 
 #include <cxx/bitfield>
+#include <cxx/conditionals>
 
 class Arm_esr
 {
@@ -124,7 +125,10 @@ public:
     PSR_m_abt = 0x17,
     PSR_m_hyp = 0x1a,
     PSR_m_und = 0x1b,
-    PSR_m_sys = 0x1f
+    PSR_m_sys = 0x1f,
+
+    Is_hyp = cxx::const_ite<TAG_ENABLED(cpu_virt)>(1, 0),
+    Status_mode_supervisor = cxx::const_ite<Is_hyp>(PSR_m_hyp, PSR_m_svc),
   };
 
   static Cpu_phys_id cpu_id();
@@ -165,18 +169,6 @@ public:
       Status_always_mask      = Status_mode_always_on | Status_IRQ_disabled,
     };
 };
-
-//--------------------------------------------------------------------
-INTERFACE[arm && !cpu_virt]:
-
-EXTENSION class Proc
-{ public: enum : unsigned { Is_hyp = 0, Status_mode_supervisor = PSR_m_svc }; };
-
-//--------------------------------------------------------------------
-INTERFACE[arm && cpu_virt]:
-
-EXTENSION class Proc
-{ public: enum : unsigned { Is_hyp = 1, Status_mode_supervisor = PSR_m_hyp }; };
 
 //--------------------------------------------------------------------
 IMPLEMENTATION[arm]:

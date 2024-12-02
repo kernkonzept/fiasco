@@ -94,7 +94,7 @@ Perf_cnt::ccnt_init(Cpu const &cpu)
                            // non-secure EL1
       val &= ~(1UL << 28); // NSU=0: don't disable counting of cycles in
                            // non-secure EL0
-      if (TAG_ENABLED(cpu_virt))
+      if constexpr (Proc::Is_hyp)
         val |= (1UL << 27); // NSH=1: don't disable counting of cycles in EL2
       asm volatile ("msr PMCCFILTR_EL0, %0" : : "r" (val));
     }
