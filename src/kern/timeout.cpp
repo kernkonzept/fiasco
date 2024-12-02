@@ -376,7 +376,9 @@ Timeout_q::do_timeouts(Unsigned64 now)
 	break;
     }
 
-  update_timer(now + Config::One_shot_max_interval_us);
+  // The timer interrupt performs some house-keeping, e.g. it keeps RCU running.
+  // Make sure it has a defined maximum latency.
+  update_timer(now + Config::Rcu_grace_period);
 
   return reschedule;
 }

@@ -60,7 +60,11 @@ public:
     Warn_level = CONFIG_WARN_LEVEL,
 
     One_shot_min_interval_us = 200,
-    One_shot_max_interval_us = 10000,
+#ifdef CONFIG_SCHED_GRANULARITY
+    Rcu_grace_period = CONFIG_SCHED_GRANULARITY,
+#else
+    Rcu_grace_period = 1000,
+#endif
 
     Fine_grained_cputime = TAG_ENABLED(fine_grained_cputime),
     Stack_depth = TAG_ENABLED(stack_depth),
