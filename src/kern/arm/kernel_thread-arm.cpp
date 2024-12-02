@@ -80,9 +80,3 @@ Kernel_thread::arch_tickless_idle(unsigned)
 {
   Proc::halt();
 }
-
-PROTECTED inline NEEDS["processor.h"]
-void
-Kernel_thread::arch_idle(unsigned)
-{ Proc::halt(); }
-

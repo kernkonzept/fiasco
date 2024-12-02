@@ -36,13 +36,3 @@ Kernel_thread::arch_tickless_idle(Cpu_number)
 {
   Proc::halt();
 }
-
-//--------------------------------------------------------------------------
-IMPLEMENTATION [arm && tickless_idle && pf_exynos]:
-
-PROTECTED inline NEEDS["processor.h"]
-void
-Kernel_thread::arch_idle(Cpu_number)
-{
-  Proc::halt();
-}

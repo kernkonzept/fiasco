@@ -204,11 +204,23 @@ Kernel_thread::idle_op()
 // ------------------------------------------------------------------------
 IMPLEMENTATION [tickless_idle]:
 
+#include "processor.h"
 #include <rcupdate.h>
 #include <tlbs.h>
 
 EXTENSION class Kernel_thread
 {
+protected:
+  /**
+   * Enter the idle state on the current CPU.
+   *
+   * This function is called with interrupts closed. Implementations that open
+   * interrupts should ensure that opening the interrupts and waiting for the
+   * next interrupt is an atomic operation, i.e. the interrupt cannot hit before
+   * the wait-for-interrupt instruction is executed.
+   */
+  void arch_idle(Cpu_number cpu);
+
 private:
   friend class Jdb_idle_stats;
   static Per_cpu<unsigned long> _idle_counter;
@@ -218,6 +230,17 @@ private:
 
 DEFINE_PER_CPU Per_cpu<unsigned long> Kernel_thread::_idle_counter;
 DEFINE_PER_CPU Per_cpu<unsigned long> Kernel_thread::_deep_idle_counter;
+
+/*
+ * Default idle operation for architectures that do not need to open interrupts
+ * to wait for the next interrupt.
+ */
+IMPLEMENT_DEFAULT inline NEEDS["processor.h"]
+void
+Kernel_thread::arch_idle(Cpu_number)
+{
+  Proc::halt(); // stop the CPU, waiting for an interrupt
+}
 
 // template code for arch idle
 IMPLEMENT
