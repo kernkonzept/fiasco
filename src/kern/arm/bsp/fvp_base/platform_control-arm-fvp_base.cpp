@@ -6,7 +6,7 @@ EXTENSION class Platform_control
 };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pf_fvp_base]:
+IMPLEMENTATION [arm && pf_fvp_base && !arm_psci]:
 
 #include "reset.h"
 
