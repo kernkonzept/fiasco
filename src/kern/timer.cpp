@@ -73,6 +73,8 @@ public:
 
   static void master_cpu(Cpu_number cpu) { _cpu = cpu; }
 
+  static constexpr Unsigned64 Infinite_timeout = UINT64_MAX;
+
 private:
   static Cpu_number _cpu;
 };

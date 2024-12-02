@@ -56,22 +56,15 @@ Timer::update_one_shot(Unsigned64 wakeup)
 {
   Unsigned32 apic;
   Unsigned64 now = system_clock();
-  if (EXPECT_FALSE(wakeup <= now))
-    // already expired
-    apic = 1;
+  if (EXPECT_FALSE(wakeup == Infinite_timeout))
+    apic = Apic::Timer_max;
+  else if (EXPECT_FALSE(wakeup <= now))
+    apic = Apic::Timer_min;
   else
     {
-      Unsigned64 delta = wakeup - now;
-      if (delta < Config::One_shot_min_interval_us)
-	apic = Apic::us_to_apic(Config::One_shot_min_interval_us);
-      else if (delta > Config::One_shot_max_interval_us)
-	apic = Apic::us_to_apic(Config::One_shot_max_interval_us);
-      else
-        apic = Apic::us_to_apic(delta);
-
-      if (EXPECT_FALSE (apic < 1))
-	// timeout too small
-	apic = 1;
+      apic = Apic::us_to_apic(wakeup - now);
+      if (EXPECT_FALSE(apic < Apic::Timer_min))
+        apic = Apic::Timer_min;
     }
 
   Apic::timer_reg_write(apic);

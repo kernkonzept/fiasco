@@ -108,11 +108,10 @@ PUBLIC inline
 unsigned
 Timeout_q::queues() const { return Wakeup_queue_count; }
 
-
 /**
  * Enqueue a new timeout.
  */
-PUBLIC inline NEEDS[Timeout_q::first, "timer.h", "config.h"]
+PUBLIC inline NEEDS[Timeout_q::first, Timeout_q::program_timer, "config.h"]
 void
 Timeout_q::enqueue(Timeout *to)
 {
@@ -129,10 +128,7 @@ Timeout_q::enqueue(Timeout *to)
   if constexpr (Config::Scheduler_one_shot)
     {
       if (to->_wakeup < _current)
-        {
-          _current = to->_wakeup;
-          Timer::update_timer(_current);
-        }
+        program_timer(to->_wakeup);
     }
 }
 
@@ -266,6 +262,57 @@ Timeout::expire()
 }
 
 /**
+ * Program the timer interrupt to the given timeout.
+ *
+ * Enforces a lower bound for the timeout, as defined by
+ * Config::One_shot_min_interval_us, to prevent too frequent handling of the
+ * timeout queue.
+ */
+PRIVATE inline NEEDS ["config.h", "timer.h"]
+void
+Timeout_q::program_timer(Unsigned64 timeout)
+{
+   if (timeout < _old_clock + Config::One_shot_min_interval_us)
+    _current = _old_clock + Config::One_shot_min_interval_us;
+  else
+    _current = timeout;
+
+  Timer::update_timer(_current);
+}
+
+/**
+ * Update the timer interrupt to the next timeout.
+ *
+ * Set the timer to the next timeout in one-shot mode. The parameter
+ * gives a hint for the maximum timeout to set.
+ *
+ * \param max_timeout  Maximum timeout to set.
+ *                     Use Timer::Infinite_timeout for no timeout.
+ */
+PUBLIC inline NEEDS ["config.h", Timeout_q::program_timer]
+void
+Timeout_q::update_timer(Unsigned64 max_timeout)
+{
+  if constexpr (!Config::Scheduler_one_shot)
+    return;
+
+  Unsigned64 next_timeout = max_timeout;
+
+  // scan all queues for the next minimum
+  for (int i = 0; i < Wakeup_queue_count; i++)
+    {
+      // make sure that something enqueued other than the dummy element
+      if (first(i).empty())
+        continue;
+
+      if (first(i).front()->_wakeup < next_timeout)
+        next_timeout = first(i).front()->_wakeup;
+    }
+
+  program_timer(next_timeout);
+}
+
+/**
  * Handles the timeouts by calling expired() for the expired timeouts and
  * programming the "oneshot timer" to the next timeout.
  *
@@ -329,29 +376,8 @@ Timeout_q::do_timeouts(Unsigned64 now)
 	break;
     }
 
-  if constexpr (Config::Scheduler_one_shot)
-    {
-      // scan all queues for the next minimum
-      //_current = (Unsigned64) ULONG_LONG_MAX;
-      _current = now + 10000; // 10ms
-      bool update_timer = true;
+  update_timer(now + Config::One_shot_max_interval_us);
 
-      for (int i = 0; i < Wakeup_queue_count; i++)
-	{
-	  // make sure that something enqueued other than the dummy element
-	  if (first(i).empty())
-	    continue;
-
-	  update_timer = true;
-
-	  if (first(i).front()->_wakeup < _current)
-	    _current =  first(i).front()->_wakeup;
-	}
-
-      if (update_timer)
-	Timer::update_timer(_current);
-
-    }
   return reschedule;
 }
 

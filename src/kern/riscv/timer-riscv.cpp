@@ -142,7 +142,10 @@ Timer::update_timer(Unsigned64 wakeup_us)
 {
   if constexpr (Config::Scheduler_one_shot)
     {
-      set_timer(us_to_ticks(wakeup_us));
+      if (wakeup_us == Infinite_timeout)
+        set_timer(0xffff'ffff'ffff'ffffULL);
+      else
+        set_timer(us_to_ticks(wakeup_us));
       if (_enabled.current())
         Cpu::enable_timer_interrupt(true);
     }
