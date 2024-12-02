@@ -85,7 +85,7 @@ Task::map_gicc_page(L4_msg_tag tag, Utcb *utcb)
       case Mem_space::Insert_err_exists:
            return commit_result(-L4_err::EExists);
       case Mem_space::Insert_err_nomem:
-           // FALLTHRU
+           [[fallthrough]];
       default:
            return commit_result(-L4_err::ENomem);
     };

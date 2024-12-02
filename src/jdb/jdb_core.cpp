@@ -735,7 +735,7 @@ int Jdb_core::exec_cmd(Cmd const cmd, char const *str, int push_next_char = -1)
       case Jdb_module::EXTRA_INPUT:
 	// more input expected
 	next_char = -1;
-	// fall through
+	[[fallthrough]];
       case Jdb_module::EXTRA_INPUT_WITH_NEXTCHAR:
 	// more input expected, also consider previously entered key
 	break;

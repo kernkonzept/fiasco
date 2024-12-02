@@ -782,7 +782,7 @@ Jdb_set_bp::action(int cmd, void *&args, char const *&fmt, int &next_char) overr
 		  puts(" I/O breakpoints not supported by this CPU");
 		  return NOTHING;
 		}
-	      // fall through
+	      [[fallthrough]];
 	    case 'a':
 	    case 'i':
 	    case 'w':
@@ -865,7 +865,7 @@ got_address:
 	      return EXTRA_INPUT;
 	    }
 	  breakpoint_length = 1; // must be 1 for instruction breakpoints
-	  // fall through
+	  [[fallthrough]];
 	case 4:
 	  // length read
 	  if (breakpoint_length & (breakpoint_length - 1))

@@ -533,7 +533,7 @@ Jdb::handle_special_cmds(int c)
           // if we have lbr feature, the processor treats the single
           // step flag as step on branches instead of step on instruction
           Cpu::boot_cpu()->btf_enable(true);
-          // fall through
+          [[fallthrough]];
         case 's': // do one single step
           entry_frame.cpu(triggered_on_cpu)->flags(
                           entry_frame.cpu(triggered_on_cpu)->flags() | EFLAGS_TF);

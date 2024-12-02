@@ -346,7 +346,11 @@ ifeq ("$(CONFIG_JDB_DISASM)","y")
   CFLAGS_X86Disassembler = -Wno-unused-parameter
   CFLAGS_X86IntelInstPrinter = -Wno-unused-parameter -Wno-sign-compare
   CFLAGS_X86ATTInstPrinter   = -Wno-unused-parameter -Wno-sign-compare
-  CFLAGS_X86DisassemblerDecoder = -Wno-bad-function-cast
+  CFLAGS_X86DisassemblerDecoder  = -Wno-bad-function-cast
+  # Clang does not support fallthrough warning elision via comments
+  CFLAGS_X86DisassemblerDecoder += $(if $(CC_IS_CLANG),\
+                                     -Wno-implicit-fallthrough)
+  CFLAGS_X86Mapping     += $(if $(CC_IS_CLANG),-Wno-implicit-fallthrough)
 endif
 
 #

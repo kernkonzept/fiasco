@@ -353,9 +353,12 @@ ifeq ("$(CONFIG_JDB_DISASM)","y")
 			 AArch64Disassembler.c AArch64Mapping.c \
 			 AArch64BaseInfo.c
     CPPFLAGS          += -DCAPSTONE_HAS_ARM64
-    CFLAGS_AArch64Mapping      = -Wno-unused-parameter
-    CFLAGS_AArch64Disassembler = -Wno-unused-parameter
-    CFLAGS_AArch64InstPrinter  = -Wno-bad-function-cast -Wno-unused-parameter
+    CFLAGS_AArch64Mapping       = -Wno-unused-parameter
+    CFLAGS_AArch64Disassembler  = -Wno-unused-parameter
+    CFLAGS_AArch64InstPrinter   = -Wno-bad-function-cast -Wno-unused-parameter
+    # Clang does not support fallthrough warning elision via comments
+    CFLAGS_AArch64Mapping      += $(if $(CC_IS_CLANG),-Wno-implicit-fallthrough)
+    CFLAGS_AArch64Disassembler += $(if $(CC_IS_CLANG),-Wno-implicit-fallthrough)
   endif
 endif
 

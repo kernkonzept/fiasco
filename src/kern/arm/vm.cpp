@@ -215,7 +215,7 @@ Vm::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, [[maybe_unused]] bool user_mode
           return 0;
         case ER_undef:
           printf("should not happen: %lx\n", state->pc);
-          // fall through
+          [[fallthrough]];
         case ER_vmm_call:
         case ER_inst_abort:
           ctxt->arch_load_vcpu_kern_state(vcpu, true);

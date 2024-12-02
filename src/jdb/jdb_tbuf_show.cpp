@@ -348,7 +348,7 @@ Jdb_tbuf_show::select_perf_event(Mword event)
                   Perf_cnt::combine_event(evntsel, unit_mask, &event);
                   return event;
                 }
-              // FALLTHRU
+              [[fallthrough]];
             case KEY_ESC:
               return Nil;
             default:
@@ -1027,7 +1027,7 @@ restart:
               goto jump_index;
             case '?': // search backward
               d = 1;
-              // fall through
+              [[fallthrough]];
             case '/': // search forward
               direction = d;
               // search in tracebuffer events
@@ -1039,7 +1039,7 @@ restart:
               if (!Jdb_input::get_string(_search_str, sizeof(_search_str)) ||
                   !_search_str[0])
                 goto status_line;
-              // fall through
+              [[fallthrough]];
             case 'n': // search next
             case 'N': // search next reverse
               n = search(_absy + addy, entries, _search_str,

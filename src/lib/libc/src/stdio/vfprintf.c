@@ -570,7 +570,7 @@ static int printf_core(FILE *f, const char *fmt, va_list *ap, union arg *nl_arg,
 			p = MAX(p, (int)(2*sizeof(void*)));
 			t = 'x';
 			fl |= ALT_FORM;
-			// fallthrough
+			__attribute__((fallthrough));
 		case 'x': case 'X':
 			a = fmt_x(arg.i, z, t&32);
 			if (arg.i && (fl & ALT_FORM)) prefix+=(t>>4), pl=2;
@@ -588,7 +588,7 @@ static int printf_core(FILE *f, const char *fmt, va_list *ap, union arg *nl_arg,
 			} else if (fl & PAD_POS) {
 				prefix+=2;
 			} else pl=0;
-			// fallthrough
+			__attribute__((fallthrough));
 		case 'u':
 			a = fmt_u(arg.i, z);
 		ifmt_tail:

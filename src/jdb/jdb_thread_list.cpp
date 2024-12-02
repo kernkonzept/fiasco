@@ -473,8 +473,7 @@ Jdb_thread_list::iter(int count, Thread **t_start,
       if (!get_key)
 	get_key = (_mode == LIST_SORT_SPACE) ? get_space_dbgid : get_prio;
 
-      // fall through
-
+      [[fallthrough]];
     case LIST_SORT_TID:
       // list threads sorted by thread id
 	{

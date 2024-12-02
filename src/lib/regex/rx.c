@@ -214,7 +214,7 @@ static const char* parseatom(struct atom*__restrict__ a,const char*__restrict__ 
     tmp=parseregex(&a->u.r,s+1,rx);
     if (*tmp==')')
       return tmp+1;
-    /* FALLTHRU */
+    __attribute__((fallthrough));
   case 0:
   case '|':
   case ')':
@@ -242,7 +242,7 @@ static const char* parseatom(struct atom*__restrict__ a,const char*__restrict__ 
       a->type=WORDEND;
       break;
     }
-    /* FALLTHRU */
+    __attribute__((fallthrough));
   default:
     a->type=CHAR;
     a->u.c=rx->cflags&REG_ICASE?tolower(*s):*s;
@@ -320,7 +320,7 @@ static const char* parsepiece(struct piece*__restrict__ p,const char*__restrict_
       if (*tmp!='}') return s;
       ++tmp;
     }
-    /* FALLTHRU */
+    __attribute__((fallthrough));
   default:
     return tmp;
   }

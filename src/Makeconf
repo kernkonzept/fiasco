@@ -101,7 +101,9 @@ CPP			:= $(if $(filter undefined default,$(origin CPP)),cpp,$(CPP))
 CPP			:= $(CROSS_COMPILE)$(CPP)$(CCXX_SUFFIX)
 
 CXX_TYPE		:= $(if $(findstring clang,$(shell $(CXX) --version)),clang,gcc)
+CXX_IS_CLANG		:= $(if $(filter clang,$(CXX_TYPE)),1)
 CC_TYPE			:= $(if $(findstring clang,$(shell $(CC) --version)),clang,gcc)
+CC_IS_CLANG		:= $(if $(filter clang,$(CC_TYPE)),1)
 LD_TYPE			:= $(if $(and $(LD),$(findstring LLD,$(shell $(LD) --version))),clang,gnu)
 CLANG_TARGET_FLAG = $(addprefix --target=, $(notdir $(CROSS_COMPILE:%-=%)))
 
@@ -159,7 +161,9 @@ SHARED_FLAGS-gcc	+= $(call CHECKCXX,-Wmisleading-indentation,) -Wlogical-op -Wfl
 SHARED_FLAGS-gcc	+= $(if $(filter 7 8 9 10,$(CCVER_MAJOR)),-Wno-nonnull)
 SHARED_FLAGS  		+= -g -Wall -Wextra $(call CHECKCC,-Wdouble-promotion) $(call CHECKCC,-Wfloat-conversion) -Wmissing-declarations
 SHARED_FLAGS  		+= -Wdeprecated
+SHARED_FLAGS		+= -Wimplicit-fallthrough
 SHARED_FLAGS-clang	+= -Wunreachable-code-aggressive
+
 # WARNING EXCEPTION: not all members of a struct used to reflect hardware state
 # are necessarily used.
 SHARED_FLAGS-clang	+= -Wno-unused-private-field
