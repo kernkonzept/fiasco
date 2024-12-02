@@ -1,9 +1,6 @@
 # vim:set ft=make:
 
-PREPROCESS_PARTS        += generic_tickless_idle
 RAM_PHYS_BASE           := 0
-
-PREPROCESS_PARTS        += generic_tickless_idle
 
 PREPROCESS_PARTS-$(CONFIG_ARM_V7PLUS)       += arm_generic_timer
 OBJECTS_LIBUART-$(CONFIG_PF_RPI_UART_16550)  = uart_16550.o

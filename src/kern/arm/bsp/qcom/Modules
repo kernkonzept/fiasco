@@ -5,7 +5,7 @@ PF_QCOM_UART-$(CONFIG_PF_QCOM_UART_GENI) := geni
 
 OBJECTS_LIBUART       += uart_$(PF_QCOM_UART-y).o
 CXXFLAGS_uart-libuart += $(call LIBUART_UART, $(PF_QCOM_UART-y))
-PREPROCESS_PARTS      += generic_tickless_idle arm_generic_timer pic_gic
+PREPROCESS_PARTS      += arm_generic_timer pic_gic
 INTERFACES_KERNEL     += generic_timer
 RAM_PHYS_BASE         := $(CONFIG_PF_QCOM_RAM_PHYS_BASE)
 

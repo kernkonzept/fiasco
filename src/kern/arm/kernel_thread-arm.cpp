@@ -68,15 +68,3 @@ static inline void
 Kernel_thread::boot_app_cpus()
 {}
 
-
-//--------------------------------------------------------------------------
-IMPLEMENTATION [arm && generic_tickless_idle]:
-
-#include "processor.h"
-
-PROTECTED inline NEEDS["processor.h"]
-void
-Kernel_thread::arch_tickless_idle(unsigned)
-{
-  Proc::halt();
-}

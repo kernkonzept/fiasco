@@ -3,7 +3,6 @@
 OBJECTS_LIBUART         += uart_pl011.o
 CXXFLAGS_uart-libuart   += $(call LIBUART_UART, pl011)
 
-PREPROCESS_PARTS        += generic_tickless_idle
 RAM_PHYS_BASE           := 0x00000000
 
 

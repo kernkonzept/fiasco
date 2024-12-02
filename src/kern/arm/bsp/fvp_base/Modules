@@ -2,7 +2,7 @@
 
 OBJECTS_LIBUART       += uart_pl011.o
 CXXFLAGS_uart-libuart += $(call LIBUART_UART, pl011)
-PREPROCESS_PARTS      += pic_gic arm_generic_timer generic_tickless_idle
+PREPROCESS_PARTS      += pic_gic arm_generic_timer
 INTERFACES_KERNEL     += generic_timer
 RAM_PHYS_BASE         := 0x80000000
 

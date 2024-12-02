@@ -221,6 +221,17 @@ protected:
    */
   void arch_idle(Cpu_number cpu);
 
+  /**
+   * Enter the "tickless idle" state on the current CPU after a successful
+   * return from enter_tickless_idle().
+   *
+   * This function is called with interrupts closed. Implementations that open
+   * interrupts should ensure that opening the interrupts and waiting for the
+   * next interrupt is an atomic operation, i.e. the interrupt cannot hit before
+   * the wait-for-interrupt instruction is executed.
+   */
+  void arch_tickless_idle(Cpu_number cpu);
+
 private:
   friend class Jdb_idle_stats;
   static Per_cpu<unsigned long> _idle_counter;
@@ -240,6 +251,17 @@ void
 Kernel_thread::arch_idle(Cpu_number)
 {
   Proc::halt(); // stop the CPU, waiting for an interrupt
+}
+
+/*
+ * Default idle operation for platforms that do not enter any special sleep
+ * states during tickless idle, but just wait for the next interrupt.
+ */
+IMPLEMENT_DEFAULT inline NEEDS[Kernel_thread::arch_idle]
+void
+Kernel_thread::arch_tickless_idle(Cpu_number cpu)
+{
+  arch_idle(cpu);
 }
 
 // template code for arch idle

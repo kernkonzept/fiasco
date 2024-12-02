@@ -6,7 +6,7 @@ IMPLEMENTATION [arm && tickless_idle && pf_exynos && mp]:
 #include "processor.h"
 #include "scheduler.h"
 
-PROTECTED inline NEEDS["processor.h", "cpu.h", "platform_control.h", "scheduler.h"]
+IMPLEMENT_OVERRIDE
 void
 Kernel_thread::arch_tickless_idle(Cpu_number cpu)
 {
@@ -22,17 +22,4 @@ Kernel_thread::arch_tickless_idle(Cpu_number cpu)
     }
   else
     Proc::halt();
-}
-
-//--------------------------------------------------------------------------
-IMPLEMENTATION [arm && tickless_idle && pf_exynos && !mp]:
-
-#include "cpu.h"
-#include "processor.h"
-
-PROTECTED inline NEEDS["processor.h", "cpu.h"]
-void
-Kernel_thread::arch_tickless_idle(Cpu_number)
-{
-  Proc::halt();
 }

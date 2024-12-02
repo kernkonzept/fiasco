@@ -2,7 +2,6 @@
 
 OBJECTS_LIBUART         += uart_omap35x.o
 CXXFLAGS_uart-libuart   += $(call LIBUART_UART, omap35x)
-PREPROCESS_PARTS        += generic_tickless_idle
 PREPROCESS_PARTS	+= $(if $(CONFIG_PF_OMAP3_OMAP35XEVM),pf_omap3 pf_omap3_35x)
 PREPROCESS_PARTS	+= $(if $(CONFIG_PF_OMAP3_BEAGLEBOARD),pf_omap3 pf_omap3_35x)
 PREPROCESS_PARTS	+= $(if $(CONFIG_PF_OMAP3_AM33XX),pf_omap3)

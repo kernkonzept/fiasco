@@ -1,6 +1,5 @@
 # vim:set ft=make:
 
-PREPROCESS_PARTS        += generic_tickless_idle
 RAM_PHYS_BASE           := 0x0
 OBJECTS_LIBUART         += uart_16550.o
 CXXFLAGS_uart-libuart   += $(call LIBUART_UART, 16550)

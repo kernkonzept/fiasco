@@ -1,6 +1,6 @@
 # vim:set ft=make:
 
-PREPROCESS_PARTS        += generic_tickless_idle pic_gic
+PREPROCESS_PARTS        += pic_gic
 PREPROCESS_PARTS        += arm_generic_timer
 INTERFACES_KERNEL       += generic_timer
 RAM_PHYS_BASE           := 0x40000000

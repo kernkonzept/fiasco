@@ -2,8 +2,7 @@
 
 OBJECTS_LIBUART       += uart_omap35x.o
 CXXFLAGS_uart-libuart += $(call LIBUART_UART, omap35x)
-PREPROCESS_PARTS      += generic_tickless_idle \
-                         arm_generic_timer pic_gic psci
+PREPROCESS_PARTS      += arm_generic_timer pic_gic psci
 INTERFACES_KERNEL     += generic_timer
 RAM_PHYS_BASE         := 0x80000000
 
