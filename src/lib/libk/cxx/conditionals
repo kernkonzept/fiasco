@@ -1,4 +1,5 @@
 // vi:ft=cpp
+#pragma once
 
 namespace cxx {
 
