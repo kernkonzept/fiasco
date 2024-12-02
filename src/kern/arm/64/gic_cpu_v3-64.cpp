@@ -39,6 +39,10 @@ Gic_cpu_v3::enable()
   _enable_sre_set();
   Mem::isb();
 
+  // Make sure ICC_CTLR_EL1.EOImode is set to 0 so that writes to
+  // ICC_EOIR1_EL1 also deactivate the interrupt
+  asm volatile("msr S3_0_C12_C12_4, %x0" : : "r" (0ul)); // ICC_CTLR_EL1
+
   asm volatile("msr S3_0_C12_C12_7, %x0" : : "r" (1ul)); // ICC_IGRPEN1_EL1
 
   pmr(Cpu_prio_val);
