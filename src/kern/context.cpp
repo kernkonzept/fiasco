@@ -1148,6 +1148,7 @@ Context::_switch_exec_common(Context *t, Helping_mode mode)
   t->set_helper(mode);
   t->set_current_cpu(get_current_cpu());
   switch_fpu(t);
+  update_consumed_time();
   switch_cpu(t);
   return switch_handle_drq();
 }

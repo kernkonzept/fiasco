@@ -91,8 +91,6 @@ IMPLEMENT inline NEEDS[Context::switch_hyp_ext_state, Context::switch_gp_regs]
 void
 Context::switch_cpu(Context *t)
 {
-  update_consumed_time();
-
   switch_hyp_ext_state(t);
   switch_gp_regs(t);
 }

@@ -46,8 +46,6 @@ IMPLEMENT inline NEEDS[Context::spill_user_state, Context::store_tpidrurw,
 void
 Context::switch_cpu(Context *t)
 {
-  update_consumed_time();
-
   spill_user_state();
   store_tpidrurw();
   switch_vm_state(t);

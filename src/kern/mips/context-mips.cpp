@@ -49,7 +49,6 @@ IMPLEMENT inline NEEDS["processor.h", "asm_mips.h"]
 void
 Context::switch_cpu(Context *t)
 {
-  update_consumed_time();
   Proc::set_ulr(t->_ulr);
 
     {

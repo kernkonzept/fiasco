@@ -21,8 +21,6 @@ Context::switch_cpu(Context *t)
 {
   Mword dummy1, dummy2, dummy3, dummy4;
 
-  update_consumed_time();
-
   t->load_gdt_user_entries(this);
 
   _ds = Cpu::get_ds();
