@@ -467,7 +467,7 @@ Irq_sender::finish_replace_irq_thread(Irq_thread old, Irq_thread target,
       else
         result = Detach_inactive;
     }
-  else if (old.is_vcpu_irq())
+  else if ((TAG_ENABLED(irq_direct_inject)) && old.is_vcpu_irq())
     {
       // Old thread is only changed later in the DRQ handler, once we know
       // whether the revocation is successful. Therefore someone else can
@@ -815,7 +815,7 @@ Irq_sender::send_local(Irq_thread t, bool is_xcpu)
   // before _irq_thread.
   Mem::mp_rmb();
 
-  if (t.is_vcpu_irq())
+  if ((TAG_ENABLED(irq_direct_inject)) && t.is_vcpu_irq())
     {
       inject_vcpu_irq(t);
       return false;
