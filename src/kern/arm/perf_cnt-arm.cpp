@@ -149,6 +149,8 @@ Perf_cnt::is_avail()
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && perf_cnt && (arm_v7 || arm_v8)]:
 
+#include <cxx/conditionals>
+
 #include "cpu.h"
 
 char const *Perf_cnt::perf_type_str = "ACor";
@@ -222,7 +224,7 @@ Perf_cnt::init_cpu(Cpu const &cpu)
 
   //set_event_type(0, 8);
 
-  useren(TAG_ENABLED(perf_cnt_user) ? 1 : 0);
+  useren(cxx::const_ite<TAG_ENABLED(perf_cnt_user)>(1, 0));
 }
 
 // ------------------------------------------------------------------------

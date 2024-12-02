@@ -885,9 +885,12 @@ Cpu::print_infos() const
 // ------------------------------------------------------------------------
 IMPLEMENTATION [debug]:
 
+#include <cxx/conditionals>
+
 PUBLIC static
 void
 Cpu::print_boot_infos()
 {
-  printf("Cache config: %s\n", Config::Cache_enabled ? "ON" : "OFF");
+  printf("Cache config: %s\n",
+         cxx::const_ite<Config::Cache_enabled>("ON", "OFF"));
 }
