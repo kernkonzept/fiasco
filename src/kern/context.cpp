@@ -1094,28 +1094,7 @@ Context::switch_exec_locked(Context *t, enum Helping_mode mode)
   LOG_CONTEXT_SWITCH;
   CNT_CONTEXT_SWITCH;
 
-  // Can only switch to ready threads!
-  // do not consider CPU locality here t can be temporarily migrated
-  if (EXPECT_FALSE (!(t->state(false) & Thread_ready_mask)))
-    {
-      assert (state(false) & Thread_ready_mask);
-      return Switch::Failed;
-    }
-
-
-  // Ensure kernel stack pointer is non-null if thread is ready
-  assert (t->_kernel_sp);
-
-  t->set_helper(mode);
-
-  if (EXPECT_TRUE(get_current_cpu() == home_cpu()))
-    update_ready_list();
-
-  t->set_current_cpu(get_current_cpu());
-  switch_fpu(t);
-  switch_cpu(t);
-
-  return switch_handle_drq();
+  return _switch_exec_common(t, mode);
 }
 
 PUBLIC
@@ -1137,14 +1116,28 @@ Context::switch_exec_helping(Context *t, Mword const *lock, Mword val)
 
   LOG_CONTEXT_SWITCH;
 
+  return _switch_exec_common(t, Helping);
+}
+
+/**
+ * Implements the actual execution context switch, which is the same for both
+ * switch_exec_locked() and switch_exec_helping(), as they only differ in the
+ * conditions that must be satisfied for the switch to take place.
+ *
+ * \note Must not be called directly, only via `switch_exec_locked()` or
+ *       `switch_exec_helping()`.
+ */
+PRIVATE
+Context::Switch
+Context::_switch_exec_common(Context *t, Helping_mode mode)
+{
   // Can only switch to ready threads!
-  // do not consider CPU locality here t can be temporarily migrated
+  // Do not consider CPU locality here, t can be temporarily migrated.
   if (EXPECT_FALSE (!(t->state(false) & Thread_ready_mask)))
     {
       assert (state(false) & Thread_ready_mask);
       return Switch::Failed;
     }
-
 
   // Ensure kernel stack pointer is non-null if thread is ready
   assert (t->_kernel_sp);
@@ -1152,7 +1145,7 @@ Context::switch_exec_helping(Context *t, Mword const *lock, Mword val)
   if (EXPECT_TRUE(get_current_cpu() == home_cpu()))
     update_ready_list();
 
-  t->set_helper(Helping);
+  t->set_helper(mode);
   t->set_current_cpu(get_current_cpu());
   switch_fpu(t);
   switch_cpu(t);
