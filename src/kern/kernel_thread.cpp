@@ -288,19 +288,35 @@ Kernel_thread::idle_op()
     {
       ++_deep_idle_counter.cpu(cpu);
       Rcu::enter_idle(cpu);
-      Timer_tick::disable(cpu);
+
       Mem_space::disable_tlb(cpu);
       Tlb::flush_all_cpu(cpu);
+
+      if constexpr (Config::Scheduler_one_shot)
+        // Reprogram the one-shot timer without the Rcu_grace_period limit.
+        Timeout_q::timeout_queue.cpu(cpu).update_timer(Timer::Infinite_timeout);
+      else
+        // Disable the timer tick while in tickless idle.
+        Timer_tick::disable(cpu);
 
       // do everything to do to a deep sleep state:
       //  - flush caches
       //  - ...
       arch_tickless_idle(cpu);
 
+      if constexpr (Config::Scheduler_one_shot)
+        {
+          // Reprogram the one-shot timer with the Rcu_grace_period limit.
+          Unsigned64 next_rcu = Timer::system_clock() + Config::Rcu_grace_period;
+          Timeout_q::timeout_queue.cpu(cpu).update_timer(next_rcu);
+        }
+      else
+        // Re-enable the timer tick when leaving tickless idle.
+        Timer_tick::enable(cpu);
+
       Mem_space::enable_tlb(cpu);
       Mem_space::reload_current();
       Rcu::leave_idle(cpu);
-      Timer_tick::enable(cpu);
     }
   else
     arch_idle(cpu);
@@ -328,3 +344,20 @@ Kernel_thread::can_tickless_idle(Cpu_number cpu)
     timeslice_timeout.cpu(cpu));
 }
 
+// ------------------------------------------------------------------------
+IMPLEMENTATION [tickless_idle && one_shot]:
+
+static_assert(TAG_ENABLED(sync_clock), "Clock must be synchronized.");
+
+IMPLEMENT inline
+bool
+Kernel_thread::can_tickless_idle(Cpu_number)
+{
+  // OPTIMIZE: Check when the next timeout is and compare against threshold, yet
+  // to be quantified, to avoid tickless idle from which we immediately wake up
+  // again. Unfortunately we cannot simply use Timeout_q::_current for that,
+  // because it is limited by the max(..., Rcu_grace_period). So we must either
+  // scan all timeouts, or somehow/somewhere store the actual next timeout
+  // without the Rcu_grace_period limit.
+  return true;
+}

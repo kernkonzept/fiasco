@@ -234,18 +234,28 @@ config ONE_SHOT
 	bool "Use scheduling timer in one-shot mode"
 	depends on HAS_ONE_SHOT
 	select FINE_GRAINED_CPUTIME
+	imply TICKLESS_IDLE
 	help
-	  More costly than periodic but more fine-granular scheduling
-	  possible.  EXPERIMENTAL!
+	  Compared to periodic timer mode, there is a small overhead in
+	  processing the timeout queue and accounting consumed CPU time, but
+	  one-shot mode allows for more fine-granular scheduling and better
+	  utilization of tickless idle.
+
+	  When enabling one-shot timer mode it is highly recommended to also
+	  enable "Tickless idle", unless the wakeup latency from idle is
+	  critical.
 
 config TICKLESS_IDLE
 	bool "Tickless idle"
 	depends on HAS_TICKLESS_IDLE
-	depends on !ONE_SHOT
 	help
 	  When a CPU core is idle, disable the timer tick on that core,
 	  detach the core from the RCU subsystem and halt the core until the
 	  next timeout or interrupt.
+
+	  Tickless idle works best together with the scheduling timer in
+	  one-shot mode, so when enabling tickless idle it is highly
+	  recommended to also set the scheduling timer to one-shot mode.
 
 	  Tickless idle is good for saving energy, but can incur a small
 	  overhead for waking up from idle.
