@@ -21,14 +21,27 @@ Outer_cache::smc(Mword func, Mword val)
   register Mword _val  asm("r0")  = val;
   asm volatile(".arch_extension sec\n"
                "dsb                \n"
+#ifdef __thumb__
                "push {r11}         \n"
+#else
+               "push {r7}          \n"
+#endif
                "smc #0             \n"
+#ifdef __thumb__
                "pop {r11}          \n"
+#else
+               "pop {r7}           \n"
+#endif
                ".arch_extension nosec\n"
                :
                : "r" (_func), "r" (_val)
-               : "memory", "cc", "r1", "r2", "r3", "r4", "r5",
-                 "r6", "r7", "r8", "r9", "r10");
+               : "r1", "r2", "r3", "r4", "r5", "r6", "r8", "r9", "r10", "r14",
+#ifdef __thumb__
+                 "r11",
+#else
+                 "r7",
+#endif
+                 "cc", "memory");
 }
 
 IMPLEMENT
