@@ -56,8 +56,11 @@ Kernel_thread::bootstrap_arch()
   // initialize the profiling timer
   bool user_irq0 = Koptions::o()->opt(Koptions::F_irq0);
 
-  if (int{Config::Scheduler_mode} == Config::SCHED_PIT && user_irq0)
-    panic("option -irq0 not possible since irq 0 is used for scheduling");
+  if constexpr (int{Config::Scheduler_mode} == Config::SCHED_PIT)
+    {
+      if (user_irq0)
+        panic("option -irq0 not possible since irq 0 is used for scheduling");
+    }
 
   boot_app_cpus();
 }

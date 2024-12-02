@@ -164,16 +164,18 @@ Kernel_thread::check_debug_koptions()
 {
   auto g = lock_guard(cpu_lock);
 
-  if (Config::Jdb &&
-      !Koptions::o()->opt(Koptions::F_nojdb) &&
-      Koptions::o()->opt(Koptions::F_jdb_cmd))
+  if constexpr (Config::Jdb)
     {
-      // extract the control sequence from the command line
-      String_buf<128> cmd;
-      for (char const *s = Koptions::o()->jdb_cmd; *s && *s != ' '; ++s)
-        cmd.append(*s);
+      if (   !Koptions::o()->opt(Koptions::F_nojdb)
+          && Koptions::o()->opt(Koptions::F_jdb_cmd))
+        {
+          // extract the control sequence from the command line
+          String_buf<128> cmd;
+          for (char const *s = Koptions::o()->jdb_cmd; *s && *s != ' '; ++s)
+            cmd.append(*s);
 
-      kdb_ke_sequence(cmd.c_str(), cmd.length());
+          kdb_ke_sequence(cmd.c_str(), cmd.length());
+        }
     }
 
   // kernel debugger rendezvous

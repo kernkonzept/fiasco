@@ -156,8 +156,11 @@ Context::load_ext_vcpu_state(Mword /*_to_state*/, Vm_state const *v)
   asm volatile ("msr VMPIDR_EL2, %x0" : : "r" (v->vmpidr));
   asm volatile ("msr VPIDR_EL2, %x0"  : : "r" (v->vpidr));
 
-  if (Config::Have_mpu && !(Cpu::has_vmsa() && vtcr & Cpu::Vtcr_msa))
-    load_ext_vcpu_state_mpu(v);
+  if constexpr (Config::Have_mpu)
+    {
+      if (!(Cpu::has_vmsa() && vtcr & Cpu::Vtcr_msa))
+        load_ext_vcpu_state_mpu(v);
+    }
 }
 
 PRIVATE inline

@@ -166,8 +166,11 @@ IMPLEMENT
 void
 Fpu::init(Cpu_number cpu, bool resume)
 {
-  if (Config::Jdb && !resume && cpu == Cpu_number::boot_cpu())
-    printf("FPU: Initialize\n");
+  if constexpr (Config::Jdb)
+    {
+      if (!resume && cpu == Cpu_number::boot_cpu())
+        printf("FPU: Initialize\n");
+    }
 
   if (!resume)
     detect_sve(cpu);

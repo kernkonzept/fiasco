@@ -126,10 +126,13 @@ Timeout_q::enqueue(Timeout *to)
 
   q.insert_before(to, tmp);
 
-  if (Config::Scheduler_one_shot && (to->_wakeup < _current))
+  if constexpr (Config::Scheduler_one_shot)
     {
-      _current = to->_wakeup;
-      Timer::update_timer(_current);
+      if (to->_wakeup < _current)
+        {
+          _current = to->_wakeup;
+          Timer::update_timer(_current);
+        }
     }
 }
 
