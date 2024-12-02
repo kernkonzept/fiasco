@@ -99,7 +99,7 @@ Scheduler::sys_run(L4_fpage::Rights, Syscall_frame *f, Utcb const *utcb)
     info.cpu = sched_param->cpus.first(Cpu::present_mask(), Config::max_num_cpus());
 
   info.sp = sched_param;
-  if (0)
+  if constexpr (0) // Intentionally disabled, only used for diagnostics
     printf("CPU[%u]: run(thread=%lx, cpu=%u (%lx,%u,%u)\n",
            cxx::int_value<Cpu_number>(curr_cpu), thread->dbg_id(),
            cxx::int_value<Cpu_number>(info.cpu),

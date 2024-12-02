@@ -25,7 +25,7 @@ void *Vmem_alloc::page_alloc(void *address, Zero_fill zf, unsigned mode)
     return 0;
 
   Address page = Kmem::kdir->virt_to_phys(reinterpret_cast<Address>(vpage));
-  if (0)
+  if constexpr (0) // Intentionally disabled, only used for diagnostics
     printf("  allocated page (virt=%p, phys=%08lx\n", vpage, page);
   Mem_unit::inv_dcache(vpage, offset_cast<void *>(vpage, Config::PAGE_SIZE));
 

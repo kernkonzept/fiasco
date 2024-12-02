@@ -325,7 +325,7 @@ Thread_object::sys_modify_senders(L4_msg_tag tag, Utcb const *in, Utcb * /*out*/
   if (sender_list()->cursor())
     return commit_result(-L4_err::EBusy);
 
-  if (0)
+  if constexpr (0) // Intentionally disabled, only used for diagnostics
     printf("MODIFY ID (%08lx:%08lx->%08lx:%08lx\n",
            in->values[1], in->values[2],
            in->values[3], in->values[4]);

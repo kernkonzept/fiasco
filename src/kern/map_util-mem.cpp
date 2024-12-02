@@ -147,7 +147,7 @@ init_mapdb_mem(Space *sigma0)
       last_bits = c;
     }
 
-  if (0)
+  if constexpr (0) // Intentionally disabled, only used for diagnostics
     printf("MDB: phys_bits=%u levels = %u\n", Cpu::boot_cpu()->phys_bits(), idx);
 
   mapdb_mem.construct(sigma0,

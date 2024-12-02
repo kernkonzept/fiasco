@@ -4,6 +4,7 @@ INTERFACE [ia32 || amd64]:
 
 EXTENSION class Kmem_alloc
 {
+  enum { ShowDebugMessages = 0  };
 public:
   static Address tss_mem_pm;
 };
@@ -46,7 +47,7 @@ PUBLIC static FIASCO_INIT
 bool
 Kmem_alloc::base_init()
 {
-  if (0)
+  if constexpr (ShowDebugMessages)
     printf("Kmem_alloc::base_init(): kip=%p\n", static_cast<void *>(Kip::k()));
 
   Mem_region_map<64> map;
@@ -60,7 +61,7 @@ Kmem_alloc::base_init()
   static_assert(Mem_layout::Physmem_max_size % Config::PAGE_SIZE == 0,
                 "Physmem_max_size must be page-aligned");
 
-  if (0)
+  if constexpr (ShowDebugMessages)
     {
       printf("Kmem_alloc: available_memory=%lu KB alloc_size=%lu KB\n",
              available_size / 1024, alloc_size / 1024);
@@ -123,7 +124,7 @@ Kmem_alloc::base_init()
   if (alloc_size)
     return false;
 
-  if (0)
+  if constexpr (ShowDebugMessages)
     {
       printf("Kmem_alloc: kernel memory from %014lx to %014lx\n", base, end + 1);
       printf("Kmem_alloc: blocks %u-%u\n", i, last);
@@ -157,7 +158,7 @@ Kmem_alloc::base_init()
 IMPLEMENT
 Kmem_alloc::Kmem_alloc()
 {
-  if (0)
+  if constexpr (ShowDebugMessages)
     printf("Kmem_alloc::Kmem_alloc()\n");
 
   unsigned long min_addr = ~0UL;
@@ -173,7 +174,7 @@ Kmem_alloc::Kmem_alloc()
   if (min_addr >= max_addr)
     panic("Cannot allocate kernel memory: Invalid reserved areas");
 
-  if (0)
+  if constexpr (ShowDebugMessages)
     printf("Kmem_alloc: TSS area needs %zu bytes\n", Mem_layout::Tss_mem_size);
 
   tss_mem_pm = permanent_alloc(Mem_layout::Tss_mem_size,
@@ -184,6 +185,6 @@ Kmem_alloc::Kmem_alloc()
 
   setup_kmem_from_kip_md_tmp(freemap_size, min_addr_kern);
 
-  if (0)
+  if constexpr (ShowDebugMessages)
     printf("Kmem_alloc: construction done\n");
 }

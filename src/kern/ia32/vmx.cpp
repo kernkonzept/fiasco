@@ -1402,6 +1402,7 @@ PUBLIC
 void
 Vmx_info::init()
 {
+  enum { ShowDebugDumps = 0 };
   bool ept = false;
   basic = Cpu::rdmsr(0x480);
   pinbased_ctls = Cpu::rdmsr(0x481);
@@ -1429,14 +1430,14 @@ Vmx_info::init()
     {
       // do not use the true pin-based ctls because user-level then needs to
       // be aware of the fact that it has to set bits 1, 2, and 4 to default 1
-      if (0) pinbased_ctls = Cpu::rdmsr(0x48d);
+      if constexpr (0) pinbased_ctls = Cpu::rdmsr(0x48d);
 
       procbased_ctls = Cpu::rdmsr(0x48e);
       exit_ctls = Cpu::rdmsr(0x48f);
       entry_ctls = Cpu::rdmsr(0x490);
     }
 
-  if (0)
+  if constexpr (ShowDebugDumps)
     dump("as read from hardware");
 
   pinbased_ctls.enforce(Vmx_info::PIB_ext_int_exit);
@@ -1536,7 +1537,7 @@ Vmx_info::init()
   exception_bitmap.enforce(Vmx_info::Exception_db, true);
   exception_bitmap.enforce(Vmx_info::Exception_ac, true);
 
-  if (0)
+  if constexpr (ShowDebugDumps)
     dump("as modified");
 }
 

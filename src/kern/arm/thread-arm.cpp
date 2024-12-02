@@ -244,7 +244,7 @@ extern "C" {
     if (Thread::is_fsr_exception(ts->esr))
       ts->error_code = Thread::map_fsr_user(ts->error_code);
 
-    if (0)
+    if constexpr (0) // Intentionally disabled, only used for diagnostics
       printf("Trap: pfa=%08lx pc=%08lx err=%08lx psr=%lx\n", ts->pf_address, ts->pc, ts->error_code, ts->psr);
     Thread *t = current_thread();
 

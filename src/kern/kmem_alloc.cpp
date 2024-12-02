@@ -503,7 +503,8 @@ void
 Kmem_alloc::setup_kmem_from_kip_md_tmp(unsigned long freemap_size,
                                        Address min_addr_kern)
 {
-  if (0)
+  enum { DebugKmemSetup = 0 };
+  if constexpr (DebugKmemSetup)
     printf("Kmem_alloc: buddy freemap needs %lu bytes\n", freemap_size);
 
   Address freemap_addr = permanent_alloc(freemap_size);
@@ -514,7 +515,7 @@ Kmem_alloc::setup_kmem_from_kip_md_tmp(unsigned long freemap_size,
   if (min_addr_kern == freemap_addr_kern)
     min_addr_kern += freemap_size;
 
-  if (0)
+  if constexpr (DebugKmemSetup)
     printf("Kmem_alloc: allocator base = %014lx\n",
            Kmem_alloc::Alloc::calc_base_addr(min_addr_kern));
 
@@ -532,7 +533,7 @@ Kmem_alloc::setup_kmem_from_kip_md_tmp(unsigned long freemap_size,
       unsigned long size = fixup_size(md);
       Address kern = Mem_layout::phys_to_pmem(start);
 
-      if (0)
+      if constexpr (DebugKmemSetup)
         printf("  Kmem_alloc: block %014lx(%014lx) size=%lx\n",
                kern, start, size);
 

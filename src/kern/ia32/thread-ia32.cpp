@@ -10,6 +10,8 @@ class Idt_entry;
 EXTENSION class Thread
 {
 private:
+  enum { ShowDebugMessages = 0 };
+
   /**
    * Return value for \ref handle_io_fault.
    */
@@ -123,20 +125,20 @@ Thread::handle_kernel_exc(Trap_state *ts)
 
       if (e.handler)
         {
-          if (0)
+          if constexpr (ShowDebugMessages)
             printf("fixup exception(h): %ld: "
                    "ip=%lx -> handler %p fixup %lx ts @ %p -> %lx\n",
                    ts->trapno(), ts->ip(), reinterpret_cast<void *>(e.handler),
                    e.fixup, static_cast<void *>(ts),
                    reinterpret_cast<Mword const *>(ts)[-1]);
-          if (0)
+          if constexpr (ShowDebugMessages)
             ts->dump();
 
           return e.handler(&e, ts);
         }
       else if (e.fixup)
         {
-          if (0)
+          if constexpr (ShowDebugMessages)
             printf("fixup exception: %ld: ip=%lx -> fixup %lx\n",
                    ts->trapno(), ts->ip(), e.fixup);
           ts->ip(e.fixup);

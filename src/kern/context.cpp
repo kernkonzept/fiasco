@@ -1943,7 +1943,7 @@ bool
 Context::Pending_rqq::handle_requests(Context **mq)
 {
   //LOG_MSG_3VAL(current(), "phq", current_cpu(), 0, 0);
-  if (0)
+  if constexpr (0) // Intentionally disabled, only used for diagnostics
     printf("CPU[%2u:%p]: Context::Pending_rqq::handle_requests() this=%p\n",
            cxx::int_value<Cpu_number>(current_cpu()),
            static_cast<void *>(current()), static_cast<void *>(this));
