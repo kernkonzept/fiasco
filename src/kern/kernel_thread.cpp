@@ -233,6 +233,13 @@ protected:
   void arch_tickless_idle(Cpu_number cpu);
 
 private:
+  /**
+   * Whether current CPU is eligible to enter tickless idle state.
+   *
+   * \param cpu  The current CPU.
+   */
+  static bool can_tickless_idle(Cpu_number cpu);
+
   friend class Jdb_idle_stats;
   static Per_cpu<unsigned long> _idle_counter;
   static Per_cpu<unsigned long> _deep_idle_counter;
@@ -277,8 +284,7 @@ Kernel_thread::idle_op()
   // 1. check for latency requirements that prevent low power modes
   // 2. check for timeouts on this CPU ignore the idle thread's timeslice
   // 3. check for RCU work on this CPU
-  if (!Rcu::has_pending_work(cpu)
-      && !Timeout_q::timeout_queue.cpu(cpu).have_timeouts(timeslice_timeout.cpu(cpu)))
+  if (!Rcu::has_pending_work(cpu) && can_tickless_idle(cpu))
     {
       ++_deep_idle_counter.cpu(cpu);
       Rcu::enter_idle(cpu);
@@ -300,4 +306,17 @@ Kernel_thread::idle_op()
     arch_idle(cpu);
 }
 
+// ------------------------------------------------------------------------
+IMPLEMENTATION [tickless_idle && !one_shot]:
+
+IMPLEMENT inline
+bool
+Kernel_thread::can_tickless_idle(Cpu_number cpu)
+{
+  // We cannot freely program the periodic timer to a specific next timeout,
+  // therefore entering tickless idle is only possible when there are no
+  // timeouts enqueued, as otherwise we would miss them.
+  return !Timeout_q::timeout_queue.cpu(cpu).have_timeouts(
+    timeslice_timeout.cpu(cpu));
+}
 
