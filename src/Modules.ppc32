@@ -5,14 +5,7 @@
 
 include $(srcdir)/Modules.generic
 
-SUBSYSTEMS  :=	ABI KERNEL LIBUART LIBK DRIVERS LIBC CXXLIB CRT0 \
-		VERSION JABI TCBOFFSET STDWORKLOAD
-
-ifeq ($(CONFIG_UNIT_TEST),y)
-	# UTEST depends on KERNEL and CHECKSUM, must be listed after them
-	SUBSYSTEMS += UTEST
-endif
-
+SUBSYSTEMS += LIBUART
 
 PREPROCESS_PARTS 	+= $(CONFIG_XARCH) $(CONFIG_ABI) 32bit \
 			   abs_syscalls big_endian jdb_thread_names \

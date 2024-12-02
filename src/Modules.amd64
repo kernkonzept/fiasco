@@ -3,13 +3,9 @@
 
 include $(srcdir)/Modules.generic
 
-SUBSYSTEMS = JABI ABI DRIVERS KERNEL CRT0 BOOT LIBK CHECKSUM CXXLIB LIBC \
-             TCBOFFSET SYMBOLS VERSION GBLCFG STDWORKLOAD
-
-ifeq ($(CONFIG_UNIT_TEST),y)
-	# UTEST depends on KERNEL and CHECKSUM, must be listed after them
-	SUBSYSTEMS += UTEST
-endif
+# UTEST depends on KERNEL and CHECKSUM, must be listed after them
+SUBSYSTEMS := $(filter-out UTEST,$(SUBSYSTEMS)) BOOT CHECKSUM SYMBOLS GBLCFG \
+              $(filter UTEST,$(SUBSYSTEMS))
 
 ifeq ("$(CONFIG_COV)","y")
 	SUBSYSTEMS += LIBCOV
