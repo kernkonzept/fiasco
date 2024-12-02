@@ -195,7 +195,6 @@ Jdb_set_trace::action(int cmd, void *&args, char const *&fmt, int &) override
 		default:
 		  return ERROR;
 		}
-	      break;
 	    default:
 	      return ERROR;
 	    }

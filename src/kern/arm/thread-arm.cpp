@@ -783,7 +783,6 @@ Thread::arm_esr_entry(Return_frame *rf)
           slowtrap_entry(ts);
           return;
         }
-      break;
 
     case 0x07: // SVE, Advanced SIMD or floating-point trap
       if ((Proc::Is_64bit // Always FPU trap on Aarch64, not used for other CPs.

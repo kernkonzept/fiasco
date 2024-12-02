@@ -854,7 +854,6 @@ Jdb_set_bp::action(int cmd, void *&args, char const *&fmt, int &next_char) overr
 	    default:
 	      return ERROR;
 	    }
-	  break;
 	case 3:
 got_address:
 	  // address/task read
