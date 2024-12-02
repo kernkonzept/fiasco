@@ -41,9 +41,6 @@ PUBLIC
 static void
 Kernel_thread::boot_app_cpus()
 {
-  if (Config::Max_num_cpus <= 1)
-    return;
-
   extern char _tramp_mp_entry[];
   extern char _tramp_mp_boot_info[];
   Mp_boot_info volatile *_tmp;

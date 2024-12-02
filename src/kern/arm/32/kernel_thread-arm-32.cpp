@@ -9,9 +9,6 @@ PUBLIC
 static void
 Kernel_thread::boot_app_cpus()
 {
-  if (Config::Max_num_cpus <= 1)
-    return;
-
   extern char _tramp_mp_entry[];
   extern volatile Mword _tramp_mp_startup_cp15_c1;
   extern volatile Mword _tramp_mp_startup_pdbr;
