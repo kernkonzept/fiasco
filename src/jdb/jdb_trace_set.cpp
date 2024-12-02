@@ -152,13 +152,6 @@ Jdb_set_trace::action(int cmd, void *&args, char const *&fmt, int &) override
 	      Jdb_pf_trace::_log        = 1;
 	      Jdb_pf_trace::_log_to_buf = 1;
 	      break;
-	    case 'R': // results on
-	      if constexpr (!Config::Jdb_logging)
-		{
-		  puts(" logging disabled");
-		  return ERROR;
-		}
-	      // fall through
 	    case 'r': // restriction
 	      putchar(first_char);
 	      fmt  = "%C";
