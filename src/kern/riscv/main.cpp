@@ -10,6 +10,8 @@ IMPLEMENTATION [riscv]:
 #include <cstdio>
 #include <cstring>
 
+#include <cxx/defensive>
+
 #include "config.h"
 #include "globals.h"
 #include "kip_init.h"
@@ -60,8 +62,7 @@ static void exit_question()
           // problems.
           // SO just do the reset at this point.
           puts("\033[1mRebooting...\033[0m");
-          platform_reset();
-          break;
+          cxx::check_noreturn<platform_reset>();
         }
     }
 }
