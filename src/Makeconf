@@ -159,6 +159,7 @@ SHARED_FLAGS-gcc	+= $(call CHECKCXX,-Wmisleading-indentation,) -Wlogical-op -Wfl
 SHARED_FLAGS-gcc	+= $(if $(filter 7 8 9 10,$(CCVER_MAJOR)),-Wno-nonnull)
 SHARED_FLAGS  		+= -g -Wall -Wextra $(call CHECKCC,-Wdouble-promotion) $(call CHECKCC,-Wfloat-conversion) -Wmissing-declarations
 SHARED_FLAGS  		+= -Wdeprecated
+SHARED_FLAGS-clang	+= -Wunreachable-code-aggressive
 # WARNING EXCEPTION: not all members of a struct used to reflect hardware state
 # are necessarily used.
 SHARED_FLAGS-clang	+= -Wno-unused-private-field
@@ -204,7 +205,6 @@ endif
 
 # Configuration dependent compile flags
 SHARED_FLAGS-$(CONFIG_NDEBUG)           += -DNDEBUG
-SHARED_FLAGS-$(CONFIG_UNREACHABLE_CODE) += $(call CHECKCC,-Wunreachable-code,)
 SHARED_FLAGS += $(if $(CONFIG_NO_FRAME_PTR),-fomit-frame-pointer,-fno-omit-frame-pointer)
 
 # To enable all warnings, including those with false positives.
