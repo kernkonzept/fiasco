@@ -228,6 +228,7 @@ void Proc::halt()
 {
   Status f = cli_save();
   asm volatile("dsb sy \n\t"
+               "isb sy \n\t"
                "wfi \n\t");
   sti_restore(f);
 }
