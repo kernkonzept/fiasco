@@ -149,18 +149,12 @@ Jdb_pf_trace::show()
 {
   if (_log)
     {
-      int res_enabled = 0;
-      BEGIN_LOG_EVENT("Page fault results", "pfr", Tb_entry_pf)
-      res_enabled = 1;
-      END_LOG_EVENT;
-      printf("PF logging%s%s enabled",
-	     res_enabled ? " incl. results" : "",
+      printf("PF logging%s enabled",
 	     _log_to_buf ? " to tracebuffer" : "");
       if (_gthread != 0)
 	{
     	  printf(", restricted to thread%s %lx",
-		 _other_thread ? "s !=" : "",
-		 _gthread);
+                 _other_thread ? "s !=" : "", _gthread);
 	}
       if (_addr.lo || _addr.hi)
 	{
