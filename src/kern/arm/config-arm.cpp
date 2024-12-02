@@ -21,7 +21,6 @@ public:
     PAGE_SHIFT = ARCH_PAGE_SHIFT,
     PAGE_SIZE  = 1 << PAGE_SHIFT,
 
-    hlt_works_ok = 1,
     Irq_shortcut = 1,
   };
 

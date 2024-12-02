@@ -10,6 +10,12 @@ public:
    */
   static Address utcb_addr();
 
+protected:
+  /**
+   * Idle operation the kernel idle threads execute in a loop on each CPU.
+   */
+  void idle_op();
+
 private:
   /**
    * Frees the memory of the initcall sections.
@@ -186,16 +192,14 @@ Kernel_thread::check_debug_koptions()
 // ------------------------------------------------------------------------
 IMPLEMENTATION [!tickless_idle]:
 
-PUBLIC inline NEEDS["processor.h"]
+#include "processor.h"
+
+IMPLEMENT_DEFAULT inline NEEDS["processor.h"]
 void
 Kernel_thread::idle_op()
 {
-  if (Config::hlt_works_ok)
-    Proc::halt();			// stop the CPU, waiting for an int
-  else
-    Proc::pause();
+  Proc::halt(); // stop the CPU, waiting for an interrupt
 }
-
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [tickless_idle]:
@@ -216,7 +220,7 @@ DEFINE_PER_CPU Per_cpu<unsigned long> Kernel_thread::_idle_counter;
 DEFINE_PER_CPU Per_cpu<unsigned long> Kernel_thread::_deep_idle_counter;
 
 // template code for arch idle
-PUBLIC
+IMPLEMENT
 void
 Kernel_thread::idle_op()
 {

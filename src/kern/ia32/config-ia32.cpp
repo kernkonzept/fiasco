@@ -68,7 +68,6 @@ public:
   static const bool watchdog = false;
 #endif
 
-//  static const bool hlt_works_ok = false;
   static bool hlt_works_ok;
 
   // the default uart to use for serial console

@@ -37,7 +37,6 @@ public:
 
     SUPERPAGE_SIZE  = 1UL << SUPERPAGE_SHIFT,
 
-    hlt_works_ok = 1,
     Irq_shortcut = 1,
   };
 

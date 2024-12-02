@@ -17,7 +17,6 @@ public:
 
     // XXXKYMA: No large pages/TLBs yet, update paging-mips32 when enabled
     have_superpages = 0,
-    hlt_works_ok = 1,
     Irq_shortcut = 1,
   };
 

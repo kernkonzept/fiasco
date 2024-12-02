@@ -259,3 +259,18 @@ Kernel_thread::boot_app_cpus()
   // Send IPI sequence to startup the APs
   Apic::mp_startup(Apic_id{0} /*ignored*/, true, tramp_page);
 }
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION[(ia32 || amd64) && !tickless_idle]:
+
+#include "processor.h"
+
+IMPLEMENT_OVERRIDE inline NEEDS["processor.h"]
+void
+Kernel_thread::idle_op()
+{
+  if (Config::hlt_works_ok)
+    Proc::halt();     // stop the CPU, waiting for an interrupt
+  else
+    Proc::pause();
+}
