@@ -56,7 +56,7 @@ Obj_cap::deref(L4_fpage::Rights *rights, bool dbg = false)
       if (!self())
         return 0;
 
-      *rights = L4_fpage::Rights::CRWS();
+      *rights = L4_fpage::Rights::CWS();
       return current;
     }
 
