@@ -45,7 +45,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [riscv && emulate_periodic_timer]:
+INTERFACE [riscv && !one_shot]:
 
 EXTENSION class Config
 {
@@ -59,7 +59,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [riscv && !emulate_periodic_timer]:
+INTERFACE [riscv && one_shot]:
 
 EXTENSION class Config
 {

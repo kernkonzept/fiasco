@@ -5,6 +5,7 @@
 # ARCHSELECT:     HAS_JDB_DISASM_OPTION
 # ARCHSELECT:     HAS_LAZY_FPU
 # ARCHSELECT:     HAS_SYNC_CLOCK
+# ARCHSELECT:     HAS_ONE_SHOT if SYNC_CLOCK
 #
 # ARCHDEFAULTPF:  PF_RISCV_VIRT
 
@@ -82,22 +83,6 @@ config RISCV_VMID
   default y
 
 # SECTION: TARGET
-
-config EMULATE_PERIODIC_TIMER
-	bool "Emulate periodic timer"
-	default y
-	help
-	  The generic SBI timer interface only exposes a one-shot timer.
-
-	  Although Fiasco can in principle run with a one-shot timer, the current
-	  implementation has several limitations. For example, running Fiasco in
-	  one-shot timer mode can negatively influence the resolution of the KIP clock
-	  and slow down the destruction of kernel objects (RCU mechanism).
-
-	  As a workaround, this option turns the SBI one-shot timer into a "periodic"
-	  timer. On each timer interrupt, Fiasco then reprograms the one-shot timer to
-	  the current time plus the periodic timer interval, thereby emulating a
-	  periodic timer.
 
 config RISCV_SBI_V1
 	bool
