@@ -918,7 +918,7 @@ private:
     inline void atomic_set_invalid()
     { atomic_and(&_ste->raw[0], ~Ste::v_bfm_t::Mask); }
 
-    /// Only the fields stored in `Ste::raw[0]` are valid in the return Ste.
+    /// Only the fields stored in `Ste::raw[0]` are valid in the returned Ste.
     inline Ste atomic_read_status()
     {
       Ste ste;
@@ -1375,8 +1375,8 @@ Iommu::ste_state(Ste_ptr ste_ptr)
  *         it from `Valid` to `Exclusive` state. The caller must subsequently
  *         invoke `flush_ste()` on the STE to make the invalidation visible to
  *         the SMMU. Then it must either configure or release the STE.
- * \retval `Acquire_result::Exclusive` if the STE could not be acquired since it
- *         was a already in `Exclusive` state.
+ * \retval `Acquire_result::Busy` if the STE could not be acquired since it was
+ *         already in `Exclusive` state.
  */
 PRIVATE
 Iommu::Acquire_result
