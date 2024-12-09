@@ -218,7 +218,6 @@ CSRC_LIBC         := libc_lock.c \
                      vsnprintf.c \
                      vsprintf.c \
                      vprintf.c \
-                     __overflow.c \
                      __towrite.c \
                      fputs.c \
                      fwrite.c \

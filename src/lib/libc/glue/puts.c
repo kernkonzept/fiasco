@@ -1,16 +1,16 @@
-#include "stdio_impl.h"
 #include "libc_stdio.h"
+#include "libc_backend.h"
+#include <string.h>
 
 int puts(const char *s)
 {
-  FILE f = (FILE)
+  unsigned long state = __libc_backend_printf_lock();
+  int ret = __libc_backend_outs(s, strlen(s));
+  if (ret >= 0)
     {
-      .flags = F_PERM | F_NORD,
-      .write = __libc_stdout_write,
-      .buf = NULL,
-      .buf_size = 0, /* vfprintf() will use local internal_buf */
-      .lock = -1,
-      .lbf = '\n',
-    };
-  return -(fputs(s, &f) < 0 || putc_unlocked('\n', &f) < 0);
+      char c = '\n';
+      ret = __libc_backend_outs(&c, 1);
+    }
+  __libc_backend_printf_unlock(state);
+  return ret;
 }

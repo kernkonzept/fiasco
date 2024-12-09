@@ -86,7 +86,6 @@ hidden void __stdio_exit_needed(void);
 #if defined(__PIC__) && (100*__GNUC__+__GNUC_MINOR__ >= 303)
 __attribute__((visibility("protected")))
 #endif
-int __overflow(FILE *, int);
 
 hidden int __fseeko(FILE *, off_t, int);
 hidden int __fseeko_unlocked(FILE *, off_t, int);
@@ -113,11 +112,6 @@ hidden void __getopt_msg(const char *, const char *, const char *, size_t);
 
 #define feof(f) ((f)->flags & F_EOF)
 #define ferror(f) ((f)->flags & F_ERR)
-
-#define putc_unlocked(c, f) \
-	( (((unsigned char)(c)!=(f)->lbf && (f)->wpos!=(f)->wend)) \
-	? *(f)->wpos++ = (unsigned char)(c) \
-	: __overflow((f),(unsigned char)(c)) )
 
 /* Caller-allocated FILE * operations */
 hidden FILE *__fopen_rb_ca(const char *, FILE *, unsigned char *, size_t);
