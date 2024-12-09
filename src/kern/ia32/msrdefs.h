@@ -28,6 +28,9 @@ enum class Msr : Unsigned32
   Ia32_sysenter_cs = 0x174,         // Kernel Code Segment
   Ia32_sysenter_esp = 0x175,        // Kernel Syscall Entry
   Ia32_sysenter_eip = 0x176,        // Kernel Stack Pointer
+  Ia32_mcg_cap = 0x179,             // Global Machine Check Capability
+  Ia32_mcg_status = 0x17a,          // Global Machine Check Status
+  Ia32_mcg_ctl = 0x17b,             // Global Machine Check Control
   Ia32_perf_ctl = 0x199,            // Performance Control
   Ia32_mtrr_phybase0 = 0x200,
   Ia32_mtrr_phybase1 = 0x201,
@@ -45,9 +48,15 @@ enum class Msr : Unsigned32
   Lastintfromip = 0x1dd,            // (P6)
   Lastinttoip = 0x1de,              // (P6)
   Ia32_pat = 0x277,                 // PAT
+  Ia32_mc0_ctl2 = 0x280,            // , 0x281, ... up to 31 registers
   Ia32_mtrr_def_type = 0x2ff,       // MTRR default memory type and MTRR enable
   Ia32_fixed_ctr_ctrl = 0x38d,      // Fixed-Function Performance Ctr Control
   Ia32_perf_global_ctrl = 0x38f,    // Global Performance Counter Control
+  Ia32_mc0_ctl = 0x400,             // , 0x404, ... up to 31 registers
+  Ia32_mc0_status = 0x401,          // , 0x405, ... up to 31 registers
+  Ia32_mc0_addr = 0x402,            // , 0x406, ... up to 31 registers
+  Ia32_mc0_misc = 0x403,            // , 0x407, ... up to 31 registers
+  Ia32_mcg_ext_ctl = 0x4d0,
   Ia32_ds_area = 0x600,             // DS Save Area
   Lastbranch_0_from_ip = 0x680,     // Last Branch Record 0 From IP
   Lastbranch_0_to_ip = 0x6c0,       // Last Branch Record 0 To IP

@@ -87,7 +87,7 @@ EXCEP_ERR	0x0d, vec0d_gen_prot, 1
 # EXCEPTION	0x0f, vec0f_trap_0f
 EXCEPTION	0x10, vec10_fpu_err
 EXCEP_ERR	0x11, vec11_align
-EXCEPTION	0x12, vec12_mcheck
+# EXCEPTION	0x12, vec12_mcheck
 EXCEPTION	0x13, vec13_simd_err
 EXCEPTION	0x14, vec14_virt_exc
 EXCEP_ERR	0x15, vec15_ctrl_prot_exc, 1
@@ -247,6 +247,18 @@ real_fpu_exception:
 	pushq	$(7)
 	save_all_regs
 	jmp	_slowtraps
+
+GATE_ENTRY	0x12, entry_vec12_machine_check, (ACC_PL_K | ACC_INTR_GATE)
+        .p2align 4
+	.type	entry_vec12_machine_check,@function
+entry_vec12_machine_check:
+	cld
+	SWITCH_TO_KERNEL_CR3 0
+	SAVE_SCRATCH
+	lea	SCRATCH_REGISTER_SIZE(%rsp), %rdi
+	call	thread_handle_machine_check
+	RESTORE_SCRATCH
+	SAFE_IRET
 
 	.section ".entry.text.timer", "ax", @progbits
 /* timer interrupt */
