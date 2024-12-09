@@ -72,9 +72,9 @@ Timer::init(Cpu_number cpu)
              _freq0.unwrap(), _interval.unwrap(), Gtimer::counter());
       assert(_freq0);
 
-      calc_scaler_shift(_freq0, 1'000'000'000, &_scaler_shift_ts_to_ns);
-      calc_scaler_shift(_freq0, 1'000'000, &_scaler_shift_ts_to_us);
-      calc_scaler_shift(1'000'000, _freq0, &_scaler_shift_us_to_ts);
+      _scaler_shift_ts_to_ns = Scaler_shift::calc(_freq0, 1'000'000'000);
+      _scaler_shift_ts_to_us = Scaler_shift::calc(_freq0, 1'000'000);
+      _scaler_shift_us_to_ts = Scaler_shift::calc(1'000'000, _freq0);
     }
   else if (_freq0 != frequency())
     {
