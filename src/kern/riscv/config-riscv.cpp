@@ -52,7 +52,6 @@ EXTENSION class Config
 public:
   enum
   {
-    Scheduler_one_shot    = 0,
     Scheduler_granularity = CONFIG_SCHED_GRANULARITY,
     Default_time_slice    = CONFIG_SCHED_DEF_TIME_SLICE * Scheduler_granularity,
   };
@@ -66,7 +65,6 @@ EXTENSION class Config
 public:
   enum
   {
-    Scheduler_one_shot    = 1,
     Scheduler_granularity = 1UL,
     Default_time_slice    = CONFIG_SCHED_DEF_TIME_SLICE * CONFIG_SCHED_GRANULARITY,
   };

@@ -49,8 +49,6 @@ public:
     Scheduler_granularity = 1000U,
     Default_time_slice = 10 * Scheduler_granularity,
 #endif
-
-    Scheduler_one_shot = TAG_ENABLED(one_shot),
   };
 
   enum

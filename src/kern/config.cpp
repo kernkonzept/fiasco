@@ -59,6 +59,7 @@ public:
 
     Warn_level = CONFIG_WARN_LEVEL,
 
+    Scheduler_one_shot = TAG_ENABLED(one_shot),
     One_shot_min_interval_us = 200,
 #ifdef CONFIG_SCHED_GRANULARITY
     Rcu_grace_period = CONFIG_SCHED_GRANULARITY,
