@@ -234,6 +234,10 @@ Ipc_gate_ctl::bind_thread(L4_obj_ref, L4_fpage::Rights rights,
   if (tag.words() < 2)
     return commit_result(-L4_err::EMsgtooshort);
 
+  Mword id = access_once(&in->values[1]);
+  if (EXPECT_FALSE(id & cxx::int_value<L4_fpage::Rights>(L4_fpage::Rights::CWS())))
+    return commit_result(-L4_err::EInval);
+
   L4_fpage::Rights t_rights(0);
   Thread *t = Ko::deref<Thread>(&tag, in, &t_rights);
   if (!t)
@@ -243,7 +247,7 @@ Ipc_gate_ctl::bind_thread(L4_obj_ref, L4_fpage::Rights rights,
     return commit_result(-L4_err::EPerm);
 
   Ipc_gate_obj *g = static_cast<Ipc_gate_obj*>(this);
-  g->_id = in->values[1];
+  g->_id = id;
   t->inc_ref();
 
   Mem::mp_wmb(); // Ensure visibility of _id before _thread
@@ -453,7 +457,12 @@ ipc_gate_factory(Ram_quota *q, Space *space,
           return 0;
         }
 
-      id = utcb->values[2];
+      id = access_once(&utcb->values[2]);
+      if (EXPECT_FALSE(id & cxx::int_value<L4_fpage::Rights>(L4_fpage::Rights::CWS())))
+        {
+          *err = L4_err::EInval;
+          return 0;
+        }
     }
 
   *err = L4_err::ENomem;
