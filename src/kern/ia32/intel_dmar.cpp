@@ -124,16 +124,15 @@ Dmar::find_mmu(Unsigned16 iommu_idx)
 
 PRIVATE
 Mword
-Dmar::parse_src_id(Src_id src_id, Unsigned8 *bus, unsigned *dfs,
-                   unsigned *dfe, Intel::Io_mmu **mmu)
+Dmar::parse_src_id(Src_id src_id, Unsigned8 *bus, unsigned *devfn,
+                   Intel::Io_mmu **mmu)
 {
   Unsigned8 type = src_id.type();
   *bus = src_id.bus();
   switch (type)
     {
     case 1:
-      *dfs = static_cast<unsigned>(src_id.devfn());
-      *dfe = *dfs + 1;
+      *devfn = static_cast<unsigned>(src_id.devfn());
       break;
     case 2:
       WARNX(Warning,
@@ -152,9 +151,9 @@ L4_msg_tag
 Dmar::op_bind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space_cap)
 {
   Unsigned8 bus;
-  unsigned dfs, dfe;
+  unsigned devfn;
   Intel::Io_mmu *mmu;
-  if (Mword err = parse_src_id(Src_id(src_id), &bus, &dfs, &dfe, &mmu))
+  if (Mword err = parse_src_id(Src_id(src_id), &bus, &devfn, &mmu))
     return Kobject_iface::commit_result(err);
 
   // Prevent the Dmar_space from being deleted while using it without holding
@@ -174,27 +173,22 @@ Dmar::op_bind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space_cap)
   // queue. While waiting for these to execute, we must be interruptible.
   auto guard_cpu = lock_guard<Lock_guard_inverse_policy>(cpu_lock);
 
-  bool need_wait = false;
-  for (unsigned df = dfs; df < dfe; ++df)
-    {
-      auto entryp = mmu->get_context_entry(bus, df, true);
+  auto entryp = mmu->get_context_entry(bus, devfn, true);
 
-      // AW: entryp might be NULL is this a user error?
-      // AW: treat it as such
-      if (!entryp)
-        return Kobject_iface::commit_result(-L4_err::ENomem);
+  // AW: entryp might be NULL is this a user error?
+  // AW: treat it as such
+  if (!entryp)
+    return Kobject_iface::commit_result(-L4_err::ENomem);
 
-      Intel::Io_mmu::Cte entry;
-      entry.tt() = Intel::Io_mmu::Cte::Tt_translate_all;
-      entry.slptptr() = slptptr;
-      entry.aw() = aw;
-      entry.did() = did;
-      entry.os() = 1;
-      entry.present() = 1;
+  Intel::Io_mmu::Cte entry;
+  entry.tt() = Intel::Io_mmu::Cte::Tt_translate_all;
+  entry.slptptr() = slptptr;
+  entry.aw() = aw;
+  entry.did() = did;
+  entry.os() = 1;
+  entry.present() = 1;
 
-      need_wait |= mmu->set_context_entry(entryp, bus, df, entry);
-    }
-  if (need_wait)
+  if (mmu->set_context_entry(entryp, bus, devfn, entry))
     mmu->queue_and_wait();
 
   return Kobject_iface::commit_result(0);
@@ -205,9 +199,9 @@ L4_msg_tag
 Dmar::op_unbind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space_cap)
 {
   Unsigned8 bus;
-  unsigned dfs, dfe;
+  unsigned devfn;
   Intel::Io_mmu *mmu;
-  if (Mword err = parse_src_id(Src_id(src_id), &bus, &dfs, &dfe, &mmu))
+  if (Mword err = parse_src_id(Src_id(src_id), &bus, &devfn, &mmu))
     return Kobject_iface::commit_result(err);
 
   // Prevent the Dmar_space from being deleted while using it without holding
@@ -221,24 +215,21 @@ Dmar::op_unbind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space_cap)
   // queue. While waiting for these to execute, we must be interruptible.
   auto guard_cpu = lock_guard<Lock_guard_inverse_policy>(cpu_lock);
 
+  auto entryp = mmu->get_context_entry(bus, devfn, false);
+  // nothing bound
+  if (!entryp)
+    return Kobject_iface::commit_result(0);
+
+  Intel::Io_mmu::Cte entry = access_once(entryp.unsafe_ptr());
+  // different space bound
+  if (entry.slptptr() != slptptr)
+    return Kobject_iface::commit_result(0);
+
   bool need_wait = false;
-  for (unsigned df = dfs; df < dfe; ++df)
-    {
-      auto entryp = mmu->get_context_entry(bus, df, false);
-      // nothing bound, skip
-      if (!entryp)
-        continue;
-
-      Intel::Io_mmu::Cte entry = access_once(entryp.unsafe_ptr());
-      // different space bound, skip
-      if (entry.slptptr() != slptptr)
-        continue;
-
-      // when the CAS fails someone else already unbound this slot,
-      // so ignore that case
-      mmu->cas_context_entry(entryp, bus, df, entry, Intel::Io_mmu::Cte(),
-                             &need_wait);
-    }
+  // when the CAS fails someone else already unbound this slot,
+  // so ignore that case
+  mmu->cas_context_entry(entryp, bus, devfn, entry, Intel::Io_mmu::Cte(),
+                         &need_wait);
   if (need_wait)
     mmu->queue_and_wait();
 
