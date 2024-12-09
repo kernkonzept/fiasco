@@ -59,15 +59,3 @@ PUBLIC static inline
 void
 Timer::acknowledge()
 {}
-
-static
-void
-Timer::update_one_shot(Unsigned64 /*wakeup*/)
-{
-}
-
-IMPLEMENT inline
-void
-Timer::update_timer(Unsigned64 /*wakeup*/)
-{
-}

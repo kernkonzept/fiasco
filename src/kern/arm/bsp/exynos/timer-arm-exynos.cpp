@@ -112,9 +112,12 @@ Timer::periodic_default_freq(Cpu_number cpu)
   timers.cpu(cpu)->set_interval(Interval);
 }
 
-IMPLEMENT_OVERRIDE inline
+//----------------------------------------------------------------------------
+IMPLEMENTATION [arm && exynos_mct && one_shot]:
+
+IMPLEMENT inline
 void
-Timer::update_one_shot(Unsigned64 wakeup)
+Timer::update_timer(Unsigned64 wakeup)
 {
   Unsigned64 now = Kip::k()->clock();
   Mword interval_mct;

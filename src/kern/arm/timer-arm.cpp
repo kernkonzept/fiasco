@@ -14,7 +14,6 @@ public:
   static Scaler_shift get_scaler_shift_ts_to_us() { return _scaler_shift_ts_to_us; }
 
 private:
-  static inline void update_one_shot(Unsigned64 wakeup);
   static Unsigned64 time_stamp();
   static Global_data<Scaler_shift> _scaler_shift_ts_to_ns;
   static Global_data<Scaler_shift> _scaler_shift_ts_to_us;
@@ -62,19 +61,6 @@ Timer::time_stamp()
 IMPLEMENT_DEFAULT
 Irq_chip::Mode Timer::irq_mode()
 { return Irq_chip::Mode::F_raising_edge; }
-
-IMPLEMENT_DEFAULT inline
-void
-Timer::update_one_shot(Unsigned64 /*wakeup*/)
-{}
-
-IMPLEMENT inline NEEDS[Timer::update_one_shot, "config.h"]
-void
-Timer::update_timer(Unsigned64 wakeup)
-{
-  if constexpr (Config::Scheduler_one_shot)
-    update_one_shot(wakeup);
-}
 
 PUBLIC static inline
 Unsigned64

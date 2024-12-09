@@ -48,10 +48,3 @@ Timer::acknowledge()
   //  Rtc::reset();
   //  irq.unmask();
 }
-
-IMPLEMENT inline
-void
-Timer::update_timer(Unsigned64)
-{
-  // does nothing in periodic mode
-}

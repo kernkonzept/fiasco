@@ -163,14 +163,6 @@ Timer::update_system_clock(Cpu_number cpu)
     Kip::k()->add_to_clock(Config::Scheduler_granularity);
 }
 
-IMPLEMENT inline
-void
-Timer::update_timer(Unsigned64 wakeup)
-{
-  (void) wakeup;
-  // FIXEME: need this for one-shot mode
-}
-
 PUBLIC static inline
 unsigned
 Timer::irq()

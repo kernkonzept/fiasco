@@ -46,9 +46,12 @@ void
 Timer::acknowledge()
 {}
 
-static
+//----------------------------------------------------------------------------
+IMPLEMENTATION[apic_timer && one_shot]:
+
+IMPLEMENT
 void
-Timer::update_one_shot(Unsigned64 wakeup)
+Timer::update_timer(Unsigned64 wakeup)
 {
   Unsigned32 apic;
   Unsigned64 now = system_clock();
@@ -64,12 +67,4 @@ Timer::update_one_shot(Unsigned64 wakeup)
     }
 
   Apic::timer_reg_write(apic);
-}
-
-IMPLEMENT inline
-void
-Timer::update_timer(Unsigned64 wakeup)
-{
-  if constexpr (Config::Scheduler_one_shot)
-    update_one_shot(wakeup);
 }

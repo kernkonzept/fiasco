@@ -100,21 +100,6 @@ Timer::set_timer(Unsigned64 time_value)
     Sbi::set_timer(time_value);
 }
 
-IMPLEMENT inline NEEDS[Timer::set_timer]
-void
-Timer::update_timer(Unsigned64 wakeup_us)
-{
-  if constexpr (Config::Scheduler_one_shot)
-    {
-      if (wakeup_us == Infinite_timeout)
-        set_timer(0xffff'ffff'ffff'ffffULL);
-      else
-        set_timer(us_to_ts(wakeup_us));
-      if (_enabled.current())
-        Cpu::enable_timer_interrupt(true);
-    }
-}
-
 PRIVATE static inline NEEDS[Timer::set_timer]
 void
 Timer::reprogram_periodic_timer(Cpu_number cpu)
@@ -172,6 +157,24 @@ Timer::toggle(Cpu_number cpu, bool enable)
       }
 
   Cpu::enable_timer_interrupt(enable);
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [riscv && one_shot]:
+
+IMPLEMENT inline NEEDS[Timer::set_timer]
+void
+Timer::update_timer(Unsigned64 wakeup_us)
+{
+  if constexpr (Config::Scheduler_one_shot)
+    {
+      if (wakeup_us == Infinite_timeout)
+        set_timer(0xffff'ffff'ffff'ffffULL);
+      else
+        set_timer(us_to_ts(wakeup_us));
+      if (_enabled.current())
+        Cpu::enable_timer_interrupt(true);
+    }
 }
 
 // ------------------------------------------------------------------------

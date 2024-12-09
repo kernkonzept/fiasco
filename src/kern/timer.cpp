@@ -140,6 +140,16 @@ Timer::system_clock()
 }
 
 //----------------------------------------------------------------------------
+IMPLEMENTATION[!one_shot]:
+
+IMPLEMENT inline
+void
+Timer::update_timer(Unsigned64)
+{
+  // does nothing in periodic timer mode
+}
+
+//----------------------------------------------------------------------------
 IMPLEMENTATION[jdb]:
 
 IMPLEMENT_DEFAULT

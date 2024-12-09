@@ -29,10 +29,3 @@ PUBLIC static inline
 void
 Timer::acknowledge()
 {}
-
-IMPLEMENT inline
-void
-Timer::update_timer(Unsigned64)
-{
-  // does nothing in periodic mode
-}
