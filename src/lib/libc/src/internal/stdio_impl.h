@@ -18,6 +18,7 @@
 #define FUNLOCK(f) __libc_backend_printf_unlock(lock_state)
 #endif /* LIBCL4 */
 
+#ifndef LIBCL4
 #define F_PERM 1
 #define F_NORD 4
 #define F_NOWR 8
@@ -25,10 +26,13 @@
 #define F_ERR 32
 #define F_SVB 64
 #define F_APP 128
+#endif
 
 /* LIBCL4: save some stack. Maybe remove even more. */
 struct _IO_FILE {
+#ifndef LIBCL4
 	unsigned flags;
+#endif
 	unsigned char *rpos;
 #ifndef LIBCL4
 	int (*close)(FILE *);
@@ -110,8 +114,12 @@ hidden void __do_orphaned_stdio_locks(void);
 
 hidden void __getopt_msg(const char *, const char *, const char *, size_t);
 
+#ifndef LIBCL4
 #define feof(f) ((f)->flags & F_EOF)
 #define ferror(f) ((f)->flags & F_ERR)
+#else
+#define ferror(f) 0
+#endif
 
 /* Caller-allocated FILE * operations */
 hidden FILE *__fopen_rb_ca(const char *, FILE *, unsigned char *, size_t);

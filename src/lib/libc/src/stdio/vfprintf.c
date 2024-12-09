@@ -687,7 +687,9 @@ int vfprintf(FILE *restrict f, const char *restrict fmt, va_list ap)
 	int nl_type[NL_ARGMAX+1] = {0};
 	union arg nl_arg[NL_ARGMAX+1];
 	unsigned char internal_buf[80], *saved_buf = 0;
+#ifndef LIBCL4
 	int olderr;
+#endif
 	int ret;
 
 	/* the copy allows passing va_list* even if va_list is an array */
@@ -698,8 +700,10 @@ int vfprintf(FILE *restrict f, const char *restrict fmt, va_list ap)
 	}
 
 	FLOCK(f);
+#ifndef LIBCL4
 	olderr = f->flags & F_ERR;
 	f->flags &= ~F_ERR;
+#endif
 	if (!f->buf_size) {
 		saved_buf = f->buf;
 		f->buf = internal_buf;
@@ -721,7 +725,9 @@ int vfprintf(FILE *restrict f, const char *restrict fmt, va_list ap)
 		f->wpos = f->wbase = f->wend = 0;
 	}
 	if (ferror(f)) ret = -1;
+#ifndef LIBCL4
 	f->flags |= olderr;
+#endif
 	FUNLOCK(f);
 	va_end(ap2);
 	return ret;
