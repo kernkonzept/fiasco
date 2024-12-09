@@ -10,7 +10,7 @@ class Rcu_glbl;
 class Rcu_data;
 
 /**
- * \brief Encapsulation of RCU batch number.
+ * Encapsulation of RCU batch number.
  */
 class Rcu_batch
 {
@@ -40,7 +40,7 @@ private:
 };
 
 /**
- * \brief Item that can bequeued for the next grace period.
+ * Item that can bequeued for the next grace period.
  *
  * An RCU item is basically a pointer to a callback which is called
  * after one grace period.
@@ -58,7 +58,7 @@ private:
 
 
 /**
- * \brief List of Rcu_items.
+ * List of Rcu_items.
  *
  * RCU lists are used a lot of times in the RCU implementation and are
  * implemented as single linked lists with FIFO semantics.
@@ -83,7 +83,7 @@ private:
 };
 
 /**
- * \brief CPU local data structure for RCU.
+ * CPU local data structure for RCU.
  */
 class Rcu_data
 {
@@ -105,7 +105,7 @@ public:
 
 
 /**
- * \brief Global RCU data structure.
+ * Global RCU data structure.
  */
 class Rcu_glbl
 {
@@ -125,7 +125,7 @@ private:
 };
 
 /**
- * \brief Encapsulation of RCU implementation.
+ * Encapsulation of RCU implementation.
  *
  * This class aggregates per CPU data structures as well as the global
  * data structure for RCU and provides a common RCU interface.
@@ -217,8 +217,9 @@ Rcu_data::Rcu_data(Cpu_number cpu)
 
 
 /**
- * \brief Enqueue Rcu_item into the list (at the tail).
- * \prarm i the RCU item to enqueue.
+ * Enqueue Rcu_item into the list (at the tail).
+ *
+ * \param i the RCU item to enqueue.
  */
 PUBLIC inline void Rcu_list::enqueue(Rcu_item *i){ push_back(i); }
 

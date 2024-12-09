@@ -22,7 +22,7 @@ public:
   enum Flags
   {
     /**
-     * \brief Flag the willingness to receive FPU state during IPC.
+     * Flag the willingness to receive FPU state during IPC.
      *
      * If this flag is set, the receiving thread in an IPC is willing
      * to receive the status of the floating point unit (FPU) from its partner

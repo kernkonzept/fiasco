@@ -866,7 +866,7 @@ Apic::detect_x2apic()
 }
 
 /**
- * \brief Map the Local APIC device registers
+ * Map the Local APIC device registers.
  *
  * This method needs to be called before Local APIC registers are accessed
  * (which includes the Apic::get_id() and Apic::get_version() methods) and
@@ -923,7 +923,7 @@ Apic::map_registers()
 }
 
 /**
- * \brief Initialize the Local APIC
+ * Initialize the Local APIC.
  *
  * This method does the initialization of the Local APIC either on bootstrap
  * or on power resume. Before this method is called for the first time,

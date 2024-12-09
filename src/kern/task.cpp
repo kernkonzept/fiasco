@@ -8,7 +8,7 @@ INTERFACE:
 #include "unique_ptr.h"
 
 /**
- * \brief A task is a protection domain.
+ * A task is a protection domain.
  *
  * A task is derived from Space, which aggregates a set of address spaces.
  * Additionally to a space, a task provides initialization and destruction
@@ -321,7 +321,8 @@ Task::initialize()
 }
 
 /**
- * \brief Create a normal Task.
+ * Create a normal Task.
+ *
  * \pre \a parent must be valid and exist.
  */
 PUBLIC explicit
@@ -439,7 +440,7 @@ Task::generic_factory(Ram_quota *q, Space *,
 }
 
 /**
- * \brief Shutdown the task.
+ * Shutdown the task.
  *
  * Currently:
  * -# Unbind and delete all contexts bound to this task.

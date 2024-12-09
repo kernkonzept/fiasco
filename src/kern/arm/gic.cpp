@@ -62,8 +62,7 @@ public:
   }
 
   /**
-   * \brief Create a GIC device that is a physical alias for the
-   *        master GIC.
+   * Create a GIC device that is a physical alias for the master GIC.
    */
   template<typename ...CPU_ARGS>
   Gic_mixin(void *dist_base, Gic *master_mapping, CPU_ARGS &&...args)

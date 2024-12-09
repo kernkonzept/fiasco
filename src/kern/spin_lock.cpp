@@ -4,7 +4,7 @@ INTERFACE:
 #include "types.h"
 
 /**
- * \brief Basic spin lock.
+ * Basic spin lock.
  *
  * Also disables lock IRQs for the time the lock is held.
  * In the UP case it is in fact just the Cpu_lock.
@@ -47,7 +47,7 @@ public:
 };
 
 /**
- * \brief Version of a spin lock that is colocated with another value.
+ * Version of a spin lock that is colocated with another value.
  */
 template< typename T >
 class Spin_lock_coloc : public Spin_lock<Mword>
@@ -122,7 +122,7 @@ protected:
 };
 
 /**
- * \brief Version of a spin lock that is colocated with another value.
+ * Version of a spin lock that is colocated with another value.
  */
 template< typename T >
 class Spin_lock_coloc : public Spin_lock<Mword>

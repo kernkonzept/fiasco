@@ -144,7 +144,7 @@ protected:
 
 public:
   /**
-   * \brief Encapsulate an aggregate of Context.
+   * Encapsulate an aggregate of Context.
    *
    * Allow to get a back reference to the aggregating Context object.
    */
@@ -156,13 +156,13 @@ public:
   public:
     Context_member() {}
     /**
-     * \brief Get the aggregating Context object.
+     * Get the aggregating Context object.
      */
     Context *context() const;
   };
 
   /**
-   * \brief Deferred Request.
+   * Deferred Request.
    *
    * Represents a request that can be queued for each Context
    * and is executed by the target context just after switching to the
@@ -204,7 +204,7 @@ public:
   };
 
   /**
-   * \brief Queue for deferred requests (Drq).
+   * Queue for deferred requests (Drq).
    *
    * A FIFO queue each Context aggregates to queue incoming Drq's
    * that have to be executed directly after switching to a context.
@@ -901,7 +901,7 @@ Context::in_ready_list() const
 
 
 /**
- * \brief Activate a newly created thread.
+ * Activate a newly created thread.
  *
  * This function sets a new thread onto the ready list and switches to
  * the thread if it can preempt the currently running thread.
@@ -1278,7 +1278,8 @@ Context::Drq_q::handle_requests()
 }
 
 /**
- * \brief Check for pending DRQs.
+ * Check for pending DRQs.
+ *
  * \return true if there are DRQs pending, false if not.
  */
 PUBLIC inline
@@ -1407,7 +1408,8 @@ Context::set_home_cpu(Cpu_number cpu)
 
 
 /**
- * \brief Queue a DRQ for changing the contexts state.
+ * Queue a DRQ for changing the contexts state.
+ *
  * \param mask bit mask for the state (state &= mask).
  * \param add bits to add to the state (state |= add).
  * \returns True if a reschedule is necessary (a de-blocked scheduling context
@@ -1445,7 +1447,7 @@ Context::xcpu_state_change(Mword mask, Mword add, bool lazy_q = false)
 
 
 /**
- * \brief Initiate a DRQ for the context.
+ * Initiate a DRQ for the context.
  *
  * \param drq   The DRQ request to enqueue (typically the `Context::_drq` member
  *              of the sending context).
@@ -1928,7 +1930,7 @@ Context::need_help(Mword const *lock, Mword val)
 }
 
 /**
- * \brief Wakeup all contexts with pending DRQs.
+ * Wakeup all contexts with pending DRQs.
  *
  * This function wakes up all context from the pending queue.
  */
