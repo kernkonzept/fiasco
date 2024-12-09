@@ -4,7 +4,6 @@
  *
  * License: see LICENSE.spdx (in this directory or the directories above)
  */
-
 #pragma once
 
 #include "uart_base.h"

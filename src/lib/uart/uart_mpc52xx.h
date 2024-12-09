@@ -1,5 +1,4 @@
-#ifndef L4_CXX_UART_MPC52XX_H__
-#define L4_CXX_UART_MPC52XX_H__
+#pragma once
 
 #include "uart_base.h"
 #include "of1275.h"

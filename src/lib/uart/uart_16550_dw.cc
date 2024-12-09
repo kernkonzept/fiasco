@@ -1,22 +1,14 @@
-/* SPDX-License-Identifier: GPL-2.0-only OR License-Ref-kk-custom */
 /*
+ * Copyright (C) 2015 Technische Universität Dresden.
  * Copyright (C) 2023 Kernkonzept GmbH.
- */
-/*
- * (c) 2015
- *     economic rights: Technische Universität Dresden (Germany)
+ * Author(s): Adam Lackorzynski <adam@l4re.org>
  *
- * This file is part of TUD:OS and distributed under the terms of the
- * GNU General Public License 2.
- * Please see the COPYING-GPL-2 file for details.
+ * License: see LICENSE.spdx (in this directory or the directories above)
  */
 
 /*!
  * \file   uart_16550_dw.cc
  * \brief  Implementation of DW-based 16550 UART
- *
- * \author Adam Lackorzynski <adam@l4re.org>
- *
  */
 #include "uart_16550_dw.h"
 

@@ -1,5 +1,10 @@
-#ifndef L4_CXX_UART_PL011_H__
-#define L4_CXX_UART_PL011_H__
+/*
+ * Copyright (C) 2021-2024 Kernkonzept GmbH.
+ * Author(s): Georg Kotheimer <georg.kotheimer@kernkonzept.com>
+ *
+ * License: see LICENSE.spdx (in this directory or the directories above)
+ */
+#pragma once
 
 #include "uart_base.h"
 

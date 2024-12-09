@@ -1,14 +1,10 @@
-/* SPDX-License-Identifier: GPL-2.0-only OR License-Ref-kk-custom */
 /*
+ * Copyright (C) 2008-2009 Technische Universität Dresden.
  * Copyright (C) 2023 Kernkonzept GmbH.
- */
-/*
- * (c) 2008-2009 Author(s)
- *     economic rights: Technische Universität Dresden (Germany)
+ * Author(s): Adam Lackorzynski <adam@os.inf.tu-dresden.de>
+ *            Alexander Warg <alexander.warg@os.inf.tu-dresden.de>
  *
- * This file is part of TUD:OS and distributed under the terms of the
- * GNU General Public License 2.
- * Please see the COPYING-GPL-2 file for details.
+ * License: see LICENSE.spdx (in this directory or the directories above)
  */
 
 /*!
@@ -16,8 +12,6 @@
  * \brief  16550 UART implementation
  *
  * \date   2008-01-04
- * \author Adam Lackorzynski <adam@os.inf.tu-dresden.de>
- *         Alexander Warg <alexander.warg@os.inf.tu-dresden.de>
  *
  */
 #include "uart_16550.h"

@@ -1,10 +1,12 @@
-/* SPDX-License-Identifier: GPL-2.0-only OR License-Ref-kk-custom */
 /*
  * Copyright (C) 2022-2023 Kernkonzept GmbH.
  * Author(s): Stephan Gerhold <stephan.gerhold@kernkonzept.com>
+ *
+ * License: see LICENSE.spdx (in this directory or the directories above)
  */
 
 /**
+ * \file
  * Driver for Qualcomm "Generic Interface (GENI) Serial Engine (SE)",
  * used in most Qualcomm platforms starting from the Snapdragon 845.
  *

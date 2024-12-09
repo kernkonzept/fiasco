@@ -1,14 +1,10 @@
-/* SPDX-License-Identifier: GPL-2.0-only OR License-Ref-kk-custom */
 /*
+ * Copyright (C) 2008-2009 Technische Universität Dresden.
  * Copyright (C) 2023 Kernkonzept GmbH.
- */
-/*
- * (c) 2008-2009 Author(s)
- *     economic rights: Technische Universität Dresden (Germany)
+ * Author(s): Adam Lackorzynski <adam@os.inf.tu-dresden.de>
+ *            Alexander Warg <alexander.warg@os.inf.tu-dresden.de>
  *
- * This file is part of TUD:OS and distributed under the terms of the
- * GNU General Public License 2.
- * Please see the COPYING-GPL-2 file for details.
+ * License: see LICENSE.spdx (in this directory or the directories above)
  */
 
 /*!
@@ -16,9 +12,6 @@
  * \brief  SA1000 Uart
  *
  * \date   2008-01-02
- * \author Adam Lackorzynski <adam@os.inf.tu-dresden.de>
- *         Alexander Warg <alexander.warg@os.inf.tu-dresden.de>
- *
  */
 
 #include "uart_sa1000.h"
@@ -30,6 +23,8 @@ namespace L4
     PAR_NONE = 0x00,
     PAR_EVEN = 0x03,
     PAR_ODD  = 0x01,
+    DAT_5    = static_cast<unsigned>(-1),
+    DAT_6    = static_cast<unsigned>(-1),
     DAT_7    = 0x00,
     DAT_8    = 0x08,
     STOP_1   = 0x00,
@@ -101,14 +96,14 @@ namespace L4
     _regs->write<unsigned int>(UTCR3, 0);
   }
 
-  bool Uart_sa1000::change_mode(Transfer_mode m, Baud_rate r)
+  bool Uart_sa1000::change_mode(Transfer_mode m, Baud_rate baud)
   {
     unsigned old_utcr3, quot;
     //proc_status st;
 
-    if (r == static_cast<Baud_rate>(-1))
+    if (baud == static_cast<Baud_rate>(-1))
       return false;
-    if (r != BAUD_NC && (r > 115200 || r < 96))
+    if (baud != BAUD_NC && (baud > 115200 || baud < 96))
       return false;
     if (m == static_cast<Transfer_mode>(-1))
       return false;
@@ -128,14 +123,14 @@ namespace L4
       _regs->write<unsigned int>(UTCR0, m & 0x0ff);
 
     /* set baud rate */
-    if (r!=BAUD_NC)
+    if (baud!=BAUD_NC)
       {
-	quot = (UARTCLK / (16 * r)) -1;
+	quot = (UARTCLK / (16 * baud)) -1;
 	_regs->write<unsigned int>(UTCR1, (quot & 0xf00) >> 8);
 	_regs->write<unsigned int>(UTCR2, quot & 0x0ff);
       }
 
-    _regs->write<unsigned int>(UTSR0, ~0U);
+    _regs->write<unsigned int>(UTSR0, static_cast<unsigned>(-1));
     _regs->write<unsigned int>(UTCR3, old_utcr3);
     return true;
 

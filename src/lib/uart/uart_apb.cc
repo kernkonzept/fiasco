@@ -4,7 +4,6 @@
  *
  * License: see LICENSE.spdx (in this directory or the directories above)
  */
-
 #include "uart_apb.h"
 #include "poll_timeout_counter.h"
 

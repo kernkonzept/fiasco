@@ -1,7 +1,9 @@
-/* SPDX-License-Identifier: GPL-2.0-only OR License-Ref-kk-custom */
 /*
  * Copyright (C) 2021-2022 Stephan Gerhold <stephan@gerhold.net>
  * Copyright (C) 2022-2023 Kernkonzept GmbH.
+ * Author(s): Stephan Gerhold <stephan@gerhold.net>
+ *
+ * License: see LICENSE.spdx (in this directory or the directories above)
  */
 #pragma once
 

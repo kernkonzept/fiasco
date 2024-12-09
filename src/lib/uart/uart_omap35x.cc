@@ -1,10 +1,8 @@
 /*
- * (c) 2009-2012 Adam Lackorzynski <adam@os.inf.tu-dresden.de>
- *     economic rights: Technische Universität Dresden (Germany)
+ * Copyright (C) 2009-2012 Technische Universität Dresden.
+ * Author(s): Adam Lackorzynski <adam@os.inf.tu-dresden.de>
  *
- * This file is part of TUD:OS and distributed under the terms of the
- * GNU General Public License 2.
- * Please see the COPYING-GPL-2 file for details.
+ * License: see LICENSE.spdx (in this directory or the directories above)
  */
 #include "uart_omap35x.h"
 #include "poll_timeout_counter.h"

@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2012 Technische Universität Dresden.
+ * Author(s): Adam Lackorzynski <adam@os.inf.tu-dresden.de>
+ *
+ * License: see LICENSE.spdx (in this directory or the directories above)
+ */
 #pragma once
 
 #include "io_regblock.h"

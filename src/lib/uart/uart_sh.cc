@@ -1,13 +1,8 @@
-/* SPDX-License-Identifier: GPL-2.0-only OR License-Ref-kk-custom */
 /*
- * Copyright (C) 2023 Kernkonzept GmbH.
- */
-/*
- * (c) 2016 Adam Lackorzynski <adam@l4re.org>
+ * Copyright (C) 2016, 2023 Kernkonzept GmbH.
+ * Author(s): Adam Lackorzynski <adam@l4re.org>
  *
- * This file is part of L4Re and distributed under the terms of the
- * GNU General Public License 2.
- * Please see the COPYING-GPL-2 file for details.
+ * License: see LICENSE.spdx (in this directory or the directories above)
  */
 #include "uart_sh.h"
 #include "poll_timeout_counter.h"
@@ -70,7 +65,7 @@ namespace L4
 
   bool Uart_sh::change_mode(Transfer_mode, Baud_rate r)
   {
-    (void)r;
+    static_cast<void>(r);
     // Set 8N1 and clock rate in SCSMR
     return true;
   }
