@@ -205,9 +205,15 @@ namespace {
 
 static Kobject_iface * FIASCO_FLATTEN
 factory_factory(Ram_quota *q, Space *,
-                L4_msg_tag, Utcb const *u, Utcb *,
+                L4_msg_tag tag, Utcb const *u, Utcb *,
                 int *err, unsigned *)
 {
+  if (EXPECT_FALSE(tag.words() < 3))
+    {
+      *err = L4_err::EMsgtooshort;
+      return nullptr;
+    }
+
   *err = L4_err::ENomem;
   return static_cast<Factory*>(q)->create_factory(u->values[2]);
 }
