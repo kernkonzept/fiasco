@@ -171,10 +171,11 @@ LIBK            := libk.a
 VPATH           += lib/libk/$(CONFIG_XARCH)/$(BITS) lib/libk/$(CONFIG_XARCH) lib/libk
 PRIVATE_INCDIR  += lib/libk/$(CONFIG_XARCH)/$(BITS) lib/libk/$(CONFIG_XARCH) lib/libk
 
-INTERFACES_LIBK := atomic lock_guard std_macros
+INTERFACES_LIBK := atomic lock_guard scaler_shift std_macros
 CSRC_LIBK       += gcc_lib.c
 CXXSRC_LIBK     += construction.cc
 atomic_IMPL     := atomic atomic-riscv
+scaler_shift_IMPL := scaler_shift scaler_shift-riscv
 
 #
 # SIMPLEMALLOC

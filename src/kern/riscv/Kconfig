@@ -4,6 +4,7 @@
 # ARCHSELECT:     HAS_SERIAL_OPTION
 # ARCHSELECT:     HAS_JDB_DISASM_OPTION
 # ARCHSELECT:     HAS_LAZY_FPU
+# ARCHSELECT:     HAS_SYNC_CLOCK
 #
 # ARCHDEFAULTPF:  PF_RISCV_VIRT
 
@@ -79,6 +80,8 @@ config RISCV_VMID
   depends on CPU_VIRT && CAN_RISCV_VMID
   bool
   default y
+
+# SECTION: TARGET
 
 config EMULATE_PERIODIC_TIMER
 	bool "Emulate periodic timer"

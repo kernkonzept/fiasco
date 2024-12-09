@@ -13,6 +13,7 @@ IMPLEMENTATION [riscv]:
 #include "config.h"
 #include "mem_layout.h"
 #include "mem_unit.h"
+#include "timer.h"
 
 
 // Make the stuff below appearing only in this compilation unit.
@@ -85,6 +86,11 @@ Kip_init::init_kip_clock()
   extern char kip_time_fn_read_ns_end[];
 
   K *k = reinterpret_cast<K *>(Kip::k());
+
+  *reinterpret_cast<Mword*>(k->b + 0x970) = Timer::get_scaler_shift_ts_to_us().scaler;
+  *reinterpret_cast<Mword*>(k->b + 0x978) = Timer::get_scaler_shift_ts_to_us().shift;
+  *reinterpret_cast<Mword*>(k->b + 0x9f0) = Timer::get_scaler_shift_ts_to_ns().scaler;
+  *reinterpret_cast<Mword*>(k->b + 0x9f8) = Timer::get_scaler_shift_ts_to_ns().shift;
 
   memcpy(k->b + 0x900, kip_time_fn_read_us,
          kip_time_fn_read_us_end - kip_time_fn_read_us);

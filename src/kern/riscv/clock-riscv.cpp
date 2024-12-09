@@ -28,5 +28,5 @@ IMPLEMENT inline NEEDS["timer.h"]
 Cpu_time
 Clock::us(Time t)
 {
-  return Timer::ticks_to_us(t);
+  return Timer::ts_to_us(t);
 }

@@ -105,6 +105,13 @@ public:
     Sstatus_user_default = Sstatus_spie,
   };
 
+  enum : Mword
+  {
+    Scounteren_cy = 1UL << 0,
+    Scounteren_tm = 1UL << 1,
+    Scounteren_ir = 1UL << 2,
+  };
+
   void init(bool is_boot_cpu);
 
   static Per_cpu<Cpu> cpus;

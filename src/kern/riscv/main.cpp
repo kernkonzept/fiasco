@@ -157,6 +157,7 @@ IMPLEMENTATION [riscv && mp]:
   Platform_control::init(_cpu);
   Ipi::init(_cpu);
   Timer::init(_cpu);
+  Timer::init_system_clock_ap(_cpu);
   Perf_cnt::init_ap(cpu);
 
   // create kernel thread
