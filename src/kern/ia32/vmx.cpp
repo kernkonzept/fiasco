@@ -902,11 +902,8 @@ enum Host_state : bool
 /**
  * VMX extended vCPU state.
  *
- * For completeness, this is the overall memory layout of the vCPU:
- *
- * 0x000 - 0x1ff: Standard vCPU state \ref Vcpu_state (with padding).
- * 0x200 - 0x3ff: VMX capabilities \ref Vmx_user_info (with padding).
- * 0x400 - 0xfff: VMX extended vCPU state.
+ * This structure is also referred to as "software VMCS" since its purpose is
+ * analogous to the hardware VMCS.
  *
  * The memory layout of the VMX extended vCPU state is as follows:
  *
@@ -921,6 +918,12 @@ enum Host_state : bool
  * 0x0c0 - 0xabf: Software VMCS fields (with padding).
  * 0xac0 - 0xbff: Software VMCS fields dirty bitmap (with padding).
  *
+ * For completeness, this is the overall memory layout of the vCPU state:
+ *
+ * 0x000 - 0x1ff: Standard vCPU state \ref Vcpu_state (with padding).
+ * 0x200 - 0x3ff: VMX capabilities \ref Vmx_user_info (with padding).
+ * 0x400 - 0xfff: VMX extended vCPU state.
+ *
  * \tparam HOST_STATE  Host fields presence discriminator.
  */
 template<Host_state HOST_STATE = Absent>
@@ -930,18 +933,18 @@ private:
   enum
   {
     /**
-     * Size of the software VMCS (in bytes).
+     * Size of the values ares (in bytes).
      */
-    Sw_vmcs_size = 2560,
+    Values_size = 2560,
 
     /**
      * Size of the dirty bitmap (in bytes).
      */
-    Dirty_bitmap_size = Sw_vmcs_size / 8
+    Dirty_bitmap_size = Values_size / 8
   };
 
-  static_assert((Sw_vmcs_size % 8) == 0,
-                "Software VMCS properly sized with respect to dirty bitmap.");
+  static_assert((Values_size % 8) == 0,
+                "Values ares properly sized with respect to dirty bitmap.");
 
   /**
    * Compute VMCS field index base index (within its size and group category).
@@ -1256,7 +1259,7 @@ private:
 
   Unsigned8 _reserved2[120];
 
-  Unsigned8 _values[Sw_vmcs_size];
+  Unsigned8 _values[Values_size];
   Unsigned8 _dirty_bitmap[Dirty_bitmap_size];
 };
 
@@ -1290,12 +1293,13 @@ struct Vmx_vm_entry_interrupt_info
 
 /**
  * Kernel object for the VMX interface which represents the hardware Virtual
- * Machine Control Structure. This kernel object is exposed to user space via
- * the vCPU context label.
+ * Machine Control Structure (VMCS). This kernel object is exposed to user
+ * space via the vCPU context label.
  *
- * The VMX extended vCPU needs to be assigned a VMCS object (via the _vmcs
- * member in \ref Vmx_vm_state) before it can be resumed. The relationship
- * policy between vCPUs and VMCSs is managed by user space.
+ * The VMX extended vCPU needs to be assigned a vCPU context, i.e. an instance
+ * of this VMCS object (via the _vmcs member in \ref Vmx_vm_state) before it
+ * can be resumed. The relationship policy between vCPUs and vCPU contexts is
+ * managed by user space.
  */
 class Vmx_vmcs :
   public cxx::Dyn_castable<Vmx_vmcs, Kobject>,
@@ -1305,12 +1309,12 @@ public:
   enum
   {
     /**
-     * Nominal VMCS size (actual size may be smaller).
+     * Nominal hardware VMCS size (actual size may be smaller).
      */
     Vmcs_size = 0x1000,
 
     /**
-     * VMCS order.
+     * Hardware VMCS order.
      */
     Vmcs_order = 12
   };
@@ -1571,7 +1575,7 @@ template<Host_state HOST_STATE>
 void
 Vmx_vm_state_t<HOST_STATE>::init()
 {
-  static_assert(offset(0x6c00) + limit(0x6c00) < Sw_vmcs_size,
+  static_assert(offset(0x6c00) + limit(0x6c00) < Values_size,
                 "Field offsets fit within the software VMCS.");
 
   _cr2_field = Vmx::Sw_guest_cr2;
@@ -1644,7 +1648,7 @@ Vmx_vm_state_t<HOST_STATE>::init()
       /* Offset of the first field */
       offset(0x0000) / 64,
 
-      /* Size of the software VMCS */
+      /* Size of the values area */
       (offset(0x6c00) + limit(0x6c00) - offset(0x0000)) / 64,
 
       {0, 0}
@@ -1884,7 +1888,8 @@ Vmx_vm_state_t<HOST_STATE>::write(Unsigned64 value)
 }
 
 /**
- * Write a 64-bit guest (including software-defined) field to the software VMCS.
+ * Write a 64-bit guest (including software-defined) field to the software
+ * VMCS.
  *
  * \tparam field  VMCS field index.
  * \param  value  Field value to write.
@@ -2470,16 +2475,16 @@ Vmx_vm_state_t<HOST_STATE>::store_guest_physical_address()
  *
  * To avoid the constly capability lookup, the capability in the \ref _vmcs
  * member is examined only if it contains no operation. If the capability
- * refers to a valid VMCS object, it is then set as the VMCS of the given
- * context. The capability in \ref _vmcs is then marked with the
+ * refers to a valid VMCS object, it is then set as the hardware VMCS of the
+ * given context. The capability in \ref _vmcs is then marked with the
  * \ref L4_obj_ref::Ipc_send operation.
  *
  * If the \ref _vmcs member contains the \ref L4_obj_ref::Ipc_reply operation,
- * the VMCS of the given context is set to none.
+ * the hardware VMCS of the given context is set to none.
  *
  * \param ctxt  Context for which to set the hardware VMCS.
  *
- * \retval 0               VMCS setup successfully.
+ * \retval 0               Hardware VMCS setup successfully.
  * \retval -L4_err::EPerm  Capability with invalid rights.
  */
 PUBLIC inline NEEDS[Vmx_vm_state_t::clear_vmcs, Vmx_vm_state_t::replace_vmcs]
@@ -2528,7 +2533,7 @@ Vmx_vm_state_t<HOST_STATE>::clear_vmcs(Context *ctxt)
 }
 
 /**
- * Replace the VMCS of the given context.
+ * Replace the hardware VMCS of the given context.
  *
  * Manage the reference counting of the previous and the next VMCS object.
  *
@@ -2550,7 +2555,7 @@ bool
 Vmx_vm_state_t<HOST_STATE>::replace_vmcs(Context *ctxt, Vmx_vmcs *prev,
                                          Vmx_vmcs *next)
 {
-  // Bind the next VMCS.
+  // Bind the next VMCS object.
   if (next)
     {
       // Make sure the hardware VMCS is not already bound.
@@ -2562,7 +2567,7 @@ Vmx_vm_state_t<HOST_STATE>::replace_vmcs(Context *ctxt, Vmx_vmcs *prev,
 
   ctxt->set_vmcs(next);
 
-  // Unbind the previous VMCS.
+  // Unbind the previous VMCS object.
   if (prev)
     {
       prev->clear_owner();

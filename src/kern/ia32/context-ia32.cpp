@@ -109,9 +109,9 @@ Context::load_gdt_user_entries(Context * /*old*/ = 0)
 IMPLEMENTATION[vmx]:
 
 /**
- * Get the VMCS object associated with the context.
+ * Get the hardware VMCS object associated with the context.
  *
- * \return VMCS object assiciated with the context.
+ * \return Hardware VMCS object assiciated with the context.
  */
 PUBLIC inline
 Vmx_vmcs *
@@ -121,9 +121,9 @@ Context::vmcs()
 }
 
 /**
- * Set the VMCS object associated with the context.
+ * Set the hardware VMCS object associated with the context.
  *
- * \param vmcs  VMCS object to associate with the context.
+ * \param vmcs  Hardware VMCS object to associate with the context.
  */
 PUBLIC inline
 void
