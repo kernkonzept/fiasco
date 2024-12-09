@@ -68,9 +68,12 @@ private:
   To_list _q[Wakeup_queue_count];
 
   /**
-   * The current programmed timeout.
+   * The current programmed timeout (only used in one-shot mode).
    */
   Unsigned64 _current;
+  /**
+   * The time when timeouts were last handled by Timeout_q::do_timeouts().
+   */
   Unsigned64 _old_clock;
 
 public:
