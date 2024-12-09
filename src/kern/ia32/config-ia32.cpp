@@ -41,8 +41,8 @@ public:
     Scheduler_granularity = 1U,
     Default_time_slice = 10000 * Scheduler_granularity,
 # else
-    Scheduler_granularity = 1000U,
-    Default_time_slice = 10 * Scheduler_granularity,
+    Scheduler_granularity = CONFIG_SCHED_GRANULARITY,
+    Default_time_slice = CONFIG_SCHED_DEF_TIME_SLICE * Scheduler_granularity,
 # endif
 #elif defined(CONFIG_SCHED_HPET)
     Scheduler_mode = SCHED_HPET,
