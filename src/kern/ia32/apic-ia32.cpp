@@ -333,7 +333,7 @@ Unsigned32
 Apic::reg_read(unsigned reg)
 {
   if (use_x2apic())
-    return Cpu::rdmsr(APIC_msr_base + (reg >> 4));
+    return Cpu::rdmsr(Msr::X2apic_regs, reg >> 4);
   else
     return *offset_cast<volatile Unsigned32 *>(io_base, reg);
 }
@@ -343,7 +343,7 @@ void
 Apic::reg_write(unsigned reg, Unsigned32 val)
 {
   if (use_x2apic())
-    Cpu::wrmsr(val, 0, APIC_msr_base + (reg >> 4));
+    Cpu::wrmsr(val, 0, Msr::X2apic_regs, reg >> 4);
   else
     *offset_cast<volatile Unsigned32 *>(io_base, reg) = val;
 }
@@ -353,7 +353,7 @@ void
 Apic::reg_write64(unsigned reg, Unsigned64 val)
 {
   assert(use_x2apic());
-  Cpu::wrmsr(val, APIC_msr_base + (reg >> 4));
+  Cpu::wrmsr(val, Msr::X2apic_regs, reg >> 4);
 }
 
 PUBLIC static inline
@@ -395,7 +395,7 @@ Apic::timer_reg_write(Unsigned32 val)
 PUBLIC static inline NEEDS["cpu.h"]
 Address
 Apic::apic_page_phys()
-{ return Cpu::rdmsr(Msr_ia32_apic_base) & 0xfffff000; }
+{ return Cpu::rdmsr(Msr::Ia32_apic_base) & 0xfffff000; }
 
 // set the global pagetable entry for the Local APIC device registers
 PUBLIC
@@ -709,7 +709,7 @@ Apic::test_present_but_disabled()
   if (!good_cpu)
     return 0;
 
-  Unsigned64 msr = Cpu::rdmsr(Msr_ia32_apic_base);
+  Unsigned64 msr = Cpu::rdmsr(Msr::Ia32_apic_base);
   return ((msr & 0xffffff000ULL) == 0xfee00000ULL);
 }
 
@@ -720,12 +720,12 @@ Apic::activate_by_msr()
 {
   Unsigned64 msr;
 
-  msr = Cpu::rdmsr(Msr_ia32_apic_base);
+  msr = Cpu::rdmsr(Msr::Ia32_apic_base);
   phys_base = msr & 0xfffff000;
   msr |= 1 << 11; // enable local APIC
   if (use_x2)
     msr |= 1 << 10; // enable x2APIC mode
-  Cpu::wrmsr(msr, Msr_ia32_apic_base);
+  Cpu::wrmsr(msr, Msr::Ia32_apic_base);
 
   // later we have to call update_feature_info() as the flags may have changed
 }

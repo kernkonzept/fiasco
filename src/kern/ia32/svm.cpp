@@ -10,6 +10,7 @@ INTERFACE[svm]:
 #include "per_cpu_data.h"
 #include "virt.h"
 #include "cpu_lock.h"
+#include "msrdefs.h"
 #include "pm.h"
 
 EXTENSION class Svm : public Pm_object
@@ -83,11 +84,11 @@ PUBLIC
 void
 Svm::pm_on_resume(Cpu_number) override
 {
-  Unsigned64 efer = Cpu::rdmsr(Msr_ia32_efer);
+  Unsigned64 efer = Cpu::rdmsr(Msr::Ia32_efer);
   efer |= 1 << 12;
-  Cpu::wrmsr(efer, Msr_ia32_efer);
+  Cpu::wrmsr(efer, Msr::Ia32_efer);
   Unsigned64 vm_hsave_pa = Kmem::virt_to_phys(_vm_hsave_area);
-  Cpu::wrmsr(vm_hsave_pa, Msr_vm_hsave_pa);
+  Cpu::wrmsr(vm_hsave_pa, Msr::Vm_hsave_pa);
   _last_user_vmcb = 0;
 }
 
@@ -101,7 +102,7 @@ Svm::cpu_svm_available(Cpu_number cpu)
     return false;
 
   Unsigned64 vmcr;
-  vmcr = c.rdmsr(Msr_vm_cr);
+  vmcr = c.rdmsr(Msr::Vm_cr);
   if (vmcr & (1 << 4)) // VM_CR.SVMDIS
     return false;
   return true;
@@ -120,9 +121,9 @@ Svm::Svm(Cpu_number cpu)
     return;
 
   Unsigned64 efer;
-  efer = c.rdmsr(Msr_ia32_efer);
+  efer = c.rdmsr(Msr::Ia32_efer);
   efer |= 1 << 12;
-  c.wrmsr(efer, Msr_ia32_efer);
+  c.wrmsr(efer, Msr::Ia32_efer);
 
   Unsigned32 eax, ebx, ecx, edx;
   c.cpuid(0x8000000a, &eax, &ebx, &ecx, &edx);
@@ -165,30 +166,31 @@ Svm::Svm(Cpu_number cpu)
   memset(_msrpm, ~0, Msr_pm_size);
 
   // allow the sysenter MSRs for the guests
-  set_msr_perm(Msr_ia32_sysenter_cs, Msr_rw);
-  set_msr_perm(Msr_ia32_sysenter_eip, Msr_rw);
-  set_msr_perm(Msr_ia32_sysenter_esp, Msr_rw);
-  set_msr_perm(Msr_ia32_gs_base, Msr_rw);
-  set_msr_perm(Msr_ia32_fs_base, Msr_rw);
-  set_msr_perm(Msr_ia32_kernel_gs_base, Msr_rw);
-  set_msr_perm(Msr_ia32_star, Msr_rw);
-  set_msr_perm(Msr_ia32_cstar, Msr_rw);
-  set_msr_perm(Msr_ia32_lstar, Msr_rw);
-  set_msr_perm(Msr_ia32_fmask, Msr_rw);
+  set_msr_perm(Msr::Ia32_sysenter_cs, Msr_rw);
+  set_msr_perm(Msr::Ia32_sysenter_eip, Msr_rw);
+  set_msr_perm(Msr::Ia32_sysenter_esp, Msr_rw);
+  set_msr_perm(Msr::Ia32_gs_base, Msr_rw);
+  set_msr_perm(Msr::Ia32_fs_base, Msr_rw);
+  set_msr_perm(Msr::Ia32_kernel_gs_base, Msr_rw);
+  set_msr_perm(Msr::Ia32_star, Msr_rw);
+  set_msr_perm(Msr::Ia32_cstar, Msr_rw);
+  set_msr_perm(Msr::Ia32_lstar, Msr_rw);
+  set_msr_perm(Msr::Ia32_fmask, Msr_rw);
 
   /* 4kB Host state-safe area */
   // FIXME: MUST NOT PANIC ON CPU HOTPLUG
   check(_vm_hsave_area = Kmem_alloc::allocator()->alloc(Bytes(State_save_area_size)));
   Unsigned64 vm_hsave_pa = Kmem::virt_to_phys(_vm_hsave_area);
 
-  c.wrmsr(vm_hsave_pa, Msr_vm_hsave_pa);
+  c.wrmsr(vm_hsave_pa, Msr::Vm_hsave_pa);
   register_pm(cpu);
 }
 
 PUBLIC
 void
-Svm::set_msr_perm(Unsigned32 msr, Msr_perms perms)
+Svm::set_msr_perm(Msr msr_enum, Msr_perms perms)
 {
+  Unsigned32 msr = static_cast<Unsigned32>(msr_enum);
   unsigned offs;
   if (msr <= 0x1fff)
     offs = 0;

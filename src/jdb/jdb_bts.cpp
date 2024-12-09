@@ -99,7 +99,7 @@ Jdb_bts::allocate()
   dsm[7] = Bts_start + Bts_size;
   dsm[8] = 0;
   dsm[9] = 0;
-  Cpu::wrmsr(Bts_ctrl, Msr_ia32_ds_area);
+  Cpu::wrmsr(Bts_ctrl, Msr::Ia32_ds_area);
 }
 
 Bts_entry*

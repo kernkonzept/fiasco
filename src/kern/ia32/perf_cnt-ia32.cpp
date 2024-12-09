@@ -11,7 +11,7 @@ public:
 
   static Perf_read_fn read_pmc[Max_slot];
   virtual void init_loadcnt(bool init_ap) = 0;
-  virtual void start_pmc(Mword) = 0;
+  virtual void start_pmc(Unsigned32) = 0;
 
   static Perf_cnt_arch *pcnt;
 
@@ -29,15 +29,15 @@ public:
   virtual int  init() = 0;
 
   // set event the counter should count
-  virtual void set_pmc_event(Mword slot) = 0;
+  virtual void set_pmc_event(Unsigned32 slot) = 0;
 
   inline void touch_watchdog()
-  { Cpu::wrmsr(hold_watchdog, _ctr_reg0 + pmc_watchdog); }
+  { Cpu::wrmsr(hold_watchdog, _ctr_reg0, pmc_watchdog); }
 
 protected:
+  Msr _sel_reg0;
+  Msr _ctr_reg0;
   Mword _nr_regs;
-  Mword _sel_reg0;
-  Mword _ctr_reg0;
   Mword _watchdog;
 
   struct Event
@@ -45,15 +45,15 @@ protected:
     char  user;		// 1=count in user mode
     char  kern;		// 1=count in kernel mode
     char  edge;		// 1=count edge / 0=count duration
-    Mword pmc;		// # of performance counter
+    Unsigned32 pmc;	// # of performance counter
     Mword bitmask;	// counter bitmask
     Mword evnt;		// event selector
   };
 
-  enum { Counter_not_allocated = static_cast<Mword>(-1) };
+  enum { Counter_not_allocated = static_cast<Unsigned32>(-1) };
 
-  static Mword    pmc_watchdog;                   // # perfcounter of watchdog
-  static Mword    pmc_loadcnt;                    // # perfcounter of loadcnt
+  static Unsigned32 pmc_watchdog;                 // # perfcounter of watchdog
+  static Unsigned32 pmc_loadcnt;                  // # perfcounter of loadcnt
   static Signed64 hold_watchdog;
   static Event    pmc_event[Perf_cnt::Max_slot];  // index is slot number
   static char     pmc_alloc[Perf_cnt::Max_pmc];   // index is # of perfcounter
@@ -85,8 +85,8 @@ Perf_cnt::Perf_event_type Perf_cnt::perf_event_type;
 Perf_cnt_arch *Perf_cnt::pcnt;
 char const *Perf_cnt::perf_type_str = "n/a";
 
-Mword Perf_cnt_arch::pmc_watchdog = Counter_not_allocated;
-Mword Perf_cnt_arch::pmc_loadcnt = Counter_not_allocated;
+Unsigned32 Perf_cnt_arch::pmc_watchdog = Counter_not_allocated;
+Unsigned32 Perf_cnt_arch::pmc_loadcnt = Counter_not_allocated;
 Signed64 Perf_cnt_arch::hold_watchdog;
 Perf_cnt_arch::Event Perf_cnt_arch::pmc_event[Perf_cnt::Max_slot];
 char  Perf_cnt_arch::pmc_alloc[Perf_cnt::Max_pmc];
@@ -128,7 +128,6 @@ enum
   // Intel P4
   P4_escr_user		= (1<<2),
   P4_escr_kern		= (1<<3),
-  Msr_p4_bpu_cccr0	= 0x360,
   P4_cccr_ovf		= (1<<31),
   P4_cccr_ovf_pmi	= (1<<26),
   P4_cccr_complement	= (1<<19),
@@ -219,10 +218,10 @@ extern "C" const struct perfctr_event_set *perfctr_cpu_event_set(unsigned)
 
 static inline
 void
-clear_msr_range(Mword base, Mword n)
+clear_msr_range(Msr base, Mword n)
 {
-  for (Mword i=0; i<n; i++)
-    Cpu::wrmsr(0, base+i);
+  for (Unsigned32 i = 0; i < n; ++i)
+    Cpu::wrmsr(0, base, i);
 }
 
 //--------------------------------------------------------------------
@@ -235,23 +234,23 @@ static Mword dummy_read_pmc() { return 0; }
 // interrupt available. Some events are not symmtetric.
 PUBLIC inline NOEXPORT
 Perf_cnt_p5::Perf_cnt_p5()
-  : Perf_cnt_arch(Msr_p5_cesr, Msr_p5_ctr0, 2, 0)
+  : Perf_cnt_arch(Msr::P5_cesr, Msr::P5_ctr0, 2, 0)
 {}
 
 FIASCO_INIT_CPU
 int
 Perf_cnt_p5::init() override
 {
-  Cpu::wrmsr(0, Msr_p5_cesr); // disable both counters
+  Cpu::wrmsr(0, Msr::P5_cesr); // disable both counters
   return 1;
 }
 
 void
-Perf_cnt_p5::set_pmc_event(Mword slot) override
+Perf_cnt_p5::set_pmc_event(Unsigned32 slot) override
 {
   Unsigned64 msr;
   Mword event;
-    
+
   event = pmc_event[slot].evnt;
   if (pmc_event[slot].user)
     event += P5_evntsel_user;
@@ -262,7 +261,7 @@ Perf_cnt_p5::set_pmc_event(Mword slot) override
   if (!pmc_event[slot].edge)
     event += P5_evntsel_duration;
 
-  msr = Cpu::rdmsr(Msr_p5_cesr);
+  msr = Cpu::rdmsr(Msr::P5_cesr);
   if (pmc_event[slot].pmc == 0)
     {
       msr &= 0xffff0000;
@@ -273,13 +272,13 @@ Perf_cnt_p5::set_pmc_event(Mword slot) override
       msr &= 0x0000ffff;
       msr |= (event << 16);
     }
-  Cpu::wrmsr(msr, Msr_p5_cesr);
+  Cpu::wrmsr(msr, Msr::P5_cesr);
 }
 
 static Mword p5_read_pmc_0()
-{ return Cpu::rdmsr(Msr_p5_ctr0); }
+{ return Cpu::rdmsr(Msr::P5_ctr0); }
 static Mword p5_read_pmc_1()
-{ return Cpu::rdmsr(Msr_p5_ctr1); }
+{ return Cpu::rdmsr(Msr::P5_ctr1); }
 
 static Perf_cnt::Perf_read_fn p5_read_pmc_fns[] =
 { &p5_read_pmc_0, &p5_read_pmc_1 };
@@ -290,11 +289,11 @@ static Perf_cnt::Perf_read_fn p5_read_pmc_fns[] =
 // is available. Some events are not symmtetric.
 PUBLIC inline NOEXPORT
 Perf_cnt_p6::Perf_cnt_p6()
-  : Perf_cnt_arch(Msr_p6_evntsel0, Msr_p6_perfctr0, 2, 1)
+  : Perf_cnt_arch(Msr::P6_evntsel0, Msr::P6_perfctr0, 2, 1)
 {}
 
 PROTECTED
-Perf_cnt_p6::Perf_cnt_p6(Mword sel_reg0, Mword ctr_reg0, 
+Perf_cnt_p6::Perf_cnt_p6(Msr sel_reg0, Msr ctr_reg0,
       			 Mword nr_regs, Mword watchdog)
   : Perf_cnt_arch(sel_reg0, ctr_reg0, nr_regs, watchdog)
 {}
@@ -303,16 +302,16 @@ FIASCO_INIT_CPU
 int
 Perf_cnt_p6::init() override
 {
-  for (Mword i=0; i<_nr_regs; i++)
+  for (Unsigned32 i = 0; i < _nr_regs; ++i)
     {
-      Cpu::wrmsr(0, _sel_reg0+i);
-      Cpu::wrmsr(0, _ctr_reg0+i);
+      Cpu::wrmsr(0, _sel_reg0, i);
+      Cpu::wrmsr(0, _ctr_reg0, i);
     }
   return 1;
 }
 
 void
-Perf_cnt_p6::set_pmc_event(Mword slot) override
+Perf_cnt_p6::set_pmc_event(Unsigned32 slot) override
 {
   Mword event;
 
@@ -325,11 +324,11 @@ Perf_cnt_p6::set_pmc_event(Mword slot) override
     event += P6_evntsel_edge;
 
   // select event
-  Cpu::wrmsr(event, _sel_reg0+pmc_event[slot].pmc);
+  Cpu::wrmsr(event, _sel_reg0, pmc_event[slot].pmc);
 }
 
 void
-Perf_cnt_p6::start_pmc(Mword /*reg_nr*/) override
+Perf_cnt_p6::start_pmc(Unsigned32 /*reg_nr*/) override
 {
   Unsigned64 msr;
 
@@ -347,7 +346,7 @@ Perf_cnt_p6::init_watchdog() override
       | P6_evntsel_kern // Monitor kernel-level events
       | P6_evntsel_user // Monitor user-level events
       | 0x79;           // #clocks CPU is not halted
-  Cpu::wrmsr(msr, _sel_reg0+pmc_watchdog);
+  Cpu::wrmsr(msr, _sel_reg0, pmc_watchdog);
 }
 
 void
@@ -358,10 +357,10 @@ Perf_cnt_p6::init_loadcnt(bool init_ap) override
   msr = P6_evntsel_kern // Monitor kernel-level events
       | P6_evntsel_user // Monitor user-level events
       | 0x79;           // #clocks CPU is not halted
-  Cpu::wrmsr(msr, _sel_reg0+pmc_loadcnt);
+  Cpu::wrmsr(msr, _sel_reg0, pmc_loadcnt);
 
   if (!init_ap)
-    printf("Load counter initialized (read with rdpmc(0x%02lX))\n", pmc_loadcnt);
+    printf("Load counter initialized (read with rdpmc(0x%02X))\n", pmc_loadcnt);
 }
 
 void
@@ -369,9 +368,9 @@ Perf_cnt_p6::start_watchdog() override
 {
   Unsigned64 msr;
 
-  msr = Cpu::rdmsr(_sel_reg0+pmc_watchdog);
+  msr = Cpu::rdmsr(_sel_reg0, pmc_watchdog);
   msr |= P6_evntsel_int; // Int enable: enable interrupt on overflow
-  Cpu::wrmsr(msr, _sel_reg0+pmc_watchdog);
+  Cpu::wrmsr(msr, _sel_reg0, pmc_watchdog);
 }
 
 void
@@ -379,9 +378,9 @@ Perf_cnt_p6::stop_watchdog() override
 {
   Unsigned64 msr;
 
-  msr = Cpu::rdmsr(_sel_reg0+pmc_watchdog);
+  msr = Cpu::rdmsr(_sel_reg0, pmc_watchdog);
   msr &= ~P6_evntsel_int; // Int enable: enable interrupt on overflow
-  Cpu::wrmsr(msr, _sel_reg0+pmc_watchdog);
+  Cpu::wrmsr(msr, _sel_reg0, pmc_watchdog);
 }
 
 static Mword p6_read_pmc_0() { return Cpu::rdpmc(0, 0xC1); }
@@ -396,17 +395,17 @@ static Perf_cnt::Perf_read_fn p6_read_pmc_fns[] =
 // seem to be symmetric. Overflow interrupts available.
 PUBLIC inline NOEXPORT
 Perf_cnt_k7::Perf_cnt_k7()
-  : Perf_cnt_p6(Msr_k7_evntsel0, Msr_k7_perfctr0, 4, 1)
+  : Perf_cnt_p6(Msr::K7_evntsel0, Msr::K7_perfctr0, 4, 1)
 {}
 
 void
-Perf_cnt_k7::start_pmc(Mword reg_nr) override
+Perf_cnt_k7::start_pmc(Unsigned32 reg_nr) override
 {
   Unsigned64 msr;
 
-  msr = Cpu::rdmsr(_sel_reg0+reg_nr);
+  msr = Cpu::rdmsr(_sel_reg0, reg_nr);
   msr |= K7_evntsel_enable;
-  Cpu::wrmsr(msr, _sel_reg0+reg_nr);
+  Cpu::wrmsr(msr, _sel_reg0, reg_nr);
 }
 
 void
@@ -418,7 +417,7 @@ Perf_cnt_k7::init_watchdog() override
       | K7_evntsel_kern // Monitor kernel-level events
       | K7_evntsel_user // Monitor user-level events
       | 0x76;           // #clocks CPU is running
-  Cpu::wrmsr(msr, _sel_reg0+pmc_watchdog);
+  Cpu::wrmsr(msr, _sel_reg0, pmc_watchdog);
 }
 
 void
@@ -429,10 +428,10 @@ Perf_cnt_k7::init_loadcnt(bool init_ap) override
   msr = K7_evntsel_kern // Monitor kernel-level events
       | K7_evntsel_user // Monitor user-level events
       | 0x76;           // #clocks CPU is running
-  Cpu::wrmsr(msr, _sel_reg0+pmc_loadcnt);
+  Cpu::wrmsr(msr, _sel_reg0, pmc_loadcnt);
 
   if (!init_ap)
-    printf("Load counter initialized (read with rdpmc(0x%02lX))\n", pmc_loadcnt);
+    printf("Load counter initialized (read with rdpmc(0x%02X))\n", pmc_loadcnt);
 }
 
 static Mword k7_read_pmc_0() { return Cpu::rdpmc(0, 0xC0010004); }
@@ -448,7 +447,7 @@ static Perf_cnt::Perf_read_fn k7_read_pmc_fns[] =
 // Arch Perfmon. Intel Core architecture
 PUBLIC inline NOEXPORT
 Perf_cnt_ap::Perf_cnt_ap()
-  : Perf_cnt_p6(Msr_ap_evntsel0, Msr_ap_perfctr0, 2, 1)
+  : Perf_cnt_p6(Msr::Ap_evntsel0, Msr::Ap_perfctr0, 2, 1)
 {
   Unsigned32 eax, ebx, ecx, edx;
   Cpu::boot_cpu()->arch_perfmon_info(&eax, &ebx, &ecx, &edx);
@@ -458,8 +457,8 @@ Perf_cnt_ap::Perf_cnt_ap()
     {
       // fixed-function performance counters supported in principle
       unsigned nr_fixed_function_perctr = edx & 0x1f;
-      Unsigned64 msr_fixed_ctr_ctrl = Cpu::rdmsr(Msr_ia32_fixed_ctr_ctrl);
-      Unsigned64 msr_perf_global_ctrl = Cpu::rdmsr(Msr_ia32_perf_global_ctrl);
+      Unsigned64 msr_fixed_ctr_ctrl = Cpu::rdmsr(Msr::Ia32_fixed_ctr_ctrl);
+      Unsigned64 msr_perf_global_ctrl = Cpu::rdmsr(Msr::Ia32_perf_global_ctrl);
       for (unsigned i = 0; i < nr_fixed_function_perctr; ++i)
         if ((ecx & (1 << i)) || ((edx & 0x1f) > i))
           {
@@ -470,19 +469,19 @@ Perf_cnt_ap::Perf_cnt_ap()
             msr_perf_global_ctrl |= (1ULL << (32 + i)); // EN_FIXED_CTR<i>=1
           }
 
-      Cpu::wrmsr(msr_fixed_ctr_ctrl, 0x38d);
-      Cpu::wrmsr(msr_perf_global_ctrl, 0x38f);
+      Cpu::wrmsr(msr_fixed_ctr_ctrl, Msr::Ia32_fixed_ctr_ctrl);
+      Cpu::wrmsr(msr_perf_global_ctrl, Msr::Ia32_perf_global_ctrl);
     }
 }
 
 void
-Perf_cnt_ap::start_pmc(Mword reg_nr) override
+Perf_cnt_ap::start_pmc(Unsigned32 reg_nr) override
 {
   Unsigned64 msr;
 
-  msr = Cpu::rdmsr(_sel_reg0 + reg_nr);
+  msr = Cpu::rdmsr(_sel_reg0, reg_nr);
   msr |= AP_evntsel_enable;
-  Cpu::wrmsr(msr, _sel_reg0 + reg_nr);
+  Cpu::wrmsr(msr, _sel_reg0, reg_nr);
 }
 
 void
@@ -494,7 +493,7 @@ Perf_cnt_ap::init_watchdog() override
         | AP_evntsel_kern // Monitor kernel-level events
         | AP_evntsel_user // Monitor user-level events
         | 0x3C;           // #clocks CPU is running
-  Cpu::wrmsr(msr, _sel_reg0 + pmc_watchdog);
+  Cpu::wrmsr(msr, _sel_reg0, pmc_watchdog);
 }
 
 void
@@ -505,10 +504,10 @@ Perf_cnt_ap::init_loadcnt(bool init_ap) override
   msr = AP_evntsel_kern   // Monitor kernel-level events
         | AP_evntsel_user // Monitor user-level events
         | 0x3C;           // #clocks CPU is running
-  Cpu::wrmsr(msr, _sel_reg0 + pmc_loadcnt);
+  Cpu::wrmsr(msr, _sel_reg0, pmc_loadcnt);
 
   if (!init_ap)
-    printf("Load counter initialized (read with rdpmc(0x%02lX))\n", pmc_loadcnt);
+    printf("Load counter initialized (read with rdpmc(0x%02X))\n", pmc_loadcnt);
 }
 
 
@@ -516,7 +515,7 @@ Perf_cnt_ap::init_loadcnt(bool init_ap) override
 // Intel P4
 PUBLIC inline NOEXPORT
 Perf_cnt_p4::Perf_cnt_p4()
-  : Perf_cnt_arch(Msr_p4_bpu_cccr0, Msr_p4_bpu_counter0, 2, 1)
+  : Perf_cnt_arch(Msr::P4_cccr0, Msr::P4_bpu_counter0, 2, 1)
 {}
 
 static inline NOEXPORT
@@ -543,7 +542,7 @@ FIASCO_INIT_CPU
 int
 Perf_cnt_p4::init() override
 {
-  Unsigned32 misc_enable = Cpu::rdmsr(Msr_p4_misc_enable);
+  Unsigned32 misc_enable = Cpu::rdmsr(Msr::P4_misc_enable);
 
   // performance monitoring available?
   if (!(misc_enable & (1<<7)))
@@ -552,40 +551,40 @@ Perf_cnt_p4::init() override
   // disable precise event based sampling
   if (!(misc_enable & (1<<12)))
     {
-      clear_msr_range(Msr_ia32_pebs_enable, 1);
-      clear_msr_range(Msr_pebs_matrix_vert, 1);
+      clear_msr_range(Msr::Ia32_pebs_enable, 1);
+      clear_msr_range(Msr::Pebs_matrix_vert, 1);
     }
 
   // ensure sane state of performance counter registers
-  clear_msr_range(Msr_bsu_escr0, 26);
+  clear_msr_range(Msr::Bsu_escr0, 26);
   if (Cpu::boot_cpu()->model() <= 2)
-    clear_msr_range(Msr_iq_escr0, 2);
-  clear_msr_range(Msr_rat_escr0, 2);
-  clear_msr_range(Msr_ssu_escr0, 1);
-  clear_msr_range(Msr_ms_escr0, 2);
-  clear_msr_range(Msr_tbpu_escr0, 2);
-  clear_msr_range(Msr_tc_escr0, 2);
-  clear_msr_range(Msr_ix_escr0, 2);
-  clear_msr_range(Msr_cru_escr0, 4);
-  clear_msr_range(Msr_cru_escr4, 2);
-  clear_msr_range(Msr_p4_cccr0, 18);
-  clear_msr_range(Msr_p4_perfctr0, 18);
+    clear_msr_range(Msr::Iq_escr0, 2);
+  clear_msr_range(Msr::Rat_escr0, 2);
+  clear_msr_range(Msr::Ssu_escr0, 1);
+  clear_msr_range(Msr::Ms_escr0, 2);
+  clear_msr_range(Msr::Tbpu_escr0, 2);
+  clear_msr_range(Msr::Tc_escr0, 2);
+  clear_msr_range(Msr::Ix_escr0, 2);
+  clear_msr_range(Msr::Cru_escr0, 4);
+  clear_msr_range(Msr::Cru_escr4, 2);
+  clear_msr_range(Msr::P4_cccr0, 18);
+  clear_msr_range(Msr::P4_perfctr0, 18);
 
   return 1;
 }
 
 void
-Perf_cnt_p4::set_pmc_event(Mword /*slot*/) override
+Perf_cnt_p4::set_pmc_event(Unsigned32 /*slot*/) override
 {}
 
 void
-Perf_cnt_p4::start_pmc(Mword reg_nr) override
+Perf_cnt_p4::start_pmc(Unsigned32 reg_nr) override
 {
   Unsigned64 msr;
 
-  msr = Cpu::rdmsr(Msr_p4_bpu_cccr0 + reg_nr);
+  msr = Cpu::rdmsr(Msr::P4_cccr0, reg_nr);
   msr |= P4_cccr_enable;
-  Cpu::wrmsr(msr, Msr_p4_bpu_cccr0 + reg_nr);
+  Cpu::wrmsr(msr, Msr::P4_cccr0, reg_nr);
 }
 
 void
@@ -597,12 +596,12 @@ Perf_cnt_p4::init_watchdog() override
       | escr_event_mask(1)      // the processor is active (non-halted)
       | P4_escr_kern            // Monitor kernel-level events
       | P4_escr_user;           // Monitor user-level events
-  Cpu::wrmsr(msr, Msr_p4_fsb_escr0);
+  Cpu::wrmsr(msr, Msr::P4_fsb_escr0);
 
   msr = P4_cccr_ovf_pmi         // performance monitor interrupt on overflow
       | P4_cccr_required	// must be set
       | cccr_escr_select(6);    // select ESCR to select events to be counted
-  Cpu::wrmsr(msr, Msr_p4_bpu_cccr0 + pmc_watchdog);
+  Cpu::wrmsr(msr, Msr::P4_cccr0, pmc_watchdog);
 }
 
 void
@@ -614,15 +613,15 @@ Perf_cnt_p4::init_loadcnt(bool init_ap) override
       | escr_event_mask(1)      // the processor is active (non-halted)
       | P4_escr_kern            // Monitor kernel-level events
       | P4_escr_user;           // Monitor user-level events
-  Cpu::wrmsr(msr, Msr_p4_fsb_escr0);
+  Cpu::wrmsr(msr, Msr::P4_fsb_escr0);
 
   msr = P4_cccr_required	// must be set
       | cccr_escr_select(6);    // select ESCR to select events to be counted
 
-  Cpu::wrmsr(msr, Msr_p4_bpu_cccr0 + pmc_loadcnt);
+  Cpu::wrmsr(msr, Msr::P4_cccr0, pmc_loadcnt);
 
   if (!init_ap)
-    printf("Load counter initialized (read with rdpmc(0x%02lX))\n", pmc_loadcnt);
+    printf("Load counter initialized (read with rdpmc(0x%02X))\n", pmc_loadcnt);
 }
 
 void
@@ -630,10 +629,10 @@ Perf_cnt_p4::start_watchdog() override
 {
   Unsigned64 msr;
 
-  msr = Cpu::rdmsr(Msr_p4_bpu_cccr0);
+  msr = Cpu::rdmsr(Msr::P4_cccr0);
   msr |= P4_cccr_ovf_pmi | P4_cccr_enable; // Int enable, Ctr enable
   msr &= ~P4_cccr_ovf;                     // clear Overflow
-  Cpu::wrmsr(msr, Msr_p4_bpu_cccr0 + pmc_watchdog);
+  Cpu::wrmsr(msr, Msr::P4_cccr0, pmc_watchdog);
 }
 
 void
@@ -641,9 +640,9 @@ Perf_cnt_p4::stop_watchdog() override
 {
   Unsigned64 msr;
 
-  msr = Cpu::rdmsr(Msr_p4_bpu_cccr0);
+  msr = Cpu::rdmsr(Msr::P4_cccr0);
   msr &= ~(P4_cccr_ovf_pmi | P4_cccr_enable); // Int disable, Ctr disable
-  Cpu::wrmsr(msr, Msr_p4_bpu_cccr0 + pmc_watchdog);
+  Cpu::wrmsr(msr, Msr::P4_cccr0, pmc_watchdog);
 }
 
 static
@@ -656,14 +655,11 @@ static Perf_cnt::Perf_read_fn p4_read_pmc_fns[] = { &p4_read_pmc };
 //--------------------------------------------------------------------
 
 PROTECTED inline
-Perf_cnt_arch::Perf_cnt_arch(Mword sel_reg0, Mword ctr_reg0, 
+Perf_cnt_arch::Perf_cnt_arch(Msr sel_reg0, Msr ctr_reg0,
 			     Mword nr_regs, Mword watchdog)
+: _sel_reg0(sel_reg0), _ctr_reg0(ctr_reg0),
+  _nr_regs(nr_regs), _watchdog(watchdog)
 {
-  _sel_reg0 = sel_reg0;
-  _ctr_reg0 = ctr_reg0;
-  _nr_regs  = nr_regs;
-  _watchdog = watchdog;
-
   for (Mword slot=0; slot<Perf_cnt::Max_slot; slot++)
     {
       pmc_event[slot].pmc  = Counter_not_allocated;
@@ -726,7 +722,7 @@ Perf_cnt_arch::alloc_loadcnt()
 // on specific counters)
 PRIVATE
 int
-Perf_cnt_arch::alloc_pmc(Mword slot, Mword bitmask)
+Perf_cnt_arch::alloc_pmc(Unsigned32 slot, Mword bitmask)
 {
   // free previous allocated counter
   Mword pmc = pmc_event[slot].pmc;
@@ -766,8 +762,8 @@ Perf_cnt_arch::alloc_pmc(Mword slot, Mword bitmask)
 
 PUBLIC virtual
 void
-Perf_cnt_arch::clear_pmc(Mword reg_nr)
-{ Cpu::wrmsr(0, _ctr_reg0+reg_nr); }
+Perf_cnt_arch::clear_pmc(Unsigned32 reg_nr)
+{ Cpu::wrmsr(0, _ctr_reg0, reg_nr); }
 
 PUBLIC
 void
@@ -789,7 +785,7 @@ Perf_cnt_arch::mode(Mword slot, const char **mode,
 
 PUBLIC
 void
-Perf_cnt_arch::setup_pmc(Mword slot, Mword bitmask, 
+Perf_cnt_arch::setup_pmc(Unsigned32 slot, Mword bitmask,
 			 Mword event, Mword user, Mword kern, Mword edge)
 {
   if (alloc_pmc(slot, bitmask))
@@ -807,7 +803,7 @@ Perf_cnt_arch::setup_pmc(Mword slot, Mword bitmask,
 
 PUBLIC virtual
 void
-Perf_cnt_arch::start_pmc(Mword /*reg_nr*/)
+Perf_cnt_arch::start_pmc(Unsigned32 /*reg_nr*/)
 {
   // nothing to do per default
 }
@@ -1130,7 +1126,7 @@ Perf_cnt::setup_pmc(Mword slot, Mword event, Mword user, Mword kern, Mword edge)
 // return current selected event for a slot #slot
 PUBLIC static
 int
-Perf_cnt::mode(Mword slot, const char **mode, const char **name, 
+Perf_cnt::mode(Mword slot, const char **mode, const char **name,
                Mword *event, Mword *user, Mword *kern, Mword *edge)
 {
   if (!perf_type() || !pcnt)

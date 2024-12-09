@@ -27,10 +27,10 @@ Cpu::setup_sysenter()
 {
   extern Per_cpu_array<Syscall_entry_text> syscall_entry_text;
 
-  wrmsr(0, GDT_CODE_KERNEL | ((GDT_CODE_USER32 | 3) << 16), Msr_ia32_star);
-  wrmsr(reinterpret_cast<Unsigned64>(&syscall_entry_text[id()]), Msr_ia32_lstar);
-  wrmsr(reinterpret_cast<Unsigned64>(&syscall_entry_text[id()]), Msr_ia32_cstar);
-  wrmsr(~0U, Msr_ia32_fmask);
+  wrmsr(0, GDT_CODE_KERNEL | ((GDT_CODE_USER32 | 3) << 16), Msr::Ia32_star);
+  wrmsr(reinterpret_cast<Unsigned64>(&syscall_entry_text[id()]), Msr::Ia32_lstar);
+  wrmsr(reinterpret_cast<Unsigned64>(&syscall_entry_text[id()]), Msr::Ia32_cstar);
+  wrmsr(~0U, Msr::Ia32_fmask);
   _syscall_entry_data[id()].set_rsp(reinterpret_cast<Address>(&kernel_sp()));
 }
 
@@ -43,10 +43,10 @@ PUBLIC inline
 void
 Cpu::setup_sysenter() const
 {
-  wrmsr(0, GDT_CODE_KERNEL | ((GDT_CODE_USER32 | 3) << 16), Msr_ia32_star);
-  wrmsr(Mem_layout::Kentry_cpu_syscall_entry, Msr_ia32_lstar);
-  wrmsr(Mem_layout::Kentry_cpu_syscall_entry, Msr_ia32_cstar);
-  wrmsr(~0U, Msr_ia32_fmask);
+  wrmsr(0, GDT_CODE_KERNEL | ((GDT_CODE_USER32 | 3) << 16), Msr::Ia32_star);
+  wrmsr(Mem_layout::Kentry_cpu_syscall_entry, Msr::Ia32_lstar);
+  wrmsr(Mem_layout::Kentry_cpu_syscall_entry, Msr::Ia32_cstar);
+  wrmsr(~0U, Msr::Ia32_fmask);
 }
 
 IMPLEMENT inline NEEDS["mem_layout.h"]
@@ -61,7 +61,7 @@ void
 Cpu::init_sysenter()
 {
   setup_sysenter();
-  wrmsr(rdmsr(Msr_ia32_efer) | 1, Msr_ia32_efer);
+  wrmsr(rdmsr(Msr::Ia32_efer) | 1, Msr::Ia32_efer);
 }
 
 
@@ -184,7 +184,7 @@ Cpu::set_cs()
 
 PUBLIC static inline NEEDS["asm.h"]
 void
-Cpu::set_fs_gs_base(Mword *base, Mword reg)
+Cpu::set_fs_gs_base(Mword *base, Msr reg)
 {
   asm volatile (
     "2: movq\t%0, %%rax\n\t"
@@ -202,7 +202,7 @@ Cpu::set_fs_gs_base(Mword *base, Mword reg)
 
 PUBLIC static inline NEEDS["asm.h"]
 void
-Cpu::set_canonical_msr(Unsigned64 value, Mword reg)
+Cpu::set_canonical_msr(Unsigned64 value, Msr reg)
 {
   asm volatile (
     "2: movq\t%%rax, %%rdx\n\t"
@@ -221,14 +221,14 @@ PUBLIC static inline NEEDS[Cpu::set_fs_gs_base]
 void
 Cpu::set_fs_base(Mword *base)
 {
-  set_fs_gs_base(base, Msr_ia32_fs_base);
+  set_fs_gs_base(base, Msr::Ia32_fs_base);
 }
 
 PUBLIC static inline NEEDS[Cpu::set_fs_gs_base]
 void
 Cpu::set_gs_base(Mword *base)
 {
-  set_fs_gs_base(base, Msr_ia32_gs_base);
+  set_fs_gs_base(base, Msr::Ia32_gs_base);
 }
 
 extern "C" Address dbf_stack_top;

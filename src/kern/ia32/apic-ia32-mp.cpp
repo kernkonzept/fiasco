@@ -87,7 +87,7 @@ Apic::mp_send_ipi(Ipi_dest_shrt dest_shrt, Apic_id dest,
     {
       asm volatile ("mfence; lfence"); // enforce serializing as in xAPIC mode
       Cpu::wrmsr(lower_icr, cxx::int_value<Apic_id>(dest),
-                 APIC_msr_base + (Apic_icr >> 4));
+                 Msr::X2apic_regs, Apic_icr >> 4);
     }
   else
     {

@@ -28,11 +28,11 @@ Jdb_kern_info_mtrr::get_var_mtrr(int reg, Address *ret_base,
                                  Address *ret_size, int *ret_type)
 {
   Unsigned64 mask, base;
-  if (   Jdb::rdmsr(Msr_ia32_mtrr_phybase1 + 2*reg, &mask) && (mask & 0x800)
-      && Jdb::rdmsr(Msr_ia32_mtrr_phybase0 + 2*reg, &base))
+  if (   Jdb::rdmsr(Msr::Ia32_mtrr_phybase1, &mask, 2*reg) && (mask & 0x800)
+      && Jdb::rdmsr(Msr::Ia32_mtrr_phybase0, &base, 2*reg))
     {
       *ret_size = (-(size_or_mask | mask >> Config::PAGE_SHIFT))
-        << Config::PAGE_SHIFT;
+                    << Config::PAGE_SHIFT;
       *ret_base = Pg::trunc(base);
       *ret_type = base & 0x0f;
     }
@@ -50,7 +50,7 @@ Jdb_kern_info_mtrr::show() override
     "write-through (WT)", "write-protected (WP)", "write back (WB)", "??"
   };
   Unsigned64 num_mtrr;
-  if (Jdb::rdmsr(Msr_ia32_mtrrcap, &num_mtrr))
+  if (Jdb::rdmsr(Msr::Ia32_mtrrcap, &num_mtrr))
     num_mtrr &= 0xff;
   else
     num_mtrr = 8;

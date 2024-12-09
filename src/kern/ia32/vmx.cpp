@@ -1406,26 +1406,26 @@ Vmx_info::init()
 {
   enum { ShowDebugDumps = 0 };
   bool ept = false;
-  basic = Cpu::rdmsr(Msr_ia32_vmx_basic);
-  pinbased_ctls = Cpu::rdmsr(Msr_ia32_vmx_pinbased_ctls);
+  basic = Cpu::rdmsr(Msr::Ia32_vmx_basic);
+  pinbased_ctls = Cpu::rdmsr(Msr::Ia32_vmx_pinbased_ctls);
   pinbased_ctls_default1 = pinbased_ctls.must_be_one();
-  procbased_ctls = Cpu::rdmsr(Msr_ia32_vmx_procbased_ctls);
+  procbased_ctls = Cpu::rdmsr(Msr::Ia32_vmx_procbased_ctls);
   procbased_ctls_default1 = procbased_ctls.must_be_one();
-  exit_ctls = Cpu::rdmsr(Msr_ia32_vmx_exit_ctls);
+  exit_ctls = Cpu::rdmsr(Msr::Ia32_vmx_exit_ctls);
   exit_ctls_default1 = exit_ctls.must_be_one();
-  entry_ctls = Cpu::rdmsr(Msr_ia32_vmx_entry_ctls);
+  entry_ctls = Cpu::rdmsr(Msr::Ia32_vmx_entry_ctls);
   entry_ctls_default1 = entry_ctls.must_be_one();
-  misc = Cpu::rdmsr(Msr_ia32_vmx_misc);
+  misc = Cpu::rdmsr(Msr::Ia32_vmx_misc);
 
-  cr0_defs = Bit_defs<Mword>(Cpu::rdmsr(Msr_ia32_vmx_cr0_fixed0),
-                             Cpu::rdmsr(Msr_ia32_vmx_cr0_fixed1));
-  cr4_defs = Bit_defs<Mword>(Cpu::rdmsr(Msr_ia32_vmx_cr4_fixed0),
-                             Cpu::rdmsr(Msr_ia32_vmx_cr4_fixed1));
+  cr0_defs = Bit_defs<Mword>(Cpu::rdmsr(Msr::Ia32_vmx_cr0_fixed0),
+                             Cpu::rdmsr(Msr::Ia32_vmx_cr0_fixed1));
+  cr4_defs = Bit_defs<Mword>(Cpu::rdmsr(Msr::Ia32_vmx_cr4_fixed0),
+                             Cpu::rdmsr(Msr::Ia32_vmx_cr4_fixed1));
   exception_bitmap = Bit_defs_32<Vmx_info::Exceptions>(0xffffffff00000000ULL);
 
-  max_index = Cpu::rdmsr(Msr_ia32_vmx_vmcs_enum);
+  max_index = Cpu::rdmsr(Msr::Ia32_vmx_vmcs_enum);
   if (procbased_ctls.allowed(Vmx_info::PRB1_enable_proc_based_ctls_2))
-    procbased_ctls2 = Cpu::rdmsr(Msr_ia32_vmx_procbased_ctls2);
+    procbased_ctls2 = Cpu::rdmsr(Msr::Ia32_vmx_procbased_ctls2);
 
   assert((Vmx::Sw_guest_xcr0 & 0x3ff) > max_index);
   assert((Vmx::Sw_guest_cr2 & 0x3ff) > max_index);
@@ -1434,11 +1434,11 @@ Vmx_info::init()
     {
       // do not use the true pin-based ctls because user-level then needs to
       // be aware of the fact that it has to set bits 1, 2, and 4 to default 1
-      if constexpr (0) pinbased_ctls = Cpu::rdmsr(Msr_ia32_vmx_true_pinbased_ctls);
+      if constexpr (0) pinbased_ctls = Cpu::rdmsr(Msr::Ia32_vmx_true_pinbased_ctls);
 
-      procbased_ctls = Cpu::rdmsr(Msr_ia32_vmx_true_procbased_ctls);
-      exit_ctls = Cpu::rdmsr(Msr_ia32_vmx_true_exit_ctls);
-      entry_ctls = Cpu::rdmsr(Msr_ia32_vmx_true_entry_ctls);
+      procbased_ctls = Cpu::rdmsr(Msr::Ia32_vmx_true_procbased_ctls);
+      exit_ctls = Cpu::rdmsr(Msr::Ia32_vmx_true_exit_ctls);
+      entry_ctls = Cpu::rdmsr(Msr::Ia32_vmx_true_entry_ctls);
     }
 
   if constexpr (ShowDebugDumps)
@@ -1468,7 +1468,7 @@ Vmx_info::init()
       procbased_ctls.enforce(Vmx_info::PRB1_enable_proc_based_ctls_2, true);
 
       if (procbased_ctls2.allowed(Vmx_info::PRB2_enable_ept))
-        ept_vpid_cap = Cpu::rdmsr(Msr_ia32_vmx_ept_vpid_cap);
+        ept_vpid_cap = Cpu::rdmsr(Msr::Ia32_vmx_ept_vpid_cap);
 
       if (has_invept() && !has_invept_global())
       {
@@ -1507,7 +1507,7 @@ Vmx_info::init()
             }
 
           // We currently do not implement the xss bitmap, and do not support
-          // the Msr_ia32_xss which is shared between guest and host. Therefore
+          // the Msr::Ia32_xss which is shared between guest and host. Therefore
           // we disable xsaves/xrstores for the guest.
           procbased_ctls2.enforce(Vmx_info::PRB2_enable_xsaves, false);
         }
@@ -2584,7 +2584,7 @@ Vmx::handle_bios_lock()
     Feature_control_vmx_outside_SMX = 1 << 2,
   };
 
-  Unsigned64 feature = Cpu::rdmsr(Msr_ia32_feature_control);
+  Unsigned64 feature = Cpu::rdmsr(Msr::Ia32_feature_control);
 
   if (feature & Feature_control_lock)
     {
@@ -2593,7 +2593,7 @@ Vmx::handle_bios_lock()
     }
   else
     Cpu::wrmsr(feature | Feature_control_vmx_outside_SMX | Feature_control_lock,
-               Msr_ia32_feature_control);
+               Msr::Ia32_feature_control);
   return true;
 }
 

@@ -301,7 +301,7 @@ Jdb_kern_info_cpu::show_feature_ia32_tsc_adjust()
             auto get_tsc_adj = [](Cpu_number)
               {
                 Unsigned64 v = ~0ULL;
-                Jdb::rdmsr(Msr_ia32_tsc_adjust, &v);
+                Jdb::rdmsr(Msr::Ia32_tsc_adjust, &v);
                 printf("%lld\n", v);
               };
 

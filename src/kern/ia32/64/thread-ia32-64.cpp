@@ -48,7 +48,7 @@ Thread::handle_ia32_branch_barriers(Address *return_flags)
   if (*return_flags & 1)
     {
       *return_flags &= ~1UL;
-      Cpu::wrmsr(0, 0, Msr_ia32_pred_cmd);
+      Cpu::wrmsr(0, 0, Msr::Ia32_pred_cmd);
     }
 }
 

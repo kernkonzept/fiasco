@@ -6,6 +6,7 @@ INTERFACE:
 
 #include "l4_types.h"
 #include "pic.h"
+#include "msrdefs.h"
 
 class Trap_state;
 class Thread;
@@ -838,10 +839,10 @@ Jdb::leave_getchar()
 
 PUBLIC static
 bool
-Jdb::rdmsr(Unsigned32 reg, Unsigned64 *v)
+Jdb::rdmsr(Msr reg, Unsigned64 *v, unsigned offs = 0)
 {
   msr_test = true;
-  *v = Cpu::rdmsr(reg);
+  *v = Cpu::rdmsr(reg, offs);
   bool success = msr_test == true;
   msr_test = false;
   return success;
@@ -849,10 +850,10 @@ Jdb::rdmsr(Unsigned32 reg, Unsigned64 *v)
 
 PUBLIC static
 bool
-Jdb::wrmsr(Unsigned64 v, Unsigned32 reg)
+Jdb::wrmsr(Unsigned64 v, Msr reg, unsigned offs = 0)
 {
   msr_test = true;
-  Cpu::wrmsr(v, reg);
+  Cpu::wrmsr(v, reg, offs);
   bool success = msr_test == true;
   msr_test = false;
   return success;

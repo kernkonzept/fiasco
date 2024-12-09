@@ -137,15 +137,15 @@ Jdb_misc_debug::action(int cmd, void *&args, char const *&fmt, int &) override
 	      Cpu::boot_cpu()->lbr_type() == Cpu::Lbr_pentium_4_ext)
 	    {
               Unsigned64 msr_from, msr_to;
-              if (   Jdb::rdmsr(Msr_ler_from_lip, &msr_from)
-                  && Jdb::rdmsr(Msr_ler_to_lip, &msr_to))
+              if (   Jdb::rdmsr(Msr::Ler_from_lip, &msr_from)
+                  && Jdb::rdmsr(Msr::Ler_to_lip, &msr_to))
                 {
                   show_lbr_entry("\nbefore exc:", msr_from);
                   show_lbr_entry(" =>", msr_to);
                 }
 
               Unsigned64 branch_tos;
-              if (Jdb::rdmsr(Msr_lastbranch_tos, &branch_tos))
+              if (Jdb::rdmsr(Msr::Lastbranch_tos, &branch_tos))
                 {
                   branch_tos &= 0xffffffffU;
                   if (Cpu::boot_cpu()->lbr_type() == Cpu::Lbr_pentium_4)
@@ -155,7 +155,7 @@ Jdb_misc_debug::action(int cmd, void *&args, char const *&fmt, int &) override
                         {
                           j = (j+1) & 3;
                           Unsigned64 msr;
-                          if (Jdb::rdmsr(Msr_lastbranch_0+j, &msr))
+                          if (Jdb::rdmsr(Msr::Lastbranch_0, &msr, j))
                             {
                               show_lbr_entry("\nbranch/exc:", msr >> 32);
                               show_lbr_entry(" =>", msr);
@@ -169,8 +169,8 @@ Jdb_misc_debug::action(int cmd, void *&args, char const *&fmt, int &) override
                         {
                           j = (j+1) & 15;
                           Unsigned64 msr_from, msr_to;
-                          if (Jdb::rdmsr(Msr_lastbranch_0_from_ip+j, &msr_from)
-                              && Jdb::rdmsr(Msr_lastbranch_0_to_ip+j, &msr_to))
+                          if (Jdb::rdmsr(Msr::Lastbranch_0_from_ip, &msr_from, j)
+                              && Jdb::rdmsr(Msr::Lastbranch_0_to_ip, &msr_to, j))
                             {
                               show_lbr_entry("\nbranch/exc:", msr_from);
                               show_lbr_entry(" =>", msr_to);
@@ -184,10 +184,10 @@ Jdb_misc_debug::action(int cmd, void *&args, char const *&fmt, int &) override
 	      Unsigned64 msr_from_ip, msr_to_ip;
               Unsigned64 msr_from_int, msr_to_int;
 
-              if (   Jdb::rdmsr(Msr_lastbranchfromip, &msr_from_ip)
-                  && Jdb::rdmsr(Msr_lastbranchtoip, &msr_to_ip)
-                  && Jdb::rdmsr(Msr_lastintfromip, &msr_from_int)
-                  && Jdb::rdmsr(Msr_lastinttoip, &msr_to_int))
+              if (   Jdb::rdmsr(Msr::Lastbranchfromip, &msr_from_ip)
+                  && Jdb::rdmsr(Msr::Lastbranchtoip, &msr_to_ip)
+                  && Jdb::rdmsr(Msr::Lastintfromip, &msr_from_int)
+                  && Jdb::rdmsr(Msr::Lastinttoip, &msr_to_int))
                 {
                   show_lbr_entry("\nbranch:", msr_from_ip);
                   show_lbr_entry(" =>", msr_to_ip);
@@ -365,14 +365,14 @@ Jdb_misc_info::action(int cmd, void *&args, char const *&fmt, int &) override
 	}
       if (args == &value64)
         {
-          if (!Jdb::wrmsr(value64, addr))
+          if (!Jdb::wrmsr(value64, Msr{static_cast<Unsigned32>(addr)}))
             puts(" => not implemented");
           else
             putchar('\n');
         }
       else if (args == &addr)
 	{
-          if (!Jdb::rdmsr(addr, &value64))
+          if (!Jdb::rdmsr(Msr{static_cast<Unsigned32>(addr)}, &value64))
             putstr(" => not implemented");
           else
             {
