@@ -523,10 +523,10 @@ Rcu::pending(Cpu_number cpu)
 
 PUBLIC static inline
 bool
-Rcu::idle(Cpu_number cpu)
+Rcu::has_pending_work(Cpu_number cpu)
 {
   Rcu_data const *d = &_rcu_data.cpu(cpu);
-  return d->_c.empty() && !d->pending(&_rcu);
+  return !d->_c.empty() || d->pending(&_rcu);
 }
 
 PUBLIC static inline

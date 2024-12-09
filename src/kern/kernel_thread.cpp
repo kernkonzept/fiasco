@@ -277,7 +277,7 @@ Kernel_thread::idle_op()
   // 1. check for latency requirements that prevent low power modes
   // 2. check for timeouts on this CPU ignore the idle thread's timeslice
   // 3. check for RCU work on this CPU
-  if (Rcu::idle(cpu)
+  if (!Rcu::has_pending_work(cpu)
       && !Timeout_q::timeout_queue.cpu(cpu).have_timeouts(timeslice_timeout.cpu(cpu)))
     {
       ++_deep_idle_counter.cpu(cpu);
