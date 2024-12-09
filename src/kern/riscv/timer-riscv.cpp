@@ -5,6 +5,13 @@ INTERFACE [riscv]:
 
 EXTENSION class Timer
 {
+public:
+  static Unsigned64 us_to_ticks(Unsigned64 us)
+  { return (us * _freq_scaler) / _us_scaler; }
+
+  static Unsigned64 ticks_to_us(Unsigned64 ticks)
+  { return (ticks * _us_scaler) / _freq_scaler; }
+
 private:
   enum : Unsigned32
   {
@@ -14,12 +21,6 @@ private:
   // XXX Make the ticks <-> us conversions more efficient.
   static Unsigned32 _freq_scaler;
   static Unsigned32 _us_scaler;
-
-  static Unsigned64 us_to_ticks(Unsigned64 us)
-  { return (us * _freq_scaler) / _us_scaler; }
-
-  static Unsigned64 ticks_to_us(Unsigned64 ticks)
-  { return (ticks * _us_scaler) / _freq_scaler; }
 
   // Period of periodic timer.
   static Unsigned64 _timer_period;

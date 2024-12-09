@@ -8,4 +8,4 @@ CXXFLAGS_uart-libuart += $(call LIBUART_UART, sifive)
 
 config_IMPL           += config-riscv-hifive_unmatched
 pic_IMPL              += pic-sifive
-clock_IMPL            += clock-generic
+clock_IMPL            += clock-riscv
