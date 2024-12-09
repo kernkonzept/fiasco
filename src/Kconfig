@@ -47,6 +47,8 @@ config HAS_CPU_MPU
 config HAS_SYNC_CLOCK
 	bool
 
+config HAS_ONE_SHOT
+	bool
 
 ################################################################################
 menu "Target configuration"
@@ -227,7 +229,7 @@ config SYNC_CLOCK
 
 config ONE_SHOT
 	bool "Use scheduling timer in one-shot mode"
-	depends on SCHED_APIC && SYNC_TSC
+	depends on HAS_ONE_SHOT
 	help
 	  More costly than periodic but more fine-granular scheduling
 	  possible.  EXPERIMENTAL!
