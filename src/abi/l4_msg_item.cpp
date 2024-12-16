@@ -12,11 +12,11 @@ INTERFACE:
  * the typed message item. The number of following words and their
  * interpretation depend on the contents of the #L4_msg_item.
  *
- * If all bits of the first word of a typed message item are zero, then it is a
- * void item (see is_void()).
+ * *Void item:* If all bits of the first word of a typed message item are zero,
+ * then it is a void item (see is_void()).
  *
- * The first word of a generic non-void typed message item has the following
- * binary layout:
+ * *Non-void item:* The first word of a generic non-void typed message item has
+ * the following binary layout:
  *
  *      MSB                        4  3  2      0  bits
  *     ┌────────────────────────────┬───┬────────┐
@@ -288,16 +288,16 @@ public:
  * - Bit 2 (`rcv_id`): This bit may be set only if `small` is set and `fwd` is
  *   unset. A set `rcv_id` bit denotes that the receiver wants to avoid a full
  *   mapping. Instead, if all preconditions are met, the receiver will get
- *   either the sent flexpage word or the label of an IPC gate (disjoined with
- *   some of the sender’s permissions) in its message registers. If the `rcv_id`
- *   bit is set:
+ *   either the sent flexpage word or the label of an IPC gate (combined with
+ *   some permissions that would have been mapped) in its message registers. If
+ *   the `rcv_id` bit is set:
  *
  *   - If the sending and the receiving thread are in the same task, then the
  *     flexpage word specified by the sender is received and nothing is mapped.
- *   - Otherwise, if the IPC was sent via an IPC gate and the receiving thread
- *     is in the same task as the thread that is attached to the IPC gate, then
- *     the label of the IPC gate disjoined with some permissions of the the sent
- *     IPC gate capability is received.
+ *   - Otherwise, if an IPC gate capability was sent and the receiving thread is
+ *     in the same task as the thread that is attached to the IPC gate, then the
+ *     bitwise OR (`|`) of the label of the IPC gate and some permissions that
+ *     would have been mapped is received.
  *   - Otherwise the behavior is the same as if the `rcv_id` bit was not set.
  */
 class L4_buf_item : public L4_msg_item
@@ -356,8 +356,8 @@ public:
  *     ┌──────────┬───────┬──────┬───┬──────────┬───┐┌─────────────────┐
  *     │ hot_spot │ order │ type │ 1 │ rcv_type │ c ││     payload     │
  *     └──────────┴───────┴──────┴───┴──────────┴───┘└─────────────────┘
- *     └──────────┘              └───┘          └───┘ from send item‘s first word
- *                └──────────────┘                    from send item‘s flexpage
+ *     └──────────┘              └───┘          └───┘ from send item’s first word
+ *                └──────────────┘                    from send item’s flexpage
  *                                   └──────────┘     initially zero
  *
  * As indicated above, the `hot_spot`, `1` (see L4_msg_item::Map), and `c`
@@ -365,7 +365,7 @@ public:
  * #L4_snd_item), and `order` and `type` are copied from the sender’s send
  * item’s flexpage. The `rcv_type` and `payload` are determined by what is
  * actually transferred, which is also affected by the `rcv_id` bit in the
- * receiver‘s buffer item (see #L4_buf_item). The `rcv_type` determines the
+ * receiver’s buffer item (see #L4_buf_item). The `rcv_type` determines the
  * content and layout of the payload.
  *
  * There are four cases for `rcv_type`:
@@ -386,10 +386,11 @@ public:
  *     └──────────┴───────┴──────┴───┴──────────┴───┘└─────────────────┘
  *
  * #Rcv_id: Used if the buffer item’s `rcv_id` bit was set and the conditions
- * for transferring an IPC gate label were fulfilled. In that case, the payload
- * consists of the IPC gate label (`obj_id`; see Kobject_common::obj_id())
- * disjoined with the write and special permissions (see
- * Obj::Capability::rights()) of the sent capability (`rights`):
+ * for transferring an IPC gate label were fulfilled. In that case, no mapping
+ * is done for this item and the payload consists of the bitwise OR (`|`) of the
+ * IPC gate label (`obj_id`; see Kobject_common::obj_id()) and the write and
+ * special permissions (see Obj::Capability::rights()) that would have been
+ * mapped (`rights`):
  *
  *                                                           2 1      0
  *     ┌──────────┬───────┬──────┬───┬──────────┬───┐┌────────┬────────┐
@@ -444,7 +445,7 @@ public:
   }
 
   /**
-   * Set the `rcv_type` to #Rcv_id and set the second word to the the
+   * Set the `rcv_type` to #Rcv_id and set the second word to the
    * disjunction of the provided object id and permissions.
    *
    * \param id      IPC gate label (see Kobject_common::obj_id()) of the sent
