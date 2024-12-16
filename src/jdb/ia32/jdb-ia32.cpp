@@ -358,8 +358,9 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
       // user address, use temporary mapping
       phys = addr.space()->virt_to_phys(addr.addr());
 
-      if (phys == ~0UL && !TAG_ENABLED(cpu_local_map))
-        phys = addr.space()->virt_to_phys_s0(addr.virt());
+      if (phys == ~0UL)
+        if constexpr (!TAG_ENABLED(cpu_local_map))
+          phys = addr.space()->virt_to_phys_s0(addr.virt());
     }
 
   if (phys == ~0UL)

@@ -637,7 +637,7 @@ Kmem::setup_cpu_structures_isolation(Cpu &cpu, Kpdir *cpu_dir,
   Address ki_page = Pg::trunc(reinterpret_cast<Address>(_kernel_text_start));
   Address kie_page = Pg::round(reinterpret_cast<Address>(_kernel_text_entry_end));
 
-  if (Print_info)
+  if constexpr (Print_info)
     printf("kernel code: %p(%lx)-%p(%lx)\n", _kernel_text_start,
            ki_page, _kernel_text_entry_end, kie_page);
 
@@ -820,7 +820,7 @@ Kmem::init_cpu(Cpu &cpu)
                   continue;
                 }
 
-              if (Print_info)
+              if constexpr (Print_info)
                 printf("physmem sync(2M): va:%16lx pte:%16lx\n", a, *src.pte);
 
               write_now(dst.pte, *src.pte);
@@ -849,7 +849,7 @@ Kmem::init_cpu(Cpu &cpu)
                   continue;
                 }
 
-              if (Print_info)
+              if constexpr (Print_info)
                 printf("physmem sync(1G): va:%16lx pte:%16lx\n", a, *src.pte);
 
               write_now(dst.pte, *src.pte);
@@ -908,9 +908,9 @@ Kmem::init_cpu(Cpu &cpu)
   // paging-structure caches during the page table switch. In that case TLB
   // flushes are exclusively done by Mem_unit::tlb_flush() calls.
 
-  Mword const flush_tlb_bit = Config::Pcid_enabled ? 1UL << 63 : 0;
-  write_now(&page[0], cpu_dir_pa | flush_tlb_bit);
-  write_now(&page[3], cpu_dir_pa | flush_tlb_bit | 0x1000);
+  enum : Mword { Flush_tlb_bit = Config::Pcid_enabled ? 1UL << 63 : 0 };
+  write_now(&page[0], cpu_dir_pa | Flush_tlb_bit);
+  write_now(&page[3], cpu_dir_pa | Flush_tlb_bit | 0x1000);
 
   setup_cpu_structures_isolation(cpu, cpu_dir, &cpu_alloc, tss_mem_vm);
 

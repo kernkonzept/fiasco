@@ -93,14 +93,14 @@ Alternative_insn::handle_alternatives(unsigned features)
   extern Alternative_insn const _alt_insns_begin[];
   extern Alternative_insn const _alt_insns_end[];
 
-  if (0)
+  if constexpr (0)
     printf("patching alternative instructions for feature: %x\n", features);
 
   for (auto *i = _alt_insns_begin; i != _alt_insns_end; ++i)
     {
       if (i->feature & features)
         {
-          if (0)
+          if constexpr (0)
             printf("  replace insn at %p %08x -> %08x\n",
                    static_cast<void *>(i->orig_code()), *i->orig_code(), *i->alt_insn());
           i->replace();

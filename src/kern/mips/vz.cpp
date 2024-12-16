@@ -436,9 +436,10 @@ Vz::State::save_full(int guest_id)
       if (EXPECT_FALSE(w > Max_guest_wired))
         w = Max_guest_wired;
 
-      if (0 && w)
-        printf("VZ[%p]: guest=%d save wired: %lu\n",
-               static_cast<void *>(this), guest_id, w);
+      if constexpr (0)
+        if (w)
+          printf("VZ[%p]: guest=%d save wired: %lu\n",
+                 static_cast<void *>(this), guest_id, w);
 
       for (unsigned i = 0; i < w; ++i)
         save_guest_tlb_entry(guest_id, i);
@@ -624,9 +625,10 @@ Vz::State::load_full(int guest_id)
   if (EXPECT_FALSE(w > Max_guest_wired))
     w = Max_guest_wired;
 
-  if (0 && w)
-    printf("VZ[%p]: guest=%d load wired: %u\n",
-           static_cast<void *>(this), guest_id, w);
+  if constexpr (0)
+    if (w)
+      printf("VZ[%p]: guest=%d load wired: %u\n",
+             static_cast<void *>(this), guest_id, w);
 
   for (unsigned i = 0; i < w; ++i)
     load_guest_tlb_entry(guest_id, i);
@@ -754,9 +756,10 @@ Vz::State::load_selective(int guest_id)
       if (EXPECT_FALSE(w > Max_guest_wired))
         w = Max_guest_wired;
 
-      if (0 && w)
-        printf("VZ[%p]: guest=%d load wired: %u (sel)\n",
-               static_cast<void *>(this), guest_id, w);
+      if constexpr (0)
+        if (w)
+          printf("VZ[%p]: guest=%d load wired: %u (sel)\n",
+                 static_cast<void *>(this), guest_id, w);
 
       for (unsigned i = 0; i < w; ++i)
         load_guest_tlb_entry(guest_id, i);

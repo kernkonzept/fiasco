@@ -83,6 +83,8 @@ Cpu::has_hpmn0() const
 //-------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
+#include <cxx/conditionals>
+
 PRIVATE static inline
 void
 Cpu::check_for_swp_enable()
@@ -107,8 +109,8 @@ Cpu::check_for_swp_enable()
 IMPLEMENT
 void Cpu::early_init()
 {
-  sctlr = Config::Cache_enabled
-          ? Cp15_c1_cache_enabled : Cp15_c1_cache_disabled;
+  sctlr = cxx::const_ite<Config::Cache_enabled>(Cp15_c1_cache_enabled,
+                                                Cp15_c1_cache_disabled);
 
   check_for_swp_enable();
 

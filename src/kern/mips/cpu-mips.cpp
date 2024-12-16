@@ -425,7 +425,6 @@ Cpu::first_boot(bool is_boot_cpu)
             default:
               panic("FTLB: page size (0x%x) not supported with FTLB\n",
                     Config::PAGE_SIZE);
-              break;
             }
 
           auto c4 = c.r<4>();

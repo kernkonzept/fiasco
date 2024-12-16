@@ -475,7 +475,7 @@ Jdb_kern_info_bench::show_arch()
       show_time (time, 200000, "load data TLB (4k)");
     }
 
-  if (false) // KVM
+  if constexpr (false) // KVM
     {
       // asm ("1: mov %%cr3,%%edx; mov %%edx, %%cr3; dec %%eax; jnz 1b; ret")
       Unsigned32 *words = static_cast<Unsigned32 *>(bench_page);
