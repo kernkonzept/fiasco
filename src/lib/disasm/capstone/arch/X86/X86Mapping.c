@@ -3594,6 +3594,7 @@ void X86_reg_access(const cs_insn *insn,
 					regs_read[read_count] = op->mem.index;
 					read_count++;
 				}
+				break;
 			default:
 				break;
 		}

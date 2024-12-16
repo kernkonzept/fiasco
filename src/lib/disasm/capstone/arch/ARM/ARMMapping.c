@@ -939,6 +939,7 @@ void ARM_reg_access(const cs_insn *insn,
 					regs_write[write_count] = (uint16_t)op->mem.base;
 					write_count++;
 				}
+				break;
 			default:
 				break;
 		}

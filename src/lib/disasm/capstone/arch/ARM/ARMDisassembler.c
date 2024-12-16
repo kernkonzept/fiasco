@@ -1480,7 +1480,7 @@ static DecodeStatus DecodeCopMemInstruction(MCInst *Inst, unsigned Insn,
 		case ARM_STC_POST:
 		case ARM_STCL_POST:
 			imm |= U << 8;
-			// fall through.
+			__attribute__((fallthrough));
 		default:
 			// The 'option' variant doesn't encode 'U' in the immediate since
 			// the immediate is unsigned [0,255].
@@ -2362,6 +2362,7 @@ static DecodeStatus DecodeVLDInstruction(MCInst *Inst, unsigned Insn,
 		case ARM_VLD4q32_UPD:
 			if (!Check(&S, DecodeDPRRegisterClass(Inst, (Rd+2)%32, Address, Decoder)))
 				return MCDisassembler_Fail;
+			break;
 		default:
 			break;
 	}
@@ -2516,7 +2517,7 @@ static DecodeStatus DecodeVLDInstruction(MCInst *Inst, unsigned Insn,
 				MCOperand_CreateReg0(Inst, 0);
 				break;
 			}
-			// Fall through
+			__attribute__((fallthrough));
 		case ARM_VLD1d8wb_fixed:
 		case ARM_VLD1d16wb_fixed:
 		case ARM_VLD1d32wb_fixed:
@@ -3324,6 +3325,7 @@ static DecodeStatus DecodeT2AddrModeSOReg(MCInst *Inst, unsigned Val,
 		case ARM_t2STRs:
 			if (Rn == 15)
 				return MCDisassembler_Fail;
+			break;
 		default:
 			break;
 	}
@@ -3387,6 +3389,7 @@ static DecodeStatus DecodeT2LoadShift(MCInst *Inst, unsigned Insn,
 				break;
 			case ARM_t2LDRSBs:
 				MCInst_setOpcode(Inst, ARM_t2PLIs);
+				break;
 			default:
 				break;
 		}
@@ -3854,6 +3857,7 @@ static DecodeStatus DecodeT2AddrModeImm12(MCInst *Inst, unsigned Val,
 		case ARM_t2STRHi12:
 			if (Rn == 15)
 				return MCDisassembler_Fail;
+			break;
 		default:
 			break;
 	}

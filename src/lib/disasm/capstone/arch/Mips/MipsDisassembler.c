@@ -1085,7 +1085,6 @@ static DecodeStatus DecodeMSA128Mem(MCInst *Inst, unsigned Insn,
 		default:
 			//assert (0 && "Unexpected instruction");
 			return MCDisassembler_Fail;
-			break;
 		case Mips_LD_B:
 		case Mips_ST_B:
 			MCOperand_CreateImm0(Inst, Offset);
@@ -1223,7 +1222,7 @@ static DecodeStatus DecodeMemMMImm12(MCInst *Inst,
 			break;
 		case Mips_SC_MM:
 			MCOperand_CreateReg0(Inst, Reg);
-			// fallthrough
+			__attribute__((fallthrough));
 		default:
 			MCOperand_CreateReg0(Inst, Reg);
 			if (MCInst_getOpcode(Inst) == Mips_LWP_MM || MCInst_getOpcode(Inst) == Mips_SWP_MM)

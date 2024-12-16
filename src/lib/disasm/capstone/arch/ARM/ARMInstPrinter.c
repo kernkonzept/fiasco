@@ -455,7 +455,7 @@ void ARM_printInst(MCInst *MI, SStream *O, void *Info)
 							pubOpcode = ARM_INS_SEVL;
 							break;
 						}
-						// fallthrough
+						__attribute__((fallthrough));
 				default:
 						// Anything else should just print normally.
 						printInstruction(MI, O, MRI);
