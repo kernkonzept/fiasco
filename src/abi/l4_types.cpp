@@ -571,6 +571,7 @@ public:
 
     EAddrnotavail = 99, ///< The given address is not available.
     EMsgtooshort  = 1001, ///< Incoming IPC message too short
+    EMsgtoolong   = 1002, ///< Incoming IPC message too long
   };
 };
 
