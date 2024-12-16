@@ -44,7 +44,7 @@ config HAS_IRQ_DIRECT_INJECT_OPTION
 config HAS_CPU_MPU
 	bool
 
-config SYNC_CLOCK
+config HAS_SYNC_CLOCK
 	bool
 
 
@@ -212,6 +212,18 @@ config CONTEXT_4K
 config CONTEXT_2K
 	bool
 	default y if CONTEXT_SIZE_2K
+
+config SYNC_CLOCK
+	bool "Synchronize kernel clock with scheduling timer"
+	depends on HAS_SYNC_CLOCK
+	default y
+	help
+	  Synchronize the kernel clock with the timer, i.e. the kernel clock
+	  is no longer stored in the KIP and advanced with each timer tick,
+	  but instead accessed by directly reading the timer.
+
+	  This allows for high-precision timestamps and is a prerequisite
+	  for running the scheduling timer in one-shot mode.
 
 config ONE_SHOT
 	bool "Use scheduling timer in one-shot mode"

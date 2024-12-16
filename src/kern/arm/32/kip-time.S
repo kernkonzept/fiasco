@@ -69,7 +69,7 @@
 /**
  * Provide the KIP clock value with a fine-grained resolution + accuracy.
  *
- * In case of CONFIG_ARM_SYNC_CLOCK is disabled, just provide the normal KIP
+ * In case of CONFIG_SYNC_CLOCK is disabled, just provide the normal KIP
  * clock. Otherwise, read the ARM generic timer counter and transform it into
  * microseconds like done for the KIP clock value.
  * This code will be copied to the KIP at OFFS__KIP_FN_READ_US.
@@ -85,7 +85,7 @@
         .global kip_time_fn_read_us_end
 #define KIP_VAL(v)      kip_time_fn_read_us + OFFS__ ##v - OFFS__KIP_FN_READ_US
 kip_time_fn_read_us:
-#ifdef CONFIG_ARM_SYNC_CLOCK
+#ifdef CONFIG_SYNC_CLOCK
         read_timer_counter
         push    {r4, r5, r6, r7}
         ldr     r6, KIP_VAL(KIP_SCALER_TIME_STAMP_TO_US)  /* scaler */
@@ -112,7 +112,7 @@ kip_time_fn_read_us_end:
 /**
  * Read the ARM generic timer and and transform the value into nanoseconds.
  *
- * In case of CONFIG_ARM_SYNC_CLOCK is enabled, provide the same value as the
+ * In case of CONFIG_SYNC_CLOCK is enabled, provide the same value as the
  * KIP clock but with nanoseconds resolution/accuracy. Otherwise, read the KIP
  * clock and return that value multiplied by 1000.
  * This code will be copied to the KIP at OFFS__KIP_FN_READ_NS.
@@ -124,7 +124,7 @@ kip_time_fn_read_us_end:
         .global kip_time_fn_read_ns_end
 #define KIP_VAL(v)      kip_time_fn_read_ns + OFFS__ ##v - OFFS__KIP_FN_READ_NS
 kip_time_fn_read_ns:
-#ifdef CONFIG_ARM_SYNC_CLOCK
+#ifdef CONFIG_SYNC_CLOCK
         read_timer_counter
         push    {r4, r5, r6, r7}
         ldr     r6, KIP_VAL(KIP_SCALER_TIME_STAMP_TO_NS)

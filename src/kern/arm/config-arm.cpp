@@ -50,7 +50,7 @@ public:
   {
     Cp15_c1_use_swp_enable = TAG_ENABLED(arm_enable_swp),
     Cp15_c1_use_alignment_check = TAG_ENABLED(arm_alignment_check),
-    Kip_clock_uses_timer = TAG_ENABLED(arm_sync_clock),
+    Kip_clock_uses_timer = TAG_ENABLED(sync_clock),
     Fast_interrupts = TAG_ENABLED(arm_fast_interrupts),
   };
 };

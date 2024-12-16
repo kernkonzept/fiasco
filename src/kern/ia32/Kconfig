@@ -7,6 +7,7 @@
 # ARCHSELECT:     FPU
 # ARCHSELECT:     HAS_FPU_OPTION
 # ARCHSELECT:     HAS_LAZY_FPU
+# ARCHSELECT:     HAS_SYNC_CLOCK if (!MP || TSC_UNIFIED)
 # ARCHDEFAULTPF:  PF_PC
 #
 # ARCH:           AMD64 amd64
@@ -19,6 +20,7 @@
 # ARCHSELECT:     FPU
 # ARCHSELECT:     HAS_FPU_OPTION
 # ARCHSELECT:     HAS_LAZY_FPU
+# ARCHSELECT:     HAS_SYNC_CLOCK if (!MP || TSC_UNIFIED)
 # ARCHDEFAULTPF:  PF_PC
 
 # PF: PC
@@ -127,14 +129,3 @@ config TSC_UNIFIED
 
 	  Unfortunately we cannot panic in that case because QEMU does not
 	  support this CPU feature in TCG.
-
-config SYNC_TSC
-	bool "Use time-stamp counter for system clock and scheduling accounting"
-	depends on (!MP || TSC_UNIFIED)
-	select SYNC_CLOCK
-	help
-	  Synchronize the internal kernel clock with the CPU time stamp
-	  counter.
-	  This option requires that the TSC is synchronized over the CPUs on an
-	  MP system.
-

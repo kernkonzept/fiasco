@@ -21,7 +21,7 @@
 
 // Provide the KIP clock value with a fine-grained resolution + accuracy.
 //
-// In case CONFIG_SYNC_TSC is disabled, just provide the normal KIP clock.
+// In case CONFIG_SYNC_CLOCK is disabled, just provide the normal KIP clock.
 // Otherwise, read the time stamp counter and transform it into microseconds
 // like done for the KIP clock value.
 // This code will be copied to the KIP at OFFS__KIP_FN_READ_US.
@@ -32,7 +32,7 @@ kip_time_fn_read_us:
 1:      push    %ebx
         call    2f
 2:      pop     %ebx
-#ifdef CONFIG_SYNC_TSC
+#ifdef CONFIG_SYNC_CLOCK
         rdtsc
         movl    %edx, %ecx
         mull    KIP_VAL(KIP_SCALER_TIME_STAMP_TO_US)
@@ -55,7 +55,7 @@ kip_time_fn_read_us_end:
 
 // Read the time stamp counter and transform it into nanoseconds.
 //
-// In case CONFIG_SYNC_TSC is enabled, provide the same value as the KIP clock
+// In case CONFIG_SYNC_CLOCK is enabled, provide the same value as the KIP clock
 // but with nanoseconds resolution/accuracy. Otherwise, the provided time is
 // not synchronized with the KIP clock but has still nanoseconds resolution.
 // This code will be copied to the KIP at OFFS__KIP_FN_READ_NS.
@@ -66,7 +66,7 @@ kip_time_fn_read_ns:
 1:      push    %ebx
         call    2f
 2:      pop     %ebx
-#ifdef CONFIG_SYNC_TSC
+#ifdef CONFIG_SYNC_CLOCK
         rdtsc
         push    %ebp
         movl    %edx, %ecx      // eax = tsc.lo, edx = tsc.hi

@@ -11,6 +11,7 @@
 # ARCHSELECT:     HAS_JDB_GZIP_OPTION
 # ARCHSELECT:     HAS_VIRT_OBJ_SPACE_OPTION if ARM_V6PLUS && !CPU_VIRT && !ARM_1176_CACHE_ALIAS_FIX
 # ARCHSELECT:     HAS_LAZY_FPU
+# ARCHSELECT:     HAS_SYNC_CLOCK if USE_GENERIC_TIMER
 # ARCHSELECT:     HAS_IRQ_DIRECT_INJECT_OPTION
 #
 # ARCHDEFAULTPF: PF_ARM_VIRT
@@ -185,7 +186,7 @@ config ARM_PROFILE_A
 	default y if !ARM_PROFILE_R
 
 config ARM_PROFILE_R
-	select ARM_SYNC_CLOCK
+	select SYNC_CLOCK
 	bool
 
 # SECTION: CPU
@@ -365,14 +366,6 @@ config ARM_ALIGNMENT_CHECK
 	bool "Enable alignment check"
 	help
 	  Enable if you want to have alignment check enabled.
-
-config ARM_SYNC_CLOCK
-	bool "Use ARM generic timer for system clock and scheduling accounting"
-	depends on USE_GENERIC_TIMER
-	default y
-	select SYNC_CLOCK
-	help
-	  Synchronize the internal kernel clock with the timer.
 
 choice
 	prompt "Execution Model"

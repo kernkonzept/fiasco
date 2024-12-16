@@ -15,7 +15,7 @@
 
 // Provide the KIP clock value with a fine-grained resolution + accuracy.
 //
-// In case CONFIG_SYNC_TSC is disabled, just provide the normal KIP clock.
+// In case CONFIG_SYNC_CLOCK is disabled, just provide the normal KIP clock.
 // Otherwise, read the time stamp counter and transform it into microseconds
 // like done for the KIP clock value.
 // This code will be copied to the KIP at OFFS__KIP_FN_READ_US.
@@ -24,7 +24,7 @@
 #define KIP_OFFS(v)     1b - OFFS__KIP_FN_READ_US + OFFS__ ##v
 kip_time_fn_read_us:
 1:
-#ifdef CONFIG_SYNC_TSC
+#ifdef CONFIG_SYNC_CLOCK
         rdtsc                   // high-order 32 bits of rax and rdx are 0
         shl     $32, %rdx
         or      %rdx, %rax
@@ -39,7 +39,7 @@ kip_time_fn_read_us_end:
 
 // Read the time stamp counter and transform it into nanoseconds.
 //
-// In case CONFIG_SYNC_TSC is enabled, provide the same value as the KIP clock
+// In case CONFIG_SYNC_CLOCK is enabled, provide the same value as the KIP clock
 // but with nanoseconds resolution/accuracy. Otherwise, the provided time is
 // not synchronized with the KIP clock but has still nanoseconds resolution.
 // This code will be copied to the KIP at OFFS__KIP_FN_READ_NS.
@@ -48,7 +48,7 @@ kip_time_fn_read_us_end:
 #define KIP_OFFS(v)     1b - OFFS__KIP_FN_READ_NS + OFFS__ ##v
 kip_time_fn_read_ns:
 1:
-#ifdef CONFIG_SYNC_TSC
+#ifdef CONFIG_SYNC_CLOCK
         rdtsc                   // high-order 32 bits of rax and rdx are 0
         shl     $32, %rdx
         or      %rdx, %rax
