@@ -70,9 +70,13 @@ extern "C" void sys_kdb_ke()
       return;
 
     case Thread::Kernel_entry_op::Kdebug_text:
-      strncpy(str, reinterpret_cast<char *>(arg), sizeof(str));
-      str[sizeof(str)-1] = 0;
-      break;
+      {
+        auto *arg_str = reinterpret_cast<char const *>(arg);
+        size_t len = min(strlen(arg_str), sizeof(str) - 1);
+        memcpy(str, arg_str, len);
+        str[len] = '\0';
+        break;
+      }
 
     default:
       break;
