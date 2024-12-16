@@ -36,14 +36,9 @@ IMPLEMENTATION:
 #include "thread_state.h"
 #include "types.h"
 
-IMPLEMENTATION [32bit]:
-#define ADDR_FMT "%08lx"
-
-IMPLEMENTATION [64bit]:
-#define ADDR_FMT "%016lx"
-
-
 IMPLEMENTATION:
+
+#define ADDR_FMT L4_MWORD_FMT
 
 class Jdb_tcb_ptr
 {

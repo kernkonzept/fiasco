@@ -448,22 +448,12 @@ Jdb_ptab_m::Jdb_ptab_m()
 
 static Jdb_ptab_m jdb_ptab_m INIT_PRIORITY(JDB_MODULE_INIT_PRIO);
 
-// -----------------------------------------------------------------------
-IMPLEMENTATION[32bit]:
-
 PRIVATE
 void
 Jdb_ptab_base::print_invalid() const
 {
+  if constexpr (sizeof(unsigned long) == 4)
     putstr("   ###  ");
-}
-
-// -----------------------------------------------------------------------
-IMPLEMENTATION[64bit]:
-
-PRIVATE
-void
-Jdb_ptab_base::print_invalid() const
-{
+  else
     putstr("       ###      ");
 }

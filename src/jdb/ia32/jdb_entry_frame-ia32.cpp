@@ -61,6 +61,10 @@ unsigned
 Jdb_entry_frame::textlen() const
 { return _dx; }
 
+PUBLIC inline NEEDS["cpu.h"]
+Mword
+Jdb_entry_frame::ss() const
+{ return from_user() ? _ss : Cpu::get_ss(); }
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION[ia32]:
@@ -87,7 +91,6 @@ Jdb_entry_frame::get_reg(unsigned reg) const
 
   return val;
 }
-
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION[amd64]:
@@ -122,11 +125,3 @@ Jdb_entry_frame::get_reg(unsigned reg) const
 
   return val;
 }
-
-//---------------------------------------------------------------------------
-IMPLEMENTATION[ia32,amd64]:
-
-PUBLIC inline NEEDS["cpu.h"]
-Mword
-Jdb_entry_frame::ss() const
-{ return from_user() ? _ss : Cpu::get_ss(); }
