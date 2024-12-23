@@ -4,7 +4,7 @@
 include $(srcdir)/Modules.generic
 
 # UTEST depends on KERNEL and CHECKSUM, must be listed after them
-SUBSYSTEMS := $(filter-out UTEST,$(SUBSYSTEMS)) BOOT CHECKSUM GBLCFG \
+SUBSYSTEMS := $(filter-out UTEST,$(SUBSYSTEMS)) BOOT CHECKSUM SYMBOLS GBLCFG \
               $(filter UTEST,$(SUBSYSTEMS))
 
 PREPROCESS_PARTS 	+= arch $(CONFIG_ABI) 32bit iofp recover_jmpbuf \
