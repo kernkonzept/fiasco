@@ -167,6 +167,14 @@ public:
   void disable_locked(unsigned irq)
   { _dist.disable_irq(typename IMPL::Version(), irq); }
 
+  void enable_locked(unsigned irq)
+  { _dist.enable_irq(irq); }
+
+  void unmask(Mword pin) override
+  {
+    assert (cpu_lock.test());
+    enable_locked(pin);
+  }
 };
 
 // ------------------------------------------------------------------------
@@ -187,18 +195,6 @@ PUBLIC inline
 unsigned
 Gic::hw_nr_irqs()
 { return _dist.hw_nr_irqs(); }
-
-PUBLIC inline
-void Gic::enable_locked(unsigned irq)
-{ _dist.enable_irq(irq); }
-
-PUBLIC
-void
-Gic::unmask(Mword pin) override
-{
-  assert (cpu_lock.test());
-  enable_locked(pin);
-}
 
 PUBLIC
 int
