@@ -13,12 +13,14 @@ IMPLEMENT void FIASCO_FLATTEN sys_ipc_wrapper()
   Thread *curr = current_thread();
   Syscall_frame *f = curr->regs()->syscall_frame();
 
-#ifndef NDEBUG
-  if ((current()->state() & Thread_vcpu_enabled)
-      && (current()->vcpu_state().access()->state & Vcpu_state::F_irqs)
-      && (f->ref().have_recv() || f->tag().items() || f->tag().words()))
-    WARN("VCPU makes syscall with IRQs enabled: PC=%lx\n", current()->regs()->ip());
-#endif
+  if constexpr (!TAG_ENABLED(ndebug))
+    {
+      if ((current()->state() & Thread_vcpu_enabled)
+          && (current()->vcpu_state().access()->state & Vcpu_state::F_irqs)
+          && (f->ref().have_recv() || f->tag().items() || f->tag().words()))
+        WARN("VCPU makes syscall with IRQs enabled: PC=%lx\n",
+             current()->regs()->ip());
+    }
 
   Obj_cap obj = f->ref();
   Utcb *utcb = curr->utcb().access(true);
