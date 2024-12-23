@@ -31,5 +31,3 @@ namespace L4
     mutable int _bufchar;
   };
 };
-
-#endif
