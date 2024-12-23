@@ -23,7 +23,7 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
      "  iret              \n"
      :
      : [sp]"r"(static_cast<Return_frame*>(regs())), "a"(arg)
-    );
+     : "memory");
 
   __builtin_unreachable();
 }
