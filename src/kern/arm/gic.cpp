@@ -57,7 +57,7 @@ public:
   : Gic(dist_base), _cpu(cxx::forward<CPU_ARGS>(args)...)
   {
     unsigned num = init(dist_init, nr_irqs_override);
-    printf("Number of IRQs available at this GIC: %d\n", num);
+    printf("GIC: Number of IRQs available at this GIC: %d\n", num);
     Irq_chip_gen::init(num);
   }
 
