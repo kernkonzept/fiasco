@@ -80,7 +80,7 @@ Mem_chunk::alloc_mem(unsigned size, unsigned align = 1)
   // allocate more memory than requested.
   unsigned alloc_size = max(size, align);
   void *mem = Kmem_alloc::allocator()->alloc(Bytes(alloc_size));
-  assert(reinterpret_cast<Address>(mem) % align == 0);
+  assert((reinterpret_cast<Address>(mem) & (align - 1)) == 0);
   return MEM(mem, size, alloc_size);
 }
 
