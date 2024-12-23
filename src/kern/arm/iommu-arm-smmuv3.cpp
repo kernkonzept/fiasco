@@ -1756,7 +1756,7 @@ Iommu::setup_strtab_2level()
     }
 
   unsigned strtab_bits = _num_stream_id_bits - Stream_table_split;
-  unsigned strtab_size = 1 << (strtab_bits) * sizeof(L1std);
+  unsigned strtab_size = (1U << strtab_bits) * sizeof(L1std);
   _strtab = Mem_chunk::alloc_zmem(strtab_size, Strtab_base::align(strtab_size));
   if (!_strtab.is_valid())
     panic("IOMMU: Failed to allocate stream table.");
