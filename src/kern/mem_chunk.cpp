@@ -72,7 +72,7 @@ Mem_chunk::alloc_mem(unsigned size, unsigned align = 1)
   if (EXPECT_FALSE(size < Kmem_alloc::Alloc::Min_size))
     return MEM();
 
-  if (EXPECT_FALSE(align != (1u << cxx::log2u(align))))
+  if (EXPECT_FALSE(align == 0 || (align & (align - 1))))
     return MEM();
 
   // Underlying buddy allocator can only provide naturally aligned blocks of
