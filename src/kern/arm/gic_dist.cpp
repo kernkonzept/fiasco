@@ -424,13 +424,13 @@ Gic_dist::is_edge_triggered(Mword pin) const
 
 PUBLIC inline NEEDS["lock_guard.h"]
 void
-Gic_dist::setup_pin(Mword pin)
+Gic_dist::setup_pin_grp0(Mword pin)
 {
   unsigned shift = (pin & 3) * 8;
   auto guard = lock_guard(_lock);
 
   _dist.clear<Unsigned32>(1UL << (pin & 0x1f),
-                     GICD_IGROUPR + (pin & ~0x1f) / 8);
+                          GICD_IGROUPR + (pin & ~0x1f) / 8);
 
   _dist.modify<Unsigned32>(0x40 << shift, 0xff << shift, GICD_IPRIORITYR + (pin & ~3));
 }

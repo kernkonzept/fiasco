@@ -238,7 +238,7 @@ Gic::alloc(Irq_base *irq, Mword pin, bool init = true) override
       || Irq_chip_gen::alloc(irq, pin, init))
     {
       printf("GIC: Switching IRQ %ld to secure\n", pin);
-      _dist.setup_pin(pin);
+      _dist.setup_pin_grp0(pin);
       return true;
     }
   return false;
