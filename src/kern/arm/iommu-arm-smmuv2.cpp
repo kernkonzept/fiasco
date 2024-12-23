@@ -854,11 +854,10 @@ Iommu::setup(Version version, void *base_addr, unsigned mask)
   cr0.gcfgfre() = Iommu::Log_faults; // Enable config fault reporting
   cr0.gcfgfie() = Iommu::Log_faults; // Enable config fault interrupts
   cr0.stalld() = 1; // Disable stalling on context faults.
-#ifdef CONFIG_IOMMU_PASSTHROUGH
-  cr0.usfcfg() = 0; // Bypass for unknown stream IDs
-#else
-  cr0.usfcfg() = 1; // Faults for unknown stream IDs
-#endif
+  if constexpr (TAG_ENABLED(iommu_passthrough))
+    cr0.usfcfg() = 0; // Bypass for unknown stream IDs
+  else
+    cr0.usfcfg() = 1; // Faults for unknown stream IDs
   cr0.smcfcfg() = 1; // Faults on multiple matches
   cr0.vmid16en() = 0; // 8-bit VMIDs
   write_reg(cr0);
