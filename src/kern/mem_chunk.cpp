@@ -69,8 +69,11 @@ PUBLIC template<typename MEM = Mem_chunk> static
 MEM
 Mem_chunk::alloc_mem(unsigned size, unsigned align = 1)
 {
-  assert(size >= Kmem_alloc::Alloc::Min_size);
-  assert(align == (1u << cxx::log2u(align)));
+  if (EXPECT_FALSE(size < Kmem_alloc::Alloc::Min_size))
+    return MEM();
+
+  if (EXPECT_FALSE(align != (1u << cxx::log2u(align))))
+    return MEM();
 
   // Underlying buddy allocator can only provide naturally aligned blocks of
   // power-of-two in size. Thus, to ensure proper alignment, we may have to
