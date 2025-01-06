@@ -132,6 +132,8 @@ Iommu::init_platform()
   static_assert(Num_iommus == 1 || Num_iommus == 2,
                 "Unexpected number of IOMMUs.");
 
+  _iommus = Iommu_array(new Boot_object<Iommu>[Num_iommus], Num_iommus);
+
   /*
    * The APPS SMMU on MSM8916 has a special "interrupt aggregation logic"
    * built around the SMMUv2 that routes the context bank interrupts to one of
@@ -148,8 +150,8 @@ Iommu::init_platform()
     version = Version::Smmu_v1;
 
   void *base = Kmem_mmio::map(apps_smmu.base, apps_smmu.size);
-  iommus()[0].setup(version, base, apps_smmu.mask);
-  iommus()[0].setup_irqs(apps_smmu_irqs, cxx::size(apps_smmu_irqs), 1);
+  _iommus[0].setup(version, base, apps_smmu.mask);
+  _iommus[0].setup_irqs(apps_smmu_irqs, cxx::size(apps_smmu_irqs), 1);
 
   /*
    * There are 2 IOMMUs on all supported platforms but the GPU SMMU is not
@@ -159,8 +161,8 @@ Iommu::init_platform()
   if (Num_iommus > 1)
     {
       base = Kmem_mmio::map(gpu_smmu.base, gpu_smmu.size);
-      iommus()[1].setup(Version::Smmu_v2, base, gpu_smmu.mask);
-      iommus()[1].setup_irqs(gpu_smmu_irqs, cxx::size(gpu_smmu_irqs), 1);
+      _iommus[1].setup(Version::Smmu_v2, base, gpu_smmu.mask);
+      _iommus[1].setup_irqs(gpu_smmu_irqs, cxx::size(gpu_smmu_irqs), 1);
     }
 
   return true;

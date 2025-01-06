@@ -16,16 +16,19 @@ public:
   Iommu &operator = (Iommu const &) = delete;
 
   enum { Num_iommus = CONFIG_ARM_IOMMU_NUM };
-  using Iommu_array = cxx::array<Iommu, unsigned, Num_iommus>;
+  using Iommu_array = cxx::static_vector<Iommu>;
   static Iommu *iommu(Unsigned16 iommu_idx);
-  static Iommu_array &iommus() { return *_iommus.get(); }
+  static Iommu_array &iommus() { return _iommus; }
+
+  unsigned idx() const
+  { return this - _iommus.begin(); }
 
 private:
   /// Platform specific IOMMU initialization.
   static bool init_platform();
   /// Common IOMMU initialization.
   static void init_common();
-  static Static_object<Iommu_array> _iommus;
+  static Iommu_array _iommus;
 
 private:
   enum class Rs;
@@ -112,12 +115,12 @@ IMPLEMENTATION [iommu]:
 #include "static_init.h"
 #include <cstdio>
 
-Static_object<Iommu::Iommu_array> Iommu::_iommus;
+Iommu::Iommu_array Iommu::_iommus;
 
 IMPLEMENT_DEFAULT
 Iommu*
 Iommu::iommu(Unsigned16 iommu_idx)
-{ return iommu_idx < Num_iommus ? &iommus()[iommu_idx] : nullptr; }
+{ return iommu_idx < iommus().size() ? &iommus()[iommu_idx] : nullptr; }
 
 IMPLEMENT_DEFAULT
 void
@@ -129,8 +132,11 @@ void
 Iommu::init()
 {
   printf("IOMMU: Initialize\n");
-  _iommus.construct();
+
   init_platform();
+  if (_iommus.size() > Num_iommus)
+    panic("Platform provided too many IOMMUs (%u)!", _iommus.size());
+
   init_common();
 }
 

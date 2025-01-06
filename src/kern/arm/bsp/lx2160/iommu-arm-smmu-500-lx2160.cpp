@@ -6,7 +6,7 @@ IMPLEMENT
 bool
 Iommu::init_platform()
 {
-  static_assert(Num_iommus == 1, "Unexpected number of IOMMUs.");
+  static_assert(Num_iommus >= 1, "Unexpected number of IOMMUs.");
   unsigned const nonsec_irqs[] =
   {
     // Global non-secure fault
@@ -22,10 +22,11 @@ Iommu::init_platform()
     234, 235, 236, 237, 238, 239, 240, 241,
   };
 
+  _iommus = Iommu_array(new Boot_object<Iommu>[1], 1);
 
   void *v = Kmem_mmio::map(0x5000000, 0x800000);
-  iommus()[0].setup(Version::Smmu_v2, v);
-  iommus()[0].setup_irqs(nonsec_irqs, cxx::size(nonsec_irqs), 1);
+  _iommus[0].setup(Version::Smmu_v2, v);
+  _iommus[0].setup_irqs(nonsec_irqs, cxx::size(nonsec_irqs), 1);
 
   return true;
 }

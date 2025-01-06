@@ -6,7 +6,7 @@ IMPLEMENT
 bool
 Iommu::init_platform()
 {
-  static_assert(Num_iommus == 1, "Unexpected number of IOMMUs.");
+  static_assert(Num_iommus >= 1, "Unexpected number of IOMMUs.");
   Address base_addr = 0x002b400000;
 
   // 103  71  SMMUv3 non-secure combined interrupt.
@@ -19,8 +19,10 @@ Iommu::init_platform()
   // 110  78  SMMUv3 secure GERROR. Unused because there is no secure side.
   // 111  79  SMMUv3 non-secure GERROR.
 
+  _iommus = Iommu_array(new Boot_object<Iommu>[1], 1);
+
   void *v = Kmem_mmio::map(base_addr, 0x100000);
-  iommus()[0].setup(v, 106, 111);
+  _iommus[0].setup(v, 106, 111);
 
   return true;
 }

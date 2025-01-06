@@ -382,7 +382,7 @@ private:
       // Dmar_space.
       if (_space_id)
         {
-          _space_id->vmid(_mmu->_idx, Invalid_vmid);
+          _space_id->vmid(_mmu->idx(), Invalid_vmid);
           _space_id = nullptr;
         }
 
@@ -428,7 +428,7 @@ private:
       // the Dmar_space on the IOMMU, to ensure that TLB flushes from other cores
       // see the correct VMID!
       if (_space_id)
-        _space_id->vmid(_mmu->_idx, vmid());
+        _space_id->vmid(_mmu->idx(), vmid());
 
       // TLBs have to be invalidated before context bank is enabled
       _mmu->tlb_invalidate_vmid(vmid());
@@ -596,7 +596,6 @@ private:
   };
 
   Version _version;
-  unsigned _idx;
 
   /// Input address size.
   Unsigned8 _ias;
@@ -700,9 +699,7 @@ private:
   void setup_irqs(unsigned const *irqs, unsigned num_irqs, unsigned num_global_irqs);
 
 public:
-  Iommu() :
-    _idx(this - iommus().begin())
-  {}
+  Iommu() = default;
 };
 
 // ------------------------------------------------------------------
@@ -815,7 +812,7 @@ Iommu::setup(Version version, void *base_addr, unsigned mask)
 
   if (Iommu::Debug)
       printf("IOMMU: SMMUv%d idx=%u ias=%u oas=%u va64=%d #cb=%u #smg=%u\n",
-             _version == Version::Smmu_v1 ? 1 : 2, _idx, _ias, _oas,
+             _version == Version::Smmu_v1 ? 1 : 2, idx(), _ias, _oas,
              Va64_support, num_context_banks, num_stream_mapping_groups);
 
   // NUMPAGE = 2 ^ (NUMPAGENDXB + 1)

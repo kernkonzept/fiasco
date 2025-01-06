@@ -977,8 +977,6 @@ private:
   Unsigned32 num_of_stream_ids() const
   { return 1 << _num_stream_id_bits; }
 
-  unsigned _idx;
-
   /// Intermediate address size (output of stage 1, input of stage 2).
   Unsigned8 _ias;
   /// Output address size (output of stage 2).
@@ -1032,9 +1030,7 @@ private:
   void setup(void *base_addr, unsigned eventq_irq, unsigned gerror_irq);
 
 public:
-  Iommu() :
-    _idx(this - iommus().begin())
-  {}
+  Iommu() = default;
 };
 
 /**
@@ -2016,7 +2012,7 @@ IMPLEMENT inline
 bool
 Iommu_domain::is_bound(Iommu const *iommu) const
 {
-  return atomic_load(&_bindings[iommu->_idx]) > 0;
+  return atomic_load(&_bindings[iommu->idx()]) > 0;
 }
 
 IMPLEMENT inline
@@ -2025,10 +2021,10 @@ Iommu_domain::add_binding(Iommu const *iommu)
 {
   auto g = lock_guard(_lock);
 
-  if (EXPECT_FALSE(_bindings[iommu->_idx] >= Max_bindings_per_iommu))
+  if (EXPECT_FALSE(_bindings[iommu->idx()] >= Max_bindings_per_iommu))
     return false;
 
-  atomic_store(&_bindings[iommu->_idx], _bindings[iommu->_idx] + 1);
+  atomic_store(&_bindings[iommu->idx()], _bindings[iommu->idx()] + 1);
   return true;
 }
 
@@ -2038,10 +2034,10 @@ Iommu_domain::del_binding(Iommu const *iommu)
 {
   auto g = lock_guard(_lock);
 
-  if (EXPECT_TRUE(_bindings[iommu->_idx] > 0))
+  if (EXPECT_TRUE(_bindings[iommu->idx()] > 0))
     {
-      auto new_count = _bindings[iommu->_idx] - 1;
-      atomic_store(&_bindings[iommu->_idx], new_count);
+      auto new_count = _bindings[iommu->idx()] - 1;
+      atomic_store(&_bindings[iommu->idx()], new_count);
       return new_count;
     }
   else

@@ -6,11 +6,13 @@ IMPLEMENT
 bool
 Iommu::init_platform()
 {
-  static_assert(Num_iommus == 1, "Unexpected number of IOMMUs.");
+  static_assert(Num_iommus >= 1, "Unexpected number of IOMMUs.");
   Address base_addr = 0x09050000;
 
+  _iommus = Iommu_array(new Boot_object<Iommu>[1], 1);
+
   void *v = Kmem_mmio::map(base_addr, 0x20000);
-  iommus()[0].setup(v, 106, 109);
+  _iommus[0].setup(v, 106, 109);
 
   return true;
 }
