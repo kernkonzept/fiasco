@@ -293,8 +293,10 @@ Kernel_thread::idle_op()
       Tlb::flush_all_cpu(cpu);
 
       if constexpr (Config::Scheduler_one_shot)
-        // Reprogram the one-shot timer without the Rcu_grace_period limit.
-        Timeout_q::timeout_queue.cpu(cpu).update_timer(Timer::Infinite_timeout);
+        // Reprogram the one-shot timer ignoring the idle thread's timeslice
+        // timeout and without the Rcu_grace_period limit.
+        Timeout_q::timeout_queue.cpu(cpu).update_timer(Timer::Infinite_timeout,
+                                                       timeslice_timeout.cpu(cpu));
       else
         // Disable the timer tick while in tickless idle.
         Timer_tick::disable(cpu);

@@ -291,25 +291,12 @@ Timeout_q::program_timer(Unsigned64 timeout)
  */
 PUBLIC inline NEEDS ["config.h", Timeout_q::program_timer]
 void
-Timeout_q::update_timer(Unsigned64 max_timeout)
+Timeout_q::update_timer(Unsigned64 max_timeout, Timeout const *ignore = nullptr)
 {
   if constexpr (!Config::Scheduler_one_shot)
     return;
 
-  Unsigned64 next_timeout = max_timeout;
-
-  // scan all queues for the next minimum
-  for (int i = 0; i < Wakeup_queue_count; i++)
-    {
-      // make sure that something enqueued other than the dummy element
-      if (first(i).empty())
-        continue;
-
-      if (first(i).front()->_wakeup < next_timeout)
-        next_timeout = first(i).front()->_wakeup;
-    }
-
-  program_timer(next_timeout);
+  Timer::update_timer(next_timeout(max_timeout, ignore));
 }
 
 /**
@@ -408,3 +395,27 @@ Timeout_q::have_timeouts(Timeout const *ignore) const
   return false;
 }
 
+PUBLIC inline
+Unsigned64
+Timeout_q::next_timeout(Unsigned64 max_timeout, Timeout const *ignore) const
+{
+  Unsigned64 next = max_timeout;
+
+  // scan all queues for the next minimum
+  for (int i = 0; i < Wakeup_queue_count; i++)
+    {
+      To_list const &queue = first(i);
+      // make sure that something enqueued other than the dummy element
+      if (queue.empty())
+        continue;
+
+      To_list::Const_iterator timeout = queue.begin();
+      if (ignore != nullptr && (*timeout == ignore && ++timeout == queue.end()))
+        continue;
+
+      if (timeout->_wakeup < next)
+        next = timeout->_wakeup;
+    }
+
+  return next;
+}
