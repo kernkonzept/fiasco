@@ -464,7 +464,10 @@ void
 Thread::handle_timer_interrupt()
 {
   Cpu_number _cpu = current_cpu();
-  // XXX: This assumes periodic timers (i.e. bogus in one-shot mode)
+
+  static_assert(!(Config::Scheduler_one_shot && !Config::Fine_grained_cputime),
+                "One-shot timer mode requires fine-grained CPU time.");
+  // This assumes periodic timers, i.e. does not work for one-shot mode.
   if constexpr (!Config::Fine_grained_cputime)
     consume_time(Config::Scheduler_granularity);
 
