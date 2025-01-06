@@ -18,3 +18,4 @@ clock_IMPL            += clock-arm-generic
 platform_control_IMPL += platform_control-arm-sbsa
 psci_IMPL             += psci-arm-sbsa
 uart_IMPL             += uart-arm-sbsa
+iommu_IMPL            += iommu-arm-smmu-v3-sbsa

@@ -6,4 +6,18 @@
 # PFSELECT: HAS_ARM_PSCI HAS_ARM_PSCI_DYNAMIC ARM_PSCI ARM_ACPI
 # PFSELECT: ARM_ASID16
 # PFSELECT: HAS_ARM_SVE
+# PFSELECT: ARM_IOMMU_COHERENT HAS_IOMMU_ARM_SMMU_V3
 # PFDEPENDS: ARM
+
+config ARM_IOMMU_MAX
+  int "Maximum number of SMMUs"
+  depends on IOMMU
+  default 16
+  help
+    The size of some IOMMU related data structures depend on the number of
+    supported IOMMUs. Setting the value too high increases the memory
+    allocation overhead. A too low value will prevent the kernel from booting,
+    though.
+
+    If in doubt, leave the default (16).
+
