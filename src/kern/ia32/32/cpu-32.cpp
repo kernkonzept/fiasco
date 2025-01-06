@@ -18,20 +18,21 @@ PUBLIC inline FIASCO_CONST
 Unsigned64
 Cpu::ns_to_tsc(Unsigned64 ns) const
 {
-  Unsigned32 dummy;
+  Unsigned32 dummy1, dummy2;
   Unsigned64 tsc;
   asm inline
 	("movl  %%edx, %%ecx		\n\t"
-	 "mull	%3			\n\t"
+	 "mull	%4			\n\t"
+	 "movl  %%eax, %2		\n\t"
 	 "movl	%%ecx, %%eax		\n\t"
 	 "movl	%%edx, %%ecx		\n\t"
-	 "mull	%3			\n\t"
+	 "mull	%4			\n\t"
 	 "addl	%%ecx, %%eax		\n\t"
 	 "adcl	$0, %%edx		\n\t"
 	 "shld	$5, %%eax, %%edx	\n\t"
-	 "shll	$5, %%eax		\n\t"
-	:"=A" (tsc), "=&c" (dummy)
-	: "0" (ns),  "b" (scaler_ns_to_tsc)
+	 "shld  $5, %2, %%eax		\n\t"
+	:"=A" (tsc), "=&c" (dummy1), "=&r" (dummy2)
+	: "0" (ns), "b" (scaler_ns_to_tsc)
 	);
   return tsc;
 }
