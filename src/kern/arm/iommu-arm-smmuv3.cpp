@@ -64,11 +64,12 @@ private:
 
   enum
   {
-    /// Limit size of stream table to cover at most 20 bits of stream ID,
-    /// resulting in a maximum size of 128KiB for the first-level table.
-    Stream_table_max_bits       = 20,
-    /// 64 entries (4k page) per second-level table.
-    Stream_table_split          = 6,
+    /// Limit size of stream table to cover at most 24 bits of stream ID,
+    /// resulting in a maximum size of 512 KiB for the first-level table.
+    Stream_table_max_bits       = 24,
+    /// 256 entries (16 KiB) per second-level table. This covers exactly one
+    /// PCI bus which is probably the main use case.
+    Stream_table_split          = 8,
     Stream_table_l2_size        = 1 << Stream_table_split,
     Stream_table_l2_mask        = Stream_table_l2_size - 1,
     /// Limit number of second-level stream tables that can be allocated to
