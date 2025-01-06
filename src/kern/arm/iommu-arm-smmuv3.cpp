@@ -1026,8 +1026,8 @@ private:
    * Configure and enable the SMMU.
    *
    * \param base_addr   Base address of the SMMU.
-   * \param eventq_irq  Event queue interrupt.
-   * \param gerror_irq  Global error interrupt.
+   * \param eventq_irq  Event queue interrupt. (optional, 0 = disabled)
+   * \param gerror_irq  Global error interrupt. (optional, 0 = disabled)
    */
   void setup(void *base_addr, unsigned eventq_irq, unsigned gerror_irq);
 
@@ -2460,7 +2460,8 @@ PRIVATE
 void
 Iommu::setup_gerror_handler(unsigned gerror_irq)
 {
-  setup_irq(gerror_irq, this, &Iommu::handle_gerror_irq);
+  if (gerror_irq)
+    setup_irq(gerror_irq, this, &Iommu::handle_gerror_irq);
 }
 
 // ------------------------------------------------------------------
@@ -2589,7 +2590,7 @@ PRIVATE
 void
 Iommu::setup_event_queue(unsigned supported_eventq_bits, unsigned eventq_irq)
 {
-  if (Iommu::Log_faults)
+  if (Iommu::Log_faults && eventq_irq)
     {
       unsigned eventq_bits = min<unsigned>(supported_eventq_bits,
                                            Event_queue_max_bits);
