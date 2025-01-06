@@ -404,8 +404,10 @@ Gic_dist::set_mode(Mword pin, Irq_chip::Mode m)
   switch (m.flow_type())
     {
     case Irq_chip::Mode::Trigger_level | Irq_chip::Mode::Polarity_high:
+    case Irq_chip::Mode::Trigger_level | Irq_chip::Mode::Polarity_low:
       break;
     case Irq_chip::Mode::Trigger_edge  | Irq_chip::Mode::Polarity_high:
+    case Irq_chip::Mode::Trigger_edge  | Irq_chip::Mode::Polarity_low:
       v = 2;
       break;
     default:
