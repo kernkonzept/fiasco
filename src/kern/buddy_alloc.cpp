@@ -103,7 +103,7 @@ private:
 };
 
 
-class Buddy_alloc : public Buddy_t_base<10, 8>
+class Buddy_alloc : public Buddy_t_base<10, 10>
 {
 };
 
