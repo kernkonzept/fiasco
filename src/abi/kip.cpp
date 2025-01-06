@@ -112,8 +112,7 @@ public:
 
   /* 0xE0   0x1C0 */
   Mword      user_ptr;
-  Mword      vhw_offset;
-  Mword      _res8[2];
+  Mword      _res8[3];
 
   /* 0xF0   0x1E0:
    * Platform_info. */

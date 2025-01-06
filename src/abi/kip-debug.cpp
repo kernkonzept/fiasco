@@ -90,8 +90,8 @@ Kip::print() const
   debug_print_memory();
   debug_print_syscalls();
 
-  printf("user_ptr: " L4_PTR_FMT "   vhw_offset: " L4_MWORD_FMT "\n",
-         user_ptr, vhw_offset);
+  printf("user_ptr: " L4_PTR_FMT "\n",
+         user_ptr);
 
   debug_print_features();
 }

@@ -55,7 +55,7 @@ namespace KIP_namespace
 	/* 60/C0  */ {},
 	/* A0/140 */ 0, 0, 0, 0,
 	/* B8/160 */ 0, {},
-	/* E0/1C0 */ 0, 0, {},
+	/* E0/1C0 */ 0, {},
 	/* F0/1D0 */ {"", 0, {0}},
       };
     char mem_descs[Size_mem_descs] = {0};
