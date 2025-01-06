@@ -1,4 +1,4 @@
-// vi:ft=cpp
+// vi:set ft=cpp: -*- Mode: C++ -*-
 /*
  * (c) 2011 Alexander Warg <warg@os.inf.tu-dresden.de>
  *     economic rights: Technische Universität Dresden (Germany)
