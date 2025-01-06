@@ -145,9 +145,6 @@ private:
     asm volatile ("mrc p15, 0, %0, c9, c14, 2" : "=r" (val)); // PMINTENCLR
     return val;
   }
-
-
-  static int _nr_counters;
 };
 
 // ------------------------------------------------------------------------

@@ -72,9 +72,6 @@ private:
 
   static void intenc(Mword val)
   { asm volatile ("msr PMINTENCLR_EL1, %0" : : "r" (val)); }
-
-
-  static int _nr_counters;
 };
 
 // --------------------------------------------------------------------------

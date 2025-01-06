@@ -5,8 +5,8 @@ INTERFACE [arm && perf_cnt]:
 
 EXTENSION class Perf_cnt
 {
+  static Global_data<int> _nr_counters;
 public:
-  static Perf_read_fn read_pmc[Max_slot];
   static Mword get_max_perf_event();
   static const char *perf_type_str;
 };
@@ -154,7 +154,7 @@ IMPLEMENTATION [arm && perf_cnt && (arm_v7 || arm_v8)]:
 #include "cpu.h"
 
 char const *Perf_cnt::perf_type_str = "ACor";
-int Perf_cnt::_nr_counters;
+DEFINE_GLOBAL Global_data<int> Perf_cnt::_nr_counters;
 
 PRIVATE static
 bool
@@ -234,11 +234,6 @@ IMPLEMENTATION [arm && perf_cnt]:
 #include "static_init.h"
 #include "tb_entry.h"
 
-Perf_cnt::Perf_read_fn Perf_cnt::read_pmc[Max_slot] =
-{ dummy_read_pmc, dummy_read_pmc };
-
-static Mword dummy_read_pmc() { return 0; }
-
 PUBLIC static
 Mword
 Perf_cnt::read_counter_0()
@@ -309,9 +304,6 @@ Perf_cnt::init()
 {
   init_cpu(*Cpu::boot_cpu());
 
-  read_pmc[0] = read_counter_0;
-  read_pmc[1] = read_counter_1;
-
   // Don't use PMCCNT_EL0 as time stamp counter.
   // Use the default generic ARM timer instead.
   // Tb_entry::set_cycle_read_func(read_cycle_cnt);
@@ -357,7 +349,7 @@ Perf_cnt::setup_pmc(Mword slot, Mword event, Mword, Mword, Mword)
 
   set_event_type(slot, event);
 
-  Tb_entry::set_rdcnt(slot, read_pmc[slot]);
+  Tb_entry::set_rdcnt(slot, slot ? &read_counter_1 : &read_counter_0);
 
   return 1;
 }
