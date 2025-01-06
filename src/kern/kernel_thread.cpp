@@ -313,6 +313,14 @@ IMPLEMENT inline
 bool
 Kernel_thread::can_tickless_idle(Cpu_number cpu)
 {
+  if constexpr (!TAG_ENABLED(sync_clock))
+    {
+      // Boot CPU is responsible for advancing the KIP clock and can therefore
+      // never enter tickless idle.
+      if (cpu == Cpu_number::boot_cpu())
+        return false;
+    }
+
   // We cannot freely program the periodic timer to a specific next timeout,
   // therefore entering tickless idle is only possible when there are no
   // timeouts enqueued, as otherwise we would miss them.

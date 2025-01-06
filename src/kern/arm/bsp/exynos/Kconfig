@@ -122,6 +122,3 @@ config PF_EXYNOS_TICKLESS_IDLE_CORE_OFF
 	help
 	  Instead of only halting an idle CPU core, try to put that core
 	  offline if it has no timeouts queued.
-
-	  Currently there is a problem with updating the KIP clock if the
-	  boot CPU is idle, hence this option is disabled by default.
