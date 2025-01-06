@@ -1,7 +1,7 @@
 // vi:set ft=cpp: -*- Mode: C++ -*-
 /* SPDX-License-Identifier: GPL-2.0-only or License-Ref-kk-custom */
 /*
- * Copyright (C) 2021-2022 Kernkonzept GmbH.
+ * Copyright (C) 2021-2024 Kernkonzept GmbH.
  * Author(s): Philipp Eppelt <philipp.eppelt@kernkonzept.com>
  */
 INTERFACE:

@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2011 Technische Universität Dresden.
- * Copyright (C) 2023 Kernkonzept GmbH.
+ * Copyright (C) 2023-2024 Kernkonzept GmbH.
  * Author(s): Adam Lackorzynski <adam@os.inf.tu-dresden.de>
  *            Björn Döbel <doebel@os.inf.tu-dresden.de>
  *

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2016, 2020-2021, 2023 Kernkonzept GmbH.
+ * Copyright (C) 2016, 2020-2021, 2023-2024 Kernkonzept GmbH.
  * Author: Steffen Liebergeld <steffen.liebergeld@kernkonzept.com>
  *
  * This file is distributed under the terms of the GNU General Public

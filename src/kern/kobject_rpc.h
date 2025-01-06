@@ -1,7 +1,7 @@
 // vi:ft=cpp
 
 /*
- * Copyright (C) 2015, 2019, 2021 Kernkonzept GmbH.
+ * Copyright (C) 2015, 2019, 2021, 2023-2024 Kernkonzept GmbH.
  * Author: Alexander Warg <alexander.warg@kernkonzept.com>
  *
  * This file is distributed under the terms of the GNU General Public

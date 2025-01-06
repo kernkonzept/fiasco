@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Kernkonzept GmbH.
+ * Copyright (C) 2017, 2019, 2023-2024 Kernkonzept GmbH.
  * Author(s): Georg Kotheimer <georg.kotheimer@kernkonzept.com>
  *
  * License: see LICENSE.spdx (in this directory or the directories above)

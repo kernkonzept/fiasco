@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only or License-Ref-kk-custom */
 /*
- * Copyright (C) 2020, 2022-2023 Kernkonzept GmbH.
+ * Copyright (C) 2020, 2022-2024 Kernkonzept GmbH.
  * Author(s): Marcus Haehnel <marcus.haehnel@kernkonzept.com>
  *
  */

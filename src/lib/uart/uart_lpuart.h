@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019, 2023 Kernkonzept GmbH.
+ * Copyright (C) 2019, 2023-2024 Kernkonzept GmbH.
  * Author(s): Adam Lackorzynski <adam@l4re.org>
  *
  * License: see LICENSE.spdx (in this directory or the directories above)
