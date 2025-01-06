@@ -6,7 +6,7 @@ IMPLEMENT
 bool
 Iommu::init_platform()
 {
-  static_assert(Num_iommus >= 1, "Unexpected number of IOMMUs.");
+  static_assert(Max_iommus >= 1, "Unexpected number of IOMMUs.");
   Address base_addr = 0x002b400000;
 
   // 103  71  SMMUv3 non-secure combined interrupt.

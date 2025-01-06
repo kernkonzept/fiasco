@@ -153,6 +153,6 @@ config PF_IMX_6_TIMER_EPIT
 
 endchoice
 
-config ARM_IOMMU_NUM
+config ARM_IOMMU_MAX
 	int
 	default 1 if IOMMU

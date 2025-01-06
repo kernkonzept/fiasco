@@ -129,10 +129,10 @@ IMPLEMENT
 bool
 Iommu::init_platform()
 {
-  static_assert(Num_iommus == 1 || Num_iommus == 2,
+  static_assert(Max_iommus == 1 || Max_iommus == 2,
                 "Unexpected number of IOMMUs.");
 
-  _iommus = Iommu_array(new Boot_object<Iommu>[Num_iommus], Num_iommus);
+  _iommus = Iommu_array(new Boot_object<Iommu>[Max_iommus], Max_iommus);
 
   /*
    * The APPS SMMU on MSM8916 has a special "interrupt aggregation logic"
@@ -158,7 +158,7 @@ Iommu::init_platform()
    * working yet on SM8150. It seems to be powered off by default so additional
    * code needs to be added somewhere (probably in bootstrap) to turn it on.
    */
-  if (Num_iommus > 1)
+  if (Max_iommus > 1)
     {
       base = Kmem_mmio::map(gpu_smmu.base, gpu_smmu.size);
       _iommus[1].setup(Version::Smmu_v2, base, gpu_smmu.mask);

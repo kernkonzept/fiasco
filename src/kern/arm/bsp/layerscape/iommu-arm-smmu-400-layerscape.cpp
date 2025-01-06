@@ -6,7 +6,7 @@ IMPLEMENT
 bool
 Iommu::init_platform()
 {
-  static_assert(Num_iommus >= 4, "Unexpected number of IOMMUs.");
+  static_assert(Max_iommus >= 4, "Unexpected number of IOMMUs.");
   /*
    * SMMU name                   | base addr  | ID for io
    * ----------------------------------------------------

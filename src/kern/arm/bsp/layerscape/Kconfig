@@ -19,7 +19,7 @@ config PF_LS1012A
 
 endchoice
 
-config ARM_IOMMU_NUM
+config ARM_IOMMU_MAX
 	int
 	default 4 if IOMMU
 

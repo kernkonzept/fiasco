@@ -6,7 +6,7 @@ IMPLEMENT
 bool
 Iommu::init_platform()
 {
-  static_assert(Num_iommus >= 1, "Unexpected number of IOMMUs.");
+  static_assert(Max_iommus >= 1, "Unexpected number of IOMMUs.");
 
   _iommus = Iommu_array(new Boot_object<Iommu>[1], 1);
 

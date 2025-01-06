@@ -15,7 +15,7 @@ public:
   Iommu(Iommu const &) = delete;
   Iommu &operator = (Iommu const &) = delete;
 
-  enum { Num_iommus = CONFIG_ARM_IOMMU_NUM };
+  enum { Max_iommus = CONFIG_ARM_IOMMU_MAX };
   using Iommu_array = cxx::static_vector<Iommu>;
   static Iommu *iommu(Unsigned16 iommu_idx);
   static Iommu_array &iommus() { return _iommus; }
@@ -134,7 +134,7 @@ Iommu::init()
   printf("IOMMU: Initialize\n");
 
   init_platform();
-  if (_iommus.size() > Num_iommus)
+  if (_iommus.size() > Max_iommus)
     panic("Platform provided too many IOMMUs (%u)!", _iommus.size());
 
   init_common();

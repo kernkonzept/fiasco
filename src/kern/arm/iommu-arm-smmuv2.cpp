@@ -75,7 +75,7 @@ public:
   public:
     Space_id()
     {
-      for (unsigned i = 0; i < Num_iommus; i++)
+      for (unsigned i = 0; i < Max_iommus; i++)
         vmid(i, Invalid_vmid);
     }
 
@@ -87,13 +87,13 @@ public:
 
     Vmid vmid(unsigned iommu_idx) const
     {
-      assert(iommu_idx < Num_iommus);
+      assert(iommu_idx < Max_iommus);
       return atomic_load(&_vmids[iommu_idx]);
     }
 
     void vmid(unsigned iommu_idx, Vmid vmid)
     {
-      assert(iommu_idx < Num_iommus);
+      assert(iommu_idx < Max_iommus);
       atomic_store(&_vmids[iommu_idx], vmid);
       // Ensure the new VMID of the page table is visible on all other cores.
       // Otherwise, a TLB flush on another core could see an outdated VMID, when
@@ -106,7 +106,7 @@ public:
 
     // Use a separate VMID for each IOMMU, has the advantage that we only flush
     // on IOMMUs where the page table is really bound.
-    Vmid _vmids[Num_iommus];
+    Vmid _vmids[Max_iommus];
     static_assert(sizeof(Iommu::Vmid) >= sizeof(Unsigned32),
                   "Memory accesses to VMIDs must be atomic, "
                   "therefore VMIDs must be at least 32-bit aligned.");
@@ -910,7 +910,7 @@ IMPLEMENT
 void
 Iommu::tlb_invalidate_space(Space_id const &space_id)
 {
-  for (unsigned i = 0; i < Num_iommus; i++)
+  for (unsigned i = 0; i < Max_iommus; i++)
     iommus()[i].tlb_invalidate_vmid(space_id.vmid(i));
 }
 

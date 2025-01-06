@@ -81,7 +81,7 @@ config PF_QCOM_UART_DM
 config PF_QCOM_UART_GENI
 	bool
 
-config ARM_IOMMU_NUM
+config ARM_IOMMU_MAX
 	int
 	default 1 if IOMMU && PF_QCOM_SM8150
 	default 2 if IOMMU && !PF_QCOM_SM8150

@@ -1106,7 +1106,7 @@ private:
    *   - `Iommu::remove()` has to scan the entire stream table, because the
    *     `count == 0` early return condition is not satisfied.
    */
-  Unsigned32 _bindings[Iommu::Num_iommus] = { 0 };
+  Unsigned32 _bindings[Iommu::Max_iommus] = { 0 };
 
   // OPTIMIZE: For the case that domain is only bound for a single stream id?
   //           Storing that stream id, would allow us to skip iterating all stream
