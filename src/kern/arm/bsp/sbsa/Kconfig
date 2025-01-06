@@ -21,3 +21,10 @@ config ARM_IOMMU_MAX
 
     If in doubt, leave the default (16).
 
+# According to the spec, the SMMU should support stage1 _and_ stage2 tables.
+# But on Graviton3 this does not seem to be the case. So use stage2 if we run
+# as hypervisor to be on the safe side.
+config ARM_IOMMU_STAGE2
+	bool
+	default y if IOMMU && CPU_VIRT
+
