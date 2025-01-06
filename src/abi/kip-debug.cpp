@@ -90,8 +90,8 @@ Kip::print() const
   debug_print_memory();
   debug_print_syscalls();
 
-  printf("user_ptr: " L4_PTR_FMT "\n",
-         user_ptr);
+  printf("user_ptr: " L4_PTR_FMT "   acpi_rsdp_addr: " L4_MWORD_FMT "\n",
+         user_ptr, acpi_rsdp_addr);
 
   debug_print_features();
 }

@@ -112,7 +112,8 @@ public:
 
   /* 0xE0   0x1C0 */
   Mword      user_ptr;
-  Mword      _res8[3];
+  Mword      acpi_rsdp_addr;
+  Mword      _res8[2];
 
   /* 0xF0   0x1E0:
    * Platform_info. */

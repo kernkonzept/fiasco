@@ -650,27 +650,18 @@ Acpi_madt::iterate() const
 
 PRIVATE static
 Acpi_rsdp const *
-Acpi_rsdp::locate_via_kip()
+Acpi_rsdp::get_from_kip()
 {
-  // If we are booted from UEFI, bootstrap reads the RSDP pointer from
-  // UEFI and creates a memory descriptor with sub type 5 for it
-  for (auto const &md: Kip::k()->mem_descs_a())
-    if (   md.type() == Mem_desc::Info
-        && md.ext_type() == Mem_desc::Info_acpi_rsdp)
-      {
-        // Rover across first page in memory descriptor. The actual RSDP
-        // address was rounded down to page alignment by bootstrap...
-        for (unsigned off = 0; off < Config::PAGE_SIZE; off += sizeof(void*))
-          {
-            Acpi_rsdp const *r = Acpi::map_table<Acpi_rsdp>(md.start() + off,
-                                                            sizeof(Acpi_rsdp));
-            if (   Acpi::check_signature(r->signature, "RSD PTR ")
-                && r->checksum_ok())
-              return r;
-          }
+  if (Kip::k()->acpi_rsdp_addr)
+    {
+      Acpi_rsdp const *r = Acpi::map_table<Acpi_rsdp>(Kip::k()->acpi_rsdp_addr,
+                                                      sizeof(Acpi_rsdp));
+      if (   Acpi::check_signature(r->signature, "RSD PTR ")
+          && r->checksum_ok())
+        return r;
 
-        panic("RSDP memory descriptor from bootstrap invalid");
-      }
+      panic("RSDP memory descriptor from bootstrap invalid");
+    }
 
   return nullptr;
 }
@@ -763,7 +754,7 @@ Acpi_rsdp::locate()
 
   extern char ebda_segment[];
 
-  if (Acpi_rsdp const *r = locate_via_kip())
+  if (Acpi_rsdp const *r = get_from_kip())
     return r;
 
   if (Acpi_rsdp const *r = locate_in_region(ACPI20_PC99_RSDP_START,
@@ -785,5 +776,5 @@ IMPLEMENT
 Acpi_rsdp const *
 Acpi_rsdp::locate()
 {
-  return locate_via_kip();
+  return get_from_kip();
 }
