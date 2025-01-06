@@ -2291,8 +2291,8 @@ Iommu::tlb_invalidate_asid(Asid asid)
 
 PRIVATE
 bool
-Iommu::prepare_ste(Ste_ptr ste_ptr, Iommu_domain &domain, unsigned virt_addr_size,
-                   unsigned start_level, Address pt_phys_addr)
+Iommu::prepare_ste(Ste_ptr ste_ptr, Iommu_domain &domain, Address pt_phys_addr,
+                   unsigned virt_addr_size, unsigned start_level)
 {
   unsigned long vmid = domain.get_or_alloc_asid();
   if (vmid == Invalid_asid)
