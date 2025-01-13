@@ -677,8 +677,7 @@ map(MAPDB* mapdb,
               // unmap dst
               auto addr = SPACE::page_address(rcv_addr, r_order);
               auto size = SPACE::to_size(r_order);
-              static_cast<SPACE *>(to_id)->v_delete(addr, r_order,
-                                                    Page::Rights::FULL());
+              to->v_delete(addr, r_order, Page::Rights::FULL());
 
               tlb.add_page(to_id, addr, r_order);
 
