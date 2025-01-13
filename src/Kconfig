@@ -221,7 +221,7 @@ config CONTEXT_2K
 config SYNC_CLOCK
 	bool "Synchronize kernel clock with scheduling timer"
 	depends on HAS_SYNC_CLOCK
-	default y
+	default y if !(IA32 || AMD64)
 	help
 	  Synchronize the kernel clock with the timer, i.e. the kernel clock
 	  is no longer stored in the KIP and advanced with each timer tick,
