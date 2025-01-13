@@ -458,17 +458,12 @@ Mpu_regions::del(Mword start, Mword end, Mpu_region_attr *attr = nullptr)
   Mpu_regions_update updates;
 
   Mpu_region *i = front();
-  while (i)
+
+  while (i && i->end() < start)
+    i = next(i);
+
+  while (i && i->start() <= end)
     {
-      if (i->end() < start)
-        {
-          i = next(i);
-          continue;
-        }
-
-      if (i->start() > end)
-        break;
-
       updates.set_updated(index(i));
       if (attr)
           *attr = i->attr();
@@ -500,18 +495,21 @@ Mpu_regions::del(Mword start, Mword end, Mpu_region_attr *attr = nullptr)
               WARN("Dropped whole region [" L4_MWORD_FMT ":" L4_MWORD_FMT
                    "] while deleting  [" L4_MWORD_FMT ":" L4_MWORD_FMT "]\n",
                    i->start(), i->end(), start, end);
-              i = erase(i);
+              erase(i);
             }
+          break;
         }
       else if (i->start() < start)
         {
-          if (i->end() >= start)
-            i->end(start - 1U);
+          // Upper part of region overlaps with unmap range.
+          i->end(start - 1U);
+          i = next(i);
         }
       else
         {
-          if (i->start() <= end)
-            i->start(end + 1U);
+          // Lower part of region overlaps with unmap range.
+          i->start(end + 1U);
+          break;
         }
     }
 
