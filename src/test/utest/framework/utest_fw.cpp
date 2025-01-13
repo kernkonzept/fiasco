@@ -142,6 +142,10 @@ struct Utest
                    : Unsigned32{Config::Scheduler_granularity},
   };
 
+  /// Priority of the main test thread, unless the test makes use of
+  /// init_unittest_exclusive.
+  static constexpr unsigned short Main_thread_prio = Config::Default_prio;
+
   /// Support for running tests with disabled timer tick.
   struct Tick_disabler
   {
@@ -1426,8 +1430,8 @@ init_unittest_threaded()
 
       // Keep reference until thread has terminated.
       Ref_ptr<Thread_object> thread_ref(t);
-
-      Utest_fw::chk(Utest::start_thread(&init_unittest, current_cpu(), 0, t),
+      Utest_fw::chk(Utest::start_thread(&init_unittest, current_cpu(),
+                                        Utest::Main_thread_prio, t),
                     "Start kernel thread executing the kunit tests");
 
       while (!(t->state() & Thread_dead))
