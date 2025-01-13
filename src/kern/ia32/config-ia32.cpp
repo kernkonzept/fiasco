@@ -54,7 +54,7 @@ public:
   enum
   {
     Pic_prio_modify = true,
-    Kip_clock_uses_rdtsc = TAG_ENABLED(sync_tsc),
+    Kip_clock_uses_rdtsc = TAG_ENABLED(sync_clock),
     Tsc_unified = TAG_ENABLED(tsc_unified),
   };
 
