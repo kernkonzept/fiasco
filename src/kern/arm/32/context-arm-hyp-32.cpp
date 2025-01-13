@@ -310,14 +310,14 @@ Context::save_ext_vcpu_state_mxu(Vm_state * v)
   Unsigned32 *ctx = &v->mpu.r[32 - idx].prbar;
   switch (idx >> 2)
     {
-      case  8: SAVE_REGIONS(31, 30, 29, 28);  // fall through
-      case  7: SAVE_REGIONS(27, 26, 25, 24);  // fall through
-      case  6: SAVE_REGIONS(23, 22, 21, 20);  // fall through
-      case  5: SAVE_REGIONS(19, 18, 17, 16);  // fall through
-      case  4: SAVE_REGIONS(15, 14, 13, 12);  // fall through
-      case  3: SAVE_REGIONS(11, 10,  9,  8);  // fall through
-      case  2: SAVE_REGIONS( 7,  6,  5,  4);  // fall through
-      case  1: SAVE_REGIONS( 3,  2,  1,  0);  // fall through
+      case  8: SAVE_REGIONS(31, 30, 29, 28); [[fallthrough]];
+      case  7: SAVE_REGIONS(27, 26, 25, 24); [[fallthrough]];
+      case  6: SAVE_REGIONS(23, 22, 21, 20); [[fallthrough]];
+      case  5: SAVE_REGIONS(19, 18, 17, 16); [[fallthrough]];
+      case  4: SAVE_REGIONS(15, 14, 13, 12); [[fallthrough]];
+      case  3: SAVE_REGIONS(11, 10,  9,  8); [[fallthrough]];
+      case  2: SAVE_REGIONS( 7,  6,  5,  4); [[fallthrough]];
+      case  1: SAVE_REGIONS( 3,  2,  1,  0); [[fallthrough]];
       default:
         break;
     }
@@ -369,14 +369,14 @@ Context::load_ext_vcpu_state_mxu(Vm_state const * v)
   Unsigned32 const *ctx = &v->mpu.r[32 - idx].prbar;
   switch (idx >> 2)
     {
-      case  8: LOAD_REGIONS(31, 30, 29, 28);  // fall through
-      case  7: LOAD_REGIONS(27, 26, 25, 24);  // fall through
-      case  6: LOAD_REGIONS(23, 22, 21, 20);  // fall through
-      case  5: LOAD_REGIONS(19, 18, 17, 16);  // fall through
-      case  4: LOAD_REGIONS(15, 14, 13, 12);  // fall through
-      case  3: LOAD_REGIONS(11, 10,  9,  8);  // fall through
-      case  2: LOAD_REGIONS( 7,  6,  5,  4);  // fall through
-      case  1: LOAD_REGIONS( 3,  2,  1,  0);  // fall through
+      case  8: LOAD_REGIONS(31, 30, 29, 28); [[fallthrough]];
+      case  7: LOAD_REGIONS(27, 26, 25, 24); [[fallthrough]];
+      case  6: LOAD_REGIONS(23, 22, 21, 20); [[fallthrough]];
+      case  5: LOAD_REGIONS(19, 18, 17, 16); [[fallthrough]];
+      case  4: LOAD_REGIONS(15, 14, 13, 12); [[fallthrough]];
+      case  3: LOAD_REGIONS(11, 10,  9,  8); [[fallthrough]];
+      case  2: LOAD_REGIONS( 7,  6,  5,  4); [[fallthrough]];
+      case  1: LOAD_REGIONS( 3,  2,  1,  0); [[fallthrough]];
       default:
         break;
     }

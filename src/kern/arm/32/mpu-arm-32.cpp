@@ -53,41 +53,42 @@ struct Mpu_arm_el1
       while (false)
 
     // Directly skip non-existing regions. We don't support more than 32 regions.
+    static_assert(Mem_layout::Mpu_regions <= 32, "No more than 32 regions!");
     switch (Mpu_arm_el1::regions())
       {
-        default:             // fall through
-        case 32: UPDATE(31); // fall through
-        case 31: UPDATE(30); // fall through
-        case 30: UPDATE(29); // fall through
-        case 29: UPDATE(28); // fall through
-        case 28: UPDATE(27); // fall through
-        case 27: UPDATE(26); // fall through
-        case 26: UPDATE(25); // fall through
-        case 25: UPDATE(24); // fall through
-        case 24: UPDATE(23); // fall through
-        case 23: UPDATE(22); // fall through
-        case 22: UPDATE(21); // fall through
-        case 21: UPDATE(20); // fall through
-        case 20: UPDATE(19); // fall through
-        case 19: UPDATE(18); // fall through
-        case 18: UPDATE(17); // fall through
-        case 17: UPDATE(16); // fall through
-        case 16: UPDATE(15); // fall through
-        case 15: UPDATE(14); // fall through
-        case 14: UPDATE(13); // fall through
-        case 13: UPDATE(12); // fall through
-        case 12: UPDATE(11); // fall through
-        case 11: UPDATE(10); // fall through
-        case 10: UPDATE(9); // fall through
-        case 9: UPDATE(8); // fall through
-        case 8: UPDATE(7); // fall through
-        case 7: UPDATE(6); // fall through
-        case 6: UPDATE(5); // fall through
-        case 5: UPDATE(4); // fall through
-        case 4: UPDATE(3); // fall through
-        case 3: UPDATE(2); // fall through
-        case 2: UPDATE(1); // fall through
-        case 1: UPDATE(0);
+        default:
+        case 32: UPDATE(31); [[fallthrough]];
+        case 31: UPDATE(30); [[fallthrough]];
+        case 30: UPDATE(29); [[fallthrough]];
+        case 29: UPDATE(28); [[fallthrough]];
+        case 28: UPDATE(27); [[fallthrough]];
+        case 27: UPDATE(26); [[fallthrough]];
+        case 26: UPDATE(25); [[fallthrough]];
+        case 25: UPDATE(24); [[fallthrough]];
+        case 24: UPDATE(23); [[fallthrough]];
+        case 23: UPDATE(22); [[fallthrough]];
+        case 22: UPDATE(21); [[fallthrough]];
+        case 21: UPDATE(20); [[fallthrough]];
+        case 20: UPDATE(19); [[fallthrough]];
+        case 19: UPDATE(18); [[fallthrough]];
+        case 18: UPDATE(17); [[fallthrough]];
+        case 17: UPDATE(16); [[fallthrough]];
+        case 16: UPDATE(15); [[fallthrough]];
+        case 15: UPDATE(14); [[fallthrough]];
+        case 14: UPDATE(13); [[fallthrough]];
+        case 13: UPDATE(12); [[fallthrough]];
+        case 12: UPDATE(11); [[fallthrough]];
+        case 11: UPDATE(10); [[fallthrough]];
+        case 10: UPDATE(9);  [[fallthrough]];
+        case  9: UPDATE(8);  [[fallthrough]];
+        case  8: UPDATE(7);  [[fallthrough]];
+        case  7: UPDATE(6);  [[fallthrough]];
+        case  6: UPDATE(5);  [[fallthrough]];
+        case  5: UPDATE(4);  [[fallthrough]];
+        case  4: UPDATE(3);  [[fallthrough]];
+        case  3: UPDATE(2);  [[fallthrough]];
+        case  2: UPDATE(1);  [[fallthrough]];
+        case  1: UPDATE(0);
           break;
       }
 
@@ -896,36 +897,36 @@ Mpu::update(Mpu_regions const &regions)
   static_assert(Mem_layout::Mpu_regions <= 32, "No more than 32 regions!");
   switch (regions.size())
     {
-      default:             // fall through
-      case 32: UPDATE(31); // fall through
-      case 31: UPDATE(30); // fall through
-      case 30: UPDATE(29); // fall through
-      case 29: UPDATE(28); // fall through
-      case 28: UPDATE(27); // fall through
-      case 27: UPDATE(26); // fall through
-      case 26: UPDATE(25); // fall through
-      case 25: UPDATE(24); // fall through
-      case 24: UPDATE(23); // fall through
-      case 23: UPDATE(22); // fall through
-      case 22: UPDATE(21); // fall through
-      case 21: UPDATE(20); // fall through
-      case 20: UPDATE(19); // fall through
-      case 19: UPDATE(18); // fall through
-      case 18: UPDATE(17); // fall through
-      case 17: UPDATE(16); // fall through
-      case 16: UPDATE(15); // fall through
-      case 15: UPDATE(14); // fall through
-      case 14: UPDATE(13); // fall through
-      case 13: UPDATE(12); // fall through
-      case 12: UPDATE(11); // fall through
-      case 11: UPDATE(10); // fall through
-      case 10: UPDATE(9); // fall through
-      case 9: UPDATE(8); // fall through
-      case 8: UPDATE(7); // fall through
-      case 7: UPDATE(6); // fall through
-      case 6: UPDATE(5); // fall through
-      case 5: UPDATE(4); // fall through
-      case 4: UPDATE(3); // fall through
+      default:
+      case 32: UPDATE(31); [[fallthrough]];
+      case 31: UPDATE(30); [[fallthrough]];
+      case 30: UPDATE(29); [[fallthrough]];
+      case 29: UPDATE(28); [[fallthrough]];
+      case 28: UPDATE(27); [[fallthrough]];
+      case 27: UPDATE(26); [[fallthrough]];
+      case 26: UPDATE(25); [[fallthrough]];
+      case 25: UPDATE(24); [[fallthrough]];
+      case 24: UPDATE(23); [[fallthrough]];
+      case 23: UPDATE(22); [[fallthrough]];
+      case 22: UPDATE(21); [[fallthrough]];
+      case 21: UPDATE(20); [[fallthrough]];
+      case 20: UPDATE(19); [[fallthrough]];
+      case 19: UPDATE(18); [[fallthrough]];
+      case 18: UPDATE(17); [[fallthrough]];
+      case 17: UPDATE(16); [[fallthrough]];
+      case 16: UPDATE(15); [[fallthrough]];
+      case 15: UPDATE(14); [[fallthrough]];
+      case 14: UPDATE(13); [[fallthrough]];
+      case 13: UPDATE(12); [[fallthrough]];
+      case 12: UPDATE(11); [[fallthrough]];
+      case 11: UPDATE(10); [[fallthrough]];
+      case 10: UPDATE(9);  [[fallthrough]];
+      case  9: UPDATE(8);  [[fallthrough]];
+      case  8: UPDATE(7);  [[fallthrough]];
+      case  7: UPDATE(6);  [[fallthrough]];
+      case  6: UPDATE(5);  [[fallthrough]];
+      case  5: UPDATE(4);  [[fallthrough]];
+      case  4: UPDATE(3);
         // UPDATE(2) // HEAP
         // UPDATE(1) // KIP
         // UPDATE(0) // kernel text

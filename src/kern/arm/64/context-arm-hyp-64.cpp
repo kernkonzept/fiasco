@@ -287,21 +287,21 @@ Context::save_ext_vcpu_state_mpu(Vm_state *v)
       Mpu_arm_el1::prselr(idx & 0xf0);
       switch (idx & 0x0f)
         {
-          case 15: SAVE_REGION(15); // fall through
-          case 14: SAVE_REGION(14); // fall through
-          case 13: SAVE_REGION(13); // fall through
-          case 12: SAVE_REGION(12); // fall through
-          case 11: SAVE_REGION(11); // fall through
-          case 10: SAVE_REGION(10); // fall through
-          case  9: SAVE_REGION(9);  // fall through
-          case  8: SAVE_REGION(8);  // fall through
-          case  7: SAVE_REGION(7);  // fall through
-          case  6: SAVE_REGION(6);  // fall through
-          case  5: SAVE_REGION(5);  // fall through
-          case  4: SAVE_REGION(4);  // fall through
-          case  3: SAVE_REGION(3);  // fall through
-          case  2: SAVE_REGION(2);  // fall through
-          case  1: SAVE_REGION(1);  // fall through
+          case 15: SAVE_REGION(15); [[fallthrough]];
+          case 14: SAVE_REGION(14); [[fallthrough]];
+          case 13: SAVE_REGION(13); [[fallthrough]];
+          case 12: SAVE_REGION(12); [[fallthrough]];
+          case 11: SAVE_REGION(11); [[fallthrough]];
+          case 10: SAVE_REGION(10); [[fallthrough]];
+          case  9: SAVE_REGION(9);  [[fallthrough]];
+          case  8: SAVE_REGION(8);  [[fallthrough]];
+          case  7: SAVE_REGION(7);  [[fallthrough]];
+          case  6: SAVE_REGION(6);  [[fallthrough]];
+          case  5: SAVE_REGION(5);  [[fallthrough]];
+          case  4: SAVE_REGION(4);  [[fallthrough]];
+          case  3: SAVE_REGION(3);  [[fallthrough]];
+          case  2: SAVE_REGION(2);  [[fallthrough]];
+          case  1: SAVE_REGION(1);  [[fallthrough]];
           case  0: SAVE_REGION(0);
             break;
         }
@@ -330,21 +330,21 @@ Context::load_ext_vcpu_state_mpu(Vm_state const *v)
       Mpu_arm_el1::prselr(idx & 0xf0);
       switch (idx & 0x0f)
         {
-          case 15: LOAD_REGION(15); // fall through
-          case 14: LOAD_REGION(14); // fall through
-          case 13: LOAD_REGION(13); // fall through
-          case 12: LOAD_REGION(12); // fall through
-          case 11: LOAD_REGION(11); // fall through
-          case 10: LOAD_REGION(10); // fall through
-          case  9: LOAD_REGION(9);  // fall through
-          case  8: LOAD_REGION(8);  // fall through
-          case  7: LOAD_REGION(7);  // fall through
-          case  6: LOAD_REGION(6);  // fall through
-          case  5: LOAD_REGION(5);  // fall through
-          case  4: LOAD_REGION(4);  // fall through
-          case  3: LOAD_REGION(3);  // fall through
-          case  2: LOAD_REGION(2);  // fall through
-          case  1: LOAD_REGION(1);  // fall through
+          case 15: LOAD_REGION(15); [[fallthrough]];
+          case 14: LOAD_REGION(14); [[fallthrough]];
+          case 13: LOAD_REGION(13); [[fallthrough]];
+          case 12: LOAD_REGION(12); [[fallthrough]];
+          case 11: LOAD_REGION(11); [[fallthrough]];
+          case 10: LOAD_REGION(10); [[fallthrough]];
+          case  9: LOAD_REGION(9);  [[fallthrough]];
+          case  8: LOAD_REGION(8);  [[fallthrough]];
+          case  7: LOAD_REGION(7);  [[fallthrough]];
+          case  6: LOAD_REGION(6);  [[fallthrough]];
+          case  5: LOAD_REGION(5);  [[fallthrough]];
+          case  4: LOAD_REGION(4);  [[fallthrough]];
+          case  3: LOAD_REGION(3);  [[fallthrough]];
+          case  2: LOAD_REGION(2);  [[fallthrough]];
+          case  1: LOAD_REGION(1);  [[fallthrough]];
           case  0: LOAD_REGION(0);
             break;
         }

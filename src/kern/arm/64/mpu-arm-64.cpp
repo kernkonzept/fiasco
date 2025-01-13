@@ -588,21 +588,21 @@ Mpu::update(Mpu_regions const &regions)
       Mpu_arm::prselr(16);
       switch (idx & 0x0f)
         {
-          case 15: UPDATE(16, 15); // fall through
-          case 14: UPDATE(16, 14); // fall through
-          case 13: UPDATE(16, 13); // fall through
-          case 12: UPDATE(16, 12); // fall through
-          case 11: UPDATE(16, 11); // fall through
-          case 10: UPDATE(16, 10); // fall through
-          case  9: UPDATE(16, 9);  // fall through
-          case  8: UPDATE(16, 8);  // fall through
-          case  7: UPDATE(16, 7);  // fall through
-          case  6: UPDATE(16, 6);  // fall through
-          case  5: UPDATE(16, 5);  // fall through
-          case  4: UPDATE(16, 4);  // fall through
-          case  3: UPDATE(16, 3);  // fall through
-          case  2: UPDATE(16, 2);  // fall through
-          case  1: UPDATE(16, 1);  // fall through
+          case 15: UPDATE(16, 15); [[fallthrough]];
+          case 14: UPDATE(16, 14); [[fallthrough]];
+          case 13: UPDATE(16, 13); [[fallthrough]];
+          case 12: UPDATE(16, 12); [[fallthrough]];
+          case 11: UPDATE(16, 11); [[fallthrough]];
+          case 10: UPDATE(16, 10); [[fallthrough]];
+          case  9: UPDATE(16, 9);  [[fallthrough]];
+          case  8: UPDATE(16, 8);  [[fallthrough]];
+          case  7: UPDATE(16, 7);  [[fallthrough]];
+          case  6: UPDATE(16, 6);  [[fallthrough]];
+          case  5: UPDATE(16, 5);  [[fallthrough]];
+          case  4: UPDATE(16, 4);  [[fallthrough]];
+          case  3: UPDATE(16, 3);  [[fallthrough]];
+          case  2: UPDATE(16, 2);  [[fallthrough]];
+          case  1: UPDATE(16, 1);  [[fallthrough]];
           case  0: UPDATE(16, 0);
             break;
         }
@@ -616,19 +616,19 @@ Mpu::update(Mpu_regions const &regions)
 
   switch (idx)
     {
-      case 15: UPDATE(0, 15); // fall through
-      case 14: UPDATE(0, 14); // fall through
-      case 13: UPDATE(0, 13); // fall through
-      case 12: UPDATE(0, 12); // fall through
-      case 11: UPDATE(0, 11); // fall through
-      case 10: UPDATE(0, 10); // fall through
-      case  9: UPDATE(0, 9);  // fall through
-      case  8: UPDATE(0, 8);  // fall through
-      case  7: UPDATE(0, 7);  // fall through
-      case  6: UPDATE(0, 6);  // fall through
-      case  5: UPDATE(0, 5);  // fall through
-      case  4: UPDATE(0, 4);  // fall through
-      case  3: UPDATE(0, 3);  // fall through
+      case 15: UPDATE(0, 15); [[fallthrough]];
+      case 14: UPDATE(0, 14); [[fallthrough]];
+      case 13: UPDATE(0, 13); [[fallthrough]];
+      case 12: UPDATE(0, 12); [[fallthrough]];
+      case 11: UPDATE(0, 11); [[fallthrough]];
+      case 10: UPDATE(0, 10); [[fallthrough]];
+      case  9: UPDATE(0, 9);  [[fallthrough]];
+      case  8: UPDATE(0, 8);  [[fallthrough]];
+      case  7: UPDATE(0, 7);  [[fallthrough]];
+      case  6: UPDATE(0, 6);  [[fallthrough]];
+      case  5: UPDATE(0, 5);  [[fallthrough]];
+      case  4: UPDATE(0, 4);  [[fallthrough]];
+      case  3: UPDATE(0, 3);
         // UPDATE(0, 2);  // Heap
         // UPDATE(0, 1);  // Kip
         // UPDATE(0, 0);  // Kernel
