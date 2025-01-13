@@ -531,8 +531,13 @@ Mpu_regions::find(Mword addr) const
 {
   for (auto const &i : _used_list)
     {
-      if (addr >= i->start() && addr <= i->end())
-        return i;
+      if (addr <= i->end())
+        {
+          if (addr >= i->start())
+            return i;
+          else
+            return nullptr;
+        }
     }
 
   return nullptr;
