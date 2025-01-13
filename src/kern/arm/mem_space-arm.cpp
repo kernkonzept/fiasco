@@ -541,7 +541,7 @@ Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order size,
       load_ku_mem_regions();
     }
 
-  if (Debug_allocation)
+  if constexpr (Debug_allocation)
     {
       printf("Mem_space::v_insert(%p, " L4_MWORD_FMT "/%u): ", this, start,
              Page_order::val(size));
@@ -650,7 +650,7 @@ Mem_space::v_delete(Vaddr virt, Page_order order,
       load_ku_mem_regions();
     }
 
-  if (Debug_free)
+  if constexpr (Debug_free)
     {
       printf("Mem_space::v_delete(%p, " L4_MWORD_FMT "/%u): ", this, start,
              Page_order::val(order));
