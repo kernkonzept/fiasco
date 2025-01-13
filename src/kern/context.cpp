@@ -2055,6 +2055,9 @@ PUBLIC static inline
 void
 Context::take_cpu_online(Cpu_number cpu)
 {
+  assert (cpu == current_cpu());
+  assert (!Proc::interrupts());
+
   Cpu::cpus.cpu(cpu).set_online(true);
   Rcu::leave_idle(cpu);
 }
