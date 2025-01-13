@@ -102,10 +102,10 @@ PUBLIC static
 void
 Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
 {
-  if constexpr (TAG_ENABLED(pf_imx95))
+  if constexpr (TAG_ENABLED(pf_imx_95))
     boot_ap_cpus_psci(phys_tramp_mp_addr,
                       { 0x000, 0x100, 0x200, 0x300, 0x400, 0x500 }, true);
-  else if constexpr (TAG_ENABLED(pf_imx8mp))
+  else if constexpr (TAG_ENABLED(pf_imx_8mp))
     boot_ap_cpus_psci(phys_tramp_mp_addr,
                       { 0x000, 0x001, 0x002, 0x003 }, true);
   else
