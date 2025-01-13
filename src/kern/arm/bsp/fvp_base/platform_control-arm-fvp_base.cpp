@@ -23,6 +23,7 @@ IMPLEMENTATION [arm && mp && pf_fvp_base && !arm_psci]:
 #include "cpu.h"
 #include "kmem_mmio.h"
 #include "koptions.h"
+#include "minmax.h"
 #include "mmio_register_block.h"
 #include "warn.h"
 #include "poll_timeout_counter.h"
