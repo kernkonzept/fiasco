@@ -323,7 +323,7 @@ void
 Cpu::init_sctlr()
 {
   Mem::dsb();
-  asm volatile("msr SCTLR_EL1, %[control]" : : [control] "r" (Sctlr_generic));
+  asm volatile("msr SCTLR_EL1, %x[control]" : : [control] "r" (Sctlr_generic));
   Mem::isb();
 }
 
@@ -359,7 +359,7 @@ void
 Cpu::init_sctlr()
 {
   Mem::dsb();
-  asm volatile("msr SCTLR_EL2, %[control]" : : [control] "r" (Sctlr_generic));
+  asm volatile("msr SCTLR_EL2, %x[control]" : : [control] "r" (Sctlr_generic));
   Mem::isb();
 }
 
