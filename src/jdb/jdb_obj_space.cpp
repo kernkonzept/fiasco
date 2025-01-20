@@ -120,13 +120,19 @@ Jdb_obj_space::print_entry(Cap_index entry)
       switch (_mode)
         {
         case Name:
-          printf("%05lx%c%c%c %-*s",
-                 o->dbg_info()->dbg_id(),
-                 rights & 8 ? 'D' : '-',
-                 rights & 2 ? 'S' : '-',
-                 rights & 1 ? 'W' : '-',
-                 7, Jdb_kobject::kobject_type(o));
-          break;
+          {
+            // ANSI escape sequences in the object type string must be taken
+            // into account when specifying the padding width for that string.
+            char const *ot = Jdb_kobject::kobject_type(o);
+            int invisible_chars = Jdb::invisible_len(ot);
+            printf("%05lx%c%c%c %-*s",
+                   o->dbg_info()->dbg_id(),
+                   rights & 8 ? 'D' : '-',
+                   rights & 2 ? 'S' : '-',
+                   rights & 1 ? 'W' : '-',
+                   7 + invisible_chars, ot);
+            break;
+          }
         case Raw:
         default:
           printf("%16lx", reinterpret_cast<Mword>(o) | rights);
