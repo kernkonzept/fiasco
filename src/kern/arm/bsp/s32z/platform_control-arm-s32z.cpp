@@ -92,7 +92,7 @@ PUBLIC static void
 Platform_control::amp_boot_init()
 {
   // Need to always start on first core of the expected cluster. Otherwise the
-  // GIC initialization or node memory assigment will fail.
+  // GIC initialization or node memory assignment will fail.
   assert(Amp_node::phys_id() == Amp_node::first_node());
 
   // Reserve memory for all AP CPUs up-front so that everybody sees the same
@@ -151,7 +151,7 @@ PUBLIC static void
 Platform_control::amp_boot_init()
 {
   // Need to always start on first core of the expected cluster. Otherwise the
-  // GIC initialization or node memory assigment will fail.
+  // GIC initialization or node memory assignment will fail.
   assert(Amp_node::phys_id() == Amp_node::first_node());
 
   amp_boot_ap_cpus(Amp_node::Max_cores);
