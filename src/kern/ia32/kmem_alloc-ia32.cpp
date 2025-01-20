@@ -58,7 +58,7 @@ Kmem_alloc::base_init()
   if (alloc_size > Mem_layout::Physmem_max_size)
     alloc_size = Mem_layout::Physmem_max_size; // maximum mappable memory
 
-  static_assert(Mem_layout::Physmem_max_size % Config::PAGE_SIZE == 0,
+  static_assert(Address{Mem_layout::Physmem_max_size} % Config::PAGE_SIZE == 0,
                 "Physmem_max_size must be page-aligned");
 
   if constexpr (ShowDebugMessages)

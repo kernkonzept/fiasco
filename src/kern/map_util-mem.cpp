@@ -126,7 +126,7 @@ static DEFINE_GLOBAL Global_data<size_t[Max_num_page_sizes]> page_sizes;
 void
 init_mapdb_mem(Space *sigma0)
 {
-  page_sizes[0] = Config::SUPERPAGE_SHIFT - Config::PAGE_SHIFT;
+  page_sizes[0] = unsigned{Config::SUPERPAGE_SHIFT} - unsigned{Config::PAGE_SHIFT};
 
   typedef Mem_space::Page_order Page_order;
   Page_order const *ps = Mem_space::get_global_page_sizes();

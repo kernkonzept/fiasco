@@ -198,7 +198,8 @@ Jdb_mapdb::show(Mapping::Pfn page, char which_mapdb)
           type = "Phys frame";
           mapdb = mapdb_mem.get();
           base_size = Order(Config::PAGE_SHIFT);
-          super_shift = Mdb_types::Order(Config::SUPERPAGE_SHIFT - Config::PAGE_SHIFT);
+          super_shift = Mdb_types::Order(unsigned{Config::SUPERPAGE_SHIFT}
+                                         - unsigned{Config::PAGE_SHIFT});
           break;
 #ifdef CONFIG_PF_PC
         case 'i':

@@ -8,23 +8,20 @@ class Gdt
 {
 public:
    /** Segment numbers. */
-  enum
-  {
-    gdt_tss             = GDT_TSS,
-    gdt_code_kernel     = GDT_CODE_KERNEL,
-    gdt_data_kernel     = GDT_DATA_KERNEL,
-    gdt_code_user       = GDT_CODE_USER,
-    gdt_data_user       = GDT_DATA_USER,
-    gdt_tss_dbf         = GDT_TSS_DBF,
-    gdt_utcb            = GDT_UTCB,
-    gdt_ldt             = GDT_LDT,
-    gdt_user_entry1     = GDT_USER_ENTRY1,
-    gdt_user_entry2     = GDT_USER_ENTRY2,
-    gdt_user_entry3     = GDT_USER_ENTRY3,
-    gdt_user_entry4     = GDT_USER_ENTRY4,
-    gdt_code_user32     = GDT_CODE_USER32,
-    gdt_max             = GDT_MAX,
-  };
+  static constexpr Unsigned16 gdt_tss         = GDT_TSS;
+  static constexpr Unsigned16 gdt_code_kernel = GDT_CODE_KERNEL;
+  static constexpr Unsigned16 gdt_data_kernel = GDT_DATA_KERNEL;
+  static constexpr Unsigned16 gdt_code_user   = GDT_CODE_USER;
+  static constexpr Unsigned16 gdt_data_user   = GDT_DATA_USER;
+  static constexpr Unsigned16 gdt_tss_dbf     = GDT_TSS_DBF;
+  static constexpr Unsigned16 gdt_utcb        = GDT_UTCB;
+  static constexpr Unsigned16 gdt_ldt         = GDT_LDT;
+  static constexpr Unsigned16 gdt_user_entry1 = GDT_USER_ENTRY1;
+  static constexpr Unsigned16 gdt_user_entry2 = GDT_USER_ENTRY2;
+  static constexpr Unsigned16 gdt_user_entry3 = GDT_USER_ENTRY3;
+  static constexpr Unsigned16 gdt_user_entry4 = GDT_USER_ENTRY4;
+  static constexpr Unsigned16 gdt_code_user32 = GDT_CODE_USER32;
+  static constexpr Unsigned16 gdt_max         = GDT_MAX;
 
   enum
   {

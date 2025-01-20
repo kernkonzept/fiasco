@@ -246,8 +246,8 @@ struct Add_item
     in_size   = in_pos + ITEM::in_size,
     out_pos   = align(MSG::out_size, ITEM::out_align),
     out_size  = out_pos + ITEM::out_size,
-    in_items  = MSG::in_items + ITEM::in_items,
-    out_items = MSG::out_items + ITEM::out_items,
+    in_items  = unsigned{MSG::in_items} + unsigned{ITEM::in_items},
+    out_items = unsigned{MSG::out_items} + unsigned{ITEM::out_items},
   };
 };
 

@@ -50,7 +50,7 @@ protected:
     R s;
 
     constexpr Check_sender(Receiver::Rcv_state s)
-    : s(static_cast<R>(s.s & Open_wait_flag))
+    : s(static_cast<R>(unsigned{s.s} & unsigned{Open_wait_flag}))
     {}
 
     constexpr Check_sender(R s) noexcept : s(s) {}

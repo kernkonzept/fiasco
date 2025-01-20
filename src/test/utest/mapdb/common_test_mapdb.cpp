@@ -21,34 +21,32 @@ INTERFACE:
 class Mapdb_test_base
 {
 public:
-  enum : Address
-  {
-    _16K  =    16 << 10,
-    _64K  =    64 << 10,
-    _512K =   512 << 10,
-    _1M   =     1 << 20,
-    _2M   =   _1M << 1,
-    _4M   =   _2M << 1,
-    _8M   =   _4M << 1,
-    _16M  =   _8M << 1,
-    _32M  =  _16M << 1,
-    _64M  =  _32M << 1,
-    _128M =  _64M << 1,
-    _256M = _128M << 1,
-    _1G   =     1 << 30,
-    _2G   =   _1G << 1,
-    S_page = Config::PAGE_SIZE,
-    S_super = Config::SUPERPAGE_SIZE,
-    Pages_per_super = Config::SUPERPAGE_SIZE / Config::PAGE_SIZE,
-  };
+  static constexpr Address _16K    =    16 << 10;
+  static constexpr Address _64K    =    64 << 10;
+  static constexpr Address _512K   =   512 << 10;
+  static constexpr Address _1M     =     1 << 20;
+  static constexpr Address _2M     =   _1M <<  1;
+  static constexpr Address _4M     =   _2M <<  1;
+  static constexpr Address _8M     =   _4M <<  1;
+  static constexpr Address _16M    =   _8M <<  1;
+  static constexpr Address _32M    =  _16M <<  1;
+  static constexpr Address _64M    =  _32M <<  1;
+  static constexpr Address _128M   =  _64M <<  1;
+  static constexpr Address _256M   = _128M <<  1;
+  static constexpr Address _1G     =     1 << 30;
+  static constexpr Address _2G     =   _1G <<  1;
+  static constexpr Address S_page  = Config::PAGE_SIZE;
+  static constexpr Address S_super = Config::SUPERPAGE_SIZE;
+  static constexpr Address Pages_per_super = Address{Config::SUPERPAGE_SIZE}
+                                           / Address{Config::PAGE_SIZE};
 
   enum Order
   {
     O_page = Config::PAGE_SHIFT,
     O_super = Config::SUPERPAGE_SHIFT,
     O_1M = 20,
-    O_2M,
-    O_4M,
+    O_2M = 21,
+    O_4M = 22,
     O_1G = 30,
   };
 

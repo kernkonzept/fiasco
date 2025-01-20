@@ -289,7 +289,10 @@ public:
    *   whole address space.
    */
   constexpr Mword is_all_spaces() const
-  { return (_raw & (type_bfm_t::Mask | order_bfm_t::Mask)) == order_bfm_t::val(Whole_space); }
+  {
+    Mword mask = Mword{type_bfm_t::Mask} | Mword{order_bfm_t::Mask};
+    return (_raw & mask) == order_bfm_t::val(Whole_space);
+  }
 
   /**
    * Is the flexpage valid?

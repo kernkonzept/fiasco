@@ -173,7 +173,7 @@ public:
   public:
     struct Result
     {
-      unsigned char v;
+      Unsigned8 v;
       CXX_BITFIELD_MEMBER(0, 0, need_resched, v);
       CXX_BITFIELD_MEMBER(1, 1, no_answer, v);
     };
@@ -190,7 +190,8 @@ public:
     static Result no_answer_resched()
     {
       Result r;
-      r.v = Result::no_answer_bfm_t::Mask | Result::need_resched_bfm_t::Mask;
+      r.v = Unsigned8{Result::no_answer_bfm_t::Mask}
+            | Unsigned8{Result::need_resched_bfm_t::Mask};
       return r;
     }
 

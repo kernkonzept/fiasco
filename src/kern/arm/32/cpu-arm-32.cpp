@@ -322,12 +322,9 @@ IMPLEMENTATION [arm && cpu_virt && 32bit && mmu]:
 EXTENSION class Cpu
 {
 public:
-  enum : Unsigned32
-  {
-    Hcr_must_set_bits = Hcr_vm | Hcr_swio | Hcr_ptw
-                      | Hcr_amo | Hcr_imo | Hcr_fmo
-                      | Hcr_tidcp | Hcr_tsc | Hcr_tactlr,
-  };
+  static constexpr Unsigned32 Hcr_must_set_bits = Hcr_vm | Hcr_swio | Hcr_ptw
+                                                | Hcr_amo | Hcr_imo | Hcr_fmo
+                                                | Hcr_tidcp | Hcr_tsc | Hcr_tactlr;
 };
 
 IMPLEMENT_OVERRIDE
@@ -346,12 +343,9 @@ IMPLEMENTATION [arm && cpu_virt && 32bit && !mmu]:
 EXTENSION class Cpu
 {
 public:
-  enum : Unsigned32
-  {
-    Hcr_must_set_bits = Hcr_vm | Hcr_swio
-                      | Hcr_amo| Hcr_imo | Hcr_fmo
-                      | Hcr_tidcp | Hcr_tsc | Hcr_tactlr,
-  };
+  static constexpr Unsigned32 Hcr_must_set_bits = Hcr_vm | Hcr_swio
+                                                | Hcr_amo| Hcr_imo | Hcr_fmo
+                                                | Hcr_tidcp | Hcr_tsc | Hcr_tactlr;
 };
 
 IMPLEMENT_OVERRIDE

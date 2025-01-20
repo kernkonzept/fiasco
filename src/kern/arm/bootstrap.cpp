@@ -30,7 +30,7 @@ public:
 
   enum
   {
-    Virt_ofs = Mem_layout::Sdram_phys_base - Mem_layout::Map_base,
+    Virt_ofs = Address{Mem_layout::Sdram_phys_base} - Address{Mem_layout::Map_base},
   };
 
   /**

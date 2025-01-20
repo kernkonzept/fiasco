@@ -113,7 +113,7 @@ PUBLIC inline
 void
 Pte_ptr::set_attribs(Page::Attr attr)
 {
-  *pte = (*pte & ~(ATTRIBS_MASK | Page::Cache_mask)) | make_attribs(attr);
+  *pte = (*pte & ~(Entry{ATTRIBS_MASK} | Page::Cache_mask)) | make_attribs(attr);
 }
 
 PUBLIC inline

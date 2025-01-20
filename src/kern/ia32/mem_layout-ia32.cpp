@@ -16,8 +16,8 @@ IMPLEMENTATION [ia32 || amd64]:
 
 #include "paging_bits.h"
 
-static_assert(Mem_layout::Tss_start + Mem_layout::Tss_mem_size
-              < Mem_layout::Tss_end,
+static_assert(Address{Mem_layout::Tss_start} + Address{Mem_layout::Tss_mem_size}
+              < Address{Mem_layout::Tss_end},
               "Too many CPUs configured, not enough space to map TSSs.");
 
 //---------------------------------------------------------------------------

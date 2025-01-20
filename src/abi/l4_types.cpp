@@ -977,7 +977,9 @@ IMPLEMENT inline NEEDS[<minmax.h>]
 Unsigned64
 L4_timeout::microsecs_abs(Utcb const *u) const
 {
-  int idx = min<int>(_t & 0x3f, Utcb::Max_buffers - Utcb::Time_val::Words);
+  unsigned idx = min<unsigned>(_t & 0x3f,
+                               unsigned{Utcb::Max_buffers}
+                               - unsigned{Utcb::Time_val::Words});
   Utcb::Time_val const *top
     = reinterpret_cast<Utcb::Time_val const *>(&u->buffers[idx]);
   return top->t;

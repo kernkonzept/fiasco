@@ -27,7 +27,7 @@ public:
     Rcv = 1
   };
 
-  L4_error(Error_code ec = None, Phase p = Snd) : _raw(ec | p) {}
+  L4_error(Error_code ec = None, Phase p = Snd) : _raw(Mword{ec} | Mword{p}) {}
   L4_error(L4_error const &e, Phase p) : _raw(e._raw | p) {}
 
   bool ok() const { return (_raw & 0xff) == 0; }

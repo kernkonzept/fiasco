@@ -73,8 +73,8 @@ Thread::arm_kernel_sync_entry(Trap_state *ts)
       // Illegal execution state: This could happen in hyp mode if PPSR_EL2
       // contains an invalid mode during ERET (``Illegal return event from
       // AArch64 state'').
-      ts->psr &= ~(Proc::Status_mode_mask | Proc::Status_interrupts_mask);
-      ts->psr |= Proc::Status_mode_user | Proc::Status_always_mask;
+      ts->psr &= ~(Mword{Proc::Status_mode_mask} | Mword{Proc::Status_interrupts_mask});
+      ts->psr |= Mword{Proc::Status_mode_user} | Mword{Proc::Status_always_mask};
       ts->esr.ec() = 0xe;
       ts->pf_address = 0UL;
       current_thread()->send_exception(ts);

@@ -194,13 +194,13 @@ public:
     Scr_default_bits = Scr_ns | Scr_rw | Scr_smd | Scr_hce,
   };
 
+  static constexpr Unsigned64 Hcr_must_set_bits = Hcr_vm | Hcr_swio | Hcr_ptw
+                                                | Hcr_amo | Hcr_imo | Hcr_fmo
+                                                | Hcr_tidcp | Hcr_tsc | Hcr_tactlr
+                                                | Hcr_tlor;
+
   enum : Unsigned64
   {
-    Hcr_must_set_bits = Hcr_vm | Hcr_swio | Hcr_ptw
-                      | Hcr_amo | Hcr_imo | Hcr_fmo
-                      | Hcr_tidcp | Hcr_tsc | Hcr_tactlr
-                      | Hcr_tlor,
-
     /**
      * HCR value to be used for the VMM.
      *

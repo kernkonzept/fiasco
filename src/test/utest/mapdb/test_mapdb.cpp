@@ -190,15 +190,12 @@ Test_tlb<Base>::remove(Mapdb::Pfn virt)
 class Mapdb_param
 {
 public:
-  enum
-  {
-    O_page = Config::PAGE_SHIFT,
-    O_super = Config::SUPERPAGE_SHIFT,
-    O_1M = 20,
-    O_2M,
-    O_4M,
-    O_1G = 30,
-  };
+  static constexpr size_t O_page = Config::PAGE_SHIFT;
+  static constexpr size_t O_super = Config::SUPERPAGE_SHIFT;
+  static constexpr size_t O_1M = 20;
+  static constexpr size_t O_2M = 21;
+  static constexpr size_t O_4M = 22;
+  static constexpr size_t O_1G = 30;
   Mapping::Order parent_page_shift;
   size_t *page_shifts;
   unsigned page_shifts_num;
@@ -209,8 +206,8 @@ class Simple_mapdb : public Mapdb_param
 public:
   Simple_mapdb()
   {
-    enum { Phys_bits = 32 };
-    parent_page_shift = Mapping::Order(Phys_bits - O_page);
+    static constexpr size_t Phys_bits = 32;
+    parent_page_shift = Mapping::Order(Phys_bits - Config::PAGE_SHIFT);
     static size_t pz[] = { O_2M - O_page, 0 };
     page_shifts = pz;
     page_shifts_num = sizeof(sizeof(pz) / sizeof(pz[0]));
@@ -222,7 +219,7 @@ class Multilevel_mapdb : public Mapdb_param
 public:
   Multilevel_mapdb()
   {
-    enum { Phys_bits = 42 };
+    static constexpr size_t Phys_bits = 42;
     parent_page_shift = Mapping::Order(Phys_bits - O_page);
     static size_t pz[] = { O_1G - O_page, O_4M - O_page, O_2M - O_page, 0 };
     page_shifts = pz;
