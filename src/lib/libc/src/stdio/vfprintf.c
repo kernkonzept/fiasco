@@ -153,7 +153,7 @@ static void pad(FILE *f, char c, size_t w, size_t l, int fl)
 }
 
 static const char xdigits[16] = {
-	"0123456789ABCDEF"
+	'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
 };
 
 static char *fmt_x(uintmax_t x, char *s, int lower)
