@@ -232,18 +232,6 @@ Jdb::restore_irqs(Cpu_number cpu)
 }
 
 
-struct On_dbg_stack
-{
-  Mword sp;
-  On_dbg_stack(Mword sp) : sp(sp) {}
-  bool operator () (Cpu_number cpu) const
-  {
-    Thread::Dbg_stack const &st = Thread::dbg_stack.cpu(cpu);
-    Mword stack_top = reinterpret_cast<Mword>(st.stack_top);
-    return sp <= stack_top && sp >= stack_top - Thread::Dbg_stack::Stack_size;
-  }
-};
-
 // Do thread lookup using Trap_state. In contrast to Thread::current_thread()
 // this function can also handle cases where we entered from kernel stack
 // context. We _never_ return 0!
@@ -258,7 +246,13 @@ Jdb::get_thread(Cpu_number cpu)
   if (entry_frame->_trapno == 8 && !(entry_frame->cs() & 3))
     sp = entry_frame->sp(); // we can trust esp since it comes from main_tss
 
-  if (foreach_cpu(On_dbg_stack(sp), false))
+  auto on_dbg_stack = [sp](Cpu_number cpu) -> bool
+    {
+      Thread::Dbg_stack const &st = Thread::dbg_stack.cpu(cpu);
+      Mword stack_top = reinterpret_cast<Mword>(st.stack_top);
+      return sp <= stack_top && sp >= stack_top - Thread::Dbg_stack::Stack_size;
+    };
+  if (foreach_cpu(on_dbg_stack, false))
     return 0;
 
   if (!Helping_lock::threading_system_active)

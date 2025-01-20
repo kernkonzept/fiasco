@@ -149,46 +149,33 @@ Jdb_bt::get_user_ebp_following_kernel_stack()
   return 0;
 }
 
-struct Is_current
-{
-  Thread *tid;
-  mutable Thread *c;
-  mutable Cpu_number cpu;
-
-  void operator () (Cpu_number _cpu) const
-  {
-    Thread *t = Jdb::get_thread(_cpu);
-    if (t == tid)
-      { c = t; cpu = _cpu; }
-  }
-
-};
-
 static void
 Jdb_bt::get_kernel_eip_ebp(Mword &eip1, Mword &eip2, Mword &ebp)
 {
   if (tid == Jdb::get_thread(Jdb::triggered_on_cpu))
-    ebp  = eip1 = eip2 = 0;
+    ebp = eip1 = eip2 = 0;
   else
     {
-      Is_current is_current;
-
-      is_current.tid = tid;
-      is_current.c = 0;
-      is_current.cpu = Cpu_number::boot_cpu();
-
-      Jdb::foreach_cpu(is_current);
+      Thread *thread = nullptr;
+      Cpu_number cpu = Cpu_number::boot_cpu();
+      Jdb::foreach_cpu([&thread, &cpu](Cpu_number c)
+                       {
+                         Thread *t = Jdb::get_thread(c);
+                         if (t == tid)
+                           {
+                             thread = t;
+                             cpu = c;
+                           }
+                       });
 
       Mword *ksp;
       Mword tcb;
 
-      if (is_current.c)
+      if (thread)
         {
-          ksp = reinterpret_cast<Mword*>(
-                  Jdb::entry_frame.cpu(is_current.cpu)->sp());
-          tcb = reinterpret_cast<Mword>(is_current.c);
-          printf("\n current on cpu %u\n",
-                 cxx::int_value<Cpu_number>(is_current.cpu));
+          ksp = reinterpret_cast<Mword*>(Jdb::entry_frame.cpu(cpu)->sp());
+          tcb = reinterpret_cast<Mword>(thread);
+          printf("\n current on cpu %u\n", cxx::int_value<Cpu_number>(cpu));
         }
       else
         {
