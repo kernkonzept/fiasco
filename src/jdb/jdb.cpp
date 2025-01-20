@@ -327,7 +327,7 @@ Jdb::printf_statline(const char *prompt, const char *help,
       int len = vprintf(format, list);
       va_end(list);
       // consider escape sequences in 'format' but not in the parameter list
-      w -= len - strlen(format) + print_len(format);
+      w -= len - invisible_len(format);
     }
   if (help)
     {
