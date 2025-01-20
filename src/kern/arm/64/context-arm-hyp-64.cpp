@@ -206,7 +206,7 @@ Context::arm_ext_vcpu_load_host_regs(Vcpu_state *vcpu, Vm_state *, Unsigned64 hc
 {
   asm volatile ("msr TPIDRRO_EL0, %x0" : : "r"(vcpu->host.tpidruro));
   asm volatile ("msr HCR_EL2, %x0"     : : "r"(hcr));
-  if (Config::Have_mpu)
+  if constexpr (Config::Have_mpu)
     asm volatile ("msr VTCR_EL2, %x0"    : : "r"(Cpu::vtcr_bits()));
 }
 
@@ -228,7 +228,7 @@ void
 Context::arm_ext_vcpu_load_guest_regs(Vcpu_state *vcpu, Vm_state *v, Mword hcr)
 {
   asm volatile ("mrs %x0, TPIDRRO_EL0" : "=r"(vcpu->host.tpidruro));
-  if (Config::Have_mpu)
+  if constexpr (Config::Have_mpu)
     asm volatile ("msr VTCR_EL2, %x0"    : : "r"(v->vtcr & Cpu::Vtcr_usr_mask));
   asm volatile ("msr HCR_EL2, %x0"     : : "r"(hcr));
   asm volatile ("msr TPIDRRO_EL0, %x0" : : "r"(vcpu->_regs.tpidruro));

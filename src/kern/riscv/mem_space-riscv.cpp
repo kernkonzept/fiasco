@@ -517,7 +517,7 @@ Mem_space::sync_write_tlb_active_on_cpu()
   // "TLB flush" despite the TLB being empty, it is required because of the
   // ordering guarantees that the SFENCE.VMA instruction provides!
 
-  if (Mem_unit::Have_asids || Mem_unit::Have_vmids)
+  if constexpr (Mem_unit::Have_asids || Mem_unit::Have_vmids)
     // Make sure to allocate an ASID for this memory space, if it does not yet
     // have one, as otherwise, when executed with an invalid ASID, the
     // SFENCE.VMA instruction would not affect this memory space. If a new ASID
@@ -626,7 +626,7 @@ Mem_space::switchin_guest_space()
                  Cpu::phys_to_ppn(cxx::int_value<Phys_mem_addr>(_dir_phys)));
 
   // Full flush if we don't use VMIDs
-  if (!Mem_unit::Have_vmids)
+  if constexpr (!Mem_unit::Have_vmids)
     Mem_unit::hfence_gvma();
 
   _current_guest.current() = this;
