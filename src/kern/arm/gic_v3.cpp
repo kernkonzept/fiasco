@@ -74,7 +74,7 @@ INTERFACE [arm_gic_msi]:
 EXTENSION class Gic_v3
 {
 public:
-  enum { Have_lpis = 1 };
+  static constexpr bool Have_lpis = true;
 
 private:
   enum
@@ -101,7 +101,7 @@ class Gic_msi;
 EXTENSION class Gic_v3
 {
 public:
-  enum { Have_lpis = 0 };
+  static constexpr bool Have_lpis = false;
 private:
   void init_lpi() {}
   void cpu_local_init_lpi(Cpu_number) {}

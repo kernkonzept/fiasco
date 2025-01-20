@@ -21,7 +21,7 @@ public:
     Asid_invalid  = ~0UL,
   };
 
-  enum { Have_asids = 1 };
+  static constexpr bool Have_asids = true;
 };
 
 //----------------------------------------------------------------------------
@@ -40,7 +40,7 @@ public:
     Asid_invalid  = ~0UL,
   };
 
-  enum { Have_asids = 0 };
+  static constexpr bool Have_asids = false;
 };
 
 //----------------------------------------------------------------------------
@@ -55,7 +55,7 @@ public:
     Vmid_invalid  = ~0UL,
   };
 
-  enum { Have_vmids = 1 };
+  static constexpr bool Have_vmids = true;
 
   static Mword _vmid_num;
 };
@@ -66,7 +66,7 @@ INTERFACE [riscv && !riscv_vmid]:
 EXTENSION class Mem_unit
 {
 public:
-  enum { Have_vmids = 0 };
+  static constexpr bool Have_vmids = false;
 };
 
 //----------------------------------------------------------------------------

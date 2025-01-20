@@ -23,7 +23,7 @@ EXTENSION class Mem_space
 
 public:
   typedef Pdir Dir_type;
-  enum { Have_asids = 1 };
+  static constexpr bool Have_asids = true;
 
   /** Return status of v_insert. */
   enum // Status
