@@ -320,7 +320,7 @@ config ARM_CORTEX_R52
 	select ARM_PROFILE_R
 	select HAS_CPU_MPU
 	select HAS_CPU_VIRT
-	select HAS_AMP_OPTION
+	select HAS_CPU_AMP_OPTION
 
 config ARM_CORTEX_R82
 	bool "ARM Cortex-R82 CPU"

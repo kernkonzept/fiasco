@@ -32,13 +32,16 @@ config HAS_MP_OPTION
 config HAS_COV_OPTION
 	bool
 
-config HAS_AMP_OPTION
+config HAS_PLAT_AMP_OPTION
 	bool
 
 config HAS_CPU_VIRT
 	bool
 
 config HAS_IRQ_DIRECT_INJECT_OPTION
+	bool
+
+config HAS_CPU_AMP_OPTION
 	bool
 
 config HAS_CPU_MPU
@@ -137,7 +140,7 @@ config MP
 
 config AMP
 	bool "Enable homogeneous asymmetric multi-processor support"
-	depends on HAS_AMP_OPTION
+	depends on HAS_CPU_AMP_OPTION && HAS_PLAT_AMP_OPTION
 	help
 	  Enable support for machines with non-cache-coherent, homogeneous
 	  multiple processors.
