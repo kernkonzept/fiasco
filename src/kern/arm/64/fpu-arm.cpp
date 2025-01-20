@@ -129,24 +129,24 @@ public:
   /// First-fault register (same length and layout as a P register)
   using Ffr = Element<Unsigned16, 0, 2, P>;
 
-  static unsigned dyn_size(unsigned vl = Fpu::max_vl())
+  static unsigned dyn_size()
   {
     using End = Element<Unsigned8, 0, 0, Ffr>;
-    return End::off(vl);
+    return End::off(Fpu::max_vl());
   }
 
   alignas(16) Unsigned8 ext_state[0];
 
   template<typename E>
-  inline typename E::Type *access(unsigned vl = Fpu::max_vl())
+  inline typename E::Type *access()
   {
-    return reinterpret_cast<typename E::Type *>(ext_state + E::off(vl));
+    return reinterpret_cast<typename E::Type *>(ext_state + E::off(Fpu::max_vl()));
   }
 
   template<typename E>
-  inline typename E::Type const *get(unsigned vl = Fpu::max_vl()) const
+  inline typename E::Type const *get() const
   {
-    return reinterpret_cast<typename E::Type const *>(ext_state + E::off(vl));
+    return reinterpret_cast<typename E::Type const *>(ext_state + E::off(Fpu::max_vl()));
   }
 };
 
