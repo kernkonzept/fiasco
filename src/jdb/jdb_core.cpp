@@ -95,7 +95,12 @@ public:
   /**
    * Like strlen but do not count ESC sequences.
    */
-  static int print_len(const char *s);
+  static int print_len(char const *s);
+
+  /**
+   * Like strlen but only count characters belonging to ESC sequences.
+   */
+  static int invisible_len(char const *s);
 
   static char esc_prompt[];
 
@@ -204,7 +209,7 @@ int Jdb_core::prompt_len()
 }
 
 IMPLEMENT
-int Jdb_core::print_len(const char *s)
+int Jdb_core::print_len(char const *s)
 {
   int l = 0;
   while (*s)
@@ -222,6 +227,33 @@ int Jdb_core::print_len(const char *s)
 	  l++;
           s++;
 	}
+    }
+  return l;
+}
+
+IMPLEMENT
+int Jdb_core::invisible_len(char const *s)
+{
+  int l = 0;
+  while (*s)
+    {
+      if (s[0] == '\033' && s[1] == '[')
+        {
+          s += 2;
+          l += 2;
+          while (*s && *s != 'm')
+            {
+              ++s;
+              ++l;
+            }
+          if (*s)
+            {
+              ++s; // skip 'm'
+              ++l;
+            }
+        }
+      else
+        s++;
     }
   return l;
 }
