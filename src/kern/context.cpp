@@ -1389,6 +1389,21 @@ Context::handle_remote_state_change()
   state_change_dirty(~del, add);
 }
 
+/**
+ * Set a new home CPU for the context.
+ *
+ * \pre The context must be either on the current CPU or on an offline CPU:
+ *      `current_cpu() == home_cpu() || !Cpu::online(home_cpu())`
+ * \pre The `_pending_rqq` lock of the context's current home CPU must be held,
+ *       as that is what protects the home CPU of a context. The only exception
+ *       are the per-CPU kernel threads, which get their home CPU set once on
+ *       creation.
+ *
+ * \param cpu  The new home CPU.
+ *
+ * \note This function needs to be public for technical reasons, but should only
+ *       be used by the thread migration and destruction code.
+ */
 PUBLIC inline
 void
 Context::set_home_cpu(Cpu_number cpu)
