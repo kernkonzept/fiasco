@@ -1293,8 +1293,8 @@ Thread::handle_global_remote_requests_irq()
  * \pre This thread must not be the currently executing thread.
  * \pre CPU lock taken.
  *
- * \param remote  False if target CPU is the current CPU.
- *                True if target CPU is the *invalid* CPU or an offline CPU.
+ * \param remote  False if home CPU is the current CPU.
+ *                True if home CPU is the *invalid* CPU or an offline CPU.
  *
  * \retval false  No rescheduling required.
  * \retval true  Rescheduling required.
@@ -1340,6 +1340,8 @@ Thread::migrate_away(Migration *inf, bool remote)
       // the thread
 
       Lock_guard<Queue::Inner_lock> g;
+      // For an invalid/offline CPU, migrate_away() is executed in a DRQ, which
+      // already acquired the queue lock of the thread's home CPU.
       if (!remote)
         g = lock_guard(q.q_lock());
 
