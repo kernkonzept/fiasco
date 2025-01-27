@@ -353,9 +353,10 @@ void Fb_console::init()
       assert(vbi);
 
       // vbi->phys_base + vbi->reserved1 form the 64 bit phys address
-      // FB could be mapped more cached aware
       Address fbphys = vbi->phys_base + (static_cast<Unsigned64>(vbi->reserved1) << 32);
-      void *fbmem = Kmem_mmio::map(fbphys, vbe->total_memory * (64 << 10));
+      void *fbmem = Kmem_mmio::map(fbphys, vbe->total_memory * (64 << 10),
+                                   false /*cache*/, false /*exec*/,
+                                   true /*global*/, true /*buffered*/);
       assert(fbmem);
 
       unsigned w = vbi->x_resolution;
