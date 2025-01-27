@@ -45,6 +45,7 @@ enum class Msr : Unsigned32
   Lastintfromip = 0x1dd,            // (P6)
   Lastinttoip = 0x1de,              // (P6)
   Ia32_pat = 0x277,                 // PAT
+  Ia32_mtrr_def_type = 0x2ff,       // MTRR default memory type and MTRR enable
   Ia32_fixed_ctr_ctrl = 0x38d,      // Fixed-Function Performance Ctr Control
   Ia32_perf_global_ctrl = 0x38f,    // Global Performance Counter Control
   Ia32_ds_area = 0x600,             // DS Save Area
