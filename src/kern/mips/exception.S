@@ -108,11 +108,8 @@
  * \param ts_offset  number of bytes that must be added to `ptr` to
  *                   address the trap-state structure.
  */
-.macro restore_all_and_eret ptr=29, ts_offset=CALL_FRAME_SIZE, adjust_pc=0
+.macro restore_all_and_eret ptr=29, ts_offset=CALL_FRAME_SIZE
 	ASM_L	t0, TS_EPC(\ts_offset)($\ptr)
-	.if \adjust_pc != 0
-		ASM_ADDIU	t0, t0, \adjust_pc
-	.endif
 #ifndef CONFIG_CPU_MIPSR6
 	ASM_L	t1, TS_HI(\ts_offset)($\ptr)
 	ASM_L	t2, TS_LO(\ts_offset)($\ptr)
@@ -143,11 +140,8 @@
  * \param ts_offset  number of bytes that must be added to `ptr` to
  *                   address the trap-state structure.
  */
-.macro restore_saved_and_eret ptr=29, ts_offset=CALL_FRAME_SIZE, adjust_pc=0
+.macro restore_saved_and_eret ptr=29, ts_offset=CALL_FRAME_SIZE
 	ASM_L	k0, TS_EPC(\ts_offset)($\ptr)
-	.if \adjust_pc != 0
-		ASM_ADDIU	k0, k0, \adjust_pc
-	.endif
 #ifndef CONFIG_CPU_MIPSR6
 	ASM_L	s1, TS_HI(\ts_offset)($\ptr)
 	ASM_L	s2, TS_LO(\ts_offset)($\ptr)
@@ -199,7 +193,7 @@
 	.endr
 .endm
 
-.macro do_eret restore, save_rest=nix, adjust_pc=0
+.macro do_eret restore, save_rest=nix
 	.set push
 	.set noreorder
 	.set noat
@@ -207,7 +201,7 @@
 	ASM_L	k0, TS_REG(0, CALL_FRAME_SIZE)(sp)
 	bnez	k0, 6931f
 	  nop
-	\restore	29, CALL_FRAME_SIZE, adjust_pc=\adjust_pc
+	\restore	29, CALL_FRAME_SIZE
 6931:
 	.if \save_rest != nix
 		\save_rest	29, CALL_FRAME_SIZE
@@ -230,10 +224,10 @@ END(ret_from_user_invoke)
 .section ".text.fast_ret_from_irq", "ax"
 LEAF(fast_ret_from_irq)
 #ifdef __mips64
-	restore_saved_and_eret	29, ASM_WORD_BYTES, adjust_pc=4 /* sp offset 4 */
+	restore_saved_and_eret	29, ASM_WORD_BYTES /* sp offset 4 */
 #else
         // see Context::prepare_switch_to()
-	restore_saved_and_eret	29, (2*ASM_WORD_BYTES), adjust_pc=4 /* sp offset 4 */
+	restore_saved_and_eret	29, (2*ASM_WORD_BYTES) /* sp offset 4 */
 #endif
 END(fast_ret_from_irq)
 
@@ -266,13 +260,18 @@ LEAF(leave_and_kill_myself)
         // does never return
 END(leave_and_kill_myself)
 
-.macro ENTRY name
+.macro ENTRY name, adjust_pc=0
 	.section .text.exc. ## name ## _entry, "ax"
 	.set noreorder
 	.set noat
 	.type \name\()_entry, function
 	.ent \name\()_entry
 \name\()_entry:
+	ASM_MFC0	k0, CP0_EPC
+        .if \adjust_pc != 0
+                ASM_ADDIU       k0, k0, \adjust_pc
+        .endif
+	ASM_S	k0, TS_EPC(CALL_FRAME_SIZE)(sp)
 .endm
 
 .macro END_ENTRY name
@@ -357,13 +356,13 @@ ENTRY unhandled
 	do_eret	restore_all_and_eret
 END_ENTRY unhandled
 
-ENTRY syscall
+ENTRY syscall, adjust_pc=4
 	.global sys_ipc_call_patch
 	save_all	29
 sys_ipc_call_patch:
 	jal	sys_ipc_wrapper
 	  nop
-	do_eret	restore_all_and_eret adjust_pc=4
+	do_eret	restore_all_and_eret
 END_ENTRY syscall
 
 ENTRY reserved_insn
@@ -576,8 +575,6 @@ mips_xtlb_refill_handler:
 	mtc0	k0, CP0_STATUS
 	mfc0	k1, CP0_CAUSE
 	ASM_S	k1, TS_CAUSE(CALL_FRAME_SIZE)(sp)
-	ASM_MFC0	k0, CP0_EPC
-	ASM_S	k0, TS_EPC(CALL_FRAME_SIZE)(sp)
 	ori	k1, k1, 1 # flag TLB refill in bit 0 of cause
 	                  # Uses reserved Cause bit 0 (see thread-mips.cpp)
 	j	tlb_fault_entry
@@ -604,8 +601,6 @@ mips_generic_exception_handler:
 	mtc0	k0, CP0_STATUS
 	mfc0	k1, CP0_CAUSE
 	ASM_S	k1, TS_CAUSE(CALL_FRAME_SIZE)(sp)
-	ASM_MFC0	k0, CP0_EPC
-	ASM_S	k0, TS_EPC(CALL_FRAME_SIZE)(sp)
 	andi	k0, k1, 0x7c     # capture the ExcCode
 	ASM_LA	$at, .Lexc_vect_table
 	ASM_ADDU	k0, k0, $at
