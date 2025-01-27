@@ -5,7 +5,7 @@ IMPLEMENTATION [arm && mpu]:
 
 IMPLEMENT_DEFAULT
 void *
-Kmem_mmio::map(Address phys, size_t size, bool cache = false, bool, bool)
+Kmem_mmio::map(Address phys, size_t size, bool cache = false, bool, bool, bool)
 {
   // Arm MPU regions must be aligned to 64 bytes
   Address start = phys & ~63UL;

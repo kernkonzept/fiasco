@@ -6,7 +6,7 @@ class Kmem_mmio
 {
 public:
   static void *map(Address phys, size_t size, bool cache = false,
-                   bool exec = false, bool global = true);
+                   bool exec = false, bool global = true, bool buffered = false);
   static void unmap(void *ptr, size_t size);
 };
 
@@ -262,18 +262,23 @@ Kmem_mmio::map_extent(Address phys_adj, uintptr_t virt, size_t size_adj,
  *       requested, the existing mapping is returned instead of establishing
  *       a new mapping.
  *
- * \param phys    Physical address of the extent to be mapped.
- * \param size    Size of the extent to be mapped.
- * \param cache   Map the extent as cached.
- * \param exec    Map the extent as executable.
- * \param global  Map the extent as global.
+ * \param phys      Physical address of the extent to be mapped.
+ * \param size      Size of the extent to be mapped.
+ * \param cache     Map the extent as cached. The 'cache' parameter has
+ *                  precedence over the 'buffered' parameter.
+ *                  'cached' are mutually exclusive.
+ * \param exec      Map the extent as executable.
+ * \param global    Map the extent as global.
+ * \param buffered  Map the extend as "buffered". The 'cache' parameter has
+ *                  precedence over the 'buffered' parameter.
  *
  * \return Pointer to the mapped extent in kernel virtual memory or
  *         #nullptr if the mapping failed.
  */
 IMPLEMENT_DEFAULT
 void *
-Kmem_mmio::map(Address phys, size_t size, bool cache, bool exec, bool global)
+Kmem_mmio::map(Address phys, size_t size, bool cache, bool exec, bool global,
+               bool buffered)
 {
   auto guard = lock_guard(&lock);
 
@@ -316,7 +321,9 @@ Kmem_mmio::map(Address phys, size_t size, bool cache, bool exec, bool global)
     }
 
   Page::Attr attr(exec ? Page::Rights::RWX() : Page::Rights::RW(),
-                  cache ? Page::Type::Normal() : Page::Type::Uncached(),
+                  cache ? Page::Type::Normal()
+                        : buffered ? Page::Type::Buffered()
+                                   : Page::Type::Uncached(),
                   global ? Page::Kern::Global() : Page::Kern::None(),
                   Page::Flags::None());
 

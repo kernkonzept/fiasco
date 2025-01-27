@@ -21,7 +21,7 @@ Kmem_mmio::map_extent(Address, uintptr_t, size_t, Page::Attr, unsigned)
 
 IMPLEMENT_OVERRIDE
 void *
-Kmem_mmio::map(Address phys, [[maybe_unused]] size_t size, bool, bool, bool)
+Kmem_mmio::map(Address phys, [[maybe_unused]] size_t size, bool, bool, bool, bool)
 {
   assert((phys + size <= Mem_layout::Mmio_map_end - Mem_layout::Mmio_map_start)
          && "MMIO outside KSEG1");
