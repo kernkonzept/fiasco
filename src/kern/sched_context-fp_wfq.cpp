@@ -170,7 +170,7 @@ Sched_context::max_param_size()
   return sizeof(Sp);
 }
 
-PUBLIC static inline
+PUBLIC static inline NEEDS["config.h"]
 int
 Sched_context::check_param(L4_sched_param const *_p)
 {
@@ -179,6 +179,8 @@ Sched_context::check_param(L4_sched_param const *_p)
     {
     case L4_sched_param_fixed_prio::Class:
       if (!_p->check_length<L4_sched_param_fixed_prio>())
+        return -L4_err::EInval;
+      if (p->fixed_prio.prio <= Config::Kernel_prio)
         return -L4_err::EInval;
       break;
 
@@ -192,6 +194,8 @@ Sched_context::check_param(L4_sched_param const *_p)
     default:
       if (!_p->is_legacy())
         return -L4_err::ERange;
+      if (p->legacy_fixed_prio.prio <= Smword{Config::Kernel_prio})
+        return -L4_err::EInval;
       break;
     }
 
