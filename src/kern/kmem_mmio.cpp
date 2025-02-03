@@ -269,7 +269,7 @@ Kmem_mmio::map_extent(Address phys_adj, uintptr_t virt, size_t size_adj,
  *                  'cached' are mutually exclusive.
  * \param exec      Map the extent as executable.
  * \param global    Map the extent as global.
- * \param buffered  Map the extend as "buffered". The 'cache' parameter has
+ * \param buffered  Map the extent as "buffered". The 'cache' parameter has
  *                  precedence over the 'buffered' parameter.
  *
  * \return Pointer to the mapped extent in kernel virtual memory or
