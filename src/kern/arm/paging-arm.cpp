@@ -750,10 +750,10 @@ struct Kernel_page_attr
 {
   enum Attribs_enum
   {
-    Cache_mask    = 0x01c,
-    NONCACHEABLE  = 0x000, ///< Caching is off
-    CACHEABLE     = 0x008, ///< Cache is enabled
-    BUFFERED      = 0x004, ///< Write buffer enabled -- Normal, non-cached
+    Cache_mask    = 0x01c, ///< MAIR index 0..7
+    NONCACHEABLE  = 0x000, ///< MAIR Attr0: Caching is off
+    CACHEABLE     = 0x008, ///< MAIR Attr2: Cache is enabled
+    BUFFERED      = 0x004, ///< MAIR Attr1: Write buffer enabled -- Normal, non-cached
   };
 
   enum

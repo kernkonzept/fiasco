@@ -753,8 +753,13 @@ public:
      * Attr1: Normal memory, Inner/Outer Non-cacheable
      * Attr2: Normal memory, Read-Allocate, no Write-Allocate,
      *        Inner/Outer Write-Through Cacheable (Non-transient)
+     * Attr3: Device-nGnRnE memory (unused)
      */
     Mair0_bits = 0x00aa4400,
+    /**
+     * Memory Attribute Indirection (MAIR1)
+     * Attr4..Attr7: Device-nGnRnE memory (unused)
+     */
     Mair1_bits = 0,
   };
 };

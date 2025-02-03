@@ -65,8 +65,13 @@ public:
      * Attr0: Device-nGnRnE memory
      * Attr1: Normal memory, Inner/Outer Non-cacheable
      * Attr2: Normal memory, RW, Inner/Outer Write-Back Cacheable (Non-transient)
+     * Attr3: Device-nGnRnE memory (unused)
      */
     Mair0_prrr_bits = 0x00ff4400,
+    /**
+     * Memory Attribute Indirection (MAIR1)
+     * Attr4..Attr7: Device-nGnRnE memory (unused)
+     */
     Mair1_nmrr_bits = 0,
   };
 };
@@ -185,9 +190,9 @@ EXTENSION class Page
 public:
   enum Attribs_enum : Mword
   {
-    NONCACHEABLE  = 0x000, ///< Caching is off
-    CACHEABLE     = 0x008, ///< Cache is enabled
-    BUFFERED      = 0x004, ///< Write buffer enabled -- Normal, non-cached
+    NONCACHEABLE  = 0x000, ///< PRRR TR0: Caching is off
+    CACHEABLE     = 0x008, ///< PRRR TR2: Cache is enabled
+    BUFFERED      = 0x004, ///< PRRR TR1: Write buffer enabled -- Normal, non-cached
   };
 
   enum Default_entries : Mword
@@ -229,10 +234,10 @@ EXTENSION class Page
 public:
   enum Attribs_enum : Mword
   {
-    Cache_mask    = 0x01c,
-    NONCACHEABLE  = 0x000, ///< Caching is off
-    CACHEABLE     = 0x008, ///< Cache is enabled
-    BUFFERED      = 0x004, ///< Write buffer enabled -- Normal, non-cached
+    Cache_mask    = 0x01c, ///< MAIR index 0..7
+    NONCACHEABLE  = 0x000, ///< MAIR Attr0: Caching is off
+    CACHEABLE     = 0x008, ///< MAIR Attr2: Cache is enabled
+    BUFFERED      = 0x004, ///< MAIR Attr1: Write buffer enabled -- Normal, non-cached
   };
 
   /// The EL1&0 translation regime supports two privilege levels.
