@@ -246,7 +246,7 @@ Jdb_obj_space::item(Cap_index entry, unsigned *rights)
   Obj_space::Entry *c = _task->jdb_lookup_cap(entry);
 
   if (!c)
-    return 0;
+    return nullptr;
 
   Kobject_iface *o = c->obj();
   *rights = cxx::int_value<Obj::Attr>(c->rights());

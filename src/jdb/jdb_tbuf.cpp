@@ -195,7 +195,7 @@ Tb_entry*
 Jdb_tbuf::unfiltered_lookup(Mword idx)
 {
   if (!event_valid(idx))
-    return 0;
+    return nullptr;
 
   return buffer() + ((_number - idx - 1) & (_max_entries - 1));
 }
@@ -220,7 +220,7 @@ Jdb_tbuf::lookup(Mword look_idx)
       Tb_entry *e = unfiltered_lookup(idx);
 
       if (!e)
-	return 0;
+	return nullptr;
       if (e->is_hidden())
 	continue;
       if (!look_idx--)
@@ -273,7 +273,7 @@ Jdb_tbuf::search(Mword nr)
     if (e->number() == nr)
       return e;
 
-  return 0;
+  return nullptr;
 }
 
 /** Event number => tracebuffer index.

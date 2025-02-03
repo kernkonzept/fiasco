@@ -24,7 +24,7 @@ Vmem_alloc::page_alloc(void *address, Zero_fill zf, unsigned mode)
   vpage = Kmem_alloc::allocator()->alloc(Config::page_order());
 
   if (EXPECT_FALSE(!vpage))
-    return 0;
+    return nullptr;
 
   // insert page into master page table
   auto e = Kmem::kdir->walk(Virt_addr(address), Pdir::Depth,
@@ -51,5 +51,5 @@ Vmem_alloc::page_alloc(void *address, Zero_fill zf, unsigned mode)
 
 error:
   Kmem_alloc::allocator()->free(Config::page_order(), vpage); // 2^0 = 1 page
-  return 0;
+  return nullptr;
 }

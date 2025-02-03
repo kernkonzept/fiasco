@@ -132,7 +132,7 @@ tag_to_string(L4_msg_tag const &tag)
     return __tag_interpreter_strings_l4re[tag.proto() - 0x4000];
   if (-24L <= tag.proto() && tag.proto() <= -1)
     return __tag_interpreter_strings_fiasco[-tag.proto() - 1];
-  return 0;
+  return nullptr;
 }
 
 static

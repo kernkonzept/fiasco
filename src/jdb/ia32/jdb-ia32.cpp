@@ -253,10 +253,10 @@ Jdb::get_thread(Cpu_number cpu)
       return sp <= stack_top && sp >= stack_top - Thread::Dbg_stack::Stack_size;
     };
   if (foreach_cpu(on_dbg_stack, false))
-    return 0;
+    return nullptr;
 
   if (!Helping_lock::threading_system_active)
-    return 0;
+    return nullptr;
 
   return static_cast<Thread*>(context_of(reinterpret_cast<const void*>(sp)));
 }

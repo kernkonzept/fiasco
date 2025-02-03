@@ -42,14 +42,14 @@ public:
 
 template<typename R> R *
 Outer::Inner::test_template() const
-{ return 0; }
+{ return nullptr; }
 
 #line 35 "nested_class.cpp"
 
 
 template<typename T> T *
 Outer::Inner_template<T>::test() const
-{ return 0; }
+{ return nullptr; }
 
 #line 40 "nested_class.cpp"
 

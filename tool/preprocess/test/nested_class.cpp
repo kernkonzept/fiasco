@@ -26,17 +26,17 @@ IMPLEMENTATION:
 IMPLEMENT inline
 void *
 Outer::Inner::test() const
-{ return 0; }
+{ return nullptr; }
 
 IMPLEMENT template<typename R>
 R *
 Outer::Inner::test_template() const
-{ return 0; }
+{ return nullptr; }
 
 IMPLEMENT template<typename T>
 T *
 Outer::Inner_template<T>::test() const
-{ return 0; }
+{ return nullptr; }
 
 IMPLEMENT template<typename T> template<typename R>
 R *

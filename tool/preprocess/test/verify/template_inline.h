@@ -281,7 +281,7 @@ stack_t<T>::dequeue(T *top)
   old_head._version  = _head._version;   // version doesnt matter
   old_head._next     = top;              // cas will fail, if top aint at top
   if(!_head._next){                      // empty stack
-    return 0;
+    return nullptr;
   }
   new_head._version = _head._version + 1;
   new_head._next    = top->get_next();
@@ -291,7 +291,7 @@ stack_t<T>::dequeue(T *top)
 			 (int *) &old_head,
 			 (int *) &new_head))
     // we didnt succeed
-    return 0;
+    return nullptr;
   else 
     // top was on top , so we dequeued it
     return top;

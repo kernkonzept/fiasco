@@ -102,7 +102,7 @@ unsigned char *
 Jdb::access_mem_task(Jdb_address addr, bool write)
 {
   if (!Cpu::is_canonical_address(addr.addr()))
-    return 0;
+    return nullptr;
 
   Address phys;
 
@@ -111,7 +111,7 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
       phys = Kmem::kdir->virt_to_phys(addr.addr());
 
       if (phys == Invalid_address)
-        return 0;
+        return nullptr;
     }
   else if (!addr.is_phys())
     {

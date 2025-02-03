@@ -162,7 +162,7 @@ public:
     void *c = Slab::alloc();
     if (EXPECT_TRUE(c != 0))
       return new (c) T(cxx::forward<ARGS>(args)...);
-    return 0;
+    return nullptr;
   }
 
   template<typename Q, typename ...ARGS>
@@ -171,7 +171,7 @@ public:
     void *c = Slab::template q_alloc<Q>(q);
     if (EXPECT_TRUE(c != 0))
       return new (c) T(cxx::forward<ARGS>(args)...);
-    return 0;
+    return nullptr;
   }
 
   void del(T *e)

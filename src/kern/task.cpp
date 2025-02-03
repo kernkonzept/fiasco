@@ -391,20 +391,20 @@ Task::create(Ram_quota *q,
   if (UTCB_AREA_MR >= 2 && EXPECT_FALSE(t.words() <= UTCB_AREA_MR))
     {
       *err = L4_err::EInval;
-      return 0;
+      return nullptr;
     }
 
   *err = L4_err::ENomem;
   cxx::unique_ptr<TASK_TYPE> v(TASK_TYPE::alloc(q));
 
   if (EXPECT_FALSE(!v))
-    return 0;
+    return nullptr;
 
   if (EXPECT_FALSE(!v->initialize()))
-    return 0;
+    return nullptr;
 
   if (MUST_SYNC_KERNEL && (v->sync_kernel() < 0))
-    return 0;
+    return nullptr;
 
   if (UTCB_AREA_MR >= 2)
     {
@@ -416,7 +416,7 @@ Task::create(Ram_quota *q,
           if (e < 0)
             {
               *err = -e;
-              return 0;
+              return nullptr;
             }
           else
             {

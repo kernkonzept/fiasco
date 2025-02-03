@@ -52,7 +52,7 @@ PUBLIC inline
 Space *
 Bts_entry::task()
 {
-  return 0; //(predicted & 0xffff0000) >> 16;
+  return nullptr; //(predicted & 0xffff0000) >> 16;
 }
 
 PUBLIC inline
@@ -106,7 +106,7 @@ Bts_entry*
 Jdb_bts::lookup(Mword idx)
 {
   if (idx >= Bts_entries)
-    return 0;
+    return nullptr;
 
   Unsigned32 *dsm = (Unsigned32*)Bts_ctrl;
   Unsigned32 curr = (dsm[1] - Bts_start) / 12 - 1;

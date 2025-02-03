@@ -290,7 +290,7 @@ mapping_t::parent()
   if (data()->depth <= Depth_sigma0_mapping)
     {
       // Sigma0 mappings don't have a parent.
-      return 0;
+      return nullptr;
     }
 
   // Iterate over mapping entries of this tree backwards until we find
@@ -336,10 +336,10 @@ mapping_t::next_child(mapping_t *parent)
   mapping_t *m = next_iter();
 
   // If we didn't find an entry, or if the entry cannot be a child of
-  // "parent", return 0
+  // "parent", return nullptr
   if (m == 0
       || m->data()->depth <= parent->data()->depth)
-    return 0;
+    return nullptr;
 
   return m;			// Found!
 }
@@ -473,12 +473,12 @@ mapdb_t::insert(mapping_t *parent,
   // couldn't allocate a bigger array.  In this case, signal an
   // out-of-memory condition.
   if (! t->mappings()[t->number_of_entries() - 1].unused())
-    return 0;
+    return nullptr;
 
   // If the parent mapping already has the maximum depth, we cannot
   // insert a child.
   if (parent->data()->depth == Depth_max)
-    return 0;
+    return nullptr;
 
   mapping_t *insert = 0;
 
@@ -567,7 +567,7 @@ mapdb_t::lookup(space_t *space,
   vm_offset_t phys = space->virt_to_phys(va);
 
   if (phys == 0xffffffff)
-    return 0;
+    return nullptr;
 
   mapping_tree_t *t;
 
@@ -597,7 +597,7 @@ mapdb_t::lookup(space_t *space,
   // not found -- unlock tree
   physframe[phys >> PAGE_SHIFT].lock.clear();
 
-  return 0;
+  return nullptr;
 } // lookup()
 
 PUBLIC void 

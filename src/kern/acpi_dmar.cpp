@@ -14,7 +14,7 @@ struct Dmar_head
   {
     if (type == T::Id)
       return static_cast<T const *>(this);
-    return 0;
+    return nullptr;
   }
 
   Unsigned16 type;

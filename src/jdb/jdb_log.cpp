@@ -152,7 +152,7 @@ Jdb_log_list::find_next_log(const char *name, const char *sc,
     if (   !strcmp(name, i->name)
         || !strcmp(sc, i->name + strlen(i->name) + 1))
       return i;
-  return 0;
+  return nullptr;
 }
 
 PUBLIC

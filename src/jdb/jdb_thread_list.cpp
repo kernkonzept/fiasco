@@ -362,14 +362,14 @@ static inline NOEXPORT
 Sched_context *
 Jdb_thread_list::sc_iter_prev(Sched_context *)
 {
-  return 0;
+  return nullptr;
 }
 
 static inline NOEXPORT
 Sched_context *
 Jdb_thread_list::sc_iter_next(Sched_context *)
 {
-  return 0;
+  return nullptr;
 }
 
 

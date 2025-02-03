@@ -42,7 +42,7 @@ Irq_base *
 Irq_chip_gen::irq(Mword pin) const override
 {
   if (pin >= _nirqs)
-    return 0;
+    return nullptr;
 
   return _irqs[pin];
 }

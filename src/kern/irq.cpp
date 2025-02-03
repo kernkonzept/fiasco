@@ -1094,7 +1094,7 @@ Irq::allocate(Ram_quota *q)
   if (nq)
     return new (nq) T(q);
 
-  return 0;
+  return nullptr;
 }
 
 

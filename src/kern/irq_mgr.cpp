@@ -133,7 +133,7 @@ Irq_mgr::irq(Mword irqnum) const
 {
   Irq i = chip(irqnum);
   if (!i.chip)
-    return 0;
+    return nullptr;
 
   return i.chip->irq(i.pin);
 }

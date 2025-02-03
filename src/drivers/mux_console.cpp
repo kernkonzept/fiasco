@@ -294,7 +294,7 @@ Mux_console::find_console(Mword any_true)
     if (_cons[i] && _cons[i]->get_attributes() & any_true)
       return _cons[i];
 
-  return 0;
+  return nullptr;
 }
 
 /**

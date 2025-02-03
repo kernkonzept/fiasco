@@ -9,4 +9,4 @@
 
 void *
 Outer::Inner::test() const
-{ return 0; }
+{ return nullptr; }

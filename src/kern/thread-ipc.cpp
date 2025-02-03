@@ -477,7 +477,7 @@ Thread::get_next_sender(Sender *sender)
           if (EXPECT_TRUE(sender->in_sender_list())
               && EXPECT_TRUE(sender_list() == sender->wait_queue()))
             return sender;
-          return 0;
+          return nullptr;
         }
       else // open wait
         {
@@ -487,7 +487,7 @@ Thread::get_next_sender(Sender *sender)
           return next;
         }
     }
-  return 0;
+  return nullptr;
 }
 
 PRIVATE inline

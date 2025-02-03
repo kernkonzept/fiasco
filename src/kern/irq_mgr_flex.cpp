@@ -61,7 +61,7 @@ public:
         _max_irq = pos + n;
         e.end   = _max_irq;
         e.chip  = chip;
-        return 0;
+        return nullptr;
       }
 
     Chip *spot = 0;
@@ -88,7 +88,7 @@ public:
     if (pos + n > _max_irq)
       _max_irq = pos + n;
 
-    return 0;
+    return nullptr;
   }
 
 private:

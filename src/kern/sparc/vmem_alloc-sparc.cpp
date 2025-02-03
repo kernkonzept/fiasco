@@ -22,7 +22,7 @@ void *Vmem_alloc::page_alloc(void *address, Zero_fill zf, unsigned mode)
   void *vpage = Kmem_alloc::allocator()->alloc(Config::page_order());
 
   if (EXPECT_FALSE(!vpage))
-    return 0;
+    return nullptr;
 
   Address page = Kmem::kdir->virt_to_phys((Address)vpage);
   if (0)

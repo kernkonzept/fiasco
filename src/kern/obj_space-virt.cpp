@@ -92,4 +92,4 @@ IMPLEMENTATION [!debug]:
 PUBLIC template< typename SPACE > static inline
 SPACE *
 Generic_obj_space<SPACE>::get_space(Base *)
-{ return 0; }
+{ return nullptr; }

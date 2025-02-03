@@ -235,10 +235,10 @@ simple_malloc(size_t size)
   void *ptr;
   size_t need;
   if (!size)
-    return 0;
+    return nullptr;
   size+=sizeof(__alloc_t);
   if (size<sizeof(__alloc_t))
-    return 0;
+    return nullptr;
   if (size<=__MAX_SMALL_SIZE)
     {
       need=GET_SIZE(size);
@@ -253,7 +253,7 @@ simple_malloc(size_t size)
 	ptr=simple_mmap(need);
     }
   if (ptr==MAP_FAILED)
-    return 0;
+    return nullptr;
   (static_cast<__alloc_t*>(ptr))->size=need;
 
   // play safe: this is required by cs_mem_malloc()!
@@ -278,7 +278,7 @@ simple_realloc(void* ptr, size_t _size)
 	  __alloc_t *tmp=BLOCK_START(ptr);
 	  size+=sizeof(__alloc_t);
 	  if (size<sizeof(__alloc_t))
-	    return 0;
+	    return nullptr;
 	  size=(size<=__MAX_SMALL_SIZE)?GET_SIZE(size):PAGE_ALIGN(size);
 	  if (tmp->size!=size)
 	    {
@@ -303,7 +303,7 @@ simple_realloc(void* ptr, size_t _size)
 		  size=PAGE_ALIGN(size);
 		  foo=simple_mremap(tmp,tmp->size,size);
 		  if (foo==MAP_FAILED)
-		    return 0;
+		    return nullptr;
 		  else
 		    {
 		      (static_cast<__alloc_t*>(foo))->size=size;
@@ -315,7 +315,7 @@ simple_realloc(void* ptr, size_t _size)
       else
 	{ /* size==0 */
 	  simple_free(ptr);
-	  return 0;
+	  return nullptr;
 	}
     }
   else

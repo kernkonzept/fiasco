@@ -114,7 +114,7 @@ Slab::alloc()
   Slab_entry *e = _free.pop_front();
 
   if (! e)
-    return 0;
+    return nullptr;
 
   ++_in_use;
   return e;
@@ -290,11 +290,11 @@ Slab_cache::q_alloc(Q *quota)
 {
   Auto_quota<Q> q(quota, _entry_size);
   if (EXPECT_FALSE(!q))
-    return 0;
+    return nullptr;
 
   void *r;
   if (EXPECT_FALSE(!(r=alloc())))
-    return 0;
+    return nullptr;
 
   q.release();
   return r;

@@ -570,18 +570,18 @@ Treemap::create(Order parent_page_shift, Space *owner_id,
   Auto_quota<Ram_quota> quota(Mapping_tree::quota(owner_id), quota_size(key_end));
 
   if (EXPECT_FALSE(!quota))
-    return 0;
+    return nullptr;
 
   Physframe *pf = Physframe::alloc(cxx::int_value<Page>(key_end));
 
   if (EXPECT_FALSE(!pf))
-    return 0;
+    return nullptr;
 
   void *m = alloc();
   if (EXPECT_FALSE(!m))
     {
       Physframe::free(pf, cxx::int_value<Page>(key_end), owner_id);
-      return 0;
+      return nullptr;
     }
 
   quota.release();
@@ -852,7 +852,7 @@ Treemap::insert(Physframe* frame, Mapping_tree::Iterator const &parent,
       Iterator free = frame->tree()->allocate(Mapping_tree::quota(space),
                                               parent);
       if (EXPECT_FALSE(!*free))
-        return 0;
+        return nullptr;
 
       free->set_space(space);
       set_vaddr(*free, va);
@@ -871,7 +871,7 @@ Treemap::insert(Physframe* frame, Mapping_tree::Iterator const &parent,
 
       Iterator free = frame->tree()->allocate_submap(payer, parent);
       if (EXPECT_FALSE(!*free))
-        return 0;
+        return nullptr;
 
       assert (_sub_shifts_num > 0);
 
@@ -881,7 +881,7 @@ Treemap::insert(Physframe* frame, Mapping_tree::Iterator const &parent,
         {
           // free the mapping got with allocate
           frame->free_mapping(payer, free);
-          return 0;
+          return nullptr;
         }
 
       free->set_submap(submap);
@@ -891,7 +891,7 @@ Treemap::insert(Physframe* frame, Mapping_tree::Iterator const &parent,
                                        submap->page_shift());
   Physframe* subframe = submap->tree(submap->trunc_to_page(subframe_offset));
   if (! subframe)
-    return 0;
+    return nullptr;
 
   Mapping* ret = submap->insert(subframe, subframe->insertion_head(),
                                 parent_space, parent_va + subframe_offset,

@@ -71,7 +71,7 @@ Boot_alloced::alloc(size_t size)
                static_cast<void *>(b), alloc_size);
 
       if (!b)
-	return 0;
+	return nullptr;
 
       b->size = alloc_size;
       _free->add(b);

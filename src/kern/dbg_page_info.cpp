@@ -125,7 +125,7 @@ Dbg_page_info_table::remove(Page_number pfn)
 
   List::Iterator i = find(e->h.begin(), e->h.end(), pfn);
   if (i == e->h.end())
-    return 0;
+    return nullptr;
 
   Dbg_page_info *r = *i;
   e->h.erase(i);

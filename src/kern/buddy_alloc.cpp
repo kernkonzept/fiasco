@@ -125,7 +125,7 @@ Buddy_t_base<A,B>::buddy(void *block, unsigned long index, Head **new_block)
   unsigned long const size = Min_size << index;
   unsigned long const n_size = size << 1;
   if (index + 1 >= Num_sizes)
-    return 0;
+    return nullptr;
   unsigned long b = reinterpret_cast<unsigned long>(block);
   unsigned long _buddy = b & ~(n_size-1);
   *new_block = reinterpret_cast<Head*>(_buddy);
@@ -139,7 +139,7 @@ Buddy_t_base<A,B>::buddy(void *block, unsigned long index, Head **new_block)
   if (_free_map[(_buddy - _base)/Min_size] && _buddy_h->index == index)
     return _buddy_h;
 
-  return 0;
+  return nullptr;
 }
 
 PUBLIC
@@ -269,7 +269,7 @@ Buddy_t_base<A,B>::alloc(unsigned long size)
 	  return f;
 	}
     }
-  return 0;
+  return nullptr;
 }
 
 PUBLIC

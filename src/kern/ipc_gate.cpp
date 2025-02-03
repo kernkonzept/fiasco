@@ -195,11 +195,11 @@ Ipc_gate::create(Ram_quota *q, Thread *t, Mword id)
   Auto_quota<Ram_quota> quota(q, sizeof(Ipc_gate_obj));
 
   if (EXPECT_FALSE(!quota))
-    return 0;
+    return nullptr;
 
   void *nq = Ipc_gate_obj::alloc();
   if (EXPECT_FALSE(!nq))
-    return 0;
+    return nullptr;
 
   quota.release();
   return new (nq) Ipc_gate_obj(q, t, id);
@@ -433,7 +433,7 @@ ipc_gate_factory(Ram_quota *q, Space *space,
       L4_fpage bind_thread(snd_items.get()->d);
       *err = L4_err::EInval;
       if (EXPECT_FALSE(!bind_thread.is_objpage()))
-        return 0;
+        return nullptr;
 
       L4_fpage::Rights thread_rights = L4_fpage::Rights(0);
       thread = cxx::dyn_cast<Thread*>(space->lookup_local(bind_thread.obj_index(),
@@ -442,26 +442,26 @@ ipc_gate_factory(Ram_quota *q, Space *space,
       if (EXPECT_FALSE(!thread))
         {
           *err = L4_err::EInval;
-          return 0;
+          return nullptr;
         }
 
       if (EXPECT_FALSE(!(thread_rights & L4_fpage::Rights::CS())))
         {
           *err = L4_err::EPerm;
-          return 0;
+          return nullptr;
         }
 
       if (EXPECT_FALSE(tag.words() < 3))
         {
           *err = L4_err::EMsgtooshort;
-          return 0;
+          return nullptr;
         }
 
       id = access_once(&utcb->values[2]);
       if (EXPECT_FALSE(id & cxx::int_value<L4_fpage::Rights>(L4_fpage::Rights::CWS())))
         {
           *err = L4_err::EInval;
-          return 0;
+          return nullptr;
         }
     }
 

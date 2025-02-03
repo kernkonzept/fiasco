@@ -373,7 +373,7 @@ unsigned char *
 Jdb::access_mem_task(Jdb_address addr, bool write)
 {
   if (!Cpu::is_canonical_address(addr.addr()))
-    return 0;
+    return nullptr;
 
   Address phys;
 
@@ -381,7 +381,7 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
     {
       auto p = Kmem::kdir->walk(Virt_addr(addr.addr()));
       if (!p.is_valid())
-        return 0;
+        return nullptr;
 
       phys = p.page_addr() | cxx::get_lsb(addr.addr(), p.page_order());
     }

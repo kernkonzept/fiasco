@@ -10,7 +10,7 @@ namespace Ptab
   struct Null_alloc
   {
     // As valid() is false, none of the other methods shall be used.
-    static void *alloc(Bytes) { assert(false); return 0; }
+    static void *alloc(Bytes) { assert(false); return nullptr; }
     static void free(void *, Bytes) { assert(false); }
     static bool valid() { return false; }
     static unsigned to_phys(void *) { assert(false); return 0; }
@@ -323,7 +323,7 @@ namespace Ptab
     {
       Next *n = static_cast<Next*>(a.alloc(Bytes(sizeof(Next))));
       if (EXPECT_FALSE(!n))
-        return 0;
+        return nullptr;
 
       n->clear(force_write_back);
       e.set_next_level(a.to_phys(n));

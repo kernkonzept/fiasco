@@ -283,7 +283,7 @@ Bst<Node, Get_key, Compare>::find_node(Key_param_type key) const
       if (d == Dir::N)
 	return static_cast<Node*>(q);
     }
-  return 0;
+  return nullptr;
 }
 
 template< typename Node, typename Get_key, class Compare>

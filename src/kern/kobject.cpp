@@ -398,7 +398,7 @@ Kobject::from_dbg(Kobject_dbg::Iterator const &d)
 {
   if (d != Kobject_dbg::end())
     return static_cast<Kobject*>(*d);
-  return 0;
+  return nullptr;
 }
 
 PUBLIC

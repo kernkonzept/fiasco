@@ -188,10 +188,10 @@ Irq_base *
 Irq_chip_ia32::irq(Mword irqn) const
 {
   if (irqn >= _irqs)
-    return 0;
+    return nullptr;
 
   if (!_vec[irqn])
-    return 0;
+    return nullptr;
 
   extern Irq_entry_stub idt_irq_vector_stubs[];
   return idt_irq_vector_stubs[_vec[irqn] - 0x20].irq;

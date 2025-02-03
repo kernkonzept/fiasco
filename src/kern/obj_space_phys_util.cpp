@@ -272,16 +272,16 @@ typename Obj_space_phys<SPACE>::Entry *
 Obj_space_phys<SPACE>::get_cap(Cap_index index)
 {
   if (EXPECT_FALSE(!_dir))
-    return 0;
+    return nullptr;
 
   unsigned d_idx = cxx::int_value<Cap_index>(index) >> Obj::Caps_per_page_ld2;
   if (EXPECT_FALSE(d_idx >= Slots_per_dir))
-    return 0;
+    return nullptr;
 
   Cap_table *tab = _dir->d[d_idx];
 
   if (EXPECT_FALSE(!tab))
-    return 0;
+    return nullptr;
 
   unsigned offs  = cxx::get_lsb(cxx::int_value<Cap_index>(index), Obj::Caps_per_page_ld2);
   return &tab->e[offs];
@@ -292,17 +292,17 @@ typename Obj_space_phys<SPACE>::Entry *
 Obj_space_phys<SPACE>::caps_alloc(Cap_index virt)
 {
   if (EXPECT_FALSE(!_dir && !alloc_dir()))
-    return 0;
+    return nullptr;
 
   static_assert(sizeof(Cap_table) == Config::PAGE_SIZE, "cap table size mismatch");
   unsigned d_idx = cxx::int_value<Cap_index>(virt) >> Obj::Caps_per_page_ld2;
   if (EXPECT_FALSE(d_idx >= Slots_per_dir))
-    return 0;
+    return nullptr;
 
   void *mem = Kmem_alloc::allocator()->q_alloc(ram_quota(), Config::page_size());
 
   if (!mem)
-    return 0;
+    return nullptr;
 
   Obj::add_cap_page_dbg_info(mem, SPACE::get_space(this),  cxx::int_value<Cap_index>(virt));
 
@@ -434,7 +434,7 @@ Obj_space_phys<SPACE>::lookup_local(Cap_index virt, L4_fpage::Rights *rights)
 {
   Entry *c = get_cap(virt, false);
   if (EXPECT_FALSE(!c))
-    return 0;
+    return nullptr;
 
   Capability cap = c->capability();
   *rights = L4_fpage::Rights(cap.rights());
@@ -533,4 +533,4 @@ IMPLEMENTATION [obj_space_virt && !debug]:
 PUBLIC template<typename BASE> static inline
 Obj_space_phys_override<BASE> *
 Obj_space_phys_override<BASE>::get_space(Obj_space *)
-{ return 0; }
+{ return nullptr; }

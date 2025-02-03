@@ -162,7 +162,7 @@ public:
   Irq_base *irq(Mword pin) const override
   {
     if (pin >= 16)
-      return 0;
+      return nullptr;
 
     return _irqs[pin];
   }

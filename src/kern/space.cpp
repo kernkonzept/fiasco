@@ -140,11 +140,11 @@ Space::find_ku_mem(User_ptr<void> p, unsigned size)
 
   // alignment check
   if (EXPECT_FALSE(pa & (sizeof(double) - 1)))
-    return 0;
+    return nullptr;
 
   // overflow check
   if (EXPECT_FALSE(pa + size - 1 < pa))
-    return 0;
+    return nullptr;
 
   for (Ku_mem_list::Const_iterator f = _ku_mem.begin(); f != _ku_mem.end(); ++f)
     {
@@ -153,7 +153,7 @@ Space::find_ku_mem(User_ptr<void> p, unsigned size)
 	return *f;
     }
 
-  return 0;
+  return nullptr;
 }
 
 IMPLEMENT_DEFAULT inline

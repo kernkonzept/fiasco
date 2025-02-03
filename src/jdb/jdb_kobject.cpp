@@ -180,14 +180,14 @@ Jdb_kobject_extension::find_extension(Kobject_common const *o, unsigned idx = 0)
   for (auto const &&ex: o->dbg_info()->_jdb_data)
     {
       if (!ex)
-        return 0;
+        return nullptr;
 
       Jdb_kobject_extension *je = static_cast<Jdb_kobject_extension*>(ex);
       if (je->type() == T::static_type && idx-- == 0)
 	return static_cast<T*>(je);
     }
 
-  return 0;
+  return nullptr;
 }
 
 PUBLIC
@@ -218,7 +218,7 @@ Jdb_kobject::find_handler(Kobject_common *o)
         return h;
     }
 
-  return 0;
+  return nullptr;
 }
 
 static DEFINE_GLOBAL_PRIO(BOOTSTRAP_INIT_PRIO) Global_data<Jdb_kobject> jdb_kobj_module;
@@ -350,7 +350,7 @@ Kobject *
 Jdb_kobject_list::next(Kobject *obj)
 {
   if (!obj)
-    return 0;
+    return nullptr;
 
   Kobject_dbg::Iterator o = Kobject_dbg::Kobject_list::iter(obj->dbg_info());
 
@@ -369,7 +369,7 @@ Kobject *
 Jdb_kobject_list::prev(Kobject *obj)
 {
   if (!obj)
-    return 0;
+    return nullptr;
 
   Kobject_dbg::Iterator o = Kobject_dbg::Kobject_list::iter(obj->dbg_info());
 

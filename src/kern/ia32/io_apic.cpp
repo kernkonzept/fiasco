@@ -488,7 +488,7 @@ Io_apic::find_apic(unsigned irqnum)
       if (a->_offset <= irqnum && a->_offset + a->_irqs > irqnum)
         return a;
     }
-  return 0;
+  return nullptr;
 };
 
 PUBLIC void

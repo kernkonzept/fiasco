@@ -93,21 +93,21 @@ OBJ *deref_next(L4_msg_tag *tag, Utcb const *utcb,
   if (!snd_items.next() || snd_items.get()->b.is_void())
     {
       *tag = commit_result(-L4_err::EInval);
-      return 0;
+      return nullptr;
     }
 
   L4_fpage fp(snd_items.get()->d);
   if (EXPECT_FALSE(!fp.is_objpage()))
     {
       *tag = commit_error(utcb, L4_error::Overflow);
-      return 0;
+      return nullptr;
     }
 
   OBJ *o = cxx::dyn_cast<OBJ*>(space->lookup_local(fp.obj_index(), rights));
   if (EXPECT_FALSE(!o))
     {
       *tag = commit_result(-L4_err::EInval);
-      return 0;
+      return nullptr;
     }
 
   return o;
@@ -124,7 +124,7 @@ OBJ *deref(L4_msg_tag *tag, Utcb const *utcb, Rights *rights)
   if (!tag->items())
     {
       *tag = commit_result(-L4_err::EInval);
-      return 0;
+      return nullptr;
     }
   Space *const space = ::current()->space();
   if (!space)

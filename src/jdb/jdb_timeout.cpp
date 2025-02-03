@@ -215,7 +215,7 @@ Jdb_list_timeouts::get_owner(Timeout *t)
           return static_cast<Thread*>(Context::current_sched()->context());
 #endif
       default:
-        return 0;
+        return nullptr;
     }
 }
 
