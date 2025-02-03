@@ -18,13 +18,6 @@ public:
     Init    = 0b101,
     Startup = 0b110,
   };
-
-private:
-  enum
-  {
-    Apic_icr = 0x300,
-    Apic_icr2 = 0x310,
-  };
 };
 
 
@@ -38,8 +31,8 @@ PUBLIC static inline
 void
 Apic::disable_external_ints()
 {
-  reg_write(APIC_lvt0, 0x0001003f);
-  reg_write(APIC_lvt1, 0x0001003f);
+  reg_write(Reg::Lvt0, 0x0001003f);
+  reg_write(Reg::Lvt1, 0x0001003f);
 }
 
 PUBLIC static inline
@@ -49,7 +42,7 @@ Apic::mp_ipi_idle()
   if (use_x2)
     return true;
   else
-    return ((reg_read(Apic_icr) & 0x00001000) == 0);
+    return ((reg_read(Reg::Icr) & 0x00001000) == 0);
 }
 
 PRIVATE static inline
@@ -86,14 +79,13 @@ Apic::mp_send_ipi(Ipi_dest_shrt dest_shrt, Apic_id dest,
   if (use_x2)
     {
       asm volatile ("mfence; lfence"); // enforce serializing as in xAPIC mode
-      Cpu::wrmsr(lower_icr, cxx::int_value<Apic_id>(dest),
-                 Msr::X2apic_regs, Apic_icr >> 4);
+      reg_write64(Reg::Icr, lower_icr, cxx::int_value<Apic_id>(dest));
     }
   else
     {
       if (dest_shrt == Ipi_dest_shrt::Noshrt)
-        reg_write(Apic_icr2, cxx::int_value<Apic_id>(dest));
-      reg_write(Apic_icr, lower_icr);
+        reg_write(Reg::Icr2, cxx::int_value<Apic_id>(dest));
+      reg_write(Reg::Icr, lower_icr);
     }
 }
 
@@ -101,7 +93,7 @@ PUBLIC static inline
 void
 Apic::mp_ipi_ack()
 {
-  reg_write(APIC_eoi, 0);
+  reg_write(Reg::Eoi, 0);
 }
 
 PUBLIC static
@@ -131,7 +123,7 @@ Apic::mp_startup(Apic_id dest, bool bcast, Address tramp_page)
 
   // XXX: should check for some errors after sending ipi
 
-  reg_write(APIC_esr, 0);
+  reg_write(Reg::Esr, 0);
 
   // Send INIT IPI
   mp_send_ipi(dest_shrt, dest, Ipi_delivery_mode::Init, 0);
@@ -156,8 +148,7 @@ Apic::mp_startup(Apic_id dest, bool bcast, Address tramp_page)
   if (!mp_ipi_idle_timeout(boot_cpu, 200))
     return 3;
 
-  unsigned esr = reg_read(APIC_esr);
-
+  unsigned esr = reg_read(Reg::Esr);
   if (esr)
     printf("APIC status: %x\n", esr);
 

@@ -25,12 +25,15 @@ PRIVATE static
 void
 Jdb_kern_info_io_apic::print_lapic(Cpu_number cpu)
 {
-  printf("\nLocal APIC [%u, %08x]: tpr=%2x ppr=%2x\n"
-         "  Running: tpr=%02x\n"
-         "  Timer: icr=%08x ccr=%08x LVT=%08x\n",
+  printf("\nLocal APIC [%u, %08x]: TPR=%2x PPR=%2x\n"
+         "  Running: TPR=%02x\n"
+         "  Timer: TMICT=%08x TMCCT=%08x LVTT=%08x\n",
          cxx::int_value<Cpu_number>(cpu), cxx::int_value<Apic_id>(Apic::get_id()),
-         Apic::tpr(), Apic::reg_read(0xa0), Jdb::apic_tpr.cpu(cpu),
-         Apic::reg_read(0x380), Apic::reg_read(0x390), Apic::reg_read(0x320));
+         Apic::tpr(), Apic::reg_read(Apic::Reg::Ppr),
+         Jdb::apic_tpr.cpu(cpu),
+         Apic::reg_read(Apic::Reg::Tmict),
+         Apic::reg_read(Apic::Reg::Tmcct),
+         Apic::reg_read(Apic::Reg::Lvtt));
 
   unsigned const regs[] = { 0x200, 0x100, 0x180 };
   char const *const regn[] = { "IRR", "ISR", "TMR" };
@@ -39,7 +42,7 @@ Jdb_kern_info_io_apic::print_lapic(Cpu_number cpu)
       printf("  %s:", regn[r]);
       for (int i = 3; i >= 0; --i)
         {
-          unsigned long v = Apic::reg_read(regs[r] + i * 0x10);
+          unsigned long v = Apic::reg_read(Apic::Reg{regs[r] + i * 0x10});
           printf(" %08lx", v);
 	}
       puts("");

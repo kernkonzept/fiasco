@@ -18,6 +18,8 @@ struct Apic_id : cxx::int_type<Unsigned32, Apic_id>
 
 class Apic : public Pm_object
 {
+  friend class Jdb_kern_info_io_apic;
+
 public:
   static void map_registers() FIASCO_INIT;
   static void detect_x2apic() FIASCO_INIT;
@@ -54,32 +56,36 @@ private:
   static Unsigned64 scaler_us_to_apic;
   static bool use_x2;
 
+  enum class Reg : unsigned
+  {
+    Id      = 0x20,     // Local APIC ID
+    Lvr     = 0x30,     // Local APIC version
+    Tpr     = 0x80,     // Task priority register
+    Ppr     = 0xA0,     // Processor priority register
+    Eoi     = 0xB0,     // EOI register
+    Ldr     = 0xD0,     // Local destination register
+    Dfr     = 0xE0,     // Destination format register
+    Spiv    = 0xF0,     // Spurious interrupt vector register
+    Isr     = 0x100,    // In-service register
+    Tmr     = 0x180,    // Trigger mode register
+    Irr     = 0x200,    // Interrupt request register
+    Esr     = 0x280,    // Error status register
+    Icr     = 0x300,    // Interrupt command register (bits 0-31)
+    Icr2    = 0x310,    // Interrupt command register (bits 32-63)
+    Lvtt    = 0x320,    // LVT timer register
+    Lvtthmr = 0x330,    // LVT thermal sensor register
+    Lvtpc   = 0x340,    // LVT performance monitoring counters register
+    Lvt0    = 0x350,    // LVT LINT0 register
+    Lvt1    = 0x360,    // LVT LINT1 register
+    Lvterr  = 0x370,    // LVT error register
+    Tmict   = 0x380,    // Timer: Initial count register
+    Tmcct   = 0x390,    // Timer: Current count register
+    Tdcr    = 0x3E0,    // Timer: Divide configuration register
+  };
+
   enum
   {
-    APIC_id			= 0x20,
-    APIC_lvr			= 0x30,
-    APIC_tpr                    = 0x80,
     APIC_tpri_mask		= 0xFF,
-    APIC_eoi			= 0xB0,
-    APIC_ldr			= 0xD0,
-    APIC_ldr_mask		= 0xFFul << 24,
-    APIC_dfr			= 0xE0,
-    APIC_spiv			= 0xF0,
-    APIC_isr			= 0x100,
-    APIC_tmr			= 0x180,
-    APIC_irr			= 0x200,
-    APIC_esr			= 0x280,
-    APIC_lvtt			= 0x320,
-    APIC_lvtthmr		= 0x330,
-    APIC_lvtpc			= 0x340,
-    APIC_lvt0			= 0x350,
-    APIC_timer_base_div		= 0x2,
-    APIC_lvt1			= 0x360,
-    APIC_lvterr			= 0x370,
-    APIC_tmict			= 0x380,
-    APIC_tmcct			= 0x390,
-    APIC_tdcr			= 0x3E0,
-
     APIC_snd_pending		= 1 << 12,
     APIC_input_polarity		= 1 << 13,
     APIC_lvt_remote_irr		= 1 << 14,
@@ -268,9 +274,9 @@ Apic_id
 Apic::get_id()
 {
   if (use_x2apic())
-    return Apic_id{reg_read(APIC_id)};
+    return Apic_id{reg_read(Reg::Id)};
   else
-    return Apic_id{reg_read(APIC_id) & 0xff000000};
+    return Apic_id{reg_read(Reg::Id) & 0xff000000};
 }
 
 /**
@@ -290,37 +296,37 @@ PRIVATE static inline
 Unsigned32
 Apic::get_version()
 {
-  return reg_read(APIC_lvr) & 0xFF;
+  return reg_read(Reg::Lvr) & 0xFF;
 }
 
 PRIVATE static inline NOEXPORT
 int
 Apic::is_integrated()
 {
-  return reg_read(APIC_lvr) & 0xF0;
+  return reg_read(Reg::Lvr) & 0xF0;
 }
 
 PRIVATE static inline NOEXPORT
 Unsigned32
 Apic::get_max_lvt_local()
 {
-  return ((reg_read(APIC_lvr) >> 16) & 0xFF);
+  return ((reg_read(Reg::Lvr) >> 16) & 0xFF);
 }
 
 PRIVATE static inline NOEXPORT
 Unsigned32
 Apic::get_num_errors()
 {
-  reg_write(APIC_esr, 0);
-  return reg_read(APIC_esr);
+  reg_write(Reg::Esr, 0);
+  return reg_read(Reg::Esr);
 }
 
 PRIVATE static inline NOEXPORT
 void
 Apic::clear_num_errors()
 {
-  reg_write(APIC_esr, 0);
-  reg_write(APIC_esr, 0);
+  reg_write(Reg::Esr, 0);
+  reg_write(Reg::Esr, 0);
 }
 
 PUBLIC static inline
@@ -332,30 +338,34 @@ Apic::get_frequency_khz()
 
 PUBLIC static inline
 Unsigned32
-Apic::reg_read(unsigned reg)
+Apic::reg_read(Apic::Reg reg)
 {
+  unsigned reg_offs = static_cast<unsigned>(reg);
   if (use_x2apic())
-    return Cpu::rdmsr(Msr::X2apic_regs, reg >> 4);
+    return Cpu::rdmsr(Msr::X2apic_regs, reg_offs >> 4);
   else
-    return *offset_cast<volatile Unsigned32 *>(io_base, reg);
+    return *offset_cast<volatile Unsigned32 *>(io_base, reg_offs);
 }
 
 PUBLIC static inline
 void
-Apic::reg_write(unsigned reg, Unsigned32 val)
+Apic::reg_write(Apic::Reg reg, Unsigned32 val)
 {
+  unsigned reg_offs = static_cast<unsigned>(reg);
   if (use_x2apic())
-    Cpu::wrmsr(val, 0, Msr::X2apic_regs, reg >> 4);
+    Cpu::wrmsr(val, 0, Msr::X2apic_regs, reg_offs >> 4);
   else
-    *offset_cast<volatile Unsigned32 *>(io_base, reg) = val;
+    *offset_cast<volatile Unsigned32 *>(io_base, reg_offs) = val;
 }
 
 PUBLIC static inline NEEDS[<cassert>]
 void
-Apic::reg_write64(unsigned reg, Unsigned64 val)
+Apic::reg_write64(Apic::Reg reg, Unsigned32 low, Unsigned32 high)
 {
+  unsigned reg_offs = static_cast<unsigned>(reg);
   assert(use_x2apic());
-  Cpu::wrmsr(val, Msr::X2apic_regs, reg >> 4);
+  Unsigned64 val = (Unsigned64{high} << 32) | low;
+  Cpu::wrmsr(val, Msr::X2apic_regs, reg_offs >> 4);
 }
 
 PUBLIC static inline
@@ -376,22 +386,22 @@ PUBLIC static inline
 Unsigned32
 Apic::timer_reg_read()
 {
-  return reg_read(APIC_tmcct);
+  return reg_read(Reg::Tmcct);
 }
 
 PUBLIC static inline
 Unsigned32
 Apic::timer_reg_read_initial()
 {
-  return reg_read(APIC_tmict);
+  return reg_read(Reg::Tmict);
 }
 
 PUBLIC static inline
 void
 Apic::timer_reg_write(Unsigned32 val)
 {
-  reg_read(APIC_tmict);
-  reg_write(APIC_tmict, val);
+  reg_read(Reg::Tmict);
+  reg_write(Reg::Tmict, val);
 }
 
 PUBLIC static inline NEEDS["cpu.h"]
@@ -444,9 +454,9 @@ Apic::timer_enable_irq()
 {
   Unsigned32 tmp_val;
 
-  tmp_val = reg_read(APIC_lvtt);
-  tmp_val &= ~(APIC_lvt_masked);
-  reg_write(APIC_lvtt, tmp_val);
+  tmp_val = reg_read(Reg::Lvtt);
+  tmp_val &= ~APIC_lvt_masked;
+  reg_write(Reg::Lvtt, tmp_val);
 }
 
 PUBLIC static inline
@@ -455,52 +465,52 @@ Apic::timer_disable_irq()
 {
   Unsigned32 tmp_val;
 
-  tmp_val = reg_read(APIC_lvtt);
+  tmp_val = reg_read(Reg::Lvtt);
   tmp_val |= APIC_lvt_masked;
-  reg_write(APIC_lvtt, tmp_val);
+  reg_write(Reg::Lvtt, tmp_val);
 }
 
 PUBLIC static inline
 int
 Apic::timer_is_irq_enabled()
 {
-  return ~reg_read(APIC_lvtt) & APIC_lvt_masked;
+  return ~reg_read(Reg::Lvtt) & APIC_lvt_masked;
 }
 
 PUBLIC static inline
 void
 Apic::timer_set_periodic()
 {
-  Unsigned32 tmp_val = reg_read(APIC_lvtt);
+  Unsigned32 tmp_val = reg_read(Reg::Lvtt);
   tmp_val |= APIC_lvt_timer_periodic;
-  reg_write(APIC_lvtt, tmp_val);
+  reg_write(Reg::Lvtt, tmp_val);
 }
 
 PUBLIC static inline
 void
 Apic::timer_set_one_shot()
 {
-  Unsigned32 tmp_val = reg_read(APIC_lvtt);
+  Unsigned32 tmp_val = reg_read(Reg::Lvtt);
   tmp_val &= ~APIC_lvt_timer_periodic;
-  reg_write(APIC_lvtt, tmp_val);
+  reg_write(Reg::Lvtt, tmp_val);
 }
 
 PUBLIC static inline
 void
 Apic::timer_assign_irq_vector(unsigned vector)
 {
-  Unsigned32 tmp_val = reg_read(APIC_lvtt);
+  Unsigned32 tmp_val = reg_read(Reg::Lvtt);
   tmp_val &= 0xffffff00;
   tmp_val |= vector;
-  reg_write(APIC_lvtt, tmp_val);
+  reg_write(Reg::Lvtt, tmp_val);
 }
 
 PUBLIC static inline
 void
 Apic::irq_ack()
 {
-  reg_read(APIC_spiv);
-  reg_write(APIC_eoi, 0);
+  reg_read(Reg::Spiv);
+  reg_write(Reg::Eoi, 0);
 }
 
 static
@@ -536,10 +546,10 @@ Apic::timer_set_divisor(unsigned newdiv)
   if (div != -1)
     {
       timer_divisor = newdiv;
-      tmp_value = reg_read(APIC_tdcr);
+      tmp_value = reg_read(Reg::Tdcr);
       tmp_value &= ~0x1F;
       tmp_value |= div;
-      reg_write(APIC_tdcr, tmp_value);
+      reg_write(Reg::Tdcr, tmp_value);
     }
 }
 
@@ -592,39 +602,39 @@ Apic::init_spiv()
 {
   Unsigned32 tmp_val;
 
-  tmp_val = reg_read(APIC_spiv);
+  tmp_val = reg_read(Reg::Spiv);
   tmp_val |= (1<<8);            // enable APIC
   tmp_val &= ~(1<<9);           // enable Focus Processor Checking
   tmp_val &= ~0xff;
   tmp_val |= APIC_IRQ_BASE + 0xf; // Set spurious IRQ vector to 0x3f
-                              // bit 0..3 are hardwired to 1 on PPro!
-  reg_write(APIC_spiv, tmp_val);
+                                // bit 0..3 are hardwired to 1 on PPro!
+  reg_write(Reg::Spiv, tmp_val);
 }
 
 static FIASCO_INIT_AND_PM
 void
 Apic::done_spiv()
 {
-  Unsigned32 val = reg_read(APIC_spiv);
+  Unsigned32 val = reg_read(Reg::Spiv);
   val &= ~(1 << 8);
-  reg_write(APIC_spiv, val);
+  reg_write(Reg::Spiv, val);
 }
 
 PUBLIC static inline NEEDS[Apic::reg_write]
 void
 Apic::tpr(unsigned prio)
-{ reg_write(APIC_tpr, prio); }
+{ reg_write(Reg::Tpr, prio); }
 
 PUBLIC static inline NEEDS[Apic::reg_read]
 unsigned
 Apic::tpr()
-{ return reg_read(APIC_tpr); }
+{ return reg_read(Reg::Tpr); }
 
 static FIASCO_INIT_CPU_AND_PM
 void
 Apic::init_tpr()
 {
-  reg_write(APIC_tpr, 0);
+  reg_write(Reg::Tpr, 0);
 }
 
 // activate APIC error interrupt
@@ -640,10 +650,10 @@ Apic::enable_errors()
 	clear_num_errors();
       before = get_num_errors();
 
-      tmp_val = reg_read(APIC_lvterr);
+      tmp_val = reg_read(Reg::Lvterr);
       tmp_val &= 0xfffeff00;         // unmask error IRQ vector
       tmp_val |= APIC_IRQ_BASE + 3;  // Set error IRQ vector to 0x63
-      reg_write(APIC_lvterr, tmp_val);
+      reg_write(Reg::Lvterr, tmp_val);
 
       if (get_max_lvt() > 3)
 	clear_num_errors();
@@ -668,16 +678,16 @@ Apic::route_pic_through_apic()
   Unsigned16 old_irqs = Pic::disable_all_save();
 
   // set LINT0 to ExtINT, edge triggered
-  tmp_val = reg_read(APIC_lvt0);
+  tmp_val = reg_read(Reg::Lvt0);
   tmp_val &= 0xfffe5800;
   tmp_val |= 0x00000700;
-  reg_write(APIC_lvt0, tmp_val);
+  reg_write(Reg::Lvt0, tmp_val);
 
   // set LINT1 to NMI, edge triggered
-  tmp_val = reg_read(APIC_lvt1);
+  tmp_val = reg_read(Reg::Lvt1);
   tmp_val &= 0xfffe5800;
   tmp_val |= 0x00000400;
-  reg_write(APIC_lvt1, tmp_val);
+  reg_write(Reg::Lvt1, tmp_val);
 
   // unmask 8259 interrupts
   Pic::restore_all(old_irqs);
@@ -692,15 +702,15 @@ Apic::init_lvt()
   auto guard = lock_guard(cpu_lock);
 
   // mask timer interrupt and set vector to _not_ invalid value
-  reg_write(APIC_lvtt, reg_read(APIC_lvtt) | APIC_lvt_masked | 0xff);
+  reg_write(Reg::Lvtt, reg_read(Reg::Lvtt) | APIC_lvt_masked | 0xff);
 
   if (have_pcint())
     // mask performance interrupt and set vector to a valid value
-    reg_write(APIC_lvtpc, reg_read(APIC_lvtpc) | APIC_lvt_masked | 0xff);
+    reg_write(Reg::Lvtpc, reg_read(Reg::Lvtpc) | APIC_lvt_masked | 0xff);
 
   if (have_tsint())
     // mask thermal sensor interrupt and set vector to a valid value
-    reg_write(APIC_lvtthmr, reg_read(APIC_lvtthmr) | APIC_lvt_masked | 0xff);
+    reg_write(Reg::Lvtthmr, reg_read(Reg::Lvtthmr) | APIC_lvt_masked | 0xff);
 }
 
 // give us a hint if we have an APIC but it is disabled (debugging only)
@@ -744,7 +754,7 @@ void
 Apic::set_perf_nmi()
 {
   if (have_pcint())
-    reg_write(APIC_lvtpc, 0x400);
+    reg_write(Reg::Lvtpc, 0x400);
 }
 
 static FIASCO_INIT_CPU_AND_PM
@@ -963,7 +973,7 @@ Apic::init(bool resume)
         {
           if (!(present & Present_before_msr))
             // APIC was not present *before* writing to MSR but is now present.
-            // We have to set APIC_lvt0 and APIC_lvt1 to appropriate values.
+            // We have to set LVT0 and LVT1 to appropriate values.
             route_pic_through_apic();
         }
       else
