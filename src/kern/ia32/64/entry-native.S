@@ -119,10 +119,23 @@ entry_int_apic_ignore:
 	SWITCH_TO_KERNEL_CR3 0
 	push	%rcx
 	push	%rdx
+	cmpb	$0, apic_use_x2		// code patching not worth the effort
+	jne	1f
+	// APIC
 	mov	apic_io_base, %rcx
-	mov	0xf0(%rcx), %edx
-	movl	$0, 0xb0(%rcx)
-	pop	%rdx
+	mov	0xf0(%rcx), %edx	// SPIV
+	movl	$0, 0xb0(%rcx)		// EOI
+	jmp	2f
+	// x2APIC
+1:	push	%rax
+	movl	$0x80f, %ecx		// SPIV
+	rdmsr
+	movl	$0x80b, %ecx		// EOI
+	xorl	%eax, %eax
+	xorl	%edx, %edx
+	wrmsr
+	pop	%rax
+2:	pop	%rdx
 	pop	%rcx
 	SAFE_IRET
 

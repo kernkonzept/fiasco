@@ -165,10 +165,23 @@ entry_int_apic_ignore:
 	pushl	%ecx
 	pushl	%edx
 	RESET_KERNEL_SEGMENTS_FORCE_DS_ES
+	cmpb	$0, apic_use_x2		// code patching not worth the effort
+	jne	1f
+	// APIC
 	mov	apic_io_base, %ecx
-	mov	0xf0(%ecx), %edx
-	movl	$0, 0xb0(%ecx)
-	popl	%edx
+	mov	0xf0(%ecx), %edx	// SPIV
+	movl	$0, 0xb0(%ecx)		// EOI
+	jmp	2f
+	// x2APIC
+1:	pushl	%eax
+	movl	$0x80f, %ecx		// SPIV
+	rdmsr
+	movl	$0x80b, %ecx		// EOI
+	xorl	%eax, %eax
+	xorl	%edx, %edx
+	wrmsr
+	popl	%eax
+2:	popl	%edx
 	popl	%ecx
 	iret
 

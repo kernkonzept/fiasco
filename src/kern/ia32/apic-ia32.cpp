@@ -54,7 +54,7 @@ private:
   static unsigned timer_divisor;
   static unsigned frequency_khz;
   static Unsigned64 scaler_us_to_apic;
-  static bool use_x2;
+  static bool use_x2 asm ("apic_use_x2");
 
   enum class Reg : unsigned
   {
