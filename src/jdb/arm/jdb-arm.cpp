@@ -424,7 +424,7 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
       // results into some data abort exception -- aborting the current 'd'
       // view.
       if (mem_type == Page::Type::Uncached()
-          && !addr.is_phys() && addr.space()->is_sigma0())
+          && addr.have_space() && addr.space()->is_sigma0())
         return 0;
 
       pte.set_page(Phys_mem_addr(cxx::mask_lsb(phys, pte.page_order())),

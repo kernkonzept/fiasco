@@ -28,6 +28,7 @@ public:
   bool is_phys() const { return _space == reinterpret_cast<Space *>(1); }
   bool is_kmem() const { return _space == nullptr || is_kernel_task(); }
   bool is_null() const { return _space == nullptr && _addr == 0; }
+  bool have_space() const { return !is_phys() && _space != nullptr; }
   Address phys() const { return _addr; }
   Address addr() const { return _addr; }
   void *virt() const { return reinterpret_cast<void *>(_addr); }
