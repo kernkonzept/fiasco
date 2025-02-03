@@ -326,3 +326,8 @@ register_factory()
 }
 
 }
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [debug]:
+
+PUBLIC Locked_prio_list const* Semaphore::waiting() const { return &_waiting; }

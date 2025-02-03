@@ -2,6 +2,8 @@ INTERFACE:
 
 #include "thread_object.h"
 
+class Semaphore;
+
 class Jdb_thread
 {
 };
@@ -108,39 +110,47 @@ Jdb_thread::print_snd_partner(Thread *t, int task_format = 0)
     putstr("   ");
 }
 
+PRIVATE static
+Semaphore const *
+Jdb_thread::waiting_for_semaphore(Thread *t)
+{
+  for (auto const &o : Kobject_dbg::_kobjects)
+    if (auto const *s = cxx::dyn_cast<Semaphore*>(Kobject::from_dbg(o)))
+      if (t->wait_queue() == s->waiting())
+        return s;
+
+  return nullptr;
+}
+
 PUBLIC static
 void
 Jdb_thread::print_partner(Thread *t, int task_format = 0)
 {
-  void const *p = t->_partner;
-
   if (!has_partner(t))
     {
       printf("%*s ", task_format, " ");
       return;
     }
 
+  void const *p = t->_partner;
   if (!p)
+    printf("%*s ", task_format, "-");
+  else if (t->is_partner(Semaphore::sem_partner()))
     {
-      printf("%*s ", task_format, "-");
-      return;
-    }
-
-  if (t->is_partner(Semaphore::sem_partner()))
-    {
-      printf("%*s ", task_format, "Sem");
-      // Actually getting the semaphore would require to scan all
-      // semaphores' wait lists to find t
+      if (Semaphore const *waiting_for = waiting_for_semaphore(t))
+        printf("%*lx+", task_format, waiting_for->dbg_id());
+      else
+        printf("%*s ", task_format, "Sem");
     }
   else if (Kobject *o = Kobject::from_dbg(Kobject_dbg::pointer_to_obj(p)))
     {
-      char flag = '?';
-
+      char flag;
       if (cxx::dyn_cast<Thread*>(o))
         flag = ' ';
       else if (cxx::dyn_cast<Irq*>(o))
         flag = '*';
-
+      else
+        flag = '?';
       printf("%*.lx%c", task_format, o->dbg_info()->dbg_id(), flag);
     }
   else
