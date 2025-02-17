@@ -54,10 +54,12 @@ disasm_bytes(unsigned printlen, bool clreol, Jdb_address addr,
 # endif
                              ), &handle);
 #elif defined(CONFIG_RISCV) && defined(CONFIG_BIT32)
-      auto syntax = static_cast<cs_mode>(CS_MODE_RISCV32|CS_MODE_LITTLE_ENDIAN);
+      auto syntax = static_cast<cs_mode>(CS_MODE_RISCV32|CS_MODE_RISCVC|
+                                         CS_MODE_LITTLE_ENDIAN);
       ret = cs_open(CS_ARCH_RISCV, syntax, &handle);
 #elif defined(CONFIG_RISCV) && defined(CONFIG_BIT64)
-      auto syntax = static_cast<cs_mode>(CS_MODE_RISCV64|CS_MODE_LITTLE_ENDIAN);
+      auto syntax = static_cast<cs_mode>(CS_MODE_RISCV64|CS_MODE_RISCVC|
+                                         CS_MODE_LITTLE_ENDIAN);
       ret = cs_open(CS_ARCH_RISCV, syntax, &handle);
 #endif
       if (ret != CS_ERR_OK)
