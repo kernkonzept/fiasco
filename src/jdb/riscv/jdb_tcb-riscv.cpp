@@ -73,7 +73,7 @@ IMPLEMENT inline
 bool
 Jdb_tcb_ptr::is_user_value() const
 {
-  return    _offs >= Context::Size - sizeof(Trap_state)
+  return    _offs >= Context::Size - Frame_pad_size - sizeof(Trap_state)
          && _offs < Context::Size - Frame_pad_size;
 }
 
