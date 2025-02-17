@@ -3,6 +3,7 @@
 #
 
 import gdb
+import gdb.types
 import re
 import os
 
