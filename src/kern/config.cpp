@@ -10,18 +10,13 @@ INTERFACE:
 #include "l4_types.h"
 #include "global_data.h"
 
-// special magic to allow old compilers to inline constants
-
 #if defined(__clang__)
 # define COMPILER "clang " __clang_version__
-# define GCC_VERSION 409
 #else
 #if defined(__GNUC__)
 # define COMPILER "gcc " __VERSION__
-# define GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__)
 #else
 # define COMPILER "Non-GCC"
-# define GCC_VERSION 0
 #endif
 #endif
 
