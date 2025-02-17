@@ -322,12 +322,13 @@ Jdb::printf_statline(const char *prompt, const char *help,
   // avoid -Wformat-zero-length warning
   if (format && (format[0] != '_' || format[1] != '\0'))
     {
+      char buf[80];
       va_list list;
       va_start(list, format);
-      int len = vprintf(format, list);
+      vsnprintf(buf, sizeof(buf), format, list);
       va_end(list);
-      // consider escape sequences in 'format' but not in the parameter list
-      w -= len - invisible_len(format);
+      putstr(buf);
+      w -= print_len(buf);
     }
   if (help)
     {
