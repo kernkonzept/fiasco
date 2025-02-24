@@ -214,7 +214,7 @@ Gic_h_v3::clear_lr(unsigned idx)
 {
 #define TRANSFER_LR(i) \
   if constexpr (i < Gic_h::Arm_vgic::N_lregs) \
-    asm ("mcr p15, 4, %0, c12, c%c1, %c2" :: "r"(0), "i"(14  + i/2), "i"(i%8))
+    asm ("mcr p15, 4, %0, c12, c%c1, %c2" :: "r"(0), "i"(12 + i/8), "i"(i % 8))
 
   switch (idx)
     {
