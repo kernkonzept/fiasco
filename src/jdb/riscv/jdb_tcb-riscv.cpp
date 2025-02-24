@@ -103,5 +103,6 @@ Address
 Jdb_tcb_ptr::user_ip() const
 {
   unsigned pc_offs = sizeof(Trap_state) - offsetof(Trap_state, _pc);
-  return top_value(-(Frame_pad_size + pc_offs) / sizeof(Mword));
+  int idx = (Frame_pad_size + pc_offs) / sizeof(Mword);
+  return top_value(-idx);
 }
