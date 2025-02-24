@@ -424,17 +424,28 @@ INTERRUPT	0x28, int8
  * The immediate in the movabs shall be patched with the
  * address of an Irq_base object that is later attached to
  * the corresponding IDT vector.
+ *
+ * The bundle align mode makes sure that each individual
+ * stub is exactly 16 bytes in length. In addition to that,
+ * the final .org directive makes sure that the whole sequence
+ * of stubs is exactly as long as it is supposed to be.
  */
 	.section ".entry.text.irqs", "ax", @progbits
 	.global idt_irq_vector_stubs
 	.align 64
 idt_irq_vector_stubs:
+.bundle_align_mode 4
 .rept APIC_IRQ_BASE - 0x28
+	.bundle_lock
 	push	%eax
 	mov	$0, %eax
 	jmp	__generic_irq_entry
+	.bundle_unlock
 .endr
-        .previous
+.bundle_align_mode 0
+.org idt_irq_vector_stubs + (APIC_IRQ_BASE - 0x28) * 16
+
+	.previous
 
 
 	.p2align 4
