@@ -622,10 +622,6 @@ Irq_sender::bind_irq_thread(Irq_thread target, Utcb const *utcb, Utcb *utcb_out)
   return commit_result(result < 0 ? result : 0);
 }
 
-PUBLIC
-Receiver *
-Irq_sender::owner() const { return static_cast<Thread*>(_irq_thread); }
-
 /**
  * Release an interrupt.
  *
@@ -1056,13 +1052,6 @@ Irq_sender::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
 }
 
 
-PUBLIC inline
-Mword
-Irq_sender::id() const
-{ return _irq_id; }
-
-
-
  // Irq implementation
 
 static DEFINE_GLOBAL Global_data<Kmem_slab_t<Irq_sender>> _irq_allocator("Irq");
@@ -1146,6 +1135,16 @@ register_factory()
 
 //--------------------------------------------------------------------------
 IMPLEMENTATION[debug || test_support_code]:
+
+PUBLIC inline
+Mword
+Irq_sender::id() const
+{ return _irq_id; }
+
+PUBLIC inline
+Receiver *
+Irq_sender::owner() const
+{ return static_cast<Thread*>(_irq_thread); }
 
 PUBLIC inline
 bool
