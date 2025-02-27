@@ -339,7 +339,7 @@ Irq::dispatch_irq_proto(Irq::Op op, bool may_unmask)
     }
 }
 
-PUBLIC virtual
+PUBLIC
 bool
 Irq_sender::put() override
 { return dec_ref() == 0; }
