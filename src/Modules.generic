@@ -126,11 +126,22 @@ LIBUART_UART2 = -include uart_$(strip $(1)).h \
 #
 # COV Subsystem
 #
+LIBCOV_CONTRIB_SUPPORTED_VERSIONS := 17
+LIBCOV_CONTRIB_MAX_VERSION        := $(lastword $(LIBCOV_CONTRIB_SUPPORTED_VERSIONS))
+LIBCOV_CONTRIB_VERSION            := $(CCVER_VERSION)
+
+ifeq ($(filter $(LIBCOV_CONTRIB_VERSION),$(LIBCOV_CONTRIB_SUPPORTED_VERSIONS)),)
+  $(warning No suitable libcov version found for clang $(LIBCOV_CONTRIB_VERSION).)
+  $(warning Falling back to libcov $(LIBCOV_CONTRIB_MAX_VERSION), unexpected errors may occur.)
+  $(warning Please update the libcov package.)
+  LIBCOV_CONTRIB_VERSION   := $(LIBCOV_CONTRIB_MAX_VERSION)
+endif
+
 LIBCOV := libcov.a
 VPATH += lib/gcov/src
-VPATH += lib/gcov/contrib/llvm_compiler-rt_profile/
+VPATH += lib/gcov/contrib/llvm_compiler-rt_profile/llvm-$(LIBCOV_CONTRIB_VERSION)/
 PRIVATE_INCDIR += lib/gcov/src
-PRIVATE_INCDIR += lib/gcov/contrib/llvm_compiler-rt_profile/
+PRIVATE_INCDIR += lib/gcov/contrib/llvm_compiler-rt_profile/llvm-$(LIBCOV_CONTRIB_VERSION)/
 
 CSRC_LIBCOV-clang_contrib := \
         InstrProfiling.c InstrProfilingBuffer.c InstrProfilingPlatformLinux.c \
