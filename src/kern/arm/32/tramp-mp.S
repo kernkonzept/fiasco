@@ -172,6 +172,11 @@ _tramp_mp_entry:
         ldr r0, [r0, r12]
         mov r1, #0
         mcrr p15, 4, r0, r1, c2     // HTBR
+
+        // Ensure paging configuration is committed before MMU and caches are
+        // enabled.
+        isb sy
+
         movw r0, #(1 | 4 | 32 | 0x1000)
         mcr  p15, 4, r0, c1, c0     // HSCTLR
 
@@ -212,6 +217,10 @@ _tramp_mp_entry:
 1:
 	mcr p15, 0, r0, c2, c0
 2:
+
+	// Ensure paging configuration is committed before MMU and caches are
+	// enabled.
+	isb sy
 #endif
 
 	ldr r0, .LC_tramp_mp_startup_cp15_c1
