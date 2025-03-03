@@ -43,7 +43,7 @@ Kernel_thread::boot_app_cpus()
 {
   extern char _tramp_mp_entry[];
   extern char _tramp_mp_boot_info[];
-  Mp_boot_info volatile *_tmp;
+  Mp_boot_info *_tmp;
   _tmp = reinterpret_cast<Mp_boot_info*>(_tramp_mp_boot_info);
 
   _tmp->sctlr = Proc::sctlr();
@@ -57,7 +57,7 @@ Kernel_thread::boot_app_cpus()
   boot_app_cpu_gic(_tmp);
 
   asm volatile ("dsb sy" : : : "memory");
-  Mem_unit::clean_dcache();
+  Mem_unit::clean_dcache(_tmp, _tmp + 1);
 
   Platform_control::boot_ap_cpus(
     Kmem::kdir->virt_to_phys(reinterpret_cast<Address>(_tramp_mp_entry)));
@@ -86,7 +86,7 @@ static void
 Kernel_thread::boot_app_cpus()
 {
   extern char _tramp_mp_boot_info[];
-  Mp_boot_info volatile *_tmp;
+  Mp_boot_info *_tmp;
   _tmp = reinterpret_cast<Mp_boot_info*>(_tramp_mp_boot_info);
 
   _tmp->sctlr = Proc::sctlr();
@@ -95,7 +95,7 @@ Kernel_thread::boot_app_cpus()
   _tmp->prlar0 = (*Kmem::kdir)[Kpdir::Kernel_text].prlar;
 
   asm volatile ("dsb sy" : : : "memory");
-  Mem_unit::clean_dcache();
+  Mem_unit::clean_dcache(_tmp, _tmp + 1);
 
   extern char _tramp_mp_entry[];
   Platform_control::boot_ap_cpus(reinterpret_cast<Address>(_tramp_mp_entry));

@@ -288,12 +288,16 @@ refvar _tramp_mp_startup_mair1
 .long 0
 defvar _tramp_mp_spinlock
 
+.global _tramp_mp_startup_data_begin
+_tramp_mp_startup_data_begin:
 defvar _tramp_mp_startup_cp15_c1
 defvar _tramp_mp_startup_pdbr
 defvar _tramp_mp_startup_dcr
 defvar _tramp_mp_startup_ttbcr
 defvar _tramp_mp_startup_mair0
 defvar _tramp_mp_startup_mair1
+.global _tramp_mp_startup_data_end
+_tramp_mp_startup_data_end:
 
 	.p2align 3
 .LC_tramp_mp_init_stack:

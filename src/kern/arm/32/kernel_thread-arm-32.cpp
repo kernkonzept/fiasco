@@ -10,12 +10,14 @@ static void
 Kernel_thread::boot_app_cpus()
 {
   extern char _tramp_mp_entry[];
-  extern volatile Mword _tramp_mp_startup_cp15_c1;
-  extern volatile Mword _tramp_mp_startup_pdbr;
-  extern volatile Mword _tramp_mp_startup_dcr;
-  extern volatile Mword _tramp_mp_startup_ttbcr;
-  extern volatile Mword _tramp_mp_startup_mair0;
-  extern volatile Mword _tramp_mp_startup_mair1;
+  extern char _tramp_mp_startup_data_begin[];
+  extern char _tramp_mp_startup_data_end[];
+  extern Mword _tramp_mp_startup_cp15_c1;
+  extern Mword _tramp_mp_startup_pdbr;
+  extern Mword _tramp_mp_startup_dcr;
+  extern Mword _tramp_mp_startup_ttbcr;
+  extern Mword _tramp_mp_startup_mair0;
+  extern Mword _tramp_mp_startup_mair1;
 
   _tramp_mp_startup_cp15_c1 = Cpu::sctlr;
   _tramp_mp_startup_pdbr
@@ -27,7 +29,8 @@ Kernel_thread::boot_app_cpus()
   _tramp_mp_startup_dcr     = 0x55555555;
 
   __asm__ __volatile__ ("" : : : "memory");
-  Mem_unit::clean_dcache();
+  Mem_unit::clean_dcache(_tramp_mp_startup_data_begin,
+                         _tramp_mp_startup_data_end);
 
   Outer_cache::clean(Kmem::kdir->virt_to_phys(reinterpret_cast<Address>(
                                                 &_tramp_mp_startup_cp15_c1)));
