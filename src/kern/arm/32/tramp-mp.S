@@ -206,9 +206,6 @@ _tramp_mp_entry:
 	ldr r0, [r0, r12]
 	mcr p15, 0, r0, c10, c2, 1  // MAIR1 / NMRR
 
-	mov r0, #0
-	mcr p15, 0, r0, c8, c7, 0
-
 	ldr r0, .LC_tramp_mp_startup_pdbr
 	ldr r0, [r0, r12]
 	tst r1, #(1 << 31)
