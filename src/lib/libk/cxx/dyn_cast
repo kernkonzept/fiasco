@@ -219,7 +219,7 @@ Type_info const Dyn_castable<SELF, BASE, BASES...>::_cxx_dyn_static_type =
   sizeof(SELF)
 };
 
-/// Dynamic cast operator, only supports upcasts, i.e. from base to derived.
+/// Dynamic cast operator, only supports downcasts, i.e. from base to derived.
 template<typename TO, typename FROM> inline
 TO dyn_cast(FROM *p)
 {
