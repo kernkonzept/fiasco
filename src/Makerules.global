@@ -52,7 +52,8 @@ comp_nobuiltin = $(if $(filter $(1),$(NOBUILTIN)),-fno-builtin)
 
 # NOCOV
 NOCOVFLAGS-gcc   := -fno-profile-arcs -fno-test-coverage
-NOCOVFLAGS-clang := -fno-profile-instr-generate -fno-coverage-mapping
+NOCOVFLAGS-clang := -fno-profile-instr-generate -fno-coverage-mapping \
+                    $(if $(CLANG_SUPPORTS_MCDC),-fno-coverage-mcdc)
 NOCOVFLAGS = $(if $(CONFIG_COV),$(NOCOVFLAGS-$(CC_TYPE)))
 comp_nocov = $(if $(filter $(1),$(NOCOV)),$(NOCOVFLAGS))
 

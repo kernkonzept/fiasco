@@ -12,7 +12,8 @@ OBJ_KERNEL_noboot = $(filter-out bootstrap%,$(OBJ_KERNEL))
 OBJ_BOOTSTRAP = $(filter  bootstrap%,$(OBJ_KERNEL))
 
 COVFLAGS_bootstrap-gcc   := -fno-profile-arcs -fno-test-coverage
-COVFLAGS_bootstrap-clang := -fno-profile-instr-generate -fno-coverage-mapping
+COVFLAGS_bootstrap-clang := -fno-profile-instr-generate -fno-coverage-mapping \
+                            $(if $(CLANG_SUPPORTS_MCDC),-fno-coverage-mcdc)
 
 define gen_bootstrap_flags =
 CXXFLAGS_$(basename $(notdir $(1))) = \

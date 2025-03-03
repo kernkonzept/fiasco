@@ -192,9 +192,16 @@ LDFLAGS			+= $(call CHECKLD,--no-warn-rwx-segments,) \
 WNO_DEPRECATED_NON_PROTOTYPE := $(if $(call CHECKCC,-Wdeprecated-non-prototype),-Wno-deprecated-non-prototype)
 DIAGNOSTICS_COLOR := $(call CHECKCC,-fdiagnostics-color=always)
 
+
+# There are older versions of clang that have the mcdc flag but the feature is
+# not at the stage where we want to use it. That's why we explicitly check for
+# the version number here and dont use CHECK_CXX.
+CLANG_SUPPORTS_MCDC    := $(shell [ $(CCVER_VERSION) -gt 17 ] && echo 1)
+
 ifneq ($(CONFIG_COV),)
   SHARED_FLAGS-gcc     += -fprofile-arcs -ftest-coverage
-  SHARED_FLAGS-clang   += -fprofile-instr-generate -fcoverage-mapping \
+  SHARED_FLAGS-clang   += -fprofile-instr-generate -fcoverage-mapping  \
+                          $(if $(CLANG_SUPPORTS_MCDC),-fcoverage-mcdc) \
                           -mllvm -instrprof-atomic-counter-update-all
   KERNEL_LDFLAGS       += $(KERNEL_LDFLAGS-$(CC_TYPE))
   OBJ_KERNEL-clang     += fiasco-covpath.o
