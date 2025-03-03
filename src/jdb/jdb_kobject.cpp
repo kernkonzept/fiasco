@@ -524,7 +524,7 @@ Jdb_kobject::obj_description(String_buffer *buffer, String_buffer *help_text,
 
   if (buffer)
     buffer->printf(dense ? "%lx %lx [%-*s]" : "%8lx %08lx [%-*s]", o->dbg_id(),
-                   reinterpret_cast<Mword>(k), dense ? 0 : 7, kobject_type(k));
+                   reinterpret_cast<Mword>(k), 0, kobject_type(k));
 
   char const *ht;
 
