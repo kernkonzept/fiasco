@@ -372,6 +372,7 @@ struct Ipc_remote_dequeue_request
 {
   Receiver *partner;
   Sender *sender;
+  Context *sender_context;
   Receiver::Abort_state state;
 };
 
@@ -388,17 +389,28 @@ Receiver::handle_remote_abort_send(Drq *, Context *, void *_rq)
       rq->partner->vcpu_update_state();
     }
   else if (rq->partner->in_ipc(rq->sender))
-    rq->state = Abt_ipc_in_progress;
+    {
+      // Only if the sender is a thread, not for Irq_sender.
+      if (rq->sender_context)
+        // The Thread_ipc_transfer flag must be set here, because otherwise
+        // the eventual clear by Thread::ipc_send_msg(), once the transfer is
+        // finished, can occur before the sender sets Thread_ipc_transfer in
+        // Thread::abort_send().
+        rq->sender_context->xcpu_state_change(~0UL, Thread_ipc_transfer);
+
+      rq->state = Abt_ipc_in_progress;
+    }
   return Drq::done();
 }
 
 PUBLIC
 Receiver::Abort_state
-Receiver::abort_send(Sender *sender)
+Receiver::abort_send(Sender *sender, Context *sender_context)
 {
   Ipc_remote_dequeue_request rq;
   rq.partner = this;
   rq.sender = sender;
+  rq.sender_context = sender_context;
   rq.state = Abt_ipc_done;
   if (current_cpu() != home_cpu())
     drq(handle_remote_abort_send, &rq);

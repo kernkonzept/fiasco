@@ -1175,10 +1175,13 @@ Thread::abort_send(L4_error const &e, Thread *partner)
           abt = Abt_ipc_cancel;
         }
       else if (partner->in_ipc(this))
-        abt = Abt_ipc_in_progress;
+        {
+          state_add_dirty(Thread_ipc_transfer);
+          abt = Abt_ipc_in_progress;
+        }
     }
   else
-    abt = partner->Receiver::abort_send(this);
+    abt = partner->Receiver::abort_send(this, this);
 
   switch (abt)
     {
@@ -1189,7 +1192,8 @@ Thread::abort_send(L4_error const &e, Thread *partner)
       utcb().access()->error = e;
       return true;
     case Abt_ipc_in_progress:
-      state_add_dirty(Thread_ipc_transfer);
+      // In case partner is on current CPU, the Thread_ipc_transfer flag was set
+      // above, otherwise in Receiver::abort_send() via xcpu_state_change().
       while (state() & Thread_ipc_transfer)
         {
           state_del_dirty(Thread_ready);

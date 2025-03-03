@@ -509,7 +509,7 @@ Irq_sender::finish_replace_irq_thread(Irq_thread old, Irq_thread target,
     }
   else // old.is_ipc_sender()
     {
-      switch (old->Receiver::abort_send(this))
+      switch (old->Receiver::abort_send(this, nullptr))
         {
         case Receiver::Abt_ipc_done:
           result = Detach_inactive;
