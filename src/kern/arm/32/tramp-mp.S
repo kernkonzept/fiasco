@@ -158,6 +158,7 @@ _tramp_mp_entry:
         // TLB flush
         mcr p15, 4, r0, c8, c7, 0 /* TLBIALLH */
         mcr p15, 4, r0, c8, c7, 4 /* TLBIALLNSNH */
+        dsb sy
 
         // init TTBCR
         ldr r0, .LC_tramp_mp_startup_ttbcr
@@ -183,6 +184,7 @@ _tramp_mp_entry:
 #else
 	// TLB flush
 	mcr p15, 0, r0, c8, c7, 0
+	dsb sy
 
 	ldr r0, .LC_tramp_mp_startup_dcr
 	ldr r0, [r0, r12]
