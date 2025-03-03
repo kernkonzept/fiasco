@@ -226,9 +226,8 @@ _tramp_mp_entry:
 	ldr r0, [r0, r12]
 	mcr p15, 0, r0, c1, c0
 
-	// barrier
-	mrc p15, 0, r0, c2, c0, 0
-	mov r0, r0
+	isb sy
+
 	ldr r0, 1f
 	mov pc, r0
 1:
