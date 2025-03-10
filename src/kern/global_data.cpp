@@ -27,7 +27,7 @@ protected:
   constexpr T * const &_get() const { return _d; }
 
 private:
-  T *_d;
+  T *_d = nullptr;
 };
 
 template< typename T >

@@ -34,7 +34,7 @@ INTERFACE [!mp]:
 EXTENSION class Spin_lock
 {
 public:
-  Spin_lock() {}
+  constexpr Spin_lock() {}
 
   using Cpu_lock::Status;
   using Cpu_lock::test;
@@ -84,7 +84,7 @@ EXTENSION class Spin_lock
 public:
   typedef Mword Status;
   /// Initialize spin lock in unlocked state.
-  Spin_lock() : _lock(0) {}
+  constexpr Spin_lock() : _lock(0) {}
 
   template< typename LOCK >
   friend struct No_cpu_lock_policy;

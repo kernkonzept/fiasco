@@ -7,7 +7,7 @@ IMPLEMENTATION:
 
 #include "processor.h"
 
-IMPLEMENT inline
+IMPLEMENT constexpr
 Cpu_lock::Cpu_lock()
 {}
 

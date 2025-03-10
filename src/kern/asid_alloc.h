@@ -45,7 +45,7 @@ public:
   Value_type a;
 
   Asid_t() = default;
-  Asid_t(Value_type a) : a(a) {}
+  constexpr Asid_t(Value_type a) : a(a) {}
 
   bool is_valid() const
   {
@@ -98,7 +98,7 @@ public:
   /**
    * Reset all bits and set first available ASID to Asid_base.
    */
-  void reset()
+  constexpr void reset()
   {
     this->clear_all();
     _current_idx = Asid_base;
@@ -123,7 +123,7 @@ public:
     return asid_num();
   }
 
-  Asid_bitmap_t()
+  constexpr Asid_bitmap_t()
   {
     reset();
   }
@@ -358,7 +358,7 @@ private:
   }
 
 public:
-  Asid_alloc_t(Asids const &asids) : _asids(asids) {}
+  constexpr Asid_alloc_t(Asids const &asids) : _asids(asids) {}
 
   /**
    * Allocate a new ASID, if necessary, and set it as the active ASID of the

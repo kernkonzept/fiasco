@@ -11,8 +11,8 @@ public:
   enum { Max_num_cpus = MAX_NUM_CPUS };
   enum class Init { Bss };
 
-  Cpu_mask_t(Init) {}
-  Cpu_mask_t() { _b.clear_all(); }
+  constexpr Cpu_mask_t(Init) {}
+  constexpr Cpu_mask_t() { _b.clear_all(); }
 
   Cpu_mask_t(Cpu_mask_t const &) = default;
   Cpu_mask_t &operator = (Cpu_mask_t const &) = default;

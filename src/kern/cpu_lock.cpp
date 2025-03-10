@@ -21,7 +21,7 @@ public:
   enum : Status { Not_locked = 0 };
 
   /// ctor.
-  inline Cpu_lock();
+  constexpr Cpu_lock();
 
   /**
    * Test if the lock is already held.

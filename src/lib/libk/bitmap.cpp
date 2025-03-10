@@ -358,9 +358,10 @@ public:
    *       bits beyond the bit range (but within the byte size range of the
    *       storage type) are also written.
    */
-  void clear_all()
+  constexpr void clear_all()
   {
-    __builtin_memset(this->_bits, 0, Size_in_bytes);
+    for (auto &b : this->_bits)
+      b = 0;
   }
 
   /**
@@ -440,7 +441,7 @@ public:
 protected:
   template<bool LARGE, size_t BTS> friend class Bitmap_base;
 
-  Bitmap_base()
+  constexpr Bitmap_base()
   {
   }
 
@@ -746,7 +747,7 @@ public:
    * This is an optimized version for the single scalar unsigned long storage
    * type.
    */
-  void clear_all()
+  constexpr void clear_all()
   {
     _bits = 0;
   }
@@ -913,7 +914,7 @@ template<size_t BITS>
 class Bitmap : public Bitmap_base<(BITS > sizeof(unsigned long) * 8), BITS>
 {
 public:
-  Bitmap()
+  constexpr Bitmap()
   {
   }
 
