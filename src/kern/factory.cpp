@@ -179,13 +179,12 @@ Factory::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,
 
   auto cpu_lock_guard = lock_guard<Lock_guard_inverse_policy>(cpu_lock);
 
-  new_o =
-    Kobject_iface::manufacture(static_cast<long>(access_once(utcb->values + 0)),
-                               this, c_space, f->tag(), utcb, utcb_out, &err,
-                               &words);
+  long label = static_cast<long>(access_once(utcb->values + 0));
+  new_o = Kobject_iface::manufacture(label, this, c_space, f->tag(), utcb,
+                                     utcb_out, &err, &words);
 
   LOG_TRACE("Kobject create", "new", ::current(), Log_entry,
-    l->op = utcb->values[0];
+    l->op = label;
     l->buffer = buffer.obj_index();
     l->id = dbg_info()->dbg_id();
     l->ram = current();
@@ -261,15 +260,18 @@ void
 Factory::Log_entry::print(String_buffer *buf) const
 {
   static char const *const ops[] =
-  { /*   0 */ "gate", "irq", 0, 0, 0, 0, 0, 0,
+  {
+    /*   0 */ "gate", "irq", 0, 0, 0, 0, 0, 0,
     /*  -8 */ 0, 0, 0, "task", "thread", 0, 0, "factory",
-    /* -16 */ "vm", "dmaspace", "irqsender", 0, "sem" };
-  char const *_op = -op < int{cxx::size(ops)} ? ops[-op] : "invalid op";
-  if (!_op)
-    _op = "(nan)";
-
-  buf->printf("factory=%lx [%s] new=%lx cap=[C:%lx] ram=%lx",
-              id, _op, newo, cxx::int_value<Cap_index>(buffer), ram);
+    /* -16 */ "vm", "dmaspace", "irqsender", 0, "sem"
+  };
+  buf->printf("factory=%lx ", id);
+  if (op <= 0 && op > -int{cxx::size(ops)})
+    buf->printf("[%s]", ops[-op] ? ops[-op] : "(nan)");
+  else
+    buf->printf("[invalid proto %ld]", op);
+  buf->printf(" new=%lx cap=[C:%lx] ram=%lx",
+              newo, cxx::int_value<Cap_index>(buffer), ram);
 }
 
 // ------------------------------------------------------------------------
