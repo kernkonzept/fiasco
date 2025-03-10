@@ -35,7 +35,7 @@ public:
       Open_wait_flag = 0x01,
       Ipc_receive   = 0x02, // with closed wait
       Ipc_open_wait = 0x03, // IPC with open wait
-      Irq_receive   = 0x05, // IRQ (alawys open wait)
+      Irq_receive   = 0x05, // IRQ (always open wait)
     };
 
     S s;
