@@ -322,7 +322,7 @@ Jdb::printf_statline(const char *prompt, const char *help,
   // avoid -Wformat-zero-length warning
   if (format && (format[0] != '_' || format[1] != '\0'))
     {
-      char buf[80];
+      char buf[128];
       va_list list;
       va_start(list, format);
       vsnprintf(buf, sizeof(buf), format, list);
