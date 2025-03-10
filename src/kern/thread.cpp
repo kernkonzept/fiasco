@@ -733,14 +733,6 @@ Thread::check_sys_ipc(unsigned flags, Thread **partner, Thread **sender,
   if (flags & L4_obj_ref::Ipc_send)
     *partner = const_cast<Thread*>(this);
 
-  // FIXME: shall be removed flags == 0 is no-op
-  if (!flags)
-    {
-      *sender = const_cast<Thread*>(this);
-      *partner = const_cast<Thread*>(this);
-      *have_recv = true;
-    }
-
   return *have_recv || ((flags & L4_obj_ref::Ipc_send) && *partner);
 }
 

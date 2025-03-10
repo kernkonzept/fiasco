@@ -45,12 +45,6 @@ public:
     None = 0,
 
     /**
-     * \deprecated Use #Ipc_call_ipc.
-     * Deprecated call code, do not use this operation code.
-     */
-    Ipc_call = 0,
-
-    /**
      * Set this bit to include a send phase.
      *
      * In the case of a send phase, the message is sent to the object

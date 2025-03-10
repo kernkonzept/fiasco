@@ -72,7 +72,7 @@ get_ipc_type(T e)
 {
   switch (e->ipc_type())
     {
-    case L4_obj_ref::Ipc_call:           return "call";
+    case L4_obj_ref::None:               return "none";
     case L4_obj_ref::Ipc_call_ipc:       return "call ipc";
     case L4_obj_ref::Ipc_send:           return "send";
     case L4_obj_ref::Ipc_recv:           return "recv";
@@ -303,8 +303,6 @@ formatter_ipc(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidlen)
 {
   Tb_entry_ipc *e = static_cast<Tb_entry_ipc*>(tb);
   unsigned char type = e->ipc_type();
-  if (!type)
-    type = L4_obj_ref::Ipc_call_ipc;
 
   // ipc operation / shortcut succeeded/failed
   const char *m = get_ipc_type(e);

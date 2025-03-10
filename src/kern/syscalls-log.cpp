@@ -21,8 +21,7 @@ IMPLEMENT void FIASCO_FLATTEN sys_ipc_log_wrapper()
   Syscall_frame *ipc_regs  = regs->syscall_frame();
 
   Mword entry_event_num    = static_cast<Mword>(-1);
-  Unsigned8 have_snd       = (ipc_regs->ref().op() & L4_obj_ref::Ipc_send)
-                             || (ipc_regs->ref().op() == L4_obj_ref::Ipc_call);
+  Unsigned8 have_snd       = ipc_regs->ref().op() & L4_obj_ref::Ipc_send;
   Utcb *utcb = curr->utcb().access(true);
   Task *curr_task = static_cast<Task*>(curr->space());
   int do_log = Jdb_ipc_trace::log()
