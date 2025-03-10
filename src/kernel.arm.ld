@@ -93,6 +93,11 @@ SECTIONS {
     QUAD(0)
     QUAD(0)
   } :bstrap :dyn
+
+  /* Add empty stringtable for .dynamic to avoid readelf warning. */
+  .dynstr : {
+    BYTE(0)
+  } :bstrap
 #endif
 
   . = ALIGN(4K);
