@@ -799,7 +799,7 @@ Fpu_state_sve::save() override
   Mword zcr_el1 = Cpu::zcr_el1();
   *access<Zcr>() = zcr_el1;
 
-  with_adjusted_vl(zcr_el1, [=]() { save_regs(); });
+  with_adjusted_vl(zcr_el1, [this]() { save_regs(); });
 }
 
 PUBLIC
@@ -808,7 +808,7 @@ Fpu_state_sve::restore() const override
 {
   Mword zcr_el1 = *get<Zcr>();
 
-  with_adjusted_vl(zcr_el1, [=]() { restore_regs(); });
+  with_adjusted_vl(zcr_el1, [this]() { restore_regs(); });
 
   // Restore vector length selected by user mode
   Cpu::zcr_el1(zcr_el1);
