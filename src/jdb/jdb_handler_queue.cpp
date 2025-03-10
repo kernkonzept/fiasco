@@ -8,7 +8,7 @@ class Jdb_handler
   friend class Jdb_handler_queue;
   
 public:
-  Jdb_handler( void (*handler)() ) : handler(handler), next(0) {}
+  Jdb_handler( void (*handler)() ) : handler(handler), next(nullptr) {}
   void execute() { handler(); }
 
 private:

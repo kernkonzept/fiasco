@@ -339,7 +339,7 @@ PRIVATE inline
 void
 Fpu::finish_init()
 {
-  set_owner(0);
+  set_owner(nullptr);
   disable();
 }
 

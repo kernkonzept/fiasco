@@ -53,7 +53,7 @@ Jdb_module::Cmd const *
 Jdb_cpu_call_module::cmds() const override
 {
   static Cmd cs[] =
-    { { 0, "", "cpucalls", "", "cpucalls\tshow CPU calls", 0 } };
+    { { 0, "", "cpucalls", "", "cpucalls\tshow CPU calls", nullptr } };
 
   return cs;
 }

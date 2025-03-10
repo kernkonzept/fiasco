@@ -89,7 +89,7 @@ Svm::pm_on_resume(Cpu_number) override
   Cpu::wrmsr(efer, Msr::Ia32_efer);
   Unsigned64 vm_hsave_pa = Kmem::virt_to_phys(_vm_hsave_area);
   Cpu::wrmsr(vm_hsave_pa, Msr::Vm_hsave_pa);
-  _last_user_vmcb = 0;
+  _last_user_vmcb = nullptr;
 }
 
 PUBLIC static inline NEEDS["cpu.h"]
@@ -112,7 +112,7 @@ PUBLIC
 Svm::Svm(Cpu_number cpu)
 {
   Cpu &c = Cpu::cpus.cpu(cpu);
-  _last_user_vmcb = 0;
+  _last_user_vmcb = nullptr;
   _svm_enabled = false;
   _max_asid = 0;
   _has_npt = false;

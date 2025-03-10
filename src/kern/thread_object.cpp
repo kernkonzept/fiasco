@@ -120,8 +120,8 @@ Thread_object::invoke(L4_obj_ref self, L4_fpage::Rights rights,
     {
       /* we do IPC */
       Thread *ct = current_thread();
-      Thread *sender = 0;
-      Thread *partner = 0;
+      Thread *sender = nullptr;
+      Thread *partner = nullptr;
       bool have_rcv = false;
 
       if (EXPECT_FALSE(!check_sys_ipc(op, &partner, &sender, &have_rcv)))
@@ -208,7 +208,7 @@ Thread_object::sys_vcpu_resume(L4_msg_tag const &tag, Utcb const *utcb, Utcb *)
       reinterpret_cast<Mword &>(vcpu->user_task) |= L4_obj_ref::Ipc_send;
     }
   else if (user_task.op() == L4_obj_ref::Ipc_reply)
-    vcpu_set_user_space(0);
+    vcpu_set_user_space(nullptr);
 
   L4_snd_item_iter snd_items(utcb, tag.words());
   int items = tag.items();
@@ -243,7 +243,7 @@ Thread_object::sys_vcpu_resume(L4_msg_tag const &tag, Utcb const *utcb, Utcb *)
       && (vcpu->sticky_flags & Vcpu_state::Sf_irq_pending))
     {
       assert(cpu_lock.test());
-      do_ipc(L4_msg_tag(), 0, 0, true, 0,
+      do_ipc(L4_msg_tag(), 0, nullptr, true, nullptr,
              L4_timeout_pair(L4_timeout::Zero, L4_timeout::Zero),
              &vcpu->_ipc_regs, L4_fpage::Rights::FULL());
 
@@ -359,14 +359,14 @@ Thread_object::sys_modify_senders(L4_msg_tag tag, Utcb const *in, Utcb * /*out*/
       // threads running on our CPU are allowed to iterate our sender list.
       if (current_cpu() != home_cpu())
         {
-          sender_list()->cursor(0);
+          sender_list()->cursor(nullptr);
           return commit_result(-L4_err::EInval);
         }
 
       c = sender_list()->cursor();
     }
 
-  sender_list()->cursor(0);
+  sender_list()->cursor(nullptr);
   return Kobject_iface::commit_result(0);
 }
 
@@ -487,7 +487,7 @@ L4_msg_tag
 Thread_object::sys_vcpu_control(L4_fpage::Rights, L4_msg_tag const &tag,
                                 Utcb const *utcb, Utcb * /* out */)
 {
-  User_ptr<Vcpu_state> vcpu(0);
+  User_ptr<Vcpu_state> vcpu(nullptr);
 
   if (tag.words() >= 2)
     vcpu = User_ptr<Vcpu_state>(reinterpret_cast<Vcpu_state*>(utcb->values[1]));
@@ -545,8 +545,8 @@ Thread_object::sys_vcpu_control(L4_fpage::Rights, L4_msg_tag const &tag,
 PUBLIC
 bool
 Thread_object::ex_regs(Address ip, Address sp,
-                Address *o_ip = 0, Address *o_sp = 0, Mword *o_flags = 0,
-                Mword ops = 0)
+                Address *o_ip = nullptr, Address *o_sp = nullptr,
+                Mword *o_flags = nullptr, Mword ops = 0)
 {
   if (current() == this)
     spill_user_state();

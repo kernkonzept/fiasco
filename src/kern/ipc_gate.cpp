@@ -104,7 +104,7 @@ Ipc_gate_ctl::downgrade(unsigned long attr) override
 
 PUBLIC inline
 Ipc_gate::Ipc_gate(Ram_quota *q, Thread *t, Mword id)
-  : _thread(0), _id(id), _quota(q), _wait_q()
+  : _thread(nullptr), _id(id), _quota(q), _wait_q()
 {
   if (t)
     {
@@ -157,7 +157,7 @@ Ipc_gate_obj::destroy(Kobjects_list &reap_list) override
   Thread *tmp = access_once(&_thread);
   if (tmp)
     {
-      _thread = 0;
+      _thread = nullptr;
       unblock_all();
       if (tmp->dec_ref() == 0)
         delete tmp;
@@ -370,8 +370,8 @@ Ipc_gate::invoke(L4_obj_ref /*self*/, L4_fpage::Rights rights,
                  Syscall_frame *f, Utcb *utcb) override
 {
   Thread *ct = current_thread();
-  Thread *sender = 0;
-  Thread *partner = 0;
+  Thread *sender = nullptr;
+  Thread *partner = nullptr;
   bool have_rcv = false;
 
   Thread *t = access_once(&_thread);
@@ -419,7 +419,7 @@ ipc_gate_factory(Ram_quota *q, Space *space,
                  int *err, unsigned *)
 {
   L4_snd_item_iter snd_items(utcb, tag.words());
-  Thread *thread = 0;
+  Thread *thread = nullptr;
   Mword id = 0;
 
   if (tag.items() && snd_items.next())

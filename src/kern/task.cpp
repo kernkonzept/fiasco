@@ -218,7 +218,7 @@ Task::alloc_ku_mem(L4_fpage *ku_area, bool need_remote_tlb_flush)
 
   User_ptr<void> u_addr(static_cast<void *>(ku_area->mem_address()));
 
-  void *p = 0;
+  void *p = nullptr;
   if (int e = alloc_ku_mem_chunk(&u_addr, sz, &p, need_remote_tlb_flush))
     {
       m->free(ram_quota());

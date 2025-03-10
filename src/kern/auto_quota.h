@@ -12,21 +12,21 @@ public:
   Auto_quota operator = (Auto_quota const &) = delete;
 
   Auto_quota(T *quota, unsigned long size)
-  : _quota(0), _bytes(size)
+  : _quota(nullptr), _bytes(size)
   {
     if (quota->alloc(size))
       _quota = quota;
   }
 
   Auto_quota(T *quota, Order order)
-  : _quota(0), _bytes(Bytes(1) << order)
+  : _quota(nullptr), _bytes(Bytes(1) << order)
   {
     if (quota->alloc(Bytes(1) << order))
       _quota = quota;
   }
 
   Auto_quota(T *quota, Bytes size)
-  : _quota(0), _bytes(size)
+  : _quota(nullptr), _bytes(size)
   {
     if (quota->alloc(size))
       _quota = quota;
@@ -47,7 +47,7 @@ public:
     if (_quota)
       _quota->free(_bytes);
 
-    _quota = 0;
+    _quota = nullptr;
   }
 
   ~Auto_quota() { reset(); }
@@ -55,7 +55,7 @@ public:
   T *release()
   {
     T *q = _quota;
-    _quota = 0;
+    _quota = nullptr;
     return q;
   }
 

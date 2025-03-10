@@ -1153,7 +1153,7 @@ Utest::start_thread(F const &fn, Cpu_number cpu,
   //     user IP is not used (thread never leaves the kernel), hence that
   //     address is used to pass the required parameters.
   //  2. Remove the 'Thread_dead' state bit.
-  t->ex_regs(reinterpret_cast<Address>(&args), 0UL, 0, 0, 0, 0);
+  t->ex_regs(reinterpret_cast<Address>(&args), 0UL, nullptr, nullptr, nullptr, 0);
   t->activate();
 
     {

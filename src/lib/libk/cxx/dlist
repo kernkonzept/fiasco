@@ -24,7 +24,7 @@ namespace cxx {
 class D_list_item
 {
 public:
-  constexpr D_list_item() : _dli_next(0), _dli_prev(0) {}
+  constexpr D_list_item() : _dli_next(nullptr), _dli_prev(nullptr) {}
 private:
   friend struct D_list_item_policy;
 
@@ -104,7 +104,7 @@ public:
   {
     C::next(C::prev(e)) = C::next(e);
     C::prev(C::next(e)) = C::prev(e);
-    C::next(e) = 0;
+    C::next(e) = nullptr;
   }
 
   static Iterator erase(Iterator const &e)
@@ -141,7 +141,7 @@ public:
   { C::next(e) = C::prev(e) = e; return e; }
 
   static void remove_last(T *e)
-  { C::next(e) = 0; }
+  { C::next(e) = nullptr; }
 
 protected:
   static Iterator __iter(typename C::Item *e) { return Iterator(e); }
@@ -170,7 +170,7 @@ public:
         Base::Iterator::operator ++ ();
 
       if (this->_c == _h)
-        this->_c = 0;
+        this->_c = nullptr;
 
       return *this;
     }
@@ -193,7 +193,7 @@ public:
         Base::Iterator::operator -- ();
 
       if (this->_c == _h)
-        this->_c = 0;
+        this->_c = nullptr;
 
       return *this;
     }
@@ -214,7 +214,7 @@ public:
   Sd_list()
   {
     if (!BSS)
-      H::set_head(_f, 0);
+      H::set_head(_f, nullptr);
   }
 
   bool empty() const { return !H::head(_f); }
@@ -226,7 +226,7 @@ public:
     if (e == C::next(e)) // must be the last
       {
         Base::remove_last(e);
-        H::set_head(_f, 0);
+        H::set_head(_f, nullptr);
         return;
       }
 
@@ -266,15 +266,15 @@ public:
   typename H::Head_type &head() { return _f; }
 
   Iterator begin() { return Iterator(H::head(_f)); }
-  Iterator end() { return Iterator(0); }
+  Iterator end() { return Iterator(nullptr); }
 
   R_iterator rbegin()
   {
     if (head())
       return R_iterator(static_cast<T*>(C::prev(H::head(_f))));
-    return R_iterator(0);
+    return R_iterator(nullptr);
   }
-  R_iterator rend() { return R_iterator(0); }
+  R_iterator rend() { return R_iterator(nullptr); }
 
 private:
   Sd_list(Sd_list const &);

@@ -143,7 +143,7 @@ bool Prio_list_elem::in_list() const { return S_list::in_list(this); }
  */
 PUBLIC inline NEEDS[Prio_list::next]
 void
-Prio_list::dequeue(Prio_list_elem *e, Prio_list_elem **next = 0)
+Prio_list::dequeue(Prio_list_elem *e, Prio_list_elem **next = nullptr)
 {
   if (P_list::in_list(e))
     {
@@ -171,7 +171,7 @@ Prio_list::dequeue(Prio_list_elem *e, Prio_list_elem **next = 0)
 }
 
 PUBLIC inline
-Iterable_prio_list::Iterable_prio_list() : _cursor(0) {}
+Iterable_prio_list::Iterable_prio_list() : _cursor(nullptr) {}
 
 /**
  * Dequeue a given element from the list.
@@ -181,8 +181,8 @@ PUBLIC inline NEEDS[Prio_list::dequeue]
 void
 Iterable_prio_list::dequeue(Prio_list_elem *e)
 {
-  Prio_list_elem **c = 0;
-  if (EXPECT_FALSE(_cursor != 0) && EXPECT_FALSE(_cursor == e))
+  Prio_list_elem **c = nullptr;
+  if (EXPECT_FALSE(_cursor != nullptr) && EXPECT_FALSE(_cursor == e))
     c = &_cursor;
 
   Prio_list::dequeue(e, c);

@@ -24,7 +24,7 @@ struct Dmar_head
 template<typename T>
 struct Next_iter
 {
-  Next_iter() : _c(0) {}
+  Next_iter() : _c(nullptr) {}
   Next_iter(T const *h) : _c(h) {}
   Next_iter const &operator ++ ()
   {

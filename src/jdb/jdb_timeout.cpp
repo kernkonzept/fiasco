@@ -253,7 +253,7 @@ Jdb_list_timeouts::list_timeouts_show_timeout(Timeout *t)
       snprintf(ownerstr, sizeof(ownerstr), "  0x%lx",
                reinterpret_cast<Address>(t));
       type  = "unkn";
-      owner = 0;
+      owner = nullptr;
       break;
     }
 
@@ -267,7 +267,7 @@ Jdb_list_timeouts::list_timeouts_show_timeout(Timeout *t)
       putstr(time_str.c_str());
     }
 
-  Jdb_kobject_name *nx = 0;
+  Jdb_kobject_name *nx = nullptr;
 
   if (owner)
     nx = Jdb_kobject_extension::find_extension<Jdb_kobject_name>(owner);
@@ -390,7 +390,7 @@ Jdb_list_timeouts::list()
                   break;
                 case KEY_RETURN:
                 case KEY_RETURN_2:
-                  if (jdb_show_tcb != 0)
+                  if (jdb_show_tcb != nullptr)
                     {
                       Thread *owner;
                       Iter i = current;
@@ -435,8 +435,8 @@ Jdb_list_timeouts::cmds() const override
 {
   static Cmd cs[] =
     {
-        { 0, "lt", "timeouts", "", "lt\tshow enqueued timeouts", 0 },
-        { 1, "", "timeoutsdump", "", 0, 0 },
+        { 0, "lt", "timeouts", "", "lt\tshow enqueued timeouts", nullptr },
+        { 1, "", "timeoutsdump", "", nullptr, nullptr },
     };
 
   return cs;

@@ -96,7 +96,7 @@ IMPLEMENTATION[ia32 || amd64]:
 
 PROTECTED inline NEEDS ["cpu.h", "gdt.h"]
 void
-Context::load_gdt_user_entries(Context * /*old*/ = 0)
+Context::load_gdt_user_entries(Context * /*old*/ = nullptr)
 {
   Gdt &gdt = *Cpu::cpus.current().get_gdt();
   for (unsigned i = 0; i < Gdt_user_entries; ++i)

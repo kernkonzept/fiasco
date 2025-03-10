@@ -39,7 +39,7 @@ Jdb_report::show_objects()
 }
 
 void
-Jdb_report::delim(const char *text = 0)
+Jdb_report::delim(const char *text = nullptr)
 {
   puts(Jdb_screen::Line);
   if (text)
@@ -58,7 +58,7 @@ Jdb_report::action(int cmd, void *&, char const *&, int &) override
   Jdb_screen::set_height(9999);
   Jdb_screen::set_width(999);
 
-  Console *gzip = 0;
+  Console *gzip = nullptr;
   if (subcmd == 'c' || subcmd == 'C')
     gzip = Kconsole::console()->find_console(Console::GZIP);
 

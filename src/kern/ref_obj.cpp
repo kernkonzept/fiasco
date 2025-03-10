@@ -14,7 +14,7 @@ template<typename T>
 class Ref_ptr
 {
 public:
-  void reset(T *n = 0)
+  void reset(T *n = nullptr)
   {
     T *old = _o;
     _o = n;
@@ -28,13 +28,13 @@ public:
   T *release()
   {
     auto r = _o;
-    _o = 0;
+    _o = nullptr;
     return r;
   }
 
   T *get() const { return _o; }
 
-  Ref_ptr() : _o(0) {}
+  Ref_ptr() : _o(nullptr) {}
   explicit Ref_ptr(T *p) : _o(p)
   {
     if (_o)
@@ -49,7 +49,7 @@ public:
 
   Ref_ptr(Ref_ptr &&o) : _o(o._o)
   {
-    o._o = 0;
+    o._o = nullptr;
   }
 
   ~Ref_ptr() noexcept
@@ -71,14 +71,14 @@ public:
 
     reset();
     _o = o._o;
-    o._o = 0;
+    o._o = nullptr;
 
     return *this;
   }
 
   T *operator -> () const { return get(); }
 
-  explicit operator bool () const { return _o != 0; }
+  explicit operator bool () const { return _o != nullptr; }
 
 private:
   T *_o;

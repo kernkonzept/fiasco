@@ -305,7 +305,7 @@ Thread::unbind()
         Kernel_task::kernel_task()->switchin_context(old);
 
       if (old->dec_ref())
-        old = 0;
+        old = nullptr;
     }
 
   if (old)
@@ -318,7 +318,7 @@ Thread::unbind()
  */
 IMPLEMENT inline NEEDS["kernel_task.h"]
 Thread::Thread(Ram_quota *q, Context_mode_kernel)
-  : Receiver(), Sender(), _quota(q), _del_observer(0), _magic(magic)
+  : Receiver(), Sender(), _quota(q), _del_observer(nullptr), _magic(magic)
 {
   inc_ref();
   _space.space(Kernel_task::kernel_task());
@@ -347,7 +347,7 @@ Thread::~Thread()		// To be called in locked state.
   unsigned long *init_sp = reinterpret_cast<unsigned long*>
     (reinterpret_cast<unsigned long>(this) + Size - sizeof(Entry_frame));
 
-  _kernel_sp = 0;
+  _kernel_sp = nullptr;
   *--init_sp = 0;
   Fpu_alloc::free_state(fpu_state());
   assert (!in_ready_list());
@@ -391,7 +391,7 @@ Thread::ipc_gate_deleted(Mword /* id */)
 {
   auto g = lock_guard(cpu_lock);
   if (Irq_base *del_observer = access_once(&_del_observer))
-    del_observer->hit(0);
+    del_observer->hit(nullptr);
 }
 
 PUBLIC
@@ -571,7 +571,7 @@ Thread::do_kill()
           if (wait_queue() == q)
             {
               sender_dequeue(q);
-              set_wait_queue(0);
+              set_wait_queue(nullptr);
               break;
             }
         }
@@ -592,7 +592,7 @@ Thread::do_kill()
     user_space->cleanup_vcpu(this, vcpu);
 
   unbind();
-  vcpu_set_user_space(0);
+  vcpu_set_user_space(nullptr);
 
   cpu_lock.lock();
 
@@ -616,7 +616,7 @@ Thread::do_kill()
   // to the 'invalid' CPU forcefully and then switching to the kernel
   // thread for doing the last bits.
   force_to_invalid_cpu();
-  kernel_context_drq(handle_kill_helper, 0);
+  kernel_context_drq(handle_kill_helper, nullptr);
   kdb_ke("Im dead");
   return true;
 }
@@ -658,7 +658,7 @@ Thread::kill()
       return true;
     }
 
-  drq(Thread::handle_remote_kill, 0);
+  drq(Thread::handle_remote_kill, nullptr);
 
   return true;
 }
@@ -726,7 +726,7 @@ Thread::check_sys_ipc(unsigned flags, Thread **partner, Thread **sender,
 {
   if (flags & L4_obj_ref::Ipc_recv)
     {
-      *sender = flags & L4_obj_ref::Ipc_open_wait ? 0 : const_cast<Thread*>(this);
+      *sender = flags & L4_obj_ref::Ipc_open_wait ? nullptr : const_cast<Thread*>(this);
       *have_recv = true;
     }
 
@@ -942,7 +942,7 @@ Thread::transfer_fpu(Thread *to) //, Trap_state *trap_state, Utcb *to_utcb)
     {
       assert (to->state() & Thread_fpu_owner);
 
-      f.set_owner(0);
+      f.set_owner(nullptr);
       to->state_del_dirty(Thread_fpu_owner);
     }
   else if (f.owner() == this)
@@ -1068,7 +1068,7 @@ Thread::migrate_away(Migration *inf, bool remote)
 
       // if we are in the middle of the scheduler, leave it now
       if (rq.schedule_in_progress == this)
-        rq.schedule_in_progress = 0;
+        rq.schedule_in_progress = nullptr;
 
       rq.ready_dequeue(sched());
 
@@ -1242,7 +1242,7 @@ Thread::handle_remote_requests_irq()
   // we might have to migrate the currently running thread, and we cannot do
   // this during the processing of the request queue. In this case we get the
   // thread in migration_q and do this here.
-  Context *migration_q = 0;
+  Context *migration_q = nullptr;
   bool resched = _pending_rqq.current().handle_requests(&migration_q);
 
   resched |= Rcu::do_pending_work(current_cpu());
@@ -1320,7 +1320,7 @@ Thread::migrate_away(Migration *inf, bool remote)
 
       // if we are in the middle of the scheduler, leave it now
       if (rq.schedule_in_progress == this)
-        rq.schedule_in_progress = 0;
+        rq.schedule_in_progress = nullptr;
 
       rq.ready_dequeue(sched());
 

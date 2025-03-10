@@ -51,11 +51,11 @@ class Jdb_kobject_handler : public cxx::S_list_item
 public:
   template<typename T>
   Jdb_kobject_handler(T const *) : kobj_type(cxx::Typeid<T>::get()) {}
-  Jdb_kobject_handler() : kobj_type(0) {}
+  Jdb_kobject_handler() : kobj_type(nullptr) {}
   cxx::Type_info const *kobj_type;
   virtual ~Jdb_kobject_handler() {}
   virtual bool invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb);
-  virtual Kobject *parent(Kobject_common *) { return 0; }
+  virtual Kobject *parent(Kobject_common *) { return nullptr; }
   char const *kobject_type(Kobject_common *o) const
   { return _kobject_type(o); }
   bool is_global() const { return !kobj_type; }
@@ -99,7 +99,7 @@ public:
   virtual bool info_kobject(Jobj_info *, Kobject_common *) { return false; }
   virtual Kobject_common *follow_link(Kobject_common *o) { return o; }
   virtual bool handle_key(Kobject_common *, int /*keycode*/) { return false; }
-  virtual char const *help_text(Kobject_common *) const { return 0; };
+  virtual char const *help_text(Kobject_common *) const { return nullptr; };
 };
 
 class Jdb_kobject_list : public Jdb_list
@@ -358,7 +358,7 @@ Jdb_kobject_list::next(Kobject *obj)
     {
       ++o;
       if (o == Kobject_dbg::end())
-	return 0;
+	return nullptr;
     }
   while (_filter && !_filter(Kobject::from_dbg(*o)));
   return Kobject::from_dbg(*o);
@@ -377,7 +377,7 @@ Jdb_kobject_list::prev(Kobject *obj)
     {
       --o;
       if (o == Kobject_dbg::end())
-	return 0;
+	return nullptr;
     }
   while (_filter && !_filter(Kobject::from_dbg(*o)));
   return Kobject::from_dbg(*o);
@@ -601,7 +601,7 @@ Jdb_kobject::cmds() const override
     {
 	{ 0, "K", "kobj", "%p", "K<kobj_ptr>\tshow information for kernel object", 
 	  &kobjp },
-	{ 1, "Q", "listkobj", "", "Q\tshow information for kernel objects", 0 },
+	{ 1, "Q", "listkobj", "", "Q\tshow information for kernel objects", nullptr },
     };
   return cs;
 }
@@ -654,7 +654,7 @@ Jdb_kobject::fmt_handler(char /*fmt*/, int *size, char const *cmd_str, void *arg
 
   if (!pos)
     {
-      *a = 0;
+      *a = nullptr;
       return 0;
     }
 
@@ -662,7 +662,7 @@ Jdb_kobject::fmt_handler(char /*fmt*/, int *size, char const *cmd_str, void *arg
   if (buffer[0] == 'P')
     num = buffer + 1;
 
-  n = strtoul(num, 0, 16);
+  n = strtoul(num, nullptr, 16);
 
   Kobject_dbg::Iterator ko;
 
@@ -674,7 +674,7 @@ Jdb_kobject::fmt_handler(char /*fmt*/, int *size, char const *cmd_str, void *arg
   if (ko != Kobject_dbg::end())
     *a = Kobject::from_dbg(ko);
   else
-    *a = 0;
+    *a = nullptr;
 
   return 0;
 }
@@ -714,6 +714,6 @@ Jdb_kobject::print_uid(Kobject_common *o, int task_format = 0)
   return;
 }
 
-static Jdb_kobject_list::Mode INIT_PRIORITY(JDB_MODULE_INIT_PRIO) all("[ALL]", 0);
+static Jdb_kobject_list::Mode INIT_PRIORITY(JDB_MODULE_INIT_PRIO) all("[ALL]", nullptr);
 
 

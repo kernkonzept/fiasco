@@ -310,7 +310,7 @@ Jdb_bt::action(int cmd, void *&args, char const *&fmt, int &next_char) override
       else if (args == &ko_tid)
 	{
 	    {
-	      tid = 0;
+	      tid = nullptr;
 	      Kobject* o = ko_tid;
 
 	      if (o)
@@ -331,13 +331,13 @@ start_backtrace_known_ebp:
 	  printf("\n\nbacktrace (thread %lx, fp=" L4_PTR_FMT
 	         ", pc=" L4_PTR_FMT "):\n",
 	      tid->dbg_info()->dbg_id(), ebp, eip);
-	  if (task != 0)
+	  if (task != nullptr)
 	    show(ebp, eip, 0, ADDR_USER);
 	  if constexpr (!Config::Have_frame_ptr)
 	    {
 	      puts("\n --kernel-bt-follows-- "
 		   "(don't trust w/o frame pointer!!)");
-	      task = 0;
+	      task = nullptr;
 	      show_without_ebp();
 	    }
 	  else
@@ -345,7 +345,7 @@ start_backtrace_known_ebp:
 	      Mword eip2;
 	      puts("\n --kernel-bt-follows--");
 	      get_kernel_eip_ebp(eip, eip2, ebp);
-	      task = 0;
+	      task = nullptr;
 	      show(ebp, eip, eip2, ADDR_KERNEL);
 	    }
 	  putchar('\n');

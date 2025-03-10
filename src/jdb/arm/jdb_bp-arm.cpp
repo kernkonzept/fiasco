@@ -546,10 +546,10 @@ PRIVATE static
 const char *
 Jdb_bp::version_string(unsigned vers)
 {
-  const char *versionstr[8] = { 0, "v6", "v6.1", "v7 base", "v7 all",
-                                "v7.1", 0, 0 };
+  const char *versionstr[8] = { nullptr, "v6", "v6.1", "v7 base", "v7 all",
+                                "v7.1", nullptr, nullptr };
 
-  return vers > 7 ? 0 : versionstr[vers];
+  return vers > 7 ? nullptr : versionstr[vers];
 }
 
 PRIVATE static inline

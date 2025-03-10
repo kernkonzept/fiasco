@@ -254,7 +254,7 @@ Dmar_space::initialize()
       _dmarpt->destroy(Virt_addr(0UL), Virt_addr(~0UL), 0, Dmar_pt::Depth,
                        Kmem_alloc::q_allocator(ram_quota()));
       Kmem_alloc::allocator()->q_free(ram_quota(), Config::page_order(), _dmarpt);
-      _dmarpt = 0;
+      _dmarpt = nullptr;
       return false;
     }
 
@@ -480,7 +480,7 @@ Dmar_space::operator delete (Dmar_space *space, std::destroying_delete_t)
 PUBLIC inline
 Dmar_space::Dmar_space(Ram_quota *q)
 : Dyn_castable_class(q, Caps::mem()),
-  _dmarpt(0), _did(Invalid_did)
+  _dmarpt(nullptr), _did(Invalid_did)
 {
   _tlb_type = Tlb_iommu;
 }
@@ -555,7 +555,7 @@ Dmar_space::~Dmar_space()
       _dmarpt->destroy(Virt_addr(0UL), Virt_addr(~0UL), 0, Dmar_pt::Depth,
                        Kmem_alloc::q_allocator(ram_quota()));
       Kmem_alloc::allocator()->q_free(ram_quota(), Config::page_order(), _dmarpt);
-      _dmarpt = 0;
+      _dmarpt = nullptr;
     }
 }
 

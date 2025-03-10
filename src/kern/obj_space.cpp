@@ -71,8 +71,8 @@ public:
   { return V_pfc(1) << p; }
 
   FIASCO_SPACE_VIRTUAL
-  bool v_lookup(V_pfn const &virt, Phys_addr *phys = 0,
-                Page_order *size = 0, Attr *attribs = 0);
+  bool v_lookup(V_pfn const &virt, Phys_addr *phys = nullptr,
+                Page_order *size = nullptr, Attr *attribs = nullptr);
 
   FIASCO_SPACE_VIRTUAL
   Page::Flags v_delete(V_pfn virt, Page_order order, Page::Rights rights);
@@ -136,7 +136,7 @@ inline
 bool
 Generic_obj_space<SPACE>::v_fabricate(V_pfn const &address,
                                       Phys_addr *phys, Page_order *size,
-                                      Attr* attribs = 0)
+                                      Attr* attribs = nullptr)
 {
   return this->v_lookup(address, phys, size, attribs);
 }

@@ -181,11 +181,11 @@ Jdb_stack_view::edit_registers()
 {
   Mword value;
   char reg = char{-1};
-  Mword *reg_ptr = 0;
+  Mword *reg_ptr = nullptr;
   unsigned x=0, y=0;
 
 
-  Jdb::printf_statline("tcb", 0, "edit register "
+  Jdb::printf_statline("tcb", nullptr, "edit register "
       "r{ax|bx|cx|dx|si|di|sp|bp|ip|fl}: ");
   Jdb::cursor(Jdb_screen::height(), 53);
 
@@ -215,7 +215,7 @@ Jdb_stack_view::edit_registers()
 
   Jdb::cursor(y+1, x+1);
   putstr("                ");
-  Jdb::printf_statline("tcb", 0, "edit %s = %16lx", 
+  Jdb::printf_statline("tcb", nullptr, "edit %s = %16lx", 
       Jdb_screen::Reg_names[reg-1],
       *reg_ptr);
   Jdb::cursor(y+1, x+1);

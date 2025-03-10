@@ -124,11 +124,11 @@ suspend_ap_cpus()
           // We assume that Platform_control::cpu_suspend() does never return
           // under any circumstances -- otherwise we'd run with inconsistent
           // state into the scheduler.
-          Sched_context::rq.cpu(cpun).schedule_in_progress = 0;
+          Sched_context::rq.cpu(cpun).schedule_in_progress = nullptr;
           Platform_control::prepare_cpu_suspend(cpun);
           _cpus_to_suspend.atomic_clear(current_cpu());
           cxx::check_noreturn<Platform_control::cpu_suspend>(cpun);
-        }, 0);
+        }, nullptr);
       return false;
     };
 

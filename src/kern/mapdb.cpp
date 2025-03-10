@@ -630,7 +630,7 @@ PRIVATE inline
 Mapping_tree::Iterator
 Treemap::_lookup(Physframe *f, Mapping_tree::Iterator m,
                  Space const *spc, Pcnt key, Pfn va,
-                 Frame *res, int *root_depth = 0, int *current_depth = 0)
+                 Frame *res, int *root_depth = nullptr, int *current_depth = nullptr)
 {
   auto subkey = cxx::get_lsb(key, _page_shift);
   for (; *m; ++m)

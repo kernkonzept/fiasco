@@ -64,7 +64,7 @@ public:
       }
   }
 
-  functor() : _d(0), _f(0) {}
+  functor() : _d(nullptr), _f(nullptr) {}
 
   functor(functor &&) = default;
   functor(functor const &) = default;

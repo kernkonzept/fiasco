@@ -408,7 +408,7 @@ Io_apic_remapped::init_apics()
   unsigned n_apics = 0;
   for (auto *ioapic : madt->iterate<Acpi_madt::Io_apic>())
     {
-      Intel::Io_mmu *mmu = 0;
+      Intel::Io_mmu *mmu = nullptr;
       ACPI::Dmar_dev_scope const *dev_scope = nullptr;
 
       for (auto &iommu: Intel::Io_mmu::iommus)

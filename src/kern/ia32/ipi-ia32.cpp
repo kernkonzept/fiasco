@@ -81,7 +81,7 @@ PRIVATE static
 void Ipi::ipi_call_spin()
 {
   Cpu_number cpu;
-  Ipi *ipi = 0;
+  Ipi *ipi = nullptr;
   for (cpu = Cpu_number::first(); cpu < Config::max_num_cpus(); ++cpu)
     {
       if (!Per_cpu_data::valid(cpu))

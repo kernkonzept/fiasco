@@ -101,7 +101,7 @@ Jdb_tbuf_output::register_ff(Unsigned8 type, Format_entry_fn format_entry_fn)
 {
   assert(type < Tbuf_dynentries);
 
-  if (   (_format_entry_fn[type] != 0)
+  if (   (_format_entry_fn[type] != nullptr)
       && (_format_entry_fn[type] != dummy_format_entry))
     panic("format entry function for type %d already registered", type);
 
@@ -232,7 +232,7 @@ Jdb_tbuf_output::set_filter(const char *filter_str, Mword *entries)
       String_buf<200> s;
 
       print_entry(&s, e);
-      if (regex.find(s.begin(), 0, 0))
+      if (regex.find(s.begin(), nullptr, nullptr))
         {
           e->unhide();
           cnt++;

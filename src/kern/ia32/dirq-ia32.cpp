@@ -45,6 +45,6 @@ irq_interrupt(Mword irqobj, Mword ip)
   Irq_base *i = reinterpret_cast<Irq_base*>(irqobj);
   i->log();
   irq_spinners(i->pin());
-  i->hit(0);
+  i->hit(nullptr);
 }
 

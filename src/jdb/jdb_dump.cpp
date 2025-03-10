@@ -324,7 +324,7 @@ Jdb_dump::key_pressed(int c, unsigned long &row, unsigned long &col) override
 	      int c1 = Jdb_core::getchar();
 	      if (c1 != KEY_RETURN && c1 != ' ' && c != KEY_RETURN_2)
 		{
-		  Jdb::printf_statline("dump", 0, "u");
+		  Jdb::printf_statline("dump", nullptr, "u");
 		  Jdb::execute_command("u", c1);
 		  return Exit;
 		}

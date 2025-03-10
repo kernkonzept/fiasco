@@ -288,7 +288,7 @@ Mapdb_ext_test::Mapdb_ext_test()
  */
 PRIVATE
 void
-Mapdb_ext_test::print_node(Mapdb::Frame const &frame, Mapping const *sub = 0)
+Mapdb_ext_test::print_node(Mapdb::Frame const &frame, Mapping const *sub = nullptr)
 {
   auto node = *frame.m ? frame.m : frame.frame->first();
   int const n_depth = *frame.m ? node->depth() + 1 : 0;

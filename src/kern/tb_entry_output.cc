@@ -104,7 +104,7 @@ static char const * const __tag_interpreter_strings_fiasco[] = {
     "Ksysexc",
     "Kexc",      // -5
     "Ksigma",
-    0,
+    nullptr,
     "Kiopf",
     "Kcapfault",
     "Kobj",      // -10

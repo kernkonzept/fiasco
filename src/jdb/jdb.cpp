@@ -51,7 +51,7 @@ public:
     {
       if (Func f = monitor_address(current_cpu, &_f))
         {
-          _f = 0;
+          _f = nullptr;
           f(_d, cxx::forward<Cpu_number>(current_cpu));
           Mem::mp_mb();
           running = false;
@@ -347,7 +347,7 @@ bool Jdb::is_toplevel_cmd(char c)
   char cm[] = {c, 0};
   Jdb_core::Cmd cmd = Jdb_core::has_cmd(cm);
 
-  if (cmd.cmd || (0 != strchr(toplevel_cmds, c)))
+  if (cmd.cmd || (nullptr != strchr(toplevel_cmds, c)))
     {
       set_next_cmd(c);
       return true;
@@ -365,7 +365,7 @@ Jdb::execute_command(const char *s, int first_char = -1)
 
   if (cmd.cmd)
     {
-      const char *args = 0;
+      const char *args = nullptr;
       if (!short_mode)
         {
           args = s + strlen(cmd.cmd->cmd);
@@ -436,14 +436,14 @@ Jdb::execute_command_ni(char const *str, int len)
             break;
 
           was_input_error = true;
-          if (0 != strchr(non_interactive_cmds, c))
+          if (nullptr != strchr(non_interactive_cmds, c))
             {
               char _cmd[] = {static_cast<char>(c), 0};
               Jdb_core::Cmd cmd = Jdb_core::has_cmd(_cmd);
 
               if (cmd.cmd)
                 {
-                  if (Jdb_core::exec_cmd (cmd, 0) != 3)
+                  if (Jdb_core::exec_cmd (cmd, nullptr) != 3)
                     was_input_error = false;
                 }
             }
@@ -456,7 +456,7 @@ Jdb::execute_command_ni(char const *str, int len)
         }
       else
         {
-          Jdb_core::Cmd cmd(0, 0);
+          Jdb_core::Cmd cmd(nullptr, nullptr);
           char const *args;
           input_long_mode(&cmd, &args);
           if (!cmd.cmd)
@@ -480,7 +480,7 @@ PRIVATE static
 bool
 Jdb::input_short_mode(Jdb::Cmd *cmd, char const **args, int &cmd_key)
 {
-  *args = 0;
+  *args = nullptr;
   for (;;)
     {
       int c;
@@ -628,7 +628,7 @@ Jdb::input_long_mode(Jdb::Cmd *cmd, char const **args)
 	  if (!buf.len())
 	    {
 	      hide_statline = false;
-	      cmd->cmd = 0;
+	      cmd->cmd = nullptr;
 	      return false;
 	    }
 	  break;
@@ -665,7 +665,7 @@ int
 Jdb::execute_command()
 {
   char const *args;
-  Jdb_core::Cmd cmd(0,0);
+  Jdb_core::Cmd cmd(nullptr,nullptr);
   bool leave;
   int cmd_key = 0;
 
@@ -1349,7 +1349,7 @@ Jdb::enter_jdb(Trap_state *ts, Cpu_number cpu)
 	      hide_statline = true;
 	    }
 
-	  printf_statline(0, 0, "_");
+	  printf_statline(nullptr, nullptr, "_");
 
 	} while (execute_command());
 
@@ -1693,7 +1693,7 @@ Jdb::remote_work_ipi(Cpu_number this_cpu, Cpu_number to_cpu,
     while (!access_once(&_remote_work_ipi_done))
       Proc::pause();
 
-  _remote_work_ipi_func = 0;
+  _remote_work_ipi_func = nullptr;
 
   return true;
 }

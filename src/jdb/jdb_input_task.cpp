@@ -59,10 +59,10 @@ PUBLIC static
 Jdb_address
 Jdb_input_task_addr::address()
 {
-  if (_task == 0 && _addr == Invalid_address)
+  if (_task == nullptr && _addr == Invalid_address)
     return Jdb_address::null();
 
-  if (_task == 0 && _space == 0)
+  if (_task == nullptr && _space == nullptr)
     return Jdb_address(_addr); // phys
 
   if (_space)
@@ -80,7 +80,7 @@ Jdb_input_task_addr::action(void *&args, char const *&fmt, int &next_char)
     {
       // initialize
       // so _task is only valid if it is explicitly set
-      _task         = 0;
+      _task         = nullptr;
       _space        = Jdb::get_space(Jdb::triggered_on_cpu);
       _addr         = Invalid_address;
     }
@@ -100,7 +100,7 @@ Jdb_input_task_addr::action(void *&args, char const *&fmt, int &next_char)
 
       if (_task && !space())
 	{
-	  _task = 0;
+	  _task = nullptr;
 	  puts(" invalid task");
 	  return Jdb_module::ERROR;
 	}
@@ -111,8 +111,8 @@ Jdb_input_task_addr::action(void *&args, char const *&fmt, int &next_char)
     }
   else if (first_char == 'p')
     {
-      _task = 0;
-      _space = 0;
+      _task = nullptr;
+      _space = nullptr;
       putstr(" [phys-mem]");
 
       args = &first_char_have_task;

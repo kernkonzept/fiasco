@@ -61,7 +61,7 @@ Thread::call_nested_trap_handler(Trap_state *ts)
 
   unsigned long &ntr = nested_trap_recover.cpu(log_cpu);
 
-  void *stack = 0;
+  void *stack = nullptr;
 
   if (!ntr)
     stack = dbg_stack.cpu(log_cpu).stack_top;

@@ -17,7 +17,7 @@ public:
   virtual bool enter_item(void * /*item*/) const { return true; }
   virtual void *follow_link(void *a) { return a; }
   virtual bool handle_key(void * /*item*/, int /*keycode*/) { return false; }
-  virtual void *parent(void * /*item*/) { return 0; }
+  virtual void *parent(void * /*item*/) { return nullptr; }
   virtual void *get_valid(void *a) { return a; }
 
 private:
@@ -51,7 +51,7 @@ IMPLEMENTATION:
 
 PUBLIC
 Jdb_list::Jdb_list()
-  : _start(0), _current(0), _screen_height(Jdb_screen::height() - 4)
+  : _start(nullptr), _current(nullptr), _screen_height(Jdb_screen::height() - 4)
 {
   _filter_str[0] = 0;
 }
@@ -148,7 +148,7 @@ PRIVATE
 void
 Jdb_list::handle_string_filter_input()
 {
-  Jdb::printf_statline("filter", 0, "%s=%s",
+  Jdb::printf_statline("filter", nullptr, "%s=%s",
                        Jdb_regex::avail() ? "Regexp" : "Search",
                        _filter_str);
 
@@ -160,7 +160,7 @@ Jdb_list::handle_string_filter_input()
   if (!_regex.start(_filter_str))
     {
       _filter_str[0] = 0;
-      Jdb::printf_statline("search", 0, "Error in regexp");
+      Jdb::printf_statline("search", nullptr, "Error in regexp");
       Jdb::getchar();
     }
 }
@@ -181,20 +181,20 @@ Jdb_list::render_visible(void *i, String_buffer *help_text)
       buffer.terminate();
       if (Jdb_regex::avail())
         {
-          if (!_regex.find(buffer.begin(), 0, 0))
-            i = 0;
+          if (!_regex.find(buffer.begin(), nullptr, nullptr))
+            i = nullptr;
         }
       else
         {
           if (!strstr(buffer.begin(), _filter_str))
-            i = 0;
+            i = nullptr;
         }
     }
 
   if (i)
     return &buffer;
 
-  return 0;
+  return nullptr;
 }
 
 PRIVATE
@@ -254,7 +254,7 @@ Jdb_list::get_visible(void *i)
 
 PRIVATE
 int
-Jdb_list::filtered_seek(int cnt, void **item, Jdb_list::Line_buf **buf = 0)
+Jdb_list::filtered_seek(int cnt, void **item, Jdb_list::Line_buf **buf = nullptr)
 {
   if (cnt == 0)
     return 0;

@@ -51,7 +51,7 @@ IMPLEMENTATION:
 PROTECTED inline
 explicit
 Sender::Sender (int /*ignored*/)
-: _wq(0)
+: _wq(nullptr)
 {}
 
 

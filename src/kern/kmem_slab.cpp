@@ -160,7 +160,7 @@ public:
   T *new_obj(ARGS &&...args)
   {
     void *c = Slab::alloc();
-    if (EXPECT_TRUE(c != 0))
+    if (EXPECT_TRUE(c != nullptr))
       return new (c) T(cxx::forward<ARGS>(args)...);
     return nullptr;
   }
@@ -169,7 +169,7 @@ public:
   T *q_new(Q *q, ARGS &&...args)
   {
     void *c = Slab::template q_alloc<Q>(q);
-    if (EXPECT_TRUE(c != 0))
+    if (EXPECT_TRUE(c != nullptr))
       return new (c) T(cxx::forward<ARGS>(args)...);
     return nullptr;
   }

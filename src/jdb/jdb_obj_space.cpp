@@ -55,7 +55,7 @@ PUBLIC
 Jdb_obj_space::Jdb_obj_space(Address base = 0, int level = 0)
 : Jdb_table(1),
   _base(base),
-  _task(0),
+  _task(nullptr),
   _mode(Name)
 {
   (void)level;
@@ -234,7 +234,7 @@ Jdb_obj_space::help_text(Kobject_common *o) const override
   if (cxx::dyn_cast<Task*>(o) || ((t = cxx::dyn_cast<Thread *>(o)) && t->space()))
     return "o=objspace";
 
-  return 0;
+  return nullptr;
 }
 
 static Jdb_obj_space jdb_obj_space INIT_PRIORITY(JDB_MODULE_INIT_PRIO);

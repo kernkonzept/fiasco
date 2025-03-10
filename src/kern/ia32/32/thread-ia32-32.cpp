@@ -302,7 +302,7 @@ Thread::call_nested_trap_handler(Trap_state *ts)
   if (!ntr)
     p.stack = dbg_stack.cpu(log_cpu).stack_top;
   else
-    p.stack = 0;
+    p.stack = nullptr;
 
   p.pdir = Kernel_task::kernel_task()
              ->virt_to_phys(reinterpret_cast<Address>(Kmem::dir()));

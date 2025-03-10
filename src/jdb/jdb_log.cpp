@@ -366,7 +366,7 @@ Jdb_log::cmds() const override
 {
   static Cmd cs[] =
     {
-	{ 0, "O", "log", "", "O\tselect log events", 0 },
+	{ 0, "O", "log", "", "O\tselect log events", nullptr },
     };
   return cs;
 }

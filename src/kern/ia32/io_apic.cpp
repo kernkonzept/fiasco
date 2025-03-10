@@ -113,7 +113,7 @@ Io_apic_mgr::chip(Mword irq) const override
   if (a)
     return Irq(a, irq - a->gsi_offset());
 
-  return Irq(0, 0);
+  return Irq(nullptr, 0);
 }
 
 PUBLIC
@@ -188,7 +188,7 @@ Io_apic::Apic::num_entries()
 
 PUBLIC explicit
 Io_apic::Io_apic(Unsigned64 phys, unsigned gsi_base)
-: Irq_chip_ia32(0), _offset(gsi_base), _next(0)
+: Irq_chip_ia32(0), _offset(gsi_base), _next(nullptr)
 {
   if constexpr (Print_info)
     printf("IO-APIC: addr=%llx\n", phys);

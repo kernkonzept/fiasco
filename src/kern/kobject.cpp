@@ -287,7 +287,7 @@ Kobject::~Kobject()
   LOG_TRACE("Kobject delete (generic)", "del", current(), Log_destroy,
       l->id = dbg_id();
       l->obj = this;
-      l->type = 0);
+      l->type = nullptr);
 }
 
 

@@ -76,7 +76,7 @@ public:
 
   Space *space(Thread *user_thread) const
   {
-    return is_user_value() ? user_thread->space() : 0;
+    return is_user_value() ? user_thread->space() : nullptr;
   }
 
   inline const char *user_value_desc() const;
@@ -421,7 +421,7 @@ Jdb_stack_view::edit_stack(bool *redraw)
       Jdb::cursor(posy(), posx());
       printf(" %.*s", Jdb_screen::Mword_size_bmode, Jdb_screen::Mword_blank);
       Jdb::printf_statline("tcb",
-          is_current ? "<Space>=edit registers" : 0,
+          is_current ? "<Space>=edit registers" : nullptr,
           "edit <" ADDR_FMT "> = " ADDR_FMT,
           current.addr(), current.value());
 
@@ -438,7 +438,7 @@ Jdb_stack_view::edit_stack(bool *redraw)
         {
           // edit memory
           putchar(c);
-          Jdb::printf_statline("tcb", 0, "edit <" ADDR_FMT "> = " ADDR_FMT,
+          Jdb::printf_statline("tcb", nullptr, "edit <" ADDR_FMT "> = " ADDR_FMT,
               current.addr(), current.value());
           Jdb::cursor(posy(), posx() + 1);
           if (!Jdb_input::get_mword(&value, sizeof(Mword)*2, 16, c))
@@ -527,7 +527,7 @@ Jdb_tcb::parent(Kobject_common *o) override
 {
   Thread *t = cxx::dyn_cast<Thread*>(o);
   if (!t)
-    return 0;
+    return nullptr;
 
   return static_cast<Task*>(t->space());
 }
@@ -824,7 +824,7 @@ dump_stack:
                   int c1 = Jdb_core::getchar();
                   if ((c1 != KEY_RETURN) && c1 != KEY_RETURN_2 && (c1 != ' '))
                     {
-                      Jdb::printf_statline("tcb", 0, "u");
+                      Jdb::printf_statline("tcb", nullptr, "u");
                       Jdb::execute_command("u", c1);
                       return NOTHING;
                     }
@@ -934,7 +934,7 @@ Jdb_tcb::action(int cmd, void *&args, char const *&fmt, int &next_char) override
               case ' ':
               case KEY_RETURN:
               case KEY_RETURN_2:
-                show(0, 0, false);
+                show(nullptr, 0, false);
                 return NOTHING;
               default:
                 args      = &threadid;
@@ -1056,7 +1056,7 @@ Jdb_tcb::cmds() const override
           "t[<threadid>]\tshow current/given thread control block (TCB)\n"
           "t{+|-}\tshow current thread control block at every JDB entry",
           &first_char },
-        { 1, "", "tcbdump", "%C", 0, &first_char },
+        { 1, "", "tcbdump", "%C", nullptr, &first_char },
     };
   return cs;
 }

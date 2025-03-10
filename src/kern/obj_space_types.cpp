@@ -153,10 +153,10 @@ namespace Obj {
     Cap_addr() {}
     Cap_addr(unsigned long a, Entry *c) : Base(a), _c(c) {}
     explicit Cap_addr(Cap_index idx)
-    : Base(cxx::int_value<Cap_index>(idx)), _c(0)
+    : Base(cxx::int_value<Cap_index>(idx)), _c(nullptr)
     {}
 
-    explicit Cap_addr(unsigned long v) : Base(v), _c(0) {}
+    explicit Cap_addr(unsigned long v) : Base(v), _c(nullptr) {}
 
     operator Cap_index () const { return Cap_index(_v); }
 

@@ -156,7 +156,7 @@ public:
   : Irq_chip_i8259<IO>(master, slave)
   {
     for (auto &i: _irqs)
-      i = 0;
+      i = nullptr;
   }
 
   Irq_base *irq(Mword pin) const override
@@ -197,7 +197,7 @@ public:
 
   void unbind(Irq_base *irq) override
   {
-    _irqs[irq->pin()] = 0;
+    _irqs[irq->pin()] = nullptr;
     Irq_chip_icu::unbind(irq);
   }
 

@@ -171,7 +171,7 @@ Int_vector_allocator::alloc()
 PUBLIC explicit inline
 Irq_chip_ia32::Irq_chip_ia32(unsigned irqs)
 : _irqs(irqs),
-  _vec(irqs ? Boot_alloced::allocate<unsigned char>(irqs) : 0)
+  _vec(irqs ? Boot_alloced::allocate<unsigned char>(irqs) : nullptr)
 {
   for (unsigned i = 0; i < irqs; ++i)
     _vec[i] = 0;
@@ -265,7 +265,7 @@ Irq_chip_ia32::vfree(Irq_base *irq, void *handler)
   assert (idt_irq_vector_stubs[v - 0x20].irq == irq);
 
   Idt::set_entry(v, reinterpret_cast<Address>(handler), false);
-  idt_irq_vector_stubs[v - 0x20].irq = 0;
+  idt_irq_vector_stubs[v - 0x20].irq = nullptr;
   _vec[irq->pin()] = 0;
 
   _vectors.free(v);

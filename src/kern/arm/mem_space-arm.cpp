@@ -390,7 +390,7 @@ Mem_space::~Mem_space()
 
 PUBLIC inline
 Mem_space::Mem_space(Ram_quota *q)
-: _quota(q), _dir(0)
+: _quota(q), _dir(nullptr)
 {}
 
 PROTECTED inline NEEDS[<new>, "kmem_slab.h", "kmem.h"]

@@ -75,7 +75,7 @@ public:
   pointer release()
   {
     pointer r = _ptr;
-    _ptr = 0;
+    _ptr = nullptr;
     return r;
   }
 

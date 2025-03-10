@@ -60,7 +60,7 @@ int jdb_dump_addr_task(Jdb_address addr, int level)
   __attribute__((weak));
 
 PUBLIC
-Jdb_ptab_base::Jdb_ptab_base(void *pt_base = 0, Space *task = 0,
+Jdb_ptab_base::Jdb_ptab_base(void *pt_base = nullptr, Space *task = nullptr,
                              unsigned char pt_level = 0,
                              Address virt_base = 0, int level = 0)
 : _base(reinterpret_cast<Address>(pt_base)), _virt_base(virt_base),
@@ -116,7 +116,7 @@ Jdb_ptab_base::key_pressed(int c, unsigned long &row, unsigned long &col) overri
                   int c1 = Jdb_core::getchar();
                   if (c1 != KEY_RETURN && c1 != ' ' && c != KEY_RETURN_2)
                     {
-                      Jdb::printf_statline("p", 0, "u");
+                      Jdb::printf_statline("p", nullptr, "u");
                       Jdb::execute_command("u", c1);
                       return Exit;
                     }
@@ -130,7 +130,7 @@ Jdb_ptab_base::key_pressed(int c, unsigned long &row, unsigned long &col) overri
             {
               if (is_pt_ptr)
                 return show_next_level(idx, next_pt_level) ? Redraw : Exit;
-              else if (jdb_dump_addr_task != 0)
+              else if (jdb_dump_addr_task != nullptr)
                 return jdb_dump_addr_task(virt, _level + 1) ? Redraw : Exit;
             }
         }
@@ -361,7 +361,7 @@ Jdb_ptab_m::help_text(Kobject_common *o) const override
   if (cxx::dyn_cast<Task*>(o) || ((t = cxx::dyn_cast<Thread*>(o)) && t->space()))
     return "p=ptab";
 
-  return 0;
+  return nullptr;
 }
 
 PUBLIC

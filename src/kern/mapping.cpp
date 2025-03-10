@@ -35,7 +35,7 @@ class Mapping : public cxx::S_list_item
   {
     INTERNAL _v;
     T *ptr() const
-    { return _v ? reinterpret_cast<T*>(PREFIX | _v) : 0; }
+    { return _v ? reinterpret_cast<T*>(PREFIX | _v) : nullptr; }
 
     explicit operator T * () const { return ptr(); }
     T &operator * () const { return *ptr(); }
@@ -133,7 +133,7 @@ PUBLIC inline
 Treemap *
 Mapping::submap() const
 {
-  return _space.ptr() ? 0 : _submap;
+  return _space.ptr() ? nullptr : _submap;
 }
 
 PUBLIC inline
@@ -141,5 +141,5 @@ void
 Mapping::set_submap(Treemap *treemap)
 {
   _submap = treemap;
-  _space = 0;
+  _space = nullptr;
 }

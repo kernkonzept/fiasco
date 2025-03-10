@@ -390,7 +390,7 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
       phys = addr.space()->virt_to_phys_s0(addr.virt());
 
       if (phys == Invalid_address)
-        return 0;
+        return nullptr;
     }
   else
     phys = addr.phys();
@@ -425,7 +425,7 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
       // view.
       if (mem_type == Page::Type::Uncached()
           && addr.have_space() && addr.space()->is_sigma0())
-        return 0;
+        return nullptr;
 
       pte.set_page(Phys_mem_addr(cxx::mask_lsb(phys, pte.page_order())),
                    Page::Attr(Page::Rights::RW(), mem_type,

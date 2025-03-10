@@ -20,7 +20,7 @@ PUBLIC
 bool
 Sigma0_task::v_fabricate(Mem_space::Vaddr address,
                          Mem_space::Phys_addr *phys, Mem_space::Page_order *size,
-                         Mem_space::Attr *attribs = 0) override
+                         Mem_space::Attr *attribs = nullptr) override
 {
   // special-cased because we don't do ptab lookup for sigma0
   *size = static_cast<Mem_space const &>(*this).largest_page_size();

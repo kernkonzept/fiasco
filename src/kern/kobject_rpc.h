@@ -38,7 +38,7 @@ commit_error(Utcb const *utcb, L4_error e,
 
 /// Check if `rights` has at least all `need` rights.
 inline bool
-check_rights(Rights rights, Rights need, L4_msg_tag *tag = 0)
+check_rights(Rights rights, Rights need, L4_msg_tag *tag = nullptr)
 {
   need &= Rights::CS() | Rights::CW();
   if (EXPECT_TRUE((rights & need) == need))
@@ -203,7 +203,7 @@ template<typename T> struct Msg_item<Cap<T> >
                          L4_snd_item_iter &snd_items, Space *s)
   {
     arg->obj = deref_next<T>(tag, in, snd_items, s, &arg->rights);
-    return arg->obj != 0;
+    return arg->obj != nullptr;
   }
 
   static void read_data(Arg_type *, char const *, char *)

@@ -122,7 +122,7 @@ Kobject_common *
 Jdb_kobject_irq::follow_link(Kobject_common *o) override
 {
   Irq_sender *t = cxx::dyn_cast<Irq_sender*>(o);
-  Kobject_common *k = t ? Kobject::from_dbg(Kobject_dbg::pointer_to_obj(t->owner())) : 0;
+  Kobject_common *k = t ? Kobject::from_dbg(Kobject_dbg::pointer_to_obj(t->owner())) : nullptr;
   return k ? k : o;
 }
 

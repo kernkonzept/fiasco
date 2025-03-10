@@ -102,7 +102,7 @@ show_cache_type(Mword val)
 
 static Cp_struct cp_vals[] =
 {
-  { Arm_cp_op<15, 0, 0, 0, 0>::Mrc, "Main ID",    0 },
+  { Arm_cp_op<15, 0, 0, 0, 0>::Mrc, "Main ID",    nullptr },
   { Arm_cp_op<15, 0, 0, 0, 1>::Mrc, "Cache type", show_cache_type },
 };
 

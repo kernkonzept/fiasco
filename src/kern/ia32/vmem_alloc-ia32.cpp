@@ -18,7 +18,7 @@ IMPLEMENT
 void*
 Vmem_alloc::page_alloc(void *address, Zero_fill zf, unsigned mode)
 {
-  void *vpage = 0;
+  void *vpage = nullptr;
   Address page;
 
   vpage = Kmem_alloc::allocator()->alloc(Config::page_order());

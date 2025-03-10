@@ -118,7 +118,7 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
       phys = addr.space()->virt_to_phys_s0(addr.virt());
 
       if (phys == Invalid_address)
-        return 0;
+        return nullptr;
     }
   else
     phys = addr.phys();

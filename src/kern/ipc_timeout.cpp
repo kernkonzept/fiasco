@@ -31,7 +31,7 @@ IPC_timeout::IPC_timeout()
 PUBLIC virtual inline NEEDS [IPC_timeout::owner, "receiver.h"]
 IPC_timeout::~IPC_timeout()
 {
-  owner()->set_timeout (0);	// reset owner's timeout field
+  owner()->set_timeout (nullptr);	// reset owner's timeout field
 }
 
 PRIVATE inline NEEDS ["globals.h"]

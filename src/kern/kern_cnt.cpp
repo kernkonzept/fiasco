@@ -119,7 +119,7 @@ PUBLIC static
 int
 Kern_cnt::mode(Mword slot, const char **mode, const char **name, Mword *event)
 {
-  Unsigned32 *c = 0;
+  Unsigned32 *c = nullptr;
 
   switch (slot)
     {
@@ -152,7 +152,7 @@ Kern_cnt::setup_pmc(Mword slot, Mword event)
   if (!(event & 0x80000000))
     {
       kcnt[slot] = nullptr;
-      Tb_entry::set_rdcnt(slot, 0);
+      Tb_entry::set_rdcnt(slot, nullptr);
       return 0;
     }
 

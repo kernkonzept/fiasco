@@ -8,7 +8,7 @@ public:
   {
   public:
     void set_current_sched(Sched_context *sched);
-    void invalidate_sched() { activate(0); }
+    void invalidate_sched() { activate(nullptr); }
     bool deblock(Sched_context *sc, Sched_context *crs, bool lazy_q = false);
     void ready_enqueue(Sched_context *sc)
     {
@@ -132,7 +132,7 @@ Sched_context::Ready_queue::deblock(Sched_context *sc, Sched_context *crs, bool 
     {
       deblock_refill(sc);
 
-      if ((EXPECT_TRUE(cs != 0) && cs->dominates(sc))
+      if ((EXPECT_TRUE(cs != nullptr) && cs->dominates(sc))
           || (crs && crs->dominates(sc)))
         res = false;
     }

@@ -48,7 +48,7 @@ Jdb_perf::cmds() const override
 {
   static Cmd cs[] =
     {
-      { 0, "M", "monperf", "", "M\tPerformance monitor events", 0 },
+      { 0, "M", "monperf", "", "M\tPerformance monitor events", nullptr },
     };
   return cs;
 }

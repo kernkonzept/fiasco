@@ -499,7 +499,7 @@ namespace Ptab
         {
           PTE_PTR l(&_e[Vec::idx(l_a)], Depth);
           PTE_PTR r(const_cast<Entry *>(&_r._e[Vec::idx(r_a)]), Depth);
-          Next *n = 0;
+          Next *n = nullptr;
           if (!r.is_valid())
             {
               l_a += 1UL << Traits::Shift;

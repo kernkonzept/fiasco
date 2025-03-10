@@ -309,7 +309,7 @@ Rcu_data::enter_idle(Rcu_glbl *rgp)
     {
       LOG_TRACE("Rcu idle", "rcu", ::current(), Rcu::Log_rcu,
           l->cpu = _cpu;
-          l->item = 0;
+          l->item = nullptr;
           l->event = Rcu::Rcu_idle);
 
       _idle = true;
@@ -343,7 +343,7 @@ Rcu::leave_idle(Cpu_number cpu)
     {
       LOG_TRACE("Rcu idle", "rcu", ::current(), Rcu::Log_rcu,
           l->cpu = cpu;
-          l->item = 0;
+          l->item = nullptr;
           l->event = Rcu::Rcu_unidle);
 
       rdp->_idle = false;
@@ -462,7 +462,7 @@ Rcu_data::process_callbacks(Rcu_glbl *rgp)
 
   LOG_TRACE("Rcu callbacks", "rcu", ::current(), Rcu::Log_rcu,
       l->cpu = _cpu;
-      l->item = 0;
+      l->item = nullptr;
       l->event = Rcu::Rcu_process);
 
   if (!_c.empty() && rgp->_completed >= _batch)

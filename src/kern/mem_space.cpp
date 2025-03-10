@@ -135,8 +135,8 @@ public:
    * @return True if an entry was found, false otherwise.
    */
   FIASCO_SPACE_VIRTUAL
-  bool v_lookup(Vaddr virt, Phys_addr *phys = 0, Page_order *order = 0,
-                Attr *page_attribs = 0);
+  bool v_lookup(Vaddr virt, Phys_addr *phys = nullptr, Page_order *order = nullptr,
+                Attr *page_attribs = nullptr);
 
   /** Invalidate page-table entries, or some of the entries' attributes.
    *
@@ -524,7 +524,7 @@ Mem_space::dir() const
 PUBLIC
 virtual bool
 Mem_space::v_fabricate(Vaddr address, Phys_addr *phys, Page_order *order,
-                       Attr *attribs = 0)
+                       Attr *attribs = nullptr)
 {
   return v_lookup(cxx::mask_lsb(address, Page_order(Config::PAGE_SHIFT)),
       phys, order, attribs);

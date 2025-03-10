@@ -68,7 +68,7 @@ Irq_chip_gen::unbind(Irq_base *irq) override
 {
   mask(irq->pin());
   Mem::barrier();
-  _irqs[irq->pin()] = 0;
+  _irqs[irq->pin()] = nullptr;
   Irq_chip_icu::unbind(irq);
 }
 

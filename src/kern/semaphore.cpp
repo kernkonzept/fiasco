@@ -51,7 +51,7 @@ Semaphore::count_up(Thread **wakeup)
         {
           _waiting.dequeue(f);
           Thread *t = static_cast<Thread*>(Sender::cast(f));
-          t->set_wait_queue(0);
+          t->set_wait_queue(nullptr);
           *wakeup = t;
         }
       else
@@ -67,7 +67,7 @@ void
 Semaphore::_hit_edge_irq(Upstream_irq const *ui)
 {
   assert (cpu_lock.test());
-  Thread *t = 0;
+  Thread *t = nullptr;
   Smword q = count_up(&t);
 
   // if we get a second edge triggered IRQ before the first is
@@ -95,7 +95,7 @@ Semaphore::_hit_level_irq(Upstream_irq const *ui)
   assert (cpu_lock.test());
   mask_and_ack();
   Upstream_irq::ack(ui);
-  Thread *t = 0;
+  Thread *t = nullptr;
   count_up(&t);
 
   if (t)
@@ -222,7 +222,7 @@ Semaphore::sys_down(L4_fpage::Rights rights, L4_timeout t, Utcb const *utcb)
           // queue.
           if (c_thread->wait_queue())
             {
-              c_thread->set_wait_queue(0);
+              c_thread->set_wait_queue(nullptr);
               c_thread->sender_dequeue(&_waiting);
               return commit_error(utcb, (s & Thread_cancel) ? L4_error::R_canceled
                                                             : L4_error::R_timeout);
@@ -297,7 +297,7 @@ Semaphore::destroy(Kobjects_list &reap_list) override
           t = static_cast<Thread*>(Sender::cast(f));
           // Do not reset t´s partner because t still has Thread_receive_wait
           // set. The fake partner avoids IPCs to that thread.
-          t->set_wait_queue(0);
+          t->set_wait_queue(nullptr);
           t->utcb().access(true)->error = L4_error::Not_existent;
         }
 

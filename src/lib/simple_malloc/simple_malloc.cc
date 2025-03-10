@@ -185,7 +185,7 @@ __small_malloc(size_t _size)
   idx=get_index(size);
   ptr=__small_mem[idx];
 
-  if (ptr==0)
+  if (ptr==nullptr)
     {
       int i,nr;
       ptr=static_cast<__alloc_t*>(simple_mmap(MEM_BLOCK_SIZE));
@@ -200,14 +200,14 @@ __small_malloc(size_t _size)
           ptr->next = offset_cast<__alloc_t*>(ptr, size);
           ptr=ptr->next;
         }
-      ptr->next=0;
+      ptr->next=nullptr;
 
       ptr=__small_mem[idx];
     }
 
   /* get a free block */
   __small_mem[idx]=ptr->next;
-  ptr->next=0;
+  ptr->next=nullptr;
 
   return ptr;
 }

@@ -374,7 +374,7 @@ Thread::call_nested_trap_handler(Trap_state *ts)
 #endif
 
   Unsigned64 ret;
-  void *stack = 0;
+  void *stack = nullptr;
   if (!ntr)
     stack = dbg_stack.cpu(log_cpu).stack_top;
 

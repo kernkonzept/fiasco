@@ -254,7 +254,7 @@ PUBLIC static void
 Perf_cnt::get_unit_mask_entry(Mword, Mword, Mword *value, const char **desc)
 {
   *value = 0;
-  *desc  = 0;
+  *desc  = nullptr;
 }
 
 

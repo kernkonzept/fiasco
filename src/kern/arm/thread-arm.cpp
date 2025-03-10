@@ -280,7 +280,7 @@ Thread::Thread(Ram_quota *q)
   _pager(Thread_ptr::Invalid),
   _exc_handler(Thread_ptr::Invalid),
   _quota(q),
-  _del_observer(0)
+  _del_observer(nullptr)
 {
   assert (state(false) == 0);
 
@@ -294,7 +294,7 @@ Thread::Thread(Ram_quota *q)
   // set a magic value -- we use it later to verify the stack hasn't
   // been overrun
   _magic = magic;
-  _timeout = 0;
+  _timeout = nullptr;
   clear_recover_jmpbuf();
 
   prepare_switch_to(&user_invoke);

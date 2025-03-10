@@ -77,7 +77,7 @@ IMPLEMENTATION:
 PUBLIC template<typename LOCK, template< typename L > class POLICY>
 inline
 Lock_guard<LOCK, POLICY>::Lock_guard()
-  : _lock(0)
+  : _lock(nullptr)
 {}
 
 PUBLIC template<typename LOCK, template< typename L > class POLICY>
@@ -133,7 +133,7 @@ inline
 void
 Lock_guard<LOCK, POLICY>::release()
 {
-  _lock = 0;
+  _lock = nullptr;
 }
 
 /**
@@ -148,7 +148,7 @@ Lock_guard<LOCK, POLICY>::reset()
   if (_lock)
     {
       Policy::set(_lock, _state);
-      _lock = 0;
+      _lock = nullptr;
     }
 }
 
@@ -205,7 +205,7 @@ Switch_lock_guard<LOCK, POLICY>::is_valid()
 PUBLIC template<typename LOCK>
 inline
 Lock_guard_2<LOCK>::Lock_guard_2()
-  : _l1(0), _l2(0)
+  : _l1(nullptr), _l2(nullptr)
 {}
 
 PUBLIC template<typename LOCK>
@@ -215,7 +215,7 @@ Lock_guard_2<LOCK>::Lock_guard_2(LOCK *l1, LOCK *l2)
 {
   _state1 = _l1->test_and_set();
   if (_l1 == _l2)
-    _l2 = 0;
+    _l2 = nullptr;
   else
     _state2 = _l2->test_and_set();
 }
@@ -244,15 +244,15 @@ Lock_guard_2<LOCK>::check_and_lock(LOCK *l1, LOCK *l2)
   _l2 = l1 < l2 ? l2 : l1;
   if ((_state1 = _l1->test_and_set()) == LOCK::Invalid)
     {
-      _l1 = _l2 = 0;
+      _l1 = _l2 = nullptr;
       return false;
     }
 
   if (_l1 == _l2)
-    _l2 = 0;
+    _l2 = nullptr;
   else if ((_state2 = _l2->test_and_set()) == LOCK::Invalid)
     {
-      _l2 = 0;
+      _l2 = nullptr;
       return false;
     }
 

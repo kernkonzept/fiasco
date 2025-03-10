@@ -18,7 +18,7 @@ public:
   {
     // A Pm_object can only be enqueued into one list as it is
     // a list element itself.
-    assert(cxx::D_list_item_policy::next(this) == 0);
+    assert(cxx::D_list_item_policy::next(this) == nullptr);
     _list.cpu(cpu).push_back(this);
   }
 

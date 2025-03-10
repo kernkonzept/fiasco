@@ -368,9 +368,9 @@ public:
   unsigned inv_q_size = 0;
   Inv_desc *inv_q;
 
-  Rte *_root_table = 0;
+  Rte *_root_table = nullptr;
 
-  Irte volatile *_irq_remapping_table = 0;
+  Irte volatile *_irq_remapping_table = nullptr;
   unsigned _irq_remap_table_size = 0;
 
   Io_mmu() = default;
@@ -1033,13 +1033,13 @@ Intel::Io_mmu::get_context_entry(Unsigned8 bus, Unsigned8 df, bool may_alloc)
     return reinterpret_cast<Cte *>(Mem_layout::phys_to_pmem(rte->ctp())) + df;
 
   if (EXPECT_FALSE(!may_alloc))
-    return 0;
+    return nullptr;
 
   enum { Ct_size = 4096 };
   const Bytes Ct_bytes = Bytes(Ct_size);
   void *ctx = Kmem_alloc::allocator()->alloc(Ct_bytes);
   if (EXPECT_FALSE(!ctx))
-    return 0; // out of memory
+    return nullptr; // out of memory
 
   memset(ctx, 0, Ct_size);
 

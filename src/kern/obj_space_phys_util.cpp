@@ -324,7 +324,7 @@ Obj_space_phys<SPACE>::caps_free()
     return;
 
   Cap_dir *d = _dir;
-  _dir = 0;
+  _dir = nullptr;
 
   Kmem_alloc *a = Kmem_alloc::allocator();
   for (unsigned i = 0; i < Slots_per_dir; ++i)

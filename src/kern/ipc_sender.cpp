@@ -40,7 +40,7 @@ Ipc_sender<Derived>::ipc_receiver_aborted() override
 {
   assert (wait_queue());
 
-  set_wait_queue(0);
+  set_wait_queue(nullptr);
   derived()->finish_send(); // WARN: Do not use this/derived() from here on!
 }
 

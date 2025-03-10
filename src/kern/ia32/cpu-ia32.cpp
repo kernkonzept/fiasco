@@ -887,7 +887,7 @@ Cpu::Cache_table const Cpu::intel_cache_table[] FIASCO_INITDATA_CPU =
 
 char const * const Cpu::vendor_ident[] =
 {
-   0,
+   nullptr,
   "GenuineIntel",
   "AuthenticAMD",
   "CyrixInstead",
@@ -902,7 +902,7 @@ char const * const Cpu::vendor_ident[] =
 
 Cpu::Vendor_table const * const Cpu::vendor_table[] =
 {
-  0,
+  nullptr,
   intel_table,
   amd_table,
   cyrix_table,

@@ -67,7 +67,7 @@ struct Elf
   {
     DYN *dyn = reinterpret_cast<DYN *>(elf_dynamic_section());
     unsigned long relcnt = 0;
-    RELOC *rel = 0;
+    RELOC *rel = nullptr;
 
     for (int i = 0; dyn[i].tag != 0; i++)
       switch (dyn[i].tag)

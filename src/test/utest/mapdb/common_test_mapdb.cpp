@@ -92,7 +92,7 @@ bool
 Test_s0_space::v_fabricate(Mem_space::Vaddr address,
                            Mem_space::Phys_addr *phys,
                            Mem_space::Page_order *order,
-                           Mem_space::Attr *attr = 0) override
+                           Mem_space::Attr *attr = nullptr) override
 {
   // Special-cased because we don't do page table lookup for sigma0.
   *order = static_cast<Mem_space const &>(*this).largest_page_size();

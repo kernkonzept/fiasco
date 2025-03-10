@@ -81,7 +81,7 @@ Jdb_rcupdate::cmds() const override
 {
   static Cmd cs[] =
     {
-	{ 0, 0, "rcupdate", "", "rcupdate\tshow RCU information", 0},
+	{ 0, nullptr, "rcupdate", "", "rcupdate\tshow RCU information", nullptr},
     };
   return cs;
 }

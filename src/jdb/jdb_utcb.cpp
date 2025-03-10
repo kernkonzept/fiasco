@@ -149,7 +149,7 @@ Jdb_kobject_utcb_hdl::help_text(Kobject_common *o) const override
   if (cxx::dyn_cast<Thread *>(o))
     return "z=UTCB/vCPU";
 
-  return 0;
+  return nullptr;
 }
 
 STATIC_INITIALIZE(Jdb_kobject_utcb_hdl);

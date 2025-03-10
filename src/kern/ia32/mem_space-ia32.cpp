@@ -546,7 +546,7 @@ Mem_space::init_page_sizes()
 IMPLEMENTATION [!ia32_pcid]:
 
 PUBLIC explicit inline
-Mem_space::Mem_space(Ram_quota *q) : _quota(q), _dir(0) {}
+Mem_space::Mem_space(Ram_quota *q) : _quota(q), _dir(nullptr) {}
 
 IMPLEMENT inline
 Mem_space::Tlb_type

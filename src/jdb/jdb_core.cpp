@@ -44,7 +44,7 @@ public:
      * @param _mod the Jdb_module providing the command.
      * @param _cmd the command structure (see Jdb_module::Cmd).
      */
-    Cmd(Jdb_module *_mod, Jdb_module::Cmd const *_cmd = 0)
+    Cmd(Jdb_module *_mod, Jdb_module::Cmd const *_cmd = nullptr)
       : mod(_mod), cmd(_cmd)
     {}
   };
@@ -305,7 +305,7 @@ Jdb_core::Cmd Jdb_core::has_cmd(char const *cmd)
         return c;
     }
 
-  return Cmd(0);
+  return Cmd(nullptr);
 }
 
 PRIVATE static
@@ -325,7 +325,7 @@ unsigned
 Jdb_core::print_alternatives(char const *prefix)
 {
   unsigned prefix_len = 0;
-  char const *match = 0;
+  char const *match = nullptr;
 
   for (auto const &&m: Jdb_module::modules)
     {
@@ -353,7 +353,7 @@ PUBLIC static
 Jdb_core::Cmd
 Jdb_core::complete_cmd(char const *prefix, bool &multi_match)
 {
-  Cmd match(0, 0);
+  Cmd match(nullptr, nullptr);
   multi_match = false;
 
   for (auto const &&m: Jdb_module::modules)
@@ -862,7 +862,7 @@ Jdb_module::Cmd const * Go_m::cmds() const override
     { 
 	{ 0, "g", "go", "",
 	   "g\tleave kernel debugger\n"
-	   "Return\tshow debug message", 0 },
+	   "Return\tshow debug message", nullptr },
     };
 
   return cs;
@@ -984,8 +984,8 @@ Jdb_module::Cmd const * Help_m::cmds() const override
 {
   static Cmd cs[] =
     {
-	{ 0, "h", "help", "", "h\tShow this help screen.", 0 },
-	{ 0, "?", 0, "", 0, 0 },
+	{ 0, "h", "help", "", "h\tShow this help screen.", nullptr },
+	{ 0, "?", nullptr, "", nullptr, nullptr },
     };
 
   return cs;

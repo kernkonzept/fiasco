@@ -27,7 +27,7 @@ namespace cxx {
 class H_list_item
 {
 public:
-  H_list_item() : _n(0), _pn(0) {}
+  H_list_item() : _n(nullptr), _pn(nullptr) {}
   ~H_list_item() { l_remove(); }
 
 private:
@@ -46,7 +46,7 @@ private:
     if (_n) 
       _n->_pn = _pn;
 
-    _pn = 0;
+    _pn = nullptr;
   }
 
   H_list_item *_n, **_pn;
@@ -124,7 +124,7 @@ public:
     if (e->Item::_n)
       e->Item::_n->_pn = &(e->Item::_n);
 
-    p->Item::_pn = 0;
+    p->Item::_pn = nullptr;
   }
 
   static void remove(T *e)

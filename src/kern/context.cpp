@@ -246,7 +246,7 @@ public:
     T *_k;
 
   public:
-    Ku_mem_ptr() : _u(0), _k(0) {}
+    Ku_mem_ptr() : _u(nullptr), _k(nullptr) {}
     Ku_mem_ptr(User_ptr<T> const &u, T *k) : _u(u), _k(k) {}
 
     void set(User_ptr<T> const &u, T *k)
@@ -821,7 +821,7 @@ Context::schedule()
       rq->schedule_in_progress = this;
       Proc::preemption_point();
       if (EXPECT_TRUE(current_cpu == ::current_cpu()))
-        rq->schedule_in_progress = 0;
+        rq->schedule_in_progress = nullptr;
       else
         return; // we got migrated and selected on our new CPU, so we may run
     }
@@ -1526,7 +1526,7 @@ Context::kernel_context_drq(Drq::Request_func *func, void *arg)
 
   Context *kc = kernel_context(current_cpu());
   if (current() == kc)
-    return func(0, kc, arg).need_resched();
+    return func(nullptr, kc, arg).need_resched();
 
   Kernel_drq *mdrq = new (&_kernel_drq.current()) Kernel_drq;
 
@@ -1954,7 +1954,7 @@ Context::Pending_rqq::handle_requests(Context **mq)
       assert (c->check_for_current_cpu());
 
       c->handle_remote_state_change();
-      if (EXPECT_FALSE(c->_migration != 0))
+      if (EXPECT_FALSE(c->_migration != nullptr))
         {
           // if the currently executing thread shall be migrated we must defer
           // this until we have handled the whole request queue, otherwise we
@@ -1986,7 +1986,7 @@ Context::Pending_rqq::handle_requests(Context **mq)
         {
           Sched_context *cs = (curr->home_cpu() == curr->get_current_cpu())
                             ? curr->sched()
-                            : 0;
+                            : nullptr;
 
           resched |= Sched_context::rq.current().deblock(c->sched(), cs);
         }
@@ -2019,7 +2019,7 @@ Context::take_cpu_offline(Cpu_number cpu, bool drain_rqq = false)
 
       // Pending_rqq::handle_requests must be called without the
       // queue lock held.
-      Context *migration_q = 0;
+      Context *migration_q = nullptr;
       q.handle_requests(&migration_q);
       // assume we run from the idle thread, and the idle thread does
       // never migrate so `migration_q` must be 0
@@ -2299,7 +2299,7 @@ Context::spill_fpu_if_owner()
     f.enable();
 
   spill_fpu();
-  f.set_owner(0);
+  f.set_owner(nullptr);
   f.disable();
 }
 
@@ -2314,7 +2314,7 @@ Context::spill_current_fpu([[maybe_unused]] Cpu_number cpu)
     {
       f.enable();
       f.owner()->spill_fpu();
-      f.set_owner(0);
+      f.set_owner(nullptr);
       f.disable();
     }
 }
@@ -2328,7 +2328,7 @@ Context::release_fpu_if_owner()
   Fpu &f = Fpu::fpu.current();
   if (f.is_owner(this))
     {
-      f.set_owner(0);
+      f.set_owner(nullptr);
       f.disable();
     }
 }
@@ -2493,7 +2493,7 @@ IMPLEMENT
 void
 Tb_entry_ctx_sw::print(String_buffer *buf) const
 {
-  Context *sctx = 0;
+  Context *sctx = nullptr;
   Mword sctxid = ~0UL;
   Mword dst;
   Mword dst_orig;

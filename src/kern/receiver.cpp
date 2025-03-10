@@ -240,7 +240,7 @@ Receiver::reset_timeout()
     return;
 
   _timeout->reset();
-  _timeout = 0;
+  _timeout = nullptr;
 }
 
 PROTECTED inline
@@ -415,7 +415,7 @@ Receiver::abort_send(Sender *sender, Context *sender_context)
   if (current_cpu() != home_cpu())
     drq(handle_remote_abort_send, &rq);
   else
-    handle_remote_abort_send(0, 0, &rq);
+    handle_remote_abort_send(nullptr, nullptr, &rq);
   return rq.state;
 }
 

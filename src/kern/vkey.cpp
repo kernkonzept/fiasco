@@ -140,7 +140,7 @@ Vkey::trigger()
 {
   Irq_base *i = access_once(vkey_irq.unwrap());
   if (i)
-    i->hit(0);
+    i->hit(nullptr);
 }
 
 PUBLIC static

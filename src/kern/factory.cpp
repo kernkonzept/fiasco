@@ -256,9 +256,9 @@ Factory::Log_entry::print(String_buffer *buf) const
 {
   static char const *const ops[] =
   {
-    /*   0 */ "gate", "irq", 0, 0, 0, 0, 0, 0,
-    /*  -8 */ 0, 0, 0, "task", "thread", 0, 0, "factory",
-    /* -16 */ "vm", "dmaspace", "irqsender", 0, "sem"
+    /*   0 */ "gate", "irq", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+    /*  -8 */ nullptr, nullptr, nullptr, "task", "thread", nullptr, nullptr, "factory",
+    /* -16 */ "vm", "dmaspace", "irqsender", nullptr, "sem"
   };
   buf->printf("factory=%lx ", id);
   if (op <= 0 && op > -int{cxx::size(ops)})

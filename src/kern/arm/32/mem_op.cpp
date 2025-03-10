@@ -106,7 +106,7 @@ Mem_op::__arm_mem_cache_maint(Op_cache op, void const *start, void const *end)
 {
   if (op == Op_cache::Dma_coherent_full)
     {
-      __arm_kmem_cache_maint(Op_cache::Dma_coherent_full, 0, 0);
+      __arm_kmem_cache_maint(Op_cache::Dma_coherent_full, nullptr, nullptr);
       return;
     }
 

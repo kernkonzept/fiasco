@@ -33,7 +33,7 @@ public:
     Irq(Init) {}
 
     /// Invalid IRQ.
-    Irq() : chip(0) {}
+    Irq() : chip(nullptr) {}
 
     /// Create a chip-pin pair.
     Irq(Irq_chip_icu *chip, Mword pin) : chip(chip), pin(pin) {}

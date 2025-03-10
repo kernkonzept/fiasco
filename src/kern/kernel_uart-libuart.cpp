@@ -133,7 +133,7 @@ bool Kernel_uart::startup(unsigned, int irq, bool resume)
     }
 
   if (Koptions::o()->uart.access_type == Koptions::Uart_type_msr)
-    return this->Uart::startup(0, irq, Koptions::o()->uart.base_baud, resume);
+    return this->Uart::startup(nullptr, irq, Koptions::o()->uart.base_baud, resume);
 
   return false;
 }

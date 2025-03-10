@@ -73,7 +73,7 @@ public:
 //---------------------------------------------------------------------------
 IMPLEMENTATION [riscv]:
 
-const char *const Config::kernel_warn_config_string = 0;
+const char *const Config::kernel_warn_config_string = nullptr;
 
 IMPLEMENT FIASCO_INIT
 void

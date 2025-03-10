@@ -340,7 +340,7 @@ Irq::dispatch_irq_proto(Irq::Op op, bool may_unmask)
 
     case Op::Trigger:
       log();
-      hit(0);
+      hit(nullptr);
       return L4_msg_tag(L4_msg_tag::Schedule); // no reply
 
     default:

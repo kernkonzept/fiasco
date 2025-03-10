@@ -112,11 +112,11 @@ public:
   Status v_insert(Phys_addr phys, V_pfn virt, Page_order size, Attr page_attribs);
 
   FIASCO_SPACE_VIRTUAL
-  bool v_lookup(V_pfn virt, Phys_addr *phys = 0, Page_order *order = 0,
-                Attr *attribs = 0);
+  bool v_lookup(V_pfn virt, Phys_addr *phys = nullptr, Page_order *order = nullptr,
+                Attr *attribs = nullptr);
   virtual
   bool v_fabricate(V_pfn address, Phys_addr *phys, Page_order *order,
-                   Attr *attribs = 0);
+                   Attr *attribs = nullptr);
   FIASCO_SPACE_VIRTUAL
   Page::Flags v_delete(V_pfn virt, Page_order order, Page::Rights rights);
 

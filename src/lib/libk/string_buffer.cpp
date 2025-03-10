@@ -3,7 +3,7 @@ INTERFACE:
 class String_buffer
 {
 public:
-  String_buffer() : _buf(0), _len(0) {}
+  String_buffer() : _buf(nullptr), _len(0) {}
   String_buffer(char *buf, int len) : _buf(buf), _len(len) {}
 
   bool __attribute__((format(printf, 2, 3))) printf(char const *fmt, ...);

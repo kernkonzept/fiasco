@@ -42,22 +42,22 @@ void
 Trap_state::dump()
 {
   char const *excpts[] =
-    {/*  0 */ "undef insn",  "WFx",        0,            "MCR (CP15)",
+    {/*  0 */ "undef insn",  "WFx",        nullptr,      "MCR (CP15)",
      /*  4 */ "MCRR (CP15)", "MCR (CP14)", "LDC (CP14)", "coproc trap",
-     /*  8 */ "MRC (CP10)",  0,            "BXJ",        0,
-     /*  C */ "MRRC (CP14)", 0,            0,            0,
-     /* 10 */ 0,             "SVC",        "HVC",        "SMC",
-     /* 14 */ 0, 0, 0, 0,
-     /* 18 */ 0, 0, 0, 0,
-     /* 1C */ 0, 0, 0, 0,
-     /* 20 */ "prefetch abt (usr)", "prefetch abt (kernel)", 0, 0,
-     /* 24 */ "data abt (user)",    "data abt (kernel)",     0, 0,
-     /* 28 */ 0, 0, 0, 0,
-     /* 2C */ 0, 0, 0, 0,
-     /* 30 */ 0, 0, 0, 0,
-     /* 34 */ 0, 0, 0, 0,
-     /* 38 */ 0, 0, 0, 0,
-     /* 3C */ 0, 0, "<TrExc>", "<IPC>"};
+     /*  8 */ "MRC (CP10)",  nullptr,      "BXJ",        nullptr,
+     /*  C */ "MRRC (CP14)", nullptr,      nullptr,      nullptr,
+     /* 10 */ nullptr,       "SVC",        "HVC",        "SMC",
+     /* 14 */ nullptr, nullptr, nullptr, nullptr,
+     /* 18 */ nullptr, nullptr, nullptr, nullptr,
+     /* 1C */ nullptr, nullptr, nullptr, nullptr,
+     /* 20 */ "prefetch abt (usr)", "prefetch abt (kernel)", nullptr, nullptr,
+     /* 24 */ "data abt (user)",    "data abt (kernel)",     nullptr, nullptr,
+     /* 28 */ nullptr, nullptr, nullptr, nullptr,
+     /* 2C */ nullptr, nullptr, nullptr, nullptr,
+     /* 30 */ nullptr, nullptr, nullptr, nullptr,
+     /* 34 */ nullptr, nullptr, nullptr, nullptr,
+     /* 38 */ nullptr, nullptr, nullptr, nullptr,
+     /* 3C */ nullptr, nullptr, "<TrExc>", "<IPC>"};
 
   printf("EXCEPTION: (%02x) %s pfa=%08lx, error=%08lx pstate=%08lx\n",
          esr.ec().get(), excpts[esr.ec()] ? excpts[esr.ec()] : "",

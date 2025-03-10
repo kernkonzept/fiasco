@@ -35,7 +35,7 @@ protected:
 public:
   typedef T Value_type;
 
-  bool valid() const { return _p != 0; }
+  bool valid() const { return _p != nullptr; }
   operator Null_ptr const * () const
   { return valid() ? reinterpret_cast<Null_ptr const *>(1)
                    : reinterpret_cast<Null_ptr const *>(0); }

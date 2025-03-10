@@ -45,7 +45,7 @@ Ram_quota::operator new (size_t, void *b) noexcept
 
 PUBLIC
 Ram_quota::Ram_quota()
-  : _parent(0), _current(0), _max(0)
+  : _parent(nullptr), _current(0), _max(0)
 {
   root = this;
 }

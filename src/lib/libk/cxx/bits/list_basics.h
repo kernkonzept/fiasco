@@ -29,7 +29,7 @@ private:
 };
 
 template< typename T >
-void * const List_iterator_end_ptr<T>::_end = 0;
+void * const List_iterator_end_ptr<T>::_end = nullptr;
 
 template< typename VALUE_T, typename TYPE >
 struct Basic_list_policy
@@ -116,7 +116,7 @@ public:
 
   // BSS allocation
   explicit Basic_list(bool) {}
-  Basic_list() : _f(0) {}
+  Basic_list() : _f(nullptr) {}
 
   Basic_list(Basic_list &&o) : _f(o._f)
   {
@@ -133,7 +133,7 @@ public:
   bool empty() const { return !_f; }
   Value_type front() const { return static_cast<Value_type>(_f); }
 
-  void clear() { _f = 0; }
+  void clear() { _f = nullptr; }
 
   Iterator begin() { return Iterator(&_f); }
   Const_iterator begin() const { return Const_iterator(_f); }

@@ -146,7 +146,7 @@ Thread::ipc_receiver_aborted() override
 {
   assert (cpu_lock.test());
   assert (wait_queue());
-  set_wait_queue(0);
+  set_wait_queue(nullptr);
 
   utcb().access()->error = L4_error::Canceled;
 
@@ -549,7 +549,7 @@ Thread::do_ipc(L4_msg_tag const &tag, Mword from_spec, Thread *partner,
 
   assert (!(state() & Thread_ipc_mask));
 
-  prepare_receive(sender, have_receive ? regs : 0);
+  prepare_receive(sender, have_receive ? regs : nullptr);
   bool activate_partner = false;
   Cpu_number current_cpu = ::current_cpu();
 
@@ -643,7 +643,7 @@ Thread::do_ipc(L4_msg_tag const &tag, Mword from_spec, Thread *partner,
     bool rcv_timeout_expired = false;
 
     // Holds the next sender if the IPC has a receive phase.
-    Sender *next = 0;
+    Sender *next = nullptr;
 
     // A: If the send phase failed, it did not set the Thread_receive_wait flag
     // and the receive phase is skipped.
@@ -994,9 +994,9 @@ Thread::copy_utcb_to(L4_msg_tag tag, Thread* receiver,
 {
   // we cannot copy trap state to trap state!
   assert (!this->_utcb_handler || !receiver->_utcb_handler);
-  if (EXPECT_FALSE(this->_utcb_handler != 0))
+  if (EXPECT_FALSE(this->_utcb_handler != nullptr))
     return copy_ts_to_utcb(tag, this, receiver, rights);
-  else if (EXPECT_FALSE(receiver->_utcb_handler != 0))
+  else if (EXPECT_FALSE(receiver->_utcb_handler != nullptr))
     return copy_utcb_to_ts(tag, this, receiver, rights);
   else
     return copy_utcb_to_utcb(tag, this, receiver, rights);
@@ -1060,7 +1060,7 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
           continue;
         }
 
-      L4_buf_iter *buf_iter = 0;
+      L4_buf_iter *buf_iter = nullptr;
 
       switch (item->b.type())
         {
