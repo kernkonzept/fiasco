@@ -37,7 +37,7 @@ PUBLIC static inline
 char const *
 Trap_state::exc_code_to_str(Mword cause)
 {
-  char const *exc_codes[] =
+  static constinit char const *const exc_codes[] =
   {
     "IRQ",     "TLB Mod",  "TLBL",      "TLBS",
     "AdEL",    "AdES",     "IBE",       "DBE",

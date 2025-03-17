@@ -367,11 +367,11 @@ Cpu::first_boot(bool is_boot_cpu)
   auto c = Mips::Configs::read();
   if (c.r<0>().mt() != 1 && c.r<0>().mt() != 4)
     {
-      char const *const tlb_type[] =
-        {
-          "None", "Standard TLB", "BAT", "Fixed Map",
-          "Dual VTLB / FTLB", "<unk>", "<unk>", "<unk>"
-        };
+      static constinit char const *const tlb_type[] =
+      {
+        "None", "Standard TLB", "BAT", "Fixed Map",
+        "Dual VTLB / FTLB", "<unk>", "<unk>", "<unk>"
+      };
       panic("unsupported TLB type: %s (%u)\n",
             tlb_type[c.r<0>().mt()], c.r<0>().mt().get());
     }

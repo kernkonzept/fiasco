@@ -91,23 +91,25 @@ PUBLIC
 void
 Trap_state::dump()
 {
-  char const *excpts[] =
-    {/*  0 */ "undef insn",  "WFx",        nullptr,      "MCR (CP15)",
-     /*  4 */ "MCRR (CP15)", "MCR (CP14)", "LDC (CP14)", "coproc trap",
-     /*  8 */ "MRC (CP10)",  nullptr,      "BXJ",        nullptr,
-     /*  C */ "MRRC (CP14)", nullptr,      nullptr,      nullptr,
-     /* 10 */ nullptr,       "SVC",        "HVC",        "SMC",
-     /* 14 */ nullptr, nullptr, nullptr, nullptr,
-     /* 18 */ nullptr, nullptr, nullptr, nullptr,
-     /* 1C */ nullptr, nullptr, nullptr, nullptr,
-     /* 20 */ "prefetch abt (usr)", "prefetch abt (kernel)", nullptr, nullptr,
-     /* 24 */ "data abt (user)",    "data abt (kernel)",     nullptr, nullptr,
-     /* 28 */ nullptr, nullptr, nullptr, nullptr,
-     /* 2C */ nullptr, nullptr, nullptr, nullptr,
-     /* 30 */ nullptr, nullptr, nullptr, nullptr,
-     /* 34 */ nullptr, nullptr, nullptr, nullptr,
-     /* 38 */ nullptr, nullptr, nullptr, nullptr,
-     /* 3C */ nullptr, nullptr, "<TrExc>", "<IPC>"};
+  static constinit char const *const excpts[] =
+  {
+    /* 0 */ "undef insn", "WFx", nullptr, "MCR (CP15)",
+    /* 4 */ "MCRR (CP15)", "MCR (CP14)", "LDC (CP14)", "coproc trap",
+    /* 8 */ "MRC (CP10)", nullptr, "BXJ", nullptr,
+    /* C */ "MRRC (CP14)", nullptr, nullptr, nullptr,
+    /* 10 */ nullptr, "SVC", "HVC", "SMC",
+    /* 14 */ nullptr, nullptr, nullptr, nullptr,
+    /* 18 */ nullptr, nullptr, nullptr, nullptr,
+    /* 1C */ nullptr, nullptr, nullptr, nullptr,
+    /* 20 */ "prefetch abt (usr)", "prefetch abt (kernel)", nullptr, nullptr,
+    /* 24 */ "data abt (user)", "data abt (kernel)", nullptr, nullptr,
+    /* 28 */ nullptr, nullptr, nullptr, nullptr,
+    /* 2C */ nullptr, nullptr, nullptr, nullptr,
+    /* 30 */ nullptr, nullptr, nullptr, nullptr,
+    /* 34 */ nullptr, nullptr, nullptr, nullptr,
+    /* 38 */ nullptr, nullptr, nullptr, nullptr,
+    /* 3C */ nullptr, nullptr, "<TrExc>", "<IPC>"
+  };
 
   printf("EXCEPTION: (%02x) %s pfa=%08lx, error=%08lx psr=%08lx\n",
          esr.ec().get(), excpts[esr.ec()] ? excpts[esr.ec()] : "", pf_address,

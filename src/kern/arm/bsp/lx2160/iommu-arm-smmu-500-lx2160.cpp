@@ -7,7 +7,7 @@ bool
 Iommu::init_platform()
 {
   static_assert(Max_iommus >= 1, "Unexpected number of IOMMUs.");
-  unsigned const nonsec_irqs[] =
+  static constinit unsigned const nonsec_irqs[] =
   {
     // Global non-secure fault
     47,

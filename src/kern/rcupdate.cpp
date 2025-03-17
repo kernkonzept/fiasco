@@ -196,7 +196,8 @@ IMPLEMENT
 void
 Rcu::Log_rcu::print(String_buffer *buf) const
 {
-  char const *events[] = { "call", "process", "idle", "unidle" };
+  static constinit char const *const events[] =
+  { "call", "process", "idle", "unidle" };
   buf->printf("rcu-%s (cpu=%u) item=%p", events[event],
               cxx::int_value<Cpu_number>(cpu), static_cast<void *>(item));
 }
