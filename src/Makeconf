@@ -142,9 +142,6 @@ CCVER_RELEASE-gcc       := $(CCVER_MAJOR).$(CCVER_MINOR)$(if $(filter $(CCVER_MA
 CCVER_RELEASE-clang     := $(CCVER_MAJOR).$(CCVER_MINOR).$(CCVER_PATCHLEVEL)
 CCVER_RELEASE           := $(CCVER_RELEASE-$(CC_TYPE))
 CCVER_FULL		:= $(CCVER_MAJOR).$(CCVER_MINOR).$(CCVER_PATCHLEVEL)
-CCVER_SEQ-gcc           := $(patsubst %$(word 1, " "),%,$(word 2,$(call get_cc_version_part, __VERSION__)))
-CCVER_SEQ-clang         := 0 # No (repo) version in release builds available
-CCVER_SEQ               := $(CCVER_SEQ-$(CC_TYPE))
 
 
 L4ALL_INCDIR     	?= $(addprefix -I, $(PRIVATE_INCDIR))
@@ -301,7 +298,7 @@ SRC_ALL = $(SRC_S) $(SRC_CPP) $(SRC_C) $(SRC_CC)
 ifeq ($(filter clean cleanall mrproper,$(MAKECMDGOALS)),)
 DEPS	= $(foreach file,$(SRC_ALL), $(dir $(file)).$(notdir $(file)).d)
 
-CC_WHITELIST-gcc     := 10 11 12 13 14
+CC_WHITELIST-gcc     := 11 12 13 14
 # Clang >= 5 required to support C++17. Furthermore:
 #  - ARM: Clang<9:  "asm goto" constructs not supported
 #  - IA32: Clang<9: "CC_HAS_ASM_FLAG_OUTPUTS" not supported
@@ -311,10 +308,11 @@ CC_WHITELIST         := $(CC_WHITELIST-$(CC_TYPE))
 # https://github.com/llvm/llvm-project/issues/53645 -- e.g. printf=>puts
 CC_BLACKLIST-ia32-clang := 12 13 14
 
-# CC_LAST_BROKEN-SEQ* specifies the last broken version
-# using the sequential version
+# CC_LAST_BROKEN-REVISION* specifies the last broken minor version
+# For gcc these are minor version numbers, for clang it is the patchlevel.
+CC_LAST_BROKEN_REVISION-gcc-11 := 1
 
-CC_LAST_BROKEN-SEQ-gcc   := $(CC_LAST_BROKEN-SEQ-gcc-$(CCVER_MAJOR))
+CC_LAST_BROKEN_REVISION := $(CC_LAST_BROKEN_REVISION-$(CC_TYPE)-$(CCVER_MAJOR))
 
 ifneq ($(DISABLE_CC_CHECK),y)
 ifeq ($(filter $(CC_WHITELIST),$(CCVER_VERSION)),)
@@ -322,11 +320,15 @@ ifeq ($(filter $(CC_WHITELIST),$(CCVER_VERSION)),)
           Please use one of the following versions: $(CC_WHITELIST))
 endif
 
-# this is for GCC only
-ifneq ($(CC_LAST_BROKEN-SEQ-gcc),)
-  MIN_SEQ_VER := $(word 1,$(sort $(CC_LAST_BROKEN-SEQ-gcc) $(CCVER_SEQ)))
-  ifneq ($(CC_LAST_BROKEN-SEQ-gcc),$(MIN_SEQ_VER))
-    $(error $(CC_TYPE)-$(CCVER_FULL) $(CCVER_SEQ) is blacklisted, please update)
+CC_BUGFIX_TYPE-clang = PATCHLEVEL
+CC_BUGFIX_TYPE-gcc = MINOR
+
+# This relies on minor versions being single digit!
+ifneq ($(CC_LAST_BROKEN_REVISION),)
+  CC_BUGFIX_VERSION := $(CCVER_$(CC_BUGFIX_TYPE-$(CC_TYPE)))
+  MIN_VER := $(word 2,$(sort $(CC_LAST_BROKEN_REVISION) $(CC_BUGFIX_VERSION)))
+  ifeq ($(CC_LAST_BROKEN_REVISION),$(or $(MIN_VER),$(CC_LAST_BROKEN_REVISION)))
+    $(error $(CC_TYPE)-$(CCVER_FULL) is blacklisted, please update)
   endif
 endif
 
