@@ -121,17 +121,17 @@ public:
 
   static constexpr Mword STACK_ALIGNMENT = 16;
 
-  static constexpr inline Mword stack_align(Mword stack)
+  static constexpr Mword stack_align(Mword stack)
   {
     return stack & ~(STACK_ALIGNMENT - 1);
   }
 
-  static constexpr inline Mword is_stack_aligned(Mword stack)
+  static constexpr Mword is_stack_aligned(Mword stack)
   {
     return !(stack & (STACK_ALIGNMENT - 1));
   }
 
-  static constexpr inline Mword stack_round(Mword size)
+  static constexpr Mword stack_round(Mword size)
   {
     return (size + STACK_ALIGNMENT - 1) & ~(STACK_ALIGNMENT - 1);;
   }
