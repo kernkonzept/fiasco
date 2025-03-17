@@ -663,22 +663,22 @@ private:
       ;
   }
 
-  static Unsigned8 address_size(Unsigned8 encoded)
+  static constexpr Unsigned8 address_size(Unsigned8 encoded)
   {
-    Unsigned8 const sizes[] = {32, 36, 40, 42, 44, 48};
+    constexpr Unsigned8 const sizes[] = {32, 36, 40, 42, 44, 48};
     return encoded < (sizeof(sizes) / sizeof(sizes[0])) ? sizes[encoded] : 0;
   }
 
-  static Unsigned8 address_size_encode(Unsigned8 size)
+  static constexpr Unsigned8 address_size_encode(Unsigned8 size)
   {
     switch (size)
       {
-        case 32: return 0;
-        case 36: return 1;
-        case 40: return 2;
-        case 42: return 3;
-        case 44: return 4;
-        case 48: return 5;
+        address_size(0): return 0;
+        address_size(1): return 1;
+        address_size(2): return 2;
+        address_size(3): return 3;
+        address_size(4): return 4;
+        address_size(5): return 5;
         default: return 5;
       }
   }
