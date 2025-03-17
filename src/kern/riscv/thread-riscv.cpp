@@ -151,18 +151,6 @@ Thread::handle_sigma0_page_fault(Address pfa)
   return success;
 }
 
-PRIVATE static
-void
-Thread::print_page_fault_error(Mword e)
-{
-  printf("%s%s (%lx), %s(%c)",
-         PF::is_instruction_error(e)
-           ? "inst" : (PF::is_read_error(e) ? "load" : "store"),
-         PF::is_translation_error(e) ? "" : " access", e,
-         PF::is_usermode_error(e) ? "user" : "kernel",
-         PF::is_read_error(e) ? 'r' : 'w');
-}
-
 PROTECTED inline
 int
 Thread::do_trigger_exception(Entry_frame *r, void *ret_handler)

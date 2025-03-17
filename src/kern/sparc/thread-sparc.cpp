@@ -22,21 +22,6 @@ enum {
   FSR_PERMISSION  = 0x0d,
 };
 
-PRIVATE static
-void
-Thread::print_page_fault_error(Mword e)
-{
-  char const *const excpts[] =
-    { "reset","undef. insn", "swi", "pref. abort", "data abort",
-      "XXX", "XXX", "XXX" };
-
-  unsigned ex = (e >> 20) & 0x07;
-
-  printf("(%lx) %s, %s(%c)",e & 0xff, excpts[ex],
-         (e & 0x00010000)?"user":"kernel",
-         (e & 0x00020000)?'r':'w');
-}
-
 //
 // Public services
 //

@@ -195,16 +195,6 @@ Thread::do_trigger_exception(Entry_frame *r, void *ret_handler)
   return 0;
 }
 
-PRIVATE static
-void
-Thread::print_page_fault_error(Mword e)
-{
-  printf("%s (%ld), %s(%c) (%lx)",
-         Trap_state::exc_code_to_str(e), (e >> 2) & 0x1f,
-         PF::is_usermode_error(e) ? "user" : "kernel",
-         PF::is_read_error(e) ? 'r' : 'w', e);
-}
-
 PUBLIC static inline NEEDS["alternatives.h"]
 void
 Thread::save_bad_instr(Trap_state *ts)

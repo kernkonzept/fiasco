@@ -109,13 +109,6 @@ thread_restore_exc_state()
 }
 
 PRIVATE static
-void
-Thread::print_page_fault_error(Mword e)
-{
-  printf("%lx", e);
-}
-
-PRIVATE static
 bool
 Thread::handle_kernel_exc(Trap_state *ts)
 {
