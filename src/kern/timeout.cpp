@@ -299,7 +299,7 @@ Timeout_q::update_timer(Unsigned64 max_timeout, Timeout const *ignore = nullptr)
   if constexpr (!Config::Scheduler_one_shot)
     return;
 
-  Timer::update_timer(next_timeout(max_timeout, ignore));
+  program_timer(next_timeout(max_timeout, ignore));
 }
 
 /**
