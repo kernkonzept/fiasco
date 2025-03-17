@@ -63,7 +63,9 @@ public:
         if (!res.do_switch())
           {
             Thread *t = current_thread();
-            Sender *s = (self.op() & L4_obj_ref::Ipc_open_wait) ? nullptr : _sender(t, static_cast<T*>(this));
+            Sender *s = (self.op() & L4_obj_ref::Ipc_open_wait)
+                          ? nullptr
+                          : _sender(t, static_cast<T*>(this));
             t->do_ipc(f->tag(), 0, nullptr, true, s, f->timeout(), f, rights);
             return;
           }
