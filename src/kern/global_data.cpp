@@ -137,6 +137,7 @@ class Global_data final : private Global_data_obj_storage<T>
 {
 public:
   using Global_data_obj_storage<T>::Global_data_obj_storage;
+  constexpr Global_data() = default;
 
   Global_data(Global_data const &) = delete;
   Global_data &operator = (Global_data const &) = delete;
