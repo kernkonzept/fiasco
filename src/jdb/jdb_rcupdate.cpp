@@ -1,4 +1,4 @@
-IMPLEMENTATION:
+IMPLEMENTATION[mp]:
 
 #include <climits>
 #include <cstring>

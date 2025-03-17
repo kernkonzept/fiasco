@@ -1548,14 +1548,6 @@ Context::drq(Drq::Request_func *func, void *arg,
              Drq::Wait_mode wait = Drq::Wait)
 { return drq(&current()->_drq, func, arg, wait); }
 
-PRIVATE static
-bool
-Context::rcu_unblock(Rcu_item *i)
-{
-  assert(cpu_lock.test());
-  return static_cast<Context*>(i)->xcpu_state_change(~Thread_waiting, Thread_ready);
-}
-
 IMPLEMENT_DEFAULT inline
 void
 Context::arch_load_vcpu_kern_state(Vcpu_state *, bool)
@@ -2247,6 +2239,14 @@ Context::rcu_wait()
       state_del_dirty(Thread_ready);
       schedule();
     }
+}
+
+PRIVATE static
+bool
+Context::rcu_unblock(Rcu_item *i)
+{
+  assert(cpu_lock.test());
+  return static_cast<Context*>(i)->xcpu_state_change(~Thread_waiting, Thread_ready);
 }
 
 //----------------------------------------------------------------------------

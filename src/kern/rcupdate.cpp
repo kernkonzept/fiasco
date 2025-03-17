@@ -1,4 +1,4 @@
-INTERFACE:
+INTERFACE[mp]:
 
 #include "cpu_mask.h"
 #include "per_cpu_data.h"
@@ -146,7 +146,7 @@ private:
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [debug]:
+INTERFACE [mp && debug]:
 
 #include "tb_entry.h"
 
@@ -172,9 +172,22 @@ public:
   };
 };
 
+// ------------------------------------------------------------------------
+INTERFACE [!mp]:
+
+class Rcu_item {};
+
+class Rcu
+{
+public:
+  static inline void enter_idle(Cpu_number) {};
+  static inline void leave_idle(Cpu_number) {};
+  static inline bool has_pending_work(Cpu_number) { return false; };
+  static inline bool do_pending_work(Cpu_number) { return false; }
+};
 
 // --------------------------------------------------------------------------
-IMPLEMENTATION [debug]:
+IMPLEMENTATION [mp && debug]:
 
 #include "logdefs.h"
 #include "string_buffer.h"
@@ -190,7 +203,7 @@ Rcu::Log_rcu::print(String_buffer *buf) const
 
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION:
+IMPLEMENTATION[mp]:
 
 #include "cpu.h"
 #include "cpu_lock.h"
