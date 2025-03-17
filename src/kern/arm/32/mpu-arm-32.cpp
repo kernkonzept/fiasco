@@ -767,7 +767,7 @@ public:
 //------------------------------------------------------------------
 IMPLEMENTATION [arm && 32bit && mpu && arm_v8]:
 
-IMPLEMENT inline constexpr
+IMPLEMENT constexpr
 Mpu_region::Mpu_region()
 : prbar(~0x3fUL), prlar(0)
 {}
@@ -777,17 +777,17 @@ Mpu_region::Mpu_region(Mword start, Mword end, Mpu_region_attr a)
 : prbar(start & ~0x3fUL), prlar(end & ~0x3fUL)
 { attr(a); }
 
-IMPLEMENT inline constexpr
+IMPLEMENT constexpr
 Mword
 Mpu_region::start() const
 { return prbar & ~0x3fUL; }
 
-IMPLEMENT inline constexpr
+IMPLEMENT constexpr
 Mword
 Mpu_region::end() const
 { return prlar |  0x3fUL; }
 
-IMPLEMENT inline constexpr
+IMPLEMENT constexpr
 Mpu_region_attr
 Mpu_region::attr() const
 {

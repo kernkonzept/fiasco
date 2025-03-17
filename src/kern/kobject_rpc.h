@@ -133,7 +133,7 @@ OBJ *deref(L4_msg_tag *tag, Utcb const *utcb, Rights *rights)
 }
 
 /// Helper to calculate the number of message words for given `bytes`.
-inline constexpr unsigned long message_words(unsigned long bytes)
+constexpr unsigned long message_words(unsigned long bytes)
 { return (bytes + sizeof(Mword) - 1) / sizeof(Mword); }
 
 /// Helper to check if `tag.words()` contains at least `size` bytes.

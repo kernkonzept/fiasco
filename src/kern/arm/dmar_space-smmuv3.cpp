@@ -11,7 +11,7 @@ INTERFACE [iommu && !arm_iommu_stage2 && 64bit]:
  */
 EXTENSION class Dmar_space
 {
-  static inline constexpr unsigned start_level()
+  static constexpr unsigned start_level()
   {
     // Not defined or used for stage 1 page tables.
     return 0;
