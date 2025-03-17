@@ -377,7 +377,11 @@ static void modify_actl(Unsigned64 mask, Unsigned64 value)
   Mword actrl;
   asm volatile ("mrc p15, 0, %0, c1, c0, 1" : "=r" (actrl));
   if ((actrl & mask) != value)
-    asm volatile ("mcr p15, 0, %0, c1, c0, 1" : : "r" ((actrl & mask) | value));
+    {
+      Mem_unit::clean_dcache();
+      asm volatile ("mcr p15, 0, %0, c1, c0, 1" : :
+                    "r" ((actrl & mask) | value));
+    }
 }
 
 static void modify_cpuectl(Unsigned64 mask, Unsigned64 value)
@@ -386,9 +390,12 @@ static void modify_cpuectl(Unsigned64 mask, Unsigned64 value)
   asm volatile ("mrrc p15, 1, %0, %1, c15" : "=r"(ectll), "=r"(ectlh));
   Unsigned64 ectl = (Unsigned64{ectlh} << 32) | ectll;
   if ((ectl & mask) != value)
-    asm volatile ("mcrr p15, 1, %0, %1, c15" : :
-                  "r"((ectll & mask) | value),
-                  "r"((ectlh & (mask >> 32)) | (value >> 32)));
+    {
+      Mem_unit::clean_dcache();
+      asm volatile ("mcrr p15, 1, %0, %1, c15" : :
+                    "r"((ectll & mask) | value),
+                    "r"((ectlh & (mask >> 32)) | (value >> 32)));
+    }
 }
 
 struct Midr_match
@@ -487,7 +494,6 @@ IMPLEMENT_OVERRIDE inline NEEDS["kmem.h"]
 void
 Cpu::early_init_platform()
 {
-  Mem_unit::clean_dcache();
   enable_smp();
 }
 
