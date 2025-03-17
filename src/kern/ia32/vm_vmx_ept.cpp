@@ -368,13 +368,11 @@ Vm_vmx_ept::operator new (size_t size, void *p) noexcept
 
 PUBLIC
 void
-Vm_vmx_ept::operator delete (void *ptr)
+Vm_vmx_ept::operator delete (Vm_vmx_ept *vm, std::destroying_delete_t)
 {
-  Vm_vmx_ept *t = static_cast<Vm_vmx_ept *>(ptr);
-  // Prevent the compiler from assuming that the object has become invalid after
-  // destruction. In particular the _quota member contains valid content.
-  asm ("" : "=m"(*t));
-  _ept_allocator.q_free(t->ram_quota(), ptr);
+  Ram_quota *q = vm->ram_quota();
+  vm->~Vm_vmx_ept();
+  _ept_allocator.q_free(q, vm);
 }
 
 PUBLIC inline

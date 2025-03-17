@@ -178,13 +178,11 @@ Vm_svm::operator new (size_t size, void *p) noexcept
 
 PUBLIC
 void
-Vm_svm::operator delete (void *ptr)
+Vm_svm::operator delete (Vm_svm *vm, std::destroying_delete_t)
 {
-  Vm_svm *t = static_cast<Vm_svm*>(ptr);
-  // Prevent the compiler from assuming that the object has become invalid after
-  // destruction. In particular the _quota member contains valid content.
-  asm ("" : "=m"(*t));
-  _svm_allocator.q_free(t->ram_quota(), ptr);
+  Ram_quota *q = vm->ram_quota();
+  vm->~Vm_svm();
+  _svm_allocator.q_free(q, vm);
 }
 
 PUBLIC

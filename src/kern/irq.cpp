@@ -1077,12 +1077,12 @@ Irq::operator new (size_t, void *p)
 
 PUBLIC
 void
-Irq::operator delete (void *_l)
+Irq::operator delete (Irq *irq, std::destroying_delete_t)
 {
-  Irq *l = static_cast<Irq *>(_l);
-  assert(l->_q);
-  asm ("" : "=m"(*l));
-  q_free(l->_q, l);
+  assert(irq->_q);
+  Ram_quota *q = irq->_q;
+  irq->~Irq();
+  q_free(q, irq);
 }
 
 PUBLIC template<typename T> inline NEEDS[Irq::q_alloc, Irq::operator new]

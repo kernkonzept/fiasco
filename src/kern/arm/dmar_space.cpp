@@ -219,10 +219,11 @@ Dmar_space::operator new ([[maybe_unused]] size_t size, void *p) noexcept
 
 PUBLIC
 void
-Dmar_space::operator delete (void *ptr)
+Dmar_space::operator delete (Dmar_space *space, std::destroying_delete_t)
 {
-  Dmar_space *t = static_cast<Dmar_space *>(ptr);
-  _dmar_space_allocator.q_free(t->ram_quota(), ptr);
+  Ram_quota *q = space->ram_quota();
+  space->~Dmar_space();
+  _dmar_space_allocator.q_free(q, space);
 }
 
 PUBLIC inline

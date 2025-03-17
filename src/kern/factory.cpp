@@ -96,19 +96,14 @@ Factory::create_factory(Mword max)
 }
 
 PUBLIC
-void Factory::operator delete (void *_f)
+void Factory::operator delete (Factory *f, std::destroying_delete_t)
 {
-  Factory *f = static_cast<Factory*>(_f);
-  // Prevent the compiler from assuming that the object has become invalid after
-  // destruction. In particular the _quota member contains valid content.
-  asm ("" : "=m"(*f));
-
   LOG_TRACE("Factory delete", "fa del", ::current(), Tb_entry_empty, {});
 
   Ram_quota *p = f->parent();
   auto limit = f->limit();
-  asm ("" : "=m"(*f));
 
+  f->~Factory();
   free(f);
   if (p)
     p->free(sizeof(Factory) + limit);

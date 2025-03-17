@@ -3134,13 +3134,11 @@ Vmx_vmcs::operator new([[maybe_unused]] size_t size, Ram_quota *quota) noexcept
  */
 PUBLIC static
 void
-Vmx_vmcs::operator delete(void *ptr)
+Vmx_vmcs::operator delete(Vmx_vmcs *vmcs, std::destroying_delete_t)
 {
-  Vmx_vmcs *vmcs = static_cast<Vmx_vmcs *>(ptr);
-  // Prevent the compiler from assuming that the object has become invalid after
-  // destruction. In particular the _quota member contains valid content.
-  asm ("" : "=m"(*vmcs));
-  _vmx_vmcs_allocator.q_free(vmcs->ram_quota(), ptr);
+  Ram_quota *q = vmcs->ram_quota();
+  vmcs->~Vmx_vmcs();
+  _vmx_vmcs_allocator.q_free(q, vmcs);
 }
 
 /**

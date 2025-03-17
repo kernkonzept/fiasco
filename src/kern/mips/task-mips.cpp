@@ -104,13 +104,11 @@ Vz_vm *Vz_vm::alloc(Ram_quota *q)
 
 PUBLIC
 void
-Vz_vm::operator delete (void *ptr)
+Vz_vm::operator delete (Vz_vm *vm, std::destroying_delete_t)
 {
-  Vz_vm *t = static_cast<Vz_vm *>(ptr);
-  // Prevent the compiler from assuming that the object has become invalid after
-  // destruction. In particular the _quota member contains valid content.
-  asm ("" : "=m"(*t));
-  _vz_vm_allocator.q_free(t->ram_quota(), ptr);
+  Ram_quota *q = vm->ram_quota();
+  vm->~Vz_vm();
+  _vz_vm_allocator.q_free(q, vm);
 }
 
 namespace {

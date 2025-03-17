@@ -4,6 +4,13 @@
 
 #include <cstddef>
 
+namespace std {
+
+struct destroying_delete_t { explicit destroying_delete_t() = default; };
+inline constexpr destroying_delete_t destroying_delete {};
+
+}
+
 inline void *operator new (size_t, void *p) noexcept { return p; }
 inline void *operator new [] (size_t, void *p) noexcept { return p; }
 

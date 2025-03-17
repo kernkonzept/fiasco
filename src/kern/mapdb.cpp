@@ -605,13 +605,13 @@ Treemap::free(void *e)
 
 PUBLIC inline
 void
-Treemap::operator delete (void *block)
+Treemap::operator delete (Treemap *t, std::destroying_delete_t)
 {
-  Treemap *t = static_cast<Treemap *>(block);
   Space *id = t->_owner_id;
   auto end = t->_key_end;
-  asm ("" : "=m"(t->_owner_id), "=m"(t->_key_end));
-  free(block);
+
+  t->~Treemap();
+  free(t);
   Mapping_tree::quota(id)->free(Treemap::quota_size(end));
 }
 

@@ -206,19 +206,15 @@ Ipc_gate::create(Ram_quota *q, Thread *t, Mword id)
 }
 
 PUBLIC
-void Ipc_gate_obj::operator delete (void *_f)
+void Ipc_gate_obj::operator delete (Ipc_gate_obj *o, std::destroying_delete_t)
 {
-  Ipc_gate_obj *f = static_cast<Ipc_gate_obj*>(_f);
-  // Prevent the compiler from assuming that the object has become invalid after
-  // destruction. In particular the _quota member contains valid content.
-  asm ("" : "=m"(*f));
-  Ram_quota *p = f->_quota;
-  // Force reading f->_quota before freeing f.
-  asm ("" : "=m"(*f));
+  Ram_quota *q = o->_quota;
 
-  free(f);
-  if (p)
-    p->free(sizeof(Ipc_gate_obj));
+  o->~Ipc_gate_obj();
+
+  free(o);
+  if (q)
+    q->free(sizeof(Ipc_gate_obj));
 }
 
 PRIVATE inline NOEXPORT

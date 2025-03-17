@@ -364,19 +364,17 @@ Task *Task::alloc(Ram_quota *q, Caps c)
 
 PUBLIC //inline
 void
-Task::operator delete (void *ptr)
+Task::operator delete (Task *t, std::destroying_delete_t)
 {
-  Task *t = static_cast<Task *>(ptr);
+  Ram_quota *q = t->ram_quota();
   LOG_TRACE("Kobject delete", "del", current(), Log_destroy,
             l->id = t->dbg_id();
             l->obj = t;
             l->type = cxx::Typeid<Task>::get();
             l->ram = t->ram_quota()->current());
 
-  // Prevent the compiler from assuming that the object has become invalid after
-  // destruction. In particular the _quota member contains valid content.
-  asm ("" : "=m"(*t));
-  _task_allocator->q_free(t->ram_quota(), ptr);
+  t->~Task();
+  _task_allocator->q_free(q, t);
 }
 
 PUBLIC template<typename TASK_TYPE, bool MUST_SYNC_KERNEL = true,
