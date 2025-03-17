@@ -42,7 +42,8 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
     if (myid != Cpu_phys_id(i))
       {
         a.r<64>(i * 8) = phys_tramp_mp_addr;
-        Mem_unit::clean_dcache();
+        Mem_unit::clean_dcache(reinterpret_cast<char *>(a.get_mmio_base())
+                               + i * 8);
         asm volatile("sev");
 
         // All at once does not work, so wait one-by-one

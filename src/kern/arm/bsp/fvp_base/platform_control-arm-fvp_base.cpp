@@ -39,7 +39,7 @@ Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
                                        sizeof(Address)));
   s.r<Address>(0) = phys_tramp_mp_addr;
   Mem::dsb();
-  Mem_unit::clean_dcache();
+  Mem_unit::clean_dcache(s.get_mmio_base());
 
   for (int i = 1; i < min<int>(Num_cores, Config::Max_num_cpus); ++i)
     {
