@@ -73,6 +73,9 @@ public:
 #else
     Max_num_cpus = 1,
 #endif
+    // RCU (tick) is not necessary if there is only a single CPU in the system,
+    // or in each AMP node.
+    Need_rcu_tick = TAG_ENABLED(mp) && Config::Max_num_cpus > 1,
     Big_endian = TAG_ENABLED(big_endian),
     Have_mmu = TAG_ENABLED(mmu),
     Have_mpu = !TAG_ENABLED(mmu),

@@ -309,7 +309,11 @@ Kernel_thread::idle_op()
       if constexpr (Config::Scheduler_one_shot)
         {
           // Reprogram the one-shot timer with the Rcu_grace_period limit.
-          Unsigned64 next_rcu = Timer::system_clock() + Config::Rcu_grace_period;
+          Unsigned64 next_rcu;
+          if constexpr (Config::Need_rcu_tick)
+            next_rcu = Timer::system_clock() + Config::Rcu_grace_period;
+          else
+            next_rcu = Timer::Infinite_timeout;
           Timeout_q::timeout_queue.cpu(cpu).update_timer(next_rcu);
         }
       else
