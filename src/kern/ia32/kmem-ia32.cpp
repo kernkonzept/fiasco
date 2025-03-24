@@ -676,7 +676,7 @@ Kmem::prepare_kernel_entry_points(Lockless_alloc *, Kpdir *cpu_dir)
   Address kde_page =
     Pg::round(reinterpret_cast<Address>(_kernel_data_entry_end));
 
-  if (Print_info)
+  if constexpr (Print_info)
     printf("kernel entry data: %p(%lx)-%p(%lx)\n", _kernel_data_entry_start,
            kd_page, _kernel_data_entry_end, kde_page);
 
