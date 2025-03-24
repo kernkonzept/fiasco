@@ -235,36 +235,36 @@ $(KCONFIG_FILE): $(KCONFIG_SRC_FILE) $(KCONFIG_PART_FILES) .$(KCONFIG_FILE).part
 	                        $(KCONFIG_PART_FILES)
 
 globalconfig.out: $(KCONFIG_FILE)
-	+$(kconfig_call) oldconfig
+	+$(VERBOSE)$(kconfig_call) oldconfig
 
 globalconfig.h globalconfig.tags: globalconfig.out
-	+$(kconfig_call) syncconfig
-	+$(update_globalconfig_tags)
+	+$(VERBOSE)$(kconfig_call) syncconfig
+	+$(VERBOSE)$(update_globalconfig_tags)
 
 config: $(KCONFIG_FILE)
-	+$(kconfig_call) menuconfig
-	+$(kconfig_call) syncconfig
-	+$(update_globalconfig_tags)
+	+$(VERBOSE)$(kconfig_call) menuconfig
+	+$(VERBOSE)$(kconfig_call) syncconfig
+	+$(VERBOSE)$(update_globalconfig_tags)
 
 textconfig: $(KCONFIG_FILE)
-	+$(kconfig_call) config syncconfig
-	+$(update_globalconfig_tags)
+	+$(VERBOSE)$(kconfig_call) config syncconfig
+	+$(VERBOSE)$(update_globalconfig_tags)
 
 menuconfig oldconfig xconfig gconfig nconfig randconfig allyesconfig allnoconfig: $(KCONFIG_FILE)
-	+$(kconfig_call) $@
-	+$(kconfig_call) syncconfig
-	+$(update_globalconfig_tags)
+	+$(VERBOSE)$(kconfig_call) $@
+	+$(VERBOSE)$(kconfig_call) syncconfig
+	+$(VERBOSE)$(update_globalconfig_tags)
 
 olddefconfig oldnoconfig: $(KCONFIG_FILE)
-	+$(kconfig_call) $@
-	+$(update_globalconfig_tags)
+	+$(VERBOSE)$(kconfig_call) $@
+	+$(VERBOSE)$(update_globalconfig_tags)
 
 oldaskconfig: $(KCONFIG_FILE)
-	+$(kconfig_call) config
-	+$(update_globalconfig_tags)
+	+$(VERBOSE)$(kconfig_call) config
+	+$(VERBOSE)$(update_globalconfig_tags)
 
 listnewconfig savedefconfig: $(KCONFIG_FILE)
-	+$(kconfig_call) $@
+	+$(VERBOSE)$(kconfig_call) $@
 
 ifneq ($(filter clean cleanall mrproper,$(MAKECMDGOALS)),)
 
