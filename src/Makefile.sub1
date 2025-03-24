@@ -84,8 +84,12 @@ endef
 	@echo "CONFIG_XARCH = $(CONFIG_XARCH)" >> $@.new
 # If the compiler configuration has changed, remove all dependency
 # files -- they have just become useless.
+# Since all object files are recompiled anyway when the compiler configuration
+# has changed, also remove all generated source files, to avoid the situation
+# that all generated source files are older than their ready stamp, resulting in
+# a startup delay on each make run, due to their recipes being executed unnecessarily.
 	@$(MOVE_IF_CHANGE) $@.new $@				\
-	  && { $(RM) .*.d */.*.d; echo "CHANGED.  Recompiling."; }	\
+	  && { $(RM) .*.d */.*.d  auto/*.cc auto/*.h auto/*.S; echo "CHANGED.  Recompiling."; }	\
 	  || echo "unchanged."
 
 # For the LLVM linker, -m cannot be detected as "ld.lld --help" does not list
