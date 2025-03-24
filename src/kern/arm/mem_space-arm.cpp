@@ -492,7 +492,7 @@ Mem_space::v_insert([[maybe_unused]] Phys_addr phys,
           WARN("Mem_space::v_insert(%p): no region available for ["
                  L4_MWORD_FMT ":" L4_MWORD_FMT "]\n",
                this, start, end);
-          if (Debug_failures)
+          if constexpr (Debug_failures)
             _dir->dump();
           return Insert_err_nomem;
         }
@@ -517,7 +517,7 @@ Mem_space::v_insert([[maybe_unused]] Phys_addr phys,
             {
               WARN("Mem_space::v_insert(%p): dropped [" L4_MWORD_FMT ":"
                    L4_MWORD_FMT "]\n", this, start, end);
-              if (Debug_failures)
+              if constexpr (Debug_failures)
                 _dir->dump();
               ret = Insert_err_nomem;
             }
