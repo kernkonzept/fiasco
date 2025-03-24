@@ -35,7 +35,7 @@ GREP		:= GREP_OPTIONS= grep
 AWKP		?= gawk --posix
 CCACHE		?= ccache
 CFLAGS		:=
-CXXFLAGS	:= -std=c++20 $(call CHECKCXX,-fno-sized-deallocation,)
+CXXFLAGS	:=
 
 OPT_CFLAGS	:= $(if $(CONFIG_OPTIMIZE_FOR_SIZE),-Os,-O3)
 OPT_CXXFLAGS	:= $(if $(CONFIG_OPTIMIZE_FOR_SIZE),-Os,-O3)
@@ -179,6 +179,7 @@ OPT_CFLAGS-gcc		+= $(call CHECKCC,-fweb,)
 OPT_SHARED_FLAGS-gcc	+= $(call CHECKCC,-frename-registers,)
 OPT_SHARED_FLAGS-gcc	+= $(call CHECKCC,-fgcse-after-reload,)
 CXXFLAGS-gcc		+= -fno-implement-inlines
+CXXFLAGS		+= -std=c++20 $(call CHECKCXX,-fno-sized-deallocation,)
 CXXFLAGS		+= $(call CHECKCXX,-Wsuggest-override)
 
 LDFLAGS			+= $(call CHECKLD,--no-warn-rwx-segments,) \
