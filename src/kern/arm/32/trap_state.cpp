@@ -53,8 +53,8 @@ Trap_state::copy_and_sanitize(Trap_state const *src)
   Mem::memcpy_mwords(this, src, 17);
   pc = src->pc;
   psr = access_once(&src->psr);
-  psr &= ~(Proc::Status_mode_mask | Proc::Status_interrupts_mask);
-  psr |= Proc::Status_mode_user | Proc::Status_always_mask;
+  psr &= ~(Mword{Proc::Status_mode_mask} | Mword{Proc::Status_interrupts_mask});
+  psr |= Mword{Proc::Status_mode_user} | Mword{Proc::Status_always_mask};
 }
 
 //-----------------------------------------------------------------

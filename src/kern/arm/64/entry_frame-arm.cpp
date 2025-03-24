@@ -120,8 +120,8 @@ Entry_frame::copy_and_sanitize(Entry_frame const *src)
   usp = src->usp;
   pc  = src->pc;
   pstate = access_once(&src->pstate);
-  pstate &= ~(Proc::Status_mode_mask | Proc::Status_interrupts_mask);
-  pstate |= Proc::Status_mode_user | Proc::Status_always_mask;
+  pstate &= ~(Mword{Proc::Status_mode_mask} | Mword{Proc::Status_interrupts_mask});
+  pstate |= Mword{Proc::Status_mode_user} | Mword{Proc::Status_always_mask};
 }
 
 // ------------------------------------------------------
