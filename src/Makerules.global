@@ -60,11 +60,12 @@ comp_nocov = $(if $(filter $(1),$(NOCOV)),$(NOCOVFLAGS))
 # Put it all together.
 c_flgs = $(CPPFLAGS) $(call comp_c_flgs,$(1)) $(call comp_c_opt_flgs,$(1)) \
          $(call comp_prof_flgs,$(1)) $(call comp_inst_flgs,$(1)) \
-         $(call comp_nobuiltin,$(1)) $(call comp_nocov,$(1))
+         $(call comp_nobuiltin,$(1)) $(call comp_nocov,$(1)) \
+         $(CFLAGS_$(basename $(notdir $(2))))
 cc_flgs = $(CPPFLAGS) $(call comp_cc_flgs,$(1)) $(call comp_cc_opt_flgs,$(1)) \
           $(call comp_prof_flgs,$(1)) $(call comp_inst_flgs,$(1)) \
-          $(call comp_nobuiltin,$(1)) $(call comp_nocov,$(1))
-
+          $(call comp_nobuiltin,$(1)) $(call comp_nocov,$(1)) \
+          $(CXXFLAGS_$(basename $(notdir $(2))))
 as_flgs = $(CPPFLAGS) $(ASFLAGS)
 
 
@@ -85,47 +86,39 @@ endif
 
 %.o:	%.cc
 	$(call comp_msg,$*)
-	$(VERBOSE)$(CXX) -c -MD -MP -MF .$*.cc.d.new -o $@ \
-	  $(call cc_flgs,$*) $(CXXFLAGS_$(basename $(notdir $@))) $< \
-	  $(COLLECT_REDIR)
+	$(VERBOSE)$(CXX) -c -MD -MP -MF .$*.cc.d.new -o $@ $(call cc_flgs,\
+	  $*,$@) $< $(COLLECT_REDIR)
 	@mv .$*.cc.d.new .$*.cc.d
 
 %.S:	%.cc
 	$(call comp_msg,$*)
-	$(VERBOSE)$(CC) -S -o $@ -fverbose-asm \
-	  $(call cc_flgs,$*) $(CXXFLAGS_$(basename $(notdir $@))) $< \
-	  $(COLLECT_REDIR)
+	$(VERBOSE)$(CC) -S -o $@ -fverbose-asm $(call cc_flgs,\
+	  $*,$@) $< $(COLLECT_REDIR)
 
 %.o:	%.c
 	$(call comp_msg,$*)
-	$(VERBOSE)$(CC) -c -MD -MP -MF .$*.c.d.new -o $@ \
-	  $(call c_flgs,$*) $(CFLAGS_$(basename $(notdir $@))) $< \
-	  $(COLLECT_REDIR)
+	$(VERBOSE)$(CC) -c -MD -MP -MF .$*.c.d.new -o $@ $(call c_flgs,\
+	  $*,$@) $< $(COLLECT_REDIR)
 	@mv .$*.c.d.new .$*.c.d
 
 %.S:	%.c
 	$(call comp_msg,$*)
-	$(VERBOSE)$(CC) -S -o $@ -fverbose-asm \
-	  $(call c_flgs,$*) $(CFLAGS_$(basename $(notdir $@))) $< \
-	  $(COLLECT_REDIR)
+	$(VERBOSE)$(CC) -S -o $@ -fverbose-asm $(call c_flgs,\
+	  $*,$@) $< $(COLLECT_REDIR)
 
 %.o:	%.S
 	$(COMP_MESSAGE)
-	$(VERBOSE)$(CC) -c -MD -MP -MF .$*.S.d.new -o $@ $(as_flgs) $< \
-	  $(COLLECT_REDIR)
+	$(VERBOSE)$(CC) -c -MD -MP -MF .$*.S.d.new -o $@ $(call as_flgs,\
+	  ) $< $(COLLECT_REDIR)
 	@mv .$*.S.d.new .$*.S.d
 
 %.i:	%.c
 	$(call comp_msg,$*)
-	$(VERBOSE)$(CC) -E -dD -o $@ \
-	  $(call c_flgs,$*) $(CFLAGS_$(basename $(notdir $@))) $< \
-	  $(COLLECT_REDIR)
+	$(VERBOSE)$(CC) -E -dD -o $@ $(call c_flgs,$*,$@) $< $(COLLECT_REDIR)
 
 %.i:	%.cc
 	$(call comp_msg,$*)
-	$(VERBOSE)$(CXX) -E -dD -o $@ \
-	  $(call cc_flgs,$*) $(CXXFLAGS_$(basename $(notdir $@))) $< \
-	  $(COLLECT_REDIR)
+	$(VERBOSE)$(CXX) -E -dD -o $@ $(call cc_flgs,$*,$@) $< $(COLLECT_REDIR)
 
 %.i:	%.S
 	$(COMP_MESSAGE)
