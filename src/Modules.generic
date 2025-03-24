@@ -126,6 +126,8 @@ LIBUART_UART2 = -include uart_$(strip $(1)).h \
 #
 # COV Subsystem
 #
+ifneq ($(CONFIG_COV),)
+
 LIBCOV_CONTRIB_SUPPORTED_VERSIONS := 17 18 19 20
 LIBCOV_CONTRIB_MIN_VERSION        := $(lastword $(LIBCOV_CONTRIB_SUPPORTED_VERSIONS))
 LIBCOV_CONTRIB_VERSION            := $(CCVER_VERSION)
@@ -166,6 +168,8 @@ $(foreach f, $(patsubst %.c, %, $(CSRC_LIBCOV-clang_contrib)), \
                               -Wno-missing-prototypes -Wno-undef))
 
 NOOPT += $(patsubst %.o, %, $(OBJ_LIBCOV))
+
+endif
 
 #
 # LIBC Subsystem
