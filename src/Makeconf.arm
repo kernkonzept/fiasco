@@ -35,7 +35,6 @@ SHARED_FLAGS-$(CONFIG_BIT32)      += $(call CHECKCC,-mno-thumb-interwork)
 SHARED_FLAGS-$(CONFIG_BIT32)      += $(if $(CONFIG_THUMB2),-mthumb -Xassembler -mimplicit-it=always,-marm) -mabi=aapcs
 SHARED_FLAGS-$(CONFIG_BIT64)      += -mgeneral-regs-only
 SHARED_FLAGS-$(CONFIG_BIT64)      += $(call CHECKCC,-mno-outline-atomics)
-SHARED_FLAGS-clang                += $(if $(CONFIG_BIT32),-no-integrated-as,)
 LDFLAGS-$(CONFIG_BIT32)           += --no-warn-mismatch
 LDFLAGS                           += $(LDFLAGS-y)
 LD_EMULATION_CHOICE-$(CONFIG_BIT32) := armelf armelf_linux_eabi armelf_fbsd
