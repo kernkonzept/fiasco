@@ -239,7 +239,7 @@ switch_from_el2_to_el1()
   Mmu<Bootstrap::Cache_flush_area, true>::flush_cache();
 
   // Ensure defined state of SCTLR_EL1
-  asm volatile ("msr SCTLR_EL1, %0       \n"
+  asm volatile ("msr SCTLR_EL1, %x0         \n"
                 : : "r" (Cpu::Sctlr_generic & ~Cpu::Sctlr_m));
 
   asm volatile ("   mrs %[tmp], MIDR_EL1    \n"
