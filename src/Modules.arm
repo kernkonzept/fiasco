@@ -266,7 +266,7 @@ CXXSRC_KERNEL		:= kernel_panic.cc libc_backend_lock.cc
 ASSRC_KERNEL	  	:= $(if $(CONFIG_MP),tramp-mp.S)
 ASSRC_KERNEL            += $(if $(CONFIG_BIT32),$(if $(CONFIG_CPU_VIRT),hvt.S,ivt.S),ivt.S)
 ASSRC_KERNEL            += kip-time.S
-CPPFLAGS                += $(if $(CONFIG_MP),-DMPCORE_PHYS_BASE=$(MPCORE_PHYS_BASE))
+CPPFLAGS                += $(if $(MPCORE_PHYS_BASE),-DMPCORE_PHYS_BASE=$(MPCORE_PHYS_BASE))
 CPPFLAGS                += -DRAM_PHYS_BASE=$(RAM_PHYS_BASE)
 
 NOOPT			+= $(filter jdb%,\
