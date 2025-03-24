@@ -27,11 +27,11 @@ public:
   { return alloc_dir(); }
 
   bool v_lookup(V_pfn const &virt, Phys_addr *phys,
-                Page_order *size, Attr *attribs);
+                Page_order *order, Attr *attribs);
 
   Page::Flags v_delete(V_pfn virt, Page_order order, Page::Rights rights);
   Obj::Insert_result v_insert(Phys_addr phys, V_pfn const &virt,
-                              Page_order size, Attr page_attribs);
+                              Page_order order, Attr page_attribs);
 
   Capability lookup(Cap_index virt);
 
@@ -113,11 +113,11 @@ public:
   { return true; }
 
   bool v_lookup(V_pfn const &virt, Phys_addr *phys,
-                Page_order *size, Attr *attribs);
+                Page_order *order, Attr *attribs);
 
   Page::Flags v_delete(V_pfn virt, Page_order order, Page::Rights rights);
   Obj::Insert_result v_insert(Phys_addr phys, V_pfn const &virt,
-                              Page_order size, Attr page_attribs);
+                              Page_order order, Attr page_attribs);
 
   Capability lookup(Cap_index virt);
 
@@ -179,9 +179,9 @@ public:
   bool FIASCO_FLATTEN
   v_lookup(typename Obj_space::V_pfn const &virt,
            typename Obj_space::Phys_addr *phys,
-           typename Obj_space::Page_order *size,
+           typename Obj_space::Page_order *order,
            typename Obj_space::Attr *attribs) override
-  { return Obj_space::v_lookup(virt, phys, size, attribs); }
+  { return Obj_space::v_lookup(virt, phys, order, attribs); }
 
   Page::Flags FIASCO_FLATTEN
   v_delete(typename Obj_space::V_pfn virt,
@@ -192,9 +192,9 @@ public:
   Obj::Insert_result FIASCO_FLATTEN
   v_insert(typename Obj_space::Phys_addr phys,
            typename Obj_space::V_pfn const &virt,
-           typename Obj_space::Page_order size,
+           typename Obj_space::Page_order order,
            typename Obj_space::Attr page_attribs) override
-  { return Obj_space::v_insert(phys, virt, size, page_attribs); }
+  { return Obj_space::v_insert(phys, virt, order, page_attribs); }
 
   typename Obj_space::Capability FIASCO_FLATTEN
   lookup(Cap_index virt) override
@@ -391,16 +391,16 @@ IMPLEMENT template< typename SPACE >
 inline NEEDS[Obj_space_phys::get_cap]
 bool FIASCO_FLATTEN
 Obj_space_phys<SPACE>::v_lookup(V_pfn const &virt, Phys_addr *phys,
-                                Page_order *size, Attr *attribs)
+                                Page_order *order, Attr *attribs)
 {
-  if (size)
-    *size = Page_order(0);
+  if (order)
+    *order = Page_order(0);
   Entry *cap = get_cap(virt, false);
 
   if (EXPECT_FALSE(!cap))
     {
-      if (size)
-        *size = Page_order(Obj::Caps_per_page_ld2);
+      if (order)
+        *order = Page_order(Obj::Caps_per_page_ld2);
       return false;
     }
 
@@ -468,10 +468,10 @@ IMPLEMENT template< typename SPACE >
 inline
 typename Obj::Insert_result FIASCO_FLATTEN
 Obj_space_phys<SPACE>::v_insert(
-  Phys_addr phys, V_pfn const &virt, [[maybe_unused]] Page_order size,
+  Phys_addr phys, V_pfn const &virt, [[maybe_unused]] Page_order order,
   Attr page_attribs)
 {
-  assert (size == Page_order(0));
+  assert (order == Page_order(0));
 
   Entry *c = get_cap(virt, true);
 

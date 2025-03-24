@@ -22,11 +22,11 @@ public:
   { return true; }
 
   bool v_lookup(V_pfn const &virt, Phys_addr *phys,
-                Page_order *size, Attr *attribs);
+                Page_order *order, Attr *attribs);
 
   Page::Flags v_delete(V_pfn virt, Page_order order, Page::Rights rights);
   Obj::Insert_result v_insert(Phys_addr phys, V_pfn const &virt,
-                              Page_order size, Attr page_attribs);
+                              Page_order order, Attr page_attribs);
 
   Capability lookup(Cap_index virt);
 
@@ -168,9 +168,9 @@ IMPLEMENT  template< typename SPACE >
 inline  NEEDS[Obj_space_virt::cap_virt, Obj_space_virt::get_cap]
 bool FIASCO_FLATTEN
 Obj_space_virt<SPACE>::v_lookup(V_pfn const &virt, Phys_addr *phys,
-                                   Page_order *size, Attr *attribs)
+                                   Page_order *order, Attr *attribs)
 {
-  if (size) *size = Page_order(0);
+  if (order) *order = Page_order(0);
   Entry *cap;
 
   if (Optimize_local
@@ -181,7 +181,7 @@ Obj_space_virt<SPACE>::v_lookup(V_pfn const &virt, Phys_addr *phys,
 
   if (EXPECT_FALSE(!cap))
     {
-      if (size) *size = Page_order(Obj::Caps_per_page_ld2);
+      if (order) *order = Page_order(Obj::Caps_per_page_ld2);
       return false;
     }
 
@@ -275,9 +275,9 @@ inline NEEDS[Obj_space_virt::cap_virt, Obj_space_virt::caps_alloc,
              Obj_space_virt::get_cap, <cassert>]
 typename Obj::Insert_result FIASCO_FLATTEN
 Obj_space_virt<SPACE>::v_insert(Phys_addr phys, V_pfn const &virt,
-                                [[maybe_unused]] Page_order size, Attr page_attribs)
+                                [[maybe_unused]] Page_order order, Attr page_attribs)
 {
-  assert (size == Page_order(0));
+  assert (order == Page_order(0));
 
   Entry *c;
 

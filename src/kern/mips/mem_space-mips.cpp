@@ -176,13 +176,13 @@ void Mem_space::kernel_space(Mem_space *_k_space)
 
 IMPLEMENT
 Mem_space::Status
-Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order size,
+Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order order,
                     Attr page_attribs, bool)
 {
-  assert (cxx::is_zero(cxx::get_lsb(phys, size)));
-  assert (cxx::is_zero(cxx::get_lsb(Virt_addr(virt), size)));
+  assert (cxx::is_zero(cxx::get_lsb(phys, order)));
+  assert (cxx::is_zero(cxx::get_lsb(Virt_addr(virt), order)));
 
-  unsigned po = cxx::int_value<Page_order>(size);
+  unsigned po = cxx::int_value<Page_order>(order);
   auto i = _dir->walk(virt, po, Kmem_alloc::q_allocator(_quota));
 
   if (EXPECT_FALSE(i.size != po && !i.is_pte()))

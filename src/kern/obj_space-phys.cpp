@@ -30,8 +30,8 @@ IMPLEMENT template< typename SPACE >
 inline
 bool FIASCO_FLATTEN
 Generic_obj_space<SPACE>::v_lookup(V_pfn const &virt, Phys_addr *phys,
-                                   Page_order *size, Attr *attribs)
-{ return Base::v_lookup(virt, phys, size, attribs); }
+                                   Page_order *order, Attr *attribs)
+{ return Base::v_lookup(virt, phys, order, attribs); }
 
 IMPLEMENT template< typename SPACE >
 inline
@@ -55,9 +55,9 @@ Generic_obj_space<SPACE>::v_delete(V_pfn virt, Page_order order,
 IMPLEMENT template< typename SPACE >
 inline
 typename Generic_obj_space<SPACE>::Status FIASCO_FLATTEN
-Generic_obj_space<SPACE>::v_insert(Phys_addr phys, V_pfn const &virt, Page_order size,
-                                   Attr page_attribs)
-{ return static_cast<Status>(Base::v_insert(phys, virt, size, page_attribs)); }
+Generic_obj_space<SPACE>::v_insert(Phys_addr phys, V_pfn const &virt,
+                                   Page_order order, Attr page_attribs)
+{ return static_cast<Status>(Base::v_insert(phys, virt, order, page_attribs)); }
 
 IMPLEMENT template< typename SPACE >
 inline

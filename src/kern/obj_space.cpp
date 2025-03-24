@@ -72,13 +72,13 @@ public:
 
   FIASCO_SPACE_VIRTUAL
   bool v_lookup(V_pfn const &virt, Phys_addr *phys = nullptr,
-                Page_order *size = nullptr, Attr *attribs = nullptr);
+                Page_order *order = nullptr, Attr *attribs = nullptr);
 
   FIASCO_SPACE_VIRTUAL
   Page::Flags v_delete(V_pfn virt, Page_order order, Page::Rights rights);
 
   FIASCO_SPACE_VIRTUAL
-  Status v_insert(Phys_addr phys, V_pfn const &virt, Page_order size,
+  Status v_insert(Phys_addr phys, V_pfn const &virt, Page_order order,
                   Attr page_attribs);
 
   FIASCO_SPACE_VIRTUAL
@@ -135,10 +135,10 @@ PUBLIC template< typename SPACE >
 inline
 bool
 Generic_obj_space<SPACE>::v_fabricate(V_pfn const &address,
-                                      Phys_addr *phys, Page_order *size,
+                                      Phys_addr *phys, Page_order *order,
                                       Attr* attribs = nullptr)
 {
-  return this->v_lookup(address, phys, size, attribs);
+  return this->v_lookup(address, phys, order, attribs);
 }
 
 

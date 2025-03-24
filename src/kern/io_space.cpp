@@ -83,14 +83,14 @@ public:
   static V_pfn map_max_address()
   { return V_pfn(Map_max_address); }
 
-  static Phys_addr page_address(Phys_addr o, Page_order s)
-  { return cxx::mask_lsb(o, s); }
+  static Phys_addr page_address(Phys_addr p, Page_order order)
+  { return cxx::mask_lsb(p, order); }
 
   static Phys_addr subpage_address(Phys_addr addr, V_pfc offset)
   { return addr | offset; }
 
-  static V_pfc subpage_offset(V_pfn addr, Page_order size)
-  { return cxx::get_lsb(addr, size); }
+  static V_pfc subpage_offset(V_pfn addr, Page_order order)
+  { return cxx::get_lsb(addr, order); }
 
   static Mdb_types::Pfn to_pfn(V_pfn p)
   { return Mdb_types::Pfn(cxx::int_value<V_pfn>(p)); }
@@ -98,8 +98,8 @@ public:
   static V_pfn to_virt(Mdb_types::Pfn p)
   { return V_pfn(cxx::int_value<Mdb_types::Pfn>(p)); }
 
-  static Mdb_types::Pcnt to_pcnt(Page_order s)
-  { return Mdb_types::Pcnt(cxx::int_value<V_pfc>(V_pfc(1) << s)); }
+  static Mdb_types::Pcnt to_pcnt(Page_order order)
+  { return Mdb_types::Pcnt(cxx::int_value<V_pfc>(V_pfc(1) << order)); }
 
   static Page_order to_order(Mdb_types::Order p)
   { return Page_order(cxx::int_value<Mdb_types::Order>(p)); }
@@ -109,7 +109,7 @@ public:
 
 
   FIASCO_SPACE_VIRTUAL
-  Status v_insert(Phys_addr phys, V_pfn virt, Page_order size, Attr page_attribs);
+  Status v_insert(Phys_addr phys, V_pfn virt, Page_order order, Attr page_attribs);
 
   FIASCO_SPACE_VIRTUAL
   bool v_lookup(V_pfn virt, Phys_addr *phys = nullptr, Page_order *order = nullptr,
@@ -406,7 +406,7 @@ IMPLEMENT template<typename SPACE>
 inline
 typename Generic_io_space<SPACE>::Status FIASCO_FLATTEN
 Generic_io_space<SPACE>::v_insert([[maybe_unused]] Phys_addr phys,
-                                  V_pfn virt, Page_order size,
+                                  V_pfn virt, Page_order order,
                                   Attr /* page_attribs */)
 {
   assert(phys == virt);
@@ -415,10 +415,10 @@ Generic_io_space<SPACE>::v_insert([[maybe_unused]] Phys_addr phys,
    * If the space is allocated as superpage, then all IO ports are
    * already enabled.
    */
-  if (_superpage && size == Page_order(Map_superpage_shift))
+  if (_superpage && order == Page_order(Map_superpage_shift))
     return Insert_warn_exists;
 
-  if (_counter == 0 && size == Page_order(Map_superpage_shift))
+  if (_counter == 0 && order == Page_order(Map_superpage_shift))
     {
       /*
        * Enable all IO ports.
@@ -430,7 +430,7 @@ Generic_io_space<SPACE>::v_insert([[maybe_unused]] Phys_addr phys,
       return Insert_ok;
     }
 
-  assert(size == Page_order(0));
+  assert(order == Page_order(0));
 
   return typename Generic_io_space::Status(io_enable(cxx::int_value<V_pfn>(virt)));
 }

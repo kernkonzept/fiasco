@@ -402,12 +402,13 @@ IMPLEMENT inline
 bool
 Thread::handle_sigma0_page_fault(Address pfa)
 {
-  Mem_space::Page_order size = mem_space()->largest_page_size(); // take a page size less than 16MB (1<<24)
+  Mem_space::Page_order order = mem_space()->largest_page_size();
+                                // take a page size less than 16MB (1<<24)
   Virt_addr va = Virt_addr(pfa);
 
-  va = cxx::mask_lsb(va, size);
+  va = cxx::mask_lsb(va, order);
 
-  return mem_space()->v_insert(Mem_space::Phys_addr(va), va, size,
+  return mem_space()->v_insert(Mem_space::Phys_addr(va), va, order,
                                Page::Attr::space_local(L4_fpage::Rights::URWX()))
     != Mem_space::Insert_err_nomem;
 }

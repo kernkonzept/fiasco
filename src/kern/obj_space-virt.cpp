@@ -34,9 +34,9 @@ IMPLEMENT  template< typename SPACE >
 inline
 bool FIASCO_FLATTEN
 Generic_obj_space<SPACE>::v_lookup(V_pfn const &virt, Phys_addr *phys,
-                                   Page_order *size, Attr *attribs)
+                                   Page_order *order, Attr *attribs)
 {
-  return Base::v_lookup(virt, phys, size, attribs);
+  return Base::v_lookup(virt, phys, order, attribs);
 }
 
 IMPLEMENT template< typename SPACE >

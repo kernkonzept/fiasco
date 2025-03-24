@@ -275,19 +275,19 @@ Vm_vmx_ept::v_lookup(Mem_space::Vaddr virt, Mem_space::Phys_addr *phys,
 PUBLIC
 Mem_space::Status
 Vm_vmx_ept::v_insert(Mem_space::Phys_addr phys, Mem_space::Vaddr virt,
-                     Mem_space::Page_order size,
+                     Mem_space::Page_order order,
                      Mem_space::Attr page_attribs, bool) override
 {
   // insert page into page table
 
   // XXX should modify page table using compare-and-swap
 
-  assert(cxx::is_zero(cxx::get_lsb(Mem_space::Phys_addr(phys), size)));
-  assert(cxx::is_zero(cxx::get_lsb(Virt_addr(virt), size)));
+  assert(cxx::is_zero(cxx::get_lsb(Mem_space::Phys_addr(phys), order)));
+  assert(cxx::is_zero(cxx::get_lsb(Virt_addr(virt), order)));
 
   int level;
   for (level = 0; level <= Ept::Depth; ++level)
-    if (Mem_space::Page_order(Ept::page_order_for_level(level)) <= size)
+    if (Mem_space::Page_order(Ept::page_order_for_level(level)) <= order)
       break;
 
   auto i = _ept->walk(virt, level, false,

@@ -246,15 +246,15 @@ Mem_space::kernel_space(Mem_space *kernel_space)
 
 IMPLEMENT
 Mem_space::Status
-Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order size,
+Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order order,
                     Attr page_attribs, bool)
 {
-  assert (cxx::is_zero(cxx::get_lsb(Phys_addr(phys), size)));
-  assert (cxx::is_zero(cxx::get_lsb(Virt_addr(virt), size)));
+  assert (cxx::is_zero(cxx::get_lsb(Phys_addr(phys), order)));
+  assert (cxx::is_zero(cxx::get_lsb(Virt_addr(virt), order)));
 
   int level;
   for (level = 0; level <= Pdir::Depth; ++level)
-    if (Page_order(Pdir::page_order_for_level(level)) <= size)
+    if (Page_order(Pdir::page_order_for_level(level)) <= order)
       break;
 
   auto i = _dir->walk(virt, level, false,
