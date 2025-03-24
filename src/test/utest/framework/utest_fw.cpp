@@ -22,6 +22,7 @@ INTERFACE:
 #include "platform_control.h"
 #include "timer.h"
 #include "thread_object.h"
+#include "thread_state.h"
 #include "unique_ptr.h"
 #include "workload.h"
 
