@@ -146,7 +146,7 @@ IMPLEMENTATION [arm && mpu]:
  *
  * Just mark it reserved in the Kip and return the base address.
  *
- * \param node The logical AMP node-id for which the memory shall be resered.
+ * \param node The logical AMP node-id for which the memory shall be reserved.
  */
 PUBLIC static void
 Kmem_alloc::reserve_amp_heap(unsigned node)
@@ -175,7 +175,7 @@ Kmem_alloc::reserve_amp_heap(unsigned node)
 }
 
 /**
- * Map desired region as kernel heap and initalize buddy allocator.
+ * Map desired region as kernel heap and initialize buddy allocator.
  */
 PRIVATE void
 Kmem_alloc::map_heap(unsigned long start, unsigned long end)
