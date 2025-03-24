@@ -104,7 +104,7 @@ EXTENSION class Mem_layout
 public:
   enum : Mword
   {
-    Kentry_cpu_page_text     = Kentry_cpu_page + Config::PAGE_SIZE,
+    Kentry_cpu_page_text     = Kentry_cpu_page + Mword{Config::PAGE_SIZE},
     Kentry_cpu_syscall_entry = Kentry_cpu_page_text
   };
 };
