@@ -109,30 +109,28 @@ public:
 //--------------------------------------------------------------------------
 IMPLEMENTATION [arm && virt_obj_space]:
 
-//---------------------------------
-// Workaround GCC BUG 33661
-// Do not use register asm ("r") in a template function, it will be ignored
-//---------------------------------
 PUBLIC static inline
-Mword
-Mem_layout::_read_special_safe(Mword const *a)
+template< typename T >
+T
+Mem_layout::read_special_safe(T const *a)
 {
-  // Counterpart: Thread::pagein_tcb_request()
-  register Mword const *res __asm__ ("r14") = a;
+  // Counterpart: Thread::pagein_tcb_request(): In case of page fault, lr/r14
+  // is set to 0 (and PSR.Z is set but not evaluated here).
+  static_assert(sizeof(T) == sizeof(Mword), "wrong sized argument");
+  register Mword const *res __asm__ ("r14") = reinterpret_cast<Mword const *>(a);
   __asm__ __volatile__ (INST32("ldr") " %0, [%0]\n"
                         : "=r" (res) : "r" (res) : "cc" );
-  return reinterpret_cast<Mword>(res);
+  return static_cast<T>(reinterpret_cast<Mword>(res));
 }
 
-//---------------------------------
-// Workaround GCC BUG 33661
-// Do not use register asm ("r") in a template function, it will be ignored
-//---------------------------------
 PUBLIC static inline
+template< typename T >
 bool
-Mem_layout::_read_special_safe(Mword const *address, Mword &v)
+Mem_layout::read_special_safe(T const *address, T &v)
 {
-  // Counterpart: Thread::pagein_tcb_request()
+  // Counterpart: Thread::pagein_tcb_request(): In case of page fault, lr/r14
+  // is set to 0 and PSR.Z is set.
+  static_assert(sizeof(T) == sizeof(Mword), "wrong sized return type");
   register Mword a asm("r14") = reinterpret_cast<Mword>(address);
   Mword ret;
   asm volatile ("msr cpsr_f, %[zero]          \n" // clear flags
@@ -142,6 +140,6 @@ Mem_layout::_read_special_safe(Mword const *address, Mword &v)
                 : [a] "=r" (a), [ret] "=r" (ret)
                 : "0" (a), [zero] "r" (0)
                 : "cc");
-  v = a;
+  v = static_cast<T>(a);
   return ret;
 }

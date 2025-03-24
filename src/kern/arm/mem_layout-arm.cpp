@@ -109,25 +109,3 @@ Mem_layout::pmem_to_phys(Address virt)
 {
   return virt;
 }
-
-// -------------------------------------------------------------------------
-IMPLEMENTATION [arm && virt_obj_space]:
-
-PUBLIC static inline
-template< typename V >
-bool
-Mem_layout::read_special_safe(V const *address, V &v)
-{
-  Mword _v;
-  bool ret = _read_special_safe(reinterpret_cast<Mword const*>(address), _v);
-  v = V(_v);
-  return ret;
-}
-
-PUBLIC static inline
-template< typename T >
-T
-Mem_layout::read_special_safe(T const *a)
-{
-  return T(_read_special_safe(reinterpret_cast<Mword const *>(a)));
-}

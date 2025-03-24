@@ -101,30 +101,28 @@ public:
 //--------------------------------------------------------------------------
 IMPLEMENTATION [arm && virt_obj_space]:
 
-//---------------------------------
-// Workaround GCC BUG 33661
-// Do not use register asm ("r") in a template function, it will be ignored
-//---------------------------------
 PUBLIC static inline
-Mword
-Mem_layout::_read_special_safe(Mword const *a)
+template< typename T >
+T
+Mem_layout::read_special_safe(T const *a)
 {
   Mword res;
-  // Counterpart: Thread::pagein_tcb_request()
+  // Counterpart: Thread::pagein_tcb_request(): In case of page fault, the
+  // register is set to 0 (and PSR.Z is set but not evaluated here).
+  static_assert(sizeof(T) == sizeof(Mword), "wrong size return type");
   __asm__ __volatile__ ("ldr %0, %1\n" : "=r" (res) : "m" (*a) : "cc" );
-  return res;
+  return static_cast<T>(res);
 }
-//
-//---------------------------------
-// Workaround GCC BUG 33661
-// Do not use register asm ("r") in a template function, it will be ignored
-//---------------------------------
+
 PUBLIC static inline
+template< typename T >
 bool
-Mem_layout::_read_special_safe(Mword const *address, Mword &v)
+Mem_layout::read_special_safe(T const *address, T &v)
 {
   Mword ret;
-  // Counterpart: Thread::pagein_tcb_request()
+  // Counterpart: Thread::pagein_tcb_request(): In case of page fault, the
+  // register is set to 0 and PSR.Z is set.
+  static_assert(sizeof(T) == sizeof(Mword), "wrong sized argument");
   asm volatile ("msr  nzcv, xzr      \n" // clear flags
                 "mov  %[ret], #1     \n"
                 "ldr  %[val], %[adr] \n"
