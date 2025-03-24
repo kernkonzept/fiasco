@@ -36,7 +36,7 @@ public:
   Gic_h::Vcpu_ppi_cfg vtmr;
   Unsigned32 _res0[1];
 
-  // size depdens on gic version, numer of LRs and APRs
+  // size depends on GIC version, number of LRs and APRs
   Gic  gic;
 
   /* The user API ends here */
