@@ -59,18 +59,19 @@ public:
     O_gcr_tcid_0_priority   = 0x40,
 
     O_gcr_cpc_offset        = 0x8000,
-    R_cpc_access            = O_gcr_cpc_offset + 0x000,
-    R_cpc_seqdel            = O_gcr_cpc_offset + 0x008,
-    R_cpc_rail              = O_gcr_cpc_offset + 0x010,
-    R_cpc_resetlen          = O_gcr_cpc_offset + 0x018,
-    R_cpc_revision          = O_gcr_cpc_offset + 0x020,
-    R_cpc_cl                = O_gcr_cpc_offset + 0x2000,
-    R_cpc_co                = O_gcr_cpc_offset + 0x4000,
 
     O_cpc_cmd               = 0x00,
     O_cpc_stat_conf         = 0x08,
     O_cpc_other             = 0x10,
   };
+
+  static constexpr unsigned R_cpc_access   = O_gcr_cpc_offset + 0x000;
+  static constexpr unsigned R_cpc_seqdel   = O_gcr_cpc_offset + 0x008;
+  static constexpr unsigned R_cpc_rail     = O_gcr_cpc_offset + 0x010;
+  static constexpr unsigned R_cpc_resetlen = O_gcr_cpc_offset + 0x018;
+  static constexpr unsigned R_cpc_revision = O_gcr_cpc_offset + 0x020;
+  static constexpr unsigned R_cpc_cl       = O_gcr_cpc_offset + 0x2000;
+  static constexpr unsigned R_cpc_co       = O_gcr_cpc_offset + 0x4000;
 
   enum Cm_revisions
   {
