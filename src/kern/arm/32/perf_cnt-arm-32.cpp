@@ -226,7 +226,7 @@ Perf_cnt::ccnt_init(Cpu const &cpu)
                            // non-secure EL1
       val &= ~(1UL << 28); // NSU=0: don't disable counting of cycles in
                            // non-secure EL0
-      if (TAG_ENABLED(cpu_virt))
+      if constexpr (TAG_ENABLED(cpu_virt))
         val |= (1UL << 27); // NSH=1: count cycles in EL2
       asm volatile ("mcr p15, 0, %0, c9, c13, 1" :: "r" (val)); // PMXEVTYPER
     }
