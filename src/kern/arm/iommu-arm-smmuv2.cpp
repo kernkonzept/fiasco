@@ -673,12 +673,12 @@ private:
   {
     switch (size)
       {
-        address_size(0): return 0;
-        address_size(1): return 1;
-        address_size(2): return 2;
-        address_size(3): return 3;
-        address_size(4): return 4;
-        address_size(5): return 5;
+        case address_size(0): return 0;
+        case address_size(1): return 1;
+        case address_size(2): return 2;
+        case address_size(3): return 3;
+        case address_size(4): return 4;
+        case address_size(5): return 5;
         default: return 5;
       }
   }
