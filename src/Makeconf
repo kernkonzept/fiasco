@@ -98,11 +98,16 @@ endif
 CPP := $(if $(filter undefined default,$(origin CPP)),cpp,$(CPP))
 CPP := $(CROSS_COMPILE)$(CPP)$(CCXX_SUFFIX)
 
-CXX_TYPE     := $(if $(findstring clang,$(shell $(CXX) --version)),clang,gcc)
-CXX_IS_CLANG := $(if $(filter clang,$(CXX_TYPE)),1)
-CC_TYPE      := $(if $(findstring clang,$(shell $(CC) --version)),clang,gcc)
+detect_cross = $(if $(shell $\
+	         sh -c "command -v $(CROSS_COMPILE)$(1)"),$(CROSS_COMPILE),)$(1)
+CC_TYPE      := $(if $(findstring clang,$\
+                 $(shell $(call detect_cross,$(CC)) --version)),clang,gcc)
 CC_IS_CLANG  := $(if $(filter clang,$(CC_TYPE)),1)
-LD_TYPE      := $(if $(and $(LD),$(findstring LLD,$(shell $(LD) --version))),clang,gnu)
+CXX_TYPE     := $(if $(findstring clang,$\
+                  $(shell $(call detect_cross,$(CXX)) --version)),clang,gcc)
+CXX_IS_CLANG := $(if $(filter clang,$(CXX_TYPE)),1)
+LD_TYPE      := $(if $(and $(LD),$(findstring LLD,$\
+                  $(shell $(call detect_cross,$(LD)) --version))),clang,gnu)
 CLANG_TARGET_FLAG = $(addprefix --target=, $(notdir $(CROSS_COMPILE:%-=%)))
 
 comp_prefixes = $(CCXX_WRAP) $(if $(USE_CCACHE),$(CCACHE))
