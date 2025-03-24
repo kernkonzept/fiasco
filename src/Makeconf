@@ -68,11 +68,6 @@ else
   PREPROCESS_FLAGS = -t
 endif
 
-ifneq ($(SYSTEM_TARGET),)
-  CROSS_COMPILE=$(SYSTEM_TARGET)
-  $(info The variable SYSTEM_TARGET has been deprecated in favor of CROSS_COMPILE.)
-endif
-
 AS			= $(CROSS_COMPILE)as
 AR			= $(CROSS_COMPILE)ar
 NM			= $(CROSS_COMPILE)nm
