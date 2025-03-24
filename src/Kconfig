@@ -56,6 +56,9 @@ config HAS_ONE_SHOT
 config HAS_TICKLESS_IDLE
 	bool
 
+config HAS_DT_OPTION
+	bool
+
 ################################################################################
 menu "Target configuration"
 # Platform-dependent options.
@@ -121,6 +124,13 @@ config LAZY_FPU
 	  It is safe to enable this option on AMD CPUs.
 
 # PF_SECTION: TARGET
+
+config DT
+	bool "Device tree support"
+	depends on HAS_DT_OPTION
+	default y
+	help
+	  Enable support to discover devices via device tree.
 
 endmenu # target
 

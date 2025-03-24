@@ -58,7 +58,8 @@ INTERFACES_KERNEL	:= cpu_mask rcupdate kobject_mapdb context_base pm \
 			   sched_context utcb_init perf_cnt trap_state       \
 			   buddy_alloc vkey kdb_ke prio_list ipi scheduler   \
 			   clock sys_call_page boot_alloc                    \
-			   semaphore jdb_object tlbs amp_node global_data observer_irq
+			   semaphore jdb_object tlbs amp_node global_data    \
+			   observer_irq dt
 
 OBJ_SPACE_TYPE = $(if $(CONFIG_VIRT_OBJ_SPACE),virt,phys)
 PREPROCESS_PARTS-y$(CONFIG_VIRT_OBJ_SPACE) += obj_space_phys
@@ -256,3 +257,19 @@ CSRC_LIBC         += lshrdi3.c
 ASSRC_LIBC        := setjmp.S longjmp.S \
                      $(if $(filter ia32,$(CONFIG_XARCH)),memcpy-i386.S)
 NOBUILTIN         += $(patsubst %.o, %, $(OBJ_LIBC))
+
+#
+# LIBFDT subsystem
+#
+ifeq ($(CONFIG_DT),y)
+  LIBFDT              := libfdt.a
+  SUBSYSTEMS          += LIBFDT
+  KERNEL_EXTRA_LIBS   += $(LIBFDT)
+  VPATH               += lib/libfdt
+  PRIVATE_INCDIR      += lib/libfdt
+  CSRC_LIBFDT         := fdt.c fdt_ro.c fdt_strerror.c fdt_addresses.c
+  # WARNING EXCEPTION: suppress warnings about bad function casts in unmodified
+  # upstream code.
+  $(foreach f, $(patsubst %.c, %, $(CSRC_LIBFDT)), \
+          $(eval CFLAGS_$(f) += -Wno-bad-function-cast))
+endif

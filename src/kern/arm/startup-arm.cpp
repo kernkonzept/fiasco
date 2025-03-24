@@ -2,6 +2,7 @@ IMPLEMENTATION [arm]:
 
 #include "config.h"
 #include "cpu.h"
+#include "dt.h"
 #include "fb_console.h"
 #include "fpu.h"
 #include "fpu_alloc.h"
@@ -46,6 +47,7 @@ Startup::stage2()
 
   Kip_init::init();
   Kmem_alloc::init();
+  Dt::init();
   Alternative_insn::init();
 
   Fb_console::init(); // needs Kip_init and Kmem_alloc
