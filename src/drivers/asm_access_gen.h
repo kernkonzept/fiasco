@@ -6,27 +6,22 @@
 
 namespace Asm_access {
 
-template <typename T>
-struct is_supported_type
-{
-  static const bool value = cxx::is_same<T, Unsigned8>::value
-                            || cxx::is_same<T, Unsigned16>::value
-                            || cxx::is_same<T, Unsigned32>::value
-                            || cxx::is_same<T, Unsigned64>::value
-                            || cxx::is_same<T, Mword>::value;
-};
+template<typename T>
+concept supported_type = cxx::is_same_v<T, Unsigned8>
+                         || cxx::is_same_v<T, Unsigned16>
+                         || cxx::is_same_v<T, Unsigned32>
+                         || cxx::is_same_v<T, Unsigned64>
+                         || cxx::is_same_v<T, Mword>;
 
-template <typename T>
-inline
-typename cxx::enable_if<is_supported_type<T>::value, T>::type
+template <supported_type T>
+inline T
 read(T const *mem)
 {
   return *reinterpret_cast<volatile T const *>(mem);
 }
 
-template <typename T>
-inline
-typename cxx::enable_if<is_supported_type<T>::value, void>::type
+template <supported_type T>
+void
 write(T val, T *mem)
 {
   *reinterpret_cast<volatile T *>(mem) = val;
