@@ -1280,20 +1280,23 @@ Thread::migrate_away(Migration *inf, bool remote)
   Cpu_number target_cpu = inf->cpu;
 
     {
-      Queue &q = _pending_rqq.current();
-      // The queue lock of the current CPU protects the cpu number in
-      // the thread
-
+      // The queue lock of the thread's current home CPU protects the `home_cpu`
+      // member of the thread.
       Lock_guard<Queue::Inner_lock> g;
+
       // For an invalid/offline CPU, migrate_away() is executed in a DRQ, which
       // already acquired the queue lock of the thread's home CPU.
       if (!remote)
-        g = lock_guard(q.q_lock());
+        {
+          // We currently execute on the home CPU of the thread.
+          Queue &q = _pending_rqq.current();
+          g = lock_guard(q.q_lock());
 
-      assert (q.q_lock()->test());
-      // potentially dequeue from our local queue
-      if (_pending_rq.queued())
-        check (q.dequeue(&_pending_rq));
+          // Potentially dequeue from our local queue. (Not necessary for thread
+          // on offline CPU, as _pending_rqq of offline CPU is always empty.)
+          if (_pending_rq.queued())
+            check (q.dequeue(&_pending_rq));
+        }
 
       Sched_context *sc = sched_context();
       sc->set(inf->sp);
@@ -1302,6 +1305,7 @@ Thread::migrate_away(Migration *inf, bool remote)
 
       Mem::mp_wmb();
 
+      assert(_pending_rqq.cpu(home_cpu()).q_lock()->is_locked());
       assert (!in_ready_list());
       assert (!_pending_rq.queued());
 
