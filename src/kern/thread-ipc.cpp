@@ -771,7 +771,12 @@ Thread::do_ipc_receive(bool have_receive, Thread *partner, Sender *sender,
   state_del(Thread_full_ipc_mask);
 }
 
-
+/**
+ * Transfer IPC message from this thread (sender) to a receiver.
+ *
+ * \post This function is a potential preemption point, if the transferred
+ *       message contains typed items.
+ */
 PRIVATE inline NEEDS [Thread::copy_utcb_to]
 bool
 Thread::transfer_msg(L4_msg_tag tag, Thread *receiver,
@@ -1004,7 +1009,12 @@ Thread::copy_utcb_to_utcb(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
   return success;
 }
 
-
+/**
+ * Transfer IPC message from this thread's UTCB (sender) to the receiver's UTCB.
+ *
+ * \post This function is a potential preemption point, if the transferred
+ *       message contains typed items.
+ */
 PUBLIC [[nodiscard]] inline NEEDS[Thread::copy_utcb_to_ts,
                                   Thread::copy_utcb_to_utcb,
                                   Thread::copy_ts_to_utcb]
