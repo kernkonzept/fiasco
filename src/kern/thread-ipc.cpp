@@ -466,28 +466,27 @@ PRIVATE inline
 Sender *
 Thread::get_next_sender(Sender *sender)
 {
-  if (!sender_list()->empty())
+  if (sender_list()->empty())
+    return nullptr;
+
+  if (sender) // closed wait
     {
-      if (sender) // closed wait
+      assert(is_partner(sender));
+      if (EXPECT_TRUE(partner_in_sender_list()))
         {
-          assert(is_partner(sender));
-          if (EXPECT_TRUE(partner_in_sender_list()))
-            {
-              assert(sender->in_sender_list() && sender_list() == sender->wait_queue());
-              return sender;
-            }
-          else
-            return nullptr;
+          assert(sender->in_sender_list() && sender_list() == sender->wait_queue());
+          return sender;
         }
-      else // open wait
-        {
-          Sender *next = Sender::cast(sender_list()->first());
-          assert (next->in_sender_list());
-          set_partner(next);
-          return next;
-        }
+      else
+        return nullptr;
     }
-  return nullptr;
+  else // open wait
+    {
+      Sender *next = Sender::cast(sender_list()->first());
+      assert (next->in_sender_list());
+      set_partner(next);
+      return next;
+    }
 }
 
 PRIVATE inline
