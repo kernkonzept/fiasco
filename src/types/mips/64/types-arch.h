@@ -3,8 +3,6 @@
 
 #include "globalconfig.h"
 
-#define L4_PTR_ARG(a) (reinterpret_cast<Address>(a))
-
 #define L4_PTR_FMT             "%016lx"
 #define L4_MWORD_FMT           "%016lx"
 #define L4_X64_FMT             "%016llx"

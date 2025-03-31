@@ -12,7 +12,7 @@ extern "C" void __cxa_pure_virtual();
 extern "C" void __cxa_pure_virtual()
 {
   panic("cxa pure virtual function called from " L4_PTR_FMT,
-        L4_PTR_ARG(__builtin_return_address(0)));
+        reinterpret_cast<Address>(__builtin_return_address(0)));
 }
 
 void operator delete(void *) noexcept
@@ -22,7 +22,7 @@ void operator delete(void *) noexcept
   // to this function (because all destructors of abstract base classes have
   // been marked abstract virtual), and we wouldn't need to define this.
   panic("operator delete (aka __builtin_delete) called from " L4_PTR_FMT,
-      L4_PTR_ARG(__builtin_return_address(0)));
+        reinterpret_cast<Address>(__builtin_return_address(0)));
 }
 
 #if defined FIASCO_GCC
@@ -40,6 +40,6 @@ void operator delete(void *, std::align_val_t)
   //
   // Clang doesn't provide std::align_val_t.
   panic("operator delete (aka __builtin_delete) called from " L4_PTR_FMT,
-      L4_PTR_ARG(__builtin_return_address(0)));
+        reinterpret_cast<Address>(__builtin_return_address(0)));
 }
 #endif
