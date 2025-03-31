@@ -254,7 +254,6 @@ IMPLEMENTATION:
 
 PUBLIC bool  Kobject::is_local(Space *) const override { return false; }
 PUBLIC Mword Kobject::obj_id() const override { return ~0UL; }
-PUBLIC virtual bool  Kobject::put() { return true; }
 PUBLIC inline Kobject_mappable *Kobject::map_root() override { return this; }
 
 PUBLIC inline NEEDS["lock_guard.h"]
@@ -266,6 +265,16 @@ Kobject_mappable::dec_cap_refcnt(Smword diff)
   return _cnt;
 }
 
+/**
+ * Initiate the deletion of a kernel object, that is, invalidate the
+ * existence lock and append the kernel object to the reap list.
+ *
+ * Called (exactly once) when the last capability for this kernel object
+ * is released.
+ *
+ * \param reap_list  The reap list the object, and dependents, are added to.
+ *                   In next phase these will be destroyed.
+ */
 PUBLIC
 void
 Kobject::initiate_deletion(Kobjects_list &reap_list) override
@@ -274,9 +283,25 @@ Kobject::initiate_deletion(Kobjects_list &reap_list) override
   reap_list.push(this, _next_to_reap);
 }
 
+/**
+ * Destroy a kernel object, that is, wait for the release of the existence lock
+ * if it is still locked, and drop references to other kernel objects.
+ *
+ * Called (exactly once) In RCU phase 1, i.e. before the RCU grace period.
+ *
+ * If the kernel object keeps references to other kernel objects, the respective
+ * sub-class must overwrite this method and drop outgoing references to other
+ * objects. This might lead to additions to the reap list.
+ *
+ * \param reap_list  The reap list dependent objects are added to, whose
+ *                   deletion gets initiated as part of destroying this object.
+ *                   These will be destroyed subsequently.
+ *
+ * \pre Interrupts must be enabled.
+ */
 PUBLIC virtual
 void
-Kobject::destroy(Kobjects_list &)
+Kobject::destroy([[maybe_unused]] Kobjects_list &reap_list)
 {
   LOG_TRACE("Kobject destroy", "des", current(), Log_destroy,
       l->id = dbg_id();
@@ -285,6 +310,38 @@ Kobject::destroy(Kobjects_list &)
   existence_lock.wait_free();
 }
 
+/**
+ * Drop the capability reference to a kernel object.
+ *
+ * Called (exactly once) in RCU phase 2, i.e. after the RCU grace period.
+ *
+ * The default implementation always returns true. If a kernel object keeps
+ * track on incoming references, for example uses kernel internal reference
+ * counting (see `Ref_cnt_obj`), put() must be overwritten and drop one reference
+ * (namely the capability reference from the mapping database). If all
+ * references are gone, true is returned, otherwise false. If there are
+ * references left, an object-specific strategy must take over, which must
+ * delete the object as soon as all incoming references are gone.
+ *
+ * \return Whether the dropped reference was the last one remaining, in which
+ *         case the caller is responsible to delete the object.
+ *
+ * \pre Interrupts must be enabled.
+ */
+PUBLIC virtual bool Kobject::put() { return true; }
+
+/**
+ * Destructor of kernel object.
+ *
+ * Called in or after RCU phase 2, i.e. after the RCU grace period.
+ *
+ * Deletion, and thus invokation of the destructor, might be delayed if the
+ * object uses kernel internal reference counting (see `Kobject::put()` and
+ * `Ref_cnt_obj`).
+ *
+ * \note Unlike in `Kobject::destroy()` and `Kobject::put()` it is not specified
+ *       whether interrupts are enabled or disabled.
+ */
 PUBLIC virtual
 Kobject::~Kobject()
 {
