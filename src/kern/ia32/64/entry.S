@@ -360,10 +360,9 @@ idt_irq_vector_stubs_data:
 idt_irq_vector_stubs_text:
 .bundle_align_mode 4
 .rept APIC_IRQ_BASE - 0x28
-0:
 	.bundle_lock
-	push	%rdi
-	movq	(idt_irq_vector_stubs_data + STUB_DATA_SIZE * (0b - idt_irq_vector_stubs_text) / STUB_TEXT_SIZE), %rdi
+0:	push	%rdi
+	movq	idt_irq_vector_stubs_data + STUB_DATA_SIZE * ((0b - idt_irq_vector_stubs_text) / STUB_TEXT_SIZE), %rdi
 	jmp	__generic_irq_entry
 	.bundle_unlock
 .endr
