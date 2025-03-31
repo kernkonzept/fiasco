@@ -203,7 +203,7 @@ Jdb::save_disable_irqs(Cpu_number cpu)
       if (Io_apic::active() && Apic::is_present())
         {
           apic_tpr.cpu(cpu) = Apic::tpr();
-          Apic::tpr(APIC_IRQ_BASE - 0x08);
+          Apic::tpr(0xff);
         }
     }
 }
