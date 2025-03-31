@@ -28,7 +28,7 @@ public:
   /**
    * The physical node-id of the first CPU.
    *
-   * Ususally the numbering starts at 0. A platform might override the
+   * Usually the numbering starts at 0. A platform might override the
    * implementation if numbering is different.
    */
   static constexpr Amp_phys_id first_node();
