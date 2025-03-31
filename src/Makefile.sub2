@@ -251,9 +251,10 @@ ccj_resolve_obj = $(abspath $(call ccj_src_to_obj,$(file)))
 # Generate compiler command line for source file
 # 1: Compiler used to compile the file
 # 2: <...>_flgs prefix
-# 3: CFLAGS / CXXFLAGS / ASFLAGS
-# 4: (relative) path to source file
-ccj_resolve_cmd = $($(1)) -c $(call $(2)_flgs,$(basename $(4))) $($(3)_$(basename $(4))) -o $(call ccj_src_to_obj,$($(4))) $(subst $(abspath .)/,,$(call ccj_resolve_src,$(4)))
+# 3: (relative) path to source file
+ccj_resolve_cmd = $($(1)) -c $(call $(2)_flgs,$(basename $(3)),$(call ccj_src_to_obj,$(3))) \
+                          -o $(call ccj_src_to_obj,$(3)) \
+                          $(subst $(abspath .)/,,$(call ccj_resolve_src,$(3)))
 
 # Helper define to output literal comma
 ccj_comma = ,
@@ -263,9 +264,9 @@ compile_commands.json: FORCE
 	$(foreach file,$(SRC_ALL), \
 	  $(file >>$@,  {) \
 	    $(file >>$@,    "command": "$(strip \
-	              $(if $(filter %.c,$(file)),$(call ccj_resolve_cmd,CC,c,CFLAGS,$(file))) \
-	              $(if $(filter %.cc,$(file)),$(call ccj_resolve_cmd,CXX,cc,CXXFLAGS,$(file))) \
-	              $(if $(filter %.S,$(file)),$(call ccj_resolve_cmd,CC,as,ASFLAGS,$(file))) \
+	              $(if $(filter %.c,$(file)),$(call ccj_resolve_cmd,CC,c,$(file))) \
+	              $(if $(filter %.cc,$(file)),$(call ccj_resolve_cmd,CXX,cc,$(file))) \
+	              $(if $(filter %.S,$(file)),$(call ccj_resolve_cmd,CC,as,$(file))) \
 	              )",) \
 	    $(file >>$@,    "directory": "$(abspath .)",) \
 	    $(file >>$@,    "file": "$(call ccj_resolve_src,$(file))",) \
