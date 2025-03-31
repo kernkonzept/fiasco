@@ -533,6 +533,11 @@ Thread::activate_ipc_partner(Thread *partner, Cpu_number current_cpu,
  * This function blocks until the message can be sent/received, the respective
  * timeout hits, the IPC is canceled, or the thread is killed.
  *
+ * \note When calling this the stack must not contain anything that needs to be
+ *       unwound/freed upon return, i.e. the stack must be disposable, because
+ *       the IRQ shortcut in (see `Ipc_sender_base::handle_shortcut()`) can
+ *       replace the receive return stack.
+ *
  * \todo review closed wait handling of sender during possible
  *       quiescent states and blocking.
  */
@@ -655,6 +660,11 @@ Thread::do_ipc(L4_msg_tag const &tag, Mword from_spec, Thread *partner,
 
 /**
  * Receive phase of an IPC operation.
+ *
+ * \note When calling this the stack must not contain anything that needs to be
+ *       unwound/freed upon return, i.e. the stack must be disposable, because
+ *       the IRQ shortcut in (see `Ipc_sender_base::handle_shortcut()`) can
+ *       replace the receive return stack.
  */
 PRIVATE inline
 void

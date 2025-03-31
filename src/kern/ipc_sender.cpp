@@ -144,7 +144,9 @@ Ipc_sender<Derived>::send_msg(Receiver *receiver, bool is_xcpu)
           || EXPECT_TRUE(current_cpu() == receiver->home_cpu()))
         {
           auto &rq = Sched_context::rq.current();
-          if (s.is_ipc()
+          if (s.is_ipc() // Shortcut is applicable with receiver that is in
+                         // explicit IPC wait (Thread_receive_wait flag set),
+                         // not asynchronous vCPU reception.
               && handle_shortcut(dst_regs, receiver))
             return false;
 
