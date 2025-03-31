@@ -183,6 +183,18 @@ private:
 };
 
 // -------------------------------------------------------------------------
+IMPLEMENTATION [obj_space_virt]:
+
+// avoid warnings about hiding virtual functions from Obj_space_phys_override
+EXTENSION class Vm_vmx_ept
+{
+private:
+  using Vm_vmx_t<Vm_vmx_ept>::v_lookup;
+  using Vm_vmx_t<Vm_vmx_ept>::v_delete;
+  using Vm_vmx_t<Vm_vmx_ept>::v_insert;
+};
+
+// -------------------------------------------------------------------------
 IMPLEMENTATION [vmx && 64bit]:
 
 IMPLEMENT inline
