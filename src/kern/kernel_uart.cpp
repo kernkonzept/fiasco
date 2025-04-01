@@ -170,12 +170,14 @@ void
 Kernel_uart::enable_rcv_irq()
 {
   Irq_mgr *mgr = Irq_mgr::mgr;
-  if (mgr->attach(&uart_irq, mgr->legacy_override(uart()->irq())))
-    {
-      uart_irq->unmask();
-      uart()->enable_rcv_irq();
-      Vkey::enable_receive();
-    }
+  Mword gsi = mgr->legacy_override(uart()->irq());
+
+  if (!mgr->gsi_attach(&uart_irq, gsi))
+    return;
+
+  uart_irq->unmask();
+  uart()->enable_rcv_irq();
+  Vkey::enable_receive();
 }
 
 //---------------------------------------------------------------------------

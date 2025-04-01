@@ -91,10 +91,10 @@ class Irq_chip_ia32
 {
 public:
   /// Number of pins at this chip.
-  unsigned nr_irqs() const { return _irqs; }
+  unsigned nr_pins() const { return _pins; }
 
 protected:
-  unsigned _irqs;
+  unsigned _pins;
   unsigned char *_vec;
   Spin_lock<> _entry_lock;
 
@@ -169,11 +169,11 @@ Int_vector_allocator::alloc()
  * \note This code is not thread / MP safe.
  */
 PUBLIC explicit inline
-Irq_chip_ia32::Irq_chip_ia32(unsigned irqs)
-: _irqs(irqs),
-  _vec(irqs ? Boot_alloced::allocate<unsigned char>(irqs) : nullptr)
+Irq_chip_ia32::Irq_chip_ia32(unsigned pins)
+: _pins(pins),
+  _vec(pins ? Boot_alloced::allocate<unsigned char>(pins) : nullptr)
 {
-  for (unsigned i = 0; i < irqs; ++i)
+  for (unsigned i = 0; i < pins; ++i)
     _vec[i] = 0;
 
   // add vectors from 0x40 up to Int_vector_allocator::End
@@ -185,16 +185,16 @@ Irq_chip_ia32::Irq_chip_ia32(unsigned irqs)
 
 PUBLIC
 Irq_base *
-Irq_chip_ia32::irq(Mword irqn) const
+Irq_chip_ia32::irq(Mword pin) const
 {
-  if (irqn >= _irqs)
+  if (pin >= _pins)
     return nullptr;
 
-  if (!_vec[irqn])
+  if (!_vec[pin])
     return nullptr;
 
   extern Irq_entry_stub idt_irq_vector_stubs[];
-  return idt_irq_vector_stubs[_vec[irqn] - 0x20].irq;
+  return idt_irq_vector_stubs[_vec[pin] - 0x20].irq;
 }
 
 /**
@@ -220,7 +220,7 @@ PRIVATE
 unsigned
 Irq_chip_ia32::_valloc(Mword pin, unsigned vector)
 {
-  if (pin >= _irqs)
+  if (pin >= _pins)
     return 0;
 
   if (vector >= Int_vector_allocator::End)
@@ -275,15 +275,15 @@ Irq_chip_ia32::vfree(Irq_base *irq, void *handler)
 
 PUBLIC
 bool
-Irq_chip_ia32::reserve(Mword irqn)
+Irq_chip_ia32::reserve(Mword pin)
 {
-  if (irqn >= _irqs)
+  if (pin >= _pins)
     return false;
 
-  if (_vec[irqn])
+  if (_vec[pin])
     return false;
 
-  _vec[irqn] = 0xff;
+  _vec[pin] = 0xff;
   return true;
 }
 

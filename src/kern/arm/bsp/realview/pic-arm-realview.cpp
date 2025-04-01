@@ -59,13 +59,13 @@ void Pic::init()
   Mgr *m = new Boot_object<Mgr>(2);
   Irq_mgr::mgr = m;
 
-  m->add_chip(0, g, g->nr_irqs());
+  m->add_chip(0, g, g->nr_pins());
 
   g = new Boot_object<Gic_v2>(Kmem_mmio::map(Mem_layout::Gic1_cpu_phys_base,
                                              Gic_cpu_v2::Size),
                               Kmem_mmio::map(Mem_layout::Gic1_dist_phys_base,
                                              Gic_dist::Size));
-  m->add_chip(256, g, g->nr_irqs());
+  m->add_chip(256, g, g->nr_pins());
 
   Cascade_irq *casc_irq = new Boot_object<Cascade_irq>(g, &Gic_v2::cascade_hit);
 

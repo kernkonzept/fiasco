@@ -169,7 +169,7 @@ Pic::init()
   gic = new Boot_object<Gic_v3>(dist_mmio, redist_mmio, id == 0);
 
   M *m = new Boot_object<M>(2);
-  m->add_chip(0, gic.unwrap(), gic->nr_irqs());
+  m->add_chip(0, gic.unwrap(), gic->nr_pins());
   if (auto *mru = Mru::create_mru(gic))
     m->add_chip(1024, mru, Mru::Nr_irqs);
 

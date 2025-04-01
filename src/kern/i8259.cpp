@@ -11,13 +11,17 @@ template<typename IO>
 class Irq_chip_i8259 : public Irq_chip_icu, private Pm_object
 {
   friend class Jdb_kern_info_pic_state;
+
 public:
+  enum { Nr_pins = 16 };
+
   typedef typename IO::Port_addr Io_address;
-  unsigned nr_irqs() const override { return 16; }
+  using Pm_object::register_pm;
+
+  unsigned nr_pins() const override { return Nr_pins; }
   int set_mode(Mword, Mode) override { return 0; }
   bool is_edge_triggered(Mword) const override { return false; }
   void set_cpu(Mword, Cpu_number) override {}
-  using Pm_object::register_pm;
 
 private:
   enum
@@ -150,32 +154,33 @@ template<typename IO>
 class Irq_chip_i8259_gen : public Irq_chip_i8259<IO>
 {
 public:
-  typedef typename Irq_chip_i8259<IO>::Io_address Io_address;
+  using typename Irq_chip_i8259<IO>::Io_address;
+  using Irq_chip_i8259<IO>::Nr_pins;
 
   Irq_chip_i8259_gen(Io_address master, Io_address slave)
   : Irq_chip_i8259<IO>(master, slave)
   {
-    for (auto &i: _irqs)
-      i = nullptr;
+    for (auto &pin: _pins)
+      pin = nullptr;
   }
 
   Irq_base *irq(Mword pin) const override
   {
-    if (pin >= 16)
+    if (pin >= Nr_pins)
       return nullptr;
 
-    return _irqs[pin];
+    return _pins[pin];
   }
 
   bool attach(Irq_base *irq, Mword pin, bool init = true) override
   {
-    if (pin >= 16)
+    if (pin >= Nr_pins)
       return false;
 
-    if (_irqs[pin])
+    if (_pins[pin])
       return false;
 
-    if (!cas<Irq_base *>(&_irqs[pin], nullptr, irq))
+    if (!cas<Irq_base *>(&_pins[pin], nullptr, irq))
       return false;
 
     this->bind(irq, pin, !init);
@@ -184,25 +189,24 @@ public:
 
   bool reserve(Mword pin) override
   {
-    if (pin >= 16)
+    if (pin >= Nr_pins)
       return false;
 
-    if (_irqs[pin])
+    if (_pins[pin])
       return false;
 
-    _irqs[pin] = reinterpret_cast<Irq_base *>(1UL);
-
+    _pins[pin] = reinterpret_cast<Irq_base *>(1UL);
     return true;
   }
 
   void detach(Irq_base *irq) override
   {
-    _irqs[irq->pin()] = nullptr;
+    _pins[irq->pin()] = nullptr;
     Irq_chip_icu::detach(irq);
   }
 
 private:
-  Irq_base *_irqs[16];
+  Irq_base::Ptr _pins[Nr_pins];
 };
 
 // --------------------------------------------------------

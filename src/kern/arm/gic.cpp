@@ -53,10 +53,10 @@ protected:
 
 public:
   template<typename ...CPU_ARGS>
-  Gic_mixin(void *dist_base, int nr_irqs_override, bool dist_init, CPU_ARGS &&...args)
+  Gic_mixin(void *dist_base, int nr_pins_override, bool dist_init, CPU_ARGS &&...args)
   : Gic(dist_base), _cpu(cxx::forward<CPU_ARGS>(args)...)
   {
-    unsigned num = init(dist_init, nr_irqs_override);
+    unsigned num = init(dist_init, nr_pins_override);
     printf("GIC: Number of IRQs available at this GIC: %d\n", num);
     Irq_chip_gen::init(num);
   }
@@ -68,7 +68,7 @@ public:
   Gic_mixin(void *dist_base, Gic *master_mapping, CPU_ARGS &&...args)
   : Gic(dist_base), _cpu(cxx::forward<CPU_ARGS>(args)...)
   {
-    Irq_chip_gen::init(master_mapping->nr_irqs());
+    Irq_chip_gen::init(master_mapping->nr_pins());
   }
 
   void init_ap(Cpu_number cpu, bool resume) override
@@ -86,16 +86,16 @@ public:
     _cpu.disable();
   }
 
-  unsigned init(bool dist_init, int nr_irqs_override = -1)
+  unsigned init(bool dist_init, int nr_pins_override = -1)
   {
     unsigned num;
 
     if (dist_init)
       num = _dist.init(typename IMPL::Version(), Cpu::Cpu_prio_val,
-                       nr_irqs_override);
+                       nr_pins_override);
     else
-      num = nr_irqs_override >= 0 ? static_cast<unsigned>(nr_irqs_override)
-                                  : _dist.hw_nr_irqs();
+      num = nr_pins_override >= 0 ? static_cast<unsigned>(nr_pins_override)
+                                  : _dist.hw_nr_pins();
 
     self()->init_global_irq_handler();
 
@@ -193,8 +193,8 @@ extern "C" void irq_handler()
 
 PUBLIC inline
 unsigned
-Gic::hw_nr_irqs()
-{ return _dist.hw_nr_irqs(); }
+Gic::hw_nr_pins()
+{ return _dist.hw_nr_pins(); }
 
 PUBLIC
 int

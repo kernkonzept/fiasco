@@ -28,8 +28,8 @@ public:
       Unsigned32 hart_ids[16];
       // Base address of the Platform Interrupt Controller (PLIC)
       Mword      plic_addr;
-      // Number of IRQs supported by the PLIC
-      Unsigned32 plic_nr_irqs;
+      // Number of interrupt pins supported by the PLIC
+      Unsigned32 plic_nr_pins;
       // Mapping of harts to their respective PLIC interrupt target context
       Unsigned32 plic_hart_irq_targets[16];
       static_assert(Config::Max_num_cpus <=

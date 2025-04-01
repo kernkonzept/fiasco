@@ -162,7 +162,7 @@ Gic_msi::with_lpi(Mword pin, CB &&cb, ARGS &&...args)
 
 PUBLIC inline
 unsigned
-Gic_msi::nr_irqs() const override
+Gic_msi::nr_pins() const override
 { return _lpis.size(); }
 
 PUBLIC

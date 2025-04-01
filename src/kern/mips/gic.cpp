@@ -232,7 +232,7 @@ Gic::pending()
 {
   // We might also need to check that we're on the proper CPU but
   // lets postpone that until it is actually required
-  for (unsigned i = 0, o = 0; i < nr_irqs(); o += Reg_bytes, i += Reg_width)
+  for (unsigned i = 0, o = 0; i < nr_pins(); o += Reg_bytes, i += Reg_width)
     if (_enabled_map[i / Reg_width])
       {
         Reg_type v = _r[Sh_pend + o] & _enabled_map[i / Reg_width];
@@ -311,13 +311,13 @@ Gic::setup_ipis()
 {
   /* make sure we have at least 16 (arbitrary) IRQs left after
    * assigning IPIs */
-  assert(Config::Max_num_cpus <= (nr_irqs() - 16));
+  assert(Config::Max_num_cpus <= (nr_pins() - 16));
 
-  _ipi_base = nr_irqs() - Config::Max_num_cpus;
+  _ipi_base = nr_pins() - Config::Max_num_cpus;
   printf("GIC: IPI base is: %u\n", _ipi_base);
 
   //FIXME: limit the number of user visible IRQs by the IPIs allocated
-  for (unsigned i = _ipi_base; i < nr_irqs(); ++i)
+  for (unsigned i = _ipi_base; i < nr_pins(); ++i)
     {
       _r.r<Unsigned32>(sh_map_pin(i)) = (1UL << 31) | (_cpu_int_ipi - 2);
       auto mask = sh_irq_bit(i);

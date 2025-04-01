@@ -117,12 +117,12 @@ Startup::stage2()
       if (timer_irq >= 0)
 	{
 	  Irq_mgr *const m = Irq_mgr::mgr;
-	  Irq_mgr::Irq const irq = m->chip(m->legacy_override(timer_irq));
-	  Io_apic *const apic = static_cast<Io_apic *>(irq.chip);
+	  Irq_mgr::Chip_pin const cp = m->chip_pin(m->legacy_override(timer_irq));
+	  Io_apic *const apic = static_cast<Io_apic *>(cp.chip);
 
-	  Io_apic_entry e = apic->read_entry(irq.pin);
+	  Io_apic_entry e = apic->read_entry(cp.pin);
 	  e.vector() = Config::Apic_timer_vector;
-	  apic->write_entry(irq.pin, e);
+	  apic->write_entry(cp.pin, e);
 	}
     }
   else

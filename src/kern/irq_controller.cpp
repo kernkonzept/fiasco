@@ -30,23 +30,23 @@ Icu::operator delete (void *)
 
 PUBLIC inline NEEDS["irq_mgr.h"]
 Irq_base *
-Icu::icu_irq(unsigned irqnum)
+Icu::icu_irq(Mword gsi)
 {
-  return Irq_mgr::mgr->irq(irqnum);
+  return Irq_mgr::mgr->gsi_irq(gsi);
 }
 
 PUBLIC inline NEEDS["irq_mgr.h"]
-Irq_mgr::Irq
-Icu::icu_get_chip(Mword pin) const
+Irq_mgr::Chip_pin
+Icu::icu_chip_pin(Mword gsi) const
 {
-  return Irq_mgr::mgr->chip(pin);
+  return Irq_mgr::mgr->chip_pin(gsi);
 }
 
 PUBLIC inline NEEDS["irq_mgr.h"]
 int
-Icu::icu_attach(unsigned irqnum, Irq_base *irq)
+Icu::icu_attach(Mword gsi, Irq_base *irq)
 {
-  if (Irq_mgr::mgr->attach(irq, irqnum))
+  if (Irq_mgr::mgr->gsi_attach(irq, gsi))
     return 0;
 
   return -L4_err::EInval;
@@ -55,9 +55,9 @@ Icu::icu_attach(unsigned irqnum, Irq_base *irq)
 
 PUBLIC inline NEEDS["irq_mgr.h"]
 int
-Icu::icu_get_info(Mword *features, Mword *num_irqs, Mword *num_msis)
+Icu::icu_info(Mword *features, Mword *num_gsis, Mword *num_msis)
 {
-  *num_irqs = Irq_mgr::mgr->nr_irqs();
+  *num_gsis = Irq_mgr::mgr->nr_gsis();
   *num_msis = Irq_mgr::mgr->nr_msis();
   *features = *num_msis ? Mword{Msi_bit} : 0;
   return 0;

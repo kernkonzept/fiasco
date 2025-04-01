@@ -61,18 +61,23 @@ Irq_chip_ia32_pic::detach(Irq_base *irq) override
 }
 
 PRIVATE
-Irq_mgr::Irq
-Irq_chip_ia32_pic::chip(Mword irq) const override
+Irq_mgr::Chip_pin
+Irq_chip_ia32_pic::chip_pin(Mword gsi) const override
 {
-  if (irq < 16)
-    return Irq(const_cast<Irq_chip_ia32_pic*>(this), irq);
+  if (gsi < 16)
+    return Chip_pin(const_cast<Irq_chip_ia32_pic *>(this), gsi);
 
-  return Irq();
+  return Chip_pin();
 }
 
 PUBLIC
 unsigned
-Irq_chip_ia32_pic::nr_irqs() const override
+Irq_chip_ia32_pic::nr_pins() const override
+{ return 16; }
+
+PUBLIC
+unsigned
+Irq_chip_ia32_pic::nr_gsis() const override
 { return 16; }
 
 PUBLIC

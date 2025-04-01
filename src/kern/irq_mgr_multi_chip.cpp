@@ -6,15 +6,15 @@ template< unsigned Bits_per_entry >
 class Irq_mgr_multi_chip : public Irq_mgr
 {
 public:
-  unsigned nr_irqs() const override { return _nchips * Irqs_per_entry; }
+  unsigned nr_gsis() const override { return _nchips * Pins_per_entry; }
   unsigned nr_msis() const override { return 0; }
 
 private:
-  enum { Irqs_per_entry = 1UL << Bits_per_entry };
+  enum { Pins_per_entry = 1UL << Bits_per_entry };
 
   struct Chip
   {
-    unsigned irq_base;
+    unsigned gsi_base;
     Irq_chip_icu *chip;
   };
 
@@ -37,29 +37,29 @@ Irq_mgr_multi_chip<Bits_per_chip>::Irq_mgr_multi_chip(unsigned chips)
 {}
 
 PUBLIC template< unsigned Bits_per_entry >
-Irq_mgr::Irq
-Irq_mgr_multi_chip<Bits_per_entry>::chip(Mword irqnum) const override
+Irq_mgr::Chip_pin
+Irq_mgr_multi_chip<Bits_per_entry>::chip_pin(Mword gsi) const override
 {
-  unsigned c = irqnum / Irqs_per_entry;
+  unsigned c = gsi / Pins_per_entry;
   if (c >= _nchips)
-    return Irq();
+    return Chip_pin();
 
   Chip *ci = _chips + c;
 
-  return Irq(ci->chip, irqnum - ci->irq_base);
+  return Chip_pin(ci->chip, gsi - ci->gsi_base);
 }
 
 PUBLIC
 template< unsigned Bits_per_entry >
 void
-Irq_mgr_multi_chip<Bits_per_entry>::add_chip(unsigned irq_base,
+Irq_mgr_multi_chip<Bits_per_entry>::add_chip(unsigned gsi_base,
                                              Irq_chip_icu *c, unsigned pins)
 {
   // check if the base is properly aligned
-  assert((irq_base % Irqs_per_entry) == 0);
+  assert((gsi_base % Pins_per_entry) == 0);
 
-  unsigned idx = irq_base / Irqs_per_entry;
-  unsigned num = (pins + Irqs_per_entry - 1) / Irqs_per_entry;
+  unsigned idx = gsi_base / Pins_per_entry;
+  unsigned num = (pins + Pins_per_entry - 1) / Pins_per_entry;
 
   assert (num);
   assert (idx < _nchips);
@@ -69,6 +69,6 @@ Irq_mgr_multi_chip<Bits_per_entry>::add_chip(unsigned irq_base,
     {
       assert (!_chips[i].chip);
       _chips[i].chip = c;
-      _chips[i].irq_base = irq_base;
+      _chips[i].gsi_base = gsi_base;
     }
 }

@@ -29,12 +29,12 @@ public:
       i = 0;
   }
 
-  unsigned nr_irqs() const override
+  unsigned nr_pins() const override
   { return cxx::size(_irqs); }
 
   Irq_base *irq(Mword pin) const override
   {
-    if (pin >= Mips_cpu_irq_chip::nr_irqs())
+    if (pin >= Mips_cpu_irq_chip::nr_pins())
       return nullptr;
 
     return _irqs[pin];
@@ -42,7 +42,7 @@ public:
 
   bool attach(Irq_base *irq, Mword pin, bool init = true) override
   {
-    if (pin >= Mips_cpu_irq_chip::nr_irqs())
+    if (pin >= Mips_cpu_irq_chip::nr_pins())
       return false;
 
     if (_irqs[pin])
@@ -65,7 +65,7 @@ public:
 
   bool reserve(Mword pin) override
   {
-    if (pin >= Mips_cpu_irq_chip::nr_irqs())
+    if (pin >= Mips_cpu_irq_chip::nr_pins())
       return false;
 
     if (_irqs[pin])

@@ -9,62 +9,63 @@ INTERFACE:
  * Helper IRQ chip for virtual ICUs.
  *
  * This IRQ chip provides a simple software-only IRQ chip that can bind up to
- * NIRQS interrupts and can be used with the Icu_h<> template.
+ * NR_PINS interrupt pins and can be used with the Icu_h<> template.
  */
-template<unsigned NIRQS = 1>
+template<unsigned NR_PINS = 1>
 class Irq_chip_virt : public Irq_chip_soft
 {
 public:
-  struct Ic_res
+  struct Chip_pin
   {
-    Ic_res() = default;
-    Ic_res(Irq_chip_virt *c, unsigned p) : chip(c), pin(p) {}
+    Chip_pin() = default;
+    Chip_pin(Irq_chip_virt *_chip, Mword _pin) : chip(_chip), pin(_pin) {}
 
     Irq_chip_virt *chip = nullptr;
-    unsigned pin;
+    Mword pin;
 
     Irq_base *irq() const
-    { return chip->_irqs[pin]; }
+    { return chip->_pins[pin]; }
   };
 
-  unsigned nr_irqs() const { return NIRQS; }
+  unsigned nr_pins() const { return NR_PINS; }
 
-  Irq_base *icu_irq(unsigned pin) const
+  Irq_base *icu_irq(Mword pin) const
   {
-    if (pin < NIRQS)
-      return _irqs[pin];
+    if (pin < NR_PINS)
+      return _pins[pin];
+
     return nullptr;
   }
 
-  Ic_res icu_get_chip(unsigned pin)
+  Chip_pin icu_chip_pin(Mword pin)
   {
-    if (pin < NIRQS)
-      return Ic_res(this, pin);
+    if (pin < NR_PINS)
+      return Chip_pin(this, pin);
 
-    return Ic_res();
+    return Chip_pin();
   }
 
   int icu_attach(Mword pin, Irq_base *irq)
   {
-    if (pin >= NIRQS)
+    if (pin >= NR_PINS)
       return -L4_err::EInval;
 
-    if (_irqs[pin])
+    if (_pins[pin])
       return -L4_err::EInval;
 
     bind(irq, pin);
-    if (cas<Irq_base *>(&_irqs[pin], nullptr, irq))
+    if (cas<Irq_base *>(&_pins[pin], nullptr, irq))
       return 0;
 
     irq->detach();
     return -L4_err::EInval;
   }
 
-  int icu_get_info(Mword *features, Mword *num_irqs, Mword *num_msis)
+  int icu_info(Mword *features, Mword *num_pins, Mword *num_msis)
   {
-    *features = 0; // supported features (only normal irqs)
-    *num_irqs = NIRQS;
+    *num_pins = NR_PINS;
     *num_msis = 0;
+    *features = 0; // Supported features (only normal IRQs)
     return 0;
   }
 
@@ -76,23 +77,23 @@ public:
     if (irq->chip() != this)
       return;
 
-    unsigned pin = irq->pin();
-    if (pin >= NIRQS)
+    Mword pin = irq->pin();
+    if (pin >= NR_PINS)
       return;
 
-    if (_irqs[pin] != irq)
+    if (_pins[pin] != irq)
       return;
 
-    if (cas<Irq_base *>(&_irqs[pin], irq, nullptr))
+    if (cas<Irq_base *>(&_pins[pin], irq, nullptr))
       Irq_chip_soft::detach(irq);
   }
 
 protected:
   Irq_base *const *icu_irq_ptr(Mword pin)
-  { return &_irqs[pin]; }
+  { return &_pins[pin]; }
 
 private:
-  Irq_base *_irqs[NIRQS];
+  Irq_base *_pins[NR_PINS];
 };
 
 class Icu_h_base
@@ -110,9 +111,9 @@ public:
     Set_mode   = 6,
   };
 
-  enum Feature
+  enum Feature : Mword
   {
-    Msi_bit = 0x80000000
+    Msi_bit = 0x80000000U
   };
 };
 
@@ -128,11 +129,11 @@ protected:
   REAL_ICU *this_icu()
   { return nonull_static_cast<REAL_ICU *>(this); }
 
-  L4_RPC(Op::Bind,     icu_bind,     (Mword irqnum, Ko::Cap<Irq> irq));
-  L4_RPC(Op::Unbind,   icu_unbind,   (Mword irqnum, Ko::Cap<Irq> irq));
-  L4_RPC(Op::Set_mode, icu_set_mode, (Mword irqnum, Irq_chip::Mode mode));
-  L4_RPC(Op::Info,     icu_get_info, (Mword *features, Mword *num_irqs, Mword *num_msis));
-  L4_RPC(Op::Msi_info, icu_msi_info, (Mword msinum, Unsigned64 src_id, Msi_info *info));
+  L4_RPC(Op::Bind,     icu_bind,     (Mword pin, Ko::Cap<Irq> irq));
+  L4_RPC(Op::Unbind,   icu_unbind,   (Mword pin, Ko::Cap<Irq> irq));
+  L4_RPC(Op::Set_mode, icu_set_mode, (Mword pin, Irq_chip::Mode mode));
+  L4_RPC(Op::Info,     icu_info,     (Mword *features, Mword *num_pins, Mword *num_msis));
+  L4_RPC(Op::Msi_info, icu_msi_info, (Mword msi, Unsigned64 src_id, Msi_info *info));
 };
 
 //---------------------------------------------------------------------------
@@ -141,23 +142,23 @@ IMPLEMENTATION:
 PUBLIC inline
 template<typename REAL_ICU>
 void
-Icu_h<REAL_ICU>::icu_mask_irq(bool mask, unsigned irqnum)
+Icu_h<REAL_ICU>::icu_mask_irq(bool mask, unsigned pin)
 {
-  Irq_base *i = this_icu()->icu_irq(irqnum);
+  Irq_base *irq = this_icu()->icu_irq(pin);
 
-  if (EXPECT_FALSE(!i))
+  if (EXPECT_FALSE(!irq))
     return;
 
   if (mask)
-    i->mask();
+    irq->mask();
   else
-    i->unmask();
+    irq->unmask();
 }
 
 PUBLIC inline
 template<typename REAL_ICU>
 L4_msg_tag
-Icu_h<REAL_ICU>::op_icu_bind(unsigned irqnum, Ko::Cap<Irq> const &irq)
+Icu_h<REAL_ICU>::op_icu_bind(unsigned pin, Ko::Cap<Irq> const &irq)
 {
   if (!Ko::check_rights(irq.rights, Ko::Rights::CW()))
     return Kobject_iface::commit_result(-L4_err::EPerm);
@@ -165,15 +166,15 @@ Icu_h<REAL_ICU>::op_icu_bind(unsigned irqnum, Ko::Cap<Irq> const &irq)
   auto guard = lock_guard(irq.obj->irq_lock());
   irq.obj->detach();
 
-  return Kobject_iface::commit_result(this_icu()->icu_attach(irqnum, irq.obj));
+  return Kobject_iface::commit_result(this_icu()->icu_attach(pin, irq.obj));
 }
 
 PUBLIC inline
 template<typename REAL_ICU>
 L4_msg_tag
-Icu_h<REAL_ICU>::op_icu_unbind(unsigned irqnum, Ko::Cap<Irq> const &)
+Icu_h<REAL_ICU>::op_icu_unbind(unsigned pin, Ko::Cap<Irq> const &)
 {
-  Irq_base *irq = this_icu()->icu_irq(irqnum);
+  Irq_base *irq = this_icu()->icu_irq(pin);
 
   if (irq)
     irq->detach();
@@ -184,36 +185,36 @@ Icu_h<REAL_ICU>::op_icu_unbind(unsigned irqnum, Ko::Cap<Irq> const &)
 PUBLIC inline
 template<typename REAL_ICU>
 L4_msg_tag
-Icu_h<REAL_ICU>::op_icu_set_mode(Mword irqnum, Irq_chip::Mode mode)
+Icu_h<REAL_ICU>::op_icu_set_mode(Mword pin, Irq_chip::Mode mode)
 {
-  auto i = this_icu()->icu_get_chip(irqnum);
+  auto cp = this_icu()->icu_chip_pin(pin);
 
-  if (!i.chip)
+  if (!cp.chip)
     return Kobject_iface::commit_result(-L4_err::EInval);
 
-  if (i.pin >= i.chip->nr_irqs())
+  if (cp.pin >= cp.chip->nr_pins())
     return Kobject_iface::commit_result(-L4_err::EInval);
 
-  int r = i.chip->set_mode(i.pin, mode);
+  int ret = cp.chip->set_mode(cp.pin, mode);
 
-  Irq_base *irq = i.irq();
+  Irq_base *irq = cp.irq();
   if (irq)
     {
       auto guard = lock_guard(irq->irq_lock());
-      if (irq->chip() == i.chip && irq->pin() == i.pin)
-        irq->switch_mode(i.chip->is_edge_triggered(i.pin));
+      if (irq->chip() == cp.chip && irq->pin() == cp.pin)
+        irq->switch_mode(cp.chip->is_edge_triggered(cp.pin));
     }
 
-  return Kobject_iface::commit_result(r);
+  return Kobject_iface::commit_result(ret);
 }
 
 PUBLIC inline
 template<typename REAL_ICU>
 L4_msg_tag
-Icu_h<REAL_ICU>::op_icu_get_info(Mword *features, Mword *num_irqs, Mword *num_msis)
+Icu_h<REAL_ICU>::op_icu_info(Mword *features, Mword *num_pins, Mword *num_msis)
 {
   return Kobject_iface::commit_result(
-    this_icu()->icu_get_info(features, num_irqs, num_msis));
+    this_icu()->icu_info(features, num_pins, num_msis));
 }
 
 PUBLIC inline
@@ -247,7 +248,7 @@ Icu_h<REAL_ICU>::icu_invoke(L4_obj_ref, L4_fpage::Rights /*rights*/,
       return Msg_icu_unbind::call(this_icu(), tag, utcb, out);
 
     case Op::Info:
-      return Msg_icu_get_info::call(this_icu(), tag, utcb, out);
+      return Msg_icu_info::call(this_icu(), tag, utcb, out);
 
     case Op::Msi_info:
       return Msg_icu_msi_info::call(this_icu(), tag, utcb, out);

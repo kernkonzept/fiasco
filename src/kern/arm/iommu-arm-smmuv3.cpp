@@ -2368,7 +2368,7 @@ template<typename T, typename F>
 void setup_irq(unsigned pin, T *obj, F func)
 {
   auto irq = new Boot_object<Smmu_irq<T, F>>(obj, func);
-  check(Irq_mgr::mgr->attach(irq, pin));
+  check(Irq_mgr::mgr->gsi_attach(irq, pin));
   // "Interrupts in SMMUv3 are required to be edge-triggered or MSIs."
   irq->chip()->set_mode(irq->pin(), Irq_chip::Mode::F_raising_edge);
   irq->unmask();

@@ -4,22 +4,25 @@ IMPLEMENTATION [ia32 || amd64]:
 #include "irq_mgr.h"
 #include "idt.h"
 
-// On IA32 we do not use a real IRQ object but a special vector
+// On IA-32 and AMD64 we do not use an IRQ object but a special vector.
 IMPLEMENT bool
-Timer_tick::attach_irq(Irq_base *irq, unsigned irqnum)
+Timer_tick::attach_irq(Irq_base *irq, unsigned isa_pin)
 {
-  // we do not use the alloc function of the chip, because this would
-  // actually route the IRQ vector through the IRQ object.
-  // However, IA32 uses a vector that points to thread_timer_interrupt below,
-  // bypassing the IRQ object infrastructure
-  irqnum = Irq_mgr::mgr->legacy_override(irqnum);
-  bool res = Irq_mgr::mgr->reserve(irqnum);
-  if (res)
-    {
-      Irq_mgr::Irq i = Irq_mgr::mgr->chip(irqnum);
-      i.chip->bind(irq, i.pin);
-    }
-  return res;
+  // We do not use the attach() method of the IRQ chip, because that would
+  // route the ISA IRQ pin through the IRQ object.
+  // However, IA-32 and AMD64 uses a dedicated ISA vector that points to
+  // the thread_timer_interrupt() method below, bypassing the IRQ object
+  // infrastructure.
+
+  Mword gsi = Irq_mgr::mgr->legacy_override(isa_pin);
+
+  if (!Irq_mgr::mgr->gsi_reserve(gsi))
+    return false;
+
+  Irq_mgr::Chip_pin cp = Irq_mgr::mgr->chip_pin(gsi);
+  cp.chip->bind(irq, cp.pin);
+
+  return true;
 }
 
 PUBLIC static

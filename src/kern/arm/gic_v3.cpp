@@ -205,7 +205,7 @@ PUBLIC
 void
 Gic_v3::migrate_irqs(Cpu_number from, Cpu_number to)
 {
-  unsigned num = hw_nr_irqs();
+  unsigned num = hw_nr_pins();
   Unsigned64 val_from = _dist.cpu_to_irouter_entry(from);
 
   for (unsigned i = 0; i < num; ++i)
@@ -322,7 +322,7 @@ Gic_v3::add_its(void *its_base)
     }
 
   Gic_its *its = new Boot_object<Gic_its>();
-  its->init(&_cpu, its_base, _msi->nr_irqs());
+  its->init(&_cpu, its_base, _msi->nr_pins());
   its->cpu_init(Cpu_number::boot_cpu(), _redist.cpu(Cpu_number::boot_cpu()));
   _its_vec[_num_its++] = its;
   return true;

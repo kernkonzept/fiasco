@@ -15,20 +15,20 @@ protected:
     Irq_chip_gen *chip;
   };
 
-  void calc_nr_irq()
+  void calc_nr_gsis()
   {
-    _nr_irqs = 0;
+    _nr_gsis = 0;
     for (unsigned i = 0; i < _nr_blocks; ++i)
-      _nr_irqs += _block[i].sz;
+      _nr_gsis += _block[i].sz;
   }
 
 public:
-  unsigned nr_irqs() const override { return _nr_irqs; }
+  unsigned nr_gsis() const override { return _nr_gsis; }
   unsigned nr_msis() const override { return 0; }
 
 protected:
   unsigned _nr_blocks;
-  unsigned _nr_irqs;
+  unsigned _nr_gsis;
   Chip_block *_block;
 };
 
@@ -439,20 +439,20 @@ class Mgr_int : public Mgr_exynos
 {
 public:
 
-  Irq chip(Mword irqnum) const override
+  Chip_pin chip_pin(Mword gsi) const override
   {
-    Mword origirq = irqnum;
+    Mword origgsi = gsi;
 
     for (unsigned i = 0; i < _nr_blocks; ++i)
       {
-        if (irqnum < _block[i].sz)
-          return Irq(_block[i].chip, irqnum);
+        if (gsi < _block[i].sz)
+          return Chip_pin(_block[i].chip, gsi);
 
-        irqnum -= _block[i].sz;
+        gsi -= _block[i].sz;
       }
 
-    printf("KERNEL: exynos-irq: Invalid irqnum=%ld\n", origirq);
-    return Irq();
+    printf("KERNEL: exynos-irq: Invalid gsi=%ld\n", origsi);
+    return Chip_pin();
   }
 
 private:
@@ -527,28 +527,28 @@ Mgr_int::Mgr_int()
     { 96,                 _gic },
     { 54 * 8,             _cc },
     { 32,                 _wu_gc },
-    { _ei_gc1->nr_irqs(), _ei_gc1 },
-    { _ei_gc2->nr_irqs(), _ei_gc2 },
+    { _ei_gc1->nr_gsis(), _ei_gc1 },
+    { _ei_gc2->nr_gsis(), _ei_gc2 },
   };
 
   _block = soc;
   _nr_blocks = cxx::size(soc);
 
-  calc_nr_irq();
+  calc_nr_gsis();
 }
 
 
 PUBLIC
 void
-Mgr_int::set_cpu(Mword irqnum, Cpu_number cpu) const override
+Mgr_int::set_cpu(Mword gsi, Cpu_number cpu) const override
 {
   // this handles only the MCT_L[01] timers
-  if (   irqnum == 379  // MCT_L1: Combiner 35:3
-      || irqnum == 504) // MCT_L0: Combiner 51:0
-    _gic->set_cpu(32 + (irqnum - 96) / 8, cpu);
+  if (   gsi == 379  // MCT_L1: Combiner 35:3
+      || gsi == 504) // MCT_L0: Combiner 51:0
+    _gic->set_cpu(32 + (gsi - 96) / 8, cpu);
   else
     WARNX(Warning, "IRQ%ld: ignoring CPU setting (%d).\n",
-          irqnum, cxx::int_value<Cpu_number>(cpu));
+          gsi, cxx::int_value<Cpu_number>(cpu));
 }
 
 PUBLIC static FIASCO_INIT
@@ -586,27 +586,27 @@ Per_cpu_ptr<Static_object<Gic_v2> > Pic::gic;
 class Mgr_ext : public Mgr_exynos
 {
 public:
-  Irq chip(Mword irqnum) const override
+  Chip_pin chip_pin(Mword gsi) const override
   {
-    Mword origirq = irqnum;
+    Mword origgsi = gsi;
 
     for (unsigned i = 0; i < _nr_blocks; ++i)
       {
-        if (irqnum < _block[i].sz)
+        if (gsi < _block[i].sz)
           {
             if (i == 0) // some special handling in GIC block
               if (!Platform::is_4412())
-                if (irqnum == 80 && Config::Max_num_cpus > 1) // MCT_L1 goes to CPU1
-                  return Irq(_gic.cpu(Cpu_number(1)), irqnum);
+                if (gsi == 80 && Config::Max_num_cpus > 1) // MCT_L1 goes to CPU1
+                  return Chip_pin(_gic.cpu(Cpu_number(1)), gsi);
 
-            return Irq(_block[i].chip, irqnum);
+            return Chip_pin(_block[i].chip, gsi);
           }
 
-        irqnum -= _block[i].sz;
+        gsi -= _block[i].sz;
       }
 
-    printf("KERNEL: exynos-irq: Invalid irqnum=%ld\n", origirq);
-    return Irq();
+    printf("KERNEL: exynos-irq: Invalid gsi=%ld\n", origgsi);
+    return Chip_pin();
   }
 
   Unsigned32 wakeup_irq_eint_mask() { return _wu_gc->_wakeup; }
@@ -714,7 +714,7 @@ Mgr_ext::Mgr_ext()
       _nr_blocks = cxx::size(soc4210);
     }
 
-  calc_nr_irq();
+  calc_nr_gsis();
 }
 
 /**
@@ -722,12 +722,12 @@ Mgr_ext::Mgr_ext()
  */
 PUBLIC
 void
-Mgr_ext::set_cpu(Mword irqnum, Cpu_number cpu) const override
+Mgr_ext::set_cpu(Mword gsi, Cpu_number cpu) const override
 {
-  if (!Platform::is_4412() && irqnum == 80)  // MCT_L1
+  if (!Platform::is_4412() && gsi == 80)  // MCT_L1
     _gic.cpu(cpu)->set_cpu(80, cpu);
   else
-    WARNX(Warning, "IRQ%ld: ignoring CPU setting (%d).\n", irqnum,
+    WARNX(Warning, "IRQ%ld: ignoring CPU setting (%d).\n", gsi,
           cxx::int_value<Cpu_number>(cpu));
 }
 
@@ -829,20 +829,20 @@ IMPLEMENTATION [pf_exynos5]:
 
 class Mgr : public Mgr_exynos
 {
-  Irq chip(Mword irqnum) const override
+  Chip_pin chip_pin(Mword gsi) const override
   {
-    Mword origirq = irqnum;
+    Mword origgsi = gsi;
 
     for (unsigned i = 0; i < _nr_blocks; ++i)
       {
-        if (irqnum < _block[i].sz)
-          return Irq(_block[i].chip, irqnum);
+        if (gsi < _block[i].sz)
+          return Chip_pin(_block[i].chip, gsi);
 
-        irqnum -= _block[i].sz;
+        gsi -= _block[i].sz;
       }
 
-    printf("KERNEL: exynos-irq: Invalid irqnum=%ld\n", origirq);
-    return Irq();
+    printf("KERNEL: exynos-irq: Invalid gsi=%ld\n", origgsi);
+    return Chip_pin();
   }
 
 private:
@@ -916,16 +916,16 @@ Mgr::Mgr()
     { Platform::is_5410() ? 256U : 160U, Pic::gic },
     { 32 * 8,                            _cc },
     { 32,                                _wu_gc },
-    { _ei_gc1->nr_irqs(),                _ei_gc1 },
-    { _ei_gc2->nr_irqs(),                _ei_gc2 },
-    { _ei_gc3->nr_irqs(),                _ei_gc3 },
-    { _ei_gc4->nr_irqs(),                _ei_gc4 },
+    { _ei_gc1->nr_gsis(),                _ei_gc1 },
+    { _ei_gc2->nr_gsis(),                _ei_gc2 },
+    { _ei_gc3->nr_gsis(),                _ei_gc3 },
+    { _ei_gc4->nr_gsis(),                _ei_gc4 },
   };
 
   _block = socblock;
   _nr_blocks = cxx::size(socblock);
 
-  calc_nr_irq();
+  calc_nr_gsis();
 }
 
 /**
@@ -933,17 +933,17 @@ Mgr::Mgr()
  */
 PUBLIC
 void
-Mgr::set_cpu(Mword irqnum, Cpu_number cpu) const override
+Mgr::set_cpu(Mword gsi, Cpu_number cpu) const override
 {
   // this handles only the MCT_L[0123] timers
-  if (   irqnum == 152   // MCT_L0
-      || irqnum == 153   // MCT_L1
-      || irqnum == 154   // MCT_L2
-      || irqnum == 155)  // MCT_L3
-    Pic::gic->set_cpu(irqnum, cpu);
+  if (   gsi == 152   // MCT_L0
+      || gsi == 153   // MCT_L1
+      || gsi == 154   // MCT_L2
+      || gsi == 155)  // MCT_L3
+    Pic::gic->set_cpu(gsi, cpu);
   else
     WARNX(Warning, "IRQ%ld: ignoring CPU setting (%d).\n",
-	  irqnum, cxx::int_value<Cpu_number>(cpu));
+	  gsi, cxx::int_value<Cpu_number>(cpu));
 }
 
 PUBLIC static FIASCO_INIT

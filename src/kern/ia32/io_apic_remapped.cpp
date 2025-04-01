@@ -47,7 +47,7 @@ public:
   : Irq_chip_ia32(Max_msis), _irt(irt), _coherent(coherent)
   {}
 
-  unsigned nr_irqs() const override { return Irq_chip_ia32::nr_irqs(); }
+  unsigned nr_pins() const override { return Irq_chip_ia32::nr_pins(); }
   bool reserve(Mword pin) override { return Irq_chip_ia32::reserve(pin); }
   Irq_base *irq(Mword pin) const override { return Irq_chip_ia32::irq(pin); }
 
@@ -112,7 +112,7 @@ PUBLIC
 int
 Irq_chip_rmsi::msg(Mword pin, Unsigned64 src, Irq_mgr::Msi_info *inf)
 {
-  if (pin >= _irqs)
+  if (pin >= _pins)
     return -L4_err::ERange;
 
   unsigned vect = vector(pin);
@@ -248,24 +248,24 @@ Irq_mgr_rmsi::Irq_mgr_rmsi(Intel::Io_mmu::Irte volatile *irt, bool coherent)
 {}
 
 PUBLIC
-Irq_mgr::Irq
-Irq_mgr_rmsi::chip(Mword irq) const override
+Irq_mgr::Chip_pin
+Irq_mgr_rmsi::chip_pin(Mword gsi) const override
 {
-  if (irq & 0x80000000)
-    return Irq(&_chip, irq & ~0x80000000);
-  else
-    return Io_apic_mgr::chip(irq);
+  if (gsi & 0x80000000)
+    return Chip_pin(&_chip, gsi & ~0x80000000);
+
+  return Io_apic_mgr::chip_pin(gsi);
 }
 
 PUBLIC
 unsigned
-Irq_mgr_rmsi::nr_irqs() const override
-{ return Io_apic_mgr::nr_irqs(); }
+Irq_mgr_rmsi::nr_gsis() const override
+{ return Io_apic_mgr::nr_gsis(); }
 
 PUBLIC
 unsigned
 Irq_mgr_rmsi::nr_msis() const override
-{ return _chip.nr_irqs(); }
+{ return _chip.nr_pins(); }
 
 PUBLIC
 int
@@ -278,13 +278,13 @@ Irq_mgr_rmsi::msg(Mword irq, Unsigned64 src, Msi_info *inf) const override
 }
 
 PUBLIC
-unsigned
-Irq_mgr_rmsi::legacy_override(Mword irq) override
+Mword
+Irq_mgr_rmsi::legacy_override(Mword isa_pin) override
 {
-  if (irq & 0x80000000)
-    return irq;
-  else
-    return Io_apic_mgr::legacy_override(irq);
+  if (isa_pin & 0x80000000)
+    return isa_pin;
+
+  return Io_apic_mgr::legacy_override(isa_pin);
 }
 
 PUBLIC

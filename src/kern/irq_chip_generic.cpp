@@ -6,11 +6,11 @@ class Irq_chip_gen : public Irq_chip_icu
 {
 public:
   Irq_chip_gen() = default;
-  explicit Irq_chip_gen(unsigned nirqs) { init(nirqs); }
+  explicit Irq_chip_gen(unsigned nr_pins) { init(nr_pins); }
 
 private:
-  unsigned _nirqs  = 0;
-  Irq_base **_irqs = nullptr;
+  unsigned _nr_pins = 0;
+  Irq_base::Ptr *_pins = nullptr;
 };
 
 // -------------------------------------------------------------------------
@@ -22,39 +22,39 @@ IMPLEMENTATION:
 
 PUBLIC
 void
-Irq_chip_gen::init(unsigned nirqs)
+Irq_chip_gen::init(unsigned nr_pins)
 {
-  _nirqs = nirqs;
-  _irqs = Boot_alloced::allocate<Irq_base *>(nirqs);
-  memset(_irqs, 0, sizeof(Irq_base*) * nirqs);
+  _nr_pins = nr_pins;
+  _pins = Boot_alloced::allocate<Irq_base *>(nr_pins);
+  memset(_pins, 0, sizeof(Irq_base*) * nr_pins);
 }
 
 PUBLIC inline
 unsigned
-Irq_chip_gen::nr_irqs() const override
-{ return _nirqs; }
+Irq_chip_gen::nr_pins() const override
+{ return _nr_pins; }
 
 PUBLIC
 Irq_base *
 Irq_chip_gen::irq(Mword pin) const override
 {
-  if (pin >= _nirqs)
+  if (pin >= _nr_pins)
     return nullptr;
 
-  return _irqs[pin];
+  return _pins[pin];
 }
 
 PUBLIC
 bool
 Irq_chip_gen::attach(Irq_base *irq, Mword pin, bool init = true) override
 {
-  if (pin >= _nirqs)
+  if (pin >= _nr_pins)
     return false;
 
-  if (_irqs[pin])
+  if (_pins[pin])
     return false;
 
-  _irqs[pin] = irq;
+  _pins[pin] = irq;
   bind(irq, pin, !init);
   return true;
 }
@@ -65,7 +65,7 @@ Irq_chip_gen::detach(Irq_base *irq) override
 {
   mask(irq->pin());
   Mem::barrier();
-  _irqs[irq->pin()] = nullptr;
+  _pins[irq->pin()] = nullptr;
   Irq_chip_icu::detach(irq);
 }
 
@@ -73,13 +73,12 @@ PUBLIC
 bool
 Irq_chip_gen::reserve(Mword pin) override
 {
-  if (pin >= _nirqs)
+  if (pin >= _nr_pins)
     return false;
 
-  if (_irqs[pin])
+  if (_pins[pin])
     return false;
 
-  _irqs[pin] = reinterpret_cast<Irq_base*>(1);
-
+  _pins[pin] = reinterpret_cast<Irq_base*>(1);
   return true;
 }

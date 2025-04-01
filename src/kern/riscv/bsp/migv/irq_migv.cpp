@@ -102,7 +102,7 @@ Irq_chip_migv::Irq_chip_migv(void *mmio)
     }
 
   // Set default priority for all interrupt sources.
-  for (unsigned pin = 1; pin <= nr_irqs(); pin++)
+  for (unsigned pin = 1; pin <= nr_pins(); pin++)
     priority(pin, 1);
 }
 

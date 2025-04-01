@@ -335,7 +335,7 @@ public:
 
   void attach(Cpu_number cpu)
   {
-    check(Irq_mgr::mgr->attach(this, _irq, false));
+    check(Irq_mgr::mgr->gsi_attach(this, _irq, false));
     chip()->set_mode_percpu(cpu, pin(), Irq_chip::Mode::F_level_high);
     chip()->unmask_percpu(cpu, pin());
   }
@@ -366,7 +366,7 @@ public:
 
   void attach(Cpu_number cpu)
   {
-    check(Irq_mgr::mgr->attach(this, _irq, false));
+    check(Irq_mgr::mgr->gsi_attach(this, _irq, false));
     chip()->set_mode_percpu(cpu, pin(), Irq_chip::Mode::F_level_high);
     chip()->unmask_percpu(cpu, pin());
     _enabled.cpu(cpu) = true;

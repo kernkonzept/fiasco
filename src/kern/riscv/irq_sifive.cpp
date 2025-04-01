@@ -44,7 +44,7 @@ private:
   class Plic_target
   {
   public:
-    void init(void *mmio, Mword context_nr, unsigned nr_irqs)
+    void init(void *mmio, Mword context_nr, unsigned nr_pins)
     {
       _enable.set_mmio_base(
         offset_cast<void *>(mmio, Enable_base + context_nr * Enable_per_hart));
@@ -55,7 +55,7 @@ private:
       threshold(0);
 
       // Disable all interrupt sources by default.
-      for (unsigned pin = 1; pin < nr_irqs; pin++)
+      for (unsigned pin = 1; pin < nr_pins; pin++)
         mask(pin);
     }
 
@@ -103,14 +103,14 @@ DEFINE_PER_CPU Per_cpu<Irq_chip_sifive::Plic_target> Irq_chip_sifive::targets;
 
 PUBLIC inline
 Irq_chip_sifive::Irq_chip_sifive(void *mmio)
-  : Irq_chip_gen(Kip::k()->platform_info.arch.plic_nr_irqs),
+  : Irq_chip_gen(Kip::k()->platform_info.arch.plic_nr_pins),
     _mmio(mmio),
     _priority(offset_cast<void *>(mmio, Priority_base))
 {
   init_cpu(Cpu_number::boot_cpu());
 
   // Set default priority for all interrupt sources.
-  for (unsigned pin = 1; pin < nr_irqs(); pin++)
+  for (unsigned pin = 1; pin < nr_pins(); pin++)
     priority(pin, 1);
 }
 
@@ -124,7 +124,7 @@ Irq_chip_sifive::init_cpu(Cpu_number cpu)
 
   auto hart_context =
     Kip::k()->platform_info.arch.plic_hart_irq_targets[hart_idx];
-  targets.cpu(cpu).init(_mmio, hart_context, nr_irqs());
+  targets.cpu(cpu).init(_mmio, hart_context, nr_pins());
 }
 
 PRIVATE inline

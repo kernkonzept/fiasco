@@ -9,10 +9,13 @@ INTERFACE:
 /**
  * Interface used to manage hardware IRQs on a platform.
  *
- * The main purpose of this interface is to allow an
- * abstract mapping of global IRQ numbers to a chip
- * and pin number pair. The interface provides also
- * some global information about IRQs.
+ * The main purpose of this interface is to allow an abstract mapping of global
+ * system interrupt numbers to a chip and pin number pair. The interface
+ * provides also some global information about IRQs.
+ *
+ * In our terminology, global system interrupt numbers form a system-wide
+ * namespace that covers both regular IRQs managed by traditional interrupt
+ * controllers and message-signaled interrupts (MSIs).
  */
 class Irq_mgr
 {
@@ -24,19 +27,20 @@ public:
   };
 
   /**
-   * Chip and pin for an IRQ pin.
+   * Chip and pin tuple.
    */
-  struct Irq
+  struct Chip_pin
   {
-    // allow uninitialized instances
+    // Allow uninitialized instances.
     enum Init { Bss };
-    Irq(Init) {}
 
-    /// Invalid IRQ.
-    Irq() : chip(nullptr) {}
+    Chip_pin(Init) {}
 
-    /// Create a chip-pin pair.
-    Irq(Irq_chip_icu *chip, Mword pin) : chip(chip), pin(pin) {}
+    /// Invalid entry.
+    Chip_pin() : chip(nullptr) {}
+
+    /// Create a chip and pin tuple.
+    Chip_pin(Irq_chip_icu *_chip, Mword _pin) : chip(_chip), pin(_pin) {}
 
     /// The chip.
     Irq_chip_icu *chip;
@@ -48,25 +52,44 @@ public:
     { return chip->irq(pin); }
   };
 
-  /// Map legacy (IA32) IRQ numbers to valid IRQ numbers.
-  virtual unsigned legacy_override(Mword irqnum) { return irqnum; }
+  /// Map legacy (ISA) pin number to global system interrupt number.
+  virtual Mword legacy_override(Mword isa_pin) { return isa_pin; }
 
-  /// Get the chip-pin pair for the given global IRQ number.
-  virtual Irq chip(Mword irqnum) const = 0;
+  /// Get the chip and pin tuple for the given global system interrupt number.
+  virtual Chip_pin chip_pin(Mword gsi) const = 0;
 
-  /// Get the highest available global IRQ number plus 1.
-  virtual unsigned nr_irqs() const = 0;
+  /**
+   * Get the count of available global system interrupt numbers representing
+   * regular IRQs.
+   *
+   * \note This count only includes the regular IRQs managed by traditional
+   *       interrupt controllers, not message-signaled interrupts (MSIs).
+   *
+   * \return Count of available global system interrupt numbers representing
+   *         regular IRQs.
+   */
+  virtual unsigned nr_gsis() const = 0;
 
-  /// Get the number of available entry points for MSIs.
+  /**
+   * Get the count of available global system interrupt numbers representing
+   * message-signaled interrupts (MSIs).
+   *
+   * \note This count only includes the message-signaled interrupts, not the
+   *       regular IRQs. The actual global system interrupt numbers that
+   *       represent MSIs are distinguished by having the bit 31 set.
+   *
+   * \return Count of available global system interrupt numbers representing
+   *         message-signaled interrupts (MSIs).
+   *
+   * \retval 0  No MSIs supported.
+   */
   virtual unsigned nr_msis() const = 0;
 
   /** Get the message to use for a given MSI.
    * \pre The IRQ pin needs to be already attached before using this function.
    */
-  virtual int msg(Mword /* irqnum */, Unsigned64, Msi_info *) const
+  virtual int msg(Mword /* msi */, Unsigned64, Msi_info *) const
   { return -L4_err::ENosys; }
-
-  virtual void set_cpu(Mword irqnum, Cpu_number cpu) const;
 
   /// The pointer to the single global instance of the actual IRQ manager.
   static Global_data<Irq_mgr *> mgr;
@@ -84,8 +107,8 @@ public:
   template<typename... A>
   explicit Irq_mgr_single_chip(A&&... args) : c(cxx::forward<A>(args)...) {}
 
-  Irq chip(Mword irqnum) const override { return Irq(&c, irqnum); }
-  unsigned nr_irqs() const override { return c.nr_irqs(); }
+  Chip_pin chip_pin(Mword gsi) const override { return Chip_pin(&c, gsi); }
+  unsigned nr_gsis() const override { return c.nr_pins(); }
   unsigned nr_msis() const override { return 0; }
 
   mutable CHIP c;
@@ -102,50 +125,50 @@ IMPLEMENT inline Irq_mgr::~Irq_mgr() {}
 
 PUBLIC inline
 bool
-Irq_mgr::attach(Irq_base *irq, Mword global_irq, bool init = true)
+Irq_mgr::gsi_attach(Irq_base *irq, Mword gsi, bool init = true)
 {
-  Irq i = chip(global_irq);
-  if (!i.chip)
+  Chip_pin cp = chip_pin(gsi);
+  if (!cp.chip)
     return false;
 
-  if (!i.chip->attach(irq, i.pin, init))
+  if (!cp.chip->attach(irq, cp.pin, init))
     return false;
 
   if (init)
-    i.chip->set_cpu(i.pin, Cpu_number::boot_cpu());
+    cp.chip->set_cpu(cp.pin, Cpu_number::boot_cpu());
 
   return true;
 }
 
 PUBLIC inline
 bool
-Irq_mgr::reserve(Mword irqnum)
+Irq_mgr::gsi_reserve(Mword gsi)
 {
-  Irq i = chip(irqnum);
-  if (!i.chip)
+  Chip_pin cp = chip_pin(gsi);
+  if (!cp.chip)
     return false;
 
-  return i.chip->reserve(i.pin);
+  return cp.chip->reserve(cp.pin);
 }
 
 PUBLIC inline
 Irq_base *
-Irq_mgr::irq(Mword irqnum) const
+Irq_mgr::gsi_irq(Mword gsi) const
 {
-  Irq i = chip(irqnum);
-  if (!i.chip)
+  Chip_pin cp = chip_pin(gsi);
+  if (!cp.chip)
     return nullptr;
 
-  return i.chip->irq(i.pin);
+  return cp.chip->irq(cp.pin);
 }
 
-IMPLEMENT
+PUBLIC inline
 void
-Irq_mgr::set_cpu(Mword irqnum, Cpu_number cpu) const
+Irq_mgr::gsi_set_cpu(Mword gsi, Cpu_number cpu) const
 {
-  Irq i = chip(irqnum);
-  if (!i.chip)
+  Chip_pin cp = chip_pin(gsi);
+  if (!cp.chip)
     return;
 
-  return i.chip->set_cpu(i.pin, cpu);
+  cp.chip->set_cpu(cp.pin, cpu);
 }

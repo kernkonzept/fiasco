@@ -17,7 +17,7 @@ public:
   enum { Max_msis = Int_vector_allocator::End - Int_vector_allocator::Base - 0x8 };
   Irq_chip_msi() : Irq_chip_ia32(Max_msis) {}
 
-  unsigned nr_irqs() const override { return Irq_chip_ia32::nr_irqs(); }
+  unsigned nr_pins() const override { return Irq_chip_ia32::nr_pins(); }
   bool reserve(Mword pin) override { return Irq_chip_ia32::reserve(pin); }
   Irq_base *irq(Mword pin) const override { return Irq_chip_ia32::irq(pin); }
 };
@@ -50,7 +50,7 @@ int
 Irq_chip_msi::msg(Mword pin, Unsigned64, Irq_mgr::Msi_info *inf)
 {
   // the requester ID does not matter, we cannot verify without IRQ remapping
-  if (pin >= _irqs)
+  if (pin >= _pins)
     return -L4_err::ERange;
 
   inf->data = vector(pin) | (1 << 14);
@@ -99,24 +99,24 @@ PUBLIC inline explicit
 Irq_mgr_msi::Irq_mgr_msi(Irq_mgr *o) : _orig(o) {}
 
 PUBLIC
-Irq_mgr::Irq
-Irq_mgr_msi::chip(Mword irq) const override
+Irq_mgr::Chip_pin
+Irq_mgr_msi::chip_pin(Mword gsi) const override
 {
-  if (irq & 0x80000000)
-    return Irq(&_chip, irq & ~0x80000000);
-  else
-    return _orig->chip(irq);
+  if (gsi & 0x80000000)
+    return Chip_pin(&_chip, gsi & ~0x80000000);
+
+  return _orig->chip_pin(gsi);
 }
 
 PUBLIC
 unsigned
-Irq_mgr_msi::nr_irqs() const override
-{ return _orig->nr_irqs(); }
+Irq_mgr_msi::nr_gsis() const override
+{ return _orig->nr_gsis(); }
 
 PUBLIC
 unsigned
 Irq_mgr_msi::nr_msis() const override
-{ return _chip.nr_irqs(); }
+{ return _chip.nr_pins(); }
 
 PUBLIC
 int
@@ -129,13 +129,13 @@ Irq_mgr_msi::msg(Mword irq, Unsigned64 src, Msi_info *inf) const override
 }
 
 PUBLIC
-unsigned
-Irq_mgr_msi::legacy_override(Mword irq) override
+Mword
+Irq_mgr_msi::legacy_override(Mword isa_pin) override
 {
-  if (irq & 0x80000000)
-    return irq;
-  else
-    return _orig->legacy_override(irq);
+  if (isa_pin & 0x80000000)
+    return isa_pin;
+
+  return _orig->legacy_override(isa_pin);
 }
 
 PUBLIC static FIASCO_INIT

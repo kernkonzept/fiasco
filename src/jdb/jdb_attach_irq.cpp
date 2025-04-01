@@ -53,16 +53,16 @@ Jdb_attach_irq::action( int cmd, void *&args, char const *&, int & ) override
         {
         case 'l': // list
           {
-            Irq_base *r;
             putchar('\n');
+            unsigned nr = Irq_mgr::mgr->nr_gsis();
 
-            unsigned n = Irq_mgr::mgr->nr_irqs();
-            for (unsigned i = 0; i < n; ++i)
+            for (unsigned gsi = 0; gsi < nr; ++gsi)
               {
-                r = static_cast<Irq *>(Irq_mgr::mgr->irq(i));
-                if (!r)
+                Irq_base *irq = static_cast<Irq *>(Irq_mgr::mgr->gsi_irq(gsi));
+                if (!irq)
                   continue;
-                printf("IRQ %02x/%02u\n", i, i);
+
+                printf("IRQ %02x/%02u\n", gsi, gsi);
               }
             return NOTHING;
           }

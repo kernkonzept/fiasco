@@ -23,7 +23,7 @@ public:
   static Timer_tick *boot_cpu_timer_tick();
 
 protected:
-  static bool attach_irq(Irq_base *irq, unsigned irqnum);
+  static bool attach_irq(Irq_base *irq, unsigned gsi);
 
 private:
   // we do not support triggering modes

@@ -17,19 +17,19 @@ class Irq_mgr_flex : public Irq_mgr
 public:
   unsigned max_chips() const { return MAX_CHIPS; }
 
-  unsigned nr_irqs() const override
+  unsigned nr_gsis() const override
   { return _max_irq; }
 
   unsigned nr_msis() const override
   { return 0; }
 
-  Irq chip(Mword irqnum) const override
+  Chip_pin chip_pin(Mword gsi) const override
   {
     for (unsigned i = 0; i < _used; ++i)
-      if (irqnum < _chips[i].end)
-        return Irq(_chips[i].chip, irqnum - _chips[i].start);
+      if (gsi < _chips[i].end)
+        return Chip_pin(_chips[i].chip, gsi - _chips[i].start);
 
-    return Irq();
+    return Chip_pin();
   }
 
   /**
@@ -46,7 +46,7 @@ public:
     if (_used >= MAX_CHIPS)
       return "too many IRQ chips";
 
-    unsigned n = chip->nr_irqs();
+    unsigned n = chip->nr_pins();
     if (n == 0)
       return "chip with zero interrupts";
 

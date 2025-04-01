@@ -83,7 +83,7 @@ PUBLIC
 void
 Gic_v2::migrate_irqs(Cpu_number from, Cpu_number to)
 {
-  unsigned num = hw_nr_irqs();
+  unsigned num = hw_nr_pins();
   Unsigned8 val_from = _sgi_template[from] >> 16;
 
   for (unsigned i = 0; i < num; i += 4)

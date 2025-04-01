@@ -346,7 +346,7 @@ Gic_dist::typer()
 
 PUBLIC inline
 unsigned
-Gic_dist::hw_nr_irqs()
+Gic_dist::hw_nr_pins()
 {
   return (typer<Typer>().num_spis() + 1) * 32;
 }
@@ -476,13 +476,13 @@ Gic_dist::enable_irq(unsigned irq)
 PUBLIC
 template<typename VERSION>
 unsigned
-Gic_dist::init(VERSION, unsigned cpu_prio, int nr_irqs_override = -1)
+Gic_dist::init(VERSION, unsigned cpu_prio, int nr_pins_override = -1)
 {
   disable(VERSION());
 
-  unsigned num = hw_nr_irqs();
-  if (nr_irqs_override >= 0)
-    num = static_cast<unsigned>(nr_irqs_override);
+  unsigned num = hw_nr_pins();
+  if (nr_pins_override >= 0)
+    num = static_cast<unsigned>(nr_pins_override);
 
   if (!Config_mxc_tzic)
     {

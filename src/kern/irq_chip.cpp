@@ -158,7 +158,7 @@ public:
   virtual Irq_base *irq(Mword pin) const = 0;
 
   /** Return the number of pins provided by this ICU. */
-  virtual unsigned nr_irqs() const = 0;
+  virtual unsigned nr_pins() const = 0;
   virtual ~Irq_chip_icu() = 0;
 };
 
@@ -173,6 +173,7 @@ class Irq_base
 
 public:
   typedef void (*Hit_func)(Irq_base *, Upstream_irq const *);
+  using Ptr = Irq_base *;
 
   enum Flags : Mword
   {

@@ -24,8 +24,8 @@ IMPLEMENTATION:
 
 PUBLIC template<typename CHIP, typename MSI_CHIP>
 unsigned
-Irq_mgr_msi<CHIP, MSI_CHIP>::nr_irqs() const override
-{ return _chip->CHIP::nr_irqs(); }
+Irq_mgr_msi<CHIP, MSI_CHIP>::nr_gsis() const override
+{ return _chip->CHIP::nr_pins(); }
 
 //-------------------------------------------------------------------
 IMPLEMENTATION[arm_gic_msi]:
@@ -36,19 +36,19 @@ Irq_mgr_msi<CHIP, MSI_CHIP>::Irq_mgr_msi(CHIP *chip, MSI_CHIP *msi_chip)
 {}
 
 PUBLIC template<typename CHIP, typename MSI_CHIP>
-Irq_mgr::Irq
-Irq_mgr_msi<CHIP, MSI_CHIP>::chip(Mword irq) const override
+Irq_mgr::Chip_pin
+Irq_mgr_msi<CHIP, MSI_CHIP>::chip_pin(Mword gsi) const override
 {
-  if (irq & Msi_flag)
-    return _msi_chip ? Irq(_msi_chip, irq & ~Msi_flag) : Irq();
-  else
-    return Irq(_chip, irq);
+  if (gsi & Msi_flag)
+    return _msi_chip ? Chip_pin(_msi_chip, gsi & ~Msi_flag) : Chip_pin();
+
+  return Chip_pin(_chip, gsi);
 }
 
 PUBLIC template<typename CHIP, typename MSI_CHIP>
 unsigned
 Irq_mgr_msi<CHIP, MSI_CHIP>::nr_msis() const override
-{ return _msi_chip ? _msi_chip->MSI_CHIP::nr_irqs() : 0; }
+{ return _msi_chip ? _msi_chip->MSI_CHIP::nr_pins() : 0; }
 
 PUBLIC template<typename CHIP, typename MSI_CHIP>
 int
@@ -69,9 +69,9 @@ Irq_mgr_msi<CHIP, MSI_CHIP>::Irq_mgr_msi(CHIP *chip, MSI_CHIP *)
 {}
 
 PUBLIC template<typename CHIP, typename MSI_CHIP>
-Irq_mgr::Irq
-Irq_mgr_msi<CHIP, MSI_CHIP>::chip(Mword irq) const override
-{ return Irq(_chip, irq); }
+Irq_mgr::Chip_pin
+Irq_mgr_msi<CHIP, MSI_CHIP>::chip_pin(Mword gsi) const override
+{ return Chip_pin(_chip, gsi); }
 
 PUBLIC template<typename CHIP, typename MSI_CHIP>
 unsigned
