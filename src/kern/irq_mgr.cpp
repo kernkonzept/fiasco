@@ -61,7 +61,7 @@ public:
   virtual unsigned nr_msis() const = 0;
 
   /** Get the message to use for a given MSI.
-   * \pre The IRQ pin needs to be already allocated before using this function.
+   * \pre The IRQ pin needs to be already attached before using this function.
    */
   virtual int msg(Mword /* irqnum */, Unsigned64, Msi_info *) const
   { return -L4_err::ENosys; }
@@ -102,13 +102,13 @@ IMPLEMENT inline Irq_mgr::~Irq_mgr() {}
 
 PUBLIC inline
 bool
-Irq_mgr::alloc(Irq_base *irq, Mword global_irq, bool init = true)
+Irq_mgr::attach(Irq_base *irq, Mword global_irq, bool init = true)
 {
   Irq i = chip(global_irq);
   if (!i.chip)
     return false;
 
-  if (!i.chip->alloc(irq, i.pin, init))
+  if (!i.chip->attach(irq, i.pin, init))
     return false;
 
   if (init)

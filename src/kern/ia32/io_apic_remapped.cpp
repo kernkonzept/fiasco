@@ -90,12 +90,12 @@ Irq_chip_rmsi::inv_iec_and_wait(unsigned vect)
 
 PUBLIC
 bool
-Irq_chip_rmsi::alloc(Irq_base *irq, Mword pin, bool init = true) override
+Irq_chip_rmsi::attach(Irq_base *irq, Mword pin, bool init = true) override
 { return valloc<Irq_chip_rmsi>(irq, pin, 0, init); }
 
 PUBLIC
 void
-Irq_chip_rmsi::unbind(Irq_base *irq) override
+Irq_chip_rmsi::detach(Irq_base *irq) override
 {
   extern char entry_int_apic_ignore[];
   unsigned vect = vector(irq->pin());
@@ -105,7 +105,7 @@ Irq_chip_rmsi::unbind(Irq_base *irq) override
   inv_iec_and_wait(vect);
 
   vfree(irq, &entry_int_apic_ignore);
-  Irq_chip_icu::unbind(irq);
+  Irq_chip_icu::detach(irq);
 }
 
 PUBLIC
@@ -289,7 +289,7 @@ Irq_mgr_rmsi::legacy_override(Mword irq) override
 
 PUBLIC
 bool
-Io_apic_remapped::alloc(Irq_base *irq, Mword pin, bool init = true) override
+Io_apic_remapped::attach(Irq_base *irq, Mword pin, bool init = true) override
 {
   unsigned v = valloc<Io_apic_remapped>(irq, pin, 0, init);
 
@@ -320,12 +320,12 @@ Io_apic_remapped::alloc(Irq_base *irq, Mword pin, bool init = true) override
 
 PUBLIC
 void
-Io_apic_remapped::unbind(Irq_base *irq) override
+Io_apic_remapped::detach(Irq_base *irq) override
 {
   unsigned vect = vector(irq->pin());
   _iommu->set_irq_mapping(Intel::Io_mmu::Irte(), vect,
                           Intel::Io_mmu::Flush_op::Flush_and_wait);
-  Io_apic::unbind(irq);
+  Io_apic::detach(irq);
 }
 
 PUBLIC

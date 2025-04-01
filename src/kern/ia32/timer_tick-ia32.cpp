@@ -6,7 +6,7 @@ IMPLEMENTATION [ia32 || amd64]:
 
 // On IA32 we do not use a real IRQ object but a special vector
 IMPLEMENT bool
-Timer_tick::allocate_irq(Irq_base *irq, unsigned irqnum)
+Timer_tick::attach_irq(Irq_base *irq, unsigned irqnum)
 {
   // we do not use the alloc function of the chip, because this would
   // actually route the IRQ vector through the IRQ object.

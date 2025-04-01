@@ -586,7 +586,7 @@ Io_apic::is_edge_triggered(Mword pin) const override
 
 PUBLIC
 bool
-Io_apic::alloc(Irq_base *irq, Mword pin, bool init = true) override
+Io_apic::attach(Irq_base *irq, Mword pin, bool init = true) override
 {
   unsigned v = valloc<Io_apic>(irq, pin, 0, init);
 
@@ -601,13 +601,13 @@ Io_apic::alloc(Irq_base *irq, Mword pin, bool init = true) override
 
 PUBLIC
 void
-Io_apic::unbind(Irq_base *irq) override
+Io_apic::detach(Irq_base *irq) override
 {
   extern char entry_int_apic_ignore[];
   Mword n = irq->pin();
   mask(n);
   vfree(irq, &entry_int_apic_ignore);
-  Irq_chip_icu::unbind(irq);
+  Irq_chip_icu::detach(irq);
 }
 
 PUBLIC static inline

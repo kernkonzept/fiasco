@@ -39,7 +39,7 @@ IMPLEMENTATION:
 
 PUBLIC
 bool
-Irq_chip_ia32_pic::alloc(Irq_base *irq, Mword irqn, bool init = true) override
+Irq_chip_ia32_pic::attach(Irq_base *irq, Mword irqn, bool init = true) override
 {
   // no mor than 16 IRQs
   if (irqn > 0xf)
@@ -52,12 +52,12 @@ Irq_chip_ia32_pic::alloc(Irq_base *irq, Mword irqn, bool init = true) override
 
 PUBLIC
 void
-Irq_chip_ia32_pic::unbind(Irq_base *irq) override
+Irq_chip_ia32_pic::detach(Irq_base *irq) override
 {
   extern char entry_int_pic_ignore[];
   mask(irq->pin());
   vfree(irq, &entry_int_pic_ignore);
-  Irq_chip::unbind(irq);
+  Irq_chip::detach(irq);
 }
 
 PRIVATE

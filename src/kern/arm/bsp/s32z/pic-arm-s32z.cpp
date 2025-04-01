@@ -59,7 +59,7 @@ class Mru : public Irq_chip_gen, Mmio_register_block
 
     void init(Gic *parent, unsigned id)
     {
-      check(parent->alloc(this, id, false));
+      check(parent->attach(this, id, false));
       chip()->set_mode_percpu(current_cpu(), pin(),
                               Irq_chip::Mode::F_level_high);
       chip()->unmask_percpu(current_cpu(), pin());
@@ -211,9 +211,9 @@ Mru::pending()
 
 PUBLIC
 bool
-Mru::alloc(Irq_base *irq, Mword pin, bool init = true) override
+Mru::attach(Irq_base *irq, Mword pin, bool init = true) override
 {
-  bool ret = Irq_chip_gen::alloc(irq, pin, init);
+  bool ret = Irq_chip_gen::attach(irq, pin, init);
   if (ret && init)
     irq->switch_mode(true); // it's edge triggered!
   return ret;

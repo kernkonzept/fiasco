@@ -69,7 +69,7 @@ void Pic::init()
 
   Cascade_irq *casc_irq = new Boot_object<Cascade_irq>(g, &Gic_v2::cascade_hit);
 
-  gic->alloc(casc_irq, 42);
+  gic->attach(casc_irq, 42);
   casc_irq->unmask();
 }
 

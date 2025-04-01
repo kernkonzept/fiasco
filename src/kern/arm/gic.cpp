@@ -216,11 +216,11 @@ IMPLEMENTATION [arm && !arm_em_tz]:
 
 PUBLIC
 bool
-Gic::alloc(Irq_base *irq, Mword pin, bool init = true) override
+Gic::attach(Irq_base *irq, Mword pin, bool init = true) override
 {
   // allow local irqs to be allocated on each CPU
   return (pin < 32 && irq->chip() == this && irq->pin() == pin)
-         || Irq_chip_gen::alloc(irq, pin, init);
+         || Irq_chip_gen::attach(irq, pin, init);
 }
 
 //-------------------------------------------------------------------
@@ -228,10 +228,10 @@ IMPLEMENTATION [arm && arm_em_tz]:
 
 PUBLIC
 bool
-Gic::alloc(Irq_base *irq, Mword pin, bool init = true) override
+Gic::attach(Irq_base *irq, Mword pin, bool init = true) override
 {
   if ((pin < 32 && irq->chip() == this && irq->pin() == pin)
-      || Irq_chip_gen::alloc(irq, pin, init))
+      || Irq_chip_gen::attach(irq, pin, init))
     {
       printf("GIC: Switching IRQ %ld to secure\n", pin);
       _dist.setup_pin_grp0(pin);

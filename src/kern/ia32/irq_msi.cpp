@@ -31,18 +31,18 @@ private:
 
 PUBLIC
 bool
-Irq_chip_msi::alloc(Irq_base *irq, Mword pin, bool init = true) override
+Irq_chip_msi::attach(Irq_base *irq, Mword pin, bool init = true) override
 { return valloc<Irq_chip_msi>(irq, pin, 0, init); }
 
 PUBLIC
 void
-Irq_chip_msi::unbind(Irq_base *irq) override
+Irq_chip_msi::detach(Irq_base *irq) override
 {
   extern char entry_int_apic_ignore[];
   //Mword n = irq->pin();
   // hm: no way to mask an MSI: mask(n);
   vfree(irq, &entry_int_apic_ignore);
-  Irq_chip_icu::unbind(irq);
+  Irq_chip_icu::detach(irq);
 }
 
 PUBLIC

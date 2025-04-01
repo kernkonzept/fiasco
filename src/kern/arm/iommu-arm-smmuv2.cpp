@@ -980,7 +980,7 @@ template<typename T, typename F>
 void setup_irq(unsigned pin, T *obj, F func)
 {
   auto irq = new Boot_object<Smmu_irq<T, F>>(obj, func);
-  check(Irq_mgr::mgr->alloc(irq, pin));
+  check(Irq_mgr::mgr->attach(irq, pin));
   irq->unmask();
 }
 

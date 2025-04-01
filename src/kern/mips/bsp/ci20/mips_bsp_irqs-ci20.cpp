@@ -42,7 +42,7 @@ Mips_bsp_irqs::init(Cpu_number cpu)
   m->add_chip(_ic[1], 32);
 
   auto *c = new Boot_object<Cascade_irq>(nullptr, ingenic_cascade);
-  Mips_cpu_irqs::chip->alloc(c, 2);
+  Mips_cpu_irqs::chip->attach(c, 2);
   c->unmask();
   printf("IRQs: global IRQ assignments\n");
   m->print_infos();

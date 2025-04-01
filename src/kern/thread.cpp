@@ -378,10 +378,10 @@ Mword Del_irq_chip::pin(Thread *t)
 
 PUBLIC inline
 void
-Del_irq_chip::unbind(Irq_base *irq) override
+Del_irq_chip::detach(Irq_base *irq) override
 {
   thread(irq->pin())->remove_delete_irq(irq);
-  Irq_chip_soft::unbind(irq);
+  Irq_chip_soft::detach(irq);
 }
 
 
@@ -402,12 +402,12 @@ Thread::register_delete_irq(Irq_base *irq)
     return false;
 
   auto g = lock_guard(irq->irq_lock());
-  irq->unbind();
+  irq->detach();
   Del_irq_chip::chip->bind(irq, reinterpret_cast<Mword>(this));
   if (cas<Irq_base *>(&_del_observer, nullptr, irq))
     return true;
 
-  irq->unbind();
+  irq->detach();
   return false;
 }
 
@@ -419,7 +419,7 @@ Thread::unregister_delete_irq()
   if (Irq_base *del_observer = access_once(&_del_observer))
     {
       auto g = lock_guard(del_observer->irq_lock());
-      del_observer->unbind();
+      del_observer->detach();
     }
 }
 
@@ -1572,10 +1572,10 @@ Mword Doorbell_irq_chip::pin(Thread *t)
 
 PUBLIC inline
 void
-Doorbell_irq_chip::unbind(Irq_base *irq) override
+Doorbell_irq_chip::detach(Irq_base *irq) override
 {
   thread(irq->pin())->remove_doorbell_irq(irq);
-  Irq_chip_soft::unbind(irq);
+  Irq_chip_soft::detach(irq);
 }
 
 
@@ -1587,12 +1587,12 @@ Thread::register_doorbell_irq(Irq_base *irq)
     return false;
 
   auto g = lock_guard(irq->irq_lock());
-  irq->unbind();
+  irq->detach();
   Doorbell_irq_chip::chip->bind(irq, reinterpret_cast<Mword>(this));
   if (cas<Irq_base *>(&_doorbell_irq, nullptr, irq))
     return true;
 
-  irq->unbind();
+  irq->detach();
   return false;
 }
 
@@ -1612,7 +1612,7 @@ Thread::unregister_doorbell_irq()
   if (Irq_base *doorbell_irq = access_once(&_doorbell_irq))
     {
       auto irq_guard = lock_guard(doorbell_irq->irq_lock());
-      doorbell_irq->unbind();
+      doorbell_irq->detach();
     }
 }
 

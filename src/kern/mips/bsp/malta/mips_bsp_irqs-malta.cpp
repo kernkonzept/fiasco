@@ -87,14 +87,14 @@ Mips_bsp_irqs::init(Cpu_number cpu)
       Cm::cm->set_gic_base_and_enable(my_gic_base);
       Gic *gic = new Boot_object<Gic>(Kmem_mmio::map(my_gic_base, Gic::Size), 4);
       auto *c = new Boot_object<Cascade_irq>(gic, gic_hit);
-      Mips_cpu_irqs::chip->alloc(c, 4);
+      Mips_cpu_irqs::chip->attach(c, 4);
       c->unmask();
       m->add_chip(gic, 32); // expose GIC IRQs starting from IRQ 32
 
-      gic->alloc(pic_c, 3);
+      gic->attach(pic_c, 3);
     }
   else
-    Mips_cpu_irqs::chip->alloc(pic_c, 2);
+    Mips_cpu_irqs::chip->attach(pic_c, 2);
 
   pic_c->unmask();
 

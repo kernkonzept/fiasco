@@ -296,7 +296,7 @@ PUBLIC void
 Gic::init_ipis(Cpu_number cpu, Irq_base *irq) override
 {
   if (cpu == Cpu_number::boot_cpu())
-    check(Mips_cpu_irqs::chip->alloc(irq, _cpu_int_ipi));
+    check(Mips_cpu_irqs::chip->attach(irq, _cpu_int_ipi));
   else
     Mips_cpu_irqs::chip->unmask(_cpu_int_ipi);
 

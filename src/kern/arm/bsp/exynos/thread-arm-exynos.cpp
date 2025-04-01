@@ -18,10 +18,10 @@ public:
   {
     if (!resume)
       {
-        check(Pic::gic.cpu(cpu)->alloc(&remote_rq_ipi, Ipi::Request));
-        check(Pic::gic.cpu(cpu)->alloc(&glbl_remote_rq_ipi, Ipi::Global_request));
-        check(Pic::gic.cpu(cpu)->alloc(&debug_ipi, Ipi::Debug));
-        check(Pic::gic.cpu(cpu)->alloc(&timer_ipi, Ipi::Timer));
+        check(Pic::gic.cpu(cpu)->attach(&remote_rq_ipi, Ipi::Request));
+        check(Pic::gic.cpu(cpu)->attach(&glbl_remote_rq_ipi, Ipi::Global_request));
+        check(Pic::gic.cpu(cpu)->attach(&debug_ipi, Ipi::Debug));
+        check(Pic::gic.cpu(cpu)->attach(&timer_ipi, Ipi::Timer));
       }
   }
 

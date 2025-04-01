@@ -109,7 +109,7 @@ public:
    * \param cpu the logical CPU number.
    */
   virtual void set_cpu(Mword pin, Cpu_number cpu) = 0;
-  virtual void unbind(Irq_base *irq);
+  virtual void detach(Irq_base *irq);
   virtual ~Irq_chip() = 0;
 };
 
@@ -152,7 +152,7 @@ public:
    *              state and set the target CPU of the pin.
    *              If this parameter is set to `false`, skip the initialization.
    */
-  virtual bool alloc(Irq_base *irq, Mword pin, bool init = true) = 0;
+  virtual bool attach(Irq_base *irq, Mword pin, bool init = true) = 0;
 
   /** Return the IRQ object attached to a given pin of the ICU. */
   virtual Irq_base *irq(Mword pin) const = 0;
@@ -215,7 +215,7 @@ public:
 
   void set_cpu(Cpu_number cpu) { _chip->set_cpu(_pin, cpu); }
 
-  void unbind() { _chip->unbind(this); }
+  void detach() { _chip->detach(this); }
 
   bool masked() const { return !(access_once(&_flags) & F_enabled); }
   Mword flags() const { return access_once(&_flags); }
@@ -363,10 +363,10 @@ Irq_chip::bind(Irq_base *irq, Mword pin, bool ctor_only = false)
 }
 
 /**
- * Unbind the passed IRQ object from this IRQ controller chip by binding the IRQ
- * object to the `sw_chip` chip.
+ * Detach the passed IRQ object from this IRQ controller chip by binding the
+ * IRQ object to the `sw_chip` chip.
  *
- * \param irq  The IRQ object to unbind.
+ * \param irq  The IRQ object to detach.
  *
  * \see Irq_base::Irq_base()
  *
@@ -374,7 +374,7 @@ Irq_chip::bind(Irq_base *irq, Mword pin, bool ctor_only = false)
  */
 IMPLEMENT inline
 void
-Irq_chip::unbind(Irq_base *irq)
+Irq_chip::detach(Irq_base *irq)
 {
   Irq_chip_soft::sw_chip->bind(irq, 0, true);
 }
@@ -417,7 +417,7 @@ void
 Irq_base::destroy()
 {
   auto g = lock_guard(_irq_lock);
-  unbind();
+  detach();
 }
 
 // --------------------------------------------------------------------------

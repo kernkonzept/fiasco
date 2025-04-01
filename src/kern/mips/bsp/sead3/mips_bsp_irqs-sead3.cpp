@@ -45,7 +45,7 @@ Mips_bsp_irqs::init(Cpu_number cpu)
     {
       gic = new Boot_object<Gic>(Kmem_mmio::map(0x1b1c0000, Gic::Size), 2);
       auto *c = new Boot_object<Cascade_irq>(gic, gic_hit);
-      Mips_cpu_irqs::chip->alloc(c, 2);
+      Mips_cpu_irqs::chip->attach(c, 2);
       c->unmask();
       m->add_chip(gic, 8);
     }

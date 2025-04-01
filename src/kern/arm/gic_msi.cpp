@@ -35,7 +35,7 @@ private:
   public:
     Lpi() { reset(); }
 
-    void alloc(Irq_base *irq, bool &success)
+    void attach(Irq_base *irq, bool &success)
     {
       // Already allocated to different Irq object
       if (_irq)
@@ -179,10 +179,10 @@ Gic_msi::irq(Mword pin) const override
 
 PUBLIC
 bool
-Gic_msi::alloc(Irq_base *irq, Mword pin, bool init = true) override
+Gic_msi::attach(Irq_base *irq, Mword pin, bool init = true) override
 {
   bool success = false;
-  with_lpi(pin, &Lpi::alloc, irq, success);
+  with_lpi(pin, &Lpi::attach, irq, success);
 
   if (success)
     bind(irq, pin, !init);
@@ -240,10 +240,10 @@ Gic_msi::migrate_lpis(Cpu_number from, Cpu_number to)
 
 PUBLIC
 void
-Gic_msi::unbind(Irq_base *irq) override
+Gic_msi::detach(Irq_base *irq) override
 {
   with_lpi(irq->pin(), &Lpi::free);
-  Irq_chip_icu::unbind(irq);
+  Irq_chip_icu::detach(irq);
 }
 
 PUBLIC
@@ -251,7 +251,7 @@ bool
 Gic_msi::reserve(Mword pin) override
 {
   bool success = false;
-  with_lpi(pin, &Lpi::alloc, reinterpret_cast<Irq_base*>(1), success);
+  with_lpi(pin, &Lpi::attach, reinterpret_cast<Irq_base*>(1), success);
   return success;
 }
 

@@ -22,8 +22,8 @@ Timer_tick::setup(Cpu_number cpu)
   if (cpu == Cpu_number::boot_cpu())
     {
       _glbl_timer.construct(Sys_cpu);
-      if (!allocate_irq(_glbl_timer, Timer::irq()))
-        panic("Could not allocate scheduling IRQ %d\n", Timer::irq());
+      if (!attach_irq(_glbl_timer, Timer::irq()))
+        panic("Could not attach scheduling IRQ %d\n", Timer::irq());
 
       printf("Timer is at IRQ %d\n", Timer::irq());
       enable_vkey(cpu);

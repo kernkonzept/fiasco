@@ -44,7 +44,7 @@ public:
     return Ic_res();
   }
 
-  int icu_bind_irq(Mword pin, Irq_base *irq)
+  int icu_attach(Mword pin, Irq_base *irq)
   {
     if (pin >= NIRQS)
       return -L4_err::EInval;
@@ -56,7 +56,7 @@ public:
     if (cas<Irq_base *>(&_irqs[pin], nullptr, irq))
       return 0;
 
-    irq->unbind();
+    irq->detach();
     return -L4_err::EInval;
   }
 
@@ -71,7 +71,7 @@ public:
   int icu_msi_info(Mword, Unsigned64, Irq_mgr::Msi_info *)
   { return -L4_err::ENosys; }
 
-  void unbind(Irq_base *irq) override
+  void detach(Irq_base *irq) override
   {
     if (irq->chip() != this)
       return;
@@ -84,7 +84,7 @@ public:
       return;
 
     if (cas<Irq_base *>(&_irqs[pin], irq, nullptr))
-      Irq_chip_soft::unbind(irq);
+      Irq_chip_soft::detach(irq);
   }
 
 protected:
@@ -163,9 +163,9 @@ Icu_h<REAL_ICU>::op_icu_bind(unsigned irqnum, Ko::Cap<Irq> const &irq)
     return Kobject_iface::commit_result(-L4_err::EPerm);
 
   auto guard = lock_guard(irq.obj->irq_lock());
-  irq.obj->unbind();
+  irq.obj->detach();
 
-  return Kobject_iface::commit_result(this_icu()->icu_bind_irq(irqnum, irq.obj));
+  return Kobject_iface::commit_result(this_icu()->icu_attach(irqnum, irq.obj));
 }
 
 PUBLIC inline
@@ -176,7 +176,7 @@ Icu_h<REAL_ICU>::op_icu_unbind(unsigned irqnum, Ko::Cap<Irq> const &)
   Irq_base *irq = this_icu()->icu_get_irq(irqnum);
 
   if (irq)
-    irq->unbind();
+    irq->detach();
 
   return Kobject_iface::commit_result(0);
 }

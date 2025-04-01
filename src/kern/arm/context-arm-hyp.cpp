@@ -333,9 +333,9 @@ public:
     set_hit(handler_wrapper<Arm_ppi_virt>);
   }
 
-  void alloc(Cpu_number cpu)
+  void attach(Cpu_number cpu)
   {
-    check(Irq_mgr::mgr->alloc(this, _irq, false));
+    check(Irq_mgr::mgr->attach(this, _irq, false));
     chip()->set_mode_percpu(cpu, pin(), Irq_chip::Mode::F_level_high);
     chip()->unmask_percpu(cpu, pin());
   }
@@ -364,9 +364,9 @@ public:
     set_hit(handler_wrapper<Arm_vtimer_ppi>);
   }
 
-  void alloc(Cpu_number cpu)
+  void attach(Cpu_number cpu)
   {
-    check(Irq_mgr::mgr->alloc(this, _irq, false));
+    check(Irq_mgr::mgr->attach(this, _irq, false));
     chip()->set_mode_percpu(cpu, pin(), Irq_chip::Mode::F_level_high);
     chip()->unmask_percpu(cpu, pin());
     _enabled.cpu(cpu) = true;
@@ -458,8 +458,8 @@ struct Local_irq_init
     if (cpu >= Cpu::invalid())
       return;
 
-    __vgic_irq->alloc(cpu);
-    __vtimer_irq->alloc(cpu);
+    __vgic_irq->attach(cpu);
+    __vtimer_irq->attach(cpu);
   }
 };
 

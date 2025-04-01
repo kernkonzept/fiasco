@@ -44,9 +44,9 @@ Icu::icu_get_chip(Mword pin) const
 
 PUBLIC inline NEEDS["irq_mgr.h"]
 int
-Icu::icu_bind_irq(unsigned irqnum, Irq_base *irq)
+Icu::icu_attach(unsigned irqnum, Irq_base *irq)
 {
-  if (Irq_mgr::mgr->alloc(irq, irqnum))
+  if (Irq_mgr::mgr->attach(irq, irqnum))
     return 0;
 
   return -L4_err::EInval;

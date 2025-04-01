@@ -483,44 +483,44 @@ Mgr_int::Mgr_int()
   // Combiners
   for (unsigned i = 0; i < 40; ++i)
     {
-      _gic->alloc(new Boot_object<Combiner_cascade_irq>(i, _cc), i + 32);
+      _gic->attach(new Boot_object<Combiner_cascade_irq>(i, _cc), i + 32);
       _gic->unmask(i + 32);
     }
-  _gic->alloc(new Boot_object<Combiner_cascade_irq>(51, _cc), 51 + 32);
+  _gic->attach(new Boot_object<Combiner_cascade_irq>(51, _cc), 51 + 32);
   _gic->unmask(51 + 32);
-  _gic->alloc(new Boot_object<Combiner_cascade_irq>(53, _cc), 53 + 32);
+  _gic->attach(new Boot_object<Combiner_cascade_irq>(53, _cc), 53 + 32);
   _gic->unmask(53 + 32);
 
   // GPIO-wakeup0-3 goes to GIC
-  _gic->alloc(new Boot_object<Gpio_cascade_wu01_irq>(_wu_gc, 0), 72); _gic->unmask(72);
-  _gic->alloc(new Boot_object<Gpio_cascade_wu01_irq>(_wu_gc, 1), 73); _gic->unmask(73);
-  _gic->alloc(new Boot_object<Gpio_cascade_wu01_irq>(_wu_gc, 2), 74); _gic->unmask(74);
-  _gic->alloc(new Boot_object<Gpio_cascade_wu01_irq>(_wu_gc, 3), 75); _gic->unmask(75);
+  _gic->attach(new Boot_object<Gpio_cascade_wu01_irq>(_wu_gc, 0), 72); _gic->unmask(72);
+  _gic->attach(new Boot_object<Gpio_cascade_wu01_irq>(_wu_gc, 1), 73); _gic->unmask(73);
+  _gic->attach(new Boot_object<Gpio_cascade_wu01_irq>(_wu_gc, 2), 74); _gic->unmask(74);
+  _gic->attach(new Boot_object<Gpio_cascade_wu01_irq>(_wu_gc, 3), 75); _gic->unmask(75);
 
   // GPIO-wakeup4-7 -> comb37:0-3
   for (unsigned i = 0; i < 4; ++i)
     {
-      _cc->alloc(new Boot_object<Gpio_cascade_wu01_irq>(_wu_gc, 4 + i), 8 * 37 + i);
+      _cc->attach(new Boot_object<Gpio_cascade_wu01_irq>(_wu_gc, 4 + i), 8 * 37 + i);
       _cc->unmask(8 * 37 + i);
     }
 
   // GPIO-wakeup8-15 -> COMB:38:0-7
   for (unsigned i = 0; i < 8; ++i)
     {
-      _cc->alloc(new Boot_object<Gpio_cascade_wu01_irq>(_wu_gc, 8 + i), 8 * 38 + i);
+      _cc->attach(new Boot_object<Gpio_cascade_wu01_irq>(_wu_gc, 8 + i), 8 * 38 + i);
       _cc->unmask(8 * 38 + i);
     }
 
   // GPIO-wakeup16-31: COMP:39:0
-  _cc->alloc(new Boot_object<Gpio_cascade_wu23_irq>(_wu_gc), 8 * 39 + 0);
+  _cc->attach(new Boot_object<Gpio_cascade_wu23_irq>(_wu_gc), 8 * 39 + 0);
   _cc->unmask(8 * 39 + 0);
 
   // xa
-  _cc->alloc(new Boot_object<Gpio_cascade_xab_irq>(_ei_gc1), 8 * 24 + 1);
+  _cc->attach(new Boot_object<Gpio_cascade_xab_irq>(_ei_gc1), 8 * 24 + 1);
   _cc->unmask(8 * 24 + 1);
 
   // xb
-  _cc->alloc(new Boot_object<Gpio_cascade_xab_irq>(_ei_gc2), 8 * 24 + 0);
+  _cc->attach(new Boot_object<Gpio_cascade_xab_irq>(_ei_gc2), 8 * 24 + 0);
   _cc->unmask(8 * 24 + 0);
 
   static Chip_block soc[] = {
@@ -640,35 +640,35 @@ Mgr_ext::Mgr_ext()
   // Combiners
   for (unsigned i = 0; i < 16; ++i)
     {
-      g->alloc(new Boot_object<Combiner_cascade_irq>(i, _cc), i + 32);
+      g->attach(new Boot_object<Combiner_cascade_irq>(i, _cc), i + 32);
       g->unmask(i + 32);
     }
 
   if (Platform::is_4412())
     {
-      g->alloc(new Boot_object<Combiner_cascade_irq>(16, _cc), 139); g->unmask(139);
-      g->alloc(new Boot_object<Combiner_cascade_irq>(17, _cc), 140); g->unmask(140);
-      g->alloc(new Boot_object<Combiner_cascade_irq>(18, _cc), 80);  g->unmask(80);
-      g->alloc(new Boot_object<Combiner_cascade_irq>(19, _cc), 74);  g->unmask(74);
+      g->attach(new Boot_object<Combiner_cascade_irq>(16, _cc), 139); g->unmask(139);
+      g->attach(new Boot_object<Combiner_cascade_irq>(17, _cc), 140); g->unmask(140);
+      g->attach(new Boot_object<Combiner_cascade_irq>(18, _cc), 80);  g->unmask(80);
+      g->attach(new Boot_object<Combiner_cascade_irq>(19, _cc), 74);  g->unmask(74);
     }
 
   // GPIO-wakeup0-15 goes to GIC
   for (unsigned i = 0; i < 16; ++i)
     {
-      g->alloc(new Boot_object<Gpio_cascade_wu01_irq>(_wu_gc, i), i + 48);
+      g->attach(new Boot_object<Gpio_cascade_wu01_irq>(_wu_gc, i), i + 48);
       g->unmask(i + 48);
     }
 
   // GPIO-wakeup16-31: GIC:32+32
-  g->alloc(new Boot_object<Gpio_cascade_wu23_irq>(_wu_gc), 64);
+  g->attach(new Boot_object<Gpio_cascade_wu23_irq>(_wu_gc), 64);
   g->unmask(64);
 
   // xa GIC:32+47
-  g->alloc(new Boot_object<Gpio_cascade_xab_irq>(_ei_gc1, Platform::is_4412() ? 1 : 0), 79);
+  g->attach(new Boot_object<Gpio_cascade_xab_irq>(_ei_gc1, Platform::is_4412() ? 1 : 0), 79);
   g->unmask(79);
 
   // xb GIC:32+46
-  g->alloc(new Boot_object<Gpio_cascade_xab_irq>(_ei_gc2, Platform::is_4412() ? 2 : 0), 78);
+  g->attach(new Boot_object<Gpio_cascade_xab_irq>(_ei_gc2, Platform::is_4412() ? 2 : 0), 78);
   g->unmask(78);
 
 
@@ -807,7 +807,7 @@ void Pic::init_ap(Cpu_number cpu, bool resume)
       // This is a debug facility as we've been seeing IRQ0
       // happening under (non-usual) high load
       _check_irq0.cpu(cpu).construct();
-      gic.cpu(cpu)->alloc(_check_irq0.cpu(cpu), 0);
+      gic.cpu(cpu)->attach(_check_irq0.cpu(cpu), 0);
     }
 }
 
@@ -878,30 +878,30 @@ Mgr::Mgr()
   // Combiners
   for (unsigned i = 0; i < 32; ++i)
     {
-      g->alloc(new Boot_object<Combiner_cascade_irq>(i, _cc), i + 32);
+      g->attach(new Boot_object<Combiner_cascade_irq>(i, _cc), i + 32);
       g->unmask(i + 32);
     }
 
-  _cc->alloc(new Boot_object<Gpio_cascade_wu01_irq>(_wu_gc, 0), 8 * 23 + 0);
-  _cc->alloc(new Boot_object<Gpio_cascade_wu01_irq>(_wu_gc, 1), 8 * 24 + 0);
+  _cc->attach(new Boot_object<Gpio_cascade_wu01_irq>(_wu_gc, 0), 8 * 23 + 0);
+  _cc->attach(new Boot_object<Gpio_cascade_wu01_irq>(_wu_gc, 1), 8 * 24 + 0);
   for (int i = 25, nr = 2; i < 32; ++i, nr += 2)
     {
-      _cc->alloc(new Boot_object<Gpio_cascade_wu01_irq>(_wu_gc, nr + 0), 8 * i + 0);
-      _cc->alloc(new Boot_object<Gpio_cascade_wu01_irq>(_wu_gc, nr + 1), 8 * i + 1);
+      _cc->attach(new Boot_object<Gpio_cascade_wu01_irq>(_wu_gc, nr + 0), 8 * i + 0);
+      _cc->attach(new Boot_object<Gpio_cascade_wu01_irq>(_wu_gc, nr + 1), 8 * i + 1);
     }
 
   // GPIO-wakeup16-31: GIC:32+32
-  g->alloc(new Boot_object<Gpio_cascade_wu23_irq>(_wu_gc), 64);
+  g->attach(new Boot_object<Gpio_cascade_wu23_irq>(_wu_gc), 64);
   g->unmask(64);
 
   if (0)
     {
       // xa GIC:32+47
-      g->alloc(new Boot_object<Gpio_cascade_xab_irq>(_ei_gc1), 79);
+      g->attach(new Boot_object<Gpio_cascade_xab_irq>(_ei_gc1), 79);
       g->unmask(79);
 
       // xb GIC:32+46
-      g->alloc(new Boot_object<Gpio_cascade_xab_irq>(_ei_gc2), 78);
+      g->attach(new Boot_object<Gpio_cascade_xab_irq>(_ei_gc2), 78);
       g->unmask(78);
     }
 

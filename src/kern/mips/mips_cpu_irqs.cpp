@@ -40,7 +40,7 @@ public:
     return _irqs[pin];
   }
 
-  bool alloc(Irq_base *irq, Mword pin, bool init = true) override
+  bool attach(Irq_base *irq, Mword pin, bool init = true) override
   {
     if (pin >= Mips_cpu_irq_chip::nr_irqs())
       return false;
@@ -55,12 +55,12 @@ public:
     return true;
   }
 
-  void unbind(Irq_base *irq) override
+  void detach(Irq_base *irq) override
   {
     mask(irq->pin());
     Mem::barrier();
     _irqs[irq->pin()] = 0;
-    Irq_chip_icu::unbind(irq);
+    Irq_chip_icu::detach(irq);
   }
 
   bool reserve(Mword pin) override

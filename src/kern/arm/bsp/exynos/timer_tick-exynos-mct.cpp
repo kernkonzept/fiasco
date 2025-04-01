@@ -23,18 +23,18 @@ IMPLEMENTATION [arm && exynos_mct && exynos_extgic]: // -------------------
 
 PRIVATE static
 bool
-Timer_tick::alloc_irq_4412_timer_tick(Cpu_number cpu, unsigned irq)
+Timer_tick::attach_irq_4412_timer_tick(Cpu_number cpu, unsigned irq)
 {
-  return Pic::gic.cpu(cpu)->alloc(_timer_ticks.cpu(cpu), irq);
+  return Pic::gic.cpu(cpu)->attach(_timer_ticks.cpu(cpu), irq);
 }
 
 IMPLEMENTATION [arm && exynos_mct && !exynos_extgic]: // ------------------
 
 PRIVATE static
 bool
-Timer_tick::alloc_irq_4412_timer_tick(Cpu_number, unsigned irq)
+Timer_tick::attach_irq_4412_timer_tick(Cpu_number, unsigned irq)
 {
-  return allocate_irq(_timer_ticks.cpu(Cpu_number::boot_cpu()), irq);
+  return attach_irq(_timer_ticks.cpu(Cpu_number::boot_cpu()), irq);
 }
 
 IMPLEMENTATION [arm && arm_generic_timer]: // -----------------------------
@@ -68,13 +68,13 @@ Timer_tick::setup(Cpu_number cpu)
     {
       assert(cpu < Cpu_number(Platform::is_5410() ? 4 : 2));
       irq = 152 + pcpu;
-      r = allocate_irq(_timer_ticks.cpu(cpu), irq);
+      r = attach_irq(_timer_ticks.cpu(cpu), irq);
     }
   else if (Platform::is_4412())
     {
       assert(cpu < Cpu_number(4));
       irq = 28;
-      r = alloc_irq_4412_timer_tick(cpu, irq);
+      r = attach_irq_4412_timer_tick(cpu, irq);
     }
   else
     {
@@ -85,7 +85,7 @@ Timer_tick::setup(Cpu_number cpu)
       else
         irq = pcpu == 0 ? 74 : 80;
 
-      r = allocate_irq(_timer_ticks.cpu(cpu), irq);
+      r = attach_irq(_timer_ticks.cpu(cpu), irq);
     }
 
   if (!r)
