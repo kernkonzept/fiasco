@@ -52,19 +52,20 @@ Jdb_attach_irq::action( int cmd, void *&args, char const *&, int & ) override
       switch (subcmd)
         {
         case 'l': // list
-            {
-              Irq_base *r;
-              putchar('\n');
-	      unsigned n = Irq_mgr::mgr->nr_irqs();
-              for (unsigned i = 0; i < n; ++i)
-                {
-                  r = static_cast<Irq*>(Irq_mgr::mgr->irq(i));
-                  if (!r)
-                    continue;
-                  printf("IRQ %02x/%02u\n", i, i);
-                }
-              return NOTHING;
-            }
+          {
+            Irq_base *r;
+            putchar('\n');
+
+            unsigned n = Irq_mgr::mgr->nr_irqs();
+            for (unsigned i = 0; i < n; ++i)
+              {
+                r = static_cast<Irq *>(Irq_mgr::mgr->irq(i));
+                if (!r)
+                  continue;
+                printf("IRQ %02x/%02u\n", i, i);
+              }
+            return NOTHING;
+          }
         }
     }
   return NOTHING;

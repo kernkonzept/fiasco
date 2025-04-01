@@ -49,7 +49,6 @@ Irq_mgr_multi_chip<Bits_per_entry>::chip(Mword irqnum) const override
   return Irq(ci->chip, irqnum - ci->irq_base);
 }
 
-
 PUBLIC
 template< unsigned Bits_per_entry >
 void
@@ -57,7 +56,7 @@ Irq_mgr_multi_chip<Bits_per_entry>::add_chip(unsigned irq_base,
                                              Irq_chip_icu *c, unsigned pins)
 {
   // check if the base is properly aligned
-  assert ((irq_base % Irqs_per_entry) == 0);
+  assert((irq_base % Irqs_per_entry) == 0);
 
   unsigned idx = irq_base / Irqs_per_entry;
   unsigned num = (pins + Irqs_per_entry - 1) / Irqs_per_entry;

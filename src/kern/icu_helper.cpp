@@ -95,7 +95,6 @@ private:
   Irq_base *_irqs[NIRQS];
 };
 
-
 class Icu_h_base
 {
 public:
@@ -117,8 +116,7 @@ public:
   };
 };
 
-
-template< typename REAL_ICU >
+template<typename REAL_ICU>
 class Icu_h : public Kobject_h<REAL_ICU>, public Icu_h_base
 {
 protected:
@@ -137,7 +135,7 @@ protected:
   L4_RPC(Op::Msi_info, icu_msi_info, (Mword msinum, Unsigned64 src_id, Msi_info *info));
 };
 
-
+//---------------------------------------------------------------------------
 IMPLEMENTATION:
 
 PUBLIC inline
@@ -164,7 +162,7 @@ Icu_h<REAL_ICU>::op_icu_bind(unsigned irqnum, Ko::Cap<Irq> const &irq)
   if (!Ko::check_rights(irq.rights, Ko::Rights::CW()))
     return Kobject_iface::commit_result(-L4_err::EPerm);
 
-  auto g = lock_guard(irq.obj->irq_lock());
+  auto guard = lock_guard(irq.obj->irq_lock());
   irq.obj->unbind();
 
   return Kobject_iface::commit_result(this_icu()->icu_bind_irq(irqnum, irq.obj));
@@ -201,7 +199,7 @@ Icu_h<REAL_ICU>::op_icu_set_mode(Mword irqnum, Irq_chip::Mode mode)
   Irq_base *irq = i.irq();
   if (irq)
     {
-      auto g = lock_guard(irq->irq_lock());
+      auto guard = lock_guard(irq->irq_lock());
       if (irq->chip() == i.chip && irq->pin() == i.pin)
         irq->switch_mode(i.chip->is_edge_triggered(i.pin));
     }
@@ -286,4 +284,3 @@ Icu_h<REAL_ICU>::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights,
 
   return icu_invoke(ref, rights, f, in, out);
 }
-

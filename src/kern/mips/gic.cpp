@@ -268,10 +268,11 @@ void
 Gic::set_cpu(Mword pin, Cpu_number cpu) override
 {
   auto pcpu = Cpu::cpus.cpu(cpu).phys_id();
+
   // AW11: avoid setting two bits in two different words of the
   // GIC_SH_MAPi_COREn registers. So limit the maximum phys CPU number
   // to 31;
-  assert (cxx::int_value<Cpu_phys_id>(pcpu) < 32);
+  assert(cxx::int_value<Cpu_phys_id>(pcpu) < 32);
 
   _r[sh_map_core(pin, pcpu)] = sh_map_core_bit(pcpu);
 }
@@ -310,7 +311,8 @@ Gic::setup_ipis()
 {
   /* make sure we have at least 16 (arbitrary) IRQs left after
    * assigning IPIs */
-  assert (Config::Max_num_cpus <= (nr_irqs() - 16));
+  assert(Config::Max_num_cpus <= (nr_irqs() - 16));
+
   _ipi_base = nr_irqs() - Config::Max_num_cpus;
   printf("GIC: IPI base is: %u\n", _ipi_base);
 

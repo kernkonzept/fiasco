@@ -2,7 +2,6 @@ INTERFACE:
 
 #include "irq_chip.h"
 
-
 class Irq_chip_gen : public Irq_chip_icu
 {
 public:
@@ -14,12 +13,10 @@ private:
   Irq_base **_irqs = nullptr;
 };
 
-
 // -------------------------------------------------------------------------
 IMPLEMENTATION:
 
 #include <cstring>
-
 #include "boot_alloc.h"
 #include "mem.h"
 

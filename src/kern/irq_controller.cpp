@@ -11,7 +11,6 @@ class Icu : public Icu_h<Icu>
   friend class Icu_h<Icu>;
 };
 
-
 //----------------------------------------------------------------------------
 IMPLEMENTATION:
 
@@ -70,7 +69,6 @@ Icu::icu_msi_info(Mword msi, Unsigned64 source, Irq_mgr::Msi_info *out)
 {
   return Irq_mgr::mgr->msg(msi, source, out);
 }
-
 
 PUBLIC inline
 Icu::Icu()

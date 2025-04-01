@@ -1,6 +1,7 @@
 INTERFACE:
 
 #include "io_apic.h"
+
 namespace Intel { class Io_mmu; }
 
 class Io_apic_remapped : public Io_apic
@@ -141,15 +142,18 @@ Irq_chip_rmsi::msg(Mword pin, Unsigned64 src, Irq_mgr::Msi_info *inf)
   return 0;
 }
 
-PUBLIC int
+PUBLIC
+int
 Irq_chip_rmsi::set_mode(Mword, Mode) override
 { return 0; }
 
-PUBLIC bool
+PUBLIC
+bool
 Irq_chip_rmsi::is_edge_triggered(Mword) const override
 { return true; }
 
-PUBLIC void
+PUBLIC
+void
 Irq_chip_rmsi::set_cpu(Mword pin, Cpu_number cpu) override
 {
   unsigned vect = vector(pin);
@@ -179,7 +183,8 @@ Irq_chip_rmsi::set_cpu(Mword pin, Cpu_number cpu) override
     inv_iec(vect);
 }
 
-PUBLIC void
+PUBLIC
+void
 Irq_chip_rmsi::mask(Mword pin) override
 {
   unsigned vect = vector(pin);
@@ -202,18 +207,21 @@ Irq_chip_rmsi::mask(Mword pin) override
   inv_iec(vect);
 }
 
-PUBLIC void
+PUBLIC
+void
 Irq_chip_rmsi::ack(Mword) override
 { ::Apic::irq_ack(); }
 
-PUBLIC void
+PUBLIC
+void
 Irq_chip_rmsi::mask_and_ack(Mword pin) override
 {
   Irq_chip_rmsi::mask(pin);
   Irq_chip_rmsi::ack(pin);
 }
 
-PUBLIC void
+PUBLIC
+void
 Irq_chip_rmsi::unmask(Mword pin) override
 {
   unsigned vect = vector(pin);
@@ -234,13 +242,13 @@ Irq_chip_rmsi::unmask(Mword pin) override
   clean_dcache(&irte);
 }
 
-
 PUBLIC inline explicit
 Irq_mgr_rmsi::Irq_mgr_rmsi(Intel::Io_mmu::Irte volatile *irt, bool coherent)
 : _chip(irt, coherent)
 {}
 
-PUBLIC Irq_mgr::Irq
+PUBLIC
+Irq_mgr::Irq
 Irq_mgr_rmsi::chip(Mword irq) const override
 {
   if (irq & 0x80000000)
@@ -269,7 +277,8 @@ Irq_mgr_rmsi::msg(Mword irq, Unsigned64 src, Msi_info *inf) const override
     return -L4_err::ERange;
 }
 
-PUBLIC unsigned
+PUBLIC
+unsigned
 Irq_mgr_rmsi::legacy_override(Mword irq) override
 {
   if (irq & 0x80000000)
@@ -277,7 +286,6 @@ Irq_mgr_rmsi::legacy_override(Mword irq) override
   else
     return Io_apic_mgr::legacy_override(irq);
 }
-
 
 PUBLIC
 bool
@@ -320,7 +328,8 @@ Io_apic_remapped::unbind(Irq_base *irq) override
   Io_apic::unbind(irq);
 }
 
-PUBLIC int
+PUBLIC
+int
 Io_apic_remapped::set_mode(Mword pin, Mode mode) override
 {
   if (!mode.set_mode())
@@ -343,8 +352,8 @@ Io_apic_remapped::set_mode(Mword pin, Mode mode) override
   return 0;
 }
 
-
-PUBLIC void
+PUBLIC
+void
 Io_apic_remapped::set_cpu(Mword pin, Cpu_number cpu) override
 {
   unsigned vect = vector(pin);
@@ -367,7 +376,6 @@ Io_apic_remapped::set_cpu(Mword pin, Cpu_number cpu) override
   // to move IRQs to another online CPU before taking a CPU offline.
   _iommu->set_irq_mapping(e, vect, Intel::Io_mmu::Flush_op::Flush);
 }
-
 
 PUBLIC static FIASCO_INIT
 bool
@@ -482,4 +490,3 @@ PUBLIC inline
 char const *
 Io_apic_remapped::chip_type() const override
 { return "rIO-APIC"; }
-

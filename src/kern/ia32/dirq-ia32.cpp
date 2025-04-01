@@ -1,4 +1,5 @@
 INTERFACE[ia32 || amd64]:
+
 #include "std_macros.h"
 #include "types.h"
 
@@ -47,4 +48,3 @@ irq_interrupt(Mword irqobj, Mword ip)
   irq_spinners(i->pin());
   i->hit(nullptr);
 }
-

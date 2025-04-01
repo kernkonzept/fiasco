@@ -24,7 +24,7 @@ private:
   enum { Base_vector = 0x20 };
 };
 
-
+//---------------------------------------------------------------------------
 IMPLEMENTATION:
 
 #include <cassert>

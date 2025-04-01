@@ -84,7 +84,7 @@ public:
   Io_apic_mgr() { register_pm(Cpu_number::boot_cpu()); }
 };
 
-
+//---------------------------------------------------------------------------
 IMPLEMENTATION:
 
 #include "acpi.h"
@@ -105,8 +105,8 @@ unsigned Io_apic::_nr_irqs;
 Io_apic *Io_apic::_first;
 Io_apic_entry *Io_apic::_state_save_area;
 
-
-PUBLIC Irq_mgr::Irq
+PUBLIC
+Irq_mgr::Irq
 Io_apic_mgr::chip(Mword irq) const override
 {
   Io_apic *a = Io_apic::find_apic(irq);
@@ -128,21 +128,24 @@ unsigned
 Io_apic_mgr::nr_msis() const override
 { return 0; }
 
-PUBLIC unsigned
+PUBLIC
+unsigned
 Io_apic_mgr::legacy_override(Mword i) override
 { return Io_apic::legacy_override(i); }
 
-PUBLIC void
+PUBLIC
+void
 Io_apic_mgr::pm_on_suspend([[maybe_unused]] Cpu_number cpu) override
 {
-  assert (cpu == Cpu_number::boot_cpu());
+  assert(cpu == Cpu_number::boot_cpu());
   Io_apic::save_state();
 }
 
-PUBLIC void
+PUBLIC
+void
 Io_apic_mgr::pm_on_resume([[maybe_unused]] Cpu_number cpu) override
 {
-  assert (cpu == Cpu_number::boot_cpu());
+  assert(cpu == Cpu_number::boot_cpu());
   Pic::disable_all_save();
   Io_apic::restore_state(true);
 }
@@ -226,7 +229,6 @@ Io_apic::Io_apic(Unsigned64 phys, unsigned gsi_base)
       write_entry(i, e);
     }
 }
-
 
 PUBLIC inline NEEDS["assert.h", "lock_guard.h"]
 Io_apic_entry
@@ -350,7 +352,6 @@ Io_apic::init_scan_apics()
   return true;
 }
 
-
 PUBLIC static FIASCO_INIT
 void
 Io_apic::init(Cpu_number)
@@ -424,7 +425,6 @@ Io_apic::dump()
              e.dest_mode() ? "logical" : "physical", e.dest().get(),
              e.polarity() ? "low" : "high", e.trigger() ? "level" : "edge");
     }
-
 }
 
 PUBLIC inline
@@ -488,23 +488,27 @@ Io_apic::find_apic(unsigned irqnum)
       if (a->_offset <= irqnum && a->_offset + a->_irqs > irqnum)
         return a;
     }
+
   return nullptr;
 };
 
-PUBLIC void
+PUBLIC
+void
 Io_apic::mask(Mword irq) override
 {
   _mask(irq);
   sync();
 }
 
-PUBLIC void
+PUBLIC
+void
 Io_apic::ack(Mword) override
 {
   ::Apic::irq_ack();
 }
 
-PUBLIC void
+PUBLIC
+void
 Io_apic::mask_and_ack(Mword irq) override
 {
   _mask(irq);
@@ -512,13 +516,15 @@ Io_apic::mask_and_ack(Mword irq) override
   ::Apic::irq_ack();
 }
 
-PUBLIC void
+PUBLIC
+void
 Io_apic::unmask(Mword irq) override
 {
   _unmask(irq);
 }
 
-PUBLIC void
+PUBLIC
+void
 Io_apic::set_cpu(Mword irq, Cpu_number cpu) override
 {
   set_dest(irq, ::Apic::apic.cpu(cpu)->apic_id());
@@ -609,10 +615,10 @@ bool
 Io_apic::active()
 { return _first; }
 
+//---------------------------------------------------------------------------
 IMPLEMENTATION [debug]:
 
 PUBLIC inline
 char const *
 Io_apic::chip_type() const override
 { return "IO-APIC"; }
-

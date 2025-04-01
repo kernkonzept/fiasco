@@ -75,18 +75,19 @@ public:
   virtual ~Irq_mgr() = 0;
 };
 
-template< typename CHIP >
+template<typename CHIP>
 class Irq_mgr_single_chip : public Irq_mgr
 {
 public:
   Irq_mgr_single_chip() {}
 
-  template< typename... A >
+  template<typename... A>
   explicit Irq_mgr_single_chip(A&&... args) : c(cxx::forward<A>(args)...) {}
 
   Irq chip(Mword irqnum) const override { return Irq(&c, irqnum); }
   unsigned nr_irqs() const override { return c.nr_irqs(); }
   unsigned nr_msis() const override { return 0; }
+
   mutable CHIP c;
 };
 

@@ -118,7 +118,7 @@ Startup::stage2()
 	{
 	  Irq_mgr *const m = Irq_mgr::mgr;
 	  Irq_mgr::Irq const irq = m->chip(m->legacy_override(timer_irq));
-	  Io_apic *const apic = static_cast<Io_apic*>(irq.chip);
+	  Io_apic *const apic = static_cast<Io_apic *>(irq.chip);
 
 	  Io_apic_entry e = apic->read_entry(irq.pin);
 	  e.vector() = Config::Apic_timer_vector;

@@ -81,6 +81,7 @@ private:
     void set_cpu(Cpu_number cpu)
     {
       _cpu = cpu;
+
       if (_its)
         _its->assign_lpi_to_cpu(*this, _cpu);
     }
@@ -266,6 +267,7 @@ Gic_msi::msg(Mword pin, Unsigned64 src, Irq_mgr::Msi_info *inf)
   int err = 0;
   if (!with_lpi(pin, &Lpi::bind_to_device, its, msi_src.device_id(), inf, err))
     err = -L4_err::ERange;
+
   return err;
 }
 

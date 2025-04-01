@@ -18,7 +18,7 @@
 
 #ifdef CONFIG_BIT32
 
-.macro	GATE_ENTRY n,name,type
+.macro	GATE_ENTRY n, name, type
 	.pushsection ".initcall.data", "aw", @progbits
 	.long	\name
 	.word	\n
@@ -33,6 +33,7 @@
 .endm
 
 #else
+
 .macro	GATE_ENTRY n, name, type
 	.pushsection ".initcall.data"
 	.quad	\name
@@ -46,6 +47,7 @@
 	.quad	0
 	.popsection
 .endm
+
 #endif
 
 #define SEL_PL_U	0x03
@@ -62,6 +64,7 @@
 #include "l4_types.h"
 
 #ifdef CONFIG_BIT32
+
 class Idt_init_entry
 {
 public:
@@ -69,7 +72,9 @@ public:
   Unsigned16  vector;
   Unsigned16  type;
 } __attribute__((packed));
+
 #else
+
 class Idt_init_entry
 {
 public:
@@ -77,6 +82,7 @@ public:
   Unsigned16  vector;
   Unsigned16  type;
 } __attribute__((packed));
+
 #endif
 
 extern Idt_init_entry idt_init_table[];

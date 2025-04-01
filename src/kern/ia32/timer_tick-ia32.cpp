@@ -63,5 +63,3 @@ thread_timer_interrupt_stop(void)
 {
   Timer_tick::_glbl_timer->ack();
 }
-
-

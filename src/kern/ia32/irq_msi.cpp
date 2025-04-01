@@ -60,39 +60,46 @@ Irq_chip_msi::msg(Mword pin, Unsigned64, Irq_mgr::Msi_info *inf)
   return 0;
 }
 
-PUBLIC int
+PUBLIC
+int
 Irq_chip_msi::set_mode(Mword, Mode) override
 { return 0; }
 
-PUBLIC bool
+PUBLIC
+bool
 Irq_chip_msi::is_edge_triggered(Mword) const override
 { return true; }
 
-PUBLIC void
+PUBLIC
+void
 Irq_chip_msi::set_cpu(Mword, Cpu_number) override
 {}
 
-PUBLIC void
+PUBLIC
+void
 Irq_chip_msi::mask(Mword) override
 {}
 
-PUBLIC void
+PUBLIC
+void
 Irq_chip_msi::ack(Mword) override
 { ::Apic::irq_ack(); }
 
-PUBLIC void
+PUBLIC
+void
 Irq_chip_msi::mask_and_ack(Mword) override
 { ::Apic::irq_ack(); }
 
-PUBLIC void
+PUBLIC
+void
 Irq_chip_msi::unmask(Mword) override
 {}
-
 
 PUBLIC inline explicit
 Irq_mgr_msi::Irq_mgr_msi(Irq_mgr *o) : _orig(o) {}
 
-PUBLIC Irq_mgr::Irq
+PUBLIC
+Irq_mgr::Irq
 Irq_mgr_msi::chip(Mword irq) const override
 {
   if (irq & 0x80000000)
@@ -121,7 +128,8 @@ Irq_mgr_msi::msg(Mword irq, Unsigned64 src, Msi_info *inf) const override
     return -L4_err::ERange;
 }
 
-PUBLIC unsigned
+PUBLIC
+unsigned
 Irq_mgr_msi::legacy_override(Mword irq) override
 {
   if (irq & 0x80000000)
@@ -129,7 +137,6 @@ Irq_mgr_msi::legacy_override(Mword irq) override
   else
     return _orig->legacy_override(irq);
 }
-
 
 PUBLIC static FIASCO_INIT
 void
@@ -152,4 +159,3 @@ PUBLIC inline
 char const *
 Irq_chip_msi::chip_type() const override
 { return "MSI"; }
-

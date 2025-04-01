@@ -31,7 +31,6 @@ protected:
   Ram_quota *_q;
 };
 
-
 /**
  * IRQ kernel object to send IPC messages to a receiving thread.
  *

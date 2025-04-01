@@ -1,7 +1,6 @@
 INTERFACE:
 
 #include <cxx/bitfield>
-
 #include "atomic.h"
 #include "types.h"
 #include "spin_lock.h"
@@ -163,9 +162,7 @@ public:
   virtual ~Irq_chip_icu() = 0;
 };
 
-
 class Kobject_iface;
-
 
 /**
  * Base class for all kinds of IRQ consuming objects.
@@ -175,8 +172,8 @@ class Irq_base
   friend class Irq_chip;
 
 public:
-
   typedef void (*Hit_func)(Irq_base *, Upstream_irq const *);
+
   enum Flags : Mword
   {
     F_enabled = 1, // This flags needs to be set atomically.
@@ -239,6 +236,7 @@ public:
           return true;
       }
     while (!cas(&_flags, old, old & ~F_enabled));
+
     return false;
   }
 
@@ -258,6 +256,7 @@ public:
           return false;
       }
     while (!cas(&_flags, old, old | F_enabled));
+
     return true;
   }
 
@@ -276,14 +275,11 @@ protected:
   template<typename T>
   static void FIASCO_FLATTEN
   handler_wrapper(Irq_base *irq, Upstream_irq const *ui)
-  { nonull_static_cast<T*>(irq)->handle(ui); }
+  { nonull_static_cast<T *>(irq)->handle(ui); }
 
 public:
   static Global_data<Irq_base *(*)(Kobject_iface *)> dcast;
 };
-
-
-
 
 //----------------------------------------------------------------------------
 INTERFACE [debug]:
@@ -293,7 +289,6 @@ EXTENSION class Irq_chip
 public:
   virtual char const *chip_type() const = 0;
 };
-
 
 //--------------------------------------------------------------------------
 IMPLEMENTATION[debug]:
@@ -384,7 +379,6 @@ Irq_chip::unbind(Irq_base *irq)
   Irq_chip_soft::sw_chip->bind(irq, 0, true);
 }
 
-
 /**
  * \param CHIP must be the dynamic type of the object.
  */
@@ -395,7 +389,7 @@ Irq_chip::handle_irq(Mword pin, Upstream_irq const *ui)
 {
   // call the irq function of the chip avoiding the
   // virtual function call overhead.
-  Irq_base *irq = nonull_static_cast<CHIP*>(this)->CHIP::irq(pin);
+  Irq_base *irq = nonull_static_cast<CHIP *>(this)->CHIP::irq(pin);
   irq->log();
   irq->hit(ui);
 }
@@ -405,17 +399,18 @@ template<typename CHIP>
 void
 Irq_chip::handle_multi_pending(Upstream_irq const *ui)
 {
-  while (Mword pend = nonull_static_cast<CHIP*>(this)->CHIP::pending())
+  while (Mword pend = nonull_static_cast<CHIP *>(this)->CHIP::pending())
     {
-      for (unsigned i = 0; i < sizeof(Mword)*8; ++i, pend >>= 1)
-	if (pend & 1)
-	  {
-	    handle_irq<CHIP>(i, ui);
-	    break; // read the pending ints again
-	  }
+      for (unsigned i = 0; i < sizeof(Mword) * 8; ++i, pend >>= 1)
+        {
+          if (pend & 1)
+            {
+              handle_irq<CHIP>(i, ui);
+              break; // Read the pending ints again
+            }
+        }
     }
 }
-
 
 PUBLIC inline NEEDS["lock_guard.h", "cpu_lock.h"]
 void
@@ -424,7 +419,6 @@ Irq_base::destroy()
   auto g = lock_guard(_irq_lock);
   unbind();
 }
-
 
 // --------------------------------------------------------------------------
 IMPLEMENTATION [!debug]:
@@ -446,15 +440,14 @@ public:
     Mword pin;
     void print(String_buffer *buf) const;
   };
+
   static_assert(sizeof(Irq_log) <= Tb_entry::Tb_entry_size);
 };
-
 
 // --------------------------------------------------------------------------
 IMPLEMENTATION [debug]:
 
 #include <cstdio>
-
 #include "logdefs.h"
 #include "kobject_dbg.h"
 #include "string_buffer.h"
@@ -465,7 +458,7 @@ Irq_base::Irq_log::print(String_buffer *buf) const
 {
   Kobject_dbg::Const_iterator irq = Kobject_dbg::pointer_to_obj(obj);
 
-  buf->printf("0x%lx/%lu @ chip %s(%p) ", pin, pin, chip->chip_type(),
+  buf->printf("0x%lx/%lu @ chip %s (%p) ", pin, pin, chip->chip_type(),
               static_cast<void *>(chip));
 
   if (irq != Kobject_dbg::end())
@@ -485,4 +478,3 @@ Irq_base::log()
       l->pin = pin();
   );
 }
-

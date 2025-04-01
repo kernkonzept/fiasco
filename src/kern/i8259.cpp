@@ -117,7 +117,6 @@ private:
                       | I8086_EMM_MOD,
   };
 
-
   Unsigned8 read_ocw(Io_address base)
   { return IO::in8(base + OFF_OCW); }
 
@@ -132,7 +131,7 @@ private:
 
   void iodelay() const { IO::iodelay(); }
 
-  // power-management hooks
+  // Power-management hooks
   void pm_on_suspend(Cpu_number) override
   { _pm_saved_state = disable_all_save(); }
 
@@ -143,7 +142,7 @@ private:
   Spin_lock<> _lock;
   bool _sfn = false;
 
-  // power-management state
+  // Power-management state
   Unsigned16 _pm_saved_state;
 };
 
@@ -152,6 +151,7 @@ class Irq_chip_i8259_gen : public Irq_chip_i8259<IO>
 {
 public:
   typedef typename Irq_chip_i8259<IO>::Io_address Io_address;
+
   Irq_chip_i8259_gen(Io_address master, Io_address slave)
   : Irq_chip_i8259<IO>(master, slave)
   {
@@ -205,7 +205,6 @@ private:
   Irq_base *_irqs[16];
 };
 
-
 // --------------------------------------------------------
 IMPLEMENTATION [i8259]:
 
@@ -249,7 +248,8 @@ Irq_chip_i8259<IO>::init(Unsigned8 vect_base,
                          bool use_sfn = false,
                          bool high_prio_ir8 = false)
 {
-  auto g = lock_guard(_lock);
+  auto guard = lock_guard(_lock);
+
   _sfn = use_sfn;
 
   // disable all IRQs
@@ -304,7 +304,7 @@ PUBLIC template<typename IO>
 void
 Irq_chip_i8259<IO>::mask(Mword pin) override
 {
-  auto g = lock_guard(_lock);
+  auto guard = lock_guard(_lock);
   _mask(pin);
 }
 
@@ -312,7 +312,8 @@ PUBLIC template<typename IO>
 void
 Irq_chip_i8259<IO>::unmask(Mword pin) override
 {
-  auto g = lock_guard(_lock);
+  auto guard = lock_guard(_lock);
+
   if (pin < 8)
     write_ocw(read_ocw(_master) & ~(1U << pin), _master);
   else
@@ -330,9 +331,10 @@ Irq_chip_i8259<IO>::_ack(Mword pin)
         {
           write_icw(OCW_TEMPLATE | READ_NEXT_RD | READ_IS_ONRD, _slave);
           if (read_icw(_slave))
-            return; // still active IRQs at the slave, don't EOI master
+            return; // Still active IRQs at the slave, don't EOI master
         }
     }
+
   write_icw(NON_SPEC_EOI, _master);
 }
 
@@ -340,7 +342,7 @@ PUBLIC template<typename IO>
 void
 Irq_chip_i8259<IO>::ack(Mword pin) override
 {
-  auto g = lock_guard(_lock);
+  auto guard = lock_guard(_lock);
   _ack(pin);
 }
 
@@ -348,7 +350,7 @@ PUBLIC template<typename IO>
 void
 Irq_chip_i8259<IO>::mask_and_ack(Mword pin) override
 {
-  auto g = lock_guard(_lock);
+  auto guard = lock_guard(_lock);
   _mask(pin);
   _ack(pin);
 }
@@ -360,4 +362,3 @@ PUBLIC template<typename IO>
 char const *
 Irq_chip_i8259<IO>::chip_type() const override
 { return "i8259"; }
-

@@ -38,7 +38,7 @@ static Gt64120 *syscon;
 static void i8259_gt64120_hit(Irq_base *_self, Upstream_irq const *u)
 {
   Cascade_irq *self = nonull_static_cast<Cascade_irq *>(_self);
-  I8259 *i = nonull_static_cast<I8259*>(self->child());
+  I8259 *i = nonull_static_cast<I8259 *>(self->child());
   Upstream_irq ui(self, u);
   unsigned irq = syscon->gt_regs()[Gt64120::R::Pci0_iack] & 0x0f;
   i->handle_irq<I8259>(irq, &ui);
