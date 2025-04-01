@@ -29,7 +29,7 @@ public:
 
   unsigned nr_irqs() const { return NIRQS; }
 
-  Irq_base *icu_get_irq(unsigned pin) const
+  Irq_base *icu_irq(unsigned pin) const
   {
     if (pin < NIRQS)
       return _irqs[pin];
@@ -143,7 +143,7 @@ template<typename REAL_ICU>
 void
 Icu_h<REAL_ICU>::icu_mask_irq(bool mask, unsigned irqnum)
 {
-  Irq_base *i = this_icu()->icu_get_irq(irqnum);
+  Irq_base *i = this_icu()->icu_irq(irqnum);
 
   if (EXPECT_FALSE(!i))
     return;
@@ -173,7 +173,7 @@ template<typename REAL_ICU>
 L4_msg_tag
 Icu_h<REAL_ICU>::op_icu_unbind(unsigned irqnum, Ko::Cap<Irq> const &)
 {
-  Irq_base *irq = this_icu()->icu_get_irq(irqnum);
+  Irq_base *irq = this_icu()->icu_irq(irqnum);
 
   if (irq)
     irq->detach();

@@ -30,7 +30,7 @@ Icu::operator delete (void *)
 
 PUBLIC inline NEEDS["irq_mgr.h"]
 Irq_base *
-Icu::icu_get_irq(unsigned irqnum)
+Icu::icu_irq(unsigned irqnum)
 {
   return Irq_mgr::mgr->irq(irqnum);
 }

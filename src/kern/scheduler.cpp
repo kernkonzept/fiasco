@@ -155,7 +155,7 @@ PUBLIC inline
 void
 Scheduler::trigger_hotplug_event()
 {
-  if (auto i = icu_get_irq(0))
+  if (auto i = icu_irq(0))
     i->hit(nullptr);
 }
 
