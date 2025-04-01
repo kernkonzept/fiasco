@@ -252,11 +252,4 @@ Idt::set_vectors_run()
     : reinterpret_cast<Address>(entry_int_timer);     // non-debugging
 
   set_entry(Config::scheduler_irq_vector, func, false);
-#if 0
-  if (!Irq_chip::hw_chip->is_free(0x7))
-    Irq_chip::hw_chip->reset(0x07);
-
-  if (!Irq_chip::hw_chip->is_free(0xf))
-    Irq_chip::hw_chip->reset(0x0f);
-#endif
 }

@@ -9,8 +9,6 @@ IMPLEMENTATION[(ia32 || amd64) && rtc_timer]:
 
 #include <cstdio>
 
-//IMPLEMENT inline int Timer::irq() { return 8; }
-
 PUBLIC static inline
 unsigned Timer::irq() { return 8; }
 
