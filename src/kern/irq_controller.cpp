@@ -67,7 +67,7 @@ PUBLIC inline NEEDS["irq_mgr.h"]
 int
 Icu::icu_msi_info(Mword msi, Unsigned64 source, Irq_mgr::Msi_info *out)
 {
-  return Irq_mgr::mgr->msg(msi, source, out);
+  return Irq_mgr::mgr->msi_info(msi, source, out);
 }
 
 PUBLIC inline

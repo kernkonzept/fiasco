@@ -52,6 +52,11 @@ public:
     { return chip->irq(pin); }
   };
 
+  enum Gsi_mask : Mword
+  {
+    Msi_bit = 0x80000000U
+  };
+
   /// Map legacy (ISA) pin number to global system interrupt number.
   virtual Mword legacy_override(Mword isa_pin) { return isa_pin; }
 
@@ -85,10 +90,28 @@ public:
    */
   virtual unsigned nr_msis() const = 0;
 
-  /** Get the message to use for a given MSI.
-   * \pre The IRQ pin needs to be already attached before using this function.
+  /**
+   * Get the message to use for a given MSI.
+   *
+   * \pre The global system interrupt number needs to be already attached
+   *      before using this function.
+   *
+   * \param      msi      Global system interrupt representing an MSI.
+   * \param      source   Optional platform-specific identifier of the
+   *                      interrupt source.
+   * \param[out] info     Message signaling information to be used by the
+   *                      interrupt source (i.e. message address and message
+   *                      payload).
+   *
+   * \retval 0                Message signaling information returned
+   *                          succesfully.
+   * \retval -L4_err::ENosys  No MSIs supported.
+   * \retval -L4_err::ERange  MSIs supported, but the given global system
+   *                          interrupt is not an MSI.
    */
-  virtual int msg(Mword /* msi */, Unsigned64, Msi_info *) const
+  virtual int msi_info([[maybe_unused]] Mword msi,
+                       [[maybe_unused]] Unsigned64 source,
+                       [[maybe_unused]] Msi_info *info) const
   { return -L4_err::ENosys; }
 
   /// The pointer to the single global instance of the actual IRQ manager.

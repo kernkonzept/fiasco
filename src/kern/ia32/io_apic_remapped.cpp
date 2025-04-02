@@ -110,7 +110,7 @@ Irq_chip_rmsi::detach(Irq_base *irq) override
 
 PUBLIC
 int
-Irq_chip_rmsi::msg(Mword pin, Unsigned64 src, Irq_mgr::Msi_info *inf)
+Irq_chip_rmsi::msi_info(Mword pin, Unsigned64 src, Irq_mgr::Msi_info *inf)
 {
   if (pin >= _pins)
     return -L4_err::ERange;
@@ -177,9 +177,9 @@ Irq_chip_rmsi::set_cpu(Mword pin, Cpu_number cpu) override
     // not yet been invalidated, the old CPU will forward the IRQ to the new
     // CPU. The case that a cache entry points to a CPU that went offline,
     // resulting in IRQs being lost, is not relevant because we always assign a
-    // valid target CPU to the entry in msg() and Fiasco does not yet implement
-    // a mechanism to move IRQs to another online CPU before taking a CPU
-    // offline.
+    // valid target CPU to the entry in msi_info() and Fiasco does not yet
+    // implement a mechanism to move IRQs to another online CPU before taking
+    // a CPU offline.
     inv_iec(vect);
 }
 
@@ -269,19 +269,19 @@ Irq_mgr_rmsi::nr_msis() const override
 
 PUBLIC
 int
-Irq_mgr_rmsi::msg(Mword irq, Unsigned64 src, Msi_info *inf) const override
+Irq_mgr_rmsi::msi_info(Mword msi, Unsigned64 src, Msi_info *info) const override
 {
-  if (irq & 0x80000000)
-    return _chip.msg(irq & ~0x80000000, src, inf);
-  else
-    return -L4_err::ERange;
+  if (msi & Msi_bit)
+    return _chip.msi_info(msi & ~Msi_bit, src, info);
+
+  return -L4_err::ERange;
 }
 
 PUBLIC
 Mword
 Irq_mgr_rmsi::legacy_override(Mword isa_pin) override
 {
-  if (isa_pin & 0x80000000)
+  if (isa_pin & Msi_bit)
     return isa_pin;
 
   return Io_apic_mgr::legacy_override(isa_pin);

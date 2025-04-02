@@ -47,15 +47,15 @@ Irq_chip_msi::detach(Irq_base *irq) override
 
 PUBLIC
 int
-Irq_chip_msi::msg(Mword pin, Unsigned64, Irq_mgr::Msi_info *inf)
+Irq_chip_msi::msi_info(Mword pin, Unsigned64, Irq_mgr::Msi_info *info)
 {
   // the requester ID does not matter, we cannot verify without IRQ remapping
   if (pin >= _pins)
     return -L4_err::ERange;
 
-  inf->data = vector(pin) | (1 << 14);
+  info->data = vector(pin) | (1 << 14);
   Unsigned32 aid{cxx::int_value<Cpu_phys_id>(Apic::apic.current()->cpu_id())};
-  inf->addr = 0xfee00000 | (aid << 12);
+  info->addr = 0xfee00000 | (aid << 12);
 
   return 0;
 }
@@ -102,8 +102,8 @@ PUBLIC
 Irq_mgr::Chip_pin
 Irq_mgr_msi::chip_pin(Mword gsi) const override
 {
-  if (gsi & 0x80000000)
-    return Chip_pin(&_chip, gsi & ~0x80000000);
+  if (gsi & Msi_bit)
+    return Chip_pin(&_chip, gsi & ~Msi_bit);
 
   return _orig->chip_pin(gsi);
 }
@@ -120,12 +120,12 @@ Irq_mgr_msi::nr_msis() const override
 
 PUBLIC
 int
-Irq_mgr_msi::msg(Mword irq, Unsigned64 src, Msi_info *inf) const override
+Irq_mgr_msi::msi_info(Mword msi, Unsigned64 src, Msi_info *info) const override
 {
-  if (irq & 0x80000000)
-    return _chip.msg(irq & ~0x80000000, src, inf);
-  else
-    return -L4_err::ERange;
+  if (msi & Msi_bit)
+    return _chip.msi_info(msi & ~Msi_bit, src, info);
+
+  return -L4_err::ERange;
 }
 
 PUBLIC

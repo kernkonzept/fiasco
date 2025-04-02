@@ -257,7 +257,7 @@ Gic_msi::reserve(Mword pin) override
 
 PUBLIC
 int
-Gic_msi::msg(Mword pin, Unsigned64 src, Irq_mgr::Msi_info *inf)
+Gic_msi::msi_info(Mword pin, Unsigned64 src, Irq_mgr::Msi_info *info)
 {
   Msi_src msi_src(src);
   Gic_its *its = _lookup_its(msi_src.its_num());
@@ -265,7 +265,7 @@ Gic_msi::msg(Mword pin, Unsigned64 src, Irq_mgr::Msi_info *inf)
     return -L4_err::ERange;
 
   int err = 0;
-  if (!with_lpi(pin, &Lpi::bind_to_device, its, msi_src.device_id(), inf, err))
+  if (!with_lpi(pin, &Lpi::bind_to_device, its, msi_src.device_id(), info, err))
     err = -L4_err::ERange;
 
   return err;

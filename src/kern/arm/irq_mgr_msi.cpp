@@ -15,7 +15,6 @@ INTERFACE[arm_gic_msi]:
 EXTENSION class Irq_mgr_msi
 {
 private:
-  enum { Msi_flag = 0x80000000 };
   MSI_CHIP *_msi_chip;
 };
 
@@ -39,8 +38,8 @@ PUBLIC template<typename CHIP, typename MSI_CHIP>
 Irq_mgr::Chip_pin
 Irq_mgr_msi<CHIP, MSI_CHIP>::chip_pin(Mword gsi) const override
 {
-  if (gsi & Msi_flag)
-    return _msi_chip ? Chip_pin(_msi_chip, gsi & ~Msi_flag) : Chip_pin();
+  if (gsi & Msi_bit)
+    return _msi_chip ? Chip_pin(_msi_chip, gsi & ~Msi_bit) : Chip_pin();
 
   return Chip_pin(_chip, gsi);
 }
@@ -52,12 +51,13 @@ Irq_mgr_msi<CHIP, MSI_CHIP>::nr_msis() const override
 
 PUBLIC template<typename CHIP, typename MSI_CHIP>
 int
-Irq_mgr_msi<CHIP, MSI_CHIP>::msg(Mword irq, Unsigned64 src, Msi_info *inf) const override
+Irq_mgr_msi<CHIP, MSI_CHIP>::msi_info(Mword msi, Unsigned64 src,
+                                      Msi_info *info) const override
 {
-  if ((irq & Msi_flag) && _msi_chip)
-    return _msi_chip->MSI_CHIP::msg(irq & ~Msi_flag, src, inf);
-  else
-    return -L4_err::ERange;
+  if ((msi & Msi_bit) && _msi_chip)
+    return _msi_chip->MSI_CHIP::msi_info(msi & ~Msi_bit, src, info);
+
+  return -L4_err::ERange;
 }
 
 //-------------------------------------------------------------------
@@ -80,5 +80,5 @@ Irq_mgr_msi<CHIP, MSI_CHIP>::nr_msis() const override
 
 PUBLIC template<typename CHIP, typename MSI_CHIP>
 int
-Irq_mgr_msi<CHIP, MSI_CHIP>::msg(Mword, Unsigned64, Msi_info *) const override
+Irq_mgr_msi<CHIP, MSI_CHIP>::msi_info(Mword, Unsigned64, Msi_info *) const override
 { return -L4_err::ENosys; }
