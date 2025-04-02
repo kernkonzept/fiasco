@@ -79,10 +79,15 @@ public:
 
 private:
   Mword _irq_id;
-  // Must only be used for sending async DRQs (no answer), because for regular
-  // DRQs the DRQ reply is sent to Drq::context(), which assumes that the Drq
-  // object is member of a Context.
+
+  /**
+   * Must only be used for sending async DRQs (no answer), because for regular
+   * DRQs the DRQ reply is sent to Drq::context(), which assumes that the Drq
+   * object is member of a Context.
+   */
   Context::Drq _drq;
+
+  void migrate(Cpu_number cpu);
 };
 
 //-----------------------------------------------------------------------------
@@ -379,8 +384,24 @@ Irq_sender::set_irq_thread(Irq_thread target, Mword irq_id)
     return;
 
   target->inc_ref();
-  if (Cpu::online(target->home_cpu()))
-    _chip->set_cpu(pin(), target->home_cpu());
+  migrate(target->home_cpu());
+}
+
+/**
+ * Migrate to the given CPU.
+ *
+ * Set the CPU target of the interrupt pin to which this IRQ sender is attached.
+ *
+ * \param cpu  Target CPU to migrate to.
+ */
+IMPLEMENT_DEFAULT inline
+void
+Irq_sender::migrate(Cpu_number cpu)
+{
+  if (!Cpu::online(cpu))
+    return;
+
+  _chip->set_cpu(pin(), cpu);
 }
 
 /**
@@ -827,8 +848,8 @@ PRIVATE static
 Context::Drq::Result
 Irq_sender::handle_remote_hit(Context::Drq *, Context *target, void *arg)
 {
-  Irq_sender *irq = static_cast<Irq_sender*>(arg);
-  irq->set_cpu(current_cpu());
+  Irq_sender *irq = static_cast<Irq_sender *>(arg);
+  irq->migrate(current_cpu());
 
   auto t = access_once(&irq->_irq_thread);
   if (EXPECT_TRUE(t == target))

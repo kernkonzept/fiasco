@@ -124,6 +124,7 @@ dirq_IMPL		:= dirq-ia32
 entry_frame_IMPL	:= entry_frame entry_frame-amd64
 fpu_IMPL		:= fpu fpu-ia32
 ipi_IMPL		:= ipi ipi-ia32
+irq_IMPL		:= irq irq-ia32
 kdb_ke_IMPL		+= kdb_ke-ia32
 kernel_thread_IMPL	:= kernel_thread kernel_thread-ia32
 kernel_uart_IMPL	:= kernel_uart kernel_uart-libuart
