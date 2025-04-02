@@ -104,11 +104,16 @@ public:
   virtual bool is_edge_triggered(Mword pin) const = 0;
 
   /**
-   * Set the target CPU.
-   * \param pin the pin to configure
-   * \param cpu the logical CPU number.
+   * Set the target CPU of an interrupt pin.
+   *
+   * \param pin  Interrupt pin to configure.
+   * \param cpu  Target logical CPU.
+   *
+   * \retval true   Target CPU set successfully.
+   * \retval false  Target CPU not set (failure or unsupported).
    */
-  virtual void set_cpu(Mword pin, Cpu_number cpu) = 0;
+  virtual bool set_cpu(Mword pin, Cpu_number cpu) = 0;
+
   virtual void detach(Irq_base *irq);
   virtual ~Irq_chip() = 0;
 };
@@ -124,9 +129,9 @@ public:
   void mask_and_ack(Mword) override {}
   void ack(Mword) override {}
 
-  void set_cpu(Mword, Cpu_number) override {}
   int set_mode(Mword, Mode) override { return 0; }
   bool is_edge_triggered(Mword) const override { return true; }
+  bool set_cpu(Mword, Cpu_number) override { return false; }
 
   static Global_data<Irq_chip_soft> sw_chip;
 };
@@ -214,7 +219,7 @@ public:
 
   void ack() { _chip->ack(_pin); }
 
-  void set_cpu(Cpu_number cpu) { _chip->set_cpu(_pin, cpu); }
+  bool set_cpu(Cpu_number cpu) { return _chip->set_cpu(_pin, cpu); }
 
   void detach() { _chip->detach(this); }
 

@@ -81,7 +81,8 @@ public:
   void unmask(Mword pin) override
   { Io::clear<Mword>(1 << (pin & 7), offs(MASK, pin)); }
 
-  void set_cpu(Mword, Cpu_number) override {}
+  bool set_cpu(Mword, Cpu_number) override { return false; }
+
   int set_mode(Mword pin, Mode m) override
   {
     unsigned v;
@@ -152,7 +153,8 @@ public:
 
   void unmask(Mword pin) override
   { modify<Mword>(0, 1 << (pin & 7), MASK + offs(pin)); }
-  void set_cpu(Mword, Cpu_number) override {}
+
+  bool set_cpu(Mword, Cpu_number) override { return false; }
 
   int set_mode(Mword pin, Mode m) override
   {
@@ -254,7 +256,7 @@ public:
 
   void ack(Mword) override {}
 
-  void set_cpu(Mword, Cpu_number) override {}
+  bool set_cpu(Mword, Cpu_number) override { return false; }
 
   int set_mode(Mword, Mode) override
   { return 0; }
@@ -539,16 +541,17 @@ Mgr_int::Mgr_int()
 
 
 PUBLIC
-void
+bool
 Mgr_int::set_cpu(Mword gsi, Cpu_number cpu) const override
 {
   // this handles only the MCT_L[01] timers
   if (   gsi == 379  // MCT_L1: Combiner 35:3
       || gsi == 504) // MCT_L0: Combiner 51:0
-    _gic->set_cpu(32 + (gsi - 96) / 8, cpu);
-  else
-    WARNX(Warning, "IRQ%ld: ignoring CPU setting (%d).\n",
-          gsi, cxx::int_value<Cpu_number>(cpu));
+    return _gic->set_cpu(32 + (gsi - 96) / 8, cpu);
+
+  WARNX(Warning, "IRQ%ld: ignoring CPU setting (%d).\n", gsi,
+        cxx::int_value<Cpu_number>(cpu));
+  return false;
 }
 
 PUBLIC static FIASCO_INIT
@@ -721,14 +724,15 @@ Mgr_ext::Mgr_ext()
  * \pre must run on the CPU given in \a cpu.
  */
 PUBLIC
-void
+bool
 Mgr_ext::set_cpu(Mword gsi, Cpu_number cpu) const override
 {
   if (!Platform::is_4412() && gsi == 80)  // MCT_L1
-    _gic.cpu(cpu)->set_cpu(80, cpu);
-  else
-    WARNX(Warning, "IRQ%ld: ignoring CPU setting (%d).\n", gsi,
-          cxx::int_value<Cpu_number>(cpu));
+    return _gic.cpu(cpu)->set_cpu(80, cpu);
+
+  WARNX(Warning, "IRQ%ld: ignoring CPU setting (%d).\n", gsi,
+        cxx::int_value<Cpu_number>(cpu));
+  return false;
 }
 
 PUBLIC static
@@ -932,7 +936,7 @@ Mgr::Mgr()
  * \pre must run on the CPU given in \a cpu.
  */
 PUBLIC
-void
+bool
 Mgr::set_cpu(Mword gsi, Cpu_number cpu) const override
 {
   // this handles only the MCT_L[0123] timers
@@ -940,10 +944,11 @@ Mgr::set_cpu(Mword gsi, Cpu_number cpu) const override
       || gsi == 153   // MCT_L1
       || gsi == 154   // MCT_L2
       || gsi == 155)  // MCT_L3
-    Pic::gic->set_cpu(gsi, cpu);
-  else
-    WARNX(Warning, "IRQ%ld: ignoring CPU setting (%d).\n",
-	  gsi, cxx::int_value<Cpu_number>(cpu));
+    return Pic::gic->set_cpu(gsi, cpu);
+
+  WARNX(Warning, "IRQ%ld: ignoring CPU setting (%d).\n", gsi,
+        cxx::int_value<Cpu_number>(cpu));
+  return false;
 }
 
 PUBLIC static FIASCO_INIT

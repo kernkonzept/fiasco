@@ -59,7 +59,7 @@ private:
 public:
   int set_mode(Mword, Mode) override { return 0; }
   bool is_edge_triggered(Mword) const override { return false; }
-  void set_cpu(Mword, Cpu_number) override {}
+  bool set_cpu(Mword, Cpu_number) override { return false; }
 };
 
 PUBLIC inline

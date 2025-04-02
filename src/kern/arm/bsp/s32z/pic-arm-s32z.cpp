@@ -291,10 +291,11 @@ Mru::is_edge_triggered(Mword /*pin*/) const override
 }
 
 PUBLIC
-void
-Mru::set_cpu(Mword /*pin*/, Cpu_number /*cpu*/) override
+bool
+Mru::set_cpu(Mword, Cpu_number) override
 {
   // single core / AMP platform
+  return false;
 }
 
 // ------------------------------------------------------------------------

@@ -72,7 +72,7 @@ private:
 public:
   int set_mode(Mword, Mode) { return 0; }
   bool is_edge_triggered(Mword) const { return false; }
-  void set_cpu(Mword, Cpu_number) {}
+  bool set_cpu(Mword, Cpu_number) { return false; }
 };
 
 //------------------------------------------------------------------------------

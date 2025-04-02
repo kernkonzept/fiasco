@@ -212,7 +212,7 @@ Irq_chip_sifive::is_edge_triggered(Mword) const override
 { return false; }
 
 PUBLIC
-void
+bool
 Irq_chip_sifive::set_cpu(Mword pin, Cpu_number cpu) override
 {
   auto guard = lock_guard(_lock);
@@ -227,6 +227,8 @@ Irq_chip_sifive::set_cpu(Mword pin, Cpu_number cpu) override
       else
         targets.cpu(n).mask(pin);
     }
+
+  return true;
 }
 
 //---------------------------------------------------------------------------

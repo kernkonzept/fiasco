@@ -153,19 +153,20 @@ Irq_chip_rmsi::is_edge_triggered(Mword) const override
 { return true; }
 
 PUBLIC
-void
+bool
 Irq_chip_rmsi::set_cpu(Mword pin, Cpu_number cpu) override
 {
   unsigned vect = vector(pin);
   if (!vect)
-    return;
+    return false;
 
   Intel::Io_mmu::Irte volatile &irte = _irt[vect];
   Intel::Io_mmu::Irte e = irte;
 
   Cpu_phys_id target = Apic::apic.cpu(cpu)->cpu_id();
   if (target == e.get_dst())
-    return;
+    return false;
+
   e.set_dst(target);
 
   irte = e;
@@ -181,6 +182,8 @@ Irq_chip_rmsi::set_cpu(Mword pin, Cpu_number cpu) override
     // implement a mechanism to move IRQs to another online CPU before taking
     // a CPU offline.
     inv_iec(vect);
+
+  return true;
 }
 
 PUBLIC
@@ -353,18 +356,19 @@ Io_apic_remapped::set_mode(Mword pin, Mode mode) override
 }
 
 PUBLIC
-void
+bool
 Io_apic_remapped::set_cpu(Mword pin, Cpu_number cpu) override
 {
   unsigned vect = vector(pin);
   if (!vect)
-    return;
+    return false;
 
   Intel::Io_mmu::Irte e = _iommu->get_irq_mapping(vect);
   Cpu_phys_id target = ::Apic::apic.cpu(cpu)->cpu_id();
 
   if (e.get_dst() == target)
-    return;
+    return false;
+
   e.set_dst(target);
 
   // There is no need to wait for the IRTE invalidation to complete. If an IRQ
@@ -375,6 +379,8 @@ Io_apic_remapped::set_cpu(Mword pin, Cpu_number cpu) override
   // CPU to the entry in alloc() and Fiasco does not yet implement a mechanism
   // to move IRQs to another online CPU before taking a CPU offline.
   _iommu->set_irq_mapping(e, vect, Intel::Io_mmu::Flush_op::Flush);
+
+  return true;
 }
 
 PUBLIC static FIASCO_INIT

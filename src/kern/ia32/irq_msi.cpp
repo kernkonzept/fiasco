@@ -71,9 +71,9 @@ Irq_chip_msi::is_edge_triggered(Mword) const override
 { return true; }
 
 PUBLIC
-void
+bool
 Irq_chip_msi::set_cpu(Mword, Cpu_number) override
-{}
+{ return false; }
 
 PUBLIC
 void

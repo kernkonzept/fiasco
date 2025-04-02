@@ -221,9 +221,12 @@ Gic_msi::unmask(Mword pin) override
 { with_lpi(pin, &Lpi::unmask); }
 
 PUBLIC
-void
+bool
 Gic_msi::set_cpu(Mword pin, Cpu_number cpu) override
-{ with_lpi(pin, &Lpi::set_cpu, cpu); }
+{
+  with_lpi(pin, &Lpi::set_cpu, cpu);
+  return true;
+}
 
 PUBLIC
 void

@@ -89,7 +89,7 @@ class S3c_chip : public Irq_chip_gen, Mmio_register_block
 public:
   int set_mode(Mword, Mode) override { return 0; }
   bool is_edge_triggered(Mword) const override { return false; }
-  void set_cpu(Mword, Cpu_number) override {}
+  bool set_cpu(Mword, Cpu_number) override { return false; }
 };
 
 PUBLIC

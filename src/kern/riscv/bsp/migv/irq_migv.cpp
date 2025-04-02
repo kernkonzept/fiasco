@@ -221,12 +221,13 @@ Irq_chip_migv::is_edge_triggered(Mword pin) const override
 }
 
 PUBLIC
-void
+bool
 Irq_chip_migv::set_cpu(Mword pin, Cpu_number cpu) override
 {
   // XXX Maybe also the invalid CPU is possible here?
   assert(cpu == Cpu_number::boot_cpu());
   unmask(pin);
+  return true;
 }
 
 //---------------------------------------------------------------------------

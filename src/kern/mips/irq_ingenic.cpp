@@ -86,9 +86,9 @@ Irq_chip_ingenic::is_edge_triggered(Mword) const override
 { return false; }
 
 PUBLIC inline
-void
+bool
 Irq_chip_ingenic::set_cpu(Mword, Cpu_number) override
-{}
+{ return false; }
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [debug]:

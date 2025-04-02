@@ -264,7 +264,7 @@ IMPLEMENTATION [mp]:
 #include "processor.h"
 
 PUBLIC
-void
+bool
 Gic::set_cpu(Mword pin, Cpu_number cpu) override
 {
   auto pcpu = Cpu::cpus.cpu(cpu).phys_id();
@@ -275,6 +275,7 @@ Gic::set_cpu(Mword pin, Cpu_number cpu) override
   assert(cxx::int_value<Cpu_phys_id>(pcpu) < 32);
 
   _r[sh_map_core(pin, pcpu)] = sh_map_core_bit(pcpu);
+  return true;
 }
 
 PUBLIC void
@@ -339,9 +340,9 @@ IMPLEMENTATION [!mp]:
 PRIVATE inline NOEXPORT void Gic::setup_ipis() {}
 
 PUBLIC inline
-void
+bool
 Gic::set_cpu(Mword, Cpu_number) override
-{}
+{ return false; }
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [debug]:

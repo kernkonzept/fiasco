@@ -195,10 +195,11 @@ Gic_v3::cpu_local_init(Cpu_number cpu)
 }
 
 PUBLIC
-void
+bool
 Gic_v3::set_cpu(Mword pin, Cpu_number cpu) override
 {
   _dist.set_cpu(pin, _dist.cpu_to_irouter_entry(cpu), Version());
+  return true;
 }
 
 PUBLIC

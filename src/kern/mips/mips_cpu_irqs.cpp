@@ -106,9 +106,10 @@ public:
   bool is_edge_triggered(Mword) const override
   { return true; }
 
-  void set_cpu(Mword, Cpu_number) override
+  bool set_cpu(Mword, Cpu_number) override
   {
     // All our IRQs are CPU-local IRQs, so nothing to do
+    return false;
   }
 
   void unmask(Mword pin) override

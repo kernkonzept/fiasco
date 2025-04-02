@@ -186,12 +186,12 @@ Irq_mgr::gsi_irq(Mword gsi) const
 }
 
 PUBLIC inline
-void
+bool
 Irq_mgr::gsi_set_cpu(Mword gsi, Cpu_number cpu) const
 {
   Chip_pin cp = chip_pin(gsi);
   if (!cp.chip)
-    return;
+    return false;
 
-  cp.chip->set_cpu(cp.pin, cpu);
+  return cp.chip->set_cpu(cp.pin, cpu);
 }

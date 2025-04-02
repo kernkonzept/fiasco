@@ -524,10 +524,11 @@ Io_apic::unmask(Mword pin) override
 }
 
 PUBLIC
-void
+bool
 Io_apic::set_cpu(Mword pin, Cpu_number cpu) override
 {
   set_dest(pin, ::Apic::apic.cpu(cpu)->apic_id());
+  return true;
 }
 
 PROTECTED static inline

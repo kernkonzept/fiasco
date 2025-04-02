@@ -73,10 +73,11 @@ Gic_v2::cpu_local_init(Cpu_number cpu)
 }
 
 PUBLIC inline
-void
+bool
 Gic_v2::set_cpu(Mword pin, Cpu_number cpu) override
 {
   _dist.set_cpu(pin, _sgi_template[cpu] >> 16, Version());
+  return true;
 }
 
 PUBLIC
