@@ -142,7 +142,8 @@ private:
   void pm_on_resume(Cpu_number) override
   { restore_all(_pm_saved_state); }
 
-  Io_address _master, _slave;
+  Io_address _master;
+  Io_address _slave;
   Spin_lock<> _lock;
   bool _sfn = false;
 
@@ -256,42 +257,64 @@ Irq_chip_i8259<IO>::init(Unsigned8 vect_base,
 
   _sfn = use_sfn;
 
-  // disable all IRQs
+  // Disable all IRQs.
   write_ocw(0xff, _master);
   write_ocw(0xff, _slave);
 
-  write_icw(PICM_ICW1, _master); iodelay();
-  write_ocw(vect_base, _master); iodelay();
-  write_ocw((1U << 2), _master); iodelay(); // cascade at IR2
+  write_icw(PICM_ICW1, _master);
+  iodelay();
+
+  write_ocw(vect_base, _master);
+  iodelay();
+
+  // Cascade at IR2.
+  write_ocw((1U << 2), _master);
+  iodelay();
+
   Unsigned8 icw4 = PICM_ICW4;
   if (use_sfn)
     icw4 |= SNF_MODE_ENA;
-  write_ocw(icw4, _master); iodelay();
+  write_ocw(icw4, _master);
+  iodelay();
 
-  write_icw(PICS_ICW1, _slave); iodelay();
-  write_ocw(vect_base + 8, _slave); iodelay();
-  write_ocw(PICS_ICW3, _slave); iodelay();
-  write_ocw(icw4, _slave); iodelay();
+  write_icw(PICS_ICW1, _slave);
+  iodelay();
+
+  write_ocw(vect_base + 8, _slave);
+  iodelay();
+
+  write_ocw(PICS_ICW3, _slave);
+  iodelay();
+
+  write_ocw(icw4, _slave);
+  iodelay();
 
   if (use_sfn && high_prio_ir8)
     {
-      // setting specific rotation (specific priority) 
-      // -- see Intel 8259A reference manual
-      // irq 1 on master hast lowest prio
-      // => irq 2 (cascade) = irqs 8..15 have highest prio
-      write_icw(SET_PRIORITY | 1, _master); iodelay();
-      // irq 7 on slave has lowest prio
-      // => irq 0 on slave (= irq 8) has highest prio
-      write_icw(SET_PRIORITY | 7, _slave); iodelay();
+      // Setting specific rotation (specific priority),
+      // see Intel 8259A reference manual.
+      // IRQ 1 on master has the lowest priority
+      // => IRQ 2 (cascade) = IRQs 8..15 have the highest priority
+      write_icw(SET_PRIORITY | 1, _master);
+      iodelay();
+
+      // IRQ 7 on slave has the lowest priority
+      // => IRQ 0 on slave (= IRQ 8) has the highest priority
+      write_icw(SET_PRIORITY | 7, _slave);
+      iodelay();
     }
 
-  // set initial masks
-  write_ocw(0xfb, _master); iodelay(); // unmask ir2
-  write_ocw(0xff, _slave); iodelay();  // mask everything
+  // Set initial masks: unmask IR2 on master, mask everything on slave.
+  write_ocw(0xfb, _master);
+  iodelay();
+  write_ocw(0xff, _slave);
+  iodelay();
 
-  /* Ack any bogus intrs by setting the End Of Interrupt bit. */
-  write_icw(NON_SPEC_EOI, _master); iodelay();
-  write_icw(NON_SPEC_EOI, _slave); iodelay();
+  // Acknowledge any bogus interrupts by setting the End Of Interrupt bit.
+  write_icw(NON_SPEC_EOI, _master);
+  iodelay();
+  write_icw(NON_SPEC_EOI, _slave);
+  iodelay();
 }
 
 PRIVATE template<typename IO> inline
