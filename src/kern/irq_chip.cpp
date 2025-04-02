@@ -104,6 +104,29 @@ public:
   virtual bool is_edge_triggered(Mword pin) const = 0;
 
   /**
+   * Get the default target CPU of an interrupt pin.
+   *
+   * Certain IRQ chips require that a default target CPU is set during the
+   * attachment of an IRQ to an interrupt pin. However, this action is
+   * undesirable for other IRQ chips that already configure the target CPU
+   * internally or do not support changing the target CPU.
+   *
+   * This method allows to distinguish these two cases.
+   *
+   * \note The default implementation returns Cpu_number::boot_cpu().
+   *
+   * \param pin  Interrupt pin to examine.
+   *
+   * \return Default target CPU to be set during the attachment of the
+   *         interrupt pin.
+   *
+   * \retval Cpu_number::nil()  No target CPU will be set during the
+   *                            attachment.
+   */
+  virtual Cpu_number default_cpu([[maybe_unused]] Mword pin) const
+  { return Cpu_number::boot_cpu(); }
+
+  /**
    * Set the target CPU of an interrupt pin.
    *
    * \param pin  Interrupt pin to configure.

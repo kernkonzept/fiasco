@@ -158,7 +158,16 @@ Irq_mgr::gsi_attach(Irq_base *irq, Mword gsi, bool init = true)
     return false;
 
   if (init)
-    cp.chip->set_cpu(cp.pin, Cpu_number::boot_cpu());
+    {
+      /*
+       * Only set the target CPU if there is a valid default CPU for the
+       * interrupt pin. Otherwise we might mess up the internal capacity
+       * balancing already performed by the IRQ chip.
+       */
+      Cpu_number cpu = cp.chip->default_cpu(cp.pin);
+      if (cpu != Cpu_number::nil())
+        cp.chip->set_cpu(cp.pin, cpu);
+    }
 
   return true;
 }
