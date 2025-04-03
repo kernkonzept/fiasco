@@ -57,52 +57,146 @@ IMPLEMENTATION:
 
 #include <cassert>
 
+#include "assert_opt.h"
 #include "config.h"
 #include "globals.h"
 #include "std_macros.h"
 
-PUBLIC inline static
+/**
+ * Locks kernel object that was looked up via capability index.
+ *
+ * \param obj       The kernel object to lock.
+ * \param cap_addr  The capability index via which `obj` was looked up.
+ * \param other     When acquiring the locks for an object pair (two cap slots),
+ *                  both might refer to the same object. This case needs special
+ *                  handling, so when locking the second slot, the result of
+ *                  locking the first slot must be provided.
+ *
+ * \note `cap_addr._c` must always point to an existing `Obj_space::Entry` (cap
+ *       slot), i.e. it must be ensured that the cap slot itself is not deleted
+ *       before the Obj_space that contains it is deleted.
+ *
+ * \return Locked object.
+ * \retval nullptr  Locking the object failed.
+ */
+PRIVATE static inline NEEDS["assert_opt.h"]
+Kobject_mappable *
+Kobject_mapdb::lock_obj(Kobject_iface *obj, // Phys_addr
+                        Obj::Cap_addr cap_addr, // Va_addr
+                        Kobject_mappable *other = nullptr)
+{
+  assert_opt(obj != nullptr);
+
+  Obj::Entry const *const cap_slot = cap_addr._c;
+
+  // The idea for safely locking a kernel object is that we must recheck that
+  // cap slot is still valid (`cap_slot->valid()`) and still points to the
+  // looked up kernel object (`cap_slot->obj() == obj`). Otherwise we cannot be
+  // sure that the kernel object `obj` is still alive. We need to disable
+  // interrupts for that temporarily, otherwise we can be preempted at any
+  // time, which would make the checks futile.
+  auto guard = lock_guard(cpu_lock);
+
+  // Used both for initial check and recheck after preemption point.
+  auto holds_same_obj = [obj, cap_slot]()
+    {
+      // Entry got invalidated?
+      if (EXPECT_FALSE(!cap_slot->valid()))
+        return false;
+
+      // Entry still points to the same object?
+      // Note that actually the memory pointed to by `obj` might have been
+      // reallocated to a different object. In other words, the object initially
+      // looked up as `obj` was freed and now a different object is allocated in
+      // the memory of `obj`. If in addition that new object was put in the same
+      // cap slot, we cannot detect here that the object was replaced.
+      // However, that is fine, because if the object can be replaced
+      // concurrently, it is up to timing anyway whether the initial lookup is
+      // done before or after the object is replaced.
+      // The only thing that MUST NOT happen is that we work on an invalid cap
+      // slot or on freed `obj` memory that has been reallocated for something
+      // entirely else, which is prevented by this and the subsequent checks.
+      if (EXPECT_FALSE(cap_slot->obj() != obj))
+        return false;
+
+      return true;
+    };
+
+  if (EXPECT_FALSE(!holds_same_obj()))
+    return nullptr;
+
+  // The cap_slot is still valid, because of RCU we know that obj is alive and
+  // stays alive at least until the next preemption point.
+  Kobject_mappable *obj_mappable = obj->map_root();
+
+  if (other != nullptr && obj_mappable == other)
+    return other;
+
+  for (;;)
+    {
+      // Acquiring a helping lock is a preemptible operation, therefore we need
+      // to recheck validity of the cap slot after each possible preemption
+      // point, which is why we set `RETURN_AFTER_HELPING=true`.
+      auto status = obj_mappable->_lock.lock</* RETURN_AFTER_HELPING = */ true>();
+
+      if (EXPECT_FALSE(status == Switch_lock::Invalid))
+        // Someone removed the object from the cap slot.
+        return nullptr;
+
+      if (EXPECT_TRUE(status != Switch_lock::Retry))
+        break;
+
+      // After a possible preemption:
+      // Let's assume that the `obj` initially looked up was freed and now a
+      // different kernel object is allocated in the memory of `obj`, which
+      // in addition is also put in the same cap slot. This is unlikely but
+      // not impossible. The layout of the reallocated object might be
+      // incompatible, i.e. its `obj->map_root()` can differ from the
+      // `obj_mappable` whose lock we try to acquire.
+      if (!holds_same_obj() || obj->map_root() != obj_mappable)
+        return nullptr;
+
+      // Retry to acquire the lock...
+    }
+
+  // Successfully acquired lock, now need to recheck if cap slot still
+  // points to object.
+  if (EXPECT_TRUE(holds_same_obj()))
+    return obj_mappable;
+
+  // Otherwise, someone replaced the object in the cap slot, so unlock
+  // again, and return failure.
+  obj_mappable->_lock.clear();
+  return nullptr;
+}
+
+PUBLIC static inline NEEDS[Kobject_mapdb::lock_obj]
 bool
 Kobject_mapdb::lookup(Space const *, Vaddr va, Phys_addr obj,
                       Frame *out)
 {
-  Kobject_mappable *rn = obj->map_root(); 
-  rn->_lock.lock();
-  if (va._c->obj() == obj)
+  if (Kobject_mappable *rn = lock_obj(obj, va))
     {
       out->m = va._c;
       out->frame = rn;
       return true;
     }
 
-  rn->_lock.clear();
   return false;
 }
 
-PRIVATE static inline
+PRIVATE static inline NEEDS[Kobject_mapdb::lock_obj]
 bool
 Kobject_mapdb::lock_cap_pair(Phys_addr obj1, Vaddr va1, Frame *frame1,
                              Phys_addr obj2, Vaddr va2, Frame *frame2)
 {
-  Kobject_mappable *rn1 = obj1->map_root();
-  rn1->_lock.lock();
+  Kobject_mappable *rn1 = lock_obj(obj1, va1);
+  if (!rn1)
+    return false;
 
-  if (va1._c->obj() != obj1)
+  Kobject_mappable *rn2 = lock_obj(obj2, va2, rn1);
+  if (!rn2)
     {
-      rn1->_lock.clear();
-      return false;
-    }
-
-  Kobject_mappable *rn2 = obj2->map_root();
-  bool same_obj = rn2 == rn1;
-
-  if (!same_obj)
-    rn2->_lock.lock();
-
-  if (va2._c->obj() != obj2)
-    {
-      if (!same_obj)
-        rn2->_lock.clear();
       rn1->_lock.clear();
       return false;
     }

@@ -160,9 +160,22 @@ namespace Obj {
 
     operator Cap_index () const { return Cap_index(_v); }
 
+    /**
+     * Set `Entry` at this capability index.
+     *
+     * During lookup or insert of this capability index, the object space
+     * implementation returns the corresponding `Entry` (capability slot) via
+     * the looked up `Cap_addr` entry.
+     *
+     * \param e  Entry at this capability index.
+     *
+     * \note The given `Entry` must not be moved to a different capability index
+     *       or deleted before the object space that contains it is deleted.
+     */
     void set_entry(Entry *e) const { _c = e; }
   };
 
+  /// \copydoc Cap_addr::set_entry
   inline void set_entry(Cap_addr const &ca, Entry *e)
   { ca.set_entry(e); }
 

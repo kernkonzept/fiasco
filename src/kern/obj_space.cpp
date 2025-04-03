@@ -70,13 +70,35 @@ public:
   static V_pfc to_size(Page_order p)
   { return V_pfc(1) << p; }
 
+  /**
+   * Compatibility interface used in generic mapping code.
+   * \see Mem_space::v_lookup
+   *
+   * \note In addition to the regular output parameters, for object spaces also
+   *       a pointer to the looked up `Entry` (capability slot) is returned via
+   *       the `virt` parameter (see `Cap_addr::set_entry()`). The pointer is
+   *       guaranteed to stay valid until this Obj_space is deleted.
+   */
   FIASCO_SPACE_VIRTUAL
   bool v_lookup(V_pfn const &virt, Phys_addr *phys = nullptr,
                 Page_order *order = nullptr, Attr *attribs = nullptr);
 
+  /**
+   * Compatibility interface used in generic mapping code.
+   * \see Mem_space::v_delete
+   */
   FIASCO_SPACE_VIRTUAL
   Page::Flags v_delete(V_pfn virt, Page_order order, Page::Rights rights);
 
+  /**
+   * Compatibility interface used in generic mapping code.
+   * \see Mem_space::v_insert
+   *
+   * \note In addition to the regular return value, for object spaces also a
+   *       pointer to the inserted `Entry` (capability slot) is returned via the
+   *       `virt` parameter (see `Cap_addr::set_entry()`). The pointer is
+   *       guaranteed to stay valid until this Obj_space is deleted.
+   */
   FIASCO_SPACE_VIRTUAL
   Status v_insert(Phys_addr phys, V_pfn const &virt, Page_order order,
                   Attr page_attribs);
