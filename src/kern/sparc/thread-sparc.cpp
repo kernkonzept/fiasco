@@ -212,12 +212,6 @@ Thread::user_ip(Mword ip)
 }
 
 PROTECTED inline
-void
-Thread::vcpu_resume_user_arch()
-{}
-
-
-PROTECTED inline
 int
 Thread::do_trigger_exception(Entry_frame * /*r*/, void * /*ret_handler*/)
 {
