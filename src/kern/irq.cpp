@@ -463,7 +463,7 @@ Irq_sender::finish_replace_irq_thread(Irq_thread old, Irq_thread target,
                                       Mword irq_id, bool abandon)
 {
   int result;
-  bool finish_send_on_unbind = true;
+  bool reject_send_on_unbind = true;
   bool was_pending = false;
 
   if (!old)
@@ -473,7 +473,7 @@ Irq_sender::finish_replace_irq_thread(Irq_thread old, Irq_thread target,
         {
           _send_state.clear(Irq_send_state::Pending);
           result = Detach_pending;
-          finish_send_on_unbind = false;
+          reject_send_on_unbind = false;
         }
       else
         result = Detach_inactive;
@@ -499,7 +499,7 @@ Irq_sender::finish_replace_irq_thread(Irq_thread old, Irq_thread target,
           break;
         case Context::Revoke_vcpu_state::Ok_was_pending:
           result = Detach_pending;
-          finish_send_on_unbind = false;
+          reject_send_on_unbind = false;
           break;
         case Context::Revoke_vcpu_state::Ok_was_active:
           // We have abandoned an active vIRQ. The VMM has to cope with the
@@ -569,8 +569,8 @@ Irq_sender::finish_replace_irq_thread(Irq_thread old, Irq_thread target,
     {
       if (target.is_bound())
         send(target);
-      else if (finish_send_on_unbind)
-        finish_send();
+      else if (reject_send_on_unbind)
+        reject_send(nullptr);
     }
 
   return result;
@@ -737,7 +737,7 @@ Irq_sender::destroy(Kobjects_list &reap_list) override
  * Called when an IPC send is finished (done or aborted by the receiver) to
  * update the send state of this Irq_sender.
  *
- * \pre The cpu_lock must be held.
+ * \pre Interrupts must be disabled.
  * \pre Must not hold _irq_lock.
  *
  * \post If Irq_sender is in Invalidated state, this function will transition it
@@ -754,7 +754,7 @@ Irq_sender::finish_send()
 
   _send_state.clear(Irq_send_state::Queued);
 
-  if (_send_state.is_invalidated())
+  if (EXPECT_FALSE(_send_state.is_invalidated()))
     {
       if (_send_state.attempt_destroy())
         {
@@ -772,6 +772,105 @@ Irq_sender::finish_send()
     {
       _send_state.clear(Irq_send_state::Masked);
       unmask();
+    }
+}
+
+/**
+ * Called when an IPC send is rejected, e.g. aborted at or by the receiver, to
+ * update the Irq_sender's send state and unbind from the receiver.
+ *
+ * \param receiver  Receiver that rejected the IPC send.
+ *                  Can be nullptr if the reject is caused by a receiver getting
+ *                  unbound from the Irq_sender, without binding a new receiver,
+ *                  to which the send could be forwarded.
+ *
+ * \pre Interrupts must be disabled.
+ * \pre Must not hold _irq_lock.
+ *
+ * \post If Irq_sender is in Invalidated state, this function will transition it
+ *       into Destroyed state and release the "IPC send" reference (see
+ *       Irq_sender::destroy()). In case that was the last reference, it will
+ *       also delete the Irq_sender, i.e. the caller must not use the Irq_sender
+ *       object after calling this function.
+ */
+PUBLIC
+void
+Irq_sender::reject_send(Receiver *receiver)
+{
+  assert(cpu_lock.test());
+
+  auto g = lock_guard<No_cpu_lock_policy>(_irq_lock);
+
+  if (_send_state.is_invalidated())
+    {
+      _send_state.clear(Irq_send_state::Queued);
+
+      // If Irq_sender is invalidated, we don't have to unbind from the
+      // receiver, as no new IPCs can be send and no new receiver thread can be
+      // bound. The Irq_sender::destroy() function takes care of unbinding.
+
+      if (_send_state.attempt_destroy())
+        {
+          // Have to release the lock before deleting the IRQ sender object, as
+          // lock is part of the object.
+          g.reset();
+
+          if (dec_ref() == 0)
+            delete this;
+        }
+
+      return;
+    }
+
+  // Transition Irq_sender, which is not bound to a thread, from Queued state to
+  // Pending state.
+  auto dequeue_rejected = [this]()
+    {
+      _send_state.clear(Irq_send_state::Queued);
+      // If the edge-triggered IRQ was queued before and the Irq_sender is
+      // now unbound, remember that it was pending originally.
+      // Level-triggered IRQs must not be remembered because the Irq_sender
+      // should only be triggered if the interrupt is still asserted when
+      // being bound again.
+      if (is_edge_triggered())
+        _send_state.set(Irq_send_state::Pending);
+    };
+
+  // Thread was unbound in the meantime.
+  if (!_irq_thread.is_bound())
+    {
+      dequeue_rejected();
+    }
+  // Still bound to the same thread that rejected the send, unbind it.
+  else if (receiver != nullptr && receiver == _irq_thread)
+    {
+      // Reject does not happen for direct IRQ injection targets.
+      assert(_irq_thread.is_ipc_sender());
+
+      // Unbind receiver thread that rejected our send. No need for the
+      // two-stage bind/unbind procedure, since here in reject_send() we know
+      // that the Irq_sender is not involved in an ongoing IPC send, so
+      // Receiver::abort_send() is not necessary.
+      Irq_thread old = _irq_thread;
+      set_irq_thread(Irq_thread::invalid(), 0);
+
+      dequeue_rejected();
+
+      g.reset();
+      // Release reference to old thread (does not need to be done under lock).
+      if (old->dec_ref() == 0)
+        delete old;
+    }
+  // Bound to a different thread.
+  else
+    {
+      // Otherwise Drq item or Ipc_sender might get enqueued twice if IRQ hits.
+      assert(_send_state.is_queued());
+
+      auto t = _irq_thread; // access under lock
+      g.reset();
+      // Forward to new bound thread.
+      send(t);
     }
 }
 
@@ -812,6 +911,13 @@ Irq_sender::modify_label(Mword const *todo, int cnt) override
  * Send IPC message to given target thread, whose home CPU is the current CPU or
  * an offline CPU.
  *
+ * \param t        Targeted thread.
+ * \param is_xcpu  Optimization in case the caller already checked
+ *                 `t->home_cpu() == current_cpu()`, then it can set
+ *                 `is_xcpu=false` to avoid recheck in `Ipc_sender::send_msg()`.
+ *
+ * \return Whether a reschedule is necessary.
+ *
  * \post The caller must not use the Irq_sender object after calling this
  *       function on it, as it might have been deleted (see finish_send()).
  */
@@ -847,7 +953,7 @@ Irq_sender::handle_remote_hit(Context::Drq *, Context *target, void *arg)
   else if (EXPECT_TRUE(t.is_bound()))
     t->drq(&irq->_drq, handle_remote_hit, irq, Context::Drq::No_wait);
   else
-    irq->finish_send();
+    irq->reject_send(nullptr);
 
   return Context::Drq::no_answer();
 }

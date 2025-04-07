@@ -29,12 +29,14 @@ public:
    * Receivers call this function on waiting senders when they get want to
    * reject a message from that sender.
    *
+   * \param receiver   Receiver that rejects the message of the waiting sender.
+   *
    * \pre Interrupts must be disabled.
    * \post This function is a potential preemption point. In particular,
    *       this means that upon return, the Sender might may already have been
    *       deleted unless the caller holds a counted reference to it.
    */
-  virtual void ipc_receiver_aborted() = 0;
+  virtual void ipc_receiver_aborted(Receiver *receiver) = 0;
 
   virtual void modify_label(Mword const *todo, int cnt) = 0;
 

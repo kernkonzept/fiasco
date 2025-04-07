@@ -142,7 +142,7 @@ IMPLEMENTATION:
 
 PUBLIC
 void
-Thread::ipc_receiver_aborted() override
+Thread::ipc_receiver_aborted(Receiver *) override
 {
   assert (cpu_lock.test());
   assert (wait_queue());

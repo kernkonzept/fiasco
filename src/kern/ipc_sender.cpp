@@ -36,12 +36,12 @@ IMPLEMENT inline Ipc_sender_base::~Ipc_sender_base() {}
 
 PUBLIC template< typename Derived >
 virtual void
-Ipc_sender<Derived>::ipc_receiver_aborted() override
+Ipc_sender<Derived>::ipc_receiver_aborted(Receiver *receiver) override
 {
   assert (wait_queue());
 
   set_wait_queue(nullptr);
-  derived()->finish_send(); // WARN: Do not use this/derived() from here on!
+  derived()->reject_send(receiver); // WARN: Do not use this/derived() from here on!
 }
 
 PUBLIC template< typename Derived >
@@ -112,7 +112,21 @@ Ipc_sender_base::handle_shortcut(Syscall_frame *dst_regs, Receiver *receiver)
   return false;
 }
 
-
+/**
+ * Send IPC message to receiver.
+ *
+ * \param receiver Targeted receiver.
+ * \param is_xcpu  Optimization in case the caller already checked
+ *                 `receiver->home_cpu() == current_cpu()`, then it
+ *                 can set `is_xcpu=false` to avoid recheck.
+ *
+ * \return Whether a reschedule is necessary.
+ *
+ * \pre Interrupts must be disabled.
+ * \post This function is a potential preemption point. In particular, this
+ *       means that upon return, the Ipc_sender might may already have been
+ *       deleted unless the caller holds a counted reference to it.
+ */
 PROTECTED template< typename Derived >
 inline  NEEDS["config.h","globals.h", "thread_state.h",
               Ipc_sender_base::handle_shortcut]
