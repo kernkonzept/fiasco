@@ -320,13 +320,6 @@ Thread::do_trigger_exception(Entry_frame *r, void *ret_handler)
   return 0;
 }
 
-PROTECTED inline
-int
-Thread::sys_control_arch(Utcb const *, Utcb *)
-{
-  return 0;
-}
-
 PROTECTED inline NEEDS[Thread::set_tpidruro]
 L4_msg_tag
 Thread::invoke_arch(L4_msg_tag tag, Utcb const *utcb, Utcb *)

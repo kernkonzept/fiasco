@@ -455,9 +455,6 @@ Thread_object::sys_control(L4_fpage::Rights rights, L4_msg_tag tag,
   if (res < 0)
     return commit_result(res);
 
-  if ((res = sys_control_arch(utcb, out)) < 0)
-    return commit_result(res);
-
   if (flags & Ctl_alien_thread)
     {
       if (utcb->values[4] & Ctl_alien_thread)

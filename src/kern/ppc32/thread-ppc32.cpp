@@ -329,13 +329,6 @@ Thread::invoke_arch(L4_msg_tag /*tag*/, Utcb const * /*utcb*/, Utcb * /*out*/)
   return commit_result(-L4_err::ENosys);
 }
 
-PROTECTED inline
-int
-Thread::sys_control_arch(Utcb const *, Utcb *)
-{
-  return 0;
-}
-
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [!mp]:
 

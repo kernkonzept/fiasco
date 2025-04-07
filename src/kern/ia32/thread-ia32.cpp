@@ -672,13 +672,6 @@ Thread::handle_not_nested_trap(Trap_state *ts)
   return 0;
 }
 
-PROTECTED inline
-int
-Thread::sys_control_arch(Utcb const *, Utcb *)
-{
-  return 0;
-}
-
 extern "C"
 void
 thread_handle_machine_check(Return_frame *rf)

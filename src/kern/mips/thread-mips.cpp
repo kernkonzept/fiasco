@@ -11,13 +11,6 @@ IMPLEMENTATION [mips]:
 #include "types.h"
 #include "paging_bits.h"
 
-PROTECTED inline
-int
-Thread::sys_control_arch(Utcb const *, Utcb *)
-{
-  return 0;
-}
-
 PRIVATE inline
 int
 Thread::cache_op(unsigned op, Address start, Address end)

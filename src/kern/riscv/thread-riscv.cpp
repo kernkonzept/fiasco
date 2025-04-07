@@ -164,13 +164,6 @@ Thread::do_trigger_exception(Entry_frame *r, void *ret_handler)
 }
 
 PROTECTED inline
-int
-Thread::sys_control_arch(Utcb const *, Utcb *)
-{
-  return 0;
-}
-
-PROTECTED inline
 L4_msg_tag
 Thread::invoke_arch(L4_msg_tag, Utcb *, Utcb *)
 {
