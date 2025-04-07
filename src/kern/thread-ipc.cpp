@@ -178,7 +178,7 @@ Thread::ipc_send_msg(Receiver *recv, bool open_wait) override
     nonull_static_cast<Thread*>(recv)->prepare_xcpu_ipc_transfer_fpu();
 
   sender_dequeue(recv->sender_list());
-  recv->vcpu_update_state();
+  recv->on_sender_dequeued(this);
   bool success = transfer_msg(regs->tag(), nonull_static_cast<Thread*>(recv),
                               _ipc_send_rights, open_wait);
 
@@ -352,7 +352,8 @@ Thread::check_sender(Thread *sender, bool zero_timeout)
 
   sender->set_wait_queue(sender_list());
   sender->sender_enqueue(sender_list(), sender->sched_context()->prio());
-  vcpu_set_irq_pending();
+  on_sender_enqueued(sender);
+
   return Check_sender::Queued;
 }
 
@@ -469,10 +470,14 @@ Thread::get_next_sender(Sender *sender)
     {
       if (sender) // closed wait
         {
-          if (EXPECT_TRUE(sender->in_sender_list())
-              && EXPECT_TRUE(sender_list() == sender->wait_queue()))
-            return sender;
-          return nullptr;
+          assert(is_partner(sender));
+          if (EXPECT_TRUE(partner_in_sender_list()))
+            {
+              assert(sender->in_sender_list() && sender_list() == sender->wait_queue());
+              return sender;
+            }
+          else
+            return nullptr;
         }
       else // open wait
         {
@@ -1202,7 +1207,7 @@ Thread::abort_send(L4_error const &e, Thread *partner)
       if (in_sender_list())
         {
           sender_dequeue(partner->sender_list());
-          partner->vcpu_update_state();
+          partner->on_sender_dequeued(this);
           abt = Abt_ipc_cancel;
         }
       else if (partner->in_ipc(this))

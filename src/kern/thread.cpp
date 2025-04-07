@@ -509,6 +509,7 @@ Thread::do_kill()
     while (Sender *s = Sender::cast(sender_list()->first()))
       {
         s->sender_dequeue(sender_list());
+        on_sender_dequeued(s);
         s->ipc_receiver_aborted();
         Proc::preemption_point();
       }

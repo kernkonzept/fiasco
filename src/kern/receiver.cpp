@@ -67,6 +67,10 @@ public:
 
   Rcv_state sender_ok(const Sender* sender) const;
 
+  /// Whether the IPC partner this Receiver is waiting for (closed wait) is
+  /// enqueued in the Receiver's sender list
+  bool partner_in_sender_list() const { return _partner_in_sender_list; }
+
   virtual ~Receiver() = 0;
 
 private:
@@ -82,6 +86,9 @@ private:
   Syscall_frame *_rcv_regs; // registers used for receive
   Mword _caller;
   Iterable_prio_list _sender_list;
+  // Tracks whether the IPC partner this Receiver is waiting for, as specified
+  // in `_partner`, is enqueued in the Receiver's sender list.
+  bool _partner_in_sender_list;
 };
 
 typedef Context_ptr_base<Receiver> Receiver_ptr;
@@ -248,6 +255,36 @@ void Receiver::prepare_receive(Sender *partner, Syscall_frame *regs)
 {
   set_rcv_regs(regs);  // message should be poked in here
   set_partner(partner);
+
+  // At this point we know that a potential communication partner for our
+  // receive phase (closed wait) is still alive. Therefore, the following check
+  // is safe.
+  _partner_in_sender_list = partner != nullptr && partner->in_sender_list()
+                            && partner->wait_queue() == sender_list();
+}
+
+/**
+ * Update receiver state after sender is enqueued to sender list.
+ */
+PUBLIC inline
+void
+Receiver::on_sender_enqueued(Sender *sender)
+{
+  vcpu_set_irq_pending();
+  if (is_partner(sender))
+    _partner_in_sender_list = true;
+}
+
+/**
+ * Update receiver state after sender is dequeued from sender list.
+ */
+PUBLIC inline
+void
+Receiver::on_sender_dequeued(Sender *sender)
+{
+  vcpu_update_state();
+  if (is_partner(sender))
+    _partner_in_sender_list = false;
 }
 
 PROTECTED inline
@@ -386,7 +423,7 @@ Receiver::handle_remote_abort_send(Drq *, Context *, void *_rq)
       // really cancel IPC
       rq->state = Abt_ipc_cancel;
       rq->sender->sender_dequeue(rq->partner->sender_list());
-      rq->partner->vcpu_update_state();
+      rq->partner->on_sender_dequeued(rq->sender);
     }
   else if (rq->partner->in_ipc(rq->sender))
     {

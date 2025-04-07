@@ -49,7 +49,7 @@ virtual void
 Ipc_sender<Derived>::ipc_send_msg(Receiver *recv, bool) override
 {
   sender_dequeue(recv->sender_list());
-  recv->vcpu_update_state();
+  recv->on_sender_dequeued(this);
 
   derived()->transfer_msg(recv);
 
@@ -165,7 +165,7 @@ Ipc_sender<Derived>::send_msg(Receiver *receiver, bool is_xcpu)
       // Enqueue if receiver is currently not ready to receive the interrupt.
       set_wait_queue(receiver->sender_list());
       sender_enqueue(receiver->sender_list(), 255);
-      receiver->vcpu_set_irq_pending();
+      receiver->on_sender_enqueued(this);
       return false;
     }
 }
