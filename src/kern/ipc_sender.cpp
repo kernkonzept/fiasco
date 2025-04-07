@@ -87,8 +87,8 @@ Ipc_sender_base::handle_shortcut(Syscall_frame *dst_regs,
 
       if constexpr (!Config::Irq_shortcut)
         {
-          // no shortcut: switch to the interrupt thread which will
-          // calls Irq::ipc_receiver_ready
+          // no shortcut: switch to the interrupt thread which will, as for
+          // regular IPC, continue from Thread::do_receive_wait().
           current()->switch_to_locked(receiver);
           return true;
         }
@@ -125,23 +125,11 @@ inline  NEEDS["config.h","globals.h", "thread_state.h",
 bool
 Ipc_sender<Derived>::send_msg(Receiver *receiver, bool is_xcpu)
 {
-  set_wait_queue(receiver->sender_list());
-
-  if constexpr (!Config::Irq_shortcut)
-    {
-      // enqueue _after_ shortcut if still necessary
-      sender_enqueue(receiver->sender_list(), 255);
-      receiver->vcpu_set_irq_pending();
-    }
-
-  // if the thread is waiting for this interrupt, make it ready;
-  // this will cause it to run irq->receiver_ready(), which
-  // handles the rest
-
   // XXX careful!  This code may run in midst of an do_ipc()
   // operation (or similar)!
   if (Receiver::Rcv_state s = receiver->sender_ok(this))
     {
+      // Receiver is ready to receive this interrupt immediately.
       Syscall_frame *dst_regs = derived()->transfer_msg(receiver);
 
       derived()->finish_send(); // WARN: Do not use this/derived() from here on!
@@ -175,13 +163,13 @@ Ipc_sender<Derived>::send_msg(Receiver *receiver, bool is_xcpu)
       rq.ready_enqueue(receiver->sched());
       return false;
     }
-
-  if constexpr (Config::Irq_shortcut)
+  else
     {
-      // enqueue after shortcut if still necessary
+      // Enqueue if receiver is currently not ready to receive the interrupt.
+      set_wait_queue(receiver->sender_list());
       sender_enqueue(receiver->sender_list(), 255);
       receiver->vcpu_set_irq_pending();
+      return false;
     }
-  return false;
 }
 
