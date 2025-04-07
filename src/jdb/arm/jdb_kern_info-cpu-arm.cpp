@@ -26,7 +26,7 @@ asm (
   ".section \".text.jdb\"                     \t\n"
   ".global jdb_mrc_insn                       \t\n"
   ".type jdb_mrc_insn, #function              \t\n"
-  "jdb_mrc_insn:   mrc p0, 0, r0, c0, c0, 0   \t\n"
+  "jdb_mrc_insn:   mrc p15, 0, r0, c0, c0, 0  \t\n"
   "                bx lr                      \t\n"
   ".previous                                  \t\n");
 
