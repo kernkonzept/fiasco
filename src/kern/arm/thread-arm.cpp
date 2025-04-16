@@ -264,8 +264,7 @@ Thread::Thread(Ram_quota *q)
 : Sender(0),
   _pager(Thread_ptr::Invalid),
   _exc_handler(Thread_ptr::Invalid),
-  _quota(q),
-  _del_observer(nullptr)
+  _quota(q)
 {
   assert (state(false) == 0);
 

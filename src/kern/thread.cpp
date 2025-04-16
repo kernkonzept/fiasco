@@ -12,6 +12,7 @@ INTERFACE:
 #include "ref_obj.h"
 #include "sender.h"
 #include "spin_lock.h"
+#include "observer_irq.h"
 
 class Return_frame;
 class Syscall_frame;
@@ -185,7 +186,7 @@ protected:
 
 protected:
   Ram_quota *_quota;
-  Irq_base *_del_observer;
+  Observer_irq _delete_irq;
 
 
   // Debugging facilities
@@ -318,7 +319,7 @@ Thread::unbind()
  */
 IMPLEMENT inline NEEDS["kernel_task.h"]
 Thread::Thread(Ram_quota *q, Context_mode_kernel)
-  : Receiver(), Sender(), _quota(q), _del_observer(nullptr), _magic(magic)
+  : Receiver(), Sender(), _quota(q), _magic(magic)
 {
   inc_ref();
   _space.space(Kernel_task::kernel_task());
@@ -355,80 +356,23 @@ Thread::~Thread()		// To be called in locked state.
 
 // IPC-gate deletion stuff ------------------------------------
 
-/**
- * Fake IRQ Chip class for IPC-gate-delete notifications.
- * This chip uses the IRQ number as thread pointer and implements
- * the bind and unbind functionality.
- */
-class Del_irq_chip : public Irq_chip_soft
-{
-public:
-  static Global_data<Del_irq_chip> chip;
-};
-
-DEFINE_GLOBAL Global_data<Del_irq_chip> Del_irq_chip::chip;
-
-PUBLIC static inline
-Thread *Del_irq_chip::thread(Mword pin)
-{ return reinterpret_cast<Thread*>(pin); }
-
-PUBLIC static inline
-Mword Del_irq_chip::pin(Thread *t)
-{ return reinterpret_cast<Mword>(t); }
-
 PUBLIC inline
-void
-Del_irq_chip::detach(Irq_base *irq) override
-{
-  thread(irq->pin())->remove_delete_irq(irq);
-  Irq_chip_soft::detach(irq);
-}
-
-
-PUBLIC inline NEEDS["irq_chip.h"]
 void
 Thread::ipc_gate_deleted(Mword /* id */)
 {
   auto g = lock_guard(cpu_lock);
-  if (Irq_base *del_observer = access_once(&_del_observer))
-    del_observer->hit(nullptr);
+  _delete_irq.trigger_irq();
 }
 
 PUBLIC
 bool
 Thread::register_delete_irq(Irq_base *irq)
-{
-  if (_del_observer)
-    return false;
-
-  auto g = lock_guard(irq->irq_lock());
-  irq->detach();
-  Del_irq_chip::chip->bind(irq, reinterpret_cast<Mword>(this));
-  if (cas<Irq_base *>(&_del_observer, nullptr, irq))
-    return true;
-
-  irq->detach();
-  return false;
-}
+{ return _delete_irq.register_irq(irq); }
 
 PUBLIC
 void
 Thread::unregister_delete_irq()
-{
-  auto g = lock_guard(cpu_lock);
-  if (Irq_base *del_observer = access_once(&_del_observer))
-    {
-      auto g = lock_guard(del_observer->irq_lock());
-      del_observer->detach();
-    }
-}
-
-PUBLIC
-void
-Thread::remove_delete_irq(Irq_base *irq)
-{
-  cas<Irq_base *>(&_del_observer, irq, nullptr);
-}
+{ _delete_irq.unregister_irq(); }
 
 // end of: IPC-gate deletion stuff -------------------------------
 
@@ -1540,72 +1484,15 @@ Thread::halt_current()
 //----------------------------------------------------------------------------
 IMPLEMENTATION [irq_direct_inject]:
 
-/**
- * Fake IRQ Chip class for doorbell interrupt notifications.
- * This chip uses the IRQ number as thread pointer and implements
- * the bind and unbind functionality.
- */
-class Doorbell_irq_chip : public Irq_chip_soft
-{
-public:
-  static Global_data<Doorbell_irq_chip> chip;
-};
-
-DEFINE_GLOBAL Global_data<Doorbell_irq_chip> Doorbell_irq_chip::chip;
-
-PUBLIC static inline
-Thread *Doorbell_irq_chip::thread(Mword pin)
-{ return reinterpret_cast<Thread*>(pin); }
-
-PUBLIC static inline
-Mword Doorbell_irq_chip::pin(Thread *t)
-{ return reinterpret_cast<Mword>(t); }
-
-PUBLIC inline
-void
-Doorbell_irq_chip::detach(Irq_base *irq) override
-{
-  thread(irq->pin())->remove_doorbell_irq(irq);
-  Irq_chip_soft::detach(irq);
-}
-
-
 PUBLIC
 bool
 Thread::register_doorbell_irq(Irq_base *irq)
-{
-  if (_doorbell_irq)
-    return false;
-
-  auto g = lock_guard(irq->irq_lock());
-  irq->detach();
-  Doorbell_irq_chip::chip->bind(irq, reinterpret_cast<Mword>(this));
-  if (cas<Irq_base *>(&_doorbell_irq, nullptr, irq))
-    return true;
-
-  irq->detach();
-  return false;
-}
-
-PUBLIC
-void
-Thread::remove_doorbell_irq(Irq_base *irq)
-{
-  cas<Irq_base *>(&_doorbell_irq, irq, nullptr);
-}
-
+{ return _doorbell_irq.register_irq(irq); }
 
 PRIVATE inline
 void
 Thread::unregister_doorbell_irq()
-{
-  auto cpu_guard = lock_guard(cpu_lock);
-  if (Irq_base *doorbell_irq = access_once(&_doorbell_irq))
-    {
-      auto irq_guard = lock_guard(doorbell_irq->irq_lock());
-      doorbell_irq->detach();
-    }
-}
+{ _doorbell_irq.unregister_irq(); }
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION [!irq_direct_inject]:

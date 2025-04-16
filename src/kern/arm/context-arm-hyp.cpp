@@ -525,8 +525,7 @@ Context::arch_inject_vcpu_irq(Mword irq_id, Vcpu_irq_list_item *irq)
 
       // Attention: this *must* be the last statement because it will usually
       // take the Irq_shortcut straight back to user space!
-      if (Irq_base *doorbell = access_once(&_doorbell_irq))
-        doorbell->hit(nullptr);
+      _doorbell_irq.trigger_irq();
     }
 }
 

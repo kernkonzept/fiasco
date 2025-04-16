@@ -71,12 +71,12 @@ protected:
 // ---------------------------------------------------------------------
 INTERFACE [irq_direct_inject]:
 
-class Irq_base;
+#include "observer_irq.h"
 
 EXTENSION class Context
 {
 protected:
-  Irq_base *_doorbell_irq;
+  Observer_irq _doorbell_irq;
 };
 
 // ---------------------------------------------------------------------
