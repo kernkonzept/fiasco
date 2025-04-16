@@ -41,8 +41,6 @@ class Ipc_gate_obj :
   friend class Ipc_gate;
 
 public:
-  bool put() override { return Ipc_gate::put(); }
-
   Thread *thread() const { return _thread; }
   Mword id() const { return _id; }
   Mword obj_id() const override { return _id; }
@@ -197,9 +195,6 @@ PUBLIC virtual
 void
 Ipc_gate_obj::initiate_deletion(Kobjects_list &reap_list) override
 {
-  if (_thread)
-    _thread->ipc_gate_deleted(_id);
-
   // Invalidate existence lock under lock of waiting queue, to ensure that from
   // now on no new senders block on the IPC gate, see the
   // `existence_lock.valid()` check in `Ipc_gate::block()`.
@@ -218,14 +213,28 @@ Ipc_gate_obj::destroy(Kobjects_list &reap_list) override
   // deletion, so they must no longer use it.
   unblock_all(true);
   abort_all_unblocked();
+}
 
+PUBLIC
+bool
+Ipc_gate_obj::put() override
+{
   Thread *tmp = access_once(&_thread);
   if (tmp)
     {
+      // To prevent delayed senders to race with a modify_senders() operation,
+      // the IPC gate must trigger the deletion IRQ only after the RCU wait,
+      // which ensures that there exist no more ephemeral references, for
+      // example in the form of a delayed sender.
+      tmp->ipc_gate_deleted(_id);
+
       _thread = nullptr;
       if (tmp->dec_ref() == 0)
         delete tmp;
+
     }
+
+  return Ipc_gate::put();
 }
 
 PUBLIC
