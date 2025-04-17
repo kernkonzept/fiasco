@@ -28,7 +28,11 @@ protected:
   Thread *_thread;
   Mword _id;
   Ram_quota *_quota;
+  /// Senders blocked on this IPC gate waiting for a target thread to be bound.
   Locked_prio_list _wait_q;
+  /// Previously blocked senders that got unblocked, but have not yet continued
+  /// execution. Protected by lock of _wait_q.
+  Prio_list _unblocked_q;
 };
 
 class Ipc_gate_obj :
@@ -118,23 +122,74 @@ Ipc_gate_obj::Ipc_gate_obj(Ram_quota *q, Thread *t, Mword id)
   : Dyn_castable_class(q, t, id)
 {}
 
+/**
+ * Unblocks all senders blocked on this IPC gate.
+ *
+ * The unblocked senders must be able to tell whether the IPC gate is still
+ * alive (has not been deleted) when they eventually return from the block
+ * operation. Therefore, IPC gate moves them from the waiting queue to the
+ * unblocked queue and activates them. When a sender continues execution, it
+ * removes itself from the unblocked queue.
+ *
+ * If `abort` is set, senders are not moved, but simply removed from the waiting
+ * queue. This allows senders to detect that their operation on the IPC gate was
+ * aborted, e.g. because the IPC gate has been deleted.
+ *
+ * \param abort  Abort the send operation at the sender. Used when an IPC gate
+ *               is deleted, to notify the sender of the deletion, preventing it
+ *               from accessing the deleted IPC gate.
+ */
 PUBLIC
 void
-Ipc_gate_obj::unblock_all()
+Ipc_gate_obj::unblock_all(bool abort)
 {
   while (::Prio_list_elem *h = _wait_q.first())
     {
       auto g1 = lock_guard(cpu_lock);
-      Thread *w;
-	{
-	  auto g2 = lock_guard(_wait_q.lock());
-	  if (EXPECT_FALSE(h != _wait_q.first()))
-	    continue;
 
-	  w = static_cast<Thread*>(Sender::cast(h));
-	  w->sender_dequeue(&_wait_q);
-	}
-      w->activate();
+      Thread *sender;
+        {
+          auto g2 = lock_guard(_wait_q.lock());
+          if (EXPECT_FALSE(h != _wait_q.first()))
+            continue;
+
+          sender = static_cast<Thread*>(Sender::cast(h));
+          sender->sender_dequeue(&_wait_q);
+          if (!abort)
+            {
+              sender->set_wait_queue(&_unblocked_q);
+              // The priority of senders does not matter in the unblocked queue.
+              sender->sender_enqueue(&_unblocked_q, 0);
+            }
+          else
+            sender->set_wait_queue(nullptr);
+        }
+
+      sender->activate();
+    }
+}
+
+/**
+ * Clear the unblocked queue.
+ *
+ * This allows senders to detect that their operation on the IPC gate was
+ * aborted, e.g. because the IPC gate has been deleted, preventing them from
+ * accessing the deleted IPC gate.
+ */
+PRIVATE
+void
+Ipc_gate_obj::abort_all_unblocked()
+{
+  while (::Prio_list_elem *h = _unblocked_q.first())
+    {
+      auto guard = lock_guard(_wait_q.lock());
+
+      if (EXPECT_FALSE(h != _unblocked_q.first()))
+        continue;
+
+      Thread *sender = static_cast<Thread*>(Sender::cast(h));
+      sender->sender_dequeue(&_unblocked_q);
+      sender->set_wait_queue(nullptr);
     }
 }
 
@@ -145,6 +200,11 @@ Ipc_gate_obj::initiate_deletion(Kobjects_list &reap_list) override
   if (_thread)
     _thread->ipc_gate_deleted(_id);
 
+  // Invalidate existence lock under lock of waiting queue, to ensure that from
+  // now on no new senders block on the IPC gate, see the
+  // `existence_lock.valid()` check in `Ipc_gate::block()`.
+  auto guard = lock_guard(_wait_q.lock());
+
   Kobject::initiate_deletion(reap_list);
 }
 
@@ -154,11 +214,15 @@ Ipc_gate_obj::destroy(Kobjects_list &reap_list) override
 {
   Kobject::destroy(reap_list);
 
+  // Signal to all blocked and already unblocked senders that the IPC gate is in
+  // deletion, so they must no longer use it.
+  unblock_all(true);
+  abort_all_unblocked();
+
   Thread *tmp = access_once(&_thread);
   if (tmp)
     {
       _thread = nullptr;
-      unblock_all();
       if (tmp->dec_ref() == 0)
         delete tmp;
     }
@@ -167,7 +231,7 @@ Ipc_gate_obj::destroy(Kobjects_list &reap_list) override
 PUBLIC
 Ipc_gate_obj::~Ipc_gate_obj()
 {
-  unblock_all();
+  assert(_wait_q.empty());
 }
 
 PUBLIC inline NEEDS[<cstddef>]
@@ -260,9 +324,9 @@ Ipc_gate_ctl::bind_thread(L4_obj_ref, L4_fpage::Rights rights,
     }
   while (!cas(&g->_thread, old, t));
 
-  g->unblock_all();
+  g->unblock_all(false);
   current()->rcu_wait();
-  g->unblock_all();
+  g->unblock_all(false);
 
   if (old && old->dec_ref() == 0)
     delete old;
@@ -336,6 +400,10 @@ Ipc_gate::block(Thread *ct, L4_timeout const &to, Utcb *u)
 
     {
       auto g = lock_guard(_wait_q.lock());
+
+      if (!existence_lock.valid())
+        return L4_error::Not_existent; // IPC gate is in destruction
+
       ct->set_wait_queue(&_wait_q);
       ct->sender_enqueue(&_wait_q, ct->sched_context()->prio());
     }
@@ -354,21 +422,31 @@ Ipc_gate::block(Thread *ct, L4_timeout const &to, Utcb *u)
   Mword state = ct->state_change(~Thread_full_ipc_mask, Thread_ready);
   ct->reset_timeout();
 
-  if (EXPECT_FALSE(ct->in_sender_list()))
-    {
-      auto g = lock_guard(_wait_q.lock());
-      // Recheck under lock whether thread is still in waiting queue.
-      if (ct->in_sender_list())
-        {
-          ct->sender_dequeue(&_wait_q);
+  if (EXPECT_FALSE(!ct->wait_queue()))
+    return L4_error::Not_existent; // IPC gate was deleted while we waited
 
-          if (state & Thread_timeout)
-            return L4_error::Timeout;
+  {
+    // If we see that we are still enqueued, due to RCU we know that the IPC
+    // gate is still alive and remains alive at least until the next time we
+    // open interrupts, so accessing its _wait_q is safe.
+    auto g = lock_guard(_wait_q.lock());
 
-          if (state & Thread_cancel)
-            return L4_error::Canceled;
-        }
-    }
+    // Recheck under lock whether thread is still in waiting or unblocked queue,
+    // which tells us whether the IPC gate is still alive (it dequeues us on its
+    // destruction).
+    if (!ct->wait_queue())
+      return L4_error::Not_existent; // IPC gate was deleted while we waited
+
+    // ct->wait_queue() can be either _wait_q or _unblocked_q.
+    ct->sender_dequeue(ct->wait_queue());
+    ct->set_wait_queue(nullptr);
+  }
+
+  if (state & Thread_timeout)
+    return L4_error::Timeout;
+
+  if (state & Thread_cancel)
+    return L4_error::Canceled;
 
   return L4_error::None;
 }
