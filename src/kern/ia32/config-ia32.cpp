@@ -72,8 +72,6 @@ public:
   static const unsigned default_console_uart = 1;
   static const unsigned default_console_uart_baudrate = 115200;
 
-  static bool found_vmware;
-
   enum : unsigned int
   {
     Io_port_count = (1UL << 16),
@@ -90,7 +88,6 @@ IMPLEMENTATION[ia32 || amd64]:
 
 bool Config::hlt_works_ok = true;
 
-bool Config::found_vmware = false;
 bool Config::apic = false;
 unsigned Config::scheduler_irq_vector;
 
