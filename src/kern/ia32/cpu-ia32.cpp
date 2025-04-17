@@ -725,7 +725,7 @@ Cpu::identify()
     switch (max)
       {
       default:
-	// All cases fall through!
+        // All cases fall through!
       case 10:
         if (_vendor == Vendor_intel) // CPUID Leaf 10 is reserved on AMD
           cpuid(10, &_arch_perfmon_info_eax,
@@ -760,35 +760,35 @@ Cpu::identify()
 
     if (_vendor == Vendor_intel)
       {
-	switch (family())
-	  {
-	  case 5:
-	    // Avoid Pentium Erratum 74
-	    if ((_features & FEAT_MMX) &&
-		(model() != 4 ||
-		 (stepping() != 4 && (stepping() != 3 || type() != 1))))
-	      _local_features |= Lf_rdpmc;
-	    break;
-	  case 6:
-	    // Avoid Pentium Pro Erratum 26
-	    if (model() >= 3 || stepping() > 9)
-	      _local_features |= Lf_rdpmc;
-	    break;
-	  case 15:
-	    _local_features |= Lf_rdpmc;
-	    _local_features |= Lf_rdpmc32;
-	    break;
-	  }
+        switch (family())
+          {
+          case 5:
+            // Avoid Pentium Erratum 74
+            if ((_features & FEAT_MMX) &&
+                (model() != 4 ||
+                 (stepping() != 4 && (stepping() != 3 || type() != 1))))
+              _local_features |= Lf_rdpmc;
+            break;
+          case 6:
+            // Avoid Pentium Pro Erratum 26
+            if (model() >= 3 || stepping() > 9)
+              _local_features |= Lf_rdpmc;
+            break;
+          case 15:
+            _local_features |= Lf_rdpmc;
+            _local_features |= Lf_rdpmc32;
+            break;
+          }
       }
     else if (_vendor == Vendor_amd)
       {
-	switch (family())
-	  {
-	  case 6:
-	  case 15:
-	    _local_features |= Lf_rdpmc;
-	    break;
-	  }
+        switch (family())
+          {
+          case 6:
+          case 15:
+            _local_features |= Lf_rdpmc;
+            break;
+          }
       }
 
     // Get maximum number for extended functions
@@ -796,27 +796,27 @@ Cpu::identify()
 
     if (max > 0x80000000)
       {
-	switch (max)
-	  {
-	  default:
-	    [[fallthrough]];
-	  case 0x80000008:
-	    if (_vendor == Vendor_amd || _vendor == Vendor_intel)
-	      addr_size_info();
-	    [[fallthrough]];
-	  case 0x80000007:
+        switch (max)
+          {
+          default:
+            [[fallthrough]];
+          case 0x80000008:
+            if (_vendor == Vendor_amd || _vendor == Vendor_intel)
+              addr_size_info();
+            [[fallthrough]];
+          case 0x80000007:
             if (_vendor == Vendor_amd || _vendor == Vendor_intel)
               if (cpuid_edx(0x80000007) & (1U << 8))
                 _local_features |= Lf_tsc_invariant;
             [[fallthrough]];
-	  case 0x80000003:
-	  case 0x80000002:
-	  case 0x80000001:
-	    if (_vendor == Vendor_intel || _vendor == Vendor_amd)
+          case 0x80000003:
+          case 0x80000002:
+          case 0x80000001:
+            if (_vendor == Vendor_intel || _vendor == Vendor_amd)
               cpuid(0x80000001, &i, &i, &_ext_8000_0001_ecx,
-                                &_ext_8000_0001_edx);
-	    break;
-	  }
+                  &_ext_8000_0001_edx);
+            break;
+          }
       }
 
     // see Intel Spec on SYSENTER:
@@ -1102,17 +1102,17 @@ Cpu::init_lbr_type()
     {
       // Intel
       if (vendor() == Vendor_intel)
-	{
-	  if (family() == 15)
-	    _lbr = model() < 3 ? Lbr_pentium_4 : Lbr_pentium_4_ext; // P4
-	  else if (family() >= 6)
-	    _lbr = Lbr_pentium_6; // PPro, PIII
-	}
+        {
+          if (family() == 15)
+            _lbr = model() < 3 ? Lbr_pentium_4 : Lbr_pentium_4_ext; // P4
+          else if (family() >= 6)
+            _lbr = Lbr_pentium_6; // PPro, PIII
+        }
       else if (vendor() == Vendor_amd)
-	{
-	  if ((family() == 6) || (family() == 15))
-	    _lbr = Lbr_pentium_6; // K7/K8
-	}
+        {
+          if ((family() == 6) || (family() == 15))
+            _lbr = Lbr_pentium_6; // K7/K8
+        }
     }
 }
 
@@ -1126,12 +1126,12 @@ Cpu::init_bts_type()
   if (can_wrmsr() && vendor() == Vendor_intel)
     {
       if (family() == 15 && (rdmsr(Msr::Ia32_misc_enable) & (1<<11)) == 0)
-	_bts = Bts_pentium_4;
+        _bts = Bts_pentium_4;
       if (family() == 6  && (model() == 9 || (model() >= 13 &&
-	      model() <= 15)))
-	_bts = Bts_pentium_m;
+              model() <= 15)))
+        _bts = Bts_pentium_m;
       if (!(features() & FEAT_DS))
-	_bts = Bts_unsupported;
+        _bts = Bts_unsupported;
     }
 }
 
@@ -1143,18 +1143,18 @@ Cpu::lbr_enable(bool on)
   if (lbr_type() != Lbr_unsupported)
     {
       if (on)
-	{
-	  lbr_active    = true;
-	  debugctl_set |= 1;
-	  debugctl_busy = true;
-	}
+        {
+          lbr_active    = true;
+          debugctl_set |= 1;
+          debugctl_busy = true;
+        }
       else
-	{
-	  lbr_active    = false;
-	  debugctl_set &= ~1;
-	  debugctl_busy = lbr_active || bts_active;
-	  wrmsr(debugctl_reset, Msr::Debugctla);
-	}
+        {
+          lbr_active    = false;
+          debugctl_set &= ~1;
+          debugctl_busy = lbr_active || bts_active;
+          wrmsr(debugctl_reset, Msr::Debugctla);
+        }
     }
 }
 
@@ -1166,19 +1166,19 @@ Cpu::btf_enable(bool on)
   if (lbr_type() != Lbr_unsupported)
     {
       if (on)
-	{
-	  btf_active      = true;
-	  debugctl_set   |= 2;
-	  debugctl_reset |= 2; /* don't disable bit in kernel */
-	  wrmsr(2, Msr::Debugctla);     /* activate _now_ */
-	}
+        {
+          btf_active      = true;
+          debugctl_set   |= 2;
+          debugctl_reset |= 2; /* don't disable bit in kernel */
+          wrmsr(2, Msr::Debugctla);     /* activate _now_ */
+        }
       else
-	{
-	  btf_active    = false;
-	  debugctl_set &= ~2;
-	  debugctl_busy = lbr_active || bts_active;
-	  wrmsr(debugctl_reset, Msr::Debugctla);
-	}
+        {
+          btf_active    = false;
+          debugctl_set &= ~2;
+          debugctl_busy = lbr_active || bts_active;
+          wrmsr(debugctl_reset, Msr::Debugctla);
+        }
     }
 }
 
@@ -1190,27 +1190,27 @@ Cpu::bts_enable(bool on)
   if (bts_type() != Bts_unsupported)
     {
       if (on)
-	{
-	  switch (bts_type())
-	    {
-	    case Bts_pentium_4: bts_active = true; debugctl_set |= 0x0c; break;
-	    case Bts_pentium_m: bts_active = true; debugctl_set |= 0xc0; break;
-	    default:;
-	    }
-	  debugctl_busy = lbr_active || bts_active;
-	}
+        {
+          switch (bts_type())
+            {
+            case Bts_pentium_4: bts_active = true; debugctl_set |= 0x0c; break;
+            case Bts_pentium_m: bts_active = true; debugctl_set |= 0xc0; break;
+            default:;
+            }
+          debugctl_busy = lbr_active || bts_active;
+        }
       else
-	{
-	  bts_active = false;
-	  switch (bts_type())
-	    {
-	    case Bts_pentium_4: debugctl_set &= ~0x0c; break;
-	    case Bts_pentium_m: debugctl_set &= ~0xc0; break;
-	    default:;
-	    }
-	  debugctl_busy = lbr_active || bts_active;
-	  wrmsr(debugctl_reset, Msr::Debugctla);
-	}
+        {
+          bts_active = false;
+          switch (bts_type())
+            {
+            case Bts_pentium_4: debugctl_set &= ~0x0c; break;
+            case Bts_pentium_m: debugctl_set &= ~0xc0; break;
+            default:;
+            }
+          debugctl_busy = lbr_active || bts_active;
+          wrmsr(debugctl_reset, Msr::Debugctla);
+        }
     }
 }
 
@@ -1433,9 +1433,9 @@ Cpu::calibrate_tsc()
       tsc_start = rdtsc ();
       count = 0;
       do
-	{
-	  count++;
-	}
+        {
+          count++;
+        }
       while ((Io::in8 (0x61) & 0x20) == 0);
       tsc_end = rdtsc ();
     }
