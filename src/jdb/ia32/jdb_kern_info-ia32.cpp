@@ -246,7 +246,9 @@ Jdb_kern_info_cpu::show() override
       snprintf(cpu_mhz, sizeof(cpu_mhz), "%u.%03u MHz", mhz, khz);
     }
 
-  Cpu::boot_cpu()->print_infos();
+  char model_str[52];
+  int model_str_len = Cpu::get_model_str_current_cpu(model_str);
+  printf("CPU: %.*s %s\n", model_str_len, model_str, cpu_mhz);
   show_features();
   show_feature_ia32_tsc_adjust();
 
