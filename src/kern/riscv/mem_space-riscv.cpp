@@ -161,13 +161,6 @@ Mem_space::initialize()
   return true;
 }
 
-PUBLIC static inline
-bool
-Mem_space::is_full_flush(L4_fpage::Rights rights)
-{
-  return static_cast<bool>(rights & L4_fpage::Rights::R());
-}
-
 PUBLIC static
 void
 Mem_space::init_page_sizes()

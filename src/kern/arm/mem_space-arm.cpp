@@ -173,13 +173,6 @@ IMPLEMENTATION [arm]:
 #include "mem_layout.h"
 #include "mem_unit.h"
 
-PUBLIC static inline
-bool
-Mem_space::is_full_flush(L4_fpage::Rights rights)
-{
-  return static_cast<bool>(rights & L4_fpage::Rights::R());
-}
-
 IMPLEMENT inline
 Mem_space::Tlb_type
 Mem_space::regular_tlb_type()

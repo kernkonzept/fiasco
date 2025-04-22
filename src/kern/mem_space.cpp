@@ -505,6 +505,13 @@ Mem_space::mem_space_fitting_sizes() const
   return __mfs;
 }
 
+PUBLIC static inline
+bool
+Mem_space::is_full_flush(L4_fpage::Rights rights)
+{
+  return static_cast<bool>(rights & L4_fpage::Rights::R());
+}
+
 PUBLIC inline
 Ram_quota *
 Mem_space::ram_quota() const

@@ -121,13 +121,6 @@ Mem_space::sync_kernel()
                     Kmem_alloc::q_allocator(_quota));
 }
 
-PUBLIC static inline
-bool
-Mem_space::is_full_flush(L4_fpage::Rights rights)
-{
-  return (bool)(rights & L4_fpage::Rights::R());
-}
-
 PUBLIC inline NEEDS["cpu.h"]
 static bool
 Mem_space::has_superpages()

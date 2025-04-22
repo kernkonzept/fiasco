@@ -158,13 +158,6 @@ Mem_space::Mem_space(Ram_quota *q, Dir_type* pdir)
   _current.cpu(Cpu_number::boot_cpu()) = this;
 }
 
-PUBLIC static inline
-bool
-Mem_space::is_full_flush(L4_fpage::Rights rights)
-{
-  return static_cast<bool>(rights & L4_fpage::Rights::R());
-}
-
 PUBLIC inline NEEDS["cpu.h"]
 static bool
 Mem_space::has_superpages()
