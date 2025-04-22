@@ -721,31 +721,16 @@ Cpu::identify()
     init_indirect_branch_mitigation();
 
     max = cpuid_eax(0);
-    switch (max)
-      {
-      default:
-        // All cases fall through!
-      case 10:
-        if (_vendor == Vendor_intel) // CPUID Leaf 10 is reserved on AMD
-          cpuid(10, &_arch_perfmon_info_eax,
-                    &_arch_perfmon_info_ebx,
-                    &_arch_perfmon_info_ecx,
-                    &_arch_perfmon_info_edx);
-        [[fallthrough]];
-      case 1:
-        update_features_info();
-      }
+
+    if (max >= 1)
+      update_features_info();
 
     if (max >= 5 && has_monitor_mwait())
       cpuid(5, &_monitor_mwait_eax, &_monitor_mwait_ebx,
                &_monitor_mwait_ecx, &_monitor_mwait_edx);
 
-    _thermal_and_pm_eax = 0;
     if (max >= 6 && _vendor == Vendor_intel)
-      {
-        Unsigned32 dummy;
-        cpuid(6, &_thermal_and_pm_eax, &dummy, &dummy, &dummy);
-      }
+      _thermal_and_pm_eax = cpuid_eax(6);
 
     try_enable_hw_performance_states(false);
 
@@ -756,6 +741,10 @@ Cpu::identify()
         if (has_arch_capabilities())
           _arch_capabilities = rdmsr(Msr::Ia32_arch_capabilities);
       }
+
+    if (max >= 10 && _vendor == Vendor_intel) // CPUID Leaf 10 reserved on AMD
+      cpuid(10, &_arch_perfmon_info_eax, &_arch_perfmon_info_ebx,
+            &_arch_perfmon_info_ecx, &_arch_perfmon_info_edx);
 
     if (_vendor == Vendor_intel)
       {
