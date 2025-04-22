@@ -703,115 +703,116 @@ Cpu::identify()
 
   // Check for CPUID Support
   set_flags(eflags ^ EFLAGS_ID);
-  if ((get_flags() ^ eflags) & EFLAGS_ID) {
+  if ((get_flags() ^ eflags) & EFLAGS_ID)
+    {
+      Unsigned32 max, i;
+      char vendor_id[12];
+      get_vendor_str_current_cpu(vendor_id);
 
-    Unsigned32 max, i;
-    char vendor_id[12];
-    get_vendor_str_current_cpu(vendor_id);
+      for (i = cxx::size(vendor_ident) - 1; i; --i)
+        if (!memcmp(vendor_id, vendor_ident[i], 12))
+          break;
 
-    for (i = cxx::size(vendor_ident) - 1; i; --i)
-      if (!memcmp(vendor_id, vendor_ident[i], 12))
-        break;
+      _vendor = static_cast<Cpu::Vendor>(i);
 
-    _vendor = static_cast<Cpu::Vendor>(i);
+      if (_vendor == Vendor_intel)
+        Ia32_intel_microcode::load();
 
-    if (_vendor == Vendor_intel)
-      Ia32_intel_microcode::load();
+      init_indirect_branch_mitigation();
 
-    init_indirect_branch_mitigation();
+      max = cpuid_eax(0);
 
-    max = cpuid_eax(0);
+      if (max >= 1)
+        update_features_info();
 
-    if (max >= 1)
-      update_features_info();
+      if (max >= 5 && has_monitor_mwait())
+        cpuid(5, &_monitor_mwait_eax, &_monitor_mwait_ebx,
+              &_monitor_mwait_ecx, &_monitor_mwait_edx);
 
-    if (max >= 5 && has_monitor_mwait())
-      cpuid(5, &_monitor_mwait_eax, &_monitor_mwait_ebx,
-               &_monitor_mwait_ecx, &_monitor_mwait_edx);
+      if (max >= 6 && _vendor == Vendor_intel)
+        _thermal_and_pm_eax = cpuid_eax(6);
 
-    if (max >= 6 && _vendor == Vendor_intel)
-      _thermal_and_pm_eax = cpuid_eax(6);
+      try_enable_hw_performance_states(false);
 
-    try_enable_hw_performance_states(false);
+      if (max >= 7 && _vendor == Vendor_intel)
+        {
+          Unsigned32 dummy1, dummy2;
+          cpuid(0x7, 0, &dummy1, &_ext_07_ebx, &dummy2, &_ext_07_edx);
+          if (has_arch_capabilities())
+            _arch_capabilities = rdmsr(Msr::Ia32_arch_capabilities);
+        }
 
-    if (max >= 7 && _vendor == Vendor_intel)
-      {
-        Unsigned32 dummy1, dummy2;
-        cpuid(0x7, 0, &dummy1, &_ext_07_ebx, &dummy2, &_ext_07_edx);
-        if (has_arch_capabilities())
-          _arch_capabilities = rdmsr(Msr::Ia32_arch_capabilities);
-      }
+      if (max >= 10 && _vendor == Vendor_intel) // CPUID Leaf 10 reserved on AMD
+        cpuid(10, &_arch_perfmon_info_eax, &_arch_perfmon_info_ebx,
+              &_arch_perfmon_info_ecx, &_arch_perfmon_info_edx);
 
-    if (max >= 10 && _vendor == Vendor_intel) // CPUID Leaf 10 reserved on AMD
-      cpuid(10, &_arch_perfmon_info_eax, &_arch_perfmon_info_ebx,
-            &_arch_perfmon_info_ecx, &_arch_perfmon_info_edx);
-
-    if (_vendor == Vendor_intel)
-      {
-        switch (family())
-          {
-          case 5:
+      if (_vendor == Vendor_intel)
+        {
+          switch (family())
+            {
+            case 5:
             // Avoid Pentium Erratum 74
             if ((_features & FEAT_MMX) &&
                 (model() != 4 ||
                  (stepping() != 4 && (stepping() != 3 || type() != 1))))
               _local_features |= Lf_rdpmc;
             break;
-          case 6:
+            case 6:
             // Avoid Pentium Pro Erratum 26
             if (model() >= 3 || stepping() > 9)
               _local_features |= Lf_rdpmc;
             break;
-          case 15:
+            case 15:
             _local_features |= Lf_rdpmc;
             _local_features |= Lf_rdpmc32;
             break;
-          }
-      }
-    else if (_vendor == Vendor_amd)
-      {
-        switch (family())
-          {
-          case 6:
-          case 15:
+            }
+        }
+      else if (_vendor == Vendor_amd)
+        {
+          switch (family())
+            {
+            case 6:
+            case 15:
             _local_features |= Lf_rdpmc;
             break;
-          }
-      }
+            }
+        }
 
-    max = cpuid_eax(0x80000000);
-    if (max > 0x80000000)
-      {
-        switch (max)
-          {
-          default:
+      max = cpuid_eax(0x80000000);
+      if (max > 0x80000000)
+        {
+          switch (max)
+            {
+            default:
             [[fallthrough]];
-          case 0x80000008:
+            case 0x80000008:
             if (_vendor == Vendor_amd || _vendor == Vendor_intel)
               addr_size_info();
             [[fallthrough]];
-          case 0x80000007:
+            case 0x80000007:
             if (_vendor == Vendor_amd || _vendor == Vendor_intel)
               if (cpuid_edx(0x80000007) & (1U << 8))
                 _local_features |= Lf_tsc_invariant;
             [[fallthrough]];
-          case 0x80000003:
-          case 0x80000002:
-          case 0x80000001:
+            case 0x80000003:
+            case 0x80000002:
+            case 0x80000001:
             if (_vendor == Vendor_intel || _vendor == Vendor_amd)
               cpuid(0x80000001, &i, &i, &_ext_8000_0001_ecx,
-                  &_ext_8000_0001_edx);
+                    &_ext_8000_0001_edx);
             break;
-          }
-      }
+            }
+        }
 
-    // see Intel Spec on SYSENTER:
-    // Some Pentium Pro pretend to have it, but actually lack it
-    if ((_version & 0xFFF) < 0x633)
-      _features &= ~FEAT_SEP;
+      // see Intel Spec on SYSENTER:
+      // Some Pentium Pro pretend to have it, but actually lack it
+      if ((_version & 0xFFF) < 0x633)
+        _features &= ~FEAT_SEP;
 
-  } else
-    _version = 0x400;
+    }
+  else
+    _version = 0x400; // 486
 
   set_flags(eflags);
 }
