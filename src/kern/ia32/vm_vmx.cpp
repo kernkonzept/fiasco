@@ -164,7 +164,8 @@ Vm_vmx_t<VARIANT>::vm_entry(Trex *regs,
   if (vmx.info.exit_ctls.allowed(Vmx_info::Ex_load_ia32_efer))
     Vmx::vmcs_write<Vmx::Vmcs_host_ia32_efer>(Cpu::rdmsr(Msr::Ia32_efer));
 
-  if (vmx.info.exit_ctls.allowed(Vmx_info::Ex_load_perf_global_ctl))
+  if (vmx.info.exit_ctls.allowed(Vmx_info::Ex_load_perf_global_ctl)
+      && cpu.arch_perf_mon_version() > 0)
     Vmx::vmcs_write<Vmx::Vmcs_host_ia32_perf_global_ctrl>(
                                          Cpu::rdmsr(Msr::Ia32_perf_global_ctrl));
 

@@ -111,6 +111,7 @@ public:
   bool has_monitor_mwait() const { return _ext_features & FEATX_MONITOR; }
   bool has_monitor_mwait_irq() const { return _monitor_mwait_ecx & 3; }
   bool has_pcid() const { return _ext_features & FEATX_PCID; }
+  unsigned arch_perf_mon_version() const { return _arch_perfmon_info_eax & 0xff; }
 
   bool __attribute__((const)) has_smep() const
   { return _ext_07_ebx & FEATX_SMEP; }
