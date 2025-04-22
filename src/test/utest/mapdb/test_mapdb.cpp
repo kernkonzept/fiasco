@@ -210,7 +210,7 @@ public:
     parent_page_shift = Mapping::Order(Phys_bits - Config::PAGE_SHIFT);
     static size_t pz[] = { O_2M - O_page, 0 };
     page_shifts = pz;
-    page_shifts_num = sizeof(sizeof(pz) / sizeof(pz[0]));
+    page_shifts_num = cxx::size(pz);
   }
 };
 
@@ -223,7 +223,7 @@ public:
     parent_page_shift = Mapping::Order(Phys_bits - O_page);
     static size_t pz[] = { O_1G - O_page, O_4M - O_page, O_2M - O_page, 0 };
     page_shifts = pz;
-    page_shifts_num = sizeof(sizeof(pz) / sizeof(pz[0]));
+    page_shifts_num = cxx::size(pz);
   }
 };
 

@@ -60,7 +60,7 @@ extern "C" void sys_kdb_ke()
   switch (Thread::Kernel_entry_op{ts->r[Trap_state::R_s6]})
     {
     case Thread::Kernel_entry_op::Kdebug_call:
-      if (arg > sizeof(Thread::dbg_extension)/sizeof(Thread::dbg_extension[0]))
+      if (arg >= cxx::size(Thread::dbg_extension))
         break;
 
       if (!Thread::dbg_extension[arg])

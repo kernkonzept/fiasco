@@ -254,7 +254,7 @@ int Keyb::getchar(bool wait)
           return -1;
 	}
 
-      if ((scan_code & 0x7f) >= sizeof(keymap)/sizeof(keymap[0]))
+      if ((scan_code & 0x7f) >= cxx::size(keymap))
 	continue;
 
       /* Handle key releases - only release of SHIFT is important. */

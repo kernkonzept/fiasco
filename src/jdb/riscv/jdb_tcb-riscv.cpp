@@ -93,7 +93,7 @@ Jdb_tcb_ptr::user_value_desc() const
       "eret_work"
     };
   static_assert(
-    (sizeof(Trap_state) / sizeof(Mword)) == (sizeof(desc) / sizeof(desc[0])),
+    (sizeof(Trap_state) / sizeof(Mword)) == cxx::size(desc),
     "desc entries do not match the sizeof Trap_state");
   return desc[(Context::Size - Frame_pad_size - _offs) / sizeof(Mword) - 1];
 }

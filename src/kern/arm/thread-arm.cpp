@@ -138,7 +138,7 @@ Thread::user_invoke()
     (nonull_static_cast<Return_frame*>(regs));
 
   static_assert(sizeof(ts->r[0]) == sizeof(Mword), "Size mismatch");
-  Mem::memset_mwords(&ts->r[0], 0, sizeof(ts->r) / sizeof(ts->r[0]));
+  Mem::memset_mwords(&ts->r[0], 0, cxx::size(ts->r));
 
   if (ct->space()->is_sigma0())
     ts->r[0] = Kmem::kdir->virt_to_phys(reinterpret_cast<Address>(Kip::k()));

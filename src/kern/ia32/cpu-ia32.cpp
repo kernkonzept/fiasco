@@ -711,7 +711,7 @@ Cpu::identify()
                    reinterpret_cast<Unsigned32 *>(vendor_id + 8),
                    reinterpret_cast<Unsigned32 *>(vendor_id + 4));
 
-    for (i = sizeof (vendor_ident) / sizeof (*vendor_ident) - 1; i; i--)
+    for (i = cxx::size(vendor_ident) - 1; i; --i)
       if (!memcmp(vendor_id, vendor_ident[i], 12))
         break;
 

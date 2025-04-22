@@ -96,8 +96,7 @@ Jdb_regex::find(const char *buffer, const char **beg, const char **end)
     return false;
 
   // execute expression
-  int ret = regexec(&_r, buffer,
-		    sizeof(_matches)/sizeof(_matches[0]), _matches, 0);
+  int ret = regexec(&_r, buffer, cxx::size(_matches), _matches, 0);
 
   if (ret == REG_NOMATCH)
     return false;

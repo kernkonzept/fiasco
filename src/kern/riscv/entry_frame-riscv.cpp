@@ -189,7 +189,7 @@ void
 Entry_frame::copy_and_sanitize(Entry_frame const *src)
 {
   // Omit eret_work, cause, tval
-  Mem::memcpy_mwords(&regs[0], &src->regs[0], sizeof(regs) / sizeof(regs[0]));
+  Mem::memcpy_mwords(&regs[0], &src->regs[0], cxx::size(regs));
   _pc = src->_pc;
 
   // Sanitize status register.

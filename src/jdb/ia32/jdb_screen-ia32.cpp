@@ -23,10 +23,9 @@ const char* Jdb_screen::Root_page_table		 = "pml4: ";
 //----------------------------------------------------------------------------
 IMPLEMENTATION:
 
-PUBLIC
-static
+PUBLIC static
 int
 Jdb_screen::num_regs()
 {
-   return sizeof(Jdb_screen::Reg_names) / sizeof(Jdb_screen::Reg_names[0]);
+  return cxx::size(Jdb_screen::Reg_names);
 }

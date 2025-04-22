@@ -96,7 +96,7 @@ Platform::process_pkg_ids()
 {
   Mword pkg_id = Io::read<Mword>(Kmem_mmio::map(Mem_layout::Chip_id_phys_base + 4,
                                                 sizeof(Mword)));
-  for  (unsigned i = 0; i < sizeof(__pkg_ids) / sizeof(__pkg_ids[0]); ++i)
+  for  (unsigned i = 0; i < cxx::size(__pkg_ids); ++i)
     if ((pkg_id & __pkg_ids[i].mask) == __pkg_ids[i].val)
       {
         _soc = (Soc_type)__pkg_ids[i].soc;

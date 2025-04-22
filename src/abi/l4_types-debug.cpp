@@ -30,10 +30,10 @@ Utcb::print(char const *clreol_lf = "\n") const
   printf("Reserved:    %16lx%s", utcb_addr, clreol_lf);
 
   printf("Buffers: dsc=%16lx%s", buf_desc.raw(), clreol_lf);
-  for (unsigned i = 0; i < sizeof(buffers) / sizeof(buffers[0]); ++i)
+  for (unsigned i = 0; i < cxx::size(buffers); ++i)
     printf("%2u:%16lx%s", i, buffers[i], !((i+1) % 4) ? clreol_lf : " ");
 
-  if ((sizeof(buffers) / sizeof(buffers[0])) % 4)
+  if (cxx::size(buffers) % 4)
     putstr(clreol_lf);
 
   printf("Free marker: " L4_MWORD_FMT "%s", free_marker, clreol_lf);

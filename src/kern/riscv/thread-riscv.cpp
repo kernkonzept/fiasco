@@ -233,8 +233,7 @@ extern "C" void leave_by_vcpu_upcall(Trap_state *ts)
 {
   Thread *c = current_thread();
   Vcpu_state *vcpu = c->vcpu_state().access();
-  Mem::memcpy_mwords(vcpu->_regs.s.regs, ts->regs,
-                     sizeof(ts->regs) / sizeof(ts->regs[0]));
+  Mem::memcpy_mwords(vcpu->_regs.s.regs, ts->regs, cxx::size(ts->regs));
   vcpu->_regs.s._pc = ts->_pc;
   vcpu->_regs.s.status = ts->status;
   vcpu->_regs.s.copy_hstatus(ts);

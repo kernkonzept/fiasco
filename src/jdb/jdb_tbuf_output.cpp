@@ -90,7 +90,7 @@ Jdb_tbuf_output::init()
   unsigned i;
 
   Jdb_tbuf::direct_log_entry = &console_log_entry;
-  for (i=0; i<sizeof(_format_entry_fn)/sizeof(_format_entry_fn[0]); i++)
+  for (i = 0; i < cxx::size(_format_entry_fn); ++i)
     if (!_format_entry_fn[i])
       _format_entry_fn[i] = dummy_format_entry;
 }

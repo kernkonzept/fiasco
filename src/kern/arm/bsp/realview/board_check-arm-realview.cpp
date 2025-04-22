@@ -75,15 +75,14 @@ Board_check::check_board()
          id >> 28, (id >> 16) & 0xfff, (id >> 12) & 0xf,
 	 (id >> 8) & 0xf, id & 0xff);
 
-  for (unsigned i = 0; i < (sizeof(ids) / sizeof(ids[0])); ++i)
+  for (unsigned i = 0; i < cxx::size(ids); ++i)
     if ((id & ids[i].mask) == ids[i].id)
       return;
 
   printf("  Invalid System ID for this kernel config\n");
-  for (unsigned i = 0; i < (sizeof(ids) / sizeof(ids[0])); ++i)
+  for (unsigned i = 0; i < cxx::size(ids); ++i)
     printf("  Expected (%08lx & %08x) == %08x%s\n",
-           id, ids[i].mask, ids[i].id,
-           i + 1 < (sizeof(ids) / sizeof(ids[0])) ? ", or" : "");
+           id, ids[i].mask, ids[i].id, i + 1 < cxx::size(ids) ? ", or" : "");
   printf("  Stopping.\n");
   while (1)
     Proc::halt();

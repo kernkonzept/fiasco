@@ -30,7 +30,7 @@ public:
   }
 
   unsigned nr_irqs() const override
-  { return sizeof(_irqs) / sizeof(_irqs[0]); }
+  { return cxx::size(_irqs); }
 
   Irq_base *irq(Mword pin) const override
   {

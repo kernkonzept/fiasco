@@ -196,8 +196,6 @@ Console::str_attr(Mword bit) const
   static char const * const attr_str[] =
     { "Direct", "Uart", "Push", "Gzip", "Buffer", "Kdb" };
 
-  return (bit < 2 || bit >= (sizeof(attr_str)/sizeof(attr_str[0]))+2)
-    ? "???"
-    : attr_str[bit-2];
+  return (bit < 2 || bit >= cxx::size(attr_str)+2) ? "???" : attr_str[bit-2];
 }
 

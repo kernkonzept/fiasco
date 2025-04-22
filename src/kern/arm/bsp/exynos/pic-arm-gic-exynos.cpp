@@ -532,7 +532,7 @@ Mgr_int::Mgr_int()
   };
 
   _block = soc;
-  _nr_blocks = sizeof(soc) / sizeof(soc[0]);
+  _nr_blocks = cxx::size(soc);
 
   calc_nr_irq();
 }
@@ -706,12 +706,12 @@ Mgr_ext::Mgr_ext()
   if (Platform::is_4412())
     {
       _block = soc4412;
-      _nr_blocks = sizeof(soc4412) / sizeof(soc4412[0]);
+      _nr_blocks = cxx::size(soc4412);
     }
   else
     {
       _block = soc4210;
-      _nr_blocks = sizeof(soc4210) / sizeof(soc4210[0]);
+      _nr_blocks = cxx::size(soc4210);
     }
 
   calc_nr_irq();
@@ -923,7 +923,7 @@ Mgr::Mgr()
   };
 
   _block = socblock;
-  _nr_blocks = sizeof(socblock) / sizeof(socblock[0]);
+  _nr_blocks = cxx::size(socblock);
 
   calc_nr_irq();
 }

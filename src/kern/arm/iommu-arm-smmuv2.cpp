@@ -666,7 +666,7 @@ private:
   static constexpr Unsigned8 address_size(Unsigned8 encoded)
   {
     constexpr Unsigned8 const sizes[] = {32, 36, 40, 42, 44, 48};
-    return encoded < (sizeof(sizes) / sizeof(sizes[0])) ? sizes[encoded] : 0;
+    return encoded < cxx::size(sizes) ? sizes[encoded] : 0;
   }
 
   static constexpr Unsigned8 address_size_encode(Unsigned8 size)
