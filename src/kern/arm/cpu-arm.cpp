@@ -103,7 +103,8 @@ INTERFACE [arm && arm_v5]:
 EXTENSION class Cpu
 {
 public:
-  enum {
+  enum
+  {
     Cp15_c1_write_buffer    = 1 << 3,
     Cp15_c1_prog32          = 1 << 4,
     Cp15_c1_data32          = 1 << 5,
@@ -114,21 +115,22 @@ public:
     Cp15_c1_f               = 1 << 10,
     Cp15_c1_rr              = 1 << 14,
     Cp15_c1_l4              = 1 << 15,
-
-    Cp15_c1_generic         = Cp15_c1_mmu
-                              | (Config::Cp15_c1_use_alignment_check ?  Cp15_c1_alignment_check : 0)
-                              | Cp15_c1_write_buffer
-                              | Cp15_c1_prog32
-                              | Cp15_c1_data32
-                              | Cp15_c1_late_abort
-                              | Cp15_c1_rom_protect
-                              | Cp15_c1_high_vector,
-
-    Cp15_c1_cache_bits      = Cp15_c1_cache
-                              | Cp15_c1_insn_cache
-                              | Cp15_c1_write_buffer,
-
   };
+
+  static constexpr Unsigned32 Cp15_c1_generic =
+                                Cp15_c1_mmu
+                                | (Config::Cp15_c1_use_alignment_check
+                                   ? Cp15_c1_alignment_check : 0)
+                                | Cp15_c1_write_buffer
+                                | Cp15_c1_prog32
+                                | Cp15_c1_data32
+                                | Cp15_c1_late_abort
+                                | Cp15_c1_rom_protect
+                                | Cp15_c1_high_vector;
+  static constexpr Unsigned32 Cp15_c1_cache_bits =
+                                Cp15_c1_cache
+                                | Cp15_c1_insn_cache
+                                | Cp15_c1_write_buffer;
 };
 
 // ------------------------------------------------------------------------
@@ -137,7 +139,8 @@ INTERFACE [arm && arm_v6]:
 EXTENSION class Cpu
 {
 public:
-  enum {
+  enum
+  {
     Cp15_c1_l4              = 1 << 15,
     Cp15_c1_u               = 1 << 22,
     Cp15_c1_xp              = 1 << 23,
@@ -145,10 +148,10 @@ public:
     Cp15_c1_nmfi            = 1 << 27,
     Cp15_c1_tre             = 1 << 28,
     Cp15_c1_force_ap        = 1 << 29,
-
-    Cp15_c1_cache_bits      = Cp15_c1_cache
-                              | Cp15_c1_insn_cache,
   };
+
+  static constexpr Unsigned32 Cp15_c1_cache_bits =
+                                Cp15_c1_cache | Cp15_c1_insn_cache;
 };
 
 // ------------------------------------------------------------------------
@@ -157,14 +160,14 @@ INTERFACE [arm && arm_v6 && !arm_mpcore]:
 EXTENSION class Cpu
 {
 public:
-  enum {
-    Cp15_c1_generic         = Cp15_c1_mmu
-                              | (Config::Cp15_c1_use_alignment_check ?  Cp15_c1_alignment_check : 0)
-			      | Cp15_c1_branch_predict
-			      | Cp15_c1_high_vector
-                              | Cp15_c1_u
-			      | Cp15_c1_xp,
-  };
+  static constexpr Unsigned32 Cp15_c1_generic =
+                                Cp15_c1_mmu
+                                | (Config::Cp15_c1_use_alignment_check
+                                   ? Cp15_c1_alignment_check : 0)
+                                | Cp15_c1_branch_predict
+                                | Cp15_c1_high_vector
+                                | Cp15_c1_u
+                                | Cp15_c1_xp;
 };
 
 // ------------------------------------------------------------------------
@@ -173,16 +176,15 @@ INTERFACE [arm && arm_v6 && arm_mpcore]:
 EXTENSION class Cpu
 {
 public:
-  enum {
-    Cp15_c1_generic         = Cp15_c1_mmu
-                              | (Config::Cp15_c1_use_alignment_check
-                                 ? Cp15_c1_alignment_check : 0)
-                              | Cp15_c1_branch_predict
-                              | Cp15_c1_high_vector
-                              | Cp15_c1_u
-                              | Cp15_c1_xp
-                              | Cp15_c1_tre,
-  };
+  static constexpr Unsigned32 Cp15_c1_generic =
+                                Cp15_c1_mmu
+                                | (Config::Cp15_c1_use_alignment_check
+                                   ? Cp15_c1_alignment_check : 0)
+                                | Cp15_c1_branch_predict
+                                | Cp15_c1_high_vector
+                                | Cp15_c1_u
+                                | Cp15_c1_xp
+                                | Cp15_c1_tre;
 };
 
 
@@ -192,24 +194,26 @@ INTERFACE [arm && (arm_v7 || arm_v8) && mmu]:
 EXTENSION class Cpu
 {
 public:
-  enum {
+  enum
+  {
     Cp15_c1_ha              = 1 << 17,
     Cp15_c1_ee              = 1 << 25,
     Cp15_c1_nmfi            = 1 << 27,
     Cp15_c1_tre             = 1 << 28,
     Cp15_c1_te              = 1 << 30,
     Cp15_c1_rao_sbop        = (0xf << 3) | (1 << 16) | (1 << 18) | (1 << 22) | (1 << 23),
-
-    Cp15_c1_cache_bits      = Cp15_c1_cache
-                              | Cp15_c1_insn_cache,
-
-    Cp15_c1_generic         = Cp15_c1_mmu
-                              | (Config::Cp15_c1_use_alignment_check ?  Cp15_c1_alignment_check : 0)
-                              | Cp15_c1_branch_predict
-                              | Cp15_c1_high_vector
-                              | Cp15_c1_tre
-                              | Cp15_c1_rao_sbop,
   };
+
+  static constexpr Unsigned32 Cp15_c1_cache_bits =
+                                Cp15_c1_cache | Cp15_c1_insn_cache;
+  static constexpr Unsigned32 Cp15_c1_generic =
+                                Cp15_c1_mmu
+                                | (Config::Cp15_c1_use_alignment_check
+                                   ? Cp15_c1_alignment_check : 0)
+                                | Cp15_c1_branch_predict
+                                | Cp15_c1_high_vector
+                                | Cp15_c1_tre
+                                | Cp15_c1_rao_sbop;
 };
 
 // ------------------------------------------------------------------------
@@ -218,18 +222,20 @@ INTERFACE [arm && (arm_v7 || arm_v8) && mpu]:
 EXTENSION class Cpu
 {
 public:
-  enum {
+  enum
+  {
     Cp15_c1_nmfi            = 1 << 27,
     Cp15_c1_rao_sbop        = (0xf << 3) | (1 << 16) | (1 << 18) | (1 << 22) | (1 << 23),
-
-    Cp15_c1_cache_bits      = Cp15_c1_cache
-                              | Cp15_c1_insn_cache,
-
-    Cp15_c1_generic         = Cp15_c1_mmu
-                              | (Config::Cp15_c1_use_alignment_check ?  Cp15_c1_alignment_check : 0)
-                              | Cp15_c1_branch_predict
-                              | Cp15_c1_rao_sbop,
   };
+
+  static constexpr Unsigned32 Cp15_c1_cache_bits =
+                                Cp15_c1_cache | Cp15_c1_insn_cache;
+  static constexpr Unsigned32 Cp15_c1_generic =
+                                Cp15_c1_mmu
+                                | (Config::Cp15_c1_use_alignment_check
+                                   ? Cp15_c1_alignment_check : 0)
+                                | Cp15_c1_branch_predict
+                                | Cp15_c1_rao_sbop;
 };
 
 //--------------------------------------------------------
