@@ -80,7 +80,7 @@ Thread::call_nested_trap_handler(Trap_state *ts)
   int ret = arm_enter_debugger(ts, log_cpu, &ntr, stack);
 
   // the jdb-cpu might have changed things we shouldn't miss!
-  Mmu<Mem_layout::Cache_flush_area, true>::flush_cache();
+  Mmu::flush_cache();
   Mem::isb();
 
   if (debugger_needs_switch_to_kdir() && (m != Kernel_task::kernel_task()))

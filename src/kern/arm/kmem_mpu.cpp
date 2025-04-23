@@ -39,7 +39,7 @@ setup_mpu()
   Mpu::init();
   Mpu::sync(kmpu, diff.value(), true);
   if (!Mpu::enabled())
-    Mmu<0, true>::inv_cache();
+    Mmu::inv_cache();
   Cpu::init_sctlr();
 }
 

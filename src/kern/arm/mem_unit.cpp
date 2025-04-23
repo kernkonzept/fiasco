@@ -3,7 +3,7 @@ INTERFACE [arm]:
 #include "mem_layout.h"
 #include "mmu.h"
 
-class Mem_unit : public Mmu< Mem_layout::Cache_flush_area >
+class Mem_unit : public Mmu
 {
 public:
   enum : Mword

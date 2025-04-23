@@ -41,8 +41,6 @@ public:
 
     Pmem_start           = 0x0000ffff80000000,
     Pmem_end             = 0x0000ffffc0000000,
-
-    Cache_flush_area     = 0x0, // dummy
   };
 
   static_assert(Tbuf_buffer_size == 1UL << 24); // max 2^17 entries @ 64B
@@ -68,7 +66,6 @@ public:
 
     Mmio_map_start       = 0xffff000000000000,
     Mmio_map_end         = 0xffff000040000000,
-    Cache_flush_area     = 0x0,
     Pmem_start           = 0xffff000040000000,
     Pmem_end             = 0xffff000080000000,
     Map_base             = 0xffff000080000000,
@@ -89,7 +86,6 @@ EXTENSION class Mem_layout
 {
 public:
   enum Virt_layout : Address {
-    Cache_flush_area     = 0x00000000, // dummy
     Map_base             = RAM_PHYS_BASE, // 1:1
 
     // Strictly speaking we would have to consult ID_AA64MMFR0_EL1.PARange but

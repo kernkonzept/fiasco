@@ -1,8 +1,7 @@
 IMPLEMENTATION [arm && (arm_v7 || arm_v8)]:
 
 PUBLIC static inline
-template< unsigned long Flush_area, bool Ram >
-Mword Mmu<Flush_area, Ram>::dcache_line_size()
+Mword Mmu::dcache_line_size()
 {
   Mword v;
   __asm__ __volatile__("mrc p15, 0, %0, c0, c0, 1" : "=r" (v)); // CTR
@@ -10,8 +9,7 @@ Mword Mmu<Flush_area, Ram>::dcache_line_size()
 }
 
 PUBLIC static inline
-template< unsigned long Flush_area, bool Ram >
-Mword Mmu<Flush_area, Ram>::icache_line_size()
+Mword Mmu::icache_line_size()
 {
   Mword v;
   __asm__ __volatile__("mrc p15, 0, %0, c0, c0, 1" : "=r" (v)); // CTR
@@ -21,9 +19,8 @@ Mword Mmu<Flush_area, Ram>::icache_line_size()
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_v6plus]:
 
-IMPLEMENT inline
-template< unsigned long Flush_area, bool Ram >
-void Mmu<Flush_area, Ram>::flush_cache(void const *start,
+IMPLEMENT inline ALWAYS_INLINE
+void Mmu::flush_cache(void const *start,
 				       void const *end)
 {
   unsigned long s = reinterpret_cast<unsigned long>(start);
@@ -45,8 +42,7 @@ void Mmu<Flush_area, Ram>::flush_cache(void const *start,
 }
 
 IMPLEMENT inline
-template< unsigned long Flush_area , bool Ram >
-void Mmu<Flush_area, Ram>::clean_dcache(void const *va)
+void Mmu::clean_dcache(void const *va)
 {
   Mem::dsb();
   __asm__ __volatile__ (
@@ -57,8 +53,7 @@ void Mmu<Flush_area, Ram>::clean_dcache(void const *va)
 }
 
 IMPLEMENT inline
-template< unsigned long Flush_area , bool Ram >
-void Mmu<Flush_area, Ram>::clean_dcache(void const *start, void const *end)
+void Mmu::clean_dcache(void const *start, void const *end)
 {
   Mem::dsb();
   __asm__ __volatile__ (
@@ -78,8 +73,7 @@ void Mmu<Flush_area, Ram>::clean_dcache(void const *start, void const *end)
 }
 
 IMPLEMENT
-template< unsigned long Flush_area, bool Ram >
-void Mmu<Flush_area, Ram>::flush_dcache(void const *start, void const *end)
+void Mmu::flush_dcache(void const *start, void const *end)
 {
   Mem::dsb();
   __asm__ __volatile__ (
@@ -98,8 +92,7 @@ void Mmu<Flush_area, Ram>::flush_dcache(void const *start, void const *end)
 }
 
 IMPLEMENT
-template< unsigned long Flush_area, bool Ram >
-void Mmu<Flush_area, Ram>::inv_dcache(void const *start, void const *end)
+void Mmu::inv_dcache(void const *start, void const *end)
 {
   Mem::dsb();
   __asm__ __volatile__ (
@@ -119,9 +112,8 @@ void Mmu<Flush_area, Ram>::inv_dcache(void const *start, void const *end)
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && (arm_mpcore || arm_1136 || arm_1176)]:
 
-IMPLEMENT
-template< unsigned long Flush_area, bool Ram >
-void Mmu<Flush_area, Ram>::flush_cache()
+IMPLEMENT inline ALWAYS_INLINE
+void Mmu::flush_cache()
 {
   Mem::dsb();
   __asm__ __volatile__ (
@@ -132,8 +124,7 @@ void Mmu<Flush_area, Ram>::flush_cache()
 }
 
 IMPLEMENT
-template< unsigned long Flush_area, bool Ram >
-void Mmu<Flush_area, Ram>::clean_dcache()
+void Mmu::clean_dcache()
 {
   Mem::dsb();
   __asm__ __volatile__ (
@@ -143,8 +134,7 @@ void Mmu<Flush_area, Ram>::clean_dcache()
 }
 
 IMPLEMENT
-template< unsigned long Flush_area, bool Ram >
-void Mmu<Flush_area, Ram>::flush_dcache()
+void Mmu::flush_dcache()
 {
   Mem::dsb();
   __asm__ __volatile__ (

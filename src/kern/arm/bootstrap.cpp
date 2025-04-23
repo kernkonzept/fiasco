@@ -96,15 +96,6 @@ class Bootstrap
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && !(arm_sa || arm_pxa)]:
-
-EXTENSION class Bootstrap
-{
-public:
-  enum { Cache_flush_area = 0 };
-};
-
-//---------------------------------------------------------------------------
 INTERFACE [arm && mmu && arm_lpae]:
 
 #include <cxx/cxx_int>
@@ -243,7 +234,7 @@ extern "C" void bootstrap_main(unsigned long load_addr)
   Unsigned32 tbbr = cxx::int_value<Bootstrap::Phys_addr>(Bootstrap::init_paging())
                     | Page::Ttbr_bits;
 
-  Mmu<Bootstrap::Cache_flush_area, true>::flush_cache();
+  Mmu::flush_cache();
 
   Bootstrap::do_arm_1176_cache_alias_workaround();
   Bootstrap::enable_paging(tbbr);

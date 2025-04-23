@@ -155,7 +155,7 @@ Thread::call_nested_trap_handler(Trap_state *ts)
 
   // the jdb-cpu might have changed things we shouldn't miss!
   // FIXME: MIPS CACHE
-  //Mmu<Mem_layout::Cache_flush_area, true>::flush_cache();
+  //Mmu::flush_cache();
 #if 0
   if (m != Kernel_task::kernel_task())
     m->make_current();

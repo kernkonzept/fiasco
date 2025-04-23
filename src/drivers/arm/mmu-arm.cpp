@@ -16,39 +16,33 @@ public:
 IMPLEMENTATION [arm && arm_v5]:
 
 IMPLEMENT static inline
-template < unsigned long Flush_area, bool Ram >
-void Mmu<Flush_area, Ram>::btc_flush()
+void Mmu::btc_flush()
 {}
 
 IMPLEMENT static inline
-template < unsigned long Flush_area, bool Ram >
-void Mmu<Flush_area, Ram>::btc_inv()
+void Mmu::btc_inv()
 {}
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_v6plus && 32bit]:
 
 IMPLEMENT static inline
-template < unsigned long Flush_area, bool Ram >
-void Mmu<Flush_area, Ram>::btc_flush()
+void Mmu::btc_flush()
 { asm volatile ("mcr p15, 0, %0, c7, c5, 6" : : "r" (0) : "memory"); }
 
 IMPLEMENT static inline
-template < unsigned long Flush_area, bool Ram >
-void Mmu<Flush_area, Ram>::btc_inv()
+void Mmu::btc_inv()
 { asm volatile ("mcr p15, 0, %0, c7, c5, 0" : : "r" (0) : "memory"); }
 
 // -----------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_v6plus && 64bit]:
 
 IMPLEMENT static inline
-template < unsigned long Flush_area, bool Ram >
-void Mmu<Flush_area, Ram>::btc_flush()
+void Mmu::btc_flush()
 {}
 
 IMPLEMENT static inline
-template < unsigned long Flush_area, bool Ram >
-void Mmu<Flush_area, Ram>::btc_inv()
+void Mmu::btc_inv()
 {}
 
 //-----------------------------------------------------------------------------
@@ -56,15 +50,13 @@ IMPLEMENTATION [arm && (arm_mpcore || arm_1136 || arm_1176 || arm_pxa
                         || arm_sa || arm_926 || arm_920t)]:
 
 PUBLIC static inline
-template< unsigned long Flush_area, bool Ram >
-constexpr Mword Mmu<Flush_area, Ram>::dcache_line_size()
+constexpr Mword Mmu::dcache_line_size()
 {
   return 32;
 }
 
 PUBLIC static inline
-template< unsigned long Flush_area, bool Ram >
-constexpr Mword Mmu<Flush_area, Ram>::icache_line_size()
+constexpr Mword Mmu::icache_line_size()
 {
   return 32;
 }
@@ -72,42 +64,33 @@ constexpr Mword Mmu<Flush_area, Ram>::icache_line_size()
 // ---------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_920t]:
 
-IMPLEMENT inline
-template< unsigned long Flush_area, bool Ram >
-void Mmu<Flush_area, Ram>::flush_cache(void const * /*start*/,
-				       void const * /*end*/)
+IMPLEMENT inline ALWAYS_INLINE
+void Mmu::flush_cache(void const *, void const *)
 {
   flush_cache();
 }
 
 IMPLEMENT
-template< unsigned long Flush_area , bool Ram >
-FIASCO_NOINLINE void Mmu<Flush_area, Ram>::clean_dcache(void const * /*start*/,
-                                                        void const * /*end*/)
+void Mmu::clean_dcache(void const *, void const *)
 {
   clean_dcache();
 }
 
 IMPLEMENT
-template< unsigned long Flush_area , bool Ram >
-void Mmu<Flush_area, Ram>::clean_dcache(void const * /*va*/)
+void Mmu::clean_dcache(void const *)
 {
   clean_dcache();
 }
 
 IMPLEMENT
-template< unsigned long Flush_area, bool Ram >
-FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_dcache(void const * /*start*/,
-                                                        void const * /*end*/)
+void Mmu::flush_dcache(void const *, void const *)
 {
   flush_dcache();
 }
 
 
 IMPLEMENT
-template< unsigned long Flush_area, bool Ram >
-FIASCO_NOINLINE void Mmu<Flush_area, Ram>::inv_dcache(void const * /*start*/,
-                                                      void const * /*end*/)
+void Mmu::inv_dcache(void const *, void const *)
 {
   // clean && invalidate dcache  ||| XXX: all
 #if 1
@@ -123,17 +106,14 @@ FIASCO_NOINLINE void Mmu<Flush_area, Ram>::inv_dcache(void const * /*start*/,
 // ---------------------------------------------------------------------------
 IMPLEMENTATION [arm && (arm_pxa || arm_sa || arm_926)]:
 
-IMPLEMENT inline
-template< unsigned long Flush_area, bool Ram >
-void Mmu<Flush_area, Ram>::flush_cache(void const * /*start*/,
-				       void const * /*end*/)
+IMPLEMENT
+void Mmu::flush_cache(void const *, void const *)
 {
   flush_cache();
 }
 
 IMPLEMENT
-template< unsigned long Flush_area , bool Ram >
-FIASCO_NOINLINE void Mmu<Flush_area, Ram>::clean_dcache(void const *start, void const *end)
+void Mmu::clean_dcache(void const *start, void const *end)
 {
   if (reinterpret_cast<Address>(end) - reinterpret_cast<Address>(start) >= 8192)
     clean_dcache();
@@ -152,16 +132,14 @@ FIASCO_NOINLINE void Mmu<Flush_area, Ram>::clean_dcache(void const *start, void 
 }
 
 IMPLEMENT
-template< unsigned long Flush_area , bool Ram >
-void Mmu<Flush_area, Ram>::clean_dcache(void const *va)
+void Mmu::clean_dcache(void const *va)
 {
   __asm__ __volatile__ ("mcr p15, 0, %0, c7, c10, 1       \n"
                         : : "r"(va) : "memory");
 }
 
 IMPLEMENT
-template< unsigned long Flush_area, bool Ram >
-FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_dcache(void const *start, void const *end)
+void Mmu::flush_dcache(void const *start, void const *end)
 {
   if (reinterpret_cast<Address>(end) - reinterpret_cast<Address>(start) >= 8192)
     flush_dcache();
@@ -181,8 +159,7 @@ FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_dcache(void const *start, void 
 
 
 IMPLEMENT
-template< unsigned long Flush_area, bool Ram >
-FIASCO_NOINLINE void Mmu<Flush_area, Ram>::inv_dcache(void const *start, void const *end)
+void Mmu::inv_dcache(void const *start, void const *end)
 {
   asm volatile (
 	  "    bic  %0, %0, %2 - 1         \n"
@@ -241,16 +218,14 @@ private:
 IMPLEMENTATION [arm_v7 || arm_v8]:
 
 IMPLEMENT
-template< unsigned long Flush_area, bool Ram >
-void Mmu<Flush_area, Ram>::flush_dcache()
+void Mmu::flush_dcache()
 {
   Mem::dsb();
   set_way_full_loop(dc_cisw);
 }
 
-IMPLEMENT
-template< unsigned long Flush_area, bool Ram >
-void Mmu<Flush_area, Ram>::flush_cache()
+IMPLEMENT inline ALWAYS_INLINE
+void Mmu::flush_cache()
 {
   Mem::dsb();
   ic_iallu();
@@ -259,16 +234,14 @@ void Mmu<Flush_area, Ram>::flush_cache()
 }
 
 IMPLEMENT
-template< unsigned long Flush_area, bool Ram >
-void Mmu<Flush_area, Ram>::clean_dcache()
+void Mmu::clean_dcache()
 {
   Mem::dsb();
   set_way_full_loop(dc_csw);
 }
 
 IMPLEMENT
-template< unsigned long Flush_area, bool Ram >
-void Mmu<Flush_area, Ram>::inv_cache()
+void Mmu::inv_cache()
 {
   // No need for a DSB here. The cache must be disabled when calling the
   // function, otherwise dirty data would be lost. Therefore all memory
@@ -281,9 +254,10 @@ void Mmu<Flush_area, Ram>::inv_cache()
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_sa]:
 
-IMPLEMENT
-template< unsigned long Flush_area, bool Ram >
-FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_cache()
+#include "mem_layout.h"
+
+IMPLEMENT inline ALWAYS_INLINE NEEDS["mem_layout.h"]
+void Mmu::flush_cache()
 {
   Mword dummy;
   asm volatile (
@@ -301,8 +275,7 @@ FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_cache()
 }
 
 IMPLEMENT
-template< unsigned long Flush_area, bool Ram >
-FIASCO_NOINLINE void Mmu<Flush_area, Ram>::clean_dcache()
+void Mmu::clean_dcache()
 {
   Mword dummy;
   asm volatile (
@@ -318,8 +291,7 @@ FIASCO_NOINLINE void Mmu<Flush_area, Ram>::clean_dcache()
 }
 
 IMPLEMENT
-template< unsigned long Flush_area, bool Ram >
-FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_dcache()
+void Mmu::flush_dcache()
 {
   Mword dummy;
   asm volatile (
@@ -339,9 +311,10 @@ FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_dcache()
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_pxa]:
 
-IMPLEMENT
-template< unsigned long Flush_area, bool Ram >
-FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_cache()
+#include "mem_layout.h"
+
+IMPLEMENT inline ALWAYS_INLINE NEEDS["mem_layout.h"]
+void Mmu::flush_cache()
 {
   Mword dummy1, dummy2;
   asm volatile
@@ -359,13 +332,12 @@ FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_cache()
      "=r" (dummy2)
      :
      "0" (Mem_layout::Cache_flush_area),
-     "1" (Ram ? 2048 : 1024)
+     "1" (2048)
     );
 }
 
 IMPLEMENT
-template< unsigned long Flush_area, bool Ram >
-FIASCO_NOINLINE void Mmu<Flush_area, Ram>::clean_dcache()
+void Mmu::clean_dcache()
 {
   Mword dummy1, dummy2;
   asm volatile
@@ -382,13 +354,12 @@ FIASCO_NOINLINE void Mmu<Flush_area, Ram>::clean_dcache()
      "=r" (dummy2)
      :
      "0" (Mem_layout::Cache_flush_area),
-     "1" (Ram ? 2048 : 1024)
+     "1" (2048)
     );
 }
 
 IMPLEMENT
-template< unsigned long Flush_area, bool Ram >
-FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_dcache()
+void Mmu::flush_dcache()
 {
   Mword dummy1, dummy2;
   asm volatile
@@ -406,16 +377,15 @@ FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_dcache()
      "=r" (dummy2)
      :
      "0" (Mem_layout::Cache_flush_area),
-     "1" (Ram ? 2048 : 1024)
+     "1" (2048)
     );
 }
 
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_920t]:
 
-IMPLEMENT
-template< unsigned long Flush_area, bool Ram >
-FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_cache()
+IMPLEMENT inline ALWAYS_INLINE
+void Mmu::flush_cache()
 {
   Mem::dsb();
 
@@ -428,16 +398,12 @@ FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_cache()
   asm volatile("mcr p15,0,%0,c7,c5,0" : : "r" (0) : "memory");
 }
 
-IMPLEMENT
-template< unsigned long Flush_area, bool Ram >
-FIASCO_NOINLINE void Mmu<Flush_area, Ram>::clean_dcache()
+IMPLEMENT void Mmu::clean_dcache()
 {
   flush_cache();
 }
 
-IMPLEMENT
-template< unsigned long Flush_area, bool Ram >
-FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_dcache()
+IMPLEMENT void Mmu::flush_dcache()
 {
   flush_cache();
 }
@@ -445,9 +411,8 @@ FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_dcache()
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_926]:
 
-IMPLEMENT
-template< unsigned long Flush_area, bool Ram >
-FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_cache()
+IMPLEMENT inline ALWAYS_INLINE
+void Mmu::flush_cache()
 {
   asm volatile
     (
@@ -463,8 +428,7 @@ FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_cache()
 }
 
 IMPLEMENT
-template< unsigned long Flush_area, bool Ram >
-FIASCO_NOINLINE void Mmu<Flush_area, Ram>::clean_dcache()
+void Mmu::clean_dcache()
 {
   asm volatile
     (
@@ -479,8 +443,7 @@ FIASCO_NOINLINE void Mmu<Flush_area, Ram>::clean_dcache()
 }
 
 IMPLEMENT
-template< unsigned long Flush_area, bool Ram >
-FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_dcache()
+void Mmu::flush_dcache()
 {
   asm volatile
     (

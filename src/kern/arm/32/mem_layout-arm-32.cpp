@@ -64,19 +64,6 @@ public:
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && !mmu]:
-
-#include "config.h"
-
-EXTENSION class Mem_layout
-{
-public:
-  enum Virt_layout : Address {
-    Cache_flush_area     = 0x00000000, // dummy
-  };
-};
-
-//---------------------------------------------------------------------------
 INTERFACE [arm && mmu && !cpu_virt]:
 
 #include "template_math.h"
@@ -93,17 +80,6 @@ public:
     Utcb_ptr_page        = 0xffffd000,
   };
 
-};
-
-//---------------------------------------------------------------------------
-INTERFACE [arm && mmu && cpu_virt]:
-
-EXTENSION class Mem_layout
-{
-public:
-  enum Virt_layout_kern : Address {
-    Cache_flush_area     = 0x00000000, // dummy
-  };
 };
 
 //--------------------------------------------------------------------------

@@ -208,7 +208,7 @@ Bootstrap::config_gic_ns()
     dist.write<Unsigned32>(~0U, 0x80 + i * 4);
 
   cpu.write<Unsigned32>(0xff, 4 /*PMR*/);
-  Mmu<Bootstrap::Cache_flush_area, true>::flush_cache();
+  Mmu::flush_cache();
 }
 
 IMPLEMENTATION [arm && mmu && (!pic_gic || have_arm_gicv3)]:
@@ -236,7 +236,7 @@ switch_from_el2_to_el1()
 
   asm volatile ("dsb sy" : : : "memory");
   // SCTLR.C might toggle, so flush cache
-  Mmu<Bootstrap::Cache_flush_area, true>::flush_cache();
+  Mmu::flush_cache();
 
   // Ensure defined state of SCTLR_EL1
   asm volatile ("msr SCTLR_EL1, %x0         \n"
@@ -296,7 +296,7 @@ switch_from_el3_to_el1()
   // drain the data and instruction caches as we might switch from
   // secure to non-secure mode and only secure mode can clear
   // caches for secure memory.
-  Mmu<Bootstrap::Cache_flush_area, true>::flush_cache();
+  Mmu::flush_cache();
 
   // setup SCR (disable monitor completely)
   asm volatile ("msr scr_el3, %0"
@@ -484,7 +484,7 @@ Bootstrap::leave_el3()
   // drain the data and instruction caches as we might switch from
   // secure to non-secure mode and only secure mode can clear
   // caches for secure memory.
-  Mmu<Bootstrap::Cache_flush_area, true>::flush_cache();
+  Mmu::flush_cache();
 
   asm volatile ("msr sctlr_el2, %0" : : "r"(sctlr) : "memory");
 
