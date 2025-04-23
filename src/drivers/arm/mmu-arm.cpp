@@ -295,7 +295,7 @@ FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_cache()
       "     mcr  p15, 0, r0, c7, c7, 0  \n"
       "     mcr  p15, 0, r0, c7, c10, 4 \n" // drain WB
       : "=r" (dummy)
-      : "r" (Flush_area), "i" (dcache_line_size())
+      : "r" (Mem_layout::Cache_flush_area), "i" (dcache_line_size())
       : "r0"
       );
 }
@@ -312,7 +312,7 @@ FIASCO_NOINLINE void Mmu<Flush_area, Ram>::clean_dcache()
       "     bne 1b            \n"
       "     mcr  p15, 0, r0, c7, c10, 4 \n" // drain WB
       : "=r" (dummy)
-      : "r" (Flush_area), "i" (dcache_line_size())
+      : "r" (Mem_layout::Cache_flush_area), "i" (dcache_line_size())
       : "r0"
       );
 }
@@ -331,7 +331,7 @@ FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_dcache()
       "     mcr  p15, 0, r0, c7, c6, 0  \n" // inv D cache
       "     mcr  p15, 0, r0, c7, c10, 4 \n" // drain WB
       : "=r" (dummy)
-      : "r" (Flush_area), "i" (dcache_line_size())
+      : "r" (Mem_layout::Cache_flush_area), "i" (dcache_line_size())
       : "r0"
       );
 }
@@ -358,7 +358,7 @@ FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_cache()
      "=r" (dummy1),
      "=r" (dummy2)
      :
-     "0" (Flush_area),
+     "0" (Mem_layout::Cache_flush_area),
      "1" (Ram ? 2048 : 1024)
     );
 }
@@ -381,7 +381,7 @@ FIASCO_NOINLINE void Mmu<Flush_area, Ram>::clean_dcache()
      "=r" (dummy1),
      "=r" (dummy2)
      :
-     "0" (Flush_area),
+     "0" (Mem_layout::Cache_flush_area),
      "1" (Ram ? 2048 : 1024)
     );
 }
@@ -405,7 +405,7 @@ FIASCO_NOINLINE void Mmu<Flush_area, Ram>::flush_dcache()
      "=r" (dummy1),
      "=r" (dummy2)
      :
-     "0" (Flush_area),
+     "0" (Mem_layout::Cache_flush_area),
      "1" (Ram ? 2048 : 1024)
     );
 }
