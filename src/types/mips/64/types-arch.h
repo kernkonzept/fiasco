@@ -35,8 +35,6 @@ typedef Signed32 Small_atomic_int;
 
 /// (virtual or physical address) should be addr_t or something
 typedef unsigned long int     Address;
-typedef Address vaddr_t;
-typedef Address vsize_t;
 enum Address_vals : Address
 {
   Invalid_address = ~0UL
