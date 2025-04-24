@@ -1,5 +1,4 @@
-#ifndef TYPES_ARCH_H__
-#define TYPES_ARCH_H__
+#pragma once
 
 #define L4_PTR_FMT              "%016lx"
 #define L4_MWORD_FMT            "%016lx"
@@ -29,21 +28,13 @@ typedef signed char Small_atomic_int;
 /// virtual or physical address in 32 bit mode (bootup)
 /// (virtual or physical address) should be addr_t or something
 typedef Mword                   Address;
-enum Address_vals
-#ifdef __cplusplus
-: Address
-#endif
+enum Address_vals : Address
 {
   Invalid_address = ~0UL
 };
 
 typedef Unsigned64              Cpu_time;
 
-#ifdef __cplusplus
-
 #include <cxx/cxx_int>
+
 typedef cxx::int_type<Unsigned32, struct Cpu_phys_id_t> Cpu_phys_id;
-
-#endif
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef TYPES_ARCH_H__
-#define TYPES_ARCH_H__
+#pragma once
 
 #include "globalconfig.h"
 
@@ -38,21 +37,13 @@ typedef Signed32 Small_atomic_int;
 typedef unsigned long int     Address;
 typedef Address vaddr_t;
 typedef Address vsize_t;
-enum Address_vals
-#ifdef __cplusplus
-: Address
-#endif
+enum Address_vals : Address
 {
   Invalid_address = ~0UL
 };
 
 typedef Unsigned64 Cpu_time;
 
-#ifdef __cplusplus
-
 #include <cxx/cxx_int>
+
 typedef cxx::int_type<unsigned short, struct Cpu_phys_id_t> Cpu_phys_id;
-
-#endif
-
-#endif
