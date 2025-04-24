@@ -3,12 +3,9 @@ INTERFACE[arm && 32bit && !cpu_virt]:
 EXTENSION class Proc
 {
 public:
-  enum : unsigned
-  {
-    // user threads run on 'usr' mode
-    Status_mode_user      = 0x10, // usr
-    Status_mode_always_on = 0x110,
-  };
+  // user threads run on 'usr' mode
+  static constexpr unsigned Status_mode_user      = 0x10; // usr
+  static constexpr unsigned Status_mode_always_on = 0x110;
 };
 
 //--------------------------------------------------------------------
@@ -17,13 +14,10 @@ INTERFACE[arm && 32bit && cpu_virt]:
 EXTENSION class Proc
 {
 public:
-  enum : unsigned
-  {
-    Status_mode_user_el0   = 0x10, // usr
-    Status_mode_user_el1   = 0x1f, // sys
-    Status_mode_user      = Status_mode_user_el0,
-    Status_mode_always_on = 0x110,
-  };
+  static constexpr unsigned Status_mode_user_el0   = 0x10; // usr
+  static constexpr unsigned Status_mode_user_el1   = 0x1f; // sys
+  static constexpr unsigned Status_mode_user       = Status_mode_user_el0;
+  static constexpr unsigned Status_mode_always_on  = 0x110;
 };
 
 //--------------------------------------------------------------------

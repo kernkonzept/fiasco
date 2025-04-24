@@ -103,33 +103,28 @@ public:
 EXTENSION class Proc
 {
 private:
-  enum : unsigned
-  {
-    Status_FIQ_disabled        = 0x40,
-    Status_IRQ_disabled        = 0x80,
-  };
+  static constexpr unsigned Status_FIQ_disabled = 0x40;
+  static constexpr unsigned Status_IRQ_disabled = 0x80;
 
 public:
-  enum : unsigned
-  {
-    Status_mode_mask           = 0x1f,
+  static constexpr unsigned Status_mode_mask = 0x1f;
+  static constexpr unsigned Status_interrupts_disabled = Status_FIQ_disabled
+                                                         | Status_IRQ_disabled;
+  static constexpr unsigned Status_thumb = 0x20;
 
-    Status_interrupts_disabled = Status_FIQ_disabled | Status_IRQ_disabled,
-    Status_thumb               = 0x20,
+  static constexpr unsigned PSR_m_usr = 0x10;
+  static constexpr unsigned PSR_m_fiq = 0x11;
+  static constexpr unsigned PSR_m_irq = 0x12;
+  static constexpr unsigned PSR_m_svc = 0x13;
+  static constexpr unsigned PSR_m_mon = 0x16;
+  static constexpr unsigned PSR_m_abt = 0x17;
+  static constexpr unsigned PSR_m_hyp = 0x1a;
+  static constexpr unsigned PSR_m_und = 0x1b;
+  static constexpr unsigned PSR_m_sys = 0x1f;
 
-    PSR_m_usr = 0x10,
-    PSR_m_fiq = 0x11,
-    PSR_m_irq = 0x12,
-    PSR_m_svc = 0x13,
-    PSR_m_mon = 0x16,
-    PSR_m_abt = 0x17,
-    PSR_m_hyp = 0x1a,
-    PSR_m_und = 0x1b,
-    PSR_m_sys = 0x1f,
-
-    Is_hyp = cxx::const_ite<TAG_ENABLED(cpu_virt)>(1, 0),
-    Status_mode_supervisor = cxx::const_ite<Is_hyp>(PSR_m_hyp, PSR_m_svc),
-  };
+  static constexpr unsigned Is_hyp = cxx::const_ite<TAG_ENABLED(cpu_virt)>(1, 0);
+  static constexpr unsigned Status_mode_supervisor = cxx::const_ite<Is_hyp>(PSR_m_hyp,
+                                                                            PSR_m_svc);
 
   static Cpu_phys_id cpu_id();
 };
@@ -142,14 +137,11 @@ INTERFACE[arm && !arm_em_tz]:
 EXTENSION class Proc
 {
 public:
-  enum : unsigned
-    {
-      Cli_mask                = Status_interrupts_disabled,
-      Sti_mask                = Status_interrupts_disabled,
-      Status_preempt_disabled = Status_IRQ_disabled,
-      Status_interrupts_mask  = Status_interrupts_disabled,
-      Status_always_mask      = Status_mode_always_on,
-    };
+  static constexpr unsigned Cli_mask                = Status_interrupts_disabled;
+  static constexpr unsigned Sti_mask                = Status_interrupts_disabled;
+  static constexpr unsigned Status_preempt_disabled = Status_IRQ_disabled;
+  static constexpr unsigned Status_interrupts_mask  = Status_interrupts_disabled;
+  static constexpr unsigned Status_always_mask      = Status_mode_always_on;
 };
 
 //--------------------------------------------------------------------
@@ -160,14 +152,12 @@ INTERFACE[arm && arm_em_tz]:
 EXTENSION class Proc
 {
 public:
-  enum : unsigned
-    {
-      Cli_mask                = Status_FIQ_disabled,
-      Sti_mask                = Status_FIQ_disabled,
-      Status_preempt_disabled = Status_FIQ_disabled,
-      Status_interrupts_mask  = Status_FIQ_disabled,
-      Status_always_mask      = Status_mode_always_on | Status_IRQ_disabled,
-    };
+  static constexpr unsigned Cli_mask                = Status_FIQ_disabled;
+  static constexpr unsigned Sti_mask                = Status_FIQ_disabled;
+  static constexpr unsigned Status_preempt_disabled = Status_FIQ_disabled;
+  static constexpr unsigned Status_interrupts_mask  = Status_FIQ_disabled;
+  static constexpr unsigned Status_always_mask      = Status_mode_always_on
+                                                      | Status_IRQ_disabled;
 };
 
 //--------------------------------------------------------------------
