@@ -5,8 +5,8 @@
 #define __THROW
 #endif
 
-#include "cdefs.h"
-#include "types.h"
+#include <stddef.h>
+#include <cdefs.h>
 
 __BEGIN_DECLS
 
