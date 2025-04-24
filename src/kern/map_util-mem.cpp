@@ -132,7 +132,7 @@ init_mapdb_mem(Space *sigma0)
   Page_order const *ps = Mem_space::get_global_page_sizes();
   unsigned idx = 0;
   unsigned phys_bits(Cpu::boot_cpu()->phys_bits());
-  phys_bits = min<unsigned>(phys_bits, MWORD_BITS);
+  phys_bits = min(phys_bits, MWORD_BITS);
 
   Page_order last_bits(phys_bits);
 

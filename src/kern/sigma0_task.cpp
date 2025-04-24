@@ -35,7 +35,7 @@ Sigma0_task::v_fabricate(Mem_space::Vaddr address,
 PUBLIC inline
 Page_number
 Sigma0_task::mem_space_map_max_address() const override
-{ return Page_number(1UL << (unsigned{MWORD_BITS} - unsigned{Mem_space::Page_shift})); }
+{ return Page_number(1UL << (MWORD_BITS - Mem_space::Page_shift)); }
 
 static DEFINE_GLOBAL Global_data<Static_object<Sigma0_task>> sigma0_task;
 
