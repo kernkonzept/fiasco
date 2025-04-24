@@ -227,6 +227,8 @@ IMPLEMENTATION [vmx]:
 
 static Kmem_slab_t<Vm_vmx_ept> _ept_allocator("Vm_vmx_ept");
 
+JDB_DEFINE_TYPENAME(Vm_vmx_ept, "\033[33;1mVm\033[m");
+
 IMPLEMENT inline
 unsigned
 Vm_vmx_ept::Epte_ptr::page_level() const
