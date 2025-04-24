@@ -23,16 +23,14 @@ typedef signed long long int   Signed64;
 typedef signed long int        Smword;
 typedef unsigned long int      Mword;
 
-enum {
-  MWORD_BITS = 64,
+static constexpr unsigned MWORD_BITS = 64;
 #if defined CONFIG_MIPS_PAGE_SIZE_16K
-  ARCH_PAGE_SHIFT = 14, // 16K pages
+static constexpr unsigned ARCH_PAGE_SHIFT = 14;
 #elif defined CONFIG_MIPS_PAGE_SIZE_4K
-  ARCH_PAGE_SHIFT = 12, // 4K pages
+static constexpr unsigned ARCH_PAGE_SHIFT = 12;
 #else
 #  error "MIPS page size must be 16KB or 4KB"
 #endif
-};
 
 typedef Signed32 Small_atomic_int;
 

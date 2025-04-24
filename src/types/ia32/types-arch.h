@@ -22,10 +22,8 @@ typedef signed long long int   Signed64;
 typedef signed long int        Smword;
 typedef unsigned long int      Mword;
 
-enum {
-  MWORD_BITS = 32,
-  ARCH_PAGE_SHIFT = 12,
-};
+static constexpr unsigned MWORD_BITS = 32;
+static constexpr unsigned ARCH_PAGE_SHIFT = 12;
 
 typedef signed char Small_atomic_int;
 
