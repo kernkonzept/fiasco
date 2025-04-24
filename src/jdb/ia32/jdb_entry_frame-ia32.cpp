@@ -32,9 +32,9 @@ Jdb_entry_frame::debug_ipi() const
 { return _trapno == 0xee; }
 
 PUBLIC inline
-Address_type
+bool
 Jdb_entry_frame::from_user() const
-{ return cs() & 3 ? ADDR_USER : ADDR_KERNEL; }
+{ return cs() & 3; }
 
 PUBLIC inline
 Address

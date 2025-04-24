@@ -6,7 +6,7 @@ INTERFACE [riscv]:
 class Jdb_entry_frame : public Trap_state
 {
 public:
-  Address_type from_user() const;
+  bool from_user() const;
   Address ip() const;
 };
 
@@ -15,9 +15,9 @@ public:
 IMPLEMENTATION [riscv]:
 
 IMPLEMENT inline
-Address_type
+bool
 Jdb_entry_frame::from_user() const
-{ return user_mode() ? ADDR_USER : ADDR_KERNEL; }
+{ return user_mode(); }
 
 IMPLEMENT inline
 Address

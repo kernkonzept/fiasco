@@ -7,7 +7,7 @@ INTERFACE [mips]:
 class Jdb_entry_frame : public Trap_state
 {
 public:
-  Address_type from_user() const;
+  bool from_user() const;
   Address ip() const;
 };
 
@@ -50,10 +50,10 @@ Jdb_entry_frame::debug_ipi() const
 }
 
 IMPLEMENT inline NEEDS["cp0_status.h"]
-Address_type
+bool
 Jdb_entry_frame::from_user() const
 {
-  return (status & Cp0_status::ST_KSU_USER) ? ADDR_USER : ADDR_KERNEL;
+  return status & Cp0_status::ST_KSU_USER;
 }
 
 PUBLIC inline

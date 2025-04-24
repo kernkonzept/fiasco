@@ -7,7 +7,7 @@ INTERFACE [ppc32]:
 class Jdb_entry_frame : public Trap_state
 {
 public:
-  Address_type from_user() const;
+  bool from_user() const;
   Address ip() const;
   bool debug_ipi() const;
 };
@@ -40,10 +40,10 @@ Jdb_entry_frame::debug_ipi() const
 { return false; }
 
 IMPLEMENT inline NEEDS["msr.h"]
-Address_type
+bool
 Jdb_entry_frame::from_user() const
 {
-  return (srr1 & Msr::Msr_pr) ? ADDR_USER : ADDR_KERNEL;
+  return srr1 & Msr::Msr_pr;
 }
 
 PUBLIC inline

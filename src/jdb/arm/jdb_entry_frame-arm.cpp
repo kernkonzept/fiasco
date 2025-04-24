@@ -7,7 +7,7 @@ INTERFACE [arm]:
 class Jdb_entry_frame : public Trap_state
 {
 public:
-  Address_type from_user() const;
+  bool from_user() const;
   Address ip() const;
   bool debug_ipi() const;
 };
@@ -35,9 +35,9 @@ Jdb_entry_frame::dump() const
 #endif
 
 IMPLEMENT inline NEEDS["processor.h"]
-Address_type
+bool
 Jdb_entry_frame::from_user() const
-{ return check_valid_user_psr() ? ADDR_USER : ADDR_KERNEL; }
+{ return check_valid_user_psr(); }
 
 PUBLIC inline
 Address Jdb_entry_frame::ksp() const

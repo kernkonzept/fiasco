@@ -206,7 +206,7 @@ Jdb_bt::get_kernel_eip_ebp(Mword &eip1, Mword &eip2, Mword &ebp)
 
 /** Show one backtrace item we found. Add symbol name and line info */
 static void
-Jdb_bt::show_item(int nr, Address ksp, Address addr, Address_type)
+Jdb_bt::show_item(int nr, Address ksp, Address addr)
 {
   printf(" %s#%d " L4_PTR_FMT " " L4_PTR_FMT "\n", nr<10 ? " ": "", nr, ksp, addr);
 }
@@ -221,12 +221,12 @@ Jdb_bt::show_without_ebp()
   for (int i=0, j=1; reinterpret_cast<Address>(ksp+i) < tcb_next-20; i++)
     {
       if (Mem_layout::in_kernel_code(ksp[i]))
-        show_item(j++, reinterpret_cast<Address>(ksp+i), ksp[i], ADDR_KERNEL);
+        show_item(j++, reinterpret_cast<Address>(ksp+i), ksp[i]);
     }
 }
 
 static void
-Jdb_bt::show(Mword ebp, Mword eip1, Mword eip2, Address_type user)
+Jdb_bt::show(Mword ebp, Mword eip1, Mword eip2, bool user)
 {
   for (int i=0; i<40 /*sanity check*/; i++)
     {
@@ -242,8 +242,8 @@ Jdb_bt::show(Mword ebp, Mword eip1, Mword eip2, Address_type user)
 
 	  ebp = m1;
 
-	  if (  (user==ADDR_KERNEL && !Mem_layout::in_kernel_code(m2))
-	      ||(user==ADDR_USER   && (m2==0 || m2 > Mem_layout::User_max)))
+	  if (  (!user && !Mem_layout::in_kernel_code(m2))
+	      ||(user   && (m2==0 || m2 > Mem_layout::User_max)))
 	    // no valid eip found -- leaving
 	    return;
 	}
@@ -260,7 +260,7 @@ Jdb_bt::show(Mword ebp, Mword eip1, Mword eip2, Address_type user)
 	  m2 = eip2;
 	}
 
-      show_item(i, ebp, m2, user);
+      show_item(i, ebp, m2);
     }
 }
 
@@ -332,7 +332,7 @@ start_backtrace_known_ebp:
 	         ", pc=" L4_PTR_FMT "):\n",
 	      tid->dbg_info()->dbg_id(), ebp, eip);
 	  if (task != nullptr)
-	    show(ebp, eip, 0, ADDR_USER);
+	    show(ebp, eip, 0, true);
 	  if constexpr (!Config::Have_frame_ptr)
 	    {
 	      puts("\n --kernel-bt-follows-- "
@@ -346,7 +346,7 @@ start_backtrace_known_ebp:
 	      puts("\n --kernel-bt-follows--");
 	      get_kernel_eip_ebp(eip, eip2, ebp);
 	      task = nullptr;
-	      show(ebp, eip, eip2, ADDR_KERNEL);
+	      show(ebp, eip, eip2, false);
 	    }
 	  putchar('\n');
 	}

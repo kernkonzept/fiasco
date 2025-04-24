@@ -472,5 +472,3 @@ size(const T(&)[N]) noexcept
 { return N; }
 
 }
-
-enum Address_type { ADDR_KERNEL = 0, ADDR_USER = 1, ADDR_UNKNOWN = 2 };
