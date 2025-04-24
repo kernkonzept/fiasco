@@ -15,33 +15,33 @@ public:
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_v5]:
 
-IMPLEMENT static inline
+IMPLEMENT static inline ALWAYS_INLINE
 void Mmu::btc_flush()
 {}
 
-IMPLEMENT static inline
+IMPLEMENT static inline ALWAYS_INLINE
 void Mmu::btc_inv()
 {}
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_v6plus && 32bit]:
 
-IMPLEMENT static inline
+IMPLEMENT static inline ALWAYS_INLINE
 void Mmu::btc_flush()
 { asm volatile ("mcr p15, 0, %0, c7, c5, 6" : : "r" (0) : "memory"); }
 
-IMPLEMENT static inline
+IMPLEMENT static inline ALWAYS_INLINE
 void Mmu::btc_inv()
 { asm volatile ("mcr p15, 0, %0, c7, c5, 0" : : "r" (0) : "memory"); }
 
 // -----------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_v6plus && 64bit]:
 
-IMPLEMENT static inline
+IMPLEMENT static inline ALWAYS_INLINE
 void Mmu::btc_flush()
 {}
 
-IMPLEMENT static inline
+IMPLEMENT static inline ALWAYS_INLINE
 void Mmu::btc_inv()
 {}
 
