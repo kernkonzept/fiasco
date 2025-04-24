@@ -4,8 +4,6 @@
 /* Capstone Disassembly Engine */
 /* By Nguyen Anh Quynh <aquynh@gmail.com>, 2013-2016 */
 
-#include <types.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
