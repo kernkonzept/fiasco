@@ -551,6 +551,7 @@ class L4_err
 public:
   enum Err
   {
+    EOk           =  0,
     EPerm         =  1, ///< Permission denied.
     ENoent        =  2, ///< Some object was not found.
     ENomem        = 12, ///< Out of memory.
