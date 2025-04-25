@@ -51,6 +51,7 @@ class Locked_prio_list : public Prio_list
 {
 public:
   Spin_lock<> *lock() { return &_lock; }
+  Spin_lock<> const *lock() const { return &_lock; }
 
 private:
   Spin_lock<> _lock;
