@@ -156,6 +156,14 @@ Context::vcpu_save_state_and_upcall()
   _exc_cont.activate(regs(), upcall);
 }
 
+PUBLIC inline
+void
+Context::vcpu_save_state_and_upcall_async_ipc()
+{
+  extern char upcall_async_ipc[] asm ("leave_by_vcpu_upcall_async_ipc");
+  _exc_cont.activate(regs(), upcall_async_ipc);
+}
+
 PUBLIC inline NEEDS["fpu.h", "space.h",
                     Context::vcpu_enable_fpu_if_disabled,
                     Context::arch_load_vcpu_kern_state,

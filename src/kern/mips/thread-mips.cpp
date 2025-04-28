@@ -345,7 +345,7 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, void *arg)
   panic("__builtin_trap()");
 }
 
-extern "C" void leave_by_vcpu_upcall()
+extern "C" void leave_by_vcpu_upcall(Trap_state *)
 {
   Thread *c = current_thread();
   c->regs()->r[0] = 0; // reset continuation

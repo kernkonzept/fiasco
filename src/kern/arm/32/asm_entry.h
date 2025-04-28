@@ -48,9 +48,30 @@ sys_call_table:
 	.word sys_arm_mem_op
 .endm
 
+.macro GEN_VCPU_UPCALL_PREAMBLE
+	sub 	sp, sp, #(RF_SIZE + 3*4)
+	stmia 	sp, {r0 - r2}
+.endm
+
 .macro GEN_VCPU_UPCALL THREAD_VCPU
 .align 4
-.global leave_by_vcpu_upcall;
+.global leave_by_vcpu_upcall_async_ipc
+.type leave_by_vcpu_upcall_async_ipc, #function
+
+/**
+ * Same as leave_by_vcpu_upcall but ensure that a partner has finished the send
+ * operation to this vCPU before returning to user space.
+ */
+leave_by_vcpu_upcall_async_ipc:
+	GEN_VCPU_UPCALL_PREAMBLE	   @ restore old return frame,
+					   @ save r0-r2 for scratch regs and
+	push	{r3, r12}		   @ preserve more callee-clobbered regs
+	bl	thread_wait_async_ipc
+	pop	{r3, r12}
+	b	1f
+
+.align 4
+.global leave_by_vcpu_upcall
 .type leave_by_vcpu_upcall, #function
 
 #define OFS__VCPU_STATE__RF (VAL__SIZEOF_TRAP_STATE - RF_SIZE + OFS__VCPU_STATE__TREX)
@@ -58,16 +79,15 @@ sys_call_table:
 /**
  * Return to user space in vCPU kernel mode.
  *
- * This is called as continuation (triggered by
- * Context::vcpu_save_state_and_upcall()) after the user space registers have
- * been restored. We just have to make sure that no registers are clobbered.
+ * Called as continuation (triggered by Context::vcpu_save_state_and_upcall())
+ * after the user space registers have been restored. We just have to make sure
+ * that no registers are clobbered.
  */
 leave_by_vcpu_upcall:
-	sub 	sp, sp, #(RF_SIZE + 3*4)   @ restore old return frame + 3 regs
-        /* save r0, r1, r2 for scratch registers */
-	stmia 	sp, {r0 - r2}
+	GEN_VCPU_UPCALL_PREAMBLE	   @ restore old return frame
+					   @ and save r0-r2 for scratch regs
 
-	/* restore original IP */
+1:	/* restore original IP */
 	CONTEXT_OF r0, sp
 	ldr	r1, [r0, #(\THREAD_VCPU)]
 	add	r1, r1, #(OFS__VCPU_STATE__RF)
@@ -91,12 +111,12 @@ leave_by_vcpu_upcall:
 	str	r2, [r0, #(OFS__THREAD__EXCEPTION_IP)]
 
 	/* Save all, except scratch registers to vCPU state */
-	stmdb	r1!, {r3-r12}
+	stmdb	r1!, {r3 - r12}
 
 	/* r1 = &vcpu_state->ts.r[3] */
 
-	/* Store scratch registers saved previously to vCPU state */
-	ldm	sp, {r3, r12, lr}     @ r3 = r0, r12 = r1, lr = r2
+	/* Store registers saved in GEN_VCPU_UPCALL_PREAMBLE to vCPU state */
+	ldm	sp, {r3, r12, lr}	   @ r3 = r0, r12 = r1, lr = r2
 	stmdb	r1, {r3, r12, lr}
 
 	add	sp, sp, #(3*4)			      @ now sp points at return frame

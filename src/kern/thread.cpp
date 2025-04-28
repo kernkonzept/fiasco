@@ -1537,3 +1537,43 @@ Thread::increment_mbt_counter()
       utcb->user[2] = 0;
     }
 }
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [(arm && 64bit) || riscv || mips]:
+
+/**
+ * Before calling leave_by_vcpu_upcall(), ensure that a partner has finished the
+ * send operation to this vCPU.
+ */
+extern "C"
+void
+leave_by_vcpu_upcall_async_ipc(Trap_state *ts)
+{
+  Thread *ct = current_thread();
+  while (EXPECT_FALSE(ct->state() & Thread_ipc_transfer))
+    {
+      ct->state_del_dirty(Thread_ready);
+      ct->schedule();
+    }
+
+  leave_by_vcpu_upcall(ts);
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [(arm && 32bit) || ia32 || amd64]:
+
+/**
+ * Called by the Assembler implementation of leave_by_vcpu_upcall() to ensure
+ * that a partner has finished the send operation to this vCPU.
+ */
+extern "C" FIASCO_FASTCALL
+void
+thread_wait_async_ipc()
+{
+  Thread *ct = current_thread();
+  while (EXPECT_FALSE(ct->state() & Thread_ipc_transfer))
+    {
+      ct->state_del_dirty(Thread_ready);
+      ct->schedule();
+    }
+}

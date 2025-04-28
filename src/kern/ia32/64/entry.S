@@ -493,29 +493,36 @@ GATE_ENTRY	(APIC_IRQ_BASE - 1), entry_ipi_remote_request, (ACC_PL_K | ACC_INTR_G
 
 GATE_INITTAB_END
 
+#define OFS__VCPU_STATE__REGS_IRET (VAL__SIZEOF_TRAP_STATE - 40 + OFS__VCPU_STATE__TREX)
+
 	.section ".entry.text.upcalls", "ax", @progbits
 	.p2align 3
 	.globl	leave_by_trigger_exception
 leave_by_trigger_exception:
-        sub $40, %rsp
+	sub	$40, %rsp	/* clean up stack from previous CPL0-CPL0 iret */
 	pushq	$0x00
 	pushq	$0xff
 	save_all_regs
 	pushq	$_slowtraps
 	jmp	thread_restore_exc_state
 
-
-#define OFS__VCPU_STATE__REGS_IRET (VAL__SIZEOF_TRAP_STATE - 40 + OFS__VCPU_STATE__TREX)
+	.p2align 3
+	.globl	leave_by_vcpu_upcall_async_ipc
+leave_by_vcpu_upcall_async_ipc:
+	sub	$40,%rsp	/* clean up stack from previous CPL0-CPL0 iret */
+	SAVE_SCRATCH
+	call	thread_restore_exc_state
+	pushq	$1f
+	jmp	thread_wait_async_ipc /* continue in leave_by_vcpu_upcall */
 
 	.p2align 3
 	.globl	leave_by_vcpu_upcall
 leave_by_vcpu_upcall:
-	sub	$40,%rsp		/* clean up stack from previous
-					 * CPL0-CPL0 iret */
+	sub	$40,%rsp	/* clean up stack from previous CPL0-CPL0 iret */
 	SAVE_SCRATCH
 	call	thread_restore_exc_state
 
-	ESP_TO_TCB_AT %rcx
+1:	ESP_TO_TCB_AT %rcx
 	mov OFS__THREAD__USER_VCPU(%rcx), %rdi
 	mov OFS__THREAD__VCPU_STATE(%rcx), %rcx
 	add $(OFS__VCPU_STATE__REGS_IRET), %rcx

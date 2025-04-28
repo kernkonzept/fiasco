@@ -350,7 +350,7 @@ Receiver::vcpu_async_ipc(Sender const *sender) const
   vcpu->_regs.set_ipc_upcall();
   self->set_partner(const_cast<Sender*>(sender));
   self->state_add_dirty(Thread_receive_wait);
-  self->vcpu_save_state_and_upcall();
+  self->vcpu_save_state_and_upcall_async_ipc();
   return Rcv_state::Irq_receive;
 }
 

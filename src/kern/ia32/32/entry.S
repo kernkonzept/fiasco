@@ -557,14 +557,12 @@ GATE_INITTAB_END
 	POST_ALIEN_IPC
 #endif
 
-
 #define OFS__VCPU_STATE__REGS_IRET (VAL__SIZEOF_TRAP_STATE - 20 + OFS__VCPU_STATE__TREX)
 
 	.p2align 3
 	.globl	leave_by_trigger_exception
 leave_by_trigger_exception:
-	subl	$12,%esp		/* clean up stack from previous
-					 * CPL0-CPL0 iret */
+	subl	$12,%esp	/* clean up stack from previous CPL0-CPL0 iret */
 	SAVE_SCRATCH
 	call	thread_restore_exc_state
 	RESTORE_SCRATCH
@@ -574,14 +572,22 @@ leave_by_trigger_exception:
 	jmp	.L_slowtraps
 
 	.p2align 3
+	.globl	leave_by_vcpu_upcall_async_ipc
+leave_by_vcpu_upcall_async_ipc:
+	subl	$12,%esp	/* clean up stack from previous CPL0-CPL0 iret */
+	SAVE_SCRATCH
+	call	thread_restore_exc_state
+	pushl	$1f
+	jmp	thread_wait_async_ipc /* continue in leave_by_vcpu_upcall */
+
+	.p2align 3
 	.globl	leave_by_vcpu_upcall
 leave_by_vcpu_upcall:
-	subl	$12,%esp		/* clean up stack from previous
-					 * CPL0-CPL0 iret */
+	subl	$12,%esp	/* clean up stack from previous CPL0-CPL0 iret */
 	SAVE_SCRATCH
 	call	thread_restore_exc_state
 
-	ESP_TO_TCB_AT %ecx
+1:	ESP_TO_TCB_AT %ecx
 	mov OFS__THREAD__USER_VCPU(%ecx), %eax /* vcpu state pointer from TCB */
 	mov OFS__THREAD__VCPU_STATE(%ecx), %ecx /* vcpu state pointer from TCB */
 	addl $(OFS__VCPU_STATE__REGS_IRET), %ecx /* skip return frame */
