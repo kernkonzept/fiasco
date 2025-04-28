@@ -468,6 +468,9 @@ Thread::handle_kill_helper(Drq *src, Context *, void *)
   return Drq::no_answer_resched();
 }
 
+/**
+ * Kill this thread (actually the current thread).
+ */
 PRIVATE
 bool
 Thread::do_kill()
@@ -476,12 +479,7 @@ Thread::do_kill()
   // already be disabled, but it does not hurt to make sure.
   auto guard = lock_guard(cpu_lock);
 
-  //
-  // Kill this thread (actually the current thread).
-  //
-
-  // But first prevent it from being woken up by asynchronous events
-
+  // First, prevent this thread from being woken up by asynchronous events.
   {
     // if IPC timeout active, reset it
     reset_timeout();
