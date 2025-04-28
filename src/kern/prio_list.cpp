@@ -43,16 +43,18 @@ public:
 
 class Iterable_prio_list : public Prio_list
 {
+private:
+  Prio_list_elem *_cursor;
+};
+
+class Locked_prio_list : public Prio_list
+{
 public:
   Spin_lock<> *lock() { return &_lock; }
 
 private:
-  Prio_list_elem *_cursor;
   Spin_lock<> _lock;
 };
-
-typedef Iterable_prio_list Locked_prio_list;
-
 
 /**
  * Single element of a priority sorted list.
