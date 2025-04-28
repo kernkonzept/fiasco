@@ -477,7 +477,7 @@ Thread::do_kill()
   auto guard = lock_guard(cpu_lock);
 
   //
-  // Kill this thread
+  // Kill this thread (actually the current thread).
   //
 
   // But first prevent it from being woken up by asynchronous events
@@ -495,6 +495,13 @@ Thread::do_kill()
     if (!rq.current_sched() || rq.current_sched()->context() == this)
       rq.set_current_sched(current()->sched());
   }
+
+  // don't vanish as long as a partner is sending to this thread
+  while (EXPECT_FALSE(state() & Thread_ipc_transfer))
+    {
+      state_del_dirty(Thread_ready);
+      schedule();
+    }
 
   // If other threads want to send me IPC messages, abort these operations.
   // IMPORTANT: After the following code block, the cpu lock must not be
