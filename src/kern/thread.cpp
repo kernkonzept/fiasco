@@ -565,20 +565,8 @@ Thread::do_kill()
       }
   }
 
-  // if engaged in IPC operation, stop it
-  if (in_sender_list())
-    {
-      while (Locked_prio_list *q = wait_queue())
-        {
-          auto g = lock_guard(q->lock());
-          if (wait_queue() == q)
-            {
-              sender_dequeue(q);
-              set_wait_queue(nullptr);
-              break;
-            }
-        }
-    }
+  // Must not be engaged in any IPC send operation at this point.
+  assert(!in_sender_list());
 
   if (utcb().kern())
     utcb().access()->free_marker = Utcb::Free_marker;
