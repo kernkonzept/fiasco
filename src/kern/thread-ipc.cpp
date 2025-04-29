@@ -170,16 +170,16 @@ Thread::prepare_xcpu_ipc_transfer_fpu()
 
 PRIVATE
 void
-Thread::ipc_send_msg(Receiver *recv, bool open_wait) override
+Thread::ipc_send_msg(Receiver *receiver, bool open_wait) override
 {
   Syscall_frame *regs = _snd_regs;
 
-  if (EXPECT_FALSE(home_cpu() != recv->home_cpu() && regs->tag().transfer_fpu()))
-    nonull_static_cast<Thread*>(recv)->prepare_xcpu_ipc_transfer_fpu();
+  if (EXPECT_FALSE(home_cpu() != receiver->home_cpu() && regs->tag().transfer_fpu()))
+    nonull_static_cast<Thread*>(receiver)->prepare_xcpu_ipc_transfer_fpu();
 
-  sender_dequeue(recv->sender_list());
-  recv->on_sender_dequeued(this);
-  bool success = transfer_msg(regs->tag(), nonull_static_cast<Thread*>(recv),
+  sender_dequeue(receiver->sender_list());
+  receiver->on_sender_dequeued(this);
+  bool success = transfer_msg(regs->tag(), nonull_static_cast<Thread*>(receiver),
                               _ipc_send_rights, open_wait);
 
   Mword state_del;
@@ -200,7 +200,7 @@ Thread::ipc_send_msg(Receiver *recv, bool open_wait) override
       state_add = Thread_transfer_failed | Thread_ready;
     }
   if (xcpu_state_change(~state_del, state_add, true))
-    recv->switch_to_locked(this);
+    receiver->switch_to_locked(this);
 }
 
 PUBLIC

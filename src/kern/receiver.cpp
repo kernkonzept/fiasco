@@ -176,9 +176,9 @@ Receiver::reset_caller()
  *      at the Receiver.
  */
 PROTECTED inline
-bool Receiver::is_partner(Sender *s) const
+bool Receiver::is_partner(Sender *sender) const
 {
-  return _partner == s;
+  return _partner == sender;
 }
 
 // Interface for senders

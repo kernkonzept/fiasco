@@ -773,9 +773,9 @@ Irq_sender::finish_send()
 
 PUBLIC inline
 Syscall_frame *
-Irq_sender::transfer_msg(Receiver *recv)
+Irq_sender::transfer_msg(Receiver *receiver)
 {
-  Syscall_frame* dst_regs = recv->rcv_regs();
+  Syscall_frame* dst_regs = receiver->rcv_regs();
 
   // set ipc return value: OK
   dst_regs->tag(L4_msg_tag(0));

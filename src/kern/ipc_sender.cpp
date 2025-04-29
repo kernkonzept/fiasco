@@ -46,12 +46,12 @@ Ipc_sender<Derived>::ipc_receiver_aborted() override
 
 PUBLIC template< typename Derived >
 virtual void
-Ipc_sender<Derived>::ipc_send_msg(Receiver *recv, bool) override
+Ipc_sender<Derived>::ipc_send_msg(Receiver *receiver, bool) override
 {
-  sender_dequeue(recv->sender_list());
-  recv->on_sender_dequeued(this);
+  sender_dequeue(receiver->sender_list());
+  receiver->on_sender_dequeued(this);
 
-  derived()->transfer_msg(recv);
+  derived()->transfer_msg(receiver);
 
   derived()->finish_send(); // WARN: Do not use this/derived() from here on!
 
@@ -59,8 +59,7 @@ Ipc_sender<Derived>::ipc_send_msg(Receiver *recv, bool) override
 
 PROTECTED inline NEEDS["config.h", "globals.h", "thread_state.h"]
 bool
-Ipc_sender_base::handle_shortcut(Syscall_frame *dst_regs,
-                                 Receiver *receiver)
+Ipc_sender_base::handle_shortcut(Syscall_frame *dst_regs, Receiver *receiver)
 {
   auto &rq = Sched_context::rq.current();
 
