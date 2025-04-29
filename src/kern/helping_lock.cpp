@@ -59,22 +59,26 @@ Helping_lock::Helping_lock ()
  * A return value of #Not_Locked may also indicate that the threading system is
  * not yet activated.
  */
-PUBLIC inline
+PUBLIC inline NEEDS["std_macros.h"]
 Helping_lock::Status NO_INSTRUMENT
 Helping_lock::test_and_set ()
 {
-  if (! threading_system_active) // still initializing?
+  if (EXPECT_FALSE(!threading_system_active)) // still initializing?
     return Not_locked;
-  
+
   return Switch_lock::test_and_set();
 }
 
 /// \copydoc test_and_set()
-PUBLIC inline NEEDS ["panic.h"]
+PUBLIC template<bool RETURN_AFTER_HELPING = false>
+inline NEEDS["std_macros.h"]
 Helping_lock::Status NO_INSTRUMENT
 Helping_lock::lock ()
 {
-  return test_and_set();
+  if (EXPECT_FALSE(!threading_system_active)) // still initializing?
+    return Not_locked;
+
+  return Switch_lock::lock<RETURN_AFTER_HELPING>();
 }
 
 /**

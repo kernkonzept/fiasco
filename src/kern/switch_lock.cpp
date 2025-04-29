@@ -52,7 +52,9 @@ public:
   {
     Not_locked, ///< The lock was formerly not acquired and -- we got it
     Locked,     ///< The lock was already acquired by ourselves
-    Invalid     ///< The lock does not exist (is invalid)
+    Invalid,    ///< The lock does not exist (is invalid)
+    Retry       ///< The lock was already acquired by someone else,
+                ///< used exlusively for `lock<RETURN_AFTER_HELPING=true>()`.
   };
 
 private:
@@ -164,20 +166,31 @@ Switch_lock::help(Context *curr, Context *owner, Address owner_id)
  * If the lock is occupied, lend the CPU to current lock owner until we are the
  * lock owner.
  *
+ * \tparam RETURN_AFTER_HELPING  Make `lock()` return with the status `Retry`
+ *                               after a preemption point.
+ *
+ * \pre When `RETURN_AFTER_HELPING` is `true`, the CPU lock must be held.
  * \pre Must be assumed to be a potential preemption point, the caller has to
  *      ensure that Switch_lock cannot be deleted, for example by holding a
  *      counted reference to it (or rather the kernel object it belongs to).
+ *      Alternatively the caller can set `RETURN_AFTER_HELPING=true`, to make
+ *      `lock()` return with the status `Retry` after a preemption point, giving
+ *      the caller the opportunity to check if the switch lock is still alive.
  *
  * \retval #Locked      The lock was already locked by the current context.
  * \retval #Not_locked  The current context got the lock (the usual case).
  * \retval #Invalid     The lock does not exist (see valid()).
+ * \retval #Retry       The lock was owned by someone else, we tried to help
+ *                      them, only relevant if `RETURN_AFTER_HELPING=true`.
  */
-PUBLIC
+PUBLIC template<bool RETURN_AFTER_HELPING = false>
 inline NEEDS["context.h", "processor.h", Switch_lock::set_lock_owner]
 Switch_lock::Status NO_INSTRUMENT
 Switch_lock::lock()
 {
-  auto guard = lock_guard(cpu_lock);
+  Lock_guard<Cpu_lock> guard;
+  if constexpr (!RETURN_AFTER_HELPING)
+    guard = lock_guard(cpu_lock);
 
   Mword o = access_once(&_lock_owner);
   if (EXPECT_FALSE(o & 1))
@@ -199,6 +212,10 @@ Switch_lock::lock()
             break;
 
           help(c, reinterpret_cast<Context *>(o), o);
+
+          if constexpr (RETURN_AFTER_HELPING)
+            return Retry;
+
         }
     }
   while (!set_lock_owner(c));
