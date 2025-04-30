@@ -319,7 +319,7 @@ SRC_ALL = $(SRC_S) $(SRC_CPP) $(SRC_C) $(SRC_CC)
 ifeq ($(filter clean cleanall mrproper,$(MAKECMDGOALS)),)
 DEPS	= $(foreach file,$(SRC_ALL), $(dir $(file)).$(notdir $(file)).d)
 
-CC_WHITELIST-gcc     := 11 12 13 14
+CC_WHITELIST-gcc     := 11 12 13 14 15
 # Clang >= 5 required to support C++17. Furthermore:
 #  - ARM: Clang<9:  "asm goto" constructs not supported
 #  - IA32: Clang<9: "CC_HAS_ASM_FLAG_OUTPUTS" not supported
