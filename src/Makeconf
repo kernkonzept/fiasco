@@ -323,7 +323,7 @@ CC_WHITELIST-gcc     := 11 12 13 14 15
 # Clang >= 5 required to support C++17. Furthermore:
 #  - ARM: Clang<9:  "asm goto" constructs not supported
 #  - IA32: Clang<9: "CC_HAS_ASM_FLAG_OUTPUTS" not supported
-CC_WHITELIST-clang   := 10 11 12 13 14 15 16 17 18 19
+CC_WHITELIST-clang   := 10 11 12 13 14 15 16 17 18 19 20
 CC_WHITELIST         := $(CC_WHITELIST-$(CC_TYPE))
 
 # https://github.com/llvm/llvm-project/issues/53645 -- e.g. printf=>puts
