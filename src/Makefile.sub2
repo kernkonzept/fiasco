@@ -93,6 +93,25 @@ docs:
 
 ###
 
+fault_info:
+	$(VERBOSE)if [ -z "$(IP)" ]; then                                         \
+	  echo "";                                                                \
+	  echo "ERROR: Please provide the faulting instruction location via IP="; \
+	  echo "";                                                                \
+	  exit 1;                                                                 \
+	fi
+	$(VERBOSE)if [ ! -e "fiasco.debug" ]; then                                \
+	  echo "";                                                                \
+	  echo "ERROR: There is no fiasco.debug finary";                          \
+	  echo "";                                                                \
+	  exit 1;                                                                 \
+	fi
+	$(VERBOSE)grep -v -e '^#' globalconfig.out
+	$(VERBOSE)$(OBJDUMP) -ldSC fiasco.debug | \
+	    grep --color=auto -C12 -E '^(0x)?([[:space:]]|0)*$(IP)'
+
+###
+
 # Make function "makedeps":  Creates (on stdout) a list of Make-like
 # dependencies in a format suitable for $(SHOWDEPS).  Expects a list
 # of source (BASE-suffix.{cpp,cc,c}, BASE[_i].h) files as input and extracts
