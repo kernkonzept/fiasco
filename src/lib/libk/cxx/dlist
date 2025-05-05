@@ -127,8 +127,8 @@ public:
     return pos;
   }
 
-  static T *self_insert(T *e)
-  { C::next(e) = C::prev(e) = e; return e; }
+  static void self_insert(typename C::Item *e)
+  { C::next(e) = C::prev(e) = e; }
 
   static void remove_last(T *e)
   { C::next(e) = nullptr; }
@@ -239,7 +239,10 @@ public:
   {
     T *h = H::head(_f);
     if (!h)
-      H::set_head(_f, Base::self_insert(e));
+      {
+        Base::self_insert(e);
+        H::set_head(_f, e);
+      }
     else
       {
         Base::insert_before(e, this->iter(h));
@@ -294,7 +297,7 @@ public:
   typedef T* value_type;
   typedef T* Value_type;
 
-  D_list() { C::next(&_h) = C::prev(&_h) = &_h; }
+  D_list() { this->self_insert(&_h); }
 
   D_list(D_list const &) = delete;
   void operator = (D_list const &) = delete;
