@@ -307,6 +307,21 @@ public:
   void remove(T *e) { Base::remove(e); }
   Iterator erase(Iterator const &e) { return Base::erase(e); }
 
+  void clear()
+  {
+    // Just clear the _dli_next pointers of all elements. It is the indicator
+    // that an element is not on a list.
+    Internal_type *i = C::next(&_h);
+    while (i != &_h)
+      {
+        Internal_type *d = i;
+        i = C::next(i);
+        C::next(d) = nullptr;
+      }
+
+    this->self_insert(&_h);
+  }
+
   void push(T *e, Pos pos)
   {
     if (pos == Front)
