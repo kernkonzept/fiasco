@@ -398,6 +398,30 @@ public:
   void push_back(T *e) { push(e, Back); }
   void push_front(T *e) { push(e, Front); }
 
+  /**
+   * Remove element from the end of the list and return it.
+   *
+   * \pre The list is not empty.
+   */
+  T *pop_back()
+  {
+    T *ret = *(end()--);
+    remove(ret);
+    return ret;
+  }
+
+  /**
+   * Remove element from the beginning of the list and return it.
+   *
+   * \pre The list is not empty.
+   */
+  T *pop_front()
+  {
+    T *ret = *begin();
+    remove(ret);
+    return ret;
+  }
+
   Iterator begin() const { return this->__iter(C::next(const_cast<Internal_type *>(&_h))); }
   Iterator end() const { return this->__iter(const_cast<Internal_type *>(&_h)); }
 
