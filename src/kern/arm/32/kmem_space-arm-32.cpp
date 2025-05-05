@@ -1,12 +1,19 @@
+// --------------------------------------------------------------------
 IMPLEMENTATION [arm && mmu]:
 
+#include "config.h"
 #include "kmem.h"
 
-// always 16 KB also for LPAE we use 4 consecutive second level tables
+namespace Boot_paging
+{
+  // always 16 KB also for LPAE we use 4 consecutive second level tables
+  constexpr unsigned Kernel_pdir_size = 4 * Config::PAGE_SIZE;
+}
+
 union
 {
   Kpdir kpdir;
-  char storage[0x4000];
+  Unsigned8 storage[Boot_paging::Kernel_pdir_size];
 } kernel_page_directory
   __attribute__((aligned(0x4000), section(".bss.kernel_page_dir")));
 
@@ -26,10 +33,15 @@ IMPLEMENTATION[arm && mmu && arm_lpae]:
 
 #include "boot_infos.h"
 
+namespace Boot_paging
+{
+  constexpr unsigned Kernel_lpae_dir_size = sizeof(Unsigned64) * 4;
+}
+
 union
 {
   Kpdir kpdir;
-  Unsigned64 storage[4];
+  Unsigned8 storage[Boot_paging::Kernel_lpae_dir_size];
 } kernel_lpae_dir __attribute__((aligned(4 * sizeof(Unsigned64))));
 
 DEFINE_GLOBAL_CONSTINIT Global_data<Kpdir *> Kmem::kdir(&kernel_lpae_dir.kpdir);
