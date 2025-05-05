@@ -453,7 +453,7 @@ public:
         gsi -= _block[i].sz;
       }
 
-    printf("KERNEL: exynos-irq: Invalid gsi=%ld\n", origsi);
+    printf("KERNEL: exynos-irq: Invalid gsi=%ld\n", origgsi);
     return Chip_pin();
   }
 
@@ -529,8 +529,8 @@ Mgr_int::Mgr_int()
     { 96,                 _gic },
     { 54 * 8,             _cc },
     { 32,                 _wu_gc },
-    { _ei_gc1->nr_gsis(), _ei_gc1 },
-    { _ei_gc2->nr_gsis(), _ei_gc2 },
+    { _ei_gc1->nr_pins(), _ei_gc1 },
+    { _ei_gc2->nr_pins(), _ei_gc2 },
   };
 
   _block = soc;
@@ -539,10 +539,9 @@ Mgr_int::Mgr_int()
   calc_nr_gsis();
 }
 
-
 PUBLIC
 bool
-Mgr_int::set_cpu(Mword gsi, Cpu_number cpu) const override
+Mgr_int::set_cpu(Mword gsi, Cpu_number cpu) const
 {
   // this handles only the MCT_L[01] timers
   if (   gsi == 379  // MCT_L1: Combiner 35:3
@@ -725,7 +724,7 @@ Mgr_ext::Mgr_ext()
  */
 PUBLIC
 bool
-Mgr_ext::set_cpu(Mword gsi, Cpu_number cpu) const override
+Mgr_ext::set_cpu(Mword gsi, Cpu_number cpu) const
 {
   if (!Platform::is_4412() && gsi == 80)  // MCT_L1
     return _gic.cpu(cpu)->set_cpu(80, cpu);
@@ -920,10 +919,10 @@ Mgr::Mgr()
     { Platform::is_5410() ? 256U : 160U, Pic::gic },
     { 32 * 8,                            _cc },
     { 32,                                _wu_gc },
-    { _ei_gc1->nr_gsis(),                _ei_gc1 },
-    { _ei_gc2->nr_gsis(),                _ei_gc2 },
-    { _ei_gc3->nr_gsis(),                _ei_gc3 },
-    { _ei_gc4->nr_gsis(),                _ei_gc4 },
+    { _ei_gc1->nr_pins(),                _ei_gc1 },
+    { _ei_gc2->nr_pins(),                _ei_gc2 },
+    { _ei_gc3->nr_pins(),                _ei_gc3 },
+    { _ei_gc4->nr_pins(),                _ei_gc4 },
   };
 
   _block = socblock;
@@ -937,7 +936,7 @@ Mgr::Mgr()
  */
 PUBLIC
 bool
-Mgr::set_cpu(Mword gsi, Cpu_number cpu) const override
+Mgr::set_cpu(Mword gsi, Cpu_number cpu) const
 {
   // this handles only the MCT_L[0123] timers
   if (   gsi == 152   // MCT_L0
