@@ -14,11 +14,12 @@ class D_list_item
 {
 public:
   constexpr D_list_item() : _dli_next(nullptr), _dli_prev(nullptr) {}
+
+  D_list_item(D_list_item const &) = delete;
+  void operator = (D_list_item const &) = delete;
+
 private:
   friend struct D_list_item_policy;
-
-  D_list_item(D_list_item const &);
-  void operator = (D_list_item const &);
 
   D_list_item *_dli_next, *_dli_prev;
 };
@@ -295,6 +296,9 @@ public:
 
   D_list() { C::next(&_h) = C::prev(&_h) = &_h; }
 
+  D_list(D_list const &) = delete;
+  void operator = (D_list const &) = delete;
+
   bool empty() const { return C::next(&_h) == &_h; }
 
   void remove(T *e) { Base::remove(e); }
@@ -321,9 +325,6 @@ public:
   }
 
 private:
-  D_list(D_list const &);
-  void operator = (D_list const &);
-
   Internal_type _h;
 };
 
