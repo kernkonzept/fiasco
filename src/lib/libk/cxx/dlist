@@ -317,6 +317,7 @@ public:
   typedef T* Value_type;
 
   constexpr D_list() { this->self_insert(&_h); }
+  ~D_list() { clear(); }
 
   D_list(D_list &&o)
   {
