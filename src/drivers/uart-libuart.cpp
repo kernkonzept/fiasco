@@ -8,7 +8,11 @@ EXTENSION class Uart
 {
 private:
   static void init_uart_instance(Unsigned32 base_baud);
+  /** Called _before_ executing startup() of the UART driver. */
   void bsp_init();
+
+  /** Called _after_ executing startup() of the UART driver. */
+  void bsp_init_2(L4::Uart *);
 
   int _irq = -1;
   static Global_data<L4::Uart *> _uart;
@@ -35,6 +39,11 @@ void
 Uart::bsp_init()
 {}
 
+IMPLEMENT_DEFAULT
+void
+Uart::bsp_init_2(L4::Uart *)
+{}
+
 PROTECTED bool
 Uart::startup(L4::Io_register_block const *reg, int irq, Unsigned32 base_baud,
               bool resume)
@@ -48,6 +57,8 @@ Uart::startup(L4::Io_register_block const *reg, int irq, Unsigned32 base_baud,
 
   if (!_uart->startup(reg))
     return false;
+
+  bsp_init_2(_uart);
 
   add_state(ENABLED);
   return true;

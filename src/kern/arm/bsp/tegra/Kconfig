@@ -1,20 +1,35 @@
 # PF: TEGRA
-# PFDESCR: NVIDIA Tegra platform
-# PFSELECT: CAN_ARM_CPU_CORTEX_A9 CAN_ARM_CACHE_L2CXX0 ARM_GIC HAVE_ARM_GICV2
+# PFDESCR: NVIDIA Jetson Orin / Tegra platform
+# PFSELECT: ARM_GIC
 # PFDEPENDS: ARM
 
 choice
-	prompt "Tegra Platform"
-	default PF_TEGRA2
+	prompt "Jetson Orin / Tegra Platform"
+	default PF_TEGRA_ORIN
 
-config PF_TEGRA2
+config PF_TEGRA_TEGRA2
 	bool "Tegra2"
 	depends on PF_TEGRA
+	select CAN_ARM_CPU_CORTEX_A9
+	select CAN_ARM_CACHE_L2CXX0
+	select HAVE_ARM_GICV2
 
-config PF_TEGRA3
+config PF_TEGRA_TEGRA3
 	bool "Tegra3"
 	depends on PF_TEGRA
+	select CAN_ARM_CPU_CORTEX_A9
+	select CAN_ARM_CACHE_L2CXX0
+	select HAVE_ARM_GICV2
 
+config PF_TEGRA_ORIN
+	bool "Jetson Orin"
+	depends on PF_TEGRA
+	select CAN_ARM_CPU_CORTEX_A76
+	select HAVE_ARM_GICV3
+	select ARM_PSCI
+	select HAS_ARM_PSCI
+	select HAS_DT_OPTION
+	select DT
 endchoice
 
 choice
@@ -23,12 +38,18 @@ choice
 
 config PF_TEGRA_TIMER_MP
 	bool "MP timer"
+	depends on PF_TEGRA_TEGRA2 || PF_TEGRA_TEGRA3
 	help
 	  ARM local-core multi-processor timer.
 
 config PF_TEGRA_TIMER_TMR
 	bool "TMR timer"
+	depends on PF_TEGRA_TEGRA2 || PF_TEGRA_TEGRA3
 	help
 	  Single broadcasting timer.
+
+config PF_TEGRA_TIMER_GENERIC
+	bool "Generic Timer"
+	depends on PF_TEGRA_ORIN
 
 endchoice

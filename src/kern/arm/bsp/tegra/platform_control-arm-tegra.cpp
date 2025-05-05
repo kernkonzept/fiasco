@@ -19,7 +19,7 @@ private:
   static Mword _orig_reset_vector;
 };
 
-INTERFACE [arm && mp && pf_tegra3]:
+INTERFACE [arm && mp && pf_tegra_tegra3]:
 
 EXTENSION class Platform_control
 {
@@ -38,7 +38,7 @@ private:
 };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && mp && pf_tegra2 && !arm_em_ns]:
+IMPLEMENTATION [arm && mp && pf_tegra_tegra2 && !arm_em_ns]:
 
 #include "kmem_mmio.h"
 
@@ -60,7 +60,7 @@ Platform_control::init_cpus()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && mp && pf_tegra3]:
+IMPLEMENTATION [arm && mp && pf_tegra_tegra3]:
 
 #include "io.h"
 #include "mem.h"
@@ -146,7 +146,7 @@ Platform_control::init_cpus()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && mp && pf_tegra && !arm_em_ns]:
+IMPLEMENTATION [arm && mp && pf_tegra && !arm_em_ns && !pf_tegra_orin]:
 
 #include "io.h"
 #include "kmem_mmio.h"
@@ -178,7 +178,22 @@ Platform_control::boot_ap_cpus(Address phys_reset_vector)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && mp && pf_tegra && arm_em_ns]:
+IMPLEMENTATION [arm && mp && pf_tegra && pf_tegra_orin && dt]:
+
+#include "dt.h"
+
+PUBLIC static
+void
+Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
+{
+  if (Dt::Node cpus = Dt::node_by_path("/cpus"))
+    boot_ap_cpus_dt(cpus, phys_tramp_mp_addr);
+  else
+    WARN("No /cpus device-tree node found!\n");
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && mp && pf_tegra && arm_em_ns && (pf_tegra_tegra2 || pf_tegra_tegra3)]:
 
 #include <cstdio>
 
