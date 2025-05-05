@@ -134,6 +134,25 @@ public:
   { C::next(e) = nullptr; }
 
 protected:
+  /**
+   * Splice the elements of `other_list` into the list before `pos`.
+   *
+   * \pre Must not be called for an empty `other_list`!
+   * \post Leaves the `other_list` in an invalid state.
+   */
+  static void splice_heads(Const_iterator pos, typename C::Item *other_list)
+  {
+    typename C::Item *ins_next = pos._c;
+    typename C::Item *ins_prev = C::prev(pos._c);
+    typename C::Item *other_head = C::next(other_list);
+    typename C::Item *other_tail = C::prev(other_list);
+
+    C::next(ins_prev) = other_head;
+    C::prev(other_head) = ins_prev;
+    C::prev(ins_next) = other_tail;
+    C::next(other_tail) = ins_next;
+  }
+
   static Iterator __iter(typename C::Item *e) { return Iterator(e); }
 };
 
@@ -338,6 +357,15 @@ public:
 
   D_list(D_list const &) = delete;
   void operator = (D_list const &) = delete;
+
+  void splice(Const_iterator pos, D_list &&other)
+  {
+    if (other.empty())
+      return;
+
+    Base::splice_heads(pos, &other._h);
+    other.self_insert(&other._h);
+  }
 
   bool empty() const { return C::next(&_h) == &_h; }
 
