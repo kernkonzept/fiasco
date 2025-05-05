@@ -299,6 +299,43 @@ public:
 
   D_list() { this->self_insert(&_h); }
 
+  D_list(D_list &&o)
+  {
+    if (o.empty())
+      {
+        this->self_insert(&_h);
+      }
+    else
+      {
+        Internal_type *p = C::prev(&o._h);
+        Internal_type *n = C::next(&o._h);
+        C::prev(&_h) = p;
+        C::next(&_h) = n;
+        C::next(p) = &_h;
+        C::prev(n) = &_h;
+        o.self_insert(&o._h);
+      }
+  }
+
+  D_list &operator=(D_list &&o)
+  {
+    if (&o == this)
+      return *this;
+
+    clear();
+
+    if (!o.empty())
+      {
+        Internal_type *p = C::prev(&o._h);
+        Internal_type *n = C::next(&o._h);
+        C::prev(&_h) = p;
+        C::next(&_h) = n;
+        C::next(p) = &_h;
+        C::prev(n) = &_h;
+        o.self_insert(&o._h);
+      }
+  }
+
   D_list(D_list const &) = delete;
   void operator = (D_list const &) = delete;
 
