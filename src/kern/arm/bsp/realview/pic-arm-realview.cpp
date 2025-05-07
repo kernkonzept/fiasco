@@ -40,7 +40,7 @@ PUBLIC static
 void Pic::init_ap(Cpu_number cpu, bool resume)
 {
   gic->init_ap(cpu, resume);
-  static_cast<Gic*>(Irq_mgr::mgr->chip(256).chip)->init_ap(cpu, resume);
+  static_cast<Gic*>(Irq_mgr::mgr->chip_pin(256).chip)->init_ap(cpu, resume);
 }
 
 
