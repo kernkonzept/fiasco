@@ -136,7 +136,8 @@ public:
   bool sysenter() const { return features() & FEAT_SEP; }
   bool syscall() const { return ext_8000_0001_edx() & FEATA_SYSCALL; }
   bool vmx() { return boot_cpu()->ext_features() & FEATX_VMX; }
-  bool svm() { return boot_cpu()->ext_8000_0001_ecx() & FEATA_SVM; }
+  bool svm() { return boot_cpu()->vendor() == Vendor_amd
+                      && boot_cpu()->ext_8000_0001_ecx() & FEATA_SVM; }
   bool has_amd_osvw() { return  boot_cpu()->ext_8000_0001_ecx() & (1<<9); }
   unsigned virt_bits() const { return _virt_bits; }
   unsigned phys_bits() const { return _phys_bits; }
