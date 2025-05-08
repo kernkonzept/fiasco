@@ -264,6 +264,7 @@ public:
 
     Mword pin = irq->pin();
 
+    this->_mask(pin);
     Irq_chip_icu::detach(irq);
     _pins[pin] = nullptr;
   }
@@ -382,7 +383,7 @@ Irq_chip_i8259<IO>::init(Unsigned8 vect_base,
   iodelay();
 }
 
-PRIVATE template<typename IO> inline
+PROTECTED template<typename IO> inline
 void
 Irq_chip_i8259<IO>::_mask(Mword pin)
 {
