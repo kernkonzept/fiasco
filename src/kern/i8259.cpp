@@ -6,6 +6,7 @@ INTERFACE [i8259]:
 #include "spin_lock.h"
 #include "types.h"
 #include "pm.h"
+#include "bitmap.h"
 
 template<typename IO>
 class Irq_chip_i8259 : public Irq_chip_icu, private Pm_object
@@ -22,6 +23,9 @@ public:
   int set_mode(Mword, Mode) override { return 0; }
   bool is_edge_triggered(Mword) const override { return false; }
   bool set_cpu(Mword, Cpu_number) override { return false; }
+
+protected:
+  mutable Spin_lock<> _lock;
 
 private:
   enum
@@ -144,7 +148,6 @@ private:
 
   Io_address _master;
   Io_address _slave;
-  Spin_lock<> _lock;
   bool _sfn = false;
 
   // Power-management state
@@ -163,11 +166,18 @@ public:
   {
     for (auto &pin: _pins)
       pin = nullptr;
+
+    _reserved.clear_all();
   }
 
   Irq_base *irq(Mword pin) const override
   {
+    auto guard = lock_guard(_lock);
+
     if (pin >= Nr_pins)
+      return nullptr;
+
+    if (_reserved[pin])
       return nullptr;
 
     return _pins[pin];
@@ -175,14 +185,17 @@ public:
 
   bool attach(Irq_base *irq, Mword pin, bool init = true) override
   {
-    if (pin >= Nr_pins)
-      return false;
+    {
+      auto guard = lock_guard(_lock);
 
-    if (_pins[pin])
-      return false;
+      if (pin >= Nr_pins)
+        return false;
 
-    if (!cas<Irq_base *>(&_pins[pin], nullptr, irq))
-      return false;
+      if (_reserved[pin] || _pins[pin])
+        return false;
+
+      _pins[pin] = irq;
+    }
 
     this->bind(irq, pin, !init);
     return true;
@@ -190,24 +203,33 @@ public:
 
   bool reserve(Mword pin) override
   {
+    auto guard = lock_guard(_lock);
+
     if (pin >= Nr_pins)
       return false;
 
-    if (_pins[pin])
+    if (_pins[pin] || _reserved[pin])
       return false;
 
-    _pins[pin] = reinterpret_cast<Irq_base *>(1UL);
+    _reserved.set_bit(pin);
     return true;
   }
 
   void detach(Irq_base *irq) override
   {
-    _pins[irq->pin()] = nullptr;
+    auto guard = lock_guard(_lock);
+
+    Mword pin = irq->pin();
+
     Irq_chip_icu::detach(irq);
+    _pins[pin] = nullptr;
   }
 
 private:
+  using Irq_chip_i8259<IO>::_lock;
+
   Irq_base::Ptr _pins[Nr_pins];
+  Bitmap<Nr_pins> _reserved;
 };
 
 // --------------------------------------------------------

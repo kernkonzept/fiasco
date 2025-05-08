@@ -44,6 +44,9 @@ public:
 // --------------------------------------------------------------------------
 INTERFACE:
 
+#include "boot_alloc.h"
+#include "bitmap.h"
+
 /**
  * Abstraction for an IRQ controller chip.
  */
@@ -166,6 +169,17 @@ public:
 class Irq_chip_icu : public Irq_chip
 {
 public:
+  /**
+   * Bitmap for keeping track of reserved pins.
+   */
+  struct Reserved_bitmap : Bitmap_storage<unsigned long *>
+  {
+    void init(unsigned nr_pins)
+    {
+      _bits = Boot_alloced::allocate<Bitmap_elem_type>(nr_elems(nr_pins));
+    }
+  };
+
   /** Reserve the given pin of the ICU making it impossible to attach an IRQ. */
   virtual bool reserve(Mword pin) = 0;
 
