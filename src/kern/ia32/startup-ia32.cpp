@@ -92,8 +92,8 @@ Startup::stage2()
     }
   else
     {
-      auto p = new Boot_object<Irq_chip_ia32_pic>();
-      p->register_pm(Cpu_number::boot_cpu());
+      auto pic = new Boot_object<Irq_chip_ia32_pic>();
+      pic->register_pm(Cpu_number::boot_cpu());
     }
 
   Kernel_task::init(); // enables current_mem_space()
@@ -107,30 +107,33 @@ Startup::stage2()
   Ipi::init(Cpu_number::boot_cpu());
   Timer::init(Cpu_number::boot_cpu());
   Kip_init::init_kip_clock();
-  int timer_irq = Timer::irq();
+
+  unsigned timer_irq = Timer::irq();
+
   if (use_io_apic)
     {
-      // If we use the IOAPIC, we route our timer IRQ to
-      // Config::Apic_timer_vector, even with PIT or RTC
+      // If we use the I/O APIC, we route our timer IRQ to
+      // Config::Apic_timer_vector, even with PIT or RTC.
       Config::scheduler_irq_vector = Config::Apic_timer_vector;
 
-      if (timer_irq >= 0)
-	{
-	  Irq_mgr *const m = Irq_mgr::mgr;
-	  Irq_mgr::Chip_pin const cp = m->chip_pin(m->legacy_override(timer_irq));
-	  Io_apic *const apic = static_cast<Io_apic *>(cp.chip);
+      if (timer_irq != ~0U)
+        {
+          Irq_mgr *const mgr = Irq_mgr::mgr;
+          Mword const gsi = mgr->legacy_override(timer_irq);
+          Irq_mgr::Chip_pin const cp = mgr->chip_pin(gsi);
+          Io_apic *const apic = static_cast<Io_apic *>(cp.chip);
 
-	  Io_apic_entry e = apic->read_entry(cp.pin);
-	  e.vector() = Config::Apic_timer_vector;
-	  apic->write_entry(cp.pin, e);
-	}
+          Io_apic_entry entry = apic->read_entry(cp.pin);
+          entry.vector() = Config::Apic_timer_vector;
+          apic->write_entry(cp.pin, entry);
+       }
     }
   else
     {
-      if (timer_irq >= 0)
-	Config::scheduler_irq_vector = 0x20 + timer_irq;
+      if (timer_irq != ~0U)
+        Config::scheduler_irq_vector = 0x20 + timer_irq;
       else
-	Config::scheduler_irq_vector = Config::Apic_timer_vector;
+        Config::scheduler_irq_vector = Config::Apic_timer_vector;
     }
 
   Idt::set_vectors_run();

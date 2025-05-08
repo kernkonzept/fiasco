@@ -11,8 +11,9 @@ IMPLEMENTATION [apic_timer]:
 #include "std_macros.h"
 #include "warn.h"
 
-// no IRQ line for the LAPIC
-PUBLIC static inline int Timer::irq() { return -1; }
+// No global system interrupt for the Local APIC timer
+PUBLIC static inline
+unsigned Timer::irq() { return ~0U; }
 
 IMPLEMENT
 void
