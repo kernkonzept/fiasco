@@ -15,6 +15,7 @@ CONFIG_FILE	:= $(TEMPLDIR)/globalconfig.out
 TEST_TEMPLATES	:= $(patsubst $(CONFIG_FILE).%,%,$(wildcard $(CONFIG_FILE).*))
 TEST_TEMPLATES  := $(if $(TEMPLATE_FILTER),$(filter $(TEMPLATE_FILTER),$(TEST_TEMPLATES)),$(TEST_TEMPLATES))
 DFL_TEMPLATE	:= amd64-dfl
+DEFCONFIG       ?= $(TEMPLDIR)/globalconfig.out.$(DFL_TEMPLATE)
 
 buildmakefile = mkdir -p "$(1)";                                        \
 		perl -p -e '$$s = "$(CURDIR)/src"; s/\@SRCDIR\@/$$s/'   \
@@ -31,7 +32,7 @@ builddir:
 		exit 1;					\
 	fi
 	@$(call buildmakefile,$(BUILDDIR))
-	@t_dfl="$(TEMPLDIR)/globalconfig.out.$(DFL_TEMPLATE)";  \
+	@t_dfl="$(DEFCONFIG)";                                  \
 	if [ -n "$(T)" ]; then                                  \
 	  tfile="$(TEMPLDIR)/globalconfig.out.$(T)";            \
 	  [ -f "$$tfile" ] || {                                 \
@@ -100,8 +101,7 @@ fiasco.builddir.create:
 	@[ -e $(DFLBUILDDIR)/Makefile ] ||			 \
 		($(call buildmakefile,$(DFLBUILDDIR)))
 	@[ -f $(DFLBUILDDIR)/globalconfig.out ] || {		 \
-		cp  $(TEMPLDIR)/globalconfig.out.$(DFL_TEMPLATE) \
-			$(DFLBUILDDIR)/globalconfig.out;	 \
+		cp $(DEFCONFIG) $(DFLBUILDDIR)/globalconfig.out; \
 		$(MAKE) -C $(DFLBUILDDIR) olddefconfig;	         \
 	}
 
