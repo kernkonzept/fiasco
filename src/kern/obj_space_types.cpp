@@ -65,7 +65,7 @@ namespace Obj {
   };
 
   /**
-   * Tn the case of a flat copy model for capabilities, we have some
+   * In the case of a flat copy model for capabilities, we have some
    * extra mapping information directly colocated within the cap tables.
    */
   class Mapping : public cxx::H_list_item
