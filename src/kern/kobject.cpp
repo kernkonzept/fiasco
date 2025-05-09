@@ -17,8 +17,15 @@ private:
   friend class Jdb_mapdb;
   friend class Obj_mapdb_test;
 
+  /// List of mappings (cap slots) pointing to this kernel object.
   Obj::Mapping::List _root;
+  /// Capability reference count of this kernel object.
   Smword _cnt;
+  /// Lock that protects the list of mappings and capability reference count of
+  /// this kernel object.
+  /// In addition this lock also protects all mappings pointing to this kernel
+  /// object, because to modify a mapping, we first have to acquire the `_lock`
+  /// of the kernel object the mapping points to.
   Helping_lock _lock;
 
 public:
@@ -36,6 +43,12 @@ public:
   }
 
 private:
+  /**
+   * Invalidate all mappings of this kernel object.
+   *
+   * \pre The `_lock` of the kernel object must be held, which effectively locks
+   *      all the mappings pointing to it, allowing us to invalidate them.
+   */
   void invalidate_mappings()
   {
     assert(_lock.test());
