@@ -234,7 +234,8 @@ extern "C" void bootstrap_main(unsigned long load_addr)
   Unsigned32 tbbr = cxx::int_value<Bootstrap::Phys_addr>(Bootstrap::init_paging())
                     | Page::Ttbr_bits;
 
-  Mmu::flush_cache();
+  // Attention zone:
+  // Only touch loader's own memory here until paging enabled.
 
   Bootstrap::do_arm_1176_cache_alias_workaround();
   Bootstrap::enable_paging(tbbr);
@@ -253,7 +254,7 @@ IMPLEMENTATION [arm && !mmu]:
 
 extern "C" void bootstrap_main()
 {
-  Bootstrap::leave_hyp_mode();
+  Bootstrap::switch_to_el1(); // NOP for cpu_virt config
   Bootstrap::init_node_data();
 
   // force to construct an absolute relocation because GCC may not do it.

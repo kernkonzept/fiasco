@@ -29,6 +29,9 @@ Bootstrap::enable_paging(Mword pdir)
   unsigned control = Config::Cache_enabled
                      ? Cpu::Cp15_c1_cache_enabled : Cpu::Cp15_c1_cache_disabled;
 
+  disable_mmu_and_caches();
+  set_mair0(Page::Mair0_prrr_bits);
+
   asm volatile("mcr p15, 0, %[ttbcr], c2, c0, 2" // TTBCR
                : : [ttbcr] "r" (Page::Ttbcr_bits));
   Mem::dsb();
@@ -51,6 +54,8 @@ IMPLEMENTATION [arm && mmu && arm_lpae && cpu_virt]:
 PUBLIC static inline void
 Bootstrap::enable_paging(Mword pdir)
 {
+  disable_mmu_and_caches();
+
   asm volatile("mcr p15, 4, %[ttbcr], c2, c0, 2" // HTCR
                : : [ttbcr] "r" (Page::Ttbcr_bits));
   asm volatile("mcr p15, 4, %[hmair0], c10, c2, 0" // HMAIR0
@@ -74,7 +79,11 @@ static inline
 Bootstrap::Order
 Bootstrap::map_page_order() { return Order(21); }
 
-PUBLIC static inline NEEDS[Bootstrap::set_mair0]
+static inline void
+Bootstrap::set_mair0(Mword v)
+{ asm volatile ("mcr p15, 0, %0, c10, c2, 0" : : "r"(v)); }
+
+PUBLIC static inline
 Bootstrap::Phys_addr
 Bootstrap::init_paging()
 {
@@ -84,7 +93,6 @@ Bootstrap::init_paging()
   for (unsigned i = 0; i < 4; ++i)
     lpae[i] = Phys_addr((reinterpret_cast<Address>(page_dir) + 0x1000 * i) | 3);
 
-  set_mair0(Page::Mair0_prrr_bits);
   create_initial_mappings();
 
   return Phys_addr(reinterpret_cast<Mword>(lpae));
@@ -114,6 +122,8 @@ Bootstrap::enable_paging(Mword pdir)
   unsigned domains = 0x55555555; // client for all domains
   unsigned control = Config::Cache_enabled
                      ? Cpu::Cp15_c1_cache_enabled : Cpu::Cp15_c1_cache_disabled;
+
+  disable_mmu_and_caches();
 
   set_asid();
   set_ttbcr();
@@ -282,7 +292,7 @@ Bootstrap::create_initial_mappings()
 IMPLEMENTATION [arm && !mmu]:
 
 PUBLIC static inline void
-Bootstrap::leave_hyp_mode()
+Bootstrap::switch_to_el1()
 {
   // Nothing to do. Already done by bootstrap on AArch32.
 }
@@ -306,10 +316,6 @@ Bootstrap::init_node_data()
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
-
-static inline void
-Bootstrap::set_mair0(Mword v)
-{ asm volatile ("mcr p15, 0, %0, c10, c2, 0" : : "r"(v)); }
 
 asm
 (
@@ -344,6 +350,8 @@ asm
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && mmu]:
 
+#include "cpu.h"
+
 struct Elf32_dyn
 {
   enum { Reloc = 17 /* REL */, Reloc_count = 0x6ffffffa /* RELCOUNT */ };
@@ -371,4 +379,29 @@ PUBLIC static void
 Bootstrap::relocate(unsigned long load_addr)
 {
   Elf<Elf32_dyn, Elf32_rel>::relocate(load_addr);
+}
+
+PRIVATE
+static inline NEEDS["cpu.h"]
+void
+Bootstrap::disable_mmu_and_caches()
+{
+  unsigned long sctlr;
+  asm ("mrc p15, 0, %0, c1, c0" : "=r" (sctlr));
+  if (sctlr & Cpu::Cp15_c1_mmu)
+    {
+      if (sctlr & Cpu::Cp15_c1_cache)
+        {
+          Mmu::clean_dcache(&bs_info, &bs_info + 1);
+
+          extern char start_of_loader[];
+          extern char end_of_loader[];
+          Mmu::clean_dcache(start_of_loader, end_of_loader);
+        }
+
+      sctlr &= ~(Cpu::Cp15_c1_mmu | Cpu::Cp15_c1_cache | Cpu::Cp15_c1_insn_cache);
+      asm volatile("mcr p15, 0, %0, c1, c0" : : "r" (sctlr));
+      Mem::isb();
+      Mem::barrier();
+    }
 }

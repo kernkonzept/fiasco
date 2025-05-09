@@ -71,4 +71,6 @@ SECTIONS {
   .iplt           : { *(.iplt) }
   .got            : { *(.got.plt) *(.igot.plt) *(.got) *(.igot) } :rw
   .dynamic        : { *(.dynamic) } :dyn :rw
+
+  end_of_loader = ABSOLUTE(.);
 }
