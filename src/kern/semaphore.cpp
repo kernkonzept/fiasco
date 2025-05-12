@@ -155,6 +155,11 @@ Semaphore::down(Thread *ct)
    return run;
 }
 
+/*
+ * L4-IFACE: kernel-semaphore.semaphore-down
+ * PROTOCOL: L4_PROTO_SEMAPHORE
+ * RIGHTS: special
+ */
 PRIVATE inline NEEDS["assert_opt.h"] NOEXPORT ALWAYS_INLINE
 L4_msg_tag
 Semaphore::sys_down(L4_fpage::Rights rights, L4_timeout t, Utcb const *utcb)

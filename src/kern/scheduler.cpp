@@ -54,6 +54,10 @@ Scheduler::Scheduler()
 }
 
 
+/*
+ * L4-IFACE: kernel-scheduler.scheduler-run_thread
+ * PROTOCOL: L4_PROTO_SCHEDULER
+ */
 PRIVATE
 L4_msg_tag
 Scheduler::sys_run(L4_fpage::Rights, Syscall_frame *f, Utcb const *utcb)
@@ -112,6 +116,10 @@ Scheduler::sys_run(L4_fpage::Rights, Syscall_frame *f, Utcb const *utcb)
   return commit_result(0);
 }
 
+/*
+ * L4-IFACE: kernel-scheduler.scheduler-idle_time
+ * PROTOCOL: L4_PROTO_SCHEDULER
+ */
 PRIVATE
 L4_msg_tag
 Scheduler::op_sched_idle(L4_cpu_set const &cpus, Cpu_time *time)
@@ -124,6 +132,10 @@ Scheduler::op_sched_idle(L4_cpu_set const &cpus, Cpu_time *time)
   return commit_result(0);
 }
 
+/*
+ * L4-IFACE: kernel-scheduler.scheduler-info
+ * PROTOCOL: L4_PROTO_SCHEDULER
+ */
 PRIVATE
 L4_msg_tag
 Scheduler::op_sched_info(L4_cpu_set_descr const &s, Mword *m, Mword *max_cpus,

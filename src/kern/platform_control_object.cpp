@@ -32,6 +32,10 @@ JDB_DEFINE_TYPENAME(Platform_control_object, "Icu/Pfc");
 
 DEFINE_GLOBAL Global_data<Platform_control_object> Platform_control_object::pfc;
 
+/*
+ * L4-IFACE: kernel-pfc.pfc-cpu_allow_shutdown
+ * PROTOCOL: L4_PROTO_PLATFORM_CTL
+ */
 PRIVATE inline
 L4_msg_tag
 Platform_control_object::sys_cpu_allow_shutdown(L4_fpage::Rights,
@@ -53,6 +57,10 @@ Platform_control_object::sys_cpu_allow_shutdown(L4_fpage::Rights,
   return commit_result(Platform_control::cpu_allow_shutdown(cpu, utcb->values[2]));
 }
 
+/*
+ * L4-IFACE: kernel-pfc.pfc-system_suspend
+ * PROTOCOL: L4_PROTO_PLATFORM_CTL
+ */
 PRIVATE inline
 L4_msg_tag
 Platform_control_object::sys_system_suspend(L4_fpage::Rights, Syscall_frame *f,
@@ -65,6 +73,10 @@ Platform_control_object::sys_system_suspend(L4_fpage::Rights, Syscall_frame *f,
   return commit_result(Platform_control::system_suspend(extra));
 }
 
+/*
+ * L4-IFACE: kernel-pfc.pfc-system_shutdown
+ * PROTOCOL: L4_PROTO_PLATFORM_CTL
+ */
 PRIVATE inline
 L4_msg_tag
 Platform_control_object::sys_system_shutdown(L4_fpage::Rights, Syscall_frame *f,

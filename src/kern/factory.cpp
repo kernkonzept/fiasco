@@ -139,6 +139,11 @@ Factory::map_obj(Kobject_iface *o, Cap_index cap, Task *_c_space,
   return commit_result(0, words, 1);
 }
 
+/*
+ * L4-IFACE: kernel-factory.factory-create
+ * PROTOCOL: L4_PROTO_FACTORY
+ * RIGHTS: special, also for optional thread argument if an IPC gate is created
+ */
 PUBLIC
 L4_msg_tag
 Factory::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,

@@ -484,6 +484,10 @@ IMPLEMENTATION [ia32 || amd64]:
 #include <feature.h>
 KIP_KERNEL_FEATURE("segments");
 
+/*
+ * L4-IFACE: kernel-thread.thread-gdt_x86
+ * PROTOCOL: L4_PROTO_THREAD
+ */
 PRIVATE inline
 L4_msg_tag
 Thread::sys_gdt_x86(L4_msg_tag tag, Utcb const *utcb, Utcb *out)

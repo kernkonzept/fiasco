@@ -43,6 +43,13 @@ Thread::cache_op(unsigned op, Address start, Address end)
 }
 
 
+/*
+ * L4-IFACE: kernel-thread.thread-set_ulr_mips,
+ *           kernel-thread.thread-vz_save_state_mips,
+ *           kernel-thread.thread-dcache_clean_mips,
+ *           kernel-thread.thread-dcache_flush_mips,
+ * PROTOCOL: L4_PROTO_THREAD
+ */
 PROTECTED inline NEEDS["processor.h", Thread::sys_vz_save_state,
                        Thread::cache_op]
 L4_msg_tag

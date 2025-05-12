@@ -121,6 +121,11 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
 //----------------------------------------------------------------------------
 IMPLEMENTATION [amd64]:
 
+/*
+ * L4-IFACE: kernel-thread.thread-set_segment_base_amd64,
+ *           kernel-thread.thread-segment_info_amd64
+ * PROTOCOL: L4_PROTO_THREAD
+ */
 PROTECTED inline NEEDS[Thread::sys_gdt_x86]
 L4_msg_tag
 Thread::invoke_arch(L4_msg_tag tag, Utcb const *utcb, Utcb *out)

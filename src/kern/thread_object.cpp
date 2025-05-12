@@ -183,6 +183,11 @@ Thread_object::invoke(L4_obj_ref self, L4_fpage::Rights rights,
 }
 
 
+/*
+ * L4-IFACE: kernel-thread.thread-vcpu_resume
+ * PROTOCOL: L4_PROTO_THREAD
+ * RIGHTS: special for the user task passed in the vCPU state
+ */
 PRIVATE inline
 L4_msg_tag
 Thread_object::sys_vcpu_resume(L4_msg_tag const &tag, Utcb const *utcb, Utcb *)
@@ -314,6 +319,10 @@ Thread_object::sys_vcpu_resume(L4_msg_tag const &tag, Utcb const *utcb, Utcb *)
   return commit_result(target_space->resume_vcpu(this, vcpu, user_mode));
 }
 
+/*
+ * L4-IFACE: kernel-thread.thread-modify_senders
+ * PROTOCOL: L4_PROTO_THREAD
+ */
 PRIVATE inline NOEXPORT NEEDS["processor.h"]
 L4_msg_tag
 Thread_object::sys_modify_senders(L4_msg_tag tag, Utcb const *in, Utcb * /*out*/)
@@ -375,6 +384,11 @@ Thread_object::sys_modify_senders(L4_msg_tag tag, Utcb const *in, Utcb * /*out*/
   return Kobject_iface::commit_result(0);
 }
 
+/*
+ * L4-IFACE: kernel-thread.thread-register_del_irq
+ * PROTOCOL: L4_PROTO_THREAD
+ * RIGHTS: write for IRQ argument
+ */
 PRIVATE inline NOEXPORT
 L4_msg_tag
 Thread_object::sys_register_delete_irq(L4_msg_tag tag, Utcb const *in, Utcb * /*out*/)
@@ -394,6 +408,11 @@ Thread_object::sys_register_delete_irq(L4_msg_tag tag, Utcb const *in, Utcb * /*
 }
 
 
+/*
+ * L4-IFACE: kernel-thread.thread-control
+ * PROTOCOL: L4_PROTO_THREAD
+ * RIGHTS: special, also for optional task argument
+ */
 PRIVATE inline NOEXPORT
 L4_msg_tag
 Thread_object::sys_control(L4_fpage::Rights rights, L4_msg_tag tag,
@@ -471,6 +490,10 @@ Thread_object::sys_control(L4_fpage::Rights rights, L4_msg_tag tag,
 }
 
 
+/*
+ * L4-IFACE: kernel-thread.thread-vcpu_control
+ * PROTOCOL: L4_PROTO_THREAD
+ */
 PRIVATE inline NOEXPORT
 L4_msg_tag
 Thread_object::sys_vcpu_control(L4_fpage::Rights, L4_msg_tag const &tag,
@@ -619,6 +642,10 @@ Thread_object::handle_remote_ex_regs(Drq *, Context *self, void *p)
   return params->result.proto() == 0 ? Drq::need_resched() : Drq::done();
 }
 
+/*
+ * L4-IFACE: kernel-thread.thread-ex_regs
+ * PROTOCOL: L4_PROTO_THREAD
+ */
 PRIVATE inline NOEXPORT
 L4_msg_tag
 Thread_object::sys_ex_regs(L4_msg_tag const &tag, Utcb *utcb, Utcb *out)
@@ -637,6 +664,10 @@ Thread_object::sys_ex_regs(L4_msg_tag const &tag, Utcb *utcb, Utcb *out)
   return params.result;
 }
 
+/*
+ * L4-IFACE: kernel-thread.thread-switch_to
+ * PROTOCOL: L4_PROTO_THREAD
+ */
 PRIVATE inline NOEXPORT NEEDS["timer.h"]
 L4_msg_tag
 Thread_object::sys_thread_switch(L4_msg_tag const & /*tag*/, Utcb const * /*utcb*/,
@@ -699,6 +730,10 @@ Thread_object::handle_sys_thread_stats_remote(Drq *, Context *self, void *data)
   return nonull_static_cast<Thread_object*>(self)->sys_thread_stats_remote(data);
 }
 
+/*
+ * L4-IFACE: kernel-thread.thread-stats_time
+ * PROTOCOL: L4_PROTO_THREAD
+ */
 PRIVATE inline NOEXPORT
 L4_msg_tag
 Thread_object::sys_thread_stats(L4_msg_tag const &/*tag*/, Utcb const * /*utcb*/, Utcb *out)

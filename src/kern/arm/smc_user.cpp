@@ -6,6 +6,10 @@ IMPLEMENTATION[arm_smc_user]:
 
 JDB_DEFINE_TYPENAME(Smc_user, "SMC");
 
+/*
+ * L4-IFACE: kernel-smc.smc-call_arm
+ * PROTOCOL: L4_PROTO_SMCCC
+ */
 struct Smc_user : Kobject_h<Smc_user, Kobject>
 {
   L4_msg_tag kinvoke(L4_obj_ref, L4_fpage::Rights,

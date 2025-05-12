@@ -462,6 +462,11 @@ Task::destroy(Kobjects_list &reap_list) override
               L4_map_mask::full(), reap_list);
 }
 
+/*
+ * L4-IFACE: kernel-task.task-map, kernel-vm.task-map, kernel-dma_space.task-map
+ * PROTOCOL: L4_PROTO_TASK
+ * RIGHTS: write
+ */
 PRIVATE inline NOEXPORT
 L4_msg_tag
 Task::sys_map(L4_fpage::Rights rights, Syscall_frame *f, Utcb *utcb)
@@ -527,6 +532,15 @@ Task::sys_map(L4_fpage::Rights rights, Syscall_frame *f, Utcb *utcb)
 }
 
 
+/*
+ * L4-IFACE: kernel-task.task-unmap
+ * PROTOCOL: L4_PROTO_TASK
+ * RIGHTS: delete for each object argument if deletion is requested
+ */
+/*
+ * L4-IFACE: kernel-vm.task-unmap, kernel-dma_space.task-unmap
+ * PROTOCOL: L4_PROTO_TASK
+ */
 PRIVATE inline NOEXPORT
 L4_msg_tag
 Task::sys_unmap(Syscall_frame *f, Utcb *utcb)
@@ -601,6 +615,10 @@ Task::sys_caps_equal(Syscall_frame *, Utcb *utcb)
   return commit_result(c_a == c_b);
 }
 
+/*
+ * L4-IFACE: kernel-task.task-add_ku_mem, kernel-vm.task-add_ku_mem
+ * PROTOCOL: L4_PROTO_TASK
+ */
 PRIVATE inline NOEXPORT
 L4_msg_tag
 Task::sys_add_ku_mem(Syscall_frame *f, Utcb *utcb, Utcb *out)
@@ -641,6 +659,10 @@ Task::sys_add_ku_mem(Syscall_frame *f, Utcb *utcb, Utcb *out)
   return commit_result(0, words);
 }
 
+/*
+ * L4-IFACE: kernel-task.task-cap_info, kernel-vm.task-cap_info
+ * PROTOCOL: L4_PROTO_TASK
+ */
 PRIVATE inline NOEXPORT
 L4_msg_tag
 Task::sys_cap_info(Syscall_frame *f, Utcb *utcb)

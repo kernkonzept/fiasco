@@ -352,6 +352,11 @@ Kobject::~Kobject()
 }
 
 
+/*
+ * L4-IFACE: kernel-ipc_gate.ipc_gate-dec_refcnt
+ * PROTOCOL: L4_PROTO_KOBJECT
+ * RIGHTS: server
+ */
 PRIVATE inline NOEXPORT
 L4_msg_tag
 Kobject::sys_dec_refcnt(L4_msg_tag tag, Utcb const *in, Utcb *out)

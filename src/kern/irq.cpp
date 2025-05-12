@@ -318,6 +318,11 @@ Irq::get_irq_opcode(L4_msg_tag tag, Utcb const *utcb)
   return access_once(utcb->values) & 0xffff;
 }
 
+/*
+ * L4-IFACE: kernel-irq.irq-trigger, kernel-semaphore.irq-trigger,
+ *           kernel-semaphore.irq-unmask
+ * PROTOCOL: L4_PROTO_IRQ
+ */
 PROTECTED inline
 L4_msg_tag
 Irq::dispatch_irq_proto(Irq::Op op, bool may_unmask)
@@ -964,6 +969,11 @@ Irq_sender::hit_edge_irq(Irq_base *i, Upstream_irq const *ui)
 { nonull_static_cast<Irq_sender*>(i)->_hit_edge_irq(ui); }
 
 
+/*
+ * L4-IFACE: kernel-irq.ipc_gate-bind_thread
+ * PROTOCOL: L4_PROTO_KOBJECT
+ * RIGHTS: special, also for thread argument
+ */
 PRIVATE
 L4_msg_tag
 Irq_sender::sys_bind(L4_msg_tag tag, L4_fpage::Rights rights, Utcb const *utcb,
@@ -986,6 +996,11 @@ Irq_sender::sys_bind(L4_msg_tag tag, L4_fpage::Rights rights, Utcb const *utcb,
   return bind_irq_thread(t, utcb, utcb_out);
 }
 
+/*
+ * L4-IFACE: kernel-irq.irq-detach
+ * PROTOCOL: L4_PROTO_IRQ_SENDER
+ * RIGHTS: special
+ */
 PRIVATE
 L4_msg_tag
 Irq_sender::sys_detach(L4_fpage::Rights rights, Utcb * /*utcb_out*/)
@@ -1000,6 +1015,10 @@ Irq_sender::sys_detach(L4_fpage::Rights rights, Utcb * /*utcb_out*/)
 }
 
 
+/*
+ * L4-IFACE: kernel-irq.irq-unmask
+ * PROTOCOL: L4_PROTO_IRQ
+ */
 PUBLIC
 L4_msg_tag
 Irq_sender::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,

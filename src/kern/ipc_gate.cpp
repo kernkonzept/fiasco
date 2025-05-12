@@ -217,6 +217,11 @@ void Ipc_gate_obj::operator delete (Ipc_gate_obj *o, std::destroying_delete_t)
     q->free(sizeof(Ipc_gate_obj));
 }
 
+/*
+ * L4-IFACE: kernel-ipc_gate.ipc_gate-bind_thread
+ * PROTOCOL: L4_PROTO_KOBJECT
+ * RIGHTS: special, also for thread argument; server
+ */
 PRIVATE inline NOEXPORT
 L4_msg_tag
 Ipc_gate_ctl::bind_thread(L4_obj_ref, L4_fpage::Rights rights,
@@ -265,6 +270,11 @@ Ipc_gate_ctl::bind_thread(L4_obj_ref, L4_fpage::Rights rights,
   return commit_result(0);
 }
 
+/*
+ * L4-IFACE: kernel-ipc_gate.ipc_gate-get_info
+ * PROTOCOL: L4_PROTO_KOBJECT
+ * RIGHTS: server
+ */
 PRIVATE inline NOEXPORT
 L4_msg_tag
 Ipc_gate_ctl::get_infos(L4_obj_ref, L4_fpage::Rights,
@@ -364,6 +374,9 @@ Ipc_gate::block(Thread *ct, L4_timeout const &to, Utcb *u)
 }
 
 
+/*
+ * L4-IFACE: kernel-ipc_gate.ipc
+ */
 PUBLIC
 void
 Ipc_gate::invoke(L4_obj_ref /*self*/, L4_fpage::Rights rights,

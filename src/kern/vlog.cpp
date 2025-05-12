@@ -72,6 +72,10 @@ Vlog::operator delete (void *)
 }
 
 
+/*
+ * L4-IFACE: kernel-log.log-write
+ * PROTOCOL: L4_PROTO_LOG
+ */
 PRIVATE inline NOEXPORT
 void
 Vlog::log_string(Utcb const *u)
@@ -102,6 +106,11 @@ Vlog::log_string(Utcb const *u)
     }
 }
 
+/*
+ * L4-IFACE: kernel-log.log-read
+ * PROTOCOL: L4_PROTO_LOG
+ * RIGHTS: write
+ */
 PRIVATE inline NOEXPORT
 L4_msg_tag
 Vlog::get_input(L4_fpage::Rights rights, Syscall_frame*, Utcb *u)
@@ -140,6 +149,10 @@ Vlog::get_input(L4_fpage::Rights rights, Syscall_frame*, Utcb *u)
   return commit_result(0);
 }
 
+/*
+ * L4-IFACE: kernel-log.log-set_attr
+ * PROTOCOL: L4_PROTO_LOG
+ */
 PRIVATE inline NOEXPORT
 L4_msg_tag
 Vlog::set_attr(L4_fpage::Rights, Syscall_frame const *, Utcb const *u)
@@ -156,6 +169,10 @@ Vlog::set_attr(L4_fpage::Rights, Syscall_frame const *, Utcb const *u)
   return commit_result(0);
 }
 
+/*
+ * L4-IFACE: kernel-log.log-get_attr
+ * PROTOCOL: L4_PROTO_LOG
+ */
 PRIVATE inline NOEXPORT
 L4_msg_tag
 Vlog::get_attr(L4_fpage::Rights, Syscall_frame *, Utcb *u)

@@ -41,6 +41,10 @@ IMPLEMENTATION [arm && cpu_virt && vgic]:
 
 #include "vgic_global.h"
 
+/*
+ * L4-IFACE: kernel-task.task-vgicc_map_arm, kernel-vm.task-vgicc_map_arm
+ * PROTOCOL: L4_PROTO_TASK
+ */
 PRIVATE
 L4_msg_tag
 Task::map_gicc_page(L4_msg_tag tag, Utcb *utcb)

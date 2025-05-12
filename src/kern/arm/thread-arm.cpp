@@ -319,6 +319,10 @@ Thread::do_trigger_exception(Entry_frame *r, void *ret_handler)
   return 0;
 }
 
+/*
+ * L4-IFACE: kernel-thread.thread-set_tpidruro_arm
+ * PROTOCOL: L4_PROTO_THREAD
+ */
 PROTECTED inline NEEDS[Thread::set_tpidruro]
 L4_msg_tag
 Thread::invoke_arch(L4_msg_tag tag, Utcb const *utcb, Utcb *)

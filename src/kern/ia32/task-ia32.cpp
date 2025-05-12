@@ -12,6 +12,10 @@ IMPLEMENTATION [(ia32 || amd64) && !no_ldt]:
 #include "std_macros.h"
 #include "x86desc.h"
 
+/*
+ * L4-IFACE: kernel-task.task-ldt_set_x86, kernel-vm.task-ldt_set_x86
+ * PROTOCOL: L4_PROTO_TASK
+ */
 PRIVATE inline NEEDS["gdt.h"]
 bool
 Task::invoke_arch(L4_msg_tag &tag, Utcb *utcb)

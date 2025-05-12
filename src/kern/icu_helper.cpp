@@ -139,6 +139,12 @@ protected:
 //---------------------------------------------------------------------------
 IMPLEMENTATION:
 
+/*
+ * L4-IFACE: kernel-log.icu-mask, kernel-log.icu-unmask,
+ *           kernel-scheduler.icu-mask, kernel-scheduler.icu-unmask,
+ *           kernel-pfc.icu-mask, kernel-pfc.icu-unmask
+ * PROTOCOL: L4_PROTO_IRQ
+ */
 PUBLIC inline
 template<typename REAL_ICU>
 void
@@ -155,6 +161,12 @@ Icu_h<REAL_ICU>::icu_mask_irq(bool mask, unsigned pin)
     irq->unmask();
 }
 
+/*
+ * L4-IFACE: kernel-log.icu-bind, kernel-scheduler.icu-bind,
+ *           kernel-pfc.icu-bind
+ * PROTOCOL: L4_PROTO_IRQ
+ * RIGHTS: write for IRQ argument
+ */
 PUBLIC inline
 template<typename REAL_ICU>
 L4_msg_tag
@@ -169,6 +181,11 @@ Icu_h<REAL_ICU>::op_icu_bind(unsigned pin, Ko::Cap<Irq> const &irq)
   return Kobject_iface::commit_result(this_icu()->icu_attach(pin, irq.obj));
 }
 
+/*
+ * L4-IFACE: kernel-log.icu-unbind, kernel-scheduler.icu-unbind,
+ *           kernel-pfc.icu-unbind
+ * PROTOCOL: L4_PROTO_IRQ
+ */
 PUBLIC inline
 template<typename REAL_ICU>
 L4_msg_tag
@@ -182,6 +199,11 @@ Icu_h<REAL_ICU>::op_icu_unbind(unsigned pin, Ko::Cap<Irq> const &)
   return Kobject_iface::commit_result(0);
 }
 
+/*
+ * L4-IFACE: kernel-log.icu-set_mode, kernel-scheduler.icu-set_mode,
+ *           kernel-pfc.icu-set_mode
+ * PROTOCOL: L4_PROTO_IRQ
+ */
 PUBLIC inline
 template<typename REAL_ICU>
 L4_msg_tag
@@ -208,6 +230,11 @@ Icu_h<REAL_ICU>::op_icu_set_mode(Mword pin, Irq_chip::Mode mode)
   return Kobject_iface::commit_result(ret);
 }
 
+/*
+ * L4-IFACE: kernel-log.icu-info, kernel-scheduler.icu-info,
+ *           kernel-pfc.icu-info
+ * PROTOCOL: L4_PROTO_IRQ
+ */
 PUBLIC inline
 template<typename REAL_ICU>
 L4_msg_tag
@@ -217,6 +244,11 @@ Icu_h<REAL_ICU>::op_icu_info(Mword *features, Mword *num_pins, Mword *num_msis)
     this_icu()->icu_info(features, num_pins, num_msis));
 }
 
+/*
+ * L4-IFACE: kernel-log.icu-msi_info, kernel-scheduler.icu-msi_info,
+ *           kernel-pfc.icu-msi_info
+ * PROTOCOL: L4_PROTO_IRQ
+ */
 PUBLIC inline
 template<typename REAL_ICU>
 L4_msg_tag

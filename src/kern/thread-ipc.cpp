@@ -231,6 +231,9 @@ Thread::modify_label(Mword const *todo, int cnt) override
     @param pfa page-fault virtual address
     @param error_code page-fault error code.
  */
+/*
+ * L4-IFACE: kernel-thread.page_fault
+ */
 PRIVATE
 bool
 Thread::handle_page_fault_pager(Thread_ptr const &_pager,
@@ -413,6 +416,9 @@ Thread::setup_timer(L4_timeout timeout, Utcb const *utcb, Timeout *timer)
  *
  * \pre IPC Timeout, if any, must already be set up.
  */
+/*
+ * L4-IFACE: kernel-thread.thread-yield
+ */
 PRIVATE inline
 void
 Thread::do_receive_wait(Sender *sender)
@@ -539,6 +545,10 @@ Thread::activate_ipc_partner(Thread *partner, Cpu_number current_cpu,
  *
  * \todo review closed wait handling of sender during possible
  *       quiescent states and blocking.
+ */
+/*
+ * L4-IFACE: kernel-thread.ipc
+ * PROTOCOL: !L4_PROTO_THREAD
  */
 PUBLIC
 void
@@ -894,6 +904,9 @@ Thread::exception(Kobject_iface *handler, Trap_state *ts, L4_fpage::Rights right
 
 /* return 1 if exception could be handled
  * return 0 if not for send_exception and halt thread
+ */
+/*
+ * L4-IFACE: kernel-thread.exception
  */
 PUBLIC inline NEEDS["task.h", "trap_state.h",
                     Thread::vcpu_return_to_kernel]

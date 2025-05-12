@@ -58,6 +58,10 @@ private:
   };
 };
 
+/*
+ * L4-IFACE: kernel-iommu.iommu-bind
+ * PROTOCOL: L4_PROTO_IOMMU
+ */
 PRIVATE
 L4_msg_tag
 Dmar::op_bind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space_cap)
@@ -79,6 +83,10 @@ Dmar::op_bind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space_cap)
   return Kobject_iface::commit_result(space->bind_mmu(iommu, s.stream_id()));
 }
 
+/*
+ * L4-IFACE: kernel-iommu.iommu-unbind
+ * PROTOCOL: L4_PROTO_IOMMU
+ */
 PRIVATE
 L4_msg_tag
 Dmar::op_unbind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space_cap)
