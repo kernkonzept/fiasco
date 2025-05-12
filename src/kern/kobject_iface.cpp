@@ -25,7 +25,17 @@ public:
   virtual Mword obj_id() const = 0;
   virtual void initiate_deletion(Kobjects_list &) = 0;
 
+  /**
+   * A kernel object can have multiple Kobject_iface base classes for different
+   * access rights levels (see `Ipc_gate_obj` vs. `Ipc_gate_ctl` and
+   * `Ipc_gate_ctl::downgrade()` for the selection between them). For reference
+   * counting and locking of mappings however, always a single common
+   * `Kobject_mappable` is used.
+   *
+   * \return `Kobject_mappable` of the kernel object this interface is part of.
+   */
   virtual Kobject_mappable *map_root() = 0;
+
   virtual ~Kobject_common() = 0;
 };
 
