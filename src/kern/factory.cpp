@@ -119,7 +119,9 @@ Factory::map_obj(Kobject_iface *o, Cap_index cap, Task *_c_space,
   // Must be destroyed _after_ releasing the existence lock below!
   Reap_list reap_list;
 
-  // Take the existence_lock for synchronizing maps -- kind of coarse-grained.
+  // Take the existence_lock for synchronizing maps -- kind of coarse-grained
+  // but necessary for the destination task (see the reasoning in
+  // Task::destroy()).
   auto space_lock_guard = switch_lock_guard(c_space->existence_lock);
   if (!space_lock_guard.is_valid())
     {

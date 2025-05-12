@@ -1140,7 +1140,8 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
 
               {
                 // Take the existence_lock for synchronizing maps -- kind of
-                // coarse-grained.
+                // coarse-grained but necessary for the destination task (see
+                // the reasoning in Task::destroy()).
                 auto sp_lock = switch_lock_guard(dst_tsk->existence_lock);
                 if (!sp_lock.is_valid())
                   {

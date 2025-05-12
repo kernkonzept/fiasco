@@ -451,6 +451,13 @@ Task::destroy(Kobjects_list &reap_list) override
 {
   Kobject::destroy(reap_list);
 
+  // Here we have invalidated the existence_lock of this task and waited for it
+  // to be released by the last owner (if any). Under the assumption that to
+  // invoke `fpage_map()` it is required to first grab the existence_lock of the
+  // destination task, we can be sure that the task is not and can never again
+  // be the destination of an fpage_map(), i.e. no new mappings can be created.
+  // Thereby it is guaranteed that after the following `fpage_unmap()` the task
+  // will be completely void of mappings.
   fpage_unmap(this, L4_fpage::all_spaces(L4_fpage::Rights::FULL()),
               L4_map_mask::full(), reap_list);
 }
@@ -503,6 +510,9 @@ Task::sys_map(L4_fpage::Rights rights, Syscall_frame *f, Utcb *utcb)
         return commit_result(-L4_err::EInval);
 
       cpu_lock.clear();
+      // Take the existence_lock for synchronizing maps -- kind of
+      // coarse-grained but necessary for the destination task (see
+      // the reasoning in Task::destroy()).
       ret = fpage_map(from.get(), sfp, this,
                       L4_fpage::all_spaces(), L4_snd_item(utcb->values[1]),
                       reap_list.list());
