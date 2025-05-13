@@ -298,7 +298,7 @@ IMPLEMENTATION:
 #include "lock_guard.h"
 #include "minmax.h"
 #include "std_macros.h"
-#include "thread_object.h"
+#include "thread.h"
 #include "thread_state.h"
 #include "l4_buf_iter.h"
 #include "vkey.h"

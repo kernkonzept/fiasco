@@ -25,6 +25,7 @@ IMPLEMENTATION:
 
 #include "context.h"
 #include "fpu.h"
+#include "irq.h"
 #include "irq_chip.h"
 #include "map_util.h"
 #include "processor.h"
@@ -374,23 +375,10 @@ PRIVATE inline NOEXPORT
 L4_msg_tag
 Thread_object::sys_register_delete_irq(L4_msg_tag tag, Utcb const *in, Utcb * /*out*/)
 {
-  L4_snd_item_iter snd_items(in, tag.words());
-
-  if (!tag.items() || !snd_items.next())
-    return Kobject_iface::commit_result(-L4_err::EInval);
-
-  L4_fpage bind_irq(snd_items.get()->d);
-  if (EXPECT_FALSE(!bind_irq.is_objpage()))
-    return Kobject_iface::commit_error(in, L4_error::Overflow);
-
-  Context *const c_thread = ::current();
-  Space *const c_space = c_thread->space();
-  L4_fpage::Rights irq_rights = L4_fpage::Rights(0);
-  Irq_base *irq
-    = Irq_base::dcast(c_space->lookup_local(bind_irq.obj_index(), &irq_rights));
-
+  L4_fpage::Rights irq_rights;
+  Irq_base *irq = Ko::deref<Irq>(&tag, in, &irq_rights);
   if (!irq)
-    return Kobject_iface::commit_result(-L4_err::EInval);
+    return tag;
 
   if (EXPECT_FALSE(!(irq_rights & L4_fpage::Rights::CW())))
     return Kobject_iface::commit_result(-L4_err::EPerm);
@@ -765,23 +753,10 @@ PRIVATE
 L4_msg_tag
 Thread_object::sys_register_doorbell_irq(L4_msg_tag tag, Utcb const *in)
 {
-  L4_snd_item_iter snd_items(in, tag.words());
-
-  if (!tag.items() || !snd_items.next())
-    return Kobject_iface::commit_result(-L4_err::EInval);
-
-  L4_fpage bind_irq(snd_items.get()->d);
-  if (EXPECT_FALSE(!bind_irq.is_objpage()))
-    return Kobject_iface::commit_error(in, L4_error::Overflow);
-
-  Context *const c_thread = ::current();
-  Space *const c_space = c_thread->space();
-  L4_fpage::Rights irq_rights = L4_fpage::Rights(0);
-  Irq_base *irq
-    = Irq_base::dcast(c_space->lookup_local(bind_irq.obj_index(), &irq_rights));
-
+  L4_fpage::Rights irq_rights;
+  Irq_base *irq = Ko::deref<Irq>(&tag, in, &irq_rights);
   if (!irq)
-    return Kobject_iface::commit_result(-L4_err::EInval);
+    return tag;
 
   if (EXPECT_FALSE(!(irq_rights & L4_fpage::Rights::CW())))
     return Kobject_iface::commit_result(-L4_err::EPerm);
