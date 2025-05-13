@@ -14,8 +14,9 @@ class Acpi_madt;
 class Io_apic_entry
 {
   friend class Io_apic;
+
 private:
-  Unsigned64 _e;
+  Unsigned64 _value;
 
 public:
   enum Delivery { Fixed, Lowest_prio, SMI, NMI = 4, INIT, ExtINT = 7 };
@@ -26,29 +27,30 @@ public:
   Io_apic_entry() {}
   Io_apic_entry(Unsigned8 vector, Delivery d, Dest_mode dm, Polarity p,
                 Trigger t, Apic_id dest)
-    : _e(  vector_bfm_t::val(vector) | delivery_bfm_t::val(d) | mask_bfm_t::val(1)
-         | dest_mode_bfm_t::val(dm)  | polarity_bfm_t::val(p)
-         | trigger_bfm_t::val(t)     | dest_bfm_t::val(cxx::int_value<Apic_id>(dest) >> 24))
+    : _value(  vector_bfm_t::val(vector) | delivery_bfm_t::val(d)
+             | mask_bfm_t::val(1)        | dest_mode_bfm_t::val(dm)
+             | polarity_bfm_t::val(p)    | trigger_bfm_t::val(t)
+             | dest_bfm_t::val(cxx::int_value<Apic_id>(dest) >> 24))
   {}
 
-  CXX_BITFIELD_MEMBER( 0,  7, vector, _e);
-  CXX_BITFIELD_MEMBER( 8, 10, delivery, _e);
-  CXX_BITFIELD_MEMBER(11, 11, dest_mode, _e);
-  CXX_BITFIELD_MEMBER(13, 13, polarity, _e);
-  CXX_BITFIELD_MEMBER(15, 15, trigger, _e);
-  CXX_BITFIELD_MEMBER(16, 16, mask, _e);
+  CXX_BITFIELD_MEMBER( 0,  7, vector, _value);
+  CXX_BITFIELD_MEMBER( 8, 10, delivery, _value);
+  CXX_BITFIELD_MEMBER(11, 11, dest_mode, _value);
+  CXX_BITFIELD_MEMBER(13, 13, polarity, _value);
+  CXX_BITFIELD_MEMBER(15, 15, trigger, _value);
+  CXX_BITFIELD_MEMBER(16, 16, mask, _value);
   // support for IRQ remapping
-  CXX_BITFIELD_MEMBER(48, 48, format, _e);
+  CXX_BITFIELD_MEMBER(48, 48, format, _value);
   // support for IRQ remapping
-  CXX_BITFIELD_MEMBER(49, 63, irt_index, _e);
-  CXX_BITFIELD_MEMBER(56, 63, dest, _e);
+  CXX_BITFIELD_MEMBER(49, 63, irt_index, _value);
+  CXX_BITFIELD_MEMBER(56, 63, dest, _value);
 };
-
 
 class Io_apic : public Irq_chip_icu, protected Irq_chip_ia32
 {
   friend class Jdb_kern_info_io_apic;
   friend class Irq_chip_ia32;
+
 public:
   unsigned nr_pins() const override { return Irq_chip_ia32::nr_pins(); }
   bool reserve(Mword pin) override { return Irq_chip_ia32::reserve(pin); }
@@ -68,7 +70,7 @@ private:
   } __attribute__((packed));
 
   Apic *_apic;
-  mutable Spin_lock<> _l;
+  mutable Spin_lock<> _lock;
   unsigned _offset;
   Io_apic *_next;
 
@@ -109,9 +111,9 @@ PUBLIC
 Irq_mgr::Chip_pin
 Io_apic_mgr::chip_pin(Mword gsi) const override
 {
-  Io_apic *a = Io_apic::find_apic(gsi);
-  if (a)
-    return Chip_pin(a, gsi - a->gsi_offset());
+  Io_apic *ioapic = Io_apic::find_apic(gsi);
+  if (ioapic)
+    return Chip_pin(ioapic, gsi - ioapic->gsi_offset());
 
   return Chip_pin();
 }
@@ -223,10 +225,10 @@ Io_apic::Io_apic(Unsigned64 phys, unsigned gsi_base)
   for (unsigned i = 0; i < _pins; ++i)
     {
       int v = 0x20 + i;
-      Io_apic_entry e(v, Io_apic_entry::Fixed, Io_apic_entry::Physical,
-                      Io_apic_entry::High_active, Io_apic_entry::Edge,
-                      cpu_phys);
-      write_entry(i, e);
+      Io_apic_entry entry(v, Io_apic_entry::Fixed, Io_apic_entry::Physical,
+                          Io_apic_entry::High_active, Io_apic_entry::Edge,
+                          cpu_phys);
+      write_entry(i, entry);
     }
 }
 
@@ -234,22 +236,22 @@ PUBLIC inline NEEDS["assert.h", "lock_guard.h"]
 Io_apic_entry
 Io_apic::read_entry(unsigned i) const
 {
-  auto g = lock_guard(_l);
-  Io_apic_entry e;
+  auto guard = lock_guard(_lock);
+  Io_apic_entry entry;
   //assert(i <= num_entries());
-  e._e = _apic->read(0x10+2*i) | (Unsigned64{_apic->read(0x11+2*i)} << 32);
-  return e;
+  entry._value = _apic->read(0x10 + 2 * i)
+                 | (Unsigned64{_apic->read(0x11 + 2 * i)} << 32);
+  return entry;
 }
-
 
 PUBLIC inline NEEDS["assert.h", "lock_guard.h"]
 void
-Io_apic::write_entry(unsigned i, Io_apic_entry const &e)
+Io_apic::write_entry(unsigned i, Io_apic_entry const &entry)
 {
-  auto g = lock_guard(_l);
+  auto guard = lock_guard(_lock);
   //assert(i <= num_entries());
-  _apic->write(0x10+2*i, e._e);
-  _apic->write(0x11+2*i, e._e >> 32);
+  _apic->write(0x10 + 2 * i, entry._value);
+  _apic->write(0x11 + 2 * i, entry._value >> 32);
 }
 
 PROTECTED static FIASCO_INIT
@@ -262,23 +264,24 @@ Io_apic::read_overrides()
       ++n;
 
       if constexpr (Print_info)
-        printf("IO-APIC: ovr[%2d] %02x -> %x %x\n",
+        printf("I/O APIC: override[%2u] ISA:%d -> PIN:%u (flags=%x)\n",
                n, irq->src, irq->irq, irq->flags);
 
       if (irq->irq >= _nr_pins)
         {
-          WARN("IO-APIC: warning override %02x -> %x (flags=%x) "
-               "points to invalid GSI\n", irq->src, irq->irq, irq->flags);
+          WARN("I/O APIC: override[%u] ISA:%d -> PIN:%u (flags=%x) "
+               "points to invalid GSI\n", n, irq->src, irq->irq, irq->flags);
           continue;
         }
 
       Io_apic *ioapic = find_apic(irq->irq);
-      assert (ioapic);
+      assert(ioapic);
       unsigned pin = irq->irq - ioapic->gsi_offset();
       Irq_chip::Mode mode = ioapic->get_mode(pin);
 
       unsigned pol = irq->flags & 0x3;
       unsigned trg = (irq->flags >> 2) & 0x3;
+
       switch (pol)
         {
         default: break;
@@ -322,7 +325,7 @@ Io_apic::init_scan_apics()
   auto madt = lookup_madt();
   if (madt == nullptr)
     {
-      WARN("Could not find APIC in RSDT nor XSDT, skipping init\n");
+      WARN("Could not find APIC in RSDT nor XSDT, skipping initialization\n");
       return false;
     }
 
@@ -333,7 +336,7 @@ Io_apic::init_scan_apics()
 
       if constexpr (Print_info)
         {
-          printf("IO-APIC[%2d]: pins %u\n", n_apics, apic->nr_pins());
+          printf("I/O APIC[%2d]: %u pins\n", n_apics, apic->nr_pins());
           apic->dump();
         }
 
@@ -342,12 +345,13 @@ Io_apic::init_scan_apics()
 
   if (!n_apics)
     {
-      WARN("IO-APIC: Could not find IO-APIC in MADT, skipping init\n");
+      WARN("I/O APIC: Could not find I/O APIC in MADT, skipping initialization\n");
       return false;
     }
 
   if constexpr (Print_info)
-    printf("IO-APIC: dual 8259: %s\n", madt->apic_flags & 1 ? "yes" : "no");
+    printf("I/O APIC: Dual 8259 %s\n",
+           madt->apic_flags & 1 ? "present" : "absent");
 
   return true;
 }
@@ -371,9 +375,9 @@ PUBLIC static
 void
 Io_apic::save_state()
 {
-  for (Io_apic *a = _first; a; a = a->_next)
-    for (unsigned i = 0; i < a->_pins; ++i)
-      _state_save_area[a->_offset + i] = a->read_entry(i);
+  for (Io_apic *apic = _first; apic; apic = apic->_next)
+    for (unsigned pin = 0; pin < apic->_pins; ++pin)
+      _state_save_area[apic->_offset + pin] = apic->read_entry(pin);
 }
 
 PUBLIC static
@@ -435,7 +439,7 @@ PRIVATE inline NEEDS["assert.h", "lock_guard.h"]
 void
 Io_apic::_mask(Mword pin)
 {
-  auto g = lock_guard(_l);
+  auto guard = lock_guard(_lock);
   //assert(pin <= _apic->num_entries());
   _apic->modify(0x10 + pin * 2, 1UL << 16, 0);
 }
@@ -444,7 +448,7 @@ PRIVATE inline NEEDS["assert.h", "lock_guard.h"]
 void
 Io_apic::_unmask(Mword pin)
 {
-  auto g = lock_guard(_l);
+  auto guard = lock_guard(_lock);
   //assert(pin <= _apic->num_entries());
   _apic->modify(0x10 + pin * 2, 0, 1UL << 16);
 }
@@ -453,7 +457,7 @@ PUBLIC inline NEEDS["assert.h", "lock_guard.h"]
 bool
 Io_apic::masked(Mword pin)
 {
-  auto g = lock_guard(_l);
+  auto guard = lock_guard(_lock);
   //assert(pin <= _apic->num_entries());
   return _apic->read(0x10 + pin * 2) & (1UL << 16);
 }
@@ -469,7 +473,7 @@ PUBLIC inline NEEDS["assert.h", "lock_guard.h"]
 void
 Io_apic::set_dest(unsigned irq, Apic_id dst)
 {
-  auto g = lock_guard(_l);
+  auto guard = lock_guard(_lock);
   //assert(irq <= _apic->num_entries());
   _apic->modify(0x11 + irq * 2,
                 cxx::int_value<Apic_id>(dst) & (~0UL << 24), ~0UL << 24);
@@ -555,10 +559,11 @@ Io_apic::set_mode(Mword pin, Mode mode) override
   if (!mode.set_mode())
     return 0;
 
-  Io_apic_entry e = read_entry(pin);
-  e.polarity() = to_io_apic_polarity(mode);
-  e.trigger() = to_io_apic_trigger(mode);
-  write_entry(pin, e);
+  Io_apic_entry entry = read_entry(pin);
+  entry.polarity() = to_io_apic_polarity(mode);
+  entry.trigger() = to_io_apic_trigger(mode);
+  write_entry(pin, entry);
+
   return 0;
 }
 
@@ -566,23 +571,26 @@ PUBLIC inline
 Irq_chip::Mode
 Io_apic::get_mode(Mword pin)
 {
-  Io_apic_entry e = read_entry(pin);
-  Mode m(Mode::Set_irq_mode);
-  m.polarity() = e.polarity() == Io_apic_entry::High_active
-               ? Mode::Polarity_high
-               : Mode::Polarity_low;
-  m.level_triggered() = e.trigger() == Io_apic_entry::Level
-                      ? Mode::Trigger_level
-                      : Mode::Trigger_edge;
-  return m;
+  Io_apic_entry entry = read_entry(pin);
+  Mode mode(Mode::Set_irq_mode);
+
+  mode.polarity() = entry.polarity() == Io_apic_entry::High_active
+                    ? Mode::Polarity_high
+                    : Mode::Polarity_low;
+
+  mode.level_triggered() = entry.trigger() == Io_apic_entry::Level
+                           ? Mode::Trigger_level
+                           : Mode::Trigger_edge;
+
+  return mode;
 }
 
 PUBLIC
 bool
 Io_apic::is_edge_triggered(Mword pin) const override
 {
-  Io_apic_entry e = read_entry(pin);
-  return e.trigger() == Io_apic_entry::Edge;
+  Io_apic_entry entry = read_entry(pin);
+  return entry.trigger() == Io_apic_entry::Edge;
 }
 
 PUBLIC
@@ -594,9 +602,10 @@ Io_apic::attach(Irq_base *irq, Mword pin, bool init = true) override
   if (!v)
     return false;
 
-  Io_apic_entry e = read_entry(pin);
-  e.vector() = v;
-  write_entry(pin, e);
+  Io_apic_entry entry = read_entry(pin);
+  entry.vector() = v;
+  write_entry(pin, entry);
+
   return true;
 }
 

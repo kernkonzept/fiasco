@@ -4,7 +4,6 @@ IMPLEMENTATION:
 #include "irq_chip.h"
 #include "irq_mgr.h"
 #include "irq_chip_ia32.h"
-
 #include "apic.h"
 #include "static_init.h"
 #include "boot_alloc.h"
@@ -26,7 +25,7 @@ class Irq_mgr_msi : public Irq_mgr
 {
 private:
   mutable Irq_chip_msi _chip;
-  Irq_mgr *_orig;
+  Irq_mgr *_base;
 };
 
 PUBLIC
@@ -96,7 +95,7 @@ Irq_chip_msi::unmask(Mword) override
 {}
 
 PUBLIC inline explicit
-Irq_mgr_msi::Irq_mgr_msi(Irq_mgr *o) : _orig(o) {}
+Irq_mgr_msi::Irq_mgr_msi(Irq_mgr *base) : _base(base) {}
 
 PUBLIC
 Irq_mgr::Chip_pin
@@ -105,13 +104,13 @@ Irq_mgr_msi::chip_pin(Mword gsi) const override
   if (gsi & Msi_bit)
     return Chip_pin(&_chip, gsi & ~Msi_bit);
 
-  return _orig->chip_pin(gsi);
+  return _base->chip_pin(gsi);
 }
 
 PUBLIC
 unsigned
 Irq_mgr_msi::nr_gsis() const override
-{ return _orig->nr_gsis(); }
+{ return _base->nr_gsis(); }
 
 PUBLIC
 unsigned
@@ -132,23 +131,28 @@ PUBLIC
 Mword
 Irq_mgr_msi::legacy_override(Mword isa_pin) override
 {
-  if (isa_pin & 0x80000000)
+  if (isa_pin & Msi_bit)
     return isa_pin;
 
-  return _orig->legacy_override(isa_pin);
+  return _base->legacy_override(isa_pin);
 }
 
 PUBLIC static FIASCO_INIT
 void
 Irq_mgr_msi::init()
 {
-  if (Irq_mgr::mgr && Irq_mgr::mgr->nr_msis() > 0)
+  Irq_mgr *base = Irq_mgr::mgr;
+
+  if (base && base->nr_msis() > 0)
     return;
 
-  Irq_mgr_msi *m;
-  Irq_mgr::mgr = m =  new Boot_object<Irq_mgr_msi>(Irq_mgr::mgr);
-  printf("Enable MSI support: chained IRQ mgr @ %p\n",
-         static_cast<void *>(m->_orig));
+  Irq_mgr_msi *mgr = new Boot_object<Irq_mgr_msi>(base);
+  if (!mgr)
+    panic("Unable to allocate MSI IRQ manager\n");
+
+  Irq_mgr::mgr = mgr;
+  printf("MSI IRQ manager %p enabled (base IRQ manager %p)\n",
+         static_cast<void *>(mgr), static_cast<void *>(base));
 }
 
 STATIC_INITIALIZE(Irq_mgr_msi);
