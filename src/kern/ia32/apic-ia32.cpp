@@ -600,15 +600,20 @@ static FIASCO_INIT_CPU_AND_PM
 void
 Apic::init_spiv()
 {
-  Unsigned32 tmp_val;
+  Unsigned32 val = reg_read(Reg::Spiv);
 
-  tmp_val = reg_read(Reg::Spiv);
-  tmp_val |= (1<<8);            // enable APIC
-  tmp_val &= ~(1<<9);           // enable Focus Processor Checking
-  tmp_val &= ~0xff;
-  tmp_val |= APIC_IRQ_BASE + 0xf; // Set spurious IRQ vector to 0x3f
-                                // bit 0..3 are hardwired to 1 on PPro!
-  reg_write(Reg::Spiv, tmp_val);
+  // Enable APIC.
+  val |= (1 << 8);
+
+  // Enable Focus Processor Checking.
+  val &= ~(1 << 9);
+
+  // Set spurious IRQ vector to 0x3f.
+  // Bits 0 .. 3 are hardwired to 1 on PPro!
+  val &= ~0xff;
+  val |= APIC_IRQ_BASE + 0xf;
+
+  reg_write(Reg::Spiv, val);
 }
 
 static FIASCO_INIT_AND_PM
@@ -644,20 +649,25 @@ Apic::enable_errors()
 {
   if (is_integrated())
     {
-      Unsigned32 tmp_val, before, after;
+      if (get_max_lvt() > 3)
+        clear_num_errors();
+
+      Unsigned32 before = get_num_errors();
+      Unsigned32 val = reg_read(Reg::Lvterr);
+
+      // Unmask error IRQ vector.
+      val &= 0xfffeff00;
+
+      // Set error IRQ vector to 0x63.
+      val |= APIC_IRQ_BASE + 3;
+
+      reg_write(Reg::Lvterr, val);
 
       if (get_max_lvt() > 3)
-	clear_num_errors();
-      before = get_num_errors();
+        clear_num_errors();
 
-      tmp_val = reg_read(Reg::Lvterr);
-      tmp_val &= 0xfffeff00;         // unmask error IRQ vector
-      tmp_val |= APIC_IRQ_BASE + 3;  // Set error IRQ vector to 0x63
-      reg_write(Reg::Lvterr, tmp_val);
+      Unsigned32 after = get_num_errors();
 
-      if (get_max_lvt() > 3)
-	clear_num_errors();
-      after = get_num_errors();
       if (Warn::is_enabled(Info))
         printf("APIC ESR value before/after enabling: %08x/%08x\n",
                before, after);
