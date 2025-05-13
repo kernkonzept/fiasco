@@ -282,9 +282,6 @@ protected:
   static void FIASCO_FLATTEN
   handler_wrapper(Irq_base *irq, Upstream_irq const *ui)
   { nonull_static_cast<T *>(irq)->handle(ui); }
-
-public:
-  static Global_data<Irq_base *(*)(Kobject_iface *)> dcast;
 };
 
 //----------------------------------------------------------------------------
@@ -330,8 +327,6 @@ IMPLEMENTATION:
 
 DEFINE_GLOBAL_PRIO(EARLY_INIT_PRIO)
 Global_data<Irq_chip_soft> Irq_chip_soft::sw_chip;
-
-DEFINE_GLOBAL Global_data<Irq_base *(*)(Kobject_iface *)> Irq_base::dcast;
 
 IMPLEMENT inline Irq_chip::~Irq_chip() {}
 IMPLEMENT inline Irq_chip_icu::~Irq_chip_icu() {}

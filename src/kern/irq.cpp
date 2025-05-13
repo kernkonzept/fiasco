@@ -306,19 +306,6 @@ IMPLEMENTATION:
 
 JDB_DEFINE_TYPENAME(Irq_sender, "\033[37mIRQ ipc\033[m");
 
-namespace {
-static Irq_base *irq_base_dcast(Kobject_iface *o)
-{ return cxx::dyn_cast<Irq*>(o); }
-
-struct Irq_base_cast
-{
-  Irq_base_cast()
-  { Irq_base::dcast = &irq_base_dcast; }
-};
-
-static Irq_base_cast register_irq_base_cast;
-}
-
 PROTECTED inline
 Mword
 Irq::get_irq_opcode(L4_msg_tag tag, Utcb const *utcb)
