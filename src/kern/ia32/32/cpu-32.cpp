@@ -115,7 +115,7 @@ Cpu::rdtsc()
 }
 
 /**
- * Support for RDTSCP is indicated by CPUID.80000001H:EDX[27].
+ * Support for RDTSCP is indicated by CPUID(8000_0001H).EDX[27].
  */
 PUBLIC static inline
 Unsigned64

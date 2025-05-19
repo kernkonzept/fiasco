@@ -455,7 +455,7 @@ Jdb_kern_info_cpu::show_features()
     {
       Unsigned32 eax, ebx, ecx, edx;
       Cpu::cpuid(i, 0, &eax, &ebx, &ecx, &edx);
-      printf("     %08x: %08x %08x %08x %08x\n", i, eax, ebx, ecx, edx);
+      printf("     %08xH: %08x %08x %08x %08x\n", i, eax, ebx, ecx, edx);
       if (i == max && max < 0x80000000U)
         {
           i = 0x80000000 - 1;

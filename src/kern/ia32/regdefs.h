@@ -55,7 +55,7 @@
 #define EFLAGS_VIP      0x00100000      // Virtual Interrupt Pending
 #define EFLAGS_ID       0x00200000      // Identification
 
-// CPU Feature Flags
+// CPU Feature Flags: CPUID(1).EDX
 #define FEAT_FPU        0x00000001      // FPU On Chip
 #define FEAT_VME        0x00000002      // Virt. 8086 Mode Enhancements
 #define FEAT_DE         0x00000004      // Debugging Extensions
@@ -86,7 +86,7 @@
 #define FEAT_TM         0x20000000      // Thermal Monitor
 #define FEAT_PBE        0x80000000      // Pending Break Enable
 
-// CPU Extended Feature Flags (Intel)
+// CPU Extended Feature Flags: CPUID(1).ECX
 #define FEATX_SSE3      0x00000001      // SSE3
 #define FEATX_MONITOR   0x00000008      // MONITOR/MWAIT Support
 #define FEATX_DSCPL     0x00000010      // CPL Qualified Debug Store
@@ -106,19 +106,21 @@
 #define FEATX_OSXSAVE   0x08000000      // OSXSAVE
 #define FEATX_AVX       0x10000000      // AVX
 
+// CPU Extended Feature Flags: CPUID(7,0).EBX
 #define FEATX_IA32_TSC_ADJUST 0x00000002 // IA32 TSC Adjust available
 #define FEATX_SMEP      0x00000080      // Supervisor-Mode Execution Prevention
 #define FEATX_INVPCID   0x00000400      // INVPCID
 
+// Intel: CPU Extended Feature Flags: CPUID(7,0).EDX
 #define FEATX_IBRS_IBPB 0x04000000      // IBRS and IBPB supported
 #define FEATX_STIBP     0x08000000      // STIBP supported
 #define FEATX_L1D_FLUSH 0x10000000      // L1D_FLUSH supported
 #define FEATX_IA32_ARCH_CAPABILITIES 0x20000000 // IA32_ARCH_CAPABILITIES supported
 
-// AMD: CPU Feature Flags, Fn80000001_ECX
+// AMD: CPU Feature Flags: CPUID(8000_0001H).ECX
 #define FEATA_SVM	0x00000004
 
-// AMD: CPU Feature Flags, Fn80000001_EDX
+// AMD: CPU Feature Flags: CPUID(8000_0001H).EDX
 #define FEATA_SYSCALL   0x00000800      // Syscall/Sysret Present
 #define FEATA_MP        0x00080000      // MP Capable
 #define FEATA_NX        0x00100000      // No-Execute Page Protection

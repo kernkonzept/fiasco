@@ -62,10 +62,10 @@ private:
   Unsigned32 _brand;                    // CPUID(1).EBX
   Unsigned32 _ext_features;             // CPUID(1).ECX
   Unsigned32 _features;                 // CPUID(1).EDX
-  Unsigned32 _ext_07_ebx;               // CPUID(7).EBX
-  Unsigned32 _ext_07_edx;               // CPUID(7).EDX
-  Unsigned32 _ext_8000_0001_ecx;        // CPUID(8000_0001).ECX
-  Unsigned32 _ext_8000_0001_edx;        // CPUID(8000_0001).EDX
+  Unsigned32 _ext_07_ebx;               // CPUID(7,0).EBX
+  Unsigned32 _ext_07_edx;               // CPUID(7,0).EDX
+  Unsigned32 _ext_8000_0001_ecx;        // CPUID(8000_0001H).ECX
+  Unsigned32 _ext_8000_0001_edx;        // CPUID(8000_0001H).EDX
   Unsigned32 _local_features;           // See Local_features
   Unsigned64 _arch_capabilities;        // Msr::Ia32_arch_capabilities
 
@@ -74,10 +74,10 @@ private:
 
   Vendor _vendor;
 
-  Unsigned32 _arch_perfmon_info_eax;    // CPUID(10).EAX
-  Unsigned32 _arch_perfmon_info_ebx;    // CPUID(10).EBX
-  Unsigned32 _arch_perfmon_info_ecx;    // CPUID(10).ECX
-  Unsigned32 _arch_perfmon_info_edx;    // CPUID(10).EDX
+  Unsigned32 _arch_perfmon_info_eax;    // CPUID(0AH).EAX
+  Unsigned32 _arch_perfmon_info_ebx;    // CPUID(0AH).EBX
+  Unsigned32 _arch_perfmon_info_ecx;    // CPUID(0AH).ECX
+  Unsigned32 _arch_perfmon_info_edx;    // CPUID(0AH).EDX
 
   Unsigned32 _monitor_mwait_eax;        // CPUID(5).EAX
   Unsigned32 _monitor_mwait_ebx;        // CPUID(5).EBX
@@ -743,7 +743,7 @@ Cpu::identify()
             _arch_capabilities = rdmsr(Msr::Ia32_arch_capabilities);
         }
 
-      if (max >= 10 && _vendor == Vendor_intel) // CPUID Leaf 10 reserved on AMD
+      if (max >= 10 && _vendor == Vendor_intel) // CPUID(0AH) reserved on AMD
         cpuid(10, &_arch_perfmon_info_eax, &_arch_perfmon_info_ebx,
               &_arch_perfmon_info_ecx, &_arch_perfmon_info_edx);
 
@@ -1517,17 +1517,17 @@ Cpu::set_frequency_and_scalers(Unsigned64 freq)
  *
  * See Intel Manual Volume 3 Chapter 18.7.3 for details.
  *
- * CPUID_15 is quite accurate.
+ * CPUID(15H) is quite accurate.
  *
- * CPUID_16 is less accurate and should be probably only used for informational
- * purposes. For instance, for a Kaby Lake processor, CPUID_16 returned a value
- * of 2800MHz while the actual CPU frequency is 2808MHz.
+ * CPUID(16H) is less accurate and should probably be used for informational
+ * purposes only. For instance, for a Kaby Lake processor, CPUID(16H) returned a
+ * value of 2800MHz while the actual CPU frequency is 2808MHz.
  *
  * Msr::Platform_info is less accurate as well. On the mentioned Kaby Lake CPU,
  * bits 15:8 report 28 defining a frequency of 28*100=2800MHz.
  *
  * Calibrating the TSC delivers results which are still more accurate than the
- * rounded information from CPUID_16 and Msr::Platform_info, even on QEMU.
+ * rounded information from CPUID(16H) and Msr::Platform_info, even on QEMU.
  */
 PRIVATE
 bool
