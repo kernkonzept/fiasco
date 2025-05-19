@@ -13,7 +13,7 @@ private:
   // At least two entries are expected: the kernel image and the heap. If the
   // RAM is not contiguous there might be more than one heap region needed,
   // though.
-  enum { Max_pmem_regions = 4 };
+  enum { Max_pmem_regions = 8 };
 
   struct Pmem_region
   {
