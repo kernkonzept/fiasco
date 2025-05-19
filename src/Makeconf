@@ -163,7 +163,8 @@ SHARED_FLAGS-gcc    += $(if $(filter sparc,$(CONFIG_XARCH)),,-freg-struct-return
 SHARED_FLAGS-gcc    += $(call CHECKCXX,-Wmisleading-indentation,) $\
                        -Wlogical-op -Wfloat-equal
 SHARED_FLAGS-gcc    += $(if $(filter 7 8 9 10,$(CCVER_MAJOR)),-Wno-nonnull)
-SHARED_FLAGS        += -g -Wall -Wextra $(call CHECKCC,-Wdouble-promotion) $\
+SHARED_FLAGS        += $(if $(CHECK_CI_BUILDCHECK),,-g)
+SHARED_FLAGS        += -Wall -Wextra $(call CHECKCC,-Wdouble-promotion) $\
                        $(call CHECKCC,-Wfloat-conversion) -Wmissing-declarations
 SHARED_FLAGS        += -Wdeprecated
 SHARED_FLAGS        += -Wimplicit-fallthrough

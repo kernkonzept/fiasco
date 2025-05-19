@@ -118,7 +118,7 @@ checkallseq:
 		$(call buildmakefile,$(ALLBUILDDIR)/$$X);	      \
 		cp $(TEMPLDIR)/globalconfig.out.$$X		      \
 		   $(ALLBUILDDIR)/$$X/globalconfig.out;		      \
-		if $(MAKE) -C $(ALLBUILDDIR)/$$X; then	              \
+		if $(MAKE) -C $(ALLBUILDDIR)/$$X; then                \
 			[ -z "$(KEEP_BUILD_DIRS)" ] &&		      \
 			   $(RM) -r $(ALLBUILDDIR)/$$X;		      \
 		else						      \
@@ -157,7 +157,7 @@ $(addprefix $(ALLBUILDDIR)/,$(TEST_TEMPLATES)):
 	   $@/globalconfig.out
 	INCLUDE_PPC32=y INCLUDE_SPARC=y                                       \
 	$(MAKE) -C $@ olddefconfig 2>&1 | tee -a $@/build.log
-	INCLUDE_PPC32=y INCLUDE_SPARC=y                                       \
+	CHECK_CI_BUILDCHECK=y INCLUDE_PPC32=y INCLUDE_SPARC=y                 \
 	$(MAKE) -C $@ 2>&1 | tee -a $@/build.log;                             \
 	buildexitcode=$${PIPESTATUS[0]};                                      \
 	grep -2 ": warning: " $@/build.log > $@/warnings.log;                 \
