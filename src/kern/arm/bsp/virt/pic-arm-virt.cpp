@@ -21,30 +21,9 @@ void Pic::init()
 
   Mmio_register_block dist(Kmem_mmio::map(Mem_layout::Gic_dist_phys_base,
                                           Gic_dist::Size));
-  /* Although we might be running on a v2 model, which is just a page, we
-   * can check the v3 regs because QEMU's dist space is 0x10000 also for v2.
-   * We check for v3 first because KVM's GIC DIST code provides the ID-regs
-   * for v3 but not for v2 (v2's are just zero). */
-  Unsigned32 pidr2_archrev = dist.read<Unsigned32>(0xffe8) & 0x0f0;
-  if (pidr2_archrev == 0x30 || pidr2_archrev == 0x40)
-    {
-      printf(pidr2_archrev == 0x40 ? "GICv4\n" : "GICv3\n");
-      auto redist = Kmem_mmio::map(Mem_layout::Gic_redist_phys_base,
-                                   Mem_layout::Gic_redist_size);
-      auto gic_v3 = new Boot_object<Gic_v3>(dist.get_mmio_base(), redist);
-
-      gic_v3->add_its(Kmem_mmio::map(Mem_layout::Gic_its_phys_base,
-                                     Mem_layout::Gic_its_size));
-
-      gic = gic_v3;
-
-      typedef Irq_mgr_msi<Gic_v3, Gic_msi> Mgr;
-      Irq_mgr::mgr = new Boot_object<Mgr>(gic_v3, gic_v3->msi_chip());
-    }
-  else if (   (dist.read<Unsigned32>(0xfe8) & 0x0f0) == 0x20
-           || (dist.read<Unsigned32>(0x8) & 0xfff00fff) == 0x4b00043b)
-    /* As KVM's ID-regs report 0 for v2, check GICD_IIDR for the KVM value
-     * (0x4b is the specific KVM-ID). */
+  // First, assume GICv2 with a 4KiB region. Also detect KVM's GIC distributor.
+  if (   (dist.read<Unsigned32>(0xfe8) & 0x0f0) == 0x20
+      || (dist.read<Unsigned32>(0x8) & 0xfff00fff) == 0x4b00043b)
     {
       printf("GICv2\n");
       typedef Irq_mgr_single_chip<Gic_v2> Mgr;
@@ -55,5 +34,25 @@ void Pic::init()
       Irq_mgr::mgr = m;
     }
   else
-    panic("GIC not found or not supported");
+    {
+      // Otherwise assume that the distributor region is 64KiB.
+      Unsigned32 pidr2_archrev = dist.read<Unsigned32>(0xffe8) & 0x0f0;
+      if (pidr2_archrev == 0x30 || pidr2_archrev == 0x40)
+        {
+          printf(pidr2_archrev == 0x40 ? "GICv4\n" : "GICv3\n");
+          auto redist = Kmem_mmio::map(Mem_layout::Gic_redist_phys_base,
+                                       Mem_layout::Gic_redist_size);
+          auto gic_v3 = new Boot_object<Gic_v3>(dist.get_mmio_base(), redist);
+
+          gic_v3->add_its(Kmem_mmio::map(Mem_layout::Gic_its_phys_base,
+                                         Mem_layout::Gic_its_size));
+
+          gic = gic_v3;
+
+          typedef Irq_mgr_msi<Gic_v3, Gic_msi> Mgr;
+          Irq_mgr::mgr = new Boot_object<Mgr>(gic_v3, gic_v3->msi_chip());
+        }
+      else
+        panic("GIC not found or not supported");
+    }
 }
