@@ -13,8 +13,7 @@ enum
   WorkspaceSize = 4096 << 10,
 };
 
-static char
-workspace[WorkspaceSize] __attribute__ ((aligned (__BIGGEST_ALIGNMENT__)));
+alignas(__BIGGEST_ALIGNMENT__) static char workspace[WorkspaceSize];
 
 void *
 zstd_workspace    = &workspace;

@@ -10,12 +10,11 @@ namespace Boot_paging
   constexpr unsigned Kernel_pdir_size = 4 * Config::PAGE_SIZE;
 }
 
-union
+union alignas(0x4000)
 {
   Kpdir kpdir;
   Unsigned8 storage[Boot_paging::Kernel_pdir_size];
-} kernel_page_directory
-  __attribute__((aligned(0x4000), section(".bss.kernel_page_dir")));
+} kernel_page_directory __attribute__((section(".bss.kernel_page_dir")));
 
 // initialize the kernel space (page table)
 IMPLEMENT
@@ -38,11 +37,11 @@ namespace Boot_paging
   constexpr unsigned Kernel_lpae_dir_size = sizeof(Unsigned64) * 4;
 }
 
-union
+union alignas(4 * sizeof(Unsigned64))
 {
   Kpdir kpdir;
   Unsigned8 storage[Boot_paging::Kernel_lpae_dir_size];
-} kernel_lpae_dir __attribute__((aligned(4 * sizeof(Unsigned64))));
+} kernel_lpae_dir;
 
 DEFINE_GLOBAL_CONSTINIT Global_data<Kpdir *> Kmem::kdir(&kernel_lpae_dir.kpdir);
 

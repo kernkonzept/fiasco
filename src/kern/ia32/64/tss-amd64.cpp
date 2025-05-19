@@ -3,7 +3,7 @@ INTERFACE[amd64]:
 #include "l4_types.h"
 #include "config.h"
 
-class Tss
+class alignas(Config::PAGE_SIZE) Tss
 {
 public:
   /**
@@ -67,7 +67,7 @@ public:
    */
 
   Mword _io_bitmap_revision;
-} __attribute__((aligned(Config::PAGE_SIZE)));
+};
 
 IMPLEMENTATION:
 

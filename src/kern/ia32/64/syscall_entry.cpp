@@ -2,16 +2,16 @@ INTERFACE [amd64]:
 
 #include "types.h"
 
-class Syscall_entry_data
+class alignas(64) Syscall_entry_data
 {
   Unsigned64 _kern_sp = 0;
   Unsigned64 _user_sp = 0;
-} __attribute__((packed, aligned(64))); // Enforce cacheline alignment
+} __attribute__((packed));
 
-struct Syscall_entry_text
+struct alignas(32) Syscall_entry_text
 {
   char _res[32]; // Keep this in sync with code in syscall_entry_text!
-} __attribute__((packed, aligned(32)));
+} __attribute__((packed));
 
 IMPLEMENTATION [amd64]:
 

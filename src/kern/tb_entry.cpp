@@ -42,7 +42,7 @@ extern Tb_log_table_entry _jdb_log_table_end;
 
 
 
-class Tb_entry
+class alignas(8) Tb_entry
 {
 protected:
   Mword         _number;        ///< event number
@@ -85,7 +85,7 @@ public:
   Group_order is_partner(Tb_entry const *) const { return Group_order::none(); }
   Mword partner() const { return 0; }
 
-} __attribute__((__packed__, __aligned__(8)));
+} __attribute__((packed));
 
 
 class Tb_entry_union : public Tb_entry

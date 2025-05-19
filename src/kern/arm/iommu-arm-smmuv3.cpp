@@ -437,7 +437,7 @@ private:
   static_assert(sizeof(Ste) == 64, "Stream Table Entry has unexpected size!");
 
   /// Context descriptor
-  struct Cd
+  struct alignas(64) Cd
   {
     Unsigned64 raw[8] = { 0 };
 
@@ -486,7 +486,7 @@ private:
 
     CXX_BITFIELD_MEMBER( 0, 31, amair0, raw[4]);
     CXX_BITFIELD_MEMBER( 32, 63, amair1, raw[4]);
-  } __attribute__((aligned(64)));
+  };
   static_assert(sizeof(Cd) == 64, "Context Descriptor has unexpected size!");
   static_assert(alignof(Cd) == 64, "Context Descriptor has unexpected alignment!");
 

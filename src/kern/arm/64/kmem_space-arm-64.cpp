@@ -12,11 +12,11 @@ namespace Boot_paging
   constexpr unsigned Pdir_size = Config::PAGE_SIZE;
 }
 
-union K_ptab_array
+union alignas(0x1000) K_ptab_array
 {
   Kpdir kpdir;
   Unsigned8 storage[Boot_paging::Pdir_size];
-} __attribute__((aligned(0x1000)));
+};
 
 // -----------------------------------------------------------------
 IMPLEMENTATION [arm && mmu && !cpu_virt]:
