@@ -1307,7 +1307,7 @@ Context::try_finish_migration()
  * \pre The context must be either on the current CPU or on an offline CPU:
  *      `current_cpu() == home_cpu() || !Cpu::online(home_cpu())`
  * \pre If `!Cpu::online(home_cpu())`, the lock of the home CPU's _pending_rqq
- *      must be held: `_pending_rqq.cpu(home_cpu()).q_lock()->test()`
+ *      must be held: `_pending_rqq.cpu(home_cpu()).q_lock()->is_locked()`
  *
  * \return True if re-scheduling is needed (ready queue has changed),
  *         false if not.
@@ -2115,7 +2115,7 @@ Context::pending_rqq_enqueue()
  * \pre The context must be either on the current CPU or on an offline CPU:
  *      `home_cpu() == current_cpu() || offline_cpu`
  * \pre If offline_cpu is true, the lock of the home CPU's _pending_rqq must be
- *      held: `_pending_rqq.cpu(home_cpu()).q_lock()->test()`
+ *      held: `_pending_rqq.cpu(home_cpu()).q_lock()->is_locked()`
  *
  * \return True if re-scheduling is needed (ready queue has changed),
  *         false if not.
