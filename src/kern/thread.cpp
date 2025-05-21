@@ -546,6 +546,11 @@ Thread::do_kill()
   unregister_delete_irq();
   unregister_doorbell_irq();
 
+  // The RCU wait here is necessary, because the regular RCU grace period after
+  // Thread::destroy() has already finished at this point, but only after this,
+  // here in Thread::do_kill(), does the thread release its connections to other
+  // kernel objects, for example by clearing its sender list. These other
+  // objects rely on the RCU mechanism for safe interaction with the thread.
   rcu_wait();
 
   state_del_dirty(Thread_ready_mask);
