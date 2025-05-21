@@ -351,6 +351,7 @@ Thread::~Thread()		// To be called in locked state.
   _kernel_sp = nullptr;
   *--init_sp = 0;
   Fpu_alloc::free_state(fpu_state());
+  assert (!(state() & Thread_ready_mask));
   assert (!in_ready_list());
 }
 
