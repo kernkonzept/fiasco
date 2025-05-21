@@ -162,10 +162,8 @@ private:
  * Kobject::put() *must* return `false` and an object-specific MP-safe
  * mechanism for object deletions has to take over.
  *
- * Kobject::destroy() and Kobject::put() are called exactly once as a direct
- * consequence of unmapping. Usually, during the lifetime of a `Kobject`,
- * there are no additional calls to those functions; however, object-specific
- * reference handling may allow or require additional calls.
+ * Kobject::destroy() and Kobject::put() are called exactly once during the
+ * lifetime of a `Kobject`, namely as a direct consequence of unmapping.
  */
 class Kobject :
   public cxx::Dyn_castable<Kobject, Kobject_iface>,
