@@ -413,6 +413,18 @@ config INTEL_IA32_BRANCH_BARRIERS
 	    (c) IBPB after address space switches to prevent cross
 	        application attacks.
 
+config INTEL_ITS_MITIGATION
+	bool "Enable ITS mitigation" if AMD64 && KERNEL_ISOLATION
+	default y if AMD64 && KERNEL_ISOLATION
+	depends on INTEL_IA32_BRANCH_BARRIERS
+	help
+	  Perform mitigation for Indirect Target Selection (ITS) by forcing the
+	  compiler to locate any indirect branch instructions in the last 32
+	  bytes of a 64-byte cache line.
+
+	  Due to the performance impact, this option should be only enabled if
+	  the kernel is executed on CPUs affected by the vulnerability.
+
 config INTEL_MDS_MITIGATION
 	bool "Enable MDS mitigation" if AMD64 && KERNEL_ISOLATION
 	default y if AMD64 && KERNEL_ISOLATION

@@ -55,7 +55,12 @@ Context::switch_cpu(Context *t)
      // in new context now (cli'd)
      "   call  switchin_context_label	\n\t"	// switch pagetable
      "   pop   %%rax			\n\t"	// don't do ret here -- we want
-     "   jmp   *%%rax			\n\t"	// to preserve the return stack
+						// to preserve the return stack
+     " .if %c[intel_its_mitigation]	\n\t"
+     "   jmp   __x86_indirect_thunk_rax	\n\t"
+     " .else				\n\t"
+     "   jmp   *%%rax			\n\t"
+     " .endif				\n\t"
      // restart code
      "  .p2align 4			\n\t"	// start code at new cache line
      "1: pop %%rbp			\n\t"	// restore base ptr
@@ -64,7 +69,8 @@ Context::switch_cpu(Context *t)
      : [old_ksp]    "c" (&_kernel_sp),
        [new_ksp]    "a" (&t->_kernel_sp),
        [new_thread] "D" (t),
-       [old_thread] "S" (this)
+       [old_thread] "S" (this),
+       [intel_its_mitigation] "i" (TAG_ENABLED(intel_its_mitigation))
      : "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15", "rbx", "rdx", "memory");
 }
 

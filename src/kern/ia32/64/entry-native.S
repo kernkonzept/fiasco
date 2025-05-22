@@ -7,6 +7,43 @@
 #include "regdefs.h"
 #include "tcboffset.h"
 
+/* Intel ITS mitigation. These "thunks" are required by code compiled with
+ * '-mfunction-return=thunk-extern -mindirect-branch=thunk-extern'.
+ * Make sure that the corresponding instructions are entirely located in the
+ * second half of a cache line. */
+
+	.p2align 6
+	.skip 32, 0xcc
+	.globl __x86_return_thunk
+__x86_return_thunk:
+	ret
+
+.macro IA32_INDIRECT_THUNK reg
+	.section ".text.__x86_indirect_thunk_\reg", "ax", @progbits
+	.p2align 6, 0xcc
+	.skip 32, 0xcc
+	.globl	__x86_indirect_thunk_\reg
+__x86_indirect_thunk_\reg:
+	jmp	*%\reg
+.endm
+
+	IA32_INDIRECT_THUNK rax
+	IA32_INDIRECT_THUNK rbx
+	IA32_INDIRECT_THUNK rcx
+	IA32_INDIRECT_THUNK rdx
+	IA32_INDIRECT_THUNK rbp
+	IA32_INDIRECT_THUNK rsp
+	IA32_INDIRECT_THUNK rsi
+	IA32_INDIRECT_THUNK rdi
+	IA32_INDIRECT_THUNK r8
+	IA32_INDIRECT_THUNK r9
+	IA32_INDIRECT_THUNK r10
+	IA32_INDIRECT_THUNK r11
+	IA32_INDIRECT_THUNK r12
+	IA32_INDIRECT_THUNK r13
+	IA32_INDIRECT_THUNK r14
+	IA32_INDIRECT_THUNK r15
+
 	.section ".entry.text.debug_exc", "ax", @progbits
 	.p2align 4
 	.globl	entry_vec01_debug
@@ -221,25 +258,28 @@ leave_from_syscall_by_iret:
 	.global	dbf_stack_top
 dbf_stack_top:
 
+#ifdef CONFIG_KERNEL_ISOLATION
+
 	.section ".text.syscall_entry"
 
-#ifdef CONFIG_KERNEL_NX
+# ifdef CONFIG_KERNEL_NX
 
 /*
  * This code shall be mapped to Kentry_cpu_page_text, exactly one page above
  * Kentry_cpu_page, which makes it possible to refer to the data without
  * clobbering a register.
  */
-#define CPUE_OFFSET syscall_entry_code - 0x1000
+# define CPUE_OFFSET (syscall_entry_code - 0x1000)
 
 	.align 0x1000
 
 #else
 
 /* This code shall be copied to Kentry_cpu_syscall_entry */
-#define CPUE_OFFSET syscall_entry_code - 0x30
+# define CPUE_OFFSET (syscall_entry_code - 0x30)
 
-#endif
+# endif
+
 	.global syscall_entry_code
 syscall_entry_code:
 	mov	%rsp, (CPUE_OFFSET + CPUE_SCRATCH_OFS)(%rip)
@@ -253,11 +293,26 @@ syscall_entry_code:
 	.global syscall_entry_reloc
 syscall_entry_reloc:
 	mov	$entry_sys_fast_ipc_c, %r11
+
+# ifdef CONFIG_INTEL_ITS_MITIGATION
+	/* CPUE_OFFSET defines the offset of syscall_entry_code from the first
+	 * of the CPU entry values which are always located at the beginning of
+	 * a page, see description of values[0..5] in Kmem::init_cpu(). */
+	.ifgt 32 - ((. - CPUE_OFFSET) % 64)
+	.error "The indirect jump must start on the 2nd half of a cache line!"
+	.endif
+# endif
 	jmp	*%r11
+# ifdef CONFIG_INTEL_ITS_MITIGATION
+	/* A jump is much shorter than a cache line. */
+	.ifgt 32 - ((. - CPUE_OFFSET - 1) % 64)
+	.error "The indirect jump must end on the 2nd half of a cache line!"
+	.endif
+# endif
+
 	.global syscall_entry_code_end
 syscall_entry_code_end:
 
-#ifdef CONFIG_KERNEL_ISOLATION
 	.section ".entry.text.safe_sysret"
 	.global safe_sysret
 safe_sysret:
@@ -346,5 +401,5 @@ safe_iret:
 verw_gdt_data_kernel:
         .word   GDT_DATA_KERNEL
 # endif
-#endif
 
+#endif /* CONFIG_KERNEL_ISOLATION */

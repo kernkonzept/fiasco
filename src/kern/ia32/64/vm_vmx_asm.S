@@ -1,3 +1,5 @@
+#include <low_level.h>
+
 /**
  * Function resume_vm_vmx, arguments:
  *  - rdi: Pointer to registers (layout specific...)
@@ -59,7 +61,7 @@ resume_vm_vmx:
 	pop	%r13
 	pop	%r12
 	pop	%rbx
-	ret
+	SAFE_RET
 
 vm_vmx_exit_vec:
 	push	%rsi
@@ -93,4 +95,4 @@ vm_vmx_exit_vec:
 	pop	%rbx
 
 	xor	%rax, %rax
-	ret
+	SAFE_RET

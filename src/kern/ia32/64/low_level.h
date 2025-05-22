@@ -35,7 +35,7 @@
 #if defined(CONFIG_KERNEL_ISOLATION) && defined(CONFIG_INTEL_IA32_BRANCH_BARRIERS)
 .macro IA32_IBRS_CLOBBER
 	mov $0x48, %ecx
-	mov $0, %edx
+	xor %edx, %edx  /* saves 3 bytes */
 	mov $3, %eax
 	wrmsr
 .endm
@@ -64,6 +64,16 @@
 .macro IA32_IBRS_CLOBBER
 .endm
 .macro IA32_IBRS
+.endm
+#endif
+
+#ifdef CONFIG_INTEL_ITS_MITIGATION
+.macro SAFE_RET
+	jmp	__x86_return_thunk
+.endm
+#else
+.macro SAFE_RET
+	ret
 .endm
 #endif
 

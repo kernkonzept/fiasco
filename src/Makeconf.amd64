@@ -25,6 +25,20 @@ SHARED_FLAGS            += $(call CHECKCC,-mno-sse4a,)
 SHARED_FLAGS            += $(call CHECKCC,-mno-3dnow,)
 SHARED_FLAGS-clang      += $(call CHECKCC,-Wno-address-of-packed-member)
 
+# Do NOT use CHECKCC to detect these mandatory compiler parameters!
+# -mfunction-return=thunk-extern supported from GCC 8.1
+# -mindirect-branch=thunk-extern supported from GCC 8.1
+# -mindirect-branch-register supported from GCC 8.1
+SHARED_FLAGS-gcc        += $(if $(CONFIG_INTEL_ITS_MITIGATION),$\
+                           -mfunction-return=thunk-extern $\
+                           -mindirect-branch=thunk-extern $\
+                           -mindirect-branch-register)
+# -mfunction-return=thunk-extern supported from Clang-15
+# -mretpoline-external-thunk supported from Clang-6
+SHARED_FLAGS-clang      += $(if $(CONFIG_INTEL_ITS_MITIGATION),$\
+                           -mfunction-return=thunk-extern $\
+                           -mretpoline-external-thunk)
+
 ASFLAGS                 += -m64 -mcmodel=kernel
 OBJCOPY_BFDNAME         := elf64-x86-64
 OBJCOPY_BFDARCH         := i386

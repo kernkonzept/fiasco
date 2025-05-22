@@ -8,6 +8,8 @@ shortcut.o:		$(TCBOFFSET)
 tramp-mp.o:		$(TCBOFFSET)
 tramp-realmode.o:	$(TCBOFFSET)
 sys_call_page-asm.o:	$(TCBOFFSET)
+vm_vmx_asm.o:		$(TCBOFFSET)
+vm_svm_asm.o:		$(TCBOFFSET)
 
 # Add future prerequisites somewhere among the list of libraries.
 # You really should not have to add anything in the $(LD) line.

@@ -405,7 +405,12 @@ Thread::call_nested_trap_handler(Trap_state *ts)
 #ifndef CONFIG_CPU_LOCAL_MAP
      "mov    %[pdbr], %%cr3     \n\t"
 #endif
-     "callq  *%[handler]        \n\t"
+     ".if %c[intel_its_mitigation] \n\t"
+     "mov    %[handler], %%rdx       \n\t"
+     "call   __x86_indirect_thunk_rdx\n\t"
+     ".else                 \n\t"
+     "callq  *%[handler]    \n\t"
+     ".endif                \n\t"
      "pop    %[old_pdbr]        \n\t"
 #ifndef CONFIG_CPU_LOCAL_MAP
      "mov    %[old_pdbr], %%cr3 \n\t"
@@ -426,7 +431,8 @@ Thread::call_nested_trap_handler(Trap_state *ts)
 #endif
        [cpu] "S" (log_cpu),
        [stack] "r" (stack),
-       [handler] "m" (nested_trap_handler)
+       [handler] "m" (nested_trap_handler),
+       [intel_its_mitigation] "i" (TAG_ENABLED(CONFIG_INTEL_ITS_MITIGATION))
      : "r8", "r9", "r10", "r11", "memory");
 
   if (!ntr)

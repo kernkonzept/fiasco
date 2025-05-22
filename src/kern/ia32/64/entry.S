@@ -127,7 +127,11 @@ slowtraps:
 	mov	BASE_TRAP_HANDLER, %rax
 	or	%rax, %rax
 	jz	.Lunexpected_trap
+#ifdef CONFIG_INTEL_ITS_MITIGATION
+	call	__x86_indirect_thunk_rax
+#else
 	call	*%rax
+#endif
 in_slowtrap:
 	/*
 	 * If the handler function returned zero (success), then resume execution
@@ -146,7 +150,7 @@ iretq_exception_handler:
 	/* Patch return address from base-trap handler to the iret fixup */
 	movq	$.Liretq_exception_stack_fix, -8(%rsi)
 	mov	$1, %eax
-	retq
+	SAFE_RET
 
 .align 8
 .Liretq_exception_stack_fix:

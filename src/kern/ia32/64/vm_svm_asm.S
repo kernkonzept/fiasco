@@ -1,7 +1,9 @@
+#include <low_level.h>
+
 	.p2align 4
 	.globl	resume_vm_svm
 resume_vm_svm:
-	
+
 	// save callee saved regs
 	push	%rbx
 	push	%r12
@@ -67,7 +69,7 @@ resume_vm_svm:
 	stgi
 
 	add	$16, %rsp
-	
+
 	// restore callee saved registers
 	pop	%rbp
 	pop	%r15
@@ -76,4 +78,4 @@ resume_vm_svm:
 	pop	%r12
 	pop	%rbx
 
-	ret
+	SAFE_RET
