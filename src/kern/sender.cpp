@@ -11,11 +11,31 @@ class Sender : private Prio_list_elem
 {
   MEMBER_OFFSET();
 public:
-  /** Receiver-ready callback. Receivers call this function on waiting senders
-      when they get ready to receive a message from that sender. Senders need
-      to implement this interface. */
-  virtual void ipc_send_msg(Receiver *, bool open_wait) = 0;
+  /**
+   * Receiver-ready callback. Receivers call this function on waiting senders
+   * when they get ready to receive a message from that sender.
+   *
+   * \param receiver   Receiver that receives the message from the waiting sender.
+   * \param open_wait  Whether the receiver is in a open or closed wait.
+   *
+   * \pre Interrupts must be disabled.
+   * \post This function is a potential preemption point. In particular,
+   *       this means that upon return, the Sender might may already have been
+   *       deleted unless the caller holds a counted reference to it.
+   */
+  virtual void ipc_send_msg(Receiver *receiver, bool open_wait) = 0;
+
+  /**
+   * Receivers call this function on waiting senders when they get want to
+   * reject a message from that sender.
+   *
+   * \pre Interrupts must be disabled.
+   * \post This function is a potential preemption point. In particular,
+   *       this means that upon return, the Sender might may already have been
+   *       deleted unless the caller holds a counted reference to it.
+   */
   virtual void ipc_receiver_aborted() = 0;
+
   virtual void modify_label(Mword const *todo, int cnt) = 0;
 
 protected:

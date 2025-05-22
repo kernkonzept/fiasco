@@ -44,11 +44,6 @@ Ipc_sender<Derived>::ipc_receiver_aborted() override
   derived()->finish_send(); // WARN: Do not use this/derived() from here on!
 }
 
-/**
- * Receiver-ready callback. Receivers call this function in the context of a
- * waiting sender when they get ready to receive a message from that sender (in
- * this case an Ipc_sender aka Irq_sender).
- */
 PUBLIC template< typename Derived >
 virtual void
 Ipc_sender<Derived>::ipc_send_msg(Receiver *recv, bool) override

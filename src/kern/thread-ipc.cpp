@@ -168,11 +168,6 @@ Thread::prepare_xcpu_ipc_transfer_fpu()
     spill_fpu_if_owner();
 }
 
-/**
- * Receiver-ready callback. Receivers call this function in the context of a
- * waiting sender when they get ready to receive a message from that sender
- * (in this case a thread).
- */
 PRIVATE
 void
 Thread::ipc_send_msg(Receiver *recv, bool open_wait) override
