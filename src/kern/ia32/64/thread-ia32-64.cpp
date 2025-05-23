@@ -378,42 +378,43 @@ Thread::call_nested_trap_handler(Trap_state *ts)
   if (!ntr)
     stack = dbg_stack.cpu(log_cpu).stack_top;
 
-  Unsigned64 dummy1, dummy2, scratch1, scratch2;
+  Unsigned64 scratch_rcx, scratch_rdx;
 
   // don't set %esp if gdb fault recovery to ensure that exceptions inside
   // kdb/jdb don't overwrite the stack
   asm volatile
-    ("mov    %%rsp,%[d2]	\n\t"	// save old stack pointer
-     "cmpq   $0,%[recover]	\n\t"
-     "jne    1f			\n\t"	// check trap within trap handler
-     "mov    %[stack],%%rsp	\n\t"	// setup clean stack pointer
-     "1:			\n\t"
-     "incq   %[recover]		\n\t"
+    ("mov    %%rsp,%[old_sp]    \n\t"   // save old stack pointer
+     "cmpq   $0,%[recover]      \n\t"
+     "jne    1f                 \n\t"   // check trap within trap handler
+     "mov    %[stack],%%rsp     \n\t"   // setup clean stack pointer
+     "1:                        \n\t"
+     "incq   %[recover]         \n\t"
 #ifndef CONFIG_CPU_LOCAL_MAP
-     "mov    %%cr3, %[d1]	\n\t"
+     "mov    %%cr3, %[old_pdbr] \n\t"
 #endif
-     "push   %[d2]		\n\t"	// save old stack pointer on new stack
-     "push   %[d1]		\n\t"	// save old pdbr
+     "push   %[old_sp]          \n\t"   // save old stack pointer on new stack
+     "push   %[old_pdbr]        \n\t"   // save old pdbr
 #ifndef CONFIG_CPU_LOCAL_MAP
-     "mov    %[pdbr], %%cr3	\n\t"
+     "mov    %[pdbr], %%cr3     \n\t"
 #endif
-     "callq  *%[handler]	\n\t"
-     "pop    %[d1]		\n\t"
+     "callq  *%[handler]        \n\t"
+     "pop    %[old_pdbr]        \n\t"
 #ifndef CONFIG_CPU_LOCAL_MAP
-     "mov    %[d1], %%cr3	\n\t"
+     "mov    %[old_pdbr], %%cr3 \n\t"
 #endif
-     "pop    %%rsp		\n\t"	// restore old stack pointer
-     "cmpq   $0,%[recover]	\n\t"	// check trap within trap handler
-     "je     1f			\n\t"
-     "decq   %[recover]		\n\t"
-     "1:			\n\t"
-     : [ret] "=&a"(ret), [d2] "=&d"(dummy2), [d1] "=&c"(dummy1), "=D"(scratch1),
-       "=S"(scratch2),
-       [recover] "+m" (ntr)
-     : [ts] "D" (ts),
+     "pop    %%rsp              \n\t"   // restore old stack pointer
+     "cmpq   $0,%[recover]      \n\t"   // check trap within trap handler
+     "je     1f                 \n\t"
+     "decq   %[recover]         \n\t"
+     "1:                        \n\t"
+     : [ret]      "=&a" (ret),
+       [old_sp]   "=&d" (scratch_rdx),
+       [old_pdbr] "=&c" (scratch_rcx),
+       [recover]  "+m" (ntr)
+     : [ts]       "D" (ts),
 #ifndef CONFIG_CPU_LOCAL_MAP
        [pdbr] "r" (Kernel_task::kernel_task()->virt_to_phys(
-                     reinterpret_cast<Address>(Kmem::dir()))),
+                   reinterpret_cast<Address>(Kmem::dir()))),
 #endif
        [cpu] "S" (log_cpu),
        [stack] "r" (stack),
