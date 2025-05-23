@@ -282,21 +282,18 @@ Vm_vmx_t<VARIANT>::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu,
   if (rv != 0)
     return rv;
 
-#ifdef CONFIG_LAZY_FPU
-  // XXX:
-  // This generates a circular dep between thread<->task, this cries for a
-  // new abstraction...
-  if (!(ctxt->state() & Thread_fpu_owner))
+  if constexpr (TAG_ENABLED(lazy_fpu))
     {
-      if (EXPECT_FALSE(!static_cast<Thread *>(ctxt)->switchin_fpu()))
+      // XXX: This generates a circular dependency between thread<->task!
+      if (!(ctxt->state() & Thread_fpu_owner))
         {
-          WARN("VMX: switchin_fpu failed\n");
-          return -L4_err::EInval;
+          if (EXPECT_FALSE(!static_cast<Thread *>(ctxt)->switchin_fpu()))
+            {
+              WARN("VMX: switchin_fpu failed\n");
+              return -L4_err::EInval;
+            }
         }
     }
-#else
-  (void)ctxt;
-#endif
 
   bool guest_long_mode = vm_state->read<Vmx::Vmcs_vm_entry_ctls>() & (1U << 9);
   if (!is_64bit() && guest_long_mode)

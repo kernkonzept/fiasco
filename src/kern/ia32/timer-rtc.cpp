@@ -20,13 +20,8 @@ IMPLEMENT
 void
 Timer::init(Cpu_number)
 {
-  printf("Using the RTC on IRQ %d (%sHz) for scheduling\n", 8,
-#ifdef CONFIG_SLOW_RTC
-         "64"
-#else
-         "1k"
-#endif
-      );
+  printf("Using the RTC on IRQ %d (%sHz) for scheduling\n",
+         8, TAG_ENABLED(slow_rtc) ? "64" : "1k");
 
   // set up timer interrupt (~ 1ms)
   Rtc::init();

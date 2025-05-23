@@ -137,8 +137,8 @@ Fpu::restore_state(Fpu_state const *s)
 {
   assert (s);
 
-  // Only fxrstor is a non-waiting instruction and thus
-  // cannot cause exception #16 for pending FPU exceptions.
+  // Only fxrstor is a non-waiting instruction and thus cannot cause
+  // exception #16 for pending FPU exceptions.
   Fpu &f = fpu.current();
 
   switch (f._variant)
@@ -146,41 +146,40 @@ Fpu::restore_state(Fpu_state const *s)
     case Variant_xsave:
       asm volatile ("xrstor (%2)" : : "a" (~0UL), "d" (~0UL), "r" (s));
       break;
+
     case Variant_fxsr:
+      if constexpr (TAG_ENABLED(workaround_amd_fpu_leak))
         {
-#if !defined (CONFIG_WORKAROUND_AMD_FPU_LEAK)
-          asm volatile ("fxrstor (%0)" : : "r" (s));
-#else
-          /* The code below fixes a security leak on AMD CPUs, where
-           * some registers of the FPU are not restored from the state_buffer
-           * if there are no FPU exceptions pending. The old values, from the
-           * last FPU owner, are therefore leaked to the new FPU owner.
-           */
+          /* The code below fixes a security leak on AMD CPUs, where some
+           * registers of the FPU are not restored from the state_buffer if
+           * there are no FPU exceptions pending. The old values, from the last
+           * FPU owner, are therefore leaked to the new FPU owner. */
           static Mword int_dummy = 0;
 
           asm volatile(
-              "fnstsw	%%ax    \n\t"   // save fpu flags in ax
-              "ffree	%%st(7) \n\t"   // make enough space for the fildl
+              "fnstsw   %%ax    \n\t"   // save fpu flags in ax
+              "ffree    %%st(7) \n\t"   // make enough space for the fildl
               "bt       $7,%%ax \n\t"   // test if exception bit is set
               "jnc      1f      \n\t"
               "fnclex           \n\t"   // clear it
               "1: fildl %1      \n\t"   // dummy load which sets the
-              // affected to def. values
+                                        // affected to default values
               "fxrstor (%0)     \n\t"   // finally restore the state
               : : "r" (s), "m" (int_dummy) : "ax");
-#endif
         }
+      else
+        asm volatile ("fxrstor (%0)" : : "r" (s));
       break;
+
     case Variant_fpu:
 #ifdef CONFIG_LAZY_FPU
-      // this should be handled in the cases where we release the FPU and it has no owner anymore...
-
-      // frstor is a waiting instruction and we must make sure no
-      // FPU exceptions are pending here. We distinguish two cases:
-      // 1) If we had a previous FPU owner, we called save_state before and
-      //    invoked fnsave which re-initialized the FPU and cleared exceptions
-      // 2) Otherwise we call fnclex instead to clear exceptions.
-
+      /* this should be handled in the cases where we release the FPU and it has
+       * no owner anymore...
+       * frstor is a waiting instruction and we must make sure no FPU exceptions
+       * are pending here. We distinguish two cases:
+       * 1) If we had a previous FPU owner, we called save_state before and
+       *    invoked fnsave which re-initialized the FPU and cleared exceptions
+       * 2) Otherwise we call fnclex instead to clear exceptions. */
       if (!f.owner())
         asm volatile ("fnclex");
 #endif
