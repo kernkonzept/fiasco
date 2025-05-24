@@ -76,6 +76,16 @@ FilesAnalyzed: false
 PackageCopyrightText: NOASSERTION
 PackageDownloadLocation: NOASSERTION
 
+PackageName: fiasco-simple-malloc
+SPDXID: SPDXRef-fiasco-simple-malloc
+PackageFileName: ./src/lib/simple_malloc
+PackageOriginator: Organization: Kernkonzept GmbH (info@kernkonzept.com)
+PackageLicenseDeclared: GPL-2.0-only
+PackageLicenseConcluded: GPL-2.0-only
+FilesAnalyzed: false
+PackageCopyrightText: NOASSERTION
+PackageDownloadLocation: NOASSERTION
+
 PackageName: fiasco-gcov
 SPDXID: SPDXRef-fiasco-gcov
 PackageFileName: ./src/lib/gcov
@@ -112,6 +122,7 @@ Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-gzip
 Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-quad
 Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-perfctr
 Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-regex
+Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-simple-malloc
 Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-gcov
 Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-cov-llvm
 Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-libc
