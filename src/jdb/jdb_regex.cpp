@@ -47,7 +47,6 @@ IMPLEMENTATION [jdb_regex]:
 #include "jdb_module.h"
 #include "kmem_alloc.h"
 #include "panic.h"
-#include "simple_malloc.h"
 
 PUBLIC
 Jdb_regex::Jdb_regex()
