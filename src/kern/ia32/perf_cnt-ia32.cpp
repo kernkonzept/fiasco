@@ -451,6 +451,13 @@ Perf_cnt_ap::Perf_cnt_ap()
   Unsigned32 eax, ebx, ecx, edx;
   Cpu::boot_cpu()->arch_perfmon_info(&eax, &ebx, &ecx, &edx);
   _nr_regs = (eax & 0x0000ff00) >> 8;
+}
+
+int
+Perf_cnt_ap::init() override
+{
+  Unsigned32 eax, ebx, ecx, edx;
+  Cpu::boot_cpu()->arch_perfmon_info(&eax, &ebx, &ecx, &edx);
 
   if ((eax & 0xff) > 1)
     {
@@ -471,6 +478,8 @@ Perf_cnt_ap::Perf_cnt_ap()
       Cpu::wrmsr(msr_fixed_ctr_ctrl, Msr::Ia32_fixed_ctr_ctrl);
       Cpu::wrmsr(msr_perf_global_ctrl, Msr::Ia32_perf_global_ctrl);
     }
+
+  return 1;
 }
 
 void
