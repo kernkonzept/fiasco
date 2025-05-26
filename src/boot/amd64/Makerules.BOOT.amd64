@@ -15,7 +15,7 @@ boot_img.ren_syms: boot_img.x2
 boot_img.x1: $(OBJ_BOOT) $(DRIVERS) $(LIBC)
 	$(LINK_MESSAGE)
 	$(VERBOSE)$(LD) $(LDFLAGS) $(LD_EMULATION_FLAG) -r -d -s -o $@ \
-	-T $(srcdir)/boot/amd64/bootstrap.ld $^
+	-T $(srcdir)/boot/amd64/bootstrap.ld -u_boot_start -gc-sections $^
 
 boot_img.x2: boot_img.x1
 	$(LINK_MESSAGE)

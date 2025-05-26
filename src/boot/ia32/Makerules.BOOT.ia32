@@ -20,7 +20,7 @@ boot_img.ren_syms: boot_img.x2
 boot_img.x1: $(OBJ_BOOT) $(DRIVERS) $(LIBC)
 	$(LINK_MESSAGE)
 	$(VERBOSE)$(LD) $(LDFLAGS) $(LD_EMULATION_FLAG) -r -s -o $@ \
-	-T $(srcdir)/boot/ia32/bootstrap.ld $^
+	-T $(srcdir)/boot/ia32/bootstrap.ld -u_boot_start -gc-sections $^
 
 boot_img.x2: boot_img.x1
 	$(LINK_MESSAGE)
