@@ -463,17 +463,25 @@ Irq_sender::finish_replace_irq_thread(Irq_thread old, Irq_thread target,
                                       Mword irq_id, bool abandon)
 {
   int result;
-  bool reject_send_on_unbind = true;
-  bool was_pending = false;
+  bool requeue_revoked = false; // for Revoke_vcpu_state::Ok_was_pending
+  bool was_pending_again = false; // for Revoke_vcpu_state::Ok_was_active_and_queued
 
   if (!old)
     {
       auto g = lock_guard<No_cpu_lock_policy>(_irq_lock);
       if (_send_state.is_pending())
         {
+          // Try to transition from Pending -> Queued, so that we can later
+          // forward the pending IRQ to the new target.
           _send_state.clear(Irq_send_state::Pending);
-          result = Detach_pending;
-          reject_send_on_unbind = false;
+          if (EXPECT_TRUE(queue()))
+            result = Detach_pending;
+          else
+            // IPC send was already queued, i.e. the IRQ was triggered between
+            // us setting the new target in `start_replace_irq_thread()` and
+            // here. Should not happen, unless the Pending flag was set without
+            // masking the IRQ or user-space unmasked the IRQ concurrently.
+            result = Detach_inactive;
         }
       else
         result = Detach_inactive;
@@ -499,7 +507,10 @@ Irq_sender::finish_replace_irq_thread(Irq_thread old, Irq_thread target,
           break;
         case Context::Revoke_vcpu_state::Ok_was_pending:
           result = Detach_pending;
-          reject_send_on_unbind = false;
+          // In this case finish_send() was already called, via vcpu_soi()),
+          // clearing the Queued flag. But the IRQ was not delivered, so before
+          // forwarding to the new target, we first need to set Queued again.
+          requeue_revoked = true;
           break;
         case Context::Revoke_vcpu_state::Ok_was_active:
           // We have abandoned an active vIRQ. The VMM has to cope with the
@@ -509,7 +520,7 @@ Irq_sender::finish_replace_irq_thread(Irq_thread old, Irq_thread target,
         case Context::Revoke_vcpu_state::Ok_was_active_and_queued:
           // Like above but the next vIRQ was already queued!
           result = Detach_abandoned;
-          was_pending = true;
+          was_pending_again = true;
           break;
         case Context::Revoke_vcpu_state::Fail_is_active:
           // We do not abandon active vIRQs except when detaching. If the Irq
@@ -540,38 +551,23 @@ Irq_sender::finish_replace_irq_thread(Irq_thread old, Irq_thread target,
   if (old && old->dec_ref() == 0)
     delete old;
 
-  was_pending = was_pending || result == Detach_pending;
-  if (result != Detach_inactive)
+  // Note: We must not use `target` anymore. We might have been preempted during
+  // DRQ execution, i.e. someone might have re-bound to a different thread and
+  // might even have deleted the `target` thread.
+
+  if (requeue_revoked)
     {
-      // We might have been preempted during DRQ execution, i.e. the someone
-      // might have re-bound to a different thread and might even have deleted
-      // the old thread. We therefore have to re-read the currently bound
-      // thread under the _irq_lock.
       auto g = lock_guard<No_cpu_lock_policy>(_irq_lock);
 
-      // Do not forward if the Irq_sender was destroyed in the meantime.
-      if (_send_state.is_in_destruction())
-        target = Irq_thread::invalid();
-      else
-        target = _irq_thread;
-
-      // If the edge-triggered IRQ was queued before and the Irq_sender is
-      // now unbound, remember that it was pending originally.
-      // Level-triggered IRQs must not be remembered because the Irq_sender
-      // should only be triggered if the interrupt is still asserted when
-      // being bound again.
-      if (!target.is_bound() && is_edge_triggered() && was_pending)
-        _send_state.set(Irq_send_state::Pending);
+      // Try requeuing the revoked IRQ.
+      if (!queue())
+        // Between the vcpu_soi() and here, the IRQ already hit again.
+        return result;
     }
 
   // re-inject if IRQ was queued before
-  if (was_pending)
-    {
-      if (target.is_bound())
-        send(target);
-      else if (reject_send_on_unbind)
-        reject_send(nullptr);
-    }
+  if (result == Detach_pending || was_pending_again)
+    reject_send(nullptr);
 
   return result;
 }
