@@ -12,7 +12,6 @@ SECTIONS
 
   .bss :
     {
-      *(.bss .gnu.linkonce.b.* COMMON)
+      *(.bss .bss.* .gnu.linkonce.b.* COMMON)
     }
-
 }
