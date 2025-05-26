@@ -4,7 +4,7 @@
 # Add future prerequisites somewhere among the list of libraries.
 # You really should not have to add anything in the $(LD) line.
 
-boot_img.o:	boot_img.x2 boot_img.ren_syms
+boot_img.o: boot_img.x2 boot_img.ren_syms
 	$(LINK_MESSAGE)
 	$(VERBOSE)$(OBJCOPY) --redefine-syms=boot_img.ren_syms $< $@
 
@@ -12,12 +12,12 @@ boot_img.ren_syms: boot_img.x2
 	$(LINK_MESSAGE)
 	$(VERBOSE)$(NM) -u $^ | perl -n -e 'if (/^\s*U\s+bootstrap_(.*)$$/) { print "bootstrap_$$1 $$1\n"; }' > $@
 
-boot_img.x1:	$(OBJ_BOOT) $(DRIVERS) $(LIBC) 
+boot_img.x1: $(OBJ_BOOT) $(DRIVERS) $(LIBC)
 	$(LINK_MESSAGE)
 	$(VERBOSE)$(LD) $(LDFLAGS) $(LD_EMULATION_FLAG) -r -d -s -o $@ \
 	-T $(srcdir)/boot/amd64/bootstrap.ld $^
 
-boot_img.x2:	boot_img.x1
+boot_img.x2: boot_img.x1
 	$(LINK_MESSAGE)
 	$(VERBOSE)$(OBJCOPY) --prefix-alloc-sections=.bootstrap --prefix-symbols=bootstrap_ -G bootstrap__boot_start $^ $@
 
@@ -43,10 +43,11 @@ endif
 # $(2) = fiasco.debug - variable
 # $(3) = Additional $(OBJ_X), e.g. OBJ_<unittest>
 define gen_kernel_rules =
-$(2):	kernel.amd64.lds boot_img.o $$(CRT0) $$(OBJ_KERNEL) $(3) $$(JDB) $$(KERNEL_EXTRA_LIBS) $$(ABI) $$(JABI) libdrivers.a $$(LIBUART) $$(LIBK) $$(CXXLIB) $$(LIBC) libfonts.a libgluedriverslibc.a $$(INTEL_MICROCODE_IMG)
+$(2): kernel.amd64.lds boot_img.o $$(CRT0) $$(OBJ_KERNEL) $(3) $$(JDB) $$(KERNEL_EXTRA_LIBS) $$(ABI) $$(JABI) libdrivers.a $$(LIBUART) $$(LIBK) $$(CXXLIB) $$(LIBC) libfonts.a libgluedriverslibc.a $$(INTEL_MICROCODE_IMG)
 		$$(LINK_MESSAGE)
-		$$(VERBOSE)$$(LD) $$(LDFLAGS) $$(LD_EMULATION_FLAG) -N -T $$< -gc-sections \
-		-o $$@ $$(filter-out $$<,$$+) $$(KERNEL_UNRES_SYMS)
+		$$(VERBOSE)$$(LD) $$(LDFLAGS) $$(LD_EMULATION_FLAG) -N -o $$@ \
+		   -T $$< -gc-sections $$(filter-out $$<,$$+) \
+		   $$(KERNEL_UNRES_SYMS)
 		$$(call ADD_CONFIGFILE,$$@)
 
 $(1): $(2)
