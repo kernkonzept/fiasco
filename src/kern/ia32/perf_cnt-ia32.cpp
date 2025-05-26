@@ -1011,8 +1011,9 @@ Perf_cnt::init()
       // set PCE-Flag in CR4 to enable read of performance measurement
       // counters in usermode. PMC were introduced in Pentium MMX and
       // PPro processors.
-      if (cpu.local_features() & Cpu::Lf_rdpmc)
-        cpu.enable_rdpmc();
+      if constexpr (TAG_ENABLED(perf_cnt_user))
+        if (cpu.local_features() & Cpu::Lf_rdpmc)
+          cpu.enable_rdpmc();
     }
 
   if (pcnt && !pcnt->init())
@@ -1038,8 +1039,9 @@ Perf_cnt::init_ap(Cpu const &cpu)
 {
   if (Perf_cnt::pcnt)
     {
-      if (cpu.local_features() & Cpu::Lf_rdpmc)
-        cpu.enable_rdpmc();
+      if constexpr (TAG_ENABLED(perf_cnt_user))
+        if (cpu.local_features() & Cpu::Lf_rdpmc)
+          cpu.enable_rdpmc();
 
       Perf_cnt::pcnt->init();
       if (Perf_cnt::pcnt->loadcnt_allocated())

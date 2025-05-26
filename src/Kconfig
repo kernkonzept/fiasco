@@ -539,7 +539,7 @@ config PERF_CNT_COUNT_CPL0
 config PERF_CNT_USER
 	bool "Allow user-level access to performance counters"
 	depends on PERF_CNT && EXPERT
-	depends on ARM || ARM64
+	depends on IA32 || AMD64 || ARM || ARM64
 	help
 	  Allows user-level to access performance counters.
 
