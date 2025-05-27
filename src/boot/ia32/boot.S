@@ -13,6 +13,6 @@ _boot_start:
 
 	.bss
 	.align	16
-	.space	1024
+	.space	2048
 _stack:
 
