@@ -1484,6 +1484,9 @@ Context::xcpu_state_change(Mword mask, Mword add, bool lazy_q = false)
  *
  * This function enqueues a DRQ and blocks the current context for a reply DRQ.
  *
+ * \pre         The DRQ request must not belong to the target context, i.e.
+ *              `drq.context() != this`.
+ *
  * \post        If `wait == Drq::Wait`, this function might wait for a remote
  *              DRQ reply and must therefore be considered a potential
  *              preemption point.
@@ -1510,6 +1513,7 @@ Context::drq(Drq *drq, Drq::Request_func *func, void *arg,
   assert(wait != Drq::Wait || !(cur->state() & Thread_drq_ready) || cur->home_cpu() == home_cpu());
   assert((wait != Drq::Wait && drq != &_drq) || !(cur->state() & Thread_drq_wait));
   assert(!drq->queued());
+  assert(drq->context() != this);
 
   drq->func = func;
   drq->arg = arg;
