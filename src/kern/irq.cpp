@@ -208,9 +208,9 @@ public:
    *   - Pending:      IRQ received without target thread.
    *
    * Valid state transitions:
-   *   - Not Queued  -> Queued | Invalidated
-   *   - Queued      -> Not Queued | Masked | Invalidated
-   *   - Masked      -> Not Queued | Invalidated
+   *   - Not Queued  -> Queued | Pending | Invalidated
+   *   - Queued      -> Not Queued | Pending | Invalidated
+   *   - Pending     -> Queued | Invalidated
    *   - Invalidated -> Destroyed
    *
    * Drivers:
@@ -248,7 +248,7 @@ public:
     constexpr bool is_pending() const { return _state & Pending; }
 
     constexpr bool can_send() const
-    { return !is_queued() && !is_invalidated() && !is_destroyed(); }
+    { return !is_queued() && !is_pending() && !is_invalidated() && !is_destroyed(); }
 
     constexpr bool is_in_destruction() const
     { return is_invalidated() || is_destroyed(); }
@@ -479,8 +479,8 @@ Irq_sender::finish_replace_irq_thread(Irq_thread old, Irq_thread target,
           else
             // IPC send was already queued, i.e. the IRQ was triggered between
             // us setting the new target in `start_replace_irq_thread()` and
-            // here. Should not happen, unless the Pending flag was set without
-            // masking the IRQ or user-space unmasked the IRQ concurrently.
+            // here. Should never happen, but better be safe, to avoid enqueuing
+            // an Irq_sender twice.
             result = Detach_inactive;
         }
       else
@@ -1032,13 +1032,19 @@ Irq_sender::_hit_edge_irq(Upstream_irq const *ui)
   auto g = lock_guard<No_cpu_lock_policy>(_irq_lock);
 
   auto t = _irq_thread; // access under lock
-  if (!t.is_bound())
+  if (EXPECT_FALSE(!t.is_bound()))
     {
       // If we get an interrupt without a thread bound, we mask the IRQ. After
       // user-space binds a thread, it must unmask the IRQ. The pending state
       // is recorded so that the interrupt is not lost and delivered once the
       // Irq_sender is bound again.
-      _send_state.set(Irq_send_state::Pending | Irq_send_state::Masked);
+      // Except for the unlikely case that an unbound Irq_sender still is
+      // enqueued in an IPC send, where instead the eventual reject_send
+      // transitions from Queued->Pending.
+      if (EXPECT_TRUE(!_send_state.is_queued()))
+        _send_state.set(Irq_send_state::Pending);
+
+      _send_state.set(Irq_send_state::Masked);
       mask_and_ack();
       Upstream_irq::ack(ui);
       return;
