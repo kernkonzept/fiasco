@@ -9,8 +9,8 @@
 
 #define UNGET 8
 
-#define FFINALLOCK(f) ((f)->lock>=0 ? __lockfile((f)) : 0)
 #ifndef LIBCL4
+#define FFINALLOCK(f) ((f)->lock>=0 ? __lockfile((f)) : 0)
 #define FLOCK(f) int __need_unlock = ((f)->lock>=0 ? __lockfile((f)) : 0)
 #define FUNLOCK(f) do { if (__need_unlock) __unlockfile((f)); } while (0)
 #else /* LIBCL4 */
@@ -42,7 +42,9 @@ struct _IO_FILE {
 	unsigned char *mustbezero_1;
 #endif
 	unsigned char *wbase;
+#ifndef LIBCL4
 	size_t (*read)(FILE *, unsigned char *, size_t);
+#endif
 	size_t (*write)(FILE *, const unsigned char *, size_t);
 #ifndef LIBCL4
 	off_t (*seek)(FILE *, off_t, int);
@@ -55,9 +57,9 @@ struct _IO_FILE {
 	int pipe_pid;
 	long lockcount;
 	int mode;
-#endif
 	volatile int lock;
 	int lbf;
+#endif
 	void *cookie;
 #ifndef LIBCL4
 	off_t off;

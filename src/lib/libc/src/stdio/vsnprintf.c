@@ -38,9 +38,7 @@ int vsnprintf(char *restrict s, size_t n, const char *restrict fmt, va_list ap)
 	char dummy[1];
 	struct cookie c = { .s = n ? s : dummy, .n = n ? n-1 : 0 };
 	FILE f = {
-		.lbf = EOF,
 		.write = sn_write,
-		.lock = -1,
 		.buf = buf,
 		.cookie = &c,
 	};

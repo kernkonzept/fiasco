@@ -12,8 +12,6 @@ int printf(const char *restrict fmt, ...)
       .write = __libc_stdout_write,
       .buf = NULL,
       .buf_size = 0, /* vfprintf() will use local internal_buf */
-      .lock = -1,
-      .lbf = -1,
     };
   va_start(ap, fmt);
   r = vfprintf(&f, fmt, ap);

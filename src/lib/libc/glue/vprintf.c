@@ -9,8 +9,6 @@ int vprintf(const char *restrict fmt, va_list ap)
       .write = __libc_stdout_write,
       .buf = NULL,
       .buf_size = 0, /* vfprintf() will use local internal_buf */
-      .lock = -1,
-      .lbf = -1,
     };
   return vfprintf(&f, fmt, ap);
 }
