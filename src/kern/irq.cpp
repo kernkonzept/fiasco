@@ -857,7 +857,7 @@ Irq_sender::handle_remote_hit(Context::Drq *, Context *target, void *arg)
  *
  * \pre The _irq_lock must be held.
  *
- * \return Whether can send, i.e. state was transititioned to queued.
+ * \return Whether can send, i.e. state was transitioned to queued.
  */
 PRIVATE inline
 bool
@@ -904,7 +904,7 @@ Irq_sender::_hit_level_irq(Upstream_irq const *ui)
 
   // For level triggered IRQs we move to the Queued state only if a thread is
   // bound. When the thread is later bound and the IRQ is still asserted, we
-  // will natually end up here again.
+  // will naturally end up here again.
   bool can_send = t.is_bound() && queue();
   if (can_send)
     {
