@@ -2,6 +2,7 @@
 
 #ifndef template_inline_i_h
 #define template_inline_i_h
+#include "template_inline.h"
 #line 200 "template.cpp"
 
 // 

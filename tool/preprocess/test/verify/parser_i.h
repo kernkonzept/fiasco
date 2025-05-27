@@ -2,6 +2,7 @@
 
 #ifndef parser_i_h
 #define parser_i_h
+#include "parser.h"
 #line 41 "parser.cpp"
 
 // Try function-pointer typedef

@@ -2,6 +2,7 @@
 
 #ifndef inline_i_h
 #define inline_i_h
+#include "inline.h"
 
 //
 // IMPLEMENTATION of inline functions follows

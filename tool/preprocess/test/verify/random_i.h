@@ -2,6 +2,7 @@
 
 #ifndef random_i_h
 #define random_i_h
+#include "random.h"
 #line 16 "random.cpp"
 
 #include "yes.h"

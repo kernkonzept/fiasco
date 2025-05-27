@@ -2,6 +2,7 @@
 
 #ifndef template_i_h
 #define template_i_h
+#include "template.h"
 #line 200 "template.cpp"
 
 // 

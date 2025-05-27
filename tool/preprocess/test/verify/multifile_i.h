@@ -2,6 +2,7 @@
 
 #ifndef multifile_i_h
 #define multifile_i_h
+#include "multifile.h"
 #line 11 "multifile2.cpp"
 
 #include "bar.h"

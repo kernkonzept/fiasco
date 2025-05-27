@@ -2,6 +2,7 @@
 
 #ifndef noinline_i_h
 #define noinline_i_h
+#include "noinline.h"
 #line 4 "noinline.cpp"
 
 // There is nothing to inline -- therefore, this #include directive

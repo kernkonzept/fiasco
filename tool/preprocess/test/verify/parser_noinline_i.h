@@ -2,6 +2,7 @@
 
 #ifndef parser_noinline_i_h
 #define parser_noinline_i_h
+#include "parser_noinline.h"
 #line 16 "parser.cpp"
 
 #include "foo.h"

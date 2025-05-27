@@ -2,6 +2,7 @@
 
 #ifndef inline_noinline_i_h
 #define inline_noinline_i_h
+#include "inline_noinline.h"
 #line 18 "inline.cpp"
 
 // Test dependency-chain resolver

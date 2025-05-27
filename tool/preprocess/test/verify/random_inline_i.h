@@ -2,6 +2,7 @@
 
 #ifndef random_inline_i_h
 #define random_inline_i_h
+#include "random_inline.h"
 #line 18 "random.cpp"
 #include <no.h>
 

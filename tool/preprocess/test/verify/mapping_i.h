@@ -2,6 +2,7 @@
 
 #ifndef mapping_i_h
 #define mapping_i_h
+#include "mapping.h"
 #line 148 "mapping.cpp"
 
 #include <assert.h>
