@@ -18,11 +18,5 @@ setjmp:
 	stp x29, x30, [x0,#80]
 	mov x2, sp
 	str x2, [x0,#104]
-#ifndef LIBCL4
-	stp  d8,  d9, [x0,#112]
-	stp d10, d11, [x0,#128]
-	stp d12, d13, [x0,#144]
-	stp d14, d15, [x0,#160]
-#endif
 	mov x0, #0
 	ret

@@ -11,12 +11,6 @@ extern "C" {
 #define __NEED___isoc_va_list
 #define __NEED_size_t
 
-#ifndef LIBCL4
-#if __STDC_VERSION__ < 201112L
-#define __NEED_struct__IO_FILE
-#endif
-#endif /* LIBCL4 */
-
 #if defined(_POSIX_SOURCE) || defined(_POSIX_C_SOURCE) \
  || defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE) \
  || defined(_BSD_SOURCE)
@@ -61,16 +55,6 @@ typedef union _G_fpos64_t {
 	double __align;
 } fpos_t;
 
-#ifndef LIBCL4
-extern FILE *const stdin;
-extern FILE *const stdout;
-extern FILE *const stderr;
-
-#define stdin  (stdin)
-#define stdout (stdout)
-#define stderr (stderr)
-#endif /* LIBCL4 */
-
 FILE *fopen(const char *__restrict, const char *__restrict);
 FILE *freopen(const char *__restrict, const char *__restrict, FILE *__restrict);
 int fclose(FILE *);
@@ -103,12 +87,6 @@ int putc(int, FILE *);
 int putchar(int);
 
 char *fgets(char *__restrict, int, FILE *__restrict);
-#ifndef LIBCL4
-#if __STDC_VERSION__ < 201112L
-char *gets(char *);
-#endif
-#endif /* LIBCL4 */
-
 int fputs(const char *__restrict, FILE *__restrict);
 int puts(const char *);
 

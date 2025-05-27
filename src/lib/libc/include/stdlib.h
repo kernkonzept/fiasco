@@ -70,14 +70,6 @@ div_t div (int, int);
 ldiv_t ldiv (long, long);
 lldiv_t lldiv (long long, long long);
 
-#ifndef LIBCL4
-int mblen (const char *, size_t);
-int mbtowc (wchar_t *__restrict, const char *__restrict, size_t);
-int wctomb (char *, wchar_t);
-size_t mbstowcs (wchar_t *__restrict, const char *__restrict, size_t);
-size_t wcstombs (char *__restrict, const wchar_t *__restrict, size_t);
-#endif /* LIBCL4 */
-
 #define EXIT_FAILURE 1
 #define EXIT_SUCCESS 0
 

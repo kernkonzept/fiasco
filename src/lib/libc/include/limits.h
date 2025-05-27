@@ -93,11 +93,6 @@
 
 #if defined(_GNU_SOURCE) || defined(_BSD_SOURCE) || defined(_XOPEN_SOURCE)
 
-#ifndef LIBCL4
-#ifdef PAGESIZE
-#define PAGE_SIZE PAGESIZE
-#endif
-#endif /* LIBCL4 */
 #define NZERO 20
 #define NL_LANGMAX 32
 

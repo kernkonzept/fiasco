@@ -199,7 +199,6 @@ PRIVATE_INCDIR    += lib/libc/arch/$(LIBC_ARCH) \
                      lib/libc/src/internal \
                      lib/libc/src/include \
                      lib/libc/include
-CPPFLAGS          += -DLIBCL4
 CSRC_LIBC         := putchar.c \
                      putstr.c \
                      stdout_write.c \

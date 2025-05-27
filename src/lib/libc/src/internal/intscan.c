@@ -2,9 +2,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include "shgetc.h"
-#ifdef LIBCL4
 #include "intscan.h"
-#endif /* LIBCL4 */
 
 /* Lookup table for digit values. -1==255>=36 -> invalid */
 static const unsigned char table[] = { -1,
@@ -33,9 +31,6 @@ unsigned long long __intscan(FILE *f, unsigned base, unsigned long long lim)
 	unsigned x;
 	unsigned long long y;
 	if (base > 36 || base == 1) {
-#ifndef LIBCL4
-		errno = EINVAL;
-#endif
 		return 0;
 	}
 	while (isspace((c=shgetc(f))));
@@ -60,9 +55,6 @@ unsigned long long __intscan(FILE *f, unsigned base, unsigned long long lim)
 		if (base == 0) base = 10;
 		if (val[c] >= base) {
 			shunget(f);
-#ifndef LIBCL4
-			errno = EINVAL;
-#endif
 			return 0;
 		}
 	}
@@ -86,9 +78,6 @@ unsigned long long __intscan(FILE *f, unsigned base, unsigned long long lim)
 	}
 	if (val[c]<base) {
 		for (; val[c]<base; c=shgetc(f));
-#ifndef LIBCL4
-		errno = ERANGE;
-#endif
 		y = lim;
 		if (lim&1) neg = 0;
 	}
@@ -96,14 +85,8 @@ done:
 	shunget(f);
 	if (y>=lim) {
 		if (!(lim&1) && !neg) {
-#ifndef LIBCL4
-			errno = ERANGE;
-#endif
 			return lim-1;
 		} else if (y>lim) {
-#ifndef LIBCL4
-			errno = ERANGE;
-#endif
 			return lim;
 		}
 	}

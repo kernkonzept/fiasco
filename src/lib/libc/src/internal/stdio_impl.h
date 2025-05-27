@@ -3,72 +3,21 @@
 
 #include <stdio.h>
 #include "syscall.h"
-#ifdef LIBCL4
 #include "libc_backend.h"
-#endif /* LIBCL4 */
 
 #define UNGET 8
 
-#ifndef LIBCL4
-#define FFINALLOCK(f) ((f)->lock>=0 ? __lockfile((f)) : 0)
-#define FLOCK(f) int __need_unlock = ((f)->lock>=0 ? __lockfile((f)) : 0)
-#define FUNLOCK(f) do { if (__need_unlock) __unlockfile((f)); } while (0)
-#else /* LIBCL4 */
 #define FLOCK(f) unsigned long lock_state = __libc_backend_printf_lock();
 #define FUNLOCK(f) __libc_backend_printf_unlock(lock_state)
-#endif /* LIBCL4 */
 
-#ifndef LIBCL4
-#define F_PERM 1
-#define F_NORD 4
-#define F_NOWR 8
-#define F_EOF 16
-#define F_ERR 32
-#define F_SVB 64
-#define F_APP 128
-#endif
-
-/* LIBCL4: save some stack. Maybe remove even more. */
 struct _IO_FILE {
-#ifndef LIBCL4
-	unsigned flags;
-#endif
 	unsigned char *rpos;
-#ifndef LIBCL4
-	int (*close)(FILE *);
-#endif
 	unsigned char *wend, *wpos;
-#ifndef LIBCL4
-	unsigned char *mustbezero_1;
-#endif
 	unsigned char *wbase;
-#ifndef LIBCL4
-	size_t (*read)(FILE *, unsigned char *, size_t);
-#endif
 	size_t (*write)(FILE *, const unsigned char *, size_t);
-#ifndef LIBCL4
-	off_t (*seek)(FILE *, off_t, int);
-#endif
 	unsigned char *buf;
 	size_t buf_size;
-#ifndef LIBCL4
-	FILE *prev, *next;
-	int fd;
-	int pipe_pid;
-	long lockcount;
-	int mode;
-	volatile int lock;
-	int lbf;
-#endif
 	void *cookie;
-#ifndef LIBCL4
-	off_t off;
-	char *getln_buf;
-	void *mustbezero_2;
-	unsigned char *shend;
-	off_t shlim, shcnt;
-	FILE *prev_locked, *next_locked;
-#endif
 };
 
 extern hidden FILE *volatile __stdin_used;
@@ -112,12 +61,7 @@ hidden void __do_orphaned_stdio_locks(void);
 
 hidden void __getopt_msg(const char *, const char *, const char *, size_t);
 
-#ifndef LIBCL4
-#define feof(f) ((f)->flags & F_EOF)
-#define ferror(f) ((f)->flags & F_ERR)
-#else
 #define ferror(f) 0
-#endif
 
 /* Caller-allocated FILE * operations */
 hidden FILE *__fopen_rb_ca(const char *, FILE *, unsigned char *, size_t);
