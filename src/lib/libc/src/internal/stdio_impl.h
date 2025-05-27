@@ -52,8 +52,6 @@ hidden FILE *__ofl_add(FILE *f);
 hidden FILE **__ofl_lock(void);
 hidden void __ofl_unlock(void);
 
-struct __pthread;
-hidden void __register_locked_file(FILE *, struct __pthread *);
 hidden void __unlist_locked_file(FILE *);
 hidden void __do_orphaned_stdio_locks(void);
 
