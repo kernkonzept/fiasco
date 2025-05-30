@@ -20,7 +20,7 @@ typedef Ptab::Page_addr_wrap<Page_number, Virt_addr::Shift> Ptab_va_vpn;
 class Kpdir : public Pdir_t<K_pte_ptr, K_ptab_traits_vpn, Ptab_va_vpn> {};
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && mmu && cpu_virt && !arm_pt_48]:
+INTERFACE [arm && mmu && cpu_virt && !arm_pt48]:
 
 /* 3-levels for stage 2 paging with a maximum IPA size of 40bits */
 typedef Ptab::Tupel< Ptab::Traits< Unsigned64, 30, 10, true>,
@@ -44,7 +44,7 @@ public:
 typedef Pdir_t<Pte_ptr, Ptab_traits_vpn, Ptab_va_vpn> Pdir;
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && mmu && cpu_virt && arm_pt_48]:
+INTERFACE [arm && mmu && cpu_virt && arm_pt48]:
 
 /* 4-levels for stage 2 paging with a maximum IPA size of 48bits */
 typedef Ptab::Tupel< Ptab::Traits< Unsigned64, 39, 9, false>,

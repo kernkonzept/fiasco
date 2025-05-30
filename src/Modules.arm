@@ -29,7 +29,6 @@ PREPROCESS_PARTS-$(CONFIG_ARM_CACHE_L2CXX0)   += outer_cache outer_cache_l2cxx0
 PREPROCESS_PARTS-$(CONFIG_ARM_920T)                 += arm_v5 vcache
 PREPROCESS_PARTS-$(CONFIG_ARM_926)                  += arm_v5 vcache
 PREPROCESS_PARTS-$(CONFIG_CPU_VIRT)                 += vgic arm_esr_traps
-PREPROCESS_PARTS-$(CONFIG_ARM_PT48)                 += arm_pt_48
 PREPROCESS_PARTS-$(CONFIG_ARM_SVE)                  += fpu_alloc_typed
 
 PREPROCESS_PARTS-$(CONFIG_IOMMU)                    += virtual_space_iface

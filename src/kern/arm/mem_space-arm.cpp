@@ -930,7 +930,7 @@ Mem_space::asid(unsigned asid)
 };
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && mmu && arm_lpae && !arm_pt_48]:
+IMPLEMENTATION [arm && mmu && arm_lpae && !arm_pt48]:
 
 PUBLIC static
 void
@@ -942,7 +942,7 @@ Mem_space::init_page_sizes()
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && mmu && arm_lpae && arm_pt_48]:
+IMPLEMENTATION [arm && mmu && arm_lpae && arm_pt48]:
 
 PUBLIC static
 void

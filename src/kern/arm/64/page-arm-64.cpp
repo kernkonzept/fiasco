@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------
-INTERFACE [arm && mmu && cpu_virt && !arm_pt_48]:
+INTERFACE [arm && mmu && cpu_virt && !arm_pt48]:
 
 EXTENSION class Page
 {
@@ -13,7 +13,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-INTERFACE [arm && mmu && cpu_virt && arm_pt_48]:
+INTERFACE [arm && mmu && cpu_virt && arm_pt48]:
 
 EXTENSION class Page
 {

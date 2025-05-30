@@ -1,4 +1,4 @@
-INTERFACE [arm && mmu && cpu_virt && !arm_pt_48]: // ----------------------
+INTERFACE [arm && mmu && cpu_virt && !arm_pt48]: // -----------------------
 
 EXTENSION class Mem_layout
 {
@@ -8,7 +8,7 @@ public:
   };
 };
 
-INTERFACE [arm && mmu && cpu_virt && arm_pt_48]: // -----------------------
+INTERFACE [arm && mmu && cpu_virt && arm_pt48]: // ------------------------
 
 EXTENSION class Mem_layout
 {
