@@ -430,7 +430,7 @@ Cpu::id_init()
   __asm__("mrs %0, ID_AA64PFR0_EL1": "=r" (_cpu_id._pfr[0]));
   __asm__("mrs %0, ID_AA64PFR1_EL1": "=r" (_cpu_id._pfr[1]));
   __asm__("mrs %0, ID_AA64DFR0_EL1": "=r" (_cpu_id._dfr0));
-  __asm__("mrs %0, ID_AA64DFR1_EL1": "=r" (_cpu_id._afr0));
+  __asm__("mrs %0, ID_AA64AFR0_EL1": "=r" (_cpu_id._afr0));
   __asm__("mrs %0, ID_AA64MMFR0_EL1": "=r" (_cpu_id._mmfr[0]));
   __asm__("mrs %0, ID_AA64MMFR1_EL1": "=r" (_cpu_id._mmfr[1]));
 }
