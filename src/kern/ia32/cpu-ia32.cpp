@@ -320,7 +320,9 @@ struct Ia32_intel_microcode
   {
     Unsigned32 hdr_version;
     Signed32   update_rev;
-    Unsigned32 date;
+    Unsigned16 date_year;
+    Unsigned8  date_day;
+    Unsigned8  date_month;
     Unsigned32 signature;
     Unsigned32 checksum;
     Unsigned32 loader_rev;
@@ -473,13 +475,16 @@ struct Ia32_intel_microcode
     Unsigned64 n = get_sig();
     if (rev_sig != n)
       {
-        printf("microcode update: rev %llx -> %llx (%x)\n",
-               rev_sig >> 32, n >> 32, update->date);
+        printf("microcode update: rev %llx -> %llx (%04x-%02x-%02x)\n",
+               rev_sig >> 32, n >> 32, update->date_year, update->date_month,
+               update->date_day);
       }
     else
       {
-        printf("error: could not load microcode update: rev %llx != %llx (%x)\n",
-               rev_sig, n, update->date);
+        printf("error: could not load microcode update: rev %llx != %llx"
+               " (%04x-%02x-%02x)\n",
+               rev_sig, update->date_year, update->date_month,
+               update->date_day);
         return false;
       }
     return true;
