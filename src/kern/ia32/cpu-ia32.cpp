@@ -828,18 +828,6 @@ Cpu::busy_wait_ns(Unsigned64 ns)
     Proc::pause();
 }
 
-PUBLIC
-bool
-Cpu::if_show_infos() const
-{
-  return    id() == Cpu_number::boot_cpu()
-         || !boot_cpu()
-         || family()    != boot_cpu()->family()
-         || model()     != boot_cpu()->model()
-         || stepping()  != boot_cpu()->stepping()
-         || brand()     != boot_cpu()->brand();
-}
-
 IMPLEMENT
 void
 Cpu::disable(Cpu_number cpu, char const *reason)
@@ -1392,7 +1380,11 @@ PUBLIC
 void
 Cpu::print_infos() const
 {
-  if (if_show_infos())
+  if (   id() == Cpu_number::boot_cpu() || !boot_cpu()
+      || family()   != boot_cpu()->family()
+      || model()    != boot_cpu()->model()
+      || stepping() != boot_cpu()->stepping()
+      || brand()    != boot_cpu()->brand())
     {
       // actually determining vendor/model for the current CPU, not "this" CPU
       char vendor_id[12];

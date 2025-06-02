@@ -312,17 +312,10 @@ Cpu::has_isa_ext(Isa_ext ext)
 }
 
 PUBLIC
-bool
-Cpu::if_show_infos() const
-{
-  return id() == Cpu_number::boot_cpu() || !boot_cpu();
-}
-
-PUBLIC
 void
 Cpu::print_infos() const
 {
-  if (if_show_infos())
+  if (id() == Cpu_number::boot_cpu() || !boot_cpu())
     printf("CPU[%u]: Extensions: %x\n",
            cxx::int_value<Cpu_number>(id()),
            Kip::k()->platform_info.arch.isa_ext[0]);

@@ -344,18 +344,12 @@ Cpu::pr(char const *fmt, ...) const
 }
 
 PUBLIC
-bool
-Cpu::if_show_infos() const
-{ return id() == Cpu_number::boot_cpu() || !boot_cpu(); }
-
-PUBLIC
 void
 Cpu::print_infos() const
 {
-  if (if_show_infos())
+  if (id() == Cpu_number::boot_cpu() || !boot_cpu())
     pr("%lluMHz (%d TLBs) %s\n",
-       frequency() / 1000000, tlb_size(),
-       options.tlbinv() ? "TLBINV " : "");
+       frequency() / 1000000, tlb_size(), options.tlbinv() ? "TLBINV " : "");
 }
 
 PRIVATE inline NOEXPORT
