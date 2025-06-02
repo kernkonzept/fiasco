@@ -1376,7 +1376,7 @@ Cpu::get_model_str_current_cpu(char model_str[52])
   return i;
 }
 
-PUBLIC
+IMPLEMENT_OVERRIDE
 void
 Cpu::print_infos() const
 {

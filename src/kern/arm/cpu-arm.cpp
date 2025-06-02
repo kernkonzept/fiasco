@@ -83,6 +83,8 @@ public:
   bool has_pmuv2() const;
   bool has_pmuv3() const;
 
+  static void print_boot_infos();
+
 private:
   void init_supervisor_mode(bool is_boot_cpu);
   void init_hyp_mode();
@@ -359,6 +361,11 @@ Cpu::has_pmuv3() const
 {
   return false;
 }
+
+IMPLEMENT_DEFAULT inline
+void
+Cpu::print_boot_infos()
+{}
 
 IMPLEMENTATION [arm && arm_v6]: // -----------------------------------------
 
@@ -859,50 +866,42 @@ IMPLEMENTATION [arm && cpu_virt]:
 KIP_KERNEL_FEATURE("arm:hyp");
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [!debug]:
-
-PUBLIC inline
-void
-Cpu::print_infos() const
-{}
-
-PUBLIC static inline
-void
-Cpu::print_boot_infos()
-{}
-
-// ------------------------------------------------------------------------
 IMPLEMENTATION [debug && arm_v6plus]:
 
-PUBLIC
+IMPLEMENT_OVERRIDE
 void
 Cpu::print_infos() const
 {
-  int n = cxx::int_value<Cpu_number>(current_cpu());
-  printf("CPU%u: ID_PFR[01]:  %08lx %08lx ID_[DA]FR0: %08lx %08lx\n"
-         "%*s ID_MMFR[04]: %08lx %08lx %08lx %08lx\n",
-         n, _cpu_id._pfr[0], _cpu_id._pfr[1], _cpu_id._dfr0, _cpu_id._afr0,
-         n > 9 ? 6 : 5, "",
-         _cpu_id._mmfr[0], _cpu_id._mmfr[1], _cpu_id._mmfr[2], _cpu_id._mmfr[3]);
+  if (id() == Cpu_number::boot_cpu() || !boot_cpu()
+      || _cpu_id._pfr[0]  != boot_cpu()->_cpu_id._pfr[0]
+      || _cpu_id._pfr[1]  != boot_cpu()->_cpu_id._pfr[1]
+      || _cpu_id._dfr0    != boot_cpu()->_cpu_id._dfr0
+      || _cpu_id._afr0    != boot_cpu()->_cpu_id._afr0
+      || _cpu_id._mmfr[0] != boot_cpu()->_cpu_id._mmfr[0]
+      || _cpu_id._mmfr[1] != boot_cpu()->_cpu_id._mmfr[1]
+      || _cpu_id._mmfr[2] != boot_cpu()->_cpu_id._mmfr[2]
+      || _cpu_id._mmfr[3] != boot_cpu()->_cpu_id._mmfr[3])
+
+    {
+      int n = cxx::int_value<Cpu_number>(current_cpu());
+      printf("CPU%u: ID_PFR[01]:  %08lx %08lx ID_[DA]FR0: %08lx %08lx\n"
+             "%*s ID_MMFR[04]: %08lx %08lx %08lx %08lx\n",
+             n, _cpu_id._pfr[0], _cpu_id._pfr[1], _cpu_id._dfr0, _cpu_id._afr0,
+             n > 9 ? 6 : 5, "",
+             _cpu_id._mmfr[0], _cpu_id._mmfr[1], _cpu_id._mmfr[2], _cpu_id._mmfr[3]);
+    }
 }
-
-// ------------------------------------------------------------------------
-IMPLEMENTATION [debug && !arm_v6plus]:
-
-PRIVATE
-void
-Cpu::print_infos() const
-{}
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [debug]:
 
 #include <cxx/conditionals>
 
-PUBLIC static
+IMPLEMENT_OVERRIDE
 void
 Cpu::print_boot_infos()
 {
   printf("Cache config: %s\n",
          cxx::const_ite<Config::Cache_enabled>("ON", "OFF"));
+  boot_cpu()->print_infos(); // all other CPUs in App_cpu_thread::bootstrap()
 }

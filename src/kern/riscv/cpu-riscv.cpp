@@ -311,7 +311,7 @@ Cpu::has_isa_ext(Isa_ext ext)
   return Kip::k()->platform_info.arch.isa_ext[ext / 32] & (1 << (ext % 32));
 }
 
-PUBLIC
+IMPLEMENT_OVERRIDE
 void
 Cpu::print_infos() const
 {

@@ -343,7 +343,7 @@ Cpu::pr(char const *fmt, ...) const
   va_end(list);
 }
 
-PUBLIC
+IMPLEMENT_OVERRIDE
 void
 Cpu::print_infos() const
 {

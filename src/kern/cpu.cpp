@@ -44,6 +44,12 @@ public:
 
   static bool is_canonical_address(Address addr);
 
+  /**
+   * Show useful information when a CPU is booted but only if the information is
+   * different from the boot CPU.
+   */
+  void print_infos() const;
+
 private:
 
   static Global_data<Online_cpu_mask> _online_mask;
@@ -115,6 +121,11 @@ IMPLEMENT_DEFAULT inline
 bool
 Cpu::is_canonical_address(Address)
 { return true; }
+
+IMPLEMENT_DEFAULT inline
+void
+Cpu::print_infos() const
+{}
 
 // --------------------------------------------------------------------------
 IMPLEMENTATION [mp]:
