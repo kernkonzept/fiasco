@@ -204,7 +204,8 @@ page_IMPL		:= page page-arm page-arm-$(BITS)
 paging_IMPL	  	:= paging paging-arm paging-arm-$(BITS)
 perf_cnt_IMPL		:= perf_cnt perf_cnt-arm perf_cnt-arm-$(BITS)
 pic_IMPL		:= pic
-platform_control_IMPL   += platform_control-arm platform_control-arm-psci
+platform_control_IMPL   += platform_control-arm platform_control-arm-psci \
+                           platform_control-arm-dt
 platform_control_object_IMPL := platform_control_object \
                                 platform_control_object-arm
 psci_IMPL		:= psci-arm
