@@ -370,6 +370,8 @@ protected:
   // for trigger_exception
   Continuation _exc_cont;
 
+  // Migration pending for this context. Must not be derefrenced directly, only
+  // after gaining exlusive access by extracting the value with a cas operation.
   Migration *_migration;
 
 public:
@@ -1588,9 +1590,6 @@ void
 Context::copy_and_sanitize_trap_state(Trap_state *dst,
                                       Trap_state const *src) const
 { dst->copy_and_sanitize(src); }
-
-PUBLIC inline
-bool Context::migration_pending() const { return _migration; }
 
 IMPLEMENT_DEFAULT inline
 void
