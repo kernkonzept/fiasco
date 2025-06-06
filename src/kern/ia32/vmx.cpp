@@ -1405,11 +1405,11 @@ DEFINE_PER_CPU Per_cpu<Vmx> Vmx::cpus(Per_cpu_data::Cpu_num);
 DEFINE_PER_CPU Per_cpu<bool> Vmx::vmwrite_failure;
 
 PUBLIC
-void
-Vmx_info::init()
+bool
+Vmx_info::init(Cpu_number cpu)
 {
   enum { ShowDebugDumps = 0 };
-  bool ept = false;
+
   basic = Cpu::rdmsr(Msr::Ia32_vmx_basic);
   pinbased_ctls = Cpu::rdmsr(Msr::Ia32_vmx_pinbased_ctls);
   pinbased_ctls_default1 = pinbased_ctls.must_be_one();
@@ -1428,8 +1428,6 @@ Vmx_info::init()
   exception_bitmap = Bit_defs_32<Vmx_info::Exceptions>(0xffffffff00000000ULL);
 
   max_index = Cpu::rdmsr(Msr::Ia32_vmx_vmcs_enum);
-  if (procbased_ctls.allowed(Vmx_info::PRB1_enable_proc_based_ctls_2))
-    procbased_ctls2 = Cpu::rdmsr(Msr::Ia32_vmx_procbased_ctls2);
 
   assert((Vmx::Sw_guest_xcr0 & 0x3ff) > max_index);
   assert((Vmx::Sw_guest_cr2 & 0x3ff) > max_index);
@@ -1447,6 +1445,42 @@ Vmx_info::init()
 
   if constexpr (ShowDebugDumps)
     dump("as read from hardware");
+
+  // Since we require EPT support, we also require the secondary
+  // processor-based VM-execution controls.
+  if (!procbased_ctls.allowed(Vmx_info::PRB1_enable_proc_based_ctls_2))
+    {
+      if (cpu == Cpu_number::boot_cpu())
+        printf("VMX: Secondary processor-based VM-execution controls not available\n");
+
+      return false;
+    }
+
+  procbased_ctls.enforce(Vmx_info::PRB1_enable_proc_based_ctls_2, true);
+  procbased_ctls2 = Cpu::rdmsr(Msr::Ia32_vmx_procbased_ctls2);
+
+  if (!procbased_ctls2.allowed(Vmx_info::PRB2_enable_ept))
+    {
+      if (cpu == Cpu_number::boot_cpu())
+        printf("VMX: EPT not available\n");
+
+      return false;
+    }
+
+  procbased_ctls2.enforce(Vmx_info::PRB2_enable_ept, true);
+  ept_vpid_cap = Cpu::rdmsr(Msr::Ia32_vmx_ept_vpid_cap);
+
+  if (has_invept() && !has_invept_global())
+    {
+      // Having the INVEPT instruction indicates that some kind of EPT TLB
+      // flushing is required. If the global INVEPT type is not supported, we
+      // cannot currently ensure proper EPT TLB flushing. This is presumably
+      // an extremely rare scenario.
+      if (cpu == Cpu_number::boot_cpu())
+        printf("VMX: Cannot ensure EPT TLB flushing\n");
+
+      return false;
+    }
 
   pinbased_ctls.enforce(Vmx_info::PIB_ext_int_exit);
   pinbased_ctls.enforce(Vmx_info::PIB_nmi_exit);
@@ -1467,77 +1501,36 @@ Vmx_info::init()
   // virtual APIC not yet supported
   procbased_ctls.enforce(Vmx_info::PRB1_tpr_shadow, false);
 
-  if (procbased_ctls.allowed(Vmx_info::PRB1_enable_proc_based_ctls_2))
+  // we disable VPID so far, need to handle virtualize it in Fiasco,
+  // as done for AMDs ASIDs
+  procbased_ctls2.enforce(Vmx_info::PRB2_enable_vpid, false);
+
+  // we do not (yet) support Page Modification Logging (PML)
+  procbased_ctls2.enforce(Vmx_info::PRB2_enable_pml, false);
+
+  if (procbased_ctls2.allowed(Vmx_info::PRB2_unrestricted))
     {
-      procbased_ctls.enforce(Vmx_info::PRB1_enable_proc_based_ctls_2, true);
-
-      if (procbased_ctls2.allowed(Vmx_info::PRB2_enable_ept))
-        ept_vpid_cap = Cpu::rdmsr(Msr::Ia32_vmx_ept_vpid_cap);
-
-      if (has_invept() && !has_invept_global())
-      {
-        // Having the INVEPT instruction indicates that some kind of EPT TLB
-        // flushing is required. If the global INVEPT type is not supported, we
-        // cannot currently ensure proper EPT TLB flushing. Therefore, disable
-        // EPT in this presumably rare scenario.
-        procbased_ctls2.enforce(Vmx_info::PRB2_enable_ept, false);
-        procbased_ctls2.enforce(Vmx_info::PRB2_unrestricted, false);
-      }
-
-      // we disable VPID so far, need to handle virtualize it in Fiasco,
-      // as done for AMDs ASIDs
-      procbased_ctls2.enforce(Vmx_info::PRB2_enable_vpid, false);
-
-      // we do not (yet) support Page Modification Logging (PML)
-      procbased_ctls2.enforce(Vmx_info::PRB2_enable_pml, false);
-
-      // EPT only in conjunction with unrestricted guest !!!
-      if (procbased_ctls2.allowed(Vmx_info::PRB2_enable_ept))
-        {
-          ept = true;
-          procbased_ctls2.enforce(Vmx_info::PRB2_enable_ept, true);
-
-          if (procbased_ctls2.allowed(Vmx_info::PRB2_unrestricted))
-            {
-              // unrestricted guest allows PE and PG to be 0
-              cr0_defs.relax(0);  // PE
-              cr0_defs.relax(31); // PG
-              procbased_ctls2.enforce(Vmx_info::PRB2_unrestricted);
-            }
-          else
-            {
-              assert (not cr0_defs.allowed(0, false));
-              assert (not cr0_defs.allowed(31, false));
-            }
-
-          // We currently do not implement the xss bitmap, and do not support
-          // the Msr::Ia32_xss which is shared between guest and host. Therefore
-          // we disable xsaves/xrstores for the guest.
-          procbased_ctls2.enforce(Vmx_info::PRB2_enable_xsaves, false);
-        }
-      else
-        assert (not procbased_ctls2.allowed(Vmx_info::PRB2_unrestricted));
+      // unrestricted guest allows PE and PG to be 0
+      cr0_defs.relax(0);  // PE
+      cr0_defs.relax(31); // PG
+      procbased_ctls2.enforce(Vmx_info::PRB2_unrestricted);
     }
   else
-    procbased_ctls2 = 0;
+    {
+      assert(not cr0_defs.allowed(0, false));
+      assert(not cr0_defs.allowed(31, false));
+    }
+
+  // We currently do not implement the xss bitmap, and do not support
+  // the Msr::Ia32_xss which is shared between guest and host. Therefore
+  // we disable xsaves/xrstores for the guest.
+  procbased_ctls2.enforce(Vmx_info::PRB2_enable_xsaves, false);
 
   // never automatically ack interrupts on exit
   exit_ctls.enforce(Vmx_info::Ex_ack_irq_on_exit, false);
 
   // host-state is 64bit or not
   exit_ctls.enforce(Vmx_info::Ex_host_addr_size, sizeof(long) > sizeof(int));
-
-  if (!ept) // needs to be per VM
-    {
-      // always enable paging
-      cr0_defs.enforce(31);
-      // always PE
-      cr0_defs.enforce(0);
-      cr4_defs.enforce(4); // PSE
-
-      // enforce PAE on 64bit, and disallow it on 32bit
-      cr4_defs.enforce(5, sizeof(long) > sizeof(int));
-    }
 
   // allow cr4.vmxe
   cr4_defs.relax(13);
@@ -1547,6 +1540,8 @@ Vmx_info::init()
 
   if constexpr (ShowDebugDumps)
     dump("as modified");
+
+  return true;
 }
 
 PUBLIC
@@ -2169,15 +2164,10 @@ Vmx_vm_state_t<HOST_STATE>::load_guest_state()
   Vmx_info::Flags<Unsigned32> pinbased_ctls
     = to_vmcs<Vmx::Vmcs_pin_based_vm_exec_ctls>(vmx.info.pinbased_ctls);
 
-  Vmx_info::Flags<Unsigned32> procbased_ctls
-    = to_vmcs<Vmx::Vmcs_pri_proc_based_vm_exec_ctls>(vmx.info.procbased_ctls);
+  to_vmcs<Vmx::Vmcs_pri_proc_based_vm_exec_ctls>(vmx.info.procbased_ctls);
 
-  Vmx_info::Flags<Unsigned32> procbased_ctls_2;
-  if (procbased_ctls.test(Vmx_info::PRB1_enable_proc_based_ctls_2))
-    procbased_ctls_2
-      = to_vmcs<Vmx::Vmcs_sec_proc_based_vm_exec_ctls>(vmx.info.procbased_ctls2);
-  else
-    procbased_ctls_2 = Vmx_info::Flags<Unsigned32>(0);
+  Vmx_info::Flags<Unsigned32> procbased_ctls_2
+    = to_vmcs<Vmx::Vmcs_sec_proc_based_vm_exec_ctls>(vmx.info.procbased_ctls2);
 
   to_vmcs<Vmx::Vmcs_vm_exit_ctls>(vmx.info.exit_ctls);
 
@@ -2701,6 +2691,7 @@ Vmx::Vmx(Cpu_number cpu)
   : _vmx_enabled(false), _has_vpid(false), _current_vmcs(nullptr)
 {
   Cpu &c = Cpu::cpus.cpu(cpu);
+
   if (cpu == Cpu::invalid() || !c.vmx())
     {
       if (cpu == Cpu_number::boot_cpu())
@@ -2716,18 +2707,12 @@ Vmx::Vmx(Cpu_number cpu)
       return;
     }
 
-  if (cpu == Cpu_number::boot_cpu())
-    printf("VMX: enabled\n");
-
-  info.init();
-
-  // check for EPT support
-  if (cpu == Cpu_number::boot_cpu())
+  if (!info.init(cpu))
     {
-      if (info.procbased_ctls2.allowed(Vmx_info::PRB2_enable_ept))
-        printf("VMX: EPT supported\n");
-      else
-        printf("VMX: EPT not available\n");
+      if (cpu == Cpu_number::boot_cpu())
+        printf("VMX: Disabling due to lack of features\n");
+
+      return;
     }
 
   // check for vpid support
@@ -2742,7 +2727,9 @@ Vmx::Vmx(Cpu_number cpu)
   Unsigned32 vmcs_size = ((info.basic & (0x1fffULL << 32)) >> 32);
   if (vmcs_size > Vmx_vmcs::Vmcs_size)
     {
-      WARN("VMX: VMCS size of %u bytes not supported\n", vmcs_size);
+      if (cpu == Cpu_number::boot_cpu())
+        printf("VMX: VMCS size of %u bytes not supported\n", vmcs_size);
+
       return;
     }
 

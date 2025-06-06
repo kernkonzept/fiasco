@@ -51,8 +51,7 @@ public:
   explicit Vm_vmx_ept_tlb(Cpu_number cpu)
   {
     auto const &vmx = Vmx::cpus.cpu(cpu);
-    if (!vmx.info.procbased_ctls2.allowed(Vmx_info::PRB2_enable_ept))
-      // EPT is not enabled, no need for EPT TLB maintenance.
+    if (!vmx.vmx_enabled())
       return;
 
     // Clean out residual EPT TLB entries during boot.
@@ -454,13 +453,6 @@ Vm_vmx_ept::init()
   auto const &vmx = Vmx::cpus.cpu(Cpu_number::boot_cpu());
   if (!vmx.vmx_enabled())
     return;
-
-  if (!vmx.info.procbased_ctls2.allowed(Vmx_info::PRB2_enable_ept))
-    {
-      Kobject_iface::set_factory(L4_msg_tag::Label_vm,
-                                 Task::generic_factory<Vm_vmx>);
-      return;
-    }
 
   Kobject_iface::set_factory(L4_msg_tag::Label_vm,
                              Task::generic_factory<Vm_vmx_ept>);
