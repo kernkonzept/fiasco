@@ -5,11 +5,16 @@ INTERFACE [vmx]:
 #include "vm.h"
 #include "vmx.h"
 #include "ipi.h"
+#include "thread.h" // XXX: circular dep, move this out here!
 
 class Vmcs;
 
 class Vm_vmx_base : public Vm
 {
+public:
+  virtual void load_vm_memory(Vmx_vm_state *vm_state) = 0;
+  virtual void store_vm_memory(Vmx_vm_state *vm_state) = 0;
+
 protected:
   static unsigned long resume_vm_vmx(Trex *regs)
     asm("resume_vm_vmx") __attribute__((__regparm__(3)));
@@ -27,18 +32,6 @@ protected:
   };
 };
 
-template<typename VARIANT>
-class Vm_vmx_t : public Vm_vmx_base
-{
-};
-
-/**
- * VMX implementation variant without EPT support.
- */
-class Vm_vmx : public Vm_vmx_t<Vm_vmx>
-{
-};
-
 //----------------------------------------------------------------------------
 IMPLEMENTATION [vmx]:
 
@@ -48,98 +41,26 @@ IMPLEMENTATION [vmx]:
 #include "mem_space.h"
 #include "msrdefs.h"
 #include "idt.h"
-#include "thread.h" // XXX: circular dep, move this out here!
 #include "thread_state.h" // XXX: circular dep, move this out here!
 #include "virt.h"
-
-static Kmem_slab_t<Vm_vmx> _vmx_allocator("Vm_vmx");
 
 PUBLIC inline
 Vm_vmx_base::Vm_vmx_base(Ram_quota *q) : Vm(q)
 {}
 
-PUBLIC inline template<typename VARIANT>
-Vm_vmx_t<VARIANT>::Vm_vmx_t(Ram_quota *q) : Vm_vmx_base(q)
-{}
-
-PUBLIC
-Vm_vmx::Vm_vmx(Ram_quota *q) : Vm_vmx_t<Vm_vmx>(q)
-{
-  _tlb_type = Tlb_per_cpu_global;
-}
-
-PUBLIC static
-Vm_vmx *Vm_vmx::alloc(Ram_quota *q)
-{
-  return _vmx_allocator.q_new(q, q);
-}
-
-PUBLIC inline
-void *
-Vm_vmx::operator new (size_t size, void *p) noexcept
-{
-  (void)size;
-  assert (size == sizeof (Vm_vmx));
-  return p;
-}
-
-PUBLIC
-void
-Vm_vmx::operator delete (Vm_vmx *vm, std::destroying_delete_t)
-{
-  Ram_quota *q = vm->ram_quota();
-  vm->~Vm_vmx();
-  _vmx_allocator.q_free(q, vm);
-}
-
-PUBLIC
-void
-Vm_vmx::tlb_flush_current_cpu() override
-{
-  // Nothing to do here, we flush on each entry!
-}
-
-PUBLIC inline
-void
-Vm_vmx::load_vm_memory(Vmx_vm_state *vm_state)
-{
-  if (sizeof(long) > sizeof(int))
-    {
-      if (vm_state->read<Vmx::Vmcs_guest_ia32_efer>() & EFER_LME)
-        Vmx::vmcs_write<Vmx::Vmcs_guest_cr3>(phys_dir());
-      else
-        WARN("VMX: No, not possible\n");
-    }
-  else
-    {
-      // for 32bit we can just load the Vm pdbr
-      Vmx::vmcs_write<Vmx::Vmcs_guest_cr3>(phys_dir());
-    }
-
-  tlb_mark_used();
-}
-
-PUBLIC inline
-void
-Vm_vmx::store_vm_memory(Vmx_vm_state *)
-{
-  // we flush the tlb on each entry
-  tlb_mark_unused();
-}
-
-PROTECTED inline
-template<typename VARIANT>
+PROTECTED inline NEEDS[Vm_vmx_base::safe_host_segments,
+                       Vm_vmx_base::load_guest_msrs,
+                       Vm_vmx_base::store_guest_restore_host_msrs]
 template<Host_state HOST_STATE>
 unsigned long
-Vm_vmx_t<VARIANT>::vm_entry(Trex *regs,
-                            Vmx_vm_state_t<HOST_STATE> *vm_state,
-                            bool guest_long_mode, Unsigned32 *reason)
+Vm_vmx_base::vm_entry(Trex *regs, Vmx_vm_state_t<HOST_STATE> *vm_state,
+                      bool guest_long_mode, Unsigned32 *reason)
 {
   Cpu &cpu = Cpu::cpus.current();
   Vmx &vmx = Vmx::cpus.current();
 
   vm_state->load_guest_state();
-  static_cast<VARIANT *>(this)->load_vm_memory(vm_state);
+  load_vm_memory(vm_state);
 
   // Set volatile host state
   Vmx::vmcs_write<Vmx::Vmcs_host_cr0>(Cpu::get_cr0());
@@ -246,16 +167,16 @@ Vm_vmx_t<VARIANT>::vm_entry(Trex *regs,
   *reason = Vmx::vmcs_read<Vmx::Vmcs_exit_reason>();
 
   vm_state->store_guest_state();
-  static_cast<VARIANT *>(this)->store_vm_memory(vm_state);
+  store_vm_memory(vm_state);
   vm_state->store_exit_info(error, *reason);
 
   return ret;
 }
 
-PROTECTED inline template<typename VARIANT>
+PROTECTED inline
 int
-Vm_vmx_t<VARIANT>::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu,
-                                  Vmx_vm_state *vm_state)
+Vm_vmx_base::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu,
+                            Vmx_vm_state *vm_state)
 {
   assert(cpu_lock.test());
 
@@ -319,12 +240,11 @@ Vm_vmx_t<VARIANT>::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu,
   return 0;
 }
 
-PUBLIC inline template<typename VARIANT>
+PUBLIC inline
 int
-Vm_vmx_t<VARIANT>::resume_vcpu(Context *ctxt, Vcpu_state *vcpu,
-                               bool user_mode) override
+Vm_vmx_base::resume_vcpu(Context *ctxt, Vcpu_state *vcpu,
+                         [[maybe_unused]] bool user_mode) override
 {
-  (void)user_mode;
   assert(user_mode);
 
   if (EXPECT_FALSE(!(ctxt->state(true) & Thread_ext_vcpu_enabled)))
@@ -420,9 +340,9 @@ Vm_vmx_t<VARIANT>::resume_vcpu(Context *ctxt, Vcpu_state *vcpu,
     }
 }
 
-PUBLIC inline template<typename VARIANT>
+PUBLIC inline
 void
-Vm_vmx_t<VARIANT>::cleanup_vcpu(Context *ctxt, Vcpu_state *vcpu) override
+Vm_vmx_base::cleanup_vcpu(Context *ctxt, Vcpu_state *vcpu) override
 {
   if (EXPECT_FALSE(!(ctxt->state(true) & Thread_ext_vcpu_enabled)))
     return;
@@ -435,9 +355,9 @@ Vm_vmx_t<VARIANT>::cleanup_vcpu(Context *ctxt, Vcpu_state *vcpu) override
 //------------------------------------------------------------------
 IMPLEMENTATION [vmx && amd64]:
 
-PRIVATE inline template<typename VARIANT>
+PRIVATE inline
 void
-Vm_vmx_t<VARIANT>::safe_host_segments()
+Vm_vmx_base::safe_host_segments()
 {
   /* we can optimize GS and FS handling based on the assuption that
    * FS and GS do not change often for the host / VMM */
@@ -457,10 +377,10 @@ Vm_vmx_t<VARIANT>::safe_host_segments()
  * \param vm_state         Software VMCS.
  * \param guest_long_mode  Guest running in long mode.
  */
-PRIVATE inline template<typename VARIANT>
+PRIVATE inline
 void
-Vm_vmx_t<VARIANT>::store_guest_restore_host_msrs(Vmx_vm_state *vm_state,
-                                                 bool guest_long_mode)
+Vm_vmx_base::store_guest_restore_host_msrs(Vmx_vm_state *vm_state,
+                                           bool guest_long_mode)
 {
   // Nothing needs to be done if the guest is not running in long mode.
   if (!guest_long_mode)
@@ -489,10 +409,9 @@ Vm_vmx_t<VARIANT>::store_guest_restore_host_msrs(Vmx_vm_state *vm_state,
  * \param vm_state         Software VMCS.
  * \param guest_long_mode  Guest running in long mode.
  */
-PRIVATE inline template<typename VARIANT>
+PRIVATE inline
 void
-Vm_vmx_t<VARIANT>::load_guest_msrs(Vmx_vm_state const *vm_state,
-                                   bool guest_long_mode)
+Vm_vmx_base::load_guest_msrs(Vmx_vm_state const *vm_state, bool guest_long_mode)
 {
   // Nothing needs to be done if the guest is not running in long mode.
   if (!guest_long_mode)
@@ -512,19 +431,19 @@ Vm_vmx_t<VARIANT>::load_guest_msrs(Vmx_vm_state const *vm_state,
 //------------------------------------------------------------------
 IMPLEMENTATION [vmx && !amd64]:
 
-PRIVATE inline template<typename VARIANT>
+PRIVATE inline
 void
-Vm_vmx_t<VARIANT>::safe_host_segments()
+Vm_vmx_base::safe_host_segments()
 {
   /* GS and FS are handled via push/pop in asm code */
 }
 
-PRIVATE inline template<typename VARIANT>
+PRIVATE inline
 void
-Vm_vmx_t<VARIANT>::store_guest_restore_host_msrs(Vmx_vm_state *, bool)
+Vm_vmx_base::store_guest_restore_host_msrs(Vmx_vm_state *, bool)
 {}
 
-PRIVATE inline template<typename VARIANT>
+PRIVATE inline
 void
-Vm_vmx_t<VARIANT>::load_guest_msrs(Vmx_vm_state *, bool)
+Vm_vmx_base::load_guest_msrs(Vmx_vm_state *, bool)
 {}

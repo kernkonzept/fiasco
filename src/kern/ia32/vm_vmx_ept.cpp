@@ -73,7 +73,7 @@ private:
  * VMX implementation variant with EPT support.
  */
 class Vm_vmx_ept :
-  public cxx::Dyn_castable<Vm_vmx_ept, Vm_vmx_t<Vm_vmx_ept>>
+  public cxx::Dyn_castable<Vm_vmx_ept, Vm_vmx_base>
 {
 private:
   class Epte_ptr
@@ -188,9 +188,9 @@ IMPLEMENTATION [obj_space_virt]:
 EXTENSION class Vm_vmx_ept
 {
 private:
-  using Vm_vmx_t<Vm_vmx_ept>::v_lookup;
-  using Vm_vmx_t<Vm_vmx_ept>::v_delete;
-  using Vm_vmx_t<Vm_vmx_ept>::v_insert;
+  using Vm_vmx_base::v_lookup;
+  using Vm_vmx_base::v_delete;
+  using Vm_vmx_base::v_insert;
 };
 
 // -------------------------------------------------------------------------
@@ -433,7 +433,7 @@ Vm_vmx_ept::initialize()
 
 PUBLIC inline
 void
-Vm_vmx_ept::load_vm_memory(Vmx_vm_state *vm_state)
+Vm_vmx_ept::load_vm_memory(Vmx_vm_state *vm_state) override
 {
   vm_state->load_cr3();
   to_vmcs();
@@ -441,7 +441,7 @@ Vm_vmx_ept::load_vm_memory(Vmx_vm_state *vm_state)
 
 PUBLIC inline
 void
-Vm_vmx_ept::store_vm_memory(Vmx_vm_state *vm_state)
+Vm_vmx_ept::store_vm_memory(Vmx_vm_state *vm_state) override
 {
   vm_state->store_cr3();
 }
