@@ -109,7 +109,7 @@ INTERFACES_KERNEL	+= __main acpi acpi_fadt acpi_dmar \
 			   i8259 allocator alternatives
 
 INTERFACES_KERNEL-$(CONFIG_IOMMU)    += intel_dmar dmar_space
-INTERFACES_KERNEL-$(CONFIG_CPU_VIRT) += svm vmx vm vm_svm vm_vmx vm_vmx_ept
+INTERFACES_KERNEL-$(CONFIG_CPU_VIRT) += svm vmx vm vm_svm vm_vmx_ept
 
 alternatives_IMPL	:= alternatives alternatives-ia32
 apic_IMPL		:= apic-ia32 apic-ia32-mp
