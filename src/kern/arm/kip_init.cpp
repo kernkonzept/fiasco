@@ -41,22 +41,19 @@ namespace KIP_namespace
   struct KIP
   {
     Kip kip = {
-	/* 00/00  */ L4_KERNEL_INFO_MAGIC,
-	             Config::Kernel_version_id,
-	             (Size_mem_descs + sizeof(Kip)) >> 4,
-	             {}, 0,
-	             cxx::int_value<Amp_phys_id>(Amp_node::phys_id(NODE)),
-	             {},
-	/* 10/20  */ 0, {},
-	/* 20/40  */ 0, 0, {},
-	/* 30/60  */ 0, 0, {},
-	/* 40/80  */ 0, 0, {},
-	/* 50/A0  */ 0, (sizeof(Kip) << (sizeof(Mword)*4)) | Num_mem_descs, {},
-	/* 60/C0  */ {},
-	/* A0/140 */ 0, 0, 0, 0,
-	/* B8/160 */ 0, {},
-	/* E0/1C0 */ 0, 0, {},
-	/* F0/1D0 */ {"", 0, {0}},
+        /* 00 */ L4_KERNEL_INFO_MAGIC,
+                 Config::Kernel_version_id,
+                 (Size_mem_descs + sizeof(Kip)) >> 4,
+                 {}, 0,
+                 cxx::int_value<Amp_phys_id>(Amp_node::phys_id(NODE)),
+                 {},
+        /* 10 */ 0, 0,
+        /* 20 */ 0, 0,
+        /* 30 */ 0, 0,
+        /* 40 */ 0, 0,
+        /* 50 */ 0, sizeof(Kip), Num_mem_descs, {},
+	/* 60 */ {0},
+        /* 70 */ {"", 0, {0}},
       };
     char mem_descs[Size_mem_descs] = {0};
   };

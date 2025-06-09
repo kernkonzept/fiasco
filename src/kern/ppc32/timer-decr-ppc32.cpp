@@ -23,7 +23,7 @@ Timer::init(Cpu_number)
   printf("Using PowerPC decrementer for scheduling\n");
 
   //1000 Hz
-  Decrementer::d()->init(Kip::k()->frequency_bus /
+  Decrementer::d()->init(Kip::k()->frequency_cpu /
                          (4*Config::Scheduler_granularity));
 
 }

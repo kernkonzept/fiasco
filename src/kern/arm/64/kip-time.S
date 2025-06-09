@@ -1,6 +1,6 @@
 #include "globalconfig.h"
 
-#define OFFS__KIP_CLOCK                         0x140
+#define OFFS__KIP_CLOCK                         0x20
 
 #define OFFS__KIP_SCALER_TIME_STAMP_TO_US       0x970
 #define OFFS__KIP_SHIFT_TIME_STAMP_TO_US        0x978

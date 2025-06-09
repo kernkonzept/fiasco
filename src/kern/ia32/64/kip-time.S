@@ -1,7 +1,7 @@
 #include "globalconfig.h"
 
 // See 'class Kip'
-#define OFFS__KIP_CLOCK                         0x140
+#define OFFS__KIP_CLOCK                         0x20
 
 #define OFFS__KIP_SCALER_TIME_STAMP_TO_US       0x9F0
 #define OFFS__KIP_SCALER_TIME_STAMP_TO_NS       0x9F8

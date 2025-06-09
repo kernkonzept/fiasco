@@ -54,65 +54,40 @@ public:
   void add_to_clock(Cpu_time plus);
 
   /* 0x00 */
-  Mword      magic;
-  Mword      version;
+  Unsigned32 magic;
+  Unsigned32 version;
   Unsigned8  offset_version_strings;
-  Unsigned8  fill0[sizeof(Mword) - 1];
+  Unsigned8  _fill0[3];
   Unsigned8  kip_sys_calls;
   Unsigned8  node;
-  Unsigned8  fill1[sizeof(Mword) - 2];
+  Unsigned8  _fill1[2];
 
-  /* the following stuff is undocumented; we assume that the kernel
-     info page is located at offset 0x1000 into the L4 kernel boot
-     image so that these declarations are consistent with section 2.9
-     of the L4 Reference Manual */
+  /* 0x10 */
+  Unsigned64            sigma0_ip;           ///< Sigma0 instruction pointer
+  Unsigned64            root_ip;             ///< Root task instruction pointer
+  /* 0x20 */
+  volatile Cpu_time     _clock; // don't access directly, use clock() instead!
+                                // not updated in certain configurations
+  Unsigned64            frequency_cpu;       ///< CPU frequency in kHz
+  /* 0x30 */
+  Unsigned64            acpi_rsdp_addr;      ///< ACPI RSDP/XSDP
+  Unsigned64            dt_addr;             ///< Device Tree
+  /* 0x40 */
+  Unsigned64            user_ptr;            ///< l4-mod-info pointer
+  Unsigned64            mbt_counter;         // only used for model-based testing
+  /* 0x50 */
+  Unsigned32            sched_granularity;   ///< for rounding time slices
+  Unsigned32            _mem_descs;          ///< memory descriptors relative to Kip
+  Unsigned32            _mem_descs_num;      ///< number of memory descriptors
+  Unsigned32            _res1[1];            ///< \internal
 
-  /* 0x10   0x20 */
-  Mword      sched_granularity;
-  Mword      _res1[3];
+  /* 0x60: */
+  Unsigned64            _res2[2];            ///< \internal - spare space
 
-  /* 0x20   0x40 */
-  Mword      sigma0_sp, sigma0_ip;
-  Mword      _res2[2];
-
-  /* 0x30   0x60 */
-  Mword      sigma1_sp, sigma1_ip;
-  Mword      _res3[2];
-
-  /* 0x40   0x80 */
-  Mword      root_sp, root_ip;
-  Mword      _res4[2];
-
-  /* 0x50   0xA0 */
-  Mword      _res_50;
-  Mword      _mem_info;
-  Mword      _res_58[2];
-
-  /* 0x60   0xC0 */
-  Mword      _res5[16];
-
-  /* 0xA0   0x140 */
-  volatile Cpu_time _clock; // don't access directly, use clock() instead!
-                            // not updated in certain configurations
-  Unsigned64 _res6;  // might be later used for clock-related time stamp offset
-
-  /* 0xB0   0x150 */
-  Mword      frequency_cpu;
-  Mword      frequency_bus;
-
-  /* 0xB8   0x160 */
-  Mword      mbt_counter; // only used for model-based testing
-  Mword      _res7[9 + ((sizeof(Mword) == 8) ? 2 : 0)];
-
-  /* 0xE0   0x1C0 */
-  Mword      user_ptr;
-  Mword      acpi_rsdp_addr;
-  Mword      _res8[2];
-
-  /* 0xF0   0x1E0:
+  /* 0x70:
    * Platform_info. */
 
-  /* 0xF0 + sizeof(Platform_info) / 0x1E0 + sizeof(Platform_info):
+  /* 0x70 + sizeof(Platform_info):
    * - Memory descriptors (2 Mwords per descriptor),
    * - kernel version string ('\0'-terminated),
    * - feature strings ('\0'-terminated)
@@ -199,15 +174,15 @@ bool Mem_desc::valid() const
 
 PRIVATE inline ALWAYS_INLINE
 Mem_desc *Kip::mem_descs()
-{ return offset_cast<Mem_desc*>(this, _mem_info >> (MWORD_BITS/2)); }
+{ return offset_cast<Mem_desc*>(this, _mem_descs); }
 
 PRIVATE inline
 Mem_desc const *Kip::mem_descs() const
-{ return offset_cast<Mem_desc const *>(this, _mem_info >> (MWORD_BITS/2)); }
+{ return offset_cast<Mem_desc const *>(this, _mem_descs); }
 
 PUBLIC inline ALWAYS_INLINE
 unsigned Kip::num_mem_descs() const
-{ return _mem_info & ((1UL << (MWORD_BITS/2))-1); }
+{ return _mem_descs_num; }
 
 PUBLIC inline NEEDS[Kip::num_mem_descs, Kip::mem_descs] ALWAYS_INLINE
 cxx::static_vector<Mem_desc>
@@ -222,10 +197,7 @@ Kip::mem_descs_a() const
 
 PUBLIC inline
 void Kip::num_mem_descs(unsigned n)
-{
-  _mem_info = (_mem_info & ~((1UL << (MWORD_BITS / 2)) - 1))
-              | (n & ((1UL << (MWORD_BITS / 2)) - 1));
-}
+{ _mem_descs_num = n; }
 
 PUBLIC
 Mem_desc *Kip::add_mem_region(Mem_desc const &md)

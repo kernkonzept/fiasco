@@ -825,7 +825,6 @@ Apic::calibrate_timer(Cpu *cpu)
   if (!frequency_ok)
     panic("APIC frequency too high, adapt Apic::scaler_us_to_apic");
 
-  Kip::k()->frequency_bus = frequency_khz;
   scaler_us_to_apic       = Cpu::muldiv(1<<21, frequency_khz, 1000);
 }
 

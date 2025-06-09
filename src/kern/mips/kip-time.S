@@ -1,10 +1,6 @@
 #include "globalconfig.h"
 
-#ifndef __mips64
-# define OFFS__KIP_CLOCK                        0xA0
-#else
-# define OFFS__KIP_CLOCK                        0x140
-#endif
+#define OFFS__KIP_CLOCK                         0x20
 
 #define OFFS__KIP_FN_READ_US                    0x900
 #define OFFS__KIP_FN_READ_NS                    0x980

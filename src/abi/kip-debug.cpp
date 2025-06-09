@@ -75,22 +75,17 @@ void
 Kip::print() const
 {
   printf("KIP @ %p\n", static_cast<void const *>(this));
-  printf("magic: %.4s  version: 0x%lx\n",
+  printf("magic: %.4s  version: 0x%x\n",
          reinterpret_cast<char const *>(&magic), version);
   print_clock();
-  printf("freq_cpu: %lukHz\n", frequency_cpu);
-  printf("freq_bus: %lukHz\n", frequency_bus);
+  printf("freq_cpu: %llukHz\n", frequency_cpu);
 
-  printf("sigma0_ip: " L4_PTR_FMT " sigma0_sp: " L4_PTR_FMT "\n",
-         sigma0_ip, sigma0_sp);
-  printf("sigma1_ip: " L4_PTR_FMT " sigma1_sp: " L4_PTR_FMT "\n",
-         sigma1_ip, sigma1_sp);
-  printf("root_ip:   " L4_PTR_FMT " root_sp:   " L4_PTR_FMT "\n",
-         root_ip, root_sp);
+  printf("sigma0_ip: %016llx\n", sigma0_ip);
+  printf("root_ip:   %016llx\n", root_ip);
   debug_print_memory();
   debug_print_syscalls();
 
-  printf("user_ptr: " L4_PTR_FMT "   acpi_rsdp_addr: " L4_MWORD_FMT "\n",
+  printf("user_ptr: %016llx   acpi_rsdp_addr: %016llx\n",
          user_ptr, acpi_rsdp_addr);
 
   debug_print_features();

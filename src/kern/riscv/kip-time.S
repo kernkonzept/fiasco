@@ -1,10 +1,6 @@
 #include "globalconfig.h"
 
-#if __riscv_xlen == 32
-# define OFFS__KIP_CLOCK                        0xA0
-#else
-# define OFFS__KIP_CLOCK                        0x140
-#endif
+# define OFFS__KIP_CLOCK                        0x20
 
 #define OFFS__KIP_SCALER_TIME_STAMP_TO_US       0x970
 #define OFFS__KIP_SHIFT_TIME_STAMP_TO_US        0x978
