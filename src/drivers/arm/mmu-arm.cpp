@@ -184,12 +184,17 @@ private:
   {
     Mem::dmb();
     Mword clidr = get_clidr();
-    unsigned lvl = (clidr >> 23) & 14;
+    // Level of Coherency CLIDR[26:24] * 2 to simplify
+    //   get_ccsidr((cache level << 1) | 0)
+    unsigned lvl = ((clidr >> 24) & 7) << 1;
 
-    for (unsigned cl = 0; cl < lvl; cl += 2)
+    for (unsigned cl = 0; cl < lvl; cl += 2, clidr >>= 3)
       {
         // data cache only
-        if (((clidr >> (cl + (cl / 2))) & 6) == 0)
+        // - 0x2 data cache only
+        // - 0x3 seperate instruction/data caches
+        // - 0x4 unified cache
+        if ((clidr & 6) == 0)
           continue;
 
         Mword ccsidr = get_ccsidr(cl);
