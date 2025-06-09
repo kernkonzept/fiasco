@@ -483,7 +483,7 @@ struct Ia32_intel_microcode
       {
         printf("error: could not load microcode update: rev %llx != %llx"
                " (%04x-%02x-%02x)\n",
-               rev_sig, update->date_year, update->date_month,
+               rev_sig, n, update->date_year, update->date_month,
                update->date_day);
         return false;
       }
