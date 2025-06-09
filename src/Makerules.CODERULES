@@ -11,7 +11,11 @@ CRTEST_DIR = selftest/coderules
 
 # select all test_* files to generate a build target for each.
 ifeq ($(CXX_TYPE),clang)
-  CRTEST_TESTS = $(INTERFACES_CODERULES)
+  # use preprocess for files from $(INTERFACES_CODERULES)
+  CRTEST_PREP_TESTS = $(INTERFACES_CODERULES)
+  # no preprocess for files from $(CXXSRC_CODERULES)
+  CRTEST_NOPREP_TESTS = $(patsubst %.cc,%,$(filter-out \
+                          $(INTERFACES_CODERULES:=.cc),$(CXXSRC_CODERULES)))
 else
 crtest_subsys: $(CRTEST_DIR)/gcc-skip.t
 $(CRTEST_DIR)/gcc-skip.t:
@@ -21,12 +25,17 @@ $(CRTEST_DIR)/gcc-skip.t:
 	$(VERBOSE)chmod +x $@
 endif
 
-CRTEST_T_FILES := $(addprefix $(CRTEST_DIR)/,$(addsuffix .t, $(CRTEST_TESTS)))
+CRTEST_TESTS = $(CRTEST_PREP_TESTS) $(CRTEST_NOPREP_TESTS)
+
+CRTEST_PREP_T_FILES   := $(addprefix $(CRTEST_DIR)/,\
+                           $(addsuffix .t, $(CRTEST_PREP_TESTS)))
+CRTEST_NOPREP_T_FILES := $(addprefix $(CRTEST_DIR)/,\
+                           $(addsuffix .t, $(CRTEST_NOPREP_TESTS)))
 
 WARNING_CHECKER := $(abspath $(srcdir)/../tool/check_diagnostics)
 
 # default target for the CODERULES subsystem, add all .t files
-crtest_subsys: $(CRTEST_T_FILES)
+crtest_subsys: $(CRTEST_PREP_T_FILES) $(CRTEST_NOPREP_T_FILES)
 
 # Currently SARIF is somewhat broken for clang wrt. location information. Use text parsing for now
 # $(CRTEST_TESTS:=.o): CXXFLAGS += -fdiagnostics-format=sarif -Wno-sarif-format-unstable
@@ -34,7 +43,13 @@ $(CRTEST_TESTS:=.o): CXXFLAGS += $(call CHECKCC,-fno-diagnostics-fixit-info -fno
 $(CRTEST_TESTS:=.diag): %.diag: %.o
 $(foreach t,$(CRTEST_TESTS),$(eval $t.o: CXX := 2>$t.diag $(CXX)))
 
-$(CRTEST_T_FILES): $(CRTEST_DIR)/%.t: %.cpp %.diag
+$(CRTEST_PREP_T_FILES): $(CRTEST_DIR)/%.t: %.cpp %.diag
+	$(VERBOSE)mkdir -p $(@D)
+	$(VERBOSE)echo '#!/usr/bin/env sh' >$@
+	$(VERBOSE)echo '$(WARNING_CHECKER) $(abspath $^)' >>$@
+	$(VERBOSE)chmod +x $@
+
+$(CRTEST_NOPREP_T_FILES): $(CRTEST_DIR)/%.t: %.cc %.diag
 	$(VERBOSE)mkdir -p $(@D)
 	$(VERBOSE)echo '#!/usr/bin/env sh' >$@
 	$(VERBOSE)echo '$(WARNING_CHECKER) $(abspath $^)' >>$@
