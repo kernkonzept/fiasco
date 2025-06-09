@@ -11,7 +11,8 @@ char *__stpcpy(char *restrict d, const char *restrict s)
 	const word *ws;
 	if ((uintptr_t)s % SS == (uintptr_t)d % SS) {
 		for (; (uintptr_t)s % SS; s++, d++)
-			if (!(*d=*s)) return d;
+			if (!(*d=*s))
+				return d;
 		wd=(void *)d; ws=(const void *)s;
 		for (; !HASZERO(*ws); *wd++ = *ws++);
 		d=(void *)wd; s=(const void *)ws;

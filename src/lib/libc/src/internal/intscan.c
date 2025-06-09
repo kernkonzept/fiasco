@@ -52,7 +52,8 @@ unsigned long long __intscan(FILE *f, unsigned base, unsigned long long lim)
 			base = 8;
 		}
 	} else {
-		if (base == 0) base = 10;
+		if (base == 0)
+			base = 10;
 		if (val[c] >= base) {
 			shunget(f);
 			return 0;
@@ -63,7 +64,8 @@ unsigned long long __intscan(FILE *f, unsigned base, unsigned long long lim)
 			x = x*10 + (c-'0');
 		for (y=x; (unsigned)(c - '0') < 10U && y<=ULLONG_MAX/10 && 10*y<=ULLONG_MAX-(c-'0'); c=shgetc(f))
 			y = y*10 + (c-'0');
-		if ((unsigned)(c - '0') >= 10U) goto done;
+		if ((unsigned)(c - '0') >= 10U)
+			goto done;
 	} else if (!(base & (base - 1))) {
 		int bs = "\0\1\2\4\7\3\6\5"[(0x17*base)>>5&7];
 		for (x=0; val[c]<base && x<=UINT_MAX/32; c=shgetc(f))
@@ -79,7 +81,8 @@ unsigned long long __intscan(FILE *f, unsigned base, unsigned long long lim)
 	if (val[c]<base) {
 		for (; val[c]<base; c=shgetc(f));
 		y = lim;
-		if (lim&1) neg = 0;
+		if (lim&1)
+			neg = 0;
 	}
 done:
 	shunget(f);
