@@ -29,12 +29,6 @@ private:
 };
 
 //----------------------------------------------------------------------------
-INTERFACE [ia32]:
-
-/* Empty class for VHW descriptor in KIP for native ia32 */
-class Vhw_descriptor {};
-
-//----------------------------------------------------------------------------
 INTERFACE:
 
 #include "types.h"
