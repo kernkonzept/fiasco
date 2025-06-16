@@ -103,16 +103,18 @@ atomic_add_fetch(T *mem, V value)
     {
     case 4:
       __asm__ __volatile__ (
-        "amoadd.w %[res], %[val], %[mem]"
-        : [res]"=r" (res), [mem]"+A"(*mem)
+        "amoadd.w %[res], %[val], %[mem] \n"
+        "add      %[res], %[res], %[val] \n"
+        : [res]"=&r" (res), [mem]"+A"(*mem)
         : [val]"r" (val)
         : "memory");
       return res;
 
     case 8:
       __asm__ __volatile__ (
-        "amoadd.d %[res], %[val], %[mem]"
-        : [res]"=r" (res), [mem]"+A"(*mem)
+        "amoadd.d %[res], %[val], %[mem] \n"
+        "add      %[res], %[res], %[val] \n"
+        : [res]"=&r" (res), [mem]"+A"(*mem)
         : [val]"r" (val)
         : "memory");
       return res;
