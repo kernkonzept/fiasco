@@ -4,6 +4,7 @@ template<typename T, typename V> inline
 T
 atomic_exchange(T *mem, V value)
 {
+  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
   T val = value;
 
   // processor locking even without explicit LOCK prefix
@@ -13,34 +14,66 @@ atomic_exchange(T *mem, V value)
   return val;
 }
 
-inline
+template<typename T, typename V> inline
 void
-atomic_and(Mword *l, Mword value)
+atomic_and(T *l, V value)
 {
-  asm volatile ("lock; andq %1, %2" : "=m"(*l) : "er"(value), "m"(*l));
+  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
+  T val = value;
+  switch (sizeof(T))
+    {
+    case 4:
+      asm volatile ("lock; andl %1, %2" : "=m"(*l) : "er"(val), "m"(*l));
+      break;
+    case 8:
+      asm volatile ("lock; andq %1, %2" : "=m"(*l) : "er"(val), "m"(*l));
+      break;
+    }
 }
 
-inline
+template<typename T, typename V> inline
 void
-atomic_or(Mword *l, Mword value)
+atomic_or(T *l, V value)
 {
-  asm volatile ("lock; orq %1, %2" : "=m"(*l) : "er"(value), "m"(*l));
+  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
+  T val = value;
+  switch (sizeof(T))
+    {
+    case 4:
+      asm volatile ("lock; orl %1, %2" : "=m"(*l) : "er"(val), "m"(*l));
+      break;
+    case 8:
+      asm volatile ("lock; orq %1, %2" : "=m"(*l) : "er"(val), "m"(*l));
+      break;
+    }
 }
 
-inline
+template<typename T, typename V> inline
 void
-atomic_add(Mword *l, Mword value)
+atomic_add(T *l, V value)
 {
-  asm volatile ("lock; addq %1, %2" : "=m"(*l) : "er"(value), "m"(*l));
+  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
+  T val = value;
+  switch (sizeof(T))
+    {
+    case 4:
+      asm volatile ("lock; addl %1, %2" : "=m"(*l) : "er"(val), "m"(*l));
+      break;
+    case 8:
+      asm volatile ("lock; addq %1, %2" : "=m"(*l) : "er"(val), "m"(*l));
+      break;
+    }
 }
 
-template<typename T> inline
+template<typename T, typename V> inline
 T
-atomic_add_fetch(T *mem, T addend)
+atomic_add_fetch(T *mem, V value)
 {
+  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
   T res;
-  asm volatile ("lock; xadd %1, %0" : "+m"(*mem), "=r"(res) : "1"(addend));
-  return res + addend;
+  T val = value;
+  asm volatile ("lock; xadd %1, %0" : "+m"(*mem), "=r"(res) : "1"(val));
+  return res + val;
 }
 
 inline
