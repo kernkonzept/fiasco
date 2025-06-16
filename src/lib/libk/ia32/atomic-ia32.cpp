@@ -44,6 +44,25 @@ atomic_add_fetch(T *mem, T addend)
   return res + addend;
 }
 
+template< typename T > ALWAYS_INLINE inline
+T
+atomic_load(T const *mem)
+{
+  static_assert(sizeof(T) == 4);
+  T res;
+  asm volatile ("movl %[mem], %[res]" : [res] "=r" (res) : [mem] "m" (*mem));
+  return res;
+}
+
+template< typename T, typename V > ALWAYS_INLINE inline
+void
+atomic_store(T *mem, V value)
+{
+  static_assert(sizeof(T) == 4);
+  T val = value;
+  asm volatile ("movl %[val], %[mem]" : [mem] "=m" (*mem) : [val] "ir" (val));
+}
+
 inline
 void
 local_atomic_add(Mword *l, Mword value)
