@@ -713,7 +713,7 @@ config POWERSAVE_GETCHAR
 
 config MBT_COUNTER
 	bool "Enable model-based testing counter"
-	depends on EXPERIMENTAL
+	depends on EXPERIMENTAL && BIT64
 
 choice
 	prompt "Warn levels"
