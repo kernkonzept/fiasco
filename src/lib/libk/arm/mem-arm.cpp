@@ -244,8 +244,7 @@ template<typename T>
 T
 Mem::read64_consistent(T const *t)
 {
-  static_assert(sizeof(T) == sizeof(Unsigned64), "value has invalid size");
-
+  static_assert(sizeof(T) == sizeof(Unsigned64));
   T res;
   asm volatile ("ldrd %0, %H0, %1" : "=r" (res) : "m"(*t));
   return res;
@@ -256,7 +255,7 @@ template<typename T>
 void
 Mem::write64_consistent(T *t, T val)
 {
-  static_assert(sizeof(T) == sizeof(Unsigned64), "value has invalid size");
+  static_assert(sizeof(T) == sizeof(Unsigned64));
   asm volatile ("strd %1, %H1, %0" : "=m"(*t) : "r"(val));
 }
 

@@ -67,8 +67,7 @@ template<typename T, typename V> inline
 T
 atomic_exchange(T *mem, V value)
 {
-  static_assert(sizeof(T) == 4 || sizeof(T) == 8,
-                "invalid size of operand (must be 4 or 8 byte)");
+  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
   T val = value;
   T res;
 
@@ -96,8 +95,7 @@ template<typename T, typename V> inline
 T
 atomic_add_fetch(T *mem, V value)
 {
-  static_assert(sizeof(T) == 4 || sizeof(T) == 8,
-                "invalid size of operand (must be 4 or 8 byte)");
+  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
   T val = value;
   T res;
 
@@ -125,8 +123,7 @@ template<typename T> ALWAYS_INLINE inline
 T
 atomic_load(T const *mem)
 {
-  static_assert(sizeof(T) == 4 || sizeof(T) == 8,
-                "atomic_load supported for 4 and 8 byte types only");
+  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
   T res;
   switch (sizeof(T))
     {
@@ -144,8 +141,7 @@ template<typename T, typename V> ALWAYS_INLINE inline
 void
 atomic_store(T *mem, V value)
 {
-  static_assert(sizeof(T) == 4 || sizeof(T) == 8,
-                "atomic_store supported for 4 and 8 byte types only");
+  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
   T val = value;
   switch (sizeof(T))
     {

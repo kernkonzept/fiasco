@@ -20,7 +20,7 @@ template< typename Type > inline
 bool
 local_cas(Type *ptr, Type oldval, Type newval)
 {
-  static_assert(sizeof(Type) == sizeof(Mword), "CAS requires Mword-sized type.");
+  static_assert(sizeof(Type) == sizeof(Mword));
 
   if constexpr (cxx::is_pointer_v<Type>)
     return local_cas_unsafe(reinterpret_cast<Mword *>(ptr),
@@ -137,7 +137,7 @@ template< typename T > inline
 bool
 cas(T *ptr, T oldval, T newval)
 {
-  static_assert(sizeof(T) == sizeof(Mword), "CAS requires Mword-sized type.");
+  static_assert(sizeof(T) == sizeof(Mword));
 
   if constexpr (cxx::is_pointer_v<T>)
     return cas_arch(reinterpret_cast<Mword*>(ptr),

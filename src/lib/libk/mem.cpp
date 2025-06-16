@@ -73,7 +73,7 @@ template<typename T>
 T
 Mem::read64_consistent(T const *t)
 {
-  static_assert(sizeof(T) == 2* sizeof(Unsigned32), "value has invalid size");
+  static_assert(sizeof(T) == 2 * sizeof(Unsigned32));
   union U
   {
     T v64;
@@ -105,7 +105,7 @@ template<typename T>
 void
 Mem::write64_consistent(T *t, T val)
 {
-  static_assert(sizeof(T) == 2* sizeof(Unsigned32), "value has invalid size");
+  static_assert(sizeof(T) == 2 * sizeof(Unsigned32));
   union U
   {
     T v64;
