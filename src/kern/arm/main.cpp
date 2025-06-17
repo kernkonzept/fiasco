@@ -29,12 +29,16 @@ IMPLEMENTATION [arm]:
 #include "global_data.h"
 
 static DEFINE_GLOBAL Global_data<int> exit_question_active;
+extern "C" void cov_print() __attribute__((weak));
 
 extern "C" [[noreturn]] void
 _exit(int)
 {
   if (exit_question_active)
     platform_reset();
+
+  if (cov_print)
+    cov_print();
 
   while (1)
     {
@@ -79,7 +83,10 @@ kernel_main()
 
   // make some basic initializations, then create and run the kernel
   // thread
-  set_exit_question(&exit_question);
+  if (cov_print)
+    set_exit_question(nullptr);
+  else
+    set_exit_question(&exit_question);
 
   printf("%s\n", Kip::k()->version_string());
 
