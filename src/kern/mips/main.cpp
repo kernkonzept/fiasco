@@ -92,7 +92,7 @@ extern "C" [[noreturn]] void kernel_main()
   __asm__ __volatile__
     ("  move $29,%0             \n"	// switch stack
      "  jal call_bootstrap      \n"
-     : : "r" (kernel->init_stack()), "r" (a0));
+     : : "r" (kernel->init_stack()), "r" (a0) : "memory");
 
   // No return from Kernel_thread::bootstrap().
   __builtin_unreachable();
@@ -169,7 +169,8 @@ IMPLEMENTATION[mips && mp]:
         ("move $29, %0            \n"  // switch stack
          "jal  call_ap_bootstrap  \n"
          :
-         : "r" (sp), "r" (r0), "r" (r1));
+         : "r" (sp), "r" (r0), "r" (r1)
+         : "memory");
     }
 
   // No return from App_cpu_thread::bootstrap().

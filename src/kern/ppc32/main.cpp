@@ -94,6 +94,7 @@ int main()
 		 :
 		 : [stack]"r" (kernel->init_stack()),
 		   [kernel]"r" (kernel)
+     : "memory"
 		 );
 
   // No return from Kernel_thread::bootstrap().

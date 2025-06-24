@@ -33,6 +33,7 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
      "  sysretq             \n"
      :
      : [flags]"i"(EFLAGS_IF), "c"(ip), [sp]"r"(sp), "D"(arg)
+     : "memory"
     );
 
   __builtin_unreachable();
@@ -111,6 +112,7 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
      "  jmp safe_sysret     \n"
      :
      : "a"(p[3]), [flags]"i"(EFLAGS_IF), "c"(ip), [sp]"r"(sp), "D"(arg)
+     : "memory"
      );
 
   __builtin_unreachable();
@@ -334,6 +336,7 @@ Thread::user_invoke()
      : [sp]"r"(nonull_static_cast<Return_frame*>(current()->regs())),
        "c"(Gdt::gdt_data_user | Gdt::Selector_user),
        "D"(rdi)
+     : "memory"
      );
 
   __builtin_unreachable();

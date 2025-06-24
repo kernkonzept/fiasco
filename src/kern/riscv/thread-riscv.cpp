@@ -223,7 +223,8 @@ Thread::riscv_fast_exit(void *sp, void *pc, void *arg)
     : :
     [stack]   "r" (sp),
     [rfe]     "r" (pc),
-              "r" (a0));
+              "r" (a0)
+    : "memory");
 
   __builtin_unreachable();
 }

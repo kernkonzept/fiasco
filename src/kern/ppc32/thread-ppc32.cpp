@@ -110,7 +110,7 @@ Thread::user_invoke()
 		   [state]"r" (Msr::Msr_user),
 		   [kip]"r" (kip),
 		   [kernel_sp]"r" (current_thread()->regs() + 1)
-		 : "r3"
+		 : "r3", "memory"
 		 );
 
   // never returns

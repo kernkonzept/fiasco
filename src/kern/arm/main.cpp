@@ -196,7 +196,8 @@ IMPLEMENTATION[arm && mp]:
         ("mov sp, %0             \n"  // switch stack
          "bl  call_ap_bootstrap  \n"
          :
-         : "r" (sp), "r" (r0), "r" (r1));
+         : "r" (sp), "r" (r0), "r" (r1)
+         : "memory");
     }
 
   // No return from App_cpu_thread::bootstrap().

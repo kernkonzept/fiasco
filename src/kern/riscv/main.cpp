@@ -173,7 +173,8 @@ IMPLEMENTATION [riscv && mp]:
     "  mv   sp, %[stack]      \n"
     "  tail call_ap_bootstrap \n"
     :
-    : [stack]   "r" (sp), "r" (a0), "r" (a1));
+    : [stack]   "r" (sp), "r" (a0), "r" (a1)
+    : "memory");
 
   // No return from App_cpu_thread::bootstrap().
   __builtin_unreachable();

@@ -40,7 +40,8 @@ Thread::arm_fast_exit(void *sp, void *pc, void *arg)
      : :
      [stack_p] "r" (sp),
      [rfe]     "r" (pc),
-     "r" (r0));
+     "r" (r0)
+     : "memory");
   __builtin_unreachable();
 }
 

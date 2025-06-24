@@ -246,6 +246,7 @@ Thread::user_invoke()
      : [sp]"r"(nonull_static_cast<Return_frame*>(current()->regs())),
        "d"(Gdt::gdt_data_user | Gdt::Selector_user),
        "c"(ecx)
+     : "memory"
      );
 
   __builtin_unreachable();

@@ -156,7 +156,8 @@ Thread::user_invoke()
           :
           : [ra] "r" (ra),
             [ts] "r" (a0),
-            [cfs] "i" (ASM_WORD_BYTES * ASM_NARGSAVE));
+            [cfs] "i" (ASM_WORD_BYTES * ASM_NARGSAVE)
+          : "memory");
     }
   while (0);
 
@@ -339,6 +340,7 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, void *arg)
        ".set pop                      \n"
        : : [status] "r" (Cp0_status::ST_USER_DEFAULT),
            [ip] "r" (t9), [sp] "r" (sp), [arg] "r" (a0)
+       : "memory"
       );
   }
 

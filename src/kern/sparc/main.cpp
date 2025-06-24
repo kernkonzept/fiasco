@@ -90,7 +90,7 @@ int main()
     ("  mov %0, %%sp         \n"  // switch stack
      "  ba  call_bootstrap   \n"
      "   mov %1, %%o0        \n"  // push "this" pointer
-     : : "r" (kernel->init_stack()), "r" (kernel));
+     : : "r" (kernel->init_stack()), "r" (kernel) : "memory");
 
   // No return from Kernel_thread::bootstrap().
   __builtin_unreachable();

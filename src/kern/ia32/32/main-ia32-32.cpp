@@ -51,7 +51,8 @@ kernel_main(void)
     ("	movl %%esi, %%esp	\n\t"	// switch stack
      "	call call_bootstrap	\n\t"	// bootstrap kernel thread
      : "=a" (dummy), "=c" (dummy), "=d" (dummy)
-     : "a"(kernel), "S" (kernel->init_stack()));
+     : "a"(kernel), "S" (kernel->init_stack())
+     : "memory");
 
   // No return from Kernel_thread::bootstrap().
   __builtin_unreachable();
@@ -73,7 +74,8 @@ main_switch_ap_cpu_stack(Kernel_thread *kernel, bool resume)
     ("	movl %[esp], %%esp	\n\t"	// switch stack
      "	call call_ap_bootstrap	\n\t"	// bootstrap kernel thread
      :  "=a" (dummy), "=c" (dummy), "=d" (dummy)
-     :	"a"(kernel), [esp]"r" (kernel->init_stack()), "d"(resume));
+     :	"a"(kernel), [esp]"r" (kernel->init_stack()), "d"(resume)
+     :  "memory");
 
   // No return from App_cpu_thread::bootstrap().
   __builtin_unreachable();
