@@ -70,8 +70,8 @@ Gic_h_v3::read_apr(unsigned opc2, Unsigned32 *a)
 PUBLIC static inline ALWAYS_INLINE void
 Gic_h_v3::write_apr(unsigned opc2, Unsigned32 r0, Unsigned32 r1)
 {
-  asm ("mcr p15, 4, %0, c12, c8, %c1" : : "r"(r0), "i"(opc2));
-  asm ("mcr p15, 4, %0, c12, c9, %c1" : : "r"(r1), "i"(opc2));
+  asm volatile ("mcr p15, 4, %0, c12, c8, %c1" : : "r"(r0), "i"(opc2));
+  asm volatile ("mcr p15, 4, %0, c12, c9, %c1" : : "r"(r1), "i"(opc2));
 }
 
 PUBLIC inline void
@@ -214,7 +214,7 @@ Gic_h_v3::clear_lr(unsigned idx)
 {
 #define TRANSFER_LR(i) \
   if constexpr (i < Gic_h::Arm_vgic::N_lregs) \
-    asm ("mcr p15, 4, %0, c12, c%c1, %c2" :: "r"(0), "i"(12 + i/8), "i"(i % 8))
+    asm volatile ("mcr p15, 4, %0, c12, c%c1, %c2" :: "r"(0), "i"(12 + i/8), "i"(i % 8))
 
   switch (idx)
     {

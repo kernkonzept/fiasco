@@ -421,7 +421,7 @@ Cpu::init_hyp_mode_common()
         : [sctlr]"=&r"(sctlr_ignore)
         : [hdcr]"r"(hdcr));
   hcr(Hcr_non_vm_bits_el0);
-  asm ("mcr p15, 4, %0, c1, c1, 3" : : "r"(Hstr_non_vm)); // HSTR
+  asm volatile ("mcr p15, 4, %0, c1, c1, 3" : : "r"(Hstr_non_vm)); // HSTR
 
   Mem::dsb();
   Mem::isb();

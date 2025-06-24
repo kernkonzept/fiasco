@@ -152,14 +152,14 @@ Mem_unit::dcache_flush(Address start, Address end)
   if (_l1_d_line)
     {
       for (Address x = start; x < end; x += _l1_d_line)
-        asm ("cache 0x15, (%0)" : : "r"(x));
+        asm volatile ("cache 0x15, (%0)" : : "r"(x));
 
       asm volatile ("sync");
 
       if (_l2_line)
         {
           for (Address x = start; x < end; x += _l2_line)
-            asm ("cache 0x17, (%0)" : : "r"(x));
+            asm volatile ("cache 0x17, (%0)" : : "r"(x));
 
           asm volatile ("sync");
         }
@@ -167,7 +167,7 @@ Mem_unit::dcache_flush(Address start, Address end)
       if (_l3_line)
         {
           for (Address x = start; x < end; x += _l3_line)
-            asm ("cache 0x16, (%0)" : : "r"(x));
+            asm volatile ("cache 0x16, (%0)" : : "r"(x));
 
           asm volatile ("sync");
         }
@@ -181,14 +181,14 @@ Mem_unit::dcache_inv(Address start, Address end)
   if (_l1_d_line)
     {
       for (Address x = start; x < end; x += _l1_d_line)
-        asm ("cache 0x11, (%0)" : : "r"(x));
+        asm volatile ("cache 0x11, (%0)" : : "r"(x));
 
       asm volatile ("sync");
 
       if (_l2_line)
         {
           for (Address x = start; x < end; x += _l2_line)
-            asm ("cache 0x13, (%0)" : : "r"(x));
+            asm volatile ("cache 0x13, (%0)" : : "r"(x));
 
           asm volatile ("sync");
         }
@@ -196,7 +196,7 @@ Mem_unit::dcache_inv(Address start, Address end)
       if (_l3_line)
         {
           for (Address x = start; x < end; x += _l3_line)
-            asm ("cache 0x12, (%0)" : : "r"(x));
+            asm volatile ("cache 0x12, (%0)" : : "r"(x));
 
           asm volatile ("sync");
         }
@@ -210,14 +210,14 @@ Mem_unit::dcache_clean(Address start, Address end)
   if (_l1_d_line)
     {
       for (Address x = start; x < end; x += _l1_d_line)
-        asm ("cache 0x19, (%0)" : : "r"(x));
+        asm volatile ("cache 0x19, (%0)" : : "r"(x));
 
       asm volatile ("sync");
 
       if (_l2_line)
         {
           for (Address x = start; x < end; x += _l2_line)
-            asm ("cache 0x1b, (%0)" : : "r"(x));
+            asm volatile ("cache 0x1b, (%0)" : : "r"(x));
 
           asm volatile ("sync");
         }
@@ -225,7 +225,7 @@ Mem_unit::dcache_clean(Address start, Address end)
       if (_l3_line)
         {
           for (Address x = start; x < end; x += _l3_line)
-            asm ("cache 0x1a, (%0)" : : "r"(x));
+            asm volatile ("cache 0x1a, (%0)" : : "r"(x));
 
           asm volatile ("sync");
         }

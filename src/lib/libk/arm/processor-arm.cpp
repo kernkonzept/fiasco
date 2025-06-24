@@ -210,7 +210,7 @@ IMPLEMENTATION[arm_v7 || arm_v8]:
 IMPLEMENT static inline
 void Proc::pause()
 {
-  asm("yield");
+  asm volatile("yield");
 }
 
 IMPLEMENT static inline

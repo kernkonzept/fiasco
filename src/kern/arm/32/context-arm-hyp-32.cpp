@@ -126,7 +126,7 @@ Context::load_ext_vcpu_state(Mword /*_to_state*/, Vm_state const *v)
 
   asm volatile ("mcr p15, 0, %0, c1, c0, 0" : : "r"(sctlr));
   // we unconditionally trap actlr accesses
-  // asm ("mcr p15, 0, %0, c1, c0, 1" : : "r"(v->actlr));
+  // asm volatile ("mcr p15, 0, %0, c1, c0, 1" : : "r"(v->actlr));
   asm volatile ("mcr p15, 0, %0, c1, c0, 2" : : "r"(v->cpacr));
 
   asm volatile ("mcr p15, 0, %0, c5, c0, 0" : : "r"(v->dfsr));

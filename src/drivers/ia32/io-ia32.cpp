@@ -10,7 +10,7 @@ public:
 IMPLEMENT inline
 void Io::iodelay() 
 {
-  asm("inb $0x80,%%al; inb $0x80,%%al" : : : "eax");
+  asm volatile ("inb $0x80,%%al; inb $0x80,%%al" : : : "eax");
 }
 
 IMPLEMENT inline

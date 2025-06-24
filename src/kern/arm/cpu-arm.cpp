@@ -701,7 +701,7 @@ Cpu::init_errata_workarounds()
               Unsigned64 v;
               asm("mrrc p15, 0, %Q0, %R0, c15" : "=r"(v)); // CPUACTLR
               v |= Unsigned64{1} << 45; // OOODIVDIS
-              asm("mcrr p15, 0, %Q0, %R0, c15" : : "r"(v)); // CPUACTLR
+              asm volatile("mcrr p15, 0, %Q0, %R0, c15" : : "r"(v)); // CPUACTLR
             }
         }
     }
@@ -750,14 +750,14 @@ Cpu::init_tz()
       : [dummy] "=r" (dummy) : : "lr" );
   // running in monitor mode
 
-  asm ("mcr  p15, 0, %[scr], c1, c1, 0" : : [scr] "r" (0x1));
+  asm volatile ("mcr  p15, 0, %[scr], c1, c1, 0" : : [scr] "r" (0x1));
   Mem::isb();
 
-  asm ("mcr  p15, 0, %0, c12, c0, 0" : : "r" (0)); // reset VBAR
-  asm ("mcr  p15, 0, %0, c13, c0, 0" : : "r" (0)); // reset FCSEIDR
-  asm ("mcr  p15, 0, %0, c1, c0, 0"  : : "r" (0x4500a0));  // SCTLR = U | (18) | (16) | (7)
+  asm volatile ("mcr  p15, 0, %0, c12, c0, 0" : : "r" (0)); // reset VBAR
+  asm volatile ("mcr  p15, 0, %0, c13, c0, 0" : : "r" (0)); // reset FCSEIDR
+  asm volatile ("mcr  p15, 0, %0, c1, c0, 0"  : : "r" (0x4500a0));  // SCTLR = U | (18) | (16) | (7)
 
-  asm ("mcr  p15, 0, %[scr], c1, c1, 0 \n" : : [scr] "r" (0x100));
+  asm volatile ("mcr  p15, 0, %[scr], c1, c1, 0 \n" : : [scr] "r" (0x100));
   Mem::isb();
   asm volatile (
       "mov  %[dummy], sp \n"
