@@ -270,7 +270,7 @@ Bootstrap::enable_paging(Mword)
   Mem::dsb();
   asm volatile("msr SCTLR_EL1, %[control]" : : [control] "r" (control));
   Mem::isb();
-  asm volatile ("ic iallu; dsb nsh; isb");
+  asm volatile ("ic iallu; dsb nsh; isb" : : : "memory");
 }
 
 static inline void
@@ -437,7 +437,7 @@ Bootstrap::enable_paging(Mword)
   Mem::dsb();
   asm volatile("msr SCTLR_EL2, %[control]" : : [control] "r" (control));
   Mem::isb();
-  asm volatile ("ic iallu; dsb nsh; isb");
+  asm volatile ("ic iallu; dsb nsh; isb" : : : "memory");
 }
 
 static inline void
