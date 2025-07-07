@@ -29,14 +29,15 @@ Jdb_tcb::print_entry_frame_regs(Thread *t)
          "RDX=%016lx  RSP=%016lx\n"
          " R8=%016lx   R9=%016lx\n"
          "R10=%016lx  R11=%016lx\n"
-         "R12=%016lx  R13=%016lx\n"
-         "R14=%016lx  R15=%016lx  FS=%04lx\n"
+         "R12=%016lx  R13=%016lx  GSBASE=%lx\n"
+         "R14=%016lx  R15=%016lx  FSBASE=%lx\n"
 	 "trapno %lu, error %08lx, from %s mode%s\n"
 	 "RIP=%s%016lx\033[m  RFlags=%016lx\n",
 	 ef->_ax, ef->_si, ef->_bx, ef->_di,
 	 ef->_cx, ef->_bp, ef->_dx, ef->sp(),
 	 ef->_r8,  ef->_r9, ef->_r10, ef->_r11,
-	 ef->_r12, ef->_r13, ef->_r14, ef->_r15, t->_fs_base,
+	 ef->_r12, ef->_r13, t->_gs_base,
+         ef->_r14, ef->_r15, t->_fs_base,
 	 ef->_trapno, ef->_err, ef->from_user() ? "user" : "kernel",
          ef->_trapno == 14 ? pfa : "",
 	 Jdb::esc_emph, ef->ip(), ef->flags());
@@ -67,8 +68,8 @@ Jdb_tcb::info_thread_state(Thread *t)
              "RDX=%016lx  RSP=%016lx\n"
              "R8= %016lx  R9= %016lx\n"
              "R10=%016lx  R11=%016lx\n"
-             "R12=%016lx  R13=%016lx  SS=%04lx\n"
-             "R14=%016lx  R15=%016lx  CS=%04lx\n"
+             "R12=%016lx  R13=%016lx  SS=%04lx GSBASE=%lx\n"
+             "R14=%016lx  R15=%016lx  CS=%04lx FSBASE=%lx\n"
 	     "in %s (user level registers)\n",
 	     p.top_value( -6), p.top_value(-10),
 	     p.top_value( -8), p.top_value( -9),
@@ -76,8 +77,8 @@ Jdb_tcb::info_thread_state(Thread *t)
 	     p.top_value(-11), p.top_value( -2),
 	     p.top_value(-19), p.top_value(-18),
 	     p.top_value(-17), p.top_value(-16),
-	     p.top_value(-15), p.top_value(-14), p.top_value(-1) & 0xffff,
-	     p.top_value(-13), p.top_value(-12), p.top_value(-4) & 0xffff,
+	     p.top_value(-15), p.top_value(-14), p.top_value(-1) & 0xffff, t->_gs_base,
+	     p.top_value(-13), p.top_value(-12), p.top_value(-4) & 0xffff, t->_fs_base,
 	     state == Jdb::s_ipc ? "ipc" : "syscall");
       break;
     case Jdb::s_user_invoke:
@@ -87,10 +88,11 @@ Jdb_tcb::info_thread_state(Thread *t)
 	     "RDX=0000000000000000  RSP=%16lx  SS=%04lx\n"
 	     " R8=0000000000000000   R9=0000000000000000\n"
 	     "R10=0000000000000000  R11=0000000000000000\n"
-	     "R12=0000000000000000  R13=0000000000000000\n"
-	     "R14=0000000000000000  R15=0000000000000000\n"
+	     "R12=0000000000000000  R13=0000000000000000 GSBASE=%lx\n"
+	     "R14=0000000000000000  R15=0000000000000000 FSBASE=%lx\n"
 	     "invoking user the first time (user level registers)\n",
-	     p.top_value(-2), p.top_value(-1) & 0xffff);
+	     p.top_value(-2), p.top_value(-1) & 0xffff,
+             t->_gs_base, t->_fs_base);
       break;
     case Jdb::s_fputrap:
       printf("RAX=%016lx  RSI=----------------\n"
