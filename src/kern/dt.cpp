@@ -144,7 +144,7 @@ public:
     {}
 
     template<typename CB>
-    constexpr void for_each_phandle(char const *, char const *, CB &&cb) const
+    constexpr void for_each_phandle(char const *, char const *, CB &&) const
     {}
   };
 };
