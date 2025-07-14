@@ -47,12 +47,12 @@ void Mmu::flush_cache(void const *start, void const *end)
 IMPLEMENT inline
 void Mmu::clean_dcache(void const *va)
 {
-  Mem::dsb();
   __asm__ __volatile__ (
       "mcr p15, 0, %0, c7, c10, 1       \n" // DCCMVAC
       :
       : "r" (reinterpret_cast<unsigned long>(va) & ~(dcache_line_size() - 1))
       : "memory");
+  Mem::dsb();
 }
 
 IMPLEMENT inline
@@ -62,7 +62,6 @@ void Mmu::clean_dcache(void const *start, void const *end)
   unsigned long s = reinterpret_cast<unsigned long>(start);
   unsigned long e = reinterpret_cast<unsigned long>(end);
 
-  Mem::dsb();
   __asm__ __volatile__ (
       // arm1176 only: "    mcrr p15, 0, %2, %1, c12         \n"
       "1:  mcr p15, 0, %[i], c7, c10, 1   \n" // DCCMVAC
@@ -85,7 +84,6 @@ void Mmu::flush_dcache(void const *start, void const *end)
   unsigned long s = reinterpret_cast<unsigned long>(start);
   unsigned long e = reinterpret_cast<unsigned long>(end);
 
-  Mem::dsb();
   __asm__ __volatile__ (
       "1:  mcr p15, 0, %[i], c7, c14, 1 \n" // Clean and Invalidate Data Cache Line (using MVA) Register
       "    add %[i], %[i], %[clsz]      \n"
@@ -107,7 +105,6 @@ void Mmu::inv_dcache(void const *start, void const *end)
   unsigned long s = reinterpret_cast<unsigned long>(start);
   unsigned long e = reinterpret_cast<unsigned long>(end);
 
-  Mem::dsb();
   __asm__ __volatile__ (
       "1:  mcr p15, 0, %[i], c7, c6, 1  \n" // Invalidate Data Cache Line (using MVA) Register
       "    add %[i], %[i], %[clsz]      \n"
@@ -127,32 +124,32 @@ IMPLEMENTATION [arm && (arm_mpcore || arm_1136 || arm_1176)]:
 IMPLEMENT inline ALWAYS_INLINE
 void Mmu::flush_cache()
 {
-  Mem::dsb();
   __asm__ __volatile__ (
       "    mcr p15, 0, r0, c7, c14, 0       \n" // Clean and Invalidate Entire Data Cache Register
       "    mcr p15, 0, r0, c7, c5, 0        \n" // Invalidate Entire Instruction Cache Register
       : : : "memory");
   btc_inv();
+  Mem::dsb();
 }
 
 IMPLEMENT
 void Mmu::clean_dcache()
 {
-  Mem::dsb();
   __asm__ __volatile__ (
       "    mcr p15, 0, r0, c7, c10, 0       \n" // Clean Entire Data Cache Register
       : : : "memory");
   btc_inv();
+  Mem::dsb();
 }
 
 IMPLEMENT
 void Mmu::flush_dcache()
 {
-  Mem::dsb();
   __asm__ __volatile__ (
       "    mcr p15, 0, r0, c7, c14, 0       \n" // Clean and Invalidate Entire Data Cache Register
       : : : "memory");
   btc_inv();
+  Mem::dsb();
 }
 
 //-----------------------------------------------------------------------------
