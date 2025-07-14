@@ -26,7 +26,7 @@ cov_membuf_init()
   const size_t membuf_size = CONFIG_COV_OUTPUT_MEMBUF_SIZE;
 
   membuf_ptr = static_cast<char*>(Kmem_mmio::map(membuf_start_phys, membuf_size,
-                                                 Kmem_mmio::Map_attr::Cached());
+                                                 Kmem_mmio::Map_attr::Cached()));
   membuf_end = &membuf_ptr[membuf_size];
 
   printf("COVERAGE: Using memory buffer at %#lx - %#lx (size %#zx)\n",
