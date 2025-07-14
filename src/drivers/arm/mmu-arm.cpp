@@ -119,14 +119,16 @@ void Mmu::clean_dcache(void const *start, void const *end)
     clean_dcache();
   else
     {
+      unsigned long ds = dcache_line_size();
+      auto s = reinterpret_cast<unsigned long>(start) & ~(ds - 1);
+      auto e = (reinterpret_cast<unsigned long>(end) + ds - 1) & ~(ds - 1);
       asm volatile (
-	  "    bic  %0, %0, %2 - 1         \n"
 	  "1:  mcr  p15, 0, %0, c7, c10, 1 \n"
 	  "    add  %0, %0, %2             \n"
 	  "    cmp  %0, %1                 \n"
-	  "    blo  1b                     \n"
+	  "    bne  1b                     \n"
 	  "    mcr  p15, 0, %0, c7, c10, 4 \n" // drain WB: CP15DSB
-	  : : "r" (start), "r" (end), "i" (dcache_line_size())
+	  : : "r" (s), "r" (e), "i" (ds)
 	  );
     }
 }
@@ -145,14 +147,16 @@ void Mmu::flush_dcache(void const *start, void const *end)
     flush_dcache();
   else
     {
+      unsigned long ds = dcache_line_size();
+      auto s = reinterpret_cast<unsigned long>(start) & ~(ds - 1);
+      auto e = (reinterpret_cast<unsigned long>(end) + ds - 1) & ~(ds - 1);
       asm volatile (
-	  "    bic  %0, %0, %2 - 1         \n"
 	  "1:  mcr  p15, 0, %0, c7, c14, 1 \n"
 	  "    add  %0, %0, %2             \n"
 	  "    cmp  %0, %1                 \n"
-	  "    blo  1b                     \n"
+	  "    bne  1b                     \n"
 	  "    mcr  p15, 0, %0, c7, c10, 4 \n" // drain WB: CP15DSB
-	  : : "r" (start), "r" (end), "i" (dcache_line_size())
+	  : : "r" (s), "r" (e), "i" (ds)
 	  );
     }
 }
@@ -161,13 +165,15 @@ void Mmu::flush_dcache(void const *start, void const *end)
 IMPLEMENT
 void Mmu::inv_dcache(void const *start, void const *end)
 {
+  unsigned long ds = dcache_line_size();
+  auto s = reinterpret_cast<unsigned long>(start) & ~(ds - 1);
+  auto e = (reinterpret_cast<unsigned long>(end) + ds - 1) & ~(ds - 1);
   asm volatile (
-	  "    bic  %0, %0, %2 - 1         \n"
 	  "1:  mcr  p15, 0, %0, c7, c6, 1  \n"
 	  "    add  %0, %0, %2             \n"
 	  "    cmp  %0, %1                 \n"
-	  "    blo  1b                     \n"
-	  : : "r" (start), "r" (end), "i" (dcache_line_size())
+	  "    bne  1b                     \n"
+	  : : "r" (s), "r" (e), "i" (ds)
 	  );
 }
 

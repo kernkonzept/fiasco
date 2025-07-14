@@ -20,19 +20,22 @@ Mword Mmu::icache_line_size()
 IMPLEMENTATION [arm && arm_v6plus]:
 
 IMPLEMENT inline ALWAYS_INLINE
-void Mmu::flush_cache(void const *start,
-				       void const *end)
+void Mmu::flush_cache(void const *start, void const *end)
 {
-  unsigned long s = reinterpret_cast<unsigned long>(start);
-  unsigned long e = reinterpret_cast<unsigned long>(end);
-  unsigned long is = icache_line_size(), ds = dcache_line_size();
+  unsigned long ds = dcache_line_size();
+  auto s = reinterpret_cast<unsigned long>(start) & ~(ds - 1U);
+  auto e = (reinterpret_cast<unsigned long>(end) + ds - 1U) & ~(ds - 1);
 
-  for (unsigned long i = s & ~(ds - 1U); i < e; i += ds)
+  for (unsigned long i = s; i != e; i += ds)
     __asm__ __volatile__ ("mcr p15, 0, %0, c7, c14, 1" : : "r"(i));  // DCCIMVAC
 
   Mem::dsb(); // make sure data cache changes are visible to instruction cache
 
-  for (unsigned long i = s & ~(is - 1U); i < e; i += is)
+  unsigned long is = icache_line_size();
+  s = reinterpret_cast<unsigned long>(start) & ~(is - 1U);
+  e = (reinterpret_cast<unsigned long>(end) + is - 1U) & ~(is - 1U);
+
+  for (unsigned long i = s; i != e; i += is)
     __asm__ __volatile__ (
         "mcr p15, 0, %0, c7, c5, 1   \n"  // ICIMVAU
         "mcr p15, 0, %0, c7, c5, 7   \n"  // BPIMVA
@@ -55,18 +58,21 @@ void Mmu::clean_dcache(void const *va)
 IMPLEMENT inline
 void Mmu::clean_dcache(void const *start, void const *end)
 {
+  unsigned long ds = dcache_line_size();
+  unsigned long s = reinterpret_cast<unsigned long>(start);
+  unsigned long e = reinterpret_cast<unsigned long>(end);
+
   Mem::dsb();
   __asm__ __volatile__ (
       // arm1176 only: "    mcrr p15, 0, %2, %1, c12         \n"
       "1:  mcr p15, 0, %[i], c7, c10, 1   \n" // DCCMVAC
       "    add %[i], %[i], %[clsz]        \n"
       "    cmp %[i], %[end]               \n"
-      "    blo 1b                         \n"
+      "    bne 1b                         \n"
       : [i]     "=&r" (start)
-      :         "0"   (reinterpret_cast<unsigned long>(start)
-                       & ~(dcache_line_size() - 1)),
-        [end]   "r"   (end),
-	[clsz]  "ir"  (dcache_line_size())
+      :         "0"   (s & ~(ds - 1)),
+        [end]   "r"   ((e + ds - 1) & ~(ds - 1)),
+	[clsz]  "ir"  (ds)
       : "memory");
   btc_inv();
   Mem::dsb();
@@ -75,17 +81,20 @@ void Mmu::clean_dcache(void const *start, void const *end)
 IMPLEMENT
 void Mmu::flush_dcache(void const *start, void const *end)
 {
+  unsigned long ds = dcache_line_size();
+  unsigned long s = reinterpret_cast<unsigned long>(start);
+  unsigned long e = reinterpret_cast<unsigned long>(end);
+
   Mem::dsb();
   __asm__ __volatile__ (
       "1:  mcr p15, 0, %[i], c7, c14, 1 \n" // Clean and Invalidate Data Cache Line (using MVA) Register
       "    add %[i], %[i], %[clsz]      \n"
       "    cmp %[i], %[end]             \n"
-      "    blo 1b                       \n"
+      "    bne 1b                       \n"
       : [i]    "=&r" (start)
-      :        "0"   (reinterpret_cast<unsigned long>(start)
-                      & ~(dcache_line_size() - 1)),
-        [end]  "r"   (end),
-	[clsz] "ir"  (dcache_line_size())
+      :        "0"   (s & ~(ds - 1)),
+        [end]  "r"   ((e + ds - 1) & ~(ds - 1)),
+	[clsz] "ir"  (ds)
       : "memory");
   btc_inv();
   Mem::dsb();
@@ -94,17 +103,20 @@ void Mmu::flush_dcache(void const *start, void const *end)
 IMPLEMENT
 void Mmu::inv_dcache(void const *start, void const *end)
 {
+  unsigned long ds = dcache_line_size();
+  unsigned long s = reinterpret_cast<unsigned long>(start);
+  unsigned long e = reinterpret_cast<unsigned long>(end);
+
   Mem::dsb();
   __asm__ __volatile__ (
       "1:  mcr p15, 0, %[i], c7, c6, 1  \n" // Invalidate Data Cache Line (using MVA) Register
       "    add %[i], %[i], %[clsz]      \n"
       "    cmp %[i], %[end]             \n"
-      "    blo 1b                       \n"
+      "    bne 1b                       \n"
       : [i]    "=&r" (start)
-      :        "0"   (reinterpret_cast<unsigned long>(start)
-                      & ~(dcache_line_size() - 1)),
-        [end]  "r"   (end),
-	[clsz] "ir"  (dcache_line_size())
+      :        "0"   (s & ~(ds - 1)),
+        [end]  "r"   ((e + ds - 1) & ~(ds - 1)),
+	[clsz] "ir"  (ds)
       : "memory");
   btc_inv();
   Mem::dsb();
