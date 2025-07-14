@@ -125,7 +125,7 @@ void Mmu::clean_dcache(void const *start, void const *end)
 	  "    add  %0, %0, %2             \n"
 	  "    cmp  %0, %1                 \n"
 	  "    blo  1b                     \n"
-	  "    mcr  p15, 0, %0, c7, c10, 4 \n" // drain WB
+	  "    mcr  p15, 0, %0, c7, c10, 4 \n" // drain WB: CP15DSB
 	  : : "r" (start), "r" (end), "i" (dcache_line_size())
 	  );
     }
@@ -151,7 +151,7 @@ void Mmu::flush_dcache(void const *start, void const *end)
 	  "    add  %0, %0, %2             \n"
 	  "    cmp  %0, %1                 \n"
 	  "    blo  1b                     \n"
-	  "    mcr  p15, 0, %0, c7, c10, 4 \n" // drain WB
+	  "    mcr  p15, 0, %0, c7, c10, 4 \n" // drain WB: CP15DSB
 	  : : "r" (start), "r" (end), "i" (dcache_line_size())
 	  );
     }
@@ -272,7 +272,7 @@ void Mmu::flush_cache()
       "     bne 1b                      \n"
       "     mov r0, #0                  \n"
       "     mcr  p15, 0, r0, c7, c7, 0  \n"
-      "     mcr  p15, 0, r0, c7, c10, 4 \n" // drain WB
+      "     mcr  p15, 0, r0, c7, c10, 4 \n" // drain WB: CP15DSB
       : "=r" (dummy)
       : "r" (Mem_layout::Cache_flush_area), "i" (dcache_line_size())
       : "r0"
@@ -288,7 +288,7 @@ void Mmu::clean_dcache()
       " 1:  ldr r0, [%1], %2  \n"
       "     teq %1, %0        \n"
       "     bne 1b            \n"
-      "     mcr  p15, 0, r0, c7, c10, 4 \n" // drain WB
+      "     mcr  p15, 0, r0, c7, c10, 4 \n" // drain WB: CP15DSB
       : "=r" (dummy)
       : "r" (Mem_layout::Cache_flush_area), "i" (dcache_line_size())
       : "r0"
@@ -306,7 +306,7 @@ void Mmu::flush_dcache()
       "     bne 1b                      \n"
       "     mov  r0, #0                 \n"
       "     mcr  p15, 0, r0, c7, c6, 0  \n" // inv D cache
-      "     mcr  p15, 0, r0, c7, c10, 4 \n" // drain WB
+      "     mcr  p15, 0, r0, c7, c10, 4 \n" // drain WB: CP15DSB
       : "=r" (dummy)
       : "r" (Mem_layout::Cache_flush_area), "i" (dcache_line_size())
       : "r0"
@@ -325,13 +325,13 @@ void Mmu::flush_cache()
   asm volatile
     (
      // write back data cache
-     " 1: mcr p15, 0, %0, c7, c2, 5                      \n\t"
-     "    add %0, %0, #32                                \n\t"
-     "    subs %1, %1, #1                                \n\t"
-     "    bne 1b                                         \n\t"
+     " 1: mcr p15, 0, %0, c7, c2, 5     \n\t"
+     "    add %0, %0, #32               \n\t"
+     "    subs %1, %1, #1               \n\t"
+     "    bne 1b                        \n\t"
      // drain write buffer
-     "    mcr  p15, 0, %0, c7, c7, 0                     \n\t"
-     "    mcr p15, 0, r0, c7, c10, 4                     \n\t"
+     "    mcr  p15, 0, %0, c7, c7, 0    \n\t"
+     "    mcr p15, 0, r0, c7, c10, 4    \n\t" // drain WB: CP15DSB
      :
      "=r" (dummy1),
      "=r" (dummy2)
@@ -348,12 +348,12 @@ void Mmu::clean_dcache()
   asm volatile
     (
      // write back data cache
-     " 1: mcr p15, 0, %0, c7, c2, 5                      \n\t"
-     "    add %0, %0, #32                                \n\t"
-     "    subs %1, %1, #1                                \n\t"
-     "    bne 1b                                         \n\t"
+     " 1: mcr p15, 0, %0, c7, c2, 5     \n\t"
+     "    add %0, %0, #32               \n\t"
+     "    subs %1, %1, #1               \n\t"
+     "    bne 1b                        \n\t"
      // drain write buffer
-     "    mcr p15, 0, r0, c7, c10, 4                     \n\t"
+     "    mcr p15, 0, r0, c7, c10, 4    \n\t" // drain WB: CP15DSB
      :
      "=r" (dummy1),
      "=r" (dummy2)
@@ -370,13 +370,13 @@ void Mmu::flush_dcache()
   asm volatile
     (
      // write back data cache
-     " 1: mcr p15, 0, %0, c7, c2, 5                      \n\t"
-     "    add %0, %0, #32                                \n\t"
-     "    subs %1, %1, #1                                \n\t"
-     "    bne 1b                                         \n\t"
-     "    mcr  p15, 0, %0, c7, c6, 0                     \n\t" // inv D cache
+     " 1: mcr p15, 0, %0, c7, c2, 5     \n\t"
+     "    add %0, %0, #32               \n\t"
+     "    subs %1, %1, #1               \n\t"
+     "    bne 1b                        \n\t"
+     "    mcr  p15, 0, %0, c7, c6, 0    \n\t" // inv D cache
      // drain write buffer
-     "    mcr p15, 0, r0, c7, c10, 4                     \n\t"
+     "    mcr p15, 0, r0, c7, c10, 4    \n\t" // drain WB: CP15DSB
      :
      "=r" (dummy1),
      "=r" (dummy2)
@@ -422,11 +422,11 @@ void Mmu::flush_cache()
   asm volatile
     (
      // write back data cache
-     "1:  mrc p15, 0, r15, c7, c14, 3                    \n\t"
-     "    bne 1b                                         \n\t"
+     "1:  mrc p15, 0, r15, c7, c14, 3   \n\t"
+     "    bne 1b                        \n\t"
      // drain write buffer
-     "    mcr p15, 0, %0, c7, c7, 0                      \n\t"
-     "    mcr p15, 0, %0, c7, c10, 4                     \n\t"
+     "    mcr p15, 0, %0, c7, c7, 0     \n\t"
+     "    mcr p15, 0, %0, c7, c10, 4    \n\t" // drain WB: CP15DSB
      : :
      "r" (0)
     );
@@ -438,10 +438,10 @@ void Mmu::clean_dcache()
   asm volatile
     (
      // write back data cache
-     "1:  mrc p15, 0, r15, c7, c14, 3                    \n\t"
-     "    bne 1b                                         \n\t"
+     "1:  mrc p15, 0, r15, c7, c14, 3   \n\t"
+     "    bne 1b                        \n\t"
      // drain write buffer
-     "    mcr p15, 0, %0, c7, c10, 4                     \n\t"
+     "    mcr p15, 0, %0, c7, c10, 4    \n\t" // drain WB: CP15DSB
      : :
      "r" (0)
     );
@@ -453,11 +453,11 @@ void Mmu::flush_dcache()
   asm volatile
     (
      // write back data cache
-     "1:  mrc p15, 0, r15, c7, c14, 3                    \n\t"
-     "    bne 1b                                         \n\t"
-     "    mcr  p15, 0, %0, c7, c6, 0                     \n\t" // inv D cache
+     "1:  mrc p15, 0, r15, c7, c14, 3   \n\t"
+     "    bne 1b                        \n\t"
+     "    mcr  p15, 0, %0, c7, c6, 0    \n\t" // inv D cache
      // drain write buffer
-     "    mcr p15, 0, %0, c7, c10, 4                     \n\t"
+     "    mcr p15, 0, %0, c7, c10, 4    \n\t" // drain WB: CP15DSB
      : :
      "r" (0)
     );

@@ -72,11 +72,11 @@ void Mem_space::make_current(Switchin_flags)
 {
   asm volatile (
       "mcr p15, 0, %2, c7, c5, 6    \n" // bt flush
-      "mcr p15, 0, r0, c7, c10, 4   \n" // dsb
+      "mcr p15, 0, r0, c7, c10, 4   \n" // CP15DSB
       "mcr p15, 0, %0, c2, c0       \n" // set TTBR0
-      "mcr p15, 0, r0, c7, c10, 4   \n" // dsb
+      "mcr p15, 0, r0, c7, c10, 4   \n" // CP15DSB
       "mcr p15, 0, %1, c13, c0, 1   \n" // set new ASID value
-      "mcr p15, 0, r0, c7, c5, 4    \n" // isb
+      "mcr p15, 0, r0, c7, c5, 4    \n" // CP15ISB
       "mcr p15, 0, %2, c7, c5, 6    \n" // bt flush
       "mrc p15, 0, r1, c2, c0       \n"
       "mov r1, r1                   \n"

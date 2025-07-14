@@ -139,7 +139,7 @@ void Proc::halt()
   Status f = cli_save();
   asm volatile("mov     r0, #0                                              \n\t"
                "mrc     p15, 0, r1, c1, c0, 0       @ Read control register \n\t"
-               "mcr     p15, 0, r0, c7, c10, 4      @ Drain write buffer    \n\t"
+               "mcr     p15, 0, r0, c7, c10, 4      @ drain WB: CP15DSB     \n\t"
                "bic     r2, r1, #1 << 12                                    \n\t"
                "mcr     p15, 0, r2, c1, c0, 0       @ Disable I cache       \n\t"
                "mcr     p15, 0, r0, c7, c0, 4       @ Wait for interrupt    \n\t"
@@ -163,7 +163,7 @@ IMPLEMENT static inline
 void Proc::halt()
 {
   Status f = cli_save();
-  asm volatile("mcr     p15, 0, r0, c7, c10, 4  @ DWB/DSB \n\t"
+  asm volatile("mcr     p15, 0, r0, c7, c10, 4  @ drain WB: CP15DSB \n\t"
                "mcr     p15, 0, r0, c7, c0, 4   @ WFI \n\t");
   sti_restore(f);
 }
@@ -179,7 +179,7 @@ IMPLEMENT static inline
 void Proc::halt()
 {
   Status f = cli_save();
-  asm volatile("mcr     p15, 0, r0, c7, c10, 4  @ DWB/DSB \n\t"
+  asm volatile("mcr     p15, 0, r0, c7, c10, 4  @ drain WB: CP15DSB \n\t"
                "wfi \n\t");
   sti_restore(f);
 }
