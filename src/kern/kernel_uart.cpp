@@ -71,11 +71,6 @@ Filter_console *
 Kernel_uart::fcon()
 { return _fcon; }
 
-IMPLEMENT_DEFAULT inline
-bool
-Kernel_uart::init_for_mode(Init_mode init_mode)
-{ return (int)init_mode == Bsp_init_mode; }
-
 PUBLIC static
 bool
 Kernel_uart::init(Init_mode init_mode = Init_before_mmu)

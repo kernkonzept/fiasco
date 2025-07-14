@@ -63,7 +63,7 @@ IMPLEMENTATION [libuart && serial]:
 
 static DEFINE_GLOBAL_CONSTINIT Global_data<Regs> regs;
 
-IMPLEMENT_OVERRIDE
+IMPLEMENT
 bool
 Kernel_uart::init_for_mode(Init_mode init_mode)
 {
