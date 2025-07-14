@@ -5,10 +5,31 @@ INTERFACE:
 class Kmem_mmio
 {
 public:
-  static void *map(Address phys, size_t size, bool cache = false,
-                   bool exec = false, bool global = true, bool buffered = false);
+  struct Map_attr : cxx::int_type_base<unsigned, Map_attr>,
+                    cxx::int_bit_ops<Map_attr>
+  {
+    constexpr explicit Map_attr(unsigned v)
+    : cxx::int_type_base<unsigned, Map_attr>(v) {}
+
+    /** Map the extent as CPU-local instead of global. */
+    static constexpr Map_attr Local() { return Map_attr(0x1); }
+    /** Map the extent as executable. */
+    static constexpr Map_attr Exec() { return Map_attr(0x2); }
+    /** Map the extent as buffered but Cached has precedence. */
+    static constexpr Map_attr Buffered() { return Map_attr(0x4); }
+    /** Map the extent as cached. Overrides Buffered. */
+    static constexpr Map_attr Cached() { return Map_attr(0xc); }
+
+    constexpr bool is_local() const { return _v & 0x1; }
+    constexpr bool is_exec() const { return _v & 0x2; }
+    constexpr bool is_cached() const { return _v & 0xc; }
+    constexpr bool is_buffered() const { return _v & 0x4; }
+  };
+
+  static void *map(Address phys, size_t size, Map_attr = Map_attr(0));
   static void unmap(void *ptr, size_t size);
 };
+
 
 INTERFACE[mmu]:
 
@@ -262,23 +283,16 @@ Kmem_mmio::map_extent(Address phys_adj, uintptr_t virt, size_t size_adj,
  *       requested, the existing mapping is returned instead of establishing
  *       a new mapping.
  *
- * \param phys      Physical address of the extent to be mapped.
- * \param size      Size of the extent to be mapped.
- * \param cache     Map the extent as cached. The 'cache' parameter has
- *                  precedence over the 'buffered' parameter.
- *                  'cached' are mutually exclusive.
- * \param exec      Map the extent as executable.
- * \param global    Map the extent as global.
- * \param buffered  Map the extent as "buffered". The 'cache' parameter has
- *                  precedence over the 'buffered' parameter.
+ * \param phys  Physical address of the extent to be mapped.
+ * \param size  Size of the extent to be mapped.
+ * \param attr  Map attributes, see Map_attr.
  *
  * \return Pointer to the mapped extent in kernel virtual memory or
  *         #nullptr if the mapping failed.
  */
 IMPLEMENT_DEFAULT
 void *
-Kmem_mmio::map(Address phys, size_t size, bool cache, bool exec, bool global,
-               bool buffered)
+Kmem_mmio::map(Address phys, size_t size, Map_attr map_attr)
 {
   auto guard = lock_guard(&lock);
 
@@ -320,11 +334,13 @@ Kmem_mmio::map(Address phys, size_t size, bool cache, bool exec, bool global,
       level = Kpdir::Super_level;
     }
 
-  Page::Attr attr(exec ? Page::Rights::RWX() : Page::Rights::RW(),
-                  cache ? Page::Type::Normal()
-                        : buffered ? Page::Type::Buffered()
-                                   : Page::Type::Uncached(),
-                  global ? Page::Kern::Global() : Page::Kern::None(),
+  Page::Attr attr(map_attr.is_exec() ? Page::Rights::RWX()
+                                     : Page::Rights::RW(),
+                  map_attr.is_cached() ? Page::Type::Normal()
+                                       : map_attr.is_buffered() ? Page::Type::Buffered()
+                                                                : Page::Type::Uncached(),
+                  map_attr.is_local() ? Page::Kern::None()
+                                      : Page::Kern::Global(),
                   Page::Flags::None());
 
   // Search for existing mapping.

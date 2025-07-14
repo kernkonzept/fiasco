@@ -336,27 +336,26 @@ IMPLEMENT static
 void Fb_console::init()
 {
   // MBI and VBx areas could be mapped cached also
-  auto *mbi
-    = static_cast<l4util_l4mod_info *>(Kmem_mmio::map(Kip::k()->user_ptr,
-                                                      Config::PAGE_SIZE, true));
+  auto *mbi = static_cast<l4util_l4mod_info *>(
+    Kmem_mmio::map(Kip::k()->user_ptr, Config::PAGE_SIZE,
+                   Kmem_mmio::Map_attr::Cached()));
   assert(mbi);
 
   if (mbi->flags & L4UTIL_MB_VIDEO_INFO)
     {
-      auto *vbe
-        = static_cast<l4util_mb_vbe_ctrl_t *>(Kmem_mmio::map(mbi->vbe_ctrl_info,
-                                              Config::PAGE_SIZE, true));
+      auto *vbe = static_cast<l4util_mb_vbe_ctrl_t *>(
+        Kmem_mmio::map(mbi->vbe_ctrl_info, Config::PAGE_SIZE,
+                       Kmem_mmio::Map_attr::Cached()));
       assert(vbe);
-      auto *vbi
-        = static_cast<l4util_mb_vbe_mode_t *>(Kmem_mmio::map(mbi->vbe_mode_info,
-                                              Config::PAGE_SIZE, true));
+      auto *vbi = static_cast<l4util_mb_vbe_mode_t *>(
+        Kmem_mmio::map(mbi->vbe_mode_info, Config::PAGE_SIZE,
+                       Kmem_mmio::Map_attr::Cached()));
       assert(vbi);
 
       // vbi->phys_base + vbi->reserved1 form the 64 bit phys address
       Address fbphys = vbi->phys_base + (static_cast<Unsigned64>(vbi->reserved1) << 32);
       void *fbmem = Kmem_mmio::map(fbphys, vbe->total_memory * (64 << 10),
-                                   false /*cache*/, false /*exec*/,
-                                   true /*global*/, true /*buffered*/);
+                                   Kmem_mmio::Map_attr::Buffered());
       assert(fbmem);
 
       unsigned w = vbi->x_resolution;

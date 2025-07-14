@@ -428,7 +428,7 @@ Acpi::_map_table(Unsigned64 phys, unsigned size)
       return nullptr;
     }
 
-  void *table = Kmem_mmio::map(phys, size, true);
+  void *table = Kmem_mmio::map(phys, size, Kmem_mmio::Map_attr::Cached());
   if (!table)
     {
       printf("ACPI: cannot map phys address %llx, map failed\n",
@@ -502,7 +502,8 @@ Acpi::init_virt()
   if (rsdp->rev && rsdp->xsdt_phys)
     {
       auto x = static_cast<Acpi_xsdt_p const *>(
-        Kmem_mmio::map(rsdp->xsdt_phys, sizeof(Acpi_xsdt_p), true));
+        Kmem_mmio::map(rsdp->xsdt_phys, sizeof(Acpi_xsdt_p),
+                       Kmem_mmio::Map_attr::Cached()));
       if (!x)
         WARN("ACPI: Could not map XSDT\n");
       else
@@ -529,7 +530,8 @@ Acpi::init_virt()
   if (rsdp->rsdt_phys)
     {
       auto r = static_cast<Acpi_rsdt_p const *>(
-        Kmem_mmio::map(rsdp->rsdt_phys, sizeof(Acpi_rsdt_p), true));
+        Kmem_mmio::map(rsdp->rsdt_phys, sizeof(Acpi_rsdt_p),
+                       Kmem_mmio::Map_attr::Cached()));
       if (!r)
         WARN("ACPI: Could not map RSDT\n");
       else

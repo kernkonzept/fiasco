@@ -98,7 +98,10 @@ Jdb_kern_info_bench::show_arch()
   // need cached, non-global mapping for measuring the time to load TLB entries
   Address phys =
     Kmem::virt_to_phys(reinterpret_cast<void*>(Mem_layout::Tbuf_status_page));
-  void *bench_page = Kmem_mmio::map(phys, Config::PAGE_SIZE, true, true, false);
+  void *bench_page = Kmem_mmio::map(phys, Config::PAGE_SIZE,
+                                    Kmem_mmio::Map_attr::Local()
+                                    | Kmem_mmio::Map_attr::Cached()
+                                    | Kmem_mmio::Map_attr::Exec());
   if (!bench_page)
     {
       printf("Couldn't map benchmark page!\n");

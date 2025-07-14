@@ -5,7 +5,7 @@ IMPLEMENTATION [arm && mpu]:
 
 IMPLEMENT_DEFAULT
 void *
-Kmem_mmio::map(Address phys, size_t size, bool cache = false, bool, bool, bool)
+Kmem_mmio::map(Address phys, size_t size, Map_attr map_attr)
 {
   // Arm MPU regions must be aligned to 64 bytes
   Address start = phys & ~63UL;
@@ -16,8 +16,9 @@ Kmem_mmio::map(Address phys, size_t size, bool cache = false, bool, bool, bool)
   auto diff = Kmem::kdir->add(
     start, end,
     Mpu_region_attr::make_attr(L4_fpage::Rights::RW(),
-                               cache ? L4_snd_item::Memory_type::Normal()
-                                     : L4_snd_item::Memory_type::Uncached()));
+                               map_attr.is_cached()
+                                 ? L4_snd_item::Memory_type::Normal()
+                                 : L4_snd_item::Memory_type::Uncached()));
   assert(diff);
   Mpu::sync(*Kmem::kdir, diff.value());
   Mem::isb();
