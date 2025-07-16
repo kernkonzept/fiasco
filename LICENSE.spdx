@@ -15,6 +15,7 @@ Relationship: SPDXRef-DOCUMENT DESCRIBES SPDXRef-fiasco-regex
 Relationship: SPDXRef-DOCUMENT DESCRIBES SPDXRef-fiasco-gcov
 Relationship: SPDXRef-DOCUMENT DESCRIBES SPDXRef-fiasco-cov-llvm
 Relationship: SPDXRef-DOCUMENT DESCRIBES SPDXRef-fiasco-libc
+Relationship: SPDXRef-DOCUMENT DESCRIBES SPDXRef-fiasco-libfdt
 
 ## Package Information
 PackageName: fiasco
@@ -117,6 +118,16 @@ PackageCopyrightText: NOASSERTION
 PackageDownloadLocation: NOASSERTION
 PackageComment: <text>This package is a subset of the libmusl.</text>
 
+PackageName: fiasco-libfdt
+SPDXID: SPDXRef-fiasco-libfdt
+PackageFileName: ./src/lib/libfdt
+PackageOriginator: Organization: Kernkonzept GmbH (info@kernkonzept.com)
+PackageLicenseDeclared: GPL-2.0-or-later OR BSD-2-Clause
+PackageLicenseConcluded: GPL-2.0-or-later OR BSD-2-Clause
+FilesAnalyzed: false
+PackageCopyrightText: NOASSERTION
+PackageDownloadLocation: NOASSERTION
+
 Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-capstone
 Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-gzip
 Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-quad
@@ -126,3 +137,4 @@ Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-simple-malloc
 Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-gcov
 Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-cov-llvm
 Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-libc
+Relationship: SPDXRef-fiasco CONTAINS SPDXRef-fiasco-libfdt
