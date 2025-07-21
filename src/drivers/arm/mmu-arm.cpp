@@ -97,7 +97,7 @@ void Mmu::inv_dcache(void const *, void const *)
   for (unsigned long index = 0; index < (1 << (32 - 26)); ++index)
     for (unsigned long seg = 0; seg < 256; seg += 32)
       asm volatile("mcr p15, 0, %0, c7, c14, 2" : : "r" ((index << 26) | seg));
-  asm volatile ("mcr  p15, 0, %0, c7, c10, 4"); // drain WB: CP15DSB
+  asm volatile ("mcr  p15, 0, r0, c7, c10, 4"); // drain WB: CP15DSB
 #else
   // invalidate dcache --- all
   asm volatile("mcr p15, 0, %0, c7, c6, 0  \n"
