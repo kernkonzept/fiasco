@@ -456,6 +456,22 @@ Jdb_kern_info_cpu::show_features()
       Unsigned32 eax, ebx, ecx, edx;
       Cpu::cpuid(i, 0, &eax, &ebx, &ecx, &edx);
       printf("     %08xH: %08x %08x %08x %08x\n", i, eax, ebx, ecx, edx);
+      if (i == 0x7) // extended features
+        for (unsigned c = 1; c <= 2; ++c)
+          {
+            Cpu::cpuid(i, c, &eax, &ebx, &ecx, &edx);
+            if (eax == 0 && ebx == 0 && ecx == 0 && edx == 0)
+              break; // invalid sub-leaf
+            printf("         ecx=%u: %08x %08x %08x %08x\n", c, eax, ebx, ecx, edx);
+          }
+      else if (i == 0xb || i == 0x1f) // extended topology
+        for (unsigned c = 1; c < 7; ++c)
+          {
+            Cpu::cpuid(i, c, &eax, &ebx, &ecx, &edx);
+            if (eax == 0 && ebx == 0)
+              break; // invalid domain
+            printf("         ecx=%u: %08x %08x %08x %08x\n", c, eax, ebx, ecx, edx);
+          }
       if (i == max && max < 0x80000000U)
         {
           i = 0x80000000 - 1;
