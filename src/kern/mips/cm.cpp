@@ -451,7 +451,7 @@ Cm::init()
 
   // FIXME: support some kind of io-reap for the kernel
   if (v >= 0x02000000)
-    panic("GCR base out of unmapped KSEG(>512 MB phys): %08lx\n", v);
+    panic("GCR base out of unmapped KSEG(>512 MiB phys): %08lx\n", v);
 
   auto gcr_phys = Phys_mem_addr(v);
 

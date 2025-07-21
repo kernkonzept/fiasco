@@ -322,7 +322,7 @@ Gic_redist::cpu_init_lpi()
   lpi_config_table.make_coherent();
 
   // Each bit in the pending table represents the pending state of one LPI.
-  // The first 1 KB is reserved for the pending state of SGIs/PPIs/SPIs.
+  // The first 1 KiB is reserved for the pending state of SGIs/PPIs/SPIs.
   unsigned lpi_pending_table_size = (1U << num_lpi_intid_bits) / 8;
   // Zero initialize pending table, no LPIs are pending.
   _lpi_pending_table = Gic_mem::alloc_zmem(lpi_pending_table_size,

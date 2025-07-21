@@ -410,10 +410,10 @@ Cpu::first_boot(bool is_boot_cpu)
           unsigned ps = 0;
           switch (Mword{Config::PAGE_SIZE})
             {
-            case 0x1000: // try to enable 4 KB pages in FTLB
+            case 0x1000: // try to enable 4 KiB pages in FTLB
               ps = 1;
               break;
-            case 0x4000: // try to enable 16 KB pages in FTLB
+            case 0x4000: // try to enable 16 KiB pages in FTLB
               ps = 2;
               break;
             default:

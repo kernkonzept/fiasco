@@ -611,7 +611,7 @@ public:
 
   Mword next_level() const
   {
-    // 1 KB second level tables
+    // 1 KiB second level tables
     return cxx::mask_lsb(access_once(pte), 10);
   }
 
@@ -626,7 +626,7 @@ public:
   unsigned char page_order() const
   {
     if (level == 0)
-      return 20; // 1 MB
+      return 20; // 1 MiB
     else
       { // no tiny pages
         if ((*pte & 3) == 1)

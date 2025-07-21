@@ -21,7 +21,7 @@ public:
 
   enum
   {
-    Kmem_size     = 8*1024*1024, //8 MB
+    Kmem_size     = 8*1024*1024,
     Htab_entries  = 8, //number of entries in page-table-entry group
                        //, min=1, max=8
   };

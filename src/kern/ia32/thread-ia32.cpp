@@ -402,7 +402,7 @@ bool
 Thread::handle_sigma0_page_fault(Address pfa)
 {
   Mem_space::Page_order order = mem_space()->largest_page_size();
-                                // take a page size less than 16 MB (1<<24)
+                                // take a page size less than 16 MiB (1<<24)
   Virt_addr va = Virt_addr(pfa);
 
   va = cxx::mask_lsb(va, order);

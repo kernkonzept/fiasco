@@ -436,7 +436,7 @@ static void
 pdir_map_range(Address pml4_pa, Address la, Address pa,
 	       Unsigned32 size, Unsigned32 mapping_bits)
 {
-  assert(la+size-1 > la); // avoid 4 GB wrap around
+  assert(la+size-1 > la); // avoid 4 GiB wrap around
 
   while (size > 0)
     {
@@ -478,7 +478,7 @@ pdir_map_range(Address pml4_pa, Address la, Address pa,
 	    {
 	      Unsigned64 *pde = find_pde(*pdpe & INTEL_PDPE_PFN, la);
 
-	      /* Use a 2 MB page if we can.  */
+	      /* Use a 2 MiB page if we can.  */
 	      if (superpage_aligned(la) && superpage_aligned(pa)
 		  && (size >= SUPERPAGE_SIZE))
 		{
@@ -509,7 +509,7 @@ pdir_map_range(Address pml4_pa, Address la, Address pa,
 		  assert(!(*pde & INTEL_PDE_SUPERPAGE));
 
 
-		  /* Use normal 4 KB page mappings.  */
+		  /* Use normal 4 KiB page mappings.  */
 		  do
 		    {
 		      Unsigned64 *pte = find_pte(*pde & INTEL_PDE_PFN, la);
@@ -538,7 +538,7 @@ base_paging_init(void)
 {
   ptab_alloc(&base_pml4_pa);
 
-  // Establish one-to-one mappings for the first 4 MB of physical memory
+  // Establish one-to-one mappings for the first 4 MiB of physical memory
   pdir_map_range(base_pml4_pa, /*virt*/0, /*phys*/0, /*size*/4 << 20,
 		 INTEL_PDE_VALID | INTEL_PDE_WRITE | INTEL_PDE_USER);
 
@@ -569,7 +569,7 @@ base_map_physical_memory_for_kernel()
          Mem_layout::pmem_to_phys(Mem_layout::Physmem) + sz,
          Mem_layout::Physmem,
          Mem_layout::Physmem + sz);
-  // map in the last 60 MB of physical memory to 0xfc400000
+  // map in the last 60 MiB of physical memory to 0xfc400000
   pdir_map_range(base_pml4_pa,
                  /*virt*/Mem_layout::Physmem,
                  /*phys*/Mem_layout::pmem_to_phys(Mem_layout::Physmem),

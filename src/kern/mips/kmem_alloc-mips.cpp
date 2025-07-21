@@ -24,7 +24,7 @@ Kmem_alloc::Kmem_alloc()
 
   unsigned long alloc_size = determine_kmem_alloc_size(available_size);
 
-  // limit to the lower 512 MB region to make sure it is mapped in KSEG0
+  // limit to the lower 512 MiB region to make sure it is mapped in KSEG0
   unsigned long max_addr = 512UL << 20;
 
   for (unsigned i = 0; alloc_size && i < map.length(); ++i)

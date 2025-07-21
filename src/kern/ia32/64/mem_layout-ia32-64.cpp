@@ -17,26 +17,26 @@ public:
 
   enum : Mword
   {
-    Kentry_start      = 0xffff810000000000UL, ///< 512 GB slot 258
-    Kentry_cpu_page   = 0xffff817fffffc000UL, ///< last 16 KB in slot 258
+    Kentry_start      = 0xffff810000000000UL, ///< 512 GiB slot 258
+    Kentry_cpu_page   = 0xffff817fffffc000UL, ///< last 16 KiB in slot 258
 
-    Caps_start        = 0xffff818000800000UL,  ///< 512 GB slot 259
-    Caps_end          = 0xffff81800c400000UL,    ///< % 4 MB
+    Caps_start        = 0xffff818000800000UL,  ///< 512 GiB slot 259
+    Caps_end          = 0xffff81800c400000UL,  ///< % 4 MiB
 
-    Utcb_addr         = 0x0000007fff000000UL,    ///< % 4 KB UTCB map address
+    Utcb_addr         = 0x0000007fff000000UL,  ///< % 4 KiB UTCB map address
     User_max          = 0x00007fffffffffffUL,
 
-    Kglobal_area      = 0xffffffff00000000UL,    ///< % 1 GB to share 1 GB tables (start)
-    Kglobal_area_end  = 0xffffffff80000000UL,    ///< % 1 GB to share 1 GB tables (end)
+    Kglobal_area      = 0xffffffff00000000UL,  ///< % 1 GiB to share 1 GiB tables (start)
+    Kglobal_area_end  = 0xffffffff80000000UL,  ///< % 1 GiB to share 1 GiB tables (end)
 
     // Service area: 0xffffffff'00000000 ... 0xffffffff'00400000 (4 MiB)
-    Service_page      = Kglobal_area,            ///< % 4 MB global mappings
-    Jdb_tmp_map_page  = Service_page + 0x2000,   ///< % 4 KB
-    Tbuf_status_page  = Service_page + 0x6000,   ///< % 4 KB
-    Tbuf_buffer_area  = Service_page + 0x200000, ///< % 2 MB
+    Service_page      = Kglobal_area,            ///< % 4 MiB global mappings
+    Jdb_tmp_map_page  = Service_page + 0x2000,   ///< % 4 KiB
+    Tbuf_status_page  = Service_page + 0x6000,   ///< % 4 KiB
+    Tbuf_buffer_area  = Service_page + 0x200000, ///< % 2 MiB
     Tbuf_buffer_size  = 0x200000,
 
-    Tss_start         = Service_page + 0x400000, ///< % 4 MB
+    Tss_start         = Service_page + 0x400000, ///< % 4 MiB
     Tss_end           = Service_page + 0xc000000,
 
     Mmio_map_start    = Kglobal_area + 0xc000000UL,
@@ -52,16 +52,16 @@ public:
                            ? Kernel_image
                            : Kernel_image + Kernel_image_size,
 
-    Adap_vram_mda_beg = Adap_image + 0xb0000, ///< % 8 KB video RAM MDA memory
+    Adap_vram_mda_beg = Adap_image + 0xb0000, ///< % 8 KiB video RAM MDA memory
     Adap_vram_mda_end = Adap_image + 0xb8000,
-    Adap_vram_cga_beg = Adap_image + 0xb8000, ///< % 8 KB video RAM CGA memory
+    Adap_vram_cga_beg = Adap_image + 0xb8000, ///< % 8 KiB video RAM CGA memory
     Adap_vram_cga_end = Adap_image + 0xc0000,
 
     // used for CPU_LOCAL_MAP only
     Kentry_cpu_pdir   = 0xfffffffff0800000UL,
 
-    Physmem           = 0xffffffff10000000UL,    ///< % 4 MB   kernel memory
-    Physmem_end       = 0xffffffffe0000000UL,    ///< % 4 MB   kernel memory
+    Physmem           = 0xffffffff10000000UL, ///< % 4 MiB kernel memory
+    Physmem_end       = 0xffffffffe0000000UL, ///< % 4 MiB kernel memory
     Physmem_max_size  = Physmem_end - Physmem,
   };
 

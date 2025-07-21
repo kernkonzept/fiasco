@@ -29,9 +29,9 @@ _realmode_startup_pdbr:
    	.align 8
 _realmode_init_gdt:
 	.long 0x00000000, 0x00000000 /* dummy                */
-	.long 0x0000FFFF, 0x00CF9A00 /* r-x/0..4GB/PL0/32bit */
-	.long 0x0000FFFF, 0x00CF9200 /* rw-/0..4GB/PL0/32bit */
-	.long 0x0000FFFF, 0x00AF9B00 /* r-x/0..4GB/PL0/64bit */
+	.long 0x0000FFFF, 0x00CF9A00 /* r-x/0..4GiB/PL0/32bit */
+	.long 0x0000FFFF, 0x00CF9200 /* rw-/0..4GiB/PL0/32bit */
+	.long 0x0000FFFF, 0x00AF9B00 /* r-x/0..4GiB/PL0/64bit */
 
 
 

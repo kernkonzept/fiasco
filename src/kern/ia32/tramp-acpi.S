@@ -20,7 +20,7 @@
  * Acpi wakeup code.
  *
  * We are thrown out of sleep directly into real mode. Therefore we must be
- * below 1 MB! We pack it into the .realmode_tramp section, which starts at
+ * below 1 MiB! We pack it into the .realmode_tramp section, which starts at
  * 0x1000.
  */
   .section .realmode_tramp , "awx", @progbits

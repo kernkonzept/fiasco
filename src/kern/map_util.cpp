@@ -566,11 +566,11 @@ map(MAPDB* mapdb,
   // the mapping data base, and entering a child mapping and a page
   // table entry for the receiver.
 
-  // Special care is taken for 4 MB page table entries we find in the
+  // Special care is taken for 4 MiB page table entries we find in the
   // sender's address space: If what we will create in the receiver is
-  // not a 4MB-mapping, too, we have to find the correct parent
+  // not a 4MiB-mapping, too, we have to find the correct parent
   // mapping for the new mapping database entry: This is the sigma0
-  // mapping for all addresses != the 4 MB page base address.
+  // mapping for all addresses != the 4 MiB page base address.
 
   // When overmapping an existing page, flush the interfering
   // physical page in the receiver, even if it is larger than the

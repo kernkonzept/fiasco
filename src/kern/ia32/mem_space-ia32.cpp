@@ -510,10 +510,10 @@ Mem_space::init_page_sizes()
 {
   add_page_size(Page_order(Config::PAGE_SHIFT));
   if (Cpu::cpus.cpu(Cpu_number::boot_cpu()).superpages())
-    add_page_size(Page_order(21)); // 2 MB
+    add_page_size(Page_order(21)); // 2 MiB
 
   if (Cpu::cpus.cpu(Cpu_number::boot_cpu()).ext_8000_0001_edx() & (1UL<<26))
-    add_page_size(Page_order(30)); // 1 GB
+    add_page_size(Page_order(30)); // 1 GiB
 }
 
 // --------------------------------------------------------------------
@@ -532,7 +532,7 @@ Mem_space::init_page_sizes()
 {
   add_page_size(Page_order(Config::PAGE_SHIFT));
   if (Cpu::cpus.cpu(Cpu_number::boot_cpu()).superpages())
-    add_page_size(Page_order(22)); // 4 MB
+    add_page_size(Page_order(22)); // 4 MiB
 }
 
 //----------------------------------------------------------------------------

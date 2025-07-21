@@ -313,7 +313,7 @@ Paging::init()
   Mem_unit::context(0);
 
   /*
-   * Map as many 16 MB chunks (1st level page table entries)
+   * Map as many 16 MiB chunks (1st level page table entries)
    * as possible.
    */
   enum { Superpage_size = 1 << Pte_ptr::Pdir_shift };

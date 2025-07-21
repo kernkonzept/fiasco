@@ -34,7 +34,7 @@ Kmem_alloc::Kmem_alloc()
 	  /* init buddy allocator with physical addresses */
 	  a->init(r.start);
 	  a->add_mem((void*)r.start, alloc_size);
-	  printf("Buddy allocator at: [%08lx; %08lx] - %lu KB\n",
+	  printf("Buddy allocator at: [%08lx; %08lx] - %lu KiB\n",
 	         r.start, r.end, alloc_size / 1024);
 	  break;
 	}

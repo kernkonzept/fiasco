@@ -349,7 +349,7 @@ Jdb_kern_info_cpu::show_features()
     "fpu (fpu on chip)",
     "vme (virtual-8086 mode enhancements)",
     "de (I/O breakpoints)",
-    "pse (4MB pages)",
+    "pse (4MiB pages)",
     "tsc (rdtsc instruction)",
     "msr (rdmsr/rdwsr instructions)",
     "pae (physical address extension)",

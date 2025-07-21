@@ -158,7 +158,7 @@ Kmem::map_initial_ram()
   // We also set up a one-to-one virt-to-phys mapping for two reasons:
   // (1) so that we switch to the new page table early and re-use the
   //     segment descriptors set up by boot_cpu.cc.  (we'll set up our
-  //     own descriptors later.) we only need the first 4 MB for that.
+  //     own descriptors later.) we only need the first 4 MiB for that.
   // (2) a one-to-one phys-to-virt mapping in the kernel's page directory
   //     sometimes comes in handy (mostly useful for debugging).
 
@@ -180,7 +180,7 @@ Kmem::map_initial_ram()
                              Page::Kern::None(), Page::Flags::Touched()),
                   Pdir::Depth, false, pdir_alloc(alloc));
 
-  // The rest of the first 4M is RW (2x2M on amd64, 1x4M on x86)
+  // The rest of the first 4MiB is RW (2x2MiB on amd64, 1x4MiB on x86)
   ok &= kdir->map(FIASCO_BDA_PAGE + Config::PAGE_SIZE,
                   Virt_addr(FIASCO_BDA_PAGE + Config::PAGE_SIZE),
                   Virt_size(Config::SUPERPAGE_SIZE - FIASCO_BDA_PAGE
@@ -383,7 +383,7 @@ Kmem::init_mmu()
                                Page::Kern::Global(), Page::Flags::Touched()),
                     Pt_entry::super_level(), false, pdir_alloc(alloc));
 
-  // map the last 64 MB of physical memory as kernel memory
+  // map the last 64 MiB of physical memory as kernel memory
   ok &= kdir->map(Mem_layout::pmem_to_phys(Mem_layout::Physmem),
                   Virt_addr(Mem_layout::Physmem), Virt_size(Mem_layout::pmem_size),
                   Page::Attr(Page::Rights::RW(), Page::Type::Normal(),
@@ -770,9 +770,9 @@ Kmem::init_cpu(Cpu &cpu)
   write_now(dst.pte, *src.pte);
 
   static_assert ((Kglobal_area & ((1UL << 30) - 1)) == 0,
-                 "Kglobal area must be 1 GB aligned");
+                 "Kglobal area must be 1 GiB aligned");
   static_assert ((Kglobal_area_end & ((1UL << 30) - 1)) == 0,
-                 "Kglobal area must be 1 GB aligned");
+                 "Kglobal area must be 1 GiB aligned");
 
   for (unsigned i = 0; i < ((Kglobal_area_end - Kglobal_area) >> 30); ++i)
     {
@@ -823,7 +823,7 @@ Kmem::init_cpu(Cpu &cpu)
                 }
 
               if constexpr (Print_info)
-                printf("physmem sync(2M): va:%16lx pte:%16lx\n", a, *src.pte);
+                printf("physmem sync(2MiB): va:%16lx pte:%16lx\n", a, *src.pte);
 
               write_now(dst.pte, *src.pte);
             }
@@ -831,7 +831,7 @@ Kmem::init_cpu(Cpu &cpu)
         }
       else
         {
-          // copy a 1 GB slot
+          // copy a 1 GiB slot
           auto src = kdir->walk(Virt_addr(a), 1);
           if (src.level != 1)
             panic("could not setup per-cpu page table, invalid source mapping: %d\n", __LINE__);
@@ -847,17 +847,17 @@ Kmem::init_cpu(Cpu &cpu)
               if (dst.is_valid())
                 {
                   assert (*dst.pte == *src.pte);
-                  i += 512; // skip 512 2MB entries == 1G
+                  i += 512; // skip 512 2MiB entries == 1GiB
                   continue;
                 }
 
               if constexpr (Print_info)
-                printf("physmem sync(1G): va:%16lx pte:%16lx\n", a, *src.pte);
+                printf("physmem sync(1GiB): va:%16lx pte:%16lx\n", a, *src.pte);
 
               write_now(dst.pte, *src.pte);
             }
 
-          i += 512; // skip 512 2MB entries == 1G
+          i += 512; // skip 512 2MiB entries == 1G
         }
     }
 

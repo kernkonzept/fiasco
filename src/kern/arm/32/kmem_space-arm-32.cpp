@@ -6,7 +6,7 @@ IMPLEMENTATION [arm && mmu]:
 
 namespace Boot_paging
 {
-  // always 16 KB also for LPAE we use 4 consecutive second level tables
+  // always 16 KiB also for LPAE we use 4 consecutive second level tables
   constexpr unsigned Kernel_pdir_size = 4 * Config::PAGE_SIZE;
 }
 

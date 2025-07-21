@@ -1,5 +1,5 @@
 === NEW TEST ===
-Page = 4 KB, Superpage = 4 MB
+Page = 4 KiB, Superpage = 4 MiB
 have_superpages = yes
 
 MAP sigma0[64K/page] -> server[ALL:page]

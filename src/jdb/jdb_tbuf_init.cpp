@@ -52,7 +52,7 @@ void Jdb_tbuf_init::init()
 
       // Must be a power of 2 for performance reasons and because the buffer
       // pointer is determined by binary AND of size-1. Also use a sane upper
-      // limit which fits into 4 GB. The allocate function limits the buffer to
+      // limit which fits into 4 GiB. The allocate function limits the buffer to
       // the available window in the virtual memory layout.
       for (n = Config::PAGE_SIZE / sizeof(Tb_entry_union);
            n < want_entries && n < max_size();

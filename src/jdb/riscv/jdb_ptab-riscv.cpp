@@ -45,7 +45,7 @@ Jdb_ptab_pdir<T>::print_entry_addr(T_pte_ptr const &entry) const
 {
   Address phys = entry_phys(entry);
   if (entry.level != T::Depth && entry.is_leaf())
-    // 4 MB page entry
+    // 4 MiB page entry
     printf("%03lx/4", phys >> entry.page_order());
   else
     // point to 4K page (leaf in lowest level or point to next level)

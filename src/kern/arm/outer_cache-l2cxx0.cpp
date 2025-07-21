@@ -257,6 +257,6 @@ Outer_cache::show_info(unsigned ways, Mword cache_id, Mword aux)
     }
 
   unsigned waysize = 16 << (((aux >> 17) & 7) - 1);
-  printf("L2: Type L2C-%s Size = %d KB  Ways=%d Waysize=%d\n",
+  printf("L2: Type L2C-%s Size = %d KiB  Ways=%d Waysize=%d\n",
          type, ways * waysize, ways, waysize);
 }

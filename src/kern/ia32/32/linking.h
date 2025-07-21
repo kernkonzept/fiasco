@@ -1,7 +1,7 @@
 #pragma once
 
 // no memory mapped at 0...FIASCO_MP_TRAMP_PAGE
-#define FIASCO_MP_TRAMP_PAGE     0x8000  // must be below 1 MB
+#define FIASCO_MP_TRAMP_PAGE     0x8000  // must be below 1 MiB
 #define FIASCO_BDA_PAGE          (FIASCO_MP_TRAMP_PAGE + 0x1000)
 #define FIASCO_IMAGE_PHYS_START  0x400000
 #define FIASCO_IMAGE_VIRT_START  0xf0000000

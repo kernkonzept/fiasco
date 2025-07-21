@@ -367,7 +367,7 @@ Mem_space::htab_size(Mword ram)
   if(ram != 1UL << log2)
     log2++;
 
-  //min is 64 KB
+  //min is 64 KiB
   log2 = (log2 < 16)? 16: log2;
   return 1UL << log2;
 }
@@ -419,7 +419,7 @@ Mem_space::install()
 		" mtsdr1 %[sdr1]    \n" //set SDR1
 		" isync             \n"
 		" mtsr 15, %[vsid]  \n" //set kernel space
-		                        //(last 256 MB of address space)
+		                        //(last 256 MiB of address space)
 		:
 		: [sdr1]"r" (_htaborg | _htabmask),
 		  [vsid]"r" (kernel_vsid)
@@ -436,7 +436,7 @@ Mem_space::init()
 
    install();
 
-   printf("Htab  installed at: [%08lx; %08lx] - %lu KB\n",
+   printf("Htab  installed at: [%08lx; %08lx] - %lu KiB\n",
           _htaborg, _htaborg + alloc_size - 1, alloc_size/1024);
 }
 

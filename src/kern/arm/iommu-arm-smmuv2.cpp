@@ -201,7 +201,7 @@ private:
     CXX_BITFIELD_MEMBER_RO(0, 7, numcb, raw);
     /// Number of page index bits. #pages = 2^(#page_index_bits+1)
     CXX_BITFIELD_MEMBER_RO(28, 30, numpagendxb, raw);
-    /// SMMU page size: 0 -> 4 KB, 1 -> 64 KB.
+    /// SMMU page size: 0 -> 4 KiB, 1 -> 64 KiB.
     CXX_BITFIELD_MEMBER_RO(31, 31, pagesize, raw);
   };
   struct Idr2 : public Smmu_reg_ro<Idr2, Rs::Gr0, 0x028>
@@ -817,7 +817,7 @@ Iommu::setup(Version version, void *base_addr, unsigned mask)
 
   // NUMPAGE = 2 ^ (NUMPAGENDXB + 1)
   unsigned num_pages = 1 << (idr1.numpagendxb() + 1);
-  // SMMU register space page size is either 4 KB or 64 KB.
+  // SMMU register space page size is either 4 KiB or 64 KiB.
   unsigned pageshift = idr1.pagesize() ? 16 : 12;
   unsigned pagesize = 1 << pageshift;
 
