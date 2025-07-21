@@ -548,7 +548,7 @@ base_paging_init(void)
                  Mem_layout::Kernel_image_size,
                  INTEL_PDE_VALID | INTEL_PDE_WRITE | INTEL_PDE_USER);
 
-  // Adapter memory needs a seperate mapping
+  // Adapter memory needs a separate mapping
   if (!Mem_layout::Adap_in_kernel_image)
     // map in the adapter memory (superpage) of physical memory to ...
     pdir_map_range(base_pml4_pa, /*virt*/Mem_layout::Adap_image,
