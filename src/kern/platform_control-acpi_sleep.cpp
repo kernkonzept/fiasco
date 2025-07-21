@@ -60,7 +60,7 @@ Platform_control::init(Cpu_number cpu)
   phys_wake_vector = reinterpret_cast<Address>(_tramp_acpi_wakeup);
   if (phys_wake_vector >= 1UL << 20)
     {
-      printf("ACPI: invalid wake vector (1MB): %lx\n", phys_wake_vector);
+      printf("ACPI: invalid wake vector (1 MB): %lx\n", phys_wake_vector);
       return;
     }
 

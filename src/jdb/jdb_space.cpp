@@ -194,13 +194,13 @@ Jdb_space::show(Task *t)
            m->u_addr.get(), m->k_addr, m->size, Jdb::clear_to_eol_str());
 
   unsigned long m = t->ram_quota()->current();
-  printf("  mem usage: %lu (%luKB) ", m, m/1024);
+  printf("  mem usage: %lu (%lu KB) ", m, m/1024);
   if (t->ram_quota()->unlimited())
     printf("-- unlimited%s\n", Jdb::clear_to_eol_str());
   else
     {
       unsigned long l = t->ram_quota()->limit();
-      printf("of %lu (%luKB) @%p%s\n", l, l/1024,
+      printf("of %lu (%lu KB) @%p%s\n", l, l/1024,
              static_cast<void *>(t->ram_quota()), Jdb::clear_to_eol_str());
     }
 

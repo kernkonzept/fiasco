@@ -23,7 +23,7 @@ public:
     Tbuf_end             = 0xec200000,
     Mmio_map_start       = 0xed000000,
     Mmio_map_end         = 0xef000000,
-    Map_base             = 0xf0000000, ///< % 80MB kernel memory
+    Map_base             = 0xf0000000, ///< % 80 MB kernel memory
     Map_end              = 0xf5000000,
     Caps_start           = 0xf5000000,
     Caps_end             = 0xfd000000,

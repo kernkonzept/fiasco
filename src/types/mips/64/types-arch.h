@@ -28,7 +28,7 @@ static constexpr unsigned ARCH_PAGE_SHIFT = 14;
 #elif defined CONFIG_MIPS_PAGE_SIZE_4K
 static constexpr unsigned ARCH_PAGE_SHIFT = 12;
 #else
-#  error "MIPS page size must be 16KB or 4KB"
+#  error "MIPS page size must be 16 KB or 4 KB"
 #endif
 
 typedef Signed32 Small_atomic_int;

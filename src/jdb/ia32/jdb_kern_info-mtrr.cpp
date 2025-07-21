@@ -49,7 +49,7 @@ Jdb_kern_info_mtrr::show_fixed_mtrr(Msr msr, unsigned size_kb, unsigned addr)
 
   Unsigned64 value;
   if (Jdb::rdmsr(msr, &value))
-    printf("  %05x (%2ukB): %s %s %s %s %s %s %s %s\n",
+    printf("  %05x (%2u KB): %s %s %s %s %s %s %s %s\n",
            addr, size_kb,
            typestr[(value >> 56) & 7],
            typestr[(value >> 48) & 7],

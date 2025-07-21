@@ -436,7 +436,7 @@ Mem_space::init()
 
    install();
 
-   printf("Htab  installed at: [%08lx; %08lx] - %lu KB\n", 
+   printf("Htab  installed at: [%08lx; %08lx] - %lu KB\n",
           _htaborg, _htaborg + alloc_size - 1, alloc_size/1024);
 }
 

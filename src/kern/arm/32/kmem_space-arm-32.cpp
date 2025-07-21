@@ -2,7 +2,7 @@ IMPLEMENTATION [arm && mmu]:
 
 #include "kmem.h"
 
-// always 16kB also for LPAE we use 4 consecutive second level tables
+// always 16 KB also for LPAE we use 4 consecutive second level tables
 union
 {
   Kpdir kpdir;

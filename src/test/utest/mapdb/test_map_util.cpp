@@ -164,8 +164,7 @@ Mapdb_util_test::test_map_util()
 
   static_assert(S_super >= _1M, "Adapt test for smaller superpage size");
 
-  pr_tag("Page = %ldKB, Superpage = %ldMB\n",
-         S_page >> 10, S_super >> 20);
+  pr_tag("Page = %ld KB, Superpage = %ld MB\n", S_page >> 10, S_super >> 20);
 
   // Support for pages > superpage is optional.
   printf(" largest_page_size = %d\n",

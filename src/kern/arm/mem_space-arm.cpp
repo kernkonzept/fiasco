@@ -755,7 +755,7 @@ void
 Mem_space::init_page_sizes()
 {
   add_page_size(Page_order(Config::PAGE_SHIFT));
-  add_page_size(Page_order(20)); // 1MB
+  add_page_size(Page_order(20)); // 1 MB
 }
 
 //----------------------------------------------------------------------------
@@ -937,8 +937,8 @@ void
 Mem_space::init_page_sizes()
 {
   add_page_size(Page_order(Config::PAGE_SHIFT));
-  add_page_size(Page_order(21)); // 2MB
-  add_page_size(Page_order(30)); // 1GB
+  add_page_size(Page_order(21)); // 2 MB
+  add_page_size(Page_order(30)); // 1 GB
 }
 
 //-----------------------------------------------------------------------------
@@ -949,9 +949,9 @@ void
 Mem_space::init_page_sizes()
 {
   add_page_size(Page_order(Config::PAGE_SHIFT));
-  add_page_size(Page_order(21)); // 2MB
-  add_page_size(Page_order(30)); // 1GB
-  add_page_size(Page_order(39)); // 512GB
+  add_page_size(Page_order(21)); // 2 MB
+  add_page_size(Page_order(30)); // 1 GB
+  add_page_size(Page_order(39)); // 512 GB
 }
 
 //-----------------------------------------------------------------------------
@@ -998,5 +998,5 @@ void
 Mem_space::init_page_sizes()
 {
   add_page_size(Page_order(Config::PAGE_SHIFT));
-  add_page_size(Page_order(21)); // 2MB
+  add_page_size(Page_order(21)); // 2 MB
 }

@@ -17,7 +17,7 @@ IMPLEMENTATION [riscv && riscv_sv39]:
 // + 1 x L1 for identity mapping of kernel
 // + 1 x L1 for virtual mapping of kernel
 // + 1 x L1 for MMIO page directory
-// + 4 x L1 for pmem (up to 4GB)
+// + 4 x L1 for pmem (up to 4 GB)
 enum { Num_boot_pages = 8 };
 
 IMPLEMENTATION [riscv && riscv_sv48]:
@@ -25,7 +25,7 @@ IMPLEMENTATION [riscv && riscv_sv48]:
 // + 1 x L1 + 1 x L2 for identity mapping of kernel
 // + 1 x L1 + 1 x L2 for virtual mapping of kernel
 // + 1 x L1 + 1 x L2 for MMIO page directory
-// + 1 x L1 + 4 x L2 for pmem (up to 4GB)
+// + 1 x L1 + 4 x L2 for pmem (up to 4 GB)
 enum { Num_boot_pages = 12 };
 
 //----------------------------------------------------------------------------

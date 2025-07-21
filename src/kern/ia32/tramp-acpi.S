@@ -16,12 +16,12 @@
 
 /* (c) 2013 Steffen Liebergeld <steffen.liebergeld@kernkonzept.com> */
 
-/* 
+/*
  * Acpi wakeup code.
- * 
+ *
  * We are thrown out of sleep directly into real mode. Therefore we must be
- * below 1MB! We pack it into the .realmode_tramp section, which starts at
- * 0x1000. 
+ * below 1 MB! We pack it into the .realmode_tramp section, which starts at
+ * 0x1000.
  */
   .section .realmode_tramp , "awx", @progbits
 

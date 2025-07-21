@@ -129,7 +129,7 @@ struct _Kmem_alloc<true, SIZE, ALIGN> : Kmem_buddy_for_size<SIZE>
  *
  * This allocator uses _Kmem_alloc<> to select between a slab allocator or
  * the buddy allocator depending on the given size of the objects.
- * (Currently all objects bigger that 1KB (0x400) are allocated using the
+ * (Currently all objects bigger that 1 KB (0x400) are allocated using the
  * buddy allocator.)
  *
  * \attention Must not be destroyed during runtime because Kmem_slab is not SMP

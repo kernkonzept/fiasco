@@ -22,8 +22,8 @@ public:
     Tcbs_end             = 0xe0000000,
     __free_1_start       = 0xec000000,
     __free_1_end         = 0xed000000,
-    Htab                 = 0xee000000, ///< % 32MB hashed pgtab
-    Map_base             = 0xf0000000, ///< % 80MB kernel memory
+    Htab                 = 0xee000000, ///< % 32 MB hashed pgtab
+    Map_base             = 0xf0000000, ///< % 80 MB kernel memory
     Map_end              = 0xf5000000,
     Caps_start           = 0xf5000000,
     Caps_end             = 0xfd000000,
@@ -116,7 +116,7 @@ Mem_layout::init()
 	  Kip::k()->add_mem_region(Mem_desc(r.start, r.end,
 	                                    Mem_desc::Reserved));
 
-	  printf("TBuf  installed at: [%08lx; %08lx] - %lu KB\n", 
+	  printf("TBuf  installed at: [%08lx; %08lx] - %lu KB\n",
 	         r.start, r.end, alloc_size / 1024);
 
 	  Tbuf_buffer_area = Tbuf_ubuffer_area = r.start;

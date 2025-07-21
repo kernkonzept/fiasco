@@ -395,7 +395,7 @@ pdir_map_range(Address pdir_pa, Address la, Address pa,
     {
       Address *pde = pdir_find_pde(pdir_pa, la);
 
-      /* Use a 4MB page if we can.  */
+      /* Use a 4 MB page if we can.  */
       if (superpage_aligned(la) && superpage_aligned(pa)
 	  && (size >= SUPERPAGE_SIZE)
 	  && (cpu_feature_flags & CPUF_4MB_PAGES))
@@ -429,7 +429,7 @@ pdir_map_range(Address pdir_pa, Address la, Address pa,
 	  assert(!(*pde & INTEL_PDE_SUPERPAGE));
 	  pte = ptab_find_pte(*pde & INTEL_PDE_PFN, la);
 
-	  /* Use normal 4KB page mappings.  */
+	  /* Use normal 4 KB page mappings.  */
 	  do
 	    {
 	      assert(!(*pte & INTEL_PTE_VALID));
@@ -451,11 +451,11 @@ pdir_map_range(Address pdir_pa, Address la, Address pa,
 void
 base_paging_init(void)
 {
-  // We assume that we only have to map the first 4MB page. This has
+  // We assume that we only have to map the first 4 MB page. This has
   // to be checked before base_paging_init was called.
   ptab_alloc(&base_pdir_pa);
 
-  // Establish one-to-one mapping for the first 4MB of physical memory
+  // Establish one-to-one mapping for the first 4 MB of physical memory
   pdir_map_range(base_pdir_pa, /*virt*/0, /*phys*/0, /*size*/4 << 20,
 		 INTEL_PDE_VALID | INTEL_PDE_WRITE | INTEL_PDE_USER);
 
@@ -489,7 +489,7 @@ void
 base_map_physical_memory_for_kernel()
 {
   unsigned long sz = Mem_layout::pmem_size;
-  // map in the last 60MB of physical memory to 0xfc400000
+  // map in the last 60 MB of physical memory to 0xfc400000
   pdir_map_range(base_pdir_pa,
                  /*virt*/Mem_layout::Physmem,
                  /*phys*/Mem_layout::pmem_to_phys(Mem_layout::Physmem),

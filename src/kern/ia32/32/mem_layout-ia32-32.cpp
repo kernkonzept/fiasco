@@ -17,25 +17,25 @@ public:
 
   enum : Mword
   {
-    Utcb_addr         = 0xbff00000,    ///< % 4KB   UTCB map address
-    Kip_auto_map      = 0xbfff2000,    ///< % 4KB
+    Utcb_addr         = 0xbff00000,    ///< % 4 KB   UTCB map address
+    Kip_auto_map      = 0xbfff2000,    ///< % 4 KB
     User_max          = 0xbfffffff,
 
     // Service area: 0xeac00000 ... eb000000 (4MiB)
-    Service_page      = 0xeac00000,    ///< % 4MB   global mappings
-    Jdb_tmp_map_page  = Service_page + 0x2000,   ///< % 4KB
-    Tbuf_status_page  = Service_page + 0x6000,   ///< % 4KB
-    Jdb_bts_area      = Service_page + 0xf000,   ///< % 4KB size 0x81000
+    Service_page      = 0xeac00000,              ///< % 4 MB   global mappings
+    Jdb_tmp_map_page  = Service_page + 0x2000,   ///< % 4 KB
+    Tbuf_status_page  = Service_page + 0x6000,   ///< % 4 KB
+    Jdb_bts_area      = Service_page + 0xf000,   ///< % 4 KB size 0x81000
 
-    Idt               = Service_page + 0xfe000,  ///< % 4KB
-    Syscalls          = Service_page + 0xff000,  ///< % 4KB syscall page
-    Tbuf_buffer_area  = Service_page + 0x200000, ///< % 2MB
+    Idt               = Service_page + 0xfe000,  ///< % 4 KB
+    Syscalls          = Service_page + 0xff000,  ///< % 4 KB syscall page
+    Tbuf_buffer_area  = Service_page + 0x200000, ///< % 2 MB
     Tbuf_buffer_size  = 0x200000,
-    // 0xeb800000-0xec000000 (8MB) free
+    // 0xeb800000-0xec000000 (8 MB) free
     Mmio_map_start      = 0xec000000,
     Mmio_map_end        = 0xef800000,
 
-    Tss_start           = 0xef800000,    ///< % 4MB
+    Tss_start           = 0xef800000,    ///< % 4 MB
     Tss_end             = 0xf0000000,
 
     Vmem_end            = 0xf0000000,
@@ -48,15 +48,15 @@ public:
                            ? Kernel_image
                            : Kernel_image + Kernel_image_size,
 
-    Adap_vram_mda_beg = Adap_image + 0xb0000, ///< % 8KB video RAM MDA memory
+    Adap_vram_mda_beg = Adap_image + 0xb0000, ///< % 8 KB video RAM MDA memory
     Adap_vram_mda_end = Adap_image + 0xb8000,
-    Adap_vram_cga_beg = Adap_image + 0xb8000, ///< % 8KB video RAM CGA memory
+    Adap_vram_cga_beg = Adap_image + 0xb8000, ///< % 8 KB video RAM CGA memory
     Adap_vram_cga_end = Adap_image + 0xc0000,
 
-    Caps_start        = 0xf0800000,    ///< % 4MB
-    Caps_end          = 0xf3000000,    ///< % 4MB == Caps_start + (1<<20) * 4
-    Physmem           = 0xfc400000,    ///< % 4MB   kernel memory
-    Physmem_end       = 0x00000000,    ///< % 4MB   kernel memory
+    Caps_start        = 0xf0800000,    ///< % 4 MB
+    Caps_end          = 0xf3000000,    ///< % 4 MB == Caps_start + (1<<20) * 4
+    Physmem           = 0xfc400000,    ///< % 4 MB   kernel memory
+    Physmem_end       = 0x00000000,    ///< % 4 MB   kernel memory
     Physmem_max_size  = Physmem_end - Physmem,
   };
 

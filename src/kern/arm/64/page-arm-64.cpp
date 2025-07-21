@@ -39,7 +39,7 @@ public:
     Ttbcr_bits =   (1UL << 31) | (1UL << 23) // RES1
                  | (Tcr_attribs <<  8) // (IRGN0)
                  | (16UL <<  0) // (T0SZ) Address space size 48bits (64 - 16)
-                 | (0UL  << 14) // (TG0)  Page granularity 4kb
+                 | (0UL  << 14) // (TG0)  Page granularity 4 KB
                  | (5UL  << 16) // (PS)   Physical address size 48bits
   };
 
@@ -80,8 +80,8 @@ public:
                  | (Tcr_attribs << 24) // (IRGN1)
                  | (16UL <<  0) // (T0SZ) Address space size 48bits (64 - 16)
                  | (16UL << 16) // (T1SZ) Address space size 48bits (64 - 16)
-                 | (0UL  << 14) // (TG0)  Page granularity 4kb
-                 | (2UL  << 30) // (TG1)  Page granularity 4kb
+                 | (0UL  << 14) // (TG0)  Page granularity 4 KB
+                 | (2UL  << 30) // (TG1)  Page granularity 4 KB
                  | (5UL  << 32) // (IPS)  Physical address size 48bits
                                 // (AS)   ASID Size
                  | ((Mem_unit::Asid_bits == 16 ? 1UL : 0UL) << 36)

@@ -2733,7 +2733,7 @@ Vmx::Vmx(Cpu_number cpu)
       return;
     }
 
-  // allocate a 4kb aligned region for VMXON
+  // allocate a 4 KB aligned region for VMXON
   // FIXME: MUST NOT PANIC ON CPU HOTPLUG
   check(_vmxon = Kmem_alloc::allocator()->alloc(Order(12)));
 

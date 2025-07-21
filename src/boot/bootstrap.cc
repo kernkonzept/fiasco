@@ -104,7 +104,7 @@ bootstrap()
           Mem_layout::Kernel_image);
 
   if (reinterpret_cast<Address>(&_end) - Mem_layout::Kernel_image > Mem_layout::Kernel_image_size)
-    panic("Fiasco boot system occupies more than %luMB",
+    panic("Fiasco boot system occupies more than %lu MB",
           Mem_layout::Kernel_image_size / (1024 * 1024));
 
   base_map_physical_memory_for_kernel();

@@ -158,7 +158,7 @@ Kmem::map_initial_ram()
   // We also set up a one-to-one virt-to-phys mapping for two reasons:
   // (1) so that we switch to the new page table early and re-use the
   //     segment descriptors set up by boot_cpu.cc.  (we'll set up our
-  //     own descriptors later.) we only need the first 4MB for that.
+  //     own descriptors later.) we only need the first 4 MB for that.
   // (2) a one-to-one phys-to-virt mapping in the kernel's page directory
   //     sometimes comes in handy (mostly useful for debugging).
 
@@ -383,7 +383,7 @@ Kmem::init_mmu()
                                Page::Kern::Global(), Page::Flags::Touched()),
                     Pt_entry::super_level(), false, pdir_alloc(alloc));
 
-  // map the last 64MB of physical memory as kernel memory
+  // map the last 64 MB of physical memory as kernel memory
   ok &= kdir->map(Mem_layout::pmem_to_phys(Mem_layout::Physmem),
                   Virt_addr(Mem_layout::Physmem), Virt_size(Mem_layout::pmem_size),
                   Page::Attr(Page::Rights::RW(), Page::Type::Normal(),
@@ -769,8 +769,10 @@ Kmem::init_cpu(Cpu &cpu)
   auto dst = cpu_dir->walk(Virt_addr(0), 0);
   write_now(dst.pte, *src.pte);
 
-  static_assert ((Kglobal_area & ((1UL << 30) - 1)) == 0, "Kglobal area must be 1GB aligned");
-  static_assert ((Kglobal_area_end & ((1UL << 30) - 1)) == 0, "Kglobal area must be 1GB aligned");
+  static_assert ((Kglobal_area & ((1UL << 30) - 1)) == 0,
+                 "Kglobal area must be 1 GB aligned");
+  static_assert ((Kglobal_area_end & ((1UL << 30) - 1)) == 0,
+                 "Kglobal area must be 1 GB aligned");
 
   for (unsigned i = 0; i < ((Kglobal_area_end - Kglobal_area) >> 30); ++i)
     {
@@ -829,7 +831,7 @@ Kmem::init_cpu(Cpu &cpu)
         }
       else
         {
-          // copy a 1GB slot
+          // copy a 1 GB slot
           auto src = kdir->walk(Virt_addr(a), 1);
           if (src.level != 1)
             panic("could not setup per-cpu page table, invalid source mapping: %d\n", __LINE__);

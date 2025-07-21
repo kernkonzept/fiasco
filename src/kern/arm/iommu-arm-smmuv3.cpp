@@ -155,7 +155,7 @@ private:
   {
     /// Output Address Size.
     CXX_BITFIELD_MEMBER_RO( 0,  2, oas, raw);
-    /// 4KB translation granule supported.
+    /// 4 KB translation granule supported.
     CXX_BITFIELD_MEMBER_RO( 4,  4, gran4k, raw);
     /// Virtual Address eXtend.
     CXX_BITFIELD_MEMBER_RO(10, 11, vax, raw);

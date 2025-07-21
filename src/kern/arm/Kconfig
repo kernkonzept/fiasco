@@ -525,8 +525,8 @@ config ARM_1176_CACHE_ALIAS_FIX
 	depends on ARM_1176
 	help
 	  The ARM1176 processor might have a memory aliasing problem when
-	  using cache sizes of more than 16kB cache. Enabling this option
-	  enables the workaround of reducing the cache size to 16kB.
+	  using cache sizes of more than 16KB cache. Enabling this option
+	  enables the workaround of reducing the cache size to 16 KB.
 
 config ARM_CPU_ERRATA
 	bool "Enable CPU errata workarounds"

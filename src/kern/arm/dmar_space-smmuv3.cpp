@@ -132,8 +132,8 @@ void
 Dmar_space::init_page_sizes()
 {
   add_page_size(Mem_space::Page_order(12));
-  add_page_size(Mem_space::Page_order(21)); // 2MB
-  add_page_size(Mem_space::Page_order(30)); // 1GB
+  add_page_size(Mem_space::Page_order(21)); // 2 MB
+  add_page_size(Mem_space::Page_order(30)); // 1 GB
 }
 
 IMPLEMENT

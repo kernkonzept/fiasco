@@ -63,7 +63,7 @@ Kmem_alloc::base_init()
 
   if constexpr (ShowDebugMessages)
     {
-      printf("Kmem_alloc: available_memory=%lu KB alloc_size=%lu KB\n",
+      printf("Kmem_alloc: available_memory=%luKB alloc_size=%luKB\n",
              available_size / 1024, alloc_size / 1024);
 
       printf("Kmem_alloc: available blocks:\n");

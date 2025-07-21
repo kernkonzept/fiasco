@@ -179,7 +179,7 @@ Mem_space::dir_shutdown()
     attributes.
     @param phys Physical address (page-aligned).
     @param virt Virtual address for which an entry should be created.
-    @param size Size of the page frame -- 4KB or 4MB.
+    @param size Size of the page frame -- 4 KB or 4 MB.
     @param page_attribs Attributes for the mapping (see
                         Mem_space::Page_attrib).
     @return Insert_ok if a new mapping was created;
@@ -310,7 +310,7 @@ Mem_space::virt_to_phys (Address virt) const
                 entry was found (and we return true), this is the size
                 of the page frame.  If no entry was found (and we
                 return false), this is the size of the free slot.  In
-                either case, it is either 4KB or 4MB.
+                either case, it is either 4 KB or 4 MB.
     @return True if an entry was found, false otherwise.
  */
 IMPLEMENT
