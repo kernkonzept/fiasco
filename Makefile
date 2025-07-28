@@ -54,19 +54,20 @@ builddir:
 endif
 
 ifneq ($(strip $(O)),)
+.PHONY: builddir
 builddir:
 	@if [ ! -e "$(O)" ]; then			\
 	  echo "build directory does not exist: '$(O)'";\
 		exit 1;					\
 	fi
-	@$(MAKE) -C $(O)
-
-%:
-	@if [ ! -e "$(O)" ]; then			\
-	  echo "build directory does not exist: '$(O)'";\
-		exit 1;					\
+	@if ! grep -qF "srcdir  := $(CURDIR)/src" $(O)/Makefile 2>/dev/null; \
+	then                                                                 \
+	  echo "builddir '$(O)' not created from this source directory.";    \
+	  exit 1;                                                            \
 	fi
-	@$(MAKE) -C $(O) $@
+	@$(MAKE) -C $(O) $(MAKECMDGOALS)
+
+%: builddir
 endif
 
 ifneq ($(strip $(T)),)
