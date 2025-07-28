@@ -44,7 +44,7 @@ public:
     Kern_lib_base	 = 0xffffe000,
     Syscalls		 = 0xfffff000,
 
-    // Service area: 0xea000000 ... 0xeaffffff (16MiB)
+    // Service area: 0xea000000 ... 0xeaffffff (16 MiB)
     Tbuf_status_page     = 0xea000000,  // page-aligned
     Jdb_tmp_map_area     = 0xea200000,  // superpage-aligned
     Tbuf_buffer_area     = 0xea800000,  // page-aligned

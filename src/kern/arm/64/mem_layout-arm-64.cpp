@@ -32,7 +32,7 @@ public:
 
     Map_base             = 0x0000ffff40000000,
 
-    // Service area: 0x0000ffff50000000 ... 0x0000ffff51ffffff (32MiB)
+    // Service area: 0x0000ffff50000000 ... 0x0000ffff51ffffff (32 MiB)
     Tbuf_status_page     = 0x0000ffff50000000,  // page-aligned
     Jdb_tmp_map_area     = 0x0000ffff50200000,  // superpage-aligned
     Tbuf_buffer_area     = 0x0000ffff51000000,  // page-aligned
@@ -57,7 +57,7 @@ public:
   enum Virt_layout_kern : Address {
     User_max             = 0x0000ff7fffffffff,
 
-    // Service area: 0xffff1000eac00000 ... 0xffff1000ebffffff (20MiB)
+    // Service area: 0xffff1000eac00000 ... 0xffff1000ebffffff (20 MiB)
     Tbuf_status_page     = 0xffff1000eac00000,  // page-aligned
     Jdb_tmp_map_area     = 0xffff1000eae00000,  // superpage-aligned
     Tbuf_buffer_area     = 0xffff1000eb000000,  // page-aligned

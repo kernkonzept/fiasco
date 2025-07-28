@@ -302,7 +302,7 @@ Buddy_t_base<A,B>::dump() const
       total += avail;
     }
 
-  printf("sum of available memory: %luK (%lu)\n", total / 1024, total);
+  printf("sum of available memory: %lu KB (%lu bytes)\n", total / 1024, total);
 }
 
 PUBLIC

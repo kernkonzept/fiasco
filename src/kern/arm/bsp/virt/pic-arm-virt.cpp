@@ -21,7 +21,7 @@ void Pic::init()
 
   Mmio_register_block dist(Kmem_mmio::map(Mem_layout::Gic_dist_phys_base,
                                           Gic_dist::Size));
-  // First, assume GICv2 with a 4KiB region. Also detect KVM's GIC distributor.
+  // First, assume GICv2 with a 4 KiB region. Also detect KVM's GIC distributor.
   if (   (dist.read<Unsigned32>(0xfe8) & 0x0f0) == 0x20
       || (dist.read<Unsigned32>(0x8) & 0xfff00fff) == 0x4b00043b)
     {
@@ -35,7 +35,7 @@ void Pic::init()
     }
   else
     {
-      // Otherwise assume that the distributor region is 64KiB.
+      // Otherwise assume that the distributor region is 64 KiB.
       Unsigned32 pidr2_archrev = dist.read<Unsigned32>(0xffe8) & 0x0f0;
       if (pidr2_archrev == 0x30 || pidr2_archrev == 0x40)
         {

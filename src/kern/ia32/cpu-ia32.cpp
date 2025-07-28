@@ -345,7 +345,7 @@ struct Ia32_intel_microcode
 
     bool checksum_valid() const
     {
-      // must be a multiple of 1KiB
+      // must be a multiple of 1 KiB
       if (total_size() & 0x3ff)
         return false;
 

@@ -29,7 +29,7 @@ public:
     Kglobal_area      = 0xffffffff00000000UL,    ///< % 1 GB to share 1 GB tables (start)
     Kglobal_area_end  = 0xffffffff80000000UL,    ///< % 1 GB to share 1 GB tables (end)
 
-    // Service area: 0xffffffff'00000000 ... 0xffffffff'00400000 (4MiB)
+    // Service area: 0xffffffff'00000000 ... 0xffffffff'00400000 (4 MiB)
     Service_page      = Kglobal_area,            ///< % 4 MB global mappings
     Jdb_tmp_map_page  = Service_page + 0x2000,   ///< % 4 KB
     Tbuf_status_page  = Service_page + 0x6000,   ///< % 4 KB

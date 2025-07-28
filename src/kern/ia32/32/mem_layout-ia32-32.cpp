@@ -21,7 +21,7 @@ public:
     Kip_auto_map      = 0xbfff2000,    ///< % 4 KB
     User_max          = 0xbfffffff,
 
-    // Service area: 0xeac00000 ... eb000000 (4MiB)
+    // Service area: 0xeac00000 ... eb000000 (4 MiB)
     Service_page      = 0xeac00000,              ///< % 4 MB   global mappings
     Jdb_tmp_map_page  = Service_page + 0x2000,   ///< % 4 KB
     Tbuf_status_page  = Service_page + 0x6000,   ///< % 4 KB
