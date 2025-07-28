@@ -31,7 +31,19 @@ public:
   Cpu(Cpu_number id) { set_id(id); }
 
 
-  struct Ids {
+  struct Ids
+  {
+    constexpr bool operator==(Ids const &other) const
+    {
+      return    _pfr[0]  == other._pfr[0]
+             && _pfr[1]  == other._pfr[1]
+             && _dfr0    == other._dfr0
+             && _afr0    == other._afr0
+             && _mmfr[0] == other._mmfr[0]
+             && _mmfr[1] == other._mmfr[1]
+             && _mmfr[2] == other._mmfr[2]
+             && _mmfr[3] == other._mmfr[3];
+    }
     Mword _pfr[2], _dfr0, _afr0, _mmfr[4];
   };
   void id_init();
@@ -97,6 +109,16 @@ private:
   Ids _cpu_id;
 
   bool has_hpmn0() const;
+};
+
+// ------------------------------------------------------------------------
+INTERFACE [debug && arm_v6plus]:
+
+#include "cpu_mask.h"
+
+EXTENSION class Cpu
+{
+  static Global_data<Cpu_mask_t<Config::Max_num_cpus>> _infos_shown;
 };
 
 // ------------------------------------------------------------------------
@@ -868,22 +890,36 @@ KIP_KERNEL_FEATURE("arm:hyp");
 // ------------------------------------------------------------------------
 IMPLEMENTATION [debug && arm_v6plus]:
 
+DEFINE_GLOBAL
+Global_data<Cpu_mask_t<Config::Max_num_cpus>> Cpu::_infos_shown;
+
+PRIVATE
+bool
+Cpu::cpu_infos_shown_with_same_ids(Cpu_number &cpu_with_same_ids) const
+{
+  for (Cpu_number n = Cpu_number::first(); n < Config::max_num_cpus(); ++n)
+    if (_infos_shown->get(n) && cpus.cpu(n)._cpu_id == _cpu_id)
+      {
+        cpu_with_same_ids = n;
+        return true;
+      }
+
+  return false;
+}
+
 IMPLEMENT_OVERRIDE
 void
 Cpu::print_infos() const
 {
-  if (id() == Cpu_number::boot_cpu() || !boot_cpu()
-      || _cpu_id._pfr[0]  != boot_cpu()->_cpu_id._pfr[0]
-      || _cpu_id._pfr[1]  != boot_cpu()->_cpu_id._pfr[1]
-      || _cpu_id._dfr0    != boot_cpu()->_cpu_id._dfr0
-      || _cpu_id._afr0    != boot_cpu()->_cpu_id._afr0
-      || _cpu_id._mmfr[0] != boot_cpu()->_cpu_id._mmfr[0]
-      || _cpu_id._mmfr[1] != boot_cpu()->_cpu_id._mmfr[1]
-      || _cpu_id._mmfr[2] != boot_cpu()->_cpu_id._mmfr[2]
-      || _cpu_id._mmfr[3] != boot_cpu()->_cpu_id._mmfr[3])
-
+  // Put in some effort to reduce logging with many CPUs.
+  int n = cxx::int_value<Cpu_number>(current_cpu());
+  Cpu_number cpu_with_same_ids;
+  if (cpu_infos_shown_with_same_ids(cpu_with_same_ids))
+    printf("CPU%u booted (same IDs as CPU%u).\n",
+           n, cxx::int_value<Cpu_number>(cpu_with_same_ids));
+  else
     {
-      int n = cxx::int_value<Cpu_number>(current_cpu());
+      _infos_shown->atomic_set(id());
       printf("CPU%u: ID_PFR[01]:  %08lx %08lx ID_[DA]FR0: %08lx %08lx\n"
              "%*s ID_MMFR[04]: %08lx %08lx %08lx %08lx\n",
              n, _cpu_id._pfr[0], _cpu_id._pfr[1], _cpu_id._dfr0, _cpu_id._afr0,
