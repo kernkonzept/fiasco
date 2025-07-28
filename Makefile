@@ -59,7 +59,6 @@ builddir:
 	  echo "build directory does not exist: '$(O)'";\
 		exit 1;					\
 	fi
-	@$(call buildmakefile,$(O))
 	@$(MAKE) -C $(O)
 
 %:
@@ -67,7 +66,6 @@ builddir:
 	  echo "build directory does not exist: '$(O)'";\
 		exit 1;					\
 	fi
-	@$(call buildmakefile,$(O))
 	@$(MAKE) -C $(O) $@
 endif
 
