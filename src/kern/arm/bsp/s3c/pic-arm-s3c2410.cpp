@@ -109,7 +109,7 @@ S3c_chip::S3c_chip()
 
 PUBLIC
 void
-S3c_chip::mask(Mword irq)
+S3c_chip::mask(Mword irq) override
 {
   Mword mainirq;
 
