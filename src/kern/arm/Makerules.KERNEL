@@ -9,7 +9,7 @@ tramp-mp.o: $(TCBOFFSET)
 # You really should not have to add anything in the $(LD) line.
 
 OBJ_KERNEL_noboot = $(filter-out bootstrap%,$(OBJ_KERNEL))
-OBJ_BOOTSTRAP = $(filter  bootstrap%,$(OBJ_KERNEL))
+OBJ_BOOTSTRAP = $(filter bootstrap%,$(OBJ_KERNEL))
 
 COVFLAGS_bootstrap-gcc   := -fno-profile-arcs -fno-test-coverage
 COVFLAGS_bootstrap-clang := -fno-profile-instr-generate -fno-coverage-mapping \
@@ -37,9 +37,9 @@ bootstrap_strip    = --strip-all $(addprefix --keep-symbol=,$(bootstrap_export))
 bootstrap_syms     = end_of_bootstrap_info|_start|start_of_loader
 bootstrap_sed      = 's/^0*([0-9a-f]*) [a-zA-Z] ($(bootstrap_syms))/\2 = 0x\1;/p'
 
-bootstrap.$(KERNEL).pre.o: $(OBJ_BOOTSTRAP) $(bootstrap_lds)
+bootstrap.$(KERNEL).pre.o: $(OBJ_BOOTSTRAP) $(bootstrap_lds) libdrivers.a
 	$(LINK_MESSAGE)
-	$(VERBOSE)$(LD) $(bootstrap_ldflags) $(OBJ_BOOTSTRAP) -o $@
+	$(VERBOSE)$(LD) $(bootstrap_ldflags) $(OBJ_BOOTSTRAP) libdrivers.a -o $@
 
 # Make a raw binary. The linker script is already minimal. Only explicitly drop
 # the things that are still unneeded (dynamic symbols) and what is expected to
