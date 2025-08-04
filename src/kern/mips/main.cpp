@@ -81,9 +81,7 @@ extern "C" [[noreturn]] void kernel_main()
   set_exit_question(&exit_question);
 
   // create kernel thread
-  static Kernel_thread *kernel = new (Ram_quota::root) Kernel_thread(Ram_quota::root);
-  Task *const ktask = Kernel_task::kernel_task();
-  kernel->kbind(ktask);
+  Kernel_thread *kernel = Kernel_thread::create_for_boot_cpu();
   assert((reinterpret_cast<Mword>(kernel->init_stack()) & 7) == 0);
 
   register Mword a0 __asm__("a0") = reinterpret_cast<Mword>(kernel);

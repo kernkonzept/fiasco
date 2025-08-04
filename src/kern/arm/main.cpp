@@ -94,9 +94,7 @@ kernel_main()
   //  pic_disable_all();
 
   // create kernel thread
-  Kernel_thread *kernel = new (Ram_quota::root) Kernel_thread(Ram_quota::root);
-  Task *const ktask = Kernel_task::kernel_task();
-  kernel->kbind(ktask);
+  Kernel_thread *kernel = Kernel_thread::create_for_boot_cpu();
   kernel->init_mpu_state();
   assert((reinterpret_cast<Mword>(kernel->init_stack()) & 7) == 0);
 

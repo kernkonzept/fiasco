@@ -81,10 +81,7 @@ kernel_main()
   Cpu::boot_cpu()->print_infos();
 
   // create kernel thread
-  static Kernel_thread *kernel =
-    new (Ram_quota::root) Kernel_thread(Ram_quota::root);
-  Task *const ktask = Kernel_task::kernel_task();
-  kernel->kbind(ktask);
+  Kernel_thread *kernel = Kernel_thread::create_for_boot_cpu();
   assert(Cpu::is_stack_aligned(reinterpret_cast<Mword>(kernel->init_stack())));
 
   // switch to stack of kernel thread and bootstrap the kernel

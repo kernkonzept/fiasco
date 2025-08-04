@@ -71,6 +71,17 @@ Address
 Kernel_thread::utcb_addr()
 { return Mem_layout::Utcb_addr; }
 
+PUBLIC static
+Kernel_thread *
+Kernel_thread::create_for_boot_cpu()
+{
+  Kernel_thread *kernel = new (Ram_quota::root) Kernel_thread(Ram_quota::root);
+  assert_opt(kernel);
+  Task *const ktask = Kernel_task::kernel_task();
+  kernel->kbind(ktask);
+  return kernel;
+}
+
 // the kernel bootstrap routine
 IMPLEMENT FIASCO_INIT
 void
