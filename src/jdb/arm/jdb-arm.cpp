@@ -255,7 +255,7 @@ Jdb::handle_debug_traps(Cpu_number cpu)
   else if (ef->debug_ipi())
     error_buffer.cpu(cpu).printf("IPI ENTRY");
   else
-    error_buffer.cpu(cpu).printf("unexpected ENTRY (ESR=%08lx)", ef->esr);
+    error_buffer.cpu(cpu).printf("unexpected ENTRY (ESR=%08lx)", ef->esr.raw());
 
   return true;
 }
