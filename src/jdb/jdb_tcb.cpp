@@ -643,7 +643,7 @@ whole_screen:
   else
     putstr("        ");
 
-  putstr("\t\t\ttimeout  : ");
+  putstr("\ttimeout: ");
   if (t->_timeout && t->_timeout->is_set())
     {
       Signed64 diff = t->_timeout->get_timeout(Jdb::system_clock_on_enter());
