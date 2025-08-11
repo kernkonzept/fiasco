@@ -238,19 +238,27 @@ char const *Kip::version_string() const
   return reinterpret_cast <char const *> (this) + (offset_version_strings << 4);
 }
 
-#ifdef TARGET_NAME
-#define TARGET_NAME_PHRASE " for " TARGET_NAME
-#else
-#define TARGET_NAME_PHRASE
+#ifndef TARGET_NAME
+# define TARGET_NAME ""
 #endif
 
-asm(".section .initkip.version, \"a\", %progbits        \n"
-    ".string \"" CONFIG_KERNEL_VERSION_STRING "\"       \n"
-    ".previous                                          \n");
+asm(".section .initkip.version, \"a\", %progbits        \n\t"
+    ".ascii \"" GREETING_COLOR_ANSI_TITLE
+     "Welcome to the L4Re Microkernel!\\n\"\n\t"
+    ".ascii \"" GREETING_COLOR_ANSI_INFO
+     "L4Re Microkernel on " DISPLAY_ARCH "-" TARGET_WORD_LEN "\\n\"\n\t"
+    ".ascii \""
+     "Rev: " CODE_VERSION " compiled with " COMPILER "\"\n\t"
+      ".ifnb " TARGET_NAME "\n\t"".ascii \" for " TARGET_NAME "\"\n\t"".endif\n\t"
+      ".ifnb " CONFIG_LABEL "\n\t"".ascii \"    [" CONFIG_LABEL "]\"\n\t"".endif\n\t"
+    ".ascii \"\\n"
+     "Build: #" BUILD_NR " " BUILD_DATE
+     GREETING_COLOR_ANSI_OFF "\\n\\000\"                \n\t"
+    ".previous                                          \n\t");
 
-asm(".section .initkip.features.end, \"a\", %progbits   \n"
-    ".string \"\"                                       \n"
-    ".previous                                          \n");
+asm(".section .initkip.features.end, \"a\", %progbits   \n\t"
+    ".string \"\"                                       \n\t"
+    ".previous                                          \n\t");
 
 
 //----------------------------------------------------------------------------

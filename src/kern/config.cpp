@@ -113,16 +113,6 @@ INTERFACE[bit64]:
 INTERFACE[!bit64]:
 #define TARGET_WORD_LEN "32"
 
-INTERFACE:
-
-#define CONFIG_KERNEL_VERSION_STRING \
-  GREETING_COLOR_ANSI_TITLE "Welcome to the L4Re Microkernel!\\n"         \
-  GREETING_COLOR_ANSI_INFO "L4Re Microkernel on " DISPLAY_ARCH "-" TARGET_WORD_LEN "\\n"      \
-                           "Rev: " CODE_VERSION " compiled with " COMPILER \
-                           TARGET_NAME_PHRASE "    [" CONFIG_LABEL "]\\n"    \
-                           "Build: #" BUILD_NR " " BUILD_DATE "\\n"            \
-  GREETING_COLOR_ANSI_OFF
-
 //---------------------------------------------------------------------------
 INTERFACE [serial]:
 
