@@ -32,7 +32,7 @@ public:
   static void update_system_clock(Cpu_number cpu);
 
   /**
-   * Get the current system clock.
+   * Get the current system clock with microsecond resolution.
    *
    * Depending on the configuration, either
    *  - read the system clock from the KIP clock value which is increased during
@@ -44,6 +44,8 @@ public:
    * instance while executing the kernel debugger.
    *
    * \note This function must not be called from JDB.
+   * \note Depending on the configuration, the accuracy of the system clock may
+   *       only be milliseconds (if the clock is read from the KIP value).
    */
   static Unsigned64 system_clock();
 
