@@ -71,7 +71,8 @@ public:
     Vtcr_msa = 1UL << 31,
   };
 
-  struct has_aarch32_el1 : public Alternative_static_functor<has_aarch32_el1>
+  struct boot_cpu_has_aarch32_el1
+  : public Alternative_static_functor<boot_cpu_has_aarch32_el1>
   {
     static bool probe()
     {
@@ -81,7 +82,7 @@ public:
     }
   };
 
-  struct has_vmsa : public Alternative_static_functor<has_vmsa>
+  struct boot_cpu_has_vmsa : public Alternative_static_functor<boot_cpu_has_vmsa>
   {
     // See Armv8-R AArch64 supplement (ARM DDI 0600A)
     static bool probe()
@@ -94,7 +95,7 @@ public:
     }
   };
 
-  struct has_sme : public Alternative_static_functor<has_sme>
+  struct boot_cpu_has_sme : public Alternative_static_functor<boot_cpu_has_sme>
   {
     static bool probe()
     {

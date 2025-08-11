@@ -79,7 +79,7 @@ Context::save_ext_vcpu_state(Mword /*_state*/, Vm_state *v)
   // always trapped: asm volatile ("mrs %0, ACTLR_EL1" : "=r"(v->actlr));
   asm volatile ("mrs %x0, TCR_EL1"   : "=r"(v->tcr));
   asm volatile ("mrs %x0, TTBR0_EL1" : "=r"(v->ttbr0));
-  if (EXPECT_TRUE(Cpu::has_vmsa()))
+  if (EXPECT_TRUE(Cpu::boot_cpu_has_vmsa()))
     asm volatile ("mrs %x0, TTBR1_EL1" : "=r"(v->ttbr1));
 
   asm volatile ("mrs %x0, SCTLR_EL1" : "=r"(v->sctlr));
@@ -93,7 +93,7 @@ Context::save_ext_vcpu_state(Mword /*_state*/, Vm_state *v)
   asm volatile ("mrs %x0, AFSR0_EL1" : "=r"(v->afsr[0]));
   asm volatile ("mrs %x0, AFSR1_EL1" : "=r"(v->afsr[1]));
 
-  if (EXPECT_TRUE(Cpu::has_aarch32_el1()))
+  if (EXPECT_TRUE(Cpu::boot_cpu_has_aarch32_el1()))
     {
       asm volatile ("mrs %x0, DACR32_EL2" : "=r"(v->dacr32));
       //asm volatile ("mrs %x0, FPEXC32_EL2" : "=r"(v->fpexc32));
@@ -135,7 +135,7 @@ Context::load_ext_vcpu_state(Mword /*_to_state*/, Vm_state const *v)
 
   // Workaround for errata #852523 (Cortex-A57) and #853709 (Cortex-A72):
   // Do this before writing to SCTLR_EL1.
-  if (EXPECT_TRUE(Cpu::has_aarch32_el1()))
+  if (EXPECT_TRUE(Cpu::boot_cpu_has_aarch32_el1()))
     {
       asm volatile ("msr DACR32_EL2, %x0"  : : "r"(v->dacr32));
       //asm volatile ("msr FPEXC32_EL2, %x0" : : "r"(v->fpexc32));
@@ -158,7 +158,7 @@ Context::load_ext_vcpu_state(Mword /*_to_state*/, Vm_state const *v)
 
   if constexpr (Config::Have_mpu)
     {
-      if (!(Cpu::has_vmsa() && vtcr & Cpu::Vtcr_msa))
+      if (!(Cpu::boot_cpu_has_vmsa() && vtcr & Cpu::Vtcr_msa))
         load_ext_vcpu_state_mpu(v);
     }
 }

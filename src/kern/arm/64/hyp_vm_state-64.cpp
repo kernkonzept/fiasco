@@ -117,7 +117,7 @@ Context_hyp::save(bool from_privileged)
   asm volatile ("mrs %x0, SPSR_EL1"  : "=r"(spsr_svc));
   asm volatile ("mrs %x0, CSSELR_EL1": "=r"(csselr));
 
-  if (EXPECT_TRUE(Cpu::has_aarch32_el1()))
+  if (EXPECT_TRUE(Cpu::boot_cpu_has_aarch32_el1()))
     {
       asm volatile ("mrs %x0, SPSR_fiq"  : "=r"(spsr_fiq));
       asm volatile ("mrs %x0, SPSR_irq"  : "=r"(spsr_irq));
@@ -161,7 +161,7 @@ Context_hyp::load(bool from_privileged, bool to_privileged)
   asm volatile ("msr SPSR_EL1, %x0"       : : "r"(spsr_svc));
   asm volatile ("msr CSSELR_EL1, %x0"     : : "r"(csselr));
 
-  if (EXPECT_TRUE(Cpu::has_aarch32_el1()))
+  if (EXPECT_TRUE(Cpu::boot_cpu_has_aarch32_el1()))
     {
       asm volatile ("msr SPSR_fiq, %x0"       : : "r"(spsr_fiq));
       asm volatile ("msr SPSR_irq, %x0"       : : "r"(spsr_irq));

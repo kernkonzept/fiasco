@@ -77,7 +77,7 @@ void
 Context::store_tpidrurw()
 {
   asm volatile ("mrs %0, TPIDR_EL0" : "=r" (_tpidrurw));
-  if (EXPECT_TRUE(Cpu::has_sme()))
+  if (EXPECT_TRUE(Cpu::boot_cpu_has_sme()))
     asm volatile ("mrs %0, S3_3_c13_c0_5" // TPIDR2_EL0, bintutils >= 2.38
                   : "=r" (_tpidr2rw));
 }
@@ -87,7 +87,7 @@ void
 Context::load_tpidrurw() const
 {
   asm volatile ("msr TPIDR_EL0, %0" : : "r" (_tpidrurw));
-  if (EXPECT_TRUE(Cpu::has_sme()))
+  if (EXPECT_TRUE(Cpu::boot_cpu_has_sme()))
     asm volatile ("msr S3_3_c13_c0_5, %0" // TPIDR2_EL0, bintutils >= 2.38
                   : : "r" (_tpidr2rw));
 }
