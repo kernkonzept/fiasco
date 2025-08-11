@@ -71,16 +71,12 @@ public:
     Vtcr_msa = 1UL << 31,
   };
 
-  struct boot_cpu_has_aarch32_el1
-  : public Alternative_static_functor<boot_cpu_has_aarch32_el1>
+  static bool has_aarch32_el1()
   {
-    static bool probe()
-    {
-      Mword pfr0;
-      asm ("mrs %0, ID_AA64PFR0_EL1": "=r" (pfr0));
-      return pfr0 & 0x20;
-    }
-  };
+    Mword pfr0;
+    asm ("mrs %0, ID_AA64PFR0_EL1": "=r" (pfr0));
+    return pfr0 & 0x20;
+  }
 
   struct boot_cpu_has_vmsa : public Alternative_static_functor<boot_cpu_has_vmsa>
   {
