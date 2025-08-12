@@ -93,27 +93,6 @@ namespace L4
     return true;
   }
 
-  int Uart_16550::get_char(bool blocking) const
-  {
-    char old_ier, ch;
-
-    if (!blocking && !char_avail())
-      return -1;
-
-    old_ier = _regs->read<unsigned char>(IER);
-    _regs->write<unsigned char>(IER, old_ier & ~0xf);
-    while (!char_avail())
-      ;
-    ch = _regs->read<unsigned char>(TRB);
-    _regs->write<unsigned char>(IER, old_ier);
-    return ch;
-  }
-
-  int Uart_16550::char_avail() const
-  {
-    return _regs->read<unsigned char>(LSR) & LSR_DR;
-  }
-
   int Uart_16550::tx_avail() const
   {
     return _regs->read<unsigned char>(LSR) & LSR_THRE;
@@ -155,4 +134,26 @@ namespace L4
     _regs->write<unsigned char>(IER, ier);
     return res;
   }
-};
+
+  int Uart_16550::char_avail() const
+  {
+    return _regs->read<unsigned char>(LSR) & LSR_DR;
+  }
+
+  int Uart_16550::get_char(bool blocking) const
+  {
+    char old_ier, ch;
+
+    if (!blocking && !char_avail())
+      return -1;
+
+    old_ier = _regs->read<unsigned char>(IER);
+    _regs->write<unsigned char>(IER, old_ier & ~0xf);
+    while (!char_avail())
+      ;
+    ch = _regs->read<unsigned char>(TRB);
+    _regs->write<unsigned char>(IER, old_ier);
+    return ch;
+  }
+
+}

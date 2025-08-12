@@ -19,13 +19,15 @@ namespace L4
     void set_rx_mbox(Io_register_block const *rx_mbox);
     void shutdown() override;
     bool change_mode(Transfer_mode m, Baud_rate r) override;
-    int get_char(bool blocking = true) const override;
-    int char_avail() const override;
     int tx_avail() const;
     void wait_tx_done() const {}
     inline void out_char(char c) const;
     int write(char const *s, unsigned long count,
               bool blocking = true) const override;
+
+    int char_avail() const override;
+    int get_char(bool blocking = true) const override;
+
   private:
     mutable unsigned _current_rx_val = 0u;
     Io_register_block const *_rx_mbox = nullptr;

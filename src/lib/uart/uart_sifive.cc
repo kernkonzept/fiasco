@@ -57,43 +57,12 @@ namespace L4
     _regs->write<unsigned>(UARTSFV_RXCTRL, 0);
   }
 
-  bool Uart_sifive::enable_rx_irq(bool enable)
-  {
-    if (enable)
-      _regs->set<unsigned>(UARTSFV_IE, UARTSFV_IE_RXWM);
-    else
-      _regs->clear<unsigned>(UARTSFV_IE, UARTSFV_IE_RXWM);
-    return true;
-  }
-
   bool Uart_sifive::change_mode(Transfer_mode, Baud_rate r)
   {
     unsigned div = _freq / r;
     _regs->write<unsigned>(UARTSFV_DIV, div);
 
     return true;
-  }
-
-  int Uart_sifive::get_char(bool blocking) const
-  {
-    while (!char_avail())
-      if (!blocking)
-        return -1;
-
-    int c = _bufchar;
-    _bufchar = -1;
-    return c;
-  }
-
-  int Uart_sifive::char_avail() const
-  {
-    if (_bufchar == -1)
-      {
-        unsigned data = _regs->read<unsigned>(UARTSFV_RXDATA);
-        if (!(data & UARTSFV_RXDATA_EMPTY))
-          _bufchar = data & UARTSFV_RXDATA_DATA;
-      }
-    return _bufchar != -1;
   }
 
   int Uart_sifive::tx_avail() const
@@ -117,4 +86,36 @@ namespace L4
   {
     return generic_write<Uart_sifive>(s, count, blocking);
   }
-};
+
+  bool Uart_sifive::enable_rx_irq(bool enable)
+  {
+    if (enable)
+      _regs->set<unsigned>(UARTSFV_IE, UARTSFV_IE_RXWM);
+    else
+      _regs->clear<unsigned>(UARTSFV_IE, UARTSFV_IE_RXWM);
+    return true;
+  }
+
+  int Uart_sifive::char_avail() const
+  {
+    if (_bufchar == -1)
+      {
+        unsigned data = _regs->read<unsigned>(UARTSFV_RXDATA);
+        if (!(data & UARTSFV_RXDATA_EMPTY))
+          _bufchar = data & UARTSFV_RXDATA_DATA;
+      }
+    return _bufchar != -1;
+  }
+
+  int Uart_sifive::get_char(bool blocking) const
+  {
+    while (!char_avail())
+      if (!blocking)
+        return -1;
+
+    int c = _bufchar;
+    _bufchar = -1;
+    return c;
+  }
+
+}

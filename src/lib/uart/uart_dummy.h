@@ -19,11 +19,12 @@ namespace L4
     bool startup(Io_register_block const *) override { return true; }
     void shutdown() override {}
     bool change_mode(Transfer_mode, Baud_rate) override { return true; }
-    int get_char(bool /*blocking*/ = true) const override { return 0; }
-    int char_avail() const override { return false; }
     inline void out_char(char /*ch*/) const {}
     int write(char const * /*str*/, unsigned long /*count*/,
               bool /*blocking*/ = true) const override
     { return 0; }
+
+    int char_avail() const override { return false; }
+    int get_char(bool /*blocking*/ = true) const override { return 0; }
   };
 };

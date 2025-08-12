@@ -105,6 +105,28 @@ namespace L4
     return count;
   }
 
+  //PRIVATE
+  inline void Uart_mpc52xx::mpc52xx_out_char(char c) const
+  {
+    while(!(rd_dirty<u16>(status()) & SR_TXRDY))
+      ;
+    wr_dirty<char>(buffer(), c);
+  }
+
+  //TODO: implement
+  void Uart_mpc52xx::shutdown() {}
+  bool Uart_mpc52xx::change_mode(Transfer_mode, Baud_rate) { return true; }
+
+  bool Uart_mpc52xx::enable_rx_irq(bool enable)
+  {
+    u16 mask = 0;
+    if(enable)
+      mask |= IMR_RXRDY;
+
+    wr<u16>(imr(), mask);
+
+    return true;
+  }
 
   inline int Uart_mpc52xx::char_avail() const
   {
@@ -122,26 +144,4 @@ namespace L4
     return c;
   }
 
-  bool Uart_mpc52xx::enable_rx_irq(bool enable)
-  {
-    u16 mask = 0;
-    if(enable)
-      mask |= IMR_RXRDY;
-
-    wr<u16>(imr(), mask);
-
-    return true;
-  }
-
-  //PRIVATE
-  inline void Uart_mpc52xx::mpc52xx_out_char(char c) const
-  {
-    while(!(rd_dirty<u16>(status()) & SR_TXRDY))
-      ;
-    wr_dirty<char>(buffer(), c);
-  }
-
-  //TODO: implement
-  void Uart_mpc52xx::shutdown() {}
-  bool Uart_mpc52xx::change_mode(Transfer_mode, Baud_rate) { return true; }
-};
+}

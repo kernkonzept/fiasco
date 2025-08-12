@@ -78,19 +78,6 @@ namespace L4
     _regs->write<unsigned int>(UART011_CR, 0);
   }
 
-  bool Uart_pl011::enable_rx_irq(bool enable)
-  {
-    unsigned long mask = UART011_RXIM | UART011_RTIM;
-
-    _regs->write<unsigned int>(UART011_ICR, 0xffff & ~mask);
-    _regs->write<unsigned int>(UART011_ECR, 0xff);
-    if (enable)
-      _regs->write<unsigned int>(UART011_IMSC, _regs->read<unsigned int>(UART011_IMSC) | mask);
-    else
-      _regs->write<unsigned int>(UART011_IMSC, _regs->read<unsigned int>(UART011_IMSC) & ~mask);
-    return true;
-  }
-
   bool Uart_pl011::change_mode(Transfer_mode, Baud_rate r)
   {
     unsigned long old_cr = _regs->read<unsigned int>(UART011_CR);
@@ -103,24 +90,6 @@ namespace L4
     _regs->write<unsigned int>(UART011_CR, old_cr);
 
     return true;
-  }
-
-  int Uart_pl011::get_char(bool blocking) const
-  {
-    while (!char_avail())
-      if (!blocking)
-        return -1;
-
-    //_regs->write(UART011_ICR, UART011_RXIC | UART011_RTIC);
-
-    int c = _regs->read<unsigned int>(UART01x_DR);
-    _regs->write<unsigned int>(UART011_ECR, 0xff);
-    return c;
-  }
-
-  int Uart_pl011::char_avail() const
-  {
-    return !(_regs->read<unsigned int>(UART01x_FR) & UART01x_FR_RXFE);
   }
 
   int Uart_pl011::tx_avail() const
@@ -144,4 +113,38 @@ namespace L4
   {
     return generic_write<Uart_pl011>(s, count, blocking);
   }
-};
+
+  bool Uart_pl011::enable_rx_irq(bool enable)
+  {
+    unsigned long mask = UART011_RXIM | UART011_RTIM;
+
+    _regs->write<unsigned int>(UART011_ICR, 0xffff & ~mask);
+    _regs->write<unsigned int>(UART011_ECR, 0xff);
+    if (enable)
+      _regs->write<unsigned int>(UART011_IMSC,
+                                 _regs->read<unsigned int>(UART011_IMSC) | mask);
+    else
+      _regs->write<unsigned int>(UART011_IMSC,
+                                 _regs->read<unsigned int>(UART011_IMSC) & ~mask);
+    return true;
+  }
+
+  int Uart_pl011::char_avail() const
+  {
+    return !(_regs->read<unsigned int>(UART01x_FR) & UART01x_FR_RXFE);
+  }
+
+  int Uart_pl011::get_char(bool blocking) const
+  {
+    while (!char_avail())
+      if (!blocking)
+        return -1;
+
+    //_regs->write(UART011_ICR, UART011_RXIC | UART011_RTIC);
+
+    int c = _regs->read<unsigned int>(UART01x_DR);
+    _regs->write<unsigned int>(UART011_ECR, 0xff);
+    return c;
+  }
+
+}

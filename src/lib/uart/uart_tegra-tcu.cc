@@ -32,6 +32,35 @@ namespace L4
   bool Uart_tegra_tcu::change_mode(Transfer_mode, Baud_rate)
   { return true; }
 
+  int Uart_tegra_tcu::tx_avail() const
+  {
+    return !(_regs->read<unsigned>(0) & Busy);
+  }
+
+  void Uart_tegra_tcu::out_char(char c) const
+  {
+    _regs->write<unsigned>(0, Doorbell | (1U << Shift_num_bytes) | c);
+  }
+
+  int Uart_tegra_tcu::write(char const *s, unsigned long count, bool blocking) const
+  {
+    return generic_write<Uart_tegra_tcu>(s, count, blocking);
+  }
+
+  int Uart_tegra_tcu::char_avail() const
+  {
+    if (_current_rx_val)
+      return true;
+
+    if (_rx_mbox)
+      {
+        unsigned v = _rx_mbox->read<unsigned>(0);
+        return v >> Shift_num_bytes; // Not sure all of v would be 0
+      }
+
+    return false;
+  }
+
   int Uart_tegra_tcu::get_char(bool blocking) const
   {
     while (!char_avail())
@@ -70,32 +99,4 @@ namespace L4
     return -1;
   }
 
-  int Uart_tegra_tcu::char_avail() const
-  {
-    if (_current_rx_val)
-      return true;
-
-    if (_rx_mbox)
-      {
-        unsigned v = _rx_mbox->read<unsigned>(0);
-        return v >> Shift_num_bytes; // Not sure all of v would be 0
-      }
-
-    return false;
-  }
-
-  int Uart_tegra_tcu::tx_avail() const
-  {
-    return !(_regs->read<unsigned>(0) & Busy);
-  }
-
-  void Uart_tegra_tcu::out_char(char c) const
-  {
-    _regs->write<unsigned>(0, Doorbell | (1U << Shift_num_bytes) | c);
-  }
-
-  int Uart_tegra_tcu::write(char const *s, unsigned long count, bool blocking) const
-  {
-    return generic_write<Uart_tegra_tcu>(s, count, blocking);
-  }
 }

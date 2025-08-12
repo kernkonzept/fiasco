@@ -18,15 +18,16 @@ namespace L4
     explicit Uart_sh(unsigned /*base_rate*/) {}
     bool startup(Io_register_block const *) override;
     void shutdown() override;
-    bool enable_rx_irq(bool enable = true) override;
     bool change_mode(Transfer_mode m, Baud_rate r) override;
-    void irq_ack() override;
-    int get_char(bool blocking = true) const override;
-    int char_avail() const override;
     int tx_avail() const;
     void wait_tx_done() const {}
     inline void out_char(char c) const;
     int write(char const *s, unsigned long count,
               bool blocking = true) const override;
+
+    bool enable_rx_irq(bool enable = true) override;
+    void irq_ack() override;
+    int char_avail() const override;
+    int get_char(bool blocking = true) const override;
   };
 };

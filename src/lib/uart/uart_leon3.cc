@@ -71,33 +71,6 @@ namespace L4
     return true;
   }
 
-  bool Uart_leon3::enable_rx_irq(bool enable)
-  {
-    unsigned r = _regs->read<unsigned int>(CTRL_REG);
-
-    if (enable)
-      r |= CTRL_RI;
-    else
-      r &= ~CTRL_RI;
-
-    _regs->write<unsigned int>(CTRL_REG, r);
-    return 0;
-  }
-
-  int Uart_leon3::get_char(bool blocking) const
-  {
-    while (!char_avail())
-      if (!blocking)
-        return -1;
-
-    return _regs->read<unsigned int>(DATA_REG) & DATA_MASK;
-  }
-
-  int Uart_leon3::char_avail() const
-  {
-    return _regs->read<unsigned int>(STATUS_REG) & STATUS_DR;
-  }
-
   int Uart_leon3::tx_avail() const
   {
     return !(_regs->read<unsigned int>(STATUS_REG) & STATUS_TF);
@@ -120,4 +93,32 @@ namespace L4
   {
     return generic_write<Uart_leon3>(s, count, blocking);
   }
-};
+
+  bool Uart_leon3::enable_rx_irq(bool enable)
+  {
+    unsigned r = _regs->read<unsigned int>(CTRL_REG);
+
+    if (enable)
+      r |= CTRL_RI;
+    else
+      r &= ~CTRL_RI;
+
+    _regs->write<unsigned int>(CTRL_REG, r);
+    return 0;
+  }
+
+  int Uart_leon3::char_avail() const
+  {
+    return _regs->read<unsigned int>(STATUS_REG) & STATUS_DR;
+  }
+
+  int Uart_leon3::get_char(bool blocking) const
+  {
+    while (!char_avail())
+      if (!blocking)
+        return -1;
+
+    return _regs->read<unsigned int>(DATA_REG) & DATA_MASK;
+  }
+
+}

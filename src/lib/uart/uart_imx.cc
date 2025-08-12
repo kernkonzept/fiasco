@@ -133,42 +133,8 @@ namespace L4
     _regs->write<unsigned int>(UCR1, 0); // Disable UART
   }
 
-  bool Uart_imx::enable_rx_irq(bool enable)
-  {
-    if (enable)
-      {
-	_regs->write<unsigned int>(UCR2, _regs->read<unsigned int>(UCR2) | UCR2_RTEC_ANY);
-	_regs->write<unsigned int>(UCR4, _regs->read<unsigned int>(UCR4) | UCR4_DREN);
-      }
-    else
-      _regs->write<unsigned int>(UCR4, _regs->read<unsigned int>(UCR4) & ~UCR4_DREN);
-
-    return true;
-  }
-
-  void Uart_imx6::irq_ack()
-  {
-    unsigned int usr1 = _regs->read<unsigned int>(USR1);
-
-    if (usr1 & USR1_AWAKE)
-      _regs->write<unsigned int>(USR1, USR1_AWAKE);
-  }
-
   bool Uart_imx::change_mode(Transfer_mode, Baud_rate)
   { return true; }
-
-  int Uart_imx::get_char(bool blocking) const
-  {
-    while (!char_avail())
-      if (!blocking) return -1;
-
-    return _regs->read<unsigned int>(URXD) & 0xff;
-  }
-
-  int Uart_imx::char_avail() const
-  {
-    return _regs->read<unsigned int>(USR2) & USR2_RDR;
-  }
 
   int Uart_imx::tx_avail() const
   {
@@ -191,4 +157,39 @@ namespace L4
   {
     return generic_write<Uart_imx>(s, count, blocking);
   }
-};
+
+  bool Uart_imx::enable_rx_irq(bool enable)
+  {
+    if (enable)
+      {
+	_regs->write<unsigned int>(UCR2, _regs->read<unsigned int>(UCR2) | UCR2_RTEC_ANY);
+	_regs->write<unsigned int>(UCR4, _regs->read<unsigned int>(UCR4) | UCR4_DREN);
+      }
+    else
+      _regs->write<unsigned int>(UCR4, _regs->read<unsigned int>(UCR4) & ~UCR4_DREN);
+
+    return true;
+  }
+
+  void Uart_imx6::irq_ack()
+  {
+    unsigned int usr1 = _regs->read<unsigned int>(USR1);
+
+    if (usr1 & USR1_AWAKE)
+      _regs->write<unsigned int>(USR1, USR1_AWAKE);
+  }
+
+  int Uart_imx::char_avail() const
+  {
+    return _regs->read<unsigned int>(USR2) & USR2_RDR;
+  }
+
+  int Uart_imx::get_char(bool blocking) const
+  {
+    while (!char_avail())
+      if (!blocking) return -1;
+
+    return _regs->read<unsigned int>(URXD) & 0xff;
+  }
+
+}

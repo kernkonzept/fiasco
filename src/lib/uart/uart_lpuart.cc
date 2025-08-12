@@ -41,16 +41,6 @@ namespace L4
     return true;
   }
 
-  bool Uart_lpuart::enable_rx_irq(bool enable)
-  {
-    if (enable)
-      _regs->set<unsigned>(CTRL, CTRL_RIE);
-    else
-      _regs->clear<unsigned>(CTRL, CTRL_RIE);
-
-    return true;
-  }
-
   void Uart_lpuart::shutdown()
   {
     _regs->write<unsigned>(CTRL, 0);
@@ -79,20 +69,6 @@ namespace L4
     return true;
   }
 
-  int Uart_lpuart::get_char(bool blocking) const
-  {
-    while (!char_avail())
-      if (!blocking)
-        return -1;
-
-    return _regs->read<unsigned char>(DATA);
-  }
-
-  int Uart_lpuart::char_avail() const
-  {
-    return !(_regs->read<unsigned>(FIFO) & FIFO_RXEMPT);
-  }
-
   int Uart_lpuart::tx_avail() const
   {
     return _regs->read<unsigned>(FIFO) & FIFO_TXEMPT;
@@ -107,4 +83,29 @@ namespace L4
   {
     return generic_write<Uart_lpuart>(s, count, blocking);
   }
+
+  bool Uart_lpuart::enable_rx_irq(bool enable)
+  {
+    if (enable)
+      _regs->set<unsigned>(CTRL, CTRL_RIE);
+    else
+      _regs->clear<unsigned>(CTRL, CTRL_RIE);
+
+    return true;
+  }
+
+  int Uart_lpuart::char_avail() const
+  {
+    return !(_regs->read<unsigned>(FIFO) & FIFO_RXEMPT);
+  }
+
+  int Uart_lpuart::get_char(bool blocking) const
+  {
+    while (!char_avail())
+      if (!blocking)
+        return -1;
+
+    return _regs->read<unsigned char>(DATA);
+  }
+
 }

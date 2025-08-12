@@ -139,30 +139,6 @@ namespace L4
     _regs->write<unsigned>(UARTCR, v);
   }
 
-  bool Uart_linflex::enable_rx_irq(bool enable)
-  {
-    _regs->set<unsigned>(LINCR1, LINCR1_INIT);
-    while ((_regs->read<unsigned>(LINSR) & LINSR_LINS) != LINSR_LINS_INITMODE)
-      ;
-
-    if (enable)
-      {
-        if (Fifo_rx_enabled)
-          set_uartcr(false);
-        _regs->set<unsigned>(LINIER, LINIER_DRIE);
-      }
-    else
-      {
-        if (Fifo_rx_enabled)
-          set_uartcr(true);
-        _regs->clear<unsigned>(LINIER, LINIER_DRIE);
-      }
-
-    _regs->clear<unsigned>(LINCR1, LINCR1_INIT);
-
-    return true;
-  }
-
   void Uart_linflex::shutdown()
   {
   }
@@ -170,42 +146,6 @@ namespace L4
   bool Uart_linflex::change_mode(Transfer_mode, Baud_rate)
   {
     return true;
-  }
-
-  int Uart_linflex::get_char(bool blocking) const
-  {
-    while (!char_avail())
-      if (!blocking)
-        return -1;
-
-    unsigned c;
-    if (is_rx_fifo_enabled())
-      {
-        unsigned sr = _regs->read<unsigned>(UARTSR);
-        _regs->write<unsigned>(UARTSR, sr);
-        c = _regs->read<unsigned char>(BDRM);
-      }
-    else
-      {
-        unsigned sr = _regs->read<unsigned>(UARTSR);
-        c = _regs->read<unsigned char>(BDRM);
-        _regs->write<unsigned>(UARTSR, sr);
-      }
-    return c;
-  }
-
-  int Uart_linflex::char_avail() const
-  {
-    unsigned sr = _regs->read<unsigned>(UARTSR);
-    sr &= (UARTSR_TO | UARTSR_BOF);
-    if (sr)
-      _regs->write<unsigned>(UARTSR, sr);
-    if (is_rx_fifo_enabled())
-      // UARTSR_RFNE=1: RX FIFO not empty.
-      return (_regs->read<unsigned>(UARTSR) & UARTSR_RFNE);
-    else
-      // UARTSR_RMB=1: Buffer ready to read.
-      return _regs->read<unsigned>(UARTSR) & UARTSR_RMB;
   }
 
   int Uart_linflex::tx_avail() const
@@ -258,4 +198,65 @@ namespace L4
   {
     return generic_write<Uart_linflex>(s, count, blocking);
   }
+
+  bool Uart_linflex::enable_rx_irq(bool enable)
+  {
+    _regs->set<unsigned>(LINCR1, LINCR1_INIT);
+    while ((_regs->read<unsigned>(LINSR) & LINSR_LINS) != LINSR_LINS_INITMODE)
+      ;
+
+    if (enable)
+      {
+        if (Fifo_rx_enabled)
+          set_uartcr(false);
+        _regs->set<unsigned>(LINIER, LINIER_DRIE);
+      }
+    else
+      {
+        if (Fifo_rx_enabled)
+          set_uartcr(true);
+        _regs->clear<unsigned>(LINIER, LINIER_DRIE);
+      }
+
+    _regs->clear<unsigned>(LINCR1, LINCR1_INIT);
+
+    return true;
+  }
+
+  int Uart_linflex::char_avail() const
+  {
+    unsigned sr = _regs->read<unsigned>(UARTSR);
+    sr &= (UARTSR_TO | UARTSR_BOF);
+    if (sr)
+      _regs->write<unsigned>(UARTSR, sr);
+    if (is_rx_fifo_enabled())
+      // UARTSR_RFNE=1: RX FIFO not empty.
+      return (_regs->read<unsigned>(UARTSR) & UARTSR_RFNE);
+    else
+      // UARTSR_RMB=1: Buffer ready to read.
+      return _regs->read<unsigned>(UARTSR) & UARTSR_RMB;
+  }
+
+  int Uart_linflex::get_char(bool blocking) const
+  {
+    while (!char_avail())
+      if (!blocking)
+        return -1;
+
+    unsigned c;
+    if (is_rx_fifo_enabled())
+      {
+        unsigned sr = _regs->read<unsigned>(UARTSR);
+        _regs->write<unsigned>(UARTSR, sr);
+        c = _regs->read<unsigned char>(BDRM);
+      }
+    else
+      {
+        unsigned sr = _regs->read<unsigned>(UARTSR);
+        c = _regs->read<unsigned char>(BDRM);
+        _regs->write<unsigned>(UARTSR, sr);
+      }
+    return c;
+  }
+
 }

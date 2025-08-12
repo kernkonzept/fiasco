@@ -136,25 +136,6 @@ namespace L4
 
   }
 
-  int Uart_sa1000::get_char(bool blocking) const
-  {
-    unsigned long old_utcr3 = _regs->read<unsigned int>(UTCR3);
-    _regs->write<unsigned int>(UTCR3, old_utcr3 & ~(UTCR3_RIE|UTCR3_TIE));
-
-    while (!char_avail())
-      if (!blocking)
-        return -1;
-
-    int ch = _regs->read<unsigned int>(UTDR);
-    _regs->write<unsigned int>(UTCR3, old_utcr3);
-    return ch;
-  }
-
-  int Uart_sa1000::char_avail() const
-  {
-    return !!(_regs->read<unsigned int>(UTSR1) & UTSR1_RNE);
-  }
-
   int Uart_sa1000::tx_avail() const
   {
     return _regs->read<unsigned int>(UTSR1) & UTSR1_TNF;
@@ -183,4 +164,24 @@ namespace L4
     _regs->write<unsigned>(UTCR3, old_utcr3);
     return c;
   }
-};
+
+  int Uart_sa1000::char_avail() const
+  {
+    return !!(_regs->read<unsigned int>(UTSR1) & UTSR1_RNE);
+  }
+
+  int Uart_sa1000::get_char(bool blocking) const
+  {
+    unsigned long old_utcr3 = _regs->read<unsigned int>(UTCR3);
+    _regs->write<unsigned int>(UTCR3, old_utcr3 & ~(UTCR3_RIE|UTCR3_TIE));
+
+    while (!char_avail())
+      if (!blocking)
+        return -1;
+
+    int ch = _regs->read<unsigned int>(UTDR);
+    _regs->write<unsigned int>(UTCR3, old_utcr3);
+    return ch;
+  }
+
+}

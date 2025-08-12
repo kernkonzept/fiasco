@@ -141,23 +141,6 @@ namespace L4
     return true;
   }
 
-  int Uart_s3c::get_char(bool blocking) const
-  {
-    while (!char_avail())
-      if (!blocking)
-        return -1;
-
-    _regs->read<unsigned int>(UFCON);
-    int c = _regs->read<unsigned int>(URXH) & 0xff;
-    ack_rx_irq();
-    return c;
-  }
-
-  int Uart_s3c::char_avail() const
-  {
-    return is_rx_fifo_non_empty();
-  }
-
   int Uart_s3c::tx_avail() const
   {
     return is_tx_fifo_not_full();
@@ -176,6 +159,23 @@ namespace L4
   int Uart_s3c::write(char const *s, unsigned long count, bool blocking) const
   {
     return generic_write<Uart_s3c>(s, count, blocking);
+  }
+
+  int Uart_s3c::char_avail() const
+  {
+    return is_rx_fifo_non_empty();
+  }
+
+  int Uart_s3c::get_char(bool blocking) const
+  {
+    while (!char_avail())
+      if (!blocking)
+        return -1;
+
+    _regs->read<unsigned int>(UFCON);
+    int c = _regs->read<unsigned int>(URXH) & 0xff;
+    ack_rx_irq();
+    return c;
   }
 
   // -----------------------

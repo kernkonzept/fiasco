@@ -39,31 +39,6 @@ namespace L4
 #endif
   }
 
-  int Uart_dcc_v6::get_char(bool blocking) const
-  {
-#ifdef __arm__
-    while (!char_avail())
-      if (!blocking)
-        return -1;
-
-    int c;
-    asm volatile("mrc p14, 0, %0, c0, c5, 0": "=r" (c));
-    return c & 0xff;
-#else
-    static_cast<void>(blocking);
-    return -1;
-#endif
-  }
-
-  int Uart_dcc_v6::char_avail() const
-  {
-#ifdef __arm__
-    return get_status() & DCC_STATUS_RX;
-#else
-    return false;
-#endif
-  }
-
   int Uart_dcc_v6::tx_avail() const
    {
 #ifdef __arm__
@@ -104,4 +79,29 @@ namespace L4
 #endif
   }
 
-};
+  int Uart_dcc_v6::char_avail() const
+  {
+#ifdef __arm__
+    return get_status() & DCC_STATUS_RX;
+#else
+    return false;
+#endif
+  }
+
+  int Uart_dcc_v6::get_char(bool blocking) const
+  {
+#ifdef __arm__
+    while (!char_avail())
+      if (!blocking)
+        return -1;
+
+    int c;
+    asm volatile("mrc p14, 0, %0, c0, c5, 0": "=r" (c));
+    return c & 0xff;
+#else
+    static_cast<void>(blocking);
+    return -1;
+#endif
+  }
+
+}

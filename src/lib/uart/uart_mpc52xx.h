@@ -56,13 +56,14 @@ namespace L4
     explicit Uart_mpc52xx(unsigned /*base_rate*/) {}
     bool startup(const L4::Io_register_block *) override;
     void shutdown() override;
-    bool enable_rx_irq(bool enable = true) override;
     bool change_mode(Transfer_mode m, Baud_rate r) override;
-    int get_char(bool blocking = true) const override;
-    int char_avail() const override;
     inline void out_char(char c) const;
     int write(char const *s, unsigned long count, bool blocking = true)
       const override;
+
+    bool enable_rx_irq(bool enable = true) override;
+    int char_avail() const override;
+    int get_char(bool blocking = true) const override;
   };
 };
 

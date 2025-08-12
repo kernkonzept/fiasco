@@ -49,15 +49,6 @@ namespace L4
     return true;
   }
 
-  bool Uart_sh::enable_rx_irq(bool enable)
-  {
-    if (enable)
-      _regs->set<unsigned short>(SCSCR, SCR_RIE);
-    else
-      _regs->clear<unsigned short>(SCSCR, SCR_RIE);
-    return true;
-  }
-
   void Uart_sh::shutdown()
   {
     _regs->write<unsigned short>(SCSCR, 0);
@@ -70,11 +61,41 @@ namespace L4
     return true;
   }
 
+  int Uart_sh::tx_avail() const
+  {
+    return _regs->read<unsigned short>(SCFSR) & SR_TDFE;
+  }
+
+  void Uart_sh::out_char(char c) const
+  {
+    _regs->write<unsigned char>(SCFTDR, c);
+    _regs->clear<unsigned short>(SCFSR, SR_TEND | SR_TDFE);
+  }
+
+  int Uart_sh::write(char const *s, unsigned long count, bool blocking) const
+  {
+    return generic_write<Uart_sh>(s, count, blocking);
+  }
+
+  bool Uart_sh::enable_rx_irq(bool enable)
+  {
+    if (enable)
+      _regs->set<unsigned short>(SCSCR, SCR_RIE);
+    else
+      _regs->clear<unsigned short>(SCSCR, SCR_RIE);
+    return true;
+  }
+
   void Uart_sh::irq_ack()
   {
     unsigned short status = _regs->read<unsigned short>(SCLSR);
     if (status & LSR_ORER) // Overrun error
       _regs->clear<unsigned short>(SCLSR, LSR_ORER);
+  }
+
+  int Uart_sh::char_avail() const
+  {
+    return _regs->read<unsigned short>(SCFSR) & (SR_DR | SR_RDF | SR_BRK);
   }
 
   int Uart_sh::get_char(bool blocking) const
@@ -93,24 +114,4 @@ namespace L4
     return ch;
   }
 
-  int Uart_sh::char_avail() const
-  {
-    return _regs->read<unsigned short>(SCFSR) & (SR_DR | SR_RDF | SR_BRK);
-  }
-
-  int Uart_sh::tx_avail() const
-  {
-    return _regs->read<unsigned short>(SCFSR) & SR_TDFE;
-  }
-
-  void Uart_sh::out_char(char c) const
-  {
-    _regs->write<unsigned char>(SCFTDR, c);
-    _regs->clear<unsigned short>(SCFSR, SR_TEND | SR_TDFE);
-  }
-
-  int Uart_sh::write(char const *s, unsigned long count, bool blocking) const
-  {
-    return generic_write<Uart_sh>(s, count, blocking);
-  }
 }

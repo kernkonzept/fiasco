@@ -58,32 +58,12 @@ namespace L4
   {
   }
 
-  bool Uart_omap35x::enable_rx_irq(bool enable)
-  {
-    _regs->write<unsigned int>(IER_REG, enable ? 1 : 0);
-    return true;
-  }
-
   bool Uart_omap35x::change_mode(Transfer_mode, Baud_rate r)
   {
     if (r != 115200)
       return false;
 
     return true;
-  }
-
-  int Uart_omap35x::get_char(bool blocking) const
-  {
-    while (!char_avail())
-      if (!blocking)
-	return -1;
-
-    return _regs->read<unsigned int>(RHR_REG);
-  }
-
-  int Uart_omap35x::char_avail() const
-  {
-    return _regs->read<unsigned int>(LSR_REG) & LSR_REG_RX_FIFO_E;
   }
 
   int Uart_omap35x::tx_avail() const
@@ -107,4 +87,25 @@ namespace L4
   {
     return generic_write<Uart_omap35x>(s, count, blocking);
   }
-};
+
+  bool Uart_omap35x::enable_rx_irq(bool enable)
+  {
+    _regs->write<unsigned int>(IER_REG, enable ? 1 : 0);
+    return true;
+  }
+
+  int Uart_omap35x::char_avail() const
+  {
+    return _regs->read<unsigned int>(LSR_REG) & LSR_REG_RX_FIFO_E;
+  }
+
+  int Uart_omap35x::get_char(bool blocking) const
+  {
+    while (!char_avail())
+      if (!blocking)
+	return -1;
+
+    return _regs->read<unsigned int>(RHR_REG);
+  }
+
+}

@@ -49,6 +49,23 @@ namespace L4
   bool Uart_sbi::change_mode(Transfer_mode, Baud_rate)
   { return true; }
 
+  void Uart_sbi::out_char(char c) const
+  {
+    sbi_console_putchar(c);
+  }
+
+  int Uart_sbi::write(char const *s, unsigned long count, bool blocking) const
+  {
+    return generic_write<Uart_sbi>(s, count, blocking);
+  }
+
+  int Uart_sbi::char_avail() const
+  {
+    if (_bufchar == -1)
+      _bufchar = sbi_console_getchar();
+    return _bufchar != -1;
+  }
+
   int Uart_sbi::get_char(bool blocking) const
   {
     while (!char_avail())
@@ -60,20 +77,4 @@ namespace L4
     return c;
   }
 
-  int Uart_sbi::char_avail() const
-  {
-    if (_bufchar == -1)
-      _bufchar = sbi_console_getchar();
-    return _bufchar != -1;
-  }
-
-  void Uart_sbi::out_char(char c) const
-  {
-    sbi_console_putchar(c);
-  }
-
-  int Uart_sbi::write(char const *s, unsigned long count, bool blocking) const
-  {
-    return generic_write<Uart_sbi>(s, count, blocking);
-  }
 }

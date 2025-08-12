@@ -9,7 +9,8 @@
 
 namespace L4
 {
-  enum Registers {
+  enum Registers
+  {
     DATA      = 0x00,
     STATE     = 0x04,
     CTRL      = 0x08,
@@ -62,35 +63,12 @@ namespace L4
     _regs->write<unsigned char>(INT, INT_TX | INT_RX | INT_TX_OVERRUN | INT_RX_OVERRUN);
   }
 
-  bool Uart_apb::enable_rx_irq(bool enable)
-  {
-    if (enable)
-      _regs->set<unsigned char>(CTRL, CTRL_RX_INT_EN);
-    else
-      _regs->clear<unsigned char>(CTRL, CTRL_RX_INT_EN);
-    return true;
-  }
-
   bool Uart_apb::change_mode(Transfer_mode, Baud_rate r)
   {
     if (_freq)
       set_rate(r);
 
     return true;
-  }
-
-  int Uart_apb::get_char(bool blocking) const
-  {
-    while (!char_avail())
-      if (!blocking)
-        return -1;
-
-    return _regs->read<unsigned char>(DATA);
-  }
-
-  int Uart_apb::char_avail() const
-  {
-    return _regs->read<unsigned char>(STATE) & STATE_RX_FULL;
   }
 
   int Uart_apb::tx_avail() const
@@ -114,4 +92,28 @@ namespace L4
   {
     return generic_write<Uart_apb>(s, count, blocking);
   }
-};
+
+  bool Uart_apb::enable_rx_irq(bool enable)
+  {
+    if (enable)
+      _regs->set<unsigned char>(CTRL, CTRL_RX_INT_EN);
+    else
+      _regs->clear<unsigned char>(CTRL, CTRL_RX_INT_EN);
+    return true;
+  }
+
+  int Uart_apb::char_avail() const
+  {
+    return _regs->read<unsigned char>(STATE) & STATE_RX_FULL;
+  }
+
+  int Uart_apb::get_char(bool blocking) const
+  {
+    while (!char_avail())
+      if (!blocking)
+        return -1;
+
+    return _regs->read<unsigned char>(DATA);
+  }
+
+}

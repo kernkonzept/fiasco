@@ -114,41 +114,6 @@ namespace L4
   bool Uart_geni::change_mode(Transfer_mode, Baud_rate)
   { return true; }
 
-  bool Uart_geni::enable_rx_irq(bool enable)
-  {
-    if (!enable)
-      {
-        _regs->write32(IRQ_EN, 0);
-        return true;
-      }
-
-    // Set up interrupts for secondary sequencer (used for RX)
-    _regs->write32(S_IRQ_CLEAR, ~0U);
-    _regs->write32(S_IRQ_EN, S_IRQ_RX_FIFO_LAST);
-    _regs->write32(IRQ_EN, IRQ_EN_S);
-    return true;
-  }
-
-  void Uart_geni::irq_ack()
-  {
-    // FIXME: Is RX_FIFO_LAST really the correct interrupt type here?
-    _regs->write32(S_IRQ_CLEAR, S_IRQ_RX_FIFO_LAST);
-  }
-
-  int Uart_geni::get_char(bool blocking) const
-  {
-    while (!char_avail())
-      if (!blocking)
-        return -1;
-
-    return _regs->read32(RX_FIFOn) & 0xff;
-  }
-
-  int Uart_geni::char_avail() const
-  {
-    return _regs->read32(RX_FIFO_STATUS) & RX_FIFO_STATUS_WC;
-  }
-
   int Uart_geni::tx_avail() const
   {
     return !(_regs->read32(STATUS) & STATUS_M_GENI_CMD_ACTIVE);
@@ -172,4 +137,40 @@ namespace L4
   {
     return generic_write<Uart_geni>(s, count, blocking);
   }
+
+  bool Uart_geni::enable_rx_irq(bool enable)
+  {
+    if (!enable)
+      {
+        _regs->write32(IRQ_EN, 0);
+        return true;
+      }
+
+    // Set up interrupts for secondary sequencer (used for RX)
+    _regs->write32(S_IRQ_CLEAR, ~0U);
+    _regs->write32(S_IRQ_EN, S_IRQ_RX_FIFO_LAST);
+    _regs->write32(IRQ_EN, IRQ_EN_S);
+    return true;
+  }
+
+  void Uart_geni::irq_ack()
+  {
+    // FIXME: Is RX_FIFO_LAST really the correct interrupt type here?
+    _regs->write32(S_IRQ_CLEAR, S_IRQ_RX_FIFO_LAST);
+  }
+
+  int Uart_geni::char_avail() const
+  {
+    return _regs->read32(RX_FIFO_STATUS) & RX_FIFO_STATUS_WC;
+  }
+
+  int Uart_geni::get_char(bool blocking) const
+  {
+    while (!char_avail())
+      if (!blocking)
+        return -1;
+
+    return _regs->read32(RX_FIFOn) & 0xff;
+  }
+
 }

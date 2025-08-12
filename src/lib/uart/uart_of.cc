@@ -39,16 +39,6 @@ namespace L4 {
     prom_call("close", 1, 0, _serial);
   }
 
-  int Uart_of::get_char(bool blocking) const
-  {
-    int c, len = 0;
-
-    while (len != 1 && blocking)
-      len = prom_call("read", 3, 1, _serial, &c, 1);
-
-    return len ? c :-1;
-  }
-
   int Uart_of::write(char const *s, unsigned long count, bool) const
   {
     /* non-blocked write ignored! */
@@ -62,6 +52,18 @@ namespace L4 {
 
   /* UNIMPLEMENTED */
   bool Uart_of::change_mode(Transfer_mode, Baud_rate){ return true; }
-  int  Uart_of::char_avail() const { return 1; }
   int  Uart_of::tx_avail() const { return 1; }
-};
+
+  int  Uart_of::char_avail() const { return 1; }
+
+  int Uart_of::get_char(bool blocking) const
+  {
+    int c, len = 0;
+
+    while (len != 1 && blocking)
+      len = prom_call("read", 3, 1, _serial, &c, 1);
+
+    return len ? c :-1;
+  }
+
+}

@@ -66,24 +66,6 @@ namespace L4
     virtual bool change_mode(Transfer_mode m, Baud_rate r) = 0;
 
     /**
-     * Read a character from the UART.
-     *
-     * \param blocking  If true, wait until a character is available for
-     *                  reading. Otherwise do not wait and just return -1 if
-     *                  no character is available.
-     * \return          The actual character read from the UART.
-     */
-    virtual int get_char(bool blocking = true) const = 0;
-
-    /**
-     * Check if there is at least one character available for reading from the
-     * UART.
-     *
-     * \return 0 if there is no character available for reading, !=0 otherwise.
-     */
-    virtual int char_avail() const = 0;
-
-    /**
      * Transmit a number of characters.
      *
      * \param s         Buffer containing the characters.
@@ -95,20 +77,6 @@ namespace L4
      */
     virtual int write(char const *s, unsigned long count,
                       bool blocking = true) const = 0;
-
-    /**
-     * Acknowledge a received interrupt.
-     */
-    virtual void irq_ack() {}
-
-    /**
-     * Enable the receive IRQ.
-     *
-     * \retval true     The RX IRQ was successfully enabled / disabled.
-     * \retval false    The RX IRQ couldn't be enabled / disabled. The
-     *                  driver does not support this operation.
-     */
-    virtual bool enable_rx_irq(bool = true) { return false; }
 
     /**
      * Return the transfer mode.
@@ -123,6 +91,39 @@ namespace L4
      * \return The baud rate.
      */
     Baud_rate rate() const { return _rate; }
+
+
+    /**
+     * Enable the receive IRQ.
+     *
+     * \retval true     The RX IRQ was successfully enabled / disabled.
+     * \retval false    The RX IRQ couldn't be enabled / disabled. The
+     *                  driver does not support this operation.
+     */
+    virtual bool enable_rx_irq(bool = true) { return false; }
+
+    /**
+     * Acknowledge a received interrupt.
+     */
+    virtual void irq_ack() {}
+
+    /**
+     * Check if there is at least one character available for reading from the
+     * UART.
+     *
+     * \return 0 if there is no character available for reading, !=0 otherwise.
+     */
+    virtual int char_avail() const = 0;
+
+    /**
+     * Read a character from the UART.
+     *
+     * \param blocking  If true, wait until a character is available for
+     *                  reading. Otherwise do not wait and just return -1 if
+     *                  no character is available.
+     * \return          The actual character read from the UART.
+     */
+    virtual int get_char(bool blocking = true) const = 0;
 
   protected:
     /**

@@ -79,29 +79,6 @@ namespace L4
     return true;
   }
 
-  bool Uart_dm::enable_rx_irq(bool enable)
-  {
-    if (enable)
-      _regs->write32(DM_IMR, DM_IMR_RXLEV);
-    else
-      _regs->write32(DM_IMR, 0);
-    return true;
-  }
-
-  int Uart_dm::get_char(bool blocking) const
-  {
-    while (!char_avail())
-      if (!blocking)
-        return -1;
-
-    return _regs->read32(DM_RF) & DM_RF_CHAR;
-  }
-
-  int Uart_dm::char_avail() const
-  {
-    return _regs->read32(DM_SR) & DM_SR_RXRDY;
-  }
-
   int Uart_dm::tx_avail() const
   {
     return _regs->read32(DM_SR) & DM_SR_TXRDY;
@@ -123,4 +100,28 @@ namespace L4
   {
     return generic_write<Uart_dm>(s, count, blocking);
   }
+
+  bool Uart_dm::enable_rx_irq(bool enable)
+  {
+    if (enable)
+      _regs->write32(DM_IMR, DM_IMR_RXLEV);
+    else
+      _regs->write32(DM_IMR, 0);
+    return true;
+  }
+
+  int Uart_dm::char_avail() const
+  {
+    return _regs->read32(DM_SR) & DM_SR_RXRDY;
+  }
+
+  int Uart_dm::get_char(bool blocking) const
+  {
+    while (!char_avail())
+      if (!blocking)
+        return -1;
+
+    return _regs->read32(DM_RF) & DM_RF_CHAR;
+  }
+
 }
