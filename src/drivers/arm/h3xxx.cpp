@@ -6,7 +6,8 @@ template< unsigned long Egpio_base >
 class H3xxx_generic
 {
 public:
-  enum {
+  enum
+  {
     H3800_asic1_gpio_offset         = 0x1e00,
     
     /// R/W 0:don't mask, 1:mask interrupt 
@@ -78,15 +79,15 @@ private:
   template< typename Reg_type >
   static inline void h3800_asic1_gpio( Reg_type val, unsigned long offset )
   {
-    *((volatile Reg_type*)(Egpio_base + H3800_asic1_gpio_offset + offset)) = 
-      val;
+    *reinterpret_cast<volatile Reg_type *>
+      (Egpio_base + H3800_asic1_gpio_offset + offset) = val;
   }
   
   template< typename Reg_type >
   static inline Reg_type h3800_asic1_gpio( unsigned long offset )
   {
-    return *((volatile Reg_type*)(Egpio_base + H3800_asic1_gpio_offset 
-	                          + offset));
+    return *reinterpret_cast<volatile Reg_type *>
+      (Egpio_base + H3800_asic1_gpio_offset + offset);
   }
 
   // define all the asic accessor functions. 
@@ -137,4 +138,3 @@ void H3xxx_generic<Egpio_base>::h3800_init()
 
   h3800_asic1_gpio_out(  H3800_asic1_ear_on | H3800_asic1_rs232_on );
 }
-

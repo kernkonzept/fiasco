@@ -18,10 +18,9 @@ public:
    */
   typedef unsigned BaudRate;
 
-  /* These constants must be defined in the 
-     arch part of the uart. To define them there
-     has the advantage of most efficient definition
-     for the hardware.
+  /* These constants must be defined in the architecture part of the Uart. To
+   * define them there has the advantage of most efficient definition for the
+   * hardware.
 
   static unsigned const PAR_NONE = xxx;
   static unsigned const PAR_EVEN = xxx;
@@ -119,7 +118,7 @@ private:
   void checksum_tag();
 
   /**
-   * Current data checksum
+   * Current data checksum.
    */
   Stream_crc32 crc32;
 };
@@ -141,26 +140,25 @@ INTERFACE [libuart]:
 EXTENSION class Uart
 {
 public:
-    enum
-      {
-        PAR_NONE = 0x00,
-        PAR_EVEN = 0x18,
-        PAR_ODD  = 0x08,
-        DAT_5    = 0x00,
-        DAT_6    = 0x01,
-        DAT_7    = 0x02,
-        DAT_8    = 0x03,
-        STOP_1   = 0x00,
-        STOP_2   = 0x04,
+  enum
+  {
+    PAR_NONE = 0x00,
+    PAR_EVEN = 0x18,
+    PAR_ODD  = 0x08,
+    DAT_5    = 0x00,
+    DAT_6    = 0x01,
+    DAT_7    = 0x02,
+    DAT_8    = 0x03,
+    STOP_1   = 0x00,
+    STOP_2   = 0x04,
 
-        MODE_8N1 = PAR_NONE | DAT_8 | STOP_1,
-        MODE_7E1 = PAR_EVEN | DAT_7 | STOP_1,
+    MODE_8N1 = PAR_NONE | DAT_8 | STOP_1,
+    MODE_7E1 = PAR_EVEN | DAT_7 | STOP_1,
 
-        // these two values are to leave either mode
-        // or baud rate unchanged on a call to change_mode
-        MODE_NC  = 0x1000000,
-        BAUD_NC  = 0x1000000,
-
+    // these two values are to leave either mode
+    // or baud rate unchanged on a call to change_mode
+    MODE_NC  = 0x1000000,
+    BAUD_NC  = 0x1000000,
   };
 
   static L4::Uart *uart();
@@ -171,7 +169,7 @@ public:
 IMPLEMENTATION [libuart]:
 
 IMPLEMENT inline Uart::~Uart()
-{ }
+{}
 
 IMPLEMENT inline void Uart::shutdown()
 {

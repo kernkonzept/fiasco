@@ -7,7 +7,8 @@ EXTENSION class Keyb
 {
 private:
 
-  enum {
+  enum
+  {
     /*
      * Keyboard I/O ports.
      */
@@ -102,11 +103,13 @@ IMPLEMENTATION[pc]:
 #include "io.h"
 #include "keycodes.h"
 
-enum {
+enum
+{
   SHIFT = 0xff,
 };
 
-static unsigned short keymap[][2] = {
+static unsigned short keymap[][2] =
+{
   {0       },		/* 0 */
   {KEY_ESC, KEY_ESC},
   {'1',	'!'},		/* 2 */

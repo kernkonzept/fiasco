@@ -6,7 +6,8 @@ INTERFACE [pf_sa1100]:
 class Sa1100 : public Mmio_register_block
 {
 public:
-  enum {
+  enum
+  {
     RSRR = 0x030000,
 
     /* interrupt controller */

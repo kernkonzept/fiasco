@@ -4,9 +4,7 @@
 
 #include <cstdio>
 
-enum {
-  DEBUG = 0,
-};
+enum { DEBUG = 0 };
 
 void num_way_l1_cache_op()
 {

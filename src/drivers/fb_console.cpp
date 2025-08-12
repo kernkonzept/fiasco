@@ -210,9 +210,7 @@ private:
   void *_video_base;
   unsigned _x, _y;
   unsigned _attribute;
-  enum {
-    MAX_ANSI_ESC_ARGS = 5,
-  };
+  enum { MAX_ANSI_ESC_ARGS = 5 };
 
   int ansi_esc_args[MAX_ANSI_ESC_ARGS];
   unsigned num_ansi_esc_args;
