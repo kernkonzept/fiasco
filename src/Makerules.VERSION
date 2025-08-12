@@ -10,7 +10,7 @@ ifeq ($(CONFIG_NO_VERSION),)
 		$(VERBOSE)v=`cd $(srcdir) && git rev-parse             \
 		                   --verify --short HEAD 2>/dev/null`; \
 		if [ -n "$$v" ]; then                                  \
-                  d=`cd $(srcdir) && git diff-index --name-only HEAD`; \
+                  d=`git -C $(srcdir) status --untracked-files=no --porcelain`; \
                   [ -n "$$d" ] && v="$$v-dirty";                       \
                 else                                                   \
 		   v=`LC_ALL=C svnversion -nc $(srcdir) 2>/dev/null`;  \
