@@ -9,22 +9,23 @@
 
 #include "uart_base.h"
 
-namespace L4
-{
-  class Uart_dummy : public Uart
-  {
-  public:
-    explicit Uart_dummy() {}
-    explicit Uart_dummy(unsigned /*base_rate*/) {}
-    bool startup(Io_register_block const *) override { return true; }
-    void shutdown() override {}
-    bool change_mode(Transfer_mode, Baud_rate) override { return true; }
-    inline void out_char(char /*ch*/) const {}
-    int write(char const * /*str*/, unsigned long /*count*/,
-              bool /*blocking*/ = true) const override
-    { return 0; }
+namespace L4 {
 
-    int char_avail() const override { return false; }
-    int get_char(bool /*blocking*/ = true) const override { return 0; }
-  };
+class Uart_dummy : public Uart
+{
+public:
+  explicit Uart_dummy() {}
+  explicit Uart_dummy(unsigned /*base_rate*/) {}
+  bool startup(Io_register_block const *) override { return true; }
+  void shutdown() override {}
+  bool change_mode(Transfer_mode, Baud_rate) override { return true; }
+  inline void out_char(char /*ch*/) const {}
+  int write(char const * /*str*/, unsigned long /*count*/,
+            bool /*blocking*/ = true) const override
+  { return 0; }
+
+  int char_avail() const override { return false; }
+  int get_char(bool /*blocking*/ = true) const override { return 0; }
 };
+
+} // namespace L4
