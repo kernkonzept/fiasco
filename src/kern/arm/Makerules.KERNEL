@@ -15,6 +15,15 @@ COVFLAGS_bootstrap-gcc   := -fno-profile-arcs -fno-test-coverage
 COVFLAGS_bootstrap-clang := -fno-profile-instr-generate -fno-coverage-mapping \
                             $(if $(CLANG_SUPPORTS_MCDC),-fno-coverage-mcdc)
 
+# Additional required objects. Don't link against libdrivers.a because
+# OBJ_BOOTSTRAP may be compiled using dedicated compiler options, see above.
+OBJ_BOOTSTRAP += bootstrap-mmu.o bootstrap-mmu-arm.o bootstrap-mmu-arm-$(BITS).o
+bootstrap-mmu%o: mmu%cc
+	$(call comp_msg,$*)
+	$(VERBOSE)$(CXX) -c -MD -MP -MF .$*.cc.d.new -o $@ $(call cc_flgs,\
+	  $*,$@) $< $(COLLECT_REDIR)
+	@mv .$*.cc.d.new .$*.cc.d
+
 define gen_bootstrap_flags =
 CXXFLAGS_$(basename $(notdir $(1))) = \
   -fPIC $(if $(CONFIG_COV),$(COVFLAGS_bootstrap-$(CC_TYPE)))
@@ -37,9 +46,9 @@ bootstrap_strip    = --strip-all $(addprefix --keep-symbol=,$(bootstrap_export))
 bootstrap_syms     = end_of_bootstrap_info|_start|start_of_loader
 bootstrap_sed      = 's/^0*([0-9a-f]*) [a-zA-Z] ($(bootstrap_syms))/\2 = 0x\1;/p'
 
-bootstrap.$(KERNEL).pre.o: $(OBJ_BOOTSTRAP) $(bootstrap_lds) libdrivers.a
+bootstrap.$(KERNEL).pre.o: $(OBJ_BOOTSTRAP) $(bootstrap_lds)
 	$(LINK_MESSAGE)
-	$(VERBOSE)$(LD) $(bootstrap_ldflags) $(OBJ_BOOTSTRAP) libdrivers.a -o $@
+	$(VERBOSE)$(LD) $(bootstrap_ldflags) $(OBJ_BOOTSTRAP) -o $@
 
 # Make a raw binary. The linker script is already minimal. Only explicitly drop
 # the things that are still unneeded (dynamic symbols) and what is expected to
