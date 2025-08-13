@@ -12,7 +12,7 @@
 # all `preprocess'd C++ source files have been created.
 
 all: do-all
-	$(VERBOSE)$(if $(CONFIG_NO_VERSION),,echo "  --> Build-Nr: $$(cat .build_nr)")
+	$(if $(CONFIG_NO_VERSION),,@printf "  --> Build-Nr: "; cat .build_nr)
 
 BUILD_OBJECTS=true
 
