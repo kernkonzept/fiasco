@@ -119,10 +119,12 @@ Context_hyp::save(bool from_privileged)
 
   if (EXPECT_TRUE(Cpu::has_aarch32_el1()))
     {
-      asm volatile ("mrs %x0, SPSR_fiq"  : "=r"(spsr_fiq));
-      asm volatile ("mrs %x0, SPSR_irq"  : "=r"(spsr_irq));
-      asm volatile ("mrs %x0, SPSR_abt"  : "=r"(spsr_abt));
-      asm volatile ("mrs %x0, SPSR_und"  : "=r"(spsr_und));
+      // If AArch32 is not supported, these registers are actually RES0
+      // so strictly speaking, we could read them unconditionally.
+      asm volatile ("mrs %x0, SPSR_fiq" : "=r"(spsr_fiq));
+      asm volatile ("mrs %x0, SPSR_irq" : "=r"(spsr_irq));
+      asm volatile ("mrs %x0, SPSR_abt" : "=r"(spsr_abt));
+      asm volatile ("mrs %x0, SPSR_und" : "=r"(spsr_und));
     }
 }
 
@@ -163,10 +165,12 @@ Context_hyp::load(bool from_privileged, bool to_privileged)
 
   if (EXPECT_TRUE(Cpu::has_aarch32_el1()))
     {
-      asm volatile ("msr SPSR_fiq, %x0"       : : "r"(spsr_fiq));
-      asm volatile ("msr SPSR_irq, %x0"       : : "r"(spsr_irq));
-      asm volatile ("msr SPSR_abt, %x0"       : : "r"(spsr_abt));
-      asm volatile ("msr SPSR_und, %x0"       : : "r"(spsr_und));
+      // If AArch32 is not supported, these registers are actually RES0
+      // so strictly speaking, we could write them unconditionally.
+      asm volatile ("msr SPSR_fiq, %x0" : : "r"(spsr_fiq));
+      asm volatile ("msr SPSR_irq, %x0" : : "r"(spsr_irq));
+      asm volatile ("msr SPSR_abt, %x0" : : "r"(spsr_abt));
+      asm volatile ("msr SPSR_und, %x0" : : "r"(spsr_und));
     }
 }
 
