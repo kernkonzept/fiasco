@@ -234,12 +234,23 @@ $(KCONFIG_FILE): $(KCONFIG_SRC_FILE) $(KCONFIG_PART_FILES) .$(KCONFIG_FILE).part
 	@$(tooldir)/gen_kconfig $(KCONFIG_SRC_FILE) $(KCONFIG_FILE) \
 	                        $(KCONFIG_PART_FILES)
 
+# On cleanall/mrproper, don't bother updating the globalconfig.out but still
+# create it if it doesn't exist because Makeconf is also needed for cleanall.
+ifeq ($(filter cleanall mrproper,$(MAKECMDGOALS)),)
+
 globalconfig.out: $(KCONFIG_FILE)
 	+$(VERBOSE)$(kconfig_call) oldconfig
 
 globalconfig.h globalconfig.tags: globalconfig.out
 	+$(VERBOSE)$(kconfig_call) syncconfig
 	+$(VERBOSE)$(update_globalconfig_tags)
+
+else
+
+globalconfig.out:
+	+$(VERBOSE)$(kconfig_call) oldconfig
+
+endif
 
 config: $(KCONFIG_FILE)
 	+$(VERBOSE)$(kconfig_call) menuconfig
