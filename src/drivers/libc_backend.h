@@ -22,20 +22,6 @@ __BEGIN_DECLS
  */
 int __libc_backend_outs(const char *s, size_t len);
 
-/**
- * The text input back-end.
- *
- * This function must be provided to the C-library for
- * text input. It has to block until len characters are
- * read or a newline is reached. The return value gives
- * the number of characters virtually read.
- *
- * @param s   A pointer to the buffer for the read text.
- * @param len The size of the buffer.
- * @return the number of characters virtually read.
- */
-int __libc_backend_ins(char *s, size_t len);
-
 typedef unsigned int __libc_backend_printf_lock_t;
 
 __libc_backend_printf_lock_t __libc_backend_printf_lock(void);
