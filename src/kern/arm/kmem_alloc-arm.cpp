@@ -137,42 +137,8 @@ STATIC_INITIALIZER_P(add_initial_pmem, BOOTSTRAP_INIT_PRIO);
 //----------------------------------------------------------------------------
 IMPLEMENTATION [arm && mpu]:
 
-#include "amp_node.h"
 #include "kmem.h"
 #include "paging.h"
-
-/**
- * Reserve kernel memory for additional AMP nodes.
- *
- * Just mark it reserved in the Kip and return the base address.
- *
- * \param node The logical AMP node-id for which the memory shall be reserved.
- */
-PUBLIC static void
-Kmem_alloc::reserve_amp_heap(unsigned node)
-{
-  unsigned phys_node = cxx::int_value<Amp_phys_id>(Amp_node::phys_id(node));
-  Mem_region_map<64> map;
-  create_free_map(Kip::all_instances()[node], &map);
-  unsigned long alloc_size = Kmem_alloc::orig_free();
-
-  for (int i = map.length() - 1; i >= 0; --i)
-    {
-      Mem_region &f = map[i];
-      if (f.size() < alloc_size)
-        continue;
-
-      f.start += (f.size() - alloc_size);
-
-      for (auto k : Kip::all_instances())
-        k->add_mem_region(Mem_desc(f.start, f.end,
-                                   k->node == phys_node ? Mem_desc::Kernel_tmp
-                                                        : Mem_desc::Reserved));
-      return;
-    }
-
-  panic("Cannot reserve kmem for node %u\n", node);
-}
 
 /**
  * Map desired region as kernel heap and initialize buddy allocator.
@@ -261,4 +227,42 @@ Kmem_alloc::Kmem_alloc()
   Kip *k = Kip::k();
   if (!init_prealloc(k))
     init_alloc();
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [arm && mpu && amp]:
+
+#include "amp_node.h"
+
+/**
+ * Reserve kernel memory for additional AMP nodes.
+ *
+ * Just mark it reserved in the Kip and return the base address.
+ *
+ * \param node The logical AMP node-id for which the memory shall be reserved.
+ */
+PUBLIC static void
+Kmem_alloc::reserve_amp_heap(unsigned node)
+{
+  unsigned phys_node = cxx::int_value<Amp_phys_id>(Amp_node::phys_id(node));
+  Mem_region_map<64> map;
+  create_free_map(Kip::all_instances()[node], &map);
+  unsigned long alloc_size = Kmem_alloc::orig_free();
+
+  for (int i = map.length() - 1; i >= 0; --i)
+    {
+      Mem_region &f = map[i];
+      if (f.size() < alloc_size)
+        continue;
+
+      f.start += (f.size() - alloc_size);
+
+      for (auto k : Kip::all_instances())
+        k->add_mem_region(Mem_desc(f.start, f.end,
+                                   k->node == phys_node ? Mem_desc::Kernel_tmp
+                                                        : Mem_desc::Reserved));
+      return;
+    }
+
+  panic("Cannot reserve kmem for node %u\n", node);
 }
