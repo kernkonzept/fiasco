@@ -110,7 +110,7 @@ EXTENSION class Gic_dist
 public:
   static constexpr bool Config_mxc_tzic = false;
 
-  Unsigned32 mxc_pending() const { return 0; }
+  static constexpr Unsigned32 mxc_pending() { return 0; }
 };
 
 // ------------------------------------------------------------------------
