@@ -37,7 +37,7 @@ Task::invoke_arch(L4_msg_tag &, Utcb *)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && cpu_virt && vgic]:
+IMPLEMENTATION [arm && cpu_virt && vgic && have_arm_gicv2]:
 
 #include "vgic_global.h"
 
@@ -100,7 +100,7 @@ Task::map_gicc_page(L4_msg_tag tag, Utcb *utcb)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && cpu_virt && !vgic]:
+IMPLEMENTATION [arm && cpu_virt && (!vgic || !have_arm_gicv2)]:
 
 PRIVATE
 L4_msg_tag
