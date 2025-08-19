@@ -46,14 +46,6 @@ Gic_cpu_v3::enable()
   pmr(Cpu_prio_val);
 }
 
-PUBLIC inline NEEDS["mem.h"]
-void
-Gic_cpu_v3::disable()
-{
-  asm volatile("mcr p15, 0, %0, c12, c12, 7" : : "r" (0)); // ICC_IGRPEN1
-  Mem::isb();
-}
-
 PUBLIC inline
 void
 Gic_cpu_v3::ack(Unsigned32 irq)
@@ -79,6 +71,17 @@ Gic_cpu_v3::pmr()
   return pmr;
 }
 
+//-------------------------------------------------------------------
+IMPLEMENTATION [mp]:
+
+PUBLIC inline NEEDS["mem.h"]
+void
+Gic_cpu_v3::disable()
+{
+  asm volatile("mcr p15, 0, %0, c12, c12, 7" : : "r" (0)); // ICC_IGRPEN1
+  Mem::isb();
+}
+
 PUBLIC inline
 void
 Gic_cpu_v3::softint(Unsigned64 sgi)
@@ -86,4 +89,3 @@ Gic_cpu_v3::softint(Unsigned64 sgi)
   asm volatile("mcrr p15, 0, %Q0, %R0, c12"
                : : "r"(sgi));
 }
-

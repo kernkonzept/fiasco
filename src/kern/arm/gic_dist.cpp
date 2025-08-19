@@ -285,13 +285,6 @@ Gic_dist::init_targets(unsigned max, V3)
     _dist.write_non_atomic<Unsigned64>(t, GICD_IROUTER + 8 * i);
 }
 
-PUBLIC inline
-Unsigned32
-Gic_dist::irouter(unsigned num)
-{
-  return _dist.read_non_atomic<Unsigned64>(GICD_IROUTER + num * 8);
-}
-
 PRIVATE
 void
 Gic_dist::igroup_init(V3, unsigned num)
@@ -324,6 +317,16 @@ Gic_dist::sync_rwp(V3)
 
   if (EXPECT_FALSE(i.timed_out()))
     WARNX(Error, "GICD: RWP timed out!\n");
+}
+
+//-------------------------------------------------------------------
+IMPLEMENTATION [have_arm_gicv3 && mp]:
+
+PUBLIC inline
+Unsigned32
+Gic_dist::irouter(unsigned num)
+{
+  return _dist.read_non_atomic<Unsigned64>(GICD_IROUTER + num * 8);
 }
 
 //-------------------------------------------------------------------

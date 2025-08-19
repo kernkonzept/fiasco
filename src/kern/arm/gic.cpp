@@ -18,14 +18,7 @@ protected:
 public:
   explicit Gic(void *dist_base) : _dist(dist_base) {}
 
-  virtual void softint_cpu(Cpu_number target, unsigned m) = 0;
-
-
   // init / pm only functions (rarely used)
-  virtual void softint_bcast(unsigned m) = 0;
-  virtual void softint_phys(unsigned m, Unsigned64 target) = 0;
-  virtual void init_ap(Cpu_number cpu, bool resume) = 0;
-  virtual void cpu_deinit(Cpu_number cpu) = 0;
   virtual unsigned gic_version() const = 0;
 
   // empty default for JDB
@@ -69,21 +62,6 @@ public:
   : Gic(dist_base), _cpu(cxx::forward<CPU_ARGS>(args)...)
   {
     Irq_chip_gen::init(master_mapping->nr_pins());
-  }
-
-  void init_ap(Cpu_number cpu, bool resume) override
-  {
-    if (!resume)
-      self()->cpu_local_init(cpu);
-
-    _cpu.enable();
-  }
-
-  void cpu_deinit(Cpu_number cpu) override
-  {
-    self()->migrate_irqs(cpu, Cpu_number::boot_cpu());
-    self()->redist_disable(cpu);
-    _cpu.disable();
   }
 
   unsigned init(bool dist_init, int nr_pins_override = -1)
@@ -174,6 +152,49 @@ public:
   {
     assert (cpu_lock.test());
     enable_locked(pin);
+  }
+};
+
+// ------------------------------------------------------------------------
+INTERFACE [arm && pic_gic && !mp]:
+
+EXTENSION class Gic
+{
+public:
+  static constexpr void init_ap(Cpu_number, bool) {}
+};
+
+// ------------------------------------------------------------------------
+INTERFACE [arm && pic_gic && mp]:
+
+EXTENSION class Gic
+{
+public:
+  virtual void softint_cpu(Cpu_number target, unsigned m) = 0;
+
+  // init / pm only functions (rarely used)
+  virtual void softint_bcast(unsigned m) = 0;
+  virtual void softint_phys(unsigned m, Unsigned64 target) = 0;
+  virtual void init_ap(Cpu_number cpu, bool resume) = 0;
+  virtual void cpu_deinit(Cpu_number cpu) = 0;
+};
+
+EXTENSION class Gic_mixin
+{
+public:
+  void init_ap(Cpu_number cpu, bool resume) override
+  {
+    if (!resume)
+      self()->cpu_local_init(cpu);
+
+    _cpu.enable();
+  }
+
+  void cpu_deinit(Cpu_number cpu) override
+  {
+    self()->migrate_irqs(cpu, Cpu_number::boot_cpu());
+    self()->redist_disable(cpu);
+    _cpu.disable();
   }
 };
 

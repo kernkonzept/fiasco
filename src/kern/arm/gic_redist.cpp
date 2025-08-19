@@ -189,22 +189,6 @@ Gic_redist::cpu_init()
 
 PUBLIC
 void
-Gic_redist::disable()
-{
-  unsigned val = _redist.read<Unsigned32>(GICR_WAKER);
-  val |= GICR_WAKER_Processor_sleep;
-  _redist.write<Unsigned32>(val, GICR_WAKER);
-
-  L4::Poll_timeout_counter i(5000000);
-  while (i.test(!(_redist.read<Unsigned32>(GICR_WAKER) & GICR_WAKER_Children_asleep)))
-    Proc::pause();
-
-  if (i.timed_out())
-    panic("GIC: redistributor still active\n");
-}
-
-PUBLIC
-void
 Gic_redist::mask(Mword pin)
 {
   _redist.write<Unsigned32>(1u << pin, GICR_ICENABLER0);
@@ -277,6 +261,25 @@ void
 Gic_redist::set_region(Mmio_register_block b)
 {
   _redist = b;
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [mp]:
+
+PUBLIC
+void
+Gic_redist::disable()
+{
+  unsigned val = _redist.read<Unsigned32>(GICR_WAKER);
+  val |= GICR_WAKER_Processor_sleep;
+  _redist.write<Unsigned32>(val, GICR_WAKER);
+
+  L4::Poll_timeout_counter i(5000000);
+  while (i.test(!(_redist.read<Unsigned32>(GICR_WAKER) & GICR_WAKER_Children_asleep)))
+    Proc::pause();
+
+  if (i.timed_out())
+    panic("GIC: redistributor still active\n");
 }
 
 //-------------------------------------------------------------------

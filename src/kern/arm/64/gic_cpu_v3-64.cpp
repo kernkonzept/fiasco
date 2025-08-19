@@ -50,14 +50,6 @@ Gic_cpu_v3::enable()
 
 PUBLIC inline NEEDS["mem.h"]
 void
-Gic_cpu_v3::disable()
-{
-  asm volatile("msr S3_0_C12_C12_7, %x0" : : "r" (0ul)); // ICC_IGRPEN1_EL1
-  Mem::isb();
-}
-
-PUBLIC inline NEEDS["mem.h"]
-void
 Gic_cpu_v3::ack(Unsigned32 irq)
 {
   asm volatile("msr S3_0_C12_C12_1, %x0" : : "r"(irq)); // ICC_EOIR1_EL1
@@ -83,6 +75,16 @@ Gic_cpu_v3::pmr()
   return pmr;
 }
 
+//-------------------------------------------------------------------
+IMPLEMENTATION [mp]:
+
+PUBLIC inline NEEDS["mem.h"]
+void
+Gic_cpu_v3::disable()
+{
+  asm volatile("msr S3_0_C12_C12_7, %x0" : : "r" (0ul)); // ICC_IGRPEN1_EL1
+  Mem::isb();
+}
 
 PUBLIC inline
 void
@@ -91,4 +93,3 @@ Gic_cpu_v3::softint(Unsigned64 sgi)
   asm volatile("msr S3_0_C12_C11_5, %x0" // ICC_SGI1R_EL1
                : : "r"(sgi));
 }
-

@@ -141,29 +141,6 @@ IMPLEMENTATION:
 DEFINE_GLOBAL Global_data<Gic_v3 *> Gic_v3::primary;
 DEFINE_PER_CPU Per_cpu<Gic_redist> Gic_v3::_redist;
 
-PUBLIC inline
-void
-Gic_v3::softint_cpu(Cpu_number target, unsigned m) override
-{
-  Unsigned64 sgi = _sgi_template[target] | (m << 24);
-  _cpu.softint(sgi);
-}
-
-PUBLIC inline
-void
-Gic_v3::softint_bcast(unsigned m) override
-{ _cpu.softint((1ull << 40) | (m << 24)); }
-
-PUBLIC inline
-void
-Gic_v3::softint_phys(unsigned m, Unsigned64 target) override
-{ _cpu.softint(target | (m << 24)); }
-
-PUBLIC inline
-void
-Gic_v3::redist_disable(Cpu_number cpu)
-{ _redist.cpu(cpu).disable(); }
-
 PUBLIC inline NEEDS["panic.h"]
 void
 Gic_v3::cpu_local_init(Cpu_number cpu)
@@ -204,20 +181,6 @@ Gic_v3::set_cpu(Mword pin, Cpu_number cpu) override
 
 PUBLIC
 void
-Gic_v3::migrate_irqs(Cpu_number from, Cpu_number to)
-{
-  unsigned num = hw_nr_pins();
-  Unsigned64 val_from = _dist.cpu_to_irouter_entry(from);
-
-  for (unsigned i = 0; i < num; ++i)
-    if (_dist.irouter(i) == val_from)
-      set_cpu(i, to);
-
-  migrate_lpis(from, to);
-}
-
-PUBLIC
-void
 Gic_v3::mask_percpu(Cpu_number cpu, Mword pin) override
 {
   assert(pin < 32);
@@ -241,6 +204,46 @@ Gic_v3::set_mode_percpu(Cpu_number cpu, Mword pin, Mode m) override
   assert(pin < 32);
   assert (cpu_lock.test());
   return _redist.cpu(cpu).set_mode(pin, m);
+}
+
+//-------------------------------------------------------------------
+IMPLEMENTATION [mp]:
+
+PUBLIC inline
+void
+Gic_v3::softint_cpu(Cpu_number target, unsigned m) override
+{
+  Unsigned64 sgi = _sgi_template[target] | (m << 24);
+  _cpu.softint(sgi);
+}
+
+PUBLIC inline
+void
+Gic_v3::softint_bcast(unsigned m) override
+{ _cpu.softint((1ull << 40) | (m << 24)); }
+
+PUBLIC inline
+void
+Gic_v3::softint_phys(unsigned m, Unsigned64 target) override
+{ _cpu.softint(target | (m << 24)); }
+
+PUBLIC inline
+void
+Gic_v3::redist_disable(Cpu_number cpu)
+{ _redist.cpu(cpu).disable(); }
+
+PUBLIC
+void
+Gic_v3::migrate_irqs(Cpu_number from, Cpu_number to)
+{
+  unsigned num = hw_nr_pins();
+  Unsigned64 val_from = _dist.cpu_to_irouter_entry(from);
+
+  for (unsigned i = 0; i < num; ++i)
+    if (_dist.irouter(i) == val_from)
+      set_cpu(i, to);
+
+  migrate_lpis(from, to);
 }
 
 //-------------------------------------------------------------------

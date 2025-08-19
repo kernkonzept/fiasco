@@ -44,6 +44,27 @@ DEFINE_GLOBAL Global_data<Gic_v2 *> Gic_v2::primary;
 
 PUBLIC inline
 void
+Gic_v2::cpu_local_init(Cpu_number cpu)
+{
+  _dist.cpu_init_v2();
+  // initialize our CPU target using the target register from some
+  // CPU local IRQ
+  _sgi_template[cpu] = _dist.itarget(0) & 0x00ff0000;
+}
+
+PUBLIC inline
+bool
+Gic_v2::set_cpu(Mword pin, Cpu_number cpu) override
+{
+  _dist.set_cpu(pin, _sgi_template[cpu] >> 16, Version());
+  return true;
+}
+
+//-------------------------------------------------------------------
+IMPLEMENTATION [mp]:
+
+PUBLIC inline
+void
 Gic_v2::softint_cpu(Cpu_number target, unsigned m) override
 { _dist.softint(_sgi_template[target] | m); }
 
@@ -61,24 +82,6 @@ PUBLIC inline
 void
 Gic_v2::redist_disable(Cpu_number)
 {}
-
-PUBLIC inline
-void
-Gic_v2::cpu_local_init(Cpu_number cpu)
-{
-  _dist.cpu_init_v2();
-  // initialize our CPU target using the target register from some
-  // CPU local IRQ
-  _sgi_template[cpu] = _dist.itarget(0) & 0x00ff0000;
-}
-
-PUBLIC inline
-bool
-Gic_v2::set_cpu(Mword pin, Cpu_number cpu) override
-{
-  _dist.set_cpu(pin, _sgi_template[cpu] >> 16, Version());
-  return true;
-}
 
 PUBLIC
 void
