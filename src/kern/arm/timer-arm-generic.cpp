@@ -102,7 +102,7 @@ PUBLIC static inline
 void
 Timer::acknowledge()
 {
-  if (!Config::Scheduler_one_shot)
+  if constexpr (!Config::Scheduler_one_shot)
     Gtimer::compare(Gtimer::compare() + _interval);
   // else done in Timer::update_timer()
 }
