@@ -301,6 +301,7 @@ Mru::set_cpu(Mword, Cpu_number) override
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pic_gic && pf_s32z && pf_s32z_mru]:
 
+#include "amp_node.h"
 #include "cpu.h"
 
 PUBLIC static
