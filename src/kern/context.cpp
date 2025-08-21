@@ -544,7 +544,7 @@ Context::check_for_current_cpu() const
 {
   Cpu_number hc = access_once(&_home_cpu);
   bool r = hc == current_cpu() || !Cpu::online(hc);
-  if (0 && EXPECT_FALSE(!r)) // debug output disabled
+  if constexpr (0 && EXPECT_FALSE(!r)) // debug output disabled
     printf("FAIL: cpu=%u (current=%u) %p current=%p\n",
            cxx::int_value<Cpu_number>(hc),
            cxx::int_value<Cpu_number>(current_cpu()),
@@ -1181,7 +1181,7 @@ Context::Drq_q::execute_request(Drq *r, bool local)
 {
   bool need_resched = false;
   Context *const self = context();
-  if (0)
+  if constexpr (0)
     printf("CPU[%2u:%p]: context=%p: handle request for %p (func=%p, arg=%p)\n",
            cxx::int_value<Cpu_number>(current_cpu()),
            static_cast<void *>(current()), static_cast<void *>(context()),
@@ -1252,7 +1252,7 @@ IMPLEMENT inline NEEDS["mem.h", "lock_guard.h"]
 bool
 Context::Drq_q::handle_requests()
 {
-  if (0)
+  if constexpr (0)
     printf("CPU[%2u:%p]: > Context::Drq_q::handle_requests() context=%p\n",
            cxx::int_value<Cpu_number>(current_cpu()),
            static_cast<void *>(current()), static_cast<void *>(context()));
@@ -1270,7 +1270,7 @@ Context::Drq_q::handle_requests()
         }
 
       Drq *r = static_cast<Drq*>(qi);
-      if (0)
+      if constexpr (0)
         printf("CPU[%2u:%p]: context=%p: handle request for %p (func=%p, arg=%p)\n",
                cxx::int_value<Cpu_number>(current_cpu()),
                static_cast<void *>(current()), static_cast<void *>(context()),
@@ -1496,7 +1496,7 @@ void
 Context::drq(Drq *drq, Drq::Request_func *func, void *arg,
              Drq::Wait_mode wait = Drq::Wait)
 {
-  if (0)
+  if constexpr (0)
     printf("CPU[%2u:%p]: > Context::drq(this=%p, func=%p, arg=%p)\n",
            cxx::int_value<Cpu_number>(current_cpu()),
            static_cast<void *>(current()), static_cast<void *>(this),
