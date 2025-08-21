@@ -1053,18 +1053,18 @@ Utest::wait_for_events(Bool_cpu_array const &done, unsigned long timeout)
   bool occurred = true;
 
   for (auto i = Cpu_number::first(); i < Config::max_num_cpus(); ++i)
-  {
-    // Skip the current and offline CPUs.
-    if (i == current_cpu() || !Cpu::online(i))
-      continue;
-
-    if (!wait_for_event(&done[i], timeout))
     {
-      // The waiting has timed out on the i-th CPU.
-      occurred = false;
-      break;
+      // Skip the current and offline CPUs.
+      if (i == current_cpu() || !Cpu::online(i))
+        continue;
+
+      if (!wait_for_event(&done[i], timeout))
+        {
+          // The waiting has timed out on the i-th CPU.
+          occurred = false;
+          break;
+        }
     }
-  }
 
   return occurred;
 }
@@ -1365,23 +1365,24 @@ Utest::Tick_disabler::wait_for_event(bool const *done, unsigned long timeout)
  */
 IMPLEMENT static
 bool
-Utest::Tick_disabler::wait_for_events(Bool_cpu_array const &done, unsigned long timeout)
+Utest::Tick_disabler::wait_for_events(Bool_cpu_array const &done,
+                                      unsigned long timeout)
 {
   bool occurred = true;
 
   for (auto i = Cpu_number::first(); i < Config::max_num_cpus(); ++i)
-  {
-    // Skip the current and offline CPUs.
-    if (i == current_cpu() || !Cpu::online(i))
-      continue;
-
-    if (!Tick_disabler::wait_for_event(&done[i], timeout))
     {
-      // The waiting has timed out on the i-th CPU.
-      occurred = false;
-      break;
+      // Skip the current and offline CPUs.
+      if (i == current_cpu() || !Cpu::online(i))
+        continue;
+
+      if (!Tick_disabler::wait_for_event(&done[i], timeout))
+        {
+          // The waiting has timed out on the i-th CPU.
+          occurred = false;
+          break;
+        }
     }
-  }
 
   return occurred;
 }
