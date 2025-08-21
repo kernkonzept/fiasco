@@ -45,11 +45,11 @@ init_unittest()
   // prevent concurrent screen output.
   Utest::wait_for_app_cpus();
 
-  Utest_fw::tap_log.start();
+  Utest_fw::tap_log->start();
 
   Mapdb_util_test().test_map_util();
 
-  Utest_fw::tap_log.finish();
+  Utest_fw::tap_log->finish();
 }
 
 class Mapdb_util_test : public Mapdb_test_base
@@ -157,8 +157,8 @@ PUBLIC
 void
 Mapdb_util_test::test_map_util()
 {
-  Utest_fw::tap_log.new_test(Mapdb_group, __func__,
-                             "d32fa52b-7faa-4a17-abb3-3c5ceeac3e0f");
+  Utest_fw::tap_log->new_test(Mapdb_group, __func__,
+                              "d32fa52b-7faa-4a17-abb3-3c5ceeac3e0f");
 
   unsigned const order_max = have_superpages() ? O_super : O_page;
 

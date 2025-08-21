@@ -26,7 +26,7 @@ init_unittest()
   // prevent concurrent screen output.
   Utest::wait_for_app_cpus();
 
-  Utest_fw::tap_log.start();
+  Utest_fw::tap_log->start();
 
   Mapdb_ext_test().test_mapdb_basic<Simple_mapdb>();
   Mapdb_ext_test().test_mapdb_maphole<Simple_mapdb>();
@@ -36,7 +36,7 @@ init_unittest()
   Mapdb_ext_test().test_mapdb_flushtest<Multilevel_mapdb>();
   Mapdb_ext_test().test_mapdb_multilevel<Multilevel_mapdb>();
 
-  Utest_fw::tap_log.finish();
+  Utest_fw::tap_log->finish();
 }
 
 /**
@@ -538,8 +538,8 @@ template <typename M>
 void
 Mapdb_ext_test::test_mapdb_basic()
 {
-  Utest_fw::tap_log.new_test(Mapdb_group, __func__,
-                             "4d74adda-6b14-4042-a441-761d78a89865");
+  Utest_fw::tap_log->new_test(Mapdb_group, __func__,
+                              "4d74adda-6b14-4042-a441-761d78a89865");
 
   Mapdb &m = create_mapdb(M());
   Mapping *sub;
@@ -609,8 +609,8 @@ template <typename M>
 void
 Mapdb_ext_test::test_mapdb_maphole()
 {
-  Utest_fw::tap_log.new_test(Mapdb_group, __func__,
-                             "ff389263-d3c8-4775-b275-2da4560d6eac");
+  Utest_fw::tap_log->new_test(Mapdb_group, __func__,
+                              "ff389263-d3c8-4775-b275-2da4560d6eac");
 
   Mapdb &m = create_mapdb(M());
   Mapdb::Frame f;
@@ -708,8 +708,8 @@ template <typename M>
 void
 Mapdb_ext_test::test_mapdb_flushtest()
 {
-  Utest_fw::tap_log.new_test(Mapdb_group, __func__,
-                             "fffeb9bb-f259-4cad-b4b5-4a34ba27b4db");
+  Utest_fw::tap_log->new_test(Mapdb_group, __func__,
+                              "fffeb9bb-f259-4cad-b4b5-4a34ba27b4db");
 
   Mapdb &m = create_mapdb(M());
   Mapdb::Frame f;
@@ -786,8 +786,8 @@ template <typename M>
 void
 Mapdb_ext_test::test_mapdb_multilevel()
 {
-  Utest_fw::tap_log.new_test(Mapdb_group, __func__,
-                             "f063d80d-7987-423a-8f8b-21bc09aff86d");
+  Utest_fw::tap_log->new_test(Mapdb_group, __func__,
+                              "f063d80d-7987-423a-8f8b-21bc09aff86d");
 
   Mapdb &m = create_mapdb(M());
   Mapdb::Frame f, s0_f;

@@ -12,6 +12,7 @@ INTERFACE:
 #include <cstring>
 #include <cstdarg>
 
+#include "global_data.h"
 #include "kdb_ke.h"
 #include "kip.h"
 #include "kmem_slab.h"
@@ -247,8 +248,8 @@ public:
     Unsigned32 cores = 0;
   };
 
-  static Utest_fw tap_log;
-  static External_info ext_info;
+  static Global_data<Utest_fw> tap_log;
+  static Global_data<External_info> ext_info;
 
   void test_name(char const *name) { _test_name = name; }
   void group_name(char const *name) { _group_name = name; }
@@ -277,20 +278,20 @@ private:
  * ACT:  Actual expression to test.
  * MSG:  Message to be printed in case of failure.
  */
-#define UTEST_TRUE(F, ACT, MSG)                                             \
-  do                                                                        \
-    {                                                                       \
-      auto act_res = static_cast<bool>(ACT);                                \
-      Utest_fw::tap_log.binary_cmp(F, true == act_res, "true", #ACT, true,  \
-                                   act_res, "==", MSG, __FILE__, __LINE__); \
+#define UTEST_TRUE(F, ACT, MSG)                                              \
+  do                                                                         \
+    {                                                                        \
+      auto act_res = static_cast<bool>(ACT);                                 \
+      Utest_fw::tap_log->binary_cmp(F, true == act_res, "true", #ACT, true,  \
+                                    act_res, "==", MSG, __FILE__, __LINE__); \
     } while (false)
 
-#define UTEST_FALSE(F, ACT, MSG)                                              \
-  do                                                                          \
-    {                                                                         \
-      auto act_res = static_cast<bool>(ACT);                                  \
-      Utest_fw::tap_log.binary_cmp(F, false == act_res, "false", #ACT, false, \
-                                   act_res, "==", MSG, __FILE__, __LINE__);   \
+#define UTEST_FALSE(F, ACT, MSG)                                               \
+  do                                                                           \
+    {                                                                          \
+      auto act_res = static_cast<bool>(ACT);                                   \
+      Utest_fw::tap_log->binary_cmp(F, false == act_res, "false", #ACT, false, \
+                                    act_res, "==", MSG, __FILE__, __LINE__);   \
     } while (false)
 
 /**
@@ -304,8 +305,8 @@ private:
     {                                                                          \
       auto rhs_res = (RHS);                                                    \
       auto lhs_res = (LHS);                                                    \
-      Utest_fw::tap_log.binary_cmp(F, lhs_res == rhs_res, #LHS, #RHS, lhs_res, \
-                                   rhs_res, "==", MSG, __FILE__, __LINE__);    \
+      Utest_fw::tap_log->binary_cmp(F, lhs_res == rhs_res, #LHS, #RHS, lhs_res,\
+                                    rhs_res, "==", MSG, __FILE__, __LINE__);   \
     } while (false)
 
 #define UTEST_NE(F, LHS, RHS, MSG)                                             \
@@ -313,8 +314,8 @@ private:
     {                                                                          \
       auto rhs_res = (RHS);                                                    \
       auto lhs_res = (LHS);                                                    \
-      Utest_fw::tap_log.binary_cmp(F, lhs_res != rhs_res, #LHS, #RHS, lhs_res, \
-                                   rhs_res, "!=", MSG, __FILE__, __LINE__);    \
+      Utest_fw::tap_log->binary_cmp(F, lhs_res != rhs_res, #LHS, #RHS, lhs_res,\
+                                    rhs_res, "!=", MSG, __FILE__, __LINE__);   \
     } while (false)
 
 #define UTEST_LT(F, LHS, RHS, MSG)                                            \
@@ -322,8 +323,8 @@ private:
     {                                                                         \
       auto rhs_res = (RHS);                                                   \
       auto lhs_res = (LHS);                                                   \
-      Utest_fw::tap_log.binary_cmp(F, lhs_res < rhs_res, #LHS, #RHS, lhs_res, \
-                                   rhs_res, "<", MSG, __FILE__, __LINE__);    \
+      Utest_fw::tap_log->binary_cmp(F, lhs_res < rhs_res, #LHS, #RHS, lhs_res,\
+                                    rhs_res, "<", MSG, __FILE__, __LINE__);   \
     } while (false)
 
 #define UTEST_LE(F, LHS, RHS, MSG)                                             \
@@ -331,8 +332,8 @@ private:
     {                                                                          \
       auto rhs_res = (RHS);                                                    \
       auto lhs_res = (LHS);                                                    \
-      Utest_fw::tap_log.binary_cmp(F, lhs_res <= rhs_res, #LHS, #RHS, lhs_res, \
-                                   rhs_res, "<=", MSG, __FILE__, __LINE__);    \
+      Utest_fw::tap_log->binary_cmp(F, lhs_res <= rhs_res, #LHS, #RHS, lhs_res,\
+                                    rhs_res, "<=", MSG, __FILE__, __LINE__);   \
     } while (false)
 
 #define UTEST_GE(F, LHS, RHS, MSG)                                             \
@@ -340,26 +341,26 @@ private:
     {                                                                          \
       auto rhs_res = (RHS);                                                    \
       auto lhs_res = (LHS);                                                    \
-      Utest_fw::tap_log.binary_cmp(F, lhs_res >= rhs_res, #LHS, #RHS, lhs_res, \
-                                   rhs_res, ">=", MSG, __FILE__, __LINE__);    \
+      Utest_fw::tap_log->binary_cmp(F, lhs_res >= rhs_res, #LHS, #RHS, lhs_res,\
+                                    rhs_res, ">=", MSG, __FILE__, __LINE__);   \
     } while (false)
 
-#define UTEST_GT(F, LHS, RHS, MSG)                                            \
-  do                                                                          \
-    {                                                                         \
-      auto rhs_res = (RHS);                                                   \
-      auto lhs_res = (LHS);                                                   \
-      Utest_fw::tap_log.binary_cmp(F, lhs_res > rhs_res, #LHS, #RHS, lhs_res, \
-                                   rhs_res, ">", MSG, __FILE__, __LINE__);    \
+#define UTEST_GT(F, LHS, RHS, MSG)                                             \
+  do                                                                           \
+    {                                                                          \
+      auto rhs_res = (RHS);                                                    \
+      auto lhs_res = (LHS);                                                    \
+      Utest_fw::tap_log->binary_cmp(F, lhs_res > rhs_res, #LHS, #RHS, lhs_res, \
+                                    rhs_res, ">", MSG, __FILE__, __LINE__);    \
     } while (false)
 
-#define UTEST_NOERR(F, ACT, MSG)                                              \
-  do                                                                          \
-    {                                                                         \
-      auto act_res = (ACT).ok();                                              \
-      Utest_fw::tap_log.binary_cmp(F, true == act_res, "true", #ACT ".ok()",  \
-                                   true, act_res, "==", MSG, __FILE__,        \
-                                   __LINE__);                                 \
+#define UTEST_NOERR(F, ACT, MSG)                                               \
+  do                                                                           \
+    {                                                                          \
+      auto act_res = (ACT).ok();                                               \
+      Utest_fw::tap_log->binary_cmp(F, true == act_res, "true", #ACT ".ok()",  \
+                                    true, act_res, "==", MSG, __FILE__,        \
+                                   __LINE__);                                  \
     } while (false)
 
 //---------------------------------------------------------------------------
@@ -382,12 +383,12 @@ KIP_KERNEL_FEATURE(
 /**
  * Single instance of the test interface.
  */
-Utest_fw Utest_fw::tap_log;
+DEFINE_GLOBAL Global_data<Utest_fw> Utest_fw::tap_log;
 
 /**
  * External information structure.
  */
-Utest_fw::External_info Utest_fw::ext_info;
+DEFINE_GLOBAL Global_data<Utest_fw::External_info> Utest_fw::ext_info;
 
 /**
  * Static members for emulating 64bit timestamps
@@ -424,17 +425,17 @@ Utest_fw::parse_feature_string()
         return;
 
       // decode the string
-      ext_info.verbose = feature[0] == '1';
-      ext_info.on_finished =
+      ext_info->verbose = feature[0] == '1';
+      ext_info->on_finished =
         static_cast<External_info::Action>(feature[1] - '0');
-      ext_info.debug   = feature[2] == '1';
+      ext_info->debug   = feature[2] == '1';
       // unused, but specified user-land interface
-//      ext_info.record  = feature[3] == '1';
+//      ext_info->record  = feature[3] == '1';
 
       if (feature[4] != 'a')
         {
           // parse a 4 digit number from single characters
-          ext_info.cores =
+          ext_info->cores =
             (feature[4] - '0') * 1000 + (feature[5] - '0') * 100
             + (feature[6] - '0') * 10 + (feature[7] - '0');
         }
@@ -444,8 +445,8 @@ Utest_fw::parse_feature_string()
 
   Utest_debug::printf("Utest_fw: external config\n"
                       "verbose %d, on_finished %d, debug %d, cores %u\n",
-                      ext_info.verbose, ext_info.on_finished,
-                      ext_info.debug, ext_info.cores);
+                      ext_info->verbose, ext_info->on_finished,
+                      ext_info->debug, ext_info->cores);
 }
 
 /**
@@ -478,7 +479,7 @@ Utest_fw::finish(char const *skip_msg = nullptr)
   if (cov_print)
     cov_print();
 
-  if (_sum_failed && ext_info.debug)
+  if (_sum_failed && ext_info->debug)
     kdb_ke("Test finish with failure & Debug flag set.");
 
   if (skip_msg)
@@ -491,7 +492,7 @@ Utest_fw::finish(char const *skip_msg = nullptr)
   // QEMU platforms terminate after the FINISH line. Only hardware tests
   // progress to this point and might want to shutdown or restart the HW
   // platform.
-  switch (ext_info.on_finished)
+  switch (ext_info->on_finished)
   {
   case External_info::Action::Reboot:
     Platform_control::system_reboot();
@@ -793,7 +794,7 @@ void
 Utest_fw::chk(bool result, char const *msg)
 {
   if (EXPECT_FALSE(!result))
-    Utest_fw::tap_log.check_failed(msg);
+    Utest_fw::tap_log->check_failed(msg);
 }
 
 /**
@@ -810,7 +811,7 @@ void
 Utest_fw::chk(bool result, Utest_fmt const &msg)
 {
   if (EXPECT_FALSE(!result))
-    Utest_fw::tap_log.check_failed(msg());
+    Utest_fw::tap_log->check_failed(msg());
 }
 
 /**
@@ -834,7 +835,7 @@ IMPLEMENT inline
 int
 Utest_debug::printf(char const *fmt, ...)
 {
-  if (!Utest_fw::ext_info.verbose)
+  if (!Utest_fw::ext_info->verbose)
     return 0;
 
   int ret;

@@ -60,7 +60,7 @@ public:
   {
     pr_tag("=== DONE TEST ===\n");
     pr_tag("\n");
-    Utest_fw::tap_log.test_done();
+    Utest_fw::tap_log->test_done();
   }
 };
 
