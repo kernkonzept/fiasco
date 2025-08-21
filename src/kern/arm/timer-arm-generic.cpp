@@ -64,7 +64,7 @@ Timer::init(Cpu_number cpu)
 
   bsp_init(cpu);
 
-  if (!TAG_ENABLED(mp) || cpu == Cpu_number::boot_cpu())
+  if (!(TAG_ENABLED(mp)) || cpu == Cpu_number::boot_cpu())
     {
       _freq0 = frequency();
       _interval = Unsigned64{_freq0} * Config::Scheduler_granularity / 1'000'000;
