@@ -17,10 +17,12 @@ INTERFACE:
 #include "kip.h"
 #include "kmem_slab.h"
 #include "l4_error.h"
+#include "lock_guard.h"
 #include "panic.h"
 #include "per_cpu_data.h"
 #include "processor.h"
 #include "platform_control.h"
+#include "spin_lock.h"
 #include "timer.h"
 #include "thread_object.h"
 #include "thread_state.h"
@@ -100,6 +102,85 @@ struct Utest
     F const &fn;
   };
 
+  /// Maintain multiple Kmem_slab_for_size instances.
+  class Slab_store
+  {
+    enum { Max_slabs_for_size_align = 32 };
+    struct Slab_for_size_align
+    {
+      size_t size;
+      size_t align;
+      void *slab;
+    };
+
+    static constexpr size_t
+    kmem_slab_align(size_t align)
+    {
+      return max<size_t>(align, Slab_cache::Min_obj_align);
+    }
+
+  public:
+    template <size_t SIZE, size_t ALIGN = 8>
+    Kmem_slab_for_size<SIZE, kmem_slab_align(ALIGN)> *
+    lookup(bool panic_on_fail)
+    {
+      auto g = lock_guard(_lock);
+      return _lookup<SIZE, kmem_slab_align(ALIGN)>(panic_on_fail);
+    }
+
+    template <size_t SIZE, size_t ALIGN = 8>
+    Kmem_slab_for_size<SIZE, kmem_slab_align(ALIGN)> *
+    create()
+    {
+      constexpr auto align = kmem_slab_align(ALIGN);
+      using Kmem_slab_type = Kmem_slab_for_size<SIZE, align>;
+
+      auto g = lock_guard(_lock);
+      Kmem_slab_type *slab = _lookup<SIZE, align>(false);
+      if (slab)
+        return slab;
+
+      for (unsigned i = 0; i < Max_slabs_for_size_align; ++i)
+        if (_slabs_for_size_align[i].size == 0)
+          {
+            void *p = Kmem_alloc::allocator()
+                                   ->alloc(Bytes(sizeof(Kmem_slab_type)));
+            if (p)
+              {
+                new (p) Kmem_slab_type();
+                _slabs_for_size_align[i].size = SIZE;
+                _slabs_for_size_align[i].align = align;
+                _slabs_for_size_align[i].slab = p;
+              }
+            return static_cast<Kmem_slab_type *>(p);
+          }
+
+      panic("Utest::Slab_store::create: Cannot create slab for size=%#zx align=%#zx",
+            SIZE, align);
+    }
+
+  private:
+    template <size_t SIZE, size_t ALIGN>
+    Kmem_slab_for_size<SIZE, kmem_slab_align(ALIGN)> *
+    _lookup(bool panic_on_fail)
+    {
+      constexpr auto align = kmem_slab_align(ALIGN);
+      using Kmem_slab_type = Kmem_slab_for_size<SIZE, align>;
+      for (unsigned i = 0; i < Max_slabs_for_size_align; ++i)
+        if (_slabs_for_size_align[i].size == SIZE
+            && _slabs_for_size_align[i].align == align)
+          return static_cast<Kmem_slab_type *>(_slabs_for_size_align[i].slab);
+
+      if (panic_on_fail)
+        panic("Utest::Slab_store::lookup: Cannot lookup slab for size=%#zx align=%#zx",
+              SIZE, align);
+      return nullptr;
+    }
+
+    Slab_for_size_align _slabs_for_size_align[Max_slabs_for_size_align];
+    Spin_lock<> _lock;
+  };
+
   template <typename T>
   struct Deleter
   {
@@ -175,6 +256,7 @@ struct Utest
    * triggered between the two function invocations.
    */
   static Unsigned64 timer_interrupt_indicator();
+  static Global_data<Slab_store> slab_store;
 };
 
 /**
@@ -370,6 +452,8 @@ IMPLEMENTATION:
 #include "mem.h"
 #include "poll_timeout_kclock.h"
 #include "timer_tick.h"
+
+DEFINE_GLOBAL Global_data<Utest::Slab_store> Utest::slab_store;
 
 /**
  * Define a feature placeholder for external information filled in by
