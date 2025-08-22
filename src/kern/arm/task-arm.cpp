@@ -49,12 +49,12 @@ PRIVATE
 L4_msg_tag
 Task::map_gicc_page(L4_msg_tag tag, Utcb *utcb)
 {
-  if (tag.words() < 2)
-    return commit_result(-L4_err::EInval);
-
   auto addr = Gic_h_global::gic->gic_v_address();
   if (!addr)
     return commit_result(-L4_err::ENosys);
+
+  if (tag.words() < 2)
+    return commit_result(-L4_err::EInval);
 
   L4_fpage gicc_page(utcb->values[1]);
   if (   !gicc_page.is_valid()
