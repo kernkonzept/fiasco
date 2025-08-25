@@ -58,7 +58,7 @@ private:
 
   //
   // data declaration follows
-  // 
+  //
 
   typedef cxx::H_list<Slab> Slab_list;
   Slab_list _full;    ///< List of full slabs
@@ -84,8 +84,8 @@ IMPLEMENTATION:
 
 // default deallocator must not be called -- must use explicit destruction
 inline NOEXPORT
-void 
-Slab::operator delete(void* /*block*/)
+void
+Slab::operator delete(void * /*block*/)
 {
   assert (!"slab::operator delete called");
 }
@@ -96,7 +96,7 @@ Slab::Slab(unsigned elems, unsigned entry_size, void *mem)
 {
   // Compute pointer to first data element, now taking into account
   // the latest colorization offset
-  char *data = reinterpret_cast<char*>(mem);
+  char *data = static_cast<char *>(mem);
 
   // Initialize the cache elements
   for (unsigned i = elems; i > 0; --i)
@@ -124,7 +124,7 @@ PUBLIC
 void
 Slab::free(void *entry)
 {
-  _free.add(reinterpret_cast<Slab_entry *>(entry));
+  _free.add(static_cast<Slab_entry *>(entry));
 
   assert(_in_use);
   --_in_use;
@@ -160,23 +160,21 @@ Slab::operator new(size_t, void *block) noexcept
   return block;
 }
 
-// 
+//
 // Slab_cache
-// 
+//
 PUBLIC inline
-Slab_cache::Slab_cache(unsigned elem_size, 
-				 unsigned alignment,
-				 char const * name, 
-				 unsigned long min_size,
-				 unsigned long max_size)
-  : _entry_size(entry_size(elem_size, alignment)), _num_empty(0),
-    _name (name)
+Slab_cache::Slab_cache(unsigned elem_size,
+                       unsigned alignment,
+                       char const *name,
+                       unsigned long min_size,
+                       unsigned long max_size)
+: _entry_size(entry_size(elem_size, alignment)), _num_empty(0), _name (name)
 {
-  for (
-      _slab_size = min_size;
-      (_slab_size - sizeof(Slab)) / _entry_size < 8
-        && _slab_size < max_size;
-      _slab_size <<= 1) ;
+  for (_slab_size = min_size;
+      (_slab_size - sizeof(Slab)) / _entry_size < 8 && _slab_size < max_size;
+      _slab_size <<= 1)
+    ;
 
   _elem_num = (_slab_size - sizeof(Slab)) / _entry_size;
 }
@@ -186,11 +184,11 @@ Slab_cache::Slab_cache(unsigned elem_size,
 //
 PUBLIC inline
 Slab_cache::Slab_cache(unsigned long slab_size,
-				 unsigned elem_size,
-				 unsigned alignment,
-				 char const * name)
-  : _slab_size(slab_size), _entry_size(entry_size(elem_size, alignment)),
-    _num_empty(0), _name (name)
+                       unsigned elem_size,
+                       unsigned alignment,
+                       char const *name)
+: _slab_size(slab_size), _entry_size(entry_size(elem_size, alignment)),
+  _num_empty(0), _name (name)
 {
   _elem_num = (_slab_size - sizeof(Slab)) / _entry_size;
 }
@@ -308,8 +306,9 @@ Slab_cache::free(void *cache_entry) // return initialized member to cache
     {
       auto guard = lock_guard(lock);
 
-      Slab *s = reinterpret_cast<Slab*>
-	((reinterpret_cast<unsigned long>(cache_entry) & ~(_slab_size - 1)) + _slab_size - sizeof(Slab));
+      Slab *s = reinterpret_cast<Slab *>
+        ((reinterpret_cast<unsigned long>(cache_entry) & ~(_slab_size - 1))
+         + _slab_size - sizeof(Slab));
 
       bool was_full = s->is_full();
 
