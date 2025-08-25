@@ -197,7 +197,7 @@ public:
   static constexpr size_t O_4M = 22;
   static constexpr size_t O_1G = 30;
   Mapping::Order parent_page_shift;
-  size_t *page_shifts;
+  size_t const *page_shifts;
   unsigned page_shifts_num;
 };
 
@@ -208,7 +208,10 @@ public:
   {
     static constexpr size_t Phys_bits = 32;
     parent_page_shift = Mapping::Order(Phys_bits - Config::PAGE_SHIFT);
-    static size_t pz[] = { O_2M - O_page, 0 };
+    static constexpr size_t pz[] =
+    {
+      O_2M - O_page, 0
+    };
     page_shifts = pz;
     page_shifts_num = cxx::size(pz);
   }
@@ -221,7 +224,10 @@ public:
   {
     static constexpr size_t Phys_bits = 42;
     parent_page_shift = Mapping::Order(Phys_bits - O_page);
-    static size_t pz[] = { O_1G - O_page, O_4M - O_page, O_2M - O_page, 0 };
+    static constexpr size_t pz[] =
+    {
+      O_1G - O_page, O_4M - O_page, O_2M - O_page, 0
+    };
     page_shifts = pz;
     page_shifts_num = cxx::size(pz);
   }
