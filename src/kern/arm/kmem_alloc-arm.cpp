@@ -52,7 +52,7 @@ Kmem_alloc::map_pmem(unsigned long phys, unsigned long size,
 IMPLEMENT
 Kmem_alloc::Kmem_alloc()
 {
-  Mem_region_map<64> map;
+  Free_regions_map map;
   unsigned long available_size
     = create_free_map(Kip::k(), &map, Config::SUPERPAGE_SIZE);
 
@@ -167,7 +167,7 @@ PRIVATE void
 Kmem_alloc::init_alloc()
 {
   Kip *kip = Kip::k();
-  Mem_region_map<64> map;
+  Free_regions_map map;
   unsigned long available_size = create_free_map(kip, &map);
   unsigned long alloc_size = determine_kmem_alloc_size(available_size);
 
@@ -245,7 +245,7 @@ PUBLIC static void
 Kmem_alloc::reserve_amp_heap(unsigned node)
 {
   unsigned phys_node = cxx::int_value<Amp_phys_id>(Amp_node::phys_id(node));
-  Mem_region_map<64> map;
+  Free_regions_map map;
   create_free_map(Kip::all_instances()[node], &map);
   unsigned long alloc_size = Kmem_alloc::orig_free();
 

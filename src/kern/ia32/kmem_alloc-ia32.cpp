@@ -50,7 +50,7 @@ Kmem_alloc::base_init()
   if constexpr (ShowDebugMessages)
     printf("Kmem_alloc::base_init(): kip=%p\n", static_cast<void *>(Kip::k()));
 
-  Mem_region_map<64> map;
+  Free_regions_map map;
   unsigned long available_size = create_free_map(Kip::k(), &map);
 
   unsigned long alloc_size = determine_kmem_alloc_size(available_size);

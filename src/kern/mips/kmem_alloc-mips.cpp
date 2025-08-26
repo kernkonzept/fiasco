@@ -18,7 +18,7 @@ IMPLEMENTATION [mips]:
 IMPLEMENT
 Kmem_alloc::Kmem_alloc()
 {
-  Mem_region_map<64> map;
+  Free_regions_map map;
   unsigned long available_size = create_free_map(Kip::k(), &map);
   printf("Available physical memory: %#lx\n", available_size);
 

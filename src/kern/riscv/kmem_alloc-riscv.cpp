@@ -10,7 +10,7 @@ PUBLIC static
 void
 Kmem_alloc::base_init(bool (*map_pmem)(Address phys, Mword size))
 {
-  Mem_region_map<64> map;
+  Free_regions_map map;
   unsigned long available_size = create_free_map(Kip::k(), &map,
                                                  Config::SUPERPAGE_SIZE);
 

@@ -17,9 +17,8 @@ Kmem_alloc::Kmem_alloc()
   a->init(Mem_layout::Map_base);
   a->setup_free_map(_freemap, Freemap_size);
 
-  /* First, collect non-used physical memory chunks
-   * into a list. */
-  Mem_region_map<64> map;
+  /* First, collect non-used physical memory chunks into a list. */
+  Free_regions_map map;
   unsigned long avail_size = create_free_map(Kip::k(), &map);
   printf("Available phys mem: %08lx\n", avail_size);
 

@@ -7,6 +7,7 @@ INTERFACE:
 #include "spin_lock.h"
 #include "lock_guard.h"
 #include "initcalls.h"
+#include "mem_region.h"
 #include "global_data.h"
 
 class Buddy_alloc;
@@ -19,6 +20,8 @@ template<typename Q> class Kmem_q_alloc;
 class Kmem_alloc
 {
   friend class Kmem_alloc_tester;
+
+  using Free_regions_map = Mem_region_map<64>;
 
 public:
   Kmem_alloc() FIASCO_INIT;
