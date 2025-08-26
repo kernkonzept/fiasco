@@ -283,16 +283,14 @@ sys_call_table:
 	adr	x30, .Lret_from_exception
 	br	x7
 
-.macro ENTRY from_lower func
+.macro ENTRY func
 	sub	sp, sp, #EF_SIZE
 	stp	x7, x8,    [sp,  #64]
 	stp	x9, x10,   [sp,  #80]
 	stp	x11, x12,  [sp,  #96]
 #ifdef CONFIG_MPU
-	.if \from_lower == 1
 	adr	x7, 1f
 	b __mpu_kernel_enter
-	.endif
 #endif
 1:	adr	x7, \func
 	b .Lgeneric_entry
@@ -336,7 +334,7 @@ __irq_handler_b_irq:
 exception_vector:
 	# from kernel with SP_EL0
 	.align 7 /* 0 -- Sync */
-	ENTRY 0 arm_kernel_sync_entry
+	ENTRY arm_kernel_sync_entry
 
 	.align 7 /* 0x80 -- IRQ */
 	ENTRY_ESR call_nested_trap_handler
@@ -345,11 +343,11 @@ exception_vector:
 	ENTRY_ESR call_nested_trap_handler
 
 	.align 7 /* 0x180 -- SError */
-	ENTRY 0 arm_serror_handler
+	ENTRY arm_serror_handler
 
 	# from kernel with SP_ELx
 	.align 7 /* 0x200 -- Sync */
-	ENTRY 0 arm_kernel_sync_entry
+	ENTRY arm_kernel_sync_entry
 
 	.align 7 /* 0x280 -- IRQ */
 	b	.Lirq_entry
@@ -358,11 +356,11 @@ exception_vector:
 	b	.Lirq_entry
 
 	.align 7 /* 0x380 -- SError */
-	ENTRY 0 arm_serror_handler
+	ENTRY arm_serror_handler
 
 	# from aarch64 user
 	.align 7 /* 0x400 -- Sync */
-	ENTRY 1 arm_esr_entry
+	ENTRY arm_esr_entry
 
 	.align 7  /* 0x480 -- IRQ */
 	b	.Lirq_entry
@@ -371,11 +369,11 @@ exception_vector:
 	b	.Lirq_entry
 
 	.align 7 /* 0x580 -- SError */
-	ENTRY 1 arm_serror_handler
+	ENTRY arm_serror_handler
 
 	# from aarch32 user
 	.align 7 /* 0x600 -- Sync */
-	ENTRY 1 arm_esr_entry
+	ENTRY arm_esr_entry
 
 	.align 7 /* 0x680 -- IRQ */
 	b	.Lirq_entry
@@ -384,6 +382,6 @@ exception_vector:
 	b	.Lirq_entry
 
 	.align 7 /* 0x780 -- SError */
-	ENTRY 1 arm_serror_handler
+	ENTRY arm_serror_handler
 
 	.align 7 /* 0x800 */
