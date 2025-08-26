@@ -1,0 +1,9 @@
+name: kernel
+binary-name: fiasco
+desc: ""
+is-kernel: true
+server-cap-name: svr
+factory:
+  - obj-type: L4.Proto.Ipc_gate
+    return-type: Ipc_gate
+    name: Ipc Gate
