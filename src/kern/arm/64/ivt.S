@@ -180,10 +180,9 @@ fast_ret_from_irq:
 /**
  * Reconfigure MPU for kernel space.
  *
- * Clobbers registers x8-x12. Note that the function returns to x7 instead of
- * lr because the latter was not saved yet!
+ * Clobbers registers x8-x11.
  */
-__mpu_kernel_enter:
+.macro mpu_kernel_enter
 	CONTEXT_OF x8, sp
 
 	// restore regular heap region
@@ -200,7 +199,7 @@ __mpu_kernel_enter:
 	// architectures and do not need this. In the worst case a level 0
 	// fault happens which is gracefully handled by
 	// Thread::arm_kernel_sync_entry().
-	br	x7
+.endm
 
 /**
  * Reconfigure MPU for user space.
@@ -246,6 +245,9 @@ __mpu_kernel_leave_nocheck:
 
 	// The final eret will implicitly synchronize the MPU updates above.
 1:	br	lr
+#else
+.macro mpu_kernel_enter
+.endm
 #endif
 
 .type	vcpu_resume, function
@@ -274,6 +276,7 @@ sys_call_table:
 	.8byte sys_ipc_wrapper
 
 .Lgeneric_entry:
+	mpu_kernel_enter  // clobbers x8-x11
 	save_gprs 1
 	mrs	x3, EL(ELR)
 	mrs	x4, EL(SPSR)
@@ -288,11 +291,7 @@ sys_call_table:
 	stp	x7, x8,    [sp,  #64]
 	stp	x9, x10,   [sp,  #80]
 	stp	x11, x12,  [sp,  #96]
-#ifdef CONFIG_MPU
-	adr	x7, 1f
-	b __mpu_kernel_enter
-#endif
-1:	adr	x7, \func
+	adr	x7, \func
 	b .Lgeneric_entry
 .endm
 
@@ -312,11 +311,8 @@ sys_call_table:
 .Lirq_entry:
 	sub	sp, sp, #EF_SIZE
 	save_gprs
-#ifdef CONFIG_MPU
-	adr	x7, 1f
-	b __mpu_kernel_enter
-#endif
-1:	mrs	x3, EL(ELR)
+	mpu_kernel_enter  // clobbers x8-x11
+	mrs	x3, EL(ELR)
 	mrs	x4, EL(SPSR)
 	stp	x3, x4, [sp, #EF_PC]
 	mov	x0, sp
