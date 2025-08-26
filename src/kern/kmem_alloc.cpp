@@ -497,7 +497,8 @@ Kmem_alloc::determine_kmem_alloc_size(unsigned long available_size,
 
   alloc_size = (alloc_size + alignment - 1) & ~(alignment - 1);
 
-  printf("Reserved %lu MiB as kernel memory.\n", alloc_size >> 20);
+  printf("Reserved %lu %ciB as kernel memory.\n",
+         alloc_size >> 20 ?: alloc_size >> 10, alloc_size >> 20 ? 'M' : 'K');
   return alloc_size;
 }
 
