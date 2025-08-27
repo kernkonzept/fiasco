@@ -167,6 +167,8 @@ int Uart_sa1000::write(char const *s, unsigned long count, bool blocking) const
   return c;
 }
 
+#ifndef UART_WITHOUT_INPUT
+
 int Uart_sa1000::char_avail() const
 {
   return !!(_regs->read<unsigned int>(UTSR1) & UTSR1_RNE);
@@ -185,5 +187,7 @@ int Uart_sa1000::get_char(bool blocking) const
   _regs->write<unsigned int>(UTCR3, old_utcr3);
   return ch;
 }
+
+#endif // !UART_WITHOUT_INPUT
 
 } // namespace L4

@@ -14,6 +14,8 @@
 
 namespace L4 {
 
+#ifndef UART_WITHOUT_INPUT
+
 void Uart_16550_dw::irq_ack()
 {
   enum Registers_dw
@@ -31,5 +33,7 @@ void Uart_16550_dw::irq_ack()
       _regs->write<U8>(lcr, LCR);
     }
 }
+
+#endif // !UART_WITHOUT_INPUT
 
 } // namespace L4

@@ -122,6 +122,8 @@ int Uart_16550::write(char const *s, unsigned long count, bool blocking) const
   return c;
 }
 
+#ifndef UART_WITHOUT_INPUT
+
 bool Uart_16550::enable_rx_irq(bool enable)
 {
   unsigned char ier = _regs->read<unsigned char>(IER);
@@ -155,5 +157,7 @@ int Uart_16550::get_char(bool blocking) const
   _regs->write<unsigned char>(IER, old_ier);
   return ch;
 }
+
+#endif // !UART_WITHOUT_INPUT
 
 } // namespace L4

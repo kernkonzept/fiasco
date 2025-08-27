@@ -79,6 +79,8 @@ int Uart_dcc_v6::write(char const *s, unsigned long count,
 #endif
 }
 
+#ifndef UART_WITHOUT_INPUT
+
 int Uart_dcc_v6::char_avail() const
 {
 #ifdef __arm__
@@ -103,5 +105,7 @@ int Uart_dcc_v6::get_char(bool blocking) const
   return -1;
 #endif
 }
+
+#endif // !UART_WITHOUT_INPUT
 
 } // namespace L4

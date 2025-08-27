@@ -24,8 +24,10 @@ public:
             bool /*blocking*/ = true) const override
   { return 0; }
 
+#ifndef UART_WITHOUT_INPUT
   int char_avail() const override { return false; }
   int get_char(bool /*blocking*/ = true) const override { return 0; }
+#endif
 };
 
 } // namespace L4

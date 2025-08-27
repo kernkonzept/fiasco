@@ -88,6 +88,7 @@ public:
    */
   Baud_rate rate() const { return _rate; }
 
+#ifndef UART_WITHOUT_INPUT
 
   /**
    * Enable the receive IRQ.
@@ -120,6 +121,8 @@ public:
    * \return          The actual character read from the UART.
    */
   virtual int get_char(bool blocking = true) const = 0;
+
+#endif // !UART_WITHOUT_INPUT
 
 protected:
   /**

@@ -103,9 +103,11 @@ public:
   int write(char const *s, unsigned long count,
             bool blocking = true) const override;
 
+#ifndef UART_WITHOUT_INPUT
   bool enable_rx_irq(bool enable = true) override;
   int char_avail() const override;
   int get_char(bool blocking = true) const override;
+#endif
 
 private:
   unsigned long _base_rate;

@@ -77,6 +77,8 @@ int Uart_sh::write(char const *s, unsigned long count, bool blocking) const
   return generic_write<Uart_sh>(s, count, blocking);
 }
 
+#ifndef UART_WITHOUT_INPUT
+
 bool Uart_sh::enable_rx_irq(bool enable)
 {
   if (enable)
@@ -113,5 +115,7 @@ int Uart_sh::get_char(bool blocking) const
   _regs->clear<unsigned short>(SCFSR, SR_DR | SR_RDF | SR_ER | SR_BRK);
   return ch;
 }
+
+#endif // !UART_WITHOUT_INPUT
 
 } // namespace L4

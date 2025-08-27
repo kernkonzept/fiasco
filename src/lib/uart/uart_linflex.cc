@@ -198,6 +198,8 @@ int Uart_linflex::write(char const *s, unsigned long count, bool blocking) const
   return generic_write<Uart_linflex>(s, count, blocking);
 }
 
+#ifndef UART_WITHOUT_INPUT
+
 bool Uart_linflex::enable_rx_irq(bool enable)
 {
   _regs->set<unsigned>(LINCR1, LINCR1_INIT);
@@ -257,5 +259,7 @@ int Uart_linflex::get_char(bool blocking) const
     }
   return c;
 }
+
+#endif // !UART_WITHOUT_INPUT
 
 } // namespace L4

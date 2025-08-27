@@ -95,6 +95,8 @@ int Uart_cadence::write(char const *s, unsigned long count, bool blocking) const
   return generic_write<Uart_cadence>(s, count, blocking);
 }
 
+#ifndef UART_WITHOUT_INPUT
+
 bool Uart_cadence::enable_rx_irq(bool enable)
 {
   _regs->write<unsigned>(RXWM, 1);
@@ -122,5 +124,7 @@ int Uart_cadence::get_char(bool blocking) const
   _regs->write<unsigned>(ISR, IXR_RXOVR);
   return _regs->read<unsigned>(FIFO);
 }
+
+#endif // !UART_WITHOUT_INPUT
 
 } // namespace L4

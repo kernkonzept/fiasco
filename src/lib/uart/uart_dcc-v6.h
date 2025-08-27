@@ -25,8 +25,10 @@ public:
   int write(char const *s, unsigned long count,
             bool blocking = true) const override;
 
+#ifndef UART_WITHOUT_INPUT
   int char_avail() const override;
   int get_char(bool blocking = true) const override;
+#endif
 
 private:
   unsigned get_status() const;

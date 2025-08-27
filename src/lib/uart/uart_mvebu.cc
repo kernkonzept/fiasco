@@ -63,6 +63,8 @@ int Uart_mvebu::write(char const *s, unsigned long count, bool blocking) const
   return generic_write<Uart_mvebu>(s, count, blocking);
 }
 
+#ifndef UART_WITHOUT_INPUT
+
 bool Uart_mvebu::enable_rx_irq(bool enable)
 {
   if (enable)
@@ -85,5 +87,7 @@ int Uart_mvebu::get_char(bool blocking) const
 
   return _regs->read<unsigned>(RBR) & 0xff;
 }
+
+#endif // !UART_WITHOUT_INPUT
 
 } // namespace L4

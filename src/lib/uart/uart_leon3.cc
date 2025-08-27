@@ -95,6 +95,8 @@ int Uart_leon3::write(char const *s, unsigned long count, bool blocking) const
   return generic_write<Uart_leon3>(s, count, blocking);
 }
 
+#ifndef UART_WITHOUT_INPUT
+
 bool Uart_leon3::enable_rx_irq(bool enable)
 {
   unsigned r = _regs->read<unsigned int>(CTRL_REG);
@@ -121,5 +123,7 @@ int Uart_leon3::get_char(bool blocking) const
 
   return _regs->read<unsigned int>(DATA_REG) & DATA_MASK;
 }
+
+#endif // !UART_WITHOUT_INPUT
 
 } // namespace L4

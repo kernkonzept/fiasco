@@ -54,6 +54,8 @@ void Uart_of::out_char(char c) const
 bool Uart_of::change_mode(Transfer_mode, Baud_rate){ return true; }
 int  Uart_of::tx_avail() const { return 1; }
 
+#ifndef UART_WITHOUT_INPUT
+
 int  Uart_of::char_avail() const { return 1; }
 
 int Uart_of::get_char(bool blocking) const
@@ -65,5 +67,7 @@ int Uart_of::get_char(bool blocking) const
 
   return len ? c :-1;
 }
+
+#endif // !UART_WITHOUT_INPUT
 
 } // namespace L4

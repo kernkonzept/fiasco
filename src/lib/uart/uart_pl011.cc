@@ -115,6 +115,8 @@ int Uart_pl011::write(char const *s, unsigned long count, bool blocking) const
   return generic_write<Uart_pl011>(s, count, blocking);
 }
 
+#ifndef UART_WITHOUT_INPUT
+
 bool Uart_pl011::enable_rx_irq(bool enable)
 {
   unsigned long mask = UART011_RXIM | UART011_RTIM;
@@ -147,5 +149,7 @@ int Uart_pl011::get_char(bool blocking) const
   _regs->write<unsigned int>(UART011_ECR, 0xff);
   return c;
 }
+
+#endif // !UART_WITHOUT_INPUT
 
 } // namespace L4

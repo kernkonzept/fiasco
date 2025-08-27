@@ -47,6 +47,8 @@ int Uart_tegra_tcu::write(char const *s, unsigned long count, bool blocking) con
   return generic_write<Uart_tegra_tcu>(s, count, blocking);
 }
 
+#ifndef UART_WITHOUT_INPUT
+
 int Uart_tegra_tcu::char_avail() const
 {
   if (_current_rx_val)
@@ -98,5 +100,7 @@ int Uart_tegra_tcu::get_char(bool blocking) const
 
   return -1;
 }
+
+#endif // !UART_WITHOUT_INPUT
 
 } // namespace L4

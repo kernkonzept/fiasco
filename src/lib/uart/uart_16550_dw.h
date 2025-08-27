@@ -18,7 +18,9 @@ public:
   : Uart_16550(base_rate)
   {}
 
+#ifndef UART_WITHOUT_INPUT
   void irq_ack() override;
+#endif
 };
 
 } // namespace L4

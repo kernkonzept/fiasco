@@ -138,6 +138,8 @@ int Uart_geni::write(char const *s, unsigned long count, bool blocking) const
   return generic_write<Uart_geni>(s, count, blocking);
 }
 
+#ifndef UART_WITHOUT_INPUT
+
 bool Uart_geni::enable_rx_irq(bool enable)
 {
   if (!enable)
@@ -172,5 +174,7 @@ int Uart_geni::get_char(bool blocking) const
 
   return _regs->read32(RX_FIFOn) & 0xff;
 }
+
+#endif // !UART_WITHOUT_INPUT
 
 }

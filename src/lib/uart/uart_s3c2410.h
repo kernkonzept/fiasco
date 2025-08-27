@@ -34,8 +34,10 @@ public:
             bool blocking = true) const override;
   void fifo_reset();
 
+#ifndef UART_WITHOUT_INPUT
   int char_avail() const override;
   int get_char(bool blocking = true) const override;
+#endif
 
 protected:
   virtual void ack_rx_irq() const = 0;

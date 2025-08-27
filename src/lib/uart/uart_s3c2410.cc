@@ -161,6 +161,8 @@ int Uart_s3c::write(char const *s, unsigned long count, bool blocking) const
   return generic_write<Uart_s3c>(s, count, blocking);
 }
 
+#ifndef UART_WITHOUT_INPUT
+
 int Uart_s3c::char_avail() const
 {
   return is_rx_fifo_non_empty();
@@ -177,6 +179,8 @@ int Uart_s3c::get_char(bool blocking) const
   ack_rx_irq();
   return c;
 }
+
+#endif // !UART_WITHOUT_INPUT
 
 // -----------------------
 

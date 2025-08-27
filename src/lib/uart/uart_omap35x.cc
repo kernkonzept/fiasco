@@ -89,6 +89,8 @@ int Uart_omap35x::write(char const *s, unsigned long count, bool blocking) const
   return generic_write<Uart_omap35x>(s, count, blocking);
 }
 
+#ifndef UART_WITHOUT_INPUT
+
 bool Uart_omap35x::enable_rx_irq(bool enable)
 {
   _regs->write<unsigned int>(IER_REG, enable ? 1 : 0);
@@ -108,5 +110,7 @@ int Uart_omap35x::get_char(bool blocking) const
 
   return _regs->read<unsigned int>(RHR_REG);
 }
+
+#endif // !UART_WITHOUT_INPUT
 
 } // namespace L4

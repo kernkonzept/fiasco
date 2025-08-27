@@ -61,6 +61,8 @@ int Uart_sbi::write(char const *s, unsigned long count, bool blocking) const
   return generic_write<Uart_sbi>(s, count, blocking);
 }
 
+#ifndef UART_WITHOUT_INPUT
+
 int Uart_sbi::char_avail() const
 {
   if (_bufchar == -1)
@@ -78,5 +80,7 @@ int Uart_sbi::get_char(bool blocking) const
   _bufchar = -1;
   return c;
 }
+
+#endif
 
 } // namespace L4

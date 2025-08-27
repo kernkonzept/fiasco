@@ -116,6 +116,8 @@ inline void Uart_mpc52xx::mpc52xx_out_char(char c) const
 void Uart_mpc52xx::shutdown() {}
 bool Uart_mpc52xx::change_mode(Transfer_mode, Baud_rate) { return true; }
 
+#ifndef UART_WITHOUT_INPUT
+
 bool Uart_mpc52xx::enable_rx_irq(bool enable)
 {
   u16 mask = 0;
@@ -142,5 +144,7 @@ int Uart_mpc52xx::get_char(bool blocking) const
   wr<u8>(command(), CMD_RESET_ERR);
   return c;
 }
+
+#endif // !UART_WITHOUT_INPUT
 
 } // namespace L4

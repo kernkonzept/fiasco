@@ -102,6 +102,8 @@ bool Uart_apb::enable_rx_irq(bool enable)
   return true;
 }
 
+#ifndef UART_WITHOUT_INPUT
+
 int Uart_apb::char_avail() const
 {
   return _regs->read<unsigned char>(STATE) & STATE_RX_FULL;
@@ -115,5 +117,7 @@ int Uart_apb::get_char(bool blocking) const
 
   return _regs->read<unsigned char>(DATA);
 }
+
+#endif // !UART_WITHOUT_INPUT
 
 } // namespace L4

@@ -7,9 +7,9 @@ all: $(notdir $(TARGET))
 
 $(OBJECTS): $(objbase)/.Compiler-config
 
-# Allow to use `#ifdef CONFIG_INPUT..#endif` in UART objects.
+# Allow to use `#ifndef UART_WITHOUT_INPUT..#endif` in UART objects.
 $(foreach o,$(basename $(OBJECTS)),\
-  $(eval CXXFLAGS_$o += -include "$(objbase)/globalconfig.h"))
+  $(eval CXXFLAGS_$o += $(if $(CONFIG_INPUT),,-DUART_WITHOUT_INPUT)))
 
 $(notdir $(TARGET)): $(OBJECTS)
 	$(AR_MESSAGE)

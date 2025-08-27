@@ -101,6 +101,8 @@ int Uart_dm::write(char const *s, unsigned long count, bool blocking) const
   return generic_write<Uart_dm>(s, count, blocking);
 }
 
+#ifndef UART_WITHOUT_INPUT
+
 bool Uart_dm::enable_rx_irq(bool enable)
 {
   if (enable)
@@ -123,5 +125,7 @@ int Uart_dm::get_char(bool blocking) const
 
   return _regs->read32(DM_RF) & DM_RF_CHAR;
 }
+
+#endif // !UART_WITHOUT_INPUT
 
 } // namespace L4

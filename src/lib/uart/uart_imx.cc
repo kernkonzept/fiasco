@@ -159,6 +159,8 @@ int Uart_imx::write(char const *s, unsigned long count, bool blocking) const
   return generic_write<Uart_imx>(s, count, blocking);
 }
 
+#ifndef UART_WITHOUT_INPUT
+
 bool Uart_imx::enable_rx_irq(bool enable)
 {
   if (enable)
@@ -192,5 +194,7 @@ int Uart_imx::get_char(bool blocking) const
 
   return _regs->read<unsigned int>(URXD) & 0xff;
 }
+
+#endif // !UART_WITHOUT_INPUT
 
 } // namespace L4

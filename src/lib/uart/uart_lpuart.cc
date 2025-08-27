@@ -84,6 +84,8 @@ int Uart_lpuart::write(char const *s, unsigned long count, bool blocking) const
   return generic_write<Uart_lpuart>(s, count, blocking);
 }
 
+#ifndef UART_WITHOUT_INPUT
+
 bool Uart_lpuart::enable_rx_irq(bool enable)
 {
   if (enable)
@@ -107,5 +109,7 @@ int Uart_lpuart::get_char(bool blocking) const
 
   return _regs->read<unsigned char>(DATA);
 }
+
+#endif // !UART_WITHOUT_INPUT
 
 } // namespace L4

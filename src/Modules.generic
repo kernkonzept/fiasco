@@ -119,10 +119,12 @@ NOOPT			+= $(patsubst %.o, %,\
 
 # Helper function to generate CXXFLAGS_uart-libuart
 LIBUART_UART = -include uart_$(strip $(1)).h \
-	       -DFIASCO_UART_TYPE=L4::Uart_$(strip $(if $(2),$(2),$(1)))
+	       -DFIASCO_UART_TYPE=L4::Uart_$(strip $(if $(2),$(2),$(1))) \
+	       $(if $(CONFIG_INPUT),,-DUART_WITHOUT_INPUT)
 
 LIBUART_UART2 = -include uart_$(strip $(1)).h \
-		-DFIASCO_UART2_TYPE=L4::Uart_$(strip $(if $(2),$(2),$(1)))
+		-DFIASCO_UART2_TYPE=L4::Uart_$(strip $(if $(2),$(2),$(1))) \
+		$(if $(CONFIG_INPUT),,-DUART_WITHOUT_INPUT)
 
 #
 # COV Subsystem
