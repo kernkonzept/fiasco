@@ -178,6 +178,13 @@ long long __ashrdi3(long long, int);
 long long __ashldi3(long long val, int bits)
 {
   union llval_t v;
+
+  // C99: Shift operations: If the value of the right operand is negative or is
+  //      greater than or equal to the width of the promoted left operand, the
+  //      behavior is undefined.
+  if (bits >= 64)
+    return 0;
+
   v.ll = val;
 
   if (bits >= 32)
@@ -206,6 +213,13 @@ long long __ashldi3(long long val, int bits)
 long long __ashrdi3(long long val, int bits)
 {
   union llval_t v;
+
+  // C99: Shift operations: If the value of the right operand is negative or is
+  //      greater than or equal to the width of the promoted left operand, the
+  //      behavior is undefined.
+  if (bits >= 64)
+    return val < 0 ? 0xffffffffffffffffLL : 0LL;
+
   v.ll = val;
 
   if (bits >= 32)
