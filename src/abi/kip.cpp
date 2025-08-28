@@ -21,7 +21,11 @@ public:
 
   enum Ext_type_info
   {
-    Info_acpi_rsdp = 0
+    Info_acpi_rsdp = 0,
+
+    Reserved_kernel = 0,
+    Reserved_heap   = 1,
+    Reserved_mmio   = 2,
   };
 
 private:
