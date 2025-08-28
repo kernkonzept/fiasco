@@ -122,10 +122,10 @@ IMPLEMENTATION:
 #include "version.h"
 
 PUBLIC inline
-Mem_desc::Mem_desc(Address start, Address end, Mem_type t, bool v = false,
-                   unsigned st = 0)
-: _l((start & ~0x3ffUL) | (t & 0x0f) | ((st << 4) & 0x0f0)
-     | (v?0x0200:0x0)),
+Mem_desc::Mem_desc(Address start, Address end, Mem_type type, bool virt = false,
+                   unsigned sub_type = 0)
+: _l((start & ~0x3ffUL) | (type & 0x0f) | ((sub_type << 4) & 0x0f0)
+     | (virt ? 0x0200 : 0x0)),
   _h(end)
 {}
 
@@ -149,6 +149,11 @@ Mem_desc::type(Mem_type t)
 PUBLIC inline ALWAYS_INLINE
 Mem_desc::Mem_type Mem_desc::type() const
 { return static_cast<Mem_type>(_l & 0x0f); }
+
+PUBLIC inline
+void
+Mem_desc::ext_type(unsigned t)
+{ _l = (_l & ~0xf0) | ((t << 4) & 0xf0); }
 
 PUBLIC inline
 unsigned Mem_desc::ext_type() const
