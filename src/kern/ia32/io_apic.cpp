@@ -202,7 +202,9 @@ Io_apic::Io_apic(Unsigned64 phys, unsigned gsi_base)
   if (!a)
     panic("Unable to map IO-APIC");
 
-  Kip::k()->add_mem_region(Mem_desc(phys, phys + Config::PAGE_SIZE -1, Mem_desc::Reserved));
+  Kip::k()->add_mem_region(Mem_desc(phys, phys + Config::PAGE_SIZE -1,
+                                    Mem_desc::Reserved, false,
+                                    Mem_desc::Reserved_mmio));
 
   a->write(0, 0);
 

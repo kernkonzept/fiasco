@@ -29,7 +29,8 @@ Kmem_alloc::Kmem_alloc()
         f.start += (f.size() - alloc_size);
 
       printf("  [%08lx - %08lx %4lu KiB]\n", f.start, f.end, f.size() >> 10);
-      Kip::k()->add_mem_region(Mem_desc(f.start, f.end, Mem_desc::Reserved));
+      Kip::k()->add_mem_region(Mem_desc(f.start, f.end, Mem_desc::Reserved,
+                                        false, Mem_desc::Reserved_heap));
       printf("    -> %08lx - %08lx\n",
 	     Mem_layout::phys_to_pmem(f.start),
 	     Mem_layout::phys_to_pmem(f.end));

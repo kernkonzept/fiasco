@@ -29,7 +29,8 @@ Kmem_alloc::Kmem_alloc()
 	{
 	  r.start += (size - alloc_size);
 	  Kip::k()->add_mem_region(Mem_desc(r.start, r.end,
-		                            Mem_desc::Reserved));
+		                            Mem_desc::Reserved, false,
+                                            Mem_desc::Reserved_heap));
 
 	  /* init buddy allocator with physical addresses */
 	  a->init(r.start);

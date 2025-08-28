@@ -837,7 +837,8 @@ Intel::Io_mmu::probe(ACPI::Dmar_drhd const *drhd)
     }
 
   Kip::k()->add_mem_region(Mem_desc(base_addr, base_addr + Config::PAGE_SIZE - 1,
-                                    Mem_desc::Reserved));
+                                    Mem_desc::Reserved, false,
+                                    Mem_desc::Reserved_mmio));
 
   caps.raw = regs[Reg_64::Capabilities];
   ecaps = regs[Reg_64::Ext_capabilities];

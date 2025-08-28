@@ -179,7 +179,8 @@ Hpet::init()
       return false;
     }
 
-  Kip::k()->add_mem_region(Mem_desc(phys, phys + 1023, Mem_desc::Reserved));
+  Kip::k()->add_mem_region(Mem_desc(phys, phys + 1023, Mem_desc::Reserved,
+                                    false, Mem_desc::Reserved_mmio));
 
   _hpet->dump();
 

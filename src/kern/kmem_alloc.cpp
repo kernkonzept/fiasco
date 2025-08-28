@@ -199,7 +199,10 @@ Kmem_alloc::permanent_alloc(size_t size, Order alignment = Order(0))
       if (gap + size < span)
         set_fixup_start(md, start + gap + size);
       else
-        md.type(Mem_desc::Reserved);
+        {
+          md.type(Mem_desc::Reserved);
+          md.ext_type(Mem_desc::Reserved_heap);
+        }
 
       return start_aligned;
     }
@@ -543,6 +546,7 @@ Kmem_alloc::setup_kmem_from_kip_md_tmp(unsigned long freemap_size,
 
       a->add_mem(reinterpret_cast<void *>(kern), size);
       md.type(Mem_desc::Reserved);
+      md.ext_type(Mem_desc::Reserved_heap);
       _orig_free += size;
     }
 }

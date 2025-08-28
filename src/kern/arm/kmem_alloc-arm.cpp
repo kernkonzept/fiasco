@@ -189,7 +189,8 @@ Kmem_alloc::init_alloc()
       for (auto k : Kip::all_instances())
         k->add_mem_region(Mem_desc(f.start, f.end,
                                    k == kip ? Mem_desc::Kernel_tmp
-                                            : Mem_desc::Reserved));
+                                            : Mem_desc::Reserved,
+                                   false, Mem_desc::Reserved_heap));
       start = f.start;
       end = f.end;
       break;
@@ -260,7 +261,8 @@ Kmem_alloc::reserve_amp_heap(unsigned node)
       for (auto k : Kip::all_instances())
         k->add_mem_region(Mem_desc(f.start, f.end,
                                    k->node == phys_node ? Mem_desc::Kernel_tmp
-                                                        : Mem_desc::Reserved));
+                                                        : Mem_desc::Reserved,
+                                   false, Mem_desc::Reserved_heap));
       return;
     }
 

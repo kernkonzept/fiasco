@@ -398,7 +398,8 @@ Mem_space::alloc(Mword alloc_size)
       if(alloc_size <= size && start >= r.start)
 	{
 	  Kip::k()->add_mem_region(Mem_desc(start, r.end,
-					    Mem_desc::Reserved));
+					    Mem_desc::Reserved, false,
+                                            Mem_desc::Reserved_heap));
 	  break;
 	}
     }

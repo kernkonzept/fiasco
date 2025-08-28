@@ -114,7 +114,8 @@ Mem_layout::init()
 	{
 	  r.start += (size - alloc_size);
 	  Kip::k()->add_mem_region(Mem_desc(r.start, r.end,
-	                                    Mem_desc::Reserved));
+	                                    Mem_desc::Reserved, false,
+                                            Mem_desc::Reserved_heap));
 
 	  printf("TBuf  installed at: [%08lx; %08lx] - %lu KiB\n",
 	         r.start, r.end, alloc_size / 1024);

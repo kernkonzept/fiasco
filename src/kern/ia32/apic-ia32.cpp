@@ -424,7 +424,9 @@ Apic::map_apic_page()
   if (!io_base)
     panic("Unable to map local APIC");
 
-  Kip::k()->add_mem_region(Mem_desc(base, base + Config::PAGE_SIZE - 1, Mem_desc::Reserved));
+  Kip::k()->add_mem_region(Mem_desc(base, base + Config::PAGE_SIZE - 1,
+                                    Mem_desc::Reserved, false,
+                                    Mem_desc::Reserved_mmio));
 }
 
 // check CPU type if APIC could be present

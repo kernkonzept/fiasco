@@ -318,7 +318,8 @@ Mru::create_mru(Gic *gic)
   Address mru_addr = mru_base[cxx::int_value<Amp_phys_id>(Amp_node::phys_id())];
   Kip::k()->add_mem_region(Mem_desc(mru_addr,
                                     mru_addr + Mem_layout::Mru_size - 1,
-                                    Mem_desc::Reserved));
+                                    Mem_desc::Reserved, false,
+                                    Mem_desc::Reserved_mmio));
   void *mru_regs = Kmem_mmio::map(mru_addr, Mem_layout::Mru_size);
 
   return new Boot_object<Mru>(mru_regs, gic);
