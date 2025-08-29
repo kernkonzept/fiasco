@@ -37,7 +37,6 @@ EXTENSION class Fpu
 public:
   enum class State_type
   {
-    None,
     Simd,
     Sve,
   };
