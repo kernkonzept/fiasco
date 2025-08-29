@@ -495,7 +495,12 @@ Thread::do_kill()
       rq.set_current_sched(current()->sched());
   }
 
-  // don't vanish as long as a partner is sending to this thread
+  // Don't vanish as long as a partner is sending to this thread.
+  // This is a safeguard for vCPUs that receive an IPC asynchronously (see
+  // `Receiver::vcpu_async_ipc()`), in case their
+  // `leave_by_vcpu_upcall_async_ipc()` continuation gets overwritten, for
+  // example by `Thread::prepare_kill()`.
+  // Regular threads should never run into this case.
   while (EXPECT_FALSE(state() & Thread_ipc_transfer))
     {
       state_del_dirty(Thread_ready);
