@@ -205,6 +205,18 @@ PROTECTED inline
 void
 Slab_cache::destroy()	// descendant should call this in destructor
 {
+  while (auto *s = _empty.front())
+    {
+      _empty.remove(s);
+      s->~Slab();
+      block_free(reinterpret_cast<char *>(s + 1) - _slab_size, _slab_size);
+      --_num_empty;
+    }
+
+  // The caller should have called Slab_cache::free() on all slab items. This
+  // would free all full and all partially-allocated slabs.
+  assert(_partial.empty());
+  assert(_full.empty());
 }
 
 PRIVATE inline NOEXPORT
