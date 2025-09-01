@@ -102,78 +102,110 @@ struct Utest
     F const &fn;
   };
 
-  /// Maintain multiple Kmem_slab_for_size instances.
+  /**
+   * Maintain multiple Kmem_slab_t and Kmem_slab_for_size instances.
+   *
+   * Usually this would be done using C++ singletons but global static data (the
+   * data instance and the corresponding guard variable) would create global
+   * static data in .bss/.data which is forbidden if CONFIG_AMP is enabled. At
+   * least the guard variable cannot be wrapped using Global_data<>.
+   */
   class Slab_store
   {
     enum { Max_slabs_for_size_align = 32 };
+
     struct Slab_for_size_align
     {
+      ///< Size of the slab type.
       size_t size;
+      ///< Alignment of the slab type.
       size_t align;
+      ///< 0: Store in Kmem_slab_for_size slab, 1: Store in Kmem_slab_t<T> slab.
+      bool for_type;
+      ///< Raw pointer to the slab.
       void *slab;
     };
 
-    static constexpr size_t
-    kmem_slab_align(size_t align)
-    {
-      return max<size_t>(align, Slab_cache::Min_obj_align);
-    }
-
   public:
-    template <size_t SIZE, size_t ALIGN = 8>
-    Kmem_slab_for_size<SIZE, kmem_slab_align(ALIGN)> *
+    template <typename T, unsigned ALIGN = alignof(T)>
+    Kmem_slab_t<T, ALIGN> *
     lookup(bool panic_on_fail)
     {
+      using Kmem_slab_type = Kmem_slab_t<T, ALIGN>;
       auto g = lock_guard(_lock);
-      return _lookup<SIZE, kmem_slab_align(ALIGN)>(panic_on_fail);
+      return _lookup<Kmem_slab_type>(sizeof(T), ALIGN, true, panic_on_fail);
     }
 
-    template <size_t SIZE, size_t ALIGN = 8>
-    Kmem_slab_for_size<SIZE, kmem_slab_align(ALIGN)> *
+    template <typename T, unsigned ALIGN = alignof(T)>
+    Kmem_slab_t<T, ALIGN> *
     create()
     {
-      constexpr auto align = kmem_slab_align(ALIGN);
-      using Kmem_slab_type = Kmem_slab_for_size<SIZE, align>;
-
+      using Kmem_slab_type = Kmem_slab_t<T, ALIGN>;
       auto g = lock_guard(_lock);
-      Kmem_slab_type *slab = _lookup<SIZE, align>(false);
-      if (slab)
+      return _create<Kmem_slab_type>(sizeof(T), ALIGN, true);
+    }
+
+    template <size_t SIZE, unsigned ALIGN = 8>
+    Kmem_slab_for_size<SIZE, ALIGN> *
+    lookup(bool panic_on_fail)
+    {
+      using Kmem_slab_type = Kmem_slab_for_size<SIZE, ALIGN>;
+      auto g = lock_guard(_lock);
+      return _lookup<Kmem_slab_type>(SIZE, ALIGN, false, panic_on_fail);
+    }
+
+    template <size_t SIZE, unsigned ALIGN = 8>
+    Kmem_slab_for_size<SIZE, ALIGN> *
+    create()
+    {
+      using Kmem_slab_type = Kmem_slab_for_size<SIZE, ALIGN>;
+      auto g = lock_guard(_lock);
+      return _create<Kmem_slab_type>(SIZE, ALIGN, false);
+    }
+
+  private:
+    template <typename Kmem_slab_type>
+    Kmem_slab_type *
+    _create(size_t size, size_t align, bool for_type)
+    {
+      if (auto *slab = _lookup<Kmem_slab_type>(size, align, for_type, false))
         return slab;
 
       for (unsigned i = 0; i < Max_slabs_for_size_align; ++i)
         if (_slabs_for_size_align[i].size == 0)
           {
+            // Kmem_alloc::alloc() requires to allocate at least 8 bytes and
+            // sizeof(Kmem_slab_t<T>) with sizeof(T) >= 0x400 is only 1 byte!
             void *p = Kmem_alloc::allocator()
-                                   ->alloc(Bytes(sizeof(Kmem_slab_type)));
+                        ->alloc(Bytes(max<size_t>(8, sizeof(Kmem_slab_type))));
             if (p)
               {
                 new (p) Kmem_slab_type();
-                _slabs_for_size_align[i].size = SIZE;
+                _slabs_for_size_align[i].size = size;
                 _slabs_for_size_align[i].align = align;
                 _slabs_for_size_align[i].slab = p;
+                _slabs_for_size_align[i].for_type = for_type;
               }
             return static_cast<Kmem_slab_type *>(p);
           }
 
       panic("Utest::Slab_store::create: Cannot create slab for size=%#zx align=%#zx",
-            SIZE, align);
+            size, align);
     }
 
-  private:
-    template <size_t SIZE, size_t ALIGN>
-    Kmem_slab_for_size<SIZE, kmem_slab_align(ALIGN)> *
-    _lookup(bool panic_on_fail)
+    template <typename Kmem_slab_type>
+    Kmem_slab_type *
+    _lookup(size_t size, size_t align, bool for_type, bool panic_on_fail)
     {
-      constexpr auto align = kmem_slab_align(ALIGN);
-      using Kmem_slab_type = Kmem_slab_for_size<SIZE, align>;
       for (unsigned i = 0; i < Max_slabs_for_size_align; ++i)
-        if (_slabs_for_size_align[i].size == SIZE
-            && _slabs_for_size_align[i].align == align)
+        if (_slabs_for_size_align[i].size == size
+            && _slabs_for_size_align[i].align == align
+            && _slabs_for_size_align[i].for_type == for_type)
           return static_cast<Kmem_slab_type *>(_slabs_for_size_align[i].slab);
 
       if (panic_on_fail)
         panic("Utest::Slab_store::lookup: Cannot lookup slab for size=%#zx align=%#zx",
-              SIZE, align);
+              size, align);
       return nullptr;
     }
 
