@@ -147,7 +147,7 @@ struct Kmem_slab_s : _Kmem_alloc<(SIZE >= 0x400), SIZE, ALIGN> {};
  * \attention Must not be destroyed during runtime because Kmem_slab is not SMP
  *            safe.
  */
-template< typename T, unsigned ALIGN = __alignof(T) >
+template< typename T, unsigned ALIGN = alignof(T) >
 struct Kmem_slab_t
 : Kmem_slab_s<sizeof(T), max<unsigned>(ALIGN, Slab_cache::Min_obj_align)>
 {

@@ -14,7 +14,7 @@ class Slab : public cxx::H_list_item
 public:
   enum
   {
-    Min_obj_align = __alignof(cxx::S_list_item),
+    Min_obj_align = alignof(cxx::S_list_item),
     Min_obj_size  = sizeof(cxx::S_list_item),
   };
 
