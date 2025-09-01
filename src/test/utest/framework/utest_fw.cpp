@@ -219,7 +219,7 @@ struct Utest
     void operator()(T *s) const
     {
       if (s)
-        Kmem_slab_t_singleton<T>::del(s);
+        slab_store->lookup<T>(true)->del(s);
     }
   };
 
@@ -1291,7 +1291,7 @@ template <typename T, Unsigned8 FILL, typename...A>
 static cxx::unique_ptr<T, Utest::Deleter<T>>
 Utest::kmem_create_fill(A&&... args)
 {
-  void *p = Kmem_slab_t_singleton<T>::alloc();
+  void *p = slab_store->create<T>()->alloc();
   if (p)
     {
       memset(p, FILL, sizeof(T));
