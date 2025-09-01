@@ -32,61 +32,6 @@ INTERFACE:
 
 extern "C" void cov_print(void) __attribute__((weak));
 
-template <typename T, unsigned ALIGN = __alignof(T)>
-struct Kmem_slab_t_singleton
-{
-  static Kmem_slab_t<T, ALIGN> instance;
-
-  static void *alloc() { return instance.alloc(); }
-
-  template<typename Q> static
-  void *q_alloc(Q *q) { return instance.template q_alloc<Q>(q); }
-
-  static void free(void *e) { instance.free(e); }
-
-  template<typename Q> static
-  void q_free(Q *q, void *e) { instance.template q_free<Q>(q, e); }
-
-  template<typename ...ARGS> static
-  T *new_obj(ARGS &&...args)
-  { return instance.new_obj(cxx::forward<ARGS>(args)...); }
-
-  template<typename Q, typename ...ARGS> static
-  T *q_new(Q *q, ARGS &&...args)
-  { return instance.q_new(q, cxx::forward<ARGS>(args)...); }
-
-  static void del(T *e)
-  { instance.del(e); }
-
-  template<typename Q> static
-  void q_del(Q *q, T *e)
-  { instance.q_del(q, e); }
-};
-
-template <typename T, unsigned ALIGN>
-Kmem_slab_t<T, ALIGN> Kmem_slab_t_singleton<T, ALIGN>::instance;
-
-template <unsigned SIZE, unsigned ALIGN = 8>
-struct Kmem_slab_for_size_singleton
-{
-  static Kmem_slab_for_size<SIZE, ALIGN> instance;
-
-  static void *alloc() { return instance.alloc(); }
-
-  template<typename Q> static
-  void *q_alloc(Q *q) { return instance.template q_alloc<Q>(q); }
-
-  static void free(void *e) { instance.free(e); }
-
-  template<typename Q> static
-  void q_free(Q *q, void *e) { instance.template q_free<Q>(q, e); }
-
-  static Slab_cache *slab() { return instance.slab(); }
-};
-
-template <unsigned SIZE, unsigned ALIGN>
-Kmem_slab_for_size<SIZE, ALIGN> Kmem_slab_for_size_singleton<SIZE, ALIGN>::instance;
-
 /// Utest namespace for constants
 struct Utest
 {
