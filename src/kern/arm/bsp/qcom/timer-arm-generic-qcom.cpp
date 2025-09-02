@@ -6,7 +6,7 @@
 
 IMPLEMENTATION [arm_generic_timer && pf_qcom && have_arm_gicv2]:
 
-PUBLIC static
+PUBLIC static inline
 unsigned Timer::irq()
 {
   switch (Gtimer::Type)
@@ -20,7 +20,7 @@ unsigned Timer::irq()
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm_generic_timer && pf_qcom && pf_qcom_sm8150]:
 
-PUBLIC static
+PUBLIC static inline
 unsigned Timer::irq()
 {
   switch (Gtimer::Type)

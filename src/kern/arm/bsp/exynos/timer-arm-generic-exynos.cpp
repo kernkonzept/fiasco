@@ -3,7 +3,7 @@ IMPLEMENTATION [arm_generic_timer && pf_exynos]:
 #include "timer_mct.h"
 #include "mem_layout.h"
 
-PUBLIC static
+PUBLIC static inline
 unsigned Timer::irq()
 {
   switch (Gtimer::Type)

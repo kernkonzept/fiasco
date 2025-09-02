@@ -64,7 +64,7 @@ unsigned
 Timer::irq_num()
 { return (r<32>(Config) >> 3) & 0x1f; }
 
-PUBLIC static unsigned
+PUBLIC static inline unsigned
 Timer::irq()
 { return _timer->irq_num() + Timer_nr; }
 

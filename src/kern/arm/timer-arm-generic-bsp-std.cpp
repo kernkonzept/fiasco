@@ -1,6 +1,6 @@
 IMPLEMENTATION [arm_generic_timer]:
 
-PUBLIC static
+PUBLIC static inline
 unsigned Timer::irq()
 {
   using T = Generic_timer::Timer_type;

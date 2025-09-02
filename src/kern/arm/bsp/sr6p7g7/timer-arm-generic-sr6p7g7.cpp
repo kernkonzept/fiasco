@@ -2,7 +2,7 @@ IMPLEMENTATION [arm_generic_timer && pf_sr6p7g7]:
 
 #include "mem_layout.h"
 
-PUBLIC static
+PUBLIC static inline
 unsigned Timer::irq()
 {
   switch (Gtimer::Type)

@@ -1,7 +1,7 @@
 IMPLEMENTATION [arm_generic_timer && pf_sbsa]:
 
 // ARM Base System Architecture 3.6 - PPI assignments
-PUBLIC static
+PUBLIC static inline
 unsigned Timer::irq()
 {
   switch (Gtimer::Type)

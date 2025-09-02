@@ -1,6 +1,6 @@
 IMPLEMENTATION [arm_generic_timer && pf_mps3_an536]:
 
-PUBLIC static
+PUBLIC static inline
 unsigned Timer::irq()
 {
   switch (Gtimer::Type)
