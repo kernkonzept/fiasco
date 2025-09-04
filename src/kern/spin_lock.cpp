@@ -3,6 +3,8 @@ INTERFACE:
 #include "cpu_lock.h"
 #include "types.h"
 
+#include <cassert>
+
 /**
  * Basic spin lock.
  *
@@ -167,7 +169,6 @@ Spin_lock_coloc<T>::set_unused(T val)
 //--------------------------------------------------------------------------
 IMPLEMENTATION [mp]:
 
-#include <cassert>
 #include "mem.h"
 
 PUBLIC template<typename Lock_t> inline
@@ -177,7 +178,7 @@ Spin_lock<Lock_t>::test() const
   return (!!cpu_lock.test()) | (_lock & Arch_lock);
 }
 
-PUBLIC template<typename Lock_t> inline NEEDS[<cassert>, Spin_lock::lock_arch, "mem.h"]
+PUBLIC template<typename Lock_t> inline NEEDS[Spin_lock::lock_arch, "mem.h"]
 void
 Spin_lock<Lock_t>::lock()
 {
