@@ -6,7 +6,7 @@ IMPLEMENTATION [arm && pf_imx_21]:
 #include "kmem_mmio.h"
 
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
   enum {
     WCR  = Kmem::Watchdog_phys_base + 0,
@@ -34,7 +34,7 @@ IMPLEMENTATION [arm && pf_imx_28]:
 #include "mmio_register_block.h"
 
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
   Register_block<32> r(Kmem_mmio::map(0x80056000, 0x100));
   r[0x50] = 1; // Watchdog counter
@@ -78,7 +78,7 @@ IMPLEMENTATION [arm && (pf_imx_35 || pf_imx_51 || pf_imx_53 || pf_imx_6
 #include "kmem_mmio.h"
 
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
   enum {
     WCR     = Mem_layout::Watchdog_phys_base + 0,
@@ -101,7 +101,7 @@ IMPLEMENTATION [arm && arm_v8]:
 #include "psci.h"
 
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
   Psci::system_reset();
   L4::infinite_loop();

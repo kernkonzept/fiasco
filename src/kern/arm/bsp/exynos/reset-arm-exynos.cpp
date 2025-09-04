@@ -5,7 +5,7 @@ IMPLEMENTATION [arm && pf_exynos]:
 #include "kmem_mmio.h"
 
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
   Io::write<Mword>(1, Kmem_mmio::map(Mem_layout::Pmu_phys_base + 0x400,
                                      sizeof(Mword)));

@@ -17,7 +17,7 @@ public:
 
 
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
   Mmio_register_block r(Kmem_mmio::map(Mem_layout::Reset_phys_base, 0x200));
   // enable software reset

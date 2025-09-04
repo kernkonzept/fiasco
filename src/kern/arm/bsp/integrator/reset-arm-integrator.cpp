@@ -5,7 +5,7 @@ IMPLEMENTATION [arm && pf_integrator]:
 #include "kmem_mmio.h"
 
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
   enum {
     HDR_CTRL_OFFSET = Mem_layout::Integrator_phys_base + 0xc,

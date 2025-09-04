@@ -5,7 +5,7 @@ IMPLEMENTATION [arm && pf_sa1100]:
 #include "kmem_mmio.h"
 
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
   Sa1100 sa(Kmem_mmio::map(Mem_layout::Timer_phys_base + Sa1100::RSRR,
                            sizeof(Mword)));

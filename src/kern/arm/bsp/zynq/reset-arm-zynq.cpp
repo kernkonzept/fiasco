@@ -6,7 +6,7 @@ IMPLEMENTATION [arm && pf_zynq]:
 #include "mmio_register_block.h"
 
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
   Mmio_register_block slcr(Kmem_mmio::map(0xf8000000, 0x1000));
   slcr.write<Unsigned32>(0xdf0d, 0x8);

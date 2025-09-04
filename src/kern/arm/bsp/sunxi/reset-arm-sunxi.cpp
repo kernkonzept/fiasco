@@ -5,7 +5,7 @@ IMPLEMENTATION [arm && pf_sunxi]:
 #include "kmem_mmio.h"
 
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
   void *wdt = Kmem_mmio::map(0x01c20c90, 0x10);
   Io::write<Unsigned32>(3, offset_cast<void *>(wdt, 4));

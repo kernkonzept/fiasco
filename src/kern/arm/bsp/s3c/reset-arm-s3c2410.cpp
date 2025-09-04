@@ -5,7 +5,7 @@ IMPLEMENTATION [arm && pf_s3c2410]:
 #include "kmem_mmio.h"
 
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
   Mmio_register_block wdg(Kmem_mmio::map(Mem_layout::Watchdog_phys_base, 0x10));
   enum {

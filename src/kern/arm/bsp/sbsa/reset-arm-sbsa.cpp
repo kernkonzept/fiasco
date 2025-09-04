@@ -4,7 +4,7 @@ IMPLEMENTATION [arm && pf_sbsa]:
 #include "psci.h"
 
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
   Psci::system_reset();
   L4::infinite_loop();

@@ -5,7 +5,7 @@ IMPLEMENTATION [mips && sead3]:
 #include "mmio_register_block.h"
 
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
   Register_block<32> r(Kmem_mmio::map(0x1f000050, sizeof(Unsigned32)));
   r[0] = 0x4d;

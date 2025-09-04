@@ -6,7 +6,7 @@ IMPLEMENTATION [arm && pf_xscale]:
 #include "kmem_mmio.h"
 
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
   enum
   {

@@ -5,7 +5,7 @@ IMPLEMENTATION [arm && pf_omap3_35x]: //-----------------------------------
 #include "kmem_mmio.h"
 
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
   enum
   {
@@ -24,7 +24,7 @@ IMPLEMENTATION [arm && pf_omap3_am33xx]: //--------------------------------
 #include "kmem_mmio.h"
 
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
   enum { PRM_RSTCTRL = 0x44e00F00, };
 
@@ -40,7 +40,7 @@ IMPLEMENTATION [arm && pf_omap4]: //---------------------------------------
 #include "kmem_mmio.h"
 
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
   enum
   {
@@ -63,7 +63,7 @@ IMPLEMENTATION [arm && pf_omap5]: //---------------------------------------
 #include "kmem_mmio.h"
 
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
   enum
   {

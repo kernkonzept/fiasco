@@ -6,7 +6,7 @@ IMPLEMENTATION [arm && pf_armada38x]:
 #include "mmio_register_block.h"
 
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
   // Configuration and Control
   Mmio_register_block r(Kmem_mmio::map(0xf1018200, 0x100));

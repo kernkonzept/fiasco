@@ -4,7 +4,7 @@ IMPLEMENTATION [arm && pf_armadaa8k]:
 #include "psci.h"
 
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
   Psci::system_reset();
 

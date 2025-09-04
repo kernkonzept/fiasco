@@ -14,7 +14,7 @@ enum Reg_offsets
  * Program General purpose timer as watchdog, thus causing a system reset
  */
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
 
   Address mbar = Boot_info::mbar();
@@ -32,7 +32,7 @@ platform_reset(void)
 IMPLEMENTATION [ppc32 && !mpc52xx]:
 
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
   L4::infinite_loop();
 }

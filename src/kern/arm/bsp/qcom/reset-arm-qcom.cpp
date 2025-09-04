@@ -10,7 +10,7 @@ IMPLEMENTATION [arm && pf_qcom && arm_psci]:
 #include "psci.h"
 
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
   Psci::system_reset();
   L4::infinite_loop();
@@ -24,7 +24,7 @@ IMPLEMENTATION [arm && pf_qcom && !arm_psci]:
 #include "kmem_mmio.h"
 
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
   void *base = Kmem_mmio::map(Mem_layout::Mpm_ps_hold, sizeof(Unsigned32));
   Io::write<Unsigned32>(0, base);

@@ -6,7 +6,7 @@ IMPLEMENTATION [arm && pf_layerscape]:
 #include "mmio_register_block.h"
 
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
   Mmio_register_block r(Kmem_mmio::map(0x02ad0000, sizeof(Unsigned16)));
   r.r<16>(0x0) = 1 << 2;

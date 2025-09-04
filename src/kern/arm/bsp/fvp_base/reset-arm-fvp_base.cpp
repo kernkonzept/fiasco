@@ -17,7 +17,7 @@ platform_shutdown(void)
 }
 
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
   ve_sysregs->reboot();
   L4::infinite_loop();

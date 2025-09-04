@@ -5,7 +5,7 @@ IMPLEMENTATION [arm && pf_tegra && (pf_tegra_tegra2 || pf_tegra_tegra3)]:
 #include "mmio_register_block.h"
 
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
   Mmio_register_block b(Kmem_mmio::map(Mem_layout::Pmc_phys_base,
                                        sizeof(Mword)));
@@ -20,7 +20,7 @@ IMPLEMENTATION [arm && pf_tegra && pf_tegra_orin]:
 #include "psci.h"
 
 [[noreturn]] void
-platform_reset(void)
+platform_reset()
 {
   Psci::system_reset();
 
