@@ -303,7 +303,7 @@ Semaphore::destroy(Kobjects_list &reap_list) override
           // Do not reset t´s partner because t still has Thread_receive_wait
           // set. The fake partner avoids IPCs to that thread.
           t->set_wait_queue(nullptr);
-          t->utcb().access(true)->error = L4_error::Not_existent;
+          t->utcb().access()->error = L4_error::Not_existent;
         }
 
       t->activate();
