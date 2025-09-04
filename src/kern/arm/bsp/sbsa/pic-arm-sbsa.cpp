@@ -1,15 +1,15 @@
 INTERFACE [arm && pic_gic && pf_sbsa]:
 
-#include "gic.h"
 #include "initcalls.h"
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pic_gic && pf_sbsa]:
 
 #include "acpi.h"
-#include "irq_mgr_msi.h"
+#include "gic.h"
 #include "gic_v3.h"
 #include "gic_redist.h"
+#include "irq_mgr_msi.h"
 #include "kmem_mmio.h"
 
 class Gic_redist_find_acpi : public Gic_redist_find
@@ -95,13 +95,4 @@ Pic::init()
 
   gic = g;
   Irq_mgr::mgr = new Boot_object<M>(g, g->msi_chip());
-}
-
-// ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && mp && pf_sbsa]:
-
-PUBLIC static
-void Pic::init_ap(Cpu_number cpu, bool resume)
-{
-  gic->init_ap(cpu, resume);
 }

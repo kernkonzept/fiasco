@@ -197,15 +197,6 @@ Pic::init()
   arm_control_init();
 }
 
-// ------------------------------------------------------------------------
-IMPLEMENTATION [arm && mp && pic_gic]:
-
-PUBLIC static
-void Pic::init_ap(Cpu_number cpu, bool resume)
-{
-  gic->init_ap(cpu, resume);
-}
-
 //-------------------------------------------------------------------------
 IMPLEMENTATION [debug && pf_rpi && !pic_gic]:
 

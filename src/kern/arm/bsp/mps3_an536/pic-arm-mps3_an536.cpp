@@ -1,6 +1,5 @@
 INTERFACE [arm && pic_gic && pf_mps3_an536]:
 
-#include "gic.h"
 #include "initcalls.h"
 
 // ------------------------------------------------------------------------
@@ -8,6 +7,7 @@ IMPLEMENTATION [arm && pic_gic && pf_mps3_an536]:
 
 #include "amp_node.h"
 #include "boot_alloc.h"
+#include "gic.h"
 #include "gic_v3.h"
 #include "irq_mgr.h"
 #include "kmem_mmio.h"

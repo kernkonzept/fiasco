@@ -9,12 +9,6 @@ IMPLEMENTATION [arm && pf_arm_virt]:
 #include "panic.h"
 #include "kmem_mmio.h"
 
-PUBLIC static
-void Pic::init_ap(Cpu_number cpu, bool resume)
-{
-  gic->init_ap(cpu, resume);
-}
-
 PUBLIC static FIASCO_INIT
 void Pic::init()
 {

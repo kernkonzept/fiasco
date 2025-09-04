@@ -1,12 +1,12 @@
 INTERFACE [arm && pic_gic && pf_armada37xx]:
 
-#include "gic.h"
 #include "initcalls.h"
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pic_gic && pf_armada37xx]:
 
 #include "boot_alloc.h"
+#include "gic.h"
 #include "gic_v3.h"
 #include "irq_mgr.h"
 #include "kmem_mmio.h"
@@ -23,13 +23,4 @@ Pic::init()
                                            Mem_layout::Gic_redist_size));
   gic = &m->c;
   Irq_mgr::mgr = m;
-}
-
-// ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && mp && pf_armada37xx]:
-
-PUBLIC static
-void Pic::init_ap(Cpu_number cpu, bool resume)
-{
-  gic->init_ap(cpu, resume);
 }

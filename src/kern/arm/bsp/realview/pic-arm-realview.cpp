@@ -2,7 +2,6 @@ INTERFACE [arm && pf_realview]:
 
 #include "initcalls.h"
 #include "types.h"
-#include "gic.h"
 
 class Irq_base;
 
@@ -31,18 +30,11 @@ IMPLEMENTATION [arm && pic_gic
                     || (pf_realview_eb
                         && (arm_mpcore || (arm_cortex_a9 && mp))))]:
 
+#include "gic.h"
 #include "gic_v2.h"
 #include "irq_mgr_multi_chip.h"
 #include "cascade_irq.h"
 #include "kmem_mmio.h"
-
-PUBLIC static
-void Pic::init_ap(Cpu_number cpu, bool resume)
-{
-  gic->init_ap(cpu, resume);
-  static_cast<Gic*>(Irq_mgr::mgr->chip_pin(256).chip)->init_ap(cpu, resume);
-}
-
 
 PUBLIC static FIASCO_INIT
 void Pic::init()
@@ -74,12 +66,26 @@ void Pic::init()
 }
 
 //-------------------------------------------------------------------
+IMPLEMENTATION [arm && pic_gic && mp
+                && (pf_realview_pb11mp
+                    || (pf_realview_eb
+                        && (arm_mpcore || (arm_cortex_a9 && mp))))]:
+
+IMPLEMENT_OVERRIDE
+void Pic::init_ap(Cpu_number cpu, bool resume)
+{
+  gic->init_ap(cpu, resume);
+  static_cast<Gic*>(Irq_mgr::mgr->chip_pin(256).chip)->init_ap(cpu, resume);
+}
+
+//-------------------------------------------------------------------
 IMPLEMENTATION [arm && pic_gic
                 && !(pf_realview_pb11mp
                      || (pf_realview_eb
                          && (arm_mpcore || (arm_cortex_a9 && mp))))]:
 
 #include "boot_alloc.h"
+#include "gic.h"
 #include "gic_v2.h"
 #include "irq_mgr.h"
 #include "kmem_mmio.h"
@@ -98,16 +104,11 @@ void Pic::init()
   Irq_mgr::mgr = m;
 }
 
-PUBLIC static
-void Pic::init_ap(Cpu_number cpu, bool resume)
-{
-  gic->init_ap(cpu, resume);
-}
-
 //-------------------------------------------------------------------
 IMPLEMENTATION [arm && pic_gic && (arm_mpcore || arm_cortex_a9)]:
 
 #include "cpu.h"
+#include "gic.h"
 #include "io.h"
 #include "platform.h"
 

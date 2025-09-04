@@ -1,6 +1,5 @@
 INTERFACE [arm && pic_gic && pf_fvp_base_r]:
 
-#include "gic.h"
 #include "initcalls.h"
 
 // ------------------------------------------------------------------------
@@ -9,6 +8,7 @@ IMPLEMENTATION [arm && pic_gic && pf_fvp_base_r]:
 #include "amp_node.h"
 #include "boot_alloc.h"
 #include "cpu.h"
+#include "gic.h"
 #include "gic_v3.h"
 #include "irq_mgr.h"
 #include "kmem_mmio.h"
@@ -29,13 +29,4 @@ Pic::init()
 
   gic = &m->c;
   Irq_mgr::mgr = m;
-}
-
-// ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && pf_fvp_base_r && mp]:
-
-PUBLIC static
-void Pic::init_ap(Cpu_number cpu, bool resume)
-{
-  gic->init_ap(cpu, resume);
 }

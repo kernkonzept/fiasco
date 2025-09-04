@@ -1,6 +1,5 @@
 INTERFACE [arm && pic_gic && pf_fvp_base]:
 
-#include "gic.h"
 #include "initcalls.h"
 
 // ------------------------------------------------------------------------
@@ -8,6 +7,7 @@ IMPLEMENTATION [arm && pic_gic && pf_fvp_base]:
 
 #include "boot_alloc.h"
 #include "irq_mgr_msi.h"
+#include "gic.h"
 #include "gic_v3.h"
 #include "kmem_mmio.h"
 
@@ -28,13 +28,4 @@ Pic::init()
 
   typedef Irq_mgr_msi<Gic_v3, Gic_msi> Mgr;
   Irq_mgr::mgr = new Boot_object<Mgr>(g, g->msi_chip());
-}
-
-// ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && mp && pf_fvp_base]:
-
-PUBLIC static
-void Pic::init_ap(Cpu_number cpu, bool resume)
-{
-  gic->init_ap(cpu, resume);
 }

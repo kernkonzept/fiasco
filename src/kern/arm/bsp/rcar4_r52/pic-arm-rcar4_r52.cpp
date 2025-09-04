@@ -1,12 +1,12 @@
 INTERFACE [arm && pic_gic && pf_rcar4_r52]:
 
-#include "gic.h"
 #include "initcalls.h"
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pic_gic && pf_rcar4_r52]:
 
 #include "boot_alloc.h"
+#include "gic.h"
 #include "gic_v3.h"
 #include "irq_mgr.h"
 #include "kmem_mmio.h"

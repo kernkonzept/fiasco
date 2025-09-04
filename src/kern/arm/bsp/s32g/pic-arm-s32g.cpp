@@ -1,14 +1,14 @@
 INTERFACE [arm && pic_gic && pf_s32g]:
 
-#include "gic.h"
 #include "initcalls.h"
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pic_gic && pf_s32g]:
 
 #include "boot_alloc.h"
-#include "irq_mgr.h"
+#include "gic.h"
 #include "gic_v3.h"
+#include "irq_mgr.h"
 #include "kmem_mmio.h"
 
 PUBLIC static FIASCO_INIT
@@ -23,13 +23,4 @@ Pic::init()
                                            Mem_layout::Gic_redist_size));
   gic = &m->c;
   Irq_mgr::mgr = m;
-}
-
-// ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && mp && pf_s32g]:
-
-PUBLIC static
-void Pic::init_ap(Cpu_number cpu, bool resume)
-{
-  gic->init_ap(cpu, resume);
 }

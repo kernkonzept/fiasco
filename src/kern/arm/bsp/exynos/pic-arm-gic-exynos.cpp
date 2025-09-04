@@ -1,6 +1,5 @@
 INTERFACE:
 
-#include "gic.h"
 #include "initcalls.h"
 
 //-------------------------------------------------------------------------
@@ -32,7 +31,6 @@ protected:
   Chip_block *_block;
 };
 
-
 //-------------------------------------------------------------------------
 IMPLEMENTATION [arm && pic_gic && pf_exynos]:
 
@@ -42,12 +40,12 @@ IMPLEMENTATION [arm && pic_gic && pf_exynos]:
 #include "assert.h"
 #include "boot_alloc.h"
 #include "config.h"
+#include "gic.h"
 #include "initcalls.h"
 #include "io.h"
 #include "irq_chip.h"
 #include "irq_chip_generic.h"
 #include "irq_mgr.h"
-#include "gic.h"
 #include "kmem.h"
 #include "kmem_mmio.h"
 #include "mmio_register_block.h"
@@ -559,12 +557,6 @@ void Pic::init()
   Irq_mgr::mgr = new Boot_object<Mgr_int>();
 }
 
-PUBLIC static
-void Pic::init_ap(Cpu_number cpu, bool resume)
-{
-  gic->init_ap(cpu, resume);
-}
-
 // ------------------------------------------------------------------------
 INTERFACE [pf_exynos4 && exynos_extgic]:
 
@@ -772,7 +764,8 @@ DEFINE_PER_CPU static Per_cpu<Static_object<Check_irq0> > _check_irq0;
 
 
 PUBLIC static
-void Pic::init_ap(Cpu_number cpu, bool resume)
+void
+Pic::init_ap(Cpu_number cpu, bool resume)
 {
   if (!resume)
     {
@@ -961,12 +954,6 @@ void
 Pic::reinit(Cpu_number)
 {
   gic->init(true);
-}
-
-PUBLIC static
-void Pic::init_ap(Cpu_number cpu, bool resume)
-{
-  gic->init_ap(cpu, resume);
 }
 
 //---------------------------------------------------------------------------

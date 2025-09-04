@@ -8,6 +8,7 @@ INTERFACE [arm && pic_gic]:
 EXTENSION class Pic
 {
 public:
+  static void init_ap(Cpu_number cpu, bool resume);
   static Global_data<Gic *>gic;
 };
 
@@ -24,4 +25,14 @@ void
 Pic::set_pending_irq(unsigned group32num, Unsigned32 val)
 {
   gic->set_pending_irq(group32num, val);
+}
+
+//-------------------------------------------------------------------
+IMPLEMENTATION [arm && pic_gic && mp]:
+
+IMPLEMENT_DEFAULT
+void
+Pic::init_ap(Cpu_number cpu, bool resume)
+{
+  gic->init_ap(cpu, resume);
 }

@@ -1,6 +1,5 @@
 INTERFACE [arm && pic_gic && pf_sr6p7g7]:
 
-#include "gic.h"
 #include "initcalls.h"
 
 // ------------------------------------------------------------------------
@@ -9,6 +8,7 @@ IMPLEMENTATION [arm && pic_gic && pf_sr6p7g7]:
 #include "amp_node.h"
 #include "boot_alloc.h"
 #include "cpu.h"
+#include "gic.h"
 #include "gic_v3.h"
 #include "irq_mgr.h"
 #include "kmem_mmio.h"
