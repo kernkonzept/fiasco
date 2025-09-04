@@ -18,16 +18,3 @@ platform_reset()
 
   L4::infinite_loop();
 }
-
-// ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pf_s32g && arm_psci]:
-
-#include "infinite_loop.h"
-#include "psci.h"
-
-[[noreturn]] void
-platform_reset()
-{
-  Psci::system_reset();
-  L4::infinite_loop();
-}

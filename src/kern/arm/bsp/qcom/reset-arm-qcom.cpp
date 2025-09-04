@@ -4,19 +4,6 @@
  * Copyright (C) 2022-2024 Kernkonzept GmbH.
  */
 
-IMPLEMENTATION [arm && pf_qcom && arm_psci]:
-
-#include "infinite_loop.h"
-#include "psci.h"
-
-[[noreturn]] void
-platform_reset()
-{
-  Psci::system_reset();
-  L4::infinite_loop();
-}
-
-// ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pf_qcom && !arm_psci]:
 
 #include "infinite_loop.h"

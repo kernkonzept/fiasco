@@ -11,6 +11,6 @@ config_IMPL           += config-arm-armada37xx
 mem_layout_IMPL       += mem_layout-arm-armada37xx
 pic_IMPL              += pic-gic pic-arm-armada37xx
 platform_control_IMPL += platform_control-arm-armada37xx
-reset_IMPL            += reset-arm-armada37xx
+reset_IMPL            += reset-arm-psci
 timer_IMPL            += timer-arm-generic timer-arm-generic-bsp-std
 timer_tick_IMPL       += timer_tick-single-vector

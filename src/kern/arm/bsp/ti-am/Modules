@@ -11,6 +11,6 @@ mem_layout_IMPL       += mem_layout-arm-ti_am
 pic_IMPL              += pic-gic pic-arm-ti_am
 timer_IMPL            += timer-arm-generic timer-arm-generic-bsp-std
 timer_tick_IMPL       += timer_tick-single-vector
-reset_IMPL            += reset-arm-ti_am
+reset_IMPL            += reset-arm-psci
 clock_IMPL            += clock-arm-generic
 platform_control_IMPL += platform_control-arm-ti_am

@@ -1,5 +1,4 @@
-// ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pf_lx2160 && arm_psci]:
+IMPLEMENTATION [arm && arm_psci]:
 
 #include "infinite_loop.h"
 #include "psci.h"
