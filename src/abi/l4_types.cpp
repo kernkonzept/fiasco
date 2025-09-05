@@ -827,7 +827,7 @@ bool Utcb::inherit_fpu() const
  * \param flags the flags, see L4_msg_tag::Flags and L4_msg_tag::Output_flags.
  * \param proto the protocol ID to use.
  */
-PUBLIC inline
+PUBLIC constexpr
 L4_msg_tag::L4_msg_tag(unsigned words, unsigned items, unsigned long flags,
     unsigned long proto)
   : _tag((words & 0x3f) | ((items & 0x3f) << 6) | flags | (proto << 16))
@@ -837,7 +837,7 @@ L4_msg_tag::L4_msg_tag(unsigned words, unsigned items, unsigned long flags,
  * Create an uninitialized message tag.
  * \note the value of the tag is unpredictable.
  */
-PUBLIC inline
+PUBLIC constexpr
 L4_msg_tag::L4_msg_tag()
 {}
 
@@ -848,7 +848,7 @@ L4_msg_tag::L4_msg_tag()
  * \param flags the output flags to set in the new tag.
  * \pre (flags & ~Rcv_flags) == 0
  */
-PUBLIC inline
+PUBLIC constexpr
 L4_msg_tag::L4_msg_tag(L4_msg_tag const &o, Mword flags)
   : _tag((o.raw() & ~static_cast<Mword>(Rcv_flags)) | flags)
 {}
@@ -857,7 +857,7 @@ L4_msg_tag::L4_msg_tag(L4_msg_tag const &o, Mword flags)
  * Create msg tag from the binary representation.
  * \param raw the raw binary representation, as passed from user level.
  */
-PUBLIC explicit inline
+PUBLIC explicit constexpr
 L4_msg_tag::L4_msg_tag(Mword raw)
   : _tag(raw)
 {}
@@ -875,7 +875,7 @@ L4_msg_tag::proto() const
  * Get the binary representation.
  * \return the binary value of the tag.
  */
-PUBLIC inline
+PUBLIC constexpr
 unsigned long
 L4_msg_tag::raw() const
 { return _tag; }
