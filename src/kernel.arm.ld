@@ -172,13 +172,18 @@ SECTIONS {
 
     . = ALIGN(0x40);
 
-    PROVIDE (_etext = .);
   } :ktext
 
+  /* These sections need to stay separate. */
   __llvm_covmap : { KEEP(*(__llvm_covmap)) } :ktext
   __llvm_covfun : { KEEP(*(__llvm_covfun)) } :ktext
   __llvm_prf_data : { KEEP(*(__llvm_prf_data)) } :ktext
   __llvm_prf_names : { KEEP(*(__llvm_prf_names)) } :ktext
+
+  .text_kernel_end : {
+    . = ALIGN(0x40);
+    _etext = .;
+  } :ktext
 
   /*
    * This section serves the purpose of taking up the remainder of the last 2M
