@@ -344,6 +344,25 @@ public:
   };
 };
 
+// ------------------------------------------------------------------------
+INTERFACE [arm && cpu_virt && arm_cortex_r52]:
+
+EXTENSION class Cpu
+{
+  enum {
+    Imp_csctlr = (Config::Dcache_flash_ways << 0)  // DFLW
+               | (Config::Icache_flash_ways << 8), // IFLW
+  };
+};
+
+// ------------------------------------------------------------------------
+INTERFACE [arm && cpu_virt && !arm_cortex_r52]:
+
+EXTENSION class Cpu
+{
+  enum { Imp_csctlr = 0 };
+};
+
 // -------------------------------------------------------------------------------
 INTERFACE [arm]:
 

@@ -213,6 +213,13 @@ PUBLIC static
 void
 Cpu::init_sctlr()
 {
+
+  // Updates to the Cache Segregation Control Register are only permitted before
+  // the caches have ever been enabled following a system reset, otherwise the
+  // update is ignored
+  if constexpr (TAG_ENABLED(arm_cortex_r52))
+    asm volatile("mcr p15, 1, %0, c9, c1, 0" : : "r" (Imp_csctlr)); // IMP_CSCTLR
+
   Mem::dsb();
   asm volatile("mcr p15, 4, %[hsctlr], c1, c0, 0" // HSCTLR
       : : [hsctlr] "r" (Hsctlr));
