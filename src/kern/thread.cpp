@@ -840,10 +840,12 @@ Thread::switchin_fpu(bool alloc_new_fpu = true)
   assert (f.owner() != this);
 
   // Allocate FPU state slab if we didn't already have one
-  if (!fpu_state().valid()
-      && (EXPECT_FALSE(!alloc_new_fpu
-                       || !Fpu_alloc::alloc_state(_quota, fpu_state()))))
-    return 0;
+  if (!fpu_state().valid())
+    {
+      if (EXPECT_FALSE(!alloc_new_fpu
+                       || !Fpu_alloc::alloc_state(_quota, fpu_state())))
+        return 0;
+    }
 
   // Enable the FPU before accessing it, otherwise recursive trap
   f.enable();
