@@ -196,7 +196,9 @@ namespace KIP_namespace
   Amp_kip<Amp_node::Max_num_nodes - 1>
   amp_kernel_info_pages __attribute__((used,section(".kernel_info_page.amp")));
 
-  static_assert(sizeof(amp_kernel_info_pages)
-                  == (Amp_node::Max_num_nodes - 1) * Config::PAGE_SIZE,
-                "Additional KIPs must be PAGE_SIZE size each!");
+  // Keep in mind that sizeof(Amp_kip<0>) == 1!
+  static_assert(Amp_node::Max_num_nodes == 1
+                || (sizeof(amp_kernel_info_pages)
+                    == (Amp_node::Max_num_nodes - 1) * Config::PAGE_SIZE),
+                    "Additional KIPs must be PAGE_SIZE size each!");
 };
