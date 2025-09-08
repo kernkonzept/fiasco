@@ -18,8 +18,8 @@
 uint64_t __llvm_profile_get_size_for_buffer(void);
 int __llvm_profile_write_buffer(char *Buffer);
 
-unsigned written = 0;
-unsigned __llvmcov_dumped = 0;
+static GLOBAL_DATA unsigned written = 0;
+static GLOBAL_DATA unsigned __llvmcov_dumped = 0;
 
 static uint32_t
 lprofCustomWriter(ProfDataWriter *this,

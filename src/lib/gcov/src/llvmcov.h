@@ -6,6 +6,9 @@
  */
 
 #pragma once
+
+#include <globalconfig.h>
+
 /**
  * Process data from llvm coverage profiling for output
  */
@@ -29,3 +32,9 @@ dump_coverage(void);
  */
 unsigned
 store_b64(void const *data, unsigned elem_size, unsigned n_elem);
+
+#ifdef CONFIG_AMP
+# define GLOBAL_DATA __attribute__((section(".global_data")))
+#else
+# define GLOBAL_DATA
+#endif

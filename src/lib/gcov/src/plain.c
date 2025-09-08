@@ -1,7 +1,8 @@
 #include "output.h"
 #include "base64.h"
+#include "llvmcov.h"
 
-unsigned buf_idx;
+static GLOBAL_DATA unsigned buf_idx;
 
 // run length encoding (rle) mechanics using a counter buffer (cb)
 struct
@@ -9,7 +10,7 @@ struct
   char init; // is initialized
   char last; // character
   int count; // how often the character was seen
-} cb = {0, 0, 0};
+} cb GLOBAL_DATA = {0, 0, 0};
 
 // Flush and print the runlength encoding buffer
 static void

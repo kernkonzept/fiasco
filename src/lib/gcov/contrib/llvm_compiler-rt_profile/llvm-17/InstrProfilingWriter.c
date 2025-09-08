@@ -22,15 +22,17 @@
 #define INSTR_PROF_VALUE_PROF_DATA
 #include "profile/InstrProfData.inc"
 
-COMPILER_RT_VISIBILITY void (*FreeHook)(void *) = NULL;
-static ProfBufferIO TheBufferIO;
-#define VP_BUFFER_SIZE 8 * 1024
-static uint8_t BufferIOBuffer[VP_BUFFER_SIZE];
-static InstrProfValueData VPDataArray[16];
-static uint32_t VPDataArraySize = sizeof(VPDataArray) / sizeof(*VPDataArray);
+#include "llvmcov.h"
 
-COMPILER_RT_VISIBILITY uint8_t *DynamicBufferIOBuffer = 0;
-COMPILER_RT_VISIBILITY uint32_t VPBufferSize = 0;
+COMPILER_RT_VISIBILITY GLOBAL_DATA void (*FreeHook)(void *) = NULL;
+static GLOBAL_DATA ProfBufferIO TheBufferIO;
+#define VP_BUFFER_SIZE 8 * 1024
+static GLOBAL_DATA uint8_t BufferIOBuffer[VP_BUFFER_SIZE];
+static GLOBAL_DATA InstrProfValueData VPDataArray[16];
+static GLOBAL_DATA uint32_t VPDataArraySize = sizeof(VPDataArray) / sizeof(*VPDataArray);
+
+COMPILER_RT_VISIBILITY GLOBAL_DATA uint8_t *DynamicBufferIOBuffer = 0;
+COMPILER_RT_VISIBILITY GLOBAL_DATA uint32_t VPBufferSize = 0;
 
 /* The buffer writer is responsible in keeping writer state
  * across the call.

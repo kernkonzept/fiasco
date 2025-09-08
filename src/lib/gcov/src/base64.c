@@ -5,6 +5,7 @@
  *
  */
 #include "base64.h"
+#include "llvmcov.h"
 
 #ifdef L4API_l4f
   #include <l4/sys/vcon.h> //For non-bootstrap version
@@ -16,13 +17,14 @@
   #endif              // L4API_
 #endif              // L4API_l4f
 
-char buffer[BUF_SIZE];
-char outbuf[BUF_SIZE * 4 / 3];
+GLOBAL_DATA char buffer[BUF_SIZE];
+GLOBAL_DATA char outbuf[BUF_SIZE * 4 / 3];
 _Static_assert(BUF_SIZE % 3 == 0, "BUF_SIZE is multiple of 3");
 
 
 // The base64 encoding table
-char const *b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+GLOBAL_DATA char const
+  *b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 
 // length of out must be enough to hold base64 string, e.g. for 10 chars -> 16!

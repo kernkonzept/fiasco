@@ -13,7 +13,9 @@
 
 #include "InstrProfilingInternal.h"
 
-static unsigned ProfileDumped = 0;
+#include "llvmcov.h"
+
+static GLOBAL_DATA unsigned ProfileDumped = 0;
 
 COMPILER_RT_VISIBILITY unsigned lprofProfileDumped(void) {
   return ProfileDumped;

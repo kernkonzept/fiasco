@@ -13,17 +13,19 @@
 #include "InstrProfilingInternal.h"
 #include "InstrProfilingPort.h"
 
+#include "llvmcov.h"
+
 /* When continuous mode is enabled (%c), this parameter is set to 1.
  *
  * This parameter is defined here in InstrProfilingBuffer.o, instead of in
  * InstrProfilingFile.o, to sequester all libc-dependent code in
  * InstrProfilingFile.o. The test `instrprof-without-libc` will break if this
  * layering is violated. */
-static int ContinuouslySyncProfile = 0;
+static GLOBAL_DATA int ContinuouslySyncProfile = 0;
 
 /* The system page size. Only valid when non-zero. If 0, the page size is
  * unavailable. */
-static unsigned PageSize = 0;
+static GLOBAL_DATA unsigned PageSize = 0;
 
 COMPILER_RT_VISIBILITY int __llvm_profile_is_continuous_mode_enabled(void) {
   return ContinuouslySyncProfile && PageSize;
