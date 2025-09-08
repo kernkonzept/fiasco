@@ -28,9 +28,6 @@ Platform_control::amp_ap_early_init()
   asm volatile ("mcr p15, 0, %0, c9, c1, 0" : : "r"(tcm_base));
   asm volatile ("mcr p15, 0, %0, c9, c1, 1" : : "r"(tcm_base | 0x00100000));
   asm volatile ("mcr p15, 0, %0, c9, c1, 2" : : "r"(tcm_base | 0x00200000));
-
-  // Split cache ways between AXIF and AXIM
-  asm volatile ("mcr p15, 1, %0, c9, c1, 0" : : "r"(0x202));
 }
 
 // ------------------------------------------------------------------------
