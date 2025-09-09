@@ -16,8 +16,10 @@ extern "C" {
 #include <kmem_mmio.h>
 #include <static_init.h>
 
-static char *membuf_ptr = NULL;
-static char const *membuf_end = NULL;
+#include "llvmcov.h"
+
+static GLOBAL_DATA char *membuf_ptr = NULL;
+static GLOBAL_DATA char const *membuf_end = NULL;
 
 static void
 cov_membuf_init()
