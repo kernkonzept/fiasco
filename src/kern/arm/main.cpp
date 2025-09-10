@@ -12,11 +12,11 @@ IMPLEMENTATION [arm]:
 
 #include <cxx/defensive>
 
+#include "banner.h"
 #include "config.h"
 #include "globals.h"
 #include "initcalls.h"
 #include "kmem_alloc.h"
-#include "kip_init.h"
 #include "kdb_ke.h"
 #include "kernel_thread.h"
 #include "kernel_task.h"
@@ -88,7 +88,7 @@ kernel_main()
   else
     set_exit_question(&exit_question);
 
-  printf("%s\n", Kip::k()->version_string());
+  Banner::init();
 
   // disallow all interrupts before we selectively enable them
   //  pic_disable_all();

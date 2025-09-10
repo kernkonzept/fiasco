@@ -38,8 +38,6 @@ public:
 //---------------------------------------------------------------------------
 IMPLEMENTATION [mips]:
 
-const char *const Config::kernel_warn_config_string = 0;
-
 IMPLEMENT_OVERRIDE inline ALWAYS_INLINE
 constexpr unsigned long Config::kmem_max() { return 32UL << 20; }
 

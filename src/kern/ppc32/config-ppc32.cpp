@@ -40,8 +40,6 @@ public:
 //---------------------------------------------------------------------------
 IMPLEMENTATION [ppc32]:
 
-const char *const Config::kernel_warn_config_string = 0;
-
 IMPLEMENT FIASCO_INIT
 void
 Config::init_arch()

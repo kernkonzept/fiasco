@@ -28,7 +28,6 @@ class Config
 {
 public:
 
-  static const char *const kernel_warn_config_string;
   enum User_memory_access_type
   {
     No_access_user_mem = 0,
@@ -96,6 +95,8 @@ public:
   static constexpr unsigned long kmem_max();
 
   static constexpr unsigned long ext_vcpu_size();
+
+  static constexpr const char *kernel_warn_config_string() FIASCO_INIT;
 };
 
 #define GREETING_COLOR_ANSI_TITLE  "\033[1;32m"
@@ -196,8 +197,16 @@ DEFINE_GLOBAL_CONSTINIT
 Global_data<unsigned> Config::tbuf_entries((1U << 17) / (sizeof(Mword) * 16));
 #endif
 
+IMPLEMENT_DEFAULT constexpr
+const char *
+Config::kernel_warn_config_string()
+{
+  return nullptr;
+}
+
 IMPLEMENT FIASCO_INIT
-void Config::init()
+void
+Config::init()
 {
   init_arch();
 

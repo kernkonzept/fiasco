@@ -95,7 +95,11 @@ unsigned Config::scheduler_irq_vector;
 bool Config::watchdog = false;
 #endif
 
-const char *const Config::kernel_warn_config_string =
+IMPLEMENT_OVERRIDE constexpr
+char const *
+Config::kernel_warn_config_string()
+{
+  return
 #ifdef CONFIG_SCHED_RTC
   "  CONFIG_SCHED_RTC is on\n"
 #endif
@@ -118,6 +122,7 @@ const char *const Config::kernel_warn_config_string =
   "  CONFIG_JDB_ACCOUNTING is on\n"
 #endif
   "";
+}
 
 IMPLEMENT FIASCO_INIT
 void
