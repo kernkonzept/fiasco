@@ -197,7 +197,6 @@ static int printf_core(FILE *f, const char *fmt, va_list *ap, union arg *nl_arg,
 	char buf[sizeof(uintmax_t)*3];
 	const char *prefix;
 	int t, pl;
-	wchar_t wc[2];
 
 	for (;;) {
 		/* This error is only specified for snprintf, but since it's
@@ -375,7 +374,6 @@ static int printf_core(FILE *f, const char *fmt, va_list *ap, union arg *nl_arg,
 			}
 			p = MAX(p, z-a + !arg.i);
 			break;
-		narrow_c:
 		case 'c':
 			*(a=z-(p=1))=arg.i;
 			fl &= ~ZERO_PAD;
@@ -388,13 +386,6 @@ static int printf_core(FILE *f, const char *fmt, va_list *ap, union arg *nl_arg,
 			p = z-a;
 			fl &= ~ZERO_PAD;
 			break;
-		case 'C':
-			if (!arg.i)
-				goto narrow_c;
-			wc[0] = arg.i;
-			wc[1] = 0;
-			arg.p = wc;
-			p = -1;
 		}
 
 		if (p < z-a)
