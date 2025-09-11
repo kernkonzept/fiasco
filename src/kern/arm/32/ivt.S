@@ -234,9 +234,9 @@
 	mpu_kernel_enter (13*4)
 	/* stack frame: RF + r12-r0, sp points to r0 */
 	CONTEXT_OF	r1, sp
-	RESET_THREAD_CANCEL_AT r1       @ sets r0 to state 
+	RESET_THREAD_CANCEL_AT r1       @ sets r0 to state
 	tst	r0, #VAL__Thread_alien_or_vcpu_user
-	bne	alien_syscall
+	bne	alien_or_vcpu_user_syscall
 	adr	r0, sys_call_table
 	adr	lr, 2f
 1:	ldr	pc, [r0, +r5, LSL #2]
@@ -719,11 +719,11 @@ __irq_handler_fiq:
 /**
  * \pre sp  points to r0-r12 + RF
  */
-alien_syscall: @ Do it for an alien ---------------------------------------
+alien_or_vcpu_user_syscall: @ ---------------------------------------------
 	tst	r0, #VAL__Thread_dis_alien
 	bicne	r0, r0, #VAL__Thread_dis_alien
 	bne	1f
-	@ Trap alien before system call -----------------------------------
+	@ Trap alien or thread in extended vCPU user mode before system call
 	ldr     r0, [sp, #RF(PSR,    13*4)] @ read orig PSR
 	tst     r0, #0x20                   @ Thumb mode?
 	ldr	lr, [sp, #RF(PC,     13*4)] @ read orig exception PC
@@ -746,7 +746,7 @@ alien_syscall: @ Do it for an alien ---------------------------------------
 	@ system call.
 	enter_slowtrap_w_stack GET_HSR(0x11), 0x40
 
-	
+
 GEN_VCPU_UPCALL OFS__THREAD__USER_VCPU
 
 missed_excpt_ret_label:      .string "ERROR in exception return"

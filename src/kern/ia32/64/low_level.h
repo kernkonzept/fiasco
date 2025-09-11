@@ -211,7 +211,7 @@
 #endif
 .endm
 
-.macro  PRE_ALIEN_IPC target=slowtraps
+.macro  PRE_ALIEN_OR_VCPU_USER_IPC target=slowtraps
 	btrl	$SHIFT__Thread_dis_alien, OFS__THREAD__STATE (%rbx)
 	jc	1f
 	movq	$253, (16*8)(%rsp)
@@ -228,8 +228,8 @@
 	jmp	\target
 .endm
 
-.macro ALIEN_SYSCALL syscall, trap_target=slowtraps
-	PRE_ALIEN_IPC \trap_target
+.macro ALIEN_OR_VCPU_USER_SYSCALL syscall, trap_target=slowtraps
+	PRE_ALIEN_OR_VCPU_USER_IPC \trap_target
 	\syscall
 	POST_ALIEN_IPC \trap_target
 .endm

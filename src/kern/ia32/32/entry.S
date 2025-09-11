@@ -59,7 +59,7 @@
 	jmp	.L_slowtraps
 .endm
 
-.macro	PRE_ALIEN_IPC
+.macro	PRE_ALIEN_OR_VCPU_USER_IPC
 	btrl	$SHIFT__Thread_dis_alien, OFS__THREAD__STATE (%ebx)
 	jc	1f
 	RESTORE_STATE
@@ -514,7 +514,7 @@ entry_sys_ipc_c:
 	RESET_KERNEL_SEGMENTS_FORCE_DS_ES
 	ESP_TO_TCB_AT %ebx
 	testl	$VAL__Thread_alien_or_vcpu_user, OFS__THREAD__STATE (%ebx)
-	jnz	.Lalien_sys_ipc_c
+	jnz	.Lalien_or_vcpu_user_sys_ipc_c
 	RESET_THREAD_CANCEL_AT %ebx
 	call	sys_ipc_wrapper         /* ipc_short_cut_wrapper */
 in_sc_ipc1:
@@ -536,7 +536,7 @@ entry_sys_ipc_log:
 	RESET_KERNEL_SEGMENTS_FORCE_DS_ES
 	ESP_TO_TCB_AT %ebx
 	testl	$VAL__Thread_alien_or_vcpu_user, OFS__THREAD__STATE (%ebx)
-	jnz	.Lalien_sys_ipc_log
+	jnz	.Lalien_or_vcpu_user_sys_ipc_log
 	RESET_THREAD_CANCEL_AT %ebx
 	call	*syscall_table
 in_slow_ipc4:
@@ -570,14 +570,14 @@ GATE_ENTRY	(APIC_IRQ_BASE - 1), entry_ipi_remote_request, (ACC_PL_K | ACC_INTR_G
 
 GATE_INITTAB_END
 
-.Lalien_sys_ipc_c:
-	PRE_ALIEN_IPC
+.Lalien_or_vcpu_user_sys_ipc_c:
+	PRE_ALIEN_OR_VCPU_USER_IPC
 	call	sys_ipc_wrapper
 	POST_ALIEN_IPC
 
-#if defined (CONFIG_JDB)
-.Lalien_sys_ipc_log:
-	PRE_ALIEN_IPC
+#ifdef CONFIG_JDB
+.Lalien_or_vcpu_user_sys_ipc_log:
+	PRE_ALIEN_OR_VCPU_USER_IPC
 	call	*syscall_table
 	POST_ALIEN_IPC
 #endif

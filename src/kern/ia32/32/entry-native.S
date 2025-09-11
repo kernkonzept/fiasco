@@ -7,7 +7,7 @@
 #include "regdefs.h"
 #include "tcboffset.h"
 
-.macro  PRE_FAST_ALIEN_IPC
+.macro  PRE_FAST_ALIEN_OR_VCPU_USER_IPC
 	btrl	$SHIFT__Thread_dis_alien, OFS__THREAD__STATE (%ebx)
 	jc	1f
 	RESTORE_STATE
@@ -84,7 +84,7 @@ entry_vec01_debug:
 	RESET_KERNEL_SEGMENTS_FORCE_DS_ES
 	ESP_TO_TCB_AT %ebx
 	testl	$VAL__Thread_alien_or_vcpu_user, OFS__THREAD__STATE (%ebx)
-	jnz	.Ldbg_alien_sys_fast_ipc_log
+	jnz	.Ldbg_alien_or_vcpu_user_sys_fast_ipc_log
 	RESET_THREAD_CANCEL_AT %ebx
 	call	*syscall_table
 	CHECK_SANITY $3			/* scratches ecx */
@@ -92,8 +92,8 @@ entry_vec01_debug:
 	popl	%eax
 	iret
 
-.Ldbg_alien_sys_fast_ipc_log:
-	PRE_FAST_ALIEN_IPC
+.Ldbg_alien_or_vcpu_user_sys_fast_ipc_log:
+	PRE_FAST_ALIEN_OR_VCPU_USER_IPC
 	push    $ret_from_fast_alien_ipc
 	jmp     *syscall_table
 
@@ -219,14 +219,14 @@ entry_sys_fast_ipc_log:
 	RESET_KERNEL_SEGMENTS_FORCE_DS_ES
 	ESP_TO_TCB_AT %ebx
 	testl	$VAL__Thread_alien_or_vcpu_user, OFS__THREAD__STATE (%ebx)
-	jnz	.Lalien_sys_fast_ipc_log
+	jnz	.Lalien_or_vcpu_user_sys_fast_ipc_log
 	RESET_THREAD_CANCEL_AT %ebx
 	call	*syscall_table
 in_slow_ipc5:
 	DO_SYSEXIT
 
-.Lalien_sys_fast_ipc_log:
-	PRE_FAST_ALIEN_IPC
+.Lalien_or_vcpu_user_sys_fast_ipc_log:
+	PRE_FAST_ALIEN_OR_VCPU_USER_IPC
 	push    $ret_from_fast_alien_ipc
 	jmp     *syscall_table
 
@@ -266,27 +266,28 @@ entry_sys_fast_ipc_c:
 	RESET_KERNEL_SEGMENTS_FORCE_DS_ES
 	ESP_TO_TCB_AT %ebx
 	testl	$VAL__Thread_alien_or_vcpu_user, OFS__THREAD__STATE (%ebx)
-	jnz	.Lalien_sys_fast_ipc_c
+	jnz	.Lalien_or_vcpu_user_sys_fast_ipc_c
 	RESET_THREAD_CANCEL_AT %ebx
 	call    sys_ipc_wrapper
 in_sc_ipc2:
 	DO_SYSEXIT
 
 	.global ret_from_fast_alien_ipc /* used in ex-regs */
-/* ex-regs patches the return address of the call to the 'sys_ipc' function
- * in the case of sysenter, because we need to leave the kernel by iret
- * to prevent the need of user-level trampoline code.
- * In the case of alien ipc there must be a special case because otherwise the
- * second alien exception is not generated. Therefore ex-regs uses 
- * 'ret_from_fast_alien_ipc' to determine this case and patches the return
- * address with 'leave_alien_from_sysenter_by_iret' instead of
- * 'leave_from_sysenter_by_iret'. (see Thread::user_ip in thread-ia32.cpp)
- */
 
+/* Ex-regs patches the return address of the call to the 'sys_ipc' function in
+ * the case of sysenter, because we need to leave the kernel by iret to prevent
+ * the need of user-level trampoline code.
+ *
+ * In case of an alien IPC (but does not apply to a thread in extended vCPU
+ * user mode) there must be a special case because otherwise the second alien
+ * exception is not generated. Therefore ex-regs uses 'ret_from_fast_alien_ipc'
+ * to determine this case and patches the return address with
+ * 'leave_alien_from_sysenter_by_iret' instead of
+ * 'leave_from_sysenter_by_iret'. (see Thread::user_ip in thread-ia32.cpp) */
 
-.Lalien_sys_fast_ipc_c:
+.Lalien_or_vcpu_user_sys_fast_ipc_c:
 	cld
-	PRE_FAST_ALIEN_IPC
+	PRE_FAST_ALIEN_OR_VCPU_USER_IPC
 	call    sys_ipc_wrapper
 ret_from_fast_alien_ipc:
 	POST_FAST_ALIEN_IPC

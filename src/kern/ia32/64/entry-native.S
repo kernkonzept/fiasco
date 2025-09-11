@@ -194,7 +194,7 @@ entry_sys_fast_ipc_log:
 	SAVE_STATE_SYSEXIT
 	ESP_TO_TCB_AT %rbx
 	testl	$VAL__Thread_alien_or_vcpu_user, OFS__THREAD__STATE (%rbx)
-	jnz	alien_sys_fast_ipc_log
+	jnz	alien_or_vcpu_user_sys_fast_ipc_log
 	RESET_THREAD_CANCEL_AT %rbx
 
 	call	*syscall_table
@@ -203,8 +203,8 @@ in_slow_ipc5:
 	mov     16(%rsp), %rcx /* load user rip */
 	SAFE_SYSRET
 
-alien_sys_fast_ipc_log:
-	ALIEN_SYSCALL syscall="call *syscall_table"
+alien_or_vcpu_user_sys_fast_ipc_log:
+	ALIEN_OR_VCPU_USER_SYSCALL syscall="call *syscall_table"
 
 
 	.globl	in_slow_ipc5
@@ -228,20 +228,20 @@ entry_sys_fast_ipc_c:
 	SAVE_STATE_SYSEXIT
 	ESP_TO_TCB_AT %rbx
 	testl	$VAL__Thread_alien_or_vcpu_user, OFS__THREAD__STATE (%rbx)
-	jnz	alien_sys_fast_ipc_c
+	jnz	alien_or_vcpu_user_sys_fast_ipc_c
 	RESET_THREAD_CANCEL_AT %rbx
-	
+
 	call    sys_ipc_wrapper
 in_sc_ipc2:
 	.globl	fast_ret_from_irq
 fast_ret_from_irq:
 	RESTORE_STATE_SYSEXIT
-	
+
 	mov     16(%rsp), %rcx /* load user rip */
 	SAFE_SYSRET
 
-alien_sys_fast_ipc_c:
-	ALIEN_SYSCALL syscall="call sys_ipc_wrapper"
+alien_or_vcpu_user_sys_fast_ipc_c:
+	ALIEN_OR_VCPU_USER_SYSCALL syscall="call sys_ipc_wrapper"
 
 
 	.globl	in_sc_ipc2
