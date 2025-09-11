@@ -1,5 +1,6 @@
 IMPLEMENTATION [arm]:
 
+#include "banner.h"
 #include "config.h"
 #include "cpu.h"
 #include "dt.h"
@@ -35,6 +36,7 @@ Startup::stage1()
   Proc::cli();
   Cpu::early_init();
   Config::init();
+  Banner::init();
 }
 
 IMPLEMENT FIASCO_INIT FIASCO_NOINLINE

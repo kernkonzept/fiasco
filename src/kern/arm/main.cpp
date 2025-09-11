@@ -12,7 +12,6 @@ IMPLEMENTATION [arm]:
 
 #include <cxx/defensive>
 
-#include "banner.h"
 #include "config.h"
 #include "globals.h"
 #include "initcalls.h"
@@ -87,8 +86,6 @@ kernel_main()
     set_exit_question(nullptr);
   else
     set_exit_question(&exit_question);
-
-  Banner::init();
 
   // disallow all interrupts before we selectively enable them
   //  pic_disable_all();
