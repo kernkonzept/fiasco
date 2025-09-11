@@ -29,6 +29,9 @@
   DUMP_THREAD_STATE (Thread_ready)
   DUMP_THREAD_STATE (Thread_cancel)
   DUMP_THREAD_STATE (Thread_dis_alien)
+#if defined (CONFIG_IA32) || defined (CONFIG_AMD64)
+  DUMP_BITSHIFT (Thread_dis_alien, Thread_dis_alien)
+#endif
   DUMP_THREAD_STATE (Thread_ipc_mask)
   DUMP_THREAD_STATE (Thread_ext_vcpu_enabled)
   DUMP_THREAD_STATE (Thread_fpu_owner)

@@ -26,7 +26,7 @@
   printf("#define OFS__" #prefix "__" #name " 0x%llx\n", READ_VAL);
 
 #define DUMP_BITSHIFT(prefix, value) \
-  printf("#define SHIFT__" #prefix " 0x%llx\n", log2(READ_VAL));
+  printf("#define SHIFT__" #prefix " 0x%x\n", log2(READ_VAL));
 
 #define DUMP_MEMBER1(prefix, type1, member1, name) \
   DUMP_OFFSET(prefix, name, READ_VAL)
@@ -45,7 +45,7 @@
  * @param value the 2^n integer
  * @return the log base 2 of value, the exponent n
  */
-int log2(int value)
+unsigned log2(unsigned long value)
 {
   unsigned c = 0; // c will be lg(v)
   while (value >>= 1)

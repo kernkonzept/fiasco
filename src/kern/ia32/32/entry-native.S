@@ -8,7 +8,7 @@
 #include "tcboffset.h"
 
 .macro  PRE_FAST_ALIEN_IPC
-	btrl	$17, OFS__THREAD__STATE (%ebx)	/* Thread_dis_alien */
+	btrl	$SHIFT__Thread_dis_alien, OFS__THREAD__STATE (%ebx)
 	jc	1f
 	RESTORE_STATE
 	popl	%eax

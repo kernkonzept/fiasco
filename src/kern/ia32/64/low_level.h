@@ -212,7 +212,7 @@
 .endm
 
 .macro  PRE_ALIEN_IPC target=slowtraps
-	btrl	$17, OFS__THREAD__STATE (%rbx)	/* Thread_dis_alien */
+	btrl	$SHIFT__Thread_dis_alien, OFS__THREAD__STATE (%rbx)
 	jc	1f
 	movq	$253, (16*8)(%rsp)
 	movq	$0,   (17*8)(%rsp)
