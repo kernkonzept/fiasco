@@ -60,8 +60,10 @@
 .endm
 
 .macro	PRE_ALIEN_OR_VCPU_USER_IPC
+# ifdef CONFIG_ALIEN
 	btrl	$SHIFT__Thread_dis_alien, OFS__THREAD__STATE (%ebx)
 	jc	1f
+# endif
 	RESTORE_STATE
 	subl	$2, 4(%esp)             /* Correct EIP to point to insn */
 	popl	%eax
@@ -69,11 +71,15 @@
 	pushl	$(0xd)
 	pusha
 	jmp	.L_slowtraps
+	/* DOES NOT RETURN! */
 
-	1: /* Do alien IPC and raise a trap afterwards */
-		RESET_THREAD_CANCEL_AT %ebx
+# ifdef CONFIG_ALIEN
+1:	/* Do alien IPC and raise a trap afterwards */
+	RESET_THREAD_CANCEL_AT %ebx
+# endif
 .endm
 
+#ifdef CONFIG_ALIEN
 .macro	POST_ALIEN_IPC
 	CHECK_SANITY $3                 /* Scratches ECX */
 	RESTORE_STATE_AFTER_IPC
@@ -83,6 +89,7 @@
 	pusha
 	jmp	.L_slowtraps
 .endm
+#endif
 
 GATE_INITTAB_BEGIN idt_init_table
 
@@ -572,14 +579,22 @@ GATE_INITTAB_END
 
 .Lalien_or_vcpu_user_sys_ipc_c:
 	PRE_ALIEN_OR_VCPU_USER_IPC
+#ifdef CONFIG_ALIEN
 	call	sys_ipc_wrapper
 	POST_ALIEN_IPC
+#else
+	/* PRE_ALIEN_OR_VCPU_USER_IPC does not return */
+#endif
 
 #ifdef CONFIG_JDB
 .Lalien_or_vcpu_user_sys_ipc_log:
 	PRE_ALIEN_OR_VCPU_USER_IPC
+# ifdef CONFIG_ALIEN
 	call	*syscall_table
 	POST_ALIEN_IPC
+# else
+	/* PRE_ALIEN_OR_VCPU_USER_IPC does not return */
+# endif
 #endif
 
 .p2align 3

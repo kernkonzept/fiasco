@@ -146,16 +146,22 @@ Return_frame::ip(Mword ip)
   // eip is set to.
   if (cs() & 0x80)
     {
-      /* symbols from the assembler entry code */
+      /* symbol from the assembler entry code */
       extern Mword leave_from_sysenter_by_iret;
-      extern Mword leave_alien_from_sysenter_by_iret;
-      extern Mword ret_from_fast_alien_ipc;
-      Mword **ret_from_disp_syscall = reinterpret_cast<Mword**>(static_cast<Entry_frame*>(this))-1;
+      Mword **ret_from_disp_syscall
+        = reinterpret_cast<Mword**>(static_cast<Entry_frame*>(this)) - 1;
+      Mword *changed_ret_from_disp_syscall = &leave_from_sysenter_by_iret;
+      if constexpr (TAG_ENABLED(alien))
+        {
+          /* symbols from the assembler entry code */
+          extern Mword ret_from_fast_alien_ipc;
+          extern Mword leave_alien_from_sysenter_by_iret;
+          if (*ret_from_disp_syscall == &ret_from_fast_alien_ipc)
+            changed_ret_from_disp_syscall = &leave_alien_from_sysenter_by_iret;
+        }
+
       cs(cs() & ~0x80);
-      if (*ret_from_disp_syscall == &ret_from_fast_alien_ipc)
-	*ret_from_disp_syscall = &leave_alien_from_sysenter_by_iret;
-      else
-	*ret_from_disp_syscall = &leave_from_sysenter_by_iret;
+      *ret_from_disp_syscall = changed_ret_from_disp_syscall;
     }
 
   _eip = ip;

@@ -468,13 +468,18 @@ Thread_object::sys_control(L4_fpage::Rights rights, L4_msg_tag tag,
 
   if (flags & Ctl_alien_thread)
     {
-      if (utcb->values[4] & Ctl_alien_thread)
+      if constexpr (TAG_ENABLED(alien))
         {
-          add_state |= Thread_alien;
-          del_state |= Thread_dis_alien;
+          if (utcb->values[4] & Ctl_alien_thread)
+            {
+              add_state |= Thread_alien;
+              del_state |= Thread_dis_alien;
+            }
+          else
+            del_state |= Thread_alien;
         }
       else
-        del_state |= Thread_alien;
+        return commit_result(-L4_err::ENosys);
     }
 
   out->values[1] = _old_pager;

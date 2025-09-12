@@ -8,8 +8,10 @@
 #include "tcboffset.h"
 
 .macro  PRE_FAST_ALIEN_OR_VCPU_USER_IPC
+# ifdef CONFIG_ALIEN
 	btrl	$SHIFT__Thread_dis_alien, OFS__THREAD__STATE (%ebx)
 	jc	1f
+# endif
 	RESTORE_STATE
 	popl	%eax
 	andl	$0x7f,4(%esp)
@@ -23,20 +25,24 @@
 	mov	52(%esp), %ebp         /* offset 52: sp */
 	mov	%ebp, 8(%esp)          /* offset  8: ebp */
 	jmp	slowtraps
+	/* DOES NOT RETURN! */
+
+# ifdef CONFIG_ALIEN
 1:	/* do alien IPC and raise a trap afterwards */
 	RESET_THREAD_CANCEL_AT %ebx
+# endif
 
 	.pushsection ".comment" /* discarded section */
-3: /* must be the same code as code before sysenter in syscall-page.... */
+3:	/* Must be the same code as code before sysenter in syscall-page. */
 	pop	%ebx
 	mov	%esp, %ebp
-4: /* the code between 3 and 4 shall never be executed, it is just to calculate
-    * the offset for the sysenter insn in the KIP / syscall page
-    */
+4:	/* The code between 3 and 4 is never be executed but only used to
+	 * calculate the offset for the sysenter instruction in the KIP /
+	 * syscall page, see above. */
 	.popsection
-
 .endm
 
+#ifdef CONFIG_ALIEN
 .macro  POST_FAST_ALIEN_IPC
 	RESTORE_STATE_AFTER_IPC
 	popl	%eax
@@ -46,6 +52,7 @@
 	pusha
 	jmp	slowtraps
 .endm
+#endif
 
 	.p2align 4
 	.globl	entry_vec01_debug
@@ -94,8 +101,12 @@ entry_vec01_debug:
 
 .Ldbg_alien_or_vcpu_user_sys_fast_ipc_log:
 	PRE_FAST_ALIEN_OR_VCPU_USER_IPC
+#ifdef CONFIG_ALIEN
 	push    $ret_from_fast_alien_ipc
 	jmp     *syscall_table
+#else
+	/* PRE_FAST_ALIEN_OR_VCPU_USER_IPC does not return */
+#endif
 
 
 	.globl	entry_vec0a_invalid_tss
@@ -227,8 +238,12 @@ in_slow_ipc5:
 
 .Lalien_or_vcpu_user_sys_fast_ipc_log:
 	PRE_FAST_ALIEN_OR_VCPU_USER_IPC
+#ifdef CONFIG_ALIEN
 	push    $ret_from_fast_alien_ipc
 	jmp     *syscall_table
+#else
+	/* PRE_FAST_ALIEN_OR_VCPU_USER_IPC does not return */
+#endif
 
 	.globl	in_slow_ipc5
 
@@ -272,8 +287,6 @@ entry_sys_fast_ipc_c:
 in_sc_ipc2:
 	DO_SYSEXIT
 
-	.global ret_from_fast_alien_ipc /* used in ex-regs */
-
 /* Ex-regs patches the return address of the call to the 'sys_ipc' function in
  * the case of sysenter, because we need to leave the kernel by iret to prevent
  * the need of user-level trampoline code.
@@ -288,9 +301,14 @@ in_sc_ipc2:
 .Lalien_or_vcpu_user_sys_fast_ipc_c:
 	cld
 	PRE_FAST_ALIEN_OR_VCPU_USER_IPC
+#ifdef CONFIG_ALIEN
 	call    sys_ipc_wrapper
+	.global ret_from_fast_alien_ipc /* see explanation above */
 ret_from_fast_alien_ipc:
 	POST_FAST_ALIEN_IPC
+#else
+	/* PRE_FAST_ALIEN_OR_VCPU_USER_IPC does not return */
+#endif
 
 	.globl	in_sc_ipc2
 

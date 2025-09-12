@@ -461,18 +461,20 @@ Thread::handle_svc(Trap_state *ts)
   state_del(Thread_cancel);
   if (state & (Thread_vcpu_user | Thread_alien))
     {
-      if (state & Thread_dis_alien)
-        {
-          state_del_dirty(Thread_dis_alien);
-          do_syscall(r5);
-          ts->error_code |= 0x40; // see ivt.S alien_syscall
-        }
-      else
-        // Adjust PC to be on SVC/HVC insn so that the instruction can either
-        // be restarted (alien thread before syscall) or can be examined in
-        // vCPU entry handler.
-        ts->pc -= Arm_esr(ts->error_code).il() ? 4 : 2;
+      if constexpr (TAG_ENABLED(alien))
+        if (state & Thread_dis_alien)
+          {
+            state_del_dirty(Thread_dis_alien);
+            do_syscall(r5);
+            ts->error_code |= 0x40; // see ivt.S alien_syscall
+            slowtrap_entry(ts);
+            return;
+          }
 
+      // Adjust PC to be on SVC/HVC insn so that the instruction can either
+      // be restarted (alien thread before syscall) or can be examined in
+      // vCPU entry handler.
+      ts->pc -= Arm_esr(ts->error_code).il() ? 4 : 2;
       slowtrap_entry(ts);
       return;
     }

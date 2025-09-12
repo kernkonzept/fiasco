@@ -419,12 +419,13 @@ Thread::handle_ecall(Return_frame *ret_frame)
 
   if (state & (Thread_vcpu_user | Thread_alien))
     {
-      if (state & Thread_dis_alien)
-        {
-          state_del_dirty(Thread_dis_alien);
-          handle_syscall(ret_frame);
-          ret_frame->cause = Return_frame::Ec_l4_alien_after_syscall;
-        }
+      if constexpr (TAG_ENABLED(alien))
+        if (state & Thread_dis_alien)
+          {
+            state_del_dirty(Thread_dis_alien);
+            handle_syscall(ret_frame);
+            ret_frame->cause = Return_frame::Ec_l4_alien_after_syscall;
+          }
 
       return handle_slow_trap(static_cast<Trap_state *>(ret_frame));
     }

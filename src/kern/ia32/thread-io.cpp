@@ -237,11 +237,17 @@ Thread::handle_io_fault(Trap_state *ts)
           // consecutive exception
           ts->_cr2 = io_page;
 
-          if (EXPECT_FALSE((state() & Thread_alien)
-                           || vcpu_exceptions_enabled(vcpu_state().access())))
+          bool send_exception;
+          if constexpr (TAG_ENABLED(alien))
+            send_exception = (state() & Thread_alien)
+                             || vcpu_exceptions_enabled(vcpu_state().access());
+          else
+            send_exception = vcpu_exceptions_enabled(vcpu_state().access());
+
+          if (EXPECTED_FALSE(send_exception))
             {
-              // Special case for alien tasks: Don't generate fault but
-              // send exception to pager.
+              // Special case for alien threads and thread in extended vCPU
+              // user mode: Don't generate fault but send exception to pager.
               ts->_err = 0;
               clear_recover_jmpbuf();
 

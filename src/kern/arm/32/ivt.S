@@ -720,9 +720,11 @@ __irq_handler_fiq:
  * \pre sp  points to r0-r12 + RF
  */
 alien_or_vcpu_user_syscall: @ ---------------------------------------------
+#ifdef CONFIG_ALIEN
 	tst	r0, #VAL__Thread_dis_alien
 	bicne	r0, r0, #VAL__Thread_dis_alien
 	bne	1f
+#endif
 	@ Trap alien or thread in extended vCPU user mode before system call
 	ldr     r0, [sp, #RF(PSR,    13*4)] @ read orig PSR
 	tst     r0, #0x20                   @ Thumb mode?
@@ -733,6 +735,7 @@ alien_or_vcpu_user_syscall: @ ---------------------------------------------
 	enter_slowtrap_w_stack GET_HSR(0x11)
 	@ Never reach this -- end up in user land after exception reply
 
+#ifdef CONFIG_ALIEN
 1:	@ Resume the alien system call ------------------------------------
 	str	r0, [r1, #(OFS__THREAD__STATE)]
 	adr	r0, sys_call_table
@@ -745,7 +748,7 @@ alien_or_vcpu_user_syscall: @ ---------------------------------------------
 	@ Set the bit 0x00000040 to indicate a trap after the resumed 
 	@ system call.
 	enter_slowtrap_w_stack GET_HSR(0x11), 0x40
-
+#endif
 
 GEN_VCPU_UPCALL OFS__THREAD__USER_VCPU
 

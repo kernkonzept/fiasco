@@ -212,14 +212,20 @@
 .endm
 
 .macro  PRE_ALIEN_OR_VCPU_USER_IPC target=slowtraps
+# ifdef CONFIG_ALIEN
 	btrl	$SHIFT__Thread_dis_alien, OFS__THREAD__STATE (%rbx)
 	jc	1f
+#endif
 	movq	$253, (16*8)(%rsp)
 	movq	$0,   (17*8)(%rsp)
 	subq	$2, (16*8 + 2*8)(%rsp) /* reset RIP to syscall */
 	jmp	\target
+	/* DOES NOT RETURN! */
+
+# ifdef CONFIG_ALIEN
 1:	/* do alien IPC and raise a trap afterwards */
 	RESET_THREAD_CANCEL_AT %rbx
+# endif
 .endm
 
 .macro  POST_ALIEN_IPC target=slowtraps
@@ -230,8 +236,12 @@
 
 .macro ALIEN_OR_VCPU_USER_SYSCALL syscall, trap_target=slowtraps
 	PRE_ALIEN_OR_VCPU_USER_IPC \trap_target
+# ifdef CONFIG_ALIEN
 	\syscall
 	POST_ALIEN_IPC \trap_target
+# else
+        /* PRE_ALIEN_OR_VCPU_USER_IPC does not return */
+# endif
 .endm
 
 
