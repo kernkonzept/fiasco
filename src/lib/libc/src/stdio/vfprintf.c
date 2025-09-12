@@ -324,17 +324,6 @@ static int printf_core(FILE *f, const char *fmt, va_list *ap, union arg *nl_arg,
 			fl &= ~ZERO_PAD;
 
 		switch(t) {
-		case 'n':
-			switch(ps) {
-			case BARE: *(int *)arg.p = cnt; break;
-			case LPRE: *(long *)arg.p = cnt; break;
-			case LLPRE: *(long long *)arg.p = cnt; break;
-			case HPRE: *(unsigned short *)arg.p = cnt; break;
-			case HHPRE: *(unsigned char *)arg.p = cnt; break;
-			case ZTPRE: *(size_t *)arg.p = cnt; break;
-			case JPRE: *(uintmax_t *)arg.p = cnt; break;
-			}
-			continue;
 		case 'p':
 			p = MAX(p, (int)(2*sizeof(void*)));
 			t = 'x';
