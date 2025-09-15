@@ -1,5 +1,4 @@
 #include "stdio_impl.h"
-#include <errno.h>
 #include <ctype.h>
 #include <limits.h>
 #include <string.h>
