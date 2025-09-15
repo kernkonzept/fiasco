@@ -17,7 +17,7 @@ struct _IO_FILE {
 	void *cookie;
 };
 
-hidden int __towrite(FILE *);
+hidden void __towrite(FILE *);
 
 hidden size_t __fwritex(const unsigned char *, size_t, FILE *);
 

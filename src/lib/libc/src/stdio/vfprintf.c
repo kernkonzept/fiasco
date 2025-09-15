@@ -425,10 +425,10 @@ int vfprintf(FILE *restrict f, const char *restrict fmt, va_list ap)
 		f->buf_size = sizeof internal_buf;
 		f->wpos = f->wbase = f->wend = 0;
 	}
-	if (!f->wend && __towrite(f))
-		ret = -1;
-	else
-		ret = printf_core(f, fmt, &ap2, nl_arg, nl_type);
+	if (!f->wend)
+		__towrite(f);
+
+	ret = printf_core(f, fmt, &ap2, nl_arg, nl_type);
 	/* allow to pass f with buf_size = 0 and buf = NULL */
 	if (f->buf == internal_buf) {
 		f->write(f, 0, 0);
