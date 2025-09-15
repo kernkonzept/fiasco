@@ -59,8 +59,6 @@ hidden void __do_orphaned_stdio_locks(void);
 
 hidden void __getopt_msg(const char *, const char *, const char *, size_t);
 
-#define ferror(f) 0
-
 /* Caller-allocated FILE * operations */
 hidden FILE *__fopen_rb_ca(const char *, FILE *, unsigned char *, size_t);
 hidden int __fclose_ca(FILE *);

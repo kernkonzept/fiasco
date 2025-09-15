@@ -127,8 +127,7 @@ static void pop_arg(union arg *arg, int type, va_list *ap)
 
 static void out(FILE *f, const char *s, size_t l)
 {
-	if (!ferror(f))
-		__fwritex((void *)s, l, f);
+	__fwritex((void *)s, l, f);
 }
 
 static void pad(FILE *f, char c, size_t w, size_t l, int fl)
@@ -306,10 +305,6 @@ static int printf_core(FILE *f, const char *fmt, va_list *ap, union arg *nl_arg,
 		if (!f)
 			continue;
 
-		/* Do not process any new directives once in error state. */
-		if (ferror(f))
-			return -1;
-
 		z = buf + sizeof(buf);
 		prefix = "-+   0X0x";
 		pl = 0;
@@ -449,8 +444,6 @@ int vfprintf(FILE *restrict f, const char *restrict fmt, va_list ap)
 		f->buf_size = 0;
 		f->wpos = f->wbase = f->wend = 0;
 	}
-	if (ferror(f))
-		ret = -1;
 	FUNLOCK(f);
 	va_end(ap2);
 	return ret;

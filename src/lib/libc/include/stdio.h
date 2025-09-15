@@ -63,7 +63,6 @@ int remove(const char *);
 int rename(const char *, const char *);
 
 int feof(FILE *);
-int ferror(FILE *);
 int fflush(FILE *);
 void clearerr(FILE *);
 
@@ -168,7 +167,6 @@ size_t fread_unlocked(void *, size_t, size_t, FILE *);
 size_t fwrite_unlocked(const void *, size_t, size_t, FILE *);
 void clearerr_unlocked(FILE *);
 int feof_unlocked(FILE *);
-int ferror_unlocked(FILE *);
 int fileno_unlocked(FILE *);
 int getw(FILE *);
 int putw(int, FILE *);
