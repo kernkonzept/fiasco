@@ -121,7 +121,7 @@ Context::save_ext_vcpu_state(Vm_state *v)
  * Load system registers from Vm_state when switching to this context having
  * extended vCPU mode enabled.
  */
-PRIVATE inline
+PROTECTED inline
 void
 Context::load_ext_vcpu_state(Vm_state const *v)
 {
