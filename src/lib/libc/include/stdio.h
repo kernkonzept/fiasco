@@ -32,15 +32,10 @@ extern "C" {
 #undef EOF
 #define EOF (-1)
 
-size_t fwrite(const void *__restrict, size_t, size_t, FILE *__restrict);
-
 int getchar(void);
 
 int putchar(int);
-
-int fputs(const char *__restrict, FILE *__restrict);
 int puts(const char *);
-
 int printf(const char *__restrict, ...);
 int fprintf(FILE *__restrict, const char *__restrict, ...);
 int sprintf(char *__restrict, const char *__restrict, ...);
@@ -50,10 +45,6 @@ int vprintf(const char *__restrict, __isoc_va_list);
 int vfprintf(FILE *__restrict, const char *__restrict, __isoc_va_list);
 int vsprintf(char *__restrict, const char *__restrict, __isoc_va_list);
 int vsnprintf(char *__restrict, size_t, const char *__restrict, __isoc_va_list);
-
-#ifdef _GNU_SOURCE
-int fputs_unlocked(const char *, FILE *);
-#endif
 
 #ifdef __cplusplus
 }
