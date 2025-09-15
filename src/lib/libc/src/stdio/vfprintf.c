@@ -190,7 +190,7 @@ static int printf_core(FILE *f, const char *fmt, va_list *ap, union arg *nl_arg,
 	int w, p, xp;
 	union arg arg;
 	int argpos;
-	unsigned st, ps;
+	unsigned st;
 	int cnt=0, l=0;
 	size_t i;
 	char buf[sizeof(uintmax_t)*3];
@@ -280,7 +280,6 @@ static int printf_core(FILE *f, const char *fmt, va_list *ap, union arg *nl_arg,
 		do {
 			if (OOB(*s))
 				goto inval;
-			ps=st;
 			st=states[st]S(*s++);
 		} while (st-1<STOP);
 		if (!st)
@@ -309,10 +308,6 @@ static int printf_core(FILE *f, const char *fmt, va_list *ap, union arg *nl_arg,
 		prefix = "-+   0X0x";
 		pl = 0;
 		t = s[-1];
-
-		/* Transform ls,lc -> S,C */
-		if (ps && (t&15)==3)
-			t&=~32;
 
 		/* - and 0 flags are mutually exclusive */
 		if (fl & LEFT_ADJ)
