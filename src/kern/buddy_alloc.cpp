@@ -275,6 +275,29 @@ Buddy_t_base<A,B>::alloc(unsigned long size)
 PUBLIC
 template< unsigned long A, int B>
 void
+Buddy_t_base<A,B>::init(unsigned long base)
+{ _base = calc_base_addr(base); }
+
+PUBLIC
+template< unsigned long A, int B>
+unsigned long
+Buddy_t_base<A,B>::avail() const
+{
+  unsigned long a = 0;
+  for (unsigned i = 0; i < Num_sizes; ++i)
+    {
+      for (B_list::Const_iterator h = _free[i].begin(); h != _free[i].end(); ++h)
+        a += (Min_size << i);
+    }
+  return a;
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [debug || jdb_kmem_stats]:
+
+PUBLIC
+template< unsigned long A, int B>
+void
 Buddy_t_base<A,B>::dump() const
 {
   unsigned long total = 0;
@@ -304,24 +327,3 @@ Buddy_t_base<A,B>::dump() const
 
   printf("sum of available memory: %lu KiB (%lu bytes)\n", total / 1024, total);
 }
-
-PUBLIC
-template< unsigned long A, int B>
-void
-Buddy_t_base<A,B>::init(unsigned long base)
-{ _base = calc_base_addr(base); }
-
-PUBLIC
-template< unsigned long A, int B>
-unsigned long
-Buddy_t_base<A,B>::avail() const
-{
-  unsigned long a = 0;
-  for (unsigned i = 0; i < Num_sizes; ++i)
-    {
-      for (B_list::Const_iterator h = _free[i].begin(); h != _free[i].end(); ++h)
-        a += (Min_size << i);
-    }
-  return a;
-}
-
