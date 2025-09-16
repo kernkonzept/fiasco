@@ -332,11 +332,6 @@ Kmem_alloc::ready()
   return _alloc != nullptr;
 }
 
-PUBLIC
-void
-Kmem_alloc::dump() const
-{ a->dump(); }
-
 PUBLIC inline //NEEDS [Kmem_alloc::alloc]
 void *
 Kmem_alloc::alloc(Order o)
