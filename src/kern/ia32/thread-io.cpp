@@ -237,14 +237,14 @@ Thread::handle_io_fault(Trap_state *ts)
           // consecutive exception
           ts->_cr2 = io_page;
 
-          bool send_exception;
+          bool do_send_exception;
           if constexpr (TAG_ENABLED(alien))
-            send_exception = (state() & Thread_alien)
-                             || vcpu_exceptions_enabled(vcpu_state().access());
+            do_send_exception = (state() & Thread_alien)
+                                || vcpu_exceptions_enabled(vcpu_state().access());
           else
-            send_exception = vcpu_exceptions_enabled(vcpu_state().access());
+            do_send_exception = vcpu_exceptions_enabled(vcpu_state().access());
 
-          if (EXPECTED_FALSE(send_exception))
+          if (EXPECT_FALSE(do_send_exception))
             {
               // Special case for alien threads and thread in extended vCPU
               // user mode: Don't generate fault but send exception to pager.
