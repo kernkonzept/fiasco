@@ -69,7 +69,7 @@ Thread::ex_regs_arch(Mword ops)
   return true;
 }
 
-
+//-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && 32bit && cpu_virt]:
 
 #include "slowtrap_entry.h"
@@ -130,11 +130,6 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
   asm ("mrc p15, 0, %0, c0, c0, 0" : "=r" (v->vpidr));
 }
 
-//-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && 32bit]:
-
-#include "infinite_loop.h"
-
 extern "C" void hyp_mode_fault(Mword abort_type, Trap_state *ts)
 {
   Mword hsr;
@@ -173,7 +168,7 @@ extern "C" void hyp_mode_fault(Mword abort_type, Trap_state *ts)
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && 32bit && debug]:
+IMPLEMENTATION [arm && 32bit && cpu_virt && debug]:
 
 PUBLIC static inline NEEDS[Thread::call_nested_trap_handler,
                            Thread::is_transient_mpu_fault]
@@ -190,7 +185,7 @@ Thread::handle_hyp_mode_fault(Mword abort_type, Trap_state *ts, Mword hsr)
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && 32bit && !debug]:
+IMPLEMENTATION [arm && 32bit && cpu_virt && !debug]:
 
 PUBLIC static inline NEEDS[Thread::is_transient_mpu_fault]
 bool
@@ -221,7 +216,7 @@ Thread::handle_hyp_mode_fault(Mword abort_type, Trap_state *ts, Mword hsr)
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && 32bit && mpu]:
+IMPLEMENTATION [arm && 32bit && cpu_virt && mpu]:
 
 #include "kmem.h"
 
@@ -282,7 +277,7 @@ Thread::is_transient_mpu_fault(Mword abort_type, Mword raw_hsr)
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && 32bit && !mpu]:
+IMPLEMENTATION [arm && 32bit && cpu_virt && !mpu]:
 
 PRIVATE static inline
 bool
@@ -290,7 +285,7 @@ Thread::is_transient_mpu_fault(Mword, Mword)
 { return false; }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && cpu_virt && fpu && 32bit]:
+IMPLEMENTATION [arm && 32bit && cpu_virt && fpu]:
 
 PUBLIC static
 bool
