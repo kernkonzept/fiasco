@@ -572,7 +572,7 @@ Mpu::update(Mpu_regions const &regions)
 #define UPDATE(base, i) \
   do \
     { \
-      if (((base) + (i)) < Mem_layout::Mpu_regions) \
+      if constexpr (((base) + (i)) < Mem_layout::Mpu_regions) \
         Mpu_arm::prxar##i(regions[(base) + (i)].prbar, \
                           regions[(base) + (i)].prlar); \
     } \

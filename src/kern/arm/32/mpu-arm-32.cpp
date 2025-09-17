@@ -47,8 +47,9 @@ struct Mpu_arm_el1
     #define UPDATE(i) \
       do \
         { \
-          if (i < Mem_layout::Mpu_regions && !(mask & (1UL << (i)))) \
-            Mpu_arm_el1::prlar##i(0); \
+          if constexpr (i < Mem_layout::Mpu_regions) \
+            if (!(mask & (1UL << (i)))) \
+              Mpu_arm_el1::prlar##i(0); \
         } \
       while (false)
 
@@ -893,7 +894,7 @@ Mpu::update(Mpu_regions const &regions)
 #define UPDATE(i) \
   do \
     { \
-      if (i < Mem_layout::Mpu_regions) \
+      if constexpr (i < Mem_layout::Mpu_regions) \
         Mpu_arm::prxar##i(regions[(i)].prbar, regions[(i)].prlar); \
     } \
   while (false)
