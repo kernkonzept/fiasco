@@ -145,14 +145,3 @@ Return_frame::ip_syscall_user() const
     ? r[30] // Assuming user entered the kernel by __l4_sys_syscall().
     : ip(); // Kernel IP.
 }
-
-PUBLIC
-void
-Syscall_frame::dump()
-{
-  printf(" R0: %08lx  R1: %08lx  R2: %08lx  R3: %08lx\n",
-         r[0], r[1], r[2], r[3]);
-  printf(" R4: %08lx\n", r[4]);
-}
-
-

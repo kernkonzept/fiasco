@@ -7,7 +7,6 @@ EXTENSION class Syscall_frame
   public:
     Mword dummy;
     Mword r[30]; //{r0, r2, r3, ..., r10, r13 .., r31, ip
-    void dump() const;
 };
 
 EXTENSION class Return_frame
@@ -32,17 +31,6 @@ IMPLEMENTATION [sparc]:
 
 #include "warn.h"
 #include "psr.h"
-
-IMPLEMENT
-void
-Syscall_frame::dump() const
-{
-  printf("IP: %08lx\n", r[29]);
-  printf("R[%2d]: %08lx R[%2d]: %08lx R[%2d]: %08lx R[%2d]: %08lx R[%2d]: %08lx\n",
-          0, r[0], 2, r[1], 3, r[2], 4, r[3], 5, r[4]);
-  printf("R[%2d]: %08lx R[%2d]: %08lx R[%2d]: %08lx R[%2d]: %08lx R[%2d]: %08lx\n",
-          6, r[5], 7, r[6], 8, r[7], 9, r[8], 10, r[9]);
-}
 
 PRIVATE
 void
