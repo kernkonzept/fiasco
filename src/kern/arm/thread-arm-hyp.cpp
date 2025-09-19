@@ -464,6 +464,7 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
   if (current() == this)
     {
       asm volatile ("msr SCTLR_EL1, %x0" : : "r"(v->sctlr));
+      asm volatile ("msr HSTR_EL2, %x0" : : "r"(Cpu::Hstr_vm));
       if (_hyp.hcr & Cpu::Hcr_tge)
         {
           // Strictly speaking, the following registers would not need to be
