@@ -123,7 +123,7 @@ Gic_h_v3::save_lrs(Gic_h::Arm_vgic::Lrs *lr)
 {
 #define TRANSFER_LR(i) \
   read_lr(lr->lr64 + i, 12 + i/8, i % 8); \
-  if (Gic_h::Arm_vgic::N_lregs <= i + 1) return
+  if constexpr (Gic_h::Arm_vgic::N_lregs <= i + 1) return
   TRANSFER_LR(0);
   TRANSFER_LR(1);
   TRANSFER_LR(2);
@@ -148,7 +148,7 @@ Gic_h_v3::load_lrs(Gic_h::Arm_vgic::Lrs const *lr)
 {
 #define TRANSFER_LR(i) \
   write_lr(lr->lr64[i], 12 + i/8, i % 8); \
-  if (Gic_h::Arm_vgic::N_lregs <= i + 1) return
+  if constexpr (Gic_h::Arm_vgic::N_lregs <= i + 1) return
   TRANSFER_LR(0);
   TRANSFER_LR(1);
   TRANSFER_LR(2);
