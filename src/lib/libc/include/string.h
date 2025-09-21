@@ -63,11 +63,6 @@ char *strsignal(int);
 void *memmem(const void *, size_t, const void *, size_t);
 #endif
 
-#if defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE) \
- || defined(_BSD_SOURCE)
-void *memccpy (void *__restrict, const void *__restrict, int, size_t);
-#endif
-
 #if defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
 char *strsep(char **, const char *);
 size_t strlcat (char *, const char *, size_t);
