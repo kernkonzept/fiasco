@@ -335,8 +335,9 @@ int __ctzsi2(unsigned val)
 int __ctzdi2(unsigned long val)
 {
   int c = __ctzsi2(val & 0xffffffffU);
-  if (c == 32 && sizeof(unsigned long) == sizeof(unsigned long long))
-    c += __ctzsi2(((unsigned long long)val) >> 32);
+  if (sizeof(unsigned long) == sizeof(unsigned long long))
+    if (c == 32)
+      c += __ctzsi2(((unsigned long long)val) >> 32);
   return c;
 }
 
