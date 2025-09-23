@@ -16,13 +16,12 @@ embedded applications. It supports the following architectures:
 |      MIPS    |    x   |   x    | ![Build check][5] |
 |     RISC-V   |    x   |   x    | ![Build check][6] |
 
-For a full list of the supported platforms and features see the [feature
-list][1].
+For a full list of the supported platforms see the [list of supported BSPs][1].
 
 We welcome contributions to the microkernel. Please see our contributors guide
 on [how to contribute][2].
 
-[1]: https://l4re.org/fiasco/features.html
+[1]: https://kernkonzept.com/l4re-board-support-package-list/
 [2]: https://kernkonzept.com/L4Re/contributing/fiasco
 [3]: https://github.com/kernkonzept/fiasco/actions/workflows/check_build_x86.yml/badge.svg?branch=master
 [4]: https://github.com/kernkonzept/fiasco/actions/workflows/check_build_arm.yml/badge.svg?branch=master
