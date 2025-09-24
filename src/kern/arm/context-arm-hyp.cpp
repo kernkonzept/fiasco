@@ -228,7 +228,6 @@ Context::arch_load_vcpu_user_state(Vcpu_state *vcpu)
 PUBLIC inline NEEDS[Context::arm_hyp_load_non_vm_state,
                     Context::vm_state,
                     Context::store_tpidruro,
-                    Context::load_cnthctl,
                     Context::save_ext_vcpu_state,
                     Context::load_ext_vcpu_state,
                     Context::vcpu_prepare_vtimer]

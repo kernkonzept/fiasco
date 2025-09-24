@@ -44,13 +44,6 @@ Context::store_tpidruro()
   asm volatile ("mrs %x0, TPIDRRO_EL0" : "=r"(_tpidruro));
 }
 
-PRIVATE static inline
-void
-Context::load_cnthctl(Unsigned64 cnthctl)
-{
-  asm volatile ("msr CNTHCTL_EL2, %x0" : : "r"(cnthctl));
-}
-
 PRIVATE inline
 void
 Context::arm_hyp_load_non_vm_state()
