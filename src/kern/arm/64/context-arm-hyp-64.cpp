@@ -65,7 +65,7 @@ Context::arm_hyp_load_non_vm_state()
 
 PRIVATE inline
 void
-Context::save_ext_vcpu_state(Mword /*_state*/, Vm_state *v)
+Context::save_ext_vcpu_state(Vm_state *v)
 {
   // save vm state
 
@@ -106,7 +106,7 @@ Context::save_ext_vcpu_state(Mword /*_state*/, Vm_state *v)
 
 PRIVATE inline
 void
-Context::load_ext_vcpu_state(Mword /*_to_state*/, Vm_state const *v)
+Context::load_ext_vcpu_state(Vm_state const *v)
 {
   Unsigned64 vtcr = 0;
 

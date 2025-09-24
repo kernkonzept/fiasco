@@ -263,7 +263,7 @@ Context::switch_vm_state(Context *t)
   if (from_ext_vcpu_enabled)
     {
       Vm_state *v = vm_state(vcpu_state().access());
-      save_ext_vcpu_state(_state, v);
+      save_ext_vcpu_state(v);
 
       if (_state & Thread_vcpu_user)
         from_mode = Gic_h_global::gic->switch_from_vcpu(&v->gic);
@@ -272,7 +272,7 @@ Context::switch_vm_state(Context *t)
   if (to_ext_vcpu_enabled)
     {
       Vm_state const *v = vm_state(t->vcpu_state().access());
-      t->load_ext_vcpu_state(_to_state, v);
+      t->load_ext_vcpu_state(v);
 
       Gic_h_global::gic->switch_to_vcpu(&v->gic,
                                         (_to_state & Thread_vcpu_user)
