@@ -146,7 +146,7 @@ Context::load_ext_vcpu_state(Vm_state const *v)
   load_ext_vcpu_state_mxu(v);
 }
 
-PRIVATE static inline
+PROTECTED static inline
 Unsigned32 Context::arm_host_sctlr()
 {
   return (Cpu::sctlr | Cpu::Cp15_c1_cache_bits) & ~(Cpu::Cp15_c1_mmu | (1 << 28));
