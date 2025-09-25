@@ -5,8 +5,8 @@ IMPLEMENTATION [arm && cpu_virt]:
 EXTENSION class Context
 {
 private:
-  inline void save_ext_vcpu_state_mxu(Vm_state *v);
-  inline void load_ext_vcpu_state_mxu(Vm_state const *v);
+  static inline void save_ext_vcpu_state_mxu(Vm_state *v);
+  static inline void load_ext_vcpu_state_mxu(Vm_state const *v);
 };
 
 IMPLEMENT inline
@@ -61,7 +61,7 @@ Context::store_tpidruro()
   asm volatile ("mrc p15, 0, %0, c13, c0, 3" : "=r"(_tpidruro));
 }
 
-PRIVATE inline NEEDS[Context::arm_host_sctlr]
+PRIVATE static inline NEEDS[Context::arm_host_sctlr]
 void
 Context::arm_hyp_load_non_vm_state()
 {
@@ -72,7 +72,7 @@ Context::arm_hyp_load_non_vm_state()
   asm volatile ("mcr p15, 0, %0, c13, c0, 0" : : "r" (0));
 }
 
-PRIVATE inline
+PRIVATE static inline
 void
 Context::save_ext_vcpu_state(Vm_state *v)
 {
@@ -145,7 +145,7 @@ Context::load_ext_vcpu_state(Vm_state const *v)
   load_ext_vcpu_state_mxu(v);
 }
 
-PROTECTED static inline
+PROTECTED static constexpr
 Unsigned32
 Context::arm_host_sctlr()
 {
@@ -189,7 +189,7 @@ Context::arm_ext_vcpu_switch_to_host_no_load(Vcpu_state *vcpu, Vm_state *v)
   v->fcseidr    = 0;
 }
 
-PRIVATE inline
+PRIVATE static inline
 void
 Context::arm_ext_vcpu_load_host_regs(Vcpu_state *vcpu, Vm_state *, Unsigned64 hcr)
 {
@@ -213,7 +213,7 @@ Context::arm_ext_vcpu_switch_to_guest(Vcpu_state *, Vm_state *v)
   asm volatile ("mcr  p15, 4, %0, c0, c0, 0" : : "r" (v->vpidr));
 }
 
-PRIVATE inline
+PRIVATE static inline
 void
 Context::arm_ext_vcpu_load_guest_regs(Vcpu_state *vcpu, Vm_state *, Unsigned64 hcr)
 {

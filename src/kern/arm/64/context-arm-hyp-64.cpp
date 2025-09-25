@@ -3,8 +3,8 @@ IMPLEMENTATION [arm && cpu_virt]:
 EXTENSION class Context
 {
 private:
-  inline void save_ext_vcpu_state_mpu(Vm_state *v);
-  inline void load_ext_vcpu_state_mpu(Vm_state const *v);
+  static inline void save_ext_vcpu_state_mpu(Vm_state *v);
+  static inline void load_ext_vcpu_state_mpu(Vm_state const *v);
 };
 
 IMPLEMENT inline
@@ -44,7 +44,7 @@ Context::store_tpidruro()
   asm volatile ("mrs %x0, TPIDRRO_EL0" : "=r"(_tpidruro));
 }
 
-PRIVATE inline
+PRIVATE static inline
 void
 Context::arm_hyp_load_non_vm_state()
 {
@@ -63,7 +63,7 @@ Context::arm_hyp_load_non_vm_state()
   asm volatile("msr CNTKCTL_EL1, %x0"   : : "r"(0x3UL));
 }
 
-PRIVATE inline
+PRIVATE static inline
 void
 Context::save_ext_vcpu_state(Vm_state *v)
 {
@@ -193,7 +193,7 @@ Context::arm_ext_vcpu_switch_to_host_no_load(Vcpu_state *vcpu, Vm_state *v)
   _hyp.cpacr    = Cpu::Cpacr_el1_generic_hyp;
 }
 
-PRIVATE inline
+PRIVATE static inline
 void
 Context::arm_ext_vcpu_load_host_regs(Vcpu_state *vcpu, Vm_state *, Unsigned64 hcr)
 {
@@ -216,7 +216,7 @@ Context::arm_ext_vcpu_switch_to_guest(Vcpu_state *, Vm_state *v)
   asm volatile ("msr CPACR_EL1, %x0"   : : "r"(v->guest_regs.cpacr));
 }
 
-PRIVATE inline
+PRIVATE static inline
 void
 Context::arm_ext_vcpu_load_guest_regs(Vcpu_state *vcpu, Vm_state *v, Unsigned64 hcr)
 {
