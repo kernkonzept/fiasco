@@ -182,11 +182,11 @@ PUBLIC static
 void
 Cpu::init_sctlr()
 {
-  unsigned control = Sctlr_generic;
+  unsigned sctlr = Sctlr_generic;
 
   Mem::dsb();
-  asm volatile("mcr p15, 0, %[control], c1, c0, 0" // SCTLR
-      : : [control] "r" (control));
+  asm volatile("mcr p15, 0, %[sctlr], c1, c0, 0" // SCTLR
+      : : [sctlr] "r" (sctlr));
   Mem::isb();
 }
 
@@ -214,8 +214,8 @@ void
 Cpu::init_sctlr()
 {
   Mem::dsb();
-  asm volatile("mcr p15, 4, %[control], c1, c0, 0" // HSCTLR
-      : : [control] "r" (Hsctlr));
+  asm volatile("mcr p15, 4, %[hsctlr], c1, c0, 0" // HSCTLR
+      : : [hsctlr] "r" (Hsctlr));
   Mem::isb();
 }
 

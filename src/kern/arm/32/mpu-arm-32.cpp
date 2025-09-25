@@ -676,9 +676,9 @@ PUBLIC static
 bool
 Mpu::enabled()
 {
-  unsigned control;
-  asm("mrc p15, 0, %0, c1, c0" : "=r"(control)); // SCTLR
-  return control & 1U; // SCTLR.M
+  unsigned sctlr;
+  asm("mrc p15, 0, %0, c1, c0" : "=r"(sctlr)); // SCTLR
+  return sctlr & 1U; // SCTLR.M
 }
 
 IMPLEMENT static
@@ -701,9 +701,9 @@ PUBLIC static
 bool
 Mpu::enabled()
 {
-  unsigned control;
-  asm("mrc p15, 4, %0, c1, c0" : "=r"(control)); // HSCTLR
-  return control & 1U; // HSCTLR.M
+  unsigned hsctlr;
+  asm("mrc p15, 4, %0, c1, c0" : "=r"(hsctlr)); // HSCTLR
+  return hsctlr & 1U; // HSCTLR.M
 }
 
 IMPLEMENT static

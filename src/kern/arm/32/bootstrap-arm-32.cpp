@@ -26,7 +26,7 @@ void
 Bootstrap::enable_paging(Mword pdir)
 {
   unsigned domains = 0x55555555; // client for all domains
-  unsigned control = Cpu::Sctlr_generic;
+  unsigned sctlr = Cpu::Sctlr_generic;
 
   disable_mmu_and_caches();
   set_mair0(Page::Mair0_prrr_bits);
@@ -42,8 +42,8 @@ Bootstrap::enable_paging(Mword pdir)
   asm volatile("mcrr p15, 0, %[pdir], %[null], c2" // TTBR0
                : : [pdir]  "r" (pdir), [null]  "r" (0));
 
-  asm volatile("mcr p15, 0, %[control], c1, c0" // control
-               : : [control] "r" (control));
+  asm volatile("mcr p15, 0, %[sctlr], c1, c0" // SCTLR
+               : : [sctlr] "r" (sctlr));
   Mem::isb();
 }
 
@@ -66,8 +66,8 @@ Bootstrap::enable_paging(Mword pdir)
   asm volatile("mcr p15, 4, r0, c8, c7, 4" : : : "memory"); // TLBIALLNSNH
   Mem::dsb();
 
-  asm volatile("mcr p15, 4, %[control], c1, c0" // HSCTLR
-      : : [control] "r" (1 | 4 | 32 | 0x1000));
+  asm volatile("mcr p15, 4, %[hsctlr], c1, c0" // HSCTLR
+               : : [hsctlr] "r" (1 | 4 | 32 | 0x1000));
   Mem::isb();
 }
 
@@ -119,7 +119,7 @@ void
 Bootstrap::enable_paging(Mword pdir)
 {
   unsigned domains = 0x55555555; // client for all domains
-  unsigned control = Cpu::Sctlr_generic;
+  unsigned sctlr = Cpu::Sctlr_generic;
 
   disable_mmu_and_caches();
 
@@ -134,8 +134,8 @@ Bootstrap::enable_paging(Mword pdir)
   asm volatile("mcr p15, 0, %[pdir], c2, c0" // TTBR0
                : : [pdir] "r" (pdir));
 
-  asm volatile("mcr p15, 0, %[control], c1, c0" // control
-               : : [control] "r" (control));
+  asm volatile("mcr p15, 0, %[sctlr], c1, c0" // SCTLR
+               : : [sctlr] "r" (sctlr));
   Mem::isb();
 }
 
