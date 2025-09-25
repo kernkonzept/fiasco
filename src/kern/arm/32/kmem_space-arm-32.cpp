@@ -21,9 +21,9 @@ union
 IMPLEMENT
 void Kmem_space::init()
 {
-  unsigned domains = 0x0001;
+  unsigned dacr = 0x0001;
 
-  asm volatile("mcr p15, 0, %0, c3, c0, 0" : : "r" (domains));
+  asm volatile("mcr p15, 0, %0, c3, c0, 0" : : "r" (dacr));
 
   Mem_unit::clean_vdcache();
 }
