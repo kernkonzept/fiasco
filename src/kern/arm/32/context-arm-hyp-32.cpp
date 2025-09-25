@@ -52,36 +52,48 @@ Context::copy_and_sanitize_trap_state(Trap_state *dst,
   sanitize_user_state(dst);
 }
 
+/**
+ * Store TPIDRURO during VM state switch into this context.
+ *
+ * Loading is done in normal thread switch code already.
+ */
 PRIVATE inline
 void
 Context::store_tpidruro()
 {
-  // store TPIDRURO here, loading is done in normal thread switch
-  // code already
   asm volatile ("mrc p15, 0, %0, c13, c0, 3" : "=r"(_tpidruro));
 }
 
+/**
+ * Load system registers with values suitable for executing a context with
+ * extended vCPU mode disabled.
+ *
+ * Called either when switching to a context with extended vCPU mode disabled or
+ * when shutting down a context having the extended vCPU mode enabled.
+ */
 PRIVATE static inline NEEDS[Context::arm_host_sctlr]
 void
 Context::arm_hyp_load_non_vm_state()
 {
   asm volatile ("mcr p15, 4, %0, c1, c1, 3" : : "r"(Cpu::Hstr_non_vm)); // HSTR
-  // load normal SCTLR ...
   asm volatile ("mcr p15, 0, %0, c1, c0, 0" : : "r" (arm_host_sctlr())); // SCTLR
   asm volatile ("mcr p15, 0, %0,  c1, c0, 2" : : "r" (0xf00000));
   asm volatile ("mcr p15, 0, %0, c13, c0, 0" : : "r" (0));
 }
 
+/**
+ * Save system registers to Vm_state when switching away from this context
+ * having extended vCPU mode enabled.
+ */
 PRIVATE static inline
 void
 Context::save_ext_vcpu_state(Vm_state *v)
 {
-  // save vm state
   asm volatile ("mrc p15, 2, %0, c0, c0, 0" : "=r"(v->csselr));
 
   asm volatile ("mrc p15, 0, %0, c1, c0, 0" : "=r"(v->sctlr));
-  // we unconditionally trap actlr accesses
-  // asm ("mrc p15, 0, %0, c1, c0, 1" : "=r"(v->actlr));
+  // ACTLR accesses always trapped because of HCR.TAC=1
+  // asm volatile ("mrc p15, 0, %0, c1, c0, 1" : "=r"(v->actlr));
   asm volatile ("mrc p15, 0, %0, c1, c0, 2" : "=r"(v->cpacr));
 
   asm volatile ("mrc p15, 0, %0, c5, c0, 0" : "=r"(v->dfsr));
@@ -105,6 +117,10 @@ Context::save_ext_vcpu_state(Vm_state *v)
   save_ext_vcpu_state_mxu(v);
 }
 
+/**
+ * Load system registers from Vm_state when switching to this context having
+ * extended vCPU mode enabled.
+ */
 PRIVATE inline
 void
 Context::load_ext_vcpu_state(Vm_state const *v)
@@ -117,7 +133,7 @@ Context::load_ext_vcpu_state(Vm_state const *v)
     sctlr &= ~Cpu::Sctlr_m;
 
   asm volatile ("mcr p15, 0, %0, c1, c0, 0" : : "r"(sctlr));
-  // we unconditionally trap actlr accesses
+  // ACTLR accesses always trapped because of HCR.TAC=1
   // asm volatile ("mcr p15, 0, %0, c1, c0, 1" : : "r"(v->actlr));
   asm volatile ("mcr p15, 0, %0, c1, c0, 2" : : "r"(v->cpacr));
 
@@ -139,8 +155,8 @@ Context::load_ext_vcpu_state(Vm_state const *v)
 
   asm volatile ("mcr p15, 0, %0, c13, c0, 0" : : "r"(v->fcseidr));
 
-  asm volatile ("mcr  p15, 4, %0, c0, c0, 5" : : "r" (v->vmpidr));
-  asm volatile ("mcr  p15, 4, %0, c0, c0, 0" : : "r" (v->vpidr));
+  asm volatile ("mcr  p15, 4, %0, c0, c0, 5" : : "r"(v->vmpidr));
+  asm volatile ("mcr  p15, 4, %0, c0, c0, 0" : : "r"(v->vpidr));
 
   load_ext_vcpu_state_mxu(v);
 }
@@ -152,28 +168,35 @@ Context::arm_host_sctlr()
   return (Cpu::sctlr | Cpu::Sctlr_cache_bits) & ~(Cpu::Sctlr_m | Cpu::Sctlr_tre);
 }
 
+/**
+ * Store system registers to Vcpu_state and Vm_state after this context entered
+ * extended vCPU host mode and load system registers with values suitable for
+ * executing this context in extended vCPU kernel mode.
+ */
 PRIVATE inline NEEDS[Context::arm_host_sctlr]
 void
 Context::arm_ext_vcpu_switch_to_host(Vcpu_state *vcpu, Vm_state *v)
 {
-  asm volatile ("mrc p15, 0, %0, c13, c0, 3"
-                : "=r"(vcpu->_regs.tpidruro));
-  asm volatile ("mrc p15, 0, %0, c1,  c0, 0"
-                : "=r"(v->guest_regs.sctlr));
-  asm volatile ("mrc p15, 0, %0, c13, c0, 0"
-                : "=r"(v->guest_regs.fcseidr));
+  asm volatile ("mrc p15, 0, %0, c13, c0, 3" : "=r"(vcpu->_regs.tpidruro));
+  asm volatile ("mrc p15, 0, %0, c1,  c0, 0" : "=r"(v->guest_regs.sctlr));
+  asm volatile ("mrc p15, 0, %0, c13, c0, 0" : "=r"(v->guest_regs.fcseidr));
 
   // fcse not supported in vmm
-  asm volatile ("mcr p15, 0, %0, c13, c0, 0" : : "r"(0));
+  asm volatile ("mcr p15, 0, %0, c13, c0, 0" : : "r"(0));       // FCSEIDR
   asm volatile ("mcr p15, 0, %0, c1,  c0, 0" : : "r"(arm_host_sctlr()));
 
   asm volatile ("mrc p15, 0, %0, c14, c3, 1" : "=r" (v->guest_regs.cntv_ctl));
   // disable VTIMER
-  asm volatile ("mcr p15, 0, %0, c14, c3, 1" : : "r"(0)); // CNTV_CTL
-  asm volatile ("mcrr p15, 4, %Q0, %R0, c14" : : "r"(0ULL)); // CNTVOFF
+  asm volatile ("mcr p15, 0, %0, c14, c3, 1" : : "r"(0));       // CNTV_CTL
+  asm volatile ("mcrr p15, 4, %Q0, %R0, c14" : : "r"(0ULL));    // CNTVOFF
   _hyp.cntvoff = 0;
 }
 
+/**
+ * Store current vCPU state into Vm_state after this context entering extended
+ * vCPU host mode but don't load any system register because this context is not
+ * the current one.
+ */
 PRIVATE inline NEEDS[Context::arm_host_sctlr]
 void
 Context::arm_ext_vcpu_switch_to_host_no_load(Vcpu_state *vcpu, Vm_state *v)
@@ -189,6 +212,10 @@ Context::arm_ext_vcpu_switch_to_host_no_load(Vcpu_state *vcpu, Vm_state *v)
   v->fcseidr    = 0;
 }
 
+/**
+ * Load a few system registers after this context entered extended vCPU host
+ * mode.
+ */
 PRIVATE static inline
 void
 Context::arm_ext_vcpu_load_host_regs(Vcpu_state *vcpu, Vm_state *, Unsigned64 hcr)
@@ -197,22 +224,29 @@ Context::arm_ext_vcpu_load_host_regs(Vcpu_state *vcpu, Vm_state *, Unsigned64 hc
   Cpu::hcr(hcr);
 }
 
+/**
+ * Load system registers from guest state before this context switches to
+ * extended vCPU guest mode.
+ */
 PRIVATE inline
 void
 Context::arm_ext_vcpu_switch_to_guest(Vcpu_state *, Vm_state *v)
 {
-  asm volatile ("mcr p15, 0, %0, c13, c0, 0"
-                : : "r"(v->guest_regs.fcseidr));
+  asm volatile ("mcr p15, 0, %0, c13, c0, 0" : : "r"(v->guest_regs.fcseidr));
 
-  asm volatile ("mcr p15, 0, %0, c1,  c0, 0" : : "r" (v->guest_regs.sctlr));
-  asm volatile ("mcr p15, 0, %0, c14, c3, 1" : : "r" (v->guest_regs.cntv_ctl));
+  asm volatile ("mcr p15, 0, %0, c1,  c0, 0" : : "r"(v->guest_regs.sctlr));
+  asm volatile ("mcr p15, 0, %0, c14, c3, 1" : : "r"(v->guest_regs.cntv_ctl));
   _hyp.cntvoff = v->cntvoff;
-  asm volatile ("mcrr p15, 4, %Q0, %R0, c14" : : "r" (v->cntvoff));
+  asm volatile ("mcrr p15, 4, %Q0, %R0, c14" : : "r"(v->cntvoff));
 
-  asm volatile ("mcr  p15, 4, %0, c0, c0, 5" : : "r" (v->vmpidr));
-  asm volatile ("mcr  p15, 4, %0, c0, c0, 0" : : "r" (v->vpidr));
+  asm volatile ("mcr  p15, 4, %0, c0, c0, 5" : : "r"(v->vmpidr));
+  asm volatile ("mcr  p15, 4, %0, c0, c0, 0" : : "r"(v->vpidr));
 }
 
+/**
+ * Store TPIDRURO and load a few system registers before this context enters
+ * extended vCPU guest mode.
+ */
 PRIVATE static inline
 void
 Context::arm_ext_vcpu_load_guest_regs(Vcpu_state *vcpu, Vm_state *, Unsigned64 hcr)

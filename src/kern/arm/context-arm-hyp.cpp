@@ -222,7 +222,7 @@ Context::arch_load_vcpu_user_state(Vcpu_state *vcpu)
     }
 
   arm_ext_vcpu_load_guest_regs(vcpu, v, _hyp.hcr);
-  _tpidruro          = vcpu->_regs.tpidruro;
+  _tpidruro = vcpu->_regs.tpidruro;
 }
 
 PUBLIC inline NEEDS[Context::arm_hyp_load_non_vm_state,
