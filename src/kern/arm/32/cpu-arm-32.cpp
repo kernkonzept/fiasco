@@ -84,7 +84,7 @@ PRIVATE static inline
 void
 Cpu::check_for_swp_enable()
 {
-  if constexpr (!Config::Cp15_c1_use_swp_enable)
+  if constexpr (!Config::Sctlr_use_swp_enable)
     return;
 
   if (((midr() >> 16) & 0xf) != 0xf)
@@ -98,13 +98,13 @@ Cpu::check_for_swp_enable()
   if (((mpidr() >> 31) & 1) == 0)
     return; // CPU has no MP extensions -> no swp enable
 
-  sctlr |= Cp15_c1_v7_sw;
+  sctlr |= Sctlr_v7_sw;
 }
 
 IMPLEMENT
 void Cpu::early_init()
 {
-  sctlr = Cpu::Cp15_c1_generic;
+  sctlr = Cpu::Sctlr_generic;
 
   check_for_swp_enable();
 
@@ -134,7 +134,7 @@ Cpu::enable_dcache()
   asm volatile("mrc     p15, 0, %0, c1, c0, 0 \n"
                "orr     %0, %1                \n"
                "mcr     p15, 0, %0, c1, c0, 0 \n"
-               : : "r" (0), "i" (Cp15_c1_cache));
+               : : "r" (0), "i" (Sctlr_cache));
 }
 
 PUBLIC static inline
@@ -144,7 +144,7 @@ Cpu::disable_dcache()
   asm volatile("mrc     p15, 0, %0, c1, c0, 0 \n"
                "bic     %0, %1                \n"
                "mcr     p15, 0, %0, c1, c0, 0 \n"
-               : : "r" (0), "i" (Cp15_c1_cache));
+               : : "r" (0), "i" (Sctlr_cache));
 }
 
 //---------------------------------------------------------------------------
@@ -182,7 +182,7 @@ PUBLIC static
 void
 Cpu::init_sctlr()
 {
-  unsigned control = Cp15_c1_generic;
+  unsigned control = Sctlr_generic;
 
   Mem::dsb();
   asm volatile("mcr p15, 0, %[control], c1, c0, 0" // SCTLR

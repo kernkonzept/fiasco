@@ -114,7 +114,7 @@ Context::load_ext_vcpu_state(Vm_state const *v)
 
   Unsigned32 sctlr = access_once(&v->sctlr);
   if (_hyp.hcr & (Cpu::Hcr_tge | Cpu::Hcr_dc))
-    sctlr &= ~Cpu::Cp15_c1_mmu;
+    sctlr &= ~Cpu::Sctlr_mmu;
 
   asm volatile ("mcr p15, 0, %0, c1, c0, 0" : : "r"(sctlr));
   // we unconditionally trap actlr accesses
@@ -149,7 +149,7 @@ PROTECTED static inline
 Unsigned32
 Context::arm_host_sctlr()
 {
-  return (Cpu::sctlr | Cpu::Cp15_c1_cache_bits) & ~(Cpu::Cp15_c1_mmu | Cpu::Cp15_c1_tre);
+  return (Cpu::sctlr | Cpu::Sctlr_cache_bits) & ~(Cpu::Sctlr_mmu | Cpu::Sctlr_tre);
 }
 
 PRIVATE inline NEEDS[Context::arm_host_sctlr]

@@ -24,7 +24,8 @@ public:
     Scr_eel2 = 1UL << 18, ///< Secure EL2 enable
   };
 
-  enum {
+  enum
+  {
     Sctlr_m       = 1UL << 0,
     Sctlr_a       = 1UL << 1,
     Sctlr_c       = 1UL << 2,
@@ -41,7 +42,6 @@ public:
     Sctlr_ntwe    = 1UL << 18,
     Sctlr_wxn     = 1UL << 19,
     Sctlr_e0e     = 1UL << 24,
-    Sctlr_ee      = 1UL << 25,
     Sctlr_uci     = 1UL << 26,
 
     Sctlr_el1_res = (1UL << 11) | (1UL << 20) | (3UL << 22) | (3UL << 28),
@@ -154,7 +154,7 @@ public:
   {
     Sctlr_generic = Sctlr_el1_generic
                     | Sctlr_m
-                    | (Config::Cp15_c1_use_alignment_check ?  Sctlr_a : 0)
+                    | (Config::Sctlr_use_alignment_check ?  Sctlr_a : 0)
   };
 
   enum : Unsigned64
@@ -223,7 +223,7 @@ public:
               | (1UL << 18) | (3UL << 22) | (3UL << 28),
 
     Sctlr_generic = Sctlr_m
-                    | (Config::Cp15_c1_use_alignment_check ?  Sctlr_a : 0)
+                    | (Config::Sctlr_use_alignment_check ? Sctlr_a : 0)
                     | Sctlr_c
                     | Sctlr_i
                     | Sctlr_res,
