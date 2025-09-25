@@ -677,7 +677,7 @@ bool
 Mpu::enabled()
 {
   unsigned sctlr;
-  asm("mrc p15, 0, %0, c1, c0" : "=r"(sctlr)); // SCTLR
+  asm("mrc p15, 0, %0, c1, c0, 0" : "=r"(sctlr)); // SCTLR
   return sctlr & 1U; // SCTLR.M
 }
 
@@ -702,7 +702,7 @@ bool
 Mpu::enabled()
 {
   unsigned hsctlr;
-  asm("mrc p15, 4, %0, c1, c0" : "=r"(hsctlr)); // HSCTLR
+  asm("mrc p15, 4, %0, c1, c0, 0" : "=r"(hsctlr)); // HSCTLR
   return hsctlr & 1U; // HSCTLR.M
 }
 

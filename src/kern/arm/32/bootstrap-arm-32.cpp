@@ -36,13 +36,13 @@ Bootstrap::enable_paging(Mword pdir)
   Mem::dsb();
   asm volatile("mcr p15, 0, r0, c8, c7, 0"); // TLBIALL
   Mem::dsb();
-  asm volatile("mcr p15, 0, %[doms], c3, c0" // domains
+  asm volatile("mcr p15, 0, %[doms], c3, c0, 0" // domains
                : : [doms]  "r" (domains));
 
   asm volatile("mcrr p15, 0, %[pdir], %[null], c2" // TTBR0
                : : [pdir]  "r" (pdir), [null]  "r" (0));
 
-  asm volatile("mcr p15, 0, %[sctlr], c1, c0" // SCTLR
+  asm volatile("mcr p15, 0, %[sctlr], c1, c0, 0" // SCTLR
                : : [sctlr] "r" (sctlr));
   Mem::isb();
 }
@@ -66,7 +66,7 @@ Bootstrap::enable_paging(Mword pdir)
   asm volatile("mcr p15, 4, r0, c8, c7, 4" : : : "memory"); // TLBIALLNSNH
   Mem::dsb();
 
-  asm volatile("mcr p15, 4, %[hsctlr], c1, c0" // HSCTLR
+  asm volatile("mcr p15, 4, %[hsctlr], c1, c0, 0" // HSCTLR
                : : [hsctlr] "r" (1 | 4 | 32 | 0x1000));
   Mem::isb();
 }
@@ -128,13 +128,13 @@ Bootstrap::enable_paging(Mword pdir)
   Mem::dsb();
   asm volatile("mcr p15, 0, r0, c8, c7, 0"); // TLBIALL
   Mem::dsb();
-  asm volatile("mcr p15, 0, %[doms], c3, c0" // domains
+  asm volatile("mcr p15, 0, %[doms], c3, c0, 0" // domains
                : : [doms]  "r" (domains));
 
-  asm volatile("mcr p15, 0, %[pdir], c2, c0" // TTBR0
+  asm volatile("mcr p15, 0, %[pdir], c2, c0, 0" // TTBR0
                : : [pdir] "r" (pdir));
 
-  asm volatile("mcr p15, 0, %[sctlr], c1, c0" // SCTLR
+  asm volatile("mcr p15, 0, %[sctlr], c1, c0, 0" // SCTLR
                : : [sctlr] "r" (sctlr));
   Mem::isb();
 }
@@ -385,7 +385,7 @@ void
 Bootstrap::disable_mmu_and_caches()
 {
   unsigned long sctlr;
-  asm ("mrc p15, 0, %0, c1, c0" : "=r" (sctlr));
+  asm ("mrc p15, 0, %0, c1, c0, 0" : "=r" (sctlr));
   if (sctlr & Cpu::Sctlr_m)
     {
       if (sctlr & Cpu::Sctlr_c)
@@ -398,7 +398,7 @@ Bootstrap::disable_mmu_and_caches()
         }
 
       sctlr &= ~(Cpu::Sctlr_m | Cpu::Sctlr_c | Cpu::Sctlr_i);
-      asm volatile("mcr p15, 0, %0, c1, c0" : : "r" (sctlr));
+      asm volatile("mcr p15, 0, %0, c1, c0, 0" : : "r" (sctlr));
       Mem::isb();
       Mem::barrier();
     }
