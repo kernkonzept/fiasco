@@ -20,21 +20,21 @@ public:
 
   enum
   {
-    Sctlr_mmu             = 1 << 0,
-    Sctlr_alignment_check = 1 << 1,
-    Sctlr_cache           = 1 << 2,
+    Sctlr_m               = 1 << 0,
+    Sctlr_a               = 1 << 1,
+    Sctlr_c               = 1 << 2,
     Sctlr_write_buffer    = 1 << 3, // only ARMv5 + ARMv6
-    Sctlr_branch_predict  = 1 << 11,
     Sctlr_v7_sw           = 1 << 10,
-    Sctlr_insn_cache      = 1 << 12,
-    Sctlr_high_vector     = 1 << 13,
+    Sctlr_z               = 1 << 11,
+    Sctlr_i               = 1 << 12,
+    Sctlr_v               = 1 << 13,
     Sctlr_ee              = 1 << 25, // since ARMv7
     Sctlr_tre             = 1 << 28,
   };
 
   static constexpr Unsigned32 Sctlr_cache_bits =
-                                Sctlr_cache
-                                | Sctlr_insn_cache
+                                Sctlr_c
+                                | Sctlr_i
                                 | (TAG_ENABLED(arm_v5)
                                    ? Sctlr_write_buffer : 0);
 
@@ -151,9 +151,9 @@ public:
   };
 
   static constexpr Unsigned32 Sctlr_generic =
-                                Sctlr_mmu
+                                Sctlr_m
                                 | (Config::Sctlr_use_alignment_check
-                                   ? Sctlr_alignment_check : 0)
+                                   ? Sctlr_a : 0)
                                 | (Config::Cache_enabled
                                    ? Sctlr_cache_bits : 0)
                                 | Sctlr_write_buffer
@@ -161,7 +161,7 @@ public:
                                 | Sctlr_data32
                                 | Sctlr_late_abort
                                 | Sctlr_rom_protect
-                                | Sctlr_high_vector;
+                                | Sctlr_v;
 };
 
 // ------------------------------------------------------------------------
@@ -187,13 +187,13 @@ EXTENSION class Cpu
 {
 public:
   static constexpr Unsigned32 Sctlr_generic =
-                                Sctlr_mmu
+                                Sctlr_m
                                 | (Config::Sctlr_use_alignment_check
-                                   ? Sctlr_alignment_check : 0)
+                                   ? Sctlr_a : 0)
                                 | (Config::Cache_enabled
                                    ? Sctlr_cache_bits : 0)
-                                | Sctlr_branch_predict
-                                | Sctlr_high_vector
+                                | Sctlr_z
+                                | Sctlr_v
                                 | Sctlr_u
                                 | Sctlr_xp;
 };
@@ -205,13 +205,13 @@ EXTENSION class Cpu
 {
 public:
   static constexpr Unsigned32 Sctlr_generic =
-                                Sctlr_mmu
+                                Sctlr_m
                                 | (Config::Sctlr_use_alignment_check
-                                   ? Sctlr_alignment_check : 0)
+                                   ? Sctlr_a : 0)
                                 | (Config::Cache_enabled
                                    ? Sctlr_cache_bits : 0)
-                                | Sctlr_branch_predict
-                                | Sctlr_high_vector
+                                | Sctlr_z
+                                | Sctlr_v
                                 | Sctlr_u
                                 | Sctlr_xp
                                 | Sctlr_tre;
@@ -233,13 +233,13 @@ public:
   };
 
   static constexpr Unsigned32 Sctlr_generic =
-                                Sctlr_mmu
+                                Sctlr_m
                                 | (Config::Sctlr_use_alignment_check
-                                   ? Sctlr_alignment_check : 0)
+                                   ? Sctlr_a : 0)
                                 | (Config::Cache_enabled
                                    ? Sctlr_cache_bits : 0)
-                                | Sctlr_branch_predict
-                                | Sctlr_high_vector
+                                | Sctlr_z
+                                | Sctlr_v
                                 | Sctlr_tre
                                 | Sctlr_rao_sbop;
 };
@@ -257,12 +257,12 @@ public:
   };
 
   static constexpr Unsigned32 Sctlr_generic =
-                                Sctlr_mmu
+                                Sctlr_m
                                 | (Config::Sctlr_use_alignment_check
-                                   ? Sctlr_alignment_check : 0)
+                                   ? Sctlr_a : 0)
                                 | (Config::Cache_enabled
                                    ? Sctlr_cache_bits : 0)
-                                | Sctlr_branch_predict
+                                | Sctlr_z
                                 | Sctlr_rao_sbop;
 };
 

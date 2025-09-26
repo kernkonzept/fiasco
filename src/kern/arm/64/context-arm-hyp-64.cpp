@@ -124,7 +124,7 @@ Context::load_ext_vcpu_state(Vm_state const *v)
 
   Unsigned32 sctlr = access_once(&v->sctlr);
   if (_hyp.hcr & (Cpu::Hcr_tge | Cpu::Hcr_dc))
-    sctlr &= ~Cpu::Sctlr_mmu;
+    sctlr &= ~Cpu::Sctlr_m;
 
   // Workaround for errata #852523 (Cortex-A57) and #853709 (Cortex-A72):
   // Do this before writing to SCTLR_EL1.

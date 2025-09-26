@@ -26,16 +26,12 @@ public:
 
   enum
   {
-    Sctlr_m       = 1UL << 0,
-    Sctlr_a       = 1UL << 1,
-    Sctlr_c       = 1UL << 2,
     Sctlr_sa      = 1UL << 3,
     Sctlr_sa0     = 1UL << 4,
     Sctlr_cp15ben = 1UL << 5,
     Sctlr_itd     = 1UL << 7,
     Sctlr_sed     = 1UL << 8,
     Sctlr_uma     = 1UL << 9,
-    Sctlr_i       = 1UL << 12,
     Sctlr_dze     = 1UL << 14,
     Sctlr_uct     = 1UL << 15,
     Sctlr_ntwi    = 1UL << 16,

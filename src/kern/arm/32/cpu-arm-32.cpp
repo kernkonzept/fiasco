@@ -134,7 +134,7 @@ Cpu::enable_dcache()
   asm volatile("mrc     p15, 0, %0, c1, c0, 0 \n"
                "orr     %0, %1                \n"
                "mcr     p15, 0, %0, c1, c0, 0 \n"
-               : : "r" (0), "i" (Sctlr_cache));
+               : : "r" (0), "i" (Sctlr_c));
 }
 
 PUBLIC static inline
@@ -144,7 +144,7 @@ Cpu::disable_dcache()
   asm volatile("mrc     p15, 0, %0, c1, c0, 0 \n"
                "bic     %0, %1                \n"
                "mcr     p15, 0, %0, c1, c0, 0 \n"
-               : : "r" (0), "i" (Sctlr_cache));
+               : : "r" (0), "i" (Sctlr_c));
 }
 
 //---------------------------------------------------------------------------
