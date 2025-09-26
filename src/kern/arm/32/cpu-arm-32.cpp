@@ -5,11 +5,6 @@ INTERFACE [arm]:
 EXTENSION class Cpu
 {
 public:
-  enum {
-    Cp15_c1_cache_enabled  = Cp15_c1_generic | Cp15_c1_cache_bits,
-    Cp15_c1_cache_disabled = Cp15_c1_generic,
-  };
-
   static Global_data<Unsigned32> sctlr;
   bool has_generic_timer() const { return (_cpu_id._pfr[1] & 0xf0000) == 0x10000; }
 };
@@ -109,8 +104,7 @@ Cpu::check_for_swp_enable()
 IMPLEMENT
 void Cpu::early_init()
 {
-  sctlr = cxx::const_ite<Config::Cache_enabled>(Cp15_c1_cache_enabled,
-                                                Cp15_c1_cache_disabled);
+  sctlr = Cpu::Cp15_c1_generic;
 
   check_for_swp_enable();
 
@@ -188,8 +182,7 @@ PUBLIC static
 void
 Cpu::init_sctlr()
 {
-  unsigned control = Config::Cache_enabled
-                     ? Cp15_c1_cache_enabled : Cp15_c1_cache_disabled;
+  unsigned control = Cp15_c1_generic;
 
   Mem::dsb();
   asm volatile("mcr p15, 0, %[control], c1, c0, 0" // SCTLR

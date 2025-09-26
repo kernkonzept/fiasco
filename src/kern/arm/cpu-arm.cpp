@@ -18,7 +18,8 @@ public:
   static Per_cpu<Cpu> cpus;
   static Cpu *boot_cpu() { return _boot_cpu; }
 
-  enum {
+  enum
+  {
     Cp15_c1_mmu             = 1 << 0,
     Cp15_c1_alignment_check = 1 << 1,
     Cp15_c1_cache           = 1 << 2,
@@ -141,20 +142,22 @@ public:
     Cp15_c1_l4              = 1 << 15,
   };
 
+  static constexpr Unsigned32 Cp15_c1_cache_bits =
+                                Cp15_c1_cache
+                                | Cp15_c1_insn_cache
+                                | Cp15_c1_write_buffer;
   static constexpr Unsigned32 Cp15_c1_generic =
                                 Cp15_c1_mmu
                                 | (Config::Cp15_c1_use_alignment_check
                                    ? Cp15_c1_alignment_check : 0)
+                                | (Config::Cache_enabled
+                                   ? Cp15_c1_cache_bits : 0)
                                 | Cp15_c1_write_buffer
                                 | Cp15_c1_prog32
                                 | Cp15_c1_data32
                                 | Cp15_c1_late_abort
                                 | Cp15_c1_rom_protect
                                 | Cp15_c1_high_vector;
-  static constexpr Unsigned32 Cp15_c1_cache_bits =
-                                Cp15_c1_cache
-                                | Cp15_c1_insn_cache
-                                | Cp15_c1_write_buffer;
 };
 
 // ------------------------------------------------------------------------
@@ -188,6 +191,8 @@ public:
                                 Cp15_c1_mmu
                                 | (Config::Cp15_c1_use_alignment_check
                                    ? Cp15_c1_alignment_check : 0)
+                                | (Config::Cache_enabled
+                                   ? Cp15_c1_cache_bits : 0)
                                 | Cp15_c1_branch_predict
                                 | Cp15_c1_high_vector
                                 | Cp15_c1_u
@@ -204,6 +209,8 @@ public:
                                 Cp15_c1_mmu
                                 | (Config::Cp15_c1_use_alignment_check
                                    ? Cp15_c1_alignment_check : 0)
+                                | (Config::Cache_enabled
+                                   ? Cp15_c1_cache_bits : 0)
                                 | Cp15_c1_branch_predict
                                 | Cp15_c1_high_vector
                                 | Cp15_c1_u
@@ -234,6 +241,8 @@ public:
                                 Cp15_c1_mmu
                                 | (Config::Cp15_c1_use_alignment_check
                                    ? Cp15_c1_alignment_check : 0)
+                                | (Config::Cache_enabled
+                                   ? Cp15_c1_cache_bits : 0)
                                 | Cp15_c1_branch_predict
                                 | Cp15_c1_high_vector
                                 | Cp15_c1_tre
@@ -258,6 +267,8 @@ public:
                                 Cp15_c1_mmu
                                 | (Config::Cp15_c1_use_alignment_check
                                    ? Cp15_c1_alignment_check : 0)
+                                | (Config::Cache_enabled
+                                   ? Cp15_c1_cache_bits : 0)
                                 | Cp15_c1_branch_predict
                                 | Cp15_c1_rao_sbop;
 };

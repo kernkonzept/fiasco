@@ -26,8 +26,7 @@ void
 Bootstrap::enable_paging(Mword pdir)
 {
   unsigned domains = 0x55555555; // client for all domains
-  unsigned control = Config::Cache_enabled
-                     ? Cpu::Cp15_c1_cache_enabled : Cpu::Cp15_c1_cache_disabled;
+  unsigned control = Cpu::Cp15_c1_generic;
 
   disable_mmu_and_caches();
   set_mair0(Page::Mair0_prrr_bits);
@@ -120,8 +119,7 @@ void
 Bootstrap::enable_paging(Mword pdir)
 {
   unsigned domains = 0x55555555; // client for all domains
-  unsigned control = Config::Cache_enabled
-                     ? Cpu::Cp15_c1_cache_enabled : Cpu::Cp15_c1_cache_disabled;
+  unsigned control = Cpu::Cp15_c1_generic;
 
   disable_mmu_and_caches();
 
