@@ -23,11 +23,18 @@ public:
     Cp15_c1_mmu             = 1 << 0,
     Cp15_c1_alignment_check = 1 << 1,
     Cp15_c1_cache           = 1 << 2,
+    Cp15_c1_write_buffer    = 1 << 3, // only ARMv5 + ARMv6
     Cp15_c1_branch_predict  = 1 << 11,
     Cp15_c1_v7_sw           = 1 << 10,
     Cp15_c1_insn_cache      = 1 << 12,
     Cp15_c1_high_vector     = 1 << 13,
   };
+
+  static constexpr Unsigned32 Cp15_c1_cache_bits =
+                                Cp15_c1_cache
+                                | Cp15_c1_insn_cache
+                                | (TAG_ENABLED(arm_v5)
+                                   ? Cp15_c1_write_buffer : 0);
 
   Cpu(Cpu_number id) { set_id(id); }
 
@@ -130,7 +137,6 @@ EXTENSION class Cpu
 public:
   enum
   {
-    Cp15_c1_write_buffer    = 1 << 3,
     Cp15_c1_prog32          = 1 << 4,
     Cp15_c1_data32          = 1 << 5,
     Cp15_c1_late_abort      = 1 << 6,
@@ -142,10 +148,6 @@ public:
     Cp15_c1_l4              = 1 << 15,
   };
 
-  static constexpr Unsigned32 Cp15_c1_cache_bits =
-                                Cp15_c1_cache
-                                | Cp15_c1_insn_cache
-                                | Cp15_c1_write_buffer;
   static constexpr Unsigned32 Cp15_c1_generic =
                                 Cp15_c1_mmu
                                 | (Config::Cp15_c1_use_alignment_check
@@ -176,9 +178,6 @@ public:
     Cp15_c1_tre             = 1 << 28,
     Cp15_c1_force_ap        = 1 << 29,
   };
-
-  static constexpr Unsigned32 Cp15_c1_cache_bits =
-                                Cp15_c1_cache | Cp15_c1_insn_cache;
 };
 
 // ------------------------------------------------------------------------
@@ -235,8 +234,6 @@ public:
     Cp15_c1_rao_sbop        = (0xf << 3) | (1 << 16) | (1 << 18) | (1 << 22) | (1 << 23),
   };
 
-  static constexpr Unsigned32 Cp15_c1_cache_bits =
-                                Cp15_c1_cache | Cp15_c1_insn_cache;
   static constexpr Unsigned32 Cp15_c1_generic =
                                 Cp15_c1_mmu
                                 | (Config::Cp15_c1_use_alignment_check
@@ -261,8 +258,6 @@ public:
     Cp15_c1_rao_sbop        = (0xf << 3) | (1 << 16) | (1 << 18) | (1 << 22) | (1 << 23),
   };
 
-  static constexpr Unsigned32 Cp15_c1_cache_bits =
-                                Cp15_c1_cache | Cp15_c1_insn_cache;
   static constexpr Unsigned32 Cp15_c1_generic =
                                 Cp15_c1_mmu
                                 | (Config::Cp15_c1_use_alignment_check
