@@ -218,7 +218,7 @@ Context::arm_ext_vcpu_switch_to_guest(Vcpu_state *, Vm_state *v)
 
 PRIVATE inline
 void
-Context::arm_ext_vcpu_load_guest_regs(Vcpu_state *vcpu, Vm_state *v, Mword hcr)
+Context::arm_ext_vcpu_load_guest_regs(Vcpu_state *vcpu, Vm_state *v, Unsigned64 hcr)
 {
   asm volatile ("mrs %x0, TPIDRRO_EL0" : "=r"(vcpu->host.tpidruro));
   if constexpr (Config::Have_mpu)
