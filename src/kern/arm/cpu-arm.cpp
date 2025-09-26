@@ -28,6 +28,7 @@ public:
     Cp15_c1_v7_sw           = 1 << 10,
     Cp15_c1_insn_cache      = 1 << 12,
     Cp15_c1_high_vector     = 1 << 13,
+    Cp15_c1_tre             = 1 << 28,
   };
 
   static constexpr Unsigned32 Cp15_c1_cache_bits =
@@ -175,7 +176,6 @@ public:
     Cp15_c1_xp              = 1 << 23,
     Cp15_c1_ee              = 1 << 25,
     Cp15_c1_nmfi            = 1 << 27,
-    Cp15_c1_tre             = 1 << 28,
     Cp15_c1_force_ap        = 1 << 29,
   };
 };
@@ -229,7 +229,6 @@ public:
     Cp15_c1_ha              = 1 << 17,
     Cp15_c1_ee              = 1 << 25,
     Cp15_c1_nmfi            = 1 << 27,
-    Cp15_c1_tre             = 1 << 28,
     Cp15_c1_te              = 1 << 30,
     Cp15_c1_rao_sbop        = (0xf << 3) | (1 << 16) | (1 << 18) | (1 << 22) | (1 << 23),
   };
