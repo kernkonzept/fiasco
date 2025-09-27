@@ -7,7 +7,7 @@ $(TCBOFFSET): dump_tcboffsets tcboffset.bin
 
 dump_tcboffsets: dump_tcboffsets.cc tcboffset_in.h globalconfig.h .Compiler-config
 	$(COMP_MESSAGE)
-	$(VERBOSE)$(HOST_CXX) -MD -MP -MF .$@.cc.d.new -I . $(HOST_CPPFLAGS) $(HOST_CXXFLAGS) -o $@ $<
+	$(VERBOSE)$(HOST_CXX) -MD -MP -MF .$@.cc.d.new -I . -I$(srcdir)/lib/host $(HOST_CPPFLAGS) $(HOST_CXXFLAGS) -o $@ $<
 	@mv .$@.cc.d.new .$@.cc.d
 
 tcboffset.o: tcboffset_in.h
