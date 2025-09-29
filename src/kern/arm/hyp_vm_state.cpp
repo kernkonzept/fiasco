@@ -34,6 +34,16 @@ public:
 struct Context_hyp
 {
   Unsigned64 par;
+
+  // This HCR value cannot be directly modified by userland after extended vCPU
+  // mode has been enabled for the corresponding Context. Instead, this value is
+  // derived from host_regs.hcr
+  // - in Context::arch_load_vcpu_kern_state() while entering kernel mode after
+  //   leaving extended vCPU user mode, and
+  // - in Context::arch_load_vcpu_user_state() before resuming an extended vCPU
+  //   in user mode.
+  // Furthermore, in Context::arch_vcpu_ext_shutdown() this HCR value is loaded
+  // with a host-compatible fixed value.
   Unsigned64 hcr = Cpu::Hcr_non_vm_bits_el0;
 
   Unsigned64 cntvoff;

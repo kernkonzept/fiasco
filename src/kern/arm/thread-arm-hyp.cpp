@@ -118,6 +118,9 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
 
   if (current() == this)
     {
+      // See Hyp_vm_state.hcr why this test is safe.
+      // Furthermore, if this test fails, the thread was already switched to
+      // execute at PL1 and _hyp.load() was done in Thread::ex_regs_arch().
       if (_hyp.hcr & Cpu::Hcr_tge)
         {
           // _hyp.hcr actually loaded in Context::arm_ext_vcpu_load_guest_regs()
@@ -464,6 +467,9 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool ext)
     {
       asm volatile ("msr SCTLR_EL1, %x0" : : "r"(v->sctlr));
       asm volatile ("msr HSTR_EL2, %x0" : : "r"(Cpu::Hstr_vm));
+      // See Hyp_vm_state.hcr why this test is safe.
+      // Furthermore, if this test fails, the thread was already switched to
+      // execute at EL1 and _hyp.load() was done in Thread::ex_regs_arch().
       if (_hyp.hcr & Cpu::Hcr_tge)
         {
           // Strictly speaking, the following registers would not need to be
