@@ -129,7 +129,7 @@ Bootstrap::enable_paging(Mword pdir)
   asm volatile("mcr p15, 0, r0, c8, c7, 0"); // TLBIALL
   Mem::dsb();
   asm volatile("mcr p15, 0, %[dacr], c3, c0, 0" // DACR
-               : : [dacr]  "r" (dcar));
+               : : [dacr]  "r" (dacr));
 
   asm volatile("mcr p15, 0, %[pdir], c2, c0, 0" // TTBR0
                : : [pdir] "r" (pdir));
