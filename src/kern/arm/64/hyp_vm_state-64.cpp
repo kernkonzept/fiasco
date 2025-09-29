@@ -86,10 +86,6 @@ public:
   // because a hyp kernel runs applications in system mode (PL1)
   Unsigned32 spsr_fiq, spsr_irq, spsr_svc, spsr_abt, spsr_und;
   Unsigned32 csselr;
-
-  // VM / USER RO but VMM writable
-  Unsigned64 vmpidr = 1UL << 31;
-  Unsigned32 vpidr = Cpu::midr();
 };
 
 //------------------------------------------------------------------
