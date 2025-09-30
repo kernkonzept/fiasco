@@ -20,11 +20,12 @@ public:
 
   typedef Gic_h_global::Arm_vgic Gic;
 
-  /* The following part is our user API */
+  /* === The following part is our user API === */
+
   Regs_h host_regs;
   Regs_g guest_regs;
 
-  Unsigned64 cntvoff;
+  Unsigned64 cntvoff;   // also in Context_hyp
 
   Unsigned64 vmpidr;
   Unsigned32 vpidr;
@@ -35,37 +36,40 @@ public:
   // size depends on GIC version, number of LRs and APRs
   Gic  gic;
 
-  /* The user API ends here */
+  /* === The user API ends here =============== */
 
   /* we should align this at a cache line ... */
-  Unsigned64 actlr;
+  Unsigned64 actlr;     // ACTLR_EL1 protected by HCR.TACR=1
 
-  Unsigned64 tcr;
-  Unsigned64 ttbr0;
-  Unsigned64 ttbr1;
+  Unsigned64 tcr;       // TCR_EL1 protected by HCR.{TRVM,TVM}=1
+  Unsigned64 ttbr0;     // TTBR0_EL1 protected by HCR.{TRVM,TVM}=1
+  Unsigned64 ttbr1;     // TTBR1_EL1 protected by HCR.{TRVM,TVM}=1
 
-  Unsigned32 sctlr;
-  Unsigned32 esr;
+  Unsigned32 sctlr;     // SCTLR_EL1 protected by HCR.{TRVM,TVM}=1
+  Unsigned32 esr;       // ESR_EL1 protected by HCR.{TRVM,TVM}=1
 
-  Unsigned64 mair;
-  Unsigned64 amair;
+  Unsigned64 mair;      // MAIR_EL1 protected by HCR.{TRVM,TVM}=1
+  Unsigned64 amair;     // AMAIR_EL1 protected by HCR.{TRVM,TVM}=1
 
-  Unsigned64 sp_el1;
-  Unsigned64 elr_el1;
+  Unsigned64 sp_el1;    // also in Context_hyp
+  Unsigned64 elr_el1;   // also in Context_hyp
 
-  Unsigned64 far;
+  Unsigned64 far;       // FAR_EL1 protected by HCR.{TRVM,TVM}=1
 
-  Unsigned32 afsr[2];
+  Unsigned32 afsr[2];   // AFSR{0,1}_EL1 protected by HCR.{TRVM,TVM}=1
 
-  Unsigned32 dacr32;
-  Unsigned32 fpexc32;
-  Unsigned32 ifsr32;
+  // EL2 registers switched during Context::{load,save}_ext_vcpu_state()
+  Unsigned32 dacr32;    // DACR32_EL2 context-switched
+  Unsigned32 fpexc32;   // FPEXC32_EL2 untouched
+  Unsigned32 ifsr32;    // IFSR32_EL2 context-switched
 
-  struct {
-    Unsigned64 prselr;
-    struct {
-      Unsigned64 prbar;
-      Unsigned64 prlar;
+  struct
+  {
+    Unsigned64 prselr;  // PRSELR_EL1 protected by HCR.{TRVM,TVM}=1
+    struct
+    {
+      Unsigned64 prbar; // PRBAR_EL1 protected by HCR.{TRVM,TVM}=1
+      Unsigned64 prlar; // PRLAR_EL1 protected by HCR.{TRVM,TVM}=1
     } r[32];
   } mpu;
 };
@@ -73,6 +77,8 @@ public:
 EXTENSION struct Context_hyp
 {
 public:
+  // The following registers are not protected by HCR.{TRVM,TVM} and hence need
+  // to be context-switched during Context_hyp::{load,store}().
   Unsigned64 sp_el1;
   Unsigned64 elr_el1;
   Unsigned64 vbar;

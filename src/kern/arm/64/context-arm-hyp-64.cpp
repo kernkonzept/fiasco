@@ -53,6 +53,11 @@ Context::store_tpidruro()
  *
  * Called either when switching to a context with extended vCPU mode disabled or
  * when shutting down a context having the extended vCPU mode enabled.
+ *
+ * SCTLR_EL1 written here is trapped if extended vCPU mode is disabled due to
+ * HCR.TRVM=1, no matter if running at EL0 or EL1.
+ * MDSCR_EL1 written here is always trapped at EL0 or EL1 because of MDCR.TDA.
+ * CNTKCTL_EL1 written here is always accessible at EL1.
  */
 PRIVATE static inline
 void
@@ -74,6 +79,10 @@ Context::arm_hyp_load_non_vm_state()
 /**
  * Save system registers to Vm_state when switching away from this context
  * having extended vCPU mode enabled.
+ *
+ * All _EL1 registers read here are trapped if extended vCPU mode is disabled
+ * due to HCR.TRVM=1, no matter if running at EL0 or EL1. Therefore these
+ * registers don't need handling in Context_hyp::{save,load}().
  */
 PRIVATE static inline
 void
@@ -106,8 +115,7 @@ Context::save_ext_vcpu_state(Vm_state *v)
 
   if constexpr (Config::Have_mpu)
     {
-      // Look into the HWs VTCR_EL2 because the user space could tamper
-      // v->vtcr!
+      // Look into the HWs VTCR_EL2 because the user space could tamper v->vtcr!
       Unsigned64 vtcr;
       asm ("mrs %x0, VTCR_EL2" : "=r"(vtcr));
       if (!(vtcr & Cpu::Vtcr_msa))
@@ -118,6 +126,10 @@ Context::save_ext_vcpu_state(Vm_state *v)
 /**
  * Load system registers from Vm_state when switching to this context having
  * extended vCPU mode enabled.
+ *
+ * All _EL1 registers written here are trapped if extended vCPU mode is disabled
+ * due to HCR.TRVM=1, no matter if running at EL0 or EL1. Therefore these
+ * registers don't need handling in Context_hyp::{save,load}().
  */
 PRIVATE inline
 void
@@ -175,7 +187,13 @@ Context::load_ext_vcpu_state(Vm_state const *v)
 /**
  * Store system registers to Vcpu_state and Vm_state after this context entered
  * extended vCPU host mode and load system registers with values suitable for
- * executing this context in extended vCPU kernel mode
+ * executing this context in extended vCPU kernel mode.
+ *
+ * SCTLR_EL1 written here is trapped if extended vCPU mode is disabled due to
+ * HCR.TRVM=1, no matter if running at EL0 or EL1.
+ * MDSCR_EL1 written here is always trapped at EL0 or EL1 because of MDCR.TDA.
+ * CPACR_EL1 written here is accessible at and is therefore also saved/restored
+ * in Context_hyp::{save,load}().
  */
 PRIVATE inline
 void
