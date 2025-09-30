@@ -205,12 +205,10 @@ public:
      * HCR value to be used for normal threads.
      *
      * On AArch64 (with virtualization support) they can choose to run in EL1
-     * or EL0.
+     * or EL0. When running at EL1, HCR.TGE=0.
      */
-    Hcr_non_vm_bits_common = Hcr_must_set_bits | Hcr_rw | Hcr_dc | Hcr_tsw
-                             | Hcr_ttlb | Hcr_tvm | Hcr_trvm,
-    Hcr_non_vm_bits_el1    = Hcr_non_vm_bits_common,
-    Hcr_non_vm_bits_el0    = Hcr_non_vm_bits_common | Hcr_tge,
+    Hcr_non_vm_bits_el0 = Hcr_must_set_bits | Hcr_rw | Hcr_dc | Hcr_tsw
+                          | Hcr_ttlb | Hcr_tvm | Hcr_trvm | Hcr_tge,
   };
 
   enum
