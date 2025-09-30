@@ -263,7 +263,7 @@ Cpu::init_hyp_mode_common()
   mdcr |= Mdcr_bits;
   asm volatile ("msr MDCR_EL2, %x0" : : "r"(mdcr));
 
-  asm volatile ("msr SCTLR_EL1, %x0" : : "r"(Mword{Sctlr_el1_generic}));
+  asm volatile ("msr SCTLR_EL1, %x0" : : "r"(Sctlr_el1_generic));
   hcr(Hcr_non_vm_bits_el0);
   asm volatile ("msr HSTR_EL2, %x0" : : "r" (Hstr_non_vm));
 
@@ -439,10 +439,10 @@ void
 Cpu::enable_dcache()
 {
   Mword r;
-  asm volatile("mrs     %0, SCTLR_EL1 \n"
-               "orr     %0, %0, %1    \n"
-               "msr     SCTLR_EL1, %0 \n"
-               : "=&r" (r) : "r" (Mword{Sctlr_c | Sctlr_i}));
+  asm volatile("mrs     %x0, SCTLR_EL1 \n"
+               "orr     %x0, %x0, %x1  \n"
+               "msr     SCTLR_EL1, %x0 \n"
+               : "=&r" (r) : "r" (Sctlr_c | Sctlr_i));
 }
 
 PUBLIC static inline
@@ -450,10 +450,10 @@ void
 Cpu::disable_dcache()
 {
   Mword r;
-  asm volatile("mrs     %0, SCTLR_EL1 \n"
-               "bic     %0, %0, %1    \n"
-               "msr     SCTLR_EL1, %0 \n"
-               : "=&r" (r) : "r" (Mword{Sctlr_c | Sctlr_i}));
+  asm volatile("mrs     %x0, SCTLR_EL1 \n"
+               "bic     %x0, %x0, %x1  \n"
+               "msr     SCTLR_EL1, %x0 \n"
+               : "=&r" (r) : "r" (Sctlr_c | Sctlr_i));
 }
 
 PUBLIC static inline

@@ -32,7 +32,7 @@ namespace Generic_timer {
     { Mword v; asm volatile("mrs %0, CNTV_CTL_EL0" : "=r" (v)); return v; }
 
     static void control(Unsigned32 v)
-    { asm volatile("msr CNTV_CTL_EL0, %0" : : "r" (Mword{v})); }
+    { asm volatile("msr CNTV_CTL_EL0, %x0" : : "r" (v)); }
 
     static void setup_timer_access()
     {
@@ -44,7 +44,7 @@ namespace Generic_timer {
     { Mword v; asm volatile ("mrs %0, CNTFRQ_EL0": "=r" (v)); return v; }
 
     static void frequency(Unsigned32 v)
-    { asm volatile ("msr CNTFRQ_EL0, %0" : : "r" (Mword{v})); }
+    { asm volatile ("msr CNTFRQ_EL0, %x0" : : "r" (v)); }
   };
 
   template<> struct T<Physical>
@@ -67,7 +67,7 @@ namespace Generic_timer {
     { Mword v; asm volatile("mrs %0, CNTP_CTL_EL0" : "=r" (v)); return v; }
 
     static void control(Unsigned32 v)
-    { asm volatile("msr CNTP_CTL_EL0, %0" : : "r" (Mword{v})); }
+    { asm volatile("msr CNTP_CTL_EL0, %x0" : : "r" (v)); }
 
     static void setup_timer_access()
     {
@@ -79,7 +79,7 @@ namespace Generic_timer {
     { Mword v; asm volatile ("mrs %0, CNTFRQ_EL0": "=r" (v)); return v; }
 
     static void frequency(Unsigned32 v)
-    { asm volatile ("msr CNTFRQ_EL0, %0" : : "r" (Mword{v})); }
+    { asm volatile ("msr CNTFRQ_EL0, %x0" : : "r" (v)); }
   };
 
   template<> struct T<Hyp>
@@ -102,7 +102,7 @@ namespace Generic_timer {
     { Mword v; asm volatile("mrs %0, CNTHP_CTL_EL2" : "=r" (v)); return v; }
 
     static void control(Unsigned32 v)
-    { asm volatile("msr CNTHP_CTL_EL2, %0" : : "r" (Mword{v})); }
+    { asm volatile("msr CNTHP_CTL_EL2, %x0" : : "r" (v)); }
 
     static void setup_timer_access()
     {
@@ -118,7 +118,7 @@ namespace Generic_timer {
     { Mword v; asm volatile ("mrs %0, CNTFRQ_EL0": "=r" (v)); return v; }
 
     static void frequency(Unsigned32 v)
-    { asm volatile ("msr CNTFRQ_EL0, %0" : : "r" (Mword{v})); }
+    { asm volatile ("msr CNTFRQ_EL0, %x0" : : "r" (v)); }
   };
 
   template<> struct T<Secure_hyp>
@@ -141,7 +141,7 @@ namespace Generic_timer {
     { Mword v; asm volatile("mrs %0, S3_4_C14_C5_1" : "=r" (v)); return v; }
 
     static void control(Unsigned32 v) // CNTHPS_CTL_EL2
-    { asm volatile("msr S3_4_C14_C5_1, %0" : : "r" (Mword{v})); }
+    { asm volatile("msr S3_4_C14_C5_1, %x0" : : "r" (v)); }
 
     static void setup_timer_access()
     {
@@ -157,7 +157,7 @@ namespace Generic_timer {
     { Mword v; asm volatile ("mrs %0, CNTFRQ_EL0": "=r" (v)); return v; }
 
     static void frequency(Unsigned32 v)
-    { asm volatile ("msr CNTFRQ_EL0, %0" : : "r" (Mword{v})); }
+    { asm volatile ("msr CNTFRQ_EL0, %x0" : : "r" (v)); }
   };
 }
 
