@@ -58,7 +58,8 @@ public:
   };
   void id_init();
 
-  enum {
+  enum
+  {
     Copro_dbg_model_not_supported = 0,
     Copro_dbg_model_v6            = 2,
     Copro_dbg_model_v6_1          = 3,
@@ -325,7 +326,8 @@ INTERFACE [arm && (arm_v7 || arm_v8) && mpu && cpu_virt]:
 EXTENSION class Cpu
 {
 public:
-  enum {
+  enum
+  {
     Hsctlr_res1 = (3 << 28) | (3 << 22) | (1 << 18) | (1 << 16) | (1 << 11)
                 | (3 << 3),
 
@@ -349,7 +351,8 @@ INTERFACE [arm && cpu_virt && arm_cortex_r52]:
 
 EXTENSION class Cpu
 {
-  enum {
+  enum
+  {
     Imp_csctlr = (Config::Dcache_flash_ways << 0)  // DFLW
                | (Config::Icache_flash_ways << 8), // IFLW
   };

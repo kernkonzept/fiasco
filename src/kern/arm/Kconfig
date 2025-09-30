@@ -562,11 +562,12 @@ config ARM_ICACHE_FLASH_WAYS
 	range 0 4
 	default 0
 	help
-	  On Cortex-R52, the L1 instruction cache supports segregation of cache ways
-	  between the Flash and AXIM interfaces. This option allows configuring how
-	  many cache ways are allocated to each interface. By default (reset value),
-	  all instruction cache ways are assigned to the AXIM interface. Adjusting
-	  this setting can optimize performance based on memory access patterns.
+	  On Cortex-R52, the L1 instruction cache supports segregation of cache
+	  ways between the Flash and AXIM interfaces. This option allows
+	  configuring how many cache ways are allocated to each interface. By
+	  default (reset value), all instruction cache ways are assigned to the
+	  AXIM interface. Adjusting this setting can optimize performance based
+	  on memory access patterns.
 
 config ARM_DCACHE_FLASH_WAYS
 	int "L1 data cache ways allocation for Flash interface"
@@ -575,10 +576,11 @@ config ARM_DCACHE_FLASH_WAYS
 	default 0
 	help
 	  On Cortex-R52, the L1 data cache supports segregation of cache ways
-	  between the Flash and AXIM interfaces. This option allows configuring how
-	  many cache ways are allocated to each interface. By default (reset value),
-	  all data cache ways are assigned to the AXIM interface. Adjusting
-	  this setting can optimize performance based on memory access patterns.
+	  between the Flash and AXIM interfaces. This option allows configuring
+	  how many cache ways are allocated to each interface. By default
+	  (reset value), all data cache ways are assigned to the AXIM
+	  interface. Adjusting this setting can optimize performance based on
+	  memory access patterns.
 
 # SECTION: COMPILING
 
