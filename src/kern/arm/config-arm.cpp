@@ -130,6 +130,19 @@ public:
   };
 };
 
+// -----------------------------------------------------------------------
+INTERFACE [arm && cpu_virt && arm_cortex_r52]:
+
+EXTENSION class Config
+{
+public:
+  enum
+  {
+    Icache_flash_ways = CONFIG_ARM_ICACHE_FLASH_WAYS,
+    Dcache_flash_ways = CONFIG_ARM_DCACHE_FLASH_WAYS,
+  };
+};
+
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
