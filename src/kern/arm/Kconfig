@@ -86,6 +86,9 @@ config CAN_ARM_CPU_CORTEX_A76
 config CAN_ARM_CPU_NEOVERSE_N1
 	bool
 
+config CAN_ARM_CPU_V8R
+	bool
+
 config CAN_ARM_CPU_CORTEX_R52
 	bool
 
@@ -312,6 +315,17 @@ config ARM_KRAIT
 	depends on CAN_ARM_CPU_KRAIT
 	select ARM_V7
 	select HAS_MP_OPTION
+
+config ARM_V8R_GENERIC
+	bool "Generic Armv8-R CPU"
+	depends on CAN_ARM_CPU_V8R
+	select ARM_V8
+	select ARM_PROFILE_R
+	select HAS_CPU_MPU
+	select HAS_CPU_VIRT
+	select HAS_CPU_AMP_OPTION if BIT32
+	select HAS_MP_OPTION if BIT64
+	select HAS_64BIT
 
 config ARM_CORTEX_R52
 	bool "ARM Cortex-R52 CPU"

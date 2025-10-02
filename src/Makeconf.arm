@@ -26,6 +26,7 @@ SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A73) += $(call CHECKCC,-mcpu=cortex-a73,-march=
 SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A76) += $(call CHECKCC,-mcpu=cortex-a76,-march=armv8-a)
 SHARED_FLAGS-$(CONFIG_ARM_NEOVERSE_N1) += $(call CHECKCC,-mcpu=neoverse-n1,-march=armv8.2-a)
 SHARED_FLAGS-$(CONFIG_ARM_KRAIT) += $(call CHECKCC,-mcpu=krait,-mcpu=cortex-a15)
+SHARED_FLAGS-$(CONFIG_ARM_V8R_GENERIC) += $(if $(CONFIG_BIT32),-march=armv8-r,-march=armv8-a)
 SHARED_FLAGS-$(CONFIG_ARM_CORTEX_R52) += $(call CHECKCC,-mcpu=cortex-r52,-march=armv8-r)
 SHARED_FLAGS-$(CONFIG_ARM_CORTEX_R82) += $(call CHECKCC,-mcpu=cortex-r82,-march=armv8-a) # armv8-r only supported starting with GCC-11
 SHARED_FLAGS-$(CONFIG_BIT32)      += $(if $(CC_IS_CLANG),,-Wno-psabi)
