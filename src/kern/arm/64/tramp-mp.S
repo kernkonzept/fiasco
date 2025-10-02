@@ -13,9 +13,7 @@
 #define SCR_EL3_DEFAULT_BITS (SCR_NS | SCR_SMD | SCR_RW)
 
 #ifndef CONFIG_CPU_VIRT
-
-#define HCR_EL2_DEFAULT_BITS (HCR_HCD | HCR_RW)
-
+# define HCR_EL2_DEFAULT_BITS (HCR_HCD | HCR_RW)
 #endif
 
 #ifndef HAVE_MACRO_BSP_EARLY_INIT
@@ -112,12 +110,12 @@ _tramp_mp_entry:
 	movz	x17, #:abs_g0_nc:sctlr_val
 	movk	x17, #:abs_g1:sctlr_val
 	orr	x18, x18, x17
-#ifdef CONFIG_CPU_VIRT
+# ifdef CONFIG_CPU_VIRT
 	mov	x6, #HCR_RW
 	msr	HCR_EL2, x6
 	msr	sctlr_el2, x18
 	mov	x18, #((0xf << 6) | 9) // => EL2
-#else
+# else
 	mrs	x6, id_aa64pfr0_el1
 	ubfx	x6, x6, #8, #4
 	cmp	x6, #0
@@ -126,7 +124,7 @@ _tramp_mp_entry:
 	msr	HCR_EL2, x6
 1:	msr	sctlr_el1, x18
 	mov	x18, #((0xf << 6) | 5) // => EL1
-#endif
+# endif
 	msr	spsr_el3, x18
 	adr	x4, 1f
 	msr	elr_el3, x4
@@ -167,7 +165,7 @@ _tramp_mp_entry:
 	dsb	sy
 
 #if defined(CONFIG_MMU)
-#ifdef CONFIG_CPU_VIRT
+# ifdef CONFIG_CPU_VIRT
 	// TLB flush
 	tlbi	alle2
 	tlbi	alle1
@@ -192,7 +190,7 @@ _tramp_mp_entry:
 	adrp	x0, _tramp_mp_startup_sctlr
 	ldr	x0, [x0, :lo12:_tramp_mp_startup_sctlr]
 	msr	SCTLR_EL2, x0
-#else
+# else
 	tlbi	vmalle1
 	dsb	sy
 
@@ -221,7 +219,7 @@ _tramp_mp_entry:
 	adrp x0, _tramp_mp_startup_sctlr
 	ldr x0, [x0, :lo12:_tramp_mp_startup_sctlr]
 	msr SCTLR_EL1, x0
-#endif
+# endif
 	dsb	sy
 	ic	iallu
 	isb	sy
@@ -242,30 +240,30 @@ _tramp_mp_virt:
 	ldr	x1, _tramp_mp_startup_prbar0
 	ldr	x2, _tramp_mp_startup_prlar0
 
-#ifdef CONFIG_CPU_VIRT
+# ifdef CONFIG_CPU_VIRT
 	msr	MAIR_EL2, x0
 	msr	S3_4_c6_c2_1, xzr // PRSELR_EL2
 	isb
 	msr	S3_4_c6_c8_0, x1  // PRBAR_EL2
 	msr	S3_4_c6_c8_1, x2  // PRLAR_EL2
-#else
+# else
 	msr	MAIR_EL1, x0
 	msr	S3_0_c6_c2_1, xzr // PRSELR_EL1
 	isb
 	msr	S3_0_c6_c8_0, x1  // PRBAR_EL1
 	msr	S3_0_c6_c8_1, x2  // PRLAR_EL1
-#endif
+# endif
 
 	// Ensure MPU configuration is committed before MMU and caches are
 	// enabled.
 	isb	sy
 
 	ldr	x0, _tramp_mp_startup_sctlr
-#ifdef CONFIG_CPU_VIRT
+# ifdef CONFIG_CPU_VIRT
 	msr	SCTLR_EL2, x0
-#else
+# else
 	msr	SCTLR_EL1, x0
-#endif
+# endif
 	isb
 #endif
 
