@@ -19,7 +19,7 @@
 #endif
 
 #define READ_VAL \
-  ({read(fd, &val, len); TARGET_BYTE_ORDER(val);})
+  ({(void)!read(fd, &val, len); TARGET_BYTE_ORDER(val);})
 
 
 #define DUMP_OFFSET(prefix,name,offset) \
