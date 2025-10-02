@@ -41,7 +41,6 @@ public:
 
   /* The user API ends here */
 
-  /* we should align this at a cache line ... */
   Unsigned32 csselr;
 
   Unsigned32 sctlr;

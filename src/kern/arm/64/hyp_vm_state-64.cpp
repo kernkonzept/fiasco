@@ -38,7 +38,6 @@ public:
 
   /* === The user API ends here =============== */
 
-  /* we should align this at a cache line ... */
   Unsigned64 actlr;     // ACTLR_EL1 protected by HCR.TACR=1
 
   Unsigned64 tcr;       // TCR_EL1 protected by HCR.{TRVM,TVM}=1
