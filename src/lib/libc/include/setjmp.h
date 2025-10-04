@@ -15,11 +15,7 @@ typedef struct __jmp_buf_tag {
 	unsigned long __ss[128/sizeof(long)];
 } jmp_buf[1];
 
-#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 1)
 #define __setjmp_attr __attribute__((__returns_twice__))
-#else
-#define __setjmp_attr
-#endif
 
 #if defined(_POSIX_SOURCE) || defined(_POSIX_C_SOURCE) \
  || defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE) \
