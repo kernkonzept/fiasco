@@ -119,6 +119,10 @@ int dialog_checklist(const char *title, const char *prompt, int height,
 	}
 
 do_resize:
+        /* Fiasco: Increase checklist height depending on display height. */
+        height = getmaxy(stdscr) - 6;
+        list_height = height - 9;
+
 	if (getmaxy(stdscr) < (height + CHECKLIST_HEIGHT_MIN))
 		return -ERRDISPLAYTOOSMALL;
 	if (getmaxx(stdscr) < (width + CHECKLIST_WIDTH_MIN))
