@@ -216,14 +216,17 @@ static int printf_core(FILE *f, const char *fmt, va_list *ap, union arg *nl_arg,
 		if (!*s)
 			break;
 
-		/* Handle literal text and %% format specifiers */
-		for (a=s; *s && *s!='%'; s++);
-		for (z=s; s[0]=='%' && s[1]=='%'; z++, s+=2);
-		if (z-a > INT_MAX-cnt)
-			goto overflow;
-		l = z-a;
-		if (f)
-			out(f, a, l);
+		{
+			/* Handle literal text and %% format specifiers */
+			const char *s_base = s;
+			for (; *s && *s!='%'; s++);
+			for (z=s; s[0]=='%' && s[1]=='%'; z++, s+=2);
+			if (z-s_base > INT_MAX-cnt)
+				goto overflow;
+			l = z-s_base;
+			if (f)
+				out(f, s_base, l);
+		}
 		if (l)
 			continue;
 
