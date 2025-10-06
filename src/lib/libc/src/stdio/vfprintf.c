@@ -437,10 +437,8 @@ int vfprintf(FILE *restrict f, const char *restrict fmt, va_list ap)
 	if (!f->buf_size) {
 		f->buf = internal_buf;
 		f->buf_size = sizeof internal_buf;
-		f->wpos = f->wend = 0;
 	}
-	if (!f->wend)
-		__towrite(f);
+	__towrite(f);
 
 	ret = printf_core(f, fmt, &ap2, nl_arg, nl_type);
 	/* allow to pass f with buf_size = 0 and buf = NULL */
