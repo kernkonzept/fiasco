@@ -374,6 +374,6 @@ IMPLEMENT_OVERRIDE static inline
 bool
 Gic_redist_find::cmp_affinity(Unsigned32 x, Unsigned32 y)
 {
-  // Arm erraturm 2743885 workaround for broken Aff1/2 field on clusters.
+  // Arm erratum 2743885 workaround for broken Aff1/2 field on clusters.
   return (x & 0xffU) == (y & 0xffU);
 }
