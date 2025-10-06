@@ -1,9 +1,8 @@
-INTERFACE [arm && pic_gic && pf_s32z]:
+INTERFACE [arm && pf_s32z]:
 
-#include "gic.h"
-#include "gic_v3.h"
-#include "initcalls.h"
 #include "mmio_register_block.h"
+#include "irq_chip_generic.h"
+#include "context_base.h"
 
 class Mru : public Irq_chip_gen, Mmio_register_block
 {
@@ -57,7 +56,7 @@ class Mru : public Irq_chip_gen, Mmio_register_block
       set_hit(handler_wrapper<Mru_ppi>);
     }
 
-    void init(Gic *parent, unsigned id)
+    void init(Irq_chip_gen *parent, unsigned id)
     {
       check(parent->attach(this, id, false));
       chip()->set_mode_percpu(current_cpu(), pin(),
@@ -89,7 +88,7 @@ class Mru : public Irq_chip_gen, Mmio_register_block
 public:
   enum { Nr_irqs = 12 };
 
-  explicit Mru(void *base, Gic *parent)
+  explicit Mru(void *base, Irq_chip_gen *parent)
   : Irq_chip_gen(Nr_irqs), Mmio_register_block(base),
     _ppi0(this),
     _ppi1(this)
@@ -103,7 +102,7 @@ private:
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && pic_gic && pf_s32z && cpu_virt]:
+INTERFACE [arm && pf_s32z && cpu_virt]:
 
 EXTENSION class Mru
 {
@@ -133,7 +132,7 @@ EXTENSION class Mru
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && pic_gic && pf_s32z && !cpu_virt]:
+INTERFACE [arm && pf_s32z && !cpu_virt]:
 
 EXTENSION class Mru
 {
@@ -148,9 +147,9 @@ EXTENSION class Mru
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pic_gic && pf_s32z]:
 
+#include "gic_v3.h"
+#include "initcalls.h"
 #include "irq_mgr_multi_chip.h"
-#include "platform_control.h"
-#include "kip.h"
 #include "kmem_mmio.h"
 #include "cpu.h"
 
@@ -176,10 +175,12 @@ Pic::init()
   Irq_mgr::mgr = m;
 }
 
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && pf_s32z]:
 
 PRIVATE
 void
-Mru::init(Gic *parent)
+Mru::init(Irq_chip_gen *parent)
 {
   for (unsigned i = 0; i < Nr_irqs; i++)
     {
@@ -299,14 +300,15 @@ Mru::set_cpu(Mword, Cpu_number) override
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && pf_s32z && pf_s32z_mru]:
+IMPLEMENTATION [arm && pf_s32z && pf_s32z_mru]:
 
 #include "amp_node.h"
 #include "cpu.h"
+#include "kip.h"
 
 PUBLIC static
 Mru *
-Mru::create_mru(Gic *gic)
+Mru::create_mru(Irq_chip_gen *parent)
 {
   static Address const mru_base[] = {
     Mem_layout::Rtu0_Mru0, Mem_layout::Rtu0_Mru1,
@@ -322,21 +324,21 @@ Mru::create_mru(Gic *gic)
                                     Mem_desc::Reserved_mmio));
   void *mru_regs = Kmem_mmio::map(mru_addr, Mem_layout::Mru_size);
 
-  return new Boot_object<Mru>(mru_regs, gic);
+  return new Boot_object<Mru>(mru_regs, parent);
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && pf_s32z && !pf_s32z_mru]:
+IMPLEMENTATION [arm && pf_s32z && !pf_s32z_mru]:
 
 PUBLIC static inline
 Mru *
-Mru::create_mru(Gic *)
+Mru::create_mru(Irq_chip_gen *)
 {
   return nullptr;
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && pf_s32z && debug]:
+IMPLEMENTATION [arm && pf_s32z && debug]:
 
 PUBLIC
 char const *
