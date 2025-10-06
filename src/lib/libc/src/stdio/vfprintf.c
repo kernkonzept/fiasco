@@ -416,7 +416,7 @@ int vfprintf(FILE *restrict f, const char *restrict fmt, va_list ap)
 	va_list ap2;
 	int nl_type[NL_ARGMAX+1] = {0};
 	union arg nl_arg[NL_ARGMAX+1];
-	unsigned char internal_buf[80], *saved_buf = 0;
+	char internal_buf[80], *saved_buf = 0;
 	int ret;
 
 	/* the copy allows passing va_list* even if va_list is an array */

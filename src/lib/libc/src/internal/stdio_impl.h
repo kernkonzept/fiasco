@@ -8,10 +8,10 @@
 #define FUNLOCK(f) __libc_backend_printf_unlock(lock_state)
 
 struct _IO_FILE {
-	unsigned char *rpos;
-	unsigned char *wend, *wpos;
+	char *rpos;
+	char *wend, *wpos;
 	void (*write)(FILE *, const char *, size_t);
-	unsigned char *buf;
+	char *buf;
 	size_t buf_size;
 	void *cookie;
 };

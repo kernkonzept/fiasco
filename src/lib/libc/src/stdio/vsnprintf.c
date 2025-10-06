@@ -31,7 +31,7 @@ static void sn_write(FILE *f, const char *s, size_t l)
 
 int vsnprintf(char *restrict s, size_t n, const char *restrict fmt, va_list ap)
 {
-	unsigned char buf[1];
+	char buf[1];
 	char dummy[1];
 	struct cookie c = { .s = n ? s : dummy, .n = n ? n-1 : 0 };
 	FILE f = {
