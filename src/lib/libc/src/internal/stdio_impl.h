@@ -16,7 +16,6 @@ struct _IO_FILE {
 	void *cookie;
 };
 
-hidden void __towrite(FILE *);
 hidden int vfprintf(FILE *__restrict, const char *__restrict, __isoc_va_list);
 
 #endif
