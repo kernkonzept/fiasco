@@ -10,7 +10,7 @@ struct cookie {
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
-static size_t sn_write(FILE *f, const char *s, size_t l)
+static void sn_write(FILE *f, const char *s, size_t l)
 {
 	struct cookie *c = f->cookie;
 	size_t k = MIN(c->n, (size_t)(f->wpos - f->wbase));
@@ -27,8 +27,6 @@ static size_t sn_write(FILE *f, const char *s, size_t l)
 	}
 	*c->s = 0;
 	f->wpos = f->wbase = f->buf;
-	/* pretend to succeed, even if we discarded extra data */
-	return l;
 }
 
 int vsnprintf(char *restrict s, size_t n, const char *restrict fmt, va_list ap)

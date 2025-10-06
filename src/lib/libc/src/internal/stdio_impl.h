@@ -11,7 +11,7 @@ struct _IO_FILE {
 	unsigned char *rpos;
 	unsigned char *wend, *wpos;
 	unsigned char *wbase;
-	size_t (*write)(FILE *, const char *, size_t);
+	void (*write)(FILE *, const char *, size_t);
 	unsigned char *buf;
 	size_t buf_size;
 	void *cookie;
