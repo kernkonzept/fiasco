@@ -126,7 +126,7 @@ static void pop_arg(union arg *arg, int type, va_list *ap)
 
 static void out(FILE *f, const char *s, size_t l)
 {
-	if (l > (size_t)(f->wend - f->wpos))
+	if (l > (size_t)(f->buf + f->buf_size - f->wpos))
 		f->write(f, s, l);
 	else {
 		memcpy(f->wpos, s, l);
@@ -436,7 +436,6 @@ int vfprintf(FILE *restrict f, const char *restrict fmt, va_list ap)
 		f->buf_size = sizeof internal_buf;
 	}
 	f->wpos = f->buf;
-	f->wend = f->buf + f->buf_size;
 
 	ret = printf_core(f, fmt, &ap2, nl_arg, nl_type);
 	/* allow to pass f with buf_size = 0 and buf = NULL */

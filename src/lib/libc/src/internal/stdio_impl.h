@@ -9,7 +9,7 @@
 
 struct _IO_FILE {
 	char *rpos;
-	char *wend, *wpos;
+	char *wpos;
 	void (*write)(FILE *, const char *, size_t);
 	char *buf;
 	size_t buf_size;
