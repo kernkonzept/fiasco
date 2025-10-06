@@ -13,9 +13,9 @@ struct cookie {
 static void sn_write(FILE *f, const char *s, size_t l)
 {
 	struct cookie *c = f->cookie;
-	size_t k = MIN(c->n, (size_t)(f->wpos - f->wbase));
+	size_t k = MIN(c->n, (size_t)(f->wpos - f->buf));
 	if (k) {
-		memcpy(c->s, f->wbase, k);
+		memcpy(c->s, f->buf, k);
 		c->s += k;
 		c->n -= k;
 	}
@@ -26,7 +26,7 @@ static void sn_write(FILE *f, const char *s, size_t l)
 		c->n -= k;
 	}
 	*c->s = 0;
-	f->wpos = f->wbase = f->buf;
+	f->wpos = f->buf;
 }
 
 int vsnprintf(char *restrict s, size_t n, const char *restrict fmt, va_list ap)

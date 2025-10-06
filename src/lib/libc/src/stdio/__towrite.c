@@ -6,6 +6,6 @@ void __towrite(FILE *f)
 	f->rpos = 0;
 
 	/* Activate write through the buffer. */
-	f->wpos = f->wbase = f->buf;
+	f->wpos = f->buf;
 	f->wend = f->buf + f->buf_size;
 }

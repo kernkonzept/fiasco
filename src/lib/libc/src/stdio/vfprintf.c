@@ -431,7 +431,7 @@ int vfprintf(FILE *restrict f, const char *restrict fmt, va_list ap)
 		saved_buf = f->buf;
 		f->buf = internal_buf;
 		f->buf_size = sizeof internal_buf;
-		f->wpos = f->wbase = f->wend = 0;
+		f->wpos = f->wend = 0;
 	}
 	if (!f->wend)
 		__towrite(f);
@@ -444,7 +444,7 @@ int vfprintf(FILE *restrict f, const char *restrict fmt, va_list ap)
 			ret = -1;
 		f->buf = saved_buf;
 		f->buf_size = 0;
-		f->wpos = f->wbase = f->wend = 0;
+		f->wpos = f->wend = 0;
 	}
 	FUNLOCK(f);
 	va_end(ap2);
