@@ -41,7 +41,6 @@ int sprintf(char *__restrict, const char *__restrict, ...);
 int snprintf(char *__restrict, size_t, const char *__restrict, ...);
 
 int vprintf(const char *__restrict, __isoc_va_list);
-int vfprintf(FILE *__restrict, const char *__restrict, __isoc_va_list);
 int vsprintf(char *__restrict, const char *__restrict, __isoc_va_list);
 int vsnprintf(char *__restrict, size_t, const char *__restrict, __isoc_va_list);
 

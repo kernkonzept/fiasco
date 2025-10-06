@@ -18,6 +18,7 @@ struct _IO_FILE {
 };
 
 hidden void __towrite(FILE *);
+hidden int vfprintf(FILE *__restrict, const char *__restrict, __isoc_va_list);
 
 hidden size_t __fwritex(const unsigned char *, size_t, FILE *);
 
