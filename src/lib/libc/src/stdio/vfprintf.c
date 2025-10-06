@@ -442,11 +442,8 @@ int vfprintf(FILE *restrict f, const char *restrict fmt, va_list ap)
 
 	ret = printf_core(f, fmt, &ap2, nl_arg, nl_type);
 	/* allow to pass f with buf_size = 0 and buf = NULL */
-	if (f->buf == internal_buf) {
+	if (f->buf == internal_buf)
 		f->write(f, 0, 0);
-		if (!f->wpos)
-			ret = -1;
-	}
 	FUNLOCK(f);
 	va_end(ap2);
 	return ret;
