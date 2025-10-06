@@ -218,12 +218,13 @@ static int printf_core(FILE *f, const char *fmt, va_list *ap, union arg *nl_arg,
 
 		{
 			/* Handle literal text and %% format specifiers */
+			const char *s_pct;
 			const char *s_base = s;
 			for (; *s && *s!='%'; s++);
-			for (z=s; s[0]=='%' && s[1]=='%'; z++, s+=2);
-			if (z-s_base > INT_MAX-cnt)
+			for (s_pct=s; s[0]=='%' && s[1]=='%'; s_pct++, s+=2);
+			if (s_pct-s_base > INT_MAX-cnt)
 				goto overflow;
-			l = z-s_base;
+			l = s_pct-s_base;
 			if (f)
 				out(f, s_base, l);
 		}
