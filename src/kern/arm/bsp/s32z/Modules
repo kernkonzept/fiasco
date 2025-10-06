@@ -4,6 +4,7 @@ OBJECTS_LIBUART       += uart_dcc-v6.o
 CXXFLAGS_uart-libuart += $(call LIBUART_UART, dcc-v6, dcc_v6)
 PREPROCESS_PARTS      += arm_generic_timer pic_gic
 INTERFACES_KERNEL     += generic_timer irq_mgr_multi_chip
+INTERFACES_DRIVERS    += mru
 RAM_PHYS_BASE         := $(strip $(if $(CONFIG_PF_S32Z_AUTO_RAM_BASE), \
                               $(if $(CONFIG_PF_S32Z_RTU_1),0x36100000,0x32100000), \
                               $(CONFIG_PF_S32Z_MANUAL_RAM_BASE)))
@@ -12,6 +13,7 @@ amp_node_IMPL         := amp_node amp_node-arm-s32z
 config_IMPL           += config-arm-s32z
 kmem_alloc_IMPL       += kmem_alloc-arm-s32z
 mem_layout_IMPL       += mem_layout-arm-s32z
+mru_IMPL              += mru mru-arm-s32z
 pic_IMPL              += pic-gic pic-arm-s32z
 timer_IMPL            += timer-arm-generic timer-arm-generic-s32z
 timer_tick_IMPL       += timer_tick-single-vector
