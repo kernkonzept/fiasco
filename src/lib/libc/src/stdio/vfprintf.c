@@ -416,12 +416,14 @@ overflow:
 	return -1;
 }
 
+/* Warning: The passed FILE state is modified by vfprintf() and must not be
+ * re-used by the caller! */
 int vfprintf(FILE *restrict f, const char *restrict fmt, va_list ap)
 {
 	va_list ap2;
 	int nl_type[NL_ARGMAX+1] = {0};
 	union arg nl_arg[NL_ARGMAX+1];
-	char internal_buf[80], *saved_buf = 0;
+	char internal_buf[80];
 	int ret;
 
 	/* the copy allows passing va_list* even if va_list is an array */
@@ -433,7 +435,6 @@ int vfprintf(FILE *restrict f, const char *restrict fmt, va_list ap)
 
 	FLOCK(f);
 	if (!f->buf_size) {
-		saved_buf = f->buf;
 		f->buf = internal_buf;
 		f->buf_size = sizeof internal_buf;
 		f->wpos = f->wend = 0;
@@ -447,9 +448,6 @@ int vfprintf(FILE *restrict f, const char *restrict fmt, va_list ap)
 		f->write(f, 0, 0);
 		if (!f->wpos)
 			ret = -1;
-		f->buf = saved_buf;
-		f->buf_size = 0;
-		f->wpos = f->wend = 0;
 	}
 	FUNLOCK(f);
 	va_end(ap2);
