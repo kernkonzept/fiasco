@@ -1,5 +1,6 @@
 INTERFACE:
 
+#include "common_mapdb_types.h"
 #include "types.h"
 #include "space.h"
 #include "kobject.h"
@@ -211,7 +212,7 @@ Kobject_mapdb::lock_cap_pair(Phys_addr obj1, Vaddr va1, Frame *frame1,
 }
 
 PUBLIC static inline NEEDS[Kobject_mapdb::lock_cap_pair]
-int
+Mapdb_lookup_src_dst
 Kobject_mapdb::lookup_src_dst(Space const *sspc, Phys_addr sobj, Vaddr sva,
                               Space const *dspc, Phys_addr dobj, Vaddr dva,
                               Frame *sframe, Frame *dframe)
@@ -221,9 +222,11 @@ Kobject_mapdb::lookup_src_dst(Space const *sspc, Phys_addr sobj, Vaddr sva,
   // sobj/dobj parameters.
   if (!(sobj < dobj ? lock_cap_pair(sobj, sva, sframe, dobj, dva, dframe)
                     : lock_cap_pair(dobj, dva, dframe, sobj, sva, sframe)))
-    return -1;
+    return Mapdb_lookup_src_dst::Fail;
 
-  return (sspc == dspc && sva == dva) ? 2 : 1;
+  return (sspc == dspc && sva == dva)
+           ? Mapdb_lookup_src_dst::Dst_equal_to_or_ancestor_of_src
+           : Mapdb_lookup_src_dst::Not_related;
 }
 
 PUBLIC static inline

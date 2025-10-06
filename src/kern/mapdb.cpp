@@ -1,5 +1,6 @@
 INTERFACE[mapdb]:
 
+#include "common_mapdb_types.h"
 #include "slab_cache.h"
 #include "l4_types.h"
 #include "types.h"
@@ -228,6 +229,7 @@ private:
 //--------------------------------------------------------------------
 INTERFACE[!mapdb]:
 
+#include "common_mapdb_types.h"
 #include "l4_types.h"
 #include "mapping.h"
 
@@ -682,7 +684,7 @@ Treemap::lookup(Pcnt key, Space const *search_space, Pfn search_va,
  * \see Mapdb::lookup_src_dst()
  */
 PUBLIC inline NEEDS[Treemap::_lookup, "assert_opt.h"]
-int
+Mapdb_lookup_src_dst
 Treemap::lookup_src_dst(Space const *src, Pcnt src_key, Pfn src_va,
                         Space const *dst, Pcnt dst_key, Pfn dst_va,
                         Frame *src_frame, Frame *dst_frame)
@@ -701,18 +703,18 @@ Treemap::lookup_src_dst(Space const *src, Pcnt src_key, Pfn src_va,
     {
       // different phys frames, do separate lookups
       if (!lookup(dst_key, dst, dst_va, dst_frame))
-        return -1;
+        return Mapdb_lookup_src_dst::Fail;
 
       if (!lookup(src_key, src, src_va, src_frame))
         {
           // src mapping not found -> we cannot map
           // free the dst frame and abort
           dst_frame->clear();
-          return -1;
+          return Mapdb_lookup_src_dst::Fail;
         }
 
       // src and dst found but no upgrade possible
-      return 1; // --> unmap dst then map
+      return Mapdb_lookup_src_dst::Not_related; // --> unmap dst then map
     }
 
   // we give prio to the dst mapping
@@ -735,10 +737,10 @@ Treemap::lookup_src_dst(Space const *src, Pcnt src_key, Pfn src_va,
         {
           auto const dst_subkey = cxx::get_lsb(dst_key, ps);
           auto const src_subkey = cxx::get_lsb(src_key, ps);
-          int r = sub->lookup_src_dst(src, src_subkey, src_va,
+          auto r = sub->lookup_src_dst(src, src_subkey, src_va,
                                       dst, dst_subkey, dst_va,
                                       src_frame, dst_frame);
-          if (r >= 0)
+          if (r != Mapdb_lookup_src_dst::Fail)
             {
               f->lock.clear();
               return r;
@@ -759,11 +761,11 @@ Treemap::lookup_src_dst(Space const *src, Pcnt src_key, Pfn src_va,
   if (!src_frame->frame && !dst_frame->frame)
     {
       f->lock.clear();
-      return -1; // nothing found
+      return Mapdb_lookup_src_dst::Fail; // nothing found
     }
   else if (src_frame->frame && dst_frame->frame)
     // src == dst
-    return 2; // unmap, but no map
+    return Mapdb_lookup_src_dst::Dst_equal_to_or_ancestor_of_src; // unmap, but no map
   else if (src_frame->frame)
     {
       // look for dst only
@@ -773,23 +775,23 @@ Treemap::lookup_src_dst(Space const *src, Pcnt src_key, Pfn src_va,
       if (!*m)
         {
           src_frame->clear_both(f);
-          return -1; // nothing found
+          return Mapdb_lookup_src_dst::Fail; // nothing found
         }
 
       if (!m->submap())
         {
           if (r_depth + 1 == c_depth)
-            return 0; // upgrade
+            return Mapdb_lookup_src_dst::Dst_child_of_src; // upgrade
 
-          return 1;
+          return Mapdb_lookup_src_dst::Not_related;
         }
 
       if (r_depth == c_depth && dst_frame->m->depth() == f->min_depth())
-        return 0;
+        return Mapdb_lookup_src_dst::Dst_child_of_src;
 
       // found dst and src, do not unlock because src_frame
       // needs to be kept locked
-      return 1;
+      return Mapdb_lookup_src_dst::Not_related;
     }
   else
     {
@@ -802,16 +804,18 @@ Treemap::lookup_src_dst(Space const *src, Pcnt src_key, Pfn src_va,
         {
           // nothing found
           dst_frame->clear_both(f);
-          return -1;
+          return Mapdb_lookup_src_dst::Fail;
         }
 
       if (!m->submap())
         {
           // same mapping size
           if (r_depth < static_cast<int>(f->min_depth()) - 1)
-            return 1; // in another subtree -> unmap + map
+            // in another subtree -> unmap + map
+            return Mapdb_lookup_src_dst::Not_related;
 
-          return 2; // in the same subtree -> unmap + no map
+          // in the same subtree -> unmap + no map
+          return Mapdb_lookup_src_dst::Dst_equal_to_or_ancestor_of_src;
         }
 
       // smaller mapping in submap found...
@@ -819,11 +823,12 @@ Treemap::lookup_src_dst(Space const *src, Pcnt src_key, Pfn src_va,
         {
           // src is in subtree of dst -> unmap dst and nothing to map then
           src_frame->clear();
-          return 2; // unmap + no map
+          // unmap + no map
+          return Mapdb_lookup_src_dst::Dst_equal_to_or_ancestor_of_src;
         }
       // src is in a sibling subtree -> unmap + map
       // needs to be kept locked
-      return 1;
+      return Mapdb_lookup_src_dst::Not_related;
     }
 }
 
@@ -1217,21 +1222,28 @@ Mapdb::grant(Frame const &f, Space *new_space,
  * \param[out] dst_frame  Returns the dst mapping if found.
  *                        Initially, `dst_frame->frame` must be `nullptr`.
  *
- * \retval -1  Dst mapping, src mapping, or both not found.
- * \retval  0  Dst is a child mapping of src.
- *             When mapping from src to dst, dst can be reused/upgraded.
- * \retval  1  Dst and src are found and none of the other cases applies.
- *             When mapping from src to dst, dst must be unmapped before src can
- *             be mapped to dst.
- * \retval  2  Dst is equal to or an ancestor of src.
- *             When mapping from src to dst, dst must be unmapped inducing also
- *             unmapping of src.
+ * \retval Mapdb_lookup_src_dst::Fail
+ *         Dst mapping, src mapping, or both not found.
+ *
+ * \retval Mapdb_lookup_src_dst::Dst_child_of_src
+ *         Dst is a child mapping of src.
+ *         When mapping from src to dst, dst can be reused/upgraded.
+ *
+ * \retval Mapdb_lookup_src_dst::Not_related
+ *         Dst and src are found and none of the other cases applies.
+ *         When mapping from src to dst, dst must be unmapped before src can
+ *         be mapped to dst.
+ *
+ * \retval Mapdb_lookup_src_dst::Dst_equal_to_or_ancestor_of_src
+ *         Dst is equal to or an ancestor of src.
+ *         When mapping from src to dst, dst must be unmapped inducing also
+ *         unmapping of src.
  *
  * \pre `src_frame->frame == nullptr && dst_frame->frame == nullptr`
  * \post If both mappings are found, then
  *       `src_frame->frame->lock.test() == Locked` and
  *       `dst_frame->frame->lock.test() == Locked`.
- *       With the exception of "Dst is equal to or an ancestor of src", then
+ *       With the exception of `Dst_equal_to_or_ancestor_of_src`, then
  *       only the `dst_frame` is set and locked.
  *
  * Simultaneously lookup two mappings, one called src, the other called dst. The
@@ -1243,7 +1255,7 @@ Mapdb::grant(Frame const &f, Space *new_space,
  * \see lookup()
  */
 PUBLIC inline
-int
+Mapdb_lookup_src_dst
 Mapdb::lookup_src_dst(Space const *src, Pfn src_phys, Pfn src_va,
                       Space const *dst, Pfn dst_phys, Pfn dst_va,
                       Frame *src_frame, Frame *dst_frame)
@@ -1287,12 +1299,12 @@ Mapdb::grant(Frame const &, Space *, Pfn)
 }
 
 PUBLIC inline
-int
+Mapdb_lookup_src_dst
 Mapdb::lookup_src_dst(Space const *, Pfn, Pfn,
                       Space const *, Pfn, Pfn,
                       Frame *, Frame *)
 {
-  return 0;
+  return Mapdb_lookup_src_dst::Dst_child_of_src;
 }
 
 PUBLIC inline

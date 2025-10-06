@@ -661,16 +661,17 @@ map(MAPDB* mapdb,
       if (rcv_page_mapped)
         {
           Frame rcv_frame;
-          int r = mapdb->lookup_src_dst(from_id, SPACE::to_pfn(s_phys),
-                                        SPACE::to_pfn(SPACE::page_address(snd_addr, s_order)),
-                                        to_id, SPACE::to_pfn(r_phys), SPACE::to_pfn(rcv_addr),
-                                        &sender_frame, &rcv_frame);
+          auto r = mapdb->lookup_src_dst(
+                     from_id, SPACE::to_pfn(s_phys),
+                     SPACE::to_pfn(SPACE::page_address(snd_addr, s_order)),
+                     to_id, SPACE::to_pfn(r_phys), SPACE::to_pfn(rcv_addr),
+                     &sender_frame, &rcv_frame);
 
-          if (r < 0)
+          if (r == Mapdb_lookup_src_dst::Fail)
             // nothing found
             continue;
 
-          if (r > 0
+          if (r != Mapdb_lookup_src_dst::Dst_child_of_src
               || grant
               || SPACE::page_address(r_phys, i_order) != i_phys
               || r_order > i_order)
@@ -694,7 +695,7 @@ map(MAPDB* mapdb,
               Map_traits<SPACE>::free_object(r_phys, reap_list);
 
               // Dst is equal to or an ancestor of src.
-              if (r == 2)
+              if (r == Mapdb_lookup_src_dst::Dst_equal_to_or_ancestor_of_src)
                 {
                   // If dst (rcv_frame) is equal to src (sender_frame), we have
                   // to unlock the rcv_frame here (and thereby also the
@@ -713,7 +714,7 @@ map(MAPDB* mapdb,
               if (!rcv_frame.same_lock(sender_frame))
                 rcv_frame.clear();
             }
-          else if (r == 0)
+          else if (r == Mapdb_lookup_src_dst::Dst_child_of_src)
             {
               i_attribs |= r_attribs;
               // we might unlock the sender mapping as we are going to manipulate
