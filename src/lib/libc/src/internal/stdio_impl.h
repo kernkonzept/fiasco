@@ -11,7 +11,7 @@ struct _IO_FILE {
 	unsigned char *rpos;
 	unsigned char *wend, *wpos;
 	unsigned char *wbase;
-	size_t (*write)(FILE *, const unsigned char *, size_t);
+	size_t (*write)(FILE *, const char *, size_t);
 	unsigned char *buf;
 	size_t buf_size;
 	void *cookie;
@@ -20,6 +20,6 @@ struct _IO_FILE {
 hidden void __towrite(FILE *);
 hidden int vfprintf(FILE *__restrict, const char *__restrict, __isoc_va_list);
 
-hidden size_t __fwritex(const unsigned char *, size_t, FILE *);
+hidden size_t __fwritex(const char *, size_t, FILE *);
 
 #endif
