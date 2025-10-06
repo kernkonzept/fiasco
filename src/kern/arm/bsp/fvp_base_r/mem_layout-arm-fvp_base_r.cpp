@@ -14,7 +14,7 @@ public:
     Ve_sysregs_base   = 0x9c010000,
     Ve_sysregs_size   = 0x10000,
 
-    // Acutally 32 regions on EL1 and EL2 but we can only handle 31 efficiently
+    // Actually 32 regions on EL1 and EL2 but we can only handle 31 efficiently
     // at the moment.
     Mpu_regions = 31,
   };
