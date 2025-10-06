@@ -179,7 +179,7 @@ static char *fmt_u(uintmax_t x, char *s)
 	return s;
 }
 
-static int getint(char **s) {
+static int getint(const char **s) {
 	int i;
 	for (i=0; isdigit(**s); (*s)++) {
 		if ((unsigned)i > INT_MAX/10U || **s-'0' > INT_MAX-10*i)
@@ -192,7 +192,8 @@ static int getint(char **s) {
 
 static int printf_core(FILE *f, const char *fmt, va_list *ap, union arg *nl_arg, int *nl_type)
 {
-	char *a, *z, *s=(char *)fmt;
+	const char *s=fmt;
+	char *a, *z;
 	unsigned l10n=0, fl;
 	int w, p, xp;
 	union arg arg;
