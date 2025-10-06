@@ -126,7 +126,15 @@ static void pop_arg(union arg *arg, int type, va_list *ap)
 
 static void out(FILE *f, const char *s, size_t l)
 {
-	__fwritex((void *)s, l, f);
+	if (!f->wend)
+		__towrite(f);
+
+	if (l > (size_t)(f->wend - f->wpos))
+		f->write(f, s, l);
+	else {
+		memcpy(f->wpos, s, l);
+		f->wpos += l;
+	}
 }
 
 static void pad(FILE *f, char c, size_t w, size_t l, int fl)
