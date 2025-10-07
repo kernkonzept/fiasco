@@ -36,7 +36,6 @@ enum {
 	SHORT, USHORT, CHAR, UCHAR,
 	LLONG, SIZET, IMAX, UMAX, PDIFF, UIPTR,
 	DBL, LDBL,
-	NOARG,
 	MAXSTATE
 };
 
@@ -50,7 +49,6 @@ static const unsigned char states[]['z'-'A'+1] = {
 		S('E') = DBL, S('F') = DBL, S('G') = DBL, S('A') = DBL,
 		S('c') = INT, S('C') = UINT,
 		S('s') = PTR, S('S') = PTR, S('p') = UIPTR, S('n') = PTR,
-		S('m') = NOARG,
 		S('l') = LPRE, S('h') = HPRE, S('L') = BIGLPRE,
 		S('z') = ZTPRE, S('j') = JPRE, S('t') = ZTPRE,
 	}, { /* 1: l-prefixed */
@@ -295,20 +293,15 @@ static int printf_core(FILE *f, const char *fmt, va_list *ap, union arg *nl_arg,
 			goto inval;
 
 		/* Check validity of argument type (nl/normal) */
-		if (st==NOARG) {
-			if (argpos>=0)
-				goto inval;
-		} else {
-			if (argpos>=0) {
-				if (!f)
-					nl_type[argpos]=st;
-				else
-					arg=nl_arg[argpos];
-			} else if (f)
-				pop_arg(&arg, st, ap);
+		if (argpos>=0) {
+			if (!f)
+				nl_type[argpos]=st;
 			else
-				return 0;
-		}
+				arg=nl_arg[argpos];
+		} else if (f)
+			pop_arg(&arg, st, ap);
+		else
+			return 0;
 
 		if (!f)
 			continue;
