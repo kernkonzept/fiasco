@@ -236,8 +236,8 @@ long long __ashrdi3(long long val, int bits)
   return v.ll;
 }
 
-int __ffssi2(int val);
-int __ffsdi2(long long val);
+int __ffssi2(unsigned val);
+int __ffsdi2(unsigned long val);
 int __ctzsi2(unsigned val);
 int __ctzdi2(unsigned long val);
 int __clzsi2(unsigned val);
@@ -251,7 +251,7 @@ int __clzdi2(unsigned long val);
  *
  * \return Index of least significant 1-bit in val
  */
-int __ffssi2(int val)
+int __ffssi2(unsigned val)
 {
   for (unsigned i = 1; i <= 32; i++, val >>= 1)
     {
@@ -270,9 +270,10 @@ int __ffssi2(int val)
  *
  * \return Index of least significant 1-bit in val
  */
-int __ffsdi2(long long val)
+int __ffsdi2(unsigned long val)
 {
-  for (unsigned i = 1; i <= 64; i++, val >>= 1)
+  unsigned max_i = sizeof(unsigned long) * 8;
+  for (unsigned i = 1; i <= max_i; i++, val >>= 1)
     {
       if (val & 1)
         return i;
