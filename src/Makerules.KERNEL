@@ -14,11 +14,16 @@ $(2): $(call KERNEL_PREREQUISITES,$(3))
 	  -T $$< -o $$@ $$(filter-out $$<,$$+)
 	$$(call ADD_CONFIGFILE,$$@)
 
-$(1): $(2)
+$(1): $(1).stripped $(2)
 	$$(LINK_MESSAGE)
-	$$(VERBOSE)$$(STRIP) -o $$@ $$<
-	$$(VERBOSE)$$(OBJCOPY) --add-gnu-debuglink=$$< $$@
+	$$(VERBOSE)$$(OBJCOPY) --add-gnu-debuglink=$$(strip $(2)) $$< $$@
 	$$(VERBOSE)chmod 755 $$@
+	$$(VERBOSE)$$(RM) $$<
+
+$(1).stripped: $(2)
+	$$(VERBOSE)$$(STRIP) -o $$@ $$<
+
+.INTERMEDIATE: $(1).stripped
 endef
 
 # generate $(KERNEL) rule
