@@ -51,8 +51,7 @@ help:
 
 ifneq ($(srcdir),NOT_SET)
 Makefile: $(srcdir)/templates/Makefile.builddir.templ
-	perl -p -i -e '$$s = "$(srcdir)"; s/\@SRCDIR\@/$$s/' \
-			< $< >$@
+	perl -p -e '$$s = "$(srcdir)"; s/\@SRCDIR\@/$$s/' < $< >$@
 endif
 
 ifneq ($(MAKECMDGOALS),help)
