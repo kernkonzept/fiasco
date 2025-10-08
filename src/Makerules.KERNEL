@@ -10,6 +10,7 @@ define gen_kernel_rules =
 $(2): $(call KERNEL_PREREQUISITES,$(3))
 	$$(LINK_MESSAGE)
 	$$(VERBOSE)$$(LD) $$(LDFLAGS) $$(LD_EMULATION_FLAG) $$(KERNEL_LDFLAGS) -N \
+	  $$(if $$(filter $$(KERNEL),$(1)),-Map=$$(KERNEL).map,) \
 	  -T $$< -o $$@ $$(filter-out $$<,$$+)
 	$$(call ADD_CONFIGFILE,$$@)
 
