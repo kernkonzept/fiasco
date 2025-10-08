@@ -15,7 +15,8 @@ phys_mem.o: $(TCBOFFSET)
 define gen_kernel_rules =
 $(2): kernel.sparc.lds $$(CRT0) $$(OBJ_KERNEL) $(3) $$(JDB) $$(LIBK) $$(LIBDISASM) libdrivers.a $$(ABI) $$(LIBUART) $$(CXXLIB) $$(LIBC) libgluedriverslibc.a
 	$$(LINK_MESSAGE)
-	$$(VERBOSE)$$(LD) $$(LDFLAGS) $$(LD_EMULATION_FLAG) -N -defsym kernel_load_addr=$$(CONFIG_KERNEL_LOAD_ADDR) \
+	$$(VERBOSE)$$(LD) $$(LDFLAGS) $$(LD_EMULATION_FLAG) $$(KERNEL_LDFLAGS) -N \
+	  -defsym kernel_load_addr=$$(CONFIG_KERNEL_LOAD_ADDR) \
 	  -T $$< -o $$@ $$(filter-out $$<,$$+)
 	$$(call ADD_CONFIGFILE,$$@)
 

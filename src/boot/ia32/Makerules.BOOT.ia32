@@ -34,17 +34,16 @@ boot_img.x2: boot_img.x1
 # $(3) = Additional $(OBJ_X), e.g. OBJ_<unittest>
 define gen_kernel_rules =
 $(2): kernel.ia32.lds boot_img.o $$(CRT0) $$(OBJ_KERNEL) $(3) $$(JDB) $$(KERNEL_EXTRA_LIBS) $$(ABI) $$(JABI) libdrivers.a $$(LIBUART) $$(LIBK) $$(CXXLIB) $$(LIBC) libfonts.a libgluedriverslibc.a
-		$$(LINK_MESSAGE)
-		$$(VERBOSE)$$(LD) $$(LDFLAGS) $$(LD_EMULATION_FLAG) -N -o $$@ \
-		   -T $$< -gc-sections $$(filter-out $$<,$$+) \
-		   $$(KERNEL_UNRES_SYMS)
-		$$(call ADD_CONFIGFILE,$$@)
+	$$(LINK_MESSAGE)
+	$$(VERBOSE)$$(LD) $$(LDFLAGS) $$(LD_EMULATION_FLAG) $$(KERNEL_LDFLAGS) -N \
+	  -T $$< -o $$@ $$(filter-out $$<,$$+) $$(KERNEL_UNRES_SYMS)
+	$$(call ADD_CONFIGFILE,$$@)
 
 $(1): $(2)
-		$$(LINK_MESSAGE)
-		$$(VERBOSE)$$(STRIP) -o $$@ $$<
-		$$(VERBOSE)$$(OBJCOPY) --add-gnu-debuglink=$$< $$@
-		$$(VERBOSE)chmod 755 $$@
+	$$(LINK_MESSAGE)
+	$$(VERBOSE)$$(STRIP) -o $$@ $$<
+	$$(VERBOSE)$$(OBJCOPY) --add-gnu-debuglink=$$< $$@
+	$$(VERBOSE)chmod 755 $$@
 endef
 
 # generate fiasco and fiasco.debug rules

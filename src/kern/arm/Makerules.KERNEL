@@ -75,8 +75,9 @@ bootstrap.$(KERNEL).sym: bootstrap.$(KERNEL).pre.o
 define gen_kernel_rules =
 $(2): kernel.arm.lds $$(CRT0) bootstrap.$$(KERNEL).rel bootstrap.$$(KERNEL).sym $$(OBJ_KERNEL_noboot) $(3) $$(JDB) $$(KERNEL_EXTRA_LIBS) $$(LIBDISASM) $$(ABI) libdrivers.a $$(LIBUART) $$(LIBK) $$(CXXLIB) $$(LIBC) libfonts.a libgluedriverslibc.a
 	$$(LINK_MESSAGE)
-	$$(VERBOSE)$$(LD) $$(LDFLAGS) $$(LD_EMULATION_FLAG) $$(KERNEL_LDFLAGS) -N -defsym kernel_load_addr=$$(CONFIG_KERNEL_LOAD_ADDR) \
-	-T $$< -o $$@ $$(filter-out $$<,$$+)
+	$$(VERBOSE)$$(LD) $$(LDFLAGS) $$(LD_EMULATION_FLAG) $$(KERNEL_LDFLAGS) -N \
+	  -defsym kernel_load_addr=$$(CONFIG_KERNEL_LOAD_ADDR) \
+	  -T $$< -o $$@ $$(filter-out $$<,$$+)
 	$$(call ADD_CONFIGFILE,$$@)
 
 $(1): $(2)
