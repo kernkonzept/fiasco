@@ -1140,7 +1140,7 @@ go_nonsecure:
 vcpu_resume:
 #ifdef CONFIG_MPU
 	// We cannot update sp before calling mpu_kernel_leave because
-	// CONTEXT_OF does not work with a fully emtpy stack!
+	// CONTEXT_OF does not work with a completely empty stack!
 	mov	r4, r1
 	mpu_kernel_leave 0, 0
 	add	sp, r4, #RF_SIZE
