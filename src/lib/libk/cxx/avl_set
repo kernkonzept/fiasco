@@ -179,7 +179,6 @@ public:
   class Node
   {
   private:
-    struct No_type;
     friend class Base_avl_set<ITEM_TYPE, COMPARE, ALLOC, GET_KEY>;
     _Node const *_n;
     explicit Node(_Node const *n) : _n(n) {}
