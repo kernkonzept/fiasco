@@ -408,6 +408,7 @@ int vfprintf(FILE *restrict f, const char *restrict fmt, va_list ap)
 	union arg nl_arg[NL_ARGMAX+1];
 	char internal_buf[80];
 	int ret;
+	unsigned long lock_state;
 
 	/* the copy allows passing va_list* even if va_list is an array */
 	va_copy(ap2, ap);
@@ -416,18 +417,25 @@ int vfprintf(FILE *restrict f, const char *restrict fmt, va_list ap)
 		return -1;
 	}
 
-	FLOCK(f);
 	if (!f->buf_size) {
 		f->buf = internal_buf;
 		f->buf_size = sizeof internal_buf;
+		/* Prevent printf() / vprintf() from concurrent printing to
+		 * "stdout" for cosmetic and practical reasons. The original
+		 * FLOCK/FUNLOCK in musl libc protected the _IO_FILE structure
+		 * from concurrent access. This is no longer necessary since
+		 * _IO_FILE is always declared on stack of our callers. */
+		lock_state = __libc_backend_printf_lock();
 	}
-	f->wpos = f->buf;
 
+	f->wpos = f->buf;
 	ret = printf_core(f, fmt, &ap2, nl_arg, nl_type);
-	/* allow to pass f with buf_size = 0 and buf = NULL */
-	if (f->buf == internal_buf)
+
+	if (f->buf == internal_buf) {
 		f->write(f, 0, 0);
-	FUNLOCK(f);
+		__libc_backend_printf_unlock(lock_state);
+	}
+
 	va_end(ap2);
 	return ret;
 }
