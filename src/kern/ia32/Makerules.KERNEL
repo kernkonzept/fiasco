@@ -31,3 +31,10 @@ endef
 
 # generate fiasco and fiasco.debug rules
 $(eval $(call gen_kernel_rules,$(KERNEL),$(KERNEL).debug,$(OBJ_STDWORKLOAD)))
+
+Symbols:	$(KERNEL).debug
+		$(COMP_MESSAGE)
+		$(VERBOSE)$(NM) -nC $(KERNEL).debug | \
+		   sed -e 's/^00000000//' | grep "^f[0-9a-z]\{7,7\}">$@.new
+		$(VERBOSE)mv $@.new $@
+		$(VERBOSE)chmod 644 $@

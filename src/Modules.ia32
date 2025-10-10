@@ -4,7 +4,7 @@
 include $(srcdir)/Modules.generic
 
 # UTEST depends on KERNEL and CHECKSUM, must be listed after them
-SUBSYSTEMS := $(filter-out UTEST,$(SUBSYSTEMS)) BOOT CHECKSUM SYMBOLS GBLCFG \
+SUBSYSTEMS := $(filter-out UTEST,$(SUBSYSTEMS)) BOOT CHECKSUM GBLCFG \
               $(filter UTEST,$(SUBSYSTEMS))
 
 PREPROCESS_PARTS 	+= arch $(CONFIG_ABI) 32bit iofp recover_jmpbuf \
@@ -88,7 +88,7 @@ KERNEL_EXTRA_LIBS	+= $(FONTS)
 # KERNEL subsystem
 #
 KERNEL			:= fiasco
-KERNEL_EXTRA		:= kernel.ia32.lds fiasco.debug
+KERNEL_EXTRA		:= Symbols kernel.ia32.lds fiasco.debug
 VPATH			+= kern/$(CONFIG_XARCH) kern/ia32/32 kern/ia32 kern
 VPATH			+= jdb/ia32/32 jdb/ia32 jdb
 PRIVATE_INCDIR		+= kern/$(CONFIG_XARCH) kern/ia32/32 kern/ia32 kern
@@ -247,11 +247,6 @@ NOOPT			+= $(patsubst %.o, %, $(OBJ_BOOT))
 #
 TCBOFFSET		:= tcboffset.h
 CXXSRC_TCBOFFSET	:= tcboffset.cc dump_tcboffsets.cc
-
-#
-# SYMBOLS subsystem
-#
-SYMBOLS			:= Symbols
 
 #
 # CHECKSUM subsystem
