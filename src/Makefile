@@ -280,7 +280,9 @@ ifneq ($(filter clean cleanall mrproper,$(MAKECMDGOALS)),)
 
 # Try to suck in clean targets from subsystems' Makefile fragments
 ifdef _modules_read_
-MAKERULES_SUBSYS = $(foreach subsys, $(SUBSYSTEMS), $(firstword $(wildcard $(addsuffix /Makerules.$(subsys),$(addprefix $(srcdir)/,$(VPATH)) $(srcdir)))))
+MAKERULES_SUBSYS = $(foreach subsys, $(SUBSYSTEMS),\
+		     $(firstword $(wildcard $(addsuffix /Makerules.$(subsys),\
+		       $(addprefix $(srcdir)/,$(VPATH)) $(srcdir)))))
 -include $(MAKERULES_SUBSYS)
 endif
 
