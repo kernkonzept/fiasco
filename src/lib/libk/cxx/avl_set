@@ -235,10 +235,19 @@ private:
   /// The allocator for new nodes
   Node_allocator _alloc;
 
-  Base_avl_set &operator = (Base_avl_set const &) = delete;
-
   typedef typename Tree::Fwd_iter_ops Fwd;
   typedef typename Tree::Rev_iter_ops Rev;
+
+  /**
+   * Deep-copy an AVL set.
+   *
+   * \param o  AVL set to deep-copy.
+   */
+  void deep_copy(Base_avl_set const &o)
+  {
+    for (Const_iterator i = o.begin(); i != o.end(); ++i)
+      insert(*i);
+  }
 
 public:
   typedef typename Type_traits<Item_type>::Param_type Item_param_type;
@@ -273,11 +282,33 @@ public:
   /**
    * Create a copy of an AVL-tree based set.
    *
-   * \param o  The set to copy.
+   * \param o      The set to copy.
+   * \param alloc  Node allocator.
    *
    * Creates a deep copy of the set with all its items.
    */
-  inline Base_avl_set(Base_avl_set const &o);
+  Base_avl_set(Base_avl_set const &o,
+               Node_allocator const &alloc = Node_allocator())
+    : _tree(), _alloc(alloc)
+  { deep_copy(o); }
+
+  /**
+   * Copy assignment operator of an AVL-tree based set.
+   *
+   * \param o  The set to copy-assign.
+   *
+   * Creates a deep copy of the set with all its items.
+   */
+  Base_avl_set &operator = (Base_avl_set const &o)
+  {
+    if (this != &o)
+      {
+        clear();
+        deep_copy(o);
+      }
+
+    return *this;
+  }
 
   /**
    * Insert an item into the set.
@@ -454,16 +485,6 @@ public:
 
 //----------------------------------------------------------------------------
 /* Implementation of AVL Tree */
-
-/* Create a copy */
-template<typename Item, class Compare, template<typename A> class Alloc,
-         typename KEY_TYPE>
-Base_avl_set<Item, Compare, Alloc, KEY_TYPE>::Base_avl_set(Base_avl_set const &o)
-  : _tree(), _alloc(o._alloc)
-{
-  for (Const_iterator i = o.begin(); i != o.end(); ++i)
-    insert(*i);
-}
 
 /* Insert new _Node. */
 template<typename Item, class Compare, template<typename A> class Alloc, typename KEY_TYPE>
