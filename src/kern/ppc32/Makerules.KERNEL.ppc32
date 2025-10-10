@@ -1,0 +1,22 @@
+# -*- makefile -*-
+# vim:se ft=make:
+
+exception.o: $(TCBOFFSET)
+phys_mem.o: $(TCBOFFSET)
+
+#TODO: strip
+#boot_img.o: bootstrap.o $(LIBUART) $(CXXLIB) $(LIBC) $(LIBK) boot_libc_glue.o
+#	$(LINK_MESSAGE)
+#	$(VERBOSE)$(LD) $(LD_EMULATION_FLAG) -o $@_x.o -q \
+#	  -T $(srcdir)/kern/ppc32/bootstrap.ld  $^
+#	$(VERBOSE)$(OBJCOPY) -G _boot_start $@_x.o $@
+#	$(VERBOSE)$(RM) $@_x.o
+
+-include .kernel.ppc32.lds.d
+
+LIBGCC = $(shell $(CXX) $(SHARED_FLAGS) -print-libgcc-file-name)
+
+# $(1) = Additional $(OBJ_X), e.g. OBJ_<unittest>
+KERNEL_PREREQUISITES = kernel.ppc32.lds $$(CRT0) $$(OBJ_KERNEL) $(1) \
+                       $$(LIBK) $$(LIBDISASM) libdrivers.a $$(ABI) $$(LIBUART) \
+                       $$(CXXLIB) $$(LIBC) $(LIBGCC) libgluedriverslibc.a

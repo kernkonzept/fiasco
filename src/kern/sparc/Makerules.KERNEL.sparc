@@ -1,0 +1,12 @@
+# -*- makefile -*-
+# vim:se ft=make:
+
+exception.o: $(TCBOFFSET)
+phys_mem.o: $(TCBOFFSET)
+
+-include .kernel.sparc.lds.d
+
+# $(1) = Additional $(OBJ_X), e.g. OBJ_<unittest>
+KERNEL_PREREQUISITES = kernel.sparc.lds $$(CRT0) $$(OBJ_KERNEL) $(1) \
+                       $$(JDB) $$(LIBK) $$(LIBDISASM) libdrivers.a $$(ABI) \
+                       $$(LIBUART) $$(CXXLIB) $$(LIBC) libgluedriverslibc.a

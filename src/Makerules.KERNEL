@@ -1,27 +1,21 @@
 # -*- makefile -*-
 # vim:se ft=make:
 
-exception.o: $(TCBOFFSET)
-
-# Add future prerequisites somewhere among the list of libraries.
-# You really should not have to add anything in the $(LD) line.
-
--include .kernel.mips.lds.d
+include $(srcdir)/kern/$(CONFIG_XARCH)/Makerules.KERNEL.$(CONFIG_XARCH)
 
 # $(1) = fiasco - variable
 # $(2) = fiasco.debug - variable
 # $(3) = Additional $(OBJ_X), e.g. OBJ_<unittest>
 define gen_kernel_rules =
-$(2): kernel.mips.lds $$(CRT0) $$(OBJ_KERNEL) $(3) $$(JDB) $$(LIBC) $$(KERNEL_EXTRA_LIBS) $$(LIBDISASM) $$(ABI) libdrivers.a $$(LIBUART) $$(LIBK) $$(CXXLIB) $$(LIBC) libgluedriverslibc.a
+$(2): $(call KERNEL_PREREQUISITES,$(3))
 	$$(LINK_MESSAGE)
 	$$(VERBOSE)$$(LD) $$(LDFLAGS) $$(LD_EMULATION_FLAG) $$(KERNEL_LDFLAGS) -N \
-	  -defsym kernel_load_addr=$$(CONFIG_KERNEL_LOAD_ADDR) \
 	  -T $$< -o $$@ $$(filter-out $$<,$$+)
 	$$(call ADD_CONFIGFILE,$$@)
 
 $(1): $(2)
 	$$(LINK_MESSAGE)
-	$$(VERBOSE)$$(STRIP) $$< -o $$@
+	$$(VERBOSE)$$(STRIP) -o $$@ $$<
 	$$(VERBOSE)$$(OBJCOPY) --add-gnu-debuglink=$$< $$@
 	$$(VERBOSE)chmod 755 $$@
 endef
@@ -31,9 +25,6 @@ $(eval $(call gen_kernel_rules,$(KERNEL),$(KERNEL).debug,$(OBJ_STDWORKLOAD)))
 
 Symbols: $(KERNEL).debug
 	$(COMP_MESSAGE)
-	$(VERBOSE)$(NM) $(KERNEL).debug | $(CROSS_COMPILE)c++filt | sort > $@.new
+	$(VERBOSE)$(NM) --numeric-sort --demangle $(KERNEL).debug > $@.new
 	$(VERBOSE)mv $@.new $@
 	$(VERBOSE)chmod 644 $@
-
-clean-KERNEL:
-

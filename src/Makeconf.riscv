@@ -40,3 +40,6 @@ SHARED_FLAGS-gcc += -march=$(RISCV_MARCH)
 SHARED_FLAGS-clang += -march=$(RISCV_MARCH)
 
 SHARED_FLAGS += -mcmodel=medany
+
+KERNEL_LDFLAGS += -defsym kernel_load_addr=$(CONFIG_KERNEL_LOAD_ADDR) \
+                  -defsym kernel_virt_addr=$(CONFIG_KERNEL_VIRT_ADDR)

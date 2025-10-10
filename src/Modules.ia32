@@ -369,7 +369,7 @@ endif
 ifneq ($(wildcard $(srcdir)/lib/perfctr),)
   SUBSYSTEMS		+= LIBPERFCTR
   KERNEL_EXTRA_LIBS	+= $(LIBPERFCTR)
-  KERNEL_UNRES_SYMS	+= -u perfctr_set_cputype
+  KERNEL_LDFLAGS	+= -u perfctr_set_cputype
 endif
 
 ifneq ($(wildcard $(srcdir)/lib/regex),)

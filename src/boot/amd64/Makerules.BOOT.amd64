@@ -1,9 +1,6 @@
 # -*- makefile -*-
 # Boot Makefile
 
-# Add future prerequisites somewhere among the list of libraries.
-# You really should not have to add anything in the $(LD) line.
-
 boot_img.o: boot_img.x2 boot_img.ren_syms
 	$(LINK_MESSAGE)
 	$(VERBOSE)$(OBJCOPY) --redefine-syms=boot_img.ren_syms $< $@

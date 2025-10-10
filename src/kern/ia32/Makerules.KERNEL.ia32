@@ -1,0 +1,19 @@
+# -*- makefile -*-
+# vim:se ft=make:
+
+entry-native.o:		$(TCBOFFSET)
+entry.o:		$(TCBOFFSET)
+entry-mp.o:		$(TCBOFFSET)
+tramp-mp.o:		$(TCBOFFSET)
+tramp-realmode.o:	$(TCBOFFSET)
+sys_call_page-asm.o:	$(TCBOFFSET)
+vm_vmx_asm.o:		$(TCBOFFSET)
+vm_svm_asm.o:		$(TCBOFFSET)
+
+-include .kernel.ia32.lds.d
+
+# $(1) = Additional $(OBJ_X), e.g. OBJ_<unittest>
+KERNEL_PREREQUISITES = kernel.ia32.lds boot_img.o $$(CRT0) $$(OBJ_KERNEL) $(1) \
+                       $$(JDB) $$(KERNEL_EXTRA_LIBS) $$(ABI) $$(JABI) \
+                       libdrivers.a $$(LIBUART) $$(LIBK) $$(CXXLIB) $$(LIBC) \
+                       libfonts.a libgluedriverslibc.a

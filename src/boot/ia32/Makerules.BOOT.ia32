@@ -1,9 +1,6 @@
 # -*- makefile -*-
 # Boot Makefile
 
-# Add future prerequisites somewhere among the list of libraries.
-# You really should not have to add anything in the $(LD) line.
-#
 # Don't link against libgcc because of -mregparm=3. The library
 # would only be necessary for 64-bit arithmetics. These functions
 # can be replaced by using div32/mod32 from lib/libk (and should

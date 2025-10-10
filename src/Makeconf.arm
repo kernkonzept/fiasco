@@ -46,3 +46,5 @@ OBJCOPY_BFDNAME                   := $(OBJCOPY_BFDNAME-y)
 OBJCOPY_BFDARCH-$(CONFIG_BIT32)   := arm
 OBJCOPY_BFDARCH-$(CONFIG_BIT64)   := aarch64
 OBJCOPY_BFDARCH                   := $(OBJCOPY_BFDARCH-y)
+
+KERNEL_LDFLAGS += -defsym kernel_load_addr=$(CONFIG_KERNEL_LOAD_ADDR)
