@@ -5,7 +5,6 @@ $(SYMBOLS):	$(KERNEL).debug
 		$(VERBOSE)$(NM) -nC $(KERNEL).debug|grep "^f[0-9a-z]\{15,15\}">$@.new
 		$(VERBOSE)mv $@.new $@
 		$(VERBOSE)chmod 644 $@
-		$(call INSTALLFILE_RULE,$@,fiasco_symbols)
 
 clean-SYMBOLS:
 		$(VERBOSE)$(RM) $(SYMBOLS)

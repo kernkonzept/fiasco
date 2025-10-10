@@ -25,7 +25,6 @@ do_chksum$(3): setchecksum genchecksum $(1)
 	  cscode=$$$$($$(call get_checksum,$(1),$(2),_start,_etext)); \
 	  csdata=$$$$($$(call get_checksum,$(1),$(2),_kernel_data_start,_edata)); \
 	  ./setchecksum $(1) 0x$$$$cscode 0x$$$$csdata && echo done > $$@
-	$$(call INSTALLFILE_RULE,fiasco,fiasco)
 
 $$(CHECKSUM): do_chksum$(3)
 
