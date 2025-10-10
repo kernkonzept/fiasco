@@ -88,6 +88,7 @@ KERNEL_EXTRA_LIBS	+= $(FONTS)
 # KERNEL subsystem
 #
 KERNEL			:= fiasco
+KERNEL_EXTRA		:= kernel.ia32.lds fiasco.debug
 VPATH			+= kern/$(CONFIG_XARCH) kern/ia32/32 kern/ia32 kern
 VPATH			+= jdb/ia32/32 jdb/ia32 jdb
 PRIVATE_INCDIR		+= kern/$(CONFIG_XARCH) kern/ia32/32 kern/ia32 kern

@@ -6,17 +6,16 @@ entry.o:		$(TCBOFFSET)
 entry-mp.o:		$(TCBOFFSET)
 tramp-mp.o:		$(TCBOFFSET)
 tramp-realmode.o:	$(TCBOFFSET)
-sys_call_page-asm.o:	$(TCBOFFSET)
 vm_vmx_asm.o:		$(TCBOFFSET)
 vm_svm_asm.o:		$(TCBOFFSET)
 
--include .kernel.ia32.lds.d
+-include .kernel.amd64.lds.d
 
 # $(1) = fiasco - variable
 # $(2) = fiasco.debug - variable
 # $(3) = Additional $(OBJ_X), e.g. OBJ_<unittest>
 define gen_kernel_rules =
-$(2): kernel.ia32.lds boot_img.o $$(CRT0) $$(OBJ_KERNEL) $(3) $$(JDB) $$(KERNEL_EXTRA_LIBS) $$(ABI) $$(JABI) libdrivers.a $$(LIBUART) $$(LIBK) $$(CXXLIB) $$(LIBC) libfonts.a libgluedriverslibc.a
+$(2): kernel.amd64.lds boot_img.o $$(CRT0) $$(OBJ_KERNEL) $(3) $$(JDB) $$(KERNEL_EXTRA_LIBS) $$(ABI) $$(JABI) libdrivers.a $$(LIBUART) $$(LIBK) $$(CXXLIB) $$(LIBC) libfonts.a libgluedriverslibc.a $$(INTEL_MICROCODE_IMG)
 	$$(LINK_MESSAGE)
 	$$(VERBOSE)$$(LD) $$(LDFLAGS) $$(LD_EMULATION_FLAG) $$(KERNEL_LDFLAGS) -N \
 	  -T $$< -o $$@ $$(filter-out $$<,$$+) $$(KERNEL_UNRES_SYMS)

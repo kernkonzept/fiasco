@@ -37,26 +37,4 @@ intel_microcode.img.o: $(INTEL_MICROCODE_BIN) intel_microcode.o
 	                     intel_microcode.o $@
 endif
 
--include .kernel.amd64.lds.d
-
-# $(1) = fiasco - variable
-# $(2) = fiasco.debug - variable
-# $(3) = Additional $(OBJ_X), e.g. OBJ_<unittest>
-define gen_kernel_rules =
-$(2): kernel.amd64.lds boot_img.o $$(CRT0) $$(OBJ_KERNEL) $(3) $$(JDB) $$(KERNEL_EXTRA_LIBS) $$(ABI) $$(JABI) libdrivers.a $$(LIBUART) $$(LIBK) $$(CXXLIB) $$(LIBC) libfonts.a libgluedriverslibc.a $$(INTEL_MICROCODE_IMG)
-	$$(LINK_MESSAGE)
-	$$(VERBOSE)$$(LD) $$(LDFLAGS) $$(LD_EMULATION_FLAG) $$(KERNEL_LDFLAGS) -N \
-	  -T $$< -o $$@ $$(filter-out $$<,$$+) $$(KERNEL_UNRES_SYMS)
-	$$(call ADD_CONFIGFILE,$$@)
-
-$(1): $(2)
-	$$(LINK_MESSAGE)
-	$$(VERBOSE)$$(STRIP) -o $$@ $$<
-	$$(VERBOSE)$$(OBJCOPY) --add-gnu-debuglink=$$< $$@
-	$$(VERBOSE)chmod 755 $$@
-endef
-
-# generate fiasco and fiasco.debug rules
-$(eval $(call gen_kernel_rules,$(KERNEL),$(KERNEL).debug,$(OBJ_STDWORKLOAD)))
-
-BOOT_CLEAN := boot_img.x1 boot_img.x2 boot_img.ren_syms boot_img.ren_syms kernel.amd64.lds
+BOOT_CLEAN := boot_img.x1 boot_img.x2 boot_img.ren_syms boot_img.ren_syms
