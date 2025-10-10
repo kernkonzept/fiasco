@@ -31,15 +31,16 @@
 
 namespace cxx {
 namespace Bits {
+
 /**
+ * Generic iterator for the AVL-tree based set.
  * \internal
- * \brief Generic iterator for the AVL-tree based set.
- * \param Cmp the type of the comparison functor.
- * \param Node the type of a node.
- * \param Key the type of the item stored in a node.
- * \param Node_op the type used to determine the direction of the iterator.
+ *
+ * \tparam Node     The type of a node.
+ * \tparam Key      The type of the item stored in a node.
+ * \tparam Node_op  The type used to determine the direction of the iterator.
  */
-template< typename Node, typename Key, typename Node_op >
+template<typename Node, typename Key, typename Node_op>
 class Avl_set_iter : public __Bst_iter_b<Node, Node_op>
 {
 private:
@@ -68,7 +69,7 @@ public:
 
   /**
    * Create an iterator from a BST iterator.
-   * \prarm o  The BST iterator that shall be copied.
+   * \param o  The BST iterator that shall be copied.
    */
   Avl_set_iter(Base const &o) : Base(o) {}
 
@@ -81,25 +82,29 @@ public:
   { Base::operator = (o); return *this; }
 
   /**
-   * \brief Dereference the iterator and get the item out of the tree.
+   * Dereference the iterator and get the item out of the tree.
+   *
    * \return A reference to the data stored in the AVL tree.
    */
   Key &operator * () const { return const_cast<Node*>(_n)->item; }
+
   /**
-   * \brief Member access to the item the iterator points to.
+   * Member access to the item the iterator points to.
+   *
    * \return A pointer to the item in the node.
    */
   Key *operator -> () const { return &const_cast<Node*>(_n)->item; }
+
   /**
-   * \brief Set the iterator to the next element (pre increment).
+   * Set the iterator to the next element (pre increment).
    */
   Avl_set_iter &operator ++ () { inc(); return *this; }
+
   /**
-   * \brief Set the iterator to the next element (post increment).
+   * Set the iterator to the next element (post increment).
    */
   Avl_set_iter operator ++ (int)
   { Avl_set_iter tmp = *this; inc(); return tmp; }
-
 };
 
 /// Internal, key-getter for Avl_set nodes.
@@ -112,9 +117,9 @@ struct Avl_set_get_key
   { return n->item; }
 };
 
-
 /**
- * Internal: AVL set with internally managed nodes.
+ * AVL set with internally managed nodes.
+ * \internal
  *
  * Use Avl_set, Avl_map, or Avl_tree in applications.
  *
@@ -125,9 +130,9 @@ struct Avl_set_get_key
  * \tparam GET_KEY    Sort-key getter (must provide the `Key_type` and
  *                    sort-key for an item (of `ITEM_TYPE`).
  */
-template< typename ITEM_TYPE, class COMPARE,
-          template<typename A> class ALLOC,
-          typename GET_KEY>
+template<typename ITEM_TYPE, class COMPARE,
+         template<typename A> class ALLOC,
+         typename GET_KEY>
 class Base_avl_set
 {
 public:
@@ -144,14 +149,19 @@ public:
     E_nomem = 12, ///< Memory allocation failed.
     E_inval = 22  ///< Internal error.
   };
+
   /// Type for the items store in the set
   typedef ITEM_TYPE Item_type;
+
   /// Key-getter type to derive the sort key of an internal node.
   typedef GET_KEY Get_key;
+
   /// Type of the sort key used for the items
   typedef typename GET_KEY::Key_type Key_type;
+
   /// Type used for const items within the set
   typedef typename Type_traits<Item_type>::Const_type Const_item_type;
+
   /// Type for the comparison functor.
   typedef COMPARE Item_compare;
 
@@ -161,7 +171,7 @@ private:
   {
   public:
     /// The actual item stored in the node.
-    Item_type  item;
+    Item_type item;
 
     _Node() = default;
 
@@ -174,13 +184,15 @@ private:
 
 public:
   /**
-   * \brief A smart pointer to a tree item.
+   * A smart pointer to a tree item.
    */
   class Node
   {
   private:
     friend class Base_avl_set<ITEM_TYPE, COMPARE, ALLOC, GET_KEY>;
+
     _Node const *_n;
+
     explicit Node(_Node const *n) : _n(n) {}
 
   public:
@@ -188,20 +200,22 @@ public:
     Node() : _n(0) {}
 
     /**
-     *  Dereference the pointer.
+     * Dereference the pointer.
      *
-     *  \pre Node is valid.
+     * \pre Node is valid.
      */
     Item_type const &operator * () { return _n->item; }
+
     /**
-     *  Dereferenced member access.
+     * Dereferenced member access.
      *
-     *  \pre Node is valid.
+     * \pre Node is valid.
      */
     Item_type const *operator -> () { return &_n->item; }
 
     /**
-     * \brief Validity check.
+     * Validity check.
+     *
      * \return false if the pointer is NIL, true if valid.
      */
     bool valid() const { return _n; }
@@ -215,7 +229,9 @@ public:
 
 private:
   typedef Avl_tree<_Node, GET_KEY, COMPARE> Tree;
+
   Tree _tree;
+
   /// The allocator for new nodes
   Node_allocator _alloc;
 
@@ -241,13 +257,14 @@ public:
   typedef Const_rev_iterator const_reverse_iterator;
 
   /**
-   * \brief Create a AVL-tree based set.
+   * Create a AVL-tree based set.
+   *
    * \param alloc Node allocator.
    *
    * Create an empty set (AVL-tree based).
    */
-  explicit Base_avl_set(Node_allocator const &alloc = Node_allocator()) 
-  : _tree(), _alloc(alloc)
+  explicit Base_avl_set(Node_allocator const &alloc = Node_allocator())
+    : _tree(), _alloc(alloc)
   {}
 
   ~Base_avl_set()
@@ -329,8 +346,8 @@ public:
     if (n)
       {
         n->~_Node();
-	_alloc.free(n);
-	return 0;
+        _alloc.free(n);
+        return 0;
       }
 
     return -E_noent;
@@ -369,45 +386,57 @@ public:
   { return Node(_tree.lower_bound_node(key)); }
 
   /**
-   * \brief Get the constant forward iterator for the first element in the set.
+   * Get the constant forward iterator for the first element in the set.
+   *
    * \return Constant forward iterator for the first element in the set.
    */
   Const_iterator begin() const { return _tree.begin(); }
+
   /**
-   * \brief Get the end marker for the constant forward iterator.
+   * Get the end marker for the constant forward iterator.
+   *
    * \return The end marker for the constant forward iterator.
    */
   Const_iterator end() const   { return _tree.end(); }
-  
+
   /**
-   * \brief Get the mutable forward iterator for the first element of the set.
+   * Get the mutable forward iterator for the first element of the set.
+   *
    * \return The mutable forward iterator for the first element of the set.
    */
   Iterator begin() { return _tree.begin(); }
+
   /**
-   * \brief Get the end marker for the mutable forward iterator.
+   * Get the end marker for the mutable forward iterator.
+   *
    * \return The end marker for mutable forward iterator.
    */
   Iterator end()   { return _tree.end(); }
 
   /**
-   * \brief Get the constant backward iterator for the last element in the set.
+   * Get the constant backward iterator for the last element in the set.
+   *
    * \return The constant backward iterator for the last element in the set.
    */
   Const_rev_iterator rbegin() const { return _tree.rbegin(); }
+
   /**
-   * \brief Get the end marker for the constant backward iterator.
+   * Get the end marker for the constant backward iterator.
+   *
    * \return The end marker for the constant backward iterator.
    */
   Const_rev_iterator rend() const   { return _tree.rend(); }
 
   /**
-   * \brief Get the mutable backward iterator for the last element of the set.
+   * Get the mutable backward iterator for the last element of the set.
+   *
    * \return The mutable backward iterator for the last element of the set.
    */
   Rev_iterator rbegin() { return _tree.rbegin(); }
+
   /**
-   * \brief Get the end marker for the mutable backward iterator.
+   * Get the end marker for the mutable backward iterator.
+   *
    * \return The end marker for mutable backward iterator.
    */
   Rev_iterator rend()   { return _tree.rend(); }
@@ -423,13 +452,13 @@ public:
 #endif
 };
 
-
 //----------------------------------------------------------------------------
 /* Implementation of AVL Tree */
 
 /* Create a copy */
-template< typename Item, class Compare, template<typename A> class Alloc, typename KEY_TYPE>
-Base_avl_set<Item,Compare,Alloc,KEY_TYPE>::Base_avl_set(Base_avl_set const &o)
+template<typename Item, class Compare, template<typename A> class Alloc,
+         typename KEY_TYPE>
+Base_avl_set<Item, Compare, Alloc, KEY_TYPE>::Base_avl_set(Base_avl_set const &o)
   : _tree(), _alloc(o._alloc)
 {
   for (Const_iterator i = o.begin(); i != o.end(); ++i)
@@ -437,9 +466,9 @@ Base_avl_set<Item,Compare,Alloc,KEY_TYPE>::Base_avl_set(Base_avl_set const &o)
 }
 
 /* Insert new _Node. */
-template< typename Item, class Compare, template< typename A > class Alloc, typename KEY_TYPE>
-Pair<typename Base_avl_set<Item,Compare,Alloc,KEY_TYPE>::Iterator, int>
-Base_avl_set<Item,Compare,Alloc,KEY_TYPE>::insert(Item const &item)
+template<typename Item, class Compare, template<typename A> class Alloc, typename KEY_TYPE>
+Pair<typename Base_avl_set<Item, Compare, Alloc, KEY_TYPE>::Iterator, int>
+Base_avl_set<Item, Compare, Alloc, KEY_TYPE>::insert(Item const &item)
 {
   _Node *n = _alloc.alloc();
   if (!n)
@@ -457,10 +486,10 @@ Base_avl_set<Item,Compare,Alloc,KEY_TYPE>::insert(Item const &item)
 }
 
 /* In-place insert new _Node. */
-template< typename Item, class Compare, template< typename A > class Alloc, typename KEY_TYPE>
+template<typename Item, class Compare, template<typename A> class Alloc, typename KEY_TYPE>
 template<typename... Args>
-Pair<typename Base_avl_set<Item,Compare,Alloc,KEY_TYPE>::Iterator, int>
-Base_avl_set<Item,Compare,Alloc,KEY_TYPE>::emplace(Args&&... args)
+Pair<typename Base_avl_set<Item, Compare, Alloc, KEY_TYPE>::Iterator, int>
+Base_avl_set<Item, Compare, Alloc, KEY_TYPE>::emplace(Args&&... args)
 {
   _Node *n = _alloc.alloc();
   if (!n)
@@ -480,7 +509,7 @@ Base_avl_set<Item,Compare,Alloc,KEY_TYPE>::emplace(Args&&... args)
 } // namespace Bits
 
 /**
- * \brief AVL set for simple compareable items.
+ * AVL set for simple comparable items.
  *
  * The AVL set can store any kind of items where a partial order is defined.
  * The default relation is defined by the '<' operator.
@@ -490,15 +519,15 @@ Base_avl_set<Item,Compare,Alloc,KEY_TYPE>::emplace(Args&&... args)
  *                    to use operator '<'.
  * \tparam ALLOC      The allocator to use for the nodes of the AVL set.
  */
-template< typename ITEM_TYPE, class COMPARE = Lt_functor<ITEM_TYPE>,
-          template<typename A> class ALLOC = New_allocator>
+template<typename ITEM_TYPE, class COMPARE = Lt_functor<ITEM_TYPE>,
+         template<typename A> class ALLOC = New_allocator>
 class Avl_set :
   public Bits::Base_avl_set<ITEM_TYPE, COMPARE, ALLOC,
-                            Bits::Avl_set_get_key<ITEM_TYPE> >
+                            Bits::Avl_set_get_key<ITEM_TYPE>>
 {
 private:
   typedef Bits::Base_avl_set<ITEM_TYPE, COMPARE, ALLOC,
-                             Bits::Avl_set_get_key<ITEM_TYPE> > Base;
+                             Bits::Avl_set_get_key<ITEM_TYPE>> Base;
 
 public:
   typedef typename Base::Node_allocator Node_allocator;
