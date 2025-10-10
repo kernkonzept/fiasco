@@ -7,7 +7,7 @@ include $(srcdir)/test/utest/Modules.utest
 include $(srcdir)/test/coderules/Modules.crtest
 
 SUBSYSTEMS += ABI JABI KERNEL DRIVERS CRT0 VERSION TCBOFFSET STDWORKLOAD
-SUBSYSTEMS += LIBK CXXLIB LIBC
+SUBSYSTEMS += CXXLIB LIBC LIBK
 
 ifeq ($(CONFIG_UNIT_TEST),y)
   # UTEST depends on KERNEL and CHECKSUM, must be listed after them
