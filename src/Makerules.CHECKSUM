@@ -32,7 +32,7 @@ $$(CHECKSUM): do_chksum$(3)
 endef
 
 # generate checksum targets for normal kernel build
-$(eval $(call all_checksum_rules,$(BOOT),$(KERNEL)))
+$(eval $(call all_checksum_rules,$(KERNEL),$(KERNEL).debug))
 
 
 setchecksum: setchecksum.c

@@ -87,7 +87,7 @@ KERNEL_EXTRA_LIBS	+= $(FONTS)
 #
 # KERNEL subsystem
 #
-KERNEL			:= fiasco.debug
+KERNEL			:= fiasco
 VPATH			+= kern/$(CONFIG_XARCH) kern/ia32/32 kern/ia32 kern
 VPATH			+= jdb/ia32/32 jdb/ia32 jdb
 PRIVATE_INCDIR		+= kern/$(CONFIG_XARCH) kern/ia32/32 kern/ia32 kern
@@ -234,7 +234,6 @@ ASSRC_CRT0		:= crt0.S
 #
 # BOOT subsystem
 #
-BOOT			:= fiasco
 VPATH			+= boot/$(CONFIG_XARCH) boot
 PRIVATE_INCDIR 		+= boot boot/ia32
 CXXSRC_BOOT		:= boot_libc_glue.cc bootstrap.cc boot_cpu.cc \

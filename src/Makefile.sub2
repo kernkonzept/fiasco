@@ -52,11 +52,11 @@ do-all: $(ALL)
 endif # ! maintainer mode
 
 
-Checkinitcalls: $(KERNEL) $(OBJ_KERNEL)
+Checkinitcalls: $(KERNEL).debug $(OBJ_KERNEL)
 	@echo "Checking initcalls"
 	$(VERBOSE)$(srcdir)/../tool/checkinitcalls \
-	  -k fiasco.debug \
-	  -Werror $(filter-out fiasco.debug, $^) \
+	  -k $(KERNEL).debug \
+	  -Werror $(filter-out $(KERNEL).debug, $^) \
 	  $(if $(CROSS_COMPILE),-t $(CROSS_COMPILE)) && \
 	echo "Initcalls OK"
 
@@ -192,7 +192,7 @@ DEPS.dot: $(KERNEL_MODULES_CPP)
 # being created/updated before all $(DEPS) are).  Therefore, depend on
 # the fiasco.debug and on main. Once this is made, we know all $(DEPS)
 # have been updated.
-Circular: $(KERNEL) $(BOOT) $(RUN_TESTS) $(UTEST_BINARIES) $(CHECKSUM)
+Circular: $(KERNEL) $(RUN_TESTS) $(UTEST_BINARIES) $(CHECKSUM)
 	@echo "Creating $@"
 	@( \
 	  echo 'Do "make DEPS" for full fine-grained dependency information.';\
