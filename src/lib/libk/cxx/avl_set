@@ -540,14 +540,14 @@ Base_avl_set<Item, Compare, Alloc, KEY_TYPE>::emplace(Args&&... args)
  *                    to use operator '<'.
  * \tparam ALLOC      The allocator to use for the nodes of the AVL set.
  */
-template<typename ITEM_TYPE, class COMPARE = Lt_functor<ITEM_TYPE>,
+template<typename ITEM_TYPE, template<typename T> class COMPARE = Lt_functor,
          template<typename A> class ALLOC = New_allocator>
 class Avl_set :
-  public Bits::Base_avl_set<ITEM_TYPE, COMPARE, ALLOC,
+  public Bits::Base_avl_set<ITEM_TYPE, COMPARE<ITEM_TYPE>, ALLOC,
                             Bits::Avl_set_get_key<ITEM_TYPE>>
 {
 private:
-  typedef Bits::Base_avl_set<ITEM_TYPE, COMPARE, ALLOC,
+  typedef Bits::Base_avl_set<ITEM_TYPE, COMPARE<ITEM_TYPE>, ALLOC,
                              Bits::Avl_set_get_key<ITEM_TYPE>> Base;
 
 public:
