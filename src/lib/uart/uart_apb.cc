@@ -93,6 +93,8 @@ int Uart_apb::write(char const *s, unsigned long count, bool blocking) const
   return generic_write<Uart_apb>(s, count, blocking);
 }
 
+#ifndef UART_WITHOUT_INPUT
+
 bool Uart_apb::enable_rx_irq(bool enable)
 {
   if (enable)
@@ -101,8 +103,6 @@ bool Uart_apb::enable_rx_irq(bool enable)
     _regs->clear<unsigned char>(CTRL, CTRL_RX_INT_EN);
   return true;
 }
-
-#ifndef UART_WITHOUT_INPUT
 
 int Uart_apb::char_avail() const
 {
