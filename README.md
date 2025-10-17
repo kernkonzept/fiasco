@@ -35,8 +35,8 @@ disclose them privately via **security@kernkonzept.com** to us.
 
 # Building
 
-Fiasco.OC can be built using a recent version of gcc (>=7) or clang (>=9),
-GNU binutils, GNU make and Perl (>=5.6).
+The L4Re Microkernel can be built using a recent version of gcc (>=11) or
+clang (>=10), GNU binutils, GNU make and Perl.
 
 Change to the top-level directory of this project and create a build directory
 by typing
@@ -56,12 +56,12 @@ the kernel by typing
 $ make
 ```
 
-You can also build in parallel by providing a suitable ```-j``` option. If the
+Use ```-j``` option to make as you see fit. If the
 build completed successfully you can find the kernel binary as *fiasco* in
 the build directory.
 
 For further information please refer to our [detailed build
-instructions](https://l4re.org/fiasco/build.html).
+instructions on l4re.org](https://l4re.org/getting_started/make.html#building-the-l4re-microkernel).
 
 # License
 
