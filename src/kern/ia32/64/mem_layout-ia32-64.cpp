@@ -17,8 +17,8 @@ public:
 
   enum : Mword
   {
-    Kentry_start      = 0xffff8100'00000000UL, ///< 512 GiB slot 258
-    Kentry_cpu_page   = 0xffff817f'ffffc000UL, ///< last 16 KiB in slot 258
+    Kentry_start      = 0xffff8100'00000000UL,  ///< 512 GiB slot 258
+    Kentry_cpu_page   = 0xffff817f'ffffc000UL,  ///< last 16 KiB in slot 258
 
     Caps_start        = 0xffff8180'00800000UL,  ///< 512 GiB slot 259
     Caps_end          = 0xffff8180'0c400000UL,  ///< % 4 MiB
@@ -26,44 +26,57 @@ public:
     Utcb_addr         = 0x0000007f'ff000000UL,  ///< % 4 KiB UTCB map address
     User_max          = 0x00007fff'ffffffffUL,
 
-    Kglobal_area      = 0xffffffff'00000000UL,  ///< % 1 GiB to share 1 GiB tables (start)
-    Kglobal_area_end  = 0xffffffff'80000000UL,  ///< % 1 GiB to share 1 GiB tables (end)
+    // ========================================================================
+    // We use a shared 1 GiB page directory for the Kglobal_area for all CPUs
+    // so there must be NO CPU-local mappings within this range. Note that this
+    // region partly overlaps Physmem..Physmem_end but that is no problem.
+    Kglobal_area      = 0xffffffff'00000000UL,     ///< % 1 GiB
 
-    // Service area: 0xffffffff'00000000 ... 0xffffffff'00400000 (4 MiB)
-    Service_page      = Kglobal_area,            ///< % 4 MiB global mappings
-    Jdb_tmp_map_page  = Service_page + 0x2000,   ///< % 4 KiB
-    Tbuf_status_page  = Service_page + 0x6000,   ///< % 4 KiB
-    Tbuf_buffer_area  = Service_page + 0x200000, ///< % 2 MiB
-    Tbuf_buffer_size  = 0x200000,
+    Service_page      = Kglobal_area,              ///< % 4 MiB global mappings
+    Jdb_tmp_map_page  = Service_page +     0x2000, ///< % 4 KiB, size 4 KiB
+    Tbuf_status_page  = Service_page +     0x6000, ///< % 4 KiB, size 4 KiB
+    // some unused space
+    Tbuf_buffer_area  = Kglobal_area + 0x00200000, ///< % 2 MiB
+    Tbuf_buffer_end   = Kglobal_area + 0x02200000, ///< size 2^x aligned
+    Tbuf_buffer_size  = Tbuf_buffer_end - Tbuf_buffer_area,
 
-    Tss_start         = Service_page + 0x400000, ///< % 4 MiB
-    Tss_end           = Service_page + 0xc000000,
+    Tss_start         = Kglobal_area + 0x02200000, ///< % 2 MiB
+    Tss_end           = Kglobal_area + 0x08200000, ///< size >= 96 MiB
 
-    Mmio_map_start    = Kglobal_area + 0xc000000UL,
-    Mmio_map_end      = Kglobal_area_end,
+    Mmio_map_start    = Kglobal_area + 0x08200000, ///< % 2 MiB
+    Mmio_map_end      = Kglobal_area + 0x20000000, ///< % 2 MiB => 382 MiB
 
-    Vmem_end          = 0xffffffff'f0000000UL,
+    Kglobal_area_end  = 0xffffffff'80000000UL,     ///< % 1 GiB
+    // ========================================================================
 
-    Kernel_image        = FIASCO_IMAGE_VIRT_START,
-    Kernel_image_size   = FIASCO_IMAGE_VIRT_SIZE,
-    Kernel_image_end    = Kernel_image + Kernel_image_size,
+    Physmem           = 0xffffffff'20000000UL, ///< % 2 MiB kernel memory
+    Physmem_end       = 0xffffffff'f0000000UL, ///< % 2 MiB kernel memory
+    Physmem_max_size  = Physmem_end - Physmem,
 
-    Adap_image           = Adap_in_kernel_image
-                           ? Kernel_image
-                           : Kernel_image + Kernel_image_size,
+    Kernel_image      = FIASCO_IMAGE_VIRT_START,
+    Kernel_image_size = FIASCO_IMAGE_VIRT_SIZE,
+    Kernel_image_end  = Kernel_image + Kernel_image_size,
+
+    Adap_image        = Adap_in_kernel_image
+                        ? Kernel_image
+                        : Kernel_image + Kernel_image_size,
 
     Adap_vram_mda_beg = Adap_image + 0xb0000, ///< % 8 KiB video RAM MDA memory
     Adap_vram_mda_end = Adap_image + 0xb8000,
     Adap_vram_cga_beg = Adap_image + 0xb8000, ///< % 8 KiB video RAM CGA memory
     Adap_vram_cga_end = Adap_image + 0xc0000,
 
-    // used for CPU_LOCAL_MAP only
-    Kentry_cpu_pdir   = 0xffffffff'f0800000UL,
-
-    Physmem           = 0xffffffff'10000000UL, ///< % 4 MiB kernel memory
-    Physmem_end       = 0xffffffff'e0000000UL, ///< % 4 MiB kernel memory
-    Physmem_max_size  = Physmem_end - Physmem,
+    // Used for CPU_LOCAL_MAP only, must be outside Kglobal_area region!
+    Kentry_cpu_pdir   = 0xffffffff'f0a00000UL, ///< % 2 MiB
   };
+
+  static_assert(Mmio_map_start >= Tss_end);
+  static_assert(Physmem >= Mmio_map_end);
+  static_assert(Kernel_image >= Physmem_end);
+
+  static_assert(Kentry_cpu_pdir >= Kglobal_area_end);
+  static_assert(Kentry_cpu_pdir >= Kernel_image_end);
+  static_assert(Kentry_cpu_pdir >= Adap_vram_cga_end);
 
   enum Offsets
   {
