@@ -1709,3 +1709,19 @@ IMPLEMENT_DEFAULT
 void
 Jdb::wakeup_other_cpus_from_jdb(Cpu_number)
 {}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm || riscv]:
+
+PUBLIC static
+Unsigned64
+Jdb::tsc_to_ns(Unsigned64 ts)
+{ return Timer::ts_to_ns(ts); }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [ia32 || amd64]:
+
+PUBLIC static
+Unsigned64
+Jdb::tsc_to_ns(Unsigned64 ts)
+{ return Cpu::boot_cpu()->tsc_to_ns(ts); }
