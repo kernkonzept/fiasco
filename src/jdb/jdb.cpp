@@ -937,18 +937,14 @@ IMPLEMENT_DEFAULT
 void
 Jdb::write_tsc_s(String_buffer *buf, Signed64 tsc, bool sign)
 {
-  Unsigned64 uns = Cpu::boot_cpu()->tsc_to_ns(tsc < 0 ? -tsc : tsc);
+  Unsigned64 uns = tsc_to_ns(tsc < 0 ? -tsc : tsc);
 
-  if (tsc < 0)
-    uns = -uns;
-
-  if (sign)
+  if (sign || tsc < 0)
     buf->printf("%c", (tsc < 0) ? '-' : (tsc == 0) ? ' ' : '+');
 
-  Mword _s  = uns / 1000000000;
-  Mword _us = (uns / 1000) - 1000000 * _s;
+  Mword _s  = uns / 1'000'000'000;
+  Mword _us = (uns / 1000) - 1'000'000 * _s;
   buf->printf("%3lu.%06lu s ", _s, _us);
-  return;
 }
 
 IMPLEMENT_DEFAULT
