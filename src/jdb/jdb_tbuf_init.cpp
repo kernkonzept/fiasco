@@ -41,7 +41,6 @@ void Jdb_tbuf_init::init()
     {
       init_done = 1;
 
-      unsigned n;
       unsigned want_entries = Config::tbuf_entries;
 
       if (Koptions::o()->opt(Koptions::F_tbuf_entries))
@@ -54,8 +53,9 @@ void Jdb_tbuf_init::init()
       // pointer is determined by binary AND of size-1. Also use a sane upper
       // limit which fits into 4 GiB. The allocate function limits the buffer to
       // the available window in the virtual memory layout.
+      unsigned n;
       for (n = Config::PAGE_SIZE / sizeof(Tb_entry_union);
-           n < want_entries && n < max_size();
+           n < want_entries && n < max_size() / sizeof(Tb_entry_union);
            n <<= 1)
         ;
 
