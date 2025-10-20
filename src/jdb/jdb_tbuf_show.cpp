@@ -372,11 +372,13 @@ Jdb_tbuf_show::show_events(Mword n, Mword ref, Mword count, Unsigned8 mode,
 
   for (i = 0; i < count; i++)
     {
-      Mword number;
-      Signed64 dtsc;
-      Signed32 dpmc;
-      Unsigned64 utsc;
-      Unsigned32 kclock, upmc1, upmc2;
+      Mword number;     // event number
+      Unsigned64 utsc;  // time stamp of this event
+      Signed64 dtsc;    // time stamp difference to previous event on same CPU
+      Unsigned32 kclock;// kernel clock value of this event
+      Signed32 dpmc;    // perf ctr difference (counter 1 or 2) to previous event
+      Unsigned32 upmc1; // perf ctr value for counter 1 of this event
+      Unsigned32 upmc2; // perf ctr value for counter 2 of this event
 
       Kconsole::console()->getchar_chance();
       _buffer_str.reset();
@@ -409,16 +411,19 @@ Jdb_tbuf_show::show_events(Mword n, Mword ref, Mword count, Unsigned8 mode,
                 break;
               }
 
+          // Print time stamp in seconds (s_tsc_ds and s_tsc_ss): It has the
+          // form of 'SSS.UUUUUU' with always 6 digits 'U' for microseconds
+          // and a variable number of digits 'S' for seconds.
           String_buf<13> s_tsc_dc;
-          String_buf<15> s_tsc_ds;
+          String_buf<17> s_tsc_ds; // up to 'SSSSSSS.UUUUUU s', > 115.5 days
           String_buf<13> s_tsc_sc;
-          String_buf<15> s_tsc_ss;
+          String_buf<19> s_tsc_ss; // up to 'SSSSSSSS.UUUUUU s', > 31.7 years
           Jdb::write_ll_dec(&s_tsc_dc, dtsc, false);
           Jdb::write_tsc_s (&s_tsc_ds, dtsc, false);
           Jdb::write_ll_dec(&s_tsc_sc, utsc, false);
           Jdb::write_tsc_s (&s_tsc_ss, utsc, false);
 
-          printf("%-3s%10lu.  %120.120s %13.13s (%14.14s)  %13.13s (%14.14s) kclk=%u\n",
+          printf("%-3s%10lu.  %120.120s %12s (%16s)  %12s (%18s) kclk=%u\n",
                  s, number, _buffer_str.begin() + y_offset, s_tsc_dc.c_str(),
                  s_tsc_ds.c_str(), s_tsc_sc.c_str(), s_tsc_ss.c_str(), kclock);
         }

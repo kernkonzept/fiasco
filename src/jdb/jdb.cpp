@@ -944,7 +944,7 @@ Jdb::write_tsc_s(String_buffer *buf, Signed64 tsc, bool sign)
 
   Mword _s  = uns / 1'000'000'000;
   Mword _us = (uns / 1000) - 1'000'000 * _s;
-  buf->printf("%3lu.%06lu s ", _s, _us);
+  buf->printf("%lu.%06lu s", _s, _us);
 }
 
 IMPLEMENT_DEFAULT
