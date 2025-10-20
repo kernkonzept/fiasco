@@ -338,16 +338,6 @@ void
 Jdb::leave_getchar()
 {}
 
-IMPLEMENT_OVERRIDE
-void
-Jdb::write_tsc(String_buffer *buf, Signed64 tsc, bool sign)
-{
-  Unsigned64 ns = Timer::ts_to_ns(tsc < 0 ? -tsc : tsc);
-  if (tsc < 0)
-    ns = -ns;
-  write_ll_ns(buf, ns, sign);
-}
-
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && mmu]:
 

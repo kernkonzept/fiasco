@@ -951,10 +951,8 @@ IMPLEMENT_DEFAULT
 void
 Jdb::write_tsc(String_buffer *buf, Signed64 tsc, bool sign)
 {
-  Unsigned64 ns = Cpu::boot_cpu()->tsc_to_ns(tsc < 0 ? -tsc : tsc);
-  if (tsc < 0)
-    ns = -ns;
-  write_ll_ns(buf, ns, sign);
+  Unsigned64 ns = tsc_to_ns(tsc < 0 ? -tsc : tsc);
+  write_ll_ns(buf, tsc < 0 ? -ns : ns, sign);
 }
 
 PUBLIC static inline
