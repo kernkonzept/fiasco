@@ -4,7 +4,7 @@ EXTENSION class Mem_layout
 {
 public:
   enum Virt_layout_kern_user_max : Address {
-    User_max             = 0x000000ffffffffff,
+    User_max             = 0x000000ff'ffffffff,
   };
 };
 
@@ -14,7 +14,7 @@ EXTENSION class Mem_layout
 {
 public:
   enum Virt_layout_kern_user_max : Address {
-    User_max             = 0x0000ffffffffffff,
+    User_max             = 0x0000ffff'ffffffff,
   };
 };
 
@@ -27,23 +27,23 @@ public:
     // The following are kernel virtual addresses. Mind that kernel and user
     // space live in different address spaces! Move to the top to minimize the
     // risk of colliding with physical memory which is still mapped 1:1.
-    Mmio_map_start       = 0x0000ffff00000000,
-    Mmio_map_end         = 0x0000ffff40000000,
+    Mmio_map_start       = 0x0000ffff'00000000,
+    Mmio_map_end         = 0x0000ffff'40000000,
 
-    Map_base             = 0x0000ffff40000000,
+    Map_base             = 0x0000ffff'40000000,
 
-    // Service area: 0x0000ffff50000000 ... 0x0000ffff51ffffff (32 MiB)
-    Tbuf_status_page     = 0x0000ffff50000000,  // page-aligned
-    Jdb_tmp_map_area     = 0x0000ffff50200000,  // superpage-aligned
-    Tbuf_buffer_area     = 0x0000ffff51000000,  // page-aligned
-    Tbuf_buffer_area_end = 0x0000ffff52000000,  // Tbuf_buffer_size 2^n
+    // Service area: 0x0000ffff'50000000 ... 0x0000ffff'51ffffff (32 MiB)
+    Tbuf_status_page     = 0x0000ffff'50000000,  // page-aligned
+    Jdb_tmp_map_area     = 0x0000ffff'50200000,  // superpage-aligned
+    Tbuf_buffer_area     = 0x0000ffff'51000000,  // page-aligned
+    Tbuf_buffer_area_end = 0x0000ffff'52000000,  // Tbuf_buffer_size 2^n
     Tbuf_buffer_size     = Tbuf_buffer_area_end - Tbuf_buffer_area,
 
-    Pmem_start           = 0x0000ffff80000000,
-    Pmem_end             = 0x0000ffffc0000000,
+    Pmem_start           = 0x0000ffff'80000000,
+    Pmem_end             = 0x0000ffff'c0000000,
   };
 
-  static_assert(Tbuf_buffer_size == 1UL << 24); // max 2^17 entries @ 64B
+  static_assert(Tbuf_buffer_size == 1UL << 24); // max 2^17 entries @ 128B
 };
 
 //---------------------------------------------------------------------------
@@ -55,26 +55,26 @@ EXTENSION class Mem_layout
 {
 public:
   enum Virt_layout_kern : Address {
-    User_max             = 0x0000ff7fffffffff,
+    User_max             = 0x0000ff7f'ffffffff,
 
-    // Service area: 0xffff1000eac00000 ... 0xffff1000ebffffff (20 MiB)
-    Tbuf_status_page     = 0xffff1000eac00000,  // page-aligned
-    Jdb_tmp_map_area     = 0xffff1000eae00000,  // superpage-aligned
-    Tbuf_buffer_area     = 0xffff1000eb000000,  // page-aligned
-    Tbuf_buffer_area_end = 0xffff1000ec000000,  // Tbuf_buffer_size 2^n
+    // Service area: 0xffff1000'eac00000 ... 0xffff1000'ebffffff (20 MiB)
+    Tbuf_status_page     = 0xffff1000'eac00000,  // page-aligned
+    Jdb_tmp_map_area     = 0xffff1000'eae00000,  // superpage-aligned
+    Tbuf_buffer_area     = 0xffff1000'eb000000,  // page-aligned
+    Tbuf_buffer_area_end = 0xffff1000'ec000000,  // Tbuf_buffer_size 2^n
     Tbuf_buffer_size     = Tbuf_buffer_area_end - Tbuf_buffer_area,
 
-    Mmio_map_start       = 0xffff000000000000,
-    Mmio_map_end         = 0xffff000040000000,
-    Pmem_start           = 0xffff000040000000,
-    Pmem_end             = 0xffff000080000000,
-    Map_base             = 0xffff000080000000,
+    Mmio_map_start       = 0xffff0000'00000000,
+    Mmio_map_end         = 0xffff0000'40000000,
+    Pmem_start           = 0xffff0000'40000000,
+    Pmem_end             = 0xffff0000'80000000,
+    Map_base             = 0xffff0000'80000000,
 
-    Caps_start           = 0xff8005000000,
-    Caps_end             = 0xff800d000000,
+    Caps_start           = 0xff80'05000000,
+    Caps_end             = 0xff80'0d000000,
   };
 
-  static_assert(Tbuf_buffer_size == 1UL << 24); // max 2^17 entries @ 64B
+  static_assert(Tbuf_buffer_size == 1UL << 24); // max 2^17 entries @ 128B
 };
 
 //--------------------------------------------------------------------------
@@ -90,7 +90,7 @@ public:
 
     // Strictly speaking we would have to consult ID_AA64MMFR0_EL1.PARange but
     // what's the point when having no virtual memory?
-    User_max             = 0xffffffffffffffff,
+    User_max             = 0xffffffff'ffffffff,
   };
 };
 
