@@ -27,7 +27,7 @@ IMPLEMENTATION [ppc32]:
 PUBLIC inline
 void
 Tb_entry::rdtsc()
-{}
+{ _tsc = 0; }
 
 // ------------------
 PUBLIC inline

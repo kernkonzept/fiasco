@@ -31,7 +31,7 @@ IMPLEMENTATION [sparc]:
 PUBLIC inline
 void
 Tb_entry::rdtsc()
-{}
+{ _tsc = 0; }
 
 // ------------------
 PUBLIC inline
