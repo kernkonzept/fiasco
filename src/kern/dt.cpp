@@ -393,7 +393,7 @@ public:
       // Ensure that the string is null-terminated as required by DTB spec.
       if (str && strnlen(str, len) == static_cast<size_t>(len))
         {
-          WARN("Property '%s' does not hold a valid string.", name);
+          WARN("Property '%s' does not hold a valid string.\n", name);
           return nullptr;
         }
       return str;

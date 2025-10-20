@@ -2043,7 +2043,7 @@ Iommu_domain::del_binding(Iommu const *iommu)
   else
     {
       g.reset(); // better not hold the lock while printing
-      WARNX(Error, "IOMMU: Attempt to delete binding while no bindings exist.");
+      WARNX(Error, "IOMMU: Attempt to delete binding while no bindings exist.\n");
       return 0;
     }
 }

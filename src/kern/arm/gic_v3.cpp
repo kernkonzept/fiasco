@@ -321,7 +321,7 @@ Gic_v3::add_its(void *its_base)
 
   if (_num_its >= _its_vec.size())
     {
-      WARN("Maximum number of ITS exceeded.");
+      WARN("Maximum number of ITS exceeded.\n");
       return false;
     }
 
