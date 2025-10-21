@@ -268,6 +268,7 @@ void
 Fpu::save_fpu_regs(Fpu_regs *r)
 {
   Mword tmp;
+  // TODO: use runtime patching to decide if saving 16 or 32 registers
   asm volatile(".fpu neon\n"
                "cmp    %2, #0          \n"
                "vstm   %0!, {d0-d15}   \n"
@@ -282,6 +283,7 @@ void
 Fpu::restore_fpu_regs(Fpu_regs const *r)
 {
   Mword tmp;
+  // TODO: use runtime patching to decide if restoring 16 or 32 registers
   asm volatile(".fpu neon\n "
                "cmp    %2, #0        \n"
                "vldm   %0!, {d0-d15}  \n"
