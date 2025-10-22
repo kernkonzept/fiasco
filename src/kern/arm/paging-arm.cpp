@@ -78,14 +78,6 @@ private:
   CLASS *_this() { return static_cast<CLASS *>(this); }
 
 public:
-  Entry _attribs_mask() const
-  {
-    if (_this()->level == 0)
-      return ~Entry(0x00000c0c);
-    else
-      return ~Entry(0x00000ffc);
-  }
-
   Entry _attribs(Page::Attr attr) const
   {
     static const unsigned short perms[] = {
@@ -197,14 +189,6 @@ private:
   CLASS *_this() { return static_cast<CLASS *>(this); }
 
 public:
-  Unsigned32 _attribs_mask() const
-  {
-    if (_this()->level == 0)
-      return ~Unsigned32{0x0000881c};
-    else
-      return ~Unsigned32{0x0000022d};
-  }
-
   Unsigned32 _attribs(Page::Attr attr) const
   {
     Mword lower = ATTRIBS::Mp_set_shared;
@@ -342,9 +326,6 @@ private:
   CLASS *_this() { return static_cast<CLASS *>(this); }
 
 public:
-  Unsigned64 _attribs_mask() const
-  { return ~Unsigned64{ATTRIBS::UXN | ATTRIBS::PXN | ATTRIBS::XN | 0x8dc}; }
-
   Unsigned64 _attribs(Page::Attr attr) const
   {
     Unsigned64 lower = 0x300; // inner sharable
@@ -472,9 +453,6 @@ private:
   CLASS *_this() { return static_cast<CLASS *>(this); }
 
 public:
-  Unsigned64 _attribs_mask() const
-  { return ~Unsigned64{0x00400000000000fc}; }
-
   Unsigned64 _attribs(Page::Attr attr) const
   {
     Unsigned64 lower = 0x300; // inner sharable
