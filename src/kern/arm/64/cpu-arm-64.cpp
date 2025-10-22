@@ -24,32 +24,29 @@ public:
     Scr_eel2 = 1UL << 18, ///< Secure EL2 enable
   };
 
-  enum
-  {
-    Sctlr_sa      = 1UL << 3,
-    Sctlr_sa0     = 1UL << 4,
-    Sctlr_cp15ben = 1UL << 5,
-    Sctlr_itd     = 1UL << 7,
-    Sctlr_sed     = 1UL << 8,
-    Sctlr_uma     = 1UL << 9,
-    Sctlr_dze     = 1UL << 14,
-    Sctlr_uct     = 1UL << 15,
-    Sctlr_ntwi    = 1UL << 16,
-    Sctlr_ntwe    = 1UL << 18,
-    Sctlr_wxn     = 1UL << 19,
-    Sctlr_e0e     = 1UL << 24,
-    Sctlr_uci     = 1UL << 26,
+  static constexpr Unsigned64 Sctlr_sa      = 1UL << 3;
+  static constexpr Unsigned64 Sctlr_sa0     = 1UL << 4;
+  static constexpr Unsigned64 Sctlr_cp15ben = 1UL << 5;
+  static constexpr Unsigned64 Sctlr_itd     = 1UL << 7;
+  static constexpr Unsigned64 Sctlr_sed     = 1UL << 8;
+  static constexpr Unsigned64 Sctlr_uma     = 1UL << 9;
+  static constexpr Unsigned64 Sctlr_dze     = 1UL << 14;
+  static constexpr Unsigned64 Sctlr_uct     = 1UL << 15;
+  static constexpr Unsigned64 Sctlr_ntwi    = 1UL << 16;
+  static constexpr Unsigned64 Sctlr_ntwe    = 1UL << 18;
+  static constexpr Unsigned64 Sctlr_wxn     = 1UL << 19;
+  static constexpr Unsigned64 Sctlr_e0e     = 1UL << 24;
+  static constexpr Unsigned64 Sctlr_uci     = 1UL << 26;
+  static constexpr Unsigned64 Sctlr_el1_res =
+    (1UL << 11) | (1UL << 20) | (3UL << 22) | (3UL << 28);
 
-    Sctlr_el1_res = (1UL << 11) | (1UL << 20) | (3UL << 22) | (3UL << 28),
-
-    Sctlr_el1_generic = Sctlr_c
-                    | Sctlr_cp15ben
-                    | Sctlr_i
-                    | Sctlr_dze
-                    | Sctlr_uct
-                    | Sctlr_uci
-                    | Sctlr_el1_res,
-  };
+  static constexpr Unsigned64 Sctlr_el1_generic = Sctlr_c
+                                                | Sctlr_cp15ben
+                                                | Sctlr_i
+                                                | Sctlr_dze
+                                                | Sctlr_uct
+                                                | Sctlr_uci
+                                                | Sctlr_el1_res;
 
   enum : Mword
   {
@@ -146,13 +143,10 @@ IMPLEMENTATION [arm && !cpu_virt]:
 EXTENSION class Cpu
 {
 public:
-  enum
-  {
-    Sctlr_generic = Sctlr_el1_generic
-                    | Sctlr_m
-                    | (Config::Sctlr_use_alignment_check ?  Sctlr_a : 0)
-  };
-
+  static constexpr Unsigned64 Sctlr_generic = Sctlr_el1_generic
+                                            | Sctlr_m
+                                            | (Config::Sctlr_use_alignment_check
+                                                ? Sctlr_a : 0);
   enum : Unsigned64
   {
     Scr_default_bits = Scr_ns | Scr_rw | Scr_smd,
@@ -211,17 +205,15 @@ public:
                           | Hcr_ttlb | Hcr_tvm | Hcr_trvm | Hcr_tge,
   };
 
-  enum
-  {
-    Sctlr_res = (3UL << 4)  | (1UL << 11) | (1UL << 16)
-              | (1UL << 18) | (3UL << 22) | (3UL << 28),
+  static constexpr Unsigned64 Sctlr_res =
+    (3UL << 4) | (1UL << 11) | (1UL << 16) | (1UL << 18) | (3UL << 22) | (3UL << 28);
 
-    Sctlr_generic = Sctlr_m
-                    | (Config::Sctlr_use_alignment_check ? Sctlr_a : 0)
-                    | Sctlr_c
-                    | Sctlr_i
-                    | Sctlr_res,
-  };
+  static constexpr Unsigned64 Sctlr_generic = Sctlr_m
+                                            | (Config::Sctlr_use_alignment_check
+                                               ? Sctlr_a : 0)
+                                            | Sctlr_c
+                                            | Sctlr_i
+                                            | Sctlr_res;
 
   enum
   {

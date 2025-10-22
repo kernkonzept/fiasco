@@ -18,19 +18,16 @@ public:
   static Per_cpu<Cpu> cpus;
   static Cpu *boot_cpu() { return _boot_cpu; }
 
-  enum
-  {
-    Sctlr_m               = 1 << 0,
-    Sctlr_a               = 1 << 1,
-    Sctlr_c               = 1 << 2,
-    Sctlr_write_buffer    = 1 << 3, // only ARMv5 + ARMv6
-    Sctlr_v7_sw           = 1 << 10,
-    Sctlr_z               = 1 << 11,
-    Sctlr_i               = 1 << 12,
-    Sctlr_v               = 1 << 13,
-    Sctlr_ee              = 1 << 25, // since ARMv7
-    Sctlr_tre             = 1 << 28,
-  };
+  static constexpr Unsigned32 Sctlr_m            = 1 << 0;
+  static constexpr Unsigned32 Sctlr_a            = 1 << 1;
+  static constexpr Unsigned32 Sctlr_c            = 1 << 2;
+  static constexpr Unsigned32 Sctlr_write_buffer = 1 << 3; // only ARMv5 + ARMv6
+  static constexpr Unsigned32 Sctlr_v7_sw        = 1 << 10;
+  static constexpr Unsigned32 Sctlr_z            = 1 << 11;
+  static constexpr Unsigned32 Sctlr_i            = 1 << 12;
+  static constexpr Unsigned32 Sctlr_v            = 1 << 13;
+  static constexpr Unsigned32 Sctlr_ee           = 1 << 25; // since ARMv7
+  static constexpr Unsigned32 Sctlr_tre          = 1 << 28;
 
   static constexpr Unsigned32 Sctlr_cache_bits =
                                 Sctlr_c
@@ -138,18 +135,15 @@ INTERFACE [arm && arm_v5]:
 EXTENSION class Cpu
 {
 public:
-  enum
-  {
-    Sctlr_prog32          = 1 << 4,
-    Sctlr_data32          = 1 << 5,
-    Sctlr_late_abort      = 1 << 6,
-    Sctlr_big_endian      = 1 << 7,
-    Sctlr_system_protect  = 1 << 8,
-    Sctlr_rom_protect     = 1 << 9,
-    Sctlr_f               = 1 << 10,
-    Sctlr_rr              = 1 << 14,
-    Sctlr_l4              = 1 << 15,
-  };
+  static constexpr Unsigned32 Sctlr_prog32         = 1 << 4;
+  static constexpr Unsigned32 Sctlr_data32         = 1 << 5;
+  static constexpr Unsigned32 Sctlr_late_abort     = 1 << 6;
+  static constexpr Unsigned32 Sctlr_big_endian     = 1 << 7;
+  static constexpr Unsigned32 Sctlr_system_protect = 1 << 8;
+  static constexpr Unsigned32 Sctlr_rom_protect    = 1 << 9;
+  static constexpr Unsigned32 Sctlr_f              = 1 << 10;
+  static constexpr Unsigned32 Sctlr_rr             = 1 << 14;
+  static constexpr Unsigned32 Sctlr_l4             = 1 << 15;
 
   static constexpr Unsigned32 Sctlr_generic =
                                 Sctlr_m
@@ -171,14 +165,11 @@ INTERFACE [arm && arm_v6]:
 EXTENSION class Cpu
 {
 public:
-  enum
-  {
-    Sctlr_l4              = 1 << 15,
-    Sctlr_u               = 1 << 22,
-    Sctlr_xp              = 1 << 23,
-    Sctlr_nmfi            = 1 << 27,
-    Sctlr_force_ap        = 1 << 29,
-  };
+  static constexpr Unsigned32 Sctlr_l4       = 1 << 15;
+  static constexpr Unsigned32 Sctlr_u        = 1 << 22;
+  static constexpr Unsigned32 Sctlr_xp       = 1 << 23;
+  static constexpr Unsigned32 Sctlr_nmfi     = 1 << 27;
+  static constexpr Unsigned32 Sctlr_force_ap = 1 << 29;
 };
 
 // ------------------------------------------------------------------------
@@ -218,20 +209,17 @@ public:
                                 | Sctlr_tre;
 };
 
-
 // ------------------------------------------------------------------------
 INTERFACE [arm && (arm_v7 || arm_v8) && mmu && 32bit]:
 
 EXTENSION class Cpu
 {
 public:
-  enum
-  {
-    Sctlr_ha              = 1 << 17,
-    Sctlr_nmfi            = 1 << 27,
-    Sctlr_te              = 1 << 30,
-    Sctlr_rao_sbop        = (0xf << 3) | (1 << 16) | (1 << 18) | (1 << 22) | (1 << 23),
-  };
+  static constexpr Unsigned32 Sctlr_ha       = 1 << 17;
+  static constexpr Unsigned32 Sctlr_nmfi     = 1 << 27;
+  static constexpr Unsigned32 Sctlr_te       = 1 << 30;
+  static constexpr Unsigned32 Sctlr_rao_sbop =
+    (0xf << 3) | (1 << 16) | (1 << 18) | (1 << 22) | (1 << 23);
 
   static constexpr Unsigned32 Sctlr_generic =
                                 Sctlr_m
@@ -251,11 +239,9 @@ INTERFACE [arm && (arm_v7 || arm_v8) && mpu && 32bit]:
 EXTENSION class Cpu
 {
 public:
-  enum
-  {
-    Sctlr_nmfi            = 1 << 27,
-    Sctlr_rao_sbop        = (0xf << 3) | (1 << 16) | (1 << 18) | (1 << 22) | (1 << 23),
-  };
+  static constexpr Unsigned32 Sctlr_nmfi     = 1 << 27;
+  static constexpr Unsigned32 Sctlr_rao_sbop =
+    (0xf << 3) | (1 << 16) | (1 << 18) | (1 << 22) | (1 << 23);
 
   static constexpr Unsigned32 Sctlr_generic =
                                 Sctlr_m
