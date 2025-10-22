@@ -56,7 +56,7 @@ bool Uart_dm::startup(Io_register_block const *regs)
 {
   _regs = regs;
 
-  enable_rx_irq(false);
+  _regs->write32(DM_IMR, 0);
   _regs->write32(DM_CR, DM_CR_RST_RX);
   _regs->write32(DM_CR, DM_CR_RST_TX);
   // Use single character mode to read/write one char at a time

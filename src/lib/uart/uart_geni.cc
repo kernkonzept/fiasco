@@ -85,7 +85,7 @@ bool Uart_geni::startup(Io_register_block const *regs)
   _regs->write32(RX_PACKING_CFG0, RX_PACKING_CFG0_1BYTE);
   _regs->write32(RX_PACKING_CFG1, RX_PACKING_CFG1_1BYTE);
 
-  enable_rx_irq(false);
+  _regs->write32(IRQ_EN, 0);
   _regs->write32(S_CMD0, S_CMD0_OP_UART_START_RX);
   return true;
 }
