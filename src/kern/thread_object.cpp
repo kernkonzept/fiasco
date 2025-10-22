@@ -458,9 +458,6 @@ Thread_object::sys_control(L4_fpage::Rights rights, L4_msg_tag tag,
         return commit_result(-L4_err::EInval); // unbind first !!
     }
 
-  Mword del_state = 0;
-  Mword add_state = 0;
-
   long res = control(_new_pager, _new_exc_handler);
 
   if (res < 0)
@@ -471,12 +468,9 @@ Thread_object::sys_control(L4_fpage::Rights rights, L4_msg_tag tag,
       if constexpr (TAG_ENABLED(alien))
         {
           if (utcb->values[4] & Ctl_alien_thread)
-            {
-              add_state |= Thread_alien;
-              del_state |= Thread_dis_alien;
-            }
+            xcpu_state_change(~Thread_dis_alien, Thread_alien, true);
           else
-            del_state |= Thread_alien;
+            xcpu_state_change(~Thread_alien, 0, true);
         }
       else
         return commit_result(-L4_err::ENosys);
@@ -484,12 +478,6 @@ Thread_object::sys_control(L4_fpage::Rights rights, L4_msg_tag tag,
 
   out->values[1] = _old_pager;
   out->values[2] = _old_exc_handler;
-
-  if (del_state || add_state)
-    {
-      assert(!(add_state & Thread_ready_mask));
-      xcpu_state_change(~del_state, add_state, true);
-    }
 
   return commit_result(0, 3);
 }
