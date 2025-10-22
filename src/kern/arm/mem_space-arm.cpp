@@ -805,6 +805,7 @@ INTERFACE [arm_v6 || arm_lpae || mpu]:
 
 EXTENSION class Mem_space
 {
+  friend struct Asid_alloc_test;
   enum
   {
     Asid_base      = 0,
@@ -816,6 +817,7 @@ INTERFACE [(arm_v7 || arm_v8) && !(arm_lpae || mpu)]:
 
 EXTENSION class Mem_space
 {
+  friend struct Asid_alloc_test;
   enum
   {
     // ASID 0 is reserved for synchronizing the update of ASID and translation
