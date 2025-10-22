@@ -25,6 +25,14 @@ public:
     FPEXC_EX   = 1 << 31,
   };
 
+  /// Result of emulate_insns().
+  enum class Emulate_result
+  {
+    Unknown,    ///< Instruction unknown / not eligible for emulation.
+    Undefined,  ///< Instruction undefined (sub architecture too old).
+    Emulated    ///< Instruction was emulated.
+  };
+
   struct Fpsid
   {
     Mword v;
@@ -196,48 +204,35 @@ Fpu::exc_pending()
   return fpexc() & FPEXC_EX;
 }
 
-
 PUBLIC static inline
-int
-Fpu::is_emu_insn(Mword opcode)
-{
-  if ((opcode & 0x0ff00f90) != 0x0ef00a10)
-    return false;
-
-  unsigned reg = (opcode >> 16) & 0xf;
-  return reg == 0 || reg == 6 || reg == 7;
-}
-
-PUBLIC static inline NEEDS[<cassert>]
-bool
+Fpu::Emulate_result
 Fpu::emulate_insns(Mword opcode, Trap_state *ts)
 {
-  unsigned reg = (opcode >> 16) & 0xf;
-  unsigned rt  = (opcode >> 12) & 0xf;
+  unsigned rt = (opcode >> 12) & 0xf;
   Fpsid fpsid = Fpu::fpu.current().fpsid();
-  switch (reg)
+
+  switch (opcode & 0x0fff'0f90)
     {
-    case 0: // FPSID
+    case 0x0ef0'0a10: // FPSID
       ts->r[rt] = fpsid.v;
       break;
-    case 6: // MVFR1
+    case 0x0ef6'0a10: // MVFR1
       if (fpsid.arch_version() < 2)
-        return false;
+        return Emulate_result::Undefined;
       ts->r[rt] = Fpu::mvfr1();
       break;
-    case 7: // MVFR0
+    case 0x0ef7'0a10: // MVFR0
       if (fpsid.arch_version() < 2)
-        return false;
+        return Emulate_result::Undefined;
       ts->r[rt] = Fpu::mvfr0();
       break;
     default:
-      return false;
+      return Emulate_result::Unknown;
     }
 
   // FPU insns are 32bit, even for thumb
   ts->pc += 4;
-
-  return true;
+  return Emulate_result::Emulated;
 }
 
 IMPLEMENT

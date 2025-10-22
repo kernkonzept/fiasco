@@ -410,15 +410,16 @@ Thread::handle_fpu_trap(Unsigned32 opcode, Trap_state *ts)
 
   if (Fpu::is_enabled())
     {
-      if (Fpu::is_emu_insn(opcode))
-        return Fpu::emulate_insns(opcode, ts);
+      if (auto r = Fpu::emulate_insns(opcode, ts); r != Fpu::Emulate_result::Unknown)
+        return r == Fpu::Emulate_result::Emulated;
 
       ts->esr.ec() = 0; // tag fpu undef insn
     }
   else if (current_thread()->switchin_fpu())
     {
-      if (Fpu::is_emu_insn(opcode))
-        return Fpu::emulate_insns(opcode, ts);
+      if (auto r = Fpu::emulate_insns(opcode, ts); r != Fpu::Emulate_result::Unknown)
+        return r == Fpu::Emulate_result::Emulated;
+
       return true;
     }
   else
