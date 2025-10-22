@@ -72,7 +72,9 @@ public:
   Uart_imx6() : Uart_imx(Type_imx6) {}
   explicit Uart_imx6(unsigned base_rate) : Uart_imx(Type_imx6, base_rate) {}
 
+#ifndef UART_WITHOUT_INPUT
   void irq_ack() override;
+#endif
 };
 
 class Uart_imx7 : public Uart_imx
