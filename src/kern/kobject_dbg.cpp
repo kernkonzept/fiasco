@@ -111,7 +111,7 @@ Kobject_dbg::pointer_to_id(void const *p)
   return ~0UL;
 }
 
-PUBLIC static
+PUBLIC static inline
 bool
 Kobject_dbg::is_kobj(void const *o)
 {
@@ -130,7 +130,7 @@ Kobject_dbg::id_to_obj(unsigned long id)
   return end();
 }
 
-PUBLIC static
+PUBLIC static inline
 unsigned long
 Kobject_dbg::obj_to_id(void const *o)
 {
@@ -162,37 +162,37 @@ Kobject_dbg::~Kobject_dbg()
 //---------------------------------------------------------------------------
 IMPLEMENTATION [!rt_dbg]:
 
-PUBLIC inline
+PUBLIC constexpr
 unsigned long
 Kobject_dbg::dbg_id() const
 { return 0; }
 
-PUBLIC static inline
+PUBLIC static constexpr
 unsigned long
 Kobject_dbg::dbg_id(void const *)
 { return ~0UL; }
 
-PUBLIC static inline
+PUBLIC static constexpr
 Kobject_dbg::Iterator
 Kobject_dbg::pointer_to_obj(void const *)
 { return 0; }
 
-PUBLIC static inline
+PUBLIC static constexpr
 unsigned long
 Kobject_dbg::pointer_to_id(void const *)
 { return ~0UL; }
 
-PUBLIC static inline
+PUBLIC static constexpr
 bool
 Kobject_dbg::is_kobj(void const *)
 { return false; }
 
-PUBLIC static inline
+PUBLIC static constexpr
 Kobject_dbg::Iterator
 Kobject_dbg::id_to_obj(unsigned long)
 { return 0; }
 
-PUBLIC static inline
+PUBLIC static constexpr
 unsigned long
 Kobject_dbg::obj_to_id(void const *)
 { return ~0UL; }
