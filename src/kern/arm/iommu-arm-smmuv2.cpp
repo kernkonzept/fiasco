@@ -445,7 +445,7 @@ private:
       // Configure shareability and cacheability for memory associated with
       // the IOMMU page tables, according to the IOMMU's support for coherent
       // page table walks.
-      if (Iommu::Coherent)
+      if constexpr (Iommu::Coherent)
         {
           tcr.sh0() = TCR_SH_IS;
           tcr.irgn0() = TCR_RGN_WBWA;
@@ -458,7 +458,7 @@ private:
           tcr.orgn0() = TCR_RGN_NC;
         }
 
-      if (Iommu::Va64_support)
+      if constexpr (Iommu::Va64_support)
         {
           tcr.pasize() = address_size_encode(_mmu->_oas);
           // First page table is concatenated (10-bits), we skip level zero.
@@ -877,7 +877,7 @@ Iommu::sync_pte()
   // supports coherent page table walks, otherwise changed PTE entries are
   // already cleaned from the dcache in Dmar_space immediately after they are
   // written.
-  if (Iommu::Coherent)
+  if constexpr (Iommu::Coherent)
     Mem::wmb();
 }
 

@@ -1527,7 +1527,7 @@ PRIVATE template<typename T> static inline
 void
 Iommu::make_observable(T *start, T *end = nullptr)
 {
-  if (Iommu::Coherent)
+  if constexpr (Iommu::Coherent)
     Mem::wmb(); // dmbist
   else
     Mem_unit::flush_dcache(start, end != nullptr ? end : start + 1);
@@ -1547,7 +1547,7 @@ Iommu::make_observable_before_cmd(T *start, T *end = nullptr)
   // Putting the command into the command queue already includes a memory
   // barrier in case the SMMU is cache coherent, so we only have to act in the
   // non-coherent case.
-  if (!Iommu::Coherent)
+  if constexpr (!Iommu::Coherent)
     make_observable(start, end);
 }
 
