@@ -86,6 +86,30 @@ DEFINE_GLOBAL Global_data<unsigned long> Kobject_dbg::_next_dbg_id;
 
 IMPLEMENT inline Kobject_dbg::Dbg_extension::~Dbg_extension() {}
 
+PROTECTED
+Kobject_dbg::Kobject_dbg()
+{
+  auto guard = lock_guard(&_kobjects_lock);
+
+  _dbg_id = _next_dbg_id++;
+  _kobjects->push_back(this);
+}
+
+IMPLEMENT inline
+Kobject_dbg::~Kobject_dbg()
+{
+    {
+      auto guard = lock_guard(&_kobjects_lock);
+      _kobjects->remove(this);
+    }
+
+  while (Dbg_extension *ex = _jdb_data.front())
+    delete ex;
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION[debug]:
+
 PUBLIC static
 Kobject_dbg::Iterator
 Kobject_dbg::pointer_to_obj(void const *p)
@@ -123,10 +147,9 @@ Kobject_dbg::Iterator
 Kobject_dbg::id_to_obj(unsigned long id)
 {
   for (Iterator l = _kobjects->begin(); l != _kobjects->end(); ++l)
-    {
-      if (l->dbg_id() == id)
-	return l;
-    }
+    if (l->dbg_id() == id)
+      return l;
+
   return end();
 }
 
@@ -135,28 +158,6 @@ unsigned long
 Kobject_dbg::obj_to_id(void const *o)
 {
   return pointer_to_id(o);
-}
-
-
-PROTECTED
-Kobject_dbg::Kobject_dbg()
-{
-  auto guard = lock_guard(&_kobjects_lock);
-
-  _dbg_id = _next_dbg_id++;
-  _kobjects->push_back(this);
-}
-
-IMPLEMENT inline
-Kobject_dbg::~Kobject_dbg()
-{
-    {
-      auto guard = lock_guard(&_kobjects_lock);
-      _kobjects->remove(this);
-    }
-
-  while (Dbg_extension *ex = _jdb_data.front())
-    delete ex;
 }
 
 //---------------------------------------------------------------------------
@@ -186,11 +187,6 @@ PUBLIC static constexpr
 bool
 Kobject_dbg::is_kobj(void const *)
 { return false; }
-
-PUBLIC static constexpr
-Kobject_dbg::Iterator
-Kobject_dbg::id_to_obj(unsigned long)
-{ return 0; }
 
 PUBLIC static constexpr
 unsigned long
