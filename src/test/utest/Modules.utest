@@ -35,3 +35,5 @@ UTEST_SUPPL :=
 # Include all existing Modules in subdirectories. They modify INTERFACES_UTEST
 # and maybe UTEST_SUPPL.
 include $(UTEST_SUBDIR_MODULES)
+
+INTERFACES_UTEST += $(INTERFACES_UTEST-y)
