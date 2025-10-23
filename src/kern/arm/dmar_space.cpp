@@ -20,7 +20,7 @@ private:
   template<typename CLASS>
   struct Pte_iommu
   {
-    static bool need_cache_write_back()
+    static constexpr bool need_cache_write_back()
     { return !Iommu::Coherent; }
 
     void write_back_if(bool)
@@ -28,13 +28,13 @@ private:
 
     void write_back()
     {
-      if (!Iommu::Coherent)
+      if constexpr (need_cache_write_back())
         Mem_unit::clean_dcache(static_cast<CLASS const *>(this)->pte);
     }
 
     static void write_back(void *start, void *end)
     {
-      if (!Iommu::Coherent)
+      if constexpr (need_cache_write_back())
         Mem_unit::clean_dcache(start, end);
     }
   };
