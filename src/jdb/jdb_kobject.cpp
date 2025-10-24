@@ -63,15 +63,15 @@ public:
 protected:
   enum class Op : Mword
   {
-    Set_name         = 0,
-    Global_id        = 1,
-    Kobj_to_id       = 2,
-    Query_log_typeid = 3,
-    Switch_log       = 4,
-    Get_name         = 5,
-    Query_log_name   = 6,
-    Add_image_info   = 7,
-    Obj_info         = 16,
+    Set_name         = 0,  ///< [rt_dbg] set debug name of kernel object
+    Global_id        = 1,  ///< [jdb]    get debug ID of kernel object
+    Kobj_to_id       = 2,  ///< [jdb]    get debug ID of object by pointer
+    Query_log_typeid = 3,  ///< [jdb]    query log-id for log type
+    Switch_log       = 4,  ///< [jdb]    enable / disable log
+    Get_name         = 5,  ///< [rt_dbg] get debug name of kernel object
+    Query_log_name   = 6,  ///< [jdb]    get name of log type for given log-id
+    Add_image_info   = 7,  ///< [rt_dbg] add image information for task
+    Obj_info         = 16, ///< [jdb]    query information about all objects
   };
 
 private:
