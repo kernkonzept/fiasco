@@ -562,10 +562,11 @@ void
 Mpu_regions::dump() const
 {
   unsigned i = 0;
+  printf("Used MPU regions:\n");
   while (i < _used_mask.size() && (i = _used_mask.ffs(i)))
     {
       auto attr = _regions[i - 1].attr();
-      printf("[" L4_MWORD_FMT ".." L4_MWORD_FMT ", %c%c, %cR%c%c]@%u ",
+      printf("  [" L4_MWORD_FMT ".." L4_MWORD_FMT ", %c%c, %cR%c%c]@%u\n",
              _regions[i - 1].start(),
              _regions[i - 1].end(),
              attr.enabled() ? '+' : '-',
