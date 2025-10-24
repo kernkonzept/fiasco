@@ -76,8 +76,12 @@ IMPLEMENTATION[rt_dbg]:
 
 #include "static_init.h"
 
-DEFINE_GLOBAL_PRIO(BOOTSTRAP_INIT_PRIO) Global_data<Spin_lock<>> Kobject_dbg::_kobjects_lock;
-DEFINE_GLOBAL_PRIO(BOOTSTRAP_INIT_PRIO) Global_data<Kobject_dbg::Kobject_list> Kobject_dbg::_kobjects;
+DEFINE_GLOBAL_PRIO(BOOTSTRAP_INIT_PRIO)
+Global_data<Spin_lock<>> Kobject_dbg::_kobjects_lock;
+
+DEFINE_GLOBAL_PRIO(BOOTSTRAP_INIT_PRIO)
+Global_data<Kobject_dbg::Kobject_list> Kobject_dbg::_kobjects;
+
 DEFINE_GLOBAL Global_data<unsigned long> Kobject_dbg::_next_dbg_id;
 
 IMPLEMENT inline Kobject_dbg::Dbg_extension::~Dbg_extension() {}
