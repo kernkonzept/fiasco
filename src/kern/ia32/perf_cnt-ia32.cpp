@@ -9,7 +9,6 @@ public:
   enum Perf_event_type
   { P5, P6, P4, };
 
-  static Perf_read_fn read_pmc[Max_slot];
   virtual void init_loadcnt(bool init_ap) = 0;
   virtual void start_pmc(Unsigned32) = 0;
 
@@ -74,8 +73,6 @@ IMPLEMENTATION [(ia32 || amd64) && perf_cnt]:
 #include "regdefs.h"
 #include "static_init.h"
 
-Perf_cnt::Perf_read_fn Perf_cnt::read_pmc[Perf_cnt::Max_slot] =
-{ dummy_read_pmc, dummy_read_pmc };
 Perf_cnt::Perf_read_fn Perf_cnt::read_pmc_fn[Perf_cnt::Max_slot] =
 { dummy_read_pmc, dummy_read_pmc };
 

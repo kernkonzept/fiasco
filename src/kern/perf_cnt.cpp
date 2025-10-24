@@ -19,23 +19,8 @@ public:
   typedef Mword (*Perf_read_fn)();
 };
 
-
-// -----------------------------------------------------------------------
-INTERFACE [!perf_cnt]:
-
-EXTENSION class Perf_cnt
-{
-public:
-  static Perf_read_fn read_pmc[Max_slot];
-};
-
 // -----------------------------------------------------------------------
 IMPLEMENTATION [!perf_cnt]:
-
-Perf_cnt::Perf_read_fn Perf_cnt::read_pmc[Max_slot] =
-{ dummy_read_pmc, dummy_read_pmc };
-
-static inline Mword dummy_read_pmc() { return 0; }
 
 PUBLIC static inline
 void
