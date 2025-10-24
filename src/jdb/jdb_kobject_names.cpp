@@ -131,25 +131,45 @@ Jdb_name_hdl::invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb) override
 {
   switch (Op{utcb->values[0]})
     {
-    case Op::Set_name:
+    case Op::Set_name: // Set name for kernel object
       set_name(o, f, utcb);
       return true;
 
-    case Op::Get_name:
-      if (auto d = Kobject_dbg::id_to_obj(utcb->values[1]); d != Kobject_dbg::end())
-        get_name(Kobject::from_dbg(d), f, utcb);
-      else
-        f->tag(Kobject_iface::commit_result(-L4_err::ENoent));
+    case Op::Get_name: // Get name for kernel object
+      get_name(o, f, utcb);
+      return true;
+
+    case Op::Query_name: // Query name for kernel object specified by debug ID
+      query_name(f, utcb);
       return true;
 
     default:
-      break;
+      return false;
     }
-  return false;
+}
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION [!jdb]:
+
+PRIVATE static inline
+void
+Jdb_name_hdl::query_name(Syscall_frame *f, Utcb *)
+{
+  f->tag(Kobject_iface::commit_result(-L4_err::ENosys));
 }
 
 //--------------------------------------------------------------------------
 IMPLEMENTATION [jdb]:
+
+PRIVATE static
+void
+Jdb_name_hdl::query_name(Syscall_frame *f, Utcb *utcb)
+{
+  if (auto d = Kobject_dbg::id_to_obj(utcb->values[1]); d != Kobject_dbg::end())
+    get_name(Kobject::from_dbg(d), f, utcb);
+  else
+    f->tag(Kobject_iface::commit_result(-L4_err::ENoent));
+}
 
 PUBLIC
 bool
@@ -177,6 +197,4 @@ Jdb_kobject_name::init()
   Jdb_kobject::module()->register_handler(&hdl);
 }
 
-
 STATIC_INITIALIZE(Jdb_kobject_name);
-

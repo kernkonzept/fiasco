@@ -68,9 +68,10 @@ protected:
     Kobj_to_id       = 2,  ///< [jdb]    get debug ID of object by pointer
     Query_log_typeid = 3,  ///< [jdb]    query log-id for log type
     Switch_log       = 4,  ///< [jdb]    enable / disable log
-    Get_name         = 5,  ///< [rt_dbg] get debug name of kernel object
+    Query_name       = 5,  ///< [jdb]    get debug name of kernel object by debug ID
     Query_log_name   = 6,  ///< [jdb]    get name of log type for given log-id
     Add_image_info   = 7,  ///< [rt_dbg] add image information for task
+    Get_name         = 8,  ///< [rt_dbg] get debug name of kernel object
     Obj_info         = 16, ///< [jdb]    query information about all objects
   };
 
