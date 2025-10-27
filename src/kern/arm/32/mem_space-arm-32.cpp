@@ -64,6 +64,11 @@ Mem_space::sync_kernel()
   return 0;
 }
 
+IMPLEMENT_OVERRIDE inline NEEDS["mem_layout.h"]
+Address
+Mem_space::max_usable_user_address()
+{ return Mem_layout::Kern_lib_base - 1; }
+
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm_v6 && mmu]:
 
