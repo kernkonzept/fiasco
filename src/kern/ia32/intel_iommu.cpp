@@ -22,7 +22,7 @@ class Io_mmu :
 {
 public:
   /// Maximum number of IOMMUs.
-  enum { Max_iommus = 16 };
+  enum { Max_iommus = CONFIG_IA32_IOMMU_MAX };
 
   /// Command and status register bits
   enum Cmd_bits
@@ -940,7 +940,7 @@ Intel::Io_mmu::init(Cpu_number cpu)
       ++units;
 
   if (units > Max_iommus)
-    panic("Cannot handle more than %d IOMMUs", Max_iommus);
+    panic("Cannot handle more than %d IOMMUs (%u found)", Max_iommus, units);
 
   // need to take a copy of the DMAR into the kernel AS as the ACPI
   // are mapped only into IDLE AS!
