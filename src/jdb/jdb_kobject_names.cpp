@@ -82,6 +82,49 @@ public:
   virtual ~Jdb_name_hdl() {}
 };
 
+PRIVATE static
+void
+Jdb_name_hdl::set_name(Kobject_common *o, Syscall_frame *f, Utcb *utcb)
+{
+  bool enqueue = false;
+  auto *n = Jdb_kobject_extension::find_extension<Jdb_kobject_name>(o);
+  if (!n)
+    {
+      n = _name_allocator->new_obj();
+      if (!n)
+        {
+          f->tag(Kobject_iface::commit_result(-L4_err::ENomem));
+          return;
+        }
+      enqueue = true;
+    }
+
+  if (f->tag().words() > 0)
+    n->name(reinterpret_cast<char const *>(&utcb->values[1]),
+            (f->tag().words() - 1) * sizeof(Mword));
+  if (enqueue)
+    o->dbg_info()->_jdb_data.add(n);
+
+  f->tag(Kobject_iface::commit_result(0));
+}
+
+PRIVATE static
+void
+Jdb_name_hdl::get_name(Kobject_common *o, Syscall_frame *f, Utcb *utcb)
+{
+  if (auto *n = Jdb_kobject_extension::find_extension<Jdb_kobject_name>(o))
+    {
+      unsigned l = min<unsigned>(n->max_len(), sizeof(utcb->values) - 1);
+      char *dst = reinterpret_cast<char *>(utcb->values);
+      strncpy(dst, n->name(), l);
+      dst[l] = 0;
+
+      f->tag(Kobject_iface::commit_result(0, Ko::message_words(l + 1)));
+    }
+  else
+    f->tag(Kobject_iface::commit_result(-L4_err::ENoent));
+}
+
 PUBLIC
 bool
 Jdb_name_hdl::invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb) override
@@ -89,53 +132,16 @@ Jdb_name_hdl::invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb) override
   switch (Op{utcb->values[0]})
     {
     case Op::Set_name:
-      {
-        bool enqueue = false;
-        Jdb_kobject_name *ne;
-        ne = Jdb_kobject_extension::find_extension<Jdb_kobject_name>(o);
-        if (!ne)
-          {
-            ne = _name_allocator->new_obj();
-            if (!ne)
-              {
-                f->tag(Kobject_iface::commit_result(-L4_err::ENomem));
-                return true;
-              }
-            enqueue = true;
-          }
+      set_name(o, f, utcb);
+      return true;
 
-        if (f->tag().words() > 0)
-          ne->name(reinterpret_cast<char const *>(&utcb->values[1]),
-                   (f->tag().words() - 1) * sizeof(Mword));
-        if (enqueue)
-          o->dbg_info()->_jdb_data.add(ne);
-        f->tag(Kobject_iface::commit_result(0));
-        return true;
-      }
     case Op::Get_name:
-      {
-        Kobject_dbg::Iterator o = Kobject_dbg::id_to_obj(utcb->values[1]);
-        if (o == Kobject_dbg::end())
-          {
-            f->tag(Kobject_iface::commit_result(-L4_err::ENoent));
-            return true;
-          }
-        Jdb_kobject_name *n =
-          Jdb_kobject_extension::find_extension<Jdb_kobject_name>(Kobject::from_dbg(o));
-        if (!n)
-          {
-            f->tag(Kobject_iface::commit_result(-L4_err::ENoent));
-            return true;
-          }
+      if (auto d = Kobject_dbg::id_to_obj(utcb->values[1]); d != Kobject_dbg::end())
+        get_name(Kobject::from_dbg(d), f, utcb);
+      else
+        f->tag(Kobject_iface::commit_result(-L4_err::ENoent));
+      return true;
 
-        unsigned l = min<unsigned>(n->max_len(), sizeof(utcb->values) - 1);
-        char *dst = reinterpret_cast<char *>(utcb->values);
-        strncpy(dst, n->name(), l);
-        dst[l] = 0;
-
-        f->tag(Kobject_iface::commit_result(0, Ko::message_words(l + 1)));
-        return true;
-      }
     default:
       break;
     }
