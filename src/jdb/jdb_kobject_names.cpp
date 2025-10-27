@@ -26,6 +26,7 @@ private:
 IMPLEMENTATION:
 
 #include "kmem_slab.h"
+#include "kobject_rpc.h"
 #include "minmax.h"
 #include "static_init.h"
 #include "panic.h"
@@ -132,8 +133,7 @@ Jdb_name_hdl::invoke(Kobject_common *o, Syscall_frame *f, Utcb *utcb) override
         strncpy(dst, n->name(), l);
         dst[l] = 0;
 
-        f->tag(Kobject_iface::commit_result(0, (l + 1 + sizeof(Mword) - 1)
-                                                / sizeof(Mword)));
+        f->tag(Kobject_iface::commit_result(0, Ko::message_words(l + 1)));
         return true;
       }
     default:
