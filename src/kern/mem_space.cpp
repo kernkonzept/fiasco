@@ -211,19 +211,19 @@ public:
    */
   Address pmem_to_phys(Address virt) const;
 
-/**
- * Simple page-table lookup.
- *
- * This method is similar to virt_to_phys(), with the difference that this
- * version handles Sigma0's address space as a special case (by having the
- * Sigma0 task class provide a specialized override of this method): For Sigma0,
- * we do not actually consult the page table, as it is meaningless because we
- * create new mappings for Sigma0 transparently; instead, we return the
- * logically-correct result of physical address == virtual address.
- *
- * @param virt Virtual address. This address does not need to be page-aligned.
- * @return Physical address corresponding to virt.
- */
+  /**
+   * Simple page-table lookup.
+   *
+   * This method is similar to virt_to_phys(), with the difference that this
+   * version handles Sigma0's address space as a special case (by having the
+   * Sigma0 task class provide a specialized override of this method): For
+   * Sigma0, we do not actually consult the page table, as it is meaningless
+   * because we create new mappings for Sigma0 transparently; instead, we return
+   * the logically-correct result of physical address == virtual address.
+   *
+   * @param virt Virtual address. This address does not need to be page-aligned.
+   * @return Physical address corresponding to virt.
+   */
   virtual
   Address virt_to_phys_s0(void *virt) const
   { return virt_to_phys(reinterpret_cast<Address>(virt)); }
