@@ -28,9 +28,8 @@ public:
 
     // ========================================================================
     // We use a shared 1 GiB page directory for the Kglobal_area for all CPUs
-    // so there must be NO CPU-local mappings within this range. Note that this
-    // region partly overlaps Physmem..Physmem_end but that is no problem.
-    Kglobal_area      = 0xfffffffe'40000000UL,     ///< % 1 GiB
+    // so there must be NO CPU-local mappings within this range.
+    Kglobal_area      = 0xfffffffe'00000000UL,     ///< % 1 GiB
 
     Mmio_map_start    = Kglobal_area,              ///< % 2 MiB
     Mmio_map_end      = Kglobal_area + 0xd0000000, ///< % 2 MiB => 3328 MiB
@@ -46,12 +45,12 @@ public:
     Tss_start         = Kglobal_area + 0xd8200000, ///< % 2 MiB
     Tss_end           = Kglobal_area + 0xde200000, ///< size >= 96 MiB
 
-    Kglobal_area_end  = 0xffffffff'80000000UL,     ///< % 1 GiB => 5 GiB
-    // ========================================================================
+    Physmem           = 0xfffffffe'e0000000UL,     ///< % 2 MiB kernel memory
+    Physmem_end       = 0xffffffff'c0000000UL,     ///< % 2 MiB kernel memory
+    Physmem_max_size  = Physmem_end - Physmem,     ///< size 3584 MiB
 
-    Physmem           = 0xffffffff'20000000UL, ///< % 2 MiB kernel memory
-    Physmem_end       = 0xffffffff'f0000000UL, ///< % 2 MiB kernel memory
-    Physmem_max_size  = Physmem_end - Physmem,
+    Kglobal_area_end  = 0xffffffff'c0000000UL,     ///< % 1 GiB => 7 GiB
+    // ========================================================================
 
     Kernel_image      = FIASCO_IMAGE_VIRT_START,
     Kernel_image_size = FIASCO_IMAGE_VIRT_SIZE,
@@ -72,6 +71,7 @@ public:
 
   static_assert(Mmio_map_end <= Service_page);
   static_assert(Physmem >= Mmio_map_end);
+  static_assert(Physmem_end <= Kglobal_area_end);
   static_assert(Kernel_image >= Physmem_end);
 
   static_assert(Kentry_cpu_pdir >= Kglobal_area_end);
