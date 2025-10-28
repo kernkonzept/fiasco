@@ -66,9 +66,9 @@ int Thread::handle_page_fault(Address pfa, Mword error_code, Mword pc,
       goto error;
     }
 
-  // Check for page fault in kernel memory region caused by user mode
+  // don't allow page fault in kernel memory region caused by user mode
   else if (EXPECT_FALSE(PF::is_usermode_error(error_code)))
-    return 0;             // disallow access after mem_user_max
+    return 0;
 
   // We're in kernel code faulting on a kernel memory region
 
