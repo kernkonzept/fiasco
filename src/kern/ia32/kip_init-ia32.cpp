@@ -152,10 +152,12 @@ Kip_init::reserve_amd64_hole()
 //---------------------------------------------------------------------------
 IMPLEMENTATION:
 
+#include "mem_space.h"
+
 PUBLIC static FIASCO_INIT
 void
 Kip_init::setup_user_virtual(Kip *kinfo)
 {
-  kinfo->add_mem_region(Mem_desc(0, Mem_layout::User_max,
+  kinfo->add_mem_region(Mem_desc(0, Mem_space::max_usable_user_address(),
                         Mem_desc::Conventional, true));
 }
