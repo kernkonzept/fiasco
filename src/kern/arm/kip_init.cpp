@@ -66,7 +66,7 @@ void Kip_init::init()
 {
   Kip *kinfo = Kip::all_instances()[Amp_node::id()];
   Kip::init_global_kip(kinfo);
-  kinfo->add_mem_region(Mem_desc(0, Mem_space::user_max(),
+  kinfo->add_mem_region(Mem_desc(0, Mem_space::max_usable_user_address(),
                         Mem_desc::Conventional, true));
   init_syscalls(kinfo);
 }

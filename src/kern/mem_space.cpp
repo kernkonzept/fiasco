@@ -300,6 +300,21 @@ public:
     return _glbl_page_sizes;
   }
 
+  /**
+   * Return maximum supported user space address.
+   *
+   * The page tables always provide up to Mem_layout::User_max bits of virtual
+   * address space but it could be further constrained by the architecture, for
+   * example by the physical address size of the MMU, or by reserved regions in
+   * the user address space.
+   *
+   * This function returns the maximum supported virtual address for userland.
+   * This address is not necessarily aligned. In contrast, Mem_layout::User_max
+   * + 1 is aligned (usually to super page boundary) so it can be used in page
+   * table code.
+   */
+  static Address max_usable_user_address();
+
 protected:
   /**
    * TLB type of this memory space.
@@ -603,6 +618,11 @@ IMPLEMENT_DEFAULT static inline
 void
 Mem_space::reload_current()
 {}
+
+IMPLEMENT_DEFAULT inline NEEDS["mem_layout.h"]
+Address
+Mem_space::max_usable_user_address()
+{ return Mem_layout::User_max; }
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION [!need_xcpu_tlb_flush]:

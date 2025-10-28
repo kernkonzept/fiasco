@@ -46,16 +46,6 @@ public:
 
   static void kernel_space(Mem_space *);
 
-  /**
-   * Return maximum supported user space address.
-   *
-   * The page tables always provide up to Mem_layout::User_max bits of virtual
-   * address space. But at least on arm64 cpu_virt the HW supported stage1
-   * output size (maximum IPA size) is additionally constrained by the
-   * available physical address size of the MMU.
-   */
-  static Address user_max();
-
 private:
   // DATA
   Dir_type *_dir;
@@ -117,8 +107,6 @@ public:
 
   static void kernel_space(Mem_space *);
 
-  static Address user_max();
-
   /**
    * Load mask of active ku_mem regions in current context.
    *
@@ -179,11 +167,6 @@ Mem_space::regular_tlb_type()
 {
   return  Have_asids ? Tlb_per_cpu_asid : Tlb_per_cpu_global;
 }
-
-IMPLEMENT_DEFAULT inline NEEDS["mem_layout.h"]
-Address
-Mem_space::user_max()
-{ return Mem_layout::User_max; }
 
 IMPLEMENT inline NEEDS["mem_unit.h", Mem_space::sync_mpu_state]
 void

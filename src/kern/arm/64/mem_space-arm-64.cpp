@@ -42,9 +42,15 @@ Mem_space::make_current(Switchin_flags)
   _current.current() = this;
 }
 
+/*
+ * The page tables always provide up to Mem_layout::User_max bits of virtual
+ * address space. But at least on arm64 cpu_virt the HW supported stage1 output
+ * size (maximum IPA size) is additionally constrained by the available physical
+ * address size of the MMU.
+ */
 IMPLEMENT_OVERRIDE
 Address
-Mem_space::user_max()
+Mem_space::max_usable_user_address()
 {
   return (1ULL << Page::ipa_bits(Cpu::pa_range())) - 1U;
 }

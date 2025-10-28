@@ -8,7 +8,7 @@ IMPLEMENTATION [arm]:
 IMPLEMENT_OVERRIDE inline NEEDS["mem_space.h"]
 Address
 Kernel_thread::utcb_addr()
-{ return Mem_space::user_max() + 1U - 0x10000U; }
+{ return Mem_space::max_usable_user_address() + 1U - 0x10000U; }
 
 IMPLEMENT inline
 void
