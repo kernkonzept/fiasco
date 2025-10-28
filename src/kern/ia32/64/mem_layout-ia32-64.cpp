@@ -30,23 +30,23 @@ public:
     // We use a shared 1 GiB page directory for the Kglobal_area for all CPUs
     // so there must be NO CPU-local mappings within this range. Note that this
     // region partly overlaps Physmem..Physmem_end but that is no problem.
-    Kglobal_area      = 0xffffffff'00000000UL,     ///< % 1 GiB
+    Kglobal_area      = 0xfffffffe'40000000UL,     ///< % 1 GiB
 
-    Service_page      = Kglobal_area,              ///< % 4 MiB global mappings
-    Jdb_tmp_map_page  = Service_page +     0x2000, ///< % 4 KiB, size 4 KiB
-    Tbuf_status_page  = Service_page +     0x6000, ///< % 4 KiB, size 4 KiB
+    Mmio_map_start    = Kglobal_area,              ///< % 2 MiB
+    Mmio_map_end      = Kglobal_area + 0xd0000000, ///< % 2 MiB => 3328 MiB
+
+    Service_page      = Kglobal_area + 0xd0000000, ///< % 4 MiB global mappings
+    Jdb_tmp_map_page  = Service_page +     0x0000, ///< % 4 KiB, size 4 KiB
+    Tbuf_status_page  = Service_page +     0x1000, ///< % 4 KiB, size 4 KiB
     // some unused space
-    Tbuf_buffer_area  = Kglobal_area + 0x00200000, ///< % 2 MiB
-    Tbuf_buffer_end   = Kglobal_area + 0x02200000, ///< size 2^x aligned
+    Tbuf_buffer_area  = Kglobal_area + 0xd0200000, ///< % 2 MiB
+    Tbuf_buffer_end   = Kglobal_area + 0xd8200000, ///< size 2^x aligned
     Tbuf_buffer_size  = Tbuf_buffer_end - Tbuf_buffer_area,
 
-    Tss_start         = Kglobal_area + 0x02200000, ///< % 2 MiB
-    Tss_end           = Kglobal_area + 0x08200000, ///< size >= 96 MiB
+    Tss_start         = Kglobal_area + 0xd8200000, ///< % 2 MiB
+    Tss_end           = Kglobal_area + 0xde200000, ///< size >= 96 MiB
 
-    Mmio_map_start    = Kglobal_area + 0x08200000, ///< % 2 MiB
-    Mmio_map_end      = Kglobal_area + 0x20000000, ///< % 2 MiB => 382 MiB
-
-    Kglobal_area_end  = 0xffffffff'80000000UL,     ///< % 1 GiB
+    Kglobal_area_end  = 0xffffffff'80000000UL,     ///< % 1 GiB => 5 GiB
     // ========================================================================
 
     Physmem           = 0xffffffff'20000000UL, ///< % 2 MiB kernel memory
@@ -70,7 +70,7 @@ public:
     Kentry_cpu_pdir   = 0xffffffff'f0a00000UL, ///< % 2 MiB
   };
 
-  static_assert(Mmio_map_start >= Tss_end);
+  static_assert(Mmio_map_end <= Service_page);
   static_assert(Physmem >= Mmio_map_end);
   static_assert(Kernel_image >= Physmem_end);
 
