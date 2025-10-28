@@ -68,9 +68,6 @@ class Kmem
 {
   friend class Kernel_task;
 
-public:
-  static Address     user_max();
-
 private:
   static Address kphys_start, kphys_end;
 };
@@ -422,7 +419,7 @@ Kmem::setup_cpu_structures(Cpu &cpu, Lockless_alloc *cpu_alloc,
   assert(tss != nullptr);
   assert(Pg::aligned(reinterpret_cast<Address>(tss)));
 
-  cpu.init_gdt(reinterpret_cast<Address>(gdt), user_max());
+  cpu.init_gdt(reinterpret_cast<Address>(gdt), ~0UL);
   cpu.init_tss(tss);
 
   // force GDT... to memory before loading the registers
@@ -444,8 +441,6 @@ Kmem::setup_cpu_structures(Cpu &cpu, Lockless_alloc *cpu_alloc,
 
   init_cpu_arch(cpu, cpu_alloc);
 }
-
-IMPLEMENT inline Address Kmem::user_max() { return ~0UL; }
 
 /**
  * Compute a kernel-virtual address for a physical address.

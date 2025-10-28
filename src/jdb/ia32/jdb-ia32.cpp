@@ -824,9 +824,6 @@ Jdb::analyze_code(Cpu_number cpu)
 {
   Jdb_entry_frame *ef = Jdb::entry_frame.cpu(cpu);
   Space *task = get_task(cpu);
-  // do nothing if page not mapped into this address space
-  if (ef->ip()+1 > Kmem::user_max())
-    return;
 
   Unsigned8 op1, op2;
 
