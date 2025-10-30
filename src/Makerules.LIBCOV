@@ -10,4 +10,4 @@ clean-LIBCOV:
 
 fiasco-covpath.o:
 	$(COMP_MESSAGE)
-	$(VERBOSE)echo '#include "globalconfig.h"\n#ifdef CONFIG_AMP\n# define GLOBAL_DATA __attribute__((section(".global_data")))\n#else\n# define GLOBAL_DATA\n#endif\nGLOBAL_DATA char const *__COV_PATH="$(PWD)/fiasco";' | $(CC) -o $@ -c -xc -
+	$(VERBOSE)echo '#include "globalconfig.h"\n#ifdef CONFIG_AMP\n# define GLOBAL_DATA __attribute__((section(".global_data")))\n#else\n# define GLOBAL_DATA\n#endif\nGLOBAL_DATA char const *__COV_PATH="$(PWD)/fiasco";' | $(CC) -o $@ -c -xc - $(SHARED_FLAGS)
