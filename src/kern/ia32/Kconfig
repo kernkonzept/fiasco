@@ -131,3 +131,7 @@ config TSC_UNIFIED
 
 	  Unfortunately we cannot panic in that case because QEMU does not
 	  support this CPU feature in TCG.
+
+config IA32_IOMMU_MAX
+	int "Maxmimum number of IOMMUs"
+	default 16 if IOMMU
