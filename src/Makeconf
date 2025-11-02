@@ -312,6 +312,10 @@ COMP_MESSAGE_NOOPT ?= $(COMP_MESSAGE)
 ADD_CONFIGFILE   = $\
   $(VERBOSE)$(OBJCOPY) --add-section .debug.fiasco_config=globalconfig.out $(1)
 
+# Do not use built-in rules and variables for a cleaner environment.
+# Use the latest mtime between symlinks and target.
+MAKEFLAGS += -rRL
+
 ifneq ($(V),2)
 MOVE_IF_CHANGE += -q
 endif
