@@ -301,17 +301,28 @@ public:
   }
 
   /**
+   * Return maximum supported user space address of MMU.
+   *
+   * This function returns the address of the highest supported virtual address
+   * for userland by the hardware. The page tables always provide up to
+   * Mem_layout::User_max bits of virtual address space but it could be further
+   * constrained by the underlying hardware, for example by the physical
+   * address size of the MMU.
+   *
+   * This address + 1 is at least aligned to a super page boundary, so it can
+   * be used in page table code.
+   */
+  static Address max_user_address();
+
+  /**
    * Return maximum supported user space address.
    *
-   * The page tables always provide up to Mem_layout::User_max bits of virtual
-   * address space but it could be further constrained by the architecture, for
-   * example by the physical address size of the MMU, or by reserved regions in
-   * the user address space.
-   *
    * This function returns the maximum supported virtual address for userland.
-   * This address is not necessarily aligned. In contrast, Mem_layout::User_max
-   * + 1 is aligned (usually to super page boundary) so it can be used in page
-   * table code.
+   * By default, this is equal to max_user_address(). In case of reserved
+   * regions it could be smaller, though.
+   *
+   * This address is not necessarily aligned and thus cannot be used in page
+   * table code!
    */
   static Address max_usable_user_address();
 
@@ -621,8 +632,13 @@ Mem_space::reload_current()
 
 IMPLEMENT_DEFAULT inline NEEDS["mem_layout.h"]
 Address
-Mem_space::max_usable_user_address()
+Mem_space::max_user_address()
 { return Mem_layout::User_max; }
+
+IMPLEMENT_DEFAULT inline
+Address
+Mem_space::max_usable_user_address()
+{ return max_user_address(); }
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION [!need_xcpu_tlb_flush]:

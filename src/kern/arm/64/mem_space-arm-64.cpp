@@ -29,6 +29,23 @@ IMPLEMENTATION [arm_v8 && mmu && arm_lpae && cpu_virt]:
 #include "cpu.h"
 #include "paging.h"
 
+EXTENSION class Mem_space
+{
+  struct Max_ipa_address
+  {
+    Max_ipa_address()
+    : val((1ULL << Page::ipa_bits(Cpu::pa_range())) - 1U)
+    {}
+
+    Address val;
+  };
+
+  static Max_ipa_address _max_user_address;
+};
+
+Mem_space::Max_ipa_address
+Mem_space::_max_user_address INIT_PRIORITY(EARLY_INIT_PRIO);
+
 IMPLEMENT inline NEEDS[Mem_space::asid]
 void
 Mem_space::make_current(Switchin_flags)
@@ -50,10 +67,8 @@ Mem_space::make_current(Switchin_flags)
  */
 IMPLEMENT_OVERRIDE
 Address
-Mem_space::max_usable_user_address()
-{
-  return (1ULL << Page::ipa_bits(Cpu::pa_range())) - 1U;
-}
+Mem_space::max_user_address()
+{ return _max_user_address.val; }
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION [arm_v8 && mpu && !cpu_virt]:
