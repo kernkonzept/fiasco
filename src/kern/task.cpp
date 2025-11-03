@@ -208,7 +208,7 @@ Task::alloc_ku_mem(L4_fpage *ku_area, bool need_remote_tlb_flush)
 
   Mword sz = 1UL << ku_area->order();
 
-  if (ku_area->mem_address() > Virt_addr(Mem_layout::User_max - sz + 1))
+  if (ku_area->mem_address() > Virt_addr(max_usable_user_address() - sz + 1))
     return -L4_err::EInval;
 
   Ku_mem *m = new (ram_quota()) Ku_mem();
