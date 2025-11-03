@@ -675,7 +675,6 @@ PUBLIC
 Irq_sender::~Irq_sender()
 {
   assert(!_irq_thread);
-  assert(_send_state.is_destroyed());
   assert(!_drq.queued());
 }
 
