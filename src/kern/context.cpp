@@ -1070,7 +1070,7 @@ Context::deblock_and_schedule(Context *to)
  *             helping state unchanged
  */
 PUBLIC
-[[nodiscard]] Context::Switch //L4_IPC_CODE
+[[nodiscard]] Context::Switch
 Context::switch_exec_locked(Context *t, enum Helping_mode mode)
 {
   // Must be called with CPU lock held
@@ -1082,17 +1082,16 @@ Context::switch_exec_locked(Context *t, enum Helping_mode mode)
   // only for logging
   [[maybe_unused]] Context *t_orig = t;
 
-  // Time-slice lending: if t is locked, switch to its locker
-  // instead, this is transitive
-  //
-
+  // Is t temporarily running on a foreign CPU, due to being helped?
   if (EXPECT_FALSE(t->running_on_different_cpu()))
     {
+      // When t currently executes on a foreign CPU, it must of course not
+      // execute on its home CPU at the same time. Let the switch fail, and
+      // retry when t gets scheduled again.
       if (!t->in_ready_list())
         Sched_context::rq.current().ready_enqueue(t->sched());
       return Switch::Failed;
     }
-
 
   LOG_CONTEXT_SWITCH;
   CNT_CONTEXT_SWITCH;
@@ -1135,7 +1134,8 @@ Context::Switch
 Context::_switch_exec_common(Context *t, Helping_mode mode)
 {
   // Can only switch to ready threads!
-  // Do not consider CPU locality here, t can be temporarily migrated.
+  // Do not require CPU locality here when accessing thread state, as t may
+  // temporarily execute on a foreign CPU due being helped.
   if (EXPECT_FALSE (!(t->state(false) & Thread_ready_mask)))
     {
       assert (state(false) & Thread_ready_mask);
