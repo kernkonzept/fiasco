@@ -109,7 +109,7 @@ Kernel_thread::bootstrap()
   Sched_context::rq.current().set_current_sched(sched());
 
   Timer_tick::setup(current_cpu());
-  assert (current_cpu() == Cpu_number::boot_cpu()); // currently the boot cpu must be 0
+  assert(current_cpu() == Cpu_number::boot_cpu()); // currently the boot cpu must be 0
   Mem_space::enable_tlb(current_cpu());
 
   Per_cpu_data::run_late_ctors(Cpu_number::boot_cpu());

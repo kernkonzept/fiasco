@@ -2,7 +2,6 @@ IMPLEMENTATION:
 
 #include <cstdio>
 #include <cxx/defensive>
-
 #include "acpi.h"
 #include "acpi_fadt.h"
 #include "context.h"
@@ -81,8 +80,6 @@ Platform_control::init(Cpu_number cpu)
   _system_suspend_enabled = true;
 }
 
-
-
 /* implemented in ia32/tramp-acpi.S */
 extern "C" FIASCO_FASTCALL
 int acpi_save_cpu_and_suspend(Unsigned32 sleep_type,
@@ -120,7 +117,7 @@ suspend_ap_cpus()
           Cpu &cpu = Cpu::cpus.current();
           Pm_object::run_on_suspend_hooks(cpun);
           cpu.pm_suspend();
-          check (Context::take_cpu_offline(cpun, true));
+          check(Context::take_cpu_offline(cpun, true));
           // We assume that Platform_control::cpu_suspend() does never return
           // under any circumstances -- otherwise we'd run with inconsistent
           // state into the scheduler.
@@ -139,7 +136,7 @@ suspend_ap_cpus()
     }
 
   // Wind up pending Rcu and Drq changes together with all _cpus_to_suspend
-  check (Context::take_cpu_offline(current_cpu(), true));
+  check(Context::take_cpu_offline(current_cpu(), true));
 
   while (!_cpus_to_suspend.empty())
     {

@@ -282,7 +282,7 @@ Switch_lock::set_lock_owner(Context *o)
 
   if (have_no_locks)
     {
-      assert (current_cpu() == o->home_cpu());
+      assert(current_cpu() == o->home_cpu());
       while (EXPECT_FALSE(!o->_running_under_lock.try_dispatch()))
         ;
     }

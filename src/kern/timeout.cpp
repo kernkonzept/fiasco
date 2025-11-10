@@ -178,7 +178,6 @@ Timeout::has_hit()
   return _flags.hit;
 }
 
-
 /**
  * Program timeout to expire at the specified wakeup time.
  *
@@ -196,7 +195,7 @@ Timeout::set(Unsigned64 clock, Cpu_number cpu)
   auto guard = lock_guard(cpu_lock);
   assert(cpu == current_cpu());
 
-  assert (!is_set());
+  assert(!is_set());
 
   _wakeup = clock;
   Timeout_q::timeout_queue.cpu(cpu).enqueue(this);
@@ -229,7 +228,7 @@ Timeout::set_again(Cpu_number cpu)
   auto guard = lock_guard(cpu_lock);
   assert(cpu == current_cpu());
 
-  assert(! is_set());
+  assert(!is_set());
   if (has_hit())
     return;
 

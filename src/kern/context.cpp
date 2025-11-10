@@ -625,7 +625,7 @@ PUBLIC inline NEEDS ["atomic.h"]
 void
 Context::state_del(Mword bits)
 {
-  assert (check_for_current_cpu());
+  assert(check_for_current_cpu());
   local_atomic_and(&_state, ~bits);
 }
 
@@ -656,7 +656,7 @@ PUBLIC inline NEEDS ["atomic.h"]
 Mword
 Context::state_change_safely(Mword mask, Mword bits)
 {
-  assert (check_for_current_cpu());
+  assert(check_for_current_cpu());
   Mword old;
 
   do
@@ -679,7 +679,7 @@ PUBLIC inline NEEDS ["atomic.h"]
 Mword
 Context::state_change(Mword mask, Mword bits)
 {
-  assert (check_for_current_cpu());
+  assert(check_for_current_cpu());
   return local_atomic_change(&_state, mask, bits);
 }
 
@@ -1319,8 +1319,8 @@ bool
 Context::handle_drq()
 {
 
-  assert (check_for_current_cpu());
-  assert (cpu_lock.test());
+  assert(check_for_current_cpu());
+  assert(cpu_lock.test());
 
   bool resched = false;
   Mword st = state();
@@ -1969,7 +1969,7 @@ Context::Pending_rqq::handle_requests(Context **mq)
           c = static_cast<Context::Pending_rq *>(qi)->context();
         }
 
-      assert (c->check_for_current_cpu());
+      assert(c->check_for_current_cpu());
 
       c->handle_remote_state_change();
       if (EXPECT_FALSE(c->_migration != nullptr))
@@ -2015,8 +2015,8 @@ PUBLIC static inline NEEDS["cpu_call.h"]
 bool
 Context::take_cpu_offline(Cpu_number cpu, bool drain_rqq = false)
 {
-  assert (cpu == current_cpu());
-  assert (!Proc::interrupts());
+  assert(cpu == current_cpu());
+  assert(!Proc::interrupts());
 
   for (;;)
     {
@@ -2066,8 +2066,8 @@ PUBLIC static inline
 void
 Context::take_cpu_online(Cpu_number cpu)
 {
-  assert (cpu == current_cpu());
-  assert (!Proc::interrupts());
+  assert(cpu == current_cpu());
+  assert(!Proc::interrupts());
 
   Cpu::cpus.cpu(cpu).set_online(true);
   Rcu::leave_idle(cpu);
@@ -2325,7 +2325,7 @@ PUBLIC static
 void
 Context::spill_current_fpu([[maybe_unused]] Cpu_number cpu)
 {
-  assert (cpu == current_cpu());
+  assert(cpu == current_cpu());
 
   Fpu &f = Fpu::fpu.current();
   if (f.owner())
@@ -2401,11 +2401,10 @@ PUBLIC static
 void
 Context::spill_current_fpu([[maybe_unused]] Cpu_number cpu)
 {
-  assert (cpu == current_cpu());
+  assert(cpu == current_cpu());
 
   current()->spill_fpu();
 }
-
 
 PUBLIC inline
 void

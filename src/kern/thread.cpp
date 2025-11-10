@@ -424,7 +424,7 @@ Thread::handle_timer_interrupt()
       && !Sched_context::rq.current().schedule_in_progress)
     {
       schedule();
-      assert (timeslice_timeout.cpu(current_cpu())->is_set());	// Coma check
+      assert(timeslice_timeout.cpu(current_cpu())->is_set());	// Coma check
     }
 }
 
@@ -738,7 +738,7 @@ PRIVATE inline
 bool
 Thread::do_migration_current(Migration *m)
 {
-  assert (current_cpu() == home_cpu());
+  assert(current_cpu() == home_cpu());
   return kernel_context_drq(handle_migration_helper, m);
 }
 
@@ -1255,9 +1255,9 @@ PRIVATE inline
 bool
 Thread::migrate_away(Migration *inf, bool remote)
 {
-  assert (check_for_current_cpu());
-  assert (current() != this);
-  assert (cpu_lock.test());
+  assert(check_for_current_cpu());
+  assert(current() != this);
+  assert(cpu_lock.test());
   bool resched = false;
 
   if (_timeout)

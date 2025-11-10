@@ -1,14 +1,15 @@
 INTERFACE:
 
 #include <cxx/dlist>
-#include "per_cpu_data.h"
-
 #include <cassert>
+#include "per_cpu_data.h"
 
 class Pm_object : public cxx::D_list_item
 {
 private:
-  typedef cxx::Sd_list<Pm_object, cxx::D_list_item_policy, cxx::Sd_list_head_policy<Pm_object>, true> List;
+  typedef cxx::Sd_list<Pm_object, cxx::D_list_item_policy,
+                       cxx::Sd_list_head_policy<Pm_object>, true> List;
+
 public:
   virtual void pm_on_suspend(Cpu_number) = 0;
   virtual void pm_on_resume(Cpu_number) = 0;
@@ -40,12 +41,9 @@ private:
   static Per_cpu<List> _list;
 };
 
-
 IMPLEMENTATION:
 
 DEFINE_PER_CPU Per_cpu<Pm_object::List> Pm_object::_list;
 
 IMPLEMENT inline
 Pm_object::~Pm_object() {}
-
-
