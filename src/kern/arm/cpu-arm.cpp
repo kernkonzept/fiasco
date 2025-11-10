@@ -623,8 +623,8 @@ Cpu::init(bool /*resume*/, bool is_boot_cpu)
   if (is_boot_cpu)
     {
       _boot_cpu = this;
-      set_present(1);
-      set_online(1);
+      set_present();
+      set_online();
     }
 
   _phys_id = Proc::cpu_id();

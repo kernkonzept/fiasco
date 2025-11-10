@@ -52,8 +52,8 @@ Cpu::init(bool, bool is_boot_cpu)
   if (is_boot_cpu)
     {
       _boot_cpu = this;
-      set_present(1);
-      set_online(1);
+      set_present();
+      set_online();
     }
 
   _phys_id = Cpu_phys_id(0); //Proc::cpu_id();

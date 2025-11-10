@@ -75,10 +75,10 @@ App_cpu_thread::bootstrap(Mword resume)
 
   Mem_unit::tlb_flush();
 
-  Cpu::cpus.current().set_present(1);
+  Cpu::cpus.current().set_present();
     {
       auto guard = lock_guard(_pending_rqq.current().q_lock());
-      Cpu::cpus.current().set_online(1);
+      Cpu::cpus.current().set_online();
     }
 
   // Release _tramp_mp_spinlock without releasing CPU lock.

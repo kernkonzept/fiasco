@@ -26,13 +26,29 @@ public:
   /** Get the logical ID of this CPU */
   Cpu_number id() const;
 
+  /**
+   * Set CPU online.
+   *
+   * This does not activate an inactive CPU, just sets the online state.
+   */
+  void set_online();
 
   /**
-   * Set this CPU to online state.
-   * NOTE: This does not activate an inactive CPU, Just set the given state.
+   * Set CPU offline (i.e. not online).
+   *
+   * This does not deactivate an active CPU, just sets the offline state.
    */
-  void set_online(bool o);
-  void set_present(bool o);
+  void set_offline();
+
+  /**
+   * Set CPU present.
+   */
+  void set_present();
+
+  /**
+   * Set CPU absent (i.e. not present).
+   */
+  void set_absent();
 
   /** Convenience for Cpu::cpus.cpu(cpu).online() */
   static bool online(Cpu_number cpu);
@@ -99,23 +115,23 @@ Cpu::present_mask()
 
 IMPLEMENT inline
 void
-Cpu::set_online(bool o)
-{
-  if (o)
-    _online_mask->atomic_set(id());
-  else
-    _online_mask->atomic_clear(id());
-}
+Cpu::set_online()
+{ _online_mask->atomic_set(id()); }
 
 IMPLEMENT inline
 void
-Cpu::set_present(bool o)
-{
-  if (o)
-    _present_mask->atomic_set(id());
-  else
-    _present_mask->atomic_clear(id());
-}
+Cpu::set_offline()
+{ _online_mask->atomic_clear(id()); }
+
+IMPLEMENT inline
+void
+Cpu::set_present()
+{ _present_mask->atomic_set(id()); }
+
+IMPLEMENT inline
+void
+Cpu::set_absent()
+{ _present_mask->atomic_clear(id()); }
 
 IMPLEMENT_DEFAULT inline
 bool

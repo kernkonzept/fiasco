@@ -2027,7 +2027,7 @@ Context::take_cpu_offline(Cpu_number cpu, bool drain_rqq = false)
 
           if (!q.first())
             {
-              Cpu::cpus.current().set_online(false);
+              Cpu::cpus.current().set_offline();
               break;
             }
 
@@ -2069,7 +2069,7 @@ Context::take_cpu_online(Cpu_number cpu)
   assert(cpu == current_cpu());
   assert(!Proc::interrupts());
 
-  Cpu::cpus.cpu(cpu).set_online(true);
+  Cpu::cpus.cpu(cpu).set_online();
   Rcu::leave_idle(cpu);
 }
 

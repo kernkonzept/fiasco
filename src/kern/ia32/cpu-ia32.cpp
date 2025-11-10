@@ -567,8 +567,8 @@ Cpu::Cpu(Cpu_number cpu)
   if (cpu == Cpu_number::boot_cpu())
     {
       _boot_cpu = this;
-      set_present(1);
-      set_online(1);
+      set_present();
+      set_online();
     }
 
   init(cpu);

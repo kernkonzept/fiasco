@@ -443,8 +443,8 @@ Cpu::first_boot(bool is_boot_cpu)
   if (is_boot_cpu)
     {
       _boot_cpu = this;
-      set_present(1);
-      set_online(1);
+      set_present();
+      set_online();
       _ns_per_cycle = 1000000000 / frequency();
       _tlb_size = tlb_size + 1;
       options = opts;
