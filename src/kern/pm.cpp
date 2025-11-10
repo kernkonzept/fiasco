@@ -5,6 +5,64 @@ INTERFACE:
 #include "per_cpu_data.h"
 
 /**
+ * Global power management callbacks.
+ *
+ * Inheriting from this class allows to define callbacks that are executed
+ * globally before suspend and after resume. These callbacks are executed
+ * before all CPU-local callbacks (in case of suspend) and after all CPU-local
+ * callbacks (in case of resume) provided by #Cpu_pm_callbacks.
+ */
+class Pm_callbacks : public cxx::D_list_item
+{
+private:
+  typedef cxx::Sd_list<Pm_callbacks, cxx::D_list_item_policy,
+                       cxx::Sd_list_head_policy<Pm_callbacks>, true> List;
+
+public:
+  Pm_callbacks()
+  { _list->push_back(this); }
+
+  /**
+   * Suspend callback, to be defined by the inheriting class.
+   *
+   * \note The callback might be called from a non-thread context on any CPU
+   *       and the implementation should be prepared for that.
+   */
+  virtual void pm_on_suspend_global() = 0;
+
+  /**
+   * Resume callback, to be defined by the inheriting class.
+   *
+   * \note The callback might be called from a non-thread context on any CPU
+   *       and the implementation should be prepared for that.
+   */
+  virtual void pm_on_resume_global() = 0;
+
+  virtual ~Pm_callbacks() = 0;
+
+  /**
+   * Run power management suspend callbacks.
+   */
+  static void run_on_suspend_hooks()
+  {
+    for (List::R_iterator i = _list->rbegin(); i != _list->rend(); ++i)
+      (*i)->pm_on_suspend_global();
+  }
+
+  /**
+   * Run power management resume callbacks.
+   */
+  static void run_on_resume_hooks()
+  {
+    for (auto const &&i: _list)
+      i->pm_on_resume_global();
+  }
+
+private:
+  static Global_data<List> _list;
+};
+
+/**
  * CPU-local power management callbacks.
  *
  * Inheriting from this class allows to define callbacks that are executed
@@ -101,7 +159,11 @@ private:
 
 IMPLEMENTATION:
 
+DEFINE_GLOBAL Global_data<Pm_callbacks::List> Pm_callbacks::_list;
 DEFINE_PER_CPU Per_cpu<Cpu_pm_callbacks::List> Cpu_pm_callbacks::_list;
+
+IMPLEMENT inline
+Pm_callbacks::~Pm_callbacks() {}
 
 IMPLEMENT inline
 Cpu_pm_callbacks::~Cpu_pm_callbacks() {}

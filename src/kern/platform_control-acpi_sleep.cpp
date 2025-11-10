@@ -184,6 +184,9 @@ do_system_suspend(Mword sleep_type)
 
   Mword result = 0;
 
+  // Run the global suspend hooks to prepare the system for suspend.
+  Pm_callbacks::run_on_suspend_hooks();
+
   // First suspend all the other CPUs in the system (temporarily releases CPU
   // lock).
   suspend_ap_cpus();
@@ -224,6 +227,9 @@ do_system_suspend(Mword sleep_type)
 
   // Restore spilled FPU state (necessary for eager FPU switching).
   current()->restore_fpu_on_resume();
+
+  // Run the global resume hooks as the final step of the resume process.
+  Pm_callbacks::run_on_resume_hooks();
 
   return result;
 }
