@@ -13,3 +13,7 @@ INTERFACE [arm && pf_rpi && pf_rpi_rpi3]:
 INTERFACE [arm && pf_rpi && pf_rpi_rpi4]:
 
 #define TARGET_NAME "RPi4 (Broadcom 2711)"
+
+INTERFACE [arm && pf_rpi && pf_rpi_rpi5]:
+
+#define TARGET_NAME "RPi5 (Broadcom 2712)"
