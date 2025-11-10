@@ -157,7 +157,7 @@ stop_booting_ap_cpu(char const *msg, Apic_id apic_id)
       Kmem::resume_cpu(_cpu);
       Idt::load();
       cpu.pm_resume();
-      Pm_object::run_on_resume_hooks(_cpu);
+      Cpu_pm_callbacks::run_on_resume_hooks(_cpu);
     }
 
   Timer::init(_cpu);

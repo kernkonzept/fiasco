@@ -109,7 +109,7 @@ Jdb_set_trace::ipc_tracing(Mode mode)
 }
 
 namespace {
-struct Jdb_ipc_log_pm : Pm_object
+struct Jdb_ipc_log_pm : Cpu_pm_callbacks
 {
   Jdb_ipc_log_pm(Cpu_number cpu) { register_pm(cpu); }
   void pm_on_resume(Cpu_number cpu) override

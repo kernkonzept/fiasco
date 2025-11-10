@@ -115,7 +115,7 @@ suspend_ap_cpus()
         {
           Cpu_number cpun = current_cpu();
           Cpu &cpu = Cpu::cpus.current();
-          Pm_object::run_on_suspend_hooks(cpun);
+          Cpu_pm_callbacks::run_on_suspend_hooks(cpun);
           cpu.pm_suspend();
           check(Context::take_cpu_offline(cpun, true));
           // We assume that Platform_control::cpu_suspend() does never return
@@ -195,7 +195,7 @@ do_system_suspend(Mword sleep_type)
   if (facs->len > 32 && facs->version >= 1)
     facs->x_fw_wake_vector = 0;
 
-  Pm_object::run_on_suspend_hooks(current_cpu());
+  Cpu_pm_callbacks::run_on_suspend_hooks(current_cpu());
 
   current()->spill_user_state();
 
@@ -216,7 +216,7 @@ do_system_suspend(Mword sleep_type)
 
   take_boot_cpu_online();
 
-  Pm_object::run_on_resume_hooks(current_cpu());
+  Cpu_pm_callbacks::run_on_resume_hooks(current_cpu());
 
   // includes booting the application CPUs
   if (_system_resume_handler)

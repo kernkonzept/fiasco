@@ -214,7 +214,7 @@ struct Vmx_user_info
 
 INTERFACE:
 
-class Vmx : public Pm_object
+class Vmx : public Cpu_pm_callbacks
 {
 public:
   /**
@@ -2751,7 +2751,7 @@ Vmx::Vmx(Cpu_number cpu)
       if (cpu == Cpu_number::boot_cpu())
         printf("VMX: initialized\n");
 
-      Pm_object::register_pm(cpu);
+      Cpu_pm_callbacks::register_pm(cpu);
     }
   else
     {

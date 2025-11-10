@@ -13,7 +13,7 @@ INTERFACE[svm]:
 #include "msrdefs.h"
 #include "pm.h"
 
-EXTENSION class Svm : public Pm_object
+EXTENSION class Svm : public Cpu_pm_callbacks
 {
 public:
   static Per_cpu<Svm> cpus;

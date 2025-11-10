@@ -17,8 +17,7 @@ INTERFACE:
 
 namespace Intel {
 
-class Io_mmu :
-  public Pm_object
+class Io_mmu : public Cpu_pm_callbacks
 {
 public:
   /// Maximum number of IOMMUs.

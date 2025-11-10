@@ -16,7 +16,7 @@ struct Apic_id : cxx::int_type<Unsigned32, Apic_id>
   Apic_id(Unsigned32 n) : cxx::int_type<Unsigned32, Apic_id>(n) {}
 };
 
-class Apic : public Pm_object
+class Apic : public Cpu_pm_callbacks
 {
   friend class Jdb_kern_info_io_apic;
 

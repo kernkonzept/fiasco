@@ -80,7 +80,7 @@ private:
   static Io_apic_entry *_state_save_area;
 };
 
-class Io_apic_mgr : public Irq_mgr, public Pm_object
+class Io_apic_mgr : public Irq_mgr, public Cpu_pm_callbacks
 {
 public:
   Io_apic_mgr() { register_pm(Cpu_number::boot_cpu()); }

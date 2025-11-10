@@ -9,7 +9,7 @@ INTERFACE [i8259]:
 #include "bitmap.h"
 
 template<typename IO>
-class Irq_chip_i8259 : public Irq_chip_icu, private Pm_object
+class Irq_chip_i8259 : public Irq_chip_icu, private Cpu_pm_callbacks
 {
   friend class Jdb_kern_info_pic_state;
 
@@ -17,7 +17,8 @@ public:
   enum { Nr_pins = 16 };
 
   typedef typename IO::Port_addr Io_address;
-  using Pm_object::register_pm;
+
+  using Cpu_pm_callbacks::register_pm;
 
   unsigned nr_pins() const override { return Nr_pins; }
   int set_mode(Mword, Mode) override { return 0; }

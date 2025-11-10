@@ -23,7 +23,7 @@ class Filter_console;
 /**
  * Glue between kernel and UART driver.
  */
-EXTENSION class Kernel_uart : public Uart, public Pm_object
+EXTENSION class Kernel_uart : public Uart, public Cpu_pm_callbacks
 {
 private:
   /**
@@ -121,7 +121,7 @@ Kernel_uart::Kernel_uart()
 PUBLIC void
 Kernel_uart::pm_on_suspend([[maybe_unused]] Cpu_number cpu) override
 {
-  assert (cpu == Cpu_number::boot_cpu());
+  assert(cpu == Cpu_number::boot_cpu());
 
   uart()->state(Console::DISABLED);
 
@@ -132,7 +132,7 @@ Kernel_uart::pm_on_suspend([[maybe_unused]] Cpu_number cpu) override
 PUBLIC void
 Kernel_uart::pm_on_resume([[maybe_unused]] Cpu_number cpu) override
 {
-  assert (cpu == Cpu_number::boot_cpu());
+  assert(cpu == Cpu_number::boot_cpu());
   static_cast<Kernel_uart*>(Kernel_uart::uart())->setup(true);
   uart()->state(Console::ENABLED);
 
