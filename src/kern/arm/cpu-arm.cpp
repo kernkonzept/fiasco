@@ -89,7 +89,9 @@ public:
     Hcr_hcd    = 1UL << 29, ///< HVC instruction disable
     Hcr_trvm   = 1UL << 30, ///< Trap reads of virtual memory controls
     Hcr_rw     = 1UL << 31, ///< EL1 is AArch64
-    Hcr_tlor   = 1ULL << 35, ///< Trap FEAT_LOR registers, not defined for HCR2
+    Hcr_tlor   = 1ULL << 35, ///< LOR: Trap FEAT_LOR registers, not def for HCR2
+    Hcr_terr   = 1ULL << 36, ///< RAS: Trap FEAT_RAS registers
+    Hcr_tea    = 1ULL << 37, ///< RAS: Route Ext Abort EL0/EL1 exceptions to EL2
   };
 
   enum : bool

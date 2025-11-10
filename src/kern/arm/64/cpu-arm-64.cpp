@@ -184,7 +184,7 @@ public:
   static constexpr Unsigned64 Hcr_must_set_bits = Hcr_vm | Hcr_swio | Hcr_ptw
                                                 | Hcr_amo | Hcr_imo | Hcr_fmo
                                                 | Hcr_tidcp | Hcr_tsc | Hcr_tactlr
-                                                | Hcr_tlor;
+                                                | Hcr_tlor | Hcr_terr | Hcr_tea;
 
   enum : Unsigned64
   {

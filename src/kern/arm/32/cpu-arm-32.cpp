@@ -325,7 +325,8 @@ public:
   static constexpr Unsigned64 Hcr_must_set_bits
     = Hcr_vm | Hcr_swio | Hcr_amo | Hcr_imo | Hcr_fmo | Hcr_tidcp | Hcr_tsc
     | Hcr_tactlr
-    | cxx::const_ite<TAG_ENABLED(mmu)>(Hcr_ptw, 0);
+    | cxx::const_ite<TAG_ENABLED(mmu)>(Hcr_ptw, 0)
+    | cxx::const_ite<TAG_ENABLED(arm_v8plus)>(Hcr_terr | Hcr_tea, 0);
 };
 
 //--------------------------------------------------------------------
