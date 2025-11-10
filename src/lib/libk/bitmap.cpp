@@ -12,6 +12,7 @@ INTERFACE:
 
 #include "atomic.h"
 #include <cxx/type_traits>
+#include <minmax.h>
 
 template<bool LARGE, size_t BITS>
 class Bitmap_base;
@@ -984,5 +985,77 @@ public:
   {
     this->_and(o);
     return *this;
+  }
+
+  /**
+   * Equal compare the bitmap with a different bitmap.
+   *
+   * The semantics of this operator is the same as the conjunction of the
+   * results of the == operator applied on each pair of corresponding bits of
+   * the bitmaps separately.
+   *
+   * \param o  Bitmap to compare the bitmap with.
+   *
+   * \retval true   All bits in the common range of the bitmaps match and all
+   *                bits beyond the common range are unset.
+   * \retval false  Some bits in the common range of the bitmaps do not match
+   *                or some bits beyond the common range are set.
+   */
+  template<size_t OTHER_BITS>
+  bool operator ==(Bitmap<OTHER_BITS> const &o) const
+  {
+    // Check the common range of bits.
+    for (size_t i = 0; i < min(BITS, OTHER_BITS); ++i)
+      if (this->operator[](i) != o[i])
+        return false;
+
+    // Check the bits in this bitmap beyond the common range.
+    for (size_t i = OTHER_BITS; i < BITS; ++i)
+      if (this->operator[](i))
+        return false;
+
+    // Check the bits in the other bitmap beyond the common range.
+    for (size_t i = BITS; i < OTHER_BITS; ++i)
+      if (o[i])
+        return false;
+
+    return true;
+  }
+
+  /**
+   * Lesser or equal compare the bitmap with a different bitmap.
+   *
+   * The semantics of this operator is the same as the conjunction of the
+   * results of the numerical <= operator applied on each pair of corresponding
+   * bits of the bitmaps separately (assuming an unset bit is represented by
+   * 0 and a set bit is represented by 1).
+   *
+   * \param o  Bitmap to compare the bitmap with.
+   *
+   * \retval true   For all bits in the common range of the bitmaps, if a bit
+   *                is set in the bitmap, it is also set in the other bitmap
+   *                In addition, if the bitmap is larger than the other bitmap,
+   *                then all bits in the bitmap beyond the common range are
+   *                unset.
+   * \retval false  For all bits in the common range of the bitmaps, there is
+   *                a bit set in the bitmap and a corresponding bit in the
+   *                other bitmap that is unset. Alternatively, if the bitmap is
+   *                larger than the other bitmap, then there is a bit in the
+   *                bitmap beyond the common range that is set.
+   */
+  template<size_t OTHER_BITS>
+  bool operator <=(Bitmap<OTHER_BITS> const &o) const
+  {
+    // Check for bitwise lesser-or-equal comparison in the common range.
+    for (size_t i = 0; i < min(BITS, OTHER_BITS); ++i)
+      if (this->operator[](i) && !o[i])
+        return false;
+
+    // Check for bits set in this bitmap beyond the common range.
+    for (size_t i = OTHER_BITS; i < BITS; ++i)
+      if (this->operator[](i))
+        return false;
+
+    return true;
   }
 };
