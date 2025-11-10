@@ -63,6 +63,18 @@ Cpu::has_pmuv3() const
 }
 
 //-------------------------------------------------------------------------
+IMPLEMENTATION [arm && arm_v8plus]:
+
+PUBLIC static inline
+bool
+Cpu::has_ras()
+{
+  Mword pfr0;
+  __asm__("mrc p15, 0, %0, c0, c1, 0": "=r" (pfr0));
+  return (pfr0 >> 28) & 0xf;
+}
+
+//-------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_v8plus && mmu]:
 
 PUBLIC static inline
@@ -321,12 +333,12 @@ IMPLEMENTATION [arm && cpu_virt && 32bit && mmu]:
 
 IMPLEMENT_OVERRIDE
 void
-Cpu::init_hyp_mode()
+Cpu::init_hyp_mode(bool is_boot_cpu)
 {
   asm volatile (
         "mcr p15, 4, %0, c2, c1, 2" // VTCR
         : : "r" ((1UL << 31) | (Page::Tcr_attribs << 8) | (1 << 6)));
-  init_hyp_mode_common();
+  init_hyp_mode_common(is_boot_cpu);
 }
 
 //--------------------------------------------------------------------
@@ -334,9 +346,9 @@ IMPLEMENTATION [arm && cpu_virt && 32bit && !mmu]:
 
 IMPLEMENT_OVERRIDE
 void
-Cpu::init_hyp_mode()
+Cpu::init_hyp_mode(bool is_boot_cpu)
 {
-  init_hyp_mode_common();
+  init_hyp_mode_common(is_boot_cpu);
 }
 
 //--------------------------------------------------------------------
@@ -381,9 +393,11 @@ public:
 
 PRIVATE inline
 void
-Cpu::init_hyp_mode_common()
+Cpu::init_hyp_mode_common(bool is_boot_cpu)
 {
   extern char hyp_vector_base[];
+
+  init_ras(is_boot_cpu);
 
   assert (!(reinterpret_cast<Mword>(hyp_vector_base) & 31));
   asm volatile ("mcr p15, 4, %0, c12, c0, 0 \n" : : "r"(hyp_vector_base));

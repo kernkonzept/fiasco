@@ -95,6 +95,8 @@ public:
 //------------------------------------------------------------------
 IMPLEMENTATION:
 
+#include "cpu.h"
+
 PUBLIC inline
 void
 Context_hyp::save(bool from_privileged)
@@ -133,7 +135,7 @@ Context_hyp::save(bool from_privileged)
     }
 }
 
-PUBLIC inline
+PUBLIC inline NEEDS["cpu.h"]
 void
 Context_hyp::load(bool from_privileged, bool to_privileged)
 {
@@ -177,5 +179,9 @@ Context_hyp::load(bool from_privileged, bool to_privileged)
       asm volatile ("msr SPSR_abt, %x0" : : "r"(spsr_abt));
       asm volatile ("msr SPSR_und, %x0" : : "r"(spsr_und));
     }
-}
 
+  if (Cpu::boot_cpu_has_ras())
+    asm volatile (".arch_extension ras   \n"
+                  "msr VDISR_EL2, xzr    \n"
+                  ".arch_extension noras \n": : "r"(0));
+}

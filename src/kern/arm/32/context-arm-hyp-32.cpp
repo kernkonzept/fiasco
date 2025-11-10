@@ -159,6 +159,11 @@ Context::load_ext_vcpu_state(Vm_state const *v)
   asm volatile ("mcr  p15, 4, %0, c0, c0, 0" : : "r"(v->vpidr));
 
   load_ext_vcpu_state_mxu(v);
+
+  // Clear VDISR when switching to a thread running in extended vCPU mode. Not
+  // required when switching to other threads running at PL1 due to HSTR.T12=1.
+  if (Cpu::boot_cpu_has_ras())
+    asm volatile ("mcr p15, 4, %0, c12, c1, 1" : : "r"(0)); // VDISR
 }
 
 PROTECTED static constexpr

@@ -71,6 +71,13 @@ public:
     return pfr0 & 0x20;
   }
 
+  static bool has_ras()
+  {
+    Mword pfr0;
+    asm ("mrs %0, ID_AA64PFR0_EL1": "=r" (pfr0));
+    return (pfr0 >> 28) & 0xf;
+  }
+
   struct boot_cpu_has_vmsa : public Alternative_static_functor<boot_cpu_has_vmsa>
   {
     // See Armv8-R AArch64 supplement (ARM DDI 0600A)
@@ -229,9 +236,11 @@ Cpu::vmid_bits() const
 
 PRIVATE inline
 void
-Cpu::init_hyp_mode_common()
+Cpu::init_hyp_mode_common(bool is_boot_cpu)
 {
   extern char exception_vector[];
+
+  init_ras(is_boot_cpu);
 
   if (vmid_bits() < Mem_unit::Asid_bits)
     panic("VMID size too small: HW provides %d bits, configured %d bits!",
@@ -289,13 +298,13 @@ Cpu::vtcr_bits()
 
 IMPLEMENT_OVERRIDE
 void
-Cpu::init_hyp_mode()
+Cpu::init_hyp_mode(bool is_boot_cpu)
 {
   // Prevent a compiler warning on Page::Min_pa_range==0.
   if (static_cast<int>(pa_range()) < Page::Min_pa_range)
     panic("Not enough physical address bits! Disable CONFIG_ARM_PT48.\n");
 
-  init_hyp_mode_common();
+  init_hyp_mode_common(is_boot_cpu);
 }
 
 //--------------------------------------------------------------------------
@@ -331,10 +340,10 @@ Cpu::vtcr_bits()
 
 IMPLEMENT_OVERRIDE
 void
-Cpu::init_hyp_mode()
+Cpu::init_hyp_mode(bool is_boot_cpu)
 {
   asm volatile ("msr S3_4_C2_C6_2, %0" : : "r"(1UL << 31)); // VSTCR_EL2
-  init_hyp_mode_common();
+  init_hyp_mode_common(is_boot_cpu);
 }
 
 PUBLIC static
@@ -466,7 +475,7 @@ Cpu::phys_bits()
 }
 
 //--------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_v8]:
+IMPLEMENTATION [arm && arm_v8plus]:
 
 PUBLIC static inline
 void

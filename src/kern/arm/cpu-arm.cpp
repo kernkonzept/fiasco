@@ -108,7 +108,7 @@ public:
 
 private:
   void init_supervisor_mode(bool is_boot_cpu);
-  void init_hyp_mode();
+  void init_hyp_mode(bool is_boot_cpu);
   static void early_init_platform();
   static void bsp_init(bool);
 
@@ -255,7 +255,7 @@ public:
                                 | Sctlr_rao_sbop;
 };
 
-//--------------------------------------------------------
+//-------------------------------------------------------------------------
 INTERFACE [arm && cpu_virt]:
 
 EXTENSION class Cpu
@@ -275,6 +275,9 @@ public:
     Mdcr_tpms      = 1UL << 14,
     Mdcr_ttrf      = 1UL << 19,
   };
+
+public:
+  static void init_ras(bool is_boot_cpu);
 };
 
 // ------------------------------------------------------------------------
@@ -332,6 +335,37 @@ public:
            | Hsctlr_mpu
            | Hsctlr_res1,
   };
+};
+
+// ------------------------------------------------------------------------
+INTERFACE [arm && cpu_virt && !arm_v8plus]:
+
+PUBLIC static constexpr
+bool
+Cpu::boot_cpu_has_ras()
+{
+  return false;
+}
+
+// ------------------------------------------------------------------------
+INTERFACE [arm && cpu_virt && arm_v8plus]:
+
+#include "alternatives.h"
+#include "global_data.h"
+
+EXTENSION class Cpu
+{
+public:
+  struct boot_cpu_has_ras : public Alternative_static_functor<boot_cpu_has_ras>
+  {
+    static bool probe()
+    {
+      return has_ras();
+    }
+  };
+
+private:
+  static Global_data<bool> _boot_cpu_has_ras;
 };
 
 // ------------------------------------------------------------------------
@@ -626,7 +660,7 @@ Cpu::init(bool /*resume*/, bool is_boot_cpu)
   id_init();
   init_errata_workarounds();
   init_supervisor_mode(is_boot_cpu);
-  init_hyp_mode();
+  init_hyp_mode(is_boot_cpu);
   bsp_init(is_boot_cpu);
 }
 
@@ -637,7 +671,7 @@ Cpu::init_supervisor_mode(bool)
 
 IMPLEMENT_DEFAULT inline
 void
-Cpu::init_hyp_mode()
+Cpu::init_hyp_mode(bool)
 {}
 
 //---------------------------------------------------------------------------
@@ -891,6 +925,32 @@ IMPLEMENTATION [arm && cpu_virt]:
 #include "feature.h"
 
 KIP_KERNEL_FEATURE("arm:hyp");
+
+IMPLEMENT_DEFAULT static inline
+void
+Cpu::init_ras(bool)
+{}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && cpu_virt && arm_v8plus]:
+
+#include "alternatives.h"
+
+DEFINE_GLOBAL Global_data<bool> Cpu::_boot_cpu_has_ras;
+
+IMPLEMENT_OVERRIDE static
+void
+Cpu::init_ras(bool is_boot_cpu)
+{
+  bool this_cpu_has_ras = has_ras();
+  if (is_boot_cpu)
+    _boot_cpu_has_ras = this_cpu_has_ras;
+  else
+    if (this_cpu_has_ras != _boot_cpu_has_ras)
+      panic("Boot CPU %s FEAT_RAS while AP CPU %s FEAT_RAS.",
+            this_cpu_has_ras ? "doesn't implement" : "implements",
+            this_cpu_has_ras ? "implements" : "doesn't implement");
+}
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [debug && arm_v6plus]:
