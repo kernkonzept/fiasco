@@ -126,29 +126,52 @@ static DEFINE_GLOBAL Global_data<size_t[Max_num_page_sizes]> page_sizes;
 void
 init_mapdb_mem(Space *sigma0)
 {
-  page_sizes[0] = unsigned{Config::SUPERPAGE_SHIFT} - unsigned{Config::PAGE_SHIFT};
-
   typedef Mem_space::Page_order Page_order;
+
+  // Maximal difference between page sizes determining the maximal
+  // number entries in MDB split arrays to 2K
+  enum { Max_mdb_ps_diff = 12 };
+
+  // Get Array of page sizes defined by the architecture
   Page_order const *ps = Mem_space::get_global_page_sizes();
+
+  // Use at most MWORD_BITS to calculate page sizes
+  unsigned phys_bits = min(Cpu::boot_cpu()->phys_bits(), MWORD_BITS);
+
+  // Create a list (s_0, ... , s_n) of Page_order elements with
+  //   * s_0 == max(Page_order(phys_bits - Max_mdb_ps_diff),
+  //                global_page_sizes[0])
+  //   * s_n == Page_order(Config::PAGE_SHIFT)
+  //   * s_m - s_{m+1} <= Page_order(Max_mdb_ps_diff) to restrict the
+  //                      number of entries per MDB split array
+  //
+  // Assume ps is terminated by Page_order(Config::PAGE_SHIFT) as
+  // specified by Mem_space::get_global_page_sizes().
+  //
+  // Subtract Config::PAGE_SHIFT from each Page_order element of the
+  // list, as expected by Mapdb.
+
   unsigned idx = 0;
-  unsigned phys_bits(Cpu::boot_cpu()->phys_bits());
-  phys_bits = min(phys_bits, MWORD_BITS);
+  Page_order c(phys_bits);
 
-  Page_order last_bits(phys_bits);
-
-  for (Page_order c = last_bits; c >= Page_order(Config::PAGE_SHIFT); --c)
+  static_assert(Page_order(Max_mdb_ps_diff) <= Page_order(Config::PAGE_SHIFT));
+  do
     {
-      c = *ps;
-      // not more than 2K entries per MDB split array
-      if (c < last_bits && (last_bits - c) > Page_order(12))
-        c = last_bits - Page_order(12);
-      else
-        ++ps;
+      // Any Page_order derived from phys_bits or global page sizes is
+      // greater or equal to Page_order(Max_mdb_ps_diff)
+      assert(c >= Page_order(Max_mdb_ps_diff));
+
+      // Pick the next potential page size
+      c -= Page_order(Max_mdb_ps_diff);
+
+      // If the real page order is larger or equal use it instead.
+      if (c <= *ps)
+        c = *ps++;
+
       printf("MDB: use page size: %u\n", cxx::int_value<Page_order>(c));
       assert (idx < Max_num_page_sizes);
       page_sizes[idx++] = cxx::int_value<Page_order>(c) - Config::PAGE_SHIFT;
-      last_bits = c;
-    }
+    } while (c != Page_order(Config::PAGE_SHIFT));
 
   if constexpr (0) // Intentionally disabled, only used for diagnostics
     printf("MDB: phys_bits=%u levels = %u\n", Cpu::boot_cpu()->phys_bits(), idx);
@@ -157,5 +180,3 @@ init_mapdb_mem(Space *sigma0)
                       Mapping::Order(phys_bits - Config::PAGE_SHIFT),
                       page_sizes, idx);
 }
-
-
