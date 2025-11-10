@@ -293,6 +293,17 @@ public:
     Max_num_global_page_sizes = 5
   };
 
+  /**
+   * Return a pointer to an array of supported page sizes.
+   *
+   * The array is sorted in a descending order and terminates with an
+   * element e == Page_order(Config::PAGE_SHIFT).
+   *
+   * \param finalize  Mark the set of page sizes as finalized if
+   *                  `finalize` is true. After that no new page size
+   *                  can be added to the set.
+   * \return Pointer to array of page sizes as Page_order.
+   */
   static Page_order const *get_global_page_sizes(bool finalize = true)
   {
     if (finalize)
@@ -490,6 +501,18 @@ Mem_space::_glbl_page_sizes;
 DEFINE_GLOBAL Global_data<unsigned> Mem_space::_num_glbl_page_sizes;
 DEFINE_GLOBAL Global_data<bool> Mem_space::_glbl_page_sizes_finished;
 
+
+/**
+ * Add a page size to the set of supported page sizes.
+ *
+ * The set is ordered in descending order.
+ *
+ * \param o  Size of page with o >= Page_order(Config::PAGE_SHIFT)
+ *
+ * \note The first page size added has to be Page_order(Config::PAGE_SHIFT).
+ * \note If the set was marked as finalized by get_global_page_sizes(true),
+ *       no new page size can be added.
+ */
 PROTECTED static
 void
 Mem_space::add_global_page_size(Page_order o)
@@ -511,7 +534,7 @@ Mem_space::add_global_page_size(Page_order o)
     _glbl_page_sizes[x] = _glbl_page_sizes[x - 1];
 
   _glbl_page_sizes[i] = o;
-  assert (_glbl_page_sizes[_num_glbl_page_sizes] <= Page_order(Config::PAGE_SHIFT));
+  assert (_glbl_page_sizes[_num_glbl_page_sizes] == Page_order(Config::PAGE_SHIFT));
 
   ++_num_glbl_page_sizes;
 }
