@@ -47,6 +47,20 @@ public:
     return *this;
   }
 
+  bool operator == (Cpu_mask_t const &o) const
+  { return _b == o._b; }
+
+  template<unsigned NCPUS>
+  bool operator == (Cpu_mask_t<NCPUS> const &o) const
+  { return _b == o._b; }
+
+  bool operator <= (Cpu_mask_t const &o) const
+  { return _b <= o._b; }
+
+  template<unsigned NCPUS>
+  bool operator <= (Cpu_mask_t<NCPUS> const &o) const
+  { return _b <= o._b; }
+
   void atomic_set(Cpu_number cpu)
   { _b.atomic_set_bit(cxx::int_value<Cpu_number>(cpu)); }
 
