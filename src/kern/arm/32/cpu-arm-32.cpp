@@ -376,7 +376,7 @@ public:
      *
      * On a hyp kernel they can choose to run in PL1 or PL0.
      * However, all but the TPIDxyz CP15 accesses are disabled.
-     * When running at PL0, HCR.TGE=0.
+     * When running at PL1, HCR.TGE=0.
      */
     Hcr_non_vm_bits_el0 = Hcr_must_set_bits | Hcr_dc | Hcr_tsw | Hcr_ttlb
                           | Hcr_tvm | Hcr_tge,
