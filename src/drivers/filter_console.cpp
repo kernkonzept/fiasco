@@ -1,4 +1,4 @@
-INTERFACE:
+INTERFACE [serial && jdb]:
 
 #include "console.h"
 #include "types.h"
@@ -43,12 +43,13 @@ private:
   int args[4];
 };
 
-
-IMPLEMENTATION:
+//----------------------------------------------------------------------------
+IMPLEMENTATION [serial && jdb]:
 
 #include <cstdio>
 #include <cstring>
 #include <cctype>
+#include "delayloop.h"
 #include "keycodes.h"
 
 PUBLIC inline explicit
@@ -58,7 +59,6 @@ Filter_console::Filter_console(Console *o, unsigned loops = 400)
   if (o->failed())
     fail();
 }
-
 
 PUBLIC
 int
@@ -76,11 +76,6 @@ Filter_console::get_attributes() const override
 {
   return _o->get_attributes();
 }
-
-// ------------------------------------------------------------------------
-IMPLEMENTATION [input]:
-
-#include "delayloop.h"
 
 PUBLIC
 int Filter_console::char_avail() const override

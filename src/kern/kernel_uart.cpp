@@ -57,18 +57,12 @@ IMPLEMENTATION [serial]:
 #include "koptions.h"
 #include "panic.h"
 
-static DEFINE_GLOBAL Global_data<Static_object<Filter_console>> _fcon;
 static DEFINE_GLOBAL Global_data<Static_object<Kernel_uart>> _kernel_uart;
 
 PUBLIC static FIASCO_CONST
 Uart *
 Kernel_uart::uart()
 { return _kernel_uart; }
-
-PUBLIC static FIASCO_CONST
-Filter_console *
-Kernel_uart::fcon()
-{ return _fcon; }
 
 PUBLIC static
 bool
@@ -81,9 +75,9 @@ Kernel_uart::init(Init_mode init_mode = Init_before_mmu)
     return true;
 
   _kernel_uart.construct();
-  _fcon.construct(_kernel_uart);
 
-  Kconsole::console()->register_console(_fcon, 0);
+  init_filter_console();
+
   return true;
 }
 
@@ -138,6 +132,34 @@ Kernel_uart::pm_on_resume([[maybe_unused]] Cpu_number cpu) override
 
   if(Config::serial_esc != Config::SERIAL_ESC_NOIRQ)
     uart()->enable_rcv_irq();
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [serial && !jdb]:
+
+PRIVATE static
+void
+Kernel_uart::init_filter_console()
+{
+  Kconsole::console()->register_console(_kernel_uart, 0);
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [serial && jdb]:
+
+static DEFINE_GLOBAL Global_data<Static_object<Filter_console>> _fcon;
+
+PUBLIC static FIASCO_CONST
+Filter_console *
+Kernel_uart::fcon()
+{ return _fcon; }
+
+PRIVATE static
+void
+Kernel_uart::init_filter_console()
+{
+  _fcon.construct(_kernel_uart);
+  Kconsole::console()->register_console(_fcon, 0);
 }
 
 // ------------------------------------------------------------------------
