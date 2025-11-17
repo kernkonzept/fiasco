@@ -88,7 +88,7 @@ Platform_control::boot_ap_cpu_spin(unsigned ap_cpu, Unsigned64 mpidr,
 
   // 64-bit atomic write access would be difficult on 32-bit hosts and actually
   // is not required here.
-  ra.write_non_atomic<Unsigned64>(0, phys_tramp_mp_addr);
+  ra.r<Unsigned64>(0).write_non_atomic(phys_tramp_mp_addr);
   Mem_unit::clean_dcache(reinterpret_cast<char *>(ra.get_mmio_base()));
   asm volatile("sev");
 
