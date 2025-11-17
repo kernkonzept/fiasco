@@ -18,7 +18,7 @@ class static_vector
 private:
   template<typename X, typename IDX2> friend class static_vector;
   T *_v;
-  IDX _l;
+  IDX _l = 0;
 
 public:
   typedef T value_type;
