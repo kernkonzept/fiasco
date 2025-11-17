@@ -317,15 +317,19 @@ IMPLEMENTATION [arm && mmu && arm_lpae]:
 PUBLIC static inline unsigned Cpu::phys_bits() { return 40; }
 
 //--------------------------------------------------------------------
-IMPLEMENTATION [arm && cpu_virt && 32bit && mmu]:
+IMPLEMENTATION [arm && cpu_virt && 32bit]:
 
 EXTENSION class Cpu
 {
 public:
-  static constexpr Unsigned32 Hcr_must_set_bits = Hcr_vm | Hcr_swio | Hcr_ptw
-                                                | Hcr_amo | Hcr_imo | Hcr_fmo
-                                                | Hcr_tidcp | Hcr_tsc | Hcr_tactlr;
+  static constexpr Unsigned64 Hcr_must_set_bits
+    = Hcr_vm | Hcr_swio | Hcr_amo | Hcr_imo | Hcr_fmo | Hcr_tidcp | Hcr_tsc
+    | Hcr_tactlr
+    | cxx::const_ite<TAG_ENABLED(mmu)>(Hcr_ptw, 0);
 };
+
+//--------------------------------------------------------------------
+IMPLEMENTATION [arm && cpu_virt && 32bit && mmu]:
 
 IMPLEMENT_OVERRIDE
 void
@@ -340,14 +344,6 @@ Cpu::init_hyp_mode()
 //--------------------------------------------------------------------
 IMPLEMENTATION [arm && cpu_virt && 32bit && !mmu]:
 
-EXTENSION class Cpu
-{
-public:
-  static constexpr Unsigned32 Hcr_must_set_bits = Hcr_vm | Hcr_swio
-                                                | Hcr_amo| Hcr_imo | Hcr_fmo
-                                                | Hcr_tidcp | Hcr_tsc | Hcr_tactlr;
-};
-
 IMPLEMENT_OVERRIDE
 void
 Cpu::init_hyp_mode()
@@ -361,7 +357,7 @@ IMPLEMENTATION [arm && cpu_virt && 32bit]:
 EXTENSION class Cpu
 {
 public:
-  enum : Unsigned32
+  enum : Unsigned64
   {
     /**
      * HCR value to be used for the VMM.
