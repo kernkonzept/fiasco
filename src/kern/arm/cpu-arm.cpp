@@ -43,14 +43,17 @@ public:
     {
       return    _pfr[0]  == other._pfr[0]
              && _pfr[1]  == other._pfr[1]
+             && _pfr[2]  == other._pfr[2]
              && _dfr0    == other._dfr0
              && _afr0    == other._afr0
              && _mmfr[0] == other._mmfr[0]
              && _mmfr[1] == other._mmfr[1]
              && _mmfr[2] == other._mmfr[2]
-             && _mmfr[3] == other._mmfr[3];
+             && _mmfr[3] == other._mmfr[3]
+             && _mmfr[4] == other._mmfr[4]
+             && _mmfr[5] == other._mmfr[5];
     }
-    Mword _pfr[2], _dfr0, _afr0, _mmfr[4];
+    Mword _pfr[3], _dfr0, _afr0, _mmfr[6];
   };
   void id_init();
 

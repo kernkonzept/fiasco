@@ -270,12 +270,17 @@ Cpu::id_init()
 {
   __asm__("mrc p15, 0, %0, c0, c1, 0": "=r" (_cpu_id._pfr[0]));
   __asm__("mrc p15, 0, %0, c0, c1, 1": "=r" (_cpu_id._pfr[1]));
+  if constexpr (TAG_ENABLED(arm_v8plus))
+    __asm__("mrc p15, 0, %0, c0, c3, 4": "=r" (_cpu_id._pfr[2]));
   __asm__("mrc p15, 0, %0, c0, c1, 2": "=r" (_cpu_id._dfr0));
   __asm__("mrc p15, 0, %0, c0, c1, 3": "=r" (_cpu_id._afr0));
   __asm__("mrc p15, 0, %0, c0, c1, 4": "=r" (_cpu_id._mmfr[0]));
   __asm__("mrc p15, 0, %0, c0, c1, 5": "=r" (_cpu_id._mmfr[1]));
   __asm__("mrc p15, 0, %0, c0, c1, 6": "=r" (_cpu_id._mmfr[2]));
   __asm__("mrc p15, 0, %0, c0, c1, 7": "=r" (_cpu_id._mmfr[3]));
+  __asm__("mrc p15, 0, %0, c0, c2, 6": "=r" (_cpu_id._mmfr[4]));
+  if constexpr (TAG_ENABLED(arm_v8plus))
+    __asm__("mrc p15, 0, %0, c0, c3, 6": "=r" (_cpu_id._mmfr[5]));
 }
 
 //---------------------------------------------------------------------------
