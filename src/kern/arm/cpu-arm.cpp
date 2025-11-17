@@ -7,8 +7,7 @@ INTERFACE [arm]:
 #include "per_cpu_data.h"
 #include "processor.h"
 
-EXTENSION
-class Cpu
+EXTENSION class Cpu
 {
 public:
   void init(bool resume, bool is_boot_cpu);
@@ -111,6 +110,7 @@ private:
   void init_supervisor_mode(bool is_boot_cpu);
   void init_hyp_mode();
   static void early_init_platform();
+  static void bsp_init(bool);
 
   static Global_data<Cpu *> _boot_cpu;
 
@@ -352,15 +352,6 @@ INTERFACE [arm && cpu_virt && !arm_cortex_r52]:
 EXTENSION class Cpu
 {
   enum { Imp_csctlr = 0 };
-};
-
-// -------------------------------------------------------------------------------
-INTERFACE [arm]:
-
-EXTENSION class Cpu
-{
-private:
-  static void bsp_init(bool);
 };
 
 //-------------------------------------------------------------------------
