@@ -212,7 +212,7 @@ public:
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && (arm_v7 || arm_v8) && mmu && 32bit]:
+INTERFACE [arm && arm_v7plus && mmu && 32bit]:
 
 EXTENSION class Cpu
 {
@@ -236,7 +236,7 @@ public:
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && (arm_v7 || arm_v8) && mpu && 32bit]:
+INTERFACE [arm && arm_v7plus && mpu && 32bit]:
 
 EXTENSION class Cpu
 {
@@ -278,7 +278,7 @@ public:
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && (arm_v7 || arm_v8) && cpu_virt]:
+INTERFACE [arm && arm_v7plus && cpu_virt]:
 
 EXTENSION class Cpu
 {
@@ -309,7 +309,7 @@ public:
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && (arm_v7 || arm_v8) && mpu && cpu_virt]:
+INTERFACE [arm && arm_v7plus && mpu && cpu_virt]:
 
 EXTENSION class Cpu
 {
@@ -410,7 +410,7 @@ Cpu::disable_smp()
   clear_actrl(0x20);
 }
 
-IMPLEMENTATION [arm && (arm_v7 || arm_v8) && 32bit]: //----------------------
+IMPLEMENTATION [arm && arm_v7plus && 32bit]: //-----------------------------
 
 static void modify_actl(Unsigned64 mask, Unsigned64 value)
 {
@@ -526,7 +526,7 @@ Cpu::early_init_platform()
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [(arm_v7 || arm_v8) && !arm_cortex_a9]:
+IMPLEMENTATION [arm_v7plus && !arm_cortex_a9]:
 
 #include "kmem.h"
 
