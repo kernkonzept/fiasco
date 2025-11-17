@@ -119,7 +119,7 @@ Kernel_uart::pm_on_suspend([[maybe_unused]] Cpu_number cpu) override
 
   uart()->state(Console::DISABLED);
 
-  if(Config::serial_esc != Config::SERIAL_ESC_NOIRQ)
+  if (Config::serial_input != Config::Serial_input_noirq)
     uart()->disable_rcv_irq();
 }
 
@@ -130,7 +130,7 @@ Kernel_uart::pm_on_resume([[maybe_unused]] Cpu_number cpu) override
   static_cast<Kernel_uart*>(Kernel_uart::uart())->setup(true);
   uart()->state(Console::ENABLED);
 
-  if(Config::serial_esc != Config::SERIAL_ESC_NOIRQ)
+  if (Config::serial_input != Config::Serial_input_noirq)
     uart()->enable_rcv_irq();
 }
 
@@ -158,7 +158,7 @@ PRIVATE static
 void
 Kernel_uart::init_filter_console()
 {
-  _fcon.construct(_kernel_uart);
+  _fcon.construct(_kernel_uart, Config::serial_esc);
   Kconsole::console()->register_console(_fcon, 0);
 }
 

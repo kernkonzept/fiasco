@@ -707,6 +707,11 @@ Jdb::open_debug_console(Cpu_number cpu)
     Kconsole::console()->
       change_state(Console::DIRECT, 0, ~Console::OUTENABLED, 0);
 
+  // Enable detection of escape cursor sequences in JDB if Config::serial_esc is
+  // disabled.
+  Kconsole::console()->
+    change_state(Console::FILTER, 0, ~0UL, Console::FILTER_ENABLED);
+
   return true;
 }
 
@@ -723,6 +728,9 @@ Jdb::close_debug_console(Cpu_number cpu)
       // eat up input from console
       while (Kconsole::console()->getchar(false)!=-1)
 	;
+
+      Kconsole::console()->
+        change_state(Console::FILTER, 0, ~Console::FILTER_ENABLED, 0);
 
       Kconsole::console()->
 	change_state(Console::DIRECT, 0, ~0UL, Console::OUTENABLED);
@@ -1193,7 +1201,7 @@ PRIVATE inline static
 void
 Jdb::rcv_uart_enable()
 {
-  if (Config::serial_esc == Config::SERIAL_ESC_IRQ)
+  if (Config::serial_input == Config::Serial_input_irq)
     Kernel_uart::enable_rcv_irq();
 }
 

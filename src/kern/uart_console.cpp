@@ -24,24 +24,22 @@ static void uart_console_init_stage2()
     return;
 
   int irq = -1;
-  if (Config::serial_esc == Config::SERIAL_ESC_IRQ
-      && (irq = Kernel_uart::uart()->irq()) == -1)
+  if (Config::serial_input && (irq = Kernel_uart::uart()->irq()) == -1)
     {
-      puts("SERIAL ESC: not supported");
-      Config::serial_esc = Config::SERIAL_ESC_NOIRQ;
+      puts("SERIAL input: UART IRQ not supported.");
+      Config::serial_input = Config::Serial_input_noirq;
     }
 
-  switch (Config::serial_esc)
+  switch (Config::serial_input)
     {
-    case Config::SERIAL_ESC_NOIRQ:
-      puts("SERIAL ESC: No IRQ for specified uart port.");
+    case Config::Serial_input_noirq:
+      puts("SERIAL ESC: No IRQ for specified UART port.");
       puts("Using serial hack in slow timer handler.");
       break;
 
-    case Config::SERIAL_ESC_IRQ:
+    case Config::Serial_input_irq:
       Kernel_uart::enable_rcv_irq();
-      printf("SERIAL ESC: allocated IRQ %d for serial uart\n", irq);
-      puts("Not using serial hack in slow timer handler.");
+      printf("SERIAL ESC: allocated IRQ %d for serial UART\n", irq);
       break;
     }
 }

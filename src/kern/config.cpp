@@ -35,10 +35,14 @@ public:
     Must_access_user_mem_direct
   };
 
-  enum {
-    SERIAL_ESC_IRQ	= 2,
-    SERIAL_ESC_NOIRQ	= 1,
-    SERIAL_NO_ESC	= 0,
+  enum Serial_input_mode
+  {
+    /// No input via UART.
+    Serial_no_input = 0,
+    /// UART is polled during timer interrupt on the boot CPU.
+    Serial_input_noirq = 1,
+    /// UART receive IRQ triggers receiving input from UART.
+    Serial_input_irq = 2,
   };
 
   static void init();
@@ -120,7 +124,8 @@ INTERFACE [serial]:
 EXTENSION class Config
 {
 public:
-  static Global_data<int>  serial_esc;
+  static Global_data<bool> serial_esc;
+  static Global_data<int> serial_input;
 };
 
 //---------------------------------------------------------------------------
@@ -129,7 +134,8 @@ INTERFACE [!serial]:
 EXTENSION class Config
 {
 public:
-  static const int serial_esc = 0;
+  static const bool serial_esc = false;
+  static const int serial_input = Serial_no_input;
 };
 
 //---------------------------------------------------------------------------
@@ -184,7 +190,9 @@ KIP_KERNEL_ABI_VERSION(FIASCO_STRINGIFY(FIASCO_KERNEL_SUBVERSION));
 DEFINE_GLOBAL Global_data<bool> Config::esc_hack;
 #ifdef CONFIG_SERIAL
 DEFINE_GLOBAL_CONSTINIT
-Global_data<int>  Config::serial_esc(Config::SERIAL_NO_ESC);
+Global_data<int> Config::serial_input(Config::Serial_no_input);
+DEFINE_GLOBAL_CONSTINIT
+Global_data<bool> Config::serial_esc(false);
 #endif
 
 #ifdef CONFIG_MMU
@@ -214,11 +222,16 @@ Config::init()
     esc_hack = true;
 
 #ifdef CONFIG_SERIAL
-  if (    Koptions::o()->opt(Koptions::F_serial_esc)
-      && !Koptions::o()->opt(Koptions::F_noserial)
-      && !Koptions::o()->opt(Koptions::F_nojdb))
+  if (!Koptions::o()->opt(Koptions::F_noserial))
     {
-      serial_esc = SERIAL_ESC_IRQ;
+      if (Koptions::o()->opt(Koptions::F_serial_input)
+          || Koptions::o()->opt(Koptions::F_serial_esc))
+        serial_input = Serial_input_irq;
+
+      if (Koptions::o()->opt(Koptions::F_serial_esc)
+          && !Koptions::o()->opt(Koptions::F_nojdb)
+          && TAG_ENABLED(jdb))
+        serial_esc = true;
     }
 #endif
 }

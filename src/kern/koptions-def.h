@@ -32,6 +32,7 @@ namespace L4_kernel_options
     F_uart_irq          = 1 << 22,
 
     F_jdb_cmd           = 1 << 23,
+    F_serial_input      = 1 << 24,
   };
 
   enum

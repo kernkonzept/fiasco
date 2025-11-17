@@ -55,7 +55,7 @@ PRIVATE static inline
 void
 Jdb::kernel_uart_irq_disable()
 {
-  if (Config::serial_esc != Config::SERIAL_ESC_NOIRQ)
+  if (Config::serial_input != Config::Serial_input_noirq)
     Kernel_uart::uart()->disable_rcv_irq();
 }
 
@@ -63,7 +63,7 @@ PRIVATE static inline
 void
 Jdb::kernel_uart_irq_enable()
 {
-  if (Config::serial_esc != Config::SERIAL_ESC_NOIRQ)
+  if (Config::serial_input != Config::Serial_input_noirq)
     {
       Kernel_uart::uart()->enable_rcv_irq();
       Kernel_uart::uart()->irq_ack();

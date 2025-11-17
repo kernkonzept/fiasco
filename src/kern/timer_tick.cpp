@@ -164,7 +164,7 @@ void
 Timer_tick::enable_vkey(Cpu_number cpu)
 {
   if (cpu == Cpu_number::boot_cpu())
-    if (Config::esc_hack || (Config::serial_esc == Config::SERIAL_ESC_NOIRQ))
+    if (Config::esc_hack || Config::serial_input == Config::Serial_input_noirq)
       Vkey::enable_receive();
 }
 
@@ -172,8 +172,8 @@ PRIVATE static inline
 void
 Timer_tick::serial_esc(Cpu_number cpu)
 {
-  if (   (cpu == Cpu_number::boot_cpu())
-      && (Config::esc_hack || (Config::serial_esc == Config::SERIAL_ESC_NOIRQ)))
+  if (   cpu == Cpu_number::boot_cpu()
+      && (Config::esc_hack || Config::serial_input == Config::Serial_input_noirq))
     {
       if (Kconsole::console()->char_avail() > 0 && !Vkey::check_())
         kdb_ke("SERIAL_ESC");

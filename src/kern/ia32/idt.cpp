@@ -247,7 +247,7 @@ Idt::set_vectors_run()
 {
   Address func =
     (Config::esc_hack || Config::watchdog ||
-     Config::serial_esc==Config::SERIAL_ESC_NOIRQ)
+     Config::serial_input == Config::Serial_input_noirq)
     ? reinterpret_cast<Address>(entry_int_timer_slow) // slower for debugging
     : reinterpret_cast<Address>(entry_int_timer);     // non-debugging
 
