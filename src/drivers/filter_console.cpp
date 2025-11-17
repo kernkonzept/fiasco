@@ -36,10 +36,10 @@ private:
     GOT_CSI, ///< control sequence introducer
   };
 
-  Seq_state seq_state;
-  unsigned pos;
+  Seq_state seq_state = NORMAL;
+  unsigned pos = 0;
   char ibuf[32];
-  unsigned arg;
+  unsigned arg = 0;
   int args[4];
 };
 
@@ -54,7 +54,7 @@ IMPLEMENTATION [serial && jdb]:
 
 PUBLIC inline explicit
 Filter_console::Filter_console(Console *o, unsigned loops = 400)
-: Console(ENABLED), _o(o), csi_timeout_loops(loops), seq_state(NORMAL), pos(0), arg(0)
+: Console(ENABLED), _o(o), csi_timeout_loops(loops)
 {
   if (o->failed())
     fail();
