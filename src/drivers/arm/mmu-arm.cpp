@@ -207,12 +207,25 @@ private:
         if ((clidr & 6) == 0)
           continue;
 
-        Mword ccsidr = get_ccsidr(cl);
+        Unsigned64 ccsidr = get_ccsidr(cl);
 
-        unsigned assoc       = ((ccsidr >> 3) & 0x3ff);
-        unsigned w_shift     = __builtin_clz(assoc);
-        unsigned set         = ((ccsidr >> 13) & 0x7fff);
+        unsigned assoc;
+        unsigned set;
+
+        if (has_feat_ccidx())
+          {
+            assoc = ((ccsidr >> 3) & 0x1fffff);
+            set   = ((ccsidr >> 32) & 0xffffff);
+          }
+        else
+          {
+            assoc = ((ccsidr >> 3) & 0x3ff);
+            set   = ((ccsidr >> 13) & 0x7fff);
+          }
+
         unsigned log2linelen = (ccsidr & 7) + 4;
+        unsigned w_shift     = __builtin_clz(assoc);
+
         do
           {
             unsigned w = assoc;

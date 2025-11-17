@@ -164,15 +164,28 @@ EXTENSION class Mmu
     return clidr;
   }
 
-  static Mword get_ccsidr(Mword csselr)
+  static Unsigned64 get_ccsidr(Mword csselr)
   {
     Mword ccsidr;
+    Mword ccsidr2 = 0;
     Proc::Status s = Proc::cli_save();
     asm volatile("mcr p15, 2, %0, c0, c0, 0" : : "r" (csselr)); // CSSELR
     Mem::isb();
     asm volatile("mrc p15, 1, %0, c0, c0, 0" : "=r" (ccsidr)); // CCSIDR
+    if (has_feat_ccidx())
+      asm("mrc p15, 1, %0, c0, c0, 2" : "=r" (ccsidr2)); // CCSIDR2
     Proc::sti_restore(s);
-    return ccsidr;
+    return ccsidr | (static_cast<Unsigned64>(ccsidr2) << 32);
+  }
+
+  static bool has_feat_ccidx()
+  {
+    if constexpr (!TAG_ENABLED(arm_v8plus))
+      return false;
+
+    Mword f;
+    asm("mrc p15, 0, %0, c0, c2, 6": "=r" (f)); // ID_MMFR4
+    return (f >> 24) & 0xf;
   }
 
   static void dc_cisw(Mword v)
