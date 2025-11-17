@@ -660,7 +660,7 @@ int
 Thread::handle_not_nested_trap(Trap_state *ts)
 {
   // no kernel debugger present
-  printf(" %p IP=" L4_PTR_FMT " Trap=%02lx [Ret/Esc]\n",
+  printf(" %p IP=" L4_PTR_FMT " Trap=%02lx [ENTER=Continue, Other=Reboot]\n",
          static_cast<void *>(this), ts->ip(), ts->_trapno);
 
   int r;
@@ -669,7 +669,7 @@ Thread::handle_not_nested_trap(Trap_state *ts)
   while ((r = Kconsole::console()->getchar(false)) == -1)
     Proc::pause();
 
-  if (r == KEY_ESC)
+  if (r != KEY_RETURN && r != KEY_RETURN_2)
     terminate (1);
 
   return 0;
