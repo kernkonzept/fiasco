@@ -41,6 +41,7 @@ private:
   char ibuf[32];
   unsigned arg = 0;
   int args[4];
+  bool always_enabled;
 };
 
 //----------------------------------------------------------------------------
@@ -53,9 +54,11 @@ IMPLEMENTATION [serial && jdb]:
 #include "keycodes.h"
 
 PUBLIC inline explicit
-Filter_console::Filter_console(Console *o)
-: Console(ENABLED), _o(o)
+Filter_console::Filter_console(Console *o, bool always_enabled = true)
+: Console(ENABLED), _o(o), always_enabled(always_enabled)
 {
+  if (always_enabled)
+    state(state() | FILTER_ENABLED);
   if (o->failed())
     fail();
 }
@@ -74,7 +77,7 @@ PUBLIC
 Mword
 Filter_console::get_attributes() const override
 {
-  return _o->get_attributes();
+  return _o->get_attributes() | FILTER;
 }
 
 PUBLIC
@@ -116,6 +119,9 @@ Filter_console::getchar(bool blocking = true) override
 {
   if (!(_o->state() & INENABLED))
     return -1;
+
+  if (!always_enabled && !(state() & FILTER_ENABLED))
+    return _o->getchar(blocking);
 
   unsigned loop_count = 100;
   int ch;

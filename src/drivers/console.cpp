@@ -15,26 +15,28 @@ class Console
 public:
   enum Console_state
   {
-    DISABLED    =     0,
-    INENABLED   =     1, ///< input channel of console enabled
-    OUTENABLED  =     2, ///< output channel of console enabled
-    ENABLED     =     INENABLED | OUTENABLED, ///< console fully enabled
-    FAILED      = 0x200, ///< initialization failed
+    DISABLED       =     0,
+    INENABLED      =     1, ///< input channel of console enabled
+    OUTENABLED     =     2, ///< output channel of console enabled
+    ENABLED        =     INENABLED | OUTENABLED, ///< console fully enabled
+    FILTER_ENABLED = 0x100, ///< filter console: filtering disable if not set
+    FAILED         = 0x200, ///< initialization failed
   };
 
   enum Console_attr
   {
     // universal attributes
-    INVALID     =    0,
-    OUT         =  0x1, ///< output to console is possible
-    IN          =  0x2, ///< input from console is possible
+    INVALID     =     0,
+    OUT         =   0x1, ///< output to console is possible
+    IN          =   0x2, ///< input from console is possible
     // attributes to identify a specific console
-    DIRECT      =  0x4, ///< output to screen or input from keyboard
-    UART        =  0x8, ///< output to/input from serial serial line
-    PUSH        = 0x10, ///< input console
-    GZIP        = 0x20, ///< gzip+uuencode output and sent to uart console
-    BUFFER      = 0x40, ///< ring buffer
-    DEBUG       = 0x80, ///< kdb interface
+    DIRECT      =   0x4, ///< output to screen or input from keyboard
+    UART        =   0x8, ///< output to/input from serial serial line
+    PUSH        =  0x10, ///< input console
+    GZIP        =  0x20, ///< gzip+uuencode output and sent to UART console
+    BUFFER      =  0x40, ///< ring buffer
+    DEBUG       =  0x80, ///< kdb interface
+    FILTER      = 0x100, ///< console for detecting ANSI Escape cursor controls
   };
 
   /**
