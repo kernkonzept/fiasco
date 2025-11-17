@@ -29,14 +29,14 @@ private:
    */
   static constexpr unsigned csi_timeout_us = 25;
 
-  enum State
+  enum Seq_state
   {
     NORMAL,
     UNKNOWN_ESC,
     GOT_CSI, ///< control sequence introducer
   };
 
-  State state;
+  Seq_state seq_state;
   unsigned pos;
   char ibuf[32];
   unsigned arg;
@@ -54,7 +54,7 @@ IMPLEMENTATION [serial && jdb]:
 
 PUBLIC inline explicit
 Filter_console::Filter_console(Console *o, unsigned loops = 400)
-: Console(ENABLED), _o(o), csi_timeout_loops(loops), state(NORMAL), pos(0), arg(0)
+: Console(ENABLED), _o(o), csi_timeout_loops(loops), seq_state(NORMAL), pos(0), arg(0)
 {
   if (o->failed())
     fail();
@@ -122,30 +122,30 @@ Filter_console::getchar(bool blocking = true) override
 
   do
     {
-      if (state == UNKNOWN_ESC && pos)
+      if (seq_state == UNKNOWN_ESC && pos)
         {
           ch = ibuf[0];
           memmove(ibuf, ibuf + 1, --pos);
           // on pos == 0 we return 'ch' using the NORMAL case below
         }
-      else if (state == GOT_CSI)
+      else if (seq_state == GOT_CSI)
         // Be more patient while in the middle of a CSI escape sequence.
         ch = getchar_timeout(csi_timeout_loops);
       else
         ch = _o->getchar(blocking);
 
       if (!pos)
-        state = NORMAL;
+        seq_state = NORMAL;
 
       if (ch == -1)
         {
-          if (state == NORMAL || blocking)
+          if (seq_state == NORMAL || blocking)
             return -1;
           else
             continue;
         }
 
-      switch (state)
+      switch (seq_state)
         {
         case UNKNOWN_ESC:
           return ch;
@@ -170,12 +170,12 @@ Filter_console::getchar(bool blocking = true) override
                     {
                       arg = 0;
                       memset(args, 0, sizeof(args));
-                      state = GOT_CSI;
+                      seq_state = GOT_CSI;
                       break;
                     }
                   else
                     {
-                      state = UNKNOWN_ESC;
+                      seq_state = UNKNOWN_ESC;
                       loop_count++;
                       continue;
                     }
@@ -201,7 +201,7 @@ Filter_console::getchar(bool blocking = true) override
             }
           else
             {
-              state = NORMAL;
+              seq_state = NORMAL;
               if (pos < sizeof(ibuf))
                 ibuf[pos++] = ch;
 
@@ -235,7 +235,7 @@ Filter_console::getchar(bool blocking = true) override
                     }
                 case 'P': return KEY_F1;
                 default:
-                  state = UNKNOWN_ESC;
+                  seq_state = UNKNOWN_ESC;
                   break;
                 }
             }
