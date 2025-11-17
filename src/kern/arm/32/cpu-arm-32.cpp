@@ -317,19 +317,6 @@ IMPLEMENTATION [arm && mmu && arm_lpae]:
 PUBLIC static inline unsigned Cpu::phys_bits() { return 40; }
 
 //--------------------------------------------------------------------
-IMPLEMENTATION [arm && cpu_virt && 32bit]:
-
-EXTENSION class Cpu
-{
-public:
-  static constexpr Unsigned64 Hcr_must_set_bits
-    = Hcr_vm | Hcr_swio | Hcr_amo | Hcr_imo | Hcr_fmo | Hcr_tidcp | Hcr_tsc
-    | Hcr_tactlr
-    | cxx::const_ite<TAG_ENABLED(mmu)>(Hcr_ptw, 0)
-    | cxx::const_ite<TAG_ENABLED(arm_v8plus)>(Hcr_terr | Hcr_tea, 0);
-};
-
-//--------------------------------------------------------------------
 IMPLEMENTATION [arm && cpu_virt && 32bit && mmu]:
 
 IMPLEMENT_OVERRIDE
@@ -358,6 +345,12 @@ IMPLEMENTATION [arm && cpu_virt && 32bit]:
 EXTENSION class Cpu
 {
 public:
+  static constexpr Unsigned64 Hcr_must_set_bits
+    = Hcr_vm | Hcr_swio | Hcr_amo | Hcr_imo | Hcr_fmo | Hcr_tidcp | Hcr_tsc
+    | Hcr_tactlr
+    | cxx::const_ite<TAG_ENABLED(mmu)>(Hcr_ptw, 0)
+    | cxx::const_ite<TAG_ENABLED(arm_v8plus)>(Hcr_terr | Hcr_tea, 0);
+
   enum : Unsigned64
   {
     /**
