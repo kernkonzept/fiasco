@@ -3,6 +3,12 @@ INTERFACE:
 #include "console.h"
 #include "types.h"
 
+/**
+ * Interpret console input and convert ANSI VT and Xterm multi-byte sequences
+ * into internal single-byte keycodes like KEY_CURSOR_* and KEY_PAGE_* which can
+ * be handled by JDB or are translated back to xterm sequences before forwarding
+ * to a Vlog client.
+ */
 class Filter_console : public Console
 {
   friend struct Console_test;
