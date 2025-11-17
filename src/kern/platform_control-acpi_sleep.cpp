@@ -107,24 +107,26 @@ suspend_ap_cpus()
   _cpus_to_suspend = Cpu::online_mask();
   _cpus_to_suspend.clear(Cpu_number::boot_cpu());
 
-  auto suspend_ap_cpu = [](Cpu_number cpu)
+  auto suspend_ap_cpu = [](Cpu_number)
     {
-      Context::spill_current_fpu(cpu);
+      Context::spill_current_fpu();
       current()->kernel_context_drq([](Context::Drq *, Context *, void *)
                                     -> Context::Drq::Result
         {
-          Cpu_number cpun = current_cpu();
-          Cpu &cpu = Cpu::cpus.current();
-          Cpu_pm_callbacks::run_on_suspend_hooks(cpun);
-          cpu.pm_suspend();
-          check(Context::take_cpu_offline(cpun, true));
+          Cpu_number cpu = current_cpu();
+
+          Cpu_pm_callbacks::run_on_suspend_hooks(cpu);
+          Cpu::cpus.current().pm_suspend();
+          check(Context::take_cpu_offline(true));
+
           // We assume that Platform_control::cpu_suspend() does never return
           // under any circumstances -- otherwise we'd run with inconsistent
           // state into the scheduler.
-          Sched_context::rq.cpu(cpun).schedule_in_progress = nullptr;
-          Platform_control::prepare_cpu_suspend(cpun);
-          _cpus_to_suspend.atomic_clear(current_cpu());
-          cxx::check_noreturn<Platform_control::cpu_suspend>(cpun);
+
+          Sched_context::rq.cpu(cpu).schedule_in_progress = nullptr;
+          Platform_control::prepare_cpu_suspend();
+          _cpus_to_suspend.atomic_clear(cpu);
+          cxx::check_noreturn<Platform_control::cpu_suspend>();
         }, nullptr);
       return false;
     };
@@ -136,7 +138,7 @@ suspend_ap_cpus()
     }
 
   // Wind up pending Rcu and Drq changes together with all _cpus_to_suspend
-  check(Context::take_cpu_offline(current_cpu(), true));
+  check(Context::take_cpu_offline(true));
 
   while (!_cpus_to_suspend.empty())
     {
@@ -148,7 +150,7 @@ suspend_ap_cpus()
 static void
 take_boot_cpu_online()
 {
-  Context::take_cpu_online(current_cpu());
+  Context::take_cpu_online();
 }
 
 IMPLEMENTATION [!mp]:
@@ -192,7 +194,7 @@ do_system_suspend(Mword sleep_type)
   suspend_ap_cpus();
 
   // Then enter system suspend via ACPI.
-  Context::spill_current_fpu(current_cpu());
+  Context::spill_current_fpu();
 
   facs->fw_wake_vector = phys_wake_vector;
   if (facs->len > 32 && facs->version >= 1)

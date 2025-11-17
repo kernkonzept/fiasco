@@ -424,7 +424,7 @@ Thread::handle_timer_interrupt()
       && !Sched_context::rq.current().schedule_in_progress)
     {
       schedule();
-      assert(timeslice_timeout.cpu(current_cpu())->is_set());	// Coma check
+      assert(timeslice_timeout.current()->is_set());	// Coma check
     }
 }
 

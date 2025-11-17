@@ -88,7 +88,7 @@ Sched_context::Ready_queue::set_current_sched(Sched_context *sched)
 
   // Program new end-of-timeslice timeout
   tt->reset();
-  tt->set(clock + sched->left(), current_cpu());
+  tt->set(clock + sched->left());
 
   // Make this timeslice current
   activate(sched);

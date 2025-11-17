@@ -230,7 +230,7 @@ protected:
    * next interrupt is an atomic operation, i.e. the interrupt cannot hit before
    * the wait-for-interrupt instruction is executed.
    */
-  void arch_idle(Cpu_number cpu);
+  void arch_idle();
 
   /**
    * Enter the "tickless idle" state on the current CPU after a successful
@@ -241,7 +241,7 @@ protected:
    * next interrupt is an atomic operation, i.e. the interrupt cannot hit before
    * the wait-for-interrupt instruction is executed.
    */
-  void arch_tickless_idle(Cpu_number cpu);
+  void arch_tickless_idle();
 
 private:
   /**
@@ -266,7 +266,7 @@ DEFINE_PER_CPU Per_cpu<unsigned long> Kernel_thread::_deep_idle_counter;
  */
 IMPLEMENT_DEFAULT inline NEEDS["processor.h"]
 void
-Kernel_thread::arch_idle(Cpu_number)
+Kernel_thread::arch_idle()
 {
   Proc::halt(); // stop the CPU, waiting for an interrupt
 }
@@ -277,9 +277,9 @@ Kernel_thread::arch_idle(Cpu_number)
  */
 IMPLEMENT_DEFAULT inline NEEDS[Kernel_thread::arch_idle]
 void
-Kernel_thread::arch_tickless_idle(Cpu_number cpu)
+Kernel_thread::arch_tickless_idle()
 {
-  arch_idle(cpu);
+  arch_idle();
 }
 
 // template code for arch idle
@@ -290,8 +290,12 @@ Kernel_thread::idle_op()
   // this version must run with disabled IRQs and a wakeup must continue
   // directly after the wait for event.
   auto guard = lock_guard(cpu_lock);
-  Cpu_number cpu = home_cpu();
+
+  Cpu_number cpu = current_cpu();
+  assert(cpu == home_cpu());
+
   ++_idle_counter.cpu(cpu);
+
   // 1. check for latency requirements that prevent low power modes
   // 2. check for timeouts on this CPU ignore the idle thread's timeslice
   // 3. check for RCU work on this CPU
@@ -315,7 +319,7 @@ Kernel_thread::idle_op()
       // do everything to do to a deep sleep state:
       //  - flush caches
       //  - ...
-      arch_tickless_idle(cpu);
+      arch_tickless_idle();
 
       if constexpr (Config::Scheduler_one_shot)
         {
@@ -336,7 +340,7 @@ Kernel_thread::idle_op()
       Rcu::leave_idle(cpu);
     }
   else
-    arch_idle(cpu);
+    arch_idle();
 }
 
 // ------------------------------------------------------------------------

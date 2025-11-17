@@ -227,8 +227,10 @@ PUBLIC inline
 void
 Receiver::set_timeout(Timeout *t, Unsigned64 tval)
 {
+  assert(current_cpu() == home_cpu());
+
   _timeout = t;
-  t->set(tval, home_cpu());
+  t->set(tval);
 }
 
 PUBLIC inline NEEDS["cpu.h"]
@@ -236,7 +238,10 @@ void
 Receiver::enqueue_timeout_again()
 {
   if (_timeout && Cpu::online(home_cpu()))
-    _timeout->set_again(home_cpu());
+    {
+      assert(current_cpu() == home_cpu());
+      _timeout->set_again();
+    }
 }
 
 PUBLIC inline

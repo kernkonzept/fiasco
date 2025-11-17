@@ -421,7 +421,7 @@ Ipc_gate::block(Thread *ct, L4_timeout const &to, Utcb *u)
   IPC_timeout timeout;
   if (tval)
     {
-      timeout.set(tval, current_cpu());
+      timeout.set(tval);
       ct->set_timeout(&timeout);
     }
   // else infinite timeout

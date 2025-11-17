@@ -2013,10 +2013,11 @@ Context::Pending_rqq::handle_requests(Context **mq)
 
 PUBLIC static inline NEEDS["cpu_call.h"]
 bool
-Context::take_cpu_offline(Cpu_number cpu, bool drain_rqq = false)
+Context::take_cpu_offline(bool drain_rqq = false)
 {
-  assert(cpu == current_cpu());
   assert(!Proc::interrupts());
+
+  Cpu_number cpu = current_cpu();
 
   for (;;)
     {
@@ -2064,13 +2065,12 @@ Context::take_cpu_offline(Cpu_number cpu, bool drain_rqq = false)
 
 PUBLIC static inline
 void
-Context::take_cpu_online(Cpu_number cpu)
+Context::take_cpu_online()
 {
-  assert(cpu == current_cpu());
   assert(!Proc::interrupts());
 
-  Cpu::cpus.cpu(cpu).set_online();
-  Rcu::leave_idle(cpu);
+  Cpu::cpus.current().set_online();
+  Rcu::leave_idle(current_cpu());
 }
 
 PRIVATE
@@ -2323,10 +2323,8 @@ Context::spill_fpu_if_owner()
 
 PUBLIC static
 void
-Context::spill_current_fpu([[maybe_unused]] Cpu_number cpu)
+Context::spill_current_fpu()
 {
-  assert(cpu == current_cpu());
-
   Fpu &f = Fpu::fpu.current();
   if (f.owner())
     {
@@ -2399,10 +2397,8 @@ Context::spill_fpu_if_owner()
 
 PUBLIC static
 void
-Context::spill_current_fpu([[maybe_unused]] Cpu_number cpu)
+Context::spill_current_fpu()
 {
-  assert(cpu == current_cpu());
-
   current()->spill_fpu();
 }
 
@@ -2429,7 +2425,7 @@ Context::spill_fpu_if_owner()
 
 PUBLIC static
 void
-Context::spill_current_fpu(Cpu_number)
+Context::spill_current_fpu()
 {}
 
 PUBLIC inline

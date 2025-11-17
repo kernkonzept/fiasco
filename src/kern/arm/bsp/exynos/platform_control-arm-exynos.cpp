@@ -394,8 +394,9 @@ Platform_control::do_print_cpu_info(Cpu_phys_id cpu)
 
 PUBLIC static
 int
-Platform_control::do_core_n_off(Cpu_number cpu)
+Platform_control::do_core_n_off()
 {
+  Cpu_number cpu = current_cpu();
   if (cpu == Cpu_number::boot_cpu())
     return -L4_err::EBusy;
 

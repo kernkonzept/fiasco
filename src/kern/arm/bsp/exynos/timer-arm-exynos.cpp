@@ -126,5 +126,5 @@ Timer::update_timer(Unsigned64 wakeup)
   else
     interval_mct = us_to_mct(wakeup - now);
 
-  timers.cpu(current_cpu())->set_interval(interval_mct);
+  timers.current()->set_interval(interval_mct);
 }
