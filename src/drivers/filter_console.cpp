@@ -23,7 +23,7 @@ private:
    * the beginning of a CSI sequence or just a single escape key. The waiting
    * time is defined by `csi_timeout_loops` times `csi_timeout_us`.
    */
-  unsigned csi_timeout_loops;
+  static constexpr unsigned csi_timeout_loops = 400;
   /**
    * The amount of time to wait during each CSI timeout loop.
    */
@@ -53,8 +53,8 @@ IMPLEMENTATION [serial && jdb]:
 #include "keycodes.h"
 
 PUBLIC inline explicit
-Filter_console::Filter_console(Console *o, unsigned loops = 400)
-: Console(ENABLED), _o(o), csi_timeout_loops(loops)
+Filter_console::Filter_console(Console *o)
+: Console(ENABLED), _o(o)
 {
   if (o->failed())
     fail();
