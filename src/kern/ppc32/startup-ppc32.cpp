@@ -19,10 +19,10 @@ IMPLEMENT FIASCO_INIT FIASCO_NOINLINE
 void
 Startup::stage1()
 {
+  Config::init();
   Proc::cli();
   Boot_info::init();
   Cpu::early_init();
-  Config::init();
 }
 
 IMPLEMENT FIASCO_INIT FIASCO_NOINLINE

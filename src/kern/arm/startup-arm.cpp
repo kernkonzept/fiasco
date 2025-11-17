@@ -32,10 +32,10 @@ IMPLEMENT FIASCO_INIT FIASCO_NOINLINE
 void
 Startup::stage1()
 {
+  Config::init();
   Kernel_uart::init(Kernel_uart::Init_after_mmu);
   Proc::cli();
   Cpu::early_init();
-  Config::init();
   Banner::init();
 }
 

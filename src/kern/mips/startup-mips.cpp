@@ -37,9 +37,9 @@ IMPLEMENT FIASCO_INIT FIASCO_NOINLINE
 void
 Startup::stage1()
 {
+  Config::init();
   Proc::cli();
   Banner::init();
-  Config::init();
 }
 
 IMPLEMENT FIASCO_INIT FIASCO_NOINLINE

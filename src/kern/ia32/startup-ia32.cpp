@@ -43,8 +43,8 @@ IMPLEMENT FIASCO_INIT FIASCO_NOINLINE
 void
 Startup::stage1()
 {
-  Boot_info::init();
   Config::init();
+  Boot_info::init();
   if (Kernel_uart::init(Kernel_uart::Init_before_mmu))
     Banner::init();
 }
