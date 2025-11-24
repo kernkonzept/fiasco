@@ -7,10 +7,12 @@ EXTENSION class Mem_layout
 public:
   enum Virt_layout : Address
   {
-    //User_max             = 0x8000000000000000 - 1,
-    User_max             = 0x0000000100000000 - 1,
-    Utcb_addr            = User_max + 1UL - (Config::PAGE_SIZE * 4),
+    //_User_max            = 0x8000000000000000 - 1,
+    _User_max            = 0x0000000100000000 - 1,
+    Utcb_addr            = _User_max + 1UL - (Config::PAGE_SIZE * 4),
   };
+
+  static constexpr Address user_max() { return _User_max; }
 
   enum : Address
   {

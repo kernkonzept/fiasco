@@ -9,6 +9,8 @@ EXTENSION class Mem_layout
 
 //TODO cbass: check what can be omitted
 public:
+  static constexpr Address user_max() { return _User_max; }
+
   enum Phys_layout {
     Utcb_ptr_page        = 0x3000,
     Syscalls_phys        = 0x4000,
@@ -16,9 +18,9 @@ public:
     Kernel_start         = 0x6000,   //end phys pool
     Syscalls             = 0xfffff000,
 
-    User_max             = 0xefffffff,
+    _User_max             = 0xefffffff,
     Tcbs                 = 0xc0000000,
-    Utcb_addr            = User_max + 1 - 0x2000,
+    Utcb_addr            = _User_max + 1 - 0x2000,
     Tcbs_end             = 0xe0000000,
     __free_1_start       = 0xec000000,
     __free_1_end         = 0xed000000,

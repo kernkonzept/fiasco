@@ -316,7 +316,7 @@ public:
    *
    * This function returns the address of the highest supported virtual address
    * for userland by the hardware. The page tables always provide up to
-   * Mem_layout::User_max bits of virtual address space but it could be further
+   * Mem_layout::user_max() bits of virtual address space but it could be further
    * constrained by the underlying hardware, for example by the physical
    * address size of the MMU.
    *
@@ -656,7 +656,7 @@ Mem_space::reload_current()
 IMPLEMENT_DEFAULT inline NEEDS["mem_layout.h"]
 Address
 Mem_space::max_user_address()
-{ return Mem_layout::User_max; }
+{ return Mem_layout::user_max(); }
 
 IMPLEMENT_DEFAULT inline
 Address

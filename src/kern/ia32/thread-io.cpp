@@ -83,7 +83,7 @@ Thread::decode_io(Address eip, Trap_state *ts, unsigned int *port, unsigned int 
     }
 
   // handle 2-byte IO instruction
-  if (!(eip < Mem_layout::User_max))
+  if (!(eip < Mem_layout::user_max()))
     return false;
 
   switch (mem_space()->peek(reinterpret_cast<Unsigned8 *>(eip), from_user))
@@ -152,7 +152,7 @@ Thread::decode_io(Address eip, Trap_state *ts, unsigned int *port, unsigned int 
     }
 
   // handle 3-byte IO instruction
-  if (!(eip < Mem_layout::User_max - 1))
+  if (!(eip < Mem_layout::user_max() - 1))
     return false;
 
   Unsigned16 word = mem_space()->peek(reinterpret_cast<Unsigned16 *>(eip), from_user);
@@ -201,7 +201,7 @@ Thread::handle_io_fault(Trap_state *ts)
   // We have to dispatch the code at the faulting eip to determine the IO port
   // and send an IO flexpage to our pager.
 
-  if (eip <= Mem_layout::User_max && ts->_trapno == 13
+  if (eip <= Mem_layout::user_max() && ts->_trapno == 13
       && (ts->_err & 7) == 0)
     {
       // If the IO bitmap is not up-to-date, we update it and retry.
@@ -297,7 +297,7 @@ Thread::handle_io_fault(Trap_state *ts)
   // Exception #13 (#GP) means that either (a) the access to the IO bitmap
   // was not within the bounds of the TSS segment or (b) the corresponding bit
   // in the IO bitmap is not set (i.e. the port is not enabled).
-  if (ts->ip() <= Mem_layout::User_max && ts->_trapno == 13
+  if (ts->ip() <= Mem_layout::user_max() && ts->_trapno == 13
       && (ts->_err & 7) == 0)
     {
       // If the IO bitmap is not up-to-date, we update it and retry.

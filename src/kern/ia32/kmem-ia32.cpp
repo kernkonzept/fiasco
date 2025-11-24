@@ -133,7 +133,7 @@ IMPLEMENT inline NEEDS["mem_layout.h"]
 bool
 Kmem::is_kmem_page_fault(Address addr, Mword /*error*/)
 {
-  return addr > Mem_layout::User_max;
+  return addr > Mem_layout::user_max();
 }
 
 

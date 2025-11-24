@@ -60,7 +60,7 @@ Mem_space::make_current(Switchin_flags)
 }
 
 /*
- * The page tables always provide up to Mem_layout::User_max bits of virtual
+ * The page tables always provide up to Mem_layout::user_max() bits of virtual
  * address space. But at least on arm64 cpu_virt the HW supported stage1 output
  * size (maximum IPA size) is additionally constrained by the available physical
  * address size of the MMU.

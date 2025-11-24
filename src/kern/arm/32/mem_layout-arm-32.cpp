@@ -3,9 +3,7 @@ INTERFACE [arm && mmu && !kern_start_0xd && !cpu_virt]:
 EXTENSION class Mem_layout
 {
 public:
-  enum Virt_layout_umax : Address {
-    User_max             = 0xbfffffff,
-  };
+  static constexpr Address user_max() { return 0xbfffffff; }
 };
 
 
@@ -15,10 +13,7 @@ INTERFACE [arm && mmu & kern_start_0xd]:
 EXTENSION class Mem_layout
 {
 public:
-  enum Virt_layout_umax : Address {
-    User_max             = 0xcfffffff,
-  };
-
+  static constexpr Address user_max() { return 0xcfffffff; }
 };
 //---------------------------------------------------------------------------
 INTERFACE [arm && (!mmu || cpu_virt)]:
@@ -26,9 +21,7 @@ INTERFACE [arm && (!mmu || cpu_virt)]:
 EXTENSION class Mem_layout
 {
 public:
-  enum Virt_layout_umax : Address {
-    User_max             = 0xffffffff,
-  };
+  static constexpr Address user_max() { return 0xffffffff; }
 };
 
 

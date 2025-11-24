@@ -74,7 +74,7 @@ IMPLEMENT inline
 Mword
 Mem_layout::in_kernel(Address a)
 {
-  return a > User_max;
+  return a > user_max();
 }
 
 PUBLIC static inline ALWAYS_INLINE

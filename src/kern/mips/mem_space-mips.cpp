@@ -360,7 +360,7 @@ Mem_space::~Mem_space()
       // free all page tables we have allocated for this address space
       // except the ones in kernel space which are always shared
       _dir->destroy(Virt_addr(0UL),
-                    Virt_addr(Mem_layout::User_max),
+                    Virt_addr(Mem_layout::user_max()),
                     Kmem_alloc::q_allocator(_quota));
       Kmem_alloc::allocator()->q_free(ram_quota(), Bytes(sizeof(Dir_type)), _dir);
     }

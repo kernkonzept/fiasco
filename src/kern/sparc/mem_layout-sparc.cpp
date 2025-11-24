@@ -8,13 +8,15 @@ INTERFACE [sparc]:
 EXTENSION class Mem_layout
 {
 public:
+  static constexpr Address user_max() { return _User_max; }
+
   enum Phys_layout : Address
   {
     Syscalls             = 0xfffff000,
 
-    User_max             = 0xbfffffff,
+    _User_max            = 0xbfffffff
     Tcbs                 = 0xc0000000,
-    Utcb_addr            = User_max + 1 - 0x2000,
+    Utcb_addr            = _User_max + 1 - 0x2000,
     Tcbs_end             = 0xe0000000,
     Utcb_ptr_page        = 0xe1000000,
     Tbuf_status_page     = 0xe1002000,

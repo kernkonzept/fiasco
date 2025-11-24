@@ -3,9 +3,7 @@ INTERFACE [arm && mmu && cpu_virt && !arm_pt48]: // -----------------------
 EXTENSION class Mem_layout
 {
 public:
-  enum Virt_layout_kern_user_max : Address {
-    User_max             = 0x000000ff'ffffffff,
-  };
+  static constexpr Address user_max() { return 0x000000ff'ffffffff; }
 };
 
 INTERFACE [arm && mmu && cpu_virt && arm_pt48]: // ------------------------
@@ -13,9 +11,7 @@ INTERFACE [arm && mmu && cpu_virt && arm_pt48]: // ------------------------
 EXTENSION class Mem_layout
 {
 public:
-  enum Virt_layout_kern_user_max : Address {
-    User_max             = 0x0000ffff'ffffffff,
-  };
+  static constexpr Address user_max() { return 0x0000ffff'ffffffff; }
 };
 
 INTERFACE [arm && mmu && cpu_virt]: // ------------------------------------
@@ -54,9 +50,9 @@ INTERFACE [arm && mmu && !cpu_virt]:
 EXTENSION class Mem_layout
 {
 public:
-  enum Virt_layout_kern : Address {
-    User_max             = 0x0000ff7f'ffffffff,
+  static constexpr Address user_max() { return 0x0000ff7f'ffffffff; }
 
+  enum Virt_layout_kern : Address {
     // Service area: 0xffff1000'eac00000 ... 0xffff1000'ebffffff (20 MiB)
     Tbuf_status_page     = 0xffff1000'eac00000,  // page-aligned
     Jdb_tmp_map_area     = 0xffff1000'eae00000,  // superpage-aligned
@@ -85,12 +81,12 @@ INTERFACE [arm && !mmu]:
 EXTENSION class Mem_layout
 {
 public:
+  // Strictly speaking we would have to consult ID_AA64MMFR0_EL1.PARange but
+  // what's the point when having no virtual memory?
+  static constexpr Address user_max() { return 0xffffffff'ffffffff; }
+
   enum Virt_layout : Address {
     Map_base             = RAM_PHYS_BASE, // 1:1
-
-    // Strictly speaking we would have to consult ID_AA64MMFR0_EL1.PARange but
-    // what's the point when having no virtual memory?
-    User_max             = 0xffffffff'ffffffff,
   };
 };
 

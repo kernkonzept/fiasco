@@ -114,9 +114,9 @@ int
 Mem_space::sync_kernel()
 {
   printf("%s checkme\n", __func__);
-  return _dir->sync(Virt_addr(Mem_layout::User_max + 1), kernel_space()->_dir,
-                    Virt_addr(Mem_layout::User_max + 1),
-                    Virt_size(-(Mem_layout::User_max + 1)), Pdir::Super_level,
+  return _dir->sync(Virt_addr(Mem_layout::user_max() + 1), kernel_space()->_dir,
+                    Virt_addr(Mem_layout::user_max() + 1),
+                    Virt_size(-(Mem_layout::user_max() + 1)), Pdir::Super_level,
                     Pte_ptr::need_cache_write_back(this == _current.current()),
                     Kmem_alloc::q_allocator(_quota));
 }

@@ -225,7 +225,7 @@ Mem_space::try_htab_fault(Address virt)
   //Address pte_ptr, phys;
   Dir_type *dir = _dir;
 
-  if(virt > Mem_layout::User_max)
+  if(virt > Mem_layout::user_max())
     dir = Kmem::kdir;
 
 #ifdef FIX_THIS

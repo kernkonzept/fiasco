@@ -15,6 +15,8 @@ public:
     Adap_in_kernel_image = FIASCO_IMAGE_PHYS_START < Config::SUPERPAGE_SIZE,
   };
 
+  static constexpr Address user_max() { return _User_max; }
+
   enum : Mword
   {
     Kentry_start      = 0xffff8100'00000000UL,  ///< 512 GiB slot 258
@@ -24,7 +26,7 @@ public:
     Caps_end          = 0xffff8180'0c400000UL,  ///< % 4 MiB
 
     Utcb_addr         = 0x0000007f'ff000000UL,  ///< % 4 KiB UTCB map address
-    User_max          = 0x00007fff'ffffffffUL,
+    _User_max         = 0x00007fff'ffffffffUL,
 
     // ========================================================================
     // We use a shared 1 GiB page directory for the Kglobal_area for all CPUs

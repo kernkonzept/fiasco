@@ -137,7 +137,7 @@ Jdb_bt::get_user_ebp_following_kernel_stack()
 
       if (!Mem_layout::in_kernel_code(m2))
         {
-          if (m2 <= Mem_layout::User_max)
+          if (m2 <= Mem_layout::user_max())
             // valid user ebp found
             return m1;
           else
@@ -243,7 +243,7 @@ Jdb_bt::show(Mword ebp, Mword eip1, Mword eip2, bool user)
 	  ebp = m1;
 
 	  if (  (!user && !Mem_layout::in_kernel_code(m2))
-	      ||(user   && (m2==0 || m2 > Mem_layout::User_max)))
+	      ||(user   && (m2==0 || m2 > Mem_layout::user_max())))
 	    // no valid eip found -- leaving
 	    return;
 	}

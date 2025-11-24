@@ -168,8 +168,8 @@ PUBLIC static inline
 bool
 Space::is_user_memory(Address address, Mword len)
 {
-  return    address <= Mem_layout::User_max && len > 0
-         && Mem_layout::User_max - address >= len - 1;
+  return    address <= Mem_layout::user_max() && len > 0
+         && Mem_layout::user_max() - address >= len - 1;
 }
 
 PRIVATE static

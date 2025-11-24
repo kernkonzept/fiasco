@@ -7,9 +7,11 @@ public:
     Sdram_phys_base       = RAM_PHYS_BASE
   };
 
+  static constexpr Address user_max() { return _User_max; }
+
   enum Virt_layout : Address {
-    User_max              = 0xbfffffff,
-    Utcb_addr             = User_max + 1 - 0x10000,
+    _User_max             = 0xbfffffff,
+    Utcb_addr             = _User_max + 1 - 0x10000,
   };
 
   enum Virt_layout_kern : Address {

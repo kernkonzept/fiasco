@@ -15,11 +15,13 @@ public:
     Adap_in_kernel_image = FIASCO_IMAGE_PHYS_START < Config::SUPERPAGE_SIZE,
   };
 
+  static constexpr Address user_max() { return _User_max; }
+
   enum : Mword
   {
     Utcb_addr         = 0xbff00000,    ///< % 4 KiB   UTCB map address
     Kip_auto_map      = 0xbfff2000,    ///< % 4 KiB
-    User_max          = 0xbfffffff,
+    _User_max         = 0xbfffffff,
 
     // Service area: 0xeac00000 ... eb000000 (4 MiB)
     Service_page      = 0xeac00000,              ///< % 4 MiB global mappings

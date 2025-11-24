@@ -5,10 +5,12 @@ INTERFACE [mips32]:
 EXTENSION class Mem_layout
 {
 public:
+  static constexpr Address user_max() { return _User_max; }
+
   enum Virt_layout : Address
   {
-    User_max             = 0x7fffffff,
-    Utcb_addr            = User_max + 1UL - (Config::PAGE_SIZE * 4),
+    _User_max            = 0x7fffffff,
+    Utcb_addr            = _User_max + 1UL - (Config::PAGE_SIZE * 4),
   };
 
   enum : Address
