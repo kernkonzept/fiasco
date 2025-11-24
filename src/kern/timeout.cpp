@@ -183,6 +183,7 @@ Timeout::has_hit()
  *
  * \param clock  Wakeup time
  *
+ * \pre `cpu_lock` must be held
  * \pre Timeout must not be set
  */
 PUBLIC inline NEEDS [<cassert>, "cpu_lock.h", "lock_guard.h",
@@ -190,9 +191,7 @@ PUBLIC inline NEEDS [<cassert>, "cpu_lock.h", "lock_guard.h",
 void
 Timeout::set(Unsigned64 clock)
 {
-  // XXX uses global kernel lock
-  auto guard = lock_guard(cpu_lock);
-
+  assert(cpu_lock.test());
   assert(!is_set());
 
   _wakeup = clock;
@@ -213,6 +212,7 @@ Timeout::get_timeout(Unsigned64 clock)
  * Program reset timeout to expire at the originally set wakeup time on the
  * current CPU, unless it already has been hit.
  *
+ * \pre `cpu_lock` must be held
  * \pre Timeout must not be set
  */
 PUBLIC inline NEEDS [<cassert>, "cpu_lock.h", "lock_guard.h",
@@ -220,9 +220,7 @@ PUBLIC inline NEEDS [<cassert>, "cpu_lock.h", "lock_guard.h",
 void
 Timeout::set_again()
 {
-  // XXX uses global kernel lock
-  auto guard = lock_guard(cpu_lock);
-
+  assert(cpu_lock.test());
   assert(!is_set());
 
   if (has_hit())
