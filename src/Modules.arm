@@ -149,7 +149,7 @@ INTERFACES_KERNEL-$(CONFIG_HAVE_ARM_GIC_MSI) += irq_mgr_msi
 INTERFACES_KERNEL-$(CONFIG_ARM_GIC_MSI)-$(CONFIG_HAVE_ARM_GICV3) += gic_mem gic_msi
 
 INTERFACES_KERNEL-$(CONFIG_IOMMU) += iommu arm_dmar dmar_space
-INTERFACES_KERNEL += boot_infos
+INTERFACES_KERNEL += boot_infos cpubits
 
 acpi_IMPL               := acpi acpi-arm
 alternatives_IMPL	:= alternatives alternatives-arm
@@ -162,6 +162,7 @@ context_IMPL	  	:= context context-arm context-arm-$(BITS) \
 continuation_IMPL	:= continuation-arm
 cpu_IMPL	  	:= cpu cpu-arm cpu-arm-$(BITS)
 cpu_lock_IMPL  	  	:= cpu_lock cpu_lock-generic
+cpubits_IMPL            := cpubits-arm-$(BITS)
 dmar_space_IMPL		:= dmar_space \
                            $(if $(CONFIG_IOMMU_ARM_SMMU_400),dmar_space-smmuv2) \
                            $(if $(CONFIG_IOMMU_ARM_SMMU_500),dmar_space-smmuv2) \

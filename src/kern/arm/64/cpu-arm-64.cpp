@@ -358,6 +358,8 @@ Cpu::init_sctlr()
 //--------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
+#include "cpubits.h"
+
 PUBLIC static inline
 bool
 Cpu::has_generic_timer()
@@ -470,12 +472,11 @@ Cpu::pa_range()
   return id_aa64mmfr0_el1 & 0x0fU;
 }
 
-PUBLIC static inline
+PUBLIC static inline NEEDS["cpubits.h"]
 unsigned
 Cpu::phys_bits()
 {
-  static char const pa_range_bits[16] = { 32, 36, 40, 42, 44, 48, 52, 56 };
-  return pa_range_bits[pa_range()];
+  return Cpubits::pa_range_bits[pa_range()];
 }
 
 //--------------------------------------------------------------------------

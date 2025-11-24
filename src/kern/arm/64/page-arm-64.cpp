@@ -29,6 +29,7 @@ public:
 //---------------------------------------------------------------------------
 INTERFACE [arm && mmu && cpu_virt]:
 
+#include "cpubits.h"
 #include "mem_unit.h"
 
 EXTENSION class Page
@@ -45,11 +46,10 @@ public:
 
   static unsigned inline ipa_bits(unsigned pa_range)
   {
-    static char const pa_range_bits[] = { 32, 36, 40, 42, 44, 48, 52 };
     if (pa_range > Max_pa_range)
       pa_range = Max_pa_range;
 
-    return pa_range_bits[pa_range];
+    return Cpubits::pa_range_bits[pa_range];
   }
 
   static unsigned inline vtcr_bits(unsigned pa_range)
