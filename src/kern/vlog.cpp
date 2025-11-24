@@ -197,7 +197,7 @@ Vlog::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,
     {
       if (Icu_h_base::Op{r_msg->values[0]} == Icu_h_base::Op::Bind
           && !Vkey::receive_enabled())
-        WARN("Without -esc / -serial_esc, Vlog will not generate input events!\n");
+        WARN("Without -esc / -serial_input, Vlog will not generate input events!\n");
 
       return Icu_h<Vlog>::icu_invoke(ref, rights, f, r_msg, s_msg);
     }
