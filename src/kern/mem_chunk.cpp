@@ -2,6 +2,7 @@ INTERFACE:
 
 #include "mem.h"
 #include "mem_unit.h"
+#include "mem_layout.h"
 
 #include <cassert>
 

@@ -1,6 +1,5 @@
 INTERFACE [arm]:
 
-#include "mem_layout.h"
 #include "mmu.h"
 
 class Mem_unit : public Mmu
