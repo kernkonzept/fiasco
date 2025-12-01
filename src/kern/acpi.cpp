@@ -477,7 +477,7 @@ Acpi_sdt::map_entry(unsigned idx, T phys)
 
 
 
-PUBLIC static
+PRIVATE static
 void
 Acpi::init_virt()
 {
