@@ -331,7 +331,7 @@ Kmem_mmio::map(Address phys, size_t size, Map_attr map_attr)
       size_adj = Super_pg::round(offset + size);
 
       step = Config::SUPERPAGE_SIZE;
-      level = Kpdir::Super_level;
+      level = Kpdir::super_level();
     }
 
   Page::Attr attr(map_attr.is_exec() ? Page::Rights::RWX()

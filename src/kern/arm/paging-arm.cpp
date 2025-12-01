@@ -411,7 +411,7 @@ public:
 
   Unsigned64 _page_bits() const
   {
-    return 0x400 | ((_this()->level == CLASS::Max_level) ? 3 : 1);
+    return 0x400 | ((_this()->level == CLASS::max_level()) ? 3 : 1);
   }
 
   Page::Flags access_flags() const
@@ -519,7 +519,7 @@ public:
 
   Unsigned64 _page_bits() const
   {
-    return 0x400 | ((_this()->level == CLASS::Max_level) ? 3 : 1);
+    return 0x400 | ((_this()->level == CLASS::max_level()) ? 3 : 1);
   }
 
   Page::Flags access_flags() const
@@ -560,11 +560,8 @@ template<typename CLASS>
 class Pte_short_desc
 {
 public:
-  enum
-  {
-    Max_level   = 1,
-    Super_level = 0,
-  };
+  static constexpr unsigned super_level() { return 0; }
+  static constexpr unsigned max_level()   { return 1; }
 
   typedef Unsigned32 Entry;
 
@@ -645,7 +642,7 @@ public:
   void clear() { write_now(pte, 0); }
   bool is_leaf() const
   {
-    if (level >= CLASS::Max_level)
+    if (level >= CLASS::max_level())
       return true;
     return (*pte & 3) == 1;
   }

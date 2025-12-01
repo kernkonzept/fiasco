@@ -47,7 +47,7 @@ Mem_space::v_insert_cache(Pte_ptr *e, Address virt, size_t size,
   //if super-page, set Pse_bit in Pdir
   if(size == Config::SUPERPAGE_SIZE)
     {
-      i = dir->walk(Addr(virt), Pdir::Super_level);
+      i = dir->walk(Addr(virt), Pdir::super_level());
       *i.e = i.e->raw() | Pte_ptr::Pse_bit;
     }
 

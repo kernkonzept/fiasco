@@ -36,7 +36,7 @@ Kmem_alloc::map_pmem(unsigned long phys, unsigned long size,
 
   for (unsigned long i = 0; i <size; i += Config::SUPERPAGE_SIZE)
     {
-      auto pte = Kmem::kdir->walk(Virt_addr(next_map + i), Kpdir::Super_level);
+      auto pte = Kmem::kdir->walk(Virt_addr(next_map + i), Kpdir::super_level());
       assert(!pte.is_valid());
       assert(pte.page_order() == Config::SUPERPAGE_SHIFT);
       pte.set_page(Phys_mem_addr(phys + i),
@@ -122,7 +122,7 @@ static void add_initial_pmem()
   // Find out our virt->phys mapping simply by walking the page table.
   Address virt = Super_pg::trunc(reinterpret_cast<Address>(_kernel_image_start));
   Address size = Super_pg::round(reinterpret_cast<Address>(_initcall_end)) - virt;
-  auto pte = Kmem::kdir->walk(Virt_addr(virt), Kpdir::Super_level, false,
+  auto pte = Kmem::kdir->walk(Virt_addr(virt), Kpdir::super_level(), false,
                               Ptab::Null_alloc(), Identity_map());
   assert(pte.is_valid());
   unsigned long phys = pte.page_addr();

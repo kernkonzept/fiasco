@@ -309,7 +309,7 @@ Kmem::map_tss_superpages(Kpdir *dir, Kmem_alloc *alloc)
   for (size_t i = 0; i < superpages; ++i)
     {
       auto e = dir->walk(Virt_addr(Mem_layout::Tss_start + Super_pg::size(i)),
-                         Pdir::Super_level, false, pdir_alloc(alloc));
+                         Pdir::super_level(), false, pdir_alloc(alloc));
 
       e.set_page(Phys_mem_addr(tss_mem_pm_base + Super_pg::size(i)),
                  Page::Attr(Page::Rights::RW(), Page::Type::Normal(),

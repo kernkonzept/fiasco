@@ -15,7 +15,7 @@ private:
 EXTENSION class Pte_ptr : private Pt_entry
 {
 public:
-  using Pt_entry::Super_level;
+  static constexpr Address super_level() { return super_level_arch(); }
 };
 
 //---------------------------------------------------------------------------
@@ -31,7 +31,7 @@ void
 Pt_entry::have_superpages(bool yes)
 {
   _have_superpages = yes;
-  _super_level = yes ? Super_level : (Super_level + 1);
+  _super_level = yes ? super_level_arch() : (super_level_arch() + 1);
 }
 
 PUBLIC static inline

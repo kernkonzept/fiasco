@@ -35,7 +35,7 @@ Kmem::drop_rights(PDIR *kd, Address vstart, Address vend, Page::Rights del)
 
   for (unsigned long i = 0; i < size; i += Config::SUPERPAGE_SIZE)
     {
-      auto pte = kd->walk(Virt_addr(vstart + i), PDIR::Super_level);
+      auto pte = kd->walk(Virt_addr(vstart + i), PDIR::super_level());
       assert(pte.is_valid());
       assert(pte.is_leaf());
       assert(pte.page_order() == Config::SUPERPAGE_SHIFT);

@@ -100,7 +100,7 @@ Kmem::init_paging()
                  Virt_addr(Mem_layout::Map_base),
                  Virt_size(bs_pgin_dta->kernel_image_size()),
                  Page::Attr::kern_global(Page::Rights::RWX()),
-                 Kpdir::Super_level, false, alloc))
+                 Kpdir::super_level(), false, alloc))
     panic("Failed to map kernel image.");
 
   // Sync Pmem.
@@ -137,7 +137,7 @@ Kmem::boot_map_pmem(Address phys, Mword size)
 
   if (!boot_kdir_map(phys, Virt_addr(Mem_layout::Pmem_start), Virt_size(size),
                      Page::Attr::space_local(Page::Rights::RW()),
-                     Kpdir::Super_level))
+                     Kpdir::super_level()))
     return false;
 
   Mem_unit::tlb_flush(Mem_unit::Asid_boot);
@@ -152,7 +152,7 @@ PRIVATE static
 Address
 Kmem::boot_virt_to_phys(Virt_addr virt)
 {
-  auto i = boot_kdir_walk(virt, Kpdir::Super_level);
+  auto i = boot_kdir_walk(virt, Kpdir::super_level());
   if (!i.is_valid())
     return ~0;
 
@@ -195,10 +195,10 @@ Kmem::sync_from_boot_kdir(Kpdir *kdir, ALLOC const &alloc,
 {
   for (Address addr = start; addr < end; addr += Config::SUPERPAGE_SIZE)
     {
-      auto be = boot_kdir_walk(Virt_addr(addr), Kpdir::Super_level);
+      auto be = boot_kdir_walk(Virt_addr(addr), Kpdir::super_level());
       if (be.is_valid())
         {
-          auto e = kdir->walk(Virt_addr(addr), Kpdir::Super_level, false, alloc);
+          auto e = kdir->walk(Virt_addr(addr), Kpdir::super_level(), false, alloc);
           e.set_page(be.entry());
         }
     }

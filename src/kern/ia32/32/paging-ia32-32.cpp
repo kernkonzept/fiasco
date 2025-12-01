@@ -8,9 +8,10 @@ INTERFACE[ia32]:
 class Pt_entry
 {
 public:
+  static constexpr Address super_level_arch() { return 0; }
+
   enum
   {
-    Super_level   = 0,
     Valid         = 0x00000001, ///< Valid
     Writable      = 0x00000002, ///< Writable
     User          = 0x00000004, ///< User accessible

@@ -9,9 +9,9 @@ class Paging {};
 class Pte_ptr
 {
 public:
+  static constexpr Address super_level() { return 0; }
   enum
   {
-    Super_level   = 0,
     Htab_entry    = 0x00000400,  ///< is raw entry of htab
     Valid         = 0x00000004,  ///< Valid
     Pse_bit       = 0x00000800,  ///< Indicates a super page in hierarch. pgt.

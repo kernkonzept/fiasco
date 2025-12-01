@@ -40,11 +40,8 @@ EXTENSION class Dmar_space
     public Pte_generic<Pte_ptr, Unsigned64>
   {
   public:
-    enum
-    {
-      Super_level = ::K_pte_ptr::Super_level,
-      Max_level   = ::K_pte_ptr::Max_level,
-    };
+    static constexpr unsigned super_level() { return ::K_pte_ptr::super_level(); }
+    static constexpr unsigned max_level()   { return ::K_pte_ptr::max_level(); }
     Pte_ptr() = default;
     Pte_ptr(void *p, unsigned char level) : Pte_long_desc<Pte_ptr>(p, level) {}
 
@@ -83,11 +80,8 @@ private:
     public Pte_generic<Pte_ptr, Unsigned64>
   {
   public:
-    enum
-    {
-      Super_level = ::Pte_ptr::Super_level,
-      Max_level   = ::Pte_ptr::Max_level,
-    };
+    static constexpr unsigned super_level() { return ::Pte_ptr::super_level(); }
+    static constexpr unsigned max_level()   { return ::Pte_ptr::max_level(); }
     Pte_ptr() = default;
     Pte_ptr(void *p, unsigned char level) : Pte_long_desc<Pte_ptr>(p, level) {}
 

@@ -192,7 +192,7 @@ Mem_space::sync_kernel()
 
   return _dir->sync(kernel_base, kernel_space()->_dir, kernel_base,
                     Virt_size(-cxx::int_value<Virt_addr>(kernel_base)),
-                    Pdir::Super_level, false, Kmem_alloc::q_allocator(_quota));
+                    Pdir::super_level(), false, Kmem_alloc::q_allocator(_quota));
 }
 
 IMPLEMENT inline
@@ -338,7 +338,7 @@ Mem_space::~Mem_space()
                     Kmem_alloc::q_allocator(_quota));
       // free all unshared page table levels for the kernel space
       _dir->destroy(Virt_addr(Mem_layout::user_max() + 1),
-                    Virt_addr(Pdir::Max_addr), 0, Pdir::Super_level,
+                    Virt_addr(Pdir::Max_addr), 0, Pdir::super_level(),
                     Kmem_alloc::q_allocator(_quota));
       free_dir(_dir);
     }

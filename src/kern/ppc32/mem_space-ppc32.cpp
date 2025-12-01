@@ -229,7 +229,7 @@ Mem_space::try_htab_fault(Address virt)
     dir = Kmem::kdir;
 
 #ifdef FIX_THIS
-  Pdir::Iter i = dir->walk(Addr(virt), Pdir::Super_level);
+  Pdir::Iter i = dir->walk(Addr(virt), Pdir::super_level());
 
   if(!i.e->valid())
     return false;
@@ -320,7 +320,7 @@ Mem_space::v_lookup(Vaddr virt, Phys_addr *phys, Page_order *order,
 {
   (void)virt; (void)phys; (void)order; (void)page_attribs;
 #ifdef FIX_THIS
-  Pdir::Iter i = _dir->walk(virt, Pdir::Super_level);
+  Pdir::Iter i = _dir->walk(virt, Pdir::super_level());
 
   if (size)
     *size = Size(1UL << i.shift());
@@ -414,7 +414,7 @@ Mem_space::v_delete(Vaddr virt, Page_order order,
     return ret;
 
   //check for and delete super page
-  i = _dir->walk(virt, Pdir::Super_level);
+  i = _dir->walk(virt, Pdir::super_level());
   i.e = 0;
 
   return ret;

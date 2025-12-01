@@ -3,11 +3,8 @@ INTERFACE [arm && mmu && arm_lpae]:
 EXTENSION class K_pte_ptr
 {
 public:
-  enum
-  {
-    Super_level    = 2,
-    Max_level      = 3,
-  };
+  static constexpr unsigned super_level() { return 2; }
+  static constexpr unsigned max_level()   { return 3; }
 };
 
 typedef Ptab::Tupel< Ptab::Traits< Unsigned64, 39, 9, false>,
@@ -32,11 +29,8 @@ typedef Ptab::Shift<Ptab_traits, Virt_addr::Shift>::List Ptab_traits_vpn;
 class Pte_ptr : public Pte_ptr_t<Pte_ptr>
 {
 public:
-  enum
-  {
-    Super_level = 1,
-    Max_level   = 2,
-  };
+  static constexpr unsigned super_level() { return 1; }
+  static constexpr unsigned max_level()   { return 2; }
   Pte_ptr() = default;
   Pte_ptr(void *p, unsigned char level) : Pte_ptr_t(p, level) {}
 };
@@ -57,11 +51,8 @@ typedef Ptab::Shift<Ptab_traits, Virt_addr::Shift>::List Ptab_traits_vpn;
 class Pte_ptr : public Pte_ptr_t<Pte_ptr>
 {
 public:
-  enum
-  {
-    Super_level = 2,
-    Max_level   = 3,
-  };
+  static constexpr unsigned super_level() { return 2; }
+  static constexpr unsigned max_level()   { return 3; }
   Pte_ptr() = default;
   Pte_ptr(void *p, unsigned char level) : Pte_ptr_t(p, level) {}
 };

@@ -22,6 +22,8 @@ class Pte_ptr
 public:
   typedef Mword Entry;
 
+  static constexpr Address super_level() { return 0; }
+
   enum
   {
     ET_invalid     = 0,           ///< Descriptor invalid
@@ -47,8 +49,6 @@ public:
     Ptab_shift1      = 18,
     Ptab_shift2      = 12,
     Page_offset_mask = 0xFFF,
-
-    Super_level    = 0,
 
     Acc_u_r_sv_r     = 0,
     Acc_u_rw_sv_rw   = 1,

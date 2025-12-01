@@ -133,7 +133,7 @@ Jdb::access_mem_task(Jdb_address addr, bool write)
   }
 
   auto pte = Kmem::kdir->walk(Virt_addr(Mem_layout::Jdb_tmp_map_area),
-                              Kpdir::Super_level, false,
+                              Kpdir::super_level(), false,
                               Kmem_alloc::q_allocator(Ram_quota::root.unwrap()));
 
   if (!pte.is_valid()

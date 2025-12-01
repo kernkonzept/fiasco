@@ -12,10 +12,7 @@ typedef Ptab::Tupel< Ptab::Traits< Unsigned32, 22, 10, true, false>,
 class Pte_ptr
 {
 public:
-  enum
-  {
-    Super_level = 0,
-  };
+  static constexpr Address super_level() { return 0; }
 };
 
 //----------------------------------------------------------------------------
@@ -27,10 +24,7 @@ typedef Ptab::Tupel< Ptab::Traits< Unsigned64, 30, 9, true>,
 class Pte_ptr
 {
 public:
-  enum
-  {
-    Super_level = 1,
-  };
+  static constexpr Address super_level() { return 1; }
 };
 
 //----------------------------------------------------------------------------
@@ -43,10 +37,7 @@ typedef Ptab::Tupel< Ptab::Traits< Unsigned64, 39, 9, true>,
 class Pte_ptr
 {
 public:
-  enum
-  {
-    Super_level = 2,
-  };
+  static constexpr Address super_level() { return 2; }
 };
 
 //----------------------------------------------------------------------------

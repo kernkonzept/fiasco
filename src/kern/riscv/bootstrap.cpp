@@ -108,7 +108,7 @@ Bootstrap::map_kernel(Address start_addr, Address end_addr, Kpdir *kdir)
 
   // Temporary one-to-one mapping for bootstrap code
   if (!kdir->map(start_addr, Virt_addr(start_addr), Virt_size(size),
-                 attr, Kpdir::Super_level, false, alloc, mem_map))
+                 attr, Kpdir::super_level(), false, alloc, mem_map))
     panic("Failed to map bootstrap code.");
 
   // Mapping for kernel code
@@ -117,7 +117,7 @@ Bootstrap::map_kernel(Address start_addr, Address end_addr, Kpdir *kdir)
                 "superpage-aligned.");
 
   if (!kdir->map(start_addr, Virt_addr(Mem_layout::Map_base), Virt_size(size),
-                 attr, Kpdir::Super_level, false, alloc, mem_map))
+                 attr, Kpdir::super_level(), false, alloc, mem_map))
     panic("Failed to map kernel image.");
 
   // Provide kernel image size to kernel code

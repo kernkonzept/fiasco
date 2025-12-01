@@ -9,9 +9,10 @@ INTERFACE[amd64]:
 class Pt_entry
 {
 public:
+  static constexpr Address super_level_arch() { return 2; }
+
   enum
   {
-    Super_level   = 2,
     Valid         = 0x00000001LL, ///< Valid
     Writable      = 0x00000002LL, ///< Writable
     User          = 0x00000004LL, ///< User accessible
