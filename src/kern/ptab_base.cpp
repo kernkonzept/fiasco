@@ -645,6 +645,8 @@ namespace Ptab
 
     typedef Level<Traits> Levels;
 
+    static constexpr unsigned depth() { return Depth; }
+
     static constexpr unsigned lsb_for_level(unsigned level)
     { return Levels::shift(level); }
 

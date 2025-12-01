@@ -33,7 +33,6 @@ public:
   enum : Mword
   {
     Used_levels = 2, // must be consistent with the used slots in PWSize
-    Depth = 4,       // for JDB, it skips zero bit levels itself
     PT_level = 3,    // Level index for the final page table
     PWField_ptei = 6,
     PWField = (21 << 24) | (0 << 18) | (0 << 12) | (Config::PAGE_SHIFT        << 6) | PWField_ptei,
@@ -52,7 +51,6 @@ public:
   enum : Mword
   {
     Used_levels = 4, // must be consistent with the used slots in PWSize
-    Depth = 4,       // for JDB, it skips zero bit levels itself
     PT_level = 3,    // Level index for the final page table
     PWField_ptei = 6,
     PWField = (39 << 24) | (30 << 18) | (21 << 12) | (Config::PAGE_SHIFT        << 6) | PWField_ptei,
@@ -233,6 +231,9 @@ public:
     static constexpr unsigned long length(unsigned l)
     { return 1UL << l_size(l); }
   };
+
+  // for JDB, it skips zero bit levels itself
+  static constexpr unsigned depth() { return 4; }
 
   static constexpr unsigned lsb_for_level(unsigned l)
   { /* Va relative */ return l_field(l) - l_field(PT_level); }

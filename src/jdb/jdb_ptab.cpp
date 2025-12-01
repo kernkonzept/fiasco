@@ -257,7 +257,7 @@ Jdb_ptab_pdir<T>::entry_is_pt_ptr(void *pte, unsigned *next_pt_level) const over
     return false;
 
   unsigned n = 1;
-  while (   (entry.level + n) < T::Depth
+  while (   (entry.level + n) < T::depth()
          && pdir_levels_length(entry.level + n) <= 1)
     ++n;
 

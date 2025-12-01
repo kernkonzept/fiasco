@@ -221,8 +221,8 @@ Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order order,
   assert (cxx::is_zero(cxx::get_lsb(Phys_addr(phys), order)));
   assert (cxx::is_zero(cxx::get_lsb(Virt_addr(virt), order)));
 
-  int level;
-  for (level = 0; level <= Pdir::Depth; ++level)
+  unsigned level;
+  for (level = 0; level <= Pdir::depth(); ++level)
     if (Page_order(Pdir::page_order_for_level(level)) <= order)
       break;
 
@@ -352,7 +352,7 @@ Mem_space::~Mem_space()
       // free all page tables we have allocated for this address space
       // except the ones in kernel space which are always shared
       _dir->destroy(Virt_addr(0UL),
-                    Virt_addr(Mem_layout::user_max()), 0, Pdir::Depth,
+                    Virt_addr(Mem_layout::user_max()), 0, Pdir::depth(),
                     Kmem_alloc::q_allocator(_quota));
       // free all unshared page table levels for the kernel space
       if constexpr (Virt_addr(Mem_layout::user_max()) < Virt_addr(Pdir::Max_addr))
