@@ -274,3 +274,22 @@ Kernel_thread::idle_op()
   else
     Proc::pause();
 }
+
+//--------------------------------------------------------------------------
+IMPLEMENTATION [(ia32 || amd64) && tickless_idle]:
+
+#include "config.h"
+#include "cpu_lock.h"
+#include "processor.h"
+
+IMPLEMENT_OVERRIDE inline NEEDS["config.h", "cpu_lock.h"]
+void
+Kernel_thread::arch_idle()
+{
+  assert(cpu_lock.test());
+
+  if (Config::hlt_works_ok)
+    asm volatile ("sti; hlt; cli" : : : "memory");
+  else
+    asm volatile ("sti; pause; cli" : : : "memory");
+}

@@ -39,6 +39,8 @@ irq_interrupt(Mword irqobj, Mword)
   Thread::assert_irq_entry();
   CNT_IRQ;
 
+  Thread::on_enter_irq_from_tickless();
+
   Irq_base *irq = reinterpret_cast<Irq_base *>(irqobj);
   irq->log();
   irq_spinners(irq->pin());

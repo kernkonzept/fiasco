@@ -154,8 +154,8 @@ public:
 
   /** nesting level in debugger (always critical) if >1 */
   static Per_cpu<unsigned long> nested_trap_recover;
-  static void handle_remote_requests_irq() asm ("handle_remote_cpu_requests");
-  static void handle_global_remote_requests_irq() asm ("ipi_remote_call");
+  static void handle_remote_requests_irq();
+  static void handle_global_remote_requests_irq();
 
   bool arch_ext_vcpu_enabled();
 
@@ -392,6 +392,8 @@ PUBLIC inline NEEDS ["config.h", "timeout.h"]
 void
 Thread::handle_timer_interrupt()
 {
+  on_enter_irq_from_tickless();
+
   Cpu_number _cpu = current_cpu();
 
   static_assert(!(Config::Scheduler_one_shot && !Config::Fine_grained_cputime),
@@ -1160,7 +1162,7 @@ Thread::force_to_invalid_cpu()
   handle_drq();
 }
 
-IMPLEMENT
+IMPLEMENT inline
 void
 Thread::handle_remote_requests_irq()
 {
@@ -1203,7 +1205,7 @@ Thread::handle_remote_requests_irq()
  *       Context::schedule()! If that ever changes, Context::schedule() would
  *       have to be performed at the end of the IPI handler.
  */
-IMPLEMENT
+IMPLEMENT inline
 void
 Thread::handle_global_remote_requests_irq()
 {
@@ -1575,3 +1577,8 @@ thread_wait_async_ipc()
       ct->schedule();
     }
 }
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [!(ia32 || amd64) || !tickless_idle]:
+
+PUBLIC static constexpr void Thread::on_enter_irq_from_tickless() {}

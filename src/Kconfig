@@ -270,7 +270,7 @@ config TICKLESS_IDLE
 	  Tickless idle is good for saving energy, but can incur a small
 	  overhead for waking up from idle.
 
-	  On x86, tickless idle adds a small overhead on each context switch.
+	  On x86, tickless idle adds a small overhead to each interrupt entry.
 
 config FINE_GRAINED_CPUTIME
 	bool "Fine-grained CPU time"

@@ -243,6 +243,9 @@ protected:
    * interrupts should ensure that opening the interrupts and waiting for the
    * next interrupt is an atomic operation, i.e. the interrupt cannot hit before
    * the wait-for-interrupt instruction is executed.
+   *
+   * \note If tickless_idle_leave_deferred is not defined, arch_tickless_idle()
+   *       must not open interrupts.
    */
   void arch_tickless_idle();
 
@@ -285,12 +288,16 @@ Kernel_thread::arch_tickless_idle()
   arch_idle();
 }
 
+// Context::leave_tickless_idle() does not re-enable the timer tick, not possible
+// because of circular include.
+static_assert(TAG_ENABLED(!tickless_idle_leave_deferred || one_shot),
+              "Tickless idle deferred leave requires one shot timer.");
+
 IMPLEMENT
 void
 Kernel_thread::idle_op()
 {
-  // this version must run with disabled IRQs and a wakeup must continue
-  // directly after the wait for event.
+  // This version must run with IRQs disabled.
   auto guard = lock_guard(cpu_lock);
 
   Cpu_number cpu = current_cpu();
@@ -312,7 +319,19 @@ Kernel_thread::idle_op()
         // Re-enable the timer tick when leaving tickless idle.
         Timer_tick::enable(cpu);
 
-      leave_tickless_idle(cpu);
+      if constexpr (TAG_ENABLED(tickless_idle_leave_deferred))
+        // On architectures, such as x86, that need to open interrupts to wait
+        // for the next interrupt, do not leave tickless idle here, because
+        // arch_tickless_idle() does not necessarily return here. An interrupt
+        // may schedule away immediately. Instead we leave tickless idle in the
+        // interrupt handler via Context::leave_tickless_idle().
+        ;
+      else
+        // On other architectures, such as ARM or RISC-V, that do not need to
+        // open interrupts to wait for the next interrupt, avoid the overhead of
+        // checking on each context switch. Instead leave tickless idle here,
+        // before executing the interrupt handler.
+        leave_tickless_idle(cpu);
     }
   else
     arch_idle();

@@ -27,6 +27,9 @@ private:
    */
   static Mword exception_cs();
 
+  static void handle_remote_cpu_requests() asm("handle_remote_cpu_requests");
+  static void ipi_remote_call() asm("ipi_remote_call");
+
 protected:
   static Trap_state::Handler nested_trap_handler FIASCO_FASTCALL;
 };
@@ -160,6 +163,7 @@ Thread::handle_slow_trap(Trap_state *ts)
 
   if (EXPECT_FALSE(ts->_trapno == 0xee)) //debug IPI
     {
+      on_enter_irq_from_tickless();
       Ipi::eoi(Ipi::Debug, current_cpu());
       goto generic_debug;
     }
@@ -276,6 +280,8 @@ fail_nomsg:
   if (Warn::is_enabled(Warning))
     ts->dump();
 
+  on_enter_irq_from_tickless();
+
   kill();
   return 0;
 
@@ -284,12 +290,56 @@ success:
   return 0;
 
 generic_debug:
+  on_enter_irq_from_tickless();
   clear_recover_jmpbuf();
 
   if (!nested_trap_handler)
     return handle_not_nested_trap(ts);
 
   return call_nested_trap_handler(ts);
+}
+
+IMPLEMENT
+void
+Thread::handle_remote_cpu_requests()
+{
+  on_enter_irq_from_tickless();
+  Thread::handle_remote_requests_irq();
+}
+
+IMPLEMENT
+void
+Thread::ipi_remote_call()
+{
+  on_enter_irq_from_tickless();
+  Thread::handle_global_remote_requests_irq();
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [(ia32 || amd64) && tickless_idle]:
+
+/**
+ * On x86, we need to open interrupts in tickless idle to wait for the next
+ * interrupt. Then, once an interrupt hits, execution continues in an interrupt
+ * handler, which must leave tickless before handling the interrupt.
+ *
+ * All interrupt handlers of interrupts that can trigger while the CPU is in
+ * tickless idle, therfore, must call on_enter_irq_from_tickless().
+ * So far these are:
+ *   - IPI (Rquest, Global_request, Debug)
+ *   - External interrupts (including MSIs)
+ *   - Timer interrupt
+ *
+ * To play it safe we also call it when:
+ *   - Slow trap results in thread getting killed.
+ *   - Slow trap results in debugger entry.
+ */
+PUBLIC static inline ALWAYS_INLINE
+void
+Thread::on_enter_irq_from_tickless()
+{
+  // Make sure to leave tickless idle before handling the interrupt.
+  leave_tickless_idle();
 }
 
 //----------------------------------------------------------------------------

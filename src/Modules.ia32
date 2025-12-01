@@ -19,6 +19,7 @@ PREPROCESS_PARTS-$(CONFIG_SCHED_APIC)        += apic_timer
 PREPROCESS_PARTS-$(CONFIG_SCHED_HPET)        += hpet_timer
 PREPROCESS_PARTS-$(CONFIG_CPU_VIRT)          += svm vmx virtual_space_iface
 PREPROCESS_PARTS-$(CONFIG_IOMMU)             += virtual_space_iface
+PREPROCESS_PARTS-$(CONFIG_TICKLESS_IDLE)     += tickless_idle_leave_deferred
 
 PREPROCESS_PARTS        += $(PREPROCESS_PARTS-y)
 
