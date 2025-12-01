@@ -127,6 +127,7 @@ private:
 
 public:
   ///@{
+  typedef Node Node_type;
   typedef typename Bst::Key_type Key_type;
   typedef typename Bst::Key_param_type Key_param_type;
   ///@}
