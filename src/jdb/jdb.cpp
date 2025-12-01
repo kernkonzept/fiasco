@@ -1468,12 +1468,12 @@ Jdb::wait_for_app_cpus(Cpu_mask const &online_cpus_to_stop)
       for (Cpu_number c = Cpu_number::second(); c < Config::max_num_cpus(); ++c)
         if (Cpu::online(c))
           {
-            if (!online_cpus_to_stop.get(c))
-              return 1; // another CPU just finished booting
-            if (!in_jdb.cpu(c))
-              all_there = false;
-            else
+            if (in_jdb.cpu(c))
               ++cpus_in_debugger;
+            else if (!online_cpus_to_stop.get(c))
+              return 1; // another CPU (c) just finished booting
+            else
+              all_there = false;
           }
 
       if (all_there)
@@ -1595,18 +1595,17 @@ Jdb::stop_all_cpus(Cpu_number current_cpu)
       // This CPU defacto left JDB
       in_jdb.cpu(current_cpu) = false;
 
-      // Signal CPU 0, that we are ready to leve the debugger
-      // This is the second door of the airlock
+      // Signal CPU 0, that we are ready to leave the debugger.
       atomic_add(&cpus_in_debugger, -1UL);
 
-      // Wait for CPU 0 to leave us out
+      // Wait for CPU 0 to leave us out.
       while (access_once(&leave_barrier))
         {
           Mem::barrier();
           Proc::pause();
         }
 
-      // CPU 0 signaled us to leave JDB
+      // CPU 0 signaled us to leave JDB.
       return false;
     }
 }
@@ -1629,7 +1628,6 @@ Jdb::leave_wait_for_others()
 	      // notify other CPU
               wakeup_other_cpus_from_jdb(c);
               Jdb::remote_func.cpu(c).reset_mp_safe();
-//	      printf("JDB: wait for CPU[%2u] to leave\n", cxx::int_value<Cpu_number>(c));
 	      all_there = false;
 	    }
 	}
