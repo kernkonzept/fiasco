@@ -228,10 +228,10 @@ Config::init()
           || Koptions::o()->opt(Koptions::F_serial_esc))
         serial_input = Serial_input_irq;
 
-      if (Koptions::o()->opt(Koptions::F_serial_esc)
-          && !Koptions::o()->opt(Koptions::F_nojdb)
-          && TAG_ENABLED(jdb))
-        serial_esc = true;
+      if constexpr (TAG_ENABLED(jdb))
+        if (Koptions::o()->opt(Koptions::F_serial_esc)
+            && !Koptions::o()->opt(Koptions::F_nojdb))
+          serial_esc = true;
     }
 #endif
 }
