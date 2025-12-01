@@ -1838,14 +1838,14 @@ Iommu::setup(void *base_addr, unsigned eventq_irq, unsigned gerror_irq)
   if constexpr (Iommu::Stage2)
     {
       if (!idr0.s2p())
-          panic("IOMMU: SMMU does not support stage 2 translation.");
+        panic("IOMMU: SMMU does not support stage 2 translation.");
 
       _num_asid_bits = idr0.vmid16() ? 16 : 8;
     }
   else
     {
       if (!idr0.s1p())
-          panic("IOMMU: SMMU does not support stage 1 translation.");
+        panic("IOMMU: SMMU does not support stage 1 translation.");
 
       _num_asid_bits = idr0.asid16() ? 16 : 8;
     }
