@@ -65,11 +65,11 @@ INTERFACE [iommu && arm_iommu_stage2 && cpu_virt && 64bit]:
 EXTENSION class Dmar_space
 {
 public:
-  static constexpr unsigned start_level()
+  static unsigned start_level()
   {
-    // For non-ARM_PT48 the first page table is concatenated (10-bits), we skip
-    // level zero.
-    return Page::Vtcr_sl0;
+    // For 3-level page tables the first page table is concatenated
+    // (10-bits), we skip level zero.
+    return Page::vtcr_sl0();
   }
 
 private:
@@ -80,8 +80,8 @@ private:
     public Pte_generic<Pte_ptr, Unsigned64>
   {
   public:
-    static constexpr unsigned super_level() { return ::Pte_ptr::super_level(); }
-    static constexpr unsigned max_level()   { return ::Pte_ptr::max_level(); }
+    static unsigned super_level() { return ::Pte_ptr::super_level(); }
+    static unsigned max_level()   { return ::Pte_ptr::max_level(); }
     Pte_ptr() = default;
     Pte_ptr(void *p, unsigned char level) : Pte_long_desc<Pte_ptr>(p, level) {}
 
@@ -92,7 +92,7 @@ private:
     }
   };
 
-  using Dmar_ptab_traits_vpn = Ptab_traits_vpn;
+  using Dmar_ptab_traits_vpn = Ptab_traits_vpn_3lvl;
 };
 
 // -----------------------------------------------------------

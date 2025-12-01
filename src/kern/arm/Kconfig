@@ -480,12 +480,34 @@ config ARM_LPAE
 	help
 	  Use the extended page table format (LPAE).
 
-config ARM_PT48
-	bool "Support user-level address space of 48bits (256 TiB)"
+config ARM_SINGLE_PT
+	bool "Include only a single page-table variant"
 	depends on CPU_VIRT && BIT64 && MMU
+	depends on EXPERT
 	help
-	  Build Fiasco with 4-level page-tables for user-level tasks. Requires
-	  a CPU model that supports at least 44bit physical addresses.
+	  Depending on the specific features of a processor, different
+	  page-table formats are required. With this option, only one
+	  specific variant is available. This leads to a slightly smaller
+	  kernel.
+
+	  If in doubt, say N.
+
+choice
+	prompt "Page-table variant"
+	depends on ARM_SINGLE_PT
+	default ARM_PT40_ONLY
+
+config ARM_PT40_ONLY
+	bool "Maximum 40 bits, 3 level"
+	help
+	  Use a 3-level page-table that covers 40 bits of the physical address space.
+
+config ARM_PT48_ONLY
+	bool "Maximum 48 bits, 4 level"
+	help
+	  Use a 4-level page-table that covers 48 bits of the physical address space.
+	
+endchoice
 
 config HAS_ARM_PSCI
 	bool

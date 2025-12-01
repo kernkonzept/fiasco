@@ -355,9 +355,9 @@ Mem_space::~Mem_space()
                     Virt_addr(Mem_layout::user_max()), 0, Pdir::depth(),
                     Kmem_alloc::q_allocator(_quota));
       // free all unshared page table levels for the kernel space
-      if constexpr (Virt_addr(Mem_layout::user_max()) < Virt_addr(Pdir::Max_addr))
+      if (Virt_addr(Mem_layout::user_max()) < Virt_addr(Pdir::max_addr()))
         _dir->destroy(Virt_addr(Mem_layout::user_max() + 1),
-                      Virt_addr(Pdir::Max_addr), 0, Pdir::super_level(),
+                      Virt_addr(Pdir::max_addr()), 0, Pdir::super_level(),
                       Kmem_alloc::q_allocator(_quota));
       _dir_alloc.q_free(ram_quota(), _dir);
     }
@@ -915,7 +915,9 @@ Mem_space::asid(unsigned asid)
 };
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && mmu && arm_lpae && !arm_pt48]:
+IMPLEMENTATION [arm && mmu && arm_lpae]:
+
+#include "cpubits.h"
 
 PUBLIC static
 void
@@ -924,19 +926,8 @@ Mem_space::init_page_sizes()
   add_page_size(Page_order(Config::PAGE_SHIFT));
   add_page_size(Page_order(21)); // 2 MiB
   add_page_size(Page_order(30)); // 1 GiB
-}
-
-//-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && mmu && arm_lpae && arm_pt48]:
-
-PUBLIC static
-void
-Mem_space::init_page_sizes()
-{
-  add_page_size(Page_order(Config::PAGE_SHIFT));
-  add_page_size(Page_order(21)); // 2 MiB
-  add_page_size(Page_order(30)); // 1 GiB
-  add_page_size(Page_order(39)); // 512 GiB
+  if (Cpubits::Pt4())
+    add_page_size(Page_order(39)); // 512 GiB
 }
 
 //-----------------------------------------------------------------------------

@@ -645,6 +645,7 @@ namespace Ptab
 
     typedef Level<Traits> Levels;
 
+    static constexpr Address max_addr() { return Max_addr; }
     static constexpr unsigned depth() { return Depth; }
 
     static constexpr unsigned lsb_for_level(unsigned level)

@@ -1,17 +1,15 @@
-INTERFACE [arm && mmu && cpu_virt && !arm_pt48]: // -----------------------
+INTERFACE [arm && mmu && cpu_virt]: // ------------------------------------
+
+#include "cpubits.h"
 
 EXTENSION class Mem_layout
 {
 public:
-  static constexpr Address user_max() { return 0x000000ff'ffffffff; }
-};
-
-INTERFACE [arm && mmu && cpu_virt && arm_pt48]: // ------------------------
-
-EXTENSION class Mem_layout
-{
-public:
-  static constexpr Address user_max() { return 0x0000ffff'ffffffff; }
+  static Address user_max()
+  {
+    return Cpubits::Pt4() ? 0x0000ffff'ffffffff
+                          : 0x000000ff'ffffffff;
+  }
 };
 
 INTERFACE [arm && mmu && cpu_virt]: // ------------------------------------

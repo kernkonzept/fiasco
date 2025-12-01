@@ -300,9 +300,12 @@ IMPLEMENT_OVERRIDE
 void
 Cpu::init_hyp_mode(bool is_boot_cpu)
 {
-  // Prevent a compiler warning on Page::Min_pa_range==0.
-  if (static_cast<int>(pa_range()) < Page::Min_pa_range)
-    panic("Not enough physical address bits! Disable CONFIG_ARM_PT48.\n");
+  if constexpr (TAG_ENABLED(arm_pt40_only))
+    if (phys_bits() > 40)
+      panic("Need to use a 4-level page-table on this system (ARM_PT48*).");
+  if constexpr (TAG_ENABLED(arm_pt48_only))
+    if (phys_bits() <= 40)
+      panic("Need to use a 3-level page-table on this system (ARM_PT40*).");
 
   init_hyp_mode_common(is_boot_cpu);
 }
