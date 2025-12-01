@@ -124,11 +124,11 @@ Bootstrap::disable_mmu_and_caches(unsigned el)
 
   unsigned long sctlr;
   if (el == 2)
-    asm("mrs %0, SCTLR_EL2" : "=r"(sctlr));
+    asm volatile("mrs %0, SCTLR_EL2" : "=r"(sctlr));
   else if (el == 1)
-    asm("mrs %0, SCTLR_EL1" : "=r"(sctlr));
+    asm volatile("mrs %0, SCTLR_EL1" : "=r"(sctlr));
   else
-    asm("mrs %0, SCTLR_EL3" : "=r"(sctlr));
+    asm volatile("mrs %0, SCTLR_EL3" : "=r"(sctlr));
   if (sctlr & Cpu::Sctlr_m)
     {
       if (sctlr & Cpu::Sctlr_c)
