@@ -173,7 +173,7 @@ EXTENSION class Mmu
     Mem::isb();
     asm volatile("mrc p15, 1, %0, c0, c0, 0" : "=r" (ccsidr)); // CCSIDR
     if (has_feat_ccidx())
-      asm("mrc p15, 1, %0, c0, c0, 2" : "=r" (ccsidr2)); // CCSIDR2
+      asm volatile("mrc p15, 1, %0, c0, c0, 2" : "=r" (ccsidr2)); // CCSIDR2
     Proc::sti_restore(s);
     return ccsidr | (static_cast<Unsigned64>(ccsidr2) << 32);
   }
