@@ -77,7 +77,7 @@ class Vm_vmx_ept : public cxx::Dyn_castable<Vm_vmx_ept, Vm>
 {
 private:
   static unsigned long resume_vm_vmx(Trex *regs)
-    asm("resume_vm_vmx") __attribute__((__regparm__(3)));
+    asm("resume_vm_vmx") FIASCO_FASTCALL;
 
   enum
   {

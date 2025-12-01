@@ -10,7 +10,7 @@ class Vm_svm : public Vm
 {
 private:
   static void resume_vm_svm(Mword phys_vmcb, Trex *regs)
-    asm("resume_vm_svm") __attribute__((__regparm__(3)));
+    asm("resume_vm_svm") FIASCO_FASTCALL;
 
   enum
   {
