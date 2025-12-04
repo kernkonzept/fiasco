@@ -13,7 +13,12 @@ jobs:
 
     steps:
     - name: Install cross compiler toolchains
-      run: sudo apt-get install gcc-aarch64-linux-gnu g++-aarch64-linux-gnu gcc-12-aarch64-linux-gnu g++-12-aarch64-linux-gnu gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf gcc-12-arm-linux-gnueabihf g++-12-arm-linux-gnueabihf
+      run: |
+        sudo apt-get update
+        sudo apt-get install gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
+          gcc-12-aarch64-linux-gnu g++-12-aarch64-linux-gnu \
+          gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf \
+          gcc-12-arm-linux-gnueabihf g++-12-arm-linux-gnueabihf
     - uses: actions/checkout@v4.1.1
     - name: make
       run: make 'TEMPLATE_FILTER=arm64-virt-el2 arm-virt-pl2' -j $(nproc) l4check
