@@ -139,7 +139,7 @@ INTERFACE [ia32 || amd64]:
  * \param disabled_insn String of assembler instruction that are used if
  *                      alt_probe() returns false.
  */
-#define ALTERNATIVE_INSN_ENABLED_NOP(disabled_insn) \
+#define ALTERNATIVE_INSN_ENABLED_NOP(disabled_insn)           \
         "819:                                           \n\t" \
         disabled_insn                                  "\n\t" \
         "829:                                           \n\t" \
@@ -197,6 +197,7 @@ struct Alternative_static_functor
 IMPLEMENTATION:
 
 #include "mem_unit.h"
+#include "static_init.h"
 
 PRIVATE inline NEEDS["mem_unit.h"]
 void
@@ -215,9 +216,6 @@ Alternative_insn::init()
   auto const *begin = &_alt_insns_begin[0];
   auto const *end = &_alt_insns_end[0];
 
-  if constexpr (Debug)
-    printf("Patching alternative instructions.\n");
-
   if (begin != end)
     {
       for (auto *i = begin; i != end; ++i)
@@ -229,7 +227,6 @@ Alternative_insn::init()
 
       Alternative_insn::patch_finish();
     }
-
-  if constexpr (Debug)
-    printf("Patching done.\n");
 }
+
+STATIC_INITIALIZE_P(Alternative_insn, ALT_INSN_INIT_PRIO);

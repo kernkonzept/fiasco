@@ -16,7 +16,6 @@ public:
 
 IMPLEMENTATION:
 
-#include <cstdio>
 #include <cstring>
 #include "boot_info.h"
 
@@ -24,15 +23,6 @@ PRIVATE
 void
 Alternative_insn::enable() const
 {
-  if constexpr (Debug)
-    {
-      printf("  replace insn at %p/%d with ", disabled_insn(), len);
-      if (enabled == 0)
-        printf("NOPs\n");
-      else
-        printf("%p\n", enabled_insn());
-    }
-
   auto *insn = static_cast<Unsigned8 *>(disabled_insn());
   if (enabled == 0)
     {

@@ -15,7 +15,6 @@ public:
 
 IMPLEMENTATION:
 
-#include <cstdio>
 #include <cstring>
 #include "mem.h"
 
@@ -23,10 +22,6 @@ PRIVATE
 void
 Alternative_insn::enable() const
 {
-  if constexpr (Debug)
-    printf("  replace insn at %p/%d\n",
-           static_cast<void *>(disabled_insn()), len);
-
   auto *insn = static_cast<void *>(disabled_insn());
   auto *enabled_insn = static_cast<void const *>(this->enabled_insn());
   memcpy(insn, enabled_insn, len);

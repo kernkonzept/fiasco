@@ -50,7 +50,6 @@ Startup::stage2()
   Kip_init::init();
   Kmem_alloc::init();
   Dt::init();
-  Alternative_insn::init();
 
   Fb_console::init(); // needs Kip_init and Kmem_alloc
 

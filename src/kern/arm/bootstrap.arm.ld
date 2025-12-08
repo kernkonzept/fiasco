@@ -25,6 +25,12 @@ SECTIONS {
     *(.anno)
 
     *(.bss .bss.* COMMON .gnu.linkonce.b.*)
+
+    PROVIDE (_alt_insns_begin = .);
+    KEEP(*(SORT(.alt_insns)))
+    PROVIDE (_alt_insns_end = .);
+    ASSERT(_alt_insns_begin == _alt_insns_end,
+           "No alternative instruction patching in bootstrap!");
   } :rw
 
   /* Add dynamic symbol information. It's dropped later but keeps readelf happy

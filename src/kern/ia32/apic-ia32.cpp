@@ -2,10 +2,11 @@ INTERFACE:
 
 #include <cxx/cxx_int>
 #include "alternatives.h"
-#include "per_cpu_data.h"
-#include "types.h"
+#include "cpu.h"
 #include "initcalls.h"
+#include "per_cpu_data.h"
 #include "pm.h"
+#include "types.h"
 
 class Return_frame;
 class Cpu;
@@ -22,7 +23,6 @@ class Apic : public Cpu_pm_callbacks
 
 public:
   static void map_registers() FIASCO_INIT;
-  static void detect_x2apic() FIASCO_INIT;
   static void init(bool resume = false) FIASCO_INIT_AND_PM;
   Apic_id apic_id() const { return _id; }
 
@@ -34,7 +34,7 @@ public:
 
   struct use_x2apic : public Alternative_static_functor<use_x2apic>
   {
-    static bool probe() { return Apic::use_x2; }
+    static bool probe() { return Cpu::cpuid_ecx(1) & FEATX_X2APIC; }
   };
 
 private:
@@ -879,14 +879,6 @@ Apic::dump_info()
            cxx::int_value<Apic_id>(get_id()) >> 24, get_version(), get_max_lvt());
 }
 
-IMPLEMENT
-void
-Apic::detect_x2apic()
-{
-  if (Cpu::cpuid_ecx(1) & FEATX_X2APIC)
-    use_x2 = true;
-}
-
 /**
  * Map the Local APIC device registers.
  *
@@ -912,9 +904,10 @@ Apic::map_registers()
       present &= ~Present_before_msr;
     }
 
-  if (use_x2)
+  if (use_x2apic())
     {
       printf("Using x2APIC\n");
+      use_x2 = true;
       present |= Present;
       activate_by_msr();
     }

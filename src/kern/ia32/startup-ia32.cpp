@@ -60,8 +60,6 @@ Startup::stage2()
   Cpu::cpus.cpu(Cpu_number::boot_cpu()).identify();
   // initialize initial page tables (also used for other CPUs later)
   Mem_space::init_page_sizes();
-  Apic::detect_x2apic();
-  Alternative_insn::init();
   Kmem::init_mmu();
 
   // earliest point for the FB because of previous MMU setup
