@@ -39,7 +39,7 @@ PUBLIC static inline
 bool
 Apic::mp_ipi_idle()
 {
-  if (use_x2)
+  if (use_x2apic())
     return true;
   else
     return ((reg_read(Reg::Icr) & 0x00001000) == 0);
@@ -82,7 +82,7 @@ Apic::mp_send_ipi(Ipi_dest_shrt dest_shrt, Apic_id dest,
                          | static_cast<Unsigned32>(delivery_mode) << 8
                          | vector;
 
-  if (use_x2)
+  if (use_x2apic())
     {
       asm volatile ("mfence; lfence"); // enforce serializing as in xAPIC mode
       reg_write64(Reg::Icr, lower_icr, cxx::int_value<Apic_id>(dest));
