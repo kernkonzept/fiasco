@@ -20,7 +20,7 @@ div32(unsigned long long dividend, unsigned long divisor)
        "xchg    %%eax, %[dividend_lo32] \n\t"
        "divl    %[divisor]              \n\t"
        "movl    %[dividend_lo32], %%edx \n\t"
-     : "=A"(ret), "=r"(dummy)
+     : "=A"(ret), "=&r"(dummy)
      : "a"(UL_CAST(dividend >> 32)), "d"(0),
        [dividend_lo32]"1"(UL_CAST(dividend & 0xffffffff)),
        [divisor]"rm"(divisor));
