@@ -660,6 +660,11 @@ void
 Dt::init()
 {}
 
+IMPLEMENT static inline
+void const *
+Dt::fdt()
+{ return nullptr; }
+
 // ------------------------------------------------------------------------
 IMPLEMENTATION [dt]:
 
