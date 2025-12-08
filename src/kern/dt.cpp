@@ -430,7 +430,7 @@ public:
         {
           uint64_t addr, size;
           if (get_reg_val(parent, regs, i, &addr, &size))
-            if (invoke_cb(cb, addr, size) == Break)
+            if (invoke_cb(cb, i, addr, size) == Break)
               break;
         }
     }
