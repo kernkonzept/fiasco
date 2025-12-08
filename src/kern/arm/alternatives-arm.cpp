@@ -17,42 +17,25 @@ IMPLEMENTATION:
 
 #include <cstdio>
 #include <cstring>
-#include "mem_unit.h"
+#include "mem.h"
 
-PRIVATE inline NOEXPORT
+PRIVATE
 void
 Alternative_insn::enable() const
 {
-  void *insn = static_cast<void *>(disabled_insn());
-  void const *enabled_insn = static_cast<void const *>(this->enabled_insn());
+  if constexpr (Debug)
+    printf("  replace insn at %p/%d\n",
+           static_cast<void *>(disabled_insn()), len);
+
+  auto *insn = static_cast<void *>(disabled_insn());
+  auto *enabled_insn = static_cast<void const *>(this->enabled_insn());
   memcpy(insn, enabled_insn, len);
-  Mem_unit::make_coherent_to_pou(insn, len);
 }
 
-IMPLEMENT
+IMPLEMENT inline NEEDS["mem.h"]
 void
-Alternative_insn::init()
+Alternative_insn::patch_finish()
 {
-  extern Alternative_insn const _alt_insns_begin[];
-  extern Alternative_insn const _alt_insns_end[];
-
-  if constexpr (Debug)
-    printf("patching alternative instructions\n");
-
-  if (&_alt_insns_begin[0] == &_alt_insns_end[0])
-    return;
-
-  for (auto *i = _alt_insns_begin; i != _alt_insns_end; ++i)
-    {
-      if (i->probe())
-        {
-          if constexpr (Debug)
-            printf("  replace insn at %p/%d\n",
-                   static_cast<void *>(i->disabled_insn()), i->len);
-          i->enable();
-        }
-    }
-
   // Mem::dsb() already included in Mem_unit::make_coherent_to_pou()
   Mem::isb();
 }

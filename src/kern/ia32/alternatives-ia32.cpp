@@ -19,12 +19,21 @@ IMPLEMENTATION:
 #include <cstdio>
 #include <cstring>
 #include "boot_info.h"
-#include "mem_unit.h"
 
-PRIVATE inline NOEXPORT
+PRIVATE
 void
 Alternative_insn::enable() const
 {
+  if constexpr (Debug)
+    {
+      printf("  replace insn at %p/%d with ",
+             static_cast<void *>(disabled_insn()), len);
+      if (enabled == 0)
+        printf("NOPs\n");
+      else
+        printf("%p\n", enabled_insn());
+    }
+
   auto *insn = static_cast<Unsigned8 *>(disabled_insn());
   if (this->enabled == 0)
     {
@@ -93,38 +102,11 @@ Alternative_insn::enable() const
       auto *enabled_insn = static_cast<Unsigned8 const *>(this->enabled_insn());
       memcpy(insn, enabled_insn, len);
     }
-  Mem_unit::make_coherent_to_pou(insn, len);
 }
 
-IMPLEMENT
+IMPLEMENT inline NEEDS["boot_info.h"]
 void
-Alternative_insn::init()
+Alternative_insn::patch_finish()
 {
-  extern Alternative_insn const _alt_insns_begin[];
-  extern Alternative_insn const _alt_insns_end[];
-
-  if constexpr (Debug)
-    printf("patching alternative instructions\n");
-
-  if (&_alt_insns_begin[0] == &_alt_insns_end[0])
-    return;
-
-  for (auto const *i = _alt_insns_begin; i != _alt_insns_end; ++i)
-    {
-      if (i->probe())
-        {
-          if constexpr (Debug)
-            {
-              printf("  replace insn at %p/%d with ",
-                     static_cast<void *>(i->disabled_insn()), i->len);
-              if (i->enabled == 0)
-                printf("NOPs\n");
-              else
-                printf("%p\n", i->enabled_insn());
-            }
-          i->enable();
-        }
-    }
-
   Boot_info::reset_checksum_ro();
 }
