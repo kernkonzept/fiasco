@@ -26,8 +26,7 @@ Alternative_insn::enable() const
 {
   if constexpr (Debug)
     {
-      printf("  replace insn at %p/%d with ",
-             static_cast<void *>(disabled_insn()), len);
+      printf("  replace insn at %p/%d with ", disabled_insn(), len);
       if (enabled == 0)
         printf("NOPs\n");
       else
@@ -35,7 +34,7 @@ Alternative_insn::enable() const
     }
 
   auto *insn = static_cast<Unsigned8 *>(disabled_insn());
-  if (this->enabled == 0)
+  if (enabled == 0)
     {
       // Replace "disabled instructions" by NOPs. Taken from Intel SDM.
       // 32-bit variants are equivalent to 64-bit variants except s/rax/eax/
