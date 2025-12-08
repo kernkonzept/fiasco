@@ -34,8 +34,6 @@ public:
 
   static void irq_chance();
 
-  static void stack_pointer(Mword sp);
-
   static Mword stack_pointer();
 
   /// Optimized version of stack_pointer() without 'volatile': The exact value

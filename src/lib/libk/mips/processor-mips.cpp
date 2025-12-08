@@ -581,13 +581,6 @@ Proc::irq_chance()
 }
 
 IMPLEMENT static inline
-void
-Proc::stack_pointer(Mword sp)
-{
-  asm volatile ("move $29,%0" : : "r" (sp));
-}
-
-IMPLEMENT static inline
 Mword
 Proc::stack_pointer()
 {

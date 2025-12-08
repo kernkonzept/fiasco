@@ -98,13 +98,6 @@ Proc::irq_chance()
 }
 
 IMPLEMENT static inline
-void
-Proc::stack_pointer(Mword sp)
-{
-  __asm__ __volatile__ ("mv sp, %0" : : "r" (sp));
-}
-
-IMPLEMENT static inline
 Mword
 Proc::stack_pointer()
 {

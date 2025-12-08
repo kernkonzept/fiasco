@@ -51,12 +51,6 @@ Mword Proc::stack_pointer_for_context()
   return sp;
 }
 
-IMPLEMENT static inline
-void Proc::stack_pointer(Mword sp)
-{
-  asm volatile ("mov %0, %%rsp" : : "r" (sp));
-}
-
 IMPLEMENT static inline ALWAYS_INLINE
 Mword Proc::program_counter()
 {

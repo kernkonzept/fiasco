@@ -76,13 +76,6 @@ void Proc::irq_chance()
 }
 
 IMPLEMENT static inline
-void Proc::stack_pointer(Mword sp)
-{
-  (void)sp;
-  asm volatile ("mov %0, %%sp\n" : : "r"(sp));
-}
-
-IMPLEMENT static inline
 Mword Proc::stack_pointer()
 {
   Mword sp = 0;
