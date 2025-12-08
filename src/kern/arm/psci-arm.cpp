@@ -77,17 +77,20 @@ INTERFACE [arm && arm_psci && arm_psci_hvc]:
 // ------------------------------------------------------------------------
 INTERFACE [arm && arm_psci && arm_psci_dyn]:
 
-#define FIASCO_ARM_PSCI_CALL_ASM_FUNC ALTERNATIVE_INSN("smc #0", "hvc #0")
+#define FIASCO_ARM_PSCI_CALL_ASM_FUNC "tbz %[is_hvc], #0, 1f \n" \
+                                      "hvc #0                \n" \
+                                      "b 2f                  \n" \
+                                      "1: smc #0             \n" \
+                                      "2:                    \n"
 
 #define FIASCO_ARM_PSCI_CALL_ASM_OPERANDS \
     : FIASCO_ARM_SMC_CALL_ASM_OUTPUTS \
-    : FIASCO_ARM_SMC_CALL_ASM_INPUTS, [alt_probe] "i"(Psci::is_hvc) \
+    : FIASCO_ARM_SMC_CALL_ASM_INPUTS, [is_hvc] "r"(Psci::is_hvc()) \
     : FIASCO_ARM_SMC_CALL_ASM_CLOBBERS
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_psci]:
 
-#include "alternatives.h"
 #include "mem.h"
 #include "mmio_register_block.h"
 #include "kmem.h"
@@ -115,7 +118,7 @@ Psci::psci_fn(unsigned fn)
     };
 }
 
-PUBLIC static inline NEEDS ["alternatives.h", "smc_call.h"]
+PUBLIC static inline NEEDS ["smc_call.h"]
 Psci::Result FIASCO_ARM_THUMB2_NO_FRAME_PTR
 Psci::psci_call(Mword fn_id,
                 Mword a0 = 0, Mword a1 = 0,
