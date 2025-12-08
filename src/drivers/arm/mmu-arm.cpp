@@ -296,7 +296,7 @@ void Mmu::flush_cache()
       "     mov r0, #0                  \n"
       "     mcr  p15, 0, r0, c7, c7, 0  \n"
       "     mcr  p15, 0, r0, c7, c10, 4 \n" // drain WB: CP15DSB
-      : "=r" (dummy)
+      : "=&r" (dummy)
       : "r" (Mem_layout::Cache_flush_area), "i" (dcache_line_size())
       : "r0"
       );
@@ -312,7 +312,7 @@ void Mmu::clean_dcache()
       "     teq %1, %0        \n"
       "     bne 1b            \n"
       "     mcr  p15, 0, r0, c7, c10, 4 \n" // drain WB: CP15DSB
-      : "=r" (dummy)
+      : "=&r" (dummy)
       : "r" (Mem_layout::Cache_flush_area), "i" (dcache_line_size())
       : "r0"
       );
@@ -330,7 +330,7 @@ void Mmu::flush_dcache()
       "     mov  r0, #0                 \n"
       "     mcr  p15, 0, r0, c7, c6, 0  \n" // inv D cache
       "     mcr  p15, 0, r0, c7, c10, 4 \n" // drain WB: CP15DSB
-      : "=r" (dummy)
+      : "=&r" (dummy)
       : "r" (Mem_layout::Cache_flush_area), "i" (dcache_line_size())
       : "r0"
       );
