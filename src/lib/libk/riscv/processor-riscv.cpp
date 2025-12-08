@@ -115,6 +115,15 @@ Proc::stack_pointer()
 
 IMPLEMENT static inline
 Mword
+Proc::stack_pointer_for_context()
+{
+  Mword sp = 0;
+  __asm__ ("mv %0, sp" : "=r" (sp));
+  return sp;
+}
+
+IMPLEMENT static inline
+Mword
 Proc::program_counter()
 {
   Mword pc = 0;

@@ -175,6 +175,14 @@ Mword Proc::stack_pointer()
 }
 
 IMPLEMENT static inline
+Mword Proc::stack_pointer_for_context()
+{
+  Mword sp;
+  asm ("mov %0, sp" : "=r" (sp));
+  return sp;
+}
+
+IMPLEMENT static inline
 void Proc::stack_pointer(Mword sp)
 {
   asm volatile ("mov sp, %0" : : "r" (sp));

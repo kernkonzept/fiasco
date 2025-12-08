@@ -598,6 +598,15 @@ Proc::stack_pointer()
 
 IMPLEMENT static inline
 Mword
+Proc::stack_pointer_for_context()
+{
+  Mword sp;
+  asm ("move %0,$29" : "=r" (sp));
+  return sp;
+}
+
+IMPLEMENT static inline
+Mword
 Proc::program_counter()
 {
   Mword pc;
