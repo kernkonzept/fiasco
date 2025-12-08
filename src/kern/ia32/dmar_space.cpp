@@ -134,7 +134,7 @@ public:
   {
     // DID 0 may be reserved by the architecture, DID 1 is identity map.
     First_did   = 2,
-    Max_nr_did  = 0x10000,
+    Last_did    = 0xffff,
     Invalid_did = ~0UL,
   };
 
@@ -144,7 +144,7 @@ private:
 
   static bool _initialized;
 
-  using Did_alloc = Simple_id_alloc<Did, First_did, Max_nr_did, Invalid_did>;
+  using Did_alloc = Simple_id_alloc<Did, First_did, Last_did, Invalid_did>;
   static Static_object<Did_alloc> _did_alloc;
 };
 

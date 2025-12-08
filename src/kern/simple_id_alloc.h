@@ -1,29 +1,42 @@
 #pragma once
 
-#include <bitmap.h>
 #include "boot_alloc.h"
+#include "assert.h"
+#include <bitmap.h>
 #include <warn.h>
 
 /**
  * Cooperative ID allocator, i.e. the allocator has no automatic rollover
- * mechanism. So if all IDs are allocated, further ID allocations will fail and
+ * mechanism. If all IDs are allocated, further ID allocations will fail and
  * the user of the allocator must either accept this or is responsible to free
- * some IDs first.
+ * some IDs first. The allocator uses a bitmap to track the allocated IDs.
  *
  * \tparam Id          Type used to store IDs.
  * \tparam First_id    First ID that can be allocated, the ones below are
  *                     considered reserved.
- * \tparam Max_nr_id   The maximum number of IDs the allocator provides.
- * \tparam Invalid_id  Value that represents an invalid ID.
+ * \tparam Last_id     Last ID that can be allocated.
+ * \tparam Invalid_id  Value that represents an invalid ID. Must be outside the
+ *                     <First_id, Last_id> range.
  */
-template<typename Id, Id First_id, Id Max_nr_id, Id Invalid_id>
+template<typename Id, Id First_id, Id Last_id, Id Invalid_id>
 class Simple_id_alloc
 {
 public:
-  explicit Simple_id_alloc(Id max_id)
-  : _max_id(max_id),
+  static_assert(First_id <= Last_id);
+  static_assert((Invalid_id < First_id) || (Invalid_id > Last_id));
+
+  /**
+   * Allocator constructor.
+   *
+   * \param last_id  The last id the allocator provides at run time.
+   */
+  explicit Simple_id_alloc(Id last_id)
+  : _last_id(last_id),
     _free_ids(new Boot_object<Id_map>())
-  {}
+  {
+    assert(last_id <= Last_id);
+    assert(First_id <= last_id);
+  }
 
   Simple_id_alloc(Simple_id_alloc const &) = delete;
   Simple_id_alloc operator = (Simple_id_alloc const &) = delete;
@@ -35,9 +48,17 @@ public:
    */
   Id alloc_id()
   {
-    for (Id id = First_id; id < _max_id; ++id)
-      if (_free_ids->atomic_get_and_set_if_unset(id) == false)
-        return id;
+    Id id = First_id;
+    for (;;)
+      {
+        if (_free_ids->atomic_get_and_set_if_unset(id) == false)
+          return id;
+
+        if (id == _last_id)
+          break;
+
+        ++id;
+      }
 
     // No ID left.
     return Invalid_id;
@@ -53,7 +74,7 @@ public:
    */
   void free_id(Id id)
   {
-    if (id >= Max_nr_id)
+    if (id < First_id || id > Last_id)
       {
         WARN("Attempt to free invalid ID.\n");
         return;
@@ -135,7 +156,8 @@ public:
   }
 
 private:
-  Id _max_id;
-  using Id_map = Bitmap<Max_nr_id>;
+  using Id_map = Bitmap<Last_id + 1>;
+
+  const Id _last_id;
   Id_map *_free_ids;
 };

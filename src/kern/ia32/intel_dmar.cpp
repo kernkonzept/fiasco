@@ -253,12 +253,12 @@ Dmar::init()
   if (!Intel::Io_mmu::iommus.size())
     return;
 
-  unsigned max_did = Dmar_space::Max_nr_did;
+  Dmar_space::Did last_did = Dmar_space::Last_did;
   for (auto &mmu: Intel::Io_mmu::iommus)
-    if (max_did > mmu.num_domains())
-      max_did = mmu.num_domains();
+    if (last_did > mmu.num_domains() - 1)
+      last_did = mmu.num_domains() - 1;
 
-  Dmar_space::init(max_did);
+  Dmar_space::init(last_did);
 
   bool pass = false;
 #ifdef CONFIG_IOMMU_PASSTHROUGH

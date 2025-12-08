@@ -41,13 +41,13 @@ public:
   enum
   {
     First_asid   = 0,
-    Max_nr_asid  = 0x10000,
-    Invalid_asid = Max_nr_asid,
+    Last_asid    = 0xffff,
+    Invalid_asid = Last_asid + 1,
     Default_vmid = 0,
   };
 
   using Asid = unsigned long;
-  using Asid_alloc = Simple_id_alloc<Asid, First_asid, Max_nr_asid, Invalid_asid>;
+  using Asid_alloc = Simple_id_alloc<Asid, First_asid, Last_asid, Invalid_asid>;
 
   /**
    * Invalidate the entire TLB of this Iommu.
@@ -1966,10 +1966,10 @@ Iommu::init_common()
   if (!Iommu::iommus().size())
     return;
 
-  unsigned max_asids = Max_nr_asid;
+  Asid last_asid = Last_asid;
   for (Iommu &iommu : iommus())
     {
-      max_asids = min(max_asids, 1u << iommu._num_asid_bits);
+      last_asid = min(last_asid, (Asid{1U} << iommu._num_asid_bits) - 1);
 
       if (iommu._ias != Iommu::iommus()[0]._ias)
         // If the assumption of a common IAS across all SMMUs does not hold,
@@ -1979,8 +1979,9 @@ Iommu::init_common()
     }
 
   if constexpr (Iommu::Debug)
-    printf("IOMMU: %u ASIDs available.\n", max_asids);
-  _asid_alloc.construct(max_asids);
+    printf("IOMMU: %lu ASIDs available.\n", last_asid + 1);
+
+  _asid_alloc.construct(last_asid);
 }
 
 IMPLEMENT
