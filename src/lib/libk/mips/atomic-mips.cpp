@@ -102,7 +102,7 @@ __f_atomic_add_fetch(Mword *l, Mword v)
           ASM_ADDU " %[tmp], %[v]    \n"
           "move      %[res], %[tmp]  \n"
           ASM_SC   " %[tmp], %[ptr]  \n"
-          : [tmp] "=&r" (tmp), [ptr] "+ZC" (*l), [res] "=r"(res)
+          : [tmp] "=&r" (tmp), [ptr] "+ZC" (*l), [res] "=&r"(res)
           : [v] "Ir" (v));
     }
   while (!tmp);
