@@ -18,7 +18,13 @@ public:
     T _or;
     T _and;
 
-    void enforce_bits(T m, bool value = true)
+    void relax_bits(T m)
+    {
+      _or &= ~m;
+      _and |= m;
+    }
+
+    void enforce_bits(T m, bool value)
     {
       if (value)
         _or |= m;
@@ -26,7 +32,7 @@ public:
         _and &= ~m;
     }
 
-    bool allowed_bits(T m, bool value = true) const
+    bool allowed_bits(T m, bool value) const
     {
       if (value)
         return _and & m;
@@ -63,18 +69,21 @@ public:
     Bit_defs_t(Bit_defs<WORD_TYPE> const &o) : Bit_defs<WORD_TYPE>(o) {}
 
     void relax(BITS_TYPE bit)
-    {
-      this->_or &= ~(WORD_TYPE{1} << static_cast<WORD_TYPE>(bit));
-      this->_and |= WORD_TYPE{1} << static_cast<WORD_TYPE>(bit);
-    }
+    { this->relax_bits(WORD_TYPE{1} << static_cast<WORD_TYPE>(bit)); }
 
-    void enforce(BITS_TYPE bit, bool value = true)
+    void enforce(BITS_TYPE bit, bool value)
     { this->enforce_bits(WORD_TYPE{1} << static_cast<WORD_TYPE>(bit), value); }
 
-    bool allowed(BITS_TYPE bit, bool value = true) const
+    bool allowed(BITS_TYPE bit) const
     {
       return this->allowed_bits(WORD_TYPE{1} << static_cast<WORD_TYPE>(bit),
-                                value);
+                                true);
+    }
+
+    bool disallowed(BITS_TYPE bit) const
+    {
+      return this->allowed_bits(WORD_TYPE{1} << static_cast<WORD_TYPE>(bit),
+                                false);
     }
   };
 
@@ -1482,13 +1491,13 @@ Vmx_info::init(Cpu_number cpu)
       return false;
     }
 
-  pinbased_ctls.enforce(Vmx_info::PIB_ext_int_exit);
-  pinbased_ctls.enforce(Vmx_info::PIB_nmi_exit);
+  pinbased_ctls.enforce(Vmx_info::PIB_ext_int_exit, true);
+  pinbased_ctls.enforce(Vmx_info::PIB_nmi_exit, true);
 
   // currently we IO-passthrough is missing, disable I/O bitmaps and enforce
   // unconditional io exiting
   procbased_ctls.enforce(Vmx_info::PRB1_use_io_bitmaps, false);
-  procbased_ctls.enforce(Vmx_info::PRB1_unconditional_io_exit);
+  procbased_ctls.enforce(Vmx_info::PRB1_unconditional_io_exit, true);
 
   // Always exit if the guest accesses a debug register.
   procbased_ctls.enforce(Vmx_info::PRB1_mov_dr_exit, true);
@@ -1510,15 +1519,15 @@ Vmx_info::init(Cpu_number cpu)
 
   if (procbased_ctls2.allowed(Vmx_info::PRB2_unrestricted))
     {
-      // unrestricted guest allows PE and PG to be 0
+      // Unrestricted guest allows PE and PG to be 0.
       cr0_defs.relax(0);  // PE
       cr0_defs.relax(31); // PG
-      procbased_ctls2.enforce(Vmx_info::PRB2_unrestricted);
+      procbased_ctls2.enforce(Vmx_info::PRB2_unrestricted, true);
     }
   else
     {
-      assert(not cr0_defs.allowed(0, false));
-      assert(not cr0_defs.allowed(31, false));
+      assert(not cr0_defs.disallowed(0));  // PE
+      assert(not cr0_defs.disallowed(31)); // PG
     }
 
   // We currently do not implement the xss bitmap, and do not support
