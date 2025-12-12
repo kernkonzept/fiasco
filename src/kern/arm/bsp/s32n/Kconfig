@@ -1,0 +1,98 @@
+# Copyright 2023-2025 NXP
+# SPDX-License-Identifier: MIT
+
+# PF: S32N
+# PFDESCR: NXP S32N
+# PFSELECT: CAN_ARM_CPU_CORTEX_R52 ARM_GIC HAVE_ARM_GICV3 HAS_PLAT_AMP_OPTION
+# PFDEPENDS: ARM
+
+choice
+	prompt "NXP S32N"
+	default PF_S32N5
+
+config PF_S32N5
+	bool "NXP S32N5"
+	depends on PF_S32N
+	help
+	  Choose for NXP S32N5 series.
+
+endchoice # PF_S32N
+
+choice
+	prompt "RTU config"
+	default PF_S32N_RTU_0
+
+config PF_S32N_RTU_0
+	bool "RTU0"
+	depends on PF_S32N5
+
+config PF_S32N_RTU_1
+	bool "RTU1"
+	depends on PF_S32N5
+
+config PF_S32N_RTU_2
+	bool "RTU2"
+	depends on PF_S32N5
+
+config PF_S32N_RTU_3
+	bool "RTU3"
+	depends on PF_S32N5
+
+endchoice # RTU
+
+choice
+	prompt "RTU Cluster 0 configuration"
+	default PF_S32N_RTU_CL0_LOCKSTEP
+
+config PF_S32N_RTU_CL0_DISABLED
+	bool "disabled"
+
+config PF_S32N_RTU_CL0_LOCKSTEP
+	bool "lockstep"
+
+config PF_S32N_RTU_CL0_SPLIT
+	bool "split mode"
+
+endchoice # RTU Cluster 0
+
+choice
+	prompt "RTU Cluster 1 configuration"
+	default PF_S32N_RTU_CL1_LOCKSTEP
+
+config PF_S32N_RTU_CL1_DISABLED
+	bool "disabled"
+
+config PF_S32N_RTU_CL1_LOCKSTEP
+	bool "lockstep"
+
+config PF_S32N_RTU_CL1_SPLIT
+	bool "split mode"
+
+endchoice # RTU Cluster 1
+
+config PF_S32N_AUTO_RAM_BASE
+	bool "Automatically choose RAM_BASE"
+	default y
+	help
+	  Use default RAM base address. Uses CRAM0 of the respective cluster:
+
+	  RTU0: 0x39580000
+	  RTU1: 0x3b580000
+	  RTU2: 0x3d580000
+	  RTU3: 0x3f580000
+
+config PF_S32N_MANUAL_RAM_BASE
+	hex "Custom RAM_BASE"
+	depends on !PF_S32N_AUTO_RAM_BASE
+	default 0x39580000 if PF_S32N_RTU_0
+	default 0x3b580000 if PF_S32N_RTU_1
+	default 0x3d580000 if PF_S32N_RTU_2
+	default 0x3f580000 if PF_S32N_RTU_3
+
+config PF_S32N_MRU
+	bool "MRU interrupt support"
+	default y
+	help
+	  This driver enables support for receiving interrupts from MRU instances
+	  that are connected as PPI to each core. Each MRU channel is available as
+	  dedicated interrupt, starting from 1024.
