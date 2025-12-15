@@ -13,10 +13,21 @@
 
 #define	DEPENDS_ON(SUBSYS)	((SUBSYS) + 2)
 
-#define LINKER_INTERNAL		 100		// linker internal use
+/**
+ * Internal linker use only.
+ * We don't use this priority but gcc would complain if we would.
+ */
+#define LINKER_INTERNAL		 100
+/**
+ * Perform runtime code patching right after hand-over from bootstrap.
+ * (See Icf53527490a73e81b21e2a2c58015e57adb31125 if we would ever need runtime
+ * code patching depending on the content of the device tree.)
+ */
 #define ALT_INSN_INIT_PRIO       DEPENDS_ON(LINKER_INTERNAL)
-/// Only for variables with a type that satisfies `constinit`, which need to be
-/// wrapped in Global_data<T>.
+/**
+ * Only for variables with a type that satisfies `constinit`, which need to be
+ * wrapped in Global_data<T>.
+ */
 #define CONSTINIT_INIT_PRIO      DEPENDS_ON(ALT_INSN_INIT_PRIO)
 #define BOOTSTRAP_INIT_PRIO      DEPENDS_ON(CONSTINIT_INIT_PRIO)
 #define EARLY_INIT_PRIO		 DEPENDS_ON(BOOTSTRAP_INIT_PRIO)
