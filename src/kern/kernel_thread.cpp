@@ -44,6 +44,7 @@ IMPLEMENTATION:
 #include "globals.h"
 #include "helping_lock.h"
 #include "kernel_task.h"
+#include "kernel_uart.h"
 #include "kmem.h"
 #include "mem_layout.h"
 #include "per_cpu_data_alloc.h"
@@ -89,6 +90,10 @@ Kernel_thread::bootstrap()
 {
   // Initializations done -- Helping_lock can now use helping lock
   Helping_lock::threading_system_active = true;
+
+  // Setting up serial input via the kernel UART enables the UART's receive IRQ,
+  // which on x86 with interrupt remapping cannot be done on the boot stack.
+  Kernel_uart::setup_serial_input();
 
   // we need per CPU data for our never running dummy CPU too
   // FIXME: we in fact need only the _pending_rqq lock

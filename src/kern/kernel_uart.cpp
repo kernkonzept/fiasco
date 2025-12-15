@@ -10,6 +10,11 @@ public:
   };
   Kernel_uart();
   static void enable_rcv_irq();
+
+  /**
+   * Setup serial input via the kernel UART according to Config::serial_input.
+   */
+  static void setup_serial_input() FIASCO_INIT;
 };
 
 INTERFACE [serial]:
@@ -199,6 +204,47 @@ public:
 };
 
 static DEFINE_GLOBAL_PRIO(BOOTSTRAP_INIT_PRIO) Global_data<Kuart_irq> uart_irq;
+
+IMPLEMENT
+void
+Kernel_uart::setup_serial_input()
+{
+  // Do not touch Kernel_uart::uart() if serial support is disabled as a whole.
+  // The object won't be constructed in this case.
+  if (Koptions::o()->opt(Koptions::F_noserial))
+    return;
+
+  if ((Kernel_uart::uart()->failed()))
+    return;
+
+  int irq = -1;
+  if (Config::serial_input && (irq = Kernel_uart::uart()->irq()) == -1)
+    {
+      puts("SERIAL input: UART IRQ not supported.");
+      Config::serial_input = Config::Serial_input_noirq;
+    }
+
+  switch (Config::serial_input)
+    {
+    case Config::Serial_input_noirq:
+      puts("SERIAL ESC: No IRQ for specified UART port.");
+      puts("Using serial hack in slow timer handler.");
+      break;
+
+    case Config::Serial_input_irq:
+      Kernel_uart::enable_rcv_irq();
+      printf("SERIAL ESC: allocated IRQ %d for serial UART\n", irq);
+      break;
+    }
+}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [!serial || !input]:
+
+IMPLEMENT inline
+void
+Kernel_uart::setup_serial_input()
+{}
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [!serial]:

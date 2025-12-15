@@ -152,8 +152,6 @@ utcb_init_IMPL		:= utcb_init utcb_init-ia32
 vmem_alloc_IMPL		:= vmem_alloc vmem_alloc-ia32
 watchdog_IMPL		:= watchdog watchdog-ia32
 
-INTERFACES_KERNEL-$(CONFIG_SERIAL) += uart_console
-
 cpu_lock_IMPL		:= cpu_lock cpu_lock-generic
 
 ifeq ("$(CONFIG_SCHED_PIT)","y")

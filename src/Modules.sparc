@@ -69,8 +69,6 @@ PRIVATE_INCDIR 	+= kern/$(CONFIG_XARCH) kern
 INTERFACES_KERNEL +=	boot_uart_init bootstrap decrementer psr sparc_types     \
 			util utcb_support irq_chip_generic
 
-INTERFACES_KERNEL-$(CONFIG_SERIAL) += uart_console
-
 INTERFACES_KERNEL += $(INTERFACES_KERNEL-y)
 
 

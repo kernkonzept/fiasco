@@ -73,7 +73,6 @@ PRIVATE_INCDIR  += kern/$(CONFIG_XARCH)/$(BITS) kern/$(CONFIG_XARCH) kern
 INTERFACES_KERNEL += __main boot_uart_init csr irq_chip_generic
 INTERFACES_KERNEL += bootstrap boot_infos
 
-INTERFACES_KERNEL-$(CONFIG_SERIAL)     += uart_console
 INTERFACES_KERNEL-$(CONFIG_CPU_VIRT)   += hyp_ext_state
 
 INTERFACES_KERNEL += $(INTERFACES_KERNEL-y)

@@ -81,7 +81,6 @@ INTERFACES_KERNEL +=	boot_uart_init cp0_status cm \
 
 #missing: jdb_extensions
 
-INTERFACES_KERNEL-$(CONFIG_SERIAL) += uart_console
 INTERFACES_KERNEL-$(CONFIG_CPU_VIRT) += vz
 
 INTERFACES_KERNEL += $(INTERFACES_KERNEL-y)
