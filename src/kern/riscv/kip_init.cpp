@@ -1,9 +1,14 @@
 INTERFACE [riscv]:
 
+#include "initcalls.h"
 #include "kip.h"
 
-class Kip_init {};
-
+class Kip_init
+{
+public:
+  static void init() FIASCO_INIT;
+  static void init_kip_clock() FIASCO_INIT;
+};
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [riscv]:
@@ -58,7 +63,7 @@ namespace KIP_namespace
     };
 };
 
-PUBLIC static
+IMPLEMENT
 void
 Kip_init::init()
 {
@@ -68,7 +73,7 @@ Kip_init::init()
                         Mem_desc::Conventional, true));
 }
 
-PUBLIC static
+IMPLEMENT
 void
 Kip_init::init_kip_clock()
 {

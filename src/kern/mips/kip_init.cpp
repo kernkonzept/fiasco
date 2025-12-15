@@ -1,9 +1,14 @@
 INTERFACE [mips]:
 
+#include "initcalls.h"
 #include "kip.h"
 
-class Kip_init {};
-
+class Kip_init
+{
+public:
+  static void init() FIASCO_INIT;
+  static void init_kip_clock() FIASCO_INIT;
+};
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [mips]:
@@ -57,8 +62,9 @@ namespace KIP_namespace
     };
 };
 
-PUBLIC static
-void Kip_init::init()
+IMPLEMENT
+void
+Kip_init::init()
 {
   Kip *kinfo = reinterpret_cast<Kip*>(&KIP_namespace::my_kernel_info_page);
   Kip::init_global_kip(kinfo);
@@ -67,7 +73,7 @@ void Kip_init::init()
                         Mem_desc::Conventional, true));
 }
 
-PUBLIC static
+IMPLEMENT
 void
 Kip_init::init_kip_clock()
 {

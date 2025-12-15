@@ -1,13 +1,15 @@
 INTERFACE [arm]:
 
+#include "initcalls.h"
 #include "kip.h"
 
 class Kip_init
 {
 public:
-  static void init();
+  static void init() FIASCO_INIT;
+  static void init_kip_clock() FIASCO_INIT;
+  static void map_kip(Kip *) FIASCO_INIT;
 };
-
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
@@ -62,7 +64,8 @@ namespace KIP_namespace
 };
 
 IMPLEMENT
-void Kip_init::init()
+void
+Kip_init::init()
 {
   Kip *kinfo = Kip::all_instances()[Amp_node::id()];
   Kip::init_global_kip(kinfo);
@@ -71,7 +74,7 @@ void Kip_init::init()
   init_syscalls(kinfo);
 }
 
-PUBLIC static
+IMPLEMENT
 void
 Kip_init::init_kip_clock()
 {
@@ -103,7 +106,7 @@ Kip_init::init_kip_clock()
 //--------------------------------------------------------------
 IMPLEMENTATION[64bit]:
 
-PRIVATE static inline
+PRIVATE static inline FIASCO_INIT
 void
 Kip_init::init_syscalls(Kip *kinfo)
 {
@@ -119,7 +122,7 @@ Kip_init::init_syscalls(Kip *kinfo)
 //--------------------------------------------------------------
 IMPLEMENTATION[32bit]:
 
-PRIVATE static inline
+PRIVATE static inline FIASCO_INIT
 void
 Kip_init::init_syscalls(Kip *)
 {}
@@ -136,7 +139,7 @@ IMPLEMENTATION[mpu]:
  * access to it. So far the kernel region covered it. Remove it from there
  * and establish the dedicated region.
  */
-PUBLIC static
+IMPLEMENT
 void
 Kip_init::map_kip(Kip *k)
 {
@@ -159,7 +162,7 @@ Kip_init::map_kip(Kip *k)
 //--------------------------------------------------------------
 IMPLEMENTATION[!mpu]:
 
-PUBLIC static inline
+IMPLEMENT inline
 void
 Kip_init::map_kip(Kip *)
 {}

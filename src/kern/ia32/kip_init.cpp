@@ -1,14 +1,17 @@
 INTERFACE [ia32 || amd64]:
 
 #include "initcalls.h"
-#include "types.h"
 #include "kip.h"
+#include "types.h"
 
 class Cpu;
 
-
 class Kip_init
 {
+public:
+  static void init() FIASCO_INIT;
+  static void init_freq(Cpu const &cpu) FIASCO_INIT;
+  static void init_kip_clock() FIASCO_INIT;
 };
 
 //----------------------------------------------------------------------------
@@ -20,16 +23,6 @@ IMPLEMENTATION [ia32 || amd64]:
 #include "div32.h"
 #include "kmem.h"
 #include "panic.h"
-
-
-/** KIP initialization. */
-PUBLIC static FIASCO_INIT
-void
-Kip_init::init_freq(Cpu const &cpu)
-{
-  Kip::k()->frequency_cpu	= div32(cpu.frequency(), 1000);
-}
-
 
 namespace KIP_namespace
 {
@@ -69,9 +62,9 @@ namespace KIP_namespace
     };
 };
 
-PUBLIC static FIASCO_INIT
-//IMPLEMENT
-void Kip_init::init()
+IMPLEMENT
+void
+Kip_init::init()
 {
   Kip *kinfo = reinterpret_cast<Kip*>(&KIP_namespace::my_kernel_info_page);
 
@@ -103,7 +96,14 @@ void Kip_init::init()
     }
 }
 
-PUBLIC static FIASCO_INIT
+IMPLEMENT
+void
+Kip_init::init_freq(Cpu const &cpu)
+{
+  Kip::k()->frequency_cpu = div32(cpu.frequency(), 1000);
+}
+
+IMPLEMENT
 void
 Kip_init::init_kip_clock()
 {
@@ -154,7 +154,7 @@ IMPLEMENTATION:
 
 #include "mem_space.h"
 
-PUBLIC static FIASCO_INIT
+PRIVATE static FIASCO_INIT
 void
 Kip_init::setup_user_virtual(Kip *kinfo)
 {
