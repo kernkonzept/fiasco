@@ -1,5 +1,7 @@
 INTERFACE:
 
+#include "initcalls.h"
+
 class Kernel_uart
 {
 public:
