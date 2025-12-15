@@ -53,7 +53,6 @@ IMPLEMENT FIASCO_INIT FIASCO_NOINLINE
 void
 Startup::stage2()
 {
-  // the logical ID of the boot CPU is always 0
   Kip_init::init();
   Kmem_alloc::init();
 
