@@ -255,7 +255,7 @@ public:
     }
 
     /**
-     * Wait for completion of preceeding invalidation descriptors.
+     * Wait for completion of preceding invalidation descriptors.
      *
      * \param flag_phys_addr  Physical address of a 32-bit wait flag,
      *                        will be set to 0 when completed.
@@ -264,7 +264,7 @@ public:
     { return Inv_desc(0x25 | wait_fn_bfm_t::val(fence), flag_phys_addr); }
 
     /**
-     * Wait for completion of preceeding invalidation descriptors.
+     * Wait for completion of preceding invalidation descriptors.
      *
      * \param flag  Wait flag located in pmem, will be set to 0 when completed.
      */
@@ -276,7 +276,7 @@ public:
     }
 
     /**
-     * Wait for completion of preceeding invalidation descriptors.
+     * Wait for completion of preceding invalidation descriptors.
      *
      * \param flag  Wait flag, will be set to 0 when completed.
      */
