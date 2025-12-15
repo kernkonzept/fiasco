@@ -40,7 +40,7 @@ private:
    */
   bool startup(unsigned port, int irq, bool resume);
 
-  static bool init_for_mode(Init_mode init_mode);
+  static bool init_for_mode(Init_mode init_mode) FIASCO_INIT;
 };
 
 //---------------------------------------------------------------------------
@@ -69,7 +69,7 @@ Uart *
 Kernel_uart::uart()
 { return _kernel_uart; }
 
-PUBLIC static
+PUBLIC static FIASCO_INIT
 bool
 Kernel_uart::init(Init_mode init_mode = Init_before_mmu)
 {
@@ -142,7 +142,7 @@ Kernel_uart::pm_on_resume([[maybe_unused]] Cpu_number cpu) override
 // ------------------------------------------------------------------------
 IMPLEMENTATION [serial && !jdb]:
 
-PRIVATE static
+PRIVATE static FIASCO_INIT
 void
 Kernel_uart::init_filter_console()
 {
@@ -159,7 +159,7 @@ Filter_console *
 Kernel_uart::fcon()
 { return _fcon; }
 
-PRIVATE static
+PRIVATE static FIASCO_INIT
 void
 Kernel_uart::init_filter_console()
 {
