@@ -97,6 +97,7 @@ endef
 # parameter.
 ifeq ($(LD_TYPE),clang)
 .Host-config:
+	@echo > $@
 else
 .Host-config: force-the-rule
 	@$(call find_ld_emulation,$@.new,$(LD_EMULATION_CHOICE))

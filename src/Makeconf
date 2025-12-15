@@ -222,7 +222,9 @@ ifneq ($(CONFIG_COV),)
   OPT_CXXFLAGS-gcc   += -O1
 endif
 
+ifneq ($(LD_TYPE),clang)
 -include $(objbase)/.Host-config
+endif
 
 # Configuration dependent compile flags
 SHARED_FLAGS-$(CONFIG_NDEBUG)           += -DNDEBUG
