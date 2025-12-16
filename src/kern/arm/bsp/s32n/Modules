@@ -1,0 +1,29 @@
+# Copyright 2023-2025 NXP
+# SPDX-License-Identifier: MIT
+
+# vim:set ft=make:
+
+OBJECTS_LIBUART       += uart_dcc-v6.o
+CXXFLAGS_uart-libuart += $(call LIBUART_UART, dcc-v6, dcc_v6)
+
+PREPROCESS_PARTS      += generic_tickless_idle arm_generic_timer pic_gic
+INTERFACES_KERNEL     += generic_timer irq_mgr_multi_chip
+INTERFACES_DRIVERS    += mru
+
+RAM_PHYS_BASE         := $(strip $(if $(CONFIG_PF_S32N_AUTO_RAM_BASE), \
+                            $(if $(CONFIG_PF_S32N_RTU_0),0x39580000,\
+                                $(if $(CONFIG_PF_S32N_RTU_1),0x3b580000,\
+                                    $(if $(CONFIG_PF_S32N_RTU_2),0x3d580000,0x3f580000))),\
+                          $(CONFIG_PF_S32N_MANUAL_RAM_BASE)))
+
+amp_node_IMPL         := amp_node amp_node-arm-s32n
+config_IMPL           += config-arm-s32n
+kmem_alloc_IMPL       += kmem_alloc-arm-s32n
+mem_layout_IMPL       += mem_layout-arm-s32n
+mru_IMPL              += mru mru-arm-s32n
+pic_IMPL              += pic-gic pic-arm-s32n
+timer_IMPL            += timer-arm-generic timer-arm-generic-s32n
+timer_tick_IMPL       += timer_tick-single-vector
+reset_IMPL            += reset-arm-s32n
+clock_IMPL            += clock-arm-generic
+platform_control_IMPL += platform_control-arm-s32n
