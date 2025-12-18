@@ -1,0 +1,13 @@
+# Copyright 2025 NXP
+# SPDX-License-Identifier: MIT
+
+# PF: S32K5
+# PFDESCR: NXP S32K5
+# PFSELECT: CAN_ARM_CPU_CORTEX_R52 ARM_GIC HAVE_ARM_GICV3 HAS_PLAT_AMP_OPTION
+# PFDEPENDS: ARM
+
+config PF_S32K5_RAM_BASE
+	hex "Kernel load address"
+	default 0x22000000
+	help
+	  Start address of the kernel image. Defaults to start of CPE SRAM0.
