@@ -54,6 +54,7 @@ Mru::pending()
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pf_s32z && pf_s32z_mru]:
 
+#include "amp_node.h"
 #include "kip.h"
 #include "kmem_mmio.h"
 
