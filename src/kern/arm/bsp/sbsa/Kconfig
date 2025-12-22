@@ -10,16 +10,16 @@
 # PFDEPENDS: ARM
 
 config ARM_IOMMU_MAX
-  int "Maximum number of SMMUs"
-  depends on IOMMU
-  default 16
-  help
-    The size of some IOMMU related data structures depend on the number of
-    supported IOMMUs. Setting the value too high increases the memory
-    allocation overhead. A too low value will prevent the kernel from booting,
-    though.
+	int "Maximum number of SMMUs"
+	depends on IOMMU
+	default 16
+	help
+	  The size of some IOMMU related data structures depend on the number of
+	  supported IOMMUs. Setting the value too high increases the memory
+	  allocation overhead. A too low value will prevent the kernel from booting,
+	  though.
 
-    If in doubt, leave the default (16).
+	  If in doubt, leave the default (16).
 
 # According to the spec, the SMMU should support stage1 _and_ stage2 tables.
 # But on Graviton3 this does not seem to be the case. So use stage2 if we run
