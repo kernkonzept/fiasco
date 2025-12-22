@@ -449,7 +449,6 @@ asm
 "     mov  sp, x9                      \n"
 "     adrp x9, :got:_start             \n"
 "     ldr  x9, [x9, #:got_lo12:_start] \n"
-"     adr  x10, _start                 \n"
 "     sub  x0, x10, x9                 \n"
 "     bl   bootstrap_main              \n"
 ".p2align 3                            \n"  // running uncached -> align!
