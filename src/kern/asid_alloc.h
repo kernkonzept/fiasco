@@ -174,7 +174,7 @@ public:
  * <generation, asid> to quickly decide whether an address space id is
  * valid or not.
  *
- * Address space ids become invalid if all ASIDs are allocated and an
+ * Address space IDs become invalid if all ASIDs are allocated and an
  * address space needs a new ASID. In this case we invalidate all
  * ASIDs except the ones currently used on a CPU by increasing the
  * generation and starting to allocate new ASIDs.
