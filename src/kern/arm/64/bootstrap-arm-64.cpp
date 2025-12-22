@@ -410,7 +410,7 @@ Bootstrap::init_paging()
 
   // map kernel to desired virtual address
   map_ram_range(kd, alloc, bs_info.kernel_start_phys, bs_info.kernel_end_phys,
-                Virt_ofs + load_addr, Page::Kern::Global());
+                load_addr - Mem_layout::Map_base, Page::Kern::Global());
 
   // Create 1:1 mapping of the kernel in the idle (user) page table. Needed by
   // Fiasco bootstrap and the mp trampoline after they enable paging, and by
@@ -562,11 +562,11 @@ Bootstrap::init_paging()
 
   // map kernel to desired virtual address
   map_ram_range(d, alloc, bs_info.kernel_start_phys, bs_info.kernel_end_phys,
-                Virt_ofs + load_addr, Page::Kern::Global());
+                load_addr - Mem_layout::Map_base, Page::Kern::Global());
 
   // Add 1:1 mapping if not already done so above. Needed by Fiasco bootstrap
   // and the mp trampoline after they enable paging, and by add_initial_pmem().
-  if (Virt_ofs + load_addr != 0)
+  if (load_addr - Mem_layout::Map_base != 0)
     map_ram_range(d, alloc, bs_info.kernel_start_phys, bs_info.kernel_end_phys,
                   0, Page::Kern::Global());
 

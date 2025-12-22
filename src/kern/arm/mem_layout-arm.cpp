@@ -4,11 +4,6 @@ INTERFACE [arm && mmu]:
 
 EXTENSION class Mem_layout
 {
-public:
-  enum Phys_layout : Address {
-    Sdram_phys_base      = RAM_PHYS_BASE,
-  };
-
 private:
   // At least two entries are expected: the kernel image and the heap. If the
   // RAM is not contiguous there might be more than one heap region needed,

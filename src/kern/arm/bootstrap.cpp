@@ -11,6 +11,7 @@ struct Bootstrap_info
   void *kip;
   Address kernel_start_phys;
   Address kernel_end_phys;
+  Address kernel_load_addr;
   Boot_paging_info pi;
 };
 
@@ -27,11 +28,6 @@ public:
 
   typedef cxx::int_type<unsigned, Order_t> Order;
   typedef cxx::int_type_order<Mword, Virt_addr_t, Order> Virt_addr;
-
-  enum
-  {
-    Virt_ofs = Address{Mem_layout::Sdram_phys_base} - Address{Mem_layout::Map_base},
-  };
 
   /**
    * Relative load address.
@@ -214,22 +210,23 @@ PUBLIC static inline ALWAYS_INLINE
 void *
 Bootstrap::kern_to_boot(void *a)
 {
-  return offset_cast<void *>(a, Bootstrap::Virt_ofs + load_addr);
+  return offset_cast<void *>(a, load_addr - Address{Mem_layout::Map_base});
 }
 
-extern "C" void bootstrap_main(unsigned long load_addr)
+extern "C" void bootstrap_main(unsigned long load_addr_delta_vs_link)
 {
-  if (load_addr)
+  if (load_addr_delta_vs_link)
     {
-      Bootstrap::relocate(load_addr);
+      Bootstrap::relocate(load_addr_delta_vs_link);
 
       // prevent compiler from reordering loads before applying the relocations
       Mem::barrier();
 
-      Bootstrap::load_addr = load_addr;
-      bs_info.kernel_start_phys += load_addr;
-      bs_info.kernel_end_phys += load_addr;
+      bs_info.kernel_start_phys += load_addr_delta_vs_link;
+      bs_info.kernel_end_phys += load_addr_delta_vs_link;
     }
+
+  Bootstrap::load_addr = load_addr_delta_vs_link + bs_info.kernel_load_addr;
 
   Unsigned32 tbbr = cxx::int_value<Bootstrap::Phys_addr>(Bootstrap::init_paging())
                     | Page::Ttbr_bits;

@@ -77,6 +77,7 @@ SECTIONS {
     MWORD(my_kernel_info_page)
     MWORD(_kernel_image_start - phys_offset)
     MWORD(_initcall_end - phys_offset)
+    MWORD(kernel_load_addr)
     KEEP(*(.bootstrap.info))
     ASSERT (ABSOLUTE(.) == end_of_bootstrap_info, "invalid size of bootstrap.info");
 

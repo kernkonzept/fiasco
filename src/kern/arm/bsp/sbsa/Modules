@@ -6,7 +6,6 @@ CXXFLAGS_uart-libuart += $(call LIBUART_UART2, 16550)
 PREPROCESS_PARTS      += second_uart
 PREPROCESS_PARTS      += arm_generic_timer pic_gic psci
 INTERFACES_KERNEL     += generic_timer
-RAM_PHYS_BASE         := 0x00000000
 
 config_IMPL           += config-arm-sbsa
 mem_layout_IMPL       += mem_layout-arm-sbsa

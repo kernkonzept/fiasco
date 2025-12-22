@@ -410,7 +410,8 @@ ifeq ("$(filter LIBUART, $(SUBSYSTEMS))","LIBUART")
   LIBUART			:= uart/libuart.a
 endif
 
-CONFIG_KERNEL_LOAD_ADDR := $(RAM_PHYS_BASE)
+# To avoid relocation work during bootup, RAM_PHYS_BASE can optionally be given.
+CONFIG_KERNEL_LOAD_ADDR := $(or $(RAM_PHYS_BASE),0x0)
 
 ifneq ($(CONFIG_MP),)
 ifneq ($(CONFIG_ARM_MPCORE)$(CONFIG_ARM_CORTEX_A9)$(CONFIG_ARM_CORTEX_A5),)
