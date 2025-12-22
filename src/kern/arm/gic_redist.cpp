@@ -68,7 +68,7 @@ public:
 
   static bool cmp_affinity(Unsigned32 x, Unsigned32 y);
 
-  static Mmio_register_block scan_range(void *base, Unsigned64 mpidr)
+  static Mmio_register_block scan_range(void *base, unsigned size, Unsigned64 mpidr)
   {
     unsigned o = 0;
     Gic_redist::Typer gicr_typer;
@@ -90,7 +90,7 @@ public:
         if (gicr_typer.vlpis())
           o += 2 * Gic_redist::GICR_frame_size;
       }
-    while (!gicr_typer.last());
+    while (o < size && !gicr_typer.last());
 
     return Mmio_register_block();
   }

@@ -16,7 +16,7 @@ class Gic_v3 : public Gic_mixin<Gic_v3, Gic_cpu_v3>
     Gic_redist_find_array(void *redist_base) : _redist_base(redist_base) {}
 
     Mmio_register_block get_redist_mmio(Unsigned64 mpid) override
-    { return scan_range(_redist_base, mpid); }
+    { return scan_range(_redist_base, ~0u, mpid); }
 
   private:
     void *_redist_base;

@@ -29,7 +29,7 @@ public:
         auto *r = Kmem_mmio::map(redist->base, redist->length);
         if (!r)
           return Mmio_register_block();
-        auto b = scan_range(r, mpid);
+        auto b = scan_range(r, redist->length, mpid);
         if (b.valid())
           return b;
       }
