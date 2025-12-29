@@ -128,3 +128,13 @@ int Uart_cadence::get_char(bool blocking) const
 #endif // !UART_WITHOUT_INPUT
 
 } // namespace L4
+
+static l4re_device_spec_dt_ids dt_ids[] = {
+  { .compatible = "xlnx,xuartps" },
+  { .compatible = "xlnx,zynqmp-uart" },
+  { .compatible = "cdns,uart-r1p8" },
+  { .compatible = "cdns,uart-r1p12" },
+  {},
+};
+
+l4re_register_device_uart_dt(L4::Uart_cadence, cadence, dt_ids);

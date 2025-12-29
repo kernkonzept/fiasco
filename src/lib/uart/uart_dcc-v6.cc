@@ -109,3 +109,10 @@ int Uart_dcc_v6::get_char(bool blocking) const
 #endif // !UART_WITHOUT_INPUT
 
 } // namespace L4
+
+static l4re_device_spec_dt_ids dt_ids[] = {
+  { .compatible = "arm,dcc" },
+  {},
+};
+
+l4re_register_device_uart_dt(L4::Uart_dcc_v6, uartarmdcc, dt_ids);

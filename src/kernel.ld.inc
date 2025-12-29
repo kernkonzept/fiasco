@@ -108,3 +108,8 @@
 EXTERN(cov_print)
 ASSERT(DEFINED(cov_print), "cov_print not available")
 #endif
+
+#define DEVS \
+    PROVIDE (__L4RE_DEVICE_BEGIN = .); \
+    KEEP (*(.data.l4redevice)) \
+    PROVIDE (__L4RE_DEVICE_END = .);

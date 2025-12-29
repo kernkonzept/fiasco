@@ -201,6 +201,9 @@ SECTIONS {
   _rx_end = .;
 
   .data_kernel : AT (ADDR(.data_kernel) - phys_offset) {
+#if defined(CONFIG_DT) || defined(CONFIG_ARM_ACPI)
+    DEVS
+#endif
     *(.data .data.* .gnu.linkonce.d.*)
     *(.anno)
 

@@ -10,6 +10,7 @@
 #include <stddef.h>
 #include "io_regblock.h"
 
+#include "device.h"
 #include "poll_timeout_counter.h"
 
 namespace L4 {
@@ -17,12 +18,15 @@ namespace L4 {
 /**
  * Uart driver abstraction.
  */
-class Uart
+class Uart : public Dev_obj
 {
 protected:
   unsigned _mode;
   unsigned _rate;
   Io_register_block const *_regs;
+
+public:
+  void *operator new (size_t, void *p) { return p; }
 
 public:
   typedef unsigned Transfer_mode;
@@ -171,3 +175,51 @@ protected:
 };
 
 } // namespace L4
+
+/*
+ * Instantiate a UART, given the memory.
+ */
+static inline
+L4::Uart *
+l4re_dev_uart_create_by_dt_compatible(const char *dt_compatible,
+                                      void *obj_buf, unsigned obj_buf_size,
+                                      unsigned freq)
+{
+  L4::Dev_obj *dev = l4re_dev_create_by_dt_compatible(dt_compatible,
+                                                      obj_buf, obj_buf_size,
+                                                      freq);
+  return static_cast<L4::Uart *>(dev);
+}
+
+/*
+ * Instantiate a UART a single time, use an internal static buffer.
+ */
+static inline
+L4::Uart *
+l4re_dev_uart_create_by_dt_compatible_once(const char *dt_compatible, unsigned freq)
+{
+  static bool once_done = false;
+
+  if (once_done)
+    return nullptr;
+
+  once_done = true;
+  static char __attribute__((aligned(sizeof(long) * 2))) obj_buf[64];
+  return l4re_dev_uart_create_by_dt_compatible(dt_compatible,
+                                               obj_buf, sizeof(obj_buf),
+                                               freq);
+}
+
+#define l4re_register_device_uart(Device_class, instance_name, \
+                                  device_dt_ids, pci_ids) \
+  static const struct l4re_device_ids __dev_spec_##instance_name \
+    = { .dt = device_dt_ids, .pcidev = pci_ids }; \
+  l4re_register_device(L4::Uart, Device_class, instance_name, \
+                       __dev_spec_##instance_name)
+
+#define l4re_register_device_uart_dt(Device_class, instance_name, dt_ids) \
+  l4re_register_device_uart(Device_class, instance_name, dt_ids, nullptr)
+
+#define l4re_register_device_uart_pci(Device_class, instance_name, pci_ids) \
+  l4re_register_device_uart(Device_class, instance_name, nullptr, pci_ids)
+

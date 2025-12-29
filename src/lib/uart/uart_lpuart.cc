@@ -113,3 +113,14 @@ int Uart_lpuart::get_char(bool blocking) const
 #endif // !UART_WITHOUT_INPUT
 
 } // namespace L4
+
+static l4re_device_spec_dt_ids dt_ids_lpuart[] = {
+  { .compatible = "fsl,imx7ulp-lpuart" }, // this is mainly used compatible
+  { .compatible = "fsl,imx8qm-lpuart" },
+  { .compatible = "fsl,imx8ulp-lpuart" },
+  { .compatible = "fsl,imx93-lpuart" },
+  { .compatible = "fsl,imxrt-lpuart" },
+  {},
+};
+
+l4re_register_device_uart_dt(L4::Uart_lpuart, imxlpuart, dt_ids_lpuart);

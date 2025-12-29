@@ -153,3 +153,11 @@ int Uart_pl011::get_char(bool blocking) const
 #endif // !UART_WITHOUT_INPUT
 
 } // namespace L4
+
+static l4re_device_spec_dt_ids dt_ids[] = {
+  { .compatible = "arm,pl011" },
+  { .compatible = "arm,sbsa-uart" },
+  {},
+};
+
+l4re_register_device_uart_dt(L4::Uart_pl011, pl011, dt_ids);
