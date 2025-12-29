@@ -3,10 +3,6 @@ INTERFACE [riscv && 32bit]:
 EXTENSION class Mem_layout
 {
 public:
-  enum Phys_layout : Address {
-    Sdram_phys_base       = RAM_PHYS_BASE
-  };
-
   static constexpr Address user_max() { return _User_max; }
 
   enum Virt_layout : Address {
