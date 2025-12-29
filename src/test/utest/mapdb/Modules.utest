@@ -6,7 +6,7 @@ ifeq ($(CONFIG_SCHED_FIXED_PRIO),y)
 
 INTERFACES_UTEST += common_test_mapdb
 # Output matching: If needs to be disabled, disable it here (not in the module).
-INTERFACES_UTEST-$(CONFIG_MMU) += test_map_util
+INTERFACES_UTEST-$(and $(CONFIG_MMU),$(CONFIG_MAPDB)) += test_map_util
 # Output matching: If needs to be disabled, disable it here (not in the module).
 INTERFACES_UTEST-$(CONFIG_MAPDB) += test_mapdb
 UTEST_SUPPL += expected_mapdb expected_map_util config_mapdb config_map_util
