@@ -33,6 +33,10 @@ INTERFACE [arm && mmu]:
 EXTENSION class Mem_layout
 {
 public:
+  enum Phys_layout : Address {
+    Sdram_phys_base = RAM_PHYS_BASE,
+  };
+
   enum Virt_layout : Address {
     Kern_lib_base	 = 0xffffe000,
     Syscalls		 = 0xfffff000,
