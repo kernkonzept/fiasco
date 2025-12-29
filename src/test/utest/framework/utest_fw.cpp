@@ -15,6 +15,7 @@ INTERFACE:
 #include "global_data.h"
 #include "kdb_ke.h"
 #include "kip.h"
+#include "cpu.h"
 #include "kmem_slab.h"
 #include "l4_error.h"
 #include "lock_guard.h"
