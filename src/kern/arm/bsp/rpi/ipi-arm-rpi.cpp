@@ -3,7 +3,7 @@ INTERFACE [arm && pf_rpi && mp && !pic_gic]: // -----------------------
 EXTENSION class Ipi
 {
 public:
-  enum Message { Global_request, Request, Debug, Timer };
+  enum Message : unsigned { Global_request, Request, Debug, Timer };
 
   static Message pending();
 
@@ -59,5 +59,5 @@ IMPLEMENT
 Ipi::Message
 Ipi::pending()
 {
-  return (Ipi::Message)Arm_control::o()->ipi_pending();
+  return Ipi::Message{Arm_control::o()->ipi_pending()};
 }
