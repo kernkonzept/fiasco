@@ -80,6 +80,7 @@ IMPLEMENTATION:
 #include "cpu_lock.h"
 #include "lock_guard.h"
 #include "context.h"
+#include "mem.h"
 #include "globals.h"
 #include "processor.h"
 
@@ -184,7 +185,7 @@ Switch_lock::help(Context *curr, Context *owner, Address owner_id)
  *                      them, only relevant if `RETURN_AFTER_HELPING=true`.
  */
 PUBLIC template<bool RETURN_AFTER_HELPING = false>
-inline NEEDS["context.h", "processor.h", Switch_lock::set_lock_owner]
+inline NEEDS["context.h", "mem.h", "processor.h", Switch_lock::set_lock_owner]
 Switch_lock::Status NO_INSTRUMENT
 Switch_lock::lock()
 {
@@ -274,7 +275,7 @@ Switch_lock::clear_lock_owner()
   atomic_and(&_lock_owner, 1);
 }
 
-PRIVATE inline
+PRIVATE inline NEEDS["mem.h"]
 bool NO_INSTRUMENT
 Switch_lock::set_lock_owner(Context *o)
 {
@@ -340,7 +341,7 @@ IMPLEMENTATION:
  * \post switch_dirty() must be called in the same atomical section
  */
 PRIVATE
-inline NEEDS[Switch_lock::clear_lock_owner, Switch_lock::lock_owner, "context.h"]
+inline NEEDS[Switch_lock::clear_lock_owner, Switch_lock::lock_owner, "context.h", "mem.h"]
 Switch_lock::Lock_context NO_INSTRUMENT
 Switch_lock::clear_no_switch_dirty()
 {
