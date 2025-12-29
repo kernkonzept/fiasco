@@ -3,7 +3,7 @@
 #include <stdarg.h>
 #include <string.h>
 
-namespace L4 {
+namespace L4_drivers {
 
 class Of
 {

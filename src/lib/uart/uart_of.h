@@ -10,7 +10,7 @@
 #include "uart_base.h"
 #include <stdarg.h>
 #include <string.h>
-#include <l4/drivers/of.h>
+#include "of1275.h"
 
 namespace L4 {
 
