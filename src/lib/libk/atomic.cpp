@@ -61,30 +61,36 @@ IMPLEMENTATION[(ppc32 && !mp) || (sparc && !mp) || (arm && !arm_v6plus)]:
 
 // Fall-back UP implementations for ppc32, sparc and armv5
 
-inline NEEDS["processor.h"]
+typename<typename T, typename V> inline NEEDS["processor.h"]
 void
-atomic_and(Mword *l, Mword value)
+atomic_and(T *l, V value)
 {
+  static_assert(sizeof(T) == 4);
+  T val = value;
   Proc::Status s = Proc::cli_save();
-  *l &= value;
+  *l &= val;
   Proc::sti_restore(s);
 }
 
-inline NEEDS["processor.h"]
+typename<typename T, typename V> inline NEEDS["processor.h"]
 void
-atomic_or(Mword *l, Mword value)
+atomic_or(T *l, V value)
 {
+  static_assert(sizeof(T) == 4);
+  T val = value;
   Proc::Status s = Proc::cli_save();
-  *l |= value;
+  *l |= val;
   Proc::sti_restore(s);
 }
 
-inline NEEDS["processor.h"]
+template<typename T, typename V> inline NEEDS["processor.h"]
 void
-atomic_add(Mword *l, Mword value)
+atomic_add(T *l, V value)
 {
+  static_assert(sizeof(T) == 4);
+  T val = value;
   Proc::Status s = Proc::cli_save();
-  *l += value;
+  *l += val;
   Proc::sti_restore(s);
 }
 
@@ -92,8 +98,10 @@ template<typename T, typename V> inline NEEDS [<cxx/type_traits>, "processor.h"]
 ALWAYS_INLINE cxx::enable_if_t<(sizeof(T) == 4), T>
 atomic_add_fetch(T *mem, V value)
 {
+  static_assert(sizeof(T) == 4);
+  T val = value;
   Proc::Status s = Proc::cli_save();
-  *mem += value;
+  *mem += val;
   T res = *mem;
   Proc::sti_restore(s);
   return res;

@@ -2,65 +2,117 @@ IMPLEMENTATION [riscv]:
 
 #include "asm_riscv.h"
 
-inline NEEDS["asm_riscv.h"]
+template<typename T, typename V>
 Mword
-atomic_and(Mword *l, Mword mask)
+atomic_and(T *l, V value)
 {
-  Mword prev;
+  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
+  T val = value;
+  T prev;
 
-  __asm__ __volatile__ (
-    "amoand." SZMOD " %[prev], %[mask], %[l]"
-    : [prev]"=r" (prev), [l]"+A"(*l)
-    : [mask]"r" (mask)
-    : "memory");
+  switch (sizeof(T))
+    {
+    case 4:
+      __asm__ __volatile__ (
+        "amoand.w %[prev], %[mask], %[l]"
+        : [prev]"=r" (prev), [l]"+A"(*l)
+        : [mask]"r" (val)
+        : "memory");
+      return prev;
 
-  return prev;
+    case 8:
+      __asm__ __volatile__ (
+        "amoand.d %[prev], %[mask], %[l]"
+        : [prev]"=r" (prev), [l]"+A"(*l)
+        : [mask]"r" (val)
+        : "memory");
+      return prev;
+    }
 }
 
-inline NEEDS["asm_riscv.h"]
+template<typename T, typename V> inline
 Mword
-atomic_or(Mword *l, Mword bits)
+atomic_or(T *l, V value)
 {
-  Mword prev;
+  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
+  T val = value;
+  T prev;
 
-  __asm__ __volatile__ (
-    "amoor." SZMOD " %[prev], %[bits], %[l]"
-    : [prev]"=r" (prev), [l]"+A"(*l)
-    : [bits]"r" (bits)
-    : "memory");
+  switch (sizeof(T))
+    {
+    case 4:
+      __asm__ __volatile__ (
+        "amoor.w %[prev], %[bits], %[l]"
+        : [prev]"=r" (prev), [l]"+A"(*l)
+        : [bits]"r" (val)
+        : "memory");
+      return prev;
 
-  return prev;
+    case 8:
+      __asm__ __volatile__ (
+        "amoor.d %[prev], %[bits], %[l]"
+        : [prev]"=r" (prev), [l]"+A"(*l)
+        : [bits]"r" (val)
+        : "memory");
+      return prev;
+    }
 }
 
-inline NEEDS["asm_riscv.h"]
+template<typename T, typename V> inline
 Mword
-atomic_add(Mword *l, Mword value)
+atomic_add(T *l, V value)
 {
-  Mword prev;
+  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
+  T val = value;
+  T prev;
 
-  __asm__ __volatile__ (
-    "amoadd." SZMOD " %[prev], %[value], %[l]"
-    : [prev]"=r" (prev), [l]"+A"(*l)
-    : [value]"r" (value)
-    : "memory");
+  switch (sizeof(T))
+    {
+    case 4:
+      __asm__ __volatile__ (
+        "amoadd.w %[prev], %[value], %[l]"
+        : [prev]"=r" (prev), [l]"+A"(*l)
+        : [value]"r" (val)
+        : "memory");
+      return prev;
 
-  return prev;
+    case 8:
+      __asm__ __volatile__ (
+        "amoadd.d %[prev], %[value], %[l]"
+        : [prev]"=r" (prev), [l]"+A"(*l)
+        : [value]"r" (val)
+        : "memory");
+      return prev;
+    }
 }
 
 
-inline NEEDS["asm_riscv.h"]
+template<typename T, typename V> inline
 Mword
-atomic_xchg(Mword *l, Mword value)
+atomic_xchg(T *l, V value)
 {
-  Mword prev;
+  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
+  T val = value;
+  T prev;
 
-  __asm__ __volatile__ (
-    "amoswap." SZMOD " %[prev], %[value], %[l]"
-    : [prev]"=r" (prev), [l]"+A"(*l)
-    : [value]"r" (value)
-    : "memory");
+  switch (sizeof(T))
+    {
+    case 4:
+      __asm__ __volatile__ (
+        "amoswap.w %[prev], %[value], %[l]"
+        : [prev]"=r" (prev), [l]"+A"(*l)
+        : [value]"r" (val)
+        : "memory");
+      return prev;
 
-  return prev;
+    case 8:
+      __asm__ __volatile__ (
+        "amoswap.d %[prev], %[value], %[l]"
+        : [prev]"=r" (prev), [l]"+A"(*l)
+        : [value]"r" (val)
+        : "memory");
+      return prev;
+    }
 }
 
 template<typename T, typename V> inline

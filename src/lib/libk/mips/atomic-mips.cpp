@@ -114,39 +114,47 @@ IMPLEMENTATION [mips && mp]:
 
 #include "mem.h"
 
-inline NEEDS["mem.h"]
+template<typename T, typename V> inline NEEDS["mem.h"]
 void
-atomic_and(Mword *l, Mword value)
+atomic_and(T *l, V value)
 {
+  static_assert(sizeof(T) == sizeof(Mword));
+  T val = value;
   Mem::mp_mb();
-  local_atomic_and(l, value);
+  local_atomic_and(l, val);
   Mem::mp_mb();
 }
 
-inline NEEDS["mem.h"]
+template<typename T, typename V>  inline NEEDS["mem.h"]
 void
-atomic_or(Mword *l, Mword value)
+atomic_or(T *l, V value)
 {
+  static_assert(sizeof(T) == sizeof(Mword));
+  T val = value;
   Mem::mp_mb();
-  local_atomic_or(l, value);
+  local_atomic_or(l, val);
   Mem::mp_mb();
 }
 
-inline NEEDS["mem.h"]
+template<typename T, typename V> inline NEEDS["mem.h"]
 void
-atomic_add(Mword *l, Mword value)
+atomic_add(T *l, V value)
 {
+  static_assert(sizeof(T) == sizeof(Mword));
+  T val = value;
   Mem::mp_mb();
-  local_atomic_add(l, value);
+  local_atomic_add(l, val);
   Mem::mp_mb();
 }
 
-inline NEEDS["mem.h", __f_atomic_add_fetch]
+template<typename T, typename V> inline NEEDS["mem.h", __f_atomic_add_fetch]
 Mword
-atomic_add_fetch(Mword *l, Mword v)
+atomic_add_fetch(T *l, V value)
 {
+  static_assert(sizeof(T) == sizeof(Mword));
+  T val = value;
   Mem::mp_mb();
-  Mword res = __f_atomic_add_fetch(l, v);
+  Mword res = __f_atomic_add_fetch(l, val);
   Mem::mp_mb();
   return res;
 }
@@ -164,26 +172,40 @@ cas_arch(Mword *m, Mword o, Mword n)
 //---------------------------------------------------------------------------
 IMPLEMENTATION [mips && !mp]:
 
-inline
+template<typename T, typename V> inline
 void
-atomic_and(Mword *l, Mword value)
-{ local_atomic_and(l, value); }
-
-inline
-void
-atomic_or(Mword *l, Mword value)
-{ local_atomic_or(l, value); }
-
-inline
-void
-atomic_add(Mword *l, Mword value)
-{ local_atomic_add(l, value); }
-
-inline NEEDS[__f_atomic_add_fetch]
-Mword
-atomic_add_fetch(Mword *l, Mword v)
+atomic_and(T *l, V value)
 {
-  return __f_atomic_add_fetch(l, v);
+  static_assert(sizeof(T) == sizeof(Mword));
+  T val = value;
+  local_atomic_and(l, val);
+}
+
+template<typename T, typename V> inline
+void
+atomic_or(T *l, V value)
+{
+  static_assert(sizeof(T) == sizeof(Mword));
+  T val = value;
+  local_atomic_or(l, val);
+}
+
+template<typename T, typename V> inline
+void
+atomic_add(T *l, V value)
+{
+  static_assert(sizeof(T) == sizeof(Mword));
+  T val = value;
+  local_atomic_add(l, val);
+}
+
+template<typename T, typename V> inline NEEDS[__f_atomic_add_fetch]
+Mword
+atomic_add_fetch(T *l, V value)
+{
+  static_assert(sizeof(T) == sizeof(Mword));
+  Mword val = value;
+  return __f_atomic_add_fetch(l, val);
 }
 
 inline

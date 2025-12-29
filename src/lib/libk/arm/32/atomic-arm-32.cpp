@@ -25,10 +25,12 @@ IMPLEMENTATION[arm && arm_v6plus]:
 #include "mem.h"
 #include <cxx/type_traits>
 
-inline
+template<typename T, typename V> inline
 void
-atomic_add(Mword *l, Mword value)
+atomic_add(T *l, V value)
 {
+  static_assert(sizeof(T) == 4);
+  T val = value;
   Mword tmp, ret;
 
   asm volatile (
@@ -39,14 +41,16 @@ atomic_add(Mword *l, Mword value)
       "teq     %[ret], #0                 \n"
       "bne     1b                         \n"
       : [v] "=&r" (tmp), [ret] "=&r" (ret), "+m" (*l)
-      :  [mem] "r" (l), [addval] "r" (value)
+      :  [mem] "r" (l), [addval] "r" (val)
       : "cc");
 }
 
-inline
+template<typename T, typename V> inline
 void
-atomic_and(Mword *l, Mword value)
+atomic_and(T *l, V value)
 {
+  static_assert(sizeof(T) == 4);
+  T val = value;
   Mword tmp, ret;
 
   asm volatile (
@@ -57,14 +61,16 @@ atomic_and(Mword *l, Mword value)
       "teq     %[ret], #0                 \n"
       "bne     1b                         \n"
       : [v] "=&r" (tmp), [ret] "=&r" (ret), "+m" (*l)
-      :  [mem] "r" (l), [andval] "r" (value)
+      :  [mem] "r" (l), [andval] "r" (val)
       : "cc");
 }
 
-inline
+template<typename T, typename V> inline
 void
-atomic_or(Mword *l, Mword value)
+atomic_or(T *l, V value)
 {
+  static_assert(sizeof(T) == 4);
+  T val = value;
   Mword tmp, ret;
 
   asm volatile (
@@ -75,7 +81,7 @@ atomic_or(Mword *l, Mword value)
       "teq     %[ret], #0                 \n"
       "bne     1b                         \n"
       : [v] "=&r" (tmp), [ret] "=&r" (ret), "+m" (*l)
-      :  [mem] "r" (l), [orval] "r" (value)
+      :  [mem] "r" (l), [orval] "r" (val)
       : "cc");
 }
 

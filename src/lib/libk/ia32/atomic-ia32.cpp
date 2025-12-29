@@ -13,32 +13,38 @@ atomic_exchange(T *mem, V value)
   return val;
 }
 
-inline
+template<typename T, typename V> inline
 void
-atomic_and(Mword *l, Mword value)
+atomic_and(T *l, V value)
 {
-  asm volatile ("lock; andl %1, %2" : "=m"(*l) : "ir"(value), "m"(*l));
+  static_assert(sizeof(T) == 4);
+  T val = value;
+  asm volatile ("lock; andl %1, %2" : "=m"(*l) : "ir"(val), "m"(*l));
 }
 
-inline
+template<typename T, typename V> inline
 void
-atomic_or(Mword *l, Mword value)
+atomic_or(T *l, V value)
 {
-  asm volatile ("lock; orl %1, %2" : "=m"(*l) : "ir"(value), "m"(*l));
+  static_assert(sizeof(T) == 4);
+  T val = value;
+  asm volatile ("lock; orl %1, %2" : "=m"(*l) : "ir"(val), "m"(*l));
 }
 
-
-inline
+template<typename T, typename V> inline
 void
-atomic_add(Mword *l, Mword value)
+atomic_add(T *l, V value)
 {
-  asm volatile ("lock; addl %1, %2" : "=m"(*l) : "ir"(value), "m"(*l));
+  static_assert(sizeof(T) == 4);
+  T val = value;
+  asm volatile ("lock; addl %1, %2" : "=m"(*l) : "ir"(val), "m"(*l));
 }
 
 template<typename T> inline
 T
 atomic_add_fetch(T *mem, T addend)
 {
+  static_assert(sizeof(T) == 4);
   T res;
   asm volatile ("lock; xadd %1, %0" : "+m"(*mem), "=r"(res) : "1"(addend));
   return res + addend;
