@@ -75,13 +75,26 @@ INTERFACE [arm && arm_psci && arm_psci_hvc]:
 #define FIASCO_ARM_PSCI_CALL_ASM_OPERANDS FIASCO_ARM_SMC_CALL_ASM_OPERANDS
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && arm_psci && arm_psci_dyn]:
+INTERFACE [arm && arm_psci && arm_psci_dyn && !64bit]:
+
+#define FIASCO_ARM_PSCI_CALL_ASM_FUNC "cmp %[is_hvc], #0     \n" \
+                                      "beq 1f                \n" \
+                                      "hvc #0                \n" \
+                                      "b 2f                  \n" \
+                                      "1: smc #0             \n" \
+                                      "2:                    \n"
+
+// ------------------------------------------------------------------------
+INTERFACE [arm && arm_psci && arm_psci_dyn && 64bit]:
 
 #define FIASCO_ARM_PSCI_CALL_ASM_FUNC "tbz %[is_hvc], #0, 1f \n" \
                                       "hvc #0                \n" \
                                       "b 2f                  \n" \
                                       "1: smc #0             \n" \
                                       "2:                    \n"
+
+// ------------------------------------------------------------------------
+INTERFACE [arm && arm_psci && arm_psci_dyn]:
 
 #define FIASCO_ARM_PSCI_CALL_ASM_OPERANDS \
     : FIASCO_ARM_SMC_CALL_ASM_OUTPUTS \
