@@ -1551,7 +1551,8 @@ Thread::increment_mbt_counter()
   Utcb *utcb = this->utcb().access(true);
   if (utcb->user[2] == 0xdeadbeef)
     {
-      atomic_add(&Kip::k()->mbt_counter, 1);
+      static_assert(sizeof(Mword) == sizeof(Kip::mbt_counter));
+      atomic_add(reinterpret_cast<Mword *>(&Kip::k()->mbt_counter), 1);
       utcb->user[2] = 0;
     }
 }
