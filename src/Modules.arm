@@ -166,6 +166,7 @@ dmar_space_IMPL		:= dmar_space \
                            $(if $(CONFIG_IOMMU_ARM_SMMU_400),dmar_space-smmuv2) \
                            $(if $(CONFIG_IOMMU_ARM_SMMU_500),dmar_space-smmuv2) \
                            $(if $(CONFIG_IOMMU_ARM_SMMU_V3),dmar_space-smmuv3)
+dt_IMPL                 := dt dt-arm
 ifeq ($(CONFIG_BIT64),y)
   entry_frame_IMPL	:= entry_frame-arm
 else
