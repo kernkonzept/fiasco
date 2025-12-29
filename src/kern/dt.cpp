@@ -386,6 +386,16 @@ public:
     uint64_t get_prop_default_u64(const char *name, uint64_t def) const
     { return get_prop_default<uint64_t>(name, def); }
 
+    template<typename CB>
+    void stringlist_for_each(char const *name, CB &&cb) const
+    {
+       int num_strs = fdt_stringlist_count(_fdt, _off, name);
+       for (int i = 0; i < num_strs; i++)
+        if (char const *str = fdt_stringlist_get(_fdt, _off, name, i, nullptr))
+          if (invoke_cb(cb, i, str) == Break)
+            break;
+    }
+
     char const *get_prop_str(char const *name) const
     {
       int len;
