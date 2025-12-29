@@ -22,8 +22,8 @@ public:
     Tcbs                 = 0xc0000000,
     Utcb_addr            = _User_max + 1 - 0x2000,
     Tcbs_end             = 0xe0000000,
-    __free_1_start       = 0xec000000,
-    __free_1_end         = 0xed000000,
+    Mmio_map_start       = 0xec000000,
+    Mmio_map_end         = 0xee000000,
     Htab                 = 0xee000000, ///< % 32 MiB hashed pgtab
     Map_base             = 0xf0000000, ///< % 80 MiB kernel memory
     Map_end              = 0xf5000000,

@@ -268,6 +268,49 @@ Pte_ptr::to_htab_ptr()
   *pte |= Valid;
 }
 
+PUBLIC static inline ALWAYS_INLINE
+Mword
+Pte_ptr::make_page(Phys_mem_addr addr, Page::Attr attr)
+{
+  return 0ul; // make something useful here
+}
+
+PUBLIC inline ALWAYS_INLINE
+void
+Pte_ptr::set_page(Entry p)
+{
+  write_now(pte, p);
+}
+
+PUBLIC inline ALWAYS_INLINE
+void
+Pte_ptr::set_page(Phys_mem_addr addr, Page::Attr attr)
+{
+  set_page(make_page(addr, attr));
+}
+
+PUBLIC inline ALWAYS_INLINE
+Mword
+Pte_ptr::page_addr() const
+{
+  return 0; // make something useful here
+}
+
+PUBLIC inline
+unsigned
+Pte_ptr::page_level() const
+{
+  return level;
+}
+
+PUBLIC inline
+bool
+Pte_ptr::attribs_compatible(Page::Attr /*attr*/) const
+{
+  // Do something useful here
+  return false;
+}
+
 //PUBLIC inline
 //Address
 //Pt_entry::pfn() const

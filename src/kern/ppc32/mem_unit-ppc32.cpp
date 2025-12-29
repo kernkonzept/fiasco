@@ -14,6 +14,12 @@ void
 Mem_unit::make_coherent_to_pou(void const *, size_t)
 {}
 
+PUBLIC static inline
+void
+Mem_unit::tlb_flush_kernel(Address /* addr */)
+{
+}
+
 //------------------------------------------------------------------------------
 IMPLEMENTATION[ppc32 && !mp]:
 

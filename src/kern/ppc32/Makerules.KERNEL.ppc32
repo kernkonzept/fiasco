@@ -18,5 +18,5 @@ LIBGCC = $(shell $(CXX) $(SHARED_FLAGS) -print-libgcc-file-name)
 
 # $(1) = Additional $(OBJ_X), e.g. OBJ_<unittest>
 KERNEL_PREREQUISITES = kernel.ppc32.lds $$(CRT0) $$(OBJ_KERNEL) $(1) \
-                       $$(LIBK) $$(LIBDISASM) libdrivers.a $$(ABI) $$(LIBUART) \
-                       $$(CXXLIB) $$(LIBC) $(LIBGCC) libgluedriverslibc.a
+                       $$(JDB) $$(LIBK) $$(LIBDISASM) libdrivers.a $$(ABI) \
+                       $$(LIBUART) $$(CXXLIB) $$(LIBC) $(LIBGCC) libgluedriverslibc.a

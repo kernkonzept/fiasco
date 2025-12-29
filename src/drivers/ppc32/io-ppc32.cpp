@@ -35,10 +35,10 @@ T Io::read_dirty(Address address)
 
 IMPLEMENT inline NEEDS["mmu.h"]
 template< typename T >
-T Io::read(Address address)
+T Io::read(void *address)
 {
   Mmu_guard dcache;
-  return read_dirty<T>(address);
+  return read_dirty<T>(reinterpret_cast<Address>(address));
 }
 
 IMPLEMENT inline NEEDS["mem_unit.h"]
@@ -51,10 +51,10 @@ void Io::write_dirty(T value, Address address)
 
 IMPLEMENT inline NEEDS["mmu.h"]
 template< typename T>
-void Io::write(T value, Address address)
+void Io::write(T value, void *address)
 {
   Mmu_guard dcache;
-  write_dirty<T>(value, address);
+  write_dirty<T>(value, reinterpret_cast<Address>(address));
 }
 
 //------------------------------------------------------------------------------

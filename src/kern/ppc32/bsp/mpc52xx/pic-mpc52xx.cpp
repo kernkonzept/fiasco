@@ -119,10 +119,10 @@ Pic::set_stat_msb(unsigned irq_num)
   switch(pic_line(irq_num))
     {
     case IRQ_MAIN:
-      Io::set<Unsigned32>(0x00200000, stat());
+      Io::set<Unsigned32>(0x00200000, reinterpret_cast<void *>(stat()));
       break;
     case IRQ_PER:
-      Io::set<Unsigned32>(0x20000000, stat());
+      Io::set<Unsigned32>(0x20000000, reinterpret_cast<void *>(stat()));
       break;
     default:
       panic("CRIT not implemented");
@@ -136,7 +136,7 @@ Pic::mask(Mword irq_num)
   Address addr;
   unsigned bit_offs;
   dispatch_mask(irq_num, &addr, &bit_offs);
-  Io::set<Unsigned32>(1U << (bit_offs - pic_num(irq_num)), addr);
+  Io::set<Unsigned32>(1U << (bit_offs - pic_num(irq_num)), reinterpret_cast<void *>(addr));
 }
 
 PUBLIC
@@ -148,7 +148,7 @@ Pic::ack(Mword irq_num)
 
   if ((line == IRQ_MAIN && (num >= 1 && num <= 3)) ||
       (line == IRQ_CRIT && num == 0))
-    Io::set<Unsigned32>(1U << (27 - num), ext());
+    Io::set<Unsigned32>(1U << (27 - num), reinterpret_cast<void *>(ext()));
 
   set_stat_msb(irq_num);
 }
@@ -168,7 +168,7 @@ Pic::unmask(Mword irq_num)
   Address addr;
   unsigned bit_offs;
   dispatch_mask(irq_num, &addr, &bit_offs);
-  Io::clear<Unsigned32>(1U << (bit_offs - pic_num(irq_num)), addr);
+  Io::clear<Unsigned32>(1U << (bit_offs - pic_num(irq_num)), reinterpret_cast<void *>(addr));
 }
 
 PUBLIC explicit
@@ -252,7 +252,7 @@ void
 Pic::post_pending_irqs()
 {
   Unsigned32 irq;
-  Unsigned32 state = Io::read<Unsigned32>(stat());
+  Unsigned32 state = Io::read<Unsigned32>(reinterpret_cast<void *>(stat()));
 
   //critical interupt
   if(state & 0x00000400)

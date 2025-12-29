@@ -7,8 +7,8 @@ STATIC_INITIALIZER_P(boot_console_init, EARLY_INIT_PRIO);
 
 static void boot_console_init()
 {
-  Console::stdout = Kernel_uart::uart();
-  Console::stderr = Console::stdout;
-  Console::stdin  = Console::stdout;
+//  Console::stdout = Kernel_uart::uart();
+//  Console::stderr = Console::stdout;
+//  Console::stdin  = Console::stdout;
 }
 

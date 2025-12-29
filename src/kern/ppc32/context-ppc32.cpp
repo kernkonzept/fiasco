@@ -67,15 +67,15 @@ Context::switch_cpu(Context *t)
 		  "1" (&_kernel_sp),
 		  "2" (t->_kernel_sp)
 		: "r0",  "r2",  "r3",  "r4",  "r5",  "r6",  "r7",
-		  "r8",  "r9",  "r13", "r14", "r15", "r16", "r17", 
+		  "r8",  "r9",  "r13", "r14", "r15", "r16", "r17",
 		  "r18", "r19", "r20", "r21", "r22", "r23", "r24",
-		  "r25", "r26", "r27", "r28", "r29", "r30", "r31",
+		  "r25", "r26", "r27", "r28", "r29", "r30",
 		  "ctr", "lr",  "cr2", "cr3", "cr4", "xer", "memory"
 		  );
 }
 
 /** Thread context switchin.  Called on every re-activation of a
-    thread (switch_exec()).  This method is public only because it is 
+    thread (switch_exec()).  This method is public only because it is
     called by an ``extern "C"'' function that is called
     from assembly code (call_switchin_context).
  */
@@ -87,7 +87,7 @@ void Context::switchin_context(Context *from)
   assert(state() & Thread_ready);
   // Set kernel-esp in case we want to return to the user.
   // kmem::kernel_esp() returns a pointer to the kernel SP (in the
-  // TSS) the CPU uses when next switching from user to kernel mode.  
+  // TSS) the CPU uses when next switching from user to kernel mode.
   // regs() + 1 returns a pointer to the end of our kernel stack.
   Kmem::kernel_sp( reinterpret_cast<Mword*>(regs() + 1) );
 #if 0
