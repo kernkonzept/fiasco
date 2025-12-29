@@ -708,6 +708,11 @@ Dt::init()
   _fdt = Kmem_mmio::map(fdt_phys, fdt_size, Kmem_mmio::Map_attr::Cached());
   if (!_fdt)
     panic("Cannot map FDT!");
+
+  Node root = node_by_path("/");
+  if (root.is_valid())
+    if (const char *m = root.get_prop_str("model"))
+      printf("DT Platform: %s\n", m);
 }
 
 IMPLEMENT static inline
