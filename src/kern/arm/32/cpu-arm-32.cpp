@@ -178,10 +178,7 @@ Cpu::init_supervisor_mode(bool is_boot_cpu)
   auto pte = Kmem::kdir->walk(Virt_addr(Kmem_space::Ivt_base),
                               Kpdir::Depth, true,
                               Kmem_alloc::q_allocator(Ram_quota::root.unwrap()));
-
-  Address va = reinterpret_cast<Address>(&ivt_start)
-                 - Mem_layout::Sdram_phys_base + Mem_layout::Map_base;
-  pte.set_page(Phys_mem_addr(Kmem::kdir->virt_to_phys(va)),
+  pte.set_page(Phys_mem_addr(reinterpret_cast<Address>(&ivt_start)),
                Page::Attr::kern_global(Page::Rights::RWX()));
   pte.write_back_if(true);
   Mem_unit::tlb_flush_kernel(Kmem_space::Ivt_base);
