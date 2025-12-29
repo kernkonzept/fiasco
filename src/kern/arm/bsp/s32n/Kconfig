@@ -61,9 +61,11 @@ choice
 
 config PF_S32N_RTU_CL1_DISABLED
 	bool "disabled"
+	depends on PF_S32N_RTU_CL0_SPLIT
 
 config PF_S32N_RTU_CL1_LOCKSTEP
 	bool "lockstep"
+	depends on !PF_S32N_RTU_CL0_DISABLED
 
 config PF_S32N_RTU_CL1_SPLIT
 	bool "split mode"
