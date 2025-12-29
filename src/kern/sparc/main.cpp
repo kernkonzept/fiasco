@@ -79,7 +79,7 @@ int main()
 
   // create kernel thread
   Kernel_thread *kernel = Kernel_thread::create_for_boot_cpu();
-  assert((reinterpret_cast<>Mword>(kernel->init_stack()) & 7) == 0);
+  assert((reinterpret_cast<Mword>(kernel->init_stack()) & 7) == 0);
 
   Mem_unit::tlb_flush();
 

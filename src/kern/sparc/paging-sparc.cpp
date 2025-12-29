@@ -61,7 +61,7 @@ public:
   };
 
   Pte_ptr() = default;
-  Pte_ptr(void *p, unsigned char level) : pte((Entry *)p), level(level) {}
+  Pte_ptr(void *p, unsigned char level) : pte(reinterpret_cast<Entry *>(p)), level(level) {}
 
   bool is_valid() const { return *pte & ET_mask; }
 
@@ -267,6 +267,34 @@ void
 Pte_ptr::write_back(void* /*start */, void* /* end */)
 {}
 
+PUBLIC static inline ALWAYS_INLINE
+Mword
+Pte_ptr::make_page(Phys_mem_addr /*addr*/, Page::Attr /*attr*/)
+{
+  return 0ul; // make something useful here
+}
+
+PUBLIC inline ALWAYS_INLINE
+void
+Pte_ptr::set_page(Entry p)
+{
+  write_now(pte, p);
+}
+
+PUBLIC inline ALWAYS_INLINE
+void
+Pte_ptr::set_page(Phys_mem_addr addr, Page::Attr attr)
+{
+  set_page(make_page(addr, attr));
+}
+
+PUBLIC inline
+bool
+Pte_ptr::attribs_compatible(Page::Attr /*attr*/) const
+{
+  // Do something useful here
+  return false;
+}
 
 //---------------------------------------------------------------------------
 

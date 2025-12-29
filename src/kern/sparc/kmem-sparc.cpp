@@ -22,7 +22,7 @@ IMPLEMENTATION [sparc]:
 #include "paging_bits.h"
 #include "panic.h"
 
-extern union {
+extern union Kernel_srmmu_l1 {
   Kpdir kpdir;
   Mword storage[256];
 } kernel_srmmu_l1;

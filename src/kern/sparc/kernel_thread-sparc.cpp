@@ -9,7 +9,7 @@ Kernel_thread::free_initcall_section()
   memset(const_cast<char *>(Mem_layout::initcall_start), 0,
          Mem_layout::initcall_end - Mem_layout::initcall_start);
   printf("%d KiB kernel memory freed\n",
-         (int)(Mem_layout::initcall_end - Mem_layout::initcall_start)/1024);
+         (Mem_layout::initcall_end - Mem_layout::initcall_start)/1024);
 }
 
 IMPLEMENT FIASCO_INIT

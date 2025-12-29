@@ -12,26 +12,26 @@ public:
 
   enum Phys_layout : Address
   {
-    Syscalls             = 0xfffff000,
+    Syscalls             = 0xfffff000ul,
 
-    _User_max            = 0xbfffffff
-    Tcbs                 = 0xc0000000,
+    _User_max            = 0xbffffffful,
+    Tcbs                 = 0xc0000000ul,
     Utcb_addr            = _User_max + 1 - 0x2000,
-    Tcbs_end             = 0xe0000000,
-    Utcb_ptr_page        = 0xe1000000,
-    Tbuf_status_page     = 0xe1002000,
-    Tbuf_buffer_area     = 0xec000000,
+    Tcbs_end             = 0xe0000000ul,
+    Utcb_ptr_page        = 0xe1000000ul,
+    Tbuf_status_page     = 0xe1002000ul,
+    Tbuf_buffer_area     = 0xec000000ul,
     Tbuf_ubuffer_area    = Tbuf_buffer_area,
-    Tbuf_end             = 0xec200000,
-    Mmio_map_start       = 0xed000000,
-    Mmio_map_end         = 0xef000000,
-    Map_base             = 0xf0000000, ///< % 80 MiB kernel memory
-    Map_end              = 0xf5000000,
-    Caps_start           = 0xf5000000,
-    Caps_end             = 0xfd000000,
-    Kernel_image         = 0xfd000000,
+    Tbuf_end             = 0xec200000ul,
+    Mmio_map_start       = 0xed000000ul,
+    Mmio_map_end         = 0xef000000ul,
+    Map_base             = 0xf0000000ul, ///< % 80 MiB kernel memory
+    Map_end              = 0xf5000000ul,
+    Caps_start           = 0xf5000000ul,
+    Caps_end             = 0xfd000000ul,
+    Kernel_image         = 0xfd000000ul,
 
-    Tbuf_buffer_size     = 0x2000000,
+    Tbuf_buffer_size     = 0x2000000ul,
   };
 private:
   static unsigned short __ph_to_pm[1UL << (32 - Config::SUPERPAGE_SHIFT)];
@@ -81,8 +81,7 @@ IMPLEMENT static inline NEEDS["config.h", "paging_bits.h"]
 Address
 Mem_layout::phys_to_pmem(Address phys)
 {
-  Address virt = ((unsigned long)__ph_to_pm[phys >> Config::SUPERPAGE_SHIFT])
-    << 16;
+  Address virt = static_cast<Address>(__ph_to_pm[phys >> Config::SUPERPAGE_SHIFT]) << 16;
 
   if (!virt)
     return ~0UL;

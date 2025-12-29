@@ -105,7 +105,7 @@ Mem_space::make_current(Switchin_flags)
   printf("%s checkme\n", __func__);
   _current.current() = this;
 
-  Paging::set_ptbr((Address)_dir);
+  Paging::set_ptbr(reinterpret_cast<Address>(_dir));
 }
 
 

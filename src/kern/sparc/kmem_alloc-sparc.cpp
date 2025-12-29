@@ -43,7 +43,7 @@ IMPLEMENT_OVERRIDE inline NEEDS["kmem.h", "psr.h", <cstdio>]
 Address
 Kmem_alloc::to_phys(void *v) const
 {
-  Address p = Kmem::kdir->virt_to_phys((Address)v);
+  Address p = Kmem::kdir->virt_to_phys(reinterpret_cast<Address>(v));
   printf("Kmem_alloc::to_phys: v=%p p=%lx psr=%lx\n", v, p, Psr::read());
   return p;
 }

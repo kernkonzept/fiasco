@@ -17,7 +17,7 @@ local_cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
 	         "1" (oldval),
 		 "2" (newval));
 #else
-  register Mword _ptr        asm("l0") = (Mword)ptr;
+  register Mword _ptr        asm("l0") = reinterpret_cast<Mword>(ptr);
   register Mword _oldval     asm("l1") = oldval;
   register Mword _newval_ret asm("l2") = newval;
   asm volatile(".word 0xe5e40171\n" // "casa [%%l0]0xb, %%l1, %%l2\n"
