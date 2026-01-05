@@ -71,7 +71,7 @@ bootstrap.$(KERNEL).sym: bootstrap.$(KERNEL).pre.o
 KERNEL_PREREQUISITES = kernel.arm.lds $$(CRT0) bootstrap.$$(KERNEL).rel \
                        bootstrap.$$(KERNEL).sym $$(OBJ_KERNEL_noboot) $(1) \
                        $$(JDB) $$(KERNEL_EXTRA_LIBS) $$(LIBDISASM) $$(ABI) \
-                       libdrivers.a $$(LIBUART) $$(LIBK) $$(CXXLIB) $$(LIBC) \
+                       libdrivers.a $$(LIBUART) $$(CXXLIB) $$(LIBC) $$(LIBK) \
                        libfonts.a libgluedriverslibc.a
 
 clean-KERNEL:
