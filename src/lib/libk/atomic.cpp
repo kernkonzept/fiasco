@@ -61,7 +61,7 @@ IMPLEMENTATION[(ppc32 && !mp) || (sparc && !mp) || (arm && !arm_v6plus)]:
 
 // Fall-back UP implementations for ppc32, sparc and armv5
 
-typename<typename T, typename V> inline NEEDS["processor.h"]
+template<typename T, typename V> inline NEEDS["processor.h"]
 void
 atomic_and(T *l, V value)
 {
@@ -72,7 +72,7 @@ atomic_and(T *l, V value)
   Proc::sti_restore(s);
 }
 
-typename<typename T, typename V> inline NEEDS["processor.h"]
+template<typename T, typename V> inline NEEDS["processor.h"]
 void
 atomic_or(T *l, V value)
 {
