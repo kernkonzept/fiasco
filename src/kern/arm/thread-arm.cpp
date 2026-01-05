@@ -745,12 +745,20 @@ Thread::arm_esr_entry(Return_frame *rf)
         }
 
     case 0x07: // SVE, Advanced SIMD or floating-point trap
-      if ((TAG_ENABLED(arm_v8) // Always FPU trap on Armv8, not used for other CPs.
-           || esr.cpt_simd() == 1
-           || esr.cpt_cpnr() == 10  // CP10: Floating-point
-           || esr.cpt_cpnr() == 11) // CP11: Advanced SIMD
-          && Thread::handle_fpu_trap(ts))
-        return;
+      if constexpr (TAG_ENABLED(arm_v8))
+        {
+          // ARMv8: only for FPU traps, not used for other CPs
+          if (Thread::handle_fpu_trap(ts))
+            return;
+        }
+      else
+        {
+          if ((esr.cpt_simd() == 1
+               || esr.cpt_cpnr() == 10  // CP10: Floating-point
+               || esr.cpt_cpnr() == 11) // CP11: Advanced SIMD
+              && Thread::handle_fpu_trap(ts))
+            return;
+        }
 
       ct->send_exception(ts);
       break;
