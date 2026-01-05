@@ -43,6 +43,8 @@ EXTENSION class Platform_control
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && amp && pf_s32n]:
 
+#include "amp_node.h"
+
 IMPLEMENT_OVERRIDE
 void
 Platform_control::amp_ap_early_init()
